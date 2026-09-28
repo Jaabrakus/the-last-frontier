@@ -82,8 +82,14 @@ func run(ctx: AnimTestContext) -> void:
 			await _tap(ctx, PlayerTorch.ACTION)
 			await _watch(ctx, "torch %s" % torch, item, count, 240)
 		var tag := " (torch up)" if torch else ""
-		# (another weapon: putting down the one in the hand leaves FrontierPlayer.weapon null until the next is
-		# drawn, a separate player.gd error)
+		# the one in the hand put down (before the fix in FrontierPlayer._leave_hand the weapon stayed null while the
+		# next weapon's draw waited for the hands: a script error every frame, which fails this suite)
+		_p.set_carried("musket", false)
+		await _watch(ctx, "musket put down" + tag, item, 0, 120)
+		ctx.check(_p.weapon != null, "musket put down%s: the player still has a current weapon (%s)" % [tag, _p.weapon_key])
+		_p.set_carried("musket", true)
+		_p.switch_weapon("musket")
+		await _watch(ctx, "musket taken back" + tag, item, count, 300)
 		_p.set_carried("bow", false)
 		await _watch(ctx, "bow put down, musket out" + tag, item, count, 120)
 		_p.set_carried("bow", true)

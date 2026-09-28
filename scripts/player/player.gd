@@ -839,9 +839,19 @@ func _leave_hand() -> void:
 		hands_free = true
 		anim.hands_free = true
 		return
+	var gone := weapon
+	var gone_key := weapon_key
 	weapon = null
 	weapon_key = ""
 	switch_weapon(next)
+	if weapon == null:
+		# the draw could not start now (the hands busy: a torch hand-over; it is held and retried, _retry_held_switch):
+		# meanwhile the hands are free with the put-down weapon as the last one, as when none is left (with no weapon
+		# at all, movement and the anim read a null weapon every frame; user 2026-09-28)
+		weapon = gone
+		weapon_key = gone_key
+		hands_free = true
+		anim.hands_free = true
 
 
 ## Seconds the hand stays empty after the last spear / tomahawk / dart is thrown before the next weapon is drawn.

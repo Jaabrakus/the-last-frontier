@@ -244,15 +244,19 @@ func _hold(sk: Skeleton3D) -> void:
 	# the gun as the right hand holds it now; on the way into the left hand, as the right hand held it when the handoff
 	# began (the right hand then goes with the gun: the right arm's own pose changes as the carry lets it go, the tree's
 	# carry cross-fade and the free swing, and the gun must not follow that: 2-4 m/s kinks at the crouch-walk start)
+	# (held relative to the root bone: the character's frame, not the skeleton's; the crouch-walk start moves the root
+	# 17 mm a frame and then 5: a gun held still in the skeleton's frame through it popped 1.6 m/s against the body)
 	var f_r := sk.get_bone_global_pose(rp).orthonormalized()
+	var root_g := sk.get_bone_global_pose(_ids.root).orthonormalized()
+	var f_r_root := root_g.affine_inverse() * f_r
 	if on:
 		if not _fr_frozen:
 			_fr_frozen = true
-			_fr_hold = _fr_last if _fr_have else f_r
-		f_r = _fr_hold
+			_fr_hold = _fr_last if _fr_have else f_r_root
+		f_r = root_g * _fr_hold
 	else:
 		_fr_frozen = false
-	_fr_last = f_r
+	_fr_last = root_g.affine_inverse() * f_r
 	_fr_have = true
 	# the fist's grip on the gun for the left prop's place in the palm now (whatever sets it: the torch's grip when the
 	# torch is in this fist too, else the clips'), and where the carry wants the gun (the grip turned round the gun's
@@ -267,14 +271,15 @@ func _hold(sk: Skeleton3D) -> void:
 	var want_l := (f_mix * k * x).orthonormalized()
 	_place(sk, "l", lp, _ids.l_wrist, want_l.basis.get_rotation_quaternion(), want_l.origin, wl)
 	var got_l := (sk.get_bone_global_pose(_ids.l_palm) * _ref).orthonormalized()
-	# the gun follows the left fist as it takes it over; the right hand holds the wrist of the stock until it lets go
-	var f := _blend(f_r, got_l * k.affine_inverse(), g, 1)
+	# the gun follows the left fist as it takes it over; the right hand holds the wrist of the stock until it lets go.
+	# (From the fist's wanted path, f_mix: that already comes from the right hand's carry by `g`; blended from f_r again
+	# the gun went (1 - g^2) of the way, twice the acceleration at each end of the handoff: 0.47 m/s a frame against
+	# the body as the crouch-walk stop gave the gun back, test_weapon_holds one_crouch_stop.)
+	var f := _blend(f_mix, got_l * k.affine_inverse(), g, 1)
 	if wr > 0.0 and g > 0.0:
 		_place(sk, "r", rp, _ids.r_wrist, f.basis.get_rotation_quaternion(), f.origin, wr)
 	last_gun = f
 	last_left = got_l
-	last_w_left = wl
-	last_w_right = wr
 	if torch != null:
 		# the gun's frame at the fist (+Z along the barrel, +Y up the gun): where the torch meets the gun fist
 		torch.gun_fist_frame = f * Transform3D(Basis(), grip_centre())
@@ -291,8 +296,8 @@ func _hold(sk: Skeleton3D) -> void:
 ## swung the 1.3 m gun 0.6 m in a frame).
 var _rv := [Vector3.ZERO, Vector3.ZERO]
 var _rv_have := [false, false]
-var _fr_last := Transform3D()
-var _fr_hold := Transform3D()
+var _fr_last := Transform3D()        ## the right prop relative to the root bone, last frame
+var _fr_hold := Transform3D()        ## (the root's frame) the right hand's hold when the handoff began
 var _fr_have := false
 var _fr_frozen := false
 

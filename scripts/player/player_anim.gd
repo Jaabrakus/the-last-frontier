@@ -1026,8 +1026,12 @@ func manual_step(dt: float) -> void:
 					left_grip.enabled = long_gun and not busy
 		left_grip.advance(dt)
 	if gun_damper != null:
-		# (with the gun in the left hand, GunMiddleCarryIK's own spring smooths it in the character's frame)
-		gun_damper.enabled = gun_free and not torch and not mid
+		# (with the gun in the left hand, GunMiddleCarryIK's own spring smooths it in the character's frame; on the way
+		# back, from the moment the gun is in the right hand again (the handoff's travel done), this damper takes over:
+		# waiting for the handoff's end left it fading in only as the stop's cross-fade of the carry ended, a 0.9 m/s
+		# pop of the gun at a crouch-walk stop, test_weapon_holds one_crouch_stop)
+		var mid_back: bool = mid and not mid_ik.on and float(GunMiddleCarryIK.weights(mid_ik.progress)[2]) <= 0.0
+		gun_damper.enabled = gun_free and not torch and (not mid or mid_back)
 		gun_damper.advance(dt)
 	if _resume_snap:
 		# back from a traversal move or the saddle: the weights the modifiers were left with are stale
