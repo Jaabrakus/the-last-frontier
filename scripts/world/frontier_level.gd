@@ -72,8 +72,20 @@ func _ready() -> void:
 	StartupProfile.mark("vegetation")
 	var player := FrontierPlayer.new()
 	player.name = "Player"
+	for preview_arg in ["--tandem-preview", "--tandem-preview-yoga"]:
+		if preview_arg in OS.get_cmdline_user_args():
+			player.show_gear = false # clean previews of the tandem poses
 	add_child(player)
 	player.global_position = Vector3(0, 0.1, 6)
+	# In-world tandem poses (isolated feature branch). Uses the existing pose handoff.
+	# (a broken feature script must not stop the level: the game would show a gray screen)
+	var tandem_script := load("res://features/tandem/frontier_tandem.gd") as GDScript
+	if tandem_script != null and tandem_script.can_instantiate():
+		var tandem: Node = tandem_script.new()
+		tandem.player = player
+		player.add_child(tandem)
+	else:
+		push_error("Tandem poses did not load; the level goes on without them.")
 	StartupProfile.mark("player")
 	environment_rig.track(player)
 	_audio(player)

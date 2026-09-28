@@ -1,0 +1,86 @@
+{
+  "source_project": "/Users/kiwimango/Downloads/tandem_test",
+  "frontier_base": "e41ed2e",
+  "files": [
+    {
+      "file": "demo.gd",
+      "source_sha256": "ae234c48e3ad0e9c7a050d41c1d22b32ab5b32bab6934ed7057ca9615bba8271",
+      "package_sha256": "dd29b4fd33b71a8d0efc87c8a6ec577ee7364872a726447c4795f7e8642e0c64"
+    },
+    {
+      "file": "demo.tscn",
+      "source_sha256": "58c0178a551e79065efd4a8d9d1c0e60aa0436977e97801911661cb1c49aff7c",
+      "package_sha256": "af0d4c32ed8d45a94b5c365b35111fd714d810521fe2d0cce241821ab4ca9442"
+    },
+    {
+      "file": "crawl_demo.gd",
+      "source_sha256": "6ba0120556f9c5b6202d1716370153a6806d1bddcb525502e9e521f109c95ecb",
+      "package_sha256": "ff58139dc2ece130ae2b2da2ad9878f106fa16cf85bc61616458ab5134c9fd37"
+    },
+    {
+      "file": "crawl_demo.tscn",
+      "source_sha256": "856f8e1e69f691f07b77cacfd42a852cd55205e5041aaf83150aaa7952ce76aa",
+      "package_sha256": "6791319589c9e9439f4725f9b7172aaa3b5beaab89f6263ff5e8d544420743b6"
+    },
+    {
+      "file": "yoga_mannequin.gd",
+      "source_sha256": "5a22e88611eb795c50745be0d67904e8ec2fc57241444ded2e531d3c98455144",
+      "package_sha256": "7ac831d0b56382c8a93a5721ee1fba943c5e0880e18f0e84c3fa2cbf7b0484a6"
+    },
+    {
+      "file": "yoga_hold_controller.gd",
+      "source_sha256": "e998f3899d182974d1aaf25eea591879dc0020684a0676a6140061db61e1e861",
+      "package_sha256": "dcc52966a7b4e0fde0c96b5564a8e32f5a8a032a051ed1fa1153d966f5639e08"
+    },
+    {
+      "file": "plank_dip_controller.gd",
+      "source_sha256": "46a6e54e8c47afa8bb6ed7ebc5ba48163e536e8aad96477f39f5923c434a6d43",
+      "package_sha256": "eccbfd7332b9dee64e1a4d78910d3148ccd5eb6f1f6582dd09c873f282f120b4"
+    },
+    {
+      "file": "tandem_yoga_stack.gd",
+      "source_sha256": "82e4d92b16bfa37c63a2866e41b0eddca8585f0562c0e36cb61c83531826906f",
+      "package_sha256": "e2848e91ccf83f40170cd9c10e690b06723d35ec35cc30033f230e271c5ffa4f"
+    },
+    {
+      "file": "crawl_hold.gd",
+      "source_sha256": "bc37a27bffcfc1979dce31c81585c7a965649887c66fb6549d9f43b3957ca899",
+      "package_sha256": "d234a937e674873b79591549d00c13e68fdb30e1efdd869eb3439830fa987831"
+    },
+    {
+      "file": "kneel_pose.gd",
+      "source_sha256": "732440897b279a66d3b3248090bcda47f42fa0418986b3136a9bc9e93b86efb3",
+      "package_sha256": "d1a050f8829cc17437a86f74eadcd3bce554877f01422ed526741c48e65a9686"
+    },
+    {
+      "file": "tandem_crawl_pair.gd",
+      "source_sha256": "3b2c706d257fb8a9dcd09d7303f4d489b1242fcf6e87f2fcb854ef6e2339b9e1",
+      "package_sha256": "76ff8a6f5c7d2b52053c25b31b9df1684814cb6d4712cbb86d0b14f22a107e25"
+    },
+    {
+      "file": "crawl_backward_flinch.tres",
+      "source_sha256": "6332cae9d81eb494266545bbe1238ea5515bb6f359a5da062d4f9f44320c8e3f",
+      "package_sha256": "6332cae9d81eb494266545bbe1238ea5515bb6f359a5da062d4f9f44320c8e3f"
+    },
+    {
+      "file": "actor_b_yoga.glb",
+      "source_sha256": "a97aebedaa71e66841b2187c4faf2028e605142b926382ae69489fea55a7a395",
+      "package_sha256": "a97aebedaa71e66841b2187c4faf2028e605142b926382ae69489fea55a7a395"
+    },
+    {
+      "file": "actor_b_crawl.glb",
+      "source_sha256": "bb8037509ab6e56f8aba0b50931671920be6afff5391b4adf6adb0361f5e3ea4",
+      "package_sha256": "bb8037509ab6e56f8aba0b50931671920be6afff5391b4adf6adb0361f5e3ea4"
+    },
+    {
+      "file": "actor_b_kneel.glb",
+      "source_sha256": "b9390fd13f1b43a8ea8ea309260e2666f5866473d24c72640cc84c0f4e3eacda",
+      "package_sha256": "b9390fd13f1b43a8ea8ea309260e2666f5866473d24c72640cc84c0f4e3eacda"
+    },
+    {
+      "file": "tools/author_crawl_backward.gd",
+      "source_sha256": "e4cf3e8eea08ec73291d73de8dc7a78dd50916750e59313e518982eef67249ac",
+      "package_sha256": "47423f4170c27b3071fc2f33e6aafa710d43c5e89ff52ef80b5e9c020d3b833f"
+    }
+  ]
+}

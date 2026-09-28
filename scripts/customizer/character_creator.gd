@@ -95,6 +95,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_rng.randomize()
 	_prev_mouse = Input.mouse_mode
+	if _prev_mouse == Input.MOUSE_MODE_HIDDEN:
+		_prev_mouse = Input.MOUSE_MODE_CAPTURED   # opened under the loading screen (its hidden cursor): the game's mouse is captured
 	for a in InputMap.get_actions():
 		Input.action_release(a)
 	get_tree().paused = true

@@ -134,5 +134,10 @@ func _process(delta: float) -> void:
 			_fade_t += delta
 			_root.modulate.a = 1.0 - clampf(_fade_t / FADE_S, 0.0, 1.0)
 			if _fade_t >= FADE_S:
-				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+				# (the character creator opens under the loading screen on a new game and pauses the tree:
+				# it keeps the mouse it took, the cursor visible)
+				if not get_tree().paused:
+					Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+				elif Input.mouse_mode == Input.MOUSE_MODE_HIDDEN:
+					Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 				queue_free()
