@@ -1,0 +1,16 @@
+[gd_resource type="ShaderMaterial" load_steps=6 format=3]
+
+[ext_resource type="Shader" path="res://assets/horse/materials/horse_coat.gdshader" id="1_shader"]
+[ext_resource type="Texture2D" path="res://assets/horse/textures/horse_coat_masks.png" id="2_masks"]
+[ext_resource type="Texture2D" path="res://assets/horse/textures/horse_coat_detail.png" id="3_detail"]
+[ext_resource type="Texture2D" path="res://assets/horse/textures/horse_coat_normal.png" id="4_normal"]
+[ext_resource type="Texture2D" path="res://assets/horse/textures/horse_coat_flow.png" id="5_flow"]
+
+[resource]
+resource_name = "horse_coat"
+render_priority = 0
+shader = ExtResource("1_shader")
+shader_parameter/masks_tex = ExtResource("2_masks")
+shader_parameter/detail_tex = ExtResource("3_detail")
+shader_parameter/normal_tex = ExtResource("4_normal")
+shader_parameter/flow_tex = ExtResource("5_flow")

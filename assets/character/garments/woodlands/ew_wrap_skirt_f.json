@@ -1,0 +1,337 @@
+{
+ "id": "ew_wrap_skirt_f",
+ "name": "Wrap skirt, wool stroud",
+ "description": "A length of wool broadcloth wrapped tightly round the hips and tied, the top turned down over the string to show the white list, with rows of silk ribbon above the hem.",
+ "kind": "garment",
+ "set": "woodlands",
+ "slot": "legs.lower",
+ "alt_slots": [],
+ "layer": {
+  "default": 20,
+  "thighs": 35,
+  "shins": 35
+ },
+ "glb": "res://assets/character/garments/woodlands/ew_wrap_skirt_f.glb",
+ "mesh": "ew_wrap_skirt_f",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "ew_wrap_skirt_f"
+  }
+ ],
+ "occupies_regions": [
+  "pelvis_center",
+  "pelvis_side",
+  "thigh_upper_l",
+  "thigh_lower_l",
+  "thigh_upper_r",
+  "thigh_lower_r"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": {
+  "hems_godot": [
+   [
+    0.083,
+    0.4,
+    0.113
+   ],
+   [
+    0.207,
+    0.4,
+    -0.005
+   ],
+   [
+    0.096,
+    0.4,
+    -0.143
+   ]
+  ],
+  "note": "front, side, back hem points (left leg) for SKIRT_HEMS / the floor lift; the legacy coat's are higher (0.525-0.585)"
+ },
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "cloth",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "stroud_blue",
+    "stroud_red",
+    "logwood_black"
+   ],
+   "default": "stroud_blue",
+   "pattern": null,
+   "bands": {
+    "axis": "x",
+    "from": "hem",
+    "list": {
+     "width": 0.016,
+     "color": "linen_white"
+    },
+    "rows_max": 3,
+    "row_width": 0.012,
+    "gap": 0.008,
+    "offset": 0.03,
+    "palette": [
+     "ribbon_red",
+     "ribbon_green",
+     "ribbon_yellow",
+     "ribbon_blue",
+     "ribbon_white",
+     "ribbon_black"
+    ],
+    "default": []
+   },
+   "palette_hex": {
+    "stroud_blue": "#1E2B4A",
+    "stroud_red": "#8A1C1F",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "turned-down band",
+   "role": "trim",
+   "fabric": "WOOL",
+   "palette": [
+    "stroud_blue",
+    "stroud_red",
+    "logwood_black"
+   ],
+   "default": "stroud_blue",
+   "pattern": null,
+   "bands": {
+    "axis": "y",
+    "from": "band's lower edge",
+    "list": {
+     "width": 0.016,
+     "color": "linen_white"
+    },
+    "rows_max": 0
+   },
+   "palette_hex": {
+    "stroud_blue": "#1E2B4A",
+    "stroud_red": "#8A1C1F",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 3044,
+    "verts": 1524,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "pelvis_center",
+     "pelvis_side",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 3044,
+  "verts": 1524,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0101
+  },
+  "glb_kb": 293.1
+ },
+ "budget": {
+  "tris_max": 3600
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "About two yards of broadcloth wrapped round the hips (Zeisberger, Loskiel [R1]); Jemison's had the list at top and bottom and the top quarter-yard turned down over the string [P4]; dress skirts were edged with ribbon [P2]. Game limit: it hangs to just below the knee; Jemison's reached halfway to the ankle.",
+ "sources": [
+  "R1",
+  "P4",
+  "P2"
+ ],
+ "aliases": [],
+ "tags": [
+  "woodlands",
+  "women"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": true,
+   "layer": "mid",
+   "groups": {
+    "hips": {
+     "n": 560,
+     "min": 0.0045,
+     "max": 0.0757,
+     "below_inner": 0,
+     "above_outer": 167,
+     "band": [
+      0.0025,
+      0.011
+     ]
+    },
+    "shins": {
+     "n": 48,
+     "min": 0.0226,
+     "max": 0.1006,
+     "below_inner": 0,
+     "above_outer": 48,
+     "band": [
+      0.0025,
+      0.012
+     ]
+    },
+    "thighs": {
+     "n": 818,
+     "min": 0.007,
+     "max": 0.1236,
+     "below_inner": 0,
+     "above_outer": 754,
+     "band": [
+      0.0025,
+      0.011
+     ]
+    },
+    "torso_lower": {
+     "n": 98,
+     "min": 0.0069,
+     "max": 0.0126,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.0055,
+      0.012
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/woodlands/ew_wrap_skirt_f.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_wrap_skirt_f.py.",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
+ "deform_limits": {
+  "ew_wrap_skirt_f": [
+   0.06,
+   0.138,
+   0.224,
+   6.6
+  ]
+ },
+ "edge_uv": {
+  "x": "distance from the hem, metres (list, then ribbon rows)",
+  "y": "distance from the turned-down band's lower edge (band) or the wrap edge (cloth), metres"
+ },
+ "coverage": {
+  "method": "rays from the skin: the normal and 4 rays tilted 25 deg must hit the garment (>= 99.5 % of samples), on the female base and the male fit",
+  "hidden": [],
+  "rejected_candidates": {
+   "pelvis_center": 0.863,
+   "pelvis_side": 0.96,
+   "thigh_upper_l": 0.876,
+   "thigh_lower_l": 0.655,
+   "thigh_upper_r": 0.894,
+   "thigh_lower_r": 0.669
+  },
+  "share": {
+   "abdomen_front": {
+    "normal": 0.171,
+    "cone": 0.086
+   },
+   "abdomen_side": {
+    "normal": 0.142,
+    "cone": 0.032
+   },
+   "abdomen_back": {
+    "normal": 0.101,
+    "cone": 0.003
+   },
+   "pelvis_center": {
+    "normal": 0.956,
+    "cone": 0.863
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 0.96
+   },
+   "thigh_upper_l": {
+    "normal": 0.922,
+    "cone": 0.876
+   },
+   "thigh_lower_l": {
+    "normal": 0.783,
+    "cone": 0.655
+   },
+   "shin_upper_l": {
+    "normal": 0.147,
+    "cone": 0.05
+   },
+   "thigh_upper_r": {
+    "normal": 0.934,
+    "cone": 0.894
+   },
+   "thigh_lower_r": {
+    "normal": 0.789,
+    "cone": 0.669
+   },
+   "shin_upper_r": {
+    "normal": 0.138,
+    "cone": 0.045
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 4.54,
+   "p05_mm": 7.32,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 2.65,
+   "p05_mm": 6.29,
+   "inside_skin": 0
+  }
+ }
+}

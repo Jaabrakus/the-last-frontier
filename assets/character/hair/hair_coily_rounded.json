@@ -1,0 +1,137 @@
+{
+ "id": "hair_coily_rounded",
+ "name": "Natural, rounded",
+ "description": "Afro-textured hair grown out and combed into a rounded shape.",
+ "kind": "hair",
+ "set": "hair",
+ "slot": "hair",
+ "alt_slots": [],
+ "layer": {
+  "default": 70
+ },
+ "glb": "res://assets/character/hair/hair_coily_rounded.glb",
+ "mesh": "hair_coily_rounded",
+ "surfaces": [
+  {
+   "surface": "strands",
+   "name": "hair_coily_rounded_tex"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [
+  "crown",
+  "sides",
+  "back"
+ ],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "hair",
+   "role": "hair",
+   "fabric": "FLAT",
+   "palette": [],
+   "default": null,
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {}
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "strands": {
+    "tris": 4832,
+    "verts": 6336,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "hair_back",
+     "hair_crown",
+     "hair_sides"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "spined",
+     "neck",
+     "heada",
+     "headb"
+    ]
+   }
+  },
+  "tris": 4832,
+  "verts": 6336,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0413,
+   "sex_head": 0.0413,
+   "face_breadth": 0.001,
+   "face_length": 0.0001,
+   "face_jaw_width": 0.0003,
+   "face_jaw_angle": 0.0004,
+   "face_chin_projection": 0.0,
+   "face_chin_width": 0.0,
+   "face_chin_height": 0.0,
+   "face_cheekbones": 0.0,
+   "face_midface": 0.0,
+   "face_cheek_fullness": 0.0003,
+   "face_prognathism": 0.0,
+   "face_brow_ridge": 0.0,
+   "face_eye_depth": 0.0,
+   "face_lid_crease": 0.0,
+   "face_lid_fold": 0.0,
+   "face_under_eye": 0.0,
+   "face_nasal_root": 0.0,
+   "face_nose_bridge": 0.0,
+   "face_nose_hump": 0.0,
+   "face_nose_width": 0.0,
+   "face_nose_length": 0.0,
+   "face_nose_tip": 0.0,
+   "face_nose_upturn": 0.0,
+   "face_lips_upper": 0.0,
+   "face_lips_lower": 0.0,
+   "hat_fit": 0.0232
+  },
+  "glb_kb": 1498.7
+ },
+ "budget": {
+  "tris_max": 10000
+ },
+ "evidence": "B",
+ "licence_note": null,
+ "history": "Natural hair grown out and combed, as described in period advertisements.",
+ "sources": [
+  "M15"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "any"
+ ],
+ "checks": {},
+ "generator": "tools/character/hair/hair_coily_rounded.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_coily_rounded.py.",
+ "hair": {
+  "queue": false,
+  "texture": "coily",
+  "strand_map": "res://assets/character/hair/tex/hair_atlas.png",
+  "builder": "hair v3 recipe",
+  "scalp_mask": "res://assets/character/hair/tex/hair_coily_rounded_scalp.png",
+  "edge_feather": 0.3
+ }
+}

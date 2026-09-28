@@ -1,0 +1,1080 @@
+{
+ "source": "six CC0 sound packs (Kenney; kheetor and rubberduck on OpenGameArt.org)",
+ "license": "CC0 1.0 Universal (public domain dedication, https://creativecommons.org/publicdomain/zero/1.0/); no attribution required (credited anyway)",
+ "approved_by_user": "2026-09-26 (see the staging folder's PROVENANCE.md)",
+ "generator": "tools/sfx/gathering_rec.py",
+ "note": "The files in this folder are the project's own mixes of these takes (plus procedural fills); the recordings themselves are not copied into the project.",
+ "packs": [
+  {
+   "key": "kenney_impact-sounds",
+   "title": "Impact Sounds 1.0",
+   "author": "Kenney (Kenney Vleugels, www.kenney.nl)",
+   "url": "https://kenney.nl/assets/impact-sounds",
+   "archive": "kenney_impact-sounds.zip",
+   "archive_sha256": "029d734af1582474..."
+  },
+  {
+   "key": "kenney_rpg-audio",
+   "title": "RPG Audio",
+   "author": "Kenney (Kenney Vleugels, www.kenney.nl)",
+   "url": "https://kenney.nl/assets/rpg-audio",
+   "archive": "kenney_rpg-audio.zip",
+   "archive_sha256": "6dbeaf8544da958d..."
+  },
+  {
+   "key": "kheetor_chop-tree-fall",
+   "title": "Tree chop, fall, thud",
+   "author": "kheetor",
+   "url": "https://opengameart.org/content/tree-chop-fall-thud",
+   "archive": "chop-tree-fall.ogg",
+   "archive_sha256": "21842dd004b46315..."
+  },
+  {
+   "key": "sfx_breaking_and_falling",
+   "title": "75 CC0 breaking / falling / hit sfx",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "archive": "sfx_breaking_and_falling.zip",
+   "archive_sha256": "e6ee04d91c5f4d30..."
+  },
+  {
+   "key": "100-CC0-wood-metal-SFX",
+   "title": "100 CC0 metal and wood SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "archive": "100-CC0-wood-metal-SFX.zip",
+   "archive_sha256": "be6eba63b03409ac..."
+  },
+  {
+   "key": "sfx_100_v2",
+   "title": "100 CC0 SFX #2",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-sfx-2",
+   "archive": "sfx_100_v2.zip",
+   "archive_sha256": "0fc61b4494e2e893..."
+  }
+ ],
+ "takes": [
+  {
+   "file": "sfx_breaking_and_falling/bfh1_falling_06.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "9950100a25a6771513d405be0d37e52a50837e12b2865a6c2a9f9622598736a6",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_hit_03.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "91ef5562417a631bdb306d3c70ec7d33a2d418f5266c1488695a993877af21f9",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_hit_05.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "c3e1a46dcf5dc0c15706f3333bfccd0b8d491aa197bc39274a6b5588b3da1ffd",
+   "used_by": [
+    "gather_rec_pick_rock_hard"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_hit_08.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "646d780521b035ad2f9865bf8f389c5ecaf895e373a0c50918a0bfc26002734e",
+   "used_by": [
+    "gather_rec_rock_depleted",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_hit_11.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "2afec5267c68aeef3ffc20edd9364f20035b51bb61a0a25e0d4f4ce2eb4b381d",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_rock_breaking_01.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "970cac3139e1530009ca87f8ee0dd800dc4da61917a5e62bdc83d475a9bf4da7",
+   "used_by": [
+    "gather_rec_rock_depleted",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_rock_breaking_02.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "3e06b794511f693b6aaca5eee1d47491bab74d814746a68de6c8bf4eec744ccc",
+   "used_by": [
+    "gather_rec_rock_depleted",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_rock_breaking_03.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "a4f7a3ccebff4e8211b6aa146b8ff708bdea1c4e41115ab3b8a0d0c33094d6ee",
+   "used_by": [
+    "gather_rec_rock_depleted",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_rock_falling_01.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "9e58d2d3302c1bad27267cef6a2b3b47bb636f49f77d8e4b986ac81a26e80d7b",
+   "used_by": [
+    "gather_rec_rock_depleted",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_rock_falling_02.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "c8421825c5e08e4bf4ed290232963aeffcf4e179c28d33a6714c5fb9704f799f",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_rock_falling_03.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "16080f9bc90924b0e4ede52922529e30e34e72af32a505b39bdfc5ebcbb9248c",
+   "used_by": [
+    "gather_rec_rock_depleted",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_rock_falling_04.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "a60fb182abebc50819d4794adbed365c940219307b713c3224d93b7f384635e9",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_rock_falling_05.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "5ccb5d99ae33341d9f80fe760174182f0d2d98477b8340ee51d3f7de31279693",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard",
+    "gather_rec_rock_depleted",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_rock_falling_07.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "66a659f0082ab3a282804a3ce5c42f096d41706fff1fa24a5328905fe41883fc",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_rock_falling_08.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "bb0f1bc082d00921eb08418eb7db4ce20ecadc4b0e4b58421e51f12b9dcbc2cb",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_rock_falling_09.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "3a85c1110c4c67837270ad78b8679a8afb48a1bad3ee6351ef4e360f28fa6096",
+   "used_by": [
+    "gather_rec_rock_depleted",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_rock_hit_01.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "a9c0d7e562bdcc7619bb100206305ac2300f9bb7e4533bdfbae46da4289fe994",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_wood_breaking_01.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "24e84b95c0fc94a1a5fb9e04edcdabbbfed987e787fcbd9c55c4651ced5c37f8",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_big",
+    "gather_rec_axe_chop_sapling",
+    "gather_rec_buck",
+    "gather_rec_tree_crack",
+    "gather_rec_tree_fall",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_wood_breaking_02.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "6ff0b54f0efd9e0c87b6bfb0870b79f2d4328080c70da6824110460fcc1872c2",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_big",
+    "gather_rec_axe_chop_sapling",
+    "gather_rec_buck",
+    "gather_rec_tree_crack",
+    "gather_rec_tree_fall",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_wood_breaking_03.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "0d230f703fe558b61e93cbd4d7cc6ebb5b73e752bcdd13f5c4347c013b405ca7",
+   "used_by": [
+    "gather_rec_tree_crack",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_wood_breaking_04.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "11b697d90021f7e1639bb26c61465aa9bc03838a7b605d917a638dd92ee40ce8",
+   "used_by": [
+    "gather_rec_tree_crack",
+    "gather_rec_tree_fall",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_wood_falling_01.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "36e5d8905268c641c3d391c10f0297b9c46ba30d3b551e24d59eafcf33643a10",
+   "used_by": [
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_wood_falling_02.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "8f72d144e2cd9058ee8e81ff6f27f936e5d33008b3580d6b6c02d58fa4268a59",
+   "used_by": [
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_wood_hit_01.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "841caeb101eeaebcb88afed9cd64db0de1b00c7f3b06835daefaabc95b970337",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_big",
+    "gather_rec_axe_chop_sapling",
+    "gather_rec_buck"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_wood_hit_02.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "16851c45e3d7add9f7ff8fe18d7b43e2d7d368b9bd1260d198127851b17af6d7",
+   "used_by": [
+    "gather_rec_axe_chop_big",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "sfx_breaking_and_falling/bfh1_wood_hit_03.ogg",
+   "pack": "sfx_breaking_and_falling",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0",
+   "sha256": "3b9f304e4de3a54624cfa9e2b2326cfe4c202d3e368dd899e7dacb0d0be78f57",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_sapling",
+    "gather_rec_buck"
+   ]
+  },
+  {
+   "file": "kenney_rpg-audio/Audio/chop.ogg",
+   "pack": "kenney_rpg-audio",
+   "author": "Kenney (Kenney Vleugels, www.kenney.nl)",
+   "url": "https://kenney.nl/assets/rpg-audio",
+   "license": "CC0 1.0",
+   "sha256": "d00c2b3c9fff07e376145c8c8c45c90e5084ec192f6ce0387db233f7b86f1486",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_big",
+    "gather_rec_axe_chop_sapling",
+    "gather_rec_buck"
+   ]
+  },
+  {
+   "file": "kheetor_chop-tree-fall/chop-tree-fall.ogg",
+   "pack": "kheetor_chop-tree-fall",
+   "author": "kheetor",
+   "url": "https://opengameart.org/content/tree-chop-fall-thud",
+   "license": "CC0 1.0",
+   "sha256": "21842dd004b46315a5d52be80997773421d8b1d3a0d473ddbcad388efd93b33a",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_big",
+    "gather_rec_buck",
+    "gather_rec_tree_crack",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "kenney_rpg-audio/Audio/creak1.ogg",
+   "pack": "kenney_rpg-audio",
+   "author": "Kenney (Kenney Vleugels, www.kenney.nl)",
+   "url": "https://kenney.nl/assets/rpg-audio",
+   "license": "CC0 1.0",
+   "sha256": "8a346186fd297254248cab8e8117060a52a5cf2a84f603153a762108550ea95e",
+   "used_by": [
+    "gather_rec_tree_crack"
+   ]
+  },
+  {
+   "file": "kenney_rpg-audio/Audio/creak2.ogg",
+   "pack": "kenney_rpg-audio",
+   "author": "Kenney (Kenney Vleugels, www.kenney.nl)",
+   "url": "https://kenney.nl/assets/rpg-audio",
+   "license": "CC0 1.0",
+   "sha256": "8a990afdc03aebb91d528f5385e2f95582dbfa8e2c12c71098ab01be9142294a",
+   "used_by": [
+    "gather_rec_tree_crack"
+   ]
+  },
+  {
+   "file": "kenney_rpg-audio/Audio/creak3.ogg",
+   "pack": "kenney_rpg-audio",
+   "author": "Kenney (Kenney Vleugels, www.kenney.nl)",
+   "url": "https://kenney.nl/assets/rpg-audio",
+   "license": "CC0 1.0",
+   "sha256": "f9638787f95004b9d2d06f8eff8e99d4e594c21b51947daf562856fbcec905d1",
+   "used_by": [
+    "gather_rec_tree_crack"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/hammer_02.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "0e4a3eac2ffd7bd7f3d7dea84df761bd2ef1dbe754199d16f11aa8dd5a668781",
+   "used_by": [
+    "gather_rec_pick_rock"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/hammer_03.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "98052d53c8a27747fe08cc0a7e0e7ff75a260bd6bea7b6de49968840dccda090",
+   "used_by": [
+    "gather_rec_pick_rock"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/hammer_04.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "7fd6d4ab5a7fe6e0993b99fe91010271548bd319a50237f16120a431040ae169",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/metal_hit_05.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "04e4d0926afd4bcd7d451884e0a74cea7c9661f56e211aeb8a4ee07bbccf4715",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard"
+   ]
+  },
+  {
+   "file": "sfx_100_v2/sfx100v2_footstep_01.ogg",
+   "pack": "sfx_100_v2",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-sfx-2",
+   "license": "CC0 1.0",
+   "sha256": "007a96c62d6c335df0d292bdc5cf44fef768b7e2f14378759d03673be6be7ec6",
+   "used_by": [
+    "gather_rec_tree_fall",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "sfx_100_v2/sfx100v2_footstep_02.ogg",
+   "pack": "sfx_100_v2",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-sfx-2",
+   "license": "CC0 1.0",
+   "sha256": "8b478a7245bbe358fcddaa5047f8f4e29c8eca52ff79c25d489b5f378747228c",
+   "used_by": [
+    "gather_rec_tree_fall",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "sfx_100_v2/sfx100v2_hit_02.ogg",
+   "pack": "sfx_100_v2",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-sfx-2",
+   "license": "CC0 1.0",
+   "sha256": "f75eaee9a0cea0f99e5d173a924c4ac72c865450c494794f9bfe48315461baea",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard"
+   ]
+  },
+  {
+   "file": "sfx_100_v2/sfx100v2_hit_03.ogg",
+   "pack": "sfx_100_v2",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-sfx-2",
+   "license": "CC0 1.0",
+   "sha256": "f44a40884dd13df80ef6bad1b8ca91a2566daaf9e03c25420ff018e4ba11e632",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard"
+   ]
+  },
+  {
+   "file": "sfx_100_v2/sfx100v2_stones_01.ogg",
+   "pack": "sfx_100_v2",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-sfx-2",
+   "license": "CC0 1.0",
+   "sha256": "20d293a892e1fa6330da2569065aa260a822198bddce2b183f8c11642e7deb4d",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_100_v2/sfx100v2_stones_02.ogg",
+   "pack": "sfx_100_v2",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-sfx-2",
+   "license": "CC0 1.0",
+   "sha256": "23f8c7335eb656ea759899946ed665712ec41f4572656f421f7f5652bea66279",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_100_v2/sfx100v2_stones_03.ogg",
+   "pack": "sfx_100_v2",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-sfx-2",
+   "license": "CC0 1.0",
+   "sha256": "94d7e0978fd90621d2d24e8ea33eefbae2933a434bb14c643cc12ea5175cefa9",
+   "used_by": [
+    "gather_rec_pick_rock",
+    "gather_rec_pick_rock_hard",
+    "gather_rec_rock_split"
+   ]
+  },
+  {
+   "file": "sfx_100_v2/sfx100v2_wood_01.ogg",
+   "pack": "sfx_100_v2",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-sfx-2",
+   "license": "CC0 1.0",
+   "sha256": "3d2f562125ccc5f4e5b2d547fac204025249acbe4ff31db721a64a639cf58fd6",
+   "used_by": [
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "sfx_100_v2/sfx100v2_wood_hit_01.ogg",
+   "pack": "sfx_100_v2",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-sfx-2",
+   "license": "CC0 1.0",
+   "sha256": "84abc80d93011d86f29bc55c10a023265ece0851d0784d1bf07c5990f08daeab",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_big",
+    "gather_rec_axe_chop_sapling",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "sfx_100_v2/sfx100v2_wood_hit_02.ogg",
+   "pack": "sfx_100_v2",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-sfx-2",
+   "license": "CC0 1.0",
+   "sha256": "7ff0c18fafb7d025addb5d3cb586444842d8281ca9ed265eb2ac7213fa754b8a",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_sapling",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "sfx_100_v2/sfx100v2_wood_hit_03.ogg",
+   "pack": "sfx_100_v2",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-sfx-2",
+   "license": "CC0 1.0",
+   "sha256": "268dddd7bee1961ef6ea0ab41972be6eaa45c2449aca6e53dab57ecd04c7de2a",
+   "used_by": [
+    "gather_rec_buck"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/wood_breaking_01.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "83a0e17e536a17897d5915e88c9e70d0be06d0a43bb3a38f44314ada46b06a3e",
+   "used_by": [
+    "gather_rec_tree_crack",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/wood_breaking_02.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "042e97ceaa551dd3fcccba0e9bdf1e8145133ac4d2ee0b0cbcd0ee698b7cb229",
+   "used_by": [
+    "gather_rec_tree_crack",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/wood_cracking_01.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "ee00fa26ec72a2bd05adc71a4edf6627db2adedc6f0416ef6788c4790c1d2724",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_big",
+    "gather_rec_axe_chop_sapling",
+    "gather_rec_buck",
+    "gather_rec_tree_crack",
+    "gather_rec_tree_fall",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/wood_cracking_02.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "128a798ebb92958c9bee5a71c420c3f61f59c241ecaca75f0bbde780bb086abd",
+   "used_by": [
+    "gather_rec_tree_crack",
+    "gather_rec_tree_fall",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/wood_cracking_03.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "9d0a3e8ee99fbf4e83472fcc26a48f834a6ac01c60769b9712e93f1e2a7f3116",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_big",
+    "gather_rec_axe_chop_sapling",
+    "gather_rec_buck",
+    "gather_rec_tree_crack",
+    "gather_rec_tree_fall",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/wood_cracking_04.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "9ac6d1ab3bce4a872bbde85fc1dc73f8243c1cfed95b0d135f3632be8b632e38",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_big",
+    "gather_rec_axe_chop_sapling",
+    "gather_rec_buck",
+    "gather_rec_tree_crack",
+    "gather_rec_tree_fall",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/wood_hammer_02.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "f3e8812f053d35d5ebbaec39c7d7136ccfcf4ad7b420beded1401c9aaca13625",
+   "used_by": [
+    "gather_rec_buck"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/wood_hit_01.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "cf3211d80094cd363e8e56906ad42a8baf10f31ef9e197f3f63464a957bade3a",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_big",
+    "gather_rec_axe_chop_sapling",
+    "gather_rec_buck"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/wood_hit_03.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "0f78a5cbe44d2ee45dfc1709f72af87bcbe5e3a8ad369b52535cfe6dbbd626a6",
+   "used_by": [
+    "gather_rec_buck"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/wood_hit_04.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "c7723f3c577cc6f46b091233fcb735016c6e15d462b371393baa4d265aef52b6",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_big",
+    "gather_rec_axe_chop_sapling",
+    "gather_rec_buck"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/wood_hit_06.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "6224beb74c930ac6b88358ced7c024b23a50d71acfe565e83cc29ffbe383676e",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_big",
+    "gather_rec_axe_chop_sapling",
+    "gather_rec_buck"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/wood_hit_08.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "b91720c949e065eabf8980beefe95bc1ede281224d834838c32a6753f2ad93a1",
+   "used_by": [
+    "gather_rec_axe_chop",
+    "gather_rec_axe_chop_big",
+    "gather_rec_tree_land"
+   ]
+  },
+  {
+   "file": "100-CC0-wood-metal-SFX/wood_hit_09.ogg",
+   "pack": "100-CC0-wood-metal-SFX",
+   "author": "rubberduck",
+   "url": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "license": "CC0 1.0",
+   "sha256": "7e90e5834792ea302ef767235b92862045b4075021c73bc2e0ee3f352bc5cdc1",
+   "used_by": [
+    "gather_rec_buck"
+   ]
+  }
+ ],
+ "outputs": {
+  "gather_rec_pick_rock": {
+   "files": [
+    "gather_rec_pick_rock_01.wav",
+    "gather_rec_pick_rock_02.wav",
+    "gather_rec_pick_rock_03.wav",
+    "gather_rec_pick_rock_04.wav",
+    "gather_rec_pick_rock_05.wav"
+   ],
+   "takes": [
+    "bfh1_falling_06",
+    "bfh1_hit_03",
+    "bfh1_hit_11",
+    "bfh1_rock_falling_02",
+    "bfh1_rock_falling_04",
+    "bfh1_rock_falling_05",
+    "bfh1_rock_falling_07",
+    "bfh1_rock_falling_08",
+    "bfh1_rock_hit_01",
+    "hammer_02",
+    "hammer_03",
+    "hammer_04",
+    "metal_hit_05",
+    "sfx100v2_hit_02",
+    "sfx100v2_hit_03",
+    "sfx100v2_stones_01",
+    "sfx100v2_stones_02",
+    "sfx100v2_stones_03"
+   ]
+  },
+  "gather_rec_pick_rock_hard": {
+   "files": [
+    "gather_rec_pick_rock_hard_01.wav",
+    "gather_rec_pick_rock_hard_02.wav",
+    "gather_rec_pick_rock_hard_03.wav",
+    "gather_rec_pick_rock_hard_04.wav"
+   ],
+   "takes": [
+    "bfh1_falling_06",
+    "bfh1_hit_03",
+    "bfh1_hit_05",
+    "bfh1_hit_11",
+    "bfh1_rock_falling_02",
+    "bfh1_rock_falling_04",
+    "bfh1_rock_falling_05",
+    "bfh1_rock_falling_07",
+    "bfh1_rock_falling_08",
+    "bfh1_rock_hit_01",
+    "hammer_04",
+    "metal_hit_05",
+    "sfx100v2_hit_02",
+    "sfx100v2_hit_03",
+    "sfx100v2_stones_01",
+    "sfx100v2_stones_02",
+    "sfx100v2_stones_03"
+   ]
+  },
+  "gather_rec_rock_split": {
+   "files": [
+    "gather_rec_rock_split_01.wav",
+    "gather_rec_rock_split_02.wav",
+    "gather_rec_rock_split_03.wav",
+    "gather_rec_rock_split_04.wav"
+   ],
+   "takes": [
+    "bfh1_falling_06",
+    "bfh1_hit_08",
+    "bfh1_rock_breaking_01",
+    "bfh1_rock_breaking_02",
+    "bfh1_rock_breaking_03",
+    "bfh1_rock_falling_01",
+    "bfh1_rock_falling_02",
+    "bfh1_rock_falling_03",
+    "bfh1_rock_falling_04",
+    "bfh1_rock_falling_05",
+    "bfh1_rock_falling_07",
+    "bfh1_rock_falling_08",
+    "bfh1_rock_falling_09",
+    "sfx100v2_stones_01",
+    "sfx100v2_stones_02",
+    "sfx100v2_stones_03"
+   ]
+  },
+  "gather_rec_rock_depleted": {
+   "files": [
+    "gather_rec_rock_depleted_01.wav",
+    "gather_rec_rock_depleted_02.wav",
+    "gather_rec_rock_depleted_03.wav"
+   ],
+   "takes": [
+    "bfh1_hit_08",
+    "bfh1_rock_breaking_01",
+    "bfh1_rock_breaking_02",
+    "bfh1_rock_breaking_03",
+    "bfh1_rock_falling_01",
+    "bfh1_rock_falling_03",
+    "bfh1_rock_falling_05",
+    "bfh1_rock_falling_09"
+   ]
+  },
+  "gather_rec_axe_chop": {
+   "files": [
+    "gather_rec_axe_chop_01.wav",
+    "gather_rec_axe_chop_02.wav",
+    "gather_rec_axe_chop_03.wav",
+    "gather_rec_axe_chop_04.wav",
+    "gather_rec_axe_chop_05.wav"
+   ],
+   "takes": [
+    "bfh1_wood_breaking_01",
+    "bfh1_wood_breaking_02",
+    "bfh1_wood_hit_01",
+    "bfh1_wood_hit_03",
+    "chop",
+    "chop-tree-fall",
+    "sfx100v2_wood_hit_01",
+    "sfx100v2_wood_hit_02",
+    "wood_cracking_01",
+    "wood_cracking_03",
+    "wood_cracking_04",
+    "wood_hit_01",
+    "wood_hit_04",
+    "wood_hit_06",
+    "wood_hit_08"
+   ]
+  },
+  "gather_rec_axe_chop_big": {
+   "files": [
+    "gather_rec_axe_chop_big_01.wav",
+    "gather_rec_axe_chop_big_02.wav",
+    "gather_rec_axe_chop_big_03.wav",
+    "gather_rec_axe_chop_big_04.wav"
+   ],
+   "takes": [
+    "bfh1_wood_breaking_01",
+    "bfh1_wood_breaking_02",
+    "bfh1_wood_hit_01",
+    "bfh1_wood_hit_02",
+    "chop",
+    "chop-tree-fall",
+    "sfx100v2_wood_hit_01",
+    "wood_cracking_01",
+    "wood_cracking_03",
+    "wood_cracking_04",
+    "wood_hit_01",
+    "wood_hit_04",
+    "wood_hit_06",
+    "wood_hit_08"
+   ]
+  },
+  "gather_rec_axe_chop_sapling": {
+   "files": [
+    "gather_rec_axe_chop_sapling_01.wav",
+    "gather_rec_axe_chop_sapling_02.wav",
+    "gather_rec_axe_chop_sapling_03.wav",
+    "gather_rec_axe_chop_sapling_04.wav"
+   ],
+   "takes": [
+    "bfh1_wood_breaking_01",
+    "bfh1_wood_breaking_02",
+    "bfh1_wood_hit_01",
+    "bfh1_wood_hit_03",
+    "chop",
+    "sfx100v2_wood_hit_01",
+    "sfx100v2_wood_hit_02",
+    "wood_cracking_01",
+    "wood_cracking_03",
+    "wood_cracking_04",
+    "wood_hit_01",
+    "wood_hit_04",
+    "wood_hit_06"
+   ]
+  },
+  "gather_rec_buck": {
+   "files": [
+    "gather_rec_buck_01.wav",
+    "gather_rec_buck_02.wav",
+    "gather_rec_buck_03.wav",
+    "gather_rec_buck_04.wav",
+    "gather_rec_buck_05.wav"
+   ],
+   "takes": [
+    "bfh1_wood_breaking_01",
+    "bfh1_wood_breaking_02",
+    "bfh1_wood_hit_01",
+    "bfh1_wood_hit_03",
+    "chop",
+    "chop-tree-fall",
+    "sfx100v2_wood_hit_03",
+    "wood_cracking_01",
+    "wood_cracking_03",
+    "wood_cracking_04",
+    "wood_hammer_02",
+    "wood_hit_01",
+    "wood_hit_03",
+    "wood_hit_04",
+    "wood_hit_06",
+    "wood_hit_09"
+   ]
+  },
+  "gather_rec_tree_crack": {
+   "files": [
+    "gather_rec_tree_crack_01.wav",
+    "gather_rec_tree_crack_02.wav",
+    "gather_rec_tree_crack_03.wav"
+   ],
+   "takes": [
+    "bfh1_wood_breaking_01",
+    "bfh1_wood_breaking_02",
+    "bfh1_wood_breaking_03",
+    "bfh1_wood_breaking_04",
+    "chop-tree-fall",
+    "creak1",
+    "creak2",
+    "creak3",
+    "wood_breaking_01",
+    "wood_breaking_02",
+    "wood_cracking_01",
+    "wood_cracking_02",
+    "wood_cracking_03",
+    "wood_cracking_04"
+   ]
+  },
+  "gather_rec_tree_fall": {
+   "files": [
+    "gather_rec_tree_fall_01.wav",
+    "gather_rec_tree_fall_02.wav",
+    "gather_rec_tree_fall_03.wav"
+   ],
+   "takes": [
+    "bfh1_wood_breaking_01",
+    "bfh1_wood_breaking_02",
+    "bfh1_wood_breaking_04",
+    "sfx100v2_footstep_01",
+    "sfx100v2_footstep_02",
+    "wood_cracking_01",
+    "wood_cracking_02",
+    "wood_cracking_03",
+    "wood_cracking_04"
+   ]
+  },
+  "gather_rec_tree_land": {
+   "files": [
+    "gather_rec_tree_land_01.wav",
+    "gather_rec_tree_land_02.wav",
+    "gather_rec_tree_land_03.wav"
+   ],
+   "takes": [
+    "bfh1_wood_breaking_01",
+    "bfh1_wood_breaking_02",
+    "bfh1_wood_breaking_03",
+    "bfh1_wood_breaking_04",
+    "bfh1_wood_falling_01",
+    "bfh1_wood_falling_02",
+    "bfh1_wood_hit_02",
+    "chop-tree-fall",
+    "sfx100v2_footstep_01",
+    "sfx100v2_footstep_02",
+    "sfx100v2_wood_01",
+    "sfx100v2_wood_hit_01",
+    "sfx100v2_wood_hit_02",
+    "wood_breaking_01",
+    "wood_breaking_02",
+    "wood_cracking_01",
+    "wood_cracking_02",
+    "wood_cracking_03",
+    "wood_cracking_04",
+    "wood_hit_08"
+   ]
+  }
+ }
+}

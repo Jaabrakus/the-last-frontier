@@ -1,0 +1,348 @@
+{
+ "id": "ew_leggings_f",
+ "name": "Wool leggings, knee-high",
+ "description": "Knee-high leggings of fine wool broadcloth with a narrow side flap, the edges bound in silk ribbon and white beads, gartered below the knee.",
+ "kind": "garment",
+ "set": "woodlands",
+ "slot": "legs.over",
+ "alt_slots": [],
+ "layer": {
+  "default": 30
+ },
+ "glb": "res://assets/character/garments/woodlands/ew_leggings_f.glb",
+ "mesh": "ew_leggings_f",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "ew_leggings_f"
+  }
+ ],
+ "occupies_regions": [
+  "shin_upper_l",
+  "shin_lower_l",
+  "ankle_l",
+  "shin_upper_r",
+  "shin_lower_r",
+  "ankle_r"
+ ],
+ "hides_regions": [
+  "shin_upper_l",
+  "shin_lower_l",
+  "shin_upper_r",
+  "shin_lower_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "cloth",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "stroud_blue",
+    "stroud_red",
+    "logwood_black"
+   ],
+   "default": "stroud_blue",
+   "pattern": null,
+   "bands": {
+    "axis": "y",
+    "from": "top edge",
+    "rows_max": 2,
+    "row_width": 0.006,
+    "gap": 0.003,
+    "palette": [
+     "ribbon_red",
+     "ribbon_green",
+     "ribbon_yellow",
+     "ribbon_blue",
+     "ribbon_white",
+     "ribbon_black",
+     "bead_white"
+    ],
+    "default": [
+     "ribbon_red"
+    ]
+   },
+   "palette_hex": {
+    "stroud_blue": "#1E2B4A",
+    "stroud_red": "#8A1C1F",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "flap",
+   "role": "trim",
+   "fabric": "WOOL",
+   "palette": [
+    "stroud_blue",
+    "stroud_red",
+    "logwood_black"
+   ],
+   "default": "stroud_blue",
+   "pattern": null,
+   "bands": {
+    "axis": "y",
+    "from": "flap edge",
+    "rows_max": 2,
+    "row_width": 0.005,
+    "gap": 0.002,
+    "palette": [
+     "ribbon_red",
+     "ribbon_green",
+     "ribbon_yellow",
+     "ribbon_blue",
+     "ribbon_white",
+     "ribbon_black",
+     "bead_white"
+    ],
+    "default": [
+     "ribbon_yellow",
+     "bead_white"
+    ]
+   },
+   "palette_hex": {
+    "stroud_blue": "#1E2B4A",
+    "stroud_red": "#8A1C1F",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "garters",
+   "role": "band",
+   "fabric": "KNIT",
+   "palette": [
+    "madder_red",
+    "stroud_blue",
+    "logwood_black"
+   ],
+   "default": "madder_red",
+   "pattern": {
+    "type": "beads",
+    "colors": [
+     "bead_white"
+    ],
+    "note": "white beads woven in"
+   },
+   "bands": null,
+   "palette_hex": {
+    "madder_red": "#8E2B21",
+    "stroud_blue": "#1E2B4A",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "KNIT"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 2400,
+    "verts": 1204,
+    "zones": [
+     0,
+     1,
+     2
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "foot_l",
+     "foot_r",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "l_upper_leg",
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "l_ball",
+     "r_upper_leg",
+     "r_knee",
+     "r_ankle",
+     "r_heel",
+     "r_ball"
+    ]
+   }
+  },
+  "tris": 2400,
+  "verts": 1204,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0017
+  },
+  "glb_kb": 257.6
+ },
+ "budget": {
+  "tris_max": 2200
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Knee-high or mid-calf, of blue or red fine cloth, the edge bound in silk and beads (Zeisberger, Loskiel [R1]); Jemison's reached from the knees into the mouth of the moccasins [P4].",
+ "sources": [
+  "R1",
+  "P4",
+  "P2"
+ ],
+ "aliases": [],
+ "tags": [
+  "woodlands",
+  "women"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": true,
+   "layer": "legwear",
+   "groups": {
+    "feet": {
+     "n": 106,
+     "min": 0.0182,
+     "max": 0.0226,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "shins": {
+     "n": 973,
+     "min": 0.0125,
+     "max": 0.0306,
+     "below_inner": 0,
+     "above_outer": 186,
+     "band": [
+      0.012,
+      0.019
+     ]
+    },
+    "thighs": {
+     "n": 125,
+     "min": 0.0129,
+     "max": 0.0296,
+     "below_inner": 0,
+     "above_outer": 22,
+     "band": [
+      0.012,
+      0.019
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/woodlands/ew_leggings_f.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_leggings_f.py.",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
+ "deform_limits": {
+  "ew_leggings_f": [
+   0.01,
+   0.01,
+   0.01,
+   4.0
+  ]
+ },
+ "edge_uv": {
+  "x": "distance from the lower hem (tube) or the flap's lower end, metres",
+  "y": "distance from the top edge (tube) or the flap's free edge (flap), metres"
+ },
+ "coverage": {
+  "method": "rays from the skin: the normal and 4 rays tilted 25 deg must hit the garment (>= 99.5 % of samples), on the female base and the male fit",
+  "hidden": [
+   "shin_upper_l",
+   "shin_lower_l",
+   "shin_upper_r",
+   "shin_lower_r"
+  ],
+  "rejected_candidates": {
+   "ankle_l": 0.949,
+   "ankle_r": 0.943
+  },
+  "share": {
+   "thigh_lower_l": {
+    "normal": 0.124,
+    "cone": 0.102
+   },
+   "shin_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_l": {
+    "normal": 1.0,
+    "cone": 0.949
+   },
+   "foot_l": {
+    "normal": 0.238,
+    "cone": 0.132
+   },
+   "thigh_lower_r": {
+    "normal": 0.102,
+    "cone": 0.081
+   },
+   "shin_upper_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_r": {
+    "normal": 1.0,
+    "cone": 0.943
+   },
+   "foot_r": {
+    "normal": 0.191,
+    "cone": 0.117
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 12.52,
+   "p05_mm": 13.4,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 12.48,
+   "p05_mm": 13.18,
+   "inside_skin": 0
+  }
+ }
+}

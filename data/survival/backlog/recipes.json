@@ -1,0 +1,541 @@
+{
+ "schema": "frontier.survival.recipes.backlog",
+ "version": 4,
+ "status": "DESIGN APPENDIX v3 (backlog): rows for milestones M3-M5 and 'post'. Not loaded by the game and not gated by the data test; a row moves into the live file, and under test, when its milestone starts. Rows may reference live ids.",
+ "design_doc": "Player_Animation_Project/graph_analysis/survival/survival_gdd.md",
+ "summary": "The other recipes.",
+ "id_rules": "Ids are stable strings (prefix.name). Never rename an id once saves exist; add an alias instead. Display names are separate and may change. An id is defined in exactly one place: the live file or the backlog.",
+ "milestones": {
+  "M1": "A winter night: fire, shelter, cold, hunger, sleep, time safety; the fort region only; one background; 1765",
+  "M2a": "A winter from the woods: living from the manor woods through the winter by your own hands (gathering, hides, sewing, snares, snowshoes, a half-faced camp, a hung cache, ice fishing); plain barter with the sutler, the trader, the garrison's soldiers, a farm family from German Flatts and an old hunter; credit and the fall outfit as options; the second background",
+  "M2b": "Learning from neighbours: lessons, watching, examining, quality standards, haggling, promises and loans",
+  "M3": "The year turns: the full almanac, seasons and weather content, the summer goal (bark and a cabin), fishing, frogs, ginseng, one played wage job; the fur cap and robe, leggings, carving, casting balls, the cache pit, char cloth and spruce beer",
+  "M4": "People: NPC schedules and tiers at the fort, standing, invitations, the soldiers and the lieutenant as mentors; Native characters only after the relevant nation's sign-off",
+  "M5": "The map: the Carry, the valley, the town and the hunting grounds, travel and camps, other markets and backgrounds",
+  "post": "After M5 and not yet planned: the 1757 and 1761 starts and their eras, detailed illnesses, thirst, potash, upstream canoe and bateau travel, the Proxy NPC tier, languages beyond English, French, Mohawk and Oneida"
+ },
+ "source_keys": {
+  "E": "graph_analysis/survival/research_economy_life.md, source list S# (E:S14 = source S14)",
+  "K": "graph_analysis/survival/research_survival_skills.md, numbered sources [#] (K:1 = source [1])",
+  "Y": "graph_analysis/survival/research_systems.md, section number (Y:3.2 = section 3.2)",
+  "C": "graph_analysis/customizer/costume_bible.md, section number",
+  "A": "Player_Animation_Project/blender_animation_index.csv (clip names and asset ids)",
+  "N": "graph_analysis/survival/survival_gdd.md, sources list (N:3 = source N3; N33 onward added in version 3)"
+ },
+ "basis_keys": {
+  "S": "sourced: checked against a primary source, a scholarly work or an institutional page; web summaries and popular pages do not qualify",
+  "H": "standard historiography (books in the GDD sources list); verify before quoting",
+  "H-regional": "true for one region's trade or society (named in the row); not yet checked for New York",
+  "M": "modern science or medicine sets the mechanic (period explanation may differ)",
+  "D": "design value for balance, or a figure resting on web summaries; not a checked historical record"
+ },
+ "recipes": [
+  {
+   "id": "rcp.charcloth",
+   "action": "fire.make_charcloth",
+   "inputs": {
+    "item.material.linen_scrap": 2
+   },
+   "outputs": {
+    "item.tinder.charcloth": 10
+   },
+   "tools": [
+    [
+     "item.tool.tin_box"
+    ]
+   ],
+   "station": "world.campfire:lit",
+   "knowledge": "know.charcloth",
+   "notes": "K:32",
+   "basis": "S",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.cordage_bast",
+   "action": "craft.cordage",
+   "inputs": {
+    "item.material.basswood_bast": 1
+   },
+   "outputs": {
+    "item.material.cordage": 3
+   },
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.gig",
+   "action": "craft.gig",
+   "inputs": {
+    "item.material.poles": 1
+   },
+   "outputs": {
+    "item.tool.gig": 1
+   },
+   "tools": [
+    [
+     "item.tool.knife"
+    ]
+   ],
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.torch_pine",
+   "action": "craft.torch",
+   "inputs": {
+    "item.material.pine_knot": 1
+   },
+   "outputs": {
+    "item.tool.torch": 1
+   },
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.torch_birch",
+   "action": "craft.torch",
+   "inputs": {
+    "item.tinder.birchbark": 2
+   },
+   "outputs": {
+    "item.tool.torch": 1
+   },
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.stretching_hoop",
+   "action": "craft.stretch_hoop",
+   "inputs": {
+    "item.material.cordage": 1
+   },
+   "outputs": {
+    "item.tool.stretching_hoop": 1
+   },
+   "tools": [
+    [
+     "item.tool.knife"
+    ]
+   ],
+   "notes": "Sapling hoop laced with bark or cordage (K:1).",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.sap_vessel_bark",
+   "action": "sugar.make_vessels",
+   "inputs": {
+    "item.material.bark_sheet": 1
+   },
+   "outputs": {
+    "item.tool.sap_vessel": 2
+   },
+   "tools": [
+    [
+     "item.tool.knife"
+    ]
+   ],
+   "notes": "Smith's camp made over a hundred two-gallon bark vessels (K:8.1).",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.sap_trough_wood",
+   "action": "sugar.make_vessels",
+   "inputs": {
+    "item.fuel.split_wood": 1
+   },
+   "outputs": {
+    "item.tool.sap_vessel": 2
+   },
+   "tools": [
+    [
+     "item.tool.hatchet",
+     "item.tool.axe"
+    ]
+   ],
+   "time_min": 40,
+   "notes": "Carved troughs when no stored bark [D].",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.jerky_bear",
+   "action": "preserve.jerk_scaffold",
+   "inputs": {
+    "item.food.bear_raw": 10
+   },
+   "outputs": {
+    "item.food.jerky": 4
+   },
+   "station": "world.drying_rack",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.smoked_eel",
+   "action": "preserve.smoke_fish",
+   "inputs": {
+    "item.food.eel_raw": 6
+   },
+   "outputs": {
+    "item.food.smoked_fish": 3
+   },
+   "station": "world.smoke_rack",
+   "notes": "Eels smoked and dried for winter (K:23).",
+   "basis": "S",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.salted_meat",
+   "action": "preserve.salt",
+   "inputs": {
+    "item.food.venison_raw": 20,
+    "item.material.salt": 3
+   },
+   "outputs": {
+    "item.food.salted_meat": 20
+   },
+   "tools": [
+    [
+     "item.tool.barrel"
+    ]
+   ],
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rcp.salted_fish",
+   "action": "preserve.salt",
+   "inputs": {
+    "item.food.fish_raw": 20,
+    "item.material.salt": 3
+   },
+   "outputs": {
+    "item.food.salted_fish": 20
+   },
+   "tools": [
+    [
+     "item.tool.barrel"
+    ]
+   ],
+   "notes": "Every family laid down shad salted (E:S52).",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rcp.bear_oil",
+   "action": "preserve.render_oil",
+   "inputs": {
+    "item.material.bear_fat": 10
+   },
+   "outputs": {
+    "item.food.bear_oil": 4
+   },
+   "tools": [
+    [
+     "item.tool.kettle_brass",
+     "item.tool.kettle_iron"
+    ]
+   ],
+   "station": "world.campfire:lit",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.parched_corn",
+   "action": "preserve.parch_corn",
+   "inputs": {
+    "item.food.dried_corn": 0.1
+   },
+   "outputs": {
+    "item.food.parched_corn": 5
+   },
+   "station": "world.campfire:lit",
+   "knowledge": "know.parched_corn",
+   "notes": "Parched in hot ashes and pounded (K:11).",
+   "basis": "S",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rcp.dried_berries",
+   "action": "preserve.dry_plants",
+   "inputs": {
+    "item.food.berries": 10
+   },
+   "outputs": {
+    "item.food.dried_berries": 1
+   },
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.dried_ginseng",
+   "action": "preserve.dry_plants",
+   "inputs": {
+    "item.forage.ginseng_fresh": 45
+   },
+   "outputs": {
+    "item.forage.ginseng_dried": 1
+   },
+   "notes": "About 3 lb fresh to 1 lb dried; badly dried roots ruined the 1750s market (E:3.8).",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.maple_sugar",
+   "action": "sugar.boil",
+   "inputs": {
+    "item.material.sap": 10,
+    "item.fuel.bundle": 2
+   },
+   "outputs": {
+    "item.food.maple_sugar": 1
+   },
+   "tools": [
+    [
+     "item.tool.kettle_brass",
+     "item.tool.kettle_iron"
+    ]
+   ],
+   "station": "world.sugar_camp",
+   "knowledge": "know.sugaring",
+   "notes": "About 10 gallons of sap per pound of sugar (E:S56, a web summary: verify).",
+   "basis": "H",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.spruce_beer",
+   "action": "brew.spruce_beer",
+   "inputs": {
+    "item.material.spruce_tips": 3,
+    "item.food.maple_sugar": 1
+   },
+   "outputs": {
+    "item.drink.spruce_beer": 1
+   },
+   "tools": [
+    [
+     "item.tool.kettle_brass",
+     "item.tool.kettle_iron"
+    ],
+    [
+     "item.tool.barrel"
+    ]
+   ],
+   "knowledge": "know.spruce_beer",
+   "notes": "K:12",
+   "basis": "S",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.broth",
+   "action": "cook.boil",
+   "inputs": {
+    "item.food.smallgame_raw": 1
+   },
+   "outputs": {
+    "item.drink.broth": 4
+   },
+   "tools": [
+    [
+     "item.tool.kettle_brass",
+     "item.tool.kettle_iron"
+    ]
+   ],
+   "station": "world.campfire:lit",
+   "notes": "Bones and scraps boiled long; any meat works (K:10.1).",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.herb_tea",
+   "action": "physick.herb_tea",
+   "inputs": {
+    "item.material.mint": 1
+   },
+   "outputs": {
+    "item.drink.herb_tea": 2
+   },
+   "tools": [
+    [
+     "item.tool.kettle_brass",
+     "item.tool.kettle_iron"
+    ]
+   ],
+   "station": "world.campfire:lit",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.conifer_tea",
+   "action": "physick.conifer_tea",
+   "inputs": {
+    "item.material.spruce_tips": 1
+   },
+   "outputs": {
+    "item.drink.conifer_tea": 2
+   },
+   "tools": [
+    [
+     "item.tool.kettle_brass",
+     "item.tool.kettle_iron"
+    ]
+   ],
+   "station": "world.campfire:lit",
+   "notes": "K:13",
+   "basis": "S",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.bark_tea",
+   "action": "physick.bark_tea",
+   "inputs": {
+    "item.material.oak_bark": 1
+   },
+   "outputs": {
+    "item.drink.bark_tea": 2
+   },
+   "tools": [
+    [
+     "item.tool.kettle_brass",
+     "item.tool.kettle_iron"
+    ]
+   ],
+   "station": "world.campfire:lit",
+   "notes": "K:8",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.poultice",
+   "action": "physick.poultice",
+   "inputs": {
+    "item.material.herbs": 1
+   },
+   "outputs": {
+    "item.remedy.poultice": 1
+   },
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.bandage",
+   "action": "craft.bandage",
+   "inputs": {
+    "item.material.linen_scrap": 1
+   },
+   "outputs": {
+    "item.remedy.bandage": 2
+   },
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.capot",
+   "action": "clothing.cut_capot",
+   "inputs": {
+    "item.trade.blanket": 1
+   },
+   "outputs": {
+    "item.cloth.capot": 1
+   },
+   "tools": [
+    [
+     "item.tool.needle_thread"
+    ]
+   ],
+   "notes": "Hooded coat cut from a blanket (K:4, K:27).",
+   "basis": "S",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.arrows",
+   "action": "craft.arrows",
+   "inputs": {
+    "item.material.arrow_shafts": 6,
+    "item.material.arrow_points": 6,
+    "item.material.feathers": 2,
+    "item.material.sinew": 1
+   },
+   "outputs": {
+    "item.ammo.arrow": 6
+   },
+   "tools": [
+    [
+     "item.tool.knife"
+    ]
+   ],
+   "basis": "D",
+   "status": "later",
+   "milestone": "M3"
+  },
+  {
+   "id": "rcp.potash",
+   "action": "potash.leach_boil",
+   "inputs": {
+    "item.material.ashes": 30,
+    "item.fuel.split_wood": 3
+   },
+   "outputs": {
+    "item.trade.potash": 1
+   },
+   "tools": [
+    [
+     "item.tool.kettle_iron"
+    ],
+    [
+     "item.tool.barrel"
+    ]
+   ],
+   "knowledge": "know.potash",
+   "notes": "Leach the ashes, boil the lye down to potash. Yield is a design value [D] (E:S36).",
+   "basis": "D",
+   "status": "later",
+   "milestone": "post"
+  },
+  {
+   "id": "rcp.melt_snow",
+   "action": "drink.melt_snow",
+   "inputs": {},
+   "outputs": {
+    "item.drink.water": 2
+   },
+   "tools": [
+    [
+     "item.tool.kettle_brass",
+     "item.tool.kettle_iron"
+    ]
+   ],
+   "station": "world.campfire:lit",
+   "basis": "D",
+   "status": "later",
+   "milestone": "post"
+  }
+ ]
+}

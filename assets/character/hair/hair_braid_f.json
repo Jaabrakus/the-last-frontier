@@ -1,0 +1,188 @@
+{
+ "id": "hair_braid_f",
+ "name": "Long braid, tied",
+ "description": "Long hair parted in the middle and worn in a single braid down the back, tied at the end.",
+ "kind": "hair",
+ "set": "hair",
+ "slot": "hair",
+ "alt_slots": [],
+ "layer": {
+  "default": 70
+ },
+ "glb": "res://assets/character/hair/hair_braid_f.glb",
+ "mesh": "hair_braid_f",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "hair_braid_f"
+  },
+  {
+   "surface": "strands",
+   "name": "hair_braid_f_tex"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [
+  "crown",
+  "sides",
+  "back",
+  "queue"
+ ],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "hair",
+   "role": "hair",
+   "fabric": "FLAT",
+   "palette": [],
+   "default": null,
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {}
+  },
+  {
+   "zone": 1,
+   "name": "tie",
+   "role": "ribbon",
+   "fabric": "FLAT",
+   "palette": [
+    "stroud_red",
+    "ribbon_red",
+    "ribbon_blue",
+    "leather_brown",
+    "logwood_black"
+   ],
+   "default": "stroud_red",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "stroud_red": "#8A1C1F",
+    "ribbon_red": "#B2202C",
+    "ribbon_blue": "#2D4F8C",
+    "leather_brown": "#5B3D26",
+    "logwood_black": "#1C1B20"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "strands": {
+    "tris": 11076,
+    "verts": 11676,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "hair_back",
+     "hair_crown",
+     "hair_queue",
+     "hair_sides"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "spined",
+     "neck",
+     "heada",
+     "headb",
+     "wrinklemaps"
+    ]
+   },
+   "main": {
+    "tris": 400,
+    "verts": 200,
+    "zones": [
+     1
+    ],
+    "regions": [
+     "hair_queue"
+    ],
+    "max_influences": 1,
+    "bones": [
+     "wrinklemaps"
+    ]
+   }
+  },
+  "tris": 11476,
+  "verts": 11876,
+  "surface_count": 2,
+  "shapes": {
+   "sex": 0.037,
+   "sex_head": 0.037,
+   "face_breadth": 0.0001,
+   "face_length": 0.0,
+   "face_jaw_width": 0.0005,
+   "face_jaw_angle": 0.0006,
+   "face_chin_projection": 0.0,
+   "face_chin_width": 0.0,
+   "face_chin_height": 0.0,
+   "face_cheekbones": 0.0,
+   "face_midface": 0.0,
+   "face_cheek_fullness": 0.0001,
+   "face_prognathism": 0.0,
+   "face_brow_ridge": 0.0,
+   "face_eye_depth": 0.0,
+   "face_lid_crease": 0.0,
+   "face_lid_fold": 0.0,
+   "face_under_eye": 0.0,
+   "face_nasal_root": 0.0,
+   "face_nose_bridge": 0.0,
+   "face_nose_hump": 0.0,
+   "face_nose_width": 0.0,
+   "face_nose_length": 0.0,
+   "face_nose_tip": 0.0,
+   "face_nose_upturn": 0.0,
+   "face_lips_upper": 0.0,
+   "face_lips_lower": 0.0,
+   "hat_fit": 0.0047
+  },
+  "glb_kb": 2598.7
+ },
+ "budget": {
+  "tris_max": 12000
+ },
+ "evidence": "B",
+ "licence_note": null,
+ "history": "A single long braid, tied: worn by Native women and by habitant women (grade B).",
+ "sources": [
+  "R1",
+  "R2"
+ ],
+ "aliases": [],
+ "tags": [
+  "women",
+  "woodlands",
+  "habitant"
+ ],
+ "checks": {},
+ "generator": "tools/character/hair/hair_braid_f.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_braid_f.py.",
+ "hair": {
+  "queue": true,
+  "pendulum_root_godot": [
+   0.0,
+   1.428,
+   -0.072
+  ],
+  "texture": "straight",
+  "part": "centre",
+  "strand_map": "res://assets/character/hair/tex/hair_atlas.png",
+  "builder": "hair v3 recipe",
+  "scalp_mask": "res://assets/character/hair/tex/hair_braid_f_scalp.png",
+  "edge_feather": 0.3
+ }
+}

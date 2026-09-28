@@ -1,0 +1,13 @@
+{
+ "rect": [
+  0.63725,
+  0.17837,
+  0.99752,
+  0.99214
+ ],
+ "note": "image space (x right, y down) of the MakeHuman head's UVs",
+ "source": [
+  "skins/young_caucasian_female/young_lightskinned_female_diffuse.png",
+  "skins/old_caucasian_female/old_lightskinned_female_diffuse.png"
+ ]
+}

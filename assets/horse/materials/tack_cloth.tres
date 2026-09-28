@@ -1,0 +1,15 @@
+[gd_resource type="StandardMaterial3D" load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/horse/textures/tack/poly_wool_herringbone_diffuse_1k.jpg" id="1_albedo"]
+[ext_resource type="Texture2D" path="res://assets/horse/textures/tack/poly_wool_herringbone_nor_gl_1k.jpg" id="2_normal"]
+
+[resource]
+resource_name = "tack_cloth"
+albedo_color = Color(0.86, 0.3, 0.25, 1)
+albedo_texture = ExtResource("1_albedo")
+roughness = 0.96
+metallic_specular = 0.3
+normal_enabled = true
+normal_scale = 1.3
+normal_texture = ExtResource("2_normal")
+texture_filter = 5

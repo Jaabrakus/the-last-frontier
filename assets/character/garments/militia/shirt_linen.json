@@ -1,0 +1,474 @@
+{
+ "id": "shirt_linen",
+ "name": "Shirt, linen or flannel",
+ "description": "Full-cut shirt with a short standing collar and narrow wristbands; white, unbleached or checked linen, or wool flannel for winter.",
+ "kind": "garment",
+ "set": "militia",
+ "slot": "shirt",
+ "alt_slots": [],
+ "layer": {
+  "default": 10
+ },
+ "glb": "res://assets/character/garments/militia/shirt_linen.glb",
+ "mesh": "shirt_linen",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "shirt_linen"
+  }
+ ],
+ "occupies_regions": [
+  "neck_lower",
+  "chest_upper_front",
+  "chest_upper_side",
+  "chest_upper_back",
+  "chest_front",
+  "chest_side",
+  "chest_back",
+  "abdomen_front",
+  "abdomen_side",
+  "abdomen_back",
+  "pelvis_center",
+  "pelvis_side",
+  "upper_arm_l",
+  "forearm_a_l",
+  "forearm_b_l",
+  "forearm_c_l",
+  "wrist_l",
+  "upper_arm_r",
+  "forearm_a_r",
+  "forearm_b_r",
+  "forearm_c_r"
+ ],
+ "hides_regions": [
+  "chest_upper_front",
+  "chest_upper_back",
+  "chest_front",
+  "chest_back",
+  "abdomen_front",
+  "abdomen_side",
+  "abdomen_back",
+  "upper_arm_l",
+  "forearm_a_l",
+  "forearm_b_l",
+  "forearm_c_l",
+  "forearm_a_r",
+  "forearm_b_r",
+  "forearm_c_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "shirt",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "linen_white",
+    "linen_unbleached",
+    "tow",
+    "check_blue",
+    "madder_red",
+    "slate_grey",
+    "indigo_mid"
+   ],
+   "default": "linen_unbleached",
+   "pattern": {
+    "options": [
+     "none",
+     "check",
+     "stripe"
+    ],
+    "default": "none",
+    "check": {
+     "colors": [
+      "check_blue",
+      "linen_white"
+     ],
+     "scale_m": 0.012
+    },
+    "stripe": {
+     "colors": [
+      "check_blue",
+      "linen_white"
+     ],
+     "scale_m": 0.006
+    }
+   },
+   "bands": null,
+   "palette_hex": {
+    "linen_white": "#E8E3D3",
+    "linen_unbleached": "#C8BA9A",
+    "tow": "#A99570",
+    "check_blue": "#2F4166",
+    "madder_red": "#8E2B21",
+    "slate_grey": "#6B6A66",
+    "indigo_mid": "#34507A"
+   },
+   "fabrics": [
+    "LIN",
+    "HES",
+    "WOOL"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 4464,
+    "verts": 2343,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "forearm_a_r",
+     "forearm_b_l",
+     "forearm_b_r",
+     "forearm_c_l",
+     "forearm_c_r",
+     "neck_lower",
+     "neck_upper",
+     "pelvis_center",
+     "pelvis_side",
+     "upper_arm_l",
+     "upper_arm_r",
+     "wrist_l",
+     "wrist_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "r_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "l_shoulder",
+     "l_elbow",
+     "l_wrist",
+     "r_clavicle",
+     "r_shoulder",
+     "r_elbow",
+     "r_wrist",
+     "neck",
+     "heada",
+     "headb",
+     "l_forarm_twist_a",
+     "l_forarm_twist_c",
+     "l_forarm_twist_b",
+     "r_forarm_twist_a",
+     "r_forarm_twist_c",
+     "r_forarm_twist_b",
+     "l_shoulder_twist_a",
+     "l_shoulder_twist_c",
+     "l_shoulder_twist_b",
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d"
+    ]
+   }
+  },
+  "tris": 4464,
+  "verts": 2343,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0156
+  },
+  "glb_kb": 385.8
+ },
+ "budget": {
+  "tris_max": 4600
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Every man's shirt was linen, from fine white to coarse check and tow; wool shirts in winter. Short collar, narrow wristbands (Fort Ticonderoga guidelines, 1758-59).",
+ "sources": [
+  "M3",
+  "M2",
+  "M15"
+ ],
+ "aliases": [],
+ "tags": [
+  "militia",
+  "frontier",
+  "regulars",
+  "women"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": false,
+   "layer": "base",
+   "groups": {
+    "arms_lower": {
+     "n": 444,
+     "min": -0.0012,
+     "max": 0.0094,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.0,
+      0.0095
+     ]
+    },
+    "arms_upper": {
+     "n": 537,
+     "min": 0.0038,
+     "max": 0.006,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.0,
+      0.0095
+     ]
+    },
+    "hips": {
+     "n": 436,
+     "min": -0.0062,
+     "max": 0.0053,
+     "below_inner": 3,
+     "above_outer": 283,
+     "band": [
+      0.0,
+      0.003
+     ]
+    },
+    "neck": {
+     "n": 295,
+     "min": -0.0183,
+     "max": 0.0056,
+     "below_inner": 15,
+     "above_outer": 0,
+     "band": [
+      0.0,
+      0.006
+     ]
+    },
+    "thighs": {
+     "n": 1,
+     "min": 0.0031,
+     "max": 0.0031,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.0,
+      0.003
+     ]
+    },
+    "torso_lower": {
+     "n": 134,
+     "min": 0.005,
+     "max": 0.005,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.0,
+      0.006
+     ]
+    },
+    "torso_upper": {
+     "n": 496,
+     "min": 0.0046,
+     "max": 0.006,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.0,
+      0.006
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/militia/shirt_linen.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/shirt_linen.py.",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "deform_limits": {
+  "shirt_linen": [
+   0.036,
+   0.055,
+   0.081,
+   36.0
+  ]
+ },
+ "tucked": true,
+ "coverage": {
+  "method": "rays from the skin (the region's vertices and triangle centres), female and male fit: hidden when every normal ray and 99.5 % of the rays tilted 28 deg hit the garment",
+  "hidden": [
+   "chest_upper_front",
+   "chest_upper_back",
+   "chest_front",
+   "chest_back",
+   "abdomen_front",
+   "abdomen_side",
+   "abdomen_back",
+   "upper_arm_l",
+   "forearm_a_l",
+   "forearm_b_l",
+   "forearm_c_l",
+   "forearm_a_r",
+   "forearm_b_r",
+   "forearm_c_r"
+  ],
+  "not_hidden_candidates": {
+   "neck_lower": 0.762,
+   "chest_upper_side": 0.996,
+   "chest_side": 0.997,
+   "upper_arm_r": 0.997
+  },
+  "share": {
+   "head": {
+    "normal": 0.008,
+    "cone": 0.0
+   },
+   "neck_upper": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "neck_lower": {
+    "normal": 0.774,
+    "cone": 0.762
+   },
+   "chest_upper_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_upper_side": {
+    "normal": 0.998,
+    "cone": 0.996
+   },
+   "chest_upper_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_side": {
+    "normal": 0.997,
+    "cone": 0.997
+   },
+   "chest_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "pelvis_center": {
+    "normal": 0.481,
+    "cone": 0.0
+   },
+   "pelvis_side": {
+    "normal": 0.65,
+    "cone": 0.0
+   },
+   "upper_arm_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_a_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_c_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "wrist_l": {
+    "normal": 0.373,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.059,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.998,
+    "cone": 0.997
+   },
+   "forearm_a_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_c_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "wrist_r": {
+    "normal": 0.232,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.054,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.007,
+    "cone": 0.0
+   },
+   "thigh_upper_r": {
+    "normal": 0.005,
+    "cone": 0.0
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 1.03,
+   "p05_mm": 4.38,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 0.01,
+   "p05_mm": 3.62,
+   "inside_skin": 0
+  }
+ }
+}

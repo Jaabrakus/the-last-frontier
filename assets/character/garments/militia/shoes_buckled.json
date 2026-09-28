@@ -1,0 +1,217 @@
+{
+ "id": "shoes_buckled",
+ "name": "Buckled shoes",
+ "description": "Waxed-calf shoes closed over the instep with a strap and a buckle.",
+ "kind": "garment",
+ "set": "militia",
+ "slot": "feet",
+ "alt_slots": [],
+ "layer": {
+  "default": 40
+ },
+ "glb": "res://assets/character/garments/militia/shoes_buckled.glb",
+ "mesh": "shoes_buckled",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "shoes_buckled"
+  }
+ ],
+ "occupies_regions": [
+  "foot_l",
+  "foot_r"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "leather",
+   "role": "leather",
+   "fabric": "LEA",
+   "palette": [
+    "leather_black",
+    "leather_brown"
+   ],
+   "default": "leather_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "leather_black": "#1D1B19",
+    "leather_brown": "#5B3D26"
+   },
+   "fabrics": [
+    "LEA"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "buckles",
+   "role": "metal",
+   "fabric": "MET",
+   "palette": [
+    "brass",
+    "pewter",
+    "silver"
+   ],
+   "default": "brass",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "brass": "#B58F4A",
+    "pewter": "#9A9C9A",
+    "silver": "#C8CACC"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": true
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1290,
+    "verts": 698,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "foot_l",
+     "foot_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "l_ball",
+     "r_knee",
+     "r_ankle",
+     "r_heel",
+     "r_ball"
+    ]
+   }
+  },
+  "tris": 1290,
+  "verts": 698,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0006
+  },
+  "glb_kb": 167.3
+ },
+ "budget": {
+  "tris_max": 1400
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Black waxed calf with brass, steel or silver buckles: what the Massachusetts provincials of 1758 and Rogers' rangers wore when not in moccasins.",
+ "sources": [
+  "M3",
+  "M2"
+ ],
+ "aliases": [],
+ "tags": [
+  "militia",
+  "frontier",
+  "regulars"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": false,
+   "layer": "outer",
+   "groups": {
+    "feet": {
+     "n": 633,
+     "min": 0.0013,
+     "max": 0.0196,
+     "below_inner": 5,
+     "above_outer": 118,
+     "band": [
+      0.004,
+      0.008
+     ]
+    },
+    "shins": {
+     "n": 65,
+     "min": -0.0218,
+     "max": 0.0284,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/militia/shoes_buckled.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/shoes_buckled.py.",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "deform_limits": {
+  "shoes_buckled": [
+   0.006,
+   0.006,
+   0.005,
+   2.6
+  ]
+ },
+ "coverage": {
+  "method": "rays from the skin (the region's vertices and triangle centres), female and male fit: hidden when every normal ray and 99.5 % of the rays tilted 28 deg hit the garment",
+  "hidden": [],
+  "not_hidden_candidates": {
+   "foot_l": 0.959,
+   "foot_r": 0.981
+  },
+  "share": {
+   "ankle_l": {
+    "normal": 0.161,
+    "cone": 0.0
+   },
+   "foot_l": {
+    "normal": 0.974,
+    "cone": 0.959
+   },
+   "ankle_r": {
+    "normal": 0.257,
+    "cone": 0.0
+   },
+   "foot_r": {
+    "normal": 0.992,
+    "cone": 0.981
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 1.15,
+   "p05_mm": 5.28,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 0.94,
+   "p05_mm": 5.3,
+   "inside_skin": 0
+  }
+ }
+}

@@ -1,0 +1,8 @@
+Frontier
+Copyright (c) [YEAR] [STUDIO OR OWNER LEGAL NAME]. All rights reserved.
+
+Use of this game is subject to its End User Licence Agreement (EULA.txt).
+
+NO AI TRAINING OR DATA MINING. The rights holder expressly reserves all rights in this game and its content against text and data mining, including under Article 4(3) of EU Directive 2019/790. No part of this game, its files or its content may be used to train, fine-tune, develop or improve any artificial intelligence or machine-learning model, system or dataset.
+
+Third-party material used in this game is listed, with its licences and credits, in CREDITS.md. Its own terms govern it, and nothing above claims rights in it or in public-domain works.

@@ -1,0 +1,447 @@
+{
+ "id": "br_belts_cartridge",
+ "name": "Cross belts with cartridge pouch",
+ "description": "Two buff leather shoulder belts crossed on the chest, with the black cartridge pouch at the right hip and the bayonet at the left.",
+ "kind": "garment",
+ "set": "regulars",
+ "slot": "accessories.shoulder",
+ "alt_slots": [],
+ "layer": {
+  "default": 60
+ },
+ "glb": "res://assets/character/garments/military/br_belts_cartridge.glb",
+ "mesh": "br_belts_cartridge",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "br_belts_cartridge"
+  }
+ ],
+ "occupies_regions": [
+  "neck_lower",
+  "chest_upper_front",
+  "chest_upper_back",
+  "chest_front",
+  "chest_back",
+  "abdomen_side"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {
+  "env40": "res://assets/character/garments/military/br_belts_cartridge.glb"
+ },
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "belts",
+   "role": "leather",
+   "fabric": "LEA",
+   "palette": [
+    "white_buff",
+    "buff",
+    "pale_buff"
+   ],
+   "default": "white_buff",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "white_buff": "#E6E0D0",
+    "buff": "#D2B98A",
+    "pale_buff": "#DCCAA0"
+   }
+  },
+  {
+   "zone": 2,
+   "name": "pouch and scabbard",
+   "role": "leather",
+   "fabric": "LEA",
+   "palette": [
+    "leather_black",
+    "leather_brown"
+   ],
+   "default": "leather_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "leather_black": "#1D1B19",
+    "leather_brown": "#5B3D26"
+   }
+  },
+  {
+   "zone": 3,
+   "name": "badge and fittings",
+   "role": "metal",
+   "fabric": "MET",
+   "palette": [
+    "brass",
+    "pewter",
+    "silver"
+   ],
+   "default": "brass",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "brass": "#B58F4A",
+    "pewter": "#9A9C9A",
+    "silver": "#C8CACC"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 3340,
+    "verts": 1907,
+    "zones": [
+     0,
+     2,
+     3
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_r",
+     "forearm_b_r",
+     "forearm_c_r",
+     "hand_r",
+     "neck_lower",
+     "neck_upper",
+     "pelvis_side",
+     "thigh_lower_l",
+     "thigh_upper_l",
+     "thigh_upper_r",
+     "upper_arm_l",
+     "upper_arm_r",
+     "wrist_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "r_clavicle",
+     "l_upper_leg_thigh_helper",
+     "l_shoulder_twist_a",
+     "r_shoulder_twist_a",
+     "l_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 3340,
+  "verts": 1907,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0224
+  },
+  "glb_kb": 311.8
+ },
+ "budget": {
+  "tris_max": 4000
+ },
+ "evidence": "B",
+ "licence_note": null,
+ "history": "The pouch belt over the left shoulder was standard; in the 1750s the bayonet usually hung from a waist belt, and the crossed pair became the rule in the 1760s. Belts were buff, whitened for parade.",
+ "sources": [
+  "P6",
+  "M1",
+  "M5"
+ ],
+ "aliases": [],
+ "tags": [
+  "regulars",
+  "british",
+  "env40"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": true,
+   "layer": "belts",
+   "groups": {
+    "arms_lower": {
+     "n": 40,
+     "min": 0.047,
+     "max": 0.1012,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "arms_upper": {
+     "n": 35,
+     "min": 0.0186,
+     "max": 0.0252,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "hands": {
+     "n": 21,
+     "min": 0.0708,
+     "max": 0.0968,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "hips": {
+     "n": 170,
+     "min": 0.0313,
+     "max": 0.1066,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "neck": {
+     "n": 194,
+     "min": 0.0193,
+     "max": 0.0417,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "thighs": {
+     "n": 210,
+     "min": 0.0351,
+     "max": 0.1312,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "torso_lower": {
+     "n": 308,
+     "min": 0.0255,
+     "max": 0.0524,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "torso_upper": {
+     "n": 929,
+     "min": 0.0196,
+     "max": 0.0534,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/military_br_belts_cartridge.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_br_belts_cartridge.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+ "envelope_variant": "env40: laid 4.5 mm over the regimental coats' outer form (military_lib._coat).",
+ "pieces_tris": {
+  "0_cloth": 1289,
+  "1_cloth": 1193,
+  "2_rigid": 420,
+  "3_rigid": 320,
+  "4_rigid": 88,
+  "5_rigid": 30
+ },
+ "coverage": {
+  "method": "rays from the skin: normal + 4 tilted 25 deg, female and male fit, within 12 cm (military_lib._base.coverage)",
+  "hidden": [],
+  "not_hidden_candidates": {},
+  "share": {
+   "head": {
+    "normal": 0.012,
+    "cone": 0.0
+   },
+   "neck_upper": {
+    "normal": 0.173,
+    "cone": 0.005
+   },
+   "neck_lower": {
+    "normal": 0.68,
+    "cone": 0.351
+   },
+   "chest_upper_front": {
+    "normal": 0.778,
+    "cone": 0.385
+   },
+   "chest_upper_side": {
+    "normal": 0.286,
+    "cone": 0.168
+   },
+   "chest_upper_back": {
+    "normal": 0.47,
+    "cone": 0.31
+   },
+   "chest_front": {
+    "normal": 0.366,
+    "cone": 0.193
+   },
+   "chest_side": {
+    "normal": 0.212,
+    "cone": 0.061
+   },
+   "chest_back": {
+    "normal": 0.358,
+    "cone": 0.163
+   },
+   "abdomen_side": {
+    "normal": 0.309,
+    "cone": 0.078
+   },
+   "abdomen_back": {
+    "normal": 0.199,
+    "cone": 0.063
+   },
+   "pelvis_side": {
+    "normal": 0.133,
+    "cone": 0.049
+   },
+   "upper_arm_l": {
+    "normal": 0.018,
+    "cone": 0.002
+   },
+   "forearm_a_l": {
+    "normal": 0.033,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.019,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.049,
+    "cone": 0.0
+   },
+   "forearm_b_r": {
+    "normal": 0.09,
+    "cone": 0.0
+   },
+   "forearm_c_r": {
+    "normal": 0.068,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.069,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.017,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.032,
+    "cone": 0.0
+   },
+   "thigh_lower_l": {
+    "normal": 0.009,
+    "cone": 0.0
+   },
+   "thigh_upper_r": {
+    "normal": 0.09,
+    "cone": 0.033
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 18.62,
+   "p05_mm": 24.4,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 17.6,
+   "p05_mm": 23.92,
+   "inside_skin": 0
+  }
+ },
+ "deform_limits": {
+  "br_belts_cartridge": [
+   0.005,
+   0.005,
+   0.002,
+   2.2
+  ]
+ },
+ "deform_class": {
+  "class": "strap",
+  "legacy_limit": [
+   0.005,
+   0.005,
+   0.0,
+   2.0
+  ]
+ },
+ "deform_scan": {
+  "female": [
+   0.0,
+   0.0,
+   0.0,
+   1.71
+  ],
+  "male": [
+   0.0,
+   0.0,
+   0.0,
+   1.76
+  ],
+  "worst": [
+   0.0,
+   0.0,
+   0.0,
+   1.76
+  ],
+  "limit": [
+   0.005,
+   0.005,
+   0.002,
+   2.2
+  ],
+  "legacy_class": "strap",
+  "legacy_limit": [
+   0.005,
+   0.005,
+   0.0,
+   2.0
+  ],
+  "within_legacy_class": true,
+  "scanned": "2026-09-24"
+ }
+}

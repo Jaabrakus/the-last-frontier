@@ -1,0 +1,173 @@
+{
+ "id": "ew_armbands",
+ "name": "Silver arm bands",
+ "description": "A pair of broad silver bands worn on the upper arms above the elbows, over the shirt sleeves or on the bare arm.",
+ "kind": "garment",
+ "set": "woodlands",
+ "slot": "accessories.arms",
+ "alt_slots": [],
+ "layer": {
+  "default": 85
+ },
+ "glb": "res://assets/character/garments/woodlands/ew_armbands.glb",
+ "mesh": "ew_armbands",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "ew_armbands"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "bands",
+   "role": "metal",
+   "fabric": "MET",
+   "palette": [
+    "silver",
+    "pewter",
+    "brass"
+   ],
+   "default": "silver",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "silver": "#C8CACC",
+    "pewter": "#9A9C9A",
+    "brass": "#B58F4A"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": true
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 896,
+    "verts": 448,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "upper_arm_l",
+     "upper_arm_r"
+    ],
+    "max_influences": 1,
+    "bones": [
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_d"
+    ]
+   }
+  },
+  "tris": 896,
+  "verts": 448,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0041
+  },
+  "glb_kb": 122.4
+ },
+ "budget": {
+  "tris_max": 1000
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Silver arm bands above and below the elbow were widely worn (Smith [P1], Heckewelder [P2], Jones [R2]; Six Nations silverwork [M11]).",
+ "sources": [
+  "P1",
+  "P2",
+  "R2",
+  "M11"
+ ],
+ "aliases": [],
+ "tags": [
+  "woodlands",
+  "men",
+  "women"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": true,
+   "layer": "ornaments",
+   "groups": {
+    "arms_upper": {
+     "n": 448,
+     "min": 0.0092,
+     "max": 0.0109,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/woodlands/ew_armbands.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_armbands.py.",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
+ "deform_limits": {
+  "ew_armbands": [
+   0.01,
+   0.01,
+   0.01,
+   4.0
+  ]
+ },
+ "coverage": {
+  "method": "rays from the skin: the normal and 4 rays tilted 25 deg must hit the garment (>= 99.5 % of samples), on the female base and the male fit",
+  "hidden": [],
+  "rejected_candidates": {},
+  "share": {
+   "chest_upper_side": {
+    "normal": 0.005,
+    "cone": 0.0
+   },
+   "chest_side": {
+    "normal": 0.022,
+    "cone": 0.0
+   },
+   "upper_arm_l": {
+    "normal": 0.085,
+    "cone": 0.051
+   },
+   "upper_arm_r": {
+    "normal": 0.087,
+    "cone": 0.054
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 9.2,
+   "p05_mm": 9.21,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 7.75,
+   "p05_mm": 8.99,
+   "inside_skin": 0
+  }
+ }
+}

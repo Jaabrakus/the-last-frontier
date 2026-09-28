@@ -1,0 +1,210 @@
+{
+ "id": "neckerchief",
+ "name": "Neckerchief",
+ "description": "A silk or linen handkerchief folded into a band, tied round the neck with the knot in front.",
+ "kind": "garment",
+ "set": "militia",
+ "slot": "accessories.neck",
+ "alt_slots": [],
+ "layer": {
+  "default": 30
+ },
+ "glb": "res://assets/character/garments/militia/neckerchief.glb",
+ "mesh": "neckerchief",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "neckerchief"
+  }
+ ],
+ "occupies_regions": [
+  "neck_lower"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "kerchief",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "logwood_black",
+    "linen_white",
+    "check_blue",
+    "madder_red",
+    "indigo_mid"
+   ],
+   "default": "logwood_black",
+   "pattern": {
+    "options": [
+     "none",
+     "check",
+     "stripe"
+    ],
+    "default": "none",
+    "check": {
+     "colors": [
+      "check_blue",
+      "linen_white"
+     ],
+     "scale_m": 0.01
+    }
+   },
+   "bands": null,
+   "palette_hex": {
+    "logwood_black": "#1C1B20",
+    "linen_white": "#E8E3D3",
+    "check_blue": "#2F4166",
+    "madder_red": "#8E2B21",
+    "indigo_mid": "#34507A"
+   },
+   "fabrics": [
+    "LIN",
+    "FLAT"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 641,
+    "verts": 397,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "neck_lower",
+     "neck_upper"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "r_clavicle",
+     "neck",
+     "heada",
+     "headb",
+     "l_shoulder_twist_a",
+     "r_shoulder_twist_a"
+    ]
+   }
+  },
+  "tris": 641,
+  "verts": 397,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0134
+  },
+  "glb_kb": 120.4
+ },
+ "budget": {
+  "tris_max": 900
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Black silk and checked linen handkerchiefs were everyday neckwear; worn instead of a stock.",
+ "sources": [
+  "R20",
+  "M3",
+  "M15"
+ ],
+ "aliases": [],
+ "tags": [
+  "militia",
+  "frontier",
+  "women"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": true,
+   "layer": "legwear",
+   "groups": {
+    "neck": {
+     "n": 318,
+     "min": -0.0238,
+     "max": 0.0281,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "torso_upper": {
+     "n": 79,
+     "min": -0.0166,
+     "max": 0.0165,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/militia/neckerchief.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/neckerchief.py.",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "deform_limits": {
+  "neckerchief": [
+   0.005,
+   0.005,
+   0.005,
+   2.2
+  ]
+ },
+ "coverage": {
+  "method": "rays from the skin (the region's vertices and triangle centres), female and male fit: hidden when every normal ray and 99.5 % of the rays tilted 28 deg hit the garment",
+  "hidden": [],
+  "not_hidden_candidates": {},
+  "share": {
+   "head": {
+    "normal": 0.004,
+    "cone": 0.0
+   },
+   "neck_lower": {
+    "normal": 0.38,
+    "cone": 0.0
+   },
+   "chest_upper_front": {
+    "normal": 0.068,
+    "cone": 0.0
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 1.08,
+   "p05_mm": 2.65,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 0.94,
+   "p05_mm": 2.57,
+   "inside_skin": 0
+  }
+ }
+}

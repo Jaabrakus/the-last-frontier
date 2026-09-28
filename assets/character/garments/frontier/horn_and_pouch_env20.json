@@ -1,0 +1,50 @@
+{
+ "variant_of": "horn_and_pouch",
+ "envelope": "env20",
+ "glb": "res://assets/character/garments/frontier/horn_and_pouch_env20.glb",
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1456,
+    "verts": 738,
+    "zones": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "neck_lower",
+     "neck_upper",
+     "pelvis_side",
+     "thigh_upper_l"
+    ],
+    "max_influences": 3,
+    "bones": [
+     "pelvis",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "r_clavicle"
+    ]
+   }
+  },
+  "tris": 1456,
+  "verts": 738,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0198
+  }
+ },
+ "deform_limits": {}
+}

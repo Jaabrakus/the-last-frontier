@@ -1,0 +1,137 @@
+{
+ "id": "hair_bun_low",
+ "name": "Low bun",
+ "description": "Long hair parted in the middle, drawn back smoothly and gathered into a bun at the nape.",
+ "kind": "hair",
+ "set": "hair",
+ "slot": "hair",
+ "alt_slots": [],
+ "layer": {
+  "default": 70
+ },
+ "glb": "res://assets/character/hair/hair_bun_low.glb",
+ "mesh": "hair_bun_low",
+ "surfaces": [
+  {
+   "surface": "strands",
+   "name": "hair_bun_low_tex"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [
+  "crown",
+  "sides",
+  "back"
+ ],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "hair",
+   "role": "hair",
+   "fabric": "FLAT",
+   "palette": [],
+   "default": null,
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {}
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "strands": {
+    "tris": 12858,
+    "verts": 13444,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "hair_back",
+     "hair_crown",
+     "hair_sides"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "spined",
+     "neck",
+     "heada",
+     "headb"
+    ]
+   }
+  },
+  "tris": 12858,
+  "verts": 13444,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0528,
+   "sex_head": 0.0528,
+   "face_breadth": 0.0001,
+   "face_length": 0.0,
+   "face_jaw_width": 0.0004,
+   "face_jaw_angle": 0.0004,
+   "face_chin_projection": 0.0,
+   "face_chin_width": 0.0,
+   "face_chin_height": 0.0,
+   "face_cheekbones": 0.0,
+   "face_midface": 0.0,
+   "face_cheek_fullness": 0.0,
+   "face_prognathism": 0.0,
+   "face_brow_ridge": 0.0,
+   "face_eye_depth": 0.0,
+   "face_lid_crease": 0.0,
+   "face_lid_fold": 0.0,
+   "face_under_eye": 0.0,
+   "face_nasal_root": 0.0,
+   "face_nose_bridge": 0.0,
+   "face_nose_hump": 0.0,
+   "face_nose_width": 0.0,
+   "face_nose_length": 0.0,
+   "face_nose_tip": 0.0,
+   "face_nose_upturn": 0.0,
+   "face_lips_upper": 0.0,
+   "face_lips_lower": 0.0,
+   "hat_fit": 0.0048
+  },
+  "glb_kb": 2795.9
+ },
+ "budget": {
+  "tris_max": 13500
+ },
+ "evidence": "B",
+ "licence_note": null,
+ "history": "Long hair gathered at the nape: worn in many forms across Europe, Asia and the colonies.",
+ "sources": [
+  "R13"
+ ],
+ "aliases": [],
+ "tags": [
+  "women",
+  "any"
+ ],
+ "checks": {},
+ "generator": "tools/character/hair/hair_bun_low.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_bun_low.py.",
+ "hair": {
+  "queue": false,
+  "texture": "straight",
+  "part": "centre",
+  "strand_map": "res://assets/character/hair/tex/hair_atlas.png",
+  "builder": "hair v3 recipe",
+  "scalp_mask": "res://assets/character/hair/tex/hair_bun_low_scalp.png",
+  "edge_feather": 0.3
+ }
+}

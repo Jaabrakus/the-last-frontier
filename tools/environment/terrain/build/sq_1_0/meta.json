@@ -1,0 +1,65 @@
+{
+ "N": 833,
+ "half": 416,
+ "chunk": 64,
+ "core": [
+  -32.0,
+  -184.0,
+  64.0,
+  216.0,
+  0.25
+ ],
+ "grass_cells": 104,
+ "core_size": [
+  0,
+  0
+ ],
+ "grass_h_scale": 0.8,
+ "macro_size": 256,
+ "square": [
+  1,
+  0
+ ],
+ "origin": [
+  832,
+  0
+ ],
+ "type": "open_land",
+ "built": [
+  [
+   0,
+   0
+  ],
+  [
+   1,
+   0
+  ]
+ ],
+ "river": {
+  "x0": 832.0,
+  "bed": 5.0,
+  "bank": 14.0
+ },
+ "stats": {
+  "height_min": -9.147665037549926,
+  "height_max": 34.79381483604806,
+  "slope_max_deg": 85.82058574205425,
+  "slope_p99_deg": 22.89489786940684,
+  "flat_samples": 0,
+  "dry_threshold": 0.06042306851704669,
+  "dry_share_clearing": 0.0,
+  "forest_share": 0.047301513642671954,
+  "layer_share": [
+   0.4841103612174427,
+   0.44643745733959234,
+   0.0,
+   0.018884134492727037,
+   0.04629159720041956,
+   0.004276449749815616
+  ],
+  "dirt_overlay_cells": 12355,
+  "stone_overlay_cells": 1937,
+  "grass_cells_empty_share": 0.0034208579881656806,
+  "grass_cells_mean_max": 0.9909643665158371
+ }
+}

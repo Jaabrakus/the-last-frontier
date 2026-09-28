@@ -1,0 +1,166 @@
+{
+ "format": "frontier-gathering",
+ "version": 1,
+ "summary": "Gathering: felling trees and bucking them into logs with the felling axe, breaking stone from outcrops and boulders with the mattock, and the Woodcutting, Mining and Building skills that grow from it (scripts/gathering/). Every number here is a design value (basis D) and tunable.",
+ "provenance": "The strokes play clips of animations_extra/Actor_B_from_A.res, retargeted from Actor_A to Actor_B; every clip keeps its native_asset_id. The tool models, the stump, the falling tree and the items are the project's own.",
+ "skills": {
+  "woodcutting": {
+   "name": "Woodcutting",
+   "summary": "Felling, limbing and bucking with the axe; cutting saplings.",
+   "survival_skill": "woodcraft",
+   "survival_note": "When the survival rules run in the game, Woodcutting points also count as survival Woodcraft practice (skills.json woodcraft covers felling). Not wired yet: SurvivalCore is not in the game.",
+   "at_100": {"power": 1.8, "speed": 1.25, "yield": 1.0},
+   "xp": {"stroke": 0.03, "felled_per_m": 1.5, "felled_min": 0.3, "log": 0.08, "sapling": 0.1, "limbed": 0.15},
+   "tiers": {
+    "apprentice": "Trees fall where you mean them to.",
+    "journeyman": "Clean cuts: fewer logs split or check when you buck the trunk.",
+    "adept": "A steady rhythm: the axe comes round quicker.",
+    "master": "A master axeman: a tree a man could not fell in an hour comes down in minutes."
+   }
+  },
+  "mining": {
+   "name": "Mining",
+   "summary": "Breaking stone from outcrops and boulders with the mattock; finding chert (flint) in the limestone.",
+   "survival_skill": "",
+   "survival_note": "Stone and chert are M3-M5 resources in survival_gdd.md section 11; the survival roster has no stone skill yet.",
+   "at_100": {"power": 1.8, "speed": 1.25, "yield": 1.0},
+   "xp": {"strike": 0.04, "stone": 0.1, "flint": 0.25, "exhausted": 0.4},
+   "tiers": {
+    "apprentice": "You read the bedding of the stone: more comes away with each piece.",
+    "journeyman": "You know chert when the mattock turns it up.",
+    "adept": "A steady rhythm: the mattock comes round quicker.",
+    "master": "You can split a boulder where you choose."
+   }
+  },
+  "building": {
+   "name": "Building",
+   "summary": "Raising walls, cabins and stockades from the logs and stone you gather (build mode, B: scripts/building/). Each piece built gives xp.piece plus xp.log per log and xp.stone per stone it cost; the skill raises what taking a piece down gives back (yield: half the cost at Novice to three quarters at Master, data/building/building.json take_down).",
+   "survival_skill": "woodcraft",
+   "at_100": {"power": 1.5, "speed": 1.3, "yield": 1.0},
+   "xp": {"piece": 0.3, "log": 0.08, "stone": 0.05},
+   "tiers": {
+    "apprentice": "Your notches hold: corners go up square.",
+    "journeyman": "You can lay out a cabin and a chimney.",
+    "adept": "Walls go up quicker under your hand.",
+    "master": "A master builder: a blockhouse is within your reach."
+   }
+  }
+ },
+ "tools": {
+  "felling_axe": {
+   "name": "Felling Axe",
+   "summary": "An American felling axe of the 1750s-60s: a heavy poll behind the eye, a flared bit about 11 cm wide, about 1.8 kg of iron and steel on a straight hickory haft of about 86 cm.",
+   "survival_item": "item.tool.axe",
+   "skill": "woodcutting",
+   "works": ["tree", "sapling", "trunk"],
+   "key": "KEY_7",
+   "haft_m": 0.86,
+   "carry_grip_m": 0.46,
+   "kg": 2.3
+  },
+  "mattock": {
+   "name": "Mattock",
+   "summary": "A pick-mattock (grubbing hoe): a pointed pick on one side of the eye and a broad adze-like blade on the other, on a straight haft of about 86 cm; the settler's tool for grubbing stumps and breaking stone.",
+   "survival_item": "item.tool.mattock",
+   "skill": "mining",
+   "works": ["rock"],
+   "key": "KEY_8",
+   "haft_m": 0.86,
+   "carry_grip_m": 0.46,
+   "kg": 2.8
+  }
+ },
+ "stone_tools": {
+  "stone_axe": {"name": "Stone Axe", "power": 0.45, "kg": 1.6, "stands_for": "felling_axe",
+   "summary": "A chert head knapped to a thick wedge, ground at the bit and lashed into a split haft (the start with nothing: made at the knapping stone). It fells trees and cuts saplings as the felling axe does, at about 45% of a steel axe's bite: more strokes for the same tree. The felling axe's key and swings; it is drawn as its own model."}
+ },
+ "items": {
+  "log": {"name": "Log", "survival_item": "item.wood.log", "summary": "An 8-foot (2.4 m) length of trunk, bucked from a felled tree."},
+  "firewood": {"name": "Firewood", "survival_item": "item.fuel.bundle", "summary": "A bundle of limbs and split top wood."},
+  "branches": {"name": "Branches", "survival_item": "item.fuel.kindling", "summary": "Small limbs and twigs: kindling, brush and boughs."},
+  "pole": {"name": "Pole", "survival_item": "item.wood.pole", "summary": "A sapling trimmed to a straight pole (rafters, rails, a lean-to)."},
+  "stone": {"name": "Stone", "survival_item": "item.stone.fieldstone", "summary": "A piece of building stone (a hearth, a chimney, a foundation)."},
+  "flint": {"name": "Flint", "survival_item": "item.tool.flint", "summary": "A nodule of chert: strikes fire on steel and can be knapped."}
+ },
+ "carry": {
+  "point": "tool_loop",
+  "point_name": "Pack tool loop",
+  "bone": "spined",
+  "pose_clip": "machete-draw--idle^grab--part",
+  "note": "The tool rides head down in a loop on the right of the pack, its haft up behind the right shoulder, exactly where the hand holds it at the grab of the draw clip (the draw's last frame; GatherTools computes the placement from the clip). Drawn by GatherTools, not SlingRig."
+ },
+ "clips": {
+  "library": "res://animations_extra/Actor_B_from_A.res",
+  "draw_grab": "machete-draw--idle^grab--part",
+  "draw_out": "machete-draw--grab^idle--part",
+  "stow_place": "machete-stow--place^idle--part",
+  "carry": "machete-draw--grab^idle--part",
+  "swings": {
+   "side": {"intro": "atk-pipe-2-side-swing-hit-intro", "hit": "atk-pipe-2-side-swing-hit", "impact_s": 0.02, "chain_s": 0.34, "end_s": 0.9, "use": "felling a standing tree, cutting a sapling: a level two-handed swing into the trunk at hip height"},
+   "chop": {"intro": "atk-pipe-1-chop-hit-intro", "hit": "atk-pipe-1-chop-hit", "impact_s": 0.12, "chain_s": 0.36, "end_s": 0.9, "use": "bucking a felled trunk, breaking stone: a two-handed overhead blow"}
+  }
+ },
+ "felling": {
+  "strokes_ref": 5.0,
+  "diameter_ref_m": 0.3,
+  "exponent": 1.3,
+  "reach_m": 1.55,
+  "stand_m": 1.05,
+  "log_length_m": 2.4,
+  "clear_frac": 0.5,
+  "max_logs": 6,
+  "buck_strokes_ref": 1.6,
+  "buck_exponent": 1.0,
+  "log_quality_novice": 0.7,
+  "scatter_deg_novice": 30.0,
+  "scatter_deg_safe": 5.0,
+  "safe_tier": "apprentice",
+  "fall_start_deg": 1.5,
+  "fall_push": 0.12,
+  "crown_mass": 0.35,
+  "hurt_min": 15.0,
+  "hurt_max": 110.0,
+  "hurt_per_mps": 7.0,
+  "stump_height_m": 0.45,
+  "firewood_per_crown_m": 0.5,
+  "branches_per_crown_m": 0.8,
+  "limb_work_per_crown_m": 1.3,
+  "limb_work_min": 3.0
+ },
+ "species": {
+  "white_pine": {"name": "white pine", "hardness": 0.8},
+  "hemlock": {"name": "hemlock", "hardness": 0.9},
+  "oak": {"name": "oak", "hardness": 1.35},
+  "maple": {"name": "maple", "hardness": 1.25},
+  "birch": {"name": "birch", "hardness": 1.0}
+ },
+ "saplings": {
+  "sapling_pine": {"name": "pine sapling"},
+  "sapling_hemlock": {"name": "hemlock sapling"},
+  "sapling_maple": {"name": "maple sapling"},
+  "sapling_birch": {"name": "birch sapling"},
+  "strokes": 2,
+  "strokes_skilled": 1,
+  "skilled_level": 20,
+  "reach_m": 1.35,
+  "yield": {"pole": 1, "branches": 1}
+ },
+ "rocks": {
+  "reach_m": 1.35,
+  "stone_volume_m3": 0.14,
+  "min_stones": 2,
+  "max_stones": 24,
+  "strikes_ref": 2.6,
+  "min_scale": 0.4,
+  "kinds": {
+   "rock_a": {"name": "limestone outcrop", "hardness": 1.0, "flint": 0.12},
+   "rock_b": {"name": "limestone outcrop", "hardness": 1.0, "flint": 0.12},
+   "rock_c": {"name": "limestone outcrop", "hardness": 1.0, "flint": 0.12},
+   "rock_d": {"name": "shale ledge", "hardness": 0.7, "flint": 0.0},
+   "rock_e": {"name": "shale ledge", "hardness": 0.7, "flint": 0.0},
+   "boulder": {"name": "granite boulder", "hardness": 1.6, "flint": 0.0}
+  },
+  "flint_skill_add": 0.12,
+  "geology_note": "The valley's bedrock is shale and limestone (chert nodules in some limestones); the boulders are glacial erratics from the Adirondacks. Names are for the prompt; basis D."
+ }
+}

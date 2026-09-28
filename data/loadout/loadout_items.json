@@ -1,0 +1,255 @@
+{
+ "format": "frontier-loadout-items",
+ "version": 1,
+ "provenance": "Rig, bind pose and clip measurements: Actor_B. Clip names keep their native asset ids in the animation library.",
+ "classes": {
+  "long": "longer than about 1.2 m: cannot hang from the waist band (0.94 m) on a 1.60 m body; slung across the back in long_A or long_B, at most two at once",
+  "belt": "carried at a belt / sash / sling carry point provided by the worn gear",
+  "companion": "travels with another item and takes no slot of its own",
+  "body_gear": "part of the outfit (customizer); not a weapon",
+  "tool": "a gathering tool (GatherTools, data/gathering/gathering.json): rides the pack's tool loop (tool_loop) or goes in the pack; drawn from over the right shoulder with the machete draw; GatherTools draws it on the body, not SlingRig"
+ },
+ "kinds": {
+  "musket": {
+   "class": "long",
+   "family": "long_gun",
+   "weapon_class": "Musket",
+   "anim_profile": "musket",
+   "length_m": 1.588,
+   "slots": [
+    "long_A",
+    "long_B"
+   ],
+   "key": "weapon_2",
+   "model": "WeaponModels.build('musket')"
+  },
+  "over_under": {
+   "class": "long",
+   "family": "long_gun",
+   "weapon_class": "OverUnderMusket (weapon-ranges workflow)",
+   "anim_profile": "musket",
+   "length_m": 1.59,
+   "slots": [
+    "long_A",
+    "long_B"
+   ],
+   "key": "weapon_2",
+   "model": "its own model (other workflow)"
+  },
+  "bow": {
+   "class": "long",
+   "weapon_class": "Bow",
+   "anim_profile": "bow",
+   "length_m": 1.526,
+   "slots": [
+    "long_B"
+   ],
+   "needs": [
+    "quiver"
+   ],
+   "key": "weapon_1",
+   "model": "WeaponModels.build('bow'), slung with the string outward (String mesh kept, no string ribbon)",
+   "slot_note": "long_B only: with the order long guns, bow, spear pair, dart bundle long_B is always free for the bow; the quiver sits under it"
+  },
+  "spear_pair": {
+   "class": "long",
+   "weapon_class": "ThrowableSpear",
+   "weapon_key": "spear",
+   "anim_profile": "spear",
+   "length_m": 1.8,
+   "count_max": 2,
+   "slots": [
+    "long_A",
+    "long_B"
+   ],
+   "key": "weapon_4",
+   "model": "ThrowableModels.build('spear') x count"
+  },
+  "dart_bundle": {
+   "class": "long",
+   "ammo_for": "atlatl",
+   "length_m": 1.65,
+   "count_max": 5,
+   "slots": [
+    "long_B",
+    "long_A"
+   ],
+   "needs": [
+    "atlatl"
+   ],
+   "model": "ThrowableModels.build('atlatl_dart') x count, tied at two points"
+  },
+  "atlatl": {
+   "class": "belt",
+   "weapon_class": "ThrowableAtlatl",
+   "weapon_key": "atlatl",
+   "anim_profile": "atlatl",
+   "length_m": 0.588,
+   "points": [
+    "back"
+   ],
+   "needs": [
+    "dart_bundle"
+   ],
+   "key": "weapon_6",
+   "gate": "relic found (legendary, anachronistic)",
+   "model": "ThrowableModels.build('atlatl')"
+  },
+  "tomahawk": {
+   "class": "belt",
+   "weapon_class": "ThrowableTomahawk",
+   "weapon_key": "tomahawk",
+   "anim_profile": "tomahawk",
+   "length_m": 0.494,
+   "count_max": 2,
+   "points": [
+    "back",
+    "back_2"
+   ],
+   "key": "weapon_5",
+   "pair_rule": "the second tomahawk stacks on the first (back_2) unless a quiver is worn (they collide by 7.4 cm); then only one is carried (the pair needs the back free of a quiver)",
+   "model": "ThrowableModels.build('tomahawk' | 'tomahawk_pipe')"
+  },
+  "pistol": {
+   "class": "belt",
+   "weapon_class": "FlintlockPistol",
+   "anim_profile": "pistol",
+   "length_m": 0.391,
+   "per_instance": true,
+   "points": [
+    "R_hip",
+    "back_right",
+    "chest_R",
+    "L_hip",
+    "chest_L"
+   ],
+   "draw_order": [
+    "R_hip",
+    "back_right",
+    "chest_R",
+    "L_hip",
+    "chest_L"
+   ],
+   "key": "weapon_3",
+   "max": 4,
+   "model": "WeaponModels.build('pistol')"
+  },
+  "quiver": {
+   "class": "companion",
+   "of": "bow",
+   "point": "quiver",
+   "arrows_max": 24,
+   "model": "new: assets/loadout/quiver (tools/loadout)"
+  },
+  "knife": {
+   "class": "belt",
+   "points": [
+    "back_left",
+    "pouch_strap",
+    "L_hip",
+    "back"
+   ],
+   "later": true
+  },
+  "saber": {
+   "class": "belt",
+   "points": [
+    "L_hip"
+   ],
+   "later": true
+  },
+  "powder_horn": {
+   "class": "body_gear",
+   "owner": "customizer (powder_horn)",
+   "point": "horn"
+  },
+  "felling_axe": {
+   "class": "tool",
+   "length_m": 0.86,
+   "points": [
+    "tool_loop"
+   ],
+   "key": "tool_axe (KEY_7)",
+   "model": "GatherModels.build('felling_axe')"
+  },
+  "mattock": {
+   "class": "tool",
+   "length_m": 0.86,
+   "points": [
+    "tool_loop"
+   ],
+   "key": "tool_mattock (KEY_8)",
+   "model": "GatherModels.build('mattock')"
+  }
+ },
+ "long_slot_rule": "assign long items in the order long guns, bow, spear pair, dart bundle; each takes its first free slot in `slots`; at most two long items; the quiver comes with the bow and sits under long_B",
+ "keys": {
+  "bindings": {
+   "weapon_1": "KEY_1",
+   "weapon_2": "KEY_2",
+   "weapon_3": "KEY_3",
+   "weapon_4": "KEY_4",
+   "weapon_5": "KEY_5",
+   "weapon_6": "KEY_6",
+   "sling_all": "KEY_X",
+   "weapon_next": "wheel down",
+   "weapon_prev": "wheel up"
+  },
+  "categories": {
+   "weapon_1": "bow",
+   "weapon_2": "long gun",
+   "weapon_3": "pistols",
+   "weapon_4": "spears",
+   "weapon_5": "tomahawks",
+   "weapon_6": "atlatl"
+  },
+  "rules": [
+   {
+    "input": "weapon_N",
+    "state": "category N not carried",
+    "result": "nothing (HUD: not carried)"
+   },
+   {
+    "input": "weapon_N",
+    "state": "another weapon in hand, or hands free",
+    "result": "holster the weapon in hand, then draw category N (pistols: the next LOADED pistol in draw order; none loaded: the one with the most reload progress)"
+   },
+   {
+    "input": "weapon_1 / weapon_4 / weapon_5 / weapon_6",
+    "state": "that weapon already in hand",
+    "result": "nothing"
+   },
+   {
+    "input": "weapon_2",
+    "state": "a long gun in hand",
+    "result": "switch to the other long gun if one is carried, else nothing"
+   },
+   {
+    "input": "weapon_3",
+    "state": "a LOADED pistol in hand",
+    "result": "nothing (hold 0.4 s: pistol pick list, later)"
+   },
+   {
+    "input": "weapon_3",
+    "state": "an EMPTY pistol in hand (fired, reload not finished)",
+    "result": "holster it at its home point and draw the next loaded pistol (draw order, cyclic after the one in hand); if no other pistol is loaded: nothing (R reloads the one in hand)"
+   },
+   {
+    "input": "sling_all (X)",
+    "state": "a weapon in hand",
+    "result": "hands free: holster, finish, HandsFree"
+   },
+   {
+    "input": "sling_all (X)",
+    "state": "hands free",
+    "result": "nothing"
+   },
+   {
+    "input": "weapon_next / weapon_prev",
+    "state": "any",
+    "result": "step through the carried categories in key order; the pistols are one entry (next loaded)"
+   }
+  ],
+  "note": "Only X puts the weapons away (no same-key toggle). Registered by scripts/loadout/loadout_input.gd (LoadoutInput.ensure(): weapon_4..6 and sling_all; weapon_1..3 stay in input_setup.gd)."
+ }
+}

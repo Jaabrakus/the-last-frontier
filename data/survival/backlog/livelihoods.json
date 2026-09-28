@@ -1,0 +1,890 @@
+{
+ "schema": "frontier.survival.livelihoods.backlog",
+ "version": 4,
+ "status": "DESIGN APPENDIX v3 (backlog): rows for milestones M3-M5 and 'post'. Not loaded by the game and not gated by the data test; a row moves into the live file, and under test, when its milestone starts. Rows may reference live ids.",
+ "design_doc": "Player_Animation_Project/graph_analysis/survival/survival_gdd.md",
+ "summary": "The other livelihoods and jobs.",
+ "id_rules": "Ids are stable strings (prefix.name). Never rename an id once saves exist; add an alias instead. Display names are separate and may change. An id is defined in exactly one place: the live file or the backlog.",
+ "milestones": {
+  "M1": "A winter night: fire, shelter, cold, hunger, sleep, time safety; the fort region only; one background; 1765",
+  "M2a": "A winter from the woods: living from the manor woods through the winter by your own hands (gathering, hides, sewing, snares, snowshoes, a half-faced camp, a hung cache, ice fishing); plain barter with the sutler, the trader, the garrison's soldiers, a farm family from German Flatts and an old hunter; credit and the fall outfit as options; the second background",
+  "M2b": "Learning from neighbours: lessons, watching, examining, quality standards, haggling, promises and loans",
+  "M3": "The year turns: the full almanac, seasons and weather content, the summer goal (bark and a cabin), fishing, frogs, ginseng, one played wage job; the fur cap and robe, leggings, carving, casting balls, the cache pit, char cloth and spruce beer",
+  "M4": "People: NPC schedules and tiers at the fort, standing, invitations, the soldiers and the lieutenant as mentors; Native characters only after the relevant nation's sign-off",
+  "M5": "The map: the Carry, the valley, the town and the hunting grounds, travel and camps, other markets and backgrounds",
+  "post": "After M5 and not yet planned: the 1757 and 1761 starts and their eras, detailed illnesses, thirst, potash, upstream canoe and bateau travel, the Proxy NPC tier, languages beyond English, French, Mohawk and Oneida"
+ },
+ "source_keys": {
+  "E": "graph_analysis/survival/research_economy_life.md, source list S# (E:S14 = source S14)",
+  "K": "graph_analysis/survival/research_survival_skills.md, numbered sources [#] (K:1 = source [1])",
+  "Y": "graph_analysis/survival/research_systems.md, section number (Y:3.2 = section 3.2)",
+  "C": "graph_analysis/customizer/costume_bible.md, section number",
+  "A": "Player_Animation_Project/blender_animation_index.csv (clip names and asset ids)",
+  "N": "graph_analysis/survival/survival_gdd.md, sources list (N:3 = source N3; N33 onward added in version 3)"
+ },
+ "basis_keys": {
+  "S": "sourced: checked against a primary source, a scholarly work or an institutional page; web summaries and popular pages do not qualify",
+  "H": "standard historiography (books in the GDD sources list); verify before quoting",
+  "H-regional": "true for one region's trade or society (named in the row); not yet checked for New York",
+  "M": "modern science or medicine sets the mechanic (period explanation may differ)",
+  "D": "design value for balance, or a figure resting on web summaries; not a checked historical record"
+ },
+ "livelihoods": [
+  {
+   "id": "liv.trading",
+   "name": "Trading on credit (packhorse or post)",
+   "status": "later",
+   "risk_class": "primary_risky",
+   "months": "all",
+   "peak": [
+    "apr",
+    "may",
+    "sep",
+    "oct"
+   ],
+   "skills": [
+    "trade",
+    "husbandry"
+   ],
+   "specialties": [],
+   "key_actions": [
+    "trade.haggle",
+    "trade.take_credit",
+    "social.gift",
+    "horse.load_pack",
+    "fur.press_pack"
+   ],
+   "inputs": [
+    "item.trade.stroud",
+    "item.trade.blanket",
+    "item.tool.kettle_brass",
+    "item.ammo.powder",
+    "item.animal.horse"
+   ],
+   "outputs": [
+    "item.pelt.beaver",
+    "item.skin.deer_fall"
+   ],
+   "markets": [
+    "mkt.town_exchange",
+    "mkt.post_trader",
+    "mkt.city_merchant",
+    "mkt.native_trading_party"
+   ],
+   "contacts": [
+    "post_trader",
+    "senior_woman",
+    "council_speaker",
+    "interpreter",
+    "city_merchant",
+    "native_trader"
+   ],
+   "capital": "goods on a merchant's consignment; one packhorse carries about 200 lb (E:S27)",
+   "unlock": {
+    "licence": "1765-68: a licence and bond (Trade Master or a merchant's letter); after 1768 regulation is weak"
+   },
+   "risks": [
+    "debt",
+    "war seizes goods",
+    "rum rules and embargoes",
+    "a town's trust once broken"
+   ],
+   "history": "Under the Plan of 1764 trade was meant to go through posts under commissaries and tariffs; after 1768 the colonies took regulation back and enforced it weakly (E:S7, N:21).",
+   "income_target_ce_per_game_day": {
+    "novice": 120,
+    "skilled": 520
+   },
+   "income_note": "cash-equivalent pence; retune against the live ladder when the row goes live",
+   "milestone": "M5"
+  },
+  {
+   "id": "liv.homesteading",
+   "name": "Clearing land and homesteading",
+   "status": "later",
+   "risk_class": "primary_risky",
+   "months": "all",
+   "peak": [
+    "mar",
+    "may",
+    "sep",
+    "oct"
+   ],
+   "skills": [
+    "husbandry",
+    "woodcraft"
+   ],
+   "specialties": [
+    "provisions",
+    "shelter"
+   ],
+   "key_actions": [
+    "land.blaze_claim",
+    "land.girdle_trees",
+    "land.clear_plot",
+    "potash.leach_boil",
+    "farm.plant_corn",
+    "farm.hoe",
+    "farm.harvest_corn",
+    "land.raise_cabin",
+    "wood.split_firewood",
+    "preserve.salt"
+   ],
+   "inputs": [
+    "item.tool.axe",
+    "item.tool.hoe",
+    "item.seed.corn",
+    "item.material.salt",
+    "item.tool.kettle_iron"
+   ],
+   "outputs": [
+    "item.trade.potash",
+    "item.food.dried_corn",
+    "item.food.beans",
+    "item.food.squash",
+    "item.food.salted_meat"
+   ],
+   "markets": [
+    "mkt.valley_store",
+    "mkt.valley_mill",
+    "mkt.fort_sutler"
+   ],
+   "contacts": [
+    "settler_farmer",
+    "storekeeper",
+    "miller",
+    "surveyor"
+   ],
+   "capital": "a lease (entry fine and rent) or a lot bought from a patentee; axe, hoe, seed",
+   "notes": "Corn feeds the household and sells dear in the hungry time; potash sold from the mid-1760s, when New York output grew, and far more after 1790. Harvest yields use the season-total scale (0.49).",
+   "risks": [
+    "frost",
+    "raids in war years",
+    "rent and deed disputes",
+    "injury from felling",
+    "stock breaking into a town's corn"
+   ],
+   "land_ethics": "Squatting on a nation's unceded land or beyond the 1768 line costs standing and starts a dispute; Indian-deed fraud behind some patents is part of the world (event.deed_dispute).",
+   "history": "Mohawk valley land came by patents, leases and purchases from patentees; Palatine German, Dutch and Scots-Irish families farmed it (N:13, N:21).",
+   "income_target_ce_per_game_day": {
+    "novice": 110,
+    "skilled": 260
+   },
+   "income_note": "cash-equivalent pence; retune against the live ladder when the row goes live",
+   "milestone": "M5"
+  },
+  {
+   "id": "liv.fishing",
+   "name": "Fishing the runs",
+   "status": "later",
+   "risk_class": "sideline",
+   "months": [
+    "apr",
+    "sep",
+    "oct",
+    "nov",
+    "jan",
+    "feb"
+   ],
+   "peak": [
+    "apr",
+    "sep",
+    "oct"
+   ],
+   "skills": [
+    "survival"
+   ],
+   "specialties": [
+    "fishing",
+    "provisions"
+   ],
+   "key_actions": [
+    "fish.net",
+    "fish.weir_build",
+    "fish.weir_harvest",
+    "fish.hook_line",
+    "fish.ice_hole",
+    "preserve.salt",
+    "preserve.smoke_fish"
+   ],
+   "inputs": [
+    "item.tool.net",
+    "item.material.salt",
+    "item.tool.barrel"
+   ],
+   "outputs": [
+    "item.food.salted_fish",
+    "item.food.smoked_fish",
+    "item.food.fish_raw"
+   ],
+   "markets": [
+    "mkt.valley_store",
+    "mkt.fort_sutler",
+    "mkt.fort_sutler"
+   ],
+   "contacts": [
+    "settler_farmer",
+    "town_hunter"
+   ],
+   "risks": [
+    "floods",
+    "weir disputes",
+    "salt cost"
+   ],
+   "history": "Runs follow drainage: shad and herring only on the Hudson below Cohoes; fall salmon and eels on the Oneida Lake side of the Carry; eels and spring suckers everywhere (seasons.json fish_runs).",
+   "milestone": "M3",
+   "income_target_ce_per_game_day": {
+    "novice": 80,
+    "skilled": 170
+   },
+   "income_note": "cash-equivalent pence; retune against the live ladder when the row goes live"
+  },
+  {
+   "id": "liv.sugaring",
+   "name": "Maple sugaring",
+   "status": "later",
+   "risk_class": "sideline",
+   "months": [
+    "feb",
+    "mar",
+    "apr"
+   ],
+   "peak": [
+    "mar"
+   ],
+   "skills": [
+    "survival"
+   ],
+   "specialties": [
+    "provisions",
+    "firecraft"
+   ],
+   "key_actions": [
+    "sugar.make_vessels",
+    "sugar.tap_trees",
+    "sugar.boil",
+    "fire.gather_fuel",
+    "wood.split_firewood"
+   ],
+   "inputs": [
+    "item.tool.kettle_brass",
+    "item.tool.sap_vessel",
+    "item.fuel.bundle"
+   ],
+   "outputs": [
+    "item.food.maple_sugar"
+   ],
+   "markets": [
+    "mkt.post_trader",
+    "mkt.valley_store",
+    "mkt.fort_sutler",
+    "mkt.town_exchange"
+   ],
+   "contacts": [
+    "senior_woman",
+    "town_farmer",
+    "settler_farmer"
+   ],
+   "unlock": {
+    "knowledge": "know.sugaring"
+   },
+   "notes": "Also food for the lean weeks (1 lb of sugar is 340 game kcal) and a valued gift.",
+   "history": "Developed by Native peoples of the Northeast; kettles made boiling easier; camps made sugar from late February to April (E:S54, E:S56).",
+   "milestone": "M3",
+   "income_target_ce_per_game_day": {
+    "novice": 70,
+    "skilled": 160
+   },
+   "income_note": "cash-equivalent pence; retune against the live ladder when the row goes live"
+  },
+  {
+   "id": "liv.gathering",
+   "name": "Gathering (ginseng, nuts, medicinal plants)",
+   "status": "later",
+   "risk_class": "sideline",
+   "months": [
+    "aug",
+    "sep",
+    "oct"
+   ],
+   "peak": [
+    "sep"
+   ],
+   "skills": [
+    "survival"
+   ],
+   "specialties": [
+    "plantlore"
+   ],
+   "key_actions": [
+    "forage.dig_ginseng",
+    "preserve.dry_plants",
+    "forage.search"
+   ],
+   "inputs": [
+    "item.tool.knife"
+   ],
+   "outputs": [
+    "item.forage.ginseng_dried",
+    "item.food.nuts",
+    "item.remedy.snakeroot"
+   ],
+   "markets": [
+    "mkt.post_trader",
+    "mkt.city_merchant"
+   ],
+   "contacts": [
+    "post_trader",
+    "senior_woman"
+   ],
+   "notes": "Low income on its own; picked up while hunting or trapping.",
+   "history": "Ginseng went from Montreal to Canton; Mohawk women helped identify it in 1716; the 1750s boom collapsed (E:S19).",
+   "milestone": "M3",
+   "income_target_ce_per_game_day": {
+    "novice": 30,
+    "skilled": 90
+   },
+   "income_note": "cash-equivalent pence; retune against the live ladder when the row goes live"
+  },
+  {
+   "id": "liv.army_supply",
+   "name": "Supplying and serving the army",
+   "status": "later",
+   "risk_class": "capital",
+   "months": "all",
+   "peak": [
+    "dec",
+    "jan",
+    "feb"
+   ],
+   "skills": [
+    "husbandry",
+    "woodcraft",
+    "hunting"
+   ],
+   "specialties": [],
+   "key_actions": [
+    "social.hire_on",
+    "horse.load_pack",
+    "butcher.field_dress",
+    "wood.split_firewood"
+   ],
+   "inputs": [
+    "item.animal.horse"
+   ],
+   "outputs": [],
+   "markets": [
+    "mkt.fort_sutler",
+    "mkt.fort_sutler"
+   ],
+   "contacts": [
+    "commissary",
+    "garrison_officer",
+    "wagoner",
+    "bateau_man"
+   ],
+   "jobs": [
+    "job.garrison_firewood",
+    "job.garrison_firewood",
+    "job.wagon_hire",
+    "job.packhorse_hire",
+    "job.bateau_crew",
+    "job.express"
+   ],
+   "notes": "In peace the detachment's firewood, fresh meat and small contracts through the sutler (live), with army wagon hire only in war starts (post). The discharged regular's spike: live in 1765.",
+   "risks": [
+    "ambush on the road",
+    "lost horses",
+    "camp disease"
+   ],
+   "history": "The army hired civilian wagons and packhorses (Franklin, 1755); bateau men moved supplies; garrisons bought fresh food and game (E:S29, E:S58).",
+   "milestone": "M4",
+   "income_target_ce_per_game_day": {
+    "novice": 110,
+    "skilled": 900
+   },
+   "income_note": "cash-equivalent pence; retune against the live ladder when the row goes live"
+  },
+  {
+   "id": "liv.soldiering_ranging",
+   "name": "Soldiering, ranging and scouting",
+   "status": "later",
+   "risk_class": "wage",
+   "months": "all",
+   "peak": [
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "jan",
+    "feb"
+   ],
+   "skills": [
+    "marksmanship",
+    "survival",
+    "hunting"
+   ],
+   "specialties": [
+    "hardihood"
+   ],
+   "key_actions": [
+    "social.hire_on",
+    "hunt.track",
+    "shelter.snow_wall_camp",
+    "travel.ford"
+   ],
+   "inputs": [
+    "item.weapon.musket"
+   ],
+   "outputs": [],
+   "markets": [
+    "mkt.fort_sutler"
+   ],
+   "contacts": [
+    "garrison_officer",
+    "ranger"
+   ],
+   "jobs": [
+    "job.provincial_enlist",
+    "job.scout",
+    "job.express"
+   ],
+   "notes": "Steady pay, rations and a bounty in war years; scouts and expresses in peace. Obligations and danger.",
+   "history": "Provincials enlisted for a campaign season (Anderson, A People's Army); rangers scouted on snowshoes and by whaleboat (K:2).",
+   "income_target_ce_per_game_day": {
+    "novice": 110,
+    "skilled": 165
+   },
+   "income_note": "cash-equivalent pence; retune against the live ladder when the row goes live",
+   "milestone": "M5"
+  },
+  {
+   "id": "liv.trades_services",
+   "name": "Trades and services (carrying, boating, guiding, interpreting)",
+   "status": "later",
+   "risk_class": "wage",
+   "months": "all",
+   "peak": [
+    "may",
+    "jun",
+    "sep"
+   ],
+   "skills": [
+    "trade",
+    "woodcraft"
+   ],
+   "specialties": [],
+   "key_actions": [
+    "social.hire_on"
+   ],
+   "inputs": [],
+   "outputs": [],
+   "markets": [
+    "mkt.post_trader"
+   ],
+   "contacts": [
+    "post_trader",
+    "interpreter",
+    "council_speaker",
+    "bateau_man"
+   ],
+   "jobs": [
+    "job.carry_goods",
+    "job.bateau_crew",
+    "job.guide_trader",
+    "job.interpreter"
+   ],
+   "unlock": {
+    "interpreter": "a nation's language knowledge"
+   },
+   "history": "Oneida carriers and settler teamsters at the Carry (Roof's hauling from 1759), bateau crews on the Mohawk and Wood Creek, interpreters and smiths at posts (N:1, E:S7).",
+   "income_target_ce_per_game_day": {
+    "novice": 90,
+    "skilled": 170
+   },
+   "income_note": "cash-equivalent pence; retune against the live ladder when the row goes live",
+   "milestone": "M5"
+  },
+  {
+   "id": "liv.household_round",
+   "name": "Living a town household's seasonal round",
+   "status": "later",
+   "risk_class": "shares",
+   "milestone_gate": "M5 after consultation",
+   "months": "all",
+   "peak": [
+    "mar",
+    "may",
+    "sep",
+    "oct"
+   ],
+   "skills": [
+    "survival",
+    "hunting",
+    "husbandry",
+    "trade"
+   ],
+   "specialties": [
+    "plantlore",
+    "provisions"
+   ],
+   "key_actions": [
+    "social.share_game",
+    "hunt.drive",
+    "sugar.boil",
+    "farm.harvest_corn",
+    "fish.weir_harvest"
+   ],
+   "inputs": [],
+   "outputs": [
+    "item.food.dried_corn",
+    "item.food.maple_sugar",
+    "item.pelt.beaver",
+    "item.skin.deer_fall"
+   ],
+   "markets": [
+    "mkt.town_exchange",
+    "mkt.post_trader"
+   ],
+   "contacts": [
+    "senior_woman",
+    "town_hunter",
+    "town_farmer",
+    "council_speaker"
+   ],
+   "jobs": [
+    "job.hunt_for_town",
+    "job.help_sugar_camp",
+    "job.help_harvest_town"
+   ],
+   "unlock": {
+    "standing": "home town 40+ (the town-raised background starts there)"
+   },
+   "notes": "Income comes in shares, food, lodging and standing rather than coin. The household decides what the player is invited to do; ceremonies stay with the community.",
+   "history": "Towns stayed occupied through the year: the men's fall hunt, Midwinter at home, spring fishing and sugaring, women's fields, orchards and livestock (N:6, N:7, N:4).",
+   "income_target_ce_per_game_day": {
+    "novice": 90,
+    "skilled": 220
+   },
+   "income_note": "cash-equivalent pence; retune against the live ladder when the row goes live",
+   "milestone": "M5"
+  }
+ ],
+ "jobs": [
+  {
+   "id": "job.wagon_hire",
+   "giver": "commissary",
+   "months": [
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct"
+   ],
+   "war_only": true,
+   "status": "later",
+   "mode": "played",
+   "pay_wage": "wage.wagon_team",
+   "game_days": [
+    2,
+    6
+   ],
+   "livelihood": "liv.army_supply",
+   "played": "drive or escort the wagon along the military road; a time-skip rolls the losses instead",
+   "losses_per_trip": {
+    "ambush": "0.04 x route danger x war mult",
+    "lame_horse": 0.08,
+    "broken_axle": 0.05,
+    "cost": {
+     "lame_horse": "item.animal.horse",
+     "broken_axle_d": 240
+    }
+   },
+   "openings": "x economy.json army_demand",
+   "src": [
+    "E:S29"
+   ],
+   "milestone": "M5"
+  },
+  {
+   "id": "job.packhorse_hire",
+   "giver": "commissary",
+   "months": [
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct"
+   ],
+   "war_only": true,
+   "status": "later",
+   "mode": "played",
+   "pay_wage": "wage.packhorse",
+   "game_days": [
+    2,
+    6
+   ],
+   "livelihood": "liv.army_supply",
+   "losses_per_trip": {
+    "lame_horse": 0.06,
+    "load_lost": 0.04
+   },
+   "openings": "x economy.json army_demand",
+   "src": [
+    "E:S29"
+   ],
+   "milestone": "M5"
+  },
+  {
+   "id": "job.bateau_crew",
+   "giver": "commissary",
+   "months": [
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct"
+   ],
+   "status": "later",
+   "mode": "time_skip_or_played",
+   "pay_wage": "wage.bateau_man",
+   "game_days": [
+    2,
+    4
+   ],
+   "livelihood": "liv.trades_services",
+   "note": "bateaux up the Mohawk, across the Carry on wagons or sledges, and down Wood Creek",
+   "src": [
+    "N:13"
+   ],
+   "milestone": "post"
+  },
+  {
+   "id": "job.express",
+   "giver": "garrison_officer",
+   "months": "all",
+   "status": "later",
+   "mode": "played",
+   "pay_d": 72,
+   "game_days": [
+    0.5,
+    1
+   ],
+   "livelihood": "liv.soldiering_ranging",
+   "milestone": "M5"
+  },
+  {
+   "id": "job.scout",
+   "giver": "ranger",
+   "months": "all",
+   "status": "later",
+   "mode": "played",
+   "pay_wage": "wage.hired_scout",
+   "game_days": [
+    1,
+    2
+   ],
+   "requires": [
+    "standing garrison 15"
+   ],
+   "livelihood": "liv.soldiering_ranging",
+   "src": [
+    "K:2"
+   ],
+   "milestone": "M4",
+   "note": "In 1765 the post hires local woodsmen to scout or carry expresses; the half-pay lieutenant arranges it. Orders and ranging companies belong to the war starts (post)."
+  },
+  {
+   "id": "job.provincial_enlist",
+   "giver": "garrison_officer",
+   "months": [
+    "apr",
+    "may"
+   ],
+   "war_only": true,
+   "status": "later",
+   "mode": "time_skip_or_played",
+   "pay_wage": "wage.provincial_soldier",
+   "term": "one campaign season",
+   "livelihood": "liv.soldiering_ranging",
+   "src": [
+    "N:10"
+   ],
+   "milestone": "M5"
+  },
+  {
+   "id": "job.day_labour",
+   "giver": "commissary",
+   "months": "all",
+   "status": "later",
+   "mode": "time_skip_or_played",
+   "pay_wage": "wage.day_labour",
+   "game_days": [
+    1,
+    1
+   ],
+   "openings": "2 a game day",
+   "livelihood": "liv.trades_services",
+   "time_skip_rule": "needs tick through advance(); time_safety interrupts apply",
+   "milestone": "M5"
+  },
+  {
+   "id": "job.harvest_hand",
+   "giver": "settler_farmer",
+   "months": [
+    "jul",
+    "sep",
+    "oct"
+   ],
+   "status": "later",
+   "mode": "played",
+   "pay_wage": "wage.harvest_hand",
+   "game_days": [
+    1,
+    1
+   ],
+   "openings": "2 a farm a season",
+   "livelihood": "liv.homesteading",
+   "milestone": "M5"
+  },
+  {
+   "id": "job.planting_hand",
+   "giver": "settler_farmer",
+   "months": [
+    "may"
+   ],
+   "status": "later",
+   "mode": "played",
+   "pay_wage": "wage.day_labour",
+   "game_days": [
+    1,
+    1
+   ],
+   "board": true,
+   "openings": "1 a farm",
+   "livelihood": "liv.homesteading",
+   "milestone": "M5"
+  },
+  {
+   "id": "job.find_stray",
+   "giver": "settler_farmer",
+   "months": "all",
+   "status": "later",
+   "mode": "played",
+   "pay_d": 36,
+   "standing": 3,
+   "livelihood": "liv.homesteading",
+   "milestone": "M5"
+  },
+  {
+   "id": "job.wolf_bounty",
+   "giver": "storekeeper",
+   "months": "all",
+   "status": "later",
+   "mode": "played",
+   "pay_d": 120,
+   "note": "a county bounty for wolves, an animal bounty only (E:S62); the game never offers bounties on people",
+   "livelihood": "liv.market_hunting",
+   "milestone": "M5"
+  },
+  {
+   "id": "job.carry_goods",
+   "giver": "post_trader",
+   "months": [
+    "may",
+    "jun",
+    "sep",
+    "oct"
+   ],
+   "status": "later",
+   "mode": "played",
+   "pay_wage": "wage.carrier_load",
+   "livelihood": "liv.trades_services",
+   "milestone": "M5"
+  },
+  {
+   "id": "job.guide_trader",
+   "giver": "post_trader",
+   "months": "all",
+   "status": "later",
+   "mode": "played",
+   "pay_d": 150,
+   "game_days": [
+    1,
+    3
+   ],
+   "livelihood": "liv.trades_services",
+   "milestone": "M5"
+  },
+  {
+   "id": "job.interpreter",
+   "giver": "post_trader",
+   "months": "all",
+   "status": "later",
+   "mode": "played",
+   "pay_wage": "wage.interpreter",
+   "requires": [
+    "a nation's language"
+   ],
+   "livelihood": "liv.trades_services",
+   "src": [
+    "E:S7"
+   ],
+   "milestone": "M5"
+  },
+  {
+   "id": "job.hunt_for_town",
+   "giver": "senior_woman",
+   "months": [
+    "feb",
+    "mar"
+   ],
+   "status": "later",
+   "mode": "played",
+   "pay": "corn, sugar or moccasins; standing (npcs.json standing.sources.job)",
+   "livelihood": "liv.household_round",
+   "milestone": "M5"
+  },
+  {
+   "id": "job.help_sugar_camp",
+   "giver": "senior_woman",
+   "months": [
+    "mar",
+    "apr"
+   ],
+   "status": "later",
+   "mode": "played",
+   "pay": "a quarter of the day's sugar; may teach",
+   "livelihood": "liv.household_round",
+   "src": [
+    "K:1"
+   ],
+   "milestone": "M5"
+  },
+  {
+   "id": "job.help_harvest_town",
+   "giver": "senior_woman",
+   "months": [
+    "sep",
+    "oct"
+   ],
+   "status": "later",
+   "mode": "played",
+   "pay": "corn and standing",
+   "requires": [
+    "invitation: standing 30"
+   ],
+   "livelihood": "liv.household_round",
+   "src": [
+    "E:S44"
+   ],
+   "milestone": "M5"
+  }
+ ],
+ "v3_notes": {
+  "trapping_history": "v2 said most beaver in the 1750s-60s were taken by breaking into lodges, 'the usual 18th-century way', and that steel traps were scarce and dear. That rests on Carlos and Lewis (N:23), a study of the Hudson's Bay Company's lowland trade: tagged H-regional. Colonial smiths were making beaver traps for the 1760s Pennsylvania trade, and traps appear in traders' papers (N:36). The lodge hunt stays as one real method; check the Johnson Papers tariffs (1761, 1765), the Fort Pitt trading post papers (1757-65), the Baynton, Wharton and Morgan invoices and the Albany ledgers before fixing the trap stock cap."
+ }
+}

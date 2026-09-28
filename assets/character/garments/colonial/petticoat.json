@@ -1,0 +1,310 @@
+{
+ "id": "petticoat",
+ "name": "Petticoat",
+ "description": "A gathered ankle-length petticoat of wool or linsey, tied on a waistband over the shift and stays.",
+ "kind": "garment",
+ "set": "colonial",
+ "slot": "legs.lower",
+ "alt_slots": [],
+ "layer": {
+  "default": 30,
+  "hips": 35,
+  "thighs": 35
+ },
+ "glb": "res://assets/character/garments/colonial/petticoat.glb",
+ "mesh": "petticoat",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "petticoat"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "pelvis_center",
+  "pelvis_side",
+  "shin_upper_l",
+  "shin_upper_r",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "pelvis_center",
+  "pelvis_side"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "cloth",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "indigo_mid",
+    "walnut_brown",
+    "madder_red",
+    "drab",
+    "stroud_blue",
+    "ranger_green",
+    "buff"
+   ],
+   "default": "indigo_mid",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "indigo_mid": "#34507A",
+    "walnut_brown": "#5A3F2C",
+    "madder_red": "#8E2B21",
+    "drab": "#8B7A5C",
+    "stroud_blue": "#1E2B4A",
+    "ranger_green": "#3B4A2E",
+    "buff": "#D2B98A"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "waistband",
+   "role": "trim",
+   "fabric": "LIN",
+   "palette": [
+    "linen_white",
+    "linen_unbleached",
+    "tow"
+   ],
+   "default": "linen_unbleached",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "linen_white": "#E8E3D3",
+    "linen_unbleached": "#C8BA9A",
+    "tow": "#A99570"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 2483,
+    "verts": 1319,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "foot_l",
+     "foot_r",
+     "pelvis_center",
+     "pelvis_side",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 2483,
+  "verts": 1319,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0715,
+   "breast_large": 0.0033,
+   "breast_small": 0.0013
+  },
+  "coverage": {
+   "abdomen_front": {
+    "normal": 1.0,
+    "cone": 0.854
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 0.802
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 0.75
+   },
+   "pelvis_center": {
+    "normal": 0.562,
+    "cone": 0.323
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "upper_arm_l": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.135,
+    "cone": 0.0
+   },
+   "forearm_b_l": {
+    "normal": 0.146,
+    "cone": 0.0
+   },
+   "forearm_c_l": {
+    "normal": 0.146,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.167,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.094,
+    "cone": 0.0
+   },
+   "forearm_b_r": {
+    "normal": 0.125,
+    "cone": 0.0
+   },
+   "forearm_c_r": {
+    "normal": 0.104,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.219,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 1.0,
+    "cone": 0.823
+   },
+   "thigh_lower_l": {
+    "normal": 0.729,
+    "cone": 0.562
+   },
+   "shin_upper_l": {
+    "normal": 0.375,
+    "cone": 0.198
+   },
+   "thigh_upper_r": {
+    "normal": 1.0,
+    "cone": 0.844
+   },
+   "thigh_lower_r": {
+    "normal": 0.833,
+    "cone": 0.625
+   },
+   "shin_upper_r": {
+    "normal": 0.406,
+    "cone": 0.25
+   }
+  },
+  "glb_kb": 372.0
+ },
+ "budget": {
+  "tris_max": 3200
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "The petticoat was the woman's skirt: wool, linsey-woolsey, linen or cotton, tied at the waist by tapes, full at the hem and ankle-length so the shoes showed; jacket and petticoat was the commonest working dress [P3][M2].",
+ "sources": [
+  "P3",
+  "M2"
+ ],
+ "aliases": [],
+ "tags": [
+  "women",
+  "colonial"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 15.18,
+    "p05_mm": 18.6,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 12.2,
+    "p05_mm": 17.57,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 14.9,
+    "p05_mm": 18.54,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 15.17,
+    "p05_mm": 18.6,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/petticoat.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/cloth2/garments/petticoat.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null
+}

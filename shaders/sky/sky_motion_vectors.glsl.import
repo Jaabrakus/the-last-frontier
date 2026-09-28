@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://c27sidmiaf1k2"
+path="res://.godot/imported/sky_motion_vectors.glsl-02c3c93e102a9e341968d5ed54fd3297.res"
+
+[deps]
+
+source_file="res://shaders/sky/sky_motion_vectors.glsl"
+dest_files=["res://.godot/imported/sky_motion_vectors.glsl-02c3c93e102a9e341968d5ed54fd3297.res"]
+
+[params]
+

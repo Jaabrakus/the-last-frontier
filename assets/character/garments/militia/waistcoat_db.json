@@ -1,0 +1,394 @@
+{
+ "id": "waistcoat_db",
+ "name": "Waistcoat, double-breasted",
+ "description": "Double-breasted waistcoat with two rows of buttons and a straight hem; wool fronts on a linen back.",
+ "kind": "garment",
+ "set": "militia",
+ "slot": "vest",
+ "alt_slots": [],
+ "layer": {
+  "default": 20
+ },
+ "glb": "res://assets/character/garments/militia/waistcoat_db.glb",
+ "mesh": "waistcoat_db",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "waistcoat_db"
+  }
+ ],
+ "occupies_regions": [
+  "neck_lower",
+  "chest_upper_front",
+  "chest_upper_side",
+  "chest_upper_back",
+  "chest_front",
+  "chest_side",
+  "chest_back",
+  "abdomen_front",
+  "abdomen_side",
+  "abdomen_back"
+ ],
+ "hides_regions": [
+  "abdomen_front",
+  "abdomen_side",
+  "abdomen_back",
+  "chest_front"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "fronts",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "madder_red",
+    "indigo_mid",
+    "drab",
+    "walnut_brown",
+    "ranger_green",
+    "linen_unbleached",
+    "buff",
+    "logwood_black"
+   ],
+   "default": "madder_red",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "madder_red": "#8E2B21",
+    "indigo_mid": "#34507A",
+    "drab": "#8B7A5C",
+    "walnut_brown": "#5A3F2C",
+    "ranger_green": "#3B4A2E",
+    "linen_unbleached": "#C8BA9A",
+    "buff": "#D2B98A",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "WOOL",
+    "LIN",
+    "TWILL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "back",
+   "role": "lining",
+   "fabric": "LIN",
+   "palette": [
+    "linen_unbleached",
+    "linen_white",
+    "tow",
+    "drab"
+   ],
+   "default": "linen_unbleached",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "linen_unbleached": "#C8BA9A",
+    "linen_white": "#E8E3D3",
+    "tow": "#A99570",
+    "drab": "#8B7A5C"
+   },
+   "fabrics": [
+    "LIN",
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "buttons",
+   "role": "button",
+   "fabric": "MET",
+   "palette": [
+    "brass",
+    "pewter",
+    "silver",
+    "logwood_black"
+   ],
+   "default": "pewter",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "brass": "#B58F4A",
+    "pewter": "#9A9C9A",
+    "silver": "#C8CACC",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": true
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1416,
+    "verts": 867,
+    "zones": [
+     0,
+     1,
+     2
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "neck_lower",
+     "neck_upper",
+     "pelvis_center",
+     "pelvis_side",
+     "upper_arm_l",
+     "upper_arm_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "r_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "r_clavicle",
+     "neck",
+     "heada",
+     "headb",
+     "l_shoulder_twist_a",
+     "r_shoulder_twist_a"
+    ]
+   }
+  },
+  "tris": 1416,
+  "verts": 867,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0175
+  },
+  "glb_kb": 201.6
+ },
+ "budget": {
+  "tris_max": 1500
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Double-breasted red waistcoats were a favourite of the merchants who clothed the 1758 Massachusetts provincials (Fort Ticonderoga).",
+ "sources": [
+  "M3",
+  "R20"
+ ],
+ "aliases": [],
+ "tags": [
+  "militia",
+  "frontier"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": false,
+   "layer": "mid",
+   "groups": {
+    "arms_upper": {
+     "n": 37,
+     "min": -0.0159,
+     "max": 0.0081,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "hips": {
+     "n": 141,
+     "min": -0.0244,
+     "max": 0.0174,
+     "below_inner": 13,
+     "above_outer": 62,
+     "band": [
+      0.0025,
+      0.011
+     ]
+    },
+    "neck": {
+     "n": 112,
+     "min": -0.0315,
+     "max": 0.0185,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "torso_lower": {
+     "n": 129,
+     "min": 0.0109,
+     "max": 0.0193,
+     "below_inner": 0,
+     "above_outer": 88,
+     "band": [
+      0.0055,
+      0.012
+     ]
+    },
+    "torso_upper": {
+     "n": 448,
+     "min": -0.0212,
+     "max": 0.0232,
+     "below_inner": 10,
+     "above_outer": 286,
+     "band": [
+      0.0055,
+      0.012
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/militia/waistcoat_db.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/waistcoat_db.py.",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "deform_limits": {
+  "waistcoat_db": [
+   0.007,
+   0.016,
+   0.082,
+   3.7
+  ]
+ },
+ "coverage": {
+  "method": "rays from the skin (the region's vertices and triangle centres), female and male fit: hidden when every normal ray and 99.5 % of the rays tilted 28 deg hit the garment",
+  "hidden": [
+   "abdomen_front",
+   "abdomen_side",
+   "abdomen_back",
+   "chest_front"
+  ],
+  "not_hidden_candidates": {
+   "chest_side": 0.922,
+   "chest_back": 0.943,
+   "chest_upper_side": 0.798,
+   "chest_upper_back": 0.864,
+   "chest_upper_front": 0.786
+  },
+  "share": {
+   "head": {
+    "normal": 0.016,
+    "cone": 0.0
+   },
+   "neck_upper": {
+    "normal": 0.168,
+    "cone": 0.0
+   },
+   "neck_lower": {
+    "normal": 0.731,
+    "cone": 0.0
+   },
+   "chest_upper_front": {
+    "normal": 0.838,
+    "cone": 0.786
+   },
+   "chest_upper_side": {
+    "normal": 0.832,
+    "cone": 0.798
+   },
+   "chest_upper_back": {
+    "normal": 0.89,
+    "cone": 0.864
+   },
+   "chest_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_side": {
+    "normal": 0.931,
+    "cone": 0.922
+   },
+   "chest_back": {
+    "normal": 0.956,
+    "cone": 0.943
+   },
+   "abdomen_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "pelvis_center": {
+    "normal": 0.262,
+    "cone": 0.0
+   },
+   "pelvis_side": {
+    "normal": 0.267,
+    "cone": 0.0
+   },
+   "upper_arm_l": {
+    "normal": 0.127,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.06,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.051,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.132,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.069,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.046,
+    "cone": 0.0
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 1.48,
+   "p05_mm": 5.88,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 1.19,
+   "p05_mm": 5.66,
+   "inside_skin": 0
+  }
+ }
+}

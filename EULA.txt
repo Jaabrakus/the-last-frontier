@@ -1,0 +1,82 @@
+FRONTIER: END USER LICENCE AGREEMENT
+
+DRAFT. Have a qualified lawyer review this before the game is sold or distributed. Fill in every [BRACKETED] item.
+
+Last updated: [DATE]
+
+This agreement is between [STUDIO OR OWNER LEGAL NAME] ("we", "us") and you, the person installing or playing Frontier (the "Game"). By installing, copying or playing the Game you agree to it. If you do not agree, do not install or play the Game.
+
+
+1. YOUR LICENCE
+
+We grant you a limited, personal, non-exclusive, non-transferable, revocable licence to install and play the Game on devices you own or control, for your own non-commercial entertainment. The Game is licensed to you, not sold. Everything not expressly granted here is reserved.
+
+
+2. WHO OWNS WHAT
+
+The Game, including its code, scripts, scenes, models, animations we made, textures, audio, text, designs and the painted menu and loading-screen views, belongs to us or our licensors. Copyright and other laws protect it.
+
+Some parts of the Game belong to others and are used under their own terms. These include animation data used with permission, models and sounds under Creative Commons or other open licences, and public-domain paintings. Each is listed in the Game's Credits (CREDITS.md). For those parts:
+  (a) their own licence or permission governs them, and nothing in this agreement narrows the rights that licence gives you;
+  (b) we claim no ownership of works in the public domain;
+  (c) the attribution notices in the Credits must stay intact.
+
+
+3. WHAT YOU MAY NOT DO
+
+Except where the law expressly allows it despite this restriction, you may not, and may not help anyone else to:
+  (a) copy, sell, rent, lend, lease, sublicense, distribute, upload or otherwise make the Game or any part of it available to others;
+  (b) reverse engineer, decompile, disassemble, decrypt or unpack the Game, or circumvent any technical protection in it;
+  (c) extract, rip, export or reuse any of its code, scripts, models, animations, textures, audio, text or other content, alone or combined with anything else;
+  (d) data-mine, scrape or use any automated means to collect content or data from the Game or its files;
+  (e) use the Game, its files or its content, including captures of it, to train, fine-tune, test, benchmark, develop or improve any artificial intelligence or machine-learning model, system or dataset, or to build a product that generates content imitating the Game;
+  (f) modify the Game or make derivative works of it, except through mod tools or permissions we publish in writing;
+  (g) remove or alter any copyright, credit, attribution or licence notice;
+  (h) use cheats, exploits or unauthorised software in any online part of the Game, or disrupt other players.
+
+
+4. VIDEOS, STREAMS AND SCREENSHOTS
+
+You may record, stream and share videos and screenshots of yourself playing the Game, including on monetised channels, as long as you:
+  - do not share the Game's files or extracted assets;
+  - do not use the recordings for anything section 3(e) forbids.
+We may withdraw this permission for particular content that is unlawful or harmful.
+
+
+5. TEXT AND DATA MINING RESERVATION
+
+We expressly reserve all rights in the Game and its content against text and data mining, including under Article 4(3) of EU Directive 2019/790 and any similar law. No one may mine, copy or analyse the Game or its content to train or develop artificial intelligence or machine-learning systems.
+
+
+6. UPDATES AND ONLINE FEATURES
+
+We may update, change or stop supporting the Game. Some updates may be needed to keep playing. Any future online features may have their own additional terms.
+
+
+7. ENDING THIS AGREEMENT
+
+This agreement lasts until it ends. It ends automatically if you break it. When it ends, you must stop using the Game and delete it. Sections 2, 3, 5, 8, 9 and 10 continue after it ends.
+
+
+8. NO WARRANTY
+
+To the fullest extent the law allows, the Game is provided "as is" and "as available", without any warranty of any kind, express or implied.
+
+
+9. LIMITS ON LIABILITY
+
+To the fullest extent the law allows, we are not liable for indirect, incidental, special or consequential damages, or for lost data or profits. Our total liability to you is limited to the amount you paid for the Game. Nothing in this agreement limits liability that cannot be limited by law.
+
+
+10. GENERAL
+
+This agreement is governed by the laws of [COUNTRY / STATE], without regard to its conflict-of-law rules. Nothing in it takes away rights you have as a consumer that cannot be waived.
+
+If any part of this agreement is found unenforceable, the rest stays in effect. If we do not enforce a term, we do not waive it.
+
+This is the whole agreement between us about the Game. Any store you bought the Game from may have its own terms as well.
+
+
+CONTACT
+
+For questions about this agreement or to report infringement: [LEGAL CONTACT EMAIL OR ADDRESS]

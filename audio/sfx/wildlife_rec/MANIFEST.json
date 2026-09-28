@@ -1,0 +1,149 @@
+{
+ "note": "The project's own cuts of public-domain recordings (U.S. Government works); the originals stay in the staging folder (Frontier_assets_staging/pd_wildlife_sfx, PROVENANCE.md).",
+ "approved_by_user": "2026-09-26 (\"lets use the public domain sounds\")",
+ "generator": "tools/sfx/wildlife_rec.py",
+ "credit": "National Park Service; U.S. Fish and Wildlife Service. No claim to original U.S. Government works.",
+ "sources": {
+  "usfws_wolf_howls": {
+   "title": "Wolves howl (11 wolf howls)",
+   "author": "U.S. Fish and Wildlife Service",
+   "page": "https://archive.org/details/WolvesHowl_571",
+   "url": "https://archive.org/download/WolvesHowl_571/11wolfhowls.mp3",
+   "licence": "Public domain (U.S. Government work; the archive.org record: public domain, may be used without prior permission)",
+   "bytes": 453120,
+   "sha256": "761e2d0e2edff6051d6cca7810fb9a55d3380082215888d737a14a1a799a5972"
+  },
+  "nps_yell_red_fox": {
+   "title": "Red fox (Yellowstone sound library)",
+   "author": "National Park Service / Shan Burson",
+   "page": "https://www.nps.gov/yell/learn/photosmultimedia/sounds-redfox.htm",
+   "url": "https://www.nps.gov/nps-audiovideo/legacy/mp3/imr/avElement/yell-YELLMJ23200837redfox.mp3",
+   "licence": "Public domain (recorded in the park; NPS: may be used without limitation, please credit the National Park Service)",
+   "bytes": 214582,
+   "sha256": "b53f9ec913fdc7102b843801d5fe9df089425ce91bfd5dc255bd1bcb0973d1ac"
+  },
+  "nps_yell_raven": {
+   "title": "Common raven (Yellowstone sound library)",
+   "author": "National Park Service / David Restivo",
+   "page": "https://www.nps.gov/yell/learn/photosmultimedia/sounds-raven.htm",
+   "url": "https://www.nps.gov/nps-audiovideo/legacy/mp3/imr/avElement/yell-RavenBlackSandBasin.mp3",
+   "licence": "Public domain (recorded in the park; NPS: may be used without limitation, please credit the National Park Service)",
+   "bytes": 410625,
+   "sha256": "538acbc56806cf8f716c8c1cb91497a6ebf01904a64a497654f62eff797fbf13"
+  }
+ },
+ "takes": [
+  {
+   "id": "wild_rec_wolf_chorus",
+   "source": "usfws_wolf_howls",
+   "from": 0.0,
+   "to": 10.5,
+   "file": "wild_rec_wolf_chorus_01.wav",
+   "seconds": 10.5
+  },
+  {
+   "id": "wild_rec_wolf_chorus",
+   "source": "usfws_wolf_howls",
+   "from": 8.5,
+   "to": 19.5,
+   "file": "wild_rec_wolf_chorus_02.wav",
+   "seconds": 11.0
+  },
+  {
+   "id": "wild_rec_wolf_chorus",
+   "source": "usfws_wolf_howls",
+   "from": 17.5,
+   "to": 28.32,
+   "file": "wild_rec_wolf_chorus_03.wav",
+   "seconds": 10.82
+  },
+  {
+   "id": "wild_rec_fox_call",
+   "source": "nps_yell_red_fox",
+   "from": 0.53,
+   "to": 1.55,
+   "file": "wild_rec_fox_call_01.wav",
+   "seconds": 1.02
+  },
+  {
+   "id": "wild_rec_fox_call",
+   "source": "nps_yell_red_fox",
+   "from": 2.28,
+   "to": 3.1,
+   "file": "wild_rec_fox_call_02.wav",
+   "seconds": 0.82
+  },
+  {
+   "id": "wild_rec_fox_call",
+   "source": "nps_yell_red_fox",
+   "from": 4.13,
+   "to": 5.0,
+   "file": "wild_rec_fox_call_03.wav",
+   "seconds": 0.87
+  },
+  {
+   "id": "wild_rec_fox_call",
+   "source": "nps_yell_red_fox",
+   "from": 7.53,
+   "to": 8.45,
+   "file": "wild_rec_fox_call_04.wav",
+   "seconds": 0.92
+  },
+  {
+   "id": "wild_rec_raven_call",
+   "source": "nps_yell_raven",
+   "from": 3.87,
+   "to": 4.45,
+   "file": "wild_rec_raven_call_01.wav",
+   "seconds": 0.58
+  },
+  {
+   "id": "wild_rec_raven_call",
+   "source": "nps_yell_raven",
+   "from": 4.92,
+   "to": 5.55,
+   "file": "wild_rec_raven_call_02.wav",
+   "seconds": 0.63
+  },
+  {
+   "id": "wild_rec_raven_call",
+   "source": "nps_yell_raven",
+   "from": 5.67,
+   "to": 6.3,
+   "file": "wild_rec_raven_call_03.wav",
+   "seconds": 0.63
+  },
+  {
+   "id": "wild_rec_raven_call",
+   "source": "nps_yell_raven",
+   "from": 6.52,
+   "to": 7.15,
+   "file": "wild_rec_raven_call_04.wav",
+   "seconds": 0.63
+  },
+  {
+   "id": "wild_rec_raven_call",
+   "source": "nps_yell_raven",
+   "from": 7.32,
+   "to": 7.95,
+   "file": "wild_rec_raven_call_05.wav",
+   "seconds": 0.63
+  },
+  {
+   "id": "wild_rec_raven_call",
+   "source": "nps_yell_raven",
+   "from": 7.92,
+   "to": 9.05,
+   "file": "wild_rec_raven_call_06.wav",
+   "seconds": 1.13
+  },
+  {
+   "id": "wild_rec_raven_call",
+   "source": "nps_yell_raven",
+   "from": 10.72,
+   "to": 11.3,
+   "file": "wild_rec_raven_call_07.wav",
+   "seconds": 0.58
+  }
+ ]
+}

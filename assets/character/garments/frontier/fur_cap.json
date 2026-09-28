@@ -1,0 +1,315 @@
+{
+ "id": "fur_cap",
+ "name": "Fur cap",
+ "description": "Round winter cap of fur with a turned-up fur band, worn over the hair.",
+ "kind": "garment",
+ "set": "frontier",
+ "slot": "head",
+ "alt_slots": [],
+ "layer": {
+  "default": 80
+ },
+ "glb": "res://assets/character/garments/frontier/fur_cap.glb",
+ "mesh": "fur_cap",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "fur_cap"
+  },
+  {
+   "surface": "fur",
+   "name": "fur_cap_fur"
+  }
+ ],
+ "occupies_regions": [
+  "head"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [
+  "crown"
+ ],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "fur",
+   "role": "fur",
+   "fabric": "FUR",
+   "palette": [
+    "fur_beaver",
+    "fur_raccoon",
+    "fur_red_fox",
+    "fur_black_bear",
+    "fur_wolf",
+    "fur_brown_bear"
+   ],
+   "default": "fur_beaver",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "fur_beaver": "#5A3B25",
+    "fur_raccoon": "#6A6259",
+    "fur_red_fox": "#A5532B",
+    "fur_black_bear": "#1F1A16",
+    "fur_wolf": "#7F776B",
+    "fur_brown_bear": "#4B3526"
+   }
+  },
+  {
+   "zone": 1,
+   "name": "lining",
+   "role": "lining",
+   "fabric": "WOOL",
+   "palette": [
+    "stroud_red",
+    "linen_unbleached",
+    "walnut_brown"
+   ],
+   "default": "stroud_red",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "stroud_red": "#8A1C1F",
+    "linen_unbleached": "#C8BA9A",
+    "walnut_brown": "#5A3F2C"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1622,
+    "verts": 831,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "head"
+    ],
+    "max_influences": 1,
+    "bones": [
+     "headb"
+    ]
+   },
+   "fur": {
+    "tris": 5988,
+    "verts": 4380,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "head"
+    ],
+    "max_influences": 1,
+    "bones": [
+     "headb"
+    ]
+   }
+  },
+  "tris": 7610,
+  "verts": 5211,
+  "surface_count": 2,
+  "shapes": {
+   "sex": 0.0126
+  },
+  "glb_kb": 651.1
+ },
+ "budget": {
+  "tris_max": 7500
+ },
+ "evidence": "B",
+ "licence_note": null,
+ "history": "Fur caps were winter wear on the frontier; Canadian habitants and militia wore a fur cap or a red tuque.",
+ "sources": [
+  "R8",
+  "R14b",
+  "M7"
+ ],
+ "aliases": [],
+ "tags": [
+  "winter",
+  "fur",
+  "men",
+  "women"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": false,
+   "layer": "head",
+   "groups": {
+    "head": {
+     "n": 5207,
+     "min": -0.0288,
+     "max": 0.0999,
+     "below_inner": 73,
+     "above_outer": 0,
+     "band": [
+      0.004,
+      null
+     ]
+    },
+    "neck": {
+     "n": 4,
+     "min": 0.0382,
+     "max": 0.0392,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/frontier/fur_cap.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/fur_cap.py.",
+ "fur": {
+  "surface": "fur_cap_fur",
+  "shader": "res://assets/character/shaders/fur_shell.gdshader",
+  "length_scale": 1.7,
+  "palette_zone": 0,
+  "shell_zone": 0,
+  "card_zone": 1,
+  "strap_envelope": null,
+  "belt_line_z": 0.942,
+  "uniforms": {
+   "fur_length": "length",
+   "guard_length": "guard",
+   "guard_amount": "guard_amount",
+   "root_color": "root",
+   "band_color": "band",
+   "tip_color": "tip",
+   "band_pos": "band_pos",
+   "tip_pos": "tip_pos",
+   "density": "density",
+   "clump": "clump",
+   "clump_size": "clump_size",
+   "droop": "droop",
+   "comb": "comb",
+   "gloss": "gloss"
+  },
+  "presets": {
+   "fur_beaver": {
+    "root": "#7b5a40",
+    "band": "#5a3b25",
+    "tip": "#4a2f1d",
+    "band_pos": 0.55,
+    "tip_pos": 0.8,
+    "length": 0.013,
+    "guard": 0.55,
+    "guard_amount": 0.8,
+    "density": 2400,
+    "clump": 0.3,
+    "clump_size": 0.008,
+    "droop": 0.1,
+    "comb": 0.49,
+    "gloss": 0.8
+   },
+   "fur_raccoon": {
+    "root": "#8a8177",
+    "band": "#6a6259",
+    "tip": "#2a2622",
+    "band_pos": 0.5,
+    "tip_pos": 0.72,
+    "length": 0.02,
+    "guard": 0.85,
+    "guard_amount": 1.0,
+    "density": 1800,
+    "clump": 0.5,
+    "clump_size": 0.011,
+    "droop": 0.14,
+    "comb": 0.39,
+    "gloss": 0.3
+   },
+   "fur_red_fox": {
+    "root": "#c99a70",
+    "band": "#a5532b",
+    "tip": "#8a3f1e",
+    "band_pos": 0.45,
+    "tip_pos": 0.8,
+    "length": 0.022,
+    "guard": 0.9,
+    "guard_amount": 1.0,
+    "density": 1800,
+    "clump": 0.5,
+    "clump_size": 0.011,
+    "droop": 0.14,
+    "comb": 0.42,
+    "gloss": 0.35
+   },
+   "fur_black_bear": {
+    "root": "#15110e",
+    "band": "#1f1a16",
+    "tip": "#3a2e25",
+    "band_pos": 0.5,
+    "tip_pos": 0.75,
+    "length": 0.024,
+    "guard": 1.0,
+    "guard_amount": 1.0,
+    "density": 1500,
+    "clump": 0.6,
+    "clump_size": 0.014,
+    "droop": 0.18,
+    "comb": 0.39,
+    "gloss": 0.55
+   },
+   "fur_wolf": {
+    "root": "#cfc3a8",
+    "band": "#7f776b",
+    "tip": "#3c3833",
+    "band_pos": 0.45,
+    "tip_pos": 0.78,
+    "length": 0.022,
+    "guard": 0.9,
+    "guard_amount": 1.0,
+    "density": 1700,
+    "clump": 0.55,
+    "clump_size": 0.012,
+    "droop": 0.14,
+    "comb": 0.42,
+    "gloss": 0.3
+   },
+   "fur_brown_bear": {
+    "root": "#2c1f16",
+    "band": "#4b3526",
+    "tip": "#6e5037",
+    "band_pos": 0.5,
+    "tip_pos": 0.78,
+    "length": 0.024,
+    "guard": 1.0,
+    "guard_amount": 1.0,
+    "density": 1500,
+    "clump": 0.6,
+    "clump_size": 0.014,
+    "droop": 0.18,
+    "comb": 0.39,
+    "gloss": 0.4
+   }
+  },
+  "note": "Shells + guard cards in one surface; fur_length = preset length x length_scale. The base (main surface, zone role 'fur') takes the preset's root colour. Set belt_flatten / strap_flatten to 1 when a belt / shoulder strap is worn over this garment (use the strap_envelope variant).",
+  "stats": {
+   "shells": 12,
+   "shell_tris": 5028,
+   "cards": 240,
+   "card_tris": 960,
+   "base_tris": 419
+  }
+ },
+ "deform_limits": {}
+}

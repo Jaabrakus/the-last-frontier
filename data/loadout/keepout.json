@@ -1,0 +1,251 @@
+{
+ "format": "frontier-loadout-keepout",
+ "version": 1,
+ "generated": "2026-09-24T16:41:46Z",
+ "provenance": "Rig, bone names, bind pose and clips: Actor_B. Body and outfit geometry: tools/character/build_body.py. Weapon models: tools/models.",
+ "conventions": "rig space at null-add; angles 0 front / 90 right / 180 back / 270 left around the torso axis; radial band measured from the legacy outer surface (data/loadout/body_fit.json outer_surface); follows_bone = the bone the zone moves with",
+ "layer": "stowed weapons sit on layer 65 (above belts 60, below hair 70); a zone is kept free of layer >= 50 items that would sit on or through the stowed item",
+ "bulk_rule": "for outfits with more bulk than the legacy coat the whole zone moves out by bulk(outfit, region) - bulk(legacy, region) (body_fit.json outfit_bulk)",
+ "zones": [
+  {
+   "id": "right_hip_pistol",
+   "purpose": "belt pistol at the right hip (source no-pack draw target)",
+   "used_by": [
+    "belt.R_hip.pistol"
+   ],
+   "follows_bone": "pelvis",
+   "angles_deg": [
+    105,
+    160
+   ],
+   "y": [
+    0.58,
+    1.02
+   ],
+   "radial_band_above_legacy_outer_cm": [
+    0,
+    7
+   ],
+   "rules": [
+    "No accessory may hang or bulge here: no pouch, horn, cartridge box, sash ends, knife or fringe.",
+    "Belts and sashes pass through at y 0.92-1.06 only (the pistol hooks or tucks on them).",
+    "Coat skirts may lie under it (cloth); fur pile under it flattens (customizer_design.md 9.4)."
+   ],
+   "note": "br_belts_cartridge's box violates this zone: with the cross belts the pistol moves to L_hip / chest hook."
+  },
+  {
+   "id": "back_belt_items",
+   "purpose": "tomahawk / atlatl through the belt at the back, knife behind the left hip",
+   "used_by": [
+    "belt.back.tomahawk",
+    "belt.back.atlatl",
+    "belt.back_left.knife"
+   ],
+   "follows_bone": "pelvis",
+   "angles_deg": [
+    170,
+    240
+   ],
+   "y": [
+    0.5,
+    1.06
+   ],
+   "radial_band_above_legacy_outer_cm": [
+    0,
+    6
+   ],
+   "rules": [
+    "Leave free of pouches, blanket rolls and tumplines hanging below the belt.",
+    "The knot of belt_tied_behind sits at 175-185 deg: the back point moves to 200 deg (see survey)."
+   ],
+   "note": ""
+  },
+  {
+   "id": "left_hip_second_item",
+   "purpose": "second pistol (cross draw) / hanger frog / knife in front of the shot pouch",
+   "used_by": [
+    "belt.L_hip.pistol",
+    "belt.L_hip.saber",
+    "belt.L_hip.knife"
+   ],
+   "follows_bone": "pelvis",
+   "angles_deg": [
+    270,
+    300
+   ],
+   "y": [
+    0.55,
+    1.05
+   ],
+   "radial_band_above_legacy_outer_cm": [
+    0,
+    7
+   ],
+   "rules": [
+    "The shot pouch must hang at or behind 285 deg (today 240-285: it may not move forward).",
+    "Sash knots and ends tied at the left hip block this zone (sash gear lists no L_hip point)."
+   ],
+   "note": ""
+  },
+  {
+   "id": "horn_back_right",
+   "purpose": "powder horn behind and below the right arm",
+   "used_by": [
+    "horn.back_R_top"
+   ],
+   "follows_bone": "spinec",
+   "angles_deg": [
+    130,
+    195
+   ],
+   "y": [
+    1.02,
+    1.2
+   ],
+   "radial_band_above_legacy_outer_cm": [
+    0,
+    7
+   ],
+   "rules": [
+    "Keep capes, blanket folds and tumplines from filling this band; the horn strap comes over the left shoulder.",
+    "A wrap (blanket, fur mantle) over it pushes it out by the wrap bulk; the horn stays outside the wrap."
+   ],
+   "note": ""
+  },
+  {
+   "id": "back_long_slots",
+   "purpose": "long_A / long_B slung weapons and the quiver",
+   "used_by": [
+    "back.long_A.*",
+    "back.long_B.*",
+    "back.quiver"
+   ],
+   "follows_bone": "spineb",
+   "angles_deg": [
+    140,
+    220
+   ],
+   "y": [
+    0.8,
+    1.45
+   ],
+   "radial_band_above_legacy_outer_cm": [
+    0,
+    16
+   ],
+   "rules": [
+    "No hard accessories on the back between the shoulder blades and the buttocks (blanket rolls, knapsacks, tumpline loads) while long weapons are slung; a tumpline blanket roll replaces a long slot.",
+    "Wraps and fur mantles raise the slot by their back bulk (outfit_bulk)."
+   ],
+   "note": ""
+  },
+  {
+   "id": "over_shoulders",
+   "purpose": "long weapons pass behind and above both shoulders; quiver nocks behind the right shoulder",
+   "used_by": [
+    "back.long_A.*",
+    "back.long_B.*",
+    "back.quiver"
+   ],
+   "follows_bone": "spineb",
+   "angles_deg": [
+    110,
+    250
+   ],
+   "y": [
+    1.35,
+    2.35
+   ],
+   "radial_band_above_legacy_outer_cm": [
+    0,
+    20
+   ],
+   "rules": [
+    "Hats: brims and plumes must clear lines from (+-0.10, 1.42, -0.18) up to (+-0.5, 2.3, -0.10); tricorn back corners are the risk.",
+    "Hair queues / braids lie under the slung items (they are pendulums on wrinklemaps)."
+   ],
+   "note": ""
+  },
+  {
+   "id": "chest_pistol_sling",
+   "purpose": "pistols hung on the pistol sling",
+   "used_by": [
+    "pistol_sling.chest_L",
+    "pistol_sling.chest_R"
+   ],
+   "follows_bone": "spined",
+   "angles_deg": [
+    320,
+    40
+   ],
+   "y": [
+    1.02,
+    1.32
+   ],
+   "radial_band_above_legacy_outer_cm": [
+    0,
+    6
+   ],
+   "rules": [
+    "Only while the pistol sling is worn: gorgets, brooches and kerchief ends must stay above y 1.30 or under the pistols."
+   ],
+   "note": ""
+  },
+  {
+   "id": "front_sash_tuck",
+   "purpose": "pistol through the sash at the front left",
+   "used_by": [
+    "sash.front_left.pistol"
+   ],
+   "follows_bone": "spinea",
+   "angles_deg": [
+    320,
+    360
+   ],
+   "y": [
+    0.85,
+    1.12
+   ],
+   "radial_band_above_legacy_outer_cm": [
+    0,
+    6
+   ],
+   "rules": [
+    "Only with a sash: aprons and breechcloth fronts lie under it."
+   ],
+   "note": ""
+  }
+ ],
+ "customizer_conflicts": [
+  {
+   "item": "knife_tomahawk (accessories.waist)",
+   "issue": "a cosmetic belt knife + tomahawk duplicates loadout weapons",
+   "request": "drop it from the catalog or make it a loadout display (hidden when the loadout provides the knife / tomahawk)"
+  },
+  {
+   "item": "powder_horn (accessories.shoulder, existing mesh)",
+   "issue": "sits in right_hip_pistol",
+   "request": "use the new horn shape and placement horn_back_right (body_fit_history.md section 6)"
+  },
+  {
+   "item": "shot_pouch / ew_shot_pouch",
+   "issue": "left hip; must stay at or behind 285 deg",
+   "request": "keep today's placement"
+  },
+  {
+   "item": "br_belts_cartridge",
+   "issue": "cartridge box in right_hip_pistol",
+   "request": "declare it 'blocks R_hip' in the catalog so the loadout moves the pistol"
+  },
+  {
+   "item": "sash_fingerwoven / ew_sash",
+   "issue": "knot and ends",
+   "request": "tie at the left hip (270 deg), ends hanging no lower than y 0.55, nothing in right_hip_pistol"
+  },
+  {
+   "item": "tumpline_blanket_roll / knapsack",
+   "issue": "back_long_slots",
+   "request": "declare 'uses back' so the loadout frees a long slot"
+  }
+ ]
+}

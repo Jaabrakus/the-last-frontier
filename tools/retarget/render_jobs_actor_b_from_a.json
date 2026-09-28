@@ -1,0 +1,831 @@
+[
+ {
+  "frames": 5,
+  "camera": [
+   2.8,
+   2.0,
+   4.8
+  ],
+  "target": [
+   0.0,
+   0.9,
+   0.0
+  ],
+  "crop": [
+   90,
+   60,
+   1010,
+   720
+  ],
+  "scale": 0.4,
+  "group": "saber-cuts",
+  "weapon": 0.8,
+  "clips": [
+   "atk-machete-1-slash-intro",
+   "atk-machete-1-slash",
+   "atk-machete-2-slash-intro",
+   "atk-machete-2-slash"
+  ],
+  "title": "saber-cuts: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source   blue = Actor_B retarget   black bar = 0.80 m blade: Actor_A along its machete prop +Z, Actor_B along the library blade frame +Y (saber: SABER_PROP_OFFSET)",
+  "ortho": 2.5,
+  "weapon_a": {
+   "axis": "z"
+  },
+  "weapon_b": {
+   "axis": "y"
+  }
+ },
+ {
+  "frames": 5,
+  "camera": [
+   2.8,
+   2.0,
+   4.8
+  ],
+  "target": [
+   0.0,
+   0.9,
+   0.0
+  ],
+  "crop": [
+   90,
+   60,
+   1010,
+   720
+  ],
+  "scale": 0.4,
+  "group": "saber-heavy",
+  "weapon": 0.8,
+  "clips": [
+   "atk-machete-1-slash-far-intro",
+   "atk-machete-2-finisher",
+   "atk-machete-2-front-hack-finisher",
+   "atk-actor_a-machete-back-hack-finisher-1"
+  ],
+  "title": "saber-heavy: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source   blue = Actor_B retarget   black bar = 0.80 m blade: Actor_A along its machete prop +Z, Actor_B along the library blade frame +Y (saber: SABER_PROP_OFFSET)",
+  "ortho": 2.5,
+  "weapon_a": {
+   "axis": "z"
+  },
+  "weapon_b": {
+   "axis": "y"
+  }
+ },
+ {
+  "frames": 5,
+  "camera": [
+   2.8,
+   2.0,
+   4.8
+  ],
+  "target": [
+   0.0,
+   0.9,
+   0.0
+  ],
+  "crop": [
+   90,
+   60,
+   1010,
+   720
+  ],
+  "scale": 0.4,
+  "group": "tomahawk",
+  "weapon": 0.45,
+  "clips": [
+   "atk-actor_a-machete-hit2-fin-intro",
+   "atk-actor_a-machete-hit2-fin",
+   "atk-machete-2-finisher-intro"
+  ],
+  "title": "tomahawk: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source   blue = Actor_B retarget   black bar = 0.45 m blade: Actor_A along its machete prop +Z, Actor_B along the library blade frame +Y (saber: SABER_PROP_OFFSET)",
+  "ortho": 2.5,
+  "weapon_a": {
+   "axis": "z"
+  },
+  "weapon_b": {
+   "axis": "y"
+  }
+ },
+ {
+  "frames": 5,
+  "camera": [
+   2.8,
+   2.0,
+   4.8
+  ],
+  "target": [
+   0.0,
+   0.9,
+   0.0
+  ],
+  "crop": [
+   90,
+   60,
+   1010,
+   720
+  ],
+  "scale": 0.4,
+  "group": "draw-stow",
+  "weapon": 0.8,
+  "clips": [
+   "machete-draw--idle^grab--part",
+   "machete-draw--grab^idle--part",
+   "machete-stow--place^idle--part",
+   "machete-crouch-draw--idle^grab--part"
+  ],
+  "title": "draw-stow: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source   blue = Actor_B retarget   black bar = 0.80 m blade: Actor_A along its machete prop +Z, Actor_B along the library blade frame +Y (saber: SABER_PROP_OFFSET)",
+  "ortho": 2.5,
+  "weapon_a": {
+   "axis": "z"
+  },
+  "weapon_b": {
+   "axis": "y"
+  }
+ },
+ {
+  "frames": 5,
+  "camera": [
+   2.8,
+   2.0,
+   4.8
+  ],
+  "target": [
+   0.0,
+   0.9,
+   0.0
+  ],
+  "crop": [
+   90,
+   60,
+   1010,
+   720
+  ],
+  "scale": 0.4,
+  "group": "fists",
+  "clips": [
+   "atk-fist-1-right-hook-hit",
+   "atk-fist-2-left-hook-hit",
+   "atk-fist-3-right-hook-hit",
+   "atk-fist-4-to-knee-hit"
+  ],
+  "title": "fists: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source (true bind pose as rest)   blue = Actor_B retarget",
+  "ortho": 2.5
+ },
+ {
+  "frames": 5,
+  "camera": [
+   2.8,
+   2.0,
+   4.8
+  ],
+  "target": [
+   0.0,
+   0.9,
+   0.0
+  ],
+  "crop": [
+   90,
+   60,
+   1010,
+   720
+  ],
+  "scale": 0.4,
+  "group": "fists-more",
+  "clips": [
+   "atk-fist-sprint-hit",
+   "atk-fist-o^r-left-hook-hit",
+   "atk-fist-right-to-down-right-gutpunch-hit",
+   "atk-fist-miss"
+  ],
+  "title": "fists-more: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source (true bind pose as rest)   blue = Actor_B retarget",
+  "ortho": 2.5
+ },
+ {
+  "frames": 5,
+  "camera": [
+   2.8,
+   2.0,
+   4.8
+  ],
+  "target": [
+   0.0,
+   0.9,
+   0.0
+  ],
+  "crop": [
+   90,
+   60,
+   1010,
+   720
+  ],
+  "scale": 0.4,
+  "group": "fist-guard",
+  "clips": [
+   "fist-block-cycle-intro",
+   "fist-block-hit",
+   "def-fist-v-fist-right-hook-actor_a-evade",
+   "def-fist-v-fist-right-hook-actor_a-evade-hit"
+  ],
+  "title": "fist-guard: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source (true bind pose as rest)   blue = Actor_B retarget",
+  "ortho": 2.5
+ },
+ {
+  "frames": 5,
+  "camera": [
+   2.8,
+   2.0,
+   4.8
+  ],
+  "target": [
+   0.0,
+   0.9,
+   0.0
+  ],
+  "crop": [
+   90,
+   60,
+   1010,
+   720
+  ],
+  "scale": 0.4,
+  "group": "musket-butt",
+  "weapon": 1.5,
+  "clips": [
+   "atk-lg-1-intro",
+   "atk-lg-1",
+   "atk-lg-rifle-butt-finisher-intro",
+   "atk-lg-rifle-butt-finisher"
+  ],
+  "title": "musket-butt: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source (rifle frame)   blue = Actor_B retarget (two-handed frame, butt along +Z)   black bar = 1.50 m musket",
+  "ortho": 2.5,
+  "weapon_a": {
+   "axis": "z",
+   "from": -0.35,
+   "to": 1.15
+  },
+  "weapon_b": {
+   "axis": "z",
+   "from": -0.79,
+   "to": 0.71
+  }
+ },
+ {
+  "frames": 5,
+  "camera": [
+   2.8,
+   2.0,
+   4.8
+  ],
+  "target": [
+   0.0,
+   0.9,
+   0.0
+  ],
+  "crop": [
+   90,
+   60,
+   1010,
+   720
+  ],
+  "scale": 0.4,
+  "group": "spear-guard",
+  "weapon": 1.8,
+  "clips": [
+   "pipe-block-intro",
+   "pipe-block-cycle",
+   "pipe-block-hit",
+   "atk-pipe-block"
+  ],
+  "title": "spear-guard: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source   blue = Actor_B retarget   black bar = 1.80 m haft along +Z (two-handed frame; the guard clips key no prop: orange = the line through the source's grip points, blue = the library weapon built from it)",
+  "ortho": 2.5
+ },
+ {
+  "frames": 5,
+  "camera": [
+   2.8,
+   2.0,
+   4.8
+  ],
+  "target": [
+   0.0,
+   0.9,
+   0.0
+  ],
+  "crop": [
+   90,
+   60,
+   1010,
+   720
+  ],
+  "scale": 0.4,
+  "group": "haft-sweep",
+  "weapon": 1.8,
+  "clips": [
+   "atk-pipe-1-side-swing-intro",
+   "atk-pipe-1-side-swing-hit",
+   "atk-pipe-1-side-swing-miss"
+  ],
+  "title": "haft-sweep: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source   blue = Actor_B retarget   black bar = 1.80 m haft along +Z (two-handed frame; the guard clips key no prop: orange = the line through the source's grip points, blue = the library weapon built from it)",
+  "ortho": 2.5
+ },
+ {
+  "frames": 5,
+  "camera": [
+   2.8,
+   2.0,
+   4.8
+  ],
+  "target": [
+   0.0,
+   0.9,
+   0.0
+  ],
+  "crop": [
+   90,
+   60,
+   1010,
+   720
+  ],
+  "scale": 0.4,
+  "group": "club",
+  "weapon": 0.9,
+  "clips": [
+   "atk-pipe-1-chop-hit",
+   "atk-pipe-2-side-swing-hit",
+   "atk-pipe-3-to-knee-hit",
+   "atk-pipe-sprint-attack-hit"
+  ],
+  "title": "club: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source   blue = Actor_B retarget   black bar = 0.90 m haft along +Z (two-handed frame; the guard clips key no prop: orange = the line through the source's grip points, blue = the library weapon built from it)",
+  "ortho": 2.5
+ },
+ {
+  "frames": 5,
+  "camera": [
+   2.8,
+   2.0,
+   4.8
+  ],
+  "target": [
+   0.0,
+   0.9,
+   0.0
+  ],
+  "crop": [
+   90,
+   60,
+   1010,
+   720
+  ],
+  "scale": 0.4,
+  "group": "dodge",
+  "clips": [
+   "generic-dodge--l",
+   "generic-dodge--r",
+   "generic-dodge--fw",
+   "generic-dodge--bw"
+  ],
+  "title": "dodge: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source (true bind pose as rest)   blue = Actor_B retarget",
+  "ortho": 2.5
+ },
+ {
+  "frames": 6,
+  "camera": [
+   2.2,
+   2.6,
+   4.0
+  ],
+  "target": [
+   0.0,
+   0.2,
+   0.0
+  ],
+  "crop": [
+   60,
+   90,
+   1040,
+   690
+  ],
+  "scale": 0.4,
+  "group": "crawl",
+  "clips": [
+   "downed-crawl-fw",
+   "downed-crawl-fw-r",
+   "downed-crawl-bw",
+   "downed-crawl-bw-r"
+  ],
+  "title": "crawl: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source (true bind pose as rest)   blue = Actor_B retarget",
+  "spacing": [
+   -0.9,
+   0.9,
+   2.7
+  ],
+  "ortho": 2.9
+ },
+ {
+  "frames": 6,
+  "camera": [
+   2.2,
+   2.6,
+   4.0
+  ],
+  "target": [
+   0.0,
+   0.2,
+   0.0
+  ],
+  "crop": [
+   60,
+   90,
+   1040,
+   690
+  ],
+  "scale": 0.4,
+  "group": "crawl-start-stop",
+  "clips": [
+   "downed-idle^crawl-fw",
+   "downed-crawl-fw^idle",
+   "downed-idle^crawl-bw-l",
+   "downed-crawl-bw-l^idle"
+  ],
+  "title": "crawl-start-stop: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source (true bind pose as rest)   blue = Actor_B retarget",
+  "spacing": [
+   -0.9,
+   0.9,
+   2.7
+  ],
+  "ortho": 2.9
+ },
+ {
+  "frames": 6,
+  "camera": [
+   2.8,
+   2.0,
+   4.8
+  ],
+  "target": [
+   0.0,
+   0.6,
+   0.2
+  ],
+  "crop": [
+   90,
+   60,
+   1010,
+   720
+  ],
+  "scale": 0.4,
+  "group": "get-down",
+  "clips": [
+   "crouch-idle-fw^downed",
+   "crouch-idle-r^downed",
+   "stealth-idle-fw^downed",
+   "stealth-run-fw^downed"
+  ],
+  "title": "get-down: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source (true bind pose as rest)   blue = Actor_B retarget",
+  "ortho": 2.5
+ },
+ {
+  "frames": 6,
+  "camera": [
+   2.8,
+   2.0,
+   4.8
+  ],
+  "target": [
+   0.0,
+   0.6,
+   0.2
+  ],
+  "crop": [
+   90,
+   60,
+   1010,
+   720
+  ],
+  "scale": 0.4,
+  "group": "get-up-flat",
+  "clips": [
+   "co-op-stunned-enter",
+   "co-op-stunned-revive",
+   "downed^death-fw",
+   "downed^death-l"
+  ],
+  "title": "get-up-flat: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source (true bind pose as rest)   blue = Actor_B retarget",
+  "ortho": 2.5
+ },
+ {
+  "frames": 7,
+  "horse": true,
+  "horse_proxy": true,
+  "lift": 1.37,
+  "floor": true,
+  "spacing": [
+   -1.3,
+   1.3,
+   3.9
+  ],
+  "camera": [
+   7.0,
+   4.0,
+   8.4
+  ],
+  "target": [
+   1.3,
+   0.8,
+   0.0
+  ],
+  "crop": [
+   40,
+   40,
+   1060,
+   720
+  ],
+  "scale": 0.4,
+  "group": "horse-mount",
+  "clips": [
+   "actor_a-horse-mount-left",
+   "actor_a-horse-mount-right"
+  ],
+  "title": "horse-mount: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source, moved into the saddle frame by the solved align   blue = Actor_B retarget (saddle frame, floor at its reference height)   green = Actor_B on the game horse (1.50 m saddle) with the runtime recipe",
+  "mount": "auto",
+  "ortho": 5.2,
+  "mount_recipe_h": 1.4961
+ },
+ {
+  "frames": 6,
+  "horse": true,
+  "horse_proxy": true,
+  "lift": 1.4961,
+  "floor": true,
+  "spacing": [
+   -1.25,
+   1.25,
+   3.5
+  ],
+  "camera": [
+   5.0,
+   3.2,
+   6.0
+  ],
+  "target": [
+   0.0,
+   1.15,
+   0.2
+  ],
+  "crop": [
+   80,
+   40,
+   1020,
+   720
+  ],
+  "scale": 0.4,
+  "group": "horse-turns",
+  "clips": [
+   "actor_a-horse-idle-turn-l",
+   "actor_a-horse-tight-turn-trot-l",
+   "actor_a-horse-gallop^gallop-90-l",
+   "actor_a-horse-gallop^gallop-180-r"
+  ],
+  "title": "horse-turns: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source   blue = Actor_B retarget   translucent = horse proxy at the game horse's saddle height (1.50 m, 14.2 hands)",
+  "ortho": 3.3
+ },
+ {
+  "frames": 6,
+  "horse": true,
+  "horse_proxy": true,
+  "lift": 1.4961,
+  "floor": true,
+  "spacing": [
+   -1.25,
+   1.25,
+   3.5
+  ],
+  "camera": [
+   5.0,
+   3.2,
+   6.0
+  ],
+  "target": [
+   0.0,
+   1.15,
+   0.2
+  ],
+  "crop": [
+   80,
+   40,
+   1020,
+   720
+  ],
+  "scale": 0.4,
+  "group": "horse-leans",
+  "clips": [
+   "actor_a-horse-gallop-lean-l",
+   "actor_a-horse-gallop-lean-hard-l",
+   "actor_a-horse-gallop-hard-turn-r",
+   "actor_a-horse-canter-lean-l"
+  ],
+  "title": "horse-leans: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source   blue = Actor_B retarget   translucent = horse proxy at the game horse's saddle height (1.50 m, 14.2 hands)",
+  "ortho": 3.3
+ },
+ {
+  "frames": 6,
+  "horse": true,
+  "horse_proxy": true,
+  "lift": 1.4961,
+  "floor": true,
+  "spacing": [
+   -1.25,
+   1.25,
+   3.5
+  ],
+  "camera": [
+   5.0,
+   3.2,
+   6.0
+  ],
+  "target": [
+   0.0,
+   1.15,
+   0.2
+  ],
+  "crop": [
+   80,
+   40,
+   1020,
+   720
+  ],
+  "scale": 0.4,
+  "group": "horse-moves",
+  "clips": [
+   "actor_a-horse-rear",
+   "actor_a-horse-idle^gallop-rear",
+   "actor_a-horse-slide-stop",
+   "actor_a-horse-incline-stumble",
+   "actor_a-horse-idle^jump-in-place"
+  ],
+  "title": "horse-moves: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source   blue = Actor_B retarget   translucent = horse proxy at the game horse's saddle height (1.50 m, 14.2 hands)",
+  "ortho": 3.3
+ },
+ {
+  "frames": 6,
+  "horse": true,
+  "horse_proxy": true,
+  "lift": 1.4961,
+  "floor": true,
+  "spacing": [
+   -1.25,
+   1.25,
+   3.5
+  ],
+  "camera": [
+   5.0,
+   3.2,
+   6.0
+  ],
+  "target": [
+   0.0,
+   1.15,
+   0.2
+  ],
+  "crop": [
+   80,
+   40,
+   1020,
+   720
+  ],
+  "scale": 0.4,
+  "group": "horse-jumps",
+  "clips": [
+   "actor_a-horse-gallop^jump-over-1m",
+   "actor_a-horse-idle^jump-over-1m",
+   "actor_a-horse-drop-down-2m",
+   "actor_a-horse-jump-across-5m-land"
+  ],
+  "title": "horse-jumps: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source   blue = Actor_B retarget   translucent = horse proxy at the game horse's saddle height (1.50 m, 14.2 hands)",
+  "ortho": 3.3
+ },
+ {
+  "frames": 6,
+  "horse": true,
+  "horse_proxy": true,
+  "lift": 1.4961,
+  "floor": true,
+  "spacing": [
+   -1.25,
+   1.25,
+   3.5
+  ],
+  "camera": [
+   5.0,
+   3.2,
+   6.0
+  ],
+  "target": [
+   0.0,
+   1.15,
+   0.2
+  ],
+  "crop": [
+   80,
+   40,
+   1020,
+   720
+  ],
+  "scale": 0.4,
+  "group": "horse-bail",
+  "clips": [
+   "actor_a-horse-idle^jump-long-fw",
+   "actor_a-horse-idle^jump-long-l",
+   "actor_a-horse-idle^jump-long-bw",
+   "actor_a-horse-idle^gallop"
+  ],
+  "title": "horse-bail: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source   blue = Actor_B retarget   translucent = horse proxy at the game horse's saddle height (1.50 m, 14.2 hands)",
+  "ortho": 3.3
+ },
+ {
+  "frames": 6,
+  "horse": true,
+  "horse_proxy": true,
+  "lift": 1.4961,
+  "floor": true,
+  "spacing": [
+   -1.25,
+   1.25,
+   3.5
+  ],
+  "camera": [
+   5.0,
+   3.2,
+   6.0
+  ],
+  "target": [
+   0.0,
+   1.15,
+   0.2
+  ],
+  "crop": [
+   80,
+   40,
+   1020,
+   720
+  ],
+  "scale": 0.4,
+  "group": "horse-pistol",
+  "weapon": 0.35,
+  "clips": [
+   "actor_a-blind-fire-1h-far-l-gallop",
+   "actor_a-blind-fire-1h-l-gallop",
+   "actor_a-blind-fire-1h-fw-gallop",
+   "actor_a-blind-fire-1h-r-gallop",
+   "actor_a-ride-pistol-arm--part"
+  ],
+  "title": "horse-pistol: Actor_A source -> Actor_B (actor_b_from_a)",
+  "prefix": "bfa_",
+  "legend": "orange = Actor_A source   blue = Actor_B retarget   translucent = horse proxy at the game horse's saddle height (1.50 m, 14.2 hands)",
+  "ortho": 3.3
+ }
+]

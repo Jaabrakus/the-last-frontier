@@ -1,0 +1,304 @@
+{
+ "id": "fr_stockings",
+ "name": "Bas (knit stockings)",
+ "description": "Knitted wool stockings drawn up over the knee under the breeches' knee band.",
+ "kind": "garment",
+ "set": "regulars",
+ "slot": "legs.over",
+ "alt_slots": [],
+ "layer": {
+  "default": 10
+ },
+ "glb": "res://assets/character/garments/military/fr_stockings.glb",
+ "mesh": "fr_stockings",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "fr_stockings"
+  }
+ ],
+ "occupies_regions": [
+  "thigh_lower_l",
+  "shin_upper_l",
+  "shin_lower_l",
+  "ankle_l",
+  "foot_l",
+  "thigh_lower_r",
+  "shin_upper_r",
+  "shin_lower_r",
+  "ankle_r",
+  "foot_r"
+ ],
+ "hides_regions": [
+  "shin_upper_l",
+  "shin_upper_r",
+  "shin_lower_l",
+  "shin_lower_r",
+  "ankle_l",
+  "ankle_r",
+  "foot_l"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "knit",
+   "role": "cloth",
+   "fabric": "KNIT",
+   "palette": [
+    "royal_blue",
+    "linen_white",
+    "slate_grey"
+   ],
+   "default": "royal_blue",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "royal_blue": "#233C78",
+    "linen_white": "#E8E3D3",
+    "slate_grey": "#6B6A66"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 2798,
+    "verts": 1441,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "foot_l",
+     "foot_r",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "l_ball",
+     "r_upper_leg",
+     "r_knee",
+     "r_ankle",
+     "r_heel",
+     "r_ball"
+    ]
+   }
+  },
+  "tris": 2798,
+  "verts": 1441,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0056
+  },
+  "glb_kb": 264.2
+ },
+ "budget": {
+  "tris_max": 2500
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Blue stockings with the blue veste and breeches of the troupes de la marine.",
+ "sources": [
+  "M4",
+  "M5",
+  "M6"
+ ],
+ "aliases": [],
+ "tags": [
+  "regulars",
+  "french"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": true,
+   "layer": "base",
+   "groups": {
+    "feet": {
+     "n": 507,
+     "min": 0.003,
+     "max": 0.003,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.0,
+      0.003
+     ]
+    },
+    "shins": {
+     "n": 534,
+     "min": 0.003,
+     "max": 0.003,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.0,
+      0.003
+     ]
+    },
+    "thighs": {
+     "n": 400,
+     "min": 0.0021,
+     "max": 0.003,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.0,
+      0.003
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/military_fr_stockings.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_fr_stockings.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+ "pieces_tris": {
+  "0_cloth": 2798
+ },
+ "coverage": {
+  "method": "rays from the skin: normal + 4 tilted 25 deg, female and male fit, within 12 cm (military_lib._base.coverage)",
+  "hidden": [
+   "shin_upper_l",
+   "shin_upper_r",
+   "shin_lower_l",
+   "shin_lower_r",
+   "ankle_l",
+   "ankle_r",
+   "foot_l"
+  ],
+  "not_hidden_candidates": {
+   "foot_r": 0.998
+  },
+  "share": {
+   "thigh_lower_l": {
+    "normal": 0.538,
+    "cone": 0.533
+   },
+   "shin_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "foot_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "thigh_lower_r": {
+    "normal": 0.533,
+    "cone": 0.526
+   },
+   "shin_upper_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "foot_r": {
+    "normal": 0.998,
+    "cone": 0.998
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 2.11,
+   "p05_mm": 2.98,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 2.04,
+   "p05_mm": 2.76,
+   "inside_skin": 0
+  }
+ },
+ "deform_limits": {
+  "fr_stockings": [
+   0.0185,
+   0.015,
+   0.002,
+   2.6
+  ]
+ },
+ "deform_class": {
+  "class": "leggings",
+  "legacy_limit": [
+   0.022,
+   0.031,
+   0.006,
+   2.8
+  ]
+ },
+ "deform_scan": {
+  "female": [
+   0.0147,
+   0.0118,
+   0.0007000000000000001,
+   2.04
+  ],
+  "male": [
+   0.0147,
+   0.0118,
+   0.0007000000000000001,
+   2.04
+  ],
+  "worst": [
+   0.0147,
+   0.0118,
+   0.0007000000000000001,
+   2.04
+  ],
+  "limit": [
+   0.0185,
+   0.015,
+   0.002,
+   2.6
+  ],
+  "legacy_class": "leggings",
+  "legacy_limit": [
+   0.022,
+   0.031,
+   0.006,
+   2.8
+  ],
+  "within_legacy_class": true,
+  "scanned": "2026-09-24"
+ }
+}

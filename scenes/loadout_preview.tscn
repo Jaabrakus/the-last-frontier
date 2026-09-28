@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/loadout/loadout_preview.gd" id="1_lpv"]
+
+[node name="LoadoutPreview" type="Node3D"]
+script = ExtResource("1_lpv")

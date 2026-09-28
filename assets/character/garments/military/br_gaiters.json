@@ -1,0 +1,303 @@
+{
+ "id": "br_gaiters",
+ "name": "Long gaiters",
+ "description": "Linen gaiters to above the knee, buttoned up the outer side, strapped below the knee.",
+ "kind": "garment",
+ "set": "regulars",
+ "slot": "legs.over",
+ "alt_slots": [],
+ "layer": {
+  "default": 30,
+  "feet": 45
+ },
+ "glb": "res://assets/character/garments/military/br_gaiters.glb",
+ "mesh": "br_gaiters",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "br_gaiters"
+  }
+ ],
+ "occupies_regions": [
+  "thigh_lower_l",
+  "shin_upper_l",
+  "shin_lower_l",
+  "ankle_l",
+  "thigh_lower_r",
+  "shin_upper_r",
+  "shin_lower_r",
+  "ankle_r"
+ ],
+ "hides_regions": [
+  "shin_upper_l",
+  "shin_upper_r",
+  "shin_lower_l",
+  "shin_lower_r",
+  "ankle_l",
+  "ankle_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "linen",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "linen_white",
+    "logwood_black",
+    "slate_grey"
+   ],
+   "default": "linen_white",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "linen_white": "#E8E3D3",
+    "logwood_black": "#1C1B20",
+    "slate_grey": "#6B6A66"
+   }
+  },
+  {
+   "zone": 2,
+   "name": "garter strap",
+   "role": "leather",
+   "fabric": "LEA",
+   "palette": [
+    "leather_black",
+    "leather_brown"
+   ],
+   "default": "leather_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "leather_black": "#1D1B19",
+    "leather_brown": "#5B3D26"
+   }
+  },
+  {
+   "zone": 3,
+   "name": "buttons and buckles",
+   "role": "button",
+   "fabric": "MET",
+   "palette": [
+    "pewter",
+    "leather_black",
+    "brass"
+   ],
+   "default": "pewter",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "pewter": "#9A9C9A",
+    "leather_black": "#1D1B19",
+    "brass": "#B58F4A"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 3419,
+    "verts": 1894,
+    "zones": [
+     0,
+     2,
+     3
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "foot_l",
+     "foot_r",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "l_ball",
+     "r_upper_leg",
+     "r_knee",
+     "r_ankle",
+     "r_heel",
+     "r_ball"
+    ]
+   }
+  },
+  "tris": 3419,
+  "verts": 1894,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.005
+  },
+  "glb_kb": 331.1
+ },
+ "budget": {
+  "tris_max": 2500
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Long white gaiters over the knee in the 1750s (Morier, 1751); black linen gaiters from the 1768 warrant. In the woods in 1758 the army changed to wool leggings.",
+ "sources": [
+  "M20",
+  "P6",
+  "M1"
+ ],
+ "aliases": [],
+ "tags": [
+  "regulars",
+  "british"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": true,
+   "layer": "legwear",
+   "groups": {
+    "feet": {
+     "n": 227,
+     "min": 0.0077,
+     "max": 0.013,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "shins": {
+     "n": 1127,
+     "min": 0.0117,
+     "max": 0.0227,
+     "below_inner": 0,
+     "above_outer": 40,
+     "band": [
+      0.012,
+      0.019
+     ]
+    },
+    "thighs": {
+     "n": 540,
+     "min": 0.0132,
+     "max": 0.0186,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.012,
+      0.019
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/military_br_gaiters.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_br_gaiters.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+ "pieces_tris": {
+  "0_cloth": 2975,
+  "1_trim": 444
+ },
+ "coverage": {
+  "method": "rays from the skin: normal + 4 tilted 25 deg, female and male fit, within 12 cm (military_lib._base.coverage)",
+  "hidden": [
+   "shin_upper_l",
+   "shin_upper_r",
+   "shin_lower_l",
+   "shin_lower_r",
+   "ankle_l",
+   "ankle_r"
+  ],
+  "not_hidden_candidates": {},
+  "share": {
+   "thigh_lower_l": {
+    "normal": 0.473,
+    "cone": 0.451
+   },
+   "shin_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "foot_l": {
+    "normal": 0.236,
+    "cone": 0.214
+   },
+   "thigh_lower_r": {
+    "normal": 0.461,
+    "cone": 0.436
+   },
+   "shin_upper_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "foot_r": {
+    "normal": 0.213,
+    "cone": 0.186
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 7.68,
+   "p05_mm": 11.32,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 7.68,
+   "p05_mm": 11.28,
+   "inside_skin": 0
+  }
+ },
+ "deform_limits": {
+  "br_gaiters": [
+   0.0145,
+   0.0195,
+   0.004,
+   3.5
+  ]
+ },
+ "deform_class": {
+  "class": "leggings",
+  "legacy_limit": [
+   0.022,
+   0.031,
+   0.006,
+   2.8
+  ]
+ }
+}

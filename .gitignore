@@ -1,0 +1,7 @@
+.godot/
+override.cfg
+__pycache__/
+*.pyc
+.DS_Store
+# Godot import temp files left by an interrupted import
+*.import-*

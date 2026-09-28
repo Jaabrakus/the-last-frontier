@@ -1,0 +1,183 @@
+{
+ "id": "hair_loose_tied",
+ "name": "Long, loosely tied",
+ "description": "Long hair combed back and tied at the nape.",
+ "kind": "hair",
+ "set": "hair",
+ "slot": "hair",
+ "alt_slots": [],
+ "layer": {
+  "default": 70
+ },
+ "glb": "res://assets/character/hair/hair_loose_tied.glb",
+ "mesh": "hair_loose_tied",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "hair_loose_tied"
+  },
+  {
+   "surface": "strands",
+   "name": "hair_loose_tied_tex"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [
+  "crown",
+  "sides",
+  "back",
+  "queue"
+ ],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "hair",
+   "role": "hair",
+   "fabric": "FLAT",
+   "palette": [],
+   "default": null,
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {}
+  },
+  {
+   "zone": 1,
+   "name": "tie",
+   "role": "tie",
+   "fabric": "SUEDE",
+   "palette": [
+    "leather_brown",
+    "logwood_black",
+    "stroud_red"
+   ],
+   "default": "leather_brown",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "leather_brown": "#5B3D26",
+    "logwood_black": "#1C1B20",
+    "stroud_red": "#8A1C1F"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "strands": {
+    "tris": 6232,
+    "verts": 6858,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "hair_back",
+     "hair_crown",
+     "hair_queue",
+     "hair_sides"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "spined",
+     "neck",
+     "heada",
+     "headb",
+     "wrinklemaps"
+    ]
+   },
+   "main": {
+    "tris": 400,
+    "verts": 200,
+    "zones": [
+     1
+    ],
+    "regions": [
+     "hair_queue"
+    ],
+    "max_influences": 1,
+    "bones": [
+     "wrinklemaps"
+    ]
+   }
+  },
+  "tris": 6632,
+  "verts": 7058,
+  "surface_count": 2,
+  "shapes": {
+   "sex": 0.0517,
+   "sex_head": 0.0517,
+   "face_breadth": 0.0001,
+   "face_length": 0.0,
+   "face_jaw_width": 0.0005,
+   "face_jaw_angle": 0.0005,
+   "face_chin_projection": 0.0,
+   "face_chin_width": 0.0,
+   "face_chin_height": 0.0,
+   "face_cheekbones": 0.0,
+   "face_midface": 0.0,
+   "face_cheek_fullness": 0.0001,
+   "face_prognathism": 0.0,
+   "face_brow_ridge": 0.0,
+   "face_eye_depth": 0.0,
+   "face_lid_crease": 0.0,
+   "face_lid_fold": 0.0,
+   "face_under_eye": 0.0,
+   "face_nasal_root": 0.0,
+   "face_nose_bridge": 0.0,
+   "face_nose_hump": 0.0,
+   "face_nose_width": 0.0,
+   "face_nose_length": 0.0,
+   "face_nose_tip": 0.0,
+   "face_nose_upturn": 0.0,
+   "face_lips_upper": 0.0,
+   "face_lips_lower": 0.0,
+   "hat_fit": 0.0049
+  },
+  "glb_kb": 1677.6
+ },
+ "budget": {
+  "tris_max": 14000
+ },
+ "evidence": "B",
+ "licence_note": null,
+ "history": "Long hair tied at the nape, common on the frontier; long tied or loose hair also among Native men.",
+ "sources": [
+  "M17",
+  "P1"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "frontier",
+  "woodlands"
+ ],
+ "checks": {},
+ "generator": "tools/character/hair/hair_loose_tied.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_loose_tied.py.",
+ "hair": {
+  "queue": true,
+  "pendulum_root_godot": [
+   0.0,
+   1.428,
+   -0.072
+  ],
+  "texture": "straight",
+  "strand_map": "res://assets/character/hair/tex/hair_atlas.png",
+  "builder": "hair v3 recipe",
+  "scalp_mask": "res://assets/character/hair/tex/hair_loose_tied_scalp.png",
+  "edge_feather": 0.3
+ }
+}

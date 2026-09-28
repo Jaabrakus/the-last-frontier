@@ -1,0 +1,202 @@
+{
+ "format": "frontier-forage",
+ "version": 1,
+ "summary": "Wild food and herb plants (scripts/forage: ForageField places and draws them and offers E, ForagePick picks, ForageModels builds them). User 2026-09-26: 'we need to add edible plants and herbs; plants and herbs will be the same things deer eat so we know where they will be'. Every plant here is gathered by people and eaten by white-tailed deer, so a patch in season is where deer feed (ForageField.deer_feed_spot / deer_eat for the wildlife).",
+ "basis": "Plants of the upper Mohawk valley woods in the 1760s and their seasons at about 43 N, and the deer's use of them, are general natural-history knowledge written from memory; they are not checked against a source in this workspace. Yields, stocks and times are design values.",
+ "calendar": "Seasons use the survival calendar's day ids (data/survival/seasons.json calendar.day_ids): a month and its early (1-10), mid (11-20) or late (21-) part. A window [from, to] wraps round the new year when to is before from.",
+ "clips": {
+  "low": ["actor_b-cap-casual-pick-flower-enter", "actor_b-cap-casual-pick-flower-loop", "actor_b-cap-casual-pick-flower-exit"],
+  "ground": ["actor_b-cap-ambi-search-low-in-place-entry", "actor_b-cap-ambi-search-low-in-place", "actor_b-cap-ambi-search-low-in-place-exit"],
+  "waist": ["actor_b-cap-ambi-search-1m-in-place-entry", "actor_b-cap-ambi-search-1m-in-place", "actor_b-cap-ambi-search-1m-in-place-exit"],
+  "high": ["actor_b-cap-ambi-search-high-in-place-entry", "actor_b-cap-ambi-search-high-in-place", "actor_b-cap-ambi-search-high-in-place-exit"]
+ },
+ "game_day_s": 3456,
+ "game_day_note": "Real seconds in a game day (seasons.json clock: 2.4 real minutes a game hour); stocks regrow on this clock.",
+ "stock_note": "stock: handfuls (the pack's units) each plant of a patch holds when it is full (a cane, a rosette, an acorn, a nut cluster); regrow_days: game days a picked plant takes to fill again (0: not this season).",
+ "plants": {
+  "blackberry": {
+   "name": "blackberry bramble", "item": "blackberries", "take": "Pick blackberries", "clip": "waist", "pick_s": 3.0,
+   "habitat": "edge", "forest": [0.3, 0.62], "trunk_m": [3.0, 12.0], "patches": 70, "per_patch": [4, 8], "spread_m": [1.2, 2.6],
+   "ripe": ["jul_late", "sep_early"], "stock": 2, "regrow_days": 3.0,
+   "deer": {"browse": 0.7, "ripe": 0.9},
+   "note": "Allegheny blackberry in clearings, old burns and the woods' edges; ripe from late July into early September. The fruit is eaten fresh or dried; a tea of the leaves and root was the country remedy for the flux. Deer browse the leaves and canes all year and take the fruit."
+  },
+  "strawberry": {
+   "name": "wild strawberry", "item": "strawberries", "take": "Pick wild strawberries", "clip": "low", "pick_s": 2.5,
+   "habitat": "open", "forest": [0.0, 0.3], "trunk_m": [6.0, 99.0], "patches": 55, "per_patch": [22, 40], "spread_m": [0.7, 1.4],
+   "ripe": ["jun_early", "jun_late"], "stock": 0.5, "regrow_days": 2.0,
+   "deer": {"browse": 0.8, "ripe": 0.9},
+   "note": "In the old fields and open ground; the fruit in June. Deer eat the leaves through the summer (a favourite forb)."
+  },
+  "plantain": {
+   "name": "plantain", "item": "plantain", "take": "Gather plantain leaves", "clip": "low", "pick_s": 2.0,
+   "habitat": "open", "forest": [0.0, 0.25], "trunk_m": [5.0, 99.0], "near_fort_m": 70.0, "patches": 45, "per_patch": [7, 14], "spread_m": [0.6, 1.3],
+   "ripe": ["may_early", "oct_late"], "stock": 0.6, "regrow_days": 2.0,
+   "deer": {"browse": 0.6, "ripe": 0.6},
+   "use": {"heal": 15.0, "over_s": 20.0, "text": "A plantain poultice on the wound"},
+   "note": "Broad-leaved plantain, 'white man's foot': come with the settlers, it grows where people walk, round the fort and by the paths. The bruised leaves are laid on wounds, cuts and stings; the young leaves are greens. Deer eat it."
+  },
+  "wintergreen": {
+   "name": "wintergreen", "item": "wintergreen", "take": "Gather wintergreen", "clip": "low", "pick_s": 2.5,
+   "habitat": "conifer", "forest": [0.45, 1.0], "trunk_m": [0.8, 6.0], "conifers_near": 2, "patches": 65, "per_patch": [14, 30], "spread_m": [0.7, 1.5],
+   "ripe": ["jan_early", "dec_late"], "berries": ["sep_mid", "apr_late"], "stock": 0.3, "regrow_days": 4.0,
+   "deer": {"browse": 0.5, "ripe": 0.8},
+   "note": "Teaberry: an evergreen carpet under pines and hemlocks. The leaves make a tea for aches and a cold, the red berries ripen in the fall and hang on through the winter. Deer eat it most in the fall and winter."
+  },
+  "ginseng": {
+   "name": "ginseng", "item": "ginseng", "take": "Dig the ginseng root", "clip": "ground", "pick_s": 6.0,
+   "habitat": "maple", "forest": [0.55, 1.0], "trunk_m": [1.5, 8.0], "maples_near": 2, "patches": 18, "per_patch": [1, 4], "spread_m": [0.4, 1.2],
+   "ripe": ["aug_mid", "oct_late"], "stock": 1.0, "regrow_days": 0.0,
+   "deer": {"browse": 0.4, "ripe": 0.5},
+   "note": "American ginseng in rich, shaded maple woods, scarce; the berries red in August and September, when the root is dug. A dug root does not grow back. Since the 1750s it has been bought at Albany and Montreal for the China trade. Deer browse it."
+  },
+  "acorns": {
+   "name": "oak", "item": "acorns", "take": "Gather acorns", "clip": "ground", "pick_s": 3.0,
+   "habitat": "oak", "trunk_m": [1.0, 7.0], "patches": 140, "per_patch": [10, 26], "spread_m": [1.5, 5.5],
+   "ripe": ["aug_late", "nov_late"], "early": {"aug_late": 0.25}, "stock": 0.25, "regrow_days": 2.0,
+   "deer": {"browse": 0.1, "ripe": 1.0},
+   "note": "Under the oaks from September to November (the first few in late August). Bitter until leached (forage.leach_acorns). The deer's first food of the fall: they come to the oaks when the acorns drop."
+  },
+  "hazelnuts": {
+   "name": "hazel", "item": "hazelnuts", "take": "Pick hazelnuts", "clip": "high", "pick_s": 3.5,
+   "habitat": "hazel", "patches": 999, "per_patch": [4, 7],
+   "ripe": ["aug_late", "sep_late"], "stock": 0.5, "regrow_days": 0.0,
+   "deer": {"browse": 0.6, "ripe": 0.5},
+   "note": "American hazel in the thickets and edges (the vegetation's hazel shrubs); the nuts picked in their husks from late August, before the squirrels have them. Deer browse the twigs."
+  },
+  "willow": {
+   "name": "black willow", "item": "willow_bark", "take": "Strip willow bark", "clip": "waist", "pick_s": 4.0,
+   "habitat": "low", "low_m": 1.0, "forest": [0.0, 0.95], "trunk_m": [1.5, 99.0], "patches": 20, "tries": 240, "per_patch": [2, 5], "spread_m": [1.5, 3.5],
+   "ripe": ["jan_early", "dec_late"], "stock": 1.0, "regrow_days": 6.0,
+   "deer": {"browse": 0.7, "ripe": 0.2},
+   "note": "Black willow and its sprouts in the damp hollows. The inner bark, chewed or steeped, was the old remedy for aches and fevers (the salicin that became aspirin). Deer browse the twigs in winter."
+  },
+  "yarrow": {
+   "name": "yarrow", "item": "yarrow", "take": "Gather yarrow", "clip": "low", "pick_s": 2.0,
+   "habitat": "open", "forest": [0.0, 0.35], "trunk_m": [4.0, 99.0], "patches": 50, "per_patch": [8, 16], "spread_m": [0.6, 1.4],
+   "ripe": ["may_early", "oct_late"], "berries": ["jun_mid", "sep_late"], "stock": 0.6, "regrow_days": 2.0,
+   "deer": {"browse": 0.3, "ripe": 0.3},
+   "use": {"heal": 5.0, "over_s": 10.0, "stanch": 0.9, "text": "Yarrow leaves packed into the wound"},
+   "note": "Soldier's woundwort, in the old fields and by the paths: feathery leaves, and flat white flower heads from June to September. Packed into a cut it stops the bleeding. Deer eat little of it."
+  },
+  "slippery_elm": {
+   "name": "slippery elm", "item": "elm_bark", "take": "Peel slippery elm bark", "clip": "waist", "pick_s": 4.5,
+   "habitat": "low", "low_m": 0.8, "forest": [0.3, 1.0], "trunk_m": [2.0, 20.0], "patches": 22, "per_patch": [1, 3], "spread_m": [1.5, 3.0],
+   "ripe": ["jan_early", "dec_late"], "stock": 1.0, "regrow_days": 8.0,
+   "deer": {"browse": 0.5, "ripe": 0.1},
+   "note": "Young slippery elms in the rich bottoms. The inner bark, soaked or boiled into a gruel, is slick and soothing: food for the sick, and for the flux. Deer browse the saplings."
+  },
+  "elderberry": {
+   "name": "elderberry", "item": "elderberries", "take": "Pick elderberries", "clip": "waist", "pick_s": 3.0,
+   "habitat": "low", "low_m": 0.7, "forest": [0.0, 1.0], "trunk_m": [2.0, 99.0], "patches": 22, "per_patch": [2, 4], "spread_m": [1.5, 3.0],
+   "ripe": ["aug_mid", "sep_late"], "stock": 1.5, "regrow_days": 3.0,
+   "deer": {"browse": 0.6, "ripe": 0.5},
+   "note": "Elder in the damp thickets along the hollows; flat heads of dark purple berries from mid August, cooked down into a syrup for colds and chills."
+  },
+  "hemp": {
+   "name": "hemp", "item": "hemp_tops", "take": "Cut hemp tops", "clip": "high", "pick_s": 3.0,
+   "habitat": "open", "near_fort_m": 110.0, "forest": [0.0, 0.25], "trunk_m": [6.0, 99.0], "patches": 22, "per_patch": [5, 12], "spread_m": [0.8, 1.8],
+   "ripe": ["jul_late", "sep_late"], "stock": 0.5, "regrow_days": 4.0,
+   "deer": {"browse": 0.3, "ripe": 0.2},
+   "note": "Hemp run wild from the settlers' fields round the fort (the colonies grew it for rope and sailcloth); the resinous flowering tops from late July."
+  },
+  "bearberry": {
+   "name": "bearberry", "item": "bearberry", "take": "Gather bearberry leaves", "clip": "low", "pick_s": 2.5,
+   "habitat": "conifer", "conifers_near": 1, "forest": [0.1, 0.75], "trunk_m": [1.5, 12.0], "patches": 24, "tries": 150, "per_patch": [4, 9], "spread_m": [0.8, 1.8],
+   "ripe": ["jan_early", "dec_late"], "berries": ["aug_late", "mar_late"], "stock": 0.4, "regrow_days": 4.0,
+   "deer": {"browse": 0.3, "ripe": 0.4},
+   "note": "Kinnikinnick: a glossy evergreen mat on the dry ground at the edges of the pines; red berries from late summer through the winter. The dried leaves were smoked, mixed with red-osier bark and tobacco."
+  },
+  "red_osier": {
+   "name": "red-osier dogwood", "item": "dogwood_bark", "take": "Scrape red-osier bark", "clip": "waist", "pick_s": 3.5,
+   "habitat": "low", "low_m": 0.8, "forest": [0.0, 0.95], "trunk_m": [1.5, 99.0], "patches": 20, "tries": 240, "per_patch": [2, 5], "spread_m": [1.2, 2.8],
+   "ripe": ["jan_early", "dec_late"], "berries": ["aug_early", "sep_late"], "stock": 1.0, "regrow_days": 5.0,
+   "deer": {"browse": 0.8, "ripe": 0.4},
+   "note": "Red-osier dogwood in the damp hollows, its stems blood red, brightest in winter; white berries in late summer. The inner bark, scraped and dried, is the red willow of kinnikinnick. A favourite browse of deer."
+  },
+  "jimsonweed": {
+   "name": "jimsonweed", "item": "jimsonweed", "take": "Gather jimsonweed", "clip": "waist", "pick_s": 2.5,
+   "habitat": "open", "near_fort_m": 100.0, "forest": [0.0, 0.25], "trunk_m": [6.0, 99.0], "patches": 12, "tries": 150, "per_patch": [2, 6], "spread_m": [0.8, 1.6],
+   "ripe": ["jul_early", "oct_late"], "berries": ["jul_mid", "sep_late"], "stock": 0.5, "regrow_days": 5.0,
+   "deer": {"browse": 0.0, "ripe": 0.0},
+   "note": "Jamestown weed, rank on the trodden ground round the fort: white trumpet flowers from July, then spiny pods. Every part is poison; soldiers who ate it in their greens at Jamestown in 1676 went mad for eleven days. Deer leave it alone."
+  },
+  "crabapple": {
+   "name": "crabapple", "item": "crabapples", "take": "Pick crabapples", "clip": "high", "pick_s": 3.0,
+   "habitat": "edge", "forest": [0.1, 0.85], "trunk_m": [3.0, 25.0], "patches": 18, "tries": 200, "per_patch": [1, 2], "spread_m": [1.0, 2.5],
+   "ripe": ["sep_early", "oct_late"], "stock": 2.0, "regrow_days": 0.0,
+   "deer": {"browse": 0.4, "ripe": 1.0},
+   "note": "Sweet crabapple at the woods' edges and in the old clearings: small, hard, sour apples from September, better pressed for cider or dried than eaten. Deer come to them as they fall."
+  },
+  "deadwood": {
+   "name": "dry sticks", "item": "branches", "take": "Gather dry sticks", "clip": "ground", "pick_s": 2.5,
+   "habitat": "woods", "forest": [0.3, 1.0], "trunk_m": [0.6, 9.0], "patches": 130, "per_patch": [3, 6], "spread_m": [1.5, 3.5],
+   "ripe": ["jan_early", "dec_late"], "stock": 1.0, "regrow_days": 5.0,
+   "deer": {"browse": 0.0, "ripe": 0.0},
+   "note": "Dead sticks and twigs fallen from the crowns, dry enough to snap: kindling and small wood without an axe (user 2026-09-28: 'do we have sticks on ground for users to make bows and arrows'). The wind and the winter bring down more."
+  },
+  "windfall": {
+   "name": "fallen limb", "item": "firewood", "take": "Break up the fallen limb", "clip": "ground", "pick_s": 4.0,
+   "habitat": "woods", "forest": [0.35, 1.0], "trunk_m": [1.0, 12.0], "patches": 70, "per_patch": [1, 3], "spread_m": [2.0, 4.0],
+   "ripe": ["jan_early", "dec_late"], "stock": 1.0, "regrow_days": 8.0,
+   "deer": {"browse": 0.0, "ripe": 0.0},
+   "note": "A dead limb brought down by the wind, broken over the knee into a bundle of firewood: the woodsman's fire without felling a tree."
+  },
+  "arrowwood": {
+   "name": "arrowwood", "item": "shoots", "take": "Cut straight shoots", "clip": "waist", "pick_s": 3.0,
+   "habitat": "edge", "forest": [0.2, 0.75], "trunk_m": [2.0, 16.0], "patches": 20, "tries": 200, "per_patch": [2, 4], "spread_m": [1.2, 2.5],
+   "ripe": ["jan_early", "dec_late"], "stock": 2.0, "regrow_days": 6.0,
+   "deer": {"browse": 0.3, "ripe": 0.0},
+   "note": "Southern arrowwood (Viburnum dentatum) at the woods' edges and along the damp ground: a thicket of long straight shoots, named for the arrow shafts cut from them. Deer browse the twigs."
+  },
+  "pine_pitch": {
+   "name": "pine pitch", "item": "pine_pitch", "take": "Scrape pine pitch", "clip": "waist", "pick_s": 3.5,
+   "habitat": "pine_trunk", "patches": 70, "per_patch": [1, 1],
+   "ripe": ["jan_early", "dec_late"], "stock": 1.0, "regrow_days": 6.0,
+   "deer": {"browse": 0.0, "ripe": 0.0},
+   "note": "Resin run from a wound in a white pine's bark, hardened in amber beads: melted with a little charcoal it is the glue that holds a point and the fletching to an arrow, and it makes a torch burn."
+  },
+  "turkey_scratch": {
+   "name": "turkey scratchings", "item": "feathers", "take": "Pick up turkey feathers", "clip": "ground", "pick_s": 2.0,
+   "habitat": "oak", "patches": 40, "per_patch": [4, 6], "spread_m": [2.0, 6.0],
+   "ripe": ["jan_early", "dec_late"], "stock": 1.0, "regrow_days": 4.0,
+   "deer": {"browse": 0.0, "ripe": 0.0},
+   "note": "Under the oaks where wild turkeys roost and scratch the leaves for acorns: moulted wing and tail feathers lie in the litter, for fletching arrows."
+  },
+  "fieldstones": {
+   "name": "loose fieldstones", "item": "stone", "take": "Pick up fieldstones", "clip": "ground", "pick_s": 3.0,
+   "habitat": "woods", "forest": [0.0, 0.8], "trunk_m": [1.5, 99.0], "patches": 30, "tries": 150, "per_patch": [2, 4], "spread_m": [1.5, 3.0],
+   "ripe": ["jan_early", "dec_late"], "stock": 1.0, "regrow_days": 20.0,
+   "deer": {"browse": 0.0, "ripe": 0.0},
+   "note": "Rounded stones the glacier left in the till, lying loose where the frost heaves them up: a fire ring, a hearth, a hammerstone, without a mattock (user 2026-09-28: 'can the game start with the user bare and naked no tools'). The frost brings up more."
+  },
+  "flint_nodules": {
+   "name": "chert nodules", "item": "flint", "take": "Pick up chert nodules", "clip": "ground", "pick_s": 2.5,
+   "habitat": "low", "low_m": 0.8, "forest": [0.0, 1.0], "trunk_m": [1.0, 99.0], "patches": 30, "tries": 150, "per_patch": [2, 3], "spread_m": [1.0, 2.5],
+   "ripe": ["jan_early", "dec_late"], "stock": 1.0, "regrow_days": 25.0,
+   "deer": {"browse": 0.0, "ripe": 0.0},
+   "note": "Onondaga chert weathered out of the limestone and washed into the hollows and creek beds: dark grey nodules in a pale rind, knapped into blades, points and axe heads, or struck on steel."
+  },
+  "dead_pole": {
+   "name": "dead sapling", "item": "pole", "take": "Take up the dead sapling", "clip": "ground", "pick_s": 3.5,
+   "habitat": "woods", "forest": [0.4, 1.0], "trunk_m": [0.8, 10.0], "patches": 60, "per_patch": [1, 2], "spread_m": [1.5, 3.0],
+   "ripe": ["jan_early", "dec_late"], "stock": 1.0, "regrow_days": 12.0,
+   "deer": {"browse": 0.0, "ripe": 0.0},
+   "note": "A sapling shaded out and dead, fallen or pulled up whole, dry and straight: a pole without an axe, for a lean-to, a spear or an axe handle."
+  },
+  "bog_ore": {
+   "name": "bog iron ore", "item": "bog_iron", "take": "Dig out bog iron ore", "clip": "ground", "pick_s": 4.0,
+   "habitat": "low", "low_m": 1.0, "forest": [0.0, 1.0], "trunk_m": [1.0, 99.0], "patches": 14, "tries": 80, "per_patch": [2, 3], "spread_m": [1.0, 2.5],
+   "ripe": ["jan_early", "dec_late"], "stock": 1.0, "regrow_days": 40.0,
+   "deer": {"browse": 0.0, "ripe": 0.0},
+   "note": "Limonite, the bog ore the colonial bloomeries of New York and New Jersey smelted: rusty lumps that form in the wet hollows where iron-rich water seeps, dug from under the moss. It grows back in the bogs, slowly (user 2026-09-28: 'we need to build recipies')."
+  },
+  "clay_bank": {
+   "name": "clay bank", "item": "clay", "take": "Dig clay", "clip": "ground", "pick_s": 3.5,
+   "habitat": "low", "low_m": 0.6, "forest": [0.0, 1.0], "trunk_m": [0.5, 99.0], "patches": 8, "tries": 250, "per_patch": [1, 2], "spread_m": [1.0, 2.0],
+   "ripe": ["jan_early", "dec_late"], "stock": 2.0, "regrow_days": 30.0,
+   "deer": {"browse": 0.0, "ripe": 0.0},
+   "note": "Grey glacial clay where a hollow's bank is cut open: a smelting shaft and a forge's hearth are lined with it, and a charcoal mound is sealed."
+  }
+ }
+}

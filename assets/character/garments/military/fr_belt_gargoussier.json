@@ -1,0 +1,274 @@
+{
+ "id": "fr_belt_gargoussier",
+ "name": "Ceinturon with gargoussier",
+ "description": "Buff leather waist belt with a brass buckle, a small red leather cartridge pouch and the bayonet.",
+ "kind": "garment",
+ "set": "regulars",
+ "slot": "accessories.waist",
+ "alt_slots": [],
+ "layer": {
+  "default": 60
+ },
+ "glb": "res://assets/character/garments/military/fr_belt_gargoussier.glb",
+ "mesh": "fr_belt_gargoussier",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "fr_belt_gargoussier"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_front",
+  "abdomen_side",
+  "abdomen_back"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {
+  "env40": "res://assets/character/garments/military/fr_belt_gargoussier.glb"
+ },
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "belt",
+   "role": "leather",
+   "fabric": "LEA",
+   "palette": [
+    "buff",
+    "white_buff",
+    "pale_buff"
+   ],
+   "default": "buff",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "buff": "#D2B98A",
+    "white_buff": "#E6E0D0",
+    "pale_buff": "#DCCAA0"
+   }
+  },
+  {
+   "zone": 2,
+   "name": "gargoussier and scabbard",
+   "role": "leather",
+   "fabric": "LEA",
+   "palette": [
+    "madder_red",
+    "leather_black"
+   ],
+   "default": "madder_red",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "madder_red": "#8E2B21",
+    "leather_black": "#1D1B19"
+   }
+  },
+  {
+   "zone": 3,
+   "name": "buckle and chape",
+   "role": "metal",
+   "fabric": "MET",
+   "palette": [
+    "brass",
+    "pewter"
+   ],
+   "default": "brass",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "brass": "#B58F4A",
+    "pewter": "#9A9C9A"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1762,
+    "verts": 987,
+    "zones": [
+     0,
+     2,
+     3
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "pelvis_center",
+     "pelvis_side",
+     "thigh_lower_l",
+     "thigh_upper_l"
+    ],
+    "max_influences": 3,
+    "bones": [
+     "pelvis",
+     "spinea",
+     "spineb",
+     "l_upper_leg_thigh_helper",
+     "l_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 1762,
+  "verts": 987,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0196
+  },
+  "glb_kb": 194.4
+ },
+ "budget": {
+  "tris_max": 3000
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "The gargoussier, a small pouch of red Russia leather, rode on the waist belt of the colonial regulars.",
+ "sources": [
+  "M4",
+  "M5"
+ ],
+ "aliases": [],
+ "tags": [
+  "regulars",
+  "french",
+  "env40"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": true,
+   "layer": "belts",
+   "groups": {
+    "hips": {
+     "n": 384,
+     "min": 0.0303,
+     "max": 0.0901,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "thighs": {
+     "n": 147,
+     "min": 0.0371,
+     "max": 0.1282,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "torso_lower": {
+     "n": 456,
+     "min": 0.0366,
+     "max": 0.0907,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/military_fr_belt_gargoussier.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_fr_belt_gargoussier.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+ "envelope_variant": "env40: laid 5 mm over the regimental coats' outer form (military_lib._coat).",
+ "pieces_tris": {
+  "0_cloth": 914,
+  "1_trim": 60,
+  "2_rigid": 380,
+  "3_rigid": 320,
+  "4_rigid": 88
+ },
+ "coverage": {
+  "method": "rays from the skin: normal + 4 tilted 25 deg, female and male fit, within 12 cm (military_lib._base.coverage)",
+  "hidden": [],
+  "not_hidden_candidates": {},
+  "share": {
+   "abdomen_front": {
+    "normal": 0.471,
+    "cone": 0.171
+   },
+   "abdomen_side": {
+    "normal": 0.483,
+    "cone": 0.192
+   },
+   "abdomen_back": {
+    "normal": 0.459,
+    "cone": 0.114
+   },
+   "pelvis_center": {
+    "normal": 0.229,
+    "cone": 0.06
+   },
+   "pelvis_side": {
+    "normal": 0.294,
+    "cone": 0.053
+   },
+   "forearm_a_l": {
+    "normal": 0.013,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.007,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.032,
+    "cone": 0.0
+   },
+   "thigh_lower_l": {
+    "normal": 0.01,
+    "cone": 0.0
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 30.32,
+   "p05_mm": 34.41,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 30.95,
+   "p05_mm": 35.5,
+   "inside_skin": 0
+  }
+ },
+ "deform_limits": {
+  "fr_belt_gargoussier": [
+   0.005,
+   0.005,
+   0.002,
+   2.0
+  ]
+ },
+ "deform_class": {
+  "class": "strap",
+  "legacy_limit": [
+   0.005,
+   0.005,
+   0.0,
+   2.0
+  ]
+ }
+}

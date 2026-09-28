@@ -1,0 +1,121 @@
+{
+ "schema": "frontier.survival.needs.backlog",
+ "version": 4,
+ "status": "DESIGN APPENDIX v3 (backlog): rows for milestones M3-M5 and 'post'. Not loaded by the game and not gated by the data test; a row moves into the live file, and under test, when its milestone starts. Rows may reference live ids.",
+ "design_doc": "Player_Animation_Project/graph_analysis/survival/survival_gdd.md",
+ "summary": "Thirst (post) and travel-map time safety (M5).",
+ "id_rules": "Ids are stable strings (prefix.name). Never rename an id once saves exist; add an alias instead. Display names are separate and may change. An id is defined in exactly one place: the live file or the backlog.",
+ "milestones": {
+  "M1": "A winter night: fire, shelter, cold, hunger, sleep, time safety; the fort region only; one background; 1765",
+  "M2a": "A winter from the woods: living from the manor woods through the winter by your own hands (gathering, hides, sewing, snares, snowshoes, a half-faced camp, a hung cache, ice fishing); plain barter with the sutler, the trader, the garrison's soldiers, a farm family from German Flatts and an old hunter; credit and the fall outfit as options; the second background",
+  "M2b": "Learning from neighbours: lessons, watching, examining, quality standards, haggling, promises and loans",
+  "M3": "The year turns: the full almanac, seasons and weather content, the summer goal (bark and a cabin), fishing, frogs, ginseng, one played wage job; the fur cap and robe, leggings, carving, casting balls, the cache pit, char cloth and spruce beer",
+  "M4": "People: NPC schedules and tiers at the fort, standing, invitations, the soldiers and the lieutenant as mentors; Native characters only after the relevant nation's sign-off",
+  "M5": "The map: the Carry, the valley, the town and the hunting grounds, travel and camps, other markets and backgrounds",
+  "post": "After M5 and not yet planned: the 1757 and 1761 starts and their eras, detailed illnesses, thirst, potash, upstream canoe and bateau travel, the Proxy NPC tier, languages beyond English, French, Mohawk and Oneida"
+ },
+ "source_keys": {
+  "E": "graph_analysis/survival/research_economy_life.md, source list S# (E:S14 = source S14)",
+  "K": "graph_analysis/survival/research_survival_skills.md, numbered sources [#] (K:1 = source [1])",
+  "Y": "graph_analysis/survival/research_systems.md, section number (Y:3.2 = section 3.2)",
+  "C": "graph_analysis/customizer/costume_bible.md, section number",
+  "A": "Player_Animation_Project/blender_animation_index.csv (clip names and asset ids)",
+  "N": "graph_analysis/survival/survival_gdd.md, sources list (N:3 = source N3; N33 onward added in version 3)"
+ },
+ "basis_keys": {
+  "S": "sourced: checked against a primary source, a scholarly work or an institutional page; web summaries and popular pages do not qualify",
+  "H": "standard historiography (books in the GDD sources list); verify before quoting",
+  "H-regional": "true for one region's trade or society (named in the row); not yet checked for New York",
+  "M": "modern science or medicine sets the mechanic (period explanation may differ)",
+  "D": "design value for balance, or a figure resting on web summaries; not a checked historical record"
+ },
+ "needs": [
+  {
+   "id": "need.thirst",
+   "name": "Thirst (light)",
+   "status": "later",
+   "setting": "post: light thirst, off unless playtests ask for it",
+   "meter": "hydration 100 (full) to 0",
+   "drain_per_game_h": 2.8,
+   "mult": {
+    "summer_heat": 1.5,
+    "heavy_work": 1.5,
+    "fever_flux": 2.0,
+    "rum_gill": 0.0
+   },
+   "drink": {
+    "source_sip": 35,
+    "canteen_serving": 30,
+    "tea_or_broth": 25,
+    "snow_eaten_raw": 10
+   },
+   "snow_raw_warmth_cost": 3,
+   "stages": [
+    {
+     "stage": "hydrated",
+     "min": 40
+    },
+    {
+     "stage": "thirsty",
+     "min": 15
+    },
+    {
+     "stage": "parched",
+     "min": 0.0001
+    },
+    {
+     "stage": "dehydrated",
+     "when": "0"
+    }
+   ],
+   "condition": "cond.thirst",
+   "water_quality": {
+    "spring": {
+     "worms": 0.0,
+     "fever": 0.0
+    },
+    "fast_stream_above_camps": {
+     "worms": 0.005,
+     "fever": 0.005
+    },
+    "river_below_fort_or_town": {
+     "worms": 0.03,
+     "fever": 0.04
+    },
+    "stagnant_pond": {
+     "worms": 0.03,
+     "fever": 0.05
+    },
+    "boiled": {
+     "worms": 0.0,
+     "fever": 0.002
+    },
+    "melted_snow_boiled": {
+     "worms": 0.0,
+     "fever": 0.0
+    }
+   },
+   "quality_rule": "Risk rolls once per drink; July-August multiply fever (flux) risk by 2; poor camp sanitation x1.5.",
+   "balance_intent": "Water is everywhere in the Northeast, so thirst is a light meter; the decision is water quality.",
+   "sources": [
+    "K:10.2",
+    "Y:3.1"
+   ],
+   "milestone": "post"
+  }
+ ],
+ "time_safety": {
+  "travel": {
+   "camps": "Travel on the map stops at dusk (sunset from seasons.json) and makes camp. Camp quality rolls from carried kit (blanket, kettle, axe or hatchet, fire kit, bark or canvas) and Survival (check D 25, +10 in snow without snowshoes). Needs resolve with the same advance() used for sleep, one night at a time.",
+   "departure_warning": "Before departure the map warns if carried food (in meals) or kit cannot cover the estimated days and nights, and shows the expected worst night warmth.",
+   "drop_in": "At any camp or encounter the player may drop into a small local scene and camp by hand.",
+   "interrupts": "The same wake rules as sleep stop the map clock; the player chooses to push on, camp or turn back.",
+   "travel_map_game_h_per_real_s": 0.4
+  },
+  "milestone": "M5",
+  "note": "The live needs.json time_safety governs sleep and jobs; these travel-map rules join it at M5."
+ },
+ "aliases": {
+  "long_hunter (difficulty preset)": "hard_winter"
+ }
+}

@@ -1,0 +1,681 @@
+{
+ "id": "fr_marine_justaucorps",
+ "name": "Justaucorps, troupes de la marine",
+ "description": "Grey-white collarless wool coat buttoned down the front, with deep blue cuffs, blue lining and brass buttons.",
+ "kind": "garment",
+ "set": "regulars",
+ "slot": "outer",
+ "alt_slots": [],
+ "layer": {
+  "default": 40
+ },
+ "glb": "res://assets/character/garments/military/fr_marine_justaucorps.glb",
+ "mesh": "fr_marine_justaucorps",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "fr_marine_justaucorps"
+  }
+ ],
+ "occupies_regions": [
+  "neck_upper",
+  "neck_lower",
+  "chest_upper_front",
+  "chest_upper_side",
+  "chest_upper_back",
+  "chest_front",
+  "chest_side",
+  "chest_back",
+  "abdomen_front",
+  "abdomen_side",
+  "abdomen_back",
+  "pelvis_center",
+  "pelvis_side",
+  "upper_arm_l",
+  "forearm_a_l",
+  "forearm_b_l",
+  "forearm_c_l",
+  "upper_arm_r",
+  "forearm_a_r",
+  "forearm_b_r",
+  "forearm_c_r",
+  "thigh_upper_l",
+  "thigh_lower_l",
+  "thigh_upper_r",
+  "thigh_lower_r"
+ ],
+ "hides_regions": [
+  "chest_upper_back",
+  "chest_back",
+  "abdomen_back",
+  "forearm_a_l",
+  "forearm_a_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": {
+  "hems_godot": [
+   [
+    0.12,
+    0.585,
+    0.145
+   ],
+   [
+    0.24,
+    0.555,
+    -0.01
+   ],
+   [
+    0.12,
+    0.525,
+    -0.18
+   ]
+  ],
+  "hem_back": 0.525,
+  "hem_front": 0.5750000000000001,
+  "vent_top": 0.8,
+  "panels": [
+   "upper_leg_front_helper",
+   "upper_leg_thigh_helper",
+   "upper_leg_rear_helper"
+  ]
+ },
+ "helpers": [
+  "shoulder_twist",
+  "forarm_twist",
+  "upper_leg_front_helper",
+  "upper_leg_thigh_helper",
+  "upper_leg_rear_helper"
+ ],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "coat",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "grey_white",
+    "royal_blue"
+   ],
+   "default": "grey_white",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "grey_white": "#D4D0C3",
+    "royal_blue": "#233C78"
+   }
+  },
+  {
+   "zone": 1,
+   "name": "cuffs and lining",
+   "role": "trim",
+   "fabric": "WOOL",
+   "palette": [
+    "royal_blue",
+    "madder_red"
+   ],
+   "default": "royal_blue",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "royal_blue": "#233C78",
+    "madder_red": "#8E2B21"
+   }
+  },
+  {
+   "zone": 3,
+   "name": "buttons",
+   "role": "button",
+   "fabric": "MET",
+   "palette": [
+    "brass",
+    "pewter",
+    "silver",
+    "gold_lace"
+   ],
+   "default": "brass",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "brass": "#B58F4A",
+    "pewter": "#9A9C9A",
+    "silver": "#C8CACC",
+    "gold_lace": "#C9A54B"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 7879,
+    "verts": 4180,
+    "zones": [
+     0,
+     1,
+     3
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "forearm_a_r",
+     "forearm_b_l",
+     "forearm_b_r",
+     "forearm_c_l",
+     "forearm_c_r",
+     "head",
+     "neck_lower",
+     "neck_upper",
+     "pelvis_center",
+     "pelvis_side",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r",
+     "upper_arm_l",
+     "upper_arm_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "r_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "l_shoulder",
+     "l_elbow",
+     "l_wrist",
+     "r_clavicle",
+     "r_shoulder",
+     "r_elbow",
+     "r_wrist",
+     "neck",
+     "heada",
+     "headb",
+     "l_forarm_twist_a",
+     "l_forarm_twist_c",
+     "l_forarm_twist_b",
+     "r_forarm_twist_a",
+     "r_forarm_twist_c",
+     "r_forarm_twist_b",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_shoulder_twist_a",
+     "l_shoulder_twist_c",
+     "l_shoulder_twist_b",
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 7879,
+  "verts": 4180,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0154
+  },
+  "glb_kb": 691.5
+ },
+ "budget": {
+  "tris_max": 8500
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "The colonial companies kept the grey-white justaucorps buttoned to the hem after the Army dropped it in 1736; officers had gilt buttons, the drummer the King's blue livery.",
+ "sources": [
+  "M6",
+  "M5",
+  "R25",
+  "M4"
+ ],
+ "aliases": [],
+ "tags": [
+  "regulars",
+  "french"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": false,
+   "layer": "outer",
+   "groups": {
+    "arms_lower": {
+     "n": 523,
+     "min": 0.0135,
+     "max": 0.0241,
+     "below_inner": 0,
+     "above_outer": 42,
+     "band": [
+      0.011,
+      0.021
+     ]
+    },
+    "arms_upper": {
+     "n": 245,
+     "min": 0.0136,
+     "max": 0.0331,
+     "below_inner": 0,
+     "above_outer": 84,
+     "band": [
+      0.011,
+      0.014
+     ]
+    },
+    "head": {
+     "n": 25,
+     "min": -0.0023,
+     "max": 0.0179,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "hips": {
+     "n": 736,
+     "min": 0.0222,
+     "max": 0.0999,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.013,
+      null
+     ]
+    },
+    "neck": {
+     "n": 114,
+     "min": 0.0132,
+     "max": 0.032,
+     "below_inner": 2,
+     "above_outer": 0,
+     "band": [
+      0.018,
+      null
+     ]
+    },
+    "thighs": {
+     "n": 1888,
+     "min": 0.0204,
+     "max": 0.1243,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.013,
+      null
+     ]
+    },
+    "torso_lower": {
+     "n": 189,
+     "min": 0.0288,
+     "max": 0.0444,
+     "below_inner": 0,
+     "above_outer": 189,
+     "band": [
+      0.013,
+      0.018
+     ]
+    },
+    "torso_upper": {
+     "n": 460,
+     "min": 0.0176,
+     "max": 0.0462,
+     "below_inner": 0,
+     "above_outer": 455,
+     "band": [
+      0.013,
+      0.018
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/military_fr_marine_justaucorps.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_fr_marine_justaucorps.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+ "regiments_terre": [
+  {
+   "id": "la_reine",
+   "name": "La Reine",
+   "cuffs": "madder_red",
+   "veste": "madder_red",
+   "breeches": "grey_white",
+   "buttons": "silver",
+   "coat": "grey_white",
+   "sources": [
+    "M5",
+    "M4",
+    "R9"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "guyenne",
+   "name": "Guyenne",
+   "cuffs": "madder_red",
+   "veste": "madder_red",
+   "breeches": "grey_white",
+   "buttons": "brass",
+   "coat": "grey_white",
+   "sources": [
+    "M5",
+    "M4",
+    "R9"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "berry",
+   "name": "Berry",
+   "cuffs": "madder_red",
+   "veste": "madder_red",
+   "breeches": "grey_white",
+   "buttons": "brass",
+   "note": "Five cuff buttons; double vertical pockets (not modelled).",
+   "coat": "grey_white",
+   "sources": [
+    "M5",
+    "M4",
+    "R9"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "bearn",
+   "name": "B\u00e9arn",
+   "cuffs": "royal_blue",
+   "veste": "royal_blue",
+   "breeches": "grey_white",
+   "buttons": "silver",
+   "note": "Vertical pockets (not modelled).",
+   "coat": "grey_white",
+   "sources": [
+    "M5",
+    "M4",
+    "R9"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "la_sarre",
+   "name": "La Sarre",
+   "cuffs": "royal_blue",
+   "veste": "madder_red",
+   "breeches": "grey_white",
+   "buttons": "brass",
+   "coat": "grey_white",
+   "sources": [
+    "M5",
+    "M4",
+    "R9"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "royal_roussillon",
+   "name": "Royal-Roussillon",
+   "cuffs": "royal_blue",
+   "veste": "royal_blue",
+   "breeches": "grey_white",
+   "buttons": "brass",
+   "note": "Six cuff buttons.",
+   "coat": "grey_white",
+   "sources": [
+    "M5",
+    "M4",
+    "R9"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "languedoc",
+   "name": "Languedoc",
+   "cuffs": "royal_blue",
+   "veste": "royal_blue",
+   "breeches": "grey_white",
+   "buttons": "brass",
+   "coat": "grey_white",
+   "sources": [
+    "M5",
+    "M4",
+    "R9"
+   ],
+   "evidence": "A"
+  }
+ ],
+ "female_body_note": "Grade C on a female body (bible \u00a75.1).",
+ "pieces_tris": {
+  "0_cloth": 2727,
+  "1_cloth": 4504,
+  "2_trim": 648
+ },
+ "coverage": {
+  "method": "rays from the skin: normal + 4 tilted 25 deg, female and male fit, within 25 cm (military_lib._base.coverage)",
+  "hidden": [
+   "chest_upper_back",
+   "chest_back",
+   "abdomen_back",
+   "forearm_a_l",
+   "forearm_a_r"
+  ],
+  "not_hidden_candidates": {
+   "chest_upper_side": 0.98,
+   "chest_side": 0.984,
+   "abdomen_side": 0.995,
+   "upper_arm_l": 0.922,
+   "upper_arm_r": 0.93
+  },
+  "share": {
+   "head": {
+    "normal": 0.025,
+    "cone": 0.001
+   },
+   "neck_upper": {
+    "normal": 0.524,
+    "cone": 0.341
+   },
+   "neck_lower": {
+    "normal": 0.925,
+    "cone": 0.87
+   },
+   "chest_upper_front": {
+    "normal": 0.846,
+    "cone": 0.59
+   },
+   "chest_upper_side": {
+    "normal": 0.995,
+    "cone": 0.98
+   },
+   "chest_upper_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_front": {
+    "normal": 0.861,
+    "cone": 0.589
+   },
+   "chest_side": {
+    "normal": 0.998,
+    "cone": 0.984
+   },
+   "chest_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_front": {
+    "normal": 0.871,
+    "cone": 0.643
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 0.995
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "pelvis_center": {
+    "normal": 0.814,
+    "cone": 0.724
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 0.996
+   },
+   "upper_arm_l": {
+    "normal": 0.965,
+    "cone": 0.922
+   },
+   "forearm_a_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_l": {
+    "normal": 1.0,
+    "cone": 0.993
+   },
+   "forearm_c_l": {
+    "normal": 0.362,
+    "cone": 0.103
+   },
+   "wrist_l": {
+    "normal": 0.153,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.14,
+    "cone": 0.001
+   },
+   "upper_arm_r": {
+    "normal": 0.965,
+    "cone": 0.93
+   },
+   "forearm_a_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_r": {
+    "normal": 1.0,
+    "cone": 0.987
+   },
+   "forearm_c_r": {
+    "normal": 0.495,
+    "cone": 0.184
+   },
+   "wrist_r": {
+    "normal": 0.134,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.144,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.85,
+    "cone": 0.747
+   },
+   "thigh_lower_l": {
+    "normal": 0.467,
+    "cone": 0.29
+   },
+   "thigh_upper_r": {
+    "normal": 0.851,
+    "cone": 0.761
+   },
+   "thigh_lower_r": {
+    "normal": 0.469,
+    "cone": 0.294
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": -2.32,
+   "p05_mm": 14.0,
+   "inside_skin": 2
+  },
+  "male": {
+   "min_mm": -2.23,
+   "p05_mm": 13.79,
+   "inside_skin": 2
+  }
+ },
+ "deform_limits": {
+  "fr_marine_justaucorps": [
+   0.0585,
+   0.103,
+   0.254,
+   20.0
+  ]
+ },
+ "deform_class": {
+  "class": "coat",
+  "legacy_limit": [
+   0.072,
+   0.125,
+   0.23,
+   27.0
+  ]
+ },
+ "deform_scan": {
+  "female": [
+   0.0449,
+   0.0821,
+   0.20170000000000002,
+   14.85
+  ],
+  "male": [
+   0.0467,
+   0.07980000000000001,
+   0.2032,
+   15.99
+  ],
+  "worst": [
+   0.0467,
+   0.0821,
+   0.2032,
+   15.99
+  ],
+  "limit": [
+   0.0585,
+   0.103,
+   0.254,
+   20.0
+  ],
+  "legacy_class": "coat",
+  "legacy_limit": [
+   0.072,
+   0.125,
+   0.23,
+   27.0
+  ],
+  "within_legacy_class": true,
+  "scanned": "2026-09-24"
+ }
+}

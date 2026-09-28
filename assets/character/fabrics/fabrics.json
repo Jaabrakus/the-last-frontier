@@ -1,0 +1,178 @@
+{
+ "format": "frontier-fabrics",
+ "version": 1,
+ "size": 1024,
+ "layers": 9,
+ "detail": "res://assets/character/fabrics/fabric_detail.jpg",
+ "normal": "res://assets/character/fabrics/fabric_normal.jpg",
+ "channels": {
+  "detail": "R = luminance / mean x 0.5, G = roughness, B = AO",
+  "normal": "OpenGL tangent space"
+ },
+ "fabrics": {
+  "LIN": {
+   "layer": 0,
+   "kit": "rough_linen",
+   "tile_m": 0.271,
+   "detail_strength": 0.55,
+   "normal_strength": 0.55,
+   "roughness_mul": 1.0,
+   "use": "linen and tow: shirts, stocks, shifts, hunting shirts",
+   "stats": {
+    "lum_cv": 0.13761539457963196,
+    "rough_mean": 0.6592821046417837,
+    "ao_mean": 0.7723704805561141,
+    "ratio_clipped": 0.0,
+    "normal_tilt_removed": [
+     -0.0,
+     -0.0
+    ]
+   }
+  },
+  "WOOL": {
+   "layer": 1,
+   "kit": "caban",
+   "tile_m": 0.274,
+   "detail_strength": 0.85,
+   "normal_strength": 0.5,
+   "roughness_mul": 1.0,
+   "use": "broadcloth, stroud, kersey, blanket cloth; felt (low normal)",
+   "stats": {
+    "lum_cv": 0.07573457999598314,
+    "rough_mean": 0.8112507427439972,
+    "ao_mean": 0.935182077744428,
+    "ratio_clipped": 0.0,
+    "normal_tilt_removed": [
+     0.0,
+     -0.0
+    ]
+   }
+  },
+  "TWILL": {
+   "layer": 2,
+   "kit": "poly_wool_herringbone",
+   "tile_m": 0.27,
+   "detail_strength": 0.45,
+   "normal_strength": 0.45,
+   "roughness_mul": 1.0,
+   "use": "twilled wool, duffel, serge",
+   "stats": {
+    "lum_cv": 0.23547054931978267,
+    "rough_mean": 0.628090316174077,
+    "ao_mean": 0.8505976733039412,
+    "ratio_clipped": 0.00012969970703125,
+    "normal_tilt_removed": [
+     0.0,
+     -0.0
+    ]
+   }
+  },
+  "KNIT": {
+   "layer": 3,
+   "kit": "knitted_fleece",
+   "tile_m": 0.266,
+   "detail_strength": 0.5,
+   "normal_strength": 0.7,
+   "roughness_mul": 1.0,
+   "use": "knit caps, stockings, mittens",
+   "stats": {
+    "lum_cv": 0.39348143977027134,
+    "rough_mean": 0.6232923507690429,
+    "ao_mean": 0.8997092415304746,
+    "ratio_clipped": 0.0024805068969726562,
+    "normal_tilt_removed": [
+     0.0,
+     -0.0
+    ]
+   }
+  },
+  "SUEDE": {
+   "layer": 4,
+   "kit": "scuba_suede",
+   "tile_m": 0.285,
+   "detail_strength": 0.55,
+   "normal_strength": 0.4,
+   "roughness_mul": 1.0,
+   "use": "buckskin: breeches, leggings, moccasins, pouches",
+   "stats": {
+    "lum_cv": 0.13415841961115432,
+    "rough_mean": 0.7144672094606885,
+    "ao_mean": 0.947369238909553,
+    "ratio_clipped": 0.0,
+    "normal_tilt_removed": [
+     -0.0,
+     0.0
+    ]
+   }
+  },
+  "LEA": {
+   "layer": 5,
+   "kit": "brown_leather",
+   "tile_m": 0.4,
+   "detail_strength": 0.45,
+   "normal_strength": 0.6,
+   "roughness_mul": 1.0,
+   "use": "tanned leather: belts, straps, shoes",
+   "stats": {
+    "lum_cv": 0.26840043434109173,
+    "rough_mean": 0.6621533936145257,
+    "ao_mean": 0.8785945331349094,
+    "ratio_clipped": 0.0030307769775390625,
+    "normal_tilt_removed": [
+     -0.0,
+     0.0
+    ]
+   }
+  },
+  "FUR": {
+   "layer": 6,
+   "kit": "curly_teddy_natural",
+   "tile_m": 0.336,
+   "detail_strength": 0.45,
+   "normal_strength": 0.6,
+   "roughness_mul": 1.0,
+   "use": "the base under fur shells; shaggy 'bearskin' cloth",
+   "stats": {
+    "lum_cv": 0.1157007378683236,
+    "rough_mean": 0.7017371345968808,
+    "ao_mean": 0.6584878734513825,
+    "ratio_clipped": 0.0,
+    "normal_tilt_removed": [
+     0.0,
+     -0.0
+    ]
+   }
+  },
+  "HES": {
+   "layer": 7,
+   "kit": "hessian_230",
+   "tile_m": 0.269,
+   "detail_strength": 0.5,
+   "normal_strength": 0.6,
+   "roughness_mul": 1.0,
+   "use": "coarse tow and hemp: tumplines, sacking",
+   "stats": {
+    "lum_cv": 0.41479166910465204,
+    "rough_mean": 0.5844644995296704,
+    "ao_mean": 0.9022892746270869,
+    "ratio_clipped": 0.00027179718017578125,
+    "normal_tilt_removed": [
+     -0.0,
+     0.0
+    ]
+   }
+  },
+  "FLAT": {
+   "layer": 8,
+   "kit": null,
+   "tile_m": 0.0,
+   "detail_strength": 0.0,
+   "normal_strength": 0.0,
+   "roughness_mul": 1.0,
+   "use": "metals, horn, wood, ribbons (procedural in the shader)",
+   "stats": {}
+  }
+ },
+ "generator": "tools/character/make_fabrics.py",
+ "provenance": "Derived from CC0 Poly Haven scans (https://polyhaven.com, CC0 1.0, no attribution required) already in assets/polyhaven/textures/clothing (MANIFEST.json); luminance, roughness, AO and normals only, resampled to 1024 px."
+}

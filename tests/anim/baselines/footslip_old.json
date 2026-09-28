@@ -1,0 +1,5839 @@
+{
+ "cases": {
+  "bow/control/idle": {
+   "body_speed_mps": 0.0,
+   "crouched": false,
+   "fresh_mps": 0.0062,
+   "max_mps": 0.0062,
+   "mean_mps": 0.0091,
+   "median_mps": 0.0062,
+   "min_mps": 0.0062,
+   "n": 4780,
+   "p90_mps": 0.0142,
+   "planted_frac": 1.0,
+   "repeats": [
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0145,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0106,
+     "preroll": "run/W 0.7s"
+    },
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0142,
+     "preroll": "run/S 1.3s"
+    },
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0106,
+     "preroll": "run/W 1.1s"
+    },
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0144,
+     "preroll": "walk/S 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "bow"
+  },
+  "bow/crouch/A": {
+   "body_speed_mps": 1.4,
+   "crouched": true,
+   "fresh_mps": 0.3759,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.3162,
+    "hemi": "fw",
+    "p90_mps": 0.7277,
+    "phases": 8,
+    "planted_frac": 0.3896,
+    "ratio": 0.8433,
+    "ratio_unclamped": 0.8433,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.4,
+    "weights": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "x": 90.0
+   },
+   "ideal_max_mps": 0.1289,
+   "ideal_min_mps": 0.1033,
+   "ideal_mps": 0.1142,
+   "max_mps": 0.5428,
+   "mean_mps": 0.6876,
+   "median_mps": 0.381,
+   "min_mps": 0.3759,
+   "n": 1706,
+   "p90_mps": 0.6454,
+   "planted_frac": 0.3702,
+   "repeats": [
+    {
+     "median_mps": 0.3759,
+     "n": 356,
+     "p90_mps": 0.6761,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.381,
+     "n": 335,
+     "p90_mps": 0.6454,
+     "preroll": "crouch/WA 0.7s"
+    },
+    {
+     "median_mps": 0.5428,
+     "n": 345,
+     "p90_mps": 1.5641,
+     "preroll": "crouch/SA 1.3s"
+    },
+    {
+     "median_mps": 0.381,
+     "n": 335,
+     "p90_mps": 0.6454,
+     "preroll": "crouch/A 1.1s"
+    },
+    {
+     "median_mps": 0.381,
+     "n": 335,
+     "p90_mps": 0.6454,
+     "preroll": "walk/A 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.1669,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "bow"
+  },
+  "bow/crouch/D": {
+   "body_speed_mps": 1.4,
+   "crouched": true,
+   "fresh_mps": 0.3928,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.3324,
+    "hemi": "fw",
+    "p90_mps": 4.0416,
+    "phases": 8,
+    "planted_frac": 0.3486,
+    "ratio": 0.8864,
+    "ratio_unclamped": 0.8864,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.4,
+    "weights": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "x": -90.0
+   },
+   "ideal_max_mps": 0.2166,
+   "ideal_min_mps": 0.184,
+   "ideal_mps": 0.2006,
+   "max_mps": 0.3957,
+   "mean_mps": 0.8441,
+   "median_mps": 0.3957,
+   "min_mps": 0.3706,
+   "n": 1555,
+   "p90_mps": 2.3117,
+   "planted_frac": 0.3406,
+   "repeats": [
+    {
+     "median_mps": 0.3928,
+     "n": 347,
+     "p90_mps": 0.934,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3957,
+     "n": 298,
+     "p90_mps": 2.3117,
+     "preroll": "crouch/WD 0.7s"
+    },
+    {
+     "median_mps": 0.3706,
+     "n": 314,
+     "p90_mps": 0.8428,
+     "preroll": "crouch/SD 1.3s"
+    },
+    {
+     "median_mps": 0.3957,
+     "n": 298,
+     "p90_mps": 2.3117,
+     "preroll": "crouch/D 1.1s"
+    },
+    {
+     "median_mps": 0.3957,
+     "n": 298,
+     "p90_mps": 2.3117,
+     "preroll": "walk/D 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0251,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "bow"
+  },
+  "bow/crouch/S": {
+   "body_speed_mps": 1.4,
+   "crouched": true,
+   "fresh_mps": 0.369,
+   "ideal": {
+    "clip_speeds": [
+     1.7486,
+     1.7261,
+     1.7679
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-bw",
+     "actor_b-p-crouch-walk-bw-lt",
+     "actor_b-p-crouch-walk-bw-rt"
+    ],
+    "cps": 0.3002,
+    "hemi": "bw",
+    "p90_mps": 3.1374,
+    "phases": 8,
+    "planted_frac": 0.3965,
+    "ratio": 0.8006,
+    "ratio_unclamped": 0.8006,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.4,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.0415,
+   "ideal_min_mps": 0.033,
+   "ideal_mps": 0.0374,
+   "max_mps": 0.369,
+   "mean_mps": 0.8528,
+   "median_mps": 0.3649,
+   "min_mps": 0.3649,
+   "n": 1829,
+   "p90_mps": 3.5886,
+   "planted_frac": 0.3987,
+   "repeats": [
+    {
+     "median_mps": 0.369,
+     "n": 361,
+     "p90_mps": 3.5609,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3649,
+     "n": 367,
+     "p90_mps": 3.5886,
+     "preroll": "crouch/SA 0.7s"
+    },
+    {
+     "median_mps": 0.3649,
+     "n": 367,
+     "p90_mps": 3.5886,
+     "preroll": "crouch/SD 1.3s"
+    },
+    {
+     "median_mps": 0.3649,
+     "n": 367,
+     "p90_mps": 3.5886,
+     "preroll": "crouch/S 1.1s"
+    },
+    {
+     "median_mps": 0.3649,
+     "n": 367,
+     "p90_mps": 3.5886,
+     "preroll": "walk/S 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0041,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "bow"
+  },
+  "bow/crouch/W": {
+   "body_speed_mps": 1.4,
+   "crouched": true,
+   "fresh_mps": 0.3594,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.3207,
+    "hemi": "fw",
+    "p90_mps": 2.6486,
+    "phases": 8,
+    "planted_frac": 0.4057,
+    "ratio": 0.8551,
+    "ratio_unclamped": 0.8551,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.4,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1185,
+   "ideal_min_mps": 0.1079,
+   "ideal_mps": 0.1132,
+   "max_mps": 0.36,
+   "mean_mps": 0.66,
+   "median_mps": 0.36,
+   "min_mps": 0.3594,
+   "n": 1722,
+   "p90_mps": 0.8116,
+   "planted_frac": 0.3719,
+   "repeats": [
+    {
+     "median_mps": 0.3594,
+     "n": 354,
+     "p90_mps": 0.4478,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.36,
+     "n": 342,
+     "p90_mps": 0.8116,
+     "preroll": "crouch/WA 0.7s"
+    },
+    {
+     "median_mps": 0.36,
+     "n": 342,
+     "p90_mps": 0.8116,
+     "preroll": "crouch/WD 1.3s"
+    },
+    {
+     "median_mps": 0.36,
+     "n": 342,
+     "p90_mps": 0.8116,
+     "preroll": "crouch/W 1.1s"
+    },
+    {
+     "median_mps": 0.36,
+     "n": 342,
+     "p90_mps": 0.8116,
+     "preroll": "walk/W 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0006,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "bow"
+  },
+  "bow/crouch/WA": {
+   "body_speed_mps": 1.4,
+   "crouched": true,
+   "fresh_mps": 0.3868,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.3184,
+    "hemi": "fw",
+    "p90_mps": 0.92,
+    "phases": 8,
+    "planted_frac": 0.2536,
+    "ratio": 0.8492,
+    "ratio_unclamped": 0.8492,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.4,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.2364,
+   "ideal_max_mps": 0.1532,
+   "ideal_min_mps": 0.1257,
+   "ideal_mps": 0.1375,
+   "max_mps": 0.7874,
+   "mean_mps": 0.5812,
+   "median_mps": 0.3868,
+   "min_mps": 0.3827,
+   "n": 958,
+   "p90_mps": 0.8229,
+   "planted_frac": 0.2114,
+   "repeats": [
+    {
+     "median_mps": 0.3868,
+     "n": 282,
+     "p90_mps": 0.8229,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.7874,
+     "n": 91,
+     "p90_mps": 1.5707,
+     "preroll": "crouch/W 0.7s"
+    },
+    {
+     "median_mps": 0.395,
+     "n": 117,
+     "p90_mps": 1.09,
+     "preroll": "crouch/A 1.3s"
+    },
+    {
+     "median_mps": 0.3827,
+     "n": 234,
+     "p90_mps": 0.7259,
+     "preroll": "crouch/WA 1.1s"
+    },
+    {
+     "median_mps": 0.3827,
+     "n": 234,
+     "p90_mps": 0.7259,
+     "preroll": "walk/WA 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.4047,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "bow"
+  },
+  "bow/run/A": {
+   "body_speed_mps": 3.6,
+   "crouched": false,
+   "fresh_mps": 0.2462,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.4354,
+    "hemi": "fw",
+    "p90_mps": 0.459,
+    "phases": 8,
+    "planted_frac": 0.1865,
+    "ratio": 1.0527,
+    "ratio_unclamped": 1.0527,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.6,
+    "weights": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "x": 90.0
+   },
+   "ideal_max_mps": 0.1623,
+   "ideal_min_mps": 0.156,
+   "ideal_mps": 0.1594,
+   "max_mps": 1.2029,
+   "mean_mps": 0.5384,
+   "median_mps": 0.2462,
+   "min_mps": 0.2414,
+   "n": 863,
+   "p90_mps": 0.6662,
+   "planted_frac": 0.1919,
+   "repeats": [
+    {
+     "median_mps": 0.2462,
+     "n": 157,
+     "p90_mps": 0.6662,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.2414,
+     "n": 173,
+     "p90_mps": 0.6325,
+     "preroll": "run/WA 0.7s"
+    },
+    {
+     "median_mps": 1.2029,
+     "n": 201,
+     "p90_mps": 1.4728,
+     "preroll": "run/SA 1.3s"
+    },
+    {
+     "median_mps": 0.2477,
+     "n": 175,
+     "p90_mps": 0.5819,
+     "preroll": "run/A 1.1s"
+    },
+    {
+     "median_mps": 0.2462,
+     "n": 157,
+     "p90_mps": 0.6662,
+     "preroll": "walk/A 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.9615,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "bow"
+  },
+  "bow/run/D": {
+   "body_speed_mps": 3.6,
+   "crouched": false,
+   "fresh_mps": 0.2932,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.4507,
+    "hemi": "fw",
+    "p90_mps": 0.4321,
+    "phases": 8,
+    "planted_frac": 0.1783,
+    "ratio": 1.0638,
+    "ratio_unclamped": 1.0638,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.6,
+    "weights": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "x": -90.0
+   },
+   "ideal_max_mps": 0.1859,
+   "ideal_min_mps": 0.164,
+   "ideal_mps": 0.1706,
+   "max_mps": 1.203,
+   "mean_mps": 0.5632,
+   "median_mps": 0.2932,
+   "min_mps": 0.2789,
+   "n": 845,
+   "p90_mps": 0.6009,
+   "planted_frac": 0.1886,
+   "repeats": [
+    {
+     "median_mps": 0.2932,
+     "n": 148,
+     "p90_mps": 0.6009,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.2789,
+     "n": 168,
+     "p90_mps": 0.5931,
+     "preroll": "run/WD 0.7s"
+    },
+    {
+     "median_mps": 1.203,
+     "n": 220,
+     "p90_mps": 1.6988,
+     "preroll": "run/SD 1.3s"
+    },
+    {
+     "median_mps": 0.2922,
+     "n": 161,
+     "p90_mps": 0.5931,
+     "preroll": "run/D 1.1s"
+    },
+    {
+     "median_mps": 0.2932,
+     "n": 148,
+     "p90_mps": 0.6016,
+     "preroll": "walk/D 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.9241,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "bow"
+  },
+  "bow/run/S": {
+   "body_speed_mps": 3.6,
+   "crouched": false,
+   "fresh_mps": 1.1987,
+   "ideal": {
+    "clip_speeds": [
+     2.474,
+     2.5234,
+     2.4457
+    ],
+    "clips": [
+     "actor_b-p-run-bw",
+     "actor_b-p-run-bw-lt",
+     "actor_b-p-run-bw-rt"
+    ],
+    "cps": 1.9843,
+    "hemi": "bw",
+    "p90_mps": 0.569,
+    "phases": 8,
+    "planted_frac": 0.2275,
+    "ratio": 1.4551,
+    "ratio_unclamped": 1.4551,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.6,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1547,
+   "ideal_min_mps": 0.1465,
+   "ideal_mps": 0.1514,
+   "max_mps": 1.1987,
+   "mean_mps": 1.2742,
+   "median_mps": 1.1946,
+   "min_mps": 1.1908,
+   "n": 1083,
+   "p90_mps": 1.5549,
+   "planted_frac": 0.2381,
+   "repeats": [
+    {
+     "median_mps": 1.1987,
+     "n": 203,
+     "p90_mps": 1.5553,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 1.1908,
+     "n": 228,
+     "p90_mps": 1.5549,
+     "preroll": "run/SA 0.7s"
+    },
+    {
+     "median_mps": 1.1908,
+     "n": 228,
+     "p90_mps": 1.5549,
+     "preroll": "run/SD 1.3s"
+    },
+    {
+     "median_mps": 1.1946,
+     "n": 221,
+     "p90_mps": 1.5225,
+     "preroll": "run/S 1.1s"
+    },
+    {
+     "median_mps": 1.1987,
+     "n": 203,
+     "p90_mps": 1.5553,
+     "preroll": "walk/S 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0079,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "bow"
+  },
+  "bow/run/W": {
+   "body_speed_mps": 3.6,
+   "crouched": false,
+   "fresh_mps": 0.272,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.4684,
+    "hemi": "fw",
+    "p90_mps": 0.2948,
+    "phases": 8,
+    "planted_frac": 0.1789,
+    "ratio": 1.0768,
+    "ratio_unclamped": 1.0768,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.6,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1712,
+   "ideal_min_mps": 0.1493,
+   "ideal_mps": 0.1598,
+   "max_mps": 0.2771,
+   "mean_mps": 0.2866,
+   "median_mps": 0.2746,
+   "min_mps": 0.272,
+   "n": 818,
+   "p90_mps": 0.4623,
+   "planted_frac": 0.1825,
+   "repeats": [
+    {
+     "median_mps": 0.272,
+     "n": 154,
+     "p90_mps": 0.4648,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.2746,
+     "n": 174,
+     "p90_mps": 0.4623,
+     "preroll": "run/WA 0.7s"
+    },
+    {
+     "median_mps": 0.2746,
+     "n": 174,
+     "p90_mps": 0.4623,
+     "preroll": "run/WD 1.3s"
+    },
+    {
+     "median_mps": 0.2771,
+     "n": 162,
+     "p90_mps": 0.4554,
+     "preroll": "run/W 1.1s"
+    },
+    {
+     "median_mps": 0.272,
+     "n": 154,
+     "p90_mps": 0.4648,
+     "preroll": "walk/W 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0051,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "bow"
+  },
+  "bow/run/WA": {
+   "body_speed_mps": 3.6,
+   "crouched": false,
+   "fresh_mps": 0.5157,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.4517,
+    "hemi": "fw",
+    "p90_mps": 0.6086,
+    "phases": 8,
+    "planted_frac": 0.1946,
+    "ratio": 1.0646,
+    "ratio_unclamped": 1.0646,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.6,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.4701,
+   "ideal_max_mps": 0.3888,
+   "ideal_min_mps": 0.3717,
+   "ideal_mps": 0.3834,
+   "max_mps": 1.3879,
+   "mean_mps": 0.9951,
+   "median_mps": 0.5157,
+   "min_mps": 0.3953,
+   "n": 807,
+   "p90_mps": 1.8126,
+   "planted_frac": 0.1808,
+   "repeats": [
+    {
+     "median_mps": 0.5157,
+     "n": 185,
+     "p90_mps": 1.8126,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.5157,
+     "n": 185,
+     "p90_mps": 1.8126,
+     "preroll": "run/W 0.7s"
+    },
+    {
+     "median_mps": 1.3879,
+     "n": 121,
+     "p90_mps": 2.3142,
+     "preroll": "run/A 1.3s"
+    },
+    {
+     "median_mps": 0.3953,
+     "n": 152,
+     "p90_mps": 1.6932,
+     "preroll": "run/WA 1.1s"
+    },
+    {
+     "median_mps": 1.1604,
+     "n": 164,
+     "p90_mps": 2.525,
+     "preroll": "walk/WA 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.9926,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "bow"
+  },
+  "bow/sprint/W": {
+   "body_speed_mps": 5.6,
+   "crouched": false,
+   "fresh_mps": 1.4552,
+   "ideal": {
+    "clip_speeds": [
+     4.2437,
+     3.7077,
+     3.6022
+    ],
+    "clips": [
+     "actor_b-p-sprint-fw",
+     "actor_b-p-sprint-fw-rt",
+     "actor_b-p-sprint-fw-lt"
+    ],
+    "cps": 0.9897,
+    "hemi": "fw",
+    "p90_mps": 1.0733,
+    "phases": 8,
+    "planted_frac": 0.1519,
+    "ratio": 1.3196,
+    "ratio_unclamped": 1.3196,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 5.6,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.2248,
+   "ideal_min_mps": 0.2051,
+   "ideal_mps": 0.2208,
+   "max_mps": 1.4556,
+   "mean_mps": 1.5787,
+   "median_mps": 1.4552,
+   "min_mps": 1.441,
+   "n": 636,
+   "p90_mps": 2.1995,
+   "planted_frac": 0.1546,
+   "repeats": [
+    {
+     "median_mps": 1.4552,
+     "n": 130,
+     "p90_mps": 2.1995,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 1.441,
+     "n": 111,
+     "p90_mps": 2.0138,
+     "preroll": "sprint/WA 0.7s"
+    },
+    {
+     "median_mps": 1.4502,
+     "n": 138,
+     "p90_mps": 2.4267,
+     "preroll": "sprint/WD 1.3s"
+    },
+    {
+     "median_mps": 1.4556,
+     "n": 127,
+     "p90_mps": 2.0862,
+     "preroll": "sprint/W 1.1s"
+    },
+    {
+     "median_mps": 1.4552,
+     "n": 130,
+     "p90_mps": 2.1995,
+     "preroll": "run/W 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0146,
+   "sprinting": true,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "bow"
+  },
+  "bow/sprint/WA": {
+   "body_speed_mps": 5.6,
+   "crouched": false,
+   "fresh_mps": 1.9545,
+   "ideal": {
+    "clip_speeds": [
+     4.2437,
+     3.7077,
+     3.6022
+    ],
+    "clips": [
+     "actor_b-p-sprint-fw",
+     "actor_b-p-sprint-fw-rt",
+     "actor_b-p-sprint-fw-lt"
+    ],
+    "cps": 1.0706,
+    "hemi": "fw",
+    "p90_mps": 1.1614,
+    "phases": 8,
+    "planted_frac": 0.1749,
+    "ratio": 1.4275,
+    "ratio_unclamped": 1.4275,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 5.6,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.7167,
+   "ideal_max_mps": 0.5749,
+   "ideal_min_mps": 0.5427,
+   "ideal_mps": 0.5591,
+   "max_mps": 2.5766,
+   "mean_mps": 2.2094,
+   "median_mps": 2.0387,
+   "min_mps": 1.9545,
+   "n": 717,
+   "p90_mps": 2.969,
+   "planted_frac": 0.1621,
+   "repeats": [
+    {
+     "median_mps": 1.9545,
+     "n": 157,
+     "p90_mps": 2.3338,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 2.5766,
+     "n": 90,
+     "p90_mps": 3.9604,
+     "preroll": "sprint/W 0.7s"
+    },
+    {
+     "median_mps": 1.9545,
+     "n": 157,
+     "p90_mps": 2.3338,
+     "preroll": "sprint/A 1.3s"
+    },
+    {
+     "median_mps": 2.0387,
+     "n": 162,
+     "p90_mps": 3.2647,
+     "preroll": "sprint/WA 1.1s"
+    },
+    {
+     "median_mps": 2.0549,
+     "n": 151,
+     "p90_mps": 2.969,
+     "preroll": "run/WA 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.6221,
+   "sprinting": true,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "bow"
+  },
+  "bow/sprint/WD": {
+   "body_speed_mps": 5.6,
+   "crouched": false,
+   "fresh_mps": 2.0634,
+   "ideal": {
+    "clip_speeds": [
+     4.2437,
+     3.7077,
+     3.6022
+    ],
+    "clips": [
+     "actor_b-p-sprint-fw",
+     "actor_b-p-sprint-fw-rt",
+     "actor_b-p-sprint-fw-lt"
+    ],
+    "cps": 1.0564,
+    "hemi": "fw",
+    "p90_mps": 1.6389,
+    "phases": 8,
+    "planted_frac": 0.1655,
+    "ratio": 1.4086,
+    "ratio_unclamped": 1.4086,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 5.6,
+    "weights": [
+     0.5,
+     0.5,
+     0.0
+    ],
+    "x": -45.0
+   },
+   "ideal_godot_mps": 0.5868,
+   "ideal_max_mps": 0.7382,
+   "ideal_min_mps": 0.684,
+   "ideal_mps": 0.6966,
+   "max_mps": 2.5878,
+   "mean_mps": 2.1024,
+   "median_mps": 2.0851,
+   "min_mps": 2.0634,
+   "n": 559,
+   "p90_mps": 2.4788,
+   "planted_frac": 0.1286,
+   "repeats": [
+    {
+     "median_mps": 2.0634,
+     "n": 157,
+     "p90_mps": 2.4788,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 2.5878,
+     "n": 56,
+     "p90_mps": 3.4891,
+     "preroll": "sprint/W 0.7s"
+    },
+    {
+     "median_mps": 2.0634,
+     "n": 157,
+     "p90_mps": 2.4788,
+     "preroll": "sprint/D 1.3s"
+    },
+    {
+     "median_mps": 2.0851,
+     "n": 101,
+     "p90_mps": 2.5023,
+     "preroll": "sprint/WD 1.1s"
+    },
+    {
+     "median_mps": 2.1326,
+     "n": 88,
+     "p90_mps": 2.4578,
+     "preroll": "run/WD 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.5244,
+   "sprinting": true,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "bow"
+  },
+  "bow/walk/A": {
+   "body_speed_mps": 1.6,
+   "crouched": false,
+   "fresh_mps": 0.3025,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.138,
+    "hemi": "fw",
+    "p90_mps": 0.4041,
+    "phases": 8,
+    "planted_frac": 0.4013,
+    "ratio": 1.2897,
+    "ratio_unclamped": 1.2897,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.6,
+    "weights": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "x": 90.0
+   },
+   "ideal_max_mps": 0.1209,
+   "ideal_min_mps": 0.1077,
+   "ideal_mps": 0.112,
+   "max_mps": 0.3072,
+   "mean_mps": 0.3463,
+   "median_mps": 0.3036,
+   "min_mps": 0.1958,
+   "n": 1852,
+   "p90_mps": 0.736,
+   "planted_frac": 0.3948,
+   "repeats": [
+    {
+     "median_mps": 0.3025,
+     "n": 374,
+     "p90_mps": 0.7168,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3036,
+     "n": 366,
+     "p90_mps": 0.7383,
+     "preroll": "walk/WA 0.7s"
+    },
+    {
+     "median_mps": 0.1958,
+     "n": 334,
+     "p90_mps": 0.3193,
+     "preroll": "walk/SA 1.3s"
+    },
+    {
+     "median_mps": 0.3072,
+     "n": 389,
+     "p90_mps": 0.736,
+     "preroll": "walk/A 1.1s"
+    },
+    {
+     "median_mps": 0.3063,
+     "n": 389,
+     "p90_mps": 0.736,
+     "preroll": "run/A 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.1114,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "bow"
+  },
+  "bow/walk/D": {
+   "body_speed_mps": 1.6,
+   "crouched": false,
+   "fresh_mps": 0.3102,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.1196,
+    "hemi": "fw",
+    "p90_mps": 0.246,
+    "phases": 8,
+    "planted_frac": 0.4034,
+    "ratio": 1.2688,
+    "ratio_unclamped": 1.2688,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.6,
+    "weights": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "x": -90.0
+   },
+   "ideal_max_mps": 0.0924,
+   "ideal_min_mps": 0.0878,
+   "ideal_mps": 0.0905,
+   "max_mps": 0.3221,
+   "mean_mps": 0.3605,
+   "median_mps": 0.3121,
+   "min_mps": 0.198,
+   "n": 1898,
+   "p90_mps": 0.5554,
+   "planted_frac": 0.4044,
+   "repeats": [
+    {
+     "median_mps": 0.3102,
+     "n": 394,
+     "p90_mps": 0.5549,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3128,
+     "n": 374,
+     "p90_mps": 0.5796,
+     "preroll": "walk/WD 0.7s"
+    },
+    {
+     "median_mps": 0.198,
+     "n": 386,
+     "p90_mps": 0.5554,
+     "preroll": "walk/SD 1.3s"
+    },
+    {
+     "median_mps": 0.3121,
+     "n": 375,
+     "p90_mps": 0.5092,
+     "preroll": "walk/D 1.1s"
+    },
+    {
+     "median_mps": 0.3221,
+     "n": 369,
+     "p90_mps": 0.5873,
+     "preroll": "run/D 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.1241,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "bow"
+  },
+  "bow/walk/S": {
+   "body_speed_mps": 1.6,
+   "crouched": false,
+   "fresh_mps": 0.2066,
+   "ideal": {
+    "clip_speeds": [
+     1.4671,
+     1.4673,
+     1.5119
+    ],
+    "clips": [
+     "actor_b-p-walk-bw",
+     "actor_b-p-walk-bw-lt",
+     "actor_b-p-walk-bw-rt"
+    ],
+    "cps": 1.1685,
+    "hemi": "bw",
+    "p90_mps": 0.4158,
+    "phases": 8,
+    "planted_frac": 0.3784,
+    "ratio": 1.0906,
+    "ratio_unclamped": 1.0906,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.6,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1223,
+   "ideal_min_mps": 0.1074,
+   "ideal_mps": 0.1132,
+   "max_mps": 0.2152,
+   "mean_mps": 0.2914,
+   "median_mps": 0.2066,
+   "min_mps": 0.2066,
+   "n": 1793,
+   "p90_mps": 0.4954,
+   "planted_frac": 0.384,
+   "repeats": [
+    {
+     "median_mps": 0.2066,
+     "n": 364,
+     "p90_mps": 0.4917,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.2066,
+     "n": 360,
+     "p90_mps": 0.4954,
+     "preroll": "walk/SA 0.7s"
+    },
+    {
+     "median_mps": 0.2066,
+     "n": 360,
+     "p90_mps": 0.4954,
+     "preroll": "walk/SD 1.3s"
+    },
+    {
+     "median_mps": 0.2076,
+     "n": 349,
+     "p90_mps": 0.529,
+     "preroll": "walk/S 1.1s"
+    },
+    {
+     "median_mps": 0.2152,
+     "n": 360,
+     "p90_mps": 0.4954,
+     "preroll": "run/S 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0086,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "bow"
+  },
+  "bow/walk/W": {
+   "body_speed_mps": 1.6,
+   "crouched": false,
+   "fresh_mps": 0.2972,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.1173,
+    "hemi": "fw",
+    "p90_mps": 0.2426,
+    "phases": 8,
+    "planted_frac": 0.4091,
+    "ratio": 1.2663,
+    "ratio_unclamped": 1.2663,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.6,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.0985,
+   "ideal_min_mps": 0.0766,
+   "ideal_mps": 0.091,
+   "max_mps": 0.3016,
+   "mean_mps": 0.3641,
+   "median_mps": 0.3011,
+   "min_mps": 0.2965,
+   "n": 1934,
+   "p90_mps": 0.7061,
+   "planted_frac": 0.4119,
+   "repeats": [
+    {
+     "median_mps": 0.2972,
+     "n": 388,
+     "p90_mps": 0.7675,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3016,
+     "n": 386,
+     "p90_mps": 0.4863,
+     "preroll": "walk/WA 0.7s"
+    },
+    {
+     "median_mps": 0.3016,
+     "n": 386,
+     "p90_mps": 0.4863,
+     "preroll": "walk/WD 1.3s"
+    },
+    {
+     "median_mps": 0.2965,
+     "n": 384,
+     "p90_mps": 0.7061,
+     "preroll": "walk/W 1.1s"
+    },
+    {
+     "median_mps": 0.3011,
+     "n": 390,
+     "p90_mps": 0.7709,
+     "preroll": "run/W 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0051,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "bow"
+  },
+  "bow/walk/WA": {
+   "body_speed_mps": 1.6,
+   "crouched": false,
+   "fresh_mps": 0.5907,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.1276,
+    "hemi": "fw",
+    "p90_mps": 0.4157,
+    "phases": 8,
+    "planted_frac": 0.3982,
+    "ratio": 1.2779,
+    "ratio_unclamped": 1.2779,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.6,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.1062,
+   "ideal_max_mps": 0.096,
+   "ideal_min_mps": 0.0867,
+   "ideal_mps": 0.0906,
+   "max_mps": 0.5907,
+   "mean_mps": 0.8087,
+   "median_mps": 0.5426,
+   "min_mps": 0.2163,
+   "n": 777,
+   "p90_mps": 2.2396,
+   "planted_frac": 0.1721,
+   "repeats": [
+    {
+     "median_mps": 0.5907,
+     "n": 153,
+     "p90_mps": 2.4136,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.5907,
+     "n": 153,
+     "p90_mps": 2.4136,
+     "preroll": "walk/W 0.7s"
+    },
+    {
+     "median_mps": 0.5426,
+     "n": 166,
+     "p90_mps": 1.9924,
+     "preroll": "walk/A 1.3s"
+    },
+    {
+     "median_mps": 0.3163,
+     "n": 177,
+     "p90_mps": 2.2396,
+     "preroll": "walk/WA 1.1s"
+    },
+    {
+     "median_mps": 0.2163,
+     "n": 128,
+     "p90_mps": 1.0108,
+     "preroll": "run/WA 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.3744,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "bow"
+  },
+  "musket/control/idle": {
+   "body_speed_mps": 0.0,
+   "crouched": false,
+   "fresh_mps": 0.0062,
+   "max_mps": 0.0062,
+   "mean_mps": 0.009,
+   "median_mps": 0.0062,
+   "min_mps": 0.0062,
+   "n": 4780,
+   "p90_mps": 0.0142,
+   "planted_frac": 1.0,
+   "repeats": [
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0145,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0106,
+     "preroll": "run/W 0.7s"
+    },
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0142,
+     "preroll": "run/S 1.3s"
+    },
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0106,
+     "preroll": "run/W 1.1s"
+    },
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0144,
+     "preroll": "walk/S 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/crouch/A": {
+   "body_speed_mps": 1.288,
+   "crouched": true,
+   "fresh_mps": 0.4036,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.2909,
+    "hemi": "fw",
+    "p90_mps": 0.7776,
+    "phases": 8,
+    "planted_frac": 0.3995,
+    "ratio": 0.7758,
+    "ratio_unclamped": 0.7758,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.288,
+    "weights": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "x": 90.0
+   },
+   "ideal_max_mps": 0.1331,
+   "ideal_min_mps": 0.0956,
+   "ideal_mps": 0.107,
+   "max_mps": 0.4977,
+   "mean_mps": 0.6649,
+   "median_mps": 0.3941,
+   "min_mps": 0.3941,
+   "n": 1420,
+   "p90_mps": 0.7225,
+   "planted_frac": 0.3121,
+   "repeats": [
+    {
+     "median_mps": 0.4036,
+     "n": 255,
+     "p90_mps": 1.9882,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3941,
+     "n": 290,
+     "p90_mps": 0.7225,
+     "preroll": "crouch/WA 0.7s"
+    },
+    {
+     "median_mps": 0.4977,
+     "n": 295,
+     "p90_mps": 1.4328,
+     "preroll": "crouch/SA 1.3s"
+    },
+    {
+     "median_mps": 0.3941,
+     "n": 290,
+     "p90_mps": 0.7224,
+     "preroll": "crouch/A 1.1s"
+    },
+    {
+     "median_mps": 0.3941,
+     "n": 290,
+     "p90_mps": 0.7224,
+     "preroll": "walk/A 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.1036,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/crouch/D": {
+   "body_speed_mps": 1.288,
+   "crouched": true,
+   "fresh_mps": 0.4107,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.3058,
+    "hemi": "fw",
+    "p90_mps": 3.9465,
+    "phases": 8,
+    "planted_frac": 0.3492,
+    "ratio": 0.8155,
+    "ratio_unclamped": 0.8155,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.288,
+    "weights": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "x": -90.0
+   },
+   "ideal_max_mps": 0.2018,
+   "ideal_min_mps": 0.1644,
+   "ideal_mps": 0.1871,
+   "max_mps": 0.4107,
+   "mean_mps": 0.8139,
+   "median_mps": 0.4097,
+   "min_mps": 0.3233,
+   "n": 1171,
+   "p90_mps": 2.1211,
+   "planted_frac": 0.2569,
+   "repeats": [
+    {
+     "median_mps": 0.4107,
+     "n": 248,
+     "p90_mps": 0.847,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.4097,
+     "n": 231,
+     "p90_mps": 2.1211,
+     "preroll": "crouch/WD 0.7s"
+    },
+    {
+     "median_mps": 0.3233,
+     "n": 230,
+     "p90_mps": 4.4602,
+     "preroll": "crouch/SD 1.3s"
+    },
+    {
+     "median_mps": 0.4097,
+     "n": 231,
+     "p90_mps": 2.1211,
+     "preroll": "crouch/D 1.1s"
+    },
+    {
+     "median_mps": 0.4097,
+     "n": 231,
+     "p90_mps": 2.1211,
+     "preroll": "walk/D 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0874,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/crouch/S": {
+   "body_speed_mps": 1.288,
+   "crouched": true,
+   "fresh_mps": 0.3329,
+   "ideal": {
+    "clip_speeds": [
+     1.7486,
+     1.7261,
+     1.7679
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-bw",
+     "actor_b-p-crouch-walk-bw-lt",
+     "actor_b-p-crouch-walk-bw-rt"
+    ],
+    "cps": 0.2762,
+    "hemi": "bw",
+    "p90_mps": 2.5437,
+    "phases": 8,
+    "planted_frac": 0.3972,
+    "ratio": 0.7366,
+    "ratio_unclamped": 0.7366,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.288,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.0411,
+   "ideal_min_mps": 0.0314,
+   "ideal_mps": 0.0345,
+   "max_mps": 0.3329,
+   "mean_mps": 0.7937,
+   "median_mps": 0.3299,
+   "min_mps": 0.3299,
+   "n": 1412,
+   "p90_mps": 3.2996,
+   "planted_frac": 0.3093,
+   "repeats": [
+    {
+     "median_mps": 0.3329,
+     "n": 268,
+     "p90_mps": 3.3194,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3299,
+     "n": 286,
+     "p90_mps": 3.2996,
+     "preroll": "crouch/SA 0.7s"
+    },
+    {
+     "median_mps": 0.3299,
+     "n": 286,
+     "p90_mps": 3.2996,
+     "preroll": "crouch/SD 1.3s"
+    },
+    {
+     "median_mps": 0.3299,
+     "n": 286,
+     "p90_mps": 3.2996,
+     "preroll": "crouch/S 1.1s"
+    },
+    {
+     "median_mps": 0.3299,
+     "n": 286,
+     "p90_mps": 3.2996,
+     "preroll": "walk/S 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.003,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/crouch/W": {
+   "body_speed_mps": 1.288,
+   "crouched": true,
+   "fresh_mps": 0.3127,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.295,
+    "hemi": "fw",
+    "p90_mps": 1.2849,
+    "phases": 8,
+    "planted_frac": 0.4052,
+    "ratio": 0.7867,
+    "ratio_unclamped": 0.7867,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.288,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1114,
+   "ideal_min_mps": 0.0966,
+   "ideal_mps": 0.1039,
+   "max_mps": 0.3148,
+   "mean_mps": 0.629,
+   "median_mps": 0.3148,
+   "min_mps": 0.3127,
+   "n": 1160,
+   "p90_mps": 1.968,
+   "planted_frac": 0.2536,
+   "repeats": [
+    {
+     "median_mps": 0.3127,
+     "n": 256,
+     "p90_mps": 0.7721,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3148,
+     "n": 226,
+     "p90_mps": 1.968,
+     "preroll": "crouch/WA 0.7s"
+    },
+    {
+     "median_mps": 0.3148,
+     "n": 226,
+     "p90_mps": 1.968,
+     "preroll": "crouch/WD 1.3s"
+    },
+    {
+     "median_mps": 0.3148,
+     "n": 226,
+     "p90_mps": 1.968,
+     "preroll": "crouch/W 1.1s"
+    },
+    {
+     "median_mps": 0.3148,
+     "n": 226,
+     "p90_mps": 1.968,
+     "preroll": "walk/W 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0021,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/crouch/WA": {
+   "body_speed_mps": 1.288,
+   "crouched": true,
+   "fresh_mps": 0.4678,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.293,
+    "hemi": "fw",
+    "p90_mps": 1.3276,
+    "phases": 8,
+    "planted_frac": 0.2759,
+    "ratio": 0.7812,
+    "ratio_unclamped": 0.7812,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.288,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.2113,
+   "ideal_max_mps": 0.1547,
+   "ideal_min_mps": 0.0922,
+   "ideal_mps": 0.1289,
+   "max_mps": 0.73,
+   "mean_mps": 0.6088,
+   "median_mps": 0.4475,
+   "min_mps": 0.4199,
+   "n": 958,
+   "p90_mps": 0.712,
+   "planted_frac": 0.2114,
+   "repeats": [
+    {
+     "median_mps": 0.4678,
+     "n": 282,
+     "p90_mps": 0.712,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.73,
+     "n": 91,
+     "p90_mps": 1.4639,
+     "preroll": "crouch/W 0.7s"
+    },
+    {
+     "median_mps": 0.4199,
+     "n": 117,
+     "p90_mps": 1.0168,
+     "preroll": "crouch/A 1.3s"
+    },
+    {
+     "median_mps": 0.4475,
+     "n": 234,
+     "p90_mps": 0.7034,
+     "preroll": "crouch/WA 1.1s"
+    },
+    {
+     "median_mps": 0.4475,
+     "n": 234,
+     "p90_mps": 0.7034,
+     "preroll": "walk/WA 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.3101,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/run/A": {
+   "body_speed_mps": 3.312,
+   "crouched": false,
+   "fresh_mps": 0.3828,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.3206,
+    "hemi": "fw",
+    "p90_mps": 0.4511,
+    "phases": 8,
+    "planted_frac": 0.1866,
+    "ratio": 0.9684,
+    "ratio_unclamped": 0.9684,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.312,
+    "weights": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "x": 90.0
+   },
+   "ideal_max_mps": 0.1526,
+   "ideal_min_mps": 0.1469,
+   "ideal_mps": 0.1506,
+   "max_mps": 1.186,
+   "mean_mps": 0.5966,
+   "median_mps": 0.36,
+   "min_mps": 0.2866,
+   "n": 630,
+   "p90_mps": 0.9068,
+   "planted_frac": 0.1427,
+   "repeats": [
+    {
+     "median_mps": 0.3828,
+     "n": 125,
+     "p90_mps": 0.9068,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.2866,
+     "n": 113,
+     "p90_mps": 0.9456,
+     "preroll": "run/WA 0.7s"
+    },
+    {
+     "median_mps": 1.186,
+     "n": 110,
+     "p90_mps": 1.7681,
+     "preroll": "run/SA 1.3s"
+    },
+    {
+     "median_mps": 0.3364,
+     "n": 144,
+     "p90_mps": 0.7652,
+     "preroll": "run/A 1.1s"
+    },
+    {
+     "median_mps": 0.36,
+     "n": 138,
+     "p90_mps": 0.852,
+     "preroll": "walk/A 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.8994,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/run/D": {
+   "body_speed_mps": 3.312,
+   "crouched": false,
+   "fresh_mps": 0.4475,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.3346,
+    "hemi": "fw",
+    "p90_mps": 0.4159,
+    "phases": 8,
+    "planted_frac": 0.1767,
+    "ratio": 0.9787,
+    "ratio_unclamped": 0.9787,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.312,
+    "weights": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "x": -90.0
+   },
+   "ideal_max_mps": 0.1858,
+   "ideal_min_mps": 0.1362,
+   "ideal_mps": 0.1469,
+   "max_mps": 1.3747,
+   "mean_mps": 0.6838,
+   "median_mps": 0.3876,
+   "min_mps": 0.3441,
+   "n": 724,
+   "p90_mps": 0.8823,
+   "planted_frac": 0.1629,
+   "repeats": [
+    {
+     "median_mps": 0.4475,
+     "n": 140,
+     "p90_mps": 0.8823,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3441,
+     "n": 171,
+     "p90_mps": 0.8428,
+     "preroll": "run/WD 0.7s"
+    },
+    {
+     "median_mps": 1.3747,
+     "n": 164,
+     "p90_mps": 1.8151,
+     "preroll": "run/SD 1.3s"
+    },
+    {
+     "median_mps": 0.3499,
+     "n": 131,
+     "p90_mps": 0.6922,
+     "preroll": "run/D 1.1s"
+    },
+    {
+     "median_mps": 0.3876,
+     "n": 118,
+     "p90_mps": 0.8849,
+     "preroll": "walk/D 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 1.0306,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/run/S": {
+   "body_speed_mps": 3.312,
+   "crouched": false,
+   "fresh_mps": 1.075,
+   "ideal": {
+    "clip_speeds": [
+     2.474,
+     2.5234,
+     2.4457
+    ],
+    "clips": [
+     "actor_b-p-run-bw",
+     "actor_b-p-run-bw-lt",
+     "actor_b-p-run-bw-rt"
+    ],
+    "cps": 1.8255,
+    "hemi": "bw",
+    "p90_mps": 0.5169,
+    "phases": 8,
+    "planted_frac": 0.2281,
+    "ratio": 1.3387,
+    "ratio_unclamped": 1.3387,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.312,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1523,
+   "ideal_min_mps": 0.144,
+   "ideal_mps": 0.1472,
+   "max_mps": 1.328,
+   "mean_mps": 1.3294,
+   "median_mps": 1.2497,
+   "min_mps": 1.075,
+   "n": 783,
+   "p90_mps": 1.8407,
+   "planted_frac": 0.1746,
+   "repeats": [
+    {
+     "median_mps": 1.075,
+     "n": 155,
+     "p90_mps": 1.618,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 1.2497,
+     "n": 147,
+     "p90_mps": 1.8407,
+     "preroll": "run/SA 0.7s"
+    },
+    {
+     "median_mps": 1.2497,
+     "n": 147,
+     "p90_mps": 1.8407,
+     "preroll": "run/SD 1.3s"
+    },
+    {
+     "median_mps": 1.328,
+     "n": 139,
+     "p90_mps": 1.9424,
+     "preroll": "run/S 1.1s"
+    },
+    {
+     "median_mps": 1.1574,
+     "n": 195,
+     "p90_mps": 2.0637,
+     "preroll": "walk/S 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.253,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/run/W": {
+   "body_speed_mps": 3.312,
+   "crouched": false,
+   "fresh_mps": 0.37,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.3509,
+    "hemi": "fw",
+    "p90_mps": 0.271,
+    "phases": 8,
+    "planted_frac": 0.1787,
+    "ratio": 0.9907,
+    "ratio_unclamped": 0.9907,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.312,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1575,
+   "ideal_min_mps": 0.1441,
+   "ideal_mps": 0.152,
+   "max_mps": 0.37,
+   "mean_mps": 0.4503,
+   "median_mps": 0.3328,
+   "min_mps": 0.3149,
+   "n": 584,
+   "p90_mps": 0.7162,
+   "planted_frac": 0.1342,
+   "repeats": [
+    {
+     "median_mps": 0.37,
+     "n": 117,
+     "p90_mps": 0.8655,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3328,
+     "n": 111,
+     "p90_mps": 0.7162,
+     "preroll": "run/WA 0.7s"
+    },
+    {
+     "median_mps": 0.3328,
+     "n": 111,
+     "p90_mps": 0.7162,
+     "preroll": "run/WD 1.3s"
+    },
+    {
+     "median_mps": 0.3149,
+     "n": 123,
+     "p90_mps": 0.7057,
+     "preroll": "run/W 1.1s"
+    },
+    {
+     "median_mps": 0.3244,
+     "n": 122,
+     "p90_mps": 0.7479,
+     "preroll": "walk/W 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0551,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/run/WA": {
+   "body_speed_mps": 3.312,
+   "crouched": false,
+   "fresh_mps": 0.27,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.3356,
+    "hemi": "fw",
+    "p90_mps": 0.5697,
+    "phases": 8,
+    "planted_frac": 0.1956,
+    "ratio": 0.9794,
+    "ratio_unclamped": 0.9794,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.312,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.4265,
+   "ideal_max_mps": 0.3666,
+   "ideal_min_mps": 0.3442,
+   "ideal_mps": 0.3529,
+   "max_mps": 2.0741,
+   "mean_mps": 0.8495,
+   "median_mps": 0.27,
+   "min_mps": 0.27,
+   "n": 574,
+   "p90_mps": 1.4447,
+   "planted_frac": 0.1325,
+   "repeats": [
+    {
+     "median_mps": 0.27,
+     "n": 129,
+     "p90_mps": 1.4447,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.27,
+     "n": 129,
+     "p90_mps": 1.4447,
+     "preroll": "run/W 0.7s"
+    },
+    {
+     "median_mps": 2.0741,
+     "n": 105,
+     "p90_mps": 3.9121,
+     "preroll": "run/A 1.3s"
+    },
+    {
+     "median_mps": 0.6465,
+     "n": 82,
+     "p90_mps": 1.0221,
+     "preroll": "run/WA 1.1s"
+    },
+    {
+     "median_mps": 0.27,
+     "n": 129,
+     "p90_mps": 1.4447,
+     "preroll": "walk/WA 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 1.8041,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/sprint/W": {
+   "body_speed_mps": 5.6,
+   "crouched": false,
+   "fresh_mps": 1.4552,
+   "ideal": {
+    "clip_speeds": [
+     4.2437,
+     3.7077,
+     3.6022
+    ],
+    "clips": [
+     "actor_b-p-sprint-fw",
+     "actor_b-p-sprint-fw-rt",
+     "actor_b-p-sprint-fw-lt"
+    ],
+    "cps": 0.9897,
+    "hemi": "fw",
+    "p90_mps": 1.0733,
+    "phases": 8,
+    "planted_frac": 0.1519,
+    "ratio": 1.3196,
+    "ratio_unclamped": 1.3196,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 5.6,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.2248,
+   "ideal_min_mps": 0.2051,
+   "ideal_mps": 0.2208,
+   "max_mps": 1.4556,
+   "mean_mps": 1.5787,
+   "median_mps": 1.4552,
+   "min_mps": 1.441,
+   "n": 636,
+   "p90_mps": 2.1995,
+   "planted_frac": 0.1546,
+   "repeats": [
+    {
+     "median_mps": 1.4552,
+     "n": 130,
+     "p90_mps": 2.1995,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 1.441,
+     "n": 111,
+     "p90_mps": 2.0138,
+     "preroll": "sprint/WA 0.7s"
+    },
+    {
+     "median_mps": 1.4502,
+     "n": 138,
+     "p90_mps": 2.4267,
+     "preroll": "sprint/WD 1.3s"
+    },
+    {
+     "median_mps": 1.4556,
+     "n": 127,
+     "p90_mps": 2.0862,
+     "preroll": "sprint/W 1.1s"
+    },
+    {
+     "median_mps": 1.4552,
+     "n": 130,
+     "p90_mps": 2.1995,
+     "preroll": "run/W 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0146,
+   "sprinting": true,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/sprint/WA": {
+   "body_speed_mps": 5.6,
+   "crouched": false,
+   "fresh_mps": 1.9545,
+   "ideal": {
+    "clip_speeds": [
+     4.2437,
+     3.7077,
+     3.6022
+    ],
+    "clips": [
+     "actor_b-p-sprint-fw",
+     "actor_b-p-sprint-fw-rt",
+     "actor_b-p-sprint-fw-lt"
+    ],
+    "cps": 1.0706,
+    "hemi": "fw",
+    "p90_mps": 1.1614,
+    "phases": 8,
+    "planted_frac": 0.1749,
+    "ratio": 1.4275,
+    "ratio_unclamped": 1.4275,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 5.6,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.7167,
+   "ideal_max_mps": 0.5749,
+   "ideal_min_mps": 0.5427,
+   "ideal_mps": 0.5591,
+   "max_mps": 2.5766,
+   "mean_mps": 2.2739,
+   "median_mps": 2.0387,
+   "min_mps": 1.9545,
+   "n": 671,
+   "p90_mps": 3.2647,
+   "planted_frac": 0.1527,
+   "repeats": [
+    {
+     "median_mps": 1.9545,
+     "n": 157,
+     "p90_mps": 2.3338,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 2.5766,
+     "n": 90,
+     "p90_mps": 3.9604,
+     "preroll": "sprint/W 0.7s"
+    },
+    {
+     "median_mps": 1.9545,
+     "n": 157,
+     "p90_mps": 2.3338,
+     "preroll": "sprint/A 1.3s"
+    },
+    {
+     "median_mps": 2.0387,
+     "n": 162,
+     "p90_mps": 3.2647,
+     "preroll": "sprint/WA 1.1s"
+    },
+    {
+     "median_mps": 2.5022,
+     "n": 105,
+     "p90_mps": 3.4138,
+     "preroll": "run/WA 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.6221,
+   "sprinting": true,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/sprint/WD": {
+   "body_speed_mps": 5.6,
+   "crouched": false,
+   "fresh_mps": 2.0634,
+   "ideal": {
+    "clip_speeds": [
+     4.2437,
+     3.7077,
+     3.6022
+    ],
+    "clips": [
+     "actor_b-p-sprint-fw",
+     "actor_b-p-sprint-fw-rt",
+     "actor_b-p-sprint-fw-lt"
+    ],
+    "cps": 1.0564,
+    "hemi": "fw",
+    "p90_mps": 1.6389,
+    "phases": 8,
+    "planted_frac": 0.1655,
+    "ratio": 1.4086,
+    "ratio_unclamped": 1.4086,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 5.6,
+    "weights": [
+     0.5,
+     0.5,
+     0.0
+    ],
+    "x": -45.0
+   },
+   "ideal_godot_mps": 0.5868,
+   "ideal_max_mps": 0.7382,
+   "ideal_min_mps": 0.684,
+   "ideal_mps": 0.6966,
+   "max_mps": 2.6289,
+   "mean_mps": 2.1715,
+   "median_mps": 2.0851,
+   "min_mps": 2.0634,
+   "n": 547,
+   "p90_mps": 2.5023,
+   "planted_frac": 0.1267,
+   "repeats": [
+    {
+     "median_mps": 2.0634,
+     "n": 157,
+     "p90_mps": 2.4788,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 2.5878,
+     "n": 56,
+     "p90_mps": 3.4891,
+     "preroll": "sprint/W 0.7s"
+    },
+    {
+     "median_mps": 2.0634,
+     "n": 157,
+     "p90_mps": 2.4788,
+     "preroll": "sprint/D 1.3s"
+    },
+    {
+     "median_mps": 2.0851,
+     "n": 101,
+     "p90_mps": 2.5023,
+     "preroll": "sprint/WD 1.1s"
+    },
+    {
+     "median_mps": 2.6289,
+     "n": 76,
+     "p90_mps": 3.0644,
+     "preroll": "run/WD 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.5655,
+   "sprinting": true,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/walk/A": {
+   "body_speed_mps": 1.472,
+   "crouched": false,
+   "fresh_mps": 0.2968,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.0469,
+    "hemi": "fw",
+    "p90_mps": 0.3077,
+    "phases": 8,
+    "planted_frac": 0.3991,
+    "ratio": 1.1865,
+    "ratio_unclamped": 1.1865,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.472,
+    "weights": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "x": 90.0
+   },
+   "ideal_max_mps": 0.1071,
+   "ideal_min_mps": 0.1012,
+   "ideal_mps": 0.104,
+   "max_mps": 0.3037,
+   "mean_mps": 0.3552,
+   "median_mps": 0.3001,
+   "min_mps": 0.1827,
+   "n": 1864,
+   "p90_mps": 0.6766,
+   "planted_frac": 0.3973,
+   "repeats": [
+    {
+     "median_mps": 0.2968,
+     "n": 376,
+     "p90_mps": 0.6766,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3022,
+     "n": 366,
+     "p90_mps": 0.7441,
+     "preroll": "walk/WA 0.7s"
+    },
+    {
+     "median_mps": 0.1827,
+     "n": 351,
+     "p90_mps": 0.3601,
+     "preroll": "walk/SA 1.3s"
+    },
+    {
+     "median_mps": 0.3037,
+     "n": 382,
+     "p90_mps": 0.674,
+     "preroll": "walk/A 1.1s"
+    },
+    {
+     "median_mps": 0.3001,
+     "n": 389,
+     "p90_mps": 0.6919,
+     "preroll": "run/A 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.121,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "musket"
+  },
+  "musket/walk/D": {
+   "body_speed_mps": 1.472,
+   "crouched": false,
+   "fresh_mps": 0.2843,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.03,
+    "hemi": "fw",
+    "p90_mps": 0.2362,
+    "phases": 8,
+    "planted_frac": 0.4042,
+    "ratio": 1.1673,
+    "ratio_unclamped": 1.1673,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.472,
+    "weights": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "x": -90.0
+   },
+   "ideal_max_mps": 0.0836,
+   "ideal_min_mps": 0.0818,
+   "ideal_mps": 0.083,
+   "max_mps": 0.2943,
+   "mean_mps": 0.3461,
+   "median_mps": 0.2907,
+   "min_mps": 0.2492,
+   "n": 1937,
+   "p90_mps": 0.4794,
+   "planted_frac": 0.4131,
+   "repeats": [
+    {
+     "median_mps": 0.2843,
+     "n": 403,
+     "p90_mps": 0.47,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.2907,
+     "n": 386,
+     "p90_mps": 0.5055,
+     "preroll": "walk/WD 0.7s"
+    },
+    {
+     "median_mps": 0.2492,
+     "n": 380,
+     "p90_mps": 0.5188,
+     "preroll": "walk/SD 1.3s"
+    },
+    {
+     "median_mps": 0.2913,
+     "n": 389,
+     "p90_mps": 0.4533,
+     "preroll": "walk/D 1.1s"
+    },
+    {
+     "median_mps": 0.2943,
+     "n": 379,
+     "p90_mps": 0.4794,
+     "preroll": "run/D 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0451,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "musket"
+  },
+  "musket/walk/S": {
+   "body_speed_mps": 1.472,
+   "crouched": false,
+   "fresh_mps": 0.1987,
+   "ideal": {
+    "clip_speeds": [
+     1.4671,
+     1.4673,
+     1.5119
+    ],
+    "clips": [
+     "actor_b-p-walk-bw",
+     "actor_b-p-walk-bw-lt",
+     "actor_b-p-walk-bw-rt"
+    ],
+    "cps": 1.075,
+    "hemi": "bw",
+    "p90_mps": 0.3804,
+    "phases": 8,
+    "planted_frac": 0.3784,
+    "ratio": 1.0033,
+    "ratio_unclamped": 1.0033,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.472,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1094,
+   "ideal_min_mps": 0.1005,
+   "ideal_mps": 0.1045,
+   "max_mps": 0.2101,
+   "mean_mps": 0.3333,
+   "median_mps": 0.1997,
+   "min_mps": 0.1987,
+   "n": 1894,
+   "p90_mps": 0.4872,
+   "planted_frac": 0.405,
+   "repeats": [
+    {
+     "median_mps": 0.1987,
+     "n": 383,
+     "p90_mps": 0.486,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.2052,
+     "n": 371,
+     "p90_mps": 0.5125,
+     "preroll": "walk/SA 0.7s"
+    },
+    {
+     "median_mps": 0.1989,
+     "n": 384,
+     "p90_mps": 0.4862,
+     "preroll": "walk/SD 1.3s"
+    },
+    {
+     "median_mps": 0.1997,
+     "n": 371,
+     "p90_mps": 0.4932,
+     "preroll": "walk/S 1.1s"
+    },
+    {
+     "median_mps": 0.2101,
+     "n": 385,
+     "p90_mps": 0.4872,
+     "preroll": "run/S 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0114,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "musket"
+  },
+  "musket/walk/W": {
+   "body_speed_mps": 1.472,
+   "crouched": false,
+   "fresh_mps": 0.2756,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.028,
+    "hemi": "fw",
+    "p90_mps": 0.2718,
+    "phases": 8,
+    "planted_frac": 0.4091,
+    "ratio": 1.165,
+    "ratio_unclamped": 1.165,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.472,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.087,
+   "ideal_min_mps": 0.0748,
+   "ideal_mps": 0.0854,
+   "max_mps": 0.2802,
+   "mean_mps": 0.3702,
+   "median_mps": 0.2774,
+   "min_mps": 0.2754,
+   "n": 2121,
+   "p90_mps": 0.8122,
+   "planted_frac": 0.4527,
+   "repeats": [
+    {
+     "median_mps": 0.2756,
+     "n": 432,
+     "p90_mps": 0.8122,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.2774,
+     "n": 424,
+     "p90_mps": 0.8303,
+     "preroll": "walk/WA 0.7s"
+    },
+    {
+     "median_mps": 0.2785,
+     "n": 423,
+     "p90_mps": 0.5281,
+     "preroll": "walk/WD 1.3s"
+    },
+    {
+     "median_mps": 0.2754,
+     "n": 420,
+     "p90_mps": 0.7025,
+     "preroll": "walk/W 1.1s"
+    },
+    {
+     "median_mps": 0.2802,
+     "n": 422,
+     "p90_mps": 0.8278,
+     "preroll": "run/W 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0048,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "musket"
+  },
+  "musket/walk/WA": {
+   "body_speed_mps": 1.472,
+   "crouched": false,
+   "fresh_mps": 0.538,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.0374,
+    "hemi": "fw",
+    "p90_mps": 0.3845,
+    "phases": 8,
+    "planted_frac": 0.3989,
+    "ratio": 1.1757,
+    "ratio_unclamped": 1.1757,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.472,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.0973,
+   "ideal_max_mps": 0.0882,
+   "ideal_min_mps": 0.0797,
+   "ideal_mps": 0.0853,
+   "max_mps": 0.538,
+   "mean_mps": 0.7824,
+   "median_mps": 0.4888,
+   "min_mps": 0.4467,
+   "n": 765,
+   "p90_mps": 2.0159,
+   "planted_frac": 0.1694,
+   "repeats": [
+    {
+     "median_mps": 0.538,
+     "n": 135,
+     "p90_mps": 2.1538,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.5239,
+     "n": 150,
+     "p90_mps": 2.046,
+     "preroll": "walk/W 0.7s"
+    },
+    {
+     "median_mps": 0.4888,
+     "n": 177,
+     "p90_mps": 2.0159,
+     "preroll": "walk/A 1.3s"
+    },
+    {
+     "median_mps": 0.4812,
+     "n": 182,
+     "p90_mps": 1.6734,
+     "preroll": "walk/WA 1.1s"
+    },
+    {
+     "median_mps": 0.4467,
+     "n": 121,
+     "p90_mps": 1.9623,
+     "preroll": "run/WA 0.9s"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0913,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "musket"
+  },
+  "pistol/control/idle": {
+   "body_speed_mps": 0.0,
+   "crouched": false,
+   "fresh_mps": 0.0062,
+   "max_mps": 0.0062,
+   "mean_mps": 0.0091,
+   "median_mps": 0.0062,
+   "min_mps": 0.0062,
+   "n": 4780,
+   "p90_mps": 0.0142,
+   "planted_frac": 1.0,
+   "repeats": [
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0145,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0106,
+     "preroll": "run/W 0.7s"
+    },
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0142,
+     "preroll": "run/S 1.3s"
+    },
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0106,
+     "preroll": "run/W 1.1s"
+    },
+    {
+     "median_mps": 0.0062,
+     "n": 956,
+     "p90_mps": 0.0144,
+     "preroll": "walk/S 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "pistol"
+  },
+  "pistol/crouch/A": {
+   "body_speed_mps": 1.4,
+   "crouched": true,
+   "fresh_mps": 0.3759,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.3162,
+    "hemi": "fw",
+    "p90_mps": 0.7277,
+    "phases": 8,
+    "planted_frac": 0.3896,
+    "ratio": 0.8433,
+    "ratio_unclamped": 0.8433,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.4,
+    "weights": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "x": 90.0
+   },
+   "ideal_max_mps": 0.1289,
+   "ideal_min_mps": 0.1033,
+   "ideal_mps": 0.1142,
+   "max_mps": 0.5428,
+   "mean_mps": 0.6876,
+   "median_mps": 0.381,
+   "min_mps": 0.3759,
+   "n": 1706,
+   "p90_mps": 0.6454,
+   "planted_frac": 0.3702,
+   "repeats": [
+    {
+     "median_mps": 0.3759,
+     "n": 356,
+     "p90_mps": 0.6761,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.381,
+     "n": 335,
+     "p90_mps": 0.6454,
+     "preroll": "crouch/WA 0.7s"
+    },
+    {
+     "median_mps": 0.5428,
+     "n": 345,
+     "p90_mps": 1.5641,
+     "preroll": "crouch/SA 1.3s"
+    },
+    {
+     "median_mps": 0.381,
+     "n": 335,
+     "p90_mps": 0.6454,
+     "preroll": "crouch/A 1.1s"
+    },
+    {
+     "median_mps": 0.381,
+     "n": 335,
+     "p90_mps": 0.6454,
+     "preroll": "walk/A 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.1669,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "pistol"
+  },
+  "pistol/crouch/D": {
+   "body_speed_mps": 1.4,
+   "crouched": true,
+   "fresh_mps": 0.3928,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.3324,
+    "hemi": "fw",
+    "p90_mps": 4.0416,
+    "phases": 8,
+    "planted_frac": 0.3486,
+    "ratio": 0.8864,
+    "ratio_unclamped": 0.8864,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.4,
+    "weights": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "x": -90.0
+   },
+   "ideal_max_mps": 0.2166,
+   "ideal_min_mps": 0.184,
+   "ideal_mps": 0.2006,
+   "max_mps": 0.3957,
+   "mean_mps": 0.8441,
+   "median_mps": 0.3957,
+   "min_mps": 0.3706,
+   "n": 1555,
+   "p90_mps": 2.3117,
+   "planted_frac": 0.3406,
+   "repeats": [
+    {
+     "median_mps": 0.3928,
+     "n": 347,
+     "p90_mps": 0.934,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3957,
+     "n": 298,
+     "p90_mps": 2.3117,
+     "preroll": "crouch/WD 0.7s"
+    },
+    {
+     "median_mps": 0.3706,
+     "n": 314,
+     "p90_mps": 0.8428,
+     "preroll": "crouch/SD 1.3s"
+    },
+    {
+     "median_mps": 0.3957,
+     "n": 298,
+     "p90_mps": 2.3117,
+     "preroll": "crouch/D 1.1s"
+    },
+    {
+     "median_mps": 0.3957,
+     "n": 298,
+     "p90_mps": 2.3117,
+     "preroll": "walk/D 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0251,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "pistol"
+  },
+  "pistol/crouch/S": {
+   "body_speed_mps": 1.4,
+   "crouched": true,
+   "fresh_mps": 0.369,
+   "ideal": {
+    "clip_speeds": [
+     1.7486,
+     1.7261,
+     1.7679
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-bw",
+     "actor_b-p-crouch-walk-bw-lt",
+     "actor_b-p-crouch-walk-bw-rt"
+    ],
+    "cps": 0.3002,
+    "hemi": "bw",
+    "p90_mps": 3.1374,
+    "phases": 8,
+    "planted_frac": 0.3965,
+    "ratio": 0.8006,
+    "ratio_unclamped": 0.8006,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.4,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.0415,
+   "ideal_min_mps": 0.033,
+   "ideal_mps": 0.0374,
+   "max_mps": 0.369,
+   "mean_mps": 0.8528,
+   "median_mps": 0.3649,
+   "min_mps": 0.3649,
+   "n": 1829,
+   "p90_mps": 3.5886,
+   "planted_frac": 0.3987,
+   "repeats": [
+    {
+     "median_mps": 0.369,
+     "n": 361,
+     "p90_mps": 3.5609,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3649,
+     "n": 367,
+     "p90_mps": 3.5886,
+     "preroll": "crouch/SA 0.7s"
+    },
+    {
+     "median_mps": 0.3649,
+     "n": 367,
+     "p90_mps": 3.5886,
+     "preroll": "crouch/SD 1.3s"
+    },
+    {
+     "median_mps": 0.3649,
+     "n": 367,
+     "p90_mps": 3.5886,
+     "preroll": "crouch/S 1.1s"
+    },
+    {
+     "median_mps": 0.3649,
+     "n": 367,
+     "p90_mps": 3.5886,
+     "preroll": "walk/S 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0041,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "pistol"
+  },
+  "pistol/crouch/W": {
+   "body_speed_mps": 1.4,
+   "crouched": true,
+   "fresh_mps": 0.3594,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.3207,
+    "hemi": "fw",
+    "p90_mps": 2.6486,
+    "phases": 8,
+    "planted_frac": 0.4057,
+    "ratio": 0.8551,
+    "ratio_unclamped": 0.8551,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.4,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1185,
+   "ideal_min_mps": 0.1079,
+   "ideal_mps": 0.1132,
+   "max_mps": 0.36,
+   "mean_mps": 0.66,
+   "median_mps": 0.36,
+   "min_mps": 0.3594,
+   "n": 1722,
+   "p90_mps": 0.8116,
+   "planted_frac": 0.3719,
+   "repeats": [
+    {
+     "median_mps": 0.3594,
+     "n": 354,
+     "p90_mps": 0.4478,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.36,
+     "n": 342,
+     "p90_mps": 0.8116,
+     "preroll": "crouch/WA 0.7s"
+    },
+    {
+     "median_mps": 0.36,
+     "n": 342,
+     "p90_mps": 0.8116,
+     "preroll": "crouch/WD 1.3s"
+    },
+    {
+     "median_mps": 0.36,
+     "n": 342,
+     "p90_mps": 0.8116,
+     "preroll": "crouch/W 1.1s"
+    },
+    {
+     "median_mps": 0.36,
+     "n": 342,
+     "p90_mps": 0.8116,
+     "preroll": "walk/W 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0006,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "pistol"
+  },
+  "pistol/crouch/WA": {
+   "body_speed_mps": 1.4,
+   "crouched": true,
+   "fresh_mps": 0.3868,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.3184,
+    "hemi": "fw",
+    "p90_mps": 0.92,
+    "phases": 8,
+    "planted_frac": 0.2536,
+    "ratio": 0.8492,
+    "ratio_unclamped": 0.8492,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.4,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.2364,
+   "ideal_max_mps": 0.1532,
+   "ideal_min_mps": 0.1257,
+   "ideal_mps": 0.1375,
+   "max_mps": 0.7874,
+   "mean_mps": 0.5812,
+   "median_mps": 0.3868,
+   "min_mps": 0.3827,
+   "n": 958,
+   "p90_mps": 0.8229,
+   "planted_frac": 0.2114,
+   "repeats": [
+    {
+     "median_mps": 0.3868,
+     "n": 282,
+     "p90_mps": 0.8229,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.7874,
+     "n": 91,
+     "p90_mps": 1.5707,
+     "preroll": "crouch/W 0.7s"
+    },
+    {
+     "median_mps": 0.395,
+     "n": 117,
+     "p90_mps": 1.09,
+     "preroll": "crouch/A 1.3s"
+    },
+    {
+     "median_mps": 0.3827,
+     "n": 234,
+     "p90_mps": 0.7259,
+     "preroll": "crouch/WA 1.1s"
+    },
+    {
+     "median_mps": 0.3827,
+     "n": 234,
+     "p90_mps": 0.7259,
+     "preroll": "walk/WA 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.4047,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "pistol"
+  },
+  "pistol/run/A": {
+   "body_speed_mps": 3.6,
+   "crouched": false,
+   "fresh_mps": 0.2462,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.4354,
+    "hemi": "fw",
+    "p90_mps": 0.459,
+    "phases": 8,
+    "planted_frac": 0.1865,
+    "ratio": 1.0527,
+    "ratio_unclamped": 1.0527,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.6,
+    "weights": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "x": 90.0
+   },
+   "ideal_max_mps": 0.1623,
+   "ideal_min_mps": 0.156,
+   "ideal_mps": 0.1594,
+   "max_mps": 1.2029,
+   "mean_mps": 0.5384,
+   "median_mps": 0.2462,
+   "min_mps": 0.2414,
+   "n": 863,
+   "p90_mps": 0.6662,
+   "planted_frac": 0.1919,
+   "repeats": [
+    {
+     "median_mps": 0.2462,
+     "n": 157,
+     "p90_mps": 0.6662,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.2414,
+     "n": 173,
+     "p90_mps": 0.6325,
+     "preroll": "run/WA 0.7s"
+    },
+    {
+     "median_mps": 1.2029,
+     "n": 201,
+     "p90_mps": 1.4728,
+     "preroll": "run/SA 1.3s"
+    },
+    {
+     "median_mps": 0.2477,
+     "n": 175,
+     "p90_mps": 0.5819,
+     "preroll": "run/A 1.1s"
+    },
+    {
+     "median_mps": 0.2462,
+     "n": 157,
+     "p90_mps": 0.6662,
+     "preroll": "walk/A 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.9615,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "pistol"
+  },
+  "pistol/run/D": {
+   "body_speed_mps": 3.6,
+   "crouched": false,
+   "fresh_mps": 0.2932,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.4507,
+    "hemi": "fw",
+    "p90_mps": 0.4321,
+    "phases": 8,
+    "planted_frac": 0.1783,
+    "ratio": 1.0638,
+    "ratio_unclamped": 1.0638,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.6,
+    "weights": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "x": -90.0
+   },
+   "ideal_max_mps": 0.1859,
+   "ideal_min_mps": 0.164,
+   "ideal_mps": 0.1706,
+   "max_mps": 1.203,
+   "mean_mps": 0.5632,
+   "median_mps": 0.2932,
+   "min_mps": 0.2789,
+   "n": 845,
+   "p90_mps": 0.6009,
+   "planted_frac": 0.1886,
+   "repeats": [
+    {
+     "median_mps": 0.2932,
+     "n": 148,
+     "p90_mps": 0.6009,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.2789,
+     "n": 168,
+     "p90_mps": 0.5931,
+     "preroll": "run/WD 0.7s"
+    },
+    {
+     "median_mps": 1.203,
+     "n": 220,
+     "p90_mps": 1.6988,
+     "preroll": "run/SD 1.3s"
+    },
+    {
+     "median_mps": 0.2922,
+     "n": 161,
+     "p90_mps": 0.5931,
+     "preroll": "run/D 1.1s"
+    },
+    {
+     "median_mps": 0.2932,
+     "n": 148,
+     "p90_mps": 0.6016,
+     "preroll": "walk/D 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.9241,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "pistol"
+  },
+  "pistol/run/S": {
+   "body_speed_mps": 3.6,
+   "crouched": false,
+   "fresh_mps": 1.1987,
+   "ideal": {
+    "clip_speeds": [
+     2.474,
+     2.5234,
+     2.4457
+    ],
+    "clips": [
+     "actor_b-p-run-bw",
+     "actor_b-p-run-bw-lt",
+     "actor_b-p-run-bw-rt"
+    ],
+    "cps": 1.9843,
+    "hemi": "bw",
+    "p90_mps": 0.569,
+    "phases": 8,
+    "planted_frac": 0.2275,
+    "ratio": 1.4551,
+    "ratio_unclamped": 1.4551,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.6,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1547,
+   "ideal_min_mps": 0.1465,
+   "ideal_mps": 0.1514,
+   "max_mps": 1.1987,
+   "mean_mps": 1.2742,
+   "median_mps": 1.1946,
+   "min_mps": 1.1908,
+   "n": 1083,
+   "p90_mps": 1.5549,
+   "planted_frac": 0.2381,
+   "repeats": [
+    {
+     "median_mps": 1.1987,
+     "n": 203,
+     "p90_mps": 1.5553,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 1.1908,
+     "n": 228,
+     "p90_mps": 1.5549,
+     "preroll": "run/SA 0.7s"
+    },
+    {
+     "median_mps": 1.1908,
+     "n": 228,
+     "p90_mps": 1.5549,
+     "preroll": "run/SD 1.3s"
+    },
+    {
+     "median_mps": 1.1946,
+     "n": 221,
+     "p90_mps": 1.5225,
+     "preroll": "run/S 1.1s"
+    },
+    {
+     "median_mps": 1.1987,
+     "n": 203,
+     "p90_mps": 1.5553,
+     "preroll": "walk/S 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0079,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "pistol"
+  },
+  "pistol/run/W": {
+   "body_speed_mps": 3.6,
+   "crouched": false,
+   "fresh_mps": 0.272,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.4684,
+    "hemi": "fw",
+    "p90_mps": 0.2948,
+    "phases": 8,
+    "planted_frac": 0.1789,
+    "ratio": 1.0768,
+    "ratio_unclamped": 1.0768,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.6,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1712,
+   "ideal_min_mps": 0.1493,
+   "ideal_mps": 0.1598,
+   "max_mps": 0.2771,
+   "mean_mps": 0.2866,
+   "median_mps": 0.2746,
+   "min_mps": 0.272,
+   "n": 818,
+   "p90_mps": 0.4623,
+   "planted_frac": 0.1825,
+   "repeats": [
+    {
+     "median_mps": 0.272,
+     "n": 154,
+     "p90_mps": 0.4648,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.2746,
+     "n": 174,
+     "p90_mps": 0.4623,
+     "preroll": "run/WA 0.7s"
+    },
+    {
+     "median_mps": 0.2746,
+     "n": 174,
+     "p90_mps": 0.4623,
+     "preroll": "run/WD 1.3s"
+    },
+    {
+     "median_mps": 0.2771,
+     "n": 162,
+     "p90_mps": 0.4554,
+     "preroll": "run/W 1.1s"
+    },
+    {
+     "median_mps": 0.272,
+     "n": 154,
+     "p90_mps": 0.4648,
+     "preroll": "walk/W 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0051,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "pistol"
+  },
+  "pistol/run/WA": {
+   "body_speed_mps": 3.6,
+   "crouched": false,
+   "fresh_mps": 0.5157,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.4517,
+    "hemi": "fw",
+    "p90_mps": 0.6086,
+    "phases": 8,
+    "planted_frac": 0.1946,
+    "ratio": 1.0646,
+    "ratio_unclamped": 1.0646,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.6,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.4701,
+   "ideal_max_mps": 0.3888,
+   "ideal_min_mps": 0.3717,
+   "ideal_mps": 0.3834,
+   "max_mps": 1.3879,
+   "mean_mps": 0.9951,
+   "median_mps": 0.5157,
+   "min_mps": 0.3953,
+   "n": 807,
+   "p90_mps": 1.8126,
+   "planted_frac": 0.1808,
+   "repeats": [
+    {
+     "median_mps": 0.5157,
+     "n": 185,
+     "p90_mps": 1.8126,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.5157,
+     "n": 185,
+     "p90_mps": 1.8126,
+     "preroll": "run/W 0.7s"
+    },
+    {
+     "median_mps": 1.3879,
+     "n": 121,
+     "p90_mps": 2.3142,
+     "preroll": "run/A 1.3s"
+    },
+    {
+     "median_mps": 0.3953,
+     "n": 152,
+     "p90_mps": 1.6932,
+     "preroll": "run/WA 1.1s"
+    },
+    {
+     "median_mps": 1.1604,
+     "n": 164,
+     "p90_mps": 2.525,
+     "preroll": "walk/WA 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.9926,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "pistol"
+  },
+  "pistol/sprint/W": {
+   "body_speed_mps": 5.6,
+   "crouched": false,
+   "fresh_mps": 1.4552,
+   "ideal": {
+    "clip_speeds": [
+     4.2437,
+     3.7077,
+     3.6022
+    ],
+    "clips": [
+     "actor_b-p-sprint-fw",
+     "actor_b-p-sprint-fw-rt",
+     "actor_b-p-sprint-fw-lt"
+    ],
+    "cps": 0.9897,
+    "hemi": "fw",
+    "p90_mps": 1.0733,
+    "phases": 8,
+    "planted_frac": 0.1519,
+    "ratio": 1.3196,
+    "ratio_unclamped": 1.3196,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 5.6,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.2248,
+   "ideal_min_mps": 0.2051,
+   "ideal_mps": 0.2208,
+   "max_mps": 1.4556,
+   "mean_mps": 1.5787,
+   "median_mps": 1.4552,
+   "min_mps": 1.441,
+   "n": 636,
+   "p90_mps": 2.1995,
+   "planted_frac": 0.1546,
+   "repeats": [
+    {
+     "median_mps": 1.4552,
+     "n": 130,
+     "p90_mps": 2.1995,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 1.441,
+     "n": 111,
+     "p90_mps": 2.0138,
+     "preroll": "sprint/WA 0.7s"
+    },
+    {
+     "median_mps": 1.4502,
+     "n": 138,
+     "p90_mps": 2.4267,
+     "preroll": "sprint/WD 1.3s"
+    },
+    {
+     "median_mps": 1.4556,
+     "n": 127,
+     "p90_mps": 2.0862,
+     "preroll": "sprint/W 1.1s"
+    },
+    {
+     "median_mps": 1.4552,
+     "n": 130,
+     "p90_mps": 2.1995,
+     "preroll": "run/W 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0146,
+   "sprinting": true,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "pistol"
+  },
+  "pistol/sprint/WA": {
+   "body_speed_mps": 5.6,
+   "crouched": false,
+   "fresh_mps": 1.9545,
+   "ideal": {
+    "clip_speeds": [
+     4.2437,
+     3.7077,
+     3.6022
+    ],
+    "clips": [
+     "actor_b-p-sprint-fw",
+     "actor_b-p-sprint-fw-rt",
+     "actor_b-p-sprint-fw-lt"
+    ],
+    "cps": 1.0706,
+    "hemi": "fw",
+    "p90_mps": 1.1614,
+    "phases": 8,
+    "planted_frac": 0.1749,
+    "ratio": 1.4275,
+    "ratio_unclamped": 1.4275,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 5.6,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.7167,
+   "ideal_max_mps": 0.5749,
+   "ideal_min_mps": 0.5427,
+   "ideal_mps": 0.5591,
+   "max_mps": 2.5766,
+   "mean_mps": 2.2094,
+   "median_mps": 2.0387,
+   "min_mps": 1.9545,
+   "n": 717,
+   "p90_mps": 2.969,
+   "planted_frac": 0.1621,
+   "repeats": [
+    {
+     "median_mps": 1.9545,
+     "n": 157,
+     "p90_mps": 2.3338,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 2.5766,
+     "n": 90,
+     "p90_mps": 3.9604,
+     "preroll": "sprint/W 0.7s"
+    },
+    {
+     "median_mps": 1.9545,
+     "n": 157,
+     "p90_mps": 2.3338,
+     "preroll": "sprint/A 1.3s"
+    },
+    {
+     "median_mps": 2.0387,
+     "n": 162,
+     "p90_mps": 3.2647,
+     "preroll": "sprint/WA 1.1s"
+    },
+    {
+     "median_mps": 2.0549,
+     "n": 151,
+     "p90_mps": 2.969,
+     "preroll": "run/WA 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.6221,
+   "sprinting": true,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "pistol"
+  },
+  "pistol/sprint/WD": {
+   "body_speed_mps": 5.6,
+   "crouched": false,
+   "fresh_mps": 2.0634,
+   "ideal": {
+    "clip_speeds": [
+     4.2437,
+     3.7077,
+     3.6022
+    ],
+    "clips": [
+     "actor_b-p-sprint-fw",
+     "actor_b-p-sprint-fw-rt",
+     "actor_b-p-sprint-fw-lt"
+    ],
+    "cps": 1.0564,
+    "hemi": "fw",
+    "p90_mps": 1.6389,
+    "phases": 8,
+    "planted_frac": 0.1655,
+    "ratio": 1.4086,
+    "ratio_unclamped": 1.4086,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 5.6,
+    "weights": [
+     0.5,
+     0.5,
+     0.0
+    ],
+    "x": -45.0
+   },
+   "ideal_godot_mps": 0.5868,
+   "ideal_max_mps": 0.7382,
+   "ideal_min_mps": 0.684,
+   "ideal_mps": 0.6966,
+   "max_mps": 2.5878,
+   "mean_mps": 2.1024,
+   "median_mps": 2.0851,
+   "min_mps": 2.0634,
+   "n": 559,
+   "p90_mps": 2.4788,
+   "planted_frac": 0.1286,
+   "repeats": [
+    {
+     "median_mps": 2.0634,
+     "n": 157,
+     "p90_mps": 2.4788,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 2.5878,
+     "n": 56,
+     "p90_mps": 3.4891,
+     "preroll": "sprint/W 0.7s"
+    },
+    {
+     "median_mps": 2.0634,
+     "n": 157,
+     "p90_mps": 2.4788,
+     "preroll": "sprint/D 1.3s"
+    },
+    {
+     "median_mps": 2.0851,
+     "n": 101,
+     "p90_mps": 2.5023,
+     "preroll": "sprint/WD 1.1s"
+    },
+    {
+     "median_mps": 2.1326,
+     "n": 88,
+     "p90_mps": 2.4578,
+     "preroll": "run/WD 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.5244,
+   "sprinting": true,
+   "stepping": "fixed",
+   "walking": false,
+   "weapon": "pistol"
+  },
+  "pistol/walk/A": {
+   "body_speed_mps": 1.6,
+   "crouched": false,
+   "fresh_mps": 0.3025,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.138,
+    "hemi": "fw",
+    "p90_mps": 0.4041,
+    "phases": 8,
+    "planted_frac": 0.4013,
+    "ratio": 1.2897,
+    "ratio_unclamped": 1.2897,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.6,
+    "weights": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "x": 90.0
+   },
+   "ideal_max_mps": 0.1209,
+   "ideal_min_mps": 0.1077,
+   "ideal_mps": 0.112,
+   "max_mps": 0.3072,
+   "mean_mps": 0.3463,
+   "median_mps": 0.3036,
+   "min_mps": 0.1958,
+   "n": 1852,
+   "p90_mps": 0.736,
+   "planted_frac": 0.3948,
+   "repeats": [
+    {
+     "median_mps": 0.3025,
+     "n": 374,
+     "p90_mps": 0.7168,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3036,
+     "n": 366,
+     "p90_mps": 0.7383,
+     "preroll": "walk/WA 0.7s"
+    },
+    {
+     "median_mps": 0.1958,
+     "n": 334,
+     "p90_mps": 0.3193,
+     "preroll": "walk/SA 1.3s"
+    },
+    {
+     "median_mps": 0.3072,
+     "n": 389,
+     "p90_mps": 0.736,
+     "preroll": "walk/A 1.1s"
+    },
+    {
+     "median_mps": 0.3063,
+     "n": 389,
+     "p90_mps": 0.736,
+     "preroll": "run/A 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.1114,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "pistol"
+  },
+  "pistol/walk/D": {
+   "body_speed_mps": 1.6,
+   "crouched": false,
+   "fresh_mps": 0.3102,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.1196,
+    "hemi": "fw",
+    "p90_mps": 0.246,
+    "phases": 8,
+    "planted_frac": 0.4034,
+    "ratio": 1.2688,
+    "ratio_unclamped": 1.2688,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.6,
+    "weights": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "x": -90.0
+   },
+   "ideal_max_mps": 0.0924,
+   "ideal_min_mps": 0.0878,
+   "ideal_mps": 0.0905,
+   "max_mps": 0.3221,
+   "mean_mps": 0.3605,
+   "median_mps": 0.3121,
+   "min_mps": 0.198,
+   "n": 1898,
+   "p90_mps": 0.5554,
+   "planted_frac": 0.4044,
+   "repeats": [
+    {
+     "median_mps": 0.3102,
+     "n": 394,
+     "p90_mps": 0.5549,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3128,
+     "n": 374,
+     "p90_mps": 0.5796,
+     "preroll": "walk/WD 0.7s"
+    },
+    {
+     "median_mps": 0.198,
+     "n": 386,
+     "p90_mps": 0.5554,
+     "preroll": "walk/SD 1.3s"
+    },
+    {
+     "median_mps": 0.3121,
+     "n": 375,
+     "p90_mps": 0.5092,
+     "preroll": "walk/D 1.1s"
+    },
+    {
+     "median_mps": 0.3221,
+     "n": 369,
+     "p90_mps": 0.5873,
+     "preroll": "run/D 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.1241,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "pistol"
+  },
+  "pistol/walk/S": {
+   "body_speed_mps": 1.6,
+   "crouched": false,
+   "fresh_mps": 0.2066,
+   "ideal": {
+    "clip_speeds": [
+     1.4671,
+     1.4673,
+     1.5119
+    ],
+    "clips": [
+     "actor_b-p-walk-bw",
+     "actor_b-p-walk-bw-lt",
+     "actor_b-p-walk-bw-rt"
+    ],
+    "cps": 1.1685,
+    "hemi": "bw",
+    "p90_mps": 0.4158,
+    "phases": 8,
+    "planted_frac": 0.3784,
+    "ratio": 1.0906,
+    "ratio_unclamped": 1.0906,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.6,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1223,
+   "ideal_min_mps": 0.1074,
+   "ideal_mps": 0.1132,
+   "max_mps": 0.2152,
+   "mean_mps": 0.2914,
+   "median_mps": 0.2066,
+   "min_mps": 0.2066,
+   "n": 1793,
+   "p90_mps": 0.4954,
+   "planted_frac": 0.384,
+   "repeats": [
+    {
+     "median_mps": 0.2066,
+     "n": 364,
+     "p90_mps": 0.4917,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.2066,
+     "n": 360,
+     "p90_mps": 0.4954,
+     "preroll": "walk/SA 0.7s"
+    },
+    {
+     "median_mps": 0.2066,
+     "n": 360,
+     "p90_mps": 0.4954,
+     "preroll": "walk/SD 1.3s"
+    },
+    {
+     "median_mps": 0.2076,
+     "n": 349,
+     "p90_mps": 0.529,
+     "preroll": "walk/S 1.1s"
+    },
+    {
+     "median_mps": 0.2152,
+     "n": 360,
+     "p90_mps": 0.4954,
+     "preroll": "run/S 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0086,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "pistol"
+  },
+  "pistol/walk/W": {
+   "body_speed_mps": 1.6,
+   "crouched": false,
+   "fresh_mps": 0.2972,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.1173,
+    "hemi": "fw",
+    "p90_mps": 0.2426,
+    "phases": 8,
+    "planted_frac": 0.4091,
+    "ratio": 1.2663,
+    "ratio_unclamped": 1.2663,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.6,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.0985,
+   "ideal_min_mps": 0.0766,
+   "ideal_mps": 0.091,
+   "max_mps": 0.3016,
+   "mean_mps": 0.3641,
+   "median_mps": 0.3011,
+   "min_mps": 0.2965,
+   "n": 1934,
+   "p90_mps": 0.7061,
+   "planted_frac": 0.4119,
+   "repeats": [
+    {
+     "median_mps": 0.2972,
+     "n": 388,
+     "p90_mps": 0.7675,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.3016,
+     "n": 386,
+     "p90_mps": 0.4863,
+     "preroll": "walk/WA 0.7s"
+    },
+    {
+     "median_mps": 0.3016,
+     "n": 386,
+     "p90_mps": 0.4863,
+     "preroll": "walk/WD 1.3s"
+    },
+    {
+     "median_mps": 0.2965,
+     "n": 384,
+     "p90_mps": 0.7061,
+     "preroll": "walk/W 1.1s"
+    },
+    {
+     "median_mps": 0.3011,
+     "n": 390,
+     "p90_mps": 0.7709,
+     "preroll": "run/W 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.0051,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "pistol"
+  },
+  "pistol/walk/WA": {
+   "body_speed_mps": 1.6,
+   "crouched": false,
+   "fresh_mps": 0.5907,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.1276,
+    "hemi": "fw",
+    "p90_mps": 0.4157,
+    "phases": 8,
+    "planted_frac": 0.3982,
+    "ratio": 1.2779,
+    "ratio_unclamped": 1.2779,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.6,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.1062,
+   "ideal_max_mps": 0.096,
+   "ideal_min_mps": 0.0867,
+   "ideal_mps": 0.0906,
+   "max_mps": 0.5907,
+   "mean_mps": 0.8087,
+   "median_mps": 0.5426,
+   "min_mps": 0.2163,
+   "n": 777,
+   "p90_mps": 2.2396,
+   "planted_frac": 0.1721,
+   "repeats": [
+    {
+     "median_mps": 0.5907,
+     "n": 153,
+     "p90_mps": 2.4136,
+     "preroll": "none"
+    },
+    {
+     "median_mps": 0.5907,
+     "n": 153,
+     "p90_mps": 2.4136,
+     "preroll": "walk/W 0.7s"
+    },
+    {
+     "median_mps": 0.5426,
+     "n": 166,
+     "p90_mps": 1.9924,
+     "preroll": "walk/A 1.3s"
+    },
+    {
+     "median_mps": 0.3163,
+     "n": 177,
+     "p90_mps": 2.2396,
+     "preroll": "walk/WA 1.1s"
+    },
+    {
+     "median_mps": 0.2163,
+     "n": 128,
+     "p90_mps": 1.0108,
+     "preroll": "run/WA 0.9s"
+    }
+   ],
+   "speed_mult": 1.0,
+   "spread_mps": 0.3744,
+   "sprinting": false,
+   "stepping": "fixed",
+   "walking": true,
+   "weapon": "pistol"
+  }
+ },
+ "meta": {
+  "anim_callback_mode_process": 1,
+  "authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file",
+  "captured": "2026-09-23",
+  "cases_stepping": "--fixed-fps 120: one process frame per physics tick, faster than real time",
+  "equip_frames": 150,
+  "generator": "tests/anim/baselines/capture_footslip_old.gd (WPT)",
+  "godot_version": "4.7.2-stable (official)",
+  "ideal": {
+   "clip_speed_source": "FootSlip.clip_travel (GA/vmm/bl/an.py method A at 15 Hz, as the plan's section 2 speeds)",
+   "clip_travel": {
+    "actor_b-p-crouch-walk-bw": {
+     "fwd": -1.7486,
+     "heading_deg": -179.8,
+     "runs": 12,
+     "sample_rate": 15.0,
+     "side": -0.006,
+     "speed": 1.7486
+    },
+    "actor_b-p-crouch-walk-bw-lt": {
+     "fwd": -0.0276,
+     "heading_deg": 90.9,
+     "runs": 8,
+     "sample_rate": 15.0,
+     "side": 1.7258,
+     "speed": 1.7261
+    },
+    "actor_b-p-crouch-walk-bw-rt": {
+     "fwd": 0.0088,
+     "heading_deg": -89.7,
+     "runs": 10,
+     "sample_rate": 15.0,
+     "side": -1.7679,
+     "speed": 1.7679
+    },
+    "actor_b-p-crouch-walk-fw": {
+     "fwd": 1.6372,
+     "heading_deg": -0.2,
+     "runs": 12,
+     "sample_rate": 15.0,
+     "side": -0.0044,
+     "speed": 1.6372
+    },
+    "actor_b-p-crouch-walk-fw-lt": {
+     "fwd": 0.0093,
+     "heading_deg": 89.7,
+     "runs": 12,
+     "sample_rate": 15.0,
+     "side": 1.6602,
+     "speed": 1.6602
+    },
+    "actor_b-p-crouch-walk-fw-rt": {
+     "fwd": -0.0116,
+     "heading_deg": -90.4,
+     "runs": 10,
+     "sample_rate": 15.0,
+     "side": -1.5793,
+     "speed": 1.5794
+    },
+    "actor_b-p-run-bw": {
+     "fwd": -2.474,
+     "heading_deg": 179.9,
+     "runs": 2,
+     "sample_rate": 15.0,
+     "side": 0.005,
+     "speed": 2.474
+    },
+    "actor_b-p-run-bw-lt": {
+     "fwd": -0.0638,
+     "heading_deg": 91.4,
+     "runs": 2,
+     "sample_rate": 15.0,
+     "side": 2.5226,
+     "speed": 2.5234
+    },
+    "actor_b-p-run-bw-rt": {
+     "fwd": 0.0165,
+     "heading_deg": -89.6,
+     "runs": 2,
+     "sample_rate": 15.0,
+     "side": -2.4456,
+     "speed": 2.4457
+    },
+    "actor_b-p-run-fw": {
+     "fwd": 3.3429,
+     "heading_deg": 0.8,
+     "runs": 2,
+     "sample_rate": 15.0,
+     "side": 0.0452,
+     "speed": 3.3432
+    },
+    "actor_b-p-run-fw-lt": {
+     "fwd": -0.106,
+     "heading_deg": 91.8,
+     "runs": 2,
+     "sample_rate": 15.0,
+     "side": 3.4183,
+     "speed": 3.4199
+    },
+    "actor_b-p-run-fw-rt": {
+     "fwd": -0.0425,
+     "heading_deg": -90.7,
+     "runs": 1,
+     "sample_rate": 15.0,
+     "side": -3.3837,
+     "speed": 3.384
+    },
+    "actor_b-p-sprint-fw": {
+     "fwd": 4.2437,
+     "heading_deg": -0.3,
+     "runs": 2,
+     "sample_rate": 15.0,
+     "side": -0.0187,
+     "speed": 4.2437
+    },
+    "actor_b-p-sprint-fw-lt": {
+     "fwd": 0.2414,
+     "heading_deg": 86.2,
+     "runs": 2,
+     "sample_rate": 15.0,
+     "side": 3.5942,
+     "speed": 3.6022
+    },
+    "actor_b-p-sprint-fw-rt": {
+     "fwd": 0.3335,
+     "heading_deg": -84.8,
+     "runs": 6,
+     "sample_rate": 30.0,
+     "side": -3.6927,
+     "speed": 3.7077
+    },
+    "actor_b-p-walk-bw": {
+     "fwd": -1.4656,
+     "heading_deg": 177.4,
+     "runs": 4,
+     "sample_rate": 15.0,
+     "side": 0.0658,
+     "speed": 1.4671
+    },
+    "actor_b-p-walk-bw-lt": {
+     "fwd": -0.0058,
+     "heading_deg": 90.2,
+     "runs": 4,
+     "sample_rate": 15.0,
+     "side": 1.4673,
+     "speed": 1.4673
+    },
+    "actor_b-p-walk-bw-rt": {
+     "fwd": -0.0132,
+     "heading_deg": -90.5,
+     "runs": 4,
+     "sample_rate": 15.0,
+     "side": -1.5119,
+     "speed": 1.5119
+    },
+    "actor_b-p-walk-fw": {
+     "fwd": 1.2635,
+     "heading_deg": 0.2,
+     "runs": 4,
+     "sample_rate": 15.0,
+     "side": 0.0037,
+     "speed": 1.2635
+    },
+    "actor_b-p-walk-fw-lt": {
+     "fwd": 0.0041,
+     "heading_deg": 89.8,
+     "runs": 4,
+     "sample_rate": 15.0,
+     "side": 1.2406,
+     "speed": 1.2406
+    },
+    "actor_b-p-walk-fw-rt": {
+     "fwd": 0.0086,
+     "heading_deg": -89.6,
+     "runs": 4,
+     "sample_rate": 15.0,
+     "side": -1.2609,
+     "speed": 1.261
+    }
+   },
+   "computed": "2026-09-23",
+   "function": "FootSlip.ideal_floor (tests/anim/lib/foot_slip.gd)",
+   "gate_note": "threshold_new_tree_mps (0.15, plan section 10) is below ideal_mps for several cases (run W/A/D/S at bow and pistol speed, sprint W, crouch D, the run and sprint diagonals), so perfect playback cannot pass it there. A reviewed gate relative to ideal_mps is an open orchestrator decision; see tests/anim/README.md.",
+   "method": "what FootSlip.result() reads for perfect, graph-faithful playback: the case's section 6.5 direction bank (graph roles of the weapon; hemisphere fw iff |deg| <= 90) blended by the graph slerp chain, every clip at one normalized phase advancing at the section 6.6 rate (ratio = speed / sum w_i v_i clamped to [0.55, 1.75]), body at the case's target speed (player.gd speeds x weapon.speed_mult(), sprint without it) along the case direction; 8 start phases of the 2.0 s window, ideal_mps = their median. ideal_godot_mps: the same with the bank blended the Godot BlendSpace1D way (rest-relative). lib/selftest/st_footslip_ideal checks that the in-game measurement of a perfect one-clip tree lands in [ideal_min, ideal_max] +- 0.02."
+  },
+  "keys": "<weapon>/<mode>/<dir>: mode walk (hold walk) / run / crouch (toggle) / sprint (hold sprint); dir W A S D WA WD. <weapon>/control/idle = standing still (after the pre-rolls for repeats 1-4), a check of the method (expected ~0).",
+  "level": "res://scenes/main.tscn, reloaded for every repeat; flat range lane, travel toward -Z; corridor checked free of colliders",
+  "library_sha256": "d33e8509fea2f1fa1f8828fa374f2c663875c10c5b8fc3a9e69068d3f9611a38",
+  "method": "FootSlip (tests/anim/lib/foot_slip.gd): l/r heel and ball sampled at every pose update in Skeleton3D.skeleton_updated; foot world velocity = body velocity + d(foot offset from the body, world axes)/process delta (continuous-time slip); planted = world height within 0.02 m of the point's minimum over the window, at both ends of the interval; stats over all four points.",
+  "order_check_cases": {
+   "again_last": [
+    0.2774,
+    0.2754,
+    0.2802
+   ],
+   "first": [
+    0.2774,
+    0.2754,
+    0.2802
+   ],
+   "identical": true,
+   "key": "musket/walk/W"
+  },
+  "order_check_realtime": {
+   "again_last": [
+    0.2765,
+    0.2765,
+    0.2765
+   ],
+   "first": [
+    0.2765,
+    0.2765,
+    0.2765
+   ],
+   "identical": true,
+   "key": "musket/walk/W"
+  },
+  "physics_hz": 120,
+  "player_anim_gd_sha256": "225e361dc6949b0d61a46736594c63aaaa13ec0a008aec748900bf831b5bfa28",
+  "player_gd_sha256": "ccbaee2294be796c9bf7b7d37a599b74ae8698db120e52d6a59e69fdedf3f753",
+  "protocol": "FootSlip.measure v2: fresh level per repeat; repeat 0 fresh, repeats 1-4 after prerolls(c)",
+  "realtime_stepping": "no --fixed-fps: real-time main loop (only in the 'realtime' section; fresh repeat only by default)",
+  "repeat_protocol": "each repeat: reload level, wait 60 physics frames, switch_weapon, wait 150; repeat 0 runs the case directly (fresh_mps); repeat k>0 first runs FootSlip.prerolls(case)[k-1] (same mode 45 deg to one side 0.7 s, to the other side 1.3 s, the case itself 1.1 s then a stop, the next mode 0.9 s). median_mps = median of the repeat medians (plan section 10 metric); min_mps / max_mps / spread_mps = range over repeats.",
+  "repeats_per_case": {
+   "cases": 5,
+   "realtime": 1
+  },
+  "spawn_frames": 60,
+  "threshold_new_tree_mps": 0.15,
+  "timing_s": {
+   "idle": 0.5,
+   "measure": 2.0,
+   "settle": 1.0
+  },
+  "tree": "old hand-built PlayerAnim AnimationTree (scripts/player/player_anim.gd before WP6)",
+  "weapons_note": "Only the lower body matters here. Bow and pistol move at speed_mult 1.0, the musket at 0.92, so bow and pistol should agree and the musket differs only through its speed."
+ },
+ "realtime": {
+  "musket/control/idle": {
+   "body_speed_mps": 0.0,
+   "crouched": false,
+   "fresh_mps": 0.0062,
+   "max_mps": 0.0062,
+   "mean_mps": 0.0099,
+   "median_mps": 0.0062,
+   "min_mps": 0.0062,
+   "n": 1156,
+   "p90_mps": 0.0145,
+   "planted_frac": 1.0,
+   "repeats": [
+    {
+     "median_mps": 0.0062,
+     "n": 1156,
+     "p90_mps": 0.0145,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/crouch/A": {
+   "body_speed_mps": 1.288,
+   "crouched": true,
+   "fresh_mps": 0.3919,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.2909,
+    "hemi": "fw",
+    "p90_mps": 0.7776,
+    "phases": 8,
+    "planted_frac": 0.3995,
+    "ratio": 0.7758,
+    "ratio_unclamped": 0.7758,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.288,
+    "weights": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "x": 90.0
+   },
+   "ideal_max_mps": 0.1331,
+   "ideal_min_mps": 0.0956,
+   "ideal_mps": 0.107,
+   "max_mps": 0.3919,
+   "mean_mps": 0.7276,
+   "median_mps": 0.3919,
+   "min_mps": 0.3919,
+   "n": 310,
+   "p90_mps": 1.9908,
+   "planted_frac": 0.2793,
+   "repeats": [
+    {
+     "median_mps": 0.3919,
+     "n": 310,
+     "p90_mps": 1.9908,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/crouch/D": {
+   "body_speed_mps": 1.288,
+   "crouched": true,
+   "fresh_mps": 0.4082,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.3058,
+    "hemi": "fw",
+    "p90_mps": 3.9465,
+    "phases": 8,
+    "planted_frac": 0.3492,
+    "ratio": 0.8155,
+    "ratio_unclamped": 0.8155,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.288,
+    "weights": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "x": -90.0
+   },
+   "ideal_max_mps": 0.2018,
+   "ideal_min_mps": 0.1644,
+   "ideal_mps": 0.1871,
+   "max_mps": 0.4082,
+   "mean_mps": 0.6266,
+   "median_mps": 0.4082,
+   "min_mps": 0.4082,
+   "n": 302,
+   "p90_mps": 0.847,
+   "planted_frac": 0.2716,
+   "repeats": [
+    {
+     "median_mps": 0.4082,
+     "n": 302,
+     "p90_mps": 0.847,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/crouch/S": {
+   "body_speed_mps": 1.288,
+   "crouched": true,
+   "fresh_mps": 0.3323,
+   "ideal": {
+    "clip_speeds": [
+     1.7486,
+     1.7261,
+     1.7679
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-bw",
+     "actor_b-p-crouch-walk-bw-lt",
+     "actor_b-p-crouch-walk-bw-rt"
+    ],
+    "cps": 0.2762,
+    "hemi": "bw",
+    "p90_mps": 2.5437,
+    "phases": 8,
+    "planted_frac": 0.3972,
+    "ratio": 0.7366,
+    "ratio_unclamped": 0.7366,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.288,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.0411,
+   "ideal_min_mps": 0.0314,
+   "ideal_mps": 0.0345,
+   "max_mps": 0.3323,
+   "mean_mps": 0.8233,
+   "median_mps": 0.3323,
+   "min_mps": 0.3323,
+   "n": 324,
+   "p90_mps": 3.3292,
+   "planted_frac": 0.2905,
+   "repeats": [
+    {
+     "median_mps": 0.3323,
+     "n": 324,
+     "p90_mps": 3.3292,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/crouch/W": {
+   "body_speed_mps": 1.288,
+   "crouched": true,
+   "fresh_mps": 0.3127,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.295,
+    "hemi": "fw",
+    "p90_mps": 1.2849,
+    "phases": 8,
+    "planted_frac": 0.4052,
+    "ratio": 0.7867,
+    "ratio_unclamped": 0.7867,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.288,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1114,
+   "ideal_min_mps": 0.0966,
+   "ideal_mps": 0.1039,
+   "max_mps": 0.3127,
+   "mean_mps": 0.496,
+   "median_mps": 0.3127,
+   "min_mps": 0.3127,
+   "n": 308,
+   "p90_mps": 0.7591,
+   "planted_frac": 0.2767,
+   "repeats": [
+    {
+     "median_mps": 0.3127,
+     "n": 308,
+     "p90_mps": 0.7591,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/crouch/WA": {
+   "body_speed_mps": 1.288,
+   "crouched": true,
+   "fresh_mps": 0.4596,
+   "ideal": {
+    "clip_speeds": [
+     1.6372,
+     1.5794,
+     1.6602
+    ],
+    "clips": [
+     "actor_b-p-crouch-walk-fw",
+     "actor_b-p-crouch-walk-fw-rt",
+     "actor_b-p-crouch-walk-fw-lt"
+    ],
+    "cps": 0.293,
+    "hemi": "fw",
+    "p90_mps": 1.3276,
+    "phases": 8,
+    "planted_frac": 0.2759,
+    "ratio": 0.7812,
+    "ratio_unclamped": 0.7812,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.288,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.2113,
+   "ideal_max_mps": 0.1547,
+   "ideal_min_mps": 0.0922,
+   "ideal_mps": 0.1289,
+   "max_mps": 0.4596,
+   "mean_mps": 0.6395,
+   "median_mps": 0.4596,
+   "min_mps": 0.4596,
+   "n": 346,
+   "p90_mps": 0.7122,
+   "planted_frac": 0.3078,
+   "repeats": [
+    {
+     "median_mps": 0.4596,
+     "n": 346,
+     "p90_mps": 0.7122,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/run/A": {
+   "body_speed_mps": 3.312,
+   "crouched": false,
+   "fresh_mps": 0.3907,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.3206,
+    "hemi": "fw",
+    "p90_mps": 0.4511,
+    "phases": 8,
+    "planted_frac": 0.1866,
+    "ratio": 0.9684,
+    "ratio_unclamped": 0.9684,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.312,
+    "weights": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "x": 90.0
+   },
+   "ideal_max_mps": 0.1526,
+   "ideal_min_mps": 0.1469,
+   "ideal_mps": 0.1506,
+   "max_mps": 0.3907,
+   "mean_mps": 0.4863,
+   "median_mps": 0.3907,
+   "min_mps": 0.3907,
+   "n": 152,
+   "p90_mps": 0.8984,
+   "planted_frac": 0.1405,
+   "repeats": [
+    {
+     "median_mps": 0.3907,
+     "n": 152,
+     "p90_mps": 0.8984,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/run/D": {
+   "body_speed_mps": 3.312,
+   "crouched": false,
+   "fresh_mps": 0.4802,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.3346,
+    "hemi": "fw",
+    "p90_mps": 0.4159,
+    "phases": 8,
+    "planted_frac": 0.1767,
+    "ratio": 0.9787,
+    "ratio_unclamped": 0.9787,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.312,
+    "weights": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "x": -90.0
+   },
+   "ideal_max_mps": 0.1858,
+   "ideal_min_mps": 0.1362,
+   "ideal_mps": 0.1469,
+   "max_mps": 0.4802,
+   "mean_mps": 0.4901,
+   "median_mps": 0.4802,
+   "min_mps": 0.4802,
+   "n": 170,
+   "p90_mps": 0.882,
+   "planted_frac": 0.1569,
+   "repeats": [
+    {
+     "median_mps": 0.4802,
+     "n": 170,
+     "p90_mps": 0.882,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/run/S": {
+   "body_speed_mps": 3.312,
+   "crouched": false,
+   "fresh_mps": 1.0884,
+   "ideal": {
+    "clip_speeds": [
+     2.474,
+     2.5234,
+     2.4457
+    ],
+    "clips": [
+     "actor_b-p-run-bw",
+     "actor_b-p-run-bw-lt",
+     "actor_b-p-run-bw-rt"
+    ],
+    "cps": 1.8255,
+    "hemi": "bw",
+    "p90_mps": 0.5169,
+    "phases": 8,
+    "planted_frac": 0.2281,
+    "ratio": 1.3387,
+    "ratio_unclamped": 1.3387,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.312,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1523,
+   "ideal_min_mps": 0.144,
+   "ideal_mps": 0.1472,
+   "max_mps": 1.0884,
+   "mean_mps": 1.2326,
+   "median_mps": 1.0884,
+   "min_mps": 1.0884,
+   "n": 188,
+   "p90_mps": 1.6338,
+   "planted_frac": 0.1707,
+   "repeats": [
+    {
+     "median_mps": 1.0884,
+     "n": 188,
+     "p90_mps": 1.6338,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/run/W": {
+   "body_speed_mps": 3.312,
+   "crouched": false,
+   "fresh_mps": 0.3679,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.3509,
+    "hemi": "fw",
+    "p90_mps": 0.271,
+    "phases": 8,
+    "planted_frac": 0.1787,
+    "ratio": 0.9907,
+    "ratio_unclamped": 0.9907,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.312,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1575,
+   "ideal_min_mps": 0.1441,
+   "ideal_mps": 0.152,
+   "max_mps": 0.3679,
+   "mean_mps": 0.4874,
+   "median_mps": 0.3679,
+   "min_mps": 0.3679,
+   "n": 141,
+   "p90_mps": 0.8675,
+   "planted_frac": 0.1319,
+   "repeats": [
+    {
+     "median_mps": 0.3679,
+     "n": 141,
+     "p90_mps": 0.8675,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/run/WA": {
+   "body_speed_mps": 3.312,
+   "crouched": false,
+   "fresh_mps": 0.26,
+   "ideal": {
+    "clip_speeds": [
+     3.3432,
+     3.384,
+     3.4199
+    ],
+    "clips": [
+     "actor_b-p-run-fw",
+     "actor_b-p-run-fw-rt",
+     "actor_b-p-run-fw-lt"
+    ],
+    "cps": 1.3356,
+    "hemi": "fw",
+    "p90_mps": 0.5697,
+    "phases": 8,
+    "planted_frac": 0.1956,
+    "ratio": 0.9794,
+    "ratio_unclamped": 0.9794,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 3.312,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.4265,
+   "ideal_max_mps": 0.3666,
+   "ideal_min_mps": 0.3442,
+   "ideal_mps": 0.3529,
+   "max_mps": 0.26,
+   "mean_mps": 0.5001,
+   "median_mps": 0.26,
+   "min_mps": 0.26,
+   "n": 160,
+   "p90_mps": 1.1361,
+   "planted_frac": 0.1483,
+   "repeats": [
+    {
+     "median_mps": 0.26,
+     "n": 160,
+     "p90_mps": 1.1361,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/sprint/W": {
+   "body_speed_mps": 5.6,
+   "crouched": false,
+   "fresh_mps": 1.4663,
+   "ideal": {
+    "clip_speeds": [
+     4.2437,
+     3.7077,
+     3.6022
+    ],
+    "clips": [
+     "actor_b-p-sprint-fw",
+     "actor_b-p-sprint-fw-rt",
+     "actor_b-p-sprint-fw-lt"
+    ],
+    "cps": 0.9897,
+    "hemi": "fw",
+    "p90_mps": 1.0733,
+    "phases": 8,
+    "planted_frac": 0.1519,
+    "ratio": 1.3196,
+    "ratio_unclamped": 1.3196,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 5.6,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.2248,
+   "ideal_min_mps": 0.2051,
+   "ideal_mps": 0.2208,
+   "max_mps": 1.4663,
+   "mean_mps": 1.5861,
+   "median_mps": 1.4663,
+   "min_mps": 1.4663,
+   "n": 165,
+   "p90_mps": 2.132,
+   "planted_frac": 0.1595,
+   "repeats": [
+    {
+     "median_mps": 1.4663,
+     "n": 165,
+     "p90_mps": 2.132,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": true,
+   "stepping": "realtime",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/sprint/WA": {
+   "body_speed_mps": 5.6,
+   "crouched": false,
+   "fresh_mps": 1.9613,
+   "ideal": {
+    "clip_speeds": [
+     4.2437,
+     3.7077,
+     3.6022
+    ],
+    "clips": [
+     "actor_b-p-sprint-fw",
+     "actor_b-p-sprint-fw-rt",
+     "actor_b-p-sprint-fw-lt"
+    ],
+    "cps": 1.0706,
+    "hemi": "fw",
+    "p90_mps": 1.1614,
+    "phases": 8,
+    "planted_frac": 0.1749,
+    "ratio": 1.4275,
+    "ratio_unclamped": 1.4275,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 5.6,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.7167,
+   "ideal_max_mps": 0.5749,
+   "ideal_min_mps": 0.5427,
+   "ideal_mps": 0.5591,
+   "max_mps": 1.9613,
+   "mean_mps": 2.0796,
+   "median_mps": 1.9613,
+   "min_mps": 1.9613,
+   "n": 197,
+   "p90_mps": 2.5406,
+   "planted_frac": 0.1793,
+   "repeats": [
+    {
+     "median_mps": 1.9613,
+     "n": 197,
+     "p90_mps": 2.5406,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": true,
+   "stepping": "realtime",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/sprint/WD": {
+   "body_speed_mps": 5.6,
+   "crouched": false,
+   "fresh_mps": 2.0623,
+   "ideal": {
+    "clip_speeds": [
+     4.2437,
+     3.7077,
+     3.6022
+    ],
+    "clips": [
+     "actor_b-p-sprint-fw",
+     "actor_b-p-sprint-fw-rt",
+     "actor_b-p-sprint-fw-lt"
+    ],
+    "cps": 1.0564,
+    "hemi": "fw",
+    "p90_mps": 1.6389,
+    "phases": 8,
+    "planted_frac": 0.1655,
+    "ratio": 1.4086,
+    "ratio_unclamped": 1.4086,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 5.6,
+    "weights": [
+     0.5,
+     0.5,
+     0.0
+    ],
+    "x": -45.0
+   },
+   "ideal_godot_mps": 0.5868,
+   "ideal_max_mps": 0.7382,
+   "ideal_min_mps": 0.684,
+   "ideal_mps": 0.6966,
+   "max_mps": 2.0623,
+   "mean_mps": 2.0058,
+   "median_mps": 2.0623,
+   "min_mps": 2.0623,
+   "n": 193,
+   "p90_mps": 2.4625,
+   "planted_frac": 0.1784,
+   "repeats": [
+    {
+     "median_mps": 2.0623,
+     "n": 193,
+     "p90_mps": 2.4625,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": true,
+   "stepping": "realtime",
+   "walking": false,
+   "weapon": "musket"
+  },
+  "musket/walk/A": {
+   "body_speed_mps": 1.472,
+   "crouched": false,
+   "fresh_mps": 0.299,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.0469,
+    "hemi": "fw",
+    "p90_mps": 0.3077,
+    "phases": 8,
+    "planted_frac": 0.3991,
+    "ratio": 1.1865,
+    "ratio_unclamped": 1.1865,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.472,
+    "weights": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "x": 90.0
+   },
+   "ideal_max_mps": 0.1071,
+   "ideal_min_mps": 0.1012,
+   "ideal_mps": 0.104,
+   "max_mps": 0.299,
+   "mean_mps": 0.3694,
+   "median_mps": 0.299,
+   "min_mps": 0.299,
+   "n": 455,
+   "p90_mps": 0.6673,
+   "planted_frac": 0.4005,
+   "repeats": [
+    {
+     "median_mps": 0.299,
+     "n": 455,
+     "p90_mps": 0.6673,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": true,
+   "weapon": "musket"
+  },
+  "musket/walk/D": {
+   "body_speed_mps": 1.472,
+   "crouched": false,
+   "fresh_mps": 0.2849,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.03,
+    "hemi": "fw",
+    "p90_mps": 0.2362,
+    "phases": 8,
+    "planted_frac": 0.4042,
+    "ratio": 1.1673,
+    "ratio_unclamped": 1.1673,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.472,
+    "weights": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "x": -90.0
+   },
+   "ideal_max_mps": 0.0836,
+   "ideal_min_mps": 0.0818,
+   "ideal_mps": 0.083,
+   "max_mps": 0.2849,
+   "mean_mps": 0.3406,
+   "median_mps": 0.2849,
+   "min_mps": 0.2849,
+   "n": 485,
+   "p90_mps": 0.4746,
+   "planted_frac": 0.425,
+   "repeats": [
+    {
+     "median_mps": 0.2849,
+     "n": 485,
+     "p90_mps": 0.4746,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": true,
+   "weapon": "musket"
+  },
+  "musket/walk/S": {
+   "body_speed_mps": 1.472,
+   "crouched": false,
+   "fresh_mps": 0.2001,
+   "ideal": {
+    "clip_speeds": [
+     1.4671,
+     1.4673,
+     1.5119
+    ],
+    "clips": [
+     "actor_b-p-walk-bw",
+     "actor_b-p-walk-bw-lt",
+     "actor_b-p-walk-bw-rt"
+    ],
+    "cps": 1.075,
+    "hemi": "bw",
+    "p90_mps": 0.3804,
+    "phases": 8,
+    "planted_frac": 0.3784,
+    "ratio": 1.0033,
+    "ratio_unclamped": 1.0033,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.472,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.1094,
+   "ideal_min_mps": 0.1005,
+   "ideal_mps": 0.1045,
+   "max_mps": 0.2001,
+   "mean_mps": 0.3324,
+   "median_mps": 0.2001,
+   "min_mps": 0.2001,
+   "n": 465,
+   "p90_mps": 0.4896,
+   "planted_frac": 0.4095,
+   "repeats": [
+    {
+     "median_mps": 0.2001,
+     "n": 465,
+     "p90_mps": 0.4896,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": true,
+   "weapon": "musket"
+  },
+  "musket/walk/W": {
+   "body_speed_mps": 1.472,
+   "crouched": false,
+   "fresh_mps": 0.2765,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.028,
+    "hemi": "fw",
+    "p90_mps": 0.2718,
+    "phases": 8,
+    "planted_frac": 0.4091,
+    "ratio": 1.165,
+    "ratio_unclamped": 1.165,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.472,
+    "weights": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "x": 0.0
+   },
+   "ideal_max_mps": 0.087,
+   "ideal_min_mps": 0.0748,
+   "ideal_mps": 0.0854,
+   "max_mps": 0.2765,
+   "mean_mps": 0.3717,
+   "median_mps": 0.2765,
+   "min_mps": 0.2765,
+   "n": 525,
+   "p90_mps": 0.7696,
+   "planted_frac": 0.4612,
+   "repeats": [
+    {
+     "median_mps": 0.2765,
+     "n": 525,
+     "p90_mps": 0.7696,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": true,
+   "weapon": "musket"
+  },
+  "musket/walk/WA": {
+   "body_speed_mps": 1.472,
+   "crouched": false,
+   "fresh_mps": 0.5306,
+   "ideal": {
+    "clip_speeds": [
+     1.2635,
+     1.261,
+     1.2406
+    ],
+    "clips": [
+     "actor_b-p-walk-fw",
+     "actor_b-p-walk-fw-rt",
+     "actor_b-p-walk-fw-lt"
+    ],
+    "cps": 1.0374,
+    "hemi": "fw",
+    "p90_mps": 0.3845,
+    "phases": 8,
+    "planted_frac": 0.3989,
+    "ratio": 1.1757,
+    "ratio_unclamped": 1.1757,
+    "semantics": "graph",
+    "source": "graph roles (actor_b_graph.json)",
+    "speed_mps": 1.472,
+    "weights": [
+     0.5,
+     0.0,
+     0.5
+    ],
+    "x": 45.0
+   },
+   "ideal_godot_mps": 0.0973,
+   "ideal_max_mps": 0.0882,
+   "ideal_min_mps": 0.0797,
+   "ideal_mps": 0.0853,
+   "max_mps": 0.5306,
+   "mean_mps": 0.894,
+   "median_mps": 0.5306,
+   "min_mps": 0.5306,
+   "n": 155,
+   "p90_mps": 2.0961,
+   "planted_frac": 0.1414,
+   "repeats": [
+    {
+     "median_mps": 0.5306,
+     "n": 155,
+     "p90_mps": 2.0961,
+     "preroll": "none"
+    }
+   ],
+   "speed_mult": 0.92,
+   "spread_mps": 0.0,
+   "sprinting": false,
+   "stepping": "realtime",
+   "walking": true,
+   "weapon": "musket"
+  }
+ }
+}

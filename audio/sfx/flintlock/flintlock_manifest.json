@@ -1,0 +1,760 @@
+{
+ "family": "flintlock",
+ "generator": "tools/sfx/flintlock.py",
+ "format": "44.1 kHz 16-bit PCM",
+ "sounds": {
+  "musket_lock": {
+   "files": [
+    "musket_lock_01.wav",
+    "musket_lock_02.wav",
+    "musket_lock_03.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.061,
+    0.058,
+    0.06
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "pan",
+    "unit_size": 3,
+    "bus": "Weapons",
+    "volume_db": -6,
+    "random_pitch": 1.03,
+    "random_volume_offset_db": 1,
+    "hook": "sfx(&'lock')"
+   }
+  },
+  "pistol_lock": {
+   "files": [
+    "pistol_lock_01.wav",
+    "pistol_lock_02.wav",
+    "pistol_lock_03.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.049,
+    0.048,
+    0.044
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "pan",
+    "unit_size": 3,
+    "bus": "Weapons",
+    "volume_db": -7,
+    "random_pitch": 1.03,
+    "hook": "sfx(&'lock')"
+   }
+  },
+  "pan_flash": {
+   "files": [
+    "pan_flash_01.wav",
+    "pan_flash_02.wav",
+    "pan_flash_03.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.28,
+    0.28,
+    0.28
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "pan",
+    "bus": "Weapons",
+    "random_pitch": 1.05,
+    "delay_after_lock_s": 0.027,
+    "volume_db": {
+     "musket": -8,
+     "pistol": -10
+    },
+    "pitch_scale": {
+     "musket": 1.0,
+     "pistol": 1.08
+    }
+   }
+  },
+  "musket_shot": {
+   "files": [
+    "musket_shot_01.wav",
+    "musket_shot_02.wav",
+    "musket_shot_03.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    1.35,
+    1.35,
+    1.35
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "muzzle",
+    "unit_size": 3,
+    "max_db": 3,
+    "bus": "Weapons",
+    "volume_db": 0,
+    "random_pitch": 1.04,
+    "hook": "fired"
+   }
+  },
+  "musket_tail": {
+   "files": [
+    "musket_tail_01.wav",
+    "musket_tail_02.wav"
+   ],
+   "channels": 2,
+   "seconds": [
+    4.0,
+    4.0
+   ],
+   "playback": {
+    "mode": "2d",
+    "bus": "Tails",
+    "volume_db": -9,
+    "random_pitch": 1.02,
+    "when": "outside fort"
+   }
+  },
+  "musket_tail_fort": {
+   "files": [
+    "musket_tail_fort_01.wav",
+    "musket_tail_fort_02.wav"
+   ],
+   "channels": 2,
+   "seconds": [
+    3.5,
+    3.5
+   ],
+   "playback": {
+    "mode": "2d",
+    "bus": "Tails",
+    "volume_db": -9,
+    "random_pitch": 1.02,
+    "when": "abs(x) < 16 and abs(z) < 16"
+   }
+  },
+  "pistol_shot": {
+   "files": [
+    "pistol_shot_01.wav",
+    "pistol_shot_02.wav",
+    "pistol_shot_03.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.679,
+    0.694,
+    0.663
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "muzzle",
+    "unit_size": 3,
+    "max_db": 3,
+    "bus": "Weapons",
+    "volume_db": -2,
+    "random_pitch": 1.05,
+    "hook": "fired"
+   }
+  },
+  "pistol_tail": {
+   "files": [
+    "pistol_tail_01.wav",
+    "pistol_tail_02.wav"
+   ],
+   "channels": 2,
+   "seconds": [
+    2.6,
+    2.6
+   ],
+   "playback": {
+    "mode": "2d",
+    "bus": "Tails",
+    "volume_db": -11,
+    "random_pitch": 1.02,
+    "when": "outside fort"
+   }
+  },
+  "pistol_tail_fort": {
+   "files": [
+    "pistol_tail_fort_01.wav",
+    "pistol_tail_fort_02.wav"
+   ],
+   "channels": 2,
+   "seconds": [
+    2.2,
+    2.2
+   ],
+   "playback": {
+    "mode": "2d",
+    "bus": "Tails",
+    "volume_db": -11,
+    "when": "abs(x) < 16 and abs(z) < 16"
+   }
+  },
+  "dry_fire": {
+   "files": [
+    "dry_fire_01.wav",
+    "dry_fire_02.wav",
+    "dry_fire_03.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.053,
+    0.052,
+    0.058
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "model",
+    "bus": "Weapons",
+    "volume_db": -8,
+    "random_pitch": 1.03,
+    "cooldown_s": 0.35,
+    "pitch_scale": {
+     "musket": 0.95,
+     "pistol": 1.15
+    },
+    "hook": "sfx(&'dry')"
+   }
+  },
+  "cock_half": {
+   "files": [
+    "cock_half_01.wav",
+    "cock_half_02.wav",
+    "cock_half_03.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.116,
+    0.125,
+    0.117
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "model",
+    "unit_size": 3,
+    "bus": "Foley",
+    "volume_db": -12,
+    "random_pitch": 1.03
+   }
+  },
+  "cock_full": {
+   "files": [
+    "cock_full_01.wav",
+    "cock_full_02.wav",
+    "cock_full_03.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.156,
+    0.129,
+    0.128
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "model",
+    "bus": "Foley",
+    "volume_db": -11,
+    "random_pitch": 1.03
+   }
+  },
+  "frizzen_open": {
+   "files": [
+    "frizzen_open_01.wav",
+    "frizzen_open_02.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.096,
+    0.094
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "model",
+    "bus": "Foley",
+    "volume_db": -12,
+    "random_pitch": 1.04
+   }
+  },
+  "frizzen_close": {
+   "files": [
+    "frizzen_close_01.wav",
+    "frizzen_close_02.wav",
+    "frizzen_close_03.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.071,
+    0.071,
+    0.084
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "model",
+    "bus": "Foley",
+    "volume_db": -11,
+    "random_pitch": 1.04
+   }
+  },
+  "cartridge_draw": {
+   "files": [
+    "cartridge_draw_01.wav",
+    "cartridge_draw_02.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.398,
+    0.396
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "hip",
+    "bus": "Foley",
+    "volume_db": -16,
+    "random_pitch": 1.05
+   }
+  },
+  "cartridge_bite": {
+   "files": [
+    "cartridge_bite_01.wav",
+    "cartridge_bite_02.wav",
+    "cartridge_bite_03.wav",
+    "cartridge_bite_04.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.273,
+    0.21,
+    0.229,
+    0.202
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "head",
+    "bus": "Foley",
+    "volume_db": -14,
+    "random_pitch": 1.06
+   }
+  },
+  "powder_pour_pan": {
+   "files": [
+    "powder_pour_pan_01.wav",
+    "powder_pour_pan_02.wav",
+    "powder_pour_pan_03.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.467,
+    0.47,
+    0.47
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "pan",
+    "bus": "Foley",
+    "volume_db": -18,
+    "random_pitch": 1.05
+   }
+  },
+  "powder_pour_barrel": {
+   "files": [
+    "powder_pour_barrel_01.wav",
+    "powder_pour_barrel_02.wav",
+    "powder_pour_barrel_03.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.806,
+    0.801,
+    0.817
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "model",
+    "bus": "Foley",
+    "volume_db": -16,
+    "random_pitch": 1.04
+   }
+  },
+  "powder_pour_barrel_pistol": {
+   "files": [
+    "powder_pour_barrel_pistol_01.wav",
+    "powder_pour_barrel_pistol_02.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.341,
+    0.347
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "model",
+    "bus": "Foley",
+    "volume_db": -16,
+    "random_pitch": 1.05
+   }
+  },
+  "ball_seat": {
+   "files": [
+    "ball_seat_01.wav",
+    "ball_seat_02.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.149,
+    0.142
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "model",
+    "bus": "Foley",
+    "volume_db": -16,
+    "random_pitch": 1.05
+   }
+  },
+  "musket_handle": {
+   "files": [
+    "musket_handle_01.wav",
+    "musket_handle_02.wav",
+    "musket_handle_03.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.244,
+    0.276,
+    0.246
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "model",
+    "bus": "Foley",
+    "volume_db": -18,
+    "random_pitch": 1.06
+   }
+  },
+  "ramrod_draw": {
+   "files": [
+    "ramrod_draw_01.wav",
+    "ramrod_draw_02.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.535,
+    0.53
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "model",
+    "bus": "Foley",
+    "volume_db": -14,
+    "random_pitch": 1.04
+   }
+  },
+  "ram_stroke": {
+   "files": [
+    "ram_stroke_01.wav",
+    "ram_stroke_02.wav",
+    "ram_stroke_03.wav",
+    "ram_stroke_04.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.306,
+    0.251,
+    0.282,
+    0.44
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "muzzle",
+    "bus": "Foley",
+    "volume_db": -11,
+    "random_pitch": 1.03,
+    "max_polyphony": 1
+   }
+  },
+  "ram_stroke_pistol": {
+   "files": [
+    "ram_stroke_pistol_01.wav",
+    "ram_stroke_pistol_02.wav",
+    "ram_stroke_pistol_03.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.173,
+    0.15,
+    0.157
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "muzzle",
+    "bus": "Foley",
+    "volume_db": -12,
+    "random_pitch": 1.04
+   }
+  },
+  "ramrod_return": {
+   "files": [
+    "ramrod_return_01.wav",
+    "ramrod_return_02.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.585,
+    0.589
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "model",
+    "bus": "Foley",
+    "volume_db": -14,
+    "random_pitch": 1.04
+   }
+  },
+  "musket_equip": {
+   "files": [
+    "musket_equip_01.wav",
+    "musket_equip_02.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.609,
+    0.61
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "chest",
+    "bus": "Foley",
+    "volume_db": -9,
+    "random_pitch": 1.04,
+    "delay_s": 0.08
+   }
+  },
+  "musket_holster": {
+   "files": [
+    "musket_holster_01.wav",
+    "musket_holster_02.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.392,
+    0.409
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "chest",
+    "bus": "Foley",
+    "volume_db": -10,
+    "random_pitch": 1.04
+   }
+  },
+  "pistol_equip": {
+   "files": [
+    "pistol_equip_01.wav",
+    "pistol_equip_02.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.245,
+    0.25
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "hip",
+    "bus": "Foley",
+    "volume_db": -9,
+    "random_pitch": 1.05,
+    "delay_s": 0.08
+   }
+  },
+  "pistol_holster": {
+   "files": [
+    "pistol_holster_01.wav",
+    "pistol_holster_02.wav"
+   ],
+   "channels": 1,
+   "seconds": [
+    0.249,
+    0.245
+   ],
+   "playback": {
+    "mode": "3d",
+    "anchor": "hip",
+    "bus": "Foley",
+    "volume_db": -10,
+    "random_pitch": 1.05
+   }
+  }
+ },
+ "reload_cues": {
+  "musket": {
+   "0 Biting cartridge": [
+    [
+     "cock_half",
+     0.05,
+     {}
+    ],
+    [
+     "frizzen_open",
+     0.32,
+     {}
+    ],
+    [
+     "cartridge_draw",
+     0.5,
+     {}
+    ],
+    [
+     "cartridge_bite",
+     0.95,
+     {}
+    ]
+   ],
+   "1 Priming the pan": [
+    [
+     "powder_pour_pan",
+     0.15,
+     {}
+    ],
+    [
+     "frizzen_close",
+     0.85,
+     {}
+    ],
+    [
+     "musket_handle",
+     1.2,
+     {}
+    ]
+   ],
+   "2 Pouring powder": [
+    [
+     "powder_pour_barrel",
+     0.2,
+     {}
+    ],
+    [
+     "ball_seat",
+     1.25,
+     {}
+    ]
+   ],
+   "3 Ramming ball": [
+    [
+     "ramrod_draw",
+     0.08,
+     {}
+    ],
+    [
+     "ram_stroke",
+     0.8,
+     {}
+    ],
+    [
+     "ram_stroke",
+     1.25,
+     {}
+    ],
+    [
+     "ram_stroke",
+     1.7,
+     {
+      "volume_db": 2,
+      "pitch_scale": 0.97
+     }
+    ]
+   ],
+   "4 Returning ramrod": [
+    [
+     "ramrod_return",
+     0.05,
+     {}
+    ],
+    [
+     "musket_handle",
+     0.78,
+     {}
+    ],
+    [
+     "cock_full",
+     1.05,
+     {}
+    ]
+   ]
+  },
+  "pistol": {
+   "0 Half-cocking": [
+    [
+     "cock_half",
+     0.05,
+     {
+      "pitch_scale": 1.15
+     }
+    ],
+    [
+     "frizzen_open",
+     0.4,
+     {
+      "pitch_scale": 1.15
+     }
+    ]
+   ],
+   "1 Powder and ball": [
+    [
+     "cartridge_bite",
+     0.0,
+     {
+      "pitch_scale": 1.05
+     }
+    ],
+    [
+     "powder_pour_barrel_pistol",
+     0.22,
+     {}
+    ],
+    [
+     "ball_seat",
+     0.6,
+     {
+      "pitch_scale": 1.1
+     }
+    ],
+    [
+     "ram_stroke_pistol",
+     0.78,
+     {}
+    ],
+    [
+     "ram_stroke_pistol",
+     0.98,
+     {
+      "volume_db": 1
+     }
+    ]
+   ],
+   "2 Priming the pan": [
+    [
+     "powder_pour_pan",
+     0.03,
+     {}
+    ],
+    [
+     "frizzen_close",
+     0.52,
+     {
+      "pitch_scale": 1.15
+     }
+    ],
+    [
+     "cock_full",
+     0.72,
+     {
+      "pitch_scale": 1.15
+     }
+    ]
+   ]
+  }
+ }
+}

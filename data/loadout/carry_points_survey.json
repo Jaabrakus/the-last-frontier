@@ -1,0 +1,5992 @@
+{
+ "format": "frontier-loadout-carry-points-survey",
+ "version": 1,
+ "generated": "2026-09-24T16:41:46Z",
+ "provenance": "Rig, bone names, bind pose and clips: Actor_B. Body and outfit geometry: tools/character/build_body.py. Weapon models: tools/models.",
+ "conventions": "rig space at null-add (+Y up, faces +Z, right = -X); angles 0 front / 90 right / 180 back / 270 left; clearances in cm, negative = interpenetration",
+ "user_rules": {
+  "back": "at most two long weapons slung at once",
+  "sidearms": "the worn belt / sash / slings decide the carry points; pistols = pistol-capable points",
+  "pistols": "separate instances with their own loaded state",
+  "loadout": "chosen at camp / a chest later; data-driven presets and a default",
+  "first_pistol": "on the belt at the right hip (the user's correction); the powder horn moves off that spot"
+ },
+ "long_weapon_classification": {
+  "long": {
+   "musket": {
+    "length_m": 1.588,
+    "grip_to_muzzle_m": 1.298,
+    "grip_to_butt_m": 0.29
+   },
+   "bow (strung)": {
+    "length_m": 1.5264,
+    "string_depth_m": 0.1859
+   },
+   "spear pair (2 tied)": {
+    "length_m": 1.8,
+    "grip_to_tip_m": 0.807,
+    "grip_to_butt_m": 0.993
+   },
+   "dart bundle (5 tied)": {
+    "length_m": 1.65
+   }
+  },
+  "not_long": {
+   "quiver": "0.66-0.76 m with the arrows; back, travels with the bow",
+   "atlatl board": {
+    "length_m": 0.5883,
+    "width_m": 0.1212
+   },
+   "pistol": {
+    "length_m": 0.3912,
+    "grip_to_muzzle_m": 0.31,
+    "butt_behind_grip_m": 0.081,
+    "butt_below_grip_m": 0.089
+   },
+   "tomahawk": {
+    "length_m": 0.494,
+    "head_length_m": 0.23
+   },
+   "knife": "about 0.30 m in the sheath",
+   "saber / hanger": "about 0.8 m; waist frog or baldric"
+  },
+  "reason": "items longer than ~1.2 m cannot hang from a waist band on a 1.60 m body without reaching the ground or the knees (belt at 0.94 m): they must be slung across the back from the shoulder"
+ },
+ "classification_rule": {
+  "clean": ">= -1 cm in locomotion, crouch and weapon use",
+  "contact": ">= -3.5 cm",
+  "clips": "< -3.5 cm",
+  "note": "traversal reported separately"
+ },
+ "gear": {
+  "legacy_baked_belt": {
+   "customizer_slot": "(legacy body, assets/character/actor_b_body.glb)",
+   "band_y": [
+    0.922,
+    0.962
+   ],
+   "points": {
+    "R_hip": {
+     "placement": "belt.R_hip.pistol",
+     "allowed": [
+      "pistol"
+     ],
+     "primary": true
+    },
+    "back": {
+     "placement": "belt.back.tomahawk",
+     "allowed": [
+      "tomahawk",
+      "atlatl",
+      "knife"
+     ],
+     "placements_by_kind": {
+      "tomahawk": "belt.back.tomahawk",
+      "atlatl": "belt.back.atlatl"
+     }
+    },
+    "back_left": {
+     "placement": "belt.back_left.knife",
+     "allowed": [
+      "knife",
+      "tomahawk (only if back is empty)"
+     ],
+     "placements_by_kind": {
+      "knife": "belt.back_left.knife",
+      "tomahawk": "belt.back_left.tomahawk"
+     }
+    },
+    "L_hip": {
+     "placement": "belt.L_hip.pistol",
+     "allowed": [
+      "pistol (cross draw)",
+      "saber",
+      "knife"
+     ],
+     "placements_by_kind": {
+      "pistol": "belt.L_hip.pistol",
+      "saber": "belt.L_hip.saber",
+      "knife": "belt.L_hip.knife"
+     }
+    }
+   },
+   "pistol_points": 2,
+   "note": "The shot pouch hangs at the left hip (240-285 deg) from its own strap; L_hip sits in front of it at 280 deg."
+  },
+  "belt_tied_behind": {
+   "customizer_slot": "accessories.waist",
+   "evidence": "A (Doddridge [P3]: the hunting-shirt belt was always tied behind)",
+   "same_points_as": "legacy_baked_belt",
+   "differences": "The knot and its short ends sit at 175-185 deg: the back tomahawk moves to 200 deg (belt.back_left.tomahawk; belt.back.atlatl already sits at 200 deg) and back_left then holds nothing else (the knife goes on the shot pouch strap).",
+   "pistol_points": 2
+  },
+  "sash_fingerwoven": {
+   "customizer_slot": "accessories.waist",
+   "evidence": "A (Canadian arrow sash [M7c]); tucking pistols and tomahawks into a sash is general period practice (B)",
+   "band_y": [
+    0.9,
+    1.06
+   ],
+   "tie": "at the left hip, ends hanging to about y 0.6 (blocks L_hip)",
+   "points": {
+    "R_hip": {
+     "placement": "belt.R_hip.pistol",
+     "allowed": [
+      "pistol"
+     ],
+     "primary": true,
+     "note": "tucked, same place and draw as the belt"
+    },
+    "back": {
+     "placement": "belt.back.tomahawk",
+     "allowed": [
+      "tomahawk",
+      "atlatl",
+      "knife"
+     ]
+    },
+    "front_left": {
+     "placement": "sash.front_left.pistol",
+     "allowed": [
+      "pistol (cross draw)",
+      "tomahawk",
+      "knife"
+     ],
+     "note": "needs the crouch nudge (thigh)"
+    }
+   },
+   "pistol_points": 2
+  },
+  "ew_sash": {
+   "customizer_slot": "accessories.waist (as a belt) or accessories.shoulder (as a baldric)",
+   "evidence": "A/B (costume bible 3.8: finger-woven sash with white beads, belt or baldric)",
+   "as_belt": "same points as sash_fingerwoven",
+   "as_baldric": {
+    "points": {
+     "hip_end": {
+      "allowed": [
+       "tomahawk",
+       "knife",
+       "pistol"
+      ],
+      "note": "the hanging end at the opposite hip; on the left it replaces belt.L_hip, on the right it collides with belt.R_hip"
+     }
+    },
+    "pistol_points": 1
+   },
+   "pistol_points": "2 as a belt, +1 as a baldric"
+  },
+  "military_waist_belt": {
+   "customizer_slot": "accessories.waist (fr_belt_gargoussier)",
+   "evidence": "A (Fort Ticonderoga [M4]: buff waist belt with the red cartridge pouch on it)",
+   "blocked": "the gargoussier at the front (330-30 deg, y 0.87-0.97)",
+   "points": {
+    "R_hip": {
+     "placement": "belt.R_hip.pistol",
+     "allowed": [
+      "pistol"
+     ]
+    },
+    "back": {
+     "placement": "belt.back.tomahawk",
+     "allowed": [
+      "tomahawk"
+     ],
+     "evidence": "1758: tomahawks carried by the regulars (Huck, via [M1])"
+    },
+    "L_hip": {
+     "placement": "belt.L_hip.saber",
+     "allowed": [
+      "saber / hanger",
+      "bayonet frog",
+      "pistol"
+     ]
+    }
+   },
+   "pistol_points": 2
+  },
+  "br_belts_cartridge": {
+   "customizer_slot": "accessories.shoulder + accessories.waist",
+   "evidence": "A (costume bible 5.6)",
+   "blocked": "the cartridge box on the shoulder belt behind the right hip (120-170 deg, y 0.85-1.02): no R_hip pistol, no back-right tomahawk",
+   "points": {
+    "L_hip": {
+     "placement": "belt.L_hip.saber",
+     "allowed": [
+      "saber / hanger",
+      "bayonet",
+      "pistol"
+     ]
+    },
+    "chest_hook": {
+     "placement": "pistol_sling.chest_R",
+     "allowed": [
+      "pistol (belt hook on the shoulder belt)"
+     ],
+     "evidence": "Highland practice of hooking the pistol on a belt (general, B)"
+    }
+   },
+   "pistol_points": 2
+  },
+  "pistol_sling": {
+   "customizer_slot": "accessories.shoulder (new item, built by the loadout workflow)",
+   "evidence": "C for 1750s frontier; primary evidence is maritime and earlier: Captain Charles Johnson, A General History of the Pyrates (1724) describes Blackbeard with 'three brace of pistols' in holsters on a sling over his shoulders, and Bartholomew Roberts with two pairs hanging from a silk sling. Not in the costume bible; not verified online in this run.",
+   "design": "a leather or silk sling over the right shoulder to the left hip (or both shoulders), two pistols hung by belt hooks / small holsters across the chest",
+   "points": {
+    "chest_L": {
+     "placement": "pistol_sling.chest_L",
+     "allowed": [
+      "pistol"
+     ]
+    },
+    "chest_R": {
+     "placement": "pistol_sling.chest_R",
+     "allowed": [
+      "pistol"
+     ]
+    }
+   },
+   "pistol_points": 2,
+   "note": "Chest pistols are clean against the body in play clips but the swinging forearms touch them when running (-4 to -8 cm) and the thighs reach them in a deep crouch; they need the crouch / aim nudge hook."
+  },
+  "horn_strap": {
+   "customizer_slot": "accessories.shoulder (powder_horn)",
+   "evidence": "A: 'a bullock's horn hung under the right arm from a strap over the left shoulder' (Knox 1757, via [M2])",
+   "points": {
+    "horn": {
+     "placement": "horn.back_R_top",
+     "allowed": [
+      "powder horn"
+     ]
+    }
+   }
+  },
+  "shot_pouch_strap": {
+   "customizer_slot": "accessories.shoulder (shot_pouch / ew_shot_pouch)",
+   "evidence": "A: pouch on the belt or a strap with a folding or sheath knife [M2]",
+   "points": {
+    "pouch_knife": {
+     "allowed": [
+      "knife"
+     ],
+     "note": "a sheath knife on the pouch strap or the pouch front: a period place for the belt knife that frees a belt point"
+    }
+   }
+  },
+  "back_slings": {
+   "long_A": {
+    "line": "upper end behind the LEFT shoulder, lower end behind the right hip (sling over the left shoulder, across the chest to the right hip)",
+    "placements": {
+     "musket": "back.long_A.musket",
+     "spear_pair": "back.long_A.spears",
+     "dart_bundle": "back.long_A.darts",
+     "bow": "back.long_A.bow"
+    },
+    "draw": "left hand over the left shoulder (source lg-stealth-draw^idle)"
+   },
+   "long_B": {
+    "line": "upper end behind the RIGHT shoulder, lower end behind the left hip (over the right shoulder, across the chest to the left hip)",
+    "placements": {
+     "bow": "back.long_B.bow",
+     "spear_pair": "back.long_B.spears",
+     "dart_bundle": "back.long_B.darts",
+     "musket": "back.long_B.musket"
+    },
+    "draw": "bow: left hand at the left mid back (source p-bow-draw-grab^idle); spears / darts: right hand over the right shoulder (source p-bow-reload reach)"
+   },
+   "quiver": {
+    "placement": "back.quiver",
+    "note": "travels with the bow, no long slot; nocks behind the right shoulder",
+    "layering": "when a long_B item is slung too it lies over the quiver (use back.quiver as inner layer and push the long_B item out by the standoff in back_layering)"
+   },
+   "rule": "at most two long weapons at once: one on long_A, one on long_B"
+  }
+ },
+ "pistol_capacity": {
+  "rule": "pistols the player can carry = pistol-capable points of the worn waist + shoulder gear, capped at 4 (two braces)",
+  "per_gear": {
+   "legacy_baked_belt / leather waist belt": {
+    "pistols": 2,
+    "points": [
+     "R_hip (clean-ish, source draw)",
+     "L_hip (cross draw, contact with the hanging left hand)"
+    ]
+   },
+   "belt_tied_behind": {
+    "pistols": 2
+   },
+   "sash_fingerwoven / ew_sash as belt": {
+    "pistols": 2,
+    "points": [
+     "R_hip",
+     "front_left (crouch nudge)"
+    ]
+   },
+   "military_waist_belt (gargoussier)": {
+    "pistols": 2
+   },
+   "br_belts_cartridge": {
+    "pistols": 2,
+    "points": [
+     "L_hip",
+     "chest hook on the shoulder belt"
+    ],
+    "note": "the cartridge box blocks R_hip"
+   },
+   "ew_sash as baldric": {
+    "pistols": 1
+   },
+   "pistol_sling (new)": {
+    "pistols": 2
+   },
+   "no waist gear": {
+    "pistols": 0,
+    "note": "a pistol is then carried in the hand or not at all"
+   }
+  },
+  "combos": {
+   "belt": 2,
+   "belt + pistol_sling": 4,
+   "sash + pistol_sling": 4,
+   "belt + ew_sash baldric": 3,
+   "br_belts_cartridge (+ waist belt)": 2
+  },
+  "evidence_summary": "A 'brace' is a pair. Belt-hook pistols (sea-service, Highland all-steel, many civilian) hung from a waist belt or shoulder belt; officers and horsemen carried pairs in saddle holsters (not on the body); pirates of the 1710s-20s wore several on slings (Johnson 1724). For the 1750s frontier a single pistol in the belt is the common case, two is plausible for officers, rangers and traders, more is a game liberty. These are general arms-history points, not from the costume bible; grade B/C."
+ },
+ "placements": {
+  "belt.R_hip.pistol": {
+   "kind": "pistol",
+   "status": "recommended",
+   "attach": "two_anchor",
+   "bone": null,
+   "anchors": [
+    "pelvis (hook on the belt band)",
+    "skin of the right hip (barrel)"
+   ],
+   "note": "Belt hook / holster at the right hip, 15 deg behind the source grab (110 deg): the right forearm swing of the diagonal walk clears it better. Barrel hangs down the hip, lock outward, butt to the rear, as in the source no-pack stow.",
+   "capsules": {
+    "pistol_hook_R125~s2:barrel": {
+     "from": [
+      -0.1742,
+      0.934,
+      -0.0981
+     ],
+     "to": [
+      -0.2487,
+      0.604,
+      -0.153
+     ],
+     "radius": 0.018,
+     "bone": "skin2",
+     "anchors": [
+      0.08,
+      0.7
+     ]
+    },
+    "pistol_hook_R125:stock": {
+     "from": [
+      -0.1877,
+      0.914,
+      -0.1089
+     ],
+     "to": [
+      -0.083,
+      0.994,
+      -0.1548
+     ],
+     "radius": 0.026,
+     "bone": "pelvis",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.1787,
+    0.9142,
+    -0.1014
+   ],
+   "grip_angle_deg": 125.1,
+   "grip_height": 0.914,
+   "outward_dir_bind": [
+    -0.818,
+    0.0,
+    -0.575
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.375,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -0.3,
+     "surface_clip": "actor_b-p-sprint-fw-lt",
+     "limb_cm": -4.9,
+     "limb": "r_forearm",
+     "limb_clip": "actor_b-p-walk-fw-lt"
+    },
+    "crouch": {
+     "surface_cm": -0.9,
+     "surface_clip": "actor_b-p-crouch-walk-fw",
+     "limb_cm": 2.2,
+     "limb": "r_shin",
+     "limb_clip": "actor_b-p-crouch-walk-bw-lt"
+    },
+    "weapon_use": {
+     "surface_cm": -0.7,
+     "surface_clip": "actor_b-p-rifle-aim-walk-fw",
+     "limb_cm": 3.6,
+     "limb": "r_thigh",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-start"
+    },
+    "traversal": {
+     "surface_cm": -3.9,
+     "surface_clip": "actor_b-p-ledge-grab-knee^idle",
+     "limb_cm": -0.8,
+     "limb": "r_hand",
+     "limb_clip": "actor_b-p-ledge-idle^walk-r"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -4.9,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-walk-fw-lt",
+     "category": "walk",
+     "limb_cm": -4.9,
+     "limb": "r_forearm",
+     "surface_cm": 0.6
+    },
+    {
+     "clip": "actor_b-p-ledge-grab-knee^idle",
+     "category": "climb",
+     "limb_cm": 4.3,
+     "limb": "r_thigh",
+     "surface_cm": -3.9
+    },
+    {
+     "clip": "actor_b-p-walk-bw",
+     "category": "walk",
+     "limb_cm": -3.7,
+     "limb": "r_forearm",
+     "surface_cm": 0.8
+    },
+    {
+     "clip": "actor_b-p-idle^vault-over-2m",
+     "category": "vault",
+     "limb_cm": 4.5,
+     "limb": "r_thigh",
+     "surface_cm": -2.9
+    },
+    {
+     "clip": "actor_b-p-idle^vault-over-1m",
+     "category": "vault",
+     "limb_cm": 5.4,
+     "limb": "r_thigh",
+     "surface_cm": -2.7
+    },
+    {
+     "clip": "actor_b-p-ledge-hang-climb-up^ledge-knee",
+     "category": "climb",
+     "limb_cm": 3.6,
+     "limb": "r_thigh",
+     "surface_cm": -2.7
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "belt.R_hip.pistol_source110": {
+   "kind": "pistol",
+   "status": "reference",
+   "attach": "two_anchor",
+   "bone": null,
+   "anchors": null,
+   "note": "Exact source no-pack grab angle (fidelity reference); the right forearm swings through it in walk / sprint.",
+   "capsules": {
+    "pistol_hook_R110~s2:barrel": {
+     "from": [
+      -0.2024,
+      0.934,
+      -0.0497
+     ],
+     "to": [
+      -0.2811,
+      0.604,
+      -0.0811
+     ],
+     "radius": 0.018,
+     "bone": "skin2",
+     "anchors": [
+      0.08,
+      0.7
+     ]
+    },
+    "pistol_hook_R110:stock": {
+     "from": [
+      -0.2141,
+      0.914,
+      -0.0554
+     ],
+     "to": [
+      -0.1327,
+      0.994,
+      -0.1326
+     ],
+     "radius": 0.026,
+     "bone": "pelvis",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.2071,
+    0.9142,
+    -0.0516
+   ],
+   "grip_angle_deg": 110.0,
+   "grip_height": 0.914,
+   "outward_dir_bind": [
+    -0.94,
+    0.0,
+    -0.342
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.374,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -0.8,
+     "surface_clip": "actor_b-p-sprint-fw-lt",
+     "limb_cm": -7.2,
+     "limb": "r_forearm",
+     "limb_clip": "actor_b-p-walk-fw-lt"
+    },
+    "crouch": {
+     "surface_cm": -0.5,
+     "surface_clip": "actor_b-p-crouch-walk-fw",
+     "limb_cm": 2.2,
+     "limb": "r_forearm",
+     "limb_clip": "actor_b-p-crouch-walk-bw-lt"
+    },
+    "weapon_use": {
+     "surface_cm": -0.4,
+     "surface_clip": "actor_b-p-1h-aim-crouch-throw-idle",
+     "limb_cm": 1.5,
+     "limb": "r_thigh",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-start"
+    },
+    "traversal": {
+     "surface_cm": -1.7,
+     "surface_clip": "actor_b-p-sprint-vault-1",
+     "limb_cm": -4.9,
+     "limb": "r_shin",
+     "limb_clip": "actor_b-p-sprint-vault-1"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -7.2,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-walk-fw-lt",
+     "category": "walk",
+     "limb_cm": -7.2,
+     "limb": "r_forearm",
+     "surface_cm": 0.1
+    },
+    {
+     "clip": "actor_b-p-sprint-fw",
+     "category": "sprint",
+     "limb_cm": -6.2,
+     "limb": "r_hand",
+     "surface_cm": 0.4
+    },
+    {
+     "clip": "actor_b-p-walk-fw",
+     "category": "walk",
+     "limb_cm": -5.7,
+     "limb": "r_forearm",
+     "surface_cm": 0.1
+    },
+    {
+     "clip": "actor_b-p-walk-bw",
+     "category": "walk",
+     "limb_cm": -5.3,
+     "limb": "r_forearm",
+     "surface_cm": 0.2
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-1",
+     "category": "vault",
+     "limb_cm": -4.9,
+     "limb": "r_shin",
+     "surface_cm": -1.7
+    },
+    {
+     "clip": "actor_b-climb-on-1-5m-up^idle-exit",
+     "category": "climb",
+     "limb_cm": -2.1,
+     "limb": "r_forearm",
+     "surface_cm": -1.2
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "belt.R_hip.pistol_rear140": {
+   "kind": "pistol",
+   "status": "alternative",
+   "attach": "two_anchor",
+   "bone": null,
+   "anchors": null,
+   "note": "Cleanest right-hip spot for the arms, but 30 deg (9.5 cm) behind the source grab and its butt reaches the back belt point.",
+   "capsules": {
+    "pistol_hook_R140~s2:barrel": {
+     "from": [
+      -0.135,
+      0.934,
+      -0.1369
+     ],
+     "to": [
+      -0.1937,
+      0.604,
+      -0.2097
+     ],
+     "radius": 0.018,
+     "bone": "skin2",
+     "anchors": [
+      0.08,
+      0.7
+     ]
+    },
+    "pistol_hook_R140:stock": {
+     "from": [
+      -0.1444,
+      0.914,
+      -0.1496
+     ],
+     "to": [
+      -0.0304,
+      0.994,
+      -0.1566
+     ],
+     "radius": 0.026,
+     "bone": "pelvis",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.1385,
+    0.9142,
+    -0.1413
+   ],
+   "grip_angle_deg": 140.0,
+   "grip_height": 0.914,
+   "outward_dir_bind": [
+    -0.643,
+    0.0,
+    -0.766
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.382,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -1.3,
+     "surface_clip": "actor_b-p-run-bw-lt",
+     "limb_cm": -2.7,
+     "limb": "r_forearm",
+     "limb_clip": "actor_b-p-walk-fw-lt"
+    },
+    "crouch": {
+     "surface_cm": -1.2,
+     "surface_clip": "actor_b-p-crouch-walk-fw",
+     "limb_cm": 2.1,
+     "limb": "r_shin",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -0.3,
+     "surface_clip": "actor_b-p-bow-aim-crouch-idle",
+     "limb_cm": 6.2,
+     "limb": "r_thigh",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -3.6,
+     "surface_clip": "actor_b-p-ledge-grab-knee^idle",
+     "limb_cm": -1.3,
+     "limb": "r_shin",
+     "limb_clip": "actor_b-p-crouch-run^vault-over-1m"
+    }
+   },
+   "verdict": "contact",
+   "worst_play_cm": -2.7,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-ledge-grab-knee^idle",
+     "category": "climb",
+     "limb_cm": 5.9,
+     "limb": "r_thigh",
+     "surface_cm": -3.6
+    },
+    {
+     "clip": "actor_b-p-ledge-hang-climb-up^ledge-knee",
+     "category": "climb",
+     "limb_cm": 5.9,
+     "limb": "r_thigh",
+     "surface_cm": -3.0
+    },
+    {
+     "clip": "actor_b-p-idle^vault-over-2m",
+     "category": "vault",
+     "limb_cm": 8.1,
+     "limb": "r_thigh",
+     "surface_cm": -2.8
+    },
+    {
+     "clip": "actor_b-p-walk-fw-lt",
+     "category": "walk",
+     "limb_cm": -2.7,
+     "limb": "r_forearm",
+     "surface_cm": 0.2
+    },
+    {
+     "clip": "actor_b-p-idle^vault-over-1m",
+     "category": "vault",
+     "limb_cm": 6.7,
+     "limb": "r_thigh",
+     "surface_cm": -2.5
+    },
+    {
+     "clip": "actor_b-p-land-med^crouch-idle",
+     "category": "land",
+     "limb_cm": 3.1,
+     "limb": "r_shin",
+     "surface_cm": -2.2
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "belt.R_hip.pistol_rigid_root": {
+   "kind": "pistol",
+   "status": "reference",
+   "attach": "rigid",
+   "bone": "root",
+   "anchors": null,
+   "note": "Rigid on root like the rig bone holster_pistol.",
+   "capsules": {
+    "pistol_hook_R110_root:barrel": {
+     "from": [
+      -0.2024,
+      0.934,
+      -0.0497
+     ],
+     "to": [
+      -0.2811,
+      0.604,
+      -0.0811
+     ],
+     "radius": 0.018,
+     "bone": "root",
+     "anchors": null
+    },
+    "pistol_hook_R110_root:stock": {
+     "from": [
+      -0.2141,
+      0.914,
+      -0.0554
+     ],
+     "to": [
+      -0.1327,
+      0.994,
+      -0.1326
+     ],
+     "radius": 0.026,
+     "bone": "root",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.2071,
+    0.9142,
+    -0.0516
+   ],
+   "grip_angle_deg": 110.0,
+   "grip_height": 0.914,
+   "outward_dir_bind": [
+    -0.94,
+    0.0,
+    -0.342
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.374,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -2.5,
+     "surface_clip": "actor_b-p-walk-fw-lt",
+     "limb_cm": -7.2,
+     "limb": "r_forearm",
+     "limb_clip": "actor_b-p-walk-fw-lt"
+    },
+    "crouch": {
+     "surface_cm": 0.2,
+     "surface_clip": "actor_b-p-crouch-walk-fw",
+     "limb_cm": 3.0,
+     "limb": "r_forearm",
+     "limb_clip": "actor_b-p-crouch-walk-bw-lt"
+    },
+    "weapon_use": {
+     "surface_cm": -3.0,
+     "surface_clip": "actor_b-p-1h-aim-throw-release-start",
+     "limb_cm": -2.1,
+     "limb": "r_thigh",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-start"
+    },
+    "traversal": {
+     "surface_cm": -3.0,
+     "surface_clip": "actor_b-p-ledge-idle-r-enter",
+     "limb_cm": -4.8,
+     "limb": "r_thigh",
+     "limb_clip": "actor_b-p-ledge-idle^walk-r"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -7.2,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-walk-fw-lt",
+     "category": "walk",
+     "limb_cm": -7.2,
+     "limb": "r_forearm",
+     "surface_cm": -2.5
+    },
+    {
+     "clip": "actor_b-p-walk-fw",
+     "category": "walk",
+     "limb_cm": -5.7,
+     "limb": "r_forearm",
+     "surface_cm": 0.1
+    },
+    {
+     "clip": "actor_b-p-walk-bw",
+     "category": "walk",
+     "limb_cm": -5.3,
+     "limb": "r_forearm",
+     "surface_cm": 0.2
+    },
+    {
+     "clip": "actor_b-p-ledge-idle^walk-r",
+     "category": "ledge",
+     "limb_cm": -4.8,
+     "limb": "r_thigh",
+     "surface_cm": -2.5
+    },
+    {
+     "clip": "actor_b-p-sprint-fw",
+     "category": "sprint",
+     "limb_cm": -4.4,
+     "limb": "r_hand",
+     "surface_cm": 0.1
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "category": "climb",
+     "limb_cm": -3.1,
+     "limb": "r_thigh",
+     "surface_cm": -2.5
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "belt.back.tomahawk": {
+   "kind": "tomahawk",
+   "status": "recommended",
+   "attach": "two_anchor",
+   "bone": "pelvis",
+   "anchors": [
+    "pelvis (head on the belt band)",
+    "skin of the buttock (haft)"
+   ],
+   "note": "Through the belt just left of the spine, head on the band with the edge toward the left (away from the pistol butt and the right elbow).",
+   "capsules": {
+    "tomahawk_185_edgeL~s2:haft": {
+     "from": [
+      0.0162,
+      0.992,
+      -0.1592
+     ],
+     "to": [
+      0.0225,
+      0.532,
+      -0.2353
+     ],
+     "radius": 0.017,
+     "bone": "skin2",
+     "anchors": [
+      0.08,
+      0.7
+     ]
+    },
+    "tomahawk_185_edgeL:head": {
+     "from": [
+      -0.0317,
+      1.002,
+      -0.1785
+     ],
+     "to": [
+      0.1287,
+      1.002,
+      -0.1305
+     ],
+     "radius": 0.03,
+     "bone": "pelvis",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.0175,
+    0.9,
+    -0.1744
+   ],
+   "grip_angle_deg": 185.0,
+   "grip_height": 0.9,
+   "outward_dir_bind": [
+    0.087,
+    0.0,
+    -0.996
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.433,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -2.2,
+     "surface_clip": "actor_b-p-run-fw-rt",
+     "limb_cm": -4.9,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-run-bw-lt"
+    },
+    "crouch": {
+     "surface_cm": -2.3,
+     "surface_clip": "actor_b-p-crouch-walk-fw",
+     "limb_cm": 0.9,
+     "limb": "l_shin",
+     "limb_clip": "actor_b-p-crouch-walk-fw"
+    },
+    "weapon_use": {
+     "surface_cm": -1.5,
+     "surface_clip": "actor_b-p-1h-aim-throw-release-end",
+     "limb_cm": 0.8,
+     "limb": "r_thigh",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -4.9,
+     "surface_clip": "actor_b-p-ledge-grab-knee^idle",
+     "limb_cm": -0.5,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-ladder-mount-top"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -4.9,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-run-bw-lt",
+     "category": "run",
+     "limb_cm": -4.9,
+     "limb": "l_hand",
+     "surface_cm": -1.7
+    },
+    {
+     "clip": "actor_b-p-ledge-grab-knee^idle",
+     "category": "climb",
+     "limb_cm": 5.4,
+     "limb": "l_thigh",
+     "surface_cm": -4.9
+    },
+    {
+     "clip": "actor_b-p-run-fw-rt",
+     "category": "run",
+     "limb_cm": -4.5,
+     "limb": "l_forearm",
+     "surface_cm": -2.2
+    },
+    {
+     "clip": "actor_b-p-ledge-hang-climb-up^ledge-knee",
+     "category": "climb",
+     "limb_cm": 6.4,
+     "limb": "l_thigh",
+     "surface_cm": -4.4
+    },
+    {
+     "clip": "actor_b-p-land-hard^run",
+     "category": "land",
+     "limb_cm": 1.0,
+     "limb": "r_thigh",
+     "surface_cm": -3.7
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-2",
+     "category": "vault",
+     "limb_cm": 8.8,
+     "limb": "l_thigh",
+     "surface_cm": -3.5
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "belt.back_right.tomahawk_150": {
+   "kind": "tomahawk",
+   "status": "rejected",
+   "attach": "rigid",
+   "bone": "pelvis",
+   "anchors": null,
+   "note": "Doddridge's 'right of the belt'; the right upper arm swings through the head in walk (-8.8 cm) and the pistol butt occupies it.",
+   "capsules": {
+    "tomahawk_150:haft": {
+     "from": [
+      -0.0938,
+      0.992,
+      -0.1365
+     ],
+     "to": [
+      -0.1526,
+      0.532,
+      -0.243
+     ],
+     "radius": 0.017,
+     "bone": "pelvis",
+     "anchors": null
+    },
+    "tomahawk_150:head": {
+     "from": [
+      -0.1757,
+      1.002,
+      -0.1054
+     ],
+     "to": [
+      -0.0255,
+      1.002,
+      -0.1921
+     ],
+     "radius": 0.03,
+     "bone": "pelvis",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.1056,
+    0.9,
+    -0.1578
+   ],
+   "grip_angle_deg": 149.9,
+   "grip_height": 0.9,
+   "outward_dir_bind": [
+    -0.502,
+    0.0,
+    -0.865
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.402,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -3.9,
+     "surface_clip": "actor_b-p-run-bw-lt",
+     "limb_cm": -8.8,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-walk-fw-lt"
+    },
+    "crouch": {
+     "surface_cm": -3.9,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": -1.6,
+     "limb": "r_shin",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -6.3,
+     "surface_clip": "actor_b-p-rifle-aim-crouch-idle",
+     "limb_cm": -0.8,
+     "limb": "r_shin",
+     "limb_clip": "actor_b-p-rifle-run-arms"
+    },
+    "traversal": {
+     "surface_cm": -10.7,
+     "surface_clip": "actor_b-p-ladder-climb-up",
+     "limb_cm": -6.6,
+     "limb": "r_shin",
+     "limb_clip": "actor_b-p-crouch-run^vault-over-1m"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -8.8,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-ladder-climb-up",
+     "category": "ladder",
+     "limb_cm": 6.6,
+     "limb": "r_thigh",
+     "surface_cm": -10.7
+    },
+    {
+     "clip": "actor_b-p-ladder-mount-top",
+     "category": "ladder",
+     "limb_cm": -2.0,
+     "limb": "r_hand",
+     "surface_cm": -10.2
+    },
+    {
+     "clip": "actor_b-p-ladder-climb-up-fast--a",
+     "category": "ladder",
+     "limb_cm": 6.2,
+     "limb": "r_thigh",
+     "surface_cm": -10.1
+    },
+    {
+     "clip": "actor_b-p-ladder-idle",
+     "category": "ladder",
+     "limb_cm": 8.5,
+     "limb": "r_thigh",
+     "surface_cm": -9.9
+    },
+    {
+     "clip": "actor_b-p-walk-fw-lt",
+     "category": "walk",
+     "limb_cm": -8.8,
+     "limb": "r_upper_arm",
+     "surface_cm": 0.1
+    },
+    {
+     "clip": "actor_b-p-crouch-run^vault-over-1m",
+     "category": "vault",
+     "limb_cm": -6.6,
+     "limb": "r_shin",
+     "surface_cm": -2.9
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "belt.back.atlatl": {
+   "kind": "atlatl",
+   "status": "recommended",
+   "attach": "two_anchor",
+   "bone": "pelvis",
+   "anchors": null,
+   "note": "Board tucked through the belt just left of the spine, bottom leaning 20 deg to the left (instead of the back tomahawk).",
+   "capsules": {
+    "atlatl_200_lean20~s2": {
+     "from": [
+      0.0732,
+      1.022,
+      -0.177
+     ],
+     "to": [
+      0.2585,
+      0.5334,
+      -0.1975
+     ],
+     "radius": 0.03,
+     "bone": "skin2",
+     "anchors": [
+      0.08,
+      0.7
+     ]
+    }
+   },
+   "grip_bind": [
+    0.0732,
+    1.022,
+    -0.177
+   ],
+   "grip_angle_deg": 200.0,
+   "grip_height": 1.022,
+   "outward_dir_bind": [
+    0.342,
+    0.0,
+    -0.94
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.361,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -1.2,
+     "surface_clip": "actor_b-p-run-bw-lt",
+     "limb_cm": 2.0,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-walk-bw"
+    },
+    "crouch": {
+     "surface_cm": -0.4,
+     "surface_clip": "actor_b-p-crouch-walk-fw",
+     "limb_cm": 4.3,
+     "limb": "r_shin",
+     "limb_clip": "actor_b-p-crouch-walk-bw-lt"
+    },
+    "weapon_use": {
+     "surface_cm": -0.8,
+     "surface_clip": "actor_b-p-rifle-aim-walk-fw",
+     "limb_cm": 5.7,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-1h-aim-throw-idle"
+    },
+    "traversal": {
+     "surface_cm": -5.1,
+     "surface_clip": "actor_b-p-ledge-chest-climb-up^idle",
+     "limb_cm": -2.0,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-ladder-mount-top"
+    }
+   },
+   "verdict": "contact",
+   "worst_play_cm": -1.2,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-ledge-chest-climb-up^idle",
+     "category": "climb",
+     "limb_cm": 6.8,
+     "limb": "l_thigh",
+     "surface_cm": -5.1
+    },
+    {
+     "clip": "actor_b-p-ledge-knee-climb-up^idle",
+     "category": "climb",
+     "limb_cm": 6.4,
+     "limb": "l_thigh",
+     "surface_cm": -4.8
+    },
+    {
+     "clip": "actor_b-p-ledge-grab-knee^idle",
+     "category": "climb",
+     "limb_cm": 2.1,
+     "limb": "l_thigh",
+     "surface_cm": -4.4
+    },
+    {
+     "clip": "actor_b-p-ladder-dismount--top-end",
+     "category": "ladder",
+     "limb_cm": 6.4,
+     "limb": "l_thigh",
+     "surface_cm": -3.9
+    },
+    {
+     "clip": "actor_b-p-land-med^crouch-idle",
+     "category": "land",
+     "limb_cm": 7.5,
+     "limb": "l_thigh",
+     "surface_cm": -3.5
+    },
+    {
+     "clip": "actor_b-p-land-hard^idle",
+     "category": "land",
+     "limb_cm": 8.2,
+     "limb": "l_thigh",
+     "surface_cm": -2.4
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "belt.back_left.atlatl_upright": {
+   "kind": "atlatl",
+   "status": "alternative",
+   "attach": "two_anchor",
+   "bone": "pelvis",
+   "anchors": null,
+   "note": "Board upright through the belt at the spine.",
+   "capsules": {
+    "atlatl_180~s2": {
+     "from": [
+      -0.0,
+      1.022,
+      -0.1753
+     ],
+     "to": [
+      -0.0,
+      0.502,
+      -0.2422
+     ],
+     "radius": 0.03,
+     "bone": "skin2",
+     "anchors": [
+      0.08,
+      0.7
+     ]
+    }
+   },
+   "grip_bind": [
+    -0.0,
+    1.022,
+    -0.1753
+   ],
+   "grip_angle_deg": 180.0,
+   "grip_height": 1.022,
+   "outward_dir_bind": [
+    -0.0,
+    0.0,
+    -1.0
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.325,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -2.7,
+     "surface_clip": "actor_b-p-sprint-fw",
+     "limb_cm": -4.8,
+     "limb": "r_shin",
+     "limb_clip": "actor_b-p-sprint-fw"
+    },
+    "crouch": {
+     "surface_cm": -2.4,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": -0.7,
+     "limb": "l_shin",
+     "limb_clip": "actor_b-p-crouch-walk-fw"
+    },
+    "weapon_use": {
+     "surface_cm": -2.9,
+     "surface_clip": "actor_b-p-rifle-aim-crouch-walk-fw",
+     "limb_cm": 0.5,
+     "limb": "r_shin",
+     "limb_clip": "actor_b-p-rifle-run-arms"
+    },
+    "traversal": {
+     "surface_cm": -5.5,
+     "surface_clip": "actor_b-p-ledge-grab-knee^idle",
+     "limb_cm": 0.3,
+     "limb": "l_shin",
+     "limb_clip": "actor_b-p-jump-rfoot-1-5m"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -4.8,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-ledge-grab-knee^idle",
+     "category": "climb",
+     "limb_cm": 5.0,
+     "limb": "l_thigh",
+     "surface_cm": -5.5
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-3",
+     "category": "vault",
+     "limb_cm": 9.1,
+     "limb": "l_thigh",
+     "surface_cm": -5.2
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-1",
+     "category": "vault",
+     "limb_cm": 8.6,
+     "limb": "l_thigh",
+     "surface_cm": -5.0
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-2",
+     "category": "vault",
+     "limb_cm": 8.6,
+     "limb": "l_thigh",
+     "surface_cm": -5.0
+    },
+    {
+     "clip": "actor_b-p-ladder-dismount--top-end",
+     "category": "ladder",
+     "limb_cm": 8.4,
+     "limb": "l_thigh",
+     "surface_cm": -5.0
+    },
+    {
+     "clip": "actor_b-p-sprint-fw",
+     "category": "sprint",
+     "limb_cm": -4.8,
+     "limb": "r_shin",
+     "surface_cm": -2.7
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "belt.back_left.tomahawk": {
+   "kind": "tomahawk",
+   "status": "alternative",
+   "attach": "two_anchor",
+   "bone": "pelvis",
+   "anchors": null,
+   "note": "Second tomahawk position; only when belt.back is empty (the heads overlap).",
+   "capsules": {
+    "tomahawk_200_edgeL~s2:haft": {
+     "from": [
+      0.0662,
+      0.992,
+      -0.156
+     ],
+     "to": [
+      0.0971,
+      0.532,
+      -0.2457
+     ],
+     "radius": 0.017,
+     "bone": "skin2",
+     "anchors": [
+      0.08,
+      0.7
+     ]
+    },
+    "tomahawk_200_edgeL:head": {
+     "from": [
+      0.0268,
+      1.002,
+      -0.1924
+     ],
+     "to": [
+      0.17,
+      1.002,
+      -0.1051
+     ],
+     "radius": 0.03,
+     "bone": "pelvis",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.0724,
+    0.9,
+    -0.1739
+   ],
+   "grip_angle_deg": 200.1,
+   "grip_height": 0.9,
+   "outward_dir_bind": [
+    0.344,
+    0.0,
+    -0.939
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.455,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -1.0,
+     "surface_clip": "actor_b-p-run-fw-rt",
+     "limb_cm": -5.8,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-run-fw-rt"
+    },
+    "crouch": {
+     "surface_cm": -1.8,
+     "surface_clip": "actor_b-p-crouch-walk-fw",
+     "limb_cm": -1.6,
+     "limb": "l_shin",
+     "limb_clip": "actor_b-p-crouch-walk-fw"
+    },
+    "weapon_use": {
+     "surface_cm": -0.7,
+     "surface_clip": "actor_b-p-1h-aim-throw-release-end",
+     "limb_cm": -1.8,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -5.8,
+     "surface_clip": "actor_b-p-ladder-mount-top",
+     "limb_cm": -7.7,
+     "limb": "l_shin",
+     "limb_clip": "actor_b-p-jump-rfoot-1-5m"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -5.8,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-jump-rfoot-1-5m",
+     "category": "jump",
+     "limb_cm": -7.7,
+     "limb": "l_shin",
+     "surface_cm": 1.3
+    },
+    {
+     "clip": "actor_b-p-run-fw-rt",
+     "category": "run",
+     "limb_cm": -5.8,
+     "limb": "l_hand",
+     "surface_cm": -1.0
+    },
+    {
+     "clip": "actor_b-p-ladder-mount-top",
+     "category": "ladder",
+     "limb_cm": -1.0,
+     "limb": "l_hand",
+     "surface_cm": -5.8
+    },
+    {
+     "clip": "actor_b-p-walk-bw",
+     "category": "walk",
+     "limb_cm": -5.6,
+     "limb": "l_upper_arm",
+     "surface_cm": 0.4
+    },
+    {
+     "clip": "actor_b-p-run-bw-lt",
+     "category": "run",
+     "limb_cm": -5.5,
+     "limb": "l_hand",
+     "surface_cm": 0.1
+    },
+    {
+     "clip": "actor_b-p-ledge-grab-knee^idle",
+     "category": "climb",
+     "limb_cm": 3.5,
+     "limb": "l_thigh",
+     "surface_cm": -4.5
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "belt.back_left.knife": {
+   "kind": "knife",
+   "status": "recommended",
+   "attach": "two_anchor",
+   "bone": "pelvis",
+   "anchors": null,
+   "note": "Sheath knife behind the left hip, behind the shot pouch (Doddridge: knife on the left).",
+   "capsules": {
+    "knife_L230~s2": {
+     "from": [
+      0.1518,
+      1.002,
+      -0.1018
+     ],
+     "to": [
+      0.2175,
+      0.692,
+      -0.1613
+     ],
+     "radius": 0.022,
+     "bone": "skin2",
+     "anchors": [
+      0.08,
+      0.7
+     ]
+    }
+   },
+   "grip_bind": [
+    0.1584,
+    0.971,
+    -0.1077
+   ],
+   "grip_angle_deg": 230.2,
+   "grip_height": 0.971,
+   "outward_dir_bind": [
+    0.768,
+    0.0,
+    -0.64
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.431,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -2.0,
+     "surface_clip": "actor_b-p-run-bw-lt",
+     "limb_cm": -3.7,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-walk-bw"
+    },
+    "crouch": {
+     "surface_cm": -2.5,
+     "surface_clip": "actor_b-p-crouch-walk-fw",
+     "limb_cm": 7.6,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -1.9,
+     "surface_clip": "actor_b-p-rifle-aim-walk-fw",
+     "limb_cm": 2.0,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -6.9,
+     "surface_clip": "actor_b-p-ladder-climb-up-fast--a",
+     "limb_cm": -5.3,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-ladder-mount-top"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -3.7,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-ladder-climb-up-fast--a",
+     "category": "ladder",
+     "limb_cm": 5.3,
+     "limb": "l_thigh",
+     "surface_cm": -6.9
+    },
+    {
+     "clip": "actor_b-p-ladder-mount-top",
+     "category": "ladder",
+     "limb_cm": -5.3,
+     "limb": "l_hand",
+     "surface_cm": -5.5
+    },
+    {
+     "clip": "actor_b-p-walk-bw",
+     "category": "walk",
+     "limb_cm": -3.7,
+     "limb": "l_upper_arm",
+     "surface_cm": 0.4
+    },
+    {
+     "clip": "actor_b-p-ledge-idle^walk-r",
+     "category": "ledge",
+     "limb_cm": -3.7,
+     "limb": "l_hand",
+     "surface_cm": -2.1
+    },
+    {
+     "clip": "actor_b-p-ladder-idle",
+     "category": "ladder",
+     "limb_cm": 8.1,
+     "limb": "l_thigh",
+     "surface_cm": -2.9
+    },
+    {
+     "clip": "actor_b-p-idle^vault-over-1m",
+     "category": "vault",
+     "limb_cm": 5.3,
+     "limb": "l_thigh",
+     "surface_cm": -2.6
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "belt.L_hip.pistol": {
+   "kind": "pistol",
+   "status": "recommended",
+   "attach": "two_anchor",
+   "bone": null,
+   "anchors": null,
+   "note": "Second belt pistol: belt hook at the left hip in front of the shot pouch, butt forward, cross draw.",
+   "capsules": {
+    "pistol_hook_L280~s2:barrel": {
+     "from": [
+      0.2024,
+      0.934,
+      0.0596
+     ],
+     "to": [
+      0.2622,
+      0.604,
+      0.0674
+     ],
+     "radius": 0.018,
+     "bone": "skin2",
+     "anchors": [
+      0.08,
+      0.7
+     ]
+    },
+    "pistol_hook_L280:stock": {
+     "from": [
+      0.2267,
+      0.914,
+      0.0625
+     ],
+     "to": [
+      0.1175,
+      0.994,
+      0.1338
+     ],
+     "radius": 0.026,
+     "bone": "pelvis",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.206,
+    0.9142,
+    0.0601
+   ],
+   "grip_angle_deg": 279.9,
+   "grip_height": 0.914,
+   "outward_dir_bind": [
+    0.985,
+    0.0,
+    0.172
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.506,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -3.2,
+     "surface_clip": "actor_b-p-sprint-fw",
+     "limb_cm": -6.9,
+     "limb": "l_forearm",
+     "limb_clip": "actor_b-p-stealth-idle"
+    },
+    "crouch": {
+     "surface_cm": -4.7,
+     "surface_clip": "actor_b-p-crouch-walk-fw",
+     "limb_cm": -5.6,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -4.3,
+     "surface_clip": "actor_b-p-1h-aim-crouch-throw-idle",
+     "limb_cm": -6.3,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -4.0,
+     "surface_clip": "actor_b-p-ladder-climb-up",
+     "limb_cm": -6.6,
+     "limb": "l_forearm",
+     "limb_clip": "actor_b-p-ledge-hang-climb-up^ledge-knee"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -6.9,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-stealth-idle",
+     "category": "idle",
+     "limb_cm": -6.9,
+     "limb": "l_forearm",
+     "surface_cm": -1.6
+    },
+    {
+     "clip": "actor_b-p-ledge-hang-climb-up^ledge-knee",
+     "category": "climb",
+     "limb_cm": -6.6,
+     "limb": "l_forearm",
+     "surface_cm": -1.5
+    },
+    {
+     "clip": "actor_b-p-1h-aim-throw-release-end",
+     "category": "throw",
+     "limb_cm": -6.3,
+     "limb": "l_hand",
+     "surface_cm": 0.0
+    },
+    {
+     "clip": "actor_b-p-ledge-knee-climb-up^idle",
+     "category": "climb",
+     "limb_cm": -6.0,
+     "limb": "l_thigh",
+     "surface_cm": -3.1
+    },
+    {
+     "clip": "actor_b-p-crouch-idle",
+     "category": "crouch",
+     "limb_cm": -5.6,
+     "limb": "l_thigh",
+     "surface_cm": -3.1
+    },
+    {
+     "clip": "actor_b-p-walk-bw",
+     "category": "walk",
+     "limb_cm": -5.5,
+     "limb": "l_forearm",
+     "surface_cm": -0.1
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "belt.L_hip.knife": {
+   "kind": "knife",
+   "status": "alternative",
+   "attach": "two_anchor",
+   "bone": "pelvis",
+   "anchors": null,
+   "note": "Knife at the left front hip; the left thigh and hand sweep it.",
+   "capsules": {
+    "knife_L285~s2": {
+     "from": [
+      0.1819,
+      1.002,
+      0.0743
+     ],
+     "to": [
+      0.2376,
+      0.692,
+      0.0849
+     ],
+     "radius": 0.022,
+     "bone": "skin2",
+     "anchors": [
+      0.08,
+      0.7
+     ]
+    }
+   },
+   "grip_bind": [
+    0.1875,
+    0.971,
+    0.0754
+   ],
+   "grip_angle_deg": 285.3,
+   "grip_height": 0.971,
+   "outward_dir_bind": [
+    0.965,
+    0.0,
+    0.264
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.457,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -5.8,
+     "surface_clip": "actor_b-p-sprint-fw-lt",
+     "limb_cm": -6.8,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-run-fw-rt"
+    },
+    "crouch": {
+     "surface_cm": -8.4,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": -3.5,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -4.6,
+     "surface_clip": "actor_b-p-bow-aim-crouch-idle",
+     "limb_cm": -5.6,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -9.7,
+     "surface_clip": "actor_b-p-ladder-climb-up",
+     "limb_cm": -8.3,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-idle^vault-over-2m"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -8.4,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-ladder-climb-up",
+     "category": "ladder",
+     "limb_cm": -2.0,
+     "limb": "l_thigh",
+     "surface_cm": -9.7
+    },
+    {
+     "clip": "actor_b-p-idle^vault-over-2m",
+     "category": "vault",
+     "limb_cm": -8.3,
+     "limb": "l_thigh",
+     "surface_cm": -8.6
+    },
+    {
+     "clip": "actor_b-p-crouch-idle",
+     "category": "crouch",
+     "limb_cm": -3.5,
+     "limb": "l_thigh",
+     "surface_cm": -8.4
+    },
+    {
+     "clip": "actor_b-p-ledge-grab-knee^idle",
+     "category": "climb",
+     "limb_cm": -8.1,
+     "limb": "l_thigh",
+     "surface_cm": -4.3
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-2m^ledge-chest-end",
+     "category": "climb",
+     "limb_cm": -7.8,
+     "limb": "l_thigh",
+     "surface_cm": -3.3
+    },
+    {
+     "clip": "actor_b-p-run-fw-rt",
+     "category": "run",
+     "limb_cm": -6.8,
+     "limb": "l_hand",
+     "surface_cm": -1.9
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "belt.L_hip.saber": {
+   "kind": "saber",
+   "status": "recommended",
+   "attach": "two_anchor",
+   "bone": "pelvis",
+   "anchors": null,
+   "note": "Hanger in a frog, hilt forward at the left hip, scabbard down and back.",
+   "capsules": {
+    "saber_L:hilt": {
+     "from": [
+      0.1946,
+      1.042,
+      0.0465
+     ],
+     "to": [
+      0.2035,
+      0.922,
+      0.0777
+     ],
+     "radius": 0.03,
+     "bone": "pelvis",
+     "anchors": null
+    },
+    "saber_L~s2:scabbard": {
+     "from": [
+      0.3186,
+      0.922,
+      0.1085
+     ],
+     "to": [
+      0.2464,
+      0.38,
+      -0.2252
+     ],
+     "radius": 0.022,
+     "bone": "skin2",
+     "anchors": [
+      0.08,
+      0.7
+     ]
+    }
+   },
+   "grip_bind": [
+    0.1991,
+    0.982,
+    0.0621
+   ],
+   "grip_angle_deg": 280.8,
+   "grip_height": 0.982,
+   "outward_dir_bind": [
+    0.982,
+    0.0,
+    0.187
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.455,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -0.9,
+     "surface_clip": "actor_b-p-walk-fw-lt",
+     "limb_cm": -9.3,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-walk-fw-lt"
+    },
+    "crouch": {
+     "surface_cm": -2.8,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": -3.6,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -1.3,
+     "surface_clip": "actor_b-p-rifle-aim-crouch-idle",
+     "limb_cm": -5.3,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -2.9,
+     "surface_clip": "actor_b-p-ladder-climb-up",
+     "limb_cm": -7.5,
+     "limb": "l_forearm",
+     "limb_clip": "actor_b-p-ledge-hang-climb-up^ledge-knee"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -9.3,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-walk-fw-lt",
+     "category": "walk",
+     "limb_cm": -9.3,
+     "limb": "l_upper_arm",
+     "surface_cm": -0.9
+    },
+    {
+     "clip": "actor_b-p-walk-fw",
+     "category": "walk",
+     "limb_cm": -7.5,
+     "limb": "l_upper_arm",
+     "surface_cm": 0.5
+    },
+    {
+     "clip": "actor_b-p-ledge-hang-climb-up^ledge-knee",
+     "category": "climb",
+     "limb_cm": -7.5,
+     "limb": "l_forearm",
+     "surface_cm": -0.2
+    },
+    {
+     "clip": "actor_b-p-land-hard^run",
+     "category": "land",
+     "limb_cm": -7.1,
+     "limb": "l_hand",
+     "surface_cm": -2.0
+    },
+    {
+     "clip": "actor_b-p-run-fw-rt",
+     "category": "run",
+     "limb_cm": -7.0,
+     "limb": "l_shin",
+     "surface_cm": -0.2
+    },
+    {
+     "clip": "actor_b-p-stealth-idle",
+     "category": "idle",
+     "limb_cm": -6.9,
+     "limb": "l_forearm",
+     "surface_cm": -0.5
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "belt.front_left.pistol_tuck": {
+   "kind": "pistol",
+   "status": "rejected",
+   "attach": "two_anchor",
+   "bone": null,
+   "anchors": null,
+   "note": "Pushed through a plain belt left of the buckle: the left thigh passes through the barrel in crouch.",
+   "capsules": {
+    "belt_diag_F340~s2:barrel": {
+     "from": [
+      0.0426,
+      0.977,
+      0.1433
+     ],
+     "to": [
+      0.2877,
+      0.8049,
+      0.1415
+     ],
+     "radius": 0.016,
+     "bone": "skin2",
+     "anchors": [
+      0.08,
+      0.7
+     ]
+    },
+    "belt_diag_F340:stock": {
+     "from": [
+      0.0455,
+      0.977,
+      0.1513
+     ],
+     "to": [
+      -0.0353,
+      1.047,
+      0.1544
+     ],
+     "radius": 0.026,
+     "bone": "pelvis",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.0426,
+    0.977,
+    0.1433
+   ],
+   "grip_angle_deg": 340.3,
+   "grip_height": 0.977,
+   "outward_dir_bind": [
+    0.337,
+    0.0,
+    0.941
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.39,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -4.8,
+     "surface_clip": "actor_b-p-sprint-fw",
+     "limb_cm": -6.2,
+     "limb": "l_forearm",
+     "limb_clip": "actor_b-p-stealth-idle"
+    },
+    "crouch": {
+     "surface_cm": -7.0,
+     "surface_clip": "actor_b-p-crouch-walk-fw",
+     "limb_cm": -10.7,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -6.1,
+     "surface_clip": "actor_b-p-1h-aim-crouch-throw-idle",
+     "limb_cm": -3.9,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -8.6,
+     "surface_clip": "actor_b-p-sprint-vault-2",
+     "limb_cm": -10.7,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-land-hard^run"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -10.7,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-crouch-idle",
+     "category": "crouch",
+     "limb_cm": -10.7,
+     "limb": "l_thigh",
+     "surface_cm": -5.0
+    },
+    {
+     "clip": "actor_b-p-land-hard^run",
+     "category": "land",
+     "limb_cm": -10.7,
+     "limb": "l_thigh",
+     "surface_cm": -3.9
+    },
+    {
+     "clip": "actor_b-p-ledge-chest-climb-up^idle",
+     "category": "climb",
+     "limb_cm": -10.7,
+     "limb": "l_thigh",
+     "surface_cm": -5.1
+    },
+    {
+     "clip": "actor_b-p-ledge-grab-knee^idle",
+     "category": "climb",
+     "limb_cm": -10.6,
+     "limb": "l_thigh",
+     "surface_cm": -4.7
+    },
+    {
+     "clip": "actor_b-p-land-med^crouch-idle",
+     "category": "land",
+     "limb_cm": -10.3,
+     "limb": "l_thigh",
+     "surface_cm": -5.5
+    },
+    {
+     "clip": "actor_b-p-ledge-knee-climb-up^idle",
+     "category": "climb",
+     "limb_cm": -9.5,
+     "limb": "l_thigh",
+     "surface_cm": -5.4
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "sash.front_left.pistol": {
+   "kind": "pistol",
+   "status": "recommended_with_mitigation",
+   "attach": "rigid",
+   "bone": "spinea",
+   "anchors": null,
+   "note": "Pushed through the sash left of centre at a steep diagonal, butt up-right (cross draw). Clips the left thigh in a deep crouch unless the crouch nudge hook tilts it.",
+   "capsules": {
+    "sash_diag_F345:barrel": {
+     "from": [
+      0.0324,
+      1.05,
+      0.1427
+     ],
+     "to": [
+      0.2922,
+      0.9,
+      0.1427
+     ],
+     "radius": 0.016,
+     "bone": "spinea",
+     "anchors": null
+    },
+    "sash_diag_F345:stock": {
+     "from": [
+      0.035,
+      1.05,
+      0.1527
+     ],
+     "to": [
+      -0.0451,
+      1.12,
+      0.1769
+     ],
+     "radius": 0.026,
+     "bone": "spinea",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.0324,
+    1.05,
+    0.1427
+   ],
+   "grip_angle_deg": 344.7,
+   "grip_height": 1.05,
+   "outward_dir_bind": [
+    0.264,
+    0.0,
+    0.965
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.331,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -4.3,
+     "surface_clip": "actor_b-p-sprint-fw-lt",
+     "limb_cm": -5.9,
+     "limb": "l_forearm",
+     "limb_clip": "actor_b-p-stealth-idle"
+    },
+    "crouch": {
+     "surface_cm": -6.8,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": -9.6,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -7.1,
+     "surface_clip": "actor_b-p-rifle-aim-crouch-walk-fw",
+     "limb_cm": -3.5,
+     "limb": "l_forearm",
+     "limb_clip": "actor_b-p-1h-aim-throw-idle"
+    },
+    "traversal": {
+     "surface_cm": -6.2,
+     "surface_clip": "actor_b-p-land-med^crouch-idle",
+     "limb_cm": -9.7,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-ledge-knee-climb-up^idle"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -9.6,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-ledge-knee-climb-up^idle",
+     "category": "climb",
+     "limb_cm": -9.7,
+     "limb": "l_thigh",
+     "surface_cm": -5.0
+    },
+    {
+     "clip": "actor_b-p-crouch-idle",
+     "category": "crouch",
+     "limb_cm": -9.6,
+     "limb": "l_thigh",
+     "surface_cm": -6.8
+    },
+    {
+     "clip": "actor_b-p-land-med^crouch-idle",
+     "category": "land",
+     "limb_cm": -8.9,
+     "limb": "l_thigh",
+     "surface_cm": -6.2
+    },
+    {
+     "clip": "actor_b-p-crouch-run^vault-over-1m",
+     "category": "vault",
+     "limb_cm": -8.9,
+     "limb": "l_thigh",
+     "surface_cm": -6.2
+    },
+    {
+     "clip": "actor_b-p-ledge-grab-knee^idle",
+     "category": "climb",
+     "limb_cm": -7.2,
+     "limb": "l_thigh",
+     "surface_cm": -4.9
+    },
+    {
+     "clip": "actor_b-p-ledge-chest-climb-up^idle",
+     "category": "climb",
+     "limb_cm": -7.2,
+     "limb": "l_thigh",
+     "surface_cm": -5.0
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "sash.front_right.pistol": {
+   "kind": "pistol",
+   "status": "alternative",
+   "attach": "rigid",
+   "bone": "spinea",
+   "anchors": null,
+   "note": "Right of centre, same diagonal.",
+   "capsules": {
+    "sash_diag_F15:barrel": {
+     "from": [
+      -0.0328,
+      1.05,
+      0.1443
+     ],
+     "to": [
+      0.2274,
+      0.9,
+      0.143
+     ],
+     "radius": 0.016,
+     "bone": "spinea",
+     "anchors": null
+    },
+    "sash_diag_F15:stock": {
+     "from": [
+      -0.0402,
+      1.05,
+      0.172
+     ],
+     "to": [
+      -0.1245,
+      1.12,
+      0.1633
+     ],
+     "radius": 0.026,
+     "bone": "spinea",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.0328,
+    1.05,
+    0.1443
+   ],
+   "grip_angle_deg": 15.3,
+   "grip_height": 1.05,
+   "outward_dir_bind": [
+    -0.264,
+    0.0,
+    0.965
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.305,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -3.8,
+     "surface_clip": "actor_b-p-sprint-fw",
+     "limb_cm": -6.9,
+     "limb": "r_forearm",
+     "limb_clip": "actor_b-p-run-bw-lt"
+    },
+    "crouch": {
+     "surface_cm": -5.4,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": -10.7,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -5.1,
+     "surface_clip": "actor_b-p-rifle-aim-crouch-walk-fw",
+     "limb_cm": -4.7,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-bow-move--arms"
+    },
+    "traversal": {
+     "surface_cm": -8.0,
+     "surface_clip": "actor_b-p-ladder-mount-top",
+     "limb_cm": -10.7,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-land-med^crouch-idle"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -10.7,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-crouch-idle",
+     "category": "crouch",
+     "limb_cm": -10.7,
+     "limb": "l_thigh",
+     "surface_cm": -5.4
+    },
+    {
+     "clip": "actor_b-p-land-med^crouch-idle",
+     "category": "land",
+     "limb_cm": -10.7,
+     "limb": "l_thigh",
+     "surface_cm": -5.0
+    },
+    {
+     "clip": "actor_b-p-crouch-run^vault-over-1m",
+     "category": "vault",
+     "limb_cm": -10.7,
+     "limb": "l_thigh",
+     "surface_cm": -4.6
+    },
+    {
+     "clip": "actor_b-p-ledge-knee-climb-up^idle",
+     "category": "climb",
+     "limb_cm": -10.2,
+     "limb": "l_thigh",
+     "surface_cm": -4.7
+    },
+    {
+     "clip": "actor_b-p-ledge-grab-knee^idle",
+     "category": "climb",
+     "limb_cm": -9.9,
+     "limb": "r_thigh",
+     "surface_cm": -5.0
+    },
+    {
+     "clip": "actor_b-p-ledge-chest-climb-up^idle",
+     "category": "climb",
+     "limb_cm": -9.7,
+     "limb": "l_thigh",
+     "surface_cm": -5.0
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "pistol_sling.chest_L": {
+   "kind": "pistol",
+   "status": "recommended_with_mitigation",
+   "attach": "rigid",
+   "bone": "spined",
+   "anchors": null,
+   "note": "Hung on the sling on the left chest, barrel down-left, butt up-right (cross draw).",
+   "capsules": {
+    "sling_diag_chestL:barrel": {
+     "from": [
+      0.0544,
+      1.27,
+      0.1474
+     ],
+     "to": [
+      0.2801,
+      1.0772,
+      0.1362
+     ],
+     "radius": 0.016,
+     "bone": "spined",
+     "anchors": null
+    },
+    "sling_diag_chestL:stock": {
+     "from": [
+      0.0544,
+      1.27,
+      0.1474
+     ],
+     "to": [
+      -0.0222,
+      1.34,
+      0.1474
+     ],
+     "radius": 0.026,
+     "bone": "spined",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.0544,
+    1.27,
+    0.1474
+   ],
+   "grip_angle_deg": 336.2,
+   "grip_height": 1.27,
+   "outward_dir_bind": [
+    0.404,
+    0.0,
+    0.915
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.258,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 1.3,
+     "surface_clip": "actor_b-p-idle-gesture",
+     "limb_cm": -8.2,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-sprint-fw"
+    },
+    "crouch": {
+     "surface_cm": -5.7,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": -10.8,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -0.5,
+     "surface_clip": "actor_b-p-1h-aim-crouch-throw-idle",
+     "limb_cm": -8.4,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-bow-move--arms"
+    },
+    "traversal": {
+     "surface_cm": -5.1,
+     "surface_clip": "actor_b-p-ledge-grab-knee^idle",
+     "limb_cm": -10.8,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-land-med^crouch-idle"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -10.8,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-crouch-idle",
+     "category": "crouch",
+     "limb_cm": -10.8,
+     "limb": "l_thigh",
+     "surface_cm": -5.7
+    },
+    {
+     "clip": "actor_b-p-land-med^crouch-idle",
+     "category": "land",
+     "limb_cm": -10.8,
+     "limb": "l_thigh",
+     "surface_cm": -4.7
+    },
+    {
+     "clip": "actor_b-p-crouch-run^vault-over-1m",
+     "category": "vault",
+     "limb_cm": -10.8,
+     "limb": "l_thigh",
+     "surface_cm": -4.2
+    },
+    {
+     "clip": "actor_b-p-ledge-knee-climb-up^idle",
+     "category": "climb",
+     "limb_cm": -8.6,
+     "limb": "l_shin",
+     "surface_cm": 0.4
+    },
+    {
+     "clip": "actor_b-p-ledge-grab-knee^idle",
+     "category": "climb",
+     "limb_cm": -8.5,
+     "limb": "l_thigh",
+     "surface_cm": -5.1
+    },
+    {
+     "clip": "actor_b-p-bow-move--arms",
+     "category": "carry",
+     "limb_cm": -8.4,
+     "limb": "l_upper_arm",
+     "surface_cm": 1.4
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "pistol_sling.chest_R": {
+   "kind": "pistol",
+   "status": "recommended_with_mitigation",
+   "attach": "rigid",
+   "bone": "spined",
+   "anchors": null,
+   "note": "Hung on the sling on the right chest where it crosses to the left hip.",
+   "capsules": {
+    "sling_diag_chestR:barrel": {
+     "from": [
+      -0.0593,
+      1.2,
+      0.1659
+     ],
+     "to": [
+      0.1737,
+      1.0072,
+      0.1571
+     ],
+     "radius": 0.016,
+     "bone": "spined",
+     "anchors": null
+    },
+    "sling_diag_chestR:stock": {
+     "from": [
+      -0.0593,
+      1.2,
+      0.1659
+     ],
+     "to": [
+      -0.1359,
+      1.27,
+      0.1659
+     ],
+     "radius": 0.026,
+     "bone": "spined",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.0593,
+    1.2,
+    0.1659
+   ],
+   "grip_angle_deg": 22.7,
+   "grip_height": 1.2,
+   "outward_dir_bind": [
+    -0.386,
+    0.0,
+    0.923
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.223,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 0.3,
+     "surface_clip": "actor_b-p-walk-fw-lt",
+     "limb_cm": -5.7,
+     "limb": "r_forearm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": -4.0,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": -10.6,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -2.7,
+     "surface_clip": "actor_b-p-1h-aim-crouch-throw-idle",
+     "limb_cm": -8.1,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-rifle-idle-aim-reload-mid--part"
+    },
+    "traversal": {
+     "surface_cm": -4.8,
+     "surface_clip": "actor_b-p-ledge-grab-knee^idle",
+     "limb_cm": -10.6,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-ledge-grab-knee^idle"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -10.6,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-crouch-idle",
+     "category": "crouch",
+     "limb_cm": -10.6,
+     "limb": "l_thigh",
+     "surface_cm": -4.0
+    },
+    {
+     "clip": "actor_b-p-ledge-grab-knee^idle",
+     "category": "climb",
+     "limb_cm": -10.6,
+     "limb": "l_thigh",
+     "surface_cm": -4.8
+    },
+    {
+     "clip": "actor_b-p-land-med^crouch-idle",
+     "category": "land",
+     "limb_cm": -10.5,
+     "limb": "l_thigh",
+     "surface_cm": -3.7
+    },
+    {
+     "clip": "actor_b-p-crouch-run^vault-over-1m",
+     "category": "vault",
+     "limb_cm": -10.5,
+     "limb": "l_thigh",
+     "surface_cm": -3.7
+    },
+    {
+     "clip": "actor_b-p-land-hard^run",
+     "category": "land",
+     "limb_cm": -10.1,
+     "limb": "r_thigh",
+     "surface_cm": -4.0
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-2",
+     "category": "vault",
+     "limb_cm": -9.0,
+     "limb": "l_thigh",
+     "surface_cm": -3.7
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "horn.back_R_top": {
+   "kind": "horn",
+   "status": "recommended",
+   "attach": "rigid",
+   "bone": "spinec",
+   "anchors": null,
+   "note": "Behind and below the right arm, above the pistol butt: base plug near the spine, spout forward-down to the right side. Strap over the left shoulder (Knox 1757), shortened.",
+   "capsules": {
+    "horn_backR_top2:base": {
+     "from": [
+      0.0738,
+      1.1866,
+      -0.1849
+     ],
+     "to": [
+      -0.0327,
+      1.105,
+      -0.1703
+     ],
+     "radius": 0.032,
+     "bone": "spinec",
+     "anchors": null
+    },
+    "horn_backR_top2:spout": {
+     "from": [
+      -0.0327,
+      1.105,
+      -0.1703
+     ],
+     "to": [
+      -0.1389,
+      1.0234,
+      -0.1537
+     ],
+     "radius": 0.018,
+     "bone": "spinec",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.0738,
+    1.1866,
+    -0.1849
+   ],
+   "grip_angle_deg": 199.5,
+   "grip_height": 1.187,
+   "outward_dir_bind": [
+    0.334,
+    0.0,
+    -0.943
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.275,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 0.9,
+     "surface_clip": "actor_b-p-sprint-fw",
+     "limb_cm": -2.7,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 0.8,
+     "surface_clip": "actor_b-p-crouch-walk-bw-lt",
+     "limb_cm": 5.7,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-crouch-walk-bw-lt"
+    },
+    "weapon_use": {
+     "surface_cm": 0.9,
+     "surface_clip": "actor_b-p-rifle-aim-crouch-idle",
+     "limb_cm": 6.5,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-rifle-run-arms"
+    },
+    "traversal": {
+     "surface_cm": 0.8,
+     "surface_clip": "actor_b-p-ledge-knee-climb-up^idle",
+     "limb_cm": -3.7,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-land-hard^run"
+    }
+   },
+   "verdict": "contact",
+   "worst_play_cm": -2.7,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-land-hard^run",
+     "category": "land",
+     "limb_cm": -3.7,
+     "limb": "l_upper_arm",
+     "surface_cm": 0.9
+    },
+    {
+     "clip": "actor_b-p-run-fw",
+     "category": "run",
+     "limb_cm": -2.7,
+     "limb": "l_upper_arm",
+     "surface_cm": 1.1
+    },
+    {
+     "clip": "actor_b-p-run-fw-rt",
+     "category": "run",
+     "limb_cm": -2.7,
+     "limb": "l_upper_arm",
+     "surface_cm": 1.1
+    },
+    {
+     "clip": "actor_b-p-walk-bw",
+     "category": "walk",
+     "limb_cm": -0.6,
+     "limb": "r_upper_arm",
+     "surface_cm": 1.2
+    },
+    {
+     "clip": "actor_b-p-crouch-walk-bw-lt",
+     "category": "crouch",
+     "limb_cm": 5.7,
+     "limb": "l_upper_arm",
+     "surface_cm": 0.8
+    },
+    {
+     "clip": "actor_b-p-ledge-knee-climb-up^idle",
+     "category": "climb",
+     "limb_cm": 6.4,
+     "limb": "r_upper_arm",
+     "surface_cm": 0.8
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "horn.back_R_under": {
+   "kind": "horn",
+   "status": "alternative",
+   "attach": "rigid",
+   "bone": "pelvis",
+   "anchors": null,
+   "note": "Behind the right hip below the belt.",
+   "capsules": {
+    "horn_backR_under:base": {
+     "from": [
+      -0.01,
+      0.9331,
+      -0.1848
+     ],
+     "to": [
+      -0.0966,
+      0.83,
+      -0.1949
+     ],
+     "radius": 0.032,
+     "bone": "pelvis",
+     "anchors": null
+    },
+    "horn_backR_under:spout": {
+     "from": [
+      -0.0966,
+      0.83,
+      -0.195
+     ],
+     "to": [
+      -0.1817,
+      0.7269,
+      -0.2019
+     ],
+     "radius": 0.018,
+     "bone": "pelvis",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.01,
+    0.9331,
+    -0.1848
+   ],
+   "grip_angle_deg": 177.3,
+   "grip_height": 0.933,
+   "outward_dir_bind": [
+    -0.047,
+    0.0,
+    -0.999
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.399,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -0.7,
+     "surface_clip": "actor_b-p-run-bw-lt",
+     "limb_cm": 3.3,
+     "limb": "r_hand",
+     "limb_clip": "actor_b-p-walk-fw-lt"
+    },
+    "crouch": {
+     "surface_cm": -0.5,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": 0.8,
+     "limb": "r_shin",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -2.1,
+     "surface_clip": "actor_b-p-rifle-aim-crouch-idle",
+     "limb_cm": 5.3,
+     "limb": "r_thigh",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -8.6,
+     "surface_clip": "actor_b-p-ladder-mount-top",
+     "limb_cm": 1.3,
+     "limb": "r_shin",
+     "limb_clip": "actor_b-p-land-med^crouch-idle"
+    }
+   },
+   "verdict": "contact",
+   "worst_play_cm": -2.1,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-ladder-mount-top",
+     "category": "ladder",
+     "limb_cm": 8.1,
+     "limb": "r_shin",
+     "surface_cm": -8.6
+    },
+    {
+     "clip": "actor_b-p-ladder-climb-up",
+     "category": "ladder",
+     "limb_cm": 7.9,
+     "limb": "r_thigh",
+     "surface_cm": -8.1
+    },
+    {
+     "clip": "actor_b-p-ladder-climb-up-fast--a",
+     "category": "ladder",
+     "limb_cm": 7.5,
+     "limb": "r_thigh",
+     "surface_cm": -8.0
+    },
+    {
+     "clip": "actor_b-p-ladder-idle",
+     "category": "ladder",
+     "limb_cm": 9.5,
+     "limb": "r_thigh",
+     "surface_cm": -4.4
+    },
+    {
+     "clip": "actor_b-p-rifle-aim-crouch-idle",
+     "category": "aim",
+     "limb_cm": 11.0,
+     "limb": "r_thigh",
+     "surface_cm": -2.1
+    },
+    {
+     "clip": "actor_b-p-rifle-aim-crouch-walk-fw",
+     "category": "aim",
+     "limb_cm": 9.0,
+     "limb": "r_thigh",
+     "surface_cm": -2.1
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "horn.back_L_top": {
+   "kind": "horn",
+   "status": "alternative",
+   "attach": "rigid",
+   "bone": "spinec",
+   "anchors": null,
+   "note": "Mirror behind the left arm, on the pouch strap.",
+   "capsules": {
+    "horn_backL_top:base": {
+     "from": [
+      -0.0514,
+      1.1672,
+      -0.204
+     ],
+     "to": [
+      0.0662,
+      1.11,
+      -0.1703
+     ],
+     "radius": 0.032,
+     "bone": "spinec",
+     "anchors": null
+    },
+    "horn_backL_top:spout": {
+     "from": [
+      0.0662,
+      1.11,
+      -0.1703
+     ],
+     "to": [
+      0.1824,
+      1.0529,
+      -0.1329
+     ],
+     "radius": 0.018,
+     "bone": "spinec",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.0514,
+    1.1672,
+    -0.204
+   ],
+   "grip_angle_deg": 167.3,
+   "grip_height": 1.167,
+   "outward_dir_bind": [
+    -0.22,
+    0.0,
+    -0.976
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.223,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 1.0,
+     "surface_clip": "actor_b-p-idle-gesture",
+     "limb_cm": -5.2,
+     "limb": "l_forearm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 1.1,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": 9.4,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": 1.0,
+     "surface_clip": "actor_b-p-rifle-run-arms",
+     "limb_cm": 6.7,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-1h-arm--part"
+    },
+    "traversal": {
+     "surface_cm": 1.0,
+     "surface_clip": "actor_b-p-idle^jump-1-5m",
+     "limb_cm": -4.7,
+     "limb": "l_forearm",
+     "limb_clip": "actor_b-p-ledge-idle-r-enter"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -5.2,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-run-fw",
+     "category": "run",
+     "limb_cm": -5.2,
+     "limb": "l_forearm",
+     "surface_cm": 1.0
+    },
+    {
+     "clip": "actor_b-p-run-fw-rt",
+     "category": "run",
+     "limb_cm": -5.2,
+     "limb": "l_forearm",
+     "surface_cm": 1.0
+    },
+    {
+     "clip": "actor_b-p-ledge-idle-r-enter",
+     "category": "ledge",
+     "limb_cm": -4.7,
+     "limb": "l_forearm",
+     "surface_cm": 1.1
+    },
+    {
+     "clip": "actor_b-p-land-hard^run",
+     "category": "land",
+     "limb_cm": -3.9,
+     "limb": "l_forearm",
+     "surface_cm": 1.0
+    },
+    {
+     "clip": "actor_b-p-run-bw-lt",
+     "category": "run",
+     "limb_cm": -2.8,
+     "limb": "l_upper_arm",
+     "surface_cm": 1.0
+    },
+    {
+     "clip": "actor_b-p-walk-bw",
+     "category": "walk",
+     "limb_cm": -1.8,
+     "limb": "l_upper_arm",
+     "surface_cm": 1.0
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "horn.under_arm_R": {
+   "kind": "horn",
+   "status": "rejected",
+   "attach": "rigid",
+   "bone": "spinec",
+   "anchors": null,
+   "note": "Literal 'under the right arm': the upper arm hangs on it (-10 cm).",
+   "capsules": {
+    "horn_underarm_R:base": {
+     "from": [
+      -0.1595,
+      1.1,
+      -0.1708
+     ],
+     "to": [
+      -0.1887,
+      1.06,
+      -0.0452
+     ],
+     "radius": 0.032,
+     "bone": "spinec",
+     "anchors": null
+    },
+    "horn_underarm_R:spout": {
+     "from": [
+      -0.1887,
+      1.06,
+      -0.0452
+     ],
+     "to": [
+      -0.2142,
+      1.02,
+      0.0817
+     ],
+     "radius": 0.018,
+     "bone": "spinec",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.1595,
+    1.1,
+    -0.1708
+   ],
+   "grip_angle_deg": 140.7,
+   "grip_height": 1.1,
+   "outward_dir_bind": [
+    -0.633,
+    0.0,
+    -0.774
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.23,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 0.2,
+     "surface_clip": "actor_b-p-run-fw",
+     "limb_cm": -10.0,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 0.3,
+     "surface_clip": "actor_b-p-crouch-walk-fw-rt",
+     "limb_cm": -4.7,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-crouch-walk-bw-lt"
+    },
+    "weapon_use": {
+     "surface_cm": 0.2,
+     "surface_clip": "actor_b-p-rifle-run-arms",
+     "limb_cm": -5.3,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-1h-arm--part"
+    },
+    "traversal": {
+     "surface_cm": -6.6,
+     "surface_clip": "actor_b-climb-on-1-5m-up^idle-exit",
+     "limb_cm": -10.2,
+     "limb": "r_thigh",
+     "limb_clip": "actor_b-climb-on-1-5m-up^idle-exit"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -10.0,
+   "worst_clips": [
+    {
+     "clip": "actor_b-climb-on-1-5m-up^idle-exit",
+     "category": "climb",
+     "limb_cm": -10.2,
+     "limb": "r_thigh",
+     "surface_cm": -6.6
+    },
+    {
+     "clip": "actor_b-p-run-fw",
+     "category": "run",
+     "limb_cm": -10.0,
+     "limb": "r_upper_arm",
+     "surface_cm": 0.2
+    },
+    {
+     "clip": "actor_b-p-run-fw-rt",
+     "category": "run",
+     "limb_cm": -10.0,
+     "limb": "r_upper_arm",
+     "surface_cm": 0.2
+    },
+    {
+     "clip": "actor_b-p-walk-bw",
+     "category": "walk",
+     "limb_cm": -9.8,
+     "limb": "r_upper_arm",
+     "surface_cm": 0.3
+    },
+    {
+     "clip": "actor_b-p-walk-fw-lt",
+     "category": "walk",
+     "limb_cm": -9.8,
+     "limb": "r_upper_arm",
+     "surface_cm": 0.5
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-2",
+     "category": "vault",
+     "limb_cm": -9.8,
+     "limb": "r_thigh",
+     "surface_cm": -6.2
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "horn.hip_L_over_pouch": {
+   "kind": "horn",
+   "status": "rejected",
+   "attach": "rigid",
+   "bone": "spinea",
+   "anchors": null,
+   "note": "On the shot pouch at the left hip: the left arm sweeps it.",
+   "capsules": {
+    "horn_hipL_over_pouch:base": {
+     "from": [
+      0.1479,
+      0.9997,
+      -0.1783
+     ],
+     "to": [
+      0.2005,
+      0.975,
+      -0.0565
+     ],
+     "radius": 0.032,
+     "bone": "spinea",
+     "anchors": null
+    },
+    "horn_hipL_over_pouch:spout": {
+     "from": [
+      0.2006,
+      0.975,
+      -0.0565
+     ],
+     "to": [
+      0.2484,
+      0.9503,
+      0.0673
+     ],
+     "radius": 0.018,
+     "bone": "spinea",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.1479,
+    0.9997,
+    -0.1783
+   ],
+   "grip_angle_deg": 216.2,
+   "grip_height": 1.0,
+   "outward_dir_bind": [
+    0.591,
+    0.0,
+    -0.807
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.423,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -2.7,
+     "surface_clip": "actor_b-p-run-fw",
+     "limb_cm": -7.9,
+     "limb": "l_forearm",
+     "limb_clip": "actor_b-p-walk-bw"
+    },
+    "crouch": {
+     "surface_cm": -1.4,
+     "surface_clip": "actor_b-p-crouch-walk-fw",
+     "limb_cm": 1.0,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-crouch-walk-bw-lt"
+    },
+    "weapon_use": {
+     "surface_cm": -2.7,
+     "surface_clip": "actor_b-p-rifle-run-arms",
+     "limb_cm": -6.5,
+     "limb": "l_forearm",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -3.3,
+     "surface_clip": "actor_b-p-idle-jump-up-1-5m^ledge",
+     "limb_cm": -8.1,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-ledge-idle^walk-r"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -7.9,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-ledge-idle^walk-r",
+     "category": "ledge",
+     "limb_cm": -8.1,
+     "limb": "l_hand",
+     "surface_cm": -0.7
+    },
+    {
+     "clip": "actor_b-p-walk-bw",
+     "category": "walk",
+     "limb_cm": -7.9,
+     "limb": "l_forearm",
+     "surface_cm": -2.5
+    },
+    {
+     "clip": "actor_b-p-walk-fw",
+     "category": "walk",
+     "limb_cm": -6.8,
+     "limb": "l_forearm",
+     "surface_cm": -2.6
+    },
+    {
+     "clip": "actor_b-p-ladder-mount-top",
+     "category": "ladder",
+     "limb_cm": -6.7,
+     "limb": "l_hand",
+     "surface_cm": -1.0
+    },
+    {
+     "clip": "actor_b-p-ledge-idle-r-enter",
+     "category": "ledge",
+     "limb_cm": -6.7,
+     "limb": "l_forearm",
+     "surface_cm": -0.7
+    },
+    {
+     "clip": "actor_b-climb-on-1-5m-up^run-enter",
+     "category": "climb",
+     "limb_cm": -6.6,
+     "limb": "l_forearm",
+     "surface_cm": -2.5
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "horn.chest": {
+   "kind": "horn",
+   "status": "rejected",
+   "attach": "rigid",
+   "bone": "spined",
+   "anchors": null,
+   "note": "High on the chest: the thighs reach it in crouch.",
+   "capsules": {
+    "horn_chest_front:base": {
+     "from": [
+      0.1308,
+      1.2421,
+      0.1674
+     ],
+     "to": [
+      0.0173,
+      1.17,
+      0.179
+     ],
+     "radius": 0.032,
+     "bone": "spined",
+     "anchors": null
+    },
+    "horn_chest_front:spout": {
+     "from": [
+      0.0172,
+      1.17,
+      0.1789
+     ],
+     "to": [
+      -0.0967,
+      1.0979,
+      0.1866
+     ],
+     "radius": 0.018,
+     "bone": "spined",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.1308,
+    1.2421,
+    0.1674
+   ],
+   "grip_angle_deg": 317.6,
+   "grip_height": 1.242,
+   "outward_dir_bind": [
+    0.674,
+    0.0,
+    0.738
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.331,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 0.6,
+     "surface_clip": "actor_b-p-run-fw-rt",
+     "limb_cm": -7.6,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-run-bw-lt"
+    },
+    "crouch": {
+     "surface_cm": -6.4,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": -10.2,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": 0.8,
+     "surface_clip": "actor_b-p-rifle-run-arms",
+     "limb_cm": -5.1,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-pistol-rev-reload-mid--part"
+    },
+    "traversal": {
+     "surface_cm": -8.6,
+     "surface_clip": "actor_b-p-ledge-grab-knee^idle",
+     "limb_cm": -10.6,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-land-med^crouch-idle"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -10.2,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-land-med^crouch-idle",
+     "category": "land",
+     "limb_cm": -10.6,
+     "limb": "l_thigh",
+     "surface_cm": -8.0
+    },
+    {
+     "clip": "actor_b-p-crouch-idle",
+     "category": "crouch",
+     "limb_cm": -10.2,
+     "limb": "l_thigh",
+     "surface_cm": -6.4
+    },
+    {
+     "clip": "actor_b-p-ledge-grab-knee^idle",
+     "category": "climb",
+     "limb_cm": -9.8,
+     "limb": "l_thigh",
+     "surface_cm": -8.6
+    },
+    {
+     "clip": "actor_b-p-ledge-chest-climb-up^idle",
+     "category": "climb",
+     "limb_cm": -9.2,
+     "limb": "l_shin",
+     "surface_cm": -4.6
+    },
+    {
+     "clip": "actor_b-p-land-hard^idle",
+     "category": "land",
+     "limb_cm": -8.9,
+     "limb": "r_thigh",
+     "surface_cm": -6.1
+    },
+    {
+     "clip": "actor_b-p-land-hard^run",
+     "category": "land",
+     "limb_cm": -8.8,
+     "limb": "r_thigh",
+     "surface_cm": -6.2
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "back.long_A.musket": {
+   "kind": "musket",
+   "status": "recommended",
+   "attach": "rigid",
+   "bone": "spineb",
+   "anchors": null,
+   "note": "Slung over the left shoulder, muzzle up behind the left shoulder, butt behind the right hip; the source long-gun draw reaches over the left shoulder with the left hand.",
+   "capsules": {
+    "musket_L_up_spineb": {
+     "from": [
+      -0.1098,
+      0.8482,
+      -0.2069
+     ],
+     "to": [
+      0.5043,
+      2.3126,
+      -0.1013
+     ],
+     "radius": 0.035,
+     "bone": "spineb",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.1217,
+    1.4003,
+    -0.1671
+   ],
+   "grip_angle_deg": 212.5,
+   "grip_height": 1.4,
+   "outward_dir_bind": [
+    0.537,
+    0.0,
+    -0.843
+   ],
+   "drawing_hand": "left",
+   "reach_from_shoulder_m": 0.183,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 1.3,
+     "surface_clip": "actor_b-p-run-bw-lt",
+     "limb_cm": -0.9,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 3.5,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": 8.0,
+     "limb": "head",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": 1.6,
+     "surface_clip": "actor_b-p-1h-aim-throw-release-end",
+     "limb_cm": 4.2,
+     "limb": "head",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -1.6,
+     "surface_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "limb_cm": -2.7,
+     "limb": "head",
+     "limb_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+    }
+   },
+   "verdict": "clean",
+   "worst_play_cm": -0.9,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "category": "climb",
+     "limb_cm": -2.7,
+     "limb": "head",
+     "surface_cm": -1.6
+    },
+    {
+     "clip": "actor_b-p-land-hard^run",
+     "category": "land",
+     "limb_cm": -2.6,
+     "limb": "l_upper_arm",
+     "surface_cm": 2.6
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-1",
+     "category": "vault",
+     "limb_cm": -1.4,
+     "limb": "head",
+     "surface_cm": 0.4
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-4",
+     "category": "vault",
+     "limb_cm": -1.2,
+     "limb": "head",
+     "surface_cm": 0.6
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-2",
+     "category": "vault",
+     "limb_cm": -1.0,
+     "limb": "head",
+     "surface_cm": 0.1
+    },
+    {
+     "clip": "actor_b-p-run-fw",
+     "category": "run",
+     "limb_cm": -0.9,
+     "limb": "l_upper_arm",
+     "surface_cm": 2.5
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "back.long_A.musket_outer": {
+   "kind": "musket",
+   "status": "layer_1",
+   "attach": "rigid",
+   "bone": "spineb",
+   "anchors": null,
+   "note": "The same line 7.5 cm further out, over a crossing item / belt items at the back.",
+   "capsules": {
+    "musket_L_up_outer": {
+     "from": [
+      -0.1098,
+      0.8482,
+      -0.2819
+     ],
+     "to": [
+      0.5043,
+      2.3126,
+      -0.1763
+     ],
+     "radius": 0.035,
+     "bone": "spineb",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.1217,
+    1.4003,
+    -0.2421
+   ],
+   "grip_angle_deg": 204.6,
+   "grip_height": 1.4,
+   "outward_dir_bind": [
+    0.416,
+    0.0,
+    -0.909
+   ],
+   "drawing_hand": "left",
+   "reach_from_shoulder_m": 0.245,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 8.7,
+     "surface_clip": "actor_b-p-run-bw-lt",
+     "limb_cm": 1.8,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 10.7,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": 14.9,
+     "limb": "head",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": 9.1,
+     "surface_clip": "actor_b-p-1h-aim-throw-release-end",
+     "limb_cm": 11.1,
+     "limb": "head",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": 2.7,
+     "surface_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "limb_cm": -0.5,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-land-hard^run"
+    }
+   },
+   "verdict": "clean",
+   "worst_play_cm": 1.8,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-land-hard^run",
+     "category": "land",
+     "limb_cm": -0.5,
+     "limb": "l_upper_arm",
+     "surface_cm": 10.0
+    },
+    {
+     "clip": "actor_b-p-run-fw",
+     "category": "run",
+     "limb_cm": 1.8,
+     "limb": "l_upper_arm",
+     "surface_cm": 9.8
+    },
+    {
+     "clip": "actor_b-p-run-fw-rt",
+     "category": "run",
+     "limb_cm": 1.8,
+     "limb": "l_upper_arm",
+     "surface_cm": 9.8
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "category": "climb",
+     "limb_cm": 2.6,
+     "limb": "head",
+     "surface_cm": 2.7
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-1",
+     "category": "vault",
+     "limb_cm": 4.2,
+     "limb": "head",
+     "surface_cm": 7.8
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-2",
+     "category": "vault",
+     "limb_cm": 4.7,
+     "limb": "head",
+     "surface_cm": 7.5
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "back.long_A.spears": {
+   "kind": "spear_pair",
+   "status": "recommended",
+   "attach": "rigid",
+   "bone": "spineb",
+   "anchors": null,
+   "note": "",
+   "capsules": {
+    "spears_L": {
+     "from": [
+      -0.2181,
+      0.59,
+      -0.2163
+     ],
+     "to": [
+      0.478,
+      2.2499,
+      -0.1194
+     ],
+     "radius": 0.035,
+     "bone": "spineb",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.1425,
+    1.4499,
+    -0.1661
+   ],
+   "grip_angle_deg": 216.8,
+   "grip_height": 1.45,
+   "outward_dir_bind": [
+    0.599,
+    0.0,
+    -0.801
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.351,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -2.8,
+     "surface_clip": "actor_b-p-run-bw-lt",
+     "limb_cm": -0.9,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 3.2,
+     "surface_clip": "actor_b-p-crouch-walk-fw",
+     "limb_cm": 8.2,
+     "limb": "head",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": 2.1,
+     "surface_clip": "actor_b-p-bow-aim-idle",
+     "limb_cm": 4.4,
+     "limb": "head",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -4.4,
+     "surface_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "limb_cm": -6.2,
+     "limb": "r_thigh",
+     "limb_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+    }
+   },
+   "verdict": "contact",
+   "worst_play_cm": -2.8,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "category": "climb",
+     "limb_cm": -6.2,
+     "limb": "r_thigh",
+     "surface_cm": -4.4
+    },
+    {
+     "clip": "actor_b-p-run-bw-lt",
+     "category": "run",
+     "limb_cm": 2.8,
+     "limb": "l_upper_arm",
+     "surface_cm": -2.8
+    },
+    {
+     "clip": "actor_b-p-land-hard^run",
+     "category": "land",
+     "limb_cm": -2.6,
+     "limb": "l_upper_arm",
+     "surface_cm": 2.0
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-mid",
+     "category": "climb",
+     "limb_cm": -0.3,
+     "limb": "head",
+     "surface_cm": -1.8
+    },
+    {
+     "clip": "actor_b-p-ledge-hang-climb-up^ledge-knee",
+     "category": "climb",
+     "limb_cm": -0.6,
+     "limb": "head",
+     "surface_cm": -1.7
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-1",
+     "category": "vault",
+     "limb_cm": -1.3,
+     "limb": "head",
+     "surface_cm": 3.5
+    }
+   ],
+   "expected_reach_clips_excluded": [
+    "actor_b-p-bow-reload--part"
+   ]
+  },
+  "back.long_A.darts": {
+   "kind": "dart_bundle",
+   "status": "recommended",
+   "attach": "rigid",
+   "bone": "spineb",
+   "anchors": null,
+   "note": "",
+   "capsules": {
+    "darts_L": {
+     "from": [
+      -0.1987,
+      0.6361,
+      -0.2165
+     ],
+     "to": [
+      0.4394,
+      2.1577,
+      -0.1213
+     ],
+     "radius": 0.035,
+     "bone": "spineb",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.1427,
+    1.4501,
+    -0.1656
+   ],
+   "grip_angle_deg": 217.0,
+   "grip_height": 1.45,
+   "outward_dir_bind": [
+    0.602,
+    0.0,
+    -0.799
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.351,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 0.8,
+     "surface_clip": "actor_b-p-walk-fw",
+     "limb_cm": -0.9,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 3.2,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": 8.1,
+     "limb": "head",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": 2.2,
+     "surface_clip": "actor_b-p-bow-aim-idle",
+     "limb_cm": 4.4,
+     "limb": "head",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -4.8,
+     "surface_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "limb_cm": -6.1,
+     "limb": "r_thigh",
+     "limb_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+    }
+   },
+   "verdict": "clean",
+   "worst_play_cm": -0.9,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "category": "climb",
+     "limb_cm": -6.1,
+     "limb": "r_thigh",
+     "surface_cm": -4.8
+    },
+    {
+     "clip": "actor_b-p-land-hard^run",
+     "category": "land",
+     "limb_cm": -2.6,
+     "limb": "l_upper_arm",
+     "surface_cm": 2.0
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-mid",
+     "category": "climb",
+     "limb_cm": -0.3,
+     "limb": "head",
+     "surface_cm": -1.7
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-1",
+     "category": "vault",
+     "limb_cm": -1.3,
+     "limb": "head",
+     "surface_cm": 3.6
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-4",
+     "category": "vault",
+     "limb_cm": -1.1,
+     "limb": "head",
+     "surface_cm": 3.6
+    },
+    {
+     "clip": "actor_b-p-ledge-hang-climb-up^ledge-knee",
+     "category": "climb",
+     "limb_cm": -0.6,
+     "limb": "head",
+     "surface_cm": -1.1
+    }
+   ],
+   "expected_reach_clips_excluded": [
+    "actor_b-p-bow-reload--part"
+   ]
+  },
+  "back.long_A.bow": {
+   "kind": "bow",
+   "status": "alternative",
+   "attach": "rigid",
+   "bone": "spineb",
+   "anchors": null,
+   "note": "",
+   "capsules": {
+    "bow_L": {
+     "from": [
+      -0.1356,
+      0.7866,
+      -0.1905
+     ],
+     "to": [
+      0.4547,
+      2.1943,
+      -0.1072
+     ],
+     "radius": 0.02,
+     "bone": "spineb",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.025,
+    1.1695,
+    -0.1678
+   ],
+   "grip_angle_deg": 187.4,
+   "grip_height": 1.169,
+   "outward_dir_bind": [
+    0.129,
+    0.0,
+    -0.992
+   ],
+   "drawing_hand": "left",
+   "reach_from_shoulder_m": 0.207,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 1.3,
+     "surface_clip": "actor_b-p-run-bw-lt",
+     "limb_cm": 0.1,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 3.5,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": 8.3,
+     "limb": "head",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": 1.8,
+     "surface_clip": "actor_b-p-1h-aim-throw-release-end",
+     "limb_cm": 4.6,
+     "limb": "head",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -4.4,
+     "surface_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "limb_cm": -2.0,
+     "limb": "head",
+     "limb_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+    }
+   },
+   "verdict": "clean",
+   "worst_play_cm": 0.1,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "category": "climb",
+     "limb_cm": -2.0,
+     "limb": "head",
+     "surface_cm": -4.4
+    },
+    {
+     "clip": "actor_b-p-land-hard^run",
+     "category": "land",
+     "limb_cm": -1.5,
+     "limb": "l_upper_arm",
+     "surface_cm": 2.8
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-mid",
+     "category": "climb",
+     "limb_cm": 0.2,
+     "limb": "head",
+     "surface_cm": -0.8
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-1",
+     "category": "vault",
+     "limb_cm": -0.7,
+     "limb": "head",
+     "surface_cm": 1.4
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-4",
+     "category": "vault",
+     "limb_cm": -0.6,
+     "limb": "head",
+     "surface_cm": 1.6
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-2",
+     "category": "vault",
+     "limb_cm": -0.3,
+     "limb": "head",
+     "surface_cm": 1.2
+    }
+   ],
+   "expected_reach_clips_excluded": [
+    "actor_b-p-bow-reload--part"
+   ]
+  },
+  "back.long_B.bow": {
+   "kind": "bow",
+   "status": "recommended",
+   "attach": "rigid",
+   "bone": "spineb",
+   "anchors": null,
+   "note": "Stave across the back, top limb behind the right shoulder (the source bow stow line), string across the chest; the source bow draw takes it at the left mid back with the left hand.",
+   "capsules": {
+    "bow_R": {
+     "from": [
+      0.1356,
+      0.7866,
+      -0.1913
+     ],
+     "to": [
+      -0.4547,
+      2.1942,
+      -0.1055
+     ],
+     "radius": 0.02,
+     "bone": "spineb",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.025,
+    1.1695,
+    -0.168
+   ],
+   "grip_angle_deg": 172.6,
+   "grip_height": 1.169,
+   "outward_dir_bind": [
+    -0.129,
+    0.0,
+    -0.992
+   ],
+   "drawing_hand": "left",
+   "reach_from_shoulder_m": 0.237,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 1.8,
+     "surface_clip": "actor_b-p-sprint-fw",
+     "limb_cm": 2.9,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-run-bw-lt"
+    },
+    "crouch": {
+     "surface_cm": 3.5,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": 7.8,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": 0.5,
+     "surface_clip": "actor_b-p-bow-aim-walk-fw",
+     "limb_cm": 5.2,
+     "limb": "head",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-start"
+    },
+    "traversal": {
+     "surface_cm": -1.4,
+     "surface_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "limb_cm": -3.6,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-ladder-mount-top"
+    }
+   },
+   "verdict": "clean",
+   "worst_play_cm": 0.5,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-ladder-mount-top",
+     "category": "ladder",
+     "limb_cm": -3.6,
+     "limb": "l_hand",
+     "surface_cm": 3.0
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "category": "climb",
+     "limb_cm": 0.6,
+     "limb": "r_upper_arm",
+     "surface_cm": -1.4
+    },
+    {
+     "clip": "actor_b-p-ledge-hang-climb-up^ledge-knee",
+     "category": "climb",
+     "limb_cm": 2.7,
+     "limb": "head",
+     "surface_cm": -0.4
+    },
+    {
+     "clip": "actor_b-p-bow-aim-walk-fw",
+     "category": "aim",
+     "limb_cm": 5.3,
+     "limb": "l_thigh",
+     "surface_cm": 0.5
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-mid",
+     "category": "climb",
+     "limb_cm": 0.7,
+     "limb": "head",
+     "surface_cm": 0.5
+    },
+    {
+     "clip": "actor_b-p-ledge-idle-r-enter",
+     "category": "ledge",
+     "limb_cm": 1.1,
+     "limb": "l_forearm",
+     "surface_cm": 2.6
+    }
+   ],
+   "expected_reach_clips_excluded": [
+    "actor_b-p-bow-reload--part"
+   ]
+  },
+  "back.long_B.bow_source": {
+   "kind": "bow",
+   "status": "reference",
+   "attach": "rigid",
+   "bone": "spineb",
+   "anchors": null,
+   "note": "The source bow stow pose itself (grip at the grab point, stave along the source prop +Y).",
+   "capsules": {
+    "bow_source": {
+     "from": [
+      0.4448,
+      0.4937,
+      -0.1834
+     ],
+     "to": [
+      -0.2547,
+      1.848,
+      -0.1479
+     ],
+     "radius": 0.02,
+     "bone": "spineb",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.095,
+    1.1708,
+    -0.1657
+   ],
+   "grip_angle_deg": 206.6,
+   "grip_height": 1.171,
+   "outward_dir_bind": [
+    0.448,
+    0.0,
+    -0.894
+   ],
+   "drawing_hand": "left",
+   "reach_from_shoulder_m": 0.178,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 1.9,
+     "surface_clip": "actor_b-p-run-bw-lt",
+     "limb_cm": -6.1,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 4.3,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": 7.1,
+     "limb": "head",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": 2.2,
+     "surface_clip": "actor_b-p-1h-aim-throw-release-end",
+     "limb_cm": 2.3,
+     "limb": "head",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-start"
+    },
+    "traversal": {
+     "surface_cm": 0.1,
+     "surface_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "limb_cm": -5.7,
+     "limb": "head",
+     "limb_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -6.1,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-run-fw",
+     "category": "run",
+     "limb_cm": -6.1,
+     "limb": "l_upper_arm",
+     "surface_cm": 3.7
+    },
+    {
+     "clip": "actor_b-p-run-fw-rt",
+     "category": "run",
+     "limb_cm": -6.1,
+     "limb": "l_upper_arm",
+     "surface_cm": 3.7
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "category": "climb",
+     "limb_cm": -5.7,
+     "limb": "head",
+     "surface_cm": 0.1
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-mid",
+     "category": "climb",
+     "limb_cm": -5.2,
+     "limb": "head",
+     "surface_cm": 0.8
+    },
+    {
+     "clip": "actor_b-p-land-hard^run",
+     "category": "land",
+     "limb_cm": -4.6,
+     "limb": "l_forearm",
+     "surface_cm": 3.3
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-1",
+     "category": "vault",
+     "limb_cm": -4.3,
+     "limb": "head",
+     "surface_cm": 1.8
+    }
+   ],
+   "expected_reach_clips_excluded": [
+    "actor_b-p-bow-reload--part"
+   ]
+  },
+  "back.long_B.spears": {
+   "kind": "spear_pair",
+   "status": "recommended",
+   "attach": "rigid",
+   "bone": "spineb",
+   "anchors": null,
+   "note": "Points up behind the right shoulder: the right hand takes the next one over the right shoulder.",
+   "capsules": {
+    "spears_R": {
+     "from": [
+      0.2181,
+      0.59,
+      -0.2177
+     ],
+     "to": [
+      -0.478,
+      2.2499,
+      -0.1201
+     ],
+     "radius": 0.035,
+     "bone": "spineb",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.1425,
+    1.4498,
+    -0.1671
+   ],
+   "grip_angle_deg": 143.3,
+   "grip_height": 1.45,
+   "outward_dir_bind": [
+    -0.598,
+    0.0,
+    -0.802
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.219,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 0.4,
+     "surface_clip": "actor_b-p-idle-gesture",
+     "limb_cm": 2.6,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 3.1,
+     "surface_clip": "actor_b-p-crouch-walk-fw",
+     "limb_cm": 7.8,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -0.5,
+     "surface_clip": "actor_b-p-bow-aim-walk-fw",
+     "limb_cm": 5.0,
+     "limb": "l_thigh",
+     "limb_clip": "actor_b-p-bow-aim-walk-fw"
+    },
+    "traversal": {
+     "surface_cm": -1.9,
+     "surface_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "limb_cm": -3.7,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-ladder-mount-top"
+    }
+   },
+   "verdict": "clean",
+   "worst_play_cm": -0.5,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-ladder-mount-top",
+     "category": "ladder",
+     "limb_cm": -3.7,
+     "limb": "l_hand",
+     "surface_cm": 3.5
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "category": "climb",
+     "limb_cm": 0.2,
+     "limb": "head",
+     "surface_cm": -1.9
+    },
+    {
+     "clip": "actor_b-p-bow-aim-walk-fw",
+     "category": "aim",
+     "limb_cm": 5.0,
+     "limb": "l_thigh",
+     "surface_cm": -0.5
+    },
+    {
+     "clip": "actor_b-p-ledge-hang-climb-up^ledge-knee",
+     "category": "climb",
+     "limb_cm": 2.5,
+     "limb": "head",
+     "surface_cm": -0.4
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-mid",
+     "category": "climb",
+     "limb_cm": 0.2,
+     "limb": "head",
+     "surface_cm": 3.2
+    },
+    {
+     "clip": "actor_b-p-idle-gesture",
+     "category": "idle",
+     "limb_cm": 5.7,
+     "limb": "head",
+     "surface_cm": 0.4
+    }
+   ],
+   "expected_reach_clips_excluded": [
+    "actor_b-p-bow-reload--part"
+   ]
+  },
+  "back.long_B.darts": {
+   "kind": "dart_bundle",
+   "status": "recommended",
+   "attach": "rigid",
+   "bone": "spineb",
+   "anchors": null,
+   "note": "Nocks up behind the right shoulder (the source arrow reach).",
+   "capsules": {
+    "darts_R": {
+     "from": [
+      0.1987,
+      0.6361,
+      -0.218
+     ],
+     "to": [
+      -0.4394,
+      2.1578,
+      -0.119
+     ],
+     "radius": 0.035,
+     "bone": "spineb",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.1427,
+    1.4502,
+    -0.165
+   ],
+   "grip_angle_deg": 143.0,
+   "grip_height": 1.45,
+   "outward_dir_bind": [
+    -0.602,
+    0.0,
+    -0.799
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.218,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 0.4,
+     "surface_clip": "actor_b-p-idle-gesture",
+     "limb_cm": 2.6,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 3.2,
+     "surface_clip": "actor_b-p-crouch-walk-fw",
+     "limb_cm": 7.7,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -0.9,
+     "surface_clip": "actor_b-p-bow-aim-walk-fw",
+     "limb_cm": 5.0,
+     "limb": "head",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-start"
+    },
+    "traversal": {
+     "surface_cm": -1.7,
+     "surface_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "limb_cm": -3.5,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-ladder-mount-top"
+    }
+   },
+   "verdict": "clean",
+   "worst_play_cm": -0.9,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-ladder-mount-top",
+     "category": "ladder",
+     "limb_cm": -3.5,
+     "limb": "l_hand",
+     "surface_cm": 2.9
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "category": "climb",
+     "limb_cm": 0.1,
+     "limb": "head",
+     "surface_cm": -1.7
+    },
+    {
+     "clip": "actor_b-p-bow-aim-walk-fw",
+     "category": "aim",
+     "limb_cm": 5.2,
+     "limb": "l_thigh",
+     "surface_cm": -0.9
+    },
+    {
+     "clip": "actor_b-p-ledge-hang-climb-up^ledge-knee",
+     "category": "climb",
+     "limb_cm": 2.4,
+     "limb": "head",
+     "surface_cm": -0.8
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-mid",
+     "category": "climb",
+     "limb_cm": 0.1,
+     "limb": "head",
+     "surface_cm": 2.6
+    },
+    {
+     "clip": "actor_b-p-idle-gesture",
+     "category": "idle",
+     "limb_cm": 5.6,
+     "limb": "head",
+     "surface_cm": 0.4
+    }
+   ],
+   "expected_reach_clips_excluded": [
+    "actor_b-p-bow-reload--part"
+   ]
+  },
+  "back.long_B.musket": {
+   "kind": "musket",
+   "status": "alternative",
+   "attach": "rigid",
+   "bone": "spineb",
+   "anchors": null,
+   "note": "",
+   "capsules": {
+    "musket_R_up": {
+     "from": [
+      0.1098,
+      0.8482,
+      -0.2085
+     ],
+     "to": [
+      -0.5043,
+      2.3127,
+      -0.0977
+     ],
+     "radius": 0.035,
+     "bone": "spineb",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.1217,
+    1.4003,
+    -0.1667
+   ],
+   "grip_angle_deg": 147.5,
+   "grip_height": 1.4,
+   "outward_dir_bind": [
+    -0.537,
+    0.0,
+    -0.843
+   ],
+   "drawing_hand": "left",
+   "reach_from_shoulder_m": 0.313,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -0.1,
+     "surface_clip": "actor_b-p-sprint-fw",
+     "limb_cm": 2.6,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 3.5,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": 7.6,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -0.8,
+     "surface_clip": "actor_b-p-bow-aim-walk-fw",
+     "limb_cm": -4.9,
+     "limb": "r_hand",
+     "limb_clip": "actor_b-p-bow-reload--part"
+    },
+    "traversal": {
+     "surface_cm": -1.2,
+     "surface_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "limb_cm": -2.8,
+     "limb": "l_hand",
+     "limb_clip": "actor_b-p-ladder-mount-top"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -4.9,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-bow-reload--part",
+     "category": "reload",
+     "limb_cm": -4.9,
+     "limb": "r_hand",
+     "surface_cm": 2.9
+    },
+    {
+     "clip": "actor_b-p-ladder-mount-top",
+     "category": "ladder",
+     "limb_cm": -2.8,
+     "limb": "l_hand",
+     "surface_cm": 3.1
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "category": "climb",
+     "limb_cm": 0.0,
+     "limb": "head",
+     "surface_cm": -1.2
+    },
+    {
+     "clip": "actor_b-p-bow-aim-walk-fw",
+     "category": "aim",
+     "limb_cm": 6.1,
+     "limb": "head",
+     "surface_cm": -0.8
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-mid",
+     "category": "climb",
+     "limb_cm": 0.0,
+     "limb": "head",
+     "surface_cm": -0.6
+    },
+    {
+     "clip": "actor_b-p-sprint-fw",
+     "category": "sprint",
+     "limb_cm": 8.2,
+     "limb": "head",
+     "surface_cm": -0.1
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  },
+  "back.quiver": {
+   "kind": "quiver",
+   "status": "recommended",
+   "attach": "rigid",
+   "bone": "spineb",
+   "anchors": null,
+   "note": "Back quiver, arrow nocks behind the right shoulder where the source reload clip reaches.",
+   "capsules": {
+    "quiver_R": {
+     "from": [
+      -0.0258,
+      0.9245,
+      -0.2587
+     ],
+     "to": [
+      -0.1776,
+      1.5668,
+      -0.1227
+     ],
+     "radius": 0.05,
+     "bone": "spineb",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.1776,
+    1.5668,
+    -0.1227
+   ],
+   "grip_angle_deg": 129.6,
+   "grip_height": 1.567,
+   "outward_dir_bind": [
+    -0.771,
+    0.0,
+    -0.637
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.305,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 1.5,
+     "surface_clip": "actor_b-p-run-bw-lt",
+     "limb_cm": -1.5,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 4.8,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": 6.0,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": 2.7,
+     "surface_clip": "actor_b-p-bow-aim-idle",
+     "limb_cm": 3.1,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-1h-aim-throw-idle"
+    },
+    "traversal": {
+     "surface_cm": -1.0,
+     "surface_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "limb_cm": -1.0,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+    }
+   },
+   "verdict": "contact",
+   "worst_play_cm": -1.5,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-run-fw",
+     "category": "run",
+     "limb_cm": -1.5,
+     "limb": "r_upper_arm",
+     "surface_cm": 3.4
+    },
+    {
+     "clip": "actor_b-p-run-fw-rt",
+     "category": "run",
+     "limb_cm": -1.4,
+     "limb": "r_upper_arm",
+     "surface_cm": 3.4
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "category": "climb",
+     "limb_cm": -1.0,
+     "limb": "r_upper_arm",
+     "surface_cm": -1.0
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-mid",
+     "category": "climb",
+     "limb_cm": -0.4,
+     "limb": "head",
+     "surface_cm": 0.0
+    },
+    {
+     "clip": "actor_b-p-ledge-hang-climb-up^ledge-knee",
+     "category": "climb",
+     "limb_cm": 1.4,
+     "limb": "r_upper_arm",
+     "surface_cm": -0.1
+    },
+    {
+     "clip": "actor_b-p-run-bw-lt",
+     "category": "run",
+     "limb_cm": 0.7,
+     "limb": "r_upper_arm",
+     "surface_cm": 1.5
+    }
+   ],
+   "expected_reach_clips_excluded": [
+    "actor_b-p-bow-reload--part"
+   ]
+  },
+  "back.quiver_outer": {
+   "kind": "quiver",
+   "status": "layer_1",
+   "attach": "rigid",
+   "bone": "spineb",
+   "anchors": null,
+   "note": "",
+   "capsules": {
+    "quiver_R_outer": {
+     "from": [
+      -0.0258,
+      0.9245,
+      -0.3337
+     ],
+     "to": [
+      -0.1776,
+      1.5668,
+      -0.1977
+     ],
+     "radius": 0.05,
+     "bone": "spineb",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    -0.1776,
+    1.5668,
+    -0.1977
+   ],
+   "grip_angle_deg": 141.3,
+   "grip_height": 1.567,
+   "outward_dir_bind": [
+    -0.625,
+    0.0,
+    -0.78
+   ],
+   "drawing_hand": "right",
+   "reach_from_shoulder_m": 0.336,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": 8.9,
+     "surface_clip": "actor_b-p-run-bw-lt",
+     "limb_cm": 3.3,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 12.0,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": 13.3,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": 9.9,
+     "surface_clip": "actor_b-p-bow-aim-idle",
+     "limb_cm": 9.5,
+     "limb": "r_upper_arm",
+     "limb_clip": "actor_b-p-1h-aim-throw-idle"
+    },
+    "traversal": {
+     "surface_cm": 5.5,
+     "surface_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "limb_cm": 4.0,
+     "limb": "head",
+     "limb_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-mid"
+    }
+   },
+   "verdict": "clean",
+   "worst_play_cm": 3.3,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-run-fw",
+     "category": "run",
+     "limb_cm": 3.3,
+     "limb": "r_upper_arm",
+     "surface_cm": 10.6
+    },
+    {
+     "clip": "actor_b-p-run-fw-rt",
+     "category": "run",
+     "limb_cm": 3.3,
+     "limb": "r_upper_arm",
+     "surface_cm": 10.6
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-mid",
+     "category": "climb",
+     "limb_cm": 4.0,
+     "limb": "head",
+     "surface_cm": 7.1
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "category": "climb",
+     "limb_cm": 4.0,
+     "limb": "head",
+     "surface_cm": 5.5
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-1",
+     "category": "vault",
+     "limb_cm": 5.3,
+     "limb": "head",
+     "surface_cm": 8.4
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-2",
+     "category": "vault",
+     "limb_cm": 5.9,
+     "limb": "head",
+     "surface_cm": 8.0
+    }
+   ],
+   "expected_reach_clips_excluded": [
+    "actor_b-p-bow-reload--part"
+   ]
+  },
+  "back.musket_source_muzzle_down": {
+   "kind": "musket",
+   "status": "rejected",
+   "attach": "rigid",
+   "bone": "spineb",
+   "anchors": null,
+   "note": "The source long-gun stow taken literally: the Brown Bess is 1.59 m, so the butt ends behind the head and the muzzle at shin height.",
+   "capsules": {
+    "musket_source_muzzle_down": {
+     "from": [
+      0.0343,
+      1.6135,
+      -0.0358
+     ],
+     "to": [
+      0.4119,
+      0.0958,
+      -0.3108
+     ],
+     "radius": 0.035,
+     "bone": "spineb",
+     "anchors": null
+    }
+   },
+   "grip_bind": [
+    0.0343,
+    1.6135,
+    -0.0358
+   ],
+   "grip_angle_deg": 209.8,
+   "grip_height": 1.613,
+   "outward_dir_bind": [
+    0.497,
+    0.0,
+    -0.868
+   ],
+   "drawing_hand": "left",
+   "reach_from_shoulder_m": 0.348,
+   "reachable": true,
+   "checks": {
+    "locomotion": {
+     "surface_cm": -4.6,
+     "surface_clip": "actor_b-p-run-bw-lt",
+     "limb_cm": -10.7,
+     "limb": "l_upper_arm",
+     "limb_clip": "actor_b-p-run-fw"
+    },
+    "crouch": {
+     "surface_cm": 0.0,
+     "surface_clip": "actor_b-p-crouch-idle",
+     "limb_cm": -3.5,
+     "limb": "head",
+     "limb_clip": "actor_b-p-crouch-idle"
+    },
+    "weapon_use": {
+     "surface_cm": -3.2,
+     "surface_clip": "actor_b-p-1h-aim-throw-release-end",
+     "limb_cm": -7.3,
+     "limb": "head",
+     "limb_clip": "actor_b-p-1h-aim-throw-release-end"
+    },
+    "traversal": {
+     "surface_cm": -5.7,
+     "surface_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "limb_cm": -10.9,
+     "limb": "head",
+     "limb_clip": "actor_b-p-sprint-vault-1"
+    }
+   },
+   "verdict": "clips",
+   "worst_play_cm": -10.7,
+   "worst_clips": [
+    {
+     "clip": "actor_b-p-sprint-vault-1",
+     "category": "vault",
+     "limb_cm": -10.9,
+     "limb": "head",
+     "surface_cm": -3.7
+    },
+    {
+     "clip": "actor_b-p-run-fw",
+     "category": "run",
+     "limb_cm": -10.7,
+     "limb": "l_upper_arm",
+     "surface_cm": -3.1
+    },
+    {
+     "clip": "actor_b-p-run-fw-rt",
+     "category": "run",
+     "limb_cm": -10.7,
+     "limb": "l_upper_arm",
+     "surface_cm": -3.1
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-4",
+     "category": "vault",
+     "limb_cm": -10.7,
+     "limb": "head",
+     "surface_cm": -4.3
+    },
+    {
+     "clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end",
+     "category": "climb",
+     "limb_cm": -10.5,
+     "limb": "head",
+     "surface_cm": -5.7
+    },
+    {
+     "clip": "actor_b-p-sprint-vault-2",
+     "category": "vault",
+     "limb_cm": -10.2,
+     "limb": "head",
+     "surface_cm": -4.5
+    }
+   ],
+   "expected_reach_clips_excluded": []
+  }
+ },
+ "conflicts_below_3cm": {
+  "belt.R_hip.pistol | belt.back.tomahawk": {
+   "play_cm": -1.7,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 0.1,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+  },
+  "belt.R_hip.pistol | belt.back.atlatl": {
+   "play_cm": -4.0,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 8.0,
+   "traversal_clip": "actor_b-p-idle^vault-over-1m"
+  },
+  "belt.R_hip.pistol | belt.back_left.tomahawk": {
+   "play_cm": -1.2,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 6.0,
+   "traversal_clip": "actor_b-p-land-hard^idle"
+  },
+  "belt.R_hip.pistol | horn.back_R_top": {
+   "play_cm": 1.0,
+   "play_clip": "actor_b-p-bow-aim-idle",
+   "traversal_cm": -2.6,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+  },
+  "belt.R_hip.pistol | back.long_A.musket": {
+   "play_cm": -4.1,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": -2.9,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-begin"
+  },
+  "belt.R_hip.pistol | back.long_A.musket_outer": {
+   "play_cm": 2.8,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 4.5,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-begin"
+  },
+  "belt.R_hip.pistol | back.long_A.spears": {
+   "play_cm": -4.5,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": -3.3,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-begin"
+  },
+  "belt.R_hip.pistol | back.long_A.darts": {
+   "play_cm": -4.3,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": -3.2,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-begin"
+  },
+  "belt.R_hip.pistol | back.long_B.bow": {
+   "play_cm": -4.5,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 3.8,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.R_hip.pistol | back.long_B.spears": {
+   "play_cm": -4.8,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 2.6,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.R_hip.pistol | back.long_B.darts": {
+   "play_cm": -4.7,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 2.6,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.R_hip.pistol | back.quiver": {
+   "play_cm": -0.6,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 0.3,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-begin"
+  },
+  "belt.back.tomahawk | belt.back.atlatl": {
+   "play_cm": -5.9,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": -6.0,
+   "traversal_clip": "actor_b-p-sprint-vault-1"
+  },
+  "belt.back.tomahawk | belt.back_left.knife": {
+   "play_cm": -4.6,
+   "play_clip": "actor_b-p-run-fw-rt",
+   "traversal_cm": -3.3,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back.tomahawk | belt.back_left.tomahawk": {
+   "play_cm": -6.0,
+   "play_clip": "actor_b-p-run-fw-rt",
+   "traversal_cm": -6.0,
+   "traversal_clip": "actor_b-p-land-hard^run"
+  },
+  "belt.back.tomahawk | belt.L_hip.knife": {
+   "play_cm": -4.2,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 11.6,
+   "traversal_clip": "actor_b-p-ledge-grab-knee^idle"
+  },
+  "belt.back.tomahawk | sash.front_left.pistol": {
+   "play_cm": 1.5,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 21.0,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back.tomahawk | pistol_sling.chest_R": {
+   "play_cm": -0.3,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 15.8,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back.tomahawk | horn.back_R_top": {
+   "play_cm": 0.1,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": -3.0,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+  },
+  "belt.back.tomahawk | back.long_A.musket": {
+   "play_cm": -4.4,
+   "play_clip": "actor_b-p-walk-fw",
+   "traversal_cm": -4.5,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+  },
+  "belt.back.tomahawk | back.long_A.musket_outer": {
+   "play_cm": 1.8,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 2.8,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-mid"
+  },
+  "belt.back.tomahawk | back.long_A.spears": {
+   "play_cm": -4.7,
+   "play_clip": "actor_b-p-walk-fw",
+   "traversal_cm": -4.8,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+  },
+  "belt.back.tomahawk | back.long_A.darts": {
+   "play_cm": -4.6,
+   "play_clip": "actor_b-p-walk-fw",
+   "traversal_cm": -4.6,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+  },
+  "belt.back.tomahawk | back.long_B.bow": {
+   "play_cm": -4.5,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": -3.4,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back.tomahawk | back.long_B.spears": {
+   "play_cm": -4.9,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": -3.6,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back.tomahawk | back.long_B.darts": {
+   "play_cm": -4.9,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": -3.6,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back.tomahawk | back.quiver": {
+   "play_cm": -2.4,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": -1.5,
+   "traversal_clip": "actor_b-p-ledge-hang-climb-up^ledge-knee"
+  },
+  "belt.back.atlatl | belt.back_left.knife": {
+   "play_cm": -4.1,
+   "play_clip": "actor_b-p-sprint-fw-lt",
+   "traversal_cm": -5.1,
+   "traversal_clip": "actor_b-p-sprint-vault-3"
+  },
+  "belt.back.atlatl | belt.back_left.tomahawk": {
+   "play_cm": -6.0,
+   "play_clip": "actor_b-p-crouch-idle",
+   "traversal_cm": -6.0,
+   "traversal_clip": "actor_b-p-ladder-dismount--top-end"
+  },
+  "belt.back.atlatl | belt.L_hip.saber": {
+   "play_cm": -0.9,
+   "play_clip": "actor_b-p-bow-aim-idle",
+   "traversal_cm": -2.4,
+   "traversal_clip": "actor_b-p-ladder-idle"
+  },
+  "belt.back.atlatl | back.long_A.musket": {
+   "play_cm": 2.0,
+   "play_clip": "actor_b-p-walk-fw-lt",
+   "traversal_cm": 2.3,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back.atlatl | back.long_A.spears": {
+   "play_cm": 2.0,
+   "play_clip": "actor_b-p-walk-fw-lt",
+   "traversal_cm": 2.3,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back.atlatl | back.long_A.darts": {
+   "play_cm": 2.0,
+   "play_clip": "actor_b-p-walk-fw-lt",
+   "traversal_cm": 2.3,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back.atlatl | back.long_B.bow": {
+   "play_cm": -4.8,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": -5.0,
+   "traversal_clip": "actor_b-climb-on-1-5m-up^run-enter"
+  },
+  "belt.back.atlatl | back.long_B.spears": {
+   "play_cm": -6.0,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": -5.8,
+   "traversal_clip": "actor_b-p-land-hard^run"
+  },
+  "belt.back.atlatl | back.long_B.darts": {
+   "play_cm": -5.9,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": -5.7,
+   "traversal_clip": "actor_b-p-land-hard^run"
+  },
+  "belt.back.atlatl | back.quiver": {
+   "play_cm": 0.7,
+   "play_clip": "actor_b-p-1h-aim-crouch-throw-idle",
+   "traversal_cm": 1.1,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back_left.knife | belt.back_left.tomahawk": {
+   "play_cm": -5.0,
+   "play_clip": "actor_b-p-sprint-fw-lt",
+   "traversal_cm": -4.5,
+   "traversal_clip": "actor_b-p-ledge-hang-climb-up^ledge-knee"
+  },
+  "belt.back_left.knife | belt.L_hip.saber": {
+   "play_cm": 2.5,
+   "play_clip": "actor_b-p-crouch-walk-fw",
+   "traversal_cm": 1.9,
+   "traversal_clip": "actor_b-p-ladder-climb-up"
+  },
+  "belt.back_left.knife | back.long_B.bow": {
+   "play_cm": -3.6,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": 2.1,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back_left.knife | back.long_B.spears": {
+   "play_cm": -4.0,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": 0.1,
+   "traversal_clip": "actor_b-climb-on-1-5m-up^idle-exit"
+  },
+  "belt.back_left.knife | back.long_B.darts": {
+   "play_cm": -3.8,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": 0.4,
+   "traversal_clip": "actor_b-climb-on-1-5m-up^idle-exit"
+  },
+  "belt.back_left.tomahawk | belt.L_hip.knife": {
+   "play_cm": -3.8,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 8.1,
+   "traversal_clip": "actor_b-p-ledge-grab-knee^idle"
+  },
+  "belt.back_left.tomahawk | sash.front_left.pistol": {
+   "play_cm": -2.7,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 18.3,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back_left.tomahawk | pistol_sling.chest_R": {
+   "play_cm": -2.5,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 12.1,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back_left.tomahawk | horn.back_R_top": {
+   "play_cm": 2.5,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": -0.8,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+  },
+  "belt.back_left.tomahawk | back.long_A.musket": {
+   "play_cm": -5.6,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": -3.0,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back_left.tomahawk | back.long_A.musket_outer": {
+   "play_cm": 1.4,
+   "play_clip": "actor_b-p-walk-fw-lt",
+   "traversal_cm": 2.7,
+   "traversal_clip": "actor_b-p-jump-rfoot-1-5m"
+  },
+  "belt.back_left.tomahawk | back.long_A.spears": {
+   "play_cm": -6.0,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": -3.2,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back_left.tomahawk | back.long_A.darts": {
+   "play_cm": -5.8,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": -3.1,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.back_left.tomahawk | back.long_B.bow": {
+   "play_cm": -5.0,
+   "play_clip": "actor_b-p-pistol-aim-idle",
+   "traversal_cm": -5.0,
+   "traversal_clip": "actor_b-p-land-hard^run"
+  },
+  "belt.back_left.tomahawk | back.long_B.spears": {
+   "play_cm": -6.3,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": -6.1,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-mid"
+  },
+  "belt.back_left.tomahawk | back.long_B.darts": {
+   "play_cm": -6.2,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": -6.0,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-mid"
+  },
+  "belt.back_left.tomahawk | back.quiver": {
+   "play_cm": -2.8,
+   "play_clip": "actor_b-p-walk-fw-lt",
+   "traversal_cm": -1.4,
+   "traversal_clip": "actor_b-p-jump-rfoot-1-5m"
+  },
+  "belt.L_hip.pistol | belt.L_hip.knife": {
+   "play_cm": -4.8,
+   "play_clip": "actor_b-p-1h-aim-throw-release-start",
+   "traversal_cm": -4.8,
+   "traversal_clip": "actor_b-p-jump-long"
+  },
+  "belt.L_hip.pistol | belt.L_hip.saber": {
+   "play_cm": -5.4,
+   "play_clip": "actor_b-p-1h-aim-throw-release-end",
+   "traversal_cm": -5.4,
+   "traversal_clip": "actor_b-p-idle-jump-up-1m^ledge"
+  },
+  "belt.L_hip.pistol | sash.front_left.pistol": {
+   "play_cm": -4.1,
+   "play_clip": "actor_b-p-1h-aim-throw-release-end",
+   "traversal_cm": -3.8,
+   "traversal_clip": "actor_b-p-ledge-hang-climb-up^ledge-knee"
+  },
+  "belt.L_hip.pistol | pistol_sling.chest_R": {
+   "play_cm": -3.7,
+   "play_clip": "actor_b-p-run-fw-rt",
+   "traversal_cm": -4.1,
+   "traversal_clip": "actor_b-p-idle-jump-up-1m^ledge"
+  },
+  "belt.L_hip.knife | belt.L_hip.saber": {
+   "play_cm": -4.6,
+   "play_clip": "actor_b-p-pistol-aim-idle",
+   "traversal_cm": -4.6,
+   "traversal_clip": "actor_b-p-idle^vault-over-1m"
+  },
+  "belt.L_hip.knife | sash.front_left.pistol": {
+   "play_cm": 1.1,
+   "play_clip": "actor_b-p-sprint-fw-lt",
+   "traversal_cm": 0.6,
+   "traversal_clip": "actor_b-p-ladder-climb-up"
+  },
+  "belt.L_hip.knife | pistol_sling.chest_R": {
+   "play_cm": -3.4,
+   "play_clip": "actor_b-p-1h-aim-throw-release-end",
+   "traversal_cm": -3.4,
+   "traversal_clip": "actor_b-p-ledge-hang-climb-up^ledge-knee"
+  },
+  "belt.L_hip.saber | sash.front_left.pistol": {
+   "play_cm": -3.6,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": -3.3,
+   "traversal_clip": "actor_b-p-idle-jump-up-2m^ledge-chest-end"
+  },
+  "belt.L_hip.saber | pistol_sling.chest_L": {
+   "play_cm": -0.3,
+   "play_clip": "actor_b-p-crouch-walk-bw-lt",
+   "traversal_cm": -0.9,
+   "traversal_clip": "actor_b-p-ladder-climb-up"
+  },
+  "belt.L_hip.saber | pistol_sling.chest_R": {
+   "play_cm": -4.5,
+   "play_clip": "actor_b-p-run-fw-rt",
+   "traversal_cm": -4.2,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "belt.L_hip.saber | back.long_B.spears": {
+   "play_cm": -5.6,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": 3.7,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+  },
+  "belt.L_hip.saber | back.long_B.darts": {
+   "play_cm": -5.4,
+   "play_clip": "actor_b-p-bow-aim-walk-fw",
+   "traversal_cm": 7.0,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+  },
+  "sash.front_left.pistol | pistol_sling.chest_L": {
+   "play_cm": 1.8,
+   "play_clip": "actor_b-p-rifle-aim-crouch-walk-fw",
+   "traversal_cm": -0.5,
+   "traversal_clip": "actor_b-p-ladder-mount-top"
+  },
+  "sash.front_left.pistol | pistol_sling.chest_R": {
+   "play_cm": -3.5,
+   "play_clip": "actor_b-p-walk-fw-lt",
+   "traversal_cm": -3.2,
+   "traversal_clip": "actor_b-p-idle-jump-up-2m^ledge-chest-begin"
+  },
+  "horn.back_R_top | back.long_A.musket": {
+   "play_cm": -6.5,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": -6.7,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "horn.back_R_top | back.long_A.musket_outer": {
+   "play_cm": 0.4,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": 0.4,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-begin"
+  },
+  "horn.back_R_top | back.long_A.spears": {
+   "play_cm": -6.6,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": -6.7,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "horn.back_R_top | back.long_A.darts": {
+   "play_cm": -6.5,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": -6.7,
+   "traversal_clip": "actor_b-p-idle^jump-1-5m"
+  },
+  "horn.back_R_top | back.long_B.bow": {
+   "play_cm": -5.2,
+   "play_clip": "actor_b-p-walk-bw",
+   "traversal_cm": -5.2,
+   "traversal_clip": "actor_b-p-sprint-vault-4"
+  },
+  "horn.back_R_top | back.long_B.spears": {
+   "play_cm": -5.5,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": -6.3,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+  },
+  "horn.back_R_top | back.long_B.darts": {
+   "play_cm": -5.5,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": -6.3,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-end"
+  },
+  "horn.back_R_top | back.quiver": {
+   "play_cm": -2.5,
+   "play_clip": "actor_b-p-run-bw-lt",
+   "traversal_cm": -2.5,
+   "traversal_clip": "actor_b-p-idle-jump-up-3m^ledge-hang-begin"
+  },
+  "back.long_A.musket | back.long_A.musket_outer": {
+   "play_cm": 0.5,
+   "play_clip": "actor_b-p-idle-gesture",
+   "traversal_cm": 0.5,
+   "traversal_clip": "actor_b-p-sprint-vault-2"
+  },
+  "back.long_A.musket | back.long_A.spears": {
+   "play_cm": -7.0,
+   "play_clip": "actor_b-p-walk-bw",
+   "traversal_cm": -7.0,
+   "traversal_clip": "actor_b-p-ladder-dismount--top-end"
+  },
+  "back.long_A.musket | back.long_A.darts": {
+   "play_cm": -7.0,
+   "play_clip": "actor_b-p-run-fw-rt",
+   "traversal_cm": -7.0,
+   "traversal_clip": "actor_b-p-sprint-vault-2"
+  },
+  "back.long_A.musket | back.long_B.bow": {
+   "play_cm": -3.9,
+   "play_clip": "actor_b-p-rifle-aim-crouch-walk-fw",
+   "traversal_cm": -3.9,
+   "traversal_clip": "actor_b-p-jump-rfoot-1-5m"
+  },
+  "back.long_A.musket | back.long_B.spears": {
+   "play_cm": -6.9,
+   "play_clip": "actor_b-p-bow-aim-crouch-idle",
+   "traversal_cm": -6.9,
+   "traversal_clip": "actor_b-p-sprint-vault-1"
+  },
+  "back.long_A.musket | back.long_B.darts": {
+   "play_cm": -6.9,
+   "play_clip": "actor_b-p-sprint-fw",
+   "traversal_cm": -6.9,
+   "traversal_clip": "actor_b-p-land-hard^run"
+  },
+  "back.long_A.musket | back.quiver": {
+   "play_cm": -4.0,
+   "play_clip": "actor_b-p-rifle-aim-crouch-walk-fw",
+   "traversal_cm": -4.0,
+   "traversal_clip": "actor_b-p-sprint-vault-1"
+  },
+  "back.long_A.musket_outer | back.long_A.spears": {
+   "play_cm": -0.9,
+   "play_clip": "actor_b-p-sprint-fw-lt",
+   "traversal_cm": -0.9,
+   "traversal_clip": "actor_b-p-crouch-run^vault-over-1m"
+  },
+  "back.long_A.musket_outer | back.long_A.darts": {
+   "play_cm": -0.4,
+   "play_clip": "actor_b-p-run-fw",
+   "traversal_cm": -0.4,
+   "traversal_clip": "actor_b-p-sprint-vault-1"
+  },
+  "back.long_A.musket_outer | back.long_B.spears": {
+   "play_cm": 0.6,
+   "play_clip": "actor_b-p-pistol-aim-crouch-walk-fw",
+   "traversal_cm": 0.6,
+   "traversal_clip": "actor_b-p-sprint-vault-1"
+  },
+  "back.long_A.musket_outer | back.long_B.darts": {
+   "play_cm": 0.6,
+   "play_clip": "actor_b-p-bow-aim-crouch-idle",
+   "traversal_cm": 0.6,
+   "traversal_clip": "actor_b-p-land-hard^run"
+  },
+  "back.long_A.musket_outer | back.quiver": {
+   "play_cm": -5.7,
+   "play_clip": "actor_b-p-pistol-aim-crouch-walk-fw",
+   "traversal_cm": -5.7,
+   "traversal_clip": "actor_b-p-land-hard^run"
+  },
+  "back.long_A.musket_outer | back.quiver_outer": {
+   "play_cm": -4.0,
+   "play_clip": "actor_b-p-rifle-aim-crouch-walk-fw",
+   "traversal_cm": -4.0,
+   "traversal_clip": "actor_b-p-ledge-chest-climb-up^idle"
+  },
+  "back.long_A.spears | back.long_A.darts": {
+   "play_cm": -7.0,
+   "play_clip": "actor_b-p-crouch-walk-fw-rt",
+   "traversal_cm": -7.0,
+   "traversal_clip": "actor_b-p-sprint-vault-2"
+  },
+  "back.long_A.spears | back.long_B.bow": {
+   "play_cm": -4.1,
+   "play_clip": "actor_b-p-rifle-aim-crouch-idle",
+   "traversal_cm": -4.1,
+   "traversal_clip": "actor_b-p-ledge-grab-knee^idle"
+  },
+  "back.long_A.spears | back.long_B.spears": {
+   "play_cm": -6.9,
+   "play_clip": "actor_b-p-stealth-idle",
+   "traversal_cm": -6.9,
+   "traversal_clip": "actor_b-p-sprint-vault-3"
+  },
+  "back.long_A.spears | back.long_B.darts": {
+   "play_cm": -6.9,
+   "play_clip": "actor_b-p-crouch-idle",
+   "traversal_cm": -6.9,
+   "traversal_clip": "actor_b-p-sprint-vault-2"
+  },
+  "back.long_A.spears | back.quiver": {
+   "play_cm": -3.7,
+   "play_clip": "actor_b-p-sprint-fw",
+   "traversal_cm": -3.7,
+   "traversal_clip": "actor_b-p-sprint-vault-2"
+  },
+  "back.long_A.darts | back.long_B.bow": {
+   "play_cm": -4.0,
+   "play_clip": "actor_b-p-crouch-idle",
+   "traversal_cm": -4.0,
+   "traversal_clip": "actor_b-p-sprint-vault-4"
+  },
+  "back.long_A.darts | back.long_B.spears": {
+   "play_cm": -7.0,
+   "play_clip": "actor_b-p-crouch-idle",
+   "traversal_cm": -7.0,
+   "traversal_clip": "actor_b-p-sprint-vault-1"
+  },
+  "back.long_A.darts | back.long_B.darts": {
+   "play_cm": -7.0,
+   "play_clip": "actor_b-p-sprint-fw-lt",
+   "traversal_cm": -7.0,
+   "traversal_clip": "actor_b-p-sprint-vault-1"
+  },
+  "back.long_A.darts | back.quiver": {
+   "play_cm": -3.8,
+   "play_clip": "actor_b-p-rifle-aim-crouch-walk-fw",
+   "traversal_cm": -3.8,
+   "traversal_clip": "actor_b-p-sprint-vault-1"
+  },
+  "back.long_B.bow | back.long_B.spears": {
+   "play_cm": -4.0,
+   "play_clip": "actor_b-p-crouch-idle",
+   "traversal_cm": -4.0,
+   "traversal_clip": "actor_b-p-drop-down^fall"
+  },
+  "back.long_B.bow | back.long_B.darts": {
+   "play_cm": -4.4,
+   "play_clip": "actor_b-p-sprint-fw",
+   "traversal_cm": -4.4,
+   "traversal_clip": "actor_b-p-land-med^crouch-idle"
+  },
+  "back.long_B.bow | back.quiver": {
+   "play_cm": -6.3,
+   "play_clip": "actor_b-p-crouch-walk-fw",
+   "traversal_cm": -6.3,
+   "traversal_clip": "actor_b-p-sprint-vault-4"
+  },
+  "back.long_B.bow | back.quiver_outer": {
+   "play_cm": -1.5,
+   "play_clip": "actor_b-p-rifle-aim-crouch-walk-fw",
+   "traversal_cm": -1.5,
+   "traversal_clip": "actor_b-climb-on-1-5m-up^idle-exit"
+  },
+  "back.long_B.spears | back.long_B.darts": {
+   "play_cm": -7.0,
+   "play_clip": "actor_b-p-crouch-walk-fw",
+   "traversal_cm": -7.0,
+   "traversal_clip": "actor_b-p-jump-long"
+  },
+  "back.long_B.spears | back.quiver": {
+   "play_cm": -6.6,
+   "play_clip": "actor_b-p-run-fw",
+   "traversal_cm": -6.6,
+   "traversal_clip": "actor_b-p-sprint-vault-4"
+  },
+  "back.long_B.spears | back.quiver_outer": {
+   "play_cm": -4.6,
+   "play_clip": "actor_b-p-sprint-fw-lt",
+   "traversal_cm": -4.6,
+   "traversal_clip": "actor_b-p-ledge-chest-climb-up^idle"
+  },
+  "back.long_B.darts | back.quiver": {
+   "play_cm": -6.7,
+   "play_clip": "actor_b-p-1h-aim-throw-release-end",
+   "traversal_cm": -6.7,
+   "traversal_clip": "actor_b-p-jump-long"
+  },
+  "back.long_B.darts | back.quiver_outer": {
+   "play_cm": -4.3,
+   "play_clip": "actor_b-p-sprint-fw-lt",
+   "traversal_cm": -4.3,
+   "traversal_clip": "actor_b-p-idle-jump-up-1-5m^ledge"
+  },
+  "back.quiver | back.quiver_outer": {
+   "play_cm": -2.7,
+   "play_clip": "actor_b-p-crouch-walk-bw-lt",
+   "traversal_cm": -2.7,
+   "traversal_clip": "actor_b-p-ladder-dismount--top-end"
+  }
+ },
+ "back_layering": {
+  "back.long_A.musket | back.long_A.spears": {
+   "gap_cm": -7.0,
+   "extra_standoff_for_outer_cm": 8.0,
+   "worst_clip": "actor_b-p-walk-bw"
+  },
+  "back.long_A.musket | back.long_A.darts": {
+   "gap_cm": -7.0,
+   "extra_standoff_for_outer_cm": 8.0,
+   "worst_clip": "actor_b-p-run-fw-rt"
+  },
+  "back.long_A.musket | back.long_B.bow": {
+   "gap_cm": -3.9,
+   "extra_standoff_for_outer_cm": 4.9,
+   "worst_clip": "actor_b-p-rifle-aim-crouch-walk-fw"
+  },
+  "back.long_A.musket | back.long_B.spears": {
+   "gap_cm": -6.9,
+   "extra_standoff_for_outer_cm": 7.9,
+   "worst_clip": "actor_b-p-bow-aim-crouch-idle"
+  },
+  "back.long_A.musket | back.long_B.darts": {
+   "gap_cm": -6.9,
+   "extra_standoff_for_outer_cm": 7.9,
+   "worst_clip": "actor_b-p-sprint-fw"
+  },
+  "back.long_A.musket | back.quiver": {
+   "gap_cm": -4.0,
+   "extra_standoff_for_outer_cm": 5.0,
+   "worst_clip": "actor_b-p-rifle-aim-crouch-walk-fw"
+  },
+  "back.long_A.musket | horn.back_R_top": {
+   "gap_cm": -6.5,
+   "extra_standoff_for_outer_cm": 7.5,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "back.long_A.musket | belt.back.tomahawk": {
+   "gap_cm": -4.4,
+   "extra_standoff_for_outer_cm": 5.4,
+   "worst_clip": "actor_b-p-walk-fw"
+  },
+  "back.long_A.musket | belt.R_hip.pistol": {
+   "gap_cm": -4.1,
+   "extra_standoff_for_outer_cm": 5.1,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "back.long_A.spears | back.long_A.darts": {
+   "gap_cm": -7.0,
+   "extra_standoff_for_outer_cm": 8.0,
+   "worst_clip": "actor_b-p-crouch-walk-fw-rt"
+  },
+  "back.long_A.spears | back.long_B.bow": {
+   "gap_cm": -4.1,
+   "extra_standoff_for_outer_cm": 5.1,
+   "worst_clip": "actor_b-p-rifle-aim-crouch-idle"
+  },
+  "back.long_A.spears | back.long_B.spears": {
+   "gap_cm": -6.9,
+   "extra_standoff_for_outer_cm": 7.9,
+   "worst_clip": "actor_b-p-stealth-idle"
+  },
+  "back.long_A.spears | back.long_B.darts": {
+   "gap_cm": -6.9,
+   "extra_standoff_for_outer_cm": 7.9,
+   "worst_clip": "actor_b-p-crouch-idle"
+  },
+  "back.long_A.spears | back.quiver": {
+   "gap_cm": -3.7,
+   "extra_standoff_for_outer_cm": 4.7,
+   "worst_clip": "actor_b-p-sprint-fw"
+  },
+  "back.long_A.spears | horn.back_R_top": {
+   "gap_cm": -6.6,
+   "extra_standoff_for_outer_cm": 7.6,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "back.long_A.spears | belt.back.tomahawk": {
+   "gap_cm": -4.7,
+   "extra_standoff_for_outer_cm": 5.7,
+   "worst_clip": "actor_b-p-walk-fw"
+  },
+  "back.long_A.spears | belt.R_hip.pistol": {
+   "gap_cm": -4.5,
+   "extra_standoff_for_outer_cm": 5.5,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "back.long_A.darts | back.long_B.bow": {
+   "gap_cm": -4.0,
+   "extra_standoff_for_outer_cm": 5.0,
+   "worst_clip": "actor_b-p-crouch-idle"
+  },
+  "back.long_A.darts | back.long_B.spears": {
+   "gap_cm": -7.0,
+   "extra_standoff_for_outer_cm": 8.0,
+   "worst_clip": "actor_b-p-crouch-idle"
+  },
+  "back.long_A.darts | back.long_B.darts": {
+   "gap_cm": -7.0,
+   "extra_standoff_for_outer_cm": 8.0,
+   "worst_clip": "actor_b-p-sprint-fw-lt"
+  },
+  "back.long_A.darts | back.quiver": {
+   "gap_cm": -3.8,
+   "extra_standoff_for_outer_cm": 4.8,
+   "worst_clip": "actor_b-p-rifle-aim-crouch-walk-fw"
+  },
+  "back.long_A.darts | horn.back_R_top": {
+   "gap_cm": -6.5,
+   "extra_standoff_for_outer_cm": 7.5,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "back.long_A.darts | belt.back.tomahawk": {
+   "gap_cm": -4.6,
+   "extra_standoff_for_outer_cm": 5.6,
+   "worst_clip": "actor_b-p-walk-fw"
+  },
+  "back.long_A.darts | belt.R_hip.pistol": {
+   "gap_cm": -4.3,
+   "extra_standoff_for_outer_cm": 5.3,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "back.long_B.bow | back.long_B.spears": {
+   "gap_cm": -4.0,
+   "extra_standoff_for_outer_cm": 5.0,
+   "worst_clip": "actor_b-p-crouch-idle"
+  },
+  "back.long_B.bow | back.long_B.darts": {
+   "gap_cm": -4.4,
+   "extra_standoff_for_outer_cm": 5.4,
+   "worst_clip": "actor_b-p-sprint-fw"
+  },
+  "back.long_B.bow | back.quiver": {
+   "gap_cm": -6.3,
+   "extra_standoff_for_outer_cm": 7.3,
+   "worst_clip": "actor_b-p-crouch-walk-fw"
+  },
+  "back.long_B.bow | horn.back_R_top": {
+   "gap_cm": -5.2,
+   "extra_standoff_for_outer_cm": 6.2,
+   "worst_clip": "actor_b-p-walk-bw"
+  },
+  "back.long_B.bow | belt.back.tomahawk": {
+   "gap_cm": -4.5,
+   "extra_standoff_for_outer_cm": 5.5,
+   "worst_clip": "actor_b-p-bow-aim-walk-fw"
+  },
+  "back.long_B.bow | belt.back.atlatl": {
+   "gap_cm": -4.8,
+   "extra_standoff_for_outer_cm": 5.8,
+   "worst_clip": "actor_b-p-bow-aim-walk-fw"
+  },
+  "back.long_B.bow | belt.R_hip.pistol": {
+   "gap_cm": -4.5,
+   "extra_standoff_for_outer_cm": 5.5,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "back.long_B.spears | back.long_B.darts": {
+   "gap_cm": -7.0,
+   "extra_standoff_for_outer_cm": 8.0,
+   "worst_clip": "actor_b-p-crouch-walk-fw"
+  },
+  "back.long_B.spears | back.quiver": {
+   "gap_cm": -6.6,
+   "extra_standoff_for_outer_cm": 7.6,
+   "worst_clip": "actor_b-p-run-fw"
+  },
+  "back.long_B.spears | horn.back_R_top": {
+   "gap_cm": -5.5,
+   "extra_standoff_for_outer_cm": 6.5,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "back.long_B.spears | belt.back.tomahawk": {
+   "gap_cm": -4.9,
+   "extra_standoff_for_outer_cm": 5.9,
+   "worst_clip": "actor_b-p-bow-aim-walk-fw"
+  },
+  "back.long_B.spears | belt.back.atlatl": {
+   "gap_cm": -6.0,
+   "extra_standoff_for_outer_cm": 7.0,
+   "worst_clip": "actor_b-p-bow-aim-walk-fw"
+  },
+  "back.long_B.spears | belt.R_hip.pistol": {
+   "gap_cm": -4.8,
+   "extra_standoff_for_outer_cm": 5.8,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "back.long_B.darts | back.quiver": {
+   "gap_cm": -6.7,
+   "extra_standoff_for_outer_cm": 7.7,
+   "worst_clip": "actor_b-p-1h-aim-throw-release-end"
+  },
+  "back.long_B.darts | horn.back_R_top": {
+   "gap_cm": -5.5,
+   "extra_standoff_for_outer_cm": 6.5,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "back.long_B.darts | belt.back.tomahawk": {
+   "gap_cm": -4.9,
+   "extra_standoff_for_outer_cm": 5.9,
+   "worst_clip": "actor_b-p-bow-aim-walk-fw"
+  },
+  "back.long_B.darts | belt.back.atlatl": {
+   "gap_cm": -5.9,
+   "extra_standoff_for_outer_cm": 6.9,
+   "worst_clip": "actor_b-p-bow-aim-walk-fw"
+  },
+  "back.long_B.darts | belt.R_hip.pistol": {
+   "gap_cm": -4.7,
+   "extra_standoff_for_outer_cm": 5.7,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "back.quiver | horn.back_R_top": {
+   "gap_cm": -2.5,
+   "extra_standoff_for_outer_cm": 3.5,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "back.quiver | belt.back.tomahawk": {
+   "gap_cm": -2.4,
+   "extra_standoff_for_outer_cm": 3.4,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "back.quiver | belt.back.atlatl": {
+   "gap_cm": 0.7,
+   "extra_standoff_for_outer_cm": 0.3,
+   "worst_clip": "actor_b-p-1h-aim-crouch-throw-idle"
+  },
+  "back.quiver | belt.R_hip.pistol": {
+   "gap_cm": -0.6,
+   "extra_standoff_for_outer_cm": 1.6,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "horn.back_R_top | belt.back.tomahawk": {
+   "gap_cm": 0.1,
+   "extra_standoff_for_outer_cm": 0.9,
+   "worst_clip": "actor_b-p-bow-aim-walk-fw"
+  },
+  "belt.back.tomahawk | belt.back.atlatl": {
+   "gap_cm": -5.9,
+   "extra_standoff_for_outer_cm": 6.9,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "belt.back.tomahawk | belt.R_hip.pistol": {
+   "gap_cm": -1.7,
+   "extra_standoff_for_outer_cm": 2.7,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  },
+  "belt.back.atlatl | belt.R_hip.pistol": {
+   "gap_cm": -4.0,
+   "extra_standoff_for_outer_cm": 5.0,
+   "worst_clip": "actor_b-p-run-bw-lt"
+  }
+ },
+ "horn": {
+  "decision": "Move the horn off the right hip (the pistol takes it) to behind and below the right arm, above the pistol butt, on its strap over the left shoulder; reshape it as a clearly curved cow horn.",
+  "placement": "horn.back_R_top",
+  "why": [
+   "Knox 1757 (costume bible [M2]): horn under the right arm on a strap over the left shoulder; this keeps the side and the strap, moved behind the arm where the arm does not hang.",
+   "Survey: surface clearance >= +0.8 cm in every clip group including traversal; limbs: -2.7 cm (the left elbow swinging back in run-fw reaches the base plug near the spine), -0.6 cm (right upper arm, walk-bw); crouch and weapon use clear (+5.7 / +6.5).",
+   "Against the other body items in play clips: belt pistol butt +1.0 cm, back tomahawk head +0.1 cm; long_A / long_B items and the quiver lie over it (back_layering: 3.5-7.6 cm extra standoff for the item over it)."
+  ],
+  "rejected": {
+   "horn.under_arm_R": "the arm hangs on it",
+   "horn.hip_L_over_pouch": "left arm sweep",
+   "horn.chest": "thighs in crouch",
+   "right hip (old)": "taken by the pistol; reads as a lump"
+  },
+  "change_request": "see graph_analysis/loadout/body_fit_history.md section 6 (apply after the customizer run)"
+ },
+ "default_layout": {
+  "waist": "legacy_baked_belt (or belt_tied_behind)",
+  "shoulder": "horn_strap (left shoulder) + shot_pouch_strap (right shoulder)",
+  "belt": {
+   "R_hip": "pistol",
+   "back": "tomahawk",
+   "back_left": "knife",
+   "L_hip": "second pistol or empty"
+  },
+  "back": {
+   "long_A": "musket",
+   "long_B": "bow",
+   "quiver": "yes (inner layer)"
+  },
+  "note": "Throwables beyond one tomahawk (second tomahawk, spears, atlatl + darts) replace an item above according to the rules."
+ },
+ "integration_hooks": [
+  "Stow attachment: belt items rigid on pelvis at their bind offset (not the belt band's skin weights: a band vertex shears up to ~50 deg in hip-twist clips); hanging pistols two-anchor (hook on the belt, barrel along the hip skin); sash items on spinea; horn on spinec; back items on spineb (rig bone holster_long's parent).",
+  "Pistol draw / holster: use the --no-pack pistol clips (actor_b-p-stealth-idle^p-grab--arm-r--no-pack, actor_b-p-stealth-draw-p^idle--arm-r--no-pack, actor_b-p-stealth-stow-p^idle--arm-r--no-pack and their --add--no-pack twins); the default (pack) clips reach the small of the back. The prop meets the grip about 5 cm in front of belt.R_hip.pistol: blend the model from the stow socket to r_hand_prop_attachment over the first 0.1 s of the draw.",
+  "Musket draw: source lg-stealth-draw^idle keeps its hand path (left hand over the left shoulder) but its gun turns from muzzle-down; with the muzzle-up stow blend the model from the stow socket (fore-end at the hand) to the prop between 0.0 and 0.3 s (at 0.3 s the source gun is muzzle up in front).",
+  "Tomahawk draw from the back of the belt: p-molotov-draw^idle--part started at 0.1-0.2 s (the hand passes the right back of the belt).",
+  "Arrow / dart reach: p-bow-reload--part (right hand over the right shoulder) matches back.quiver and long_B nocks.",
+  "Crouch / aim nudge: front items (sash.front_left.pistol, pistol_sling.*) rotate out about the band tangent by the thigh flexion (and by the forearm when aiming) so the thighs and forearms do not pass through them.",
+  "Traversal: keep items stowed during climbs; allow a push-out of up to 5 cm along the outward normal while climb / ladder / ledge clips play (every back and belt item touches the body there).",
+  "Layering: back items that overlap get the standoff in back_layering; the order is quiver, long_B, long_A (outermost).",
+  "Outfit bulk: offset every stow point along its outward normal by bulk(outfit, region) - bulk(legacy coat, region) (body_fit.json outfit_bulk)."
+ ]
+}

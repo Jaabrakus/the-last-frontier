@@ -1,0 +1,258 @@
+{
+ "family": "impacts",
+ "generator": "tools/sfx/impacts.py",
+ "seed": 1,
+ "notes": {
+  "volume": "volume_db = volume_db + linear_to_db(clamp(speed / speed_ref, speed_min, 1)) when speed_ref is set",
+  "travel_delay": "optional: delay playback by distance_to_camera / 343 s, capped at 0.4 s",
+  "hook": "projectile.gd _on_impact, after `var speed := velocity.length()`: Sfx.impact(kind, collider, point, normal, speed) -> id ('arrow_hit_' or 'ball_hit_') + Sfx.surface_of(collider, point, normal), played 3D at point under current_scene",
+  "surface_of": [
+   "meta 'surface' if set",
+   "meta hit_part 'post' -> wood, 'head' -> straw",
+   "an ancestor that is a TargetDummy (torso AnimatableBody3D) -> straw",
+   "normal.y > 0.7 and point.y < 0.05 is ground: dirt if abs(x)<16 and abs(z)<16 (fort floor) or abs(x)<5 and -160<z<-20 (range lane), otherwise grass",
+   "CollisionShape3D SphereShape3D (rocks) or BoxShape3D ~(0.9,1.6,0.9) (chimney) -> stone; BoxShape3D ~(1.6,0.9,0.9) +-0.05 (hay bales) -> straw",
+   "everything else -> wood"
+  ],
+  "layering": "on dummies (straw surface) dummy_hit is layered on top of arrow/ball_hit_straw",
+  "levels": "ball_hit_* files are densified (tanh soft saturation of the first 30 ms, +4 dB momentary loudness at the same -1 dBFS peak) and arrow_hit_* volume_db sit 2-4 dB lower than in the first set, so with these volume_db values a ball lands ~9 dB louder than an arrow on the same surface (approx. K-weighted momentary loudness; ball stone ~7 dB without the ricochet, ~11-13 dB with it)",
+  "ball_whizz": "optional: BALL only, once per projectile, when the step segment's closest approach to the camera is < 3 m and _life > 0.08 s; play 3D at the closest point. max_distance for it is not in the spec (60 m chosen here).",
+  "melee": "axe_clash: two weapons meeting (MeleeSweep.sound 'weapon'); axe_crunch_flesh: an axe cut reaching a body's core, the spine (MeleeSweep.crunch 'flesh'). Synthesized like the rest (no samples)."
+ },
+ "sounds": {
+  "arrow_hit_wood": {
+   "unit_size": 8.0,
+   "max_distance": 150.0,
+   "bus": "World",
+   "volume_db": -6.0,
+   "speed_ref": 62.0,
+   "speed_min": 0.25,
+   "random_pitch": 1.06,
+   "travel_delay": true,
+   "files": [
+    "res://audio/sfx/impacts/arrow_hit_wood_01.wav",
+    "res://audio/sfx/impacts/arrow_hit_wood_02.wav",
+    "res://audio/sfx/impacts/arrow_hit_wood_03.wav",
+    "res://audio/sfx/impacts/arrow_hit_wood_04.wav"
+   ]
+  },
+  "arrow_hit_straw": {
+   "unit_size": 8.0,
+   "max_distance": 150.0,
+   "bus": "World",
+   "volume_db": -5.0,
+   "speed_ref": 62.0,
+   "speed_min": 0.25,
+   "random_pitch": 1.06,
+   "travel_delay": true,
+   "files": [
+    "res://audio/sfx/impacts/arrow_hit_straw_01.wav",
+    "res://audio/sfx/impacts/arrow_hit_straw_02.wav",
+    "res://audio/sfx/impacts/arrow_hit_straw_03.wav",
+    "res://audio/sfx/impacts/arrow_hit_straw_04.wav"
+   ]
+  },
+  "arrow_hit_dirt": {
+   "unit_size": 8.0,
+   "max_distance": 150.0,
+   "bus": "World",
+   "volume_db": -6.5,
+   "speed_ref": 62.0,
+   "speed_min": 0.25,
+   "random_pitch": 1.06,
+   "travel_delay": true,
+   "files": [
+    "res://audio/sfx/impacts/arrow_hit_dirt_01.wav",
+    "res://audio/sfx/impacts/arrow_hit_dirt_02.wav",
+    "res://audio/sfx/impacts/arrow_hit_dirt_03.wav",
+    "res://audio/sfx/impacts/arrow_hit_dirt_04.wav"
+   ]
+  },
+  "arrow_hit_grass": {
+   "unit_size": 8.0,
+   "max_distance": 150.0,
+   "bus": "World",
+   "volume_db": -7.5,
+   "speed_ref": 62.0,
+   "speed_min": 0.25,
+   "random_pitch": 1.06,
+   "travel_delay": true,
+   "files": [
+    "res://audio/sfx/impacts/arrow_hit_grass_01.wav",
+    "res://audio/sfx/impacts/arrow_hit_grass_02.wav",
+    "res://audio/sfx/impacts/arrow_hit_grass_03.wav"
+   ]
+  },
+  "arrow_hit_stone": {
+   "unit_size": 8.0,
+   "max_distance": 150.0,
+   "bus": "World",
+   "volume_db": -5.0,
+   "speed_ref": 62.0,
+   "speed_min": 0.25,
+   "random_pitch": 1.06,
+   "travel_delay": true,
+   "files": [
+    "res://audio/sfx/impacts/arrow_hit_stone_01.wav",
+    "res://audio/sfx/impacts/arrow_hit_stone_02.wav",
+    "res://audio/sfx/impacts/arrow_hit_stone_03.wav"
+   ]
+  },
+  "ball_hit_wood": {
+   "unit_size": 8.0,
+   "max_distance": 150.0,
+   "bus": "World",
+   "volume_db": 0.0,
+   "speed_ref": 180.0,
+   "speed_min": 0.3,
+   "random_pitch": 1.05,
+   "travel_delay": true,
+   "files": [
+    "res://audio/sfx/impacts/ball_hit_wood_01.wav",
+    "res://audio/sfx/impacts/ball_hit_wood_02.wav",
+    "res://audio/sfx/impacts/ball_hit_wood_03.wav",
+    "res://audio/sfx/impacts/ball_hit_wood_04.wav"
+   ]
+  },
+  "ball_hit_dirt": {
+   "unit_size": 8.0,
+   "max_distance": 150.0,
+   "bus": "World",
+   "volume_db": -1.0,
+   "speed_ref": 180.0,
+   "speed_min": 0.3,
+   "random_pitch": 1.06,
+   "travel_delay": true,
+   "files": [
+    "res://audio/sfx/impacts/ball_hit_dirt_01.wav",
+    "res://audio/sfx/impacts/ball_hit_dirt_02.wav",
+    "res://audio/sfx/impacts/ball_hit_dirt_03.wav",
+    "res://audio/sfx/impacts/ball_hit_dirt_04.wav"
+   ]
+  },
+  "ball_hit_grass": {
+   "unit_size": 8.0,
+   "max_distance": 150.0,
+   "bus": "World",
+   "volume_db": -2.0,
+   "speed_ref": 180.0,
+   "speed_min": 0.3,
+   "random_pitch": 1.06,
+   "travel_delay": true,
+   "files": [
+    "res://audio/sfx/impacts/ball_hit_grass_01.wav",
+    "res://audio/sfx/impacts/ball_hit_grass_02.wav",
+    "res://audio/sfx/impacts/ball_hit_grass_03.wav"
+   ]
+  },
+  "ball_hit_straw": {
+   "unit_size": 8.0,
+   "max_distance": 150.0,
+   "bus": "World",
+   "volume_db": -1.0,
+   "speed_ref": 180.0,
+   "speed_min": 0.3,
+   "random_pitch": 1.06,
+   "travel_delay": true,
+   "files": [
+    "res://audio/sfx/impacts/ball_hit_straw_01.wav",
+    "res://audio/sfx/impacts/ball_hit_straw_02.wav",
+    "res://audio/sfx/impacts/ball_hit_straw_03.wav"
+   ]
+  },
+  "ball_hit_stone": {
+   "unit_size": 8.0,
+   "max_distance": 150.0,
+   "bus": "World",
+   "volume_db": 0.0,
+   "speed_ref": 180.0,
+   "speed_min": 0.3,
+   "random_pitch": 1.05,
+   "travel_delay": true,
+   "files": [
+    "res://audio/sfx/impacts/ball_hit_stone_01.wav",
+    "res://audio/sfx/impacts/ball_hit_stone_02.wav",
+    "res://audio/sfx/impacts/ball_hit_stone_03.wav"
+   ]
+  },
+  "ball_whizz": {
+   "unit_size": 8.0,
+   "max_distance": 60.0,
+   "bus": "World",
+   "volume_db": -6.0,
+   "speed_ref": null,
+   "speed_min": null,
+   "random_pitch": 1.06,
+   "travel_delay": false,
+   "files": [
+    "res://audio/sfx/impacts/ball_whizz_01.wav",
+    "res://audio/sfx/impacts/ball_whizz_02.wav",
+    "res://audio/sfx/impacts/ball_whizz_03.wav"
+   ]
+  },
+  "axe_clash": {
+   "unit_size": 8.0,
+   "max_distance": 150.0,
+   "bus": "World",
+   "volume_db": -2.0,
+   "speed_ref": null,
+   "speed_min": null,
+   "random_pitch": 1.05,
+   "travel_delay": true,
+   "files": [
+    "res://audio/sfx/impacts/axe_clash_01.wav",
+    "res://audio/sfx/impacts/axe_clash_02.wav",
+    "res://audio/sfx/impacts/axe_clash_03.wav",
+    "res://audio/sfx/impacts/axe_clash_04.wav"
+   ]
+  },
+  "axe_crunch_flesh": {
+   "unit_size": 8.0,
+   "max_distance": 150.0,
+   "bus": "World",
+   "volume_db": -1.0,
+   "speed_ref": null,
+   "speed_min": null,
+   "random_pitch": 1.05,
+   "travel_delay": true,
+   "files": [
+    "res://audio/sfx/impacts/axe_crunch_flesh_01.wav",
+    "res://audio/sfx/impacts/axe_crunch_flesh_02.wav",
+    "res://audio/sfx/impacts/axe_crunch_flesh_03.wav",
+    "res://audio/sfx/impacts/axe_crunch_flesh_04.wav"
+   ]
+  },
+  "arrow_hit_flesh": {
+   "unit_size": 8.0,
+   "max_distance": 150.0,
+   "bus": "World",
+   "volume_db": -5.0,
+   "speed_ref": 62.0,
+   "speed_min": 0.25,
+   "random_pitch": 1.06,
+   "travel_delay": true,
+   "files": [
+    "res://audio/sfx/impacts/arrow_hit_flesh_01.wav",
+    "res://audio/sfx/impacts/arrow_hit_flesh_02.wav",
+    "res://audio/sfx/impacts/arrow_hit_flesh_03.wav",
+    "res://audio/sfx/impacts/arrow_hit_flesh_04.wav"
+   ]
+  },
+  "ball_hit_flesh": {
+   "unit_size": 8.0,
+   "max_distance": 150.0,
+   "bus": "World",
+   "volume_db": -1.0,
+   "speed_ref": 180.0,
+   "speed_min": 0.3,
+   "random_pitch": 1.06,
+   "travel_delay": true,
+   "files": [
+    "res://audio/sfx/impacts/ball_hit_flesh_01.wav",
+    "res://audio/sfx/impacts/ball_hit_flesh_02.wav",
+    "res://audio/sfx/impacts/ball_hit_flesh_03.wav",
+    "res://audio/sfx/impacts/ball_hit_flesh_04.wav"
+   ]
+  }
+ }
+}

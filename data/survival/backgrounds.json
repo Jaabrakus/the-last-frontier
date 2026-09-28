@@ -1,0 +1,701 @@
+{
+ "schema": "frontier.survival.backgrounds",
+ "version": 4,
+ "status": "LIVE design data v4: the vertical slice (milestones M1, M2a and M2b; survival_gdd.md version 4). The game and tests/survival/test_survival_data.gd read these rows. Every number is tunable.",
+ "design_doc": "Player_Animation_Project/graph_analysis/survival/survival_gdd.md",
+ "summary": "Backgrounds are head starts: the backcountry hunter (M1) and the discharged provincial or ranger (M2a), each with starting levels, kit, a little money, known recipes, people and a habit any character can earn. Debts are optional start variants; the default start owes nothing.",
+ "id_rules": "Ids are stable strings (prefix.name). Never rename an id once saves exist; add an alias instead. Display names are separate and may change. An id is defined in exactly one place: the live file or the backlog.",
+ "milestones": {
+  "M1": "A winter night: fire, shelter, cold, hunger, sleep, time safety; the fort region only; one background; 1765",
+  "M2a": "A winter from the woods: living from the manor woods through the winter by your own hands (gathering, hides, sewing, snares, snowshoes, a half-faced camp, a hung cache, ice fishing); plain barter with the sutler, the trader, the garrison's soldiers, a farm family from German Flatts and an old hunter; credit and the fall outfit as options; the second background",
+  "M2b": "Learning from neighbours: lessons, watching, examining, quality standards, haggling, promises and loans",
+  "M3": "The year turns: the full almanac, seasons and weather content, the summer goal (bark and a cabin), fishing, frogs, ginseng, one played wage job; the fur cap and robe, leggings, carving, casting balls, the cache pit, char cloth and spruce beer",
+  "M4": "People: NPC schedules and tiers at the fort, standing, invitations, the soldiers and the lieutenant as mentors; Native characters only after the relevant nation's sign-off",
+  "M5": "The map: the Carry, the valley, the town and the hunting grounds, travel and camps, other markets and backgrounds",
+  "post": "After M5 and not yet planned: the 1757 and 1761 starts and their eras, detailed illnesses, thirst, potash, upstream canoe and bateau travel, the Proxy NPC tier, languages beyond English, French, Mohawk and Oneida"
+ },
+ "source_keys": {
+  "E": "graph_analysis/survival/research_economy_life.md, source list S# (E:S14 = source S14)",
+  "K": "graph_analysis/survival/research_survival_skills.md, numbered sources [#] (K:1 = source [1])",
+  "Y": "graph_analysis/survival/research_systems.md, section number (Y:3.2 = section 3.2)",
+  "C": "graph_analysis/customizer/costume_bible.md, section number",
+  "A": "Player_Animation_Project/blender_animation_index.csv (clip names and asset ids)",
+  "N": "graph_analysis/survival/survival_gdd.md, sources list (N:3 = source N3; N33 onward added in version 3)"
+ },
+ "basis_keys": {
+  "S": "sourced: checked against a primary source, a scholarly work or an institutional page; web summaries and popular pages do not qualify",
+  "H": "standard historiography (books in the GDD sources list); verify before quoting",
+  "H-regional": "true for one region's trade or society (named in the row); not yet checked for New York",
+  "M": "modern science or medicine sets the mechanic (period explanation may differ)",
+  "D": "design value for balance, or a figure resting on web summaries; not a checked historical record"
+ },
+ "rules": [
+  "A background is a head start: starting skill levels, kit, a little money, known recipes, people and a habit any character can earn. It never locks a skill, recipe or action, and gives no experience multiplier (redesign_skills.md rules L1 and L7).",
+  "Skill budgets are 145-155 over the ten live skills, none above 35 at the start, and each background spikes in a different livelihood that is live in the default era (1765).",
+  "Every habit touches a system the slice has (listed in touches; tested), and any character earns it by doing.",
+  "Debts are optional start variants chosen at creation (start_variants); the default, Clear, owes nothing.",
+  "Outfits are cosmetic: an outfit set only suggests a background; any outfit goes with any background.",
+  "Nothing is locked by sex. Where a period institution was male-only (militia rolls, provincial and ranging service), obligation_rules give the historical equivalent, or the documented-fiction option applies.",
+  "No stat is tied to ancestry or ethnicity."
+ ],
+ "skill_budget": {
+  "target": [
+   145,
+   155
+  ],
+  "max_start": 35,
+  "rule": "sum of starting levels over the ten live skills; no skill above 35 at the start"
+ },
+ "start_rules": {
+  "default_start": {
+   "day": "sep_early",
+   "year": 1765,
+   "era": "era.peace_1765_1767"
+  },
+  "slice_backgrounds": {
+   "M1": [
+    "bg.backcountry_hunter"
+   ],
+   "M2a": [
+    "bg.backcountry_hunter",
+    "bg.provincial_ranger"
+   ]
+  },
+  "other_starts": "The 1761 and 1757 starts are 'post' (backlog/seasons.json).",
+  "default_variant": "start.clear"
+ },
+ "obligation_rules": {
+  "militia": {
+   "default": "historical",
+   "historical": {
+    "men": "answer the district's musters and alarms (event.militia_muster)",
+    "women": "supply the muster (provisions worth 60 d), or in an alarm hold the blockhouse or lodge refugee families; same standing effects"
+   },
+   "service_history": "Provincial and ranging service was men's service; women followed regiments on the ration list as wives, laundresses and nurses, and some kept sutlers' stores. Default: a woman takes the ration-list variant.",
+   "open_musters": "Option: anyone may answer musters and take any service history. Documented as deliberate fiction."
+  }
+ },
+ "outfit_set_links": {
+  "frontier": {
+   "customizer_set_name": "Frontiersman / trapper",
+   "suggested_backgrounds": [
+    "bg.backcountry_hunter",
+    "bg.provincial_ranger"
+   ]
+  },
+  "militia": {
+   "customizer_set_name": "Colonial militia & provincials",
+   "suggested_backgrounds": [
+    "bg.provincial_ranger"
+   ]
+  }
+ },
+ "creation_flow": [
+  "1. Customizer (appearance, outfit preset).",
+  "2. Background (M1: the backcountry hunter only; M2a: two), then the service variant.",
+  "3. Start variant: Clear (default), Outfitted on credit, On the sutler's tally, or (M2b) A promise to keep.",
+  "4. Summary of skills, kit, known recipes, people, the habit and any debt or obligation.",
+  "5. Start: Early September 1765 at the post at the ford, Woodsman preset by default."
+ ],
+ "long_term_goals": [
+  {
+   "id": "goal.winter_ready",
+   "milestone": "M2a",
+   "name": "Winter-ready",
+   "text": "By Late November: a shelter of quality 4, a spare pair of moccasins made, mitts and a cap, 10 game days of food stored, a hung cache and 6 or more cordage; snowshoes by Early January.",
+   "fits": [
+    "bg.backcountry_hunter",
+    "bg.provincial_ranger"
+   ]
+  },
+  {
+   "id": "goal.by_my_own_hand",
+   "milestone": "M2a",
+   "name": "By my own hand",
+   "text": "Make moccasins, mitts, snowshoes, cordage and a quality-4 shelter yourself.",
+   "fits": [
+    "bg.backcountry_hunter",
+    "bg.provincial_ranger"
+   ]
+  },
+  {
+   "id": "goal.good_neighbour",
+   "milestone": "M2a",
+   "name": "A good neighbour",
+   "text": "Friendly with the garrison and the farm family, and trust 5 with one person.",
+   "fits": [
+    "bg.backcountry_hunter",
+    "bg.provincial_ranger"
+   ]
+  },
+  {
+   "id": "goal.learned_from_a_neighbour",
+   "milestone": "M2b",
+   "name": "Learned from a neighbour",
+   "text": "Take a lesson or learn a recipe by watching.",
+   "fits": [
+    "bg.backcountry_hunter",
+    "bg.provincial_ranger"
+   ]
+  },
+  {
+   "id": "goal.kept_my_word",
+   "milestone": "M2b",
+   "name": "Kept my word",
+   "text": "Keep a promise or a labour owed, and break none.",
+   "fits": [
+    "bg.backcountry_hunter",
+    "bg.provincial_ranger"
+   ]
+  },
+  {
+   "id": "goal.clear_books",
+   "milestone": "M2a",
+   "name": "Clear books",
+   "conditional": "shown only while an account is open",
+   "text": "Close the spring settlement owing no one: the trader's book, the sutler's tally.",
+   "milestones": [
+    "the winter visits' payments",
+    "paid in full in the window"
+   ],
+   "fits": [
+    "bg.backcountry_hunter",
+    "bg.provincial_ranger"
+   ]
+  }
+ ],
+ "backgrounds": [
+  {
+   "id": "bg.backcountry_hunter",
+   "name": "Backcountry hunter",
+   "status": "slice",
+   "life_history": "Grew up on the edge of the valley settlements; hunts and traps from fall to spring and lives mostly from the woods, trading skins and furs when the trader comes up the river.",
+   "historical_basis": "Settler hunters who went out for the season on credit (E:3.3). The term 'long hunter' belonged to southwest Virginia and western North Carolina hunts into Kentucky and Tennessee and is used only at the Ohio node after 1761 (review 1, issue 1).",
+   "outfit_sets": [
+    "frontier"
+   ],
+   "skills": {
+    "survival": 32,
+    "hunting": 30,
+    "trapping": 28,
+    "provisions": 12,
+    "hidecraft": 15,
+    "woodcraft": 12,
+    "trade": 6,
+    "marksmanship": 15,
+    "close_combat": 5,
+    "archery": 0
+   },
+   "spike": "liv.trapping",
+   "starting_kit": [
+    [
+     "item.weapon.musket",
+     1
+    ],
+    [
+     "item.tool.knife",
+     1
+    ],
+    [
+     "item.tool.hatchet",
+     1
+    ],
+    [
+     "item.ammo.powder",
+     2
+    ],
+    [
+     "item.ammo.lead",
+     3
+    ],
+    [
+     "item.ammo.ball",
+     12
+    ],
+    [
+     "item.tool.flint",
+     3
+    ],
+    [
+     "item.tool.fire_steel",
+     1
+    ],
+    [
+     "item.tinder.charcloth",
+     10
+    ],
+    [
+     "item.tinder.punk",
+     3
+    ],
+    [
+     "item.cloth.matchcoat",
+     1
+    ],
+    [
+     "item.cloth.hunting_shirt",
+     1
+    ],
+    [
+     "item.cloth.breechcloth_leggings",
+     1
+    ],
+    [
+     "item.cloth.moccasins",
+     2
+    ],
+    [
+     "item.cloth.mitts",
+     1
+    ],
+    [
+     "item.cloth.fur_cap",
+     1
+    ],
+    [
+     "item.food.jerky",
+     6
+    ],
+    [
+     "item.food.cornmeal",
+     8
+    ],
+    [
+     "item.drink.rum",
+     1
+    ],
+    [
+     "item.remedy.bandage",
+     2
+    ],
+    [
+     "item.trap.steel",
+     2
+    ],
+    [
+     "item.tool.awl",
+     1
+    ],
+    [
+     "item.material.sinew",
+     2
+    ],
+    [
+     "item.tool.hooks_line",
+     1
+    ],
+    [
+     "item.tool.bullet_mould",
+     1
+    ]
+   ],
+   "starting_money_d": 24,
+   "standing": {
+    "faction.post": 10
+   },
+   "start": {
+    "region": "reg.fort_clearing",
+    "poi": "poi.fort.woods_camp",
+    "legal": true,
+    "legal_note": "Legal. The woods are Cosby's Manor, a 1734 patent surveyed in 1762 and still unsettled (N:33): under colonial practice a hunter needs no one's leave to hunt or trap unenclosed patent land; cutting timber for sale or raising a cabin would need a lease from the proprietors. The Oneida hunting grounds west of the Carry, where leave is needed, come at M5 with their people present."
+   },
+   "milestone": "M1",
+   "credit": {
+    "first_outfit_limit_barter_d": 1100,
+    "note": "the trader knows him: a full fall outfit"
+   },
+   "suggested_presets": [
+    "Backcountry hunter (summer)",
+    "Winter trapper"
+   ],
+   "habit": "habit.line_hand",
+   "known": [
+    "trap.steel_land_set",
+    "trap.snare_set",
+    "rcp.cordage_hemp",
+    "rcp.cordage_sinew",
+    "rcp.rawhide",
+    "know.hide_dressing",
+    "rcp.moccasins",
+    "rcp.mitts_fur",
+    "rcp.jerky",
+    "preserve.cache_pit"
+   ],
+   "heard_of": [
+    "know.snowshoes",
+    "shelter.half_faced_camp",
+    "fish.ice_hole",
+    "rcp.acorn_meal"
+   ],
+   "seen": [],
+   "known_note": "A backcountry hunter dressed his own skins for moccasins and a hunting shirt, a method learned from Native neighbours (its origin note says so).",
+   "people": {
+    "npc.woods.old_hunter": 3
+   }
+  },
+  {
+   "id": "bg.provincial_ranger",
+   "name": "Discharged provincial or ranger (served 1756-63)",
+   "status": "slice",
+   "life_history": "Served in a New York provincial regiment or a ranging company in the late war (some went on with Bradstreet in 1764), was discharged, and has wintered since at the post. Owes no service to the regulars; like every man of the district he is on the county militia roll.",
+   "historical_basis": "Provincial service by the campaign season (Anderson, N:10); the ranging companies were disbanded after the war and New York raised no provincials after 1764, so in 1765 a veteran's duty is the county militia, not orders from a commandant (review 1 of v2, blocker).",
+   "outfit_sets": [
+    "frontier",
+    "militia"
+   ],
+   "suggested_presets": [
+    "Ranger, 1759",
+    "Massachusetts provincial, 1758"
+   ],
+   "skills": {
+    "survival": 25,
+    "hunting": 20,
+    "trapping": 15,
+    "provisions": 18,
+    "hidecraft": 12,
+    "woodcraft": 15,
+    "trade": 5,
+    "marksmanship": 25,
+    "close_combat": 10,
+    "archery": 0
+   },
+   "spike": "liv.market_hunting",
+   "starting_kit": [
+    [
+     "item.weapon.musket",
+     1
+    ],
+    [
+     "item.tool.hatchet",
+     1
+    ],
+    [
+     "item.tool.knife",
+     1
+    ],
+    [
+     "item.ammo.powder",
+     1
+    ],
+    [
+     "item.ammo.ball",
+     20
+    ],
+    [
+     "item.cloth.matchcoat",
+     1
+    ],
+    [
+     "item.tool.snowshoes",
+     1
+    ],
+    [
+     "item.tool.flint",
+     3
+    ],
+    [
+     "item.tool.fire_steel",
+     1
+    ],
+    [
+     "item.tinder.charcloth",
+     10
+    ],
+    [
+     "item.food.salt_pork",
+     4
+    ],
+    [
+     "item.food.biscuit",
+     6
+    ],
+    [
+     "item.cloth.linen_shirt",
+     1
+    ],
+    [
+     "item.cloth.wool_waistcoat",
+     1
+    ],
+    [
+     "item.cloth.breechcloth_leggings",
+     1
+    ],
+    [
+     "item.cloth.moccasins",
+     2
+    ],
+    [
+     "item.cloth.fur_cap",
+     1
+    ],
+    [
+     "item.remedy.bandage",
+     1
+    ],
+    [
+     "item.tool.needle_thread",
+     1
+    ],
+    [
+     "item.tool.awl",
+     1
+    ],
+    [
+     "item.tool.hooks_line",
+     1
+    ]
+   ],
+   "starting_money_d": 60,
+   "standing": {
+    "faction.garrison": 20,
+    "faction.colonial_authorities": 5
+   },
+   "start": {
+    "region": "reg.fort_clearing",
+    "poi": "poi.fort.sutler_store",
+    "legal": true,
+    "legal_note": "Lodges by the sutler's store by the lieutenant's leave; hunts the same manor woods."
+   },
+   "milestone": "M2a",
+   "variants": {
+    "service": {
+     "choose_one": [
+      {
+       "id": "service.provincial",
+       "name": "A New York provincial regiment, 1756-63"
+      },
+      {
+       "id": "service.ranging_company",
+       "name": "A ranging company, 1758-61"
+      },
+      {
+       "id": "service.ration_list",
+       "name": "On a regiment's ration list: a soldier's wife, laundress, nurse or sutler's hand, 1756-63",
+       "note": "The historically grounded variant for a woman on the default 'historical' setting."
+      }
+     ],
+     "default": "service.provincial",
+     "rule": "Provincial and ranging service was men's service. On the default 'historical' setting a woman takes the ration-list variant; the 'open service' option lets anyone take any variant and is documented as deliberate fiction (obligation_rules)."
+    }
+   },
+   "credit": {
+    "first_outfit_limit_barter_d": 1000,
+    "note": "the trader does not know him yet: a little less"
+   },
+   "aliases_note": "Id kept from v2 (bg.provincial_ranger); the display name and obligation changed in v3.",
+   "obligation": {
+    "kind": "militia_muster",
+    "due_event": "event.militia_muster",
+    "miss_standing": {
+     "faction.garrison": -5,
+     "faction.colonial_authorities": -10
+    },
+    "miss_fine_d": 48,
+    "obligation_by_role": "backgrounds.json obligation_rules.militia",
+    "fine_payable": [
+     "coin",
+     "provisions of the same value"
+    ],
+    "fine_note": "48 d in coin or provisions [D]. The v3 draft's work on the fort's works is gone: the regular garrison had no say over the provincial militia's fines [H: verify the colony's militia act]; statute road work is the M5 labour hook (W:13)."
+   },
+   "habit": "habit.cold_camp",
+   "known": [
+    "shelter.half_faced_camp",
+    "fish.ice_hole",
+    "rcp.mitts"
+   ],
+   "seen": [
+    "trap.steel_land_set",
+    "know.snowshoes",
+    "rcp.moccasins",
+    "know.hide_dressing",
+    "rcp.mitts_fur"
+   ],
+   "heard_of": [
+    "trap.snare_set",
+    "rcp.cordage_hemp",
+    "rcp.jerky",
+    "rcp.rawhide",
+    "preserve.cache_pit"
+   ],
+   "people": {
+    "npc.fort.sutler": 2
+   },
+   "seen_note": "Seen, not made: steel sets and snowshoes (he wore them), and moccasins, fur mitts and hide dressing (the rangers' winter camps made and mended their own footwear and mittens; fix round 1, F4) [D]."
+  }
+ ],
+ "aliases": {
+  "bg.provincial_ranger": "display renamed 'Discharged provincial or ranger (served 1756-63)' in v3",
+  "perk.pack_discipline": "perk.line_hand (v3)",
+  "drawback.orders": "drawback.militia_and_debt (v3)",
+  "perk.line_hand": "habit.line_hand (v4: anyone earns it after 150 line checks)",
+  "perk.cold_camp": "habit.cold_camp (v4: anyone earns it after 10 fireless nights)",
+  "drawback.owes_outfit": "start.outfitted_on_credit (v4: an optional start variant)",
+  "drawback.militia_and_debt": "the provincial's obligation (the muster) and start.sutler_tally (v4)"
+ },
+ "habits": [
+  {
+   "id": "habit.line_hand",
+   "name": "Line hand",
+   "text": "Walks a trap line 20% faster and carries 15% more meat and pelts.",
+   "effects": {
+    "trap_walk_time_mult": 0.8,
+    "carry_capacity_mult.pelts_meat": 1.15
+   },
+   "touches": [
+    "trap.check",
+    "butcher.field_dress"
+   ],
+   "earned_by": {
+    "counter": "line_checks",
+    "count": 150,
+    "text": "150 checks of a trap line"
+   },
+   "milestone": "M1"
+  },
+  {
+   "id": "habit.cold_camp",
+   "name": "Cold camp",
+   "text": "Campaign camps: sleeps without a fire at 80% of the usual heat loss and raises a brush lean-to in 25% less time.",
+   "effects": {
+    "sleep_no_fire_warmth_loss_mult": 0.8,
+    "time_mult.shelter.brush_leanto": 0.75
+   },
+   "touches": [
+    "need.warmth",
+    "shelter.brush_leanto"
+   ],
+   "earned_by": {
+    "counter": "fireless_nights",
+    "count": 10,
+    "text": "10 nights slept without a fire"
+   },
+   "milestone": "M2a"
+  }
+ ],
+ "start_variants": [
+  {
+   "id": "start.clear",
+   "name": "Clear",
+   "default": true,
+   "backgrounds": [
+    "bg.backcountry_hunter",
+    "bg.provincial_ranger"
+   ],
+   "text": "Owes no one. The background's kit, a little money, the people who know you; arriving between Late November and March, provisions and hooks and line besides.",
+   "milestone": "M1",
+   "season_kit": {
+    "from": "nov_late",
+    "to": "mar_late",
+    "add": [
+     [
+      "item.food.cornmeal",
+      20
+     ],
+     [
+      "item.food.salt_pork",
+      6
+     ],
+     [
+      "item.tool.hooks_line",
+      1
+     ]
+    ],
+    "only_if_missing": [
+     "item.tool.hooks_line"
+    ],
+    "text": "Arriving in the cold months, a newcomer brings provisions for the first days (20 lb of cornmeal, 6 lb of salt pork) and hooks and line for the ice [D]."
+   }
+  },
+  {
+   "id": "start.outfitted_on_credit",
+   "name": "Outfitted on credit",
+   "backgrounds": [
+    "bg.backcountry_hunter"
+   ],
+   "kit_add": [
+    [
+     "item.trap.steel",
+     2
+    ],
+    [
+     "item.ammo.powder",
+     1
+    ],
+    [
+     "item.tool.kettle_brass",
+     1
+    ]
+   ],
+   "debt": {
+    "creditor": "npc.post.trader",
+    "amount_barter_d": 715,
+    "carried_d": 240,
+    "layer": "barter",
+    "due_event": "event.spring_trade"
+   },
+   "text": "Two more steel traps, a pound of powder and a brass kettle on the trader's book: 715 barter d (240 carried from last season), due in the spring window.",
+   "milestone": "M2a"
+  },
+  {
+   "id": "start.sutler_tally",
+   "name": "On the sutler's tally",
+   "backgrounds": [
+    "bg.provincial_ranger"
+   ],
+   "kit_add": [
+    [
+     "item.ammo.powder",
+     1
+    ],
+    [
+     "item.ammo.lead",
+     4
+    ],
+    [
+     "item.trade.blanket",
+     1
+    ]
+   ],
+   "debt": {
+    "creditor": "npc.fort.sutler",
+    "amount_d": 288,
+    "layer": "cash",
+    "due_event": "event.spring_trade"
+   },
+   "sutler_limit_d": 360,
+   "text": "A pound of powder, four of lead and a blanket on the sutler's tally: 288 d cash, due in the spring window (the v3 debt; her limit rises to 360 d, the balance report's R3).",
+   "milestone": "M2a"
+  },
+  {
+   "id": "start.promise",
+   "name": "A promise to keep",
+   "backgrounds": [
+    "bg.backcountry_hunter",
+    "bg.provincial_ranger"
+   ],
+   "promise": {
+    "to": "npc.fort.sutler",
+    "goods": {
+     "item.food.venison_raw": 60
+    },
+    "due_day": "feb_late",
+    "kept": {
+     "standing": {
+      "faction.garrison": 5
+     },
+     "trust": 1
+    },
+    "broken": {
+     "standing": {
+      "faction.garrison": -5
+     },
+     "trust": -2
+    }
+   },
+   "text": "Promised the sutler 60 lb of venison by Late February for last winter's kindness: kept, +5 garrison standing and her trust; broken, -5.",
+   "milestone": "M2b"
+  }
+ ]
+}

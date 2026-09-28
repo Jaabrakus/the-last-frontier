@@ -1,0 +1,1056 @@
+{
+ "schema": "frontier.survival.recipes",
+ "version": 4,
+ "status": "LIVE design data v4: the vertical slice (milestones M1, M2a and M2b; survival_gdd.md version 4). The game and tests/survival/test_survival_data.gd read these rows. Every number is tunable.",
+ "design_doc": "Player_Animation_Project/graph_analysis/survival/survival_gdd.md",
+ "summary": "Recipes in the slice: stakes, cordage, rawhide and buckskin, moccasins, mitts, snowshoes in two stages, jerky and acorn meal. Cooking uses items' cook_to. Each recipe names its skill, the standards it can be worked to (M2b), its routes to knowing it and an origin note for the recipe book.",
+ "id_rules": "Ids are stable strings (prefix.name). Never rename an id once saves exist; add an alias instead. Display names are separate and may change. An id is defined in exactly one place: the live file or the backlog.",
+ "milestones": {
+  "M1": "A winter night: fire, shelter, cold, hunger, sleep, time safety; the fort region only; one background; 1765",
+  "M2a": "A winter from the woods: living from the manor woods through the winter by your own hands (gathering, hides, sewing, snares, snowshoes, a half-faced camp, a hung cache, ice fishing); plain barter with the sutler, the trader, the garrison's soldiers, a farm family from German Flatts and an old hunter; credit and the fall outfit as options; the second background",
+  "M2b": "Learning from neighbours: lessons, watching, examining, quality standards, haggling, promises and loans",
+  "M3": "The year turns: the full almanac, seasons and weather content, the summer goal (bark and a cabin), fishing, frogs, ginseng, one played wage job; the fur cap and robe, leggings, carving, casting balls, the cache pit, char cloth and spruce beer",
+  "M4": "People: NPC schedules and tiers at the fort, standing, invitations, the soldiers and the lieutenant as mentors; Native characters only after the relevant nation's sign-off",
+  "M5": "The map: the Carry, the valley, the town and the hunting grounds, travel and camps, other markets and backgrounds",
+  "post": "After M5 and not yet planned: the 1757 and 1761 starts and their eras, detailed illnesses, thirst, potash, upstream canoe and bateau travel, the Proxy NPC tier, languages beyond English, French, Mohawk and Oneida"
+ },
+ "source_keys": {
+  "E": "graph_analysis/survival/research_economy_life.md, source list S# (E:S14 = source S14)",
+  "K": "graph_analysis/survival/research_survival_skills.md, numbered sources [#] (K:1 = source [1])",
+  "Y": "graph_analysis/survival/research_systems.md, section number (Y:3.2 = section 3.2)",
+  "C": "graph_analysis/customizer/costume_bible.md, section number",
+  "A": "Player_Animation_Project/blender_animation_index.csv (clip names and asset ids)",
+  "N": "graph_analysis/survival/survival_gdd.md, sources list (N:3 = source N3; N33 onward added in version 3)"
+ },
+ "basis_keys": {
+  "S": "sourced: checked against a primary source, a scholarly work or an institutional page; web summaries and popular pages do not qualify",
+  "H": "standard historiography (books in the GDD sources list); verify before quoting",
+  "H-regional": "true for one region's trade or society (named in the row); not yet checked for New York",
+  "M": "modern science or medicine sets the mechanic (period explanation may differ)",
+  "D": "design value for balance, or a figure resting on web summaries; not a checked historical record"
+ },
+ "rules": {
+  "yield": "outputs are the Success amounts; the action's outcome yield_mult scales them (excellent 1.25, success 1.0, partial 0.6, failure 0).",
+  "failure_keeps": "On a failure about half the inputs are kept or the output is downgraded; everything is lost only on a mishap. The prompt lists the materials at risk next to the chance.",
+  "tools": "each inner list is any-of; all lists are required. Tools are not consumed unless the action wears them.",
+  "station": "world object that must be near and in the given state",
+  "inputs_any": "lists of which any one carried item serves (1 of it unless the recipe says inputs_any_qty)",
+  "input_meta_exclude": "stacks whose meta has these values are not used (a green or slipped pelt, curing buckskin, spoiled meat)",
+  "time_min": "overrides the action's working time for this recipe",
+  "difficulty": "overrides the action's D for this recipe",
+  "base_xp": "overrides the action's base experience for this recipe",
+  "near": "world or node tags this recipe needs besides the action's (the sapling stand for splints)",
+  "stage_of": "the recipe is one stage of a longer make; no stage exceeds 120 game minutes (seasons.json time.production_rule)",
+  "cure_game_days": "the product waits out a cure (meta.curing) before use; a pair [min, max] rolls in between",
+  "output_to": "world.drying_rack: the product hangs on a rack at the camp until it has cured, then is taken down",
+  "time_mult_with": "a carried tool that speeds the work (a kettle halves leaching)",
+  "knowledge": "the technique that covers this recipe; its knowledge state gates the recipe (skills.json knowledge_model)",
+  "standards": {
+   "plain": {
+    "d_add": 0,
+    "time_mult": 1.0,
+    "quality": 1.0
+   },
+   "good": {
+    "d_add": 15,
+    "time_mult": 1.2,
+    "quality": 1.25
+   },
+   "fine": {
+    "d_add": 30,
+    "time_mult": 1.4,
+    "quality": 1.5
+   },
+   "masterwork": {
+    "d_add": 45,
+    "time_mult": 1.6,
+    "quality": 2.0,
+    "needs_state": "mastered"
+   },
+   "partial_rule": "a partial result above plain gives the product one standard lower",
+   "meta": "the output stack's meta.quality carries the standard's quality; the barter valuation values it as Q",
+   "milestone": "M2b"
+  },
+  "routes": "how a character comes to know it: common, taught_by, watch, examine, trial (with an optional notice)",
+  "origin": "the recipe book's origin note, reviewed with the nations' offices before it ships (GDD section 13, rule 9)",
+  "outcomes": "a recipe's own outcome rows, laid over its action's (a failed buckskin still makes rawhide)",
+  "discrete_units": [
+   "each",
+   "pair",
+   "piece",
+   "length",
+   "bundle",
+   "skin",
+   "set",
+   "sheet",
+   "pelt"
+  ]
+ },
+ "recipes": [
+  {
+   "id": "rcp.stake_set",
+   "action": "craft.stakes",
+   "inputs": {},
+   "outputs": {
+    "item.trap.stake_set": 1
+   },
+   "tools": [
+    [
+     "item.tool.knife",
+     "item.tool.flint_knife"
+    ]
+   ],
+   "notes": "Saplings are cut on the spot (requires node.sapling_stand). Smith's 1756 raccoon fall trap (K:7.1).",
+   "basis": "S",
+   "milestone": "M2a",
+   "status": "slice",
+   "skill": "trapping",
+   "standards": [
+    "plain",
+    "good"
+   ],
+   "routes": {
+    "common": true,
+    "taught_by": [
+     "npc.woods.old_hunter",
+     "player"
+    ],
+    "watch": [
+     "activity:craft"
+    ]
+   },
+   "origin": "The deadfall's stakes, trigger and bait stick: common frontier knowledge (Smith's raccoon falls, 1756; K:1, K:7.1)."
+  },
+  {
+   "id": "rcp.cordage_hemp",
+   "action": "craft.cordage",
+   "skill": "hidecraft",
+   "inputs": {
+    "item.material.hemp_fibre": 1
+   },
+   "outputs": {
+    "item.material.cordage": 3
+   },
+   "difficulty": 15,
+   "time_min": [
+    20,
+    30
+   ],
+   "base_xp": 2,
+   "standards": [
+    "plain",
+    "good",
+    "fine"
+   ],
+   "routes": {
+    "taught_by": [
+     "npc.woods.old_hunter",
+     "player"
+    ],
+    "watch": [
+     "activity:craft"
+    ],
+    "examine": "item.material.cordage",
+    "trial": {
+     "from": [
+      "heard_of",
+      "seen"
+     ],
+     "notice": {
+      "text": "The stalk's fibre strips into long threads. Twisted, it might hold.",
+      "carrying": [
+       "item.material.hemp_fibre"
+      ]
+     }
+    }
+   },
+   "origin": "Indian hemp cordage is an Indigenous technology that colonists learned; wording under consultation (GDD section 13, rule 9).",
+   "notes": "Stalks cut in the fall, retted and stripped, the fibre twisted on the thigh (W:4).",
+   "basis": "S",
+   "sources": [
+    "W:4",
+    "K:20"
+   ],
+   "milestone": "M2a",
+   "status": "slice"
+  },
+  {
+   "id": "rcp.cordage_sinew",
+   "action": "craft.cordage",
+   "skill": "hidecraft",
+   "inputs": {
+    "item.material.sinew": 1
+   },
+   "outputs": {
+    "item.material.cordage": 2
+   },
+   "difficulty": 20,
+   "time_min": [
+    20,
+    30
+   ],
+   "base_xp": 2,
+   "standards": [
+    "plain",
+    "good",
+    "fine"
+   ],
+   "routes": {
+    "taught_by": [
+     "npc.woods.old_hunter",
+     "player"
+    ],
+    "watch": [
+     "activity:craft"
+    ],
+    "trial": {
+     "from": [
+      "heard_of",
+      "seen"
+     ],
+     "notice": {
+      "text": "Dried sinew splits into threads; twisted, it would make a line.",
+      "carrying": [
+       "item.material.sinew"
+      ]
+     }
+    }
+   },
+   "origin": "Sinew thread and cord: used by Native and colonial hunters alike; wording under consultation (GDD section 13, rule 9).",
+   "basis": "D",
+   "sources": [
+    "K:7.2"
+   ],
+   "milestone": "M2a",
+   "status": "slice"
+  },
+  {
+   "id": "rcp.rawhide",
+   "action": "craft.dress_hide",
+   "skill": "hidecraft",
+   "inputs": {
+    "item.material.green_hide": 1
+   },
+   "input_meta_exclude": {
+    "slipped": true,
+    "stretched": true
+   },
+   "outputs": {
+    "item.material.rawhide": 2,
+    "item.material.deer_hair": 2
+   },
+   "tools": [
+    [
+     "item.tool.knife",
+     "item.tool.flint_knife"
+    ]
+   ],
+   "difficulty": 15,
+   "time_min": [
+    40,
+    60
+   ],
+   "base_xp": 2,
+   "standards": [
+    "plain",
+    "good"
+   ],
+   "outcomes": {
+    "failure": {
+     "yield_mult": 0.5,
+     "note": "scraped through in places: only part of the hide will serve"
+    }
+   },
+   "routes": {
+    "taught_by": [
+     "npc.woods.old_hunter",
+     "player"
+    ],
+    "watch": [
+     "activity:skin_dress"
+    ],
+    "examine": "item.material.rawhide",
+    "trial": {
+     "from": [
+      "heard_of",
+      "seen"
+     ],
+     "notice": {
+      "text": "A hide scraped clean and dried hard on a frame would make lacing.",
+      "carrying": [
+       "item.material.green_hide"
+      ],
+      "near": [
+       "node.sapling_stand"
+      ]
+     }
+    }
+   },
+   "origin": "Rawhide lacing and lashings, as Native and colonial snowshoe makers used; wording under consultation (GDD section 13, rule 9).",
+   "notes": "Scraped and dried without dressing: snowshoe lacing, lashings, repairs (K:9.5). The hair is kept for stuffing moccasins.",
+   "basis": "D",
+   "sources": [
+    "K:9.5"
+   ],
+   "milestone": "M2a",
+   "status": "slice"
+  },
+  {
+   "id": "rcp.dress_hide",
+   "action": "craft.dress_hide",
+   "skill": "hidecraft",
+   "knowledge": "know.hide_dressing",
+   "inputs": {
+    "item.material.green_hide": 1
+   },
+   "input_meta_exclude": {
+    "slipped": true,
+    "stretched": true
+   },
+   "inputs_any": [
+    [
+     "item.material.brains",
+     "item.food.cornmeal"
+    ]
+   ],
+   "outputs": {
+    "item.skin.dressed_buckskin": 1,
+    "item.material.deer_hair": 2,
+    "item.material.hide_scrap": 1
+   },
+   "tools": [
+    [
+     "item.tool.knife",
+     "item.tool.flint_knife"
+    ]
+   ],
+   "station": "world.campfire:lit",
+   "difficulty": 35,
+   "time_min": [
+    90,
+    120
+   ],
+   "base_xp": 6,
+   "cure_game_days": 1,
+   "standards": [
+    "plain",
+    "good",
+    "fine",
+    "masterwork"
+   ],
+   "outcomes": {
+    "failure": {
+     "yield_mult": 1.0,
+     "output_variant": "item.material.rawhide",
+     "note": "the hide went hard in the working: it will serve as rawhide"
+    }
+   },
+   "origin": "A Native method of dressing skins, widely learned by colonial hunters; wording under consultation (GDD section 13, rule 9).",
+   "notes": "Flesh, dehair, work in brains (or young corn mash), stretch and work dry, then smoke over the fire; a game day's cure before it can be sewn. Skilled, heavy work (E:3.1).",
+   "basis": "H",
+   "sources": [
+    "E:3.1",
+    "W:9"
+   ],
+   "milestone": "M2a",
+   "status": "slice"
+  },
+  {
+   "id": "rcp.dress_robe",
+   "action": "craft.dress_hide",
+   "skill": "hidecraft",
+   "knowledge": "know.hide_dressing",
+   "inputs": {
+    "item.material.green_bison_robe": 1
+   },
+   "input_meta_exclude": {
+    "slipped": true
+   },
+   "inputs_any": [
+    [
+     "item.material.brains",
+     "item.food.cornmeal"
+    ]
+   ],
+   "outputs": {
+    "item.cloth.fur_robe": 1,
+    "item.material.hide_scrap": 2
+   },
+   "tools": [
+    [
+     "item.tool.knife",
+     "item.tool.flint_knife"
+    ]
+   ],
+   "difficulty": 40,
+   "time_min": [
+    180,
+    240
+   ],
+   "base_xp": 8,
+   "outcomes": {
+    "failure": {
+     "yield_mult": 1.0,
+     "output_variant": "item.material.rawhide",
+     "note": "the hair slipped in the working: it will serve as rawhide"
+    }
+   },
+   "origin": "The Plains nations' way of dressing a buffalo robe with the hair on, the robes the fur trade carried east; wording under consultation (GDD section 13, rule 9).",
+   "notes": "Fleshed and thinned on the frame, brains worked into the flesh side, worked soft by hand, the hair left on; heavier work than a deerskin. Not smoked: a robe is worn and slept under, not wetted like moccasin leather. Pulled forward from M3 to the slice with the plains bison in the game (2026-09-28).",
+   "basis": "H",
+   "sources": [
+    "E:3.1"
+   ],
+   "milestone": "M2a",
+   "status": "slice"
+  },
+  {
+   "id": "rcp.moccasins",
+   "action": "craft.moccasins",
+   "skill": "hidecraft",
+   "inputs": {
+    "item.skin.dressed_buckskin": 0.33,
+    "item.material.sinew": 1
+   },
+   "input_meta_exclude": {
+    "curing": true
+   },
+   "outputs": {
+    "item.cloth.moccasins": 1
+   },
+   "tools": [
+    [
+     "item.tool.awl",
+     "item.tool.bone_awl"
+    ],
+    [
+     "item.tool.knife",
+     "item.tool.flint_knife"
+    ]
+   ],
+   "difficulty": 25,
+   "time_min": [
+    40,
+    60
+   ],
+   "base_xp": 4,
+   "standards": [
+    "plain",
+    "good",
+    "fine",
+    "masterwork"
+   ],
+   "routes": {
+    "taught_by": [
+     "npc.woods.old_hunter",
+     "player"
+    ],
+    "watch": [
+     "activity:craft"
+    ],
+    "examine": "item.cloth.moccasins",
+    "trial": {
+     "from": [
+      "heard_of",
+      "seen"
+     ]
+    }
+   },
+   "origin": "A Native form of footwear that colonial hunters adopted; wording under consultation (GDD section 13, rule 9).",
+   "notes": "One piece with a gathered seam, sewn with an awl and sinew; a pair cost a few hours' labour (Doddridge, W:3). A dressed deerskin cuts about three pairs (fix round 1: was two) [D; H: verify the yield].",
+   "basis": "H-regional",
+   "sources": [
+    "W:3",
+    "K:9"
+   ],
+   "milestone": "M2a",
+   "status": "slice"
+  },
+  {
+   "id": "rcp.mitts_fur",
+   "action": "clothing.sew_mitts",
+   "skill": "hidecraft",
+   "inputs": {
+    "item.material.sinew": 1
+   },
+   "inputs_any": [
+    [
+     "item.pelt.raccoon",
+     "item.pelt.fox",
+     "item.pelt.marten",
+     "item.pelt.wolf",
+     "item.skin.deer_fall",
+     "item.skin.dressed_buckskin"
+    ]
+   ],
+   "input_meta_exclude": {
+    "green": true,
+    "slipped": true
+   },
+   "outputs": {
+    "item.cloth.mitts": 1
+   },
+   "tools": [
+    [
+     "item.tool.awl",
+     "item.tool.bone_awl"
+    ],
+    [
+     "item.tool.knife",
+     "item.tool.flint_knife"
+    ]
+   ],
+   "difficulty": 20,
+   "time_min": [
+    30,
+    45
+   ],
+   "base_xp": 2,
+   "standards": [
+    "plain",
+    "good",
+    "fine"
+   ],
+   "routes": {
+    "taught_by": [
+     "npc.woods.old_hunter",
+     "player"
+    ],
+    "watch": [
+     "activity:craft"
+    ],
+    "examine": "item.cloth.mitts",
+    "trial": {
+     "from": [
+      "heard_of",
+      "seen"
+     ],
+     "notice": {
+      "text": "A dried pelt sewn fur-side in would keep the hands warmer than wool.",
+      "carrying": [
+       "item.material.sinew",
+       "item.tool.awl",
+       "item.tool.bone_awl"
+      ]
+     }
+    }
+   },
+   "origin": "Fur mitts: worn by Native and colonial winter travellers alike.",
+   "basis": "H",
+   "sources": [
+    "K:18",
+    "K:27"
+   ],
+   "milestone": "M2a",
+   "status": "slice",
+   "notes": "Any dried pelt, or a dried deerskin with the hair left on, or buckskin, sewn fur-side (hair-side) in [H: verify period deerskin mittens]; fix round 1 added the deerskins so a hunter's first deer makes mittens before the fur season."
+  },
+  {
+   "id": "rcp.mitts",
+   "action": "clothing.sew_mitts",
+   "skill": "hidecraft",
+   "inputs": {
+    "item.material.wool_scrap": 1
+   },
+   "outputs": {
+    "item.cloth.mitts": 1
+   },
+   "tools": [
+    [
+     "item.tool.needle_thread"
+    ]
+   ],
+   "difficulty": 20,
+   "time_min": [
+    30,
+    45
+   ],
+   "base_xp": 2,
+   "standards": [
+    "plain",
+    "good",
+    "fine"
+   ],
+   "routes": {
+    "taught_by": [
+     "npc.fort.sutler",
+     "player"
+    ],
+    "examine": "item.cloth.mitts",
+    "trial": {
+     "from": [
+      "heard_of",
+      "seen"
+     ]
+    }
+   },
+   "origin": "A European household craft: wool mitts sewn from scraps.",
+   "basis": "D",
+   "sources": [
+    "K:9.5"
+   ],
+   "milestone": "M2a",
+   "status": "slice"
+  },
+  {
+   "id": "rcp.hunting_frock",
+   "action": "clothing.sew_mitts",
+   "skill": "hidecraft",
+   "knowledge": "know.hide_dressing",
+   "inputs": {
+    "item.skin.dressed_buckskin": 1,
+    "item.material.sinew": 1
+   },
+   "outputs": {
+    "item.cloth.hunting_frock": 1
+   },
+   "tools": [
+    [
+     "item.tool.awl",
+     "item.tool.bone_awl"
+    ],
+    [
+     "item.tool.knife",
+     "item.tool.flint_knife"
+    ]
+   ],
+   "difficulty": 30,
+   "time_min": [
+    90,
+    120
+   ],
+   "base_xp": 5,
+   "notes": "A whole dressed skin cut to a frock, the seams sewn with sinew through awl holes and fringed.",
+   "basis": "H",
+   "sources": [
+    "W:3"
+   ],
+   "milestone": "M2a",
+   "status": "slice",
+   "origin": "The backcountry hunting frock, cut in dressed buckskin after the Eastern Woodlands peoples' skin shirts and fringed at the seams, worn by colonial hunters and rangers; wording under consultation (GDD section 13, rule 9)."
+  },
+  {
+   "id": "rcp.leggings_skin",
+   "action": "clothing.sew_mitts",
+   "skill": "hidecraft",
+   "knowledge": "know.hide_dressing",
+   "inputs": {
+    "item.skin.dressed_buckskin": 0.5,
+    "item.material.sinew": 1
+   },
+   "outputs": {
+    "item.cloth.leggings_buckskin": 1
+   },
+   "tools": [
+    [
+     "item.tool.awl",
+     "item.tool.bone_awl"
+    ],
+    [
+     "item.tool.knife",
+     "item.tool.flint_knife"
+    ]
+   ],
+   "difficulty": 25,
+   "time_min": [
+    60,
+    90
+   ],
+   "base_xp": 4,
+   "notes": "Half a skin: a breechclout and two leggings sewn up the outside of the leg, tied to the belt.",
+   "basis": "H",
+   "sources": [
+    "W:3"
+   ],
+   "milestone": "M2a",
+   "status": "slice",
+   "origin": "Breechclout and leggings: Eastern Woodlands dress, widely taken up by colonial hunters, traders and rangers; wording under consultation (GDD section 13, rule 9)."
+  },
+  {
+   "id": "rcp.fur_cap",
+   "action": "clothing.sew_mitts",
+   "skill": "hidecraft",
+   "knowledge": "know.hide_dressing",
+   "inputs": {
+    "item.material.sinew": 1
+   },
+   "inputs_any": [
+    [
+     "item.pelt.raccoon",
+     "item.pelt.fox",
+     "item.pelt.marten",
+     "item.pelt.fisher",
+     "item.pelt.mink",
+     "item.pelt.wolf"
+    ]
+   ],
+   "outputs": {
+    "item.cloth.fur_cap": 1
+   },
+   "tools": [
+    [
+     "item.tool.awl",
+     "item.tool.bone_awl"
+    ],
+    [
+     "item.tool.knife",
+     "item.tool.flint_knife"
+    ]
+   ],
+   "difficulty": 20,
+   "time_min": [
+    30,
+    45
+   ],
+   "base_xp": 2,
+   "notes": "A pelt cut and sewn into a cap, the fur outward (a raccoon's with its tail).",
+   "basis": "H",
+   "sources": [
+    "K:27"
+   ],
+   "milestone": "M2a",
+   "status": "slice",
+   "origin": "A cap of fur, worn across the frontier by the region's peoples and by colonists alike (the raccoon's tail left on); wording under consultation (GDD section 13, rule 9)."
+  },
+  {
+   "id": "rcp.ash_splints",
+   "action": "craft.snowshoes",
+   "skill": "woodcraft",
+   "knowledge": "know.snowshoes",
+   "inputs": {},
+   "outputs": {
+    "item.material.ash_splints": 2
+   },
+   "tools": [
+    [
+     "item.tool.knife",
+     "item.tool.flint_knife"
+    ],
+    [
+     "item.tool.hatchet",
+     "item.tool.axe",
+     "item.weapon.tomahawk",
+     "item.tool.stone_axe"
+    ]
+   ],
+   "near": [
+    "node.sapling_stand"
+   ],
+   "difficulty": 30,
+   "time_min": [
+    90,
+    120
+   ],
+   "base_xp": 7,
+   "stage_of": {
+    "make": "item.tool.snowshoes",
+    "stage": 1,
+    "of": 2
+   },
+   "standards": [
+    "plain",
+    "good",
+    "fine",
+    "masterwork"
+   ],
+   "origin": "A Native form, learned by colonial hunters and soldiers; wording under consultation (GDD section 13, rule 9).",
+   "notes": "Stage 1 of snowshoes: ash split and shaved, steamed, bent on a form and dried (K:9.5).",
+   "basis": "D",
+   "sources": [
+    "K:9.5"
+   ],
+   "milestone": "M2a",
+   "status": "slice"
+  },
+  {
+   "id": "rcp.snowshoes",
+   "action": "craft.snowshoes",
+   "skill": "woodcraft",
+   "knowledge": "know.snowshoes",
+   "inputs": {
+    "item.material.ash_splints": 2,
+    "item.material.rawhide": 2
+   },
+   "outputs": {
+    "item.tool.snowshoes": 1
+   },
+   "tools": [
+    [
+     "item.tool.knife",
+     "item.tool.flint_knife"
+    ],
+    [
+     "item.tool.awl",
+     "item.tool.bone_awl"
+    ]
+   ],
+   "difficulty": 40,
+   "time_min": [
+    100,
+    120
+   ],
+   "base_xp": 8,
+   "stage_of": {
+    "make": "item.tool.snowshoes",
+    "stage": 2,
+    "of": 2
+   },
+   "standards": [
+    "plain",
+    "good",
+    "fine",
+    "masterwork"
+   ],
+   "origin": "A Native form, learned by colonial hunters and soldiers; wording under consultation (GDD section 13, rule 9).",
+   "notes": "Stage 2: lacing the frames with rawhide. Rangers campaigned on snowshoes in 1757-58 (K:2).",
+   "basis": "D",
+   "sources": [
+    "K:2",
+    "K:9.5"
+   ],
+   "milestone": "M2a",
+   "status": "slice"
+  },
+  {
+   "id": "rcp.jerky",
+   "action": "preserve.jerk_scaffold",
+   "skill": "provisions",
+   "inputs": {
+    "item.food.venison_raw": 10
+   },
+   "input_meta_exclude": {
+    "spoiled": true
+   },
+   "outputs": {
+    "item.food.jerky": 4
+   },
+   "station": "world.campfire:lit",
+   "difficulty": 25,
+   "time_min": [
+    60,
+    90
+   ],
+   "base_xp": 8,
+   "cure_game_days": [
+    1,
+    2
+   ],
+   "output_to": "world.drying_rack",
+   "standards": [
+    "plain",
+    "good"
+   ],
+   "routes": {
+    "taught_by": [
+     "npc.fort.sutler",
+     "npc.woods.old_hunter",
+     "player"
+    ],
+    "watch": [
+     "activity:cook"
+    ],
+    "trial": {
+     "from": [
+      "heard_of",
+      "seen"
+     ],
+     "notice": {
+      "text": "Smoke and a slow fire dry meat; strips hung over it might keep.",
+      "carrying": [
+       "item.food.venison_raw"
+      ],
+      "near": [
+       "world.campfire:lit"
+      ],
+      "min_qty": {
+       "item.food.venison_raw": 10
+      }
+     }
+    }
+   },
+   "origin": "Meat cut thin and dried on a scaffold over a slow fire, as Native and colonial hunters did; wording under consultation (GDD section 13, rule 9).",
+   "notes": "Thin strips on the drying rack over a slow, smoky fire, 'where there was no salt' (K:24); 1-2 game days on the rack. About 60% of the weight is water (K:8.1).",
+   "basis": "M",
+   "sources": [
+    "K:24",
+    "K:1",
+    "K:8.1"
+   ],
+   "milestone": "M2a",
+   "status": "slice"
+  },
+  {
+   "id": "rcp.acorn_meal",
+   "action": "forage.leach_acorns",
+   "skill": "provisions",
+   "inputs": {
+    "item.food.acorns": 30
+   },
+   "outputs": {
+    "item.food.acorn_meal": 2.4
+   },
+   "difficulty": 20,
+   "time_min": [
+    50,
+    70
+   ],
+   "base_xp": 2,
+   "time_mult_with": {
+    "item.tool.kettle_brass": 0.5
+   },
+   "standards": [
+    "plain"
+   ],
+   "routes": {
+    "watch": [
+     "activity:cook"
+    ],
+    "trial": {
+     "from": [
+      "heard_of",
+      "seen"
+     ],
+     "notice": {
+      "text": "Acorns are bitter. Would running water wash the bitterness out?",
+      "carrying": [
+       "item.food.acorns"
+      ],
+      "near": [
+       "node.water"
+      ],
+      "min_qty": {
+       "item.food.acorns": 10
+      }
+     }
+    }
+   },
+   "origin": "Leached acorn meal was a Native food, often a secondary one; colonists mostly fed the mast to hogs; wording under consultation (GDD section 13, rule 9).",
+   "notes": "Shell, pound and leach in running water (K:5.3). Fixed under the production rule: 30 handfuls (4,500 historical kcal) give 2.4 lb of meal, about 90% of the energy. A deliberately weak option (W:10, W:11).",
+   "basis": "D",
+   "sources": [
+    "K:5.3",
+    "K:30",
+    "W:11"
+   ],
+   "milestone": "M2a",
+   "status": "slice"
+  },
+  {
+   "id": "rcp.cast_balls",
+   "action": "craft.cast_balls",
+   "inputs": {
+    "item.ammo.lead": 1
+   },
+   "outputs": {
+    "item.ammo.ball": 16
+   },
+   "tools": [
+    [
+     "item.tool.bullet_mould"
+    ]
+   ],
+   "station": "world.campfire:lit",
+   "basis": "D",
+   "status": "slice",
+   "milestone": "M2a",
+   "skill": "survival",
+   "routes": {
+    "common": true
+   },
+   "origin": "Casting balls from bar lead in a mould at the fire: every musket owner's camp work.",
+   "notes": "About 16 balls to the pound for a trade gun's bore (items.json item.ammo.lead); the mould and ladle are the hunter's own kit."
+  },
+  {
+   "id": "rcp.smoked_fish",
+   "action": "preserve.jerk_scaffold",
+   "inputs": {
+    "item.food.fish_raw": 6
+   },
+   "outputs": {
+    "item.food.smoked_fish": 3
+   },
+   "station": "world.campfire:lit",
+   "basis": "D",
+   "status": "slice",
+   "milestone": "M2a",
+   "skill": "provisions",
+   "difficulty": 25,
+   "time_min": [
+    50,
+    70
+   ],
+   "base_xp": 8,
+   "cure_game_days": [
+    1,
+    2
+   ],
+   "output_to": "world.drying_rack",
+   "input_meta_exclude": {
+    "spoiled": true
+   },
+   "standards": [
+    "plain",
+    "good"
+   ],
+   "outcomes": {
+    "excellent": {
+     "yield_mult": 1.1,
+     "output_variant": "item.food.smoked_fish"
+    },
+    "success": {
+     "yield_mult": 1.0,
+     "output_variant": "item.food.smoked_fish"
+    },
+    "partial": {
+     "yield_mult": 0.6,
+     "output_variant": "item.food.smoked_fish"
+    },
+    "failure": {
+     "yield_mult": 0.5,
+     "output_variant": "item.food.smoked_fish",
+     "note": "half the fish under-smoked and thrown out"
+    }
+   },
+   "routes": {
+    "common": true
+   },
+   "origin": "Fish split and smoked over a slow fire, as Native and colonial fishers did; wording under consultation (GDD section 13, rule 9).",
+   "notes": "Six pounds of fresh fish dry to three of smoked fish on the jerky rack (fix round 1: live from M2a with hook-and-line fishing, for Provisions practice and a spring and summer store) [D].",
+   "sources": [
+    "K:23",
+    "K:8.1"
+   ]
+  }
+ ],
+ "critical": {
+  "rule": "T7, no coin on the critical path (static, tests/survival/test_survival_data.gd): every critical output has a producing path from live nodes, carcass yields, the background's kit or makeable tools with no market step, and every recipe and technique on it is known, heard of, seen or reachable by a notice for each background without a lesson.",
+  "outputs": {
+   "item.cloth.moccasins": "warmth",
+   "item.cloth.mitts": "warmth",
+   "item.material.cordage": "making",
+   "item.material.rawhide": "making",
+   "item.skin.dressed_buckskin": "making",
+   "item.food.jerky": "food",
+   "item.tool.snowshoes": "travel"
+  },
+  "techniques": {
+   "fire.gather": "fire",
+   "fire.strike_flint_steel": "fire",
+   "shelter.brush_leanto": "shelter",
+   "shelter.half_faced_camp": "shelter",
+   "forage.search": "food",
+   "forage.dig_groundnut": "food",
+   "trap.deadfall_set": "food",
+   "trap.snare_set": "food",
+   "clothing.repair_moccasins": "mending",
+   "preserve.cache_pit": "food"
+  },
+  "kit_consumables": {
+   "item.tool.flint": {
+    "uses_needed": 72,
+    "why": "about two strikes a game day for a game year (36 game days) [D]; chert strike-a-lights from the streambed refill it at M3"
+   }
+  },
+  "rule_consumables": "T7b (fix round 1): a path that runs on a traded consumable counts as a market step unless it has a no-market refill; a kit consumable listed here passes when the kit covers uses_needed (test_survival_data.gd). Musket hunting is not a critical path; the hunter's balls refill from his own lead (craft.cast_balls)."
+ }
+}

@@ -1,0 +1,916 @@
+{
+ "id": "br_coat_cropped_1758",
+ "name": "Regimental coat, cropped (1758)",
+ "description": "The lapelled regimental coat with its skirts docked to the upper thigh and the lace taken off.",
+ "kind": "garment",
+ "set": "regulars",
+ "slot": "outer",
+ "alt_slots": [],
+ "layer": {
+  "default": 40
+ },
+ "glb": "res://assets/character/garments/military/br_coat_cropped_1758.glb",
+ "mesh": "br_coat_cropped_1758",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "br_coat_cropped_1758"
+  }
+ ],
+ "occupies_regions": [
+  "neck_upper",
+  "neck_lower",
+  "chest_upper_front",
+  "chest_upper_side",
+  "chest_upper_back",
+  "chest_front",
+  "chest_side",
+  "chest_back",
+  "abdomen_front",
+  "abdomen_side",
+  "abdomen_back",
+  "pelvis_center",
+  "pelvis_side",
+  "upper_arm_l",
+  "forearm_a_l",
+  "forearm_b_l",
+  "forearm_c_l",
+  "upper_arm_r",
+  "forearm_a_r",
+  "forearm_b_r",
+  "forearm_c_r",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_regions": [
+  "chest_upper_back",
+  "chest_back",
+  "abdomen_back",
+  "forearm_a_l",
+  "forearm_a_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": {
+  "hems_godot": [
+   [
+    0.12,
+    0.585,
+    0.145
+   ],
+   [
+    0.24,
+    0.555,
+    -0.01
+   ],
+   [
+    0.12,
+    0.525,
+    -0.18
+   ]
+  ],
+  "hem_back": 0.655,
+  "hem_front": 0.6900000000000001,
+  "vent_top": 0.83,
+  "panels": [
+   "upper_leg_front_helper",
+   "upper_leg_thigh_helper",
+   "upper_leg_rear_helper"
+  ]
+ },
+ "helpers": [
+  "shoulder_twist",
+  "forarm_twist",
+  "upper_leg_front_helper",
+  "upper_leg_thigh_helper",
+  "upper_leg_rear_helper"
+ ],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "coat",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "madder_red",
+    "scarlet"
+   ],
+   "default": "madder_red",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "madder_red": "#8E2B21",
+    "scarlet": "#A8161E"
+   }
+  },
+  {
+   "zone": 1,
+   "name": "facings and lining",
+   "role": "trim",
+   "fabric": "WOOL",
+   "palette": [
+    "yellow",
+    "pale_yellow",
+    "deep_yellow",
+    "buff",
+    "pale_buff",
+    "white_facing",
+    "orange",
+    "full_green",
+    "deep_green",
+    "royal_blue",
+    "logwood_black",
+    "madder_red"
+   ],
+   "default": "buff",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "yellow": "#D0A93A",
+    "pale_yellow": "#D8C675",
+    "deep_yellow": "#C38E26",
+    "buff": "#D2B98A",
+    "pale_buff": "#DCCAA0",
+    "white_facing": "#E4DECC",
+    "orange": "#C0632A",
+    "full_green": "#2E5134",
+    "deep_green": "#213A2A",
+    "royal_blue": "#233C78",
+    "logwood_black": "#1C1B20",
+    "madder_red": "#8E2B21"
+   }
+  },
+  {
+   "zone": 3,
+   "name": "buttons",
+   "role": "button",
+   "fabric": "MET",
+   "palette": [
+    "pewter",
+    "brass",
+    "silver"
+   ],
+   "default": "pewter",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "pewter": "#9A9C9A",
+    "brass": "#B58F4A",
+    "silver": "#C8CACC"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 6515,
+    "verts": 3523,
+    "zones": [
+     0,
+     1,
+     3
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "forearm_a_r",
+     "forearm_b_l",
+     "forearm_b_r",
+     "forearm_c_l",
+     "forearm_c_r",
+     "head",
+     "neck_lower",
+     "neck_upper",
+     "pelvis_center",
+     "pelvis_side",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r",
+     "upper_arm_l",
+     "upper_arm_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "r_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "l_shoulder",
+     "l_elbow",
+     "l_wrist",
+     "r_clavicle",
+     "r_shoulder",
+     "r_elbow",
+     "r_wrist",
+     "neck",
+     "heada",
+     "headb",
+     "l_forarm_twist_a",
+     "l_forarm_twist_c",
+     "l_forarm_twist_b",
+     "r_forarm_twist_a",
+     "r_forarm_twist_c",
+     "r_forarm_twist_b",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_shoulder_twist_a",
+     "l_shoulder_twist_c",
+     "l_shoulder_twist_b",
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 6515,
+  "verts": 3523,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0228
+  },
+  "glb_kb": 628.2
+ },
+ "budget": {
+  "tris_max": 8000
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "In 1758 Lord Howe had the army's coats docked shorter than the Highlanders' and the lace removed; gorgets and sashes were left behind (Huck, 29 May 1758).",
+ "sources": [
+  "M1",
+  "M3",
+  "P5"
+ ],
+ "aliases": [],
+ "tags": [
+  "regulars",
+  "british",
+  "1758"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": false,
+   "layer": "outer",
+   "groups": {
+    "arms_lower": {
+     "n": 546,
+     "min": 0.0135,
+     "max": 0.0241,
+     "below_inner": 0,
+     "above_outer": 56,
+     "band": [
+      0.011,
+      0.021
+     ]
+    },
+    "arms_upper": {
+     "n": 247,
+     "min": 0.014,
+     "max": 0.0351,
+     "below_inner": 0,
+     "above_outer": 79,
+     "band": [
+      0.011,
+      0.014
+     ]
+    },
+    "head": {
+     "n": 28,
+     "min": 0.0062,
+     "max": 0.0206,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "hips": {
+     "n": 576,
+     "min": 0.0223,
+     "max": 0.1012,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.013,
+      null
+     ]
+    },
+    "neck": {
+     "n": 134,
+     "min": 0.0153,
+     "max": 0.0338,
+     "below_inner": 1,
+     "above_outer": 0,
+     "band": [
+      0.018,
+      null
+     ]
+    },
+    "thighs": {
+     "n": 1022,
+     "min": 0.02,
+     "max": 0.1094,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.013,
+      null
+     ]
+    },
+    "torso_lower": {
+     "n": 259,
+     "min": 0.029,
+     "max": 0.0476,
+     "below_inner": 0,
+     "above_outer": 259,
+     "band": [
+      0.013,
+      0.018
+     ]
+    },
+    "torso_upper": {
+     "n": 711,
+     "min": 0.0178,
+     "max": 0.0471,
+     "below_inner": 0,
+     "above_outer": 703,
+     "band": [
+      0.013,
+      0.018
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/military_br_coat_cropped_1758.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_br_coat_cropped_1758.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+ "regiments": [
+  {
+   "id": "foot_15th",
+   "name": "15th Foot",
+   "facing": "yellow",
+   "lace": {
+    "base": "linen_white",
+    "stripes": [
+     [
+      "ribbon_black",
+      0.3,
+      0.14
+     ],
+     [
+      "ribbon_yellow",
+      0.62,
+      0.14
+     ]
+    ]
+   },
+   "lace_recorded": true,
+   "buttons": "pewter",
+   "note": "Lace black and yellow.",
+   "sources": [
+    "P5",
+    "M5"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_17th",
+   "name": "17th Foot",
+   "facing": "white_facing",
+   "lace": {
+    "base": "linen_white",
+    "stripes": []
+   },
+   "lace_recorded": false,
+   "buttons": "pewter",
+   "note": "Greyish-white facings.",
+   "sources": [
+    "P5"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_22nd",
+   "name": "22nd Foot",
+   "facing": "buff",
+   "lace": {
+    "base": "linen_white",
+    "stripes": []
+   },
+   "lace_recorded": false,
+   "buttons": "pewter",
+   "note": "",
+   "sources": [
+    "P5"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_27th",
+   "name": "27th Foot",
+   "facing": "buff",
+   "lace": {
+    "base": "linen_white",
+    "stripes": []
+   },
+   "lace_recorded": false,
+   "buttons": "pewter",
+   "note": "Inniskilling: castle badge.",
+   "sources": [
+    "P5"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_28th",
+   "name": "28th Foot",
+   "facing": "yellow",
+   "lace": {
+    "base": "linen_white",
+    "stripes": [
+     [
+      "ribbon_yellow",
+      0.25,
+      0.1
+     ],
+     [
+      "ribbon_black",
+      0.5,
+      0.1
+     ],
+     [
+      "ribbon_yellow",
+      0.75,
+      0.1
+     ]
+    ]
+   },
+   "lace_recorded": true,
+   "buttons": "pewter",
+   "note": "Lace with yellow and black lines and black spots (spots not drawn).",
+   "sources": [
+    "P5",
+    "M5"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_35th",
+   "name": "35th Foot",
+   "facing": "orange",
+   "lace": {
+    "base": "linen_white",
+    "stripes": [
+     [
+      "ribbon_black",
+      0.28,
+      0.14
+     ],
+     [
+      "orange",
+      0.62,
+      0.18
+     ]
+    ]
+   },
+   "lace_recorded": true,
+   "buttons": "pewter",
+   "note": "Lace black and orange with an orange zigzag (drawn as a stripe).",
+   "sources": [
+    "P5",
+    "M5"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_40th",
+   "name": "40th Foot",
+   "facing": "buff",
+   "lace": {
+    "base": "linen_white",
+    "stripes": []
+   },
+   "lace_recorded": false,
+   "buttons": "pewter",
+   "note": "",
+   "sources": [
+    "P5"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_42nd",
+   "name": "42nd Foot",
+   "facing": "buff",
+   "lace": {
+    "base": "linen_white",
+    "stripes": []
+   },
+   "lace_recorded": false,
+   "buttons": "pewter",
+   "note": "Highland regiment: buff facings, blue after it became Royal in July 1758 (Highland jacket and plaid are separate items).",
+   "sources": [
+    "P5",
+    "R6"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_43rd",
+   "name": "43rd Foot",
+   "facing": "white_facing",
+   "lace": {
+    "base": "linen_white",
+    "stripes": [
+     [
+      "ribbon_red",
+      0.3,
+      0.12
+     ],
+     [
+      "ribbon_blue",
+      0.62,
+      0.12
+     ]
+    ]
+   },
+   "lace_recorded": true,
+   "buttons": "pewter",
+   "note": "Lace with red lines and blue devices (devices drawn as a stripe).",
+   "sources": [
+    "P5",
+    "M5"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_44th",
+   "name": "44th Foot",
+   "facing": "yellow",
+   "lace": {
+    "base": "linen_white",
+    "stripes": []
+   },
+   "lace_recorded": false,
+   "buttons": "pewter",
+   "note": "With the 48th in Braddock's army, 1755.",
+   "sources": [
+    "P5"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_45th",
+   "name": "45th Foot",
+   "facing": "deep_green",
+   "lace": {
+    "base": "linen_white",
+    "stripes": []
+   },
+   "lace_recorded": false,
+   "buttons": "pewter",
+   "note": "",
+   "sources": [
+    "P5"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_46th",
+   "name": "46th Foot",
+   "facing": "yellow",
+   "lace": {
+    "base": "linen_white",
+    "stripes": []
+   },
+   "lace_recorded": false,
+   "buttons": "pewter",
+   "note": "",
+   "sources": [
+    "P5"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_47th",
+   "name": "47th Foot",
+   "facing": "white_facing",
+   "lace": {
+    "base": "linen_white",
+    "stripes": []
+   },
+   "lace_recorded": false,
+   "buttons": "pewter",
+   "note": "In 1759 wore the 50th and 51st's clothing after its own was captured.",
+   "sources": [
+    "P5",
+    "M5"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_48th",
+   "name": "48th Foot",
+   "facing": "buff",
+   "lace": {
+    "base": "linen_white",
+    "stripes": [
+     [
+      "ribbon_green",
+      0.3,
+      0.13
+     ],
+     [
+      "ribbon_yellow",
+      0.62,
+      0.13
+     ]
+    ]
+   },
+   "lace_recorded": true,
+   "buttons": "pewter",
+   "note": "Lace green and yellow.",
+   "sources": [
+    "P5",
+    "M5"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_58th",
+   "name": "58th Foot",
+   "facing": "logwood_black",
+   "lace": {
+    "base": "linen_white",
+    "stripes": [
+     [
+      "ribbon_yellow",
+      0.5,
+      0.35
+     ]
+    ]
+   },
+   "lace_recorded": true,
+   "buttons": "brass",
+   "note": "Yellow lace, brass buttons.",
+   "sources": [
+    "M5"
+   ],
+   "evidence": "A"
+  },
+  {
+   "id": "foot_60th",
+   "name": "60th Foot",
+   "facing": "royal_blue",
+   "lace": null,
+   "lace_recorded": true,
+   "buttons": "pewter",
+   "note": "Royal American Regiment: no lace for the men.",
+   "sources": [
+    "R23"
+   ],
+   "evidence": "A"
+  }
+ ],
+ "female_body_note": "Grade C on a female body (bible \u00a75.1).",
+ "pieces_tris": {
+  "0_cloth": 3025,
+  "1_cloth": 2744,
+  "2_trim": 8,
+  "3_trim": 738
+ },
+ "coverage": {
+  "method": "rays from the skin: normal + 4 tilted 25 deg, female and male fit, within 25 cm (military_lib._base.coverage)",
+  "hidden": [
+   "chest_upper_back",
+   "chest_back",
+   "abdomen_back",
+   "forearm_a_l",
+   "forearm_a_r"
+  ],
+  "not_hidden_candidates": {
+   "chest_upper_side": 0.98,
+   "chest_side": 0.949,
+   "abdomen_side": 0.892,
+   "upper_arm_l": 0.917,
+   "upper_arm_r": 0.925
+  },
+  "share": {
+   "head": {
+    "normal": 0.023,
+    "cone": 0.001
+   },
+   "neck_upper": {
+    "normal": 0.516,
+    "cone": 0.323
+   },
+   "neck_lower": {
+    "normal": 0.916,
+    "cone": 0.851
+   },
+   "chest_upper_front": {
+    "normal": 0.692,
+    "cone": 0.393
+   },
+   "chest_upper_side": {
+    "normal": 0.995,
+    "cone": 0.98
+   },
+   "chest_upper_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_front": {
+    "normal": 0.579,
+    "cone": 0.129
+   },
+   "chest_side": {
+    "normal": 0.998,
+    "cone": 0.949
+   },
+   "chest_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_front": {
+    "normal": 0.314,
+    "cone": 0.0
+   },
+   "abdomen_side": {
+    "normal": 0.982,
+    "cone": 0.892
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "pelvis_center": {
+    "normal": 0.637,
+    "cone": 0.55
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 0.987
+   },
+   "upper_arm_l": {
+    "normal": 0.965,
+    "cone": 0.917
+   },
+   "forearm_a_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_l": {
+    "normal": 1.0,
+    "cone": 0.993
+   },
+   "forearm_c_l": {
+    "normal": 0.362,
+    "cone": 0.103
+   },
+   "wrist_l": {
+    "normal": 0.15,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.139,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.965,
+    "cone": 0.925
+   },
+   "forearm_a_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_r": {
+    "normal": 1.0,
+    "cone": 0.987
+   },
+   "forearm_c_r": {
+    "normal": 0.495,
+    "cone": 0.175
+   },
+   "wrist_r": {
+    "normal": 0.138,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.138,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.659,
+    "cone": 0.576
+   },
+   "thigh_lower_l": {
+    "normal": 0.151,
+    "cone": 0.068
+   },
+   "thigh_upper_r": {
+    "normal": 0.667,
+    "cone": 0.598
+   },
+   "thigh_lower_r": {
+    "normal": 0.151,
+    "cone": 0.069
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 6.16,
+   "p05_mm": 14.0,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 5.33,
+   "p05_mm": 13.75,
+   "inside_skin": 0
+  }
+ },
+ "deform_limits": {
+  "br_coat_cropped_1758": [
+   0.0675,
+   0.1055,
+   0.1445,
+   25.2
+  ]
+ },
+ "deform_class": {
+  "class": "coat",
+  "legacy_limit": [
+   0.072,
+   0.125,
+   0.23,
+   27.0
+  ]
+ },
+ "deform_scan": {
+  "female": [
+   0.0533,
+   0.08439999999999999,
+   0.11019999999999999,
+   19.72
+  ],
+  "male": [
+   0.0537,
+   0.08289999999999999,
+   0.1153,
+   20.11
+  ],
+  "worst": [
+   0.0537,
+   0.08439999999999999,
+   0.1153,
+   20.11
+  ],
+  "limit": [
+   0.0675,
+   0.1055,
+   0.1445,
+   25.2
+  ],
+  "legacy_class": "coat",
+  "legacy_limit": [
+   0.072,
+   0.125,
+   0.23,
+   27.0
+  ],
+  "within_legacy_class": true,
+  "scanned": "2026-09-24"
+ }
+}

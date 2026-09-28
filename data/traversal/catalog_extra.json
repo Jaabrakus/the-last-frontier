@@ -1,0 +1,377 @@
+{
+ "meta": {
+  "authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file",
+  "generator": "hand-made extra catalogue for tools/traversal/measure_traversal_clips.gd (landing clips the traversal preview plays after drops; LocoBrain owns them in game)",
+  "inputs": {
+   "graph_export": {
+    "path": "animations/actor_b_graph.json",
+    "sha256": "92c245898730e2b331a31a00be907a23db28a14cb8380e2f98884e99e3cb13fd"
+   },
+   "index": {
+    "path": "PAP/blender_animation_index.csv",
+    "sha256": "4011e06af1643fbb47d9de1e726120862cb1ee4822f6bab7306095bf8a997606"
+   },
+   "keyed_bones": {
+    "library_sha256": "d33e8509fea2f1fa1f8828fa374f2c663875c10c5b8fc3a9e69068d3f9611a38",
+    "path": "tools/anim_graph/actor_b_keyed_bones.json",
+    "sha256": "8421f13d9ed606172d1a3a08f9b288ef21c082eedee94c1e99a5239af10d1377"
+   },
+   "player_blending": {
+    "path": "PAP/player_blending/player_blending.json",
+    "sha256": "621970f50dcd1a8a9800c6224b74a2b9a4e7da5ffbcb02174aba483f60bfc770"
+   }
+  },
+  "notes": [
+   "family: first matching regex over the clip name (FAMILIES in the generator); IGC clips are listed by name",
+   "variant.kind: part (-bow--part / -rifle--part / --bow / --rifle: arm + hand + prop-bone weapon layer over the base clip), hands (--hands: finger pose layer), add (--add), base",
+   "name_hints are parsed from names only; measured geometry is in data/traversal/clip_geometry.json",
+   "graph: every (state, leaf) whose leaf resolves to the clip under one of the selections x extras (role leaf), a layer record keyed on the leaf chain (role layer) or a state-keyed record (role state_layer)",
+   "graph_gaps: traversal-family states none of whose leaves resolve to an Actor_B traversal clip under any selection",
+   "graph_states[*].only_with_extras: the state reaches an Actor_B traversal clip only when one of these extra overlays is selected (e.g. the hang states only as a ladder, ledge:ladder); empty = also without extras",
+   "graph_next / graph_prev: state S (playing this clip) has a transition record to state T playing the other clip; fade_s = the smallest record fade; via = up to 4 records (cond = condition summary as in graph_analysis/graph/lib.py short_cond)",
+   "selections ['(all)'] = every selection in meta.resolver.selections; extras ['(any)'] = with and without every extra overlay"
+  ],
+  "resolver": {
+   "extras": [
+    "ledge:grab",
+    "ledge:hang",
+    "ledge:ladder",
+    "jump:flat",
+    "jump:high",
+    "jump:short-jump-1m-lt",
+    "jump:short-jump-1m-rt",
+    "jump:short-jump-2m-lt",
+    "jump:short-jump-2m-rt",
+    "jump:vault",
+    "jump:vault-close",
+    "jump:vault-melee",
+    "jump:wall-jump",
+    "ladder-entry-exit:default",
+    "ladder-entry-exit:rail",
+    "ladder-entry-exit:to-left",
+    "ladder-entry-exit:to-right",
+    "ladder-entry-exit:vault",
+    "crouch-under:none",
+    "crouch-under:on",
+    "wall-shimmy:default",
+    "wall-shimmy:jump-fail",
+    "wall-shimmy:jump-tell"
+   ],
+   "loop": "asc_once",
+   "selections": {
+    "bow/crouch": {
+     "actor_b": "anim-overlay-player-actor_b-actor_b",
+     "crouch": "anim-overlay-player-crouch-crouch",
+     "move": "anim-overlay-player-move-walk-crouched",
+     "weapon-base": "anim-overlay-player-weapon-base-bow",
+     "weapon-draw-holster": "anim-overlay-player-weapon-draw-holster-bow"
+    },
+    "bow/run": {
+     "actor_b": "anim-overlay-player-actor_b-actor_b",
+     "move": "anim-overlay-player-move-run",
+     "weapon-base": "anim-overlay-player-weapon-base-bow",
+     "weapon-draw-holster": "anim-overlay-player-weapon-draw-holster-bow"
+    },
+    "bow/sprint": {
+     "actor_b": "anim-overlay-player-actor_b-actor_b",
+     "move": "anim-overlay-player-move-run-sprint",
+     "weapon-base": "anim-overlay-player-weapon-base-bow",
+     "weapon-draw-holster": "anim-overlay-player-weapon-draw-holster-bow"
+    },
+    "bow/walk": {
+     "actor_b": "anim-overlay-player-actor_b-actor_b",
+     "move": "anim-overlay-player-move-walk",
+     "weapon-base": "anim-overlay-player-weapon-base-bow",
+     "weapon-draw-holster": "anim-overlay-player-weapon-draw-holster-bow"
+    },
+    "musket/crouch": {
+     "actor_b": "anim-overlay-player-actor_b-actor_b",
+     "crouch": "anim-overlay-player-crouch-crouch",
+     "move": "anim-overlay-player-move-walk-crouched",
+     "weapon-base": "anim-overlay-player-weapon-base-long-gun",
+     "weapon-draw-holster": "anim-overlay-player-weapon-draw-holster-long-gun",
+     "weapon-sub-type": "anim-overlay-player-weapon-sub-type-rifle-no-scope"
+    },
+    "musket/run": {
+     "actor_b": "anim-overlay-player-actor_b-actor_b",
+     "move": "anim-overlay-player-move-run",
+     "weapon-base": "anim-overlay-player-weapon-base-long-gun",
+     "weapon-draw-holster": "anim-overlay-player-weapon-draw-holster-long-gun",
+     "weapon-sub-type": "anim-overlay-player-weapon-sub-type-rifle-no-scope"
+    },
+    "musket/sprint": {
+     "actor_b": "anim-overlay-player-actor_b-actor_b",
+     "move": "anim-overlay-player-move-run-sprint",
+     "weapon-base": "anim-overlay-player-weapon-base-long-gun",
+     "weapon-draw-holster": "anim-overlay-player-weapon-draw-holster-long-gun",
+     "weapon-sub-type": "anim-overlay-player-weapon-sub-type-rifle-no-scope"
+    },
+    "musket/walk": {
+     "actor_b": "anim-overlay-player-actor_b-actor_b",
+     "move": "anim-overlay-player-move-walk",
+     "weapon-base": "anim-overlay-player-weapon-base-long-gun",
+     "weapon-draw-holster": "anim-overlay-player-weapon-draw-holster-long-gun",
+     "weapon-sub-type": "anim-overlay-player-weapon-sub-type-rifle-no-scope"
+    },
+    "none/run": {
+     "actor_b": "anim-overlay-player-actor_b-actor_b",
+     "move": "anim-overlay-player-move-run"
+    },
+    "pistol/crouch": {
+     "actor_b": "anim-overlay-player-actor_b-actor_b",
+     "crouch": "anim-overlay-player-crouch-crouch",
+     "move": "anim-overlay-player-move-walk-crouched",
+     "weapon-base": "anim-overlay-player-weapon-base-pistol",
+     "weapon-draw-holster": "anim-overlay-player-weapon-draw-holster-pistol",
+     "weapon-sub-type": "anim-overlay-player-weapon-sub-type-revolver"
+    },
+    "pistol/run": {
+     "actor_b": "anim-overlay-player-actor_b-actor_b",
+     "move": "anim-overlay-player-move-run",
+     "weapon-base": "anim-overlay-player-weapon-base-pistol",
+     "weapon-draw-holster": "anim-overlay-player-weapon-draw-holster-pistol",
+     "weapon-sub-type": "anim-overlay-player-weapon-sub-type-revolver"
+    },
+    "pistol/sprint": {
+     "actor_b": "anim-overlay-player-actor_b-actor_b",
+     "move": "anim-overlay-player-move-run-sprint",
+     "weapon-base": "anim-overlay-player-weapon-base-pistol",
+     "weapon-draw-holster": "anim-overlay-player-weapon-draw-holster-pistol",
+     "weapon-sub-type": "anim-overlay-player-weapon-sub-type-revolver"
+    },
+    "pistol/walk": {
+     "actor_b": "anim-overlay-player-actor_b-actor_b",
+     "move": "anim-overlay-player-move-walk",
+     "weapon-base": "anim-overlay-player-weapon-base-pistol",
+     "weapon-draw-holster": "anim-overlay-player-weapon-draw-holster-pistol",
+     "weapon-sub-type": "anim-overlay-player-weapon-sub-type-revolver"
+    }
+   },
+   "vendor": "tools/anim_graph/vendor (unedited graph-analysis tools)"
+  },
+  "schema": 1,
+  "warnings": []
+ },
+ "families": {
+  "drop": {
+   "clips": [
+    "actor_b-climb-on-0-5m-down^idle-exit",
+    "actor_b-climb-on-0-5m-down^run-enter",
+    "actor_b-climb-on-0-5m-down^run-enter-in-place",
+    "actor_b-climb-on-0-5m-down^run-enter-left",
+    "actor_b-climb-on-0-5m-down^run-enter-right",
+    "actor_b-climb-on-0-5m-down^run-exit",
+    "actor_b-climb-on-0-5m-down^run-loop",
+    "actor_b-climb-on-1m-down^crouch-enter",
+    "actor_b-climb-on-1m-down^crouch-exit",
+    "actor_b-climb-on-1m-down^crouch-loop",
+    "actor_b-climb-on-1m-down^idle-exit",
+    "actor_b-climb-on-1m-down^run-enter",
+    "actor_b-climb-on-1m-down^run-enter-in-place",
+    "actor_b-climb-on-1m-down^run-enter-left",
+    "actor_b-climb-on-1m-down^run-enter-right",
+    "actor_b-climb-on-1m-down^run-exit",
+    "actor_b-climb-on-1m-down^run-loop",
+    "actor_b-climb-on-2-5m-down^idle-exit",
+    "actor_b-climb-on-2-5m-down^run-enter",
+    "actor_b-climb-on-2-5m-down^run-enter-in-place",
+    "actor_b-climb-on-2-5m-down^run-exit",
+    "actor_b-climb-on-2-5m-down^run-loop",
+    "actor_b-climb-on-2m-down^idle-crouch-exit",
+    "actor_b-climb-on-2m-down^idle-exit",
+    "actor_b-climb-on-2m-down^run-enter",
+    "actor_b-climb-on-2m-down^run-enter-left",
+    "actor_b-climb-on-2m-down^run-enter-right",
+    "actor_b-climb-on-2m-down^run-enter-right-in-place",
+    "actor_b-climb-on-2m-down^run-exit",
+    "actor_b-climb-on-2m-down^run-loop",
+    "actor_b-climb-on-3m-down^idle-exit",
+    "actor_b-climb-on-3m-down^run-enter",
+    "actor_b-climb-on-3m-down^run-enter-in-place",
+    "actor_b-climb-on-3m-down^run-enter-left",
+    "actor_b-climb-on-3m-down^run-enter-right",
+    "actor_b-climb-on-3m-down^run-exit",
+    "actor_b-climb-on-3m-down^run-loop",
+    "actor_b-p-crouch-drop-down^fall",
+    "actor_b-p-drop-down^fall",
+    "actor_b-p-drop-down^fall--bow",
+    "actor_b-p-drop-down^fall--rifle",
+    "actor_b-p-jump-down-2m"
+   ],
+   "count": 42,
+   "description": "drops and climb-downs off ledges"
+  }
+ },
+ "graph_gaps": {},
+ "graph_states": {},
+ "clips": {
+  "actor_b-p-land-med^run": {
+   "family": "drop",
+   "graph": [],
+   "graph_next": [],
+   "graph_prev": [],
+   "igc": false,
+   "index": [
+    {
+     "asset_id": "bd417e47625e8df421640258790802432fa349986c7ae7375bf0ee26aacf8e15",
+     "blend_file": "blender_libraries/Actor_B_014.blend",
+     "kind": "clip",
+     "original_name": "actor_b-p-land-med^run",
+     "sample_count": 13,
+     "sample_rate": 10.0
+    }
+   ],
+   "name_hints": {
+    "from_token": "p-land",
+    "segments": [],
+    "to_token": "run"
+   },
+   "variant": {
+    "base_clip": null,
+    "kind": "base",
+    "weapon": null
+   },
+   "variants": []
+  },
+  "actor_b-p-land-med^idle": {
+   "family": "drop",
+   "graph": [],
+   "graph_next": [],
+   "graph_prev": [],
+   "igc": false,
+   "index": [
+    {
+     "asset_id": "b882e8cb7b83d56736cdf1a0803c68aaddd8ff7ffb5b64bd1b18ca1cf619aade",
+     "blend_file": "blender_libraries/Actor_B_014.blend",
+     "kind": "clip",
+     "original_name": "actor_b-p-land-med^idle",
+     "sample_count": 14,
+     "sample_rate": 10.0
+    }
+   ],
+   "name_hints": {
+    "from_token": "p-land",
+    "segments": [],
+    "to_token": "idle"
+   },
+   "variant": {
+    "base_clip": null,
+    "kind": "base",
+    "weapon": null
+   },
+   "variants": []
+  },
+  "actor_b-p-land-soft^run": {
+   "family": "drop",
+   "graph": [],
+   "graph_next": [],
+   "graph_prev": [],
+   "igc": false,
+   "index": [
+    {
+     "asset_id": "56654cd90f38d8c7aa9dbd937c2796e61864c9b648860c3311621357f034c562",
+     "blend_file": "blender_libraries/Actor_B_014.blend",
+     "kind": "clip",
+     "original_name": "actor_b-p-land-soft^run",
+     "sample_count": 5,
+     "sample_rate": 10.0
+    }
+   ],
+   "name_hints": {
+    "from_token": "p-land",
+    "segments": [],
+    "to_token": "run"
+   },
+   "variant": {
+    "base_clip": null,
+    "kind": "base",
+    "weapon": null
+   },
+   "variants": []
+  },
+  "actor_b-p-land-soft^idle": {
+   "family": "drop",
+   "graph": [],
+   "graph_next": [],
+   "graph_prev": [],
+   "igc": false,
+   "index": [
+    {
+     "asset_id": "229e060599fc7492e81f67c18388088a061f5128a000198336662e7125ea2b8f",
+     "blend_file": "blender_libraries/Actor_B_014.blend",
+     "kind": "clip",
+     "original_name": "actor_b-p-land-soft^idle",
+     "sample_count": 16,
+     "sample_rate": 10.0
+    }
+   ],
+   "name_hints": {
+    "from_token": "p-land",
+    "segments": [],
+    "to_token": "idle"
+   },
+   "variant": {
+    "base_clip": null,
+    "kind": "base",
+    "weapon": null
+   },
+   "variants": []
+  },
+  "actor_b-p-land-hard^run": {
+   "family": "drop",
+   "graph": [],
+   "graph_next": [],
+   "graph_prev": [],
+   "igc": false,
+   "index": [
+    {
+     "asset_id": "3665953a2f70641bc8b108478c0c3173881e661716804da7c886b3015ccc6b5e",
+     "blend_file": "blender_libraries/Actor_B_014.blend",
+     "kind": "clip",
+     "original_name": "actor_b-p-land-hard^run",
+     "sample_count": 17,
+     "sample_rate": 10.0
+    }
+   ],
+   "name_hints": {
+    "from_token": "p-land",
+    "segments": [],
+    "to_token": "run"
+   },
+   "variant": {
+    "base_clip": null,
+    "kind": "base",
+    "weapon": null
+   },
+   "variants": []
+  },
+  "actor_b-p-land-hard^idle": {
+   "family": "drop",
+   "graph": [],
+   "graph_next": [],
+   "graph_prev": [],
+   "igc": false,
+   "index": [
+    {
+     "asset_id": "b8b320583dc42fdc1e0df67501c96efafccffb2ea5b4ff38aee7e7fd571d3f7d",
+     "blend_file": "blender_libraries/Actor_B_014.blend",
+     "kind": "clip",
+     "original_name": "actor_b-p-land-hard^idle",
+     "sample_count": 24,
+     "sample_rate": 10.0
+    }
+   ],
+   "name_hints": {
+    "from_token": "p-land",
+    "segments": [],
+    "to_token": "idle"
+   },
+   "variant": {
+    "base_clip": null,
+    "kind": "base",
+    "weapon": null
+   },
+   "variants": []
+  }
+ }
+}

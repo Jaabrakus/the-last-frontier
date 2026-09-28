@@ -1,0 +1,55 @@
+{
+ "bark_palisade": {
+  "source": "bark_brown_02",
+  "lin_lum": 0.10500003397464752,
+  "sat": 0.82
+ },
+ "boards_weathered": {
+  "source": "brown_planks_07",
+  "rows_px": [
+   [
+    285,
+    525
+   ],
+   [
+    715,
+    970
+   ],
+   [
+    1160,
+    1398
+   ],
+   [
+    1915,
+    2150
+   ]
+  ],
+  "lin_lum": 0.18000005185604095,
+  "sat": 0.55,
+  "layout": "4 rows of 512 px; row k covers v in [k/4,(k+1)/4]; u tile = 1 m"
+ },
+ "shingles_riven": {
+  "source": "roof_planks (grain)",
+  "lin_lum": 0.1596067100763321,
+  "tile_m": 2.8,
+  "courses": 8,
+  "course_m": 0.35,
+  "layout": "course k covers v in [k/8,(k+1)/8]; v runs down-slope; butt at the bottom"
+ },
+ "fieldstone": {
+  "source": "stacked_stone_wall",
+  "lin_lum": 0.15000002086162567,
+  "sat": 0.3
+ },
+ "straw_fibre": {
+  "source": "procedural",
+  "lin_lum": 0.2799999999999998
+ },
+ "wool_twill": {
+  "source": "procedural"
+ },
+ "structure_noise": {
+  "source": "procedural",
+  "channels": "R broad fbm, G medium fbm, B vertical streaks, A grain"
+ }
+}

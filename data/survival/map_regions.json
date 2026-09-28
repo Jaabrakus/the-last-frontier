@@ -1,0 +1,693 @@
+{
+ "schema": "frontier.survival.map_regions",
+ "version": 4,
+ "status": "LIVE design data v4: the vertical slice (milestones M1, M2a and M2b; survival_gdd.md version 4). The game and tests/survival/test_survival_data.gd read these rows. Every number is tunable.",
+ "design_doc": "Player_Animation_Project/graph_analysis/survival/survival_gdd.md",
+ "summary": "The slice's one region: the post at the ford and the manor woods, with its land status, resource nodes (with season stocks), trapping cells, fauna, and the old field, the bottomland and the old hunter's hut. The other regions, the travel map, routes and encounters are backlog.",
+ "id_rules": "Ids are stable strings (prefix.name). Never rename an id once saves exist; add an alias instead. Display names are separate and may change. An id is defined in exactly one place: the live file or the backlog.",
+ "milestones": [
+  {
+   "id": "M1",
+   "name": "A winter night",
+   "content": "A winter night: fire, shelter, cold, hunger, sleep, time safety; the fort region only; one background; 1765"
+  },
+  {
+   "id": "M2a",
+   "name": "A winter from the woods",
+   "content": "A winter from the woods: living from the manor woods through the winter by your own hands (gathering, hides, sewing, snares, snowshoes, a half-faced camp, a hung cache, ice fishing); plain barter with the sutler, the trader, the garrison's soldiers, a farm family from German Flatts and an old hunter; credit and the fall outfit as options; the second background"
+  },
+  {
+   "id": "M2b",
+   "name": "Learning from neighbours",
+   "content": "Learning from neighbours: lessons, watching, examining, quality standards, haggling, promises and loans"
+  },
+  {
+   "id": "M3",
+   "name": "The year turns",
+   "content": "The year turns: the full almanac, seasons and weather content, the summer goal (bark and a cabin), fishing, frogs, ginseng, one played wage job; the fur cap and robe, leggings, carving, casting balls, the cache pit, char cloth and spruce beer"
+  },
+  {
+   "id": "M4",
+   "name": "People",
+   "content": "People: NPC schedules and tiers at the fort, standing, invitations, the soldiers and the lieutenant as mentors; Native characters only after the relevant nation's sign-off"
+  },
+  {
+   "id": "M5",
+   "name": "The map",
+   "content": "The map: the Carry, the valley, the town and the hunting grounds, travel and camps, other markets and backgrounds"
+  },
+  {
+   "id": "post",
+   "name": "After M5 and not yet planned",
+   "content": "After M5 and not yet planned: the 1757 and 1761 starts and their eras, detailed illnesses, thirst, potash, upstream canoe and bateau travel, the Proxy NPC tier, languages beyond English, French, Mohawk and Oneida"
+  }
+ ],
+ "source_keys": {
+  "E": "graph_analysis/survival/research_economy_life.md, source list S# (E:S14 = source S14)",
+  "K": "graph_analysis/survival/research_survival_skills.md, numbered sources [#] (K:1 = source [1])",
+  "Y": "graph_analysis/survival/research_systems.md, section number (Y:3.2 = section 3.2)",
+  "C": "graph_analysis/customizer/costume_bible.md, section number",
+  "A": "Player_Animation_Project/blender_animation_index.csv (clip names and asset ids)",
+  "N": "graph_analysis/survival/survival_gdd.md, sources list (N:3 = source N3; N33 onward added in version 3)"
+ },
+ "basis_keys": {
+  "S": "sourced: checked against a primary source, a scholarly work or an institutional page; web summaries and popular pages do not qualify",
+  "H": "standard historiography (books in the GDD sources list); verify before quoting",
+  "H-regional": "true for one region's trade or society (named in the row); not yet checked for New York",
+  "M": "modern science or medicine sets the mechanic (period explanation may differ)",
+  "D": "design value for balance, or a figure resting on web summaries; not a checked historical record"
+ },
+ "setting": {
+  "default": "New York, 1765: the upper Mohawk at the ford between German Flatts and the Carry. The slice is one region; the Carry, the valley, the Oneida town and the hunting grounds come at M5.",
+  "frame": "new_york"
+ },
+ "institutions": {
+  "rule": "Each region names one institutions block.",
+  "new_york": {
+   "currency": "new_york",
+   "land_regime": {
+    "how": [
+     "lease from a patentee or manor (service.patent_lease)",
+     "purchase from a patentee (service.buy_from_patentee)"
+    ],
+    "title_rests_on": "Crown patents resting on Indian deeds; some deeds were fraudulent and are disputed (seasons.json event.deed_dispute: the Kayaderosseras patent, the Canajoharie and George Klock disputes)",
+    "squatting": "marking a lot without a lease or deed gives no right; tomahawk and cabin rights do not apply",
+    "unsettled_patents": "Much patented land in 1765 was still unsettled (Cosby's Manor: granted 1734, surveyed 1762, sold to Philip Schuyler and partners in 1772, lotted in 1786; N:33). Hunting and trapping there needed no one's leave; building or cutting timber for sale needed a lease."
+   },
+   "fish_runs_by_drainage": {
+    "note": "fish runs are backlog (M3)"
+   },
+   "trade_regulator": "seasons.json trade_regulators by era; Johnson's Northern Department (Indian Department) and its commissaries",
+   "settlers": [
+    "Palatine German",
+    "Dutch",
+    "Scots-Irish",
+    "New England"
+   ],
+   "src": [
+    "N:13",
+    "N:21",
+    "N:32",
+    "N:33"
+   ]
+  }
+ },
+ "land_status": {
+  "fort_grounds": {
+   "claims": "not allowed",
+   "note": "the commandant's ground"
+  },
+  "patent_unsettled": {
+   "claims": "a lease from the proprietors for a cabin or timber for sale; none needed to hunt or trap",
+   "hunting": "open",
+   "legal_for_hunter": true,
+   "note": "Cosby's Manor, patented in 1734 on a 1734 Indian deed (grantors to verify, N:33) and still unsettled in 1765. Mohawk and Oneida hunters and travellers still used this country; they appear from M4, each only after its nation's sign-off.",
+   "camps": "a hunter's camp (a lean-to, a half-faced camp, a bark hunting camp) needs no lease; a log house, a clearing or timber for sale needs one, and its rent may be paid in kind"
+  }
+ },
+ "resource_nodes": [
+  {
+   "id": "node.tinder",
+   "gives": [
+    "item.tinder.birchbark",
+    "item.tinder.cedarbark",
+    "item.tinder.grass",
+    "item.tinder.punk",
+    "item.tinder.fungus"
+   ],
+   "biomes": [
+    "forest",
+    "edge"
+   ],
+   "regrow_game_days": 2,
+   "milestone": "M1"
+  },
+  {
+   "id": "node.deadwood",
+   "gives": [
+    "item.fuel.bundle",
+    "item.fuel.kindling",
+    "tinder (fire.gather)"
+   ],
+   "biomes": [
+    "forest"
+   ],
+   "regrow_game_days": 4,
+   "milestone": "M1"
+  },
+  {
+   "id": "node.sapling_stand",
+   "gives": [
+    "item.material.poles"
+   ],
+   "biomes": [
+    "forest",
+    "edge"
+   ],
+   "regrow_game_days": 18,
+   "milestone": "M1"
+  },
+  {
+   "id": "node.conifer",
+   "gives": [
+    "item.material.boughs"
+   ],
+   "biomes": [
+    "forest",
+    "swamp"
+   ],
+   "regrow_game_days": 9,
+   "milestone": "M1"
+  },
+  {
+   "id": "node.windfall",
+   "gives": [
+    "shelter",
+    "item.fuel.bundle"
+   ],
+   "biomes": [
+    "forest"
+   ],
+   "regrow_game_days": null,
+   "milestone": "M1"
+  },
+  {
+   "id": "node.water",
+   "gives": [
+    "wading (the brook)"
+   ],
+   "biomes": [
+    "any"
+   ],
+   "milestone": "M1"
+  },
+  {
+   "id": "node.trail",
+   "gives": [
+    "trap site"
+   ],
+   "biomes": [
+    "forest",
+    "edge",
+    "streambank"
+   ],
+   "milestone": "M2a",
+   "site_quality": {
+    "run_or_crossing": 3,
+    "trail": 2,
+    "off_trail": 1
+   },
+   "note": "Each trail node carries a site quality; the trap's placement starts from it (actions.json trap_model)."
+  },
+  {
+   "id": "node.nut_grove",
+   "gives": [
+    "item.food.nuts"
+   ],
+   "biomes": [
+    "hardwood"
+   ],
+   "milestone": "M2a",
+   "count_in_region": 5,
+   "stock": {
+    "item.food.nuts": 120
+   },
+   "refill": [
+    {
+     "day": "sep_early",
+     "to": {
+      "item.food.nuts": 120
+     }
+    }
+   ],
+   "note": "Five groves hold 27 meals a season; a careful gatherer takes about 16 and leaves room for a second player (redesign_economy.md 3.3). Picked out, a grove is empty until next September; the snow-season row digs what is left."
+  },
+  {
+   "id": "node.oak",
+   "gives": [
+    "item.food.acorns"
+   ],
+   "biomes": [
+    "hardwood"
+   ],
+   "milestone": "M2a",
+   "count_in_region": 6,
+   "stock": {
+    "item.food.acorns": 150
+   },
+   "refill": [
+    {
+     "day": "sep_early",
+     "to": {
+      "item.food.acorns": 150
+     }
+    }
+   ],
+   "note": "Plenty of mast but a poor return: the stock is not the limit, the work is."
+  },
+  {
+   "id": "node.groundnut",
+   "gives": [
+    "item.food.groundnut"
+   ],
+   "biomes": [
+    "thicket",
+    "floodplain"
+   ],
+   "milestone": "M2a",
+   "count_in_region": 5,
+   "stock": {
+    "item.food.groundnut": 60
+   },
+   "refill": [
+    {
+     "day": "sep_early",
+     "to": {
+      "item.food.groundnut": 30
+     }
+    },
+    {
+     "day": "apr_early",
+     "to": {
+      "item.food.groundnut": 30
+     }
+    }
+   ],
+   "note": "Half the bed in the fall and half in April: about 10 meals a season."
+  },
+  {
+   "id": "node.forage_streambank",
+   "gives": [
+    "forage table"
+   ],
+   "biomes": [
+    "streambank"
+   ],
+   "milestone": "M2a",
+   "count_in_region": 6,
+   "stock": {
+    "item.food.grapes": 30,
+    "item.food.fiddleheads": 20
+   },
+   "refill": [
+    {
+     "day": "sep_early",
+     "to": {
+      "item.food.grapes": 30
+     }
+    },
+    {
+     "day": "apr_early",
+     "to": {
+      "item.food.fiddleheads": 20
+     }
+    }
+   ],
+   "note": "Variety, not energy."
+  },
+  {
+   "id": "node.forage_woods",
+   "gives": [
+    "forage table"
+   ],
+   "biomes": [
+    "hardwood"
+   ],
+   "milestone": "M2a",
+   "count_in_region": 6,
+   "stock": {
+    "item.food.ramps": 20,
+    "item.food.strawberries": 20,
+    "item.food.berries": 30
+   },
+   "refill": [
+    {
+     "day": "apr_early",
+     "to": {
+      "item.food.ramps": 20
+     }
+    },
+    {
+     "day": "jun_early",
+     "to": {
+      "item.food.strawberries": 20
+     }
+    },
+    {
+     "day": "jul_early",
+     "to": {
+      "item.food.berries": 30
+     }
+    }
+   ],
+   "note": "Ramps in April and May; strawberries in June and berries in July and August (fix round 1)."
+  },
+  {
+   "id": "node.fish_water",
+   "gives": [
+    "item.food.fish_raw"
+   ],
+   "biomes": [
+    "river",
+    "lake",
+    "stream"
+   ],
+   "milestone": "M2a",
+   "count_in_region": 2,
+   "stock": {
+    "item.food.fish_raw": 40
+   },
+   "recover_per_season": 0.3,
+   "note": "The brook and the ford: 40 lb a winter each, recovering 30% of the deficit a season (like the trapping cells); the spring runs of suckers and pickerel fill each to 60 lb in April [H: verify for the Mohawk's tributaries]. The stock stops fishing replacing the hunt.",
+   "refill": [
+    {
+     "day": "apr_early",
+     "to": {
+      "item.food.fish_raw": 60
+     }
+    }
+   ]
+  },
+  {
+   "id": "node.dry_leaves",
+   "gives": [
+    "moccasin stuffing"
+   ],
+   "biomes": [
+    "hardwood"
+   ],
+   "milestone": "M2a",
+   "note": "Dry leaves for stuffing moccasins; scraped from under the snow in winter."
+  },
+  {
+   "id": "node.hemp_patch",
+   "gives": [
+    "item.material.hemp_fibre"
+   ],
+   "biomes": [
+    "old_field",
+    "streambank"
+   ],
+   "count_in_region": 3,
+   "stock": {
+    "item.material.hemp_fibre": 12
+   },
+   "refill": [
+    {
+     "day": "sep_mid",
+     "to": {
+      "item.material.hemp_fibre": 12
+     }
+    }
+   ],
+   "milestone": "M2a",
+   "note": "Indian hemp (dogbane) in the old field and on the streambank: stalks cut Mid September to Late November (W:4); about 100 lengths of cordage a season in all.",
+   "sources": [
+    "W:4"
+   ]
+  }
+ ],
+ "fauna": {
+  "trap_species": {
+   "marten": {
+    "nightly_rate": 0.045,
+    "stock_per_cell": 1.8,
+    "recovery_per_season": 0.3,
+    "pelt": true,
+    "activity": {
+     "default": 1.0
+    }
+   },
+   "fisher": {
+    "nightly_rate": 0.015,
+    "stock_per_cell": 0.6,
+    "recovery_per_season": 0.3,
+    "pelt": true,
+    "activity": {
+     "default": 1.0
+    }
+   },
+   "mink": {
+    "nightly_rate": 0.038,
+    "stock_per_cell": 1.5,
+    "recovery_per_season": 0.3,
+    "pelt": true,
+    "activity": {
+     "default": 1.0
+    }
+   },
+   "fox": {
+    "nightly_rate": 0.038,
+    "stock_per_cell": 1.5,
+    "recovery_per_season": 0.3,
+    "pelt": true,
+    "activity": {
+     "default": 1.0
+    }
+   },
+   "raccoon": {
+    "nightly_rate": 0.053,
+    "stock_per_cell": 3.3,
+    "recovery_per_season": 0.3,
+    "pelt": true,
+    "activity": {
+     "dec": 0.6,
+     "jan": 0.4,
+     "feb": 0.5,
+     "default": 1.0
+    }
+   },
+   "wolf": {
+    "nightly_rate": 0.006,
+    "stock_per_cell": 0.3,
+    "recovery_per_season": 0.3,
+    "pelt": true,
+    "activity": {
+     "default": 1.0
+    }
+   },
+   "small": {
+    "nightly_rate": 0.075,
+    "stock_per_cell": 3.3,
+    "recovery_per_season": 0.6,
+    "pelt": false,
+    "meat_lb": 2,
+    "activity": {
+     "default": 1.0
+    },
+    "note": "hares, squirrels and the like: food, not fur"
+   }
+  },
+  "trap_species_note": "Game-scale numbers [D]: a trapping cell's stock is the catchable animals in the stretch of trail country it stands for, not a census. Nightly rates are per calendar night for a trap at placement 3 in a full cell.",
+  "deer": {
+   "stock": 24,
+   "immigration_per_game_day": 1.0,
+   "note": "Deer in the region's woods; hunting takes from the stock and deer drift in from the wider manor lands [D]."
+  },
+  "species_notes": {
+   "marten": "Marten in the upland conifer stands [D: verify local abundance in the 1760s].",
+   "wolf": "County wolf bounties are backlog (job.wolf_bounty)."
+  },
+  "src": [
+   "K:30",
+   "K:22",
+   "E:6"
+  ]
+ },
+ "trapping_cells": {
+  "count": 16,
+  "size_m": 250,
+  "sites_per_cell": {
+   "good": 1,
+   "fair": 2
+  },
+  "site_quality": {
+   "good": 3,
+   "fair": 2,
+   "poor": 1
+  },
+  "rule": "The manor woods are divided into 16 trapping cells. Each has one good site (a run, a crossing or a den tree), two fair ones on the trail, and any number of poor ones off it. Stock and depletion are per cell (actions.json trap_model.depletion)."
+ },
+ "regions": [
+  {
+   "id": "reg.fort_clearing",
+   "name": "The post at the ford and the manor woods",
+   "kind": "fort",
+   "status": "exists",
+   "institutions": "new_york",
+   "scene": "res://scenes/main.tscn",
+   "level_script": "res://scripts/world/frontier_level.gd",
+   "size_m": 800,
+   "target_size_m": 1200,
+   "biomes": [
+    "clearing",
+    "hardwood",
+    "edge",
+    "streambank"
+   ],
+   "land_status": {
+    "fort": "fort_grounds",
+    "woods": "patent_unsettled"
+   },
+   "factions": [
+    "faction.garrison"
+   ],
+   "danger": 0.5,
+   "modelled_on": "A composite small post at the Mohawk ford where Old Fort Schuyler stood (built 1758 on Cosby's Manor, garrisoned 1758-60, N:34), kept garrisoned in 1765 as a composite of the last detachments on the Oswego communication (the British gave up Fort Stanwix gradually between about 1765 and 1767, N:35). The woods around it are Cosby's Manor: patented, surveyed, unsettled.",
+   "era_states": {
+    "era.peace_1765_1767": "a lieutenant's detachment of about twenty regulars in what may be the post's last season; the sutler's store; hunters on credit; the Schenectady trader comes up with the boats and by sleigh"
+   },
+   "pois": [
+    {
+     "id": "poi.fort.gate",
+     "type": "fort",
+     "note": "north gate to the range (existing)"
+    },
+    {
+     "id": "poi.fort.parade_ground",
+     "type": "fort",
+     "note": "the district's militia musters here in May"
+    },
+    {
+     "id": "poi.fort.barracks",
+     "type": "fort"
+    },
+    {
+     "id": "poi.fort.officers_quarters",
+     "type": "fort"
+    },
+    {
+     "id": "poi.fort.headquarters",
+     "type": "fort"
+    },
+    {
+     "id": "poi.fort.sutler_store",
+     "type": "fort",
+     "market": "mkt.fort_sutler",
+     "note": "the trader sets up here on his visits"
+    },
+    {
+     "id": "poi.fort.range",
+     "type": "fort",
+     "note": "the existing shooting range"
+    },
+    {
+     "id": "poi.fort.woodpile",
+     "type": "resource",
+     "note": "the garrison's woodpile (world.woodpile)"
+    },
+    {
+     "id": "poi.fort.woodlot",
+     "type": "resource",
+     "nodes": [
+      "node.deadwood",
+      "node.sapling_stand"
+     ]
+    },
+    {
+     "id": "poi.fort.brook",
+     "type": "resource",
+     "nodes": [
+      "node.water",
+      "node.fish_water"
+     ],
+     "note": "wading shortens the line; the log crossing is about 20 game minutes round; ice-hole spot from January (river ice 10 cm or more)"
+    },
+    {
+     "id": "poi.fort.log_crossing",
+     "type": "ford"
+    },
+    {
+     "id": "poi.fort.woods",
+     "type": "resource",
+     "nodes": [
+      "node.trail",
+      "node.conifer",
+      "node.deadwood",
+      "node.tinder",
+      "node.windfall",
+      "node.nut_grove",
+      "node.oak",
+      "node.forage_woods",
+      "node.dry_leaves"
+     ],
+     "note": "the manor woods: 16 trapping cells (trapping_cells)"
+    },
+    {
+     "id": "poi.fort.woods_camp",
+     "type": "campsite",
+     "note": "the backcountry hunter's line camp in the manor woods"
+    },
+    {
+     "id": "poi.fort.old_field",
+     "type": "resource",
+     "nodes": [
+      "node.hemp_patch",
+      "node.sapling_stand",
+      "node.deadwood"
+     ],
+     "note": "the 1758 camp's cleared ground, grown up in brush and Indian hemp",
+     "milestone": "M2a"
+    },
+    {
+     "id": "poi.fort.bottomland",
+     "type": "resource",
+     "nodes": [
+      "node.groundnut",
+      "node.forage_streambank",
+      "node.fish_water",
+      "node.water",
+      "node.hemp_patch"
+     ],
+     "note": "the floodplain by the ford: groundnut thickets, grapes, fish water with an ice-hole spot",
+     "milestone": "M2a"
+    },
+    {
+     "id": "poi.woods.hunters_hut",
+     "type": "campsite",
+     "nodes": [
+      "node.deadwood",
+      "node.sapling_stand",
+      "node.conifer"
+     ],
+     "activity_spots": [
+      "craft",
+      "skin_dress",
+      "hearth"
+     ],
+     "watchable": true,
+     "note": "the old hunter's bark hut on the upper brook",
+     "milestone": "M2a"
+    }
+   ],
+   "nodes_per_km2": {
+    "node.deadwood": 40,
+    "node.tinder": 30,
+    "node.sapling_stand": 12,
+    "node.conifer": 10,
+    "node.trail": 14,
+    "node.windfall": 4,
+    "node.nut_grove": 3.5,
+    "node.oak": 4,
+    "node.groundnut": 3.5,
+    "node.hemp_patch": 2,
+    "node.forage_streambank": 4,
+    "node.forage_woods": 4,
+    "node.fish_water": 1.4
+   },
+   "notes": "Today's 800 m level (terrain.gd WORLD_HALF = 400) becomes the first region, grown toward 1.2 km to hold the woods. No travel map in the slice.",
+   "milestone": "M1",
+   "era_states_note": "Other eras (1758 to 1764 and from 1768) are in backlog/map_regions.json region_extensions."
+  }
+ ],
+ "build_order": [
+  "M1: reg.fort_clearing (exists) with the woods in the same scene",
+  "M2a: trapping cells, trail nodes, the trader's visits, the old field, the bottomland and the old hunter's hut",
+  "M3-M5: backlog/map_regions.json"
+ ],
+ "node_stock_rule": {
+  "rule": "A node's stock is a once-a-season total (the x0.49 season-total rule): each gather takes from it, and a picked-out node is empty until its refill day (or, for fish water, recovers part of its deficit each season). Node instances: the world names them (context.node_id); without one, the core uses the region's count_in_region instances of the type in order.",
+  "coop_scaling": "a host with N players scales stocks by 1 + 0.5 x (N - 1) as a starting point (multiplayer_readiness.md P1-8)",
+  "state": "world (SurvivalState.world.nodes)"
+ }
+}

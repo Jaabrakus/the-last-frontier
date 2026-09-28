@@ -1,0 +1,503 @@
+{
+ "note": "The project's own cuts of public-domain / CC0 recordings; the originals and their provenance stay in the staging folder (Frontier_assets_staging/pd_bird_sfx/PROVENANCE.md, copied in SOURCE.md).",
+ "approved_by_user": "2026-09-26 (\"lets do it\")",
+ "generator": "tools/sfx/birds_rec.py",
+ "credit": "National Park Service (NPS files). No claim to original U.S. Government works.",
+ "takes": [
+  {
+   "id": "bird_rec_barred_owl",
+   "file": "bird_rec_barred_owl_01.wav",
+   "source": "owl_barred_nps_weirfarm.mp3",
+   "from": 111.15,
+   "to": 119.1,
+   "seconds": 7.95,
+   "clarity_db": 16.5
+  },
+  {
+   "id": "bird_rec_barred_owl",
+   "file": "bird_rec_barred_owl_02.wav",
+   "source": "owl_barred_nps_weirfarm.mp3",
+   "from": 118.1,
+   "to": 125.6,
+   "seconds": 7.5,
+   "clarity_db": 16.7
+  },
+  {
+   "id": "bird_rec_barred_owl",
+   "file": "bird_rec_barred_owl_03.wav",
+   "source": "owl_barred_nps_weirfarm.mp3",
+   "from": 124.7,
+   "to": 131.9,
+   "seconds": 7.2,
+   "clarity_db": 16.7
+  },
+  {
+   "id": "bird_rec_barred_owl",
+   "file": "bird_rec_barred_owl_04.wav",
+   "source": "owl_barred_nps_weirfarm.mp3",
+   "from": 131.3,
+   "to": 138.5,
+   "seconds": 7.2,
+   "clarity_db": 17.0
+  },
+  {
+   "id": "bird_rec_barred_owl",
+   "file": "bird_rec_barred_owl_05.wav",
+   "source": "owl_barred_nps_weirfarm.mp3",
+   "from": 138.3,
+   "to": 140.85,
+   "seconds": 2.55,
+   "clarity_db": 16.4
+  },
+  {
+   "id": "bird_rec_great_horned_owl",
+   "file": "bird_rec_great_horned_owl_01.wav",
+   "source": "owl_great_horned_blume.mp3",
+   "from": 13.2,
+   "to": 16.3,
+   "seconds": 3.1,
+   "clarity_db": 15.1
+  },
+  {
+   "id": "bird_rec_great_horned_owl",
+   "file": "bird_rec_great_horned_owl_02.wav",
+   "source": "owl_great_horned_blume.mp3",
+   "from": 27.85,
+   "to": 31.25,
+   "seconds": 3.4,
+   "clarity_db": 14.9
+  },
+  {
+   "id": "bird_rec_great_horned_owl",
+   "file": "bird_rec_great_horned_owl_03.wav",
+   "source": "owl_great_horned_blume.mp3",
+   "from": 80.65,
+   "to": 83.75,
+   "seconds": 3.1,
+   "clarity_db": 14.3
+  },
+  {
+   "id": "bird_rec_great_horned_owl",
+   "file": "bird_rec_great_horned_owl_04.wav",
+   "source": "owl_great_horned_blume.mp3",
+   "from": 126.35,
+   "to": 129.25,
+   "seconds": 2.9,
+   "clarity_db": 13.6
+  },
+  {
+   "id": "bird_rec_great_horned_owl",
+   "file": "bird_rec_great_horned_owl_05.wav",
+   "source": "owl_great_horned_blume.mp3",
+   "from": 155.15,
+   "to": 157.75,
+   "seconds": 2.6,
+   "clarity_db": 13.9
+  },
+  {
+   "id": "bird_rec_whip_poor_will",
+   "file": "bird_rec_whip_poor_will_01.wav",
+   "source": "whip_poor_will_commons.ogg",
+   "from": 19.75,
+   "to": 25.3,
+   "seconds": 5.55,
+   "clarity_db": 21.6
+  },
+  {
+   "id": "bird_rec_whip_poor_will",
+   "file": "bird_rec_whip_poor_will_02.wav",
+   "source": "whip_poor_will_commons.ogg",
+   "from": 25.05,
+   "to": 30.65,
+   "seconds": 5.6,
+   "clarity_db": 21.9
+  },
+  {
+   "id": "bird_rec_whip_poor_will",
+   "file": "bird_rec_whip_poor_will_03.wav",
+   "source": "whip_poor_will_commons.ogg",
+   "from": 52.65,
+   "to": 56.2,
+   "seconds": 3.55,
+   "clarity_db": 20.9
+  },
+  {
+   "id": "bird_rec_whip_poor_will",
+   "file": "bird_rec_whip_poor_will_04.wav",
+   "source": "whip_poor_will_commons.ogg",
+   "from": 70.35,
+   "to": 74.95,
+   "seconds": 4.44,
+   "clarity_db": 21.7
+  },
+  {
+   "id": "bird_rec_wood_thrush",
+   "file": "bird_rec_wood_thrush_01.wav",
+   "source": "wood_thrush_commons.ogg",
+   "from": 589.55,
+   "to": 593.3,
+   "seconds": 3.75,
+   "clarity_db": 30.2
+  },
+  {
+   "id": "bird_rec_wood_thrush",
+   "file": "bird_rec_wood_thrush_02.wav",
+   "source": "wood_thrush_commons.ogg",
+   "from": 593.4,
+   "to": 597.9,
+   "seconds": 4.5,
+   "clarity_db": 31.2
+  },
+  {
+   "id": "bird_rec_wood_thrush",
+   "file": "bird_rec_wood_thrush_03.wav",
+   "source": "wood_thrush_commons.ogg",
+   "from": 598.8,
+   "to": 601.55,
+   "seconds": 2.75,
+   "clarity_db": 28.6
+  },
+  {
+   "id": "bird_rec_wood_thrush",
+   "file": "bird_rec_wood_thrush_04.wav",
+   "source": "wood_thrush_commons.ogg",
+   "from": 601.2,
+   "to": 603.6,
+   "seconds": 2.4,
+   "clarity_db": 29.7
+  },
+  {
+   "id": "bird_rec_wood_thrush",
+   "file": "bird_rec_wood_thrush_05.wav",
+   "source": "wood_thrush_commons.ogg",
+   "from": 621.95,
+   "to": 625.9,
+   "seconds": 3.95,
+   "clarity_db": 34.6
+  },
+  {
+   "id": "bird_rec_wood_thrush",
+   "file": "bird_rec_wood_thrush_06.wav",
+   "source": "wood_thrush_commons.ogg",
+   "from": 625.4,
+   "to": 629.05,
+   "seconds": 3.65,
+   "clarity_db": 35.1
+  },
+  {
+   "id": "bird_rec_wood_thrush",
+   "file": "bird_rec_wood_thrush_07.wav",
+   "source": "wood_thrush_commons.ogg",
+   "from": 629.15,
+   "to": 631.55,
+   "seconds": 2.4,
+   "clarity_db": 32.1
+  },
+  {
+   "id": "bird_rec_veery",
+   "file": "bird_rec_veery_01.wav",
+   "source": "veery_commons.ogg",
+   "from": 60.15,
+   "to": 62.35,
+   "seconds": 2.2,
+   "clarity_db": 32.1
+  },
+  {
+   "id": "bird_rec_veery",
+   "file": "bird_rec_veery_02.wav",
+   "source": "veery_commons.ogg",
+   "from": 192.75,
+   "to": 195.25,
+   "seconds": 2.5,
+   "clarity_db": 30.4
+  },
+  {
+   "id": "bird_rec_veery",
+   "file": "bird_rec_veery_03.wav",
+   "source": "veery_commons.ogg",
+   "from": 210.75,
+   "to": 213.0,
+   "seconds": 2.25,
+   "clarity_db": 31.2
+  },
+  {
+   "id": "bird_rec_veery",
+   "file": "bird_rec_veery_04.wav",
+   "source": "veery_commons.ogg",
+   "from": 216.0,
+   "to": 219.2,
+   "seconds": 3.2,
+   "clarity_db": 34.2
+  },
+  {
+   "id": "bird_rec_veery",
+   "file": "bird_rec_veery_05.wav",
+   "source": "veery_commons.ogg",
+   "from": 224.4,
+   "to": 226.9,
+   "seconds": 2.5,
+   "clarity_db": 30.4
+  },
+  {
+   "id": "bird_rec_hermit_thrush",
+   "file": "bird_rec_hermit_thrush_01.wav",
+   "source": "hermit_thrush_nps.mp3",
+   "from": 9.35,
+   "to": 11.4,
+   "seconds": 2.05,
+   "clarity_db": 28.7
+  },
+  {
+   "id": "bird_rec_hermit_thrush",
+   "file": "bird_rec_hermit_thrush_02.wav",
+   "source": "hermit_thrush_nps.mp3",
+   "from": 98.35,
+   "to": 100.4,
+   "seconds": 2.05,
+   "clarity_db": 28.8
+  },
+  {
+   "id": "bird_rec_hermit_thrush",
+   "file": "bird_rec_hermit_thrush_03.wav",
+   "source": "hermit_thrush_nps.mp3",
+   "from": 105.55,
+   "to": 107.6,
+   "seconds": 2.05,
+   "clarity_db": 28.8
+  },
+  {
+   "id": "bird_rec_hermit_thrush",
+   "file": "bird_rec_hermit_thrush_04.wav",
+   "source": "hermit_thrush_nps.mp3",
+   "from": 137.15,
+   "to": 139.35,
+   "seconds": 2.2,
+   "clarity_db": 30.7
+  },
+  {
+   "id": "bird_rec_robin",
+   "file": "bird_rec_robin_01.wav",
+   "source": "robin_nps.mp3",
+   "from": 6.3,
+   "to": 9.7,
+   "seconds": 3.4,
+   "clarity_db": 24.3
+  },
+  {
+   "id": "bird_rec_robin",
+   "file": "bird_rec_robin_02.wav",
+   "source": "robin_nps.mp3",
+   "from": 13.4,
+   "to": 15.6,
+   "seconds": 2.2,
+   "clarity_db": 26.5
+  },
+  {
+   "id": "bird_rec_robin",
+   "file": "bird_rec_robin_03.wav",
+   "source": "robin_nps.mp3",
+   "from": 17.35,
+   "to": 20.25,
+   "seconds": 2.9,
+   "clarity_db": 28.0
+  },
+  {
+   "id": "bird_rec_robin",
+   "file": "bird_rec_robin_04.wav",
+   "source": "robin_nps.mp3",
+   "from": 20.5,
+   "to": 23.6,
+   "seconds": 3.1,
+   "clarity_db": 24.9
+  },
+  {
+   "id": "bird_rec_robin",
+   "file": "bird_rec_robin_05.wav",
+   "source": "robin_nps.mp3",
+   "from": 43.7,
+   "to": 46.0,
+   "seconds": 2.3,
+   "clarity_db": 24.9
+  },
+  {
+   "id": "bird_rec_red_eyed_vireo",
+   "file": "bird_rec_red_eyed_vireo_01.wav",
+   "source": "red_eyed_vireo_commons.ogg",
+   "from": 47.98,
+   "to": 50.4,
+   "seconds": 2.42,
+   "clarity_db": 22.4
+  },
+  {
+   "id": "bird_rec_red_eyed_vireo",
+   "file": "bird_rec_red_eyed_vireo_02.wav",
+   "source": "red_eyed_vireo_commons.ogg",
+   "from": 86.78,
+   "to": 88.85,
+   "seconds": 2.07,
+   "clarity_db": 15.1
+  },
+  {
+   "id": "bird_rec_red_eyed_vireo",
+   "file": "bird_rec_red_eyed_vireo_03.wav",
+   "source": "red_eyed_vireo_commons.ogg",
+   "from": 92.63,
+   "to": 97.0,
+   "seconds": 4.37,
+   "clarity_db": 19.7
+  },
+  {
+   "id": "bird_rec_red_eyed_vireo",
+   "file": "bird_rec_red_eyed_vireo_04.wav",
+   "source": "red_eyed_vireo_commons.ogg",
+   "from": 178.48,
+   "to": 181.65,
+   "seconds": 3.17,
+   "clarity_db": 25.5
+  },
+  {
+   "id": "bird_rec_chickadee",
+   "file": "bird_rec_chickadee_01.wav",
+   "source": "chickadee_commons.wav",
+   "from": 0.15,
+   "to": 1.6,
+   "seconds": 1.45,
+   "clarity_db": 23.1
+  },
+  {
+   "id": "bird_rec_chickadee",
+   "file": "bird_rec_chickadee_02.wav",
+   "source": "chickadee_commons.wav",
+   "from": 6.35,
+   "to": 7.55,
+   "seconds": 1.2,
+   "clarity_db": 23.6
+  },
+  {
+   "id": "bird_rec_chickadee",
+   "file": "bird_rec_chickadee_03.wav",
+   "source": "chickadee_commons.wav",
+   "from": 9.9,
+   "to": 11.1,
+   "seconds": 1.2,
+   "clarity_db": 19.2
+  },
+  {
+   "id": "bird_rec_blue_jay",
+   "file": "bird_rec_blue_jay_01.wav",
+   "source": "blue_jay_commons.ogg",
+   "from": 1.75,
+   "to": 2.55,
+   "seconds": 0.8,
+   "clarity_db": 28.4
+  },
+  {
+   "id": "bird_rec_blue_jay",
+   "file": "bird_rec_blue_jay_02.wav",
+   "source": "blue_jay_commons.ogg",
+   "from": 15.6,
+   "to": 16.4,
+   "seconds": 0.8,
+   "clarity_db": 27.4
+  },
+  {
+   "id": "bird_rec_blue_jay",
+   "file": "bird_rec_blue_jay_03.wav",
+   "source": "blue_jay_commons.ogg",
+   "from": 21.15,
+   "to": 22.0,
+   "seconds": 0.85,
+   "clarity_db": 32.5
+  },
+  {
+   "id": "bird_rec_blue_jay",
+   "file": "bird_rec_blue_jay_04.wav",
+   "source": "blue_jay_commons.ogg",
+   "from": 24.05,
+   "to": 24.9,
+   "seconds": 0.85,
+   "clarity_db": 31.1
+  },
+  {
+   "id": "bird_rec_pileated_woodpecker",
+   "file": "bird_rec_pileated_woodpecker_01.wav",
+   "source": "pileated_woodpecker_commons.ogg",
+   "from": 5.05,
+   "to": 9.1,
+   "seconds": 4.05,
+   "clarity_db": 17.4
+  },
+  {
+   "id": "bird_rec_pileated_woodpecker",
+   "file": "bird_rec_pileated_woodpecker_02.wav",
+   "source": "pileated_woodpecker_commons.ogg",
+   "from": 10.9,
+   "to": 14.2,
+   "seconds": 3.3,
+   "clarity_db": 13.2
+  },
+  {
+   "id": "bird_rec_ruffed_grouse",
+   "file": "bird_rec_ruffed_grouse_01.wav",
+   "source": "ruffed_grouse_nps.mp3",
+   "from": 3.2,
+   "to": 12.9,
+   "seconds": 9.7,
+   "clarity_db": 4.7
+  },
+  {
+   "id": "bird_rec_wild_turkey",
+   "file": "bird_rec_wild_turkey_01.wav",
+   "source": "wild_turkey_nps.mp3",
+   "from": 3.2,
+   "to": 4.75,
+   "seconds": 1.55,
+   "clarity_db": 16.5
+  },
+  {
+   "id": "bird_rec_wild_turkey",
+   "file": "bird_rec_wild_turkey_02.wav",
+   "source": "wild_turkey_nps.mp3",
+   "from": 50.9,
+   "to": 52.45,
+   "seconds": 1.55,
+   "clarity_db": 18.7
+  },
+  {
+   "id": "bird_rec_crow",
+   "file": "bird_rec_crow_01.wav",
+   "source": "crow_nps.mp3",
+   "from": 26.1,
+   "to": 27.8,
+   "seconds": 1.7,
+   "clarity_db": 32.8
+  },
+  {
+   "id": "bird_rec_crow",
+   "file": "bird_rec_crow_02.wav",
+   "source": "crow_nps.mp3",
+   "from": 41.5,
+   "to": 43.25,
+   "seconds": 1.75,
+   "clarity_db": 33.2
+  },
+  {
+   "id": "bird_rec_crow",
+   "file": "bird_rec_crow_03.wav",
+   "source": "crow_nps.mp3",
+   "from": 66.45,
+   "to": 68.15,
+   "seconds": 1.7,
+   "clarity_db": 32.4
+  },
+  {
+   "id": "bird_rec_crow",
+   "file": "bird_rec_crow_04.wav",
+   "source": "crow_nps.mp3",
+   "from": 113.65,
+   "to": 115.4,
+   "seconds": 1.75,
+   "clarity_db": 32.3
+  }
+ ]
+}

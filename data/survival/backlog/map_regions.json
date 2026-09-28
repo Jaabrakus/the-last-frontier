@@ -1,0 +1,1647 @@
+{
+ "schema": "frontier.survival.map_regions.backlog",
+ "version": 4,
+ "status": "DESIGN APPENDIX v3 (backlog): rows for milestones M3-M5 and 'post'. Not loaded by the game and not gated by the data test; a row moves into the live file, and under test, when its milestone starts. Rows may reference live ids.",
+ "design_doc": "Player_Animation_Project/graph_analysis/survival/survival_gdd.md",
+ "summary": "The other regions, off-map nodes, routes, travel modes and encounters; the fort region's other eras.",
+ "id_rules": "Ids are stable strings (prefix.name). Never rename an id once saves exist; add an alias instead. Display names are separate and may change. An id is defined in exactly one place: the live file or the backlog.",
+ "milestones": {
+  "M1": "A winter night: fire, shelter, cold, hunger, sleep, time safety; the fort region only; one background; 1765",
+  "M2a": "A winter from the woods: living from the manor woods through the winter by your own hands (gathering, hides, sewing, snares, snowshoes, a half-faced camp, a hung cache, ice fishing); plain barter with the sutler, the trader, the garrison's soldiers, a farm family from German Flatts and an old hunter; credit and the fall outfit as options; the second background",
+  "M2b": "Learning from neighbours: lessons, watching, examining, quality standards, haggling, promises and loans",
+  "M3": "The year turns: the full almanac, seasons and weather content, the summer goal (bark and a cabin), fishing, frogs, ginseng, one played wage job; the fur cap and robe, leggings, carving, casting balls, the cache pit, char cloth and spruce beer",
+  "M4": "People: NPC schedules and tiers at the fort, standing, invitations, the soldiers and the lieutenant as mentors; Native characters only after the relevant nation's sign-off",
+  "M5": "The map: the Carry, the valley, the town and the hunting grounds, travel and camps, other markets and backgrounds",
+  "post": "After M5 and not yet planned: the 1757 and 1761 starts and their eras, detailed illnesses, thirst, potash, upstream canoe and bateau travel, the Proxy NPC tier, languages beyond English, French, Mohawk and Oneida"
+ },
+ "source_keys": {
+  "E": "graph_analysis/survival/research_economy_life.md, source list S# (E:S14 = source S14)",
+  "K": "graph_analysis/survival/research_survival_skills.md, numbered sources [#] (K:1 = source [1])",
+  "Y": "graph_analysis/survival/research_systems.md, section number (Y:3.2 = section 3.2)",
+  "C": "graph_analysis/customizer/costume_bible.md, section number",
+  "A": "Player_Animation_Project/blender_animation_index.csv (clip names and asset ids)",
+  "N": "graph_analysis/survival/survival_gdd.md, sources list (N:3 = source N3; N33 onward added in version 3)"
+ },
+ "basis_keys": {
+  "S": "sourced: checked against a primary source, a scholarly work or an institutional page; web summaries and popular pages do not qualify",
+  "H": "standard historiography (books in the GDD sources list); verify before quoting",
+  "H-regional": "true for one region's trade or society (named in the row); not yet checked for New York",
+  "M": "modern science or medicine sets the mechanic (period explanation may differ)",
+  "D": "design value for balance, or a figure resting on web summaries; not a checked historical record"
+ },
+ "setting": {
+  "default": "New York: the upper Mohawk valley, the Oneida Carry, Oriska and the Oneida country, with Albany off-map (M5). The live slice is one region (map_regions.json).",
+  "structure": "Playable regions of about 1-1.5 km, each its own Godot scene, joined by a painted travel map.",
+  "src": [
+   "Y:10",
+   "E:1.1",
+   "N:1"
+  ]
+ },
+ "institutions": {
+  "rule": "Each region names one institutions block; the economy, land, fish and trade systems read it (review 1, blocker). The default frame is New York.",
+  "new_york": {
+   "currency": "new_york",
+   "land_regime": {
+    "how": [
+     "lease from a patentee or manor (service.patent_lease)",
+     "purchase from a patentee (service.buy_from_patentee)"
+    ],
+    "title_rests_on": "Crown patents resting on Indian deeds; some deeds were fraudulent and are disputed (seasons.json event.deed_dispute: the Kayaderosseras patent, the Canajoharie and George Klock disputes)",
+    "squatting": "marking a lot without a lease or deed gives no right; tomahawk and cabin rights do not apply"
+   },
+   "fish_runs_by_drainage": {
+    "hudson_below_cohoes": [
+     "fish_run.shad_herring"
+    ],
+    "mohawk_above_cohoes": [
+     "fish_run.eels",
+     "fish_run.spring_suckers"
+    ],
+    "lake_ontario": [
+     "fish_run.salmon_fall",
+     "fish_run.eels",
+     "fish_run.spring_suckers"
+    ]
+   },
+   "trade_regulator": "seasons.json trade_regulators by era; Johnson's Northern Department (Indian Department) and its commissaries",
+   "settlers": [
+    "Palatine German",
+    "Dutch",
+    "Scots-Irish",
+    "New England"
+   ],
+   "src": [
+    "N:13",
+    "N:21",
+    "N:32"
+   ]
+  },
+  "pennsylvania_ohio": {
+   "currency": "pennsylvania",
+   "land_regime": {
+    "how": [
+     "Pennsylvania land-office warrant and survey (service.land_warrant)",
+     "tomahawk and cabin rights (Virginia claims)"
+    ]
+   },
+   "fish_runs_by_drainage": {
+    "susquehanna": [
+     "fish_run.shad_herring",
+     "fish_run.eels"
+    ],
+    "ohio": [
+     "fish_run.spring_suckers"
+    ]
+   },
+   "trade_regulator": "the Pennsylvania commissioners' store at Fort Pitt (1759-64), then the Plan of 1764, then colonial regulation",
+   "note": "Used only by the Ohio node, or if the default setting moves to the Susquehanna or the upper Ohio.",
+   "src": [
+    "E:S7",
+    "E:S49"
+   ]
+  }
+ },
+ "travel_map": {
+  "real_s_per_game_h": 2.5,
+  "shows": "known routes, estimate with season and danger, reported dangers, closures",
+  "camps": "needs.json time_safety.travel (stop at dusk, camp roll from kit and Survival, departure warning, drop in to camp by hand)",
+  "encounter_scenes": "small generated scenes whose terrain follows the route kind",
+  "loading": "next region loads in the background (ResourceLoader.load_threaded_request)"
+ },
+ "land_status": {
+  "patent_leased_or_bought": {
+   "claims": "a lot needs a lease or a deed from the patentee; rent or the purchase balance falls due",
+   "standing": {}
+  },
+  "nation_town_lands": {
+   "claims": "not allowed",
+   "note": "the town, its fields, orchards and pastures"
+  },
+  "nation_hunting_grounds": {
+   "claims": "dispute: -25 standing with the nation and town, -10 colonial authorities after 1763",
+   "hunting": "by the town's leave: ask the hunters' fall camp or the council (social.ask_leave), or have the interpreter or the post trader broker it; without leave -2 standing per carcass",
+   "note": "unceded land; encroachment was a root cause of war (E:9.7, E:S33); colonial hunters on Iroquois grounds after the 1763 Proclamation were a standing Oneida complaint to Johnson (N:21)"
+  },
+  "contested": {
+   "claims": "no; a war zone in war eras",
+   "note": "patrols and armed parties in war years"
+  },
+  "beyond_line": {
+   "from_year": 1768,
+   "claims": "illegal beyond the Fort Stanwix line: -15 colonial authorities, -25 with the nation",
+   "src": [
+    "E:S33"
+   ]
+  },
+  "patent_claimed_disputed_carry": {
+   "claims": "not allowed without the patentee's deed; the Oneida dispute the claim",
+   "note": "The Carry: colonists claimed it under the Oriskany patent (1705); the Roof family bought land beside the fort from Oliver De Lancey, who held the easternmost part of that patent (N:1). The Oneida disputed the patent, and the 1768 line began here (review 1 of v2, minor 9)."
+  }
+ },
+ "poi_types": [
+  "fort",
+  "trading_post",
+  "settlement",
+  "homestead",
+  "native_town",
+  "hunting_camp",
+  "mission",
+  "mill",
+  "tavern",
+  "beaver_meadow",
+  "salt_lick",
+  "fish_run",
+  "resource",
+  "portage",
+  "ford",
+  "landing",
+  "trail_junction",
+  "lookout",
+  "burned_homestead",
+  "campsite",
+  "cache"
+ ],
+ "poi_fields": [
+  "id",
+  "type",
+  "market",
+  "nodes",
+  "seasonal (day-id window)",
+  "run",
+  "event",
+  "note",
+  "discovery",
+  "from_year"
+ ],
+ "discovery": {
+  "default": "exploration",
+  "other": [
+   "told by an NPC (rumour.game, directions)",
+   "a purchased map",
+   "background reveal"
+  ]
+ },
+ "resource_nodes": [
+  {
+   "id": "node.bark_tree",
+   "gives": [
+    "item.material.bark_sheet",
+    "item.material.basswood_bast"
+   ],
+   "biomes": [
+    "forest"
+   ],
+   "regrow_game_days": 36,
+   "note": "elm, birch, basswood; season gate bark_peel",
+   "milestone": "M3"
+  },
+  {
+   "id": "node.hollow_tree",
+   "gives": [
+    "shelter"
+   ],
+   "biomes": [
+    "old_growth"
+   ],
+   "regrow_game_days": null,
+   "milestone": "M3"
+  },
+  {
+   "id": "node.overhang",
+   "gives": [
+    "shelter"
+   ],
+   "biomes": [
+    "ridge"
+   ],
+   "regrow_game_days": null,
+   "milestone": "M3"
+  },
+  {
+   "id": "node.spring",
+   "gives": [
+    "drink"
+   ],
+   "biomes": [
+    "any"
+   ],
+   "quality": "spring",
+   "milestone": "M3"
+  },
+  {
+   "id": "node.marsh",
+   "gives": [
+    "item.food.cattail",
+    "item.food.cranberries"
+   ],
+   "biomes": [
+    "marsh"
+   ],
+   "regrow_game_days": 9,
+   "ague_risk": true,
+   "milestone": "M3"
+  },
+  {
+   "id": "node.ginseng_patch",
+   "gives": [
+    "item.forage.ginseng_fresh"
+   ],
+   "biomes": [
+    "rich_hardwood"
+   ],
+   "regrow_game_days": 36,
+   "milestone": "M3"
+  },
+  {
+   "id": "node.frog_pond",
+   "gives": [
+    "item.food.frog_raw",
+    "item.food.turtle_raw",
+    "item.food.turtle_eggs"
+   ],
+   "biomes": [
+    "pond",
+    "marsh"
+   ],
+   "regrow_game_days": 3,
+   "milestone": "M3"
+  },
+  {
+   "id": "node.beaver_pond",
+   "gives": [
+    "trap site (water)",
+    "lodge (hunt.beaver_lodge)"
+   ],
+   "biomes": [
+    "beaver_meadow"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "node.den_tree",
+   "gives": [
+    "bear den (Dec-Mar)"
+   ],
+   "biomes": [
+    "old_growth",
+    "ridge"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "node.maple_stand",
+   "gives": [
+    "sap"
+   ],
+   "biomes": [
+    "hardwood"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "node.timber",
+   "gives": [
+    "item.material.logs"
+   ],
+   "biomes": [
+    "forest"
+   ],
+   "regrow_game_days": null,
+   "milestone": "M3"
+  },
+  {
+   "id": "node.forage_clearing",
+   "gives": [
+    "forage table"
+   ],
+   "biomes": [
+    "clearing",
+    "old_field"
+   ],
+   "regrow_game_days": 6,
+   "milestone": "M3"
+  },
+  {
+   "id": "node.berry_patch",
+   "gives": [
+    "item.food.berries"
+   ],
+   "biomes": [
+    "burn",
+    "edge",
+    "barren"
+   ],
+   "regrow_game_days": 6,
+   "milestone": "M3"
+  }
+ ],
+ "fauna": {
+  "trap_night_density_prime": {
+   "note": "Base nightly catch weight per species for one well-placed trap in good habitat (actions.json trap_model). Region multipliers below; month activity in activity_by_month.",
+   "beaver": 0.12,
+   "muskrat": 0.1,
+   "otter": 0.02,
+   "marten": 0.04,
+   "fisher": 0.015,
+   "mink": 0.03,
+   "fox": 0.03,
+   "raccoon": 0.06,
+   "wolf": 0.01,
+   "small": 0.08,
+   "turkey": 0.02
+  },
+  "activity_by_month": {
+   "raccoon": {
+    "jan": 0.4,
+    "feb": 0.5,
+    "default": 1.0
+   },
+   "beaver": {
+    "jan": 0.6,
+    "feb": 0.6,
+    "note": "under ice: lodge hunts and ice-hole sets"
+   },
+   "black_bear": {
+    "dec": 0.0,
+    "jan": 0.0,
+    "feb": 0.0,
+    "mar": 0.2,
+    "default": 1.0
+   },
+   "default": 1.0
+  },
+  "hunt_spawns_per_region_season": {
+   "unit": "animal groups present in the loaded region; respawn after explicit game days (no process rule)",
+   "reg.hunting_grounds": {
+    "autumn": {
+     "deer": 12,
+     "black_bear": 3,
+     "turkey": 4,
+     "elk": 1,
+     "wolf": 1,
+     "small": 20
+    },
+    "winter": {
+     "deer": 8,
+     "turkey": 3,
+     "elk": 1,
+     "wolf": 2,
+     "small": 14,
+     "note": "deer yard in deep snow"
+    },
+    "spring": {
+     "deer": 9,
+     "black_bear": 2,
+     "turkey": 5,
+     "small": 18
+    },
+    "summer": {
+     "deer": 10,
+     "black_bear": 3,
+     "turkey": 4,
+     "small": 20
+    }
+   },
+   "reg.settler_valley": {
+    "default": {
+     "deer": 2,
+     "turkey": 2,
+     "small": 12,
+     "note": "hunted out near farms"
+    }
+   },
+   "reg.native_town": {
+    "default": {
+     "deer": 3,
+     "turkey": 2,
+     "small": 10,
+     "note": "the town's own grounds: hunt by leave"
+    }
+   },
+   "reg.carry_post": {
+    "default": {
+     "deer": 4,
+     "turkey": 2,
+     "small": 12
+    }
+   },
+   "reg.lake_country": {
+    "default": {
+     "deer": 7,
+     "black_bear": 2,
+     "turkey": 3,
+     "wolf": 1,
+     "small": 14
+    },
+    "winter": {
+     "deer": 5,
+     "moose": 1,
+     "wolf": 2,
+     "small": 10,
+     "note": "crust hunting for moose, Feb-Mar"
+    },
+    "rare": {
+     "cougar": 0.1
+    }
+   }
+  },
+  "region_trap_mult": {
+   "reg.hunting_grounds": 1.0,
+   "reg.lake_country": 0.8,
+   "reg.carry_post": 0.5,
+   "reg.settler_valley": 0.2,
+   "reg.native_town": 0.4
+  },
+  "species_notes": {
+   "elk": "Eastern elk lived across Pennsylvania and New York in the 18th century (K:22).",
+   "bison": "The eastern population of the plains bison (Bison bison) reached western Pennsylvania and the Ohio Country; not the northwestern wood bison. Not in the starting regions (K:22).",
+   "moose": "Moose lived in the Adirondack and lake country and were taken on the late-winter snow crust (K:2).",
+   "cougar": "Rare but present in the 1760s Northeast.",
+   "passenger_pigeon": "Spring nesting event only (K:22).",
+   "wolf": "County bounties (E:S62)."
+  },
+  "src": [
+   "K:30",
+   "K:22",
+   "E:6"
+  ]
+ },
+ "regions": [
+  {
+   "id": "reg.carry_post",
+   "name": "The Oneida Carry",
+   "kind": "trading_post",
+   "status": "planned",
+   "institutions": "new_york",
+   "drainage": "watershed: Mohawk (east) and Wood Creek to Oneida Lake (west)",
+   "size_m": 1200,
+   "biomes": [
+    "river",
+    "marsh",
+    "hardwood",
+    "clearing"
+   ],
+   "land_status": "patent_claimed_disputed_carry",
+   "factions": [
+    "faction.post"
+   ],
+   "ague_factor": 0.7,
+   "danger": 0.6,
+   "modelled_on": "the Oneida Carry between the Mohawk and Wood Creek (N:1, N:2)",
+   "era_states": {
+    "era.war_1755_1758": "1755 to March 1756: Forts Williams and Bull and a magazine; Fort Bull destroyed 27 March 1756; rebuilt works that summer; Webb destroys every work on 31 August 1756 and falls back to German Flatts; the Carry lies abandoned (patrols, Oneida carriers) until Fort Stanwix is begun on 26 August 1758. No post and no tariff board.",
+    "era.war_1759_1760": "Fort Stanwix garrisoned; sutlers, bateau men, Oneida carriers; the Roof family's inn and hauling from 1759. A military zone.",
+    "era.tense_peace_1761_1762": "a small garrison; traders by the commander's leave; posted 1761 tariffs",
+    "era.war_1763_1764": "a garrison on alert; trade thin",
+    "era.peace_1765_1767": "a trader's store at the landing by the commissary's leave; Roof's inn; Oriska east of the Carry; the tariffs Johnson applied administratively",
+    "era.line_1768_1773": "the congress of October-November 1768 camps here; the new line begins at the Carry; the fort decays; trade unregulated"
+   },
+   "pois": [
+    {
+     "id": "poi.post.store",
+     "type": "trading_post",
+     "market": "mkt.post_trader",
+     "from_year": 1761
+    },
+    {
+     "id": "poi.post.trader_house",
+     "type": "trading_post",
+     "from_year": 1761
+    },
+    {
+     "id": "poi.post.inn",
+     "type": "tavern",
+     "from_year": 1759,
+     "note": "the Roof (Rueff) family's inn and hauling (N:1)"
+    },
+    {
+     "id": "poi.post.fort",
+     "type": "fort",
+     "note": "Forts Williams and Bull (1755-56); Fort Stanwix (from August 1758)"
+    },
+    {
+     "id": "poi.post.cabins",
+     "type": "trading_post"
+    },
+    {
+     "id": "poi.post.smithy",
+     "type": "trading_post"
+    },
+    {
+     "id": "poi.post.warehouse",
+     "type": "trading_post"
+    },
+    {
+     "id": "poi.post.landing",
+     "type": "landing",
+     "event": "event.boats_arrive",
+     "note": "the Mohawk landing"
+    },
+    {
+     "id": "poi.post.upper_landing",
+     "type": "landing",
+     "note": "the Wood Creek landing"
+    },
+    {
+     "id": "poi.post.carry_trail",
+     "type": "portage",
+     "length_m": 900
+    },
+    {
+     "id": "poi.post.fishing_place",
+     "type": "fish_run",
+     "run": "fish_run.salmon_fall",
+     "note": "Wood Creek: salmon and eels"
+    },
+    {
+     "id": "poi.post.marsh",
+     "type": "resource",
+     "nodes": [
+      "node.marsh",
+      "node.frog_pond",
+      "node.fish_water"
+     ]
+    },
+    {
+     "id": "poi.post.oriska",
+     "type": "settlement",
+     "note": "Oriska, east of the Carry: grew up in the 1760s where Oneida and settler households met; of about 90 residents only half were Oneida; villagers sold food, hauled goods and traded with travellers (N:1). Settlers' stock in the corn is a dispute here."
+    }
+   ],
+   "nodes_per_km2": {
+    "node.deadwood": 30,
+    "node.tinder": 25,
+    "node.marsh": 6,
+    "node.fish_water": 8,
+    "node.frog_pond": 5,
+    "node.trail": 8,
+    "node.forage_streambank": 6,
+    "node.conifer": 10
+   },
+   "milestone": "M5"
+  },
+  {
+   "id": "reg.settler_valley",
+   "name": "The Mohawk valley settlement",
+   "kind": "settlement",
+   "status": "planned",
+   "institutions": "new_york",
+   "drainage": "mohawk_above_cohoes",
+   "size_m": 1400,
+   "biomes": [
+    "old_field",
+    "clearing",
+    "hardwood",
+    "river",
+    "floodplain"
+   ],
+   "land_status": "patent_leased_or_bought",
+   "factions": [
+    "faction.settlers_valley"
+   ],
+   "ague_factor": 0.6,
+   "danger": 0.4,
+   "modelled_on": "the Palatine settlements of German Flatts and the upper Mohawk",
+   "era_states": {
+    "era.war_1755_1758": "blockhouses and alarms; German Flatts is raided in November 1757",
+    "era.peace_1765_1767": "growth: new leases and purchases, potash kettles, a mill",
+    "era.line_1768_1773": "settler pressure west toward the line; deed disputes"
+   },
+   "pois": [
+    {
+     "id": "poi.valley.store",
+     "type": "settlement",
+     "market": "mkt.valley_store"
+    },
+    {
+     "id": "poi.valley.tavern",
+     "type": "tavern",
+     "market": "mkt.valley_tavern"
+    },
+    {
+     "id": "poi.valley.mill",
+     "type": "mill",
+     "market": "mkt.valley_mill"
+    },
+    {
+     "id": "poi.valley.blockhouse",
+     "type": "settlement",
+     "note": "refuge at war alarms"
+    },
+    {
+     "id": "poi.valley.ferry",
+     "type": "ford"
+    },
+    {
+     "id": "poi.valley.church",
+     "type": "settlement",
+     "note": "a Reformed church"
+    },
+    {
+     "id": "poi.valley.farm_mccord",
+     "type": "homestead",
+     "note": "tenants on a patent lease"
+    },
+    {
+     "id": "poi.valley.farm_klein",
+     "type": "homestead",
+     "note": "freeholders"
+    },
+    {
+     "id": "poi.valley.player_lot",
+     "type": "campsite",
+     "note": "the valley settler background's lot (leased or bought)"
+    },
+    {
+     "id": "poi.valley.sugar_bush",
+     "type": "resource",
+     "nodes": [
+      "node.maple_stand"
+     ],
+     "seasonal": [
+      "feb_late",
+      "apr_mid"
+     ]
+    },
+    {
+     "id": "poi.valley.eel_weir",
+     "type": "fish_run",
+     "run": "fish_run.eels",
+     "note": "no shad above Cohoes Falls; salted Hudson shad comes by trade"
+    }
+   ],
+   "nodes_per_km2": {
+    "node.deadwood": 20,
+    "node.tinder": 20,
+    "node.timber": 25,
+    "node.forage_clearing": 10,
+    "node.berry_patch": 6,
+    "node.nut_grove": 4,
+    "node.oak": 6,
+    "node.groundnut": 3,
+    "node.spring": 2,
+    "node.fish_water": 4
+   },
+   "milestone": "M5"
+  },
+  {
+   "id": "reg.native_town",
+   "name": "The Oneida town",
+   "kind": "native_town",
+   "status": "planned",
+   "milestone_gate": "M5, after consultation (npcs.json culture_data.consultation)",
+   "institutions": "new_york",
+   "drainage": "lake_ontario",
+   "size_m": 1400,
+   "biomes": [
+    "fields",
+    "orchard",
+    "river",
+    "hardwood",
+    "clearing"
+   ],
+   "land_status": "nation_town_lands",
+   "factions": [
+    "faction.home_town"
+   ],
+   "nation": "campaign setting (default oneida)",
+   "ague_factor": 0.5,
+   "danger": 0.3,
+   "modelled_on": "Kanonwalohale, south of Oneida Lake (N:4)",
+   "display_name_rule": "The town's in-game name is chosen with the nation's cultural office; until then the UI says 'the town'.",
+   "dwellings": "npcs.json culture_data.nations.haudenosaunee.dwellings_by_era (log houses, bark houses, a few short longhouses; frame houses from about 1765)",
+   "pois": [
+    {
+     "id": "poi.town.houses",
+     "type": "native_town",
+     "market": "mkt.town_exchange",
+     "note": "households' houses: dwellings by era (culture_data)"
+    },
+    {
+     "id": "poi.town.home_house",
+     "type": "native_town",
+     "note": "the player's household (town-raised background)"
+    },
+    {
+     "id": "poi.town.council_house",
+     "type": "native_town"
+    },
+    {
+     "id": "poi.town.chapel",
+     "type": "mission",
+     "from_year": 1766
+    },
+    {
+     "id": "poi.town.schoolhouse",
+     "type": "mission",
+     "from_year": 1766
+    },
+    {
+     "id": "poi.town.fields",
+     "type": "native_town",
+     "note": "corn, beans and squash; the women's fields: no trespass"
+    },
+    {
+     "id": "poi.town.orchard",
+     "type": "native_town",
+     "note": "apple orchards"
+    },
+    {
+     "id": "poi.town.pens",
+     "type": "native_town",
+     "note": "hogs, cattle, horses and fowl; oxen from the late 1760s"
+    },
+    {
+     "id": "poi.town.landing",
+     "type": "landing"
+    },
+    {
+     "id": "poi.town.sugar_camp",
+     "type": "resource",
+     "nodes": [
+      "node.maple_stand"
+     ],
+     "seasonal": [
+      "feb_late",
+      "apr_mid"
+     ]
+    },
+    {
+     "id": "poi.town.fishing_place",
+     "type": "fish_run",
+     "run": "fish_run.salmon_fall",
+     "note": "salmon, eels and spring suckers"
+    },
+    {
+     "id": "poi.town.drying_racks",
+     "type": "native_town"
+    }
+   ],
+   "nodes_per_km2": {
+    "node.deadwood": 20,
+    "node.tinder": 20,
+    "node.forage_clearing": 8,
+    "node.berry_patch": 6,
+    "node.nut_grove": 5,
+    "node.fish_water": 6,
+    "node.frog_pond": 3,
+    "node.spring": 2
+   },
+   "milestone": "M5"
+  },
+  {
+   "id": "reg.hunting_grounds",
+   "name": "The hunting grounds",
+   "kind": "wilderness",
+   "status": "planned",
+   "institutions": "new_york",
+   "drainage": "lake_ontario",
+   "size_m": 1500,
+   "biomes": [
+    "old_growth",
+    "hardwood",
+    "beaver_meadow",
+    "ridge",
+    "swamp",
+    "stream"
+   ],
+   "land_status": "nation_hunting_grounds",
+   "factions": [
+    "faction.home_town"
+   ],
+   "ague_factor": 0.3,
+   "danger": 0.7,
+   "modelled_on": "Oneida hunting grounds in the uplands north and west of the Carry",
+   "pois": [
+    {
+     "id": "poi.hunt.station_camp",
+     "type": "hunting_camp",
+     "note": "settler hunters' base; can be raided in war"
+    },
+    {
+     "id": "poi.hunt.fall_camp_site",
+     "type": "hunting_camp",
+     "seasonal": [
+      "oct_mid",
+      "jan_mid"
+     ],
+     "note": "the town men's fall hunting camp"
+    },
+    {
+     "id": "poi.hunt.beaver_meadow",
+     "type": "beaver_meadow",
+     "nodes": [
+      "node.beaver_pond",
+      "node.marsh"
+     ]
+    },
+    {
+     "id": "poi.hunt.salt_lick",
+     "type": "salt_lick",
+     "note": "deer and elk gather"
+    },
+    {
+     "id": "poi.hunt.deer_yard",
+     "type": "resource",
+     "seasonal": [
+      "dec_early",
+      "feb_late"
+     ]
+    },
+    {
+     "id": "poi.hunt.den_ridge",
+     "type": "resource",
+     "nodes": [
+      "node.den_tree",
+      "node.overhang"
+     ]
+    },
+    {
+     "id": "poi.hunt.ginseng_hollow",
+     "type": "resource",
+     "nodes": [
+      "node.ginseng_patch"
+     ]
+    },
+    {
+     "id": "poi.hunt.hollow_tree_grove",
+     "type": "resource",
+     "nodes": [
+      "node.hollow_tree"
+     ]
+    },
+    {
+     "id": "poi.hunt.fishing_place",
+     "type": "fish_run",
+     "run": "fish_run.eels",
+     "note": "eels and fall salmon"
+    }
+   ],
+   "nodes_per_km2": {
+    "node.deadwood": 50,
+    "node.tinder": 35,
+    "node.sapling_stand": 15,
+    "node.bark_tree": 10,
+    "node.conifer": 15,
+    "node.hollow_tree": 1,
+    "node.windfall": 4,
+    "node.trail": 20,
+    "node.den_tree": 1,
+    "node.maple_stand": 4,
+    "node.nut_grove": 6,
+    "node.oak": 8,
+    "node.groundnut": 3,
+    "node.forage_woods": 8,
+    "node.fish_water": 6,
+    "node.frog_pond": 4,
+    "node.water": 10
+   },
+   "milestone": "M5",
+   "people_present": [
+    "npc.town.hunters (fall hunt, October to January)",
+    "enc.hunting_party"
+   ],
+   "v3_note": "The Oneida hunting grounds enter at M5 with their people present: the town's fall-hunt parties, who grant or refuse leave (review 1 of v2, major 2). Before M5 the slice's woods are Cosby's Manor."
+  },
+  {
+   "id": "reg.lake_country",
+   "name": "The lake and mountain country",
+   "kind": "wilderness",
+   "status": "planned",
+   "institutions": "new_york",
+   "drainage": "hudson and champlain headwaters",
+   "size_m": 1500,
+   "biomes": [
+    "lake",
+    "ridge",
+    "hardwood",
+    "swamp",
+    "old_growth"
+   ],
+   "land_status": "contested",
+   "factions": [
+    "faction.garrison",
+    "faction.new_france"
+   ],
+   "ague_factor": 0.2,
+   "danger": 1.2,
+   "modelled_on": "the Lake George and upper Hudson country",
+   "era_states": {
+    "era.war_1755_1758": "contested: Lake George 1755; Rogers' snowshoe fights (January 1757, March 1758); Fort William Henry falls 9 August 1757; Abercromby's defeat at Ticonderoga, July 1758",
+    "era.war_1759_1760": "Amherst takes Ticonderoga and Crown Point (1759); the front moves north; supply convoys on the road from Albany and Fort Edward",
+    "era.peace_1765_1767": "abandoned works, discharged soldiers' land grants, hunters",
+    "era.line_1768_1773": "grants and settlement creep north from Fort Edward"
+   },
+   "pois": [
+    {
+     "id": "poi.lake.lookout",
+     "type": "lookout"
+    },
+    {
+     "id": "poi.lake.ranger_camp",
+     "type": "hunting_camp"
+    },
+    {
+     "id": "poi.lake.burned_homestead",
+     "type": "burned_homestead",
+     "note": "a ruin from the war years: report the loss, bury the dead, or help survivors; never salvage"
+    },
+    {
+     "id": "poi.lake.narrows",
+     "type": "ford"
+    },
+    {
+     "id": "poi.lake.portage",
+     "type": "portage"
+    },
+    {
+     "id": "poi.lake.ice_road",
+     "type": "trail_junction",
+     "seasonal": [
+      "jan_early",
+      "feb_late"
+     ]
+    }
+   ],
+   "nodes_per_km2": {
+    "node.deadwood": 45,
+    "node.tinder": 30,
+    "node.conifer": 20,
+    "node.overhang": 3,
+    "node.windfall": 5,
+    "node.fish_water": 10,
+    "node.trail": 12,
+    "node.water": 10
+   },
+   "reached_by": "node.river_city (Albany, then the military road by Fort Edward to Lake George), not from the upper Mohawk",
+   "v3_note": "Moved off the upper Mohawk: no road ran there (review 1 of v2, minor 10). Milestone 'post'.",
+   "milestone": "post"
+  }
+ ],
+ "offmap_nodes": [
+  {
+   "id": "node.river_city",
+   "name": "Albany",
+   "kind": "offmap_city",
+   "market": "mkt.city_merchant",
+   "institutions": "new_york",
+   "factions": [
+    "faction.colonial_authorities"
+   ],
+   "fish_runs": [
+    "fish_run.shad_herring"
+   ],
+   "note": "merchants (spring and fall fur sales), patents and leases, news; the Hudson below Cohoes has the shad run",
+   "milestone": "M5"
+  },
+  {
+   "id": "node.johnson_hall",
+   "name": "Johnson Hall",
+   "kind": "offmap_site",
+   "institutions": "new_york",
+   "from_year": 1763,
+   "factions": [
+    "faction.colonial_authorities"
+   ],
+   "note": "Sir William Johnson's seat: councils; captives returned in 1764",
+   "milestone": "M5"
+  },
+  {
+   "id": "node.canajoharie",
+   "name": "Canajoharie",
+   "kind": "offmap_town",
+   "institutions": "new_york",
+   "factions": [
+    "faction.town.canajoharie"
+   ],
+   "note": "the Mohawk upper castle; a Mohawk woman's store; the Klock disputes",
+   "milestone": "M5"
+  },
+  {
+   "id": "node.oswego",
+   "name": "Oswego (Fort Ontario)",
+   "kind": "offmap_post",
+   "institutions": "new_york",
+   "factions": [
+    "faction.garrison"
+   ],
+   "note": "a trading post under the Plan of 1764; fell to the French in August 1756",
+   "milestone": "M5"
+  },
+  {
+   "id": "node.niagara",
+   "name": "Niagara",
+   "kind": "offmap_post",
+   "institutions": "new_york",
+   "factions": [
+    "faction.garrison"
+   ],
+   "note": "the 1759 siege; the great council of 1764 and the return of captives",
+   "milestone": "M5"
+  },
+  {
+   "id": "node.oquaga",
+   "name": "Oquaga",
+   "kind": "offmap_town",
+   "institutions": "new_york",
+   "factions": [
+    "faction.town.oquaga"
+   ],
+   "note": "a multi-nation town on the upper Susquehanna; Lenape and Munsee families; the way south",
+   "milestone": "M5"
+  },
+  {
+   "id": "node.north",
+   "name": "Montreal and the St. Lawrence",
+   "kind": "offmap_region",
+   "factions": [
+    "faction.new_france",
+    "faction.montreal_traders",
+    "faction.town.kahnawake",
+    "faction.town.akwesasne",
+    "faction.town.oswegatchie"
+   ],
+   "note": "New France until 1760; Montreal traders under British licence from 1761; Kahnawake, Akwesasne and Oswegatchie",
+   "milestone": "M5"
+  },
+  {
+   "id": "node.west",
+   "name": "The Ohio Country",
+   "kind": "offmap_region",
+   "institutions": "pennsylvania_ohio",
+   "factions": [
+    "faction.nation.shawnee",
+    "faction.nation.lenape",
+    "faction.nation.wyandot"
+   ],
+   "note": "future regions: Shawnee and Lenape towns, the Forks of the Ohio; long hunters after 1761; Dunmore's War in 1774; the Mingo (Ohio Seneca and Cayuga) under Logan fought in Dunmore's War in 1774 while the Six Nations' council stayed neutral",
+   "milestone": "M5"
+  },
+  {
+   "id": "node.nation_towns",
+   "name": "Other towns of the Confederacy",
+   "kind": "offmap_region",
+   "factions": [
+    "faction.home_nation"
+   ],
+   "note": "Onondaga and the other nations' towns: councils and visiting delegations come from here",
+   "milestone": "M5"
+  }
+ ],
+ "travel_modes": {
+  "foot": {
+   "base": 1.0,
+   "notes": "listed hours are foot hours on the route"
+  },
+  "horse": {
+   "road_trail_mult": 1.8,
+   "off_trail_mult": 0.8,
+   "needs": "fodder; scarce in winter",
+   "carry_kg": 90
+  },
+  "wagon": {
+   "road_only": true,
+   "mult": 1.2,
+   "carry_kg": 900,
+   "needs": "4 horses",
+   "closed": "mud season and deep snow on the Albany road (seasons.json gates)"
+  },
+  "canoe": {
+   "downstream_mult": 2.5,
+   "upstream_mult": 0.8,
+   "carry_kg": 300,
+   "crew": 2,
+   "closed_when": "river_ice_cm > 0",
+   "portage": "foot speed with the load",
+   "upstream_milestone": "post"
+  },
+  "bateau": {
+   "downstream_mult": 1.8,
+   "upstream_mult": 0.6,
+   "carry_kg": 1400,
+   "crew": 3,
+   "gate": "bateau_routes_open",
+   "note": "The bateau (battoe) carried freight on the Mohawk-Wood Creek route in the 1750s-60s; the Schenectady or Durham-type boat came into common use in the 1790s. Whole bateaux crossed the Carry on wagons or sledges or on carriers' shoulders (review 1 of v2, minor 7).",
+   "portage": "wagons, sledges or carriers haul the whole boat across the Carry",
+   "milestone": "post"
+  },
+  "ice": {
+   "mult": 1.6,
+   "requires": "ice_cm >= 20",
+   "thaw_breakthrough_chance": 0.05
+  },
+  "snowshoe": {
+   "deep_snow_mult_without": 0.4,
+   "deep_snow_mult_with": 0.9,
+   "deep_snow_cm": 40
+  },
+  "season_mods": {
+   "mud_season": {
+    "foot": 0.7,
+    "wagon": 0.5
+   },
+   "breakup_floods": {
+    "canoe_danger_mult": 2.0,
+    "fords": "difficulty 45"
+   }
+  }
+ },
+ "routes": [
+  {
+   "id": "rt.fort_valley",
+   "a": "reg.fort_clearing",
+   "b": "reg.settler_valley",
+   "kind": "road",
+   "hours": {
+    "foot": 6,
+    "horse": 3.3,
+    "wagon": 5,
+    "bateau_down": 4,
+    "bateau_up": 9
+   },
+   "danger": 0.5,
+   "encounters": "enc.settled",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.fort_post",
+   "a": "reg.fort_clearing",
+   "b": "reg.carry_post",
+   "kind": "road_and_river",
+   "hours": {
+    "foot": 10,
+    "horse": 6,
+    "bateau_down": 6,
+    "bateau_up": 14,
+    "canoe_down": 5,
+    "canoe_up": 12
+   },
+   "danger": 0.8,
+   "encounters": "enc.wilderness",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.post_town",
+   "a": "reg.carry_post",
+   "b": "reg.native_town",
+   "kind": "trail_and_river",
+   "hours": {
+    "foot": 6,
+    "horse": 3.5,
+    "canoe_down": 4,
+    "canoe_up": 7
+   },
+   "danger": 0.4,
+   "encounters": "enc.settled",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.fort_hunt",
+   "a": "reg.fort_clearing",
+   "b": "reg.hunting_grounds",
+   "kind": "trail",
+   "hours": {
+    "foot": 9,
+    "horse": 5.5
+   },
+   "danger": 0.6,
+   "encounters": "enc.wilderness",
+   "status": "later",
+   "note": "M5: from the manor woods west past the Carry to the Oneida hunting grounds",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.town_hunt",
+   "a": "reg.native_town",
+   "b": "reg.hunting_grounds",
+   "kind": "trail",
+   "hours": {
+    "foot": 8,
+    "horse": 5
+   },
+   "danger": 0.6,
+   "encounters": "enc.wilderness",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.post_hunt",
+   "a": "reg.carry_post",
+   "b": "reg.hunting_grounds",
+   "kind": "trail_and_river",
+   "hours": {
+    "foot": 10,
+    "canoe_down": 8,
+    "canoe_up": 12
+   },
+   "danger": 0.7,
+   "encounters": "enc.wilderness",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.valley_city",
+   "a": "reg.settler_valley",
+   "b": "node.river_city",
+   "kind": "road_and_river",
+   "hours": {
+    "foot": 30,
+    "horse": 17,
+    "wagon": 24,
+    "bateau_down": 16,
+    "bateau_up": 30
+   },
+   "danger": 0.3,
+   "danger_scales_with_cargo": true,
+   "closures": [
+    "mud_season",
+    "deep_snow_roads"
+   ],
+   "encounters": "enc.settled",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.valley_johnson_hall",
+   "a": "reg.settler_valley",
+   "b": "node.johnson_hall",
+   "kind": "road",
+   "hours": {
+    "foot": 12,
+    "horse": 7
+   },
+   "danger": 0.3,
+   "encounters": "enc.settled",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.valley_canajoharie",
+   "a": "reg.settler_valley",
+   "b": "node.canajoharie",
+   "kind": "road",
+   "hours": {
+    "foot": 8,
+    "horse": 4.5
+   },
+   "danger": 0.3,
+   "encounters": "enc.settled",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.post_oswego",
+   "a": "reg.carry_post",
+   "b": "node.oswego",
+   "kind": "river_and_lake",
+   "hours": {
+    "bateau_down": 20,
+    "bateau_up": 36,
+    "canoe_down": 16,
+    "canoe_up": 28
+   },
+   "danger": 0.8,
+   "encounters": "enc.wilderness",
+   "note": "Wood Creek, Oneida Lake and the Oswego River",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.oswego_niagara",
+   "a": "node.oswego",
+   "b": "node.niagara",
+   "kind": "lake",
+   "hours": {
+    "bateau_down": 30,
+    "canoe_down": 26
+   },
+   "danger": 0.8,
+   "encounters": "enc.wilderness",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.town_oquaga",
+   "a": "reg.native_town",
+   "b": "node.oquaga",
+   "kind": "trail",
+   "hours": {
+    "foot": 30,
+    "horse": 18
+   },
+   "danger": 0.4,
+   "encounters": "enc.settled",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.oquaga_west",
+   "a": "node.oquaga",
+   "b": "node.west",
+   "kind": "trail_and_river",
+   "hours": {
+    "foot": 60,
+    "canoe_down": 44
+   },
+   "danger": 1.3,
+   "encounters": "enc.wilderness",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.lake_north",
+   "a": "reg.lake_country",
+   "b": "node.north",
+   "kind": "lake",
+   "hours": {
+    "canoe_down": 36,
+    "canoe_up": 40,
+    "ice": 30
+   },
+   "danger": 1.8,
+   "encounters": "enc.contested",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.town_nation_towns",
+   "a": "reg.native_town",
+   "b": "node.nation_towns",
+   "kind": "trail",
+   "hours": {
+    "foot": 24,
+    "horse": 14
+   },
+   "danger": 0.3,
+   "encounters": "enc.settled",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "rt.city_lake",
+   "a": "node.river_city",
+   "b": "reg.lake_country",
+   "kind": "military_road",
+   "hours": {
+    "foot": 20,
+    "horse": 11,
+    "wagon": 16
+   },
+   "danger": 1.0,
+   "encounters": "enc.contested",
+   "milestone": "post",
+   "status": "later",
+   "note": "Albany to Fort Edward to Lake George, the military road; about as far as Albany is from German Flatts"
+  }
+ ],
+ "encounters": {
+  "chance_per_game_hour": "0.04 * route.danger * season_mult * war_mult * mode_mult * cargo_mult * (1 - 0.3 * max(survival, hunting)/100)",
+  "cargo_mult": "1 + carried trade value / 2,880 d, max 2 (routes with danger_scales_with_cargo)",
+  "season_mult": {
+   "winter": 0.6,
+   "spring": 1.0,
+   "summer": 1.2,
+   "autumn": 1.0
+  },
+  "war_mult": {
+   "war": 1.5,
+   "war_regional": 1.3,
+   "tense_peace": 1.1,
+   "peace": 1.0
+  },
+  "mode_mult": {
+   "foot": 1.0,
+   "horse": 0.8,
+   "wagon": 1.0,
+   "canoe": 0.7,
+   "bateau": 0.8,
+   "ice": 0.8
+  },
+  "tables": {
+   "enc.settled": [
+    {
+     "id": "enc.news",
+     "w": 30,
+     "kind": "text",
+     "effect": "a dialogue topic from news.*"
+    },
+    {
+     "id": "enc.travellers_trade",
+     "w": 16,
+     "kind": "scene",
+     "npc": "peddler"
+    },
+    {
+     "id": "enc.trading_party",
+     "w": 10,
+     "kind": "scene",
+     "npc": "native_trader",
+     "effect": "a nation's trading party on the road: trade, news (mkt.native_trading_party)"
+    },
+    {
+     "id": "enc.express_rider",
+     "w": 10,
+     "kind": "text",
+     "npc": "express_rider"
+    },
+    {
+     "id": "enc.diplomats",
+     "w": 8,
+     "kind": "scene",
+     "npc": "diplomatic_party"
+    },
+    {
+     "id": "enc.lost_stray",
+     "w": 8,
+     "kind": "text",
+     "effect": "job.find_stray"
+    },
+    {
+     "id": "enc.sick_traveller",
+     "w": 6,
+     "kind": "scene",
+     "effect": "help: standing +3, costs time and food"
+    },
+    {
+     "id": "enc.weather_accident",
+     "w": 10,
+     "kind": "text",
+     "effect": "wet goods or lame horse (load security matters)"
+    },
+    {
+     "id": "enc.deserters",
+     "w": 4,
+     "kind": "scene",
+     "npc": "deserter"
+    },
+    {
+     "id": "enc.game_sign",
+     "w": 4,
+     "kind": "text",
+     "effect": "rumour.game"
+    }
+   ],
+   "enc.wilderness": [
+    {
+     "id": "enc.animal",
+     "w": 30,
+     "kind": "scene",
+     "effect": "deer, bear, turkey or wolves by season"
+    },
+    {
+     "id": "enc.hunting_party",
+     "w": 15,
+     "kind": "scene",
+     "npc": "town_hunter",
+     "effect": "news, trade, a share of game"
+    },
+    {
+     "id": "enc.backcountry_hunters",
+     "w": 10,
+     "kind": "scene",
+     "npc": "backcountry_hunter"
+    },
+    {
+     "id": "enc.trading_party",
+     "w": 6,
+     "kind": "scene",
+     "npc": "native_trader"
+    },
+    {
+     "id": "enc.weather_accident",
+     "w": 15,
+     "kind": "text",
+     "effect": "upset canoe or bateau: goods and powder wet; fall through ice in a thaw"
+    },
+    {
+     "id": "enc.lost_trail",
+     "w": 10,
+     "kind": "text",
+     "effect": "+2 game hours unless a Survival check at difficulty 30"
+    },
+    {
+     "id": "enc.game_sign",
+     "w": 12,
+     "kind": "text",
+     "effect": "rumour.game"
+    },
+    {
+     "id": "enc.patrol",
+     "w": 5,
+     "kind": "scene",
+     "npc": "patrol",
+     "war_only": true
+    },
+    {
+     "id": "enc.deserters",
+     "w": 3,
+     "kind": "scene",
+     "npc": "deserter"
+    }
+   ],
+   "enc.contested": [
+    {
+     "id": "enc.patrol",
+     "w": 25,
+     "kind": "scene",
+     "npc": "patrol",
+     "rule": "friend or foe by the war state and the alignment of the party's named community (npcs.json alignments); avoidable with a hunting or survival check"
+    },
+    {
+     "id": "enc.animal",
+     "w": 20,
+     "kind": "scene"
+    },
+    {
+     "id": "enc.ranger_scouts",
+     "w": 15,
+     "kind": "scene",
+     "npc": "ranger",
+     "years": [
+      1755,
+      1763
+     ],
+     "note": "ranging companies were disbanded after the war; in 1765 a patrol is a hired scout or an express"
+    },
+    {
+     "id": "enc.weather_accident",
+     "w": 15,
+     "kind": "text"
+    },
+    {
+     "id": "enc.burned_farm",
+     "w": 8,
+     "kind": "scene",
+     "effect": "a burned farm: report the loss at the fort or valley (standing +3), bury the dead (time), or help survivors to safety (food and time; standing +5). Nothing to loot (review 1, issue 21)."
+    },
+    {
+     "id": "enc.refugees",
+     "w": 5,
+     "kind": "scene",
+     "war_only": true,
+     "effect": "families fleeing raids: share food, escort them, or pass by",
+     "years": [
+      1755,
+      1758
+     ],
+     "note": "In this corridor refugees belong to 1755-58 (German Flatts, November 1757 and April 1758; the lake country). 1763 and 1774 refugee flows were on the Pennsylvania and Virginia frontiers (node.west)."
+    },
+    {
+     "id": "enc.express_rider",
+     "w": 12,
+     "kind": "text",
+     "npc": "express_rider"
+    }
+   ]
+  },
+  "src": [
+   "Y:10.1",
+   "E:8"
+  ]
+ },
+ "aliases": {
+  "poi.town.longhouses": "poi.town.houses",
+  "poi.town.home_longhouse": "poi.town.home_house",
+  "poi.valley.player_claim": "poi.valley.player_lot",
+  "poi.valley.shad_fishery": "poi.valley.eel_weir",
+  "poi.town.weir": "poi.town.fishing_place",
+  "poi.hunt.eel_weir": "poi.hunt.fishing_place",
+  "poi.hunt.winter_camp_site": "poi.hunt.fall_camp_site",
+  "node.allied_towns": "node.nation_towns",
+  "rt.town_allies": "rt.town_nation_towns",
+  "rt.post_west": "rt.oquaga_west",
+  "enc.long_hunters": "enc.backcountry_hunters",
+  "enc.captives_returned": "event.captives_returned"
+ },
+ "region_extensions": {
+  "reg.fort_clearing": {
+   "milestone": "post",
+   "era_states": {
+    "era.war_1755_1758": "no post yet: the ford on the carrying road; provincial and regular parties pass; the German Flatts raid (November 1757) sends refugees down the valley; the post is built in 1758",
+    "era.war_1759_1760": "a supply post for the Oswego and Niagara campaigns: provincials, rangers, bateau men and wagon traffic; army hiring and meat contracts",
+    "era.tense_peace_1761_1762": "a small garrison after the conquest; Amherst's economies; ranging companies disbanded; the post shrinks",
+    "era.war_1763_1764": "on alert through Pontiac's War; New York provincials pass with Bradstreet in 1764",
+    "era.line_1768_1773": "given up: a caretaker or no one; the buildings decay; the 1768 congress passes up the river to the Carry"
+   },
+   "v3_note": "The 1761-62 and 1763-64 states were missing in v2 (review 1 of v2, blocker).",
+   "pois": [
+    {
+     "id": "poi.fort.hospital",
+     "type": "fort",
+     "milestone": "M4",
+     "note": "the surgeon's room"
+    },
+    {
+     "id": "poi.fort.commissary",
+     "type": "fort",
+     "milestone": "post",
+     "note": "the provisions store of the war years (1758-63)"
+    }
+   ]
+  }
+ }
+}

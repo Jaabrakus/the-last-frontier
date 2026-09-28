@@ -1,0 +1,342 @@
+{
+ "id": "leggings_wool",
+ "name": "Wool leggings (1758 issue)",
+ "description": "Coarse wool leggings from the instep to above the knee with the seam flaps outside, tied under the knee with garters.",
+ "kind": "garment",
+ "set": "militia",
+ "slot": "legs.over",
+ "alt_slots": [],
+ "layer": {
+  "default": 30
+ },
+ "glb": "res://assets/character/garments/militia/leggings_wool.glb",
+ "mesh": "leggings_wool",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "leggings_wool"
+  }
+ ],
+ "occupies_regions": [
+  "thigh_lower_l",
+  "shin_upper_l",
+  "shin_lower_l",
+  "ankle_l",
+  "thigh_lower_r",
+  "shin_upper_r",
+  "shin_lower_r",
+  "ankle_r"
+ ],
+ "hides_regions": [
+  "shin_upper_l",
+  "shin_lower_l",
+  "shin_upper_r",
+  "shin_lower_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "leggings",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "indigo_mid",
+    "ranger_green",
+    "stroud_blue",
+    "stroud_red",
+    "drab",
+    "slate_grey",
+    "walnut_brown"
+   ],
+   "default": "ranger_green",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "indigo_mid": "#34507A",
+    "ranger_green": "#3B4A2E",
+    "stroud_blue": "#1E2B4A",
+    "stroud_red": "#8A1C1F",
+    "drab": "#8B7A5C",
+    "slate_grey": "#6B6A66",
+    "walnut_brown": "#5A3F2C"
+   },
+   "fabrics": [
+    "WOOL",
+    "TWILL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "garters",
+   "role": "band",
+   "fabric": "WOOL",
+   "palette": [
+    "indigo_mid",
+    "ranger_green",
+    "stroud_blue",
+    "stroud_red",
+    "drab",
+    "slate_grey",
+    "walnut_brown",
+    "madder_red",
+    "logwood_black"
+   ],
+   "default": "ranger_green",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "indigo_mid": "#34507A",
+    "ranger_green": "#3B4A2E",
+    "stroud_blue": "#1E2B4A",
+    "stroud_red": "#8A1C1F",
+    "drab": "#8B7A5C",
+    "slate_grey": "#6B6A66",
+    "walnut_brown": "#5A3F2C",
+    "madder_red": "#8E2B21",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "WOOL",
+    "KNIT",
+    "LEA"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 2479,
+    "verts": 1377,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "foot_l",
+     "foot_r",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "l_ball",
+     "r_upper_leg",
+     "r_knee",
+     "r_ankle",
+     "r_heel",
+     "r_ball"
+    ]
+   }
+  },
+  "tris": 2479,
+  "verts": 1377,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0061
+  },
+  "glb_kb": 257.3
+ },
+ "budget": {
+  "tris_max": 2500
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Knox, 1758: frieze about three quarters of a yard long, the flaps outside, gartered under the knee; issued in blue or green to the provincials that year.",
+ "sources": [
+  "M1",
+  "M3",
+  "M2"
+ ],
+ "aliases": [],
+ "tags": [
+  "militia",
+  "frontier"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": false,
+   "layer": "legwear",
+   "groups": {
+    "feet": {
+     "n": 67,
+     "min": 0.0006,
+     "max": 0.0176,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "shins": {
+     "n": 765,
+     "min": -0.0114,
+     "max": 0.0466,
+     "below_inner": 24,
+     "above_outer": 79,
+     "band": [
+      0.012,
+      0.019
+     ]
+    },
+    "thighs": {
+     "n": 545,
+     "min": -0.0017,
+     "max": 0.0317,
+     "below_inner": 28,
+     "above_outer": 36,
+     "band": [
+      0.012,
+      0.019
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/militia/leggings_wool.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/leggings_wool.py.",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "deform_limits": {
+  "leggings_wool": [
+   0.037,
+   0.039,
+   0.007,
+   2.85
+  ]
+ },
+ "coverage": {
+  "method": "rays from the skin (the region's vertices and triangle centres), female and male fit: hidden when every normal ray and 99.5 % of the rays tilted 28 deg hit the garment",
+  "hidden": [
+   "shin_upper_l",
+   "shin_lower_l",
+   "shin_upper_r",
+   "shin_lower_r"
+  ],
+  "not_hidden_candidates": {
+   "ankle_l": 0.822,
+   "ankle_r": 0.829
+  },
+  "share": {
+   "pelvis_center": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.014,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.003,
+    "cone": 0.0
+   },
+   "forearm_b_r": {
+    "normal": 0.013,
+    "cone": 0.0
+   },
+   "forearm_c_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.014,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.029,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.014,
+    "cone": 0.0
+   },
+   "thigh_lower_l": {
+    "normal": 0.607,
+    "cone": 0.0
+   },
+   "shin_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_l": {
+    "normal": 0.979,
+    "cone": 0.822
+   },
+   "foot_l": {
+    "normal": 0.101,
+    "cone": 0.0
+   },
+   "thigh_upper_r": {
+    "normal": 0.014,
+    "cone": 0.0
+   },
+   "thigh_lower_r": {
+    "normal": 0.613,
+    "cone": 0.0
+   },
+   "shin_upper_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_r": {
+    "normal": 0.967,
+    "cone": 0.829
+   },
+   "foot_r": {
+    "normal": 0.106,
+    "cone": 0.0
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 1.2,
+   "p05_mm": 11.47,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 1.18,
+   "p05_mm": 11.45,
+   "inside_skin": 0
+  }
+ }
+}

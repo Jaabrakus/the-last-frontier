@@ -1,0 +1,500 @@
+{
+  "_doc": "The fish of the world's waters (user 2026-09-27: 'add a fish powerlevel with different types of fish', 'we should have actual fish in the ponds and rivers with there own intelligence we mimic and try to catch'). `waters`: the most of each species a square's water holds (its type's `water` in squares.json: river, brook, spring, lake, marsh), fish as the player could see and catch them across the square (FishStock keeps the numbers; FishLife puts the ones near the player in the water, each with its own mind). `species`: how each lives (habitat, time of day, wariness, food, runs) and looks (FishMesh; tools/wildlife/fish_bake.gd bakes the meshes and skins). Species and seasons are the northeastern woodlands' of the 1760s (Lake Ontario's and the Ohio's waters); [H] marks what wants checking against a source.",
+  "_habitat": "Where in the water a fish keeps its lie: seam (the slack water beside and behind a boulder or at a rapid's edge, where the current brings food), head (the head of a pool, just below a rapid), riffle (the fast shallow water of a rapid itself), pool (the slow deep middle), bank (slow water along the edges, under the banks). Layer: where in the water it swims (bottom, low, mid).",
+  "_activity": "How active (feeding, moving, taking bait) it is by the time of day: dawn (05-08), day, dusk (18-21), night; x the month's (winter slow).",
+  "_runs": "A run: in `months` (1-12) the square's water holds `in` of its most, out of them `out` (salmon up the rivers from the lake in the fall, suckers in the spring, sturgeon to the rapids in May and June). Between, the numbers drift toward it (FishStock).",
+  "_barbels": "Barbels: [along the body, to the side, up] from the snout, fractions of its length, mirrored to both sides.",
+  "_wary": "wary_m: how near a person standing on the bank at the water's edge a fish lets come before it bolts (crouched, still, farther off: nearer); fish fished hard grow warier (FishStock.wary).",
+  "_bait": "Bait: picky (how much a dragged, unnatural drift puts it off: the power of `natural`), hold_s (how long it keeps a bait in its mouth before spitting it: the angler's time to set the hook), fight_s (how long it fights on the line before it tires, held lightly).",
+  "hatch": {
+    "_doc": "Insects on the water (what brings the fish up to rise), by month (1-12) and hour: the evening hatch strongest, none in winter.",
+    "months": [0.0, 0.0, 0.1, 0.5, 1.0, 1.0, 0.85, 0.8, 0.6, 0.3, 0.05, 0.0],
+    "dawn": 0.5,
+    "day": 0.3,
+    "dusk": 1.0,
+    "night": 0.05
+  },
+  "month_activity": [0.3, 0.3, 0.45, 0.75, 1.0, 1.0, 0.9, 0.85, 0.95, 0.9, 0.6, 0.35],
+  "waters": {
+    "river": {
+      "brook_trout": 110,
+      "salmon": 70,
+      "sucker": 130,
+      "perch": 60,
+      "pike": 8,
+      "eel": 36,
+      "bullhead": 20,
+      "sturgeon": 8
+    },
+    "brook": {"brook_trout": 50, "sucker": 12, "eel": 6},
+    "spring": {"brook_trout": 16},
+    "lake": {
+      "perch": 400,
+      "pike": 36,
+      "sucker": 150,
+      "bullhead": 80,
+      "eel": 50,
+      "salmon": 60,
+      "sturgeon": 12,
+      "brook_trout": 20
+    },
+    "marsh": {"pickerel": 40, "bullhead": 90, "perch": 50, "eel": 24}
+  },
+  "species": {
+    "brook_trout": {
+      "name": "brook trout",
+      "lb": [0.15, 1.2],
+      "len": [0.16, 0.38],
+      "habitat": {"seam": 1.0, "head": 0.8, "bank": 0.5, "riffle": 0.35, "pool": 0.25},
+      "layer": "mid",
+      "activity": {"dawn": 1.0, "day": 0.45, "dusk": 1.0, "night": 0.15},
+      "wary_m": 9.0,
+      "school": [1, 1],
+      "diet": ["insect", "nymph", "worm", "minnow"],
+      "rises": true,
+      "leap": 0.04,
+      "cruise": 0.3,
+      "burst": 2.6,
+      "picky": 2.5,
+      "hold_s": 0.6,
+      "fight_s": 14,
+      "r": 0.03,
+      "die": 0.1,
+      "floor": 0.15,
+      "rec": 0.4,
+      "note": "Cold clear water; holds facing the current in a lie where it brings food, rises to insects at dusk; the wariest.",
+      "look": {
+        "h": [
+          [0.0, 0.0], [0.03, 0.045], [0.12, 0.085], [0.3, 0.108], [0.45, 0.105], [0.62, 0.08], [0.78, 0.05],
+          [0.86, 0.042]
+        ],
+        "w": [[0.0, 0.0], [0.03, 0.034], [0.12, 0.058], [0.3, 0.066], [0.5, 0.056], [0.7, 0.034], [0.86, 0.018]],
+        "tail": {"base": 0.86, "hi": 0.1, "lo": 0.1, "fork": 0.012},
+        "fins": [
+          {"k": "dorsal", "u": [0.36, 0.5], "h": 0.09}, {"k": "adipose", "u": [0.7, 0.75], "h": 0.022},
+          {"k": "anal", "u": [0.62, 0.71], "h": 0.07}, {"k": "pelvic", "u": [0.46, 0.52], "h": 0.055},
+          {"k": "pectoral", "u": [0.19, 0.25], "h": 0.065}
+        ],
+        "paint": {
+          "back": "#3a4a2c",
+          "side": "#7d8656",
+          "belly": "#e0783a",
+          "fin": "#c65a2a",
+          "fin_top": "#56583a",
+          "fin_edge": "#f2f0e6",
+          "fin_bar": "#1c1c18",
+          "patterns": [
+            {"k": "vermiculate", "c": "#c2bd84", "d": [0.7, 1.0]},
+            {"k": "spots", "c": "#e2cf78", "n": 110, "r": 0.0065, "d": [0.42, 0.78]},
+            {"k": "spots", "c": "#d63a2a", "halo": "#7394cc", "n": 18, "r": 0.0038, "d": [0.4, 0.6]},
+            {"k": "fin_marble", "c": "#2a3020", "fins": ["dorsal", "caudal"]}
+          ]
+        },
+        "eye": 0.021,
+        "shine": 0.45,
+        "rough": 0.42,
+        "swim": {"k": 0.85, "head": 0.012, "tail": 0.11}
+      }
+    },
+    "salmon": {
+      "name": "Atlantic salmon",
+      "lb": [4.0, 16.0],
+      "len": [0.55, 0.9],
+      "habitat": {"head": 1.0, "pool": 0.7, "seam": 0.45},
+      "layer": "low",
+      "activity": {"dawn": 0.8, "day": 0.45, "dusk": 0.9, "night": 0.35},
+      "wary_m": 8.0,
+      "school": [1, 4],
+      "diet": ["insect", "minnow", "roe"],
+      "rises": false,
+      "leap": 1.0,
+      "cruise": 0.45,
+      "burst": 3.5,
+      "picky": 1.2,
+      "hold_s": 0.9,
+      "fight_s": 60,
+      "r": 0.25,
+      "die": 0.2,
+      "floor": 0.0,
+      "rec": 0.0,
+      "runs": {"river": {"months": [9, 10, 11], "in": 1.0, "out": 0.06}},
+      "note": "Lake Ontario's salmon ran up its rivers to spawn in the fall [H: the runs of the 1760s]: they rest in the pools below the rapids, leap them, and hardly feed, striking at a fly from temper.",
+      "look": {
+        "h": [
+          [0.0, 0.0], [0.03, 0.04], [0.12, 0.08], [0.32, 0.104], [0.5, 0.098], [0.68, 0.065], [0.8, 0.04],
+          [0.85, 0.036]
+        ],
+        "w": [[0.0, 0.0], [0.03, 0.03], [0.14, 0.055], [0.32, 0.06], [0.55, 0.05], [0.75, 0.028], [0.85, 0.016]],
+        "tail": {"base": 0.85, "hi": 0.11, "lo": 0.11, "fork": 0.035},
+        "fins": [
+          {"k": "dorsal", "u": [0.38, 0.5], "h": 0.085}, {"k": "adipose", "u": [0.72, 0.76], "h": 0.02},
+          {"k": "anal", "u": [0.66, 0.74], "h": 0.06}, {"k": "pelvic", "u": [0.5, 0.55], "h": 0.05},
+          {"k": "pectoral", "u": [0.19, 0.25], "h": 0.06}
+        ],
+        "paint": {
+          "back": "#34434a",
+          "side": "#b7b6a8",
+          "belly": "#ecebe4",
+          "fin": "#56554c",
+          "fin_edge": "#56554c",
+          "patterns": [
+            {"k": "xspots", "c": "#1d1f1a", "n": 70, "r": 0.0065, "d": [0.6, 1.0]},
+            {"k": "spots", "c": "#a8452e", "n": 6, "r": 0.004, "d": [0.5, 0.62]},
+            {"k": "blush", "c": "#7a5a48", "d": [0.4, 0.7], "a": 0.25}
+          ]
+        },
+        "eye": 0.017,
+        "shine": 0.7,
+        "rough": 0.32,
+        "swim": {"k": 0.8, "head": 0.01, "tail": 0.1}
+      }
+    },
+    "sucker": {
+      "name": "white sucker",
+      "lb": [0.8, 3.0],
+      "len": [0.3, 0.5],
+      "habitat": {"pool": 1.0, "head": 0.35, "riffle": 0.15},
+      "layer": "bottom",
+      "activity": {"dawn": 0.8, "day": 0.6, "dusk": 0.8, "night": 0.7},
+      "wary_m": 6.0,
+      "school": [3, 8],
+      "diet": ["worm", "nymph", "roe"],
+      "rises": false,
+      "leap": 0.0,
+      "cruise": 0.25,
+      "burst": 1.8,
+      "picky": 1.0,
+      "hold_s": 1.5,
+      "fight_s": 12,
+      "r": 0.05,
+      "die": 0.15,
+      "floor": 0.2,
+      "rec": 0.5,
+      "runs": {"river": {"months": [4, 5], "in": 1.0, "out": 0.5, "habitat": {"riffle": 1.2, "head": 1.0}}},
+      "note": "Schools grubbing the bottom of the pools; in April and May they crowd the rapids to spawn (the spring run of suckers the people wait for).",
+      "look": {
+        "h": [[0.0, 0.0], [0.03, 0.04], [0.12, 0.074], [0.35, 0.094], [0.55, 0.085], [0.72, 0.055], [0.84, 0.04]],
+        "w": [[0.0, 0.0], [0.03, 0.04], [0.12, 0.065], [0.35, 0.07], [0.6, 0.055], [0.84, 0.02]],
+        "c": [[0.0, 0.012], [0.08, 0.0], [1.0, 0.0]],
+        "tail": {"base": 0.84, "hi": 0.11, "lo": 0.11, "fork": 0.045},
+        "fins": [
+          {"k": "dorsal", "u": [0.4, 0.53], "h": 0.08}, {"k": "anal", "u": [0.7, 0.76], "h": 0.06},
+          {"k": "pelvic", "u": [0.5, 0.55], "h": 0.05}, {"k": "pectoral", "u": [0.18, 0.24], "h": 0.06}
+        ],
+        "paint": {
+          "back": "#4a4632",
+          "side": "#a39164",
+          "belly": "#ece6d6",
+          "fin": "#8a7a5a",
+          "fin_edge": "#8a7a5a",
+          "patterns": [
+            {"k": "scales", "c": "#2e2a1e", "a": 0.25, "d": [0.3, 1.0]},
+            {"k": "stripe", "c": "#3a3226", "d": [0.47, 0.57], "a": 0.35}
+          ]
+        },
+        "eye": 0.018,
+        "shine": 0.4,
+        "rough": 0.45,
+        "swim": {"k": 0.8, "head": 0.01, "tail": 0.1}
+      }
+    },
+    "perch": {
+      "name": "yellow perch",
+      "lb": [0.15, 0.8],
+      "len": [0.15, 0.3],
+      "habitat": {"pool": 1.0, "bank": 0.5},
+      "layer": "mid",
+      "activity": {"dawn": 0.9, "day": 0.8, "dusk": 0.9, "night": 0.1},
+      "wary_m": 4.0,
+      "school": [4, 10],
+      "diet": ["worm", "minnow", "nymph", "insect"],
+      "rises": false,
+      "leap": 0.0,
+      "cruise": 0.3,
+      "burst": 1.8,
+      "picky": 0.6,
+      "hold_s": 1.0,
+      "fight_s": 6,
+      "r": 0.05,
+      "die": 0.15,
+      "floor": 0.2,
+      "rec": 0.5,
+      "note": "Schools in the slow pools by day, bold and greedy: the easiest to catch.",
+      "look": {
+        "h": [[0.0, 0.0], [0.03, 0.05], [0.12, 0.1], [0.3, 0.13], [0.45, 0.12], [0.62, 0.085], [0.76, 0.05], [0.84, 0.042]],
+        "w": [[0.0, 0.0], [0.03, 0.03], [0.15, 0.05], [0.35, 0.055], [0.6, 0.04], [0.84, 0.016]],
+        "c": [[0.0, -0.018], [0.18, 0.0], [0.3, 0.01], [0.5, 0.0], [1.0, 0.0]],
+        "tail": {"base": 0.84, "hi": 0.1, "lo": 0.1, "fork": 0.03},
+        "fins": [
+          {"k": "dorsal_spiny", "u": [0.26, 0.46], "h": 0.1}, {"k": "dorsal", "u": [0.5, 0.64], "h": 0.08},
+          {"k": "anal", "u": [0.63, 0.72], "h": 0.06}, {"k": "pelvic", "u": [0.3, 0.36], "h": 0.055},
+          {"k": "pectoral", "u": [0.24, 0.3], "h": 0.055}
+        ],
+        "paint": {
+          "back": "#4b5324",
+          "side": "#c9a93a",
+          "belly": "#f0ead0",
+          "fin": "#b8a052",
+          "fin_edge": "#b8a052",
+          "fin_low": "#e0772e",
+          "patterns": [
+            {"k": "bars", "c": "#2f3418", "n": 7, "u": [0.2, 0.8], "w": 0.035, "d": [0.3, 1.0]},
+            {"k": "fin_membrane", "c": "#2c2c20", "fins": ["dorsal_spiny"]}
+          ]
+        },
+        "eye": 0.026,
+        "shine": 0.35,
+        "rough": 0.45,
+        "swim": {"k": 0.8, "head": 0.012, "tail": 0.1}
+      }
+    },
+    "pike": {
+      "name": "northern pike",
+      "lb": [2.0, 14.0],
+      "len": [0.5, 1.0],
+      "habitat": {"bank": 1.0, "pool": 0.5},
+      "layer": "mid",
+      "activity": {"dawn": 1.0, "day": 0.7, "dusk": 1.0, "night": 0.1},
+      "wary_m": 5.0,
+      "school": [1, 1],
+      "diet": ["minnow", "frog"],
+      "rises": false,
+      "leap": 0.0,
+      "ambush": true,
+      "cruise": 0.2,
+      "burst": 4.0,
+      "picky": 1.0,
+      "hold_s": 1.2,
+      "fight_s": 30,
+      "r": 0.015,
+      "die": 0.1,
+      "floor": 0.25,
+      "rec": 0.2,
+      "note": "Waits still along the slow edges and strikes: at a small fish, or a minnow on a line.",
+      "look": {
+        "h": [
+          [0.0, 0.0], [0.02, 0.014], [0.1, 0.044], [0.2, 0.063], [0.45, 0.074], [0.65, 0.07], [0.78, 0.05],
+          [0.86, 0.035]
+        ],
+        "w": [[0.0, 0.0], [0.02, 0.026], [0.1, 0.046], [0.2, 0.05], [0.45, 0.052], [0.7, 0.04], [0.86, 0.015]],
+        "tail": {"base": 0.86, "hi": 0.085, "lo": 0.085, "fork": 0.03},
+        "fins": [
+          {"k": "dorsal", "u": [0.66, 0.79], "h": 0.065}, {"k": "anal", "u": [0.68, 0.8], "h": 0.055},
+          {"k": "pelvic", "u": [0.5, 0.55], "h": 0.045}, {"k": "pectoral", "u": [0.2, 0.25], "h": 0.05}
+        ],
+        "paint": {
+          "back": "#2f3a22",
+          "side": "#5d6a3a",
+          "belly": "#e8e2c4",
+          "fin": "#7a6a3a",
+          "fin_edge": "#8a4a2a",
+          "patterns": [
+            {"k": "ovals", "c": "#cfcf98", "n": 150, "r": 0.0075, "d": [0.4, 0.9]},
+            {"k": "fin_marble", "c": "#2a2a18", "fins": ["dorsal", "anal", "caudal"]}
+          ]
+        },
+        "eye": 0.016,
+        "shine": 0.4,
+        "rough": 0.4,
+        "swim": {"k": 0.75, "head": 0.008, "tail": 0.1}
+      }
+    },
+    "eel": {
+      "name": "American eel",
+      "lb": [0.8, 4.0],
+      "len": [0.5, 1.0],
+      "habitat": {"bank": 1.0, "pool": 0.6, "seam": 0.4},
+      "layer": "bottom",
+      "activity": {"dawn": 0.2, "day": 0.0, "dusk": 0.6, "night": 1.0},
+      "hides": true,
+      "wary_m": 4.0,
+      "school": [1, 1],
+      "diet": ["worm", "minnow", "crayfish"],
+      "rises": false,
+      "leap": 0.0,
+      "cruise": 0.25,
+      "burst": 1.6,
+      "picky": 0.8,
+      "hold_s": 2.0,
+      "fight_s": 20,
+      "r": 0.02,
+      "die": 0.1,
+      "floor": 0.2,
+      "rec": 0.3,
+      "note": "Under the banks and stones by day; out along the bottom at night (eels were speared by torchlight and taken in weirs in the fall).",
+      "look": {
+        "h": [[0.0, 0.0], [0.02, 0.018], [0.08, 0.028], [0.3, 0.034], [0.7, 0.028], [0.92, 0.014], [0.97, 0.006]],
+        "w": [[0.0, 0.0], [0.02, 0.018], [0.08, 0.026], [0.3, 0.03], [0.7, 0.02], [0.92, 0.008], [0.97, 0.003]],
+        "tail": {"base": 0.97, "hi": 0.014, "lo": 0.014, "fork": -0.01},
+        "fins": [
+          {"k": "dorsal", "u": [0.35, 0.97], "h": 0.024, "low": true},
+          {"k": "anal", "u": [0.5, 0.97], "h": 0.02, "low": true}, {"k": "pectoral", "u": [0.135, 0.165], "h": 0.02}
+        ],
+        "paint": {
+          "back": "#2e2e1e",
+          "side": "#5a5634",
+          "belly": "#d8cc8a",
+          "fin": "#34331f",
+          "fin_edge": "#3a3a26",
+          "patterns": []
+        },
+        "eye": 0.01,
+        "shine": 0.55,
+        "rough": 0.3,
+        "swim": {"k": 1.5, "head": 0.03, "tail": 0.06}
+      }
+    },
+    "bullhead": {
+      "name": "brown bullhead",
+      "lb": [0.3, 1.5],
+      "len": [0.2, 0.35],
+      "habitat": {"pool": 1.0, "bank": 0.6},
+      "layer": "bottom",
+      "activity": {"dawn": 0.3, "day": 0.1, "dusk": 0.7, "night": 1.0},
+      "wary_m": 3.0,
+      "school": [1, 3],
+      "diet": ["worm", "minnow", "crayfish"],
+      "rises": false,
+      "leap": 0.0,
+      "cruise": 0.2,
+      "burst": 1.4,
+      "picky": 0.5,
+      "hold_s": 2.0,
+      "fight_s": 10,
+      "r": 0.05,
+      "die": 0.15,
+      "floor": 0.25,
+      "rec": 0.5,
+      "note": "A catfish of the slow muddy water, feeling along the bottom with its barbels at night.",
+      "look": {
+        "h": [[0.0, 0.0], [0.03, 0.036], [0.12, 0.066], [0.3, 0.1], [0.5, 0.095], [0.72, 0.068], [0.86, 0.055]],
+        "w": [[0.0, 0.0], [0.03, 0.07], [0.12, 0.1], [0.25, 0.088], [0.5, 0.062], [0.86, 0.02]],
+        "tail": {"base": 0.86, "hi": 0.08, "lo": 0.08, "fork": -0.02},
+        "fins": [
+          {"k": "dorsal", "u": [0.3, 0.38], "h": 0.1}, {"k": "adipose", "u": [0.66, 0.77], "h": 0.035},
+          {"k": "anal", "u": [0.6, 0.8], "h": 0.06}, {"k": "pelvic", "u": [0.47, 0.53], "h": 0.05},
+          {"k": "pectoral", "u": [0.16, 0.22], "h": 0.06},
+          {"k": "barbel", "from": [0.03, 0.035, 0.0], "to": [0.22, 0.1, -0.02]},
+          {"k": "barbel", "from": [0.03, 0.012, -0.03], "to": [0.1, 0.03, -0.07]},
+          {"k": "barbel", "from": [0.035, 0.028, -0.028], "to": [0.11, 0.06, -0.06]},
+          {"k": "barbel", "from": [0.01, 0.02, 0.02], "to": [0.05, 0.03, 0.045]}
+        ],
+        "paint": {
+          "back": "#2e2a1c",
+          "side": "#5e5232",
+          "belly": "#e2d49a",
+          "fin": "#3a3424",
+          "fin_edge": "#3a3424",
+          "patterns": [{"k": "mottle", "c": "#1e1a12", "a": 0.55, "d": [0.4, 1.0]}]
+        },
+        "eye": 0.012,
+        "shine": 0.5,
+        "rough": 0.35,
+        "swim": {"k": 0.8, "head": 0.012, "tail": 0.1},
+        "c": [[0.0, -0.012], [0.12, -0.01], [0.3, 0.0], [1.0, 0.0]]
+      }
+    },
+    "sturgeon": {
+      "name": "lake sturgeon",
+      "lb": [20.0, 90.0],
+      "len": [1.0, 1.7],
+      "habitat": {"head": 1.0, "riffle": 0.4, "pool": 0.5},
+      "layer": "bottom",
+      "activity": {"dawn": 0.6, "day": 0.6, "dusk": 0.6, "night": 0.6},
+      "wary_m": 5.0,
+      "school": [1, 3],
+      "diet": ["worm", "crayfish", "nymph"],
+      "rises": false,
+      "leap": 0.25,
+      "cruise": 0.35,
+      "burst": 1.6,
+      "picky": 1.0,
+      "hold_s": 1.5,
+      "fight_s": 120,
+      "r": 0.15,
+      "die": 0.2,
+      "floor": 0.0,
+      "rec": 0.0,
+      "runs": {"river": {"months": [5, 6], "in": 1.0, "out": 0.0}},
+      "note": "The lake's giants come up to the rapids to spawn in May and June, rolling and leaping clear in the shallows [H: the river's run].",
+      "look": {
+        "h": [
+          [0.0, 0.0], [0.03, 0.02], [0.1, 0.05], [0.25, 0.074], [0.45, 0.078], [0.65, 0.058], [0.8, 0.034],
+          [0.84, 0.03]
+        ],
+        "w": [[0.0, 0.0], [0.03, 0.025], [0.1, 0.055], [0.25, 0.07], [0.45, 0.068], [0.65, 0.045], [0.84, 0.015]],
+        "c": [[0.0, -0.016], [0.1, 0.0], [0.84, 0.012]],
+        "tail": {"base": 0.84, "hi": 0.14, "lo": 0.06, "fork": 0.05, "upper_long": 0.06},
+        "fins": [
+          {"k": "dorsal", "u": [0.66, 0.76], "h": 0.06}, {"k": "anal", "u": [0.7, 0.78], "h": 0.05},
+          {"k": "pelvic", "u": [0.55, 0.6], "h": 0.045}, {"k": "pectoral", "u": [0.18, 0.25], "h": 0.08},
+          {"k": "barbel", "from": [0.055, 0.012, -0.015], "to": [0.06, 0.014, -0.045]},
+          {"k": "barbel", "from": [0.055, 0.004, -0.016], "to": [0.06, 0.005, -0.046]}
+        ],
+        "paint": {
+          "back": "#3e3e34",
+          "side": "#6e6a58",
+          "belly": "#d8d2c0",
+          "fin": "#4a483c",
+          "fin_edge": "#4a483c",
+          "patterns": [
+            {"k": "scutes", "c": "#bdb8a2", "rows": [1.0, 0.62, 0.3], "n": 13},
+            {"k": "speckle", "c": "#23231c", "n": 260, "r": 0.003, "d": [0.4, 1.0]}
+          ]
+        },
+        "eye": 0.009,
+        "shine": 0.3,
+        "rough": 0.55,
+        "swim": {"k": 0.7, "head": 0.008, "tail": 0.09}
+      }
+    },
+    "pickerel": {
+      "name": "chain pickerel",
+      "lb": [1.0, 3.0],
+      "len": [0.35, 0.6],
+      "habitat": {"bank": 1.0, "pool": 0.4},
+      "layer": "mid",
+      "activity": {"dawn": 1.0, "day": 0.8, "dusk": 1.0, "night": 0.1},
+      "wary_m": 5.0,
+      "school": [1, 1],
+      "diet": ["minnow", "frog"],
+      "rises": false,
+      "leap": 0.0,
+      "ambush": true,
+      "cruise": 0.2,
+      "burst": 3.5,
+      "picky": 1.0,
+      "hold_s": 1.0,
+      "fight_s": 18,
+      "r": 0.02,
+      "die": 0.1,
+      "floor": 0.25,
+      "rec": 0.3,
+      "note": "The pike's smaller cousin of the weedy marsh water, chain-marked.",
+      "look": {
+        "h": [
+          [0.0, 0.0], [0.02, 0.013], [0.1, 0.04], [0.2, 0.056], [0.45, 0.066], [0.65, 0.062], [0.78, 0.045],
+          [0.86, 0.032]
+        ],
+        "w": [[0.0, 0.0], [0.02, 0.022], [0.1, 0.04], [0.2, 0.044], [0.45, 0.046], [0.7, 0.035], [0.86, 0.014]],
+        "tail": {"base": 0.86, "hi": 0.08, "lo": 0.08, "fork": 0.03},
+        "fins": [
+          {"k": "dorsal", "u": [0.66, 0.79], "h": 0.06}, {"k": "anal", "u": [0.68, 0.8], "h": 0.05},
+          {"k": "pelvic", "u": [0.5, 0.55], "h": 0.04}, {"k": "pectoral", "u": [0.2, 0.25], "h": 0.045}
+        ],
+        "paint": {
+          "back": "#39401e",
+          "side": "#b09a48",
+          "belly": "#ece4c4",
+          "fin": "#8a7a44",
+          "fin_edge": "#8a7a44",
+          "patterns": [{"k": "chain", "c": "#23260f", "d": [0.3, 1.0]}]
+        },
+        "eye": 0.018,
+        "shine": 0.4,
+        "rough": 0.4,
+        "swim": {"k": 0.75, "head": 0.008, "tail": 0.1}
+      }
+    }
+  }
+}

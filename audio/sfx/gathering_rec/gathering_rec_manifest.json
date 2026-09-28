@@ -1,0 +1,137 @@
+{
+ "about": "Written by tools/sfx/gathering_rec.py. volume_db = target_db - st_loudness_db - min(20*log10(unit_size / listener_m), 3): the in-game loudness at the typical listener distance, matched to the existing sounds (see the generator's SOUNDS table).",
+ "sounds": {
+  "gather_rec_axe_chop": {
+   "bus": "World",
+   "listener_m": 4.0,
+   "max_distance": 220.0,
+   "random_pitch": 1.05,
+   "random_volume_db": 2.0,
+   "st_loudness_db": -17.77,
+   "target_db": -18.5,
+   "unit_size": 5.0,
+   "variants": 5,
+   "volume_db": -2.7
+  },
+  "gather_rec_axe_chop_big": {
+   "bus": "World",
+   "listener_m": 4.0,
+   "max_distance": 240.0,
+   "random_pitch": 1.04,
+   "random_volume_db": 2.0,
+   "st_loudness_db": -15.84,
+   "target_db": -17.5,
+   "unit_size": 5.0,
+   "variants": 4,
+   "volume_db": -3.6
+  },
+  "gather_rec_axe_chop_sapling": {
+   "bus": "World",
+   "listener_m": 4.0,
+   "max_distance": 80.0,
+   "random_pitch": 1.06,
+   "random_volume_db": 2.0,
+   "st_loudness_db": -19.08,
+   "target_db": -23.0,
+   "unit_size": 4.0,
+   "variants": 4,
+   "volume_db": -3.9
+  },
+  "gather_rec_buck": {
+   "bus": "World",
+   "listener_m": 4.0,
+   "max_distance": 180.0,
+   "random_pitch": 1.05,
+   "random_volume_db": 2.0,
+   "st_loudness_db": -19.36,
+   "target_db": -20.0,
+   "unit_size": 5.0,
+   "variants": 5,
+   "volume_db": -2.6
+  },
+  "gather_rec_pick_rock": {
+   "bus": "World",
+   "listener_m": 4.0,
+   "max_distance": 150.0,
+   "random_pitch": 1.05,
+   "random_volume_db": 2.0,
+   "st_loudness_db": -18.3,
+   "target_db": -19.0,
+   "unit_size": 5.0,
+   "variants": 5,
+   "volume_db": -2.6
+  },
+  "gather_rec_pick_rock_hard": {
+   "bus": "World",
+   "listener_m": 4.0,
+   "max_distance": 160.0,
+   "random_pitch": 1.05,
+   "random_volume_db": 2.0,
+   "st_loudness_db": -19.41,
+   "target_db": -17.5,
+   "unit_size": 5.0,
+   "variants": 4,
+   "volume_db": 0.0
+  },
+  "gather_rec_rock_depleted": {
+   "bus": "World",
+   "listener_m": 4.0,
+   "max_distance": 200.0,
+   "random_pitch": 1.03,
+   "random_volume_db": 1.0,
+   "st_loudness_db": -17.03,
+   "target_db": -17.0,
+   "unit_size": 6.0,
+   "variants": 3,
+   "volume_db": -3.0
+  },
+  "gather_rec_rock_split": {
+   "bus": "World",
+   "listener_m": 4.0,
+   "max_distance": 150.0,
+   "random_pitch": 1.04,
+   "random_volume_db": 1.5,
+   "st_loudness_db": -21.88,
+   "target_db": -20.0,
+   "unit_size": 5.0,
+   "variants": 4,
+   "volume_db": -0.1
+  },
+  "gather_rec_tree_crack": {
+   "bus": "World",
+   "listener_m": 5.0,
+   "max_distance": 250.0,
+   "random_pitch": 1.03,
+   "random_volume_db": 1.0,
+   "st_loudness_db": -12.93,
+   "target_db": -19.0,
+   "unit_size": 10.0,
+   "variants": 3,
+   "volume_db": -9.1
+  },
+  "gather_rec_tree_fall": {
+   "bus": "World",
+   "listener_m": 9.0,
+   "max_distance": 200.0,
+   "random_pitch": 1.02,
+   "random_volume_db": 1.0,
+   "st_loudness_db": -10.82,
+   "target_db": -19.0,
+   "unit_size": 12.0,
+   "variants": 3,
+   "volume_db": -10.7
+  },
+  "gather_rec_tree_land": {
+   "bus": "World",
+   "listener_m": 12.0,
+   "max_distance": 400.0,
+   "random_pitch": 1.03,
+   "random_volume_db": 1.0,
+   "st_loudness_db": -12.13,
+   "target_db": -12.0,
+   "unit_size": 20.0,
+   "variants": 3,
+   "volume_db": -2.9
+  }
+ }
+}

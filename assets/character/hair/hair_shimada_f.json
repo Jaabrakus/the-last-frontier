@@ -1,0 +1,171 @@
+{
+ "id": "hair_shimada_f",
+ "name": "Dressed up (shimada)",
+ "description": "Long hair dressed up: full side locks, a projection at the nape and a knot on the top of the head held with a pin.",
+ "kind": "hair",
+ "set": "hair",
+ "slot": "hair",
+ "alt_slots": [],
+ "layer": {
+  "default": 70
+ },
+ "glb": "res://assets/character/hair/hair_shimada_f.glb",
+ "mesh": "hair_shimada_f",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "hair_shimada_f"
+  },
+  {
+   "surface": "strands",
+   "name": "hair_shimada_f_tex"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [
+  "crown",
+  "sides",
+  "back"
+ ],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "hair",
+   "role": "hair",
+   "fabric": "FLAT",
+   "palette": [],
+   "default": null,
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {}
+  },
+  {
+   "zone": 1,
+   "name": "pin",
+   "role": "pin",
+   "fabric": "FLAT",
+   "palette": [
+    "logwood_black",
+    "ribbon_red",
+    "linen_unbleached"
+   ],
+   "default": "logwood_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "logwood_black": "#1C1B20",
+    "ribbon_red": "#B2202C",
+    "linen_unbleached": "#C8BA9A"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "strands": {
+    "tris": 7734,
+    "verts": 8406,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "hair_back",
+     "hair_crown",
+     "hair_sides"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "spined",
+     "neck",
+     "heada",
+     "headb"
+    ]
+   },
+   "main": {
+    "tris": 300,
+    "verts": 152,
+    "zones": [
+     1
+    ],
+    "regions": [
+     "hair_crown"
+    ],
+    "max_influences": 1,
+    "bones": [
+     "headb"
+    ]
+   }
+  },
+  "tris": 8034,
+  "verts": 8558,
+  "surface_count": 2,
+  "shapes": {
+   "sex": 0.0449,
+   "sex_head": 0.0449,
+   "face_breadth": 0.0001,
+   "face_length": 0.0,
+   "face_jaw_width": 0.0005,
+   "face_jaw_angle": 0.0004,
+   "face_chin_projection": 0.0,
+   "face_chin_width": 0.0,
+   "face_chin_height": 0.0,
+   "face_cheekbones": 0.0,
+   "face_midface": 0.0,
+   "face_cheek_fullness": 0.0001,
+   "face_prognathism": 0.0,
+   "face_brow_ridge": 0.0,
+   "face_eye_depth": 0.0,
+   "face_lid_crease": 0.0,
+   "face_lid_fold": 0.0,
+   "face_under_eye": 0.0,
+   "face_nasal_root": 0.0,
+   "face_nose_bridge": 0.0,
+   "face_nose_hump": 0.0,
+   "face_nose_width": 0.0,
+   "face_nose_length": 0.0,
+   "face_nose_tip": 0.0,
+   "face_nose_upturn": 0.0,
+   "face_lips_upper": 0.0,
+   "face_lips_lower": 0.0,
+   "hat_fit": 0.0436
+  },
+  "glb_kb": 2057.6
+ },
+ "budget": {
+  "tris_max": 15000
+ },
+ "evidence": "B",
+ "licence_note": "Period style of Edo Japan; Japanese travellers were all but unknown in the 1750s northeast.",
+ "history": "Edo-period Japanese women dressed the hair up in the shimada: side locks, nape projection, top knot.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "women",
+  "any"
+ ],
+ "checks": {},
+ "generator": "tools/character/hair/hair_shimada_f.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_shimada_f.py.",
+ "hair": {
+  "queue": false,
+  "texture": "straight",
+  "strand_map": "res://assets/character/hair/tex/hair_atlas.png",
+  "builder": "hair v3 recipe",
+  "scalp_mask": "res://assets/character/hair/tex/hair_shimada_f_scalp.png",
+  "edge_feather": 0.3
+ }
+}

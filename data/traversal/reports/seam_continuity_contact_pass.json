@@ -1,0 +1,9669 @@
+{
+ "meta": {
+  "generator": "tools/traversal/seam_continuity.gd",
+  "fps": 120,
+  "label": "contact_pass",
+  "units": {
+   "d2": "cm per frame^2 at 120 fps (one-frame jump)",
+   "dv": "m/s (3-frame mean velocity after - before)"
+  },
+  "note": "rendered pose after TraversalIK; root = the rig (skeleton) origin; pose = pelvis in the rig frame; contact pass 2026-09-25 (the seam pass report is seam_continuity_seam_pass.json, the review baseline seam_continuity_before.json)"
+ },
+ "routes": {
+  "vault_sprint": {
+   "seams": [
+    {
+     "frame": 13,
+     "kind": "entry",
+     "from": "loco:idle:1381441",
+     "to": "loco:walk:1399891",
+     "fade": 0.0,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.45,
+      "dv": 0.59
+     },
+     "l_palm": {
+      "d2": 0.45,
+      "dv": 0.91
+     },
+     "r_palm": {
+      "d2": 0.45,
+      "dv": 0.5
+     },
+     "l_foot": {
+      "d2": 0.45,
+      "dv": 0.5
+     },
+     "r_foot": {
+      "d2": 0.45,
+      "dv": 0.79
+     },
+     "root": {
+      "d2": 0.45,
+      "dv": 0.58
+     },
+     "pose": {
+      "d2": 0.03,
+      "dv": 0.05
+     },
+     "capsule": {
+      "d2": 0.45,
+      "dv": 0.64
+     }
+    },
+    {
+     "frame": 28,
+     "kind": "entry",
+     "from": "loco:walk:1399891",
+     "to": "loco:run:1407139",
+     "fade": 0.0,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.38,
+      "dv": 0.62
+     },
+     "l_palm": {
+      "d2": 0.52,
+      "dv": 0.75
+     },
+     "r_palm": {
+      "d2": 0.67,
+      "dv": 1.05
+     },
+     "l_foot": {
+      "d2": 0.35,
+      "dv": 0.7
+     },
+     "r_foot": {
+      "d2": 0.63,
+      "dv": 1.16
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.38
+     },
+     "pose": {
+      "d2": 0.3,
+      "dv": 0.27
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 46,
+     "kind": "entry",
+     "from": "loco:run:1407139",
+     "to": "loco:sprint:1416142",
+     "fade": 0.0,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.36,
+      "dv": 0.54
+     },
+     "l_palm": {
+      "d2": 0.6,
+      "dv": 1.99
+     },
+     "r_palm": {
+      "d2": 0.95,
+      "dv": 1.67
+     },
+     "l_foot": {
+      "d2": 2.22,
+      "dv": 2.61
+     },
+     "r_foot": {
+      "d2": 0.83,
+      "dv": 2.01
+     },
+     "root": {
+      "d2": 0.1,
+      "dv": 0.36
+     },
+     "pose": {
+      "d2": 0.36,
+      "dv": 0.53
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 151,
+     "kind": "entry",
+     "from": "loco:sprint:1416142",
+     "to": "loco:run:1474012",
+     "fade": 0.0,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.25,
+      "dv": 0.49
+     },
+     "l_palm": {
+      "d2": 1.22,
+      "dv": 2.44
+     },
+     "r_palm": {
+      "d2": 0.89,
+      "dv": 1.87
+     },
+     "l_foot": {
+      "d2": 1.05,
+      "dv": 2.51
+     },
+     "r_foot": {
+      "d2": 1.95,
+      "dv": 4.4
+     },
+     "root": {
+      "d2": 0.02,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 0.24,
+      "dv": 0.45
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.11
+     }
+    },
+    {
+     "frame": 218,
+     "kind": "entry",
+     "from": "loco:run:1474012",
+     "to": "vault_sprint:1:0",
+     "fade": 0.2,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.75,
+      "dv": 0.73
+     },
+     "l_palm": {
+      "d2": 1.34,
+      "dv": 0.48
+     },
+     "r_palm": {
+      "d2": 1.29,
+      "dv": 0.26
+     },
+     "l_foot": {
+      "d2": 1.51,
+      "dv": 0.76
+     },
+     "r_foot": {
+      "d2": 2.58,
+      "dv": 0.77
+     },
+     "root": {
+      "d2": 1.13,
+      "dv": 0.54
+     },
+     "pose": {
+      "d2": 1.14,
+      "dv": 0.22
+     },
+     "capsule": {
+      "d2": 0.69,
+      "dv": 0.57
+     }
+    },
+    {
+     "frame": 253,
+     "kind": "part",
+     "from": "vault_sprint:1:0",
+     "to": "vault_sprint:1:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.11,
+      "dv": 0.05
+     },
+     "l_palm": {
+      "d2": 0.01,
+      "dv": 0.03
+     },
+     "r_palm": {
+      "d2": 0.1,
+      "dv": 0.19
+     },
+     "l_foot": {
+      "d2": 0.22,
+      "dv": 0.32
+     },
+     "r_foot": {
+      "d2": 0.34,
+      "dv": 0.98
+     },
+     "root": {
+      "d2": 0.09,
+      "dv": 0.04
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.27,
+      "dv": 0.59
+     }
+    },
+    {
+     "frame": 289,
+     "kind": "part",
+     "from": "vault_sprint:1:1",
+     "to": "vault_sprint:1:2",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.93,
+      "dv": 0.42
+     },
+     "l_palm": {
+      "d2": 0.7,
+      "dv": 0.3
+     },
+     "r_palm": {
+      "d2": 0.96,
+      "dv": 0.51
+     },
+     "l_foot": {
+      "d2": 0.8,
+      "dv": 1.15
+     },
+     "r_foot": {
+      "d2": 0.94,
+      "dv": 0.49
+     },
+     "root": {
+      "d2": 0.93,
+      "dv": 0.42
+     },
+     "pose": {
+      "d2": 0.09,
+      "dv": 0.04
+     },
+     "capsule": {
+      "d2": 0.5,
+      "dv": 0.49
+     }
+    },
+    {
+     "frame": 325,
+     "kind": "part",
+     "from": "vault_sprint:1:2",
+     "to": "vault_sprint:1:3",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.24,
+      "dv": 0.07
+     },
+     "l_palm": {
+      "d2": 0.4,
+      "dv": 0.22
+     },
+     "r_palm": {
+      "d2": 0.52,
+      "dv": 0.72
+     },
+     "l_foot": {
+      "d2": 0.17,
+      "dv": 0.33
+     },
+     "r_foot": {
+      "d2": 1.44,
+      "dv": 1.95
+     },
+     "root": {
+      "d2": 0.27,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.18,
+      "dv": 0.22
+     }
+    },
+    {
+     "frame": 373,
+     "kind": "exit",
+     "from": "vault_sprint:1:3",
+     "to": "exit:run:2",
+     "fade": 0.2,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.25,
+      "dv": 0.34
+     },
+     "l_palm": {
+      "d2": 0.72,
+      "dv": 1.23
+     },
+     "r_palm": {
+      "d2": 1.14,
+      "dv": 1.56
+     },
+     "l_foot": {
+      "d2": 1.63,
+      "dv": 2.42
+     },
+     "r_foot": {
+      "d2": 0.91,
+      "dv": 0.96
+     },
+     "root": {
+      "d2": 0.18,
+      "dv": 0.37
+     },
+     "pose": {
+      "d2": 0.34,
+      "dv": 0.12
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.26
+     }
+    },
+    {
+     "frame": 384,
+     "kind": "exit",
+     "from": "exit:run:2",
+     "to": "loco:sprint:1642131",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.64,
+      "dv": 0.36
+     },
+     "l_palm": {
+      "d2": 2.1,
+      "dv": 1.01
+     },
+     "r_palm": {
+      "d2": 1.96,
+      "dv": 2.13
+     },
+     "l_foot": {
+      "d2": 3.86,
+      "dv": 2.08
+     },
+     "r_foot": {
+      "d2": 4.15,
+      "dv": 2.05
+     },
+     "root": {
+      "d2": 0.15,
+      "dv": 0.47
+     },
+     "pose": {
+      "d2": 0.68,
+      "dv": 0.6
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 513,
+     "kind": "entry",
+     "from": "loco:sprint:1642131",
+     "to": "loco:run:1715776",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.93,
+      "dv": 0.15
+     },
+     "l_palm": {
+      "d2": 1.91,
+      "dv": 0.96
+     },
+     "r_palm": {
+      "d2": 1.75,
+      "dv": 1.8
+     },
+     "l_foot": {
+      "d2": 2.45,
+      "dv": 1.7
+     },
+     "r_foot": {
+      "d2": 3.97,
+      "dv": 2.31
+     },
+     "root": {
+      "d2": 0.03,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 0.93,
+      "dv": 0.09
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.11
+     }
+    },
+    {
+     "frame": 581,
+     "kind": "entry",
+     "from": "loco:run:1715776",
+     "to": "vault_sprint:3:0",
+     "fade": 0.2,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.74,
+      "dv": 1.08
+     },
+     "l_palm": {
+      "d2": 3.35,
+      "dv": 1.58
+     },
+     "r_palm": {
+      "d2": 4.46,
+      "dv": 1.59
+     },
+     "l_foot": {
+      "d2": 1.95,
+      "dv": 3.46
+     },
+     "r_foot": {
+      "d2": 2.87,
+      "dv": 1.92
+     },
+     "root": {
+      "d2": 1.13,
+      "dv": 0.54
+     },
+     "pose": {
+      "d2": 1.15,
+      "dv": 0.73
+     },
+     "capsule": {
+      "d2": 0.69,
+      "dv": 0.57
+     }
+    },
+    {
+     "frame": 616,
+     "kind": "part",
+     "from": "vault_sprint:3:0",
+     "to": "vault_sprint:3:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.11,
+      "dv": 0.05
+     },
+     "l_palm": {
+      "d2": 0.01,
+      "dv": 0.03
+     },
+     "r_palm": {
+      "d2": 0.12,
+      "dv": 0.21
+     },
+     "l_foot": {
+      "d2": 0.22,
+      "dv": 0.29
+     },
+     "r_foot": {
+      "d2": 0.34,
+      "dv": 0.98
+     },
+     "root": {
+      "d2": 0.09,
+      "dv": 0.04
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.27,
+      "dv": 0.58
+     }
+    },
+    {
+     "frame": 652,
+     "kind": "part",
+     "from": "vault_sprint:3:1",
+     "to": "vault_sprint:3:2",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.91,
+      "dv": 0.4
+     },
+     "l_palm": {
+      "d2": 0.68,
+      "dv": 0.3
+     },
+     "r_palm": {
+      "d2": 0.93,
+      "dv": 0.5
+     },
+     "l_foot": {
+      "d2": 0.77,
+      "dv": 1.14
+     },
+     "r_foot": {
+      "d2": 0.92,
+      "dv": 0.48
+     },
+     "root": {
+      "d2": 0.91,
+      "dv": 0.4
+     },
+     "pose": {
+      "d2": 0.09,
+      "dv": 0.04
+     },
+     "capsule": {
+      "d2": 0.49,
+      "dv": 0.45
+     }
+    },
+    {
+     "frame": 688,
+     "kind": "part",
+     "from": "vault_sprint:3:2",
+     "to": "vault_sprint:3:3",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.24,
+      "dv": 0.07
+     },
+     "l_palm": {
+      "d2": 0.4,
+      "dv": 0.22
+     },
+     "r_palm": {
+      "d2": 0.52,
+      "dv": 0.72
+     },
+     "l_foot": {
+      "d2": 0.17,
+      "dv": 0.33
+     },
+     "r_foot": {
+      "d2": 1.44,
+      "dv": 1.95
+     },
+     "root": {
+      "d2": 0.27,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.18,
+      "dv": 0.22
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.93,
+     "dv": 1.08
+    },
+    "entry_l_palm": {
+     "d2": 3.35,
+     "dv": 2.44
+    },
+    "entry_r_palm": {
+     "d2": 4.46,
+     "dv": 1.87
+    },
+    "entry_l_foot": {
+     "d2": 2.45,
+     "dv": 3.46
+    },
+    "entry_r_foot": {
+     "d2": 3.97,
+     "dv": 4.4
+    },
+    "entry_root": {
+     "d2": 1.13,
+     "dv": 0.58
+    },
+    "entry_pose": {
+     "d2": 1.15,
+     "dv": 0.73
+    },
+    "entry_capsule": {
+     "d2": 0.69,
+     "dv": 0.64
+    },
+    "part_pelvis": {
+     "d2": 0.93,
+     "dv": 0.42
+    },
+    "part_l_palm": {
+     "d2": 0.7,
+     "dv": 0.3
+    },
+    "part_r_palm": {
+     "d2": 0.96,
+     "dv": 0.72
+    },
+    "part_l_foot": {
+     "d2": 0.8,
+     "dv": 1.15
+    },
+    "part_r_foot": {
+     "d2": 1.44,
+     "dv": 1.95
+    },
+    "part_root": {
+     "d2": 0.93,
+     "dv": 0.42
+    },
+    "part_pose": {
+     "d2": 0.09,
+     "dv": 0.04
+    },
+    "part_capsule": {
+     "d2": 0.5,
+     "dv": 0.59
+    },
+    "exit_pelvis": {
+     "d2": 0.64,
+     "dv": 0.36
+    },
+    "exit_l_palm": {
+     "d2": 2.1,
+     "dv": 1.23
+    },
+    "exit_r_palm": {
+     "d2": 1.96,
+     "dv": 2.13
+    },
+    "exit_l_foot": {
+     "d2": 3.86,
+     "dv": 2.42
+    },
+    "exit_r_foot": {
+     "d2": 4.15,
+     "dv": 2.05
+    },
+    "exit_root": {
+     "d2": 0.18,
+     "dv": 0.47
+    },
+    "exit_pose": {
+     "d2": 0.68,
+     "dv": 0.6
+    },
+    "exit_capsule": {
+     "d2": 0.1,
+     "dv": 0.47
+    }
+   },
+   "moves": [
+    "vault_sprint",
+    "vault_sprint"
+   ]
+  },
+  "vault_idle": {
+   "seams": [
+    {
+     "frame": 194,
+     "kind": "entry",
+     "from": "loco:walk:1870999",
+     "to": "vault_idle:5:0",
+     "fade": 0.2,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 1.38,
+      "dv": 0.36
+     },
+     "l_palm": {
+      "d2": 2.88,
+      "dv": 0.5
+     },
+     "r_palm": {
+      "d2": 3.12,
+      "dv": 0.46
+     },
+     "l_foot": {
+      "d2": 0.84,
+      "dv": 0.4
+     },
+     "r_foot": {
+      "d2": 3.66,
+      "dv": 0.65
+     },
+     "root": {
+      "d2": 0.88,
+      "dv": 0.04
+     },
+     "pose": {
+      "d2": 0.79,
+      "dv": 0.39
+     },
+     "capsule": {
+      "d2": 0.9,
+      "dv": 0.09
+     }
+    },
+    {
+     "frame": 253,
+     "kind": "part",
+     "from": "vault_idle:5:0",
+     "to": "vault_idle:5:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 1.41,
+      "dv": 0.06
+     },
+     "l_palm": {
+      "d2": 0.93,
+      "dv": 1.22
+     },
+     "r_palm": {
+      "d2": 0.94,
+      "dv": 2.4
+     },
+     "l_foot": {
+      "d2": 1.58,
+      "dv": 1.29
+     },
+     "r_foot": {
+      "d2": 1.2,
+      "dv": 1.07
+     },
+     "root": {
+      "d2": 1.43,
+      "dv": 0.03
+     },
+     "pose": {
+      "d2": 0.12,
+      "dv": 0.04
+     },
+     "capsule": {
+      "d2": 0.51,
+      "dv": 0.61
+     }
+    },
+    {
+     "frame": 289,
+     "kind": "part",
+     "from": "vault_idle:5:1",
+     "to": "vault_idle:5:2",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.88,
+      "dv": 0.43
+     },
+     "l_palm": {
+      "d2": 0.64,
+      "dv": 0.47
+     },
+     "r_palm": {
+      "d2": 0.84,
+      "dv": 0.67
+     },
+     "l_foot": {
+      "d2": 0.65,
+      "dv": 0.42
+     },
+     "r_foot": {
+      "d2": 0.85,
+      "dv": 0.58
+     },
+     "root": {
+      "d2": 0.74,
+      "dv": 0.32
+     },
+     "pose": {
+      "d2": 0.27,
+      "dv": 0.19
+     },
+     "capsule": {
+      "d2": 0.49,
+      "dv": 0.05
+     }
+    },
+    {
+     "frame": 325,
+     "kind": "part",
+     "from": "vault_idle:5:2",
+     "to": "vault_idle:5:3",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.14,
+      "dv": 0.03
+     },
+     "l_palm": {
+      "d2": 0.14,
+      "dv": 0.14
+     },
+     "r_palm": {
+      "d2": 0.15,
+      "dv": 0.54
+     },
+     "l_foot": {
+      "d2": 0.46,
+      "dv": 0.13
+     },
+     "r_foot": {
+      "d2": 1.35,
+      "dv": 1.95
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.03
+     },
+     "pose": {
+      "d2": 0.11,
+      "dv": 0.05
+     },
+     "capsule": {
+      "d2": 0.25,
+      "dv": 0.19
+     }
+    },
+    {
+     "frame": 349,
+     "kind": "exit",
+     "from": "vault_idle:5:3",
+     "to": "exit:run:6",
+     "fade": 0.2,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.24,
+      "dv": 0.35
+     },
+     "l_palm": {
+      "d2": 0.9,
+      "dv": 0.96
+     },
+     "r_palm": {
+      "d2": 1.62,
+      "dv": 1.77
+     },
+     "l_foot": {
+      "d2": 2.39,
+      "dv": 1.56
+     },
+     "r_foot": {
+      "d2": 0.35,
+      "dv": 0.21
+     },
+     "root": {
+      "d2": 0.19,
+      "dv": 0.45
+     },
+     "pose": {
+      "d2": 0.21,
+      "dv": 0.18
+     },
+     "capsule": {
+      "d2": 0.11,
+      "dv": 0.26
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 1.38,
+     "dv": 0.36
+    },
+    "entry_l_palm": {
+     "d2": 2.88,
+     "dv": 0.5
+    },
+    "entry_r_palm": {
+     "d2": 3.12,
+     "dv": 0.46
+    },
+    "entry_l_foot": {
+     "d2": 0.84,
+     "dv": 0.4
+    },
+    "entry_r_foot": {
+     "d2": 3.66,
+     "dv": 0.65
+    },
+    "entry_root": {
+     "d2": 0.88,
+     "dv": 0.04
+    },
+    "entry_pose": {
+     "d2": 0.79,
+     "dv": 0.39
+    },
+    "entry_capsule": {
+     "d2": 0.9,
+     "dv": 0.09
+    },
+    "part_pelvis": {
+     "d2": 1.41,
+     "dv": 0.43
+    },
+    "part_l_palm": {
+     "d2": 0.93,
+     "dv": 1.22
+    },
+    "part_r_palm": {
+     "d2": 0.94,
+     "dv": 2.4
+    },
+    "part_l_foot": {
+     "d2": 1.58,
+     "dv": 1.29
+    },
+    "part_r_foot": {
+     "d2": 1.35,
+     "dv": 1.95
+    },
+    "part_root": {
+     "d2": 1.43,
+     "dv": 0.32
+    },
+    "part_pose": {
+     "d2": 0.27,
+     "dv": 0.19
+    },
+    "part_capsule": {
+     "d2": 0.51,
+     "dv": 0.61
+    },
+    "exit_pelvis": {
+     "d2": 0.24,
+     "dv": 0.35
+    },
+    "exit_l_palm": {
+     "d2": 0.9,
+     "dv": 0.96
+    },
+    "exit_r_palm": {
+     "d2": 1.62,
+     "dv": 1.77
+    },
+    "exit_l_foot": {
+     "d2": 2.39,
+     "dv": 1.56
+    },
+    "exit_r_foot": {
+     "d2": 0.35,
+     "dv": 0.21
+    },
+    "exit_root": {
+     "d2": 0.19,
+     "dv": 0.45
+    },
+    "exit_pose": {
+     "d2": 0.21,
+     "dv": 0.18
+    },
+    "exit_capsule": {
+     "d2": 0.11,
+     "dv": 0.26
+    }
+   },
+   "moves": [
+    "vault_idle"
+   ]
+  },
+  "step_on": {
+   "seams": [
+    {
+     "frame": 198,
+     "kind": "entry",
+     "from": "loco:walk:2187920",
+     "to": "step_on:7:0",
+     "fade": 0.2,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.26,
+      "dv": 0.18
+     },
+     "l_palm": {
+      "d2": 0.37,
+      "dv": 0.29
+     },
+     "r_palm": {
+      "d2": 0.69,
+      "dv": 0.24
+     },
+     "l_foot": {
+      "d2": 0.33,
+      "dv": 0.1
+     },
+     "r_foot": {
+      "d2": 2.45,
+      "dv": 0.31
+     },
+     "root": {
+      "d2": 0.29,
+      "dv": 0.07
+     },
+     "pose": {
+      "d2": 0.2,
+      "dv": 0.24
+     },
+     "capsule": {
+      "d2": 0.14,
+      "dv": 0.07
+     }
+    },
+    {
+     "frame": 305,
+     "kind": "exit",
+     "from": "step_on:7:0",
+     "to": "exit:run:8",
+     "fade": 0.2,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.17,
+      "dv": 0.23
+     },
+     "l_palm": {
+      "d2": 0.21,
+      "dv": 0.15
+     },
+     "r_palm": {
+      "d2": 0.27,
+      "dv": 0.33
+     },
+     "l_foot": {
+      "d2": 0.39,
+      "dv": 0.45
+     },
+     "r_foot": {
+      "d2": 0.22,
+      "dv": 0.27
+     },
+     "root": {
+      "d2": 0.08,
+      "dv": 0.19
+     },
+     "pose": {
+      "d2": 0.18,
+      "dv": 0.08
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.23
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.26,
+     "dv": 0.18
+    },
+    "entry_l_palm": {
+     "d2": 0.37,
+     "dv": 0.29
+    },
+    "entry_r_palm": {
+     "d2": 0.69,
+     "dv": 0.24
+    },
+    "entry_l_foot": {
+     "d2": 0.33,
+     "dv": 0.1
+    },
+    "entry_r_foot": {
+     "d2": 2.45,
+     "dv": 0.31
+    },
+    "entry_root": {
+     "d2": 0.29,
+     "dv": 0.07
+    },
+    "entry_pose": {
+     "d2": 0.2,
+     "dv": 0.24
+    },
+    "entry_capsule": {
+     "d2": 0.14,
+     "dv": 0.07
+    },
+    "exit_pelvis": {
+     "d2": 0.17,
+     "dv": 0.23
+    },
+    "exit_l_palm": {
+     "d2": 0.21,
+     "dv": 0.15
+    },
+    "exit_r_palm": {
+     "d2": 0.27,
+     "dv": 0.33
+    },
+    "exit_l_foot": {
+     "d2": 0.39,
+     "dv": 0.45
+    },
+    "exit_r_foot": {
+     "d2": 0.22,
+     "dv": 0.27
+    },
+    "exit_root": {
+     "d2": 0.08,
+     "dv": 0.19
+    },
+    "exit_pose": {
+     "d2": 0.18,
+     "dv": 0.08
+    },
+    "exit_capsule": {
+     "d2": 0.1,
+     "dv": 0.23
+    }
+   },
+   "moves": [
+    "step_on"
+   ]
+  },
+  "vault_tall": {
+   "seams": [
+    {
+     "frame": 235,
+     "kind": "entry",
+     "from": "loco:walk:2387194",
+     "to": "vault_tall_fall:9:0",
+     "fade": 0.2,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.78,
+      "dv": 0.11
+     },
+     "l_palm": {
+      "d2": 2.33,
+      "dv": 0.06
+     },
+     "r_palm": {
+      "d2": 2.12,
+      "dv": 0.34
+     },
+     "l_foot": {
+      "d2": 1.13,
+      "dv": 0.09
+     },
+     "r_foot": {
+      "d2": 1.08,
+      "dv": 0.25
+     },
+     "root": {
+      "d2": 1.3,
+      "dv": 0.07
+     },
+     "pose": {
+      "d2": 1.75,
+      "dv": 0.07
+     },
+     "capsule": {
+      "d2": 0.23,
+      "dv": 0.05
+     }
+    },
+    {
+     "frame": 450,
+     "kind": "air",
+     "from": "vault_tall_fall:9:0",
+     "to": "air:vault_tall_fall:10",
+     "fade": 0.2,
+     "mode": "MOVE>AIR",
+     "pelvis": {
+      "d2": 0.81,
+      "dv": 0.09
+     },
+     "l_palm": {
+      "d2": 0.68,
+      "dv": 0.72
+     },
+     "r_palm": {
+      "d2": 1.3,
+      "dv": 0.82
+     },
+     "l_foot": {
+      "d2": 1.82,
+      "dv": 0.17
+     },
+     "r_foot": {
+      "d2": 1.77,
+      "dv": 0.06
+     },
+     "root": {
+      "d2": 0.32,
+      "dv": 0.11
+     },
+     "pose": {
+      "d2": 0.61,
+      "dv": 0.03
+     },
+     "capsule": {
+      "d2": 0.2,
+      "dv": 0.13
+     }
+    },
+    {
+     "frame": 522,
+     "kind": "air",
+     "from": "air:vault_tall_fall:10",
+     "to": "loco:fall:10",
+     "fade": 0.2,
+     "mode": "AIR>AIR",
+     "pelvis": {
+      "d2": 0.18,
+      "dv": 0.37
+     },
+     "l_palm": {
+      "d2": 0.75,
+      "dv": 1.15
+     },
+     "r_palm": {
+      "d2": 0.77,
+      "dv": 1.51
+     },
+     "l_foot": {
+      "d2": 4.02,
+      "dv": 0.6
+     },
+     "r_foot": {
+      "d2": 1.0,
+      "dv": 0.94
+     },
+     "root": {
+      "d2": 0.08,
+      "dv": 0.25
+     },
+     "pose": {
+      "d2": 0.19,
+      "dv": 0.33
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.34
+     }
+    },
+    {
+     "frame": 545,
+     "kind": "land",
+     "from": "loco:fall:10",
+     "to": "land_run:11:0",
+     "fade": 0.1,
+     "mode": "AIR>MOVE",
+     "pelvis": {
+      "d2": 2.35,
+      "dv": 3.64
+     },
+     "l_palm": {
+      "d2": 2.34,
+      "dv": 3.82
+     },
+     "r_palm": {
+      "d2": 2.55,
+      "dv": 2.36
+     },
+     "l_foot": {
+      "d2": 4.02,
+      "dv": 5.08
+     },
+     "r_foot": {
+      "d2": 4.3,
+      "dv": 5.95
+     },
+     "root": {
+      "d2": 2.35,
+      "dv": 3.67
+     },
+     "pose": {
+      "d2": 0.25,
+      "dv": 0.23
+     },
+     "capsule": {
+      "d2": 4.48,
+      "dv": 6.16
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.78,
+     "dv": 0.11
+    },
+    "entry_l_palm": {
+     "d2": 2.33,
+     "dv": 0.06
+    },
+    "entry_r_palm": {
+     "d2": 2.12,
+     "dv": 0.34
+    },
+    "entry_l_foot": {
+     "d2": 1.13,
+     "dv": 0.09
+    },
+    "entry_r_foot": {
+     "d2": 1.08,
+     "dv": 0.25
+    },
+    "entry_root": {
+     "d2": 1.3,
+     "dv": 0.07
+    },
+    "entry_pose": {
+     "d2": 1.75,
+     "dv": 0.07
+    },
+    "entry_capsule": {
+     "d2": 0.23,
+     "dv": 0.05
+    },
+    "air_pelvis": {
+     "d2": 0.81,
+     "dv": 0.37
+    },
+    "air_l_palm": {
+     "d2": 0.75,
+     "dv": 1.15
+    },
+    "air_r_palm": {
+     "d2": 1.3,
+     "dv": 1.51
+    },
+    "air_l_foot": {
+     "d2": 4.02,
+     "dv": 0.6
+    },
+    "air_r_foot": {
+     "d2": 1.77,
+     "dv": 0.94
+    },
+    "air_root": {
+     "d2": 0.32,
+     "dv": 0.25
+    },
+    "air_pose": {
+     "d2": 0.61,
+     "dv": 0.33
+    },
+    "air_capsule": {
+     "d2": 0.2,
+     "dv": 0.34
+    },
+    "land_pelvis": {
+     "d2": 2.35,
+     "dv": 3.64
+    },
+    "land_l_palm": {
+     "d2": 2.34,
+     "dv": 3.82
+    },
+    "land_r_palm": {
+     "d2": 2.55,
+     "dv": 2.36
+    },
+    "land_l_foot": {
+     "d2": 4.02,
+     "dv": 5.08
+    },
+    "land_r_foot": {
+     "d2": 4.3,
+     "dv": 5.95
+    },
+    "land_root": {
+     "d2": 2.35,
+     "dv": 3.67
+    },
+    "land_pose": {
+     "d2": 0.25,
+     "dv": 0.23
+    },
+    "land_capsule": {
+     "d2": 4.48,
+     "dv": 6.16
+    }
+   },
+   "moves": [
+    "vault_tall_fall",
+    "land_run"
+   ]
+  },
+  "mantle_knee_run": {
+   "seams": [
+    {
+     "frame": 19,
+     "kind": "entry",
+     "from": "loco:walk:2839165",
+     "to": "loco:run:2846408",
+     "fade": 0.1,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.4,
+      "dv": 0.47
+     },
+     "l_palm": {
+      "d2": 0.86,
+      "dv": 0.77
+     },
+     "r_palm": {
+      "d2": 0.76,
+      "dv": 0.65
+     },
+     "l_foot": {
+      "d2": 0.78,
+      "dv": 0.77
+     },
+     "r_foot": {
+      "d2": 2.53,
+      "dv": 0.4
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.38
+     },
+     "pose": {
+      "d2": 0.34,
+      "dv": 0.25
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 37,
+     "kind": "entry",
+     "from": "loco:run:2846408",
+     "to": "loco:sprint:2855130",
+     "fade": 0.1,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.55,
+      "dv": 0.93
+     },
+     "l_palm": {
+      "d2": 1.78,
+      "dv": 3.28
+     },
+     "r_palm": {
+      "d2": 1.76,
+      "dv": 2.08
+     },
+     "l_foot": {
+      "d2": 2.86,
+      "dv": 4.49
+     },
+     "r_foot": {
+      "d2": 2.84,
+      "dv": 3.29
+     },
+     "root": {
+      "d2": 0.1,
+      "dv": 0.36
+     },
+     "pose": {
+      "d2": 0.57,
+      "dv": 1.0
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 139,
+     "kind": "entry",
+     "from": "loco:sprint:2855130",
+     "to": "loco:run:2916900",
+     "fade": 0.1,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.37,
+      "dv": 0.12
+     },
+     "l_palm": {
+      "d2": 1.61,
+      "dv": 1.32
+     },
+     "r_palm": {
+      "d2": 1.84,
+      "dv": 1.76
+     },
+     "l_foot": {
+      "d2": 0.87,
+      "dv": 1.43
+     },
+     "r_foot": {
+      "d2": 2.25,
+      "dv": 1.68
+     },
+     "root": {
+      "d2": 0.03,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 0.37,
+      "dv": 0.19
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.11
+     }
+    },
+    {
+     "frame": 228,
+     "kind": "entry",
+     "from": "loco:run:2916900",
+     "to": "mantle_1m_run:12:0",
+     "fade": 0.2,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.27,
+      "dv": 0.19
+     },
+     "l_palm": {
+      "d2": 1.01,
+      "dv": 0.61
+     },
+     "r_palm": {
+      "d2": 0.87,
+      "dv": 0.53
+     },
+     "l_foot": {
+      "d2": 1.16,
+      "dv": 0.49
+     },
+     "r_foot": {
+      "d2": 1.14,
+      "dv": 0.82
+     },
+     "root": {
+      "d2": 0.86,
+      "dv": 0.04
+     },
+     "pose": {
+      "d2": 0.83,
+      "dv": 0.18
+     },
+     "capsule": {
+      "d2": 0.46,
+      "dv": 0.08
+     }
+    },
+    {
+     "frame": 307,
+     "kind": "part",
+     "from": "mantle_1m_run:12:0",
+     "to": "mantle_1m_run:12:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.44,
+      "dv": 0.21
+     },
+     "l_palm": {
+      "d2": 0.14,
+      "dv": 0.13
+     },
+     "r_palm": {
+      "d2": 0.48,
+      "dv": 0.38
+     },
+     "l_foot": {
+      "d2": 0.56,
+      "dv": 0.43
+     },
+     "r_foot": {
+      "d2": 0.2,
+      "dv": 0.57
+     },
+     "root": {
+      "d2": 0.41,
+      "dv": 0.21
+     },
+     "pose": {
+      "d2": 0.16,
+      "dv": 0.06
+     },
+     "capsule": {
+      "d2": 0.74,
+      "dv": 1.32
+     }
+    },
+    {
+     "frame": 355,
+     "kind": "exit",
+     "from": "mantle_1m_run:12:1",
+     "to": "exit:run:13",
+     "fade": 0.2,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.12,
+      "dv": 0.17
+     },
+     "l_palm": {
+      "d2": 0.14,
+      "dv": 0.59
+     },
+     "r_palm": {
+      "d2": 0.13,
+      "dv": 0.23
+     },
+     "l_foot": {
+      "d2": 0.1,
+      "dv": 0.87
+     },
+     "r_foot": {
+      "d2": 0.16,
+      "dv": 0.75
+     },
+     "root": {
+      "d2": 0.12,
+      "dv": 0.21
+     },
+     "pose": {
+      "d2": 0.0,
+      "dv": 0.12
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.27
+     }
+    },
+    {
+     "frame": 356,
+     "kind": "exit",
+     "from": "exit:run:13",
+     "to": "loco:run:3096239",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.39,
+      "dv": 0.25
+     },
+     "l_palm": {
+      "d2": 0.81,
+      "dv": 0.63
+     },
+     "r_palm": {
+      "d2": 0.81,
+      "dv": 0.17
+     },
+     "l_foot": {
+      "d2": 1.08,
+      "dv": 1.18
+     },
+     "r_foot": {
+      "d2": 1.21,
+      "dv": 0.95
+     },
+     "root": {
+      "d2": 0.19,
+      "dv": 0.38
+     },
+     "pose": {
+      "d2": 0.45,
+      "dv": 0.21
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.36
+     }
+    },
+    {
+     "frame": 374,
+     "kind": "entry",
+     "from": "loco:run:3096239",
+     "to": "loco:sprint:3110364",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.51,
+      "dv": 0.44
+     },
+     "l_palm": {
+      "d2": 1.58,
+      "dv": 2.9
+     },
+     "r_palm": {
+      "d2": 1.09,
+      "dv": 1.71
+     },
+     "l_foot": {
+      "d2": 1.21,
+      "dv": 2.13
+     },
+     "r_foot": {
+      "d2": 2.58,
+      "dv": 3.73
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.37
+     },
+     "pose": {
+      "d2": 0.53,
+      "dv": 0.31
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.55,
+     "dv": 0.93
+    },
+    "entry_l_palm": {
+     "d2": 1.78,
+     "dv": 3.28
+    },
+    "entry_r_palm": {
+     "d2": 1.84,
+     "dv": 2.08
+    },
+    "entry_l_foot": {
+     "d2": 2.86,
+     "dv": 4.49
+    },
+    "entry_r_foot": {
+     "d2": 2.84,
+     "dv": 3.73
+    },
+    "entry_root": {
+     "d2": 0.86,
+     "dv": 0.38
+    },
+    "entry_pose": {
+     "d2": 0.83,
+     "dv": 1.0
+    },
+    "entry_capsule": {
+     "d2": 0.46,
+     "dv": 0.47
+    },
+    "part_pelvis": {
+     "d2": 0.44,
+     "dv": 0.21
+    },
+    "part_l_palm": {
+     "d2": 0.14,
+     "dv": 0.13
+    },
+    "part_r_palm": {
+     "d2": 0.48,
+     "dv": 0.38
+    },
+    "part_l_foot": {
+     "d2": 0.56,
+     "dv": 0.43
+    },
+    "part_r_foot": {
+     "d2": 0.2,
+     "dv": 0.57
+    },
+    "part_root": {
+     "d2": 0.41,
+     "dv": 0.21
+    },
+    "part_pose": {
+     "d2": 0.16,
+     "dv": 0.06
+    },
+    "part_capsule": {
+     "d2": 0.74,
+     "dv": 1.32
+    },
+    "exit_pelvis": {
+     "d2": 0.39,
+     "dv": 0.25
+    },
+    "exit_l_palm": {
+     "d2": 0.81,
+     "dv": 0.63
+    },
+    "exit_r_palm": {
+     "d2": 0.81,
+     "dv": 0.23
+    },
+    "exit_l_foot": {
+     "d2": 1.08,
+     "dv": 1.18
+    },
+    "exit_r_foot": {
+     "d2": 1.21,
+     "dv": 0.95
+    },
+    "exit_root": {
+     "d2": 0.19,
+     "dv": 0.38
+    },
+    "exit_pose": {
+     "d2": 0.45,
+     "dv": 0.21
+    },
+    "exit_capsule": {
+     "d2": 0.1,
+     "dv": 0.36
+    }
+   },
+   "moves": [
+    "mantle_1m_run"
+   ]
+  },
+  "mantle_1_5m": {
+   "seams": [
+    {
+     "frame": 19,
+     "kind": "entry",
+     "from": "loco:walk:3122288",
+     "to": "loco:run:3129397",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.4,
+      "dv": 0.47
+     },
+     "l_palm": {
+      "d2": 0.86,
+      "dv": 0.77
+     },
+     "r_palm": {
+      "d2": 0.76,
+      "dv": 0.65
+     },
+     "l_foot": {
+      "d2": 0.78,
+      "dv": 0.77
+     },
+     "r_foot": {
+      "d2": 2.53,
+      "dv": 0.4
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.38
+     },
+     "pose": {
+      "d2": 0.34,
+      "dv": 0.25
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 37,
+     "kind": "entry",
+     "from": "loco:run:3129397",
+     "to": "loco:sprint:3137771",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.55,
+      "dv": 0.93
+     },
+     "l_palm": {
+      "d2": 1.78,
+      "dv": 3.28
+     },
+     "r_palm": {
+      "d2": 2.4,
+      "dv": 2.08
+     },
+     "l_foot": {
+      "d2": 2.86,
+      "dv": 4.49
+     },
+     "r_foot": {
+      "d2": 3.87,
+      "dv": 3.29
+     },
+     "root": {
+      "d2": 0.1,
+      "dv": 0.36
+     },
+     "pose": {
+      "d2": 0.57,
+      "dv": 1.0
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 131,
+     "kind": "entry",
+     "from": "loco:sprint:3137771",
+     "to": "loco:run:3196929",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.59,
+      "dv": 0.58
+     },
+     "l_palm": {
+      "d2": 1.31,
+      "dv": 3.19
+     },
+     "r_palm": {
+      "d2": 1.02,
+      "dv": 2.29
+     },
+     "l_foot": {
+      "d2": 0.94,
+      "dv": 0.87
+     },
+     "r_foot": {
+      "d2": 2.24,
+      "dv": 1.36
+     },
+     "root": {
+      "d2": 0.03,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 0.58,
+      "dv": 0.57
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.11
+     }
+    },
+    {
+     "frame": 206,
+     "kind": "entry",
+     "from": "loco:run:3196929",
+     "to": "loco:walk:3248476",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.26,
+      "dv": 0.13
+     },
+     "l_palm": {
+      "d2": 0.62,
+      "dv": 0.8
+     },
+     "r_palm": {
+      "d2": 1.07,
+      "dv": 0.79
+     },
+     "l_foot": {
+      "d2": 1.76,
+      "dv": 0.22
+     },
+     "r_foot": {
+      "d2": 0.94,
+      "dv": 0.56
+     },
+     "root": {
+      "d2": 0.03,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 0.26,
+      "dv": 0.12
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.11
+     }
+    },
+    {
+     "frame": 262,
+     "kind": "entry",
+     "from": "loco:walk:3248476",
+     "to": "mantle_1_5m:14:0",
+     "fade": 0.3,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.55,
+      "dv": 0.23
+     },
+     "l_palm": {
+      "d2": 1.57,
+      "dv": 0.25
+     },
+     "r_palm": {
+      "d2": 2.02,
+      "dv": 0.53
+     },
+     "l_foot": {
+      "d2": 1.8,
+      "dv": 0.56
+     },
+     "r_foot": {
+      "d2": 1.0,
+      "dv": 0.29
+     },
+     "root": {
+      "d2": 0.44,
+      "dv": 0.23
+     },
+     "pose": {
+      "d2": 0.57,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.21,
+      "dv": 0.07
+     }
+    },
+    {
+     "frame": 369,
+     "kind": "part",
+     "from": "mantle_1_5m:14:0",
+     "to": "mantle_1_5m:14:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.52,
+      "dv": 0.21
+     },
+     "l_palm": {
+      "d2": 0.32,
+      "dv": 0.55
+     },
+     "r_palm": {
+      "d2": 0.83,
+      "dv": 1.6
+     },
+     "l_foot": {
+      "d2": 0.68,
+      "dv": 0.52
+     },
+     "r_foot": {
+      "d2": 0.44,
+      "dv": 0.62
+     },
+     "root": {
+      "d2": 0.55,
+      "dv": 0.29
+     },
+     "pose": {
+      "d2": 0.1,
+      "dv": 0.08
+     },
+     "capsule": {
+      "d2": 0.68,
+      "dv": 0.65
+     }
+    },
+    {
+     "frame": 417,
+     "kind": "exit",
+     "from": "mantle_1_5m:14:1",
+     "to": "exit:run:15",
+     "fade": 0.2,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.12,
+      "dv": 0.22
+     },
+     "l_palm": {
+      "d2": 0.28,
+      "dv": 0.86
+     },
+     "r_palm": {
+      "d2": 0.27,
+      "dv": 0.43
+     },
+     "l_foot": {
+      "d2": 0.36,
+      "dv": 0.88
+     },
+     "r_foot": {
+      "d2": 0.41,
+      "dv": 0.68
+     },
+     "root": {
+      "d2": 0.13,
+      "dv": 0.25
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.14
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.26
+     }
+    },
+    {
+     "frame": 419,
+     "kind": "exit",
+     "from": "exit:run:15",
+     "to": "loco:run:3446590",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.35,
+      "dv": 0.29
+     },
+     "l_palm": {
+      "d2": 0.71,
+      "dv": 0.93
+     },
+     "r_palm": {
+      "d2": 0.66,
+      "dv": 0.45
+     },
+     "l_foot": {
+      "d2": 0.83,
+      "dv": 1.09
+     },
+     "r_foot": {
+      "d2": 1.14,
+      "dv": 0.94
+     },
+     "root": {
+      "d2": 0.19,
+      "dv": 0.47
+     },
+     "pose": {
+      "d2": 0.41,
+      "dv": 0.25
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.43
+     }
+    },
+    {
+     "frame": 436,
+     "kind": "entry",
+     "from": "loco:run:3446590",
+     "to": "loco:sprint:3459340",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.67,
+      "dv": 0.49
+     },
+     "l_palm": {
+      "d2": 3.22,
+      "dv": 2.74
+     },
+     "r_palm": {
+      "d2": 3.36,
+      "dv": 1.49
+     },
+     "l_foot": {
+      "d2": 1.62,
+      "dv": 2.07
+     },
+     "r_foot": {
+      "d2": 3.71,
+      "dv": 3.18
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.39
+     },
+     "pose": {
+      "d2": 0.68,
+      "dv": 0.37
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 471,
+     "kind": "air",
+     "from": "loco:sprint:3459340",
+     "to": "air:drop_fall:16",
+     "fade": 0.2,
+     "mode": "OFF>AIR",
+     "pelvis": {
+      "d2": 1.14,
+      "dv": 0.4
+     },
+     "l_palm": {
+      "d2": 1.63,
+      "dv": 3.8
+     },
+     "r_palm": {
+      "d2": 1.45,
+      "dv": 2.52
+     },
+     "l_foot": {
+      "d2": 4.11,
+      "dv": 6.29
+     },
+     "r_foot": {
+      "d2": 1.4,
+      "dv": 1.97
+     },
+     "root": {
+      "d2": 0.08,
+      "dv": 0.13
+     },
+     "pose": {
+      "d2": 1.18,
+      "dv": 0.31
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.2
+     }
+    },
+    {
+     "frame": 534,
+     "kind": "land",
+     "from": "air:drop_fall:16",
+     "to": "land_soft:17:0",
+     "fade": 0.1,
+     "mode": "AIR>MOVE",
+     "pelvis": {
+      "d2": 2.11,
+      "dv": 3.76
+     },
+     "l_palm": {
+      "d2": 2.12,
+      "dv": 3.11
+     },
+     "r_palm": {
+      "d2": 2.16,
+      "dv": 3.77
+     },
+     "l_foot": {
+      "d2": 2.13,
+      "dv": 2.51
+     },
+     "r_foot": {
+      "d2": 2.32,
+      "dv": 3.93
+     },
+     "root": {
+      "d2": 2.11,
+      "dv": 3.79
+     },
+     "pose": {
+      "d2": 0.17,
+      "dv": 0.26
+     },
+     "capsule": {
+      "d2": 3.77,
+      "dv": 5.05
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.67,
+     "dv": 0.93
+    },
+    "entry_l_palm": {
+     "d2": 3.22,
+     "dv": 3.28
+    },
+    "entry_r_palm": {
+     "d2": 3.36,
+     "dv": 2.29
+    },
+    "entry_l_foot": {
+     "d2": 2.86,
+     "dv": 4.49
+    },
+    "entry_r_foot": {
+     "d2": 3.87,
+     "dv": 3.29
+    },
+    "entry_root": {
+     "d2": 0.44,
+     "dv": 0.39
+    },
+    "entry_pose": {
+     "d2": 0.68,
+     "dv": 1.0
+    },
+    "entry_capsule": {
+     "d2": 0.21,
+     "dv": 0.47
+    },
+    "part_pelvis": {
+     "d2": 0.52,
+     "dv": 0.21
+    },
+    "part_l_palm": {
+     "d2": 0.32,
+     "dv": 0.55
+    },
+    "part_r_palm": {
+     "d2": 0.83,
+     "dv": 1.6
+    },
+    "part_l_foot": {
+     "d2": 0.68,
+     "dv": 0.52
+    },
+    "part_r_foot": {
+     "d2": 0.44,
+     "dv": 0.62
+    },
+    "part_root": {
+     "d2": 0.55,
+     "dv": 0.29
+    },
+    "part_pose": {
+     "d2": 0.1,
+     "dv": 0.08
+    },
+    "part_capsule": {
+     "d2": 0.68,
+     "dv": 0.65
+    },
+    "exit_pelvis": {
+     "d2": 0.35,
+     "dv": 0.29
+    },
+    "exit_l_palm": {
+     "d2": 0.71,
+     "dv": 0.93
+    },
+    "exit_r_palm": {
+     "d2": 0.66,
+     "dv": 0.45
+    },
+    "exit_l_foot": {
+     "d2": 0.83,
+     "dv": 1.09
+    },
+    "exit_r_foot": {
+     "d2": 1.14,
+     "dv": 0.94
+    },
+    "exit_root": {
+     "d2": 0.19,
+     "dv": 0.47
+    },
+    "exit_pose": {
+     "d2": 0.41,
+     "dv": 0.25
+    },
+    "exit_capsule": {
+     "d2": 0.1,
+     "dv": 0.43
+    },
+    "air_pelvis": {
+     "d2": 1.14,
+     "dv": 0.4
+    },
+    "air_l_palm": {
+     "d2": 1.63,
+     "dv": 3.8
+    },
+    "air_r_palm": {
+     "d2": 1.45,
+     "dv": 2.52
+    },
+    "air_l_foot": {
+     "d2": 4.11,
+     "dv": 6.29
+    },
+    "air_r_foot": {
+     "d2": 1.4,
+     "dv": 1.97
+    },
+    "air_root": {
+     "d2": 0.08,
+     "dv": 0.13
+    },
+    "air_pose": {
+     "d2": 1.18,
+     "dv": 0.31
+    },
+    "air_capsule": {
+     "d2": 0.07,
+     "dv": 0.2
+    },
+    "land_pelvis": {
+     "d2": 2.11,
+     "dv": 3.76
+    },
+    "land_l_palm": {
+     "d2": 2.12,
+     "dv": 3.11
+    },
+    "land_r_palm": {
+     "d2": 2.16,
+     "dv": 3.77
+    },
+    "land_l_foot": {
+     "d2": 2.13,
+     "dv": 2.51
+    },
+    "land_r_foot": {
+     "d2": 2.32,
+     "dv": 3.93
+    },
+    "land_root": {
+     "d2": 2.11,
+     "dv": 3.79
+    },
+    "land_pose": {
+     "d2": 0.17,
+     "dv": 0.26
+    },
+    "land_capsule": {
+     "d2": 3.77,
+     "dv": 5.05
+    }
+   },
+   "moves": [
+    "mantle_1_5m",
+    "drop_fall",
+    "land_soft"
+   ]
+  },
+  "climb_chest": {
+   "seams": [
+    {
+     "frame": 19,
+     "kind": "entry",
+     "from": "loco:walk:3511485",
+     "to": "loco:run:3518335",
+     "fade": 0.1,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.4,
+      "dv": 0.47
+     },
+     "l_palm": {
+      "d2": 0.86,
+      "dv": 0.77
+     },
+     "r_palm": {
+      "d2": 0.76,
+      "dv": 0.65
+     },
+     "l_foot": {
+      "d2": 0.78,
+      "dv": 0.77
+     },
+     "r_foot": {
+      "d2": 2.53,
+      "dv": 0.4
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.38
+     },
+     "pose": {
+      "d2": 0.34,
+      "dv": 0.25
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 37,
+     "kind": "entry",
+     "from": "loco:run:3518335",
+     "to": "loco:sprint:3526460",
+     "fade": 0.1,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.55,
+      "dv": 0.93
+     },
+     "l_palm": {
+      "d2": 1.78,
+      "dv": 3.28
+     },
+     "r_palm": {
+      "d2": 1.76,
+      "dv": 2.08
+     },
+     "l_foot": {
+      "d2": 2.86,
+      "dv": 4.49
+     },
+     "r_foot": {
+      "d2": 2.84,
+      "dv": 3.29
+     },
+     "root": {
+      "d2": 0.1,
+      "dv": 0.36
+     },
+     "pose": {
+      "d2": 0.57,
+      "dv": 1.0
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 131,
+     "kind": "entry",
+     "from": "loco:sprint:3526460",
+     "to": "loco:run:3585258",
+     "fade": 0.1,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.32,
+      "dv": 0.54
+     },
+     "l_palm": {
+      "d2": 1.81,
+      "dv": 3.04
+     },
+     "r_palm": {
+      "d2": 1.28,
+      "dv": 2.13
+     },
+     "l_foot": {
+      "d2": 0.87,
+      "dv": 0.78
+     },
+     "r_foot": {
+      "d2": 1.57,
+      "dv": 1.2
+     },
+     "root": {
+      "d2": 0.03,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 0.32,
+      "dv": 0.53
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.11
+     }
+    },
+    {
+     "frame": 206,
+     "kind": "entry",
+     "from": "loco:run:3585258",
+     "to": "loco:walk:3639271",
+     "fade": 0.1,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.11,
+      "dv": 0.13
+     },
+     "l_palm": {
+      "d2": 0.45,
+      "dv": 0.81
+     },
+     "r_palm": {
+      "d2": 0.73,
+      "dv": 0.78
+     },
+     "l_foot": {
+      "d2": 0.95,
+      "dv": 0.15
+     },
+     "r_foot": {
+      "d2": 0.46,
+      "dv": 0.55
+     },
+     "root": {
+      "d2": 0.03,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 0.11,
+      "dv": 0.12
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.11
+     }
+    },
+    {
+     "frame": 274,
+     "kind": "entry",
+     "from": "loco:walk:3639271",
+     "to": "climb_chest:18:0",
+     "fade": 0.2,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.22,
+      "dv": 0.07
+     },
+     "l_palm": {
+      "d2": 1.49,
+      "dv": 0.39
+     },
+     "r_palm": {
+      "d2": 1.36,
+      "dv": 0.27
+     },
+     "l_foot": {
+      "d2": 0.49,
+      "dv": 0.68
+     },
+     "r_foot": {
+      "d2": 0.81,
+      "dv": 1.0
+     },
+     "root": {
+      "d2": 0.24,
+      "dv": 0.05
+     },
+     "pose": {
+      "d2": 0.34,
+      "dv": 0.06
+     },
+     "capsule": {
+      "d2": 0.12,
+      "dv": 0.04
+     }
+    },
+    {
+     "frame": 309,
+     "kind": "part",
+     "from": "climb_chest:18:0",
+     "to": "climb_chest:18:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.42,
+      "dv": 0.25
+     },
+     "l_palm": {
+      "d2": 0.38,
+      "dv": 0.36
+     },
+     "r_palm": {
+      "d2": 0.39,
+      "dv": 0.69
+     },
+     "l_foot": {
+      "d2": 0.71,
+      "dv": 0.92
+     },
+     "r_foot": {
+      "d2": 0.9,
+      "dv": 1.12
+     },
+     "root": {
+      "d2": 0.31,
+      "dv": 0.11
+     },
+     "pose": {
+      "d2": 0.19,
+      "dv": 0.14
+     },
+     "capsule": {
+      "d2": 0.55,
+      "dv": 1.22
+     }
+    },
+    {
+     "frame": 333,
+     "kind": "part",
+     "from": "climb_chest:18:1",
+     "to": "climb_chest:18:2",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.74,
+      "dv": 0.66
+     },
+     "l_palm": {
+      "d2": 0.44,
+      "dv": 1.46
+     },
+     "r_palm": {
+      "d2": 0.27,
+      "dv": 0.07
+     },
+     "l_foot": {
+      "d2": 0.75,
+      "dv": 0.86
+     },
+     "r_foot": {
+      "d2": 0.76,
+      "dv": 0.75
+     },
+     "root": {
+      "d2": 0.68,
+      "dv": 0.39
+     },
+     "pose": {
+      "d2": 0.26,
+      "dv": 0.34
+     },
+     "capsule": {
+      "d2": 0.29,
+      "dv": 0.37
+     }
+    },
+    {
+     "frame": 513,
+     "kind": "part",
+     "from": "climb_chest:18:2",
+     "to": "climb_chest:18:3",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.17,
+      "dv": 0.08
+     },
+     "l_palm": {
+      "d2": 0.17,
+      "dv": 0.25
+     },
+     "r_palm": {
+      "d2": 0.24,
+      "dv": 0.3
+     },
+     "l_foot": {
+      "d2": 0.23,
+      "dv": 0.25
+     },
+     "r_foot": {
+      "d2": 0.01,
+      "dv": 0.01
+     },
+     "root": {
+      "d2": 0.19,
+      "dv": 0.13
+     },
+     "pose": {
+      "d2": 0.08,
+      "dv": 0.07
+     },
+     "capsule": {
+      "d2": 0.33,
+      "dv": 0.69
+     }
+    },
+    {
+     "frame": 561,
+     "kind": "exit",
+     "from": "climb_chest:18:3",
+     "to": "exit:run:19",
+     "fade": 0.2,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.14,
+      "dv": 0.19
+     },
+     "l_palm": {
+      "d2": 0.16,
+      "dv": 0.61
+     },
+     "r_palm": {
+      "d2": 0.15,
+      "dv": 0.23
+     },
+     "l_foot": {
+      "d2": 0.12,
+      "dv": 0.88
+     },
+     "r_foot": {
+      "d2": 0.15,
+      "dv": 0.74
+     },
+     "root": {
+      "d2": 0.14,
+      "dv": 0.22
+     },
+     "pose": {
+      "d2": 0.0,
+      "dv": 0.12
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.27
+     }
+    },
+    {
+     "frame": 562,
+     "kind": "exit",
+     "from": "exit:run:19",
+     "to": "loco:run:4009585",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.39,
+      "dv": 0.25
+     },
+     "l_palm": {
+      "d2": 0.81,
+      "dv": 0.64
+     },
+     "r_palm": {
+      "d2": 0.81,
+      "dv": 0.16
+     },
+     "l_foot": {
+      "d2": 1.09,
+      "dv": 1.18
+     },
+     "r_foot": {
+      "d2": 1.19,
+      "dv": 0.94
+     },
+     "root": {
+      "d2": 0.19,
+      "dv": 0.38
+     },
+     "pose": {
+      "d2": 0.45,
+      "dv": 0.21
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.37
+     }
+    },
+    {
+     "frame": 580,
+     "kind": "entry",
+     "from": "loco:run:4009585",
+     "to": "loco:sprint:4023498",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.51,
+      "dv": 0.44
+     },
+     "l_palm": {
+      "d2": 2.54,
+      "dv": 2.9
+     },
+     "r_palm": {
+      "d2": 2.54,
+      "dv": 1.71
+     },
+     "l_foot": {
+      "d2": 1.26,
+      "dv": 2.13
+     },
+     "r_foot": {
+      "d2": 2.94,
+      "dv": 3.72
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.37
+     },
+     "pose": {
+      "d2": 0.53,
+      "dv": 0.31
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 615,
+     "kind": "air",
+     "from": "loco:sprint:4023498",
+     "to": "air:drop_fall:20",
+     "fade": 0.2,
+     "mode": "OFF>AIR",
+     "pelvis": {
+      "d2": 1.14,
+      "dv": 0.34
+     },
+     "l_palm": {
+      "d2": 1.79,
+      "dv": 3.86
+     },
+     "r_palm": {
+      "d2": 1.6,
+      "dv": 2.32
+     },
+     "l_foot": {
+      "d2": 4.57,
+      "dv": 5.45
+     },
+     "r_foot": {
+      "d2": 1.41,
+      "dv": 1.8
+     },
+     "root": {
+      "d2": 0.08,
+      "dv": 0.13
+     },
+     "pose": {
+      "d2": 1.18,
+      "dv": 0.25
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.2
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.55,
+     "dv": 0.93
+    },
+    "entry_l_palm": {
+     "d2": 2.54,
+     "dv": 3.28
+    },
+    "entry_r_palm": {
+     "d2": 2.54,
+     "dv": 2.13
+    },
+    "entry_l_foot": {
+     "d2": 2.86,
+     "dv": 4.49
+    },
+    "entry_r_foot": {
+     "d2": 2.94,
+     "dv": 3.72
+    },
+    "entry_root": {
+     "d2": 0.24,
+     "dv": 0.38
+    },
+    "entry_pose": {
+     "d2": 0.57,
+     "dv": 1.0
+    },
+    "entry_capsule": {
+     "d2": 0.12,
+     "dv": 0.47
+    },
+    "part_pelvis": {
+     "d2": 0.74,
+     "dv": 0.66
+    },
+    "part_l_palm": {
+     "d2": 0.44,
+     "dv": 1.46
+    },
+    "part_r_palm": {
+     "d2": 0.39,
+     "dv": 0.69
+    },
+    "part_l_foot": {
+     "d2": 0.75,
+     "dv": 0.92
+    },
+    "part_r_foot": {
+     "d2": 0.9,
+     "dv": 1.12
+    },
+    "part_root": {
+     "d2": 0.68,
+     "dv": 0.39
+    },
+    "part_pose": {
+     "d2": 0.26,
+     "dv": 0.34
+    },
+    "part_capsule": {
+     "d2": 0.55,
+     "dv": 1.22
+    },
+    "exit_pelvis": {
+     "d2": 0.39,
+     "dv": 0.25
+    },
+    "exit_l_palm": {
+     "d2": 0.81,
+     "dv": 0.64
+    },
+    "exit_r_palm": {
+     "d2": 0.81,
+     "dv": 0.23
+    },
+    "exit_l_foot": {
+     "d2": 1.09,
+     "dv": 1.18
+    },
+    "exit_r_foot": {
+     "d2": 1.19,
+     "dv": 0.94
+    },
+    "exit_root": {
+     "d2": 0.19,
+     "dv": 0.38
+    },
+    "exit_pose": {
+     "d2": 0.45,
+     "dv": 0.21
+    },
+    "exit_capsule": {
+     "d2": 0.1,
+     "dv": 0.37
+    },
+    "air_pelvis": {
+     "d2": 1.14,
+     "dv": 0.34
+    },
+    "air_l_palm": {
+     "d2": 1.79,
+     "dv": 3.86
+    },
+    "air_r_palm": {
+     "d2": 1.6,
+     "dv": 2.32
+    },
+    "air_l_foot": {
+     "d2": 4.57,
+     "dv": 5.45
+    },
+    "air_r_foot": {
+     "d2": 1.41,
+     "dv": 1.8
+    },
+    "air_root": {
+     "d2": 0.08,
+     "dv": 0.13
+    },
+    "air_pose": {
+     "d2": 1.18,
+     "dv": 0.25
+    },
+    "air_capsule": {
+     "d2": 0.07,
+     "dv": 0.2
+    }
+   },
+   "moves": [
+    "climb_chest",
+    "drop_fall"
+   ]
+  },
+  "climb_hang_3m": {
+   "seams": [
+    {
+     "frame": 13,
+     "kind": "entry",
+     "from": "loco:idle:4060546",
+     "to": "loco:walk:4065567",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.43,
+      "dv": 0.58
+     },
+     "l_palm": {
+      "d2": 0.43,
+      "dv": 0.9
+     },
+     "r_palm": {
+      "d2": 0.43,
+      "dv": 0.49
+     },
+     "l_foot": {
+      "d2": 0.43,
+      "dv": 0.49
+     },
+     "r_foot": {
+      "d2": 0.55,
+      "dv": 0.79
+     },
+     "root": {
+      "d2": 0.43,
+      "dv": 0.57
+     },
+     "pose": {
+      "d2": 0.06,
+      "dv": 0.05
+     },
+     "capsule": {
+      "d2": 0.43,
+      "dv": 0.64
+     }
+    },
+    {
+     "frame": 28,
+     "kind": "entry",
+     "from": "loco:walk:4065567",
+     "to": "loco:run:4071767",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.38,
+      "dv": 0.62
+     },
+     "l_palm": {
+      "d2": 0.95,
+      "dv": 0.75
+     },
+     "r_palm": {
+      "d2": 0.87,
+      "dv": 1.05
+     },
+     "l_foot": {
+      "d2": 1.3,
+      "dv": 0.7
+     },
+     "r_foot": {
+      "d2": 1.36,
+      "dv": 1.16
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.38
+     },
+     "pose": {
+      "d2": 0.39,
+      "dv": 0.27
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 46,
+     "kind": "entry",
+     "from": "loco:run:4071767",
+     "to": "loco:sprint:4079719",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.6,
+      "dv": 0.54
+     },
+     "l_palm": {
+      "d2": 3.2,
+      "dv": 1.99
+     },
+     "r_palm": {
+      "d2": 3.18,
+      "dv": 1.67
+     },
+     "l_foot": {
+      "d2": 2.22,
+      "dv": 2.61
+     },
+     "r_foot": {
+      "d2": 3.24,
+      "dv": 2.01
+     },
+     "root": {
+      "d2": 0.1,
+      "dv": 0.36
+     },
+     "pose": {
+      "d2": 0.54,
+      "dv": 0.53
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 147,
+     "kind": "entry",
+     "from": "loco:sprint:4079719",
+     "to": "loco:run:4142498",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.47,
+      "dv": 0.11
+     },
+     "l_palm": {
+      "d2": 1.26,
+      "dv": 1.22
+     },
+     "r_palm": {
+      "d2": 1.05,
+      "dv": 0.74
+     },
+     "l_foot": {
+      "d2": 1.42,
+      "dv": 0.69
+     },
+     "r_foot": {
+      "d2": 2.06,
+      "dv": 1.37
+     },
+     "root": {
+      "d2": 0.03,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 0.46,
+      "dv": 0.12
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.11
+     }
+    },
+    {
+     "frame": 223,
+     "kind": "entry",
+     "from": "loco:run:4142498",
+     "to": "loco:walk:4193095",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.25,
+      "dv": 0.06
+     },
+     "l_palm": {
+      "d2": 0.69,
+      "dv": 0.56
+     },
+     "r_palm": {
+      "d2": 0.51,
+      "dv": 0.78
+     },
+     "l_foot": {
+      "d2": 0.48,
+      "dv": 0.28
+     },
+     "r_foot": {
+      "d2": 3.54,
+      "dv": 0.52
+     },
+     "root": {
+      "d2": 0.03,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 0.26,
+      "dv": 0.05
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.11
+     }
+    },
+    {
+     "frame": 263,
+     "kind": "entry",
+     "from": "loco:walk:4193095",
+     "to": "climb_hang_3m:21:0",
+     "fade": 0.2,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.5,
+      "dv": 0.38
+     },
+     "l_palm": {
+      "d2": 2.42,
+      "dv": 0.27
+     },
+     "r_palm": {
+      "d2": 1.22,
+      "dv": 0.91
+     },
+     "l_foot": {
+      "d2": 1.54,
+      "dv": 1.34
+     },
+     "r_foot": {
+      "d2": 1.4,
+      "dv": 0.51
+     },
+     "root": {
+      "d2": 0.42,
+      "dv": 0.15
+     },
+     "pose": {
+      "d2": 0.16,
+      "dv": 0.27
+     },
+     "capsule": {
+      "d2": 0.29,
+      "dv": 0.14
+     }
+    },
+    {
+     "frame": 286,
+     "kind": "part",
+     "from": "climb_hang_3m:21:0",
+     "to": "climb_hang_3m:21:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 1.56,
+      "dv": 0.73
+     },
+     "l_palm": {
+      "d2": 2.41,
+      "dv": 3.71
+     },
+     "r_palm": {
+      "d2": 1.37,
+      "dv": 2.66
+     },
+     "l_foot": {
+      "d2": 1.06,
+      "dv": 1.23
+     },
+     "r_foot": {
+      "d2": 2.15,
+      "dv": 2.49
+     },
+     "root": {
+      "d2": 1.29,
+      "dv": 0.4
+     },
+     "pose": {
+      "d2": 0.32,
+      "dv": 0.36
+     },
+     "capsule": {
+      "d2": 1.35,
+      "dv": 0.3
+     }
+    },
+    {
+     "frame": 310,
+     "kind": "part",
+     "from": "climb_hang_3m:21:1",
+     "to": "climb_hang_3m:21:2",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.55,
+      "dv": 0.51
+     },
+     "l_palm": {
+      "d2": 2.67,
+      "dv": 2.8
+     },
+     "r_palm": {
+      "d2": 4.06,
+      "dv": 3.53
+     },
+     "l_foot": {
+      "d2": 0.6,
+      "dv": 1.13
+     },
+     "r_foot": {
+      "d2": 0.61,
+      "dv": 1.15
+     },
+     "root": {
+      "d2": 0.32,
+      "dv": 0.22
+     },
+     "pose": {
+      "d2": 0.43,
+      "dv": 0.66
+     },
+     "capsule": {
+      "d2": 0.43,
+      "dv": 0.95
+     }
+    },
+    {
+     "frame": 346,
+     "kind": "part",
+     "from": "climb_hang_3m:21:2",
+     "to": "climb_hang_3m:21:3",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.2,
+      "dv": 0.1
+     },
+     "l_palm": {
+      "d2": 0.0,
+      "dv": 0.0
+     },
+     "r_palm": {
+      "d2": 0.32,
+      "dv": 0.21
+     },
+     "l_foot": {
+      "d2": 0.27,
+      "dv": 0.31
+     },
+     "r_foot": {
+      "d2": 0.24,
+      "dv": 0.39
+     },
+     "root": {
+      "d2": 0.16,
+      "dv": 0.06
+     },
+     "pose": {
+      "d2": 0.09,
+      "dv": 0.04
+     },
+     "capsule": {
+      "d2": 0.6,
+      "dv": 1.18
+     }
+    },
+    {
+     "frame": 610,
+     "kind": "part",
+     "from": "climb_hang_3m:21:3",
+     "to": "climb_hang_3m:21:4",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.19,
+      "dv": 0.1
+     },
+     "l_palm": {
+      "d2": 0.98,
+      "dv": 0.79
+     },
+     "r_palm": {
+      "d2": 0.21,
+      "dv": 0.35
+     },
+     "l_foot": {
+      "d2": 0.27,
+      "dv": 0.23
+     },
+     "r_foot": {
+      "d2": 0.4,
+      "dv": 0.01
+     },
+     "root": {
+      "d2": 0.21,
+      "dv": 0.12
+     },
+     "pose": {
+      "d2": 0.08,
+      "dv": 0.04
+     },
+     "capsule": {
+      "d2": 0.61,
+      "dv": 1.31
+     }
+    },
+    {
+     "frame": 658,
+     "kind": "exit",
+     "from": "climb_hang_3m:21:4",
+     "to": "exit:run:22",
+     "fade": 0.2,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.15,
+      "dv": 0.22
+     },
+     "l_palm": {
+      "d2": 0.27,
+      "dv": 0.86
+     },
+     "r_palm": {
+      "d2": 0.24,
+      "dv": 0.44
+     },
+     "l_foot": {
+      "d2": 0.38,
+      "dv": 0.9
+     },
+     "r_foot": {
+      "d2": 1.01,
+      "dv": 0.62
+     },
+     "root": {
+      "d2": 0.15,
+      "dv": 0.23
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.14
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.25
+     }
+    },
+    {
+     "frame": 660,
+     "kind": "exit",
+     "from": "exit:run:22",
+     "to": "loco:run:4649497",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.36,
+      "dv": 0.3
+     },
+     "l_palm": {
+      "d2": 0.75,
+      "dv": 0.9
+     },
+     "r_palm": {
+      "d2": 0.72,
+      "dv": 0.41
+     },
+     "l_foot": {
+      "d2": 1.01,
+      "dv": 1.15
+     },
+     "r_foot": {
+      "d2": 1.38,
+      "dv": 1.17
+     },
+     "root": {
+      "d2": 0.19,
+      "dv": 0.47
+     },
+     "pose": {
+      "d2": 0.43,
+      "dv": 0.26
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.43
+     }
+    },
+    {
+     "frame": 677,
+     "kind": "entry",
+     "from": "loco:run:4649497",
+     "to": "loco:sprint:4662357",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.44,
+      "dv": 0.48
+     },
+     "l_palm": {
+      "d2": 3.0,
+      "dv": 2.78
+     },
+     "r_palm": {
+      "d2": 2.97,
+      "dv": 1.58
+     },
+     "l_foot": {
+      "d2": 1.44,
+      "dv": 2.08
+     },
+     "r_foot": {
+      "d2": 3.48,
+      "dv": 3.38
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.39
+     },
+     "pose": {
+      "d2": 0.46,
+      "dv": 0.37
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 715,
+     "kind": "air",
+     "from": "loco:sprint:4662357",
+     "to": "air:drop_fall:23",
+     "fade": 0.2,
+     "mode": "OFF>AIR",
+     "pelvis": {
+      "d2": 1.15,
+      "dv": 0.26
+     },
+     "l_palm": {
+      "d2": 2.15,
+      "dv": 2.77
+     },
+     "r_palm": {
+      "d2": 2.3,
+      "dv": 2.26
+     },
+     "l_foot": {
+      "d2": 4.47,
+      "dv": 3.67
+     },
+     "r_foot": {
+      "d2": 1.33,
+      "dv": 1.35
+     },
+     "root": {
+      "d2": 0.08,
+      "dv": 0.13
+     },
+     "pose": {
+      "d2": 1.19,
+      "dv": 0.17
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.2
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.6,
+     "dv": 0.62
+    },
+    "entry_l_palm": {
+     "d2": 3.2,
+     "dv": 2.78
+    },
+    "entry_r_palm": {
+     "d2": 3.18,
+     "dv": 1.67
+    },
+    "entry_l_foot": {
+     "d2": 2.22,
+     "dv": 2.61
+    },
+    "entry_r_foot": {
+     "d2": 3.54,
+     "dv": 3.38
+    },
+    "entry_root": {
+     "d2": 0.43,
+     "dv": 0.57
+    },
+    "entry_pose": {
+     "d2": 0.54,
+     "dv": 0.53
+    },
+    "entry_capsule": {
+     "d2": 0.43,
+     "dv": 0.64
+    },
+    "part_pelvis": {
+     "d2": 1.56,
+     "dv": 0.73
+    },
+    "part_l_palm": {
+     "d2": 2.67,
+     "dv": 3.71
+    },
+    "part_r_palm": {
+     "d2": 4.06,
+     "dv": 3.53
+    },
+    "part_l_foot": {
+     "d2": 1.06,
+     "dv": 1.23
+    },
+    "part_r_foot": {
+     "d2": 2.15,
+     "dv": 2.49
+    },
+    "part_root": {
+     "d2": 1.29,
+     "dv": 0.4
+    },
+    "part_pose": {
+     "d2": 0.43,
+     "dv": 0.66
+    },
+    "part_capsule": {
+     "d2": 1.35,
+     "dv": 1.31
+    },
+    "exit_pelvis": {
+     "d2": 0.36,
+     "dv": 0.3
+    },
+    "exit_l_palm": {
+     "d2": 0.75,
+     "dv": 0.9
+    },
+    "exit_r_palm": {
+     "d2": 0.72,
+     "dv": 0.44
+    },
+    "exit_l_foot": {
+     "d2": 1.01,
+     "dv": 1.15
+    },
+    "exit_r_foot": {
+     "d2": 1.38,
+     "dv": 1.17
+    },
+    "exit_root": {
+     "d2": 0.19,
+     "dv": 0.47
+    },
+    "exit_pose": {
+     "d2": 0.43,
+     "dv": 0.26
+    },
+    "exit_capsule": {
+     "d2": 0.1,
+     "dv": 0.43
+    },
+    "air_pelvis": {
+     "d2": 1.15,
+     "dv": 0.26
+    },
+    "air_l_palm": {
+     "d2": 2.15,
+     "dv": 2.77
+    },
+    "air_r_palm": {
+     "d2": 2.3,
+     "dv": 2.26
+    },
+    "air_l_foot": {
+     "d2": 4.47,
+     "dv": 3.67
+    },
+    "air_r_foot": {
+     "d2": 1.33,
+     "dv": 1.35
+    },
+    "air_root": {
+     "d2": 0.08,
+     "dv": 0.13
+    },
+    "air_pose": {
+     "d2": 1.19,
+     "dv": 0.17
+    },
+    "air_capsule": {
+     "d2": 0.07,
+     "dv": 0.2
+    }
+   },
+   "moves": [
+    "climb_hang_3m",
+    "drop_fall"
+   ]
+  },
+  "mantle_knee_idle": {
+   "seams": [
+    {
+     "frame": 13,
+     "kind": "entry",
+     "from": "loco:idle:4708031",
+     "to": "loco:walk:4713188",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.43,
+      "dv": 0.58
+     },
+     "l_palm": {
+      "d2": 0.7,
+      "dv": 0.9
+     },
+     "r_palm": {
+      "d2": 0.44,
+      "dv": 0.49
+     },
+     "l_foot": {
+      "d2": 0.79,
+      "dv": 0.49
+     },
+     "r_foot": {
+      "d2": 0.7,
+      "dv": 0.79
+     },
+     "root": {
+      "d2": 0.43,
+      "dv": 0.57
+     },
+     "pose": {
+      "d2": 0.28,
+      "dv": 0.05
+     },
+     "capsule": {
+      "d2": 0.43,
+      "dv": 0.64
+     }
+    },
+    {
+     "frame": 224,
+     "kind": "entry",
+     "from": "loco:walk:4713188",
+     "to": "mantle_1m_idle:24:0",
+     "fade": 0.3,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.9,
+      "dv": 0.13
+     },
+     "l_palm": {
+      "d2": 3.21,
+      "dv": 0.36
+     },
+     "r_palm": {
+      "d2": 1.74,
+      "dv": 0.12
+     },
+     "l_foot": {
+      "d2": 3.45,
+      "dv": 1.88
+     },
+     "r_foot": {
+      "d2": 2.15,
+      "dv": 0.34
+     },
+     "root": {
+      "d2": 0.92,
+      "dv": 0.07
+     },
+     "pose": {
+      "d2": 0.94,
+      "dv": 0.1
+     },
+     "capsule": {
+      "d2": 0.34,
+      "dv": 0.18
+     }
+    },
+    {
+     "frame": 283,
+     "kind": "part",
+     "from": "mantle_1m_idle:24:0",
+     "to": "mantle_1m_idle:24:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.47,
+      "dv": 0.19
+     },
+     "l_palm": {
+      "d2": 0.12,
+      "dv": 0.07
+     },
+     "r_palm": {
+      "d2": 0.49,
+      "dv": 0.12
+     },
+     "l_foot": {
+      "d2": 0.65,
+      "dv": 0.68
+     },
+     "r_foot": {
+      "d2": 0.41,
+      "dv": 0.45
+     },
+     "root": {
+      "d2": 0.51,
+      "dv": 0.23
+     },
+     "pose": {
+      "d2": 0.1,
+      "dv": 0.05
+     },
+     "capsule": {
+      "d2": 0.52,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 415,
+     "kind": "exit",
+     "from": "mantle_1m_idle:24:1",
+     "to": "exit:idle:25",
+     "fade": 0.6,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.1,
+      "dv": 0.24
+     },
+     "l_palm": {
+      "d2": 0.25,
+      "dv": 0.25
+     },
+     "r_palm": {
+      "d2": 0.12,
+      "dv": 0.26
+     },
+     "l_foot": {
+      "d2": 0.23,
+      "dv": 0.22
+     },
+     "r_foot": {
+      "d2": 0.19,
+      "dv": 0.4
+     },
+     "root": {
+      "d2": 0.1,
+      "dv": 0.23
+     },
+     "pose": {
+      "d2": 0.01,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.23
+     }
+    },
+    {
+     "frame": 420,
+     "kind": "exit",
+     "from": "exit:idle:25",
+     "to": "loco:walk:5031231",
+     "fade": 0.6,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.22,
+      "dv": 0.36
+     },
+     "l_palm": {
+      "d2": 0.56,
+      "dv": 0.51
+     },
+     "r_palm": {
+      "d2": 0.49,
+      "dv": 0.28
+     },
+     "l_foot": {
+      "d2": 1.64,
+      "dv": 0.55
+     },
+     "r_foot": {
+      "d2": 2.05,
+      "dv": 0.3
+     },
+     "root": {
+      "d2": 0.1,
+      "dv": 0.33
+     },
+     "pose": {
+      "d2": 0.23,
+      "dv": 0.06
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.9,
+     "dv": 0.58
+    },
+    "entry_l_palm": {
+     "d2": 3.21,
+     "dv": 0.9
+    },
+    "entry_r_palm": {
+     "d2": 1.74,
+     "dv": 0.49
+    },
+    "entry_l_foot": {
+     "d2": 3.45,
+     "dv": 1.88
+    },
+    "entry_r_foot": {
+     "d2": 2.15,
+     "dv": 0.79
+    },
+    "entry_root": {
+     "d2": 0.92,
+     "dv": 0.57
+    },
+    "entry_pose": {
+     "d2": 0.94,
+     "dv": 0.1
+    },
+    "entry_capsule": {
+     "d2": 0.43,
+     "dv": 0.64
+    },
+    "part_pelvis": {
+     "d2": 0.47,
+     "dv": 0.19
+    },
+    "part_l_palm": {
+     "d2": 0.12,
+     "dv": 0.07
+    },
+    "part_r_palm": {
+     "d2": 0.49,
+     "dv": 0.12
+    },
+    "part_l_foot": {
+     "d2": 0.65,
+     "dv": 0.68
+    },
+    "part_r_foot": {
+     "d2": 0.41,
+     "dv": 0.45
+    },
+    "part_root": {
+     "d2": 0.51,
+     "dv": 0.23
+    },
+    "part_pose": {
+     "d2": 0.1,
+     "dv": 0.05
+    },
+    "part_capsule": {
+     "d2": 0.52,
+     "dv": 0.47
+    },
+    "exit_pelvis": {
+     "d2": 0.22,
+     "dv": 0.36
+    },
+    "exit_l_palm": {
+     "d2": 0.56,
+     "dv": 0.51
+    },
+    "exit_r_palm": {
+     "d2": 0.49,
+     "dv": 0.28
+    },
+    "exit_l_foot": {
+     "d2": 1.64,
+     "dv": 0.55
+    },
+    "exit_r_foot": {
+     "d2": 2.05,
+     "dv": 0.4
+    },
+    "exit_root": {
+     "d2": 0.1,
+     "dv": 0.33
+    },
+    "exit_pose": {
+     "d2": 0.23,
+     "dv": 0.06
+    },
+    "exit_capsule": {
+     "d2": 0.1,
+     "dv": 0.47
+    }
+   },
+   "moves": [
+    "mantle_1m_idle"
+   ]
+  },
+  "drop_and_land": {
+   "seams": [
+    {
+     "frame": 19,
+     "kind": "entry",
+     "from": "loco:walk:5094699",
+     "to": "loco:run:5101630",
+     "fade": 0.6,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.4,
+      "dv": 0.47
+     },
+     "l_palm": {
+      "d2": 0.86,
+      "dv": 0.77
+     },
+     "r_palm": {
+      "d2": 0.76,
+      "dv": 0.65
+     },
+     "l_foot": {
+      "d2": 0.78,
+      "dv": 0.8
+     },
+     "r_foot": {
+      "d2": 2.53,
+      "dv": 0.5
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.38
+     },
+     "pose": {
+      "d2": 0.34,
+      "dv": 0.25
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 37,
+     "kind": "entry",
+     "from": "loco:run:5101630",
+     "to": "loco:sprint:5109782",
+     "fade": 0.6,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.6,
+      "dv": 0.93
+     },
+     "l_palm": {
+      "d2": 3.37,
+      "dv": 3.28
+     },
+     "r_palm": {
+      "d2": 2.88,
+      "dv": 2.08
+     },
+     "l_foot": {
+      "d2": 3.55,
+      "dv": 4.49
+     },
+     "r_foot": {
+      "d2": 4.24,
+      "dv": 3.29
+     },
+     "root": {
+      "d2": 0.1,
+      "dv": 0.36
+     },
+     "pose": {
+      "d2": 0.6,
+      "dv": 1.0
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 131,
+     "kind": "entry",
+     "from": "loco:sprint:5109782",
+     "to": "loco:run:5168017",
+     "fade": 0.6,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.6,
+      "dv": 0.58
+     },
+     "l_palm": {
+      "d2": 1.31,
+      "dv": 3.19
+     },
+     "r_palm": {
+      "d2": 1.02,
+      "dv": 2.29
+     },
+     "l_foot": {
+      "d2": 1.37,
+      "dv": 0.87
+     },
+     "r_foot": {
+      "d2": 2.24,
+      "dv": 1.36
+     },
+     "root": {
+      "d2": 0.03,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 0.61,
+      "dv": 0.57
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.11
+     }
+    },
+    {
+     "frame": 206,
+     "kind": "entry",
+     "from": "loco:run:5168017",
+     "to": "loco:walk:5221890",
+     "fade": 0.6,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.26,
+      "dv": 0.13
+     },
+     "l_palm": {
+      "d2": 0.62,
+      "dv": 0.8
+     },
+     "r_palm": {
+      "d2": 1.07,
+      "dv": 0.79
+     },
+     "l_foot": {
+      "d2": 1.76,
+      "dv": 0.22
+     },
+     "r_foot": {
+      "d2": 0.94,
+      "dv": 0.56
+     },
+     "root": {
+      "d2": 0.03,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 0.26,
+      "dv": 0.12
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.11
+     }
+    },
+    {
+     "frame": 262,
+     "kind": "entry",
+     "from": "loco:walk:5221890",
+     "to": "mantle_1_5m:26:0",
+     "fade": 0.3,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.55,
+      "dv": 0.23
+     },
+     "l_palm": {
+      "d2": 1.57,
+      "dv": 0.25
+     },
+     "r_palm": {
+      "d2": 2.02,
+      "dv": 0.53
+     },
+     "l_foot": {
+      "d2": 1.8,
+      "dv": 0.56
+     },
+     "r_foot": {
+      "d2": 1.0,
+      "dv": 0.29
+     },
+     "root": {
+      "d2": 0.44,
+      "dv": 0.23
+     },
+     "pose": {
+      "d2": 0.57,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.21,
+      "dv": 0.07
+     }
+    },
+    {
+     "frame": 369,
+     "kind": "part",
+     "from": "mantle_1_5m:26:0",
+     "to": "mantle_1_5m:26:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.52,
+      "dv": 0.21
+     },
+     "l_palm": {
+      "d2": 0.32,
+      "dv": 0.55
+     },
+     "r_palm": {
+      "d2": 0.83,
+      "dv": 1.6
+     },
+     "l_foot": {
+      "d2": 0.68,
+      "dv": 0.52
+     },
+     "r_foot": {
+      "d2": 0.44,
+      "dv": 0.62
+     },
+     "root": {
+      "d2": 0.55,
+      "dv": 0.29
+     },
+     "pose": {
+      "d2": 0.1,
+      "dv": 0.08
+     },
+     "capsule": {
+      "d2": 0.68,
+      "dv": 0.65
+     }
+    },
+    {
+     "frame": 417,
+     "kind": "exit",
+     "from": "mantle_1_5m:26:1",
+     "to": "exit:run:27",
+     "fade": 0.2,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.12,
+      "dv": 0.22
+     },
+     "l_palm": {
+      "d2": 0.28,
+      "dv": 0.86
+     },
+     "r_palm": {
+      "d2": 0.27,
+      "dv": 0.43
+     },
+     "l_foot": {
+      "d2": 0.36,
+      "dv": 0.88
+     },
+     "r_foot": {
+      "d2": 0.41,
+      "dv": 0.68
+     },
+     "root": {
+      "d2": 0.13,
+      "dv": 0.25
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.14
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.26
+     }
+    },
+    {
+     "frame": 419,
+     "kind": "exit",
+     "from": "exit:run:27",
+     "to": "loco:run:5419590",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.35,
+      "dv": 0.29
+     },
+     "l_palm": {
+      "d2": 0.71,
+      "dv": 0.93
+     },
+     "r_palm": {
+      "d2": 0.66,
+      "dv": 0.45
+     },
+     "l_foot": {
+      "d2": 0.83,
+      "dv": 1.09
+     },
+     "r_foot": {
+      "d2": 1.14,
+      "dv": 0.94
+     },
+     "root": {
+      "d2": 0.19,
+      "dv": 0.47
+     },
+     "pose": {
+      "d2": 0.41,
+      "dv": 0.25
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.43
+     }
+    },
+    {
+     "frame": 436,
+     "kind": "entry",
+     "from": "loco:run:5419590",
+     "to": "loco:sprint:5432194",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.67,
+      "dv": 0.49
+     },
+     "l_palm": {
+      "d2": 3.22,
+      "dv": 2.74
+     },
+     "r_palm": {
+      "d2": 3.36,
+      "dv": 1.49
+     },
+     "l_foot": {
+      "d2": 1.62,
+      "dv": 2.07
+     },
+     "r_foot": {
+      "d2": 3.71,
+      "dv": 3.18
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.39
+     },
+     "pose": {
+      "d2": 0.68,
+      "dv": 0.37
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 471,
+     "kind": "air",
+     "from": "loco:sprint:5432194",
+     "to": "air:drop_fall:28",
+     "fade": 0.2,
+     "mode": "OFF>AIR",
+     "pelvis": {
+      "d2": 1.14,
+      "dv": 0.4
+     },
+     "l_palm": {
+      "d2": 1.63,
+      "dv": 3.8
+     },
+     "r_palm": {
+      "d2": 1.45,
+      "dv": 2.52
+     },
+     "l_foot": {
+      "d2": 4.11,
+      "dv": 6.29
+     },
+     "r_foot": {
+      "d2": 1.4,
+      "dv": 1.97
+     },
+     "root": {
+      "d2": 0.08,
+      "dv": 0.13
+     },
+     "pose": {
+      "d2": 1.18,
+      "dv": 0.31
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.2
+     }
+    },
+    {
+     "frame": 534,
+     "kind": "land",
+     "from": "air:drop_fall:28",
+     "to": "land_soft:29:0",
+     "fade": 0.1,
+     "mode": "AIR>MOVE",
+     "pelvis": {
+      "d2": 2.11,
+      "dv": 3.76
+     },
+     "l_palm": {
+      "d2": 2.35,
+      "dv": 3.11
+     },
+     "r_palm": {
+      "d2": 2.6,
+      "dv": 3.77
+     },
+     "l_foot": {
+      "d2": 3.16,
+      "dv": 2.51
+     },
+     "r_foot": {
+      "d2": 2.32,
+      "dv": 3.93
+     },
+     "root": {
+      "d2": 2.11,
+      "dv": 3.79
+     },
+     "pose": {
+      "d2": 0.26,
+      "dv": 0.26
+     },
+     "capsule": {
+      "d2": 3.77,
+      "dv": 5.05
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.67,
+     "dv": 0.93
+    },
+    "entry_l_palm": {
+     "d2": 3.37,
+     "dv": 3.28
+    },
+    "entry_r_palm": {
+     "d2": 3.36,
+     "dv": 2.29
+    },
+    "entry_l_foot": {
+     "d2": 3.55,
+     "dv": 4.49
+    },
+    "entry_r_foot": {
+     "d2": 4.24,
+     "dv": 3.29
+    },
+    "entry_root": {
+     "d2": 0.44,
+     "dv": 0.39
+    },
+    "entry_pose": {
+     "d2": 0.68,
+     "dv": 1.0
+    },
+    "entry_capsule": {
+     "d2": 0.21,
+     "dv": 0.47
+    },
+    "part_pelvis": {
+     "d2": 0.52,
+     "dv": 0.21
+    },
+    "part_l_palm": {
+     "d2": 0.32,
+     "dv": 0.55
+    },
+    "part_r_palm": {
+     "d2": 0.83,
+     "dv": 1.6
+    },
+    "part_l_foot": {
+     "d2": 0.68,
+     "dv": 0.52
+    },
+    "part_r_foot": {
+     "d2": 0.44,
+     "dv": 0.62
+    },
+    "part_root": {
+     "d2": 0.55,
+     "dv": 0.29
+    },
+    "part_pose": {
+     "d2": 0.1,
+     "dv": 0.08
+    },
+    "part_capsule": {
+     "d2": 0.68,
+     "dv": 0.65
+    },
+    "exit_pelvis": {
+     "d2": 0.35,
+     "dv": 0.29
+    },
+    "exit_l_palm": {
+     "d2": 0.71,
+     "dv": 0.93
+    },
+    "exit_r_palm": {
+     "d2": 0.66,
+     "dv": 0.45
+    },
+    "exit_l_foot": {
+     "d2": 0.83,
+     "dv": 1.09
+    },
+    "exit_r_foot": {
+     "d2": 1.14,
+     "dv": 0.94
+    },
+    "exit_root": {
+     "d2": 0.19,
+     "dv": 0.47
+    },
+    "exit_pose": {
+     "d2": 0.41,
+     "dv": 0.25
+    },
+    "exit_capsule": {
+     "d2": 0.1,
+     "dv": 0.43
+    },
+    "air_pelvis": {
+     "d2": 1.14,
+     "dv": 0.4
+    },
+    "air_l_palm": {
+     "d2": 1.63,
+     "dv": 3.8
+    },
+    "air_r_palm": {
+     "d2": 1.45,
+     "dv": 2.52
+    },
+    "air_l_foot": {
+     "d2": 4.11,
+     "dv": 6.29
+    },
+    "air_r_foot": {
+     "d2": 1.4,
+     "dv": 1.97
+    },
+    "air_root": {
+     "d2": 0.08,
+     "dv": 0.13
+    },
+    "air_pose": {
+     "d2": 1.18,
+     "dv": 0.31
+    },
+    "air_capsule": {
+     "d2": 0.07,
+     "dv": 0.2
+    },
+    "land_pelvis": {
+     "d2": 2.11,
+     "dv": 3.76
+    },
+    "land_l_palm": {
+     "d2": 2.35,
+     "dv": 3.11
+    },
+    "land_r_palm": {
+     "d2": 2.6,
+     "dv": 3.77
+    },
+    "land_l_foot": {
+     "d2": 3.16,
+     "dv": 2.51
+    },
+    "land_r_foot": {
+     "d2": 2.32,
+     "dv": 3.93
+    },
+    "land_root": {
+     "d2": 2.11,
+     "dv": 3.79
+    },
+    "land_pose": {
+     "d2": 0.26,
+     "dv": 0.26
+    },
+    "land_capsule": {
+     "d2": 3.77,
+     "dv": 5.05
+    }
+   },
+   "moves": [
+    "mantle_1_5m",
+    "drop_fall",
+    "land_soft"
+   ]
+  },
+  "ladder_up": {
+   "seams": [
+    {
+     "frame": 19,
+     "kind": "entry",
+     "from": "loco:walk:5493633",
+     "to": "loco:run:5500154",
+     "fade": 0.1,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.4,
+      "dv": 0.47
+     },
+     "l_palm": {
+      "d2": 0.87,
+      "dv": 0.77
+     },
+     "r_palm": {
+      "d2": 0.76,
+      "dv": 0.65
+     },
+     "l_foot": {
+      "d2": 0.69,
+      "dv": 0.77
+     },
+     "r_foot": {
+      "d2": 2.53,
+      "dv": 0.4
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.38
+     },
+     "pose": {
+      "d2": 0.34,
+      "dv": 0.25
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 372,
+     "kind": "entry",
+     "from": "loco:run:5500154",
+     "to": "loco:walk:5670457",
+     "fade": 0.1,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.24,
+      "dv": 0.42
+     },
+     "l_palm": {
+      "d2": 0.65,
+      "dv": 1.29
+     },
+     "r_palm": {
+      "d2": 0.52,
+      "dv": 0.95
+     },
+     "l_foot": {
+      "d2": 0.97,
+      "dv": 1.53
+     },
+     "r_foot": {
+      "d2": 1.11,
+      "dv": 1.74
+     },
+     "root": {
+      "d2": 0.08,
+      "dv": 0.27
+     },
+     "pose": {
+      "d2": 0.2,
+      "dv": 0.26
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.36
+     }
+    },
+    {
+     "frame": 380,
+     "kind": "entry",
+     "from": "loco:walk:5670457",
+     "to": "ladder_mount_bottom:30:0",
+     "fade": 0.3,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.36,
+      "dv": 0.27
+     },
+     "l_palm": {
+      "d2": 0.84,
+      "dv": 1.46
+     },
+     "r_palm": {
+      "d2": 0.82,
+      "dv": 0.6
+     },
+     "l_foot": {
+      "d2": 3.01,
+      "dv": 1.63
+     },
+     "r_foot": {
+      "d2": 0.39,
+      "dv": 0.36
+     },
+     "root": {
+      "d2": 0.61,
+      "dv": 0.11
+     },
+     "pose": {
+      "d2": 0.52,
+      "dv": 0.23
+     },
+     "capsule": {
+      "d2": 0.25,
+      "dv": 0.14
+     }
+    },
+    {
+     "frame": 475,
+     "kind": "part",
+     "from": "ladder_mount_bottom:30:0",
+     "to": "ladder_mount_bottom:30:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "l_palm": {
+      "d2": 0.02,
+      "dv": 0.05
+     },
+     "r_palm": {
+      "d2": 0.02,
+      "dv": 0.04
+     },
+     "l_foot": {
+      "d2": 0.02,
+      "dv": 0.0
+     },
+     "r_foot": {
+      "d2": 0.09,
+      "dv": 0.11
+     },
+     "root": {
+      "d2": 0.04,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "capsule": {
+      "d2": 0.09,
+      "dv": 0.19
+     }
+    },
+    {
+     "frame": 535,
+     "kind": "chain",
+     "from": "ladder_mount_bottom:30:1",
+     "to": "lhub:1",
+     "fade": 0.2,
+     "mode": "MOVE>CLIMB",
+     "pelvis": {
+      "d2": 0.04,
+      "dv": 0.01
+     },
+     "l_palm": {
+      "d2": 0.02,
+      "dv": 0.01
+     },
+     "r_palm": {
+      "d2": 0.02,
+      "dv": 0.01
+     },
+     "l_foot": {
+      "d2": 0.08,
+      "dv": 0.01
+     },
+     "r_foot": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "root": {
+      "d2": 0.01,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.01
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.03
+     }
+    },
+    {
+     "frame": 567,
+     "kind": "chain",
+     "from": "lhub:1",
+     "to": "cyc:2",
+     "fade": 0.2,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.14,
+      "dv": 0.04
+     },
+     "l_palm": {
+      "d2": 0.08,
+      "dv": 0.01
+     },
+     "r_palm": {
+      "d2": 2.05,
+      "dv": 0.02
+     },
+     "l_foot": {
+      "d2": 3.48,
+      "dv": 0.22
+     },
+     "r_foot": {
+      "d2": 0.04,
+      "dv": 0.0
+     },
+     "root": {
+      "d2": 0.02,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.14,
+      "dv": 0.04
+     },
+     "capsule": {
+      "d2": 0.03,
+      "dv": 0.1
+     }
+    },
+    {
+     "frame": 626,
+     "kind": "chain",
+     "from": "cyc:2",
+     "to": "cyc:3",
+     "fade": 0.15,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.33,
+      "dv": 0.1
+     },
+     "l_palm": {
+      "d2": 0.67,
+      "dv": 0.19
+     },
+     "r_palm": {
+      "d2": 0.08,
+      "dv": 0.09
+     },
+     "l_foot": {
+      "d2": 0.15,
+      "dv": 0.06
+     },
+     "r_foot": {
+      "d2": 0.71,
+      "dv": 0.53
+     },
+     "root": {
+      "d2": 0.03,
+      "dv": 0.05
+     },
+     "pose": {
+      "d2": 0.32,
+      "dv": 0.05
+     },
+     "capsule": {
+      "d2": 0.03,
+      "dv": 0.04
+     }
+    },
+    {
+     "frame": 710,
+     "kind": "chain",
+     "from": "cyc:3",
+     "to": "cyc:4",
+     "fade": 0.15,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.17,
+      "dv": 0.08
+     },
+     "l_palm": {
+      "d2": 0.16,
+      "dv": 0.14
+     },
+     "r_palm": {
+      "d2": 4.65,
+      "dv": 0.19
+     },
+     "l_foot": {
+      "d2": 0.65,
+      "dv": 0.75
+     },
+     "r_foot": {
+      "d2": 0.41,
+      "dv": 0.01
+     },
+     "root": {
+      "d2": 0.01,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.16,
+      "dv": 0.07
+     },
+     "capsule": {
+      "d2": 0.01,
+      "dv": 0.01
+     }
+    },
+    {
+     "frame": 794,
+     "kind": "chain",
+     "from": "cyc:4",
+     "to": "cyc:5",
+     "fade": 0.15,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.33,
+      "dv": 0.06
+     },
+     "l_palm": {
+      "d2": 0.7,
+      "dv": 0.21
+     },
+     "r_palm": {
+      "d2": 0.08,
+      "dv": 0.01
+     },
+     "l_foot": {
+      "d2": 0.5,
+      "dv": 0.35
+     },
+     "r_foot": {
+      "d2": 0.74,
+      "dv": 0.36
+     },
+     "root": {
+      "d2": 0.04,
+      "dv": 0.0
+     },
+     "pose": {
+      "d2": 0.36,
+      "dv": 0.06
+     },
+     "capsule": {
+      "d2": 0.03,
+      "dv": 0.01
+     }
+    },
+    {
+     "frame": 878,
+     "kind": "chain",
+     "from": "cyc:5",
+     "to": "cyc:6",
+     "fade": 0.2,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.29,
+      "dv": 0.01
+     },
+     "l_palm": {
+      "d2": 0.08,
+      "dv": 0.13
+     },
+     "r_palm": {
+      "d2": 0.4,
+      "dv": 0.11
+     },
+     "l_foot": {
+      "d2": 0.65,
+      "dv": 0.73
+     },
+     "r_foot": {
+      "d2": 0.24,
+      "dv": 0.07
+     },
+     "root": {
+      "d2": 0.02,
+      "dv": 0.04
+     },
+     "pose": {
+      "d2": 0.29,
+      "dv": 0.03
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.03
+     }
+    },
+    {
+     "frame": 1022,
+     "kind": "chain",
+     "from": "cyc:6",
+     "to": "lhub:7",
+     "fade": 0.4,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.05,
+      "dv": 0.06
+     },
+     "l_palm": {
+      "d2": 0.0,
+      "dv": 0.0
+     },
+     "r_palm": {
+      "d2": 0.0,
+      "dv": 0.0
+     },
+     "l_foot": {
+      "d2": 0.0,
+      "dv": 0.0
+     },
+     "r_foot": {
+      "d2": 0.05,
+      "dv": 0.0
+     },
+     "root": {
+      "d2": 0.01,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.05,
+      "dv": 0.06
+     },
+     "capsule": {
+      "d2": 0.01,
+      "dv": 0.01
+     }
+    },
+    {
+     "frame": 1048,
+     "kind": "chain",
+     "from": "lhub:7",
+     "to": "ladder_dismount_top:31:0",
+     "fade": 0.2,
+     "mode": "CLIMB>MOVE",
+     "pelvis": {
+      "d2": 1.22,
+      "dv": 0.04
+     },
+     "l_palm": {
+      "d2": 1.46,
+      "dv": 0.03
+     },
+     "r_palm": {
+      "d2": 2.42,
+      "dv": 0.03
+     },
+     "l_foot": {
+      "d2": 3.27,
+      "dv": 0.04
+     },
+     "r_foot": {
+      "d2": 3.91,
+      "dv": 0.1
+     },
+     "root": {
+      "d2": 1.51,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 1.64,
+      "dv": 0.12
+     },
+     "capsule": {
+      "d2": 0.61,
+      "dv": 0.04
+     }
+    },
+    {
+     "frame": 1131,
+     "kind": "part",
+     "from": "ladder_dismount_top:31:0",
+     "to": "ladder_dismount_top:31:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "l_palm": {
+      "d2": 2.68,
+      "dv": 1.4
+     },
+     "r_palm": {
+      "d2": 2.01,
+      "dv": 1.18
+     },
+     "l_foot": {
+      "d2": 0.35,
+      "dv": 0.54
+     },
+     "r_foot": {
+      "d2": 0.26,
+      "dv": 0.45
+     },
+     "root": {
+      "d2": 0.2,
+      "dv": 0.35
+     },
+     "pose": {
+      "d2": 0.19,
+      "dv": 0.34
+     },
+     "capsule": {
+      "d2": 0.16,
+      "dv": 0.24
+     }
+    },
+    {
+     "frame": 1407,
+     "kind": "exit",
+     "from": "ladder_dismount_top:31:1",
+     "to": "exit:run:32",
+     "fade": 0.6,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.32,
+      "dv": 0.29
+     },
+     "l_palm": {
+      "d2": 0.68,
+      "dv": 0.72
+     },
+     "r_palm": {
+      "d2": 0.48,
+      "dv": 0.13
+     },
+     "l_foot": {
+      "d2": 1.01,
+      "dv": 0.87
+     },
+     "r_foot": {
+      "d2": 0.28,
+      "dv": 0.31
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.25
+     },
+     "pose": {
+      "d2": 0.28,
+      "dv": 0.05
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.25
+     }
+    },
+    {
+     "frame": 1420,
+     "kind": "exit",
+     "from": "exit:run:32",
+     "to": "loco:run:6804958",
+     "fade": 0.6,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.57,
+      "dv": 0.54
+     },
+     "l_palm": {
+      "d2": 1.81,
+      "dv": 0.68
+     },
+     "r_palm": {
+      "d2": 1.04,
+      "dv": 1.29
+     },
+     "l_foot": {
+      "d2": 2.22,
+      "dv": 1.14
+     },
+     "r_foot": {
+      "d2": 2.53,
+      "dv": 0.18
+     },
+     "root": {
+      "d2": 0.19,
+      "dv": 0.51
+     },
+     "pose": {
+      "d2": 0.57,
+      "dv": 0.17
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.4,
+     "dv": 0.47
+    },
+    "entry_l_palm": {
+     "d2": 0.87,
+     "dv": 1.46
+    },
+    "entry_r_palm": {
+     "d2": 0.82,
+     "dv": 0.95
+    },
+    "entry_l_foot": {
+     "d2": 3.01,
+     "dv": 1.63
+    },
+    "entry_r_foot": {
+     "d2": 2.53,
+     "dv": 1.74
+    },
+    "entry_root": {
+     "d2": 0.61,
+     "dv": 0.38
+    },
+    "entry_pose": {
+     "d2": 0.52,
+     "dv": 0.26
+    },
+    "entry_capsule": {
+     "d2": 0.25,
+     "dv": 0.47
+    },
+    "part_pelvis": {
+     "d2": 0.04,
+     "dv": 0.02
+    },
+    "part_l_palm": {
+     "d2": 2.68,
+     "dv": 1.4
+    },
+    "part_r_palm": {
+     "d2": 2.01,
+     "dv": 1.18
+    },
+    "part_l_foot": {
+     "d2": 0.35,
+     "dv": 0.54
+    },
+    "part_r_foot": {
+     "d2": 0.26,
+     "dv": 0.45
+    },
+    "part_root": {
+     "d2": 0.2,
+     "dv": 0.35
+    },
+    "part_pose": {
+     "d2": 0.19,
+     "dv": 0.34
+    },
+    "part_capsule": {
+     "d2": 0.16,
+     "dv": 0.24
+    },
+    "chain_pelvis": {
+     "d2": 1.22,
+     "dv": 0.1
+    },
+    "chain_l_palm": {
+     "d2": 1.46,
+     "dv": 0.21
+    },
+    "chain_r_palm": {
+     "d2": 4.65,
+     "dv": 0.19
+    },
+    "chain_l_foot": {
+     "d2": 3.48,
+     "dv": 0.75
+    },
+    "chain_r_foot": {
+     "d2": 3.91,
+     "dv": 0.53
+    },
+    "chain_root": {
+     "d2": 1.51,
+     "dv": 0.08
+    },
+    "chain_pose": {
+     "d2": 1.64,
+     "dv": 0.12
+    },
+    "chain_capsule": {
+     "d2": 0.61,
+     "dv": 0.1
+    },
+    "exit_pelvis": {
+     "d2": 0.57,
+     "dv": 0.54
+    },
+    "exit_l_palm": {
+     "d2": 1.81,
+     "dv": 0.72
+    },
+    "exit_r_palm": {
+     "d2": 1.04,
+     "dv": 1.29
+    },
+    "exit_l_foot": {
+     "d2": 2.22,
+     "dv": 1.14
+    },
+    "exit_r_foot": {
+     "d2": 2.53,
+     "dv": 0.31
+    },
+    "exit_root": {
+     "d2": 0.19,
+     "dv": 0.51
+    },
+    "exit_pose": {
+     "d2": 0.57,
+     "dv": 0.17
+    },
+    "exit_capsule": {
+     "d2": 0.1,
+     "dv": 0.47
+    }
+   },
+   "moves": [
+    "ladder_mount_bottom",
+    "ladder_dismount_top"
+   ]
+  },
+  "ladder_down": {
+   "seams": [
+    {
+     "frame": 19,
+     "kind": "entry",
+     "from": "loco:walk:6899695",
+     "to": "loco:run:6906754",
+     "fade": 0.6,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.57,
+      "dv": 0.47
+     },
+     "l_palm": {
+      "d2": 1.41,
+      "dv": 0.77
+     },
+     "r_palm": {
+      "d2": 1.56,
+      "dv": 0.65
+     },
+     "l_foot": {
+      "d2": 2.82,
+      "dv": 0.77
+     },
+     "r_foot": {
+      "d2": 2.53,
+      "dv": 0.4
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.38
+     },
+     "pose": {
+      "d2": 0.57,
+      "dv": 0.25
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 372,
+     "kind": "entry",
+     "from": "loco:run:6906754",
+     "to": "loco:walk:7080506",
+     "fade": 0.6,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.24,
+      "dv": 0.42
+     },
+     "l_palm": {
+      "d2": 0.65,
+      "dv": 1.29
+     },
+     "r_palm": {
+      "d2": 0.52,
+      "dv": 0.95
+     },
+     "l_foot": {
+      "d2": 0.97,
+      "dv": 1.53
+     },
+     "r_foot": {
+      "d2": 1.11,
+      "dv": 1.74
+     },
+     "root": {
+      "d2": 0.08,
+      "dv": 0.27
+     },
+     "pose": {
+      "d2": 0.2,
+      "dv": 0.26
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.36
+     }
+    },
+    {
+     "frame": 380,
+     "kind": "entry",
+     "from": "loco:walk:7080506",
+     "to": "ladder_mount_bottom:33:0",
+     "fade": 0.3,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.36,
+      "dv": 0.27
+     },
+     "l_palm": {
+      "d2": 0.84,
+      "dv": 1.46
+     },
+     "r_palm": {
+      "d2": 0.82,
+      "dv": 0.6
+     },
+     "l_foot": {
+      "d2": 3.01,
+      "dv": 1.63
+     },
+     "r_foot": {
+      "d2": 0.39,
+      "dv": 0.36
+     },
+     "root": {
+      "d2": 0.61,
+      "dv": 0.11
+     },
+     "pose": {
+      "d2": 0.52,
+      "dv": 0.23
+     },
+     "capsule": {
+      "d2": 0.25,
+      "dv": 0.14
+     }
+    },
+    {
+     "frame": 475,
+     "kind": "part",
+     "from": "ladder_mount_bottom:33:0",
+     "to": "ladder_mount_bottom:33:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "l_palm": {
+      "d2": 0.02,
+      "dv": 0.05
+     },
+     "r_palm": {
+      "d2": 0.02,
+      "dv": 0.04
+     },
+     "l_foot": {
+      "d2": 0.02,
+      "dv": 0.0
+     },
+     "r_foot": {
+      "d2": 0.09,
+      "dv": 0.11
+     },
+     "root": {
+      "d2": 0.04,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "capsule": {
+      "d2": 0.09,
+      "dv": 0.19
+     }
+    },
+    {
+     "frame": 535,
+     "kind": "chain",
+     "from": "ladder_mount_bottom:33:1",
+     "to": "lhub:8",
+     "fade": 0.2,
+     "mode": "MOVE>CLIMB",
+     "pelvis": {
+      "d2": 0.04,
+      "dv": 0.01
+     },
+     "l_palm": {
+      "d2": 0.02,
+      "dv": 0.01
+     },
+     "r_palm": {
+      "d2": 0.02,
+      "dv": 0.01
+     },
+     "l_foot": {
+      "d2": 0.08,
+      "dv": 0.01
+     },
+     "r_foot": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "root": {
+      "d2": 0.01,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.01
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.03
+     }
+    },
+    {
+     "frame": 567,
+     "kind": "chain",
+     "from": "lhub:8",
+     "to": "cyc:9",
+     "fade": 0.2,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.14,
+      "dv": 0.04
+     },
+     "l_palm": {
+      "d2": 0.08,
+      "dv": 0.01
+     },
+     "r_palm": {
+      "d2": 2.05,
+      "dv": 0.02
+     },
+     "l_foot": {
+      "d2": 3.48,
+      "dv": 0.22
+     },
+     "r_foot": {
+      "d2": 0.04,
+      "dv": 0.0
+     },
+     "root": {
+      "d2": 0.02,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.14,
+      "dv": 0.04
+     },
+     "capsule": {
+      "d2": 0.03,
+      "dv": 0.1
+     }
+    },
+    {
+     "frame": 626,
+     "kind": "chain",
+     "from": "cyc:9",
+     "to": "cyc:10",
+     "fade": 0.15,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.33,
+      "dv": 0.1
+     },
+     "l_palm": {
+      "d2": 0.67,
+      "dv": 0.19
+     },
+     "r_palm": {
+      "d2": 0.08,
+      "dv": 0.09
+     },
+     "l_foot": {
+      "d2": 0.15,
+      "dv": 0.06
+     },
+     "r_foot": {
+      "d2": 0.71,
+      "dv": 0.53
+     },
+     "root": {
+      "d2": 0.03,
+      "dv": 0.05
+     },
+     "pose": {
+      "d2": 0.32,
+      "dv": 0.05
+     },
+     "capsule": {
+      "d2": 0.03,
+      "dv": 0.04
+     }
+    },
+    {
+     "frame": 710,
+     "kind": "chain",
+     "from": "cyc:10",
+     "to": "cyc:11",
+     "fade": 0.2,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.29,
+      "dv": 0.01
+     },
+     "l_palm": {
+      "d2": 0.08,
+      "dv": 0.13
+     },
+     "r_palm": {
+      "d2": 0.48,
+      "dv": 0.13
+     },
+     "l_foot": {
+      "d2": 0.65,
+      "dv": 0.73
+     },
+     "r_foot": {
+      "d2": 0.24,
+      "dv": 0.07
+     },
+     "root": {
+      "d2": 0.02,
+      "dv": 0.04
+     },
+     "pose": {
+      "d2": 0.29,
+      "dv": 0.03
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.03
+     }
+    },
+    {
+     "frame": 854,
+     "kind": "chain",
+     "from": "cyc:11",
+     "to": "lhub:12",
+     "fade": 0.4,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.05,
+      "dv": 0.06
+     },
+     "l_palm": {
+      "d2": 0.0,
+      "dv": 0.0
+     },
+     "r_palm": {
+      "d2": 0.0,
+      "dv": 0.0
+     },
+     "l_foot": {
+      "d2": 0.0,
+      "dv": 0.0
+     },
+     "r_foot": {
+      "d2": 0.02,
+      "dv": 0.0
+     },
+     "root": {
+      "d2": 0.01,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.05,
+      "dv": 0.06
+     },
+     "capsule": {
+      "d2": 0.01,
+      "dv": 0.01
+     }
+    },
+    {
+     "frame": 886,
+     "kind": "chain",
+     "from": "lhub:12",
+     "to": "cyc:13",
+     "fade": 0.2,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.37,
+      "dv": 0.02
+     },
+     "l_palm": {
+      "d2": 0.15,
+      "dv": 0.02
+     },
+     "r_palm": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "l_foot": {
+      "d2": 2.06,
+      "dv": 0.05
+     },
+     "r_foot": {
+      "d2": 0.09,
+      "dv": 0.0
+     },
+     "root": {
+      "d2": 0.05,
+      "dv": 0.03
+     },
+     "pose": {
+      "d2": 0.38,
+      "dv": 0.04
+     },
+     "capsule": {
+      "d2": 0.05,
+      "dv": 0.03
+     }
+    },
+    {
+     "frame": 957,
+     "kind": "chain",
+     "from": "cyc:13",
+     "to": "cyc:14",
+     "fade": 0.15,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.11,
+      "dv": 0.01
+     },
+     "l_palm": {
+      "d2": 0.29,
+      "dv": 0.16
+     },
+     "r_palm": {
+      "d2": 3.22,
+      "dv": 0.78
+     },
+     "l_foot": {
+      "d2": 0.65,
+      "dv": 1.28
+     },
+     "r_foot": {
+      "d2": 0.15,
+      "dv": 0.02
+     },
+     "root": {
+      "d2": 0.04,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.09,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.04,
+      "dv": 0.01
+     }
+    },
+    {
+     "frame": 1089,
+     "kind": "chain",
+     "from": "cyc:14",
+     "to": "cyc:15",
+     "fade": 0.2,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.49,
+      "dv": 0.04
+     },
+     "l_palm": {
+      "d2": 2.05,
+      "dv": 0.18
+     },
+     "r_palm": {
+      "d2": 0.21,
+      "dv": 0.0
+     },
+     "l_foot": {
+      "d2": 1.12,
+      "dv": 0.27
+     },
+     "r_foot": {
+      "d2": 0.15,
+      "dv": 0.01
+     },
+     "root": {
+      "d2": 0.07,
+      "dv": 0.05
+     },
+     "pose": {
+      "d2": 0.49,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.04
+     }
+    },
+    {
+     "frame": 1209,
+     "kind": "chain",
+     "from": "cyc:15",
+     "to": "lhub:16",
+     "fade": 0.4,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.08,
+      "dv": 0.1
+     },
+     "l_palm": {
+      "d2": 0.01,
+      "dv": 0.01
+     },
+     "r_palm": {
+      "d2": 0.0,
+      "dv": 0.0
+     },
+     "l_foot": {
+      "d2": 0.0,
+      "dv": 0.0
+     },
+     "r_foot": {
+      "d2": 0.01,
+      "dv": 0.01
+     },
+     "root": {
+      "d2": 0.0,
+      "dv": 0.0
+     },
+     "pose": {
+      "d2": 0.08,
+      "dv": 0.09
+     },
+     "capsule": {
+      "d2": 0.0,
+      "dv": 0.0
+     }
+    },
+    {
+     "frame": 1235,
+     "kind": "chain",
+     "from": "lhub:16",
+     "to": "ladder_dismount_bottom:34:0",
+     "fade": 0.2,
+     "mode": "CLIMB>MOVE",
+     "pelvis": {
+      "d2": 0.2,
+      "dv": 0.03
+     },
+     "l_palm": {
+      "d2": 0.14,
+      "dv": 0.03
+     },
+     "r_palm": {
+      "d2": 0.13,
+      "dv": 0.04
+     },
+     "l_foot": {
+      "d2": 0.25,
+      "dv": 0.01
+     },
+     "r_foot": {
+      "d2": 1.75,
+      "dv": 0.05
+     },
+     "root": {
+      "d2": 0.39,
+      "dv": 0.7
+     },
+     "pose": {
+      "d2": 0.38,
+      "dv": 0.68
+     },
+     "capsule": {
+      "d2": 0.12,
+      "dv": 0.05
+     }
+    },
+    {
+     "frame": 1354,
+     "kind": "exit",
+     "from": "ladder_dismount_bottom:34:0",
+     "to": "exit:idle:35",
+     "fade": 0.3,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.11,
+      "dv": 0.19
+     },
+     "l_palm": {
+      "d2": 0.39,
+      "dv": 1.0
+     },
+     "r_palm": {
+      "d2": 0.09,
+      "dv": 0.12
+     },
+     "l_foot": {
+      "d2": 0.26,
+      "dv": 0.49
+     },
+     "r_foot": {
+      "d2": 0.38,
+      "dv": 0.13
+     },
+     "root": {
+      "d2": 0.13,
+      "dv": 0.21
+     },
+     "pose": {
+      "d2": 0.02,
+      "dv": 0.04
+     },
+     "capsule": {
+      "d2": 0.13,
+      "dv": 0.3
+     }
+    },
+    {
+     "frame": 1356,
+     "kind": "exit",
+     "from": "exit:idle:35",
+     "to": "loco:idle:8100884",
+     "fade": 0.3,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.13,
+      "dv": 0.35
+     },
+     "l_palm": {
+      "d2": 0.39,
+      "dv": 1.06
+     },
+     "r_palm": {
+      "d2": 0.13,
+      "dv": 0.17
+     },
+     "l_foot": {
+      "d2": 0.7,
+      "dv": 0.71
+     },
+     "r_foot": {
+      "d2": 0.43,
+      "dv": 0.18
+     },
+     "root": {
+      "d2": 0.13,
+      "dv": 0.33
+     },
+     "pose": {
+      "d2": 0.06,
+      "dv": 0.1
+     },
+     "capsule": {
+      "d2": 0.13,
+      "dv": 0.49
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.57,
+     "dv": 0.47
+    },
+    "entry_l_palm": {
+     "d2": 1.41,
+     "dv": 1.46
+    },
+    "entry_r_palm": {
+     "d2": 1.56,
+     "dv": 0.95
+    },
+    "entry_l_foot": {
+     "d2": 3.01,
+     "dv": 1.63
+    },
+    "entry_r_foot": {
+     "d2": 2.53,
+     "dv": 1.74
+    },
+    "entry_root": {
+     "d2": 0.61,
+     "dv": 0.38
+    },
+    "entry_pose": {
+     "d2": 0.57,
+     "dv": 0.26
+    },
+    "entry_capsule": {
+     "d2": 0.25,
+     "dv": 0.47
+    },
+    "part_pelvis": {
+     "d2": 0.03,
+     "dv": 0.01
+    },
+    "part_l_palm": {
+     "d2": 0.02,
+     "dv": 0.05
+    },
+    "part_r_palm": {
+     "d2": 0.02,
+     "dv": 0.04
+    },
+    "part_l_foot": {
+     "d2": 0.02,
+     "dv": 0.0
+    },
+    "part_r_foot": {
+     "d2": 0.09,
+     "dv": 0.11
+    },
+    "part_root": {
+     "d2": 0.04,
+     "dv": 0.01
+    },
+    "part_pose": {
+     "d2": 0.03,
+     "dv": 0.01
+    },
+    "part_capsule": {
+     "d2": 0.09,
+     "dv": 0.19
+    },
+    "chain_pelvis": {
+     "d2": 0.49,
+     "dv": 0.1
+    },
+    "chain_l_palm": {
+     "d2": 2.05,
+     "dv": 0.19
+    },
+    "chain_r_palm": {
+     "d2": 3.22,
+     "dv": 0.78
+    },
+    "chain_l_foot": {
+     "d2": 3.48,
+     "dv": 1.28
+    },
+    "chain_r_foot": {
+     "d2": 1.75,
+     "dv": 0.53
+    },
+    "chain_root": {
+     "d2": 0.39,
+     "dv": 0.7
+    },
+    "chain_pose": {
+     "d2": 0.49,
+     "dv": 0.68
+    },
+    "chain_capsule": {
+     "d2": 0.12,
+     "dv": 0.1
+    },
+    "exit_pelvis": {
+     "d2": 0.13,
+     "dv": 0.35
+    },
+    "exit_l_palm": {
+     "d2": 0.39,
+     "dv": 1.06
+    },
+    "exit_r_palm": {
+     "d2": 0.13,
+     "dv": 0.17
+    },
+    "exit_l_foot": {
+     "d2": 0.7,
+     "dv": 0.71
+    },
+    "exit_r_foot": {
+     "d2": 0.43,
+     "dv": 0.18
+    },
+    "exit_root": {
+     "d2": 0.13,
+     "dv": 0.33
+    },
+    "exit_pose": {
+     "d2": 0.06,
+     "dv": 0.1
+    },
+    "exit_capsule": {
+     "d2": 0.13,
+     "dv": 0.49
+    }
+   },
+   "moves": [
+    "ladder_mount_bottom",
+    "ladder_dismount_bottom"
+   ]
+  },
+  "beam_log": {
+   "seams": [
+    {
+     "frame": 156,
+     "kind": "entry",
+     "from": "loco:walk:8160036",
+     "to": "beam_enter:36:0",
+     "fade": 0.25,
+     "mode": "OFF>BEAM",
+     "pelvis": {
+      "d2": 0.38,
+      "dv": 0.04
+     },
+     "l_palm": {
+      "d2": 0.33,
+      "dv": 0.06
+     },
+     "r_palm": {
+      "d2": 0.51,
+      "dv": 0.24
+     },
+     "l_foot": {
+      "d2": 1.04,
+      "dv": 0.51
+     },
+     "r_foot": {
+      "d2": 0.24,
+      "dv": 0.19
+     },
+     "root": {
+      "d2": 0.42,
+      "dv": 0.06
+     },
+     "pose": {
+      "d2": 0.12,
+      "dv": 0.05
+     },
+     "capsule": {
+      "d2": 0.61,
+      "dv": 0.05
+     }
+    },
+    {
+     "frame": 323,
+     "kind": "chain",
+     "from": "beam_enter:36:0",
+     "to": "beam_loop:37:0",
+     "fade": 0.2,
+     "mode": "BEAM>BEAM",
+     "pelvis": {
+      "d2": 0.05,
+      "dv": 0.05
+     },
+     "l_palm": {
+      "d2": 0.5,
+      "dv": 0.05
+     },
+     "r_palm": {
+      "d2": 0.7,
+      "dv": 0.08
+     },
+     "l_foot": {
+      "d2": 0.47,
+      "dv": 0.0
+     },
+     "r_foot": {
+      "d2": 1.45,
+      "dv": 0.18
+     },
+     "root": {
+      "d2": 0.2,
+      "dv": 0.05
+     },
+     "pose": {
+      "d2": 0.24,
+      "dv": 0.01
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.12
+     }
+    },
+    {
+     "frame": 455,
+     "kind": "chain",
+     "from": "beam_loop:37:0",
+     "to": "beam_loop:38:0",
+     "fade": 0.0,
+     "mode": "BEAM>BEAM",
+     "pelvis": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "l_palm": {
+      "d2": 0.07,
+      "dv": 0.04
+     },
+     "r_palm": {
+      "d2": 0.1,
+      "dv": 0.04
+     },
+     "l_foot": {
+      "d2": 0.05,
+      "dv": 0.07
+     },
+     "r_foot": {
+      "d2": 0.2,
+      "dv": 0.19
+     },
+     "root": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.04,
+      "dv": 0.06
+     }
+    },
+    {
+     "frame": 587,
+     "kind": "chain",
+     "from": "beam_loop:38:0",
+     "to": "beam_loop:39:0",
+     "fade": 0.0,
+     "mode": "BEAM>BEAM",
+     "pelvis": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "l_palm": {
+      "d2": 0.07,
+      "dv": 0.04
+     },
+     "r_palm": {
+      "d2": 0.1,
+      "dv": 0.04
+     },
+     "l_foot": {
+      "d2": 0.05,
+      "dv": 0.07
+     },
+     "r_foot": {
+      "d2": 0.2,
+      "dv": 0.19
+     },
+     "root": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.04,
+      "dv": 0.06
+     }
+    },
+    {
+     "frame": 719,
+     "kind": "chain",
+     "from": "beam_loop:39:0",
+     "to": "beam_loop:40:0",
+     "fade": 0.0,
+     "mode": "BEAM>BEAM",
+     "pelvis": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "l_palm": {
+      "d2": 0.07,
+      "dv": 0.04
+     },
+     "r_palm": {
+      "d2": 0.1,
+      "dv": 0.04
+     },
+     "l_foot": {
+      "d2": 0.05,
+      "dv": 0.07
+     },
+     "r_foot": {
+      "d2": 0.2,
+      "dv": 0.19
+     },
+     "root": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.04,
+      "dv": 0.06
+     }
+    },
+    {
+     "frame": 851,
+     "kind": "exit",
+     "from": "beam_loop:40:0",
+     "to": "exit:idle:41",
+     "fade": 0.4,
+     "mode": "BEAM>OFF",
+     "pelvis": {
+      "d2": 0.16,
+      "dv": 0.28
+     },
+     "l_palm": {
+      "d2": 0.77,
+      "dv": 0.85
+     },
+     "r_palm": {
+      "d2": 0.45,
+      "dv": 0.18
+     },
+     "l_foot": {
+      "d2": 0.84,
+      "dv": 0.68
+     },
+     "r_foot": {
+      "d2": 0.32,
+      "dv": 0.26
+     },
+     "root": {
+      "d2": 0.14,
+      "dv": 0.29
+     },
+     "pose": {
+      "d2": 0.11,
+      "dv": 0.07
+     },
+     "capsule": {
+      "d2": 0.67,
+      "dv": 0.28
+     }
+    },
+    {
+     "frame": 859,
+     "kind": "exit",
+     "from": "exit:idle:41",
+     "to": "loco:idle:8816705",
+     "fade": 0.4,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.17,
+      "dv": 0.49
+     },
+     "l_palm": {
+      "d2": 0.19,
+      "dv": 0.44
+     },
+     "r_palm": {
+      "d2": 0.18,
+      "dv": 0.54
+     },
+     "l_foot": {
+      "d2": 0.51,
+      "dv": 0.29
+     },
+     "r_foot": {
+      "d2": 0.26,
+      "dv": 0.77
+     },
+     "root": {
+      "d2": 0.14,
+      "dv": 0.44
+     },
+     "pose": {
+      "d2": 0.05,
+      "dv": 0.07
+     },
+     "capsule": {
+      "d2": 0.13,
+      "dv": 0.56
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.38,
+     "dv": 0.04
+    },
+    "entry_l_palm": {
+     "d2": 0.33,
+     "dv": 0.06
+    },
+    "entry_r_palm": {
+     "d2": 0.51,
+     "dv": 0.24
+    },
+    "entry_l_foot": {
+     "d2": 1.04,
+     "dv": 0.51
+    },
+    "entry_r_foot": {
+     "d2": 0.24,
+     "dv": 0.19
+    },
+    "entry_root": {
+     "d2": 0.42,
+     "dv": 0.06
+    },
+    "entry_pose": {
+     "d2": 0.12,
+     "dv": 0.05
+    },
+    "entry_capsule": {
+     "d2": 0.61,
+     "dv": 0.05
+    },
+    "chain_pelvis": {
+     "d2": 0.07,
+     "dv": 0.06
+    },
+    "chain_l_palm": {
+     "d2": 0.5,
+     "dv": 0.05
+    },
+    "chain_r_palm": {
+     "d2": 0.7,
+     "dv": 0.08
+    },
+    "chain_l_foot": {
+     "d2": 0.47,
+     "dv": 0.07
+    },
+    "chain_r_foot": {
+     "d2": 1.45,
+     "dv": 0.19
+    },
+    "chain_root": {
+     "d2": 0.2,
+     "dv": 0.06
+    },
+    "chain_pose": {
+     "d2": 0.24,
+     "dv": 0.02
+    },
+    "chain_capsule": {
+     "d2": 0.07,
+     "dv": 0.12
+    },
+    "exit_pelvis": {
+     "d2": 0.17,
+     "dv": 0.49
+    },
+    "exit_l_palm": {
+     "d2": 0.77,
+     "dv": 0.85
+    },
+    "exit_r_palm": {
+     "d2": 0.45,
+     "dv": 0.54
+    },
+    "exit_l_foot": {
+     "d2": 0.84,
+     "dv": 0.68
+    },
+    "exit_r_foot": {
+     "d2": 0.32,
+     "dv": 0.77
+    },
+    "exit_root": {
+     "d2": 0.14,
+     "dv": 0.44
+    },
+    "exit_pose": {
+     "d2": 0.11,
+     "dv": 0.07
+    },
+    "exit_capsule": {
+     "d2": 0.67,
+     "dv": 0.56
+    }
+   },
+   "moves": [
+    "beam_enter",
+    "beam_loop",
+    "beam_loop",
+    "beam_loop",
+    "beam_loop"
+   ]
+  },
+  "beam_raised": {
+   "seams": [
+    {
+     "frame": 138,
+     "kind": "entry",
+     "from": "loco:walk:8874895",
+     "to": "beam_enter:42:0",
+     "fade": 0.25,
+     "mode": "OFF>BEAM",
+     "pelvis": {
+      "d2": 0.38,
+      "dv": 0.07
+     },
+     "l_palm": {
+      "d2": 0.45,
+      "dv": 0.25
+     },
+     "r_palm": {
+      "d2": 0.45,
+      "dv": 0.3
+     },
+     "l_foot": {
+      "d2": 0.38,
+      "dv": 0.32
+     },
+     "r_foot": {
+      "d2": 1.38,
+      "dv": 0.38
+     },
+     "root": {
+      "d2": 0.42,
+      "dv": 0.06
+     },
+     "pose": {
+      "d2": 0.07,
+      "dv": 0.05
+     },
+     "capsule": {
+      "d2": 0.59,
+      "dv": 0.05
+     }
+    },
+    {
+     "frame": 305,
+     "kind": "chain",
+     "from": "beam_enter:42:0",
+     "to": "beam_loop:43:0",
+     "fade": 0.2,
+     "mode": "BEAM>BEAM",
+     "pelvis": {
+      "d2": 0.05,
+      "dv": 0.05
+     },
+     "l_palm": {
+      "d2": 0.5,
+      "dv": 0.05
+     },
+     "r_palm": {
+      "d2": 0.7,
+      "dv": 0.08
+     },
+     "l_foot": {
+      "d2": 0.48,
+      "dv": 0.0
+     },
+     "r_foot": {
+      "d2": 1.45,
+      "dv": 0.18
+     },
+     "root": {
+      "d2": 0.2,
+      "dv": 0.05
+     },
+     "pose": {
+      "d2": 0.24,
+      "dv": 0.01
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.12
+     }
+    },
+    {
+     "frame": 437,
+     "kind": "chain",
+     "from": "beam_loop:43:0",
+     "to": "beam_loop:44:0",
+     "fade": 0.0,
+     "mode": "BEAM>BEAM",
+     "pelvis": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "l_palm": {
+      "d2": 0.07,
+      "dv": 0.04
+     },
+     "r_palm": {
+      "d2": 0.1,
+      "dv": 0.04
+     },
+     "l_foot": {
+      "d2": 0.05,
+      "dv": 0.08
+     },
+     "r_foot": {
+      "d2": 0.2,
+      "dv": 0.19
+     },
+     "root": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.04,
+      "dv": 0.06
+     }
+    },
+    {
+     "frame": 569,
+     "kind": "chain",
+     "from": "beam_loop:44:0",
+     "to": "beam_loop:45:0",
+     "fade": 0.0,
+     "mode": "BEAM>BEAM",
+     "pelvis": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "l_palm": {
+      "d2": 0.07,
+      "dv": 0.04
+     },
+     "r_palm": {
+      "d2": 0.1,
+      "dv": 0.04
+     },
+     "l_foot": {
+      "d2": 0.05,
+      "dv": 0.08
+     },
+     "r_foot": {
+      "d2": 0.2,
+      "dv": 0.19
+     },
+     "root": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.04,
+      "dv": 0.06
+     }
+    },
+    {
+     "frame": 701,
+     "kind": "chain",
+     "from": "beam_loop:45:0",
+     "to": "beam_loop:46:0",
+     "fade": 0.0,
+     "mode": "BEAM>BEAM",
+     "pelvis": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "l_palm": {
+      "d2": 0.07,
+      "dv": 0.04
+     },
+     "r_palm": {
+      "d2": 0.1,
+      "dv": 0.04
+     },
+     "l_foot": {
+      "d2": 0.05,
+      "dv": 0.08
+     },
+     "r_foot": {
+      "d2": 0.2,
+      "dv": 0.19
+     },
+     "root": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.04,
+      "dv": 0.06
+     }
+    },
+    {
+     "frame": 833,
+     "kind": "chain",
+     "from": "beam_loop:46:0",
+     "to": "beam_exit:47:0",
+     "fade": 0.2,
+     "mode": "BEAM>BEAM",
+     "pelvis": {
+      "d2": 0.11,
+      "dv": 0.06
+     },
+     "l_palm": {
+      "d2": 0.63,
+      "dv": 0.04
+     },
+     "r_palm": {
+      "d2": 0.5,
+      "dv": 0.07
+     },
+     "l_foot": {
+      "d2": 0.12,
+      "dv": 0.07
+     },
+     "r_foot": {
+      "d2": 0.95,
+      "dv": 0.22
+     },
+     "root": {
+      "d2": 0.12,
+      "dv": 0.07
+     },
+     "pose": {
+      "d2": 0.17,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.06
+     }
+    },
+    {
+     "frame": 1061,
+     "kind": "exit",
+     "from": "beam_exit:47:0",
+     "to": "exit:idle:48",
+     "fade": 0.4,
+     "mode": "BEAM>OFF",
+     "pelvis": {
+      "d2": 0.15,
+      "dv": 0.22
+     },
+     "l_palm": {
+      "d2": 0.33,
+      "dv": 0.36
+     },
+     "r_palm": {
+      "d2": 0.12,
+      "dv": 0.12
+     },
+     "l_foot": {
+      "d2": 0.24,
+      "dv": 0.28
+     },
+     "r_foot": {
+      "d2": 0.16,
+      "dv": 0.35
+     },
+     "root": {
+      "d2": 0.12,
+      "dv": 0.22
+     },
+     "pose": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.23
+     }
+    },
+    {
+     "frame": 1064,
+     "kind": "exit",
+     "from": "exit:idle:48",
+     "to": "loco:walk:9731427",
+     "fade": 0.4,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.15,
+      "dv": 0.44
+     },
+     "l_palm": {
+      "d2": 0.35,
+      "dv": 1.03
+     },
+     "r_palm": {
+      "d2": 0.19,
+      "dv": 0.23
+     },
+     "l_foot": {
+      "d2": 0.44,
+      "dv": 0.14
+     },
+     "r_foot": {
+      "d2": 0.59,
+      "dv": 1.04
+     },
+     "root": {
+      "d2": 0.18,
+      "dv": 0.51
+     },
+     "pose": {
+      "d2": 0.12,
+      "dv": 0.13
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.38,
+     "dv": 0.07
+    },
+    "entry_l_palm": {
+     "d2": 0.45,
+     "dv": 0.25
+    },
+    "entry_r_palm": {
+     "d2": 0.45,
+     "dv": 0.3
+    },
+    "entry_l_foot": {
+     "d2": 0.38,
+     "dv": 0.32
+    },
+    "entry_r_foot": {
+     "d2": 1.38,
+     "dv": 0.38
+    },
+    "entry_root": {
+     "d2": 0.42,
+     "dv": 0.06
+    },
+    "entry_pose": {
+     "d2": 0.07,
+     "dv": 0.05
+    },
+    "entry_capsule": {
+     "d2": 0.59,
+     "dv": 0.05
+    },
+    "chain_pelvis": {
+     "d2": 0.11,
+     "dv": 0.06
+    },
+    "chain_l_palm": {
+     "d2": 0.63,
+     "dv": 0.05
+    },
+    "chain_r_palm": {
+     "d2": 0.7,
+     "dv": 0.08
+    },
+    "chain_l_foot": {
+     "d2": 0.48,
+     "dv": 0.08
+    },
+    "chain_r_foot": {
+     "d2": 1.45,
+     "dv": 0.22
+    },
+    "chain_root": {
+     "d2": 0.2,
+     "dv": 0.07
+    },
+    "chain_pose": {
+     "d2": 0.24,
+     "dv": 0.02
+    },
+    "chain_capsule": {
+     "d2": 0.07,
+     "dv": 0.12
+    },
+    "exit_pelvis": {
+     "d2": 0.15,
+     "dv": 0.44
+    },
+    "exit_l_palm": {
+     "d2": 0.35,
+     "dv": 1.03
+    },
+    "exit_r_palm": {
+     "d2": 0.19,
+     "dv": 0.23
+    },
+    "exit_l_foot": {
+     "d2": 0.44,
+     "dv": 0.28
+    },
+    "exit_r_foot": {
+     "d2": 0.59,
+     "dv": 1.04
+    },
+    "exit_root": {
+     "d2": 0.18,
+     "dv": 0.51
+    },
+    "exit_pose": {
+     "d2": 0.12,
+     "dv": 0.13
+    },
+    "exit_capsule": {
+     "d2": 0.1,
+     "dv": 0.47
+    }
+   },
+   "moves": [
+    "beam_enter",
+    "beam_loop",
+    "beam_loop",
+    "beam_loop",
+    "beam_loop",
+    "beam_exit"
+   ]
+  },
+  "tree_stand": {
+   "seams": [
+    {
+     "frame": 19,
+     "kind": "entry",
+     "from": "loco:walk:9757493",
+     "to": "loco:run:9764471",
+     "fade": 0.4,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.57,
+      "dv": 0.47
+     },
+     "l_palm": {
+      "d2": 1.09,
+      "dv": 0.77
+     },
+     "r_palm": {
+      "d2": 1.56,
+      "dv": 0.65
+     },
+     "l_foot": {
+      "d2": 2.34,
+      "dv": 0.77
+     },
+     "r_foot": {
+      "d2": 2.53,
+      "dv": 0.4
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.38
+     },
+     "pose": {
+      "d2": 0.57,
+      "dv": 0.25
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 80,
+     "kind": "entry",
+     "from": "loco:run:9764471",
+     "to": "loco:walk:9810810",
+     "fade": 0.4,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.17,
+      "dv": 0.23
+     },
+     "l_palm": {
+      "d2": 0.76,
+      "dv": 0.44
+     },
+     "r_palm": {
+      "d2": 0.67,
+      "dv": 0.96
+     },
+     "l_foot": {
+      "d2": 0.66,
+      "dv": 0.38
+     },
+     "r_foot": {
+      "d2": 1.47,
+      "dv": 0.49
+     },
+     "root": {
+      "d2": 0.08,
+      "dv": 0.27
+     },
+     "pose": {
+      "d2": 0.12,
+      "dv": 0.04
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.35
+     }
+    },
+    {
+     "frame": 88,
+     "kind": "entry",
+     "from": "loco:walk:9810810",
+     "to": "ladder_mount_bottom:49:0",
+     "fade": 0.3,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.34,
+      "dv": 0.38
+     },
+     "l_palm": {
+      "d2": 0.81,
+      "dv": 0.74
+     },
+     "r_palm": {
+      "d2": 0.73,
+      "dv": 1.68
+     },
+     "l_foot": {
+      "d2": 2.9,
+      "dv": 0.87
+     },
+     "r_foot": {
+      "d2": 0.64,
+      "dv": 1.01
+     },
+     "root": {
+      "d2": 0.61,
+      "dv": 0.11
+     },
+     "pose": {
+      "d2": 0.52,
+      "dv": 0.35
+     },
+     "capsule": {
+      "d2": 0.25,
+      "dv": 0.14
+     }
+    },
+    {
+     "frame": 183,
+     "kind": "part",
+     "from": "ladder_mount_bottom:49:0",
+     "to": "ladder_mount_bottom:49:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "l_palm": {
+      "d2": 0.02,
+      "dv": 0.05
+     },
+     "r_palm": {
+      "d2": 0.02,
+      "dv": 0.04
+     },
+     "l_foot": {
+      "d2": 0.0,
+      "dv": 0.0
+     },
+     "r_foot": {
+      "d2": 0.09,
+      "dv": 0.11
+     },
+     "root": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "capsule": {
+      "d2": 0.09,
+      "dv": 0.19
+     }
+    },
+    {
+     "frame": 243,
+     "kind": "chain",
+     "from": "ladder_mount_bottom:49:1",
+     "to": "lhub:17",
+     "fade": 0.2,
+     "mode": "MOVE>CLIMB",
+     "pelvis": {
+      "d2": 0.04,
+      "dv": 0.01
+     },
+     "l_palm": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "r_palm": {
+      "d2": 0.02,
+      "dv": 0.01
+     },
+     "l_foot": {
+      "d2": 0.08,
+      "dv": 0.02
+     },
+     "r_foot": {
+      "d2": 0.69,
+      "dv": 0.02
+     },
+     "root": {
+      "d2": 0.01,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.01
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.03
+     }
+    },
+    {
+     "frame": 275,
+     "kind": "chain",
+     "from": "lhub:17",
+     "to": "cyc:18",
+     "fade": 0.2,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.14,
+      "dv": 0.04
+     },
+     "l_palm": {
+      "d2": 0.08,
+      "dv": 0.01
+     },
+     "r_palm": {
+      "d2": 2.05,
+      "dv": 0.02
+     },
+     "l_foot": {
+      "d2": 3.48,
+      "dv": 0.21
+     },
+     "r_foot": {
+      "d2": 0.04,
+      "dv": 0.0
+     },
+     "root": {
+      "d2": 0.02,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.14,
+      "dv": 0.04
+     },
+     "capsule": {
+      "d2": 0.03,
+      "dv": 0.1
+     }
+    },
+    {
+     "frame": 334,
+     "kind": "chain",
+     "from": "cyc:18",
+     "to": "cyc:19",
+     "fade": 0.15,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.33,
+      "dv": 0.1
+     },
+     "l_palm": {
+      "d2": 0.67,
+      "dv": 0.19
+     },
+     "r_palm": {
+      "d2": 0.08,
+      "dv": 0.09
+     },
+     "l_foot": {
+      "d2": 0.15,
+      "dv": 0.06
+     },
+     "r_foot": {
+      "d2": 0.7,
+      "dv": 0.53
+     },
+     "root": {
+      "d2": 0.03,
+      "dv": 0.05
+     },
+     "pose": {
+      "d2": 0.32,
+      "dv": 0.05
+     },
+     "capsule": {
+      "d2": 0.03,
+      "dv": 0.04
+     }
+    },
+    {
+     "frame": 418,
+     "kind": "chain",
+     "from": "cyc:19",
+     "to": "cyc:20",
+     "fade": 0.2,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.29,
+      "dv": 0.01
+     },
+     "l_palm": {
+      "d2": 0.08,
+      "dv": 0.13
+     },
+     "r_palm": {
+      "d2": 0.48,
+      "dv": 0.13
+     },
+     "l_foot": {
+      "d2": 0.65,
+      "dv": 0.73
+     },
+     "r_foot": {
+      "d2": 0.24,
+      "dv": 0.07
+     },
+     "root": {
+      "d2": 0.02,
+      "dv": 0.04
+     },
+     "pose": {
+      "d2": 0.29,
+      "dv": 0.03
+     },
+     "capsule": {
+      "d2": 0.02,
+      "dv": 0.03
+     }
+    },
+    {
+     "frame": 562,
+     "kind": "chain",
+     "from": "cyc:20",
+     "to": "lhub:21",
+     "fade": 0.4,
+     "mode": "CLIMB>CLIMB",
+     "pelvis": {
+      "d2": 0.05,
+      "dv": 0.06
+     },
+     "l_palm": {
+      "d2": 0.0,
+      "dv": 0.0
+     },
+     "r_palm": {
+      "d2": 0.0,
+      "dv": 0.0
+     },
+     "l_foot": {
+      "d2": 0.0,
+      "dv": 0.0
+     },
+     "r_foot": {
+      "d2": 0.04,
+      "dv": 0.0
+     },
+     "root": {
+      "d2": 0.01,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.05,
+      "dv": 0.06
+     },
+     "capsule": {
+      "d2": 0.01,
+      "dv": 0.01
+     }
+    },
+    {
+     "frame": 588,
+     "kind": "chain",
+     "from": "lhub:21",
+     "to": "ladder_dismount_top:50:0",
+     "fade": 0.2,
+     "mode": "CLIMB>MOVE",
+     "pelvis": {
+      "d2": 1.22,
+      "dv": 0.04
+     },
+     "l_palm": {
+      "d2": 1.46,
+      "dv": 0.03
+     },
+     "r_palm": {
+      "d2": 2.42,
+      "dv": 0.03
+     },
+     "l_foot": {
+      "d2": 3.27,
+      "dv": 0.04
+     },
+     "r_foot": {
+      "d2": 3.91,
+      "dv": 0.1
+     },
+     "root": {
+      "d2": 1.51,
+      "dv": 0.08
+     },
+     "pose": {
+      "d2": 1.64,
+      "dv": 0.12
+     },
+     "capsule": {
+      "d2": 0.61,
+      "dv": 0.04
+     }
+    },
+    {
+     "frame": 671,
+     "kind": "part",
+     "from": "ladder_dismount_top:50:0",
+     "to": "ladder_dismount_top:50:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "l_palm": {
+      "d2": 2.68,
+      "dv": 1.4
+     },
+     "r_palm": {
+      "d2": 2.01,
+      "dv": 1.18
+     },
+     "l_foot": {
+      "d2": 0.35,
+      "dv": 0.54
+     },
+     "r_foot": {
+      "d2": 0.26,
+      "dv": 0.45
+     },
+     "root": {
+      "d2": 0.2,
+      "dv": 0.35
+     },
+     "pose": {
+      "d2": 0.19,
+      "dv": 0.34
+     },
+     "capsule": {
+      "d2": 0.16,
+      "dv": 0.24
+     }
+    },
+    {
+     "frame": 947,
+     "kind": "exit",
+     "from": "ladder_dismount_top:50:1",
+     "to": "exit:run:51",
+     "fade": 0.6,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.32,
+      "dv": 0.29
+     },
+     "l_palm": {
+      "d2": 0.68,
+      "dv": 0.72
+     },
+     "r_palm": {
+      "d2": 0.48,
+      "dv": 0.13
+     },
+     "l_foot": {
+      "d2": 1.01,
+      "dv": 0.87
+     },
+     "r_foot": {
+      "d2": 0.28,
+      "dv": 0.31
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.25
+     },
+     "pose": {
+      "d2": 0.28,
+      "dv": 0.05
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.25
+     }
+    },
+    {
+     "frame": 960,
+     "kind": "exit",
+     "from": "exit:run:51",
+     "to": "loco:run:10780683",
+     "fade": 0.6,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.44,
+      "dv": 0.54
+     },
+     "l_palm": {
+      "d2": 0.61,
+      "dv": 0.68
+     },
+     "r_palm": {
+      "d2": 0.9,
+      "dv": 1.29
+     },
+     "l_foot": {
+      "d2": 2.22,
+      "dv": 1.14
+     },
+     "r_foot": {
+      "d2": 0.8,
+      "dv": 0.18
+     },
+     "root": {
+      "d2": 0.19,
+      "dv": 0.51
+     },
+     "pose": {
+      "d2": 0.31,
+      "dv": 0.17
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 974,
+     "kind": "entry",
+     "from": "loco:run:10780683",
+     "to": "loco:idle:10796478",
+     "fade": 0.6,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.67,
+      "dv": 0.25
+     },
+     "l_palm": {
+      "d2": 1.03,
+      "dv": 0.5
+     },
+     "r_palm": {
+      "d2": 1.3,
+      "dv": 2.23
+     },
+     "l_foot": {
+      "d2": 1.83,
+      "dv": 1.13
+     },
+     "r_foot": {
+      "d2": 1.85,
+      "dv": 2.34
+     },
+     "root": {
+      "d2": 0.69,
+      "dv": 0.09
+     },
+     "pose": {
+      "d2": 0.34,
+      "dv": 0.34
+     },
+     "capsule": {
+      "d2": 3.0,
+      "dv": 3.45
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.67,
+     "dv": 0.47
+    },
+    "entry_l_palm": {
+     "d2": 1.09,
+     "dv": 0.77
+    },
+    "entry_r_palm": {
+     "d2": 1.56,
+     "dv": 2.23
+    },
+    "entry_l_foot": {
+     "d2": 2.9,
+     "dv": 1.13
+    },
+    "entry_r_foot": {
+     "d2": 2.53,
+     "dv": 2.34
+    },
+    "entry_root": {
+     "d2": 0.69,
+     "dv": 0.38
+    },
+    "entry_pose": {
+     "d2": 0.57,
+     "dv": 0.35
+    },
+    "entry_capsule": {
+     "d2": 3.0,
+     "dv": 3.45
+    },
+    "part_pelvis": {
+     "d2": 0.04,
+     "dv": 0.02
+    },
+    "part_l_palm": {
+     "d2": 2.68,
+     "dv": 1.4
+    },
+    "part_r_palm": {
+     "d2": 2.01,
+     "dv": 1.18
+    },
+    "part_l_foot": {
+     "d2": 0.35,
+     "dv": 0.54
+    },
+    "part_r_foot": {
+     "d2": 0.26,
+     "dv": 0.45
+    },
+    "part_root": {
+     "d2": 0.2,
+     "dv": 0.35
+    },
+    "part_pose": {
+     "d2": 0.19,
+     "dv": 0.34
+    },
+    "part_capsule": {
+     "d2": 0.16,
+     "dv": 0.24
+    },
+    "chain_pelvis": {
+     "d2": 1.22,
+     "dv": 0.1
+    },
+    "chain_l_palm": {
+     "d2": 1.46,
+     "dv": 0.19
+    },
+    "chain_r_palm": {
+     "d2": 2.42,
+     "dv": 0.13
+    },
+    "chain_l_foot": {
+     "d2": 3.48,
+     "dv": 0.73
+    },
+    "chain_r_foot": {
+     "d2": 3.91,
+     "dv": 0.53
+    },
+    "chain_root": {
+     "d2": 1.51,
+     "dv": 0.08
+    },
+    "chain_pose": {
+     "d2": 1.64,
+     "dv": 0.12
+    },
+    "chain_capsule": {
+     "d2": 0.61,
+     "dv": 0.1
+    },
+    "exit_pelvis": {
+     "d2": 0.44,
+     "dv": 0.54
+    },
+    "exit_l_palm": {
+     "d2": 0.68,
+     "dv": 0.72
+    },
+    "exit_r_palm": {
+     "d2": 0.9,
+     "dv": 1.29
+    },
+    "exit_l_foot": {
+     "d2": 2.22,
+     "dv": 1.14
+    },
+    "exit_r_foot": {
+     "d2": 0.8,
+     "dv": 0.31
+    },
+    "exit_root": {
+     "d2": 0.19,
+     "dv": 0.51
+    },
+    "exit_pose": {
+     "d2": 0.31,
+     "dv": 0.17
+    },
+    "exit_capsule": {
+     "d2": 0.1,
+     "dv": 0.47
+    }
+   },
+   "moves": [
+    "ladder_mount_bottom",
+    "ladder_dismount_top"
+   ]
+  },
+  "tree_branch": {
+   "seams": [
+    {
+     "frame": 82,
+     "kind": "entry",
+     "from": "loco:walk:10942190",
+     "to": "beam_enter:52:0",
+     "fade": 0.25,
+     "mode": "OFF>BEAM",
+     "pelvis": {
+      "d2": 0.42,
+      "dv": 0.07
+     },
+     "l_palm": {
+      "d2": 0.42,
+      "dv": 0.25
+     },
+     "r_palm": {
+      "d2": 0.52,
+      "dv": 0.15
+     },
+     "l_foot": {
+      "d2": 1.18,
+      "dv": 0.48
+     },
+     "r_foot": {
+      "d2": 0.55,
+      "dv": 0.53
+     },
+     "root": {
+      "d2": 0.44,
+      "dv": 0.05
+     },
+     "pose": {
+      "d2": 0.09,
+      "dv": 0.06
+     },
+     "capsule": {
+      "d2": 0.75,
+      "dv": 0.05
+     }
+    },
+    {
+     "frame": 249,
+     "kind": "chain",
+     "from": "beam_enter:52:0",
+     "to": "beam_loop:53:0",
+     "fade": 0.2,
+     "mode": "BEAM>BEAM",
+     "pelvis": {
+      "d2": 0.05,
+      "dv": 0.05
+     },
+     "l_palm": {
+      "d2": 0.5,
+      "dv": 0.05
+     },
+     "r_palm": {
+      "d2": 0.7,
+      "dv": 0.08
+     },
+     "l_foot": {
+      "d2": 0.47,
+      "dv": 0.0
+     },
+     "r_foot": {
+      "d2": 1.45,
+      "dv": 0.18
+     },
+     "root": {
+      "d2": 0.2,
+      "dv": 0.05
+     },
+     "pose": {
+      "d2": 0.24,
+      "dv": 0.01
+     },
+     "capsule": {
+      "d2": 0.07,
+      "dv": 0.12
+     }
+    },
+    {
+     "frame": 381,
+     "kind": "chain",
+     "from": "beam_loop:53:0",
+     "to": "beam_loop:54:0",
+     "fade": 0.0,
+     "mode": "BEAM>BEAM",
+     "pelvis": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "l_palm": {
+      "d2": 0.07,
+      "dv": 0.04
+     },
+     "r_palm": {
+      "d2": 0.1,
+      "dv": 0.04
+     },
+     "l_foot": {
+      "d2": 0.05,
+      "dv": 0.07
+     },
+     "r_foot": {
+      "d2": 0.2,
+      "dv": 0.19
+     },
+     "root": {
+      "d2": 0.07,
+      "dv": 0.06
+     },
+     "pose": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.04,
+      "dv": 0.06
+     }
+    },
+    {
+     "frame": 513,
+     "kind": "exit",
+     "from": "beam_loop:54:0",
+     "to": "exit:idle:55",
+     "fade": 0.4,
+     "mode": "BEAM>OFF",
+     "pelvis": {
+      "d2": 0.16,
+      "dv": 0.28
+     },
+     "l_palm": {
+      "d2": 0.77,
+      "dv": 0.85
+     },
+     "r_palm": {
+      "d2": 0.45,
+      "dv": 0.18
+     },
+     "l_foot": {
+      "d2": 0.8,
+      "dv": 0.68
+     },
+     "r_foot": {
+      "d2": 0.32,
+      "dv": 0.26
+     },
+     "root": {
+      "d2": 0.14,
+      "dv": 0.29
+     },
+     "pose": {
+      "d2": 0.11,
+      "dv": 0.07
+     },
+     "capsule": {
+      "d2": 0.59,
+      "dv": 0.28
+     }
+    },
+    {
+     "frame": 521,
+     "kind": "exit",
+     "from": "exit:idle:55",
+     "to": "loco:idle:11356364",
+     "fade": 0.4,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.17,
+      "dv": 0.49
+     },
+     "l_palm": {
+      "d2": 0.19,
+      "dv": 0.44
+     },
+     "r_palm": {
+      "d2": 0.18,
+      "dv": 0.54
+     },
+     "l_foot": {
+      "d2": 0.51,
+      "dv": 0.27
+     },
+     "r_foot": {
+      "d2": 0.26,
+      "dv": 0.77
+     },
+     "root": {
+      "d2": 0.14,
+      "dv": 0.44
+     },
+     "pose": {
+      "d2": 0.05,
+      "dv": 0.07
+     },
+     "capsule": {
+      "d2": 0.13,
+      "dv": 0.56
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.42,
+     "dv": 0.07
+    },
+    "entry_l_palm": {
+     "d2": 0.42,
+     "dv": 0.25
+    },
+    "entry_r_palm": {
+     "d2": 0.52,
+     "dv": 0.15
+    },
+    "entry_l_foot": {
+     "d2": 1.18,
+     "dv": 0.48
+    },
+    "entry_r_foot": {
+     "d2": 0.55,
+     "dv": 0.53
+    },
+    "entry_root": {
+     "d2": 0.44,
+     "dv": 0.05
+    },
+    "entry_pose": {
+     "d2": 0.09,
+     "dv": 0.06
+    },
+    "entry_capsule": {
+     "d2": 0.75,
+     "dv": 0.05
+    },
+    "chain_pelvis": {
+     "d2": 0.07,
+     "dv": 0.06
+    },
+    "chain_l_palm": {
+     "d2": 0.5,
+     "dv": 0.05
+    },
+    "chain_r_palm": {
+     "d2": 0.7,
+     "dv": 0.08
+    },
+    "chain_l_foot": {
+     "d2": 0.47,
+     "dv": 0.07
+    },
+    "chain_r_foot": {
+     "d2": 1.45,
+     "dv": 0.19
+    },
+    "chain_root": {
+     "d2": 0.2,
+     "dv": 0.06
+    },
+    "chain_pose": {
+     "d2": 0.24,
+     "dv": 0.02
+    },
+    "chain_capsule": {
+     "d2": 0.07,
+     "dv": 0.12
+    },
+    "exit_pelvis": {
+     "d2": 0.17,
+     "dv": 0.49
+    },
+    "exit_l_palm": {
+     "d2": 0.77,
+     "dv": 0.85
+    },
+    "exit_r_palm": {
+     "d2": 0.45,
+     "dv": 0.54
+    },
+    "exit_l_foot": {
+     "d2": 0.8,
+     "dv": 0.68
+    },
+    "exit_r_foot": {
+     "d2": 0.32,
+     "dv": 0.77
+    },
+    "exit_root": {
+     "d2": 0.14,
+     "dv": 0.44
+    },
+    "exit_pose": {
+     "d2": 0.11,
+     "dv": 0.07
+    },
+    "exit_capsule": {
+     "d2": 0.59,
+     "dv": 0.56
+    }
+   },
+   "moves": [
+    "beam_enter",
+    "beam_loop",
+    "beam_loop"
+   ]
+  },
+  "gap_jumps": {
+   "seams": [
+    {
+     "frame": 19,
+     "kind": "entry",
+     "from": "loco:walk:11412456",
+     "to": "loco:run:11419441",
+     "fade": 0.4,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.4,
+      "dv": 0.47
+     },
+     "l_palm": {
+      "d2": 0.86,
+      "dv": 0.77
+     },
+     "r_palm": {
+      "d2": 0.76,
+      "dv": 0.65
+     },
+     "l_foot": {
+      "d2": 0.78,
+      "dv": 0.77
+     },
+     "r_foot": {
+      "d2": 2.53,
+      "dv": 0.4
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.38
+     },
+     "pose": {
+      "d2": 0.34,
+      "dv": 0.25
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 37,
+     "kind": "entry",
+     "from": "loco:run:11419441",
+     "to": "loco:sprint:11427828",
+     "fade": 0.4,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.6,
+      "dv": 0.93
+     },
+     "l_palm": {
+      "d2": 3.37,
+      "dv": 3.28
+     },
+     "r_palm": {
+      "d2": 2.88,
+      "dv": 2.08
+     },
+     "l_foot": {
+      "d2": 3.09,
+      "dv": 4.49
+     },
+     "r_foot": {
+      "d2": 4.24,
+      "dv": 3.29
+     },
+     "root": {
+      "d2": 0.1,
+      "dv": 0.36
+     },
+     "pose": {
+      "d2": 0.6,
+      "dv": 1.0
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 133,
+     "kind": "entry",
+     "from": "loco:sprint:11427828",
+     "to": "gap_jump:56:0",
+     "fade": 0.2,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 1.04,
+      "dv": 0.14
+     },
+     "l_palm": {
+      "d2": 2.87,
+      "dv": 2.71
+     },
+     "r_palm": {
+      "d2": 1.97,
+      "dv": 1.98
+     },
+     "l_foot": {
+      "d2": 2.42,
+      "dv": 2.36
+     },
+     "r_foot": {
+      "d2": 5.13,
+      "dv": 4.06
+     },
+     "root": {
+      "d2": 1.07,
+      "dv": 0.18
+     },
+     "pose": {
+      "d2": 0.6,
+      "dv": 0.1
+     },
+     "capsule": {
+      "d2": 0.71,
+      "dv": 0.23
+     }
+    },
+    {
+     "frame": 156,
+     "kind": "part",
+     "from": "gap_jump:56:0",
+     "to": "gap_jump:56:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.92,
+      "dv": 0.58
+     },
+     "l_palm": {
+      "d2": 1.32,
+      "dv": 2.35
+     },
+     "r_palm": {
+      "d2": 1.15,
+      "dv": 1.63
+     },
+     "l_foot": {
+      "d2": 1.03,
+      "dv": 1.15
+     },
+     "r_foot": {
+      "d2": 1.2,
+      "dv": 0.93
+     },
+     "root": {
+      "d2": 0.92,
+      "dv": 0.56
+     },
+     "pose": {
+      "d2": 0.1,
+      "dv": 0.18
+     },
+     "capsule": {
+      "d2": 1.09,
+      "dv": 1.68
+     }
+    },
+    {
+     "frame": 204,
+     "kind": "part",
+     "from": "gap_jump:56:1",
+     "to": "gap_jump:56:2",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 0.47,
+      "dv": 0.22
+     },
+     "l_palm": {
+      "d2": 0.8,
+      "dv": 0.87
+     },
+     "r_palm": {
+      "d2": 0.96,
+      "dv": 1.02
+     },
+     "l_foot": {
+      "d2": 0.37,
+      "dv": 1.25
+     },
+     "r_foot": {
+      "d2": 0.46,
+      "dv": 0.7
+     },
+     "root": {
+      "d2": 0.41,
+      "dv": 0.2
+     },
+     "pose": {
+      "d2": 0.08,
+      "dv": 0.06
+     },
+     "capsule": {
+      "d2": 0.77,
+      "dv": 1.38
+     }
+    },
+    {
+     "frame": 264,
+     "kind": "exit",
+     "from": "gap_jump:56:2",
+     "to": "exit:run:57",
+     "fade": 0.2,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.78,
+      "dv": 0.88
+     },
+     "l_palm": {
+      "d2": 1.48,
+      "dv": 1.69
+     },
+     "r_palm": {
+      "d2": 1.04,
+      "dv": 1.03
+     },
+     "l_foot": {
+      "d2": 2.45,
+      "dv": 3.42
+     },
+     "r_foot": {
+      "d2": 2.53,
+      "dv": 2.94
+     },
+     "root": {
+      "d2": 0.31,
+      "dv": 0.57
+     },
+     "pose": {
+      "d2": 0.78,
+      "dv": 0.85
+     },
+     "capsule": {
+      "d2": 0.18,
+      "dv": 0.28
+     }
+    },
+    {
+     "frame": 275,
+     "kind": "exit",
+     "from": "exit:run:57",
+     "to": "loco:run:11573702",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.19,
+      "dv": 0.59
+     },
+     "l_palm": {
+      "d2": 0.59,
+      "dv": 1.95
+     },
+     "r_palm": {
+      "d2": 0.53,
+      "dv": 1.45
+     },
+     "l_foot": {
+      "d2": 0.88,
+      "dv": 2.04
+     },
+     "r_foot": {
+      "d2": 0.54,
+      "dv": 1.77
+     },
+     "root": {
+      "d2": 0.26,
+      "dv": 0.56
+     },
+     "pose": {
+      "d2": 0.11,
+      "dv": 0.51
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.35
+     }
+    },
+    {
+     "frame": 277,
+     "kind": "entry",
+     "from": "loco:run:11573702",
+     "to": "long_jump:58:0",
+     "fade": 0.2,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.39,
+      "dv": 1.12
+     },
+     "l_palm": {
+      "d2": 1.11,
+      "dv": 2.6
+     },
+     "r_palm": {
+      "d2": 1.26,
+      "dv": 1.59
+     },
+     "l_foot": {
+      "d2": 1.22,
+      "dv": 1.5
+     },
+     "r_foot": {
+      "d2": 1.89,
+      "dv": 1.88
+     },
+     "root": {
+      "d2": 0.36,
+      "dv": 0.48
+     },
+     "pose": {
+      "d2": 0.28,
+      "dv": 0.78
+     },
+     "capsule": {
+      "d2": 0.53,
+      "dv": 0.21
+     }
+    },
+    {
+     "frame": 288,
+     "kind": "part",
+     "from": "long_jump:58:0",
+     "to": "long_jump:58:1",
+     "fade": 0.0,
+     "mode": "MOVE>MOVE",
+     "pelvis": {
+      "d2": 1.18,
+      "dv": 0.87
+     },
+     "l_palm": {
+      "d2": 1.27,
+      "dv": 0.75
+     },
+     "r_palm": {
+      "d2": 1.26,
+      "dv": 2.48
+     },
+     "l_foot": {
+      "d2": 4.13,
+      "dv": 3.79
+     },
+     "r_foot": {
+      "d2": 4.36,
+      "dv": 7.68
+     },
+     "root": {
+      "d2": 1.06,
+      "dv": 0.7
+     },
+     "pose": {
+      "d2": 0.24,
+      "dv": 0.3
+     },
+     "capsule": {
+      "d2": 0.9,
+      "dv": 1.29
+     }
+    },
+    {
+     "frame": 396,
+     "kind": "exit",
+     "from": "long_jump:58:1",
+     "to": "exit:run:59",
+     "fade": 0.2,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.31,
+      "dv": 0.3
+     },
+     "l_palm": {
+      "d2": 0.82,
+      "dv": 1.2
+     },
+     "r_palm": {
+      "d2": 0.4,
+      "dv": 0.53
+     },
+     "l_foot": {
+      "d2": 0.53,
+      "dv": 0.67
+     },
+     "r_foot": {
+      "d2": 1.23,
+      "dv": 0.89
+     },
+     "root": {
+      "d2": 0.21,
+      "dv": 0.28
+     },
+     "pose": {
+      "d2": 0.19,
+      "dv": 0.07
+     },
+     "capsule": {
+      "d2": 0.83,
+      "dv": 0.24
+     }
+    },
+    {
+     "frame": 408,
+     "kind": "exit",
+     "from": "exit:run:59",
+     "to": "loco:run:11657501",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.31,
+      "dv": 0.63
+     },
+     "l_palm": {
+      "d2": 0.88,
+      "dv": 2.43
+     },
+     "r_palm": {
+      "d2": 0.9,
+      "dv": 1.97
+     },
+     "l_foot": {
+      "d2": 1.86,
+      "dv": 0.58
+     },
+     "r_foot": {
+      "d2": 0.61,
+      "dv": 0.9
+     },
+     "root": {
+      "d2": 0.29,
+      "dv": 0.4
+     },
+     "pose": {
+      "d2": 0.26,
+      "dv": 0.43
+     },
+     "capsule": {
+      "d2": 0.5,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 425,
+     "kind": "entry",
+     "from": "loco:run:11657501",
+     "to": "loco:sprint:11671390",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.43,
+      "dv": 0.37
+     },
+     "l_palm": {
+      "d2": 3.14,
+      "dv": 1.17
+     },
+     "r_palm": {
+      "d2": 3.27,
+      "dv": 1.05
+     },
+     "l_foot": {
+      "d2": 2.42,
+      "dv": 3.88
+     },
+     "r_foot": {
+      "d2": 2.92,
+      "dv": 2.04
+     },
+     "root": {
+      "d2": 0.24,
+      "dv": 0.45
+     },
+     "pose": {
+      "d2": 0.44,
+      "dv": 0.17
+     },
+     "capsule": {
+      "d2": 0.15,
+      "dv": 0.47
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 1.04,
+     "dv": 1.12
+    },
+    "entry_l_palm": {
+     "d2": 3.37,
+     "dv": 3.28
+    },
+    "entry_r_palm": {
+     "d2": 3.27,
+     "dv": 2.08
+    },
+    "entry_l_foot": {
+     "d2": 3.09,
+     "dv": 4.49
+    },
+    "entry_r_foot": {
+     "d2": 5.13,
+     "dv": 4.06
+    },
+    "entry_root": {
+     "d2": 1.07,
+     "dv": 0.48
+    },
+    "entry_pose": {
+     "d2": 0.6,
+     "dv": 1.0
+    },
+    "entry_capsule": {
+     "d2": 0.71,
+     "dv": 0.47
+    },
+    "part_pelvis": {
+     "d2": 1.18,
+     "dv": 0.87
+    },
+    "part_l_palm": {
+     "d2": 1.32,
+     "dv": 2.35
+    },
+    "part_r_palm": {
+     "d2": 1.26,
+     "dv": 2.48
+    },
+    "part_l_foot": {
+     "d2": 4.13,
+     "dv": 3.79
+    },
+    "part_r_foot": {
+     "d2": 4.36,
+     "dv": 7.68
+    },
+    "part_root": {
+     "d2": 1.06,
+     "dv": 0.7
+    },
+    "part_pose": {
+     "d2": 0.24,
+     "dv": 0.3
+    },
+    "part_capsule": {
+     "d2": 1.09,
+     "dv": 1.68
+    },
+    "exit_pelvis": {
+     "d2": 0.78,
+     "dv": 0.88
+    },
+    "exit_l_palm": {
+     "d2": 1.48,
+     "dv": 2.43
+    },
+    "exit_r_palm": {
+     "d2": 1.04,
+     "dv": 1.97
+    },
+    "exit_l_foot": {
+     "d2": 2.45,
+     "dv": 3.42
+    },
+    "exit_r_foot": {
+     "d2": 2.53,
+     "dv": 2.94
+    },
+    "exit_root": {
+     "d2": 0.31,
+     "dv": 0.57
+    },
+    "exit_pose": {
+     "d2": 0.78,
+     "dv": 0.85
+    },
+    "exit_capsule": {
+     "d2": 0.83,
+     "dv": 0.47
+    }
+   },
+   "moves": [
+    "gap_jump",
+    "long_jump"
+   ]
+  },
+  "crouch_under": {
+   "seams": [
+    {
+     "frame": 13,
+     "kind": "entry",
+     "from": "loco:idle:11729403",
+     "to": "loco:walk:11735455",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.43,
+      "dv": 0.58
+     },
+     "l_palm": {
+      "d2": 0.43,
+      "dv": 0.9
+     },
+     "r_palm": {
+      "d2": 0.43,
+      "dv": 0.49
+     },
+     "l_foot": {
+      "d2": 0.43,
+      "dv": 0.49
+     },
+     "r_foot": {
+      "d2": 0.55,
+      "dv": 0.79
+     },
+     "root": {
+      "d2": 0.43,
+      "dv": 0.57
+     },
+     "pose": {
+      "d2": 0.06,
+      "dv": 0.05
+     },
+     "capsule": {
+      "d2": 0.43,
+      "dv": 0.64
+     }
+    },
+    {
+     "frame": 28,
+     "kind": "entry",
+     "from": "loco:walk:11735455",
+     "to": "loco:run:11741831",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.44,
+      "dv": 0.62
+     },
+     "l_palm": {
+      "d2": 0.78,
+      "dv": 0.75
+     },
+     "r_palm": {
+      "d2": 0.91,
+      "dv": 1.05
+     },
+     "l_foot": {
+      "d2": 1.95,
+      "dv": 0.7
+     },
+     "r_foot": {
+      "d2": 1.09,
+      "dv": 1.16
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.38
+     },
+     "pose": {
+      "d2": 0.44,
+      "dv": 0.27
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    },
+    {
+     "frame": 210,
+     "kind": "entry",
+     "from": "loco:run:11741831",
+     "to": "loco:walk:11850477",
+     "fade": 0.2,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.48,
+      "dv": 0.5
+     },
+     "l_palm": {
+      "d2": 1.0,
+      "dv": 1.51
+     },
+     "r_palm": {
+      "d2": 0.77,
+      "dv": 1.33
+     },
+     "l_foot": {
+      "d2": 1.76,
+      "dv": 1.1
+     },
+     "r_foot": {
+      "d2": 2.19,
+      "dv": 2.0
+     },
+     "root": {
+      "d2": 0.04,
+      "dv": 0.1
+     },
+     "pose": {
+      "d2": 0.47,
+      "dv": 0.47
+     },
+     "capsule": {
+      "d2": 0.04,
+      "dv": 0.13
+     }
+    },
+    {
+     "frame": 250,
+     "kind": "entry",
+     "from": "loco:walk:11850477",
+     "to": "crawl_start:60:0",
+     "fade": 0.25,
+     "mode": "OFF>CRAWL",
+     "pelvis": {
+      "d2": 0.42,
+      "dv": 0.05
+     },
+     "l_palm": {
+      "d2": 0.4,
+      "dv": 0.24
+     },
+     "r_palm": {
+      "d2": 0.58,
+      "dv": 0.22
+     },
+     "l_foot": {
+      "d2": 1.12,
+      "dv": 0.73
+     },
+     "r_foot": {
+      "d2": 0.49,
+      "dv": 0.46
+     },
+     "root": {
+      "d2": 0.36,
+      "dv": 0.05
+     },
+     "pose": {
+      "d2": 0.25,
+      "dv": 0.09
+     },
+     "capsule": {
+      "d2": 0.29,
+      "dv": 0.06
+     }
+    },
+    {
+     "frame": 393,
+     "kind": "chain",
+     "from": "crawl_start:60:0",
+     "to": "crawl_loop:61:0",
+     "fade": 0.25,
+     "mode": "CRAWL>CRAWL",
+     "pelvis": {
+      "d2": 0.12,
+      "dv": 0.05
+     },
+     "l_palm": {
+      "d2": 0.63,
+      "dv": 0.06
+     },
+     "r_palm": {
+      "d2": 0.34,
+      "dv": 0.03
+     },
+     "l_foot": {
+      "d2": 0.64,
+      "dv": 0.05
+     },
+     "r_foot": {
+      "d2": 1.75,
+      "dv": 0.01
+     },
+     "root": {
+      "d2": 0.34,
+      "dv": 0.03
+     },
+     "pose": {
+      "d2": 0.23,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.18,
+      "dv": 0.04
+     }
+    },
+    {
+     "frame": 513,
+     "kind": "chain",
+     "from": "crawl_loop:61:0",
+     "to": "crawl_loop:62:0",
+     "fade": 0.0,
+     "mode": "CRAWL>CRAWL",
+     "pelvis": {
+      "d2": 0.07,
+      "dv": 0.05
+     },
+     "l_palm": {
+      "d2": 0.06,
+      "dv": 0.05
+     },
+     "r_palm": {
+      "d2": 0.09,
+      "dv": 0.05
+     },
+     "l_foot": {
+      "d2": 0.48,
+      "dv": 0.1
+     },
+     "r_foot": {
+      "d2": 0.15,
+      "dv": 0.01
+     },
+     "root": {
+      "d2": 0.06,
+      "dv": 0.05
+     },
+     "pose": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.01
+     }
+    },
+    {
+     "frame": 618,
+     "kind": "chain",
+     "from": "crawl_loop:62:0",
+     "to": "crawl_end:63:0",
+     "fade": 0.25,
+     "mode": "CRAWL>CRAWL",
+     "pelvis": {
+      "d2": 0.48,
+      "dv": 0.04
+     },
+     "l_palm": {
+      "d2": 0.81,
+      "dv": 0.05
+     },
+     "r_palm": {
+      "d2": 0.55,
+      "dv": 0.03
+     },
+     "l_foot": {
+      "d2": 0.78,
+      "dv": 0.45
+     },
+     "r_foot": {
+      "d2": 1.87,
+      "dv": 0.01
+     },
+     "root": {
+      "d2": 0.86,
+      "dv": 0.03
+     },
+     "pose": {
+      "d2": 0.54,
+      "dv": 0.01
+     },
+     "capsule": {
+      "d2": 0.35,
+      "dv": 0.03
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.48,
+     "dv": 0.62
+    },
+    "entry_l_palm": {
+     "d2": 1.0,
+     "dv": 1.51
+    },
+    "entry_r_palm": {
+     "d2": 0.91,
+     "dv": 1.33
+    },
+    "entry_l_foot": {
+     "d2": 1.95,
+     "dv": 1.1
+    },
+    "entry_r_foot": {
+     "d2": 2.19,
+     "dv": 2.0
+    },
+    "entry_root": {
+     "d2": 0.43,
+     "dv": 0.57
+    },
+    "entry_pose": {
+     "d2": 0.47,
+     "dv": 0.47
+    },
+    "entry_capsule": {
+     "d2": 0.43,
+     "dv": 0.64
+    },
+    "chain_pelvis": {
+     "d2": 0.48,
+     "dv": 0.05
+    },
+    "chain_l_palm": {
+     "d2": 0.81,
+     "dv": 0.06
+    },
+    "chain_r_palm": {
+     "d2": 0.55,
+     "dv": 0.05
+    },
+    "chain_l_foot": {
+     "d2": 0.78,
+     "dv": 0.45
+    },
+    "chain_r_foot": {
+     "d2": 1.87,
+     "dv": 0.01
+    },
+    "chain_root": {
+     "d2": 0.86,
+     "dv": 0.05
+    },
+    "chain_pose": {
+     "d2": 0.54,
+     "dv": 0.02
+    },
+    "chain_capsule": {
+     "d2": 0.35,
+     "dv": 0.04
+    }
+   },
+   "moves": [
+    "crawl_start",
+    "crawl_loop",
+    "crawl_loop",
+    "crawl_end"
+   ]
+  },
+  "wall_shimmy": {
+   "seams": [
+    {
+     "frame": 53,
+     "kind": "entry",
+     "from": "loco:walk:12412051",
+     "to": "shimmy_enter:64:0",
+     "fade": 0.25,
+     "mode": "OFF>SIDLE",
+     "pelvis": {
+      "d2": 0.33,
+      "dv": 0.46
+     },
+     "l_palm": {
+      "d2": 0.76,
+      "dv": 0.82
+     },
+     "r_palm": {
+      "d2": 0.96,
+      "dv": 0.31
+     },
+     "l_foot": {
+      "d2": 0.77,
+      "dv": 0.13
+     },
+     "r_foot": {
+      "d2": 1.1,
+      "dv": 0.6
+     },
+     "root": {
+      "d2": 0.49,
+      "dv": 0.35
+     },
+     "pose": {
+      "d2": 0.35,
+      "dv": 0.2
+     },
+     "capsule": {
+      "d2": 0.16,
+      "dv": 0.44
+     }
+    },
+    {
+     "frame": 400,
+     "kind": "chain",
+     "from": "shimmy_enter:64:0",
+     "to": "shimmy_start:65:0",
+     "fade": 0.2,
+     "mode": "SIDLE>SIDLE",
+     "pelvis": {
+      "d2": 0.04,
+      "dv": 0.02
+     },
+     "l_palm": {
+      "d2": 0.1,
+      "dv": 0.02
+     },
+     "r_palm": {
+      "d2": 0.17,
+      "dv": 0.02
+     },
+     "l_foot": {
+      "d2": 1.72,
+      "dv": 0.05
+     },
+     "r_foot": {
+      "d2": 0.75,
+      "dv": 0.0
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.02
+     },
+     "pose": {
+      "d2": 0.1,
+      "dv": 0.0
+     },
+     "capsule": {
+      "d2": 0.04,
+      "dv": 0.03
+     }
+    },
+    {
+     "frame": 568,
+     "kind": "chain",
+     "from": "shimmy_start:65:0",
+     "to": "shimmy_loop:66:0",
+     "fade": 0.0,
+     "mode": "SIDLE>SIDLE",
+     "pelvis": {
+      "d2": 0.02,
+      "dv": 0.01
+     },
+     "l_palm": {
+      "d2": 0.03,
+      "dv": 0.05
+     },
+     "r_palm": {
+      "d2": 0.02,
+      "dv": 0.02
+     },
+     "l_foot": {
+      "d2": 0.12,
+      "dv": 0.22
+     },
+     "r_foot": {
+      "d2": 0.03,
+      "dv": 0.04
+     },
+     "root": {
+      "d2": 0.02,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.01,
+      "dv": 0.0
+     },
+     "capsule": {
+      "d2": 0.05,
+      "dv": 0.02
+     }
+    },
+    {
+     "frame": 868,
+     "kind": "chain",
+     "from": "shimmy_loop:66:0",
+     "to": "shimmy_loop:67:0",
+     "fade": 0.0,
+     "mode": "SIDLE>SIDLE",
+     "pelvis": {
+      "d2": 0.04,
+      "dv": 0.03
+     },
+     "l_palm": {
+      "d2": 0.04,
+      "dv": 0.04
+     },
+     "r_palm": {
+      "d2": 0.05,
+      "dv": 0.03
+     },
+     "l_foot": {
+      "d2": 0.06,
+      "dv": 0.02
+     },
+     "r_foot": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "root": {
+      "d2": 0.02,
+      "dv": 0.03
+     },
+     "pose": {
+      "d2": 0.03,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.05,
+      "dv": 0.03
+     }
+    },
+    {
+     "frame": 1168,
+     "kind": "chain",
+     "from": "shimmy_loop:67:0",
+     "to": "shimmy_loop:68:0",
+     "fade": 0.0,
+     "mode": "SIDLE>SIDLE",
+     "pelvis": {
+      "d2": 0.04,
+      "dv": 0.03
+     },
+     "l_palm": {
+      "d2": 0.04,
+      "dv": 0.04
+     },
+     "r_palm": {
+      "d2": 0.05,
+      "dv": 0.03
+     },
+     "l_foot": {
+      "d2": 0.06,
+      "dv": 0.02
+     },
+     "r_foot": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "root": {
+      "d2": 0.02,
+      "dv": 0.03
+     },
+     "pose": {
+      "d2": 0.03,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.05,
+      "dv": 0.03
+     }
+    },
+    {
+     "frame": 1468,
+     "kind": "chain",
+     "from": "shimmy_loop:68:0",
+     "to": "shimmy_loop:69:0",
+     "fade": 0.0,
+     "mode": "SIDLE>SIDLE",
+     "pelvis": {
+      "d2": 0.04,
+      "dv": 0.03
+     },
+     "l_palm": {
+      "d2": 0.04,
+      "dv": 0.04
+     },
+     "r_palm": {
+      "d2": 0.05,
+      "dv": 0.03
+     },
+     "l_foot": {
+      "d2": 0.06,
+      "dv": 0.02
+     },
+     "r_foot": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "root": {
+      "d2": 0.02,
+      "dv": 0.03
+     },
+     "pose": {
+      "d2": 0.03,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.05,
+      "dv": 0.03
+     }
+    },
+    {
+     "frame": 1768,
+     "kind": "chain",
+     "from": "shimmy_loop:69:0",
+     "to": "shimmy_loop:70:0",
+     "fade": 0.0,
+     "mode": "SIDLE>SIDLE",
+     "pelvis": {
+      "d2": 0.04,
+      "dv": 0.03
+     },
+     "l_palm": {
+      "d2": 0.04,
+      "dv": 0.04
+     },
+     "r_palm": {
+      "d2": 0.05,
+      "dv": 0.03
+     },
+     "l_foot": {
+      "d2": 0.06,
+      "dv": 0.02
+     },
+     "r_foot": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "root": {
+      "d2": 0.02,
+      "dv": 0.03
+     },
+     "pose": {
+      "d2": 0.03,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.05,
+      "dv": 0.03
+     }
+    },
+    {
+     "frame": 2068,
+     "kind": "chain",
+     "from": "shimmy_loop:70:0",
+     "to": "shimmy_loop:71:0",
+     "fade": 0.0,
+     "mode": "SIDLE>SIDLE",
+     "pelvis": {
+      "d2": 0.04,
+      "dv": 0.03
+     },
+     "l_palm": {
+      "d2": 0.04,
+      "dv": 0.04
+     },
+     "r_palm": {
+      "d2": 0.05,
+      "dv": 0.03
+     },
+     "l_foot": {
+      "d2": 0.06,
+      "dv": 0.02
+     },
+     "r_foot": {
+      "d2": 0.03,
+      "dv": 0.01
+     },
+     "root": {
+      "d2": 0.02,
+      "dv": 0.03
+     },
+     "pose": {
+      "d2": 0.03,
+      "dv": 0.02
+     },
+     "capsule": {
+      "d2": 0.05,
+      "dv": 0.03
+     }
+    },
+    {
+     "frame": 2368,
+     "kind": "chain",
+     "from": "shimmy_loop:71:0",
+     "to": "shimmy_stop:72:0",
+     "fade": 0.166,
+     "mode": "SIDLE>SIDLE",
+     "pelvis": {
+      "d2": 0.06,
+      "dv": 0.03
+     },
+     "l_palm": {
+      "d2": 0.07,
+      "dv": 0.07
+     },
+     "r_palm": {
+      "d2": 0.15,
+      "dv": 0.06
+     },
+     "l_foot": {
+      "d2": 1.64,
+      "dv": 0.02
+     },
+     "r_foot": {
+      "d2": 1.38,
+      "dv": 0.02
+     },
+     "root": {
+      "d2": 0.09,
+      "dv": 0.03
+     },
+     "pose": {
+      "d2": 0.11,
+      "dv": 0.01
+     },
+     "capsule": {
+      "d2": 0.04,
+      "dv": 0.03
+     }
+    },
+    {
+     "frame": 2596,
+     "kind": "chain",
+     "from": "shimmy_stop:72:0",
+     "to": "shimmy_exit:73:0",
+     "fade": 0.5,
+     "mode": "SIDLE>SIDLE",
+     "pelvis": {
+      "d2": 0.23,
+      "dv": 0.03
+     },
+     "l_palm": {
+      "d2": 0.59,
+      "dv": 0.05
+     },
+     "r_palm": {
+      "d2": 0.25,
+      "dv": 0.05
+     },
+     "l_foot": {
+      "d2": 2.59,
+      "dv": 0.01
+     },
+     "r_foot": {
+      "d2": 1.24,
+      "dv": 0.01
+     },
+     "root": {
+      "d2": 0.29,
+      "dv": 0.01
+     },
+     "pose": {
+      "d2": 0.33,
+      "dv": 0.03
+     },
+     "capsule": {
+      "d2": 0.11,
+      "dv": 0.03
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.33,
+     "dv": 0.46
+    },
+    "entry_l_palm": {
+     "d2": 0.76,
+     "dv": 0.82
+    },
+    "entry_r_palm": {
+     "d2": 0.96,
+     "dv": 0.31
+    },
+    "entry_l_foot": {
+     "d2": 0.77,
+     "dv": 0.13
+    },
+    "entry_r_foot": {
+     "d2": 1.1,
+     "dv": 0.6
+    },
+    "entry_root": {
+     "d2": 0.49,
+     "dv": 0.35
+    },
+    "entry_pose": {
+     "d2": 0.35,
+     "dv": 0.2
+    },
+    "entry_capsule": {
+     "d2": 0.16,
+     "dv": 0.44
+    },
+    "chain_pelvis": {
+     "d2": 0.23,
+     "dv": 0.03
+    },
+    "chain_l_palm": {
+     "d2": 0.59,
+     "dv": 0.07
+    },
+    "chain_r_palm": {
+     "d2": 0.25,
+     "dv": 0.06
+    },
+    "chain_l_foot": {
+     "d2": 2.59,
+     "dv": 0.22
+    },
+    "chain_r_foot": {
+     "d2": 1.38,
+     "dv": 0.04
+    },
+    "chain_root": {
+     "d2": 0.29,
+     "dv": 0.03
+    },
+    "chain_pose": {
+     "d2": 0.33,
+     "dv": 0.03
+    },
+    "chain_capsule": {
+     "d2": 0.11,
+     "dv": 0.03
+    }
+   },
+   "moves": [
+    "shimmy_enter",
+    "shimmy_start",
+    "shimmy_loop",
+    "shimmy_loop",
+    "shimmy_loop",
+    "shimmy_loop",
+    "shimmy_loop",
+    "shimmy_loop",
+    "shimmy_stop",
+    "shimmy_exit"
+   ]
+  },
+  "squeeze": {
+   "seams": [
+    {
+     "frame": 271,
+     "kind": "entry",
+     "from": "loco:walk:15002328",
+     "to": "squeeze:74:0",
+     "fade": 0.0,
+     "mode": "OFF>MOVE",
+     "pelvis": {
+      "d2": 0.13,
+      "dv": 0.22
+     },
+     "l_palm": {
+      "d2": 0.35,
+      "dv": 0.76
+     },
+     "r_palm": {
+      "d2": 0.31,
+      "dv": 0.43
+     },
+     "l_foot": {
+      "d2": 0.45,
+      "dv": 0.57
+     },
+     "r_foot": {
+      "d2": 0.35,
+      "dv": 0.52
+     },
+     "root": {
+      "d2": 0.06,
+      "dv": 0.09
+     },
+     "pose": {
+      "d2": 0.15,
+      "dv": 0.28
+     },
+     "capsule": {
+      "d2": 0.2,
+      "dv": 0.54
+     }
+    },
+    {
+     "frame": 1266,
+     "kind": "exit",
+     "from": "squeeze:74:0",
+     "to": "exit:idle:75",
+     "fade": 0.4,
+     "mode": "MOVE>OFF",
+     "pelvis": {
+      "d2": 0.11,
+      "dv": 0.24
+     },
+     "l_palm": {
+      "d2": 1.45,
+      "dv": 0.81
+     },
+     "r_palm": {
+      "d2": 1.5,
+      "dv": 0.58
+     },
+     "l_foot": {
+      "d2": 0.96,
+      "dv": 0.37
+     },
+     "r_foot": {
+      "d2": 0.61,
+      "dv": 0.15
+     },
+     "root": {
+      "d2": 0.1,
+      "dv": 0.23
+     },
+     "pose": {
+      "d2": 0.05,
+      "dv": 0.04
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.23
+     }
+    },
+    {
+     "frame": 1270,
+     "kind": "exit",
+     "from": "exit:idle:75",
+     "to": "loco:walk:16055908",
+     "fade": 0.4,
+     "mode": "OFF>OFF",
+     "pelvis": {
+      "d2": 0.28,
+      "dv": 0.4
+     },
+     "l_palm": {
+      "d2": 1.45,
+      "dv": 1.92
+     },
+     "r_palm": {
+      "d2": 1.5,
+      "dv": 1.88
+     },
+     "l_foot": {
+      "d2": 0.96,
+      "dv": 1.46
+     },
+     "r_foot": {
+      "d2": 1.55,
+      "dv": 1.16
+     },
+     "root": {
+      "d2": 0.11,
+      "dv": 0.33
+     },
+     "pose": {
+      "d2": 0.28,
+      "dv": 0.08
+     },
+     "capsule": {
+      "d2": 0.1,
+      "dv": 0.47
+     }
+    }
+   ],
+   "worst": {
+    "entry_pelvis": {
+     "d2": 0.13,
+     "dv": 0.22
+    },
+    "entry_l_palm": {
+     "d2": 0.35,
+     "dv": 0.76
+    },
+    "entry_r_palm": {
+     "d2": 0.31,
+     "dv": 0.43
+    },
+    "entry_l_foot": {
+     "d2": 0.45,
+     "dv": 0.57
+    },
+    "entry_r_foot": {
+     "d2": 0.35,
+     "dv": 0.52
+    },
+    "entry_root": {
+     "d2": 0.06,
+     "dv": 0.09
+    },
+    "entry_pose": {
+     "d2": 0.15,
+     "dv": 0.28
+    },
+    "entry_capsule": {
+     "d2": 0.2,
+     "dv": 0.54
+    },
+    "exit_pelvis": {
+     "d2": 0.28,
+     "dv": 0.4
+    },
+    "exit_l_palm": {
+     "d2": 1.45,
+     "dv": 1.92
+    },
+    "exit_r_palm": {
+     "d2": 1.5,
+     "dv": 1.88
+    },
+    "exit_l_foot": {
+     "d2": 0.96,
+     "dv": 1.46
+    },
+    "exit_r_foot": {
+     "d2": 1.55,
+     "dv": 1.16
+    },
+    "exit_root": {
+     "d2": 0.11,
+     "dv": 0.33
+    },
+    "exit_pose": {
+     "d2": 0.28,
+     "dv": 0.08
+    },
+    "exit_capsule": {
+     "d2": 0.1,
+     "dv": 0.47
+    }
+   },
+   "moves": [
+    "squeeze"
+   ]
+  }
+ }
+}

@@ -1,0 +1,1756 @@
+{
+ "schema": "frontier.survival.npcs",
+ "version": 4,
+ "status": "LIVE design data v4: the vertical slice (milestones M1, M2a and M2b; survival_gdd.md version 4). The game and tests/survival/test_survival_data.gd read these rows. Every number is tunable.",
+ "design_doc": "Player_Animation_Project/graph_analysis/survival/survival_gdd.md",
+ "summary": "The slice's people: the sutler, the Schenectady trader, the lieutenant commanding, two soldiers of the detachment, a farm family from German Flatts and an old hunter in the manor woods. Each has a trade behaviour (wants, keeps, margin, coin premium, patience, credit) and, from M2b, a mentor block. They run as market, job and lesson menus with simple schedules; tiers and bodies come at M4.",
+ "id_rules": "Ids are stable strings (prefix.name). Never rename an id once saves exist; add an alias instead. Display names are separate and may change. An id is defined in exactly one place: the live file or the backlog.",
+ "milestones": {
+  "M1": "A winter night: fire, shelter, cold, hunger, sleep, time safety; the fort region only; one background; 1765",
+  "M2a": "A winter from the woods: living from the manor woods through the winter by your own hands (gathering, hides, sewing, snares, snowshoes, a half-faced camp, a hung cache, ice fishing); plain barter with the sutler, the trader, the garrison's soldiers, a farm family from German Flatts and an old hunter; credit and the fall outfit as options; the second background",
+  "M2b": "Learning from neighbours: lessons, watching, examining, quality standards, haggling, promises and loans",
+  "M3": "The year turns: the full almanac, seasons and weather content, the summer goal (bark and a cabin), fishing, frogs, ginseng, one played wage job; the fur cap and robe, leggings, carving, casting balls, the cache pit, char cloth and spruce beer",
+  "M4": "People: NPC schedules and tiers at the fort, standing, invitations, the soldiers and the lieutenant as mentors; Native characters only after the relevant nation's sign-off",
+  "M5": "The map: the Carry, the valley, the town and the hunting grounds, travel and camps, other markets and backgrounds",
+  "post": "After M5 and not yet planned: the 1757 and 1761 starts and their eras, detailed illnesses, thirst, potash, upstream canoe and bateau travel, the Proxy NPC tier, languages beyond English, French, Mohawk and Oneida"
+ },
+ "source_keys": {
+  "E": "graph_analysis/survival/research_economy_life.md, source list S# (E:S14 = source S14)",
+  "K": "graph_analysis/survival/research_survival_skills.md, numbered sources [#] (K:1 = source [1])",
+  "Y": "graph_analysis/survival/research_systems.md, section number (Y:3.2 = section 3.2)",
+  "C": "graph_analysis/customizer/costume_bible.md, section number",
+  "A": "Player_Animation_Project/blender_animation_index.csv (clip names and asset ids)",
+  "N": "graph_analysis/survival/survival_gdd.md, sources list (N:3 = source N3; N33 onward added in version 3)"
+ },
+ "basis_keys": {
+  "S": "sourced: checked against a primary source, a scholarly work or an institutional page; web summaries and popular pages do not qualify",
+  "H": "standard historiography (books in the GDD sources list); verify before quoting",
+  "H-regional": "true for one region's trade or society (named in the row); not yet checked for New York",
+  "M": "modern science or medicine sets the mechanic (period explanation may differ)",
+  "D": "design value for balance, or a figure resting on web summaries; not a checked historical record"
+ },
+ "architecture": {
+  "slice": "Market and job NPCs only: present by schedule at their POI, with a trade or job menu and a few topics. The reaction/schedule/utility layers and the Record and Full tiers arrive at M4 (backlog/npcs.json architecture).",
+  "bodies": "Actor_B clones dressed by the customizer"
+ },
+ "schedule_rules": {
+  "key_priority": [
+   "state:<role state> (sick, away_hunting, on_campaign, mourning, visiting_kin)",
+   "event:<id>",
+   "date:<day id>",
+   "season:<season>+weather:<state>",
+   "season:<season>",
+   "default"
+  ],
+  "block": "[start 'HH:MM', location ('home' | 'work' | 'spot:<tag>' | poi id), activity tag]",
+  "inherit": "a key may say {'inherit': 'default', 'outdoor_to': 'work'} to reuse another key with changes",
+  "no_weekdays": "A game day stands for about ten, so recurring social time uses calendar events instead of weekdays.",
+  "src": [
+   "Y:9.1",
+   "Y:2.5"
+  ]
+ },
+ "factions": [
+  {
+   "id": "faction.garrison",
+   "name": "The garrison (the detachment and its sutler)",
+   "milestone": "M1"
+  },
+  {
+   "id": "faction.post",
+   "name": "The traders (the Schenectady trader and his house)",
+   "milestone": "M2a"
+  },
+  {
+   "id": "faction.colonial_authorities",
+   "name": "Colonial authorities (the county, its militia officers)",
+   "milestone": "M2a"
+  },
+  {
+   "id": "faction.none",
+   "name": "No faction",
+   "milestone": "M1"
+  },
+  {
+   "id": "faction.settlers_valley",
+   "name": "Settlers of the valley",
+   "kind": "community",
+   "crown": "british",
+   "milestone": "M2a"
+  }
+ ],
+ "activities": {
+  "wake": {
+   "anim": "anim.sit_rest",
+   "spot": "home"
+  },
+  "sleep": {
+   "anim": "anim.sleep",
+   "spot": "bed"
+  },
+  "meal": {
+   "anim": "anim.eat",
+   "spot": "hearth"
+  },
+  "leisure": {
+   "anim": "anim.sit_rest",
+   "spot": "hearth|bench|tavern"
+  },
+  "keep_store": {
+   "anim": "anim.work_waist",
+   "spot": "counter",
+   "watchable": true
+  },
+  "weigh_furs": {
+   "anim": "anim.work_waist",
+   "spot": "counter",
+   "watchable": true
+  },
+  "keep_accounts": {
+   "anim": "anim.work_waist",
+   "spot": "desk"
+  },
+  "away": {
+   "anim": null,
+   "spot": ""
+  },
+  "fatigue_chop": {
+   "anim": "anim.chop",
+   "spot": "woodpile"
+  },
+  "duty": {
+   "anim": "anim.sit_rest",
+   "spot": "sentry_post|parade_ground",
+   "note": "sentry, drill and fatigues; the soldier's full day comes at M4"
+  },
+  "skin_dress": {
+   "anim": "anim.kneel_ground_work",
+   "spot": "work_area",
+   "watchable": true
+  },
+  "craft": {
+   "anim": "anim.crafting_pack",
+   "spot": "work_area",
+   "watchable": true
+  },
+  "cook": {
+   "anim": "anim.work_waist",
+   "spot": "hearth",
+   "watchable": true
+  },
+  "teach": {
+   "anim": "anim.talk_gesture",
+   "spot": "work_area"
+  }
+ },
+ "archetypes": [
+  {
+   "id": "sutler",
+   "name": "Sutler",
+   "faction": "faction.garrison",
+   "settlement": [
+    "fort"
+   ],
+   "market": "mkt.fort_sutler",
+   "status": "slice",
+   "schedule": {
+    "default": [
+     [
+      "06:00",
+      "home",
+      "wake"
+     ],
+     [
+      "07:00",
+      "work",
+      "keep_store"
+     ],
+     [
+      "12:00",
+      "home",
+      "meal"
+     ],
+     [
+      "13:00",
+      "work",
+      "keep_store"
+     ],
+     [
+      "21:00",
+      "work",
+      "keep_accounts"
+     ],
+     [
+      "22:30",
+      "home",
+      "sleep"
+     ]
+    ]
+   },
+   "trade_behaviour": "tb.sutler",
+   "topics": [
+    "news.prices",
+    "trade.offer",
+    "trade.credit",
+    "almanac",
+    "trade.needs",
+    "work.offer",
+    "learn.ask"
+   ],
+   "reaction": {
+    "courage": 0.3,
+    "on_danger": "shelter"
+   },
+   "milestone": "M2a",
+   "role_title": "the sutler"
+  },
+  {
+   "id": "post_trader",
+   "name": "Visiting trader",
+   "faction": "faction.post",
+   "settlement": [
+    "post"
+   ],
+   "market": "mkt.visiting_trader",
+   "status": "slice",
+   "schedule": {
+    "default": [
+     [
+      "00:00",
+      "away",
+      "sleep"
+     ]
+    ],
+    "event:fall_credit": [
+     [
+      "07:00",
+      "poi:poi.fort.sutler_store",
+      "keep_accounts"
+     ],
+     [
+      "21:30",
+      "poi:poi.fort.sutler_store",
+      "sleep"
+     ]
+    ],
+    "event:trader_visit_winter": [
+     [
+      "07:00",
+      "poi:poi.fort.sutler_store",
+      "weigh_furs"
+     ],
+     [
+      "21:30",
+      "poi:poi.fort.sutler_store",
+      "sleep"
+     ]
+    ],
+    "event:trader_visit_late_winter": [
+     [
+      "07:00",
+      "poi:poi.fort.sutler_store",
+      "weigh_furs"
+     ],
+     [
+      "21:30",
+      "poi:poi.fort.sutler_store",
+      "sleep"
+     ]
+    ],
+    "event:spring_trade": [
+     [
+      "06:00",
+      "poi:poi.fort.sutler_store",
+      "weigh_furs"
+     ],
+     [
+      "20:00",
+      "poi:poi.fort.sutler_store",
+      "keep_accounts"
+     ],
+     [
+      "23:00",
+      "poi:poi.fort.sutler_store",
+      "sleep"
+     ]
+    ]
+   },
+   "trade_behaviour": "tb.post_tariff",
+   "topics": [
+    "trade.offer",
+    "trade.credit",
+    "news.prices",
+    "almanac",
+    "trade.needs",
+    "work.offer",
+    "learn.ask"
+   ],
+   "reaction": {
+    "courage": 0.4,
+    "on_danger": "shelter"
+   },
+   "milestone": "M2a",
+   "role_title": "the Schenectady trader"
+  },
+  {
+   "id": "garrison_officer",
+   "name": "Garrison officer",
+   "faction": "faction.garrison",
+   "settlement": [
+    "fort"
+   ],
+   "status": "slice",
+   "schedule": {
+    "default": [
+     [
+      "06:00",
+      "home",
+      "wake"
+     ],
+     [
+      "08:00",
+      "work",
+      "keep_accounts"
+     ],
+     [
+      "12:30",
+      "home",
+      "meal"
+     ],
+     [
+      "14:00",
+      "work",
+      "keep_accounts"
+     ],
+     [
+      "18:00",
+      "home",
+      "meal"
+     ],
+     [
+      "20:00",
+      "home",
+      "leisure"
+     ],
+     [
+      "22:00",
+      "home",
+      "sleep"
+     ]
+    ]
+   },
+   "trade_behaviour": "tb.garrison_contract",
+   "jobs": [
+    "job.garrison_firewood"
+   ],
+   "topics": [
+    "request.firewood",
+    "news.prices"
+   ],
+   "reaction": {
+    "courage": 0.8,
+    "on_danger": "command"
+   },
+   "outfit_presets": [
+    "44th Foot, 1755",
+    "Light infantry, 1758"
+   ],
+   "milestone": "M2a",
+   "role_title": "the lieutenant commanding"
+  },
+  {
+   "id": "garrison_soldier",
+   "name": "Soldier",
+   "faction": "faction.garrison",
+   "settlement": [
+    "fort"
+   ],
+   "status": "slice",
+   "schedule": {
+    "default": [
+     [
+      "05:30",
+      "home",
+      "wake"
+     ],
+     [
+      "06:30",
+      "spot:woodpile",
+      "fatigue_chop"
+     ],
+     [
+      "12:00",
+      "home",
+      "meal"
+     ],
+     [
+      "13:00",
+      "spot:parade_ground",
+      "duty"
+     ],
+     [
+      "18:00",
+      "home",
+      "meal"
+     ],
+     [
+      "19:00",
+      "poi:poi.fort.sutler_store",
+      "leisure"
+     ],
+     [
+      "21:00",
+      "home",
+      "sleep"
+     ]
+    ]
+   },
+   "trade_behaviour": "tb.soldier",
+   "topics": [
+    "trade.offer",
+    "trade.needs",
+    "work.offer",
+    "news.prices"
+   ],
+   "reaction": {
+    "courage": 0.6,
+    "on_danger": "defend"
+   },
+   "notes": "Sentry spots need round-the-clock coverage; the director rotates soldiers through them.",
+   "milestone": "M2a",
+   "market": "mkt.post_soldiers",
+   "teaches_later": [
+    "know.spruce_beer (M4)",
+    "know.charcloth (M4)"
+   ],
+   "role_title": "a soldier of the detachment"
+  },
+  {
+   "id": "settler_farmer",
+   "name": "Settler farmer (household head)",
+   "faction": "faction.settlers_valley",
+   "settlement": [
+    "settlement"
+   ],
+   "status": "slice",
+   "schedule": {
+    "default": [
+     [
+      "00:00",
+      "away",
+      "away"
+     ]
+    ],
+    "event:farm_visit_fall": [
+     [
+      "08:00",
+      "poi:poi.fort.sutler_store",
+      "keep_store"
+     ],
+     [
+      "17:00",
+      "away",
+      "away"
+     ]
+    ],
+    "event:farm_visit_winter": [
+     [
+      "08:00",
+      "poi:poi.fort.sutler_store",
+      "keep_store"
+     ],
+     [
+      "17:00",
+      "away",
+      "away"
+     ]
+    ],
+    "event:farm_visit_late_winter": [
+     [
+      "08:00",
+      "poi:poi.fort.sutler_store",
+      "keep_store"
+     ],
+     [
+      "17:00",
+      "away",
+      "away"
+     ]
+    ],
+    "event:farm_visit_spring": [
+     [
+      "08:00",
+      "poi:poi.fort.sutler_store",
+      "keep_store"
+     ],
+     [
+      "17:00",
+      "away",
+      "away"
+     ]
+    ]
+   },
+   "trade_behaviour": "tb.household_small",
+   "topics": [
+    "trade.offer",
+    "trade.needs",
+    "work.offer",
+    "news.prices",
+    "learn.ask_about"
+   ],
+   "notes": "In the slice the household comes to the post on four market days (their farm is M5).",
+   "milestone": "M2a",
+   "market": "mkt.farm_visit",
+   "role_title": "the farm family from German Flatts"
+  },
+  {
+   "id": "backcountry_hunter",
+   "name": "Backcountry hunter",
+   "faction": "faction.none",
+   "settlement": [
+    "hunting_camp"
+   ],
+   "status": "slice",
+   "schedule": {
+    "default": [
+     [
+      "05:00",
+      "home",
+      "wake"
+     ],
+     [
+      "06:00",
+      "away",
+      "away"
+     ],
+     [
+      "18:00",
+      "home",
+      "meal"
+     ],
+     [
+      "19:00",
+      "home",
+      "craft"
+     ],
+     [
+      "21:00",
+      "home",
+      "sleep"
+     ]
+    ],
+    "event:fall_credit": [
+     [
+      "00:00",
+      "away",
+      "away"
+     ]
+    ],
+    "event:trader_visit_winter": [
+     [
+      "00:00",
+      "away",
+      "away"
+     ]
+    ],
+    "event:trader_visit_late_winter": [
+     [
+      "00:00",
+      "away",
+      "away"
+     ]
+    ]
+   },
+   "trade_behaviour": "tb.household_small",
+   "topics": [
+    "trade.offer",
+    "trade.needs",
+    "work.offer",
+    "learn.ask_about"
+   ],
+   "reaction": {
+    "courage": 0.7,
+    "on_danger": "fight"
+   },
+   "milestone": "M2a",
+   "role_title": "the old hunter"
+  }
+ ],
+ "trade_behaviours": {
+  "tb.none": {
+   "trades": false
+  },
+  "tb.sutler": {
+   "market_type": "sutler",
+   "haggle_d": 30,
+   "credit": "tally",
+   "rum": "regulated",
+   "value_out": "cash_price",
+   "margin": 0.2,
+   "coin_premium": 1.0,
+   "patience": 3,
+   "accepts": [
+    "goods",
+    "coin",
+    "labour",
+    "promise"
+   ],
+   "wants": [
+    {
+     "items": [
+      "item.fuel.split_wood"
+     ],
+     "months": [
+      "oct",
+      "nov",
+      "dec",
+      "jan",
+      "feb",
+      "mar"
+     ],
+     "tier": "wants",
+     "quota": 16,
+     "reason": "she burns a cord a week in the cold months"
+    },
+    {
+     "items": [
+      "item.cloth.moccasins",
+      "item.cloth.mitts",
+      "item.cloth.fur_cap"
+     ],
+     "months": [
+      "nov",
+      "dec",
+      "jan",
+      "feb"
+     ],
+     "tier": "wants",
+     "quota": 3,
+     "reason": "her own stock is sold out and the soldiers keep asking"
+    },
+    {
+     "items": [
+      "item.food.venison_raw",
+      "item.food.jerky"
+     ],
+     "tier": "resells",
+     "channel": "meat_channel",
+     "reason": "the mess buys fresh meat and jerky"
+    }
+   ],
+   "keeps": [
+    {
+     "items": [
+      "item.ammo.powder",
+      "item.ammo.lead"
+     ],
+     "months": [
+      "dec",
+      "jan",
+      "feb",
+      "mar"
+     ],
+     "tier": "little",
+     "reason": "powder and lead run short until the river opens"
+    },
+    {
+     "from_market": "mkt.fort_sutler",
+     "tier": "enough"
+    }
+   ],
+   "notes": "Her barter prices are her counter prices: the cash price (carriage, season, stock) before her margin."
+  },
+  "tb.post_tariff": {
+   "market_type": "licensed_post",
+   "haggle_d": 30,
+   "tariff_board": "by era",
+   "credit": "book",
+   "opens_with": "a formal greeting with the head of a trading party (E:S4)",
+   "rum": "regulated",
+   "value_out": "tariff",
+   "value_in": "tariff",
+   "margin": 0.0,
+   "coin_premium": 1.6667,
+   "patience": 2,
+   "accepts": [
+    "furs_and_skins",
+    "goods_he_resells",
+    "coin",
+    "book",
+    "labour"
+   ],
+   "wants": [
+    {
+     "cats": [
+      "pelt",
+      "skin"
+     ],
+     "tier": "resells",
+     "reason": "furs and skins are his trade"
+    },
+    {
+     "items": [
+      "item.tool.snowshoes",
+      "item.skin.dressed_buckskin"
+     ],
+     "tier": "resells",
+     "reason": "he sells them down the river"
+    }
+   ],
+   "keeps": [
+    {
+     "from_market": "mkt.visiting_trader",
+     "tier": "enough"
+    }
+   ],
+   "notes": "His barter tariff is his valuation: the overplus is his margin, so there is no spread on top (E:S14). He pays coin at 0.6 of barter value."
+  },
+  "tb.soldier": {
+   "market_type": "soldiers",
+   "haggle_d": 30,
+   "credit": "none",
+   "value_out": "rv_k",
+   "markup": 1.0,
+   "margin": 0.1,
+   "coin_premium": 1.2,
+   "patience": 3,
+   "accepts": [
+    "goods",
+    "coin",
+    "labour"
+   ],
+   "wants": [
+    {
+     "items": [
+      "item.cloth.moccasins",
+      "item.cloth.mitts"
+     ],
+     "months": [
+      "nov",
+      "dec",
+      "jan",
+      "feb"
+     ],
+     "tier": "short_of",
+     "quota": 4,
+     "reason": "the sutler has none and their issue shoes are no good in the snow"
+    },
+    {
+     "items": [
+      "item.cloth.fur_cap"
+     ],
+     "months": [
+      "nov",
+      "dec",
+      "jan",
+      "feb"
+     ],
+     "tier": "wants",
+     "quota": 2,
+     "reason": "sentry duty is cold"
+    },
+    {
+     "items": [
+      "item.tool.snowshoes"
+     ],
+     "months": [
+      "nov",
+      "dec",
+      "jan",
+      "feb"
+     ],
+     "tier": "wants",
+     "quota": 1,
+     "reason": "the wood party and the express go out on snowshoes [H: snowshoes were issued to regulars and rangers in the late war (K:2); verify for a 1765 detachment]"
+    },
+    {
+     "items": [
+      "item.food.venison_raw"
+     ],
+     "tier": "wants",
+     "quota": 20,
+     "reason": "fresh meat beats salt pork"
+    },
+    {
+     "items": [
+      "item.skin.dressed_buckskin"
+     ],
+     "tier": "uses",
+     "quota": 2,
+     "reason": "for mending and pouches"
+    }
+   ],
+   "keeps": [
+    {
+     "items": [
+      "item.trade.tobacco",
+      "item.tool.needle_thread"
+     ],
+     "tier": "enough",
+     "from_market": "mkt.post_soldiers"
+    }
+   ],
+   "notes": "New in v4 (redesign_economy.md 9.0): the backlog's soldiers had tb.none."
+  },
+  "tb.garrison_contract": {
+   "market_type": "contract",
+   "credit": "none",
+   "trades": "the firewood contract only (economy.json wages): coin or rations",
+   "value_out": "none",
+   "patience": 0
+  },
+  "tb.household_small": {
+   "market_type": "household",
+   "haggle_d": 25,
+   "credit": "promise",
+   "credit_trust_min": 5,
+   "value_out": "rv_k",
+   "markup": 1.0,
+   "margin": 0.05,
+   "coin_premium": 1.3,
+   "patience": 4,
+   "accepts": [
+    "goods",
+    "coin",
+    "labour",
+    "promise"
+   ],
+   "sells": "surplus food by season",
+   "buys": "salt, tools, cloth, meat and skins",
+   "wants": [
+    {
+     "items": [
+      "item.material.salt"
+     ],
+     "tier": "uses",
+     "quota": 4,
+     "reason": "salt is always short"
+    }
+   ],
+   "keeps": [],
+   "notes": "A small household's trade: surplus by season, need-driven, patient, coin only at a premium. Individuals override wants and keeps."
+  }
+ },
+ "dialogue_topics": [
+  {
+   "id": "news.prices",
+   "cat": "news",
+   "effects": [
+    "reveals prices at another market (a Mount & Blade-style rumour, Y:9.5)"
+   ],
+   "milestone": "M2a"
+  },
+  {
+   "id": "request.firewood",
+   "cat": "request",
+   "effects": [
+    "offers job.garrison_firewood"
+   ],
+   "milestone": "M2a"
+  },
+  {
+   "id": "trade.offer",
+   "cat": "trade",
+   "effects": [
+    "opens the trade screen"
+   ],
+   "milestone": "M2a"
+  },
+  {
+   "id": "trade.credit",
+   "cat": "trade",
+   "effects": [
+    "trade.take_credit",
+    "the ledger's debt clock"
+   ],
+   "milestone": "M2a"
+  },
+  {
+   "id": "almanac",
+   "cat": "advice",
+   "effects": [
+    "fills the almanac page: what is valuable this season and where, and what opens next month"
+   ],
+   "milestone": "M2a"
+  },
+  {
+   "id": "trade.needs",
+   "cat": "trade",
+   "effects": [
+    "'What are you short of?': reveals the partner's wants and stock"
+   ],
+   "milestone": "M2a"
+  },
+  {
+   "id": "work.offer",
+   "cat": "trade",
+   "effects": [
+    "labour as a trade line (economy.json service.labour)"
+   ],
+   "milestone": "M2a"
+  },
+  {
+   "id": "learn.ask_about",
+   "cat": "learn",
+   "effects": [
+    "talk: makes a recipe the partner knows heard of (skills.json knowledge_model)"
+   ],
+   "milestone": "M2a"
+  },
+  {
+   "id": "learn.ask",
+   "cat": "learn",
+   "effects": [
+    "'Will you show me...': the mentor's lessons and asks (social.ask_teach)"
+   ],
+   "milestone": "M2b"
+  },
+  {
+   "id": "ledger.promises",
+   "cat": "trade",
+   "effects": [
+    "promises and loans with this person, kept and broken"
+   ],
+   "milestone": "M2b"
+  }
+ ],
+ "individuals": [
+  {
+   "id": "npc.fort.sutler",
+   "archetype": "sutler",
+   "role_title": "the sutler",
+   "draft_name": "Hannah Pruitt",
+   "milestone": "M2a",
+   "status": "slice",
+   "home": "poi.fort.sutler_store",
+   "work": "poi.fort.sutler_store",
+   "persona": {
+    "family": "a widow who took over her husband's licence from the lieutenant",
+    "opinions": [
+     "a tally is a kindness until spring",
+     "rum sells, but not to a man who cannot stand"
+    ],
+    "life_lines": [
+     "autumn: stocks up before the river closes",
+     "spring: settles every tally before the boats"
+    ]
+   },
+   "mentor": {
+    "levels": {
+     "provisions": 50,
+     "hidecraft": 40,
+     "trade": 45,
+     "survival": 25
+    },
+    "teaches": [
+     {
+      "id": "rcp.mitts",
+      "asks": [
+       {
+        "goods": {
+         "item.pelt.marten": 1
+        }
+       },
+       {
+        "labour": {
+         "job": "job.sutler_wood",
+         "hours": 3
+        }
+       },
+       {
+        "coin": 6
+       }
+      ],
+      "where": "poi.fort.sutler_store"
+     },
+     {
+      "id": "clothing.repair_moccasins",
+      "asks": [
+       {
+        "labour": {
+         "job": "job.sutler_wood",
+         "hours": 2
+        }
+       },
+       {
+        "goods": {
+         "item.food.venison_raw": 10
+        }
+       }
+      ]
+     },
+     {
+      "id": "rcp.jerky",
+      "asks": [
+       {
+        "goods": {
+         "item.food.venison_raw": 20
+        }
+       },
+       {
+        "labour": {
+         "job": "job.sutler_stores",
+         "hours": 3
+        }
+       }
+      ]
+     },
+     {
+      "skill": "provisions",
+      "asks": [
+       {
+        "labour": {
+         "job": "job.sutler_stores",
+         "hours": 3
+        }
+       },
+       {
+        "goods": {
+         "item.food.venison_raw": 20
+        }
+       }
+      ]
+     }
+    ],
+    "declines_when": [
+     "the learner is drunk",
+     "the trader's visit is on (she is busy)",
+     "garrison standing below 0"
+    ],
+    "demonstrates": {
+     "keep_store": [
+      "clothing.repair_moccasins",
+      "clothing.sew_mitts"
+     ]
+    },
+    "milestone": "M2b",
+    "later": [
+     {
+      "id": "know.spruce_beer",
+      "milestone": "M4"
+     },
+     {
+      "id": "know.charcloth",
+      "milestone": "M4"
+     }
+    ]
+   },
+   "trust_start": 0
+  },
+  {
+   "id": "npc.post.trader",
+   "archetype": "post_trader",
+   "role_title": "the Schenectady trader",
+   "draft_name": "Jacob Van Wie",
+   "milestone": "M2a",
+   "status": "slice",
+   "home": "poi.fort.sutler_store",
+   "work": "poi.fort.sutler_store",
+   "persona": {
+    "family": "a Schenectady family of traders; his partner keeps their store on the river",
+    "opinions": [
+     "a hunter's word is worth his last spring's furs",
+     "the tariffs up at the posts are for other men's trade, not his"
+    ],
+    "life_lines": [
+     "fall credit: weighs every hunter's promise",
+     "winter: comes up by sleigh when the snow is down",
+     "spring: weighs the furs and the excuses"
+    ]
+   },
+   "mentor": {
+    "levels": {
+     "trade": 60,
+     "hidecraft": 55,
+     "trapping": 35
+    },
+    "teaches": [
+     {
+      "skill": "hidecraft",
+      "asks": [
+       {
+        "friendship": 3
+       },
+       {
+        "first_refusal": true
+       }
+      ]
+     },
+     {
+      "skill": "trade",
+      "asks": [
+       {
+        "friendship": 3
+       },
+       {
+        "labour": {
+         "job": "job.landing_hand",
+         "hours": 3
+        }
+       }
+      ]
+     }
+    ],
+    "declines_when": [
+     "he is not on a visit",
+     "the learner is drunk",
+     "not yet trusted (three fair trades or a book with him)"
+    ],
+    "demonstrates": {
+     "weigh_furs": [
+      "fur.stretch"
+     ]
+    },
+    "milestone": "M2b",
+    "never_coin": true
+   }
+  },
+  {
+   "id": "npc.fort.commandant",
+   "archetype": "garrison_officer",
+   "role_title": "the lieutenant commanding",
+   "draft_name": "Lieutenant Josiah Crane",
+   "milestone": "M2a",
+   "status": "slice",
+   "home": "poi.fort.officers_quarters",
+   "work": "poi.fort.headquarters",
+   "persona": {
+    "family": "a wife and two daughters in Albany; writes by every express",
+    "opinions": [
+     "the post should be given up or properly manned",
+     "the hunters who cut his wood are worth more than letters from New York"
+    ],
+    "life_lines": [
+     "autumn: lets the winter's firewood by the cord",
+     "spring: expects word that the post is to be given up and the detachment called in to its regiment; a reduction, and half-pay, is what he dreads"
+    ]
+   },
+   "notes": "Replaces v2's 'Captain' who waited on half-pay: half-pay went to reduced officers, not serving captains (review 1 of v2, blocker). A lieutenant commanding a small detachment fits a post in its last season."
+  },
+  {
+   "id": "npc.fort.soldier_1",
+   "archetype": "garrison_soldier",
+   "role_title": "a soldier of the detachment",
+   "draft_name": "Private Thomas Lyle",
+   "milestone": "M2a",
+   "status": "slice",
+   "home": "poi.fort.barracks",
+   "work": "poi.fort.parade_ground",
+   "persona": {
+    "family": "a Lanarkshire weaver's son who enlisted in 1757",
+    "opinions": [
+     "the woods are no place for a Christian in January",
+     "the sutler's rum is watered"
+    ],
+    "life_lines": [
+     "winter: trades his tobacco for anything that keeps his feet warm",
+     "spring: counts the days to the relief"
+    ]
+   }
+  },
+  {
+   "id": "npc.fort.soldier_2",
+   "archetype": "garrison_soldier",
+   "role_title": "a soldier of the detachment",
+   "draft_name": "Private John Ashby",
+   "milestone": "M2a",
+   "status": "slice",
+   "home": "poi.fort.barracks",
+   "work": "poi.fort.parade_ground",
+   "persona": {
+    "family": "a Hampshire farm boy with a wife on the regiment's ration list",
+    "opinions": [
+     "fresh meat twice a week would cure half the sick list"
+    ],
+    "life_lines": [
+     "winter: splits the sutler's wood for a pipe of tobacco"
+    ]
+   }
+  },
+  {
+   "id": "npc.valley.farm_family",
+   "archetype": "settler_farmer",
+   "role_title": "the farm family from German Flatts",
+   "draft_name": "the Staring household",
+   "milestone": "M2a",
+   "status": "slice",
+   "home": "",
+   "work": "poi.fort.sutler_store",
+   "persona": {
+    "family": "a Palatine household: the father, his wife and their grown son, who drive up with the sleigh",
+    "opinions": [
+     "a fat deer in February is worth two in October",
+     "the post should buy its flour from the valley, not Albany"
+    ],
+    "life_lines": [
+     "autumn: comes up after the harvest with cornmeal and kraut",
+     "February: short of meat, long on patience",
+     "May: comes with the district's muster"
+    ]
+   },
+   "trade": {
+    "wants": [
+     {
+      "items": [
+       "item.food.venison_raw"
+      ],
+      "months": [
+       "dec",
+       "feb"
+      ],
+      "tier": "wants",
+      "quota": 30,
+      "reason": "they are short of meat in the hungry time"
+     },
+     {
+      "items": [
+       "item.food.venison_raw"
+      ],
+      "tier": "uses",
+      "quota": 30,
+      "reason": "fresh meat for the road home"
+     },
+     {
+      "items": [
+       "item.skin.deer_fall",
+       "item.skin.dressed_buckskin"
+      ],
+      "tier": "wants",
+      "quota": 3,
+      "reason": "leather for the household"
+     },
+     {
+      "items": [
+       "item.pelt.raccoon",
+       "item.pelt.fox"
+      ],
+      "tier": "uses",
+      "quota": 2,
+      "reason": "pelts for caps"
+     },
+     {
+      "items": [
+       "item.material.salt"
+      ],
+      "tier": "uses",
+      "quota": 4,
+      "reason": "salt is always short"
+     }
+    ],
+    "keeps": [
+     {
+      "items": [
+       "item.food.cornmeal"
+      ],
+      "months": [
+       "oct"
+      ],
+      "tier": "plenty",
+      "reason": "after the harvest they have plenty of cornmeal"
+     },
+     {
+      "items": [
+       "item.food.cornmeal"
+      ],
+      "months": [
+       "dec"
+      ],
+      "tier": "enough"
+     },
+     {
+      "items": [
+       "item.food.cornmeal"
+      ],
+      "months": [
+       "feb",
+       "may"
+      ],
+      "tier": "little",
+      "reason": "they have little cornmeal left"
+     },
+     {
+      "items": [
+       "item.food.flour",
+       "item.food.salt_pork",
+       "item.food.sauerkraut",
+       "item.food.dried_apples"
+      ],
+      "tier": "enough"
+     }
+    ],
+    "stock": "economy.json mkt.farm_visit stock_by_event"
+   },
+   "mentor": {
+    "levels": {
+     "provisions": 45,
+     "hidecraft": 30
+    },
+    "teaches": [
+     {
+      "skill": "provisions",
+      "asks": [
+       {
+        "labour": {
+         "job": "job.landing_hand",
+         "hours": 3
+        }
+       },
+       {
+        "goods": {
+         "item.food.venison_raw": 20
+        }
+       },
+       {
+        "friendship": 2
+       }
+      ]
+     },
+     {
+      "id": "rcp.jerky",
+      "asks": [
+       {
+        "goods": {
+         "item.food.venison_raw": 10
+        }
+       },
+       {
+        "friendship": 2
+       }
+      ]
+     }
+    ],
+    "declines_when": [
+     "they are packing to leave (after 15:00)",
+     "the learner is drunk"
+    ],
+    "demonstrates": {
+     "keep_store": [
+      "preserve.jerk_scaffold"
+     ]
+    },
+    "milestone": "M2b",
+    "talk_heard_of": [
+     "rcp.jerky"
+    ],
+    "talk_note": "Their talk of how a Palatine household keeps food makes sauerkraut, dried apples, bark tanning and flax heard of for the M5 homestead (backlog ids, not yet in the recipe book)."
+   },
+   "notes": "H/D: German Palatine farms at German Flatts; verify the visits and goods in the valley records."
+  },
+  {
+   "id": "npc.woods.old_hunter",
+   "archetype": "backcountry_hunter",
+   "role_title": "the old hunter",
+   "draft_name": "Old Pieter",
+   "milestone": "M2a",
+   "status": "slice",
+   "home": "poi.woods.hunters_hut",
+   "work": "trail cells 3-6",
+   "persona": {
+    "family": "a widower whose sons went down to Schenectady",
+    "opinions": [
+     "never set where you camp",
+     "the sutler's rum is dearer than her salt"
+    ],
+    "life_lines": [
+     "autumn: cuts his poles before the snow",
+     "spring: grumbles that the beaver are fewer every year"
+    ],
+    "origin_line": "learned from the hunters I wintered among"
+   },
+   "legal": "a hunter on unenclosed patent land, as the player (GDD 3.1)",
+   "trade": {
+    "margin": 0.05,
+    "coin_premium": 1.5,
+    "patience": 3,
+    "wants": [
+     {
+      "items": [
+       "item.ammo.powder"
+      ],
+      "months": [
+       "dec",
+       "jan",
+       "feb",
+       "mar"
+      ],
+      "tier": "wants",
+      "quota": 2,
+      "reason": "his powder runs low in the deep winter"
+     },
+     {
+      "items": [
+       "item.ammo.powder"
+      ],
+      "tier": "uses",
+      "quota": 2,
+      "reason": "powder is always useful"
+     },
+     {
+      "items": [
+       "item.ammo.lead",
+       "item.material.salt"
+      ],
+      "tier": "uses",
+      "quota": 3,
+      "reason": "lead and salt"
+     },
+     {
+      "items": [
+       "item.trade.tobacco"
+      ],
+      "months": [
+       "nov",
+       "dec",
+       "jan",
+       "feb",
+       "mar"
+      ],
+      "tier": "wants",
+      "quota": 2,
+      "reason": "a winter without tobacco is long"
+     },
+     {
+      "items": [
+       "item.trade.tobacco"
+      ],
+      "tier": "uses",
+      "quota": 2,
+      "reason": "tobacco"
+     },
+     {
+      "items": [
+       "item.food.cornmeal"
+      ],
+      "tier": "uses",
+      "quota": 20,
+      "reason": "a change from meat"
+     },
+     {
+      "items": [
+       "item.trap.steel"
+      ],
+      "tier": "wants",
+      "quota": 1,
+      "reason": "he has only two steel traps"
+     }
+    ],
+    "keeps": [
+     {
+      "items": [
+       "item.material.cordage",
+       "item.material.rawhide",
+       "item.material.sinew"
+      ],
+      "tier": "enough"
+     }
+    ],
+    "stock_per_month": {
+     "item.material.cordage": 8,
+     "item.material.rawhide": 4,
+     "item.material.sinew": 4
+    },
+    "never_offers": [
+     "item.cloth.moccasins",
+     "item.tool.snowshoes",
+     "item.food.venison_raw",
+     "item.food.jerky"
+    ],
+    "never_note": "He will not part with his moccasins or snowshoes, and he never sells meat: he shares it (hospitality is not trade)."
+   },
+   "mentor": {
+    "levels": {
+     "trapping": 70,
+     "hunting": 65,
+     "survival": 60,
+     "hidecraft": 55,
+     "woodcraft": 50
+    },
+    "teaches": [
+     {
+      "id": "trap.snare_set",
+      "asks": [
+       {
+        "labour": {
+         "job": "job.old_hunter_line",
+         "hours": 3
+        }
+       },
+       {
+        "goods": {
+         "item.trade.tobacco": 1
+        }
+       },
+       {
+        "friendship": 3
+       }
+      ]
+     },
+     {
+      "skill": "trapping",
+      "asks": [
+       {
+        "labour": {
+         "job": "job.old_hunter_line",
+         "hours": 3
+        }
+       },
+       {
+        "friendship": 3
+       }
+      ]
+     },
+     {
+      "skill": "hunting",
+      "asks": [
+       {
+        "labour": {
+         "job": "job.old_hunter_line",
+         "hours": 3
+        }
+       },
+       {
+        "goods": {
+         "item.ammo.powder": 0.5
+        }
+       }
+      ]
+     },
+     {
+      "id": "shelter.half_faced_camp",
+      "asks": [
+       {
+        "labour": {
+         "job": "job.old_hunter_wood",
+         "hours": 3
+        }
+       },
+       {
+        "friendship": 3
+       }
+      ]
+     },
+     {
+      "id": "trap.steel_land_set",
+      "asks": [
+       {
+        "labour": {
+         "job": "job.old_hunter_line",
+         "hours": 3
+        }
+       },
+       {
+        "friendship": 3
+       }
+      ]
+     },
+     {
+      "id": "fish.ice_hole",
+      "asks": [
+       {
+        "friendship": 3
+       },
+       {
+        "goods": {
+         "item.trade.tobacco": 1
+        }
+       }
+      ]
+     },
+     {
+      "id": "rcp.rawhide",
+      "asks": [
+       {
+        "friendship": 3
+       },
+       {
+        "goods": {
+         "item.material.salt": 1
+        }
+       },
+       {
+        "labour": {
+         "job": "job.old_hunter_line",
+         "hours": 3
+        }
+       }
+      ]
+     },
+     {
+      "id": "know.hide_dressing",
+      "asks": [
+       {
+        "friendship": 5
+       },
+       {
+        "labour": {
+         "job": "job.old_hunter_line",
+         "hours": 4
+        }
+       }
+      ]
+     },
+     {
+      "id": "rcp.moccasins",
+      "asks": [
+       {
+        "friendship": 3
+       },
+       {
+        "goods": {
+         "item.ammo.powder": 0.5
+        }
+       },
+       {
+        "labour": {
+         "job": "job.old_hunter_line",
+         "hours": 3
+        }
+       }
+      ]
+     },
+     {
+      "id": "know.snowshoes",
+      "asks": [
+       {
+        "friendship": 5
+       },
+       {
+        "labour": {
+         "job": "job.old_hunter_wood",
+         "hours": 4
+        }
+       }
+      ]
+     }
+    ],
+    "declines_when": [
+     "the learner is drunk",
+     "not yet trusted (trust 3 for sets and sign, 5 for dressing and snowshoes)",
+     "he is away in the trader's weeks"
+    ],
+    "demonstrates": {
+     "craft": [
+      "craft.cordage",
+      "craft.moccasins",
+      "craft.stakes",
+      "craft.snowshoes"
+     ],
+     "skin_dress": [
+      "fur.skin",
+      "fur.stretch",
+      "craft.dress_hide"
+     ]
+    },
+    "milestone": "M2b",
+    "origin_line": "learned from the hunters I wintered among"
+   },
+   "notes": "Brought forward from the backlog archetype (M5) as one individual: the slice's teacher of its core field skills who does not want coin. He names no nation and claims no invention; how the origin is shown goes to the offices in the M2-M3 consultation packet (GDD section 13)."
+  }
+ ],
+ "standing": {
+  "range": [
+   -100,
+   100
+  ],
+  "tiers": [
+   {
+    "id": "hostile",
+    "max": -50
+   },
+   {
+    "id": "distrusted",
+    "max": -15
+   },
+   {
+    "id": "neutral",
+    "max": 15
+   },
+   {
+    "id": "friendly",
+    "max": 50
+   },
+   {
+    "id": "trusted",
+    "max": 100
+   }
+  ],
+  "tracked_per": [
+   "faction",
+   "individual trust"
+  ],
+  "sources": {
+   "fair_trade": {
+    "value": 1,
+    "per": "visit with 60 d or more of rv traded (barter counts)",
+    "cap_per_game_month": 3
+   },
+   "honour_debt": {
+    "value": 5,
+    "earned": true
+   },
+   "obligation_kept": {
+    "value": 3,
+    "earned": true
+   },
+   "firewood_cord": {
+    "value": 0.5,
+    "per": "cord stacked",
+    "cap_per_game_month": 3
+   },
+   "merry_company": {
+    "value": 1,
+    "per": "visit (cond.drunk merry, at the sutler's or a settlement)",
+    "cap_per_game_month": 3,
+    "ceiling": 50
+   },
+   "labour_given": {
+    "value": 0.5,
+    "per": "game hour of labour given to a person",
+    "cap_per_game_month": 4
+   },
+   "meat_shared": {
+    "value": 1,
+    "per": "a gift of 10 lb or more of fresh meat in the hungry time (February-April)",
+    "cap_per_game_month": 2
+   }
+  },
+  "penalties": {
+   "cheating_found_out": -10,
+   "theft": -25,
+   "missed_obligation": -5,
+   "default_on_debt": "economy.json credit.grading",
+   "insult": -1
+  },
+  "ceilings": "Merry company reaches Friendly (50) at most; Trusted only through earned sources.",
+  "note": "The full standing system (communities, gossip, gifts, kinship) is backlog (M4).",
+  "trust": {
+   "range": [
+    0,
+    10
+   ],
+   "per": "individual (the seven cast members)",
+   "start": "0, or the background's people",
+   "sources": {
+    "fair_trade": 0.5,
+    "labour_kept": 1,
+    "promise_kept": 1,
+    "meat_shared": 1,
+    "lesson_taken": 0.25
+   },
+   "penalties": {
+    "insult": -1,
+    "promise_broken": -2,
+    "labour_broken": -2,
+    "cheating_found_out": -3
+   },
+   "cap_fair_trade_per_game_month": 1.0,
+   "uses": "trust sets promises and loans (5), lessons (the mentor's friendship asks) and credit as a promise (5)"
+  }
+ },
+ "release_rule": "In the slice every NPC uses a role title ('the sutler', 'the Schenectady trader', 'the lieutenant commanding'); draft names ship for everyone at once, colonial and Native alike, after the consultation sign-off (backlog/npcs.json culture_data.consultation).",
+ "representation": "The slice depicts no Native characters and no Native land: the woods are patented, unsettled colonial land (map_regions.json). Native communities, people and history enter at M4-M5, each only after its nation's sign-off. Consultation starts now, before any further Native content is drafted (review 1 of v2, the consultation issue). The slice's self-sufficiency techniques that are Indigenous technology carry origin notes in the recipe book, and the old hunter says he learned them from the hunters he wintered among (GDD section 13, rules 9-11).",
+ "aliases": {
+  "npc.fort.captain": "npc.fort.commandant (v3: a lieutenant commanding)",
+  "mkt.post_trader (slice role)": "mkt.visiting_trader (v3)"
+ }
+}

@@ -1,0 +1,1931 @@
+{
+ "schema": "frontier.survival.economy.backlog",
+ "version": 4,
+ "status": "DESIGN APPENDIX v3 (backlog): rows for milestones M3-M5 and 'post'. Not loaded by the game and not gated by the data test; a row moves into the live file, and under test, when its milestone starts. Rows may reference live ids.",
+ "design_doc": "Player_Animation_Project/graph_analysis/survival/survival_gdd.md",
+ "summary": "The other markets, goods, services and wages (retuned to the cash-equivalent ladder), gifts and rum.",
+ "id_rules": "Ids are stable strings (prefix.name). Never rename an id once saves exist; add an alias instead. Display names are separate and may change. An id is defined in exactly one place: the live file or the backlog.",
+ "milestones": {
+  "M1": "A winter night: fire, shelter, cold, hunger, sleep, time safety; the fort region only; one background; 1765",
+  "M2a": "A winter from the woods: living from the manor woods through the winter by your own hands (gathering, hides, sewing, snares, snowshoes, a half-faced camp, a hung cache, ice fishing); plain barter with the sutler, the trader, the garrison's soldiers, a farm family from German Flatts and an old hunter; credit and the fall outfit as options; the second background",
+  "M2b": "Learning from neighbours: lessons, watching, examining, quality standards, haggling, promises and loans",
+  "M3": "The year turns: the full almanac, seasons and weather content, the summer goal (bark and a cabin), fishing, frogs, ginseng, one played wage job; the fur cap and robe, leggings, carving, casting balls, the cache pit, char cloth and spruce beer",
+  "M4": "People: NPC schedules and tiers at the fort, standing, invitations, the soldiers and the lieutenant as mentors; Native characters only after the relevant nation's sign-off",
+  "M5": "The map: the Carry, the valley, the town and the hunting grounds, travel and camps, other markets and backgrounds",
+  "post": "After M5 and not yet planned: the 1757 and 1761 starts and their eras, detailed illnesses, thirst, potash, upstream canoe and bateau travel, the Proxy NPC tier, languages beyond English, French, Mohawk and Oneida"
+ },
+ "source_keys": {
+  "E": "graph_analysis/survival/research_economy_life.md, source list S# (E:S14 = source S14)",
+  "K": "graph_analysis/survival/research_survival_skills.md, numbered sources [#] (K:1 = source [1])",
+  "Y": "graph_analysis/survival/research_systems.md, section number (Y:3.2 = section 3.2)",
+  "C": "graph_analysis/customizer/costume_bible.md, section number",
+  "A": "Player_Animation_Project/blender_animation_index.csv (clip names and asset ids)",
+  "N": "graph_analysis/survival/survival_gdd.md, sources list (N:3 = source N3; N33 onward added in version 3)"
+ },
+ "basis_keys": {
+  "S": "sourced: checked against a primary source, a scholarly work or an institutional page; web summaries and popular pages do not qualify",
+  "H": "standard historiography (books in the GDD sources list); verify before quoting",
+  "H-regional": "true for one region's trade or society (named in the row); not yet checked for New York",
+  "M": "modern science or medicine sets the mechanic (period explanation may differ)",
+  "D": "design value for balance, or a figure resting on web summaries; not a checked historical record"
+ },
+ "price_profiles": {
+  "flat": {
+   "jan": 1.0,
+   "feb": 1.0,
+   "mar": 1.0,
+   "apr": 1.0,
+   "may": 1.0,
+   "jun": 1.0,
+   "jul": 1.0,
+   "aug": 1.0,
+   "sep": 1.0,
+   "oct": 1.0,
+   "nov": 1.0,
+   "dec": 1.0
+  },
+  "fur_demand": {
+   "jan": 1.0,
+   "feb": 1.0,
+   "mar": 1.0,
+   "apr": 1.0,
+   "may": 0.95,
+   "jun": 0.9,
+   "jul": 0.9,
+   "aug": 0.9,
+   "sep": 1.0,
+   "oct": 1.0,
+   "nov": 1.0,
+   "dec": 1.0
+  },
+  "corn": {
+   "jan": 1.5,
+   "feb": 1.7,
+   "mar": 2.0,
+   "apr": 2.0,
+   "may": 1.8,
+   "jun": 1.6,
+   "jul": 1.5,
+   "aug": 1.2,
+   "sep": 0.8,
+   "oct": 0.8,
+   "nov": 1.0,
+   "dec": 1.4
+  },
+  "fresh_meat": {
+   "jan": 1.2,
+   "feb": 1.3,
+   "mar": 1.3,
+   "apr": 1.3,
+   "may": 1.1,
+   "jun": 0.8,
+   "jul": 0.8,
+   "aug": 0.8,
+   "sep": 0.9,
+   "oct": 0.9,
+   "nov": 0.9,
+   "dec": 1.1
+  },
+  "maple_sugar": {
+   "jan": 1.2,
+   "feb": 0.9,
+   "mar": 0.8,
+   "apr": 0.8,
+   "may": 1.0,
+   "jun": 1.0,
+   "jul": 1.0,
+   "aug": 1.1,
+   "sep": 1.1,
+   "oct": 1.2,
+   "nov": 1.2,
+   "dec": 1.2
+  },
+  "preserved_fish": {
+   "jan": 1.3,
+   "feb": 1.3,
+   "mar": 1.3,
+   "apr": 0.9,
+   "may": 0.8,
+   "jun": 0.9,
+   "jul": 1.0,
+   "aug": 1.0,
+   "sep": 0.9,
+   "oct": 0.9,
+   "nov": 1.1,
+   "dec": 1.3
+  },
+  "fresh_fish": {
+   "jan": 1.2,
+   "feb": 1.2,
+   "mar": 1.1,
+   "apr": 0.7,
+   "may": 0.8,
+   "jun": 1.0,
+   "jul": 1.0,
+   "aug": 1.0,
+   "sep": 0.8,
+   "oct": 0.8,
+   "nov": 1.0,
+   "dec": 1.2
+  },
+  "outfit_goods": {
+   "jan": 1.0,
+   "feb": 1.0,
+   "mar": 1.0,
+   "apr": 0.95,
+   "may": 0.95,
+   "jun": 1.0,
+   "jul": 1.0,
+   "aug": 1.05,
+   "sep": 1.1,
+   "oct": 1.1,
+   "nov": 1.05,
+   "dec": 1.0
+  },
+  "winter_goods": {
+   "jan": 1.2,
+   "feb": 1.2,
+   "mar": 1.0,
+   "apr": 0.9,
+   "may": 0.8,
+   "jun": 0.8,
+   "jul": 0.8,
+   "aug": 0.9,
+   "sep": 1.0,
+   "oct": 1.1,
+   "nov": 1.2,
+   "dec": 1.2
+  }
+ },
+ "goods": [
+  {
+   "item": "item.pelt.beaver",
+   "cash_retail_d": 136,
+   "origin": "produce",
+   "profile": "fur_demand",
+   "basis": "S",
+   "src": [
+    "N:3"
+   ],
+   "note": "Albany, 1766: an 88 lb pack settled a debt of 33 pounds 7 s 4 d New York (about 91 d a lb; a prime pelt about 1.5 lb)",
+   "barter": {
+    "basis": "S",
+    "src": [
+     "E:S1"
+    ],
+    "beaver": 1.0
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.pelt.otter",
+   "cash_retail_d": 300,
+   "origin": "produce",
+   "profile": "fur_demand",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 2.0
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.pelt.muskrat",
+   "cash_retail_d": 6,
+   "origin": "produce",
+   "profile": "fur_demand",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.05
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.pelt.black_bear",
+   "cash_retail_d": 180,
+   "origin": "produce",
+   "profile": "fur_demand",
+   "basis": "H",
+   "src": [
+    "E:S18"
+   ],
+   "note": "fine skins fetched several beaver",
+   "barter": {
+    "basis": "H",
+    "src": [
+     "E:S18"
+    ],
+    "beaver": 2.0
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.pelt.cougar",
+   "cash_retail_d": 60,
+   "origin": "produce",
+   "profile": "fur_demand",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.5
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.skin.deer_summer",
+   "cash_retail_d": 30,
+   "origin": "produce",
+   "profile": "fur_demand",
+   "basis": "D",
+   "note": "half a buck",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.333
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.skin.elk",
+   "cash_retail_d": 120,
+   "origin": "produce",
+   "profile": "fur_demand",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 1.3
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.skin.moose",
+   "cash_retail_d": 132,
+   "origin": "produce",
+   "profile": "fur_demand",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 1.5
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.food.bear_oil",
+   "cash_retail_d": 18,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "src": [
+    "E:S18"
+   ],
+   "note": "about 6 s a gallon",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.15
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.food.maple_sugar",
+   "cash_retail_d": 6,
+   "origin": "produce",
+   "profile": "maple_sugar",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.05
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.forage.ginseng_dried",
+   "cash_retail_d": 48,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "src": [
+    "E:S19"
+   ],
+   "note": "the 1750-52 boom paid about five times this; later starts come after the collapse",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.35
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.trade.potash",
+   "cash_retail_d": 288,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "src": [
+    "E:S36"
+   ],
+   "note": "per cwt; encouraged by Parliament from 1751 and by Society of Arts premiums; New York and New England output grew markedly from the mid-1760s with Johnson's encouragement, and a larger boom followed in 1790-1820 (N:42)",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.food.dried_corn",
+   "cash_retail_d": 36,
+   "origin": "produce",
+   "profile": "corn",
+   "basis": "H",
+   "note": "3 s New York the bushel at harvest; the hungry time doubles it",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.25
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.seed.corn",
+   "cash_retail_d": 48,
+   "origin": "produce",
+   "profile": "corn",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.food.beans",
+   "cash_retail_d": 1.5,
+   "origin": "produce",
+   "profile": "corn",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.012
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.food.squash",
+   "cash_retail_d": 2,
+   "origin": "produce",
+   "profile": "corn",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.015
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.food.apples",
+   "cash_retail_d": 12,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "note": "the peck; from orchards",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.08
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.food.dried_berries",
+   "cash_retail_d": 4,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.03
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.food.parched_corn",
+   "cash_retail_d": 3,
+   "origin": "produce",
+   "profile": "corn",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.02
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.food.salted_fish",
+   "cash_retail_d": 1.5,
+   "origin": "produce",
+   "profile": "preserved_fish",
+   "basis": "D",
+   "src": [
+    "E:12.2"
+   ],
+   "note": "salted Hudson shad by the 200-lb barrel; no shad runs above Cohoes",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.food.salted_meat",
+   "cash_retail_d": 4,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.food.bear_raw",
+   "cash_retail_d": 2,
+   "origin": "produce",
+   "profile": "fresh_meat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.food.pork_raw",
+   "cash_retail_d": 3,
+   "origin": "produce",
+   "profile": "fresh_meat",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.02
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.food.fowl_raw",
+   "cash_retail_d": 3,
+   "origin": "produce",
+   "profile": "fresh_meat",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.02
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.food.eel_raw",
+   "cash_retail_d": 1.5,
+   "origin": "produce",
+   "profile": "fresh_fish",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.trade.stroud",
+   "cash_retail_d": 192,
+   "origin": "import",
+   "profile": "outfit_goods",
+   "basis": "D",
+   "note": "2 yd of stroud at about 8 s New York the yard [D]",
+   "barter": {
+    "basis": "S",
+    "src": [
+     "E:S14"
+    ],
+    "beaver": 2.0
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.cloth.capot",
+   "cash_retail_d": 150,
+   "origin": "import",
+   "profile": "winter_goods",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 1.5
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.cloth.fur_robe",
+   "cash_retail_d": 240,
+   "origin": "produce",
+   "profile": "winter_goods",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 2.0
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.cloth.shoes",
+   "cash_retail_d": 60,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.cloth.great_coat",
+   "cash_retail_d": 240,
+   "origin": "import",
+   "profile": "winter_goods",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.tool.kettle_iron",
+   "cash_retail_d": 60,
+   "origin": "import",
+   "profile": "outfit_goods",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.7
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.tool.tin_box",
+   "cash_retail_d": 6,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.tool.hoe",
+   "cash_retail_d": 30,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.4
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.tool.spade",
+   "cash_retail_d": 42,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.tool.net",
+   "cash_retail_d": 120,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 1.2
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.tool.canteen",
+   "cash_retail_d": 12,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.tool.barrel",
+   "cash_retail_d": 30,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.tool.lock_cover",
+   "cash_retail_d": 8,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.tool.pocket_compass",
+   "cash_retail_d": 60,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.tool.pocket_watch",
+   "cash_retail_d": 1200,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "note": "rare",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.tool.ice_creepers",
+   "cash_retail_d": 12,
+   "origin": "import",
+   "profile": "winter_goods",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.tool.eye_shades",
+   "cash_retail_d": 1,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.bait.castoreum",
+   "cash_retail_d": 12,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.1
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.weapon.spear",
+   "cash_retail_d": 24,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.ammo.cartridge",
+   "cash_retail_d": 2,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.trade.vermilion",
+   "cash_retail_d": 12,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.15
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.trade.beads",
+   "cash_retail_d": 36,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.5
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.trade.ribbon",
+   "cash_retail_d": 6,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "barter": {
+    "basis": "D",
+    "beaver": 0.08
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.trade.silver_brooch",
+   "cash_retail_d": 12,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "src": [
+    "E:S59"
+   ],
+   "barter": {
+    "basis": "D",
+    "beaver": 0.15
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.trade.silver_gorget",
+   "cash_retail_d": 240,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "src": [
+    "E:S59"
+   ],
+   "barter": {
+    "basis": "D",
+    "beaver": 2.0
+   },
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.drink.cider",
+   "cash_retail_d": 4,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.drink.spruce_beer",
+   "cash_retail_d": 8,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.seed.beans_squash",
+   "cash_retail_d": 6,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.remedy.peruvian_bark",
+   "cash_retail_d": 36,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "src": [
+    "K:35"
+   ],
+   "note": "expensive import",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.remedy.pinkroot",
+   "cash_retail_d": 12,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "src": [
+    "K:15"
+   ],
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.remedy.wormseed",
+   "cash_retail_d": 6,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.remedy.snakeroot",
+   "cash_retail_d": 6,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.book.domestic_medicine",
+   "cash_retail_d": 96,
+   "origin": "import",
+   "profile": "flat",
+   "basis": "D",
+   "note": "valley stores from 1772 (items.json)",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.animal.horse",
+   "cash_retail_d": 2400,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "note": "about 10 pounds New York",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.animal.hog",
+   "cash_retail_d": 168,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "item": "item.animal.cow",
+   "cash_retail_d": 1080,
+   "origin": "produce",
+   "profile": "flat",
+   "basis": "D",
+   "status": "later",
+   "milestone": "M5"
+  }
+ ],
+ "services": [
+  {
+   "id": "service.meal",
+   "price_d": 30,
+   "unit": "meal (800 game kcal)",
+   "kcal": 800,
+   "where": [
+    "mkt.valley_tavern"
+   ],
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "service.board_day",
+   "price_d": 70,
+   "unit": "game day (meals and lodging)",
+   "where": [
+    "mkt.valley_tavern"
+   ],
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "service.surgeon",
+   "price_d": 48,
+   "unit": "visit",
+   "where": [
+    "mkt.fort_sutler"
+   ],
+   "npc": "surgeon",
+   "status": "later",
+   "treats": [
+    "cond.injury.wound",
+    "cond.infection",
+    "cond.injury.fracture",
+    "cond.frostbite",
+    "cond.fever",
+    "cond.flux",
+    "cond.poisoned",
+    "cond.camp_fever"
+   ],
+   "milestone": "M5"
+  },
+  {
+   "id": "service.surgeon_purge",
+   "price_d": 36,
+   "unit": "dose",
+   "where": [
+    "mkt.fort_sutler"
+   ],
+   "npc": "surgeon",
+   "treats": [
+    "cond.worms"
+   ],
+   "src": [
+    "K:5"
+   ],
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "service.surgeon_set_bone",
+   "price_d": 96,
+   "unit": "setting",
+   "where": [
+    "mkt.fort_sutler"
+   ],
+   "npc": "surgeon",
+   "treats": [
+    "cond.injury.fracture"
+   ],
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "service.town_healer",
+   "price_d": null,
+   "unit": "gift",
+   "where": [
+    "mkt.town_exchange"
+   ],
+   "npc": "town_healer",
+   "requires_standing": 50,
+   "treats": [
+    "cond.injury.wound",
+    "cond.infection",
+    "cond.fever"
+   ],
+   "status": "later",
+   "note": "By relationship; preparations are not for sale (K:8).",
+   "milestone": "M5"
+  },
+  {
+   "id": "service.smith_repair",
+   "price_d": 24,
+   "unit": "job",
+   "where": [
+    "mkt.valley_store",
+    "mkt.post_trader"
+   ],
+   "note": "gunlocks, traps, kettles; smiths at posts were a treaty obligation (E:S7)",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "service.interpreter",
+   "price_d": 12,
+   "unit": "visit",
+   "where": [
+    "mkt.post_trader",
+    "mkt.town_exchange"
+   ],
+   "note": "needed without the language",
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "service.ferry",
+   "price_d": 2,
+   "unit": "crossing",
+   "where": [
+    "mkt.valley_store"
+   ],
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "service.mill_toll",
+   "price_frac": 0.083,
+   "unit": "share of grain",
+   "where": [
+    "mkt.valley_mill"
+   ],
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "service.patent_lease",
+   "price_d": 120,
+   "unit": "entry fine for a 100-acre lot",
+   "rent_d_per_year": 240,
+   "where": [
+    "mkt.valley_store"
+   ],
+   "institutions": "new_york",
+   "status": "later",
+   "note": "Lease from a patentee or manor: an entry fine, then a yearly rent in wheat, fowls or cash [H]. Only on lands the patent covers and the nation has ceded.",
+   "milestone": "M5"
+  },
+  {
+   "id": "service.buy_from_patentee",
+   "price_d": 3600,
+   "unit": "100 acres with survey",
+   "where": [
+    "mkt.valley_store"
+   ],
+   "institutions": "new_york",
+   "status": "later",
+   "note": "Freehold bought from a patentee (about 15 pounds New York) [D]. A deed resting on a disputed Indian deed can be challenged (seasons.json event.deed_dispute).",
+   "milestone": "M5"
+  },
+  {
+   "id": "service.land_warrant",
+   "price_d": 1680,
+   "unit": "100 acres with survey",
+   "where": [
+    "node.west"
+   ],
+   "institutions": "pennsylvania",
+   "status": "later",
+   "note": "Pennsylvania land-office warrant: the Ohio and Susquehanna frame only, not New York.",
+   "milestone": "M5"
+  },
+  {
+   "id": "service.packhorse_hire",
+   "price_d": 128,
+   "unit": "game day",
+   "per_day_scaled": true,
+   "where": [
+    "mkt.valley_store",
+    "mkt.post_trader"
+   ],
+   "src": [
+    "E:S29"
+   ],
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "service.guide",
+   "price_d": 150,
+   "unit": "game day",
+   "per_day_scaled": true,
+   "where": [
+    "mkt.post_trader",
+    "mkt.town_exchange"
+   ],
+   "status": "later",
+   "milestone": "M5"
+  },
+  {
+   "id": "service.city_commission",
+   "price_frac": 0.05,
+   "unit": "share of a sale at the Albany merchant",
+   "where": [
+    "mkt.city_merchant"
+   ],
+   "status": "later",
+   "note": "plus cartage 2 d a pelt and city lodging 20 d a game night",
+   "milestone": "M5"
+  }
+ ],
+ "wages": [
+  {
+   "id": "wage.day_labour",
+   "cash_d": 75,
+   "in_kind_d": 0,
+   "hist": "about 37 s 6 d New York a month for a labourer, 1762 (N:3): about 15 d a day",
+   "hist_currency": "new_york",
+   "hist_d_per_day": 15,
+   "status": "later",
+   "openings": "2 a market a game day; few in Jan-Feb",
+   "mode": "time_skip_or_played",
+   "src": [
+    "N:3"
+   ],
+   "milestone": "M3",
+   "note": "M3's played wage job: summer repairs at the fort (cut and set pickets, mend the roofs)"
+  },
+  {
+   "id": "wage.harvest_hand",
+   "cash_d": 80,
+   "in_kind_d": 15,
+   "board": true,
+   "hist": "harvest wages about 2 s 6 d New York a day with board [H]",
+   "hist_currency": "new_york",
+   "hist_d_per_day": 30,
+   "months": [
+    "jul",
+    "sep",
+    "oct"
+   ],
+   "openings": "2 a farm a season",
+   "status": "later",
+   "mode": "played",
+   "v3_note": "retuned under the cash-equivalent ladder: a safe wage is at most half of skilled trapping (live economy.json wages_rule)",
+   "milestone": "M5"
+  },
+  {
+   "id": "wage.provincial_soldier",
+   "cash_d": 70,
+   "in_kind_d": 25,
+   "rations": true,
+   "bounty_d": 480,
+   "bounty_per": "campaign season",
+   "hist": "a New York company's privates drew 38 s 9 d a month in 1757 (N:3); Massachusetts pay in lawful money (Anderson, N:10) converts at 72 d a dollar",
+   "hist_currency": "new_york",
+   "hist_d_per_day": 15.5,
+   "war_only": true,
+   "status": "later",
+   "mode": "time_skip_or_played",
+   "v3_note": "retuned under the cash-equivalent ladder: a safe wage is at most half of skilled trapping (live economy.json wages_rule)",
+   "milestone": "M5"
+  },
+  {
+   "id": "wage.frontier_guard",
+   "cash_d": 90,
+   "in_kind_d": 0,
+   "hist": "2 s a day, New Jersey currency (E:S38)",
+   "hist_currency": "new_jersey",
+   "hist_d_per_day": 25.6,
+   "status": "later",
+   "mode": "played",
+   "v3_note": "retuned under the cash-equivalent ladder: a safe wage is at most half of skilled trapping (live economy.json wages_rule)",
+   "milestone": "M5"
+  },
+  {
+   "id": "wage.bateau_man",
+   "cash_d": 75,
+   "in_kind_d": 20,
+   "rations": true,
+   "hist": "about 2 s New York a day with rations [D]",
+   "hist_currency": "new_york",
+   "hist_d_per_day": 23,
+   "status": "later",
+   "mode": "time_skip_or_played",
+   "v3_note": "retuned under the cash-equivalent ladder: a safe wage is at most half of skilled trapping (live economy.json wages_rule)",
+   "milestone": "M5"
+  },
+  {
+   "id": "wage.carrier_load",
+   "per_load_d": 18,
+   "loads_per_game_day_max": 6,
+   "hist": "per load across the Carry [D]",
+   "hist_currency": "new_york",
+   "status": "later",
+   "mode": "played",
+   "milestone": "M5"
+  },
+  {
+   "id": "wage.interpreter",
+   "cash_d": 95,
+   "in_kind_d": 0,
+   "hist": "paid posts at forts and councils (E:S7); historically well paid, held under the ladder cap because the post brings standing, gifts and access [D; revisit]",
+   "hist_currency": "new_york",
+   "status": "later",
+   "mode": "played",
+   "requires": [
+    "a nation's language"
+   ],
+   "v3_note": "retuned under the cash-equivalent ladder: a safe wage is at most half of skilled trapping (live economy.json wages_rule)",
+   "milestone": "M5"
+  },
+  {
+   "id": "wage.packhorse",
+   "cash_d": 100,
+   "in_kind_d": 0,
+   "capital": true,
+   "requires": [
+    "item.animal.horse"
+   ],
+   "hist": "2 s a day with saddle, Pennsylvania currency (E:S29)",
+   "hist_currency": "pennsylvania",
+   "hist_d_per_day": 25.6,
+   "status": "later",
+   "mode": "played",
+   "gross_d": 128,
+   "costs": {
+    "feed_d_per_game_day": 20,
+    "wear_d_per_game_day": 8
+   },
+   "loss_rates_per_contract": {
+    "lame_horse": 0.08,
+    "horse_value_d": 2400
+   },
+   "capital_d": 2640,
+   "capital_note": "a horse (2,400 d) and a pack saddle (240 d)",
+   "openings": "about 6 contract days a season",
+   "milestone": "M5"
+  },
+  {
+   "id": "wage.wagon_team",
+   "cash_d": 380,
+   "in_kind_d": 0,
+   "capital": true,
+   "requires": [
+    "wagon",
+    "4 x item.animal.horse"
+   ],
+   "hist": "15 s a day for a wagon, four horses and driver, Pennsylvania currency (E:S29), about 960 d New York a game day gross; net of feed and wear about 400",
+   "hist_currency": "pennsylvania",
+   "hist_d_per_day": 192,
+   "war_only": true,
+   "status": "later",
+   "mode": "played",
+   "risk": "played contract with real losses (livelihoods.json job.wagon_hire)",
+   "gross_d": 960,
+   "costs": {
+    "feed_d_per_game_day": 80,
+    "driver_or_own_time": "the player drives",
+    "wear_d_per_game_day": 60,
+    "army_deductions_and_delays": "about half the gross [D]"
+   },
+   "loss_rates_per_contract": {
+    "lame_horse": 0.08,
+    "broken_axle": 0.05,
+    "ambush": "route danger x 0.03",
+    "horse_value_d": 1920,
+    "axle_d": 240
+   },
+   "capital_d": 10800,
+   "openings": "about 6 contract days a war season, tapering by army_demand",
+   "v3_note": "Capital test (review 2 of v2): payback at least one season after expected losses, daily income at most twice skilled risky income (the backlog check computes both).",
+   "milestone": "M5"
+  },
+  {
+   "id": "wage.hired_scout",
+   "cash_d": 90,
+   "in_kind_d": 0,
+   "milestone": "M4",
+   "status": "later",
+   "name": "Hired scout or express pay",
+   "hist": "in peace a post paid local woodsmen by the trip or the day to scout or carry expresses, about 1 s 6 d New York a day [D; verify in the Johnson Papers and garrison accounts]",
+   "hist_currency": "new_york",
+   "mode": "played"
+  }
+ ],
+ "army_demand": {
+  "rule": "Army hiring and commissary caps taper through a war (review 2, issue 9).",
+  "by_war_year": {
+   "1": 1.0,
+   "2": 0.85,
+   "3": 0.7,
+   "4": 0.55,
+   "5": 0.45,
+   "6": 0.4
+  },
+  "peace_garrison_mult": 0.33
+ },
+ "markets": [
+  {
+   "id": "mkt.post_trader",
+   "name": "Trader's store at the Carry",
+   "poi": "poi.post.store",
+   "type": "licensed_post",
+   "npc": "post_trader",
+   "status": "later",
+   "faction": "faction.post",
+   "price_layer": "barter",
+   "spread": 0.25,
+   "tariff_board": "by era: seasons.json trade_regulators (1761-67 posted tariffs; none in 1755-60 or after 1768)",
+   "open_by_era": {
+    "era.war_1755_1758": "closed: the Carry is a military zone (and abandoned from September 1756 to August 1758); a sutler serves the works",
+    "era.war_1759_1760": "sutlers and Roof's inn only"
+   },
+   "rum_policy": "regulated",
+   "currency": "barter_units_or_coin",
+   "unit_display": "beaver",
+   "credit": {
+    "who": "anyone with post standing >= 0",
+    "limit_mult": 1.0,
+    "due": "apr_mid"
+   },
+   "prime_season_bonus": {
+    "months": [
+     "dec",
+     "jan",
+     "feb",
+     "mar",
+     "apr"
+    ],
+    "fur_price_mult": 1.05,
+    "note": "the post pays best for prime pelts in season, in goods"
+   },
+   "sells": [
+    "item.trade.stroud",
+    "item.trade.blanket",
+    "item.cloth.linen_shirt",
+    "item.tool.kettle_brass",
+    "item.tool.kettle_iron",
+    "item.tool.knife",
+    "item.tool.hatchet",
+    "item.weapon.tomahawk",
+    "item.tool.awl",
+    "item.tool.needle_thread",
+    "item.tool.fire_steel",
+    "item.tool.flint",
+    "item.ammo.powder",
+    "item.ammo.lead",
+    "item.weapon.musket",
+    "item.trap.steel",
+    "item.trade.vermilion",
+    "item.trade.beads",
+    "item.trade.ribbon",
+    "item.trade.silver_brooch",
+    "item.trade.silver_gorget",
+    "item.trade.tobacco",
+    "item.drink.rum",
+    "item.tool.hooks_line",
+    "item.tool.net",
+    "item.material.salt",
+    "item.cloth.capot",
+    "item.cloth.matchcoat",
+    "item.cloth.breechcloth_leggings"
+   ],
+   "stock_target": {
+    "default": 20,
+    "item.trap.steel": 4,
+    "item.weapon.musket": 3,
+    "item.ammo.powder": 40
+   },
+   "restock": "event.boats_arrive (to 150% of target) and event.last_boats; nothing new between November and May",
+   "buys": {
+    "categories": [
+     "pelt",
+     "skin"
+    ],
+    "items": [
+     "item.food.bear_oil",
+     "item.food.maple_sugar",
+     "item.forage.ginseng_dried",
+     "item.tool.snowshoes",
+     "item.cloth.moccasins",
+     "item.food.dried_corn",
+     "item.bait.castoreum"
+    ],
+    "pelts_per_visit": 60
+   },
+   "services": [
+    "service.smith_repair",
+    "service.interpreter",
+    "service.packhorse_hire",
+    "service.guide"
+   ],
+   "jobs": [
+    "job.carry_goods",
+    "job.guide_trader",
+    "job.interpreter"
+   ],
+   "haggle_d": 40,
+   "src": [
+    "E:3.4",
+    "E:S7",
+    "N:1"
+   ],
+   "stock_note": "the steel-trap cap is a design value to revisit after checking the tariffs and ledgers (N:36)",
+   "v3_note": "At M5 the trader who visits the fort in the slice (live mkt.visiting_trader) keeps this store.",
+   "milestone": "M5"
+  },
+  {
+   "id": "mkt.valley_store",
+   "name": "Valley store",
+   "poi": "poi.valley.store",
+   "type": "store_book_credit",
+   "npc": "storekeeper",
+   "status": "later",
+   "faction": "faction.settlers_valley",
+   "price_layer": "cash",
+   "import_markup": 1.15,
+   "spread": 0.3,
+   "rum_policy": "open",
+   "currency": "book_credit",
+   "pelt_price_mult": 0.8,
+   "credit": {
+    "who": "settlers and people with valley standing >= 15",
+    "limit_mult": 1.0,
+    "due": "nov_late",
+    "overdue_interest_per_year": 0.06,
+    "interest_note": "simple interest on an overdue book debt, under New York's legal ceiling of 7% (1737 act, N:37); outfit accounts at the post carry none"
+   },
+   "sells": [
+    "item.tool.axe",
+    "item.tool.hoe",
+    "item.tool.spade",
+    "item.material.salt",
+    "item.seed.corn",
+    "item.seed.beans_squash",
+    "item.trade.blanket",
+    "item.cloth.linen_shirt",
+    "item.tool.kettle_iron",
+    "item.ammo.powder",
+    "item.ammo.lead",
+    "item.drink.rum",
+    "item.food.flour",
+    "item.food.cornmeal",
+    "item.food.salt_pork",
+    "item.tool.barrel",
+    "item.tool.bullet_mould",
+    "item.tool.needle_thread",
+    "item.cloth.shoes",
+    "item.cloth.breeches_stockings",
+    "item.cloth.wool_waistcoat",
+    "item.cloth.great_coat",
+    "item.animal.hog",
+    "item.animal.cow",
+    "item.animal.horse",
+    "item.tool.ice_creepers",
+    "item.book.domestic_medicine",
+    "item.trap.steel"
+   ],
+   "stock_target": {
+    "default": 15,
+    "item.trap.steel": 2,
+    "item.book.domestic_medicine": 1
+   },
+   "restock": "carts from Schenectady and Albany every 3 game days; none in mud season",
+   "buys": {
+    "items": [
+     "item.trade.potash",
+     "item.food.dried_corn",
+     "item.food.salted_meat",
+     "item.food.maple_sugar",
+     "item.skin.deer_fall",
+     "item.skin.deer_summer",
+     "item.pelt.raccoon",
+     "item.pelt.fox",
+     "item.pelt.beaver",
+     "item.food.salted_fish",
+     "item.food.jerky",
+     "item.food.apples"
+    ]
+   },
+   "services": [
+    "service.ferry",
+    "service.patent_lease",
+    "service.buy_from_patentee",
+    "service.packhorse_hire",
+    "service.smith_repair"
+   ],
+   "jobs": [
+    "job.harvest_hand",
+    "job.planting_hand",
+    "job.find_stray",
+    "job.wolf_bounty"
+   ],
+   "haggle_d": 35,
+   "src": [
+    "E:3.5"
+   ],
+   "milestone": "M5"
+  },
+  {
+   "id": "mkt.valley_tavern",
+   "name": "Tavern",
+   "poi": "poi.valley.tavern",
+   "type": "tavern",
+   "npc": "tavern_keeper",
+   "status": "later",
+   "faction": "faction.settlers_valley",
+   "price_layer": "cash",
+   "import_markup": 1.15,
+   "spread": 0.3,
+   "rum_policy": "open",
+   "currency": "coin_or_credit",
+   "sells": [
+    "item.drink.rum",
+    "item.drink.cider",
+    "item.food.mush",
+    "item.food.venison_cooked"
+   ],
+   "buys": {
+    "items": [
+     "item.food.venison_raw",
+     "item.food.fowl_raw",
+     "item.food.fish_raw"
+    ]
+   },
+   "services": [
+    "service.lodging",
+    "service.meal",
+    "service.board_day"
+   ],
+   "haggle_d": 30,
+   "src": [
+    "E:S40",
+    "E:3.10"
+   ],
+   "milestone": "M5"
+  },
+  {
+   "id": "mkt.valley_mill",
+   "name": "Mill",
+   "poi": "poi.valley.mill",
+   "type": "mill",
+   "npc": "miller",
+   "status": "later",
+   "faction": "faction.settlers_valley",
+   "price_layer": "cash",
+   "import_markup": 1.0,
+   "spread": 0.2,
+   "rum_policy": "none",
+   "currency": "toll",
+   "sells": [
+    "item.food.cornmeal",
+    "item.food.flour"
+   ],
+   "buys": {
+    "items": [
+     "item.food.dried_corn"
+    ]
+   },
+   "services": [
+    "service.mill_toll"
+   ],
+   "haggle_d": 30,
+   "src": [
+    "E:3.10"
+   ],
+   "milestone": "M5"
+  },
+  {
+   "id": "mkt.town_exchange",
+   "name": "Town households (exchange)",
+   "poi": "poi.town.houses",
+   "type": "town_household",
+   "npc": "senior_woman",
+   "status": "later",
+   "milestone_gate": "M5 after consultation",
+   "faction": "faction.home_town",
+   "price_layer": "barter",
+   "spread": 0.25,
+   "rum_policy": "by_council",
+   "rum_policy_default": "restricted",
+   "currency": "barter",
+   "coin_spread_add": 0.1,
+   "gift_first": true,
+   "unit_display": "buck_or_beaver",
+   "sells": [
+    "item.food.dried_corn",
+    "item.food.beans",
+    "item.food.squash",
+    "item.food.apples",
+    "item.food.pork_raw",
+    "item.food.fowl_raw",
+    "item.food.dried_berries",
+    "item.food.maple_sugar",
+    "item.food.parched_corn",
+    "item.cloth.moccasins",
+    "item.tool.snowshoes",
+    "item.food.smoked_fish",
+    "item.food.bear_oil",
+    "item.pelt.beaver",
+    "item.skin.deer_fall",
+    "item.weapon.bow",
+    "item.ammo.arrow",
+    "item.cloth.fur_robe"
+   ],
+   "buys": {
+    "items": [
+     "item.trade.stroud",
+     "item.trade.blanket",
+     "item.cloth.linen_shirt",
+     "item.tool.kettle_brass",
+     "item.tool.knife",
+     "item.tool.hatchet",
+     "item.tool.axe",
+     "item.tool.hoe",
+     "item.tool.awl",
+     "item.tool.needle_thread",
+     "item.ammo.powder",
+     "item.ammo.lead",
+     "item.tool.flint",
+     "item.trade.silver_brooch",
+     "item.trade.silver_gorget",
+     "item.trade.vermilion",
+     "item.trade.beads",
+     "item.trade.ribbon",
+     "item.trade.tobacco",
+     "item.material.salt"
+    ]
+   },
+   "who_decides": {
+    "corn_and_food_stores": "senior_woman",
+    "pelts": "the hunter who took them",
+    "diplomacy": "council_speaker",
+    "rum_policy": "the council, with the senior women's voice"
+   },
+   "services": [
+    "service.town_healer",
+    "service.interpreter",
+    "service.guide"
+   ],
+   "jobs": [
+    "job.hunt_for_town",
+    "job.help_sugar_camp",
+    "job.help_harvest_town"
+   ],
+   "haggle_d": 45,
+   "src": [
+    "E:3.1",
+    "E:S44",
+    "N:4",
+    "Y:9.8"
+   ],
+   "note": "Trade goes through households. Senior women decide food sales. Colonial coin is less useful here. The town keeps orchards, hogs, cattle and fowl alongside its fields (N:4).",
+   "milestone": "M5"
+  },
+  {
+   "id": "mkt.peddler",
+   "name": "Travelling peddler",
+   "poi": "roaming",
+   "type": "peddler",
+   "npc": "peddler",
+   "status": "later",
+   "faction": "faction.none",
+   "price_layer": "cash",
+   "import_markup": 1.5,
+   "spread": 0.4,
+   "rum_policy": "open",
+   "currency": "coin",
+   "sells": "random 8-14 goods from the post list",
+   "buys": {
+    "categories": [
+     "pelt",
+     "skin"
+    ]
+   },
+   "pelt_price_mult": 0.7,
+   "note": "Some carry rum against a town's policy: an NPC choice the player can report or ignore.",
+   "haggle_d": 35,
+   "milestone": "M5"
+  },
+  {
+   "id": "mkt.city_merchant",
+   "name": "Albany merchant house",
+   "poi": "node.river_city",
+   "type": "wholesale",
+   "npc": "city_merchant",
+   "status": "later",
+   "faction": "faction.colonial_authorities",
+   "price_layer": "cash",
+   "import_markup": 1.0,
+   "spread": 0.2,
+   "rum_policy": "open",
+   "currency": "coin_or_credit",
+   "fur_price_mult": 1.0,
+   "potash_price_mult": 1.1,
+   "buys_pelts_only": {
+    "windows": [
+     [
+      "may_early",
+      "jun_late"
+     ],
+     [
+      "sep_mid",
+      "oct_late"
+     ]
+    ],
+    "note": "the merchant buys furs only at the spring and fall sales, for shipment to London"
+   },
+   "trip_costs": {
+    "commission": "service.city_commission",
+    "lodging_d_per_game_night": 20,
+    "cartage_d_per_pelt": 2,
+    "road_closures": "mud season and deep snow close the wagon road (seasons.json gates)",
+    "danger_by_cargo": "encounter chance x (1 + cargo value / 2,880 d), max x2"
+   },
+   "sells": "every import at markup 1.0",
+   "buys": {
+    "categories": [
+     "pelt",
+     "skin"
+    ],
+    "items": [
+     "item.trade.potash",
+     "item.forage.ginseng_dried"
+    ]
+   },
+   "credit": {
+    "who": "anyone with standing >= 20 or a consignment",
+    "limit_mult": 1.2,
+    "due": "may_mid",
+    "overdue_interest_per_year": 0.06,
+    "interest_note": "simple interest on an overdue book debt, under New York's legal ceiling of 7% (1737 act, N:37); outfit accounts at the post carry none"
+   },
+   "haggle_d": 55,
+   "note": "Off-map (Albany). Good cash prices at the sales, less the costs of getting there.",
+   "src": [
+    "N:3",
+    "E:12.1"
+   ],
+   "milestone": "M5"
+  },
+  {
+   "id": "mkt.montreal_traders",
+   "name": "Montreal traders (British licence, Canadien crews)",
+   "poi": "roaming",
+   "type": "peddler",
+   "npc": "canadien_voyageur",
+   "status": "later",
+   "faction": "faction.montreal_traders",
+   "price_layer": "barter",
+   "spread": 0.3,
+   "rum_policy": "regulated",
+   "currency": "barter",
+   "active_from_year": 1761,
+   "sells": [
+    "item.trade.stroud",
+    "item.trade.blanket",
+    "item.cloth.capot",
+    "item.tool.kettle_brass",
+    "item.ammo.powder",
+    "item.ammo.lead",
+    "item.trade.silver_brooch",
+    "item.trade.vermilion",
+    "item.tool.knife"
+   ],
+   "buys": {
+    "categories": [
+     "pelt"
+    ]
+   },
+   "haggle_d": 40,
+   "src": [
+    "E:S25",
+    "E:S26"
+   ],
+   "unit_display": "beaver",
+   "milestone": "M5"
+  },
+  {
+   "id": "mkt.native_trading_party",
+   "name": "A nation's trading party",
+   "poi": "roaming",
+   "type": "trading_party",
+   "npc": "native_trader",
+   "status": "later",
+   "faction": "by_community",
+   "price_layer": "barter",
+   "spread": 0.25,
+   "rum_policy": "by_council",
+   "currency": "barter",
+   "when": [
+    [
+     "apr_mid",
+     "jun_late"
+    ],
+    [
+     "sep_mid",
+     "oct_late"
+    ]
+   ],
+   "routes": [
+    "Kahnawake carriers on the Albany-Montreal route",
+    "Oneida and Onondaga parties to Oswego and the Carry",
+    "Mohawk traders from Canajoharie to the valley and Albany"
+   ],
+   "sells": [
+    "item.pelt.beaver",
+    "item.pelt.otter",
+    "item.pelt.marten",
+    "item.skin.deer_fall",
+    "item.cloth.moccasins",
+    "item.tool.snowshoes",
+    "item.food.bear_oil",
+    "item.food.maple_sugar",
+    "item.cloth.fur_robe"
+   ],
+   "buys": {
+    "items": [
+     "item.trade.stroud",
+     "item.trade.blanket",
+     "item.tool.kettle_brass",
+     "item.ammo.powder",
+     "item.ammo.lead",
+     "item.trade.silver_brooch",
+     "item.trade.vermilion",
+     "item.trade.tobacco",
+     "item.cloth.linen_shirt"
+    ]
+   },
+   "haggle_d": 45,
+   "src": [
+    "E:S25",
+    "N:13",
+    "N:21"
+   ],
+   "note": "Native traders as market actors in their own right: they compare prices across Albany, Oswego and Montreal and sell where it pays (review 1, issue 15).",
+   "unit_display": "beaver",
+   "milestone": "M5"
+  }
+ ],
+ "gifts": {
+  "standing_per_d": 0.041666666666666664,
+  "caps": "npcs.json standing.sources.gift (per community per game month, diminishing, gifts alone reach Friendly at most)",
+  "preferences": {
+   "town_household": {
+    "item.trade.stroud": 1.5,
+    "item.trade.blanket": 1.5,
+    "item.tool.kettle_brass": 1.5,
+    "item.ammo.powder": 1.5,
+    "item.ammo.lead": 1.3,
+    "item.trade.silver_brooch": 1.3,
+    "item.trade.tobacco": 1.2
+   },
+   "garrison": {
+    "item.trade.tobacco": 1.2
+   },
+   "settlers": {
+    "item.material.salt": 1.3,
+    "item.seed.corn": 1.2
+   }
+  },
+  "first_visit_protocol": {
+   "market_type": "town_household",
+   "expected_gift_d": 24,
+   "missing_standing": -3
+  },
+  "wampum": "Not an item and not a currency. Councils exchange wampum as a record and pledge in NPC diplomacy only (E:S10, E:S11).",
+  "note": "Gifts were diplomacy, not charity (E:2.4). Amherst's 1761 gift cuts appear as an era effect."
+ },
+ "rum": {
+  "policies": {
+   "open": "sold freely",
+   "regulated": "sold within licence and tariff limits; not to a town whose policy forbids it",
+   "restricted": "a town allows rum only at councils or by the council's leave, and asks traders not to bring it",
+   "banned": "the council forbids it",
+   "none": "not stocked",
+   "by_council": "set per town and era in council"
+  },
+  "town_policy": {
+   "set_by": "the town council, with the senior women's voice, at event.council and when a trader's rum causes trouble",
+   "default": "restricted",
+   "per_town_per_era": "npcs.json communities[].rum_policy_by_era; the council may move one step a year (restricted, banned, or open at councils) according to its leaders' positions",
+   "history": "Positions varied by town and over time: some leaders asked that rum be kept from their towns and hunting camps (the Shawnee leaders' 1738 letter), prophets such as Neolin preached against it, and some leaders asked for rum at councils (Mancall, K:19)."
+  },
+  "selling_against_policy": {
+   "no_world_spectacle": "There is no drinking event in a town. Consequences come through people and institutions (review 1, issue 5).",
+   "consequences": [
+    "the council's response: a named leader's speech to the trader and to the player",
+    "standing -15 with the town and -5 with colonial officials",
+    "the trader's licence (1765-68) is reported to the commissary; a second offence loses it",
+    "a trade embargo on the player by that town for a season after a second offence"
+   ]
+  },
+  "refuse_request": {
+   "standing": {
+    "market_faction": 2
+   },
+   "cap": "npcs.json standing.sources.refuse_rum_request"
+  },
+  "rule": "Drunkenness is the same for every character (conditions.json). The harm of the rum trade shows through traders' choices and communities' own leaders, never as a trait of any people.",
+  "sources": [
+   "K:19",
+   "K:16",
+   "K:17"
+  ],
+  "note_v3": "Town rum policies arrive with the towns (M5); the live slice has only the sutler's regulated rum."
+ },
+ "era_multipliers": {
+  "era.war_1755_1758": {
+   "item.ammo.powder": 1.3,
+   "item.ammo.lead": 1.2,
+   "item.weapon.musket": 1.2,
+   "item.food.venison_raw": 1.2,
+   "item.trade.potash": 0.5
+  },
+  "era.war_1759_1760": {
+   "item.ammo.powder": 1.2,
+   "item.food.venison_raw": 1.1,
+   "item.trade.potash": 0.5
+  },
+  "era.tense_peace_1761_1762": {
+   "item.trade.potash": 0.6,
+   "note": "powder restricted at posts for nations' households"
+  },
+  "era.war_1763_1764": {
+   "item.ammo.powder": 1.4,
+   "item.food.dried_corn": 1.2,
+   "item.trade.potash": 0.6
+  },
+  "era.line_1768_1773": {
+   "item.trade.potash": 1.2
+  },
+  "era.dunmore_1774": {
+   "item.trade.potash": 1.25
+  }
+ },
+ "aliases": {
+  "wage.ranger": "wage.hired_scout (v3)",
+  "mkt.fort_commissary": "live mkt.fort_sutler meat channel (v3)",
+  "service.meal / service.board_day": "retired with the living clock (v3)"
+ }
+}

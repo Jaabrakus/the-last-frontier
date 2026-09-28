@@ -1,0 +1,1771 @@
+{
+	"meta": {
+		"save_version": 1,
+		"data_schema": 3,
+		"date": "Late November 1765",
+		"time": "07:46",
+		"background": "bg.backcountry_hunter",
+		"preset": "woodsman",
+		"saved_unix": 1790307674.598091,
+		"backlog_milestones": []
+	},
+	"state": {
+		"version": 1,
+		"data_schema": 3,
+		"background_id": "bg.backcountry_hunter",
+		"preset": "woodsman",
+		"settings": {
+			"thirst_enabled": false,
+			"service_setting": "historical",
+			"militia_role": "men",
+			"night_compression": true,
+			"backlog_milestones": []
+		},
+		"rng_seed": "3",
+		"rng_state": "-7268162291623305444",
+		"base_year": 1765,
+		"minutes": 46546.0,
+		"needs": {
+			"stomach": 1282.9518959865675,
+			"reserve": 2500.0,
+			"warmth": 100.0,
+			"wetness": 0.0,
+			"fatigue": 0.0,
+			"hydration": 100.0,
+			"drunk": 0.0,
+			"drunk_peak": 0.0,
+			"health": 100.0
+		},
+		"need_stages": {
+			"need.food": "peckish",
+			"need.warmth": "comfortable",
+			"need.rest": "rested",
+			"need.wetness": "dry"
+		},
+		"activity": "rest",
+		"asleep": false,
+		"conditions": {
+			"cond.hunger": {
+				"stage": "peckish",
+				"t_h": 13.090017956670948,
+				"since": 45760.59892259974
+			}
+		},
+		"flags": {
+			"last_abs_day": 32,
+			"last_dawn_day": 32,
+			"refeed_t": 46293.65896129755,
+			"refeed_kcal": 570.0000000000001,
+			"last_trap_work_min": 45576.937425080956
+		},
+		"skills": {
+			"survival": 34.670083761978496,
+			"hunting": 31.470145237138322,
+			"woodcraft": 12.857461801547254,
+			"trade": 6.0,
+			"marksmanship": 15.02,
+			"archery": 0.0,
+			"close_combat": 5.0
+		},
+		"skill_log": {
+			"day": 32,
+			"uses": {
+				"cook.roast": 1,
+				"eat": 1,
+				"rest.sleep": 2
+			},
+			"xp": {
+				"survival": 0.012000927547350208
+			}
+		},
+		"inventory": [
+			{
+				"id": "item.weapon.musket",
+				"qty": 1.0,
+				"meta": {}
+			},
+			{
+				"id": "item.tool.knife",
+				"qty": 1.0,
+				"meta": {}
+			},
+			{
+				"id": "item.tool.hatchet",
+				"qty": 1.0,
+				"meta": {}
+			},
+			{
+				"id": "item.ammo.powder",
+				"qty": 4.9,
+				"meta": {}
+			},
+			{
+				"id": "item.ammo.lead",
+				"qty": 9.0,
+				"meta": {}
+			},
+			{
+				"id": "item.ammo.ball",
+				"qty": 10.0,
+				"meta": {}
+			},
+			{
+				"id": "item.tool.flint",
+				"qty": 3.0,
+				"meta": {
+					"wear": 5.0
+				}
+			},
+			{
+				"id": "item.tool.fire_steel",
+				"qty": 1.0,
+				"meta": {}
+			},
+			{
+				"id": "item.cloth.matchcoat",
+				"qty": 1.0,
+				"meta": {}
+			},
+			{
+				"id": "item.cloth.hunting_shirt",
+				"qty": 1.0,
+				"meta": {}
+			},
+			{
+				"id": "item.cloth.breechcloth_leggings",
+				"qty": 1.0,
+				"meta": {}
+			},
+			{
+				"id": "item.cloth.moccasins",
+				"qty": 2.0,
+				"meta": {}
+			},
+			{
+				"id": "item.cloth.mitts",
+				"qty": 1.0,
+				"meta": {}
+			},
+			{
+				"id": "item.cloth.fur_cap",
+				"qty": 1.0,
+				"meta": {}
+			},
+			{
+				"id": "item.drink.rum",
+				"qty": 1.0,
+				"meta": {}
+			},
+			{
+				"id": "item.tinder.fungus",
+				"qty": 4.0,
+				"meta": {}
+			},
+			{
+				"id": "item.fuel.bundle",
+				"qty": 6.0,
+				"meta": {}
+			},
+			{
+				"id": "item.trade.blanket",
+				"qty": 1.0,
+				"meta": {}
+			},
+			{
+				"id": "item.cloth.linen_shirt",
+				"qty": 1.0,
+				"meta": {}
+			},
+			{
+				"id": "item.tinder.grass",
+				"qty": 4.0,
+				"meta": {}
+			},
+			{
+				"id": "item.tinder.cedarbark",
+				"qty": 3.0,
+				"meta": {}
+			},
+			{
+				"id": "item.tinder.birchbark",
+				"qty": 2.0,
+				"meta": {}
+			},
+			{
+				"id": "item.pelt.raccoon",
+				"qty": 1.0,
+				"meta": {
+					"grade": "prime_well_handled",
+					"prime": 0.9,
+					"condition": 0.9,
+					"green": true,
+					"species": "raccoon",
+					"spoil": 0.2318913213891641,
+					"stretched": true,
+					"dry_h": 14.769782079195137,
+					"dry_need_h": 48.7
+				}
+			},
+			{
+				"id": "item.pelt.fox",
+				"qty": 1.0,
+				"meta": {
+					"grade": "good",
+					"prime": 0.9,
+					"condition": 1.0,
+					"green": true,
+					"species": "fox",
+					"spoil": 0.2318913213891641,
+					"stretched": true,
+					"dry_h": 14.556399972938395,
+					"dry_need_h": 60.6
+				}
+			},
+			{
+				"id": "item.pelt.fisher",
+				"qty": 1.0,
+				"meta": {
+					"grade": "prime_well_handled",
+					"prime": 0.9,
+					"condition": 0.9,
+					"green": true,
+					"species": "fisher",
+					"spoil": 0.2318913213891641,
+					"stretched": true,
+					"dry_h": 14.343065336973863,
+					"dry_need_h": 70.5
+				}
+			},
+			{
+				"id": "item.pelt.marten",
+				"qty": 1.0,
+				"meta": {
+					"grade": "prime_well_handled",
+					"prime": 0.9,
+					"condition": 0.8,
+					"green": true,
+					"species": "marten",
+					"spoil": 0.22703064446063775,
+					"stretched": true,
+					"dry_h": 14.12980971615192,
+					"dry_need_h": 51.5
+				}
+			}
+		],
+		"worn": [
+			"item.cloth.matchcoat",
+			"item.cloth.hunting_shirt",
+			"item.cloth.breechcloth_leggings",
+			"item.cloth.moccasins",
+			"item.cloth.mitts",
+			"item.cloth.fur_cap"
+		],
+		"camp": {
+			"shelters": {
+				"shelter.1": {
+					"id": "shelter.1",
+					"type": "brush_leanto",
+					"quality": 2.0,
+					"location": "poi.fort.woods_camp",
+					"created": 35411.7145357615
+				}
+			},
+			"fires": {
+				"fire.2": {
+					"id": "fire.2",
+					"state": "lit",
+					"fuel_min": 35.13623004729399,
+					"coal_h": 0.0,
+					"ember_min": 0.0,
+					"coal_only": false,
+					"location": "poi.fort.woods_camp",
+					"stack": {
+						"item.fuel.split_wood": 5.0
+					},
+					"created": 45624.336230047295
+				},
+				"hearth.poi.fort.sutler_store": {
+					"id": "hearth.poi.fort.sutler_store",
+					"state": "lit",
+					"fuel_min": 0.0,
+					"coal_h": 0.0,
+					"ember_min": 0.0,
+					"coal_only": false,
+					"location": "poi.fort.sutler_store",
+					"stack": {},
+					"created": 36410.05882352941,
+					"hearth": true
+				}
+			},
+			"carcasses": {},
+			"next_id": 8,
+			"beds": {
+				"poi.fort.woods_camp": {
+					"type": "bough_bed",
+					"ground_ins": 2.0,
+					"location": "poi.fort.woods_camp",
+					"created": 35511.20270785043
+				}
+			}
+		},
+		"trapline": {
+			"traps": {
+				"trap.1": {
+					"id": "trap.1",
+					"type": "steel_land",
+					"cell": 0,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 1.1,
+					"bait": "none",
+					"state": "buried",
+					"catch": "",
+					"catch_day": -1,
+					"set_day": 30,
+					"last_visit_day": 31,
+					"location": "line.cell.0"
+				},
+				"trap.3": {
+					"id": "trap.3",
+					"type": "steel_land",
+					"cell": 2,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 1.1,
+					"bait": "none",
+					"state": "holding",
+					"catch": "mink",
+					"catch_day": 32,
+					"set_day": 30,
+					"last_visit_day": 31,
+					"location": "line.cell.2"
+				},
+				"trap.4": {
+					"id": "trap.4",
+					"type": "steel_land",
+					"cell": 3,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 1.0,
+					"bait": "none",
+					"state": "buried",
+					"catch": "",
+					"catch_day": 31,
+					"set_day": 30,
+					"last_visit_day": 31,
+					"location": "line.cell.3"
+				},
+				"trap.5": {
+					"id": "trap.5",
+					"type": "deadfall",
+					"cell": 4,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 1.0,
+					"bait": "none",
+					"state": "buried",
+					"catch": "",
+					"catch_day": 31,
+					"set_day": 30,
+					"last_visit_day": 31,
+					"location": "line.cell.4"
+				},
+				"trap.6": {
+					"id": "trap.6",
+					"type": "deadfall",
+					"cell": 5,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 0.8,
+					"bait": "none",
+					"state": "buried",
+					"catch": "",
+					"catch_day": -1,
+					"set_day": 30,
+					"last_visit_day": 31,
+					"location": "line.cell.5"
+				},
+				"trap.7": {
+					"id": "trap.7",
+					"type": "deadfall",
+					"cell": 6,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 1.0,
+					"bait": "none",
+					"state": "buried",
+					"catch": "",
+					"catch_day": 31,
+					"set_day": 30,
+					"last_visit_day": 31,
+					"location": "line.cell.6"
+				},
+				"trap.8": {
+					"id": "trap.8",
+					"type": "deadfall",
+					"cell": 7,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 0.8,
+					"bait": "none",
+					"state": "set",
+					"catch": "",
+					"catch_day": 31,
+					"set_day": 30,
+					"last_visit_day": 31,
+					"location": "line.cell.7"
+				},
+				"trap.9": {
+					"id": "trap.9",
+					"type": "deadfall",
+					"cell": 8,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 0.8,
+					"bait": "none",
+					"state": "holding",
+					"catch": "fisher",
+					"catch_day": 32,
+					"set_day": 31,
+					"last_visit_day": 31,
+					"location": "line.cell.8"
+				},
+				"trap.10": {
+					"id": "trap.10",
+					"type": "deadfall",
+					"cell": 9,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 1.0,
+					"bait": "none",
+					"state": "holding",
+					"catch": "mink",
+					"catch_day": 32,
+					"set_day": 31,
+					"last_visit_day": 31,
+					"location": "line.cell.9"
+				},
+				"trap.11": {
+					"id": "trap.11",
+					"type": "deadfall",
+					"cell": 10,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 1.0,
+					"bait": "none",
+					"state": "set",
+					"catch": "",
+					"catch_day": -1,
+					"set_day": 31,
+					"last_visit_day": 31,
+					"location": "line.cell.10"
+				},
+				"trap.12": {
+					"id": "trap.12",
+					"type": "deadfall",
+					"cell": 11,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 1.0,
+					"bait": "none",
+					"state": "holding",
+					"catch": "mink",
+					"catch_day": 32,
+					"set_day": 31,
+					"last_visit_day": 31,
+					"location": "line.cell.11"
+				},
+				"trap.13": {
+					"id": "trap.13",
+					"type": "deadfall",
+					"cell": 12,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 1.0,
+					"bait": "none",
+					"state": "holding",
+					"catch": "mink",
+					"catch_day": 32,
+					"set_day": 31,
+					"last_visit_day": 31,
+					"location": "line.cell.12"
+				},
+				"trap.14": {
+					"id": "trap.14",
+					"type": "deadfall",
+					"cell": 13,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 1.1,
+					"bait": "none",
+					"state": "buried",
+					"catch": "",
+					"catch_day": -1,
+					"set_day": 31,
+					"last_visit_day": 31,
+					"location": "line.cell.13"
+				},
+				"trap.15": {
+					"id": "trap.15",
+					"type": "deadfall",
+					"cell": 14,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 0.9,
+					"bait": "none",
+					"state": "set",
+					"catch": "",
+					"catch_day": -1,
+					"set_day": 31,
+					"last_visit_day": 31,
+					"location": "line.cell.14"
+				},
+				"trap.16": {
+					"id": "trap.16",
+					"type": "deadfall",
+					"cell": 15,
+					"site": "good",
+					"placement": 3.0,
+					"set_quality": 0.9,
+					"bait": "none",
+					"state": "buried",
+					"catch": "",
+					"catch_day": -1,
+					"set_day": 31,
+					"last_visit_day": 31,
+					"location": "line.cell.15"
+				}
+			},
+			"next_id": 17,
+			"signs": {
+				"15": {
+					"raccoon": 24
+				},
+				"11": {
+					"raccoon": 24
+				}
+			},
+			"gunfire": {},
+			"stock": [
+				{
+					"marten": 1.8,
+					"fisher": 0.6,
+					"mink": 1.5,
+					"fox": 1.5,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 3.3
+				},
+				{
+					"marten": 1.8,
+					"fisher": 0.6,
+					"mink": 1.5,
+					"fox": 1.5,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 3.3
+				},
+				{
+					"marten": 1.8,
+					"fisher": 0.6,
+					"mink": 0.5,
+					"fox": 1.5,
+					"raccoon": 2.3388555309633383,
+					"wolf": 0.3,
+					"small": 3.3
+				},
+				{
+					"marten": 1.8,
+					"fisher": 0.6,
+					"mink": 1.5,
+					"fox": 0.5388555309633384,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 3.3
+				},
+				{
+					"marten": 1.8,
+					"fisher": 0.023313318578003027,
+					"mink": 1.5,
+					"fox": 1.5,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 3.3
+				},
+				{
+					"marten": 1.8,
+					"fisher": 0.6,
+					"mink": 1.5,
+					"fox": 1.5,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 3.3
+				},
+				{
+					"marten": 1.8,
+					"fisher": 0.6,
+					"mink": 1.5,
+					"fox": 1.5,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 2.3967989298633174
+				},
+				{
+					"marten": 0.8388555309633384,
+					"fisher": 0.6,
+					"mink": 1.5,
+					"fox": 1.5,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 3.3
+				},
+				{
+					"marten": 1.8,
+					"fisher": 0.0,
+					"mink": 1.5,
+					"fox": 1.5,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 3.3
+				},
+				{
+					"marten": 1.8,
+					"fisher": 0.6,
+					"mink": 0.5,
+					"fox": 1.5,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 3.3
+				},
+				{
+					"marten": 1.8,
+					"fisher": 0.6,
+					"mink": 1.5,
+					"fox": 1.5,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 3.3
+				},
+				{
+					"marten": 1.8,
+					"fisher": 0.6,
+					"mink": 0.5,
+					"fox": 1.5,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 3.3
+				},
+				{
+					"marten": 1.8,
+					"fisher": 0.6,
+					"mink": 0.5,
+					"fox": 1.5,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 3.3
+				},
+				{
+					"marten": 1.8,
+					"fisher": 0.6,
+					"mink": 1.5,
+					"fox": 1.5,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 3.3
+				},
+				{
+					"marten": 1.8,
+					"fisher": 0.6,
+					"mink": 1.5,
+					"fox": 1.5,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 3.3
+				},
+				{
+					"marten": 1.8,
+					"fisher": 0.6,
+					"mink": 1.5,
+					"fox": 1.5,
+					"raccoon": 3.3,
+					"wolf": 0.3,
+					"small": 3.3
+				}
+			],
+			"deer_stock": 24.0
+		},
+		"weather": {
+			"state": "overcast",
+			"hours_to_tick": 5.2333333333325,
+			"noise_c": -1.450325846672058,
+			"wind_dir_deg": 190.4544620513916,
+			"wind_ms": 1.682241678237915,
+			"snow_depth_cm": 7.275025470973892,
+			"snowed_tonight": false,
+			"hours_in_state": 0.6666666666666666,
+			"last_snow_min": 45058.18378290128
+		},
+		"economy": {
+			"money_d": 1,
+			"accounts": {
+				"npc.post.trader": {
+					"creditor": "npc.post.trader",
+					"layer": "barter",
+					"balance_d": 1152.0,
+					"due_event": "event.spring_trade",
+					"history": [
+						{
+							"t": 34980.0,
+							"date": "Early September 1765",
+							"what": "carried debt",
+							"d": 240.0,
+							"balance": 240.0
+						},
+						{
+							"t": 36417.89215686275,
+							"date": "Mid September 1765",
+							"what": "bought Steel trap x1.0",
+							"d": 144.0,
+							"balance": 384.0
+						},
+						{
+							"t": 36417.89215686275,
+							"date": "Mid September 1765",
+							"what": "bought Steel trap x1.0",
+							"d": 144.0,
+							"balance": 528.0
+						},
+						{
+							"t": 36417.89215686275,
+							"date": "Mid September 1765",
+							"what": "bought Gunpowder x1.0",
+							"d": 72.0,
+							"balance": 600.0
+						},
+						{
+							"t": 36417.89215686275,
+							"date": "Mid September 1765",
+							"what": "bought Gunpowder x1.0",
+							"d": 72.0,
+							"balance": 672.0
+						},
+						{
+							"t": 36417.89215686275,
+							"date": "Mid September 1765",
+							"what": "bought Gunpowder x1.0",
+							"d": 72.0,
+							"balance": 744.0
+						},
+						{
+							"t": 36417.89215686275,
+							"date": "Mid September 1765",
+							"what": "bought Bar lead x1.0",
+							"d": 14.0,
+							"balance": 758.0
+						},
+						{
+							"t": 36417.89215686275,
+							"date": "Mid September 1765",
+							"what": "bought Bar lead x1.0",
+							"d": 14.0,
+							"balance": 772.0
+						},
+						{
+							"t": 36417.89215686275,
+							"date": "Mid September 1765",
+							"what": "bought Bar lead x1.0",
+							"d": 14.0,
+							"balance": 786.0
+						},
+						{
+							"t": 36417.89215686275,
+							"date": "Mid September 1765",
+							"what": "bought Bar lead x1.0",
+							"d": 14.0,
+							"balance": 800.0
+						},
+						{
+							"t": 36417.89215686275,
+							"date": "Mid September 1765",
+							"what": "bought Bar lead x1.0",
+							"d": 14.0,
+							"balance": 814.0
+						},
+						{
+							"t": 36417.89215686275,
+							"date": "Mid September 1765",
+							"what": "bought Bar lead x1.0",
+							"d": 14.0,
+							"balance": 828.0
+						},
+						{
+							"t": 36417.89215686275,
+							"date": "Mid September 1765",
+							"what": "bought Wool blanket x1.0",
+							"d": 216.0,
+							"balance": 1044.0
+						},
+						{
+							"t": 36417.89215686275,
+							"date": "Mid September 1765",
+							"what": "bought Linen shirt x1.0",
+							"d": 108.0,
+							"balance": 1152.0
+						}
+					],
+					"season_sales_d": 0.0,
+					"outfit_charged_d": 912.0,
+					"outfit_limit_d": 1100.0,
+					"outfit_year": 1765
+				},
+				"npc.fort.sutler": {
+					"creditor": "npc.fort.sutler",
+					"layer": "cash",
+					"balance_d": 0.0,
+					"due_event": "event.spring_trade",
+					"history": [],
+					"season_sales_d": 0.0,
+					"outfit_charged_d": 0.0
+				}
+			},
+			"stock": {
+				"mkt.fort_sutler": {
+					"item.food.cornmeal": 3.0,
+					"item.food.salt_pork": 12.0,
+					"item.food.biscuit": 12.0,
+					"item.food.jerky": 12.0,
+					"item.drink.rum": 12.0,
+					"item.remedy.bandage": 12.0,
+					"item.tool.flint": 12.0,
+					"item.cloth.moccasins": 12.0,
+					"item.cloth.mitts": 12.0,
+					"item.ammo.powder": 6.0,
+					"item.ammo.lead": 12.0,
+					"item.trade.blanket": 2.0
+				},
+				"mkt.visiting_trader": {
+					"item.trap.steel": 2.0,
+					"item.ammo.powder": 17.0,
+					"item.ammo.lead": 4.0,
+					"item.ammo.ball": 10.0,
+					"item.trade.blanket": 9.0,
+					"item.cloth.linen_shirt": 9.0,
+					"item.cloth.matchcoat": 10.0,
+					"item.cloth.breechcloth_leggings": 10.0,
+					"item.tool.knife": 10.0,
+					"item.tool.hatchet": 10.0,
+					"item.tool.axe": 10.0,
+					"item.tool.flint": 10.0,
+					"item.tool.fire_steel": 10.0,
+					"item.drink.rum": 10.0,
+					"item.weapon.musket": 1.0
+				}
+			},
+			"last_restock_day": {
+				"mkt.fort_sutler": 30,
+				"mkt.visiting_trader": 25
+			},
+			"standing": {
+				"faction.post": 11.0,
+				"faction.garrison": 3.5
+			},
+			"standing_log": {
+				"faction.post|fair_trade|1765|sep": 1.0,
+				"faction.garrison|firewood_cord|1765|oct": 3.0,
+				"faction.garrison|firewood_cord|1765|nov": 0.5
+			},
+			"meat_sold": {},
+			"visit_trade": {
+				"mkt.visiting_trader|25": 912.0,
+				"mkt.fort_sutler|25": 22.0,
+				"mkt.fort_sutler|27": 33.0,
+				"mkt.fort_sutler|28": 77.0,
+				"mkt.fort_sutler|29": 68.0,
+				"mkt.fort_sutler|30": 21.0
+			},
+			"contract": {
+				"cords": 11,
+				"armloads": 0.0,
+				"open": true,
+				"season_year": 1765
+			},
+			"obligations": [],
+			"collection": {},
+			"income": {
+				"coin_d": 198.0,
+				"barter_d": 0.0,
+				"ce_d": 198.0,
+				"wages_d": 198.0,
+				"by_cat": {
+					"wage": 198.0
+				}
+			},
+			"steel_cap": {}
+		},
+		"jobs": {
+			"current": {},
+			"progress": {},
+			"seq": 285,
+			"last_result": {
+				"ok": true,
+				"action": "rest.sleep",
+				"outcome": "success",
+				"chance": 1.0,
+				"D": 0.0,
+				"minutes": 60.0,
+				"hurry": false,
+				"gained": {},
+				"notes": [],
+				"unhandled": [],
+				"seq": 285
+			},
+			"recent": [
+				{
+					"ok": true,
+					"action": "wood.split_firewood",
+					"outcome": "success",
+					"chance": 0.597624363359121,
+					"D": 10.0,
+					"minutes": 21.190423033075458,
+					"hurry": false,
+					"gained": {
+						"item.fuel.split_wood": 2.0
+					},
+					"notes": [],
+					"unhandled": [],
+					"xp": 0.0,
+					"seq": 280
+				},
+				{
+					"ok": false,
+					"action": "rest.sleep",
+					"interrupted": "food worse: hungry",
+					"kept_progress": false,
+					"elapsed_min": 370.0,
+					"duration_min": 579.0,
+					"seq": 281
+				},
+				{
+					"ok": true,
+					"action": "cook.roast",
+					"outcome": "excellent",
+					"chance": 0.9609680472405192,
+					"D": 10.0,
+					"minutes": 21.39246548565369,
+					"hurry": false,
+					"gained": {
+						"item.food.mush": 2.5909090909090913
+					},
+					"notes": [],
+					"unhandled": [],
+					"cooked": {
+						"ok": true,
+						"item": "item.food.mush",
+						"qty_in": 1.7272727272727275,
+						"qty_out": 2.5909090909090913,
+						"state": "cooked"
+					},
+					"xp": 0.012000927547350208,
+					"seq": 282
+				},
+				{
+					"ok": true,
+					"action": "eat",
+					"outcome": "success",
+					"chance": 1.0,
+					"D": 0.0,
+					"minutes": 2.266495811901075,
+					"hurry": false,
+					"gained": {},
+					"notes": [],
+					"unhandled": [],
+					"eat": {
+						"ok": true,
+						"item": "item.food.mush",
+						"qty": 2.5909090909090913,
+						"kcal": 570.0000000000001,
+						"vomited": false,
+						"queasy": false,
+						"plain_fare": false
+					},
+					"seq": 283
+				},
+				{
+					"ok": true,
+					"action": "rest.sleep",
+					"outcome": "success",
+					"chance": 1.0,
+					"D": 0.0,
+					"minutes": 192.34103870244877,
+					"hurry": false,
+					"gained": {},
+					"notes": [],
+					"unhandled": [],
+					"seq": 284
+				},
+				{
+					"ok": true,
+					"action": "rest.sleep",
+					"outcome": "success",
+					"chance": 1.0,
+					"D": 0.0,
+					"minutes": 60.0,
+					"hurry": false,
+					"gained": {},
+					"notes": [],
+					"unhandled": [],
+					"seq": 285
+				}
+			]
+		},
+		"diet_log": [
+			{
+				"day": 29,
+				"grain": 1600.0,
+				"meat": 1840.0,
+				"other": 0.0
+			},
+			{
+				"day": 30,
+				"grain": 2831.9999999999995,
+				"meat": 159.99999999999994,
+				"other": 0.0
+			},
+			{
+				"day": 31,
+				"grain": 799.9999999999998,
+				"meat": 1440.0,
+				"other": 0.0
+			},
+			{
+				"day": 32,
+				"grain": 570.0000000000001,
+				"meat": 0.0,
+				"other": 0.0
+			}
+		],
+		"nodes_used": {},
+		"npc_states": {},
+		"context": {
+			"location": "poi.fort.woods_camp",
+			"near": [
+				"node.trail",
+				"node.conifer",
+				"node.deadwood",
+				"node.tinder",
+				"node.windfall",
+				"node.sapling_stand"
+			],
+			"indoors": false,
+			"fire_distance_m": 1.5,
+			"in_shelter": true,
+			"region": "reg.fort_clearing"
+		},
+		"stats": {
+			"days": 8,
+			"checks": {
+				"hunt.track": {
+					"n": 4,
+					"success": 2,
+					"failure": 1,
+					"partial": 1
+				},
+				"shelter.brush_leanto": {
+					"n": 1,
+					"success": 1
+				},
+				"craft.stakes": {
+					"n": 16,
+					"success": 10,
+					"partial": 2,
+					"failure": 4
+				},
+				"fire.gather": {
+					"n": 15,
+					"success": 14,
+					"excellent": 1
+				},
+				"fire.strike_flint_steel": {
+					"n": 16,
+					"success": 10,
+					"partial": 1,
+					"failure": 5
+				},
+				"shelter.bough_bed": {
+					"n": 1,
+					"success": 1
+				},
+				"cook.roast": {
+					"n": 8,
+					"success": 5,
+					"partial": 1,
+					"excellent": 2
+				},
+				"wood.split_firewood": {
+					"n": 93,
+					"partial": 18,
+					"success": 61,
+					"failure": 8,
+					"excellent": 5,
+					"mishap": 1
+				},
+				"physick.bind_wound": {
+					"n": 2,
+					"failure": 1,
+					"success": 1
+				},
+				"trap.steel_land_set": {
+					"n": 4,
+					"excellent": 2,
+					"success": 2
+				},
+				"trap.deadfall_set": {
+					"n": 14,
+					"success": 8,
+					"partial": 3,
+					"failure": 2,
+					"excellent": 1
+				},
+				"trap.check": {
+					"n": 8,
+					"success": 7,
+					"partial": 1
+				},
+				"fur.skin": {
+					"n": 4,
+					"excellent": 1,
+					"success": 3
+				},
+				"butcher.field_dress": {
+					"n": 5,
+					"success": 4,
+					"excellent": 1
+				},
+				"fur.stretch": {
+					"n": 4,
+					"excellent": 2,
+					"partial": 1,
+					"success": 1
+				}
+			},
+			"wakes": 7,
+			"cold_stage_h": {
+				"comfortable": 192.7666666666659
+			},
+			"catches": 10,
+			"food_stage_h": {
+				"fed": 44.377363413530034,
+				"peckish": 125.41160840170961,
+				"hungry": 22.977694851429124
+			},
+			"health_min": 98.46469699690937,
+			"fires_lit": 10,
+			"meals_eaten": 24.214999999999996,
+			"interrupts": 34,
+			"coals_struck": 1,
+			"sleep_h": 76.6665719454389,
+			"cond_cond.queasy": 2,
+			"cond_cond.injury.cut": 1,
+			"vomits": 2,
+			"catches_collected": 5,
+			"steel_traps_lost": 1
+		},
+		"journal": [
+			{
+				"t": 34980.0,
+				"date": "Early September 1765",
+				"time": "07:00",
+				"kind": "start",
+				"text": "Early September 1765: Backcountry hunter begins at woods camp"
+			},
+			{
+				"t": 35411.7145357615,
+				"date": "Early September 1765",
+				"time": "14:11",
+				"kind": "camp",
+				"text": "brush leanto raised (quality 2)"
+			},
+			{
+				"t": 36000.0,
+				"date": "Mid September 1765",
+				"time": "00:00",
+				"kind": "event",
+				"text": "Fall credit begins"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Steel trap x1 for 1.00 beaver (12 s 0 d)"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Steel trap x1 for 1.00 beaver (12 s 0 d)"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Gunpowder x1 for 0.50 beaver (6 s 0 d)"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Gunpowder x1 for 0.50 beaver (6 s 0 d)"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Gunpowder x1 for 0.50 beaver (6 s 0 d)"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Bar lead x1 for 0.10 beaver (1 s 2 d)"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Bar lead x1 for 0.10 beaver (1 s 2 d)"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Bar lead x1 for 0.10 beaver (1 s 2 d)"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Bar lead x1 for 0.10 beaver (1 s 2 d)"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Bar lead x1 for 0.10 beaver (1 s 2 d)"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Bar lead x1 for 0.10 beaver (1 s 2 d)"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Wool blanket x1 for 1.50 beaver (18 s 0 d)"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Linen shirt x1 for 0.75 beaver (9 s 0 d)"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "took the fall outfit on the book: 6.33 beaver (3 l 16 s 0 d)"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 1 d"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 1 d"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 36417.89215686275,
+				"date": "Mid September 1765",
+				"time": "06:57",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 37440.0,
+				"date": "Late September 1765",
+				"time": "00:00",
+				"kind": "event",
+				"text": "Fall credit ends"
+			},
+			{
+				"t": 37490.0,
+				"date": "Late September 1765",
+				"time": "00:50",
+				"kind": "sleep",
+				"text": "woke: food worse: peckish"
+			},
+			{
+				"t": 38880.0,
+				"date": "Early October 1765",
+				"time": "00:00",
+				"kind": "event",
+				"text": "The winter's firewood begins"
+			},
+			{
+				"t": 39040.0,
+				"date": "Early October 1765",
+				"time": "02:40",
+				"kind": "sleep",
+				"text": "woke: food worse: hungry"
+			},
+			{
+				"t": 39456.29887804317,
+				"date": "Early October 1765",
+				"time": "09:36",
+				"kind": "trade",
+				"text": "stacked 1 cord(s) at the woodpile: 1 s 6 d"
+			},
+			{
+				"t": 39562.663519858346,
+				"date": "Early October 1765",
+				"time": "11:22",
+				"kind": "trade",
+				"text": "stacked 1 cord(s) at the woodpile: 1 s 6 d"
+			},
+			{
+				"t": 39599.31980085147,
+				"date": "Early October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 1 d"
+			},
+			{
+				"t": 39599.31980085147,
+				"date": "Early October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 1 d"
+			},
+			{
+				"t": 39599.31980085147,
+				"date": "Early October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 39599.31980085147,
+				"date": "Early October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 39599.31980085147,
+				"date": "Early October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 39599.31980085147,
+				"date": "Early October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 39599.31980085147,
+				"date": "Early October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 39599.31980085147,
+				"date": "Early October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 39599.31980085147,
+				"date": "Early October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 39599.31980085147,
+				"date": "Early October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 39599.31980085147,
+				"date": "Early October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 39599.31980085147,
+				"date": "Early October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 39599.31980085147,
+				"date": "Early October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Salt pork x1 for 11 d"
+			},
+			{
+				"t": 40260.0,
+				"date": "Early October 1765",
+				"time": "23:00",
+				"kind": "sleep",
+				"text": "woke: food worse: peckish"
+			},
+			{
+				"t": 40320.0,
+				"date": "Mid October 1765",
+				"time": "00:00",
+				"kind": "event",
+				"text": "The winter's firewood ends"
+			},
+			{
+				"t": 40896.19244692304,
+				"date": "Mid October 1765",
+				"time": "09:36",
+				"kind": "trade",
+				"text": "stacked 1 cord(s) at the woodpile: 1 s 6 d"
+			},
+			{
+				"t": 40981.19991526904,
+				"date": "Mid October 1765",
+				"time": "11:01",
+				"kind": "trade",
+				"text": "stacked 1 cord(s) at the woodpile: 1 s 6 d"
+			},
+			{
+				"t": 41039.08434677497,
+				"date": "Mid October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Salt pork x1 for 11 d"
+			},
+			{
+				"t": 41039.08434677497,
+				"date": "Mid October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Salt pork x1 for 1 s 0 d"
+			},
+			{
+				"t": 41039.08434677497,
+				"date": "Mid October 1765",
+				"time": "11:59",
+				"kind": "trade",
+				"text": "bought Salt pork x1 for 1 s 0 d"
+			},
+			{
+				"t": 41120.56238758659,
+				"date": "Mid October 1765",
+				"time": "13:20",
+				"kind": "trade",
+				"text": "stacked 1 cord(s) at the woodpile: 1 s 6 d"
+			},
+			{
+				"t": 41205.56201982922,
+				"date": "Mid October 1765",
+				"time": "14:45",
+				"kind": "trade",
+				"text": "stacked 1 cord(s) at the woodpile: 1 s 6 d"
+			},
+			{
+				"t": 41294.15251139697,
+				"date": "Mid October 1765",
+				"time": "16:14",
+				"kind": "trade",
+				"text": "bought Salt pork x1 for 1 s 1 d"
+			},
+			{
+				"t": 41294.15251139697,
+				"date": "Mid October 1765",
+				"time": "16:14",
+				"kind": "trade",
+				"text": "bought Salt pork x1 for 1 s 2 d"
+			},
+			{
+				"t": 41294.15251139697,
+				"date": "Mid October 1765",
+				"time": "16:14",
+				"kind": "trade",
+				"text": "bought Salt pork x1 for 1 s 3 d"
+			},
+			{
+				"t": 41680.0,
+				"date": "Mid October 1765",
+				"time": "22:40",
+				"kind": "sleep",
+				"text": "woke: food worse: peckish"
+			},
+			{
+				"t": 42150.0,
+				"date": "Late October 1765",
+				"time": "06:30",
+				"kind": "sleep",
+				"text": "woke: the fire is smouldering"
+			},
+			{
+				"t": 42365.9527637686,
+				"date": "Late October 1765",
+				"time": "10:05",
+				"kind": "trade",
+				"text": "stacked 1 cord(s) at the woodpile: 1 s 6 d"
+			},
+			{
+				"t": 42472.095592620906,
+				"date": "Late October 1765",
+				"time": "11:52",
+				"kind": "trade",
+				"text": "stacked 1 cord(s) at the woodpile: 1 s 6 d"
+			},
+			{
+				"t": 42529.936821011725,
+				"date": "Late October 1765",
+				"time": "12:49",
+				"kind": "trade",
+				"text": "bought Salt pork x1 for 1 s 5 d"
+			},
+			{
+				"t": 42529.936821011725,
+				"date": "Late October 1765",
+				"time": "12:49",
+				"kind": "trade",
+				"text": "bought Salt pork x1 for 1 s 5 d"
+			},
+			{
+				"t": 42566.54974289944,
+				"date": "Late October 1765",
+				"time": "13:26",
+				"kind": "trade",
+				"text": "stacked 1 cord(s) at the woodpile: 1 s 6 d"
+			},
+			{
+				"t": 42696.241182813,
+				"date": "Late October 1765",
+				"time": "15:36",
+				"kind": "trade",
+				"text": "stacked 1 cord(s) at the woodpile: 1 s 6 d"
+			},
+			{
+				"t": 42754.08241120382,
+				"date": "Late October 1765",
+				"time": "16:34",
+				"kind": "trade",
+				"text": "bought Salt pork x1 for 1 s 5 d"
+			},
+			{
+				"t": 42754.08241120382,
+				"date": "Late October 1765",
+				"time": "16:34",
+				"kind": "trade",
+				"text": "bought Salt pork x1 for 1 s 5 d"
+			},
+			{
+				"t": 43779.42062416264,
+				"date": "Early November 1765",
+				"time": "09:39",
+				"kind": "trade",
+				"text": "stacked 1 cord(s) at the woodpile: 1 s 6 d"
+			},
+			{
+				"t": 43858.435857649136,
+				"date": "Early November 1765",
+				"time": "10:58",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 43858.435857649136,
+				"date": "Early November 1765",
+				"time": "10:58",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 43858.435857649136,
+				"date": "Early November 1765",
+				"time": "10:58",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 43858.435857649136,
+				"date": "Early November 1765",
+				"time": "10:58",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 43858.435857649136,
+				"date": "Early November 1765",
+				"time": "10:58",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 43858.435857649136,
+				"date": "Early November 1765",
+				"time": "10:58",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 2 d"
+			},
+			{
+				"t": 43858.435857649136,
+				"date": "Early November 1765",
+				"time": "10:58",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 3 d"
+			},
+			{
+				"t": 43858.435857649136,
+				"date": "Early November 1765",
+				"time": "10:58",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 3 d"
+			},
+			{
+				"t": 43858.435857649136,
+				"date": "Early November 1765",
+				"time": "10:58",
+				"kind": "trade",
+				"text": "bought Cornmeal x1 for 3 d"
+			},
+			{
+				"t": 44270.5858828116,
+				"date": "Early November 1765",
+				"time": "17:50",
+				"kind": "cond",
+				"text": "the food came back up"
+			},
+			{
+				"t": 44272.87166018239,
+				"date": "Early November 1765",
+				"time": "17:52",
+				"kind": "cond",
+				"text": "the food came back up"
+			},
+			{
+				"t": 44970.0,
+				"date": "Mid November 1765",
+				"time": "05:30",
+				"kind": "sleep",
+				"text": "woke: the fire is smouldering"
+			},
+			{
+				"t": 46270.0,
+				"date": "Late November 1765",
+				"time": "03:10",
+				"kind": "sleep",
+				"text": "woke: food worse: hungry"
+			},
+			{
+				"t": 46443.65896129755,
+				"date": "Late November 1765",
+				"time": "06:03",
+				"kind": "loss",
+				"text": "a steel trap is gone from the line (stolen or dragged off)"
+			}
+		]
+	}
+}

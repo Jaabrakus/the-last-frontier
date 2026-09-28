@@ -1,0 +1,316 @@
+{
+ "id": "breeches",
+ "name": "Knee breeches",
+ "description": "Knee breeches cut close over the hips and thighs, a waistband above the navel, a button fall in front and a buttoned band below each knee.",
+ "kind": "garment",
+ "set": "colonial",
+ "slot": "legs.lower",
+ "alt_slots": [],
+ "layer": {
+  "default": 30
+ },
+ "glb": "res://assets/character/garments/colonial/breeches.glb",
+ "mesh": "breeches",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "breeches"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "pelvis_center",
+  "pelvis_side",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "pelvis_center",
+  "pelvis_side",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "cloth",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "buff",
+    "drab",
+    "walnut_brown",
+    "stroud_blue",
+    "madder_red",
+    "buckskin_pale"
+   ],
+   "default": "drab",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "buff": "#D2B98A",
+    "drab": "#8B7A5C",
+    "walnut_brown": "#5A3F2C",
+    "stroud_blue": "#1E2B4A",
+    "madder_red": "#8E2B21",
+    "buckskin_pale": "#C8AA7C"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "waistband and knee bands",
+   "role": "trim",
+   "fabric": "WOOL",
+   "palette": [
+    "buff",
+    "drab",
+    "walnut_brown",
+    "stroud_blue",
+    "buckskin_pale"
+   ],
+   "default": "drab",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "buff": "#D2B98A",
+    "drab": "#8B7A5C",
+    "walnut_brown": "#5A3F2C",
+    "stroud_blue": "#1E2B4A",
+    "buckskin_pale": "#C8AA7C"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "buttons",
+   "role": "button",
+   "fabric": "MET",
+   "palette": [
+    "brass",
+    "pewter"
+   ],
+   "default": "brass",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "brass": "#B58F4A",
+    "pewter": "#9A9C9A"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 2998,
+    "verts": 1585,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "pelvis_center",
+     "pelvis_side",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "r_upper_leg",
+     "r_knee",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spinea_muscle"
+    ]
+   }
+  },
+  "tris": 2998,
+  "verts": 1585,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0544,
+   "breast_large": 0.0029,
+   "breast_small": 0.0002
+  },
+  "coverage": {
+   "abdomen_front": {
+    "normal": 0.854,
+    "cone": 0.812
+   },
+   "abdomen_side": {
+    "normal": 0.771,
+    "cone": 0.719
+   },
+   "abdomen_back": {
+    "normal": 0.719,
+    "cone": 0.646
+   },
+   "pelvis_center": {
+    "normal": 0.896,
+    "cone": 0.698
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "upper_arm_l": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.104,
+    "cone": 0.0
+   },
+   "forearm_b_l": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "forearm_c_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.083,
+    "cone": 0.0
+   },
+   "forearm_b_r": {
+    "normal": 0.062,
+    "cone": 0.0
+   },
+   "forearm_c_r": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "thigh_lower_l": {
+    "normal": 0.896,
+    "cone": 0.885
+   },
+   "thigh_upper_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "thigh_lower_r": {
+    "normal": 0.885,
+    "cone": 0.844
+   }
+  },
+  "glb_kb": 333.0
+ },
+ "budget": {
+  "tris_max": 3600
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Breeches of wool, linen, buckskin or leather were the men's lower garment of the 1750s and 60s, cut high in the waist, close over the hip and gathered at the knee with a buckled or buttoned band [P1][M2].",
+ "sources": [
+  "P1",
+  "M2"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "colonial"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 3.0,
+    "p05_mm": 6.98,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 3.0,
+    "p05_mm": 4.99,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 3.0,
+    "p05_mm": 6.98,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 3.0,
+    "p05_mm": 6.98,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/breeches.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/cloth2/garments/breeches.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null
+}

@@ -1,0 +1,45 @@
+{
+ "variant_of": "powder_horn",
+ "envelope": "env10",
+ "glb": "res://assets/character/garments/frontier/powder_horn_env10.glb",
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 816,
+    "verts": 416,
+    "zones": [
+     0,
+     1,
+     2
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "neck_lower",
+     "pelvis_side"
+    ],
+    "max_influences": 3,
+    "bones": [
+     "pelvis",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle"
+    ]
+   }
+  },
+  "tris": 816,
+  "verts": 416,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0163
+  }
+ },
+ "deform_limits": {}
+}

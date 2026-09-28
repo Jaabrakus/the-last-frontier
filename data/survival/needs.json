@@ -1,0 +1,462 @@
+{
+ "schema": "frontier.survival.needs",
+ "version": 4,
+ "status": "LIVE design data v4: the vertical slice (milestones M1, M2a and M2b; survival_gdd.md version 4). The game and tests/survival/test_survival_data.gd read these rows. Every number is tunable.",
+ "design_doc": "Player_Animation_Project/graph_analysis/survival/survival_gdd.md",
+ "summary": "Needs for the slice: food, warmth, wetness and rest (thirst is 'post'). Tuned in real minutes of play on the Woodsman preset.",
+ "id_rules": "Ids are stable strings (prefix.name). Never rename an id once saves exist; add an alias instead. Display names are separate and may change. An id is defined in exactly one place: the live file or the backlog.",
+ "milestones": {
+  "M1": "A winter night: fire, shelter, cold, hunger, sleep, time safety; the fort region only; one background; 1765",
+  "M2a": "A winter from the woods: living from the manor woods through the winter by your own hands (gathering, hides, sewing, snares, snowshoes, a half-faced camp, a hung cache, ice fishing); plain barter with the sutler, the trader, the garrison's soldiers, a farm family from German Flatts and an old hunter; credit and the fall outfit as options; the second background",
+  "M2b": "Learning from neighbours: lessons, watching, examining, quality standards, haggling, promises and loans",
+  "M3": "The year turns: the full almanac, seasons and weather content, the summer goal (bark and a cabin), fishing, frogs, ginseng, one played wage job; the fur cap and robe, leggings, carving, casting balls, the cache pit, char cloth and spruce beer",
+  "M4": "People: NPC schedules and tiers at the fort, standing, invitations, the soldiers and the lieutenant as mentors; Native characters only after the relevant nation's sign-off",
+  "M5": "The map: the Carry, the valley, the town and the hunting grounds, travel and camps, other markets and backgrounds",
+  "post": "After M5 and not yet planned: the 1757 and 1761 starts and their eras, detailed illnesses, thirst, potash, upstream canoe and bateau travel, the Proxy NPC tier, languages beyond English, French, Mohawk and Oneida"
+ },
+ "source_keys": {
+  "E": "graph_analysis/survival/research_economy_life.md, source list S# (E:S14 = source S14)",
+  "K": "graph_analysis/survival/research_survival_skills.md, numbered sources [#] (K:1 = source [1])",
+  "Y": "graph_analysis/survival/research_systems.md, section number (Y:3.2 = section 3.2)",
+  "C": "graph_analysis/customizer/costume_bible.md, section number",
+  "A": "Player_Animation_Project/blender_animation_index.csv (clip names and asset ids)",
+  "N": "graph_analysis/survival/survival_gdd.md, sources list (N:3 = source N3; N33 onward added in version 3)"
+ },
+ "basis_keys": {
+  "S": "sourced: checked against a primary source, a scholarly work or an institutional page; web summaries and popular pages do not qualify",
+  "H": "standard historiography (books in the GDD sources list); verify before quoting",
+  "H-regional": "true for one region's trade or society (named in the row); not yet checked for New York",
+  "M": "modern science or medicine sets the mechanic (period explanation may differ)",
+  "D": "design value for balance, or a figure resting on web summaries; not a checked historical record"
+ },
+ "clock_note": "Needs tick in game hours of the SimClock. A game hour is 2.4 real minutes by day and 1.2 at night (seasons.json). Drain rates were chosen so the real-minute targets below hold on the Woodsman preset.",
+ "real_time_targets_woodsman": {
+  "food_full_to_hungry_real_min": [
+   35,
+   45
+  ],
+  "food_full_to_health_drain_real_min": [
+   85,
+   110
+  ],
+  "warmth_winter_night_poor_kit_to_cold_real_min": [
+   3,
+   5
+  ],
+  "warmth_winter_night_poor_kit_to_zero_real_min": [
+   7,
+   10
+  ],
+  "rest_awake_to_tired_game_h": 18,
+  "rest_awake_to_exhausted_game_h": 36
+ },
+ "food": {
+  "flow_factor": 5,
+  "rule": "Food uses the one conversion factor (seasons.json time.flow_factor = 5): an item's game kcal is its historical energy divided by 5, and the body burns 2,400 game kcal a game day, so a game day of eating stands for five days of eating, the same factor that sets wages and trap nights.",
+  "meal_game_kcal": 800,
+  "game_kcal_per_game_day": 2400,
+  "display": "Food shows in meals only (inventory, trade screen, sleep dialog and travel warnings). Pounds and kcal of food are internal; carried weight still shows as load in kg. Prices at the sutler show per meal as well as per the sutler's unit (review 2 of v2, the clocks issue).",
+  "groups": {
+   "grain": "cornmeal, flour, biscuit, johnnycake",
+   "meat": "venison, small game, jerky, salt pork",
+   "fish": "fish",
+   "plant": "nuts, groundnuts, greens, grapes, acorn meal, sauerkraut, dried apples"
+  },
+  "plain_fare": {
+   "window_game_days": 3,
+   "max_share_one_group": 0.7,
+   "effect": {
+    "meal_energy_mult": 0.85,
+    "sleep_quality_add": -0.05
+   },
+   "shown_as": "a 'plain fare' pip on the hunger icon and in food tooltips",
+   "rule": "When one food group gives more than 70% of the energy eaten over the last 3 game days, meals give 85% of their energy and sleep is a little worse. Cornmeal alone, or venison alone, is plain fare; nuts and groundnuts break it."
+  },
+  "targets": {
+   "deer_feeds_game_days": [
+    2,
+    4
+   ],
+   "cheapest_varied_diet_vs_cheapest_cash_wage": [
+    0.25,
+    0.5
+   ]
+  },
+  "target_rule": "At every market that sells food, the cheapest diet that avoids plain fare must cost 0.25-0.5 of the cheapest cash wage (tested). Grain was cheap against wages in 1765; at a frontier post carriage and the need for meat are what make food cost something. On the line your own meat is free, which is the point of hunting it.",
+  "sources": [
+   "K:10.1",
+   "Y:3.1"
+  ],
+  "computed": {
+   "deer_game_days": 2.75,
+   "deer_meals": 8.2,
+   "cheapest_cash_wage_d": 72,
+   "markets": {
+    "mkt.fort_sutler": {
+     "cost_d": 26.8,
+     "kcal_by_item": {
+      "item.food.cornmeal": 1680,
+      "item.food.salt_pork": 720
+     },
+     "complete": true,
+     "frac_of_cheapest_wage": 0.372
+    }
+   }
+  }
+ },
+ "needs": [
+  {
+   "id": "need.food",
+   "name": "Food",
+   "status": "slice",
+   "model": "Two stores like a bar and a core: the stomach store (fast) and the body reserve (slow). Game kcal.",
+   "stomach_capacity_kcal": 3000,
+   "reserve_capacity_kcal": 2500,
+   "start": {
+    "stomach": 2400,
+    "reserve": 2500
+   },
+   "burn_kcal_per_game_h": 100,
+   "activity_mult": {
+    "sleep": 0.7,
+    "rest": 0.8,
+    "walk": 1.0,
+    "crouch": 1.0,
+    "run": 1.4,
+    "sprint": 1.9,
+    "heavy_work": 1.8,
+    "snowshoe": 2.0,
+    "wading": 1.5,
+    "paddling": 1.5
+   },
+   "cold_mult": {
+    "chilled": 1.05,
+    "cold": 1.2,
+    "very_cold": 1.35,
+    "hypothermic": 1.5
+   },
+   "reserve_rules": {
+    "drain_when_stomach_empty": true,
+    "refill_kcal_per_game_h": 60,
+    "refill_when_stomach_above_frac": 0.5
+   },
+   "stages": [
+    {
+     "stage": "fed",
+     "stomach_frac_min": 0.6
+    },
+    {
+     "stage": "peckish",
+     "stomach_frac_min": 0.35
+    },
+    {
+     "stage": "hungry",
+     "stomach_frac_min": 0.15
+    },
+    {
+     "stage": "very_hungry",
+     "stomach_frac_min": 0.0001
+    },
+    {
+     "stage": "starving",
+     "when": "stomach empty, reserve > 0"
+    },
+    {
+     "stage": "wasting",
+     "when": "stomach and reserve empty"
+    }
+   ],
+   "condition": "cond.hunger",
+   "refeeding": {
+    "when_stage_in": [
+     "starving",
+     "wasting"
+    ],
+    "kcal_within_game_h": 1200,
+    "cond": "cond.queasy",
+    "chance": 0.6,
+    "exempt_items": [],
+    "note": "Eat a little at a time after starving: meals of plain grain are exempt from the queasy roll.",
+    "exempt_groups": [
+     "grain"
+    ]
+   },
+   "overeat": {
+    "stomach_over_capacity": "refused, or cond.queasy chance 0.3 when forced"
+   },
+   "balance_intent": "A game day's walking burns 2,400 game kcal, three meals. A deer is about 8 meals; frozen meat keeps all winter, so in the slice the pressure is getting food, carrying it and eating a varied diet, not spoilage.",
+   "sources": [
+    "K:10.1",
+    "Y:3.1"
+   ],
+   "milestone": "M1"
+  },
+  {
+   "id": "need.warmth",
+   "name": "Warmth",
+   "status": "slice",
+   "range": [
+    0,
+    100
+   ],
+   "start": 100,
+   "rate_formula": "dW/dh = clamp((T_eff - T_comfort) * k, -max_loss, +max_gain) * warmth_loss_mult (loss only)",
+   "T_comfort_c": 8.0,
+   "k": 1.2,
+   "max_loss_per_game_h": 40,
+   "max_gain_per_game_h": 30,
+   "T_eff_formula": "air_c + ins_eff * c_per_ins + shelter_c + fire_c + activity_c + food_c - wind_c - wet_c + bedding_c",
+   "c_per_ins": 1.8,
+   "ins_eff": "sum over worn clothing classes of ins * (1 - wetness * (1 - wet_keep)); while sleeping add bedding ins",
+   "shelter_c_per_quality": 1.5,
+   "fire_c_by_distance_m": [
+    [
+     1.0,
+     22
+    ],
+    [
+     2.0,
+     20
+    ],
+    [
+     4.0,
+     12
+    ],
+    [
+     7.0,
+     5
+    ],
+    [
+     10.0,
+     0
+    ]
+   ],
+   "fire_c_shelter_q5_mult": 1.3,
+   "long_fire": "fire_c at the 2 m value for everyone in the shelter",
+   "activity_c": {
+    "sleep": -2,
+    "rest": 0,
+    "walk": 4,
+    "crouch": 2,
+    "run": 8,
+    "sprint": 10,
+    "heavy_work": 8,
+    "snowshoe": 9,
+    "wading": -4
+   },
+   "food_c": {},
+   "wind_c": "wind_ms * 0.8 * (1 - wind_block); wind_block = min(0.9, sum(clothing wind)/10 + (0.5 if shelter_q >= 2))",
+   "wet_c": "6 * wetness",
+   "bedding_c": {
+    "none": 0,
+    "bough_bed": 2,
+    "bark_floor": 1,
+    "fur_robe_under": 3,
+    "pole_bed": 3
+   },
+   "stages": [
+    {
+     "stage": "comfortable",
+     "min": 70
+    },
+    {
+     "stage": "chilled",
+     "min": 50
+    },
+    {
+     "stage": "cold",
+     "min": 30
+    },
+    {
+     "stage": "very_cold",
+     "min": 15
+    },
+    {
+     "stage": "hypothermic",
+     "min": 0.0001
+    },
+    {
+     "stage": "freezing",
+     "when": "warmth 0"
+    }
+   ],
+   "condition": "cond.cold",
+   "worked_example": "Winter night -15 C, calm, poor kit (ins 6), no shelter or fire, resting: T_eff = -15 + 10.8 = -4.2; rate = (-4.2 - 8) * 1.2 = -14.6/h. Cold (30..50) after about 3.4 game h = 4.1 real min at night; 0 after about 6.8 game h = 8.2 real min. Good winter kit (ins 17.5): T_eff +16.5, warming slowly.",
+   "sources": [
+    "K:9",
+    "Y:3.1"
+   ],
+   "milestone": "M1",
+   "hud": "The warmth icon always shows the true stage. Drink adds a 'you feel warm' tag beside it; it never changes the reading (review 2 of v2, the drink issue)."
+  },
+  {
+   "id": "need.wetness",
+   "name": "Wetness",
+   "status": "slice",
+   "range": [
+    0.0,
+    1.0
+   ],
+   "gain_per_game_h": {
+    "rain_unsheltered": 0.25,
+    "heavy_rain": 0.45,
+    "snow_melting_on_clothes": 0.08,
+    "sweat_heavy_work_below_0c": 0.05
+   },
+   "events": {
+    "wade_knee": 0.3,
+    "wade_waist": 0.6,
+    "fall_through_ice": 1.0
+   },
+   "dry_per_game_h": {
+    "by_fire_2m": 0.5,
+    "in_shelter": 0.1,
+    "sun_warm_wind": 0.2,
+    "cold_air": 0.03
+   },
+   "feet_wet_flag": "set by wading or snow in unstuffed moccasins; doubles frostbite exposure on feet",
+   "condition": "cond.wet",
+   "milestone": "M1"
+  },
+  {
+   "id": "need.rest",
+   "name": "Rest",
+   "status": "slice",
+   "meter": "fatigue 0 (rested) to 100 (collapse)",
+   "start": 10,
+   "gain_per_game_h_awake": 2.5,
+   "activity_mult": {
+    "rest": 0.5,
+    "walk": 1.0,
+    "run": 1.3,
+    "sprint": 1.6,
+    "heavy_work": 1.5,
+    "snowshoe": 1.6
+   },
+   "sleep_recovery_per_game_h": 12.5,
+   "sleep_quality_formula": "q = clamp(0.4 + 0.08*shelter_q + bedding + warmth_term - insects - cold_camp, 0.2, 1.1)",
+   "sleep_quality_terms": {
+    "bedding": {
+     "none": 0.0,
+     "blanket": 0.1,
+     "bough_bed": 0.15,
+     "pole_bed": 0.2
+    },
+    "warmth_term": {
+     "comfortable": 0.1,
+     "chilled": 0.0,
+     "cold": -0.25,
+     "very_cold": -0.5
+    },
+    "insects": {
+     "note": "insects arrive with summer (M3)"
+    },
+    "cold_camp_no_fire_winter": 0.1,
+    "plain_fare": -0.05
+   },
+   "stages": [
+    {
+     "stage": "rested",
+     "max": 45
+    },
+    {
+     "stage": "tired",
+     "max": 90
+    },
+    {
+     "stage": "exhausted",
+     "max": 99.99
+    },
+    {
+     "stage": "collapse",
+     "when": "fatigue 100: pass out 2-4 game h where you stand"
+    }
+   ],
+   "condition": "cond.fatigue",
+   "sources": [
+    "K:10.3",
+    "Y:3.1"
+   ],
+   "milestone": "M1"
+  }
+ ],
+ "load": {
+  "comfortable_kg": 30,
+  "heavy_kg": 45,
+  "max_kg": 60,
+  "heavy_effects": {
+   "move_speed_mult": 0.85,
+   "fatigue_rate_mult": 1.3,
+   "sprint_allowed": true
+  },
+  "overloaded_effects": {
+   "move_speed_mult": 0.65,
+   "fatigue_rate_mult": 1.6,
+   "sprint_allowed": false
+  },
+  "packhorse_capacity_kg": 90,
+  "tumpline_bonus_kg": 10,
+  "note": "A dressed deer (40-60 kg) is too heavy to carry whole: quarter it, jerk it on the spot, or bring a horse (K:6). A cache holds what the pack cannot (actions.json world.cache_pit).",
+  "sources": [
+   "K:6",
+   "E:S27"
+  ]
+ },
+ "time_safety": {
+  "rule": "Accelerated time never kills without a decision (review 2, issue 12).",
+  "sleep_and_jobs": {
+   "wake_or_interrupt_when": [
+    "any need stage worsens (hunger, cold, wet, fatigue from sleep excepted)",
+    "the fire goes out or drops to smouldering",
+    "a threat is detected within 60 m (sleep) or 25 m (jobs)",
+    "a condition gains a stage",
+    "weather turns to storm or blizzard",
+    "any of the above while senseless from drink: the player wakes groggy (check -0.2 for one game hour); no companion is needed"
+   ],
+   "sleep_dialog_shows": [
+    "expected night warmth stage at the chosen length (from forecast low, kit, shelter, bedding and fire fuel)",
+    "fire fuel hours left",
+    "food left in meals"
+   ],
+   "bank_fire_option": "The sleep dialog offers 'bank the fire' when fuel is stacked: fire.bank runs before sleep and the stack feeds it (actions.json slice_verbs)."
+  },
+  "travel": "No travel map in the slice: the woods are part of the fort scene. The travel-map camps are backlog (M5).",
+  "sources": [
+   "Y:3.5",
+   "Y:4"
+  ],
+  "hurry": "The hurry toggle (actions.json job_runner.hurry) never suspends the wake rules."
+ },
+ "difficulty_scaling": {
+  "settler": {
+   "food": 0.6,
+   "warmth": 0.6,
+   "fatigue": 0.6
+  },
+  "woodsman": {
+   "food": 1.0,
+   "warmth": 1.0,
+   "fatigue": 1.0
+  },
+  "hard_winter": {
+   "food": 1.1,
+   "warmth": 1.3,
+   "fatigue": 1.2
+  },
+  "ironman": {
+   "food": 1.1,
+   "warmth": 1.3,
+   "fatigue": 1.2
+  },
+  "applies_to": [
+   "food burn",
+   "warmth loss",
+   "fatigue gain"
+  ],
+  "rule": "Per need (the balance report's R2): Hard Winter is about cold, not starving careful players; v3's single x1.3 starved careful trappers."
+ },
+ "aliases": {
+  "food_calendar": "renamed 'food' in v3; the living clock is replaced by the one flow factor",
+  "need.thirst": "backlog (post)"
+ }
+}

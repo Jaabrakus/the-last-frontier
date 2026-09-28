@@ -1,0 +1,273 @@
+{
+ "id": "leggings_buckskin",
+ "name": "Buckskin leggings, fringed",
+ "description": "Long leggings of smoked or pale buckskin with the seam and a fringe on the outside of the leg, tied up to the belt and gartered below the knee.",
+ "kind": "garment",
+ "set": "frontier",
+ "slot": "legs.over",
+ "alt_slots": [],
+ "layer": {
+  "default": 30
+ },
+ "glb": "res://assets/character/garments/frontier/leggings_buckskin.glb",
+ "mesh": "leggings_buckskin",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "leggings_buckskin"
+  },
+  {
+   "surface": "fringe",
+   "name": "leggings_buckskin_fringe"
+  }
+ ],
+ "occupies_regions": [
+  "thigh_upper_l",
+  "thigh_lower_l",
+  "shin_upper_l",
+  "shin_lower_l",
+  "thigh_upper_r",
+  "thigh_lower_r",
+  "shin_upper_r",
+  "shin_lower_r",
+  "ankle_r"
+ ],
+ "hides_regions": [
+  "shin_upper_l",
+  "shin_lower_l",
+  "shin_upper_r",
+  "shin_lower_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "buckskin",
+   "role": "leather",
+   "fabric": "SUEDE",
+   "palette": [
+    "buckskin_smoked",
+    "buckskin_pale",
+    "leather_brown"
+   ],
+   "default": "buckskin_smoked",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "buckskin_smoked": "#A07E55",
+    "buckskin_pale": "#C8AA7C",
+    "leather_brown": "#5B3D26"
+   }
+  },
+  {
+   "zone": 1,
+   "name": "fringe",
+   "role": "fringe",
+   "fabric": "SUEDE",
+   "palette": [
+    "buckskin_smoked",
+    "buckskin_pale",
+    "leather_brown"
+   ],
+   "default": "buckskin_smoked",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "buckskin_smoked": "#A07E55",
+    "buckskin_pale": "#C8AA7C",
+    "leather_brown": "#5B3D26"
+   }
+  },
+  {
+   "zone": 2,
+   "name": "garters",
+   "role": "band",
+   "fabric": "LEA",
+   "palette": [
+    "leather_brown",
+    "madder_red",
+    "stroud_blue",
+    "buckskin_smoked"
+   ],
+   "default": "leather_brown",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "leather_brown": "#5B3D26",
+    "madder_red": "#8E2B21",
+    "stroud_blue": "#1E2B4A",
+    "buckskin_smoked": "#A07E55"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 3363,
+    "verts": 1715,
+    "zones": [
+     0,
+     2
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "foot_r",
+     "pelvis_center",
+     "pelvis_side",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "r_upper_leg",
+     "r_knee",
+     "r_ankle",
+     "r_heel",
+     "r_ball",
+     "spinea",
+     "spineb"
+    ]
+   },
+   "fringe": {
+    "tris": 252,
+    "verts": 336,
+    "zones": [
+     1
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 2,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "l_ankle",
+     "r_upper_leg",
+     "r_knee",
+     "r_ankle"
+    ]
+   }
+  },
+  "tris": 3615,
+  "verts": 2051,
+  "surface_count": 2,
+  "shapes": {
+   "sex": 0.0113
+  },
+  "glb_kb": 369.9
+ },
+ "budget": {
+  "tris_max": 3200
+ },
+ "evidence": "B",
+ "licence_note": null,
+ "history": "Buckskin leggings with a fringed side seam belong mostly to the 1770s-80s; in the 1750s wool leggings with the flap outside were usual. Long leggings were tied to the belt over a breechcloth.",
+ "sources": [
+  "R3",
+  "M1",
+  "M2",
+  "P3"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "backcountry"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": false,
+   "layer": "legwear",
+   "groups": {
+    "feet": {
+     "n": 3,
+     "min": 0.0127,
+     "max": 0.014,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "hips": {
+     "n": 148,
+     "min": -0.0269,
+     "max": 0.0163,
+     "below_inner": 81,
+     "above_outer": 0,
+     "band": [
+      0.012,
+      0.019
+     ]
+    },
+    "shins": {
+     "n": 851,
+     "min": -0.0191,
+     "max": 0.0935,
+     "below_inner": 105,
+     "above_outer": 163,
+     "band": [
+      0.012,
+      0.019
+     ]
+    },
+    "thighs": {
+     "n": 1049,
+     "min": -0.0454,
+     "max": 0.0952,
+     "below_inner": 219,
+     "above_outer": 180,
+     "band": [
+      0.012,
+      0.019
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/frontier/leggings_buckskin.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/leggings_buckskin.py.",
+ "fringe": {
+  "surface": "leggings_buckskin_fringe",
+  "shader": "res://assets/character/shaders/fringe.gdshader",
+  "zone": 1
+ },
+ "deform_limits": {}
+}

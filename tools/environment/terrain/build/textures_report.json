@@ -1,0 +1,107 @@
+[
+ {
+  "slice": 0,
+  "name": "grass",
+  "source": "aerial_grass_rock",
+  "hue_deg": -3.0,
+  "sat_scale": 0.9,
+  "linear_value_scale": 1.0,
+  "mean_linear_luminance": 0.1245,
+  "mean_srgb": [
+   0.446,
+   0.374,
+   0.174
+  ],
+  "mean_roughness": 0.809
+ },
+ {
+  "slice": 1,
+  "name": "dry_grass",
+  "source": "aerial_grass_rock",
+  "hue_deg": 12.0,
+  "sat_scale": 0.8,
+  "linear_value_scale": 1.283,
+  "mean_linear_luminance": 0.1991,
+  "mean_srgb": [
+   0.493,
+   0.489,
+   0.231
+  ],
+  "mean_roughness": 0.809
+ },
+ {
+  "slice": 2,
+  "name": "dirt",
+  "source": "dirt_floor",
+  "hue_deg": 0.0,
+  "sat_scale": 0.85,
+  "linear_value_scale": 0.62,
+  "mean_linear_luminance": 0.1997,
+  "mean_srgb": [
+   0.576,
+   0.459,
+   0.35
+  ],
+  "mean_roughness": 0.92
+ },
+ {
+  "slice": 3,
+  "name": "mud",
+  "source": "mud_forest",
+  "hue_deg": 0.0,
+  "sat_scale": 0.9,
+  "linear_value_scale": 1.35,
+  "mean_linear_luminance": 0.0368,
+  "mean_srgb": [
+   0.244,
+   0.177,
+   0.105
+  ],
+  "mean_roughness": 0.918
+ },
+ {
+  "slice": 4,
+  "name": "forest_floor",
+  "source": "forest_ground_04",
+  "hue_deg": 0.0,
+  "sat_scale": 0.92,
+  "linear_value_scale": 1.0,
+  "mean_linear_luminance": 0.1198,
+  "mean_srgb": [
+   0.416,
+   0.357,
+   0.277
+  ],
+  "mean_roughness": 0.9
+ },
+ {
+  "slice": 5,
+  "name": "rock",
+  "source": "forest_ground_04",
+  "hue_deg": 0.0,
+  "sat_scale": 0.4,
+  "linear_value_scale": 0.8,
+  "mean_linear_luminance": 0.111,
+  "mean_srgb": [
+   0.374,
+   0.351,
+   0.319
+  ],
+  "mean_roughness": 0.9
+ },
+ {
+  "slice": 6,
+  "name": "leaves",
+  "source": "forest_leaves_04",
+  "hue_deg": -4.0,
+  "sat_scale": 0.7,
+  "linear_value_scale": 1.0,
+  "mean_linear_luminance": 0.1659,
+  "mean_srgb": [
+   0.508,
+   0.4,
+   0.314
+  ],
+  "mean_roughness": 0.759
+ }
+]

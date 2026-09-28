@@ -1,0 +1,493 @@
+{
+ "id": "ew_shift_f",
+ "name": "Long linen shirt, worn over the skirt",
+ "description": "A long linen shirt with full sleeves and a collar band, worn outside the wrap skirt and reaching nearly to the knee; the collar may be red.",
+ "kind": "garment",
+ "set": "woodlands",
+ "slot": "shirt",
+ "alt_slots": [],
+ "layer": {
+  "default": 10,
+  "hips": 35,
+  "thighs": 35
+ },
+ "glb": "res://assets/character/garments/woodlands/ew_shift_f.glb",
+ "mesh": "ew_shift_f",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "ew_shift_f"
+  }
+ ],
+ "occupies_regions": [
+  "neck_lower",
+  "chest_upper_front",
+  "chest_upper_side",
+  "chest_upper_back",
+  "chest_front",
+  "chest_side",
+  "chest_back",
+  "abdomen_front",
+  "abdomen_side",
+  "abdomen_back",
+  "pelvis_center",
+  "pelvis_side",
+  "upper_arm_l",
+  "forearm_a_l",
+  "forearm_b_l",
+  "forearm_c_l",
+  "wrist_l",
+  "upper_arm_r",
+  "forearm_a_r",
+  "forearm_b_r",
+  "forearm_c_r",
+  "thigh_upper_l",
+  "thigh_lower_l",
+  "thigh_upper_r",
+  "thigh_lower_r"
+ ],
+ "hides_regions": [
+  "chest_back",
+  "abdomen_front",
+  "abdomen_side",
+  "abdomen_back",
+  "pelvis_side",
+  "forearm_a_l",
+  "forearm_b_l",
+  "forearm_c_l",
+  "forearm_a_r",
+  "forearm_b_r",
+  "forearm_c_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "linen",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "linen_white",
+    "linen_unbleached",
+    "tow"
+   ],
+   "default": "linen_white",
+   "pattern": {
+    "options": [
+     "none",
+     "check",
+     "calico_small"
+    ],
+    "check": {
+     "colors": [
+      "check_blue",
+      "linen_white"
+     ],
+     "scale_m": 0.012
+    },
+    "calico_small": {
+     "colors": [
+      "madder_red",
+      "indigo_mid",
+      "linen_white"
+     ],
+     "scale_m": 0.02,
+     "evidence": "B (1770s)"
+    }
+   },
+   "bands": null,
+   "palette_hex": {
+    "linen_white": "#E8E3D3",
+    "linen_unbleached": "#C8BA9A",
+    "tow": "#A99570"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "collar and wrist bands",
+   "role": "trim",
+   "fabric": "LIN",
+   "palette": [
+    "linen_white",
+    "madder_red",
+    "linen_unbleached"
+   ],
+   "default": "linen_white",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "linen_white": "#E8E3D3",
+    "madder_red": "#8E2B21",
+    "linen_unbleached": "#C8BA9A"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 5640,
+    "verts": 2818,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "forearm_a_r",
+     "forearm_b_l",
+     "forearm_b_r",
+     "forearm_c_l",
+     "forearm_c_r",
+     "neck_lower",
+     "pelvis_center",
+     "pelvis_side",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r",
+     "upper_arm_l",
+     "upper_arm_r",
+     "wrist_l",
+     "wrist_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "r_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "l_shoulder",
+     "l_elbow",
+     "r_clavicle",
+     "r_shoulder",
+     "r_elbow",
+     "neck",
+     "headb",
+     "l_forarm_twist_a",
+     "l_forarm_twist_c",
+     "l_forarm_twist_b",
+     "r_forarm_twist_a",
+     "r_forarm_twist_c",
+     "r_forarm_twist_b",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_shoulder_twist_a",
+     "l_shoulder_twist_c",
+     "l_shoulder_twist_b",
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 5640,
+  "verts": 2818,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0146
+  },
+  "glb_kb": 544.8
+ },
+ "budget": {
+  "tris_max": 5600
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Linen or calico, nearly to the knee and worn outside the skirt; a fine white shift with a red collar marked rank (Loskiel); dress shifts were ruffled and set with small brooches (Cresswell) [R1].",
+ "sources": [
+  "R1"
+ ],
+ "aliases": [],
+ "tags": [
+  "woodlands",
+  "women"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": true,
+   "layer": "base",
+   "groups": {
+    "arms_lower": {
+     "n": 357,
+     "min": 0.0049,
+     "max": 0.0097,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.0,
+      0.0095
+     ]
+    },
+    "arms_upper": {
+     "n": 395,
+     "min": 0.0025,
+     "max": 0.0069,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      0.0,
+      0.0095
+     ]
+    },
+    "hips": {
+     "n": 388,
+     "min": 0.02,
+     "max": 0.0908,
+     "below_inner": 0,
+     "above_outer": 388,
+     "band": [
+      0.0,
+      0.003
+     ]
+    },
+    "neck": {
+     "n": 62,
+     "min": 0.0097,
+     "max": 0.0153,
+     "below_inner": 0,
+     "above_outer": 62,
+     "band": [
+      0.0,
+      0.006
+     ]
+    },
+    "thighs": {
+     "n": 1113,
+     "min": 0.0299,
+     "max": 0.1141,
+     "below_inner": 0,
+     "above_outer": 1113,
+     "band": [
+      0.0,
+      0.003
+     ]
+    },
+    "torso_lower": {
+     "n": 137,
+     "min": 0.0085,
+     "max": 0.0266,
+     "below_inner": 0,
+     "above_outer": 137,
+     "band": [
+      0.0,
+      0.006
+     ]
+    },
+    "torso_upper": {
+     "n": 366,
+     "min": 0.0037,
+     "max": 0.0139,
+     "below_inner": 0,
+     "above_outer": 239,
+     "band": [
+      0.0,
+      0.006
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/woodlands/ew_shift_f.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_shift_f.py.",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
+ "deform_limits": {
+  "ew_shift_f": [
+   0.099,
+   0.171,
+   0.123,
+   12.7
+  ]
+ },
+ "edge_uv": {
+  "x": "distance from the hem or the wrist band's end, metres",
+  "y": "distance from the front slit, metres"
+ },
+ "coverage": {
+  "method": "rays from the skin: the normal and 4 rays tilted 25 deg must hit the garment (>= 99.5 % of samples), on the female base and the male fit",
+  "hidden": [
+   "chest_back",
+   "abdomen_front",
+   "abdomen_side",
+   "abdomen_back",
+   "pelvis_side",
+   "forearm_a_l",
+   "forearm_b_l",
+   "forearm_c_l",
+   "forearm_a_r",
+   "forearm_b_r",
+   "forearm_c_r"
+  ],
+  "rejected_candidates": {
+   "chest_upper_side": 0.914,
+   "chest_upper_back": 0.894,
+   "chest_front": 0.965,
+   "chest_side": 0.991,
+   "upper_arm_l": 0.984,
+   "upper_arm_r": 0.988
+  },
+  "share": {
+   "head": {
+    "normal": 0.003,
+    "cone": 0.0
+   },
+   "neck_lower": {
+    "normal": 0.591,
+    "cone": 0.531
+   },
+   "chest_upper_front": {
+    "normal": 0.889,
+    "cone": 0.838
+   },
+   "chest_upper_side": {
+    "normal": 0.936,
+    "cone": 0.914
+   },
+   "chest_upper_back": {
+    "normal": 0.899,
+    "cone": 0.894
+   },
+   "chest_front": {
+    "normal": 0.99,
+    "cone": 0.965
+   },
+   "chest_side": {
+    "normal": 0.997,
+    "cone": 0.991
+   },
+   "chest_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "pelvis_center": {
+    "normal": 0.94,
+    "cone": 0.88
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "upper_arm_l": {
+    "normal": 0.991,
+    "cone": 0.984
+   },
+   "forearm_a_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_c_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "wrist_l": {
+    "normal": 0.394,
+    "cone": 0.317
+   },
+   "upper_arm_r": {
+    "normal": 0.995,
+    "cone": 0.988
+   },
+   "forearm_a_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_c_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "wrist_r": {
+    "normal": 0.286,
+    "cone": 0.21
+   },
+   "thigh_upper_l": {
+    "normal": 0.776,
+    "cone": 0.654
+   },
+   "thigh_lower_l": {
+    "normal": 0.408,
+    "cone": 0.266
+   },
+   "thigh_upper_r": {
+    "normal": 0.783,
+    "cone": 0.669
+   },
+   "thigh_lower_r": {
+    "normal": 0.408,
+    "cone": 0.257
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 2.46,
+   "p05_mm": 4.91,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": -1.83,
+   "p05_mm": 4.51,
+   "inside_skin": 4
+  }
+ }
+}

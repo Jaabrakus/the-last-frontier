@@ -1,0 +1,198 @@
+{
+ "id": "br_stock",
+ "name": "Stock",
+ "description": "A stiffened band worn round the neck and buckled behind.",
+ "kind": "garment",
+ "set": "regulars",
+ "slot": "accessories.neck",
+ "alt_slots": [],
+ "layer": {
+  "default": 15
+ },
+ "glb": "res://assets/character/garments/military/br_stock.glb",
+ "mesh": "br_stock",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "br_stock"
+  }
+ ],
+ "occupies_regions": [
+  "neck_lower"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "stock",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "logwood_black",
+    "linen_white"
+   ],
+   "default": "logwood_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "logwood_black": "#1C1B20",
+    "linen_white": "#E8E3D3"
+   }
+  },
+  {
+   "zone": 3,
+   "name": "buckle",
+   "role": "metal",
+   "fabric": "MET",
+   "palette": [
+    "brass",
+    "pewter"
+   ],
+   "default": "brass",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "brass": "#B58F4A",
+    "pewter": "#9A9C9A"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 899,
+    "verts": 531,
+    "zones": [
+     0,
+     3
+    ],
+    "regions": [
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "neck_lower",
+     "neck_upper"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "r_clavicle",
+     "neck",
+     "heada",
+     "headb",
+     "l_shoulder_twist_a",
+     "r_shoulder_twist_a"
+    ]
+   }
+  },
+  "tris": 899,
+  "verts": 531,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0136
+  },
+  "glb_kb": 144.0
+ },
+ "budget": {
+  "tris_max": 900
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "The soldier's stock was buckled behind the neck; black stocks became regulation later in the century.",
+ "sources": [
+  "P6",
+  "M1"
+ ],
+ "aliases": [],
+ "tags": [
+  "regulars",
+  "british"
+ ],
+ "checks": {},
+ "generator": "tools/character/garments/military_br_stock.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_br_stock.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+ "pieces_tris": {
+  "0_cloth": 839,
+  "1_trim": 60
+ },
+ "coverage": {
+  "method": "rays from the skin: normal + 4 tilted 25 deg, female and male fit, within 12 cm (military_lib._base.coverage)",
+  "hidden": [],
+  "not_hidden_candidates": {
+   "neck_lower": 0.736
+  },
+  "share": {
+   "head": {
+    "normal": 0.0,
+    "cone": 0.0
+   },
+   "neck_upper": {
+    "normal": 0.118,
+    "cone": 0.083
+   },
+   "neck_lower": {
+    "normal": 0.776,
+    "cone": 0.736
+   },
+   "chest_upper_front": {
+    "normal": 0.154,
+    "cone": 0.128
+   },
+   "chest_upper_side": {
+    "normal": 0.122,
+    "cone": 0.111
+   },
+   "chest_upper_back": {
+    "normal": 0.151,
+    "cone": 0.123
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 5.36,
+   "p05_mm": 5.58,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 5.2,
+   "p05_mm": 5.47,
+   "inside_skin": 0
+  }
+ },
+ "deform_limits": {
+  "br_stock": [
+   0.0175,
+   0.0285,
+   0.031,
+   5.8
+  ]
+ },
+ "deform_class": {
+  "class": "linen",
+  "legacy_limit": [
+   0.005,
+   0.005,
+   0.04,
+   3.8
+  ]
+ }
+}

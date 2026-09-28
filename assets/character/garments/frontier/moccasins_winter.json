@@ -1,0 +1,340 @@
+{
+ "id": "moccasins_winter",
+ "name": "Winter moccasins, fur cuffs",
+ "description": "Center-seam puckered moccasins of hide with the hair left on, worn fur inside; the ankle flaps turned down show the fur as a cuff.",
+ "kind": "garment",
+ "set": "frontier",
+ "slot": "feet",
+ "alt_slots": [],
+ "layer": {
+  "default": 40
+ },
+ "glb": "res://assets/character/garments/frontier/moccasins_winter.glb",
+ "mesh": "moccasins_winter",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "moccasins_winter"
+  },
+  {
+   "surface": "fur",
+   "name": "moccasins_winter_fur"
+  }
+ ],
+ "occupies_regions": [
+  "ankle_l",
+  "foot_l",
+  "ankle_r",
+  "foot_r"
+ ],
+ "hides_regions": [
+  "foot_l",
+  "foot_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "deerskin",
+   "role": "leather",
+   "fabric": "SUEDE",
+   "palette": [
+    "buckskin_smoked",
+    "buckskin_pale",
+    "leather_brown"
+   ],
+   "default": "buckskin_smoked",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "buckskin_smoked": "#A07E55",
+    "buckskin_pale": "#C8AA7C",
+    "leather_brown": "#5B3D26"
+   }
+  },
+  {
+   "zone": 1,
+   "name": "thong",
+   "role": "leather",
+   "fabric": "LEA",
+   "palette": [
+    "leather_brown",
+    "buckskin_smoked",
+    "logwood_black"
+   ],
+   "default": "leather_brown",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "leather_brown": "#5B3D26",
+    "buckskin_smoked": "#A07E55",
+    "logwood_black": "#1C1B20"
+   }
+  },
+  {
+   "zone": 2,
+   "name": "fur cuff",
+   "role": "fur",
+   "fabric": "FUR",
+   "palette": [
+    "fur_beaver",
+    "fur_raccoon",
+    "fur_red_fox",
+    "fur_wolf",
+    "fur_black_bear"
+   ],
+   "default": "fur_beaver",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "fur_beaver": "#5A3B25",
+    "fur_raccoon": "#6A6259",
+    "fur_red_fox": "#A5532B",
+    "fur_wolf": "#7F776B",
+    "fur_black_bear": "#1F1A16"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 2669,
+    "verts": 1352,
+    "zones": [
+     0,
+     1,
+     2
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "foot_l",
+     "foot_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "l_ball",
+     "r_knee",
+     "r_ankle",
+     "r_heel",
+     "r_ball"
+    ]
+   },
+   "fur": {
+    "tris": 5480,
+    "verts": 4430,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "foot_l",
+     "foot_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "l_ball",
+     "r_knee",
+     "r_ankle",
+     "r_heel"
+    ]
+   }
+  },
+  "tris": 8149,
+  "verts": 5782,
+  "surface_count": 2,
+  "shapes": {
+   "sex": 0.0011
+  },
+  "glb_kb": 757.8
+ },
+ "budget": {
+  "tris_max": 9000
+ },
+ "evidence": "B",
+ "licence_note": null,
+ "history": "Puckered moccasins were worn with wool liners in winter (Rogers' rangers); hide moccasins with the hair left on, fur inside, fit the northern winter but are not specifically cited here.",
+ "sources": [
+  "P3",
+  "M2",
+  "M7"
+ ],
+ "aliases": [],
+ "tags": [
+  "winter",
+  "fur",
+  "men",
+  "women"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": false,
+   "layer": "outer",
+   "groups": {
+    "feet": {
+     "n": 792,
+     "min": -0.0035,
+     "max": 0.0457,
+     "below_inner": 6,
+     "above_outer": 379,
+     "band": [
+      0.004,
+      0.008
+     ]
+    },
+    "shins": {
+     "n": 4990,
+     "min": -0.0135,
+     "max": 0.0447,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/frontier/moccasins_winter.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/moccasins_winter.py.",
+ "fur": {
+  "surface": "moccasins_winter_fur",
+  "shader": "res://assets/character/shaders/fur_shell.gdshader",
+  "length_scale": 0.9,
+  "palette_zone": 2,
+  "shell_zone": 0,
+  "card_zone": 1,
+  "strap_envelope": null,
+  "belt_line_z": 0.942,
+  "uniforms": {
+   "fur_length": "length",
+   "guard_length": "guard",
+   "guard_amount": "guard_amount",
+   "root_color": "root",
+   "band_color": "band",
+   "tip_color": "tip",
+   "band_pos": "band_pos",
+   "tip_pos": "tip_pos",
+   "density": "density",
+   "clump": "clump",
+   "clump_size": "clump_size",
+   "droop": "droop",
+   "comb": "comb",
+   "gloss": "gloss"
+  },
+  "presets": {
+   "fur_beaver": {
+    "root": "#7b5a40",
+    "band": "#5a3b25",
+    "tip": "#4a2f1d",
+    "band_pos": 0.55,
+    "tip_pos": 0.8,
+    "length": 0.013,
+    "guard": 0.55,
+    "guard_amount": 0.8,
+    "density": 2400,
+    "clump": 0.3,
+    "clump_size": 0.008,
+    "droop": 0.1,
+    "comb": 0.49,
+    "gloss": 0.8
+   },
+   "fur_raccoon": {
+    "root": "#8a8177",
+    "band": "#6a6259",
+    "tip": "#2a2622",
+    "band_pos": 0.5,
+    "tip_pos": 0.72,
+    "length": 0.02,
+    "guard": 0.85,
+    "guard_amount": 1.0,
+    "density": 1800,
+    "clump": 0.5,
+    "clump_size": 0.011,
+    "droop": 0.14,
+    "comb": 0.39,
+    "gloss": 0.3
+   },
+   "fur_red_fox": {
+    "root": "#c99a70",
+    "band": "#a5532b",
+    "tip": "#8a3f1e",
+    "band_pos": 0.45,
+    "tip_pos": 0.8,
+    "length": 0.022,
+    "guard": 0.9,
+    "guard_amount": 1.0,
+    "density": 1800,
+    "clump": 0.5,
+    "clump_size": 0.011,
+    "droop": 0.14,
+    "comb": 0.42,
+    "gloss": 0.35
+   },
+   "fur_wolf": {
+    "root": "#cfc3a8",
+    "band": "#7f776b",
+    "tip": "#3c3833",
+    "band_pos": 0.45,
+    "tip_pos": 0.78,
+    "length": 0.022,
+    "guard": 0.9,
+    "guard_amount": 1.0,
+    "density": 1700,
+    "clump": 0.55,
+    "clump_size": 0.012,
+    "droop": 0.14,
+    "comb": 0.42,
+    "gloss": 0.3
+   },
+   "fur_black_bear": {
+    "root": "#15110e",
+    "band": "#1f1a16",
+    "tip": "#3a2e25",
+    "band_pos": 0.5,
+    "tip_pos": 0.75,
+    "length": 0.024,
+    "guard": 1.0,
+    "guard_amount": 1.0,
+    "density": 1500,
+    "clump": 0.6,
+    "clump_size": 0.014,
+    "droop": 0.18,
+    "comb": 0.39,
+    "gloss": 0.55
+   }
+  },
+  "note": "Shells + guard cards in one surface; fur_length = preset length x length_scale. The base (main surface, zone role 'fur') takes the preset's root colour. Set belt_flatten / strap_flatten to 1 when a belt / shoulder strap is worn over this garment (use the strap_envelope variant).",
+  "stats": {
+   "shells": 10,
+   "shell_tris": 4760,
+   "cards": 180,
+   "card_tris": 720,
+   "base_tris": 476
+  }
+ },
+ "deform_limits": {}
+}

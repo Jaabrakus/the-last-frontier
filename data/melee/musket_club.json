@@ -1,0 +1,116 @@
+{
+ "summary": "The musket (or the over-under) clubbed (user 2026-09-27: 'make it where we can turn muskets into clubs'; picked: middle mouse flips it, held by the barrel): the felling axe's attacks (AxeMelee via GatherTools.club) with the gun end for end in the hands, the butt as the head; the same clips and times (our own D, W, S; D mirrored for A; the stab (our own thrust); the parry sweep). Blunt: nothing is cut in to (cut.surfaces empty), a heavier thud on flesh and straw. Heavier than the axe: its attacks play at rate (0.88) of the axe's pace, and hit harder. guard: the two-handed guard between attacks (the D swing's first pose).",
+ "default": "D",
+ "aim_lean_deg": 20.0,
+ "reach_m": 0.0,
+ "rate": 0.88,
+ "guard": {
+  "clip": "own-axe-d-intro",
+  "time": 0.0
+ },
+ "cut": {
+  "surfaces": []
+ },
+ "sounds": {
+  "flesh": "ball_hit_flesh",
+  "straw": "ball_hit_straw"
+ },
+ "swings": {
+  "D": {
+   "desc": "right to left",
+   "intro": "own-axe-d-intro",
+   "hit": "own-axe-d",
+   "frame": "pipe",
+   "strike": [
+    0.28,
+    0.52
+   ],
+   "damage": 45.0,
+   "chain_s": 0.7,
+   "end_s": 1.0
+  },
+  "A": {
+   "desc": "left to right, two-handed (our own D mirrored: data/anim_author/axe_swings.json axe_a)",
+   "intro": "own-axe-a-intro",
+   "hit": "own-axe-a",
+   "frame": "pipe",
+   "strike": [
+    0.28,
+    0.52
+   ],
+   "damage": 45.0,
+   "chain_s": 0.7,
+   "end_s": 1.0
+  },
+  "W": {
+   "desc": "overhead, down",
+   "intro": "own-axe-w-intro",
+   "hit": "own-axe-w",
+   "frame": "pipe",
+   "strike": [
+    0.46,
+    0.68
+   ],
+   "damage": 60.0,
+   "chain_s": 0.95,
+   "end_s": 1.2
+  },
+  "S": {
+   "desc": "the high block: the felling axe's (the haft, here the barrel and stock, held across above the forehead in both hands against W's chop: tools/anim_author/author_high_block.gd); no attack, no damage",
+   "intro": "own-axe-block-high-intro",
+   "hit": "own-axe-block-high",
+   "frame": "pipe",
+   "strike": [
+    0.08,
+    0.6
+   ],
+   "damage": 0.0,
+   "chain_s": 0.6,
+   "end_s": 0.95
+  },
+  "STAB": {
+   "desc": "the stab: a one-handed underhand thrust of the butt straight ahead, held as the guard's right hand holds it (our own, keyed by hand: tools/anim_author/author_thrust.gd club_stab)",
+   "intro": "own-club-stab-intro",
+   "hit": "own-club-stab",
+   "frame": "pipe",
+   "strike": [
+    0.16,
+    0.34
+   ],
+   "rate": 0.8,
+   "damage": 30.0,
+   "chain_s": 0.55,
+   "end_s": 0.62
+  },
+  "AD": {
+   "desc": "the parry: the felling axe's (our own two-handed sweep of the haft across the chest, knocking a thrust aside: tools/anim_author/author_parry.gd axe_parry), the gun held by the barrel as the axe by its haft",
+   "intro": "own-axe-parry-intro",
+   "hit": "own-axe-parry",
+   "frame": "pipe",
+   "strike": [
+    0.1,
+    0.36
+   ],
+   "damage": 0.0,
+   "chain_s": 0.45,
+   "end_s": 0.62
+  }
+ },
+ "stamina": {
+  "_doc": "the felling axe's, a little dearer for the heavier gun (AxeMelee.pay)",
+  "D": 14,
+  "A": 14,
+  "W": 20,
+  "S": 10,
+  "STAB": 12,
+  "AD": 10,
+  "feint": 10
+ },
+ "counters": {
+  "_doc": "the only blocks (user 2026-09-27: \"ad should only parry thrusts and [the] users should only block by counters and thats it\"): the counter meets the blow head on; facing each other the side cuts are mirrored (user 2026-09-27: \"i forget that it is mirrored for the other player ... if the user does the same attacks it cancel out ... besides the up down and down up\"): D meets D and A meets A (each from its own right or left: the two edges come at each other), W is met by the high block (S: no attack, the haft held up across; two W go the same way and both land), the parry (AD) a stab and nothing else; in time it stops the blow, late or early it takes part of its damage (AxeMelee.block_power)",
+  "A": "A",
+  "D": "D",
+  "W": "S",
+  "STAB": "AD"
+ }
+}

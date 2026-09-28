@@ -1,0 +1,1183 @@
+{
+ "schema": "frontier.survival.conditions.backlog",
+ "version": 4,
+ "status": "DESIGN APPENDIX v3 (backlog): rows for milestones M3-M5 and 'post'. Not loaded by the game and not gated by the data test; a row moves into the live file, and under test, when its milestone starts. Rows may reference live ids.",
+ "design_doc": "Player_Animation_Project/graph_analysis/survival/survival_gdd.md",
+ "summary": "The other 22 conditions: the M3 illnesses and injuries, detailed illnesses (post).",
+ "id_rules": "Ids are stable strings (prefix.name). Never rename an id once saves exist; add an alias instead. Display names are separate and may change. An id is defined in exactly one place: the live file or the backlog.",
+ "milestones": {
+  "M1": "A winter night: fire, shelter, cold, hunger, sleep, time safety; the fort region only; one background; 1765",
+  "M2a": "A winter from the woods: living from the manor woods through the winter by your own hands (gathering, hides, sewing, snares, snowshoes, a half-faced camp, a hung cache, ice fishing); plain barter with the sutler, the trader, the garrison's soldiers, a farm family from German Flatts and an old hunter; credit and the fall outfit as options; the second background",
+  "M2b": "Learning from neighbours: lessons, watching, examining, quality standards, haggling, promises and loans",
+  "M3": "The year turns: the full almanac, seasons and weather content, the summer goal (bark and a cabin), fishing, frogs, ginseng, one played wage job; the fur cap and robe, leggings, carving, casting balls, the cache pit, char cloth and spruce beer",
+  "M4": "People: NPC schedules and tiers at the fort, standing, invitations, the soldiers and the lieutenant as mentors; Native characters only after the relevant nation's sign-off",
+  "M5": "The map: the Carry, the valley, the town and the hunting grounds, travel and camps, other markets and backgrounds",
+  "post": "After M5 and not yet planned: the 1757 and 1761 starts and their eras, detailed illnesses, thirst, potash, upstream canoe and bateau travel, the Proxy NPC tier, languages beyond English, French, Mohawk and Oneida"
+ },
+ "source_keys": {
+  "E": "graph_analysis/survival/research_economy_life.md, source list S# (E:S14 = source S14)",
+  "K": "graph_analysis/survival/research_survival_skills.md, numbered sources [#] (K:1 = source [1])",
+  "Y": "graph_analysis/survival/research_systems.md, section number (Y:3.2 = section 3.2)",
+  "C": "graph_analysis/customizer/costume_bible.md, section number",
+  "A": "Player_Animation_Project/blender_animation_index.csv (clip names and asset ids)",
+  "N": "graph_analysis/survival/survival_gdd.md, sources list (N:3 = source N3; N33 onward added in version 3)"
+ },
+ "basis_keys": {
+  "S": "sourced: checked against a primary source, a scholarly work or an institutional page; web summaries and popular pages do not qualify",
+  "H": "standard historiography (books in the GDD sources list); verify before quoting",
+  "H-regional": "true for one region's trade or society (named in the row); not yet checked for New York",
+  "M": "modern science or medicine sets the mechanic (period explanation may differ)",
+  "D": "design value for balance, or a figure resting on web summaries; not a checked historical record"
+ },
+ "conditions": [
+  {
+   "id": "cond.thirst",
+   "name": "Thirst",
+   "family": "need",
+   "status": "later",
+   "driven_by": "need.thirst",
+   "icon": "water",
+   "signature": "dry breathing and a narrowing view",
+   "trade_off": "drink the pond now, or walk to a spring or boil it",
+   "stages": [
+    {
+     "stage": "thirsty",
+     "effects": {
+      "stamina_regen_mult": 0.85
+     }
+    },
+    {
+     "stage": "parched",
+     "effects": {
+      "check_mod": -0.05,
+      "max_stamina_mult": 0.85,
+      "vision_vignette": 0.1
+     }
+    },
+    {
+     "stage": "dehydrated",
+     "effects": {
+      "check_mod": -0.1,
+      "max_stamina_mult": 0.7,
+      "vision_vignette": 0.2,
+      "health_drain_per_hour": 3.0
+     }
+    }
+   ],
+   "tell": {
+    "audio": "dry breathing",
+    "screen": "vignette at parched"
+   },
+   "cure": "drink",
+   "sources": [
+    "K:10.2"
+   ],
+   "milestone": "post"
+  },
+  {
+   "id": "cond.frostbite",
+   "name": "Frostbite",
+   "family": "exposure",
+   "status": "later",
+   "icon": "hand_frost",
+   "signature": "numb white fingers or toes that slow the reload or the walk",
+   "trade_off": "take off the mitts to set a trap, or wait for a better moment",
+   "zones": [
+    "hands",
+    "feet",
+    "face"
+   ],
+   "exposure": {
+    "accumulate_when": "Cold stage very_cold or worse, or air below -10 C with the zone under-insulated",
+    "per_game_h": 10,
+    "wind_mult": "1 + wind_ms / 5",
+    "wet_feet_mult": 2.0,
+    "standing_still_mult": 1.5,
+    "zone_insulation_needed_below_minus10c": {
+     "hands": 2,
+     "feet": 2.5,
+     "face": 1
+    },
+    "stage_thresholds": {
+     "frostnip": 30,
+     "superficial": 60,
+     "deep": 100
+    }
+   },
+   "stages": [
+    {
+     "stage": "frostnip",
+     "effects_by_zone": {
+      "hands": {
+       "fine_work_mod": -0.1
+      }
+     }
+    },
+    {
+     "stage": "superficial",
+     "effects_by_zone": {
+      "hands": {
+       "fine_work_mod": -0.25,
+       "reload_speed_mult": 0.8,
+       "draw_speed_mult": 0.85
+      },
+      "feet": {
+       "move_speed_mult": 0.8
+      }
+     },
+     "heal_game_days": 3.7
+    },
+    {
+     "stage": "deep",
+     "effects_by_zone": {
+      "hands": {
+       "fine_work_mod": -0.4,
+       "reload_speed_mult": 0.65,
+       "draw_speed_mult": 0.7
+      },
+      "feet": {
+       "move_speed_mult": 0.6,
+       "sprint_allowed": false
+      }
+     },
+     "heal_game_days": 5.5,
+     "permanent_loss": {
+      "preset": [
+       "ironman"
+      ],
+      "zone_mult": 0.9
+     }
+    }
+   ],
+   "refreeze_rule": "A zone that rewarms and then refreezes worsens one stage (K:28).",
+   "period_view": "'Rub it with snow', slow warming, cold water, then warm soup (K:18).",
+   "game_truth": "Gradual rewarming (physick.rewarm) away from the flame, or warm water; rubbing gives no benefit and a 20% chance to worsen frostnip (K:28).",
+   "cures": [
+    {
+     "action": "physick.rewarm"
+    },
+    {
+     "service": "service.surgeon",
+     "stages": [
+      "deep"
+     ]
+    }
+   ],
+   "sources": [
+    "K:9",
+    "K:28"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "cond.worms",
+   "name": "Worms",
+   "family": "illness",
+   "status": "later",
+   "icon": "worm",
+   "signature": "a gnawing hunger soon after eating: food lasts a quarter less",
+   "trade_off": "pay the surgeon or dose with pinkroot (poison risk), or eat more and live with it",
+   "visible": true,
+   "tells": [
+    "'Hungry again already' after a meal",
+    "the hunger icon carries a worm pip once incubation ends",
+    "an episode of queasiness every few days"
+   ],
+   "acquire": {
+    "raw_or_undercooked_fish": 0.04,
+    "undercooked_game": 0.02,
+    "bad_water_drink": 0.03,
+    "properly_cooked": 0.0
+   },
+   "incubation_game_days": [
+    3.4,
+    4.8
+   ],
+   "stages": [
+    {
+     "stage": "infested",
+     "effects": {
+      "hunger_burn_mult": 1.25,
+      "max_stamina_mult": 0.9
+     }
+    }
+   ],
+   "episodes": {
+    "queasy_per_game_day": 0.15
+   },
+   "natural_clearance": {
+    "chance_per_season": 0.15
+   },
+   "cures": [
+    {
+     "action": "physick.pinkroot",
+     "chance": 0.7,
+     "on_fail": "cond.poisoned",
+     "note": "the surgeon's or the book's remedy (know.worm_remedies)"
+    },
+    {
+     "action": "physick.wormseed_tansy",
+     "chance": 0.5,
+     "on_fail": "cond.queasy"
+    },
+    {
+     "service": "service.surgeon_purge",
+     "chance": 0.85,
+     "after": {
+      "cond": "cond.purged",
+      "game_days": [
+       1,
+       2
+      ]
+     }
+    }
+   ],
+   "period_view": "Buchan blames weak digestion, unripe fruit and raw herbs; purges and bitters (K:5).",
+   "game_truth": "Intestinal roundworms and tapeworms from raw fish, undercooked game and bad water. Trichinella from bear and pork is a different illness (cond.trichinosis).",
+   "sources": [
+    "K:10.4",
+    "K:5",
+    "K:15"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "cond.trichinosis",
+   "name": "Fever and aching after eating bear or pork",
+   "family": "illness",
+   "status": "later",
+   "icon": "fever",
+   "signature": "fever and aching muscles: the aim trembles and stamina is short",
+   "trade_off": "cook bear and pork through, which costs fuel and time, or risk weeks of weakness",
+   "acquire": {
+    "undercooked_bear": 0.08,
+    "undercooked_pork": 0.06,
+    "properly_cooked": 0.0,
+    "note": "boiling cannot undercook"
+   },
+   "incubation_game_days": [
+    1,
+    2
+   ],
+   "duration_game_days": [
+    4.8,
+    8.3
+   ],
+   "stages": [
+    {
+     "stage": "fever",
+     "effects": {
+      "aim_tremor": 0.15,
+      "max_stamina_mult": 0.75,
+      "check_mod": -0.05
+     }
+    },
+    {
+     "stage": "aching",
+     "effects": {
+      "aim_tremor": 0.08,
+      "max_stamina_mult": 0.85
+     }
+    }
+   ],
+   "cures": [
+    {
+     "rule": "no period cure: time and rest; warm shelter and full meals shorten it by a quarter"
+    }
+   ],
+   "period_view": "No one in 1765 could name it: Trichinella was described in 1835 and linked to pork in 1860. People took it for a rheumatic fever or an ague.",
+   "game_truth": "Trichinella larvae lodge in muscle; pinkroot and other worm remedies do nothing (N:30, K:31).",
+   "sources": [
+    "K:31",
+    "N:30"
+   ],
+   "glossary_modern_name": "trichinosis (optional glossary only)",
+   "milestone": "post"
+  },
+  {
+   "id": "cond.purged",
+   "name": "Purged",
+   "family": "illness",
+   "status": "later",
+   "icon": "bowl",
+   "signature": "weak for a day after the surgeon's purge",
+   "trade_off": "the cure's price in time",
+   "stages": [
+    {
+     "stage": "purged",
+     "effects": {
+      "max_stamina_mult": 0.8,
+      "stamina_regen_mult": 0.8,
+      "check_mod": -0.05
+     }
+    }
+   ],
+   "cure": "time",
+   "sources": [
+    "K:5"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "cond.fever",
+   "name": "Fever (seasonal)",
+   "family": "illness",
+   "status": "later",
+   "icon": "fever",
+   "note": "One seasonal fever replaces ague, chest cold and flux by default (review 2, issue 7). The three detailed conditions stay in the data behind the 'detailed illnesses' setting.",
+   "variant_by_cause": {
+    "flux": {
+     "when": "bad water, spoiled food, crowded forts in July-August",
+     "signature": "thirst doubles and no sprinting",
+     "effects": {
+      "thirst_mult": 2.0,
+      "sprint_allowed": false,
+      "max_stamina_mult": 0.75
+     }
+    },
+    "ague": {
+     "when": "sleeping by marsh or slow water, July-October",
+     "signature": "fits every two or three game days",
+     "effects_in_fit": {
+      "aim_tremor": 0.25,
+      "max_stamina_mult": 0.6,
+      "warmth_loss_mult": 1.3
+     }
+    },
+    "chest": {
+     "when": "wet and cold for two or more game hours",
+     "signature": "a cough that breaks stealth",
+     "effects": {
+      "noise_mult": 1.2,
+      "max_stamina_mult": 0.85
+     }
+    }
+   },
+   "signature": "by cause: thirst (flux), fits (ague) or a cough (chest)",
+   "trade_off": "keep working the season's best weeks, or rest in a warm shelter and lose them",
+   "duration_game_days": [
+    3.2,
+    3.7
+   ],
+   "cures": [
+    {
+     "rule": "rest in warm shelter with water and broth halves the duration"
+    },
+    {
+     "action": "physick.bark_tea",
+     "duration_mult": 0.75,
+     "variants": [
+      "flux"
+     ]
+    },
+    {
+     "action": "physick.peruvian_bark",
+     "chance": 0.8,
+     "variants": [
+      "ague"
+     ]
+    },
+    {
+     "service": "service.surgeon",
+     "effect": "duration x0.6"
+    }
+   ],
+   "sources": [
+    "K:10.6",
+    "K:10.8",
+    "K:7",
+    "K:35"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "cond.flux",
+   "name": "Flux (dysentery)",
+   "family": "illness",
+   "status": "later",
+   "setting": "detailed_illnesses",
+   "icon": "flux",
+   "signature": "thirst doubles or trebles",
+   "trade_off": "boil every drink, or risk the season's water",
+   "acquire": {
+    "bad_water_drink": "water_quality.fever",
+    "spoiled_food": 0.1,
+    "poor_camp_sanitation_mult": 1.5,
+    "crowded_fort_summer_mult": 2.0,
+    "july_august_mult": 2.0
+   },
+   "duration_game_days": [
+    3.2,
+    3.7
+   ],
+   "stages": [
+    {
+     "stage": "loose",
+     "game_days": 1,
+     "effects": {
+      "thirst_mult": 2.0,
+      "max_stamina_mult": 0.8
+     }
+    },
+    {
+     "stage": "flux",
+     "effects": {
+      "thirst_mult": 3.0,
+      "max_stamina_mult": 0.6,
+      "sprint_allowed": false,
+      "check_mod": -0.15
+     }
+    },
+    {
+     "stage": "wasted",
+     "when": "flux while parched",
+     "effects": {
+      "thirst_mult": 3.0,
+      "max_stamina_mult": 0.5,
+      "health_drain_per_hour": 3.0
+     }
+    }
+   ],
+   "cures": [
+    {
+     "rule": "hydration kept at 40 or more halves the duration"
+    },
+    {
+     "action": "physick.bark_tea",
+     "duration_mult": 0.75
+    },
+    {
+     "service": "service.surgeon",
+     "effect": "stage -1, then cond.purged 1 game day"
+    }
+   ],
+   "period_view": "Camp filth and marshes (Pringle); ipecacuanha, rhubarb, opiates, broths (K:7, K:5).",
+   "game_truth": "Fluids and broth work; boiled water prevents it.",
+   "lethal_on_presets": [
+    "hard_winter",
+    "ironman"
+   ],
+   "sources": [
+    "K:10.6",
+    "K:7"
+   ],
+   "milestone": "post"
+  },
+  {
+   "id": "cond.scurvy",
+   "name": "Scurvy",
+   "family": "illness",
+   "status": "later",
+   "icon": "gum",
+   "visible": true,
+   "signature": "weariness, then healing stops",
+   "trade_off": "carry dried food light, or carry greens, conifer tea or roots",
+   "counter": {
+    "unit": "game days without vitamin C",
+    "strong_serving": -1.5,
+    "weak_serving": -0.4,
+    "floor": 0,
+    "shown_as": "the diet-variety pip in food tooltips and a stage icon from lassitude on"
+   },
+   "stages": [
+    {
+     "stage": "lassitude",
+     "counter_min": 5.7,
+     "effects": {
+      "fatigue_rate_mult": 1.2
+     }
+    },
+    {
+     "stage": "spongy_gums",
+     "counter_min": 8.7,
+     "effects": {
+      "fatigue_rate_mult": 1.3,
+      "max_stamina_mult": 0.75,
+      "health_regen_mult": 0.5
+     }
+    },
+    {
+     "stage": "severe",
+     "counter_min": 11.7,
+     "effects": {
+      "max_stamina_mult": 0.6,
+      "health_regen_mult": 0.0,
+      "health_drain_per_hour": 1.0,
+      "dialogue_flags": [
+       "old_wounds_reopen"
+      ]
+     }
+    }
+   ],
+   "vit_c_sources": {
+    "strong": [
+     "item.drink.conifer_tea",
+     "item.food.ramps",
+     "item.food.greens",
+     "item.food.berries",
+     "item.food.strawberries",
+     "item.food.cranberries",
+     "item.material.spruce_tips"
+    ],
+    "weak": [
+     "item.drink.spruce_beer",
+     "item.food.venison_raw",
+     "item.food.fish_raw",
+     "item.food.squash",
+     "item.food.groundnut",
+     "item.food.cattail",
+     "item.food.fiddleheads",
+     "item.food.apples"
+    ]
+   },
+   "notes": "Spruce beer is weak: fermentation and boiling destroy most vitamin C. Fresh needles hold about 50-100 mg per 100 g, and a Cartier-type infusion about 50 mg (N:29).",
+   "period_view": "Lind blamed cold damp lodgings; Amherst ordered spruce beer in 1759 (K:6, K:12).",
+   "game_truth": "Vitamin C deficiency; the counter naturally threatens late-winter diets of salt and dried food.",
+   "sources": [
+    "K:10.7",
+    "K:6",
+    "K:12",
+    "K:13",
+    "N:29"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "cond.ague",
+   "name": "Ague (intermittent fever)",
+   "family": "illness",
+   "status": "later",
+   "setting": "detailed_illnesses",
+   "icon": "fever",
+   "signature": "fits every two or three game days",
+   "trade_off": "buy dear Peruvian bark, or work around the fits",
+   "acquire": {
+    "sleep_near_marsh_or_slow_river": 0.04,
+    "window": [
+     "jul_early",
+     "oct_late"
+    ],
+    "region_factor": "map_regions.json region.ague_factor (lower in the north)"
+   },
+   "incubation_game_days": [
+    1,
+    2
+   ],
+   "fits": {
+    "every_game_days": [
+     2,
+     3
+    ],
+    "fit_game_h": 6,
+    "effects": {
+     "max_stamina_mult": 0.6,
+     "aim_tremor": 0.25,
+     "warmth_loss_mult": 1.3,
+     "check_mod": -0.1
+    }
+   },
+   "stages": [
+    {
+     "stage": "between_fits",
+     "effects": {
+      "max_stamina_mult": 0.9
+     }
+    },
+    {
+     "stage": "fit",
+     "effects": {
+      "max_stamina_mult": 0.6,
+      "aim_tremor": 0.25,
+      "warmth_loss_mult": 1.3,
+      "check_mod": -0.1
+     }
+    }
+   ],
+   "course": {
+    "remission_game_days": 8.7,
+    "relapse_chance_per_season": 0.3
+   },
+   "cures": [
+    {
+     "action": "physick.peruvian_bark",
+     "chance": 0.8
+    },
+    {
+     "action": "physick.fever_bark",
+     "effect": "fit effects x0.85, no cure"
+    }
+   ],
+   "sources": [
+    "K:10.8",
+    "K:35",
+    "K:34"
+   ],
+   "milestone": "post"
+  },
+  {
+   "id": "cond.chest_cold",
+   "name": "Chest cold (catarrh)",
+   "family": "illness",
+   "status": "later",
+   "setting": "detailed_illnesses",
+   "icon": "cough",
+   "signature": "a cough that breaks stealth",
+   "trade_off": "hunt anyway and cough, or rest warm",
+   "acquire": {
+    "wet_and_cold_2h": 0.25
+   },
+   "duration_game_days": [
+    3.4,
+    3.7
+   ],
+   "stages": [
+    {
+     "stage": "cough",
+     "effects": {
+      "max_stamina_mult": 0.9,
+      "noise_mult": 1.2,
+      "dialogue_flags": [
+       "cough"
+      ]
+     }
+    },
+    {
+     "stage": "pleurisy",
+     "effects": {
+      "max_stamina_mult": 0.7,
+      "health_drain_per_hour": 1.0,
+      "check_mod": -0.1
+     }
+    }
+   ],
+   "escalation": {
+    "to": "pleurisy",
+    "chance_if_cold_persists": 0.15
+   },
+   "cough_event": {
+    "every_real_min": [
+     3,
+     6
+    ],
+    "note": "An audible cough breaks stealth."
+   },
+   "cures": [
+    {
+     "rule": "rest in a warm shelter halves the duration"
+    },
+    {
+     "action": "physick.snakeroot",
+     "duration_mult": 0.75
+    }
+   ],
+   "sources": [
+    "K:10.8",
+    "K:14"
+   ],
+   "milestone": "post"
+  },
+  {
+   "id": "cond.rheumatism",
+   "name": "Rheumatism",
+   "family": "illness",
+   "status": "later",
+   "icon": "joint",
+   "signature": "stiff joints on cold mornings: slow reloads and draws for two game hours after waking",
+   "trade_off": "wade the beaver sets in ice water for the best pelts, or keep your joints",
+   "acquire": {
+    "per_game_h_wading_below_5c": 0.02,
+    "sleep_soaked": 0.05,
+    "note": "beaver water sets, ice holes, wet camps"
+   },
+   "stages": [
+    {
+     "stage": "stiff",
+     "effects": {
+      "reload_speed_mult": 0.9,
+      "draw_speed_mult": 0.9,
+      "move_speed_mult": 0.95
+     }
+    }
+   ],
+   "applies": "the first 2 game hours after waking when air is below 5 C",
+   "course": {
+    "flare_game_days": [
+     2,
+     4
+    ],
+    "recurs": "each winter once acquired, less with warm dry shelter"
+   },
+   "cures": [
+    {
+     "rule": "warm dry shelter and rest end a flare early"
+    }
+   ],
+   "sources": [
+    "K:9",
+    "K:1"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "cond.snow_blindness",
+   "name": "Snow blindness",
+   "family": "exposure",
+   "status": "later",
+   "icon": "eye_sun",
+   "signature": "burning eyes and a blurred, narrowed view",
+   "trade_off": "travel the bright crust at noon, or wear eye shades and travel slower (or at dawn and dusk)",
+   "acquire": {
+    "per_game_h_bright_snow_clear_sky": 0.08,
+    "window": [
+     "feb_early",
+     "apr_early"
+    ],
+    "prevented_by": [
+     "item.tool.eye_shades"
+    ],
+    "note": "ranging and crust hunting on open snow and lake ice"
+   },
+   "stages": [
+    {
+     "stage": "sore_eyes",
+     "effects": {
+      "blur": 0.25,
+      "vision_vignette": 0.2
+     }
+    },
+    {
+     "stage": "blind",
+     "effects": {
+      "blur": 0.6,
+      "vision_vignette": 0.5,
+      "move_speed_mult": 0.6
+     }
+    }
+   ],
+   "duration_game_days": [
+    1,
+    2
+   ],
+   "cures": [
+    {
+     "rule": "rest in shade or darkness; a cloth over the eyes"
+    }
+   ],
+   "sources": [
+    "K:2",
+    "K:27"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "cond.poisoned",
+   "name": "Poisoned",
+   "family": "illness",
+   "status": "later",
+   "icon": "skull",
+   "signature": "dizziness and sway",
+   "trade_off": "eat an unfamiliar plant when hungry, or identify it first",
+   "causes": [
+    "pinkroot overdose",
+    "misidentified plant",
+    "snakebite venom"
+   ],
+   "stages": [
+    {
+     "stage": "dizzy",
+     "effects": {
+      "aim_sway_mult": 1.3,
+      "max_stamina_mult": 0.7,
+      "check_mod": -0.1
+     }
+    },
+    {
+     "stage": "severe",
+     "effects": {
+      "aim_sway_mult": 1.6,
+      "max_stamina_mult": 0.5,
+      "health_drain_per_hour": 8.0,
+      "sprint_allowed": false
+     }
+    }
+   ],
+   "duration_game_h": {
+    "dizzy": [
+     12,
+     24
+    ],
+    "severe": [
+     2,
+     4
+    ]
+   },
+   "severe_sources": [
+    "water hemlock (often deadly)"
+   ],
+   "cures": [
+    {
+     "rule": "time and rest"
+    },
+    {
+     "service": "service.surgeon"
+    }
+   ],
+   "sources": [
+    "K:10.4"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "cond.injury.burn",
+   "name": "Burn",
+   "family": "injury",
+   "status": "later",
+   "icon": "flame",
+   "signature": "a sore hand for a day",
+   "trade_off": "work the fire faster, or safely",
+   "stages": [
+    {
+     "stage": "minor",
+     "effects": {
+      "fine_work_mod": -0.1
+     }
+    }
+   ],
+   "heal_game_days": [
+    1,
+    2
+   ],
+   "cures": [
+    {
+     "rule": "cool water, cover"
+    }
+   ],
+   "sources": [
+    "K:10.10"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "cond.injury.sprain",
+   "name": "Sprain",
+   "family": "injury",
+   "status": "later",
+   "icon": "ankle",
+   "signature": "a limp and no running",
+   "trade_off": "rest a day, or limp home with the load",
+   "stages": [
+    {
+     "stage": "sprained",
+     "effects": {
+      "move_speed_mult": 0.7,
+      "sprint_allowed": false
+     }
+    }
+   ],
+   "heal_game_days": [
+    2,
+    3.1
+   ],
+   "prevented_by": [
+    "item.tool.ice_creepers (on ice)"
+   ],
+   "cures": [
+    {
+     "action": "physick.splint",
+     "heal_mult": 1.3
+    },
+    {
+     "rest": true
+    }
+   ],
+   "sources": [
+    "K:10.10"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "cond.injury.fracture",
+   "name": "Broken bone",
+   "family": "injury",
+   "status": "later",
+   "icon": "bone",
+   "signature": "a broken limb that takes most of a season",
+   "trade_off": "the surgeon's fee, or a crooked mend",
+   "zones": [
+    "arm",
+    "leg"
+   ],
+   "stages": [
+    {
+     "stage": "broken",
+     "effects": {}
+    }
+   ],
+   "effects_by_zone": {
+    "arm": {
+     "draw_speed_mult": 0.5,
+     "reload_speed_mult": 0.6,
+     "fine_work_mod": -0.3
+    },
+    "leg": {
+     "move_speed_mult": 0.45,
+     "sprint_allowed": false
+    }
+   },
+   "heal_game_days": 6.9,
+   "unsplinted": {
+    "heal_mult": 0.5,
+    "permanent_chance": 0.3
+   },
+   "cures": [
+    {
+     "action": "physick.splint"
+    },
+    {
+     "service": "service.surgeon_set_bone"
+    }
+   ],
+   "sources": [
+    "K:10.10"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "cond.injury.snakebite",
+   "name": "Snakebite",
+   "family": "injury",
+   "status": "later",
+   "icon": "snake",
+   "signature": "a swollen limb, then dizziness",
+   "trade_off": "cross the ledges in summer, or go around",
+   "window": [
+    "may_early",
+    "sep_late"
+   ],
+   "where": "rocky ledges (timber rattlesnake, copperhead)",
+   "stages": [
+    {
+     "stage": "bitten",
+     "effects": {
+      "max_stamina_mult": 0.6,
+      "move_speed_mult": 0.85
+     }
+    }
+   ],
+   "then": "cond.poisoned:dizzy",
+   "heal_game_days": [
+    1,
+    2
+   ],
+   "cures": [
+    {
+     "rest": true
+    },
+    {
+     "action": "physick.snakeroot",
+     "effect": "morale text only: 'your faith in the root steadies you'"
+    }
+   ],
+   "sources": [
+    "K:10.10",
+    "K:14"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "cond.injury.wound",
+   "name": "Wound (shot, arrow, blade, animal)",
+   "family": "injury",
+   "status": "later",
+   "icon": "wound",
+   "signature": "bleeding, and a weak limb until it mends",
+   "trade_off": "dress it now, or get clear first",
+   "zones": [
+    "arm",
+    "leg",
+    "torso"
+   ],
+   "stages": [
+    {
+     "stage": "bleeding",
+     "effects": {
+      "health_drain_per_hour": 5.0
+     }
+    },
+    {
+     "stage": "dressed",
+     "effects": {}
+    }
+   ],
+   "effects_by_zone": {
+    "arm": {
+     "draw_speed_mult": 0.75,
+     "reload_speed_mult": 0.8,
+     "aim_sway_mult": 1.2
+    },
+    "leg": {
+     "move_speed_mult": 0.75,
+     "sprint_allowed": false
+    },
+    "torso": {
+     "max_stamina_mult": 0.75
+    }
+   },
+   "heal_game_days": [
+    3.4,
+    4.8
+   ],
+   "infection": {
+    "chance_unclean": 0.3,
+    "chance_cleaned": 0.08,
+    "cond": "cond.infection"
+   },
+   "cures": [
+    {
+     "action": "physick.bind_wound"
+    },
+    {
+     "service": "service.surgeon"
+    },
+    {
+     "service": "service.town_healer",
+     "requires_standing": 50
+    }
+   ],
+   "note": "Damage itself belongs to the existing hit system (scripts/core/hit.gd); survival owns bleeding, healing and infection.",
+   "sources": [
+    "K:10.10"
+   ],
+   "milestone": "M4"
+  },
+  {
+   "id": "cond.infection",
+   "name": "Infected wound (fever)",
+   "family": "illness",
+   "status": "later",
+   "icon": "fever",
+   "signature": "a hot wound and failing strength",
+   "trade_off": "the surgeon now, or the poultice and hope",
+   "stages": [
+    {
+     "stage": "inflamed",
+     "effects": {
+      "check_mod": -0.05,
+      "max_stamina_mult": 0.85,
+      "health_regen_mult": 0.5
+     }
+    },
+    {
+     "stage": "fever",
+     "effects": {
+      "check_mod": -0.1,
+      "max_stamina_mult": 0.7,
+      "health_regen_mult": 0.0,
+      "health_drain_per_hour": 2.0,
+      "aim_tremor": 0.1
+     }
+    }
+   ],
+   "escalate_after_game_days": 2,
+   "cures": [
+    {
+     "action": "physick.poultice",
+     "chance": 0.5,
+     "stages": [
+      "inflamed"
+     ]
+    },
+    {
+     "service": "service.surgeon",
+     "chance": 0.8
+    },
+    {
+     "service": "service.town_healer",
+     "chance": 0.8,
+     "requires_standing": 50
+    }
+   ],
+   "sources": [
+    "K:10.10"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "cond.lingering_injury",
+   "name": "Lingering injury",
+   "family": "injury",
+   "status": "later",
+   "icon": "bandage",
+   "signature": "weak for two game days after a bad end",
+   "trade_off": "the price of dying on Woodsman",
+   "stages": [
+    {
+     "stage": "weak",
+     "effects": {
+      "max_stamina_mult": 0.85,
+      "health_regen_mult": 0.8
+     }
+    }
+   ],
+   "duration_game_days": 2,
+   "cause": "waking after a death on the Woodsman or Hard Winter preset",
+   "sources": [
+    "Y:6"
+   ],
+   "milestone": "M3"
+  },
+  {
+   "id": "cond.camp_fever",
+   "name": "Camp fever (typhus)",
+   "family": "world_event",
+   "status": "later",
+   "icon": "fever",
+   "note": "Only during an outbreak event in crowded winter quarters or a jail; closes buildings, raises prices.",
+   "stages": [
+    {
+     "stage": "fever",
+     "effects": {
+      "max_stamina_mult": 0.5,
+      "check_mod": -0.2,
+      "health_drain_per_hour": 1.5,
+      "blur": 0.2
+     }
+    }
+   ],
+   "duration_game_days": [
+    3.7,
+    4.1
+   ],
+   "cures": [
+    {
+     "service": "service.surgeon",
+     "effect": "stage eased"
+    },
+    {
+     "rest": true
+    }
+   ],
+   "sources": [
+    "K:7",
+    "K:10.8"
+   ],
+   "milestone": "M4"
+  },
+  {
+   "id": "cond.smallpox",
+   "name": "Smallpox",
+   "family": "world_event",
+   "status": "later",
+   "icon": null,
+   "note": "A grave world event: towns and forts quarantine, trade stops, councils meet. Player infection is off by default; never a player tool, never shown graphically. Mortality followed war, famine, displacement and crowding, not a 'virgin soil' trait of any people (Kelton; Jones, N:22). For a 1765 start the model is inoculation (variolation) debates in the valley and outbreaks in garrison towns such as Albany; the 1757 Fort William Henry outbreak struck mainly the western, French-allied nations (Steele, N:19) and belongs to the war start (post).",
+   "player_infection_default": false,
+   "stages": [],
+   "sources": [
+    "N:22",
+    "N:19",
+    "K:10.8"
+   ],
+   "milestone": "post"
+  }
+ ]
+}

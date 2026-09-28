@@ -1,0 +1,6901 @@
+{
+ "tool": "tools/horse/build_horse.py",
+ "space": "Godot model space: +y up, the horse faces +z, +x is the horse's left; metres",
+ "size": {
+  "withers_height": 1.45,
+  "hands_decimal": 14.272,
+  "hands_notation": "14.1",
+  "note": "Hands in the usual notation: 14.1 = 14 hands 1 inch (1 hand = 4 in = 0.1016 m).",
+  "type": "stocky 1750s colonial saddle horse (Canadian / Chickasaw / Narragansett type)",
+  "scale_from_base": [
+   1.02,
+   1.05,
+   1.1069
+  ]
+ },
+ "turning": {
+  "a_lat": 6.0,
+  "turn_radius_min": {
+   "walk": 2.0,
+   "trot": 3.5,
+   "canter": 5.0,
+   "gallop": 10.0,
+   "sprint": 20.0
+  },
+  "lean_k": 0.5,
+  "lean_max_deg": 14.0,
+  "note": "Every moving gait clip X has curved variants X_tl / X_tr baked on a circle of radius turn_radius (hooves planted along the arc, the body leaning in). Blend them with X by curvature: weight = yaw rate x turn_radius / speed (-1..1, + = left). The runtime yaw limit is speed / max(turn_radius_min[gait], speed^2 / a_lat)."
+ },
+ "attach_height": 1.4961,
+ "seat_height": 1.3711,
+ "withers_height": 1.45,
+ "clip_ground": {
+  "authored": 1.37,
+  "actual": 1.4961,
+  "mount_ground_offset": -0.1261,
+  "note": "The riding clips are saddle-relative and need no change. Ground-relative rider clips (mount, dismount) were fitted to a ground 1.37 m under the clip origin; on this horse the ground is attach_height under it, so shift their origin by mount_ground_offset (m, along the saddle frame's up axis) while they blend between ground and saddle."
+ },
+ "sockets": {
+  "saddle": [
+   0.0,
+   1.4961,
+   0.0
+  ],
+  "passenger": [
+   0.0,
+   1.533,
+   -0.39
+  ],
+  "stirrup_tread_l": [
+   0.425,
+   0.8311,
+   0.16
+  ],
+  "stirrup_tread_r": [
+   -0.425,
+   0.8311,
+   0.16
+  ],
+  "stirrup_bar_l": [
+   0.145,
+   1.3411,
+   0.08
+  ],
+  "stirrup_bar_r": [
+   -0.145,
+   1.3411,
+   0.08
+  ],
+  "stirrup_iron_height": 0.115,
+  "bit": [
+   0.0,
+   1.2665,
+   1.3669
+  ],
+  "rein_l": [
+   0.0694,
+   1.2665,
+   1.3669
+  ],
+  "rein_r": [
+   -0.0694,
+   1.2665,
+   1.3669
+  ],
+  "hoof_toes": {
+   "LF": [
+    "hoof_l",
+    [
+     0.1377,
+     0.0,
+     0.7079
+    ]
+   ],
+   "RF": [
+    "hoof_r",
+    [
+     -0.1377,
+     0.0,
+     0.7079
+    ]
+   ],
+   "LH": [
+    "hhoof_l",
+    [
+     0.1224,
+     0.0,
+     -0.4125
+    ]
+   ],
+   "RH": [
+    "hhoof_r",
+    [
+     -0.1224,
+     0.0,
+     -0.4125
+    ]
+   ]
+  }
+ },
+ "mount": {
+  "note": "Actor_A mount-left fit (horse.md 1.7): rider starts on the ground 0.69 m out, 0.18 m forward, turned ~101 deg to face the flank. The dismount lands ~0.55 m out. The mount clip's origin must rise by attach_height (not 1.37 m); see clip_ground.",
+  "mount_left": {
+   "pos": [
+    0.69,
+    0.0,
+    0.18
+   ],
+   "yaw_deg": -101.0
+  },
+  "mount_right": {
+   "pos": [
+    -0.69,
+    0.0,
+    0.18
+   ],
+   "yaw_deg": 101.0
+  },
+  "dismount_left": {
+   "pos": [
+    0.55,
+    0.0,
+    0.0
+   ]
+  },
+  "dismount_right": {
+   "pos": [
+    -0.55,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "collision": {
+  "box_size": [
+   0.62,
+   0.95,
+   1.8
+  ],
+  "box_center": [
+   0.0,
+   1.025,
+   0.07
+  ],
+  "feet_radius": 0.36
+ },
+ "rig": {
+  "revision": 5,
+  "bones": 60,
+  "column": [
+   "body",
+   "chest",
+   "back",
+   "loin",
+   "loin_2",
+   "hips",
+   "tail_1",
+   "tail_2",
+   "tail_3",
+   "tail_4"
+  ],
+  "neck": [
+   "neck_1",
+   "neck_2",
+   "neck_3",
+   "head"
+  ],
+  "spine_flex_shares": {
+   "loin": 0.0,
+   "loin_2": 0.4,
+   "hips": 0.6
+  },
+  "spine_bend_shares": {
+   "chest": 1.0,
+   "loin": -0.3,
+   "loin_2": -0.3,
+   "hips": -0.4
+  },
+  "scapula": {
+   "pivot_from_top": 0.22,
+   "sling_m": 0.015
+  },
+  "note": "body is the trunk control (not skinned). chest: T1-T9 (withers, the shoulder blades hang from it), back: T10-T18 (saddle), loin: L1-L3, loin_2: L4-L6, hips: sacrum and pelvis (turns about the lumbosacral joint). The shoulder blades turn about a point in their upper part (pivot_from_top of their length) and glide down the ribcage while their leg carries no weight."
+ },
+ "helpers": {
+  "shoulder_l": [
+   "scapula_l",
+   "humerus_l",
+   0.5
+  ],
+  "elbow_l": [
+   "humerus_l",
+   "radius_l",
+   0.5
+  ],
+  "knee_l": [
+   "radius_l",
+   "cannon_l",
+   0.5
+  ],
+  "fetlock_l": [
+   "cannon_l",
+   "pastern_l",
+   0.5
+  ],
+  "thigh_l": [
+   "hips",
+   "femur_l",
+   0.5
+  ],
+  "hock_l": [
+   "tibia_l",
+   "hcannon_l",
+   0.5
+  ],
+  "hfetlock_l": [
+   "hcannon_l",
+   "hpastern_l",
+   0.5
+  ],
+  "shoulder_r": [
+   "scapula_r",
+   "humerus_r",
+   0.5
+  ],
+  "elbow_r": [
+   "humerus_r",
+   "radius_r",
+   0.5
+  ],
+  "knee_r": [
+   "radius_r",
+   "cannon_r",
+   0.5
+  ],
+  "fetlock_r": [
+   "cannon_r",
+   "pastern_r",
+   0.5
+  ],
+  "thigh_r": [
+   "hips",
+   "femur_r",
+   0.5
+  ],
+  "hock_r": [
+   "tibia_r",
+   "hcannon_r",
+   0.5
+  ],
+  "hfetlock_r": [
+   "hcannon_r",
+   "hpastern_r",
+   0.5
+  ]
+ },
+ "clips": {
+  "idle": {
+   "length": 13.3333,
+   "frames": 401,
+   "loop": true,
+   "kind": "idle",
+   "key_rate": 30,
+   "keys": 401,
+   "rider_clip": "actor_b-horse-idle",
+   "rider_native_asset_id": "40d904332dc69544346ce511342bc99803d2ecd89f4d4203f9c0527a9ff5f29c",
+   "diagnostics": {
+    "frames": 401,
+    "length": 13.3333,
+    "loop_close": 0.0,
+    "ground_speed": 0.0,
+    "key_rate": 30,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 30.0,
+     "sink": 0.0,
+     "drift": 0.0,
+     "slide_p50": 0.0,
+     "slide_p95": 0.0,
+     "slide_max": 0.0
+    },
+    "joint_rom": {
+     "hip": 0.18,
+     "stifle": 0.84,
+     "hock": 1.05,
+     "fetlock": 0.37
+    },
+    "pelvis_pitch_range": 0.0,
+    "pelvis_roll_range": 0.0,
+    "pelvis_pitch_vs_back_range": 0.0,
+    "max_stretch": {
+     "LF": 0.9349,
+     "RF": 0.9349,
+     "LH": 0.9013,
+     "RH": 0.9013
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.008,
+    "neck_elevation_deg": 40.14,
+    "poll_height": 1.6323,
+    "stance_slip": 0.0,
+    "frame_jump": 0.0,
+    "skate": 0.0,
+    "touchdown_speed": null,
+    "liftoff_speed": null,
+    "swing_peak_min": null,
+    "swing_mid_min": null,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9349,
+    "neck_elev_mean": 40.1364,
+    "poll_height_mean": 1.6323,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.0,
+      "skate": 0.0,
+      "touchdown_speed": null,
+      "liftoff_speed": null,
+      "swing_peak": null,
+      "swing_peak_at": null,
+      "swing_mid_min": null,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9349
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.0,
+      "skate": 0.0,
+      "touchdown_speed": null,
+      "liftoff_speed": null,
+      "swing_peak": null,
+      "swing_peak_at": null,
+      "swing_mid_min": null,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9349
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.0,
+      "skate": 0.0,
+      "touchdown_speed": null,
+      "liftoff_speed": null,
+      "swing_peak": null,
+      "swing_peak_at": null,
+      "swing_mid_min": null,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9013,
+      "hip_rom": 0.3474,
+      "hip_rom_natural": 0.3474,
+      "hip_min": 0.9878,
+      "hip_max": 1.3352,
+      "stifle_rom": 1.6651,
+      "hock_rom": 2.0814,
+      "stifle_range": [
+       108.8747317010223,
+       110.53987942833412
+      ],
+      "hock_range": [
+       126.35501771955532,
+       128.43645939820215
+      ],
+      "stifle_hock_corr": 1.0,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.0,
+      "skate": 0.0,
+      "touchdown_speed": null,
+      "liftoff_speed": null,
+      "swing_peak": null,
+      "swing_peak_at": null,
+      "swing_mid_min": null,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9013,
+      "hip_rom": 0.3474,
+      "hip_rom_natural": 0.3474,
+      "hip_min": 0.9878,
+      "hip_max": 1.3352,
+      "stifle_rom": 1.6651,
+      "hock_rom": 2.0814,
+      "stifle_range": [
+       108.8747317010223,
+       110.53987942833412
+      ],
+      "hock_range": [
+       126.35501771955532,
+       128.43645939820215
+      ],
+      "stifle_hock_corr": 1.0,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "walk": {
+   "length": 2.4,
+   "frames": 73,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 30,
+   "keys": 73,
+   "rider_clip": "actor_b-horse-walk-fw",
+   "rider_native_asset_id": "538b60aba79bb8435e41b965e97434f0ec451848b91cf31768d746f67b25c7d1",
+   "strides": 2,
+   "stride_s": 1.2,
+   "design_speed": 1.375,
+   "stride_length": 1.65,
+   "duty": [
+    0.6,
+    0.6
+   ],
+   "touchdown_phase": {
+    "LH": 0.815,
+    "LF": 0.065,
+    "RH": 0.315,
+    "RF": 0.565
+   },
+   "lh_touchdown_clip_phase": 0.4075,
+   "saddle_amp": 0.03,
+   "diagnostics": {
+    "frames": 73,
+    "length": 2.4,
+    "loop_close": 2.0650148258027912e-14,
+    "ground_speed": 1.375,
+    "key_rate": 30,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 30.0,
+     "sink": 0.0043,
+     "drift": 0.0031,
+     "slide_p50": 0.0119,
+     "slide_p95": 0.031,
+     "slide_max": 0.1451
+    },
+    "joint_rom": {
+     "hip": 39.78,
+     "stifle": 52.27,
+     "hock": 95.41,
+     "fetlock": 41.01
+    },
+    "pelvis_pitch_range": 7.89,
+    "pelvis_roll_range": 4.38,
+    "pelvis_pitch_vs_back_range": 5.61,
+    "max_stretch": {
+     "LF": 0.9871,
+     "RF": 0.9871,
+     "LH": 0.9969,
+     "RH": 0.9969
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.03,
+    "neck_elevation_deg": 37.36,
+    "poll_height": 1.5842,
+    "td_speed_win": 0.2332,
+    "td_height_win": 0.0196,
+    "td_angle_min": 68.5481,
+    "lo_speed_win": 0.4266,
+    "lo_height_win": 0.0369,
+    "stance_slip": 0.0,
+    "frame_jump": 0.2461,
+    "skate": 0.0096,
+    "touchdown_speed": 0.0096,
+    "liftoff_speed": 0.0227,
+    "swing_peak_min": 0.1477,
+    "swing_mid_min": 0.0613,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9969,
+    "neck_elev_mean": 37.359,
+    "poll_height_mean": 1.5842,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2461,
+      "skate": 0.0096,
+      "touchdown_speed": 0.0096,
+      "liftoff_speed": 0.0086,
+      "swing_peak": 0.2068,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.0613,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9871,
+      "ev_td_speed": 0.2332,
+      "ev_td_height": 0.0227,
+      "ev_td_angle": 71.0893,
+      "ev_lo_speed": 0.4266,
+      "ev_lo_height": 0.0369
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2461,
+      "skate": 0.0096,
+      "touchdown_speed": 0.0096,
+      "liftoff_speed": 0.0086,
+      "swing_peak": 0.2068,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.0613,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9871,
+      "ev_td_speed": 0.2332,
+      "ev_td_height": 0.0227,
+      "ev_td_angle": 71.0893,
+      "ev_lo_speed": 0.4266,
+      "ev_lo_height": 0.0369
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1972,
+      "skate": 0.0095,
+      "touchdown_speed": 0.0095,
+      "liftoff_speed": 0.0227,
+      "swing_peak": 0.1477,
+      "swing_peak_at": 0.233,
+      "swing_mid_min": 0.0708,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9969,
+      "ev_td_speed": 0.2312,
+      "ev_td_height": 0.0196,
+      "ev_td_angle": 68.5481,
+      "ev_lo_speed": 0.0023,
+      "ev_lo_height": 0.0777,
+      "hip_rom": 38.2731,
+      "hip_rom_natural": 66.1425,
+      "hip_min": -20.4515,
+      "hip_max": 17.8217,
+      "stifle_rom": 48.9263,
+      "hock_rom": 94.2695,
+      "stifle_range": [
+       84.22038271353773,
+       133.14671489596148
+      ],
+      "hock_range": [
+       76.65348431808061,
+       170.9229474738218
+      ],
+      "stifle_hock_corr": 0.7574,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1972,
+      "skate": 0.0095,
+      "touchdown_speed": 0.0095,
+      "liftoff_speed": 0.0227,
+      "swing_peak": 0.1477,
+      "swing_peak_at": 0.233,
+      "swing_mid_min": 0.0708,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9969,
+      "ev_td_speed": 0.2312,
+      "ev_td_height": 0.0196,
+      "ev_td_angle": 68.5481,
+      "ev_lo_speed": 0.0023,
+      "ev_lo_height": 0.0777,
+      "hip_rom": 38.2731,
+      "hip_rom_natural": 66.1425,
+      "hip_min": -20.4515,
+      "hip_max": 17.8217,
+      "stifle_rom": 48.9263,
+      "hock_rom": 94.2695,
+      "stifle_range": [
+       84.22038271353773,
+       133.14671489596148
+      ],
+      "hock_range": [
+       76.65348431808057,
+       170.9229474738219
+      ],
+      "stifle_hock_corr": 0.7528,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "walk_s": {
+   "length": 2.4,
+   "frames": 73,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 30,
+   "keys": 73,
+   "rider_clip": "actor_b-horse-walk-fw",
+   "rider_native_asset_id": "538b60aba79bb8435e41b965e97434f0ec451848b91cf31768d746f67b25c7d1",
+   "strides": 2,
+   "stride_s": 1.2,
+   "design_speed": 0.4813,
+   "stride_length": 0.5775,
+   "duty": [
+    0.6,
+    0.6
+   ],
+   "touchdown_phase": {
+    "LH": 0.815,
+    "LF": 0.065,
+    "RH": 0.315,
+    "RF": 0.565
+   },
+   "lh_touchdown_clip_phase": 0.4075,
+   "saddle_amp": 0.03,
+   "variant_of": "walk",
+   "diagnostics": {
+    "frames": 73,
+    "length": 2.4,
+    "loop_close": 1.0547118733938987e-15,
+    "ground_speed": 0.48125,
+    "key_rate": 30,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 30.0,
+     "sink": 0.0025,
+     "drift": 0.0031,
+     "slide_p50": 0.0058,
+     "slide_p95": 0.0207,
+     "slide_max": 0.0324
+    },
+    "joint_rom": {
+     "hip": 22.58,
+     "stifle": 24.35,
+     "hock": 47.99,
+     "fetlock": 40.84
+    },
+    "pelvis_pitch_range": 7.89,
+    "pelvis_roll_range": 4.38,
+    "pelvis_pitch_vs_back_range": 5.61,
+    "max_stretch": {
+     "LF": 0.9285,
+     "RF": 0.9285,
+     "LH": 0.9011,
+     "RH": 0.9011
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.03,
+    "neck_elevation_deg": 38.46,
+    "poll_height": 1.5958,
+    "td_speed_win": 0.0811,
+    "td_height_win": 0.0156,
+    "td_angle_min": 80.4392,
+    "lo_speed_win": 0.8783,
+    "lo_height_win": 0.0354,
+    "stance_slip": 0.0,
+    "frame_jump": 0.1275,
+    "skate": 0.0109,
+    "touchdown_speed": 0.0033,
+    "liftoff_speed": 0.0263,
+    "swing_peak_min": 0.093,
+    "swing_mid_min": 0.0418,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9285,
+    "neck_elev_mean": 38.4557,
+    "poll_height_mean": 1.5958,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1275,
+      "skate": 0.0109,
+      "touchdown_speed": 0.0033,
+      "liftoff_speed": 0.0109,
+      "swing_peak": 0.1185,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.0418,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9285,
+      "ev_td_speed": 0.0811,
+      "ev_td_height": 0.0181,
+      "ev_td_angle": 81.5292,
+      "ev_lo_speed": 0.0116,
+      "ev_lo_height": 0.0354
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1275,
+      "skate": 0.0109,
+      "touchdown_speed": 0.0033,
+      "liftoff_speed": 0.0109,
+      "swing_peak": 0.1185,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.0418,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9285,
+      "ev_td_speed": 0.0811,
+      "ev_td_height": 0.0181,
+      "ev_td_angle": 81.5292,
+      "ev_lo_speed": 0.0116,
+      "ev_lo_height": 0.0354
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.0682,
+      "skate": 0.0032,
+      "touchdown_speed": 0.0032,
+      "liftoff_speed": 0.0263,
+      "swing_peak": 0.093,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.046,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9011,
+      "ev_td_speed": 0.0791,
+      "ev_td_height": 0.0156,
+      "ev_td_angle": 80.4392,
+      "ev_lo_speed": 0.8783,
+      "ev_lo_height": 0.0549,
+      "hip_rom": 22.5648,
+      "hip_rom_natural": 22.5648,
+      "hip_min": -7.719,
+      "hip_max": 14.8457,
+      "stifle_rom": 24.35,
+      "hock_rom": 47.7863,
+      "stifle_range": [
+       86.14620833260842,
+       110.49623554781135
+      ],
+      "hock_range": [
+       80.59557045592044,
+       128.38191737612175
+      ],
+      "stifle_hock_corr": 0.982,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.0682,
+      "skate": 0.0032,
+      "touchdown_speed": 0.0032,
+      "liftoff_speed": 0.0263,
+      "swing_peak": 0.093,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.046,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9011,
+      "ev_td_speed": 0.0791,
+      "ev_td_height": 0.0156,
+      "ev_td_angle": 80.4392,
+      "ev_lo_speed": 0.8783,
+      "ev_lo_height": 0.0549,
+      "hip_rom": 22.5648,
+      "hip_rom_natural": 22.5648,
+      "hip_min": -7.719,
+      "hip_max": 14.8457,
+      "stifle_rom": 24.35,
+      "hock_rom": 47.7863,
+      "stifle_range": [
+       86.14620833260838,
+       110.49623554781144
+      ],
+      "hock_range": [
+       80.5955704559205,
+       128.38191737612192
+      ],
+      "stifle_hock_corr": 0.9817,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "trot": {
+   "length": 0.9333,
+   "frames": 29,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 113,
+   "rider_clip": "actor_b-horse-trot-fw",
+   "rider_native_asset_id": "d09a0039ec60fb985b644a599d1d46797524f2afd4f8eca17a249442a84bbdbb",
+   "strides": 1,
+   "stride_s": 0.9333,
+   "design_speed": 3.0001,
+   "stride_length": 2.8,
+   "duty": [
+    0.36,
+    0.36
+   ],
+   "touchdown_phase": {
+    "LH": 0.5,
+    "LF": 0.0,
+    "RH": 0.0,
+    "RF": 0.5
+   },
+   "lh_touchdown_clip_phase": 0.5,
+   "saddle_amp": 0.06,
+   "diagnostics": {
+    "frames": 29,
+    "length": 0.9333,
+    "loop_close": 5.551115123125783e-16,
+    "ground_speed": 3.00010714668381,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0028,
+     "drift": 0.0032,
+     "slide_p50": 0.0081,
+     "slide_p95": 0.0642,
+     "slide_max": 0.1233
+    },
+    "joint_rom": {
+     "hip": 43.74,
+     "stifle": 54.22,
+     "hock": 99.0,
+     "fetlock": 50.76
+    },
+    "pelvis_pitch_range": 5.18,
+    "pelvis_roll_range": 5.5,
+    "pelvis_pitch_vs_back_range": 5.01,
+    "max_stretch": {
+     "LF": 0.9923,
+     "RF": 0.9923,
+     "LH": 0.9973,
+     "RH": 0.9973
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.06,
+    "neck_elevation_deg": 39.41,
+    "poll_height": 1.5918,
+    "td_speed_win": 0.5242,
+    "td_height_win": 0.0233,
+    "td_angle_min": 53.2633,
+    "lo_speed_win": 1.3864,
+    "lo_height_win": 0.0501,
+    "stance_slip": 0.0,
+    "frame_jump": 0.2684,
+    "skate": 0.0,
+    "touchdown_speed": 0.5242,
+    "liftoff_speed": 1.1488,
+    "swing_peak_min": 0.1703,
+    "swing_mid_min": 0.0745,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9973,
+    "neck_elev_mean": 39.4122,
+    "poll_height_mean": 1.5918,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2684,
+      "skate": 0.0,
+      "touchdown_speed": 0.5242,
+      "liftoff_speed": 0.9506,
+      "swing_peak": 0.2944,
+      "swing_peak_at": 0.324,
+      "swing_mid_min": 0.0745,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9923,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": 1.1728,
+      "ev_lo_height": 0.0501
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2684,
+      "skate": 0.0,
+      "touchdown_speed": 0.5242,
+      "liftoff_speed": 0.9506,
+      "swing_peak": 0.2944,
+      "swing_peak_at": 0.324,
+      "swing_mid_min": 0.0745,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9923,
+      "ev_td_speed": 0.5242,
+      "ev_td_height": 0.0283,
+      "ev_td_angle": 58.291,
+      "ev_lo_speed": 1.1728,
+      "ev_lo_height": 0.0501
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2669,
+      "skate": 0.0,
+      "touchdown_speed": 0.5226,
+      "liftoff_speed": 1.1488,
+      "swing_peak": 0.1703,
+      "swing_peak_at": 0.265,
+      "swing_mid_min": 0.0787,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9973,
+      "ev_td_speed": 0.5226,
+      "ev_td_height": 0.0233,
+      "ev_td_angle": 53.2633,
+      "ev_lo_speed": 1.3864,
+      "ev_lo_height": 0.0541,
+      "hip_rom": 42.7742,
+      "hip_rom_natural": 66.9443,
+      "hip_min": -27.5218,
+      "hip_max": 15.2524,
+      "stifle_rom": 53.3988,
+      "hock_rom": 98.1725,
+      "stifle_range": [
+       83.35122860827782,
+       136.7500643936039
+      ],
+      "hock_range": [
+       73.32393835148656,
+       171.49642651883534
+      ],
+      "stifle_hock_corr": 0.7019,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2669,
+      "skate": 0.0,
+      "touchdown_speed": 0.5226,
+      "liftoff_speed": 1.1488,
+      "swing_peak": 0.1703,
+      "swing_peak_at": 0.265,
+      "swing_mid_min": 0.0787,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9973,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": 1.3864,
+      "ev_lo_height": 0.0541,
+      "hip_rom": 42.7742,
+      "hip_rom_natural": 66.9443,
+      "hip_min": -27.5218,
+      "hip_max": 15.2524,
+      "stifle_rom": 53.3988,
+      "hock_rom": 98.1725,
+      "stifle_range": [
+       83.35122860827776,
+       136.75006439360357
+      ],
+      "hock_range": [
+       73.32393835148653,
+       171.49642651883485
+      ],
+      "stifle_hock_corr": 0.698,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "trot_s": {
+   "length": 0.9333,
+   "frames": 29,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 113,
+   "rider_clip": "actor_b-horse-trot-fw",
+   "rider_native_asset_id": "d09a0039ec60fb985b644a599d1d46797524f2afd4f8eca17a249442a84bbdbb",
+   "strides": 1,
+   "stride_s": 0.9333,
+   "design_speed": 1.6801,
+   "stride_length": 1.568,
+   "duty": [
+    0.36,
+    0.36
+   ],
+   "touchdown_phase": {
+    "LH": 0.5,
+    "LF": 0.0,
+    "RH": 0.0,
+    "RF": 0.5
+   },
+   "lh_touchdown_clip_phase": 0.5,
+   "saddle_amp": 0.06,
+   "variant_of": "trot",
+   "diagnostics": {
+    "frames": 29,
+    "length": 0.9333,
+    "loop_close": 8.881784197001252e-16,
+    "ground_speed": 1.6800600021429337,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0025,
+     "drift": 0.0032,
+     "slide_p50": 0.0032,
+     "slide_p95": 0.0388,
+     "slide_max": 0.1042
+    },
+    "joint_rom": {
+     "hip": 28.2,
+     "stifle": 23.47,
+     "hock": 47.34,
+     "fetlock": 49.93
+    },
+    "pelvis_pitch_range": 5.18,
+    "pelvis_roll_range": 5.5,
+    "pelvis_pitch_vs_back_range": 5.01,
+    "max_stretch": {
+     "LF": 0.9265,
+     "RF": 0.9265,
+     "LH": 0.8883,
+     "RH": 0.8883
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.06,
+    "neck_elevation_deg": 40.1,
+    "poll_height": 1.5988,
+    "td_speed_win": 0.2926,
+    "td_height_win": 0.0198,
+    "td_angle_min": 63.9309,
+    "lo_speed_win": 1.1807,
+    "lo_height_win": 0.042,
+    "stance_slip": 0.0,
+    "frame_jump": 0.177,
+    "skate": 0.0,
+    "touchdown_speed": 0.2926,
+    "liftoff_speed": 0.9906,
+    "swing_peak_min": 0.1094,
+    "swing_mid_min": 0.0551,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9265,
+    "neck_elev_mean": 40.0976,
+    "poll_height_mean": 1.5988,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.177,
+      "skate": 0.0,
+      "touchdown_speed": 0.2926,
+      "liftoff_speed": 0.5771,
+      "swing_peak": 0.2139,
+      "swing_peak_at": 0.324,
+      "swing_mid_min": 0.0551,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9265,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": 0.6894,
+      "ev_lo_height": 0.0441
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.177,
+      "skate": 0.0,
+      "touchdown_speed": 0.2926,
+      "liftoff_speed": 0.5771,
+      "swing_peak": 0.2139,
+      "swing_peak_at": 0.324,
+      "swing_mid_min": 0.0551,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9265,
+      "ev_td_speed": 0.2926,
+      "ev_td_height": 0.024,
+      "ev_td_angle": 67.9186,
+      "ev_lo_speed": 0.6894,
+      "ev_lo_height": 0.0441
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1322,
+      "skate": 0.0,
+      "touchdown_speed": 0.291,
+      "liftoff_speed": 0.9906,
+      "swing_peak": 0.1094,
+      "swing_peak_at": 0.265,
+      "swing_mid_min": 0.0584,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8883,
+      "ev_td_speed": 0.291,
+      "ev_td_height": 0.0198,
+      "ev_td_angle": 63.9309,
+      "ev_lo_speed": 1.1807,
+      "ev_lo_height": 0.042,
+      "hip_rom": 28.1519,
+      "hip_rom_natural": 33.7336,
+      "hip_min": -9.4355,
+      "hip_max": 18.7165,
+      "stifle_rom": 23.4585,
+      "hock_rom": 47.3269,
+      "stifle_range": [
+       84.81778705978726,
+       108.27633209543664
+      ],
+      "hock_range": [
+       77.7533713534453,
+       125.08024295795688
+      ],
+      "stifle_hock_corr": 0.9691,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1322,
+      "skate": 0.0,
+      "touchdown_speed": 0.291,
+      "liftoff_speed": 0.9906,
+      "swing_peak": 0.1094,
+      "swing_peak_at": 0.265,
+      "swing_mid_min": 0.0584,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8883,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": 1.1807,
+      "ev_lo_height": 0.042,
+      "hip_rom": 28.1519,
+      "hip_rom_natural": 33.7336,
+      "hip_min": -9.4355,
+      "hip_max": 18.7165,
+      "stifle_rom": 23.4585,
+      "hock_rom": 47.3269,
+      "stifle_range": [
+       84.81778705978721,
+       108.27633209543664
+      ],
+      "hock_range": [
+       77.75337135344523,
+       125.08024295795688
+      ],
+      "stifle_hock_corr": 0.9699,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "canter": {
+   "length": 0.9333,
+   "frames": 29,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 113,
+   "rider_clip": "actor_b-horse-canter-fw",
+   "rider_native_asset_id": "704b71e831fe8230d3e2034836bddff7eec6394138f9d02d0b86478c357d6fc4",
+   "strides": 2,
+   "stride_s": 0.46665,
+   "design_speed": 6.0002,
+   "stride_length": 2.8,
+   "duty": [
+    0.4,
+    0.37
+   ],
+   "touchdown_phase": {
+    "LH": 0.02,
+    "LF": 0.22,
+    "RH": 0.22,
+    "RF": 0.42
+   },
+   "lh_touchdown_clip_phase": 0.01,
+   "saddle_amp": 0.08,
+   "diagnostics": {
+    "frames": 29,
+    "length": 0.9333,
+    "loop_close": 1.0824674490095276e-14,
+    "ground_speed": 6.00021429336762,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0038,
+     "drift": 0.0029,
+     "slide_p50": 0.0322,
+     "slide_p95": 0.1457,
+     "slide_max": 0.219
+    },
+    "joint_rom": {
+     "hip": 53.16,
+     "stifle": 63.71,
+     "hock": 94.66,
+     "fetlock": 57.68
+    },
+    "pelvis_pitch_range": 21.99,
+    "pelvis_roll_range": 1.39,
+    "pelvis_pitch_vs_back_range": 13.86,
+    "max_stretch": {
+     "LF": 1.0105,
+     "RF": 1.0123,
+     "LH": 0.9969,
+     "RH": 0.9975
+    },
+    "reach_err": 0.01244,
+    "saddle_z_p2p": 0.08,
+    "neck_elevation_deg": 29.11,
+    "poll_height": 1.4807,
+    "td_speed_win": 2.4197,
+    "td_height_win": 0.0598,
+    "td_angle_min": 39.0525,
+    "lo_speed_win": 1.6006,
+    "lo_height_win": 0.1191,
+    "stance_slip": 0.0,
+    "frame_jump": 0.6221,
+    "skate": 0.0,
+    "touchdown_speed": 1.5303,
+    "liftoff_speed": 0.6617,
+    "swing_peak_min": 0.174,
+    "swing_mid_min": 0.1051,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 1.0123,
+    "neck_elev_mean": 29.1144,
+    "poll_height_mean": 1.4807,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.5955,
+      "skate": 0.0,
+      "touchdown_speed": 0.0778,
+      "liftoff_speed": 0.0039,
+      "swing_peak": 0.5087,
+      "swing_peak_at": 0.389,
+      "swing_mid_min": 0.1051,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 1.0105,
+      "ev_td_speed": 2.4197,
+      "ev_td_height": 0.0798,
+      "ev_td_angle": 44.6923,
+      "ev_lo_speed": 0.2012,
+      "ev_lo_height": 0.1372
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.6221,
+      "skate": 0.0,
+      "touchdown_speed": 1.5303,
+      "liftoff_speed": 0.1531,
+      "swing_peak": 0.516,
+      "swing_peak_at": 0.438,
+      "swing_mid_min": 0.2032,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 1.0123,
+      "ev_td_speed": 2.2721,
+      "ev_td_height": 0.0826,
+      "ev_td_angle": 47.4666,
+      "ev_lo_speed": 0.426,
+      "ev_lo_height": 0.1264
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.503,
+      "skate": 0.0,
+      "touchdown_speed": 0.0462,
+      "liftoff_speed": 0.2364,
+      "swing_peak": 0.2845,
+      "swing_peak_at": 0.278,
+      "swing_mid_min": 0.1164,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9969,
+      "ev_td_speed": 2.2096,
+      "ev_td_height": 0.0598,
+      "ev_td_angle": 39.0525,
+      "ev_lo_speed": 1.4559,
+      "ev_lo_height": 0.1229,
+      "hip_rom": 48.7475,
+      "hip_rom_natural": 66.7166,
+      "hip_min": -27.9323,
+      "hip_max": 20.8153,
+      "stifle_rom": 38.9716,
+      "hock_rom": 93.91,
+      "stifle_range": [
+       90.73572793522463,
+       129.70727845894268
+      ],
+      "hock_range": [
+       77.0717266143979,
+       170.9817434092145
+      ],
+      "stifle_hock_corr": 0.8576,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4543,
+      "skate": 0.0,
+      "touchdown_speed": 0.0002,
+      "liftoff_speed": 0.6617,
+      "swing_peak": 0.174,
+      "swing_peak_at": 0.278,
+      "swing_mid_min": 0.1217,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9975,
+      "ev_td_speed": 2.2162,
+      "ev_td_height": 0.0603,
+      "ev_td_angle": 39.2463,
+      "ev_lo_speed": 1.6006,
+      "ev_lo_height": 0.1191,
+      "hip_rom": 53.0667,
+      "hip_rom_natural": 60.1311,
+      "hip_min": -32.3079,
+      "hip_max": 20.7588,
+      "stifle_rom": 63.14,
+      "hock_rom": 93.9011,
+      "stifle_range": [
+       87.35377101270137,
+       150.49373174333843
+      ],
+      "hock_range": [
+       77.9951674338052,
+       171.8962598670475
+      ],
+      "stifle_hock_corr": 0.9338,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "canter_s": {
+   "length": 0.9333,
+   "frames": 29,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 113,
+   "rider_clip": "actor_b-horse-canter-fw",
+   "rider_native_asset_id": "704b71e831fe8230d3e2034836bddff7eec6394138f9d02d0b86478c357d6fc4",
+   "strides": 2,
+   "stride_s": 0.46665,
+   "design_speed": 3.7201,
+   "stride_length": 1.736,
+   "duty": [
+    0.4,
+    0.37
+   ],
+   "touchdown_phase": {
+    "LH": 0.02,
+    "LF": 0.22,
+    "RH": 0.22,
+    "RF": 0.42
+   },
+   "lh_touchdown_clip_phase": 0.01,
+   "saddle_amp": 0.08,
+   "variant_of": "canter",
+   "diagnostics": {
+    "frames": 29,
+    "length": 0.9333,
+    "loop_close": 1.5543122344752192e-15,
+    "ground_speed": 3.7201328618879246,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0024,
+     "drift": 0.0029,
+     "slide_p50": 0.0151,
+     "slide_p95": 0.0868,
+     "slide_max": 0.1112
+    },
+    "joint_rom": {
+     "hip": 38.58,
+     "stifle": 31.63,
+     "hock": 56.89,
+     "fetlock": 57.02
+    },
+    "pelvis_pitch_range": 21.99,
+    "pelvis_roll_range": 1.39,
+    "pelvis_pitch_vs_back_range": 13.86,
+    "max_stretch": {
+     "LF": 0.942,
+     "RF": 0.9478,
+     "LH": 0.8667,
+     "RH": 0.9136
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.08,
+    "neck_elevation_deg": 31.86,
+    "poll_height": 1.5123,
+    "td_speed_win": 1.503,
+    "td_height_win": 0.0539,
+    "td_angle_min": 49.689,
+    "lo_speed_win": 1.8957,
+    "lo_height_win": 0.0883,
+    "stance_slip": 0.0,
+    "frame_jump": 0.4492,
+    "skate": 0.0002,
+    "touchdown_speed": 0.9316,
+    "liftoff_speed": 1.0291,
+    "swing_peak_min": 0.1507,
+    "swing_mid_min": 0.0936,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9478,
+    "neck_elev_mean": 31.8556,
+    "poll_height_mean": 1.5123,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4423,
+      "skate": 0.0,
+      "touchdown_speed": 0.0001,
+      "liftoff_speed": 0.0903,
+      "swing_peak": 0.453,
+      "swing_peak_at": 0.389,
+      "swing_mid_min": 0.0936,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.942,
+      "ev_td_speed": 1.503,
+      "ev_td_height": 0.071,
+      "ev_td_angle": 54.7951,
+      "ev_lo_speed": 0.8845,
+      "ev_lo_height": 0.1154
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4492,
+      "skate": 0.0,
+      "touchdown_speed": 0.9316,
+      "liftoff_speed": 0.1121,
+      "swing_peak": 0.4445,
+      "swing_peak_at": 0.438,
+      "swing_mid_min": 0.1795,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9478,
+      "ev_td_speed": 1.368,
+      "ev_td_height": 0.0739,
+      "ev_td_angle": 58.3375,
+      "ev_lo_speed": 0.9894,
+      "ev_lo_height": 0.1158
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.3339,
+      "skate": 0.0,
+      "touchdown_speed": 0.0273,
+      "liftoff_speed": 0.6856,
+      "swing_peak": 0.2283,
+      "swing_peak_at": 0.278,
+      "swing_mid_min": 0.0989,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8667,
+      "ev_td_speed": 1.3717,
+      "ev_td_height": 0.0539,
+      "ev_td_angle": 49.689,
+      "ev_lo_speed": 1.8706,
+      "ev_lo_height": 0.0898,
+      "hip_rom": 37.8796,
+      "hip_rom_natural": 38.2016,
+      "hip_min": -18.5671,
+      "hip_max": 19.3125,
+      "stifle_rom": 12.1935,
+      "hock_rom": 40.1614,
+      "stifle_range": [
+       91.51135257715511,
+       103.70485612709876
+      ],
+      "hock_range": [
+       79.73129995379463,
+       119.8927199974547
+      ],
+      "stifle_hock_corr": 0.9403,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2903,
+      "skate": 0.0002,
+      "touchdown_speed": 0.0002,
+      "liftoff_speed": 1.0291,
+      "swing_peak": 0.1507,
+      "swing_peak_at": 0.389,
+      "swing_mid_min": 0.1124,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9136,
+      "ev_td_speed": 1.3777,
+      "ev_td_height": 0.0545,
+      "ev_td_angle": 49.9012,
+      "ev_lo_speed": 1.8957,
+      "ev_lo_height": 0.0883,
+      "hip_rom": 25.2515,
+      "hip_rom_natural": 25.2515,
+      "hip_min": -10.7348,
+      "hip_max": 14.5167,
+      "stifle_rom": 27.2947,
+      "hock_rom": 52.5793,
+      "stifle_range": [
+       85.94175152324242,
+       113.23640389949473
+      ],
+      "hock_range": [
+       79.22786671975015,
+       131.8071883436903
+      ],
+      "stifle_hock_corr": 0.8484,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "gallop": {
+   "length": 0.6,
+   "frames": 19,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 73,
+   "rider_clip": "actor_b-horse-gallop-fw",
+   "rider_native_asset_id": "bae2af14bbd7f116ab2f2cf2bc85e8cba749b63783b0ee0d581dde81b6a0546b",
+   "strides": 1,
+   "stride_s": 0.6,
+   "design_speed": 10.0,
+   "stride_length": 6.0,
+   "duty": [
+    0.19,
+    0.175
+   ],
+   "touchdown_phase": {
+    "LH": 0.76,
+    "LF": 0.1,
+    "RH": 0.86,
+    "RF": 0.2
+   },
+   "lh_touchdown_clip_phase": 0.76,
+   "saddle_amp": 0.12,
+   "diagnostics": {
+    "frames": 19,
+    "length": 0.6,
+    "loop_close": 9.18709552877317e-15,
+    "ground_speed": 10.0,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0062,
+     "drift": 0.0042,
+     "slide_p50": 0.094,
+     "slide_p95": 0.8524,
+     "slide_max": 0.9378
+    },
+    "joint_rom": {
+     "hip": 67.46,
+     "stifle": 81.9,
+     "hock": 109.2,
+     "fetlock": 67.34
+    },
+    "pelvis_pitch_range": 23.24,
+    "pelvis_roll_range": 1.27,
+    "pelvis_pitch_vs_back_range": 23.98,
+    "max_stretch": {
+     "LF": 0.9846,
+     "RF": 0.9817,
+     "LH": 0.9963,
+     "RH": 0.9976
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.12,
+    "neck_elevation_deg": 27.77,
+    "poll_height": 1.4531,
+    "td_speed_win": 5.4364,
+    "td_height_win": 0.0536,
+    "td_angle_min": 16.4708,
+    "lo_speed_win": 9.0351,
+    "lo_height_win": 0.0911,
+    "stance_slip": 0.0,
+    "frame_jump": 0.6151,
+    "skate": 0.0,
+    "touchdown_speed": 2.4067,
+    "liftoff_speed": 5.0612,
+    "swing_peak_min": 0.4746,
+    "swing_mid_min": 0.1733,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9976,
+    "neck_elev_mean": 27.7702,
+    "poll_height_mean": 1.4531,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.6151,
+      "skate": 0.0,
+      "touchdown_speed": 2.4067,
+      "liftoff_speed": 2.8716,
+      "swing_peak": 0.6716,
+      "swing_peak_at": 0.393,
+      "swing_mid_min": 0.2981,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9846,
+      "ev_td_speed": 4.3072,
+      "ev_td_height": 0.0803,
+      "ev_td_angle": 29.227,
+      "ev_lo_speed": 4.989,
+      "ev_lo_height": 0.1361
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.5973,
+      "skate": 0.0,
+      "touchdown_speed": 1.0856,
+      "liftoff_speed": 5.0612,
+      "swing_peak": 0.6514,
+      "swing_peak_at": 0.321,
+      "swing_mid_min": 0.3022,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9817,
+      "ev_td_speed": 4.3072,
+      "ev_td_height": 0.0803,
+      "ev_td_angle": 29.227,
+      "ev_lo_speed": 5.2964,
+      "ev_lo_height": 0.137
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.5543,
+      "skate": 0.0,
+      "touchdown_speed": 2.0474,
+      "liftoff_speed": 0.6447,
+      "swing_peak": 0.5248,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.1733,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9963,
+      "ev_td_speed": 5.4364,
+      "ev_td_height": 0.0536,
+      "ev_td_angle": 16.4708,
+      "ev_lo_speed": 9.0351,
+      "ev_lo_height": 0.0911,
+      "hip_rom": 57.8352,
+      "hip_rom_natural": 97.3849,
+      "hip_min": -38.823,
+      "hip_max": 19.0121,
+      "stifle_rom": 80.4547,
+      "hock_rom": 107.2989,
+      "stifle_range": [
+       74.66584371650319,
+       155.12050791547045
+      ],
+      "hock_range": [
+       62.84760496203511,
+       170.1465092675959
+      ],
+      "stifle_hock_corr": 0.5287,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.5086,
+      "skate": 0.0,
+      "touchdown_speed": 0.7762,
+      "liftoff_speed": 1.5535,
+      "swing_peak": 0.4746,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.1912,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9976,
+      "ev_td_speed": 5.4364,
+      "ev_td_height": 0.0536,
+      "ev_td_angle": 16.4708,
+      "ev_lo_speed": 8.9675,
+      "ev_lo_height": 0.0921,
+      "hip_rom": 67.3774,
+      "hip_rom_natural": 92.6373,
+      "hip_min": -46.4315,
+      "hip_max": 20.9459,
+      "stifle_rom": 50.7362,
+      "hock_rom": 106.5963,
+      "stifle_range": [
+       81.15837112417884,
+       131.89461768285017
+      ],
+      "hock_range": [
+       65.37015489707994,
+       171.96647207297974
+      ],
+      "stifle_hock_corr": 0.5756,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "gallop_s": {
+   "length": 0.6,
+   "frames": 19,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 73,
+   "rider_clip": "actor_b-horse-gallop-fw",
+   "rider_native_asset_id": "bae2af14bbd7f116ab2f2cf2bc85e8cba749b63783b0ee0d581dde81b6a0546b",
+   "strides": 1,
+   "stride_s": 0.6,
+   "design_speed": 7.0,
+   "stride_length": 4.2,
+   "duty": [
+    0.19,
+    0.175
+   ],
+   "touchdown_phase": {
+    "LH": 0.76,
+    "LF": 0.1,
+    "RH": 0.86,
+    "RF": 0.2
+   },
+   "lh_touchdown_clip_phase": 0.76,
+   "saddle_amp": 0.12,
+   "variant_of": "gallop",
+   "diagnostics": {
+    "frames": 19,
+    "length": 0.6,
+    "loop_close": 1.1213252548714081e-14,
+    "ground_speed": 7.000000000000001,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0034,
+     "drift": 0.0031,
+     "slide_p50": 0.0521,
+     "slide_p95": 0.226,
+     "slide_max": 0.2424
+    },
+    "joint_rom": {
+     "hip": 52.09,
+     "stifle": 54.84,
+     "hock": 60.84,
+     "fetlock": 67.54
+    },
+    "pelvis_pitch_range": 23.24,
+    "pelvis_roll_range": 1.27,
+    "pelvis_pitch_vs_back_range": 23.98,
+    "max_stretch": {
+     "LF": 0.9191,
+     "RF": 0.8653,
+     "LH": 0.8621,
+     "RH": 0.9002
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.12,
+    "neck_elevation_deg": 30.79,
+    "poll_height": 1.4882,
+    "td_speed_win": 3.8001,
+    "td_height_win": 0.0493,
+    "td_angle_min": 21.2614,
+    "lo_speed_win": 6.7628,
+    "lo_height_win": 0.0778,
+    "stance_slip": 0.0,
+    "frame_jump": 0.4755,
+    "skate": 0.0,
+    "touchdown_speed": 1.6804,
+    "liftoff_speed": 3.4597,
+    "swing_peak_min": 0.3913,
+    "swing_mid_min": 0.1543,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9191,
+    "neck_elev_mean": 30.7854,
+    "poll_height_mean": 1.4882,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4755,
+      "skate": 0.0,
+      "touchdown_speed": 1.6804,
+      "liftoff_speed": 2.1566,
+      "swing_peak": 0.6454,
+      "swing_peak_at": 0.393,
+      "swing_mid_min": 0.2654,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9191,
+      "ev_td_speed": 3.0105,
+      "ev_td_height": 0.0739,
+      "ev_td_angle": 36.3744,
+      "ev_lo_speed": 3.6196,
+      "ev_lo_height": 0.1262
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4587,
+      "skate": 0.0,
+      "touchdown_speed": 0.7563,
+      "liftoff_speed": 3.4597,
+      "swing_peak": 0.6175,
+      "swing_peak_at": 0.321,
+      "swing_mid_min": 0.2619,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.8653,
+      "ev_td_speed": 3.0105,
+      "ev_td_height": 0.0739,
+      "ev_td_angle": 36.3744,
+      "ev_lo_speed": 3.6051,
+      "ev_lo_height": 0.1261
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4066,
+      "skate": 0.0,
+      "touchdown_speed": 1.4282,
+      "liftoff_speed": 0.6261,
+      "swing_peak": 0.4435,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.1543,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8621,
+      "ev_td_speed": 3.8001,
+      "ev_td_height": 0.0493,
+      "ev_td_angle": 21.2614,
+      "ev_lo_speed": 6.7628,
+      "ev_lo_height": 0.0778,
+      "hip_rom": 51.8256,
+      "hip_rom_natural": 81.6761,
+      "hip_min": -31.1711,
+      "hip_max": 20.6545,
+      "stifle_rom": 53.3322,
+      "hock_rom": 52.7837,
+      "stifle_range": [
+       73.73134812779901,
+       127.0635759085889
+      ],
+      "hock_range": [
+       66.04257980639721,
+       118.82632898922678
+      ],
+      "stifle_hock_corr": 0.6895,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.3584,
+      "skate": 0.0,
+      "touchdown_speed": 0.5392,
+      "liftoff_speed": 1.2776,
+      "swing_peak": 0.3913,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.1828,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9002,
+      "ev_td_speed": 3.8001,
+      "ev_td_height": 0.0493,
+      "ev_td_angle": 21.2614,
+      "ev_lo_speed": 6.7555,
+      "ev_lo_height": 0.0778,
+      "hip_rom": 51.2769,
+      "hip_rom_natural": 69.6736,
+      "hip_min": -28.7136,
+      "hip_max": 22.5632,
+      "stifle_rom": 27.7422,
+      "hock_rom": 60.8054,
+      "stifle_range": [
+       78.39916479394832,
+       106.14138676541982
+      ],
+      "hock_range": [
+       67.3489361568876,
+       128.1543426653606
+      ],
+      "stifle_hock_corr": 0.6966,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "sprint": {
+   "length": 4.6667,
+   "frames": 141,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 561,
+   "rider_clip": "actor_b-horse-gallop-sprint",
+   "rider_native_asset_id": "917c12c0ebb356a116dc25ed20aee5b0ceff2d33cab14ffe7cf0b37c2e793ce1",
+   "strides": 10,
+   "stride_s": 0.46667,
+   "design_speed": 13.0713,
+   "stride_length": 6.1,
+   "duty": [
+    0.175,
+    0.16
+   ],
+   "touchdown_phase": {
+    "LH": 0.86,
+    "LF": 0.14,
+    "RH": 0.93,
+    "RF": 0.22
+   },
+   "lh_touchdown_clip_phase": 0.086,
+   "saddle_amp": 0.14,
+   "diagnostics": {
+    "frames": 141,
+    "length": 4.6667,
+    "loop_close": 4.157785227221211e-14,
+    "ground_speed": 13.071335204748538,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0064,
+     "drift": 0.0044,
+     "slide_p50": 0.1482,
+     "slide_p95": 0.8496,
+     "slide_max": 0.862
+    },
+    "joint_rom": {
+     "hip": 62.7,
+     "stifle": 72.77,
+     "hock": 109.55,
+     "fetlock": 70.23
+    },
+    "pelvis_pitch_range": 28.5,
+    "pelvis_roll_range": 1.19,
+    "pelvis_pitch_vs_back_range": 23.75,
+    "max_stretch": {
+     "LF": 0.9853,
+     "RF": 0.9678,
+     "LH": 0.9963,
+     "RH": 0.9892
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.14,
+    "neck_elevation_deg": 24.27,
+    "poll_height": 1.4116,
+    "td_speed_win": 7.1464,
+    "td_height_win": 0.0624,
+    "td_angle_min": 14.6726,
+    "lo_speed_win": 11.4704,
+    "lo_height_win": 0.1012,
+    "stance_slip": 0.0,
+    "frame_jump": 0.7674,
+    "skate": 0.0022,
+    "touchdown_speed": 5.6602,
+    "liftoff_speed": 6.8026,
+    "swing_peak_min": 0.4261,
+    "swing_mid_min": 0.1232,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9963,
+    "neck_elev_mean": 24.2695,
+    "poll_height_mean": 1.4116,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.7625,
+      "skate": 0.0,
+      "touchdown_speed": 5.6602,
+      "liftoff_speed": 1.987,
+      "swing_peak": 0.7093,
+      "swing_peak_at": 0.409,
+      "swing_mid_min": 0.329,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9853,
+      "ev_td_speed": 6.2707,
+      "ev_td_height": 0.101,
+      "ev_td_angle": 25.781,
+      "ev_lo_speed": 6.0973,
+      "ev_lo_height": 0.1694
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.7674,
+      "skate": 0.0,
+      "touchdown_speed": 0.0002,
+      "liftoff_speed": 1.2359,
+      "swing_peak": 0.7038,
+      "swing_peak_at": 0.375,
+      "swing_mid_min": 0.2254,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9678,
+      "ev_td_speed": 6.2711,
+      "ev_td_height": 0.1009,
+      "ev_td_angle": 25.7585,
+      "ev_lo_speed": 6.2149,
+      "ev_lo_height": 0.1685
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.689,
+      "skate": 0.0022,
+      "touchdown_speed": 0.0022,
+      "liftoff_speed": 6.3854,
+      "swing_peak": 0.535,
+      "swing_peak_at": 0.292,
+      "swing_mid_min": 0.1232,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9963,
+      "ev_td_speed": 7.1464,
+      "ev_td_height": 0.0624,
+      "ev_td_angle": 14.6726,
+      "ev_lo_speed": 11.3377,
+      "ev_lo_height": 0.1033,
+      "hip_rom": 55.4525,
+      "hip_rom_natural": 91.8172,
+      "hip_min": -33.8851,
+      "hip_max": 21.5674,
+      "stifle_rom": 71.9512,
+      "hock_rom": 108.2093,
+      "stifle_range": [
+       76.35461615890712,
+       148.30583954770043
+      ],
+      "hock_range": [
+       61.895089997487034,
+       170.10437986940883
+      ],
+      "stifle_hock_corr": 0.5742,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.6771,
+      "skate": 0.0014,
+      "touchdown_speed": 0.0014,
+      "liftoff_speed": 6.8026,
+      "swing_peak": 0.4261,
+      "swing_peak_at": 0.292,
+      "swing_mid_min": 0.1289,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9892,
+      "ev_td_speed": 7.1462,
+      "ev_td_height": 0.0624,
+      "ev_td_angle": 14.6734,
+      "ev_lo_speed": 11.4704,
+      "ev_lo_height": 0.1012,
+      "hip_rom": 53.8783,
+      "hip_rom_natural": 82.7482,
+      "hip_min": -29.4191,
+      "hip_max": 24.4592,
+      "stifle_rom": 43.2955,
+      "hock_rom": 98.9301,
+      "stifle_range": [
+       81.83213949199569,
+       125.12768891690679
+      ],
+      "hock_range": [
+       64.17262394468796,
+       163.10271063766666
+      ],
+      "stifle_hock_corr": 0.6579,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "walk_tl": {
+   "length": 2.4,
+   "frames": 73,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 30,
+   "keys": 73,
+   "rider_clip": "actor_b-horse-walk-fw",
+   "rider_native_asset_id": "538b60aba79bb8435e41b965e97434f0ec451848b91cf31768d746f67b25c7d1",
+   "strides": 2,
+   "stride_s": 1.2,
+   "design_speed": 1.375,
+   "stride_length": 1.65,
+   "duty": [
+    0.6,
+    0.6
+   ],
+   "touchdown_phase": {
+    "LH": 0.815,
+    "LF": 0.065,
+    "RH": 0.315,
+    "RF": 0.565
+   },
+   "lh_touchdown_clip_phase": 0.4075,
+   "saddle_amp": 0.03,
+   "curve": 1.0,
+   "curve_of": "walk",
+   "turn_radius": 2.0,
+   "yaw_rate_deg_s": 39.391,
+   "lean_deg": 2.752,
+   "body_drop": -0.0023,
+   "diagnostics": {
+    "frames": 73,
+    "length": 2.4,
+    "loop_close": 3.469446951953614e-14,
+    "ground_speed": 1.375,
+    "key_rate": 30,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 30.0,
+     "sink": 0.0037,
+     "drift": 0.0031,
+     "slide_p50": 0.0148,
+     "slide_p95": 0.0462,
+     "slide_max": 0.3289
+    },
+    "joint_rom": {
+     "hip": 45.77,
+     "stifle": 59.49,
+     "hock": 96.07,
+     "fetlock": 41.77
+    },
+    "pelvis_pitch_range": 8.16,
+    "pelvis_roll_range": 4.39,
+    "pelvis_pitch_vs_back_range": 5.92,
+    "max_stretch": {
+     "LF": 0.9724,
+     "RF": 1.0181,
+     "LH": 0.9877,
+     "RH": 0.9973
+    },
+    "reach_err": 0.01811,
+    "saddle_z_p2p": 0.03,
+    "neck_elevation_deg": 37.14,
+    "poll_height": 1.572,
+    "td_speed_win": 0.2589,
+    "td_height_win": 0.0196,
+    "td_angle_min": 66.7336,
+    "lo_speed_win": 0.4139,
+    "lo_height_win": 0.0374,
+    "stance_slip": 0.0,
+    "frame_jump": 0.263,
+    "skate": 0.026,
+    "touchdown_speed": 0.026,
+    "liftoff_speed": 0.3437,
+    "swing_peak_min": 0.1434,
+    "swing_mid_min": 0.0611,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 1.0181,
+    "neck_elev_mean": 37.144,
+    "poll_height_mean": 1.572,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2379,
+      "skate": 0.0096,
+      "touchdown_speed": 0.0096,
+      "liftoff_speed": 0.0088,
+      "swing_peak": 0.2029,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.0618,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9724,
+      "ev_td_speed": 0.2289,
+      "ev_td_height": 0.0227,
+      "ev_td_angle": 71.4115,
+      "ev_lo_speed": 0.4139,
+      "ev_lo_height": 0.0374
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.263,
+      "skate": 0.026,
+      "touchdown_speed": 0.026,
+      "liftoff_speed": 0.3437,
+      "swing_peak": 0.2203,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.0611,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 1.0181,
+      "ev_td_speed": 0.2589,
+      "ev_td_height": 0.0227,
+      "ev_td_angle": 69.1713,
+      "ev_lo_speed": 0.3898,
+      "ev_lo_height": 0.0387
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1916,
+      "skate": 0.0094,
+      "touchdown_speed": 0.0094,
+      "liftoff_speed": 0.023,
+      "swing_peak": 0.1434,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.0708,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9877,
+      "ev_td_speed": 0.2255,
+      "ev_td_height": 0.0196,
+      "ev_td_angle": 69.023,
+      "ev_lo_speed": 0.2327,
+      "ev_lo_height": 0.0751,
+      "hip_rom": 34.2301,
+      "hip_rom_natural": 64.4299,
+      "hip_min": -15.3278,
+      "hip_max": 18.9023,
+      "stifle_rom": 45.12,
+      "hock_rom": 88.2031,
+      "stifle_range": [
+       82.26962074210493,
+       127.38962062489163
+      ],
+      "hock_range": [
+       73.75966009409554,
+       161.96272879422574
+      ],
+      "stifle_hock_corr": 0.7395,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2146,
+      "skate": 0.0105,
+      "touchdown_speed": 0.0105,
+      "liftoff_speed": 0.0227,
+      "swing_peak": 0.1538,
+      "swing_peak_at": 0.233,
+      "swing_mid_min": 0.0716,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9973,
+      "ev_td_speed": 0.2529,
+      "ev_td_height": 0.0196,
+      "ev_td_angle": 66.7336,
+      "ev_lo_speed": 0.0864,
+      "ev_lo_height": 0.0775,
+      "hip_rom": 44.0672,
+      "hip_rom_natural": 70.3209,
+      "hip_min": -26.318,
+      "hip_max": 17.7491,
+      "stifle_rom": 55.7267,
+      "hock_rom": 95.663,
+      "stifle_range": [
+       84.01016102458982,
+       139.7368419846008
+      ],
+      "hock_range": [
+       75.90573110562255,
+       171.5686993525588
+      ],
+      "stifle_hock_corr": 0.7234,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "walk_tr": {
+   "length": 2.4,
+   "frames": 73,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 30,
+   "keys": 73,
+   "rider_clip": "actor_b-horse-walk-fw",
+   "rider_native_asset_id": "538b60aba79bb8435e41b965e97434f0ec451848b91cf31768d746f67b25c7d1",
+   "strides": 2,
+   "stride_s": 1.2,
+   "design_speed": 1.375,
+   "stride_length": 1.65,
+   "duty": [
+    0.6,
+    0.6
+   ],
+   "touchdown_phase": {
+    "LH": 0.815,
+    "LF": 0.065,
+    "RH": 0.315,
+    "RF": 0.565
+   },
+   "lh_touchdown_clip_phase": 0.4075,
+   "saddle_amp": 0.03,
+   "curve": -1.0,
+   "curve_of": "walk",
+   "turn_radius": 2.0,
+   "yaw_rate_deg_s": -39.391,
+   "lean_deg": -2.752,
+   "body_drop": -0.0026,
+   "diagnostics": {
+    "frames": 73,
+    "length": 2.4,
+    "loop_close": 7.047140648808181e-14,
+    "ground_speed": 1.375,
+    "key_rate": 30,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 30.0,
+     "sink": 0.0036,
+     "drift": 0.0031,
+     "slide_p50": 0.0148,
+     "slide_p95": 0.0416,
+     "slide_max": 0.3244
+    },
+    "joint_rom": {
+     "hip": 45.79,
+     "stifle": 59.29,
+     "hock": 96.11,
+     "fetlock": 41.73
+    },
+    "pelvis_pitch_range": 8.16,
+    "pelvis_roll_range": 4.39,
+    "pelvis_pitch_vs_back_range": 5.92,
+    "max_stretch": {
+     "LF": 1.0179,
+     "RF": 0.9721,
+     "LH": 0.9975,
+     "RH": 0.9874
+    },
+    "reach_err": 0.01787,
+    "saddle_z_p2p": 0.03,
+    "neck_elevation_deg": 37.14,
+    "poll_height": 1.5717,
+    "td_speed_win": 0.2589,
+    "td_height_win": 0.0196,
+    "td_angle_min": 66.7337,
+    "lo_speed_win": 0.4135,
+    "lo_height_win": 0.0374,
+    "stance_slip": 0.0,
+    "frame_jump": 0.263,
+    "skate": 0.0231,
+    "touchdown_speed": 0.0231,
+    "liftoff_speed": 0.3393,
+    "swing_peak_min": 0.1433,
+    "swing_mid_min": 0.0611,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 1.0179,
+    "neck_elev_mean": 37.1441,
+    "poll_height_mean": 1.5717,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.263,
+      "skate": 0.0231,
+      "touchdown_speed": 0.0231,
+      "liftoff_speed": 0.3393,
+      "swing_peak": 0.2202,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.0611,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 1.0179,
+      "ev_td_speed": 0.2589,
+      "ev_td_height": 0.0227,
+      "ev_td_angle": 69.1713,
+      "ev_lo_speed": 0.3934,
+      "ev_lo_height": 0.0385
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2379,
+      "skate": 0.0096,
+      "touchdown_speed": 0.0096,
+      "liftoff_speed": 0.0088,
+      "swing_peak": 0.2029,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.0618,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9721,
+      "ev_td_speed": 0.2289,
+      "ev_td_height": 0.0227,
+      "ev_td_angle": 71.4116,
+      "ev_lo_speed": 0.4135,
+      "ev_lo_height": 0.0374
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2146,
+      "skate": 0.0105,
+      "touchdown_speed": 0.0105,
+      "liftoff_speed": 0.0228,
+      "swing_peak": 0.1537,
+      "swing_peak_at": 0.233,
+      "swing_mid_min": 0.0716,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9975,
+      "ev_td_speed": 0.2529,
+      "ev_td_height": 0.0196,
+      "ev_td_angle": 66.7337,
+      "ev_lo_speed": 0.0891,
+      "ev_lo_height": 0.0774,
+      "hip_rom": 44.084,
+      "hip_rom_natural": 70.3469,
+      "hip_min": -26.3275,
+      "hip_max": 17.7565,
+      "stifle_rom": 55.5238,
+      "hock_rom": 96.025,
+      "stifle_range": [
+       83.96683764157879,
+       139.49064600496777
+      ],
+      "hock_range": [
+       75.85305885893169,
+       171.8780942810991
+      ],
+      "stifle_hock_corr": 0.7278,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1916,
+      "skate": 0.0094,
+      "touchdown_speed": 0.0094,
+      "liftoff_speed": 0.023,
+      "swing_peak": 0.1433,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.0708,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9874,
+      "ev_td_speed": 0.2255,
+      "ev_td_height": 0.0196,
+      "ev_td_angle": 69.023,
+      "ev_lo_speed": 0.2338,
+      "ev_lo_height": 0.0751,
+      "hip_rom": 34.3302,
+      "hip_rom_natural": 64.4537,
+      "hip_min": -15.3396,
+      "hip_max": 18.9906,
+      "stifle_rom": 45.1188,
+      "hock_rom": 87.9968,
+      "stifle_range": [
+       82.22709563215045,
+       127.34585147795579
+      ],
+      "hock_range": [
+       73.70784482104793,
+       161.70463252157103
+      ],
+      "stifle_hock_corr": 0.736,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "walk_s_tl": {
+   "length": 2.4,
+   "frames": 73,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 30,
+   "keys": 73,
+   "rider_clip": "actor_b-horse-walk-fw",
+   "rider_native_asset_id": "538b60aba79bb8435e41b965e97434f0ec451848b91cf31768d746f67b25c7d1",
+   "strides": 2,
+   "stride_s": 1.2,
+   "design_speed": 0.4813,
+   "stride_length": 0.5775,
+   "duty": [
+    0.6,
+    0.6
+   ],
+   "touchdown_phase": {
+    "LH": 0.815,
+    "LF": 0.065,
+    "RH": 0.315,
+    "RF": 0.565
+   },
+   "lh_touchdown_clip_phase": 0.4075,
+   "saddle_amp": 0.03,
+   "curve": 1.0,
+   "curve_of": "walk_s",
+   "turn_radius": 2.0,
+   "yaw_rate_deg_s": 13.787,
+   "lean_deg": 0.338,
+   "body_drop": 0.0,
+   "diagnostics": {
+    "frames": 73,
+    "length": 2.4,
+    "loop_close": 5.322131624296844e-15,
+    "ground_speed": 0.48125,
+    "key_rate": 30,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 30.0,
+     "sink": 0.0025,
+     "drift": 0.0031,
+     "slide_p50": 0.0064,
+     "slide_p95": 0.0223,
+     "slide_max": 0.0352
+    },
+    "joint_rom": {
+     "hip": 23.64,
+     "stifle": 24.92,
+     "hock": 48.92,
+     "fetlock": 41.91
+    },
+    "pelvis_pitch_range": 8.04,
+    "pelvis_roll_range": 4.38,
+    "pelvis_pitch_vs_back_range": 5.79,
+    "max_stretch": {
+     "LF": 0.9252,
+     "RF": 0.9302,
+     "LH": 0.904,
+     "RH": 0.8984
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.03,
+    "neck_elevation_deg": 38.44,
+    "poll_height": 1.5949,
+    "td_speed_win": 0.0894,
+    "td_height_win": 0.0156,
+    "td_angle_min": 79.6476,
+    "lo_speed_win": 0.8828,
+    "lo_height_win": 0.0349,
+    "stance_slip": 0.0,
+    "frame_jump": 0.1323,
+    "skate": 0.0111,
+    "touchdown_speed": 0.0037,
+    "liftoff_speed": 0.0263,
+    "swing_peak_min": 0.093,
+    "swing_mid_min": 0.0408,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9302,
+    "neck_elev_mean": 38.4427,
+    "poll_height_mean": 1.5949,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1237,
+      "skate": 0.0111,
+      "touchdown_speed": 0.0032,
+      "liftoff_speed": 0.0111,
+      "swing_peak": 0.1158,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.0426,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9252,
+      "ev_td_speed": 0.0788,
+      "ev_td_height": 0.0181,
+      "ev_td_angle": 81.7627,
+      "ev_lo_speed": 0.0375,
+      "ev_lo_height": 0.036
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1323,
+      "skate": 0.0108,
+      "touchdown_speed": 0.0037,
+      "liftoff_speed": 0.0108,
+      "swing_peak": 0.1211,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.0408,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9302,
+      "ev_td_speed": 0.0894,
+      "ev_td_height": 0.0181,
+      "ev_td_angle": 80.6692,
+      "ev_lo_speed": 0.052,
+      "ev_lo_height": 0.0349
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.0658,
+      "skate": 0.0031,
+      "touchdown_speed": 0.0031,
+      "liftoff_speed": 0.0263,
+      "swing_peak": 0.093,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.0453,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.904,
+      "ev_td_speed": 0.076,
+      "ev_td_height": 0.0156,
+      "ev_td_angle": 80.7984,
+      "ev_lo_speed": 0.8794,
+      "ev_lo_height": 0.0548,
+      "hip_rom": 21.9943,
+      "hip_rom_natural": 21.9943,
+      "hip_min": -8.1111,
+      "hip_max": 13.8832,
+      "stifle_rom": 24.9212,
+      "hock_rom": 48.7687,
+      "stifle_range": [
+       86.2062565162487,
+       111.12747936810281
+      ],
+      "hock_range": [
+       80.40227344152464,
+       129.17100376964692
+      ],
+      "stifle_hock_corr": 0.9821,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.0722,
+      "skate": 0.0035,
+      "touchdown_speed": 0.0035,
+      "liftoff_speed": 0.0263,
+      "swing_peak": 0.093,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.0468,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8984,
+      "ev_td_speed": 0.0858,
+      "ev_td_height": 0.0156,
+      "ev_td_angle": 79.6476,
+      "ev_lo_speed": 0.8828,
+      "ev_lo_height": 0.0549,
+      "hip_rom": 23.6362,
+      "hip_rom_natural": 23.6362,
+      "hip_min": -7.2614,
+      "hip_max": 16.3748,
+      "stifle_rom": 24.0582,
+      "hock_rom": 47.3054,
+      "stifle_range": [
+       85.87709816262179,
+       109.93531515878932
+      ],
+      "hock_range": [
+       80.37535501838228,
+       127.68074432023292
+      ],
+      "stifle_hock_corr": 0.9815,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "walk_s_tr": {
+   "length": 2.4,
+   "frames": 73,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 30,
+   "keys": 73,
+   "rider_clip": "actor_b-horse-walk-fw",
+   "rider_native_asset_id": "538b60aba79bb8435e41b965e97434f0ec451848b91cf31768d746f67b25c7d1",
+   "strides": 2,
+   "stride_s": 1.2,
+   "design_speed": 0.4813,
+   "stride_length": 0.5775,
+   "duty": [
+    0.6,
+    0.6
+   ],
+   "touchdown_phase": {
+    "LH": 0.815,
+    "LF": 0.065,
+    "RH": 0.315,
+    "RF": 0.565
+   },
+   "lh_touchdown_clip_phase": 0.4075,
+   "saddle_amp": 0.03,
+   "curve": -1.0,
+   "curve_of": "walk_s",
+   "turn_radius": 2.0,
+   "yaw_rate_deg_s": -13.787,
+   "lean_deg": -0.338,
+   "body_drop": 0.0,
+   "diagnostics": {
+    "frames": 73,
+    "length": 2.4,
+    "loop_close": 4.8780424144467815e-15,
+    "ground_speed": 0.48125,
+    "key_rate": 30,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 30.0,
+     "sink": 0.0025,
+     "drift": 0.0031,
+     "slide_p50": 0.0064,
+     "slide_p95": 0.0223,
+     "slide_max": 0.0352
+    },
+    "joint_rom": {
+     "hip": 23.64,
+     "stifle": 24.92,
+     "hock": 48.92,
+     "fetlock": 41.91
+    },
+    "pelvis_pitch_range": 8.04,
+    "pelvis_roll_range": 4.38,
+    "pelvis_pitch_vs_back_range": 5.79,
+    "max_stretch": {
+     "LF": 0.9302,
+     "RF": 0.9252,
+     "LH": 0.8984,
+     "RH": 0.904
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.03,
+    "neck_elevation_deg": 38.44,
+    "poll_height": 1.5949,
+    "td_speed_win": 0.0894,
+    "td_height_win": 0.0156,
+    "td_angle_min": 79.6477,
+    "lo_speed_win": 0.8828,
+    "lo_height_win": 0.0349,
+    "stance_slip": 0.0,
+    "frame_jump": 0.1323,
+    "skate": 0.0111,
+    "touchdown_speed": 0.0037,
+    "liftoff_speed": 0.0263,
+    "swing_peak_min": 0.093,
+    "swing_mid_min": 0.0408,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9302,
+    "neck_elev_mean": 38.4428,
+    "poll_height_mean": 1.5949,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1323,
+      "skate": 0.0108,
+      "touchdown_speed": 0.0037,
+      "liftoff_speed": 0.0108,
+      "swing_peak": 0.1211,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.0408,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9302,
+      "ev_td_speed": 0.0894,
+      "ev_td_height": 0.0181,
+      "ev_td_angle": 80.6692,
+      "ev_lo_speed": 0.052,
+      "ev_lo_height": 0.0349
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1237,
+      "skate": 0.0111,
+      "touchdown_speed": 0.0032,
+      "liftoff_speed": 0.0111,
+      "swing_peak": 0.1158,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.0426,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9252,
+      "ev_td_speed": 0.0788,
+      "ev_td_height": 0.0181,
+      "ev_td_angle": 81.7627,
+      "ev_lo_speed": 0.0375,
+      "ev_lo_height": 0.036
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.0722,
+      "skate": 0.0035,
+      "touchdown_speed": 0.0035,
+      "liftoff_speed": 0.0263,
+      "swing_peak": 0.093,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.0468,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8984,
+      "ev_td_speed": 0.0858,
+      "ev_td_height": 0.0156,
+      "ev_td_angle": 79.6477,
+      "ev_lo_speed": 0.8828,
+      "ev_lo_height": 0.0549,
+      "hip_rom": 23.6362,
+      "hip_rom_natural": 23.6362,
+      "hip_min": -7.2614,
+      "hip_max": 16.3748,
+      "stifle_rom": 24.0582,
+      "hock_rom": 47.3054,
+      "stifle_range": [
+       85.87709816262176,
+       109.93531515878925
+      ],
+      "hock_range": [
+       80.37535501838221,
+       127.68074432023282
+      ],
+      "stifle_hock_corr": 0.9819,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.0658,
+      "skate": 0.0031,
+      "touchdown_speed": 0.0031,
+      "liftoff_speed": 0.0263,
+      "swing_peak": 0.093,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.0453,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.904,
+      "ev_td_speed": 0.076,
+      "ev_td_height": 0.0156,
+      "ev_td_angle": 80.7984,
+      "ev_lo_speed": 0.8794,
+      "ev_lo_height": 0.0548,
+      "hip_rom": 21.9943,
+      "hip_rom_natural": 21.9943,
+      "hip_min": -8.1111,
+      "hip_max": 13.8832,
+      "stifle_rom": 24.9212,
+      "hock_rom": 48.7687,
+      "stifle_range": [
+       86.2062565162487,
+       111.12747936810288
+      ],
+      "hock_range": [
+       80.40227344152464,
+       129.17100376964706
+      ],
+      "stifle_hock_corr": 0.9819,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "trot_tl": {
+   "length": 0.9333,
+   "frames": 29,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 113,
+   "rider_clip": "actor_b-horse-trot-fw",
+   "rider_native_asset_id": "d09a0039ec60fb985b644a599d1d46797524f2afd4f8eca17a249442a84bbdbb",
+   "strides": 1,
+   "stride_s": 0.9333,
+   "design_speed": 3.0001,
+   "stride_length": 2.8,
+   "duty": [
+    0.36,
+    0.36
+   ],
+   "touchdown_phase": {
+    "LH": 0.5,
+    "LF": 0.0,
+    "RH": 0.0,
+    "RF": 0.5
+   },
+   "lh_touchdown_clip_phase": 0.5,
+   "saddle_amp": 0.06,
+   "curve": 1.0,
+   "curve_of": "trot",
+   "turn_radius": 3.5,
+   "yaw_rate_deg_s": 49.112,
+   "lean_deg": 7.345,
+   "body_drop": -0.0254,
+   "diagnostics": {
+    "frames": 29,
+    "length": 0.9333,
+    "loop_close": 1.6653345369377348e-15,
+    "ground_speed": 3.00010714668381,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0032,
+     "drift": 0.0032,
+     "slide_p50": 0.0108,
+     "slide_p95": 0.0754,
+     "slide_max": 0.3599
+    },
+    "joint_rom": {
+     "hip": 44.74,
+     "stifle": 63.81,
+     "hock": 107.18,
+     "fetlock": 49.23
+    },
+    "pelvis_pitch_range": 5.51,
+    "pelvis_roll_range": 5.49,
+    "pelvis_pitch_vs_back_range": 5.33,
+    "max_stretch": {
+     "LF": 0.9536,
+     "RF": 1.0025,
+     "LH": 0.9967,
+     "RH": 0.9971
+    },
+    "reach_err": 0.00294,
+    "saddle_z_p2p": 0.06,
+    "neck_elevation_deg": 38.65,
+    "poll_height": 1.5325,
+    "td_speed_win": 0.5703,
+    "td_height_win": 0.0233,
+    "td_angle_min": 52.7744,
+    "lo_speed_win": 1.4858,
+    "lo_height_win": 0.0493,
+    "stance_slip": 0.0,
+    "frame_jump": 0.2859,
+    "skate": 0.0,
+    "touchdown_speed": 0.5703,
+    "liftoff_speed": 1.229,
+    "swing_peak_min": 0.1756,
+    "swing_mid_min": 0.0753,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 1.0025,
+    "neck_elev_mean": 38.6532,
+    "poll_height_mean": 1.5325,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2683,
+      "skate": 0.0,
+      "touchdown_speed": 0.5298,
+      "liftoff_speed": 0.9071,
+      "swing_peak": 0.2858,
+      "swing_peak_at": 0.324,
+      "swing_mid_min": 0.0757,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9536,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": 1.1087,
+      "ev_lo_height": 0.0493
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2859,
+      "skate": 0.0,
+      "touchdown_speed": 0.5703,
+      "liftoff_speed": 1.0304,
+      "swing_peak": 0.3056,
+      "swing_peak_at": 0.324,
+      "swing_mid_min": 0.0753,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 1.0025,
+      "ev_td_speed": 0.5703,
+      "ev_td_height": 0.0283,
+      "ev_td_angle": 56.0915,
+      "ev_lo_speed": 1.2045,
+      "ev_lo_height": 0.0493
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2672,
+      "skate": 0.0,
+      "touchdown_speed": 0.5319,
+      "liftoff_speed": 1.0963,
+      "swing_peak": 0.1756,
+      "swing_peak_at": 0.265,
+      "swing_mid_min": 0.0793,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9967,
+      "ev_td_speed": 0.532,
+      "ev_td_height": 0.0233,
+      "ev_td_angle": 52.7744,
+      "ev_lo_speed": 1.3338,
+      "ev_lo_height": 0.055,
+      "hip_rom": 36.0919,
+      "hip_rom_natural": 69.1661,
+      "hip_min": -18.448,
+      "hip_max": 17.6439,
+      "stifle_rom": 53.844,
+      "hock_rom": 105.7995,
+      "stifle_range": [
+       76.89209214872632,
+       130.736091389062
+      ],
+      "hock_range": [
+       64.8710748341514,
+       170.6705318803431
+      ],
+      "stifle_hock_corr": 0.5479,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2793,
+      "skate": 0.0,
+      "touchdown_speed": 0.568,
+      "liftoff_speed": 1.229,
+      "swing_peak": 0.1761,
+      "swing_peak_at": 0.206,
+      "swing_mid_min": 0.0795,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9971,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": 1.4858,
+      "ev_lo_height": 0.0545,
+      "hip_rom": 43.9923,
+      "hip_rom_natural": 71.9354,
+      "hip_min": -28.1814,
+      "hip_max": 15.8109,
+      "stifle_rom": 62.7316,
+      "hock_rom": 103.556,
+      "stifle_range": [
+       79.04099758763932,
+       141.77257521074176
+      ],
+      "hock_range": [
+       67.63389973606625,
+       171.18992712653744
+      ],
+      "stifle_hock_corr": 0.6196,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "trot_tr": {
+   "length": 0.9333,
+   "frames": 29,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 113,
+   "rider_clip": "actor_b-horse-trot-fw",
+   "rider_native_asset_id": "d09a0039ec60fb985b644a599d1d46797524f2afd4f8eca17a249442a84bbdbb",
+   "strides": 1,
+   "stride_s": 0.9333,
+   "design_speed": 3.0001,
+   "stride_length": 2.8,
+   "duty": [
+    0.36,
+    0.36
+   ],
+   "touchdown_phase": {
+    "LH": 0.5,
+    "LF": 0.0,
+    "RH": 0.0,
+    "RF": 0.5
+   },
+   "lh_touchdown_clip_phase": 0.5,
+   "saddle_amp": 0.06,
+   "curve": -1.0,
+   "curve_of": "trot",
+   "turn_radius": 3.5,
+   "yaw_rate_deg_s": -49.112,
+   "lean_deg": -7.345,
+   "body_drop": -0.0254,
+   "diagnostics": {
+    "frames": 29,
+    "length": 0.9333,
+    "loop_close": 4.718447854656915e-15,
+    "ground_speed": 3.00010714668381,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0032,
+     "drift": 0.0032,
+     "slide_p50": 0.0109,
+     "slide_p95": 0.0724,
+     "slide_max": 0.3588
+    },
+    "joint_rom": {
+     "hip": 44.74,
+     "stifle": 63.8,
+     "hock": 107.2,
+     "fetlock": 49.23
+    },
+    "pelvis_pitch_range": 5.51,
+    "pelvis_roll_range": 5.49,
+    "pelvis_pitch_vs_back_range": 5.33,
+    "max_stretch": {
+     "LF": 1.0025,
+     "RF": 0.9536,
+     "LH": 0.9971,
+     "RH": 0.9967
+    },
+    "reach_err": 0.00294,
+    "saddle_z_p2p": 0.06,
+    "neck_elevation_deg": 38.65,
+    "poll_height": 1.5325,
+    "td_speed_win": 0.5681,
+    "td_height_win": 0.0233,
+    "td_angle_min": 50.9479,
+    "lo_speed_win": 1.4858,
+    "lo_height_win": 0.0493,
+    "stance_slip": 0.0,
+    "frame_jump": 0.2859,
+    "skate": 0.0,
+    "touchdown_speed": 0.5703,
+    "liftoff_speed": 1.229,
+    "swing_peak_min": 0.1756,
+    "swing_mid_min": 0.0753,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 1.0025,
+    "neck_elev_mean": 38.6532,
+    "poll_height_mean": 1.5325,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2859,
+      "skate": 0.0,
+      "touchdown_speed": 0.5703,
+      "liftoff_speed": 1.0304,
+      "swing_peak": 0.3056,
+      "swing_peak_at": 0.324,
+      "swing_mid_min": 0.0753,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 1.0025,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": 1.2045,
+      "ev_lo_height": 0.0493
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2683,
+      "skate": 0.0,
+      "touchdown_speed": 0.5298,
+      "liftoff_speed": 0.9071,
+      "swing_peak": 0.2858,
+      "swing_peak_at": 0.324,
+      "swing_mid_min": 0.0757,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9536,
+      "ev_td_speed": 0.5298,
+      "ev_td_height": 0.0283,
+      "ev_td_angle": 58.0183,
+      "ev_lo_speed": 1.1087,
+      "ev_lo_height": 0.0493
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2793,
+      "skate": 0.0,
+      "touchdown_speed": 0.568,
+      "liftoff_speed": 1.229,
+      "swing_peak": 0.1761,
+      "swing_peak_at": 0.206,
+      "swing_mid_min": 0.0795,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9971,
+      "ev_td_speed": 0.5681,
+      "ev_td_height": 0.0233,
+      "ev_td_angle": 50.9479,
+      "ev_lo_speed": 1.4858,
+      "ev_lo_height": 0.0545,
+      "hip_rom": 43.9923,
+      "hip_rom_natural": 71.9354,
+      "hip_min": -28.1814,
+      "hip_max": 15.8109,
+      "stifle_rom": 62.7316,
+      "hock_rom": 103.556,
+      "stifle_range": [
+       79.04099758763928,
+       141.7725752107416
+      ],
+      "hock_range": [
+       67.63389973606628,
+       171.18992712653744
+      ],
+      "stifle_hock_corr": 0.6198,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2672,
+      "skate": 0.0,
+      "touchdown_speed": 0.5319,
+      "liftoff_speed": 1.0963,
+      "swing_peak": 0.1756,
+      "swing_peak_at": 0.265,
+      "swing_mid_min": 0.0793,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9967,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": 1.3338,
+      "ev_lo_height": 0.055,
+      "hip_rom": 36.0919,
+      "hip_rom_natural": 69.1661,
+      "hip_min": -18.448,
+      "hip_max": 17.6439,
+      "stifle_rom": 53.844,
+      "hock_rom": 105.7995,
+      "stifle_range": [
+       76.89209214872628,
+       130.7360913890622
+      ],
+      "hock_range": [
+       64.87107483415146,
+       170.6705318803533
+      ],
+      "stifle_hock_corr": 0.5442,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "trot_s_tl": {
+   "length": 0.9333,
+   "frames": 29,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 113,
+   "rider_clip": "actor_b-horse-trot-fw",
+   "rider_native_asset_id": "d09a0039ec60fb985b644a599d1d46797524f2afd4f8eca17a249442a84bbdbb",
+   "strides": 1,
+   "stride_s": 0.9333,
+   "design_speed": 1.6801,
+   "stride_length": 1.568,
+   "duty": [
+    0.36,
+    0.36
+   ],
+   "touchdown_phase": {
+    "LH": 0.5,
+    "LF": 0.0,
+    "RH": 0.0,
+    "RF": 0.5
+   },
+   "lh_touchdown_clip_phase": 0.5,
+   "saddle_amp": 0.06,
+   "curve": 1.0,
+   "curve_of": "trot_s",
+   "turn_radius": 3.5,
+   "yaw_rate_deg_s": 27.503,
+   "lean_deg": 2.35,
+   "body_drop": 0.0,
+   "diagnostics": {
+    "frames": 29,
+    "length": 0.9333,
+    "loop_close": 7.771561172376096e-16,
+    "ground_speed": 1.6800600021429337,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0025,
+     "drift": 0.0032,
+     "slide_p50": 0.0051,
+     "slide_p95": 0.0391,
+     "slide_max": 0.1054
+    },
+    "joint_rom": {
+     "hip": 28.54,
+     "stifle": 24.8,
+     "hock": 49.33,
+     "fetlock": 51.95
+    },
+    "pelvis_pitch_range": 5.39,
+    "pelvis_roll_range": 5.49,
+    "pelvis_pitch_vs_back_range": 5.22,
+    "max_stretch": {
+     "LF": 0.9129,
+     "RF": 0.9272,
+     "LH": 0.8795,
+     "RH": 0.8937
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.06,
+    "neck_elevation_deg": 39.94,
+    "poll_height": 1.5909,
+    "td_speed_win": 0.3098,
+    "td_height_win": 0.0198,
+    "td_angle_min": 64.2076,
+    "lo_speed_win": 1.2084,
+    "lo_height_win": 0.0419,
+    "stance_slip": 0.0,
+    "frame_jump": 0.1836,
+    "skate": 0.0,
+    "touchdown_speed": 0.3098,
+    "liftoff_speed": 1.0121,
+    "swing_peak_min": 0.1093,
+    "swing_mid_min": 0.0551,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9272,
+    "neck_elev_mean": 39.9376,
+    "poll_height_mean": 1.5909,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1726,
+      "skate": 0.0,
+      "touchdown_speed": 0.287,
+      "liftoff_speed": 0.5822,
+      "swing_peak": 0.2092,
+      "swing_peak_at": 0.324,
+      "swing_mid_min": 0.0552,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9129,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": 0.6948,
+      "ev_lo_height": 0.0444
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1836,
+      "skate": 0.0,
+      "touchdown_speed": 0.3098,
+      "liftoff_speed": 0.5971,
+      "swing_peak": 0.2189,
+      "swing_peak_at": 0.324,
+      "swing_mid_min": 0.0551,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9272,
+      "ev_td_speed": 0.3098,
+      "ev_td_height": 0.024,
+      "ev_td_angle": 66.7532,
+      "ev_lo_speed": 0.7157,
+      "ev_lo_height": 0.0438
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1303,
+      "skate": 0.0,
+      "touchdown_speed": 0.2874,
+      "liftoff_speed": 0.9886,
+      "swing_peak": 0.1093,
+      "swing_peak_at": 0.265,
+      "swing_mid_min": 0.0583,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8795,
+      "ev_td_speed": 0.2874,
+      "ev_td_height": 0.0198,
+      "ev_td_angle": 64.2076,
+      "ev_lo_speed": 1.1811,
+      "ev_lo_height": 0.0419,
+      "hip_rom": 27.9823,
+      "hip_rom_natural": 33.3773,
+      "hip_min": -9.3776,
+      "hip_max": 18.6047,
+      "stifle_rom": 22.8601,
+      "hock_rom": 46.2931,
+      "stifle_range": [
+       84.0402052741393,
+       106.90029718081934
+      ],
+      "hock_range": [
+       76.62466900951102,
+       122.9178150662808
+      ],
+      "stifle_hock_corr": 0.9702,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1382,
+      "skate": 0.0,
+      "touchdown_speed": 0.3078,
+      "liftoff_speed": 1.0121,
+      "swing_peak": 0.1099,
+      "swing_peak_at": 0.265,
+      "swing_mid_min": 0.0591,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8937,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": 1.2084,
+      "ev_lo_height": 0.0421,
+      "hip_rom": 28.4296,
+      "hip_rom_natural": 35.6888,
+      "hip_min": -9.1506,
+      "hip_max": 19.279,
+      "stifle_rom": 24.7968,
+      "hock_rom": 49.3275,
+      "stifle_range": [
+       84.30808845186642,
+       109.10486449561955
+      ],
+      "hock_range": [
+       77.12005997169302,
+       126.44756714173798
+      ],
+      "stifle_hock_corr": 0.9595,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "trot_s_tr": {
+   "length": 0.9333,
+   "frames": 29,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 113,
+   "rider_clip": "actor_b-horse-trot-fw",
+   "rider_native_asset_id": "d09a0039ec60fb985b644a599d1d46797524f2afd4f8eca17a249442a84bbdbb",
+   "strides": 1,
+   "stride_s": 0.9333,
+   "design_speed": 1.6801,
+   "stride_length": 1.568,
+   "duty": [
+    0.36,
+    0.36
+   ],
+   "touchdown_phase": {
+    "LH": 0.5,
+    "LF": 0.0,
+    "RH": 0.0,
+    "RF": 0.5
+   },
+   "lh_touchdown_clip_phase": 0.5,
+   "saddle_amp": 0.06,
+   "curve": -1.0,
+   "curve_of": "trot_s",
+   "turn_radius": 3.5,
+   "yaw_rate_deg_s": -27.503,
+   "lean_deg": -2.35,
+   "body_drop": 0.0,
+   "diagnostics": {
+    "frames": 29,
+    "length": 0.9333,
+    "loop_close": 1.3877787807814457e-15,
+    "ground_speed": 1.6800600021429337,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0025,
+     "drift": 0.0032,
+     "slide_p50": 0.0051,
+     "slide_p95": 0.0392,
+     "slide_max": 0.1053
+    },
+    "joint_rom": {
+     "hip": 28.54,
+     "stifle": 24.8,
+     "hock": 49.34,
+     "fetlock": 51.94
+    },
+    "pelvis_pitch_range": 5.39,
+    "pelvis_roll_range": 5.49,
+    "pelvis_pitch_vs_back_range": 5.22,
+    "max_stretch": {
+     "LF": 0.9272,
+     "RF": 0.9129,
+     "LH": 0.8937,
+     "RH": 0.8795
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.06,
+    "neck_elevation_deg": 39.94,
+    "poll_height": 1.5909,
+    "td_speed_win": 0.3078,
+    "td_height_win": 0.0198,
+    "td_angle_min": 62.6406,
+    "lo_speed_win": 1.2084,
+    "lo_height_win": 0.0419,
+    "stance_slip": 0.0,
+    "frame_jump": 0.1836,
+    "skate": 0.0,
+    "touchdown_speed": 0.3098,
+    "liftoff_speed": 1.0121,
+    "swing_peak_min": 0.1093,
+    "swing_mid_min": 0.0551,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9272,
+    "neck_elev_mean": 39.9376,
+    "poll_height_mean": 1.5909,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1836,
+      "skate": 0.0,
+      "touchdown_speed": 0.3098,
+      "liftoff_speed": 0.5971,
+      "swing_peak": 0.2189,
+      "swing_peak_at": 0.324,
+      "swing_mid_min": 0.0551,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9272,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": 0.7157,
+      "ev_lo_height": 0.0438
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1726,
+      "skate": 0.0,
+      "touchdown_speed": 0.287,
+      "liftoff_speed": 0.5822,
+      "swing_peak": 0.2092,
+      "swing_peak_at": 0.324,
+      "swing_mid_min": 0.0552,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9129,
+      "ev_td_speed": 0.287,
+      "ev_td_height": 0.024,
+      "ev_td_angle": 68.3022,
+      "ev_lo_speed": 0.6948,
+      "ev_lo_height": 0.0444
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1382,
+      "skate": 0.0,
+      "touchdown_speed": 0.3078,
+      "liftoff_speed": 1.0121,
+      "swing_peak": 0.1099,
+      "swing_peak_at": 0.265,
+      "swing_mid_min": 0.0591,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8937,
+      "ev_td_speed": 0.3078,
+      "ev_td_height": 0.0198,
+      "ev_td_angle": 62.6406,
+      "ev_lo_speed": 1.2084,
+      "ev_lo_height": 0.0421,
+      "hip_rom": 28.4296,
+      "hip_rom_natural": 35.6888,
+      "hip_min": -9.1506,
+      "hip_max": 19.279,
+      "stifle_rom": 24.7968,
+      "hock_rom": 49.3275,
+      "stifle_range": [
+       84.30808845186647,
+       109.1048644956195
+      ],
+      "hock_range": [
+       77.12005997169298,
+       126.44756714173803
+      ],
+      "stifle_hock_corr": 0.9593,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1303,
+      "skate": 0.0,
+      "touchdown_speed": 0.2874,
+      "liftoff_speed": 0.9886,
+      "swing_peak": 0.1093,
+      "swing_peak_at": 0.265,
+      "swing_mid_min": 0.0583,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8795,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": 1.1811,
+      "ev_lo_height": 0.0419,
+      "hip_rom": 27.9823,
+      "hip_rom_natural": 33.3773,
+      "hip_min": -9.3776,
+      "hip_max": 18.6047,
+      "stifle_rom": 22.8601,
+      "hock_rom": 46.2931,
+      "stifle_range": [
+       84.04020527413923,
+       106.90029718081935
+      ],
+      "hock_range": [
+       76.6246690095111,
+       122.91781506628082
+      ],
+      "stifle_hock_corr": 0.9711,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "canter_tl": {
+   "length": 0.9333,
+   "frames": 29,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 113,
+   "rider_clip": "actor_b-horse-canter-fw",
+   "rider_native_asset_id": "704b71e831fe8230d3e2034836bddff7eec6394138f9d02d0b86478c357d6fc4",
+   "strides": 2,
+   "stride_s": 0.46665,
+   "design_speed": 6.0002,
+   "stride_length": 2.8,
+   "duty": [
+    0.4,
+    0.37
+   ],
+   "touchdown_phase": {
+    "LH": 0.02,
+    "LF": 0.22,
+    "RH": 0.22,
+    "RF": 0.42
+   },
+   "lh_touchdown_clip_phase": 0.01,
+   "saddle_amp": 0.08,
+   "curve": 1.0,
+   "curve_of": "canter",
+   "turn_radius": 6.0004,
+   "yaw_rate_deg_s": 57.294,
+   "lean_deg": 14.0,
+   "body_drop": -0.0617,
+   "diagnostics": {
+    "frames": 29,
+    "length": 0.9333,
+    "loop_close": 1.8263168755083825e-14,
+    "ground_speed": 6.00021429336762,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0033,
+     "drift": 0.0029,
+     "slide_p50": 0.0433,
+     "slide_p95": 0.1118,
+     "slide_max": 0.3743
+    },
+    "joint_rom": {
+     "hip": 50.16,
+     "stifle": 55.82,
+     "hock": 103.76,
+     "fetlock": 50.45
+    },
+    "pelvis_pitch_range": 21.42,
+    "pelvis_roll_range": 1.25,
+    "pelvis_pitch_vs_back_range": 13.25,
+    "max_stretch": {
+     "LF": 0.9606,
+     "RF": 1.0112,
+     "LH": 0.9627,
+     "RH": 0.9973
+    },
+    "reach_err": 0.01141,
+    "saddle_z_p2p": 0.08,
+    "neck_elevation_deg": 27.79,
+    "poll_height": 1.3378,
+    "td_speed_win": 2.4526,
+    "td_height_win": 0.0597,
+    "td_angle_min": 37.3773,
+    "lo_speed_win": 1.5782,
+    "lo_height_win": 0.1241,
+    "stance_slip": 0.0,
+    "frame_jump": 0.6525,
+    "skate": 0.0,
+    "touchdown_speed": 1.6428,
+    "liftoff_speed": 0.559,
+    "swing_peak_min": 0.1764,
+    "swing_mid_min": 0.1112,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 1.0112,
+    "neck_elev_mean": 27.7872,
+    "poll_height_mean": 1.3378,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.5913,
+      "skate": 0.0,
+      "touchdown_speed": 0.0011,
+      "liftoff_speed": 0.0179,
+      "swing_peak": 0.5011,
+      "swing_peak_at": 0.278,
+      "swing_mid_min": 0.1112,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9606,
+      "ev_td_speed": 2.4526,
+      "ev_td_height": 0.0785,
+      "ev_td_angle": 43.8249,
+      "ev_lo_speed": 0.8027,
+      "ev_lo_height": 0.1515
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.6525,
+      "skate": 0.0,
+      "touchdown_speed": 1.6428,
+      "liftoff_speed": 0.1595,
+      "swing_peak": 0.5074,
+      "swing_peak_at": 0.312,
+      "swing_mid_min": 0.2019,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 1.0112,
+      "ev_td_speed": 2.4451,
+      "ev_td_height": 0.0826,
+      "ev_td_angle": 45.3725,
+      "ev_lo_speed": 0.5128,
+      "ev_lo_height": 0.1296
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.5195,
+      "skate": 0.0,
+      "touchdown_speed": 0.0484,
+      "liftoff_speed": 0.2563,
+      "swing_peak": 0.2907,
+      "swing_peak_at": 0.278,
+      "swing_mid_min": 0.1207,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9627,
+      "ev_td_speed": 2.2708,
+      "ev_td_height": 0.0597,
+      "ev_td_angle": 38.2404,
+      "ev_lo_speed": 1.508,
+      "ev_lo_height": 0.1241,
+      "hip_rom": 47.7981,
+      "hip_rom_natural": 75.6065,
+      "hip_min": -23.6021,
+      "hip_max": 24.1959,
+      "stifle_rom": 37.1635,
+      "hock_rom": 88.6772,
+      "stifle_range": [
+       76.91084341634331,
+       114.07430432160842
+      ],
+      "hock_range": [
+       59.79072625084679,
+       148.4679689571151
+      ],
+      "stifle_hock_corr": 0.6424,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.5072,
+      "skate": 0.0,
+      "touchdown_speed": 0.0009,
+      "liftoff_speed": 0.559,
+      "swing_peak": 0.1764,
+      "swing_peak_at": 0.278,
+      "swing_mid_min": 0.1195,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9973,
+      "ev_td_speed": 2.3636,
+      "ev_td_height": 0.0602,
+      "ev_td_angle": 37.3773,
+      "ev_lo_speed": 1.5782,
+      "ev_lo_height": 0.125,
+      "hip_rom": 50.0813,
+      "hip_rom_natural": 65.6384,
+      "hip_min": -26.8893,
+      "hip_max": 23.192,
+      "stifle_rom": 55.8219,
+      "hock_rom": 103.1998,
+      "stifle_range": [
+       80.71438123992495,
+       136.53624814516263
+      ],
+      "hock_range": [
+       68.26636535683969,
+       171.46617281418347
+      ],
+      "stifle_hock_corr": 0.9305,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "canter_tr": {
+   "length": 0.9333,
+   "frames": 29,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 113,
+   "rider_clip": "actor_b-horse-canter-fw",
+   "rider_native_asset_id": "704b71e831fe8230d3e2034836bddff7eec6394138f9d02d0b86478c357d6fc4",
+   "strides": 2,
+   "stride_s": 0.46665,
+   "design_speed": 6.0002,
+   "stride_length": 2.8,
+   "duty": [
+    0.4,
+    0.37
+   ],
+   "touchdown_phase": {
+    "LH": 0.02,
+    "LF": 0.22,
+    "RH": 0.22,
+    "RF": 0.42
+   },
+   "lh_touchdown_clip_phase": 0.01,
+   "saddle_amp": 0.08,
+   "curve": -1.0,
+   "curve_of": "canter",
+   "turn_radius": 6.0004,
+   "yaw_rate_deg_s": -57.294,
+   "lean_deg": -14.0,
+   "body_drop": -0.0024,
+   "diagnostics": {
+    "frames": 29,
+    "length": 0.9333,
+    "loop_close": 1.765254609153999e-14,
+    "ground_speed": 6.00021429336762,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0039,
+     "drift": 0.0029,
+     "slide_p50": 0.0435,
+     "slide_p95": 0.1812,
+     "slide_max": 0.2852
+    },
+    "joint_rom": {
+     "hip": 53.7,
+     "stifle": 48.96,
+     "hock": 95.78,
+     "fetlock": 50.91
+    },
+    "pelvis_pitch_range": 21.65,
+    "pelvis_roll_range": 1.7,
+    "pelvis_pitch_vs_back_range": 13.49,
+    "max_stretch": {
+     "LF": 1.01,
+     "RF": 0.9879,
+     "LH": 0.9975,
+     "RH": 0.9906
+    },
+    "reach_err": 0.0102,
+    "saddle_z_p2p": 0.08,
+    "neck_elevation_deg": 27.8,
+    "poll_height": 1.3971,
+    "td_speed_win": 2.6031,
+    "td_height_win": 0.0596,
+    "td_angle_min": 37.1796,
+    "lo_speed_win": 1.7223,
+    "lo_height_win": 0.1183,
+    "stance_slip": 0.0,
+    "frame_jump": 0.6342,
+    "skate": 0.0,
+    "touchdown_speed": 1.5698,
+    "liftoff_speed": 0.5769,
+    "swing_peak_min": 0.1739,
+    "swing_mid_min": 0.1064,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 1.01,
+    "neck_elev_mean": 27.8006,
+    "poll_height_mean": 1.3971,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.6192,
+      "skate": 0.0,
+      "touchdown_speed": 0.0992,
+      "liftoff_speed": 0.0114,
+      "swing_peak": 0.4983,
+      "swing_peak_at": 0.389,
+      "swing_mid_min": 0.1064,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 1.01,
+      "ev_td_speed": 2.6031,
+      "ev_td_height": 0.0823,
+      "ev_td_angle": 43.4893,
+      "ev_lo_speed": 0.5498,
+      "ev_lo_height": 0.1297
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.6342,
+      "skate": 0.0,
+      "touchdown_speed": 1.5698,
+      "liftoff_speed": 0.11,
+      "swing_peak": 0.5088,
+      "swing_peak_at": 0.312,
+      "swing_mid_min": 0.1943,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9879,
+      "ev_td_speed": 2.3308,
+      "ev_td_height": 0.0823,
+      "ev_td_angle": 46.6652,
+      "ev_lo_speed": 0.3771,
+      "ev_lo_height": 0.1312
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.5296,
+      "skate": 0.0,
+      "touchdown_speed": 0.0503,
+      "liftoff_speed": 0.2573,
+      "swing_peak": 0.2883,
+      "swing_peak_at": 0.278,
+      "swing_mid_min": 0.1166,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9975,
+      "ev_td_speed": 2.3588,
+      "ev_td_height": 0.0596,
+      "ev_td_angle": 37.1796,
+      "ev_lo_speed": 1.4798,
+      "ev_lo_height": 0.1282,
+      "hip_rom": 52.5041,
+      "hip_rom_natural": 70.3705,
+      "hip_min": -32.8197,
+      "hip_max": 19.6844,
+      "stifle_rom": 44.07,
+      "hock_rom": 95.4531,
+      "stifle_range": [
+       90.21086617448164,
+       134.2809040970237
+      ],
+      "hock_range": [
+       76.41562268854848,
+       171.8687431248384
+      ],
+      "stifle_hock_corr": 0.8351,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4949,
+      "skate": 0.0,
+      "touchdown_speed": 0.0009,
+      "liftoff_speed": 0.5769,
+      "swing_peak": 0.1739,
+      "swing_peak_at": 0.278,
+      "swing_mid_min": 0.1235,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9906,
+      "ev_td_speed": 2.2784,
+      "ev_td_height": 0.0603,
+      "ev_td_angle": 38.4364,
+      "ev_lo_speed": 1.7223,
+      "ev_lo_height": 0.1183,
+      "hip_rom": 47.033,
+      "hip_rom_natural": 61.9949,
+      "hip_min": -23.9692,
+      "hip_max": 23.0638,
+      "stifle_rom": 48.9605,
+      "hock_rom": 94.9252,
+      "stifle_range": [
+       81.40371237012008,
+       130.3642448201338
+      ],
+      "hock_range": [
+       69.29408659102401,
+       164.21931357555658
+      ],
+      "stifle_hock_corr": 0.9274,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "canter_s_tl": {
+   "length": 0.9333,
+   "frames": 29,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 113,
+   "rider_clip": "actor_b-horse-canter-fw",
+   "rider_native_asset_id": "704b71e831fe8230d3e2034836bddff7eec6394138f9d02d0b86478c357d6fc4",
+   "strides": 2,
+   "stride_s": 0.46665,
+   "design_speed": 3.7201,
+   "stride_length": 1.736,
+   "duty": [
+    0.4,
+    0.37
+   ],
+   "touchdown_phase": {
+    "LH": 0.02,
+    "LF": 0.22,
+    "RH": 0.22,
+    "RF": 0.42
+   },
+   "lh_touchdown_clip_phase": 0.01,
+   "saddle_amp": 0.08,
+   "curve": 1.0,
+   "curve_of": "canter_s",
+   "turn_radius": 6.0004,
+   "yaw_rate_deg_s": 35.522,
+   "lean_deg": 6.615,
+   "body_drop": 0.0,
+   "diagnostics": {
+    "frames": 29,
+    "length": 0.9333,
+    "loop_close": 2.886579864025407e-15,
+    "ground_speed": 3.7201328618879246,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0024,
+     "drift": 0.0029,
+     "slide_p50": 0.0146,
+     "slide_p95": 0.0869,
+     "slide_max": 0.1111
+    },
+    "joint_rom": {
+     "hip": 39.41,
+     "stifle": 31.76,
+     "hock": 57.39,
+     "fetlock": 55.92
+    },
+    "pelvis_pitch_range": 21.83,
+    "pelvis_roll_range": 1.23,
+    "pelvis_pitch_vs_back_range": 13.69,
+    "max_stretch": {
+     "LF": 0.9068,
+     "RF": 0.9573,
+     "LH": 0.8452,
+     "RH": 0.9147
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.08,
+    "neck_elevation_deg": 31.43,
+    "poll_height": 1.4848,
+    "td_speed_win": 1.4994,
+    "td_height_win": 0.0539,
+    "td_angle_min": 48.6462,
+    "lo_speed_win": 1.9377,
+    "lo_height_win": 0.0885,
+    "stance_slip": 0.0,
+    "frame_jump": 0.4605,
+    "skate": 0.0003,
+    "touchdown_speed": 0.9774,
+    "liftoff_speed": 1.0385,
+    "swing_peak_min": 0.1484,
+    "swing_mid_min": 0.0937,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9573,
+    "neck_elev_mean": 31.4335,
+    "poll_height_mean": 1.4848,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4381,
+      "skate": 0.0,
+      "touchdown_speed": 0.0004,
+      "liftoff_speed": 0.0904,
+      "swing_peak": 0.4468,
+      "swing_peak_at": 0.389,
+      "swing_mid_min": 0.0937,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9068,
+      "ev_td_speed": 1.4994,
+      "ev_td_height": 0.071,
+      "ev_td_angle": 54.8416,
+      "ev_lo_speed": 0.9254,
+      "ev_lo_height": 0.1155
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4605,
+      "skate": 0.0,
+      "touchdown_speed": 0.9774,
+      "liftoff_speed": 0.1408,
+      "swing_peak": 0.4514,
+      "swing_peak_at": 0.312,
+      "swing_mid_min": 0.1805,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9573,
+      "ev_td_speed": 1.4377,
+      "ev_td_height": 0.074,
+      "ev_td_angle": 57.0665,
+      "ev_lo_speed": 1.0464,
+      "ev_lo_height": 0.1175
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.3347,
+      "skate": 0.0,
+      "touchdown_speed": 0.0277,
+      "liftoff_speed": 0.6937,
+      "swing_peak": 0.2253,
+      "swing_peak_at": 0.278,
+      "swing_mid_min": 0.0997,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8452,
+      "ev_td_speed": 1.3778,
+      "ev_td_height": 0.0539,
+      "ev_td_angle": 49.5535,
+      "ev_lo_speed": 1.8993,
+      "ev_lo_height": 0.0896,
+      "hip_rom": 38.6946,
+      "hip_rom_natural": 39.417,
+      "hip_min": -18.4824,
+      "hip_max": 20.2122,
+      "stifle_rom": 11.7403,
+      "hock_rom": 39.6607,
+      "stifle_range": [
+       88.1306489088567,
+       99.87090466706957
+      ],
+      "hock_range": [
+       75.43960728418952,
+       115.10033364221322
+      ],
+      "stifle_hock_corr": 0.9359,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.3017,
+      "skate": 0.0003,
+      "touchdown_speed": 0.0003,
+      "liftoff_speed": 1.0385,
+      "swing_peak": 0.1484,
+      "swing_peak_at": 0.389,
+      "swing_mid_min": 0.1114,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9147,
+      "ev_td_speed": 1.4389,
+      "ev_td_height": 0.0545,
+      "ev_td_angle": 48.6462,
+      "ev_lo_speed": 1.9377,
+      "ev_lo_height": 0.0885,
+      "hip_rom": 27.2629,
+      "hip_rom_natural": 27.2629,
+      "hip_min": -11.4115,
+      "hip_max": 15.8514,
+      "stifle_rom": 27.3825,
+      "hock_rom": 52.9361,
+      "stifle_range": [
+       86.09783393945553,
+       113.48030713235008
+      ],
+      "hock_range": [
+       79.17586048141038,
+       132.1119512244982
+      ],
+      "stifle_hock_corr": 0.8494,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "canter_s_tr": {
+   "length": 0.9333,
+   "frames": 29,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 113,
+   "rider_clip": "actor_b-horse-canter-fw",
+   "rider_native_asset_id": "704b71e831fe8230d3e2034836bddff7eec6394138f9d02d0b86478c357d6fc4",
+   "strides": 2,
+   "stride_s": 0.46665,
+   "design_speed": 3.7201,
+   "stride_length": 1.736,
+   "duty": [
+    0.4,
+    0.37
+   ],
+   "touchdown_phase": {
+    "LH": 0.02,
+    "LF": 0.22,
+    "RH": 0.22,
+    "RF": 0.42
+   },
+   "lh_touchdown_clip_phase": 0.01,
+   "saddle_amp": 0.08,
+   "curve": -1.0,
+   "curve_of": "canter_s",
+   "turn_radius": 6.0004,
+   "yaw_rate_deg_s": -35.522,
+   "lean_deg": -6.615,
+   "body_drop": 0.0,
+   "diagnostics": {
+    "frames": 29,
+    "length": 0.9333,
+    "loop_close": 1.6653345369377348e-15,
+    "ground_speed": 3.7201328618879246,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0024,
+     "drift": 0.0029,
+     "slide_p50": 0.0177,
+     "slide_p95": 0.0887,
+     "slide_max": 0.1127
+    },
+    "joint_rom": {
+     "hip": 39.14,
+     "stifle": 28.25,
+     "hock": 53.14,
+     "fetlock": 55.05
+    },
+    "pelvis_pitch_range": 21.91,
+    "pelvis_roll_range": 1.71,
+    "pelvis_pitch_vs_back_range": 13.78,
+    "max_stretch": {
+     "LF": 0.9417,
+     "RF": 0.9163,
+     "LH": 0.866,
+     "RH": 0.8859
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.08,
+    "neck_elevation_deg": 31.44,
+    "poll_height": 1.4848,
+    "td_speed_win": 1.5675,
+    "td_height_win": 0.0539,
+    "td_angle_min": 48.4361,
+    "lo_speed_win": 1.9503,
+    "lo_height_win": 0.088,
+    "stance_slip": 0.0,
+    "frame_jump": 0.453,
+    "skate": 0.0003,
+    "touchdown_speed": 0.9324,
+    "liftoff_speed": 1.0665,
+    "swing_peak_min": 0.1482,
+    "swing_mid_min": 0.0931,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9417,
+    "neck_elev_mean": 31.4415,
+    "poll_height_mean": 1.4848,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.453,
+      "skate": 0.0,
+      "touchdown_speed": 0.0004,
+      "liftoff_speed": 0.0798,
+      "swing_peak": 0.4554,
+      "swing_peak_at": 0.389,
+      "swing_mid_min": 0.0931,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9417,
+      "ev_td_speed": 1.5675,
+      "ev_td_height": 0.071,
+      "ev_td_angle": 53.6379,
+      "ev_lo_speed": 0.9364,
+      "ev_lo_height": 0.1168
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4479,
+      "skate": 0.0,
+      "touchdown_speed": 0.9324,
+      "liftoff_speed": 0.1063,
+      "swing_peak": 0.4358,
+      "swing_peak_at": 0.438,
+      "swing_mid_min": 0.1762,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9163,
+      "ev_td_speed": 1.3686,
+      "ev_td_height": 0.0739,
+      "ev_td_angle": 58.301,
+      "ev_lo_speed": 0.9964,
+      "ev_lo_height": 0.1154
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.3446,
+      "skate": 0.0,
+      "touchdown_speed": 0.0289,
+      "liftoff_speed": 0.6836,
+      "swing_peak": 0.2297,
+      "swing_peak_at": 0.278,
+      "swing_mid_min": 0.0989,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.866,
+      "ev_td_speed": 1.4329,
+      "ev_td_height": 0.0539,
+      "ev_td_angle": 48.4361,
+      "ev_lo_speed": 1.9107,
+      "ev_lo_height": 0.0901,
+      "hip_rom": 38.47,
+      "hip_rom_natural": 39.1734,
+      "hip_min": -18.3139,
+      "hip_max": 20.1561,
+      "stifle_rom": 12.5079,
+      "hock_rom": 40.2986,
+      "stifle_range": [
+       91.27702446055038,
+       103.78491407549296
+      ],
+      "hock_range": [
+       79.4271930906965,
+       119.72576606063393
+      ],
+      "stifle_hock_corr": 0.9345,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.2914,
+      "skate": 0.0003,
+      "touchdown_speed": 0.0003,
+      "liftoff_speed": 1.0665,
+      "swing_peak": 0.1482,
+      "swing_peak_at": 0.389,
+      "swing_mid_min": 0.1138,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8859,
+      "ev_td_speed": 1.3837,
+      "ev_td_height": 0.0545,
+      "ev_td_angle": 49.7768,
+      "ev_lo_speed": 1.9503,
+      "ev_lo_height": 0.088,
+      "hip_rom": 26.488,
+      "hip_rom_natural": 26.488,
+      "hip_min": -10.9286,
+      "hip_max": 15.5594,
+      "stifle_rom": 24.445,
+      "hock_rom": 49.4298,
+      "stifle_range": [
+       82.93985058099015,
+       107.38489378700572
+      ],
+      "hock_range": [
+       75.06299921547541,
+       124.49280329569203
+      ],
+      "stifle_hock_corr": 0.8325,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "gallop_tl": {
+   "length": 0.6,
+   "frames": 19,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 73,
+   "rider_clip": "actor_b-horse-gallop-fw",
+   "rider_native_asset_id": "bae2af14bbd7f116ab2f2cf2bc85e8cba749b63783b0ee0d581dde81b6a0546b",
+   "strides": 1,
+   "stride_s": 0.6,
+   "design_speed": 10.0,
+   "stride_length": 6.0,
+   "duty": [
+    0.19,
+    0.175
+   ],
+   "touchdown_phase": {
+    "LH": 0.76,
+    "LF": 0.1,
+    "RH": 0.86,
+    "RF": 0.2
+   },
+   "lh_touchdown_clip_phase": 0.76,
+   "saddle_amp": 0.12,
+   "curve": 1.0,
+   "curve_of": "gallop",
+   "turn_radius": 16.6667,
+   "yaw_rate_deg_s": 34.377,
+   "lean_deg": 14.0,
+   "body_drop": -0.0304,
+   "diagnostics": {
+    "frames": 19,
+    "length": 0.6,
+    "loop_close": 3.558264793923627e-14,
+    "ground_speed": 10.0,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0055,
+     "drift": 0.0036,
+     "slide_p50": 0.129,
+     "slide_p95": 0.7289,
+     "slide_max": 0.7969
+    },
+    "joint_rom": {
+     "hip": 66.98,
+     "stifle": 84.55,
+     "hock": 119.72,
+     "fetlock": 58.65
+    },
+    "pelvis_pitch_range": 22.56,
+    "pelvis_roll_range": 1.22,
+    "pelvis_pitch_vs_back_range": 23.22,
+    "max_stretch": {
+     "LF": 0.9167,
+     "RF": 0.9887,
+     "LH": 0.9966,
+     "RH": 0.997
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.12,
+    "neck_elevation_deg": 26.74,
+    "poll_height": 1.344,
+    "td_speed_win": 5.5698,
+    "td_height_win": 0.0536,
+    "td_angle_min": 16.0969,
+    "lo_speed_win": 9.1189,
+    "lo_height_win": 0.0922,
+    "stance_slip": 0.0,
+    "frame_jump": 0.62,
+    "skate": 0.0,
+    "touchdown_speed": 2.4294,
+    "liftoff_speed": 5.1125,
+    "swing_peak_min": 0.4762,
+    "swing_mid_min": 0.1746,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.997,
+    "neck_elev_mean": 26.742,
+    "poll_height_mean": 1.344,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.62,
+      "skate": 0.0,
+      "touchdown_speed": 2.4294,
+      "liftoff_speed": 2.8536,
+      "swing_peak": 0.6681,
+      "swing_peak_at": 0.393,
+      "swing_mid_min": 0.2974,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9167,
+      "ev_td_speed": 4.347,
+      "ev_td_height": 0.0803,
+      "ev_td_angle": 29.0029,
+      "ev_lo_speed": 4.9669,
+      "ev_lo_height": 0.136
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.6099,
+      "skate": 0.0,
+      "touchdown_speed": 1.1138,
+      "liftoff_speed": 5.1125,
+      "swing_peak": 0.6434,
+      "swing_peak_at": 0.321,
+      "swing_mid_min": 0.2951,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9887,
+      "ev_td_speed": 4.4162,
+      "ev_td_height": 0.0803,
+      "ev_td_angle": 28.6205,
+      "ev_lo_speed": 5.3534,
+      "ev_lo_height": 0.1366
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.5622,
+      "skate": 0.0,
+      "touchdown_speed": 2.0688,
+      "liftoff_speed": 0.6404,
+      "swing_peak": 0.5568,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.1746,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9966,
+      "ev_td_speed": 5.4922,
+      "ev_td_height": 0.0536,
+      "ev_td_angle": 16.3126,
+      "ev_lo_speed": 9.06,
+      "ev_lo_height": 0.0922,
+      "hip_rom": 53.5203,
+      "hip_rom_natural": 108.7693,
+      "hip_min": -33.074,
+      "hip_max": 20.4463,
+      "stifle_rom": 82.934,
+      "hock_rom": 117.8029,
+      "stifle_range": [
+       64.99061819349654,
+       147.92459206111042
+      ],
+      "hock_range": [
+       52.748132509100444,
+       170.55099383716737
+      ],
+      "stifle_hock_corr": 0.3642,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.5705,
+      "skate": 0.0,
+      "touchdown_speed": 0.7959,
+      "liftoff_speed": 1.5731,
+      "swing_peak": 0.4762,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.186,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.997,
+      "ev_td_speed": 5.5698,
+      "ev_td_height": 0.0536,
+      "ev_td_angle": 16.0969,
+      "ev_lo_speed": 9.1189,
+      "ev_lo_height": 0.0934,
+      "hip_rom": 66.8503,
+      "hip_rom_natural": 95.4606,
+      "hip_min": -45.0815,
+      "hip_max": 21.7689,
+      "stifle_rom": 51.2436,
+      "hock_rom": 110.2313,
+      "stifle_range": [
+       77.34033152055771,
+       128.58396947783385
+      ],
+      "hock_range": [
+       60.884879764278395,
+       171.11615605091833
+      ],
+      "stifle_hock_corr": 0.512,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "gallop_tr": {
+   "length": 0.6,
+   "frames": 19,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 73,
+   "rider_clip": "actor_b-horse-gallop-fw",
+   "rider_native_asset_id": "bae2af14bbd7f116ab2f2cf2bc85e8cba749b63783b0ee0d581dde81b6a0546b",
+   "strides": 1,
+   "stride_s": 0.6,
+   "design_speed": 10.0,
+   "stride_length": 6.0,
+   "duty": [
+    0.19,
+    0.175
+   ],
+   "touchdown_phase": {
+    "LH": 0.76,
+    "LF": 0.1,
+    "RH": 0.86,
+    "RF": 0.2
+   },
+   "lh_touchdown_clip_phase": 0.76,
+   "saddle_amp": 0.12,
+   "curve": -1.0,
+   "curve_of": "gallop",
+   "turn_radius": 16.6667,
+   "yaw_rate_deg_s": -34.377,
+   "lean_deg": -14.0,
+   "body_drop": 0.0,
+   "diagnostics": {
+    "frames": 19,
+    "length": 0.6,
+    "loop_close": 4.068967385251199e-14,
+    "ground_speed": 10.0,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0055,
+     "drift": 0.0033,
+     "slide_p50": 0.1262,
+     "slide_p95": 0.5951,
+     "slide_max": 0.6529
+    },
+    "joint_rom": {
+     "hip": 65.36,
+     "stifle": 85.69,
+     "hock": 112.98,
+     "fetlock": 58.21
+    },
+    "pelvis_pitch_range": 22.7,
+    "pelvis_roll_range": 1.32,
+    "pelvis_pitch_vs_back_range": 23.19,
+    "max_stretch": {
+     "LF": 0.9914,
+     "RF": 0.975,
+     "LH": 0.9964,
+     "RH": 0.9971
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.12,
+    "neck_elevation_deg": 26.74,
+    "poll_height": 1.3744,
+    "td_speed_win": 5.5698,
+    "td_height_win": 0.0536,
+    "td_angle_min": 16.0969,
+    "lo_speed_win": 9.2198,
+    "lo_height_win": 0.0918,
+    "stance_slip": 0.0,
+    "frame_jump": 0.6253,
+    "skate": 0.0,
+    "touchdown_speed": 2.4682,
+    "liftoff_speed": 4.781,
+    "swing_peak_min": 0.4954,
+    "swing_mid_min": 0.1713,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9971,
+    "neck_elev_mean": 26.7375,
+    "poll_height_mean": 1.3744,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.6253,
+      "skate": 0.0,
+      "touchdown_speed": 2.4682,
+      "liftoff_speed": 2.9467,
+      "swing_peak": 0.6619,
+      "swing_peak_at": 0.393,
+      "swing_mid_min": 0.293,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9914,
+      "ev_td_speed": 4.4162,
+      "ev_td_height": 0.0803,
+      "ev_td_angle": 28.6205,
+      "ev_lo_speed": 5.0491,
+      "ev_lo_height": 0.1359
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.6029,
+      "skate": 0.0,
+      "touchdown_speed": 1.0962,
+      "liftoff_speed": 4.781,
+      "swing_peak": 0.6458,
+      "swing_peak_at": 0.393,
+      "swing_mid_min": 0.3051,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.975,
+      "ev_td_speed": 4.347,
+      "ev_td_height": 0.0803,
+      "ev_td_angle": 29.0029,
+      "ev_lo_speed": 4.9821,
+      "ev_lo_height": 0.136
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.5632,
+      "skate": 0.0,
+      "touchdown_speed": 2.0982,
+      "liftoff_speed": 0.6474,
+      "swing_peak": 0.5147,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.1713,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9964,
+      "ev_td_speed": 5.5698,
+      "ev_td_height": 0.0536,
+      "ev_td_angle": 16.0969,
+      "ev_lo_speed": 9.2198,
+      "ev_lo_height": 0.0918,
+      "hip_rom": 58.5603,
+      "hip_rom_natural": 96.5823,
+      "hip_min": -39.7481,
+      "hip_max": 18.8122,
+      "stifle_rom": 84.2862,
+      "hock_rom": 107.5497,
+      "stifle_range": [
+       74.7896982966167,
+       159.07584931214305
+      ],
+      "hock_range": [
+       62.72933687342975,
+       170.27898914498584
+      ],
+      "stifle_hock_corr": 0.5484,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.5649,
+      "skate": 0.0,
+      "touchdown_speed": 0.7846,
+      "liftoff_speed": 1.5481,
+      "swing_peak": 0.4954,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.193,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9971,
+      "ev_td_speed": 5.4922,
+      "ev_td_height": 0.0536,
+      "ev_td_angle": 16.3125,
+      "ev_lo_speed": 9.0282,
+      "ev_lo_height": 0.0927,
+      "hip_rom": 65.3024,
+      "hip_rom_natural": 96.3206,
+      "hip_min": -42.8801,
+      "hip_max": 22.4222,
+      "stifle_rom": 50.3485,
+      "hock_rom": 112.3879,
+      "stifle_range": [
+       75.08133442133779,
+       125.42981522112238
+      ],
+      "hock_range": [
+       58.92383704398563,
+       171.31169581769285
+      ],
+      "stifle_hock_corr": 0.476,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "gallop_s_tl": {
+   "length": 0.6,
+   "frames": 19,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 73,
+   "rider_clip": "actor_b-horse-gallop-fw",
+   "rider_native_asset_id": "bae2af14bbd7f116ab2f2cf2bc85e8cba749b63783b0ee0d581dde81b6a0546b",
+   "strides": 1,
+   "stride_s": 0.6,
+   "design_speed": 7.0,
+   "stride_length": 4.2,
+   "duty": [
+    0.19,
+    0.175
+   ],
+   "touchdown_phase": {
+    "LH": 0.76,
+    "LF": 0.1,
+    "RH": 0.86,
+    "RF": 0.2
+   },
+   "lh_touchdown_clip_phase": 0.76,
+   "saddle_amp": 0.12,
+   "curve": 1.0,
+   "curve_of": "gallop_s",
+   "turn_radius": 16.6667,
+   "yaw_rate_deg_s": 24.064,
+   "lean_deg": 8.342,
+   "body_drop": 0.0,
+   "diagnostics": {
+    "frames": 19,
+    "length": 0.6,
+    "loop_close": 3.6359804056473877e-14,
+    "ground_speed": 7.000000000000001,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0034,
+     "drift": 0.0031,
+     "slide_p50": 0.0633,
+     "slide_p95": 0.2266,
+     "slide_max": 0.2429
+    },
+    "joint_rom": {
+     "hip": 52.24,
+     "stifle": 55.34,
+     "hock": 62.34,
+     "fetlock": 62.8
+    },
+    "pelvis_pitch_range": 22.98,
+    "pelvis_roll_range": 1.23,
+    "pelvis_pitch_vs_back_range": 23.71,
+    "max_stretch": {
+     "LF": 0.8803,
+     "RF": 0.8719,
+     "LH": 0.8429,
+     "RH": 0.9047
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.12,
+    "neck_elevation_deg": 30.34,
+    "poll_height": 1.4514,
+    "td_speed_win": 3.8682,
+    "td_height_win": 0.0493,
+    "td_angle_min": 20.9198,
+    "lo_speed_win": 6.853,
+    "lo_height_win": 0.078,
+    "stance_slip": 0.0,
+    "frame_jump": 0.4753,
+    "skate": 0.0,
+    "touchdown_speed": 1.6844,
+    "liftoff_speed": 3.503,
+    "swing_peak_min": 0.3888,
+    "swing_mid_min": 0.1557,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9047,
+    "neck_elev_mean": 30.3418,
+    "poll_height_mean": 1.4514,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4753,
+      "skate": 0.0,
+      "touchdown_speed": 1.6844,
+      "liftoff_speed": 2.1414,
+      "swing_peak": 0.646,
+      "swing_peak_at": 0.393,
+      "swing_mid_min": 0.265,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.8803,
+      "ev_td_speed": 3.0173,
+      "ev_td_height": 0.0739,
+      "ev_td_angle": 36.3129,
+      "ev_lo_speed": 3.5955,
+      "ev_lo_height": 0.126
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4652,
+      "skate": 0.0,
+      "touchdown_speed": 0.7707,
+      "liftoff_speed": 3.503,
+      "swing_peak": 0.6156,
+      "swing_peak_at": 0.321,
+      "swing_mid_min": 0.2583,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.8719,
+      "ev_td_speed": 3.0667,
+      "ev_td_height": 0.0739,
+      "ev_td_angle": 35.8696,
+      "ev_lo_speed": 3.6508,
+      "ev_lo_height": 0.1259
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4071,
+      "skate": 0.0,
+      "touchdown_speed": 1.4331,
+      "liftoff_speed": 0.6258,
+      "swing_peak": 0.4514,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.1557,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8429,
+      "ev_td_speed": 3.8128,
+      "ev_td_height": 0.0493,
+      "ev_td_angle": 21.1972,
+      "ev_lo_speed": 6.7575,
+      "ev_lo_height": 0.078,
+      "hip_rom": 52.0502,
+      "hip_rom_natural": 85.0486,
+      "hip_min": -30.7465,
+      "hip_max": 21.3037,
+      "stifle_rom": 53.7117,
+      "hock_rom": 52.8478,
+      "stifle_range": [
+       69.58600081274585,
+       123.29768825117723
+      ],
+      "hock_range": [
+       61.74544987844975,
+       114.5932997179547
+      ],
+      "stifle_hock_corr": 0.6106,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.364,
+      "skate": 0.0,
+      "touchdown_speed": 0.5492,
+      "liftoff_speed": 1.2886,
+      "swing_peak": 0.3888,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.1802,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9047,
+      "ev_td_speed": 3.8682,
+      "ev_td_height": 0.0493,
+      "ev_td_angle": 20.9198,
+      "ev_lo_speed": 6.853,
+      "ev_lo_height": 0.078,
+      "hip_rom": 51.3302,
+      "hip_rom_natural": 70.2733,
+      "hip_min": -28.6171,
+      "hip_max": 22.7131,
+      "stifle_rom": 29.1297,
+      "hock_rom": 62.2974,
+      "stifle_range": [
+       78.02867956792,
+       107.1584236026064
+      ],
+      "hock_range": [
+       67.05980440837862,
+       129.35719750301354
+      ],
+      "stifle_hock_corr": 0.672,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "gallop_s_tr": {
+   "length": 0.6,
+   "frames": 19,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 73,
+   "rider_clip": "actor_b-horse-gallop-fw",
+   "rider_native_asset_id": "bae2af14bbd7f116ab2f2cf2bc85e8cba749b63783b0ee0d581dde81b6a0546b",
+   "strides": 1,
+   "stride_s": 0.6,
+   "design_speed": 7.0,
+   "stride_length": 4.2,
+   "duty": [
+    0.19,
+    0.175
+   ],
+   "touchdown_phase": {
+    "LH": 0.76,
+    "LF": 0.1,
+    "RH": 0.86,
+    "RF": 0.2
+   },
+   "lh_touchdown_clip_phase": 0.76,
+   "saddle_amp": 0.12,
+   "curve": -1.0,
+   "curve_of": "gallop_s",
+   "turn_radius": 16.6667,
+   "yaw_rate_deg_s": -24.064,
+   "lean_deg": -8.342,
+   "body_drop": 0.0,
+   "diagnostics": {
+    "frames": 19,
+    "length": 0.6,
+    "loop_close": 3.544387006115812e-14,
+    "ground_speed": 7.000000000000001,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0034,
+     "drift": 0.0031,
+     "slide_p50": 0.0677,
+     "slide_p95": 0.2263,
+     "slide_max": 0.2423
+    },
+    "joint_rom": {
+     "hip": 52.1,
+     "stifle": 56.31,
+     "hock": 60.33,
+     "fetlock": 62.92
+    },
+    "pelvis_pitch_range": 23.06,
+    "pelvis_roll_range": 1.3,
+    "pelvis_pitch_vs_back_range": 23.69,
+    "max_stretch": {
+     "LF": 0.9203,
+     "RF": 0.8345,
+     "LH": 0.8632,
+     "RH": 0.8807
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.12,
+    "neck_elevation_deg": 30.34,
+    "poll_height": 1.4514,
+    "td_speed_win": 3.8682,
+    "td_height_win": 0.0493,
+    "td_angle_min": 20.9198,
+    "lo_speed_win": 6.8702,
+    "lo_height_win": 0.0779,
+    "stance_slip": 0.0,
+    "frame_jump": 0.4807,
+    "skate": 0.0,
+    "touchdown_speed": 1.7121,
+    "liftoff_speed": 3.4516,
+    "swing_peak_min": 0.3969,
+    "swing_mid_min": 0.1537,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9203,
+    "neck_elev_mean": 30.3385,
+    "poll_height_mean": 1.4514,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4807,
+      "skate": 0.0,
+      "touchdown_speed": 1.7121,
+      "liftoff_speed": 2.1793,
+      "swing_peak": 0.6438,
+      "swing_peak_at": 0.393,
+      "swing_mid_min": 0.2635,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9203,
+      "ev_td_speed": 3.0667,
+      "ev_td_height": 0.0739,
+      "ev_td_angle": 35.8696,
+      "ev_lo_speed": 3.6655,
+      "ev_lo_height": 0.126
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.4588,
+      "skate": 0.0,
+      "touchdown_speed": 0.7582,
+      "liftoff_speed": 3.4516,
+      "swing_peak": 0.6155,
+      "swing_peak_at": 0.321,
+      "swing_mid_min": 0.2638,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.8345,
+      "ev_td_speed": 3.0173,
+      "ev_td_height": 0.0739,
+      "ev_td_angle": 36.3129,
+      "ev_lo_speed": 3.5967,
+      "ev_lo_height": 0.126
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.411,
+      "skate": 0.0,
+      "touchdown_speed": 1.454,
+      "liftoff_speed": 0.6274,
+      "swing_peak": 0.4389,
+      "swing_peak_at": 0.367,
+      "swing_mid_min": 0.1537,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8632,
+      "ev_td_speed": 3.8682,
+      "ev_td_height": 0.0493,
+      "ev_td_angle": 20.9198,
+      "ev_lo_speed": 6.8702,
+      "ev_lo_height": 0.0779,
+      "hip_rom": 52.0287,
+      "hip_rom_natural": 82.0163,
+      "hip_min": -31.0518,
+      "hip_max": 20.9769,
+      "stifle_rom": 54.7025,
+      "hock_rom": 53.4839,
+      "stifle_range": [
+       73.1939690655584,
+       127.89643407462395
+      ],
+      "hock_range": [
+       65.61078311782622,
+       119.09464247359806
+      ],
+      "stifle_hock_corr": 0.686,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.3607,
+      "skate": 0.0,
+      "touchdown_speed": 0.5412,
+      "liftoff_speed": 1.2783,
+      "swing_peak": 0.3969,
+      "swing_peak_at": 0.3,
+      "swing_mid_min": 0.1855,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8807,
+      "ev_td_speed": 3.8128,
+      "ev_td_height": 0.0493,
+      "ev_td_angle": 21.1972,
+      "ev_lo_speed": 6.7597,
+      "ev_lo_height": 0.078,
+      "hip_rom": 51.5565,
+      "hip_rom_natural": 72.3215,
+      "hip_min": -28.6031,
+      "hip_max": 22.9534,
+      "stifle_rom": 28.9998,
+      "hock_rom": 60.3197,
+      "stifle_range": [
+       74.13531365341316,
+       103.13515421074584
+      ],
+      "hock_range": [
+       62.89325623604715,
+       123.21291867408132
+      ],
+      "stifle_hock_corr": 0.618,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "sprint_tl": {
+   "length": 4.6667,
+   "frames": 141,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 561,
+   "rider_clip": "actor_b-horse-gallop-sprint",
+   "rider_native_asset_id": "917c12c0ebb356a116dc25ed20aee5b0ceff2d33cab14ffe7cf0b37c2e793ce1",
+   "strides": 10,
+   "stride_s": 0.46667,
+   "design_speed": 13.0713,
+   "stride_length": 6.1,
+   "duty": [
+    0.175,
+    0.16
+   ],
+   "touchdown_phase": {
+    "LH": 0.86,
+    "LF": 0.14,
+    "RH": 0.93,
+    "RF": 0.22
+   },
+   "lh_touchdown_clip_phase": 0.086,
+   "saddle_amp": 0.14,
+   "curve": 1.0,
+   "curve_of": "sprint",
+   "turn_radius": 28.4766,
+   "yaw_rate_deg_s": 26.3,
+   "lean_deg": 14.0,
+   "body_drop": 0.0,
+   "diagnostics": {
+    "frames": 141,
+    "length": 4.6667,
+    "loop_close": 1.5754064719430971e-13,
+    "ground_speed": 13.071335204748538,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0067,
+     "drift": 0.0048,
+     "slide_p50": 0.2026,
+     "slide_p95": 0.9644,
+     "slide_max": 0.9785
+    },
+    "joint_rom": {
+     "hip": 63.13,
+     "stifle": 72.55,
+     "hock": 116.06,
+     "fetlock": 60.36
+    },
+    "pelvis_pitch_range": 27.58,
+    "pelvis_roll_range": 1.13,
+    "pelvis_pitch_vs_back_range": 22.96,
+    "max_stretch": {
+     "LF": 0.9351,
+     "RF": 0.9785,
+     "LH": 0.9975,
+     "RH": 0.996
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.14,
+    "neck_elevation_deg": 23.42,
+    "poll_height": 1.3344,
+    "td_speed_win": 7.2479,
+    "td_height_win": 0.0624,
+    "td_angle_min": 14.4741,
+    "lo_speed_win": 11.5592,
+    "lo_height_win": 0.1025,
+    "stance_slip": 0.0,
+    "frame_jump": 0.7696,
+    "skate": 0.0022,
+    "touchdown_speed": 5.6905,
+    "liftoff_speed": 6.8354,
+    "swing_peak_min": 0.4157,
+    "swing_mid_min": 0.1229,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9975,
+    "neck_elev_mean": 23.4195,
+    "poll_height_mean": 1.3344,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.7661,
+      "skate": 0.0,
+      "touchdown_speed": 5.6905,
+      "liftoff_speed": 1.951,
+      "swing_peak": 0.7048,
+      "swing_peak_at": 0.409,
+      "swing_mid_min": 0.329,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9351,
+      "ev_td_speed": 6.3046,
+      "ev_td_height": 0.101,
+      "ev_td_angle": 25.6581,
+      "ev_lo_speed": 6.0423,
+      "ev_lo_height": 0.1702
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.7696,
+      "skate": 0.0,
+      "touchdown_speed": 0.001,
+      "liftoff_speed": 1.3084,
+      "swing_peak": 0.6952,
+      "swing_peak_at": 0.375,
+      "swing_mid_min": 0.2217,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9785,
+      "ev_td_speed": 6.364,
+      "ev_td_height": 0.1009,
+      "ev_td_angle": 25.4271,
+      "ev_lo_speed": 6.5596,
+      "ev_lo_height": 0.1672
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.7633,
+      "skate": 0.0022,
+      "touchdown_speed": 0.0022,
+      "liftoff_speed": 6.3523,
+      "swing_peak": 0.5484,
+      "swing_peak_at": 0.292,
+      "swing_mid_min": 0.1229,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9975,
+      "ev_td_speed": 7.1882,
+      "ev_td_height": 0.0624,
+      "ev_td_angle": 14.5902,
+      "ev_lo_speed": 11.2629,
+      "ev_lo_height": 0.1058,
+      "hip_rom": 54.6242,
+      "hip_rom_natural": 98.5023,
+      "hip_min": -31.8279,
+      "hip_max": 22.7963,
+      "stifle_rom": 72.2055,
+      "hock_rom": 115.982,
+      "stifle_range": [
+       70.60879635223539,
+       142.8142780885289
+      ],
+      "hock_range": [
+       55.80864467092203,
+       171.7906328834854
+      ],
+      "stifle_hock_corr": 0.4769,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.683,
+      "skate": 0.0014,
+      "touchdown_speed": 0.0014,
+      "liftoff_speed": 6.8354,
+      "swing_peak": 0.4157,
+      "swing_peak_at": 0.292,
+      "swing_mid_min": 0.1262,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.996,
+      "ev_td_speed": 7.2479,
+      "ev_td_height": 0.0624,
+      "ev_td_angle": 14.4741,
+      "ev_lo_speed": 11.5592,
+      "ev_lo_height": 0.1025,
+      "hip_rom": 54.308,
+      "hip_rom_natural": 83.3977,
+      "hip_min": -30.2276,
+      "hip_max": 24.0803,
+      "stifle_rom": 45.604,
+      "hock_rom": 105.1943,
+      "stifle_range": [
+       82.27090285399653,
+       127.87493886618994
+      ],
+      "hock_range": [
+       64.45813206437832,
+       169.6524501184982
+      ],
+      "stifle_hock_corr": 0.6769,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "sprint_tr": {
+   "length": 4.6667,
+   "frames": 141,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 120,
+   "keys": 561,
+   "rider_clip": "actor_b-horse-gallop-sprint",
+   "rider_native_asset_id": "917c12c0ebb356a116dc25ed20aee5b0ceff2d33cab14ffe7cf0b37c2e793ce1",
+   "strides": 10,
+   "stride_s": 0.46667,
+   "design_speed": 13.0713,
+   "stride_length": 6.1,
+   "duty": [
+    0.175,
+    0.16
+   ],
+   "touchdown_phase": {
+    "LH": 0.86,
+    "LF": 0.14,
+    "RH": 0.93,
+    "RF": 0.22
+   },
+   "lh_touchdown_clip_phase": 0.086,
+   "saddle_amp": 0.14,
+   "curve": -1.0,
+   "curve_of": "sprint",
+   "turn_radius": 28.4766,
+   "yaw_rate_deg_s": -26.3,
+   "lean_deg": -14.0,
+   "body_drop": 0.0,
+   "diagnostics": {
+    "frames": 141,
+    "length": 4.6667,
+    "loop_close": 1.8290924330699454e-13,
+    "ground_speed": 13.071335204748538,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0065,
+     "drift": 0.0043,
+     "slide_p50": 0.271,
+     "slide_p95": 0.6905,
+     "slide_max": 0.6999
+    },
+    "joint_rom": {
+     "hip": 63.26,
+     "stifle": 74.36,
+     "hock": 114.03,
+     "fetlock": 60.39
+    },
+    "pelvis_pitch_range": 28.06,
+    "pelvis_roll_range": 1.25,
+    "pelvis_pitch_vs_back_range": 23.01,
+    "max_stretch": {
+     "LF": 0.9947,
+     "RF": 0.9424,
+     "LH": 0.9966,
+     "RH": 0.978
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.14,
+    "neck_elevation_deg": 23.42,
+    "poll_height": 1.3344,
+    "td_speed_win": 7.2481,
+    "td_height_win": 0.0624,
+    "td_angle_min": 14.4746,
+    "lo_speed_win": 11.4554,
+    "lo_height_win": 0.1029,
+    "stance_slip": 0.0,
+    "frame_jump": 0.7719,
+    "skate": 0.0022,
+    "touchdown_speed": 5.7439,
+    "liftoff_speed": 6.8139,
+    "swing_peak_min": 0.4323,
+    "swing_mid_min": 0.122,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9966,
+    "neck_elev_mean": 23.4195,
+    "poll_height_mean": 1.3344,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.7669,
+      "skate": 0.0,
+      "touchdown_speed": 5.7439,
+      "liftoff_speed": 1.9638,
+      "swing_peak": 0.6985,
+      "swing_peak_at": 0.409,
+      "swing_mid_min": 0.3205,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9947,
+      "ev_td_speed": 6.3638,
+      "ev_td_height": 0.101,
+      "ev_td_angle": 25.4516,
+      "ev_lo_speed": 6.0819,
+      "ev_lo_height": 0.1705
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.7705,
+      "skate": 0.0,
+      "touchdown_speed": 0.001,
+      "liftoff_speed": 1.2267,
+      "swing_peak": 0.6973,
+      "swing_peak_at": 0.375,
+      "swing_mid_min": 0.2265,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9424,
+      "ev_td_speed": 6.3049,
+      "ev_td_height": 0.1009,
+      "ev_td_angle": 25.6386,
+      "ev_lo_speed": 5.97,
+      "ev_lo_height": 0.1709
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.6942,
+      "skate": 0.0022,
+      "touchdown_speed": 0.0022,
+      "liftoff_speed": 6.47,
+      "swing_peak": 0.5257,
+      "swing_peak_at": 0.292,
+      "swing_mid_min": 0.122,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9966,
+      "ev_td_speed": 7.2481,
+      "ev_td_height": 0.0624,
+      "ev_td_angle": 14.4746,
+      "ev_lo_speed": 11.4554,
+      "ev_lo_height": 0.1041,
+      "hip_rom": 56.0999,
+      "hip_rom_natural": 91.4007,
+      "hip_min": -34.666,
+      "hip_max": 21.4339,
+      "stifle_rom": 73.6278,
+      "hock_rom": 108.3936,
+      "stifle_range": [
+       76.84022648785768,
+       150.4679970609202
+      ],
+      "hock_range": [
+       62.08711382568674,
+       170.48071810612635
+      ],
+      "stifle_hock_corr": 0.5937,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.7719,
+      "skate": 0.0014,
+      "touchdown_speed": 0.0014,
+      "liftoff_speed": 6.8139,
+      "swing_peak": 0.4323,
+      "swing_peak_at": 0.292,
+      "swing_mid_min": 0.1301,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.978,
+      "ev_td_speed": 7.1881,
+      "ev_td_height": 0.0624,
+      "ev_td_angle": 14.5924,
+      "ev_lo_speed": 11.434,
+      "ev_lo_height": 0.1029,
+      "hip_rom": 54.0197,
+      "hip_rom_natural": 87.729,
+      "hip_min": -28.3031,
+      "hip_max": 25.7166,
+      "stifle_rom": 44.8036,
+      "hock_rom": 97.9261,
+      "stifle_range": [
+       76.53518388174561,
+       121.33877128199916
+      ],
+      "hock_range": [
+       57.88520893042189,
+       155.8112903668784
+      ],
+      "stifle_hock_corr": 0.5568,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "turn_l": {
+   "length": 2.0,
+   "frames": 61,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 30,
+   "keys": 61,
+   "strides": 1,
+   "stride_s": 2.0,
+   "design_speed": 0.0,
+   "stride_length": 0.0,
+   "duty": [
+    0.72,
+    0.72
+   ],
+   "touchdown_phase": {
+    "LH": 0.75,
+    "LF": 0.0,
+    "RH": 0.25,
+    "RF": 0.5
+   },
+   "lh_touchdown_clip_phase": 0.75,
+   "saddle_amp": 0.012,
+   "yaw_rate_deg_s": 22.5,
+   "diagnostics": {
+    "frames": 61,
+    "length": 2.0,
+    "loop_close": 7.216449660063518e-16,
+    "ground_speed": 0.0,
+    "key_rate": 30,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 30.0,
+     "sink": 0.0007,
+     "drift": 0.0009,
+     "slide_p50": 0.0015,
+     "slide_p95": 0.0041,
+     "slide_max": 0.1593
+    },
+    "joint_rom": {
+     "hip": 11.42,
+     "stifle": 20.09,
+     "hock": 42.11,
+     "fetlock": 17.42
+    },
+    "pelvis_pitch_range": 5.22,
+    "pelvis_roll_range": 1.74,
+    "pelvis_pitch_vs_back_range": 4.04,
+    "max_stretch": {
+     "LF": 0.954,
+     "RF": 0.9583,
+     "LH": 0.9231,
+     "RH": 0.9036
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.012,
+    "neck_elevation_deg": 40.81,
+    "poll_height": 1.6397,
+    "td_speed_win": 0.0824,
+    "td_height_win": 0.0141,
+    "td_angle_min": 80.9395,
+    "lo_speed_win": 0.2508,
+    "lo_height_win": 0.0351,
+    "stance_slip": 0.0,
+    "frame_jump": 0.1036,
+    "skate": 0.0,
+    "touchdown_speed": 0.0826,
+    "liftoff_speed": 0.1717,
+    "swing_peak_min": 0.0989,
+    "swing_mid_min": 0.0409,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9583,
+    "neck_elev_mean": 40.8081,
+    "poll_height_mean": 1.6397,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1036,
+      "skate": 0.0,
+      "touchdown_speed": 0.0826,
+      "liftoff_speed": 0.0464,
+      "swing_peak": 0.0993,
+      "swing_peak_at": 0.406,
+      "swing_mid_min": 0.0409,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.954,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": 0.0797,
+      "ev_lo_height": 0.037
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1023,
+      "skate": 0.0,
+      "touchdown_speed": 0.0824,
+      "liftoff_speed": 0.0473,
+      "swing_peak": 0.1045,
+      "swing_peak_at": 0.406,
+      "swing_mid_min": 0.0424,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9583,
+      "ev_td_speed": 0.0824,
+      "ev_td_height": 0.0172,
+      "ev_td_angle": 80.9395,
+      "ev_lo_speed": 0.1094,
+      "ev_lo_height": 0.0351
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.0401,
+      "skate": 0.0,
+      "touchdown_speed": 0.0639,
+      "liftoff_speed": 0.1717,
+      "swing_peak": 0.1035,
+      "swing_peak_at": 0.281,
+      "swing_mid_min": 0.0523,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9231,
+      "ev_td_speed": 0.0639,
+      "ev_td_height": 0.0141,
+      "ev_td_angle": 81.4353,
+      "ev_lo_speed": 0.2508,
+      "ev_lo_height": 0.0472,
+      "hip_rom": 9.9822,
+      "hip_rom_natural": 9.9822,
+      "hip_min": -3.0751,
+      "hip_max": 6.9072,
+      "stifle_rom": 21.896,
+      "hock_rom": 44.3404,
+      "stifle_range": [
+       93.55893724091564,
+       115.4549525545298
+      ],
+      "hock_range": [
+       90.23980620121756,
+       134.5802110689
+      ],
+      "stifle_hock_corr": 0.9808,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.039,
+      "skate": 0.0,
+      "touchdown_speed": 0.0636,
+      "liftoff_speed": 0.139,
+      "swing_peak": 0.0989,
+      "swing_peak_at": 0.344,
+      "swing_mid_min": 0.0562,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9036,
+      "ev_td_speed": 0.0636,
+      "ev_td_height": 0.0141,
+      "ev_td_angle": 81.4674,
+      "ev_lo_speed": 0.2093,
+      "ev_lo_height": 0.0457,
+      "hip_rom": 11.39,
+      "hip_rom_natural": 11.39,
+      "hip_min": -2.8332,
+      "hip_max": 8.5567,
+      "stifle_rom": 17.3561,
+      "hock_rom": 37.6556,
+      "stifle_range": [
+       93.67645422187843,
+       111.03258439857453
+      ],
+      "hock_range": [
+       91.39676763869049,
+       129.05234880966785
+      ],
+      "stifle_hock_corr": 0.9876,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "turn_r": {
+   "length": 2.0,
+   "frames": 61,
+   "loop": true,
+   "kind": "cycle",
+   "key_rate": 30,
+   "keys": 61,
+   "strides": 1,
+   "stride_s": 2.0,
+   "design_speed": 0.0,
+   "stride_length": 0.0,
+   "duty": [
+    0.72,
+    0.72
+   ],
+   "touchdown_phase": {
+    "LH": 0.75,
+    "LF": 0.0,
+    "RH": 0.25,
+    "RF": 0.5
+   },
+   "lh_touchdown_clip_phase": 0.75,
+   "saddle_amp": 0.012,
+   "yaw_rate_deg_s": -22.5,
+   "diagnostics": {
+    "frames": 61,
+    "length": 2.0,
+    "loop_close": 4.2049697057677804e-15,
+    "ground_speed": 0.0,
+    "key_rate": 30,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 30.0,
+     "sink": 0.0007,
+     "drift": 0.0008,
+     "slide_p50": 0.0015,
+     "slide_p95": 0.0041,
+     "slide_max": 0.1593
+    },
+    "joint_rom": {
+     "hip": 7.31,
+     "stifle": 21.92,
+     "hock": 44.39,
+     "fetlock": 13.63
+    },
+    "pelvis_pitch_range": 5.22,
+    "pelvis_roll_range": 1.74,
+    "pelvis_pitch_vs_back_range": 4.04,
+    "max_stretch": {
+     "LF": 0.9583,
+     "RF": 0.954,
+     "LH": 0.9036,
+     "RH": 0.9231
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.012,
+    "neck_elevation_deg": 40.81,
+    "poll_height": 1.6397,
+    "td_speed_win": 0.0826,
+    "td_height_win": 0.0141,
+    "td_angle_min": 80.9099,
+    "lo_speed_win": 0.2508,
+    "lo_height_win": 0.0351,
+    "stance_slip": 0.0,
+    "frame_jump": 0.1036,
+    "skate": 0.0,
+    "touchdown_speed": 0.0826,
+    "liftoff_speed": 0.1717,
+    "swing_peak_min": 0.0989,
+    "swing_mid_min": 0.0409,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 0.9583,
+    "neck_elev_mean": 40.8083,
+    "poll_height_mean": 1.6397,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1023,
+      "skate": 0.0,
+      "touchdown_speed": 0.0824,
+      "liftoff_speed": 0.0473,
+      "swing_peak": 0.1045,
+      "swing_peak_at": 0.406,
+      "swing_mid_min": 0.0424,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.9583,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": 0.1094,
+      "ev_lo_height": 0.0351
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1036,
+      "skate": 0.0,
+      "touchdown_speed": 0.0826,
+      "liftoff_speed": 0.0464,
+      "swing_peak": 0.0993,
+      "swing_peak_at": 0.406,
+      "swing_mid_min": 0.0409,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 0.954,
+      "ev_td_speed": 0.0826,
+      "ev_td_height": 0.0172,
+      "ev_td_angle": 80.9099,
+      "ev_lo_speed": 0.0797,
+      "ev_lo_height": 0.037
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.039,
+      "skate": 0.0,
+      "touchdown_speed": 0.0636,
+      "liftoff_speed": 0.139,
+      "swing_peak": 0.0989,
+      "swing_peak_at": 0.344,
+      "swing_mid_min": 0.0562,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9036,
+      "ev_td_speed": 0.0636,
+      "ev_td_height": 0.0141,
+      "ev_td_angle": 81.4674,
+      "ev_lo_speed": 0.2093,
+      "ev_lo_height": 0.0457,
+      "hip_rom": 11.39,
+      "hip_rom_natural": 11.39,
+      "hip_min": -2.8332,
+      "hip_max": 8.5567,
+      "stifle_rom": 17.3561,
+      "hock_rom": 37.6556,
+      "stifle_range": [
+       93.6764542218784,
+       111.03258439857453
+      ],
+      "hock_range": [
+       91.39676763869055,
+       129.05234880966785
+      ],
+      "stifle_hock_corr": 0.9874,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.0401,
+      "skate": 0.0,
+      "touchdown_speed": 0.0639,
+      "liftoff_speed": 0.1717,
+      "swing_peak": 0.1035,
+      "swing_peak_at": 0.281,
+      "swing_mid_min": 0.0523,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9231,
+      "ev_td_speed": 0.0639,
+      "ev_td_height": 0.0141,
+      "ev_td_angle": 81.4353,
+      "ev_lo_speed": 0.2508,
+      "ev_lo_height": 0.0472,
+      "hip_rom": 9.9822,
+      "hip_rom_natural": 9.9822,
+      "hip_min": -3.0751,
+      "hip_max": 6.9072,
+      "stifle_rom": 21.896,
+      "hock_rom": 44.3404,
+      "stifle_range": [
+       93.55893724091557,
+       115.45495255452974
+      ],
+      "hock_range": [
+       90.23980620121745,
+       134.5802110688999
+      ],
+      "stifle_hock_corr": 0.9811,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "jump": {
+   "length": 1.2667,
+   "frames": 39,
+   "loop": false,
+   "kind": "jump",
+   "key_rate": 120,
+   "keys": 153,
+   "rider_clip": "actor_b-horse-gallop^jump-over",
+   "rider_native_asset_id": "c8a654261a7f0bbce797440a14d81ed156e9a20b3ff75f0079f7494edd68c6cf",
+   "design_speed": 8.5,
+   "takeoff_time": 0.37,
+   "landing_time": 0.84,
+   "launch_speed_rate1": 2.3053,
+   "gravity": 9.81,
+   "stance_windows": {
+    "LF": [
+     [
+      0.0,
+      0.13
+     ],
+     [
+      0.84,
+      0.97
+     ],
+     [
+      1.22,
+      1.35
+     ]
+    ],
+    "RF": [
+     [
+      0.07,
+      0.2
+     ],
+     [
+      0.9,
+      1.03
+     ]
+    ],
+    "LH": [
+     [
+      0.2,
+      0.34
+     ],
+     [
+      0.99,
+      1.12
+     ]
+    ],
+    "RH": [
+     [
+      -0.1,
+      0.02
+     ],
+     [
+      0.23,
+      0.355
+     ],
+     [
+      1.05,
+      1.18
+     ]
+    ]
+   },
+   "clearance": {
+    "0.8": {
+     "max_rail": 1.022690567841732,
+     "best_x": 4.55,
+     "window_060": [
+      3.35,
+      6.25
+     ],
+     "apex_root": 0.4232471892474601
+    },
+    "1.0": {
+     "max_rail": 0.870367562612756,
+     "best_x": 4.55,
+     "window_060": [
+      3.5500000000000003,
+      6.0
+     ],
+     "apex_root": 0.2708782011183745
+    },
+    "1.2": {
+     "max_rail": 0.7876242017476335,
+     "best_x": 4.55,
+     "window_060": [
+      3.75,
+      5.75
+     ],
+     "apex_root": 0.18810986188776008
+    }
+   },
+   "note": "The root (CharacterBody) flies a ballistic arc from takeoff_time to landing_time (clip time); the clip's body height is relative to that lifted root. At playback rate r the launch speed is launch_speed_rate1 / r. clearance: highest rail per rate and the distance from the root at the jump start to the rail (best_x, and the window in which a 0.6 m rail clears).",
+   "diagnostics": {
+    "frames": 39,
+    "length": 1.2667,
+    "loop_close": null,
+    "ground_speed": 8.5,
+    "key_rate": 120,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 120.0,
+     "sink": 0.0049,
+     "drift": 0.0085,
+     "slide_p50": 0.0658,
+     "slide_p95": 0.2722,
+     "slide_max": 2.1195
+    },
+    "joint_rom": {
+     "hip": 90.76,
+     "stifle": 103.16,
+     "hock": 122.0,
+     "fetlock": 55.78
+    },
+    "pelvis_pitch_range": 27.56,
+    "pelvis_roll_range": 0.0,
+    "pelvis_pitch_vs_back_range": 10.98,
+    "max_stretch": {
+     "LF": 1.0095,
+     "RF": 1.0259,
+     "LH": 0.9976,
+     "RH": 0.9972
+    },
+    "reach_err": 0.02565,
+    "saddle_z_p2p": 0.6447,
+    "neck_elevation_deg": 26.86,
+    "poll_height": 1.6171,
+    "td_speed_win": 6.9817,
+    "td_height_win": 0.0448,
+    "td_angle_min": 17.4446,
+    "lo_speed_win": 7.3833,
+    "lo_height_win": 0.0449,
+    "stance_slip": 0.0,
+    "frame_jump": 0.6895,
+    "skate": 0.0,
+    "touchdown_speed": 6.3279,
+    "liftoff_speed": 4.8084,
+    "swing_peak_min": 0.1286,
+    "swing_mid_min": 0.0832,
+    "swing_drag_m": 0.0,
+    "sink": -0.0,
+    "stretch": 1.0259,
+    "neck_elev_mean": 26.8642,
+    "poll_height_mean": 1.6171,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.6895,
+      "skate": 0.0,
+      "touchdown_speed": 1.167,
+      "liftoff_speed": 2.5646,
+      "swing_peak": 0.56,
+      "swing_peak_at": 0.614,
+      "swing_mid_min": 0.1431,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 1.0095,
+      "ev_td_speed": 4.7712,
+      "ev_td_height": 0.1063,
+      "ev_td_angle": 33.7494,
+      "ev_lo_speed": 6.7554,
+      "ev_lo_height": 0.0982
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.6148,
+      "skate": 0.0,
+      "touchdown_speed": 3.7139,
+      "liftoff_speed": 0.4483,
+      "swing_peak": 0.5525,
+      "swing_peak_at": 0.562,
+      "swing_mid_min": 0.402,
+      "swing_drag_m": 0.0,
+      "sink": -0.0,
+      "stretch": 1.0259,
+      "ev_td_speed": 3.7301,
+      "ev_td_height": 0.0599,
+      "ev_td_angle": 25.778,
+      "ev_lo_speed": 7.2153,
+      "ev_lo_height": 0.1155
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.6248,
+      "skate": 0.0,
+      "touchdown_speed": 6.3279,
+      "liftoff_speed": 4.8084,
+      "swing_peak": 0.1286,
+      "swing_peak_at": 0.7,
+      "swing_mid_min": 0.0832,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9976,
+      "ev_td_speed": 6.3302,
+      "ev_td_height": 0.0468,
+      "ev_td_angle": 18.1162,
+      "ev_lo_speed": 7.2997,
+      "ev_lo_height": 0.0449,
+      "hip_rom": 90.0357,
+      "hip_rom_natural": 111.4941,
+      "hip_min": -68.6272,
+      "hip_max": 21.4086,
+      "stifle_rom": 102.0806,
+      "hock_rom": 121.9869,
+      "stifle_range": [
+       73.80106636100577,
+       175.88164904481448
+      ],
+      "hock_range": [
+       50.013081661690606,
+       171.99999999999955
+      ],
+      "stifle_hock_corr": 0.8746,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0078
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.6668,
+      "skate": 0.0,
+      "touchdown_speed": 5.204,
+      "liftoff_speed": 2.4318,
+      "swing_peak": 0.1363,
+      "swing_peak_at": 0.833,
+      "swing_mid_min": 0.1089,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.9972,
+      "ev_td_speed": 6.9817,
+      "ev_td_height": 0.0448,
+      "ev_td_angle": 17.4446,
+      "ev_lo_speed": 7.3833,
+      "ev_lo_height": 0.0735,
+      "hip_rom": 84.9763,
+      "hip_rom_natural": 98.6265,
+      "hip_min": -55.5964,
+      "hip_max": 29.3799,
+      "stifle_rom": 90.0224,
+      "hock_rom": 116.4062,
+      "stifle_range": [
+       77.77883451696557,
+       167.80123329882548
+      ],
+      "hock_range": [
+       54.985494360573576,
+       171.39164977547944
+      ],
+      "stifle_hock_corr": 0.9164,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  },
+  "rear": {
+   "length": 4.0,
+   "frames": 121,
+   "loop": false,
+   "kind": "rear",
+   "key_rate": 30,
+   "keys": 121,
+   "rider_clip": "actor_a-horse-rear",
+   "rider_native_asset_id": "0e8ecd2447f9a534683d596638943b43bc0b2002bebd6e44d4802a1ccdb1e802",
+   "diagnostics": {
+    "frames": 121,
+    "length": 4.0,
+    "loop_close": null,
+    "ground_speed": 0.0,
+    "key_rate": 30,
+    "playback": {
+     "hz": 240.0,
+     "key_rate": 30.0,
+     "sink": 0.0002,
+     "drift": 0.0031,
+     "slide_p50": 0.0003,
+     "slide_p95": 0.0121,
+     "slide_max": 0.2955
+    },
+    "joint_rom": {
+     "hip": 24.71,
+     "stifle": 22.25,
+     "hock": 27.81,
+     "fetlock": 7.39
+    },
+    "pelvis_pitch_range": 42.99,
+    "pelvis_roll_range": 0.0,
+    "pelvis_pitch_vs_back_range": 0.0,
+    "max_stretch": {
+     "LF": 0.9309,
+     "RF": 0.9309,
+     "LH": 0.8973,
+     "RH": 0.8973
+    },
+    "reach_err": 0.0,
+    "saddle_z_p2p": 0.0707,
+    "neck_elevation_deg": 57.58,
+    "poll_height": 1.8778,
+    "td_speed_win": 0.0526,
+    "td_height_win": 0.0025,
+    "td_angle_min": 54.5371,
+    "lo_speed_win": 0.0282,
+    "lo_height_win": 0.0014,
+    "stance_slip": 0.0,
+    "frame_jump": 0.1558,
+    "skate": 0.0526,
+    "touchdown_speed": 0.0526,
+    "liftoff_speed": 0.0282,
+    "swing_peak_min": 1.0163,
+    "swing_mid_min": 0.5848,
+    "swing_drag_m": 0.0166,
+    "sink": -0.0,
+    "stretch": 0.9309,
+    "neck_elev_mean": 57.5808,
+    "poll_height_mean": 1.8778,
+    "legs": {
+     "LF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1558,
+      "skate": 0.0526,
+      "touchdown_speed": 0.0526,
+      "liftoff_speed": 0.0269,
+      "swing_peak": 1.0335,
+      "swing_peak_at": 0.61,
+      "swing_mid_min": 0.5848,
+      "swing_drag_m": 0.0155,
+      "sink": -0.0,
+      "stretch": 0.9309,
+      "ev_td_speed": 0.0526,
+      "ev_td_height": 0.0025,
+      "ev_td_angle": 54.5371,
+      "ev_lo_speed": 0.0269,
+      "ev_lo_height": 0.0015
+     },
+     "RF": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.1232,
+      "skate": 0.0526,
+      "touchdown_speed": 0.0526,
+      "liftoff_speed": 0.0282,
+      "swing_peak": 1.0163,
+      "swing_peak_at": 0.478,
+      "swing_mid_min": 0.6531,
+      "swing_drag_m": 0.0166,
+      "sink": -0.0,
+      "stretch": 0.9309,
+      "ev_td_speed": 0.0526,
+      "ev_td_height": 0.0026,
+      "ev_td_angle": 56.3527,
+      "ev_lo_speed": 0.0282,
+      "ev_lo_height": 0.0014
+     },
+     "LH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.0,
+      "skate": 0.0,
+      "touchdown_speed": null,
+      "liftoff_speed": null,
+      "swing_peak": null,
+      "swing_peak_at": null,
+      "swing_mid_min": null,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8973,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": null,
+      "ev_lo_height": null,
+      "hip_rom": 38.6676,
+      "hip_rom_natural": 38.6676,
+      "hip_min": -33.3064,
+      "hip_max": 5.3612,
+      "stifle_rom": 28.201,
+      "hock_rom": 35.2511,
+      "stifle_range": [
+       81.50013898742169,
+       109.70112040966953
+      ],
+      "hock_range": [
+       92.13694183677492,
+       127.38799488469243
+      ],
+      "stifle_hock_corr": 1.0,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     },
+     "RH": {
+      "stance_slip": 0.0,
+      "frame_jump": 0.0,
+      "skate": 0.0,
+      "touchdown_speed": null,
+      "liftoff_speed": null,
+      "swing_peak": null,
+      "swing_peak_at": null,
+      "swing_mid_min": null,
+      "swing_drag_m": 0.0,
+      "sink": 0.0,
+      "stretch": 0.8973,
+      "ev_td_speed": null,
+      "ev_td_height": null,
+      "ev_td_angle": null,
+      "ev_lo_speed": null,
+      "ev_lo_height": null,
+      "hip_rom": 38.6676,
+      "hip_rom_natural": 38.6676,
+      "hip_min": -33.3064,
+      "hip_max": 5.3612,
+      "stifle_rom": 28.201,
+      "hock_rom": 35.2511,
+      "stifle_range": [
+       81.50013898742169,
+       109.70112040966953
+      ],
+      "hock_range": [
+       92.13694183677492,
+       127.38799488469243
+      ],
+      "stifle_hock_corr": 1.0,
+      "reach_miss_stance": 0.0,
+      "reach_miss_swing": 0.0
+     }
+    }
+   }
+  }
+ },
+ "triangles": {
+  "HorseBody": 25991,
+  "Hooves": 2456,
+  "Eyes": 864,
+  "Mane": 1596,
+  "Forelock": 144,
+  "Tail": 1872,
+  "Feathers": 120,
+  "Saddle": 4997,
+  "SaddleCloth": 1796,
+  "Girth": 600,
+  "Bridle": 2197,
+  "Bit": 498,
+  "StirrupLeather_l": 500,
+  "StirrupIron_l": 700,
+  "StirrupLeather_r": 500,
+  "StirrupIron_r": 700
+ },
+ "triangles_total": 45531,
+ "look": {
+  "coats": [
+   "bay",
+   "brown",
+   "black",
+   "chestnut",
+   "grey",
+   "dun"
+  ],
+  "default_coat": "bay",
+  "materials": {
+   "horse_coat": "assets/horse/materials/horse_coat.gdshader: coat masks, normal, detail and flow textures (assets/horse/textures/horse_coat_*.png, baked by tools/horse/coat.py)",
+   "horse_hair": "assets/horse/materials/horse_hair.gdshader: hair cards (horse_hair_strands.png), alpha scissor, two-sided, anisotropic highlight along the strands",
+   "horse_hoof": "assets/horse/materials/horse_hoof.gdshader: horn with growth rings, light horn under the sock",
+   "horse_eye": "wet dark eye",
+   "tack_leather / tack_bridle": "Poly Haven brown_leather (CC0), tinted",
+   "tack_cloth": "Poly Haven poly_wool_herringbone (CC0) dyed madder red: wool saddle cloth",
+   "tack_girth": "Poly Haven hessian_230 (CC0): woven girth web",
+   "tack_iron": "forged iron (bit, stirrup irons)"
+  },
+  "note": "scripts/horse/horse_look.gd assigns these materials by the glTF material names and applies a coat variant (Horse.coat) through per-instance shader parameters.",
+  "texture_check": [
+   {
+    "uv": [
+     0.841064453125,
+     0.087646484375
+    ],
+    "p": [
+     0.04116547107696533,
+     0.4504464864730835,
+     1.4274483919143677
+    ],
+    "n": [
+     0.08977267994229003,
+     -0.16234523088594016,
+     0.982641792284742
+    ],
+    "flow": [
+     0.045688990453131066,
+     0.9862581016830563,
+     0.1587686147067735
+    ]
+   },
+   {
+    "uv": [
+     0.916748046875,
+     0.763916015625
+    ],
+    "p": [
+     0.10568860173225403,
+     0.5620819330215454,
+     0.32712456583976746
+    ],
+    "n": [
+     -0.8566630240439947,
+     0.5157894632254841,
+     0.009470631518804892
+    ],
+    "flow": [
+     0.024960902688609333,
+     0.059779857108986,
+     -0.9978994548655685
+    ]
+   },
+   {
+    "uv": [
+     0.968017578125,
+     0.688720703125
+    ],
+    "p": [
+     0.09252604842185974,
+     0.4849381744861603,
+     0.06747622787952423
+    ],
+    "n": [
+     -0.8972923772573216,
+     -0.44016081055115236,
+     0.03353879203037965
+    ],
+    "flow": [
+     -0.05935868413962355,
+     0.04502106461784708,
+     -0.9972209636574474
+    ]
+   },
+   {
+    "uv": [
+     0.489501953125,
+     0.107666015625
+    ],
+    "p": [
+     0.1776021420955658,
+     -0.5660089254379272,
+     1.3664031028747559
+    ],
+    "n": [
+     0.6782751730371398,
+     -0.13382189767870853,
+     0.7225195425337
+    ],
+    "flow": [
+     0.6057845694748507,
+     0.6583613459422666,
+     -0.44674981091798677
+    ]
+   },
+   {
+    "uv": [
+     0.427490234375,
+     0.625244140625
+    ],
+    "p": [
+     -0.007889680564403534,
+     -1.0688503980636597,
+     1.7359548807144165
+    ],
+    "n": [
+     -0.09056204564990934,
+     0.13630426414001398,
+     0.9865189625470728
+    ],
+    "flow": [
+     -0.1587660454166718,
+     0.975944485966983,
+     -0.1494178809024976
+    ]
+   },
+   {
+    "uv": [
+     0.281982421875,
+     0.747314453125
+    ],
+    "p": [
+     -0.012410665862262249,
+     -0.806901752948761,
+     0.9775305390357971
+    ],
+    "n": [
+     0.12335273618779262,
+     -0.8696225981499569,
+     -0.47805924241866027
+    ],
+    "flow": [
+     0.09700217313408221,
+     0.4899975790591801,
+     -0.8663099623826381
+    ]
+   },
+   {
+    "uv": [
+     0.566162109375,
+     0.697509765625
+    ],
+    "p": [
+     -0.2355852723121643,
+     -0.559408962726593,
+     1.2719731330871582
+    ],
+    "n": [
+     -0.9722413923851648,
+     -0.06709580174706302,
+     0.2241535819942987
+    ],
+    "flow": [
+     -0.21714696160848898,
+     0.615536793329876,
+     -0.7576025693735304
+    ]
+   },
+   {
+    "uv": [
+     0.096435546875,
+     0.432373046875
+    ],
+    "p": [
+     -0.09476163238286972,
+     -0.5487467646598816,
+     0.5339195728302002
+    ],
+    "n": [
+     0.9466144678092163,
+     0.2983116211356651,
+     -0.12219339601502825
+    ],
+    "flow": [
+     -0.1375029331719116,
+     0.030800243865654973,
+     -0.9900223675993067
+    ]
+   },
+   {
+    "uv": [
+     0.473388671875,
+     0.148681640625
+    ],
+    "p": [
+     0.23800429701805115,
+     -0.5572769045829773,
+     1.2372705936431885
+    ],
+    "n": [
+     0.9724621465951453,
+     0.028403867237099582,
+     0.231323569412067
+    ],
+    "flow": [
+     0.15792799770240445,
+     0.6496150134956673,
+     -0.7436794213790867
+    ]
+   },
+   {
+    "uv": [
+     0.534912109375,
+     0.135498046875
+    ],
+    "p": [
+     0.18217866122722626,
+     -0.719334602355957,
+     1.326527714729309
+    ],
+    "n": [
+     0.9210084631277076,
+     -0.23213486601102984,
+     0.3128207391289448
+    ],
+    "flow": [
+     0.3670655023067903,
+     0.24833704570458148,
+     -0.8964327240495988
+    ]
+   },
+   {
+    "uv": [
+     0.194091796875,
+     0.364990234375
+    ],
+    "p": [
+     -0.1613764762878418,
+     -0.6093848347663879,
+     0.6992864608764648
+    ],
+    "n": [
+     -0.07665548410480456,
+     -0.9955088422062784,
+     -0.05555251430649273
+    ],
+    "flow": [
+     -0.01962751486387815,
+     0.05721230825969339,
+     -0.9981690800880709
+    ]
+   },
+   {
+    "uv": [
+     0.332763671875,
+     0.485107421875
+    ],
+    "p": [
+     0.1398918628692627,
+     0.013203703798353672,
+     0.7908859252929688
+    ],
+    "n": [
+     0.3970769018709431,
+     0.07897592897978539,
+     -0.9143810675218256
+    ],
+    "flow": [
+     -0.47463518614275035,
+     0.8703888637795584,
+     -0.13093764120284937
+    ]
+   },
+   {
+    "uv": [
+     0.524169921875,
+     0.048095703125
+    ],
+    "p": [
+     -0.2237197905778885,
+     -0.45045822858810425,
+     0.7989049553871155
+    ],
+    "n": [
+     -0.654596840244477,
+     0.4312705709864149,
+     -0.6208934460460976
+    ],
+    "flow": [
+     0.3219892010433939,
+     0.902143526063196,
+     0.28715851509871737
+    ]
+   },
+   {
+    "uv": [
+     0.340087890625,
+     0.037841796875
+    ],
+    "p": [
+     0.12540912628173828,
+     -0.5098168253898621,
+     0.4730072319507599
+    ],
+    "n": [
+     -0.8715536665148476,
+     0.48221675499766176,
+     -0.08866345123020518
+    ],
+    "flow": [
+     0.10828066237160257,
+     0.01293552732778223,
+     -0.9940362016994749
+    ]
+   },
+   {
+    "uv": [
+     0.329833984375,
+     0.150146484375
+    ],
+    "p": [
+     0.25619909167289734,
+     -0.15056756138801575,
+     1.1096587181091309
+    ],
+    "n": [
+     0.9782115828521951,
+     -0.05754453532940638,
+     0.19947612796403913
+    ],
+    "flow": [
+     0.12518323819223198,
+     0.9299931757082325,
+     -0.3456036024288861
+    ]
+   },
+   {
+    "uv": [
+     0.091552734375,
+     0.379150390625
+    ],
+    "p": [
+     -0.11347516626119614,
+     -0.5718072056770325,
+     0.37637659907341003
+    ],
+    "n": [
+     0.9974386863772602,
+     -0.06837093287940635,
+     0.021011483888701835
+    ],
+    "flow": [
+     0.026060415635730052,
+     0.07381288139364095,
+     -0.9969315489426851
+    ]
+   },
+   {
+    "uv": [
+     0.609130859375,
+     0.583740234375
+    ],
+    "p": [
+     -0.2574707269668579,
+     -0.2722398340702057,
+     1.049516201019287
+    ],
+    "n": [
+     -0.9928124079682376,
+     -0.05708612137115459,
+     0.10518886505285475
+    ],
+    "flow": [
+     -0.09172224804153474,
+     0.9275207573761196,
+     -0.362342757414353
+    ]
+   },
+   {
+    "uv": [
+     0.639892578125,
+     0.399658203125
+    ],
+    "p": [
+     -0.2244122326374054,
+     0.2232009321451187,
+     0.80237877368927
+    ],
+    "n": [
+     -0.7244058380892566,
+     -0.653972129590741,
+     -0.21807483912811404
+    ],
+    "flow": [
+     -0.19095265863366512,
+     0.49431177151721206,
+     -0.8480524480834016
+    ]
+   },
+   {
+    "uv": [
+     0.656494140625,
+     0.332763671875
+    ],
+    "p": [
+     -0.21993085741996765,
+     0.39884626865386963,
+     0.6968674063682556
+    ],
+    "n": [
+     -0.8872734844022462,
+     -0.14718825716966874,
+     -0.43712856327178207
+    ],
+    "flow": [
+     0.4149302219800933,
+     0.15919237823482676,
+     -0.8958184512497442
+    ]
+   },
+   {
+    "uv": [
+     0.255126953125,
+     0.192138671875
+    ],
+    "p": [
+     0.263746440410614,
+     0.02564367465674877,
+     0.925918459892273
+    ],
+    "n": [
+     0.9550263826831226,
+     0.005918904524686636,
+     -0.2964617596730101
+    ],
+    "flow": [
+     -0.10979585387012657,
+     0.9357937731258267,
+     -0.33501475288688193
+    ]
+   },
+   {
+    "uv": [
+     0.311767578125,
+     0.522705078125
+    ],
+    "p": [
+     0.07771239429712296,
+     -0.1452392041683197,
+     0.7591149806976318
+    ],
+    "n": [
+     0.2089817900820425,
+     0.05241417586125497,
+     -0.9765138839683185
+    ],
+    "flow": [
+     -0.009376506033903593,
+     0.9986241086423795,
+     0.05159429011828059
+    ]
+   },
+   {
+    "uv": [
+     0.249267578125,
+     0.215087890625
+    ],
+    "p": [
+     0.22523438930511475,
+     0.023708047345280647,
+     0.8546574115753174
+    ],
+    "n": [
+     0.7681746945013133,
+     0.023693737948835947,
+     -0.6398017235908527
+    ],
+    "flow": [
+     -0.043938816366880115,
+     0.9989098701916076,
+     -0.01576234912896371
+    ]
+   },
+   {
+    "uv": [
+     0.181396484375,
+     0.094970703125
+    ],
+    "p": [
+     0.2672822177410126,
+     0.3190200924873352,
+     1.1387848854064941
+    ],
+    "n": [
+     0.9910016787602802,
+     0.017528747006713537,
+     0.1326967057717746
+    ],
+    "flow": [
+     0.032698123474878805,
+     0.9296468281081194,
+     -0.3669981031418749
+    ]
+   },
+   {
+    "uv": [
+     0.424072265625,
+     0.281494140625
+    ],
+    "p": [
+     0.2455795854330063,
+     -0.5315220952033997,
+     0.8170912265777588
+    ],
+    "n": [
+     0.9623851335142758,
+     -0.10377243635126487,
+     -0.25108989673906074
+    ],
+    "flow": [
+     0.002816819700893156,
+     0.9279430670421115,
+     -0.3727113224135431
+    ]
+   }
+  ],
+  "texture_check_note": "Blender (horse) space samples of the baked flow texture: uv (Blender, v up), rest position p, normal n and the 3D hair direction the texel encodes. tests/horse/test_horse.gd decodes the texel with Godot's tangent frame and compares (normal-map and flow conventions)."
+ },
+ "source_note": "Procedural (generated). Gait timing from the Actor_B rider clips; no rider animation data is stored in the horse asset."
+}

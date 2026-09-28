@@ -1,0 +1,85 @@
+{
+ "meta": {
+  "generator": "tests/traversal/test_traversal_perf.gd",
+  "note": "headless, CPU only, GDScript; wall-clock on the machine that ran it",
+  "budgets_ms": {
+   "probe_mean": 0.35,
+   "probe_p95": 0.8,
+   "solve_max": 6.0,
+   "ik_mean": 0.4,
+   "ik_max": 1.2,
+   "state_mean": 0.15,
+   "inertializer_mean": 0.15,
+   "inertializer_p99": 0.5
+  }
+ },
+ "probe_select_ms": {
+  "calls": 800,
+  "mean": 0.156505,
+  "p95": 0.638,
+  "max": 5.452
+ },
+ "solve_ms": {
+  "beam_enter": 0.96,
+  "beam_exit": 1.35,
+  "beam_loop": 0.77,
+  "climb_chest": 3.57,
+  "climb_hang_3m": 4.47,
+  "climb_hang_3m_idle": 5.32,
+  "crawl_end": 1.28,
+  "crawl_loop": 0.8,
+  "crawl_start": 1.1,
+  "drop_fall": 0.35,
+  "drop_hop": 0.2,
+  "gap_jump": 0.96,
+  "ladder_climb_down": 0.98,
+  "ladder_climb_up": 0.27,
+  "ladder_dismount_bottom": 0.49,
+  "ladder_dismount_top": 1.35,
+  "ladder_down_a": 1.38,
+  "ladder_down_b": 1.48,
+  "ladder_down_idle": 0.49,
+  "ladder_down_idle_flip": 0.55,
+  "ladder_idle": 6.81,
+  "ladder_mount_bottom": 0.58,
+  "ladder_mount_top": 4.24,
+  "ladder_up_a": 0.34,
+  "ladder_up_b": 0.89,
+  "ladder_up_idle": 1.65,
+  "ladder_up_idle_flip": 1.49,
+  "land_idle": 0.97,
+  "land_run": 1.99,
+  "land_soft": 0.36,
+  "long_jump": 1.63,
+  "mantle_1_5m": 2.67,
+  "mantle_1m_idle": 1.48,
+  "mantle_1m_run": 2.0,
+  "shimmy_enter": 1.92,
+  "shimmy_exit": 1.31,
+  "shimmy_idle": 3.59,
+  "shimmy_loop": 1.64,
+  "shimmy_start": 0.94,
+  "shimmy_stop": 1.28,
+  "squeeze": 5.1,
+  "step_on": 0.74,
+  "step_over": 0.75,
+  "vault_idle": 3.58,
+  "vault_sprint": 1.08,
+  "vault_tall_fall": 2.83
+ },
+ "ik_ms": {
+  "frames": 5304,
+  "mean": 0.296203619909502,
+  "p99": 0.636,
+  "max": 0.926
+ },
+ "inertializer_ms": {
+  "frames": 8294,
+  "mean": 0.0102982879189779,
+  "p99": 0.038
+ },
+ "anim_state_ms": {
+  "mean": 0.0149200603318251
+ },
+ "failures": 0
+}

@@ -1,0 +1,58 @@
+{
+  "source": "assets/polyhaven/hdri/qwantani_late_afternoon_puresky_2k.hdr",
+  "output": "assets/environment/sky/qwantani_late_afternoon_nosun_2k.exr",
+  "size": [
+    2048,
+    1024
+  ],
+  "sun_native_azimuth_deg": 216.129,
+  "sun_elevation_deg": 19.077,
+  "sun_native_direction": [
+    -0.55723,
+    0.32684,
+    0.76333
+  ],
+  "panorama_convention": "u = atan2(x, -z) / 2pi (0 = north = -Z, 0.25 = east = +X), v = acos(y) / pi",
+  "removed_sun_normal_irradiance_rgb": [
+    9.2069,
+    7.4117,
+    5.262
+  ],
+  "removed_sun_normal_irradiance_lum": 7.6382,
+  "removed_solid_angle_sr": 0.010416368980430461,
+  "spike_pixels_clamped": 1033,
+  "disc_radius_deg": 1.2,
+  "aureole_fit_rgb_slope_intercept": [
+    [
+      -1.6128,
+      3.8083
+    ],
+    [
+      -1.492,
+      3.5649
+    ],
+    [
+      -1.3021,
+      3.1723
+    ]
+  ],
+  "sun_color_linear": [
+    1.0,
+    0.805,
+    0.5715
+  ],
+  "sun_color_srgb": [
+    1.0,
+    0.9088,
+    0.7806
+  ],
+  "godot_light_energy_for_sky_energy_1": 2.9307,
+  "sky_horizontal_irradiance_rgb": [
+    1.0561,
+    1.3634,
+    1.8189
+  ],
+  "sun_horizontal_irradiance_lum": 2.4964,
+  "sky_horizontal_irradiance_lum": 1.331,
+  "processed_max_luminance": 28.949
+}

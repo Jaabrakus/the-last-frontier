@@ -1,0 +1,212 @@
+{
+ "id": "stock_linen",
+ "name": "Neck stock",
+ "description": "A band of pleated white linen round the neck, fastened behind with a small buckle.",
+ "kind": "garment",
+ "set": "militia",
+ "slot": "accessories.neck",
+ "alt_slots": [],
+ "layer": {
+  "default": 20
+ },
+ "glb": "res://assets/character/garments/militia/stock_linen.glb",
+ "mesh": "stock_linen",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "stock_linen"
+  }
+ ],
+ "occupies_regions": [
+  "neck_lower"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "stock",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "linen_white",
+    "linen_unbleached",
+    "logwood_black"
+   ],
+   "default": "linen_white",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "linen_white": "#E8E3D3",
+    "linen_unbleached": "#C8BA9A",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "buckle",
+   "role": "metal",
+   "fabric": "MET",
+   "palette": [
+    "brass",
+    "pewter",
+    "silver"
+   ],
+   "default": "pewter",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "brass": "#B58F4A",
+    "pewter": "#9A9C9A",
+    "silver": "#C8CACC"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": true
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 779,
+    "verts": 453,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "neck_lower",
+     "neck_upper"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "r_clavicle",
+     "neck",
+     "heada",
+     "headb",
+     "l_shoulder_twist_a",
+     "r_shoulder_twist_a"
+    ]
+   }
+  },
+  "tris": 779,
+  "verts": 453,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0135
+  },
+  "glb_kb": 136.5
+ },
+ "budget": {
+  "tris_max": 800
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "The everyday neckwear of the period: a linen stock buckled behind, or a roller or kerchief.",
+ "sources": [
+  "R20",
+  "M3"
+ ],
+ "aliases": [],
+ "tags": [
+  "militia",
+  "frontier",
+  "regulars"
+ ],
+ "checks": {
+  "envelope": {
+   "ok": true,
+   "layer": "mid",
+   "groups": {
+    "head": {
+     "n": 1,
+     "min": 0.0079,
+     "max": 0.0079,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    },
+    "neck": {
+     "n": 452,
+     "min": -0.0168,
+     "max": 0.0091,
+     "below_inner": 0,
+     "above_outer": 0,
+     "band": [
+      null,
+      null
+     ]
+    }
+   }
+  }
+ },
+ "generator": "tools/character/garments/militia/stock_linen.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/stock_linen.py.",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "deform_limits": {
+  "stock_linen": [
+   0.005,
+   0.005,
+   0.009,
+   3.1
+  ]
+ },
+ "coverage": {
+  "method": "rays from the skin (the region's vertices and triangle centres), female and male fit: hidden when every normal ray and 99.5 % of the rays tilted 28 deg hit the garment",
+  "hidden": [],
+  "not_hidden_candidates": {
+   "neck_lower": 0.452
+  },
+  "share": {
+   "head": {
+    "normal": 0.002,
+    "cone": 0.0
+   },
+   "neck_upper": {
+    "normal": 0.251,
+    "cone": 0.0
+   },
+   "neck_lower": {
+    "normal": 0.452,
+    "cone": 0.452
+   }
+  }
+ },
+ "fit_check": {
+  "female": {
+   "min_mm": 1.03,
+   "p05_mm": 1.81,
+   "inside_skin": 0
+  },
+  "male": {
+   "min_mm": 0.87,
+   "p05_mm": 1.64,
+   "inside_skin": 0
+  }
+ }
+}

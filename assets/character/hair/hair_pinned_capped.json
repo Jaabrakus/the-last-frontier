@@ -1,0 +1,140 @@
+{
+ "id": "hair_pinned_capped",
+ "name": "Pinned up",
+ "description": "Long hair parted in the middle, drawn back and pinned up at the back of the head, to be worn under a linen cap.",
+ "kind": "hair",
+ "set": "hair",
+ "slot": "hair",
+ "alt_slots": [],
+ "layer": {
+  "default": 70
+ },
+ "glb": "res://assets/character/hair/hair_pinned_capped.glb",
+ "mesh": "hair_pinned_capped",
+ "surfaces": [
+  {
+   "surface": "strands",
+   "name": "hair_pinned_capped_tex"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [
+  "crown",
+  "sides",
+  "back"
+ ],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "hair",
+   "role": "hair",
+   "fabric": "FLAT",
+   "palette": [],
+   "default": null,
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {}
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "strands": {
+    "tris": 13124,
+    "verts": 13724,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "hair_back",
+     "hair_crown",
+     "hair_sides"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "spined",
+     "neck",
+     "heada",
+     "headb"
+    ]
+   }
+  },
+  "tris": 13124,
+  "verts": 13724,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0349,
+   "sex_head": 0.0349,
+   "face_breadth": 0.0,
+   "face_length": 0.0,
+   "face_jaw_width": 0.0004,
+   "face_jaw_angle": 0.0004,
+   "face_chin_projection": 0.0,
+   "face_chin_width": 0.0,
+   "face_chin_height": 0.0,
+   "face_cheekbones": 0.0,
+   "face_midface": 0.0,
+   "face_cheek_fullness": 0.0,
+   "face_prognathism": 0.0,
+   "face_brow_ridge": 0.0,
+   "face_eye_depth": 0.0,
+   "face_lid_crease": 0.0,
+   "face_lid_fold": 0.0,
+   "face_under_eye": 0.0,
+   "face_nasal_root": 0.0,
+   "face_nose_bridge": 0.0,
+   "face_nose_hump": 0.0,
+   "face_nose_width": 0.0,
+   "face_nose_length": 0.0,
+   "face_nose_tip": 0.0,
+   "face_nose_upturn": 0.0,
+   "face_lips_upper": 0.0,
+   "face_lips_lower": 0.0,
+   "hat_fit": 0.0052
+  },
+  "glb_kb": 2861.1
+ },
+ "budget": {
+  "tris_max": 13500
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Colonial women pinned their hair up under a linen cap; a hat went over the cap outdoors.",
+ "sources": [
+  "R13",
+  "M16"
+ ],
+ "aliases": [],
+ "tags": [
+  "women",
+  "militia",
+  "frontier",
+  "regulars"
+ ],
+ "checks": {},
+ "generator": "tools/character/hair/hair_pinned_capped.py",
+ "lib_version": 1,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_pinned_capped.py.",
+ "hair": {
+  "queue": false,
+  "texture": "straight",
+  "part": "centre",
+  "strand_map": "res://assets/character/hair/tex/hair_atlas.png",
+  "builder": "hair v3 recipe",
+  "scalp_mask": "res://assets/character/hair/tex/hair_pinned_capped_scalp.png",
+  "edge_feather": 0.3
+ }
+}
