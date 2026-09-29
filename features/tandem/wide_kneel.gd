@@ -65,6 +65,9 @@ func react(kind: String, gauge := 1.0) -> bool:
 	_playing = CLIPS.variant(ap, &"wide_kneel", kind, gauge)
 	ap.play(_playing, 0.08)
 	ap.seek(0.0, true)
+	# her breasts jolt with it, as full as the flinch (FrontierTandem.jiggle)
+	var tandem := player.get_node_or_null("TandemPoses")
+	if tandem != null: tandem.jiggle(player, gauge)
 	return true
 func _gauge() -> float:
 	return base.flinch_gauge() if is_instance_valid(base) else 1.0

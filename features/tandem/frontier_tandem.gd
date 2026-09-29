@@ -298,6 +298,15 @@ func _lead_reacts() -> void:
 	if not is_instance_valid(base_pose): return
 	if mode == "crawl": base_pose.flinch("partner", flinch_gauge())
 	else: base_pose.flinch(0.0, flinch_gauge())
+	jiggle(player, flinch_gauge())
+
+## Her breasts jolt with her flinch (CharacterBodyMesh.breast_jolt), as full as the flinch plays (the flinch gauge from
+## the man's genital rating; the user 2026-09-29); a man's chest none. The crawl and Happy Baby here, the Wide Kneel
+## (wide_kneel.gd react) too.
+func jiggle(p: FrontierPlayer, strength: float) -> void:
+	if not is_instance_valid(p) or not is_woman(p) or not is_instance_valid(p.skeleton): return
+	var body := p.skeleton.get_node_or_null("Body") as CharacterBodyMesh
+	if body != null: body.breast_jolt(strength)
 
 ## The genital stat of a man's look (-1..1). A partner who is not a man has none (NAN).
 func genital_stat(p: FrontierPlayer) -> float:
@@ -319,8 +328,9 @@ func flinch_gauge() -> float:
 
 ## The lead's own backward flinch; her partner rocks back after it (his own backward flinch, at the gauge).
 func lead_backward() -> void:
-	if mode == "crawl" and base_pose.flinch_backward() and joined:
-		_partner_back.append(reaction_delay)
+	if mode == "crawl" and base_pose.flinch_backward():
+		jiggle(player, flinch_gauge() if joined else 1.0)
+		if joined: _partner_back.append(reaction_delay)
 
 func partner_reaction() -> void:
 	if mode == "crawl" and joined and base_pose.stamina > 0 and partner_pose.flinch(flinch_gauge()):

@@ -286,6 +286,8 @@ const BREAST_MAX := 0.04            # m: the shown offset approaches this softly
 const BREAST_ACCEL_MAX := 40.0      # m/s^2: a teleport or a cut is not a jolt
 const SOFT_HELD := 0.5
 const SOFT_SUBSTEP := 1.0 / 120.0   # s: the springs' longest step
+## A flinch's jolt (breast_jolt): the springs' velocity kicked up and forward (m/s, chest bind frame: y up, z forward).
+const BREAST_JOLT := Vector3(0.0, 0.85, 0.35)
 ## The male genitals (body v4): on an unused rig bone (GENITAL_HELPER: keyed by the clips, no mesh
 ## used it; like the queue's wrinklemaps), always carried by the pelvis. Bare (`genital_swing` 1:
 ## BodyMaterials, a man with nothing over the pelvis) they bounce on a small spring (the offset, pelvis
@@ -1278,6 +1280,18 @@ func _soft(sk: Skeleton3D) -> void:
 			d.n = int(d.n) + 1
 		d.pp = p
 		sk.set_bone_global_pose(d.bone, _breast_global(gc, d))
+
+
+## A flinch jolts the breasts (features/tandem: a woman's flinch in the tandem poses, as full as the pair's flinch gauge
+## from the man's genital rating; the user 2026-09-29: "women breast jiggle effects on flinch based on the male
+## gentials ratings"): each spring's velocity is kicked by BREAST_JOLT x `strength`, the two a little unevenly, and they
+## bounce and settle as they do after a landing. Held by clothes the springs are stiffer and settle sooner: the kick is
+## up to twice as hard there so it still shows.
+func breast_jolt(strength: float) -> void:
+	var held := clampf(soft_support, 0.0, 1.0)
+	for i in _breasts.size():
+		var d: Dictionary = _breasts[i]
+		d.v = (d.v as Vector3) + BREAST_JOLT * strength * (1.0 + held) * (1.08 if i == 0 else 0.92)
 
 
 ## A damped spring x'' = -k x - c x' + f over `dt`, in steps of at most SOFT_SUBSTEP (stable at any
