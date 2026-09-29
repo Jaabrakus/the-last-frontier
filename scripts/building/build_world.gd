@@ -10,7 +10,7 @@ extends Node3D
 ##   w.dependents(p)                                     # pieces resting on it
 ##   w.remove_piece(p)
 ##
-## Nothing is saved: like the felled trees, a new game starts without the buildings.
+## Saved with the game (SaveParts.save_building / load_building).
 
 signal changed
 
@@ -22,6 +22,13 @@ var next_id := 1
 ## Riven-shingle courses on the roofs (off: the flat shingle deck of the low preset, like the fort).
 var detail := true
 var grass := BuildGrass.new()
+## The fort's furnishing (FortPlan) has been built into this world (saved: a loaded game is not given it twice).
+var stamped := false
+## The fort's structure (FortPlan: palisade, gate, firing step, ramps, ladders, blockhouses, flag pole) has been built into
+## this world (saved: a loaded game is not given it twice; a save from before it existed is given it).
+var fort_built := false
+## Strokes done on the palisade pieces being cut (PalisadeCuts): key -> work.
+var cut_work := {}
 
 
 ## The level's building node (made under the current scene when `create`).
@@ -42,6 +49,7 @@ static func of(tree: SceneTree, create := true) -> BuildWorld:
 
 func _exit_tree() -> void:
 	BuildGeometry.release()
+	PalisadeCuts.release()
 
 
 func _process(_delta: float) -> void:

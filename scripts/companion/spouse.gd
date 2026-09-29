@@ -33,6 +33,10 @@ const ARRIVE := 0.9
 ## Forage and firewood spots: this far from home (m).
 const WOODS_RANGE := Vector2(18.0, 42.0)
 const KEEP := &"spouse"
+## Her stations (woodpile, smokehouse, rack, frame, hoop) are within this of the hearth (m); her chores at the others too.
+const HOUSE_RANGE := 16.0
+## The stations she idles at, as chores when she has no task (CampStation kinds).
+const CHORE_KINDS := ["workbench", "tanning_frame", "stretching_hoop", "drying_rack", "alchemy_table", "work_stone", "forge"]
 
 var sc: SpouseCore
 var player: Node3D
@@ -57,15 +61,21 @@ var _stuck_t := 0.0
 var _last := Vector3.ZERO
 var _look_at := Vector3.ZERO
 var _look_on := false
+## BABY (scripts/companion/baby_link.gd): while valid it is called each physics frame as errand(dt) and answers [direction, speed]
+## (her walk to the cradle or the player) or null (no errand now); it takes precedence over her work and chores. `idle_clip` is
+## the clip she stands in when not walking ("" the plain idle): the sit and kneel of feeding and changing the baby.
+var errand := Callable()
+var idle_clip := ""
 ## Her chores when there is no task: a spot to go to, and how long she works at it (s); 0 when she is not at one.
 var _chore := false
 var _chore_len := 0.0
 var _chore_wait := 0.0
+var _chore_face := Vector3.INF
 
 
 static func spawn(parent: Node, core: SpouseCore, p: Node3D, at: Vector3) -> Spouse:
 	var s := Spouse.new()
-	s.name = "Spouse"
+	s.name = "Spouse" if core.worker_id == 0 else "Worker%d" % core.worker_id
 	s.sc = core
 	s.player = p
 	s.home = at
@@ -92,6 +102,13 @@ func _ready() -> void:
 	if sc:
 		sc.carcass_finder = _carcass_near_home
 		sc.fire_finder = _fire_needing_wood
+		sc.finders = {
+			"pile": func() -> Object: return HouseholdSites.low_pile(get_tree(), hearth, HOUSE_RANGE),
+			"smoke": func() -> Object: return HouseholdSites.smokehouse(get_tree(), hearth, HOUSE_RANGE),
+			"rack": func() -> Object: return _lit_rack(),
+			"frame": func() -> Object: return HouseholdSites.station(get_tree(), "tanning_frame", hearth, HOUSE_RANGE, CampStation.TAN_FIRE_M),
+			"hoop": func() -> Object: return HouseholdSites.station(get_tree(), "stretching_hoop", hearth, HOUSE_RANGE),
+		}
 		sc.task_finished.connect(_on_task_finished)
 
 
@@ -138,7 +155,15 @@ func _physics_process(dt: float) -> void:
 		return
 	var move := Vector3.ZERO
 	var speed := WALK_SPEED
-	if _phase != "":
+	var baby_errand: Variant = errand.call(dt) if errand.is_valid() else null   # BABY
+	if baby_errand is Array:
+		if _phase != "":
+			_phase = ""
+			_chore = false
+			_clip = ""
+		move = baby_errand[0]
+		speed = baby_errand[1]
+	elif _phase != "":
 		_work_step(dt)
 	elif sc.busy():
 		# a task began where she stands: kneel to it
@@ -148,7 +173,7 @@ func _physics_process(dt: float) -> void:
 		var d := _decide(dt)
 		move = d[0]
 		speed = d[1]
-	_move(move, speed, dt)
+	_move(move, speed * Pregnancy.speed_mult(sc.pregnancy, sc.core.state.minutes), dt)   # PREGNANCY: slower late on
 
 
 ## What she does now when not at work: [direction, speed].
@@ -196,8 +221,16 @@ func _chores(dt: float) -> Array:
 		_chore_wait -= dt
 		if _chore_wait > 0.0:
 			return [Vector3.ZERO, 0.0]
-		var centre := hearth if _rng.randf() < 0.6 else home
-		var p := centre + _ring(_rng.randf_range(1.0, 5.0))
+		_chore_face = Vector3.INF
+		var p := Vector3.ZERO
+		var st: Node3D = _chore_station() if _rng.randf() < 0.45 else null
+		if st != null:
+			# a spell at a bench, frame or hoop: beside it, turned to it
+			_chore_face = st.global_position
+			p = st.global_position + _ring(1.3)
+		else:
+			var centre := hearth if _rng.randf() < 0.6 else home
+			p = centre + _ring(_rng.randf_range(1.0, 5.0))
 		p.y = global_position.y
 		_goal = p
 		_has_goal = true
@@ -213,7 +246,8 @@ func _chores(dt: float) -> Array:
 	_chore_wait = _rng.randf_range(2.0, 6.0)
 	_chore_len = _rng.randf_range(6.0, 14.0)
 	_chore = true
-	_look_on = false
+	_look_on = _chore_face != Vector3.INF
+	_look_at = _chore_face
 	_phase = "in"
 	_phase_t = 0.0
 	_play_work(CLIP_WORK_IN)
@@ -226,6 +260,7 @@ func _plan_check() -> void:
 		_plan = {}
 		_has_goal = false
 		_stuck_t = 0.0
+		sc.abandon_plan()
 		sc._cool = SpouseCore.RETRY_MIN * 0.3
 
 
@@ -245,18 +280,45 @@ func _site_for(plan: Dictionary) -> Vector3:
 	match String(plan.site):
 		"home":
 			return hearth + _ring(1.1)
-		"carcass":
-			var a := sc.carcass_finder.call() as Node3D
-			return (a.global_position + _ring(1.2)) if a else home
-		"fire":
-			var f := sc.fire_finder.call() as Node3D
-			return (f.global_position + _ring(1.5)) if f else home
+		"carcass", "fire", "pile", "smoke", "rack", "frame", "hoop":
+			# the station or carcass the plan claimed (the finders, when it names none)
+			var o: Object = plan.get("obj")
+			var at := _pos_of(o if o != null and is_instance_valid(o) else sc.find_site(String(plan.site)))
+			var reach := 1.2 if String(plan.site) == "carcass" else 1.5
+			return (at + _ring(reach)) if at != Vector3.INF else home
 	# the woods: a spot round home, on the ground
 	var ang := _rng.randf() * TAU
 	var r := _rng.randf_range(WOODS_RANGE.x, WOODS_RANGE.y)
 	var p := home + Vector3(cos(ang), 0.0, sin(ang)) * r
 	p.y = FrontierTerrain.height_at(p.x, p.z)
 	return p
+
+
+## Where a station object is (Vector3.INF: not a place).
+func _pos_of(o: Object) -> Vector3:
+	if o is Node3D:
+		return (o as Node3D).global_position
+	if o != null and o.has_method("pos"):
+		return o.pos()
+	return Vector3.INF
+
+
+## A drying rack with a lit campfire beside it (the meat hangs over the fire).
+func _lit_rack() -> Object:
+	var st := HouseholdSites.station(get_tree(), "drying_rack", hearth, HOUSE_RANGE, CampStation.DRY_FIRE_M) as Node3D
+	if st != null and HouseholdSites._lit_fire_near(get_tree(), st.global_position, CampStation.DRY_FIRE_M):
+		return st
+	return null
+
+
+## A station of one of her chore kinds within reach of the house, picked at random (null: none).
+func _chore_station() -> Node3D:
+	var opts: Array[Node3D] = []
+	for n in get_tree().get_nodes_in_group(BuiltPiece.GROUP):
+		var st := (n as Node).get_node_or_null("Station") as CampStation
+		if st != null and st.kind in CHORE_KINDS and st.global_position.distance_to(hearth) <= HOUSE_RANGE:
+			opts.append(st)
+	return opts[_rng.randi() % opts.size()] if not opts.is_empty() else null
 
 
 func _ring(r: float) -> Vector3:
@@ -279,12 +341,13 @@ func _fire_needing_wood() -> Object:
 	return best
 
 
-func _carcass_near_home() -> Object:
+## The carcass nearest the hearth that is worth working, passing over the ids in `skip` (another worker has it).
+func _carcass_near_home(skip: Array = []) -> Object:
 	var best: Object = null
 	var bd := 30.0
 	for n in get_tree().get_nodes_in_group(&"carcasses"):
 		var a := n as Node3D
-		if a == null or not is_instance_valid(a) or a.get("meat_left") == null:
+		if a == null or not is_instance_valid(a) or a.get("meat_left") == null or skip.has(a.get_instance_id()):
 			continue
 		if float(a.get("meat_left")) <= 0.02 or a.get("dress_step") == null or int(a.get("dress_step")) >= 2:
 			continue
@@ -304,15 +367,11 @@ func _start_work() -> void:
 	if sc.task == "cook":
 		_look_at = hearth
 		_look_on = true
-	elif sc.task == "butcher":
-		var a := sc.carcass_finder.call() as Node3D
-		if a:
-			_look_at = a.global_position
-			_look_on = true
-	elif sc.task == "tend":
-		var f := sc.fire_finder.call() as Node3D
-		if f:
-			_look_at = f.global_position
+	elif SpouseCore.site_of(sc.task) not in ["home", "woods"]:
+		# faces the station, fire or carcass the job works at
+		var at := _pos_of(sc.site_object())
+		if at != Vector3.INF:
+			_look_at = at
 			_look_on = true
 	_show(CLIP_WORK)
 	_clip = ""
@@ -355,6 +414,7 @@ func _work_step(dt: float) -> void:
 
 func _on_task_finished(_task: String, _text: String) -> void:
 	_plan = {}
+	sc.abandon_plan()
 
 
 func _len(clip: String) -> float:
@@ -381,7 +441,7 @@ func _move(dir: Vector3, speed: float, dt: float) -> void:
 		v.x = move_toward(v.x, 0.0, 12.0 * dt)
 		v.z = move_toward(v.z, 0.0, 12.0 * dt)
 		if _phase == "":
-			_show(CLIP_IDLE)
+			_show(CLIP_IDLE if idle_clip == "" else idle_clip)   # BABY: idle_clip while sitting or kneeling with the baby
 	velocity = v
 	rotation.y = lerp_angle(rotation.y, _face, clampf(dt * 10.0, 0.0, 1.0))
 	move_and_slide()
@@ -426,9 +486,18 @@ func interact(_p: Node) -> void:
 
 
 func interact_actions(_p: Node) -> Array:
-	return [{"id": "talk", "text": "Talk to %s" % sc.name}, {"id": "manage", "text": "Household"}]
+	var out := [{"id": "talk", "text": "Talk to %s" % sc.name}, {"id": "manage", "text": "Household"}]
+	var h := Household.find(get_tree())
+	if h != null and h.link != null and h.link.following() and sc == h.sc:
+		out.push_front({"id": "yoga", "text": "Choose a yoga pose"})   # she follows for yoga: E asks for the pose
+	return out
 
 
 func interact_action(_p: Node, id: String) -> void:
+	if id == "yoga":
+		var h := Household.find(get_tree())
+		if h != null and h.link != null:
+			h.link.request_pose()
+		return
 	talk_requested.emit(self, "tasks" if id == "manage" else "talk")
 

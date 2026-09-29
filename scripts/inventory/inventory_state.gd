@@ -30,6 +30,12 @@ const NAMES := {"musket": "Flintlock Musket", "over_under": "Over-and-Under", "b
 		"jimsonweed": "Jimsonweed", "crabapples": "Crabapples",
 		# the woods' own materials (ForageField: arrowwood, pine pitch, turkey scratchings)
 		"shoots": "Straight Shoots", "pine_pitch": "Pine Pitch", "feathers": "Turkey Feathers",
+		# farming (data/farming/farming.json): the hoe, the digging stick, seed and the crops
+		"hoe": "Hoe", "digging_stick": "Digging Stick", "seed_corn": "Seed Corn", "seed_beans": "Bean Seed",
+		"seed_squash": "Squash Seed", "seed_tobacco": "Tobacco Seed", "seed_flax": "Flaxseed", "corn": "Ear of Corn",
+		"roast_corn": "Roasted Corn", "charred_corn": "Charred Corn", "beans": "Beans", "bean_pot": "Boiled Beans",
+		"scorched_beans": "Scorched Beans", "squash": "Squash", "roast_squash": "Roasted Squash",
+		"charred_squash": "Charred Squash", "tobacco_leaves": "Tobacco Leaves", "flax": "Flax",
 		# provisions (data/survival/game_items.json): the kit's food
 		"jerky": "Jerky", "cornmeal": "Cornmeal",
 		# cooked on a campfire (CampCooking)

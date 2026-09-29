@@ -1,0 +1,294 @@
+{
+ "format": "frontier-farming",
+ "version": 1,
+ "summary": "Farming (user 2026-09-28: \"add farming into the game\"; picked: a growing season sped up, hoe any open ground, the Three Sisters plus tobacco and flax, a crafted hoe): a bed is broken out of open ground with the hoe (or the digging stick), sown with seed from the pack (E), weeded with the hoe as it grows, and harvested (E) when ripe; the crops grow on the survival clock (a sleep moves them on), rain helps, frost kills what is not ripe. The Husbandry skill grows from it (GatherSkills). scripts/farming/. Every number is a design value (basis D) and tunable.",
+ "sources_note": "Corn, beans and squash planted together in hills, the Haudenosaunee women's way [the survival backlog's farm.plant_corn]; tobacco and flax were the backcountry's cash and fibre crops. Growth is sped up to 3-4 game days (a game year is 36 days, a game day a third of a month): a crop sown in early September, when a new game starts, is ripe in October, before the frost of early November.",
+ "bed_m": 2.0,
+ "reach_m": 2.2,
+ "aim_m": 1.3,
+ "max_slope_y": 0.9,
+ "till_work": 5.0,
+ "weed_work": 2.0,
+ "retill_after_harvest": 0.6,
+ "sow_window": [
+  "mar_early",
+  "oct_late"
+ ],
+ "frozen_window": [
+  "dec_early",
+  "feb_late"
+ ],
+ "frost_window": [
+  "nov_early",
+  "feb_late"
+ ],
+ "rain_bonus": 0.1,
+ "rain_hours_full": 12.0,
+ "weed_thresholds": [
+  0.33,
+  0.66
+ ],
+ "yield_base": 0.8,
+ "yield_per_weeding": 0.1,
+ "skill_yield_at_100": 0.5,
+ "seed_pouch": {
+  "seed_corn": 6,
+  "seed_beans": 6,
+  "seed_squash": 4,
+  "seed_tobacco": 3,
+  "seed_flax": 4
+ },
+ "sowings": {
+  "three_sisters": {
+   "name": "the Three Sisters",
+   "text": "Sow corn, beans and squash together (the Three Sisters)",
+   "seeds": {
+    "seed_corn": 1,
+    "seed_beans": 1,
+    "seed_squash": 1
+   },
+   "crops": [
+    "corn",
+    "beans",
+    "squash"
+   ],
+   "grow_days": 4.0,
+   "bonus": 1.15,
+   "note": "The beans climb the corn and the squash shades the ground: together they yield more than apart."
+  },
+  "corn": {
+   "name": "corn",
+   "text": "Sow corn",
+   "seeds": {
+    "seed_corn": 1
+   },
+   "crops": [
+    "corn"
+   ],
+   "grow_days": 4.0
+  },
+  "beans": {
+   "name": "beans",
+   "text": "Sow beans",
+   "seeds": {
+    "seed_beans": 1
+   },
+   "crops": [
+    "beans"
+   ],
+   "grow_days": 3.0
+  },
+  "squash": {
+   "name": "squash",
+   "text": "Sow squash",
+   "seeds": {
+    "seed_squash": 1
+   },
+   "crops": [
+    "squash"
+   ],
+   "grow_days": 3.0
+  },
+  "tobacco": {
+   "name": "tobacco",
+   "text": "Set out tobacco",
+   "seeds": {
+    "seed_tobacco": 1
+   },
+   "crops": [
+    "tobacco"
+   ],
+   "grow_days": 4.0
+  },
+  "flax": {
+   "name": "flax",
+   "text": "Sow flax",
+   "seeds": {
+    "seed_flax": 1
+   },
+   "crops": [
+    "flax"
+   ],
+   "grow_days": 3.0
+  }
+ },
+ "order": [
+  "three_sisters",
+  "corn",
+  "beans",
+  "squash",
+  "tobacco",
+  "flax"
+ ],
+ "crops": {
+  "corn": {
+   "name": "corn",
+   "item": "corn",
+   "yield": [
+    6,
+    9
+   ],
+   "seed": "seed_corn",
+   "seed_back": [
+    1,
+    2
+   ],
+   "sisters_yield": [
+    5,
+    8
+   ]
+  },
+  "beans": {
+   "name": "beans",
+   "item": "beans",
+   "yield": [
+    3,
+    5
+   ],
+   "seed": "seed_beans",
+   "seed_back": [
+    1,
+    2
+   ],
+   "sisters_yield": [
+    2,
+    4
+   ]
+  },
+  "squash": {
+   "name": "squash",
+   "item": "squash",
+   "yield": [
+    2,
+    4
+   ],
+   "seed": "seed_squash",
+   "seed_back": [
+    1,
+    2
+   ],
+   "sisters_yield": [
+    2,
+    3
+   ]
+  },
+  "tobacco": {
+   "name": "tobacco",
+   "item": "tobacco_leaves",
+   "yield": [
+    4,
+    7
+   ],
+   "seed": "seed_tobacco",
+   "seed_back": [
+    1,
+    2
+   ]
+  },
+  "flax": {
+   "name": "flax",
+   "item": "flax",
+   "yield": [
+    4,
+    6
+   ],
+   "seed": "seed_flax",
+   "seed_back": [
+    1,
+    2
+   ]
+  }
+ },
+ "items": {
+  "hoe": {
+   "name": "Hoe",
+   "tag": "Tool",
+   "text": "A broad iron blade on a straight haft: breaks ground for a bed and keeps the weeds down."
+  },
+  "digging_stick": {
+   "name": "Digging Stick",
+   "tag": "Tool",
+   "text": "A hardwood stick, its point hardened in the fire: breaks ground slowly where there is no hoe."
+  },
+  "seed_corn": {
+   "name": "Seed Corn",
+   "tag": "Seed",
+   "text": "Flint corn kept back from the harvest: a few kernels to a hill."
+  },
+  "seed_beans": {
+   "name": "Bean Seed",
+   "tag": "Seed",
+   "text": "Dry beans kept for sowing: they climb the corn."
+  },
+  "seed_squash": {
+   "name": "Squash Seed",
+   "tag": "Seed",
+   "text": "Squash seed: the vines shade the ground between the hills."
+  },
+  "seed_tobacco": {
+   "name": "Tobacco Seed",
+   "tag": "Seed",
+   "text": "Tobacco seed, fine as dust: set out in a well-worked bed."
+  },
+  "seed_flax": {
+   "name": "Flaxseed",
+   "tag": "Seed",
+   "text": "Flaxseed: sown thick for the fibre."
+  },
+  "corn": {
+   "name": "Ear of Corn",
+   "tag": "Food",
+   "text": "An ear of flint corn: roast it on a fire, or pound it into meal at the stone."
+  },
+  "roast_corn": {
+   "name": "Roasted Corn",
+   "tag": "Food",
+   "text": "An ear roasted in its husk."
+  },
+  "charred_corn": {
+   "name": "Charred Corn",
+   "tag": "Food",
+   "text": "An ear left too long in the coals."
+  },
+  "beans": {
+   "name": "Beans",
+   "tag": "Food",
+   "text": "A pound of dry beans: boil them on a fire."
+  },
+  "bean_pot": {
+   "name": "Boiled Beans",
+   "tag": "Food",
+   "text": "A pot of beans boiled soft."
+  },
+  "scorched_beans": {
+   "name": "Scorched Beans",
+   "tag": "Food",
+   "text": "Beans boiled dry and caught on the pot."
+  },
+  "squash": {
+   "name": "Squash",
+   "tag": "Food",
+   "text": "A squash: roast it on a fire. It keeps for weeks."
+  },
+  "roast_squash": {
+   "name": "Roasted Squash",
+   "tag": "Food",
+   "text": "Squash roasted soft in the ashes."
+  },
+  "charred_squash": {
+   "name": "Charred Squash",
+   "tag": "Food",
+   "text": "Squash burnt black on one side."
+  },
+  "tobacco_leaves": {
+   "name": "Tobacco Leaves",
+   "tag": "Crop",
+   "text": "Green tobacco leaves: cure and twist them at the workbench into tobacco for the pipe."
+  },
+  "flax": {
+   "name": "Flax",
+   "tag": "Crop",
+   "text": "Pulled flax stalks: the fibre makes cord at the workbench."
+  }
+ }
+}

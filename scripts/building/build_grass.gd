@@ -18,6 +18,7 @@ var _base: PackedByteArray
 var _n := 0
 var _tex: ImageTexture
 var _missing := false
+var _tries := 0
 ## Texels the built pieces marked at the last update (tests).
 var marked := 0
 
@@ -32,7 +33,13 @@ func flush(world: Node3D) -> void:
 		return
 	_dirty = false
 	if _tex == null and not _find(world):
-		_missing = true
+		# (the level's own blocker map is made a moment after the level is built, and the fort's pieces are stamped with
+		# the level: try again for a while before deciding there is no grass, headless runs, grass off)
+		_tries += 1
+		if _tries > 600:
+			_missing = true
+		else:
+			_dirty = true
 		return
 	var data := _base.duplicate()
 	marked = 0

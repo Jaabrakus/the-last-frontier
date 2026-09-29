@@ -30,9 +30,11 @@ Open the folder in Godot and press **F5**.
 | E at a wheelbarrow's handles / bed | Push it (E sets it down) / put in a deer, a log length or pack things, or tip them out (see Horses) |
 | E at a horse cart's shafts / tailboard | Hitch the horse to it (in the saddle: a tap) or unhitch it / put in a deer, a log, the wheelbarrow or pack things, take out the last (see Horses) |
 | E at a wild plant | Pick berries, nuts, acorns, herbs, or dig a root (see Wild food and herbs) |
+| LMB with the hoe out | At open ground: break it out into a bed; at a growing bed: hoe out the weeds (see Farming) |
+| E at a bed | Sow it (hold E: which crop), harvest it when ripe, or pull up frost-killed plants (see Farming) |
 | V | Eat the best food in the pack (right-click food in the pack: eat that) |
 | Z | Sleep on the ground (Z again, or move, to get up); better in a lean-to and by a fire |
-| F at a lit campfire | Cook: roast the pack's venison, or bake its cornmeal into johnnycake (see Fire, cold and shelter) |
+| F at a lit campfire | Cook: roast the pack's venison, corn or squash, boil its beans, or bake its cornmeal into johnnycake (see Fire, cold and shelter) |
 | F5 / F9 | Quick save / load the latest save (see Saving and death) |
 | F3 | Debug readout |
 
@@ -173,7 +175,19 @@ built floor too; the drying rack may stand over a campfire.
   three one-room cabins to Apprentice).
 - The look is the fort's: the same generated log, board, shingle and fieldstone meshes and the processed CC0 Poly
   Haven textures (StructureMeshKit, StructureMaterials). The grass is kept out from under floors and footings.
-- What you build is saved with the game (see Saving and death); a new game starts without it.
+- What you build is saved with the game (see Saving and death); a new game starts without it, except the fort itself.
+- **The fort is built from these pieces** (user 2026-09-28): the palisade, the gate, the firing step along the north wall,
+  its ramps and ladders, the two blockhouses and the flag pole are the menu's Fort pieces, stamped free of cost when the
+  level is built exactly where `data/building/fort_structure.json` lists them (`FortPlan.stamp_structure`); the cabin, the
+  storehouse, the crates and the range are still the level's own. The furnishing on top (`fort_plan.json`) is stamped after.
+  Take them down, rebuild them, cut them like any piece. The blockhouses' lower storeys are hollow with a hung door (E).
+- **Windows in the palisade:** with the felling axe in the hand, aim at a built palisade (within 1.5 m): "Chop through the
+  palisade", 8 strokes cut a piece two stakes wide and 1 m tall, **from belly height up**, measured from where you stand:
+  the first piece starts 1 m over your feet (so on the firing step's deck the first cut takes everything from belly height
+  to the top, a notch to shoot over; on the ground the next cuts take the next piece up, the third takes the top off; halfway
+  up a ramp the piece rises with you); nothing below belly height is ever cut. Build mode's Fort group fills an opening in
+  again: Repair (the stakes stand as they were) or Cover with logs (horizontal logs across it; the axe knocks them out).
+  The cuts are saved with the game. (`scripts/building/palisade_cuts.gd`)
 
 Tests: `tests/building/test_building.gd` (headless: data and costs, meshes and colliders, sockets and snapping as
 numbers, and on the level with the real input path: B, the wheel, hold E, a cabin built piece by piece, notched
@@ -382,8 +396,8 @@ The game saves itself and dying costs your pack (`scripts/save/`).
   `auto.json`), written whole or not at all.
 - A save holds the survival core (needs, conditions, the date and hour, the kit, skills), the sky and weather, the
   player (where, health, the pack, what they wear, the weapons' state, the torches, the gathering skills), the felled
-  trees, stumps and quarried rocks, what you built (doors, the campfires and their coals), the palisade and gate as cut
-  or repaired, weapons and torches lying about, the animals (alive and dead, how far they are butchered), where the
+  trees, stumps and quarried rocks, what you built (doors, the campfires and their coals, the fort's pieces and the
+  windows cut in its palisade, the gate's door), weapons and torches lying about, the animals (alive and dead, how far they are butchered), where the
   horse stands (a load it was dragging is left lying), the wheelbarrow and the horse cart (where they stand, what is in
   them, the horse still in the cart's shafts), the picked plants, and your home and dropped packs. Loading rebuilds the level from its seeds and
   applies the save on top. A save from another forest layout keeps everything but the felled trees and the picked
@@ -451,6 +465,34 @@ A plant that bears once a season (crabapples, hazelnuts) bears again when its se
 Tests: `tests/forage/test_forage.gd` (headless: data, calendar, placement and habitats, seasons, picking with the
 real E, deer, the poultice through the pack); `tests/forage/forage_shots.gd` (windowed: each plant, picking, the pack,
 and the frame time with the plants shown and hidden).
+
+## Farming
+
+Beds of the Three Sisters, tobacco and flax, hoed out of open ground (user 2026-09-28: "add farming into the game";
+`scripts/farming/`, numbers in `data/farming/farming.json`; the crops are the project's own models, built from the
+forage plants' parts).
+
+- **The hoe** is made at the forge (2 bar iron, 2 charcoal, a pole) or traded for; it is not in the kit. A start with
+  nothing makes a **digging stick** (a pole and a knife, at the knapping stone or the workbench), half the hoe's bite.
+  **7** cycles the felling axe, the mattock and the hoe.
+- **Breaking ground**: with the hoe out, hold **LMB** at open ground: a 2 m bed on the world's grid, about five strokes
+  (fewer with skill), the grass cleared off it. Not on rock, water, a steep slope, among trees or where a building
+  stands; the ground is frozen from December to February.
+- **Sowing** (**E** at a worked bed; hold **E** for the list), March to October, from the pack's seed: the **Three
+  Sisters** (a seed each of corn, beans and squash: the beans climb the corn and the squash shades the hills; they
+  yield more together), or corn, beans, squash, tobacco or flax alone. A new character has a pouch of seed (corn 6,
+  beans 6, squash 4, tobacco 3, flax 4); every harvest saves a little seed back.
+- **Growing** on the game's clock (a sleep moves it on): sprouts, young plants, grown, ripe, in 3 to 4 game days (a
+  game day is a third of a month). Weeds come up a third and two thirds of the way: hoe them out (**LMB**) for a
+  better harvest; rain on the bed helps a little. November's frost kills what is not ripe (a late sowing warns).
+- **Harvesting** (**E** at a ripe bed): ears of corn, beans, squash, tobacco leaves or flax into the pack, by the
+  weeding, the rain and the **Husbandry** skill (a field skill like Woodcutting; it trains on every stroke, sowing and
+  harvest, and raises the yield). The bed is ready to sow again.
+- **The crops**: roast corn and squash and boil beans on a lit campfire (**F**); pound 4 ears into a pound of cornmeal
+  at the knapping stone; twist 3 tobacco leaves into tobacco for the pipe and 2 flax into cordage at the workbench.
+
+The beds are records in the survival core's world (`core.state.world.farm`), saved with it. `FarmField.find(tree)`;
+the hoe's side is GatherTools' `"ground"` target (`FarmField.ground_candidates`, `strike`, `hoe_prompt`).
 
 ## Horses
 
@@ -570,7 +612,8 @@ scripts/horse/    horse.gd (gaits, jump, hills), horse_mount.gd (E), rider_link.
                   horse_haul.gd / skid_load.gd / log_pile.gd (log skidding), carcass_load.gd (hauling game)
 scripts/building/ build_mode.gd (B, the ghost, placing, take down), build_snap.gd (sockets, validity),
                   build_geometry.gd (meshes, colliders), build_world.gd / built_piece.gd (the placed pieces),
-                  build_door.gd (doors, gate leaves), build_hud.gd, build_grass.gd, build_data.gd
+                  build_door.gd (doors, gate leaves), build_hud.gd, build_grass.gd, build_data.gd,
+                  fort_pieces.gd / fort_plan.gd (the fort's pieces and their stamping), palisade_cuts.gd (windows)
 scripts/ui/hud.gd, scripts/fx/fx.gd, scripts/core/ (input, hit routing)
 animations/, characters/   Actor_B library + rig from Player_Animation_Project/godot_export
 tests/            smoke_test.gd (headless gameplay test), screenshot.gd, compute_weapon_offsets.gd

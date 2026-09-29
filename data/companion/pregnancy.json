@@ -1,0 +1,98 @@
+{
+  "format": "frontier-pregnancy",
+  "version": 1,
+  "summary": "Conception after a finished yoga session, gestation and birth (Pregnancy reads it; logic only). The woman of the pair conceives: the wife when the player is a man, the player when she is a woman. The roll uses the survival check model: chance = SurvivalSkills.chance(S, D, check_mod + repeat penalty), then conception chance = base_chance * chance / ref_chance, clamped. Drawn from the named stream w.conception of the woman's core (saved with it).",
+  "enabled": true,
+  "player_setting": "pregnancy",
+  "player_setting_default": true,
+  "check": {
+    "difficulty": 80.0,
+    "weights": {
+      "health": 0.4,
+      "food": 0.25,
+      "warmth": 0.15,
+      "rest": 0.2
+    },
+    "food": {
+      "fed": 1.0,
+      "peckish": 0.85,
+      "hungry": 0.55,
+      "very_hungry": 0.3,
+      "starving": 0.1,
+      "wasting": 0.0
+    },
+    "warmth": {
+      "comfortable": 1.0,
+      "chilled": 0.75,
+      "cold": 0.4,
+      "very_cold": 0.15,
+      "hypothermic": 0.0,
+      "freezing": 0.0
+    },
+    "rest": {
+      "rested": 1.0,
+      "tired": 0.6,
+      "exhausted": 0.2,
+      "collapse": 0.0
+    },
+    "condition_mod_min": -0.4,
+    "condition_mod_max": 0.1,
+    "ref_chance": 0.55
+  },
+  "base_chance": 0.22,
+  "chance_floor": 0.04,
+  "chance_cap": 0.6,
+  "daily_limit": 2,
+  "repeat_mult": 0.4,
+  "gestation_days": 27,
+  "stages": [
+    {
+      "id": "early",
+      "name": "Early",
+      "upto": 0.25,
+      "extra_kcal": 0.05,
+      "speed": 1.0,
+      "extra_fatigue_per_h": 0.0
+    },
+    {
+      "id": "middle",
+      "name": "Middle",
+      "upto": 0.6,
+      "extra_kcal": 0.15,
+      "speed": 1.0,
+      "extra_fatigue_per_h": 0.0
+    },
+    {
+      "id": "late",
+      "name": "Late",
+      "upto": 0.9,
+      "extra_kcal": 0.25,
+      "speed": 0.85,
+      "extra_fatigue_per_h": 0.4
+    },
+    {
+      "id": "near_term",
+      "name": "Near term",
+      "upto": 1.01,
+      "extra_kcal": 0.3,
+      "speed": 0.7,
+      "extra_fatigue_per_h": 0.6
+    }
+  ],
+  "heavy_stages": [
+    "late",
+    "near_term"
+  ],
+  "heavy_tag": "heavy",
+  "fatigue_cap": 90.0,
+  "rest_days_after_birth": 4,
+  "child": {
+    "twins_chance": 0.0,
+    "stats_span": [
+      0.85,
+      1.15
+    ]
+  },
+  "check_step_minutes": 60.0,
+  "notice_days": 3
+}

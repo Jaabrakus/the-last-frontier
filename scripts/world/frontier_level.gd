@@ -18,6 +18,7 @@ extends Node3D
 ##   FrontierVegetation.build()       trees, undergrowth, logs, rocks            (package C)
 ##   SurvivalBridge                   hunger, warmth, rest, the kit; the core's clock drives the sky (scripts/survival_game)
 ##   ForageField.build()              berries, nuts and herbs where they grow (scripts/forage; its own seed)
+##   FarmField                        the player's beds: hoed out of open ground, sown, weeded, harvested (scripts/farming)
 ##   SnowCover                        winter's snow: on the ground, trees and roofs, falling, prints (scripts/snow)
 ##   WildlifeSpawner                  deer, bucks, foxes, wolves (scripts/wildlife; off in -s tool / test runs)
 ##   FishLife                         the river's fish near the player: rising, schooling, spooking, taking bait
@@ -102,12 +103,18 @@ func _ready() -> void:
 		# player's clock (needs the bridge's core, so the same switch)
 		Household.install(self, player)
 	StartupProfile.mark("survival")
+	# the fort's furnishing from the build menu's pieces (scripts/building/fort_plan.gd): the wife's work
+	FortPlan.install(self)
 	# forage (scripts/forage): berries, nuts and herbs where they grow; the deer feed on them too
 	var forage := ForageField.new()
 	forage.name = "Forage"
 	add_child(forage)
 	forage.build(vegetation)
 	StartupProfile.mark("forage")
+	# farming (scripts/farming): beds broken out of open ground with the hoe, sown, weeded and harvested
+	var farm := FarmField.new()
+	farm.name = "Farm"
+	add_child(farm)
 	# snow (scripts/snow): the survival core's snow on the land, the falling snow, the prints
 	var snow := SnowCover.new()
 	snow.name = "Snow"

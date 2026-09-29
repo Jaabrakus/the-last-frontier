@@ -396,6 +396,8 @@ static func save_building(level: Node) -> Dictionary:
 			e["open"] = p.door.is_open
 		for c in p.find_children("*", "Campfire", true, false):
 			var cf := c as Campfire
+		if not p.cuts.is_empty():
+			e["cuts"] = PalisadeCuts.to_save(p.cuts)      # the windows cut in a palisade section
 			e["fire"] = {"lit": cf.state.lit, "left": cf.state.burn_left, "total": cf.state.burn_total, "coals": cf._coals}
 			break
 		var chest := p.get_node_or_null("Chest") as StorageChest
@@ -408,16 +410,27 @@ static func save_building(level: Node) -> Dictionary:
 		if smoke:
 			e["smokehouse"] = smoke.to_save_all()
 		ps.append(e)
-	return {"pieces": ps, "next_id": w.next_id}
+	return {"pieces": ps, "next_id": w.next_id, "stamped": w.stamped, "fort_built": w.fort_built}
 
 
 static func load_building(level: Node, d: Dictionary) -> void:
 	var ps: Array = d.get("pieces", [])
-	if ps.is_empty():
+	# the fort's structure (FortPlan: palisade, gate, firing step, blockhouses...) is among the saved pieces when the save
+	# says so; a save from before the fort was built from pieces has none, and is given it below
+	var had_fort := bool(d.get("fort_built", false))
+	var had_plan := bool(d.get("stamped", false))
+	if ps.is_empty() and not had_plan and not had_fort:
 		return
 	var w := BuildWorld.of(level.get_tree(), true)
 	for e in ps:
 		w.next_id = int(e.id)
+	if had_plan or had_fort or w.stamped or w.fort_built:
+		# the level stamped its own fort (and furnishing) when it was built: the save's pieces replace them (their ids would
+		# clash), the save has the fort's furnishing among them (or the player took it all down): no second one
+		w.stamped = had_plan or w.stamped
+		for q in w.pieces():
+			w.remove_piece(q)
+		w.fort_built = had_fort
 		var g := PackedFloat32Array()
 		for x in e.get("ground", []):
 			g.append(float(x))
@@ -428,6 +441,8 @@ static func load_building(level: Node, d: Dictionary) -> void:
 		p.supports = sup
 		if e.has("open") and p.door:
 			p.door.set_open(bool(e.open), true)
+		if e.has("cuts") and p.type == "palisade":
+			p.set_cuts(PalisadeCuts.from_save(e.cuts))
 		if e.has("fire"):
 			_restore_fire.call_deferred(p, e.fire)
 		if e.has("chest") and p.get_node_or_null("Chest") is StorageChest:
@@ -439,6 +454,8 @@ static func load_building(level: Node, d: Dictionary) -> void:
 	w.next_id = maxi(w.next_id, int(d.get("next_id", w.next_id)))
 
 
+	if not had_fort and not w.fort_built and FortPlan.structure_enabled():
+		FortPlan.stamp_structure(w)
 static func _restore_fire(p: BuiltPiece, f: Dictionary) -> void:
 	if not is_instance_valid(p):
 		return
@@ -458,75 +475,14 @@ static func _restore_fire(p: BuiltPiece, f: Dictionary) -> void:
 
 # --- Fort --------------------------------------------------------------------------------------------------
 
-static func save_fort(level: Node) -> Dictionary:
-	var out := {}
-	var wc := WallCuts.find(level.get_tree())
-	if wc:
-		var cuts := []
-		for win in wc.windows:
-			var base := float((wc.frame(int(win.wall))[0] as Vector3).y)
-			cuts.append({"wall": int(win.wall), "k": int(win.k), "h0": float(win.y0) - base, "h1": float(win.y1) - base,
-					"rect": [float(win.u0), float(win.u1), float(win.y0) - base, float(win.y1) - base]})
-		var holes := []
-		for wi in wc.walls.size():
-			holes.append(plain((wc.walls[wi] as Dictionary).holes))
-		var fills := []
-		for f in wc.fills:
-			var e := {"kind": String(f.kind), "wall": int(f.wall), "rect": plain(f.rect)}
-			if f.door != null and is_instance_valid(f.door):
-				e["away"] = v3(-(f.door as Node3D).global_basis.z)
-				e["open"] = (f.door as BuildDoor).is_open
-			fills.append(e)
-		out = {"cuts": cuts, "holes": holes, "fills": fills}
-	var gate := FortGate.find(level.get_tree())
-	if gate:
-		out["gate_open"] = gate.open
-	return out
+## The old "fort" part (windows chopped through the classic palisade and the gate's state): the fort is built from pieces
+## now and saved with the building (a palisade's cuts, a gate's door); the part stays in the format for the saves that have it.
+static func save_fort(_level: Node) -> Dictionary:
+	return {}
 
 
-static func load_fort(level: Node, d: Dictionary) -> void:
-	var wc := WallCuts.find(level.get_tree())
-	if wc and d.has("cuts"):
-		for c in d.cuts:
-			if int(c.wall) < wc.walls.size():
-				wc.cut(int(c.wall), int(c.k), float(c.h0), float(c.h1))
-		# holes since repaired: the ones cut that are no longer open and not covered or doored
-		var saved_holes: Array = d.get("holes", [])
-		var filled := []
-		for f in d.get("fills", []):
-			filled.append([int(f.wall), f.rect])
-		for c in d.cuts:
-			var wi := int(c.wall)
-			if wi >= saved_holes.size():
-				continue
-			var open := false
-			for h in saved_holes[wi]:
-				if _same_rect(h, c.rect):
-					open = true
-			var covered := filled.any(func(e: Array) -> bool: return e[0] == wi and _same_rect(e[1], c.rect))
-			if not open and not covered:
-				wc.repair({"wall": wi, "rect": c.rect})
-		for f in d.get("fills", []):
-			var op := {"wall": int(f.wall), "rect": f.rect}
-			if String(f.kind) == "cover":
-				wc.cover(op)
-			elif String(f.kind) == "door":
-				op["away"] = to_v3(f.get("away"), Vector3.FORWARD)
-				var door := wc.add_door(op)
-				if door and bool(f.get("open", false)):
-					door.set_open(true, true)
-	var gate := FortGate.find(level.get_tree())
-	if gate and d.has("gate_open"):
-		gate.set_open(bool(d.gate_open), true)
-
-
-static func _same_rect(a: Variant, b: Variant) -> bool:
-	if not (a is Array) or not (b is Array) or (a as Array).size() != 4 or (b as Array).size() != 4:
-		return false
-	for i in 4:
-		if absf(float(a[i]) - float(b[i])) > 0.01:
-			return false
-	return true
+static func load_fort(_level: Node, _d: Dictionary) -> void:
+	pass
 
 
 # --- Items -------------------------------------------------------------------------------------------------
@@ -700,7 +656,7 @@ static func load_wildlife(level: Node, d: Dictionary) -> void:
 
 
 static func _make_animal(sp: WildlifeSpawner, g: WildGroup, m: Dictionary) -> WildAnimal:
-	var a := WildAnimal.new()
+	var a := WildlifeSpecies.make(String(m.species))
 	sp.set("_serial", int(sp.get("_serial")) + 1)
 	a.name = "%s_%d" % [String(m.species).capitalize(), int(sp.get("_serial"))]
 	a.setup(String(m.species), sp, g, 1765 + int(sp.get("_serial")) * 7919)

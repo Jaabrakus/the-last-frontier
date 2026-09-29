@@ -180,6 +180,15 @@
    ],
    "key": "tool_mattock (KEY_8)",
    "model": "GatherModels.build('mattock')"
+  },
+  "hoe": {
+   "class": "tool",
+   "length_m": 0.86,
+   "points": [
+    "tool_loop"
+   ],
+   "key": "tool_cycle (KEY_7)",
+   "model": "GatherModels.build('hoe')"
   }
  },
  "long_slot_rule": "assign long items in the order long guns, bow, spear pair, dart bundle; each takes its first free slot in `slots`; at most two long items; the quiver comes with the bow and sits under long_B",

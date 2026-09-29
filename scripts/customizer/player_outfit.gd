@@ -28,6 +28,15 @@ const BASIC := {
 	"men": {"shirt": "shirt_linen", "legs.lower": "breeches"},
 	"women": {"shirt": "shift_linen", "legs.lower": "petticoat"},
 }
+## The genitals under clothes (the user, 2026-09-28: "only hide genitals if they wear underwear / pants; males hide
+## genitals on all clothes"): a woman's are hidden only by a garment closed between the legs, underwear or pants
+## (CLOSED_IDS, or a catalog tag in CLOSED_TAGS); a skirt, a shift or shirt tails leave them. A man's are hidden
+## under any garment over the pelvis (its catalog occupies_regions has pelvis_center, or it is worn on the legs).
+## "pelvis_center" in hide_regions is what hides them (the body's region, the pubic hair, BodyMaterials.apply_look's
+## genital_swing), so the rule decides whether a garment's pelvis_center counts.
+const CLOSED_IDS := ["breeches"]
+const CLOSED_TAGS := ["underwear", "pants"]
+const GENITALS := "pelvis_center"
 ## Colours used when the look does not choose them (over the catalog's zone defaults).
 const DEFAULT_COLORS := {}
 
@@ -234,7 +243,10 @@ static func dress(body: CharacterBodyMesh, outfit: Dictionary, sex := 0.0) -> Di
 		_apply_materials(body.part_meshes(tag), e, colors)
 		worn[slot] = id
 		res.parts.append(tag)
-		for r: String in e.get("hides_regions", []):
+		var hides: Array = (e.get("hides_regions", []) as Array).filter(func(r: String) -> bool: return r != GENITALS)
+		if hides_genitals(id, slot, sex):
+			hides.append(GENITALS)
+		for r: String in hides:
 			if not r in res.hide_regions:
 				res.hide_regions.append(r)
 		res.hide_hair_zones.append_array(e.get("hides_hair_zones", []))
@@ -242,6 +254,22 @@ static func dress(body: CharacterBodyMesh, outfit: Dictionary, sex := 0.0) -> Di
 			res.has_hat = true
 	res.bulk_slots = worn if not worn.is_empty() else {"bare": true}
 	return res
+
+
+## Whether garment `id`, worn in `slot`, hides the genitals of a body of `sex` (see CLOSED_IDS).
+static func hides_genitals(id: String, slot: String, sex: float) -> bool:
+	var e := entry(id)
+	if e.is_empty():
+		return false
+	if body_type(sex) == "men":
+		return slot == "legs.lower" or GENITALS in (e.get("occupies_regions", []) as Array) \
+				or GENITALS in (e.get("hides_regions", []) as Array)
+	if id in CLOSED_IDS:
+		return true
+	for t: String in e.get("tags", []):
+		if t in CLOSED_TAGS:
+			return true
+	return false
 
 
 static func _apply_materials(meshes: Array, e: Dictionary, colors: Dictionary) -> void:

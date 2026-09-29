@@ -1,10 +1,9 @@
 extends SceneTree
-## The fort's gate leaves (user 2026-09-26: "i also want to be able to gate to be chopable where we can use the axe so
-## it allows us to create a window to shoot weapons"; asked where: "Both"), on the real level with the real player:
-## the gate stands open at the start (the way out is clear); E ("Close the gate") closes it and the body cannot walk
-## out; with the felling axe in the hand the gate is no E target but its leaf is a firing window target; held strokes
-## cut the window, a ray through it passes the leaf while a ray beside it is stopped; the axe away, E opens the gate
-## again and the leaf with its window swings clear.
+## The fort's gate (since 2026-09-28 the palisade_gate build piece FortPlan stamps in the north wall; its two plank leaves are a
+## BuildDoor) on the real level with the real player: it stands open at the start (the way out to the range is clear); E ("Shut
+## the gate") shuts it and the body cannot walk out; the felling axe in the hand finds nothing to chop in the gate's leaves (the
+## old gate windows, FortGate + WallCuts, are gone: windows are cut in the palisade sections only, PalisadeCuts); E opens the
+## gate again.
 ##
 ##   Godot --headless --fixed-fps 120 --path . -s tests/gathering/test_gate_window.gd
 ## "GATE WINDOW TEST OK" and exit 0 when every check passes. Run it under a hard time limit.
@@ -37,6 +36,7 @@ func _place(pos: Vector3, yaw: float) -> void:
 	p.global_position = pos
 	p.velocity = Vector3.ZERO
 	p.yaw = yaw
+	p.pitch = 0.0
 	p.traversal.controller.teleported()
 	await _ticks(30)
 
@@ -51,28 +51,32 @@ func _initialize() -> void:
 	p.set("ignore_mouse_capture", true)
 	while p.traversal == null or not p.traversal.world_ready:
 		await physics_frame
-	var gate := FortGate.find(self)
-	var wc := WallCuts.find(self)
-	_check(gate != null and gate.leaves.size() == 2, "the gate has two leaves")
-	if gate == null:
+	var world := BuildWorld.of(self, false)
+	var gate: BuiltPiece = null
+	for q in (world.pieces() if world else []):
+		if q.type == "palisade_gate":
+			gate = q
+	_check(gate != null and gate.door != null, "the fort's gate is a built palisade gate with its leaves")
+	if gate == null or gate.door == null:
 		quit(1)
 		return
-	var z := gate.hinge_z
-	_check(gate.open and not _hit_leaf(Vector3(0, 1.0, z - 2.0), Vector3(0, 1.0, z + 2.0)), "open at the start: the way through is clear")
+	var door := gate.door
+	var z := gate.global_position.z
+	_check(door.is_open and not _hit_leaf(Vector3(0, 1.0, z - 2.0), Vector3(0, 1.0, z + 2.0)), "open at the start: the way through is clear")
 
 	# (clear of the leaves' swing: a closing leaf pushes a body in its way)
-	await _place(Vector3(0.8, 0.02, z + 3.2), 0.0)
-	_check(gate.interact_prompt(p) == "Close the gate", "E at the gate: \"%s\"" % gate.interact_prompt(p))
-	gate.interact(p)
-	await _ticks(int(FortGate.SWING_S * 120.0) + 30)
-	_check(gate.is_closed() and _hit_leaf(Vector3(0.8, 1.0, z - 2.0), Vector3(0.8, 1.0, z + 2.0)), "closed: the leaves fill the gateway")
+	await _place(Vector3(0.6, 0.02, z + 3.2), 0.0)
+	_check(door.interact_prompt(p) == "Shut the gate", "E at the gate: \"%s\"" % door.interact_prompt(p))
+	door.interact(p)
+	await _ticks(int(120.0 / BuildDoor.SWING_RATE) + 40)
+	_check(not door.is_open and _hit_leaf(Vector3(0.6, 1.0, z - 2.0), Vector3(0.6, 1.0, z + 2.0)), "shut: the leaves fill the gateway")
 	Input.action_press("move_forward")
 	await _ticks(180)
 	Input.action_release("move_forward")
-	_check(p.global_position.z > z - 0.05, "the body cannot walk out through the closed gate (z %.2f)" % p.global_position.z)
+	_check(p.global_position.z > z - 0.05, "the body cannot walk out through the shut gate (z %.2f)" % p.global_position.z)
 
-	# the axe out at the closed leaf: a firing window target, the gate no E target
-	await _place(Vector3(0.8, 0.02, z + 1.0), 0.0)
+	# the axe at the shut leaf: nothing to chop (the gate is not cut), and no wall target either
+	await _place(Vector3(0.6, 0.02, z + 1.0), 0.0)
 	var g: GatherTools = p.gather
 	g.take_out("felling_axe")
 	var t := 0.0
@@ -80,41 +84,12 @@ func _initialize() -> void:
 		await physics_frame
 		t += 1.0 / 120.0
 	await _ticks(20)
-	_check(gate.interact_prompt(p) == "", "with the axe in the hand the gate is no E target")
-	var leaf_walls := [int(gate.leaves[0].wall), int(gate.leaves[1].wall)]
-	_check(str(g.target.get("type", "")) == "wall" and int(g.target.get("wall", -1)) in leaf_walls,
-			"the target is a window through the leaf (%s, wall %s)" % [str(g.target.get("type", "")), str(g.target.get("wall", ""))])
-	var n0 := wc.window_count()
-	Input.action_press("fire")
-	t = 0.0
-	while t < 40.0 and wc.window_count() == n0:
-		await physics_frame
-		t += 1.0 / 120.0
-	Input.action_release("fire")
+	_check(str(g.target.get("type", "")) != "wall", "with the axe in the hand the gate's leaf is no chopping target (%s)" % str(g.target.get("type", "")))
+	g.put_away()
 	await _ticks(60)
-	_check(wc.window_count() == n0 + 1, "held strokes cut the window (%.1f s)" % t)
-	if wc.window_count() == n0 + 1:
-		var win: Dictionary = wc.windows[wc.window_count() - 1]
-		var fr := wc.frame(int(win.wall))
-		var a: Vector3 = fr[0]
-		var dir: Vector3 = fr[1]
-		var nrm := dir.cross(Vector3.UP).normalized()
-		var ym := 0.5 * (float(win.y0) + float(win.y1))
-		var at := func(u: float, y: float) -> bool:
-			var q := a + dir * u
-			return _hit_leaf(Vector3(q.x, y, q.z) + nrm, Vector3(q.x, y, q.z) - nrm)
-		var uc := 0.5 * (float(win.u0) + float(win.u1))
-		_check(not at.call(uc, ym), "a ray through the window passes the leaf")
-		_check(at.call(uc, ym + 0.6) and at.call(float(win.u1) + 0.3, ym), "over and beside the window the leaf stops it")
-		# the axe away, E opens the gate: the leaf swings clear of the gateway
-		g.put_away()
-		await _ticks(120)
-		_check(gate.interact_prompt(p) == "Open the gate", "the axe away, E at the gate: \"%s\"" % gate.interact_prompt(p))
-		gate.interact(p)
-		await _ticks(int(FortGate.SWING_S * 120.0) + 30)
-		_check(gate.open and not _hit_leaf(Vector3(0.8, 1.0, z - 2.0), Vector3(0.8, 1.0, z + 2.0)), "open again: the way through is clear")
-		var fr2 := wc.frame(int(win.wall))
-		_check(absf((fr2[1] as Vector3).dot(dir)) < 0.1, "the window's leaf swung with it (its line turned %.0f deg)" % rad_to_deg(acos(clampf((fr2[1] as Vector3).dot(dir), -1.0, 1.0))))
+	door.interact(p)
+	await _ticks(int(120.0 / BuildDoor.SWING_RATE) + 40)
+	_check(door.is_open and not _hit_leaf(Vector3(0, 1.0, z - 2.0), Vector3(0, 1.0, z + 2.0)), "open again: the way through is clear")
 
 	if _fails.is_empty():
 		print("GATE WINDOW TEST OK (%d checks)" % _checks)

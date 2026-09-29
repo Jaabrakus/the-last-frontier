@@ -73,7 +73,7 @@ func cost(id: String) -> Dictionary:
 	return out
 
 
-## A piece that closes an opening chopped in a wall (WallCuts): "repair", "cover" or "door"; "" for a piece.
+## A piece that closes an opening cut in the palisade (PalisadeCuts): "repair" or "cover"; "" for a piece.
 func opening(id: String) -> String:
 	return String(pieces.get(id, {}).get("opening", ""))
 

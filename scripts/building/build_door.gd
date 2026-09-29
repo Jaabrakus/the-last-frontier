@@ -43,9 +43,22 @@ static func make(piece_type: String) -> BuildDoor:
 	return d
 
 
+## A hung door of any size for a building that is not a build piece (the fort's cabin, storehouse and blockhouses): its
+## node stands at the middle of the doorway's foot, +Z the way out, the hinge on the -X side, the leaf swinging in.
+static func make_sized(width: float, height: float) -> BuildDoor:
+	var d := BuildDoor.new()
+	d.name = "Door"
+	d._center = Vector3(0, height * 0.5, 0)
+	var w := width - 0.06
+	var hgt := height - 0.08
+	d._add_leaf("door", Vector3(-w * 0.5, 0.0, -0.06), OPEN_ANGLE, Vector3(w * 0.5, 0.03 + hgt * 0.5, 0.0), Vector3(w, hgt, 0.05),
+			BuildGeometry.sized_leaf_mesh(w, hgt))
+	return d
+
+
 ## A leaf turning about its hinge line at `hinge_at`: the AnimatableBody3D is the hinge itself (it only follows
 ## changes of its own transform, not of a parent's).
-func _add_leaf(mesh_kind: String, hinge_at: Vector3, open_yaw: float, box_center: Vector3, box_size: Vector3) -> void:
+func _add_leaf(mesh_kind: String, hinge_at: Vector3, open_yaw: float, box_center: Vector3, box_size: Vector3, mesh: Mesh = null) -> void:
 	var body := AnimatableBody3D.new()
 	body.name = "Leaf%d" % _hinges.size()
 	body.position = hinge_at
@@ -60,7 +73,7 @@ func _add_leaf(mesh_kind: String, hinge_at: Vector3, open_yaw: float, box_center
 	body.add_child(cs)
 	var mi := MeshInstance3D.new()
 	mi.name = "LeafMesh"
-	mi.mesh = BuildGeometry.leaf_mesh(mesh_kind)
+	mi.mesh = mesh if mesh != null else BuildGeometry.leaf_mesh(mesh_kind)
 	body.add_child(mi)
 	add_child(body)
 	_hinges.append(body)

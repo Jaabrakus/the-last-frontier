@@ -25,7 +25,7 @@ const REACH_M := 2.8
 ## The pack's raw food that cooks, in the order F takes it (fish first: it keeps least; each species its own kind,
 ## FishCatch, all roasting into roast fish).
 const RAW := ["brook_trout", "salmon", "sucker", "perch", "pike", "eel", "bullhead", "sturgeon", "pickerel", "venison",
-		"small_game", "cornmeal"]
+		"small_game", "cornmeal", "corn", "squash", "beans"]
 ## What each comes back as.
 const COOKED := {
 	"venison": {"cooked": "roast_venison", "burnt": "charred_venison", "verb": "Roast"},
@@ -40,6 +40,10 @@ const COOKED := {
 	"sturgeon": {"cooked": "roast_fish", "burnt": "charred_fish", "verb": "Roast"},
 	"pickerel": {"cooked": "roast_fish", "burnt": "charred_fish", "verb": "Roast"},
 	"cornmeal": {"cooked": "johnnycake", "burnt": "burnt_johnnycake", "verb": "Bake"},
+	# the farm's crops (FarmField)
+	"corn": {"cooked": "roast_corn", "burnt": "charred_corn", "verb": "Roast"},
+	"squash": {"cooked": "roast_squash", "burnt": "charred_squash", "verb": "Roast"},
+	"beans": {"cooked": "bean_pot", "burnt": "scorched_beans", "verb": "Boil"},
 }
 
 var bridge: SurvivalBridge
@@ -163,7 +167,7 @@ func start(f: Campfire) -> bool:
 		return false
 	var k := raw_kind(p)
 	if k == "":
-		bridge._notice("Nothing to cook: fresh fish, raw venison or cornmeal")
+		bridge._notice("Nothing to cook: fresh fish, raw venison, cornmeal, corn, squash or beans")
 		return false
 	var core := bridge.core
 	# the core's fire is this one
@@ -205,13 +209,25 @@ func start(f: Campfire) -> bool:
 	_blender = HorsePhaseBlender.new(_ap, p, LIB)
 	_blender.show_clip(CLIP_IN, 0.0, 0.0)
 	_blender.update(0.0)
-	_label.text = "Roasting venison over the fire" if k == "venison" else "Roasting small game over the fire" if k == "small_game" else ("Roasting %s over the fire" % InventoryState.name_of(k).to_lower() if FishCatch.is_fish(k) else "Baking johnnycake in the ashes")
+	_label.text = "Roasting venison over the fire" if k == "venison" else "Roasting small game over the fire" if k == "small_game" else ("Roasting %s over the fire" % InventoryState.name_of(k).to_lower() if FishCatch.is_fish(k) else _crop_label(k))
 	_bar.value = 0.0
 	_layer.visible = true
 	return true
 
 
 ## The roast is done: its food back into the pack, cooked (or burnt), one unit for each put on.
+## The bar's line for the farm's crops (and the cornmeal's).
+static func _crop_label(k: String) -> String:
+	match k:
+		"corn":
+			return "Roasting ears of corn in their husks"
+		"squash":
+			return "Roasting squash in the ashes"
+		"beans":
+			return "Boiling beans over the fire"
+	return "Baking johnnycake in the ashes"
+
+
 func _on_finished(res: Dictionary) -> void:
 	if not cooking or String(res.get("action", "")) != JOB:
 		return
@@ -238,6 +254,9 @@ func _on_finished(res: Dictionary) -> void:
 		text = "You roast the small game: %d %s%s" % [units, nm, ", a little underdone" if st == "undercooked" else ""]
 	elif FishCatch.is_fish(kind):
 		text = "You roast the %s: %d lb of %s%s" % [InventoryState.name_of(kind).to_lower(), units, nm, ", a little underdone" if st == "undercooked" else ""]
+	elif kind in ["corn", "squash", "beans"]:
+		var what := "You boil the beans" if kind == "beans" else "You roast the %s" % InventoryState.name_of(kind).to_lower()
+		text = "%s: %d %s%s" % [what, units, nm, ", a little underdone" if st == "undercooked" else ""]
 	else:
 		text = "You bake %d %s in the ashes%s" % [units, nm, ", a little doughy" if st == "undercooked" else ""]
 	bridge.needs_changed.emit()

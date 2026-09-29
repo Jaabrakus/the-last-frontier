@@ -44,6 +44,20 @@
     "adept": "Walls go up quicker under your hand.",
     "master": "A master builder: a blockhouse is within your reach."
    }
+  },
+  "husbandry": {
+   "name": "Husbandry",
+   "summary": "Farming: breaking ground for beds with the hoe, sowing, hoeing out the weeds and harvesting the Three Sisters, tobacco and flax (scripts/farming/, data/farming/farming.json). The skill raises the harvest (farming.json skill_yield_at_100).",
+   "survival_skill": "husbandry",
+   "survival_note": "The survival rules' Husbandry (backlog skills.json, milestone M5: the homestead) is the same craft; the rules' farm actions are not live, the game farms (FarmField).",
+   "at_100": {"power": 1.8, "speed": 1.25, "yield": 1.0},
+   "xp": {"stroke": 0.03, "tilled": 0.25, "weeded": 0.15, "sown": 0.2, "harvest": 0.6},
+   "tiers": {
+    "apprentice": "You save good seed from each harvest and know the hills from the weeds.",
+    "journeyman": "The ground breaks quicker under your hoe.",
+    "adept": "Your beds bear more: well-worked hills, the weeds kept down.",
+    "master": "A master of the field: the Three Sisters bear their best for you."
+   }
   }
  },
  "tools": {
@@ -68,11 +82,24 @@
    "haft_m": 0.86,
    "carry_grip_m": 0.46,
    "kg": 2.8
+  },
+  "hoe": {
+   "name": "Hoe",
+   "summary": "A planter's broad hoe of the 1760s: a wide iron blade set at an angle to a straight ash haft, forged at the forge (2 bar iron, charcoal, a pole) or traded for; breaks ground for a bed and hoes out the weeds (farming, FarmField). Not in the kit (crafted).",
+   "survival_item": "item.tool.hoe",
+   "skill": "husbandry",
+   "works": ["ground"],
+   "crafted": true,
+   "haft_m": 0.86,
+   "carry_grip_m": 0.46,
+   "kg": 1.4
   }
  },
  "stone_tools": {
   "stone_axe": {"name": "Stone Axe", "power": 0.45, "kg": 1.6, "stands_for": "felling_axe",
-   "summary": "A chert head knapped to a thick wedge, ground at the bit and lashed into a split haft (the start with nothing: made at the knapping stone). It fells trees and cuts saplings as the felling axe does, at about 45% of a steel axe's bite: more strokes for the same tree. The felling axe's key and swings; it is drawn as its own model."}
+   "summary": "A chert head knapped to a thick wedge, ground at the bit and lashed into a split haft (the start with nothing: made at the knapping stone). It fells trees and cuts saplings as the felling axe does, at about 45% of a steel axe's bite: more strokes for the same tree. The felling axe's key and swings; it is drawn as its own model."},
+  "digging_stick": {"name": "Digging Stick", "power": 0.5, "kg": 0.8, "stands_for": "hoe",
+   "summary": "A hardwood stick with a fire-hardened point (the start with nothing: made at the knapping stone or the workbench). It breaks ground and hoes out weeds as the hoe does, at half the hoe's bite: more strokes for the same bed. The hoe's swings; drawn as its own model."}
  },
  "items": {
   "log": {"name": "Log", "survival_item": "item.wood.log", "summary": "An 8-foot (2.4 m) length of trunk, bucked from a felled tree."},
