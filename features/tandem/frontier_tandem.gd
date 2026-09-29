@@ -49,8 +49,8 @@ const GAUGE_AT_MINUS_ONE := 0.25
 ## Cinematic camera: side-on to the pair, a little above, slowly drifting; eased in over CINE_BLEND_S.
 const CINE_BLEND_S := 1.4
 const CINE_PITCH := -0.10
-const CINE_DIST := {"crawl": 2.6, "yoga": 2.7, "wide": 2.8}
-const CINE_PIVOT_Y := {"crawl": 0.55, "yoga": 0.6, "wide": 0.55}
+const CINE_DIST := {"crawl": 2.6, "yoga": 2.7, "wide": 2.6}
+const CINE_PIVOT_Y := {"crawl": 0.55, "yoga": 0.6, "wide": 0.8}
 ## Which side of the pair the shot is taken from: +1 her right (where the crawl's arm is lifted and held), -1 her
 ## left. Measured against her own shoulders (the rig faces +Z, the game -Z: her right is +1 here).
 const CINE_SIDE := {"crawl": 1.0, "yoga": 1.0, "wide": 1.0}
@@ -84,6 +84,8 @@ var _cine := 0.0
 var _cine_time := 0.0
 var _cine_mode := "crawl"
 var _cam0: Dictionary = {}
+## The Reverse Plank pair's camera: before the woman on top (its eased yaw; INF: not yet).
+var _cine_front := INF
 ## Partners under a player's own control that stood up inside the pose: collision comes back once they are clear.
 var _separating: Dictionary = {}
 var _exiting := false
@@ -625,6 +627,7 @@ func _cinematic(delta: float) -> void:
 	if want and _cine <= 0.0:
 		_cine_mode = pair
 		_cine_time = 0.0
+		_cine_front = INF
 		_cam0 = {"yaw": player.yaw, "pitch": player.pitch, "dist": player.spring_arm.spring_length,
 				"y": player.camera_pivot.position.y}
 	if not want and _cine <= 0.0: return
@@ -633,10 +636,27 @@ func _cinematic(delta: float) -> void:
 	var e := smoothstep(0.0, 1.0, _cine)
 	var facing: float = _lead.player.rotation.y if is_instance_valid(_lead) else player.rotation.y
 	var yaw_to: float = facing + PI * 0.5 * float(CINE_SIDE[_cine_mode]) + sin(_cine_time * 0.4) * 0.16
+	var her := _wide_upper() if _cine_mode == "wide" else null
+	if her != null:
+		# the Reverse Plank pair (user 2026-09-29: "the camera face the partner on top"): out before the woman kneeling
+		# on top, looking at her (her rig's +Z is her front), easing round when she turns about (R)
+		var f: Vector3 = her.skeleton.get_parent().global_basis.z
+		var front := atan2(f.x, f.z) + sin(_cine_time * 0.4) * 0.12
+		_cine_front = front if _cine_front == INF else lerp_angle(_cine_front, front, minf(1.0, delta * 2.5))
+		yaw_to = _cine_front
 	player.yaw = lerp_angle(_cam0.yaw, yaw_to, e)
 	player.pitch = lerpf(_cam0.pitch, CINE_PITCH, e)
 	player.spring_arm.spring_length = lerpf(_cam0.dist, CINE_DIST[_cine_mode], e)
 	player.camera_pivot.position.y = lerpf(_cam0.y, CINE_PIVOT_Y[_cine_mode], e)
+
+## The woman kneeling on top in the Reverse Plank pair: this player, or the one over this player's plank; else null.
+func _wide_upper() -> FrontierPlayer:
+	var k: Node = player.kneeling
+	if k != null and k.name == "ReversePlank" and is_instance_valid(k.partner) and k.joined:
+		return k.partner
+	if k != null and k.name == "WideKneel" and is_instance_valid(k.base):
+		return player
+	return null
 
 func _release_camera() -> void:
 	if _cine <= 0.0 or _cam0.is_empty(): return
