@@ -30,18 +30,16 @@ extends Node3D
 ##     tools/environment/structures/colliders_with_structures.json).
 ##   * Grass blockers (2026-09-25 clipping pass): GrassBlockers/ holds plain Node3D boxes (meta
 ##     half_extents) where a visual part near the ground reaches past its collider -- the
-##     blockhouses' corner log ends, the straw trusses' bulging straw, the moving dummy's track --
+##     straw trusses' bulging straw, the moving dummy's track --
 ##     so scripts/world/terrain/grass.gd keeps grass out of them. No physics, no rendering.
 ##   * Traversal: the cabin box and the cabin roof carry meta trav = {no_traverse: true} on their
 ##     CollisionShape3D (traversal review 9.6: the free-run climbed the 3.0 m walls into the roof).
-##   * Gate leaves (2026-09-26): FortGate, two plank leaves on the posts' pintles (AnimatableBody3D colliders, open
-##     at the start; E opens and closes them), and WallCuts: firing windows chopped through the palisade and the
-##     leaves with the felling axe (the colliders are rebuilt around the holes).
-##   * Ladders (2026-09-26): two up to the firing step by the gate (LADDER_X), each a TravLadder marker and two
-##     rail colliders (no_traverse), built with the colliders (headless too); rails and rungs are dressed with
-##     the walkway.
-##   * Occluders (OccluderInstance3D + BoxOccluder3D) inside the palisade, the blockhouses, the
-##     cabin and the storehouse; they need rendering/occlusion_culling/use_occlusion_culling.
+##   * The palisade, the gate, the firing step, the ramps, the ladders, the blockhouses and the flag pole are NOT here any
+##     more (user 2026-09-28: "the fort should be recreated from builder pieces"): they are build-menu pieces stamped
+##     by FortPlan.stamp_structure (data/building/fort_structure.json; FortPieces, BuildGeometry, PalisadeCuts for the
+##     windows). What is left is the cabin, the storehouse, the supplies, the range, the dummies and the props. The
+##     level rng is still burned as the classic palisade's log heights burned it (_burn_palisade_rng), so the
+##     vegetation that follows is where it always was.
 ##   * settings.structure_detail = false (low preset): flat shingle-textured roofs instead of
 ##     shingle courses, no walkway joists or ramp cleats. Colliders never change with quality.
 ##
@@ -53,12 +51,8 @@ const FORT_HALF := 16.0
 const GATE_HALF := 3.0
 const FIRING_LINE_Z := -FORT_HALF - 4.0
 const RANGE_DISTANCES := [10, 25, 50, 75, 100, 120]
-const WALL_HEIGHT := 4.2
+const WALL_HEIGHT := 4.2             ## (the classic palisade's log height: only _burn_palisade_rng counts logs with it)
 const LOG_R := 0.19
-## Walkway posts: clear of both ramp footprints and x in +-[11.3, 12.7] (look-dev spec 8.3).
-const WALKWAY_POSTS := [3.6, 6.6, 9.6, 15.3, -3.6, -6.6, -9.6]
-const POST_Z := -14.29
-const RIM_BOTTOM := 1.93
 
 ## Extra colliders (documented additions, spec 8.3): [name, shape, centre, size, meta surface].
 ## Shapes are boxes unless noted; the cabin log ends are built in _cabin_log_end_colliders().
@@ -85,18 +79,6 @@ const ROOF_EAVE_Y := 0.05
 const ROOF_APEX_Y := 2.034
 ## Traversal meta (scripts/traversal/shape_registry.gd, gate "excluded").
 const NO_TRAVERSE := {"no_traverse": true}
-## Ladders up to the firing step by the gate (user 2026-09-26: "add the climbing and ladders in the game"): the x of
-## each ladder between the walkway posts. The rungs stand LADDER_OFF in front of the walkway's edge (the climbing
-## clips' toes reach ~0.22 m past the rung line; scenes/traversal_course.gd), with TravLaneClimb's pitch and rung
-## radius (the rungs the ladder clips' fists and feet fit) and the first rung where the mount leaves the feet; the
-## walkway's top is one hub step of the top dismount (TravLaneClimb.top_height(1) 2.30 m, 2.8 cm over it).
-const LADDER_X := [5.1, -5.1]
-const LADDER_OFF := 0.25
-const LADDER_HALF_W := 0.25
-const LADDER_RAIL := Vector3(0.06, 0.3, 0.3)     ## rail cross-section (x, z) and how far it stands over the boards (y)
-const WALK_TOP := 2.275
-const WALK_EDGE_Z := -FORT_HALF + 1.8
-
 ## false: gameplay nodes and colliders only. Defaults to false when running headless.
 @export var visuals := true
 @export var extra_colliders := true
@@ -114,11 +96,9 @@ var stats := {}                   ## triangle counts per visual group, build tim
 var _vrng := RandomNumberGenerator.new()
 var _kits := {}                   ## group -> [StructureMeshKit, parent Node3D]
 var _mats := {}
-var _logs: Array[Transform3D] = []
-## Firing windows chopped through the palisade (WallCuts; its walls and logs registered by _fort / _palisade).
-var wall_cuts: WallCuts
-## The gate's two leaves (FortGate).
-var gate_leaves: FortGate
+## The hung doors of the cabin and the storehouse (FortHollow; E opens them): name -> BuildDoor. (The blockhouse pieces
+## hang their own: BuiltPiece.door.)
+var doors := {}
 var _dummies: Array[TargetDummy] = []
 
 
@@ -154,8 +134,6 @@ func build(world_settings: WorldSettings, rng: RandomNumberGenerator) -> void:
 		var t3 := Time.get_ticks_usec()
 		for d in _dummies:
 			DummyStyle.apply(d)
-		if occluders:
-			_occluders()
 		stats["geometry_ms"] = (t2 - t1) / 1000.0
 		stats["commit_ms"] = (t3 - t2) / 1000.0
 		stats["dummies_occluders_ms"] = (Time.get_ticks_usec() - t3) / 1000.0
@@ -173,109 +151,43 @@ func _exit_tree() -> void:
 # --- Layout and colliders (the original _fort / _range, rng calls unchanged) ------------------
 
 func _fort(rng: RandomNumberGenerator) -> void:
-	var walls := [
-		[Vector3(-FORT_HALF, 0, -FORT_HALF), Vector3(FORT_HALF, 0, -FORT_HALF), true],   # North (gate)
-		[Vector3(-FORT_HALF, 0, FORT_HALF), Vector3(FORT_HALF, 0, FORT_HALF), false],
-		[Vector3(-FORT_HALF, 0, -FORT_HALF), Vector3(-FORT_HALF, 0, FORT_HALF), false],
-		[Vector3(FORT_HALF, 0, -FORT_HALF), Vector3(FORT_HALF, 0, FORT_HALF), false],
-	]
-	var palisade := _group_node(fort, "Palisade")
-	wall_cuts = WallCuts.new()
-	wall_cuts.name = "WallCuts"
-	add_child(wall_cuts)
-	var log_from := _logs.size()
-	for wall in walls:
-		var a: Vector3 = wall[0]
-		var b: Vector3 = wall[1]
-		var n := int(a.distance_to(b) / (LOG_R * 2.0))
-		var dir := (b - a).normalized()
-		for i in n + 1:
-			var p := a.lerp(b, float(i) / n)
-			if wall[2] and absf(p.x) < GATE_HALF:
-				continue
-			var h := WALL_HEIGHT + rng.randf_range(-0.25, 0.25)
-			# Visual log: local X along the wall, y scaled to the log's height.
-			_logs.append(Transform3D(Basis(dir, Vector3.UP * (h / WALL_HEIGHT), dir.cross(Vector3.UP)), p))
-		var length := a.distance_to(b)
-		var rot := atan2(-dir.z, dir.x)
-		# Traversal: the palisade is not climbed (user 2026-09-26: "on the wall i can climb over thru the wall"):
-		# its collider is a 0.38 m slab whose top read as a beam, 2 m above the firing step, while the logs end in
-		# points; the path check skips the shape being climbed, so the climb went through the logs.
-		# (Each collider is a wall of WallCuts: a window cut through it rebuilds it around the hole.)
-		if wall[2]:
-			var seg := FORT_HALF - GATE_HALF
-			var wl := _no_traverse(_box_collider(palisade, Vector3(-FORT_HALF + seg * 0.5, WALL_HEIGHT * 0.5, a.z), Vector3(seg, WALL_HEIGHT, LOG_R * 2), rot_y_of(0.0)))
-			wall_cuts.register_wall(wl, a, Vector3(-GATE_HALF, 0, a.z), WALL_HEIGHT, LOG_R * 2)
-			var wr := _no_traverse(_box_collider(palisade, Vector3(FORT_HALF - seg * 0.5, WALL_HEIGHT * 0.5, a.z), Vector3(seg, WALL_HEIGHT, LOG_R * 2), rot_y_of(0.0)))
-			wall_cuts.register_wall(wr, Vector3(GATE_HALF, 0, a.z), b, WALL_HEIGHT, LOG_R * 2)
-		else:
-			var wb := _no_traverse(_box_collider(palisade, (a + b) * 0.5 + Vector3(0, WALL_HEIGHT * 0.5, 0), Vector3(length, WALL_HEIGHT, LOG_R * 2), rot_y_of(rot)))
-			wall_cuts.register_wall(wb, a, b, WALL_HEIGHT, LOG_R * 2)
-	var seen_log := {}
-	for li in range(log_from, _logs.size()):
-		var lp: Vector3 = _logs[li].origin
-		var key := Vector2i(roundi(lp.x * 100.0), roundi(lp.z * 100.0))
-		if seen_log.has(key):
-			continue
-		seen_log[key] = true
-		var wi := wall_cuts.wall_of(lp)
-		if wi >= 0:
-			wall_cuts.add_log(wi, lp)
-	wall_cuts.finish_registration()
-
-	# Gate posts and lintel.
-	var gate := _group_node(fort, "Gate")
-	for s: float in [-1.0, 1.0]:
-		_no_traverse(_cyl_collider(gate, Vector3(s * (GATE_HALF + 0.1), 2.6, -FORT_HALF), 0.28, 5.2))
-	_no_traverse(_box_collider(gate, Vector3(0, 5.0, -FORT_HALF), Vector3(GATE_HALF * 2 + 0.8, 0.4, 0.45)))
-	# The gate's leaves on the posts' pintles (FortGate): open at the start, E opens and closes them, the axe cuts
-	# firing windows through them (their colliders are WallCuts walls that swing with them).
-	gate_leaves = FortGate.new()
-	gate_leaves.name = "Leaves"
-	gate_leaves.visuals = visuals
-	gate_leaves.materials = _mats if visuals else {}
-	gate_leaves.hinge_z = -FORT_HALF + 0.12
-	gate.add_child(gate_leaves)
-	gate_leaves.build(wall_cuts, NO_TRAVERSE)
-
-	# Firing step (walkway) and ramps.
-	var walk := _group_node(fort, "Walkway")
-	for s: float in [-1.0, 1.0]:
-		var cx := s * (GATE_HALF + (FORT_HALF - GATE_HALF) * 0.5)
-		_box_collider(walk, Vector3(cx, 2.2, -FORT_HALF + 1.0), Vector3(FORT_HALF - GATE_HALF - 0.5, 0.15, 1.6))
-		var ramp_x := FORT_HALF - 2.0 if s > 0.0 else -(FORT_HALF - 4.0)
-		_ramp_collider(walk, ramp_x, -FORT_HALF + 6.9, -FORT_HALF + 1.9, 2.3)
-	for x: float in LADDER_X:
-		_ladder(walk, x)
-
-	# Blockhouses on the north-west and south-east corners.
-	for corner: Vector3 in [Vector3(-FORT_HALF, 0, -FORT_HALF), Vector3(FORT_HALF, 0, FORT_HALF)]:
-		var bh := _group_node(fort, "Blockhouse_%s" % ("NW" if corner.x < 0.0 else "SE"))
-		_box_collider(bh, corner + Vector3(0, 1.75, 0), Vector3(4.5, 3.5, 4.5))
-		_box_collider(bh, corner + Vector3(0, 4.6, 0), Vector3(5.5, 2.2, 5.5))
+	_burn_palisade_rng(rng)
 
 	# Cabin (with its chimney) and storehouse.
 	var cabin := _group_node(fort, "Cabin")
-	var cabin_box := _box_collider(cabin, Vector3(-8, 1.5, 7), Vector3(7, 3, 5))
 	# Traversal: the 3.0 m walls are not a climb. Without this the free-run planned a
 	# climb_hang_3m up the walls into the roof (traversal review 9.6; see _cabin_roof_collider).
-	cabin_box.get_child(0).set_meta(&"trav", NO_TRAVERSE.duplicate())
+	_hollow_colliders(cabin, "cabin")
 	_box_collider(cabin, Vector3(-4.43, 3.4, 8), Vector3(0.9, 1.6, 0.9))    # Chimney: stone by its size.
 	var store := _group_node(fort, "Storehouse")
-	_box_collider(store, Vector3(9, 1.2, 4), Vector3(5, 2.4, 4))
+	_hollow_colliders(store, "storehouse")
 
 	# Supplies: crates (random turn from the level rng), barrels.
 	var supplies := _group_node(fort, "Supplies")
-	for p: Vector3 in [Vector3(5, 0.4, -6), Vector3(5.9, 0.4, -6.2), Vector3(5.4, 1.2, -6.1), Vector3(-10, 0.4, -4), Vector3(12, 0.4, -9)]:
+	for p: Vector3 in [Vector3(5, 0.4, -6), Vector3(5.9, 0.4, -6.2), Vector3(5.4, 1.2, -6.1), Vector3(-10, 0.4, -4), Vector3(13.6, 0.4, -9)]:      # (the last one moved from x 12 off the east ramp's foot)
 		var body := _box_collider(supplies, p, Vector3(0.8, 0.8, 0.8), rot_y_of(rng.randf_range(-0.3, 0.3)))
 		body.set_meta(&"structure", "crate")
 	for p: Vector3 in [Vector3(7, 0.5, -3), Vector3(7.7, 0.5, -3.4), Vector3(-5, 0.5, -10), Vector3(-5.8, 0.5, -10.3), Vector3(11, 0.5, 8)]:
 		var body := _cyl_collider(supplies, p, 0.32, 1.0)
 		body.set_meta(&"structure", "barrel")
 
-	# Flag pole in the parade ground.
-	var flag := _group_node(fort, "Flag")
-	_cyl_collider(flag, Vector3(-6, 5, -2), 0.07, 10.0)
+
+## The classic palisade drew a height for each of its logs from the level's rng (WALL_HEIGHT +- 0.25 m: 4 walls of 32 m in
+## logs of 0.38 m, the gate's gap left out). It is a build-menu piece now, but the vegetation that follows takes its
+## random numbers from the same generator: the same draws are made and thrown away, so the trees stand where they did.
+func _burn_palisade_rng(rng: RandomNumberGenerator) -> void:
+	for wall: Array in [[Vector3(-FORT_HALF, 0, -FORT_HALF), Vector3(FORT_HALF, 0, -FORT_HALF), true],
+			[Vector3(-FORT_HALF, 0, FORT_HALF), Vector3(FORT_HALF, 0, FORT_HALF), false],
+			[Vector3(-FORT_HALF, 0, -FORT_HALF), Vector3(-FORT_HALF, 0, FORT_HALF), false],
+			[Vector3(FORT_HALF, 0, -FORT_HALF), Vector3(FORT_HALF, 0, FORT_HALF), false]]:
+		var a: Vector3 = wall[0]
+		var b: Vector3 = wall[1]
+		var n := int(a.distance_to(b) / (LOG_R * 2.0))
+		for i in n + 1:
+			var p := a.lerp(b, float(i) / n)
+			if wall[2] and absf(p.x) < GATE_HALF:
+				continue
+			rng.randf_range(-0.25, 0.25)
 
 
 func _range(rng: RandomNumberGenerator) -> void:
@@ -319,9 +231,6 @@ func _range(rng: RandomNumberGenerator) -> void:
 
 func _extra_colliders() -> void:
 	var extra := _group_node(self, "ExtraColliders")
-	# Walkway posts under the inner rim beam.
-	for x: float in WALKWAY_POSTS:
-		_box_collider(extra, Vector3(x, RIM_BOTTOM * 0.5, POST_Z), Vector3(0.16, RIM_BOTTOM, 0.16))
 	for e: Array in EXTRA_COLLIDERS:
 		var body := _box_collider(extra, e[1], e[2])
 		body.name = String(e[0])
@@ -345,10 +254,7 @@ func _extra_colliders() -> void:
 func _grass_blockers() -> void:
 	var gb := _group_node(self, "GrassBlockers")
 	var boxes := []
-	# Blockhouse lower storeys: the dovetailed log ends reach 2.27 m from the centre (collider
-	# 2.25); the grown square's corners are chamfered, so the box is 0.2 m wider.
-	for corner: Vector3 in [Vector3(-FORT_HALF, 0, -FORT_HALF), Vector3(FORT_HALF, 0, FORT_HALF)]:
-		boxes.append([Transform3D(Basis(), corner + Vector3(0, 0.35, 0)), Vector3(2.45, 0.35, 2.45)])
+	# (The blockhouses are build pieces now: BuildGrass keeps grass off their footprints.)
 	# Straw trusses: the bound straw bulges up to ~0.2 m past the 1.6 x 0.9 x 0.9 box.
 	var cover := range_root.get_node_or_null("Cover")
 	if cover:
@@ -408,277 +314,9 @@ func _kit(group: String, parent: Node3D) -> StructureMeshKit:
 
 
 func _dress_fort() -> void:
-	_palisade()
-	_ribbands()
-	_gate()
-	_walkways()
-	for corner: Vector3 in [Vector3(-FORT_HALF, 0, -FORT_HALF), Vector3(FORT_HALF, 0, FORT_HALF)]:
-		_blockhouse(corner)
 	_cabin()
 	_storehouse()
 	_supplies()
-	_flag()
-
-
-## Palisade: three log variants, one MultiMesh each (bark + hewn tip surfaces). Duplicate logs at
-## the corners and logs buried inside the blockhouses are skipped (visual only).
-func _palisade() -> void:
-	if wall_cuts:
-		wall_cuts.materials = _mats
-	var meshes: Array[ArrayMesh] = []
-	for v in 3:
-		meshes.append(StructureGeometry.palisade_log(v, _mats))
-	var per: Array = [[], [], []]
-	var seen := {}
-	for t in _logs:
-		var key := Vector2i(roundi(t.origin.x * 100.0), roundi(t.origin.z * 100.0))
-		if seen.has(key):
-			continue
-		seen[key] = true
-		var inside := false
-		for c: Vector3 in [Vector3(-FORT_HALF, 0, -FORT_HALF), Vector3(FORT_HALF, 0, FORT_HALF)]:
-			if absf(t.origin.x - c.x) < 2.1 and absf(t.origin.z - c.z) < 2.1:
-				inside = true
-		if inside:
-			continue
-		per[_vrng.randi_range(0, 2)].append(t)
-	var parent := fort.get_node("Palisade") as Node3D
-	var tris := 0
-	for v in 3:
-		var list: Array = per[v]
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.use_custom_data = true
-		mm.mesh = meshes[v]
-		mm.instance_count = list.size()
-		for i in list.size():
-			var t: Transform3D = list[i]
-			var s := _vrng.randf_range(0.99, 1.05)
-			var yaw := Basis(Vector3.UP, _vrng.randf_range(-0.12, 0.12))
-			var b := t.basis * yaw
-			b = Basis(b.x * s, b.y, b.z * s)
-			mm.set_instance_transform(i, Transform3D(b, t.origin))
-			mm.set_instance_custom_data(i, Color(_vrng.randf(), _vrng.randf(), _vrng.randf_range(-1.0, 1.0), _vrng.randf_range(0.0, 0.7)))
-		var mmi := MultiMeshInstance3D.new()
-		mmi.name = "Logs%d" % v
-		mmi.multimesh = mm
-		parent.add_child(mmi)
-		if wall_cuts:
-			for i in list.size():
-				wall_cuts.set_log_visual((list[i] as Transform3D).origin, v, mm, i)
-		var n := 0
-		for si in meshes[v].get_surface_count():
-			n += meshes[v].surface_get_array_index_len(si) / 3
-		tris += n * list.size()
-	stats["palisade"] = tris
-
-
-## Ribband: a hewn rail pinned across the inside of the logs, 2.95 m up (it ties the stockade
-## together). It stands 9 cm off the logs, inside the player capsule's clearance from the wall
-## collider, so it needs no collider of its own.
-func _ribbands() -> void:
-	var kit := _kit("PalisadeTrim", fort.get_node("Palisade"))
-	var y := 2.95
-	var d := FORT_HALF - 0.245
-	var runs := [
-		[Vector3(-FORT_HALF + 2.3, y, -d), Vector3(-GATE_HALF - 0.35, y, -d)],
-		[Vector3(GATE_HALF + 0.35, y, -d), Vector3(FORT_HALF - 0.25, y, -d)],
-		[Vector3(-FORT_HALF + 0.25, y, d), Vector3(FORT_HALF - 2.3, y, d)],
-		[Vector3(-d, y, -FORT_HALF + 2.3), Vector3(-d, y, FORT_HALF - 0.25)],
-		[Vector3(d, y, -FORT_HALF + 0.25), Vector3(d, y, FORT_HALF - 2.3)],
-	]
-	for r: Array in runs:
-		var a: Vector3 = r[0]
-		var b: Vector3 = r[1]
-		var dir := (b - a).normalized()
-		var frame := Basis(dir, Vector3.UP, dir.cross(Vector3.UP))
-		kit.box(&"boards", Transform3D(frame, (a + b) * 0.5), Vector3(a.distance_to(b), 0.16, 0.09), StructureMeshKit.GRAIN_X,
-				_vrng.randi_range(0, 3), _vrng.randf(), Color(0.92, 0.9, 0.86, 0.9))
-
-
-func _gate() -> void:
-	var kit := _kit("Gate", fort.get_node("Gate"))
-	var r := _vrng
-	for s: float in [-1.0, 1.0]:
-		var x := s * (GATE_HALF + 0.1)
-		kit.box(&"boards", Transform3D(Basis(), Vector3(x, 2.6, -FORT_HALF)), Vector3(0.46, 5.2, 0.46), StructureMeshKit.GRAIN_Y,
-				r.randi_range(0, 3), r.randf(), Color(0.95, 0.93, 0.9, 1.0), StructureMeshKit.KIND_ENDGRAIN, 8, 0.0, 0.7)
-		# Chamfer strips on the four vertical edges (edge wear catches them).
-		for cx: float in [-1.0, 1.0]:
-			for cz: float in [-1.0, 1.0]:
-				var t := Transform3D(Basis(Vector3.UP, PI * 0.25), Vector3(x + cx * 0.215, 2.6, -FORT_HALF + cz * 0.215))
-				kit.box(&"boards", t, Vector3(0.05, 5.2, 0.05), StructureMeshKit.GRAIN_Y, r.randi_range(0, 3), r.randf(),
-						Color(1.05, 1.03, 1.0, 1.0), StructureMeshKit.KIND_ENDGRAIN, 4 | 8, 1.0)
-		# Iron pintles on the inner faces (the gate's leaves hang on them, FortGate).
-		for hy: float in [0.7, 3.4]:
-			kit.box(&"boards", Transform3D(Basis(), Vector3(x - s * 0.25, hy, -FORT_HALF + 0.12)), Vector3(0.06, 0.1, 0.08),
-					StructureMeshKit.GRAIN_X, 0, 0.0, Color.WHITE, StructureMeshKit.KIND_IRON)
-	kit.box(&"boards", Transform3D(Basis(), Vector3(0, 5.0, -FORT_HALF)), Vector3(GATE_HALF * 2 + 0.8, 0.4, 0.45),
-			StructureMeshKit.GRAIN_X, r.randi_range(0, 3), r.randf(), Color(0.95, 0.93, 0.9, 1.0))
-	# A small shingled hood over the lintel.
-	StructureGeometry.gable_roof(kit, Vector3(0, 5.2, -FORT_HALF), 0.3, GATE_HALF * 2 + 1.1, 35.0, PI * 0.5, r, detail, false)
-
-
-func _walkways() -> void:
-	var kit := _kit("Walkway", fort.get_node("Walkway"))
-	var r := _vrng
-	for s: float in [-1.0, 1.0]:
-		var x0 := GATE_HALF + 0.25
-		var x1 := FORT_HALF - 0.25
-		if s < 0.0:
-			x1 = FORT_HALF - 2.3          # the NW blockhouse covers the rest
-		var xa := s * x0
-		var xb := s * x1
-		var lo := minf(xa, xb)
-		var hi := maxf(xa, xb)
-		# Deck: five boards across, each in 2-3 lengths with staggered joints.
-		for j in 5:
-			var zc := -FORT_HALF + 0.2 + 0.15 + j * 0.325
-			var x := lo
-			while x < hi - 0.05:
-				var L := minf(r.randf_range(3.0, 5.0), hi - x)
-				if hi - (x + L) < 0.8:
-					L = hi - x
-				var t := r.randf_range(0.86, 1.06)
-				kit.box(&"boards", Transform3D(Basis(), Vector3(x + L * 0.5, 2.25 - r.randf_range(0.0, 0.004), zc)),
-						Vector3(L - 0.006, 0.05, 0.3), StructureMeshKit.GRAIN_X, r.randi_range(0, 3), r.randf(), Color(t, t, t * 0.98, 1.0),
-						StructureMeshKit.KIND_ENDGRAIN, 0, 0.0, 0.8)
-				x += L
-		if detail:
-			# Joists under the deck.
-			var jx := lo + 0.3
-			while jx < hi - 0.1:
-				kit.box(&"boards", Transform3D(Basis(), Vector3(jx, 2.175, -FORT_HALF + 1.0)), Vector3(0.12, 0.1, 1.6),
-						StructureMeshKit.GRAIN_Z, r.randi_range(0, 3), r.randf(), Color(0.85, 0.83, 0.8, 0.7))
-				jx += 1.55
-		# Rim beam on the posts, ledger against the wall.
-		kit.box(&"boards", Transform3D(Basis(), Vector3((lo + hi) * 0.5, (RIM_BOTTOM + 2.125) * 0.5, POST_Z)),
-				Vector3(hi - lo, 2.125 - RIM_BOTTOM, 0.16), StructureMeshKit.GRAIN_X, r.randi_range(0, 3), r.randf(), Color(0.9, 0.88, 0.85, 0.85))
-		kit.box(&"boards", Transform3D(Basis(), Vector3((lo + hi) * 0.5, 2.04, -FORT_HALF + 0.27)),
-				Vector3(hi - lo, 0.17, 0.14), StructureMeshKit.GRAIN_X, r.randi_range(0, 3), r.randf(), Color(0.8, 0.78, 0.75, 0.6))
-	for x: float in WALKWAY_POSTS:
-		kit.box(&"boards", Transform3D(Basis(), Vector3(x, RIM_BOTTOM * 0.5, POST_Z)), Vector3(0.16, RIM_BOTTOM, 0.16),
-				StructureMeshKit.GRAIN_Y, r.randi_range(0, 3), r.randf(), Color(0.95, 0.93, 0.9, 1.0), StructureMeshKit.KIND_ENDGRAIN, 8, 0.0, 0.6)
-	# Ramps (same frame as their colliders).
-	for s: float in [-1.0, 1.0]:
-		var ramp_x := FORT_HALF - 2.0 if s > 0.0 else -(FORT_HALF - 4.0)
-		_ramp_visual(kit, ramp_x, -FORT_HALF + 6.9, -FORT_HALF + 1.9, 2.3)
-	# Ladders (same frame as their markers and rail colliders).
-	for x: float in LADDER_X:
-		_ladder_visual(kit, x)
-
-
-## A ladder's rails (hewn, the size of their colliders) and round rungs (TravLaneClimb's pitch and radius: the rungs
-## the climbing clips' fists close on), the top rung under the boards' edge.
-func _ladder_visual(kit: StructureMeshKit, x: float) -> void:
-	var r := _vrng
-	var z := WALK_EDGE_Z + LADDER_OFF
-	var h := WALK_TOP + LADDER_RAIL.y
-	for sx: float in [-LADDER_HALF_W, LADDER_HALF_W]:
-		kit.box(&"boards", Transform3D(Basis(), Vector3(x + sx, h * 0.5, z - LADDER_RAIL.z * 0.4)), Vector3(LADDER_RAIL.x, h, LADDER_RAIL.z),
-				StructureMeshKit.GRAIN_Y, r.randi_range(0, 3), r.randf(), Color(0.92, 0.9, 0.87, 1.0), StructureMeshKit.KIND_ENDGRAIN, 0, 0.0, 0.6)
-	var pitch := TravLaneClimb.PITCH
-	var rr := TravLaneClimb.RUNG_R
-	var off := TravLaneClimb.first_rung_top()
-	var k := 0
-	while off + k * pitch <= WALK_TOP + 0.01:
-		var y := off + k * pitch - rr
-		_rung(kit, Vector3(x - LADDER_HALF_W, y, z), Vector3(x + LADDER_HALF_W, y, z), rr, r)
-		k += 1
-
-
-## A round rung from a to b (radius rr): one grid of 8 sides.
-func _rung(kit: StructureMeshKit, a: Vector3, b: Vector3, rr: float, r: RandomNumberGenerator) -> void:
-	const SEG := 8
-	var ax := (b - a).normalized()
-	var u := ax.cross(Vector3.UP).normalized()
-	if u.length() < 0.5:
-		u = ax.cross(Vector3.FORWARD).normalized()
-	var v := u.cross(ax).normalized()
-	var row := r.randi_range(0, 3)
-	var rows_p := []
-	var rows_n := []
-	var rows_u := []
-	var rows_c := []
-	for e: Vector3 in [a, b]:
-		var P := PackedVector3Array()
-		var N := PackedVector3Array()
-		var U := PackedVector2Array()
-		var C := PackedColorArray()
-		for j in SEG + 1:
-			var ang := TAU * j / SEG
-			var nrm := u * cos(ang) + v * sin(ang)
-			P.append(e + nrm * rr)
-			N.append(nrm)
-			U.append(Vector2((e - a).length() * 0.5, StructureMeshKit.row_v(row, float(j) / SEG)))
-			C.append(Color(0.72, 0.66, 0.58, 1.0))
-		rows_p.append(P)
-		rows_n.append(N)
-		rows_u.append(U)
-		rows_c.append(C)
-	kit.grid(&"boards", rows_p, rows_n, rows_u, rows_c)
-
-
-func _ramp_visual(kit: StructureMeshKit, x: float, z_bottom: float, z_top: float, top_y: float) -> void:
-	var t := _ramp_transform(x, z_bottom, z_top, top_y)
-	var length := Vector2(z_bottom - z_top, top_y).length()
-	var saved := kit.xform
-	kit.xform = saved * t
-	var r := _vrng
-	# Stringers inside the slab thickness, planks across, cleats for footing.
-	for sx: float in [-1.0, 1.0]:
-		kit.box(&"boards", Transform3D(Basis(), Vector3(sx * 0.5, -0.02, 0)), Vector3(0.1, 0.11, length),
-				StructureMeshKit.GRAIN_Z, r.randi_range(0, 3), r.randf(), Color(0.85, 0.83, 0.8, 0.8))
-	var z := -length * 0.5
-	while z < length * 0.5 - 0.05:
-		var bw := minf(0.2, length * 0.5 - z)
-		var tint := r.randf_range(0.86, 1.06)
-		kit.box(&"boards", Transform3D(Basis(), Vector3(0, 0.055, z + bw * 0.5)), Vector3(1.2, 0.04, bw - 0.012),
-				StructureMeshKit.GRAIN_X, r.randi_range(0, 3), r.randf(), Color(tint, tint, tint * 0.98, 1.0))
-		z += bw
-	if detail:
-		var cz := -length * 0.5 + 0.3
-		while cz < length * 0.5 - 0.2:
-			kit.box(&"boards", Transform3D(Basis(), Vector3(0, 0.092, cz)), Vector3(1.05, 0.035, 0.05),
-					StructureMeshKit.GRAIN_X, r.randi_range(0, 3), r.randf(), Color(1.0, 0.98, 0.95, 1.0), StructureMeshKit.KIND_ENDGRAIN, 8, 0.8)
-			cz += 0.42
-	kit.xform = saved
-
-
-func _blockhouse(corner: Vector3) -> void:
-	var tag := "NW" if corner.x < 0.0 else "SE"
-	var kit := _kit("Blockhouse_" + tag, fort.get_node("Blockhouse_" + tag))
-	var r := _vrng
-	StructureGeometry.hewn_box(kit, corner + Vector3(0, 1.75, 0), Vector3(4.5, 3.5, 4.5), 12, r)
-	StructureGeometry.hewn_box(kit, corner + Vector3(0, 4.6, 0), Vector3(5.5, 2.2, 5.5), 8, r, PackedStringArray(), false)
-	# Soffit of the jettied upper floor and the cantilevered joist ends.
-	for i in 4:
-		var out := [Vector3.RIGHT, Vector3.LEFT, Vector3.BACK, Vector3.FORWARD][i] as Vector3
-		var along := Vector3.UP.cross(out)
-		var c := corner + Vector3(0, 3.5, 0)
-		var a := c + out * 2.25 - along * 2.25
-		var b := c + out * 2.25 + along * 2.25
-		var e := c + out * 2.75 + along * 2.75
-		var f := c + out * 2.75 - along * 2.75
-		kit.quad(&"boards", a, b, e, f, Vector2(-2.25, StructureMeshKit.row_v(i, 0)), Vector2(2.25, StructureMeshKit.row_v(i, 0)),
-				Vector2(2.75, StructureMeshKit.row_v(i, 1)), Vector2(-2.75, StructureMeshKit.row_v(i, 1)), Color(0.8, 0.78, 0.75, 0.55),
-				StructureMeshKit.KIND_TEX, 0.0, PackedColorArray(), Vector3.DOWN)
-		for k in 5:
-			var s := -1.8 + k * 0.9
-			var p := c + out * 2.5 + along * s + Vector3(0, -0.1, 0)
-			kit.box(&"boards", Transform3D(Basis(along, Vector3.UP, out), p), Vector3(0.15, 0.2, 0.5), StructureMeshKit.GRAIN_Z,
-					r.randi_range(0, 3), r.randf(), Color(0.9, 0.88, 0.85, 0.75))
-		# Loopholes: two in the upper storey on every face, one below on the outer faces.
-		for s: float in [-1.2, 1.2]:
-			StructureGeometry.loophole(kit, c + out * 2.75 + along * s + Vector3(0, 1.05, 0), out, 0.1, 0.32, 0.03)
-		var outer := out.dot((corner - Vector3.ZERO).normalized()) > 0.1
-		if outer:
-			StructureGeometry.loophole(kit, c + out * 2.25 + along * 0.0 + Vector3(0, -1.9, 0), out, 0.1, 0.3, 0.03)
-	# Door on the parade side.
-	var door_out := Vector3.BACK if corner.z < 0.0 else Vector3.FORWARD
-	var door_x := corner.x + (1.2 if corner.x < 0.0 else -1.2)
-	StructureGeometry.door(kit, Vector3(door_x, 0.0, corner.z + door_out.z * 2.25), door_out, 0.9, 1.85, r)
-	StructureGeometry.gable_roof(kit, corner + Vector3(0, 5.7, 0), 5.5, 5.5, 32.0, 0.0, r, detail)
 
 
 func _cabin() -> void:
@@ -694,11 +332,11 @@ func _cabin() -> void:
 		ew.append(0.15 + k * 0.3)
 	ew.append(3.0)
 	StructureGeometry.round_log_face(kit, Vector3(c.x, 0, c.z - 2.5), Vector3.FORWARD, 7.0, ns, r)
-	StructureGeometry.round_log_face(kit, Vector3(c.x, 0, c.z + 2.5), Vector3.BACK, 7.0, ns, r)
+	var hb: Dictionary = FortHollow.BUILDINGS["cabin"]
+	FortHollow.door_wall(kit, hb, r)                  # the south face, the doorway cut through its logs
 	StructureGeometry.round_log_face(kit, Vector3(c.x - 3.5, 0, c.z), Vector3.LEFT, 5.0, ew, r)
 	StructureGeometry.round_log_face(kit, Vector3(c.x + 3.5, 0, c.z), Vector3.RIGHT, 5.0, ew, r)
-	kit.box(&"boards", Transform3D(Basis(), c), size - Vector3(0.05, 0.0, 0.05), StructureMeshKit.GRAIN_X, 0, 0.0,
-			Color(0.3, 0.28, 0.26, 0.4), StructureMeshKit.KIND_TEX, 8)
+	FortHollow.interior(kit, hb, r)
 	# Saddle-notched log ends at the four corners (0.25 m out; colliders in _cabin_log_end_colliders).
 	var rr := 0.155
 	for cx: float in [-11.5, -4.5]:
@@ -712,7 +350,7 @@ func _cabin() -> void:
 				var y := k * 0.3
 				StructureGeometry.log_end(kit, Vector3(cx - sx * (rr - 0.035), y, cz - sz * 0.05), Vector3(0, 0, sz), 0.3, rr, r)
 	# Door, shuttered window, roof, chimney.
-	StructureGeometry.door(kit, Vector3(-8, 0.0, 9.5), Vector3.BACK, 1.05, 2.02, r, 0.04)
+	StructureGeometry.door(kit, Vector3(-8, 0.0, 9.5), Vector3.BACK, 1.05, FortHollow.lintel_y(hb), r, 0.04, false)
 	StructureGeometry.shutter(kit, Vector3(-10.25, 0, 9.5), Vector3.BACK, 0.62, 0.62, 1.12, r)
 	StructureGeometry.gable_roof(kit, Vector3(-8, 3.0, 7), 5.0, 7.0, 35.0, PI / 2, r, detail)
 	StructureGeometry.chimney(kit, Vector3(-4.5, 0.0, 7.25), Vector3(-3.42, 1.9, 8.75), Vector2(-4.88, 7.55), Vector2(-3.98, 8.45), 2.6, 5.55)
@@ -799,8 +437,11 @@ func _chimney_smoke() -> void:
 func _storehouse() -> void:
 	var kit := _kit("Storehouse", fort.get_node("Storehouse"))
 	var r := _vrng
-	StructureGeometry.hewn_box(kit, Vector3(9, 1.2, 4), Vector3(5, 2.4, 4), 8, r)
-	StructureGeometry.door(kit, Vector3(6.5, 0.0, 4.0), Vector3.LEFT, 1.0, 1.85, r, 0.035)
+	var hb: Dictionary = FortHollow.BUILDINGS["storehouse"]
+	StructureGeometry.hewn_box(kit, Vector3(9, 1.2, 4), Vector3(5, 2.4, 4), 8, r, PackedStringArray(["-x"]), true, false)
+	FortHollow.door_wall(kit, hb, r)
+	FortHollow.interior(kit, hb, r)
+	StructureGeometry.door(kit, Vector3(6.5, 0.0, 4.0), Vector3.LEFT, 1.0, FortHollow.lintel_y(hb), r, 0.035, false)
 	StructureGeometry.gable_roof(kit, Vector3(9, 2.4, 4), 4.0, 5.0, 30.0, 0.0, r, detail)
 
 
@@ -817,20 +458,6 @@ func _supplies() -> void:
 			"barrel":
 				var t := Transform3D(Basis(Vector3.UP, r.randf() * TAU), sb.position)
 				StructureGeometry.barrel(kit, t, 0.32, 1.0, r)
-
-
-func _flag() -> void:
-	var node := fort.get_node("Flag") as Node3D
-	var kit := _kit("Flag", node)
-	StructureGeometry.pole(kit, Vector3(-6, 0, -2), -0.1, 10.0, 0.085, 0.055, _vrng)
-	# Cleat and a trodden base.
-	kit.box(&"boards", Transform3D(Basis(), Vector3(-5.92, 1.3, -2)), Vector3(0.04, 0.16, 0.05), StructureMeshKit.GRAIN_Y, 1, 0.0)
-	var flag := MeshInstance3D.new()
-	flag.name = "FlagCloth"
-	flag.mesh = StructureGeometry.flag_mesh(1.8, 1.1, _mats[&"flag"])
-	flag.position = Vector3(-6.0 + 0.08, 9.3, -2)
-	flag.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
-	node.add_child(flag)
 
 
 func _dress_range() -> void:
@@ -893,47 +520,7 @@ func _commit() -> void:
 		var n := kit.triangle_count()
 		stats[group] = n
 		total += n
-	stats["meshes_total"] = total + int(stats.get("palisade", 0))
-
-
-## Conservative box occluders strictly inside opaque geometry (spec 8.5): a thin slab in the
-## palisade's centre plane (logs overlap there) up to 3.3 m, below the lowest hewn point; the
-## blockhouse, cabin and storehouse boxes inset by 5 cm.
-func _occluders() -> void:
-	var node := _group_node(self, "Occluders")
-	var top := 3.3
-	var segs := [
-		[Vector3(-FORT_HALF + 2.3, 0, -FORT_HALF), Vector3(-GATE_HALF - 0.1, 0, -FORT_HALF)],
-		[Vector3(GATE_HALF + 0.1, 0, -FORT_HALF), Vector3(FORT_HALF - 0.1, 0, -FORT_HALF)],
-		[Vector3(-FORT_HALF + 0.1, 0, FORT_HALF), Vector3(FORT_HALF - 2.3, 0, FORT_HALF)],
-		[Vector3(-FORT_HALF, 0, -FORT_HALF + 2.3), Vector3(-FORT_HALF, 0, FORT_HALF - 0.1)],
-		[Vector3(FORT_HALF, 0, -FORT_HALF + 0.1), Vector3(FORT_HALF, 0, FORT_HALF - 2.3)],
-	]
-	for s: Array in segs:
-		var a: Vector3 = s[0]
-		var b: Vector3 = s[1]
-		var dir := (b - a).normalized()
-		var occ := OccluderInstance3D.new()
-		var box := BoxOccluder3D.new()
-		box.size = Vector3(a.distance_to(b), top, 0.04)
-		occ.occluder = box
-		occ.transform = Transform3D(Basis(dir, Vector3.UP, dir.cross(Vector3.UP)), (a + b) * 0.5 + Vector3(0, top * 0.5, 0))
-		node.add_child(occ)
-	var boxes := [
-		[Vector3(-FORT_HALF, 1.75, -FORT_HALF), Vector3(4.5, 3.5, 4.5)],
-		[Vector3(-FORT_HALF, 4.6, -FORT_HALF), Vector3(5.5, 2.2, 5.5)],
-		[Vector3(FORT_HALF, 1.75, FORT_HALF), Vector3(4.5, 3.5, 4.5)],
-		[Vector3(FORT_HALF, 4.6, FORT_HALF), Vector3(5.5, 2.2, 5.5)],
-		[Vector3(-8, 1.5, 7), Vector3(7, 3, 5)],
-		[Vector3(9, 1.2, 4), Vector3(5, 2.4, 4)],
-	]
-	for bx: Array in boxes:
-		var occ := OccluderInstance3D.new()
-		var box := BoxOccluder3D.new()
-		box.size = (bx[1] as Vector3) - Vector3(0.1, 0.1, 0.1)
-		occ.occluder = box
-		occ.position = bx[0]
-		node.add_child(occ)
+	stats["meshes_total"] = total
 
 
 # --- Collider helpers --------------------------------------------------------------------------
@@ -965,25 +552,14 @@ func _box_collider(parent: Node3D, pos: Vector3, size: Vector3, rot := Vector3.Z
 	return body
 
 
-## A ladder up to the firing step (LADDER_X): its TravLadder marker (the climb) and its two rails' colliders (no
-## traversal geometry: nothing vaults them, and no hang climb starts beside them, TraversalProbe.room_below).
-func _ladder(parent: Node3D, x: float) -> void:
-	var z := WALK_EDGE_Z + LADDER_OFF
-	var m := TravLadder.new()
-	m.name = "Ladder_" + ("E" if x > 0.0 else "W")
-	m.debug_draw = false
-	m.position = Vector3(x, 0.0, z)
-	m.bottom = Vector3.ZERO
-	m.top = Vector3(0.0, WALK_TOP, 0.0)
-	m.outward = Vector3(0, 0, 1)
-	m.width = LADDER_HALF_W * 2.0
-	m.rung_pitch = TravLaneClimb.PITCH
-	m.rung_offset = TravLaneClimb.first_rung_top()
-	m.rung_radius = TravLaneClimb.RUNG_R
-	parent.add_child(m)
-	var h := WALK_TOP + LADDER_RAIL.y
-	for sx: float in [-LADDER_HALF_W, LADDER_HALF_W]:
-		_no_traverse(_box_collider(parent, Vector3(x + sx, h * 0.5, z - LADDER_RAIL.z * 0.4), Vector3(LADDER_RAIL.x, h, LADDER_RAIL.z)))
+## The hollow colliders of a fort building (FortHollow) and its hung door, under `parent`.
+func _hollow_colliders(parent: Node3D, name: String) -> void:
+	var b: Dictionary = FortHollow.BUILDINGS[name]
+	for bx: Array in FortHollow.collider_boxes(b):
+		_no_traverse(_box_collider(parent, bx[0], bx[1]))
+	doors[name] = FortHollow.hang_door(parent, b)
+	if visuals:
+		FortHollow.light(parent, b)
 
 
 ## Tags a collider body's shapes as not traversal geometry (TravShapeRegistry.gate: "excluded").
@@ -1005,22 +581,3 @@ func _cyl_collider(parent: Node3D, pos: Vector3, radius: float, height: float) -
 	body.position = pos
 	parent.add_child(body)
 	return body
-
-
-## The original _ramp(): a plank ramp rising north (toward -Z) whose top surface runs from the
-## ground at z_bottom to top_y at z_top.
-static func _ramp_transform(x: float, z_bottom: float, z_top: float, top_y: float) -> Transform3D:
-	var thickness := 0.15
-	var run := z_bottom - z_top
-	var angle := atan2(top_y, run)
-	var normal := Vector3(0, cos(angle), sin(angle))
-	var mid := Vector3(x, top_y * 0.5, (z_bottom + z_top) * 0.5)
-	return Transform3D(Basis.from_euler(Vector3(angle, 0, 0)), mid - normal * thickness * 0.5)
-
-
-func _ramp_collider(parent: Node3D, x: float, z_bottom: float, z_top: float, top_y: float) -> void:
-	var run := z_bottom - z_top
-	var length := Vector2(run, top_y).length()
-	var t := _ramp_transform(x, z_bottom, z_top, top_y)
-	var body := _box_collider(parent, t.origin, Vector3(1.2, 0.15, length))
-	body.rotation.x = atan2(top_y, run)

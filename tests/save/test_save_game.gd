@@ -81,6 +81,25 @@ func _end() -> void:
 	quit(0 if fails.is_empty() else 1)
 
 
+## A palisade section of the fort's north wall east of the gate.
+func _section() -> BuiltPiece:
+	var w := BuildWorld.of(self, false) if current_scene else null
+	if w == null:
+		return null
+	for p in w.pieces():
+		if p.type == "palisade" and absf(p.global_position.z + 16.0) < 0.1 and p.global_position.x > 5.0:
+			return p
+	return null
+
+
+func _gate() -> BuiltPiece:
+	var w := BuildWorld.of(self, false)
+	for p in w.pieces():
+		if p.type == "palisade_gate":
+			return p
+	return null
+
+
 func _ground(x: float, z: float) -> Vector3:
 	return Vector3(x, FrontierTerrain.height_at(x, z), z)
 
@@ -187,11 +206,17 @@ func _change() -> void:
 	want["dry_piece"] = dry.piece_id
 	check(st.hanging_lb() >= 1.9, "venison hangs on the drying rack (%.1f lb; %s)" % [st.hanging_lb(), st.last.get("text", "")])
 	want["pieces"] = w.pieces().size()
-	# the fort: a piece out of the palisade, the gate shut
-	var wc := WallCuts.find(tree)
-	wc.cut(0, 4, 0.9, 1.6)
-	want["windows"] = wc.windows.size()
-	FortGate.find(tree).set_open(false, true)
+	# the fort (built from pieces, FortPlan): two pieces cut out of a palisade section (one covered), the gate shut
+	var sec := _section()
+	check(sec != null and w.fort_built, "the fort stands as pieces (the palisade section, FortPlan)")
+	want["section"] = sec.piece_id if sec else -1
+	PalisadeCuts.cut(w, sec.piece_id, 1, 1.0, 2.0)
+	PalisadeCuts.cut(w, sec.piece_id, 1, 2.0, 3.0)
+	PalisadeCuts.cut(w, sec.piece_id, 2, 3.0, 4.45)
+	PalisadeCuts.cover(w, {"piece": sec.piece_id, "k": 2, "h0": 3.0, "h1": 4.45})
+	want["windows"] = sec.cuts.size()
+	want["gate_piece"] = _gate().piece_id
+	_gate().door.set_open(false, true)
 	# items: the musket down, a spear lying, a torch dropped burning
 	var mw: Weapon = player.weapons["musket"]
 	var pw := PlacedWeapon.from_weapon(mw, "musket")
@@ -317,7 +342,7 @@ func _load() -> void:
 	check(absf(float(vh.rock_size.get(int(want.rock), 1.0)) - 0.5) < 0.01, "the rock is half quarried")
 	var w := BuildWorld.of(tree, false)
 	check(w != null and w.pieces().size() == int(want.pieces), "the buildings stand (%d)" % (w.pieces().size() if w else 0))
-	var doors := w.pieces().filter(func(p: BuiltPiece) -> bool: return p.door != null)
+	var doors := w.pieces().filter(func(p: BuiltPiece) -> bool: return p.type == "wall_door")
 	check(doors.size() == 1 and doors[0].door.is_open, "the door is open")
 	await frames(3)
 	var fires := level.find_children("*", "Campfire", true, false)
@@ -332,8 +357,14 @@ func _load() -> void:
 	var rack := mr.get_node_or_null("Rack") as WeaponRack if mr else null
 	var held := rack.held() if rack else []
 	check(held.size() == 1 and (held[0] as PlacedWeapon).key == "spear" and (held[0] as PlacedWeapon).rack_slot == 2, "the built rack holds its spear, in its slot")
-	check(WallCuts.find(tree).windows.size() == int(want.windows), "the palisade has its piece out (%d)" % WallCuts.find(tree).windows.size())
-	check(not FortGate.find(tree).open, "the gate is shut")
+	var sec2 := w.by_id(int(want.section))
+	check(sec2 != null and sec2.cuts.size() == int(want.windows) and sec2.cuts.size() == 3, "the palisade has its pieces out (%d)" % (sec2.cuts.size() if sec2 else -1))
+	check(sec2 != null and PalisadeCuts.removed(sec2.cuts, 2, false).is_empty() and not PalisadeCuts.removed(sec2.cuts, 2, true).is_empty(),
+			"the cover is still on the opening (the collider is closed there)")
+	check(sec2 != null and PalisadeCuts.removed(sec2.cuts, 1, false).size() == 1 and absf(float(PalisadeCuts.removed(sec2.cuts, 1, false)[0][1]) - 3.0) < 0.01,
+			"the two stacked pieces are one opening (1 m to 3 m)")
+	var gate2 := w.by_id(int(want.gate_piece))
+	check(gate2 != null and gate2.door != null and not gate2.door.is_open, "the gate is shut")
 	var placed := get_nodes_in_group(PlacedWeapon.GROUP).filter(func(n: Node) -> bool: return n is PlacedWeapon and (n as PlacedWeapon).rack == null)
 	check(placed.size() == 1 and placed[0].key == "musket" and not bool(placed[0].state.get("loaded", true)), "the musket lies where it was put, unloaded")
 	check(not player.is_carried("musket"), "and is not carried")

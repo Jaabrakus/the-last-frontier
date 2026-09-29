@@ -24,9 +24,12 @@ var supports: Array[int] = []
 ## A palisade's or gate's ground heights over its origin, under each stake / post (BuildSnap.check).
 var ground := PackedFloat32Array()
 var ctx := {}
+## A palisade's cut openings [[k (pair of stakes 0..3), h0, h1 (over the section's origin), covered 0 / 1]] (PalisadeCuts).
+var cuts: Array = []
 var door: BuildDoor
 var body: StaticBody3D
 var _visuals: Array[GeometryInstance3D] = []
+var _detail := true
 
 
 ## The reach the interactor allows (build mode's reach).
@@ -41,10 +44,11 @@ func _ready() -> void:
 ## (Re)builds the mesh and the colliders for `new_ctx`.
 func dress(new_ctx: Dictionary, detail := true) -> void:
 	ctx = new_ctx
+	_detail = detail
 	for v in _visuals:
 		if is_instance_valid(v):
 			v.queue_free()
-	_visuals = build_visuals(self, type, variant, ctx, ground, detail, true)
+	_visuals = build_visuals(self, type, variant, ctx, ground, detail, true, cuts)
 	if body:
 		remove_child(body)
 		body.queue_free()
@@ -52,7 +56,8 @@ func dress(new_ctx: Dictionary, detail := true) -> void:
 	body.name = "Body"
 	body.add_to_group(BODY_GROUP)
 	body.set_meta(&"built_piece_id", piece_id)
-	for c: Array in BuildGeometry.colliders(type, ctx):
+	var shapes: Array = PalisadeCuts.colliders(ctx, cuts) if type == "palisade" and not cuts.is_empty() else BuildGeometry.colliders(type, ctx)
+	for c: Array in shapes:
 		var cs := CollisionShape3D.new()
 		cs.shape = c[0]
 		cs.transform = c[1]
@@ -67,6 +72,11 @@ func dress(new_ctx: Dictionary, detail := true) -> void:
 	if door == null and type in ["wall_door", "palisade_gate"]:
 		door = BuildDoor.make(type)
 		add_child(door)
+	if type == "blockhouse" and door == null:
+		# the lower storey is hollow: a hung door in its doorway (E opens it) and a dim light inside
+		door = FortHollow.hang_door(self, FortPieces.HOLLOW)
+		if DisplayServer.get_name() != "headless":
+			FortHollow.light(self, FortPieces.HOLLOW)
 	if type == "campfire" and get_node_or_null("Campfire") == null:
 		var cf := Campfire.new()
 		cf.name = "Campfire"
@@ -79,6 +89,19 @@ func dress(new_ctx: Dictionary, detail := true) -> void:
 		hf.position = BuildGeometry.HEARTH_FIRE
 		hf.smoke_at = BuildGeometry.HEARTH_SMOKE - BuildGeometry.HEARTH_FIRE
 		add_child(hf)
+	if type == "ladder" and get_node_or_null("Ladder") == null:
+		# a climbable ladder (the fort's: a TravLadder marker over the rails)
+		var m := TravLadder.new()
+		m.name = "Ladder"
+		m.debug_draw = false
+		m.bottom = Vector3.ZERO
+		m.top = Vector3(0.0, FortPieces.WALK_TOP, 0.0)
+		m.outward = Vector3(0, 0, 1)
+		m.width = FortPieces.LADDER_HALF_W * 2.0
+		m.rung_pitch = TravLaneClimb.PITCH
+		m.rung_offset = TravLaneClimb.first_rung_top()
+		m.rung_radius = TravLaneClimb.RUNG_R
+		add_child(m)
 	if type == "lean_to":
 		add_to_group(&"shelters")
 	if type in ["musket_rack", "spear_barrel"] and get_node_or_null("Rack") == null:
@@ -97,6 +120,11 @@ func dress(new_ctx: Dictionary, detail := true) -> void:
 		var sm := Smokehouse.new()
 		sm.name = "Smokehouse"
 		add_child(sm)
+	if type == "cradle" and get_node_or_null("Cradle") == null:
+		# the baby's cradle (BabyLink lays the baby in it)
+		var cr := Cradle.new()
+		cr.name = "Cradle"
+		add_child(cr)
 	if type == "storage_chest" and get_node_or_null("Chest") == null:
 		var ch := StorageChest.new()
 		ch.name = "Chest"
@@ -118,14 +146,14 @@ func dress(new_ctx: Dictionary, detail := true) -> void:
 ## The look of a piece under `parent`: its mesh, a palisade's stakes (MultiMeshes), for a ghost (`solid` off)
 ## also a door's or gate's leaves where they hang shut. Returns the GeometryInstance3Ds made.
 static func build_visuals(parent: Node3D, p_type: String, p_variant: int, p_ctx: Dictionary, p_ground: PackedFloat32Array,
-		detail: bool, solid: bool) -> Array[GeometryInstance3D]:
+		detail: bool, solid: bool, p_cuts: Array = []) -> Array[GeometryInstance3D]:
 	var out: Array[GeometryInstance3D] = []
 	var mi := MeshInstance3D.new()
 	mi.name = "Mesh"
 	mi.mesh = BuildGeometry.mesh(p_type, p_variant, p_ctx, detail, solid or p_type != "palisade")
 	parent.add_child(mi)
 	out.append(mi)
-	if p_type in ["work_stone", "charcoal_mound", "forge"]:
+	if p_type in ["work_stone", "charcoal_mound", "forge", "flagpole"]:
 		# the parts not drawn with the kit: the knapping stone's boulder, the mound's earth dome, the forge's bellows
 		for part: Array in BuildGeometry.piece_parts(p_type):
 			var pm := MeshInstance3D.new()
@@ -138,8 +166,15 @@ static func build_visuals(parent: Node3D, p_type: String, p_variant: int, p_ctx:
 			out.append(pm)
 	if p_type == "palisade":
 		var per: Array = [[], [], []]
-		for s: Array in BuildGeometry.stake_transforms(p_ground, p_variant):
-			(per[int(s[0])] as Array).append(s)
+		var stakes := BuildGeometry.stake_transforms(p_ground, p_variant)
+		for i in stakes.size():
+			var s: Array = stakes[i]
+			var gone := PalisadeCuts.removed(p_cuts, PalisadeCuts.pair_of(i)) if not p_cuts.is_empty() else []
+			if gone.is_empty():
+				(per[int(s[0])] as Array).append(s)
+			else:
+				# a stake with a hole in it: the pieces of it over and under the hole
+				out.append_array(PalisadeCuts.stake_pieces(parent, s, gone))
 		for v in 3:
 			var list: Array = per[v]
 			if list.is_empty():
@@ -157,6 +192,8 @@ static func build_visuals(parent: Node3D, p_type: String, p_variant: int, p_ctx:
 			mmi.multimesh = mm
 			parent.add_child(mmi)
 			out.append(mmi)
+		if not p_cuts.is_empty():
+			out.append_array(PalisadeCuts.cover_meshes(parent, p_cuts, p_variant))
 	if not solid and p_type in ["wall_door", "palisade_gate"]:
 		for lf: Array in BuildDoor.ghost_leaves(p_type):
 			var lm := MeshInstance3D.new()
@@ -165,6 +202,16 @@ static func build_visuals(parent: Node3D, p_type: String, p_variant: int, p_ctx:
 			parent.add_child(lm)
 			out.append(lm)
 	return out
+
+
+## Sets the palisade's cut openings (PalisadeCuts) and dresses it again: stakes with holes, the collider round them.
+func set_cuts(new_cuts: Array) -> void:
+	cuts = new_cuts
+	dress(ctx, _detail)
+	var w := get_parent() as BuildWorld
+	if w:
+		w.grass.mark()
+		w.changed.emit()
 
 
 ## Its sockets in world space: [[kind, Transform3D]].

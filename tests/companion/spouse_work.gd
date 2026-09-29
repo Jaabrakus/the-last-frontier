@@ -42,19 +42,17 @@ func _run() -> void:
 	await _frames(120)
 	h = Household.find(self)
 	var sc := h.sc
-	# a store of her own (no chest in the level yet), the hearth 6 m from her
-	var store := HouseholdStock.new()
+	# the fort's own chests (FortPlan) are the household's store: raw venison in them
+	var store: HouseholdStock = h.stock
+	print("chests: ", get_nodes_in_group(StorageChest.GROUP).size())
 	store.put("venison", 6)
-	sc.stock = store
-	h.body.hearth = h.body.global_position + Vector3(6, 0, 0)
-	h.body.home = h.body.hearth
 	print(h.set_role("home"))
 	var core := h.bridge.core
 	var first_kneel := -1
 	for i in 1500:
 		await process_frame
 		core.advance(0.8)
-		if h.body._phase == "work" and first_kneel < 0:
+		if h.body._phase == "work" and sc.busy() and first_kneel < 0:
 			first_kneel = i
 			print("kneeling at frame ", i, " at ", h.body.global_position, " task ", sc.task)
 			var to := h.body.global_position - player.global_position
@@ -67,7 +65,6 @@ func _run() -> void:
 			break
 	print("store: ", store.all(), " journal: ", sc.journal.slice(-3))
 	# outside: goes out to forage
-	sc.stock = store
 	print(h.set_role("outside"))
 	var far := 0.0
 	var did := false

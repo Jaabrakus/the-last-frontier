@@ -20,7 +20,7 @@ extends RefCounted
 const G := preload("res://scripts/building/build_geometry.gd")
 const WALLS := ["wall", "wall_window", "wall_door"]
 ## Pieces R flips end for end when snapped.
-const FLIPS := ["wall", "wall_window", "wall_door", "gable", "roof", "palisade", "palisade_gate"]
+const FLIPS := ["wall", "wall_window", "wall_door", "gable", "roof", "palisade", "palisade_gate", "walkway"]
 ## Pieces that may pass through each other (a chimney stack through the roof).
 const OVERLAP_OK := {"hearth": ["roof", "gable"], "roof": ["hearth"], "gable": ["hearth"],
 		"drying_rack": ["campfire"], "campfire": ["drying_rack"]}
@@ -30,12 +30,12 @@ const FOOT := {"bough_bed": [Vector2(0.5, 1.0), 0.3], "pole_bed": [Vector2(0.48,
 		"musket_rack": [Vector2(0.9, 0.25), 0.3], "spear_barrel": [Vector2(0.24, 0.24), 0.2],
 		"drying_rack": [Vector2(1.05, 0.45), 0.5], "tanning_frame": [Vector2(1.3, 0.7), 0.45],
 		"alchemy_table": [Vector2(0.64, 0.29), 0.2], "workbench": [Vector2(0.8, 0.3), 0.2],
-		"stretching_hoop": [Vector2(0.4, 0.35), 0.5], "storage_chest": [Vector2(0.42, 0.22), 0.15],
+		"stretching_hoop": [Vector2(0.4, 0.35), 0.5], "storage_chest": [Vector2(0.42, 0.22), 0.15], "cradle": [Vector2(0.27, 0.48), 0.15],
 		"woodpile": [Vector2(0.95, 0.28), 0.3], "smokehouse": [Vector2(1.0, 0.9), 0.35]}
 ## Socket kinds a snapped piece rests on: taking the socket's piece down needs this one gone first.
 const SUPPORTING := ["edge", "corner", "wall_top", "roof_end"]
 ## Socket kinds whose piece stands on the ground like the socket's own piece.
-const SAME_GROUND := ["wall_end", "post_side", "pal_end"]
+const SAME_GROUND := ["wall_end", "post_side", "pal_end", "pal_inside", "walk_end", "walk_front"]
 ## Candidates check() is tried on per frame (best first; the first that can be built wins).
 const MAX_CANDIDATES := 6
 ## Score bias per socket kind: where two sockets put a piece in the same place (a wall on a floor's edge or at the
@@ -71,11 +71,14 @@ static func sockets_local(type: String) -> Array:
 		"palisade", "palisade_gate":
 			out.append(["pal_end", Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(h, 0, 0))])
 			out.append(["pal_end", Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(-h, 0, 0))])
+	out.append_array(FortPieces.sockets(type))
 	return out
 
 
 ## The socket kinds a piece takes: {kind: [Transform3D of the piece in the socket's frame]}.
 static func attach(type: String) -> Dictionary:
+	if FortPieces.is_fort_piece(type):
+		return FortPieces.attach(type)
 	var h := G.L * 0.5
 	var inline := Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(0, 0, h))
 	var round_a := Transform3D(Basis(), Vector3(h, 0, 0))
@@ -103,6 +106,8 @@ static func attach(type: String) -> Dictionary:
 ## these do; sockets put pieces side by side without it (walls at a corner, a wall on a floor, a post at a wall's
 ## end, a gable beside a roof bay).
 static func inner_local(type: String) -> Array:
+	if FortPieces.is_fort_piece(type):
+		return FortPieces.inner(type)
 	match type:
 		"floor":
 			return [[Transform3D(Basis(), Vector3(0, G.FLOOR_H * 0.5, 0)), Vector3(1.4, G.FLOOR_H * 0.5 - 0.03, 1.4)]]
@@ -152,6 +157,8 @@ static func inner_local(type: String) -> Array:
 			return [[Transform3D(Basis(), Vector3(0, 0.9, -0.1)), Vector3(G.HOOP_R, 0.7, 0.3)]]
 		"storage_chest":
 			return [[Transform3D(Basis(), Vector3(0, 0.26, 0)), Vector3(G.CHEST_W * 0.5, 0.22, G.CHEST_D * 0.5)]]
+		"cradle":
+			return [[Transform3D(Basis(), Vector3(0, 0.22, 0)), Vector3(G.CRADLE_W * 0.5, 0.2, G.CRADLE_L * 0.5)]]
 		"woodpile":
 			return [[Transform3D(Basis(), Vector3(0, 0.5, 0)), Vector3(G.WOOD_L * 0.5 + 0.05, 0.45, G.WOOD_D * 0.5)]]
 		"smokehouse":
@@ -167,6 +174,8 @@ static func inner_local(type: String) -> Array:
 
 ## A point in the middle of the piece (its frame): what the crosshair is matched against.
 static func center_local(type: String) -> Vector3:
+	if FortPieces.is_fort_piece(type):
+		return FortPieces.center(type)
 	match type:
 		"floor":
 			return Vector3(0, 0.2, 0)
@@ -200,6 +209,8 @@ static func center_local(type: String) -> Vector3:
 			return Vector3(0, 1.05, 0)
 		"storage_chest":
 			return Vector3(0, 0.35, 0)
+		"cradle":
+			return Vector3(0, 0.25, 0)
 		"woodpile":
 			return Vector3(0, 0.5, 0)
 		"smokehouse":
@@ -255,7 +266,7 @@ static func candidates(type: String, world: BuildWorld, aim: Vector3, radius: fl
 				xf.basis = xf.basis.orthonormalized()
 				# in line off either end: the same way round as the piece it continues (the socket frames of the
 				# two ends face opposite ways, so off the -X end the in-line frame comes out turned end for end)
-				if off.origin.z > 0.0 and kind in ["wall_end", "pal_end", "roof_end"] and xf.basis.z.dot(pxf.basis.z) < 0.0:
+				if off.origin.z > 0.0 and kind in ["wall_end", "pal_end", "roof_end", "walk_end"] and xf.basis.z.dot(pxf.basis.z) < 0.0:
 					xf.basis = xf.basis * Basis(Vector3.UP, PI)
 				var ref := xf * c_local
 				var dd := Vector2(ref.x - aim.x, ref.z - aim.z).length() + 0.5 * absf(ref.y - aim.y) + float(KIND_BIAS.get(kind, 0.0))
@@ -408,9 +419,9 @@ static func _ground(type: String, xf: Transform3D, kind: String, grounded: bool,
 			if hi - lo > (0.3 if type == "campfire" else 0.6):
 				return {"reason": "Needs flatter ground"}
 		"bough_bed", "pole_bed", "musket_rack", "spear_barrel", "drying_rack", "tanning_frame", "alchemy_table", "workbench", \
-				"stretching_hoop", "storage_chest", "woodpile", "smokehouse":
+				"stretching_hoop", "storage_chest", "cradle", "woodpile", "smokehouse", "walkway", "walkway_ramp", "ladder", "blockhouse", "flagpole":
 			# the corners of its footprint and the middle on the ground (or a floor); it sits at the highest
-			var f: Array = FOOT[type]
+			var f: Array = FOOT[type] if FOOT.has(type) else FortPieces.foot(type)
 			var e: Vector2 = f[0]
 			var pts: Array = [Vector3(-e.x, 0, -e.y), Vector3(e.x, 0, -e.y), Vector3(-e.x, 0, e.y), Vector3(e.x, 0, e.y), Vector3.ZERO]
 			var ys := _samples(xf, pts, space, skip, 2.0 if free else 0.6, 2.0)

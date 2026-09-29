@@ -3,12 +3,47 @@
   "version": 1,
   "summary": "Build mode (B): log cabins, windows, doors, palisade forts and chimneys from the logs and stone in the pack (scripts/building/). Every number here is a design value and tunable. Pieces are 3 m modules: they snap to each other's sockets (floor edges, wall ends and tops, roof ends, wall faces) or stand on the ground on a 0.25 m / 15 degree grid.",
   "provenance": "Pieces, meshes and colliders are the project's own, generated in code (scripts/building/build_geometry.gd) with the fort's StructureMeshKit and StructureMaterials (the CC0 Poly Haven textures processed for the fort, assets/environment/structures/textures/SOURCES.md). No animation data is used.",
-  "order": ["floor", "wall", "wall_window", "wall_door", "post", "gable", "roof", "hearth", "campfire", "lean_to", "bough_bed", "drying_rack", "woodpile", "smokehouse", "pole_bed", "musket_rack", "spear_barrel", "storage_chest", "tanning_frame", "alchemy_table", "workbench", "stretching_hoop", "work_stone", "charcoal_mound", "forge", "trap_steel", "trap_snare", "trap_deadfall", "palisade", "palisade_gate", "opening_repair", "opening_cover", "opening_door"],
+  "order": ["floor", "wall", "wall_window", "wall_door", "post", "gable", "roof", "hearth", "campfire", "lean_to", "bough_bed", "drying_rack", "woodpile", "smokehouse", "pole_bed", "cradle", "musket_rack", "spear_barrel", "storage_chest", "tanning_frame", "alchemy_table", "workbench", "stretching_hoop", "work_stone", "charcoal_mound", "forge", "trap_steel", "trap_snare", "trap_deadfall", "palisade", "palisade_gate", "walkway", "walkway_ramp", "ladder", "blockhouse", "flagpole", "opening_repair", "opening_cover"],
   "pieces": {
+    "walkway": {
+      "group": "Fort",
+      "name": "Firing step",
+      "summary": "A 3 m section of the walkway along the inside of a palisade: a plank deck on joists at head height, a rim beam on a post. Snaps to a palisade's inside and to the next section.",
+      "cost": {"log": 4},
+      "free": true
+    },
+    "walkway_ramp": {
+      "group": "Fort",
+      "name": "Walkway ramp",
+      "summary": "A plank ramp with cleats up to the firing step: snaps to a walkway's open edge.",
+      "cost": {"log": 5},
+      "free": true
+    },
+    "ladder": {
+      "group": "Fort",
+      "name": "Ladder",
+      "summary": "A ladder up to the firing step, climbed with the rung clips: snaps to a walkway's open edge.",
+      "cost": {"log": 3},
+      "free": true
+    },
+    "blockhouse": {
+      "group": "Fort",
+      "name": "Blockhouse",
+      "summary": "A two-storey hewn-log corner tower, its upper floor jettied over the lower, with loopholes on every face, a hung door (E) into the hollow lower storey on one side and a shingled roof.",
+      "cost": {"log": 40},
+      "free": true
+    },
+    "flagpole": {
+      "group": "Fort",
+      "name": "Flag pole",
+      "summary": "A tall pole with a flag flying from it.",
+      "cost": {"log": 4},
+      "free": true
+    },
     "opening_repair": {
       "group": "Fort",
       "name": "Repair the wall",
-      "summary": "Aimed into an opening chopped in the palisade or the gate (WallCuts): the logs (or planks) stand there again.",
+      "summary": "Aimed into an opening cut in the palisade (the axe cuts windows in it, from belly height up): the stakes stand there again.",
       "cost": {"log": 2},
       "free": true,
       "opening": "repair"
@@ -16,18 +51,10 @@
     "opening_cover": {
       "group": "Fort",
       "name": "Cover with logs",
-      "summary": "Aimed into an opening chopped in the palisade or the gate: horizontal logs across it close it (the axe chops them out again).",
+      "summary": "Aimed into an opening cut in the palisade: horizontal logs across it close it (the axe chops them out again).",
       "cost": {"log": 1},
       "free": true,
       "opening": "cover"
-    },
-    "opening_door": {
-      "group": "Fort",
-      "name": "Door in the wall",
-      "summary": "Aimed into an opening in the palisade chopped open from the ground up (1.85 m): a hung plank door, E opens and shuts it.",
-      "cost": {"log": 3},
-      "free": true,
-      "opening": "door"
     },
     "floor": {
       "group": "Cabin",
@@ -102,7 +129,7 @@
     "palisade": {
       "group": "Fort",
       "name": "Palisade wall",
-      "summary": "Eight sharpened stakes set in the ground (they follow it), with a ribband pinned inside.",
+      "summary": "Eight sharpened stakes set in the ground (they follow it), with a ribband pinned inside. The felling axe cuts windows in it in pieces, from belly height up; build mode fills a cut in again.",
       "cost": {"log": 8},
       "free": true
     },
@@ -237,6 +264,17 @@
       "summary": "A log propped over the bait on a figure-four between two stakes. Place it, then E sets it (deadfall stakes from the pack, and a hatchet or an axe). Raccoons, martens, minks, fishers and hares.",
       "cost": {},
       "free": true
+    },
+    "cradle": {
+      "group": "Furniture",
+      "name": "Cradle",
+      "summary": "A small plank rocking cradle on two curved rockers with a hood over the head end and a straw tick in it: where the baby is laid to sleep. E with the baby in your arms lays it in; E on it takes the baby up. Your wife lays the baby in it when she goes to work or sleeps.",
+      "cost": {
+        "log": 2,
+        "rawhide": 1
+      },
+      "free": true,
+      "on_floor": true
     },
     "storage_chest": {
       "group": "Furniture",

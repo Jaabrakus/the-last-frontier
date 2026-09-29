@@ -102,6 +102,8 @@ func _ready() -> void:
 		# player's clock (needs the bridge's core, so the same switch)
 		Household.install(self, player)
 	StartupProfile.mark("survival")
+	# the fort's furnishing from the build menu's pieces (scripts/building/fort_plan.gd): the wife's work
+	FortPlan.install(self)
 	# forage (scripts/forage): berries, nuts and herbs where they grow; the deer feed on them too
 	var forage := ForageField.new()
 	forage.name = "Forage"

@@ -109,7 +109,7 @@ static func palisade_log(variant: int, materials: Dictionary) -> ArrayMesh:
 
 ## A piece of palisade log `variant` (the same log as palisade_log: its rng draws are the same), the part between
 ## local heights y_lo and y_hi (mesh space: base -0.15, apex PALISADE_H): a window chopped through the wall
-## (WallCuts) leaves the log below the sill and above the lintel. A cut end is a flat axe-hewn face (hewn_mm);
+## (PalisadeCuts, the built palisade's windows) leaves the log below the sill and above the lintel. A cut end is a flat axe-hewn face (hewn_mm);
 ## a piece whose y_hi reaches the point keeps it. y_hi at most the lowest point of the tip's scallop ring.
 static func palisade_log_piece(variant: int, materials: Dictionary, y_lo: float, y_hi: float) -> ArrayMesh:
 	var kit := K.new()
@@ -323,7 +323,7 @@ static func hewn_face(kit: K, c: Vector3, out: Vector3, w: float, bounds: Packed
 ## All four faces of a box as hewn-log walls, plus a dark backing box (inset 3.5 cm) that closes
 ## the corners. `skip_faces`: faces to leave out ("+x", "-x", "+z", "-z").
 static func hewn_box(kit: K, center: Vector3, size: Vector3, courses: int, rng: RandomNumberGenerator,
-		skip_faces := PackedStringArray(), ground_ao := true) -> void:
+		skip_faces := PackedStringArray(), ground_ao := true, backing := true) -> void:
 	var y0 := center.y - size.y * 0.5
 	var y1 := center.y + size.y * 0.5
 	var bounds := PackedFloat32Array()
@@ -337,8 +337,9 @@ static func hewn_box(kit: K, center: Vector3, size: Vector3, courses: int, rng: 
 		var out: Vector3 = f[1]
 		var half := size.x * 0.5 if absf(out.x) > 0.5 else size.z * 0.5
 		hewn_face(kit, center + out * half, out, f[2], bounds, rng, 0 if i < 2 else 1, 0.28, ground_ao)
-	kit.box(&"boards", Transform3D(Basis(), center), size - Vector3(0.07, 0.0, 0.07), K.GRAIN_X, 0, 0.0,
-			Color(0.35, 0.33, 0.3, 0.4), K.KIND_TEX, 8)
+	if backing:
+		kit.box(&"boards", Transform3D(Basis(), center), size - Vector3(0.07, 0.0, 0.07), K.GRAIN_X, 0, 0.0,
+				Color(0.35, 0.33, 0.3, 0.4), K.KIND_TEX, 8)
 
 
 # --- Round-log cabin walls ----------------------------------------------------------------------
@@ -599,7 +600,7 @@ static func _gable_ends(kit: K, w: float, d: float, p: float, half: float, rng: 
 ## Plank door (vertical boards, two strap hinges, latch) with a casing, on a wall whose outer
 ## surface is at `c` (centre of the door at the ground line), facing `out`.
 static func door(kit: K, c: Vector3, out: Vector3, width: float, height: float, rng: RandomNumberGenerator,
-		proud := 0.04) -> void:
+		proud := 0.04, leaf := true) -> void:
 	var up := Vector3.UP
 	var along := up.cross(out)
 	var frame := Basis(along, up, out)
@@ -608,18 +609,21 @@ static func door(kit: K, c: Vector3, out: Vector3, width: float, height: float, 
 	var n := maxi(3, int(round(width / 0.2)))
 	var bw := width / n
 	for i in n:
+		if not leaf:
+			break                 # a hung leaf (BuildDoor) closes the doorway: only the casing is drawn here
 		var x := -width * 0.5 + bw * (i + 0.5)
 		var t := rng.randf_range(0.85, 1.05)
 		kit.box(&"boards", Transform3D(Basis(), Vector3(x, height * 0.5 + 0.03, 0.0)), Vector3(bw - 0.008, height, 0.04),
 				K.GRAIN_Y, rng.randi_range(0, 3), rng.randf(), Color(t * 0.92, t * 0.9, t * 0.88, 1.0), K.KIND_TEX, 32)
 	# Strap hinges (hinge side at -x) and a latch bar.
-	for hy: float in [height * 0.2, height * 0.8]:
-		kit.box(&"boards", Transform3D(Basis(), Vector3(-width * 0.5 + width * 0.33, hy, 0.024)), Vector3(width * 0.62, 0.05, 0.008),
-				K.GRAIN_X, 0, 0.0, Color.WHITE, K.KIND_IRON, 32)
-		kit.box(&"boards", Transform3D(Basis(), Vector3(-width * 0.5 - 0.02, hy, 0.02)), Vector3(0.05, 0.08, 0.03),
-				K.GRAIN_X, 0, 0.0, Color.WHITE, K.KIND_IRON, 32)
-	kit.box(&"boards", Transform3D(Basis(), Vector3(width * 0.36, height * 0.52, 0.03)), Vector3(0.2, 0.04, 0.03),
-			K.GRAIN_X, 1, 0.3, Color(0.8, 0.78, 0.75, 1.0), K.KIND_TEX, 32)
+	if leaf:
+		for hy: float in [height * 0.2, height * 0.8]:
+			kit.box(&"boards", Transform3D(Basis(), Vector3(-width * 0.5 + width * 0.33, hy, 0.024)), Vector3(width * 0.62, 0.05, 0.008),
+					K.GRAIN_X, 0, 0.0, Color.WHITE, K.KIND_IRON, 32)
+			kit.box(&"boards", Transform3D(Basis(), Vector3(-width * 0.5 - 0.02, hy, 0.02)), Vector3(0.05, 0.08, 0.03),
+					K.GRAIN_X, 0, 0.0, Color.WHITE, K.KIND_IRON, 32)
+		kit.box(&"boards", Transform3D(Basis(), Vector3(width * 0.36, height * 0.52, 0.03)), Vector3(0.2, 0.04, 0.03),
+				K.GRAIN_X, 1, 0.3, Color(0.8, 0.78, 0.75, 1.0), K.KIND_TEX, 32)
 	# Casing: jambs and head.
 	for sx: float in [-1.0, 1.0]:
 		kit.box(&"boards", Transform3D(Basis(), Vector3(sx * (width * 0.5 + 0.06), (height + 0.1) * 0.5, 0.0)),

@@ -1,6 +1,7 @@
 extends SceneTree
-## The fort's ladders up to the firing step (user 2026-09-26: "add the climbing and ladders in the game"), on the real
-## level with the real player: both ladders are baked as climbing lanes; walking into a ladder mounts it, holding
+## The fort's ladders up to the firing step (user 2026-09-26: "add the climbing and ladders in the game"; since 2026-09-28
+## the ladder build pieces FortPlan stamps at x = +-6, z = -13.95), on the real level with the real player: both ladders
+## are baked as climbing lanes; walking into a ladder mounts it, holding
 ## forward climbs it and steps off onto the walkway's boards; holding back climbs down and steps off onto the ground.
 ##
 ##   Godot --headless --fixed-fps 120 --path . -s tests/traversal/test_fort_ladders.gd
@@ -9,6 +10,10 @@ extends SceneTree
 var _fails: Array[String] = []
 var _checks := 0
 var p: FrontierPlayer
+const LADDER_X := [6.0, -6.0]          ## the ladder pieces' x (data/building/fort_structure.json)
+const LADDER_Z := -13.95               ## their z: 25 cm in front of the firing step's open edge (z -14.2)
+const WALK_TOP := FortPieces.WALK_TOP
+const WALK_EDGE_Z := -14.2
 
 
 func _check(ok: bool, what: String) -> void:
@@ -26,7 +31,7 @@ func _release() -> void:
 ## From 2 m in front of the ladder at x, walking into it: forward to the top, or (down) back from the upper hub.
 func _climb(x: float, down: bool, secs: float) -> Dictionary:
 	_release()
-	p.global_position = Vector3(x, 0.02, FrontierStructures.WALK_EDGE_Z + FrontierStructures.LADDER_OFF + 2.0)
+	p.global_position = Vector3(x, 0.02, LADDER_Z + 2.0)
 	p.velocity = Vector3.ZERO
 	p.yaw = 0.0
 	p.traversal.controller.teleported()
@@ -67,15 +72,15 @@ func _initialize() -> void:
 	while p.traversal == null or not p.traversal.world_ready:
 		await physics_frame
 	var lanes: Array = p.traversal.controller.ledges.lanes.values()
-	_check(lanes.size() == FrontierStructures.LADDER_X.size(), "both ladders are climbing lanes (%d)" % lanes.size())
-	for x: float in FrontierStructures.LADDER_X:
+	_check(lanes.size() == LADDER_X.size(), "both ladders are climbing lanes (%d)" % lanes.size())
+	for x: float in LADDER_X:
 		var r := await _climb(x, false, 9.0)
 		var e: Vector3 = r.end
 		_check("ladder_mount_bottom" in r.moves and "ladder_dismount_top" in r.moves and (r.modes as Dictionary).has("CLIMB"),
 				"x %.1f up: mount, climb, top dismount (%s)" % [x, str(r.moves)])
-		_check(absf(e.y - FrontierStructures.WALK_TOP) < 0.03 and bool(r.floor) and e.z < FrontierStructures.WALK_EDGE_Z - 0.1,
+		_check(absf(e.y - WALK_TOP) < 0.03 and bool(r.floor) and e.z < WALK_EDGE_Z - 0.1,
 				"x %.1f up: on the walkway's boards after it (%s, floor %s)" % [x, str(e.snapped(Vector3.ONE * 0.01)), r.floor])
-	var d := await _climb(FrontierStructures.LADDER_X[0], true, 10.0)
+	var d := await _climb(LADDER_X[0], true, 10.0)
 	var de: Vector3 = d.end
 	_check("ladder_dismount_bottom" in d.moves and not ("ladder_dismount_top" in d.moves),
 			"down: climbs back down and steps off at the bottom (%s)" % str(d.moves))

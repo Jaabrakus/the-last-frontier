@@ -73,6 +73,8 @@ func _test_data() -> void:
 	var want := {"floor": {"log": 4, "stone": 6}, "wall": {"log": 6}, "wall_window": {"log": 5}, "wall_door": {"log": 5},
 			"post": {"log": 1}, "gable": {"log": 2}, "roof": {"log": 4}, "hearth": {"stone": 16}, "palisade": {"log": 8},
 			"palisade_gate": {"log": 10},
+			# the fort's parts (scripts/building/fort_pieces.gd)
+			"walkway": {"log": 4}, "walkway_ramp": {"log": 5}, "ladder": {"log": 3}, "blockhouse": {"log": 40}, "flagpole": {"log": 4},
 			# camp pieces (tests/building/test_campfire.gd)
 			"campfire": {"stone": 6, "firewood": 4}, "lean_to": {"pole": 5, "branches": 10},
 			# beds, racks and crafting stations (tests/survival_game/test_camp_stations.gd)
@@ -89,8 +91,8 @@ func _test_data() -> void:
 			"work_stone": {},
 			# the charcoal mound and the forge (tests/survival_game/test_bare.gd)
 			"charcoal_mound": {"firewood": 8, "clay": 1}, "forge": {"stone": 10, "clay": 3, "log": 1, "rawhide": 1}}
-	# (and the three ways to close an opening chopped in a wall, WallCuts: no pieces of their own)
-	var fixes := {"opening_repair": {"log": 2}, "opening_cover": {"log": 1}, "opening_door": {"log": 3}}
+	# (and the two ways to close an opening cut in the palisade, PalisadeCuts: no pieces of their own)
+	var fixes := {"opening_repair": {"log": 2}, "opening_cover": {"log": 1}}
 	_check(d.order.size() == want.size() + fixes.size(), "the menu has the %d pieces and %d wall fixes (%d)" % [want.size(), fixes.size(), d.order.size()])
 	for id: String in fixes:
 		_check(d.order.has(id) and d.opening(id) != "" and d.cost(id) == fixes[id], "%s is a wall fix costing %s" % [id, fixes[id]])
@@ -374,6 +376,7 @@ func _test_level() -> void:
 	await _level_cabin()
 	await _level_validity()
 	await _level_palisade()
+	await _level_fort()
 	await _level_walk()
 	await _level_take_down()
 	# a weapon key ends build mode
@@ -394,6 +397,8 @@ func _test_level() -> void:
 
 var _floor: BuiltPiece
 var _walls := {}
+## The palisade section _level_palisade built out on the clearing (the fort's own are stamped: FortPlan).
+var _first_pal: BuiltPiece
 
 
 func _level_cabin() -> void:
@@ -562,6 +567,7 @@ func _level_palisade() -> void:
 	_check(first != null, "a palisade section on the ground")
 	if first == null:
 		return
+	_first_pal = first
 	var fx := first.global_transform
 	_check(absf(fx.basis.x.normalized().dot(Vector3.RIGHT)) > 0.99, "it runs across the view (the camera looks along -Z)")
 	_check(first.ground.size() == G.STAKES, "each stake has its ground height (%d)" % first.ground.size())
@@ -592,6 +598,87 @@ func _level_palisade() -> void:
 		var shut := await _until(func() -> bool: return gate.door.swing() <= 0.0, 240)
 		hit = player.get_world_3d().direct_space_state.intersect_ray(q)
 		_check(shut and not hit.is_empty(), "the shut gate closes the gateway")
+
+
+## The fort's own parts (FortPieces): a firing step on a palisade's inside, the next in line, a ramp and a ladder at its
+## open edge, a blockhouse and a flag pole on the ground.
+func _level_fort() -> void:
+	var world := BuildWorld.of(self)
+	var pal := _first_pal
+	_check(pal != null and is_instance_valid(pal), "a palisade section to build the firing step on")
+	if pal == null:
+		return
+	var fx := pal.global_transform
+	_set_pack("log", 300)
+	_stand(fx * Vector3(0, 0, -5.5), fx.basis.z)
+	await _frames(4)
+	var logs0 := mode.pack_count("log")
+	var w1 := await _build("walkway", fx * Vector3(0, 0, -1.0), "pal_inside")
+	_check(w1 != null, "a firing step snaps to a palisade's inside")
+	if w1 == null:
+		return
+	var back := w1.global_transform * Vector3(0, 0, -0.8)
+	var face := fx * Vector3(0, 0, -0.2)
+	_check(_near(Vector3(back.x, 0, back.z), Vector3(face.x, 0, face.z), 0.05), "its back edge lies against the palisade's inside face (%s, %s)" % [back, face])
+	_check(w1.global_transform.basis.z.dot(fx.basis.z) < -0.99, "its open edge faces into the fort")
+	var w2 := await _build("walkway", w1.global_transform * Vector3(3.1, 0, 0))
+	_check(w2 != null and _near(w2.global_position * Vector3(1, 0, 1), (w1.global_transform * Vector3(3.0, 0, 0)) * Vector3(1, 0, 1), 0.05),
+			"the next firing step follows on in line")
+	_stand(w1.global_transform * Vector3(5.0, 0, 4.0), w1.global_transform.basis.x)
+	await _frames(4)
+	var ramp := await _build("walkway_ramp", w1.global_transform * Vector3(0, 0, 0.8 + FortPieces.RAMP_RUN * 0.5), "walk_front")
+	_check(ramp != null, "a ramp snaps to the open edge")
+	if ramp:
+		var top := ramp.global_transform * Vector3(0, FortPieces.WALK_TOP, -FortPieces.RAMP_RUN * 0.5)
+		var deck := w1.global_transform * Vector3(0, FortPieces.WALK_TOP, 0.8)
+		_check(absf(top.y - deck.y) < 0.4 and Vector2(top.x - deck.x, top.z - deck.z).length() < 0.1, "its top meets the deck's edge (%s, %s)" % [top, deck])
+	var lad: BuiltPiece = null
+	if w2:
+		lad = await _build("ladder", w2.global_transform * Vector3(0, 0, 0.9), "walk_front")
+		_check(lad != null and lad.get_node_or_null("Ladder") is TravLadder, "a ladder with its climb marker snaps to the open edge")
+	# a person can walk up the ramp onto the deck
+	if ramp and w1:
+		var up := ramp.global_transform * Vector3(0, 0, FortPieces.RAMP_RUN * 0.5 + 1.0)
+		var to := w1.global_transform * Vector3(0, 0, 0.0) - up
+		_stand(up, Vector3(to.x, 0, to.z).normalized())
+		await _frames(10)
+		Input.action_press(&"move_forward")
+		await _frames(420)
+		Input.action_release(&"move_forward")
+		await _frames(20)
+		_check(player.global_position.y > w1.global_position.y + FortPieces.WALK_TOP - 0.4,
+				"the player walked up the ramp onto the firing step (y %.2f, deck at %.2f)" % [player.global_position.y, w1.global_position.y + FortPieces.WALK_TOP])
+	# the blockhouse and the flag pole on open ground
+	var spot := fx * Vector3(0, 0, -16.0)
+	_stand(spot + fx.basis.z * 6.0, -fx.basis.z)
+	await _frames(4)
+	var bh := await _build("blockhouse", spot)
+	_check(bh != null, "a blockhouse on open ground")
+	# (its lower storey is hollow with a hung door: FortPieces.HOLLOW)
+	_check(bh != null and bh.door != null and not bh.door.is_open, "the blockhouse hangs a door in its doorway")
+	if bh and bh.door:
+		var doorway := bh.global_transform * Vector3(1.2, 1.0, 2.25)
+		var qd := PhysicsRayQueryParameters3D.create(doorway + bh.global_transform.basis.z * 1.0, doorway - bh.global_transform.basis.z * 1.0)
+		_check(not player.get_world_3d().direct_space_state.intersect_ray(qd).is_empty(), "a shut blockhouse door stops a ray through the doorway")
+		bh.door.set_open(true, true)
+		await _frames(4)
+		_check(player.get_world_3d().direct_space_state.intersect_ray(qd).is_empty(), "an open one lets it through")
+		var qw := PhysicsRayQueryParameters3D.create(bh.global_transform * Vector3(0, 1.0, 2.6), bh.global_transform * Vector3(0, 1.0, -2.6))
+		_check(not player.get_world_3d().direct_space_state.intersect_ray(qw).is_empty(), "the walls stop a ray elsewhere")
+	var flag_at := fx * Vector3(9.0, 0, -8.0)
+	_stand(flag_at + fx.basis.z * 3.0, -fx.basis.z)
+	await _frames(4)
+	var flag := await _build("flagpole", flag_at)
+	_check(flag != null and flag.get_child_count() > 0, "a flag pole")
+	if flag:
+		var cloth := false
+		for c in flag.get_children():
+			if c is MeshInstance3D and String(c.name).begins_with("Part"):
+				cloth = true
+		_check(cloth, "the pole flies a flag")
+	var spent := logs0 - mode.pack_count("log")
+	var want := 4 + 4 + (5 if ramp else 0) + (3 if lad else 0) + (40 if bh else 0) + (4 if flag else 0)
+	_check(spent == want, "the fort pieces took %d logs (%d)" % [want, spent])
 
 
 func _level_walk() -> void:

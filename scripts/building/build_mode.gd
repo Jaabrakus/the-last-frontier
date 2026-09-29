@@ -364,19 +364,19 @@ func place() -> BuiltPiece:
 	return p
 
 
-## Closing an opening chopped in a wall (WallCuts; user 2026-09-26: "each one hole we cut we need to either be able to
-## build a doors there or cover it up with logs or repair it"): the opening the crosshair looks into, and whether
-## `kind` (BuildData.opening: repair / cover / door) can be done there.
+## Closing an opening cut in the palisade (PalisadeCuts; user 2026-09-26: "each one hole we cut we need to either be able to
+## build a doors there or cover it up with logs or repair it"; 2026-09-28: "a cut opening can be filled back in"): the opening
+## the crosshair looks into, and whether `kind` (BuildData.opening: repair / cover) can be done there.
 func _opening_placement(kind: String) -> void:
-	var wc := WallCuts.find(get_tree())
-	if wc == null:
-		verdict = {"ok": false, "reason": "Look into an opening chopped in the wall"}
+	var world := BuildWorld.of(get_tree(), false)
+	if world == null:
+		verdict = {"ok": false, "reason": "Look into an opening cut in the palisade"}
 		return
 	var ray := _aim_ray()
 	if ray.is_empty():
-		verdict = {"ok": false, "reason": "Look into an opening chopped in the wall"}
+		verdict = {"ok": false, "reason": "Look into an opening cut in the palisade"}
 		return
-	var op := wc.opening_at(ray[0], ray[1], player.global_position + Vector3.UP * 1.3, kind, [player.get_rid()])
+	var op := PalisadeCuts.opening_at(world, ray[0], ray[1], player.global_position, kind, [player.get_rid()])
 	if not bool(op.get("ok", false)):
 		verdict = {"ok": false, "reason": String(op.get("reason", ""))}
 		return
@@ -401,17 +401,15 @@ func _aim_ray() -> Array:
 
 
 func _close_opening(type: String, c: Dictionary) -> void:
-	var wc := WallCuts.find(get_tree())
+	var world := BuildWorld.of(get_tree(), false)
 	var op: Dictionary = verdict.get("opening", {})
-	if wc == null or op.is_empty():
+	if world == null or op.is_empty():
 		return
 	match data.opening(type):
 		"repair":
-			wc.repair(op)
+			PalisadeCuts.repair(world, op)
 		"cover":
-			wc.cover(op)
-		"door":
-			wc.add_door(op)
+			PalisadeCuts.cover(world, op)
 	var sk := skills()
 	if sk:
 		sk.award("building", sk.xp("building", "piece") + sk.xp("building", "log") * int(c.get("log", 0)))
@@ -442,7 +440,7 @@ func _show_opening_ghost(type: String) -> void:
 			ch.queue_free()
 		var mi := MeshInstance3D.new()
 		var bm := BoxMesh.new()
-		bm.size = Vector3(sz.x, sz.y, 0.12 if data.opening(type) == "door" else sz.z + 0.04)
+		bm.size = Vector3(sz.x, sz.y, sz.z + 0.04)
 		mi.mesh = bm
 		mi.material_override = _ghost_mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

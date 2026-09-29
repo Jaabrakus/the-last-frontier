@@ -17,10 +17,10 @@ extends SceneTree
 ##   Godot --headless --fixed-fps 120 --path . -s tests/traversal/test_walkway_climb.gd
 ## "WALKWAY CLIMB TEST OK" and exit 0 when every check passes. Run it under a hard time limit.
 
-const LIP_Z := -14.2                ## the east walkway's front edge (FortStructures: box at z -15, 1.6 deep)
+const LIP_Z := -14.2                ## the east walkway's front edge (the firing step pieces, FortPieces: centred on z -15, 1.6 deep)
 const DECK_TOP := 2.275
 const DECK_BOT := 2.125
-const RIM_BOT := 1.93               ## the rim beam under the boards' front (visual, FortStructures.RIM_BOTTOM)
+const RIM_BOT := 1.93               ## the rim beam under the boards' front (visual, FortPieces.RIM_BOTTOM)
 const RIM_Z0 := -14.37
 const INSIDE_TOL := 0.03
 const BODY := ["pelvis", "spine_2", "head", "l_knee", "r_knee", "l_ankle", "r_ankle", "l_ball", "r_ball", "l_heel", "r_heel"]
@@ -155,7 +155,7 @@ func _initialize() -> void:
 	r = await _run(Vector3(8.0, 0.02, LIP_Z + 2.5), 0.0, 3.0, 99.0, 0.0)
 	_check((r.moves as Dictionary).is_empty() and float(r.max_y) < 0.3, "nospace: walking up to it and under it climbs nothing (%s)" % str((r.moves as Dictionary).keys()))
 
-	r = await _run(Vector3(6.6, 0.02, LIP_Z + 0.6), 0.0, 2.5)
+	r = await _run(Vector3(9.0, 0.02, LIP_Z + 0.6), 0.0, 2.5)      # (a firing step's post stands at each section's middle: 3, 6, 9, 12)
 	_check((r.moves as Dictionary).is_empty(), "post: no climb where a post stands under the lip (%s)" % str((r.moves as Dictionary).keys()))
 
 	sk.skeleton_updated.disconnect(_pose)

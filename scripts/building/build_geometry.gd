@@ -114,6 +114,9 @@ const SMOKE_DOOR := Vector2(0.9, 1.55)
 const CHEST_W := 0.9
 const CHEST_D := 0.5
 const CHEST_H := 0.46
+const CRADLE_W := 0.5          ## the cradle: across, along (the head at -z) and to the rim
+const CRADLE_L := 0.92
+const CRADLE_H := 0.42
 ## The hearth's fire (Campfire in a hearth): where it burns, on the hearthstone in the firebox's mouth, and where its
 ## smoke comes out, the top of the stack.
 const HEARTH_FIRE := Vector3(0, 0.07, HEARTH_D + 0.14)
@@ -226,6 +229,8 @@ static func mesh(type: String, variant: int, ctx: Dictionary, detail := true, ca
 			_stretching_hoop(kit, rng)
 		"storage_chest":
 			_storage_chest(kit, rng, false)
+		"cradle":
+			_cradle(kit, rng)
 		"woodpile":
 			_woodpile(kit, rng)
 		"smokehouse":
@@ -242,6 +247,8 @@ static func mesh(type: String, variant: int, ctx: Dictionary, detail := true, ca
 			_charcoal_mound(kit, rng)
 		"forge":
 			_forge(kit, rng)
+		"walkway", "walkway_ramp", "ladder", "blockhouse", "flagpole":
+			FortPieces.mesh(kit, type, rng, detail)
 	var m := kit.commit(StructureMaterials.all())
 	if cache:
 		_cache[key] = m
@@ -526,9 +533,25 @@ static func _window_frame(kit: K, rng: RandomNumberGenerator) -> void:
 ## Plank door on its hinge line: vertical boards from x = 0 to 0.94, battens and a brace on the inside (-Z),
 ## strap hinges and a latch on the outside (+Z).
 static func _door_leaf(kit: K, rng: RandomNumberGenerator) -> void:
-	var w := DOOR_HALF * 2.0 - 0.06
-	var hgt := DOOR_TOP - 0.08
-	var n := 5
+	_door_leaf_sized(kit, rng, DOOR_HALF * 2.0 - 0.06, DOOR_TOP - 0.08)
+
+
+## A plank door leaf `w` wide and `hgt` tall from its hinge (a door hung in the fort's buildings: BuildDoor.make_sized).
+static func sized_leaf_mesh(w: float, hgt: float) -> ArrayMesh:
+	var key := "leaf|sized|%.3f|%.3f" % [w, hgt]
+	if _cache.has(key):
+		return _cache[key]
+	var kit := K.new()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4242 + int(w * 100.0) + int(hgt * 10.0)
+	_door_leaf_sized(kit, rng, w, hgt)
+	var m := kit.commit(StructureMaterials.all())
+	_cache[key] = m
+	return m
+
+
+static func _door_leaf_sized(kit: K, rng: RandomNumberGenerator, w: float, hgt: float) -> void:
+	var n := maxi(3, int(round(w / 0.19)))
 	var bw := w / n
 	for i in n:
 		var t := rng.randf_range(0.85, 1.05)
@@ -1024,6 +1047,8 @@ static func _forge(kit: K, rng: RandomNumberGenerator) -> void:
 
 ## A piece's parts drawn beside its kit mesh (BuiltPiece.build_visuals): [[mesh, transform, material or null]].
 static func piece_parts(type: String) -> Array:
+	if FortPieces.is_fort_piece(type):
+		return FortPieces.parts(type)
 	match type:
 		"work_stone":
 			return work_stone_parts()
@@ -1198,6 +1223,31 @@ static func _noose(kit: K, c: Vector3, cord: Color) -> void:
 		var d := p1 - p0
 		var bs := Basis.looking_at(d.normalized(), Vector3.FORWARD if absf(d.normalized().z) < 0.95 else Vector3.UP)
 		kit.box(&"boards", Transform3D(bs, (p0 + p1) * 0.5), Vector3(0.005, 0.005, d.length() + 0.003), K.GRAIN_Z, 0, 0.0, cord, K.KIND_CLAY)
+
+
+## A cradle: a plank box on two curved rockers (three boards a side, the ends turned up), a taller headboard with a hood over
+## the head end (-z), a straw tick in it (the baby lies on it: BabyLink / Cradle).
+static func _cradle(kit: K, rng: RandomNumberGenerator) -> void:
+	var hw := CRADLE_W * 0.5
+	var hl := CRADLE_L * 0.5
+	for sx: float in [-1.0, 1.0]:
+		# the rocker: a flat middle and the two ends turned up
+		kit.box(&"boards", Transform3D(Basis(), Vector3(sx * (hw - 0.02), 0.03, 0.0)), Vector3(0.04, 0.06, 0.5), K.GRAIN_Z, rng.randi_range(0, 3), rng.randf())
+		for sz: float in [-1.0, 1.0]:
+			kit.box(&"boards", Transform3D(Basis(Vector3.RIGHT, sz * 0.4), Vector3(sx * (hw - 0.02), 0.075, sz * (hl - 0.2))),
+					Vector3(0.04, 0.06, 0.3), K.GRAIN_Z, rng.randi_range(0, 3), rng.randf())
+		# the side board, a little flared
+		kit.box(&"boards", Transform3D(Basis(Vector3.FORWARD, sx * 0.12), Vector3(sx * (hw - 0.03), 0.22, 0.0)),
+				Vector3(0.03, 0.22, CRADLE_L - 0.04), K.GRAIN_Z, rng.randi_range(0, 3), rng.randf())
+	kit.box(&"boards", Transform3D(Basis(), Vector3(0, 0.1, 0)), Vector3(CRADLE_W - 0.06, 0.03, CRADLE_L - 0.06), K.GRAIN_Z, rng.randi_range(0, 3), rng.randf())
+	kit.box(&"boards", Transform3D(Basis(), Vector3(0, 0.25, -hl + 0.015)), Vector3(CRADLE_W - 0.02, 0.32, 0.03), K.GRAIN_X, rng.randi_range(0, 3), rng.randf())
+	kit.box(&"boards", Transform3D(Basis(), Vector3(0, 0.2, hl - 0.015)), Vector3(CRADLE_W - 0.02, 0.22, 0.03), K.GRAIN_X, rng.randi_range(0, 3), rng.randf())
+	# the hood: a board over the head end, tilted, on two side pieces
+	kit.box(&"boards", Transform3D(Basis(Vector3.RIGHT, -0.25), Vector3(0, 0.4, -hl + 0.16)), Vector3(CRADLE_W - 0.04, 0.025, 0.34), K.GRAIN_X, rng.randi_range(0, 3), rng.randf())
+	for sx: float in [-1.0, 1.0]:
+		kit.box(&"boards", Transform3D(Basis(), Vector3(sx * (hw - 0.03), 0.34, -hl + 0.16)), Vector3(0.03, 0.14, 0.32), K.GRAIN_Z, rng.randi_range(0, 3), rng.randf())
+	kit.box(&"straw", Transform3D(Basis(), Vector3(0, 0.15, 0.03)), Vector3(CRADLE_W - 0.1, 0.07, CRADLE_L - 0.16), K.GRAIN_Z, rng.randi_range(0, 3),
+			rng.randf(), Color(0.86, 0.8, 0.64, 1.0))
 
 
 ## A storage chest: plank sides and ends, iron straps and corners, a hasp; its lid is StorageChest's (it opens) unless
@@ -1376,6 +1426,8 @@ static func _gate_leaf(kit: K, dir: float, rng: RandomNumberGenerator) -> void:
 ## The piece's colliders in its frame: [[Shape3D, Transform3D, meta {name: value}]] (doors and gate leaves are
 ## their own bodies: BuildDoor). `ctx` as for mesh().
 static func colliders(type: String, ctx: Dictionary) -> Array:
+	if FortPieces.is_fort_piece(type):
+		return FortPieces.colliders(type)
 	var out: Array = []
 	var h := L * 0.5
 	var nt := {"trav": NO_TRAVERSE}
@@ -1468,6 +1520,8 @@ static func colliders(type: String, ctx: Dictionary) -> Array:
 			out.append(_box(Vector3(0, (HOOP_Y + HOOP_R) * 0.5, -0.02), Vector3(HOOP_R * 2.0, HOOP_Y + HOOP_R, 0.08), {"surface": "wood", "no_traverse": true}))
 		"storage_chest":
 			out.append(_box(Vector3(0, CHEST_H * 0.5, 0), Vector3(CHEST_W, CHEST_H, CHEST_D), {"surface": "wood", "no_traverse": true}))
+		"cradle":
+			out.append(_box(Vector3(0, CRADLE_H * 0.5, 0), Vector3(CRADLE_W, CRADLE_H, CRADLE_L), {"surface": "wood", "no_traverse": true}))
 		"charcoal_mound":
 			out.append(_box(Vector3(0, MOUND_H * 0.4, 0), Vector3(MOUND_R * 1.6, MOUND_H * 0.8, MOUND_R * 1.6), {"surface": "dirt", "no_traverse": true}))
 			out.append(_box(Vector3(0, 0.005, 0), Vector3(MOUND_R * 2.6, 0.01, MOUND_R * 2.6)))
@@ -1515,7 +1569,9 @@ static func colliders(type: String, ctx: Dictionary) -> Array:
 			var g: Array = ctx.get("gy", [0.0, 0.0])
 			var lo := minf(float(g[0]), float(g[1]))
 			var gmin := float(ctx.get("gmin", lo))
-			out.append(_box(Vector3(0, (gmin - STAKE_SINK + gmin + 3.4) * 0.5, 0), Vector3(L, 3.4 + STAKE_SINK, 0.4)))
+			# not climbed (user 2026-09-26: "on the wall i can climb over thru the wall"), like the classic fort's; with cuts
+			# in it the collider is PalisadeCuts.colliders (the same box round the holes)
+			out.append(_box(Vector3(0, (gmin - STAKE_SINK + gmin + PalisadeCuts.BOX_TOP) * 0.5, 0), Vector3(L, PalisadeCuts.BOX_TOP + STAKE_SINK, PalisadeCuts.THICK), nt))
 		"palisade_gate":
 			var g: Array = ctx.get("gy", [0.0, 0.0])
 			for i in 2:

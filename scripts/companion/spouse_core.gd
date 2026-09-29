@@ -1,33 +1,43 @@
 class_name SpouseCore
 extends RefCounted
-## The player's spouse, logic only (user 2026-09-28: "build a wife NPC for my char ... if I'm male I get a female and
-## female a male", "they should have the same stats as us, and depending on role either home or outside they do the
-## task like if I bring a carcass home or veggies"). The body is Spouse (scripts/companion).
+## A worker of the player's household, logic only; the wife is worker 0 (user 2026-09-28: "build a wife NPC for my char ...
+## if I'm male I get a female and female a male", "they should have the same stats as us, and depending on role either home
+## or outside they do the task like if I bring a carcass home or veggies"). The body is Spouse (scripts/companion).
 ##
 ## Same stats: she has a SurvivalCore of her own, built on the same data as the player's and started from the player's
 ## skills, so she has the same needs (hunger, warmth), conditions, skills and kit, and every action she takes is a real
 ## survival job run on that core with her own skill checks. It runs on the player's clock (sync()).
 ## The household's store (HouseholdStock: the storage chests) is what she eats from and what her work goes into, in the
-## game's pack kinds; a task moves the food or materials into her core (game_items.json maps a pack unit to a core item,
+## game's pack kinds; a job moves the food or materials into her core (game_items.json maps a pack unit to a core item,
 ## as the bridge and CampCooking do), runs the job, and moves what it made back.
 ##
-## Roles: "home" (cooks what is brought in, butchers a carcass brought home), "outside" (forages, gathers firewood, by
-## day), "follow" (stays with the player), "stay" (waits where she is). She eats when hungry and does no work at night.
-## A task is planned (plan()), begun where its work is (begin(): the body walks her there first), finished by its job
-## or by a timer, and reported (task_finished).
+## Her work is the JobBook (data/companion/jobs.json): each job says what it takes, makes, needs (a station), how it runs (a
+## survival core action, or a timed local job) and what it keeps back for eating. This class is the generic runner for it:
+## offer(id) says whether a job can run now and with what (asking the site providers, the finders the body installs, for the
+## station the job needs), plan() picks the enabled job the household is most short of (JobBook targets and pull, working
+## back along the chain), begin() reserves the inputs and the station and starts it, and finishing puts the outputs in the
+## store, cancelling gives the inputs back. The special results (roast, the rack, the hoop, the carcass, the smokehouse)
+## are the few handlers named in the data.
+##
+## Roles: "home" (the home jobs: cook, butcher, the fort's chores), "outside" (forage, firewood, by day), "follow" (stays
+## with the player), "stay" (waits where she is). She eats when hungry and does no work at night. Workers sharing a store
+## (HouseholdCrew) claim their inputs and stations in the store's reservation table, so no two take the same.
 
 signal task_finished(task: String, text: String)
 signal said(text: String)
 
 const ROLES := ["home", "outside", "follow", "stay"]
-const TASKS := ["tend", "cook", "butcher", "forage", "firewood"]
-const TASK_NAMES := {"tend": "Tend the fire", "cook": "Cook", "butcher": "Butcher", "forage": "Forage", "firewood": "Gather firewood"}
-const TASK_ROLE := {"tend": "home", "cook": "home", "butcher": "home", "forage": "outside", "firewood": "outside"}
-const JOB_OF := {"cook": "cook.roast", "forage": "forage.search", "firewood": "wood.split_firewood"}
-## Game minutes a butchering takes (a skin, then the meat), less with hidecraft.
-## Game minutes laying wood on the fire takes.
-const TEND_MIN := 8.0
-const BUTCHER_MIN := {"skin": 25.0, "butcher": 40.0}
+## The job ids, their names and roles, from the book (kept under the names the earlier code used).
+static var TASKS: Array = JobBook.ids()
+static var TASK_NAMES: Dictionary = JobBook.names()
+static var TASK_ROLE: Dictionary = JobBook.roles()
+## The site a `needs` is worked at ("" : none: the woods for outside jobs, the hearth for home ones).
+const SITE_OF_NEEDS := {"fire": "fire", "carcass": "carcass", "woodpile": "pile", "smokehouse": "smoke", "rack": "rack",
+		"tanning_frame": "frame", "hoop": "hoop", "hearth": "home", "chest": "home", "none": ""}
+## Her drying rack is in her own core under this location (the home's).
+const RACK_LOC := "home"
+## Pelts on the hoops of the whole household at most.
+const HOOP_MAX := 2
 ## Nothing is started between these game hours (she sleeps) and outside work stops at dusk.
 const AWAKE := Vector2(5.5, 21.5)
 const DAYLIGHT := Vector2(6.0, 19.0)
@@ -38,42 +48,84 @@ const NAMES_M := ["Thomas", "Elias", "Samuel", "Josiah", "Nathaniel", "Caleb", "
 const HOME_CTX := {"location": "home", "near": [], "indoors": true, "fire_distance_m": 1.5, "in_shelter": true,
 		"fire_id": "hearth.home"}
 const WOODS_POI := "poi.fort.woods_camp"
+## A job scores this much when its station wants work; a job with stock to work scores this much before any pull.
+const SITE_SCORE := 1.0
+const STOCK_SCORE := 0.1
 
 var name := ""
 var look := {}
 var role := "home"
-var enabled := {"tend": true, "cook": true, "butcher": true, "forage": true, "firewood": true}
+## Her place in the household (0: the wife), and the jobs she does: {job id: bool}, every job in the book.
+var worker_id := 0
+var enabled := {}
 var core: SurvivalCore
-var stock: HouseholdStock = HouseholdStock.new()
+## The household's store, shared by its workers (setting it joins that household: HouseholdCrew).
+var stock: HouseholdStock = HouseholdStock.new():
+	set(v):
+		if stock != null and stock != v:
+			stock.release(worker_id)
+			stock.crew.remove(self)
+		stock = v
+		v.crew.add(self)
 ## The game items she works with (data/survival/game_items.json).
 var items := {}
 var materials := {}
 var fuel := {}
-## Now: the task ("" none), what it says, and (for the timed ones) the game minutes left.
+## Now: the job ("" none), what it says, and (for the timed ones) the game minutes left.
 var task := ""
 var task_text := ""
 var minutes_left := 0.0
-## A task the player asked for by name: it goes first while it can be done (cleared when it is done or cannot be).
+## A job the player asked for by name: it goes first while it can be done (cleared when it is done or cannot be).
 var focus := ""
 var journal: Array = []
-## Finds a carcass at home: Callable() -> Object with finish_dress(step, hands) and meat_left (null: none).
+## Finds a carcass at home: Callable(skip: Array = []) -> Object with finish_dress(step, hands) and meat_left (null: none);
+## `skip` lists instance ids the other workers have claimed.
 var carcass_finder := Callable()
 ## Finds a lit campfire at home that wants wood: Callable() -> Object with add_wood_units(n) (null: none).
 var fire_finder := Callable()
-var _fire: Object
-
+## Finders for the fort's stations: site id ("pile", "smoke", "rack", "frame", "hoop") -> Callable() -> Object or null.
+## pile: wood_room(), add_wood_units(n); smoke: larder_raw(), smudge_min(), smudge_room(), add_venison(n), add_wood_units(n);
+## rack, frame, hoop: only where she works (the body walks to them).
+var finders := {}
+## Pelts drying on her hoop: [{pelt, dried, ready_at}] (game minutes on her clock). Saved.
+var hoop: Array = []
+## INTIMACY (scripts/companion/intimacy.gd): the gauge 0..1, the cooldown after a yoga session and after a declined offer
+## (game minutes). Saved. `role_saved`: while a yoga follow borrows `role`, the role to save and to go back to ("" none).
+var intimacy := 0.1
+var intimacy_cd := 0.0
+var intimacy_offer_cd := 0.0
+var role_saved := ""
+## PREGNANCY (scripts/companion/pregnancy.gd): her record {conceived_at, due_at, stage, births, ...}. Saved; old saves have none.
+var pregnancy: Dictionary = Pregnancy.new_record()
+## The running job's offer (what it took and where).
+var _run := {}
+var _moved := {}
 var _cool := 0.0
-var _flip := false
-var _animal: Object
-var _step := ""
-var _cook := {}
+var _ran := {}
+var _ticks := 0
+
+
+func _init() -> void:
+	for id: String in JobBook.ids():
+		enabled[id] = true
+	join(stock)
+
+
+## Joins the household whose store this is (HouseholdCrew): she claims and works from it. A worker who was in another
+## drops what she had claimed there.
+func join(store: HouseholdStock) -> void:
+	stock = store
 
 
 static func opposite_look(player_look: Dictionary, seed_v: int) -> Dictionary:
+	var sex := 1.0 - clampf(roundf(float(player_look.get("sex", 1.0))), 0.0, 1.0)
+	return look_for(sex, String(player_look.get("people", "")), seed_v)
+
+
+## A look of a given sex (and people, when it has presets), picked by the seed.
+static func look_for(sex: float, people: String, seed_v: int) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_v
-	var sex := 1.0 - clampf(roundf(float(player_look.get("sex", 1.0))), 0.0, 1.0)
-	var people := String(player_look.get("people", ""))
 	var list := CharacterPeoples.presets(people, sex)
 	if list.is_empty():
 		list = CharacterPeoples.presets("", sex)
@@ -85,8 +137,20 @@ static func opposite_look(player_look: Dictionary, seed_v: int) -> Dictionary:
 
 ## A new spouse for the player whose survival core is `main`: opposite sex, her own core on the same data and clock.
 static func create(main: SurvivalCore, player_look: Dictionary, seed_v: int) -> SpouseCore:
+	return _build(main, opposite_look(player_look, seed_v), seed_v)
+
+
+## A generic unit of the household (any sex, a random look), for the workers after the wife.
+static func create_unit(main: SurvivalCore, seed_v: int, sex := -1.0) -> SpouseCore:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_v ^ 0x5EED
+	var sx := sex if sex >= 0.0 else float(rng.randi() % 2)
+	return _build(main, look_for(sx, "", rng.randi()), seed_v)
+
+
+static func _build(main: SurvivalCore, the_look: Dictionary, seed_v: int) -> SpouseCore:
 	var s := SpouseCore.new()
-	s.look = opposite_look(player_look, seed_v)
+	s.look = the_look
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_v
 	var pool: Array = NAMES_M if float(s.look.get("sex", 0.0)) >= 0.5 else NAMES_F
@@ -117,24 +181,35 @@ static func create(main: SurvivalCore, player_look: Dictionary, seed_v: int) -> 
 static func from_dict(d: Dictionary, main: SurvivalCore) -> SpouseCore:
 	var s := SpouseCore.new()
 	s.name = String(d.get("name", "Wife"))
+	s.worker_id = int(d.get("id", 0))
 	s.look = (d.get("look", {}) as Dictionary).duplicate(true)
 	s.role = String(d.get("role", "home")) if ROLES.has(String(d.get("role", "home"))) else "home"
-	for k in TASKS:
+	# jobs the save does not know (an old save, a job added since) are on
+	for k: String in JobBook.ids():
 		s.enabled[k] = bool((d.get("enabled", {}) as Dictionary).get(k, true))
 	s.items = SurvivalBridge.load_items()
 	s.materials = SurvivalBridge.load_items("materials")
 	s.fuel = SurvivalBridge.load_items("fuel")
 	s.core = SurvivalCore.from_state(SurvivalState.from_dict(d.get("core", {})), {"data": main.data})
+	s.hoop = (d.get("hoop", []) as Array).duplicate(true)
 	s._wire()
 	s.journal = (d.get("journal", []) as Array).duplicate()
+	# intimacy (old saves have none: the default start)
+	s.intimacy = clampf(float(d.get("intimacy", 0.1)), 0.0, 1.0)
+	s.intimacy_cd = maxf(float(d.get("intimacy_cd", 0.0)), 0.0)
+	s.intimacy_offer_cd = maxf(float(d.get("intimacy_offer_cd", 0.0)), 0.0)
+	s.pregnancy = Pregnancy.normalize(d.get("pregnancy"))
 	return s
 
 
 func to_dict() -> Dictionary:
-	# a task in the middle of its work is given up (her food and materials go back to the store)
+	# a job in the middle of its work is given up (her food and materials go back to the store)
 	cancel("saved")
-	return {"name": name, "look": look.duplicate(true), "role": role, "enabled": enabled.duplicate(),
-			"core": core.state.to_dict(), "journal": journal.duplicate()}
+	SurvivalStreams.sync(core)   # PREGNANCY: her named streams are saved with her core
+	return {"id": worker_id, "name": name, "look": look.duplicate(true), "role": role if role_saved == "" else role_saved,
+			"enabled": enabled.duplicate(), "core": core.state.to_dict(), "journal": journal.duplicate(), "hoop": hoop.duplicate(true),
+			"intimacy": intimacy, "intimacy_cd": intimacy_cd, "intimacy_offer_cd": intimacy_offer_cd,
+			"pregnancy": pregnancy.duplicate(true)}
 
 
 func _wire() -> void:
@@ -147,6 +222,8 @@ func is_male() -> bool:
 
 
 func title() -> String:
+	if worker_id > 0:
+		return "hand"
 	return "husband" if is_male() else "wife"
 
 
@@ -163,10 +240,8 @@ func sync(main: SurvivalCore) -> void:
 	_cool = maxf(_cool - maxf(dm, 0.0), 0.0)
 	if minutes_left > 0.0:
 		minutes_left = maxf(minutes_left - maxf(dm, 0.0), 0.0)
-		if minutes_left <= 0.0 and task == "butcher":
-			_butcher_done()
-		elif minutes_left <= 0.0 and task == "tend":
-			_tend_done()
+		if minutes_left <= 0.0 and task != "":
+			_timed_done()
 	_eat_when_hungry()
 
 
@@ -285,156 +360,385 @@ func unit_kcal(kind: String) -> float:
 
 
 # ---------------------------------------------------------------- planning
-## The next task for her role now, {task, site ("home" | "woods" | "carcass"), text}, or {} when there is none.
+## The next job for her role now, {task, site ("home" | "woods" | "carcass" | a station id), text, obj (the station or
+## carcass she is going to)}, or {} when there is none. It is the enabled, runnable job the household is most short of
+## (JobBook.pull along the chain, then the stations' own wants, then stock to work), the book's priority among equals; what
+## it will take and the station are claimed until she begins or plans again.
 func plan() -> Dictionary:
 	if task != "" or _cool > 0.0 or core.is_dead() or not awake() or role == "follow" or role == "stay":
 		return {}
-	if focus != "" and TASK_ROLE.get(focus, "") == role and enabled.get(focus, false):
-		var f := _plan_for(focus)
-		if not f.is_empty():
-			return f
+	stock.release(worker_id)
+	var best := _choose()
+	if best.is_empty():
+		return {}
+	_hold(best)
+	return {"task": String(best.id), "site": String(best.site), "text": String(best.text), "obj": best.get("obj")}
+
+
+## The best job to do now: its offer, or {}.
+func _choose() -> Dictionary:
+	var short := shortages()
+	var active := func(id: String) -> bool: return stock.crew.any_enabled(id) or enabled.get(id, false)
+	var cands := []
+	var focus_ok := false
+	for id: String in JobBook.ids():
+		var job := JobBook.job(id)
+		if String(job.where) != role or not bool(enabled.get(id, false)):
+			continue
+		if role == "outside" and not daylight():
+			continue
+		if not heavy_ok(job):   # PREGNANCY: no heavy jobs in the late stages or while she rests after a birth
+			continue
+		var o := offer(id)
+		var forced := focus == id
+		if o.is_empty():
+			continue
+		var pull := JobBook.pull(id, short, active)
+		var demand := String(job.demand)
+		if demand == "target" and pull <= 0.0 and not forced:
+			continue
+		var score := (100.0 if forced else 0.0)
+		match demand:
+			"site":
+				score += maxf(pull, SITE_SCORE)
+			_:
+				score += pull + STOCK_SCORE
+		focus_ok = focus_ok or forced
+		cands.append({"o": o, "score": score, "prio": int(job.priority), "ran": int(_ran.get(id, 0))})
+	if focus != "" and not focus_ok:
 		focus = ""
-	if role == "home":
-		if enabled.tend and _fire_wanting() != null:
-			return {"task": "tend", "site": "fire", "text": "Tending the fire"}
-		if enabled.cook and cook_kind() != "":
-			return {"task": "cook", "site": "home", "text": "Cooking"}
-		if enabled.butcher and _find_carcass() != null:
-			return {"task": "butcher", "site": "carcass", "text": "Butchering the carcass"}
-	elif role == "outside" and daylight():
-		var order := ["forage", "firewood"] if _flip else ["firewood", "forage"]
-		for t in order:
-			if enabled[t]:
-				return {"task": t, "site": "woods", "text": "Gathering firewood" if t == "firewood" else "Foraging"}
+	if cands.is_empty():
+		return {}
+	cands.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if absf(float(a.score) - float(b.score)) > 0.001:
+			return float(a.score) > float(b.score)
+		if a.prio != b.prio:
+			return a.prio < b.prio
+		return a.ran < b.ran)
+	return cands[0].o
+
+
+## False for a job tagged "heavy" while her pregnancy or her rest after a birth rules out heavy work.
+func heavy_ok(job: Dictionary) -> bool:
+	if not (job.get("tags", []) as Array).has(String(Pregnancy.cfg().get("heavy_tag", "heavy"))):
+		return true
+	return not Pregnancy.heavy_blocked(pregnancy, core.state.minutes)
+
+
+## What the household is short of now (JobBook.shortages on the store, for everyone it feeds).
+func shortages() -> Dictionary:
+	return JobBook.shortages(func(k: String) -> int: return stock.count(k), stock.crew.people())
+
+
+## The site the job works at, as the body knows it.
+static func site_of(id: String) -> String:
+	var job := JobBook.job(id)
+	var s := String(SITE_OF_NEEDS.get(String(job.get("needs", "none")), ""))
+	if s == "":
+		return "woods" if String(job.get("where", "home")) == "outside" else "home"
+	return s
+
+
+## The station object a site id is: a station (finders), the carcass or the fire (their finders). A carcass another worker
+## has claimed is passed over.
+func find_site(site: String) -> Object:
+	var o: Object = null
+	match site:
+		"carcass":
+			if carcass_finder.is_valid():
+				o = carcass_finder.call(_claimed_carcasses()) if carcass_finder.get_argument_count() >= 1 else carcass_finder.call()
+		"fire":
+			if fire_finder.is_valid():
+				o = fire_finder.call()
+		_:
+			var c: Variant = finders.get(site)
+			if c is Callable and (c as Callable).is_valid():
+				o = (c as Callable).call()
+	return o if o != null and is_instance_valid(o) else null
+
+
+## The object held by the job in hand or just planned (the body walks to it).
+func site_object() -> Object:
+	var o: Variant = _run.get("obj")
+	if o is Object and is_instance_valid(o):
+		return o
+	return find_site(site_of(task)) if task != "" else null
+
+
+func _claimed_carcasses() -> Array:
+	var out := []
+	for key: String in stock.reserved:
+		if key.begins_with("s:carcass:") and stock.held_by_others(worker_id, key) > 0:
+			out.append(int(key.get_slice(":", 2)))
+	return out
+
+
+static func _site_key(site: String, o: Object) -> String:
+	var n: Variant = o.get("node")
+	return "s:%s:%d" % [site, (n as Object).get_instance_id() if n is Object else o.get_instance_id()]
+
+
+# ---------------------------------------------------------------- offers
+func _free(kind: String) -> int:
+	return stock.free_count(kind, worker_id)
+
+
+## What of `kind` the job may use: the store's free units less what the job keeps back.
+func _spare(job_id: String, kind: String) -> int:
+	return maxi(_free(kind) - JobBook.keep_of(job_id, kind), 0)
+
+
+## The job as it can run now: {id, text, site, inputs {pack kind: units}, how, obj (its station), site_key, mode, params,
+## meta, done, minutes ...} or {} when it cannot (no station, nothing to work, another worker on it). This is what plan()
+## chooses among and begin() runs.
+func offer(id: String) -> Dictionary:
+	var job := JobBook.job(id)
+	if job.is_empty():
+		return {}
+	var sid := String(SITE_OF_NEEDS.get(String(job.needs), ""))
+	var obj: Object = null
+	var key := ""
+	if sid != "" and sid != "home":
+		obj = find_site(sid)
+		if obj == null:
+			return {}
+		key = _site_key(sid, obj)
+		if not stock.site_free(worker_id, key):
+			return {}
+	var o := {}
+	match String(job.offer):
+		"gather":
+			o = {"inputs": {}}
+		"carcass":
+			o = _offer_carcass(obj)
+		"feed":
+			o = _offer_feed(job, obj)
+		"smokehouse":
+			o = _offer_smoke(job, obj)
+		_:
+			o = _offer_variants(job, obj)
+	if o.is_empty():
+		return {}
+	o["id"] = id
+	o["site"] = site_of(id)
+	if not o.has("text"):
+		o["text"] = String(job.text)
+	if not o.has("how"):
+		o["how"] = job.how
+	o["obj"] = obj
+	o["site_key"] = key
+	return o
+
+
+func _guard_ok(job: Dictionary) -> bool:
+	return String(job.get("guard", "")) != "fed" or _preserving_ok()
+
+
+## She may spare the store's raw meat for preserving: not when she is hungry with nothing to eat (cooking comes first).
+func _preserving_ok() -> bool:
+	var stage := SurvivalNeeds.food_stage(core)
+	return stage in ["fed", "full", "satisfied"] or _best_food() != ""
+
+
+func _offer_carcass(obj: Object) -> Dictionary:
+	var skin: bool = obj.get("dress_step") == 0
+	return {"inputs": {}, "step": "skin" if skin else "butcher", "text": "Skinning the carcass" if skin else "Butchering the carcass"}
+
+
+## Wood (or the like) to lay on a fire or a pile: the job's kind, up to a trip, what the job keeps back left.
+func _offer_feed(job: Dictionary, obj: Object) -> Dictionary:
+	var cfg: Dictionary = job.feed
+	var kind := String(cfg.kind)
+	var n := mini(_spare(String(job.id), kind), int(cfg.trip))
+	if String(cfg.get("room", "")) != "":
+		n = mini(n, int(obj.call(String(cfg.room))))
+	if n <= 0:
+		return {}
+	return {"inputs": {kind: n}}
+
+
+## What the smokehouse wants now: raw venison to hang (the larder holds so many), sticks for the smudge when it is low.
+func _offer_smoke(job: Dictionary, obj: Object) -> Dictionary:
+	if not _guard_ok(job):
+		return {}
+	var cfg: Dictionary = job.smokehouse
+	var id := String(job.id)
+	var raw := int(obj.larder_raw())
+	var lmax := int(cfg.larder_max)
+	var add := clampi(mini(_spare(id, "venison"), lmax - raw), 0, lmax)
+	var sticks := 0
+	if raw + add > 0 and float(obj.smudge_min()) < float(cfg.smudge_low):
+		var trip := int(cfg.sticks_trip)
+		sticks = clampi(mini(mini(_spare(id, "firewood"), int(obj.smudge_room())), trip), 0, trip)
+	if add + sticks <= 0:
+		return {}
+	var inputs := {}
+	if add > 0:
+		inputs["venison"] = add
+	if sticks > 0:
+		inputs["firewood"] = sticks
+	return {"inputs": inputs, "add": add, "sticks": sticks}
+
+
+## Jobs with variants (cook by what is in the store, tan by hide and brains ...) and the take-down of a rack or hoop.
+func _offer_variants(job: Dictionary, obj: Object) -> Dictionary:
+	var id := String(job.id)
+	var td: Dictionary = job.get("takedown", {})
+	if not td.is_empty() and _ready_down(td) and obj != null:
+		return {"inputs": {}, "mode": "down", "text": String(td.text), "minutes": float(td.minutes),
+				"how": {"type": "timed", "done": "takedown", "record": String(td.record)}}
+	if not _guard_ok(job):
+		return {}
+	match String(job.get("station", "")):
+		"rack":
+			for w: SpouseCore in stock.crew.workers:
+				if w._rack_lb(false) > 0.0:
+					return {}
+		"hoop":
+			var n := 0
+			for w: SpouseCore in stock.crew.workers:
+				n += w.hoop.size()
+			if n >= HOOP_MAX:
+				return {}
+	for v: Dictionary in job.get("variants", []):
+		var o := _variant_offer(job, v)
+		if not o.is_empty():
+			return o
 	return {}
 
 
-func _plan_for(id: String) -> Dictionary:
-	match id:
-		"tend":
-			return {"task": "tend", "site": "fire", "text": "Tending the fire"} if _fire_wanting() != null else {}
-		"cook":
-			return {"task": "cook", "site": "home", "text": "Cooking"} if cook_kind() != "" else {}
-		"butcher":
-			return {"task": "butcher", "site": "carcass", "text": "Butchering the carcass"} if _find_carcass() != null else {}
-		"forage", "firewood":
-			if daylight():
-				return {"task": id, "site": "woods", "text": "Gathering firewood" if id == "firewood" else "Foraging"}
-	return {}
+func _variant_offer(job: Dictionary, v: Dictionary) -> Dictionary:
+	var id := String(job.id)
+	var inputs := {}
+	var first := ""
+	for tok: String in v.get("inputs", {}):
+		var qty: Variant = v.inputs[tok]
+		var pick := ""
+		for k: String in JobBook.expand(tok):
+			if pack_item(k).is_empty() or _spare(id, k) < 1:
+				continue
+			if _free(k) < int((v.get("min_have", {}) as Dictionary).get(k, 1)):
+				continue
+			var n := _batch(job, k, qty)
+			if n < 0 or _spare(id, k) < n:
+				continue
+			pick = k
+			inputs[k] = n
+			break
+		if pick == "":
+			return {}
+		if first == "":
+			first = pick
+	var text := String(v.get("text", job.text))
+	var by_kind: Dictionary = v.get("text_by_kind", {})
+	if by_kind.has(first):
+		text = String(by_kind[first])
+	elif text.contains("%s"):
+		text = text % InventoryState.name_of(first).to_lower()
+	var params: Dictionary = (v.get("params", {}) as Dictionary).duplicate(true)
+	for pk: String in v.get("input_params", []):
+		var e := pack_item(first)
+		match pk:
+			"item":
+				params["item"] = String(e.item)
+			"qty":
+				params["qty"] = float(inputs[first]) * float(e.get("qty", 1.0))
+	return {"inputs": inputs, "params": params, "meta": v.get("meta", {}), "text": text, "mode": "work",
+			"variant": String(v.get("id", "")), "done": String(v.get("done", "")), "first": first}
 
 
-## The raw food in the store she would cook ("" none), as CampCooking's order: fish, venison, small game, cornmeal.
-func cook_kind() -> String:
-	for k: String in CampCooking.RAW:
-		if items.has(k) and stock.count(k) > 0:
-			return k
-	return ""
+## How many units of `kind` a variant takes: the number in the data, or a batch by the job's rule (-1: none).
+func _batch(job: Dictionary, kind: String, qty: Variant) -> int:
+	if not (qty is String):
+		return int(qty)
+	var rule: Dictionary = job.get("batch", {})
+	var spare := _spare(String(job.id), kind)
+	match String(rule.get("rule", "")):
+		"kcal":
+			var kcal := maxf(unit_kcal(kind), 1.0)
+			return clampi(floori(SurvivalJobs.COOK_MAX_GAME_KCAL / kcal + 0.0001), 1, maxi(spare, 1))
+		"lb":
+			var e := pack_item(kind)
+			var per := maxf(float(e.get("qty", 1.0)), 0.0001)
+			var has := SurvivalInventory.count(core, String(e.get("item", "")))
+			return maxi(ceili((float(rule.lb) - has) / per - 0.0001), 0)
+	return 1
 
 
-## A lit fire at home low on wood, when the store has firewood for it.
-func _fire_wanting() -> Object:
-	if stock.count("firewood") <= 0 or not fire_finder.is_valid():
-		return null
-	var f: Object = fire_finder.call()
-	return f if f != null and is_instance_valid(f) else null
+## Claims what the offer will take and the station it works at (until she begins, plans again or the job ends).
+func _hold(o: Dictionary) -> void:
+	stock.release(worker_id)
+	for k: String in o.get("inputs", {}):
+		stock.reserve_kind(worker_id, k, int(o.inputs[k]))
+	if String(o.get("site_key", "")) != "":
+		stock.reserve(worker_id, String(o.site_key), 1)
 
 
-func _find_carcass() -> Object:
-	if not carcass_finder.is_valid():
-		return null
-	var a: Object = carcass_finder.call()
-	return a if a != null and is_instance_valid(a) else null
+## Lets go of a plan she will not carry out (the body could not reach the place).
+func abandon_plan() -> void:
+	if task == "":
+		stock.release(worker_id)
+
+
+func _needs_name(id: String) -> String:
+	return JobBook.name_of(id).to_lower()
 
 
 ## Begins `id` (she is at its work). False when it cannot start (a line says why; she waits before trying again).
 func begin(id: String) -> bool:
-	if task != "" or not TASKS.has(id):
+	if task != "" or not JobBook.has(id):
 		return false
-	match id:
-		"tend":
-			return _begin_tend()
-		"cook":
-			return _begin_cook()
-		"butcher":
-			return _begin_butcher()
-	return _begin_gather(id)
-
-
-func _begin_gather(id: String) -> bool:
-	set_place("woods")
-	var r := core.start_job(String(JOB_OF[id]), {})
+	var job := JobBook.job(id)
+	var o := offer(id)
+	if o.is_empty():
+		return _cannot(id, {"reason": String(job.get("idle", "not now"))})
+	_hold(o)
+	var how: Dictionary = o.how
+	if String(how.get("type", "")) == "timed":
+		minutes_left = _minutes(job, o)
+		_start(id, o)
+		return true
+	set_place("woods" if String(job.where) == "outside" else "home")
+	if how.has("near"):
+		core.state.context["near"] = how.near
+	_moved = {}
+	if not _load_inputs(o.inputs, o.get("meta", {})):
+		return _cannot(id, {"reason": "not enough to work with"})
+	var r := core.start_job(String(how.action), o.get("params", {}))
 	if not bool(r.get("ok", false)):
+		_return_inputs()
 		return _cannot(id, r)
+	# what she took is out of the store: only the station stays claimed
+	stock.release(worker_id)
+	if String(o.site_key) != "":
+		stock.reserve(worker_id, String(o.site_key), 1)
+	_start(id, o)
+	return true
+
+
+func _start(id: String, o: Dictionary) -> void:
 	task = id
-	task_text = "Gathering firewood" if id == "firewood" else "Foraging"
-	return true
+	task_text = String(o.text)
+	_run = o
 
 
-func _begin_cook() -> bool:
-	var k := cook_kind()
-	if k == "":
-		return _cannot("cook", {"reason": "nothing to cook"})
-	set_place("home")
-	var e: Dictionary = items[k]
-	var per := maxf(float(e.get("qty", 1.0)), 0.0001)
-	var kcal := maxf(unit_kcal(k), 1.0)
-	var n := clampi(floori(SurvivalJobs.COOK_MAX_GAME_KCAL / kcal + 0.0001), 1, stock.count(k))
-	n = stock.take(k, n)
-	SurvivalInventory.add(core, String(e.item), n * per)
-	var r := core.start_job(String(JOB_OF.cook), {"item": String(e.item), "qty": n * per})
-	if not bool(r.get("ok", false)):
-		SurvivalInventory.remove(core, String(e.item), n * per)
-		stock.put(k, n)
-		return _cannot("cook", r)
-	_cook = {"kind": k, "units": n, "item": String(e.item), "per": per}
-	task = "cook"
-	task_text = "Baking johnnycake" if k == "cornmeal" else "Roasting %s" % InventoryState.name_of(k).to_lower()
-	return true
-
-
-func _begin_tend() -> bool:
-	_fire = _fire_wanting()
-	if _fire == null:
-		return _cannot("tend", {"reason": "the fire needs nothing"})
-	minutes_left = TEND_MIN
-	task = "tend"
-	task_text = "Tending the fire"
-	return true
-
-
-func _tend_done() -> void:
-	var f := _fire
-	var id := task
-	var n := 0
-	if f != null and is_instance_valid(f):
-		var want := mini(stock.count("firewood"), 3)
-		var taken := stock.take("firewood", want)
-		n = int(f.add_wood_units(taken))
-		if n < taken:
-			stock.put("firewood", taken - n)
-	_end_task()
-	var text := "%s lays %d %s on the fire." % [name, n, "stick" if n == 1 else "sticks"] if n > 0 else "%s finds the fire well fed." % name
-	_note(text)
-	task_finished.emit(id, text)
-
-
-func _begin_butcher() -> bool:
-	_animal = _find_carcass()
-	if _animal == null:
-		return _cannot("butcher", {"reason": "no carcass"})
-	_step = "skin" if _animal.get("dress_step") == 0 else "butcher"
-	var skill := SurvivalSkills.level(core, "hidecraft")
-	minutes_left = float(BUTCHER_MIN[_step]) * lerpf(1.4, 0.7, clampf(skill / 100.0, 0.0, 1.0))
-	task = "butcher"
-	task_text = "Skinning the carcass" if _step == "skin" else "Butchering the carcass"
-	return true
+## Game minutes a timed job takes (by its step, less with skill when the data says so).
+func _minutes(job: Dictionary, o: Dictionary) -> float:
+	var m: Variant = o.get("minutes", o.how.get("minutes", 0.0))
+	var base := float((m as Dictionary).get(String(o.get("step", "")), 0.0)) if m is Dictionary else float(m)
+	var sc: Variant = o.how.get("skill_scale")
+	if sc is Array and String(job.get("skill", "")) != "":
+		var skill := SurvivalSkills.level(core, String(job.skill))
+		base *= lerpf(float(sc[0]), float(sc[1]), clampf(skill / 100.0, 0.0, 1.0))
+	return base
 
 
 func _cannot(id: String, r: Dictionary) -> bool:
 	var rs: Array = r.get("reasons", [])
 	var why := String(rs[0]) if not rs.is_empty() else String(r.get("reason", "not now"))
-	_note("%s cannot %s: %s." % [name, String(TASK_NAMES.get(id, id)).to_lower(), why])
+	_note("%s cannot %s: %s." % [name, _needs_name(id), why])
 	_cool = RETRY_MIN
+	stock.release(worker_id)
 	return false
 
 
@@ -442,66 +746,58 @@ func _cannot(id: String, r: Dictionary) -> bool:
 func cancel(reason := "stopped") -> void:
 	if task == "":
 		return
-	if task == "cook":
-		if SurvivalJobs.is_running(core):
-			core.cancel_job(reason)
-		_return_cook()
-	elif SurvivalJobs.is_running(core):
+	if SurvivalJobs.is_running(core):
 		core.cancel_job(reason)
+	_return_inputs()
 	_end_task()
 
 
-func _return_cook() -> void:
-	if _cook.is_empty():
-		return
-	var left := SurvivalInventory.count(core, String(_cook.item))
-	if left > 0.0001:
-		SurvivalInventory.remove(core, String(_cook.item), left)
-		var n := floori(left / float(_cook.per) + 0.0001)
-		if n > 0:
-			stock.put(String(_cook.kind), n)
-	_cook = {}
-
-
 func _end_task() -> void:
+	if task != "":
+		_ticks += 1
+		_ran[task] = _ticks
 	task = ""
 	task_text = ""
 	minutes_left = 0.0
-	_animal = null
-	_fire = null
-	_step = ""
-	_cook = {}
-	_flip = not _flip
+	_run = {}
+	_moved = {}
+	stock.release(worker_id)
 
 
 # ---------------------------------------------------------------- finishing
 func _on_job_finished(res: Dictionary) -> void:
-	var action := String(res.get("action", ""))
-	if task == "" or String(JOB_OF.get(task, "")) != action:
+	if task == "" or _run.is_empty() or String(_run.how.get("action", "")) != String(res.get("action", "")):
 		return
 	var id := task
 	if focus == id:
 		focus = ""
+	var how: Dictionary = _run.how
 	var text := ""
-	if id == "cook":
-		text = _cook_done(res)
-	else:
-		text = _deposit("brings back")
-		if text == "":
-			text = "%s finds nothing." % name
-		else:
-			text = "%s %s." % [name, text]
+	match String(how.get("result", "deposit")):
+		"cook":
+			text = _result_cook(res)
+		"rack":
+			text = _result_rack(res)
+		"hoop":
+			text = _result_hoop()
+		_:
+			_return_inputs()
+			var got := _deposit(String(how.get("verb", "brings back")))
+			if got == "":
+				text = "%s %s." % [name, String(how.get("none", "finds nothing"))]
+			else:
+				var done := String(_run.get("done", ""))
+				text = "%s %s." % [name, got.replace(String(how.get("verb", "")), done) if done != "" else got]
 	_end_task()
 	_note(text)
 	task_finished.emit(id, text)
 
 
 func _on_job_interrupted(job: Dictionary, reason: String) -> void:
-	if task == "" or String(JOB_OF.get(task, "")) != String(job.get("action", "")):
+	if task == "" or _run.is_empty() or String(_run.how.get("action", "")) != String(job.get("action", "")):
 		return
 	var id := task
-	if id == "cook":
-		_return_cook()
+	_return_inputs()
 	var got := _deposit("brings back")
 	_end_task()
 	_cool = RETRY_MIN * 0.5
@@ -510,15 +806,39 @@ func _on_job_interrupted(job: Dictionary, reason: String) -> void:
 	task_finished.emit(id, text)
 
 
-func _cook_done(res: Dictionary) -> String:
+## A timed job is over: the task ends and it is told.
+func _finish_timed(text: String) -> void:
+	var id := task
+	if focus == id:
+		focus = ""
+	_end_task()
+	_note(text)
+	task_finished.emit(id, text)
+
+
+func _timed_done() -> void:
+	match String(_run.get("how", {}).get("done", "")):
+		"carcass":
+			_done_carcass()
+		"feed":
+			_done_feed()
+		"smoke":
+			_done_smoke()
+		"takedown":
+			_done_takedown()
+		_:
+			_end_task()
+
+
+func _result_cook(res: Dictionary) -> String:
 	var c: Dictionary = res.get("cooked", {})
+	var k := String(_run.first)
+	var n := int(_run.inputs[k])
 	if not bool(c.get("ok", false)):
-		_return_cook()
+		_return_inputs()
 		return "%s could not get the food to cook." % name
 	SurvivalInventory.remove(core, String(c.item), float(c.qty_out))
-	var k := String(_cook.kind)
-	var n := int(_cook.units)
-	_return_cook()
+	_return_inputs()
 	var cooked: Dictionary = CampCooking.COOKED[k]
 	var st := String(c.get("state", "cooked"))
 	var got := String(cooked.burnt if st == "burnt" else cooked.cooked)
@@ -529,10 +849,39 @@ func _cook_done(res: Dictionary) -> String:
 	return "%s cooks %d %s%s." % [name, n, nm, ", a little underdone" if st == "undercooked" else ""]
 
 
-func _butcher_done() -> void:
-	var a := _animal
-	var step := _step
-	var id := task
+func _result_rack(res: Dictionary) -> String:
+	_return_inputs()
+	var cr: Dictionary = res.get("recipe", {})
+	if not cr.has("rack"):
+		return "%s spoils the meat on the rack." % name
+	var lb := 0.0
+	for v: Variant in SurvivalUtil.dict(cr.get("made")).values():
+		lb += float(v)
+	return "%s hangs %d lb of jerky to dry (a day or two)." % [name, roundi(lb)]
+
+
+## The pelt fleshed and laced goes on her hoop to dry for the time the core gave it.
+func _result_hoop() -> String:
+	var k := String(_run.first)
+	var item := String(materials.get(k, {}).get("item", ""))
+	var meta := {}
+	for st: Dictionary in core.state.inventory:
+		var m := SurvivalUtil.dict(st.get("meta"))
+		if String(st.id) == item and bool(m.get("stretched", false)):
+			meta = m.duplicate(true)
+			SurvivalInventory.remove_stack_qty(core, st, 1.0)
+			break
+	_return_inputs()
+	if meta.is_empty():
+		return "%s tears the pelt in the lacing." % name
+	var need_min := float(meta.get("dry_need_h", 60.0)) * 60.0
+	hoop.append({"pelt": k, "dried": "dried_" + k, "ready_at": core.state.minutes + need_min})
+	return "%s laces the %s onto the hoop to dry (%d hours)." % [name, InventoryState.name_of(k).to_lower(), roundi(need_min / 60.0)]
+
+
+func _done_carcass() -> void:
+	var a: Object = _run.get("obj")
+	var step := String(_run.get("step", "butcher"))
 	if a == null or not is_instance_valid(a) or a.get("meat_left") == null:
 		_end_task()
 		return
@@ -543,10 +892,147 @@ func _butcher_done() -> void:
 		stock.put(String(e.kind), int(e.count))
 		parts.append("%d %s" % [int(e.count), InventoryState.name_of(String(e.kind)).to_lower()])
 	hands.free()
-	_end_task()
-	var text := "%s %s the carcass%s." % [name, "skins" if step == "skin" else "butchers", ": " + ", ".join(parts) if not parts.is_empty() else ""]
-	_note(text)
-	task_finished.emit(id, text)
+	_finish_timed("%s %s the carcass%s." % [name, "skins" if step == "skin" else "butchers", ": " + ", ".join(parts) if not parts.is_empty() else ""])
+
+
+## Lays wood on a fire or a pile: what the job may take now, up to what the station has room for.
+func _done_feed() -> void:
+	var job := JobBook.job(task)
+	var cfg: Dictionary = job.feed
+	var o := offer(task)
+	var kind := String(cfg.kind)
+	var n := 0
+	if not o.is_empty():
+		var taken := stock.take_for(worker_id, kind, int(o.inputs.get(kind, 0)))
+		n = int((o.obj as Object).call(String(cfg.add), taken))
+		if n < taken:
+			stock.put(kind, taken - n)
+	_finish_timed("%s %s %d %s %s." % [name, cfg.verb, n, "stick" if n == 1 else "sticks", cfg.noun] if n > 0 \
+			else "%s %s." % [name, cfg.full])
+
+
+func _done_smoke() -> void:
+	var o := offer(task)
+	var hung := 0
+	var laid := 0
+	if not o.is_empty():
+		var s: Object = o.obj
+		var v := stock.take_for(worker_id, "venison", int(o.get("add", 0)))
+		hung = int(s.add_venison(v))
+		if hung < v:
+			stock.put("venison", v - hung)
+		var f := stock.take_for(worker_id, "firewood", int(o.get("sticks", 0)))
+		laid = int(s.add_wood_units(f))
+		if laid < f:
+			stock.put("firewood", f - laid)
+	var parts := []
+	if hung > 0:
+		parts.append("hangs %d venison" % hung)
+	if laid > 0:
+		parts.append("feeds the smudge %d %s" % [laid, "stick" if laid == 1 else "sticks"])
+	_finish_timed("%s %s in the smokehouse." % [name, " and ".join(parts)] if not parts.is_empty() else "%s finds the smokehouse in order." % name)
+
+
+## The dry jerky off the rack into the store (a part pound stays with her), or the dried pelts off the hoop.
+func _done_takedown() -> void:
+	var text := ""
+	if String(_run.how.get("record", "")) == "rack":
+		var r := _rack()
+		var keep := []
+		var lb := 0.0
+		for h in SurvivalUtil.arr(r.get("hanging")):
+			if core.state.minutes >= float(h.get("ready_at", 0.0)):
+				lb += float(h.get("qty", 0.0))
+			else:
+				keep.append(h)
+		if not r.is_empty():
+			r["hanging"] = keep
+		var units := floori(lb + 0.0001)
+		if lb - units > 0.0001:
+			SurvivalInventory.add(core, "item.food.jerky", lb - units)
+		if units > 0:
+			stock.put("jerky", units)
+		text = "%s takes down %d jerky." % [name, units] if units > 0 else "%s finds the strips not yet dry." % name
+	else:
+		var got := []
+		var rest := []
+		for e: Dictionary in hoop:
+			if core.state.minutes >= float(e.get("ready_at", 0.0)):
+				stock.put(String(e.dried), 1)
+				got.append(InventoryState.name_of(String(e.dried)).to_lower())
+			else:
+				rest.append(e)
+		hoop = rest
+		text = "%s takes down the %s." % [name, ", ".join(got)] if not got.is_empty() else "%s finds the pelt still damp." % name
+	_finish_timed(text)
+
+
+# ---------------------------------------------------------------- the rack and the hoop
+## The jerky on her rack (her own core's rack record at home): pounds hanging and pounds dry.
+func _rack() -> Dictionary:
+	return SurvivalCamp.rack_at(core, RACK_LOC)
+
+
+func _rack_lb(ready_only: bool) -> float:
+	var n := 0.0
+	for h in SurvivalUtil.arr(_rack().get("hanging")):
+		if not ready_only or core.state.minutes >= float(h.get("ready_at", 0.0)):
+			n += float(h.get("qty", 0.0))
+	return n
+
+
+## Whether something on her rack or hoop (by the take-down's record) is done.
+func _ready_down(td: Dictionary) -> bool:
+	if String(td.record) == "rack":
+		return _rack_lb(true) >= float(td.get("min_lb", 1.0))
+	for e: Dictionary in hoop:
+		if core.state.minutes >= float(e.get("ready_at", 0.0)):
+			return true
+	return false
+
+
+## "down" (dry jerky to take off the rack), "work" (a batch to hang), or "" (nothing).
+func _jerky_mode() -> String:
+	return String(offer("jerky").get("mode", ""))
+
+
+func _stretch_mode() -> String:
+	return String(offer("stretch").get("mode", ""))
+
+
+# ---------------------------------------------------------------- the store and her core
+## Takes `inputs` ({pack kind: units}, all or nothing) from the store into her core, with `meta` on them. False when the
+## store is short (nothing kept). The units the other workers have claimed are not taken.
+func _load_inputs(inputs: Dictionary, meta := {}) -> bool:
+	var taken := {}
+	for k: String in inputs:
+		var n := stock.take_for(worker_id, k, int(inputs[k]))
+		taken[k] = n
+		if n < int(inputs[k]):
+			for k2: String in taken:
+				stock.put(k2, int(taken[k2]))
+			return false
+	_moved = {}
+	for k: String in taken:
+		var m := pack_item(k)
+		var item := String(m.item)
+		var per := float(m.get("qty", 1.0))
+		_moved[item] = [k, int(taken[k]), per, SurvivalInventory.count(core, item)]
+		if int(taken[k]) > 0:
+			SurvivalInventory.add(core, item, int(taken[k]) * per, meta)
+	return true
+
+
+## What of the loaded inputs is still in her core goes back to the store (whole units; a part stays with her).
+func _return_inputs() -> void:
+	for item: String in _moved:
+		var m: Array = _moved[item]
+		var left := SurvivalInventory.count(core, item) - float(m[3])
+		var units := mini(floori(left / float(m[2]) + 0.0001), int(m[1]))
+		if units > 0:
+			SurvivalInventory.remove(core, item, units * float(m[2]))
+			stock.put(String(m[0]), units)
+	_moved = {}
 
 
 ## What her core holds of the game's food and materials goes to the store (whole pack units; the rest stays with her).

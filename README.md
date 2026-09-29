@@ -175,7 +175,19 @@ built floor too; the drying rack may stand over a campfire.
   three one-room cabins to Apprentice).
 - The look is the fort's: the same generated log, board, shingle and fieldstone meshes and the processed CC0 Poly
   Haven textures (StructureMeshKit, StructureMaterials). The grass is kept out from under floors and footings.
-- What you build is saved with the game (see Saving and death); a new game starts without it.
+- What you build is saved with the game (see Saving and death); a new game starts without it, except the fort itself.
+- **The fort is built from these pieces** (user 2026-09-28): the palisade, the gate, the firing step along the north wall,
+  its ramps and ladders, the two blockhouses and the flag pole are the menu's Fort pieces, stamped free of cost when the
+  level is built exactly where `data/building/fort_structure.json` lists them (`FortPlan.stamp_structure`); the cabin, the
+  storehouse, the crates and the range are still the level's own. The furnishing on top (`fort_plan.json`) is stamped after.
+  Take them down, rebuild them, cut them like any piece. The blockhouses' lower storeys are hollow with a hung door (E).
+- **Windows in the palisade:** with the felling axe in the hand, aim at a built palisade (within 1.5 m): "Chop through the
+  palisade", 8 strokes cut a piece two stakes wide and 1 m tall, **from belly height up**, measured from where you stand:
+  the first piece starts 1 m over your feet (so on the firing step's deck the first cut takes everything from belly height
+  to the top, a notch to shoot over; on the ground the next cuts take the next piece up, the third takes the top off; halfway
+  up a ramp the piece rises with you); nothing below belly height is ever cut. Build mode's Fort group fills an opening in
+  again: Repair (the stakes stand as they were) or Cover with logs (horizontal logs across it; the axe knocks them out).
+  The cuts are saved with the game. (`scripts/building/palisade_cuts.gd`)
 
 Tests: `tests/building/test_building.gd` (headless: data and costs, meshes and colliders, sockets and snapping as
 numbers, and on the level with the real input path: B, the wheel, hold E, a cabin built piece by piece, notched
@@ -384,8 +396,8 @@ The game saves itself and dying costs your pack (`scripts/save/`).
   `auto.json`), written whole or not at all.
 - A save holds the survival core (needs, conditions, the date and hour, the kit, skills), the sky and weather, the
   player (where, health, the pack, what they wear, the weapons' state, the torches, the gathering skills), the felled
-  trees, stumps and quarried rocks, what you built (doors, the campfires and their coals), the palisade and gate as cut
-  or repaired, weapons and torches lying about, the animals (alive and dead, how far they are butchered), where the
+  trees, stumps and quarried rocks, what you built (doors, the campfires and their coals, the fort's pieces and the
+  windows cut in its palisade, the gate's door), weapons and torches lying about, the animals (alive and dead, how far they are butchered), where the
   horse stands (a load it was dragging is left lying), the wheelbarrow and the horse cart (where they stand, what is in
   them, the horse still in the cart's shafts), the picked plants, and your home and dropped packs. Loading rebuilds the level from its seeds and
   applies the save on top. A save from another forest layout keeps everything but the felled trees and the picked
@@ -600,7 +612,8 @@ scripts/horse/    horse.gd (gaits, jump, hills), horse_mount.gd (E), rider_link.
                   horse_haul.gd / skid_load.gd / log_pile.gd (log skidding), carcass_load.gd (hauling game)
 scripts/building/ build_mode.gd (B, the ghost, placing, take down), build_snap.gd (sockets, validity),
                   build_geometry.gd (meshes, colliders), build_world.gd / built_piece.gd (the placed pieces),
-                  build_door.gd (doors, gate leaves), build_hud.gd, build_grass.gd, build_data.gd
+                  build_door.gd (doors, gate leaves), build_hud.gd, build_grass.gd, build_data.gd,
+                  fort_pieces.gd / fort_plan.gd (the fort's pieces and their stamping), palisade_cuts.gd (windows)
 scripts/ui/hud.gd, scripts/fx/fx.gd, scripts/core/ (input, hit routing)
 animations/, characters/   Actor_B library + rig from Player_Animation_Project/godot_export
 tests/            smoke_test.gd (headless gameplay test), screenshot.gd, compute_weapon_offsets.gd

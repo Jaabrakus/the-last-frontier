@@ -1016,12 +1016,12 @@ func _impact(t: Dictionary) -> void:
 				if float((wn as Node).call(&"axe_strike", cur, power)) >= 1.0:
 					target = {}
 		"wall":
-			var wc := WallCuts.find(get_tree())
-			if wc:
+			var bw := BuildWorld.of(get_tree(), false)
+			if bw:
 				skills.award(sk, skills.xp(sk, "stroke"))
 				GatherFx.wood_chips(scene, point, normal)
 				_rec_or(GatherSfx.chop(point, 0.4), "axe_chop", point, 0.0, &"ball_hit_wood")
-				if wc.strike(cur, power) >= 1.0:
+				if PalisadeCuts.strike(bw, cur, power) >= 1.0:
 					GatherFx.wood_chips(scene, point, normal, 28)
 					_rec_or(GatherSfx.buck(point, 0.4), "axe_buck", point, 2.0, &"ball_hit_wood")
 					give("firewood", 2)
@@ -1236,13 +1236,13 @@ func _find_target() -> void:
 			if cd < 2.2:
 				cands.append({"type": "crown", "src": "felled", "i": ft.get_instance_id(), "felled": ft,
 						"pos": ft.crown_point(p), "radius": 0.15, "dist": cd})
-	# A piece of the palisade or the gate where the camera aims (WallCuts), with the axe in the hand only (the wall is
-	# everywhere).
+	# A piece of a built palisade where the camera aims (PalisadeCuts: from belly height up, measured from the feet), with
+	# the axe in the hand only (the wall is everywhere).
 	if tool == "felling_axe" and in_hand() == "felling_axe":
-		var wc := WallCuts.find(get_tree())
-		var cam := player.get_viewport().get_camera_3d() if wc and player.is_inside_tree() else null
+		var bw := BuildWorld.of(get_tree(), false)
+		var cam := player.get_viewport().get_camera_3d() if bw and player.is_inside_tree() else null
 		if cam:
-			var wcand := wc.aim(cam.global_position, -cam.global_basis.z, p + Vector3.UP * 1.3, [player.get_rid()])
+			var wcand := PalisadeCuts.aim(bw, cam.global_position, -cam.global_basis.z, p, [player.get_rid()])
 			if not wcand.is_empty():
 				cands.append(wcand)
 	# a carcass butchered with the axe (group "axe_work": MammothButchery; user 2026-09-27: "use the axe to butcher"):
@@ -1298,7 +1298,7 @@ func _reach_of(type: String) -> float:
 		"crown":
 			return 1.4
 		"wall":
-			return WallCuts.REACH
+			return PalisadeCuts.REACH
 		"carcass":
 			return 2.4
 		"ground":
@@ -1414,8 +1414,7 @@ func _refresh(t: Dictionary) -> Dictionary:
 			_finish_target(dc)
 			return dc
 		"wall":
-			var wc := WallCuts.find(get_tree())
-			var dw := wc.describe(String(t.key), p + Vector3.UP * 1.3) if wc else {}
+			var dw := PalisadeCuts.describe(BuildWorld.of(get_tree(), false), String(t.key), p)
 			if dw.is_empty() or float(dw.dist) > _reach_of("wall") + 0.4:
 				return {}
 			_finish_target(dw)
@@ -1516,8 +1515,7 @@ func prompt() -> String:
 			var wn: Variant = target.get("work")
 			return String((wn as Node).call(&"axe_prompt", String(target.key))) if wn is Node and is_instance_valid(wn) else ""
 		"wall":
-			var wc := WallCuts.find(get_tree())
-			var done := wc.progress(String(target.key)) if wc else 0.0
+			var done := PalisadeCuts.progress(BuildWorld.of(get_tree(), false), String(target.key))
 			return "Chop through the %s%s" % [nm, "" if done <= 0.0 else "  %d%%" % int(done * 100.0)]
 		"ground":
 			var fm := FarmField.find(get_tree())
