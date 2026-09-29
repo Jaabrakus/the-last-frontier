@@ -1224,6 +1224,7 @@ func _skirt_tuck(delta: float) -> void:
 	# on all fours in the tandem crawl (FrontierTandem: `kneeling`, its mode) the back is rolled up to the lower back
 	var back := kneeling != null and str(kneeling.get(&"mode")) == "crawl"
 	body.skirt_tuck_back = move_toward(body.skirt_tuck_back, 1.0 if back else 0.0, delta / 0.5)
+	appearance.set_rolled(body.skirt_tuck_back > 0.5)
 
 
 ## Too much drink: the aim wanders, slow and uneven (two waves on yaw and pitch), by `aim_sway` degrees. Only the change

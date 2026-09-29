@@ -27,6 +27,9 @@ var blink: FaceBlink
 var overlay: Node
 ## Customizer garments worn over the legacy outfit, slot -> id (PlayerOutfit.dress bulk_slots).
 var outfit_slots := {}
+## The back of the skirt rolled up (the tandem crawl; set_rolled): the regions the dress hides, as it hid them.
+var rolled := false
+var _fit_hide: Array = []
 var _was_down := false
 
 
@@ -112,6 +115,8 @@ func apply(lk: Dictionary) -> void:
 	look = AppearanceStore.validate(lk)
 	var fit := dress(body, look)
 	outfit_slots = fit.get("bulk_slots", {})
+	_fit_hide = (fit.get("hide_regions", []) as Array).duplicate()
+	rolled = false
 	if blink == null:
 		blink = FaceBlink.new()
 		blink.name = "FaceBlink"
@@ -119,6 +124,38 @@ func apply(lk: Dictionary) -> void:
 	blink.body = body
 	_sync_gear.call_deferred()
 	look_changed.emit(look)
+
+
+## The back rolled up (on all fours in the tandem crawl, FrontierPlayer: the petticoat's back is rolled onto the lower
+## back, CharacterBodyMesh.skirt_tuck_back) or let down: rolled, the linen under it (the shirt slot: a shift, a shirt)
+## is rolled up with it, its part below the waist not drawn (ROLLED_GARMENT_HIDES), and the skin it and the petticoat
+## covered there is drawn again (ROLLED_SHOWS: the user 2026-09-29, "see the white around the buttocks, and in the
+## side view we lose the buttocks").
+const ROLLED_SHOWS := ["pelvis_side", "thigh_upper_l", "thigh_upper_r"]
+const ROLLED_GARMENT_HIDES := ["pelvis_center", "pelvis_side", "thigh_upper_l", "thigh_lower_l", "thigh_upper_r",
+		"thigh_lower_r"]
+
+
+func set_rolled(on: bool) -> void:
+	if on == rolled or body == null:
+		return
+	rolled = on
+	var shown: Array = ROLLED_SHOWS if on else []
+	var skin := BodyMaterials.hide_mask(_fit_hide.filter(func(r: String) -> bool: return not r in shown))
+	for mi: MeshInstance3D in body.part_meshes("head"):
+		_set_hide(mi, skin)
+	var cloth := BodyMaterials.hide_mask(ROLLED_GARMENT_HIDES if on else [])
+	for mi: MeshInstance3D in body.part_meshes("outfit:shirt"):
+		_set_hide(mi, cloth)
+
+
+static func _set_hide(mi: MeshInstance3D, mask: Vector2i) -> void:
+	if not is_instance_valid(mi) or mi.mesh == null:
+		return
+	for s in mi.mesh.get_surface_count():
+		var m := mi.get_surface_override_material(s) as ShaderMaterial
+		if m and m.shader and m.shader.get_shader_uniform_list().any(func(u: Dictionary) -> bool: return u.name == "hide_mask"):
+			m.set_shader_parameter("hide_mask", mask)
 
 
 ## The slung weapons, quiver and belt items sit on the outfit's bulk (SlingRig, body_fit.json): the
