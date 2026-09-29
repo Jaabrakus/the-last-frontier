@@ -21,7 +21,8 @@ extends RefCounted
 ##    ledge graph (TravLedgeGraph.remove_source) when it is first quarried (they no longer fit it);
 ##  - the grass blocker map (grass.gd, built at load from the layout) still keeps the grass off the spot: the
 ##    stump and the rubble stay there. Nothing else caches the vegetation at run time (the canopy map above
-##    aside). Changes are not saved: a new game grows the forest back.
+##    aside, and PerchBranches' climbing branches: a felled tree's are dropped, PerchBranches.forget_tree).
+##    Changes are not saved: a new game grows the forest back.
 
 const Assets := preload("res://scripts/world/vegetation/veg_assets.gd")
 const CanopyMap := preload("res://scripts/world/vegetation/canopy_map.gd")
@@ -181,6 +182,8 @@ func remove_tree(i: int) -> Dictionary:
 	if cs:
 		cs.get_parent().remove_child(cs)
 		cs.queue_free()
+	if veg and veg.is_inside_tree():
+		veg.get_tree().call_group(PerchBranches.GROUP, &"forget_tree", i)
 	return d
 
 

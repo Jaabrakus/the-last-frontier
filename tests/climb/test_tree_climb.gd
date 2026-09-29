@@ -8,6 +8,7 @@ extends SceneTree
 ##            own weapon is in hand and aims (the camera in nearer, the body faded); G again takes hold of the trunk
 ##   round    D crawls round the trunk, staying on its bark
 ##   down     S climbs down; near the ground the climber lets go and drops onto it
+##   felled   felling the tree takes its branches with it: no perch left standing in the air where it was
 ##
 ##   Godot --headless --path . -s tests/climb/test_tree_climb.gd -- --no-capture
 ## "TREE CLIMB TEST PASSED" and exit 0 when every check passes. Run it under a hard time limit.
@@ -20,6 +21,7 @@ var checks := 0
 var axis := Vector3.ZERO
 var radius := 0.0
 var top := 0.0
+var tree_i := -1
 
 
 func _initialize() -> void:
@@ -82,6 +84,7 @@ func _pick_tree() -> bool:
 			axis = pos
 			radius = r
 			top = pos.y + h - 0.3
+			tree_i = i
 	return best < INF
 
 
@@ -203,3 +206,16 @@ func _climb() -> void:
 	_expect(g.state == PlayerGrip.OFF and p.is_on_floor() and p.global_position.y < ground + 0.3,
 			"down: climbed down and dropped onto the ground (y %.2f, ground %.2f)" % [p.global_position.y, ground])
 	Input.action_release("grip")
+	# felled: its branches go with it (user 2026-09-28: "when we fell a tree, the climbable branches are still there")
+	var pb := p.get_node_or_null("PerchBranches") as PerchBranches
+	var near_top := Vector3(axis.x, top, axis.z)
+	_expect(pb != null and not pb.perch_at(near_top).is_empty(), "felled: the standing tree has its perch")
+	VegHarvest.find(self).remove_tree(tree_i)
+	await _fr(2)
+	var left := 0
+	for c in pb.get_children() if pb else []:
+		var n := c as Node3D
+		if n and not n.is_queued_for_deletion() and Vector2(n.global_position.x - axis.x, n.global_position.z - axis.z).length() < 2.2:
+			left += 1
+	_expect(pb != null and pb.perch_at(near_top).is_empty() and left == 0,
+			"felled: no branch or perch floor left where the tree stood (%d)" % left)

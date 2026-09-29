@@ -55,6 +55,10 @@ veg_clear_b={
 "type": "vec4",
 "value": Vector4(0, 0, 0, 0)
 }
+veg_clear_c={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
 
 sky_time={
 "type": "float",

@@ -29,8 +29,12 @@ bool frontier_near_fade(vec3 view_pos, vec2 frag_xy, float begin, float end) {
 // the aim) dither out, as the near fade does; veg_clear_b.w (0..1) fades the whole thing in and out (0: off, nothing
 // changes). frontier_line_clear_near() is the same for trunks, only within `near` metres of the camera (a camera
 // that swings round behind the trunk the player is perched on).
+// The crown round the climber too (user 2026-09-28: "when we are on a tree the branchs should fade so we can see the
+// ground"): leaves and limbs within veg_clear_c.w metres of veg_clear_c.xyz (the climber) dither out with the line,
+// so the ground below shows through the tree they are in; trunks keep to the line alone.
 global uniform vec4 veg_clear_a;
 global uniform vec4 veg_clear_b;
+global uniform vec4 veg_clear_c;
 
 float frontier_line_distance(vec3 world_pos) {
 	vec3 a = veg_clear_a.xyz;
@@ -39,19 +43,28 @@ float frontier_line_distance(vec3 world_pos) {
 	return length(world_pos - (a + ab * t));
 }
 
+bool frontier_clear_test(float k, vec2 frag_xy) {
+	float dither = fract(52.9829189 * fract(dot(frag_xy, vec2(0.06711056, 0.00583715))));
+	return mix(1.0, k, veg_clear_b.w) <= dither;
+}
+
 bool frontier_line_clear(vec3 world_pos, vec2 frag_xy) {
 	if (veg_clear_b.w <= 0.0) {
 		return false;
 	}
 	float r = veg_clear_a.w;
-	float k = mix(1.0, smoothstep(r * 0.5, r, frontier_line_distance(world_pos)), veg_clear_b.w);
-	float dither = fract(52.9829189 * fract(dot(frag_xy, vec2(0.06711056, 0.00583715))));
-	return k <= dither;
+	float k = smoothstep(r * 0.5, r, frontier_line_distance(world_pos));
+	float rc = veg_clear_c.w;
+	if (rc > 0.0) {
+		k = min(k, smoothstep(rc * 0.55, rc, length(world_pos - veg_clear_c.xyz)));
+	}
+	return frontier_clear_test(k, frag_xy);
 }
 
 bool frontier_line_clear_near(vec3 world_pos, vec2 frag_xy, float near) {
 	if (veg_clear_b.w <= 0.0 || length(world_pos - veg_clear_a.xyz) > near) {
 		return false;
 	}
-	return frontier_line_clear(world_pos, frag_xy);
+	float r = veg_clear_a.w;
+	return frontier_clear_test(smoothstep(r * 0.5, r, frontier_line_distance(world_pos)), frag_xy);
 }

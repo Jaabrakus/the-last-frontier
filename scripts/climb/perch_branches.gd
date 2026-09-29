@@ -7,9 +7,11 @@ extends Node3D
 ## on, with a small level floor on it (PerchFloor, a StaticBody3D) for a crouching climber's feet. Built as the player
 ## comes near and freed as they go (out of sight, among the crowns). PlayerGrip asks for the perch of the trunk it holds
 ## (perch_at), pulls the climber up onto it and leaves them crouched there (user: "no feet dangling more like a
-## crouch"), weapons in hand.
+## crouch"), weapons in hand. A felled tree's branches go with it (VegHarvest.remove_tree calls forget_tree; user
+## 2026-09-28: "when we fell a tree, the climbable branches are still there").
 
 const Assets := preload("res://scripts/world/vegetation/veg_assets.gd")
+const GROUP := &"perch_branches"
 const BARK_TEX := "res://assets/polyhaven/textures/structures/bark_brown_02/bark_brown_02_"
 const RADIUS := 40.0
 const KEEP := 48.0
@@ -39,6 +41,7 @@ static func install(p: FrontierPlayer) -> PerchBranches:
 
 
 func _ready() -> void:
+	add_to_group(GROUP)
 	top_level = true
 	global_transform = Transform3D.IDENTITY
 	_mat = _bark(Color(0.62, 0.52, 0.42))
@@ -65,8 +68,9 @@ func _gather() -> bool:
 	if _veg == null or _veg.get("layout") == null:
 		return false
 	var lay = _veg.layout
+	var hv := VegHarvest.of(_veg as FrontierVegetation)
 	for i in lay.tree_pos.size():
-		if lay.tree_collider[i] == 0:
+		if lay.tree_collider[i] == 0 or (hv and hv.felled.has(i)):
 			continue
 		var info := Assets.tree(lay.tree_kind[i], lay.tree_variant[i])
 		var s: float = lay.tree_scale[i]
@@ -81,9 +85,22 @@ func _gather() -> bool:
 		# top: vegetation.gd sinks it 0.3 m, and lengthens it by what it sinks more on a slope)
 		for k in 3:
 			var ak := a + TAU * float(k) / 3.0
-			_trees.append({"i": i * 4 + k, "axis": pos, "r": r, "top": pos.y + h - 0.3 + 0.12 * float(k - 1),
+			_trees.append({"i": i * 4 + k, "tree": i, "axis": pos, "r": r, "top": pos.y + h - 0.3 + 0.12 * float(k - 1),
 					"dir": Vector3(sin(ak), 0.0, cos(ak)), "birch": birch})
 	return true
+
+
+## Tree `tree` (a layout index) is gone: its branches and their floors with it, now and for good.
+func forget_tree(tree: int) -> void:
+	var keep: Array = []
+	for tr: Dictionary in _trees:
+		if int(tr.tree) != tree:
+			keep.append(tr)
+		elif _live.has(tr.i):
+			for n: Node in _live[tr.i]:
+				n.queue_free()
+			_live.erase(tr.i)
+	_trees = keep
 
 
 func _process(delta: float) -> void:
