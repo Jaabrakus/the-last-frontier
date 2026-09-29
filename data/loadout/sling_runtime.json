@@ -159,7 +159,33 @@
    "wood",
    "horn_tip"
   ],
-  "note": "loadout_design.md 2.6: the old right-hip horn read as 'a grenade on the belt'; the rig hides the baked one on the legacy body and hangs the reshaped curved cow horn (plug, spout ring, stopper) behind the right hip above the pistol butt, tied to the horn strap. The customizer's horn_node() change request stays open (the permanent fix is theirs)."
+  "note": "loadout_design.md 2.6: the old right-hip horn read as 'a grenade on the belt'; the rig hides the baked one on the legacy body and hangs the reshaped curved cow horn (plug, spout ring, stopper) behind the right hip above the pistol butt, tied to the horn strap. The customizer's horn_node() change request stays open (the permanent fix is theirs).",
+  "place": "belt",
+  "belt": {
+   "bone": "pelvis",
+   "plug": [
+    -0.085,
+    0.945,
+    -0.215
+   ],
+   "bend": [
+    -0.17,
+    0.908,
+    -0.176
+   ],
+   "spout": [
+    -0.214,
+    0.852,
+    -0.1
+   ],
+   "region": "waist_belt",
+   "strap": false,
+   "note": "The user 2026-09-29: the horn on the waist like before, 'right next to the tomahawk': tied on the belt at the back, from beside the tomahawk's handle (plug, at the belt) slanting down along the belt toward the right hip (spout), above the seat, clear of the tomahawk and of the right-hip pistol's butt, held 3 cm off the seat (a knee raised high, the ladder's mount, pushes the seat back into it); no shoulder strap. With a pistol at back_right (the sash brace) or a second tomahawk at back_2 the belt there is taken: the horn hangs on its strap as at the reference placement above (the model's own, carried here rigidly).",
+   "unless_points": [
+    "back_right",
+    "back_2"
+   ]
+  }
  },
  "strap_order_lift_m": {
   "horn": 0.004,

@@ -8,7 +8,8 @@ extends SceneTree
 ## Exit 0 and "SLING RIG TEST OK" when every check passes. Pins:
 ##   - the FIRST PISTOL hangs on the belt at the right hip (user rule): carried by the pelvis, grip at the
 ##     side seam (80-100 deg about the torso axis), at belt height, outside the coat, lock out, muzzle down;
-##     the baked right-hip horn is hidden and the reshaped horn hangs >= 7 cm clear of the pistol
+##     the baked right-hip horn is hidden and the reshaped horn is tied on the belt at the back, next to the tomahawk
+##     toward the right hip (the user 2026-09-29: "we can put it right next to the tomahawk"), clear of the pistol
 ##   - every stowed copy follows its carrying bone (rigid: < 1 mm; hanging items: the hook < 1 mm)
 ##   - counts on the body: spears, tomahawks, darts, arrows, minus the one in the hand
 ##   - HANDOFF CONTINUITY for every drawable item of every preset, standing and crouched, playing the draw
@@ -179,9 +180,17 @@ func _test_first_pistol() -> void:
 				for hc: Array in rig.caps_at(horn, horn.world):
 					for pc: Array in rig.caps_at(e, e.world):
 						gap = minf(gap, float(SlingRig._closest_seg_seg(hc[0], hc[1], pc[0], pc[1])[0]) - float(hc[2]) - float(pc[2]))
-				_check(gap >= 0.065, "%s: horn clear of the right-hip pistol (%.1f cm)" % [pid, gap * 100.0])
+				_check(gap >= 0.015, "%s: horn clear of the right-hip pistol (%.1f cm)" % [pid, gap * 100.0])
 				var hang := SlingBodySurface.angle_of(horn.world.origin - rig.surface.axis_at(horn.world.origin.y))
-				_check(horn.world.origin.y > grip.y + 0.1, "%s: horn above the pistol butt, off the belt (%.2f m)" % [pid, horn.world.origin.y])
+				# (on the belt by the tomahawk, unless a pistol at back_right or a second tomahawk takes that belt: then on
+				# its strap, sling_runtime.json horn.belt.unless_points)
+				var taken := lo.items.any(func(it: Dictionary) -> bool: return (it.get("points", []) as Array).any(
+						func(pt) -> bool: return String(pt) in ["back_right", "back_2"]))
+				if taken:
+					_check(rig.horn_strapped, "%s: horn on its strap (the belt behind is taken)" % pid)
+				else:
+					_check(not rig.horn_strapped and absf(horn.world.origin.y - grip.y) < 0.12 and hang > 130.0,
+							"%s: horn on the belt at the back by the tomahawk (%.2f m, %.0f deg round)" % [pid, horn.world.origin.y, hang])
 				report.first_pistol[String(pid) + "_horn"] = {"gap_cm": snappedf(gap * 100, 0.1), "plug_angle": snappedf(hang, 0.1)}
 			var model := horn.root if horn else null
 			_check(model != null and _has_any(model, ["Plug"]) and _has_any(model, ["Spout", "SpoutRing"]) and _has_any(model, ["Stopper", "SpoutTip"]),

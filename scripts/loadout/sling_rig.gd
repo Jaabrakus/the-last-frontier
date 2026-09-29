@@ -146,6 +146,8 @@ var body: CharacterBodyMesh
 var surface: SlingBodySurface
 var player: FrontierPlayer
 var entries: Array = []
+## The powder horn hangs on its strap over the left shoulder (false: tied on the belt, sling_runtime.json horn.place).
+var horn_strapped := true
 var straps: Array = []
 ## item id -> the in-hand weapon model (the player's weapon.model, or the preview's)
 var hand_models := {}
@@ -484,13 +486,28 @@ func _make_entry(it: Dictionary, p: String) -> void:
 
 func _make_horn() -> void:
 	var h: Dictionary = _rt.get("horn", {})
+	# a placement of its own (sling_runtime.json horn.place: "hip", on the belt at the right hip, as the old body's
+	# horn sat, under the right-hip pistol's grip; the user 2026-09-29: "we had it both on the right hip before"): the
+	# delivered horn and its capsules are carried there rigidly from the reference's points (horn.plug/bend/spout)
+	var at: Dictionary = h.get(String(h.get("place", "")), {})
+	# (unless an item rides where it would lie: then on its strap, at the reference placement)
+	for it: Dictionary in loadout.items:
+		for pt in it.get("points", []):
+			if String(pt) in (at.get("unless_points", []) as Array):
+				at = {}
+	var src: Dictionary = at if not at.is_empty() else h
 	var spec := data.point("horn", "powder_horn")
-	var bone := String(h.get("bone", "spinec"))
+	var bone := String(src.get("bone", "spinec"))
 	if not _bi.has(bone):
 		return
-	var plug := _v3(h.get("plug", [0.016, 1.15, -0.175]))
-	var bend := _v3(h.get("bend", [-0.079, 1.13, -0.157]))
-	var spout := _v3(h.get("spout", [-0.15, 1.09, -0.092]))
+	var plug := _v3(src.get("plug", [0.016, 1.15, -0.175]))
+	var bend := _v3(src.get("bend", [-0.079, 1.13, -0.157]))
+	var spout := _v3(src.get("spout", [-0.15, 1.09, -0.092]))
+	var move := Transform3D.IDENTITY
+	if not at.is_empty():
+		move = _horn_frame(plug, bend, spout) * _horn_frame(_v3(h.get("plug", [0.016, 1.15, -0.175])),
+				_v3(h.get("bend", [-0.079, 1.13, -0.157])), _v3(h.get("spout", [-0.15, 1.09, -0.092]))).affine_inverse()
+	horn_strapped = bool(src.get("strap", true))
 	var z := (spout - plug).normalized()
 	var chord := plug.distance_to(spout)
 	var bowv := (bend - plug) - z * (bend - plug).dot(z)
@@ -505,10 +522,11 @@ func _make_horn() -> void:
 		var ref: Dictionary = SlingModels.gear_entry("powder_horn").get("reference_bind_placement", {})
 		var v: Variant = str_to_var(String(ref.get("bind", "")))
 		if v is Transform3D:
-			x = (v as Transform3D).basis.x
-			y = (v as Transform3D).basis.y
-			z = (v as Transform3D).basis.z
-			plug = (v as Transform3D).origin
+			var t := move * (v as Transform3D)
+			x = t.basis.x
+			y = t.basis.y
+			z = t.basis.z
+			plug = t.origin
 	e.item_id = "powder_horn"
 	e.kind = "powder_horn"
 	e.point = "horn"
@@ -521,11 +539,11 @@ func _make_horn() -> void:
 	e.attach = "rigid"
 	e.yield_deg = float(h.get("yield_deg", 30.0))
 	for c: Dictionary in spec.get("capsules_bind", []):
-		e.caps.append([_v3(c.from), _v3(c.to), float(c.radius)])
+		e.caps.append([move * _v3(c.from), move * _v3(c.to), float(c.radius)])
 	if e.caps.is_empty():
 		e.caps = [[plug, bend, 0.032], [bend, spout, 0.018]]
 	e.hook = plug
-	e.region = "back"
+	e.region = String(src.get("region", "back"))
 	e.normal = surface.radial_normal(plug) if surface else Vector3.BACK
 	e.socket = _socket(bone)
 	e.holder = Node3D.new()
@@ -620,6 +638,15 @@ func _has_legacy_horn() -> bool:
 				if m and m.resource_name == "horn":
 					return true
 	return false
+
+
+## The horn's frame from its plug, the bend of its curve and its spout (z along the chord, y toward the bend), at the plug.
+static func _horn_frame(plug: Vector3, bend: Vector3, spout: Vector3) -> Transform3D:
+	var z := (spout - plug).normalized()
+	var bowv := (bend - plug) - z * (bend - plug).dot(z)
+	var y := bowv.normalized() if bowv.length() > 1e-4 else Vector3.UP
+	var x := y.cross(z).normalized()
+	return Transform3D(Basis(x, z.cross(x).normalized(), z), plug)
 
 
 ## The legacy body's baked right-hip horn is the "grenade on the belt"; the rig hides it (a runtime
@@ -2861,8 +2888,8 @@ func _make_straps() -> void:
 			routes = d.get("straps", {})
 	for rid: String in routes:
 		var r: Dictionary = routes[rid]
-		if rid == "horn_strap" and legacy_body:
-			continue   # the legacy body bakes its horn strap: the horn is tied to it (horn_ties)
+		if rid == "horn_strap" and (legacy_body or not horn_strapped):
+			continue   # the legacy body bakes its horn strap: the horn is tied to it (horn_ties); on the belt it has none
 		if rid == "pistol_sling" and not loadout.gear.has("pistol_sling"):
 			continue
 		var anchors: Array = []
@@ -2912,7 +2939,7 @@ func _make_straps() -> void:
 		if spec.has("gear"):
 			if not loadout.gear.has(String(spec.gear)) or covered.has("gear:" + String(spec.id)):
 				continue
-			if String(spec.id) == "horn_strap" and covered.has("gear:horn_strap"):
+			if String(spec.id) == "horn_strap" and (covered.has("gear:horn_strap") or not horn_strapped):
 				continue
 		if spec.has("legacy_strap") and bool(spec.legacy_strap) != legacy_body:
 			continue
