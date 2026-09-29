@@ -99,6 +99,9 @@ var drain_mult := 1.0
 @export var perch_aim_shoulder := 0.55
 @export var aim_fade := 0.7                ## the body's transparency aiming from a branch
 @export var near_fade_m := Vector2(0.55, 1.1)   ## the body fades as the camera comes within these (m, fully .. none)
+## Up a tree the leaves and limbs of its crown this near the climber fade out (the ground shows through; user
+## 2026-09-28: "when we are on a tree the branchs should fade so we can see the ground"); 0: only the line of sight.
+@export var crown_clear_m := 4.5
 ## The swing (the climber hanging from the hands, 1 m to the body's centre; springs: the climber pulling back in).
 @export var swing_len := 1.0
 @export var swing_k_side := 18.0
@@ -197,6 +200,7 @@ var _perch_face := Vector3.FORWARD
 var _jump_hold := 0.0
 var _off_t := 0.0
 var _clear_w := 0.0              ## the line-of-sight fade's strength (veg_clear_*)
+var _crown_r := 0.0              ## the crown clear's radius now (kept while the fade goes out)
 ## Hanging one-handed with a weapon out (HANG_WEAPONS).
 var hang_aim := false
 var aim_arm: GripAimArm
@@ -319,13 +323,13 @@ func tick(dt: float) -> bool:
 		if player.is_on_floor() and _rest <= 0.0:
 			stamina = move_toward(stamina, stamina_max, regain * dt)
 		if tapped and not _need_press and _cool <= 0.0 and stamina > 5.0 and _can_grab():
+			# beside a wild horse: its mane, and up onto its back (HorseBreaking); the player is on it now
+			if HorseBreaking.try_grab(player):
+				return true
 			return _try_grab()
 		return false
 	if player.is_dead:
 		_let_go(0.0, "dead")
-			# beside a wild horse: its mane, and up onto its back (HorseBreaking); the player is on it now
-			if HorseBreaking.try_grab(player):
-				return true
 		return false
 	if not is_instance_valid(anchor) or not is_instance_valid(gripped):
 		_let_go(0.0, "lost")
@@ -369,6 +373,7 @@ func _feed_legs(dt: float) -> void:
 
 ## The leaves and limbs between the camera and the climber, and on along the aim, fade out while climbing or crouched
 ## on a branch (veg_clear_*, shaders/vegetation/near_fade.gdshaderinc): a clear view and a clear shot from a tree.
+## In a tree (its bark gripped, or perched) the crown round the climber fades too (crown_clear_m), for the ground.
 func _line_of_sight(delta: float) -> void:
 	var on := (state != OFF or perched) and player.camera != null
 	var w := move_toward(_clear_w, 1.0 if on else 0.0, delta / 0.35)
@@ -379,8 +384,14 @@ func _line_of_sight(delta: float) -> void:
 	var head := player.global_position + Vector3.UP * 1.45
 	var aim := player.weapon != null and player.weapon.aim > 0.3 and (perched or hang_aim)
 	var far := head + (-player.camera.global_basis.z) * (9.0 if aim else 1.2)
+	if perched or (gripped != null and gripped.is_in_group(&"trees")):
+		_crown_r = crown_clear_m
+	elif on:
+		_crown_r = 0.0
+	var mid := player.global_position + Vector3.UP * 1.0
 	RenderingServer.global_shader_parameter_set(&"veg_clear_a", Vector4(cam.x, cam.y, cam.z, 1.1))
 	RenderingServer.global_shader_parameter_set(&"veg_clear_b", Vector4(far.x, far.y, far.z, _clear_w))
+	RenderingServer.global_shader_parameter_set(&"veg_clear_c", Vector4(mid.x, mid.y, mid.z, _crown_r))
 
 
 ## The branch's camera and the body's fade (see perch_cam_distance).

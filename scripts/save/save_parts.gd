@@ -396,10 +396,10 @@ static func save_building(level: Node) -> Dictionary:
 				"supports": Array(p.supports), "ground": Array(p.ground)}
 		if p.door:
 			e["open"] = p.door.is_open
-		for c in p.find_children("*", "Campfire", true, false):
-			var cf := c as Campfire
 		if not p.cuts.is_empty():
 			e["cuts"] = PalisadeCuts.to_save(p.cuts)      # the windows cut in a palisade section
+		for c in p.find_children("*", "Campfire", true, false):
+			var cf := c as Campfire
 			e["fire"] = {"lit": cf.state.lit, "left": cf.state.burn_left, "total": cf.state.burn_total, "coals": cf._coals}
 			break
 		var chest := p.get_node_or_null("Chest") as StorageChest
@@ -424,8 +424,6 @@ static func load_building(level: Node, d: Dictionary) -> void:
 	if ps.is_empty() and not had_plan and not had_fort:
 		return
 	var w := BuildWorld.of(level.get_tree(), true)
-	for e in ps:
-		w.next_id = int(e.id)
 	if had_plan or had_fort or w.stamped or w.fort_built:
 		# the level stamped its own fort (and furnishing) when it was built: the save's pieces replace them (their ids would
 		# clash), the save has the fort's furnishing among them (or the player took it all down): no second one
@@ -433,6 +431,8 @@ static func load_building(level: Node, d: Dictionary) -> void:
 		for q in w.pieces():
 			w.remove_piece(q)
 		w.fort_built = had_fort
+	for e in ps:
+		w.next_id = int(e.id)
 		var g := PackedFloat32Array()
 		for x in e.get("ground", []):
 			g.append(float(x))
@@ -441,10 +441,10 @@ static func load_building(level: Node, d: Dictionary) -> void:
 		for x in e.get("supports", []):
 			sup.append(int(x))
 		p.supports = sup
-		if e.has("open") and p.door:
-			p.door.set_open(bool(e.open), true)
 		if e.has("cuts") and p.type == "palisade":
 			p.set_cuts(PalisadeCuts.from_save(e.cuts))
+		if e.has("open") and p.door:
+			p.door.set_open(bool(e.open), true)
 		if e.has("fire"):
 			_restore_fire.call_deferred(p, e.fire)
 		if e.has("chest") and p.get_node_or_null("Chest") is StorageChest:
@@ -454,10 +454,10 @@ static func load_building(level: Node, d: Dictionary) -> void:
 		if e.has("smokehouse") and p.get_node_or_null("Smokehouse") is Smokehouse:
 			(p.get_node("Smokehouse") as Smokehouse).from_save_all(e.smokehouse)
 	w.next_id = maxi(w.next_id, int(d.get("next_id", w.next_id)))
-
-
 	if not had_fort and not w.fort_built and FortPlan.structure_enabled():
 		FortPlan.stamp_structure(w)
+
+
 static func _restore_fire(p: BuiltPiece, f: Dictionary) -> void:
 	if not is_instance_valid(p):
 		return
