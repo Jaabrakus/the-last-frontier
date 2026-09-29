@@ -40,6 +40,9 @@ uniform float sss_strength : hint_range(0.0, 1.0) = 0.45;
 // light the chest and shoulders bounce up under the chin: the neck's front (and any part facing down) lies in the
 // chin's shadow and read half as bright as the chest; this lifts it by this much of its own colour
 uniform float neck_bounce : hint_range(0.0, 1.0) = 0.22;
+// the light there is to bounce, 0..1 (DayNight: the key light against the day's; 1 where no sky sets it): the bounce is
+// an emission, so without it the neck glowed on its own in the dark (user 2026-09-29: "at night time the neck lights up")
+global uniform float skin_bounce;
 uniform float detail_strength : hint_range(0.0, 2.0) = 1.0;
 uniform float albedo_scale : hint_range(0.5, 1.2) = 0.9;
 uniform int debug_view = 0;
@@ -365,7 +368,7 @@ void fragment() {
 	CLEARCOAT = clamp(oil * oil_sheen * shine * mix(0.35, 1.0, clamp(pore * 1.2 - 0.2, 0.0, 1.0)) * (1.0 - 0.6 * beard), 0.0, 1.0);
 	CLEARCOAT_ROUGHNESS = oil_roughness;
 	AO = mix(0.35, 1.0, cavity);
-	EMISSION = albedo * (neck_bounce * nzf * (1.0 - smoothstep(-0.2, 0.6, v_ny)) * smoothstep(1.27, 1.33, v_h));
+	EMISSION = albedo * (neck_bounce * skin_bounce * nzf * (1.0 - smoothstep(-0.2, 0.6, v_ny)) * smoothstep(1.27, 1.33, v_h));
 	AO_LIGHT_AFFECT = 0.35;
 	// (less under hair: the light the strips let through reddened the hairline into a glowing band)
 	SSS_STRENGTH = debug_view == 0 ? sss * (v_region <= 1u ? head_sss : 1.0) * (1.0 - 0.75 * hair_cover) : 0.0;

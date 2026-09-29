@@ -226,6 +226,10 @@ func _apply(delta: float) -> void:
 		sun.light_energy = MOON_ENERGY * moon_w * (1.0 - _shade)
 		_aim(sun, md)
 		sun.shadow_enabled = moon_w > 0.05
+	# the light there is to bounce (the skin's glow under the chin, skin.gdshader neck_bounce): the key light against the
+	# day's, some of it on a grey day; next to none at night (as an emission it had glowed round the neck in the dark)
+	RenderingServer.global_shader_parameter_set(&"skin_bounce",
+			clampf(maxf(sun.light_energy / maxf(base_sun_energy, 1e-4), 0.35 * day_w), 0.0, 1.0))
 	# the sky
 	if sky_mat:
 		sky_mat.set_shader_parameter(&"sun_dir", sd)
