@@ -40,6 +40,10 @@ const RACK_LOC := "home"
 const HOOP_MAX := 2
 ## Nothing is started between these game hours (she sleeps) and outside work stops at dusk.
 const AWAKE := Vector2(5.5, 21.5)
+## Her own sleeping hours (user 2026-09-29: "someone can sleep during the day and work the night"): the game hour she goes to
+## bed and how many hours she keeps in it; by default the night AWAKE leaves. Saved with her.
+var sleep_from := AWAKE.y
+var sleep_h := 24.0 - AWAKE.y + AWAKE.x
 const DAYLIGHT := Vector2(6.0, 19.0)
 ## After a task that could not start she waits this long (game minutes) before trying anything.
 const RETRY_MIN := 45.0
@@ -109,6 +113,7 @@ var hunt := {}
 ## RECRUIT (scripts/companion/recruit.gd): a recruited worker's record {kind, traits, trust, morale, share, place, ...} ({} for the
 ## others; saved), and her work speed from her morale (Recruit.work_mult: timed jobs take 1 / this as long).
 var recruit := {}
+var _slip_rng := RandomNumberGenerator.new()   # SHARPNESS
 var work_mult := 1.0
 ## TOOLS (scripts/companion/tool_pool.gd): made in this session (create/_build): her background's kit is not hers; a worker loaded
 ## from a save before the pool has it and brings it into the pool once (ToolPool.adopt).
@@ -201,6 +206,8 @@ static func from_dict(d: Dictionary, main: SurvivalCore) -> SpouseCore:
 	s.worker_id = int(d.get("id", 0))
 	s.look = (d.get("look", {}) as Dictionary).duplicate(true)
 	s.body_look = (d.get("body_look", {}) as Dictionary).duplicate(true) if d.get("body_look") is Dictionary else {}   # GROWTH
+	s.sleep_from = clampf(float(d.get("sleep_from", AWAKE.y)), 0.0, 24.0)
+	s.sleep_h = clampf(float(d.get("sleep_h", 24.0 - AWAKE.y + AWAKE.x)), 0.0, 20.0)
 	s.role = String(d.get("role", "home")) if ROLES.has(String(d.get("role", "home"))) else "home"
 	# jobs the save does not know (an old save, a job added since) are on
 	for k: String in JobBook.ids():
@@ -225,7 +232,7 @@ func to_dict() -> Dictionary:
 	# a job in the middle of its work is given up (her food and materials go back to the store)
 	cancel("saved")
 	SurvivalStreams.sync(core)   # PREGNANCY: her named streams are saved with her core
-	return {"id": worker_id, "name": name, "look": look.duplicate(true), "body_look": body_look.duplicate(true), "role": role if role_saved == "" else role_saved,
+	return {"id": worker_id, "name": name, "look": look.duplicate(true), "body_look": body_look.duplicate(true), "role": role if role_saved == "" else role_saved, "sleep_from": sleep_from, "sleep_h": sleep_h,
 			"enabled": enabled.duplicate(), "core": core.state.to_dict(), "journal": journal.duplicate(), "hoop": hoop.duplicate(true),
 			"intimacy": intimacy, "intimacy_cd": intimacy_cd, "intimacy_offer_cd": intimacy_offer_cd,
 			"pregnancy": pregnancy.duplicate(true), "recruit": recruit.duplicate(true)}   # RECRUIT
@@ -257,6 +264,8 @@ func sync(main: SurvivalCore) -> void:
 	elif dm < -0.0001:
 		core.state.minutes = main.state.minutes
 	_cool = maxf(_cool - maxf(dm, 0.0), 0.0)
+	var idle := task == "" and (role == "home" or role == "stay")   # SHARPNESS: the gauge fills while she rests, any hour
+	Sharpness.rest_tick(self, maxf(dm, 0.0), idle and not awake(), idle and awake(), idle and not awake())
 	if minutes_left > 0.0:
 		minutes_left = maxf(minutes_left - maxf(dm, 0.0), 0.0)
 		if minutes_left <= 0.0 and task != "":
@@ -270,8 +279,12 @@ func hour() -> float:
 
 
 func awake() -> bool:
-	var h := hour()
-	return h >= AWAKE.x and h < AWAKE.y
+	return not sleeping_hour()
+
+
+## Whether the hour is in her own sleeping hours (they may run past midnight).
+func sleeping_hour() -> bool:
+	return fposmod(hour() - sleep_from, 24.0) < sleep_h
 
 
 func daylight() -> bool:
@@ -439,6 +452,9 @@ func _choose() -> Dictionary:
 		if a.prio != b.prio:
 			return a.prio < b.prio
 		return a.ran < b.ran)
+	# SHARPNESS: tired, hungry or unwell, she sometimes does a lesser job first (never over the player's own order)
+	if cands.size() > 1 and not focus_ok and _slip_rng.randf() < Sharpness.slip(Sharpness.of(self), Sharpness.num("job_slip", 0.35)):
+		return cands[_slip_rng.randi_range(1, mini(2, cands.size() - 1))].o
 	return cands[0].o
 
 

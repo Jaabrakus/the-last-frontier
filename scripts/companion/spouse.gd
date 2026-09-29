@@ -300,14 +300,23 @@ func _chores(dt: float) -> Array:
 
 ## Gives up a plan whose spot she cannot reach (stuck against something for a while).
 func _plan_check() -> void:
-	# the woods are everywhere out there: stuck among the trees short of a woods spot, she works where she stands (a field
-	# lesson's child is with her either way) instead of giving the plan up
-	if _stuck_t > 1.5 and String(_plan.get("site", "")) == "woods" \
+	var woods := String(_plan.get("site", "")) == "woods"
+	# PATHS: a woods spot her way cannot reach (in a thicket, on a rock): she works at the nearest point the way goes to
+	if woods and nav != null and nav.status == NavMover.FAILED and nav.reason == "unreachable" and nav.reach_end != Vector3.INF \
+			and Vector2(nav.reach_end.x - _goal.x, nav.reach_end.z - _goal.z).length() < 10.0:
+		_goal = nav.reach_end
+		nav.reset()
+		_stuck_t = 0.0
+		return
+	# with no way on the mesh (none baked there, off it, given up stuck) she steers straight, and held up by the trees short of a
+	# woods spot she works where she stands (a field lesson's child is with her either way): the last resort, not the plan
+	var lost := nav == null or not nav.on_path
+	if lost and _stuck_t > 1.5 and woods \
 			and Vector2(global_position.x - home.x, global_position.z - home.z).length() >= WOODS_RANGE.x * 0.5:
 		_goal = Vector3(global_position.x, _goal.y, global_position.z)
 		_stuck_t = 0.0
 		return
-	if _stuck_t > 4.0:
+	if _stuck_t > (4.0 if lost else 8.0):
 		_plan = {}
 		_has_goal = false
 		_stuck_t = 0.0
@@ -530,6 +539,7 @@ func _move(dir: Vector3, speed: float, dt: float) -> void:
 ## (BabyLink) and anything else that walks her somewhere.
 func walk_to(to: Vector3, speed: float, arrive := ARRIVE * 0.9) -> Array:
 	if nav != null:
+		nav.sharp = Sharpness.of(sc)   # SHARPNESS: tired, a less direct way
 		var d := nav.steer(to, _dt, arrive)
 		if nav.on_path:
 			_nav_dir = true

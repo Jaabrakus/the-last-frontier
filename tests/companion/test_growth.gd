@@ -22,6 +22,7 @@ func _main(seed_v := 7) -> SurvivalCore:
 
 
 func _initialize() -> void:
+	Sharpness.slips_on = false   # (exact planning and paths: no tired slips here; tests/companion/test_sharpness.gd has them)
 	InputSetup.ensure()
 	Growth.set_cfg({})
 	main = _main()

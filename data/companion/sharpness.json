@@ -1,0 +1,32 @@
+{
+ "summary": "How sharp a worker's decisions are (Sharpness, scripts/companion/sharpness.gd; user 2026-09-29: 'the more rest the smarter the decision, the less rested the less optimized ... mistakes can happen', 'it is based on the well rested meter', 'a gauge that refills when someone sleeps or rests, nothing more complicated'). Sharpness comes from the WELL RESTED gauge, the player's own (core flag well_rested_until, SurvivalBridge.is_well_rested). It refills whenever she rests, at any hour and for any length: `sleep_rate` gauge-hours per hour asleep, `rest_rate` sitting idle, times `bed_mult` in a bed and `warm_mult` by a fire, held at `cap_h`. It runs down as time goes. Sharp = `unrested` when empty, up to 1 with `full_h` hours or more left; hunger, poor health, a late pregnancy and low morale take more off. A dull worker's paths wander (`wander_m`), she is slower to see she is stuck (`stuck_slow`), and she sometimes takes a lesser job (`job_slip`); `mistake_min` of each still happens to the sharpest.",
+ "floor": 0.2,
+ "hunger": {
+  "fed": 0.0,
+  "full": 0.0,
+  "satisfied": 0.0,
+  "peckish": 0.05,
+  "hungry": 0.15,
+  "very_hungry": 0.25,
+  "starving": 0.35,
+  "wasting": 0.45
+ },
+ "health_below": 60.0,
+ "health_drop": 0.15,
+ "pregnancy_late_drop": 0.1,
+ "low_morale": 0.4,
+ "morale_drop": 0.1,
+ "mistake_min": 0.05,
+ "wander_chance": 0.8,
+ "wander_m": 3.0,
+ "wander_min_path_m": 10.0,
+ "stuck_slow": 1.5,
+ "job_slip": 0.35,
+ "unrested": 0.55,
+ "full_h": 8.0,
+ "sleep_rate": 1.5,
+ "rest_rate": 0.5,
+ "bed_mult": 1.25,
+ "warm_mult": 1.25,
+ "cap_h": 12.0
+}

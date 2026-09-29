@@ -3,8 +3,9 @@ extends CharacterBody3D
 ## A visitor's body (RECRUIT, scripts/companion/recruit_link.gd): the Actor_B rig dressed from their look, as the spouse's is
 ## (a teen at the teen's body and proportions), walking a list of waypoints (the road in, the way round to the gate and
 ## home, the road out) and standing or sitting about the camp between. E on a visitor talks to them (RecruitScreen).
-## It walks straight from point to point with a probe ahead turning it past what is in the way (a tree, a post); held
-## up for a while it steps through (no collision for a moment) so a scripted walk always ends.
+## NAV: it walks from point to point along the navigation mesh (NavMover: round trees, rocks and the palisade, through the
+## gate, opening a shut door); where there is no mesh or no way it walks straight with a probe ahead turning it past what is
+## in the way, and held up there for a while it steps through (no collision for a moment) so a scripted walk always ends.
 
 signal arrived(body: RecruitBody)
 
@@ -46,6 +47,10 @@ var _last := Vector3.ZERO
 var _idle_t := 0.0
 var _sitting := false
 var _rng := RandomNumberGenerator.new()
+## NAV: its way on the navigation mesh; this frame's direction came from it; the step-throughs it needed (tests).
+var nav: NavMover
+var _nav_dir := false
+var ghosts := 0
 
 
 static func spawn(parent: Node, at: Vector3, the_look: Dictionary, drawn: Dictionary, is_teen: bool) -> RecruitBody:
@@ -79,6 +84,7 @@ func _ready() -> void:
 		shape.height = 1.7 * sv
 		cap.position.y = shape.height * 0.5
 	_last = global_position
+	nav = NavMover.new(self, shape.radius)   # NAV
 
 
 func _build_model() -> void:
@@ -135,14 +141,21 @@ func settle(at: Vector3) -> void:
 
 func _physics_process(dt: float) -> void:
 	var dir := Vector3.ZERO
+	_nav_dir = false
 	match mode:
 		"walk", "leave":
 			while not route.is_empty():
 				var to: Vector3 = (route[0] as Vector3) - global_position
 				to.y = 0.0
-				if to.length() > ARRIVE:
-					dir = to.normalized()
+				# NAV: a point the way cannot quite reach (in a bush, on a hearth): there once at the nearest the way goes
+				var short := nav != null and nav.status == NavMover.FAILED and nav.reason == "unreachable" and nav.reach_end != Vector3.INF \
+						and Vector2(nav.reach_end.x - global_position.x, nav.reach_end.z - global_position.z).length() < ARRIVE + 0.3 \
+						and Vector2(nav.reach_end.x - (route[0] as Vector3).x, nav.reach_end.z - (route[0] as Vector3).z).length() < 2.5
+				if to.length() > ARRIVE and not short:
+					dir = _way(route[0] as Vector3, dt, ARRIVE)   # NAV
 					break
+				if nav != null:
+					nav.reset()
 				route.pop_front()
 			if route.is_empty():
 				dir = Vector3.ZERO
@@ -157,7 +170,7 @@ func _physics_process(dt: float) -> void:
 			var to := camp - global_position
 			to.y = 0.0
 			if to.length() > 1.6:
-				dir = to.normalized()
+				dir = _way(camp, dt, 1.4)   # NAV
 				_sitting = false
 			else:
 				_idle_t -= dt
@@ -173,6 +186,19 @@ func _physics_process(dt: float) -> void:
 	_move(dir, dt)
 
 
+## NAV: the way to `to` now along the navigation mesh (ZERO when there or waiting for a door), or straight at it where there
+## is none (turned aside by the probe in _move).
+func _way(to: Vector3, dt: float, arrive: float) -> Vector3:
+	if nav != null:
+		var d := nav.steer(to, dt, arrive)
+		if nav.on_path:
+			_nav_dir = true
+			return d
+	var st := to - global_position
+	st.y = 0.0
+	return st.normalized() if st.length() > 0.05 else Vector3.ZERO
+
+
 func _move(dir: Vector3, dt: float) -> void:
 	var v := velocity
 	var moving := dir.length() > 0.01
@@ -181,7 +207,7 @@ func _move(dir: Vector3, dt: float) -> void:
 		if _ghost_t <= 0.0:
 			collision_mask = 1
 	if moving:
-		var want := _steer(dir) if _ghost_t <= 0.0 else dir
+		var want := dir if _nav_dir or _ghost_t > 0.0 else _steer(dir)
 		v.x = want.x * speed
 		v.z = want.z * speed
 		_face = lerp_angle(_face, atan2(-want.x, -want.z), clampf(dt * 8.0, 0.0, 1.0))
@@ -204,11 +230,12 @@ func _move(dir: Vector3, dt: float) -> void:
 	move_and_slide()
 	if global_position.y < FrontierTerrain.height_at(global_position.x, global_position.z) - 2.0:
 		global_position.y = FrontierTerrain.height_at(global_position.x, global_position.z) + 0.2
-	if moving and global_position.distance_to(_last) < speed * dt * 0.3:
+	if moving and not _nav_dir and global_position.distance_to(_last) < speed * dt * 0.3:   # NAV: on a path it repaths itself
 		_stuck_t += dt
 		if _stuck_t > STUCK_S:
 			_stuck_t = 0.0
 			_ghost_t = GHOST_S
+			ghosts += 1
 			collision_mask = 0
 	else:
 		_stuck_t = maxf(_stuck_t - dt, 0.0)

@@ -13,6 +13,7 @@ func _expect(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	Sharpness.slips_on = false   # (exact planning and paths: no tired slips here; tests/companion/test_sharpness.gd has them)
 	InputSetup.ensure()
 	var main := SurvivalCore.new_game("bg.backcountry_hunter", {"seed": 7, "start_day": "sep_early", "start_hour": 8.0,
 			"backlog_milestones": ["M2a", "M2b", "M3"], "settings": {"rest_need": false}})

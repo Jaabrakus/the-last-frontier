@@ -202,6 +202,9 @@ func _physics_process(dt: float) -> void:
 		var fell := global_position.y < FrontierTerrain.height_at(global_position.x, global_position.z) - 15.0
 		if fell or dg > RECOVER_FAR or (dg > RECOVER_M and _lost_t > LOST_S) or (dg > LOST_M and _lost_t > LOST_LONG_S):
 			var at := g.global_position + Vector3(0.9, 0.3, 0.9)
+			# the last resort, logged: which of the reasons, how far, and what its way said
+			print("ChildBody %s: brought back beside its guardian (%s, %.0f m off, lost %.1f s, nav %s)" % [String(child.get("name", name)),
+					"fell through" if fell else "too far" if dg > RECOVER_FAR else "no way", dg, _lost_t, nav.reason if nav != null else "-"])
 			global_position = at
 			velocity = Vector3.ZERO
 			_lost_t = 0.0

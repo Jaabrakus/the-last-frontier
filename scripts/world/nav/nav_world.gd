@@ -10,7 +10,10 @@ extends Node3D
 ##     the tile its target is in, and the tiles along a long walk (request); the ones far from them all are dropped;
 ##   - a bake: the geometry gathered on the main thread for the tile (NavSource: the ground from the height field, the
 ##     static colliders in the box; ~ms), baked on a worker thread (bake_from_source_geometry_data_async), then swapped
-##     into the tile's region; MAX_BAKING at a time, nearest the walkers first;
+##     in as a new region for the tile's old one in one server step; MAX_BAKING at a time, nearest the walkers first;
+##   - the map joins its regions on a worker thread too (async iterations: joining ~25 tiles of ~5000 polygons took the
+##     main thread ~140 ms a rebake when it was synchronous); a tile's mesh is known to be in the map when the map says the
+##     closest point to a spot on it is owned by its new region (the probe);
 ##   - rebakes: polled every POLL_S (and on BuildWorld.changed): a built piece added, taken down or re-dressed (its body
 ##     replaced: a palisade cut), a felled tree (VegHarvest.felled, the lying FelledTree trunks), a quarried rock marks the
 ##     tiles round it dirty; the old mesh is used until the new one is in;
@@ -20,6 +23,8 @@ extends Node3D
 ## then steer straight, as before). A debug overlay of the baked mesh: `debug = true` or the user arg nav_debug=on.
 
 signal tile_baked(key: Vector2i, ms: float)
+## A tile's new mesh is in the map's paths.
+signal tile_in(key: Vector2i)
 
 const NODE_NAME := "NavWorld"
 ## A static body in this group is not baked (not an obstacle to the walkers).
@@ -46,10 +51,15 @@ const POLL_S := 1.0
 
 var map: RID
 var debug := false
-## Totals for the tests and the report: tiles baked, gather / bake ms (sum, max), the last tile's numbers.
-var stats := {"baked": 0, "gather_ms": 0.0, "gather_max": 0.0, "bake_ms": 0.0, "bake_max": 0.0, "wall_max": 0.0, "last": {}}
+## Totals for the tests and the report: tiles baked, gather / bake ms (sum, max), the last tile's numbers; the main thread's
+## share: the change poll (poll_max), setting a baked mesh on its region (set_max), the NavigationServer's own step each frame
+## (nav_max: the map joining the regions again after a new mesh; Performance.TIME_NAVIGATION_PROCESS), this node's whole tick
+## (tick_max), the path queries (path_n, path_ms, path_max); off it: a new mesh set to its being in the map's paths (sync_max).
+var stats := {"baked": 0, "gather_ms": 0.0, "gather_max": 0.0, "bake_ms": 0.0, "bake_max": 0.0, "poll_max": 0.0, "set_max": 0.0,
+		"nav_max": 0.0, "tick_max": 0.0, "path_n": 0, "path_ms": 0.0, "path_max": 0.0, "sync_max": 0.0, "last": {}}
 
-## Vector2i -> {region: RID, state: "queued" | "baking" | "ready", dirty, gen, set_iter, used (s), prio}
+## Vector2i -> {region: RID, state: "queued" | "baking" | "ready", dirty, gen, used (s), after; once baked: nm, in_gen, in_map,
+## had (a mesh of it has been in the map), probe, set_us}
 var tiles := {}
 var movers: Array[NavMover] = []
 var _queue: Array[Vector2i] = []
@@ -59,8 +69,9 @@ var _poll_t := 0.0
 var _want_t := 0.0
 var _requested := {}          ## Vector2i -> clock time it was last asked for
 var _pieces := {}             ## piece id -> [tile keys, body instance id]
-var _felled_n := -1
-var _rock_n := -1
+var _felled_seen := {}        ## VegHarvest.felled index -> true (seen, its tiles made dirty once)
+var _rock_seen := {}          ## VegHarvest.rock_size index -> the size last seen
+var _veg_primed := false
 var _felled_nodes := {}       ## instance id -> true (FelledTree nodes seen)
 var _doors: Array[BuildDoor] = []
 var _doors_t := 0.0
@@ -92,9 +103,12 @@ func _ready() -> void:
 	NavigationServer3D.map_set_up(map, Vector3.UP)
 	NavigationServer3D.map_set_cell_size(map, CELL)
 	NavigationServer3D.map_set_cell_height(map, CELL_H)
-	NavigationServer3D.map_set_edge_connection_margin(map, 0.3)
+	# tiles join where their border edges come within this: on sloping ground the two tiles' edges bake a little apart
+	# (a 3 m step across the seam west of the fort went 13 m round at 0.3); a wall and the walker's clearance keep more than
+	# a metre between the mesh on its two sides, and only tile borders are joined, so nothing joins through a wall
+	NavigationServer3D.map_set_edge_connection_margin(map, 0.6)
 	NavigationServer3D.map_set_merge_rasterizer_cell_scale(map, 0.25)
-	NavigationServer3D.map_set_use_async_iterations(map, false)
+	NavigationServer3D.map_set_use_async_iterations(map, true)
 	NavigationServer3D.map_set_active(map, true)
 	if "nav_debug=on" in OS.get_cmdline_user_args():
 		debug = true
@@ -144,31 +158,38 @@ func request(a: Vector3, b: Vector3, ring := 0) -> void:
 	_want_t = 0.0
 
 
-## Whether the mesh is in (baked and synced into the map) at `p`.
+## Whether there is mesh in the map at `p` (its tile's first bake is in; a rebake's old mesh serves until the new one is in).
 func ready_at(p: Vector3) -> bool:
 	var t: Variant = tiles.get(key_of(p))
-	if t == null or t.state != "ready":
-		return false
-	return _synced(t)
+	return t != null and bool(t.get("had", false))
 
 
 ## Whether the tile at `p` is on its way (queued or baking, not in yet).
 func pending_at(p: Vector3) -> bool:
 	var t: Variant = tiles.get(key_of(p))
-	return t != null and (t.state != "ready" or not _synced(t))
-
-
-## Whether a tile's last mesh is in the map's paths: the map has synced since it was set (the map and the regions update
-## synchronously, see _ready: with async iterations a sync could come without the new mesh and the map's iteration only moves
-## when something changes, so there was no telling).
-func _synced(t: Dictionary) -> bool:
-	return NavigationServer3D.map_get_iteration_id(map) != int(t.set_iter)
+	return t != null and not bool(t.get("had", false))
 
 
 ## Whether the tile at `p` has its latest bake in the map (tests: a rebake is in).
 func synced_at(p: Vector3) -> bool:
 	var t: Variant = tiles.get(key_of(p))
-	return t != null and t.state == "ready" and int(t.get("in_gen", -1)) == int(t.gen) and _synced(t)
+	return t != null and t.state == "ready" and bool(t.get("in_map", false)) and int(t.get("in_gen", -1)) == int(t.gen)
+
+
+## The tiles whose new region is not known to be in the map yet: in when the map's closest point to the probe (a spot on
+## the new mesh) is owned by the new region.
+func _check_in() -> void:
+	for k: Vector2i in tiles:
+		var t: Dictionary = tiles[k]
+		if t.state != "ready" or bool(t.get("in_map", true)):
+			continue
+		var probe: Vector3 = t.get("probe", Vector3.INF)
+		if probe == Vector3.INF or NavigationServer3D.map_get_closest_point_owner(map, probe) == t.region:
+			t.in_map = true
+			t.had = true
+			var ms := (Time.get_ticks_usec() - int(t.set_us)) / 1000.0
+			stats.sync_max = maxf(float(stats.sync_max), ms)
+			tile_in.emit(k)
 
 
 ## The nearest point on the mesh to `p` (p itself when there is no mesh there).
@@ -198,8 +219,30 @@ func path(from: Vector3, to: Vector3) -> PackedVector3Array:
 	_query.map = map
 	_query.start_position = from
 	_query.target_position = to
+	var t0 := Time.get_ticks_usec()
 	NavigationServer3D.query_path(_query, _result)
+	path_timed((Time.get_ticks_usec() - t0) / 1000.0)
 	return _result.path
+
+
+## The same query on a worker thread (the walkers' own: a long way over a few dozen tiles of thousands of polygons took the
+## main thread up to ~14 ms): returns the WorkerThreadPool task; `res` holds the path once it is done and `ms` [0] its time.
+## The server's map queries are thread-safe (they read the map's current iteration).
+func path_async(from: Vector3, to: Vector3, q: NavigationPathQueryParameters3D, res: NavigationPathQueryResult3D, ms: Array) -> int:
+	q.path_search_max_polygons = 0
+	q.map = map
+	q.start_position = from
+	q.target_position = to
+	return WorkerThreadPool.add_task(func() -> void:
+		var t0 := Time.get_ticks_usec()
+		NavigationServer3D.query_path(q, res)
+		ms[0] = (Time.get_ticks_usec() - t0) / 1000.0, false, "nav path")
+
+
+func path_timed(ms: float) -> void:
+	stats.path_n = int(stats.path_n) + 1
+	stats.path_ms = float(stats.path_ms) + ms
+	stats.path_max = maxf(float(stats.path_max), ms)
 
 
 func iteration() -> int:
@@ -319,7 +362,10 @@ func npc_opened(d: BuildDoor) -> bool:
 
 # ---------------------------------------------------------------- the tiles
 func _physics_process(dt: float) -> void:
+	var t0 := Time.get_ticks_usec()
 	_clock += dt
+	# the server's step of the frame before (the map's sync after a region got a new mesh is the costly one)
+	stats.nav_max = maxf(float(stats.nav_max), Performance.get_monitor(Performance.TIME_NAVIGATION_PROCESS) * 1000.0)
 	_want_t -= dt
 	if _want_t <= 0.0:
 		_want_t = 0.5
@@ -327,8 +373,11 @@ func _physics_process(dt: float) -> void:
 	_poll_t += dt
 	if _poll_t >= POLL_S:
 		_poll_t = 0.0
+		var tp := Time.get_ticks_usec()
 		_poll_changes()
+		stats.poll_max = maxf(float(stats.poll_max), (Time.get_ticks_usec() - tp) / 1000.0)
 	_close_doors(dt)
+	_check_in()
 	# (a tile marked dirty waits a moment: a body added this frame is not in the physics space's queries yet)
 	var i := 0
 	while _baking < MAX_BAKING and i < _queue.size():
@@ -339,6 +388,7 @@ func _physics_process(dt: float) -> void:
 			continue
 		_queue.remove_at(i)
 		_start(k)
+	stats.tick_max = maxf(float(stats.tick_max), (Time.get_ticks_usec() - t0) / 1000.0)
 
 
 ## The tiles wanted now: queued when missing (or dirty), nearest a walker first; the far ones dropped.
@@ -364,7 +414,7 @@ func _want() -> void:
 	for k: Vector2i in want:
 		var t: Variant = tiles.get(k)
 		if t == null:
-			t = {"region": RID(), "state": "queued", "dirty": false, "gen": 0, "set_iter": -1, "used": _clock}
+			t = {"region": RID(), "state": "queued", "dirty": false, "gen": 0, "used": _clock}
 			tiles[k] = t
 			_queue.append(k)
 		t.used = _clock
@@ -423,9 +473,13 @@ func _start(k: Vector2i) -> void:
 	var src := NavigationMeshSourceGeometryData3D.new()
 	var st := {}
 	NavSource._terrain(gather_box, src, st)
-	var lo := float(st.get("ground_lo", 0.0)) - 3.0
-	var hi := float(st.get("ground_hi", 0.0)) + 14.0
+	# (on a world-wide lattice of CELL_H: Recast measures its voxels' heights from the box's floor, and a tile whose floor was
+	# off its neighbour's by a part of a cell had its vertices on the seam at other heights; the map did not join those edges,
+	# and a path across the seam was sent through an edge connection the long way round: 20 m for 4 in the yard)
+	var lo := floorf((float(st.get("ground_lo", 0.0)) - 3.0) / CELL_H) * CELL_H
+	var hi := ceilf((float(st.get("ground_hi", 0.0)) + 14.0) / CELL_H) * CELL_H
 	var probe := AABB(Vector3(gather_box.position.x, lo, gather_box.position.z), Vector3(gather_box.size.x, hi - lo, gather_box.size.z))
+	st["terrain_ms"] = (Time.get_ticks_usec() - t0) / 1000.0
 	NavSource._colliders(get_world_3d(), probe, src, st)
 	var gather_ms := (Time.get_ticks_usec() - t0) / 1000.0
 	var nm := _new_mesh()
@@ -471,19 +525,29 @@ func _baked(k: Vector2i, gen: int, nm: NavigationMesh, gather_ms: float, started
 	var t: Variant = tiles.get(k)
 	if t == null or int(t.gen) != gen:
 		return   # dropped, or baked again since
-	if not (t.region as RID).is_valid():
-		t.region = NavigationServer3D.region_create()
-		NavigationServer3D.region_set_map(t.region, map)
-		NavigationServer3D.region_set_enabled(t.region, true)
-		NavigationServer3D.region_set_use_async_iterations(t.region, false)
-	NavigationServer3D.region_set_navigation_mesh(t.region, nm)
+	# a new region for the new mesh, the old one freed in the same server step: the map's next iteration has the one or the
+	# other, never neither or both (the region's own polygons are made in that step, synchronously, so it cannot miss it)
+	var ts := Time.get_ticks_usec()
+	var r := NavigationServer3D.region_create()
+	NavigationServer3D.region_set_use_async_iterations(r, false)
+	NavigationServer3D.region_set_navigation_mesh(r, nm)
+	NavigationServer3D.region_set_map(r, map)
+	NavigationServer3D.region_set_enabled(r, true)
+	if (t.region as RID).is_valid():
+		NavigationServer3D.free_rid(t.region)
+	t.region = r
+	stats.set_max = maxf(float(stats.set_max), (Time.get_ticks_usec() - ts) / 1000.0)
 	t.state = "ready"
 	t["nm"] = nm
-	t["in_gen"] = gen   # the generation of the mesh in the map (tests: a rebake is in)
-	t.set_iter = NavigationServer3D.map_get_iteration_id(map)
+	t["in_gen"] = gen   # the generation of the mesh set (tests: a rebake is in, with in_map)
+	t["in_map"] = false
+	t["set_us"] = Time.get_ticks_usec()
+	t["probe"] = _probe_of(nm)
 	stats.baked = int(stats.baked) + 1
 	stats.gather_ms = float(stats.gather_ms) + gather_ms
-	stats.gather_max = maxf(float(stats.gather_max), gather_ms)
+	if gather_ms > float(stats.gather_max):
+		stats.gather_max = gather_ms
+		stats["gather_worst"] = {"tile": k, "terrain_ms": st.get("terrain_ms", 0.0), "shapes": st.get("shapes", 0)}
 	stats.bake_ms = float(stats.bake_ms) + bake_ms
 	stats.bake_max = maxf(float(stats.bake_max), bake_ms)
 	stats.last = {"tile": k, "gather_ms": gather_ms, "bake_ms": bake_ms, "polys": nm.get_polygon_count(),
@@ -491,6 +555,26 @@ func _baked(k: Vector2i, gen: int, nm: NavigationMesh, gather_ms: float, started
 	if debug:
 		_draw_tile(k, nm)
 	tile_baked.emit(k, gather_ms + bake_ms)
+
+
+## A spot on a mesh (the middle of its largest polygon) to ask the map about; INF for an empty mesh.
+func _probe_of(nm: NavigationMesh) -> Vector3:
+	var verts := nm.get_vertices()
+	var best := -1.0
+	var at := Vector3.INF
+	for i in nm.get_polygon_count():
+		var poly := nm.get_polygon(i)
+		if poly.size() < 3:
+			continue
+		var c := Vector3.ZERO
+		for j in poly.size():
+			c += verts[poly[j]]
+		c /= poly.size()
+		var a := (verts[poly[1]] - verts[poly[0]]).cross(verts[poly[2]] - verts[poly[0]]).length()
+		if a > best:
+			best = a
+			at = c
+	return at
 
 
 ## Marks the tiles round a box of the world to bake again.
@@ -532,16 +616,20 @@ func _poll_changes() -> void:
 		_pieces = now
 	var h := VegHarvest.find(get_tree()) if tiles.size() > 0 else null
 	if h != null:
-		if h.felled.size() != _felled_n:
-			if _felled_n >= 0:
-				for i: int in h.felled:
-					dirty(h.lay.tree_pos[i], 3.0)
-			_felled_n = h.felled.size()
-		if h.rock_size.size() != _rock_n or _rock_n < 0:
-			if _rock_n >= 0:
-				for i: int in h.rock_size:
+		# only the trees felled and the rocks quarried since the last look (the ones before the first look are in the first bakes)
+		if h.felled.size() != _felled_seen.size():
+			for i: int in h.felled:
+				if not _felled_seen.has(i):
+					_felled_seen[i] = true
+					if _veg_primed:
+						dirty(h.lay.tree_pos[i], 3.0)
+		for i: int in h.rock_size:
+			var f := float(h.rock_size[i])
+			if float(_rock_seen.get(i, -1.0)) != f:
+				_rock_seen[i] = f
+				if _veg_primed:
 					dirty(h.lay.prop_pos[i], 3.0)
-			_rock_n = h.rock_size.size()
+		_veg_primed = true
 	for n in get_tree().get_nodes_in_group(&"felled_trees"):
 		var id := n.get_instance_id()
 		if not _felled_nodes.has(id) and n is Node3D:

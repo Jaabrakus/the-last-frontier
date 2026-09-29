@@ -280,6 +280,7 @@ func _build_tasks() -> void:
 			_show(tab))
 		roles.add_child(b)
 	_content.add_child(_label("%s %s." % [sc.name, ROLE_HINT[sc.role]], 15, DIM))
+	_build_sleep(sc)
 	var short := sc.shortages()
 	if not short.is_empty():
 		var parts := []
@@ -321,6 +322,47 @@ func _build_tasks() -> void:
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l.custom_minimum_size = Vector2(580, 0)
 		_content.add_child(l)
+
+
+## Her sleeping hours (user 2026-09-29: "we should be able to manage that in the task menu"): when she goes to bed and for how
+## long, by the half hour, with the night, the day and the evening as one press. She rests then (the well-rested gauge fills
+## whenever she sleeps) and is not given work.
+func _build_sleep(sc: SpouseCore) -> void:
+	_content.add_child(_label("Sleep", 17, HEAD))
+	var presets := _row()
+	for pr: Array in [["Night", 21.5, 8.0], ["Day", 8.0, 8.0], ["Evening", 14.0, 8.0], ["Short night", 23.0, 5.0]]:
+		var b := _button(String(pr[0]), 0)
+		if is_equal_approx(sc.sleep_from, float(pr[1])) and is_equal_approx(sc.sleep_h, float(pr[2])):
+			b.modulate = LIT
+		b.pressed.connect(func() -> void:
+			var w := _sc()
+			w.sleep_from = float(pr[1])
+			w.sleep_h = float(pr[2])
+			_show(tab))
+		presets.add_child(b)
+	var row := _row()
+	row.add_child(_label("Goes to bed", 16, TEXT))
+	row.add_child(_step(-0.5, func() -> void: _sc().sleep_from = fposmod(_sc().sleep_from - 0.5, 24.0)))
+	row.add_child(_label(_clock(sc.sleep_from), 16, TEXT))
+	row.add_child(_step(0.5, func() -> void: _sc().sleep_from = fposmod(_sc().sleep_from + 0.5, 24.0)))
+	row.add_child(_label("for", 16, TEXT))
+	row.add_child(_step(-0.5, func() -> void: _sc().sleep_h = clampf(_sc().sleep_h - 0.5, 0.0, 12.0)))
+	row.add_child(_label("%s h" % String.num(sc.sleep_h, 1), 16, TEXT))
+	row.add_child(_step(0.5, func() -> void: _sc().sleep_h = clampf(_sc().sleep_h + 0.5, 0.0, 12.0)))
+	_content.add_child(_label("%s sleeps %s to %s. A short nap, or a sleep by day, rests just the same: bed and fire rest her faster." % [sc.name, _clock(sc.sleep_from), _clock(fposmod(sc.sleep_from + sc.sleep_h, 24.0))], 15, DIM))
+
+
+func _step(d: float, fn: Callable) -> Button:
+	var b := _button("+" if d > 0.0 else "-", 38)
+	b.pressed.connect(func() -> void:
+		fn.call()
+		_show(tab))
+	return b
+
+
+static func _clock(h: float) -> String:
+	var m := int(roundf(fposmod(h, 24.0) * 2.0)) * 30
+	return "%02d:%02d" % [floori(m / 60.0) % 24, m % 60]
 
 
 ## One chain: its name, all on / all off for the worker, and each link in working order with its toggle and who does it.

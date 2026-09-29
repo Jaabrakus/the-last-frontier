@@ -5,7 +5,8 @@ extends RefCounted
 ##   var nav := NavMover.new(self, 0.3)                    # registers with the level's NavWorld (none: nav.world == null)
 ##   var dir := nav.steer(goal, dt, 0.9)                   # a horizontal unit vector, ZERO when there or waiting at a door
 ##   if nav.on_path: walk dir as it is                     # else: no mesh here / no way found: steer as before (fallback)
-## It asks for a path when the target is new or has moved (following someone), when the map has changed under it (a rebake),
+## It asks for a path (on a worker thread: NavWorld.path_async; the old path is walked meanwhile, and a first one is waited
+## for a frame or two) when the target is new or has moved (following someone), when the map has changed under it (a rebake),
 ## and when the body makes no headway (STUCK_S: blocked by something the mesh does not know); it asks the NavWorld for the
 ## tiles it needs (a long walk), follows the path's corners, opens a shut door on its way (and waits for the leaf), keeps
 ## clear of the other walkers (NavWorld.separation), and gives up with a `reason` ("no_nav": nothing baked here and
@@ -30,6 +31,11 @@ const FAR_M := 200.0
 var body: CharacterBody3D
 var world: NavWorld
 var radius := 0.3
+## How sharp the walker is now (Sharpness, 0..1; the body sets it): a dull walker's path wanders a little at its bends and it
+## is slower to see it is stuck; mistakes happen now and then to the sharpest too.
+var sharp := 1.0
+var wanders := 0
+var _rng := RandomNumberGenerator.new()
 var status := IDLE
 var reason := ""
 ## The steer this frame came from a path (walk it as it is); false: the caller steers itself.
@@ -43,6 +49,9 @@ var paths := 0
 var doors_opened := 0
 var give_ups := 0
 var waiting_door: BuildDoor
+## Where the last path ended when it could not reach its target ("unreachable": a spot in a thicket, on a rock): the nearest
+## the way goes (the caller may take it instead); INF otherwise.
+var reach_end := Vector3.INF
 
 var _i := 0
 var _path_to := Vector3.INF
@@ -56,6 +65,15 @@ var _check_at := Vector3.ZERO
 var _repaths := 0
 var _door_wait := 0.0
 var _partial := false
+## the path query under way on a worker thread (-1: none), what it was asked for, and the generation it belongs to (a reset or
+## a give-up since makes its answer stale)
+var _task := -1
+var _task_to := Vector3.INF
+var _task_gen := 0
+var _gen := 0
+var _q: NavigationPathQueryParameters3D
+var _res: NavigationPathQueryResult3D
+var _ms := [0.0]
 
 
 func _init(b: CharacterBody3D, r := 0.3) -> void:
@@ -77,6 +95,9 @@ func attach() -> void:
 
 
 func release() -> void:
+	if _task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_task)
+		_task = -1
 	if world != null and is_instance_valid(world):
 		world.unregister(self)
 	world = null
@@ -90,6 +111,8 @@ func reset() -> void:
 	reason = ""
 	_repaths = 0
 	_fail_to = Vector3.INF
+	reach_end = Vector3.INF
+	_gen += 1
 
 
 ## The way to go this frame toward `to` (horizontal, unit length, ZERO when within `arrive` or waiting for a door). See on_path.
@@ -111,9 +134,21 @@ func steer(to: Vector3, dt: float, arrive := 0.6) -> Vector3:
 	# given up on this target a moment ago
 	if _fail_to != Vector3.INF and _fail_to.distance_to(to) < 2.0 and _clock - _fail_t < RETRY_S:
 		return Vector3.ZERO
-	if _need_path(to, at, flat):
+	if _task >= 0 and not _collect(at):
+		return Vector3.ZERO   # its answer: no way
+	if _task < 0 and _need_path(to, at, flat):
+		# a new errand (not the same one moved on a little, as someone followed): the old way is not walked meanwhile
+		var jump := path.is_empty() or _path_to.distance_to(to) > 2.0 + 0.25 * flat
 		if not _make_path(at, to):
 			return Vector3.ZERO
+		if jump:
+			path = PackedVector3Array()
+	if _task >= 0 and path.is_empty():
+		# the first path is on its way (a frame or two): stand
+		on_path = true
+		status = WAIT
+		reason = "query"
+		return Vector3.ZERO
 	var dir := _follow(at, to, arrive)
 	if status == FAILED:
 		return Vector3.ZERO
@@ -178,6 +213,7 @@ func _fail(why: String) -> Vector3:
 	_fail_to = target
 	_fail_t = _clock
 	path = PackedVector3Array()
+	_gen += 1   # (a query under way is stale)
 	return Vector3.ZERO
 
 
@@ -210,11 +246,31 @@ func _make_path(at: Vector3, to: Vector3) -> bool:
 	if Vector2(from.x - at.x, from.z - at.z).length() > ON_MESH or absf(from.y - at.y) > 2.0:
 		_fail("off_mesh")
 		return false
-	var p := world.path(at, to)
+	if _q == null:
+		_q = NavigationPathQueryParameters3D.new()
+		_res = NavigationPathQueryResult3D.new()
+	_task = world.path_async(at, to, _q, _res, _ms)
+	_task_to = to
+	_task_gen = _gen
 	paths += 1
 	_path_t = _clock
 	_path_to = to
 	_iter = world.iteration()
+	return true
+
+
+## Takes the path query's answer when it is done (dropped when stale); false when the answer is that there is no way.
+func _collect(at: Vector3) -> bool:
+	if not WorkerThreadPool.is_task_completed(_task):
+		return true
+	WorkerThreadPool.wait_for_task_completion(_task)
+	_task = -1
+	if world != null and is_instance_valid(world):
+		world.path_timed(float(_ms[0]))
+	if _task_gen != _gen:
+		return true
+	var to := _task_to
+	var p := _res.path
 	if p.size() < 2:
 		# on the same spot of the mesh, or nothing: straight at it when close, else no way
 		if Vector2(to.x - at.x, to.z - at.z).length() < 2.0:
@@ -222,10 +278,11 @@ func _make_path(at: Vector3, to: Vector3) -> bool:
 		else:
 			_fail("no_path")
 			return false
-	path = p
+	path = _wander(p)
 	_i = 1
 	var end := p[p.size() - 1]
 	_partial = Vector2(end.x - to.x, end.z - to.z).length() > SLACK
+	reach_end = end if _partial else Vector3.INF
 	status = MOVING
 	reason = ""
 	_check_t = 0.0
@@ -296,7 +353,7 @@ func _door_ahead(at: Vector3, aim: Vector3) -> bool:
 ## No headway for STUCK_S: a new path from here; after REPATHS of those, it gives up.
 func _headway(dt: float, at: Vector3) -> void:
 	_check_t += dt
-	if _check_t < STUCK_S:
+	if _check_t < STUCK_S * (1.0 + (1.0 - sharp) * Sharpness.num("stuck_slow", 1.5)):
 		return
 	var moved := Vector2(at.x - _check_at.x, at.z - _check_at.z).length()
 	_check_t = 0.0
@@ -310,3 +367,26 @@ func _headway(dt: float, at: Vector3) -> void:
 		_fail("stuck")
 		return
 	path = PackedVector3Array()   # asked again next frame, from here
+
+
+## A less than perfect way (Sharpness): now and then, more often the duller the walker, the bends of a long path are pushed
+## sideways a little (onto the mesh again), so it wanders instead of cutting the corners cleanly.
+func _wander(p: PackedVector3Array) -> PackedVector3Array:
+	if p.size() < 3 or world == null or not is_instance_valid(world):
+		return p
+	var total := 0.0
+	for i in range(1, p.size()):
+		total += p[i - 1].distance_to(p[i])
+	if total < Sharpness.num("wander_min_path_m", 10.0) or _rng.randf() >= Sharpness.slip(sharp, Sharpness.num("wander_chance", 0.8)):
+		return p
+	var amount := Sharpness.num("wander_m", 3.0) * maxf(1.0 - sharp, 0.15)
+	var out := PackedVector3Array([p[0]])
+	for i in range(1, p.size() - 1):
+		var dir := (p[i + 1] - p[i - 1])
+		dir.y = 0.0
+		var side := Vector3(-dir.z, 0.0, dir.x).normalized() if dir.length_squared() > 1e-6 else Vector3.RIGHT
+		var q := world.snap(p[i] + side * _rng.randf_range(-amount, amount))
+		out.append(q if Vector2(q.x - p[i].x, q.z - p[i].z).length() <= amount + 0.5 else p[i])
+	out.append(p[p.size() - 1])
+	wanders += 1
+	return out
