@@ -9,6 +9,11 @@ extends RefCounted
 ## then the knapping stone's tools (CampStation.STONE) and what they make.
 
 
+## The loadout gear that is kit, not a place to carry things: the powder horn on its strap, the shot pouch on its strap,
+## the pistol sling. A start with nothing wears none of it (the belt and the back slings are only where things ride).
+const KIT_GEAR := ["horn_strap", "shot_pouch_strap", "pistol_sling"]
+
+
 static func apply(b: SurvivalBridge) -> void:
 	var core := b.core
 	core.state.inventory = []
@@ -38,6 +43,9 @@ static func apply(b: SurvivalBridge) -> void:
 	if lo:
 		for it: Dictionary in lo.items.duplicate():
 			lo.remove_item(String(it.id))
+		# (and the kit's gear: the starting loadout's horn strap had left a powder horn on the back of a character who
+		# owns nothing, the user 2026-09-29)
+		lo.gear = PackedStringArray(Array(lo.gear).filter(func(g: String) -> bool: return not g in KIT_GEAR))
 	p.apply_loadout(lo, [])
 	if p.gather:
 		p.gather._ensure_owned()            # (the axe that rode the pack's loop is gone: it re-reads the loadout)
