@@ -117,19 +117,19 @@ const GAME := {
 const LOOK := {
 	"stand": {"prime": [Vector3(-0.14, 1.08, 0.2), Vector3(0.3, 0.5, 0.81), Vector3(-0.3, 1.0, 0.0)],
 		"cast": [Vector3(0.0, 0.8, 0.34), Vector3(0.05, 1.0, 0.05)],
-		"ram": [Vector3(-0.08, 1.22, 0.3), Vector3(-0.703, 0.643, -0.301), Vector3(0.0, 0.3, 1.0)],
+		"ram": [Vector3(-0.04, 1.22, 0.26), Vector3(-0.703, 0.643, -0.301), Vector3(0.0, 0.3, 1.0)],
 		"up": [Vector3(-0.06, 0.86, 0.36), Vector3(0.18, 0.98, -0.05), Vector3(-1.0, 0.18, 0.0)],
 		"pouch": Vector3(-0.21, 0.97, 0.02),
-		"chest_prime": [-12.0, 8.0], "chest": [6.0, 4.0], "chest_up": [0.0, 6.0], "head": 0.0, "bar": -1.0,
+		"chest_prime": [-12.0, 8.0], "chest": [6.0, 4.0], "chest_up": [0.0, 6.0], "head": 0.0, "bar": -1.1,
 		"bar_low": -0.7},
 	# (crouched: the muzzle at the shoulder as standing, so the gun flatter, its butt just off the ground: user
 	# 2026-09-28 "crouch reload gun needs to be lower")
 	"crouch": {"prime": [Vector3(-0.12, 0.6, 0.16), Vector3(0.5, 0.25, 0.8), Vector3(-0.3, 1.0, 0.0)],
 		"cast": [Vector3(0.0, 0.42, 0.32), Vector3(0.05, 1.0, 0.04)],
-		"ram": [Vector3(-0.06, 0.84, 0.36), Vector3(-0.8, 0.45, -0.4), Vector3(0.0, 0.3, 1.0)],
+		"ram": [Vector3(-0.02, 0.84, 0.3), Vector3(-0.8, 0.45, -0.4), Vector3(0.0, 0.3, 1.0)],
 		"up": [Vector3(-0.06, 0.42, 0.34), Vector3(0.12, 0.98, 0.06), Vector3(-1.0, 0.1, 0.0)],
 		"pouch": Vector3(-0.26, 0.44, -0.1),
-		"chest_prime": [-12.0, 24.0], "chest": [6.0, 20.0], "chest_up": [0.0, 28.0], "head": 0.0, "bar": -1.14,
+		"chest_prime": [-12.0, 24.0], "chest": [6.0, 20.0], "chest_up": [0.0, 28.0], "head": 0.0, "bar": -1.16,
 		"bar_low": -0.5,
 		"butt": true},
 }
@@ -433,6 +433,16 @@ func _fore() -> Callable:
 		return _held("l", gun_at(t) * FORESTOCK)
 
 
+## The left hand as the game's carry holds the forestock (from below, the fingers round it: measured in the game, it
+## reads right), slid along the stock to `z` (the model's z; the full stock runs almost to the muzzle, z -1.19): while
+## the gun is loaded the left hand holds it there the same way (user 2026-09-29: the fist closed under the barrel, the
+## barrel over the knuckles, "looks crazy").
+func _fore_at(z: float) -> Callable:
+	return func(t: float) -> Array:
+		var slid := Transform3D(FORESTOCK.basis, Vector3(FORESTOCK.origin.x, FORESTOCK.origin.y, z))
+		return _held("l", gun_at(t) * slid)
+
+
 ## The hands' tracks (for the stance: set by _stance()).
 func _tracks() -> void:
 	var down := Vector3(0, 0, 1)                  # (the fist's +Y down the barrel: the cartridge's end toward the muzzle)
@@ -467,11 +477,10 @@ func _tracks() -> void:
 		# let go: down to the wrist of the stock as the gun comes up (full cock 6.11)
 		[RET_UP + 0.02, _grip()], [TOTAL, _grip()],
 	]
-	var bar := func(p: Vector3) -> Callable: return _on_gun(p, Vector3(0, 0, -1))
 	_left = [
 		[0.0, _fore()], [CAST_FROM + 0.24, _fore()],
-		[CAST_AT, bar.call(BARREL_GRIP)], [RET_FROM, bar.call(BARREL_GRIP)],
-		[RET_UP, bar.call(BARREL_LOW)], [RET_AT, _fore()], [TOTAL, _fore()],
+		[CAST_AT, _fore_at(BARREL_GRIP.z)], [RET_FROM, _fore_at(BARREL_GRIP.z)],
+		[RET_UP, _fore_at(BARREL_LOW.z)], [RET_AT, _fore()], [TOTAL, _fore()],
 	]
 
 
