@@ -15,3 +15,9 @@
 
 The original model and textures stay untouched in `assets/polyhaven/models/grass_medium_01/`
 (see `assets/polyhaven/MANIFEST.json`).
+
+`herb_atlas.png` (2048 x 1024 RGBA, 4 x 4 cells of 512 x 256, imported like the grass atlas) and `herb_variants.json`
+are written by `tools/environment/terrain/make_herb_atlas.py` (deterministic, all procedural, painted with the grass
+atlas's helpers, each card cropped to its plant): cells 0-3 fern clumps, 4 wood sorrel, 5 mayapple, 6 trillium,
+7 violets, 8-9 asters, 10-11 goldenrod, 12-13 black-eyed Susans, 14-15 wild bergamot. The grass shader turns some of
+its tufts into these (`pick_herb`).

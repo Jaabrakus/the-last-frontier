@@ -44,6 +44,12 @@ uniform float density_scale = 1.0;
 uniform float pattern_n = 625.0;
 uniform vec4 variant_rects[16];
 uniform float variant_aspects[16];
+/// The herbs and wildflowers (tools/environment/terrain/make_herb_atlas.py): their atlas and cells; herb_chance scales
+/// how many tufts become one (0: none).
+uniform sampler2D herb_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
+uniform vec4 herb_rects[16];
+uniform float herb_aspects[16];
+uniform float herb_chance = 1.0;
 // Late-summer colouring (multiplies the atlas).
 uniform vec3 green_tint = vec3(1.0, 1.0, 0.72);    // linear multipliers
 uniform vec3 dry_tint = vec3(1.7, 1.18, 0.45);
@@ -57,11 +63,88 @@ varying vec3 v_world;
 varying float v_root;     // how dark the root gets (tall grass more than mowed turf)
 varying float v_canopy;   // crown cover over the tuft (canopy.gdshaderinc)
 varying float v_straw;    // 0 the grass's own colour .. 1 cured straw (the season, the snow)
+varying flat int v_herb;  // 1: a herb or wildflower card (herb_atlas), 0: a grass tuft
 
 // The year's grass (leaf_season, scripts/snow/season_leaves.gd; user 2026-09-28: the seasons as "a world thing"): it
 // cures to straw through the autumn, stands dead and tan all winter (out of the snow), and greens again after the buds.
 global uniform float leaf_season;
 const vec3 STRAW = vec3(0.3, 0.215, 0.1);
+
+// Herbs and wildflowers (user 2026-09-28: "add a procdure grass thing right that will save us cpu and gpu? with chance
+// for herbs and etc"): some of the tufts the pattern already draws are a plant instead, by chance and in drifts, with no
+// placement on the CPU and no instances of their own: under the trees fern beds, wood sorrel, mayapples and the spring's
+// trilliums and violets; in the open meadow drifts of black-eyed Susans and wild bergamot in the summer, asters and
+// goldenrod from August into October. Each in its days of the year (season_day), each plant a day or so early or late.
+global uniform float season_day;
+
+bool herb_in(float d, float a, float b, float r) {
+	return d > a + r && d < b - (1.0 - r);
+}
+
+/// The herb at xz (a herb_atlas cell) or -1 for a grass tuft; `size` its height (m), `turned` a fern's autumn colour.
+int pick_herb(vec2 xz, float forest, float meadow_h, out float size, out float turned) {
+	size = 0.0;
+	turned = 0.0;
+	if (herb_chance <= 0.0) {
+		return -1;
+	}
+	float d = season_day;
+	float roll = frontier_hash(xz * 2.31 + vec2(7.7, 1.9)) / herb_chance;
+	float kind = frontier_hash(xz * 0.913 - vec2(4.4, 8.1));
+	float own = frontier_hash(xz * 1.37 + vec2(2.2, -6.3));
+	float bed = smoothstep(0.4, 0.72, snow_vnoise(xz / 9.0 + 5.0));
+	float drift = smoothstep(0.42, 0.75, snow_vnoise(xz / 23.0 - 3.0));
+	int two = int(fract(kind * 7.3) * 1.999);
+	if (forest > 0.5) {
+		if (roll < 0.7 * bed) {
+			// a fern bed: up from late April, golden then russet in the autumn, died back by late November
+			float s = leaf_season;
+			float up = s < 1.0 ? 1.0 : (s < 2.0 ? 1.0 - smoothstep(1.2, 1.85, s + (own - 0.5) * 0.3) : smoothstep(2.15, 2.65, s + (own - 0.5) * 0.3));
+			if (up < 0.05) {
+				return -1;
+			}
+			size = mix(0.35, 0.7, kind) * up;
+			turned = s < 1.0 ? smoothstep(0.35, 1.0, s + (own - 0.5) * 0.3) * 0.7 : (s < 2.0 ? 1.0 : 0.0);
+			return int(kind * 3.999);
+		}
+		if (roll < 0.7 * bed + 0.25 * drift) {
+			if (kind < 0.4) {
+				size = 0.11;
+				return herb_in(d, 11.0, 31.0, own) ? 4 : -1;       // wood sorrel
+			}
+			if (kind < 0.65) {
+				size = 0.4;
+				return herb_in(d, 10.5, 22.0, own) ? 5 : -1;       // mayapple
+			}
+			if (kind < 0.85) {
+				size = 0.28;
+				return herb_in(d, 10.0, 13.5, own) ? 6 : -1;       // trillium
+			}
+			size = 0.12;
+			return herb_in(d, 10.0, 14.5, own) ? 7 : -1;           // violets
+		}
+		return -1;
+	}
+	if (meadow_h < 0.24 || roll > 0.28 * drift) {
+		return -1;   // (not on the mowed turf)
+	}
+	// (a wildflower holds its head just over the meadow's grass)
+	float over = meadow_h * (1.3 + 0.3 * own);
+	if (kind < 0.25) {
+		size = max(0.6, over);
+		return herb_in(d, 16.0, 25.5, own) ? 12 + two : -1;         // black-eyed Susans
+	}
+	if (kind < 0.5) {
+		size = max(0.7, over);
+		return herb_in(d, 18.0, 23.5, own) ? 14 + two : -1;         // wild bergamot
+	}
+	if (kind < 0.75) {
+		size = max(0.7, over);
+		return herb_in(d, 22.0, 29.5, own) ? 8 + two : -1;          // asters
+	}
+	size = max(0.9, over * 1.1);
+	return herb_in(d, 21.0, 28.5, own) ? 10 + two : -1;             // goldenrod
+}
 
 float grass_cure(float s) {
 	if (s < 1.0) {
@@ -100,6 +183,8 @@ void vertex() {
 	float grow = 0.0;
 	float gh = 0.0, dry_share = 0.0, forest_share = 0.0;
 	float sd = 0.0;   // the snow's depth over the tuft (m)
+	int hk = -1;      // a herb (herb_atlas cell) in place of the tuft, or -1
+	float h_size = 0.0, h_turned = 0.0;
 	vec2 uv = (xz - square_origin + grid_half + 0.5) / grid_size;
 	if (rank < keep && fade > 0.0) {
 		// Ground under the tuft.
@@ -130,6 +215,11 @@ void vertex() {
 		float open_density = mix(1.0, meadow_density, smoothstep(0.2, 0.3, gh * grass_h_scale));
 		float loc = clamp(1.0 - bare * 1.25, 0.0, 1.0) * mix(open_density, mix(0.3, 0.65, herb), forest_share);
 		grow = clamp((keep * loc - rank) * 14.0, 0.0, 1.0) * smoothstep(0.03, 0.07, gh * grass_h_scale) * fade;
+		hk = pick_herb(xz, forest_share, gh * grass_h_scale, h_size, h_turned);
+		if (hk >= 0) {
+			// (its own density: a fern bed or a flower drift whatever the grass there)
+			grow = clamp((keep * clamp(1.0 - bare * 1.25, 0.0, 1.0) * 0.55 - rank) * 14.0, 0.0, 1.0) * fade;
+		}
 		if (textureLod(blocker_map, (xz - blocker_rect.xy) / blocker_rect.zw, 0.0).r > 0.5) {
 			grow = 0.0;
 		}
@@ -141,7 +231,7 @@ void vertex() {
 			vec3 rg = snow_region_at(xz);
 			sd *= snow_depth_k(xz, tnw, rg, snow_exposure(rg.y, 1.0 - s1.b));
 		}
-		if (sd > 0.0 && gh * grass_h_scale < sd + 0.05) {
+		if (sd > 0.0 && (hk >= 0 ? h_size : gh * grass_h_scale) < sd + 0.05) {
 			grow = 0.0;   // buried
 		}
 	}
@@ -156,6 +246,7 @@ void vertex() {
 		v_y = 0.0;
 		v_tint = vec3(0.0);
 		v_straw = 0.0;
+		v_herb = 0;
 		v_world = base;
 		v_root = 1.0;
 		v_canopy = 0.0;
@@ -187,8 +278,17 @@ void vertex() {
 		vec4 rect = variant_rects[variant];
 		float aspect = variant_aspects[variant];
 		float height = max(hm * (0.7 + 0.6 * r1) * grow - sd, 0.0);
+		if (hk >= 0) {
+			rect = herb_rects[hk];
+			aspect = herb_aspects[hk];
+			height = max(h_size * (0.75 + 0.5 * r1) * grow - sd, 0.0);
+		}
 		float turf = 1.0 - smoothstep(0.2, 0.3, hm);
 		float width = height * aspect * width_scale * (1.0 + 0.5 * turf);
+		if (hk >= 0) {
+			width = height * aspect * 0.8;   // (a plant's card at its own proportions)
+			turf = 0.4;
+		}
 
 		float yaw = r0 * 6.2832;
 		float a = COLOR.r * 3.14159 + yaw;
@@ -212,6 +312,11 @@ void vertex() {
 		v_tint = mix(green_tint, dry_tint, dryness * 0.6) * (0.9 + 0.2 * r2);
 		// the season's straw, each tuft a little ahead or behind; in the snow what stands out of it is dead straw
 		v_straw = clamp(max(grass_cure(leaf_season) * (0.8 + 0.4 * r2), snow_cover * 2.0), 0.0, 1.0);
+		v_herb = hk >= 0 ? 1 : 0;
+		if (hk >= 0) {
+			v_tint = vec3(0.9 + 0.2 * r2);
+			v_straw = h_turned;
+		}
 		v_world = wp;
 		v_root = mix(1.0, 0.45, turf);
 		v_canopy = canopy_cover(xz);
@@ -219,7 +324,7 @@ void vertex() {
 }
 
 void fragment() {
-	vec4 a = texture(atlas, v_uv);
+	vec4 a = v_herb == 1 ? texture(herb_atlas, v_uv) : texture(atlas, v_uv);
 	// Keep thin blades from dissolving in the smaller mips: boost alpha with the uv footprint.
 	vec2 fw = fwidth(v_uv) * vec2(2048.0, 1024.0);
 	ALPHA = a.a * (1.0 + clamp(log2(max(max(fw.x, fw.y), 1.0)), 0.0, 6.0) * 0.35);

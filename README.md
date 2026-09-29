@@ -689,7 +689,15 @@ woods under the bare crowns open to the sky (the canopy map keeps the evergreens
 58 % hardwood. The forest floor greens with moss and herbs after the buds, fades in the autumn under fresh fallen
 leaves and lies brown in winter; the ferns turn golden then russet, die back over winter and unfurl again in spring.
 The undergrowth: hazel and young trees under the canopy, fern beds, downed logs and big windthrown trunks with their
-root plates.
+root plates. The grass cures to straw through the autumn and stands tan over the winter.
+
+Herbs and wildflowers come from the grass itself (`shaders/grass/grass.gdshader` `pick_herb`, the cards painted by
+`tools/environment/terrain/make_herb_atlas.py`): some of the tufts the GPU already draws round the camera become a plant
+instead, by chance and in drifts, with no placement on the CPU and no objects of their own, everywhere there is ground.
+Under the trees fern beds (golden then russet in the autumn, died back in winter), wood sorrel, mayapples, and the
+spring's trilliums and violets; in the open black-eyed Susans and wild bergamot in the summer, goldenrod and asters from
+August into October, each in its days of the year (the `season_day` global). None of them is a forage plant: what can
+be picked is still placed by `ForageField`.
 
 | Dev key | Action |
 |---|---|

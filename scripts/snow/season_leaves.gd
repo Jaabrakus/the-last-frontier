@@ -28,6 +28,8 @@ const CanopyMap := preload("res://scripts/world/vegetation/canopy_map.gd")
 ## The value set now (tests); `force` >= 0 holds it (tools, captures).
 var value := 0.0
 var force := -1.0
+## The same for the day of the year (0 .. 36; tools, captures).
+var force_day := -1.0
 ## canopy_leaves now.
 var leaves := 1.0
 ## How far this autumn's snow has stripped the trees (0..1; kept through a thaw: the leaves do not come back).
@@ -47,11 +49,23 @@ static func at_day(day: float) -> float:
 
 func _process(_delta: float) -> void:
 	var v := force
+	var b := SurvivalBridge.find(get_tree())
+	var core: SurvivalCore = b.core if b else null
+	# the day of the year (the ground's herbs and wildflowers bloom by it: grass.gdshader pick_herb)
+	var day := 20.0
+	if core:
+		day = float(SurvivalClock.day_of_year(core)) + SurvivalClock.hour(core) / 24.0
+	else:
+		var dn0 := get_tree().get_first_node_in_group(&"weather")
+		var c0: Variant = dn0.get("clock") if dn0 else null
+		if c0:
+			day = float(c0.day_of_year) / 365.0 * 36.0
+	if force_day >= 0.0:
+		day = force_day
+	SnowCover._global(&"season_day", day)
 	if v < 0.0:
-		var b := SurvivalBridge.find(get_tree())
-		var core: SurvivalCore = b.core if b else null
 		if core:
-			v = at_day(float(SurvivalClock.day_of_year(core)) + SurvivalClock.hour(core) / 24.0)
+			v = at_day(day)
 			# the first lasting snow brings down the leaves still on the trees
 			if v >= 0.5 and v < 2.0:
 				stripped = maxf(stripped, clampf(SurvivalWeather.snow_depth_cm(core) / STRIP_CM, 0.0, 1.0))
@@ -59,10 +73,7 @@ func _process(_delta: float) -> void:
 			else:
 				stripped = 0.0
 		else:
-			# (no survival core: the sky's calendar, its day of a 365-day year)
-			var dn := get_tree().get_first_node_in_group(&"weather")
-			var c: Variant = dn.get("clock") if dn else null
-			v = at_day(float(c.day_of_year) / 365.0 * 36.0) if c else 0.0
+			v = at_day(day)     # (no survival core: the sky's calendar, its day of a 365-day year)
 	if v >= 3.0:
 		v = 0.0
 	value = v

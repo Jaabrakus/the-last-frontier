@@ -494,18 +494,19 @@ func _clutter(density: float) -> void:
 		prop_scale.append(0.62 + 0.1 * fposmod(prop_yaw[i] * 3.7, 1.0))
 		prop_kind.append(Assets.ROOTS)
 		prop_tilt.append(Vector3(0.0, 0.0, 0.35))
-	# Ferns: patches of 10-40 in the shaded forest near the fort (user 2026-09-28: "more foliage").
+	# Ferns: patches of 5-25 in the shaded forest near the fort (the fern beds everywhere else, and more of them:
+	# the grass's herbs, grass.gdshader pick_herb, drawn on the GPU with no objects).
 	var f := int(ceil(CLUTTER_RADIUS / 14.0))
 	for iz in range(-f, f):
 		for ix in range(-f, f):
-			if _h(ix, iz, 601) > 0.75 * density:
+			if _h(ix, iz, 601) > 0.4 * density:
 				continue
 			var cx := (ix + 0.5) * 14.0 + (_h(ix, iz, 602) - 0.5) * 8.0
 			var cz := (iz + 0.5) * 14.0 + (_h(ix, iz, 603) - 0.5) * 8.0
-			if FrontierTerrain.forest_density(cx, cz) < 0.45 or FrontierTerrain.flat_distance(cx, cz) < 8.0:
+			if FrontierTerrain.forest_density(cx, cz) < 0.55 or FrontierTerrain.flat_distance(cx, cz) < 8.0:
 				continue
-			var count := 10 + int(_h(ix, iz, 604) * 30.0)
-			var radius := lerpf(3.0, 8.0, _h(ix, iz, 605))
+			var count := 5 + int(_h(ix, iz, 604) * 20.0)
+			var radius := lerpf(2.5, 6.0, _h(ix, iz, 605))
 			for k in count:
 				var a := _h(ix, iz, 700 + k) * TAU
 				var rr := sqrt(_h(ix, iz, 800 + k)) * radius

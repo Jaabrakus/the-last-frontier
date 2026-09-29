@@ -148,3 +148,7 @@ water_ice={
 "type": "float",
 "value": 0.0
 }
+season_day={
+"type": "float",
+"value": 20.0
+}

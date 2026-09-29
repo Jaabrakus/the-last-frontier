@@ -31,6 +31,11 @@ const SHADER_PATH := "res://shaders/grass/grass.gdshader"
 const ATLAS_PATH := "res://assets/environment/grass/grass_atlas.png"
 const VARIANTS_PATH := "res://assets/environment/grass/grass_variants.json"
 const MAX_VARIANTS := 16
+## The herbs and wildflowers some tufts become by chance (user 2026-09-28: "a procdure grass thing ... with chance for
+## herbs and etc"; tools/environment/terrain/make_herb_atlas.py): fern beds, wood sorrel, mayapples, trilliums and violets
+## under the trees, drifts of black-eyed Susans, bergamot, asters and goldenrod in the open, each in its season.
+const HERB_ATLAS_PATH := "res://assets/environment/grass/herb_atlas.png"
+const HERBS_PATH := "res://assets/environment/grass/herb_variants.json"
 ## Grass blocker map (2026-09-24 clipping pass): an R8 map at BLOCK_RES m per texel over the
 ## whole world marks every solid footprint on the ground (walls, buildings, crates, barrels, hay,
 ## ramps, dummies' posts, tree trunks, stumps, logs, rocks), grown by BLOCK_GROW (half a tuft), so
@@ -328,6 +333,24 @@ func _make_material(sq := Vector2i.ZERO) -> ShaderMaterial:
 				aspects[i] = float(v.aspect)
 	m.set_shader_parameter("variant_rects", rects)
 	m.set_shader_parameter("variant_aspects", aspects)
+	# the herbs and wildflowers some tufts become (grass.gdshader pick_herb; make_herb_atlas.py)
+	var hrects := PackedVector4Array()
+	var haspects := PackedFloat32Array()
+	hrects.resize(MAX_VARIANTS)
+	haspects.resize(MAX_VARIANTS)
+	var hmeta: Variant = JSON.parse_string(FileAccess.get_file_as_string(HERBS_PATH)) if FileAccess.file_exists(HERBS_PATH) else null
+	if hmeta is Array and ResourceLoader.exists(HERB_ATLAS_PATH):
+		for v: Dictionary in hmeta:
+			var i := int(v.cell)
+			if i < MAX_VARIANTS:
+				var r: Array = v.uv_rect
+				hrects[i] = Vector4(r[0], r[1], r[2], r[3])
+				haspects[i] = float(v.aspect)
+		m.set_shader_parameter("herb_atlas", load(HERB_ATLAS_PATH))
+	else:
+		m.set_shader_parameter("herb_chance", 0.0)
+	m.set_shader_parameter("herb_rects", hrects)
+	m.set_shader_parameter("herb_aspects", haspects)
 	return m
 
 
