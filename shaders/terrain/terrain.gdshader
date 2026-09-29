@@ -22,6 +22,36 @@ shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
 
 #include "res://shaders/common/canopy.gdshaderinc"
+#include "res://shaders/common/snow.gdshaderinc"
+
+// The broadleaves' year (scripts/snow/season_leaves.gd; shaders/vegetation/leaf_season.gdshaderinc): the forest floor's
+// ground cover and fallen leaves follow it.
+global uniform float leaf_season;
+
+// How green the forest floor's ground cover is at leaf_season `s` (user 2026-09-28: "after the buds we need to make the
+// forest floor not dirt maybe green"): full through the summer, a little faded in the autumn, dying back as the leaves
+// come down on it, none in winter, greening again once the buds break.
+float forest_green(float s) {
+	if (s < 1.0) {
+		return 1.0 - 0.25 * s;
+	}
+	if (s < 2.0) {
+		return 0.75 * (1.0 - smoothstep(1.0, 1.7, s));
+	}
+	return smoothstep(2.1, 2.6, s);
+}
+
+// How cured the open ground's grass is at `s` (grass.gdshader grass_cure): the meadows tan through the autumn and the
+// winter, green again after the buds.
+float ground_cure(float s) {
+	if (s < 1.0) {
+		return 0.45 * smoothstep(0.2, 1.0, s);
+	}
+	if (s < 2.0) {
+		return mix(0.45, 1.0, smoothstep(1.0, 1.8, s));
+	}
+	return 1.0 - smoothstep(2.1, 2.6, s);
+}
 
 uniform sampler2D height_map : filter_nearest, repeat_disable;
 uniform sampler2D splat0 : filter_linear_mipmap, repeat_disable;         // grass, dry, dirt, mud
@@ -196,6 +226,7 @@ void fragment() {
 		sample_layer(L_GRASS, xz, TILE_GRASS_MACRO, near, anti_m, false, a, n);
 		a.rgb *= mix(1.0, 0.72 + 0.62 * det_lum, near_k * 0.8 + 0.2) * grass_ground_tint;
 		a.rgb = mix(vec3(dot(a.rgb, vec3(0.2126, 0.7152, 0.0722))), a.rgb, 0.8);   // tame the lime patches
+		a.rgb = mix(a.rgb, vec3(dot(a.rgb, vec3(0.2126, 0.7152, 0.0722))) * vec3(1.3, 1.0, 0.6), ground_cure(leaf_season) * 0.8);
 		ca[0] = vec4(a.rgb, det_a.a);
 		na[0] = vec4(det_n.rg, 0.9 * det_n.b + 0.1, det_n.a);
 		wa[0] = w_grass;
@@ -242,6 +273,18 @@ void fragment() {
 			a = mix(a, la, lk);
 			if (near) n = mix(n, texture(nrm_array, vec3(luv, L_LEAVES)), lk);
 		}
+		// Ground cover over the litter: moss, wood sorrel, herbs and seedlings in patches, thickest where the canopy
+		// lets the light down, by the season (forest_green); under the broadleaves this autumn's fallen leaves, fresh
+		// rust and orange as they come down, browning through the winter.
+		float gs = forest_green(leaf_season);
+		if (gs > 0.001) {
+			float patch = smoothstep(0.3, 0.7, mn.g * 0.35 + mn.b * 0.4 + mn.a * 0.25 + (1.0 - density) * 0.2);
+			float lum = dot(a.rgb, vec3(0.3, 0.59, 0.11));
+			vec3 moss = mix(vec3(0.045, 0.085, 0.018), vec3(0.085, 0.125, 0.03), mn.r) * clamp(lum / 0.11, 0.75, 1.2);
+			a.rgb = mix(a.rgb, moss, gs * mix(0.3, 0.95, patch));
+		}
+		float fallen = broad * smoothstep(1.0, 1.5, leaf_season) * (1.0 - smoothstep(2.0, 2.45, leaf_season));
+		a.rgb = mix(a.rgb, a.rgb * vec3(1.45, 0.82, 0.42), fallen * 0.75);
 		ca[4] = a;
 		na[4] = n;
 		wa[4] = w_forest;
@@ -293,10 +336,40 @@ void fragment() {
 	albedo *= 1.0 - canopy_darkening * density;
 	rough = clamp(rough + canopy_darkening * density * 0.2, 0.3, 1.0);
 
+	// Snow (snow.gdshaderinc; scripts/snow): over the ground by the core's depth, thinner under the crowns and on the
+	// trodden dirt of the paths, pressed down where feet went (the trail map round the player): a print shows its
+	// blue-shaded sides, and the ground through it where the snow is thin.
+	// By the land's region (snow_land): the open plains scoured, drifted and rippled by the wind, the woods deep and even,
+	// the cliffs' faces bare.
+	float snow = 0.0;
+	vec2 sgrad = vec2(0.0);
+	vec2 rgrad = vec2(0.0);
+	if (snow_cover > 0.001) {
+		float sk, se;
+		snow = snow_land(wp, N, 1.0 - density, sk, se) * (1.0 - 0.5 * density) * (1.0 - 0.6 * clamp(wear, 0.0, 1.0));
+		if (snow > 0.001 && se > 0.05) {
+			rgrad = snow_ripple_grad(xz, se) * smoothstep(0.3, 0.8, sk) * (near ? 1.0 : 0.4);
+		}
+		if (snow > 0.001) {
+			float pressed = snow_pressed(xz);
+			sgrad = near ? snow_ground_grad(pressed, wp) : vec2(0.0);
+			vec3 sc = snow_albedo(wp);
+			sc = mix(sc, sc * SNOW_SHADE, pressed * 0.55);
+			float through = pressed * (1.0 - smoothstep(0.08, 0.45, snow_cover));
+			albedo = mix(albedo, sc, snow * (1.0 - through * 0.7));
+			rough = mix(rough, mix(0.62, 0.9, snow_fresh), snow);
+			ao = mix(ao, 1.0, snow * 0.5);
+		}
+	}
+
 	vec3 n_world = N;
 	if (near) {
 		dn *= near_k;
 		n_world = normalize(N + T * dn.x + B * dn.y);
+	}
+	if (snow > 0.001) {
+		// the snow smooths the ground's detail; a print's sides tilt (the surface is the print's depth lower in it)
+		n_world = normalize(mix(n_world, N, snow * 0.8) + vec3(sgrad.x * 0.05 + rgrad.x, 0.0, sgrad.y * 0.05 + rgrad.y) * snow);
 	}
 	ALBEDO = albedo;
 	ROUGHNESS = rough;

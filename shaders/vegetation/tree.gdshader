@@ -10,12 +10,15 @@ render_mode cull_disabled, depth_draw_opaque, diffuse_burley, specular_schlick_g
 #include "res://shaders/vegetation/tree_common.gdshaderinc"
 #include "res://shaders/common/canopy.gdshaderinc"
 #include "res://shaders/vegetation/lod_fade.gdshaderinc"
+#include "res://shaders/common/snow.gdshaderinc"
+#include "res://shaders/vegetation/leaf_season.gdshaderinc"
 
 /// Forward-scatter glow of thin leaves against the key light (x leaf_glow).
 uniform float leaf_glow_strength = 1.0;
 
 varying float v_canopy;
 varying vec2 v_lod;
+varying float v_leaf_s;
 
 void vertex() {
 	v_col = COLOR;
@@ -23,6 +26,7 @@ void vertex() {
 	v_height = (MODEL_MATRIX * vec4(VERTEX, 1.0)).y - MODEL_MATRIX[3].y;
 	VERTEX += tree_wind(VERTEX, MODEL_MATRIX, COLOR, UV2);
 	v_canopy = canopy_cover(MODEL_MATRIX[3].xz);
+	v_leaf_s = leaf_season_at(MODEL_MATRIX[3].xyz, leaf_early);
 	// the LOD's share of this tree (lod_fade.gdshaderinc); none: the instance collapses to a point, no pixels
 	v_lod = frontier_lod_cover(distance(CAMERA_POSITION_WORLD, MODEL_MATRIX[3].xyz));
 	if (v_lod.x <= 0.0 || v_lod.y <= 0.0) {
@@ -53,6 +57,13 @@ void fragment() {
 	if (s.alpha < alpha_cut) {
 		discard;
 	}
+	// the broadleaves' year (leaf_season.gdshaderinc): autumn's colours, the fall, spring's buds
+	if (s.leaf && !season_leaf(s.albedo, v_col.b, leaf_fall, autumn_a, autumn_b, v_leaf_s)) {
+		discard;
+	}
+	// snow on the crown's tops and the limbs (snow.gdshaderinc)
+	s.albedo = snow_on_tree(s.albedo, normalize((INV_VIEW_MATRIX * vec4(FRONT_FACING ? NORMAL : -NORMAL, 0.0)).xyz), s.leaf,
+			v_col.g, v_col.b);
 	ALBEDO = s.albedo;
 	ALPHA = s.alpha;
 	ALPHA_SCISSOR_THRESHOLD = alpha_cut;

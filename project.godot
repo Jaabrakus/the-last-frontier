@@ -96,3 +96,55 @@ leaf_glow={
 "type": "vec4",
 "value": Vector4(0, 0, 0, 0)
 }
+snow_cover={
+"type": "float",
+"value": 0.0
+}
+snow_fresh={
+"type": "float",
+"value": 0.0
+}
+snow_total={
+"type": "float",
+"value": 0.0
+}
+snow_trail={
+"type": "sampler2D",
+"value": ""
+}
+snow_trail_rect={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+snow_shelter={
+"type": "sampler2D",
+"value": ""
+}
+snow_shelter_rect={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+leaf_season={
+"type": "float",
+"value": 0.0
+}
+canopy_leaves={
+"type": "float",
+"value": 1.0
+}
+snow_region={
+"type": "sampler2D",
+"value": ""
+}
+snow_region_rect={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+snow_wind={
+"type": "vec2",
+"value": Vector2(1, 0)
+}
+water_ice={
+"type": "float",
+"value": 0.0
+}

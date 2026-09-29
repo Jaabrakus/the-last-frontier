@@ -3,10 +3,13 @@ extends RefCounted
 ## tree crowns cover over every square metre of the level, baked once from the vegetation layout (VegLayout) when the
 ## level is built. No class_name: vegetation.gd and ForestLight preload this file.
 ##
-## The map (MAP_SIZE x MAP_SIZE texels of TEXEL m, centred on the level, L8 with mipmaps) is the union of every canopy
+## The map (MAP_SIZE x MAP_SIZE texels of TEXEL m, centred on the level, RG8 with mipmaps) is the union of every canopy
 ## tree's crown seen from below: a soft disc of the crown's radius round its centre (trees.json crown_center, turned by
 ## the tree's yaw, x its scale), as opaque as the species' crown (CROWN_OPACITY), stacked as 1 - prod(1 - a). Saplings
 ## and shrubs are not in it (they stand under the canopy). Its mip levels are the cover averaged over 2, 4, 8, 16 m.
+## R: every crown; G: the evergreens' alone (the pines and the hemlocks keep theirs in winter). The broadleaves' year
+## (SeasonLeaves, user 2026-09-28: bare in winter) sets `leaves` (the canopy_leaves global): the cover in use is
+## G + (R - G) x leaves, so the woods under bare oaks and maples open to the sky while a pine stand stays dim.
 ##
 ## Shaders read it through res://shaders/common/canopy.gdshaderinc (the global uniforms canopy_map / canopy_rect,
 ## declared in project.godot [shader_globals]): the terrain, the grass, the ferns and the trees darken the sky light
@@ -32,6 +35,8 @@ static var image: Image              ## the L8 map (mip 0), for the CPU queries
 static var texture: ImageTexture
 static var _stamps := {}
 static var _dapple: ShaderMaterial
+## How leafy the broadleaves' crowns are now, 1 summer .. 0 bare (SeasonLeaves sets it with the canopy_leaves global).
+static var leaves := 1.0
 
 
 ## Bakes the map from the layout's trees and publishes it to the shaders (canopy_map, canopy_rect). Returns ms.
@@ -39,12 +44,17 @@ static func bake(layout: RefCounted) -> float:
 	var t0 := Time.get_ticks_usec()
 	var img := Image.create(MAP_SIZE, MAP_SIZE, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 1))
-	for i in (layout.tree_pos as PackedVector3Array).size():
-		var crown := _crown(layout, i)
-		if not crown.is_empty():
-			var stamp: Image = crown[0]
-			img.blend_rect(stamp, Rect2i(Vector2i.ZERO, stamp.get_size()), crown[1])
-	img.convert(Image.FORMAT_L8)
+	# the broadleaves first (red stamps: R only), then the evergreens (yellow: R and G): a blend takes from the other
+	# channels what it adds to its own, and G is still 0 under every broadleaf stamp
+	for ever: bool in [false, true]:
+		for i in (layout.tree_pos as PackedVector3Array).size():
+			if _evergreen(layout.tree_kind[i]) != ever:
+				continue
+			var crown := _crown(layout, i)
+			if not crown.is_empty():
+				var stamp: Image = crown[0]
+				img.blend_rect(stamp, Rect2i(Vector2i.ZERO, stamp.get_size()), crown[1])
+	img.convert(Image.FORMAT_RG8)
 	image = img.duplicate() as Image
 	img.generate_mipmaps()
 	texture = ImageTexture.create_from_image(img)
@@ -64,6 +74,7 @@ static func remove_crown(layout: Object, i: int) -> float:
 	var t0 := Time.get_ticks_usec()
 	var stamp: Image = crown[0]
 	var at: Vector2i = crown[1]
+	var ever := _evergreen(layout.tree_kind[i])
 	for y in stamp.get_height():
 		for x in stamp.get_width():
 			var mx := at.x + x
@@ -73,8 +84,10 @@ static func remove_crown(layout: Object, i: int) -> float:
 			var a := stamp.get_pixel(x, y).a
 			if a <= 0.0:
 				continue
-			var c := image.get_pixel(mx, my).r
-			image.set_pixel(mx, my, Color.WHITE * clampf(1.0 - (1.0 - c) / maxf(1.0 - a, 0.05), 0.0, 1.0))
+			var c := image.get_pixel(mx, my)
+			var r := clampf(1.0 - (1.0 - c.r) / maxf(1.0 - a, 0.05), 0.0, 1.0)
+			var g := clampf(1.0 - (1.0 - c.g) / maxf(1.0 - a, 0.05), 0.0, 1.0) if ever else c.g
+			image.set_pixel(mx, my, Color(r, minf(g, r), 0.0))
 	var img := image.duplicate() as Image
 	img.generate_mipmaps()
 	texture.update(img)
@@ -91,7 +104,7 @@ static func _crown(layout: Object, i: int) -> Array:
 	var cc: Array = info.get("crown_center", [0.0, 0.0, 0.0])
 	var off := Vector3(float(cc[0]), 0.0, float(cc[2])).rotated(Vector3.UP, layout.tree_yaw[i]) * s
 	var r := float(info.get("crown_radius", 4.0)) * s
-	var stamp := _stamp(r, CROWN_OPACITY[k])
+	var stamp := _stamp(r, CROWN_OPACITY[k], _evergreen(k))
 	var half := stamp.get_width() / 2
 	var pos: Vector3 = layout.tree_pos[i]
 	var c := (Vector2(pos.x + off.x, pos.z + off.z) - ORIGIN) / TEXEL
@@ -107,7 +120,8 @@ static func publish() -> void:
 	_set_global(&"canopy_rect", Vector4(ORIGIN.x, ORIGIN.y, 1.0 / span, 1.0 / span))
 
 
-## Crown cover 0..1 at world (x, z) (bilinear on the 1 m map); 0 off the map or before a bake.
+## Crown cover 0..1 at world (x, z) now (bilinear on the 1 m map; the broadleaves' by `leaves`); 0 off the map or
+## before a bake.
 static func cover_at(x: float, z: float) -> float:
 	if image == null:
 		return 0.0
@@ -116,9 +130,13 @@ static func cover_at(x: float, z: float) -> float:
 	if i.x < 0 or i.y < 0 or i.x >= MAP_SIZE - 1 or i.y >= MAP_SIZE - 1:
 		return 0.0
 	var u := f - Vector2(i)
-	var a := lerpf(image.get_pixel(i.x, i.y).r, image.get_pixel(i.x + 1, i.y).r, u.x)
-	var b := lerpf(image.get_pixel(i.x, i.y + 1).r, image.get_pixel(i.x + 1, i.y + 1).r, u.x)
+	var a := lerpf(_cover(image.get_pixel(i.x, i.y)), _cover(image.get_pixel(i.x + 1, i.y)), u.x)
+	var b := lerpf(_cover(image.get_pixel(i.x, i.y + 1)), _cover(image.get_pixel(i.x + 1, i.y + 1)), u.x)
 	return lerpf(a, b, u.y)
+
+
+static func _cover(c: Color) -> float:
+	return c.g + (c.r - c.g) * leaves
 
 
 ## Mean cover over a disc of `radius` m round (x, z): the centre and two rings of 8.
@@ -142,10 +160,15 @@ static func dapple_material() -> ShaderMaterial:
 	return _dapple
 
 
-## A soft disc of radius r m (texels at TEXEL), white with alpha = opacity inside 0.55 r, falling to 0 at 1.05 r.
-static func _stamp(r: float, opacity: float) -> Image:
+static func _evergreen(kind: int) -> bool:
+	return Assets.autumn_of(Assets.SPECIES[kind]).is_empty()
+
+
+## A soft disc of radius r m (texels at TEXEL), alpha = opacity inside 0.55 r, falling to 0 at 1.05 r: yellow (R and G)
+## for an evergreen, red (R) for a broadleaf.
+static func _stamp(r: float, opacity: float, ever: bool) -> Image:
 	var rq := snappedf(clampf(r, 0.5, 12.0), 0.25)
-	var key := "%.2f_%.2f" % [rq, opacity]
+	var key := "%.2f_%.2f_%s" % [rq, opacity, ever]
 	if _stamps.has(key):
 		return _stamps[key]
 	var half := ceili(rq * 1.05 / TEXEL) + 1
@@ -155,7 +178,7 @@ static func _stamp(r: float, opacity: float) -> Image:
 		for x in n:
 			var d := Vector2(x - half, y - half).length() * TEXEL
 			var a := opacity * (1.0 - smoothstep(0.55 * rq, 1.05 * rq, d))
-			img.set_pixel(x, y, Color(1, 1, 1, a))
+			img.set_pixel(x, y, Color(1, 1.0 if ever else 0.0, 0, a))
 	_stamps[key] = img
 	return img
 

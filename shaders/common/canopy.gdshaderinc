@@ -1,7 +1,8 @@
 // The forest canopy's light (forest lighting, 2026-09-26). Included by the terrain, the grass, the ferns, the trees and
 // the tree impostors. The globals (project.godot [shader_globals]):
 //   canopy_map   crown cover 0..1 per square metre of the level (scripts/world/vegetation/canopy_map.gd; its mips are
-//                the cover averaged over 2..16 m)
+//                the cover averaged over 2..16 m): R every crown, G the evergreens' alone
+//   canopy_leaves how leafy the broadleaves are now, 1 summer .. 0 bare (SeasonLeaves): the cover is G + (R - G) x it
 //   canopy_rect  x0, z0, 1 / width, 1 / depth (m) of the map
 //   canopy_light rgb: the light a closed canopy scatters down (leaves transmit and reflect the sun: green-gold), as
 //                emission per unit albedo; a: the share of the sky light (ambient and its reflections) a closed canopy
@@ -17,6 +18,7 @@
 
 global uniform sampler2D canopy_map : filter_linear_mipmap, repeat_disable;
 global uniform vec4 canopy_rect;
+global uniform float canopy_leaves;
 global uniform vec4 canopy_light;
 global uniform vec4 leaf_glow;
 
@@ -27,7 +29,8 @@ global uniform vec4 leaf_glow;
 const float CANOPY_SKY_VIEW = 1.7;
 
 float canopy_cover(vec2 xz) {
-	return min(textureLod(canopy_map, (xz - canopy_rect.xy) * canopy_rect.zw, 3.5).r * CANOPY_SKY_VIEW, 1.0);
+	vec2 c = textureLod(canopy_map, (xz - canopy_rect.xy) * canopy_rect.zw, 3.5).rg;
+	return min((c.g + (c.r - c.g) * canopy_leaves) * CANOPY_SKY_VIEW, 1.0);
 }
 
 // Multiplier of the sky light under the canopy.

@@ -144,7 +144,7 @@
   },
   "arrowwood": {
    "name": "arrowwood", "item": "shoots", "take": "Cut straight shoots", "clip": "waist", "pick_s": 3.0,
-   "habitat": "edge", "forest": [0.2, 0.75], "trunk_m": [2.0, 16.0], "patches": 20, "tries": 200, "per_patch": [2, 4], "spread_m": [1.2, 2.5],
+   "habitat": "edge", "forest": [0.2, 0.75], "trunk_m": [2.0, 16.0], "patches": 20, "tries": 500, "per_patch": [2, 4], "spread_m": [1.2, 2.5],
    "ripe": ["jan_early", "dec_late"], "stock": 2.0, "regrow_days": 6.0,
    "deer": {"browse": 0.3, "ripe": 0.0},
    "note": "Southern arrowwood (Viburnum dentatum) at the woods' edges and along the damp ground: a thicket of long straight shoots, named for the arrow shafts cut from them. Deer browse the twigs."

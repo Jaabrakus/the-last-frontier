@@ -12,6 +12,8 @@ render_mode cull_disabled, depth_draw_opaque;
 #include "res://shaders/common/canopy.gdshaderinc"
 #include "res://shaders/vegetation/painted_light.gdshaderinc"
 #include "res://shaders/vegetation/lod_fade.gdshaderinc"
+#include "res://shaders/common/snow.gdshaderinc"
+#include "res://shaders/vegetation/leaf_season.gdshaderinc"
 
 /// Toned toward the realistic trees near the player (user 2026-09-28: the distant trees painted, no bright band ahead
 /// of the realistic ones): the colour's saturation kept (1: the look test's), and a tint (the photo foliage's cooler,
@@ -35,6 +37,7 @@ uniform float top_warm_amount = 0.18;
 
 varying float v_canopy;
 varying vec2 v_lod;
+varying float v_leaf_s;
 
 void vertex() {
 	v_col = COLOR;
@@ -42,6 +45,7 @@ void vertex() {
 	v_height = (MODEL_MATRIX * vec4(VERTEX, 1.0)).y - MODEL_MATRIX[3].y;
 	VERTEX += tree_wind(VERTEX, MODEL_MATRIX, COLOR, UV2);
 	v_canopy = canopy_cover(MODEL_MATRIX[3].xz);
+	v_leaf_s = leaf_season_at(MODEL_MATRIX[3].xyz, leaf_early);
 	// the LOD's share of this tree (lod_fade.gdshaderinc); none: the instance collapses, no pixels
 	v_lod = frontier_lod_cover(distance(CAMERA_POSITION_WORLD, MODEL_MATRIX[3].xyz));
 	if (v_lod.x <= 0.0 || v_lod.y <= 0.0) {
@@ -86,6 +90,13 @@ void fragment() {
 		}
 		float top = v_col.g * clamp(NORMAL.y * 0.5 + 0.5, 0.0, 1.0);
 		col = mix(col, top_warm * (col.g / max(top_warm.g, 0.01)), top * top_warm_amount);
+		// toned toward the realistic trees: less saturated, the cooler green (before the season: autumn's colours
+		// keep their fire, not greyed to pastels)
+		col = mix(vec3(dot(col, vec3(0.3, 0.59, 0.11))), col, tone_saturation) * tone_tint;
+		// the broadleaves' year (leaf_season.gdshaderinc): autumn's colours, the fall, spring's buds
+		if (!season_leaf(col, fract(v_col.b * 7.13 + v_custom.z * 3.1), leaf_fall, autumn_a, autumn_b, v_leaf_s)) {
+			discard;
+		}
 		// the terminator steps dab by dab
 		v_stroke = v_col.b;
 		AO = mix(1.0, v_col.r, 0.75);
@@ -100,9 +111,12 @@ void fragment() {
 		v_stroke = 0.5 + (v_col.b - 0.5) * 0.4;
 		AO = mix(1.0, v_col.r, 0.8);
 		AO_LIGHT_AFFECT = 0.15;
+		// toned toward the realistic trees
+		col = mix(vec3(dot(col, vec3(0.3, 0.59, 0.11))), col, tone_saturation) * tone_tint;
 	}
-	// toned toward the realistic trees: less saturated, the cooler green
-	col = mix(vec3(dot(col, vec3(0.3, 0.59, 0.11))), col, tone_saturation) * tone_tint;
+	// snow on the crown's tops and the limbs (snow.gdshaderinc)
+	col = snow_on_tree(col, normalize((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz), leaf, v_col.g,
+			fract(v_col.b * 7.13 + v_custom.z * 3.1));
 	ALBEDO = col;
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;

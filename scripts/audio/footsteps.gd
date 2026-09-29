@@ -8,7 +8,7 @@ extends Node
 ## stride (walk 0.72 m, run 1.15, sprint 1.55, crouch 0.55), alternating left and right feet.
 ## The first step after starting to move comes at 40 % of a stride. The surface under the
 ## feet (a short ray down, see Sfx.surface_of) picks dirt, grass or wood; straw counts as
-## grass and stone as dirt. Run and sprint steps sometimes rattle the kit (gear_jostle).
+## grass and stone as dirt; on the ground with snow lying on it (SnowCover.depth_at: not under a roof), snow. Run and sprint steps sometimes rattle the kit (gear_jostle).
 ##
 ## Landings: after more than 0.12 s in the air, falling faster than 1.5 m/s, land_<surface>
 ## plays louder for harder falls (+8 dB from 2 to 7 m/s), with the kit rattling.
@@ -138,17 +138,21 @@ func _feet() -> Vector3:
 	return player.global_position + Vector3.UP * 0.02
 
 
-## Footstep surface under the player: dirt, grass or wood.
+## Footstep surface under the player: dirt, grass, wood or snow.
 func surface() -> String:
 	var from := player.global_position + Vector3.UP * 0.1
 	var q := PhysicsRayQueryParameters3D.create(from, from + Vector3.DOWN * 0.6)
 	q.exclude = [player.get_rid()]
 	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)
+	var snow := SnowCover.find(get_tree())
+	var snowy := snow != null and snow.depth_at(player.global_position) > 0.02
 	if hit.is_empty():
+		if snowy:
+			return "snow"
 		return "dirt" if Sfx.is_dirt(player.global_position) else "grass"
 	match Sfx.surface_of(hit.collider, hit.position, hit.normal):
 		"wood":
 			return "wood"
 		"dirt", "stone":
-			return "dirt"
-	return "grass"
+			return "snow" if snowy and (hit.collider as Node).is_in_group(&"terrain") else "dirt"
+	return "snow" if snowy else "grass"

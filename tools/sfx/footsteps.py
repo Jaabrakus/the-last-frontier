@@ -1265,6 +1265,86 @@ def cloth_move(v: Variant) -> np.ndarray:
 
 
 # =============================================================================
+# recipes: snow (user 2026-09-28: "snow ... gameplay": the footsteps crunch in the snow)
+# =============================================================================
+# Packed snow under a boot: the heel's thud muffled (the snow takes it), then the crunch of the crystals collapsing,
+# a dense granular crackle with a wide low bed (the body of the crunch), and in the cold a squeak or two
+# (narrow snaps 900-2200 Hz). Slower to build and longer than grass: the foot sinks before it holds.
+
+def step_snow_walk(v: Variant) -> np.ndarray:
+    heel = thud(v, 90.0 * v.strat("pitch", 0.9, 1.1), tau=0.010, dur=0.06, lp=200.0, noise_db=v.u(-2.0, 2.0))
+    crunch = crackle(v, 0.230, 700.0, 5000.0, rate=v.strat("grain", 700.0, 1000.0),
+                     pts=[(0.0, 0.0), (0.045, 1.0), (0.12, 0.85), (0.23, 0.0)],
+                     snaps=v.strat_int("squeak", 0, 3), snap_band=(900.0, 2200.0), snap_db=0.0,
+                     bed_db=-1.0, bed_band=(350.0, 5000.0), spread=0.5)
+    return mix_gapless(0.34, [
+        (0.002, heel, -12.0),
+        (0.002 + v.u(0.0, 0.003), sole_contact(v, lo=200.0, hi=1500.0), -12.0),
+        (v.u(0.006, 0.016), crunch, 0.0),
+    ])
+
+
+def step_snow_run(v: Variant) -> np.ndarray:
+    heel = thud(v, 100.0 * v.strat("pitch", 0.9, 1.1), tau=0.009, dur=0.06, lp=240.0, noise_db=v.u(-2.0, 2.0))
+    crunch = crackle(v, 0.160, 700.0, 5500.0, rate=v.strat("grain", 1000.0, 1400.0),
+                     pts=[(0.0, 0.0), (0.02, 1.0), (0.08, 0.8), (0.16, 0.0)],
+                     snaps=v.strat_int("squeak", 1, 3), snap_band=(900.0, 2200.0), snap_db=0.0,
+                     bed_db=-1.0, bed_band=(350.0, 5500.0), spread=0.5)
+    return mix_gapless(0.26, [
+        (0.002, heel, -8.0),
+        (0.002 + v.u(0.0, 0.003), sole_contact(v, lo=200.0, hi=1500.0), -9.0),
+        (v.u(0.004, 0.010), crunch, 1.0),
+    ])
+
+
+def step_snow_sprint(v: Variant) -> np.ndarray:
+    heel = thud(v, 95.0 * v.strat("pitch", 0.9, 1.1), tau=0.011, dur=0.08, lp=240.0, noise_db=v.u(-2.0, 2.0))
+    crunch = crackle(v, 0.170, 700.0, 6000.0, rate=v.strat("grain", 1300.0, 1700.0),
+                     pts=[(0.0, 0.0), (0.015, 1.0), (0.07, 0.8), (0.17, 0.0)],
+                     snaps=v.strat_int("squeak", 1, 4), snap_band=(900.0, 2400.0), snap_db=-1.0,
+                     bed_db=-1.0, bed_band=(350.0, 6000.0), spread=0.5)
+    spray = scuff(v, 0.120, 1500.0, 7000.0, attack=0.012, grit=v.strat_int("spray", 6, 12),
+                  click_band=(1500.0, 5000.0), click_db=-6.0, am_rate=90.0, am_depth=0.6,
+                  sustain=0.5, click_tau=(0.0002, 0.0006))
+    return mix_gapless(0.30, [
+        (0.002, heel, -7.0),
+        (0.002 + v.u(0.0, 0.003), sole_contact(v, lo=200.0, hi=1500.0), -9.0),
+        (0.004, crunch, 0.0),
+        (0.03, spray, -8.0),
+    ])
+
+
+def step_snow_crouch(v: Variant) -> np.ndarray:
+    heel = thud(v, 90.0 * v.strat("pitch", 0.9, 1.1), tau=0.008, dur=0.05, lp=200.0, noise_db=v.u(-2.0, 2.0))
+    crunch = crackle(v, 0.300, 700.0, 4500.0, rate=v.strat("grain", 450.0, 650.0),
+                     pts=[(0.0, 0.0), (0.08, 1.0), (0.18, 0.8), (0.30, 0.0)],
+                     snaps=v.strat_int("squeak", 0, 2), snap_band=(900.0, 2000.0), snap_db=-2.0,
+                     bed_db=-2.0, bed_band=(350.0, 4500.0), spread=0.4, tick_tau=(0.00005, 0.0002))
+    cl = cloth(v, 0.34, attack=v.u(0.10, 0.15))
+    return mix_gapless(0.40, [
+        (0.002, heel, -28.0),
+        (0.002 + v.u(0.0, 0.003), sole_contact(v, lo=200.0, hi=1500.0), -24.0),
+        (v.strat("crush", 0.010, 0.030), crunch, -10.0),
+        (0.0, cl, -18.0),
+    ])
+
+
+def land_snow(v: Variant) -> np.ndarray:
+    a, gap = _land_thuds(v, 220.0)
+    crunch = crackle(v, 0.300, 700.0, 5500.0, rate=v.strat("grain", 1400.0, 1900.0),
+                     pts=[(0.0, 0.0), (0.02, 1.0), (0.10, 0.8), (0.30, 0.0)],
+                     snaps=v.strat_int("squeak", 1, 4), snap_band=(900.0, 2200.0), snap_db=-1.0,
+                     bed_db=0.0, bed_band=(300.0, 5500.0), spread=0.5)
+    knee = cloth(v, 0.24, attack=0.05)
+    return mix_gapless(0.46, [
+        (0.002, a, -4.0),
+        (0.002 + gap + v.u(0.0, 0.003), sole_contact(v, lo=200.0, hi=1500.0), -8.0),
+        (0.006, crunch, 0.0),
+        (0.02, knee, -10.0),
+    ])
+
+
+# =============================================================================
 # registry, levels and driver
 # =============================================================================
 
@@ -1285,6 +1365,11 @@ SOUNDS = {
     "land_dirt": (3, land_dirt, 0.35),
     "land_grass": (3, land_grass, 0.35),
     "land_wood": (2, land_wood, 0.40),
+    "step_snow_walk": (4, step_snow_walk, 0.34),
+    "step_snow_run": (4, step_snow_run, 0.26),
+    "step_snow_sprint": (4, step_snow_sprint, 0.30),
+    "step_snow_crouch": (4, step_snow_crouch, 0.40),
+    "land_snow": (3, land_snow, 0.46),
     "jump_takeoff": (3, jump_takeoff, 0.25),
     "gear_jostle": (4, gear_jostle, 0.25),
     "cloth_move": (4, cloth_move, 0.35),
@@ -1302,7 +1387,7 @@ BASE_VOLUME_DB = {
 # Designed in-game loudness relative to step_dirt_walk (dB).
 TARGET_REL_WALK_DB = {
     "walk": 0.0, "run": 5.0, "sprint": 8.0, "crouch": -6.0, "land": 5.0,
-    "wood": 1.0, "grass": 0.0, "dirt": 0.0,
+    "wood": 1.0, "grass": 0.0, "dirt": 0.0, "snow": -1.0,
     "jump_takeoff": -1.0, "cloth_move": -2.0, "gear_jostle": -2.0,
 }
 REFERENCE_ID = "step_dirt_walk"

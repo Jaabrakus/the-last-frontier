@@ -9,6 +9,10 @@ extends RefCounted
 ## union), applies the stacking limit (at most the three strongest penalties per key) and clamps to bounds.
 ## Modifiers change sway, tremor, speed and timing only; the aim point is never moved (modifier_contract.aim_rule).
 
+## Snow this deep (cm) begins to slow walking; this deep, the deep-snow gate's full walk mults (seasons.json gates.deep_snow).
+const DEEP_SNOW_FROM_CM := 10.0
+const DEEP_SNOW_FULL_CM := 35.0
+
 ## Keys where a larger value is the penalty (everything else: a smaller value is the penalty).
 const HIGHER_IS_WORSE := ["aim_sway_mult", "aim_tremor", "spread_mult", "hold_fatigue_mult", "misfire_add",
 		"hangfire_mult", "health_drain_per_hour", "hunger_burn_mult", "warmth_loss_mult", "fatigue_rate_mult",
@@ -367,11 +371,16 @@ static func _env_sources(core: SurvivalCore) -> Array:
 			out.append({"src": "env.damp_string", "label": "damp bowstring",
 					"effects": SurvivalUtil.dict(SurvivalUtil.dict(extra.get("bowstring_damp")).get("effects")).duplicate()})
 		var gates := core.data.section("seasons", "gates")
-		if SurvivalClock.gate_active(core, "deep_snow"):
+		# deep snow by the snow that lies (user 2026-09-28, snow "gameplay"): from DEEP_SNOW_FROM_CM it slows walking,
+		# the full effect (the gate's walk mults) from DEEP_SNOW_FULL_CM; the snow on the ground, not the calendar
+		# (where the player stands when the level says: SnowCover's snow_here_cm, the land's drifts and scoured ground)
+		var snow_cm := SurvivalUtil.num(core.state.context.get("snow_here_cm"), SurvivalWeather.snow_depth_cm(core))
+		if snow_cm > DEEP_SNOW_FROM_CM:
 			var ge := SurvivalUtil.dict(SurvivalUtil.dict(gates.get("deep_snow")).get("effects"))
 			var shoes := SurvivalInventory.has(core, "item.tool.snowshoes")
-			var m := SurvivalUtil.num(ge.get("walk_mult_with_snowshoes" if shoes else "walk_mult_without_snowshoes"), 1.0)
-			out.append({"src": "env.deep_snow", "label": "deep snow", "effects": {"move_speed_mult": m}})
+			var full := SurvivalUtil.num(ge.get("walk_mult_with_snowshoes" if shoes else "walk_mult_without_snowshoes"), 1.0)
+			var k := clampf((snow_cm - DEEP_SNOW_FROM_CM) / (DEEP_SNOW_FULL_CM - DEEP_SNOW_FROM_CM), 0.0, 1.0)
+			out.append({"src": "env.deep_snow", "label": "deep snow", "effects": {"move_speed_mult": lerpf(1.0, full, k)}})
 		elif SurvivalClock.gate_active(core, "mud_season"):
 			var me := SurvivalUtil.dict(SurvivalUtil.dict(gates.get("mud_season")).get("effects"))
 			out.append({"src": "env.mud", "label": "mud", "effects": {"move_speed_mult": SurvivalUtil.num(me.get("foot_mult"), 0.7)}})

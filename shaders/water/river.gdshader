@@ -15,6 +15,11 @@
 //             fainter white V trailing it, torn by the churning water (user 2026-09-28: the rapids "hard to see and doesnt make it look good"; "the rocks
 //             white looks good but remove the ripples or the waves", "remove those white lines", "keep the v trail
 //             make it less powerfull": no standing waves, no streaks)
+//   ice       in the cold (user 2026-09-28: snow "procedure beacuse we have the great planes as well as the water";
+//             water_ice, SnowCover from the month's mean temperature: the depth of water the ice covers): shelf ice grows
+//             out from the banks over the shallows first, dark and clear where it is new, grey-white where it has
+//             thickened; in deep winter the slow water freezes across; the rapids stay open; snow lies on it in wind-swept
+//             patches (snow.gdshaderinc)
 shader_type spatial;
 // (seen from under it too; no shadows on it: the far terrain casts them from its coarse 8 m mesh, blocky on the water)
 render_mode blend_mix, depth_draw_always, cull_disabled, shadows_disabled, diffuse_burley, specular_schlick_ggx;
@@ -24,6 +29,11 @@ uniform sampler2D depth_tex : hint_depth_texture, filter_nearest, repeat_disable
 uniform sampler2D ripple_a : filter_linear_mipmap, repeat_enable;    // noise normal maps (0..1 encoded)
 uniform sampler2D ripple_b : filter_linear_mipmap, repeat_enable;
 uniform sampler2D foam_noise : filter_linear_mipmap, repeat_enable;
+
+#include "res://shaders/common/snow.gdshaderinc"
+global uniform float water_ice;
+const vec3 ICE_NEW = vec3(0.05, 0.075, 0.085);
+const vec3 ICE_OLD = vec3(0.5, 0.57, 0.62);
 
 uniform vec3 shallow_tint : source_color = vec3(0.78, 0.86, 0.72);
 uniform vec3 deep_color : source_color = vec3(0.035, 0.085, 0.075);
@@ -111,6 +121,27 @@ void fragment() {
 	METALLIC = 0.0;
 	SPECULAR = 0.5;
 	ALPHA = smoothstep(0.0, edge_fade, deep);
+	// ice: over the water shallower than the reach (the rapids none), its edge ragged
+	float reach = water_ice * (1.0 - smoothstep(0.1, 0.5, v_rapid));
+	if (reach > 0.005) {
+		float rag = (texture(foam_noise, v_world.xz / 11.0).r - 0.5) * 0.35 + (texture(foam_noise, v_world.xz / 2.3).r - 0.5) * 0.08;
+		float margin = reach - deep + rag * min(reach, 0.6);
+		float ice = smoothstep(-0.01, 0.03, margin);
+		if (ice > 0.001) {
+			// new ice at its edge dark and clear (the water under it), thickening grey-white back toward the bank
+			float thick = smoothstep(0.02, 0.35, margin);
+			vec3 icec = mix(ICE_NEW, ICE_OLD, thick) * (0.92 + 0.16 * texture(foam_noise, v_world.xz / 1.3).r);
+			// snow on the ice: wind-swept, in patches and drifts
+			float sn = snow_cover > 0.001 ? smoothstep(0.35, 0.75, snow_vnoise(v_world.xz * 0.12) * 0.7
+					+ snow_vnoise(v_world.xz * 0.9) * 0.3 + snow_cover * thick - 0.35) : 0.0;
+			icec = mix(icec, snow_albedo(v_world), sn);
+			ALBEDO = mix(ALBEDO, icec, ice);
+			EMISSION = mix(EMISSION, through * 0.35 * (1.0 - thick), ice);
+			ROUGHNESS = mix(ROUGHNESS, mix(0.12, 0.75, max(thick * 0.6, sn)), ice);
+			NORMAL = normalize(mix(NORMAL, (VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz, ice));
+			ALPHA = max(ALPHA, ice * smoothstep(0.0, 0.03, deep + 0.03));
+		}
+	}
 	if (debug_view == 1) {
 		EMISSION = vec3(0.0);
 	} else if (debug_view == 2) {

@@ -12,12 +12,15 @@
 // grass lights like the ground under it, darker and cooler at the root, translucent
 // (BACKLIGHT, stronger toward the sun via frontier_backlight). No shadows cast (node setting).
 // Under the forest canopy (canopy.gdshaderinc, per tuft): less sky light, the light the leaves scatter down.
+// Under snow (snow.gdshaderinc): a tuft no taller than the snow's depth is buried (hidden); a taller one stands out of
+// the snow, its root at the snow's surface.
 
 shader_type spatial;
 render_mode cull_disabled, depth_draw_opaque, diffuse_lambert_wrap, specular_disabled, world_vertex_coords;
 
 #include "res://shaders/common/wind.gdshaderinc"
 #include "res://shaders/common/canopy.gdshaderinc"
+#include "res://shaders/common/snow.gdshaderinc"
 
 uniform sampler2D atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 uniform sampler2D height_map : filter_nearest, repeat_disable;
@@ -53,6 +56,22 @@ varying vec3 v_tint;
 varying vec3 v_world;
 varying float v_root;     // how dark the root gets (tall grass more than mowed turf)
 varying float v_canopy;   // crown cover over the tuft (canopy.gdshaderinc)
+varying float v_straw;    // 0 the grass's own colour .. 1 cured straw (the season, the snow)
+
+// The year's grass (leaf_season, scripts/snow/season_leaves.gd; user 2026-09-28: the seasons as "a world thing"): it
+// cures to straw through the autumn, stands dead and tan all winter (out of the snow), and greens again after the buds.
+global uniform float leaf_season;
+const vec3 STRAW = vec3(0.3, 0.215, 0.1);
+
+float grass_cure(float s) {
+	if (s < 1.0) {
+		return 0.45 * smoothstep(0.2, 1.0, s);
+	}
+	if (s < 2.0) {
+		return mix(0.45, 1.0, smoothstep(1.0, 1.8, s));
+	}
+	return 1.0 - smoothstep(2.1, 2.6, s);
+}
 
 float ground_height(vec2 xz) {
 	vec2 f = clamp(xz - square_origin + grid_half, vec2(0.0), vec2(grid_size - 1.001));
@@ -80,6 +99,7 @@ void vertex() {
 	float keep = dens * density_scale;
 	float grow = 0.0;
 	float gh = 0.0, dry_share = 0.0, forest_share = 0.0;
+	float sd = 0.0;   // the snow's depth over the tuft (m)
 	vec2 uv = (xz - square_origin + grid_half + 0.5) / grid_size;
 	if (rank < keep && fade > 0.0) {
 		// Ground under the tuft.
@@ -100,13 +120,29 @@ void vertex() {
 		float meadow = s0.r + s0.g;
 		forest_share = s1.r / max(meadow + s1.r, 1e-3);
 		dry_share = s0.g / max(meadow, 1e-3);
+		// the woods' herb layer (user 2026-09-28: the forest floor "not dirt maybe green", "more foliage"): woodland
+		// grasses, sedges and herbs in patches under the trees, green (not the meadows' dry share)
+		float herb = forest_share * smoothstep(0.35, 0.65, snow_vnoise(xz / 7.0 + 11.0));
+		gh = max(gh, herb * 0.26 / grass_h_scale);
+		dry_share *= 1.0 - 0.85 * forest_share;
 		float bare = clamp(dirt + mud + s1.g, 0.0, 1.0);
 		// Mowed turf (under 0.24 m) is a closed carpet: full pattern density there.
 		float open_density = mix(1.0, meadow_density, smoothstep(0.2, 0.3, gh * grass_h_scale));
-		float loc = clamp(1.0 - bare * 1.25, 0.0, 1.0) * mix(open_density, 0.3, forest_share);
+		float loc = clamp(1.0 - bare * 1.25, 0.0, 1.0) * mix(open_density, mix(0.3, 0.65, herb), forest_share);
 		grow = clamp((keep * loc - rank) * 14.0, 0.0, 1.0) * smoothstep(0.03, 0.07, gh * grass_h_scale) * fade;
 		if (textureLod(blocker_map, (xz - blocker_rect.xy) / blocker_rect.zw, 0.0).r > 0.5) {
 			grow = 0.0;
+		}
+		sd = snow_cover * SNOW_FULL_M * (1.0 - 0.5 * forest_share);
+		if (sd > 0.0) {
+			// the land's snow here (snow_depth_k): the wind-scoured rises let the tall straw through, a drift buries it
+			vec2 tb = textureLod(terrain_normal, uv, 0.0).rg * 2.0 - 1.0;
+			vec3 tnw = vec3(tb.x, sqrt(max(1.0 - dot(tb, tb), 0.0)), tb.y);
+			vec3 rg = snow_region_at(xz);
+			sd *= snow_depth_k(xz, tnw, rg, snow_exposure(rg.y, 1.0 - s1.b));
+		}
+		if (sd > 0.0 && gh * grass_h_scale < sd + 0.05) {
+			grow = 0.0;   // buried
 		}
 	}
 	// Beyond 10 m two crossed cards read the same as three: drop the third plane.
@@ -119,6 +155,7 @@ void vertex() {
 		v_uv = vec2(0.0);
 		v_y = 0.0;
 		v_tint = vec3(0.0);
+		v_straw = 0.0;
 		v_world = base;
 		v_root = 1.0;
 		v_canopy = 0.0;
@@ -149,7 +186,7 @@ void vertex() {
 		}
 		vec4 rect = variant_rects[variant];
 		float aspect = variant_aspects[variant];
-		float height = hm * (0.7 + 0.6 * r1) * grow;
+		float height = max(hm * (0.7 + 0.6 * r1) * grow - sd, 0.0);
 		float turf = 1.0 - smoothstep(0.2, 0.3, hm);
 		float width = height * aspect * width_scale * (1.0 + 0.5 * turf);
 
@@ -158,7 +195,7 @@ void vertex() {
 		vec3 across = vec3(cos(a), 0.0, sin(a));
 		float u = r3 > 0.5 ? 1.0 - UV.x : UV.x;
 		float y = 1.0 - UV.y;
-		float g = ground_height(xz);
+		float g = ground_height(xz) + sd;
 		vec3 root = vec3(xz.x, g, xz.y);
 		vec3 wp = root + across * (UV.x - 0.5) * width + vec3(0.0, y * height, 0.0);
 		float hh = y * height;
@@ -173,6 +210,8 @@ void vertex() {
 		v_y = y;
 		float dryness = clamp(dry_share * 0.55 + (r1 - 0.5) * 0.35 + (variant >= 8 && variant <= 10 ? 0.25 : 0.0), 0.0, 1.0);
 		v_tint = mix(green_tint, dry_tint, dryness * 0.6) * (0.9 + 0.2 * r2);
+		// the season's straw, each tuft a little ahead or behind; in the snow what stands out of it is dead straw
+		v_straw = clamp(max(grass_cure(leaf_season) * (0.8 + 0.4 * r2), snow_cover * 2.0), 0.0, 1.0);
 		v_world = wp;
 		v_root = mix(1.0, 0.45, turf);
 		v_canopy = canopy_cover(xz);
@@ -188,6 +227,10 @@ void fragment() {
 	// Darker, cooler root; lighter, drier tips.
 	float root_k = smoothstep(0.0, 0.55, v_y);
 	vec3 col = a.rgb * v_tint * mix(mix(vec3(1.0), vec3(0.62, 0.66, 0.7), v_root), vec3(1.0), root_k);
+	if (v_straw > 0.001) {
+		float lum = dot(col, vec3(0.3, 0.59, 0.11));
+		col = mix(col, STRAW * clamp(lum / 0.16, 0.5, 1.05), v_straw);
+	}
 	ALBEDO = col;
 	float ao = mix(1.0 - 0.45 * v_root, 1.0, root_k);
 	AO = ao * canopy_sky_factor(v_canopy, 1.0);

@@ -666,4 +666,37 @@ front; it also checks the rendered discs against their CPU mirror), `tools/envir
 the stars' brightness and width while the camera turns, tilts, walks and runs, against a still view; `fix=0` shows the
 engine's TAA alone).
 
+## Snow and the seasons
+
+Winter is real (`scripts/snow/`): the survival core already turns the sky's rain to snow below freezing and keeps the
+snow on the ground (building while it snows, settling, melting in a thaw, deepest in January and February); `SnowCover`
+shows it. The ground whitens with the depth (`shaders/common/snow.gdshaderinc`: thinner under the crowns and on the
+trodden paths, patchy while it is thin), the grass is buried as it deepens (tall straw still stands out of it), snow lies
+on the trees (the pines hold it), the rocks, the roofs, the palisade's tips and the ledges and banks against the walls,
+but not under a roof (a shelter map built from the level's colliders, rebuilt when a building piece goes up). Flakes
+fall round the camera in place of the rain, drifting with the wind. Whoever walks the snow leaves prints: the player,
+the spouse, the horse (hooves), the deer, wolves, foxes and bison, each their own stride; new snow fills them in
+(`SnowPrints`: pressed into a trail map round the player, kept as records for tracking: `prints_near()`). Footsteps
+crunch; deep snow slows walking (snowshoes help: `survival_conditions.gd`).
+
+The broadleaves' year (`scripts/snow/season_leaves.gd`, `shaders/vegetation/leaf_season.gdshaderinc`): the maples,
+oaks, birches and hazels turn from mid September (each its colours), are in full colour by mid October, drop their
+leaves through November (the first lasting snow brings down the last) and stand bare to April, when the buds break
+and the leaves come back; the white pines and the hemlocks stay green. Tree by tree over the whole world, the same in
+every level of detail and at every distance: the maples first and the oaks last, whole stands ahead of others, the
+high ground sooner; the woods turn patch by patch. The shade follows: a bare tree's shadow thins to its limbs' and the
+woods under the bare crowns open to the sky (the canopy map keeps the evergreens' cover apart). The forest is about
+58 % hardwood. The forest floor greens with moss and herbs after the buds, fades in the autumn under fresh fallen
+leaves and lies brown in winter; the ferns turn golden then russet, die back over winter and unfurl again in spring.
+The undergrowth: hazel and young trees under the canopy, fern beds, downed logs and big windthrown trunks with their
+root plates.
+
+| Dev key | Action |
+|---|---|
+| Shift+F10 | Snow test: a snowing January morning, then a clear winter day with the snow lying, then back |
+
+Tests: `tests/snow/test_snow.gd` (windowed: the cover, the falling snow, prints and their filling in, the footsteps,
+the shelter, the slowed walk; `shots=<dir>`), `tests/snow/test_seasons.gd` (windowed: the calendar, the snow stripping
+the last leaves, the winter canopy; `shots=<dir>`: two views of the woods in every season).
+
 See CREDITS.md for animation provenance.

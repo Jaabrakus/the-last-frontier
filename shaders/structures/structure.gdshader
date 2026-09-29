@@ -15,6 +15,7 @@ shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
 
 #include "res://shaders/structures/weathering.gdshaderinc"
+#include "res://shaders/common/snow.gdshaderinc"
 
 global uniform vec3 sun_direction;
 
@@ -133,6 +134,17 @@ void fragment() {
 		frontier_ground_dirt(alb, rough, v_wp, wn, ground_y, dirt_height, dirt_strength, dirt_tint, noise_tex);
 		if (soot_y < 999.0) {
 			frontier_soot(alb, v_wp, wn, soot_y, noise_tex);
+		}
+		// snow (snow.gdshaderinc): on the roofs, the palisade's tips, the ledges and the steps, and banked against the
+		// foot of the walls as deep as it lies; none under a roof
+		if (snow_cover > 0.001 && !snow_sheltered(v_wp)) {
+			float sn = snow_amount(v_wp, wn);
+			float drift = 1.0 - smoothstep(0.0, snow_cover * SNOW_FULL_M + 0.03, v_wp.y - ground_y);
+			sn = max(sn, drift * min(snow_cover * 3.0, 1.0) * step(ground_y, v_wp.y + 0.5));
+			alb = mix(alb, snow_albedo(v_wp), sn);
+			rough = mix(rough, mix(0.6, 0.88, snow_fresh), sn);
+			metal *= 1.0 - sn;
+			spec = mix(spec, 0.35, sn);
 		}
 	}
 	float vao = COLOR.a;

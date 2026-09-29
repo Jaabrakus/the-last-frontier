@@ -350,6 +350,127 @@
     }
    }
   },
+  "step_snow_walk": {
+   "base_volume_db": -16.0,
+   "target_rel_walk_db": -1.0,
+   "target_db": -34.71,
+   "a_loud100_db": -16.43,
+   "trim_db": -2.3,
+   "files": {
+    "step_snow_walk_01.wav": {
+     "a_loud100_db": -17.14,
+     "trim_db": -1.6
+    },
+    "step_snow_walk_02.wav": {
+     "a_loud100_db": -16.45,
+     "trim_db": -2.3
+    },
+    "step_snow_walk_03.wav": {
+     "a_loud100_db": -16.05,
+     "trim_db": -2.7
+    },
+    "step_snow_walk_04.wav": {
+     "a_loud100_db": -16.08,
+     "trim_db": -2.6
+    }
+   }
+  },
+  "step_snow_run": {
+   "base_volume_db": -11.0,
+   "target_rel_walk_db": 4.0,
+   "target_db": -29.71,
+   "a_loud100_db": -16.05,
+   "trim_db": -2.7,
+   "files": {
+    "step_snow_run_01.wav": {
+     "a_loud100_db": -17.12,
+     "trim_db": -1.6
+    },
+    "step_snow_run_02.wav": {
+     "a_loud100_db": -16.29,
+     "trim_db": -2.4
+    },
+    "step_snow_run_03.wav": {
+     "a_loud100_db": -16.65,
+     "trim_db": -2.1
+    },
+    "step_snow_run_04.wav": {
+     "a_loud100_db": -14.13,
+     "trim_db": -4.6
+    }
+   }
+  },
+  "step_snow_sprint": {
+   "base_volume_db": -8.0,
+   "target_rel_walk_db": 7.0,
+   "target_db": -26.71,
+   "a_loud100_db": -16.77,
+   "trim_db": -1.9,
+   "files": {
+    "step_snow_sprint_01.wav": {
+     "a_loud100_db": -16.38,
+     "trim_db": -2.3
+    },
+    "step_snow_sprint_02.wav": {
+     "a_loud100_db": -19.3,
+     "trim_db": 0.6
+    },
+    "step_snow_sprint_03.wav": {
+     "a_loud100_db": -15.27,
+     "trim_db": -3.4
+    },
+    "step_snow_sprint_04.wav": {
+     "a_loud100_db": -16.12,
+     "trim_db": -2.6
+    }
+   }
+  },
+  "step_snow_crouch": {
+   "base_volume_db": -22.0,
+   "target_rel_walk_db": -7.0,
+   "target_db": -40.71,
+   "a_loud100_db": -17.34,
+   "trim_db": -1.4,
+   "files": {
+    "step_snow_crouch_01.wav": {
+     "a_loud100_db": -15.98,
+     "trim_db": -2.7
+    },
+    "step_snow_crouch_02.wav": {
+     "a_loud100_db": -15.49,
+     "trim_db": -3.2
+    },
+    "step_snow_crouch_03.wav": {
+     "a_loud100_db": -17.6,
+     "trim_db": -1.1
+    },
+    "step_snow_crouch_04.wav": {
+     "a_loud100_db": -20.3,
+     "trim_db": 1.6
+    }
+   }
+  },
+  "land_snow": {
+   "base_volume_db": -12.0,
+   "target_rel_walk_db": 4.0,
+   "target_db": -29.71,
+   "a_loud100_db": -16.07,
+   "trim_db": -1.6,
+   "files": {
+    "land_snow_01.wav": {
+     "a_loud100_db": -16.57,
+     "trim_db": -1.1
+    },
+    "land_snow_02.wav": {
+     "a_loud100_db": -14.8,
+     "trim_db": -2.9
+    },
+    "land_snow_03.wav": {
+     "a_loud100_db": -16.84,
+     "trim_db": -0.9
+    }
+   }
+  },
   "jump_takeoff": {
    "base_volume_db": -14.0,
    "target_rel_walk_db": -1.0,

@@ -642,6 +642,8 @@ func _proxy_buffer(idx: PackedInt32Array, pk: int, pv: int, crowns: bool) -> Pac
 			buf[o + j] *= ky
 		for j: int in [2, 6, 10]:
 			buf[o + j] *= kxz
+		# the tree's season for the shadow crowns (canopy_dapple.gdshader: a bare broadleaf's shade thins)
+		buf[o + 15] = Assets.leaf_code(layout.tree_kind[i])
 		o += 16
 	return buf
 

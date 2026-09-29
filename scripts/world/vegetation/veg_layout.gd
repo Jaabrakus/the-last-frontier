@@ -13,7 +13,9 @@ extends RefCounted
 ##     outside the flat zones; ~1 per 55 m2 inside +-220 m, ~1 per 90 m2 beyond.
 ##   - Species by terrain: hemlock in low ground and on north slopes, white pine on high ground,
 ##     oak / maple in patches, birch at the forest edge; the pine / hemlock "edge" variants (low
-##     crowns) along the forest edge.
+##     crowns) along the forest edge. A hardwood forest with the conifers in it (user 2026-09-28,
+##     "more hardwoods": the hills colour in autumn and stand bare in winter): about 58 % oak,
+##     maple and birch, 42 % pine and hemlock (was 39 / 61).
 ##   - Sun corridors (spec 7.4): every tree whose crown would cut the ray from a protected point
 ##     toward EnvironmentRig.sun_direction() within 200 m is shortened (down to half size), or
 ##     replaced by a sapling, or dropped.
@@ -198,8 +200,8 @@ func _trees() -> void:
 			var vb := noise_b.get_noise_2d(x, z)          # pine vs hemlock
 			var north := maxf(-nrm.z, 0.0)
 			var w := [
-				0.30 * (1.0 + 1.5 * smoothstep(4.0, 14.0, y)) * (1.0 + 0.9 * vb) * (1.0 - 0.6 * va),
-				0.25 * (1.0 + 2.0 * smoothstep(0.0, -4.0, y) + 4.0 * north) * (1.0 - 0.9 * vb) * (1.0 - 0.6 * va),
+				0.13 * (1.0 + 1.5 * smoothstep(4.0, 14.0, y)) * (1.0 + 0.9 * vb) * (1.0 - 0.6 * va),
+				0.11 * (1.0 + 2.0 * smoothstep(0.0, -4.0, y) + 4.0 * north) * (1.0 - 0.9 * vb) * (1.0 - 0.6 * va),
 				0.15 * (1.0 + 1.2 * va),
 				0.20 * (1.0 + 1.2 * va),
 				0.10 * (1.0 + 3.5 * edge),
@@ -322,8 +324,12 @@ func _crown_clear(kind: int, variant: int, base: Vector3, s: float) -> bool:
 func _collider_props() -> void:
 	# Stumps: the clearing cut for the stockade (1 per ~80 m2 in the blend band), a few in the forest.
 	_scatter_grid(9.0, 100, _pick_stump, 0.45, 1.05, 1.2)
-	# Logs: fallen trunks in the forest, cut logs at the clearing edge.
-	_scatter_grid(26.0, 200, _pick_log, 1.0, 1.9, 2.5)
+	# Logs: fallen trunks in the forest, cut logs at the clearing edge (user 2026-09-28: "more ... downed logs and
+	# trees"): about one per 330 m2 of forest (was one per 900).
+	_scatter_grid(17.0, 200, _pick_log, 1.0, 2.1, 2.5)
+	# Fallen trees: the big old trunks of windthrown trees (8 m and more; the clutter pass stands their root plates up at
+	# their butt ends), about one per 2500 m2 of deep forest.
+	_scatter_grid(40.0, 250, _pick_fallen, 2.4, 3.0, 3.5)
 	# Rocks and boulders: scattered, more on slopes and high ground (the ridge).
 	_scatter_grid(22.0, 300, _pick_rock, 0.5, 1.3, 2.0)
 
@@ -346,6 +352,12 @@ func _pick_log(x: float, z: float, ix: int, iz: int) -> int:
 	var fd := FrontierTerrain.forest_density(x, z)
 	var p := 0.75 if fd > 0.6 else (0.35 if d < 24.0 else 0.1)
 	return Assets.LOG if _h(ix, iz, 201) < p else -1
+
+
+func _pick_fallen(x: float, z: float, ix: int, iz: int) -> int:
+	if FrontierTerrain.flat_distance(x, z) < 12.0 or FrontierTerrain.forest_density(x, z) < 0.65:
+		return -1
+	return Assets.LOG if _h(ix, iz, 251) < 0.6 else -1
 
 
 func _pick_rock(x: float, z: float, ix: int, iz: int) -> int:
@@ -424,9 +436,10 @@ func _clutter(density: float) -> void:
 			var fd := FrontierTerrain.forest_density(x, z)
 			var edge := maxf(1.0 - smoothstep(0.35, 0.9, fd), 0.0) * (1.0 - smoothstep(24.0, 60.0, d))
 			edge = maxf(edge, (1.0 - absf(fd - 0.5) * 2.0))
-			var p := (0.12 + 0.55 * edge) * density
+			# (user 2026-09-28: "more bushes": an understory of hazel and young trees under the canopy too)
+			var p := (0.2 + 0.5 * edge) * density
 			if fd > 0.8:
-				p = 0.06 * density
+				p = 0.4 * density
 			if _h(ix, iz, 403) > p:
 				continue
 			var nrm := FrontierTerrain.normal_at(x, z)
@@ -459,7 +472,7 @@ func _clutter(density: float) -> void:
 			var kind := -1
 			if d < 26.0 and _h(ix, iz, 503) < 0.45 * density:
 				kind = Assets.BRUSH
-			elif fd > 0.6 and _h(ix, iz, 504) < 0.3 * density:
+			elif fd > 0.6 and _h(ix, iz, 504) < 0.45 * density:
 				kind = Assets.ROOTS
 			if kind < 0 or _is_occupied(x, z, 2.0):
 				continue
@@ -469,18 +482,30 @@ func _clutter(density: float) -> void:
 			prop_scale.append(s)
 			prop_kind.append(kind)
 			prop_tilt.append(Vector3.ZERO)
-	# Ferns: patches of 5-25 in the shaded forest near the fort.
+	# The fallen trees' root plates: stood up at the butt end of each big trunk (the colliders pass laid them).
+	for i in prop_pos.size():
+		if prop_kind[i] != Assets.LOG or prop_scale[i] < 2.35 or (i < _prop_keep.size() and _prop_keep[i] == 0):
+			continue
+		var along := Vector3(1.0, 0.0, 0.0).rotated(Vector3.UP, prop_yaw[i])
+		var half := float((Assets.prop(Assets.LOG).get("size", [3.0, 0.3, 0.3]) as Array)[0]) * prop_scale[i] * 0.5
+		var end := prop_pos[i] + along * (half + 0.3)
+		prop_pos.append(Vector3(end.x, FrontierTerrain.height_at(end.x, end.z) - 0.25, end.z))
+		prop_yaw.append(prop_yaw[i] + PI * 0.5)
+		prop_scale.append(0.62 + 0.1 * fposmod(prop_yaw[i] * 3.7, 1.0))
+		prop_kind.append(Assets.ROOTS)
+		prop_tilt.append(Vector3(0.0, 0.0, 0.35))
+	# Ferns: patches of 10-40 in the shaded forest near the fort (user 2026-09-28: "more foliage").
 	var f := int(ceil(CLUTTER_RADIUS / 14.0))
 	for iz in range(-f, f):
 		for ix in range(-f, f):
-			if _h(ix, iz, 601) > 0.4 * density:
+			if _h(ix, iz, 601) > 0.75 * density:
 				continue
 			var cx := (ix + 0.5) * 14.0 + (_h(ix, iz, 602) - 0.5) * 8.0
 			var cz := (iz + 0.5) * 14.0 + (_h(ix, iz, 603) - 0.5) * 8.0
-			if FrontierTerrain.forest_density(cx, cz) < 0.55 or FrontierTerrain.flat_distance(cx, cz) < 8.0:
+			if FrontierTerrain.forest_density(cx, cz) < 0.45 or FrontierTerrain.flat_distance(cx, cz) < 8.0:
 				continue
-			var count := 5 + int(_h(ix, iz, 604) * 20.0)
-			var radius := lerpf(2.5, 6.0, _h(ix, iz, 605))
+			var count := 10 + int(_h(ix, iz, 604) * 30.0)
+			var radius := lerpf(3.0, 8.0, _h(ix, iz, 605))
 			for k in count:
 				var a := _h(ix, iz, 700 + k) * TAU
 				var rr := sqrt(_h(ix, iz, 800 + k)) * radius

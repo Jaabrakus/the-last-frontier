@@ -29,6 +29,9 @@ var _near: Array[AudioStream] = []
 var _far: Array[AudioStream] = []
 var _pending: Array[Dictionary] = []
 var _rain_level := 0.0
+## 0 rain .. 1 snow: while the survival core says it snows (SnowCover sets it), the precipitation falls as SnowFall's
+## flakes and the rain streaks and their sound stop.
+var snow_mix := 0.0
 ## Thunder sounds started so far (tests).
 var thunder_played := 0
 
@@ -99,7 +102,7 @@ func _build_rain() -> void:
 
 
 func _update_rain(w: WeatherSystem, cam: Camera3D, delta: float) -> void:
-	_rain_level = move_toward(_rain_level, w.rain, delta * 0.5)
+	_rain_level = move_toward(_rain_level, w.rain * (1.0 - snow_mix), delta * 0.5)
 	var on := _rain_level > 0.01
 	if _rain.emitting != on:
 		_rain.emitting = on

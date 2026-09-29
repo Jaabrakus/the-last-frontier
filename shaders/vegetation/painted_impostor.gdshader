@@ -18,6 +18,8 @@ render_mode cull_disabled, depth_draw_opaque, world_vertex_coords;
 #include "res://shaders/common/canopy.gdshaderinc"
 #include "res://shaders/vegetation/painted_light.gdshaderinc"
 #include "res://shaders/vegetation/lod_fade.gdshaderinc"
+#include "res://shaders/common/snow.gdshaderinc"
+#include "res://shaders/vegetation/leaf_season.gdshaderinc"
 
 /// Toned toward the realistic trees near the player (user 2026-09-28: the distant trees painted, no bright band ahead
 /// of the realistic ones): the colour's saturation kept (1: the look test's), and a tint (the photo foliage's cooler,
@@ -34,6 +36,12 @@ uniform sampler2D imp_normal : filter_linear_mipmap_anisotropic, repeat_disable;
 /// Per atlas row: x = frame width (m), y = frame height (m), z = frame bottom (m, relative to
 /// the tree base), w = unused.
 uniform vec4 rows[16];
+/// Per atlas row: the species' leaf fall (0 an evergreen, 1 a broadleaf) and autumn colours (leaf_season.gdshaderinc).
+uniform float row_fall[16];
+uniform vec3 row_autumn_a[16];
+uniform vec3 row_autumn_b[16];
+/// Per atlas row: the species' timing (leaf_season_at's `early`).
+uniform float row_early[16];
 uniform float frames = 8.0;
 uniform float row_count = 10.0;
 uniform vec3 leaf_variation : source_color = vec3(0.9, 0.95, 0.8);
@@ -55,10 +63,15 @@ varying float v_canopy;
 varying float v_h;
 varying vec2 v_lod;
 
+varying flat int v_row;
+varying float v_leaf_s;
+
 void vertex() {
 	vec3 base = MODEL_MATRIX[3].xyz;
 	float scale = length(MODEL_MATRIX[0].xyz);
 	int row = int(INSTANCE_CUSTOM.x + 0.5);
+	v_row = row;
+	v_leaf_s = leaf_season_at(base, row_early[row]);
 	vec4 info = rows[row];
 	vec3 to_cam = CAMERA_POSITION_WORLD - base;
 	to_cam.y = 0.0;
@@ -126,9 +139,15 @@ void fragment() {
 	v_stroke = cell;
 	// toned toward the realistic trees: less saturated, the cooler green
 	col = mix(vec3(dot(col, vec3(0.3, 0.59, 0.11))), col, tone_saturation) * tone_tint;
-	ALBEDO = col;
 	vec3 n = textureGrad(imp_normal, uv, gx, gy).rgb * 2.0 - 1.0;
 	vec3 nw = normalize(v_right * n.x + vec3(0.0, 1.0, 0.0) * n.y + v_back * n.z);
+	// the broadleaves' year (leaf_season.gdshaderinc): autumn's colours, bare twiggy crowns in winter, spring's buds
+	if (!season_impostor(col, snow_hash(floor(uv * 400.0)), row_fall[v_row], row_autumn_a[v_row], row_autumn_b[v_row], v_leaf_s)) {
+		discard;
+	}
+	// snow on the crown's tops (snow.gdshaderinc): the baked crown normals, clumps by the atlas cell
+	col = snow_on_tree(col, nw, true, 0.8, snow_hash(floor(uv * 160.0)));
+	ALBEDO = col;
 	NORMAL = normalize((VIEW_MATRIX * vec4(nw, 0.0)).xyz);
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;

@@ -238,6 +238,7 @@ static func tree_material(kind: int) -> ShaderMaterial:
 	var m := ShaderMaterial.new()
 	m.shader = load("res://shaders/vegetation/tree.gdshader")
 	_apply_tree_params(m, look)
+	apply_season(m, look_key)
 	m.set_shader_parameter("push_whole", 1.0 if small else 0.0)
 	_materials[key] = m
 	return m
@@ -253,6 +254,7 @@ static func painted_tree_material(kind: int) -> ShaderMaterial:
 		m.shader = load("res://shaders/vegetation/painted_tree.gdshader")
 		_apply_tree_params(m, LOOK[look_key])
 		PaintedLook.apply_palette(m, look_key)
+		apply_season(m, look_key)
 		m.set_shader_parameter("push_whole", 0.0)
 		_materials[key] = m
 	return _materials[key]
@@ -303,6 +305,53 @@ static func painted_bake_material(kind: int, mode: int) -> ShaderMaterial:
 	return m
 
 
+## The broadleaves' autumn colours (sRGB, two a tree mixes card by card); [] for an evergreen (a pine, a hemlock: they keep
+## their needles). User 2026-09-28: "orange leaves ... only pine trees keep their leaves".
+const AUTUMN := {
+	"maple": [Color("b8401c"), Color("e08a2a")],
+	"oak": [Color("8a4a1e"), Color("b07030")],
+	"birch": [Color("d4a52a"), Color("ecc84c")],
+	"hazel": [Color("c89a30"), Color("dcb84a")],
+}
+
+
+## When each broadleaf turns and leafs out, -1 late .. 1 early (leaf_season.gdshaderinc leaf_early; the stand, the ground and
+## the tree itself run it earlier or later again): the maples first, the birches and the hazels, the oaks last (and they
+## hold their brown leaves longest).
+const LEAF_EARLY := {"maple": 1.0, "birch": 0.35, "hazel": 0.1, "oak": -1.0}
+
+
+static func autumn_of(species: String) -> Array:
+	for k: String in AUTUMN:
+		if species.contains(k):
+			return AUTUMN[k]
+	return []
+
+
+## A tree material's year (leaf_season.gdshaderinc): leaf_fall 1 and its autumn colours for a broadleaf, 0 for an evergreen.
+static func apply_season(m: ShaderMaterial, species: String) -> void:
+	var a := autumn_of(species)
+	m.set_shader_parameter("leaf_fall", 0.0 if a.is_empty() else 1.0)
+	m.set_shader_parameter("leaf_early", early_of(species))
+	if not a.is_empty():
+		m.set_shader_parameter("autumn_a", a[0])
+		m.set_shader_parameter("autumn_b", a[1])
+
+
+static func early_of(species: String) -> float:
+	for k: String in LEAF_EARLY:
+		if species.contains(k):
+			return float(LEAF_EARLY[k])
+	return 0.0
+
+
+## A tree's season for the shadow crowns (canopy_dapple.gdshader, INSTANCE_CUSTOM.w): 0 an evergreen, a broadleaf
+## 0.5 + its timing / 4 (0.25 .. 0.75).
+static func leaf_code(kind: int) -> float:
+	var sp: String = SPECIES[kind]
+	return 0.0 if autumn_of(sp).is_empty() else 0.5 + early_of(sp) * 0.25
+
+
 static func _apply_tree_params(m: ShaderMaterial, look: Dictionary) -> void:
 	var bark: String = look.bark
 	if bark == "birch":
@@ -347,6 +396,29 @@ static func impostor_material() -> ShaderMaterial:
 		var r: Dictionary = rows[i]
 		arr[i] = Vector4(float(r.frame_w), float(r.frame_h), float(r.frame_y0), 0.0)
 	m.set_shader_parameter("rows", arr)
+	# the broadleaves' year per row (leaf_season.gdshaderinc): the row's species
+	var fall := PackedFloat32Array()
+	var early := PackedFloat32Array()
+	var aut_a := PackedVector3Array()
+	var aut_b := PackedVector3Array()
+	fall.resize(16)
+	early.resize(16)
+	aut_a.resize(16)
+	aut_b.resize(16)
+	for i in mini(rows.size(), 16):
+		var sp := String((rows[i] as Dictionary).get("name", "")).get_slice("_v", 0)
+		var a := autumn_of(sp)
+		fall[i] = 0.0 if a.is_empty() else 1.0
+		early[i] = early_of(sp)
+		if not a.is_empty():
+			var ca: Color = (a[0] as Color).srgb_to_linear()
+			var cb: Color = (a[1] as Color).srgb_to_linear()
+			aut_a[i] = Vector3(ca.r, ca.g, ca.b)
+			aut_b[i] = Vector3(cb.r, cb.g, cb.b)
+	m.set_shader_parameter("row_fall", fall)
+	m.set_shader_parameter("row_early", early)
+	m.set_shader_parameter("row_autumn_a", aut_a)
+	m.set_shader_parameter("row_autumn_b", aut_b)
 	m.set_shader_parameter("frames", float(info.get("frames", 8)))
 	m.set_shader_parameter("row_count", float(maxi(rows.size(), 1)))
 	_materials["impostor"] = m
