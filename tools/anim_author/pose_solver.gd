@@ -14,12 +14,23 @@ extends RefCounted
 ##     "tool": {"grip": [x,y,z], "haft": [x,y,z], "edge": [x,y,z] | "q": [x,y,z,w],
 ##              "spread": m | "left": [x,y,z], "lturn": [y,p,r] | "lq": [x,y,z,w], "right": [x,y,z], "rturn" | "rq",
 ##              "lfree": [x,y,z] (one-handed: the left wrist off the tool, there),
+##              "rhand": {"at": [x,y,z], "haft": [x,y,z], "edge": [x,y,z], "rel": Transform3D} (the right hand off the
+##              tool, its fist closed on something at `at` along `haft`: a cartridge, a ramrod; "rel", when given, is
+##              the frame put there in the wrist's frame (fist_rel(): the curled fingers' hole) instead of the prop
+##              bone's) | "rfree": [x,y,z] (its wrist there): the tool stays where the key puts it, carried by the right
+##              hand's prop bone (the musket held in the left alone),
+##              "lhand": {"at", "haft", "edge", "rel"} (the left fist closed there, as "rhand": the barrel held up),
 ##              "up": m (hold "blade": how far up the haft from the knob the right hand holds it; GRIP_M when missing)},
 ##     "elbows": {"r": [x,y,z], "l": [...]}, "knees": {...},
 ##     "feet": {"l": [x, z, heel_lift, yaw, pitch, roll], "r": [...]}, "fist": 0..1}
 ## hold (set before pose()): how the tool sits on the right hand's prop bone, as GatherTools holds it in the game:
 ##   "blade"  the one-hand frame (the haft along the bone's +Y, the edge its -Z, the hand GRIP_M up the haft)
 ##   "pipe"   the two-handed frame of the pipe clips (the haft along the bone's +Z, the edge its +Y, the hand at the knob)
+##   "musket" the musket model on its socket as the game hangs it (FrontierPlayer musket_offset: turned half round Y):
+##            the tool's frame is the model's own (the lock at the origin, +Y the barrel's top, -Z to the muzzle, so
+##            "haft" is the barrel's top and "edge" the muzzle's way); "right" [0,0,0] with "rq" [0,1,0,0] is the right
+##            hand on the grip, "left" the same with "lq" the left hand on the forestock (the prop bones coincide there,
+##            as in the rifle clips)
 ## space (set before pose()): "body" (the default) or "chest": the tool's place and turn and the elbows' ways are in the
 ## chest's frame (its turn, from the top spine bone), the knees' in the pelvis's, so a body turning carries them round
 ## as it does (measured keys: fit_ref.gd).
@@ -39,6 +50,8 @@ const FINGERS := ["index", "middle", "ring", "pinky"]
 const GRIP_M := 0.46
 ## GatherTools.two_hand_offset: the tool model on the prop bone in the pipe clips' two-handed frame.
 const PIPE := Transform3D(Basis(Vector3(1, 0, 0), Vector3(0, 0, 1), Vector3(0, -1, 0)), Vector3(0, 0, -0.035))
+## FrontierPlayer's musket_offset: the musket model on its socket (the right hand's prop bone).
+const MUSKET := Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO)
 
 var sk: Skeleton3D
 var rest := {}                   ## bone name -> rest global Transform3D (skeleton space)
@@ -113,6 +126,8 @@ static func _e(a) -> Basis:
 
 ## The tool model's frame on the right hand's prop bone for `hold`.
 static func hold_xf(h: String, up := GRIP_M) -> Transform3D:
+	if h == "musket":
+		return MUSKET
 	return PIPE if h == "pipe" else Transform3D(Basis(), Vector3(0, -up, 0))
 
 
@@ -195,7 +210,22 @@ func pose(p: Dictionary) -> void:
 		var grip := (tf * hx.affine_inverse()).origin
 		var haft := tf.basis.y.normalized()
 		var edge := -tf.basis.z.normalized()
-		if tl.has("right"):
+		if tl.has("rhand") or tl.has("rfree"):
+			# the right hand off the tool (the prop bone still carries the tool: below)
+			if tl.has("rhand"):
+				var rh: Dictionary = tl.rhand
+				var at := _v3(rh.at)
+				var hf := _v3(rh.get("haft", [0, 1, 0])).normalized()
+				var ed := _v3(rh.get("edge", [0, 0, 0]))
+				if space == "chest":
+					at = chest_xf * at
+					hf = body * hf
+					ed = body * ed
+				_hand("r", at, hf, ed, pole_r, rh.get("rel"))
+			else:
+				var rf := _v3(tl.rfree)
+				_arm("r", chest_xf * rf if space == "chest" else rf, pole_r)
+		elif tl.has("right"):
 			var rxf := Transform3D(_q(tl.rq) if tl.has("rq") else _e(tl.get("rturn", [0, 0, 0])), _v3(tl.right))
 			var held := _place("r", tf * rxf, pole_r, wrist_bend > 0.0)
 			if wrist_bend > 0.0:
@@ -206,7 +236,19 @@ func pose(p: Dictionary) -> void:
 			_place("r", tf * hold_xf(hold).affine_inverse(), pole_r)
 		else:
 			_hand("r", grip, haft, edge, pole_r)
-		if tl.has("lfree"):
+		if tl.has("lhand"):
+			# the left fist closed on the tool (or anything) at `at` along `haft`, as "rhand" (body space, or the
+			# chest's in space "chest"): the musket's barrel held up while the right hand loads it
+			var lh: Dictionary = tl.lhand
+			var lat := _v3(lh.at)
+			var lhf := _v3(lh.get("haft", [0, 1, 0])).normalized()
+			var led := _v3(lh.get("edge", [0, 0, 0]))
+			if space == "chest":
+				lat = chest_xf * lat
+				lhf = body * lhf
+				led = body * led
+			_hand("l", lat, lhf, led, pole_l, lh.get("rel"))
+		elif tl.has("lfree"):
 			# a one-handed hold: the left hand off the tool, its wrist where lfree says (the body's frame, or the
 			# chest's in space "chest")
 			var lf := _v3(tl.lfree)
@@ -216,7 +258,7 @@ func pose(p: Dictionary) -> void:
 			_place("l", tf * lt, pole_l)
 		else:
 			_hand("l", grip - haft * float(tl.get("spread", 0.3)), haft, Vector3.ZERO, pole_l)
-		if tl.has("right"):
+		if tl.has("right") or tl.has("rhand") or tl.has("rfree"):
 			# the tool's own place: the prop bone carries it there (the bake keys it)
 			set_g("r_hand_prop_attachment", tf * hold_xf(hold).affine_inverse())
 		elif carry == "pipe":
@@ -266,10 +308,11 @@ static func _clamp_q(q: Quaternion, most: float) -> Quaternion:
 ## A hand closed on the haft at `at`: its tool bone's +Y along the haft, rolled round it the way that leads the forearm
 ## back toward the shoulder (and, given `edge`, that turns the tool's edge, the bone's -Z, that way: the right hand
 ## carries the tool in the game); then the arm reaches the wrist there (two-bone IK) and the wrist takes the hand's turn.
-func _hand(side: String, at: Vector3, haft: Vector3, edge := Vector3.ZERO, pole := Vector3.ZERO) -> void:
+func _hand(side: String, at: Vector3, haft: Vector3, edge := Vector3.ZERO, pole := Vector3.ZERO, grip: Variant = null) -> void:
 	var wr := g(side + "_wrist")
 	var prop := g(side + "_hand_prop_attachment")
-	var rel := wr.affine_inverse() * prop            # (the tool bone in the wrist's frame: fixed; the palm is not turned)
+	# (the tool bone in the wrist's frame: fixed; the palm is not turned) or the frame `grip` gives there
+	var rel: Transform3D = grip if grip is Transform3D else wr.affine_inverse() * prop
 	var sh := g(side + "_shoulder").origin
 	var ref := (sh - at)
 	ref = ref - haft * ref.dot(haft)
@@ -291,6 +334,31 @@ func _hand(side: String, at: Vector3, haft: Vector3, edge := Vector3.ZERO, pole 
 	_arm(side, best.origin, pole)
 	var w2 := g(side + "_wrist")
 	set_g(side + "_wrist", Transform3D(best.basis, w2.origin))
+
+
+## Where a closed hand holds what it closes on, in its wrist's frame: the hole the fingers curled by `amount` (as
+## _fist()) leave, its +Y out of the thumb's side along what runs through it (the knuckles' line), its +Z toward the
+## middle finger's knuckle. For "rhand"/"lhand" "rel": a rod, a barrel or a cartridge held in the fist rather than at the prop
+## bone. Leaves the skeleton at rest.
+func fist_rel(side: String, amount := 1.0) -> Transform3D:
+	sk.reset_bone_poses()
+	sk.force_update_all_bone_transforms()
+	_fist(amount)
+	var c := Vector3.ZERO
+	var n := 0
+	for f: String in FINGERS:
+		for j: String in ["a", "b", "c"]:
+			if idx(side + "_" + f + j) >= 0:
+				c += g(side + "_" + f + j).origin
+				n += 1
+	c /= maxf(float(n), 1.0)
+	var y := (g(side + "_indexa").origin - g(side + "_pinkya").origin).normalized()
+	var back := g(side + "_middlea").origin - c
+	var z := (back - y * back.dot(y)).normalized()
+	var out := g(side + "_wrist").affine_inverse() * Transform3D(Basis(y.cross(z).normalized(), y, z), c)
+	sk.reset_bone_poses()
+	sk.force_update_all_bone_transforms()
+	return out
 
 
 ## Two-bone IK: the shoulder's and the elbow's turns that put the wrist at `target`, the elbow bent toward `pole` (down

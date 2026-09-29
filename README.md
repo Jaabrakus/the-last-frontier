@@ -45,7 +45,7 @@ Weapons are carried in a relaxed idle and raised only while aiming. Shots are ze
 
 
 - **Bow**: silent, draw strength sets arrow speed/damage (30-90), fatigue after a long hold, 24 arrows. Arrows drop noticeably: hold over at range.
-- **Musket**: 120 damage, very accurate still/crouched, 5-stage reload (~8 s). Interrupting (sprint, jump, swap) keeps finished stages.
+- **Musket**: 120 damage, very accurate still/crouched, 5-stage reload (~6.3 s, its own animation: bite, prime, pour, ram, return; standing, walking or crouched). Interrupting (sprint, jump, swap) keeps finished stages.
 - **Pistol**: 105 damage, fast to draw, poor past ~30 m, 3-stage reload (~3 s).
 - **Long gun in the left hand**: crouch-walking after a while without aiming, the left hand carries the musket in the
   middle at its side and the right hand is free; switching from the musket to the tomahawk or the spear keeps the

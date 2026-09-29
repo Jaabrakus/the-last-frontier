@@ -34,7 +34,8 @@ const RELOAD := {
 	"musket": [
 		[1.3, [["cock_half", 0.05], ["frizzen_open", 0.32], ["cartridge_draw", 0.50], ["cartridge_bite", 0.95]]],
 		[1.6, [["powder_pour_pan", 0.15], ["frizzen_close", 0.85], ["musket_handle", 1.20]]],
-		[1.8, [["powder_pour_barrel", 0.20], ["ball_seat", 1.25]]],
+		# (the rod's first tugs start in the pouring step: MusketReload's animation draws it from 1.1 s into it)
+		[1.8, [["powder_pour_barrel", 0.20], ["ball_seat", 1.25], ["ramrod_draw", 1.41]]],
 		[2.2, [["ramrod_draw", 0.08], ["ram_stroke", 0.80], ["ram_stroke", 1.25], ["ram_stroke", 1.70, 2.0, 0.97]]],
 		[1.3, [["ramrod_return", 0.05], ["musket_handle", 0.78], ["cock_full", 1.05]]],
 	],

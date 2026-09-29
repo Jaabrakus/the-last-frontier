@@ -1429,7 +1429,7 @@ RELOAD_CUES = {
                                ["cartridge_draw", 0.50, {}], ["cartridge_bite", 0.95, {}]],
         "1 Priming the pan": [["powder_pour_pan", 0.15, {}], ["frizzen_close", 0.85, {}],
                               ["musket_handle", 1.20, {}]],
-        "2 Pouring powder": [["powder_pour_barrel", 0.20, {}], ["ball_seat", 1.25, {}]],
+        "2 Pouring powder": [["powder_pour_barrel", 0.20, {}], ["ball_seat", 1.25, {}], ["ramrod_draw", 1.41, {}]],
         "3 Ramming ball": [["ramrod_draw", 0.08, {}], ["ram_stroke", 0.80, {}], ["ram_stroke", 1.25, {}],
                            ["ram_stroke", 1.70, {"volume_db": 2, "pitch_scale": 0.97}]],
         "4 Returning ramrod": [["ramrod_return", 0.05, {}], ["musket_handle", 0.78, {}], ["cock_full", 1.05, {}]],

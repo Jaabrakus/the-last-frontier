@@ -44,7 +44,7 @@ const MAX_ARM_SPEED := 30.0
 ## Between the first stage reaching full weight and the last stage's fade-out, the pose under the
 ## reload partials (the carry / aim pose) never shows through by more than this (no dip).
 const MAX_BASE_LEAK := 0.2
-const MUSKET := [["reload_begin", 1.3], ["reload_mid", 1.6], ["reload_mid", 1.8], ["reload_mid", 2.2], ["reload_end", 1.3]]
+const MUSKET := [["reload_begin", 1.0], ["reload_mid", 1.2], ["reload_mid", 1.4], ["reload_mid", 1.7], ["reload_end", 1.0]]
 const PISTOL := [["reload_begin", 0.8], ["reload_mid", 1.2], ["reload_end", 0.9]]
 const ARM_BONES := ["l_clavicle", "r_clavicle", "l_shoulder", "r_shoulder", "l_elbow", "r_elbow", "l_wrist", "r_wrist"]
 const PROP_BONES := ["l_hand_prop_attachment", "r_hand_prop_attachment"]
@@ -78,7 +78,7 @@ func run(ctx: AnimTestContext) -> void:
 	await _fire(ctx, h)
 	await _charge(ctx, h)
 	await _chain_order(ctx, h)
-	for c in [["musket", "stand", 1.3, 1.6], ["musket", "crouch", 1.3, 1.6], ["pistol", "stand", 0.8, 1.2]]:
+	for c in [["musket", "stand", 1.0, 1.2], ["musket", "crouch", 1.0, 1.2], ["pistol", "stand", 0.8, 1.2]]:
 		await _seam(ctx, h, c[0], c[1], c[2], c[3])
 	await _holster(ctx, h)
 	await _crouch_change(ctx, h)

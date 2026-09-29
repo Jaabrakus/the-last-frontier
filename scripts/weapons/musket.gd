@@ -2,7 +2,15 @@ class_name Musket
 extends Firearm
 ## Smoothbore flintlock musket. One heavy, accurate shot when standing still
 ## or crouched, then a long, exposed reload: bite the cartridge, prime the pan,
-## pour powder down the barrel, ram the ball, return the rod.
+## pour powder down the barrel, ram the ball, return the rod. The reload's own
+## animation, the ramrod, the cartridge and the lock: MusketReload (a child).
+
+
+func _ready() -> void:
+	var r := MusketReload.new()
+	r.name = "Reload"
+	r.gun = self
+	add_child(r)
 
 
 func _init() -> void:
@@ -42,12 +50,14 @@ func _init() -> void:
 		"crouch_idle": ["actor_b-p-rifle-crouch-idle-arms", 1.0],
 		"crouch_walk": ["actor_b-p-rifle-crouch-run-arms", 0.8],
 	}
+	# 6.3 s in all (user 2026-09-29: "the timer is suppose to be like 6.3s"; it was 8.2 s, then 5.6 s for "20s for 3
+	# fires"). Every step is MusketReload's own animation, time-scaled to these.
 	reload_stages = [
-		["reload_begin", 1.3, "Biting cartridge"],
-		["reload_mid", 1.6, "Priming the pan"],
-		["reload_mid", 1.8, "Pouring powder"],
-		["reload_mid", 2.2, "Ramming ball"],
-		["reload_end", 1.3, "Returning ramrod"],
+		["reload_begin", 1.0, "Biting cartridge"],
+		["reload_mid", 1.2, "Priming the pan"],
+		["reload_mid", 1.4, "Pouring powder"],
+		["reload_mid", 1.7, "Ramming ball"],
+		["reload_end", 1.0, "Returning ramrod"],
 	]
 	clips = {
 		# Hand + prop-bone layer over the aim pose (places the weapon in the hands).

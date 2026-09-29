@@ -100,13 +100,16 @@ func _tap(action: String, hold_frames := 3) -> void:
 	await _frames(2)
 
 
-## Flintlocks: hold fire to shoulder the weapon, release to shoot.
+## Flintlocks: hold fire to shoulder the weapon, release to shoot. Aimed again once shouldered (the camera comes in
+## as the weapon is raised, so an aim taken before it is off by the move), so the shot does not hang on how long
+## what came before took (a shorter musket reload moved the pistol's shot off the dummy).
 func _hold_and_release_fire() -> void:
 	Input.action_press("fire")
 	for i in 120:
 		await physics_frame
 		if player.weapon.aim >= 1.0:
 			break
+	await _aim()
 	seed(SPREAD_SEED)
 	Input.action_release("fire")
 	await _frames(2)

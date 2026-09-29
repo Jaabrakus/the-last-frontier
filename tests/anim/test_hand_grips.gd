@@ -311,7 +311,7 @@ func _scenario(ctx: AnimTestContext, sc: Dictionary) -> void:
 				Input.action_release(a)
 		await ctx.seconds(maxf(float(st[1]) - 2.0 / Engine.physics_ticks_per_second, 0.0))
 		if String(st[0]) == "reload":
-			# Reload stages run 8.2 s in all; wait for the end (sprint / air interrupt it).
+			# The musket's reload stages run 6.3 s in all; wait for the end (sprint / air interrupt it).
 			var w8 := 0
 			while w.state == Firearm.State.RELOADING and w8 < 600:
 				await ctx.frames(1)
