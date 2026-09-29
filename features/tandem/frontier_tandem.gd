@@ -49,11 +49,11 @@ const GAUGE_AT_MINUS_ONE := 0.25
 ## Cinematic camera: side-on to the pair, a little above, slowly drifting; eased in over CINE_BLEND_S.
 const CINE_BLEND_S := 1.4
 const CINE_PITCH := -0.10
-const CINE_DIST := {"crawl": 2.6, "yoga": 2.7}
-const CINE_PIVOT_Y := {"crawl": 0.55, "yoga": 0.6}
+const CINE_DIST := {"crawl": 2.6, "yoga": 2.7, "wide": 2.8}
+const CINE_PIVOT_Y := {"crawl": 0.55, "yoga": 0.6, "wide": 0.55}
 ## Which side of the pair the shot is taken from: +1 her right (where the crawl's arm is lifted and held), -1 her
 ## left. Measured against her own shoulders (the rig faces +Z, the game -Z: her right is +1 here).
-const CINE_SIDE := {"crawl": 1.0, "yoga": 1.0}
+const CINE_SIDE := {"crawl": 1.0, "yoga": 1.0, "wide": 1.0}
 @export var crawl_offset := Vector3(0, 0, -0.30)
 @export var reaction_delay := 0.15
 @export var cinematic := true
@@ -113,6 +113,9 @@ func _ready() -> void:
 		call_deferred("_preview", "yoga")
 
 func _input(event: InputEvent) -> void:
+	# The solo wide-kneel controller owns its keys and pose.
+	if player.kneeling != null and player.kneeling.name in ["WideKneel", "ReversePlank"]: return
+	if event is InputEventKey and event.ctrl_pressed and event.physical_keycode == KEY_N: return
 	if not event is InputEventKey or not event.pressed or event.echo:
 		return
 	var key: int = event.physical_keycode
@@ -244,6 +247,12 @@ func join_nearby() -> bool:
 	var best_d := JOIN_RANGE_M
 	for n: Node in player.get_parent().get_children():
 		if n == player or not n is FrontierPlayer: continue
+		# someone in the Reverse Plank with nobody over them: a woman kneels over them (reverse_plank.gd)
+		var rp := n.get_node_or_null("ReversePlank")
+		if rp != null and rp.active and not rp.joined and not rp.inviting and is_woman(player) \
+				and player.global_position.distance_to((n as Node3D).global_position) < best_d:
+			rp.take_partner(player)
+			return true
 		var t := n.get_node_or_null("TandemPoses")
 		if t == null or t.mode.is_empty() or t.joined: continue
 		var d := player.global_position.distance_to((n as Node3D).global_position)
@@ -588,14 +597,23 @@ func partner_fraction() -> float:
 	if mode == "yoga": return _plank_stamina / PLANK_MAX
 	return partner_pose.stamina / partner_pose.stamina_max if is_instance_valid(partner_pose) else 1.0
 
-## (yours, the other's) for the bars while this player is paired in a pose, else (-1, -1).
+## (yours, the other's) for the bars while this player is paired in a pose, else (-1, -1). The Reverse Plank pair
+## (reverse_plank.gd, wide_kneel.gd): his stamina holding her, hers for her flinches.
 func _pair_stamina() -> Vector2:
+	var k: Node = player.kneeling
+	if k != null and k.name == "ReversePlank" and k.joined and is_instance_valid(k.partner_pose):
+		return Vector2(k.stamina / k.stamina_max, k.partner_pose.stamina / k.partner_pose.stamina_max)
+	if k != null and k.name == "WideKneel" and is_instance_valid(k.base) and k.base.joined:
+		return Vector2(k.stamina / k.stamina_max, k.base.stamina / k.base.stamina_max)
 	if is_instance_valid(_lead):
 		return Vector2(_lead.partner_fraction(), _lead.lead_fraction()) if _lead.joined else Vector2(-1.0, -1.0)
 	return Vector2(lead_fraction(), partner_fraction()) if joined else Vector2(-1.0, -1.0)
 
 ## The pose this player is paired in, as lead or partner ("" when alone).
 func _pair_mode() -> String:
+	var k: Node = player.kneeling
+	if k != null and ((k.name == "ReversePlank" and k.joined) or (k.name == "WideKneel" and is_instance_valid(k.base))):
+		return "wide"
 	if is_instance_valid(_lead): return _lead.mode if _lead.joined else ""
 	return mode if joined else ""
 

@@ -74,6 +74,9 @@ func _ready() -> void:
 	StartupProfile.mark("vegetation")
 	var player := FrontierPlayer.new()
 	player.name = "Player"
+	if "--wide-kneel-preview" in OS.get_cmdline_user_args() or "--reverse-plank-preview" in OS.get_cmdline_user_args() or "--reverse-wide-preview" in OS.get_cmdline_user_args() or "--reverse-wide-reversed-preview" in OS.get_cmdline_user_args():
+		player.use_appearance = false
+		player.show_gear = false
 	for preview_arg in ["--tandem-preview", "--tandem-preview-yoga"]:
 		if preview_arg in OS.get_cmdline_user_args():
 			player.show_gear = false # clean previews of the tandem poses
@@ -88,6 +91,12 @@ func _ready() -> void:
 		player.add_child(tandem)
 	else:
 		push_error("Tandem poses did not load; the level goes on without them.")
+	var wide: Node = load("res://features/tandem/wide_kneel.gd").new()
+	wide.player = player
+	player.add_child(wide)
+	var reverse: Node = load("res://features/tandem/reverse_plank.gd").new()
+	reverse.player = player
+	player.add_child(reverse)
 	StartupProfile.mark("player")
 	environment_rig.track(player)
 	_audio(player)

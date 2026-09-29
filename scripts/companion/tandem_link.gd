@@ -4,7 +4,9 @@ extends Node
 ## keeps the gauge (Intimacy, on the spouse's SpouseCore) fed from what happens in the world (time near her, meals,
 ## gifts to the store, finished jobs, talk), makes the offer when the gauge is full and all is calm, runs the YogaFlow
 ## state machine (her borrowed follow role, the offer prompt, the pose menu) and starts the real tandem pose through
-## TandemProxy (features/tandem is not changed): the woman leads, the man joins as the partner.
+## TandemProxy (features/tandem is not changed): the woman leads, the man joins as the partner. The Wide Kneel on the
+## Reverse Plank ("wide"; user 2026-09-29: the new tandem poses "to add to yoga"): the man lies in the plank
+## (features/tandem/reverse_plank.gd, his own or the stand-in's) and the woman kneels over him (take_partner).
 ##   Household.link.talked()          a Talk tab reply (once an hour counts)
 ##   Household.link.yoga_gate()       "" or the reason yoga cannot be asked now
 ##   Household.link.ask()             the Talk tab's button: her line (she follows, or says why not)
@@ -16,6 +18,9 @@ var proxy: FrontierPlayer
 ## The proxy's own tandem controller when she leads (the wife, for a male player).
 var lead: Node
 var leader := ""
+## The pose of the session, and for "wide" the man's Reverse Plank under her.
+var _pose := ""
+var base: Node
 var _sc: SpouseCore
 var _prev_min := -1.0
 var _prev_stomach := 0.0
@@ -258,6 +263,10 @@ func _park_end() -> void:
 
 
 func _stop_poses() -> void:
+	if is_instance_valid(base):
+		base.stop()
+	base = null
+	_pose = ""
 	if is_instance_valid(lead):
 		lead.stop_pose()
 	var pt := TandemProxy.controller_of(house.player)
@@ -269,11 +278,15 @@ func _stop_poses() -> void:
 # ---------------------------------------------------------------- the pose
 func _begin_pose(pose: String, who: String) -> void:
 	leader = who
+	_pose = pose
 	_start_failed = false
 	_try_t = 0.0
 	var pt := TandemProxy.controller_of(house.player)
 	if pt == null:
 		_start_failed = true
+		return
+	if pose == "wide":
+		_begin_wide(who, pt)
 		return
 	if who == "spouse":
 		_swap_in()
@@ -281,6 +294,20 @@ func _begin_pose(pose: String, who: String) -> void:
 		lead.set_meta(&"pose", pose)
 	else:
 		pt.set_meta(&"pose", pose)
+
+
+## The Wide Kneel on the Reverse Plank: the man's plank (the player's own, or one for the stand-in with a tandem gate
+## to check the ground), the woman taken over it in _start_tick.
+func _begin_wide(who: String, pt: Node) -> void:
+	_swap_in()
+	var man: FrontierPlayer = house.player if who == "spouse" else proxy
+	if TandemProxy.controller_of(man) == null:
+		TandemProxy.add_lead(man, pt)
+	base = man.get_node_or_null("ReversePlank")
+	if base == null:
+		base = load("res://features/tandem/reverse_plank.gd").new()
+		base.player = man
+		man.add_child(base)
 
 
 ## The spouse's body is hidden and parked, a stand-in FrontierPlayer takes her place (see TandemProxy).
@@ -304,6 +331,15 @@ func _start_tick(dt: float) -> void:
 	if pt == null:
 		_start_failed = true
 		return
+	if _pose == "wide":
+		# the man into the plank, then the woman over him
+		if not is_instance_valid(base):
+			_start_failed = true
+		elif not base.active:
+			base.start()
+		elif not base.joined and not base.inviting:
+			base.take_partner(proxy if leader == "spouse" else house.player)
+		return
 	if leader == "spouse":
 		if not is_instance_valid(lead):
 			return
@@ -320,6 +356,8 @@ func _start_tick(dt: float) -> void:
 
 
 func _paired() -> bool:
+	if _pose == "wide":
+		return is_instance_valid(base) and base.active and base.joined
 	var pt := TandemProxy.controller_of(house.player)
 	if leader == "spouse":
 		return is_instance_valid(lead) and not lead.mode.is_empty() and lead.joined

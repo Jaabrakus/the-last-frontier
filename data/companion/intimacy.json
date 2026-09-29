@@ -35,7 +35,8 @@
   "start_timeout_s": 10.0,
   "poses": [
     {"id": "crawl", "name": "The crawl"},
-    {"id": "yoga", "name": "Happy Baby"}
+    {"id": "yoga", "name": "Happy Baby"},
+    {"id": "wide", "name": "Wide Kneel on the Reverse Plank"}
   ],
   "levels": [
     {"upto": 0.2, "word": "Reserved"},
