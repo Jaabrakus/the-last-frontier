@@ -16317,7 +16317,7 @@
   "godot_version": "4.7.2-stable (official)",
   "graph": {
    "path": "animations/actor_b_graph.json",
-   "sha256": "bb37139b2b60d4aaafd81c82f86594770c58da812d47203a3950ad13e999f121"
+   "sha256": "2648e743e5aeeeb28d6c353d39d538eca146d163fa424f93486398b8e8a4220a"
   },
   "gt_source": {
    "path": "source/graph_analysis/graph/vmm/bl/dump3.jsonl",

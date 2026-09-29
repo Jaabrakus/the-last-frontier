@@ -137,7 +137,7 @@ func _stub(ctx: AnimTestContext) -> void:
 	ctx.check(p2.contains("f1200 FALL -> LAND landed") and p2.contains("air_to_land - 0/0.1 proposed"),
 			"panel 2: trace entry with its key, record, graph / used fade and status")
 	ctx.check(p2.contains("[bracket]"), "panel 2: warning text with brackets kept")
-	ctx.check(p3.contains("0x0000c468") and p3.contains("bbf6d71a") and p3.contains("0x0000410c") and p3.contains("574fa8b3"),
+	ctx.check(p3.contains("0x0000c468") and p3.contains("46553345") and p3.contains("0x0000410c") and p3.contains("7672e9d3"),
 			"panel 3: state offset, leaf ID, chain record offset and to-ID")
 	ctx.check(p3.contains(NATIVE_ID), "panel 3: native_asset_id in full")
 	ctx.check(p3.contains("player-overlays:0x00021774") and p3.contains("0.80"), "panel 3: layer weight and lambda source")
@@ -221,10 +221,10 @@ static func stub_snapshot() -> Dictionary:
 			"weight": 0.25, "role_key": "musket/run/fw"},
 			{"node": "L__land__run__soft", "hemi": "", "clip": "actor_b-p-land-soft^run", "position": 0.1, "length": 0.4, "rate": 1.0,
 			"weight": 0.75, "role_key": "musket/run/land_soft_run"}],
-		"provenance": {"musket/run/fw": {"state": "run-fw", "state_offset": "0x0000c468", "leaf": "base-walk-fwd", "leaf_id": "bbf6d71a",
+		"provenance": {"musket/run/fw": {"state": "run-fw", "state_offset": "0x0000c468", "leaf": "base-walk-fwd", "leaf_id": "46553345",
 			"clip": "actor_b-p-run-fw", "status": "resolved", "native_asset_id": NATIVE_ID,
 			"chain": [{"layer": "move", "set": "anim-overlay-player-move-run", "record_offset": "0x0000410c", "from": "base-walk-fwd",
-				"from_id": "bbf6d71a", "to": "base-run-strafe-fwd", "to_id": "574fa8b3"}],
+				"from_id": "46553345", "to": "base-run-strafe-fwd", "to_id": "7672e9d3"}],
 			"layers": [{"slot": "arms", "kind": "partial", "clip": "actor_b-p-rifle-run-arms", "weight": 0.8, "weight_source": "lambda const",
 				"lambda": "player-overlays:0x00021774", "record_offset": "0x0000dadc", "superseded_by": null}]}},
 		"trace": [{"frame": 1200, "t": 20.0, "from": "FALL", "to": "LAND", "reason": "landed", "key": "air_to_land", "record": "",

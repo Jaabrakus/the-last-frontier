@@ -47,8 +47,8 @@
    "state": "idle",
    "state_offset": "0x00001c68",
    "leaf": "base-idle-base-noarms",
-   "leaf_id": "07e4a7fa",
-   "final_id": "be7ab6f2",
+   "leaf_id": "933c1794",
+   "final_id": "c3d3a4ad",
    "chain": [
     [
      "actor_b",
@@ -68,8 +68,8 @@
    "state": "run-fw",
    "state_offset": "0x0000c468",
    "leaf": "base-walk-fwd",
-   "leaf_id": "bbf6d71a",
-   "final_id": "4431c8e9",
+   "leaf_id": "46553345",
+   "final_id": "adc12ea9",
    "chain": [
     [
      "actor_b",
@@ -89,8 +89,8 @@
    "state": "run-fw",
    "state_offset": "0x0000c468",
    "leaf": "base-walk-fwd-left",
-   "leaf_id": "acba6ee3",
-   "final_id": "6f733bfd",
+   "leaf_id": "e7c3259b",
+   "final_id": "6c2a1c56",
    "chain": [
     [
      "actor_b",
@@ -110,8 +110,8 @@
    "state": "run-fw",
    "state_offset": "0x0000c468",
    "leaf": "base-walk-fwd-right",
-   "leaf_id": "a6d281a2",
-   "final_id": "10bc5c1a",
+   "leaf_id": "9386b052",
+   "final_id": "2ee2ddb9",
    "chain": [
     [
      "actor_b",
@@ -131,8 +131,8 @@
    "state": "run-bkwd",
    "state_offset": "0x0000c428",
    "leaf": "base-walk-bkwd",
-   "leaf_id": "d5617ac5",
-   "final_id": "0115e940",
+   "leaf_id": "29e5c39f",
+   "final_id": "82936c87",
    "chain": [
     [
      "actor_b",
@@ -152,8 +152,8 @@
    "state": "run-bkwd",
    "state_offset": "0x0000c428",
    "leaf": "base-walk-bkwd-left",
-   "leaf_id": "a6427274",
-   "final_id": "4f87b87e",
+   "leaf_id": "4df00a70",
+   "final_id": "3879bb94",
    "chain": [
     [
      "actor_b",
@@ -173,8 +173,8 @@
    "state": "run-bkwd",
    "state_offset": "0x0000c428",
    "leaf": "base-walk-bkwd-right",
-   "leaf_id": "7144c074",
-   "final_id": "3048df99",
+   "leaf_id": "a8d504e9",
+   "final_id": "4b3894c1",
    "chain": [
     [
      "actor_b",
@@ -194,8 +194,8 @@
    "state": "idle^run-fwd",
    "state_offset": "0x0000c228",
    "leaf": "base-idle^walk-fwd",
-   "leaf_id": "3acb6754",
-   "final_id": "4b1e182d",
+   "leaf_id": "fd1f31a6",
+   "final_id": "5cd0911f",
    "chain": [
     [
      "actor_b",
@@ -215,8 +215,8 @@
    "state": "idle^run-fwd",
    "state_offset": "0x0000c228",
    "leaf": "base-idle^walk-fwd-left",
-   "leaf_id": "48bda190",
-   "final_id": "2c0258b7",
+   "leaf_id": "ecb7692d",
+   "final_id": "cef8b9bc",
    "chain": [
     [
      "actor_b",
@@ -236,8 +236,8 @@
    "state": "idle^run-fwd",
    "state_offset": "0x0000c228",
    "leaf": "base-idle^walk-fwd-right",
-   "leaf_id": "77b0a207",
-   "final_id": "53cd3f50",
+   "leaf_id": "ca81907b",
+   "final_id": "bc0eb802",
    "chain": [
     [
      "actor_b",
@@ -257,8 +257,8 @@
    "state": "idle^run-bkwd",
    "state_offset": "0x0000c268",
    "leaf": "base-idle^walk-back",
-   "leaf_id": "e552f3ad",
-   "final_id": "0e3a3984",
+   "leaf_id": "4f569155",
+   "final_id": "202d240d",
    "chain": [
     [
      "actor_b",
@@ -278,8 +278,8 @@
    "state": "idle^run-bkwd",
    "state_offset": "0x0000c268",
    "leaf": "base-idle^walk-back-left",
-   "leaf_id": "539936ec",
-   "final_id": "0cf6db34",
+   "leaf_id": "55762105",
+   "final_id": "55385f7f",
    "chain": [
     [
      "actor_b",
@@ -299,8 +299,8 @@
    "state": "idle^run-bkwd",
    "state_offset": "0x0000c268",
    "leaf": "base-idle^walk-back-right",
-   "leaf_id": "347dce16",
-   "final_id": "7339bcd3",
+   "leaf_id": "fe9a0d5a",
+   "final_id": "9398979e",
    "chain": [
     [
      "actor_b",
@@ -320,8 +320,8 @@
    "state": "run-fw^idle",
    "state_offset": "0x0000c3a8",
    "leaf": "base-walk-fwd^idle",
-   "leaf_id": "32faab26",
-   "final_id": "fff973b9",
+   "leaf_id": "6e62e8b8",
+   "final_id": "41eb2b9e",
    "chain": [
     [
      "actor_b",
@@ -341,8 +341,8 @@
    "state": "run-fw^idle",
    "state_offset": "0x0000c3a8",
    "leaf": "base-walk-fwd-left^idle",
-   "leaf_id": "707a82a4",
-   "final_id": "e09510e8",
+   "leaf_id": "eab976bd",
+   "final_id": "2df71003",
    "chain": [
     [
      "actor_b",
@@ -362,8 +362,8 @@
    "state": "run-fw^idle",
    "state_offset": "0x0000c3a8",
    "leaf": "base-walk-fwd-right^idle",
-   "leaf_id": "5860788b",
-   "final_id": "d2ecf113",
+   "leaf_id": "e7d43f10",
+   "final_id": "52a8d907",
    "chain": [
     [
      "actor_b",
@@ -383,8 +383,8 @@
    "state": "run-bk^idle",
    "state_offset": "0x0000c3e8",
    "leaf": "base-walk-bk^idle",
-   "leaf_id": "35c95de1",
-   "final_id": "c665ce4a",
+   "leaf_id": "4dd343e9",
+   "final_id": "45fe89f1",
    "chain": [
     [
      "actor_b",
@@ -404,8 +404,8 @@
    "state": "run-bk^idle",
    "state_offset": "0x0000c3e8",
    "leaf": "base-walk-bk-left^idle",
-   "leaf_id": "ba276be0",
-   "final_id": "eb55aa1a",
+   "leaf_id": "0b7db7a8",
+   "final_id": "e62490d2",
    "chain": [
     [
      "actor_b",
@@ -425,8 +425,8 @@
    "state": "run-bk^idle",
    "state_offset": "0x0000c3e8",
    "leaf": "base-walk-bk-right^idle",
-   "leaf_id": "77897ac4",
-   "final_id": "d92c4be1",
+   "leaf_id": "36b5a954",
+   "final_id": "ffcfc93f",
    "chain": [
     [
      "actor_b",
@@ -446,8 +446,8 @@
    "state": "run-fw^run-bkwd",
    "state_offset": "0x0000c328",
    "leaf": "relaxed-quickstop^run-bkwd",
-   "leaf_id": "7cff4eb5",
-   "final_id": "0e3a3984",
+   "leaf_id": "2f318f0b",
+   "final_id": "202d240d",
    "chain": [
     [
      "move",
@@ -474,8 +474,8 @@
    "state": "run-fw^run-bkwd",
    "state_offset": "0x0000c328",
    "leaf": "relaxed-quickstop^run-bkwd-left",
-   "leaf_id": "98e9d271",
-   "final_id": "0cf6db34",
+   "leaf_id": "ce69a716",
+   "final_id": "55385f7f",
    "chain": [
     [
      "move",
@@ -502,8 +502,8 @@
    "state": "run-fw^run-bkwd",
    "state_offset": "0x0000c328",
    "leaf": "relaxed-quickstop^run-bkwd-right",
-   "leaf_id": "325808ee",
-   "final_id": "7339bcd3",
+   "leaf_id": "1a403e33",
+   "final_id": "9398979e",
    "chain": [
     [
      "move",
@@ -530,8 +530,8 @@
    "state": "run-bw^run-fwd",
    "state_offset": "0x0000c2a8",
    "leaf": "relaxed-quickstop^run-fwd",
-   "leaf_id": "ab1358f5",
-   "final_id": "4b1e182d",
+   "leaf_id": "cda8be58",
+   "final_id": "5cd0911f",
    "chain": [
     [
      "move",
@@ -558,8 +558,8 @@
    "state": "run-bw^run-fwd",
    "state_offset": "0x0000c2a8",
    "leaf": "relaxed-quickstop^run-fwd-left",
-   "leaf_id": "ab9a8213",
-   "final_id": "2c0258b7",
+   "leaf_id": "cea5e3c2",
+   "final_id": "cef8b9bc",
    "chain": [
     [
      "move",
@@ -586,8 +586,8 @@
    "state": "run-bw^run-fwd",
    "state_offset": "0x0000c2a8",
    "leaf": "relaxed-quickstop^run-fwd-right",
-   "leaf_id": "987921a7",
-   "final_id": "53cd3f50",
+   "leaf_id": "f5b635e4",
+   "final_id": "bc0eb802",
    "chain": [
     [
      "move",
@@ -614,8 +614,8 @@
    "state": "idle-turn-l",
    "state_offset": "0x0000c168",
    "leaf": "idle-turn-l",
-   "leaf_id": "182fe300",
-   "final_id": "d12d2ff5",
+   "leaf_id": "5a3adead",
+   "final_id": "9bbed36d",
    "chain": [
     [
      "move",
@@ -642,8 +642,8 @@
    "state": "idle-turn-r",
    "state_offset": "0x0000c128",
    "leaf": "idle-turn-r",
-   "leaf_id": "68b0987a",
-   "final_id": "a1b2548f",
+   "leaf_id": "403c8a22",
+   "final_id": "63371abc",
    "chain": [
     [
      "move",
@@ -670,8 +670,8 @@
    "state": "idle-turn-l-180",
    "state_offset": "0x0000c1a8",
    "leaf": "idle-turn-l-180",
-   "leaf_id": "55f3a46c",
-   "final_id": "55f3a46c",
+   "leaf_id": "53a82673",
+   "final_id": "53a82673",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -683,8 +683,8 @@
    "state": "idle-turn-r-180",
    "state_offset": "0x0000c1e8",
    "leaf": "idle-turn-r-180",
-   "leaf_id": "2526e1ff",
-   "final_id": "2526e1ff",
+   "leaf_id": "551b5e95",
+   "final_id": "551b5e95",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -696,8 +696,8 @@
    "state": "quick-turn-180-r",
    "state_offset": "0x00001ba8",
    "leaf": "melee-fist-idle-turn-180-r",
-   "leaf_id": "7d9998bf",
-   "final_id": "82c76a86",
+   "leaf_id": "cd5817cd",
+   "final_id": "f49147fe",
    "chain": [
     [
      "actor_b",
@@ -717,8 +717,8 @@
    "state": "run-jump-long",
    "state_offset": "0x00005d68",
    "leaf": "run^jump-long",
-   "leaf_id": "457c4cea",
-   "final_id": "e2cc6e53",
+   "leaf_id": "df83389f",
+   "final_id": "790a0c45",
    "chain": [
     [
      "actor_b",
@@ -738,8 +738,8 @@
    "state": "jump-long",
    "state_offset": "0x00005de8",
    "leaf": "jump-long",
-   "leaf_id": "7a92466e",
-   "final_id": "9da83ba0",
+   "leaf_id": "a4d198e0",
+   "final_id": "52938fee",
    "chain": [
     [
      "actor_b",
@@ -754,13 +754,13 @@
   },
   "walk/pre_fall": {
    "clip": null,
-   "graph_clip": "#ab73793b",
+   "graph_clip": "#4fff6a5b",
    "status": "missing",
    "state": "pre-fall",
    "state_offset": "0x00001d28",
-   "leaf": "#ab73793b",
-   "leaf_id": "ab73793b",
-   "final_id": "ab73793b",
+   "leaf": "#4fff6a5b",
+   "leaf_id": "4fff6a5b",
+   "final_id": "4fff6a5b",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -772,8 +772,8 @@
    "state": "fall",
    "state_offset": "0x00001ce8",
    "leaf": "fall",
-   "leaf_id": "80d3cabd",
-   "final_id": "8e1b0e8a",
+   "leaf_id": "44b21b77",
+   "final_id": "9ea4b9eb",
    "chain": [
     [
      "actor_b",
@@ -793,8 +793,8 @@
    "state": "fall-land-soft-idle",
    "state_offset": "0x00001e68",
    "leaf": "land-soft^idle",
-   "leaf_id": "96319c32",
-   "final_id": "f57b1c9f",
+   "leaf_id": "4eb4de1c",
+   "final_id": "95605492",
    "chain": [
     [
      "actor_b",
@@ -814,8 +814,8 @@
    "state": "fall-land-soft-run",
    "state_offset": "0x00001ea8",
    "leaf": "land-soft^run",
-   "leaf_id": "3b00016a",
-   "final_id": "3d5e4cdd",
+   "leaf_id": "e85fb687",
+   "final_id": "95831811",
    "chain": [
     [
      "move",
@@ -842,8 +842,8 @@
    "state": "fall-land-hard-idle",
    "state_offset": "0x00001da8",
    "leaf": "land-hard^idle",
-   "leaf_id": "72d0edfa",
-   "final_id": "2d9a52f1",
+   "leaf_id": "bb15ed6c",
+   "final_id": "7c1d20e1",
    "chain": [
     [
      "actor_b",
@@ -863,8 +863,8 @@
    "state": "fall-land-hard-run",
    "state_offset": "0x00001de8",
    "leaf": "land-hard^run",
-   "leaf_id": "238ef92d",
-   "final_id": "d9bf3d15",
+   "leaf_id": "bc4a1c58",
+   "final_id": "1d4954c7",
    "chain": [
     [
      "move",
@@ -891,8 +891,8 @@
    "state": "jump-long-land-idle",
    "state_offset": "0x00005e28",
    "leaf": "land-hard^idle",
-   "leaf_id": "72d0edfa",
-   "final_id": "2d9a52f1",
+   "leaf_id": "bb15ed6c",
+   "final_id": "7c1d20e1",
    "chain": [
     [
      "actor_b",
@@ -912,8 +912,8 @@
    "state": "jump-long-land-run",
    "state_offset": "0x00005ea8",
    "leaf": "land-med^run",
-   "leaf_id": "40b2a290",
-   "final_id": "bcf8fde9",
+   "leaf_id": "f07c9292",
+   "final_id": "dc770e11",
    "chain": [
     [
      "move",
@@ -940,8 +940,8 @@
    "state": "fall-land-medium-idle",
    "state_offset": "0x00001f28",
    "leaf": "land-med^idle",
-   "leaf_id": "ef6db0b4",
-   "final_id": "48dd920d",
+   "leaf_id": "9e2c19e0",
+   "final_id": "62c7ed62",
    "chain": [
     [
      "actor_b",
@@ -961,8 +961,8 @@
    "state": "fall-land-medium-run",
    "state_offset": "0x00001f68",
    "leaf": "land-med^run",
-   "leaf_id": "40b2a290",
-   "final_id": "bcf8fde9",
+   "leaf_id": "f07c9292",
+   "final_id": "dc770e11",
    "chain": [
     [
      "move",
@@ -989,8 +989,8 @@
    "state": "fall-land-soft-run-bw",
    "state_offset": "0x00001ee8",
    "leaf": "land-soft^run-bw",
-   "leaf_id": "487cb752",
-   "final_id": "c06da14f",
+   "leaf_id": "5243fa69",
+   "final_id": "9e6abf86",
    "chain": [
     [
      "move",
@@ -1017,8 +1017,8 @@
    "state": "fall-land-medium-run-bw",
    "state_offset": "0x00001fa8",
    "leaf": "land-med^run-bw",
-   "leaf_id": "0084c4c6",
-   "final_id": "e7e58f99",
+   "leaf_id": "475de655",
+   "final_id": "db83477b",
    "chain": [
     [
      "move",
@@ -1045,21 +1045,21 @@
    "state": "fall-land-hard-run-bw",
    "state_offset": "0x00001e28",
    "leaf": "land-hard^run-bw",
-   "leaf_id": "5e912fc7",
-   "final_id": "7b62a28d",
+   "leaf_id": "15c60e4f",
+   "final_id": "073d34b7",
    "chain": [
     [
      "move",
      "anim-overlay-player-move-walk",
      "0x00008194",
      "land-hard^run-bw",
-     "#fe80e942"
+     "#c4033517"
     ],
     [
      "actor_b",
      "anim-overlay-player-actor_b-actor_b",
      "0x00004f68",
-     "#fe80e942",
+     "#c4033517",
      "actor_b-p-land-hard^walk-bw"
     ]
    ],
@@ -1073,8 +1073,8 @@
    "state": "jump-long-land-idle-med",
    "state_offset": "0x00005e68",
    "leaf": "land-med^idle",
-   "leaf_id": "ef6db0b4",
-   "final_id": "48dd920d",
+   "leaf_id": "9e2c19e0",
+   "final_id": "62c7ed62",
    "chain": [
     [
      "actor_b",
@@ -1094,8 +1094,8 @@
    "state": "jump-long-land-run-hard",
    "state_offset": "0x00005ee8",
    "leaf": "land-hard^run-stumble",
-   "leaf_id": "6d6930de",
-   "final_id": "6d6930de",
+   "leaf_id": "2ad4f37c",
+   "final_id": "2ad4f37c",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -1107,8 +1107,8 @@
    "state": "fall-land-damage-idle",
    "state_offset": "0x00001fe8",
    "leaf": "land-hard-damage^idle",
-   "leaf_id": "06455089",
-   "final_id": "7ec24d61",
+   "leaf_id": "85ec2b46",
+   "final_id": "2865a6eb",
    "chain": [
     [
      "actor_b",
@@ -1128,8 +1128,8 @@
    "state": "fall-land-death",
    "state_offset": "0x00002028",
    "leaf": "land-hard-damage^death",
-   "leaf_id": "eb31b64e",
-   "final_id": "aa90ae11",
+   "leaf_id": "51cea6ea",
+   "final_id": "185cbcbf",
    "chain": [
     [
      "actor_b",
@@ -1149,8 +1149,8 @@
    "state": "hit-reaction-full-body",
    "state_offset": "0x0000df68",
    "leaf": "idle-hr-fwd",
-   "leaf_id": "70622416",
-   "final_id": "8952034e",
+   "leaf_id": "8478599e",
+   "final_id": "5423dfc7",
    "chain": [
     [
      "actor_b",
@@ -1170,8 +1170,8 @@
    "state": "hit-reaction-par",
    "state_offset": "0x0000e068",
    "leaf": "idle-hr-fwd--add",
-   "leaf_id": "8705c808",
-   "final_id": "fcb4aae8",
+   "leaf_id": "bccb7f67",
+   "final_id": "0608a06c",
    "chain": [
     [
      "actor_b",
@@ -1191,8 +1191,8 @@
    "state": "death-front-mid",
    "state_offset": "0x00003428",
    "leaf": "death-front-mid",
-   "leaf_id": "455225bc",
-   "final_id": "022d143d",
+   "leaf_id": "060dcc89",
+   "final_id": "75b143d8",
    "chain": [
     [
      "actor_b",
@@ -1212,8 +1212,8 @@
    "state": "idle",
    "state_offset": "0x00001c68",
    "leaf": "base-idle-base-noarms",
-   "leaf_id": "07e4a7fa",
-   "final_id": "be7ab6f2",
+   "leaf_id": "933c1794",
+   "final_id": "c3d3a4ad",
    "chain": [
     [
      "actor_b",
@@ -1233,8 +1233,8 @@
    "state": "run-fw",
    "state_offset": "0x0000c468",
    "leaf": "base-walk-fwd",
-   "leaf_id": "bbf6d71a",
-   "final_id": "4c2c4b95",
+   "leaf_id": "46553345",
+   "final_id": "782aca24",
    "chain": [
     [
      "move",
@@ -1271,8 +1271,8 @@
    "state": "run-fw",
    "state_offset": "0x0000c468",
    "leaf": "base-walk-fwd-left",
-   "leaf_id": "acba6ee3",
-   "final_id": "74dda1c6",
+   "leaf_id": "e7c3259b",
+   "final_id": "531edb07",
    "chain": [
     [
      "move",
@@ -1309,8 +1309,8 @@
    "state": "run-fw",
    "state_offset": "0x0000c468",
    "leaf": "base-walk-fwd-right",
-   "leaf_id": "a6d281a2",
-   "final_id": "0b12c621",
+   "leaf_id": "9386b052",
+   "final_id": "e2222afa",
    "chain": [
     [
      "move",
@@ -1347,8 +1347,8 @@
    "state": "run-bkwd",
    "state_offset": "0x0000c428",
    "leaf": "base-walk-bkwd",
-   "leaf_id": "d5617ac5",
-   "final_id": "09086a3c",
+   "leaf_id": "29e5c39f",
+   "final_id": "8d1672e8",
    "chain": [
     [
      "move",
@@ -1385,8 +1385,8 @@
    "state": "run-bkwd",
    "state_offset": "0x0000c428",
    "leaf": "base-walk-bkwd-left",
-   "leaf_id": "a6427274",
-   "final_id": "54292245",
+   "leaf_id": "4df00a70",
+   "final_id": "a6d73ba4",
    "chain": [
     [
      "move",
@@ -1423,8 +1423,8 @@
    "state": "run-bkwd",
    "state_offset": "0x0000c428",
    "leaf": "base-walk-bkwd-right",
-   "leaf_id": "7144c074",
-   "final_id": "2be645a2",
+   "leaf_id": "a8d504e9",
+   "final_id": "3927469d",
    "chain": [
     [
      "move",
@@ -1461,8 +1461,8 @@
    "state": "idle^run-fwd",
    "state_offset": "0x0000c228",
    "leaf": "base-idle^walk-fwd",
-   "leaf_id": "3acb6754",
-   "final_id": "a3de82de",
+   "leaf_id": "fd1f31a6",
+   "final_id": "0ede1c0f",
    "chain": [
     [
      "move",
@@ -1489,8 +1489,8 @@
    "state": "idle^run-fwd",
    "state_offset": "0x0000c228",
    "leaf": "base-idle^walk-fwd-left",
-   "leaf_id": "48bda190",
-   "final_id": "b9f297b3",
+   "leaf_id": "ecb7692d",
+   "final_id": "768478dd",
    "chain": [
     [
      "move",
@@ -1517,8 +1517,8 @@
    "state": "idle^run-fwd",
    "state_offset": "0x0000c228",
    "leaf": "base-idle^walk-fwd-right",
-   "leaf_id": "77b0a207",
-   "final_id": "c63df054",
+   "leaf_id": "ca81907b",
+   "final_id": "5175cdfc",
    "chain": [
     [
      "move",
@@ -1545,8 +1545,8 @@
    "state": "idle^run-bkwd",
    "state_offset": "0x0000c268",
    "leaf": "base-idle^walk-back",
-   "leaf_id": "e552f3ad",
-   "final_id": "e6faa377",
+   "leaf_id": "4f569155",
+   "final_id": "93378739",
    "chain": [
     [
      "move",
@@ -1573,8 +1573,8 @@
    "state": "idle^run-bkwd",
    "state_offset": "0x0000c268",
    "leaf": "base-idle^walk-back-left",
-   "leaf_id": "539936ec",
-   "final_id": "99061430",
+   "leaf_id": "55762105",
+   "final_id": "0cf37b6e",
    "chain": [
     [
      "move",
@@ -1601,8 +1601,8 @@
    "state": "idle^run-bkwd",
    "state_offset": "0x0000c268",
    "leaf": "base-idle^walk-back-right",
-   "leaf_id": "347dce16",
-   "final_id": "e6c973d7",
+   "leaf_id": "fe9a0d5a",
+   "final_id": "e07235a9",
    "chain": [
     [
      "move",
@@ -1629,8 +1629,8 @@
    "state": "run-fw^idle",
    "state_offset": "0x0000c3a8",
    "leaf": "base-walk-fwd^idle",
-   "leaf_id": "32faab26",
-   "final_id": "4091022f",
+   "leaf_id": "6e62e8b8",
+   "final_id": "3d824c07",
    "chain": [
     [
      "move",
@@ -1657,8 +1657,8 @@
    "state": "run-fw^idle",
    "state_offset": "0x0000c3a8",
    "leaf": "base-walk-fwd-left^idle",
-   "leaf_id": "707a82a4",
-   "final_id": "b84a313d",
+   "leaf_id": "eab976bd",
+   "final_id": "21f80f13",
    "chain": [
     [
      "move",
@@ -1685,8 +1685,8 @@
    "state": "run-fw^idle",
    "state_offset": "0x0000c3a8",
    "leaf": "base-walk-fwd-right^idle",
-   "leaf_id": "5860788b",
-   "final_id": "8a33d0c6",
+   "leaf_id": "e7d43f10",
+   "final_id": "4f56ef58",
    "chain": [
     [
      "move",
@@ -1713,8 +1713,8 @@
    "state": "run-bk^idle",
    "state_offset": "0x0000c3e8",
    "leaf": "base-walk-bk^idle",
-   "leaf_id": "35c95de1",
-   "final_id": "790dbfdc",
+   "leaf_id": "4dd343e9",
+   "final_id": "bb5f0794",
    "chain": [
     [
      "move",
@@ -1741,8 +1741,8 @@
    "state": "run-bk^idle",
    "state_offset": "0x0000c3e8",
    "leaf": "base-walk-bk-left^idle",
-   "leaf_id": "ba276be0",
-   "final_id": "b38a8bcf",
+   "leaf_id": "0b7db7a8",
+   "final_id": "8d7bbad3",
    "chain": [
     [
      "move",
@@ -1769,8 +1769,8 @@
    "state": "run-bk^idle",
    "state_offset": "0x0000c3e8",
    "leaf": "base-walk-bk-right^idle",
-   "leaf_id": "77897ac4",
-   "final_id": "81f36a34",
+   "leaf_id": "36b5a954",
+   "final_id": "b3459d5d",
    "chain": [
     [
      "move",
@@ -1797,8 +1797,8 @@
    "state": "run-fw^run-bkwd",
    "state_offset": "0x0000c328",
    "leaf": "relaxed-quickstop^run-bkwd",
-   "leaf_id": "7cff4eb5",
-   "final_id": "81095845",
+   "leaf_id": "2f318f0b",
+   "final_id": "192d2483",
    "chain": [
     [
      "actor_b",
@@ -1818,8 +1818,8 @@
    "state": "run-fw^run-bkwd",
    "state_offset": "0x0000c328",
    "leaf": "relaxed-quickstop^run-bkwd-left",
-   "leaf_id": "98e9d271",
-   "final_id": "c01392df",
+   "leaf_id": "ce69a716",
+   "final_id": "fe1c22b6",
    "chain": [
     [
      "actor_b",
@@ -1839,8 +1839,8 @@
    "state": "run-fw^run-bkwd",
    "state_offset": "0x0000c328",
    "leaf": "relaxed-quickstop^run-bkwd-right",
-   "leaf_id": "325808ee",
-   "final_id": "bfdcf538",
+   "leaf_id": "1a403e33",
+   "final_id": "d71cb8dc",
    "chain": [
     [
      "actor_b",
@@ -1860,8 +1860,8 @@
    "state": "run-bw^run-fwd",
    "state_offset": "0x0000c2a8",
    "leaf": "relaxed-quickstop^run-fwd",
-   "leaf_id": "ab1358f5",
-   "final_id": "c42d79ec",
+   "leaf_id": "cda8be58",
+   "final_id": "61f5f52f",
    "chain": [
     [
      "actor_b",
@@ -1881,8 +1881,8 @@
    "state": "run-bw^run-fwd",
    "state_offset": "0x0000c2a8",
    "leaf": "relaxed-quickstop^run-fwd-left",
-   "leaf_id": "ab9a8213",
-   "final_id": "e0e7115c",
+   "leaf_id": "cea5e3c2",
+   "final_id": "51f9388c",
    "chain": [
     [
      "actor_b",
@@ -1902,8 +1902,8 @@
    "state": "run-bw^run-fwd",
    "state_offset": "0x0000c2a8",
    "leaf": "relaxed-quickstop^run-fwd-right",
-   "leaf_id": "987921a7",
-   "final_id": "9f2876bb",
+   "leaf_id": "f5b635e4",
+   "final_id": "ab60bce9",
    "chain": [
     [
      "actor_b",
@@ -1923,8 +1923,8 @@
    "state": "idle-turn-l",
    "state_offset": "0x0000c168",
    "leaf": "idle-turn-l",
-   "leaf_id": "182fe300",
-   "final_id": "d12d2ff5",
+   "leaf_id": "5a3adead",
+   "final_id": "9bbed36d",
    "chain": [
     [
      "move",
@@ -1951,8 +1951,8 @@
    "state": "idle-turn-r",
    "state_offset": "0x0000c128",
    "leaf": "idle-turn-r",
-   "leaf_id": "68b0987a",
-   "final_id": "a1b2548f",
+   "leaf_id": "403c8a22",
+   "final_id": "63371abc",
    "chain": [
     [
      "move",
@@ -1979,8 +1979,8 @@
    "state": "idle-turn-l-180",
    "state_offset": "0x0000c1a8",
    "leaf": "idle-turn-l-180",
-   "leaf_id": "55f3a46c",
-   "final_id": "55f3a46c",
+   "leaf_id": "53a82673",
+   "final_id": "53a82673",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -1992,8 +1992,8 @@
    "state": "idle-turn-r-180",
    "state_offset": "0x0000c1e8",
    "leaf": "idle-turn-r-180",
-   "leaf_id": "2526e1ff",
-   "final_id": "2526e1ff",
+   "leaf_id": "551b5e95",
+   "final_id": "551b5e95",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -2005,8 +2005,8 @@
    "state": "quick-turn-180-r",
    "state_offset": "0x00001ba8",
    "leaf": "melee-fist-idle-turn-180-r",
-   "leaf_id": "7d9998bf",
-   "final_id": "82c76a86",
+   "leaf_id": "cd5817cd",
+   "final_id": "f49147fe",
    "chain": [
     [
      "actor_b",
@@ -2026,8 +2026,8 @@
    "state": "run-jump-long",
    "state_offset": "0x00005d68",
    "leaf": "run^jump-long",
-   "leaf_id": "457c4cea",
-   "final_id": "e2cc6e53",
+   "leaf_id": "df83389f",
+   "final_id": "790a0c45",
    "chain": [
     [
      "actor_b",
@@ -2047,8 +2047,8 @@
    "state": "jump-long",
    "state_offset": "0x00005de8",
    "leaf": "jump-long",
-   "leaf_id": "7a92466e",
-   "final_id": "9da83ba0",
+   "leaf_id": "a4d198e0",
+   "final_id": "52938fee",
    "chain": [
     [
      "actor_b",
@@ -2063,13 +2063,13 @@
   },
   "run/pre_fall": {
    "clip": null,
-   "graph_clip": "#ab73793b",
+   "graph_clip": "#4fff6a5b",
    "status": "missing",
    "state": "pre-fall",
    "state_offset": "0x00001d28",
-   "leaf": "#ab73793b",
-   "leaf_id": "ab73793b",
-   "final_id": "ab73793b",
+   "leaf": "#4fff6a5b",
+   "leaf_id": "4fff6a5b",
+   "final_id": "4fff6a5b",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -2081,8 +2081,8 @@
    "state": "fall",
    "state_offset": "0x00001ce8",
    "leaf": "fall",
-   "leaf_id": "80d3cabd",
-   "final_id": "8e1b0e8a",
+   "leaf_id": "44b21b77",
+   "final_id": "9ea4b9eb",
    "chain": [
     [
      "actor_b",
@@ -2102,8 +2102,8 @@
    "state": "fall-land-soft-idle",
    "state_offset": "0x00001e68",
    "leaf": "land-soft^idle",
-   "leaf_id": "96319c32",
-   "final_id": "f57b1c9f",
+   "leaf_id": "4eb4de1c",
+   "final_id": "95605492",
    "chain": [
     [
      "actor_b",
@@ -2123,8 +2123,8 @@
    "state": "fall-land-soft-run",
    "state_offset": "0x00001ea8",
    "leaf": "land-soft^run",
-   "leaf_id": "3b00016a",
-   "final_id": "9cb023d3",
+   "leaf_id": "e85fb687",
+   "final_id": "3ed94a65",
    "chain": [
     [
      "actor_b",
@@ -2144,8 +2144,8 @@
    "state": "fall-land-hard-idle",
    "state_offset": "0x00001da8",
    "leaf": "land-hard^idle",
-   "leaf_id": "72d0edfa",
-   "final_id": "2d9a52f1",
+   "leaf_id": "bb15ed6c",
+   "final_id": "7c1d20e1",
    "chain": [
     [
      "actor_b",
@@ -2165,8 +2165,8 @@
    "state": "fall-land-hard-run",
    "state_offset": "0x00001de8",
    "leaf": "land-hard^run",
-   "leaf_id": "238ef92d",
-   "final_id": "843edb94",
+   "leaf_id": "bc4a1c58",
+   "final_id": "af41e527",
    "chain": [
     [
      "actor_b",
@@ -2186,8 +2186,8 @@
    "state": "jump-long-land-idle",
    "state_offset": "0x00005e28",
    "leaf": "land-hard^idle",
-   "leaf_id": "72d0edfa",
-   "final_id": "2d9a52f1",
+   "leaf_id": "bb15ed6c",
+   "final_id": "7c1d20e1",
    "chain": [
     [
      "actor_b",
@@ -2207,8 +2207,8 @@
    "state": "jump-long-land-run",
    "state_offset": "0x00005ea8",
    "leaf": "land-med^run",
-   "leaf_id": "40b2a290",
-   "final_id": "e1e0fcf9",
+   "leaf_id": "f07c9292",
+   "final_id": "30c1d734",
    "chain": [
     [
      "actor_b",
@@ -2228,8 +2228,8 @@
    "state": "fall-land-medium-idle",
    "state_offset": "0x00001f28",
    "leaf": "land-med^idle",
-   "leaf_id": "ef6db0b4",
-   "final_id": "48dd920d",
+   "leaf_id": "9e2c19e0",
+   "final_id": "62c7ed62",
    "chain": [
     [
      "actor_b",
@@ -2249,8 +2249,8 @@
    "state": "fall-land-medium-run",
    "state_offset": "0x00001f68",
    "leaf": "land-med^run",
-   "leaf_id": "40b2a290",
-   "final_id": "e1e0fcf9",
+   "leaf_id": "f07c9292",
+   "final_id": "30c1d734",
    "chain": [
     [
      "actor_b",
@@ -2270,8 +2270,8 @@
    "state": "fall-land-soft-run-bw",
    "state_offset": "0x00001ee8",
    "leaf": "land-soft^run-bw",
-   "leaf_id": "487cb752",
-   "final_id": "00ebdb84",
+   "leaf_id": "5243fa69",
+   "final_id": "be3b2467",
    "chain": [
     [
      "actor_b",
@@ -2291,8 +2291,8 @@
    "state": "fall-land-medium-run-bw",
    "state_offset": "0x00001fa8",
    "leaf": "land-med^run-bw",
-   "leaf_id": "0084c4c6",
-   "final_id": "0ae3d97c",
+   "leaf_id": "475de655",
+   "final_id": "257986ef",
    "chain": [
     [
      "actor_b",
@@ -2312,8 +2312,8 @@
    "state": "fall-land-hard-run-bw",
    "state_offset": "0x00001e28",
    "leaf": "land-hard^run-bw",
-   "leaf_id": "5e912fc7",
-   "final_id": "16064311",
+   "leaf_id": "15c60e4f",
+   "final_id": "70ec2d8c",
    "chain": [
     [
      "actor_b",
@@ -2333,8 +2333,8 @@
    "state": "jump-long-land-idle-med",
    "state_offset": "0x00005e68",
    "leaf": "land-med^idle",
-   "leaf_id": "ef6db0b4",
-   "final_id": "48dd920d",
+   "leaf_id": "9e2c19e0",
+   "final_id": "62c7ed62",
    "chain": [
     [
      "actor_b",
@@ -2354,8 +2354,8 @@
    "state": "jump-long-land-run-hard",
    "state_offset": "0x00005ee8",
    "leaf": "land-hard^run-stumble",
-   "leaf_id": "6d6930de",
-   "final_id": "6d6930de",
+   "leaf_id": "2ad4f37c",
+   "final_id": "2ad4f37c",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -2367,8 +2367,8 @@
    "state": "fall-land-damage-idle",
    "state_offset": "0x00001fe8",
    "leaf": "land-hard-damage^idle",
-   "leaf_id": "06455089",
-   "final_id": "7ec24d61",
+   "leaf_id": "85ec2b46",
+   "final_id": "2865a6eb",
    "chain": [
     [
      "actor_b",
@@ -2388,8 +2388,8 @@
    "state": "fall-land-death",
    "state_offset": "0x00002028",
    "leaf": "land-hard-damage^death",
-   "leaf_id": "eb31b64e",
-   "final_id": "aa90ae11",
+   "leaf_id": "51cea6ea",
+   "final_id": "185cbcbf",
    "chain": [
     [
      "actor_b",
@@ -2409,8 +2409,8 @@
    "state": "hit-reaction-full-body",
    "state_offset": "0x0000df68",
    "leaf": "idle-hr-fwd",
-   "leaf_id": "70622416",
-   "final_id": "8952034e",
+   "leaf_id": "8478599e",
+   "final_id": "5423dfc7",
    "chain": [
     [
      "actor_b",
@@ -2430,8 +2430,8 @@
    "state": "hit-reaction-par",
    "state_offset": "0x0000e068",
    "leaf": "idle-hr-fwd--add",
-   "leaf_id": "8705c808",
-   "final_id": "fcb4aae8",
+   "leaf_id": "bccb7f67",
+   "final_id": "0608a06c",
    "chain": [
     [
      "actor_b",
@@ -2451,8 +2451,8 @@
    "state": "death-front-mid",
    "state_offset": "0x00003428",
    "leaf": "death-front-mid",
-   "leaf_id": "455225bc",
-   "final_id": "022d143d",
+   "leaf_id": "060dcc89",
+   "final_id": "75b143d8",
    "chain": [
     [
      "actor_b",
@@ -2472,8 +2472,8 @@
    "state": "idle",
    "state_offset": "0x00001c68",
    "leaf": "base-idle-base-noarms",
-   "leaf_id": "07e4a7fa",
-   "final_id": "be7ab6f2",
+   "leaf_id": "933c1794",
+   "final_id": "c3d3a4ad",
    "chain": [
     [
      "actor_b",
@@ -2493,8 +2493,8 @@
    "state": "run-fw",
    "state_offset": "0x0000c468",
    "leaf": "base-walk-fwd",
-   "leaf_id": "bbf6d71a",
-   "final_id": "a1afe092",
+   "leaf_id": "46553345",
+   "final_id": "ff575a5b",
    "chain": [
     [
      "move",
@@ -2531,8 +2531,8 @@
    "state": "run-fw",
    "state_offset": "0x0000c468",
    "leaf": "base-walk-fwd-left",
-   "leaf_id": "acba6ee3",
-   "final_id": "f0c933e1",
+   "leaf_id": "e7c3259b",
+   "final_id": "2d168a55",
    "chain": [
     [
      "move",
@@ -2569,8 +2569,8 @@
    "state": "run-fw",
    "state_offset": "0x0000c468",
    "leaf": "base-walk-fwd-right",
-   "leaf_id": "a6d281a2",
-   "final_id": "8f065406",
+   "leaf_id": "9386b052",
+   "final_id": "550a2a47",
    "chain": [
     [
      "move",
@@ -2607,8 +2607,8 @@
    "state": "run-bkwd",
    "state_offset": "0x0000c428",
    "leaf": "base-walk-bkwd",
-   "leaf_id": "d5617ac5",
-   "final_id": "e48bc13b",
+   "leaf_id": "29e5c39f",
+   "final_id": "80874ae8",
    "chain": [
     [
      "move",
@@ -2645,8 +2645,8 @@
    "state": "run-bkwd",
    "state_offset": "0x0000c428",
    "leaf": "base-walk-bkwd-left",
-   "leaf_id": "a6427274",
-   "final_id": "d03db062",
+   "leaf_id": "4df00a70",
+   "final_id": "c14d67f2",
    "chain": [
     [
      "move",
@@ -2683,8 +2683,8 @@
    "state": "run-bkwd",
    "state_offset": "0x0000c428",
    "leaf": "base-walk-bkwd-right",
-   "leaf_id": "7144c074",
-   "final_id": "aff2d785",
+   "leaf_id": "a8d504e9",
+   "final_id": "c0303c48",
    "chain": [
     [
      "move",
@@ -2721,8 +2721,8 @@
    "state": "idle^run-fwd",
    "state_offset": "0x0000c228",
    "leaf": "base-idle^walk-fwd",
-   "leaf_id": "3acb6754",
-   "final_id": "6c80d6e7",
+   "leaf_id": "fd1f31a6",
+   "final_id": "6c17ed4e",
    "chain": [
     [
      "move",
@@ -2749,8 +2749,8 @@
    "state": "idle^run-fwd",
    "state_offset": "0x0000c228",
    "leaf": "base-idle^walk-fwd-left",
-   "leaf_id": "48bda190",
-   "final_id": "445b002e",
+   "leaf_id": "ecb7692d",
+   "final_id": "02289d1f",
    "chain": [
     [
      "move",
@@ -2777,8 +2777,8 @@
    "state": "idle^run-fwd",
    "state_offset": "0x0000c228",
    "leaf": "base-idle^walk-fwd-right",
-   "leaf_id": "77b0a207",
-   "final_id": "3b9467c9",
+   "leaf_id": "ca81907b",
+   "final_id": "eb5a135d",
    "chain": [
     [
      "move",
@@ -2805,8 +2805,8 @@
    "state": "idle^run-bkwd",
    "state_offset": "0x0000c268",
    "leaf": "base-idle^walk-back",
-   "leaf_id": "e552f3ad",
-   "final_id": "29a4f74e",
+   "leaf_id": "4f569155",
+   "final_id": "26cacab0",
    "chain": [
     [
      "move",
@@ -2843,8 +2843,8 @@
    "state": "idle^run-bkwd",
    "state_offset": "0x0000c268",
    "leaf": "base-idle^walk-back-left",
-   "leaf_id": "539936ec",
-   "final_id": "64af83ad",
+   "leaf_id": "55762105",
+   "final_id": "d5e9ba0e",
    "chain": [
     [
      "move",
@@ -2881,8 +2881,8 @@
    "state": "idle^run-bkwd",
    "state_offset": "0x0000c268",
    "leaf": "base-idle^walk-back-right",
-   "leaf_id": "347dce16",
-   "final_id": "1b60e44a",
+   "leaf_id": "fe9a0d5a",
+   "final_id": "f8454d29",
    "chain": [
     [
      "move",
@@ -2919,8 +2919,8 @@
    "state": "run-fw^idle",
    "state_offset": "0x0000c3a8",
    "leaf": "base-walk-fwd^idle",
-   "leaf_id": "32faab26",
-   "final_id": "dd946b16",
+   "leaf_id": "6e62e8b8",
+   "final_id": "0016072c",
    "chain": [
     [
      "move",
@@ -2947,8 +2947,8 @@
    "state": "run-fw^idle",
    "state_offset": "0x0000c3a8",
    "leaf": "base-walk-fwd-left^idle",
-   "leaf_id": "707a82a4",
-   "final_id": "61b81683",
+   "leaf_id": "eab976bd",
+   "final_id": "49b76b8f",
    "chain": [
     [
      "move",
@@ -2975,8 +2975,8 @@
    "state": "run-fw^idle",
    "state_offset": "0x0000c3a8",
    "leaf": "base-walk-fwd-right^idle",
-   "leaf_id": "5860788b",
-   "final_id": "53c1f778",
+   "leaf_id": "e7d43f10",
+   "final_id": "b8965eb3",
    "chain": [
     [
      "move",
@@ -3003,8 +3003,8 @@
    "state": "run-bk^idle",
    "state_offset": "0x0000c3e8",
    "leaf": "base-walk-bk^idle",
-   "leaf_id": "35c95de1",
-   "final_id": "e408d6e5",
+   "leaf_id": "4dd343e9",
+   "final_id": "7bb5ff7b",
    "chain": [
     [
      "move",
@@ -3031,8 +3031,8 @@
    "state": "run-bk^idle",
    "state_offset": "0x0000c3e8",
    "leaf": "base-walk-bk-left^idle",
-   "leaf_id": "ba276be0",
-   "final_id": "6a78ac71",
+   "leaf_id": "0b7db7a8",
+   "final_id": "d75ef166",
    "chain": [
     [
      "move",
@@ -3059,8 +3059,8 @@
    "state": "run-bk^idle",
    "state_offset": "0x0000c3e8",
    "leaf": "base-walk-bk-right^idle",
-   "leaf_id": "77897ac4",
-   "final_id": "58014d8a",
+   "leaf_id": "36b5a954",
+   "final_id": "9741371b",
    "chain": [
     [
      "move",
@@ -3087,8 +3087,8 @@
    "state": "run-fw^run-bkwd",
    "state_offset": "0x0000c328",
    "leaf": "relaxed-quickstop^run-bkwd",
-   "leaf_id": "7cff4eb5",
-   "final_id": "c2f39cbf",
+   "leaf_id": "2f318f0b",
+   "final_id": "62754332",
    "chain": [
     [
      "move",
@@ -3115,8 +3115,8 @@
    "state": "run-fw^run-bkwd",
    "state_offset": "0x0000c328",
    "leaf": "relaxed-quickstop^run-bkwd-left",
-   "leaf_id": "98e9d271",
-   "final_id": "d95d646f",
+   "leaf_id": "ce69a716",
+   "final_id": "edbba906",
    "chain": [
     [
      "move",
@@ -3143,8 +3143,8 @@
    "state": "run-fw^run-bkwd",
    "state_offset": "0x0000c328",
    "leaf": "relaxed-quickstop^run-bkwd-right",
-   "leaf_id": "325808ee",
-   "final_id": "a6920388",
+   "leaf_id": "1a403e33",
+   "final_id": "92991eed",
    "chain": [
     [
      "move",
@@ -3171,8 +3171,8 @@
    "state": "run-bw^run-fwd",
    "state_offset": "0x0000c2a8",
    "leaf": "relaxed-quickstop^run-fwd",
-   "leaf_id": "ab1358f5",
-   "final_id": "87d7bd16",
+   "leaf_id": "cda8be58",
+   "final_id": "ab939eb7",
    "chain": [
     [
      "move",
@@ -3199,8 +3199,8 @@
    "state": "run-bw^run-fwd",
    "state_offset": "0x0000c2a8",
    "leaf": "relaxed-quickstop^run-fwd-left",
-   "leaf_id": "ab9a8213",
-   "final_id": "f9a9e7ec",
+   "leaf_id": "cea5e3c2",
+   "final_id": "ff733730",
    "chain": [
     [
      "move",
@@ -3227,8 +3227,8 @@
    "state": "run-bw^run-fwd",
    "state_offset": "0x0000c2a8",
    "leaf": "relaxed-quickstop^run-fwd-right",
-   "leaf_id": "987921a7",
-   "final_id": "8666800b",
+   "leaf_id": "f5b635e4",
+   "final_id": "e76c9cf0",
    "chain": [
     [
      "move",
@@ -3255,8 +3255,8 @@
    "state": "idle-turn-l",
    "state_offset": "0x0000c168",
    "leaf": "idle-turn-l",
-   "leaf_id": "182fe300",
-   "final_id": "182fe300",
+   "leaf_id": "5a3adead",
+   "final_id": "5a3adead",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -3268,8 +3268,8 @@
    "state": "idle-turn-r",
    "state_offset": "0x0000c128",
    "leaf": "idle-turn-r",
-   "leaf_id": "68b0987a",
-   "final_id": "68b0987a",
+   "leaf_id": "403c8a22",
+   "final_id": "403c8a22",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -3281,8 +3281,8 @@
    "state": "idle-turn-l-180",
    "state_offset": "0x0000c1a8",
    "leaf": "idle-turn-l-180",
-   "leaf_id": "55f3a46c",
-   "final_id": "55f3a46c",
+   "leaf_id": "53a82673",
+   "final_id": "53a82673",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -3294,8 +3294,8 @@
    "state": "idle-turn-r-180",
    "state_offset": "0x0000c1e8",
    "leaf": "idle-turn-r-180",
-   "leaf_id": "2526e1ff",
-   "final_id": "2526e1ff",
+   "leaf_id": "551b5e95",
+   "final_id": "551b5e95",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -3307,8 +3307,8 @@
    "state": "quick-turn-180-r",
    "state_offset": "0x00001ba8",
    "leaf": "melee-fist-idle-turn-180-r",
-   "leaf_id": "7d9998bf",
-   "final_id": "82c76a86",
+   "leaf_id": "cd5817cd",
+   "final_id": "f49147fe",
    "chain": [
     [
      "actor_b",
@@ -3328,8 +3328,8 @@
    "state": "run-jump-long",
    "state_offset": "0x00005d68",
    "leaf": "run^jump-long",
-   "leaf_id": "457c4cea",
-   "final_id": "e2cc6e53",
+   "leaf_id": "df83389f",
+   "final_id": "790a0c45",
    "chain": [
     [
      "actor_b",
@@ -3349,8 +3349,8 @@
    "state": "jump-long",
    "state_offset": "0x00005de8",
    "leaf": "jump-long",
-   "leaf_id": "7a92466e",
-   "final_id": "9da83ba0",
+   "leaf_id": "a4d198e0",
+   "final_id": "52938fee",
    "chain": [
     [
      "actor_b",
@@ -3365,13 +3365,13 @@
   },
   "sprint/pre_fall": {
    "clip": null,
-   "graph_clip": "#ab73793b",
+   "graph_clip": "#4fff6a5b",
    "status": "missing",
    "state": "pre-fall",
    "state_offset": "0x00001d28",
-   "leaf": "#ab73793b",
-   "leaf_id": "ab73793b",
-   "final_id": "ab73793b",
+   "leaf": "#4fff6a5b",
+   "leaf_id": "4fff6a5b",
+   "final_id": "4fff6a5b",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -3383,8 +3383,8 @@
    "state": "fall",
    "state_offset": "0x00001ce8",
    "leaf": "fall",
-   "leaf_id": "80d3cabd",
-   "final_id": "8e1b0e8a",
+   "leaf_id": "44b21b77",
+   "final_id": "9ea4b9eb",
    "chain": [
     [
      "actor_b",
@@ -3404,8 +3404,8 @@
    "state": "fall-land-soft-idle",
    "state_offset": "0x00001e68",
    "leaf": "land-soft^idle",
-   "leaf_id": "96319c32",
-   "final_id": "f57b1c9f",
+   "leaf_id": "4eb4de1c",
+   "final_id": "95605492",
    "chain": [
     [
      "actor_b",
@@ -3425,8 +3425,8 @@
    "state": "fall-land-soft-run",
    "state_offset": "0x00001ea8",
    "leaf": "land-soft^run",
-   "leaf_id": "3b00016a",
-   "final_id": "b3571ca0",
+   "leaf_id": "e85fb687",
+   "final_id": "ba1f5565",
    "chain": [
     [
      "move",
@@ -3453,8 +3453,8 @@
    "state": "fall-land-hard-idle",
    "state_offset": "0x00001da8",
    "leaf": "land-hard^idle",
-   "leaf_id": "72d0edfa",
-   "final_id": "2d9a52f1",
+   "leaf_id": "bb15ed6c",
+   "final_id": "7c1d20e1",
    "chain": [
     [
      "actor_b",
@@ -3474,8 +3474,8 @@
    "state": "fall-land-hard-run",
    "state_offset": "0x00001de8",
    "leaf": "land-hard^run",
-   "leaf_id": "238ef92d",
-   "final_id": "a5ba8435",
+   "leaf_id": "bc4a1c58",
+   "final_id": "333b91c3",
    "chain": [
     [
      "move",
@@ -3502,8 +3502,8 @@
    "state": "jump-long-land-idle",
    "state_offset": "0x00005e28",
    "leaf": "land-hard^idle",
-   "leaf_id": "72d0edfa",
-   "final_id": "2d9a52f1",
+   "leaf_id": "bb15ed6c",
+   "final_id": "7c1d20e1",
    "chain": [
     [
      "actor_b",
@@ -3523,8 +3523,8 @@
    "state": "jump-long-land-run",
    "state_offset": "0x00005ea8",
    "leaf": "land-med^run",
-   "leaf_id": "40b2a290",
-   "final_id": "b95f1e58",
+   "leaf_id": "f07c9292",
+   "final_id": "d22bd44b",
    "chain": [
     [
      "move",
@@ -3551,8 +3551,8 @@
    "state": "fall-land-medium-idle",
    "state_offset": "0x00001f28",
    "leaf": "land-med^idle",
-   "leaf_id": "ef6db0b4",
-   "final_id": "48dd920d",
+   "leaf_id": "9e2c19e0",
+   "final_id": "62c7ed62",
    "chain": [
     [
      "actor_b",
@@ -3572,8 +3572,8 @@
    "state": "fall-land-medium-run",
    "state_offset": "0x00001f68",
    "leaf": "land-med^run",
-   "leaf_id": "40b2a290",
-   "final_id": "b95f1e58",
+   "leaf_id": "f07c9292",
+   "final_id": "d22bd44b",
    "chain": [
     [
      "move",
@@ -3600,8 +3600,8 @@
    "state": "fall-land-soft-run-bw",
    "state_offset": "0x00001ee8",
    "leaf": "land-soft^run-bw",
-   "leaf_id": "487cb752",
-   "final_id": "7beb446c",
+   "leaf_id": "5243fa69",
+   "final_id": "ae637e7f",
    "chain": [
     [
      "move",
@@ -3628,8 +3628,8 @@
    "state": "fall-land-medium-run-bw",
    "state_offset": "0x00001fa8",
    "leaf": "land-med^run-bw",
-   "leaf_id": "0084c4c6",
-   "final_id": "0d550166",
+   "leaf_id": "475de655",
+   "final_id": "a0287117",
    "chain": [
     [
      "move",
@@ -3656,8 +3656,8 @@
    "state": "fall-land-hard-run-bw",
    "state_offset": "0x00001e28",
    "leaf": "land-hard^run-bw",
-   "leaf_id": "5e912fc7",
-   "final_id": "0abb90fd",
+   "leaf_id": "15c60e4f",
+   "final_id": "2bc8e240",
    "chain": [
     [
      "move",
@@ -3684,8 +3684,8 @@
    "state": "jump-long-land-idle-med",
    "state_offset": "0x00005e68",
    "leaf": "land-med^idle",
-   "leaf_id": "ef6db0b4",
-   "final_id": "48dd920d",
+   "leaf_id": "9e2c19e0",
+   "final_id": "62c7ed62",
    "chain": [
     [
      "actor_b",
@@ -3705,8 +3705,8 @@
    "state": "jump-long-land-run-hard",
    "state_offset": "0x00005ee8",
    "leaf": "land-hard^run-stumble",
-   "leaf_id": "6d6930de",
-   "final_id": "6d6930de",
+   "leaf_id": "2ad4f37c",
+   "final_id": "2ad4f37c",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -3718,8 +3718,8 @@
    "state": "fall-land-damage-idle",
    "state_offset": "0x00001fe8",
    "leaf": "land-hard-damage^idle",
-   "leaf_id": "06455089",
-   "final_id": "7ec24d61",
+   "leaf_id": "85ec2b46",
+   "final_id": "2865a6eb",
    "chain": [
     [
      "actor_b",
@@ -3739,8 +3739,8 @@
    "state": "fall-land-death",
    "state_offset": "0x00002028",
    "leaf": "land-hard-damage^death",
-   "leaf_id": "eb31b64e",
-   "final_id": "aa90ae11",
+   "leaf_id": "51cea6ea",
+   "final_id": "185cbcbf",
    "chain": [
     [
      "actor_b",
@@ -3760,8 +3760,8 @@
    "state": "hit-reaction-full-body",
    "state_offset": "0x0000df68",
    "leaf": "idle-hr-fwd",
-   "leaf_id": "70622416",
-   "final_id": "8952034e",
+   "leaf_id": "8478599e",
+   "final_id": "5423dfc7",
    "chain": [
     [
      "actor_b",
@@ -3781,8 +3781,8 @@
    "state": "hit-reaction-par",
    "state_offset": "0x0000e068",
    "leaf": "idle-hr-fwd--add",
-   "leaf_id": "8705c808",
-   "final_id": "fcb4aae8",
+   "leaf_id": "bccb7f67",
+   "final_id": "0608a06c",
    "chain": [
     [
      "actor_b",
@@ -3802,8 +3802,8 @@
    "state": "death-front-mid",
    "state_offset": "0x00003428",
    "leaf": "death-front-mid",
-   "leaf_id": "455225bc",
-   "final_id": "022d143d",
+   "leaf_id": "060dcc89",
+   "final_id": "75b143d8",
    "chain": [
     [
      "actor_b",
@@ -3823,8 +3823,8 @@
    "state": "idle",
    "state_offset": "0x00001c68",
    "leaf": "base-idle-base-noarms",
-   "leaf_id": "07e4a7fa",
-   "final_id": "a5c687b6",
+   "leaf_id": "933c1794",
+   "final_id": "4c866c57",
    "chain": [
     [
      "crouch",
@@ -3861,8 +3861,8 @@
    "state": "run-fw",
    "state_offset": "0x0000c468",
    "leaf": "base-walk-fwd",
-   "leaf_id": "bbf6d71a",
-   "final_id": "03f011ba",
+   "leaf_id": "46553345",
+   "final_id": "95f952d8",
    "chain": [
     [
      "move",
@@ -3899,8 +3899,8 @@
    "state": "run-fw",
    "state_offset": "0x0000c468",
    "leaf": "base-walk-fwd-left",
-   "leaf_id": "acba6ee3",
-   "final_id": "6dd29346",
+   "leaf_id": "e7c3259b",
+   "final_id": "5dcb44aa",
    "chain": [
     [
      "move",
@@ -3937,8 +3937,8 @@
    "state": "run-fw",
    "state_offset": "0x0000c468",
    "leaf": "base-walk-fwd-right",
-   "leaf_id": "a6d281a2",
-   "final_id": "121df4a1",
+   "leaf_id": "9386b052",
+   "final_id": "4a9f0ad5",
    "chain": [
     [
      "move",
@@ -3975,8 +3975,8 @@
    "state": "run-bkwd",
    "state_offset": "0x0000c428",
    "leaf": "base-walk-bkwd",
-   "leaf_id": "d5617ac5",
-   "final_id": "46d43013",
+   "leaf_id": "29e5c39f",
+   "final_id": "6c32f96f",
    "chain": [
     [
      "move",
@@ -4013,8 +4013,8 @@
    "state": "run-bkwd",
    "state_offset": "0x0000c428",
    "leaf": "base-walk-bkwd-left",
-   "leaf_id": "a6427274",
-   "final_id": "4d2610c5",
+   "leaf_id": "4df00a70",
+   "final_id": "ed92e3c8",
    "chain": [
     [
      "move",
@@ -4051,8 +4051,8 @@
    "state": "run-bkwd",
    "state_offset": "0x0000c428",
    "leaf": "base-walk-bkwd-right",
-   "leaf_id": "7144c074",
-   "final_id": "32e97722",
+   "leaf_id": "a8d504e9",
+   "final_id": "96d58317",
    "chain": [
     [
      "move",
@@ -4089,8 +4089,8 @@
    "state": "idle^run-fwd",
    "state_offset": "0x0000c228",
    "leaf": "base-idle^walk-fwd",
-   "leaf_id": "3acb6754",
-   "final_id": "b6b9cd9b",
+   "leaf_id": "fd1f31a6",
+   "final_id": "b1bbe88e",
    "chain": [
     [
      "move",
@@ -4117,8 +4117,8 @@
    "state": "idle^run-fwd",
    "state_offset": "0x0000c228",
    "leaf": "base-idle^walk-fwd-left",
-   "leaf_id": "48bda190",
-   "final_id": "bd21a882",
+   "leaf_id": "ecb7692d",
+   "final_id": "7caeb3aa",
    "chain": [
     [
      "move",
@@ -4145,8 +4145,8 @@
    "state": "idle^run-fwd",
    "state_offset": "0x0000c228",
    "leaf": "base-idle^walk-fwd-right",
-   "leaf_id": "77b0a207",
-   "final_id": "c2eecf65",
+   "leaf_id": "ca81907b",
+   "final_id": "a5ade1d4",
    "chain": [
     [
      "move",
@@ -4173,8 +4173,8 @@
    "state": "idle^run-bkwd",
    "state_offset": "0x0000c268",
    "leaf": "base-idle^walk-back",
-   "leaf_id": "e552f3ad",
-   "final_id": "f39dec32",
+   "leaf_id": "4f569155",
+   "final_id": "c0af3134",
    "chain": [
     [
      "move",
@@ -4201,8 +4201,8 @@
    "state": "idle^run-bkwd",
    "state_offset": "0x0000c268",
    "leaf": "base-idle^walk-back-left",
-   "leaf_id": "539936ec",
-   "final_id": "9dd52b01",
+   "leaf_id": "55762105",
+   "final_id": "e6d34c64",
    "chain": [
     [
      "move",
@@ -4229,8 +4229,8 @@
    "state": "idle^run-bkwd",
    "state_offset": "0x0000c268",
    "leaf": "base-idle^walk-back-right",
-   "leaf_id": "347dce16",
-   "final_id": "e21a4ce6",
+   "leaf_id": "fe9a0d5a",
+   "final_id": "cd3a77bc",
    "chain": [
     [
      "move",
@@ -4257,8 +4257,8 @@
    "state": "run-fw^idle",
    "state_offset": "0x0000c3a8",
    "leaf": "base-walk-fwd^idle",
-   "leaf_id": "32faab26",
-   "final_id": "025ea60f",
+   "leaf_id": "6e62e8b8",
+   "final_id": "73418bb6",
    "chain": [
     [
      "move",
@@ -4285,8 +4285,8 @@
    "state": "run-fw^idle",
    "state_offset": "0x0000c3a8",
    "leaf": "base-walk-fwd-left^idle",
-   "leaf_id": "707a82a4",
-   "final_id": "71b6e0dd",
+   "leaf_id": "eab976bd",
+   "final_id": "7be2d7ae",
    "chain": [
     [
      "move",
@@ -4313,8 +4313,8 @@
    "state": "run-fw^idle",
    "state_offset": "0x0000c3a8",
    "leaf": "base-walk-fwd-right^idle",
-   "leaf_id": "5860788b",
-   "final_id": "43cf0126",
+   "leaf_id": "e7d43f10",
+   "final_id": "622a3781",
    "chain": [
     [
      "move",
@@ -4341,8 +4341,8 @@
    "state": "run-bk^idle",
    "state_offset": "0x0000c3e8",
    "leaf": "base-walk-bk^idle",
-   "leaf_id": "35c95de1",
-   "final_id": "3bc21bfc",
+   "leaf_id": "4dd343e9",
+   "final_id": "58410cc3",
    "chain": [
     [
      "move",
@@ -4369,8 +4369,8 @@
    "state": "run-bk^idle",
    "state_offset": "0x0000c3e8",
    "leaf": "base-walk-bk-left^idle",
-   "leaf_id": "ba276be0",
-   "final_id": "7a765a2f",
+   "leaf_id": "0b7db7a8",
+   "final_id": "9cfb8a25",
    "chain": [
     [
      "move",
@@ -4397,8 +4397,8 @@
    "state": "run-bk^idle",
    "state_offset": "0x0000c3e8",
    "leaf": "base-walk-bk-right^idle",
-   "leaf_id": "77897ac4",
-   "final_id": "480fbbd4",
+   "leaf_id": "36b5a954",
+   "final_id": "1bd15736",
    "chain": [
     [
      "move",
@@ -4425,8 +4425,8 @@
    "state": "run-fw^run-bkwd",
    "state_offset": "0x0000c328",
    "leaf": "relaxed-quickstop^run-bkwd",
-   "leaf_id": "7cff4eb5",
-   "final_id": "c83afbcd",
+   "leaf_id": "2f318f0b",
+   "final_id": "369babeb",
    "chain": [
     [
      "move",
@@ -4453,8 +4453,8 @@
    "state": "run-fw^run-bkwd",
    "state_offset": "0x0000c328",
    "leaf": "relaxed-quickstop^run-bkwd-left",
-   "leaf_id": "98e9d271",
-   "final_id": "8f50f991",
+   "leaf_id": "ce69a716",
+   "final_id": "463b658a",
    "chain": [
     [
      "move",
@@ -4481,8 +4481,8 @@
    "state": "run-fw^run-bkwd",
    "state_offset": "0x0000c328",
    "leaf": "relaxed-quickstop^run-bkwd-right",
-   "leaf_id": "325808ee",
-   "final_id": "f09f9e76",
+   "leaf_id": "1a403e33",
+   "final_id": "178a1a86",
    "chain": [
     [
      "move",
@@ -4509,8 +4509,8 @@
    "state": "run-bw^run-fwd",
    "state_offset": "0x0000c2a8",
    "leaf": "relaxed-quickstop^run-fwd",
-   "leaf_id": "ab1358f5",
-   "final_id": "8d1eda64",
+   "leaf_id": "cda8be58",
+   "final_id": "6d1bb7b9",
    "chain": [
     [
      "move",
@@ -4537,8 +4537,8 @@
    "state": "run-bw^run-fwd",
    "state_offset": "0x0000c2a8",
    "leaf": "relaxed-quickstop^run-fwd-left",
-   "leaf_id": "ab9a8213",
-   "final_id": "afa47a12",
+   "leaf_id": "cea5e3c2",
+   "final_id": "b6e25cb0",
    "chain": [
     [
      "move",
@@ -4565,8 +4565,8 @@
    "state": "run-bw^run-fwd",
    "state_offset": "0x0000c2a8",
    "leaf": "relaxed-quickstop^run-fwd-right",
-   "leaf_id": "987921a7",
-   "final_id": "d06b1df5",
+   "leaf_id": "f5b635e4",
+   "final_id": "aa28c4c7",
    "chain": [
     [
      "move",
@@ -4593,8 +4593,8 @@
    "state": "idle-turn-l",
    "state_offset": "0x0000c168",
    "leaf": "idle-turn-l",
-   "leaf_id": "182fe300",
-   "final_id": "c9275f06",
+   "leaf_id": "5a3adead",
+   "final_id": "aad6ea1c",
    "chain": [
     [
      "move",
@@ -4621,8 +4621,8 @@
    "state": "idle-turn-r",
    "state_offset": "0x0000c128",
    "leaf": "idle-turn-r",
-   "leaf_id": "68b0987a",
-   "final_id": "b9b8247c",
+   "leaf_id": "403c8a22",
+   "final_id": "24cbfd9d",
    "chain": [
     [
      "move",
@@ -4649,8 +4649,8 @@
    "state": "idle-turn-l-180",
    "state_offset": "0x0000c1a8",
    "leaf": "idle-turn-l-180",
-   "leaf_id": "55f3a46c",
-   "final_id": "55f3a46c",
+   "leaf_id": "53a82673",
+   "final_id": "53a82673",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -4662,8 +4662,8 @@
    "state": "idle-turn-r-180",
    "state_offset": "0x0000c1e8",
    "leaf": "idle-turn-r-180",
-   "leaf_id": "2526e1ff",
-   "final_id": "2526e1ff",
+   "leaf_id": "551b5e95",
+   "final_id": "551b5e95",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -4675,8 +4675,8 @@
    "state": "quick-turn-180-r",
    "state_offset": "0x00001ba8",
    "leaf": "melee-fist-idle-turn-180-r",
-   "leaf_id": "7d9998bf",
-   "final_id": "b66d981e",
+   "leaf_id": "cd5817cd",
+   "final_id": "502233a6",
    "chain": [
     [
      "move",
@@ -4703,8 +4703,8 @@
    "state": "run-jump-long",
    "state_offset": "0x00005d68",
    "leaf": "run^jump-long",
-   "leaf_id": "457c4cea",
-   "final_id": "e2cc6e53",
+   "leaf_id": "df83389f",
+   "final_id": "790a0c45",
    "chain": [
     [
      "actor_b",
@@ -4724,8 +4724,8 @@
    "state": "jump-long",
    "state_offset": "0x00005de8",
    "leaf": "jump-long",
-   "leaf_id": "7a92466e",
-   "final_id": "9da83ba0",
+   "leaf_id": "a4d198e0",
+   "final_id": "52938fee",
    "chain": [
     [
      "actor_b",
@@ -4740,13 +4740,13 @@
   },
   "crouch/pre_fall": {
    "clip": null,
-   "graph_clip": "#ab73793b",
+   "graph_clip": "#4fff6a5b",
    "status": "missing",
    "state": "pre-fall",
    "state_offset": "0x00001d28",
-   "leaf": "#ab73793b",
-   "leaf_id": "ab73793b",
-   "final_id": "ab73793b",
+   "leaf": "#4fff6a5b",
+   "leaf_id": "4fff6a5b",
+   "final_id": "4fff6a5b",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -4758,8 +4758,8 @@
    "state": "fall",
    "state_offset": "0x00001ce8",
    "leaf": "fall",
-   "leaf_id": "80d3cabd",
-   "final_id": "8e1b0e8a",
+   "leaf_id": "44b21b77",
+   "final_id": "9ea4b9eb",
    "chain": [
     [
      "actor_b",
@@ -4779,8 +4779,8 @@
    "state": "fall-land-soft-idle",
    "state_offset": "0x00001e68",
    "leaf": "land-soft^idle",
-   "leaf_id": "96319c32",
-   "final_id": "f3b66c29",
+   "leaf_id": "4eb4de1c",
+   "final_id": "0afd2275",
    "chain": [
     [
      "crouch",
@@ -4807,8 +4807,8 @@
    "state": "fall-land-soft-run",
    "state_offset": "0x00001ea8",
    "leaf": "land-soft^run",
-   "leaf_id": "3b00016a",
-   "final_id": "574b5066",
+   "leaf_id": "e85fb687",
+   "final_id": "6ab32a60",
    "chain": [
     [
      "move",
@@ -4835,8 +4835,8 @@
    "state": "fall-land-hard-idle",
    "state_offset": "0x00001da8",
    "leaf": "land-hard^idle",
-   "leaf_id": "72d0edfa",
-   "final_id": "acc59420",
+   "leaf_id": "bb15ed6c",
+   "final_id": "cf6fbfc9",
    "chain": [
     [
      "crouch",
@@ -4863,8 +4863,8 @@
    "state": "fall-land-hard-run",
    "state_offset": "0x00001de8",
    "leaf": "land-hard^run",
-   "leaf_id": "238ef92d",
-   "final_id": "58e0fbc4",
+   "leaf_id": "bc4a1c58",
+   "final_id": "d2375cc8",
    "chain": [
     [
      "move",
@@ -4891,8 +4891,8 @@
    "state": "jump-long-land-idle",
    "state_offset": "0x00005e28",
    "leaf": "land-hard^idle",
-   "leaf_id": "72d0edfa",
-   "final_id": "acc59420",
+   "leaf_id": "bb15ed6c",
+   "final_id": "cf6fbfc9",
    "chain": [
     [
      "crouch",
@@ -4919,8 +4919,8 @@
    "state": "jump-long-land-run",
    "state_offset": "0x00005ea8",
    "leaf": "land-med^run",
-   "leaf_id": "40b2a290",
-   "final_id": "079303cd",
+   "leaf_id": "f07c9292",
+   "final_id": "e5edffcb",
    "chain": [
     [
      "move",
@@ -4947,8 +4947,8 @@
    "state": "fall-land-medium-idle",
    "state_offset": "0x00001f28",
    "leaf": "land-med^idle",
-   "leaf_id": "ef6db0b4",
-   "final_id": "f3b66c29",
+   "leaf_id": "9e2c19e0",
+   "final_id": "0afd2275",
    "chain": [
     [
      "crouch",
@@ -4975,8 +4975,8 @@
    "state": "fall-land-medium-run",
    "state_offset": "0x00001f68",
    "leaf": "land-med^run",
-   "leaf_id": "40b2a290",
-   "final_id": "079303cd",
+   "leaf_id": "f07c9292",
+   "final_id": "e5edffcb",
    "chain": [
     [
      "move",
@@ -5003,8 +5003,8 @@
    "state": "fall-land-soft-run-bw",
    "state_offset": "0x00001ee8",
    "leaf": "land-soft^run-bw",
-   "leaf_id": "487cb752",
-   "final_id": "c556162b",
+   "leaf_id": "5243fa69",
+   "final_id": "ca91a530",
    "chain": [
     [
      "move",
@@ -5031,8 +5031,8 @@
    "state": "fall-land-medium-run-bw",
    "state_offset": "0x00001fa8",
    "leaf": "land-med^run-bw",
-   "leaf_id": "0084c4c6",
-   "final_id": "29f01ed0",
+   "leaf_id": "475de655",
+   "final_id": "c4acfa91",
    "chain": [
     [
      "move",
@@ -5059,8 +5059,8 @@
    "state": "fall-land-hard-run-bw",
    "state_offset": "0x00001e28",
    "leaf": "land-hard^run-bw",
-   "leaf_id": "5e912fc7",
-   "final_id": "ec705ad6",
+   "leaf_id": "15c60e4f",
+   "final_id": "30f28b6d",
    "chain": [
     [
      "move",
@@ -5087,8 +5087,8 @@
    "state": "jump-long-land-idle-med",
    "state_offset": "0x00005e68",
    "leaf": "land-med^idle",
-   "leaf_id": "ef6db0b4",
-   "final_id": "f3b66c29",
+   "leaf_id": "9e2c19e0",
+   "final_id": "0afd2275",
    "chain": [
     [
      "crouch",
@@ -5115,8 +5115,8 @@
    "state": "jump-long-land-run-hard",
    "state_offset": "0x00005ee8",
    "leaf": "land-hard^run-stumble",
-   "leaf_id": "6d6930de",
-   "final_id": "6d6930de",
+   "leaf_id": "2ad4f37c",
+   "final_id": "2ad4f37c",
    "chain": [],
    "layers": [],
    "resolution": "unique"
@@ -5128,8 +5128,8 @@
    "state": "fall-land-damage-idle",
    "state_offset": "0x00001fe8",
    "leaf": "land-hard-damage^idle",
-   "leaf_id": "06455089",
-   "final_id": "7ec24d61",
+   "leaf_id": "85ec2b46",
+   "final_id": "2865a6eb",
    "chain": [
     [
      "actor_b",
@@ -5149,8 +5149,8 @@
    "state": "fall-land-death",
    "state_offset": "0x00002028",
    "leaf": "land-hard-damage^death",
-   "leaf_id": "eb31b64e",
-   "final_id": "aa90ae11",
+   "leaf_id": "51cea6ea",
+   "final_id": "185cbcbf",
    "chain": [
     [
      "actor_b",
@@ -5170,8 +5170,8 @@
    "state": "hit-reaction-full-body",
    "state_offset": "0x0000df68",
    "leaf": "idle-hr-fwd",
-   "leaf_id": "70622416",
-   "final_id": "8952034e",
+   "leaf_id": "8478599e",
+   "final_id": "5423dfc7",
    "chain": [
     [
      "actor_b",
@@ -5191,8 +5191,8 @@
    "state": "hit-reaction-par",
    "state_offset": "0x0000e068",
    "leaf": "idle-hr-fwd--add",
-   "leaf_id": "8705c808",
-   "final_id": "fcb4aae8",
+   "leaf_id": "bccb7f67",
+   "final_id": "0608a06c",
    "chain": [
     [
      "actor_b",
@@ -5212,8 +5212,8 @@
    "state": "death-front-mid",
    "state_offset": "0x00003428",
    "leaf": "death-front-mid",
-   "leaf_id": "455225bc",
-   "final_id": "022d143d",
+   "leaf_id": "060dcc89",
+   "final_id": "75b143d8",
    "chain": [
     [
      "actor_b",
@@ -5401,8 +5401,8 @@
     "state": "idle-pistol-out-part",
     "state_offset": "0x00004de8",
     "leaf": "1p-idle-fingers",
-    "leaf_id": "9d6cd6c1",
-    "final_id": "d985a019",
+    "leaf_id": "281846b9",
+    "final_id": "679c4efe",
     "chain": [
      [
       "actor_b",
@@ -5422,8 +5422,8 @@
     "state": "idle-hands",
     "state_offset": "0x000045a8",
     "leaf": "idle-hands",
-    "leaf_id": "7fb80cc8",
-    "final_id": "aff649fc",
+    "leaf_id": "8ad9668c",
+    "final_id": "df7d066c",
     "chain": [
      [
       "actor_b",
@@ -5445,8 +5445,8 @@
     "state": "idle-pistol-out-part",
     "state_offset": "0x00004de8",
     "leaf": "1p-idle-fingers",
-    "leaf_id": "9d6cd6c1",
-    "final_id": "d985a019",
+    "leaf_id": "281846b9",
+    "final_id": "679c4efe",
     "chain": [
      [
       "actor_b",
@@ -5466,8 +5466,8 @@
     "state": "idle-hands",
     "state_offset": "0x000045a8",
     "leaf": "idle-hands",
-    "leaf_id": "7fb80cc8",
-    "final_id": "aff649fc",
+    "leaf_id": "8ad9668c",
+    "final_id": "df7d066c",
     "chain": [
      [
       "actor_b",
@@ -5494,8 +5494,8 @@
      "state": "idle-pistol-grab-part",
      "state_offset": "0x00004ea8",
      "leaf": "idle^p-grab-arm-r",
-     "leaf_id": "beb23058",
-     "final_id": "7fbad8a4",
+     "leaf_id": "ffa28cbc",
+     "final_id": "ab644e97",
      "chain": [
       [
        "actor_b",
@@ -5521,8 +5521,8 @@
      "state": "idle-pistol-draw-part",
      "state_offset": "0x00004f28",
      "leaf": "p-grab^idle-gunout-arm-r",
-     "leaf_id": "c75eee91",
-     "final_id": "3cb7a941",
+     "leaf_id": "fcd29063",
+     "final_id": "c8406b91",
      "chain": [
       [
        "actor_b",
@@ -5548,8 +5548,8 @@
      "state": "idle-pistol-holster-part",
      "state_offset": "0x000050e8",
      "leaf": "p-grab^idle-gunout-arm-r",
-     "leaf_id": "c75eee91",
-     "final_id": "3cb7a941",
+     "leaf_id": "fcd29063",
+     "final_id": "c8406b91",
      "chain": [
       [
        "actor_b",
@@ -5575,8 +5575,8 @@
      "state": "idle-pistol-finish-part",
      "state_offset": "0x00005168",
      "leaf": "p-grab^idle-arm-r",
-     "leaf_id": "f13c4688",
-     "final_id": "3cb7a941",
+     "leaf_id": "58c11f07",
+     "final_id": "c8406b91",
      "chain": [
       [
        "actor_b",
@@ -5602,8 +5602,8 @@
      "state": "idle-pistol-grab-part",
      "state_offset": "0x00004ea8",
      "leaf": "idle^p-grab-arm-r",
-     "leaf_id": "beb23058",
-     "final_id": "7fbad8a4",
+     "leaf_id": "ffa28cbc",
+     "final_id": "ab644e97",
      "chain": [
       [
        "crouch",
@@ -5636,8 +5636,8 @@
      "state": "idle-pistol-draw-part",
      "state_offset": "0x00004f28",
      "leaf": "p-grab^idle-gunout-arm-r",
-     "leaf_id": "c75eee91",
-     "final_id": "3cb7a941",
+     "leaf_id": "fcd29063",
+     "final_id": "c8406b91",
      "chain": [
       [
        "crouch",
@@ -5670,8 +5670,8 @@
      "state": "idle-pistol-holster-part",
      "state_offset": "0x000050e8",
      "leaf": "p-grab^idle-gunout-arm-r",
-     "leaf_id": "c75eee91",
-     "final_id": "3cb7a941",
+     "leaf_id": "fcd29063",
+     "final_id": "c8406b91",
      "chain": [
       [
        "crouch",
@@ -5704,8 +5704,8 @@
      "state": "idle-pistol-finish-part",
      "state_offset": "0x00005168",
      "leaf": "p-grab^idle-arm-r",
-     "leaf_id": "f13c4688",
-     "final_id": "6f91e70e",
+     "leaf_id": "58c11f07",
+     "final_id": "ad9f49c5",
      "chain": [
       [
        "crouch",
@@ -10760,17 +10760,17 @@
   [
    "0x000005b8",
    "atk-fist-k^meatshield-enter",
-   "#255102c8"
+   "#806ef9e9"
   ],
   [
    "0x000005cc",
    "atk-pistol-meatshield-idle-enter-bw",
-   "#2672466b"
+   "#cf1de353"
   ],
   [
    "0x000005e0",
    "def-pistol-meatshield-idle",
-   "#d1d284ac"
+   "#883da456"
   ],
   [
    "0x000005f4",
@@ -10885,7 +10885,7 @@
       [
        "weapon-draw-holster",
        "0x00011660",
-       "#0a1fff6d"
+       "#92edd0d8"
       ],
       [
        "actor_b",
@@ -10898,7 +10898,7 @@
       [
        "weapon-draw-holster",
        "0x0001164c",
-       "#554eb9d9"
+       "#3b94284e"
       ],
       [
        "actor_b",
@@ -10913,7 +10913,7 @@
       [
        "weapon-draw-holster",
        "0x00011660",
-       "#0a1fff6d"
+       "#92edd0d8"
       ],
       [
        "actor_b",
@@ -10926,7 +10926,7 @@
       [
        "weapon-draw-holster",
        "0x0001164c",
-       "#554eb9d9"
+       "#3b94284e"
       ],
       [
        "actor_b",
@@ -10956,7 +10956,7 @@
       [
        "weapon-draw-holster",
        "0x00011674",
-       "#6678a2cd"
+       "#dcc8447b"
       ],
       [
        "actor_b",
@@ -10984,7 +10984,7 @@
       [
        "weapon-draw-holster",
        "0x00011674",
-       "#6678a2cd"
+       "#dcc8447b"
       ],
       [
        "actor_b",
@@ -11014,7 +11014,7 @@
       [
        "weapon-draw-holster",
        "0x00011674",
-       "#6678a2cd"
+       "#dcc8447b"
       ],
       [
        "actor_b",
@@ -11042,7 +11042,7 @@
       [
        "weapon-draw-holster",
        "0x00011674",
-       "#6678a2cd"
+       "#dcc8447b"
       ],
       [
        "actor_b",
@@ -11059,7 +11059,7 @@
       [
        "weapon-draw-holster",
        "0x0001169c",
-       "#b9318e4f"
+       "#40b95819"
       ],
       [
        "actor_b",
@@ -11072,7 +11072,7 @@
       [
        "weapon-draw-holster",
        "0x000116b0",
-       "#63332388"
+       "#411bd640"
       ],
       [
        "actor_b",
@@ -11087,7 +11087,7 @@
       [
        "weapon-draw-holster",
        "0x0001169c",
-       "#b9318e4f"
+       "#40b95819"
       ],
       [
        "actor_b",
@@ -11100,7 +11100,7 @@
       [
        "weapon-draw-holster",
        "0x000116b0",
-       "#63332388"
+       "#411bd640"
       ],
       [
        "actor_b",
@@ -11122,7 +11122,7 @@
       [
        "weapon-draw-holster",
        "0x00011750",
-       "#d1349cc4"
+       "#840e9739"
       ],
       [
        "actor_b",
@@ -11140,7 +11140,7 @@
       [
        "weapon-draw-holster",
        "0x0001173c",
-       "#46d4c047"
+       "#5e73cdf6"
       ],
       [
        "actor_b",
@@ -11160,7 +11160,7 @@
       [
        "weapon-draw-holster",
        "0x00011750",
-       "#d1349cc4"
+       "#840e9739"
       ],
       [
        "actor_b",
@@ -11178,7 +11178,7 @@
       [
        "weapon-draw-holster",
        "0x0001173c",
-       "#46d4c047"
+       "#5e73cdf6"
       ],
       [
        "actor_b",
@@ -11218,7 +11218,7 @@
       [
        "weapon-draw-holster",
        "0x00011764",
-       "#75e2db53"
+       "#e171280d"
       ],
       [
        "actor_b",
@@ -11256,7 +11256,7 @@
       [
        "weapon-draw-holster",
        "0x00011764",
-       "#75e2db53"
+       "#e171280d"
       ],
       [
        "actor_b",
@@ -11296,7 +11296,7 @@
       [
        "weapon-draw-holster",
        "0x00011764",
-       "#75e2db53"
+       "#e171280d"
       ],
       [
        "actor_b",
@@ -11334,7 +11334,7 @@
       [
        "weapon-draw-holster",
        "0x00011764",
-       "#75e2db53"
+       "#e171280d"
       ],
       [
        "actor_b",
@@ -11356,7 +11356,7 @@
       [
        "weapon-draw-holster",
        "0x000117a0",
-       "#a882a7c7"
+       "#64480756"
       ],
       [
        "actor_b",
@@ -11374,7 +11374,7 @@
       [
        "weapon-draw-holster",
        "0x0001178c",
-       "#b8184021"
+       "#a424192f"
       ],
       [
        "actor_b",
@@ -11394,7 +11394,7 @@
       [
        "weapon-draw-holster",
        "0x000117a0",
-       "#a882a7c7"
+       "#64480756"
       ],
       [
        "actor_b",
@@ -11412,7 +11412,7 @@
       [
        "weapon-draw-holster",
        "0x0001178c",
-       "#b8184021"
+       "#a424192f"
       ],
       [
        "actor_b",

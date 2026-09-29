@@ -86,13 +86,13 @@ extends RefCounted
 ##                      crouch toggle until a record consumes it (dropped after held_max_age_s;
 ##                      also a weapon change in the aim states, aimidle_change); posted every tick
 ##                      while moving in a landing (land_to_move / land_run_to_move);
-##   run-fw / #d923ebe9 while moving (fw if |move_dir| <= 90) in a landing, and in a heavy hit
+##   run-fw / #e2d6c492 while moving (fw if |move_dir| <= 90) in a landing, and in a heavy hit
 ##                      once its 20-frame change-move-mode gate has passed (loco_enabled is false
 ##                      during the hit before that);
 ##   idle               while not moving in a landing (land_run_stop), and when aim_stance ends in
 ##                      aim-idle / aim-run;
 ##   run                when aim_stance ends while moving in aim-run (aimwalk_to_move);
-##   #b1b6f04e / #f492d1e7  the reversal requests (move_reversal; trigger not in the data,
+##   #96646cbc / #e78e5cf7  the reversal requests (move_reversal; trigger not in the data,
 ##                      proposed): use_transition_anims, speed >= reversal_min_speed, the stick in
 ##                      the other hemisphere (past 97.5 / 82.5) and at least reversal_angle_deg
 ##                      from the current velocity direction (the stick reverses against the
@@ -173,9 +173,9 @@ const RT_OF_GROUP := {"move": MOVE, "start": START, "stop": STOP, "rev": REVERSA
 
 const REQ_MODE := "change-move-mode"
 const REQ_FW := "run-fw"
-const REQ_BW := "#d923ebe9"
-const REQ_REV_TO_BW := "#b1b6f04e"
-const REQ_REV_TO_FW := "#f492d1e7"
+const REQ_BW := "#e2d6c492"
+const REQ_REV_TO_BW := "#96646cbc"
+const REQ_REV_TO_FW := "#e78e5cf7"
 const REQ_IDLE := "idle"
 const REQ_RUN := "run"
 

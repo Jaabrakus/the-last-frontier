@@ -6028,21 +6028,21 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#91201877",
+       "request": "#fd83b53b",
        "to_state": "vault-2m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#ff499e08",
+       "request": "#32f79c5e",
        "to_state": "vault-2m^run"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#91201877",
+       "request": "#fd83b53b",
        "to_state": "vault-2m^idle"
       }
      ]
@@ -6102,21 +6102,21 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "vault",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       }
      ]
@@ -6129,28 +6129,28 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -6163,21 +6163,21 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "vault",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -8816,14 +8816,14 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#91201877",
+       "request": "#fd83b53b",
        "to_state": "vault-2m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#ff499e08",
+       "request": "#32f79c5e",
        "to_state": "vault-2m^run"
       }
      ]
@@ -8862,7 +8862,7 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       }
      ]
@@ -8875,14 +8875,14 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -8895,7 +8895,7 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -9222,28 +9222,28 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m",
-       "request": "#91201877",
+       "request": "#fd83b53b",
        "to_state": "vault-2m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m",
-       "request": "#ff499e08",
+       "request": "#32f79c5e",
        "to_state": "vault-2m^run"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m-drop-1m",
-       "request": "#91201877",
+       "request": "#fd83b53b",
        "to_state": "vault-2m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m-drop-1m",
-       "request": "#ff499e08",
+       "request": "#32f79c5e",
        "to_state": "vault-2m^run"
       }
      ]
@@ -9290,28 +9290,28 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m-drop-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-2m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-2m-drop-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       }
      ]
@@ -9324,28 +9324,28 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m-drop-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m-drop-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -9358,28 +9358,28 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m-drop-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-2m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-2m-drop-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -11125,7 +11125,7 @@
       "ledge:ladder"
      ],
      "layer": null,
-     "leaf": "#afe40a65",
+     "leaf": "#776fcaff",
      "role": "leaf",
      "selections": [
       "(all)"
@@ -11758,7 +11758,7 @@
       "ledge:ladder"
      ],
      "layer": null,
-     "leaf": "#85ddec04",
+     "leaf": "#183dbd7b",
      "role": "leaf",
      "selections": [
       "(all)"
@@ -14263,28 +14263,28 @@
        "cond": "-",
        "fade_s": 0.2,
        "from_state": "wall-shimmy-idle-left",
-       "request": "#8e6fcc68",
+       "request": "#2ec95958",
        "to_state": "wall-shimmy-idle^move-left"
       },
       {
        "cond": "-",
        "fade_s": 0.2,
        "from_state": "wall-shimmy-idle-left",
-       "request": "#e2d1872c",
+       "request": "#a4a2175b",
        "to_state": "wall-shimmy-idle^move-right"
       },
       {
        "cond": "-",
        "fade_s": 0.2,
        "from_state": "wall-shimmy-idle-right",
-       "request": "#8e6fcc68",
+       "request": "#2ec95958",
        "to_state": "wall-shimmy-idle^move-left"
       },
       {
        "cond": "-",
        "fade_s": 0.2,
        "from_state": "wall-shimmy-idle-right",
-       "request": "#e2d1872c",
+       "request": "#a4a2175b",
        "to_state": "wall-shimmy-idle^move-right"
       }
      ]
@@ -14874,28 +14874,28 @@
        "cond": "-",
        "fade_s": 0.2,
        "from_state": "wall-shimmy-idle-left",
-       "request": "#8e6fcc68",
+       "request": "#2ec95958",
        "to_state": "wall-shimmy-idle^move-left"
       },
       {
        "cond": "-",
        "fade_s": 0.2,
        "from_state": "wall-shimmy-idle-left",
-       "request": "#e2d1872c",
+       "request": "#a4a2175b",
        "to_state": "wall-shimmy-idle^move-right"
       },
       {
        "cond": "-",
        "fade_s": 0.2,
        "from_state": "wall-shimmy-idle-right",
-       "request": "#8e6fcc68",
+       "request": "#2ec95958",
        "to_state": "wall-shimmy-idle^move-left"
       },
       {
        "cond": "-",
        "fade_s": 0.2,
        "from_state": "wall-shimmy-idle-right",
-       "request": "#e2d1872c",
+       "request": "#a4a2175b",
        "to_state": "wall-shimmy-idle^move-right"
       }
      ]
@@ -16218,28 +16218,28 @@
        "cond": ">=0&<=0.01",
        "fade_s": 0.166,
        "from_state": "wall-shimmy-move-left",
-       "request": "#e2d1872c",
+       "request": "#a4a2175b",
        "to_state": "wall-shimmy-move-left^idle"
       },
       {
        "cond": ">=0.23&<=0.25",
        "fade_s": 0.166,
        "from_state": "wall-shimmy-move-left",
-       "request": "#e2d1872c",
+       "request": "#a4a2175b",
        "to_state": "wall-shimmy-move-left^idle"
       },
       {
        "cond": ">=0.478&<=0.498",
        "fade_s": 0.166,
        "from_state": "wall-shimmy-move-left",
-       "request": "#e2d1872c",
+       "request": "#a4a2175b",
        "to_state": "wall-shimmy-move-left^idle"
       },
       {
        "cond": ">=0.742&<=0.762",
        "fade_s": 0.166,
        "from_state": "wall-shimmy-move-left",
-       "request": "#e2d1872c",
+       "request": "#a4a2175b",
        "to_state": "wall-shimmy-move-left^idle"
       }
      ]
@@ -16350,28 +16350,28 @@
        "cond": ">=0&<=0.01",
        "fade_s": 0.166,
        "from_state": "wall-shimmy-move-left",
-       "request": "#e2d1872c",
+       "request": "#a4a2175b",
        "to_state": "wall-shimmy-move-left^idle"
       },
       {
        "cond": ">=0.23&<=0.25",
        "fade_s": 0.166,
        "from_state": "wall-shimmy-move-left",
-       "request": "#e2d1872c",
+       "request": "#a4a2175b",
        "to_state": "wall-shimmy-move-left^idle"
       },
       {
        "cond": ">=0.478&<=0.498",
        "fade_s": 0.166,
        "from_state": "wall-shimmy-move-left",
-       "request": "#e2d1872c",
+       "request": "#a4a2175b",
        "to_state": "wall-shimmy-move-left^idle"
       },
       {
        "cond": ">=0.742&<=0.762",
        "fade_s": 0.166,
        "from_state": "wall-shimmy-move-left",
-       "request": "#e2d1872c",
+       "request": "#a4a2175b",
        "to_state": "wall-shimmy-move-left^idle"
       }
      ]
@@ -17670,14 +17670,14 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#91201877",
+       "request": "#fd83b53b",
        "to_state": "vault-2m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#ff499e08",
+       "request": "#32f79c5e",
        "to_state": "vault-2m^run"
       },
       {
@@ -17691,7 +17691,7 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "vault",
-       "request": "#91201877",
+       "request": "#fd83b53b",
        "to_state": "vault-2m^idle"
       }
      ]
@@ -17737,14 +17737,14 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "vault",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       }
      ]
@@ -17757,28 +17757,28 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "vault",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "vault",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -17791,14 +17791,14 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "vault",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -18833,21 +18833,21 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#91201877",
+       "request": "#fd83b53b",
        "to_state": "vault-2m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#ff499e08",
+       "request": "#32f79c5e",
        "to_state": "vault-2m^run"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#91201877",
+       "request": "#fd83b53b",
        "to_state": "vault-2m^idle"
       }
      ]
@@ -18867,14 +18867,14 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#91201877",
+       "request": "#fd83b53b",
        "to_state": "vault-2m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#ff499e08",
+       "request": "#32f79c5e",
        "to_state": "vault-2m^run"
       }
      ]
@@ -18887,28 +18887,28 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m",
-       "request": "#91201877",
+       "request": "#fd83b53b",
        "to_state": "vault-2m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m",
-       "request": "#ff499e08",
+       "request": "#32f79c5e",
        "to_state": "vault-2m^run"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m-drop-1m",
-       "request": "#91201877",
+       "request": "#fd83b53b",
        "to_state": "vault-2m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m-drop-1m",
-       "request": "#ff499e08",
+       "request": "#32f79c5e",
        "to_state": "vault-2m^run"
       }
      ]
@@ -18921,14 +18921,14 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#91201877",
+       "request": "#fd83b53b",
        "to_state": "vault-2m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#ff499e08",
+       "request": "#32f79c5e",
        "to_state": "vault-2m^run"
       },
       {
@@ -18942,7 +18942,7 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "vault",
-       "request": "#91201877",
+       "request": "#fd83b53b",
        "to_state": "vault-2m^idle"
       }
      ]
@@ -20803,21 +20803,21 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "vault",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       }
      ]
@@ -20830,7 +20830,7 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       }
      ]
@@ -20843,28 +20843,28 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m-drop-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-2m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-2m-drop-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       }
      ]
@@ -20877,14 +20877,14 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "vault",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       }
      ]
@@ -21234,28 +21234,28 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -21268,14 +21268,14 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -21288,28 +21288,28 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m-drop-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m-drop-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -21322,28 +21322,28 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "vault",
-       "request": "#40d9a044",
+       "request": "#5a28604e",
        "to_state": "vault-1m^idle"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "vault",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -21503,21 +21503,21 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "vault",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -21530,7 +21530,7 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -21543,28 +21543,28 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "idle^vault-2m-drop-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-2m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-2m-drop-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -21577,14 +21577,14 @@
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "move^vault-1m",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       },
       {
        "cond": ">=1",
        "fade_s": 0.2,
        "from_state": "vault",
-       "request": "#d2318980",
+       "request": "#ecb2aea0",
        "to_state": "vault-1m^run-a"
       }
      ]
@@ -23312,7 +23312,7 @@
    "family": "climb_up",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#ebf934c2"
+    "#82c7cea9"
    ],
    "state": "climb-0-5-carry"
   },
@@ -23339,7 +23339,7 @@
    "family": "climb_up",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#0b4a838e"
+    "#0255a8e3"
    ],
    "state": "climb-0-5-carry^idle"
   },
@@ -23839,7 +23839,7 @@
    "family": "ledge_hang",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#093038f9",
+    "#f7c26b0b",
     "hang-climb-rt"
    ],
    "state": "climb-lt-lh"
@@ -23995,7 +23995,7 @@
    "family": "ledge_hang",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#565facac",
+    "#aa046e17",
     "hang-climb-rt"
    ],
    "state": "climb-rt-rh"
@@ -24275,7 +24275,7 @@
    "family": "climb_up",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#4d097656"
+    "#0a7f9532"
    ],
    "state": "idle-knee-grab"
   },
@@ -24284,7 +24284,7 @@
    "family": "climb_up",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#4d097656"
+    "#0a7f9532"
    ],
    "state": "idle-waist-grab"
   },
@@ -24302,7 +24302,7 @@
    "family": "climb_up",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#0d1058e1"
+    "#f56365fb"
    ],
    "state": "idle^climb-0-5-carry"
   },
@@ -24320,7 +24320,7 @@
    "family": "vault",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#99f5613e"
+    "#5c94147d"
    ],
    "state": "idle^vault-kick"
   },
@@ -24414,9 +24414,9 @@
    "family": "ledge_hang",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#21558a08",
-    "#1aade8a5",
-    "#c9baf8ef",
+    "#833c0d79",
+    "#5e1e4a6b",
+    "#efd0abb0",
     "ledge-grab-look--add"
    ],
    "state": "ledge-grab-look-fail"
@@ -24426,9 +24426,9 @@
    "family": "ledge_hang",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#8ee3b093",
-    "#03b0788a",
-    "#96b46bbe",
+    "#3fccfedd",
+    "#35863198",
+    "#4e65b536",
     "ledge-grab-look--add"
    ],
    "state": "ledge-grab-look-left"
@@ -24438,9 +24438,9 @@
    "family": "ledge_hang",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#6ead7c2c",
-    "#8e8532c5",
-    "#8219786d",
+    "#491d835a",
+    "#b23ee827",
+    "#ed469cd3",
     "ledge-grab-look--add"
    ],
    "state": "ledge-grab-look-right"
@@ -24450,7 +24450,7 @@
    "family": "ledge_hang",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#c45a573e",
+    "#2870d601",
     "ledge-grab-look--add"
    ],
    "state": "ledge-grab-look-up-back"
@@ -24567,7 +24567,7 @@
    "family": "climb_up",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#4d097656"
+    "#0a7f9532"
    ],
    "state": "run-knee-grab"
   },
@@ -24594,7 +24594,7 @@
    "family": "ledge_hang",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#3e5120c9"
+    "#2ec06935"
    ],
    "state": "run-ledge-hang-drop"
   },
@@ -24612,7 +24612,7 @@
    "family": "climb_up",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#5ef065bb"
+    "#eca1669c"
    ],
    "state": "run-waist-grab"
   },
@@ -24621,7 +24621,7 @@
    "family": "climb_up",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#dc6fa764"
+    "#9ea29b1f"
    ],
    "state": "run^climb-0-5"
   },
@@ -24668,7 +24668,7 @@
    "family": "vault",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#f7ba00b4"
+    "#dfb6bbe0"
    ],
    "state": "vault-kick^idle"
   },
@@ -24724,7 +24724,7 @@
    "family": "climb_up",
    "leaf_in_actor_a_library": [],
    "leaves": [
-    "#f738393e"
+    "#0191f558"
    ],
    "state": "waist-grab-approach"
   },
@@ -24760,7 +24760,7 @@
     {
      "actor_b": {},
      "clip": "ledge-land-grab-1-hand-contact",
-     "clip_id": "728b9045"
+     "clip_id": "a990cec1"
     }
    ],
    "only_with_extras": [],
@@ -24793,7 +24793,7 @@
     {
      "actor_b": {},
      "clip": "ledge-land-grab-1-hand^ledge-grab",
-     "clip_id": "cff0d3f8"
+     "clip_id": "44ad320f"
     }
    ],
    "only_with_extras": [],
@@ -24836,7 +24836,7 @@
       ]
      },
      "clip": "jump-long",
-     "clip_id": "7a92466e"
+     "clip_id": "a4d198e0"
     }
    ],
    "only_with_extras": [],
@@ -24852,7 +24852,7 @@
     {
      "actor_b": {},
      "clip": "ledge-land-grab-1-hand-air",
-     "clip_id": "16ae685d"
+     "clip_id": "a9e1a073"
     }
    ],
    "only_with_extras": [],
@@ -24868,7 +24868,7 @@
     {
      "actor_b": {},
      "clip": "ledge-hang-land-1hand-contact",
-     "clip_id": "b1bc60c3"
+     "clip_id": "2cbe8a12"
     }
    ],
    "only_with_extras": [],
@@ -24893,7 +24893,7 @@
     {
      "actor_b": {},
      "clip": "ledge-land-grab-2-hand-contact",
-     "clip_id": "ba93c306"
+     "clip_id": "11d7ab30"
     }
    ],
    "only_with_extras": [],
@@ -24926,7 +24926,7 @@
     {
      "actor_b": {},
      "clip": "ledge-land-grab-2-hand^ledge-grab",
-     "clip_id": "f785801f"
+     "clip_id": "1678009e"
     }
    ],
    "only_with_extras": [],
@@ -25065,7 +25065,7 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dba0",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -25073,7 +25073,7 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dbd0",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -25081,7 +25081,7 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dc00",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -25089,7 +25089,7 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dc30",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -25097,7 +25097,7 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dc60",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -25105,7 +25105,7 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dc90",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -25113,7 +25113,7 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dcc0",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -25121,7 +25121,7 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dcf0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -25161,7 +25161,7 @@
       ]
      },
      "clip": "jump-long",
-     "clip_id": "7a92466e"
+     "clip_id": "a4d198e0"
     }
    ],
    "only_with_extras": [],
@@ -25177,7 +25177,7 @@
     {
      "actor_b": {},
      "clip": "ledge-land-grab-2-hand-air",
-     "clip_id": "93de9543"
+     "clip_id": "81414bd3"
     }
    ],
    "only_with_extras": [],
@@ -25193,7 +25193,7 @@
     {
      "actor_b": {},
      "clip": "cover-stand^ledge-grab-above--antic",
-     "clip_id": "d15af343"
+     "clip_id": "9bced772"
     }
    ],
    "only_with_extras": [],
@@ -25218,7 +25218,7 @@
     {
      "actor_b": {},
      "clip": "cover-stand^ledge-grab-above--land",
-     "clip_id": "07ae0890"
+     "clip_id": "b4a14fc9"
     }
    ],
    "only_with_extras": [],
@@ -25381,7 +25381,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x000278f0",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -25389,7 +25389,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027920",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -25397,7 +25397,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027950",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -25405,7 +25405,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027980",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -25413,7 +25413,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x000279b0",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -25421,7 +25421,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x000279e0",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -25429,7 +25429,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027a10",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -25437,7 +25437,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027a40",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     }
@@ -25459,7 +25459,7 @@
     {
      "actor_b": {},
      "clip": "cover-stand^ledge-grab-above--jump",
-     "clip_id": "f057e45f"
+     "clip_id": "197435b0"
     }
    ],
    "only_with_extras": [],
@@ -25475,7 +25475,7 @@
     {
      "actor_b": {},
      "clip": "ledge-grab-r-flinch-a1-aim",
-     "clip_id": "009a074a"
+     "clip_id": "4cb909f8"
     }
    ],
    "only_with_extras": [],
@@ -25491,7 +25491,7 @@
     {
      "actor_b": {},
      "clip": "ledge-grab-r-flinch-a1-aim",
-     "clip_id": "009a074a"
+     "clip_id": "4cb909f8"
     }
    ],
    "only_with_extras": [],
@@ -25507,7 +25507,7 @@
     {
      "actor_b": {},
      "clip": "arm-scale-ledge-add-multi-fm",
-     "clip_id": "ac70da18"
+     "clip_id": "dcb9ed5a"
     }
    ],
    "only_with_extras": [],
@@ -25531,7 +25531,7 @@
     {
      "actor_b": {},
      "clip": "auto-climb-1m^run",
-     "clip_id": "487877ea"
+     "clip_id": "e5a2d79d"
     }
    ],
    "only_with_extras": [],
@@ -25572,7 +25572,7 @@
     {
      "actor_b": {},
      "clip": "auto-climb-1m^walk",
-     "clip_id": "f79548e8"
+     "clip_id": "d9487507"
     }
    ],
    "only_with_extras": [],
@@ -25613,7 +25613,7 @@
     {
      "actor_b": {},
      "clip": "auto-drop-1m-r",
-     "clip_id": "ecf465e7"
+     "clip_id": "62908bfd"
     }
    ],
    "only_with_extras": [],
@@ -25654,7 +25654,7 @@
     {
      "actor_b": {},
      "clip": "auto-drop-1m-r^idle",
-     "clip_id": "d72e5d61"
+     "clip_id": "47c9649f"
     }
    ],
    "only_with_extras": [],
@@ -25681,7 +25681,7 @@
      "cond": ">=0 L48688",
      "fade_s": 0.4,
      "record": "0x0002fe30",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "idle^run-bkwd"
     },
@@ -25689,7 +25689,7 @@
      "cond": ">=0 L48588",
      "fade_s": 0.4,
      "record": "0x0002fe60",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "run-bkwd"
     },
@@ -25759,7 +25759,7 @@
     {
      "actor_b": {},
      "clip": "auto-drop-1m-r^run",
-     "clip_id": "b4105df6"
+     "clip_id": "4a9a68b2"
     }
    ],
    "only_with_extras": [],
@@ -25792,7 +25792,7 @@
     {
      "actor_b": {},
      "clip": "climb-down-2m-run",
-     "clip_id": "a29a7793"
+     "clip_id": "291f5926"
     }
    ],
    "only_with_extras": [],
@@ -25825,7 +25825,7 @@
     {
      "actor_b": {},
      "clip": "auto-run^climb-1m",
-     "clip_id": "c201e6d7"
+     "clip_id": "dd24153e"
     }
    ],
    "only_with_extras": [],
@@ -25850,7 +25850,7 @@
     {
      "actor_b": {},
      "clip": "auto-run^drop-1m",
-     "clip_id": "e06102d5"
+     "clip_id": "1a2cb815"
     }
    ],
    "only_with_extras": [],
@@ -25875,7 +25875,7 @@
     {
      "actor_b": {},
      "clip": "run-jump-down-2m-begin",
-     "clip_id": "0515d920"
+     "clip_id": "9231ef27"
     }
    ],
    "only_with_extras": [],
@@ -25918,7 +25918,7 @@
       ]
      },
      "clip": "run-jump-down-2m",
-     "clip_id": "f65479cc"
+     "clip_id": "d5112abc"
     }
    ],
    "only_with_extras": [],
@@ -25967,7 +25967,7 @@
       ]
      },
      "clip": "run-jump-down-2m-end^idle",
-     "clip_id": "a3fb4d0a"
+     "clip_id": "3d23c786"
     }
    ],
    "only_with_extras": [],
@@ -26000,7 +26000,7 @@
     {
      "actor_b": {},
      "clip": "run-jump-down-2m-end",
-     "clip_id": "ce820047"
+     "clip_id": "0dbe8c48"
     }
    ],
    "only_with_extras": [],
@@ -26043,7 +26043,7 @@
       ]
      },
      "clip": "drop-down^fall",
-     "clip_id": "9bc03422"
+     "clip_id": "d4136f77"
     }
    ],
    "only_with_extras": [],
@@ -26068,7 +26068,7 @@
     {
      "actor_b": {},
      "clip": "auto-walk^climb-1m",
-     "clip_id": "3f22f1fb"
+     "clip_id": "4332d12e"
     }
    ],
    "only_with_extras": [],
@@ -26103,7 +26103,7 @@
       ]
      },
      "clip": "ledge-land-chest-contact",
-     "clip_id": "fd9744d1"
+     "clip_id": "5d954b8e"
     }
    ],
    "only_with_extras": [],
@@ -26189,7 +26189,7 @@
       ]
      },
      "clip": "jump-long",
-     "clip_id": "7a92466e"
+     "clip_id": "a4d198e0"
     }
    ],
    "only_with_extras": [],
@@ -26205,7 +26205,7 @@
     {
      "actor_b": {},
      "clip": "ledge-land-chest-air",
-     "clip_id": "efb46a43"
+     "clip_id": "e610b653"
     }
    ],
    "only_with_extras": [],
@@ -26221,7 +26221,7 @@
     {
      "actor_b": {},
      "clip": "ledge-land-chest-wall-contact",
-     "clip_id": "0ae2eb18"
+     "clip_id": "4c51bbd9"
     }
    ],
    "only_with_extras": [],
@@ -26254,7 +26254,7 @@
     {
      "actor_b": {},
      "clip": "ledge-land-chest-wall-air",
-     "clip_id": "7b6065aa"
+     "clip_id": "bcd37658"
     }
    ],
    "only_with_extras": [],
@@ -26270,7 +26270,7 @@
     {
      "actor_b": {},
      "clip": "ledge-hang-land-chest-contact",
-     "clip_id": "40348d27"
+     "clip_id": "853d7916"
     }
    ],
    "only_with_extras": [],
@@ -26295,7 +26295,7 @@
     {
      "actor_b": {},
      "clip": "ledge-hang-land-chest-contact",
-     "clip_id": "40348d27"
+     "clip_id": "853d7916"
     }
    ],
    "only_with_extras": [],
@@ -26344,7 +26344,7 @@
       ]
      },
      "clip": "ledge-chest-climb-up^idle",
-     "clip_id": "e6c5da22"
+     "clip_id": "3d6c09a1"
     }
    ],
    "only_with_extras": [],
@@ -26371,7 +26371,7 @@
      "cond": ">=0.75 L48688",
      "fade_s": 0.6,
      "record": "0x00024db0",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "idle^run-bkwd"
     },
@@ -26379,7 +26379,7 @@
      "cond": ">=0.75 L48588",
      "fade_s": 0.6,
      "record": "0x00024de0",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "run-bkwd"
     },
@@ -26482,7 +26482,7 @@
       ]
      },
      "clip": "ledge-chest-climb-up^walk",
-     "clip_id": "12e0b5c6"
+     "clip_id": "4e4637ef"
     }
    ],
    "only_with_extras": [],
@@ -26548,7 +26548,7 @@
       ]
      },
      "clip": "walk-jump-up-0-5m",
-     "clip_id": "11a5fada"
+     "clip_id": "94d0dc26"
     }
    ],
    "only_with_extras": [],
@@ -26580,12 +26580,12 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#ebf934c2",
-     "clip_id": "ebf934c2"
+     "clip": "#82c7cea9",
+     "clip_id": "82c7cea9"
     }
    ],
    "only_with_extras": [],
-   "reference_clip": "#ebf934c2",
+   "reference_clip": "#82c7cea9",
    "state_offset": "0x00006f68",
    "transitions": [
     {
@@ -26614,7 +26614,7 @@
     {
      "actor_b": {},
      "clip": "pt-climb-onto-0-5m",
-     "clip_id": "6130dd4f"
+     "clip_id": "2b9de612"
     }
    ],
    "only_with_extras": [],
@@ -26647,7 +26647,7 @@
     {
      "actor_b": {},
      "clip": "pt-climb-onto-0-5m^run",
-     "clip_id": "398a7346"
+     "clip_id": "b8a39b06"
     }
    ],
    "only_with_extras": [],
@@ -26687,12 +26687,12 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#0b4a838e",
-     "clip_id": "0b4a838e"
+     "clip": "#0255a8e3",
+     "clip_id": "0255a8e3"
     }
    ],
    "only_with_extras": [],
-   "reference_clip": "#0b4a838e",
+   "reference_clip": "#0255a8e3",
    "state_offset": "0x00006fa8",
    "transitions": [
     {
@@ -26721,7 +26721,7 @@
     {
      "actor_b": {},
      "clip": "climb-onto-0-5m^idle",
-     "clip_id": "d94f9716"
+     "clip_id": "c55cb949"
     }
    ],
    "only_with_extras": [],
@@ -26748,7 +26748,7 @@
      "cond": ">=0 L48688",
      "fade_s": 0.4,
      "record": "0x0002fe30",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "idle^run-bkwd"
     },
@@ -26756,7 +26756,7 @@
      "cond": ">=0 L48588",
      "fade_s": 0.4,
      "record": "0x0002fe60",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "run-bkwd"
     },
@@ -26818,7 +26818,7 @@
     {
      "actor_b": {},
      "clip": "climb-onto-0-5m^run",
-     "clip_id": "f42aba4c"
+     "clip_id": "c5563fd7"
     }
    ],
    "only_with_extras": [],
@@ -26981,12 +26981,12 @@
       ]
      },
      "clip": "climb-down",
-     "clip_id": "384db0cf"
+     "clip_id": "44426060"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-down",
-     "clip_id": "a5aaf33d"
+     "clip_id": "0f913a68"
     }
    ],
    "only_with_extras": [
@@ -27039,12 +27039,12 @@
       ]
      },
      "clip": "climb-down--^idle",
-     "clip_id": "00177ef6"
+     "clip_id": "31d08410"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-down^hang-idle",
-     "clip_id": "33ed4504"
+     "clip_id": "abf530b3"
     }
    ],
    "only_with_extras": [
@@ -27236,12 +27236,12 @@
       ]
      },
      "clip": "climb-down",
-     "clip_id": "384db0cf"
+     "clip_id": "44426060"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-down",
-     "clip_id": "a5aaf33d"
+     "clip_id": "0f913a68"
     }
    ],
    "only_with_extras": [
@@ -27284,12 +27284,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-fast^down-rt-fast-b",
-     "clip_id": "e34d43a4"
+     "clip_id": "1c7ef6a0"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -27330,12 +27330,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-fast^down-rt-fast",
-     "clip_id": "7b4df7e0"
+     "clip_id": "f89c96f6"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -27407,12 +27407,12 @@
       ]
      },
      "clip": "climb-down--^idle",
-     "clip_id": "00177ef6"
+     "clip_id": "31d08410"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-down^hang-idle",
-     "clip_id": "33ed4504"
+     "clip_id": "abf530b3"
     }
    ],
    "only_with_extras": [
@@ -27513,12 +27513,12 @@
       ]
      },
      "clip": "climb-down-fast--a",
-     "clip_id": "d40154b0"
+     "clip_id": "3b290b9f"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [
@@ -27708,12 +27708,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt",
-     "clip_id": "17cba0b3"
+     "clip_id": "ac641543"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-down-rt",
-     "clip_id": "f10bfbc6"
+     "clip_id": "6b8ee7e1"
     }
    ],
    "only_with_extras": [],
@@ -27754,12 +27754,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt-fast^down-fast",
-     "clip_id": "0087c397"
+     "clip_id": "e8d01fd5"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -27814,12 +27814,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt--^idle",
-     "clip_id": "6677c638"
+     "clip_id": "1474ddb0"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-down-rt^hang-idle",
-     "clip_id": "4ac4f4ae"
+     "clip_id": "7524f230"
     }
    ],
    "only_with_extras": [],
@@ -27930,12 +27930,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt-fast--a",
-     "clip_id": "029a1195"
+     "clip_id": "62150dd3"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -27976,12 +27976,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt-fast^down-fast-b",
-     "clip_id": "2c2dd813"
+     "clip_id": "1eef9a07"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -28031,7 +28031,7 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt-fast--a",
-     "clip_id": "029a1195"
+     "clip_id": "62150dd3"
     },
     {
      "actor_b": {
@@ -28044,12 +28044,12 @@
       ]
      },
      "clip": "ledge-grab-base",
-     "clip_id": "5b377b87"
+     "clip_id": "daee6abb"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [
@@ -28116,12 +28116,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt-fast--b",
-     "clip_id": "0fd9374c"
+     "clip_id": "0a293c29"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -28200,12 +28200,12 @@
       ]
      },
      "clip": "climb-down",
-     "clip_id": "384db0cf"
+     "clip_id": "44426060"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-down",
-     "clip_id": "a5aaf33d"
+     "clip_id": "0f913a68"
     }
    ],
    "only_with_extras": [
@@ -28248,12 +28248,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-fast^down-rt-fast",
-     "clip_id": "7b4df7e0"
+     "clip_id": "f89c96f6"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -28294,12 +28294,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-fast^down-rt-fast-b",
-     "clip_id": "e34d43a4"
+     "clip_id": "1c7ef6a0"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -28370,19 +28370,19 @@
        "..."
       ]
      },
-     "clip": "#afe40a65",
-     "clip_id": "afe40a65"
+     "clip": "#776fcaff",
+     "clip_id": "776fcaff"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-down^hang-idle",
-     "clip_id": "33ed4504"
+     "clip_id": "abf530b3"
     }
    ],
    "only_with_extras": [
     "ledge:ladder"
    ],
-   "reference_clip": "#afe40a65",
+   "reference_clip": "#776fcaff",
    "state_offset": "0x000093e8",
    "transitions": [
     {
@@ -28477,12 +28477,12 @@
       ]
      },
      "clip": "climb-down-fast--b",
-     "clip_id": "d9427269"
+     "clip_id": "b0c5884a"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [
@@ -28525,12 +28525,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt-fast^down-fast-b",
-     "clip_id": "2c2dd813"
+     "clip_id": "1eef9a07"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -28580,7 +28580,7 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt-fast--a",
-     "clip_id": "029a1195"
+     "clip_id": "62150dd3"
     },
     {
      "actor_b": {
@@ -28593,12 +28593,12 @@
       ]
      },
      "clip": "ledge-grab-base",
-     "clip_id": "5b377b87"
+     "clip_id": "daee6abb"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [
@@ -28665,12 +28665,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt-fast--b",
-     "clip_id": "0fd9374c"
+     "clip_id": "0a293c29"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -28858,12 +28858,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt",
-     "clip_id": "17cba0b3"
+     "clip_id": "ac641543"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-down-rt",
-     "clip_id": "f10bfbc6"
+     "clip_id": "6b8ee7e1"
     }
    ],
    "only_with_extras": [],
@@ -28904,12 +28904,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt-fast^down-fast",
-     "clip_id": "0087c397"
+     "clip_id": "e8d01fd5"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -28964,12 +28964,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt--^idle",
-     "clip_id": "6677c638"
+     "clip_id": "1474ddb0"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-down-rt^hang-idle",
-     "clip_id": "4ac4f4ae"
+     "clip_id": "7524f230"
     }
    ],
    "only_with_extras": [],
@@ -29080,12 +29080,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt-fast--a",
-     "clip_id": "029a1195"
+     "clip_id": "62150dd3"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -29238,12 +29238,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt-far",
-     "clip_id": "cfa98a64"
+     "clip_id": "3cedc34c"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -29284,12 +29284,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt-far--^idle",
-     "clip_id": "88066a36"
+     "clip_id": "dd3b394d"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -29434,12 +29434,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt-far",
-     "clip_id": "cfa98a64"
+     "clip_id": "3cedc34c"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -29480,12 +29480,12 @@
     {
      "actor_b": {},
      "clip": "climb-down-rt-far--^idle",
-     "clip_id": "88066a36"
+     "clip_id": "dd3b394d"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -29630,12 +29630,12 @@
     {
      "actor_b": {},
      "clip": "climb-rt-far",
-     "clip_id": "cd5b885b"
+     "clip_id": "f0f6f621"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -29676,12 +29676,12 @@
     {
      "actor_b": {},
      "clip": "climb-rt-far--^idle",
-     "clip_id": "e13a0842"
+     "clip_id": "403d695d"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -29826,12 +29826,12 @@
     {
      "actor_b": {},
      "clip": "climb-rt-far",
-     "clip_id": "cd5b885b"
+     "clip_id": "f0f6f621"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -29872,12 +29872,12 @@
     {
      "actor_b": {},
      "clip": "climb-rt-far--^idle",
-     "clip_id": "e13a0842"
+     "clip_id": "403d695d"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -30022,12 +30022,12 @@
     {
      "actor_b": {},
      "clip": "climb-up-rt-far",
-     "clip_id": "72f7d5e7"
+     "clip_id": "5d908833"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -30068,12 +30068,12 @@
     {
      "actor_b": {},
      "clip": "climb-up-rt-far--^idle",
-     "clip_id": "92851cd2"
+     "clip_id": "c2be047e"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -30218,12 +30218,12 @@
     {
      "actor_b": {},
      "clip": "climb-up-rt-far",
-     "clip_id": "72f7d5e7"
+     "clip_id": "5d908833"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -30264,12 +30264,12 @@
     {
      "actor_b": {},
      "clip": "climb-up-rt-far--^idle",
-     "clip_id": "92851cd2"
+     "clip_id": "c2be047e"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -30294,7 +30294,7 @@
     {
      "actor_b": {},
      "clip": "jump-up-1-75m",
-     "clip_id": "70b05c31"
+     "clip_id": "971ebf91"
     }
    ],
    "only_with_extras": [],
@@ -30337,7 +30337,7 @@
       ]
      },
      "clip": "ledge-grab-chest^ledge-grab-knee",
-     "clip_id": "abb85f29"
+     "clip_id": "b4c11e71"
     }
    ],
    "only_with_extras": [],
@@ -30380,7 +30380,7 @@
       ]
      },
      "clip": "ledge-grab-knee^idle",
-     "clip_id": "af3f98cd"
+     "clip_id": "184b9ec4"
     }
    ],
    "only_with_extras": [],
@@ -30407,7 +30407,7 @@
      "cond": ">=0.5 L48688",
      "fade_s": 0.4,
      "record": "0x00037300",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "idle^run-bkwd"
     },
@@ -30415,7 +30415,7 @@
      "cond": ">=0.5 L48588",
      "fade_s": 0.4,
      "record": "0x00037330",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "run-bkwd"
     },
@@ -30520,7 +30520,7 @@
     {
      "actor_b": {},
      "clip": "jump-onto-1m",
-     "clip_id": "001c8998"
+     "clip_id": "4cf8d758"
     }
    ],
    "only_with_extras": [],
@@ -30550,28 +30550,28 @@
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031b70",
-     "request": "#c8eaa2dc",
+     "request": "#1616fed5",
      "source": "wall-jump-45-long-jump"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031b70",
-     "request": "#c8eaa2dc",
+     "request": "#1616fed5",
      "source": "wall-jump-45-long-jump-flip"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031b70",
-     "request": "#c8eaa2dc",
+     "request": "#1616fed5",
      "source": "wall-jump-90-long-jump"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031b70",
-     "request": "#c8eaa2dc",
+     "request": "#1616fed5",
      "source": "wall-jump-90-long-jump-flip"
     }
    ],
@@ -30579,7 +30579,7 @@
     {
      "actor_b": {},
      "clip": "jump-onto-1m-close",
-     "clip_id": "c6af8976"
+     "clip_id": "623aedb8"
     }
    ],
    "only_with_extras": [],
@@ -30595,7 +30595,7 @@
     {
      "actor_b": {},
      "clip": "jump-up-1-75m",
-     "clip_id": "70b05c31"
+     "clip_id": "971ebf91"
     }
    ],
    "only_with_extras": [],
@@ -30638,7 +30638,7 @@
       ]
      },
      "clip": "ledge-grab-chest^ledge-grab-knee",
-     "clip_id": "abb85f29"
+     "clip_id": "b4c11e71"
     }
    ],
    "only_with_extras": [],
@@ -30671,7 +30671,7 @@
     {
      "actor_b": {},
      "clip": "ledge-grab-knee^run",
-     "clip_id": "a037599e"
+     "clip_id": "983a1f7f"
     }
    ],
    "only_with_extras": [],
@@ -30704,119 +30704,119 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dcf0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "2-hand-grab-2"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027a40",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "against-wall-ledge-grab-climb"
     },
     {
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021fd0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "fall-grab-edge"
     },
     {
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x000362d0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "fall-grab-edge-hang"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00026340",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "ledge-grab"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029f80",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "ledge-grab-bk"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027a40",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "ledge-grab-climb"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f4a0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "ledge-grab-fw"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f1d0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "ledge-grab-look-away"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002ccb0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "ledge-grab-look-away-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003eb70",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "ledge-grab-look-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003cec0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "ledge-grab-look-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00039190",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "ledge-grab-look-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b230",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "ledge-grab-look-up-back"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00023480",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "ledge-shimmy-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000340b0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "ledge-shimmy-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001eec0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "source": "swim-ledge-grab"
     }
    ],
@@ -30824,12 +30824,12 @@
     {
      "actor_b": {},
      "clip": "ledge-grab^corner-90-in-down-begin",
-     "clip_id": "86f166d3"
+     "clip_id": "0b79b2f7"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-90-in-down",
-     "clip_id": "d0110d19"
+     "clip_id": "1b82969a"
     }
    ],
    "only_with_extras": [],
@@ -30870,12 +30870,12 @@
     {
      "actor_b": {},
      "clip": "ledge-grab^corner-90-in-down^idle",
-     "clip_id": "6b37998c"
+     "clip_id": "39ed4498"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-90-in-down--end",
-     "clip_id": "813a8c44"
+     "clip_id": "9d4692d0"
     }
    ],
    "only_with_extras": [],
@@ -30900,119 +30900,119 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dc60",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "2-hand-grab-2"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x000279b0",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "against-wall-ledge-grab-climb"
     },
     {
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021f40",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "fall-grab-edge"
     },
     {
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x00036240",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "fall-grab-edge-hang"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000262b0",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "ledge-grab"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029ef0",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "ledge-grab-bk"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x000279b0",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "ledge-grab-climb"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f410",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "ledge-grab-fw"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f140",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "ledge-grab-look-away"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002cc20",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "ledge-grab-look-away-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003eae0",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "ledge-grab-look-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003ce30",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "ledge-grab-look-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00039100",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "ledge-grab-look-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b1a0",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "ledge-grab-look-up-back"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000233f0",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "ledge-shimmy-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00034020",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "ledge-shimmy-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001ee30",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "source": "swim-ledge-grab"
     }
    ],
@@ -31020,12 +31020,12 @@
     {
      "actor_b": {},
      "clip": "ledge-grab^corner-90-in-down-begin",
-     "clip_id": "86f166d3"
+     "clip_id": "0b79b2f7"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-90-in-down",
-     "clip_id": "d0110d19"
+     "clip_id": "1b82969a"
     }
    ],
    "only_with_extras": [],
@@ -31066,12 +31066,12 @@
     {
      "actor_b": {},
      "clip": "ledge-grab^corner-90-in-down^idle",
-     "clip_id": "6b37998c"
+     "clip_id": "39ed4498"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-90-in-down--end",
-     "clip_id": "813a8c44"
+     "clip_id": "9d4692d0"
     }
    ],
    "only_with_extras": [],
@@ -31096,119 +31096,119 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dc90",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "2-hand-grab-2"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x000279e0",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "against-wall-ledge-grab-climb"
     },
     {
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021f70",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "fall-grab-edge"
     },
     {
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x00036270",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "fall-grab-edge-hang"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000262e0",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "ledge-grab"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029f20",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "ledge-grab-bk"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x000279e0",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "ledge-grab-climb"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f440",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "ledge-grab-fw"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f170",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "ledge-grab-look-away"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002cc50",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "ledge-grab-look-away-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003eb10",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "ledge-grab-look-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003ce60",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "ledge-grab-look-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00039130",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "ledge-grab-look-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b1d0",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "ledge-grab-look-up-back"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00023420",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "ledge-shimmy-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00034050",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "ledge-shimmy-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001ee60",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "source": "swim-ledge-grab"
     }
    ],
@@ -31216,12 +31216,12 @@
     {
      "actor_b": {},
      "clip": "ledge-grab^corner-90-in-begin",
-     "clip_id": "89ea02ac"
+     "clip_id": "89d9afaf"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-90-in",
-     "clip_id": "e7e89904"
+     "clip_id": "3eabcc69"
     }
    ],
    "only_with_extras": [],
@@ -31262,12 +31262,12 @@
     {
      "actor_b": {},
      "clip": "ledge-grab^corner-90-in^idle",
-     "clip_id": "72565ac3"
+     "clip_id": "b73ef1d2"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-90-in--end",
-     "clip_id": "4e7b6d8c"
+     "clip_id": "4bcb6fc9"
     }
    ],
    "only_with_extras": [],
@@ -31292,119 +31292,119 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dc00",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "2-hand-grab-2"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027950",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "against-wall-ledge-grab-climb"
     },
     {
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021ee0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "fall-grab-edge"
     },
     {
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x000361e0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "fall-grab-edge-hang"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00026250",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "ledge-grab"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029e90",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "ledge-grab-bk"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027950",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "ledge-grab-climb"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f3b0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "ledge-grab-fw"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f0e0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "ledge-grab-look-away"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002cbc0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "ledge-grab-look-away-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003ea80",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "ledge-grab-look-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003cdd0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "ledge-grab-look-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000390a0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "ledge-grab-look-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b140",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "ledge-grab-look-up-back"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00023390",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "ledge-shimmy-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00033fc0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "ledge-shimmy-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001edd0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "source": "swim-ledge-grab"
     }
    ],
@@ -31412,12 +31412,12 @@
     {
      "actor_b": {},
      "clip": "ledge-grab^corner-90-in-begin",
-     "clip_id": "89ea02ac"
+     "clip_id": "89d9afaf"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-90-in",
-     "clip_id": "e7e89904"
+     "clip_id": "3eabcc69"
     }
    ],
    "only_with_extras": [],
@@ -31458,12 +31458,12 @@
     {
      "actor_b": {},
      "clip": "ledge-grab^corner-90-in^idle",
-     "clip_id": "72565ac3"
+     "clip_id": "b73ef1d2"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-90-in--end",
-     "clip_id": "4e7b6d8c"
+     "clip_id": "4bcb6fc9"
     }
    ],
    "only_with_extras": [],
@@ -31488,119 +31488,119 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dcc0",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "2-hand-grab-2"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027a10",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "against-wall-ledge-grab-climb"
     },
     {
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021fa0",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "fall-grab-edge"
     },
     {
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x000362a0",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "fall-grab-edge-hang"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00026310",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "ledge-grab"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029f50",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "ledge-grab-bk"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027a10",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "ledge-grab-climb"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f470",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "ledge-grab-fw"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f1a0",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "ledge-grab-look-away"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002cc80",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "ledge-grab-look-away-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003eb40",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "ledge-grab-look-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003ce90",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "ledge-grab-look-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00039160",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "ledge-grab-look-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b200",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "ledge-grab-look-up-back"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00023450",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "ledge-shimmy-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00034080",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "ledge-shimmy-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001ee90",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "source": "swim-ledge-grab"
     }
    ],
@@ -31608,12 +31608,12 @@
     {
      "actor_b": {},
      "clip": "ledge-grab^corner-90-in-up-begin",
-     "clip_id": "e983ce61"
+     "clip_id": "ab55afb4"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-90-in-up",
-     "clip_id": "fbc169ac"
+     "clip_id": "fe35901b"
     }
    ],
    "only_with_extras": [],
@@ -31654,12 +31654,12 @@
     {
      "actor_b": {},
      "clip": "ledge-grab^corner-90-in-up^idle",
-     "clip_id": "6d426d69"
+     "clip_id": "5e24305c"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-90-in-up--end",
-     "clip_id": "f75f3475"
+     "clip_id": "ecdb883a"
     }
    ],
    "only_with_extras": [],
@@ -31684,119 +31684,119 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dc30",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "2-hand-grab-2"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027980",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "against-wall-ledge-grab-climb"
     },
     {
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021f10",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "fall-grab-edge"
     },
     {
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x00036210",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "fall-grab-edge-hang"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00026280",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "ledge-grab"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029ec0",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "ledge-grab-bk"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027980",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "ledge-grab-climb"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f3e0",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "ledge-grab-fw"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f110",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "ledge-grab-look-away"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002cbf0",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "ledge-grab-look-away-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003eab0",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "ledge-grab-look-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003ce00",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "ledge-grab-look-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000390d0",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "ledge-grab-look-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b170",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "ledge-grab-look-up-back"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000233c0",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "ledge-shimmy-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00033ff0",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "ledge-shimmy-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001ee00",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "source": "swim-ledge-grab"
     }
    ],
@@ -31804,12 +31804,12 @@
     {
      "actor_b": {},
      "clip": "ledge-grab^corner-90-in-up-begin",
-     "clip_id": "e983ce61"
+     "clip_id": "ab55afb4"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-90-in-up",
-     "clip_id": "fbc169ac"
+     "clip_id": "fe35901b"
     }
    ],
    "only_with_extras": [],
@@ -31850,12 +31850,12 @@
     {
      "actor_b": {},
      "clip": "ledge-grab^corner-90-in-up^idle",
-     "clip_id": "6d426d69"
+     "clip_id": "5e24305c"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-90-in-up--end",
-     "clip_id": "f75f3475"
+     "clip_id": "ecdb883a"
     }
    ],
    "only_with_extras": [],
@@ -31923,7 +31923,7 @@
     {
      "actor_b": {},
      "clip": "jump-onto-1m",
-     "clip_id": "001c8998"
+     "clip_id": "4cf8d758"
     }
    ],
    "only_with_extras": [],
@@ -31953,28 +31953,28 @@
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031bd0",
-     "request": "#124bbeb8",
+     "request": "#f00df5f5",
      "source": "wall-jump-45-long-jump"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031bd0",
-     "request": "#124bbeb8",
+     "request": "#f00df5f5",
      "source": "wall-jump-45-long-jump-flip"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031bd0",
-     "request": "#124bbeb8",
+     "request": "#f00df5f5",
      "source": "wall-jump-90-long-jump"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031bd0",
-     "request": "#124bbeb8",
+     "request": "#f00df5f5",
      "source": "wall-jump-90-long-jump-flip"
     }
    ],
@@ -31982,7 +31982,7 @@
     {
      "actor_b": {},
      "clip": "jump-onto-1m-close",
-     "clip_id": "c6af8976"
+     "clip_id": "623aedb8"
     }
    ],
    "only_with_extras": [],
@@ -32166,17 +32166,17 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#093038f9",
-     "clip_id": "093038f9"
+     "clip": "#f7c26b0b",
+     "clip_id": "f7c26b0b"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-rt",
-     "clip_id": "d2f4bcf2"
+     "clip_id": "2d72f5bd"
     }
    ],
    "only_with_extras": [],
-   "reference_clip": "#093038f9",
+   "reference_clip": "#f7c26b0b",
    "state_offset": "0x00009768",
    "transitions": [
     {
@@ -32220,12 +32220,12 @@
     {
      "actor_b": {},
      "clip": "climb-rt--^idle",
-     "clip_id": "008e23b6"
+     "clip_id": "1b9f8e24"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-rt^hang-idle",
-     "clip_id": "6c0f3b21"
+     "clip_id": "486bcc76"
     }
    ],
    "only_with_extras": [],
@@ -32344,12 +32344,12 @@
     {
      "actor_b": {},
      "clip": "climb-rt-fast--a",
-     "clip_id": "4d5c14b0"
+     "clip_id": "5036c879"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -32392,7 +32392,7 @@
     {
      "actor_b": {},
      "clip": "climb-rt-fast--a",
-     "clip_id": "4d5c14b0"
+     "clip_id": "5036c879"
     },
     {
      "actor_b": {
@@ -32405,12 +32405,12 @@
       ]
      },
      "clip": "ledge-grab-base",
-     "clip_id": "5b377b87"
+     "clip_id": "daee6abb"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [
@@ -32485,12 +32485,12 @@
     {
      "actor_b": {},
      "clip": "climb-rt-fast--b",
-     "clip_id": "401f3269"
+     "clip_id": "2ccc61ac"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -32523,7 +32523,7 @@
     {
      "actor_b": {},
      "clip": "jump-up-1-5m^ledge-knee",
-     "clip_id": "810efdea"
+     "clip_id": "3e085a30"
     }
    ],
    "only_with_extras": [],
@@ -32566,7 +32566,7 @@
       ]
      },
      "clip": "ledge-grab-knee^idle",
-     "clip_id": "af3f98cd"
+     "clip_id": "184b9ec4"
     }
    ],
    "only_with_extras": [],
@@ -32593,7 +32593,7 @@
      "cond": ">=0.5 L48688",
      "fade_s": 0.4,
      "record": "0x00037300",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "idle^run-bkwd"
     },
@@ -32601,7 +32601,7 @@
      "cond": ">=0.5 L48588",
      "fade_s": 0.4,
      "record": "0x00037330",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "run-bkwd"
     },
@@ -32677,28 +32677,28 @@
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031ae0",
-     "request": "#2d91a2c6",
+     "request": "#ede7c522",
      "source": "wall-jump-45-long-jump"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031ae0",
-     "request": "#2d91a2c6",
+     "request": "#ede7c522",
      "source": "wall-jump-45-long-jump-flip"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031ae0",
-     "request": "#2d91a2c6",
+     "request": "#ede7c522",
      "source": "wall-jump-90-long-jump"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031ae0",
-     "request": "#2d91a2c6",
+     "request": "#ede7c522",
      "source": "wall-jump-90-long-jump-flip"
     }
    ],
@@ -32706,7 +32706,7 @@
     {
      "actor_b": {},
      "clip": "jump-onto-1m",
-     "clip_id": "001c8998"
+     "clip_id": "4cf8d758"
     }
    ],
    "only_with_extras": [],
@@ -32736,28 +32736,28 @@
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031b10",
-     "request": "#48ca7e36",
+     "request": "#f6f0fad8",
      "source": "wall-jump-45-long-jump"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031b10",
-     "request": "#48ca7e36",
+     "request": "#f6f0fad8",
      "source": "wall-jump-45-long-jump-flip"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031b10",
-     "request": "#48ca7e36",
+     "request": "#f6f0fad8",
      "source": "wall-jump-90-long-jump"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031b10",
-     "request": "#48ca7e36",
+     "request": "#f6f0fad8",
      "source": "wall-jump-90-long-jump-flip"
     }
    ],
@@ -32765,7 +32765,7 @@
     {
      "actor_b": {},
      "clip": "jump-onto-1m-close",
-     "clip_id": "c6af8976"
+     "clip_id": "623aedb8"
     }
    ],
    "only_with_extras": [],
@@ -32781,7 +32781,7 @@
     {
      "actor_b": {},
      "clip": "jump-up-1-5m^ledge-knee",
-     "clip_id": "810efdea"
+     "clip_id": "3e085a30"
     }
    ],
    "only_with_extras": [],
@@ -32814,7 +32814,7 @@
     {
      "actor_b": {},
      "clip": "ledge-grab-knee^run",
-     "clip_id": "a037599e"
+     "clip_id": "983a1f7f"
     }
    ],
    "only_with_extras": [],
@@ -32857,7 +32857,7 @@
       ]
      },
      "clip": "ledge-grab-knee^idle",
-     "clip_id": "af3f98cd"
+     "clip_id": "184b9ec4"
     }
    ],
    "only_with_extras": [],
@@ -32884,7 +32884,7 @@
      "cond": ">=0.2 L48688",
      "fade_s": 0.4,
      "record": "0x00028040",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "idle^run-bkwd"
     },
@@ -32892,7 +32892,7 @@
      "cond": ">=0.2 L48588",
      "fade_s": 0.4,
      "record": "0x00028070",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "run-bkwd"
     },
@@ -32954,7 +32954,7 @@
     {
      "actor_b": {},
      "clip": "ledge-grab-knee^run",
-     "clip_id": "a037599e"
+     "clip_id": "983a1f7f"
     }
    ],
    "only_with_extras": [],
@@ -32987,119 +32987,119 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dbd0",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "2-hand-grab-2"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027920",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "against-wall-ledge-grab-climb"
     },
     {
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021eb0",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "fall-grab-edge"
     },
     {
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x000361b0",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "fall-grab-edge-hang"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00026220",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "ledge-grab"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029e60",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "ledge-grab-bk"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027920",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "ledge-grab-climb"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f380",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "ledge-grab-fw"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f0b0",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "ledge-grab-look-away"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002cb90",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "ledge-grab-look-away-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003ea50",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "ledge-grab-look-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003cda0",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "ledge-grab-look-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00039070",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "ledge-grab-look-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b110",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "ledge-grab-look-up-back"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00023360",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "ledge-shimmy-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00033f90",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "ledge-shimmy-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001eda0",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "source": "swim-ledge-grab"
     }
    ],
@@ -33107,12 +33107,12 @@
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-out-90-begin",
-     "clip_id": "909302b6"
+     "clip_id": "dc318f8d"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -33153,12 +33153,12 @@
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-out-90^idle",
-     "clip_id": "cec711d5"
+     "clip_id": "ff34de93"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -33183,119 +33183,119 @@
      "cond": ">=0.25",
      "fade_s": 0.2,
      "record": "0x0002dba0",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "2-hand-grab-2"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x000278f0",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "against-wall-ledge-grab-climb"
     },
     {
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021e80",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "fall-grab-edge"
     },
     {
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x00036180",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "fall-grab-edge-hang"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000261f0",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "ledge-grab"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029e30",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "ledge-grab-bk"
     },
     {
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x000278f0",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "ledge-grab-climb"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f350",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "ledge-grab-fw"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f080",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "ledge-grab-look-away"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002cb60",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "ledge-grab-look-away-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003ea20",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "ledge-grab-look-fail"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003cd70",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "ledge-grab-look-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00039040",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "ledge-grab-look-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b0e0",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "ledge-grab-look-up-back"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00023330",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "ledge-shimmy-left"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00033f60",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "ledge-shimmy-right"
     },
     {
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001ed70",
-     "request": "#355f7872",
+     "request": "#85591498",
      "source": "swim-ledge-grab"
     }
    ],
@@ -33303,12 +33303,12 @@
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-out-90-begin",
-     "clip_id": "909302b6"
+     "clip_id": "dc318f8d"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -33349,12 +33349,12 @@
     {
      "actor_b": {},
      "clip": "ledge-hang-corner-out-90^idle",
-     "clip_id": "cec711d5"
+     "clip_id": "ff34de93"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -33389,7 +33389,7 @@
     {
      "actor_b": {},
      "clip": "climb-rt-fast--a",
-     "clip_id": "4d5c14b0"
+     "clip_id": "5036c879"
     },
     {
      "actor_b": {
@@ -33402,12 +33402,12 @@
       ]
      },
      "clip": "ledge-grab-base",
-     "clip_id": "5b377b87"
+     "clip_id": "daee6abb"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [
@@ -33482,12 +33482,12 @@
     {
      "actor_b": {},
      "clip": "climb-rt-fast--b",
-     "clip_id": "401f3269"
+     "clip_id": "2ccc61ac"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -33688,17 +33688,17 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#565facac",
-     "clip_id": "565facac"
+     "clip": "#aa046e17",
+     "clip_id": "aa046e17"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-rt",
-     "clip_id": "d2f4bcf2"
+     "clip_id": "2d72f5bd"
     }
    ],
    "only_with_extras": [],
-   "reference_clip": "#565facac",
+   "reference_clip": "#aa046e17",
    "state_offset": "0x00009528",
    "transitions": [
     {
@@ -33742,12 +33742,12 @@
     {
      "actor_b": {},
      "clip": "climb-rt--^idle",
-     "clip_id": "008e23b6"
+     "clip_id": "1b9f8e24"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-rt^hang-idle",
-     "clip_id": "6c0f3b21"
+     "clip_id": "486bcc76"
     }
    ],
    "only_with_extras": [],
@@ -33873,12 +33873,12 @@
     {
      "actor_b": {},
      "clip": "climb-rt-fast--a",
-     "clip_id": "4d5c14b0"
+     "clip_id": "5036c879"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -33911,7 +33911,7 @@
     {
      "actor_b": {},
      "clip": "climb-onto-1m^idle",
-     "clip_id": "3e705f56"
+     "clip_id": "affec2dd"
     }
    ],
    "only_with_extras": [],
@@ -33938,7 +33938,7 @@
      "cond": ">=0 L48688",
      "fade_s": 0.6,
      "record": "0x00024640",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "idle^run-bkwd"
     },
@@ -33946,7 +33946,7 @@
      "cond": ">=0 L48588",
      "fade_s": 0.6,
      "record": "0x00024670",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "run-bkwd"
     },
@@ -34022,28 +34022,28 @@
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031a80",
-     "request": "#b363bb6e",
+     "request": "#513a6ba6",
      "source": "wall-jump-45-long-jump"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031a80",
-     "request": "#b363bb6e",
+     "request": "#513a6ba6",
      "source": "wall-jump-45-long-jump-flip"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031a80",
-     "request": "#b363bb6e",
+     "request": "#513a6ba6",
      "source": "wall-jump-90-long-jump"
     },
     {
      "cond": ">=0.9",
      "fade_s": 0.1,
      "record": "0x00031a80",
-     "request": "#b363bb6e",
+     "request": "#513a6ba6",
      "source": "wall-jump-90-long-jump-flip"
     }
    ],
@@ -34051,7 +34051,7 @@
     {
      "actor_b": {},
      "clip": "climb-onto-1m",
-     "clip_id": "f42c44de"
+     "clip_id": "19d92ade"
     }
    ],
    "only_with_extras": [],
@@ -34067,7 +34067,7 @@
     {
      "actor_b": {},
      "clip": "climb-onto-1m^run",
-     "clip_id": "379d4c32"
+     "clip_id": "62b4aadb"
     }
    ],
    "only_with_extras": [],
@@ -34143,7 +34143,7 @@
     {
      "actor_b": {},
      "clip": "jump-onto-1m",
-     "clip_id": "001c8998"
+     "clip_id": "4cf8d758"
     }
    ],
    "only_with_extras": [],
@@ -34159,7 +34159,7 @@
     {
      "actor_b": {},
      "clip": "jump-onto-1m^run",
-     "clip_id": "f740b48b"
+     "clip_id": "4ff05333"
     }
    ],
    "only_with_extras": [],
@@ -34322,12 +34322,12 @@
       ]
      },
      "clip": "climb-up",
-     "clip_id": "fedc6b11"
+     "clip_id": "cae52de5"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-up",
-     "clip_id": "f63fb454"
+     "clip_id": "ecb4ed9c"
     }
    ],
    "only_with_extras": [
@@ -34380,12 +34380,12 @@
       ]
      },
      "clip": "climb-up--^idle",
-     "clip_id": "bd492175"
+     "clip_id": "3e675b46"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-up^hang-idle",
-     "clip_id": "903eab52"
+     "clip_id": "8ddbcb97"
     }
    ],
    "only_with_extras": [
@@ -34422,7 +34422,7 @@
       ]
      },
      "clip": "idle-jump-up-3m^ledge-hang-begin",
-     "clip_id": "35361c07"
+     "clip_id": "793fdb61"
     }
    ],
    "only_with_extras": [],
@@ -34465,7 +34465,7 @@
       ]
      },
      "clip": "idle-jump-up-3m^ledge-hang-end",
-     "clip_id": "98d1f171"
+     "clip_id": "a10e7c5b"
     }
    ],
    "only_with_extras": [],
@@ -34500,7 +34500,7 @@
       ]
      },
      "clip": "jump-2o75-grab-01--idle^prep",
-     "clip_id": "db7c105e"
+     "clip_id": "f5f49ea7"
     }
    ],
    "only_with_extras": [],
@@ -34543,7 +34543,7 @@
       ]
      },
      "clip": "jump-2o75-grab-03--grab^idle",
-     "clip_id": "83ead118"
+     "clip_id": "b24b3f16"
     }
    ],
    "only_with_extras": [],
@@ -34586,7 +34586,7 @@
       ]
      },
      "clip": "jump-2o75-grab-02--prep^grab",
-     "clip_id": "d13b043d"
+     "clip_id": "a4402b3e"
     }
    ],
    "only_with_extras": [],
@@ -34629,7 +34629,7 @@
       ]
      },
      "clip": "idle-jump-up-3m^ledge-hang-mid",
-     "clip_id": "a1dbeb33"
+     "clip_id": "3d669b16"
     }
    ],
    "only_with_extras": [],
@@ -34679,7 +34679,7 @@
       ]
      },
      "clip": "ledge-hang-climb-up^ledge-knee",
-     "clip_id": "9610993c"
+     "clip_id": "a1c8245b"
     }
    ],
    "only_with_extras": [],
@@ -34730,7 +34730,7 @@
       ]
      },
      "clip": "idle-jump-up-2o75-fail",
-     "clip_id": "8a0ec4f7"
+     "clip_id": "a9b8060a"
     }
    ],
    "only_with_extras": [],
@@ -34822,12 +34822,12 @@
       ]
      },
      "clip": "climb-up",
-     "clip_id": "fedc6b11"
+     "clip_id": "cae52de5"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-up",
-     "clip_id": "f63fb454"
+     "clip_id": "ecb4ed9c"
     }
    ],
    "only_with_extras": [
@@ -34886,19 +34886,19 @@
        "..."
       ]
      },
-     "clip": "#85ddec04",
-     "clip_id": "85ddec04"
+     "clip": "#183dbd7b",
+     "clip_id": "183dbd7b"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-up^hang-idle",
-     "clip_id": "903eab52"
+     "clip_id": "8ddbcb97"
     }
    ],
    "only_with_extras": [
     "ledge:ladder"
    ],
-   "reference_clip": "#85ddec04",
+   "reference_clip": "#183dbd7b",
    "state_offset": "0x00009228",
    "transitions": [
     {
@@ -34993,12 +34993,12 @@
       ]
      },
      "clip": "climb-up-fast--b",
-     "clip_id": "0beefac4"
+     "clip_id": "6ace01b0"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [
@@ -35195,12 +35195,12 @@
     {
      "actor_b": {},
      "clip": "climb-up-rt",
-     "clip_id": "2d712b3e"
+     "clip_id": "48aad742"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-up-rt",
-     "clip_id": "dee26473"
+     "clip_id": "4c0353e0"
     }
    ],
    "only_with_extras": [],
@@ -35248,12 +35248,12 @@
     {
      "actor_b": {},
      "clip": "climb-up-rt--^idle",
-     "clip_id": "5990ba9a"
+     "clip_id": "1729716d"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-up-rt^hang-idle",
-     "clip_id": "91b92420"
+     "clip_id": "40c68ad8"
     }
    ],
    "only_with_extras": [],
@@ -35371,12 +35371,12 @@
     {
      "actor_b": {},
      "clip": "climb-up-rt-fast--a",
-     "clip_id": "099b63b8"
+     "clip_id": "de886732"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -35419,7 +35419,7 @@
     {
      "actor_b": {},
      "clip": "climb-up-rt-fast--a",
-     "clip_id": "099b63b8"
+     "clip_id": "de886732"
     },
     {
      "actor_b": {
@@ -35432,12 +35432,12 @@
       ]
      },
      "clip": "ledge-grab-base",
-     "clip_id": "5b377b87"
+     "clip_id": "daee6abb"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [
@@ -35512,12 +35512,12 @@
     {
      "actor_b": {},
      "clip": "climb-up-rt-fast--b",
-     "clip_id": "04d84561"
+     "clip_id": "a70624ea"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -35743,12 +35743,12 @@
       ]
      },
      "clip": "climb-up",
-     "clip_id": "fedc6b11"
+     "clip_id": "cae52de5"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-up",
-     "clip_id": "f63fb454"
+     "clip_id": "ecb4ed9c"
     }
    ],
    "only_with_extras": [
@@ -35808,12 +35808,12 @@
       ]
      },
      "clip": "climb-up--^idle",
-     "clip_id": "bd492175"
+     "clip_id": "3e675b46"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-up^hang-idle",
-     "clip_id": "903eab52"
+     "clip_id": "8ddbcb97"
     }
    ],
    "only_with_extras": [
@@ -35914,12 +35914,12 @@
       ]
      },
      "clip": "climb-up-fast--a",
-     "clip_id": "06addc1d"
+     "clip_id": "7711f149"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [
@@ -35964,7 +35964,7 @@
     {
      "actor_b": {},
      "clip": "climb-up-rt-fast--a",
-     "clip_id": "099b63b8"
+     "clip_id": "de886732"
     },
     {
      "actor_b": {
@@ -35977,12 +35977,12 @@
       ]
      },
      "clip": "ledge-grab-base",
-     "clip_id": "5b377b87"
+     "clip_id": "daee6abb"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [
@@ -36049,12 +36049,12 @@
     {
      "actor_b": {},
      "clip": "climb-up-rt-fast--b",
-     "clip_id": "04d84561"
+     "clip_id": "a70624ea"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -36249,12 +36249,12 @@
     {
      "actor_b": {},
      "clip": "climb-up-rt",
-     "clip_id": "2d712b3e"
+     "clip_id": "48aad742"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-up-rt",
-     "clip_id": "dee26473"
+     "clip_id": "4c0353e0"
     }
    ],
    "only_with_extras": [],
@@ -36302,12 +36302,12 @@
     {
      "actor_b": {},
      "clip": "climb-up-rt--^idle",
-     "clip_id": "5990ba9a"
+     "clip_id": "1729716d"
     },
     {
      "actor_b": {},
      "clip": "hang-climb-up-rt^hang-idle",
-     "clip_id": "91b92420"
+     "clip_id": "40c68ad8"
     }
    ],
    "only_with_extras": [],
@@ -36425,12 +36425,12 @@
     {
      "actor_b": {},
      "clip": "climb-up-rt-fast--a",
-     "clip_id": "099b63b8"
+     "clip_id": "de886732"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-idle-base-legs",
-     "clip_id": "303f456b"
+     "clip_id": "5156dc18"
     }
    ],
    "only_with_extras": [],
@@ -36463,7 +36463,7 @@
     {
      "actor_b": {},
      "clip": "ledge-grab^vault",
-     "clip_id": "4b4d2f9a"
+     "clip_id": "0e9f83aa"
     }
    ],
    "only_with_extras": [],
@@ -36498,7 +36498,7 @@
       ]
      },
      "clip": "falling-ledge-grab",
-     "clip_id": "bf90bed0"
+     "clip_id": "0724d577"
     }
    ],
    "only_with_extras": [],
@@ -36661,7 +36661,7 @@
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021e80",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -36669,7 +36669,7 @@
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021eb0",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -36677,7 +36677,7 @@
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021ee0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -36685,7 +36685,7 @@
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021f10",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -36693,7 +36693,7 @@
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021f40",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -36701,7 +36701,7 @@
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021f70",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -36709,7 +36709,7 @@
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021fa0",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -36717,7 +36717,7 @@
      "cond": ">=0.12",
      "fade_s": 0.2,
      "record": "0x00021fd0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -36749,7 +36749,7 @@
       ]
      },
      "clip": "falling-ledge-grab",
-     "clip_id": "bf90bed0"
+     "clip_id": "0724d577"
     }
    ],
    "only_with_extras": [],
@@ -36912,7 +36912,7 @@
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x00036180",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -36920,7 +36920,7 @@
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x000361b0",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -36928,7 +36928,7 @@
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x000361e0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -36936,7 +36936,7 @@
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x00036210",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -36944,7 +36944,7 @@
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x00036240",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -36952,7 +36952,7 @@
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x00036270",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -36960,7 +36960,7 @@
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x000362a0",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -36968,7 +36968,7 @@
      "cond": ">=0.04",
      "fade_s": 0.2,
      "record": "0x000362d0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -36990,7 +36990,7 @@
     {
      "actor_b": {},
      "clip": "ledge-grab-r-flinch-a1",
-     "clip_id": "5c9a7399"
+     "clip_id": "f69f5dc9"
     }
    ],
    "only_with_extras": [],
@@ -37006,7 +37006,7 @@
     {
      "actor_b": {},
      "clip": "ledge-grab-r-flinch-a1",
-     "clip_id": "5c9a7399"
+     "clip_id": "f69f5dc9"
     }
    ],
    "only_with_extras": [],
@@ -37032,7 +37032,7 @@
       ]
      },
      "clip": "run^jump-long",
-     "clip_id": "457c4cea"
+     "clip_id": "df83389f"
     }
    ],
    "only_with_extras": [],
@@ -37045,7 +37045,7 @@
      "record": "0x0003bcf0",
      "request": "auto",
      "scalar_0x20": -1.0,
-     "target": "#9dcc9cf6"
+     "target": "#6e07f05e"
     }
    ]
   },
@@ -37067,7 +37067,7 @@
       ]
      },
      "clip": "run^jump-long",
-     "clip_id": "457c4cea"
+     "clip_id": "df83389f"
     }
    ],
    "only_with_extras": [],
@@ -37080,7 +37080,7 @@
      "record": "0x000374c0",
      "request": "auto",
      "scalar_0x20": -1.0,
-     "target": "#fe1da2d7"
+     "target": "#91b8bb4f"
     }
    ]
   },
@@ -37102,7 +37102,7 @@
       ]
      },
      "clip": "run^jump-long",
-     "clip_id": "457c4cea"
+     "clip_id": "df83389f"
     }
    ],
    "only_with_extras": [],
@@ -37145,7 +37145,7 @@
       ]
      },
      "clip": "idle-jump-up-0-5m",
-     "clip_id": "95806a1e"
+     "clip_id": "8a93c5e9"
     }
    ],
    "only_with_extras": [],
@@ -37170,7 +37170,7 @@
     {
      "actor_b": {},
      "clip": "idle^jump-onto-1m",
-     "clip_id": "903eaff1"
+     "clip_id": "9ee43588"
     }
    ],
    "only_with_extras": [],
@@ -37195,7 +37195,7 @@
     {
      "actor_b": {},
      "clip": "idle^jump-onto-1m-close",
-     "clip_id": "2c7fec95"
+     "clip_id": "027a3f0c"
     }
    ],
    "only_with_extras": [],
@@ -37220,7 +37220,7 @@
     {
      "actor_b": {},
      "clip": "idle^jump-onto-1m",
-     "clip_id": "903eaff1"
+     "clip_id": "9ee43588"
     }
    ],
    "only_with_extras": [],
@@ -37245,7 +37245,7 @@
     {
      "actor_b": {},
      "clip": "idle^jump-onto-1m-close",
-     "clip_id": "2c7fec95"
+     "clip_id": "027a3f0c"
     }
    ],
    "only_with_extras": [],
@@ -37270,7 +37270,7 @@
     {
      "actor_b": {},
      "clip": "idle^jump-onto-1m",
-     "clip_id": "903eaff1"
+     "clip_id": "9ee43588"
     }
    ],
    "only_with_extras": [],
@@ -37295,7 +37295,7 @@
     {
      "actor_b": {},
      "clip": "idle^jump-onto-1m-close",
-     "clip_id": "2c7fec95"
+     "clip_id": "027a3f0c"
     }
    ],
    "only_with_extras": [],
@@ -37320,7 +37320,7 @@
     {
      "actor_b": {},
      "clip": "idle^jump-onto-1m",
-     "clip_id": "903eaff1"
+     "clip_id": "9ee43588"
     }
    ],
    "only_with_extras": [],
@@ -37345,7 +37345,7 @@
     {
      "actor_b": {},
      "clip": "idle^climb-onto-1m",
-     "clip_id": "f3171640"
+     "clip_id": "e5d6cf17"
     }
    ],
    "only_with_extras": [],
@@ -37380,7 +37380,7 @@
       ]
      },
      "clip": "run^jump-long",
-     "clip_id": "457c4cea"
+     "clip_id": "df83389f"
     }
    ],
    "only_with_extras": [],
@@ -37404,12 +37404,12 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#4d097656",
-     "clip_id": "4d097656"
+     "clip": "#0a7f9532",
+     "clip_id": "0a7f9532"
     }
    ],
    "only_with_extras": [],
-   "reference_clip": "#4d097656",
+   "reference_clip": "#0a7f9532",
    "state_offset": "0x00008368",
    "transitions": [
     {
@@ -37429,12 +37429,12 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#4d097656",
-     "clip_id": "4d097656"
+     "clip": "#0a7f9532",
+     "clip_id": "0a7f9532"
     }
    ],
    "only_with_extras": [],
-   "reference_clip": "#4d097656",
+   "reference_clip": "#0a7f9532",
    "state_offset": "0x00008568",
    "transitions": [
     {
@@ -37455,7 +37455,7 @@
     {
      "actor_b": {},
      "clip": "idle^climb-onto-0-5m",
-     "clip_id": "55247b34"
+     "clip_id": "c2b4512c"
     }
    ],
    "only_with_extras": [],
@@ -37479,12 +37479,12 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#0d1058e1",
-     "clip_id": "0d1058e1"
+     "clip": "#f56365fb",
+     "clip_id": "f56365fb"
     }
    ],
    "only_with_extras": [],
-   "reference_clip": "#0d1058e1",
+   "reference_clip": "#f56365fb",
    "state_offset": "0x00006f28",
    "transitions": [
     {
@@ -37523,7 +37523,7 @@
       ]
      },
      "clip": "idle-jump-up-1-5m^ledge-knee",
-     "clip_id": "8ca7695a"
+     "clip_id": "3cd3986c"
     }
    ],
    "only_with_extras": [],
@@ -37574,7 +37574,7 @@
       ]
      },
      "clip": "idle-jump-up-1m^ledge-knee",
-     "clip_id": "8be29818"
+     "clip_id": "1af29329"
     }
    ],
    "only_with_extras": [],
@@ -37625,7 +37625,7 @@
       ]
      },
      "clip": "idle-jump-up-2m^ledge-chest-begin",
-     "clip_id": "3c715bea"
+     "clip_id": "68ac6eea"
     }
    ],
    "only_with_extras": [],
@@ -37668,7 +37668,7 @@
       ]
      },
      "clip": "idle-jump-up-2m^ledge-chest-end",
-     "clip_id": "04bf35ac"
+     "clip_id": "83d65957"
     }
    ],
    "only_with_extras": [],
@@ -37719,7 +37719,7 @@
       ]
      },
      "clip": "idle-jump-up-2m^ledge-chest-mid",
-     "clip_id": "3db52fee"
+     "clip_id": "217a0a28"
     }
    ],
    "only_with_extras": [],
@@ -37754,7 +37754,7 @@
       ]
      },
      "clip": "idle^jump-2-5m",
-     "clip_id": "e36bb638"
+     "clip_id": "86a3e202"
     }
    ],
    "only_with_extras": [],
@@ -37797,7 +37797,7 @@
       ]
      },
      "clip": "stealth-idle^vault-over-test",
-     "clip_id": "e337d224"
+     "clip_id": "d4ab61d3"
     }
    ],
    "only_with_extras": [],
@@ -37822,7 +37822,7 @@
     {
      "actor_b": {},
      "clip": "idle^vault",
-     "clip_id": "a9ba4419"
+     "clip_id": "5f0810e9"
     }
    ],
    "only_with_extras": [],
@@ -37873,7 +37873,7 @@
       ]
      },
      "clip": "idle^vault-over",
-     "clip_id": "7fd957f3"
+     "clip_id": "feed6526"
     }
    ],
    "only_with_extras": [],
@@ -37884,7 +37884,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030210",
-     "request": "#ff499e08",
+     "request": "#32f79c5e",
      "scalar_0x20": -1.0,
      "target": "vault-2m^run"
     },
@@ -37892,7 +37892,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030240",
-     "request": "#91201877",
+     "request": "#fd83b53b",
      "scalar_0x20": -1.0,
      "target": "vault-2m^idle"
     },
@@ -37900,7 +37900,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030270",
-     "request": "#d2318980",
+     "request": "#ecb2aea0",
      "scalar_0x20": 0.2,
      "target": "vault-1m^run-a"
     },
@@ -37908,7 +37908,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x000302a0",
-     "request": "#40d9a044",
+     "request": "#5a28604e",
      "scalar_0x20": 0.2,
      "target": "vault-1m^idle"
     },
@@ -37940,7 +37940,7 @@
       ]
      },
      "clip": "idle^vault-over-2m",
-     "clip_id": "7b62958b"
+     "clip_id": "8e37f418"
     }
    ],
    "only_with_extras": [],
@@ -37951,7 +37951,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030210",
-     "request": "#ff499e08",
+     "request": "#32f79c5e",
      "scalar_0x20": -1.0,
      "target": "vault-2m^run"
     },
@@ -37959,7 +37959,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030240",
-     "request": "#91201877",
+     "request": "#fd83b53b",
      "scalar_0x20": -1.0,
      "target": "vault-2m^idle"
     },
@@ -37967,7 +37967,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030270",
-     "request": "#d2318980",
+     "request": "#ecb2aea0",
      "scalar_0x20": 0.2,
      "target": "vault-1m^run-a"
     },
@@ -37975,7 +37975,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x000302a0",
-     "request": "#40d9a044",
+     "request": "#5a28604e",
      "scalar_0x20": 0.2,
      "target": "vault-1m^idle"
     },
@@ -38007,7 +38007,7 @@
       ]
      },
      "clip": "idle^vault-over-2m",
-     "clip_id": "7b62958b"
+     "clip_id": "8e37f418"
     }
    ],
    "only_with_extras": [],
@@ -38018,7 +38018,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030210",
-     "request": "#ff499e08",
+     "request": "#32f79c5e",
      "scalar_0x20": -1.0,
      "target": "vault-2m^run"
     },
@@ -38026,7 +38026,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030240",
-     "request": "#91201877",
+     "request": "#fd83b53b",
      "scalar_0x20": -1.0,
      "target": "vault-2m^idle"
     },
@@ -38034,7 +38034,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030270",
-     "request": "#d2318980",
+     "request": "#ecb2aea0",
      "scalar_0x20": 0.2,
      "target": "vault-1m^run-a"
     },
@@ -38042,7 +38042,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x000302a0",
-     "request": "#40d9a044",
+     "request": "#5a28604e",
      "scalar_0x20": 0.2,
      "target": "vault-1m^idle"
     },
@@ -38063,12 +38063,12 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#99f5613e",
-     "clip_id": "99f5613e"
+     "clip": "#5c94147d",
+     "clip_id": "5c94147d"
     }
    ],
    "only_with_extras": [],
-   "reference_clip": "#99f5613e",
+   "reference_clip": "#5c94147d",
    "state_offset": "0x0000aea8",
    "transitions": [
     {
@@ -38184,7 +38184,7 @@
       ]
      },
      "clip": "jump-long",
-     "clip_id": "7a92466e"
+     "clip_id": "a4d198e0"
     }
    ],
    "only_with_extras": [],
@@ -38242,7 +38242,7 @@
       ]
      },
      "clip": "jump-rt-foot-2-5m",
-     "clip_id": "77635c5f"
+     "clip_id": "74bde4c6"
     }
    ],
    "only_with_extras": [],
@@ -38301,7 +38301,7 @@
       ]
      },
      "clip": "jump-rt-foot-2-5m^idle",
-     "clip_id": "9f52b245"
+     "clip_id": "57020e57"
     }
    ],
    "only_with_extras": [],
@@ -38360,7 +38360,7 @@
       ]
      },
      "clip": "jump-rt-foot-2-5m^run",
-     "clip_id": "7b3de434"
+     "clip_id": "9c1269b4"
     }
    ],
    "only_with_extras": [],
@@ -38395,7 +38395,7 @@
       ]
      },
      "clip": "ledge-land-knee-contact",
-     "clip_id": "4bbbee0b"
+     "clip_id": "f1017782"
     }
    ],
    "only_with_extras": [],
@@ -38471,7 +38471,7 @@
     {
      "actor_b": {},
      "clip": "jump-med",
-     "clip_id": "619bb771"
+     "clip_id": "7411e549"
     }
    ],
    "only_with_extras": [],
@@ -38487,7 +38487,7 @@
     {
      "actor_b": {},
      "clip": "ledge-land-knee-air",
-     "clip_id": "9c96a217"
+     "clip_id": "1f0cbdc7"
     }
    ],
    "only_with_extras": [],
@@ -38528,7 +38528,7 @@
       ]
      },
      "clip": "ledge-grab-knee^idle",
-     "clip_id": "af3f98cd"
+     "clip_id": "184b9ec4"
     }
    ],
    "only_with_extras": [],
@@ -38555,7 +38555,7 @@
      "cond": ">=0.2 L48688",
      "fade_s": 0.4,
      "record": "0x00031c90",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "idle^run-bkwd"
     },
@@ -38563,7 +38563,7 @@
      "cond": ">=0.2 L48588",
      "fade_s": 0.4,
      "record": "0x00031cc0",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "run-bkwd"
     },
@@ -38633,7 +38633,7 @@
     {
      "actor_b": {},
      "clip": "ledge-grab-knee^run",
-     "clip_id": "a037599e"
+     "clip_id": "983a1f7f"
     }
    ],
    "only_with_extras": [],
@@ -38734,7 +38734,7 @@
       ]
      },
      "clip": "ledge-knee-climb-up^idle",
-     "clip_id": "e5237761"
+     "clip_id": "0ed7fa08"
     }
    ],
    "only_with_extras": [],
@@ -38761,7 +38761,7 @@
      "cond": ">=0.5 L48688",
      "fade_s": 0.6,
      "record": "0x00023b40",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "idle^run-bkwd"
     },
@@ -38769,7 +38769,7 @@
      "cond": ">=0.5 L48588",
      "fade_s": 0.6,
      "record": "0x00023b70",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "run-bkwd"
     },
@@ -38900,7 +38900,7 @@
       ]
      },
      "clip": "ledge-knee-climb-up^walk",
-     "clip_id": "11061885"
+     "clip_id": "c01192cf"
     }
    ],
    "only_with_extras": [],
@@ -38935,7 +38935,7 @@
       ]
      },
      "clip": "relaxed-idle^ladder-idle-start",
-     "clip_id": "59be5099"
+     "clip_id": "5eea4de9"
     }
    ],
    "only_with_extras": [],
@@ -38978,7 +38978,7 @@
       ]
      },
      "clip": "relaxed-idle^ladder-idle-top-mount",
-     "clip_id": "7eb31f94"
+     "clip_id": "890b5814"
     }
    ],
    "only_with_extras": [],
@@ -39021,7 +39021,7 @@
       ]
      },
      "clip": "relaxed-idle^ladder-idle-end",
-     "clip_id": "07f34d1e"
+     "clip_id": "7e1d27cc"
     }
    ],
    "only_with_extras": [],
@@ -39056,7 +39056,7 @@
       ]
      },
      "clip": "ladder-dismount-bottom",
-     "clip_id": "10797501"
+     "clip_id": "298676fc"
     }
    ],
    "only_with_extras": [],
@@ -39099,7 +39099,7 @@
       ]
      },
      "clip": "ladder-dismount-top-gap-start-ap-hands",
-     "clip_id": "a6009018"
+     "clip_id": "dd2dbf26"
     }
    ],
    "only_with_extras": [],
@@ -39150,7 +39150,7 @@
       ]
      },
      "clip": "ladder-dismount-top-gap-start-ap-hands",
-     "clip_id": "a6009018"
+     "clip_id": "dd2dbf26"
     }
    ],
    "only_with_extras": [],
@@ -39209,7 +39209,7 @@
       ]
      },
      "clip": "ladder-dismount-top-gap-end",
-     "clip_id": "0077acd6"
+     "clip_id": "86b97dc3"
     }
    ],
    "only_with_extras": [],
@@ -39260,7 +39260,7 @@
       ]
      },
      "clip": "ladder-dismount-top-gap-end",
-     "clip_id": "0077acd6"
+     "clip_id": "86b97dc3"
     }
    ],
    "only_with_extras": [],
@@ -39311,7 +39311,7 @@
       ]
      },
      "clip": "ladder-dismount-top-gap-end^walk",
-     "clip_id": "fb37fb28"
+     "clip_id": "dcc84a8c"
     }
    ],
    "only_with_extras": [],
@@ -39362,7 +39362,7 @@
       ]
      },
      "clip": "ladder-dismount-top-gap-end^walk",
-     "clip_id": "fb37fb28"
+     "clip_id": "dcc84a8c"
     }
    ],
    "only_with_extras": [],
@@ -40273,7 +40273,7 @@
       ]
      },
      "clip": "ledge-grab-base",
-     "clip_id": "5b377b87"
+     "clip_id": "daee6abb"
     }
    ],
    "only_with_extras": [
@@ -40438,7 +40438,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000261f0",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -40446,7 +40446,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00026220",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -40454,7 +40454,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00026250",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -40462,7 +40462,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00026280",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -40470,7 +40470,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000262b0",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -40478,7 +40478,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000262e0",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -40486,7 +40486,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00026310",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -40494,7 +40494,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00026340",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -40651,7 +40651,7 @@
     {
      "actor_b": {},
      "clip": "ledge-hang-swing-bk",
-     "clip_id": "4776ae27"
+     "clip_id": "91674236"
     }
    ],
    "only_with_extras": [],
@@ -40814,7 +40814,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029e30",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -40822,7 +40822,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029e60",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -40830,7 +40830,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029e90",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -40838,7 +40838,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029ec0",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -40846,7 +40846,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029ef0",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -40854,7 +40854,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029f20",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -40862,7 +40862,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029f50",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -40870,7 +40870,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00029f80",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -40956,7 +40956,7 @@
     {
      "actor_b": {},
      "clip": "jump-up-2-75m",
-     "clip_id": "aba7f4a6"
+     "clip_id": "944ddd15"
     }
    ],
    "only_with_extras": [],
@@ -41119,7 +41119,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x000278f0",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -41127,7 +41127,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027920",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -41135,7 +41135,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027950",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -41143,7 +41143,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027980",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -41151,7 +41151,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x000279b0",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -41159,7 +41159,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x000279e0",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -41167,7 +41167,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027a10",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -41175,7 +41175,7 @@
      "cond": ">=0.5",
      "fade_s": 0.2,
      "record": "0x00027a40",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     }
@@ -41189,7 +41189,7 @@
     {
      "actor_b": {},
      "clip": "ledge-grab-edge-break-fall",
-     "clip_id": "9c8ace91"
+     "clip_id": "10b0f41a"
     }
    ],
    "only_with_extras": [],
@@ -41285,7 +41285,7 @@
     {
      "actor_b": {},
      "clip": "ledge-hang-swing-fw",
-     "clip_id": "7b4fcf9a"
+     "clip_id": "01f1e366"
     }
    ],
    "only_with_extras": [],
@@ -41448,7 +41448,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f350",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -41456,7 +41456,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f380",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -41464,7 +41464,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f3b0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -41472,7 +41472,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f3e0",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -41480,7 +41480,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f410",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -41488,7 +41488,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f440",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -41496,7 +41496,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f470",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -41504,7 +41504,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001f4a0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -41661,12 +41661,12 @@
     {
      "actor_b": {},
      "clip": "ledge-grab-look-away",
-     "clip_id": "923325e5"
+     "clip_id": "7066cf93"
     },
     {
      "actor_b": {},
      "clip": "ledge-grab-look--add",
-     "clip_id": "3587ff0b"
+     "clip_id": "f3977cf0"
     }
    ],
    "only_with_extras": [],
@@ -41829,7 +41829,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f080",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -41837,7 +41837,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f0b0",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -41845,7 +41845,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f0e0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -41853,7 +41853,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f110",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -41861,7 +41861,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f140",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -41869,7 +41869,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f170",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -41877,7 +41877,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f1a0",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -41885,7 +41885,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002f1d0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -42049,12 +42049,12 @@
     {
      "actor_b": {},
      "clip": "ledge-grab-look-away-fail",
-     "clip_id": "14b63a05"
+     "clip_id": "815c3c1b"
     },
     {
      "actor_b": {},
      "clip": "ledge-grab-look--add",
-     "clip_id": "3587ff0b"
+     "clip_id": "f3977cf0"
     }
    ],
    "only_with_extras": [],
@@ -42217,7 +42217,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002cb60",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -42225,7 +42225,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002cb90",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -42233,7 +42233,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002cbc0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -42241,7 +42241,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002cbf0",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -42249,7 +42249,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002cc20",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -42257,7 +42257,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002cc50",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -42265,7 +42265,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002cc80",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -42273,7 +42273,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002ccb0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -42436,23 +42436,23 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#21558a08",
-     "clip_id": "21558a08"
+     "clip": "#833c0d79",
+     "clip_id": "833c0d79"
     },
     {
      "actor_b": {},
-     "clip": "#1aade8a5",
-     "clip_id": "1aade8a5"
+     "clip": "#5e1e4a6b",
+     "clip_id": "5e1e4a6b"
     },
     {
      "actor_b": {},
-     "clip": "#c9baf8ef",
-     "clip_id": "c9baf8ef"
+     "clip": "#efd0abb0",
+     "clip_id": "efd0abb0"
     },
     {
      "actor_b": {},
      "clip": "ledge-grab-look--add",
-     "clip_id": "3587ff0b"
+     "clip_id": "f3977cf0"
     }
    ],
    "only_with_extras": [],
@@ -42615,7 +42615,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003ea20",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -42623,7 +42623,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003ea50",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -42631,7 +42631,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003ea80",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -42639,7 +42639,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003eab0",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -42647,7 +42647,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003eae0",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -42655,7 +42655,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003eb10",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -42663,7 +42663,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003eb40",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -42671,7 +42671,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003eb70",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -42813,23 +42813,23 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#8ee3b093",
-     "clip_id": "8ee3b093"
+     "clip": "#3fccfedd",
+     "clip_id": "3fccfedd"
     },
     {
      "actor_b": {},
-     "clip": "#03b0788a",
-     "clip_id": "03b0788a"
+     "clip": "#35863198",
+     "clip_id": "35863198"
     },
     {
      "actor_b": {},
-     "clip": "#96b46bbe",
-     "clip_id": "96b46bbe"
+     "clip": "#4e65b536",
+     "clip_id": "4e65b536"
     },
     {
      "actor_b": {},
      "clip": "ledge-grab-look--add",
-     "clip_id": "3587ff0b"
+     "clip_id": "f3977cf0"
     }
    ],
    "only_with_extras": [],
@@ -42992,7 +42992,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003cd70",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -43000,7 +43000,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003cda0",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -43008,7 +43008,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003cdd0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -43016,7 +43016,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003ce00",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -43024,7 +43024,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003ce30",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -43032,7 +43032,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003ce60",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -43040,7 +43040,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003ce90",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -43048,7 +43048,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0003cec0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -43235,23 +43235,23 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#6ead7c2c",
-     "clip_id": "6ead7c2c"
+     "clip": "#491d835a",
+     "clip_id": "491d835a"
     },
     {
      "actor_b": {},
-     "clip": "#8e8532c5",
-     "clip_id": "8e8532c5"
+     "clip": "#b23ee827",
+     "clip_id": "b23ee827"
     },
     {
      "actor_b": {},
-     "clip": "#8219786d",
-     "clip_id": "8219786d"
+     "clip": "#ed469cd3",
+     "clip_id": "ed469cd3"
     },
     {
      "actor_b": {},
      "clip": "ledge-grab-look--add",
-     "clip_id": "3587ff0b"
+     "clip_id": "f3977cf0"
     }
    ],
    "only_with_extras": [],
@@ -43414,7 +43414,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00039040",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -43422,7 +43422,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00039070",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -43430,7 +43430,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000390a0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -43438,7 +43438,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000390d0",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -43446,7 +43446,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00039100",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -43454,7 +43454,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00039130",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -43462,7 +43462,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00039160",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -43470,7 +43470,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00039190",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -43633,13 +43633,13 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#c45a573e",
-     "clip_id": "c45a573e"
+     "clip": "#2870d601",
+     "clip_id": "2870d601"
     },
     {
      "actor_b": {},
      "clip": "ledge-grab-look--add",
-     "clip_id": "3587ff0b"
+     "clip_id": "f3977cf0"
     }
    ],
    "only_with_extras": [],
@@ -43802,7 +43802,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b0e0",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -43810,7 +43810,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b110",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -43818,7 +43818,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b140",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -43826,7 +43826,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b170",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -43834,7 +43834,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b1a0",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -43842,7 +43842,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b1d0",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -43850,7 +43850,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b200",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -43858,7 +43858,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0002b230",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -44049,22 +44049,22 @@
     {
      "actor_b": {},
      "clip": "ledge-grab-shuffle-r",
-     "clip_id": "8e20e31f"
+     "clip_id": "327bd444"
     },
     {
      "actor_b": {},
      "clip": "ledge-grab-strafe-r",
-     "clip_id": "5b3f9c1b"
+     "clip_id": "32e2b587"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-strafe-r-short",
-     "clip_id": "c937c4a7"
+     "clip_id": "8f8dc63a"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-strafe-r-long",
-     "clip_id": "59c337ff"
+     "clip_id": "560de9fd"
     }
    ],
    "only_with_extras": [],
@@ -44187,7 +44187,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00023330",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -44195,7 +44195,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00023360",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -44203,7 +44203,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00023390",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -44211,7 +44211,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000233c0",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -44219,7 +44219,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000233f0",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -44227,7 +44227,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00023420",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -44235,7 +44235,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00023450",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -44243,7 +44243,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00023480",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -44466,22 +44466,22 @@
     {
      "actor_b": {},
      "clip": "ledge-grab-shuffle-r",
-     "clip_id": "8e20e31f"
+     "clip_id": "327bd444"
     },
     {
      "actor_b": {},
      "clip": "ledge-grab-strafe-r",
-     "clip_id": "5b3f9c1b"
+     "clip_id": "32e2b587"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-strafe-r-short",
-     "clip_id": "c937c4a7"
+     "clip_id": "8f8dc63a"
     },
     {
      "actor_b": {},
      "clip": "ledge-hang-strafe-r-long",
-     "clip_id": "59c337ff"
+     "clip_id": "560de9fd"
     }
    ],
    "only_with_extras": [],
@@ -44604,7 +44604,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00033f60",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -44612,7 +44612,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00033f90",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -44620,7 +44620,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00033fc0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -44628,7 +44628,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00033ff0",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -44636,7 +44636,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00034020",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -44644,7 +44644,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00034050",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -44652,7 +44652,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x00034080",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -44660,7 +44660,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x000340b0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -44788,7 +44788,7 @@
       ]
      },
      "clip": "ledge-warn-bw^idle",
-     "clip_id": "030dc40c"
+     "clip_id": "74b48c33"
     }
    ],
    "only_with_extras": [],
@@ -44839,7 +44839,7 @@
       ]
      },
      "clip": "ledge-warn-fw^idle",
-     "clip_id": "3a9179ff"
+     "clip_id": "6853c5e2"
     }
    ],
    "only_with_extras": [],
@@ -44890,7 +44890,7 @@
       ]
      },
      "clip": "ledge-warn-l^idle",
-     "clip_id": "bb248b5a"
+     "clip_id": "a728ec10"
     }
    ],
    "only_with_extras": [],
@@ -44941,7 +44941,7 @@
       ]
      },
      "clip": "ledge-warn-r^idle",
-     "clip_id": "8ed505bd"
+     "clip_id": "9546e888"
     }
    ],
    "only_with_extras": [],
@@ -45000,7 +45000,7 @@
       ]
      },
      "clip": "run^vault-over",
-     "clip_id": "d52bc552"
+     "clip_id": "b578e80f"
     }
    ],
    "only_with_extras": [],
@@ -45011,7 +45011,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030210",
-     "request": "#ff499e08",
+     "request": "#32f79c5e",
      "scalar_0x20": -1.0,
      "target": "vault-2m^run"
     },
@@ -45019,7 +45019,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030240",
-     "request": "#91201877",
+     "request": "#fd83b53b",
      "scalar_0x20": -1.0,
      "target": "vault-2m^idle"
     },
@@ -45027,7 +45027,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030270",
-     "request": "#d2318980",
+     "request": "#ecb2aea0",
      "scalar_0x20": 0.2,
      "target": "vault-1m^run-a"
     },
@@ -45035,7 +45035,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x000302a0",
-     "request": "#40d9a044",
+     "request": "#5a28604e",
      "scalar_0x20": 0.2,
      "target": "vault-1m^idle"
     },
@@ -45067,7 +45067,7 @@
       ]
      },
      "clip": "run^vault-over-2m",
-     "clip_id": "7f00fcc3"
+     "clip_id": "36a2adf7"
     }
    ],
    "only_with_extras": [],
@@ -45078,7 +45078,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030210",
-     "request": "#ff499e08",
+     "request": "#32f79c5e",
      "scalar_0x20": -1.0,
      "target": "vault-2m^run"
     },
@@ -45086,7 +45086,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030240",
-     "request": "#91201877",
+     "request": "#fd83b53b",
      "scalar_0x20": -1.0,
      "target": "vault-2m^idle"
     },
@@ -45094,7 +45094,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030270",
-     "request": "#d2318980",
+     "request": "#ecb2aea0",
      "scalar_0x20": 0.2,
      "target": "vault-1m^run-a"
     },
@@ -45102,7 +45102,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x000302a0",
-     "request": "#40d9a044",
+     "request": "#5a28604e",
      "scalar_0x20": 0.2,
      "target": "vault-1m^idle"
     },
@@ -45134,7 +45134,7 @@
       ]
      },
      "clip": "run^vault-over-2m",
-     "clip_id": "7f00fcc3"
+     "clip_id": "36a2adf7"
     }
    ],
    "only_with_extras": [],
@@ -45145,7 +45145,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030210",
-     "request": "#ff499e08",
+     "request": "#32f79c5e",
      "scalar_0x20": -1.0,
      "target": "vault-2m^run"
     },
@@ -45153,7 +45153,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030240",
-     "request": "#91201877",
+     "request": "#fd83b53b",
      "scalar_0x20": -1.0,
      "target": "vault-2m^idle"
     },
@@ -45161,7 +45161,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030270",
-     "request": "#d2318980",
+     "request": "#ecb2aea0",
      "scalar_0x20": 0.2,
      "target": "vault-1m^run-a"
     },
@@ -45169,7 +45169,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x000302a0",
-     "request": "#40d9a044",
+     "request": "#5a28604e",
      "scalar_0x20": 0.2,
      "target": "vault-1m^idle"
     },
@@ -45191,7 +45191,7 @@
     {
      "actor_b": {},
      "clip": "roll-end^drop^ledge-grab",
-     "clip_id": "b79e53ab"
+     "clip_id": "c1332d16"
     }
    ],
    "only_with_extras": [],
@@ -45226,7 +45226,7 @@
       ]
      },
      "clip": "run^jump-long",
-     "clip_id": "457c4cea"
+     "clip_id": "df83389f"
     }
    ],
    "only_with_extras": [],
@@ -45239,7 +45239,7 @@
      "record": "0x0003bcf0",
      "request": "auto",
      "scalar_0x20": -1.0,
-     "target": "#9dcc9cf6"
+     "target": "#6e07f05e"
     }
    ]
   },
@@ -45261,7 +45261,7 @@
       ]
      },
      "clip": "run^jump-long",
-     "clip_id": "457c4cea"
+     "clip_id": "df83389f"
     }
    ],
    "only_with_extras": [],
@@ -45274,7 +45274,7 @@
      "record": "0x000374c0",
      "request": "auto",
      "scalar_0x20": -1.0,
-     "target": "#fe1da2d7"
+     "target": "#91b8bb4f"
     }
    ]
   },
@@ -45296,7 +45296,7 @@
       ]
      },
      "clip": "run^jump-long",
-     "clip_id": "457c4cea"
+     "clip_id": "df83389f"
     }
    ],
    "only_with_extras": [],
@@ -45321,7 +45321,7 @@
     {
      "actor_b": {},
      "clip": "run^jump-onto-1m",
-     "clip_id": "0a305a75"
+     "clip_id": "6cbfc70f"
     }
    ],
    "only_with_extras": [],
@@ -45346,7 +45346,7 @@
     {
      "actor_b": {},
      "clip": "run^jump-onto-1m-close",
-     "clip_id": "0246c7ea"
+     "clip_id": "08c3bf63"
     }
    ],
    "only_with_extras": [],
@@ -45371,7 +45371,7 @@
     {
      "actor_b": {},
      "clip": "run^jump-onto-1m",
-     "clip_id": "0a305a75"
+     "clip_id": "6cbfc70f"
     }
    ],
    "only_with_extras": [],
@@ -45396,7 +45396,7 @@
     {
      "actor_b": {},
      "clip": "run^jump-onto-1m-close",
-     "clip_id": "0246c7ea"
+     "clip_id": "08c3bf63"
     }
    ],
    "only_with_extras": [],
@@ -45421,7 +45421,7 @@
     {
      "actor_b": {},
      "clip": "run^jump-onto-1m",
-     "clip_id": "0a305a75"
+     "clip_id": "6cbfc70f"
     }
    ],
    "only_with_extras": [],
@@ -45446,7 +45446,7 @@
     {
      "actor_b": {},
      "clip": "run^jump-onto-1m-close",
-     "clip_id": "0246c7ea"
+     "clip_id": "08c3bf63"
     }
    ],
    "only_with_extras": [],
@@ -45471,7 +45471,7 @@
     {
      "actor_b": {},
      "clip": "run^jump-onto-1m",
-     "clip_id": "0a305a75"
+     "clip_id": "6cbfc70f"
     }
    ],
    "only_with_extras": [],
@@ -45496,7 +45496,7 @@
     {
      "actor_b": {},
      "clip": "idle^climb-onto-1m",
-     "clip_id": "f3171640"
+     "clip_id": "e5d6cf17"
     }
    ],
    "only_with_extras": [],
@@ -45531,7 +45531,7 @@
       ]
      },
      "clip": "run-jump-up-3m^ledge-hang-begin",
-     "clip_id": "2f0032a2"
+     "clip_id": "5fc9b382"
     }
    ],
    "only_with_extras": [],
@@ -45574,7 +45574,7 @@
       ]
      },
      "clip": "run-jump-up-3m^ledge-hang-end",
-     "clip_id": "28880367"
+     "clip_id": "58711c96"
     }
    ],
    "only_with_extras": [],
@@ -45617,7 +45617,7 @@
       ]
      },
      "clip": "run-jump-up-3m^ledge-hang-mid",
-     "clip_id": "11821925"
+     "clip_id": "c1e22e0c"
     }
    ],
    "only_with_extras": [],
@@ -45652,7 +45652,7 @@
       ]
      },
      "clip": "run^jump-long",
-     "clip_id": "457c4cea"
+     "clip_id": "df83389f"
     }
    ],
    "only_with_extras": [],
@@ -45687,7 +45687,7 @@
       ]
      },
      "clip": "run^jump-long",
-     "clip_id": "457c4cea"
+     "clip_id": "df83389f"
     }
    ],
    "only_with_extras": [],
@@ -45711,12 +45711,12 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#4d097656",
-     "clip_id": "4d097656"
+     "clip": "#0a7f9532",
+     "clip_id": "0a7f9532"
     }
    ],
    "only_with_extras": [],
-   "reference_clip": "#4d097656",
+   "reference_clip": "#0a7f9532",
    "state_offset": "0x000083a8",
    "transitions": [
     {
@@ -45737,7 +45737,7 @@
     {
      "actor_b": {},
      "clip": "run^drop^ledge-grab",
-     "clip_id": "6e982d12"
+     "clip_id": "4fba5c77"
     }
    ],
    "only_with_extras": [],
@@ -45762,7 +45762,7 @@
     {
      "actor_b": {},
      "clip": "idle^rev-drop^ledge-grab",
-     "clip_id": "0677b690"
+     "clip_id": "1a4e5082"
     }
    ],
    "only_with_extras": [],
@@ -45786,12 +45786,12 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#3e5120c9",
-     "clip_id": "3e5120c9"
+     "clip": "#2ec06935",
+     "clip_id": "2ec06935"
     }
    ],
    "only_with_extras": [],
-   "reference_clip": "#3e5120c9",
+   "reference_clip": "#2ec06935",
    "state_offset": "0x00002628",
    "transitions": [
     {
@@ -45812,7 +45812,7 @@
     {
      "actor_b": {},
      "clip": "idle^rev-drop^ledge-hang",
-     "clip_id": "56bebb4b"
+     "clip_id": "e52ce367"
     }
    ],
    "only_with_extras": [],
@@ -45836,12 +45836,12 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#5ef065bb",
-     "clip_id": "5ef065bb"
+     "clip": "#eca1669c",
+     "clip_id": "eca1669c"
     }
    ],
    "only_with_extras": [],
-   "reference_clip": "#5ef065bb",
+   "reference_clip": "#eca1669c",
    "state_offset": "0x000085a8",
    "transitions": [
     {
@@ -45861,12 +45861,12 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#dc6fa764",
-     "clip_id": "dc6fa764"
+     "clip": "#9ea29b1f",
+     "clip_id": "9ea29b1f"
     }
    ],
    "only_with_extras": [],
-   "reference_clip": "#dc6fa764",
+   "reference_clip": "#9ea29b1f",
    "state_offset": "0x00006de8",
    "transitions": [
     {
@@ -45887,7 +45887,7 @@
     {
      "actor_b": {},
      "clip": "pt-run^climb-onto-0-5m",
-     "clip_id": "11cf6e6e"
+     "clip_id": "7a192c10"
     }
    ],
    "only_with_extras": [],
@@ -45930,7 +45930,7 @@
       ]
      },
      "clip": "run-jump-up-1-5m^ledge-knee",
-     "clip_id": "bf35b785"
+     "clip_id": "11435ed7"
     }
    ],
    "only_with_extras": [],
@@ -45989,7 +45989,7 @@
       ]
      },
      "clip": "walk-jump-up-1m^ledge-knee",
-     "clip_id": "30502ced"
+     "clip_id": "276c1505"
     }
    ],
    "only_with_extras": [],
@@ -46040,7 +46040,7 @@
       ]
      },
      "clip": "walk-jump-up-2m^ledge-chest-begin",
-     "clip_id": "b7e88a40"
+     "clip_id": "348f6eb0"
     }
    ],
    "only_with_extras": [],
@@ -46083,7 +46083,7 @@
       ]
      },
      "clip": "walk-jump-up-2m^ledge-chest-end",
-     "clip_id": "bdcdbd2c"
+     "clip_id": "47bcd8c2"
     }
    ],
    "only_with_extras": [],
@@ -46134,7 +46134,7 @@
       ]
      },
      "clip": "walk-jump-up-2m^ledge-chest-mid",
-     "clip_id": "84c7a76e"
+     "clip_id": "9250fae8"
     }
    ],
    "only_with_extras": [],
@@ -46177,7 +46177,7 @@
       ]
      },
      "clip": "run^jump-rt-foot-2-5m",
-     "clip_id": "b0e478d1"
+     "clip_id": "5356ef3a"
     }
    ],
    "only_with_extras": [],
@@ -46228,7 +46228,7 @@
       ]
      },
      "clip": "stealth-run^vault-over-test",
-     "clip_id": "d88d84b6"
+     "clip_id": "0d1de54f"
     }
    ],
    "only_with_extras": [],
@@ -46253,7 +46253,7 @@
     {
      "actor_b": {},
      "clip": "run^vault",
-     "clip_id": "61545127"
+     "clip_id": "305ff261"
     }
    ],
    "only_with_extras": [],
@@ -46394,12 +46394,12 @@
       ]
      },
      "clip": "ledge-grab-base",
-     "clip_id": "5b377b87"
+     "clip_id": "daee6abb"
     },
     {
      "actor_b": {},
      "clip": "swim-ledge-grab",
-     "clip_id": "96c3be89"
+     "clip_id": "ba20c5e3"
     }
    ],
    "only_with_extras": [
@@ -46564,7 +46564,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001ed70",
-     "request": "#355f7872",
+     "request": "#85591498",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-rt"
     },
@@ -46572,7 +46572,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001eda0",
-     "request": "#4a901f95",
+     "request": "#2c816e58",
      "scalar_0x20": -1.0,
      "target": "climb-out-90-lt"
     },
@@ -46580,7 +46580,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001edd0",
-     "request": "#7dd273cc",
+     "request": "#26abf310",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-rt"
     },
@@ -46588,7 +46588,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001ee00",
-     "request": "#9cdf301a",
+     "request": "#88b8881b",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-rt"
     },
@@ -46596,7 +46596,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001ee30",
-     "request": "#981188ee",
+     "request": "#23f06dc8",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-rt"
     },
@@ -46604,7 +46604,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001ee60",
-     "request": "#021d142b",
+     "request": "#c5df4d05",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-lt"
     },
@@ -46612,7 +46612,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001ee90",
-     "request": "#e31057fd",
+     "request": "#2de5f787",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-up-lt"
     },
@@ -46620,7 +46620,7 @@
      "cond": ">=0",
      "fade_s": 0.2,
      "record": "0x0001eec0",
-     "request": "#e7deef09",
+     "request": "#ef29578c",
      "scalar_0x20": -1.0,
      "target": "climb-in-90-dn-lt"
     },
@@ -46650,7 +46650,7 @@
     {
      "actor_b": {},
      "clip": "swim-climb-up-0om^ledge-knee",
-     "clip_id": "e73dba1b"
+     "clip_id": "014986e1"
     }
    ],
    "only_with_extras": [],
@@ -46709,7 +46709,7 @@
       ]
      },
      "clip": "stealth-vault-end^stealth-idle-test",
-     "clip_id": "5ab90d53"
+     "clip_id": "a318523e"
     }
    ],
    "only_with_extras": [],
@@ -46768,7 +46768,7 @@
       ]
      },
      "clip": "stealth-vault-end^stealth-run-test",
-     "clip_id": "42f9cb82"
+     "clip_id": "48c6c97d"
     }
    ],
    "only_with_extras": [],
@@ -46787,7 +46787,7 @@
      "cond": "L48688",
      "fade_s": 0.4,
      "record": "0x0002f7b0",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": -1.0,
      "target": "run-fw^idle"
     },
@@ -46850,7 +46850,7 @@
       ]
      },
      "clip": "stealth-vault-test",
-     "clip_id": "172e5b46"
+     "clip_id": "6bfa6962"
     }
    ],
    "only_with_extras": [],
@@ -46924,7 +46924,7 @@
       ]
      },
      "clip": "stealth-vault^vault-end-stealth-idle-test",
-     "clip_id": "0677b426"
+     "clip_id": "91ab8491"
     }
    ],
    "only_with_extras": [],
@@ -46983,7 +46983,7 @@
       ]
      },
      "clip": "stealth-vault^vault-end-stealth-run-test",
-     "clip_id": "55f753b0"
+     "clip_id": "ba2645a5"
     }
    ],
    "only_with_extras": [],
@@ -47048,7 +47048,7 @@
       ]
      },
      "clip": "run^vault-over",
-     "clip_id": "d52bc552"
+     "clip_id": "b578e80f"
     }
    ],
    "only_with_extras": [],
@@ -47059,7 +47059,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030210",
-     "request": "#ff499e08",
+     "request": "#32f79c5e",
      "scalar_0x20": -1.0,
      "target": "vault-2m^run"
     },
@@ -47067,7 +47067,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030240",
-     "request": "#91201877",
+     "request": "#fd83b53b",
      "scalar_0x20": -1.0,
      "target": "vault-2m^idle"
     },
@@ -47075,7 +47075,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030270",
-     "request": "#d2318980",
+     "request": "#ecb2aea0",
      "scalar_0x20": 0.2,
      "target": "vault-1m^run-a"
     },
@@ -47083,7 +47083,7 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x000302a0",
-     "request": "#40d9a044",
+     "request": "#5a28604e",
      "scalar_0x20": 0.2,
      "target": "vault-1m^idle"
     },
@@ -47108,49 +47108,49 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x000302a0",
-     "request": "#40d9a044",
+     "request": "#5a28604e",
      "source": "idle^vault-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x000302a0",
-     "request": "#40d9a044",
+     "request": "#5a28604e",
      "source": "idle^vault-2m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x000302a0",
-     "request": "#40d9a044",
+     "request": "#5a28604e",
      "source": "idle^vault-2m-drop-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x000302a0",
-     "request": "#40d9a044",
+     "request": "#5a28604e",
      "source": "move^vault-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x000302a0",
-     "request": "#40d9a044",
+     "request": "#5a28604e",
      "source": "move^vault-2m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x000302a0",
-     "request": "#40d9a044",
+     "request": "#5a28604e",
      "source": "move^vault-2m-drop-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x000302a0",
-     "request": "#40d9a044",
+     "request": "#5a28604e",
      "source": "vault"
     }
    ],
@@ -47173,7 +47173,7 @@
       ]
      },
      "clip": "vault-over^idle",
-     "clip_id": "db9796a0"
+     "clip_id": "39d36834"
     }
    ],
    "only_with_extras": [],
@@ -47224,7 +47224,7 @@
       ]
      },
      "clip": "vault-over^run",
-     "clip_id": "5cff45f6"
+     "clip_id": "014c9b85"
     }
    ],
    "only_with_extras": [],
@@ -47252,49 +47252,49 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030270",
-     "request": "#d2318980",
+     "request": "#ecb2aea0",
      "source": "idle^vault-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030270",
-     "request": "#d2318980",
+     "request": "#ecb2aea0",
      "source": "idle^vault-2m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030270",
-     "request": "#d2318980",
+     "request": "#ecb2aea0",
      "source": "idle^vault-2m-drop-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030270",
-     "request": "#d2318980",
+     "request": "#ecb2aea0",
      "source": "move^vault-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030270",
-     "request": "#d2318980",
+     "request": "#ecb2aea0",
      "source": "move^vault-2m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030270",
-     "request": "#d2318980",
+     "request": "#ecb2aea0",
      "source": "move^vault-2m-drop-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030270",
-     "request": "#d2318980",
+     "request": "#ecb2aea0",
      "source": "vault"
     }
    ],
@@ -47317,7 +47317,7 @@
       ]
      },
      "clip": "vault-over^run",
-     "clip_id": "5cff45f6"
+     "clip_id": "014c9b85"
     }
    ],
    "only_with_extras": [],
@@ -47360,7 +47360,7 @@
       ]
      },
      "clip": "vault-over^idle-close",
-     "clip_id": "5cd4c82f"
+     "clip_id": "0a1c93c0"
     }
    ],
    "only_with_extras": [],
@@ -47403,7 +47403,7 @@
       ]
      },
      "clip": "vault-over^run",
-     "clip_id": "5cff45f6"
+     "clip_id": "014c9b85"
     }
    ],
    "only_with_extras": [],
@@ -47430,49 +47430,49 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030240",
-     "request": "#91201877",
+     "request": "#fd83b53b",
      "source": "idle^vault-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030240",
-     "request": "#91201877",
+     "request": "#fd83b53b",
      "source": "idle^vault-2m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030240",
-     "request": "#91201877",
+     "request": "#fd83b53b",
      "source": "idle^vault-2m-drop-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030240",
-     "request": "#91201877",
+     "request": "#fd83b53b",
      "source": "move^vault-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030240",
-     "request": "#91201877",
+     "request": "#fd83b53b",
      "source": "move^vault-2m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030240",
-     "request": "#91201877",
+     "request": "#fd83b53b",
      "source": "move^vault-2m-drop-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030240",
-     "request": "#91201877",
+     "request": "#fd83b53b",
      "source": "vault"
     }
    ],
@@ -47488,7 +47488,7 @@
       ]
      },
      "clip": "vault-over-2m^idle",
-     "clip_id": "cb2d6d05"
+     "clip_id": "52e3c48b"
     }
    ],
    "only_with_extras": [],
@@ -47515,49 +47515,49 @@
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030210",
-     "request": "#ff499e08",
+     "request": "#32f79c5e",
      "source": "idle^vault-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030210",
-     "request": "#ff499e08",
+     "request": "#32f79c5e",
      "source": "idle^vault-2m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030210",
-     "request": "#ff499e08",
+     "request": "#32f79c5e",
      "source": "idle^vault-2m-drop-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030210",
-     "request": "#ff499e08",
+     "request": "#32f79c5e",
      "source": "move^vault-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030210",
-     "request": "#ff499e08",
+     "request": "#32f79c5e",
      "source": "move^vault-2m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030210",
-     "request": "#ff499e08",
+     "request": "#32f79c5e",
      "source": "move^vault-2m-drop-1m"
     },
     {
      "cond": ">=1",
      "fade_s": 0.2,
      "record": "0x00030210",
-     "request": "#ff499e08",
+     "request": "#32f79c5e",
      "source": "vault"
     }
    ],
@@ -47573,7 +47573,7 @@
       ]
      },
      "clip": "vault-over-2m^run",
-     "clip_id": "b839525d"
+     "clip_id": "901ecc9c"
     }
    ],
    "only_with_extras": [],
@@ -47598,7 +47598,7 @@
     {
      "actor_b": {},
      "clip": "ledge-land-waist^ledge-grab",
-     "clip_id": "2f398fab"
+     "clip_id": "61fdee4c"
     }
    ],
    "only_with_extras": [],
@@ -47638,12 +47638,12 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#f7ba00b4",
-     "clip_id": "f7ba00b4"
+     "clip": "#dfb6bbe0",
+     "clip_id": "dfb6bbe0"
     }
    ],
    "only_with_extras": [],
-   "reference_clip": "#f7ba00b4",
+   "reference_clip": "#dfb6bbe0",
    "state_offset": "0x0000aee8",
    "transitions": [
     {
@@ -47666,7 +47666,7 @@
      "cond": ">=0.5 L48688",
      "fade_s": 0.4,
      "record": "0x00037300",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "idle^run-bkwd"
     },
@@ -47674,7 +47674,7 @@
      "cond": ">=0.5 L48588",
      "fade_s": 0.4,
      "record": "0x00037330",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "run-bkwd"
     },
@@ -47736,7 +47736,7 @@
     {
      "actor_b": {},
      "clip": "vault^ledge-grab",
-     "clip_id": "1ca6b662"
+     "clip_id": "d15d0d12"
     }
    ],
    "only_with_extras": [],
@@ -47821,7 +47821,7 @@
       ]
      },
      "clip": "vault-over^fall-close",
-     "clip_id": "cecaccf7"
+     "clip_id": "0763a8c2"
     }
    ],
    "only_with_extras": [],
@@ -47846,7 +47846,7 @@
     {
      "actor_b": {},
      "clip": "vault^idle",
-     "clip_id": "5ee5c94c"
+     "clip_id": "9c965a36"
     }
    ],
    "only_with_extras": [],
@@ -47873,7 +47873,7 @@
      "cond": ">=0.5 L48688",
      "fade_s": 0.4,
      "record": "0x00037300",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "idle^run-bkwd"
     },
@@ -47881,7 +47881,7 @@
      "cond": ">=0.5 L48588",
      "fade_s": 0.4,
      "record": "0x00037330",
-     "request": "#d923ebe9",
+     "request": "#e2d6c492",
      "scalar_0x20": 0.2,
      "target": "run-bkwd"
     },
@@ -47943,7 +47943,7 @@
     {
      "actor_b": {},
      "clip": "vault^run",
-     "clip_id": "8b75ebb2"
+     "clip_id": "0d14dd1d"
     }
    ],
    "only_with_extras": [],
@@ -47976,7 +47976,7 @@
     {
      "actor_b": {},
      "clip": "ledge-land-waist-contact",
-     "clip_id": "e41d5764"
+     "clip_id": "5b9db49d"
     }
    ],
    "only_with_extras": [],
@@ -48033,7 +48033,7 @@
       ]
      },
      "clip": "ledge-grab-chest^ledge-grab-knee",
-     "clip_id": "abb85f29"
+     "clip_id": "b4c11e71"
     }
    ],
    "only_with_extras": [],
@@ -48101,7 +48101,7 @@
     {
      "actor_b": {},
      "clip": "jump-med",
-     "clip_id": "619bb771"
+     "clip_id": "7411e549"
     }
    ],
    "only_with_extras": [],
@@ -48116,12 +48116,12 @@
    "leaves": [
     {
      "actor_b": {},
-     "clip": "#f738393e",
-     "clip_id": "f738393e"
+     "clip": "#0191f558",
+     "clip_id": "0191f558"
     }
    ],
    "only_with_extras": [],
-   "reference_clip": "#f738393e",
+   "reference_clip": "#0191f558",
    "state_offset": "0x00008628",
    "transitions": []
   },
@@ -48133,7 +48133,7 @@
     {
      "actor_b": {},
      "clip": "ledge-grab^ledge-walk-r",
-     "clip_id": "61792a6c"
+     "clip_id": "0e2570e3"
     }
    ],
    "only_with_extras": [],
@@ -48176,7 +48176,7 @@
       ]
      },
      "clip": "idle-enter^ledge-walk-r",
-     "clip_id": "8965aab6"
+     "clip_id": "19b55465"
     }
    ],
    "only_with_extras": [],
@@ -48219,7 +48219,7 @@
       ]
      },
      "clip": "idle-enter^ledge-walk-r",
-     "clip_id": "8965aab6"
+     "clip_id": "19b55465"
     }
    ],
    "only_with_extras": [],
@@ -48254,7 +48254,7 @@
       ]
      },
      "clip": "ledge-walk-l-exit^idle",
-     "clip_id": "6f4df04a"
+     "clip_id": "e218a979"
     }
    ],
    "only_with_extras": [],
@@ -48289,7 +48289,7 @@
       ]
      },
      "clip": "ledge-walk-r-exit^idle",
-     "clip_id": "02807768"
+     "clip_id": "7c8033d9"
     }
    ],
    "only_with_extras": [],
@@ -48346,7 +48346,7 @@
       ]
      },
      "clip": "ledge-walk-idle-r",
-     "clip_id": "7dc0442a"
+     "clip_id": "d0e638ae"
     }
    ],
    "only_with_extras": [],
@@ -48357,7 +48357,7 @@
      "cond": "-",
      "fade_s": 0.2,
      "record": "0x000322c0",
-     "request": "#8e6fcc68",
+     "request": "#2ec95958",
      "scalar_0x20": -1.0,
      "target": "wall-shimmy-idle^move-left"
     },
@@ -48365,7 +48365,7 @@
      "cond": "-",
      "fade_s": 0.2,
      "record": "0x000322f0",
-     "request": "#e2d1872c",
+     "request": "#a4a2175b",
      "scalar_0x20": -1.0,
      "target": "wall-shimmy-idle^move-right"
     },
@@ -48426,7 +48426,7 @@
       ]
      },
      "clip": "ledge-walk-idle-r",
-     "clip_id": "7dc0442a"
+     "clip_id": "d0e638ae"
     }
    ],
    "only_with_extras": [],
@@ -48437,7 +48437,7 @@
      "cond": "-",
      "fade_s": 0.2,
      "record": "0x00033c20",
-     "request": "#8e6fcc68",
+     "request": "#2ec95958",
      "scalar_0x20": -1.0,
      "target": "wall-shimmy-idle^move-left"
     },
@@ -48445,7 +48445,7 @@
      "cond": "-",
      "fade_s": 0.2,
      "record": "0x00033c50",
-     "request": "#e2d1872c",
+     "request": "#a4a2175b",
      "scalar_0x20": -1.0,
      "target": "wall-shimmy-idle^move-right"
     },
@@ -48469,14 +48469,14 @@
      "cond": "-",
      "fade_s": 0.2,
      "record": "0x000322c0",
-     "request": "#8e6fcc68",
+     "request": "#2ec95958",
      "source": "wall-shimmy-idle-left"
     },
     {
      "cond": "-",
      "fade_s": 0.2,
      "record": "0x00033c20",
-     "request": "#8e6fcc68",
+     "request": "#2ec95958",
      "source": "wall-shimmy-idle-right"
     }
    ],
@@ -48492,7 +48492,7 @@
       ]
      },
      "clip": "ledge-idle-r^ledge-walk-r",
-     "clip_id": "56bbb08a"
+     "clip_id": "2dfcc606"
     }
    ],
    "only_with_extras": [],
@@ -48519,14 +48519,14 @@
      "cond": "-",
      "fade_s": 0.2,
      "record": "0x000322f0",
-     "request": "#e2d1872c",
+     "request": "#a4a2175b",
      "source": "wall-shimmy-idle-left"
     },
     {
      "cond": "-",
      "fade_s": 0.2,
      "record": "0x00033c50",
-     "request": "#e2d1872c",
+     "request": "#a4a2175b",
      "source": "wall-shimmy-idle-right"
     }
    ],
@@ -48542,7 +48542,7 @@
       ]
      },
      "clip": "ledge-idle-r^ledge-walk-r",
-     "clip_id": "56bbb08a"
+     "clip_id": "2dfcc606"
     }
    ],
    "only_with_extras": [],
@@ -48567,7 +48567,7 @@
     {
      "actor_b": {},
      "clip": "ledge-walk-r^ledge-grab",
-     "clip_id": "984ff666"
+     "clip_id": "10e285b3"
     }
    ],
    "only_with_extras": [],
@@ -48617,7 +48617,7 @@
       ]
      },
      "clip": "ledge-walk-r",
-     "clip_id": "addc5370"
+     "clip_id": "e54ca37c"
     }
    ],
    "only_with_extras": [],
@@ -48668,7 +48668,7 @@
      "cond": ">=0&<=0.01",
      "fade_s": 0.166,
      "record": "0x000268e0",
-     "request": "#e2d1872c",
+     "request": "#a4a2175b",
      "scalar_0x20": -1.0,
      "target": "wall-shimmy-move-left^idle"
     },
@@ -48676,7 +48676,7 @@
      "cond": ">=0.23&<=0.25",
      "fade_s": 0.166,
      "record": "0x00026910",
-     "request": "#e2d1872c",
+     "request": "#a4a2175b",
      "scalar_0x20": -1.0,
      "target": "wall-shimmy-move-left^idle"
     },
@@ -48684,7 +48684,7 @@
      "cond": ">=0.478&<=0.498",
      "fade_s": 0.166,
      "record": "0x00026940",
-     "request": "#e2d1872c",
+     "request": "#a4a2175b",
      "scalar_0x20": -1.0,
      "target": "wall-shimmy-move-left^idle"
     },
@@ -48692,7 +48692,7 @@
      "cond": ">=0.742&<=0.762",
      "fade_s": 0.166,
      "record": "0x00026970",
-     "request": "#e2d1872c",
+     "request": "#a4a2175b",
      "scalar_0x20": -1.0,
      "target": "wall-shimmy-move-left^idle"
     },
@@ -48700,7 +48700,7 @@
      "cond": ">=0.99&<=1",
      "fade_s": 0.166,
      "record": "0x000269a0",
-     "request": "#e2d1872c",
+     "request": "#a4a2175b",
      "scalar_0x20": -1.0,
      "target": "wall-shimmy-move-left^idle"
     },
@@ -48759,35 +48759,35 @@
      "cond": ">=0&<=0.01",
      "fade_s": 0.166,
      "record": "0x000268e0",
-     "request": "#e2d1872c",
+     "request": "#a4a2175b",
      "source": "wall-shimmy-move-left"
     },
     {
      "cond": ">=0.23&<=0.25",
      "fade_s": 0.166,
      "record": "0x00026910",
-     "request": "#e2d1872c",
+     "request": "#a4a2175b",
      "source": "wall-shimmy-move-left"
     },
     {
      "cond": ">=0.478&<=0.498",
      "fade_s": 0.166,
      "record": "0x00026940",
-     "request": "#e2d1872c",
+     "request": "#a4a2175b",
      "source": "wall-shimmy-move-left"
     },
     {
      "cond": ">=0.742&<=0.762",
      "fade_s": 0.166,
      "record": "0x00026970",
-     "request": "#e2d1872c",
+     "request": "#a4a2175b",
      "source": "wall-shimmy-move-left"
     },
     {
      "cond": ">=0.99&<=1",
      "fade_s": 0.166,
      "record": "0x000269a0",
-     "request": "#e2d1872c",
+     "request": "#a4a2175b",
      "source": "wall-shimmy-move-left"
     }
    ],
@@ -48803,7 +48803,7 @@
       ]
      },
      "clip": "ledge-walk-r-^ledge-idle-r",
-     "clip_id": "0f8f391b"
+     "clip_id": "d01daf80"
     }
    ],
    "only_with_extras": [],
@@ -48853,7 +48853,7 @@
       ]
      },
      "clip": "ledge-walk-r",
-     "clip_id": "addc5370"
+     "clip_id": "e54ca37c"
     }
    ],
    "only_with_extras": [],
@@ -48904,7 +48904,7 @@
      "cond": ">=0&<=0.01",
      "fade_s": 0.166,
      "record": "0x000282c0",
-     "request": "#8e6fcc68",
+     "request": "#2ec95958",
      "scalar_0x20": -1.0,
      "target": "wall-shimmy-move-right^idle"
     },
@@ -48912,7 +48912,7 @@
      "cond": ">=0.23&<=0.25",
      "fade_s": 0.166,
      "record": "0x000282f0",
-     "request": "#8e6fcc68",
+     "request": "#2ec95958",
      "scalar_0x20": -1.0,
      "target": "wall-shimmy-move-right^idle"
     },
@@ -48920,7 +48920,7 @@
      "cond": ">=0.478&<=0.498",
      "fade_s": 0.166,
      "record": "0x00028320",
-     "request": "#8e6fcc68",
+     "request": "#2ec95958",
      "scalar_0x20": -1.0,
      "target": "wall-shimmy-move-right^idle"
     },
@@ -48928,7 +48928,7 @@
      "cond": ">=0.742&<=0.762",
      "fade_s": 0.166,
      "record": "0x00028350",
-     "request": "#8e6fcc68",
+     "request": "#2ec95958",
      "scalar_0x20": -1.0,
      "target": "wall-shimmy-move-right^idle"
     },
@@ -48936,7 +48936,7 @@
      "cond": ">=0.99&<=1",
      "fade_s": 0.166,
      "record": "0x00028380",
-     "request": "#8e6fcc68",
+     "request": "#2ec95958",
      "scalar_0x20": -1.0,
      "target": "wall-shimmy-move-right^idle"
     },
@@ -48995,35 +48995,35 @@
      "cond": ">=0&<=0.01",
      "fade_s": 0.166,
      "record": "0x000282c0",
-     "request": "#8e6fcc68",
+     "request": "#2ec95958",
      "source": "wall-shimmy-move-right"
     },
     {
      "cond": ">=0.23&<=0.25",
      "fade_s": 0.166,
      "record": "0x000282f0",
-     "request": "#8e6fcc68",
+     "request": "#2ec95958",
      "source": "wall-shimmy-move-right"
     },
     {
      "cond": ">=0.478&<=0.498",
      "fade_s": 0.166,
      "record": "0x00028320",
-     "request": "#8e6fcc68",
+     "request": "#2ec95958",
      "source": "wall-shimmy-move-right"
     },
     {
      "cond": ">=0.742&<=0.762",
      "fade_s": 0.166,
      "record": "0x00028350",
-     "request": "#8e6fcc68",
+     "request": "#2ec95958",
      "source": "wall-shimmy-move-right"
     },
     {
      "cond": ">=0.99&<=1",
      "fade_s": 0.166,
      "record": "0x00028380",
-     "request": "#8e6fcc68",
+     "request": "#2ec95958",
      "source": "wall-shimmy-move-right"
     }
    ],
@@ -49039,7 +49039,7 @@
       ]
      },
      "clip": "ledge-walk-r-^ledge-idle-r",
-     "clip_id": "0f8f391b"
+     "clip_id": "d01daf80"
     }
    ],
    "only_with_extras": [],

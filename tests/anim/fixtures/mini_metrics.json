@@ -9150,7 +9150,7 @@
   "godot_version": "4.7.2-stable (official)",
   "graph": {
    "path": "tools/anim_graph/fixtures/mini_graph.json",
-   "sha256": "5f32989533e4e57b90a443e190c9d0f5472cebb85173db98b13ab41424bc109c"
+   "sha256": "0ad28da5cb09a50cb509570cb77acc72b61a274e793cf1b28748fd5b0ca5cd8a"
   },
   "gt_source": {
    "path": "source/graph_analysis/graph/vmm/bl/dump3.jsonl",

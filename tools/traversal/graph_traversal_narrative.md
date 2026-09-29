@@ -76,11 +76,11 @@ The fraction is the number of states whose every leaf resolves to an Actor_B cli
   - The JSON names this variable `ledge_free_hang`, not `secondary`, because LocoBrain maps `secondary*` to `move_dir_deg`.
 - **`reverse`** (flags 0x4, fade 0.1–0.2 s, phase ≤ 0.5) returns any hand-over-hand move to the hang hub when the stick is released or reversed in its first half.
 - **Hashed requests.** Their name hashes are not in symbol_candidates, so each is read from its only target(s):
-  - the vault exits `#40d9a044`, `#d2318980`, `#91201877`, `#ff499e08`;
-  - the narrow-ledge moves `#8e6fcc68` / `#e2d1872c`;
-  - the corner moves `#355f7872` etc.;
+  - the vault exits `#5a28604e`, `#ecb2aea0`, `#fd83b53b`, `#32f79c5e`;
+  - the narrow-ledge moves `#2ec95958` / `#a4a2175b`;
+  - the corner moves `#85591498` etc.;
   - the wall-jump catches.
-  - `#9dcc9cf6` and `#fe1da2d7` are targets that are not states in the table.
+  - `#6e07f05e` and `#91b8bb4f` are targets that are not states in the table.
 - **Undecoded fields**, copied as-is: `scalar_0x20`, the flags at +0x04 and byte +0x28. Observations: 0x800 is on most chained auto records between parts of one move; 0x20 is on many phase-1 exits (into `run-fw`, `idle` and the vault exit states); 0x84 is on the navigation records out of the hang hub and 0x80 on most chaining records; 0x4 is on `reverse` and the shimmy → hub records. Byte 0x28 = 05 marks the 0.75 s look / swing fades, and 04 marks most returns to the hub.
 - **Runtime fields.** The traversal lambdas read {n_fields} distinct runtime fields (§8).
 - **Height labels** (`geometry_label` in the JSON) are parsed from names: authoring intent, not measurements. The clip survey (`data/traversal/clip_geometry.json`) holds the measured contacts.

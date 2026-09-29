@@ -14,7 +14,7 @@ This extract only creates files: `tools/traversal/`, `data/traversal/` and this 
    - For the states whose phase the graph sets directly (`*-mid-jump`: air progress; `vault`: 1.0), the input needs a TimeSeek-driven timeline instead of free play.
 3. **`scripts/player/anim/loco_brain.gd` (LocoBrain).**
    - (a) Add an entry point for code-started traversal states, for example `enter_traversal(gs, fade, entry_phase, info)`, on top of `_enter_gs`, plus a TRAVERSE state tag. While traversing, the locomotion code rules (takeoff, fall, land, hit entries) are suspended unless the controller cancels.
-   - (b) Add a way to post traversal requests into `_requests` / `_held`: `idle`, `run`, `vault`, the four vault exits, `ledge-climb-*` and the hashed corner requests, `reverse`, `fall`, `#8e6fcc68` / `#e2d1872c` / `shimmy-idle`.
+   - (b) Add a way to post traversal requests into `_requests` / `_held`: `idle`, `run`, `vault`, the four vault exits, `ledge-climb-*` and the hashed corner requests, `reverse`, `fall`, `#2ec95958` / `#a4a2175b` / `shimmy-idle`.
    - (c) `_conditions_ok`: add the variable `ledge_free_hang` (second condition of the settle records). Today every non-phase, non-frames variable reads `move_dir_deg`.
    - (d) Per-state phase handling: a set phase for air progress; a rate scale per state from `callbacks.phase_update_cb`.
    - (e) Exits into `fall`, `idle`, `run-fw`, `idle^run-fwd` and `fall-land-soft-idle` are existing graph states, so the hand-back needs no new code beyond clearing TRAVERSE.
@@ -57,7 +57,7 @@ Motion options for the missing free-hang network (design decision, not made here
 - The mirror flag reading of state +0x2c (inferred, strong).
 - Default values of the rate fields (`D4+124/128/132/136`, `D8+92/96`); the graph stores only where they are read.
 - Which `ledge` overlay the game used for real ledges. `ledge-hang` and `ledge-grab` are empty sets, so on ledges the graph clips play unchanged, and those clips are absent from both libraries.
-- The two hashed wall-jump targets (`#9dcc9cf6`, `#fe1da2d7`), which are not states in the table.
+- The two hashed wall-jump targets (`#6e07f05e`, `#91b8bb4f`), which are not states in the table.
 - The leaves whose clip IDs have no name (`#...`) in the look, vault-kick, carry and wall-jump trees.
 - Crouched jump-ups collect two arm parts at weight 1.0: the crouch part (keyed on the crouch intermediate) and the standing part (keyed on the source clip). Layer order (overlay priority, then record offset) decides which one shows; the exporter's layer rules apply.
 

@@ -32,7 +32,7 @@ verify current file integrity and, when configured, upstream file hashes and res
   "file": "build_subgraph.py",
   "source": "graph_analysis/graph/build_subgraph.py",
   "source_sha256": "d339adfb92e0b8feb5da05b4a4f899c751179e91b14aaf9b9286dc5a592c5b02",
-  "vendored_sha256": "eaf63fc4bc987362fa3d04a1d2f8f4cc6cfd331ac1141962a49d1ddc0bd221f0"
+  "vendored_sha256": "92503065e1ece7f8f34e9a956c1d0ecada8da7f1916ab98e693ede9b3406d496"
  },
  {
   "file": "lib.py",

@@ -86,7 +86,7 @@ SEL=[
  ('hit-reaction-par','damage','upper_additive',False,'partial/additive hit reaction (idle-hr-fwd--add)'),
  ('death-front-mid','damage','base',False,'death (terminal; 0 transitions)'),
  # optional
- ('crouch-change','locomotion','upper_additive',True,'additive stand^crouch/crouch^stand (#40871cf6 -> stand^crouch--add -> actor_b-p-stand^crouch--add); 0 incoming, self-loop'),
+ ('crouch-change','locomotion','upper_additive',True,'additive stand^crouch/crouch^stand (#8390fa57 -> stand^crouch--add -> actor_b-p-stand^crouch--add); 0 incoming, self-loop'),
  ('quick-turn-180-r','locomotion','base',True,'Actor_B 180 turn available via this state (melee-fist-idle-turn-180-r -> actor_b-p-stealth-idle-turn-180)'),
  ('idle^vault-1m','traversal','base',True,'vault 1m from idle'),
  ('move^vault-1m','traversal','base',True,'vault 1m while moving'),
@@ -258,7 +258,7 @@ RUNTIME_CLIPS={
  'fire':{'status':'INFERRED (reverse lookup of overlay remaps; state leaf is a placeholder \'idle\' overridden by clip callback)',
    'pistol':['9mm-aim-fire','actor_b-p-pistol-fire--add','actor_b-p-pistol-beretta-fire--add'],
    'musket':['2lg-shotgun-fire','bolt-rifle-fire--add','actor_b-p-rifle-idle-aim-fire--add'],
-   'bow':['#663285d5','actor_b-p-bow-fire--add']},
+   'bow':['#be1bfc74','actor_b-p-bow-fire--add']},
  'hit-reaction-full-body':{'status':'INFERRED (clip callback returns int32[info+280]; directional Actor_B clips exist)',
    'candidates':['actor_b-p-hr-fw','actor_b-p-hr-bw','actor_b-p-hr-lt','actor_b-p-hr-rt']},
 }

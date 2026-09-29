@@ -44,7 +44,7 @@
   "godot_version": "4.7.2-stable (official)",
   "inputs_sha256": {
    "Actor_B.res": "d33e8509fea2f1fa1f8828fa374f2c663875c10c5b8fc3a9e69068d3f9611a38",
-   "clip_geometry.json": "d50caabb7cfbe4119ec2ebaccda4408ac237829be19b2760405b80207ebf51fc",
+   "clip_geometry.json": "4ecc61005182574a0f4d737b96233e7f514186443f67bd6879303c851bb6790a",
    "clip_geometry_extra.json": "ac22bfeb63dc58e008e1a0eb7a6939e6df2575a20f9908171918e65cc757be9e",
    "contact_probes.json": "fd4aaaf25a39ca1da605d084386d25acac74a138d59dff97f79953d069291e61",
    "graph_traversal.json": "dbb93e8e84b722e3a09307b8da55a6fcc7c9db9758bfe7ac143ad3d7034b8a58",
@@ -10539,7 +10539,7 @@
    "exit_speed": 0.1076,
    "exit_velocity": [-0.0938, 0.0043, -0.0528],
    "fade_in": {
-    "key": "graph:#e2d1872c",
+    "key": "graph:#a4a2175b",
     "s": 0.2,
     "status": "graph"
    },

@@ -1830,7 +1830,7 @@
    ],
    "weapon_policy": "sling",
    "fade_in": {
-    "key": "graph:#e2d1872c",
+    "key": "graph:#a4a2175b",
     "s": 0.2,
     "status": "graph"
    },
