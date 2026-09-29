@@ -27,9 +27,11 @@ var blink: FaceBlink
 var overlay: Node
 ## Customizer garments worn over the legacy outfit, slot -> id (PlayerOutfit.dress bulk_slots).
 var outfit_slots := {}
-## The back of the skirt rolled up (the tandem crawl; set_rolled): the regions the dress hides, as it hid them.
+## The back of the skirt rolled up (the tandem crawl; set_rolled), the breeches down (a tandem partner; set_pants_down);
+## the dress as PlayerOutfit fitted it (hide_regions, hide_hair_zones, has_hat), to show again what they uncover.
 var rolled := false
-var _fit_hide: Array = []
+var pants_down := false
+var _fit := {}
 var _was_down := false
 
 
@@ -115,8 +117,9 @@ func apply(lk: Dictionary) -> void:
 	look = AppearanceStore.validate(lk)
 	var fit := dress(body, look)
 	outfit_slots = fit.get("bulk_slots", {})
-	_fit_hide = (fit.get("hide_regions", []) as Array).duplicate()
+	_fit = fit.duplicate(true)
 	rolled = false
+	pants_down = false
 	if blink == null:
 		blink = FaceBlink.new()
 		blink.name = "FaceBlink"
@@ -136,17 +139,48 @@ const ROLLED_GARMENT_HIDES := ["pelvis_center", "pelvis_side", "thigh_upper_l", 
 		"thigh_lower_r"]
 
 
+## The breeches down at the knees (the partner in a tandem pose: kneeling behind the crawl, the plank over Happy Baby;
+## FrontierPlayer; the user 2026-09-29: "for the men's yoga poses of crawl, kneel and plank the pants roll to the knees
+## exposing the genitals"): the legs garment is drawn only below the thighs' upper half (PANTS_GARMENT_HIDES: what is
+## left of it lies about the knees), the shirt's tails rolled up as in the crawl, and the skin they covered drawn again
+## with its own dress (PANTS_SHOWS: the genitals with their hair and their swing, as bare).
+const PANTS_SHOWS := ["pelvis_center", "pelvis_side", "thigh_upper_l", "thigh_upper_r"]
+const PANTS_GARMENT_HIDES := ["abdomen_front", "abdomen_side", "abdomen_back", "pelvis_center", "pelvis_side",
+		"thigh_upper_l", "thigh_upper_r"]
+
+
 func set_rolled(on: bool) -> void:
 	if on == rolled or body == null:
 		return
 	rolled = on
-	var shown: Array = ROLLED_SHOWS if on else []
-	var skin := BodyMaterials.hide_mask(_fit_hide.filter(func(r: String) -> bool: return not r in shown))
-	for mi: MeshInstance3D in body.part_meshes("head"):
-		_set_hide(mi, skin)
-	var cloth := BodyMaterials.hide_mask(ROLLED_GARMENT_HIDES if on else [])
-	for mi: MeshInstance3D in body.part_meshes("outfit:shirt"):
-		_set_hide(mi, cloth)
+	_undress()
+
+
+func set_pants_down(on: bool) -> void:
+	if on == pants_down or body == null:
+		return
+	pants_down = on
+	_undress()
+
+
+## The body and the garments for what is rolled up or down now (set_rolled, set_pants_down).
+func _undress() -> void:
+	var shown: Array = []
+	var cloth := {"outfit:shirt": [], "outfit:legs.lower": []}
+	if rolled or pants_down:
+		shown.append_array(ROLLED_SHOWS)
+		cloth["outfit:shirt"] = ROLLED_GARMENT_HIDES
+	if pants_down:
+		shown.append_array(PANTS_SHOWS)
+		cloth["outfit:legs.lower"] = PANTS_GARMENT_HIDES
+	var fit := _fit.duplicate(true)
+	fit["hide_regions"] = (_fit.get("hide_regions", []) as Array).filter(func(r: String) -> bool: return not r in shown)
+	# (the skin's hide mask, the pubic hair part and the genitals' swing follow the dressed look's hide_regions)
+	BodyMaterials.apply_look(body, dressed_look(look, fit), ["head", "body_hair"])
+	for tag: String in cloth:
+		var mask := BodyMaterials.hide_mask(cloth[tag])
+		for mi: MeshInstance3D in body.part_meshes(tag):
+			_set_hide(mi, mask)
 
 
 static func _set_hide(mi: MeshInstance3D, mask: Vector2i) -> void:

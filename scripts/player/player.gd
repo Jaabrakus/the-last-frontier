@@ -1213,10 +1213,16 @@ func knock_down(v: Vector3) -> bool:
 ## A closed skirt (a petticoat) is tucked up at the front while climbing: a ladder (traversal CLIMB), a trunk or a giant
 ## (PlayerGrip), a branch (perch); at the back in the tandem crawl; let down again after (CharacterBodyMesh.skirt_tuck,
 ## skirt_tuck_back; the user 2026-09-29: "for climbing and ladder ... the skirt rolls up at the front", "for the crawl
-## yoga pose we need the back skirt up towards the lower back").
+## yoga pose we need the back skirt up towards the lower back"). The tandem partner's breeches go down to the knees.
 func _skirt_tuck(delta: float) -> void:
 	var body := appearance.body if appearance else null
-	if body == null or not body.skirt_closed:
+	if body == null:
+		return
+	# the partner in a tandem pose (kneeling behind the crawl, the plank over Happy Baby: the lead's FrontierTandem is
+	# his `kneeling`, he its companion): the breeches down at the knees (PlayerAppearance.set_pants_down)
+	appearance.set_pants_down(kneeling != null and kneeling.get(&"companion") == self and bool(kneeling.get(&"joined"))
+			and not str(kneeling.get(&"mode")).is_empty())
+	if not body.skirt_closed:
 		return
 	var up := climbing != null or perch != null or (traversal != null and traversal.controller != null
 			and traversal.controller.mode == TraversalController.Mode.CLIMB)
