@@ -104,6 +104,15 @@ var intimacy_offer_cd := 0.0
 var role_saved := ""
 ## PREGNANCY (scripts/companion/pregnancy.gd): her record {conceived_at, due_at, stage, births, ...}. Saved; old saves have none.
 var pregnancy: Dictionary = Pregnancy.new_record()
+## HUNT (scripts/companion/hunt_job.gd): the hunt in hand {phase, weapon, quarry, carry, ...} ({} none; not saved: a save ends it).
+var hunt := {}
+## RECRUIT (scripts/companion/recruit.gd): a recruited worker's record {kind, traits, trust, morale, share, place, ...} ({} for the
+## others; saved), and her work speed from her morale (Recruit.work_mult: timed jobs take 1 / this as long).
+var recruit := {}
+var work_mult := 1.0
+## TOOLS (scripts/companion/tool_pool.gd): made in this session (create/_build): her background's kit is not hers; a worker loaded
+## from a save before the pool has it and brings it into the pool once (ToolPool.adopt).
+var tool_kit_new := false
 ## The running job's offer (what it took and where).
 var _run := {}
 var _moved := {}
@@ -180,6 +189,7 @@ static func _build(main: SurvivalCore, the_look: Dictionary, seed_v: int) -> Spo
 		st.skills[k] = main.state.skills[k]
 	st.weather = main.state.weather.duplicate(true)
 	s._strip_provisions()
+	s.tool_kit_new = true   # TOOLS
 	s._wire()
 	s.set_place("home")
 	return s
@@ -207,6 +217,7 @@ static func from_dict(d: Dictionary, main: SurvivalCore) -> SpouseCore:
 	s.intimacy_cd = maxf(float(d.get("intimacy_cd", 0.0)), 0.0)
 	s.intimacy_offer_cd = maxf(float(d.get("intimacy_offer_cd", 0.0)), 0.0)
 	s.pregnancy = Pregnancy.normalize(d.get("pregnancy"))
+	s.recruit = (d.get("recruit") as Dictionary).duplicate(true) if d.get("recruit") is Dictionary else {}   # RECRUIT (old saves: none)
 	return s
 
 
@@ -217,7 +228,7 @@ func to_dict() -> Dictionary:
 	return {"id": worker_id, "name": name, "look": look.duplicate(true), "body_look": body_look.duplicate(true), "role": role if role_saved == "" else role_saved,
 			"enabled": enabled.duplicate(), "core": core.state.to_dict(), "journal": journal.duplicate(), "hoop": hoop.duplicate(true),
 			"intimacy": intimacy, "intimacy_cd": intimacy_cd, "intimacy_offer_cd": intimacy_offer_cd,
-			"pregnancy": pregnancy.duplicate(true)}
+			"pregnancy": pregnancy.duplicate(true), "recruit": recruit.duplicate(true)}   # RECRUIT
 
 
 func _wire() -> void:
@@ -251,6 +262,7 @@ func sync(main: SurvivalCore) -> void:
 		if minutes_left <= 0.0 and task != "":
 			_timed_done()
 	_eat_when_hungry()
+	ToolPool.tick(self)   # TOOLS: her kit into the pool once; her borrowed things back at the end of her day
 
 
 func hour() -> float:
@@ -378,8 +390,12 @@ func plan() -> Dictionary:
 	stock.release(worker_id)
 	var best := _choose()
 	if best.is_empty():
+		ToolPool.let_go(self)   # TOOLS: no job: nothing claimed
 		return {}
 	_hold(best)
+	ToolPool.planned(self, String(best.id))   # TOOLS: its tools claimed (her body fetches them first)
+	if String(best.id) == HuntJob.JOB:   # HUNT: her own weapon claimed (the one she is best at), not the rack's first
+		HuntKit.planned(self, best)
 	return {"task": String(best.id), "site": String(best.site), "text": String(best.text), "obj": best.get("obj")}
 
 
@@ -525,9 +541,13 @@ func offer(id: String) -> Dictionary:
 			o = _offer_smoke(job, obj)
 		"lesson":   # GROWTH
 			o = _offer_lesson()
+		"hunt":   # HUNT
+			o = HuntJob.offer(self)
 		_:
 			o = _offer_variants(job, obj)
 	if o.is_empty():
+		return {}
+	if not ToolPool.offer_ok(self, id, o):   # TOOLS: not without its tools free
 		return {}
 	o["id"] = id
 	o["site"] = site_of(id)
@@ -698,6 +718,7 @@ func _hold(o: Dictionary) -> void:
 func abandon_plan() -> void:
 	if task == "":
 		stock.release(worker_id)
+		ToolPool.let_go(self)   # TOOLS: her claims on the chest go too
 
 
 func _needs_name(id: String) -> String:
@@ -711,8 +732,12 @@ func begin(id: String) -> bool:
 	var job := JobBook.job(id)
 	var o := offer(id)
 	if o.is_empty():
-		return _cannot(id, {"reason": String(job.get("idle", "not now"))})
+		return _cannot(id, {"reason": ToolPool.blocked_why(self, id, String(job.get("idle", "not now")))})   # TOOLS: or the tool not free
 	_hold(o)
+	if String(job.offer) == "hunt" and not HuntKit.arm(self, o):   # HUNT: her weapon and knife in hand first
+		return _cannot(id, {"reason": HuntJob.line("no_kit")})
+	if not ToolPool.ready(self, id):   # TOOLS: she has the tools it takes (fetched now if her body did not)
+		return _cannot(id, {"reason": ToolPool.why(self)})
 	var how: Dictionary = o.how
 	if String(how.get("type", "")) == "timed":
 		# a timed job always takes some time: one of 0 minutes would never finish (sync ends a job as it runs out)
@@ -725,6 +750,7 @@ func begin(id: String) -> bool:
 	_moved = {}
 	if not _load_inputs(o.inputs, o.get("meta", {})):
 		return _cannot(id, {"reason": "not enough to work with"})
+	ToolPool.load_core(self)   # TOOLS: the borrowed tools in her core, where the rules look for them
 	var r := core.start_job(String(how.action), o.get("params", {}))
 	if not bool(r.get("ok", false)):
 		_return_inputs()
@@ -734,6 +760,8 @@ func begin(id: String) -> bool:
 	if String(o.site_key) != "":
 		stock.reserve(worker_id, String(o.site_key), 1)
 	_start(id, o)
+	if String(job.offer) == "hunt":   # HUNT: the weapon and shot for the hunt
+		HuntJob.started(self, o)
 	return true
 
 
@@ -741,6 +769,7 @@ func _start(id: String, o: Dictionary) -> void:
 	task = id
 	task_text = String(o.text)
 	_run = o
+	ToolPool.started(self, id)   # TOOLS
 
 
 ## Game minutes a timed job takes (by its step, less with skill when the data says so).
@@ -751,7 +780,8 @@ func _minutes(job: Dictionary, o: Dictionary) -> float:
 	if sc is Array and String(job.get("skill", "")) != "":
 		var skill := SurvivalSkills.level(core, String(job.skill))
 		base *= lerpf(float(sc[0]), float(sc[1]), clampf(skill / 100.0, 0.0, 1.0))
-	return base
+	base *= ToolPool.speed_of(self, String(job.get("id", "")))   # TOOLS: an optional tool she has makes it quicker
+	return base / clampf(work_mult, 0.25, 2.0)   # RECRUIT: a recruit's morale sets her pace
 
 
 func _cannot(id: String, r: Dictionary) -> bool:
@@ -760,6 +790,7 @@ func _cannot(id: String, r: Dictionary) -> bool:
 	_note("%s cannot %s: %s." % [name, _needs_name(id), why])
 	_cool = RETRY_MIN
 	stock.release(worker_id)
+	ToolPool.cannot(self)   # TOOLS
 	return false
 
 
@@ -769,11 +800,14 @@ func cancel(reason := "stopped") -> void:
 		return
 	if SurvivalJobs.is_running(core):
 		core.cancel_job(reason)
+	ToolPool.run_ended(self, false)   # TOOLS: the borrowed things out of her core (no wear)
 	_return_inputs()
 	_end_task()
 
 
 func _end_task() -> void:
+	HuntJob.ended(self)   # HUNT: a borrowed weapon back to the store
+	ToolPool.run_ended(self)   # TOOLS: a timed run wears its tools
 	if task != "":
 		_ticks += 1
 		_ran[task] = _ticks
@@ -789,6 +823,10 @@ func _end_task() -> void:
 func _on_job_finished(res: Dictionary) -> void:
 	if task == "" or _run.is_empty() or String(_run.how.get("action", "")) != String(res.get("action", "")):
 		return
+	if String(_run.how.get("result", "")) == "hunt":   # HUNT: the sign read, the hunt goes on (HuntJob)
+		HuntJob.tracked(self, res)
+		return
+	ToolPool.run_ended(self)   # TOOLS: the borrowed things out of her core before she deposits what she made
 	var id := task
 	if focus == id:
 		focus = ""
@@ -818,6 +856,7 @@ func _on_job_interrupted(job: Dictionary, reason: String) -> void:
 	if task == "" or _run.is_empty() or String(_run.how.get("action", "")) != String(job.get("action", "")):
 		return
 	var id := task
+	ToolPool.run_ended(self)   # TOOLS
 	_return_inputs()
 	var got := _deposit("brings back")
 	_end_task()

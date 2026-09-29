@@ -43,7 +43,7 @@ func _book() -> void:
 		_expect(stages.has(j.stage) and String(j.name) != "" and j.has("needs") and j.has("how") and j.has("inputs") and j.has("outputs"),
 				"%s is a whole entry (%s, %s, needs %s)" % [id, j.stage, j.where, j.needs])
 		for k: String in JobBook.inputs_of(id) + JobBook.inputs_of(id, true) + JobBook.outputs_of(id):
-			_expect(kinds.has(k) or k == "smoked_venison", "%s: %s is a pack kind" % [id, k])
+			_expect(kinds.has(k) or k in ["smoked_venison", "carcass"], "%s: %s is a pack kind" % [id, k])   # HUNT: the carcass links the hunt to the butcher
 		if String(j.how.get("type", "")) == "survival":
 			_expect(not main.data.action(String(j.how.action)).is_empty(), "%s runs a real survival action (%s)" % [id, j.how.action])
 
@@ -56,9 +56,9 @@ func _chain() -> void:
 		_expect(JobBook.downstream("butcher").has(d), "butcher feeds %s" % d)
 	_expect(JobBook.downstream("firewood").has("tend") and JobBook.downstream("firewood").has("woodpile"), "firewood feeds the fires and the pile")
 	_expect(not JobBook.upstream("smoke").has("firewood") and JobBook.upstream("smoke", true).has("firewood"), "the smudge's wood is fuel, not a link")
-	_expect(JobBook.upstream_all("cook") == ["butcher"] and JobBook.downstream_all("butcher").size() >= 5, "the whole way up and down")
+	_expect(JobBook.upstream_all("cook") == ["butcher", "hunt"] and JobBook.downstream_all("butcher").size() >= 5, "the whole way up and down")   # HUNT
 	var c := JobBook.chain("cook")
-	_expect(c[0] == "butcher" and c.has("cook") and c.has("stretch") and not c.has("tend"), "cook's chain starts at the butcher (%s)" % str(c))
+	_expect(c[0] == "hunt" and c[1] == "butcher" and c.has("cook") and c.has("stretch") and not c.has("tend"), "cook's chain starts at the hunt, then the butcher (%s)" % str(c))   # HUNT
 	var seen := {}
 	var dup := false
 	for ch: Dictionary in JobBook.chains():

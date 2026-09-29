@@ -33,6 +33,30 @@ func put(kind: String, n: int) -> int:
 	return n
 
 
+# ---------------------------------------------------------------- TOOLS: the tool pool's things
+## The household's tool pool (scripts/companion/tool_pool.gd; null: this household has no pool and its workers keep their own
+## kits). It counts what the store holds of its kinds and lends them to the workers, on this store's reservations.
+var pool: ToolPool = null
+
+
+## Up to `n` units of `kind` out of the store as unit records ([{}]; a rack weapon carries {"state"}); the units taken.
+func take_units(kind: String, n: int) -> Array:
+	var out := []
+	for i in take(kind, n):
+		out.append({})
+	return out
+
+
+## Units of `kind` (as take_units gave them) back into the store; how many went in.
+func put_units(kind: String, units: Array) -> int:
+	return put(kind, units.size())
+
+
+## The place a worker walks to for `kind` (to take it: `fetch`, or to put it back): a Node3D, or null (no place to walk to).
+func spot_for(_kind: String, _fetch := true) -> Node3D:
+	return null
+
+
 # ---------------------------------------------------------------- reservations
 ## What the workers who share this store have claimed for the work they are about to do or doing: units of a kind
 ## ("k:venison") and stations or carcasses ("s:carcass:1234"), by worker id. A worker plans and works around the

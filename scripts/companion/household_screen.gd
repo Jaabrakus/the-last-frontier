@@ -268,6 +268,7 @@ func _build_tasks() -> void:
 	var sc := _sc()
 	_content.add_child(_label("Right now", 17, HEAD))
 	_content.add_child(_label("%s: %s" % [sc.name, sc.status_text()], 18, TEXT))
+	RecruitPanel.build(self)   # RECRUIT: a recruit's morale, terms and Send away; the places to sleep; who is camped by the fort
 	_content.add_child(_label("Role", 17, HEAD))
 	var roles := _row()
 	for r in ["follow", "stay", "home", "outside"]:
@@ -310,6 +311,7 @@ func _build_tasks() -> void:
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l.custom_minimum_size = Vector2(580, 0)
 		_content.add_child(l)
+	ToolPanel.build(self)   # TOOLS: the pool: owned, out and with whom, worn, broken, jobs waiting for a tool
 	_content.add_child(_label("Lately", 17, HEAD))
 	var j := sc.journal
 	if j.is_empty():

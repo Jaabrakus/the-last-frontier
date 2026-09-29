@@ -5,8 +5,9 @@ extends CharacterBody3D
 ## the player), a walking body that follows the player, waits, or goes about her role's work on her own, with the
 ## logic in SpouseCore. E talks to her.
 ##
-## She walks straight at what she is going to (no navmesh in this world): the ground under her feet is the terrain's
-## collider, a wall or a tree in the way turns her aside (a probe ahead of her). At her work she kneels over it (the
+## She walks the way the level's navigation mesh gives (NavMover on NavWorld: round trees, rocks, buildings and the palisade,
+## out and in through the gate, opening a shut door as she comes to it); where there is no mesh (far out, not baked yet) or no
+## way, she walks straight at it as before: a wall or a tree in the way turns her aside (a probe ahead of her). At her work she kneels over it (the
 ## search-low clips, as the player cooking or butchering) while her core's job runs on the game clock; cooking, she
 ## faces the hearth.
 
@@ -64,6 +65,11 @@ var _stuck_t := 0.0
 var _last := Vector3.ZERO
 var _look_at := Vector3.ZERO
 var _look_on := false
+## PATHS: her way on the navigation mesh (scripts/world/nav/nav_mover.gd); _nav_dir: this frame's direction came from it
+## (walked as it is, not turned aside by the probe).
+var nav: NavMover
+var _nav_dir := false
+var _dt := 0.0
 ## BABY (scripts/companion/baby_link.gd): while valid it is called each physics frame as errand(dt) and answers [direction, speed]
 ## (her walk to the cradle or the player) or null (no errand now); it takes precedence over her work and chores. `idle_clip` is
 ## the clip she stands in when not walking ("" the plain idle): the sit and kneel of feeding and changing the baby.
@@ -102,6 +108,7 @@ func _ready() -> void:
 	cap.position.y = 0.85
 	add_child(cap)
 	_build_model()
+	nav = NavMover.new(self, 0.3)
 	if sc:
 		sc.carcass_finder = _carcass_near_home
 		sc.fire_finder = _fire_needing_wood
@@ -113,6 +120,7 @@ func _ready() -> void:
 			"hoop": func() -> Object: return HouseholdSites.station(get_tree(), "stretching_hoop", hearth, HOUSE_RANGE),
 		}
 		sc.task_finished.connect(_on_task_finished)
+		HuntRun.attach(self)   # HUNT: the hunt drives her through `errand` (scripts/companion/hunt_run.gd)
 
 
 var _body: CharacterBodyMesh
@@ -187,6 +195,10 @@ func _physics_process(dt: float) -> void:
 		return
 	var move := Vector3.ZERO
 	var speed := WALK_SPEED
+	_nav_dir = false
+	_dt = dt
+	if nav != null:
+		nav.home = home
 	var baby_errand: Variant = errand.call(dt) if errand.is_valid() else null   # BABY
 	if baby_errand is Array:
 		if _phase != "":
@@ -227,7 +239,7 @@ func _decide(dt: float) -> Array:
 		to.y = 0.0
 		if to.length() > ARRIVE:
 			_plan_check()
-			return [to.normalized(), WALK_SPEED]
+			return walk_to(_goal, WALK_SPEED)
 		var id := String(_plan.task)
 		_plan = {}
 		_has_goal = false
@@ -242,7 +254,7 @@ func _decide(dt: float) -> Array:
 	var back := (hearth if sc.role == "home" else home) - global_position
 	back.y = 0.0
 	if back.length() > 3.0:
-		return [back.normalized(), WALK_SPEED]
+		return walk_to(hearth if sc.role == "home" else home, WALK_SPEED, 2.8)
 	return [Vector3.ZERO, 0.0]
 
 
@@ -264,7 +276,7 @@ func _chores(dt: float) -> Array:
 			var centre := hearth if _rng.randf() < 0.6 else home
 			p = centre + _ring(_rng.randf_range(1.0, 5.0))
 		p.y = global_position.y
-		_goal = p
+		_goal = _snap(p)
 		_has_goal = true
 	var to := _goal - global_position
 	to.y = 0.0
@@ -273,7 +285,7 @@ func _chores(dt: float) -> Array:
 			_stuck_t = 0.0
 			_has_goal = false
 			_chore_wait = 1.0
-		return [to.normalized(), WALK_SPEED]
+		return walk_to(_goal, WALK_SPEED)
 	_has_goal = false
 	_chore_wait = _rng.randf_range(2.0, 6.0)
 	_chore_len = _rng.randf_range(6.0, 14.0)
@@ -307,8 +319,11 @@ func _follow() -> Array:
 	var to := player.global_position - global_position
 	to.y = 0.0
 	var d := to.length()
-	if d > FOLLOW_FAR or (_clip in [CLIP_WALK, CLIP_RUN] and d > FOLLOW_NEAR):
-		return [to.normalized(), RUN_SPEED if d > FOLLOW_RUN else WALK_SPEED]
+	# near but with a wall between (the palisade, a cabin's wall): the way round is the way to go
+	var walled := d > 1.6 and d <= FOLLOW_FAR and NavMover.walled(self, player)
+	if d > FOLLOW_FAR or walled or (_clip in [CLIP_WALK, CLIP_RUN] and d > FOLLOW_NEAR):
+		var far := d > FOLLOW_RUN or (nav != null and nav.on_path and nav.remaining() > FOLLOW_RUN)
+		return walk_to(player.global_position, RUN_SPEED if far else WALK_SPEED, 1.2 if walled else FOLLOW_NEAR * 0.9)
 	# stands facing the player
 	_face = atan2(-to.x, -to.z) if d > 0.1 else _face
 	return [Vector3.ZERO, 0.0]
@@ -324,13 +339,13 @@ func _site_for(plan: Dictionary) -> Vector3:
 			var o: Object = plan.get("obj")
 			var at := _pos_of(o if o != null and is_instance_valid(o) else sc.find_site(String(plan.site)))
 			var reach := 1.2 if String(plan.site) == "carcass" else 1.5
-			return (at + _ring(reach)) if at != Vector3.INF else home
+			return _snap(at + _ring(reach)) if at != Vector3.INF else home
 	# the woods: a spot round home, on the ground
 	var ang := _rng.randf() * TAU
 	var r := _rng.randf_range(WOODS_RANGE.x, WOODS_RANGE.y)
 	var p := home + Vector3(cos(ang), 0.0, sin(ang)) * r
 	p.y = FrontierTerrain.height_at(p.x, p.z)
-	return p
+	return _snap(p)
 
 
 ## Where a station object is (Vector3.INF: not a place).
@@ -488,7 +503,7 @@ func _move(dir: Vector3, speed: float, dt: float) -> void:
 		v.y = -0.5
 	var moving := dir.length() > 0.01 and speed > 0.0
 	if moving:
-		var want := _steer(dir.normalized())
+		var want := dir.normalized() if _nav_dir else _steer(dir.normalized())
 		v.x = want.x * speed
 		v.z = want.z * speed
 		_face = lerp_angle(_face, atan2(-want.x, -want.z), clampf(dt * 8.0, 0.0, 1.0))
@@ -507,6 +522,30 @@ func _move(dir: Vector3, speed: float, dt: float) -> void:
 	else:
 		_stuck_t = maxf(_stuck_t - dt, 0.0)
 	_last = global_position
+
+
+## PATHS: which way to walk to `to` now: [direction, speed] along her path on the navigation mesh (NavMover: round what is in
+## the way, through the gate, a shut door opened on the way; [ZERO, 0] when there, within `arrive`, or waiting for the door to
+## swing), or straight at it (turned aside by the probe, _steer) where there is no mesh or no way. Also for the baby's errands
+## (BabyLink) and anything else that walks her somewhere.
+func walk_to(to: Vector3, speed: float, arrive := ARRIVE * 0.9) -> Array:
+	if nav != null:
+		var d := nav.steer(to, _dt, arrive)
+		if nav.on_path:
+			_nav_dir = true
+			return [d, speed if d != Vector3.ZERO else 0.0]
+	var st := to - global_position
+	st.y = 0.0
+	return [st.normalized() if st.length() > 0.05 else Vector3.ZERO, speed]
+
+
+## A spot moved onto the navigation mesh (the nearest walkable point: not inside a trunk, a rock or a wall) when there is one
+## within 2.5 m; the spot as it is otherwise.
+func _snap(p: Vector3) -> Vector3:
+	if nav == null or nav.world == null:
+		return p
+	var q := nav.world.snap(p)
+	return q if Vector2(q.x - p.x, q.z - p.z).length() < 2.5 and absf(q.y - p.y) < 2.0 else p
 
 
 ## The way she goes to move along `dir`: turned aside when something solid is close ahead.

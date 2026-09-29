@@ -60,6 +60,7 @@ static func _normalise(d: Dictionary) -> Dictionary:
 		job["demand"] = String(job.get("demand", "stock"))
 		job["offer"] = String(job.get("offer", "variants"))
 		job["tags"] = job.get("tags", [])
+		job["tools"] = job.get("tools", {}) if job.get("tools") is Dictionary else {}   # TOOLS: what it borrows (ToolPool.needs_of)
 		jobs[job.id] = job
 		order.append(job.id)
 		i += 1
@@ -319,7 +320,7 @@ static func cascade(id: String) -> Array:
 	while grew:
 		grew = false
 		for d: String in downstream_all(id):
-			if off.has(d):
+			if off.has(d) or bool(job(d).get("fed_from_outside", false)):   # HUNT: the butcher has the player's kills too
 				continue
 			var ups: Array = (_g().up as Dictionary).get(d, [])
 			var only := not ups.is_empty()

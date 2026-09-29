@@ -31,6 +31,9 @@ var family: Array = []
 var baby: BabyLink
 ## GROWTH (scripts/companion/growth_link.gd): the children's stages, bodies, lessons and the NPC father's day. State lives in the family records.
 var growth: GrowthLink
+## RECRUIT (scripts/companion/recruit_link.gd): travellers and neighbours who can be asked to join, and the joined workers' morale.
+## Saved as "recruit".
+var recruits: RecruitLink
 var _rng := RandomNumberGenerator.new()
 
 
@@ -58,6 +61,7 @@ func _ready() -> void:
 	_rng.randomize()
 	stock = ChestStock.new()
 	stock.tree = get_tree()
+	ToolPool.install(stock)   # TOOLS: the household's tools, weapons and consumables the workers borrow
 	_new_spouse.call_deferred()
 	link = TandemLink.new()
 	link.name = "TandemLink"
@@ -75,6 +79,10 @@ func _ready() -> void:
 	growth.name = "GrowthLink"
 	growth.house = self
 	add_child(growth)
+	recruits = RecruitLink.new()   # RECRUIT
+	recruits.name = "RecruitLink"
+	recruits.house = self
+	add_child(recruits)
 
 
 ## The household's workers: the wife first.
@@ -114,6 +122,7 @@ func _spawn(w: SpouseCore, at: Vector3) -> Spouse:
 	w.join(stock)
 	var b := Spouse.spawn(get_parent(), w, player, at)
 	bodies[w.worker_id] = b
+	ToolCarry.attach(b)   # TOOLS: she walks to the chest for her tools and carries one in her hand
 	b.talk_requested.connect(func(who: Spouse, tab: String) -> void: open(who, tab))
 	if w.worker_id == 0:
 		home = at
@@ -158,7 +167,7 @@ func _set_hearth() -> void:
 # ---------------------------------------------------------------- the workers
 ## Takes on another worker (the household's supply chain grows by the jobs she does): a generic unit, any sex and a random
 ## look unless `sex` (0 female, 1 male) says. `jobs` (job ids) limits what she does; empty: everything. Returns her.
-## (No recruiting yet: this is the way in for a family or a village, and for tests and the console.)
+## (Recruiting, RecruitLink, takes on a prepared worker through adopt(); this is the way in for tests and the console.)
 func add_worker(seed_v := -1, sex := -1.0, jobs := []) -> SpouseCore:
 	if bridge == null or bridge.core == null:
 		return null
@@ -181,8 +190,11 @@ func remove_worker(w: SpouseCore) -> bool:
 	if w == null or w.worker_id == 0 or not stock.crew.workers.has(w):
 		return false
 	w.cancel("left")
+	ToolPool.leave(w)   # TOOLS: what she borrowed goes back
 	stock.release(w.worker_id)
 	var b := body_of(w)
+	if recruits != null:
+		recruits.on_removed(w, b)   # RECRUIT: they walk away by the road; the departure is kept
 	if b:
 		b.queue_free()
 	bodies.erase(w.worker_id)
@@ -197,6 +209,8 @@ func _process(_dt: float) -> void:
 		return
 	for w: SpouseCore in stock.crew.workers:
 		w.sync(bridge.core)
+	if stock.pool != null:
+		stock.pool.tick_house(_dt)   # TOOLS: the start pool once the fort is furnished
 	if Input.is_action_just_pressed(ACTION) and screen == null and not get_tree().paused and is_instance_valid(player) \
 			and not player.is_dead:
 		open(body, "tasks")
@@ -301,8 +315,12 @@ func save_data() -> Dictionary:
 	if growth != null:
 		growth.flush()   # GROWTH: each child's learning core goes into its record
 	d["family"] = family.duplicate(true)
+	if stock.pool != null:
+		d["tools"] = stock.pool.save_data()   # TOOLS: who holds what, the wear, the broken
 	if baby != null:
 		d["baby"] = baby.save_data()   # BABY: the needs and the holder
+	if recruits != null:
+		d["recruit"] = recruits.save_data()   # RECRUIT: the candidates, who joined, who left
 	return d
 
 
@@ -312,6 +330,8 @@ func load_data(d: Dictionary) -> void:
 		growth.reset()   # GROWTH: the records carry the stages; cores and bodies are made again from them
 	if baby != null:
 		baby.load_data(d.get("baby"))   # BABY: an old save has none: the defaults, the wife holding
+	if recruits != null:
+		recruits.load_data(d.get("recruit"))   # RECRUIT: an old save has none: a new state
 	if not (d.has("workers") or d.has("spouse")) or bridge == null or bridge.core == null:
 		return
 	for b: Variant in bodies.values():
@@ -319,6 +339,8 @@ func load_data(d: Dictionary) -> void:
 			(b as Node).queue_free()
 	bodies.clear()
 	var ats := stock.crew.load_dict(d, bridge.core, stock)
+	if stock.pool != null:
+		stock.pool.load_data(d.get("tools"))   # TOOLS: an old save has none: the workers' kits come into the pool
 	if stock.crew.workers.is_empty():
 		return
 	var first: Array = ats[0] if not ats.is_empty() and ats[0] is Array else d.get("home", [0, 0, 0])

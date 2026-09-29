@@ -24,7 +24,8 @@
     "jerky": ["I'll cut strips and dry them over the fire.", "Jerky keeps through winter. I'll make it."],
     "tan": ["I'll work the hides at the frame.", "Bring the hides and brains, and I'll dress them."],
     "stretch": ["I'll stretch the pelts on the hoop.", "Furs want stretching before they spoil."],
-    "teach": ["I'll sit down with the little one and show it how.", "It's time for a lesson."]
+    "teach": ["I'll sit down with the little one and show it how.", "It's time for a lesson."],
+    "hunt": ["I'll take the gun and see what's moving.", "There's deer sign by the creek. I'll bring one home.", "We want meat. I'll go and hunt."]
   },
   "home_set": ["Then this is home.", "Aye, this will do."],
   "nothing": ["There's nothing to do just now.", "All in hand here."],
@@ -46,8 +47,8 @@
       "player": ["Which will you take? I'll join you.", "You choose, and I'll follow your lead."]
     },
     "ask": {
-      "accepted_spouse": ["I'd like that. Come, choose where we'll begin.", "Gladly. I'll come to you."],
       "minor": ["No. Not with a child.", "That is not for the young."],
+      "accepted_spouse": ["I'd like that. Come, choose where we'll begin.", "Gladly. I'll come to you."],
       "accepted_player": ["Gladly. I'll come to you, and you may choose.", "I'd like that. Lead on."],
       "not_full": ["Not yet. Let's spend more time together first.", "Ask me again when we know each other better."],
       "cooldown": ["We've only just done so. Give it a day.", "Not so soon. We should rest a while."],
@@ -95,5 +96,34 @@
       "birth_girl": ["You have given birth to a daughter, {name}.", "A daughter is born to you: {name}."],
       "birth_boy": ["You have given birth to a son, {name}.", "A son is born to you: {name}."]
     }
+  },
+  "recruit": {
+    "arrive": ["Travellers on the {road} road: {party}, coming to camp by the east path outside the palisade.", "{party}: coming in along the {road} road to camp by the east path."],
+    "leave_road": ["{name} has taken the road again.", "{name} moved on this morning."],
+    "greet": ["Good day to you.", "You're from the fort? Good day.", "Well met."],
+    "greet_need": ["Anything you can spare, I would be grateful for.", "Forgive me. I've not eaten in a while."],
+    "talk": ["We talk a while about the road, the weather and the valley.", "They tell you where they come from and what they are good at, and ask about the fort."],
+    "talk_again": ["We've talked today already. Let me think on what you said.", "Another time. I've told you most of it."],
+    "gift": ["Thank you kindly.", "That's generous of you. Thank you."],
+    "gift_help": ["Thank you. I'll not forget it.", "God bless you. I was nearly done."],
+    "gift_cap": ["You've given plenty today. Keep the rest for your own.", "No more, thank you. I'm well enough."],
+    "gift_none": ["There's nothing in the store to give."],
+    "promise": ["Then I'll hold you to it.", "Your word is enough for me."],
+    "share": ["I'll think on those terms.", "That's something to consider."],
+    "yes": ["Then we'll stay. Show us where to put our things.", "Done. I'll work for you as well as I can.", "Aye. We'll make a go of it here."],
+    "partial": ["Not yet. Let me see a little more of the place first.", "Ask me again tomorrow. I'm not decided."],
+    "no": ["No. I don't think it would suit.", "I'd sooner go on, thank you."],
+    "blocked": ["Where would we sleep? There's no room for us.", "Not while there's no place for us to lay our heads."],
+    "joined": ["{name} has joined the household.", "{names} have joined the household."],
+    "warn": {
+      "1": ["{name}: \"I'm not happy here. Something has to change.\"", "{name} is short with everyone today. Morale is low."],
+      "2": ["{name}: \"Another day like this and I'm gone.\"", "{name} says they will leave if things don't improve."]
+    },
+    "left": ["{name} has left the household and taken the road.", "{name} packed up and left this morning."],
+    "dismissed": ["{name} gathers their things and goes.", "{name} nods, and takes the road out."]
+  },
+  "tools": {
+    "note": "TOOLS (scripts/companion/tool_pool.gd): broke: the worker's name and the tool (two %s).",
+    "broke": ["%s's %s breaks.", "%s breaks the %s and brings the pieces home.", "%s's %s gives out at last."]
   }
 }

@@ -832,7 +832,7 @@ func _errand_move(dt: float) -> Variant:
 				b._stuck_t = 0.0
 				_next_step()
 				return [Vector3.ZERO, 0.0]
-			return [to.normalized(), Spouse.WALK_SPEED * (1.6 if to.length() > 8.0 else 1.0)]
+			return b.walk_to(target, Spouse.WALK_SPEED * (1.6 if to.length() > 8.0 else 1.0), 0.5)   # PATHS: on the navigation mesh
 		"take":
 			if not st.has("started"):
 				st["started"] = true

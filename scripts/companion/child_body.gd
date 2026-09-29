@@ -26,8 +26,15 @@ const FOOT_RUN := 3.4
 const NEAR_BASE := 1.1
 const FAR_BASE := 2.2
 const RUN_FROM := 8.0
-## Further than this from the guardian (the player rode or fast-travelled off), or fallen through the ground: it is brought back beside it.
+## PATHS: it walks to its guardian along the navigation mesh (NavMover: round trees and buildings, through the gate, opening a shut
+## door), straight where there is none. It is brought back beside the guardian only as a last resort: fallen through the ground,
+## further than RECOVER_FAR (the player rode or fast-travelled off), further than RECOVER_M with no way to it for LOST_S, or
+## further than LOST_M with no way for LOST_LONG_S.
 const RECOVER_M := 60.0
+const RECOVER_FAR := 150.0
+const LOST_S := 4.0
+const LOST_M := 20.0
+const LOST_LONG_S := 15.0
 
 var link: GrowthLink
 var child: Dictionary
@@ -48,26 +55,35 @@ var _mood := "idle"        ## "idle" | "play" | "sit" | "watch"
 var _mood_t := 0.0
 var _stuck_t := 0.0
 var _last := Vector3.ZERO
+## PATHS: its way on the navigation mesh; this frame's direction came from it; how long it has had no way to its guardian;
+## how many times it was brought back (the last resort; tests).
+var nav: NavMover
+var _nav_dir := false
+var _lost_t := 0.0
+var teleports := 0
 
 
 ## A child's body at `stage` on the skeleton `sk`: the game's body v4 dressed from `look` (its drawn look: Growth.body_look) in a child's
 ## clothes (ChildLook.dress_look: `sex` the child's own), then shaped (shape_body). Null without the body.
-static func dress_body(sk: Skeleton3D, anim: AnimationPlayer, look: Dictionary, sex: float, stage: String) -> CharacterBodyMesh:
+static func dress_body(sk: Skeleton3D, anim: AnimationPlayer, look: Dictionary, sex: float, stage: String, done := Callable()) -> CharacterBodyMesh:
 	var b := CharacterBodyMesh.attach_parts(sk, anim, {"head": BodyMaterials.BODY_GLB})
 	if b == null:
 		return null
 	PlayerAppearance.dress(b, AppearanceStore.validate(ChildLook.dress_look(ChildLook.young(look, stage), sex, stage)))
-	shape_body(b, look, stage)
+	shape_body(b, look, stage, done)
 	return b
 
 
 ## The stage's proportions (ChildProportion, the stage's form: nothing for an adult), the head's rounding (HeadRound: the stage's and
 ## the look's child_round) and the skin's smoothness (ChildSkin) on a dressed body.
-static func shape_body(b: CharacterBodyMesh, look: Dictionary, stage: String) -> ChildProportion:
+static func shape_body(b: CharacterBodyMesh, look: Dictionary, stage: String, done := Callable()) -> ChildProportion:
 	var form := ChildLook.stage_form(stage)
 	var p: ChildProportion = null
 	if not form.is_empty():
-		p = ChildProportion.shape(b, form, ChildLook.roundness(look, stage))
+		# CHILD BAKE: with `done` the bake is off the main thread (ChildProportion.shape_async; `done` when the body is shaped)
+		p = ChildProportion.shape_async(b, form, ChildLook.roundness(look, stage), done) if done.is_valid() else ChildProportion.shape(b, form, ChildLook.roundness(look, stage))
+	elif done.is_valid():
+		done.call(null)            # CHILD BAKE
 	ChildSkin.apply(b, ChildLook.skin_smooth(stage))
 	return p
 
@@ -94,11 +110,13 @@ func _ready() -> void:
 	add_child(_shape)
 	_build_model()
 	refresh()
+	nav = NavMover.new(self, 0.2)
 
 
-func _build_model() -> void:
+func _build_model(old: Node3D = null) -> void:
 	var scene := BackgroundLoad.take("res://characters/Actor_B.tscn") as PackedScene
 	_model = scene.instantiate() as Node3D
+	_model.visible = false            # CHILD BAKE: shown when its bake is on (_on_shaped), the old body (a stage change) until then
 	var p: Variant = link.house.player if link != null and link.house != null else null
 	_model.rotation.y = deg_to_rad(float(p.get("model_yaw_offset_deg")) if p != null and p.get("model_yaw_offset_deg") != null else 180.0)
 	add_child(_model)
@@ -108,7 +126,7 @@ func _build_model() -> void:
 	# the flat asexual child body at every stage that has this body (ChildLook.body_for_stage through Growth.body_look), clothed for a
 	# child, with the stage's proportions, rounded head and soft skin (ChildProportion, HeadRound, ChildSkin)
 	_stage = Growth.stage_of(child)
-	body = dress_body(sk, ap, Growth.body_look(child, link.now() if link != null and link._ok() else 0.0), float(child.get("sex", 0.0)), _stage)
+	body = dress_body(sk, ap, Growth.body_look(child, link.now() if link != null and link._ok() else 0.0), float(child.get("sex", 0.0)), _stage, _on_shaped.bind(_model, old))
 	if ap:
 		for c in [CLIP_IDLE, CLIP_WALK, CLIP_RUN, CLIP_PLAY, CLIP_SIT, CLIP_WATCH]:
 			var full := "%s/%s" % [LIB, c]
@@ -128,16 +146,24 @@ func refresh() -> void:
 	var s := scale_now()
 	if _model != null and _stage != "" and Growth.stage_of(child) != _stage:
 		# a new stage: the body made again at its proportions
-		_model.queue_free()
+		var old := _model                 # CHILD BAKE: the old body shows until the new one is shaped
 		_model = null
 		_clip = ""
-		_build_model()
+		_build_model(old)
 	if _model != null:
 		_model.scale = Vector3.ONE * s
 	var cap := _shape.shape as CapsuleShape3D
 	cap.radius = maxf(0.3 * s, 0.14)
 	cap.height = maxf(1.7 * s, cap.radius * 2.0 + 0.05)
 	_shape.position.y = cap.height * 0.5
+
+
+## CHILD BAKE: the new body's bake is on: it shows, the one it replaces goes.
+func _on_shaped(_p: ChildProportion, m: Node3D, old: Node3D) -> void:
+	if is_instance_valid(m):
+		m.visible = true
+	if is_instance_valid(old):
+		old.queue_free()
 
 
 func scale_now() -> float:
@@ -167,14 +193,21 @@ func _physics_process(dt: float) -> void:
 		return
 	var move := Vector3.ZERO
 	var speed := 0.0
+	_nav_dir = false
 	var g: Node3D = link.guardian(child)
 	var mode := String(child.get("mode", "follow"))
 	var s := scale_now()
-	if g != null and mode == "follow" and (global_position.distance_to(g.global_position) > RECOVER_M \
-			or global_position.y < FrontierTerrain.height_at(global_position.x, global_position.z) - 15.0):
-		var at := g.global_position + Vector3(0.9, 0.3, 0.9)
-		global_position = at
-		velocity = Vector3.ZERO
+	if g != null and mode == "follow":
+		var dg := global_position.distance_to(g.global_position)
+		var fell := global_position.y < FrontierTerrain.height_at(global_position.x, global_position.z) - 15.0
+		if fell or dg > RECOVER_FAR or (dg > RECOVER_M and _lost_t > LOST_S) or (dg > LOST_M and _lost_t > LOST_LONG_S):
+			var at := g.global_position + Vector3(0.9, 0.3, 0.9)
+			global_position = at
+			velocity = Vector3.ZERO
+			_lost_t = 0.0
+			teleports += 1
+			if nav != null:
+				nav.reset()
 	if link.frozen(child):
 		pass   # a lesson or the household screen has it standing
 	elif mode == "follow" and g != null:
@@ -183,14 +216,39 @@ func _physics_process(dt: float) -> void:
 		var d := to.length()
 		var near := NEAR_BASE + 0.8 * s
 		var far := FAR_BASE + 1.2 * s
-		if d > far or (_clip in [CLIP_WALK, CLIP_RUN] and d > near):
-			move = to.normalized()
-			speed = Growth.num(child, "run_speed", 2.0) if d > RUN_FROM else Growth.num(child, "walk_speed", 1.0)
+		# near but with a wall between (the palisade, a shut door): the way round is the way to go
+		var walled := d > 1.2 and d <= far and NavMover.walled(self, g)
+		if d > far or walled or (_clip in [CLIP_WALK, CLIP_RUN] and d > near):
+			var long := d > RUN_FROM or (nav != null and nav.on_path and nav.remaining() > RUN_FROM)
+			speed = Growth.num(child, "run_speed", 2.0) if long else Growth.num(child, "walk_speed", 1.0)
+			move = _way(g.global_position, dt, 0.9 if walled else near * 0.9)
+			if move == Vector3.ZERO and _nav_dir:
+				_stand(dt, to, link.guardian_busy(child))   # there by the way, or waiting for a door
+			# no way to the guardian (the straight steer, making no headway): lost for a while
+			if not _nav_dir and _stuck_t > 0.5:
+				_lost_t += dt
+			else:
+				_lost_t = maxf(_lost_t - dt * 2.0, 0.0)
 		else:
+			_lost_t = 0.0
 			_stand(dt, to, link.guardian_busy(child))
 	else:
+		_lost_t = 0.0
 		_stand(dt, Vector3.ZERO, false)
 	_move(move, speed, dt)
+
+
+## PATHS: the way to `to` now along the navigation mesh (ZERO when there or waiting for a door), or straight at it where there is
+## no mesh or no way (turned aside by the probe in _move).
+func _way(to: Vector3, dt: float, arrive: float) -> Vector3:
+	if nav != null:
+		var d := nav.steer(to, dt, arrive)
+		if nav.on_path:
+			_nav_dir = true
+			return d
+	var st := to - global_position
+	st.y = 0.0
+	return st.normalized() if st.length() > 0.05 else Vector3.ZERO
 
 
 ## Standing about: watches a parent at work, else idles and plays for a spell, in a loop.
@@ -218,7 +276,7 @@ func _move(dir: Vector3, speed: float, dt: float) -> void:
 	var s := scale_now()
 	var moving := dir.length() > 0.01 and speed > 0.0
 	if moving:
-		var want := _steer(dir.normalized())
+		var want := dir.normalized() if _nav_dir else _steer(dir.normalized())
 		v.x = want.x * speed
 		v.z = want.z * speed
 		_face = lerp_angle(_face, atan2(-want.x, -want.z), clampf(dt * 8.0, 0.0, 1.0))

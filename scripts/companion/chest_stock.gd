@@ -24,6 +24,8 @@ func _chests(smokehouses_last := false) -> Array:
 
 
 func count(kind: String) -> int:
+	if ToolPool.is_rack(kind):   # TOOLS: the weapons stand in the racks and barrels
+		return ToolRacks.count(tree, kind)
 	var n := 0
 	for c: StorageChest in _chests():
 		if kind == "venison" and c is Smokehouse:
@@ -41,6 +43,8 @@ func all() -> Dictionary:
 
 
 func take(kind: String, n: int) -> int:
+	if ToolPool.is_rack(kind):   # TOOLS
+		return ToolRacks.take(tree, home, kind, n).size()
 	var got := 0
 	var inv := InventoryState.new()
 	for c: StorageChest in _chests():
@@ -55,6 +59,8 @@ func take(kind: String, n: int) -> int:
 func put(kind: String, n: int) -> int:
 	if n <= 0:
 		return 0
+	if ToolPool.is_rack(kind):   # TOOLS
+		return ToolRacks.put(tree, home, kind, ToolRacks.plain_units(n))
 	for c: StorageChest in _chests(true):
 		if not c.accepts(kind):
 			continue
@@ -62,3 +68,36 @@ func put(kind: String, n: int) -> int:
 		inv.add(kind, n)
 		return c.put(inv, kind, n)
 	return 0
+
+
+# ---------------------------------------------------------------- TOOLS: the pool's things in the chests and racks
+## Rack weapons come out with their state, chest kinds as plain units.
+func take_units(kind: String, n: int) -> Array:
+	if ToolPool.is_rack(kind):
+		return ToolRacks.take(tree, home, kind, n)
+	return super.take_units(kind, n)
+
+
+func put_units(kind: String, units: Array) -> int:
+	if ToolPool.is_rack(kind):
+		return ToolRacks.put(tree, home, kind, units)
+	return put(kind, units.size())
+
+
+## The chest, rack or barrel a worker goes to: the nearest that holds `kind` (fetch) or takes it (putting back).
+func spot_for(kind: String, fetch := true) -> Node3D:
+	if ToolPool.is_rack(kind):
+		return ToolRacks.spot(tree, home, kind, fetch)
+	for c: StorageChest in _chests(true):
+		if fetch and c.count_of(kind) > 0 or not fetch and c.accepts(kind):
+			return c
+	return null
+
+
+## Whether the level has any storage chest (the fort is furnished) / weapon rack yet.
+func chests_ready() -> bool:
+	return not _chests().is_empty()
+
+
+func racks_ready() -> bool:
+	return not ToolRacks.racks(tree, home).is_empty()

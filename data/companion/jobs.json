@@ -16,7 +16,7 @@
   "leather": {"name": "Leather", "min": 4, "kinds": ["buckskin", "rawhide"]},
   "furs": {"name": "Dried furs", "min": 2, "kinds": ["dried_wolf_pelt", "dried_fox_pelt", "dried_marten_pelt", "dried_mink_pelt", "dried_fisher_pelt", "dried_raccoon_pelt"]}
  },
- "chain_names": {"teach": "Family: teaching the children", "butcher": "Game: carcass to table", "firewood": "Wood: from the woods to the fires", "forage": "Foraging"},
+ "chain_names": {"teach": "Family: teaching the children", "butcher": "Game: carcass to table", "hunt": "Game: the hunt to the table", "firewood": "Wood: from the woods to the fires", "forage": "Foraging"},
  "jobs": [
   {
    "id": "tend", "name": "Tend the fire", "stage": "upkeep", "where": "home", "needs": "fire", "priority": 10,
@@ -24,7 +24,8 @@
    "demand": "site", "offer": "feed", "skill": "",
    "inputs": {"firewood": 3}, "outputs": {},
    "feed": {"kind": "firewood", "trip": 3, "add": "add_wood_units", "verb": "lays", "full": "finds the fire well fed", "noun": "on the fire"},
-   "keep": {}, "how": {"type": "timed", "done": "feed", "minutes": 8}, "tags": ["fire", "wood"]
+   "keep": {}, "how": {"type": "timed", "done": "feed", "minutes": 8}, "tags": ["fire", "wood"],
+   "tools": {"optional": [{"any": ["flint_steel"], "speed": 0.8}], "note": "TOOLS: flint and steel to kindle a fire gone low (quicker)"}
   },
   {
    "id": "woodpile", "name": "Stock the woodpile", "stage": "upkeep", "where": "home", "needs": "woodpile", "priority": 20,
@@ -53,7 +54,8 @@
     {"id": "work", "inputs": {"venison": "batch"}, "params": {"recipe": "rcp.jerky"}, "text": "Hanging venison strips over the fire", "outputs": {"jerky": 10}}
    ],
    "keep": {"venison": 2},
-   "how": {"type": "survival", "action": "preserve.jerk_scaffold", "result": "rack", "near": ["node.sapling_stand"]}, "tags": ["meat", "preserve"]
+   "how": {"type": "survival", "action": "preserve.jerk_scaffold", "result": "rack", "near": ["node.sapling_stand"]}, "tags": ["meat", "preserve"],
+   "tools": {"need": [["trade_knife", "flint_knife"]], "note": "TOOLS: a knife to cut the strips"}
   },
   {
    "id": "cook", "name": "Cook", "stage": "process", "where": "home", "needs": "hearth", "priority": 40,
@@ -71,8 +73,9 @@
    "id": "butcher", "name": "Butcher", "stage": "process", "where": "home", "needs": "carcass", "priority": 50,
    "text": "Butchering the carcass", "idle": "no carcass",
    "demand": "stock", "offer": "carcass", "skill": "hidecraft",
-   "inputs": {}, "outputs": {"venison": 4, "small_game": 1, "deer_hide": 1, "brains": 1, "wolf_pelt": 1, "fox_pelt": 1},
-   "keep": {}, "how": {"type": "timed", "done": "carcass", "minutes": {"skin": 25.0, "butcher": 40.0}, "skill_scale": [1.4, 0.7]}, "tags": ["meat", "hide", "heavy"]
+   "inputs": {"carcass": 1}, "fed_from_outside": true, "outputs": {"venison": 4, "small_game": 1, "deer_hide": 1, "brains": 1, "wolf_pelt": 1, "fox_pelt": 1},
+   "keep": {}, "how": {"type": "timed", "done": "carcass", "minutes": {"skin": 25.0, "butcher": 40.0}, "skill_scale": [1.4, 0.7]}, "tags": ["meat", "hide", "heavy"],
+   "tools": {"need": [["trade_knife", "flint_knife"]], "optional": [{"any": ["hatchet", "axe"], "speed": 0.85}], "note": "TOOLS: a knife to skin and butcher; a hatchet splits the pelvis and brisket (quicker)"}
   },
   {
    "id": "tan", "name": "Tan hides", "stage": "craft", "where": "home", "needs": "tanning_frame", "priority": 60,
@@ -84,7 +87,8 @@
     {"id": "rawhide", "inputs": {"deer_hide": 1}, "min_have": {"deer_hide": 2}, "params": {"recipe": "rcp.rawhide"}, "text": "Fleshing and scraping the hide", "done": "scrapes the hide:", "outputs": {"rawhide": 2}}
    ],
    "keep": {},
-   "how": {"type": "survival", "action": "craft.dress_hide", "result": "deposit", "verb": "makes", "none": "spoils the hide in the working", "near": ["node.sapling_stand"]}, "tags": ["hide", "heavy"]
+   "how": {"type": "survival", "action": "craft.dress_hide", "result": "deposit", "verb": "makes", "none": "spoils the hide in the working", "near": ["node.sapling_stand"]}, "tags": ["hide", "heavy"],
+   "tools": {"need": [["trade_knife", "flint_knife"]], "note": "TOOLS: the recipes' knife (rcp.dress_hide, rcp.rawhide)"}
   },
   {
    "id": "stretch", "name": "Stretch pelts", "stage": "craft", "where": "home", "needs": "hoop", "priority": 70,
@@ -96,7 +100,20 @@
     {"id": "lace", "inputs": {"@green_pelt": 1}, "meta": {"green": true, "grade": "good"}, "params": {}, "input_params": ["item"], "text": "Lacing the pelt into the hoop", "outputs": {"@dried": 1}}
    ],
    "keep": {},
-   "how": {"type": "survival", "action": "fur.stretch", "result": "hoop", "near": ["node.sapling_stand"]}, "tags": ["hide", "fur"]
+   "how": {"type": "survival", "action": "fur.stretch", "result": "hoop", "near": ["node.sapling_stand"]}, "tags": ["hide", "fur"],
+   "tools": {"need": [["trade_knife", "flint_knife"]], "optional": [["awl", "bone_awl"]], "note": "TOOLS: fur.stretch's knife; an awl for the lacing holes"}
+  },
+  {
+   "id": "hunt", "name": "Hunt", "stage": "gather", "where": "outside", "needs": "none", "priority": 75,
+   "text": "Out hunting", "idle": "no game to hunt",
+   "demand": "target", "offer": "hunt", "skill": "hunting",
+   "inputs": {}, "outputs": {"carcass": 1},
+   "note": "data/companion/hunt.json, scripts/companion/hunt_job.gd (the logic) and hunt_run.gd (the body): reads sign (the core's hunt.track), stalks and shoots real game, and hauls the kill home for the butcher or dresses it where it fell. The carcass is not a store kind: it links the hunt to the butcher in the chain (the meals, jerky, leather and furs shortages pull it through the butcher); the butcher is fed_from_outside too (the player's kills), so switching the hunt off never takes the butcher with it.",
+   "keep": {}, "how": {"type": "survival", "action": "hunt.track", "result": "hunt"}, "tags": ["meat", "hide", "heavy"],
+   "tools": {"need": [["musket", "over_under", "bow", "spear_pair", "pistol"]], "optional": [["trade_knife", "flint_knife"]],
+    "use_by": {"musket": {"musket_balls": 4, "powder": 1}, "over_under": {"musket_balls": 4, "powder": 1}, "pistol": {"musket_balls": 4, "powder": 1}, "bow": {"arrows": 8}, "spear_pair": {}},
+    "food": ["jerky", "johnnycake", "roast_venison", "roast_small_game", "roast_fish", "smoked_venison"],
+    "note": "TOOLS/HUNT: a weapon (any of these; HuntKit takes the one she is best at that has shot for it: marksmanship, archery, close combat), a knife to dress the kill (optional), and per trip the shot for her weapon (use_by: the weapon's `use`, the whole units she takes: a pound of powder is 40 charges) and a meal from the store (food: the first there is). HuntKit checks them out of the pool (ToolPool.checkout / take), spends each shot fired and each arrow or spear lost (ToolPool.spend), and returns the rest after the hunt."}
   },
   {
    "id": "forage", "name": "Forage", "stage": "gather", "where": "outside", "needs": "none", "priority": 80,
@@ -110,7 +127,8 @@
    "text": "Gathering firewood", "idle": "not now",
    "demand": "target", "offer": "gather", "skill": "woodcraft",
    "inputs": {}, "outputs": {"firewood": 4},
-   "keep": {}, "how": {"type": "survival", "action": "wood.split_firewood", "result": "deposit", "verb": "brings back", "none": "finds nothing"}, "tags": ["wood", "heavy"]
+   "keep": {}, "how": {"type": "survival", "action": "wood.split_firewood", "result": "deposit", "verb": "brings back", "none": "finds nothing"}, "tags": ["wood", "heavy"],
+   "tools": {"need": [["hatchet", "axe", "stone_axe", "tomahawk"]], "note": "TOOLS: wood.split_firewood's axe (the first free of these)"}
   },
   {
    "id": "teach", "name": "Teach the children", "stage": "upkeep", "where": "home", "needs": "none", "priority": 5,

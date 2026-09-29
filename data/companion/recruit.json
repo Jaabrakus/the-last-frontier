@@ -1,0 +1,207 @@
+{
+  "format": "frontier-recruit",
+  "version": 1,
+  "summary": "Recruiting (user 2026-09-29: 'start a family and/or village'): people who can join the household as workers. Recruit (scripts/companion/recruit.gd) reads this file; RecruitLink is the node side (arrivals, bodies, the talk screen, morale). Three sources: PARTIES of travellers and settlers who walk in along a road now and then, camp near the fort a few days and go on if nobody takes them in; PEOPLE IN NEED among them (a lost trapper, a widow with her child, a servant who ran from an indenture); and RESIDENTS of the slice's cast (the farm family's grown son, the old hunter) who come by to talk once the player's trust with them is high. Each candidate is a generated person: a look from the region's peoples (CharacterPeoples.random_look), a sex, an age stage (adult or teen), a survival core of their own on a background (backgrounds.json) with the kind's skill changes, and traits. They state what they want (a place to sleep, food in store, trust, a fair share, a promise or a companion), and the player asks them to join through the survival skill model (the player's Trade against the kind's difficulty, with trust, standing and the wants met or not as modifiers), with the odds shown. Joined, they are household workers with a morale (fed, housed, not overworked, trust) that sets their work speed and makes them leave, with warnings, if it stays low for days. Every number is tunable.",
+
+  "portrayal": "Plain portrayal of the period's people: ordinary words, no dialect spelling, no caricature. A servant who ran from an indenture is a person with a trade and a reason; a widow is a working woman looking for a roof, not a charity case. The slice depicts no Native characters and no Native land (npcs.json representation), so recruits are drawn from the colonial peoples of the valley in 1765; the slice's cast keeps its role titles (npcs.json release_rule).",
+
+  "region_peoples": {"english": 3.0, "scots_irish": 3.0, "palatine": 3.0, "dutch": 2.0, "french": 1.0, "african_american": 1.0, "euro_african": 0.5},
+
+  "names": {
+    "english": {"f": ["Hannah", "Abigail", "Mary", "Sarah", "Elizabeth", "Ann", "Margaret", "Lydia", "Susannah", "Esther"], "m": ["John", "William", "Thomas", "James", "Samuel", "Joseph", "Benjamin", "Daniel", "Richard", "Edward"]},
+    "scots_irish": {"f": ["Margaret", "Jean", "Agnes", "Isabel", "Janet", "Mary", "Martha", "Grizel"], "m": ["James", "Robert", "Hugh", "Andrew", "Patrick", "Alexander", "David", "Archibald"]},
+    "palatine": {"f": ["Anna", "Catharina", "Maria", "Elisabeth", "Margaretha", "Magdalena", "Barbara", "Eva"], "m": ["Johannes", "Georg", "Conrad", "Nicolaus", "Adam", "Frederick", "Jacob", "Christian"]},
+    "dutch": {"f": ["Geertruy", "Annatje", "Maritje", "Catalina", "Engeltje", "Rachel"], "m": ["Hendrick", "Abraham", "Jan", "Harmen", "Cornelis", "Gerrit", "Teunis"]},
+    "french": {"f": ["Marie", "Marguerite", "Angelique", "Madeleine", "Louise"], "m": ["Jean", "Pierre", "Louis", "Joseph", "Francois", "Antoine"]},
+    "african_american": {"f": ["Susan", "Mary", "Hannah", "Rachel", "Grace", "Phebe", "Dinah"], "m": ["Peter", "James", "John", "Isaac", "Prince", "Samuel", "Jacob"]},
+    "euro_african": {"f": ["Mary", "Sarah", "Ann", "Rachel", "Elizabeth"], "m": ["John", "Peter", "Thomas", "Isaac", "Joseph"]}
+  },
+
+  "arrivals": {
+    "summary": "A party comes when `next_at` (game minutes) is reached, by daylight (`hours`), and while fewer than `max_present` visitors are about; the next is set `every_days` later (a random span). Visitors stay `stay_days` (a random span from their arrival) and then leave by the road they came, if nobody took them in. The first party comes `first_after_days` into a new game.",
+    "first_after_days": 0.4,
+    "every_days": [2.0, 5.0],
+    "hours": [7.0, 15.0],
+    "stay_days": [2.0, 4.0],
+    "max_present": 3,
+    "walk_speed": 1.25
+  },
+
+  "places": {
+    "summary": "Where visitors walk (x, z in metres; the level's trampled paths, tools/environment/terrain/bake_terrain.py PATHS): each road runs from where they come into view to the camp beside the east path, outside the palisade; `to_home` leads from the camp round to the north gate and in; `fort_half` is the palisade's half size (inside it a leaver walks out by the gate first).",
+    "camp": [22.5, -3.0],
+    "camp_spread": 2.6,
+    "roads": [
+      {"id": "east", "points": [[100.0, 51.0], [70.0, 33.0], [44.0, 23.0], [30.5, 12.5], [25.8, 3.0]]},
+      {"id": "west", "points": [[-100.0, -18.0], [-70.0, -10.0], [-45.0, -12.5], [-31.0, -17.0], [-22.0, -21.2], [-12.0, -22.6], [-3.5, -21.0], [3.5, -21.0], [12.0, -22.6], [20.5, -19.5], [24.6, -9.0]]},
+      {"id": "south", "points": [[-38.0, 84.0], [-24.0, 55.0], [-5.0, 40.5], [15.0, 33.5], [27.5, 26.0], [30.5, 12.5], [25.8, 3.0]]}
+    ],
+    "to_home": [[24.6, -9.0], [20.5, -19.5], [12.0, -22.6], [3.5, -21.0], [0.0, -19.0], [0.0, -12.0], [0.0, -9.0]],
+    "fort_half": 16.5,
+    "gate_out": [[0.0, -9.0], [0.0, -12.0], [0.0, -19.0], [3.5, -21.0]]
+  },
+
+  "traits": {
+    "summary": "Personality: `trust_mult` scales the trust they gain, `morale_mult` how fast their morale moves, `persuade` adds to the ask's chance, `likes` biases the jobs they want (job ids from jobs.json; unknown ids are ignored), `share_add` raises the share they hold out for.",
+    "steady": {"name": "Steady", "morale_mult": 0.6, "text": "slow to sour and slow to cheer"},
+    "warm": {"name": "Warm", "trust_mult": 1.5, "text": "quick to trust a kindness"},
+    "wary": {"name": "Wary", "trust_mult": 0.6, "persuade": -0.05, "text": "slow to trust"},
+    "hard_working": {"name": "Hard-working", "likes": ["firewood", "woodpile", "butcher"], "text": "wants a full day's work"},
+    "homebody": {"name": "Home-keeping", "likes": ["cook", "tend", "smoke", "jerky"], "text": "happiest at the hearth"},
+    "woodswise": {"name": "Woods-wise", "likes": ["forage", "firewood", "hunt"], "text": "would rather be out in the woods"},
+    "handy": {"name": "Handy", "likes": ["tan", "stretch", "butcher"], "text": "good with a knife and a hide"},
+    "proud": {"name": "Proud", "share_add": 1, "persuade": -0.03, "text": "will not work for board alone"},
+    "hopeful": {"name": "Hopeful", "persuade": 0.05, "morale_mult": 0.8, "text": "means to make a go of it"},
+    "restless": {"name": "Restless", "morale_mult": 1.5, "text": "moves on when things go badly"}
+  },
+
+  "kinds": {
+    "settler": {
+      "name": "settler", "desc": "a settler looking for land", "age": "adult", "sex": "any",
+      "background": "bg.provincial_ranger", "skills": {"provisions": 12, "woodcraft": 10, "hunting": -6, "marksmanship": -10},
+      "traits": ["steady", "hopeful", "hard_working", "homebody", "proud", "warm"],
+      "likes": ["cook", "woodpile", "firewood", "forage", "tend"],
+      "difficulty": 22, "trust_start": 2.0, "stash": {"cornmeal": 3, "jerky": 2},
+      "wants": [{"kind": "bed"}, {"kind": "food_days", "days": [3, 5]}, {"kind": "share", "rank": 1}, {"kind": "trust", "min": 3.0}],
+      "story": ["Came up the valley to lease land on the patent; the proprietors' agent never came to meet them.", "Sold what they had at Schenectady to come west, and found the good land already taken up."]
+    },
+    "hand": {
+      "name": "hired hand", "desc": "a hand looking for work", "age": "adult", "sex": "any",
+      "background": "bg.provincial_ranger", "skills": {"woodcraft": 8, "survival": -4},
+      "traits": ["hard_working", "restless", "warm", "wary", "woodswise", "handy"],
+      "likes": ["firewood", "woodpile", "butcher", "forage"],
+      "difficulty": 15, "trust_start": 2.0, "stash": {"jerky": 2},
+      "wants": [{"kind": "bed"}, {"kind": "food_days", "days": [2, 3]}, {"kind": "share", "rank": 1}],
+      "story": ["Was hired for the harvest at the Flatts and let go after it; looking for a winter's work and a roof.", "Worked the carry at the portage until the boats stopped for the season."]
+    },
+    "trapper": {
+      "name": "trapper", "desc": "a trapper in need", "need": true, "age": "adult", "sex": "m",
+      "background": "bg.backcountry_hunter", "skills": {"trapping": 10, "hidecraft": 8, "trade": 4},
+      "traits": ["wary", "woodswise", "handy", "steady"],
+      "likes": ["butcher", "tan", "stretch", "smoke", "jerky", "forage", "hunt"],
+      "difficulty": 18, "trust_start": 1.0, "hungry": true, "stash": {},
+      "wants": [{"kind": "help", "text": "Something to eat first"}, {"kind": "bed"}, {"kind": "trust", "min": 3.0}],
+      "story": ["Lost his canoe and his furs on the river above the Carry; has walked two days without food.", "His partner took sick and went down to the settlements; the line was too much for one man, and the stores ran out."]
+    },
+    "widow": {
+      "name": "widow", "desc": "a widow with her child", "need": true, "age": "adult", "sex": "f",
+      "background": "bg.provincial_ranger", "skills": {"provisions": 18, "hidecraft": 8, "marksmanship": -10, "trade": 4},
+      "traits": ["steady", "homebody", "warm", "proud", "hopeful"],
+      "likes": ["cook", "smoke", "jerky", "tend", "tan", "teach"],
+      "difficulty": 18, "trust_start": 2.0, "stash": {"cornmeal": 2},
+      "wants": [{"kind": "bed"}, {"kind": "together", "text": "My child comes with me"}, {"kind": "food_days", "days": [3, 5]}, {"kind": "trust", "min": 3.0}],
+      "story": ["Her husband died of a fever at the Flatts last winter; the farm was his brother's, and there was no room for them after.", "Kept a house and a garden for twelve years; wants work and a roof for herself and her child."]
+    },
+    "widow_child": {
+      "name": "child", "desc": "the widow's child", "age": "teen", "sex": "any",
+      "background": "bg.provincial_ranger", "skills_scale": 0.45, "skills": {"provisions": 4},
+      "traits": ["hopeful", "warm", "restless", "woodswise"],
+      "likes": ["forage", "firewood", "tend", "woodpile", "cook"],
+      "difficulty": 14, "trust_start": 2.0, "stash": {},
+      "wants": [{"kind": "together", "text": "Goes where the mother goes"}],
+      "story": ["Carries half the family's things and does not complain of it."]
+    },
+    "servant": {
+      "name": "runaway servant", "desc": "a servant who ran from an indenture", "need": true, "age": "adult", "sex": "any",
+      "peoples": {"english": 2.0, "scots_irish": 3.0, "palatine": 2.0},
+      "background": "bg.provincial_ranger", "skills": {"provisions": 8, "woodcraft": 10, "marksmanship": -15, "trade": -2},
+      "traits": ["wary", "hard_working", "handy", "restless", "steady"],
+      "likes": ["woodpile", "firewood", "butcher", "cook", "tan"],
+      "difficulty": 16, "trust_start": 0.5, "stash": {},
+      "wants": [{"kind": "promise", "text": "Your word you will not send me back", "button": "Give your word"}, {"kind": "bed"}, {"kind": "share", "rank": 1}, {"kind": "trust", "min": 2.5}],
+      "story": ["Signed an indenture for passage from Rotterdam; the master sold the term on twice and added years for every complaint.", "Served five years of seven on a farm near Albany and was promised freedom dues that never came, so left."]
+    },
+    "old_hunter": {
+      "name": "the old hunter", "desc": "the old hunter from the manor woods", "age": "adult", "sex": "m", "people": "dutch",
+      "fixed_name": "Old hunter",
+      "background": "bg.backcountry_hunter", "skills": {"hunting": 22, "trapping": 22, "hidecraft": 20, "survival": 16, "provisions": 10, "trade": 8},
+      "traits": ["steady", "woodswise", "handy", "wary"],
+      "likes": ["butcher", "tan", "stretch", "smoke", "jerky", "forage", "hunt"],
+      "difficulty": 30, "trust_start": 0.0, "stash": {"jerky": 4},
+      "wants": [{"kind": "bed"}, {"kind": "food_days", "days": [5, 7]}, {"kind": "share", "rank": 1}, {"kind": "trust", "min": 6.0}],
+      "story": ["His sons went down to Schenectady; the hut in the manor woods is cold for one man, and his knees are not what they were."]
+    },
+    "farm_son": {
+      "name": "the farm family's son", "desc": "the grown son of the farm family from German Flatts", "age": "adult", "sex": "m", "people": "palatine",
+      "fixed_name": "Farmer's son",
+      "background": "bg.provincial_ranger", "skills": {"provisions": 10, "woodcraft": 16, "survival": 4, "marksmanship": -8},
+      "traits": ["hard_working", "hopeful", "restless", "warm"],
+      "likes": ["firewood", "woodpile", "cook", "forage", "butcher"],
+      "difficulty": 24, "trust_start": 0.0, "stash": {"cornmeal": 4},
+      "wants": [{"kind": "bed"}, {"kind": "food_days", "days": [3, 4]}, {"kind": "share", "rank": 2}, {"kind": "trust", "min": 4.0}],
+      "story": ["The farm will go to his elder brother; he wants a place of his own some day and will work toward one."]
+    }
+  },
+
+  "parties": [
+    {"id": "settler_couple", "weight": 2.0, "text": "A settler couple", "couple": true, "together": true, "members": [{"kind": "settler", "sex": "m"}, {"kind": "settler", "sex": "f"}]},
+    {"id": "hand", "weight": 3.0, "text": "A hand looking for work", "members": [{"kind": "hand"}]},
+    {"id": "two_hands", "weight": 1.0, "text": "Two hands looking for work", "members": [{"kind": "hand"}, {"kind": "hand"}]},
+    {"id": "lost_trapper", "weight": 2.0, "text": "A trapper in need", "road": "south", "members": [{"kind": "trapper"}]},
+    {"id": "widow", "weight": 2.0, "text": "A widow and her child", "together": true, "members": [{"kind": "widow"}, {"kind": "widow_child"}]},
+    {"id": "servant", "weight": 1.0, "text": "A runaway servant", "road": "west", "members": [{"kind": "servant"}]},
+    {"id": "old_hunter", "weight": 3.0, "resident": "npc.woods.old_hunter", "appear_trust": 4.0, "text": "The old hunter", "road": "south", "members": [{"kind": "old_hunter"}]},
+    {"id": "farm_son", "weight": 3.0, "resident": "npc.valley.farm_family", "appear_trust": 3.0, "text": "The farm family's son", "road": "west", "members": [{"kind": "farm_son"}]}
+  ],
+
+  "shares": [
+    {"rank": 0, "id": "board", "name": "Bed and board"},
+    {"rank": 1, "id": "share", "name": "Board and a share of the take"},
+    {"rank": 2, "id": "equal", "name": "An equal share"}
+  ],
+
+  "trust": {
+    "summary": "Trust with a candidate, 0..10 (the same scale as npcs.json standing.trust). Talking a while counts once a game day; food given from the household store counts per unit up to a daily cap; the first food to one in need counts as help. A resident's trust is the player's trust with that NPC (SurvivalTrade.trust: fair trade, labour and promises kept) plus what is gained here. A refused ask costs a little. A joined worker's trust drifts up while fed and housed.",
+    "talk": 0.5,
+    "gift": 0.6,
+    "gift_day_cap": 3,
+    "help": 1.5,
+    "promise": 0.5,
+    "refused": -0.5,
+    "joined_day": 0.1,
+    "max": 10.0
+  },
+
+  "persuade": {
+    "summary": "The ask to join is a Trade check (skills.json check_model): p = base + (Trade - difficulty) / slope + modifiers, between the model's floor and cap. Modifiers: trust above or below what they want (`per_trust` a point, within +-`trust_cap`), every want met (`all_met`), each want not met (`unmet`, or the want's own), a share above what they want (`share_step` a rank), the player's standing with the valley's settlers (`standing` by tier), their traits. A want marked hard (a place to sleep, room for the whole party) must be met before they can be asked. Excellent and success: they join. Partial: 'not yet' (ask again after `partial_cd_h`). Failure: trust lost and no asking for `fail_cd_h`.",
+    "skill": "trade",
+    "per_trust": 0.06,
+    "trust_cap": 0.3,
+    "all_met": 0.15,
+    "unmet": -0.2,
+    "unmet_by_kind": {"help": -0.3, "promise": -0.35, "share": -0.15, "trust": 0.0},
+    "share_step": 0.05,
+    "helped": 0.08,
+    "standing_faction": "faction.settlers_valley",
+    "standing": {"hostile": -0.3, "distrusted": -0.15, "neutral": 0.0, "friendly": 0.05, "trusted": 0.1},
+    "partial_cd_h": 6.0,
+    "fail_cd_h": 24.0,
+    "practice": 0.6
+  },
+
+  "housing": {
+    "summary": "Places to sleep in the settlement: each built piece of these types sleeps `places[type]` people; a floor bay with a roof over it (a cabin's) sleeps `roofed_floor`. Who needs one: the player and the spouse share one, each other worker has one (a recruited couple shares one), and every child of the household at `children_from` or older who is not a worker has one (younger ones sleep with their parents). The count is within `range_m` of home.",
+    "places": {"pole_bed": 1, "bough_bed": 1, "lean_to": 1},
+    "roofed_floor": 1,
+    "range_m": 60.0,
+    "children_from": "teen"
+  },
+
+  "food": {"kcal_per_day": 2400.0},
+
+  "morale": {
+    "summary": "A recruited worker's morale, 0..1: it moves toward a target made of being fed (their hunger stage), housed (a place for everyone), not overworked (hours at work in the last game day) and trust, at `rate_per_day` (x their traits' morale_mult). It sets the work speed (timed jobs take 1/`speed` as long; after each job they rest `rest_min` x (1 - speed) game minutes). Below `low` at a day's turn counts a low day (at or above: the count goes back to 0); at `warn_days` they complain, at `leave_days` they leave. They leave walking away by the road.",
+    "start": 0.7,
+    "weights": {"fed": 0.35, "housed": 0.25, "rested": 0.15, "trust": 0.25},
+    "fed_by_stage": {"full": 1.0, "fed": 1.0, "satisfied": 1.0, "peckish": 0.7, "hungry": 0.4, "very_hungry": 0.15, "starving": 0.0, "wasting": 0.0},
+    "work_hours_ok": 9.0,
+    "work_hours_max": 14.0,
+    "rate_per_day": 0.35,
+    "speed": [0.6, 1.1],
+    "rest_min": 90.0,
+    "low": 0.3,
+    "warn_days": [1, 2],
+    "leave_days": 3,
+    "words": [[0.2, "miserable"], [0.4, "unhappy"], [0.6, "content enough"], [0.8, "content"], [1.01, "in good heart"]]
+  }
+}
