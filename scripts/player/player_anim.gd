@@ -250,12 +250,14 @@ const TRACE_KEEP := 64
 ## How much of the source's rifle spine lean the long gun's carry keeps (1 = the graph: the additive layer
 ## actor_b-p-rifle-idle-spine--add at its layer weights, idle and stops 0.6, walk 0.5, starts 0.4, run 0.2,
 ## bends the torso about 32 deg back at full weight; the rifle idle stood 25 deg back against the pistol's
-## 8; user playtest 2026-09-25: "arch to far back"). 0.25: the rifle idle about 11 deg back.
+## 8; user playtest 2026-09-25: "arch to far back"). 0.25: the rifle idle about 11 deg back. None with the hands free
+## (the gun slung, not held: it had still leaned him back, the user 2026-09-29: "how come he leans back like that, why
+## not upright and straight").
 @export_range(0.0, 1.0, 0.05) var long_gun_spine_lean := 0.25:
 	set(v):
 		long_gun_spine_lean = v
 		if upper:
-			upper.spine_add_scale = v
+			upper.spine_add_scale = 0.0 if hands_free else v
 
 @export_group("Performance")
 ## Carry-layer layout (TreeBuilder, applied at setup): "input" = every carry layer inside its
@@ -330,8 +332,12 @@ var gun_damper: GunCarryDamper
 ## The left arm of the long-gun carries while moving (LeftArmPose): see long_gun_move_carry.
 var left_arm: LeftArmPose
 ## Hands free (FrontierPlayer.hands_free: H, or the weapon was put down): both arms take the locomotion's
-## own swing (left_arm and right_arm with the lower-body clips as sources); the weapon's carry is off.
-var hands_free := false
+## own swing (left_arm and right_arm with the lower-body clips as sources); the weapon's carry is off, and its spine lean.
+var hands_free := false:
+	set(v):
+		hands_free = v
+		if upper:
+			upper.spine_add_scale = 0.0 if v else long_gun_spine_lean
 var right_arm: LeftArmPose
 ## A torch is in a hand (PlayerTorch, every physics tick): HandHolds decides which (TorchCarryIK) and where the long gun
 ## goes (GunMiddleCarryIK: the left hand, gripped in the middle).
@@ -434,7 +440,7 @@ func setup(p_player: FrontierPlayer, ap: AnimationPlayer, sk: Skeleton3D, weapon
 	upper = UpperBody.new(data, self, index)
 	upper.set_lower_selector(L)
 	upper.strict_graph_cuts = strict_graph_cuts
-	upper.spine_add_scale = long_gun_spine_lean
+	upper.spine_add_scale = 0.0 if hands_free else long_gun_spine_lean
 	stabilizer = upper.attach_stabilizer(sk)
 	loco = LocoBrain.new(data, self, index, L, upper.W)
 	loco.join_fade_s = join_fade_s
