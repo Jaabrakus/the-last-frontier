@@ -499,7 +499,8 @@ func seg_cast() -> void:
 	if not await _fishing_bank():
 		return
 	var g := FishingGear.find(player)
-	_cam_rel(Vector3(-2.4, 0.9, 2.8), Vector3(0.6, 1.4, -7.0), 48.0, 4.0)
+	# (above the bank's reeds: at 0.9 m the lens was in them and nothing else showed)
+	_cam_rel(Vector3(-2.6, 2.0, 2.6), Vector3(0.6, 1.1, -7.0), 48.0, 4.0)
 	await _roll("", "", "", 40)
 	await _sec(0.8)
 	await _cast(g, true)

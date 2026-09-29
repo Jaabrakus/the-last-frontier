@@ -39,7 +39,7 @@ SECTIONS = {
 	"dark": (30, 38),
 	"climax": (38, 39),
 	"title": (39, 42),
-	"sting": (42, 48),              # (two bars more: the mammoth shot and climbed before the charge)
+	"sting": (42, 47),              # (a bar more: the mammoth shot and climbed, cut away on a hit to the end card)
 }
 
 # chords: [bass midi, pad voicing (midi)]

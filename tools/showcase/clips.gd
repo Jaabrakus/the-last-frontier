@@ -1319,7 +1319,8 @@ func seg_forage() -> void:
 	if not player.hands_free:
 		player.toggle_hands_free()
 	var side := out_dir.cross(Vector3.UP).normalized()
-	_cam_at(at + side * 2.6 + out_dir * 1.4 + Vector3.UP * 1.4, func() -> Vector3: return (at + pp) * 0.5 + Vector3.UP * 0.7, 45.0)
+	# (above the flowers: goldenrod and black-eyed Susans stand as high as the lens was, 1.4 m)
+	_cam_at(at + side * 2.6 + out_dir * 1.4 + Vector3.UP * 2.2, func() -> Vector3: return (at + pp) * 0.5 + Vector3.UP * 0.8, 45.0)
 	await _warm(50)
 	await _roll("", "", "", 10)
 	await _sec(0.5)

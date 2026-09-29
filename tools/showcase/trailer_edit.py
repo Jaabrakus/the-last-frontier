@@ -84,9 +84,9 @@ class Title:
 
 S = trailer_score.SECTIONS
 EDIT = [
-	# open: the game's own loading screen (its painting of the river), dissolving into the river at dawn; the valley in
-	# summer, then in the fall (the seasons)
-	Clip("load", B(0), 5, src=0.0, fade_in=12, gain=None),
+	# open: the game's start-up screen (the title, the menu, its picture of the river: user 2026-09-29), dissolving
+	# into the river at dawn; the valley in summer, then in the fall (the seasons)
+	Clip("menu", B(0), 5, src=0.0, fade_in=12, gain=None, shift=-110),     # (down: the title clear of the letterbox)
 	Clip("dawn_river", B(1, 1), 11, src=0.3, xfade=30, gain=-3.0, pre=2.2),
 	Clip("valley", B(4), 4, src=0.8, xfade=24, gain=-9.0),
 	Clip("autumn", B(5), 4, src=1.0, xfade=18, gain=-9.0),
@@ -97,8 +97,8 @@ EDIT = [
 	Clip("chop", B(12), 4, sync=("felled", B(13)), gain=-2.0),
 	Clip("chop", B(13), 8, sync=("felled", B(13)), gain=-2.0, accents=(("down", "boom"),)),
 	Clip("build", B(15), 8, src=0.3, speed=1.6, gain=None),
-	# yoga together, quick, and a newborn's cry on the cut
-	Clip("yoga", B(17), 2, sync=("paired", B(17)), gain=None, accents=((2.0, "cry"),)),
+	# yoga together, quick, under "MAKE A LIFE" (the synthesized cry did not sound right: user 2026-09-29)
+	Clip("yoga", B(17), 2, sync=("paired", B(17)), gain=None),
 	Clip("forage", B(17, 2), 2, src=0.4, gain=-6.0),
 	Clip("cast", B(18), 4, sync=("cast", B(18, 1)), gain=-6.0),
 	Clip("fight", B(19), 4, sync=("strike", B(19, 0.5)), gain=-5.0),
@@ -127,19 +127,35 @@ EDIT = [
 	# sting
 	# the mammoth on the plains: shot behind the knee over his shoulder, going down; he takes hold of its flank and
 	# climbs onto its back; then the charge's shot
-	# (straight on from the title, no black between)
+	# (straight on from the title, no black between); the last shot: the climb, cut away before he is on its back (user
+	# 2026-09-29: "it should end before he climbs the top of the mammoth"), a hit on the cut to the end card (the
+	# charge's shot, the sting that was here, is out: "the final shot is bad")
 	Clip("mammoth", B(42), 4, sync=("shot", B(42, 1)), gain=-1.0, accents=(("buckle", "boom"),)),
-	Clip("mammoth", B(43), 7, sync=("grab", B(43)), speed=1.4, gain=None),
-	Clip("charge", B(44, 3), 5, sync=("shot", B(45, 1)), gain=-1.0, fade_out=8),
+	Clip("mammoth", B(43), 7, sync=("grab", B(43)), gain=-2.0, accents=((7.0, "hit"),)),
 ]
 
 TITLES = [
 	Title(B(1, 3), 8, [("THE UPPER MOHAWK VALLEY", "place"), ("1765", "year")], where="low", fade=16),
+	Title(B(5, 0.5), 3, [("THE SEASONS TURN", "tag")], where="low"),
 	Title(B(10, 0.5), 6, [("CARVE OUT A LIFE", "tag")], where="low"),
+	# what is happening (user 2026-09-29: "at least have titles of what is happening")
+	Title(B(12, 1), 5, [("FELL THE FOREST", "tag")], where="low"),
+	Title(B(15, 0.5), 6, [("BUILD A HOMESTEAD", "tag")], where="low"),
+	Title(B(17), 4, [("MAKE A LIFE", "tag")], where="low"),
+	Title(B(18, 0.5), 5, [("FISH THE RIVERS", "tag")], where="low"),
+	Title(B(20, 0.5), 6, [("TAME AND RIDE HORSES", "tag")], where="low"),
 	Title(B(22, 0.5), 6, [("LIVE OFF THE LAND", "tag")], where="low"),
+	Title(B(24), 5, [("HUNT WITH BOW AND MUSKET", "tag")], where="low"),
+	Title(B(27), 4, [("CLIMB ANYTHING", "tag")], where="low"),
+	Title(B(28, 1), 5, [("THE HERDS STAMPEDE", "tag")], where="low"),
 	Title(B(30, 0.5), 6, [("ENDURE THE WILD", "tag")], where="low"),
+	Title(B(32, 0.5), 6, [("SURVIVE THE WINTER", "tag")], where="low"),
+	Title(B(34, 0.5), 3, [("WOLVES HUNT TOO", "tag")], where="low"),
+	Title(B(36, 0.5), 3, [("MAKE CAMP", "tag")], where="low"),
+	Title(B(37, 0.5), 3, [("LOAD BY HAND", "tag")], where="low"),
 	Title(B(39, 1), 10, [("FRONTIER", "title"), ("IN DEVELOPMENT", "place")], fade=20),
-	Title(B(46), 8, [("FRONTIER", "title_small"), ("In development", "sub"), ("", "gap"),
+	Title(B(42, 0.5), 6, [("BRING DOWN GIANTS", "tag")], where="low"),
+	Title(B(44, 3), 9, [("FRONTIER", "title_small"), ("In development", "sub"), ("", "gap"),
 			("Deer and wolves: Quaternius (CC0)  ·  Bison and great horned owl: Poly by Google (CC-BY 3.0)", "small"),
 			("Textures: Poly Haven (CC0)  ·  Sounds: Kenney, kheetor, rubberduck (CC0) and public-domain recordings", "small"),
 			("Recorded in the game  ·  Music synthesized for the trailer  ·  Full credits: CREDITS.md", "small")], fade=14),
