@@ -189,11 +189,12 @@ const SKIRT_CLOSED_BUNCH := 0.62
 ## the cloth there stays), the sides half as much, the back not at all (panels front, side, back:
 ## SKIRT_CLOSED_TUCK_SHARE); the legs below a tucked hem no longer push it, and it flows as ever. The lift is along
 ## the pelvis's up, toward the waist. `skirt_tuck_back` rolls the back up the same way (on all fours in the crawl: up
-## toward the lower back; the user 2026-09-29), the front not at all (SKIRT_CLOSED_TUCK_BACK_SHARE).
+## toward the lower back, the sides too and the front partway, so the thighs show from the side; the user 2026-09-29:
+## "the side thighs are cut off"; SKIRT_CLOSED_TUCK_BACK_SHARE).
 const SKIRT_CLOSED_TUCK := 0.08
 const SKIRT_CLOSED_TUCK_LIFT_M := 0.14
 const SKIRT_CLOSED_TUCK_SHARE := Vector3(1.0, 0.5, 0.0)
-const SKIRT_CLOSED_TUCK_BACK_SHARE := Vector3(0.0, 0.8, 1.0)
+const SKIRT_CLOSED_TUCK_BACK_SHARE := Vector3(0.6, 1.0, 1.0)
 ## The back rolls up higher than the front: onto the lower back ("roll it higher to the lower back").
 const SKIRT_CLOSED_TUCK_BACK_LIFT_M := 0.3
 ## The leg joints that push a closed skirt (per side, "l_" / "r_"), plus points along the thigh and the shin, and how
