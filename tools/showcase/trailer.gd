@@ -15,10 +15,10 @@ extends "res://tools/showcase/clips.gd"
 ## (climb_tree before chop: clips.gd's tree picks do not skip a tree an earlier take felled.)
 const SHOTS := ["dawn_river", "valley", "herd", "gate", "walk", "climb_tree", "chop", "build", "forage", "cast", "fight",
 		"ride", "stalk", "musket", "throw", "vault", "wolves", "storm", "camp", "torch", "owl", "night_shot", "dusk",
-		"bison", "stampede", "charge", "reload", "autumn", "winter_walk", "river_ice", "yoga", "mammoth"]
+		"bison", "stampede", "charge", "reload", "autumn", "winter_walk", "river_ice", "yoga", "baby", "mammoth"]
 ## Takes the cut does not use, recorded only when named (only=): the musket's reload walking and crouched (to check
 ## it), the shot from the palisade's firing step (the rebuilt fort's step moved: it does not fire from there).
-const EXTRA := ["wall", "reload_walk", "reload_crouch", "reload_crouch_walk"]
+const EXTRA := ["wall", "reload_walk", "reload_crouch", "reload_crouch_walk", "arms_check"]
 
 var marks := PackedStringArray()
 var hide_arc := false               ## the throw's aim arc kept out of the picture
@@ -916,6 +916,10 @@ func seg_torch() -> void:
 	player.traversal.controller.teleported()
 	if player.torch.count() < 3:
 		player.torch.add_torches(3)
+	# (a hand free for it: the takes used to follow the camp's, which left him hands-free; each take now starts with
+	# the hands on the weapons, and the torch never came up)
+	if not player.hands_free:
+		player.toggle_hands_free()
 	await _tap(&"torch")
 	await _torch_in_hand()
 	await _sec(0.6)
@@ -1436,3 +1440,66 @@ func seg_yoga() -> void:
 	await _roll("", "", "", 30)
 	await _sec(4.0)
 	lead.stop_pose()
+
+
+## The newborn in his wife's arms at home, cradled (MAKE A LIFE: the yoga, then the child; user 2026-09-29 "i didnt see
+## the make a baby part"): a child three days old added to the household as its own test does (tests/companion/
+## baby_shots.gd), the wife kept at home; close on her from the front, at the baby's height.
+func seg_baby() -> void:
+	_clock(10.5, "fair", 0.2)
+	var h := Household.find(self)
+	if h == null or h.sc == null or h.body == null:
+		print("TRAILER: no baby (no household)")
+		return
+	h.set_role("stay", h.sc)
+	var now := float(h.bridge.core.state.minutes)
+	var child := Pregnancy.make_child(RandomNumberGenerator.new(), now - 3.0 * 1440.0,
+			{"next_id": 1, "mother": h.sc.name, "father": "player", "kind": "spouse"})
+	h.family.append(child)
+	await _warm(240)
+	if h.baby == null or h.baby.baby == null:
+		print("TRAILER: no baby (the household made none)")
+		return
+	h.baby._pose_for["spouse"] = "cradle"
+	for i in 90:
+		h.baby.errand = {}              # (no laying her down while it is filmed)
+		await process_frame
+	var b := h.body as Node3D
+	var at: Vector3 = b.global_position
+	# (the Spouse body faces its -Z: +Z filmed her back)
+	var fwd := Vector3(-b.global_basis.z.x, 0.0, -b.global_basis.z.z).normalized()
+	var sd := fwd.cross(Vector3.UP).normalized()
+	_place(at.x - fwd.x * 5.0 + sd.x * 4.0, at.z - fwd.z * 5.0 + sd.z * 4.0, at)
+	player.traversal.controller.teleported()
+	_cam_at(at + fwd * 1.7 + sd * 0.55 + Vector3.UP * 1.4, func() -> Vector3: return (h.body as Node3D).global_position + Vector3.UP * 1.15, 34.0, 3.0)
+	await _roll("", "", "", 30)
+	mark("baby")
+	# (filmed in short steps, the errand cleared between them: a plain frame loop is not film time)
+	for i in 45:
+		h.baby.errand = {}
+		await _sec(0.1)
+
+
+## (a check, not in the cut) the left arm on the carried musket while he jogs, then walks, then crouch-walks: from his
+## left, the elbow's side (user 2026-09-29: "fix the left elbow on walking or jogging animations again")
+func seg_arms_check() -> void:
+	_clock(11.0, "fair", 0.2)
+	await _equip("musket")
+	var dir := Vector3(1, 0, 0)
+	var a := _lane(Vector3(30.0, 0.0, -95.0), dir, 40.0, -3.0, 3.0)
+	_place(a.x, a.z, a + dir * 80.0)
+	player.traversal.controller.teleported()
+	_cam_rel(Vector3(2.6, 1.3, -1.2), Vector3(0.0, 1.2, 0.2), 40.0, 5.0)
+	await _roll("", "", "", 30)
+	_press(&"move_forward")
+	mark("jog")
+	await _sec(3.0)
+	_press(&"walk")
+	mark("walk")
+	await _sec(3.0)
+	_release(&"walk")
+	player.set_crouched(true)
+	mark("crouch")
+	await _sec(3.0)
+	_release(&"move_forward")
+	player.set_crouched(false)
