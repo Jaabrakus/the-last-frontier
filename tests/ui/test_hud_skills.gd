@@ -4,7 +4,7 @@ extends SceneTree
 ##   HUD     health bar follows health; the slot strip outlines what is in the hands, one small line gives the
 ##           weapon's ammo (no item card: the user did not want it); gathering shows toasts with the item (and not the centre notice too); a level up shows a toast;
 ##           the compass follows the camera; the clock shows the date; F1 shows the controls; F3 the debug lines
-##   Skills  K opens the character screen on Skills: 3 field and 10 frontier skill cards, each with its icon; a card
+##   Skills  K opens the character screen on Skills: 4 field (Husbandry, farming, the fourth) and 10 frontier skill cards, each with its icon; a card
 ##           click shows its ladder; the developers' notes are kept out of the text; K again closes it; Tab opens Gear
 ##
 ##   Godot --headless --path . -s tests/ui/test_hud_skills.gd
@@ -163,8 +163,8 @@ func _initialize() -> void:
 			for tr in (sp._cards[k] as Node).find_children("*", "TextureRect", true, false):
 				if (tr as TextureRect).texture != null:
 					icons += 1
-		_check(field == 3 and frontier == 10, "3 field and 10 frontier skill cards (%d, %d)" % [field, frontier])
-		_check(icons == 13, "each card has its icon (%d)" % icons)
+		_check(field == GatherSkills.IDS.size() and frontier == 10, "%d field and 10 frontier skill cards (%d, %d)" % [GatherSkills.IDS.size(), field, frontier])
+		_check(icons == GatherSkills.IDS.size() + 10, "each card has its icon (%d)" % icons)
 		sp.select("s:hunting")
 		await _frames(2)
 		var dtext := ""

@@ -37,6 +37,13 @@ static func stone_chips(parent: Node, point: Vector3, normal: Vector3, amount :=
 	_dust(parent, point + normal * 0.05, normal, 8, Vector2(0.07, 0.2), 1.2, Color(0.52, 0.51, 0.48, 0.32))
 
 
+## Earth thrown up by a hoe's stroke (farming): a puff of brown dust and a few clods.
+static func soil(parent: Node, point: Vector3, normal: Vector3, amount := 10) -> void:
+	if parent == null or not _visuals(parent):
+		return
+	_dust(parent, point + normal * 0.04, normal, amount, Vector2(0.06, 0.2), 0.8, Color(0.34, 0.26, 0.17, 0.6))
+
+
 static func fall_dust(parent: Node, point: Vector3, width: float) -> void:
 	if not _visuals(parent):
 		return

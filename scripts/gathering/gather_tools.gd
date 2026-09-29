@@ -27,6 +27,8 @@ extends Node
 ##                  in a barricade
 ##   rock           broken into stone (and chert from the limestone), the rock shrinking as it goes until it is
 ##                  gone (VegHarvest)
+##   ground         (the hoe, or the digging stick standing in for it; farming, FarmField) open ground broken out into
+##                  a bed, a growing bed's weeds hoed out; open ground is only a target with the hoe in the hand
 ## Everything gathered goes into the pack (InventoryState pack; every item stacks) with a notice at the top of
 ## the screen; each new level of a skill has one too (and the tier's line at 20, 40, 60, 80).
 ##
@@ -57,15 +59,15 @@ signal limbed(log: SkidLoad)
 ## stay for remapping, without a default key.
 const CYCLE_ACTION := &"tool_cycle"
 const CYCLE_KEY := KEY_7
-const ACTIONS := {"felling_axe": &"tool_axe", "mattock": &"tool_mattock"}
+const ACTIONS := {"felling_axe": &"tool_axe", "mattock": &"tool_mattock", "hoe": &"tool_hoe"}
 const KEYS := {}
 ## The tools in the button's and the wheel's order.
-const ORDER := ["felling_axe", "mattock"]
+const ORDER := ["felling_axe", "mattock", "hoe"]
 const AXE := "felling_axe"
 const STONE_AXE := "stone_axe"
-const SKILL_OF := {"felling_axe": "woodcutting", "mattock": "mining"}
+const SKILL_OF := {"felling_axe": "woodcutting", "mattock": "mining", "hoe": "husbandry"}
 ## Target types each tool works on.
-const WORKS := {"felling_axe": ["tree", "sapling", "trunk", "crown", "wall", "carcass"], "mattock": ["rock"]}
+const WORKS := {"felling_axe": ["tree", "sapling", "trunk", "crown", "wall", "carcass"], "mattock": ["rock"], "hoe": ["ground"]}
 ## The swing each target type takes.
 ## The musket as a club (see the top).
 const CLUB := "musket_club"
@@ -75,7 +77,7 @@ const FLIP_S := 0.35
 ## The tools that attack on LMB when there is nothing to work in front (AxeMelee; data/melee/<tool>.json).
 const MELEE_TOOLS := ["felling_axe", "musket_club"]
 const SWING_OF := {"tree": "side", "sapling": "side", "trunk": "chop", "crown": "side", "rock": "chop", "wall": "side",
-		"carcass": "chop"}
+		"carcass": "chop", "ground": "chop"}
 ## Seconds after a draw starts before the hand closes on the tool (clip time), the draw's play rate.
 const DRAW_RATE := 1.35
 const STOW_RATE := 1.4
@@ -231,6 +233,8 @@ func _ensure_owned(first := false) -> void:
 	var inv := InventoryState.from_player(player)
 	var worn := false
 	for kind: String in data.tools:
+		if bool(data.tools[kind].get("crafted", false)):
+			continue                 # (made or bought, never handed out: the hoe)
 		if player.loadout and player.loadout.has_kind(kind):
 			worn = true
 			continue
@@ -262,8 +266,21 @@ func owns(kind: String) -> bool:
 		return true
 	if _in_pack(kind):
 		return true
-	# a stone axe is the felling axe's stand-in (the start with nothing)
-	return kind == AXE and _in_pack(STONE_AXE)
+	# a stone axe is the felling axe's stand-in (the start with nothing), a digging stick the hoe's
+	return stand_in(kind) != ""
+
+
+## The stand-in the player works `kind` with when they have no `kind` itself (data stone_tools: stands_for): "" none.
+func stand_in(kind: String) -> String:
+	for s: String in data.stone_tools:
+		if String(data.stone_tools[s].get("stands_for", "")) == kind and _in_pack(s):
+			return s
+	return ""
+
+
+## The player has only the stand-in of `kind` (none of the tool itself on the loop or in the pack).
+func stand_in_only(kind: String) -> bool:
+	return on_loop != kind and not _in_pack(kind) and stand_in(kind) != ""
 
 
 func _in_pack(kind: String) -> bool:
@@ -280,14 +297,14 @@ func stone_only() -> bool:
 
 ## What a stroke of `kind` (the tool in the hand) is worth against a steel felling axe's: the stone axe's share.
 func stroke_mult(kind: String) -> float:
-	if kind == AXE and stone_only():
-		return float(data.stone_tools.get(STONE_AXE, {}).get("power", 0.45))
+	if stand_in_only(kind):
+		return float(data.stone_tools.get(stand_in(kind), {}).get("power", 0.45))
 	return 1.0
 
 
 ## The model drawn for the tool in the hand: the stone axe's for the felling axe stood in for.
 func _model_kind(kind: String) -> String:
-	return STONE_AXE if kind == AXE and stone_only() else kind
+	return stand_in(kind) if stand_in_only(kind) else kind
 
 
 ## Puts `n` of `item` into the pack (stacking) and notes it.
@@ -986,6 +1003,8 @@ func _impact(t: Dictionary) -> void:
 				limb(ft)
 		"rock":
 			_break_stone(cur, power, point, normal)
+		"ground":
+			_work_ground(cur, power, point, normal)
 		"carcass":
 			var wn: Variant = cur.get("work")
 			if wn is Node and is_instance_valid(wn):
@@ -1009,6 +1028,38 @@ func _impact(t: Dictionary) -> void:
 					_note("A piece of the %s is chopped out" % String(cur.get("name", "palisade")))
 					target = {}
 	stroke_landed.emit(String(cur.type), cur)
+
+
+## A stroke of the hoe at a bed or open ground (FarmField.strike): ground broken, a bed worked, weeds hoed out.
+func _work_ground(cur: Dictionary, power: float, point: Vector3, normal: Vector3) -> void:
+	var farm := FarmField.find(get_tree())
+	if farm == null:
+		return
+	var res := farm.strike(String(cur.key), power)
+	var ev := String(res.get("event", ""))
+	var sk := "husbandry"
+	match ev:
+		"frozen":
+			_note("The ground is frozen hard: nothing grows till spring")
+			target = {}
+			return
+		"blocked":
+			_note("No room for a bed here: roots, rock, water or a building")
+			target = {}
+			return
+		"":
+			return
+	GatherFx.soil(get_tree().current_scene, point, normal)
+	_sound("hoe", point, -3.0, &"arrow_hit_wood")
+	skills.award(sk, skills.xp(sk, "stroke"))
+	if ev == "tilled":
+		skills.award(sk, skills.xp(sk, "tilled"))
+		_note("The bed is worked: sow it (E)")
+		target = {}
+	elif ev == "weeded":
+		skills.award(sk, skills.xp(sk, "weeded"))
+		_note("Weeds hoed out")
+		target = {}
 
 
 func _break_stone(cur: Dictionary, power: float, point: Vector3, normal: Vector3) -> void:
@@ -1204,6 +1255,10 @@ func _find_target() -> void:
 		for wn in awork:
 			if wn.has_method(&"axe_candidates"):
 				cands.append_array(wn.axe_candidates(p + Vector3.UP * 1.0, eye, look, [player.get_rid()]))
+	# the ground the hoe works (farming, FarmField): beds that want breaking or weeding; open ground with the hoe out
+	var farm := FarmField.find(get_tree())
+	if farm and owns("hoe"):
+		cands.append_array(farm.ground_candidates(p, view, in_hand() == "hoe"))
 	for c0: Dictionary in cands:
 		var c := c0
 		var reach := _reach_of(String(c.type))
@@ -1246,6 +1301,8 @@ func _reach_of(type: String) -> float:
 			return WallCuts.REACH
 		"carcass":
 			return 2.4
+		"ground":
+			return 2.2
 	return 1.5
 
 
@@ -1309,6 +1366,8 @@ func _finish_target(c: Dictionary) -> void:
 			nm = String(data.rocks.get("kinds", {}).get(String(c.name), {}).get("name", "rock"))
 		"wall":
 			nm = String(c.get("name", "palisade"))
+		"ground":
+			nm = "ground"
 		"carcass":
 			nm = String(c.get("name", "carcass"))
 			var to_p := p + Vector3.UP * 1.0 - (c.pos as Vector3)
@@ -1361,6 +1420,15 @@ func _refresh(t: Dictionary) -> Dictionary:
 				return {}
 			_finish_target(dw)
 			return dw
+		"ground":
+			var fm := FarmField.find(get_tree())
+			var dg := fm.describe(String(t.key), p) if fm else {}
+			if dg.is_empty() or float(dg.dist) > _reach_of("ground") + 0.4:
+				return {}
+			if t.has("point") and bool(dg.get("fresh", false)):
+				dg["point"] = t.point
+			_finish_target(dg)
+			return dg
 		_:
 			if harvest == null:
 				return {}
@@ -1451,6 +1519,9 @@ func prompt() -> String:
 			var wc := WallCuts.find(get_tree())
 			var done := wc.progress(String(target.key)) if wc else 0.0
 			return "Chop through the %s%s" % [nm, "" if done <= 0.0 else "  %d%%" % int(done * 100.0)]
+		"ground":
+			var fm := FarmField.find(get_tree())
+			return fm.hoe_prompt(String(target.key)) if fm else ""
 	return ""
 
 

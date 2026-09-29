@@ -84,6 +84,9 @@ const FORGE := {
 			"detail": "2 bar iron, 2 charcoal, a pole for the haft: a felling axe"},
 	"mattock": {"text": "Mattock", "inputs": {"bar_iron": 2, "charcoal": 2, "pole": 1}, "n": 1, "seconds": 20.0,
 			"verb": "Drawing the pick and the blade, punching the eye, hafting", "detail": "2 bar iron, 2 charcoal, a pole: a mattock"},
+	"hoe": {"text": "Hoe", "inputs": {"bar_iron": 2, "charcoal": 2, "pole": 1}, "n": 1, "seconds": 18.0,
+			"verb": "Drawing a broad blade, forging the neck and eye, hafting it",
+			"detail": "2 bar iron, 2 charcoal, a pole: a planter's hoe (breaks ground for a bed, hoes out weeds)"},
 	"skinning_knife": {"text": "Belt knife", "inputs": {"bar_iron": 1, "charcoal": 1, "branches": 1}, "n": 1, "seconds": 14.0,
 			"verb": "Drawing a blade, hardening it, fitting a handle", "detail": "a bar of iron, charcoal, a branch for the handle: a belt knife"},
 	"tomahawk": {"text": "Tomahawk", "weapon": "tomahawk", "inputs": {"bar_iron": 1, "charcoal": 1, "branches": 1}, "n": 1, "seconds": 14.0,
@@ -121,6 +124,13 @@ const GEAR := {
 			"detail": "a pole and barbs (an antler, or a flint): a spear for the fish in the shallows"},
 	"stake_set": {"text": "Deadfall stakes", "inputs": {"branches": 3}, "n": 1, "seconds": 6.0,
 			"verb": "Cutting stakes, a trigger and a bait stick", "detail": "3 branches: the stakes and trigger of one deadfall"},
+	# farming (FarmField): the crops worked up at the bench
+	"cordage_flax": {"text": "Linen cord from flax (2)", "makes": "cordage", "inputs": {"flax": 2}, "n": 2, "seconds": 8.0,
+			"verb": "Breaking and scutching the flax, twisting the fibre into cord",
+			"detail": "2 flax: 2 lengths of cordage (a snare each, or a rod's line)"},
+	"tobacco": {"text": "Twist of tobacco", "inputs": {"tobacco_leaves": 3}, "n": 1, "seconds": 8.0,
+			"verb": "Hanging the leaves to cure and twisting them into a carrot",
+			"detail": "3 tobacco leaves, cured and twisted: tobacco for the pipe"},
 }
 ## The knapping stone's work (the start with nothing; same shape as GEAR; `makes` the pack kind when it is not the id): the
 ## first tools from the ground's own things: chert (fieldstones, nodules), sticks, poles, bark cord. A throwing spear is
@@ -142,9 +152,15 @@ const STONE := {
 			"detail": "an antler tine ground to a point: the awl to sew hides (moccasins, mitts, clothes)"},
 	"torch": {"text": "Pine-knot torches (2)", "inputs": {"branches": 1, "pine_pitch": 1}, "n": 2, "seconds": 5.0,
 			"verb": "Splitting sticks and working pitch into them", "detail": "a branch and pine pitch: 2 torches"},
+	"digging_stick": {"text": "Digging stick", "inputs": {"pole": 1}, "knife": true, "n": 1, "seconds": 6.0,
+			"verb": "Whittling a point and hardening it in the fire",
+			"detail": "a pole whittled to a point and fire-hardened: breaks ground for a bed, slowly (half a hoe's bite)"},
+	"cornmeal": {"text": "Cornmeal", "inputs": {"corn": 4}, "n": 1, "seconds": 7.0,
+			"verb": "Shelling the ears and pounding the corn on the stone",
+			"detail": "4 ears of corn shelled and pounded: a pound of cornmeal (bake it into johnnycake on a fire)"},
 }
 ## The knapping stone's things the workbench makes too.
-const STONE_AT_BENCH := ["bone_awl", "torch"]
+const STONE_AT_BENCH := ["bone_awl", "torch", "digging_stick"]
 ## The workbench's gunstock (a log cut and carved; the forge makes the barrel and lock).
 const BENCH_WOOD := {
 	"gunstock": {"text": "Gunstock", "inputs": {"log": 1}, "knife": true, "n": 1, "seconds": 16.0,

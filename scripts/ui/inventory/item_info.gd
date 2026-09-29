@@ -226,6 +226,8 @@ static func _weapon_rows(kind: String, player: Node, rows: Array) -> void:
 static func _tool_rows(kind: String, player: Node, rows: Array) -> void:
 	var does := {"felling_axe": "fells trees and saplings, limbs and bucks them; cuts openings in log walls",
 			"mattock": "breaks stone from outcrops and boulders; digs flint",
+			"hoe": "breaks open ground for a bed and hoes out the weeds (farming)",
+			"digging_stick": "breaks ground for a bed and weeds it, at half a hoe's bite",
 			"skinning_knife": "skins and butchers game you have killed",
 			"fire_steel": "lights a campfire or a torch, struck on flint"}
 	if does.has(kind):

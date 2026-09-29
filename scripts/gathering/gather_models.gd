@@ -7,6 +7,9 @@ class_name GatherModels
 ##                  (curved "fawn-foot" handles are 19th century)
 ##   "mattock"      a pick-mattock (grubbing hoe): a square pick curving slightly down on one side of the eye,
 ##                  a broad mattock blade across the haft on the other, on the same straight haft
+##   "hoe"          a planter's broad hoe (farming): a goose neck from the eye to a wide iron blade that angles down
+##                  toward -Z, on the same straight haft
+##   "digging_stick"  a hardwood stick, its top end whittled to a fire-hardened point (the hoe's stand-in)
 ##   "log", "firewood", "branches", "pole", "stone", "flint"   the gathered items (inventory icons)
 ##
 ## Tool axes (like ThrowableModels' tomahawk): origin at the haft's end (the knob), the haft up +Y into the
@@ -42,11 +45,15 @@ static func build(kind: String) -> Node3D:
 			return _stone(0.055, 3, "flint")
 		"stone_axe":
 			return _stone_axe()
+		"hoe":
+			return _hoe()
+		"digging_stick":
+			return _digging_stick()
 	return null
 
 
 static func has(kind: String) -> bool:
-	return kind in ["felling_axe", "mattock", "log", "firewood", "branches", "pole", "stone", "flint", "stone_axe"]
+	return kind in ["felling_axe", "mattock", "log", "firewood", "branches", "pole", "stone", "flint", "stone_axe", "hoe", "digging_stick"]
 
 
 # --- Tools -----------------------------------------------------------------------------------------
@@ -153,6 +160,79 @@ static func _mattock() -> Node3D:
 	bm.material_override = iron
 	root.add_child(bm)
 	_markers(root, Vector3(0, EYE_Y - 0.035, PICK_Z))
+	return root
+
+
+## A planter's hoe: the eye on the haft's top, a short neck, then a broad thin blade flaring to about 17 cm at the edge,
+## hanging from the eye down and a little forward (about 65 deg below square to the haft, as a hoe's blade meets the
+## ground when the haft is swung down); the edge its cutting edge.
+const HOE_TILT := -65.0
+static func _hoe() -> Node3D:
+	var root := Node3D.new()
+	root.name = "Hoe"
+	_haft(root)
+	var iron := _iron()
+	var eye := _loft_z([[0.026, 0.03, -0.03, 0.02], [0.018, 0.032, -0.032, 0.022], [-0.018, 0.032, -0.032, 0.022],
+			[-0.026, 0.03, -0.03, 0.02]], EYE_Y, 12, 0.5)
+	var em := MeshInstance3D.new()
+	em.name = "Eye"
+	em.mesh = eye
+	em.material_override = iron
+	root.add_child(em)
+	# the blade built flat along -Z from the eye, then turned down about the eye's cross axis
+	var blade: Array = []
+	for i in 10:
+		var f := i / 9.0
+		var z := lerpf(0.0, -0.2, f)
+		var th := lerpf(0.011, 0.0018, pow(f, 0.8))
+		var hw := 0.013 if f < 0.25 else lerpf(0.013, 0.086, smoothstep(0.25, 0.5, f))
+		blade.append([z, th, -th, hw])
+	var bm := MeshInstance3D.new()
+	bm.name = "Blade"
+	bm.mesh = _loft_z(blade, 0.0, 10, 0.25)
+	bm.material_override = iron
+	bm.position = Vector3(0, EYE_Y, -0.022)
+	bm.rotation.x = deg_to_rad(HOE_TILT)
+	root.add_child(bm)
+	_markers(root, bm.position + bm.basis * Vector3(0, 0, -0.2))
+	return root
+
+
+## A digging stick: a straight hardwood stick of about 1.05 m, the top end whittled to a point and blackened in the
+## fire to harden it.
+static func _digging_stick() -> Node3D:
+	var root := Node3D.new()
+	root.name = "DiggingStick"
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var tip := SurfaceTool.new()
+	tip.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rings: Array = [[0.0, 0.0], [0.004, 0.017], [0.02, 0.019], [0.5, 0.018], [0.86, 0.017], [0.92, 0.016], [0.97, 0.009],
+			[1.04, 0.0015]]
+	var seg := 9
+	for r in rings.size() - 1:
+		var a: Array = rings[r]
+		var b: Array = rings[r + 1]
+		var target := tip if float(a[0]) >= 0.9 else st
+		for k in seg:
+			var t0 := TAU * k / seg
+			var t1 := TAU * (k + 1) / seg
+			var bend := Vector3(0.0, 0.0, -0.02) * sin(float(a[0]) * PI)
+			var bend1 := Vector3(0.0, 0.0, -0.02) * sin(float(b[0]) * PI)
+			var p00 := Vector3(cos(t0) * a[1], a[0], sin(t0) * a[1]) + bend
+			var p01 := Vector3(cos(t1) * a[1], a[0], sin(t1) * a[1]) + bend
+			var p10 := Vector3(cos(t0) * b[1], b[0], sin(t0) * b[1]) + bend1
+			var p11 := Vector3(cos(t1) * b[1], b[0], sin(t1) * b[1]) + bend1
+			var n0 := Vector3(cos(t0), 0.0, sin(t0))
+			var n1 := Vector3(cos(t1), 0.0, sin(t1))
+			_quad(target, [p00, p10, p11, p01], [n0, n0, n1, n1], [Vector2(0, a[0]), Vector2(0, b[0]), Vector2(1, b[0]), Vector2(1, a[0])])
+	for pair in [[st, _hickory(), "Stick"], [tip, _mat("charred_point", Color(0.1, 0.08, 0.06), 0.0, 0.85), "Point"]]:
+		var mi := MeshInstance3D.new()
+		mi.name = pair[2]
+		mi.mesh = (pair[0] as SurfaceTool).commit()
+		mi.material_override = pair[1]
+		root.add_child(mi)
+	_markers(root, Vector3(0, 1.03, -0.01))
 	return root
 
 

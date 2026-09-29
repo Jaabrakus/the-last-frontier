@@ -1,6 +1,6 @@
 class_name GatherSkills
 extends RefCounted
-## The gathering skills: Woodcutting, Mining and Building (data/gathering/gathering.json), each a level from
+## The gathering skills: Woodcutting, Mining, Building and Husbandry (farming) (data/gathering/gathering.json), each a level from
 ## 0 to 100 like the survival skills (data/survival/skills.json), with the same tiers (Novice 0, Apprentice 20,
 ## Journeyman 40, Adept 60, Master 80) and the same diminishing growth (growth model v4's level curve: a gain
 ## is scaled by L(S) = 1 / (1 + (S / 45)^3), so the first levels come in a few trees and Master takes hundreds).
@@ -20,7 +20,7 @@ extends RefCounted
 signal leveled(id: String, level: int, tier: Dictionary)
 
 const SAVE_PATH := "user://frontier_gathering.json"
-const IDS: Array[String] = ["woodcutting", "mining", "building"]
+const IDS: Array[String] = ["woodcutting", "mining", "building", "husbandry"]
 const MAX_LEVEL := 100.0
 
 var data: GatherData

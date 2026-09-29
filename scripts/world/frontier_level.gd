@@ -18,6 +18,7 @@ extends Node3D
 ##   FrontierVegetation.build()       trees, undergrowth, logs, rocks            (package C)
 ##   SurvivalBridge                   hunger, warmth, rest, the kit; the core's clock drives the sky (scripts/survival_game)
 ##   ForageField.build()              berries, nuts and herbs where they grow (scripts/forage; its own seed)
+##   FarmField                        the player's beds: hoed out of open ground, sown, weeded, harvested (scripts/farming)
 ##   WildlifeSpawner                  deer, bucks, foxes, wolves (scripts/wildlife; off in -s tool / test runs)
 ##   FishLife                         the river's fish near the player: rising, schooling, spooking, taking bait
 ##   FishingGear                      fishing: the rod and line, the spear (8 the gear button)
@@ -107,6 +108,10 @@ func _ready() -> void:
 	add_child(forage)
 	forage.build(vegetation)
 	StartupProfile.mark("forage")
+	# farming (scripts/farming): beds broken out of open ground with the hoe, sown, weeded and harvested
+	var farm := FarmField.new()
+	farm.name = "Farm"
+	add_child(farm)
 	# wildlife (scripts/wildlife): deer herds, a lone buck, foxes and a wolf pack in the woods round the fort
 	if WildlifeSpawner.enabled():
 		var wildlife := WildlifeSpawner.new()

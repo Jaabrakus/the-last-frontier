@@ -145,7 +145,7 @@ func _run() -> void:
 		# (the models run along their Z, up +Y; the camera looks at their side from +X)
 		m.rotation = Vector3(deg_to_rad(40.0), 0.0, 0.0) if kind in ["musket", "over_under", "spear_pair", "atlatl", "dart_bundle", "pistol", "torch",
 				"log", "firewood", "branches", "pole", "bow", "clay_pipe"] else Vector3.ZERO
-		if kind in ["felling_axe", "mattock"]:
+		if kind in ["felling_axe", "mattock", "hoe", "digging_stick"]:
 			m.rotation = Vector3(deg_to_rad(-42.0), 0.0, 0.0)   # the haft (+Y) from bottom left, the head top right
 		elif kind in ["stone", "flint"]:
 			m.rotation = Vector3(deg_to_rad(-20.0), deg_to_rad(35.0), 0.0)
@@ -259,6 +259,8 @@ func _model(kind: String) -> Node3D:
 		return WildlifeModels.build(kind)
 	if ForageModels.has(kind):
 		return ForageModels.build(kind)
+	if FarmModels.has(kind):
+		return FarmModels.build(kind)
 	if ProvisionModels.has(kind):
 		return ProvisionModels.build(kind)
 	if ViceModels.has(kind):

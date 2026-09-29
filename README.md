@@ -30,9 +30,11 @@ Open the folder in Godot and press **F5**.
 | E at a wheelbarrow's handles / bed | Push it (E sets it down) / put in a deer, a log length or pack things, or tip them out (see Horses) |
 | E at a horse cart's shafts / tailboard | Hitch the horse to it (in the saddle: a tap) or unhitch it / put in a deer, a log, the wheelbarrow or pack things, take out the last (see Horses) |
 | E at a wild plant | Pick berries, nuts, acorns, herbs, or dig a root (see Wild food and herbs) |
+| LMB with the hoe out | At open ground: break it out into a bed; at a growing bed: hoe out the weeds (see Farming) |
+| E at a bed | Sow it (hold E: which crop), harvest it when ripe, or pull up frost-killed plants (see Farming) |
 | V | Eat the best food in the pack (right-click food in the pack: eat that) |
 | Z | Sleep on the ground (Z again, or move, to get up); better in a lean-to and by a fire |
-| F at a lit campfire | Cook: roast the pack's venison, or bake its cornmeal into johnnycake (see Fire, cold and shelter) |
+| F at a lit campfire | Cook: roast the pack's venison, corn or squash, boil its beans, or bake its cornmeal into johnnycake (see Fire, cold and shelter) |
 | F5 / F9 | Quick save / load the latest save (see Saving and death) |
 | F3 | Debug readout |
 
@@ -451,6 +453,34 @@ A plant that bears once a season (crabapples, hazelnuts) bears again when its se
 Tests: `tests/forage/test_forage.gd` (headless: data, calendar, placement and habitats, seasons, picking with the
 real E, deer, the poultice through the pack); `tests/forage/forage_shots.gd` (windowed: each plant, picking, the pack,
 and the frame time with the plants shown and hidden).
+
+## Farming
+
+Beds of the Three Sisters, tobacco and flax, hoed out of open ground (user 2026-09-28: "add farming into the game";
+`scripts/farming/`, numbers in `data/farming/farming.json`; the crops are the project's own models, built from the
+forage plants' parts).
+
+- **The hoe** is made at the forge (2 bar iron, 2 charcoal, a pole) or traded for; it is not in the kit. A start with
+  nothing makes a **digging stick** (a pole and a knife, at the knapping stone or the workbench), half the hoe's bite.
+  **7** cycles the felling axe, the mattock and the hoe.
+- **Breaking ground**: with the hoe out, hold **LMB** at open ground: a 2 m bed on the world's grid, about five strokes
+  (fewer with skill), the grass cleared off it. Not on rock, water, a steep slope, among trees or where a building
+  stands; the ground is frozen from December to February.
+- **Sowing** (**E** at a worked bed; hold **E** for the list), March to October, from the pack's seed: the **Three
+  Sisters** (a seed each of corn, beans and squash: the beans climb the corn and the squash shades the hills; they
+  yield more together), or corn, beans, squash, tobacco or flax alone. A new character has a pouch of seed (corn 6,
+  beans 6, squash 4, tobacco 3, flax 4); every harvest saves a little seed back.
+- **Growing** on the game's clock (a sleep moves it on): sprouts, young plants, grown, ripe, in 3 to 4 game days (a
+  game day is a third of a month). Weeds come up a third and two thirds of the way: hoe them out (**LMB**) for a
+  better harvest; rain on the bed helps a little. November's frost kills what is not ripe (a late sowing warns).
+- **Harvesting** (**E** at a ripe bed): ears of corn, beans, squash, tobacco leaves or flax into the pack, by the
+  weeding, the rain and the **Husbandry** skill (a field skill like Woodcutting; it trains on every stroke, sowing and
+  harvest, and raises the yield). The bed is ready to sow again.
+- **The crops**: roast corn and squash and boil beans on a lit campfire (**F**); pound 4 ears into a pound of cornmeal
+  at the knapping stone; twist 3 tobacco leaves into tobacco for the pipe and 2 flax into cordage at the workbench.
+
+The beds are records in the survival core's world (`core.state.world.farm`), saved with it. `FarmField.find(tree)`;
+the hoe's side is GatherTools' `"ground"` target (`FarmField.ground_candidates`, `strike`, `hoe_prompt`).
 
 ## Horses
 
