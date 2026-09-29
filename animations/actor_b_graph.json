@@ -52439,7 +52439,6 @@
   "why": "The only records into a landing are jump-long's idle request (jump-long-land-idle) and the out-of-scope wall-jump-fail-45 / -90 fall requests (fall-land-soft-idle); every other landing has no incoming record, so the game code picks the landing and the rule is proposed. Band by vertical impact speed: soft < medium_impact_mps (about a 1.8 m drop) <= medium < hard_impact_mps (about 3.3 m) <= hard. Direction at touchdown: idle when not moving, run when moving with |move_dir_deg| <= thresholds.hemi_enter_deg, run_bw when moving further back (the graph's own backward landings, which exit into run-bkwd). A jump landing (last jump within jump-long + jump_land_window_s) in the soft or medium band uses the jump-long-land states; a hard impact always uses the fall table. Frontier's flat jump lands at about 4.4 m/s, so it takes the soft jump row."
  },
  "meta": {
-  "authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file",
   "coverage": {
    "atlatl/crouch": {
     "direct": [
@@ -52795,11 +52794,11 @@
    "FR/scripts/weapons/{bow,musket,pistol}.gd#relaxed+clips tables (canonical JSON)": "21cb15b17ace4c30f1068c294aded97e9c5bfa66a51bcb948e95ef790de5f9fd",
    "FR/tools/anim_graph/actor_b_keyed_bones.json": "8421f13d9ed606172d1a3a08f9b288ef21c082eedee94c1e99a5239af10d1377",
    "FR/tools/anim_graph/frontier_bindings.json": "821eeb56ee902274eea5688e1d039aba3a0a8ff82ade500e054d55cb0d21a7a6",
-   "PAP/blender_animation_index.csv": "4011e06af1643fbb47d9de1e726120862cb1ee4822f6bab7306095bf8a997606",
-   "PAP/graph_analysis/graph/actor_b_library_dump.json": "58af2c70b2b22b2a163e874bf1ceb9c28094a863fa1d5359ed8d6ef22847af1d",
-   "PAP/graph_analysis/graph/movement_modes_actor_b.json": "217e8f4597876865e40b67cc80d74c79b85117c99ffa6558e3d98f71bdc99ba9",
-   "PAP/graph_analysis/graph/state_subgraph.json": "25243c8dedfcd415c73e1bcde8cb2e1cc6e6fabd5ac6e7591f23bbc454f1d846",
-   "PAP/player_blending/player_blending.json": "621970f50dcd1a8a9800c6224b74a2b9a4e7da5ffbcb02174aba483f60bfc770"
+   "source/blender_animation_index.csv": "4011e06af1643fbb47d9de1e726120862cb1ee4822f6bab7306095bf8a997606",
+   "source/graph_analysis/graph/actor_b_library_dump.json": "58af2c70b2b22b2a163e874bf1ceb9c28094a863fa1d5359ed8d6ef22847af1d",
+   "source/graph_analysis/graph/movement_modes_actor_b.json": "217e8f4597876865e40b67cc80d74c79b85117c99ffa6558e3d98f71bdc99ba9",
+   "source/graph_analysis/graph/state_subgraph.json": "25243c8dedfcd415c73e1bcde8cb2e1cc6e6fabd5ac6e7591f23bbc454f1d846",
+   "source/player_blending/player_blending.json": "621970f50dcd1a8a9800c6224b74a2b9a4e7da5ffbcb02174aba483f60bfc770"
   },
   "generator": "tools/anim_graph/export_actor_b_graph.py",
   "keyed_bones": {
@@ -52957,14 +52956,14 @@
    "weight": "layer weight 0..1 from raw_0x0c lambda"
   },
   "vendored": {
-   "_vendor_paths.py": "391f77996ab561d3c580099c065910baee66dc5de7ca067d893d3906bfe5f2d4",
-   "build_subgraph.py": "7857b4782a5d8c3244096c1232c5c28c549b674c78ad9ffe58c8a7037801568f",
+   "_vendor_paths.py": "9907a2d0216d68f6dacbc99f95fa4136ef6629e859bca9fbca8b2c9a3751a5bf",
+   "build_subgraph.py": "eaf63fc4bc987362fa3d04a1d2f8f4cc6cfd331ac1141962a49d1ddc0bd221f0",
    "common.py": "73a14c0b37b6053696c2e74c233586a6a70e19fa1a3b7af34d2a9686946c6ae8",
    "decode_lambda.py": "e7eadd83c2b016bb901a2f56288023e21005a2d39f086260a77370d09cf8468b",
    "durations.py": "75f89b668d93809e9038619a288dba2eda541af71a70dc4be8e10088e577943c",
    "lib.py": "8494740037e8d35d731340ad5cecf3b4ed7ebc629ff797dbb10139767a8abb58",
    "resolve.py": "e30fbdf82aa7d6258283c5314adcac703c2f6c2ea1cab311283384a32f89ce02",
-   "resolve_overlays.py": "b0f73a8fe044092f5a260168433672789eeabe7b76d48061f0ff08663c4fd7e6",
+   "resolve_overlays.py": "1ee2dd18a34d5cae52a41ab24f42ac303f22e97a442b00f4f4a6b6645dedc69b",
    "symvm.py": "961a445000632d92af44a506906e437e687702a0baff56f8e3e095aa96cb4036"
   },
   "warnings": [

@@ -134,7 +134,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_armbands.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_armbands.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_armbands.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -394,7 +394,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_breechcloth.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_breechcloth.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_breechcloth.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -622,7 +622,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_brooches.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_brooches.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_brooches.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -815,7 +815,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_earbobs.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_earbobs.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_earbobs.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -1027,7 +1027,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_gorget.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_gorget.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_gorget.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -1232,7 +1232,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_head_wrap.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_head_wrap.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_head_wrap.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -1537,7 +1537,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_leggings_f.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_leggings_f.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_leggings_f.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -1896,7 +1896,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_leggings_m.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_leggings_m.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_leggings_m.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -2298,7 +2298,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_matchcoat.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_matchcoat.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_matchcoat.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -2689,7 +2689,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_moccasins_f.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_moccasins_f.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_moccasins_f.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -2971,7 +2971,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_moccasins_m.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_moccasins_m.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_moccasins_m.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -3217,7 +3217,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_sash.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_sash.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_sash.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -3641,7 +3641,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_shift_f.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_shift_f.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_shift_f.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -4135,7 +4135,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_shirt_linen.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_shirt_linen.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_shirt_linen.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -4663,7 +4663,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_shirt_ruffled.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_shirt_ruffled.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_shirt_ruffled.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -5093,7 +5093,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_wrap_skirt_f.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_wrap_skirt_f.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_wrap_skirt_f.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -5317,7 +5317,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_wristbands.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_wristbands.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_wristbands.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {

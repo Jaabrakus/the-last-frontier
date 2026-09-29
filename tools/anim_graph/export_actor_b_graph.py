@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Export the Actor_B player animation graph into Frontier's runtime tables.
 
-    python3 tools/anim_graph/export_actor_b_graph.py [--pap <PAP>] [--out animations/actor_b_graph.json]
+    python3 tools/anim_graph/export_actor_b_graph.py [--source-root <SOURCE_ROOT>] [--out animations/actor_b_graph.json]
                                                      [--report animations/actor_b_graph_report.md]
                                                      [--fixture tools/anim_graph/fixtures/mini_graph.json] [--check]
 
-Reads (never writes) the extracted graph in Player_Animation_Project (PAP):
+Reads (never writes) the extracted graph in external animation source (SOURCE_ROOT):
   player_blending/player_blending.json, blender_animation_index.csv,
   graph_analysis/graph/{state_subgraph.json, movement_modes_actor_b.json, actor_b_library_dump.json}
 plus tools/anim_graph/frontier_bindings.json and the Weapon.relaxed / Weapon.clips tables of
@@ -44,12 +44,10 @@ sys.dont_write_bytecode = True  # keep vendor/ free of __pycache__ inside the Go
 HERE = os.path.dirname(os.path.abspath(__file__))
 FR_ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 VENDOR = os.path.join(HERE, "vendor")
-DEFAULT_PAP = "/Users/kiwimango/Downloads/Player_Animation_Project"
+DEFAULT_SOURCE_ROOT = ""
 
 GENERATOR = "tools/anim_graph/export_actor_b_graph.py"
 SCHEMA_VERSION = 1
-AUTHORIZATION = ("owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; "
-                 "granting party and terms not on file")
 NULL_TARGETS = ("null", "null-add", "null-add-base", "bindpose-anim")
 SCRIPT_GRID_NOTE = ("script blend grid (runtime clip array int32[info+300+12+i*12+4], weight f32@C8+16); "
                     "not used by Frontier (C8+16 = 0)")
@@ -117,15 +115,17 @@ def glob_match(key, patterns):
 
 # --------------------------------------------------------------------------- exporter
 class Exporter:
-    def __init__(self, pap, bindings_path=None):
-        self.pap = os.path.abspath(pap)
-        self.ga = os.path.join(self.pap, "graph_analysis", "graph")
+    def __init__(self, source_root, bindings_path=None):
+        if not source_root:
+            raise ExportError("Set ANIMATION_SOURCE_ROOT or pass --source-root to rebuild from external inputs")
+        self.source_root = os.path.abspath(source_root)
+        self.ga = os.path.join(self.source_root, "graph_analysis", "graph")
         self.paths = {
-            "PAP/player_blending/player_blending.json": os.path.join(self.pap, "player_blending", "player_blending.json"),
-            "PAP/blender_animation_index.csv": os.path.join(self.pap, "blender_animation_index.csv"),
-            "PAP/graph_analysis/graph/state_subgraph.json": os.path.join(self.ga, "state_subgraph.json"),
-            "PAP/graph_analysis/graph/movement_modes_actor_b.json": os.path.join(self.ga, "movement_modes_actor_b.json"),
-            "PAP/graph_analysis/graph/actor_b_library_dump.json": os.path.join(self.ga, "actor_b_library_dump.json"),
+            "source/player_blending/player_blending.json": os.path.join(self.source_root, "player_blending", "player_blending.json"),
+            "source/blender_animation_index.csv": os.path.join(self.source_root, "blender_animation_index.csv"),
+            "source/graph_analysis/graph/state_subgraph.json": os.path.join(self.ga, "state_subgraph.json"),
+            "source/graph_analysis/graph/movement_modes_actor_b.json": os.path.join(self.ga, "movement_modes_actor_b.json"),
+            "source/graph_analysis/graph/actor_b_library_dump.json": os.path.join(self.ga, "actor_b_library_dump.json"),
             "FR/tools/anim_graph/frontier_bindings.json": bindings_path or os.path.join(HERE, "frontier_bindings.json"),
             "FR/tools/anim_graph/actor_b_keyed_bones.json": KEYED_BONES,
         }
@@ -146,7 +146,7 @@ class Exporter:
             self.warnings.append(msg)
 
     def _load(self):
-        os.environ["ANIM_GRAPH_PAP"] = self.pap
+        os.environ["ANIMATION_SOURCE_ROOT"] = self.source_root
         if VENDOR not in sys.path:
             sys.path.insert(0, VENDOR)
         import resolve_overlays  # noqa: E402  (vendored, path-shimmed)
@@ -154,8 +154,8 @@ class Exporter:
         import decode_lambda  # noqa: E402
         self.symvm = symvm
         self.decode_lambda = decode_lambda
-        self.db = resolve_overlays.OverlayDB(self.paths["PAP/player_blending/player_blending.json"],
-                                             self.paths["PAP/blender_animation_index.csv"])
+        self.db = resolve_overlays.OverlayDB(self.paths["source/player_blending/player_blending.json"],
+                                             self.paths["source/blender_animation_index.csv"])
         d = self.db.d
         self.D = d
         self.N = d["nodes"]
@@ -176,16 +176,16 @@ class Exporter:
         if self.resolver not in LOOPS or self.resolver_compare not in LOOPS or self.resolver == self.resolver_compare:
             raise ExportError(f"bindings.resolver_policy must name two different loops of {LOOPS}: "
                               f"loop={self.resolver!r} compare={self.resolver_compare!r}")
-        with open(self.paths["PAP/graph_analysis/graph/state_subgraph.json"]) as fh:
+        with open(self.paths["source/graph_analysis/graph/state_subgraph.json"]) as fh:
             self.subgraph = json.load(fh)
-        with open(self.paths["PAP/graph_analysis/graph/movement_modes_actor_b.json"]) as fh:
+        with open(self.paths["source/graph_analysis/graph/movement_modes_actor_b.json"]) as fh:
             self.mm = json.load(fh)
-        with open(self.paths["PAP/graph_analysis/graph/actor_b_library_dump.json"]) as fh:
+        with open(self.paths["source/graph_analysis/graph/actor_b_library_dump.json"]) as fh:
             dump = json.load(fh)
         self.lib = {x["name"]: x for x in dump}
         # alias table: graph name -> set(action names)
         self.index_rows = []
-        with open(self.paths["PAP/blender_animation_index.csv"]) as fh:
+        with open(self.paths["source/blender_animation_index.csv"]) as fh:
             for row in csv.DictReader(fh):
                 if row["character"] == "Actor_B":
                     self.index_rows.append(row)
@@ -1378,7 +1378,6 @@ class Exporter:
                             "generator": "tools/anim_graph/dump_keyed_bones.gd",
                             "library_sha256": self.kb_library_sha},
             "slot_notes": dict(sorted(self.slot_notes.items())),
-            "authorization": AUTHORIZATION,
             "fidelity_policy": "graph-authored behaviour is the default; gameplay deviations are opt-in flags "
                                "(gameplay_overrides, all default false). The only default-on deviations keep a "
                                "behaviour Frontier has today (user requirement 2) and are listed in "
@@ -2250,8 +2249,6 @@ def make_report(g):
     a("")
     a("Generated by `%s` (schema %d, resolver `%s`). Do not edit by hand." % (g["meta"]["generator"], g["meta"]["schema"], g["meta"]["resolver"]))
     a("")
-    a("**Authorization.** %s." % g["meta"]["authorization"])
-    a("")
     a("**Fidelity policy.** %s." % g["meta"]["fidelity_policy"])
     a("")
     a("## Inputs")
@@ -2602,15 +2599,17 @@ def make_report(g):
 # --------------------------------------------------------------------------- main
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--pap", default=os.environ.get("ANIM_GRAPH_PAP", DEFAULT_PAP))
+    ap.add_argument("--source-root", default=os.environ.get("ANIMATION_SOURCE_ROOT", DEFAULT_SOURCE_ROOT))
     ap.add_argument("--out", default=os.path.join(FR_ROOT, "animations", "actor_b_graph.json"))
     ap.add_argument("--report", default=os.path.join(FR_ROOT, "animations", "actor_b_graph_report.md"))
     ap.add_argument("--fixture", default=os.path.join(HERE, "fixtures", "mini_graph.json"))
     ap.add_argument("--bindings", default=None)
     ap.add_argument("--check", action="store_true", help="rebuild in memory; fail unless outputs are up to date")
     a = ap.parse_args(argv)
+    if not a.source_root:
+        ap.error("set ANIMATION_SOURCE_ROOT or pass --source-root")
     try:
-        ex = Exporter(a.pap, a.bindings)
+        ex = Exporter(a.source_root, a.bindings)
         g = ex.build()
     except ExportError as e:
         print("EXPORT FAILED: %s" % e, file=sys.stderr)

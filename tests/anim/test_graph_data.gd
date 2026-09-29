@@ -98,7 +98,6 @@ func _check_table(ctx: AnimTestContext, rig: RigFixture, label: String, d: AnimG
 	ctx.check(d.has_metrics() and m_bad.is_empty(), "%s: %d metrics clips exist with the library lengths %s" % [label, d.metrics.get("clips", {}).size(), m_bad.slice(0, 5)])
 	var errs := d.validate(rig.ap)
 	ctx.check(errs.is_empty(), "%s: validate() reports 0 errors %s" % [label, errs.slice(0, 5)])
-	ctx.check(d.authorization().begins_with("owner-stated"), "%s: owner-stated authorization carried" % label)
 
 
 func _check_overrides(ctx: AnimTestContext, d: AnimGraphData) -> void:

@@ -2,7 +2,7 @@ extends SceneTree
 ## Loadout handoff survey: where the hands go in every draw / stow / holster / switch clip of
 ## Actor_B, measured on the real rig, and the stowed transform that makes a sling / holster handoff
 ## seamless. Writes data/loadout/handoffs.json (summary) and data/loadout/handoffs_cases.json (every
-## case in full); explained in Player_Animation_Project/graph_analysis/loadout/handoff_survey.md.
+## case in full); explained in source/graph_analysis/loadout/handoff_survey.md.
 ##
 ##   python3 tools/loadout/resolve_loadout_graph.py        (first: graph selections it summarises)
 ##   Godot --headless --path . -s tools/loadout/measure_handoffs.gd -- [out=<path>] [only=<substring>]
@@ -79,7 +79,6 @@ const GRAPH_SEL := "res://data/loadout/graph_selections.json"
 const DEFAULT_OUT := "res://data/loadout/handoffs.json"
 const GENERATOR := "tools/loadout/measure_handoffs.gd"
 const SCHEMA := 1
-const AUTHORIZATION := "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file"
 
 const HZ := 60.0
 const HALF_TURN := Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO)
@@ -233,7 +232,7 @@ func _initialize() -> void:
 			doc.meta.cases_file = cases_path.get_file()
 			doc.meta.case_ids = cases.keys()
 			var detail := {"meta": {"schema": SCHEMA, "generator": GENERATOR, "summary_file": out_path.get_file(),
-					"authorization": AUTHORIZATION, "axes": doc.meta.axes}, "cases": cases}
+					"axes": doc.meta.axes}, "cases": cases}
 			for pair in [[out_path, JSON.stringify(_round(doc), " ", true)], [cases_path, JSON.stringify(_round(detail), "", true)]]:
 				var f := FileAccess.open(pair[0], FileAccess.WRITE)
 				if f == null:
@@ -720,7 +719,6 @@ func _measure() -> Dictionary:
 		"meta": {
 			"schema": SCHEMA, "generator": GENERATOR, "godot_version": Engine.get_version_info().string,
 			"rig": RIG, "library": LIB, "graph": GRAPH, "body": BODY,
-			"authorization": AUTHORIZATION,
 			"axes": "skeleton space: +Z = character forward, +X = character LEFT, +Y = up; metres, seconds",
 			"sample_hz": HZ,
 			"composition": "base = roles.<w>/<run|crouch>/idle clip at t = 0 + its layers (scratch AnimationTree); partial replaces its keyed bones (prop bones included); twin Add2 at 1 (phase-matched); FK",

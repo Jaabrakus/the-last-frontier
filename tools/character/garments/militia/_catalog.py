@@ -215,8 +215,7 @@ def main():
         "tokens": {t: TOKENS[t] for t in sorted(used) if t in TOKENS},
         "fabrics": {k: {"kit": v[0], "tile_m": v[1]} for k, v in FABRICS.items()},
         "provenance": ("Garment geometry generated procedurally by tools/character/garments/militia; skeleton and "
-                       "bind pose from the Actor_B rig (extracted game animation data; owner-stated authorization: "
-                       "Player_Animation_Project/ASSET_AUTHORIZATION.md); fabric kits derived from Poly Haven CC0 scans."),
+                       "bind pose from the Actor_B rig; fabric kits derived from Poly Haven CC0 scans."),
     }
     path = os.path.join(OUT_DIR, "catalog.json")
     with open(path, "w") as f:

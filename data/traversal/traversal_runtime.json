@@ -38,17 +38,16 @@
  },
  "meta": {
   "align": "reference path of the skeleton origin: the clip survey's align samples (clip_geometry.json series), refined to track_hz by pinning the survey's anchor limb between its samples (a flight step is ballistic between its end samples); parts join with pelvis continuity",
-  "authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file",
   "contacts": "limb windows whose world speed stays below contact_speed (m/s) for >= 3 samples (gaps <= 2 samples merged); surface: support (feet before the first top contact at the start height), top (on the obstacle / ledge top), landing (feet after the last top release), wall (other feet: braced on a face), hang (hands on a lip, hang moves)",
   "frame": "move frame at t = 0 (the character's start pose): +Z fwd, +X left, +Y up; tracks are clip time at rate 1",
   "generator": "tools/traversal/build_runtime_table.gd",
   "godot_version": "4.7.2-stable (official)",
   "inputs_sha256": {
    "Actor_B.res": "d33e8509fea2f1fa1f8828fa374f2c663875c10c5b8fc3a9e69068d3f9611a38",
-   "clip_geometry.json": "157ffb816d618ab06a6f265b43d3565bfc39fba2f3650ca2909a2fbdadbed756",
-   "clip_geometry_extra.json": "25025025ee655dbc8ae2092063fd8d10f373b3b1b68fe42c4e1670ee7b079741",
-   "contact_probes.json": "eb3788a5c1e731a69ebfb54d693fec682aa77860bf60fe8f410a85662fab65f2",
-   "graph_traversal.json": "f94943bac22b9425d62165ae450b13e81ca4d46e534b2a571ce6ae391e98ad45",
+   "clip_geometry.json": "d50caabb7cfbe4119ec2ebaccda4408ac237829be19b2760405b80207ebf51fc",
+   "clip_geometry_extra.json": "ac22bfeb63dc58e008e1a0eb7a6939e6df2575a20f9908171918e65cc757be9e",
+   "contact_probes.json": "fd4aaaf25a39ca1da605d084386d25acac74a138d59dff97f79953d069291e61",
+   "graph_traversal.json": "dbb93e8e84b722e3a09307b8da55a6fcc7c9db9758bfe7ac143ad3d7034b8a58",
    "traversal_moves.json": "9d3029b44c976c3ec88e204a048299278b34efe377ad341ba1a90f05e3c349c9"
   },
   "points": "l/r_hand, l/r_foot, l/r_knee = the RENDERED palm / shoe sole / kneecap: lowest of the mesh-calibrated probe vertices (data/traversal/contact_probes.json), xz = soft-min centre; pelvis, head_top = headb + 0.13 m, l/r_heel, l/r_ball, l/r_elbow = bone origins (clearance); world = align + skeleton point",

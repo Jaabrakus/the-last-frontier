@@ -1,11 +1,11 @@
 #!/bin/bash
 # Copy the Actor_B rig (animation library + character scene) from the asset project
-# Player_Animation_Project/godot_export into Frontier, but only when the asset project's
+# source/godot_export into Frontier, but only when the asset project's
 # verify_bind_rest.gd passes (rest == the game's bind pose 'null-add', RESET, stamp, additive
 # audit, skin check). Then runs tests/anim/test_rig.gd on Frontier; if that fails the previous
 # Frontier files are restored. Prints the sha256 of both copies.   (plan WP0, section 4.4)
 #
-#   tools/anim_graph/sync_rig.sh [--pap <Player_Animation_Project>] [--dry-run]
+#   tools/anim_graph/sync_rig.sh [--source-root <external animation source>] [--dry-run]
 #                                [--graph <actor_b_graph.json>] [--body <body.glb>]
 #
 #   --dry-run   verify and test only; copy nothing.
@@ -24,7 +24,7 @@
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 FR="$(cd "$HERE/../.." && pwd)"
-PAP="${PAP:-$HOME/Downloads/Player_Animation_Project}"
+SOURCE_ROOT="${ANIMATION_SOURCE_ROOT:-}"
 GODOT="${GODOT:-/Applications/Godot_mono.app/Contents/MacOS/Godot}"
 TIMEOUT="${GODOT_TIMEOUT:-600}"
 DRY=0
@@ -32,15 +32,16 @@ GRAPH=""
 BODY=""
 while [ $# -gt 0 ]; do
 	case "$1" in
-		--pap) PAP="$2"; shift 2 ;;
+		--source-root) SOURCE_ROOT="$2"; shift 2 ;;
 		--dry-run) DRY=1; shift ;;
 		--graph) GRAPH="$2"; shift 2 ;;
 		--body) BODY="$2"; shift 2 ;;
-		-h|--help) sed -n '2,24p' "$0"; exit 0 ;;
+		-h|--help) sed -n '2,/^$/p' "$0"; exit 0 ;;
 		*) echo "sync_rig: unknown argument $1" >&2; exit 2 ;;
 	esac
 done
-GE="$PAP/godot_export"
+[ -n "$SOURCE_ROOT" ] || { echo "sync_rig: set ANIMATION_SOURCE_ROOT or pass --source-root" >&2; exit 2; }
+GE="$SOURCE_ROOT/godot_export"
 FILES="animations/Actor_B.res characters/Actor_B.tscn"
 for f in $FILES; do
 	[ -f "$GE/$f" ] || { echo "sync_rig: missing $GE/$f" >&2; exit 2; }

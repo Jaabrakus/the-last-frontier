@@ -8,7 +8,7 @@ extends SceneTree
 ##
 ## The numbers behind the thresholds, and the scenario matrix they come from (both backgrounds, four season starts,
 ## careful and careless play, three presets), are in
-## Player_Animation_Project/graph_analysis/survival/survival_balance_report.md. To rerun the matrix:
+## source/graph_analysis/survival/survival_balance_report.md. To rerun the matrix:
 ##   Godot --headless --path . -s tests/survival/run_balance_matrix.gd -- --bg bg.backcountry_hunter,bg.provincial_ranger \
 ##         --starts sep_early,dec_early,mar_early,jun_early --policies trapper,hunter,woodcutter,idle,careless --seeds 1,2,3,4
 

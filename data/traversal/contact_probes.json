@@ -71,8 +71,7 @@
     "probes": 81,
     "vertices": 524
    }
-  },
-  "authorization": "owner-stated, see Player_Animation_Project/ASSET_AUTHORIZATION.md"
+  }
  },
  "limbs": {
   "l_hand": {

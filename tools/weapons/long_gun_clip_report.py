@@ -89,7 +89,6 @@ def main():
         "ref_left_palm_cm": [round(float(x), 1) for x in ref_l],
         "ref_right_palm_cm": [round(float(x), 1) for x in ref_r],
         "off_grip_cm": OFF_CM, "offline_deg": OFFLINE_DEG,
-        "authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md",
     }, "clips": {}}
     for name, r in clips.items():
         fr = r["frames"]

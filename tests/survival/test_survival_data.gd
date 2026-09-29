@@ -33,7 +33,7 @@ extends SceneTree
 ##
 ##   Godot --headless --path . -s tests/survival/test_survival_data.gd
 ##
-## Design document: Player_Animation_Project/graph_analysis/survival/survival_gdd.md
+## Design document: source/graph_analysis/survival/survival_gdd.md
 
 const DIR := "res://data/survival/"
 const FILES := ["skills", "backgrounds", "needs", "conditions", "items", "recipes", "actions",

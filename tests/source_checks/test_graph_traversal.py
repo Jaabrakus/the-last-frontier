@@ -1,8 +1,8 @@
 """Structural tests of data/traversal/graph_traversal.json (tools/traversal/extract_graph_traversal.py).
 
-    python3 -m unittest discover tools/traversal/tests
+    python3 -m unittest discover tests/source_checks
 
-Read-only over Player_Animation_Project.
+Read-only over external animation source.
 """
 import csv
 import json
@@ -11,9 +11,10 @@ import sys
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TOOL = os.path.normpath(os.path.join(HERE, ".."))
+TOOL = os.path.normpath(os.path.join(HERE, "..", "..", "tools", "traversal"))
 FR = os.path.normpath(os.path.join(TOOL, "..", ".."))
-PAP = os.environ.get("ANIM_GRAPH_PAP", "/Users/kiwimango/Downloads/Player_Animation_Project")
+SOURCE_ROOT = os.environ.get("ANIMATION_SOURCE_ROOT", "")
+HAVE_SOURCE_ROOT = bool(SOURCE_ROOT) and os.path.exists(os.path.join(SOURCE_ROOT, "player_blending", "player_blending.json"))
 OUT = os.path.join(FR, "data", "traversal", "graph_traversal.json")
 sys.path.insert(0, TOOL)
 
@@ -23,17 +24,18 @@ def load():
         return json.load(fh)
 
 
+@unittest.skipUnless(HAVE_SOURCE_ROOT, "external animation source not found; set ANIMATION_SOURCE_ROOT")
 class GraphTraversalTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.g = load()
-        with open(os.path.join(PAP, "player_blending", "player_blending.json")) as fh:
+        with open(os.path.join(SOURCE_ROOT, "player_blending", "player_blending.json")) as fh:
             d = json.load(fh)
         cls.src = {}
         for s in d["states"]:
             cls.src.setdefault(s["name"], s)
         cls.actions_b = {}
-        with open(os.path.join(PAP, "blender_animation_index.csv")) as fh:
+        with open(os.path.join(SOURCE_ROOT, "blender_animation_index.csv")) as fh:
             for row in csv.DictReader(fh):
                 if row["character"] == "Actor_B":
                     cls.actions_b[row["action_name"]] = row
@@ -150,7 +152,6 @@ class GraphTraversalTest(unittest.TestCase):
 
     def test_provenance(self):
         m = self.g["meta"]
-        self.assertIn("owner-stated", m["authorization"])
         self.assertEqual(len(m["inputs_sha256"]), 7)
 
 

@@ -24,7 +24,7 @@ extends Weapon
 ## walking over them or pressing E near them (ThrownPickup). Only `count` are carried
 ## (`max_count`). throw_phase() names the cycle: idle, aiming, throwing, recovering, empty.
 ##
-## Animation contract (see Player_Animation_Project/graph_analysis/throwables/
+## Animation contract (see source/graph_analysis/throwables/
 ## throwables_design.md, section 3). Signals are the ones every Weapon has:
 ##   action_started("equip", equip_time)
 ##   action_started("throw", release_time + follow_time)   release-start -> release-end,

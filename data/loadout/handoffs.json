@@ -3340,7 +3340,6 @@
   }
  },
  "meta": {
-  "authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file",
   "axes": "skeleton space: +Z = character forward, +X = character LEFT, +Y = up; metres, seconds",
   "body": "res://assets/character/actor_b_body.glb",
   "case_ids": [

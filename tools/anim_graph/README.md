@@ -11,11 +11,11 @@ re-hashed from names), overlay record offsets and `native_asset_id` / `source_at
 ```
 python3 tools/anim_graph/export_actor_b_graph.py            # regenerate the outputs
 python3 tools/anim_graph/export_actor_b_graph.py --check    # rebuild in memory, run the assertions, exit 0 only if the outputs are current
-python3 -m unittest discover tools/anim_graph/tests         # WP1 tests (test_vendor, test_export)
+python3 -m unittest discover tests/source_checks            # WP1 tests (test_vendor, test_export)
 ```
 
-Options: `--pap <Player_Animation_Project>` (default `/Users/kiwimango/Downloads/Player_Animation_Project`, or
-`$ANIM_GRAPH_PAP`), `--out`, `--report`, `--fixture`, `--bindings`. Python 3.9, standard library only.
+Rebuilds require `--source-root /path/to/source` or `ANIMATION_SOURCE_ROOT`. No source path is assumed.
+Other options: `--out`, `--report`, `--fixture`, `--bindings`. Python 3.9, standard library only.
 A full build takes about 1 s.
 
 ## Files
@@ -38,8 +38,8 @@ A full build takes about 1 s.
 
 ## Inputs (read-only)
 
-`PAP/player_blending/player_blending.json`, `PAP/blender_animation_index.csv`,
-`PAP/graph_analysis/graph/{state_subgraph.json, movement_modes_actor_b.json, actor_b_library_dump.json}`,
+`source/player_blending/player_blending.json`, `source/blender_animation_index.csv`,
+`source/graph_analysis/graph/{state_subgraph.json, movement_modes_actor_b.json, actor_b_library_dump.json}`,
 `frontier_bindings.json`, `actor_b_keyed_bones.json`, and the `relaxed` / `clips` tables of `scripts/weapons/{bow,musket,pistol}.gd`
 (only for the report's Frontier comparison; the output records a hash of the parsed tables, not of the files).
 
@@ -199,8 +199,8 @@ Godot --headless --path . -s tests/anim/run_all.gd -- --no-capture --only=test_m
 Rerun it after the exporter (or a rig resync) changes `actor_b_graph.json` or `Actor_B.res`; `test_metrics`
 and `check` report "stale" otherwise. A rig restamp or Godot patch release that leaves every measured value
 unchanged is not stale (`meta.rig_sha256` / `meta.godot_version` are ignored by the comparison; rerun to
-restamp). `pap=<dir>` points at Player_Animation_Project (default as for the exporter, or
-`$ANIM_GRAPH_PAP`); only its Blender foot dump `graph_analysis/graph/vmm/bl/dump3.jsonl` is read. Without the
+restamp). `source_root=<dir>` points at external animation source (default as for the exporter, or
+`$ANIMATION_SOURCE_ROOT`); only its Blender foot dump `graph_analysis/graph/vmm/bl/dump3.jsonl` is read. Without the
 dump the tool warns and writes `gt_check` as skipped, and `check` / `test_metrics` compare everything except
 the gt-derived fields (`gt_check`, `clips.*.blender`, `clips.*.fidelity_warning`) and say the dump is
 missing instead of "stale".
@@ -255,4 +255,4 @@ missing instead of "stale".
   are samples where the library interpolates across a dropped key (the tracks sit on a key-reduced 30 Hz
   grid); `clips.<name>.blender.gt_max_mm` lists every dumped clip's worst sample.
 
-`meta` records the owner-stated authorization and the sha256 of the library, rig, graph and dump.
+`meta` records the sha256 of the library, rig, graph and dump.

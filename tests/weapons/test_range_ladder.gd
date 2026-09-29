@@ -1,6 +1,6 @@
 extends SceneTree
 ## Range ladder test: the balanced weapons flown through the game's own launch and flight code
-## (Player_Animation_Project/graph_analysis/weapons/weapons_balance_design.md, sections 1.2,
+## (source/graph_analysis/weapons/weapons_balance_design.md, sections 1.2,
 ## 1.4, 1.6, 1.7, 1.9 and 4.2-4.5). No level and no player rig: a flat physics world, a stub
 ## FrontierPlayer (its _ready / _physics_process do nothing; get_aim_point() returns a set
 ## point) holding a muzzle marker, and each weapon instance balanced with WeaponBalance.apply.

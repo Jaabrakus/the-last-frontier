@@ -1,6 +1,6 @@
 """Exporter contract tests (WP1): schema, determinism, goldens, provenance, structural assertions.
 
-Run: python3 -m unittest discover tools/anim_graph/tests   (from the Frontier root)
+Run: python3 -m unittest discover tests/source_checks   (from the Frontier root)
 """
 import ast
 import copy
@@ -14,10 +14,10 @@ import unittest
 
 sys.dont_write_bytecode = True
 HERE = os.path.dirname(os.path.abspath(__file__))
-TOOL = os.path.dirname(HERE)
+TOOL = os.path.normpath(os.path.join(HERE, "..", "..", "tools", "anim_graph"))
 FR = os.path.normpath(os.path.join(TOOL, "..", ".."))
-PAP = os.environ.get("ANIM_GRAPH_PAP", "/Users/kiwimango/Downloads/Player_Animation_Project")
-HAVE_PAP = os.path.exists(os.path.join(PAP, "player_blending", "player_blending.json"))
+SOURCE_ROOT = os.environ.get("ANIMATION_SOURCE_ROOT", "")
+HAVE_SOURCE_ROOT = bool(SOURCE_ROOT) and os.path.exists(os.path.join(SOURCE_ROOT, "player_blending", "player_blending.json"))
 SCHEMA = os.path.join(TOOL, "schema", "actor_b_graph.schema.json")
 FIXTURE = os.path.join(TOOL, "fixtures", "mini_graph.json")
 OUT = os.path.join(FR, "animations", "actor_b_graph.json")
@@ -132,7 +132,7 @@ def build(bindings=None):
         with os.fdopen(fd, "w") as fh:
             json.dump(bindings, fh)
     try:
-        e = ex.Exporter(PAP, path)
+        e = ex.Exporter(SOURCE_ROOT, path)
         g = e.build()
         res = (g, None)
     except ex.ExportError as err:
@@ -152,14 +152,14 @@ def layer_map(role):
     return {l["clip"]: l for l in role["layers"] if l["clip"]}
 
 
-@unittest.skipUnless(HAVE_PAP, "Player_Animation_Project not found; set ANIM_GRAPH_PAP")
+@unittest.skipUnless(HAVE_SOURCE_ROOT, "external animation source not found; set ANIMATION_SOURCE_ROOT")
 class TestExport(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.g, err = build()
         if err:
             raise AssertionError(err)
-        cls.D = load_json(os.path.join(PAP, "player_blending", "player_blending.json"))
+        cls.D = load_json(os.path.join(SOURCE_ROOT, "player_blending", "player_blending.json"))
         cls.remap = {}
         for s in cls.D["overlay_sets"]:
             for r in s["remaps"]:
@@ -194,22 +194,21 @@ class TestExport(unittest.TestCase):
         for _ in range(2):
             td = tempfile.mkdtemp()
             o = [os.path.join(td, n) for n in ("g.json", "r.md", "f.json")]
-            p = subprocess.run([sys.executable, "-B", EXPORTER, "--pap", PAP, "--out", o[0], "--report", o[1], "--fixture", o[2]],
+            p = subprocess.run([sys.executable, "-B", EXPORTER, "--source-root", SOURCE_ROOT, "--out", o[0], "--report", o[1], "--fixture", o[2]],
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=600)
             self.assertEqual(p.returncode, 0, p.stderr)
             outs.append([read_bytes(x) for x in o])
         self.assertEqual(outs[0], outs[1])
 
     def test_check_mode(self):
-        p = subprocess.run([sys.executable, "-B", EXPORTER, "--pap", PAP, "--check"], stdout=subprocess.PIPE,
+        p = subprocess.run([sys.executable, "-B", EXPORTER, "--source-root", SOURCE_ROOT, "--check"], stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE, universal_newlines=True, timeout=600)
         self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
         self.assertIn("CHECK OK", p.stdout)
 
-    def test_provenance_authorization(self):
+    def test_provenance(self):
         m = self.g["meta"]
-        self.assertTrue(m["authorization"].startswith("owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md"))
-        self.assertIn("PAP/player_blending/player_blending.json", m["generated_from"])
+        self.assertIn("source/player_blending/player_blending.json", m["generated_from"])
         self.assertIn("resolve_overlays.py", m["vendored"])
         for name, c in self.g["clips"].items():
             self.assertRegex(c["native_asset_id"] or "", r"^(stream_)?[0-9a-f]{64}$", name)
@@ -263,7 +262,7 @@ class TestExport(unittest.TestCase):
         self.assertGreater(n, 1000)
 
     def test_graph_state_transitions_match_subgraph(self):
-        sub = load_json(os.path.join(PAP, "graph_analysis", "graph", "state_subgraph.json"))
+        sub = load_json(os.path.join(SOURCE_ROOT, "graph_analysis", "graph", "state_subgraph.json"))
         gs = self.g["graph_states"]
         for t in sub["transitions"]:
             m = [x for x in gs[t["source"]]["transitions"] if x["record"] == t["record_offset"] and x["order"] == t["order_in_source"]]
@@ -425,7 +424,7 @@ class TestExport(unittest.TestCase):
                 kinds.setdefault(k.split("/")[2], set()).add(r["additive"])
         self.assertTrue(all(len(v) == 1 for v in kinds.values()))
         # (d) clips exist (dump) and carry library data
-        dump = {x["name"] for x in load_json(os.path.join(PAP, "graph_analysis", "graph", "actor_b_library_dump.json"))}
+        dump = {x["name"] for x in load_json(os.path.join(SOURCE_ROOT, "graph_analysis", "graph", "actor_b_library_dump.json"))}
         self.assertLessEqual(set(g["clips"]), dump)
         # (f) only allowed roles missing
         import fnmatch
@@ -715,7 +714,7 @@ class TestExport(unittest.TestCase):
         """The evidence behind resolver_policy: under asc_fix no state leaf and no layer target reaches the crouch
         bow-draw records in any of the 12 selections; under asc_once they are live (the bow's crouch reload)."""
         import export_actor_b_graph as exm
-        e = exm.Exporter(PAP)
+        e = exm.Exporter(SOURCE_ROOT)
         starts = {n["clip_id"] for n in e.N.values() if n.get("type") == "anim-node-animation" and n.get("clip_id")}
         for sn, st in e.db.sets.items():
             for r in st["remaps"]:

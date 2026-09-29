@@ -430,7 +430,7 @@
  },
  "generator": "tools/character/garments/frontier/capot_fur_trim.py",
  "lib_version": 1,
- "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/capot_fur_trim.py.",
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/capot_fur_trim.py.",
  "fur": {
   "surface": "capot_fur_trim_fur",
   "shader": "res://assets/character/shaders/fur_shell.gdshader",

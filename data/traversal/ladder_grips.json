@@ -4,8 +4,7 @@
   "hz": 20.0,
   "closed_r": 0.005,
   "frame": "offset: the fist hole's centre in the wrist bone's frame (skeleton units, m); median over the samples with a closed fist. track: [clip time, x, y, z, hole radius] per closed-fist sample (the centre moves up to 1 cm within a clip and the hole narrows to 0.6 cm where the fingers squeeze)",
-  "body": "res://assets/character/actor_b_body.glb",
-  "authorization": "owner-stated, see Player_Animation_Project/ASSET_AUTHORIZATION.md"
+  "body": "res://assets/character/actor_b_body.glb"
  },
  "moves": {
   "ladder_climb_down": {

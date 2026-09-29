@@ -6,7 +6,7 @@ extends Musket
 ## lock. One lock fires whichever barrel is on top; each barrel has its own pan, frizzen and
 ## frizzen spring. After the first shot: half cock, press the catch at the front of the trigger
 ## guard, turn the barrels half a turn until they latch, full cock, fire. Design:
-## Player_Animation_Project/graph_analysis/weapons/weapons_balance_design.md section 2 (numbers
+## source/graph_analysis/weapons/weapons_balance_design.md section 2 (numbers
 ## 2.2, state machine 2.4, HUD 2.5, animation 2.6); history in over_under_research.md.
 ##
 ## Honest rules it keeps:

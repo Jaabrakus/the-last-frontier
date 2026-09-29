@@ -67,7 +67,7 @@ Motion options for the missing free-hang network (design decision, not made here
 cd /Users/kiwimango/Downloads/Frontier
 python3 tools/traversal/extract_graph_traversal.py            # writes data/traversal/graph_traversal.json and this file
 python3 tools/traversal/extract_graph_traversal.py --check    # exit 2 if either output is stale
-python3 -m unittest discover tools/traversal/tests            # structural tests of the extract
+python3 -m unittest discover tests/source_checks            # structural tests of the extract
 ```
 
 Inputs are read-only. `meta.inputs_sha256` records the graph, the clip index, the WP1 exporter, its bindings and the vendored decoders.

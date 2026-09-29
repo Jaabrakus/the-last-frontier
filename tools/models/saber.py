@@ -10,7 +10,7 @@ ball drag.
 Run headless (factory scene):
   Blender -b --factory-startup --python tools/models/saber.py -- \
       [--out assets/weapons/saber.glb] [--renders DIR] [--blend FILE.blend] \
-      [--hand-check Player_Animation_Project/blender_libraries]   (needs --renders)
+      [--hand-check source/blender_libraries]   (needs --renders)
 
 Dimensions (the 1751 pattern: blade 24 3/4-25 3/4 in, overall about 31-31.5 in):
   blade 0.652 m visible (25.7 in) from the quillon block to the point, spine

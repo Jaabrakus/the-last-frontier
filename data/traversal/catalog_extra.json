@@ -1,6 +1,5 @@
 {
  "meta": {
-  "authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file",
   "generator": "hand-made extra catalogue for tools/traversal/measure_traversal_clips.gd (landing clips the traversal preview plays after drops; LocoBrain owns them in game)",
   "inputs": {
    "graph_export": {
@@ -8,7 +7,7 @@
     "sha256": "92c245898730e2b331a31a00be907a23db28a14cb8380e2f98884e99e3cb13fd"
    },
    "index": {
-    "path": "PAP/blender_animation_index.csv",
+    "path": "source/blender_animation_index.csv",
     "sha256": "4011e06af1643fbb47d9de1e726120862cb1ee4822f6bab7306095bf8a997606"
    },
    "keyed_bones": {
@@ -17,7 +16,7 @@
     "sha256": "8421f13d9ed606172d1a3a08f9b288ef21c082eedee94c1e99a5239af10d1377"
    },
    "player_blending": {
-    "path": "PAP/player_blending/player_blending.json",
+    "path": "source/player_blending/player_blending.json",
     "sha256": "621970f50dcd1a8a9800c6224b74a2b9a4e7da5ffbcb02174aba483f60bfc770"
    }
   },

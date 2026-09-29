@@ -1,6 +1,5 @@
 {
 "source": {
-"authorization": "ASSET_AUTHORIZATION.md, the climbing animations entry and its player animation tree addition (owner-confirmed; approval terms not reviewed)",
 "files": {
 "climbing_motion_graph.json": "21dab2625e223b4e41e66969fa5eb231a7f51bba2b267e88656cd3bcf6b42411",
 "climbing_transitions.csv": "316c975860956ed50003758866ae40e2ff258adf6769d1342173b96821d12239",

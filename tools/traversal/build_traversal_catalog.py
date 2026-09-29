@@ -13,7 +13,7 @@ leaves resolve to no Actor_B clip (the gaps the free-running design has to fill)
 
 Inputs (read-only): tools/anim_graph/actor_b_keyed_bones.json (the library's clip list),
 animations/actor_b_graph.json (the 12 exported weapon x mode overlay selections),
-PAP/player_blending/player_blending.json and PAP/blender_animation_index.csv (through the vendored
+source/player_blending/player_blending.json and source/blender_animation_index.csv (through the vendored
 resolver in tools/anim_graph/vendor). Standard library only, Python 3.9.
 
 Provenance: numeric asset IDs and 32-bit symbol IDs are copied, never recomputed from names.
@@ -32,16 +32,13 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 VENDOR = os.path.join(ROOT, "tools", "anim_graph", "vendor")
-DEFAULT_PAP = os.environ.get("ANIM_GRAPH_PAP", "/Users/kiwimango/Downloads/Player_Animation_Project")
+DEFAULT_SOURCE_ROOT = os.environ.get("ANIMATION_SOURCE_ROOT", "")
 KEYED = os.path.join(ROOT, "tools", "anim_graph", "actor_b_keyed_bones.json")
 GRAPH_EXPORT = os.path.join(ROOT, "animations", "actor_b_graph.json")
 OUT = os.path.join(ROOT, "data", "traversal", "traversal_catalog.json")
 GENERATOR = "tools/traversal/build_traversal_catalog.py"
 SCHEMA = 1
 RESOLVER_LOOP = "asc_once"   # tools/anim_graph/frontier_bindings.json resolver_policy.loop
-
-AUTHORIZATION = ("owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; "
-                 "granting party and terms not on file")
 
 # ------------------------------------------------------------------------------------------
 # Families. First match wins, on the clip name without its "actor_b-" prefix.
@@ -211,8 +208,8 @@ def variant_of(name, lib):
 # Graph linkage
 # ------------------------------------------------------------------------------------------
 
-def load_resolver(pap):
-    os.environ["ANIM_GRAPH_PAP"] = pap
+def load_resolver(source_root):
+    os.environ["ANIMATION_SOURCE_ROOT"] = source_root
     sys.dont_write_bytecode = True   # read-only use of the vendored tools: no __pycache__ in tools/anim_graph/vendor
     sys.path.insert(0, VENDOR)
     import resolve_overlays  # noqa: E402  (vendored, unedited)
@@ -281,8 +278,8 @@ def state_family(name):
     return None
 
 
-def build(pap):
-    ro, glib = load_resolver(pap)
+def build(source_root):
+    ro, glib = load_resolver(source_root)
     db = ro.OverlayDB()
     D = db.d
     N = D["nodes"]
@@ -290,7 +287,7 @@ def build(pap):
     lib = set(keyed["clips"])
     graph_export = json.load(open(GRAPH_EXPORT))
     idx_rows = collections.defaultdict(list)
-    with open(os.path.join(pap, "blender_animation_index.csv")) as fh:
+    with open(os.path.join(source_root, "blender_animation_index.csv")) as fh:
         for row in csv.DictReader(fh):
             if row["character"] == "Actor_B":
                 idx_rows[row["action_name"]].append(row)
@@ -456,7 +453,6 @@ def build(pap):
         "meta": {
             "schema": SCHEMA,
             "generator": GENERATOR,
-            "authorization": AUTHORIZATION,
             "resolver": {"loop": RESOLVER_LOOP, "vendor": "tools/anim_graph/vendor (unedited graph-analysis tools)",
                          "selections": {k: v for k, v in sels.items()},
                          "extras": [e for e, _ in exs if e]},
@@ -464,10 +460,10 @@ def build(pap):
                 "keyed_bones": {"path": "tools/anim_graph/actor_b_keyed_bones.json", "sha256": sha256(KEYED),
                                 "library_sha256": keyed.get("library_sha256")},
                 "graph_export": {"path": "animations/actor_b_graph.json", "sha256": sha256(GRAPH_EXPORT)},
-                "player_blending": {"path": "PAP/player_blending/player_blending.json",
-                                    "sha256": sha256(os.path.join(pap, "player_blending", "player_blending.json"))},
-                "index": {"path": "PAP/blender_animation_index.csv",
-                          "sha256": sha256(os.path.join(pap, "blender_animation_index.csv"))},
+                "player_blending": {"path": "source/player_blending/player_blending.json",
+                                    "sha256": sha256(os.path.join(source_root, "player_blending", "player_blending.json"))},
+                "index": {"path": "source/blender_animation_index.csv",
+                          "sha256": sha256(os.path.join(source_root, "blender_animation_index.csv"))},
             },
             "notes": [
                 "family: first matching regex over the clip name (FAMILIES in the generator); IGC clips are listed by name",
@@ -497,11 +493,13 @@ def dumps(doc):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--pap", default=DEFAULT_PAP)
+    ap.add_argument("--source-root", default=DEFAULT_SOURCE_ROOT)
     ap.add_argument("--out", default=OUT)
     ap.add_argument("--check", action="store_true")
     a = ap.parse_args()
-    doc = build(a.pap)
+    if not a.source_root:
+        ap.error("set ANIMATION_SOURCE_ROOT or pass --source-root")
+    doc = build(a.source_root)
     text = dumps(doc)
     if a.check:
         old = open(a.out).read() if os.path.exists(a.out) else ""

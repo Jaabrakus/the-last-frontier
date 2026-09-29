@@ -51,7 +51,7 @@ Weapons are carried in a relaxed idle and raised only while aiming. Shots are ze
   middle at its side and the right hand is free; switching from the musket to the tomahawk or the spear keeps the
   musket in the left hand (not slung) and draws the throwable with the right; its key (or the throwable's again)
   brings the musket back to both hands, aim ready in about 0.4 s.
-- **Thrown weapons** (spear 2, tomahawk 2, atlatl 5 darts): hold LMB to wind up (the arc shows where it lands), release to throw; they stick in wood, straw and soft ground and are picked up again. The character plays the source graph's throw (raised into the throw aim pose, then release-start, release-end, back to carry; the whole body when standing, the upper body over the legs when moving). The spear is carried overhand above the shoulder like a javelin (lowered across the body while sprinting) and drawn from the back sling along the long-gun draw's own path, the tomahawk like a hatchet in the fist, head up, drawn from the back of the belt; after a throw the next one is taken into the hand during the draw; both carries are poses of the source clips (see `Player_Animation_Project/graph_analysis/throwables/throwables_design.md` section 6).
+- **Thrown weapons** (spear 2, tomahawk 2, atlatl 5 darts): hold LMB to wind up (the arc shows where it lands), release to throw; they stick in wood, straw and soft ground and are picked up again. The character plays the source graph's throw (raised into the throw aim pose, then release-start, release-end, back to carry; the whole body when standing, the upper body over the legs when moving). The spear is carried overhand above the shoulder like a javelin (lowered across the body while sprinting) and drawn from the back sling along the long-gun draw's own path, the tomahawk like a hatchet in the fist, head up, drawn from the back of the belt; after a throw the next one is taken into the hand during the draw; both carries are poses of the source clips (see `source/graph_analysis/throwables/throwables_design.md` section 6).
 
 ## Torch
 
@@ -638,7 +638,7 @@ scripts/building/ build_mode.gd (B, the ghost, placing, take down), build_snap.g
                   build_door.gd (doors, gate leaves), build_hud.gd, build_grass.gd, build_data.gd,
                   fort_pieces.gd / fort_plan.gd (the fort's pieces and their stamping), palisade_cuts.gd (windows)
 scripts/ui/hud.gd, scripts/fx/fx.gd, scripts/core/ (input, hit routing)
-animations/, characters/   Actor_B library + rig from Player_Animation_Project/godot_export
+animations/, characters/   Actor_B library + rig from source/godot_export
 tests/            smoke_test.gd (headless gameplay test), screenshot.gd, compute_weapon_offsets.gd
 ```
 

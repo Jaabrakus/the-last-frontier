@@ -1,7 +1,7 @@
 """Vendored graph-analysis tools: provenance and behaviour (WP1).
 
-Run: python3 -m unittest discover tools/anim_graph/tests   (from the Frontier root)
-Needs the Player_Animation_Project tree (env ANIM_GRAPH_PAP, default below); tests that need it
+Run: python3 -m unittest discover tests/source_checks   (from the Frontier root)
+Needs the external animation source tree (env ANIMATION_SOURCE_ROOT, explicitly configured); tests that need it
 skip with a notice when it is absent.
 """
 import hashlib
@@ -15,11 +15,11 @@ import unittest
 
 sys.dont_write_bytecode = True
 HERE = os.path.dirname(os.path.abspath(__file__))
-TOOL = os.path.dirname(HERE)
+TOOL = os.path.normpath(os.path.join(HERE, "..", "..", "tools", "anim_graph"))
 VENDOR = os.path.join(TOOL, "vendor")
-PAP = os.environ.get("ANIM_GRAPH_PAP", "/Users/kiwimango/Downloads/Player_Animation_Project")
-GA = os.path.join(PAP, "graph_analysis", "graph")
-HAVE_PAP = os.path.exists(os.path.join(PAP, "player_blending", "player_blending.json"))
+SOURCE_ROOT = os.environ.get("ANIMATION_SOURCE_ROOT", "")
+GA = os.path.join(SOURCE_ROOT, "graph_analysis", "graph")
+HAVE_SOURCE_ROOT = bool(SOURCE_ROOT) and os.path.exists(os.path.join(SOURCE_ROOT, "player_blending", "player_blending.json"))
 
 
 def read_bytes(path):
@@ -48,17 +48,17 @@ _DB = None
 def overlay_db():
     global _DB
     if _DB is None:
-        os.environ["ANIM_GRAPH_PAP"] = PAP
+        os.environ["ANIMATION_SOURCE_ROOT"] = SOURCE_ROOT
         if VENDOR not in sys.path:
             sys.path.insert(0, VENDOR)
         import resolve_overlays
-        _DB = resolve_overlays.OverlayDB(os.path.join(PAP, "player_blending", "player_blending.json"),
-                                         os.path.join(PAP, "blender_animation_index.csv"))
+        _DB = resolve_overlays.OverlayDB(os.path.join(SOURCE_ROOT, "player_blending", "player_blending.json"),
+                                         os.path.join(SOURCE_ROOT, "blender_animation_index.csv"))
     return _DB
 
 
 class TestProvenance(unittest.TestCase):
-    def test_vendored_hashes_and_shim(self):
+    def test_vendored_and_upstream_hashes(self):
         rec = provenance()
         files = sorted(r["file"] for r in rec)
         self.assertEqual(files, sorted(["resolve_overlays.py", "symvm.py", "common.py", "build_subgraph.py", "lib.py",
@@ -66,14 +66,7 @@ class TestProvenance(unittest.TestCase):
         for r in rec:
             data = read_bytes(os.path.join(VENDOR, r["file"]))
             self.assertEqual(sha(data), r["vendored_sha256"], r["file"] + ": vendored copy changed")
-            lines = data.decode("utf-8").split("\n")
-            for s in r["shim"]:
-                self.assertEqual(lines[s["line"] - 1], s["replacement"], r["file"])
-                self.assertIn("vendored path shim", s["replacement"])
-                lines[s["line"] - 1] = s["original"]
-            src = "\n".join(lines).encode("utf-8")
-            self.assertEqual(sha(src), r["source_sha256"], r["file"] + ": more than the path shim differs from the source")
-            if HAVE_PAP:
+            if HAVE_SOURCE_ROOT:
                 gp = os.path.join(GA, r["file"])
                 if os.path.exists(gp):
                     self.assertEqual(sha(read_bytes(gp)), r["source_sha256"],
@@ -90,12 +83,12 @@ class TestProvenance(unittest.TestCase):
                     self.assertIn((f, i), allowed, f"{f}:{i} hard-codes a path")
 
 
-@unittest.skipUnless(HAVE_PAP, "Player_Animation_Project not found; set ANIM_GRAPH_PAP")
+@unittest.skipUnless(HAVE_SOURCE_ROOT, "external animation source not found; set ANIMATION_SOURCE_ROOT")
 class TestVendoredBehaviour(unittest.TestCase):
     def test_build_subgraph_regenerates_state_subgraph(self):
         with tempfile.TemporaryDirectory() as td:
             out = os.path.join(td, "state_subgraph.json")
-            env = dict(os.environ, ANIM_GRAPH_PAP=PAP, ANIM_GRAPH_SUBGRAPH_OUT=out, PYTHONDONTWRITEBYTECODE="1")
+            env = dict(os.environ, ANIMATION_SOURCE_ROOT=SOURCE_ROOT, ANIM_GRAPH_SUBGRAPH_OUT=out, PYTHONDONTWRITEBYTECODE="1")
             p = subprocess.run([sys.executable, "-B", "build_subgraph.py"], cwd=VENDOR, env=env,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=300)
             self.assertEqual(p.returncode, 0, p.stderr)

@@ -8,7 +8,7 @@ Two generators share one library (`lib/`, see `lib/README.md`):
 | `build_character.sh` (`build_character.py`) | the customizer parts: `assets/character/body/body.glb` (+ `.json`), `assets/character/hair/<id>.glb` (+ catalog fragment `.json`), `assets/character/garments/<set>/<id>.glb`, `assets/character/catalog.json` | body and 17 hair styles built; garments come from the garment workstreams |
 
 Both run Blender 5.2 headless on a temporary copy of `Actor_B_001.blend` and never write
-into `Player_Animation_Project`. `build_body.py` now imports the generic code from `lib/`;
+into `external animation source`. `build_body.py` now imports the generic code from `lib/`;
 the refactor was checked against the shipped glb: every mesh except the coat is identical,
 and the coat differed run to run already (see `lib/remesh.py untangle`).
 
@@ -433,7 +433,5 @@ every face of every people, and no face feature is scaled, amplified or smoothed
 
 ## Provenance
 
-The skeleton, bone names and bind pose come from the Actor_B rig, converted from
-extracted game animation data (owner-stated authorization:
-`Player_Animation_Project/ASSET_AUTHORIZATION.md`). All meshes are generated procedurally
-by these scripts; no animation data or asset ids are changed.
+The skeleton, bone names and bind pose come from the Actor_B rig. All meshes are generated
+procedurally by these scripts; no animation data or asset ids are changed.

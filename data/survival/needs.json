@@ -2,7 +2,6 @@
  "schema": "frontier.survival.needs",
  "version": 4,
  "status": "LIVE design data v4: the vertical slice (milestones M1, M2a and M2b; survival_gdd.md version 4). The game and tests/survival/test_survival_data.gd read these rows. Every number is tunable.",
- "design_doc": "Player_Animation_Project/graph_analysis/survival/survival_gdd.md",
  "summary": "Needs for the slice: food, warmth, wetness and rest (thirst is 'post'). Tuned in real minutes of play on the Woodsman preset.",
  "id_rules": "Ids are stable strings (prefix.name). Never rename an id once saves exist; add an alias instead. Display names are separate and may change. An id is defined in exactly one place: the live file or the backlog.",
  "milestones": {
@@ -19,7 +18,7 @@
   "K": "graph_analysis/survival/research_survival_skills.md, numbered sources [#] (K:1 = source [1])",
   "Y": "graph_analysis/survival/research_systems.md, section number (Y:3.2 = section 3.2)",
   "C": "graph_analysis/customizer/costume_bible.md, section number",
-  "A": "Player_Animation_Project/blender_animation_index.csv (clip names and asset ids)",
+  "A": "Bundled animation clip names and asset IDs",
   "N": "graph_analysis/survival/survival_gdd.md, sources list (N:3 = source N3; N33 onward added in version 3)"
  },
  "basis_keys": {

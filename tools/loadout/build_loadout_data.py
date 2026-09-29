@@ -2,7 +2,7 @@
 """Loadout design data: carry points, gear, items and presets (Frontier).
 
 Reads the two loadout surveys and the rig, and writes the data files the loadout design
-(Player_Animation_Project/graph_analysis/loadout/loadout_design.md) defines:
+(source/graph_analysis/loadout/loadout_design.md) defines:
 
     python3 tools/loadout/build_loadout_data.py candidates   # 1. verification capsules
     Godot --headless --path . -s tools/loadout/measure_body_fit.gd -- \

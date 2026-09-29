@@ -6,7 +6,7 @@
 
 Covers data/traversal/traversal_catalog.json (tools/traversal/build_traversal_catalog.py),
 data/traversal/clip_geometry.json (tools/traversal/measure_traversal_clips.gd) and the survey
-Player_Animation_Project/graph_analysis/traversal/clip_survey.md (tools/traversal/write_clip_survey.py).
+source/graph_analysis/traversal/clip_survey.md (tools/traversal/write_clip_survey.py).
 The sanity bounds are deliberately loose: they pin the measured behaviour of the motion (a ladder
 climb rises, a beam walk keeps the feet on one line), not exact reconstructed values.
 """
@@ -17,7 +17,7 @@ import sys
 import unittest
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-PAP = os.environ.get("ANIM_GRAPH_PAP", "/Users/kiwimango/Downloads/Player_Animation_Project")
+SOURCE_ROOT = os.environ.get("ANIMATION_SOURCE_ROOT", "")
 CATALOG = os.path.join(ROOT, "data", "traversal", "traversal_catalog.json")
 GEOMETRY = os.path.join(ROOT, "data", "traversal", "clip_geometry.json")
 GODOT = os.environ.get("GODOT_BIN", "/Applications/Godot_mono.app/Contents/MacOS/Godot")
@@ -39,9 +39,6 @@ class ClipGeometryTest(unittest.TestCase):
 
     # --- contract -------------------------------------------------------------------------------
     def test_meta_provenance(self):
-        for doc in (self.cat, self.geo):
-            m = doc["meta"]
-            self.assertIn("owner-stated", m["authorization"])
         self.assertEqual(self.geo["meta"]["catalog"]["path"], "data/traversal/traversal_catalog.json")
 
     def test_every_catalogue_clip_measured(self):
@@ -183,13 +180,13 @@ class ClipGeometryTest(unittest.TestCase):
         self.assertEqual(c["exit"]["pose"], "knee_on_ledge")
 
     # --- regeneration checks --------------------------------------------------------------------
-    @unittest.skipUnless(os.path.isdir(PAP), "Player_Animation_Project not found")
+    @unittest.skipUnless(bool(SOURCE_ROOT) and os.path.isdir(SOURCE_ROOT), "external animation source not found")
     def test_catalog_current(self):
         r = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "traversal", "build_traversal_catalog.py"), "--check"],
                            capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
-    @unittest.skipUnless(os.path.isdir(PAP), "Player_Animation_Project not found")
+    @unittest.skipUnless(bool(SOURCE_ROOT) and os.path.isdir(SOURCE_ROOT), "external animation source not found")
     def test_survey_current(self):
         r = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "traversal", "write_clip_survey.py"), "--check"],
                            capture_output=True, text=True)

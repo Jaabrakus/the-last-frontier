@@ -20,7 +20,7 @@ extends AnimTestSuite
 ##     nothing; the buttons take no keyboard focus; freeing the overlay (or bind() while frozen)
 ##     undoes its freeze (auto_process and the AimStabilizer's trim_hold), time scale and F8 toggle;
 ##   - panel 3 at 1280x720 (layout_size): ends above the crosshair; an oversized entry is compacted
-##     and then cut, with the authorization kept;
+##     and then cut;
 ##   - in the level: the player has exactly one overlay (player.gd attach(); a second attach()
 ##     returns it), bound to its PlayerAnim; the
 ##     HUD's F3 still toggles its debug line while F4 does not, and F3 leaves the overlay alone;
@@ -141,10 +141,8 @@ func _stub(ctx: AnimTestContext) -> void:
 			"panel 3: state offset, leaf ID, chain record offset and to-ID")
 	ctx.check(p3.contains(NATIVE_ID), "panel 3: native_asset_id in full")
 	ctx.check(p3.contains("player-overlays:0x00021774") and p3.contains("0.80"), "panel 3: layer weight and lambda source")
-	ctx.check(p3.contains("owner-stated"), "panel 3: authorization")
 	# Panel 3's height at 1280x720 (layout_size: the headless root viewport is 64x64): it ends
-	# above the crosshair, compacting and then cutting an oversized entry; the authorization comes
-	# first, so a cut never hides it.
+	# above the crosshair, compacting and then cutting an oversized entry.
 	o.layout_size = Vector2(1280, 720)
 	o.render(stub_snapshot())
 	ctx.check(o.provenance_level == 0 and not o.provenance_clipped and _prov_bottom(o) <= o.provenance_limit() + 0.5,
@@ -154,8 +152,6 @@ func _stub(ctx: AnimTestContext) -> void:
 	ctx.check(o.provenance_clipped and o.provenance_level == AnimDebugOverlay.PROV_LEVELS - 1 and _prov_bottom(o) <= o.provenance_limit() + 0.5,
 			"1280x720: an oversized provenance is compacted, then cut to its height (level %d, clipped %s, bottom %.0f px, limit %.0f)"
 			% [o.provenance_level, o.provenance_clipped, _prov_bottom(o), o.provenance_limit()])
-	ctx.check(p3b.find("owner-stated") >= 0 and p3b.find("owner-stated") < p3b.find("native_asset_id"),
-			"a cut panel 3 keeps the authorization (it comes before the entries)")
 	ctx.check(p3b.contains("(cut to fit)"), "a cut panel 3 says so in its header")
 	o.render(stub_snapshot())
 	ctx.check(o.provenance_level == 0 and not o.provenance_clipped, "the next snapshot is fitted afresh (full again)")
@@ -235,8 +231,7 @@ static func stub_snapshot() -> Dictionary:
 			"fade_graph": 0.0, "fade_used": 0.1, "status": "proposed"}],
 		"trace_lines": ["[f 1200] FALL(run,fw) fall -> LAND fall-land-soft-idle  moving=true (wish 3.60 v 3.24) key=air_to_land graph - 0/0.1 proposed"],
 		"options": {"overrides": {"override_fast_hemisphere_fade": false}, "options": {"blocked": true}},
-		"warnings": ["TreeBuilder: something [bracket]"],
-		"authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file"}
+		"warnings": ["TreeBuilder: something [bracket]"]}
 
 
 # --- facade rig -----------------------------------------------------------------------------
@@ -695,7 +690,7 @@ func _level_provenance_fit(ctx: AnimTestContext, a: PlayerAnim, o: AnimDebugOver
 		var base: Dictionary = a.data.aim_tree(parts[0], st).get("base", {})
 		if not base.is_empty():
 			prov["aim/%s/%s/base" % [parts[0], st]] = a.call("_prov_entry", base)
-		o.render({"ok": true, "provenance": prov, "attribution": a.data.attribution(), "authorization": a.data.authorization()})
+		o.render({"ok": true, "provenance": prov, "attribution": a.data.attribution()})
 		n += 1
 		var tag := "%d%s" % [o.provenance_level, " cut" if o.provenance_clipped else ""]
 		levels[tag] = int(levels.get(tag, 0)) + 1

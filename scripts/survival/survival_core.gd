@@ -23,7 +23,7 @@ extends RefCounted
 ##   - learning:                           recipe_book(), lesson_offers(mentor), arrange_lesson(mentor, what, ask),
 ##                                         watchable(), examine via run_job("learn.examine", {item})
 ##   - listening to the signals below.
-## Design: Player_Animation_Project/graph_analysis/survival/survival_gdd.md; API notes: survival_core_api.md there.
+## Design: source/graph_analysis/survival/survival_gdd.md; API notes: survival_core_api.md there.
 
 ## Game minutes are simulated in steps of at most this size (needs, fires and conditions stay smooth) [D].
 const STEP_MIN := 10.0

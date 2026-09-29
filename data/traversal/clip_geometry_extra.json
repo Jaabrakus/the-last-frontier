@@ -1947,10 +1947,9 @@
   "drop": ["actor_b-p-land-hard^idle", "actor_b-p-land-hard^run", "actor_b-p-land-med^idle", "actor_b-p-land-med^run", "actor_b-p-land-soft^idle", "actor_b-p-land-soft^run"]
  },
  "meta": {
-  "authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file",
   "catalog": {
    "path": "data/traversal/catalog_extra.json",
-   "sha256": "01cc2e6a5de14517dbb00a15e6b0c77c9fc09b1ed73b273f484c9b3327653a4d"
+   "sha256": "57dbf88c1f60df9cb7fb2db9fcc3553450ec747c88487425217819ace9cdabdb"
   },
   "generator": "tools/traversal/measure_traversal_clips.gd",
   "godot_version": "4.7.2-stable (official)",

@@ -1,7 +1,6 @@
 {
   "schema": "frontier.weapons.ballistics/1",
   "about": "Weapon balance: applied at runtime by WeaponBalance.apply(weapon, key). Script defaults are the fallback.",
-  "design_doc": "Player_Animation_Project/graph_analysis/weapons/weapons_balance_design.md",
   "research": "data/weapons/range_research.json",
   "generated_by": "expect blocks: python3 tools/weapons/check_balance.py --write",
   "physics_ticks_per_second": 120,

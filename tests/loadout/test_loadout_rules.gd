@@ -4,7 +4,7 @@ extends SceneTree
 ##   Godot --headless --path . -s tests/loadout/test_loadout_rules.gd        (about 1 s; run under a time limit)
 ##
 ## Exit 0 and "LOADOUT RULES TEST OK" when every check passes.
-## Pins (Player_Animation_Project/graph_analysis/loadout/loadout_design.md 1 and 3):
+## Pins (source/graph_analysis/loadout/loadout_design.md 1 and 3):
 ##   - every preset loads, validates, carries at most two long weapons; the default keeps today's weapons
 ##   - never more than two long weapons: the slot rule for every pair, a third long item is refused (swap)
 ##   - the pistol count follows the worn gear (the design's table of maxima) and the other carried items

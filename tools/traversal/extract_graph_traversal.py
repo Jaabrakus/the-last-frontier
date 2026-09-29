@@ -5,8 +5,8 @@ ledge hang / shimmy / hand-over-hand climb, corners, drops, ladder, narrow-ledge
 Offline only; nothing here runs in the game. Python 3.9, standard library only.
 
 Reads (read-only):
-  PAP/player_blending/player_blending.json            decoded graph (states, trees, transitions, overlays, lambdas)
-  PAP/blender_animation_index.csv                     clip index (Actor_A / Actor_B names)
+  source/player_blending/player_blending.json            decoded graph (states, trees, transitions, overlays, lambdas)
+  source/blender_animation_index.csv                     clip index (Actor_A / Actor_B names)
   FR/tools/anim_graph/export_actor_b_graph.py         WP1 exporter, used as a library: its vendored, unmodified
                                                       resolve_overlays.py (overlay resolver), symvm.py and
                                                       decode_lambda.py (lambda decoders), its condition / transition /
@@ -15,7 +15,7 @@ Reads (read-only):
 
 Writes:
   FR/data/traversal/graph_traversal.json
-  PAP/graph_analysis/traversal/graph_traversal.md
+  source/graph_analysis/traversal/graph_traversal.md
 
 Usage:
   python3 tools/traversal/extract_graph_traversal.py            # regenerate both outputs
@@ -35,11 +35,9 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 FR_ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 ANIM_GRAPH = os.path.join(FR_ROOT, "tools", "anim_graph")
-DEFAULT_PAP = "/Users/kiwimango/Downloads/Player_Animation_Project"
+DEFAULT_SOURCE_ROOT = ""
 GENERATOR = "tools/traversal/extract_graph_traversal.py"
 SCHEMA_VERSION = 1
-AUTHORIZATION = ("owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms "
-                 "not on file")
 
 sys.path.insert(0, ANIM_GRAPH)
 import export_actor_b_graph as X  # noqa: E402  (read-only reuse of the WP1 exporter)
@@ -304,9 +302,11 @@ def geometry_label(state, leaves):
 
 
 class TraversalExtract:
-    def __init__(self, pap):
-        self.pap = os.path.abspath(pap)
-        self.ex = X.Exporter(self.pap)
+    def __init__(self, source_root):
+        if not source_root:
+            raise X.ExportError("Set ANIMATION_SOURCE_ROOT or pass --source-root")
+        self.source_root = os.path.abspath(source_root)
+        self.ex = X.Exporter(self.source_root)
         self.ex._gstate_cache = {}
         self.D = self.ex.D
         self.S = self.D["states"]
@@ -318,7 +318,7 @@ class TraversalExtract:
         self.lambdas = {}
         self.index_b = {}
         self.index_a = {}
-        with open(os.path.join(self.pap, "blender_animation_index.csv")) as fh:
+        with open(os.path.join(self.source_root, "blender_animation_index.csv")) as fh:
             import csv
             for row in csv.DictReader(fh):
                 (self.index_b if row["character"] == "Actor_B" else self.index_a).setdefault(row["original_name"], row)
@@ -776,8 +776,8 @@ class TraversalExtract:
 
         warnings = sorted(set(self.warnings + ex.warnings + ["exporter error (informational): " + e for e in ex.errors]))
         paths = {
-            "PAP/player_blending/player_blending.json": os.path.join(self.pap, "player_blending", "player_blending.json"),
-            "PAP/blender_animation_index.csv": os.path.join(self.pap, "blender_animation_index.csv"),
+            "source/player_blending/player_blending.json": os.path.join(self.source_root, "player_blending", "player_blending.json"),
+            "source/blender_animation_index.csv": os.path.join(self.source_root, "blender_animation_index.csv"),
             "FR/tools/anim_graph/export_actor_b_graph.py": os.path.join(ANIM_GRAPH, "export_actor_b_graph.py"),
             "FR/tools/anim_graph/frontier_bindings.json": os.path.join(ANIM_GRAPH, "frontier_bindings.json"),
             "FR/tools/anim_graph/vendor/resolve_overlays.py": os.path.join(ANIM_GRAPH, "vendor", "resolve_overlays.py"),
@@ -786,7 +786,6 @@ class TraversalExtract:
         }
         meta = {
             "generator": GENERATOR, "schema_version": SCHEMA_VERSION,
-            "authorization": AUTHORIZATION,
             "inputs_sha256": {k: sha256_file(p) for k, p in paths.items()},
             "resolver": {"loop": ex.resolver, "compare": ex.resolver_compare,
                          "policy": "tools/anim_graph/frontier_bindings.json resolver_policy (one loop for every leaf); "
@@ -1187,14 +1186,16 @@ def to_jsonable(o):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--pap", default=os.environ.get("ANIM_GRAPH_PAP", DEFAULT_PAP))
+    ap.add_argument("--source-root", default=os.environ.get("ANIMATION_SOURCE_ROOT", DEFAULT_SOURCE_ROOT))
     ap.add_argument("--out", default=os.path.join(FR_ROOT, "data", "traversal", "graph_traversal.json"))
-    ap.add_argument("--md", default=None, help="default: <pap>/graph_analysis/traversal/graph_traversal.md")
+    ap.add_argument("--md", default=None, help="default: <source_root>/graph_analysis/traversal/graph_traversal.md")
     ap.add_argument("--check", action="store_true")
     a = ap.parse_args(argv)
-    md_path = a.md or os.path.join(a.pap, "graph_analysis", "traversal", "graph_traversal.md")
+    if not a.source_root:
+        ap.error("set ANIMATION_SOURCE_ROOT or pass --source-root")
+    md_path = a.md or os.path.join(a.source_root, "graph_analysis", "traversal", "graph_traversal.md")
     try:
-        g = TraversalExtract(a.pap).build()
+        g = TraversalExtract(a.source_root).build()
     except X.ExportError as e:
         print("TRAVERSAL EXTRACT FAILED: %s" % e, file=sys.stderr)
         return 1

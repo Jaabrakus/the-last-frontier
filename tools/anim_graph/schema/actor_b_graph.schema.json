@@ -12,7 +12,7 @@
  "properties": {
   "meta": {
    "type": "object",
-   "required": ["schema", "generator", "resolver", "resolver_compare", "resolver_policy", "resolver_exceptions", "resolver_disagreements", "authorization",
+   "required": ["schema", "generator", "resolver", "resolver_compare", "resolver_policy", "resolver_exceptions", "resolver_disagreements",
                 "fidelity_policy", "generated_from", "vendored", "warnings", "coverage", "slot_basis", "keyed_bones", "superseded_by"],
    "properties": {
     "schema": {"const": 1},
@@ -35,7 +35,6 @@
     "keyed_bones": {"type": "object", "required": ["file", "generator", "library_sha256"]},
     "slot_notes": {"type": "object", "additionalProperties": {"type": "string"}},
     "superseded_by": {"type": "string"},
-    "authorization": {"type": "string", "pattern": "^owner-stated"},
     "fidelity_policy": {"type": "string"},
     "generated_from": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
     "vendored": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},

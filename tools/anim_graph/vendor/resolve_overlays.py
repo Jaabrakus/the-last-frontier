@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Overlay clip-name resolver for the extracted player animation graph.
 
-Read-only over /Users/kiwimango/Downloads/Player_Animation_Project.
+Read-only over /path/to/source.
 
 Record model (20-byte remap record, stride 0x14 in the source modules):
     +0x00 from_id   32-bit symbol id (clip id, or state id when flags byte1 & 0x02)
@@ -51,7 +51,7 @@ import os
 import sys
 from dataclasses import dataclass, field
 
-PROJECT = __import__("_vendor_paths").PAP  # vendored path shim
+PROJECT = __import__("_vendor_paths").SOURCE_ROOT  # vendored path shim
 GRAPH_JSON = os.path.join(PROJECT, "player_blending", "player_blending.json")
 INDEX_CSV = os.path.join(PROJECT, "blender_animation_index.csv")
 OUT_DIR = os.path.dirname(os.path.abspath(__file__))

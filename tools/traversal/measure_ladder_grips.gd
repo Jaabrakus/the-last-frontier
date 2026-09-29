@@ -126,8 +126,7 @@ func _initialize() -> void:
 			out[id] = entry
 	var data := {"meta": {"generator": "tools/traversal/measure_ladder_grips.gd", "hz": HZ, "closed_r": CLOSED_R,
 			"frame": "offset: the fist hole's centre in the wrist bone's frame (skeleton units, m); median over the samples with a closed fist. track: [clip time, x, y, z, hole radius] per closed-fist sample (the centre moves up to 1 cm within a clip and the hole narrows to 0.6 cm where the fingers squeeze)",
-			"body": CharacterBodyMesh.DEFAULT_PATH,
-			"authorization": "owner-stated, see Player_Animation_Project/ASSET_AUTHORIZATION.md"},
+			"body": CharacterBodyMesh.DEFAULT_PATH},
 			"moves": out}
 	var text := JSON.stringify(data, " ", false) + "\n"
 	if _args.has("check"):

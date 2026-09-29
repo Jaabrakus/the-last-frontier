@@ -14,7 +14,7 @@ extends SceneTree
 ##            --base (use the base harness SurvivalSim instead of the balance harness, which cooks raw meat first)
 ##
 ## It never changes game state outside the run and writes only the --out file. Findings from it are written up in
-## Player_Animation_Project/graph_analysis/survival/survival_balance_report.md.
+## source/graph_analysis/survival/survival_balance_report.md.
 
 const SIM_BALANCE := preload("res://scripts/survival/sim/survival_sim_balance.gd")
 const SEASON_OF := {"dec": "winter", "jan": "winter", "feb": "winter", "mar": "spring", "apr": "spring", "may": "spring",

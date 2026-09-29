@@ -10,7 +10,7 @@ extends RefCounted
 ##                                     horn, handoff defaults, test thresholds)
 ##
 ## The first three are written by tools/loadout/build_loadout_data.py (the design,
-## Player_Animation_Project/graph_analysis/loadout/loadout_design.md); this class never writes them.
+## source/graph_analysis/loadout/loadout_design.md); this class never writes them.
 ##
 ##   var d := LoadoutData.get_default()
 ##   d.point("R_hip", "pistol")          # the carry_gear entry of a placement ({} if none)

@@ -2,7 +2,6 @@
  "schema": "frontier.survival.actions",
  "version": 4,
  "status": "LIVE design data v4: the vertical slice (milestones M1, M2a and M2b; survival_gdd.md version 4). The game and tests/survival/test_survival_data.gd read these rows. Every number is tunable.",
- "design_doc": "Player_Animation_Project/graph_analysis/survival/survival_gdd.md",
  "summary": "The slice's actions (M1: 13; M2a: 29 more; M2b: 4 more, 46 in all), the trap model with snares, carcass yields, world objects (the drying rack, the hung cache, staged builds) and the animation hooks they use. Every action is a technique (gated by knowledge; most are common knowledge), a recipe action (gated per recipe) or a plain verb (never gated). Fix round 1 moved casting balls and hook-and-line fishing live (redesign_balance_report.md F1-F3).",
  "id_rules": "Ids are stable strings (prefix.name). Never rename an id once saves exist; add an alias instead. Display names are separate and may change. An id is defined in exactly one place: the live file or the backlog.",
  "milestones": {
@@ -19,7 +18,7 @@
   "K": "graph_analysis/survival/research_survival_skills.md, numbered sources [#] (K:1 = source [1])",
   "Y": "graph_analysis/survival/research_systems.md, section number (Y:3.2 = section 3.2)",
   "C": "graph_analysis/customizer/costume_bible.md, section number",
-  "A": "Player_Animation_Project/blender_animation_index.csv (clip names and asset ids)",
+  "A": "Bundled animation clip names and asset IDs",
   "N": "graph_analysis/survival/survival_gdd.md, sources list (N:3 = source N3; N33 onward added in version 3)"
  },
  "basis_keys": {
@@ -1636,7 +1635,7 @@
   }
  ],
  "anim_notes": [
-  "Clip names are the neutral aliases in Player_Animation_Project/blender_animation_index.csv; asset_id is the stable numeric id to preserve. Clips with in_frontier_library=false must be added to Frontier's Actor_B library through the godot_export pipeline, keeping native_asset_id and source_attribution metadata.",
+  "Clip names are the neutral aliases in source/blender_animation_index.csv; asset_id is the stable numeric id to preserve. Clips with in_frontier_library=false must be added to Frontier's Actor_B library through the godot_export pipeline, keeping native_asset_id and source_attribution metadata.",
   "Actor_A clips need the Actor_A to Actor_B retarget planned by the melee workflow before use.",
   "The graph-driven animation rebuild owns the AnimationTree; survival only requests a hook by id through JobRunner."
  ],

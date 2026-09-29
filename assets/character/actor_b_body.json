@@ -7971,5 +7971,5 @@
   ]
  },
  "transform_format": "12 floats: basis x, y, z columns, then origin",
- "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (see Player_Animation_Project/ASSET_AUTHORIZATION.md). Mesh geometry: generated procedurally by this script."
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Mesh geometry: generated procedurally by this script."
 }

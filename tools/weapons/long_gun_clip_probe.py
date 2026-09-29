@@ -1,12 +1,12 @@
 """Sample the hand and weapon-prop bones of Actor_B long-gun clips (Blender 5.2, headless).
 
-Used by the over-under research (Player_Animation_Project/graph_analysis/weapons/
+Used by the over-under research (source/graph_analysis/weapons/
 over_under_research.md) to measure what each hand does in the reload / pump / draw clips
 relative to the weapon (the musket hangs off r_hand_prop_attachment, prop +Z along the barrel,
 +Y up; scripts/player/player.gd musket_offset).
 
 Run one library file at a time, under a time limit:
-  Blender -b Player_Animation_Project/blender_libraries/Actor_B_016.blend \
+  Blender -b source/blender_libraries/Actor_B_016.blend \
       --python tools/weapons/long_gun_clip_probe.py -- --out samples.jsonl <action> [<action> ...]
 
 Every pose bone is reset to identity before an action is evaluated, so a partial clip is sampled

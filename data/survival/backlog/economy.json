@@ -2,7 +2,6 @@
  "schema": "frontier.survival.economy.backlog",
  "version": 4,
  "status": "DESIGN APPENDIX v3 (backlog): rows for milestones M3-M5 and 'post'. Not loaded by the game and not gated by the data test; a row moves into the live file, and under test, when its milestone starts. Rows may reference live ids.",
- "design_doc": "Player_Animation_Project/graph_analysis/survival/survival_gdd.md",
  "summary": "The other markets, goods, services and wages (retuned to the cash-equivalent ladder), gifts and rum.",
  "id_rules": "Ids are stable strings (prefix.name). Never rename an id once saves exist; add an alias instead. Display names are separate and may change. An id is defined in exactly one place: the live file or the backlog.",
  "milestones": {
@@ -19,7 +18,7 @@
   "K": "graph_analysis/survival/research_survival_skills.md, numbered sources [#] (K:1 = source [1])",
   "Y": "graph_analysis/survival/research_systems.md, section number (Y:3.2 = section 3.2)",
   "C": "graph_analysis/customizer/costume_bible.md, section number",
-  "A": "Player_Animation_Project/blender_animation_index.csv (clip names and asset ids)",
+  "A": "Bundled animation clip names and asset IDs",
   "N": "graph_analysis/survival/survival_gdd.md, sources list (N:3 = source N3; N33 onward added in version 3)"
  },
  "basis_keys": {

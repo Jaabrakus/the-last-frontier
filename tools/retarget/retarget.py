@@ -13,7 +13,7 @@ prototype_clips.json (the 29-clip prototype, library actor_a_rt) and
 actor_b_from_a_clips.json (the production set, library actor_b_from_a; with a
 library_name the run also writes checks.py's checks, manifest and Godot test reference).
 
-Method (Player_Animation_Project/graph_analysis/melee_horse_prone/retarget.md and
+Method (source/graph_analysis/melee_horse_prone/retarget.md and
 actor_b_from_a.md):
  1. Bind poses. Actor_A's true bind pose is the 1-frame clip `bindpose` (asset 792869cd...):
     it equals `null-add` on all 40 channels null-add keys (<= 0.004 deg, 0 mm), it matches
@@ -1758,7 +1758,7 @@ def summarize(m):
 def write_manifest(path, args, pair, rt, src, dst, cfg, results, out, rep):
     B = pair.B
     man = {"tool": TOOL_VERSION, "library_name": out.get("library_name", "actor_a_rt"), "source_actor": "Actor_A", "target_actor": "Actor_B",
-           "source_library": "Player_Animation_Project/godot_export/animations/Actor_A.res",
+           "source_library": "Actor_A.res",
            "a_bind": {"clip": A_BIND_POSE, "native_asset_id": A_BIND_ASSET,
                       "evidence": "equals null-add on its 40 channels; constant bone offsets of the clips; single-axis hinges"},
            "scale_s": round(pair.s, 5), "stature_ratio": round(pair.stature_ratio, 5), "hand_ratio": round(pair.k_hand, 5),

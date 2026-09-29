@@ -851,7 +851,7 @@ def write_manifest(path, tool, pair, rt, cfg, results, out, chk):
     ents = {e["name"]: e for e in cfg["clips"]}
     man = {"library": "Actor_B_from_A.res", "library_name": out.get("library_name"), "tool": tool,
            "source_actor": "Actor_A", "target_actor": "Actor_B",
-           "source_library": "Player_Animation_Project/godot_export/animations/Actor_A.res",
+           "source_library": "Actor_A.res",
            "a_bind": out.get("a_bind"), "scale_s": round(pair.s, 5), "stature_ratio": round(pair.stature_ratio, 5),
            "hand_ratio": round(pair.k_hand, 5), "leg_ratio": round(pair.k_leg, 5), "arm_ratio": round(pair.k_arm, 5),
            "align": pair.align_mode,

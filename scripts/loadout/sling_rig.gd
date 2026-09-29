@@ -30,7 +30,7 @@ extends Node3D
 ##
 ## On a FrontierPlayer (install) the rig reads player.weapons / weapon_key / weapon.active /
 ## is_switching() and the weapon models' visibility, and only toggles model visibility; player.gd is
-## unchanged. See Player_Animation_Project/graph_analysis/loadout/sling_runtime.md for the hooks the
+## unchanged. See source/graph_analysis/loadout/sling_runtime.md for the hooks the
 ## later integration needs.
 ##
 ## Provenance: stowed transforms, clip names and phases come from the Actor_B rig and clips.

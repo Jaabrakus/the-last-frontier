@@ -1,5 +1,5 @@
 extends SceneTree
-## Pins the engine behaviour the traversal hand-back relies on (design: PAP/graph_analysis/traversal/
+## Pins the engine behaviour the traversal hand-back relies on (design: source/graph_analysis/traversal/
 ## traversal_design.md, 8.6):
 ##   1. CharacterBody3D.is_on_floor() goes stale while the body is moved by move_and_collide() or by
 ##      direct placement (the traversal's owned modes): it keeps the last move_and_slide() result.

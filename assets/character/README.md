@@ -247,10 +247,8 @@ Godot --path . --resolution 1280x720 -s tools/character/body_screenshots.gd -- \
 
 ## Provenance
 
-The skeleton, bone names and bind pose come from the Actor_B rig, which was converted
-from extracted game animation data; see
-`Player_Animation_Project/ASSET_AUTHORIZATION.md`. The body and clothing geometry are
-generated procedurally by `tools/character/build_body.py`.
+The skeleton, bone names and bind pose come from the Actor_B rig. The body and clothing
+geometry are generated procedurally by `tools/character/build_body.py`.
 
 ## Customizer parts (tools/character/build_character.sh)
 

@@ -3,7 +3,7 @@
 Run headless on a COPY of the Actor_B rig library (the script never saves the
 opened file and refuses to run on the original):
 
-  cp .../Player_Animation_Project/blender_libraries/Actor_B_001.blend /tmp/rig_copy.blend
+  cp .../source/blender_libraries/Actor_B_001.blend /tmp/rig_copy.blend
   Blender -b /tmp/rig_copy.blend --python tools/character/build_body.py -- \
       [--out assets/character/actor_b_body.glb] [--previews DIR] [--save-blend FILE]
 
@@ -79,9 +79,8 @@ game's driver (previews only; the game uses CharacterBodyMesh). Its results for 
 few reference poses go into the sidecar json ("driver_reference"), and
 tools/character/check_body_attach.gd checks that the game's driver gives the same.
 
-Provenance: the skeleton, bone names and bind pose come from the Actor_B rig
-converted from extracted game animation data (see Player_Animation_Project/
-ASSET_AUTHORIZATION.md). The body and clothing geometry are generated here.
+Provenance: the skeleton, bone names and bind pose come from the Actor_B rig.
+The body and clothing geometry are generated here.
 
 The generic code moved to tools/character/lib (lib v1) without changes; the output
 of this script is unchanged.
@@ -1142,8 +1141,8 @@ def main():
             "bind_global_godot": {b: xf12(godot_xf(G[b])) for b in used_sorted},
             "inverse_bind_godot": {b: xf12(np.linalg.inv(godot_xf(G[b]))) for b in used_sorted},
             "transform_format": "12 floats: basis x, y, z columns, then origin",
-            "provenance": ("Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data "
-                           "(see Player_Animation_Project/ASSET_AUTHORIZATION.md). Mesh geometry: generated procedurally by this script."),
+            "provenance": ("Skeleton, bone names and bind pose: Actor_B rig. "
+                           "Mesh geometry: generated procedurally by this script."),
         }
         with open(os.path.splitext(args.out)[0] + ".json", "w") as f:
             json.dump(info, f, indent=1)
@@ -1171,7 +1170,7 @@ def main():
     if args.save_blend:
         dst = os.path.realpath(args.save_blend)
         if dst == os.path.realpath(SOURCE_RIG_FILE) or dst.startswith(os.path.realpath(PROJECT) + os.sep):
-            raise SystemExit("refusing to save into Player_Animation_Project")
+            raise SystemExit("refusing to save into external animation source")
         bpy.ops.wm.save_as_mainfile(filepath=dst, copy=True)
     log("done")
 

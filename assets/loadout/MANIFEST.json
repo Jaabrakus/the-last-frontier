@@ -196,10 +196,7 @@
       0.0607
      ]
     ]
-   },
-   "renders": [
-    "Player_Animation_Project/graph_analysis/loadout/screens/assets/quiver_turnaround.png"
-   ]
+   }
   },
   {
    "kind": "powder_horn",
@@ -388,10 +385,7 @@
       0.2136
      ]
     ]
-   },
-   "renders": [
-    "Player_Animation_Project/graph_analysis/loadout/screens/assets/powder_horn_turnaround.png"
-   ]
+   }
   },
   {
    "kind": "spear_pair_tie",
@@ -523,10 +517,7 @@
       0.6667
      ]
     ]
-   },
-   "renders": [
-    "Player_Animation_Project/graph_analysis/loadout/screens/assets/spear_pair_tie_turnaround.png"
-   ]
+   }
   },
   {
    "kind": "dart_bundle",
@@ -691,10 +682,7 @@
       1.1633
      ]
     ]
-   },
-   "renders": [
-    "Player_Animation_Project/graph_analysis/loadout/screens/assets/dart_bundle_turnaround.png"
-   ]
+   }
   },
   {
    "kind": "musket_sling",
@@ -810,10 +798,7 @@
       -0.0879
      ]
     ]
-   },
-   "renders": [
-    "Player_Animation_Project/graph_analysis/loadout/screens/assets/musket_sling_turnaround.png"
-   ]
+   }
   },
   {
    "kind": "pistol_belt_hook",
@@ -906,10 +891,7 @@
       -0.0278
      ]
     ]
-   },
-   "renders": [
-    "Player_Animation_Project/graph_analysis/loadout/screens/assets/pistol_belt_hook_turnaround.png"
-   ]
+   }
   },
   {
    "kind": "pistol_sling_loop",
@@ -985,10 +967,7 @@
       -0.112
      ]
     ]
-   },
-   "renders": [
-    "Player_Animation_Project/graph_analysis/loadout/screens/assets/pistol_sling_loop_turnaround.png"
-   ]
+   }
   },
   {
    "kind": "pistol_sling_buckle",
@@ -1078,10 +1057,7 @@
       0.1
      ]
     ]
-   },
-   "renders": [
-    "Player_Animation_Project/graph_analysis/loadout/screens/assets/pistol_sling_buckle_turnaround.png"
-   ]
+   }
   },
   {
    "kind": "tomahawk_frog",
@@ -1162,10 +1138,7 @@
       0.0272
      ]
     ]
-   },
-   "renders": [
-    "Player_Animation_Project/graph_analysis/loadout/screens/assets/tomahawk_frog_turnaround.png"
-   ]
+   }
   },
   {
    "kind": "bow_cord",
@@ -1241,10 +1214,7 @@
       0.0196
      ]
     ]
-   },
-   "renders": [
-    "Player_Animation_Project/graph_analysis/loadout/screens/assets/bow_cord_turnaround.png"
-   ]
+   }
   }
  ],
  "strap_routes": "assets/loadout/strap_routes_bind.json (tools/loadout/render_loadout_on_body.py)",
@@ -1260,35 +1230,5 @@
   "Musket sling: the swivel opening of musket.glb is 2.5 cm, so the strap is 2.3 cm wide at the ends; use 2.3 cm for the musket sling ribbon (loadout_design.md 4 says 3.5 cm). In long_A the rear swivel sits at mid-back (StrapRear at y 1.32 m, because the stowed musket's wrist is at y 1.115 m), so the route closes from the right lower ribs under the right arm to the rear swivel, not via the right hip.",
   "Powder horn: reference_bind_placement is the model -> bind transform on spinec along the measured horn capsules; the customizer's horn_node() change (loadout_design.md 2.6) can bake this mesh there, or the loadout can place it rigidly with the 30 deg yield. The legacy body's baked horn strap still runs to the old right-hip place; the horn_strap route in strap_routes_bind.json goes plug staple -> left shoulder -> chest -> under the right arm -> spout ring.",
   "Hidden display parts (powder_horn StrapPreview, spear_pair_tie / dart_bundle ThongPreview, musket_sling SlingTaut) are for world pickups, racks and the camp chest; on the body the straps are StrapRibbon ribbons through the markers."
- ],
- "screens": {
-  "dir": "Player_Animation_Project/graph_analysis/loadout/screens/assets",
-  "turnarounds": [
-   "bow_cord_turnaround.png",
-   "dart_bundle_turnaround.png",
-   "dart_bundle_variants.png",
-   "musket_sling_turnaround.png",
-   "musket_sling_variants.png",
-   "pistol_belt_hook_turnaround.png",
-   "pistol_sling_buckle_turnaround.png",
-   "pistol_sling_loop_turnaround.png",
-   "powder_horn_turnaround.png",
-   "powder_horn_variants.png",
-   "quiver_turnaround.png",
-   "quiver_variants.png",
-   "spear_pair_tie_turnaround.png",
-   "spear_pair_tie_variants.png",
-   "tomahawk_frog_turnaround.png"
-  ],
-  "on_body": [
-   "onbody_bow_darts.png",
-   "onbody_musket_bow.png",
-   "onbody_musket_bow_closeups.png",
-   "onbody_musket_bow_quiver_at_nocks.png",
-   "onbody_musket_spears.png",
-   "onbody_two_braces.png",
-   "onbody_two_braces_closeups.png"
-  ],
-  "on_body_generator": "tools/loadout/render_loadout_on_body.py (bind pose, legacy body, all items stowed)"
- }
+ ]
 }

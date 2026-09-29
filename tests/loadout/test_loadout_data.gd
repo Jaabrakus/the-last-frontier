@@ -8,7 +8,7 @@ extends SceneTree
 ## Exit code 0 and "LOADOUT DATA TEST OK" when every check passes; 1 and the failures otherwise.
 ## Run it under a hard time limit like every Godot run.
 ##
-## What it pins (Player_Animation_Project/graph_analysis/loadout/loadout_design.md):
+## What it pins (source/graph_analysis/loadout/loadout_design.md):
 ##   - every stowed transform parses with str_to_var(), is orthonormal, matches its quaternion, and
 ##     bone rest * local reproduces the bind-space transform (so the runtime can use `local` directly)
 ##   - the first pistol sits on the belt at the right hip (user rule), carried by the pelvis

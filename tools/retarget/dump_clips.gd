@@ -3,7 +3,7 @@ extends SceneTree
 ## AnimationLibrary to JSON for tools/retarget/retarget.py. Read-only: nothing in the
 ## library or the game is changed.
 ##
-##   Godot --headless --path <Player_Animation_Project>/godot_export \
+##   Godot --headless --path <external animation source>/godot_export \
 ##       -s <Frontier>/tools/retarget/dump_clips.gd -- \
 ##       actor=Actor_A clips=<a,b,c | @file> out=<json> [fps=30] [rig_only=1]
 ##       actor=Actor_A every=6 out=<json>      (bind-pose probe sample: every 6th clip,

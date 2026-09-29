@@ -2,7 +2,7 @@
 """Writes the Actor_B traversal clip survey (Markdown) from data/traversal/clip_geometry.json and
 data/traversal/traversal_catalog.json.
 
-    python3 tools/traversal/write_clip_survey.py            # writes PAP/graph_analysis/traversal/clip_survey.md
+    python3 tools/traversal/write_clip_survey.py            # writes source/graph_analysis/traversal/clip_survey.md
     python3 tools/traversal/write_clip_survey.py --check    # exit 1 when the committed survey is stale
 
 Pipeline: build_traversal_catalog.py (clip list, names, graph links) -> measure_traversal_clips.gd
@@ -18,10 +18,10 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
-PAP = os.environ.get("ANIM_GRAPH_PAP", "/Users/kiwimango/Downloads/Player_Animation_Project")
+SOURCE_ROOT = os.environ.get("ANIMATION_SOURCE_ROOT", "")
 GEOMETRY = os.path.join(ROOT, "data", "traversal", "clip_geometry.json")
 CATALOG = os.path.join(ROOT, "data", "traversal", "traversal_catalog.json")
-OUT = os.path.join(PAP, "graph_analysis", "traversal", "clip_survey.md")
+OUT = os.path.join(SOURCE_ROOT, "graph_analysis", "traversal", "clip_survey.md")
 
 FAMILY_ORDER = ["vault", "climb_up", "ledge_hang", "wall_shimmy", "edge_warn", "ladder", "drop",
                 "gap_jump", "beam", "crouch_under", "squeeze"]
@@ -449,6 +449,8 @@ def main():
     ap.add_argument("--out", default=OUT)
     ap.add_argument("--check", action="store_true")
     a = ap.parse_args()
+    if not SOURCE_ROOT and a.out == OUT:
+        ap.error("set ANIMATION_SOURCE_ROOT or pass --out for the survey")
     geo = json.load(open(a.geometry))
     cat = json.load(open(a.catalog))
     text = build(geo, cat)

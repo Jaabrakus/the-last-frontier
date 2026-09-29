@@ -125,7 +125,7 @@
  "checks": {},
  "generator": "tools/character/hair/hair_cornrows.py",
  "lib_version": 1,
- "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_cornrows.py.",
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_cornrows.py.",
  "hair": {
   "queue": false,
   "texture": "coily",

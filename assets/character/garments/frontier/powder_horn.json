@@ -233,7 +233,7 @@
  },
  "generator": "tools/character/garments/frontier/powder_horn.py",
  "lib_version": 1,
- "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/powder_horn.py.",
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/powder_horn.py.",
  "envelope_variants": "strap on the outermost torso layer: env10 shirt, env20 waistcoat, env40 coat or hunting shirt, env50 blanket / fur robe / fur coat",
  "deform_limits": {},
  "variant_shifts": {

@@ -7714,5 +7714,5 @@
   ]
  },
  "transform_format": "12 floats: basis x, y, z columns, then origin",
- "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Body geometry: the MakeHuman base mesh, targets and MPFB's game-engine rig weights (CC0, MakeHuman Community; MPFB 2.0.17 data, tools/character/makehuman/README.md), fitted by tools/character/body/body_v4.py."
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Body geometry: the MakeHuman base mesh, targets and MPFB's game-engine rig weights (CC0, MakeHuman Community; MPFB 2.0.17 data, tools/character/makehuman/README.md), fitted by tools/character/body/body_v4.py."
 }

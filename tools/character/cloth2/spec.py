@@ -87,8 +87,7 @@ class Spec:
             "evidence": self.evidence, "licence_note": self.licence_note, "history": self.history,
             "sources": list(self.sources), "aliases": [], "tags": list(self.tags), "checks": checks,
             "generator": generator, "lib_version": 2,
-            "provenance": ("Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data "
-                           "(owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry "
+            "provenance": ("Skeleton, bone names and bind pose: Actor_B rig. Geometry "
                            "generated procedurally by " + generator + " (cloth2: grown from the MakeHuman body's surface)."),
             "fabric_note": ("Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail "
                             "tinted to the palette colour at runtime; UVs in metres along the grain."),

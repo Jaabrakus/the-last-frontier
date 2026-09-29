@@ -110,8 +110,6 @@ def main() -> None:
     param = json.load(open(param_p))
     out = {
         "source": {
-            "authorization": "ASSET_AUTHORIZATION.md, the climbing animations entry and its player animation tree "
-                             "addition (owner-confirmed; approval terms not reviewed)",
             "files": {os.path.basename(p): sha256(p) for p in (graph_p, rows_p, pend_p, param_p)},
             "evidence": graph.get("evidence", ""),
             "unresolved": graph.get("unresolved", []),

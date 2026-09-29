@@ -9,7 +9,7 @@ into `assets/horse/textures/tack/`. The materials (coat, hair and hoof shaders, 
 `assets/horse/materials/`. `scripts/horse/horse_look.gd` applies them and the coat variants.
 
 The design and the rider-clip analysis are in
-`Player_Animation_Project/graph_analysis/melee_horse_prone/horse.md`. §0.4 of that file
+`source/graph_analysis/melee_horse_prone/horse.md`. §0.4 of that file
 (revision 5) covers the skeleton below and the skinning; §0.3 (revision 4) the proportions,
 the hindquarters and hind-leg motion, the pace (speeds against the rider clips' step timing),
 the exported key rate and the playback checks; it supersedes the speeds and several numbers

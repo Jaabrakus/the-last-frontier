@@ -1,5 +1,5 @@
 extends SceneTree
-## Cross-check of the traversal clip speeds (design: PAP/graph_analysis/traversal/traversal_design.md, 8.3).
+## Cross-check of the traversal clip speeds (design: source/graph_analysis/traversal/traversal_design.md, 8.3).
 ##
 ## Runs the traversal survey's own contact-path odometry (measure_traversal_clips.gd `_odometry`, same
 ## constants) on:

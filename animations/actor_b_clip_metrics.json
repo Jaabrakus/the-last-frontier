@@ -16312,16 +16312,15 @@
   ]
  },
  "meta": {
-  "authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file",
   "clip_source": "graph",
   "generator": "tools/anim_graph/measure_clips.gd",
   "godot_version": "4.7.2-stable (official)",
   "graph": {
    "path": "animations/actor_b_graph.json",
-   "sha256": "a66fa5a7c8c34b4d33f41a8297b509877ef413aaf46daac8685230d891262611"
+   "sha256": "bb37139b2b60d4aaafd81c82f86594770c58da812d47203a3950ad13e999f121"
   },
   "gt_source": {
-   "path": "PAP/graph_analysis/graph/vmm/bl/dump3.jsonl",
+   "path": "source/graph_analysis/graph/vmm/bl/dump3.jsonl",
    "sha256": "140fd4126775974ecfd0960ed524390cade8160e8dd78cffdc0a0dca10222810"
   },
   "library_sha256": "d33e8509fea2f1fa1f8828fa374f2c663875c10c5b8fc3a9e69068d3f9611a38",

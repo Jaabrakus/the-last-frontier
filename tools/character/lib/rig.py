@@ -19,13 +19,12 @@ from .sdf import mirror_x
 HERE = os.path.dirname(os.path.abspath(__file__))
 CHARACTER_TOOLS = os.path.normpath(os.path.join(HERE, ".."))
 FRONTIER = os.path.normpath(os.path.join(HERE, "..", "..", ".."))
-PROJECT = os.path.expanduser("~/Downloads/Player_Animation_Project")
+PROJECT = os.path.expanduser(os.environ.get("ANIMATION_SOURCE_ROOT", ""))
 LIBS = os.path.join(PROJECT, "blender_libraries")
 SOURCE_RIG_FILE = os.path.join(LIBS, "Actor_B_001.blend")
 BIND_LIB = os.path.join(LIBS, "Actor_B_021.blend")
 BIND_ACTION = "null-add"
-PROVENANCE_RIG = ("Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data "
-                  "(owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md).")
+PROVENANCE_RIG = "Skeleton, bone names and bind pose: Actor_B rig."
 
 # ===========================================================================
 # Rig: bind pose (null-add) and joint positions
@@ -166,11 +165,13 @@ def export_glb(rig, objs, path, texcoords=False, morph=False, vertex_color=True)
 
 
 def guard_source():
+    if not PROJECT:
+        raise SystemExit("Set ANIMATION_SOURCE_ROOT to the external animation source before rebuilding")
     cur = os.path.realpath(bpy.data.filepath) if bpy.data.filepath else ""
     if not cur:
         raise SystemExit("open a COPY of Actor_B_001.blend (Blender -b copy.blend --python build_body.py)")
     if cur == os.path.realpath(SOURCE_RIG_FILE) or cur.startswith(os.path.realpath(PROJECT) + os.sep):
-        raise SystemExit("refusing to run on a file inside Player_Animation_Project; open a copy instead")
+        raise SystemExit("refusing to run on a file inside external animation source; open a copy instead")
 
 
 def g2b(p):

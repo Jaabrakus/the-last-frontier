@@ -258,7 +258,7 @@
  },
  "generator": "tools/character/garments/frontier/mittens_fur.py",
  "lib_version": 1,
- "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/mittens_fur.py.",
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/mittens_fur.py.",
  "fur": {
   "surface": "mittens_fur_fur",
   "shader": "res://assets/character/shaders/fur_shell.gdshader",

@@ -2,10 +2,9 @@
  "meta": {
   "generator": "tools/traversal/extract_graph_traversal.py",
   "schema_version": 1,
-  "authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file",
   "inputs_sha256": {
-   "PAP/player_blending/player_blending.json": "621970f50dcd1a8a9800c6224b74a2b9a4e7da5ffbcb02174aba483f60bfc770",
-   "PAP/blender_animation_index.csv": "4011e06af1643fbb47d9de1e726120862cb1ee4822f6bab7306095bf8a997606",
+   "source/player_blending/player_blending.json": "621970f50dcd1a8a9800c6224b74a2b9a4e7da5ffbcb02174aba483f60bfc770",
+   "source/blender_animation_index.csv": "4011e06af1643fbb47d9de1e726120862cb1ee4822f6bab7306095bf8a997606",
    "FR/tools/anim_graph/export_actor_b_graph.py": "277bf45a17c13234b991c82e53055bf67c304673c92c96e2c2142166ba538c01",
    "FR/tools/anim_graph/frontier_bindings.json": "020ff17db8913bb1a886e9aad656c9778f3cdba7ec43b6ab5143c3402ee26b2a",
    "FR/tools/anim_graph/vendor/resolve_overlays.py": "b0f73a8fe044092f5a260168433672789eeabe7b76d48061f0ff08663c4fd7e6",

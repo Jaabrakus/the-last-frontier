@@ -306,7 +306,6 @@ func _snapshot(ctx: AnimTestContext, h) -> void:
 	ctx.check(not lines.is_empty() and matched == lines.size(), "--anim-trace lines have the plan format (%d of %d), e.g. %s" % [matched, lines.size(),
 			lines[lines.size() - 1] if not lines.is_empty() else "-"])
 	ctx.check(graph_rec > 0, "trace lines name graph record offsets (%d)" % graph_rec)
-	ctx.check(String(s.get("authorization", "")) != "", "snapshot carries the owner-stated authorization")
 	h.run(60)
 
 

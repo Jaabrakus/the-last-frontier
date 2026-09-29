@@ -4,7 +4,7 @@
  "tool": "retarget.py 0.4",
  "source_actor": "Actor_A",
  "target_actor": "Actor_B",
- "source_library": "Player_Animation_Project/godot_export/animations/Actor_A.res",
+ "source_library": "Actor_A.res",
  "a_bind": {
   "clip": "bindpose",
   "native_asset_id": "792869cd518b2384e05c827bcc09a169d9d23eba88b796053f329a850544260c"

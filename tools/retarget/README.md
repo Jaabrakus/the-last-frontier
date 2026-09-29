@@ -2,7 +2,7 @@
 
 Offline tools that turn clips of the extracted Actor_A rig into clips for the game's
 Actor_B rig (the player). Design, evidence and numbers:
-- prototype and method: `Player_Animation_Project/graph_analysis/melee_horse_prone/retarget.md`
+- prototype and method: `source/graph_analysis/melee_horse_prone/retarget.md`
 - production library `actor_b_from_a`: `.../melee_horse_prone/actor_b_from_a.md`
 
 Provenance: every output clip keeps its source `native_asset_id`, `original_name`,
@@ -23,7 +23,7 @@ Outputs of the production build:
 | `animations_extra/Actor_B_from_A.res` | AnimationLibrary `actor_b_from_a`, 152 clips (melee, crawl / prone, horse) |
 | `animations_extra/Actor_B_from_A.json` | manifest: provenance, group / use / priority, `loop` / `seamless`, weapon frames and the mount runtime recipe, per-clip checks, FK reference |
 | `tests/retarget/data/actor_b_from_a_ref.json` | Actor_A reference data for the Godot test |
-| `Player_Animation_Project/graph_analysis/melee_horse_prone/actor_b_from_a_report.json` | full metrics and checks |
+| `source/graph_analysis/melee_horse_prone/actor_b_from_a_report.json` | full metrics and checks |
 
 ```gdscript
 anim_player.add_animation_library("actor_b_from_a", load("res://animations_extra/Actor_B_from_A.res"))
@@ -45,7 +45,7 @@ loop choice), so its numbers will differ from `retarget.md`; the horse prototype
 
 | File | What it does |
 | --- | --- |
-| `dump_clips.gd` | Godot, headless, in `Player_Animation_Project/godot_export`: rests, bind-pose candidates and clips to JSON (30 fps). `every=N` samples a library for the bind probe. |
+| `dump_clips.gd` | Godot, headless, in `source/godot_export`: rests, bind-pose candidates and clips to JSON (30 fps). `every=N` samples a library for the bind probe. |
 | `bind_pose_probe.py` | Finds an actor's true bind pose: constant bone offsets, `null-add` agreement, single-axis hinges. |
 | `rtmath.py` | Batched quaternion / matrix math and skeleton FK (numpy). |
 | `retarget.py` | The retarget (bind-relative rotations, anchor-mapped root, one-sided hinge IK, limb-length targets, straight-knee / straight-elbow caps, wrist limit, per-frame floor, contacts, props and the synthetic guard weapon, prop roll, additives, loops). `--report`, `--manifest`, `--test-ref`. |

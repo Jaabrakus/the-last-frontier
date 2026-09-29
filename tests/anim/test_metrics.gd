@@ -76,7 +76,7 @@ const FIDELITY_HEADING_DEG := 10.0
 const FIDELITY_MIN_SPEED := 0.1
 const FIDELITY_GT_MM := 20.0
 const FIDELITY_PROFILE_M := 0.05
-const MISSING_PAP := "/nonexistent/test_metrics_missing_pap"
+const MISSING_SOURCE_ROOT := "/nonexistent/test_metrics_missing_pap"
 const UPPER_MUST := ["upper_base", "spinea", "spineb", "spinec", "spined", "neck", "heada", "l_clavicle", "r_clavicle",
 		"l_shoulder", "r_shoulder", "l_elbow", "r_elbow", "l_wrist", "r_wrist"]
 const UPPER_NOT := ["root", "lower_base", "pelvis", "l_upper_leg", "l_knee", "l_ankle", "l_heel", "l_ball",
@@ -126,7 +126,6 @@ func run(ctx: AnimTestContext) -> void:
 			"metrics were measured on the current animations/Actor_B.res (library_sha256)")
 	ctx.check(bool(m.meta.rest.ok) and float(m.meta.rest.max_rot) <= 1e-6 and float(m.meta.rest.max_pos) <= 1e-6,
 			"measured with rest == null-add (BindRest: rot %s rad, pos %s m)" % [m.meta.rest.max_rot, m.meta.rest.max_pos])
-	ctx.check(String(m.meta.authorization).begins_with("owner-stated"), "owner-stated authorization recorded in meta")
 	ctx.check(String(m.meta.clip_source) == ("graph" if not graph.is_empty() else "builtin"),
 			"clip list source is %s" % m.meta.clip_source)
 
@@ -650,11 +649,11 @@ func _regen(ctx: AnimTestContext, tool: Script, path: String, opts: Dictionary) 
 			" -- graph=res://tools/anim_graph/fixtures/mini_graph.json out=res://tests/anim/fixtures/mini_metrics.json fixture=1"])
 
 
-## measure() without the Blender dump (pap=<missing dir>): no errors, gt_check skipped, the CLI summary
+## measure() without the Blender dump (source_root=<missing dir>): no errors, gt_check skipped, the CLI summary
 ## line formats (it used to call float(null) and hang the tool), and compare() against the committed
 ## fixture reports the missing dump rather than "stale".
 func _check_missing_dump(ctx: AnimTestContext, tool: Script) -> void:
-	var r: Dictionary = tool.measure(ctx.tree.root, {"graph": MINI_GRAPH, "fixture": "1", "pap": MISSING_PAP})
+	var r: Dictionary = tool.measure(ctx.tree.root, {"graph": MINI_GRAPH, "fixture": "1", "source_root": MISSING_SOURCE_ROOT})
 	ctx.check((r.errors as Array).is_empty(), "measure() with a missing Blender dump returns without errors%s" % [
 			(": " + "; ".join(r.errors)) if not (r.errors as Array).is_empty() else ""])
 	if not (r.errors as Array).is_empty():

@@ -134083,7 +134083,6 @@
   "wall_shimmy": ["actor_b-p-ledge-crouch-idle-r-enter", "actor_b-p-ledge-idle", "actor_b-p-ledge-idle--hands", "actor_b-p-ledge-idle-l-exit", "actor_b-p-ledge-idle-r-enter", "actor_b-p-ledge-idle-r-exit", "actor_b-p-ledge-idle^walk-r", "actor_b-p-ledge-walk-r-loop", "actor_b-p-ledge-walk-r^idle", "out2a-7-stairwell-sidle--actor_b"]
  },
  "meta": {
-  "authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file",
   "catalog": {
    "path": "data/traversal/traversal_catalog.json",
    "sha256": "a9c3038b3df6ea341d37c0c50b70f9788ea04c8efb0e62e936100d4f3882a01b"

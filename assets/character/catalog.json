@@ -544,7 +544,7 @@
    },
    "generator": "tools/character/garments/military_br_belts_cartridge.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_br_belts_cartridge.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_br_belts_cartridge.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "envelope_variant": "env40: laid 4.5 mm over the regimental coats' outer form (military_lib._coat).",
    "pieces_tris": {
     "0_cloth": 1289,
@@ -922,7 +922,7 @@
    },
    "generator": "tools/character/garments/military_br_breeches.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_br_breeches.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_br_breeches.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "pieces_tris": {
     "0_cloth": 2389,
     "1_trim": 318
@@ -1475,7 +1475,7 @@
    },
    "generator": "tools/character/garments/military_br_coat_cropped_1758.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_br_coat_cropped_1758.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_br_coat_cropped_1758.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "regiments": [
     {
      "id": "foot_15th",
@@ -2189,7 +2189,7 @@
    },
    "generator": "tools/character/garments/military_br_cocked_hat.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_br_cocked_hat.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_br_cocked_hat.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "felt_note": "Felt uses the WOOL kit with a low normal strength (bible \u00a77).",
    "pieces_tris": {
     "0_rigid": 1604
@@ -2484,7 +2484,7 @@
    },
    "generator": "tools/character/garments/military_br_gaiters.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_br_gaiters.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_br_gaiters.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "pieces_tris": {
     "0_cloth": 2975,
     "1_trim": 444
@@ -2984,7 +2984,7 @@
    },
    "generator": "tools/character/garments/military_br_regimental_coat_1751.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_br_regimental_coat_1751.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_br_regimental_coat_1751.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "regiments": [
     {
      "id": "foot_15th",
@@ -3655,7 +3655,7 @@
    "checks": {},
    "generator": "tools/character/garments/military_br_stock.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_br_stock.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_br_stock.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "pieces_tris": {
     "0_cloth": 839,
     "1_trim": 60
@@ -3972,7 +3972,7 @@
    },
    "generator": "tools/character/garments/military_br_waistcoat.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_br_waistcoat.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_br_waistcoat.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "pieces_tris": {
     "0_cloth": 1532,
     "1_trim": 288
@@ -4417,7 +4417,7 @@
    },
    "generator": "tools/character/garments/militia/breeches_fall.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/breeches_fall.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/militia/breeches_fall.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "deform_limits": {
     "breeches_fall": [
@@ -4900,7 +4900,7 @@
    },
    "generator": "tools/character/garments/frontier/capot_blanket.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/capot_blanket.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/capot_blanket.py.",
    "fabric_options": {
     "blanket": [
      "WOOL",
@@ -5341,7 +5341,7 @@
    },
    "generator": "tools/character/garments/frontier/capot_fur_trim.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/capot_fur_trim.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/capot_fur_trim.py.",
    "fur": {
     "surface": "capot_fur_trim_fur",
     "shader": "res://assets/character/shaders/fur_shell.gdshader",
@@ -5592,7 +5592,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_armbands.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_armbands.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_armbands.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -5852,7 +5852,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_breechcloth.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_breechcloth.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_breechcloth.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -6071,7 +6071,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_brooches.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_brooches.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_brooches.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -6264,7 +6264,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_earbobs.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_earbobs.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_earbobs.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -6476,7 +6476,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_gorget.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_gorget.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_gorget.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -6681,7 +6681,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_head_wrap.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_head_wrap.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_head_wrap.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -6986,7 +6986,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_leggings_f.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_leggings_f.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_leggings_f.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -7343,7 +7343,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_leggings_m.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_leggings_m.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_leggings_m.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -7736,7 +7736,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_matchcoat.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_matchcoat.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_matchcoat.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -8118,7 +8118,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_moccasins_f.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_moccasins_f.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_moccasins_f.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -8400,7 +8400,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_moccasins_m.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_moccasins_m.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_moccasins_m.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -8648,7 +8648,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_sash.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_sash.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_sash.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -9063,7 +9063,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_shift_f.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_shift_f.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_shift_f.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -9548,7 +9548,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_shirt_linen.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_shirt_linen.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_shirt_linen.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -10067,7 +10067,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_shirt_ruffled.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_shirt_ruffled.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_shirt_ruffled.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -10488,7 +10488,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_wrap_skirt_f.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_wrap_skirt_f.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_wrap_skirt_f.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -10703,7 +10703,7 @@
    },
    "generator": "tools/character/garments/woodlands/ew_wristbands.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/woodlands/ew_wristbands.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/woodlands/ew_wristbands.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": "Eastern Woodlands dress of living nations: needs paid review by the nations concerned (their cultural or historic-preservation offices) before public release; costume bible 3.7. No consultation has happened yet.",
    "deform_limits": {
@@ -10940,7 +10940,7 @@
    },
    "generator": "tools/character/garments/military_fr_belt_gargoussier.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_fr_belt_gargoussier.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_fr_belt_gargoussier.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "envelope_variant": "env40: laid 5 mm over the regimental coats' outer form (military_lib._coat).",
    "pieces_tris": {
     "0_cloth": 914,
@@ -11223,7 +11223,7 @@
    },
    "generator": "tools/character/garments/military_fr_breeches.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_fr_breeches.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_fr_breeches.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "pieces_tris": {
     "0_cloth": 2389,
     "1_trim": 318
@@ -11513,7 +11513,7 @@
    "checks": {},
    "generator": "tools/character/garments/military_fr_cravat.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_fr_cravat.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_fr_cravat.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "pieces_tris": {
     "0_cloth": 839,
     "1_trim": 44
@@ -11791,7 +11791,7 @@
    },
    "generator": "tools/character/garments/military_fr_gaiters_white.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_fr_gaiters_white.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_fr_gaiters_white.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "pieces_tris": {
     "0_cloth": 3063,
     "1_trim": 408
@@ -12240,7 +12240,7 @@
    },
    "generator": "tools/character/garments/military_fr_marine_justaucorps.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_fr_marine_justaucorps.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_fr_marine_justaucorps.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "regiments_terre": [
     {
      "id": "la_reine",
@@ -12739,7 +12739,7 @@
    },
    "generator": "tools/character/garments/military_fr_stockings.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_fr_stockings.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_fr_stockings.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "pieces_tris": {
     "0_cloth": 2798
    },
@@ -13035,7 +13035,7 @@
    },
    "generator": "tools/character/garments/military_fr_tricorne.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_fr_tricorne.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_fr_tricorne.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "felt_note": "Felt uses the WOOL kit with a low normal strength (bible \u00a77).",
    "pieces_tris": {
     "0_rigid": 1604
@@ -13412,7 +13412,7 @@
    },
    "generator": "tools/character/garments/military_fr_veste.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/military_fr_veste.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/military_fr_veste.py. Fabric: the approved CC0 Poly Haven scans (assets/polyhaven/textures/clothing), tinted at runtime. Cut, colours and trims follow the costume bible \u00a75 (Set D) and its sources.",
    "pieces_tris": {
     "0_cloth": 2399,
     "1_trim": 360
@@ -14038,7 +14038,7 @@
    },
    "generator": "tools/character/garments/militia/frock_coat.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/frock_coat.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/militia/frock_coat.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "deform_limits": {
     "frock_coat": [
@@ -14383,7 +14383,7 @@
    },
    "generator": "tools/character/garments/frontier/fur_cap.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/fur_cap.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/fur_cap.py.",
    "fur": {
     "surface": "fur_cap_fur",
     "shader": "res://assets/character/shaders/fur_shell.gdshader",
@@ -14968,7 +14968,7 @@
    },
    "generator": "tools/character/garments/frontier/fur_coat_tailored.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/fur_coat_tailored.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/fur_coat_tailored.py.",
    "fur": {
     "surface": "fur_coat_tailored_fur",
     "shader": "res://assets/character/shaders/fur_shell.gdshader",
@@ -15390,7 +15390,7 @@
    },
    "generator": "tools/character/garments/frontier/fur_mantle.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/fur_mantle.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/fur_mantle.py.",
    "fur": {
     "surface": "fur_mantle_fur",
     "shader": "res://assets/character/shaders/fur_shell.gdshader",
@@ -15674,7 +15674,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_bag_wig.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_bag_wig.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_bag_wig.py.",
    "hair": {
     "queue": true,
     "pendulum_root_godot": [
@@ -15821,7 +15821,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_bedouin_braids.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_bedouin_braids.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_bedouin_braids.py.",
    "hair": {
     "queue": false,
     "texture": "straight",
@@ -16004,7 +16004,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_braid_f.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_braid_f.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_braid_f.py.",
    "hair": {
     "queue": true,
     "pendulum_root_godot": [
@@ -16146,7 +16146,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_bun_low.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_bun_low.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_bun_low.py.",
    "hair": {
     "queue": false,
     "texture": "straight",
@@ -16317,7 +16317,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_chonmage.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_chonmage.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_chonmage.py.",
    "hair": {
     "queue": false,
     "texture": "straight",
@@ -16494,7 +16494,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_club_ribbon.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_club_ribbon.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_club_ribbon.py.",
    "hair": {
     "queue": true,
     "pendulum_root_godot": [
@@ -16679,7 +16679,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_club_wrapped_f.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_club_wrapped_f.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_club_wrapped_f.py.",
    "hair": {
     "queue": true,
     "pendulum_root_godot": [
@@ -16822,7 +16822,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_coily_rounded.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_coily_rounded.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_coily_rounded.py.",
    "hair": {
     "queue": false,
     "texture": "coily",
@@ -16959,7 +16959,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_cornrows.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_cornrows.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_cornrows.py.",
    "hair": {
     "queue": false,
     "texture": "coily",
@@ -17097,7 +17097,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_cropped_1758.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_cropped_1758.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_cropped_1758.py.",
    "hair": {
     "queue": false,
     "texture": "cropped",
@@ -17270,7 +17270,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_crown_lock_braided.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_crown_lock_braided.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_crown_lock_braided.py.",
    "hair": {
     "queue": false,
     "texture": "straight",
@@ -17457,7 +17457,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_crown_lock_silver.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_crown_lock_silver.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_crown_lock_silver.py.",
    "hair": {
     "queue": false,
     "texture": "straight",
@@ -17625,7 +17625,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_jjok_f.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_jjok_f.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_jjok_f.py.",
    "hair": {
     "queue": false,
     "texture": "straight",
@@ -17773,7 +17773,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_long_loose.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_long_loose.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_long_loose.py.",
    "hair": {
     "queue": false,
     "texture": "straight",
@@ -17952,7 +17952,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_loose_tied.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_loose_tied.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_loose_tied.py.",
    "hair": {
     "queue": true,
     "pendulum_root_godot": [
@@ -18094,7 +18094,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_natural_short.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_natural_short.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_natural_short.py.",
    "hair": {
     "queue": false,
     "texture": "coily",
@@ -18233,7 +18233,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_pinned_capped.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_pinned_capped.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_pinned_capped.py.",
    "hair": {
     "queue": false,
     "texture": "straight",
@@ -18412,7 +18412,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_qing_queue.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_qing_queue.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_qing_queue.py.",
    "hair": {
     "queue": true,
     "pendulum_root_godot": [
@@ -18600,7 +18600,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_queue_ribbon.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_queue_ribbon.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_queue_ribbon.py.",
    "hair": {
     "queue": true,
     "pendulum_root_godot": [
@@ -18739,7 +18739,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_shaved.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_shaved.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_shaved.py.",
    "hair": {
     "queue": false,
     "texture": "cropped",
@@ -18869,7 +18869,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_shikha.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_shikha.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_shikha.py.",
    "hair": {
     "queue": false,
     "texture": "straight",
@@ -19041,7 +19041,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_shimada_f.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_shimada_f.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_shimada_f.py.",
    "hair": {
     "queue": false,
     "texture": "straight",
@@ -19175,7 +19175,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_shuruba_f.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_shuruba_f.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_shuruba_f.py.",
    "hair": {
     "queue": false,
     "texture": "coily",
@@ -19309,7 +19309,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_siamese_crop.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_siamese_crop.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_siamese_crop.py.",
    "hair": {
     "queue": false,
     "texture": "cropped",
@@ -19443,7 +19443,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_siamese_short_f.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_siamese_short_f.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_siamese_short_f.py.",
    "hair": {
     "queue": false,
     "texture": "straight",
@@ -19616,7 +19616,7 @@
    "checks": {},
    "generator": "tools/character/hair/hair_topknot.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/hair/hair_topknot.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/hair/hair_topknot.py.",
    "hair": {
     "queue": false,
     "texture": "straight",
@@ -19886,7 +19886,7 @@
    },
    "generator": "tools/character/garments/frontier/horn_and_pouch.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/horn_and_pouch.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/horn_and_pouch.py.",
    "deform_limits": {},
    "variant_shifts": {
     "env10": {
@@ -20301,7 +20301,7 @@
    },
    "generator": "tools/character/garments/militia/hunting_frock.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/hunting_frock.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/militia/hunting_frock.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "deform_limits": {
     "hunting_frock": [
@@ -20856,7 +20856,7 @@
    },
    "generator": "tools/character/garments/frontier/hunting_shirt_tow.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/hunting_shirt_tow.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/hunting_shirt_tow.py.",
    "fabric_options": {
     "cloth": [
      "LIN",
@@ -21141,7 +21141,7 @@
    },
    "generator": "tools/character/garments/frontier/leggings_buckskin.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/leggings_buckskin.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/leggings_buckskin.py.",
    "fringe": {
     "surface": "leggings_buckskin_fringe",
     "shader": "res://assets/character/shaders/fringe.gdshader",
@@ -21373,7 +21373,7 @@
    },
    "generator": "tools/character/garments/militia/leggings_wool.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/leggings_wool.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/militia/leggings_wool.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "deform_limits": {
     "leggings_wool": [
@@ -21751,7 +21751,7 @@
    },
    "generator": "tools/character/garments/frontier/mittens_fur.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/mittens_fur.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/mittens_fur.py.",
    "fur": {
     "surface": "mittens_fur_fur",
     "shader": "res://assets/character/shaders/fur_shell.gdshader",
@@ -22040,7 +22040,7 @@
    },
    "generator": "tools/character/garments/frontier/moccasins_puckered.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/moccasins_puckered.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/moccasins_puckered.py.",
    "deform_limits": {}
   },
   "moccasins_winter": {
@@ -22264,7 +22264,7 @@
    },
    "generator": "tools/character/garments/frontier/moccasins_winter.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/moccasins_winter.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/moccasins_winter.py.",
    "fur": {
     "surface": "moccasins_winter_fur",
     "shader": "res://assets/character/shaders/fur_shell.gdshader",
@@ -22569,7 +22569,7 @@
    },
    "generator": "tools/character/garments/militia/monmouth_cap.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/monmouth_cap.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/militia/monmouth_cap.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "deform_limits": {
     "monmouth_cap": [
@@ -22771,7 +22771,7 @@
    },
    "generator": "tools/character/garments/militia/neckerchief.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/neckerchief.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/militia/neckerchief.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "deform_limits": {
     "neckerchief": [
@@ -23048,7 +23048,7 @@
    },
    "generator": "tools/character/garments/frontier/powder_horn.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/powder_horn.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/powder_horn.py.",
    "envelope_variants": "strap on the outermost torso layer: env10 shirt, env20 waistcoat, env40 coat or hunting shirt, env50 blanket / fur robe / fur coat",
    "deform_limits": {},
    "variant_shifts": {
@@ -23469,7 +23469,7 @@
    },
    "generator": "tools/character/garments/militia/provincial_coat_ma.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/provincial_coat_ma.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/militia/provincial_coat_ma.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "deform_limits": {
     "provincial_coat_ma": [
@@ -23789,7 +23789,7 @@
    },
    "generator": "tools/character/garments/militia/round_hat_cut.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/round_hat_cut.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/militia/round_hat_cut.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "deform_limits": {
     "round_hat_cut": [
@@ -24209,7 +24209,7 @@
    },
    "generator": "tools/character/cloth2/garments/shirt_linen.py",
    "lib_version": 2,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/cloth2/garments/shirt_linen.py (cloth2: grown from the MakeHuman body's surface).",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/shirt_linen.py (cloth2: grown from the MakeHuman body's surface).",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": null
   },
@@ -24381,7 +24381,7 @@
    },
    "generator": "tools/character/garments/militia/shoes_buckled.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/shoes_buckled.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/militia/shoes_buckled.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "deform_limits": {
     "shoes_buckled": [
@@ -24648,7 +24648,7 @@
    },
    "generator": "tools/character/garments/frontier/shot_pouch.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/shot_pouch.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/shot_pouch.py.",
    "deform_limits": {},
    "variant_shifts": {
     "env10": {
@@ -24833,7 +24833,7 @@
    },
    "generator": "tools/character/garments/militia/stock_linen.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/stock_linen.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/militia/stock_linen.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "deform_limits": {
     "stock_linen": [
@@ -25097,7 +25097,7 @@
    },
    "generator": "tools/character/garments/militia/stockings.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/stockings.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/militia/stockings.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "deform_limits": {
     "stockings": [
@@ -25421,7 +25421,7 @@
    },
    "generator": "tools/character/garments/militia/tricorn.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/tricorn.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/militia/tricorn.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "deform_limits": {
     "tricorn": [
@@ -25748,7 +25748,7 @@
    },
    "generator": "tools/character/garments/militia/waistcoat_db.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/waistcoat_db.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/militia/waistcoat_db.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "deform_limits": {
     "waistcoat_db": [
@@ -26143,7 +26143,7 @@
    },
    "generator": "tools/character/garments/militia/waistcoat_sb.py",
    "lib_version": 1,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/militia/waistcoat_sb.py.",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/militia/waistcoat_sb.py.",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "deform_limits": {
     "waistcoat_sb": [
@@ -26576,7 +26576,7 @@
    },
    "generator": "tools/character/cloth2/garments/breeches.py",
    "lib_version": 2,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/cloth2/garments/breeches.py (cloth2: grown from the MakeHuman body's surface).",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/breeches.py (cloth2: grown from the MakeHuman body's surface).",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": null
   },
@@ -26905,7 +26905,7 @@
    },
    "generator": "tools/character/cloth2/garments/petticoat.py",
    "lib_version": 2,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/cloth2/garments/petticoat.py (cloth2: grown from the MakeHuman body's surface).",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/petticoat.py (cloth2: grown from the MakeHuman body's surface).",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": null
   },
@@ -27271,7 +27271,7 @@
    },
    "generator": "tools/character/cloth2/garments/shift_linen.py",
    "lib_version": 2,
-   "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/cloth2/garments/shift_linen.py (cloth2: grown from the MakeHuman body's surface).",
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/shift_linen.py (cloth2: grown from the MakeHuman body's surface).",
    "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
    "review": null
   }

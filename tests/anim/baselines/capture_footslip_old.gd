@@ -256,7 +256,6 @@ func _meta(anim: AnimationTree, old_tree: bool) -> Dictionary:
 				+ "so bow and pistol should agree and the musket differs only through its speed.",
 		"threshold_new_tree_mps": 0.15,
 		"captured": Time.get_date_string_from_system(),
-		"authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file",
 	}
 
 

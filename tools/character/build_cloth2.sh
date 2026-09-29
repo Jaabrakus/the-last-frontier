@@ -1,6 +1,6 @@
 #!/bin/bash
 # cloth2 garments (see build_cloth2.py). Works on a temporary COPY of the Actor_B rig library; the original
-# .blend in Player_Animation_Project is only read.
+# .blend in external animation source is only read.
 #
 #   tools/character/build_cloth2.sh shirt_linen,breeches
 #   tools/character/build_cloth2.sh all
@@ -8,7 +8,9 @@ set -euo pipefail
 export PYTHONDONTWRITEBYTECODE=1
 HERE="$(cd "$(dirname "$0")" && pwd)"
 BLENDER="${BLENDER:-/Applications/Blender.app/Contents/MacOS/Blender}"
-SRC="${ACTOR_B_BLEND:-$HOME/Downloads/Player_Animation_Project/blender_libraries/Actor_B_001.blend}"
+: "${ANIMATION_SOURCE_ROOT:?Set ANIMATION_SOURCE_ROOT to the external animation source directory}"
+export ANIMATION_SOURCE_ROOT
+SRC="${ACTOR_B_BLEND:?Set ACTOR_B_BLEND to the rig library and ANIMATION_SOURCE_ROOT to its source directory}"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 cp "$SRC" "$TMP/actor_b_rig_copy.blend"

@@ -1,7 +1,7 @@
 class_name SurvivalBridge
 extends Node
 ## The one place the game talks to the survival core (SurvivalCore and its modules in scripts/survival; the contract:
-## Player_Animation_Project/graph_analysis/survival/survival_core_api.md). User 2026-09-27: hunger first, "one bridge,
+## source/graph_analysis/survival/survival_core_api.md). User 2026-09-27: hunger first, "one bridge,
 ## one clock, the packs mapped", so fire and cold, saves and death, and the winter's goal plug in here.
 ##
 ## The core: a new game when the level starts (the backcountry hunter, Early September 1765, 08:00), driven with real

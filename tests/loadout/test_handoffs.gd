@@ -71,7 +71,6 @@ func _check(ok: bool, what: String) -> void:
 
 func _test_meta(s: Dictionary, c: Dictionary) -> void:
 	var m: Dictionary = s.get("meta", {})
-	_check(String(m.get("authorization", "")).contains("owner-stated"), "meta.authorization is owner-stated")
 	var v: Dictionary = m.get("validation", {})
 	_check(float(v.get("max_prop_err_mm", 99.0)) <= 2.0 and int(v.get("samples", 0)) > 100,
 			"validation: manual composition within 2 mm of the AnimationTree (%s mm over %s samples)" % [v.get("max_prop_err_mm"), v.get("samples")])

@@ -246,7 +246,6 @@ func _run() -> bool:
 			"row": "[bone0..3, weight0..3, offset0 xyz .. offset3 xyz]: p = sum w_k * G[bone_k] * offset_k (skeleton space)",
 			"rule": "vertices within %.3f m of the limb's lowest in any frame of the traversal clips + bind extremes (124 dirs, so the guards see edges and toes); helper-weighted vertices (> %.2f) excluded" % [TIE, HELPER_MAX],
 			"report": report,
-			"authorization": "owner-stated, see Player_Animation_Project/ASSET_AUTHORIZATION.md",
 		},
 		"limbs": out_limbs,
 	}

@@ -242,7 +242,7 @@ code_entries=[
 ]
 
 meta=dict(
- source='/Users/kiwimango/Downloads/Player_Animation_Project/player_blending/player_blending.json (read-only)',
+ source='source/player_blending/player_blending.json (read-only)',
  provenance='extracted & converted player animation graph; neutral aliases; hex ids are opaque keys (not recomputed)',
  units=dict(fade_s='transition scalar +0x1c; interpreted as seconds (INFERRED, supported: 17 distinct values 0..2.0; self-loop auto@phase>=1 uses 0.0 in 151/156; fade <= target clip length in 1221/1228 records)',
             scalar_0x20='second duration, <= fade in 619/625 non-negative records; -1 = unset in 2612/3237; meaning unverified (candidate: motion/root blend time)',

@@ -209,7 +209,6 @@ func build(parent: Node) -> Dictionary:
 			"points": "l/r_hand, l/r_foot, l/r_knee = the RENDERED palm / shoe sole / kneecap: lowest of the mesh-calibrated probe vertices (data/traversal/contact_probes.json), xz = soft-min centre; pelvis, head_top = headb + 0.13 m, l/r_heel, l/r_ball, l/r_elbow = bone origins (clearance); world = align + skeleton point",
 			"align": "reference path of the skeleton origin: the clip survey's align samples (clip_geometry.json series), refined to track_hz by pinning the survey's anchor limb between its samples (a flight step is ballistic between its end samples); parts join with pelvis continuity",
 			"contacts": "limb windows whose world speed stays below contact_speed (m/s) for >= 3 samples (gaps <= 2 samples merged); surface: support (feet before the first top contact at the start height), top (on the obstacle / ledge top), landing (feet after the last top release), wall (other feet: braced on a face), hang (hands on a lip, hang moves)",
-			"authorization": str(_moves.meta.authorization),
 		},
 		"settings": _moves.settings,
 		"moves": out_moves,

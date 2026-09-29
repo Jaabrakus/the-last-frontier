@@ -4542,7 +4542,6 @@
  },
  "meta": {
   "anim_callback_mode_process": 1,
-  "authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file",
   "captured": "2026-09-23",
   "cases_stepping": "--fixed-fps 120: one process frame per physics tick, faster than real time",
   "equip_frames": 150,

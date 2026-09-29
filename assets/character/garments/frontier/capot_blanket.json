@@ -343,7 +343,7 @@
  },
  "generator": "tools/character/garments/frontier/capot_blanket.py",
  "lib_version": 1,
- "provenance": "Skeleton, bone names and bind pose: Actor_B rig converted from extracted game animation data (owner-stated authorization, see Player_Animation_Project/ASSET_AUTHORIZATION.md). Geometry generated procedurally by tools/character/garments/frontier/capot_blanket.py.",
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/garments/frontier/capot_blanket.py.",
  "fabric_options": {
   "blanket": [
    "WOOL",

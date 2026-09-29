@@ -64,18 +64,18 @@
     },
     {
       "file": "actor_b_yoga.glb",
-      "source_sha256": "a97aebedaa71e66841b2187c4faf2028e605142b926382ae69489fea55a7a395",
-      "package_sha256": "a97aebedaa71e66841b2187c4faf2028e605142b926382ae69489fea55a7a395"
+      "source_sha256": "908773eaa5247fb0a8cf1191c5636201955af044fe8a96494fd0d57ba92179bd",
+      "package_sha256": "908773eaa5247fb0a8cf1191c5636201955af044fe8a96494fd0d57ba92179bd"
     },
     {
       "file": "actor_b_crawl.glb",
-      "source_sha256": "bb8037509ab6e56f8aba0b50931671920be6afff5391b4adf6adb0361f5e3ea4",
-      "package_sha256": "bb8037509ab6e56f8aba0b50931671920be6afff5391b4adf6adb0361f5e3ea4"
+      "source_sha256": "744afa1636e404b7b7069f2c7c225b9bbb23f8abdaac502381d4e1194bf807a5",
+      "package_sha256": "744afa1636e404b7b7069f2c7c225b9bbb23f8abdaac502381d4e1194bf807a5"
     },
     {
       "file": "actor_b_kneel.glb",
-      "source_sha256": "b9390fd13f1b43a8ea8ea309260e2666f5866473d24c72640cc84c0f4e3eacda",
-      "package_sha256": "b9390fd13f1b43a8ea8ea309260e2666f5866473d24c72640cc84c0f4e3eacda"
+      "source_sha256": "2724b201e82a2d0e77d093191b1d88c58a457f907939655ab58a3cfc6493e1d5",
+      "package_sha256": "2724b201e82a2d0e77d093191b1d88c58a457f907939655ab58a3cfc6493e1d5"
     },
     {
       "file": "tools/author_crawl_backward.gd",

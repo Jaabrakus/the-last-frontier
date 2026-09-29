@@ -1,6 +1,6 @@
 """Loadout carry gear for Frontier: procedural 1750s models, built headless in Blender 5.2.
 
-Builds the carry gear that the loadout design (Player_Animation_Project/graph_analysis/
+Builds the carry gear that the loadout design (source/graph_analysis/
 loadout/loadout_design.md) needs so every weapon the player carries but does not hold
 is visible on the body, and writes them as GLB files to assets/loadout/ together with
 assets/loadout/MANIFEST.json:

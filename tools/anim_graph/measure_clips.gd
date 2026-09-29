@@ -9,8 +9,7 @@ extends SceneTree
 ##                  (default res://animations/actor_b_graph.json; `graph=none` or a missing file
 ##                  uses the built-in list below)
 ##   out=<path>     output (default res://animations/actor_b_clip_metrics.json)
-##   pap=<dir>      Player_Animation_Project (default $ANIM_GRAPH_PAP, else
-##                  /Users/kiwimango/Downloads/Player_Animation_Project); only its Blender foot
+##   source_root=<dir>  optional external source (or $ANIMATION_SOURCE_ROOT); only its Blender foot
 ##                  dump GA/vmm/bl/dump3.jsonl is read, for gt_check and clips.*.blender
 ##   check          measure, compare with the existing output and exit 1 if it differs (writes nothing).
 ##                  meta.rig_sha256 / meta.godot_version (STAMP_FIELDS) are ignored by the comparison, and
@@ -83,12 +82,10 @@ const LIB := "actor_b"
 const LIBRARY_RES := "res://animations/Actor_B.res"
 const DEFAULT_GRAPH := "res://animations/actor_b_graph.json"
 const DEFAULT_OUT := "res://animations/actor_b_clip_metrics.json"
-const DEFAULT_PAP := "/Users/kiwimango/Downloads/Player_Animation_Project"
+const DEFAULT_SOURCE_ROOT := ""
 const DUMP_REL := "graph_analysis/graph/vmm/bl/dump3.jsonl"
 const GENERATOR := "tools/anim_graph/measure_clips.gd"
 const SCHEMA := 1
-
-const AUTHORIZATION := "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file"
 
 const POINTS := ["l_heel", "l_ball", "r_heel", "r_ball"]
 const LEG_BONES := ["l_upper_leg", "l_knee", "l_ankle", "l_heel", "l_ball",
@@ -274,7 +271,7 @@ static func compare(new_text: String, old_text: String) -> Dictionary:
 		out.status = "no_dump" if no_dump else "current"
 		var notes := PackedStringArray()
 		if no_dump:
-			notes.append("gt_check, clips.*.blender and clips.*.fidelity_warning not re-measured: the Blender foot dump was not found (pass pap=<Player_Animation_Project> or set ANIM_GRAPH_PAP); every other field is current")
+			notes.append("gt_check, clips.*.blender and clips.*.fidelity_warning not re-measured: the Blender foot dump was not found (pass source_root=<external animation source> or set ANIMATION_SOURCE_ROOT); every other field is current")
 		if not stamps.is_empty():
 			notes.append("only %s differ; rerun without `check` to restamp" % ", ".join(stamps))
 		out.note = "; ".join(notes)
@@ -290,7 +287,7 @@ static func compare(new_text: String, old_text: String) -> Dictionary:
 		if str(x) != str(y):
 			why.append(pair[1])
 	if no_dump:
-		why.append("and the Blender foot dump was not found, so gt_check could not be re-measured (pap=<dir> or ANIM_GRAPH_PAP)")
+		why.append("and the Blender foot dump was not found, so gt_check could not be re-measured (source_root=<dir> or ANIMATION_SOURCE_ROOT)")
 	out.reason = "is stale" + ((" (" + "; ".join(why) + ")") if not why.is_empty() else "")
 	return out
 
@@ -315,7 +312,7 @@ static func _strip(doc: Dictionary, no_gt: bool) -> Dictionary:
 # Measurement (static, so tests can run it in process: load(<this script>).measure(root, opts))
 # =============================================================================================
 
-## Runs every measurement. opts: graph, pap, fixture (see the header).
+## Runs every measurement. opts: graph, source_root, fixture (see the header).
 ## Returns {data: Dictionary (the metrics document), errors: [str], warnings: [str], travel_count: int}.
 static func measure(parent: Node, opts := {}) -> Dictionary:
 	var out := {"data": {}, "errors": [], "warnings": [], "travel_count": 0}
@@ -372,11 +369,11 @@ static func measure(parent: Node, opts := {}) -> Dictionary:
 	var src := _sources(graph, lib)
 	for w in src.warnings:
 		out.warnings.append(w)
-	var pap: String = str(opts.get("pap", OS.get_environment("ANIM_GRAPH_PAP")))
-	if pap == "":
-		pap = DEFAULT_PAP
-	var dump_path := pap.path_join(DUMP_REL)
-	var dump := _load_dump(dump_path)
+	var source_root: String = str(opts.get("source_root", OS.get_environment("ANIMATION_SOURCE_ROOT")))
+	if source_root == "":
+		source_root = DEFAULT_SOURCE_ROOT
+	var dump_path := source_root.path_join(DUMP_REL)
+	var dump: Dictionary = _load_dump(dump_path) if not source_root.is_empty() else {}
 	if dump.is_empty():
 		out.warnings.append("Blender foot dump not found or empty: %s (gt_check and clips.*.blender skipped)" % dump_path)
 
@@ -485,9 +482,8 @@ static func measure(parent: Node, opts := {}) -> Dictionary:
 		"rig_sha256": FileAccess.get_sha256(RIG),
 		"graph": {"path": _rel(graph_path), "sha256": FileAccess.get_sha256(graph_path)} if not graph.is_empty() else null,
 		"clip_source": src.source,
-		"gt_source": {"path": "PAP/" + DUMP_REL, "sha256": FileAccess.get_sha256(dump_path)} if not dump.is_empty() else null,
+		"gt_source": {"path": "source/" + DUMP_REL, "sha256": FileAccess.get_sha256(dump_path)} if not dump.is_empty() else null,
 		"rest": rest,
-		"authorization": AUTHORIZATION,
 		"units": {"length": "m", "time": "s", "speed": "m/s", "angle": "deg unless named *_rad",
 				"space": "skeleton space: forward +Z, left +X, up +Y; heading_deg and yaw_deg + = left"},
 		"method": {

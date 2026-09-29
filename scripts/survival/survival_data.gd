@@ -9,7 +9,7 @@ extends RefCounted
 ##
 ## The data is read-only after load. Every number used by the survival modules comes from here; the few design values
 ## the code adds itself are named constants tagged [D] where they are defined.
-## Design: Player_Animation_Project/graph_analysis/survival/survival_gdd.md
+## Design: source/graph_analysis/survival/survival_gdd.md
 
 const DEFAULT_DIR := "res://data/survival/"
 const BACKLOG_SUBDIR := "backlog/"

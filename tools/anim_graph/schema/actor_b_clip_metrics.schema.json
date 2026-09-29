@@ -10,7 +10,7 @@
   "meta": {
    "type": "object",
    "required": ["schema", "generator", "godot_version", "library_sha256", "rig_sha256", "graph", "clip_source", "gt_source",
-                "rest", "authorization", "units", "method"],
+                "rest", "units", "method"],
    "additionalProperties": false,
    "properties": {
     "schema": {"const": 1},
@@ -27,7 +27,6 @@
              "properties": {"ok": {"const": true}, "max_rot": {"type": "number", "maximum": 1e-6}, "max_pos": {"type": "number", "maximum": 1e-6},
                             "max_scl": {"type": "number"}, "channels": {"type": "integer", "minimum": 1}, "stamped": {"type": "boolean"},
                             "changed": {"type": "integer"}, "reason": {"type": "string"}}},
-    "authorization": {"type": "string", "pattern": "^owner-stated"},
     "units": {"type": "object", "additionalProperties": {"type": "string"}},
     "method": {"type": "object", "required": ["travel", "travel_contact", "cyclic", "body_profile", "plant", "loop", "pitch", "pitch_range", "chest_height", "gt_check", "blender", "fidelity"],
                "additionalProperties": {"type": "string"}},

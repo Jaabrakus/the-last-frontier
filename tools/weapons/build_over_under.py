@@ -10,7 +10,7 @@ the barrels. The hickory ramrod rides in brass pipes in the groove between the
 barrels on one side and turns with them. Each barrel has its own front and rear
 sight. German sporting work of the mid-18th century: walnut half stock with a
 cheekpiece and a sliding wooden patchbox lid, browned barrels, bright iron lock,
-brass furniture. Design: Player_Animation_Project/graph_analysis/weapons/
+brass furniture. Design: source/graph_analysis/weapons/
 weapons_balance_design.md sections 2.1, 2.2 and 2.7 (model contract), history in
 over_under_research.md section 1.
 

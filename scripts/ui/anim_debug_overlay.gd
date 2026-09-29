@@ -514,7 +514,7 @@ func render(snap: Dictionary) -> void:
 	_texts[0].text = format_fields(snap)
 	_texts[1].text = format_weights(snap, g, _clip_lengths(snap))
 	# Panel 3 changes with the lower input or aim base only: refit (format and measure) then.
-	var ph := [snap.get("ok"), snap.get("provenance"), snap.get("attribution"), snap.get("authorization")].hash()
+	var ph := [snap.get("ok"), snap.get("provenance"), snap.get("attribution")].hash()
 	if ph != _prov_hash or _prov_snap.is_empty():
 		_prov_hash = ph
 		_prov_snap = snap
@@ -752,8 +752,8 @@ static func format_weights(snap: Dictionary, gates: Array = [], lengths: Diction
 
 
 ## Panel 3: provenance of the dominant lower input and the aim base (plan section 9): the
-## attribution and authorization (first, so they stay visible when the panel is cut to its
-## height), then per entry graph state and offset, leaf and leaf ID, clip, native_asset_id,
+## attribution (first, so it stays visible when the panel is cut to its height), then per
+## entry graph state and offset, leaf and leaf ID, clip, native_asset_id,
 ## overlay chain (set, record offset, from / to IDs; names for the lower input), layers (slot,
 ## clip, weight, weight source, lambda, record offset; ">hands" = superseded by the grip).
 ## level (PROV_LEVELS, for the panel's height limit above the crosshair): 0 everything, 1 without
@@ -769,8 +769,6 @@ static func format_provenance(snap: Dictionary, level := 0) -> String:
 	var credit := PackedStringArray()
 	if snap.has("attribution"):
 		credit.append(String(snap.attribution))
-	if snap.has("authorization"):
-		credit.append("authorization: %s" % snap.authorization)
 	if not credit.is_empty():
 		L.append("[color=#aaaaaa]%s[/color]" % _esc("  ".join(credit)))
 	var prov: Dictionary = snap.get("provenance", {})

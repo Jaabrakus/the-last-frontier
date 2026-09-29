@@ -14,7 +14,7 @@ extends SceneTree
 ##
 ## Why contact odometry: the clips carry no root motion. The skeleton's `root` bone is the hips
 ## (it sits at pelvis height and only sways), and the game's align / trajectory channel was not
-## exported ("gameplay trajectory channels ... are not baked", Player_Animation_Project/README.md).
+## exported ("gameplay trajectory channels ... are not baked", source/README.md).
 ## Every clip is therefore in place relative to an unknown moving align. Contacts are static in the
 ## world, so while a heel, ball, palm or knee is planted its skeleton-space velocity is minus the align
 ## velocity. measure() rebuilds the align path from the contacts (see _odometry) and reports
@@ -31,7 +31,6 @@ const DEFAULT_CATALOG := "res://data/traversal/traversal_catalog.json"
 const DEFAULT_OUT := "res://data/traversal/clip_geometry.json"
 const GENERATOR := "tools/traversal/measure_traversal_clips.gd"
 const SCHEMA := 1
-const AUTHORIZATION := "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file"
 
 ## Tracked points (skeleton-space positions per sample). Heels, balls, palms and knees feed the
 ## odometry anchors (a foot is one rolling-sole anchor made of its heel and ball).
@@ -365,7 +364,6 @@ static func measure(parent: Node, opts := {}) -> Dictionary:
 			"library_sha256": FileAccess.get_sha256(LIBRARY_RES),
 			"catalog": {"path": _rel(cat_path), "sha256": FileAccess.get_sha256(cat_path)},
 			"rest": rest,
-			"authorization": AUTHORIZATION,
 			"units": {"length": "m", "time": "s", "speed": "m/s", "angle": "deg",
 					"frame": "world = the clip's align frame at its first sample (the character's start position): fwd = +Z, side = +X (left), up = +Y; skel = skeleton space (the moving, unexported align)"},
 			"method": _method_notes(),

@@ -826,7 +826,7 @@ func start_recording(path: String) -> bool:
 			"start_inputs": inputs.to_dict() if inputs != null else {},
 			"graph_sha256": FileAccess.get_sha256(data.graph_path) if data.graph_path != "" else "",
 			"overrides": _override_state(), "weapon": String(_weapon), "carry_layers": carry_layers,
-			"attribution": data.attribution(), "authorization": data.authorization()})
+			"attribution": data.attribution()})
 	if ok and trace:
 		print("[anim] recording to %s" % path)
 	return ok
@@ -1139,7 +1139,7 @@ func debug_snapshot() -> Dictionary:
 			"upper": up, "slots": _slots(), "provenance": _provenance(), "trace": loco.trace(),
 			"trace_lines": _trace_lines.duplicate(), "options": _options_snapshot(), "warnings": Array(_warnings),
 			"recording": recorder.path if is_recording() else "", "tree": index.summary(),
-			"attribution": data.attribution(), "authorization": data.authorization()}
+			"attribution": data.attribution()}
 
 
 ## The last TRACE_KEEP transition lines in the --anim-trace format (kept when tracing is off).

@@ -4,7 +4,7 @@ extends RefCounted
 ##
 ## The extracted clips, and the game's additive composition base * (null-add^-1 * add),
 ## are authored against the bind pose held in the 1-frame clip `null-add`. The asset
-## pipeline (Player_Animation_Project/godot_export/tools/build_libraries.gd) bakes that
+## pipeline (source/godot_export/tools/build_libraries.gd) bakes that
 ## pose into the Skeleton3D rest: every channel `null-add` keys at t = 0 becomes the rest
 ## value of that channel, and every other channel keeps the imported glTF rest. With that
 ## rest, Godot's Add2 (base * rest^-1 * add) equals the game's composition, and bones a

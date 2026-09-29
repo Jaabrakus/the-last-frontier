@@ -60,7 +60,7 @@ func _ready() -> void:
 		metadata_hashes[path] = metadata_digest.finish().hex_encode()
 		total += names.size()
 	var graph: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://animations/actor_b_graph.json"))
-	check(graph.meta.has("authorization") == debug, "graph bookkeeping follows export mode")
+	check((graph.clips.values()[0] as Dictionary).has("native_asset_id") == debug, "graph bookkeeping follows export mode")
 	check(graph.clips.size() == 347, "all graph clips survive")
 	var alias_count := 0
 	for clip: Dictionary in graph.clips.values():

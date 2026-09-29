@@ -3,7 +3,7 @@ extends SceneTree
 ## native clip of the same motion (green)], drawn as capsule mannequins on the two
 ## unskinned rigs. Needs a window (a rendering driver); it opens on screen briefly.
 ##
-##   Godot --path <Player_Animation_Project>/godot_export -s <Frontier>/tools/retarget/render_compare.gd -- \
+##   Godot --path <external animation source>/godot_export -s <Frontier>/tools/retarget/render_compare.gd -- \
 ##       lib=<Frontier>/animations_extra/actor_a_rt_proto.res out=<dir> \
 ##       jobs=<jobs.json>
 ##

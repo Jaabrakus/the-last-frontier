@@ -308,7 +308,7 @@ func _run() -> bool:
 	bind_g = CharacterBodyMesh.bind_pose_globals(sk, nulladd)
 	var out := {"meta": {"tool": "tools/loadout/measure_body_fit.gd", "space": "rig/skeleton space: +Y up, faces +Z, character right = -X",
 			"angles": "0 front, 90 character right, 180 back, 270 left", "body": CharacterBodyMesh.DEFAULT_PATH,
-			"bind": "null-add", "grid_offset_m": GRID_OFF, "provenance": "Rig, clips and bind pose: Actor_B, converted from extracted game animation data (Player_Animation_Project/ASSET_AUTHORIZATION.md). Body geometry: tools/character/build_body.py."}}
+			"bind": "null-add", "grid_offset_m": GRID_OFF, "provenance": "Rig, clips and bind pose: Actor_B. Body geometry: tools/character/build_body.py."}}
 	_collect_surface()
 	out["bind"] = _bind_section()
 	out["items"] = _items_section()

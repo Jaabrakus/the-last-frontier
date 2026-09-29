@@ -829,7 +829,7 @@ On a quiet machine the first build measured +24 % (1.20 → 1.49 ms, above). The
 layout (WP9) remains the documented way to cut the rest.
 
 Windowed strips: `tests/throwables/throw_carry_screens.gd -- ... move=run|sprint|walk`; review
-copies in `Player_Animation_Project/graph_analysis/throwables/screens/throw2/review/`.
+copies in `source/graph_analysis/throwables/screens/throw2/review/`.
 
 ## THROW2 fix 2 record (2026-09-25): throw-cycle draws, sprint banks, jumps and switch flips
 

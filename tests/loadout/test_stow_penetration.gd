@@ -239,7 +239,7 @@ func _clip_list() -> Array:
 
 
 ## Clips of the traversal moves the player keeps disabled until they are fixed
-## (Player_Animation_Project/graph_analysis/traversal/READY_FOR_INTEGRATION.md: climb_hang_3m,
+## (source/graph_analysis/traversal/READY_FOR_INTEGRATION.md: climb_hang_3m,
 ## gap_jumps / long_jump, wall_shimmy, squeeze): the player never plays them, so the carried gear is not
 ## judged on them.
 const DISABLED_MOVE_CLIPS := ["-3m^ledge-hang", "ledge-hang", "long-jump", "gap-jump", "shimmy", "squeeze"]

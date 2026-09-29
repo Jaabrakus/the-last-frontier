@@ -6,7 +6,7 @@ extends RefCounted
 ##   animations/actor_b_clip_metrics.json   tools/anim_graph/measure_clips.gd (WP2)
 ##
 ## Numeric asset IDs, symbol IDs and record offsets are kept as the exporter wrote them
-## (meta.attribution / meta.authorization carry the provenance text).
+## (meta.attribution carries the provenance text).
 ##
 ## Clip names are Godot action names of the `actor_b` library ("actor_b-p-run-fw"); godot_anim()
 ## gives the library path. resolve_alias() maps original / source / graph names to the action.
@@ -145,10 +145,6 @@ func is_fixture() -> bool:
 
 func attribution() -> String:
 	return String(graph.get("meta", {}).get("attribution", ""))
-
-
-func authorization() -> String:
-	return String(graph.get("meta", {}).get("authorization", ""))
 
 
 ## Weapons of the table, in Frontier order.

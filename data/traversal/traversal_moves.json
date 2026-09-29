@@ -8,8 +8,7 @@
    "proposed": "this design's choice where the graph has no record; tunable",
    "override": "deliberately differs from a graph record; opt-in with a flag",
    "substitute": "the graph state is kept but its clip is missing; another motion plays it"
-  },
-  "authorization": "owner-stated; see Player_Animation_Project/ASSET_AUTHORIZATION.md; granting party and terms not on file"
+  }
  },
  "settings": {
   "status": "proposed",

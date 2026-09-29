@@ -2,7 +2,7 @@ class_name WeaponBalance
 ## Weapon balance loader: writes the numbers of data/weapons/ballistics.json onto a weapon
 ## instance (speed, gravity, drag, damage, spread and handling), so one file is the balance
 ## authority and the script defaults stay the fallback. Design:
-## Player_Animation_Project/graph_analysis/weapons/weapons_balance_design.md, section 3.
+## source/graph_analysis/weapons/weapons_balance_design.md, section 3.
 ##
 ##   WeaponBalance.apply(weapon, "musket")      the row for a roster key ("tomahawk_pipe" uses
 ##                                             the "tomahawk" row through "aliases")
