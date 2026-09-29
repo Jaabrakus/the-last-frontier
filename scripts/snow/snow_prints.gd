@@ -129,6 +129,10 @@ func _walk(w: Dictionary) -> void:
 		w.last = p                 # (in the saddle: the horse's hooves print, not the rider's boots)
 		return
 	var ground := FrontierTerrain.height_at(p.x, p.z)
+	# (on the river's ice: its top is the ground; the prints kept for tracking, WildPlanner)
+	var surf := WorldRiver.surface_at(p.x, p.z)
+	if surf != WorldRiver.NO_WATER and float(cover.ice_m) > 0.1 and p.y > surf - 0.1:
+		ground = surf
 	if p.y - ground > 0.35 or cover.depth_at(p) <= 0.005:
 		w.last = p
 		return

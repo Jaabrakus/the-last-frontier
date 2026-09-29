@@ -17,7 +17,8 @@ extends Node
 ##   rises and the slopes facing the wind and drifted in their lee, the woods deep and even, the cliffs' faces bare),
 ##   the shaders' region map, and depth_at() the same on the CPU: the prints, the footsteps and the slowed walk follow
 ##   the snow where the player stands (the core's snow_here_cm context);
-##   the water's ice (water_ice: the river's shelf ice from the banks as the cold deepens, frozen across in deep winter).
+##   the water's ice (water_ice: the river's shelf ice from the banks as the cold deepens, frozen across in deep winter),
+##   firm enough to walk on back from its thin edge (RiverIce: slabs at the water's surface round the player).
 ## Test key: Shift+F10 cycles a snowing January morning -> a clear winter day with the snow lying -> back to the date and
 ## the ground it was.
 ##
@@ -35,6 +36,7 @@ const SHELTER_HALF := 400.0
 const COVER_MIN_H := 1.3
 const COVER_MIN_W := 0.8
 const SnowLand := preload("res://scripts/snow/snow_land.gd")
+const RiverIce := preload("res://scripts/snow/river_ice.gd")
 
 ## The depth shown now (m), and the core's.
 var depth_m := 0.0
@@ -55,6 +57,8 @@ var total_units := 0.0
 var force_depth_m := -1.0
 var prints: SnowPrints
 var fall: SnowFall
+## The river's ice underfoot (river_ice.gd).
+var river_ice: StaticBody3D
 ## The broadleaves' year (autumn colour, the fall, bare winter trees, spring's buds): SeasonLeaves.
 var season: SeasonLeaves
 
@@ -86,6 +90,10 @@ func _ready() -> void:
 	season = SeasonLeaves.new()
 	season.name = "Leaves"
 	add_child(season)
+	river_ice = RiverIce.new()
+	river_ice.name = "RiverIce"
+	river_ice.set("cover", self)
+	add_child(river_ice)
 	_global(&"snow_cover", 0.0)
 	_global(&"snow_fresh", 0.0)
 	_global(&"snow_total", 0.0)
@@ -213,7 +221,7 @@ func build_shelter() -> void:
 		var cs := c as CollisionShape3D
 		if cs.shape == null or cs.disabled or not (cs.get_parent() is StaticBody3D or cs.get_parent() is AnimatableBody3D):
 			continue
-		if (cs.get_parent() as Node).is_in_group(&"terrain"):
+		if (cs.get_parent() as Node).is_in_group(&"terrain") or (cs.get_parent() as Node).is_in_group(RiverIce.GROUP):
 			continue
 		var ab := _shape_aabb(cs)
 		if ab.size.x < COVER_MIN_W or ab.size.z < COVER_MIN_W:

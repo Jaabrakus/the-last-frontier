@@ -2,7 +2,8 @@ class_name SnowFall
 extends Node3D
 ## The falling snow round the camera (SnowCover's; WeatherFx's rain streaks give way to it while the core says it snows):
 ## soft flakes in a box that follows the camera, drifting down and with the ground wind, as many as the snowfall asks
-## (SnowCover.falling), lit by the scene's light level as the rain is. Like the rain it does not know about roofs.
+## (SnowCover.falling), lit by the scene's light level as the rain is. None falls under a roof (shaders/weather/
+## precip.gdshader: the shelter map).
 
 const AMOUNT := {"high": 6000, "medium": 4000, "low": 2000}
 const BOX := Vector3(15.0, 1.0, 15.0)      ## half extents of the spawn box above the camera
@@ -12,7 +13,7 @@ const SPEED := 1.05                        ## m/s, a flake's fall
 var cover: SnowCover
 var _p: GPUParticles3D
 var _proc: ParticleProcessMaterial
-var _draw: StandardMaterial3D
+var _draw: ShaderMaterial
 var _level := 0.0
 
 
@@ -39,16 +40,14 @@ func _ready() -> void:
 	_proc.turbulence_influence_max = 0.15
 	_proc.scale_min = 0.6
 	_proc.scale_max = 1.4
-	_draw = StandardMaterial3D.new()
-	_draw.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_draw.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_draw.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	_draw.albedo_texture = Fx._soft_dot()
-	_draw.albedo_color = Color(0.92, 0.94, 0.97, 0.85)
-	# flakes right at the lens would be big blobs: they fade in from 0.6 m
-	_draw.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_ALPHA
-	_draw.distance_fade_min_distance = 0.3
-	_draw.distance_fade_max_distance = 1.2
+	_draw = ShaderMaterial.new()
+	_draw.shader = load("res://shaders/weather/precip.gdshader")
+	_draw.set_shader_parameter("billboard", 0)
+	_draw.set_shader_parameter("tex", Fx._soft_dot())
+	_draw.set_shader_parameter("tint", Color(0.92, 0.94, 0.97, 0.85))
+	# flakes right at the lens would be big blobs: they fade in from 0.3 m
+	_draw.set_shader_parameter("fade_min", 0.3)
+	_draw.set_shader_parameter("fade_max", 1.2)
 	var quad := QuadMesh.new()
 	quad.size = Vector2(0.045, 0.045)
 	quad.material = _draw
@@ -94,4 +93,4 @@ func _process(delta: float) -> void:
 		var forest: Node = dn.get("forest")
 		var fog_e: float = forest.rain_light if forest and forest.enabled else (env as Environment).fog_light_energy
 		lvl = clampf(fog_e * 1.3, 0.12, 1.0)
-	_draw.albedo_color = Color(0.9 * lvl + 0.08, 0.92 * lvl + 0.08, 0.96 * lvl + 0.08, 0.55 + 0.35 * _level)
+	_draw.set_shader_parameter("tint", Color(0.9 * lvl + 0.08, 0.92 * lvl + 0.08, 0.96 * lvl + 0.08, 0.55 + 0.35 * _level))

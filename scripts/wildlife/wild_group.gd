@@ -59,6 +59,11 @@ var trail_seen := 0.0
 var trail_wait := -1.0
 ## Trails given up (the kill gone, eaten, lost): {instance id: till when} they are not taken up again.
 var trails_left := {}
+## Wolves on a trail in the snow (TRACK with snow_trail; WildPlanner._snow_track): whose prints they follow (SnowPrints
+## kinds: deer, bison, boot) and the game time (core minutes) of the last print they came to.
+var snow_trail := false
+var snow_kind := ""
+var snow_t := 0.0
 ## Wolves: till when they are after the player for the kill he took from them (WildPlanner, WildAnimal._predator).
 var after_player_until := -1e9
 ## Wolves: when the pack last howled.

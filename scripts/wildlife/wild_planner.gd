@@ -33,6 +33,16 @@ const FORT_RANGE := 80.0
 ## goes, then eat what he left; starving (STARVE_HUNGER), they take it and come for him. Its meat gone with him (butchered,
 ## or hauled off on a rope): starving, they come after him (AFTER_PLAYER_S, till they are fed); hungry, they give it up.
 ## Deer plenty, they leave his game alone (WildlifeSpawner.pick_prey / nearest_carcass) and take up no trail.
+## Trails in the snow (user 2026-09-28: "wolves don't follow snow tracks yet" - "fix these"; SnowPrints keeps every
+## print, whose and when): a hungry pack (SNOW_TRACK_HUNGER) that crosses fresh prints (a member within SNOW_SCENT_M of
+## one no older than SNOW_FRESH_MIN game minutes) of deer or bison, or bold (dusk, night) or starving a man's, follows
+## them (TRACK, the leader to the newest print of the kind in reach, on toward its maker); the maker in reach
+## (TRACK_SEE_M): a deer or a bison is hunted (HUNT), the man the pack comes upon (PATROL on him: WildAnimal's senses do
+## the rest). No newer print for SNOW_LOST_S: the trail is lost. No snow, no prints: nothing to follow.
+const SNOW_TRACK_HUNGER := 0.35
+const SNOW_SCENT_M := 25.0
+const SNOW_FRESH_MIN := 720.0
+const SNOW_LOST_S := 25.0
 const TRACK_HUNGER := 0.4
 const STARVE_HUNGER := 0.75
 const TRACK_SCENT_M := 25.0
@@ -136,11 +146,12 @@ static func _pack(g: WildGroup, sp: WildlifeSpawner) -> void:
 		return
 	# a blood trail: on it while it holds; else one crossed, the land short of deer
 	if g.activity == WildGroup.Activity.TRACK:
-		if _track(g, sp):
+		if _snow_track(g, sp) if g.snow_trail else _track(g, sp):
 			return
 		if is_instance_valid(g.trail_of):
 			g.trails_left[g.trail_of.get_instance_id()] = sp.now + TRAIL_LEFT_S
 		g.trail_of = null
+		g.snow_trail = false
 		g.trail_wait = -1.0
 		g.dest_set = false
 		g.activity = WildGroup.Activity.PATROL
@@ -158,13 +169,16 @@ static func _pack(g: WildGroup, sp: WildlifeSpawner) -> void:
 			g.trail_wait = -1.0
 			_assign(g, sp, WildGroup.Activity.TRACK, b.pos)
 			return
-	# hungry: free meat first, then a hunt
+	# hungry: free meat first, then a trail in the snow, then a hunt
 	if n.x > 0.35:
 		var c := sp.nearest_carcass(g.centroid(), 300.0, "wolf")
 		if c != null:
 			g.carcass = c
 			_assign(g, sp, WildGroup.Activity.EAT, c.global_position)
 			return
+	if n.x > SNOW_TRACK_HUNGER and g.activity != WildGroup.Activity.TRACK and not g.is_routed(sp.now) \
+			and _take_snow_trail(g, sp, n.x > STARVE_HUNGER or bold > 0.6):
+		return
 	if n.x > 0.55 and (bold > 0.6 or n.x > 0.85):
 		var prey := sp.pick_prey(g.centroid(), 350.0)
 		if prey != null:
@@ -213,6 +227,79 @@ static func _track(g: WildGroup, sp: WildlifeSpawner) -> bool:
 		g.dest_set = true
 		return true
 	return sp.now - g.trail_seen < TRACK_LOST_S
+
+
+## The prints in the snow (SnowCover's SnowPrints), null without snow.
+static func _prints(sp: WildlifeSpawner) -> SnowPrints:
+	var snow := SnowCover.find(sp.get_tree()) if sp.is_inside_tree() else null
+	return snow.prints if snow and snow.depth_m > 0.005 else null
+
+
+## A fresh trail in the snow crossed by a member (the newest print within SNOW_SCENT_M of one of them): the pack takes
+## it up (TRACK). `man`: a man's prints too (bold or starving).
+static func _take_snow_trail(g: WildGroup, sp: WildlifeSpawner, man: bool) -> bool:
+	var prints := _prints(sp)
+	if prints == null:
+		return false
+	var kinds := ["deer", "bison"]
+	if man and sp.player != null and not sp.player.is_dead:
+		kinds.append("boot")
+	var best := {}
+	for m in g.alive():
+		var near := prints.prints_near(m.global_position, SNOW_SCENT_M, kinds, SNOW_FRESH_MIN)
+		if not near.is_empty() and (best.is_empty() or float(near[0].t) > float(best.t)):
+			best = near[0]
+	if best.is_empty():
+		return false
+	g.snow_trail = true
+	g.snow_kind = String(best.kind)
+	g.snow_t = float(best.t)
+	g.trail_of = null
+	g.trail_seen = sp.now
+	_assign(g, sp, WildGroup.Activity.TRACK, _print_pos(best))
+	return true
+
+
+## On a trail in the snow (TRACK, snow_trail): whether the pack keeps to it (false: lost, or given up).
+static func _snow_track(g: WildGroup, sp: WildlifeSpawner) -> bool:
+	var lead := g.leader()
+	var prints := _prints(sp)
+	if lead == null or prints == null:
+		return false
+	var at := lead.global_position
+	# up with the one that made them
+	if g.snow_kind == "boot":
+		var p := sp.player
+		if p == null or p.is_dead:
+			return false
+		if at.distance_to(p.global_position) < TRACK_SEE_M:
+			g.snow_trail = false
+			_assign(g, sp, WildGroup.Activity.PATROL, p.global_position)
+			return true
+	else:
+		var prey := sp.pick_prey(at, TRACK_SEE_M)
+		if prey != null:
+			g.snow_trail = false
+			g.prey = prey
+			g.hunt_since = sp.now
+			_assign(g, sp, WildGroup.Activity.HUNT, prey.global_position)
+			return true
+	# on along it: the newest print of its kind in reach, if newer than the last one come to
+	var near := prints.prints_near(at, SNOW_SCENT_M, [g.snow_kind], SNOW_FRESH_MIN)
+	if not near.is_empty() and float(near[0].t) > g.snow_t:
+		g.snow_t = float(near[0].t)
+		g.trail_seen = sp.now
+		g.dest = _print_pos(near[0])
+		g.dest_set = true
+		return true
+	return sp.now - g.trail_seen < SNOW_LOST_S
+
+
+## A print's place on the ground.
+static func _print_pos(rec: Dictionary) -> Vector3:
+	var x := float(rec.x)
+	var z := float(rec.z)
+	return Vector3(x, FrontierTerrain.height_at(x, z), z)
 
 
 ## The trail's end, the animal dead: the pack's kill, or the player's to wait him out for or come after him for.

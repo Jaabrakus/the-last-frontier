@@ -21,7 +21,7 @@ const THUNDER_NEAR_M := 3500.0
 var day_night: Node
 var _rain: GPUParticles3D
 var _rain_proc: ParticleProcessMaterial
-var _rain_draw: StandardMaterial3D
+var _rain_draw: ShaderMaterial
 var _light: DirectionalLight3D
 var _rain_audio: AudioStreamPlayer
 var _thunder_players: Array[AudioStreamPlayer] = []
@@ -72,17 +72,15 @@ func _build_rain() -> void:
 	_rain_proc.particle_flag_align_y = true
 	_rain_proc.scale_min = 0.7
 	_rain_proc.scale_max = 1.2
-	_rain_draw = StandardMaterial3D.new()
-	_rain_draw.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_rain_draw.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_rain_draw.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
-	_rain_draw.billboard_keep_scale = true
-	_rain_draw.cull_mode = BaseMaterial3D.CULL_DISABLED
-	_rain_draw.albedo_color = Color(0.72, 0.76, 0.82, 0.22)
+	# upright streaks turned to the camera, none drawn under a roof (shaders/weather/precip.gdshader: the snow's shelter
+	# map; user 2026-09-28: "rain and snow still fall through roofs")
+	_rain_draw = ShaderMaterial.new()
+	_rain_draw.shader = load("res://shaders/weather/precip.gdshader")
+	_rain_draw.set_shader_parameter("billboard", 1)
+	_rain_draw.set_shader_parameter("tint", Color(0.72, 0.76, 0.82, 0.22))
 	# drops right at the lens would be long bright lines: they fade in from 1 m to 3 m
-	_rain_draw.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_ALPHA
-	_rain_draw.distance_fade_min_distance = 1.0
-	_rain_draw.distance_fade_max_distance = 3.0
+	_rain_draw.set_shader_parameter("fade_min", 1.0)
+	_rain_draw.set_shader_parameter("fade_max", 3.0)
 	var quad := QuadMesh.new()
 	quad.size = Vector2(0.014, 0.6)
 	quad.material = _rain_draw
@@ -124,7 +122,7 @@ func _update_rain(w: WeatherSystem, cam: Camera3D, delta: float) -> void:
 		var fog_e: float = forest.rain_light if forest and forest.enabled else day_night.env.fog_light_energy
 		lvl = clampf(fog_e * 0.9, 0.04, 0.8)
 	lvl += w.ground_flash * 1.5
-	_rain_draw.albedo_color = Color(0.72 * lvl + 0.05, 0.76 * lvl + 0.05, 0.82 * lvl + 0.06, 0.2 + 0.2 * _rain_level)
+	_rain_draw.set_shader_parameter("tint", Color(0.72 * lvl + 0.05, 0.76 * lvl + 0.05, 0.82 * lvl + 0.06, 0.2 + 0.2 * _rain_level))
 	if _rain_audio and _rain_audio.stream:
 		if not _rain_audio.playing:
 			_rain_audio.play(randf() * maxf(_rain_audio.stream.get_length() - 1.0, 0.0))

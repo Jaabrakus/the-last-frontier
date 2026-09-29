@@ -743,7 +743,11 @@ but not under a roof (a shelter map built from the level's colliders, rebuilt wh
 fall round the camera in place of the rain, drifting with the wind. Whoever walks the snow leaves prints: the player,
 the spouse, the horse (hooves), the deer, wolves, foxes and bison, each their own stride; new snow fills them in
 (`SnowPrints`: pressed into a trail map round the player, kept as records for tracking: `prints_near()`). Footsteps
-crunch; deep snow slows walking (snowshoes help: `survival_conditions.gd`).
+crunch; deep snow slows walking (snowshoes help: `survival_conditions.gd`). A hungry wolf pack that crosses fresh prints
+follows them (`WildPlanner`: deer and bison, and a man's when bold or starving) to the animal, and hunts it, or to him.
+No rain or snow falls under a roof, and nothing grows there (`shaders/weather/precip.gdshader`, the grass: the shelter
+map). The river freezes from its banks as the cold deepens, across its slow water in deep winter (the rapids stay
+open), and the ice back from its thin edge bears the player and the horse (`scripts/snow/river_ice.gd`).
 
 The broadleaves' year (`scripts/snow/season_leaves.gd`, `shaders/vegetation/leaf_season.gdshaderinc`): the maples,
 oaks, birches and hazels turn from mid September (each its colours), are in full colour by mid October, drop their

@@ -223,6 +223,11 @@ void vertex() {
 		if (textureLod(blocker_map, (xz - blocker_rect.xy) / blocker_rect.zw, 0.0).r > 0.5) {
 			grow = 0.0;
 		}
+		// nothing grows under a roof (the snow's shelter map: the cabins, the storehouse, the blockhouses, what the player
+		// builds; user 2026-09-28, the grass and the flowers came up through a floor)
+		if (grow > 0.0 && snow_sheltered(vec3(xz.x, ground_height(xz) + 0.2, xz.y))) {
+			grow = 0.0;
+		}
 		sd = snow_cover * SNOW_FULL_M * (1.0 - 0.5 * forest_share);
 		if (sd > 0.0) {
 			// the land's snow here (snow_depth_k): the wind-scoured rises let the tall straw through, a drift buries it
