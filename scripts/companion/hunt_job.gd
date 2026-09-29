@@ -369,7 +369,7 @@ static func dress(w: SpouseCore, carcass: Object) -> Array:
 static func deposit(w: SpouseCore) -> String:
 	var parts := []
 	for e: Dictionary in w.hunt.get("carry", []):
-		var n := w.stock.put(String(e.kind), int(e.count))
+		var n := w.stock.put(String(e.kind), int(e.count), w.name, "brought home from the hunt")   # LEDGER
 		if n > 0:
 			parts.append("%d %s" % [n, InventoryState.name_of(String(e.kind)).to_lower()])
 	w.hunt["carry"] = []

@@ -5,11 +5,13 @@
  "kinds_note": "Pool kinds are chest or rack kinds of their own (never the player's loadout kinds: the chest screen would lose a felling axe or a knife the player must always have): 'axe' is the household's felling axe, 'trade_knife' its skinning knife, 'flint_steel' its fire kit. Aliases (below) let the other work name the player's kinds. store: 'chest' (a storage chest keeps it: the player hands over spares through the ordinary chest screen) or 'rack' (a WeaponRack slot holds it as a PlacedWeapon of rack_key, with the weapon's state; E on a rack puts a carried weapon in as ever; rack_style: the kind of rack it prefers). item: the survival core item the rules look for while a worker carries it (\"\" none: a tool the rules do not know). durability: runs of work before it is worn out (wear_per_run, default 1, each run of a job that used it); break_chance: the odds a run breaks it outright. model: what she holds in her right hand ([library, kind]: gather = GatherModels, wildlife = WildlifeModels, throwable = ThrowableModels; [] shows nothing), grip: metres up the model's own +Y from its origin to where the fist closes; state: what a rack weapon is put back with when it has no state of its own.",
  "jobs_note": "A job's tools (data/companion/jobs.json `tools`, ToolPool.needs_of): need: [[kind, ...], ...] any-of groups, every group required (the first free kind of a group is taken; what she holds already serves first); optional: [[kind, ...]] or [{any: [kind, ...], speed: minutes factor}] taken when free (a timed job's minutes times speed); use: {kind: units} consumables a run takes (what is left comes back). Joined with what the survival rules ask of the job's action (actions.json requires.tools -> need, tools_optional -> optional) and its variants' recipes (recipes.json tools), mapped from the rules' items to the kinds below by `item`.",
  "api_note": "ToolPool (scripts/companion/tool_pool.gd): checkout(worker, needs) -> {ok, items, reason}; return_all(worker); available(kind, owner); held_by(worker); counts(); HuntKit's source shape count(kind, owner) / take(kind, n, owner) / put_back(kind, n, owner) and spend(worker, kind, n) for a consumable used.",
- "aliases": {"felling_axe": "axe", "skinning_knife": "trade_knife", "fire_steel": "flint_steel", "knife": "trade_knife", "spear": "spear_pair"},
+ "aliases": {"hoe": "farm_hoe", "digging_stick": "farm_stick", "felling_axe": "axe", "skinning_knife": "trade_knife", "fire_steel": "flint_steel", "knife": "trade_knife", "spear": "spear_pair"},
  "kinds": {
   "hatchet": {"name": "Hatchet", "class": "tool", "store": "chest", "item": "item.tool.hatchet", "durability": 160, "break_chance": 0.002, "model": ["throwable", "tomahawk"], "grip": 0.12},
   "axe": {"name": "Felling Axe", "class": "tool", "store": "chest", "item": "item.tool.axe", "durability": 240, "break_chance": 0.001, "model": ["gather", "felling_axe"], "grip": 0.46},
   "stone_axe": {"name": "Stone Axe", "class": "tool", "store": "chest", "item": "item.tool.stone_axe", "durability": 40, "break_chance": 0.01, "model": ["gather", "stone_axe"], "grip": 0.3},
+  "farm_hoe": {"name": "Hoe", "class": "tool", "store": "chest", "item": "item.tool.hoe", "durability": 200, "break_chance": 0.001, "model": ["gather", "hoe"], "grip": 0.46},
+  "farm_stick": {"name": "Digging Stick", "class": "tool", "store": "chest", "item": "item.tool.digging_stick", "durability": 50, "break_chance": 0.008, "model": ["gather", "digging_stick"], "grip": 0.3},
   "trade_knife": {"name": "Knife", "class": "tool", "store": "chest", "item": "item.tool.knife", "durability": 200, "break_chance": 0.001, "model": ["wildlife", "skinning_knife"], "grip": 0.0},
   "flint_knife": {"name": "Flint Knife", "class": "tool", "store": "chest", "item": "item.tool.flint_knife", "durability": 30, "break_chance": 0.01, "model": []},
   "awl": {"name": "Awl", "class": "tool", "store": "chest", "item": "item.tool.awl", "durability": 120, "break_chance": 0.002, "model": []},
@@ -42,8 +44,9 @@
  "worker_kit": {"keep_cats": ["clothing"], "personal": []},
  "recruits_bring": true,
  "legacy_bring": true,
- "start_note": "A new game's pool, put in the fort's chests and racks once the fort is furnished (FortPlan): chest kinds by count, rack kinds by pieces (each a rack weapon with its state).",
+ "start_note": "A new game's pool, put in the fort's chests and racks once the fort is furnished (FortPlan): chest kinds by count, rack kinds by pieces (each a rack weapon with its state). farm: the fields' tools (FARM: the hoe job), put in the chests once on their own, so an older save gets them too.",
  "start": {
+  "farm": {"farm_hoe": 1, "farm_stick": 1},
   "chest": {"hatchet": 2, "axe": 1, "trade_knife": 3, "flint_steel": 2, "awl": 1, "bullet_mould": 1, "hooks_line": 1, "steel_trap": 2, "stake_set": 2, "cordage": 8, "powder": 2, "musket_balls": 24, "bar_lead": 1},
   "rack": {"musket": [{"loaded": false, "reserve": 0}], "spear_pair": [{"count": 2}, {"count": 2}]}
  },

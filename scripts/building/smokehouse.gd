@@ -58,10 +58,10 @@ func accepts(kind: String) -> bool:
 	return _food.has(kind)
 
 
-func put(inv: InventoryState, kind: String, n: int) -> int:
+func put(inv: InventoryState, kind: String, n: int, who := "", why := "") -> int:
 	if not accepts(kind):
 		return 0
-	var got := super.put(inv, kind, n)
+	var got := super.put(inv, kind, n, who, why)
 	if kind == "venison":
 		for i in got:
 			smoke.append(0.0)
@@ -69,8 +69,8 @@ func put(inv: InventoryState, kind: String, n: int) -> int:
 	return got
 
 
-func take(inv: InventoryState, kind: String, n: int) -> int:
-	var got := super.take(inv, kind, n)
+func take(inv: InventoryState, kind: String, n: int, who := "", why := "") -> int:
+	var got := super.take(inv, kind, n, who, why)
 	if kind == "venison":
 		for i in got:
 			if not smoke.is_empty():
@@ -278,11 +278,12 @@ func open_menu(player: Node) -> void:
 # --- The save ----------------------------------------------------------------------------------------
 
 func to_save_all() -> Dictionary:
-	return {"items": to_save(), "smoke": smoke.duplicate(), "smudge": smudge_min, "frac": _jerky_frac}
+	return {"items": to_save(), "smoke": smoke.duplicate(), "smudge": smudge_min, "frac": _jerky_frac, "ledger": ledger_save()}
 
 
 func from_save_all(d: Dictionary) -> void:
 	from_save(d.get("items", []))
+	ledger_load(d.get("ledger"))   # LEDGER: an older save has none
 	smoke = []
 	for s in d.get("smoke", []):
 		smoke.append(float(s))

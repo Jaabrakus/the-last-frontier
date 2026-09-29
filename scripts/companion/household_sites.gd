@@ -49,12 +49,12 @@ class Smoke extends RefCounted:
 	func smudge_room() -> int:
 		return floori((Smokehouse.SMUDGE_MAX_MIN - node.smudge_min) / Smokehouse.SMUDGE_MIN_PER_WOOD)
 
-	func add_venison(n: int) -> int:
+	func add_venison(n: int, who := "", why := "") -> int:
 		if n <= 0:
 			return 0
 		var inv := InventoryState.new()
 		inv.add("venison", n)
-		return node.put(inv, "venison", n)
+		return node.put(inv, "venison", n, who, why)   # LEDGER: the larder notes who hung it
 
 	func add_wood_units(n: int) -> int:
 		var put := clampi(n, 0, smudge_room())

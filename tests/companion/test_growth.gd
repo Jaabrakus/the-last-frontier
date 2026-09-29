@@ -515,12 +515,12 @@ class TestStock extends ChestStock:
 	func all() -> Dictionary:
 		return goods.duplicate()
 
-	func take(kind: String, n: int) -> int:
+	func take(kind: String, n: int, _who := "", _why := "") -> int:
 		var got := mini(n, int(goods.get(kind, 0)))
 		goods[kind] = int(goods.get(kind, 0)) - got
 		return got
 
-	func put(kind: String, n: int) -> int:
+	func put(kind: String, n: int, _who := "", _why := "") -> int:
 		goods[kind] = int(goods.get(kind, 0)) + n
 		return n
 

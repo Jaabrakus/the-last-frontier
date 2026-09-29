@@ -112,12 +112,16 @@ func _ready() -> void:
 	if sc:
 		sc.carcass_finder = _carcass_near_home
 		sc.fire_finder = _fire_needing_wood
+		sc.warmth_finder = func() -> float: return Campfire.warmth_at(get_tree(), global_position) if is_inside_tree() else 0.0
 		sc.finders = {
 			"pile": func() -> Object: return HouseholdSites.low_pile(get_tree(), hearth, HOUSE_RANGE),
 			"smoke": func() -> Object: return HouseholdSites.smokehouse(get_tree(), hearth, HOUSE_RANGE),
 			"rack": func() -> Object: return _lit_rack(),
 			"frame": func() -> Object: return HouseholdSites.station(get_tree(), "tanning_frame", hearth, HOUSE_RANGE, CampStation.TAN_FIRE_M),
 			"hoop": func() -> Object: return HouseholdSites.station(get_tree(), "stretching_hoop", hearth, HOUSE_RANGE),
+			# FARM: a bed of the fields round home that wants the hoe, or sowing / harvest (not one another worker claimed)
+			"hoebed": func(claimed: Array) -> Object: return FarmJob.spot(sc, FarmField.find(get_tree()), FarmJob.HOE, claimed, home),
+			"tendbed": func(claimed: Array) -> Object: return FarmJob.spot(sc, FarmField.find(get_tree()), FarmJob.FARM, claimed, home),
 		}
 		sc.task_finished.connect(_on_task_finished)
 		HuntRun.attach(self)   # HUNT: the hunt drives her through `errand` (scripts/companion/hunt_run.gd)
@@ -343,11 +347,11 @@ func _site_for(plan: Dictionary) -> Vector3:
 	match String(plan.site):
 		"home":
 			return hearth + _ring(1.1)
-		"carcass", "fire", "pile", "smoke", "rack", "frame", "hoop":
-			# the station or carcass the plan claimed (the finders, when it names none)
+		"carcass", "fire", "pile", "smoke", "rack", "frame", "hoop", "hoebed", "tendbed":
+			# the station, carcass or bed the plan claimed (the finders, when it names none)
 			var o: Object = plan.get("obj")
 			var at := _pos_of(o if o != null and is_instance_valid(o) else sc.find_site(String(plan.site)))
-			var reach := 1.2 if String(plan.site) == "carcass" else 1.5
+			var reach := 1.2 if String(plan.site) == "carcass" else (1.3 if String(plan.site).ends_with("bed") else 1.5)
 			return _snap(at + _ring(reach)) if at != Vector3.INF else home
 	# the woods: a spot round home, on the ground
 	var ang := _rng.randf() * TAU

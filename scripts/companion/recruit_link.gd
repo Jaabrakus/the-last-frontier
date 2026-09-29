@@ -127,7 +127,7 @@ func unit(c: Dictionary) -> SpouseCore:
 	else:
 		w = Recruit.build_worker(m, c)
 	for k: Variant in c.get("stash", {}):
-		w.stock.put(String(k), int(c.stash[k]))
+		w.stock.put(String(k), int(c.stash[k]), w.name, "what they carry")
 	units[id] = w
 	return w
 
@@ -204,9 +204,9 @@ func gift(c: Dictionary) -> String:
 	var kind := _gift_kind()
 	if kind == "" or u == null:
 		return say(c, "gift_none")
-	if house.stock.take(kind, 1) < 1:
+	if house.stock.take(kind, 1, "you", "a gift to %s" % u.name) < 1:   # LEDGER
 		return say(c, "gift_none")
-	u.stock.put(kind, 1)
+	u.stock.put(kind, 1, u.name, "a gift from you")
 	var r := Recruit.gift(c, now())
 	u._eat_when_hungry()
 	c["hungry"] = c.hungry and SurvivalNeeds.food_stage(u.core) in ["very_hungry", "starving", "wasting", "hungry"]
@@ -273,7 +273,7 @@ func join(ids: Array) -> void:
 			place = 0 if couple_placed.has(String(c.party)) else 1
 			couple_placed[String(c.party)] = true
 		for k: Variant in w.stock.all():
-			house.stock.put(String(k), w.stock.take(String(k), int(w.stock.count(String(k)))))
+			house.stock.put(String(k), w.stock.take(String(k), int(w.stock.count(String(k))), w.name, "joins the household"), w.name, "joins the household")   # LEDGER
 		w.recruit = Recruit.recruit_record(c, now(), place)
 		# a party that joins together has the terms its first member agreed, and trusts you as far as they do
 		var ld: Dictionary = lead if not lead.is_empty() and bool(c.get("together", false)) else c

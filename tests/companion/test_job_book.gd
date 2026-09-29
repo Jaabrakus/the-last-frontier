@@ -39,6 +39,10 @@ func _book() -> void:
 	var kinds := {}
 	for t in ["items", "materials", "fuel"]:
 		kinds.merge(SurvivalBridge.load_items(t))
+	var fd := FarmField.load_data()   # FARM: the seed and the crops the beds take and give (the store's kinds, not a core's)
+	for c: String in fd.crops:
+		kinds[String(fd.crops[c].item)] = true
+		kinds[String(fd.crops[c].seed)] = true
 	for id: String in JobBook.ids():
 		var j := JobBook.job(id)
 		_expect(stages.has(j.stage) and String(j.name) != "" and j.has("needs") and j.has("how") and j.has("inputs") and j.has("outputs"),
@@ -57,7 +61,8 @@ func _chain() -> void:
 		_expect(JobBook.downstream("butcher").has(d), "butcher feeds %s" % d)
 	_expect(JobBook.downstream("firewood").has("tend") and JobBook.downstream("firewood").has("woodpile"), "firewood feeds the fires and the pile")
 	_expect(not JobBook.upstream("smoke").has("firewood") and JobBook.upstream("smoke", true).has("firewood"), "the smudge's wood is fuel, not a link")
-	_expect(JobBook.upstream_all("cook") == ["butcher", "hunt"] and JobBook.downstream_all("butcher").size() >= 5, "the whole way up and down")   # HUNT
+	_expect(JobBook.upstream_all("cook") == ["butcher", "hunt", "hoe", "farm"] and JobBook.downstream_all("butcher").size() >= 5,
+			"the whole way up and down (%s)" % str(JobBook.upstream_all("cook")))   # HUNT, FARM
 	var c := JobBook.chain("cook")
 	_expect(c[0] == "hunt" and c[1] == "butcher" and c.has("cook") and c.has("stretch") and not c.has("tend"), "cook's chain starts at the hunt, then the butcher (%s)" % str(c))   # HUNT
 	var seen := {}
@@ -66,10 +71,14 @@ func _chain() -> void:
 		for id: String in ch.jobs:
 			dup = dup or seen.has(id)
 			seen[id] = true
-	_expect(not dup and seen.size() == JobBook.ids().size(), "chains() lists every job once (%d chains)" % JobBook.chains().size())
+	# (a chain for each source: the cook is in the hunt's and the fields'; user 2026-09-29: "hunt is a different supply chain
+	# and farming is a different supply chain")
+	var in_both := JobBook.chains().filter(func(ch: Dictionary) -> bool: return (ch.jobs as Array).has("cook")).map(func(ch: Dictionary) -> String: return String(ch.id))
+	_expect(seen.size() == JobBook.ids().size() and in_both == ["hunt", "hoe"], "every job is in a chain; the cook in the hunt's and the fields' (%s)" % str(in_both))
+	_expect(JobBook.chain("hoe") == ["hoe", "farm", "cook"] and JobBook.chain_of("hoe").name == "Farm: the beds to the table", "the fields' chain: the hoe, the sowing and harvest, the cook (%s)" % str(JobBook.chain("hoe")))
 	_expect(JobBook.chain("firewood")[0] == "firewood" and JobBook.chain("forage") == ["forage"], "the wood chain starts at the woods; foraging stands alone")
 	var cb := JobBook.cascade("butcher")
-	_expect(cb.has("cook") and cb.has("jerky") and cb.has("tan") and cb.has("stretch"), "switching the butcher off takes what only it feeds")
+	_expect(not cb.has("cook") and cb.has("jerky") and cb.has("tan") and cb.has("stretch"), "switching the butcher off takes what only it feeds (not the cook: the fields feed it too)")
 	_expect(JobBook.cascade("cook") == ["cook"], "cook feeds nothing")
 	_expect(JobBook.cascade("firewood").has("tend") and JobBook.cascade("firewood").has("woodpile"), "firewood off takes the fires' feeding")
 
@@ -150,13 +159,14 @@ func _toggles() -> void:
 	crew.set_enabled(w, "cook", true)
 	crew.set_enabled(w, "smoke", true)
 	crew.set_enabled(w, "butcher", false, true)
-	_expect(not w.enabled.cook and not w.enabled.smoke and not w.enabled.jerky and not w.enabled.tan and w.enabled.tend and w.enabled.firewood,
-			"the butcher off with what only it feeds; the wood chain untouched")
-	_expect(w.plan().is_empty(), "so the venison in the store is left alone")
+	_expect(w.enabled.cook and not w.enabled.smoke and not w.enabled.jerky and not w.enabled.tan and w.enabled.tend and w.enabled.firewood,
+			"the butcher off with what only it feeds (the cook stays: the fields feed it too); the wood chain untouched")
+	_expect(w.plan().get("task", "") == "cook", "so the venison is not smoked or dried; the cook, still on, cooks it (%s)" % str(w.plan()))
 	crew.set_enabled(w, "cook", true, true)
 	_expect(w.enabled.cook and w.enabled.butcher, "cook on brings the link that feeds it")
 	crew.set_chain(w, JobBook.chain_of("cook").id, false)
-	_expect(not w.enabled.cook and not w.enabled.butcher and not w.enabled.stretch and w.enabled.firewood, "a chain off as a whole")
+	_expect(w.enabled.cook and not w.enabled.butcher and not w.enabled.hunt and not w.enabled.stretch and w.enabled.firewood,
+			"a chain off as a whole, the cook it shares with the fields left on")
 	crew.set_chain(w, JobBook.chain_of("cook").id, true)
 	# a job nobody does pulls nothing
 	_expect(JobBook.pull("butcher", w.shortages(), func(_id: String) -> bool: return false) == 0.0, "no one doing the downstream: the butcher is not pulled")

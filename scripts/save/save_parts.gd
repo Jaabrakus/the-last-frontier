@@ -406,6 +406,7 @@ static func save_building(level: Node) -> Dictionary:
 		var chest := p.get_node_or_null("Chest") as StorageChest
 		if chest:
 			e["chest"] = chest.to_save()
+			e["chest_ledger"] = chest.ledger_save()   # LEDGER
 		var pile := p.get_node_or_null("Woodpile") as Woodpile
 		if pile:
 			e["woodpile"] = pile.to_save()
@@ -450,6 +451,7 @@ static func load_building(level: Node, d: Dictionary) -> void:
 			_restore_fire.call_deferred(p, e.fire)
 		if e.has("chest") and p.get_node_or_null("Chest") is StorageChest:
 			(p.get_node("Chest") as StorageChest).from_save(e.chest)
+			(p.get_node("Chest") as StorageChest).ledger_load(e.get("chest_ledger"))   # LEDGER: an older save has none
 		if e.has("woodpile") and p.get_node_or_null("Woodpile") is Woodpile:
 			(p.get_node("Woodpile") as Woodpile).from_save(int(e.woodpile))
 		if e.has("smokehouse") and p.get_node_or_null("Smokehouse") is Smokehouse:

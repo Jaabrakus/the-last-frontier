@@ -5,6 +5,9 @@ extends RefCounted
 ## level's storage chests.
 
 var kinds := {}
+## LEDGER: this store's own memory of what went in and out while it has no chests (StoreLedger); ChestStock's chests keep
+## their own.
+var ledger: Array = []
 
 
 func count(kind: String) -> int:
@@ -15,22 +18,38 @@ func all() -> Dictionary:
 	return kinds.duplicate()
 
 
-## Up to `n` of `kind` out of the store; how many came out.
-func take(kind: String, n: int) -> int:
+## Up to `n` of `kind` out of the store; how many came out. `who` took it, for `why` (the ledger: StoreLedger).
+func take(kind: String, n: int, who := "", why := "") -> int:
 	var got := mini(count(kind), maxi(n, 0))
 	if got > 0:
 		kinds[kind] = count(kind) - got
 		if int(kinds[kind]) <= 0:
 			kinds.erase(kind)
+		ledger = StoreLedger.add(ledger, null, who, kind, -got, why)
 	return got
 
 
 ## `n` of `kind` into the store; how many went in.
-func put(kind: String, n: int) -> int:
+func put(kind: String, n: int, who := "", why := "") -> int:
 	if n <= 0:
 		return 0
 	kinds[kind] = count(kind) + n
+	ledger = StoreLedger.add(ledger, null, who, kind, n, why)
 	return n
+
+
+## LEDGER: a worker's name by her id (the crew's), for the ledger; "" when there is none.
+func worker_name(owner: int) -> String:
+	if crew != null:
+		for w: SpouseCore in crew.workers:
+			if w.worker_id == owner:
+				return w.name
+	return ""
+
+
+## LEDGER: the last `n` goings in and out of the store, newest first (StoreLedger entries).
+func recent(n: int) -> Array:
+	return StoreLedger.recent([ledger], n)
 
 
 # ---------------------------------------------------------------- TOOLS: the tool pool's things
@@ -40,16 +59,16 @@ var pool: ToolPool = null
 
 
 ## Up to `n` units of `kind` out of the store as unit records ([{}]; a rack weapon carries {"state"}); the units taken.
-func take_units(kind: String, n: int) -> Array:
+func take_units(kind: String, n: int, who := "", why := "") -> Array:
 	var out := []
-	for i in take(kind, n):
+	for i in take(kind, n, who, why):
 		out.append({})
 	return out
 
 
 ## Units of `kind` (as take_units gave them) back into the store; how many went in.
-func put_units(kind: String, units: Array) -> int:
-	return put(kind, units.size())
+func put_units(kind: String, units: Array, who := "", why := "") -> int:
+	return put(kind, units.size(), who, why)
 
 
 ## The place a worker walks to for `kind` (to take it: `fetch`, or to put it back): a Node3D, or null (no place to walk to).
@@ -105,8 +124,8 @@ func free_count(kind: String, owner: int) -> int:
 
 
 ## Up to `n` of `kind` for `owner`, never units the others have claimed; how many came out.
-func take_for(owner: int, kind: String, n: int) -> int:
-	return take(kind, mini(n, free_count(kind, owner)))
+func take_for(owner: int, kind: String, n: int, who := "", why := "") -> int:
+	return take(kind, mini(n, free_count(kind, owner)), who, why)
 
 
 func site_free(owner: int, key: String) -> bool:

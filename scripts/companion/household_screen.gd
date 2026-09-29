@@ -297,6 +297,7 @@ func _build_tasks() -> void:
 		for id: String in nobody:
 			names.append(JobBook.name_of(id))
 		_wrapped("Nobody does: %s." % ", ".join(names), 14, Color(0.9, 0.6, 0.45))
+	_build_fields()
 	_content.add_child(_label("Bring meat and roots home to a storage chest: she cooks them and butchers a carcass left near the fire.", 14, DIM))
 	_content.add_child(_label("The household keeps", 17, HEAD))
 	var all := house.stock.all()
@@ -307,11 +308,15 @@ func _build_tasks() -> void:
 		keys.sort()
 		var parts := []
 		for k in keys:
-			parts.append("%d %s" % [int(all[k]), InventoryState.name_of(String(k)).to_lower()])
+			parts.append(StoreLedger.count_words(String(k), int(all[k])))
 		var l := _label(", ".join(parts), 16, TEXT)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l.custom_minimum_size = Vector2(580, 0)
 		_content.add_child(l)
+	# LEDGER: who took what out of the store, and put what in, lately (the chests' own ledgers)
+	var led: Array = house.stock.recent(60) if house.stock.has_method("recent") else []
+	if not led.is_empty():
+		_wrapped("Lately in the store: %s." % "; ".join(StoreLedger.lines(led, StoreLedger.now(house.get_tree()), 5)), 14, DIM)
 	ToolPanel.build(self)   # TOOLS: the pool: owned, out and with whom, worn, broken, jobs waiting for a tool
 	_content.add_child(_label("Lately", 17, HEAD))
 	var j := sc.journal
@@ -350,6 +355,48 @@ func _build_sleep(sc: SpouseCore) -> void:
 	row.add_child(_label("%s h" % String.num(sc.sleep_h, 1), 16, TEXT))
 	row.add_child(_step(0.5, func() -> void: _sc().sleep_h = clampf(_sc().sleep_h + 0.5, 0.0, 12.0)))
 	_content.add_child(_label("%s sleeps %s to %s. A short nap, or a sleep by day, rests just the same: bed and fire rest her faster." % [sc.name, _clock(sc.sleep_from), _clock(fposmod(sc.sleep_from + sc.sleep_h, 24.0))], 15, DIM))
+
+
+## FARM: the fields round home: how many beds the household keeps (the hoe job breaks ground up to it: FarmJob), what
+## the beds round home are doing, and the seed in the store.
+func _build_fields() -> void:
+	_content.add_child(_label("The fields", 17, HEAD))
+	var crew := house.crew()
+	var row := _row()
+	row.add_child(_label("Beds kept round home", 16, TEXT))
+	row.add_child(_step(-1.0, func() -> void: house.crew().beds_wanted = maxi(house.crew().beds_wanted - 1, 0)))
+	row.add_child(_label(str(crew.beds_wanted), 16, TEXT))
+	row.add_child(_step(1.0, func() -> void: house.crew().beds_wanted = mini(house.crew().beds_wanted + 1, 24)))
+	var field := FarmField.find(house.get_tree())
+	var line := "No fields in this place."
+	if field != null:
+		var n := {}
+		var mine := field.beds_near(house.home, FarmJob.FIELD_M)
+		for key: String in mine:
+			var st := field.state_of(key)
+			n[st] = int(n.get(st, 0)) + 1
+		var parts := []
+		for st: Array in [["breaking", "being broken"], ["tilled", "ready to sow"], ["growing", "growing"], ["ripe", "ripe"], ["dead", "killed by frost"]]:
+			if int(n.get(st[0], 0)) > 0:
+				parts.append("%d %s" % [int(n[st[0]]), st[1]])
+		line = "%d bed%s round home%s." % [mine.size(), "" if mine.size() == 1 else "s", (": " + ", ".join(parts)) if not parts.is_empty() else ""]
+		if field.frozen():
+			line += " The ground is frozen."
+		elif not field.can_sow_now():
+			line += " Too late in the year to sow."
+	var seeds := []
+	for k: String in JobBook.group("seed"):
+		if house.stock.count(k) > 0:
+			seeds.append("%d %s" % [house.stock.count(k), InventoryState.name_of(k).to_lower()])
+	line += " Seed in the store: %s." % (", ".join(seeds) if not seeds.is_empty() else "none (put seed in a storage chest)")
+	_wrapped(line + " A hoe or a digging stick in a chest lets them break ground and weed.", 14, DIM)
+	if field != null:
+		# FARM: the beds' own memory, read out (FarmField.note)
+		var lines := []
+		for e: Dictionary in field.recent(field.beds_near(house.home, FarmJob.FIELD_M), 4):
+			lines.append("%s %s, %s" % [String(e.who).left(1).to_upper() + String(e.who).substr(1), String(e.what), StoreLedger.ago(field.now_min() - float(e.t))])
+		if not lines.is_empty():
+			_wrapped("Lately in the fields: %s." % "; ".join(lines), 14, DIM)
 
 
 func _step(d: float, fn: Callable) -> Button:

@@ -403,7 +403,7 @@ class StoreSource extends RefCounted:
 		return stock.free_count(kind, owner)
 
 	func take(kind: String, n: int, owner: int) -> int:
-		return stock.take_for(owner, kind, n)
+		return stock.take_for(owner, kind, n, stock.worker_name(owner), "the hunt")   # LEDGER
 
-	func put_back(kind: String, n: int, _owner: int) -> int:
-		return stock.put(kind, n)
+	func put_back(kind: String, n: int, owner: int) -> int:
+		return stock.put(kind, n, stock.worker_name(owner), "back from the hunt")

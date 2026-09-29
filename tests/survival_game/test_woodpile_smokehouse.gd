@@ -215,6 +215,11 @@ func _test_screen() -> void:
 		return
 	var chest := cp.get_node("Chest") as StorageChest
 	await stand(chest.global_position + Vector3(0, 0, 1.4))
+	# (headless, the root viewport is 64x64: the screen, centred on it, had its buttons at negative positions, where the
+	# mouse events were dropped; the clicks below need a screen's worth of room, as a window has)
+	var was_size := root.size
+	root.size = Vector2i(1280, 720)
+	await process_frame
 	set_count("stone", 4)
 	set_count("branches", 3)
 	var wkey := String(player.weapon_key)
@@ -231,17 +236,17 @@ func _test_screen() -> void:
 	var row := _row(scr, "stone", true)
 	check(row != null, "the pack's stone has a row")
 	if row:
-		_click(row, MOUSE_BUTTON_LEFT)
+		await _click(row, MOUSE_BUTTON_LEFT)
 		await process_frame
 		await process_frame
 		check(chest.count_of("stone") == 1 and count("stone") == 3, "a click: one stone in (%d, %d)" % [chest.count_of("stone"), count("stone")])
 		row = _row(scr, "stone", true)
-		_click(row, MOUSE_BUTTON_RIGHT)
+		await _click(row, MOUSE_BUTTON_RIGHT)
 		await process_frame
 		await process_frame
 		check(chest.count_of("stone") == 4 and count("stone") == 0, "a right-click: all the stone in")
 		var back := _row(scr, "stone", false)
-		_click(back, MOUSE_BUTTON_LEFT)
+		await _click(back, MOUSE_BUTTON_LEFT)
 		await process_frame
 		await process_frame
 		check(chest.count_of("stone") == 3 and count("stone") == 1, "a click on the chest's side: one back")
@@ -257,6 +262,7 @@ func _test_screen() -> void:
 	for i in 4:
 		await process_frame
 	check(not paused and not is_instance_valid(scr), "Esc closes it, the game goes on")
+	root.size = was_size
 	await frames(10)
 	check(String(player.weapon_key) == wkey, "the player's weapon as it was (%s)" % player.weapon_key)
 
@@ -270,8 +276,16 @@ func _row(scr: ChestScreen, kind: String, pack: bool) -> Button:
 	return null
 
 
-## A real click on `b`: the mouse moved there, the button pressed and let go, through the viewport's input.
+## A real click on `b`: its list scrolled to show it (as a hand would: a full pack runs past the list's bottom), the
+## mouse moved there, the button pressed and let go, through the viewport's input.
 func _click(b: Button, button: MouseButton) -> void:
+	var sc := b.get_parent()
+	while sc != null and not (sc is ScrollContainer):
+		sc = sc.get_parent()
+	if sc is ScrollContainer:
+		(sc as ScrollContainer).ensure_control_visible(b)
+		await process_frame
+		await process_frame
 	var at := b.get_global_rect().get_center()
 	var mv := InputEventMouseMotion.new()
 	mv.position = at

@@ -25,6 +25,8 @@
     "tan": ["I'll work the hides at the frame.", "Bring the hides and brains, and I'll dress them."],
     "stretch": ["I'll stretch the pelts on the hoop.", "Furs want stretching before they spoil."],
     "teach": ["I'll sit down with the little one and show it how.", "It's time for a lesson."],
+    "hoe": ["I'll take the hoe to the beds.", "The weeds are up. I'll hoe them out.", "We want another bed. I'll break the ground."],
+    "farm": ["I'll see to the beds.", "The corn's ripe. I'll bring it in.", "There's seed in the chest. I'll get it in the ground."],
     "hunt": ["I'll take the gun and see what's moving.", "There's deer sign by the creek. I'll bring one home.", "We want meat. I'll go and hunt."]
   },
   "home_set": ["Then this is home.", "Aye, this will do."],

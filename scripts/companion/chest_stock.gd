@@ -42,7 +42,7 @@ func all() -> Dictionary:
 	return d
 
 
-func take(kind: String, n: int) -> int:
+func take(kind: String, n: int, who := "", why := "") -> int:
 	if ToolPool.is_rack(kind):   # TOOLS
 		return ToolRacks.take(tree, home, kind, n).size()
 	var got := 0
@@ -52,11 +52,11 @@ func take(kind: String, n: int) -> int:
 			break
 		if kind == "venison" and c is Smokehouse:
 			continue
-		got += c.take(inv, kind, n - got)
+		got += c.take(inv, kind, n - got, who, why)   # LEDGER: each chest notes its own
 	return got
 
 
-func put(kind: String, n: int) -> int:
+func put(kind: String, n: int, who := "", why := "") -> int:
 	if n <= 0:
 		return 0
 	if ToolPool.is_rack(kind):   # TOOLS
@@ -66,22 +66,30 @@ func put(kind: String, n: int) -> int:
 			continue
 		var inv := InventoryState.new()
 		inv.add(kind, n)
-		return c.put(inv, kind, n)
+		return c.put(inv, kind, n, who, why)
 	return 0
+
+
+## LEDGER: the last `n` goings in and out of the household's chests together, newest first.
+func recent(n: int) -> Array:
+	var ls := []
+	for c: StorageChest in _chests():
+		ls.append(c.ledger)
+	return StoreLedger.recent(ls, n)
 
 
 # ---------------------------------------------------------------- TOOLS: the pool's things in the chests and racks
 ## Rack weapons come out with their state, chest kinds as plain units.
-func take_units(kind: String, n: int) -> Array:
+func take_units(kind: String, n: int, who := "", why := "") -> Array:
 	if ToolPool.is_rack(kind):
 		return ToolRacks.take(tree, home, kind, n)
-	return super.take_units(kind, n)
+	return super.take_units(kind, n, who, why)
 
 
-func put_units(kind: String, units: Array) -> int:
+func put_units(kind: String, units: Array, who := "", why := "") -> int:
 	if ToolPool.is_rack(kind):
 		return ToolRacks.put(tree, home, kind, units)
-	return put(kind, units.size())
+	return put(kind, units.size(), who, why)
 
 
 ## The chest, rack or barrel a worker goes to: the nearest that holds `kind` (fetch) or takes it (putting back).

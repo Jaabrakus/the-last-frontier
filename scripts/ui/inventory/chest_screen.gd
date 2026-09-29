@@ -22,6 +22,9 @@ var _chest_box: VBoxContainer
 var _pack_head: Label
 var _chest_head: Label
 var _note: Label
+## LEDGER: the chest's last goings in and out, under the columns (LATELY_N of them).
+var _lately: Label
+const LATELY_N := 4
 var _done := false
 var _icon_t := 0.0
 
@@ -84,6 +87,11 @@ func _ready() -> void:
 		var from_pack: bool = pair[1]
 		b.pressed.connect(func() -> void: move_all(from_pack))
 		all.add_child(b)
+	# LEDGER: what the chest remembers of who put in and took out what (StoreLedger)
+	_lately = _label("", 14, DIM)
+	_lately.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_lately.custom_minimum_size = Vector2(624, 0)
+	outer.add_child(_lately)
 	_note = _label("Click: move one     Right-click: move them all     Esc: close", 15, DIM)
 	outer.add_child(_note)
 	# centred on the screen, growing both ways from its middle (setting position to -size / 2 put it in the top-left
@@ -144,6 +152,10 @@ func refresh() -> void:
 		_chest_box.add_child(_row(String(e.kind), int(e.count), false))
 	if chest.items.is_empty():
 		_chest_box.add_child(_label("Empty", 16, DIM))
+	if _lately:
+		var lines := StoreLedger.lines(StoreLedger.recent([chest.ledger], 40), StoreLedger.now(get_tree()), LATELY_N)
+		_lately.text = ("Lately: " + "; ".join(lines) + ".") if not lines.is_empty() else ""
+		_lately.visible = not lines.is_empty()
 
 
 func _row(kind: String, n: int, from_pack: bool) -> Button:
@@ -167,7 +179,7 @@ func _row(kind: String, n: int, from_pack: bool) -> Button:
 ## Moves `n` of `kind` from the pack into the chest (`from_pack`) or back.
 func move(kind: String, from_pack: bool, n: int) -> int:
 	var inv := InventoryState.from_player(player)
-	var got: int = chest.put(inv, kind, n) if from_pack else chest.take(inv, kind, n)
+	var got: int = chest.put(inv, kind, n, "you", "by hand") if from_pack else chest.take(inv, kind, n, "you", "by hand")   # LEDGER
 	player.set("inventory_pack", inv.pack.duplicate(true))
 	refresh.call_deferred()
 	return got

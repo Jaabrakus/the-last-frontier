@@ -10,6 +10,8 @@ extends RefCounted
 ##   Household.add_worker() / remove_worker() are the way in for the node; this class is the logic, headless.
 
 var workers: Array = []
+## FARM: how many beds round home the household keeps (the hoe job breaks ground up to it; the Tasks tab sets it). Saved.
+var beds_wanted := FarmJob.BEDS_WANTED
 
 
 func size() -> int:
@@ -75,11 +77,12 @@ func set_enabled(w: SpouseCore, job: String, on: bool, cascade := false) -> void
 			w.cancel("told to stop")
 
 
-## A whole chain on or off for a worker (`chain_id` is JobBook.chains()[i].id).
+## A whole chain on or off for a worker (`chain_id` is JobBook.chains()[i].id); off leaves the jobs another chain shares
+## (the cook works the hunt's venison and the fields' crops).
 func set_chain(w: SpouseCore, chain_id: String, on: bool) -> void:
 	for c: Dictionary in JobBook.chains():
 		if c.id == chain_id:
-			for id: String in c.jobs:
+			for id: String in (c.jobs if on else JobBook.own_jobs(chain_id)):
 				set_enabled(w, id, on)
 
 
@@ -123,13 +126,14 @@ func to_dict(ats := []) -> Dictionary:
 		if i < ats.size():
 			e["at"] = ats[i]
 		out.append(e)
-	return {"workers": out}
+	return {"workers": out, "beds_wanted": beds_wanted}
 
 
 ## Builds the workers from a save: the new format, or the old one (a single "spouse": she becomes worker 0). The workers
 ## share `store` and join this crew. Returns the "at" positions found ([] entries where there were none).
 func load_dict(d: Dictionary, main: SurvivalCore, store: HouseholdStock) -> Array:
 	workers.clear()
+	beds_wanted = int(d.get("beds_wanted", FarmJob.BEDS_WANTED))   # FARM: an older save keeps the default
 	store.crew = self
 	var ats := []
 	var entries: Array = d.get("workers", [])

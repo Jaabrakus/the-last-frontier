@@ -178,6 +178,7 @@ func _step_time(b: SurvivalBridge) -> void:
 				r["rain"] = float(r.get("rain", 0.0)) + dmin / 60.0
 			if frost and progress(k) < 1.0:
 				r["dead"] = true
+				note(k, "the frost", "killed the %s" % _crops_words(String(r.sow)))
 				changed.emit(k)
 		if _state_key(k) != String(_drawn.get(k, "")):
 			_redraw(k)
@@ -368,7 +369,7 @@ func hoe_prompt(key: String) -> String:
 
 ## A stroke of the hoe (or the digging stick) worth `power`: breaks ground (a new bed where there was none), or hoes
 ## out the weeds. {event: "", "broke", "tilled", "weeded", "frozen", "blocked"}.
-func strike(key: String, power: float) -> Dictionary:
+func strike(key: String, power: float, who := "you") -> Dictionary:
 	if frozen():
 		return {"event": "frozen"}
 	var ij := key.split(",")
@@ -380,6 +381,7 @@ func strike(key: String, power: float) -> Dictionary:
 		beds[key] = {"i": i, "j": j, "work": 0.0, "till": 0.0, "sow": "", "sown": 0.0, "hoed": 0, "weed_work": 0.0,
 				"rain": 0.0, "dead": false}
 		_clear_grass([Vector2i(i, j)])
+		note(key, who, "broke ground for the bed")
 	var r: Dictionary = beds[key]
 	var ev := "broke"
 	match state_of(key):
@@ -388,6 +390,7 @@ func strike(key: String, power: float) -> Dictionary:
 			r["till"] = clampf(float(r.work) / float(data.get("till_work", 5.0)), 0.0, 1.0)
 			if float(r.till) >= 1.0:
 				ev = "tilled"
+				note(key, who, "finished breaking the ground")
 		"growing":
 			if weeds_due(key) <= 0:
 				return {"event": ""}
@@ -397,6 +400,7 @@ func strike(key: String, power: float) -> Dictionary:
 				r["weed_work"] = 0.0
 				r["hoed"] = int(r.get("hoed", 0)) + 1
 				ev = "weeded"
+				note(key, who, "hoed out the weeds")
 		_:
 			return {"event": ""}
 	_redraw(key)
@@ -436,6 +440,17 @@ func sow(key: String, id: String, p: Node) -> bool:
 	for s: String in need:
 		inv.take(s, int(need[s]))
 	p.set("inventory_pack", inv.pack.duplicate(true))
+	sow_bed(key, id, "you")
+	_award("sown")
+	return true
+
+
+## The bed sown with `id` (the seed already found elsewhere: a household worker's from the store, FarmJob). False when
+## it cannot be (not tilled, out of season).
+func sow_bed(key: String, id: String, who := "") -> bool:
+	if state_of(key) != "tilled" or not can_sow_now() or not data.sowings.has(id):
+		return false
+	note(key, who, "sowed %s" % sowing_name(id))
 	var r: Dictionary = beds[key]
 	r["sow"] = id
 	r["sown"] = now_min()
@@ -443,7 +458,6 @@ func sow(key: String, id: String, p: Node) -> bool:
 	r["weed_work"] = 0.0
 	r["rain"] = 0.0
 	r["dead"] = false
-	_award("sown")
 	_redraw(key)
 	changed.emit(key)
 	return true
@@ -451,12 +465,13 @@ func sow(key: String, id: String, p: Node) -> bool:
 
 ## What a ripe bed gives now: {pack kind: count} (the crops by the yields, the weeding, the rain and the skill; a little
 ## seed saved back).
-func harvest_yield(key: String) -> Dictionary:
+## `skill` (0..100): the one who harvests (a household worker's, FarmJob); the player's Husbandry when not given.
+func harvest_yield(key: String, skill := -1.0) -> Dictionary:
 	var r: Dictionary = beds[key]
 	var sw: Dictionary = data.sowings.get(String(r.sow), {})
 	var mult := float(data.get("yield_base", 0.8)) + float(data.get("yield_per_weeding", 0.1)) * mini(int(r.get("hoed", 0)), 2)
 	mult *= 1.0 + float(data.get("rain_bonus", 0.1)) * clampf(float(r.get("rain", 0.0)) / float(data.get("rain_hours_full", 12.0)), 0.0, 1.0)
-	mult *= 1.0 + float(data.get("skill_yield_at_100", 0.5)) * _skill_level() / 100.0
+	mult *= 1.0 + float(data.get("skill_yield_at_100", 0.5)) * (skill if skill >= 0.0 else _skill_level()) / 100.0
 	mult *= float(sw.get("bonus", 1.0))
 	var sisters := (sw.get("crops", []) as Array).size() > 1
 	var got := {}
@@ -486,9 +501,95 @@ func harvest(key: String, p: Node) -> Dictionary:
 			inv.add(k, int(got[k]))
 			p.set("inventory_pack", inv.pack.duplicate(true))
 	_award("harvest")
+	note(key, "you", "harvested %s" % _got_words(got))
 	_clear(key)
 	harvested.emit(key, got)
 	return got
+
+
+## A ripe bed harvested by someone else than the player (a household worker, FarmJob, at `skill`): what it gave ({kind:
+## count}, the seed saved back with it), the bed worked ground again; {} when not ripe. Where it goes is theirs to say.
+func take_harvest(key: String, skill: float, who := "") -> Dictionary:
+	if state_of(key) != "ripe":
+		return {}
+	var got := harvest_yield(key, skill)
+	note(key, who, "harvested %s" % _got_words(got))
+	_clear(key)
+	harvested.emit(key, got)
+	return got
+
+
+## The frost-killed plants pulled up (someone else than the player: FarmJob). False when the bed is not dead.
+func clear_bed(key: String, who := "") -> bool:
+	if state_of(key) != "dead":
+		return false
+	note(key, who, "pulled up the dead plants")
+	_clear(key)
+	return true
+
+
+## The beds within `m` of `p` (their keys).
+func beds_near(p: Vector3, m: float) -> Array:
+	var out := []
+	for key: String in beds:
+		var c := bed_center(key)
+		if Vector2(c.x - p.x, c.z - p.z).length() <= m:
+			out.append(key)
+	return out
+
+
+# --- The bed's memory ---------------------------------------------------------------------------------------------
+## What was done to a bed, by whom and when (user 2026-09-29: "the memory should be in the crop ... the crop has what was
+## planted and the player reads it or the npc"): its record's "log", [[game minute, who, what]], the last LOG_KEEP, saved
+## with it. Who: "you" for the player's hand, a worker's name (FarmJob), "the frost".
+const LOG_KEEP := 12
+
+
+func note(key: String, who: String, what: String) -> void:
+	var r: Dictionary = beds.get(key, {})
+	if r.is_empty():
+		return
+	var lg: Array = r.get("log", [])
+	lg.append([now_min(), who if who != "" else "the household", what])
+	if lg.size() > LOG_KEEP:
+		lg = lg.slice(lg.size() - LOG_KEEP)
+	r["log"] = lg
+
+
+## The bed's memory, oldest first ([[minute, who, what]]).
+func history(key: String) -> Array:
+	return (beds.get(key, {}).get("log", []) as Array).duplicate(true)
+
+
+## Who sowed what is in the bed now and how long ago ("sown by Mercy, 2 days ago"); "" when it is not sown.
+func sown_line(key: String) -> String:
+	var r: Dictionary = beds.get(key, {})
+	if String(r.get("sow", "")) == "":
+		return ""
+	var lg: Array = r.get("log", [])
+	for i in range(lg.size() - 1, -1, -1):
+		var e: Array = lg[i]
+		if String(e[2]).begins_with("sowed"):
+			return "sown by %s, %s" % [String(e[1]), StoreLedger.ago(now_min() - float(e[0]))]
+	return ""
+
+
+## The latest things done on the beds `keys`, newest first: [{t, who, what, key}].
+func recent(keys: Array, n: int) -> Array:
+	var all := []
+	for key: String in keys:
+		for e: Array in beds.get(key, {}).get("log", []):
+			all.append({"t": float(e[0]), "who": String(e[1]), "what": String(e[2]), "key": key})
+	all.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a.t) > float(b.t))
+	return all.slice(0, mini(n, all.size()))
+
+
+func _got_words(got: Dictionary) -> String:
+	var parts := []
+	for k: String in got:
+		if not k.begins_with("seed_"):
+			parts.append(StoreLedger.count_words(k, int(got[k])))
+	return ", ".join(parts) if not parts.is_empty() else "nothing"
 
 
 ## The bed back to worked, empty ground (after a harvest, or the frost-killed plants pulled).
@@ -560,10 +661,16 @@ func _find_offer() -> Dictionary:
 				return {}
 			best["can"] = false
 			best["text"] = "%s growing%s" % [_crops_words(String(r.sow)).capitalize(), _when_ripe(k2)]
+			var sl := sown_line(k2)
+			if sl != "":
+				best["text"] += "  (%s)" % sl
 		"ripe":
 			best["can"] = true
 			best["act"] = "harvest"
 			best["text"] = "Harvest the %s" % _crops_words(String(r.sow))
+			var sl := sown_line(k2)
+			if sl != "":
+				best["text"] += "  (%s)" % sl
 		"dead":
 			best["can"] = true
 			best["act"] = "clear"
@@ -680,7 +787,7 @@ func _finish(p: Node, key: String, act: String) -> void:
 	elif act == "harvest":
 		harvest(key, p)
 	elif act == "clear" and state_of(key) == "dead":
-		_clear(key)
+		clear_bed(key, "you")
 
 
 func _notice(text: String) -> void:

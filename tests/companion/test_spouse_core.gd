@@ -261,7 +261,7 @@ class FakeSmoke extends RefCounted:
 	func smudge_room() -> int:
 		return floori((1440.0 - smudge) / 240.0)
 
-	func add_venison(n: int) -> int:
+	func add_venison(n: int, _who := "", _why := "") -> int:
 		raw += n
 		return n
 

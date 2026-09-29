@@ -95,5 +95,47 @@ func _initialize() -> void:
 	nm.world = null
 	var p := PackedVector3Array([Vector3(0, 0, 0), Vector3(5, 0, 0), Vector3(10, 0, 0), Vector3(15, 0, 0)])
 	_expect(nm._wander(p) == p, "no world: the path is left as it is")
+	# SpouseCore.sync: resting by a lit fire fills the gauge faster (the body's warmth_finder); low, she takes a ginseng
+	# tonic from the store, one a day
+	w.role = "home"
+	w.task = ""
+	w.sleep_from = 21.0
+	w.sleep_h = 8.0
+	w.core.state.needs["stomach"] = 2500.0
+	_at_hour(w, 12.0)
+	main.state.minutes = w.core.state.minutes
+	w.core.state.flags["well_rested_until"] = w.core.state.minutes + 180.0
+	var h0 := Sharpness.rested_hours(w)
+	main.state.minutes += 60.0
+	w.sync(main)
+	var cold := Sharpness.rested_hours(w) - h0
+	w.warmth_finder = func() -> float: return 1.0
+	h0 = Sharpness.rested_hours(w)
+	main.state.minutes += 60.0
+	w.sync(main)
+	var warm := Sharpness.rested_hours(w) - h0
+	_expect(cold > 0.0 and warm > cold + 0.05, "an hour's rest by a lit fire fills more (%.2f h) than away from it (%.2f h)" % [warm, cold])
+	w.warmth_finder = func() -> float: return 0.2
+	h0 = Sharpness.rested_hours(w)
+	main.state.minutes += 60.0
+	w.sync(main)
+	_expect(is_equal_approx(Sharpness.rested_hours(w) - h0, cold), "a fire too far off to warm her does not count")
+	w.warmth_finder = Callable()
+	w.core.state.flags["well_rested_until"] = -1.0
+	w.stock.put("ginseng_tonic", 2)
+	main.state.minutes += 1.0
+	w.sync(main)
+	var tonic := Sharpness.rested_hours(w)
+	_expect(w.stock.count("ginseng_tonic") == 1 and tonic >= 3.9, "worn out, she takes a ginseng tonic from the store (%.1f h well rested, %d left)" % [tonic, w.stock.count("ginseng_tonic")])
+	w.core.state.flags["well_rested_until"] = -1.0
+	main.state.minutes += 1.0
+	w.sync(main)
+	_expect(w.stock.count("ginseng_tonic") == 1, "one tonic a day (%d left)" % w.stock.count("ginseng_tonic"))
+	w.core.state.flags["well_rested_until"] = w.core.state.minutes + 300.0
+	w.stock.put("ginseng_tonic", 1)
+	main.state.minutes += 1440.0
+	w.core.state.flags["well_rested_until"] = main.state.minutes + 300.0
+	w.sync(main)
+	_expect(w.stock.count("ginseng_tonic") == 2, "rested enough, she leaves the tonic in the store")
 	print("SHARPNESS TEST %s" % ("PASSED" if fails == 0 else "FAILED (%d)" % fails))
 	quit(1 if fails else 0)

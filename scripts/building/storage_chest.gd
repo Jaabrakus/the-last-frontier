@@ -12,6 +12,8 @@ const LID_OPEN := deg_to_rad(-105.0)
 
 ## [{kind, count}] in the order they went in.
 var items: Array = []
+## LEDGER: who put in and took out what, when, for what (StoreLedger; saved with the chest).
+var ledger: Array = []
 var interact_reach := 2.4
 var open := false
 var _lid: MeshInstance3D
@@ -74,13 +76,15 @@ func total() -> int:
 	return n
 
 
-## Up to `n` of `kind` from `inv` (a pack) into the chest. How many went in.
-func put(inv: InventoryState, kind: String, n: int) -> int:
+## Up to `n` of `kind` from `inv` (a pack) into the chest. How many went in. `who` and `why` go in the ledger ("you",
+## "by hand": the chest screen; a worker's name and her work: the household's store).
+func put(inv: InventoryState, kind: String, n: int, who := "", why := "") -> int:
 	if not accepts(kind):
 		return 0
 	var got := inv.take(kind, n)
 	if got <= 0:
 		return 0
+	_log(who, kind, got, why)
 	for e: Dictionary in items:
 		if String(e.kind) == kind:
 			e.count = int(e.count) + got
@@ -90,7 +94,7 @@ func put(inv: InventoryState, kind: String, n: int) -> int:
 
 
 ## Up to `n` of `kind` out of the chest into `inv`. How many came out.
-func take(inv: InventoryState, kind: String, n: int) -> int:
+func take(inv: InventoryState, kind: String, n: int, who := "", why := "") -> int:
 	for i in items.size():
 		var e: Dictionary = items[i]
 		if String(e.kind) != kind:
@@ -100,8 +104,13 @@ func take(inv: InventoryState, kind: String, n: int) -> int:
 		if int(e.count) <= 0:
 			items.remove_at(i)
 		inv.add(kind, got)
+		_log(who, kind, -got, why)
 		return got
 	return 0
+
+
+func _log(who: String, kind: String, n: int, why: String) -> void:
+	ledger = StoreLedger.add(ledger, get_tree() if is_inside_tree() else null, who, kind, n, why)
 
 
 # --- E ---------------------------------------------------------------------------------------------
@@ -136,6 +145,14 @@ func interact(player: Node) -> void:
 
 func to_save() -> Array:
 	return items.duplicate(true)
+
+
+func ledger_save() -> Array:
+	return StoreLedger.to_save(ledger)
+
+
+func ledger_load(a: Variant) -> void:
+	ledger = StoreLedger.from_save(a)
 
 
 func from_save(a: Array) -> void:

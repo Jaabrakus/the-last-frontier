@@ -370,8 +370,14 @@ func _worn(kind: String, u: Dictionary) -> bool:
 
 
 # ---------------------------------------------------------------- into and out of the containers
+## LEDGER: a worker's name for the store's ledger ("" none: the household).
+func _who(id: int) -> String:
+	var s := stock()
+	return s.worker_name(id) if s != null else ""
+
+
 ## Up to `n` units of `kind` out of the house and the containers (the most worn first), with their wear.
-func _take_units(kind: String, n: int) -> Array:
+func _take_units(kind: String, n: int, who := "", why := "") -> Array:
 	var out := []
 	var ov: Array = overflow.get(kind, [])
 	while out.size() < n and not ov.is_empty():
@@ -381,7 +387,7 @@ func _take_units(kind: String, n: int) -> Array:
 	var s := stock()
 	if out.size() < n and s != null:
 		_trim_wear(kind)
-		var units := s.take_units(kind, n - out.size())
+		var units := s.take_units(kind, n - out.size(), who, why)   # LEDGER
 		var wl: Array = stored_wear.get(kind, [])
 		wl.sort()
 		for u: Variant in units:
@@ -396,11 +402,11 @@ func _take_units(kind: String, n: int) -> Array:
 
 
 ## Units back into the containers (the racks for rack kinds); what no container takes stays in the house.
-func _put_units(kind: String, units: Array) -> void:
+func _put_units(kind: String, units: Array, who := "", why := "") -> void:
 	if units.is_empty():
 		return
 	var s := stock()
-	var n := s.put_units(kind, units) if s != null else 0
+	var n := s.put_units(kind, units, who, why) if s != null else 0   # LEDGER
 	var wl: Array = stored_wear.get(kind, [])
 	for i in units.size():
 		var u: Dictionary = units[i]
@@ -433,7 +439,7 @@ func add(kind: String, n: int, units: Array = []) -> void:
 	var list := units.duplicate(true)
 	while list.size() < n:
 		list.append({"wear": 0.0})
-	_put_units(k, list)
+	_put_units(k, list, "", "the fort's stores")
 
 
 # ---------------------------------------------------------------- lending
@@ -512,7 +518,8 @@ func collect(w: Variant, only: Array = []) -> int:
 	for k: String in c.keys():
 		if not only.is_empty() and not only.has(k):
 			continue
-		var units := _take_units(k, int(c[k]))
+		var jt := String(JobBook.job(String(job_of.get(id, ""))).get("text", ""))   # ("Hoeing the beds")
+		var units := _take_units(k, int(c[k]), _who(id), "borrowed for %s" % jt.to_lower() if jt != "" else "borrowed")
 		_hold_units(id, k, units)
 		got += units.size()
 		c.erase(k)
@@ -546,7 +553,7 @@ func _return_due(id: int, kind := "") -> void:
 		(held[id] as Dictionary)[k] = units.slice(0, keep)
 		if ((held[id] as Dictionary)[k] as Array).is_empty():
 			(held[id] as Dictionary).erase(k)
-		_put_units(k, give)
+		_put_units(k, give, _who(id), "returned")
 		back.erase(k)
 	if back.is_empty():
 		due.erase(id)
@@ -601,7 +608,7 @@ func return_all(w: Variant) -> int:
 	var n := 0
 	var h: Dictionary = held.get(id, {})
 	for k: String in h:
-		_put_units(k, h[k])
+		_put_units(k, h[k], _who(id), "returned")
 		n += (h[k] as Array).size()
 	held.erase(id)
 	return n
@@ -632,7 +639,7 @@ func take(kind: String, n: int, owner: Variant) -> int:
 	if is_pool(k):
 		var id := wid(owner)
 		var c: Dictionary = claims.get(id, {})
-		var got := _take_units(k, mini(n, available(k, id)))
+		var got := _take_units(k, mini(n, available(k, id)), _who(id), "used at work")
 		_hold_units(id, k, got)
 		if c.has(k):
 			c[k] = maxi(int(c[k]) - got.size(), 0)
@@ -653,7 +660,7 @@ func put_back(kind: String, n: int, owner: Variant) -> int:
 			held[id][k] = units.slice(0, units.size() - give.size())
 			if (held[id][k] as Array).is_empty():
 				(held[id] as Dictionary).erase(k)
-		_put_units(k, give)
+		_put_units(k, give, _who(id), "put back")
 		return give.size()
 	var s := stock()
 	return s.put(kind, n) if s != null else 0
@@ -998,6 +1005,12 @@ func seed_start(force := false) -> void:
 		var ch: Dictionary = st.get("chest", {})
 		for k: String in ch:
 			add(k, int(ch[k]))
+	if not bool(seeded.get("farm", false)) and chests_ok:
+		# FARM: the fields' tools (the hoe job), once on their own: a game saved before them gets them too
+		seeded["farm"] = true
+		var fm: Dictionary = st.get("farm", {})
+		for k: String in fm:
+			add(k, int(fm[k]))
 	if not bool(seeded.get("rack", false)) and racks_ok:
 		seeded["rack"] = true
 		var rk: Dictionary = st.get("rack", {})
@@ -1023,7 +1036,7 @@ func tick_house(dt: float) -> void:
 	for k: String in overflow.keys():
 		var units: Array = overflow[k]
 		overflow.erase(k)
-		_put_units(k, units)
+		_put_units(k, units, "", "put away")
 
 
 # ================================================================ saving

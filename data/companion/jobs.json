@@ -5,18 +5,21 @@
  "stages": ["gather", "process", "preserve", "craft", "upkeep"],
  "stage_names": {"gather": "Gather", "process": "Process", "preserve": "Preserve", "craft": "Craft", "upkeep": "Upkeep"},
  "groups": {
-  "raw_food": ["brook_trout", "salmon", "sucker", "perch", "pike", "eel", "bullhead", "sturgeon", "pickerel", "venison", "small_game", "cornmeal"],
+  "raw_food": ["brook_trout", "salmon", "sucker", "perch", "pike", "eel", "bullhead", "sturgeon", "pickerel", "venison", "small_game", "cornmeal", "corn", "squash", "beans"],
+  "seed": ["seed_corn", "seed_beans", "seed_squash", "seed_tobacco", "seed_flax"],
   "green_pelt": {"from": "materials", "suffix": "_pelt", "twin_prefix": "dried_"}
  },
  "targets": {
-  "meals": {"name": "Cooked food", "per_person": 3, "kinds": ["johnnycake", "roast_venison", "charred_venison", "roast_small_game", "charred_small_game", "roast_fish", "charred_fish"]},
+  "meals": {"name": "Cooked food", "per_person": 3, "kinds": ["johnnycake", "roast_venison", "charred_venison", "roast_small_game", "charred_small_game", "roast_fish", "charred_fish", "roast_corn", "charred_corn", "roast_squash", "charred_squash", "bean_pot", "scorched_beans"]},
   "pantry": {"name": "Berries and nuts", "per_person": 4, "kinds": ["blackberries", "strawberries", "elderberries", "crabapples", "hazelnuts", "acorns"]},
   "firewood": {"name": "Firewood", "min": 8, "kinds": ["firewood"]},
   "jerky": {"name": "Jerky put by", "min": 12, "kinds": ["jerky"]},
   "leather": {"name": "Leather", "min": 4, "kinds": ["buckskin", "rawhide"]},
-  "furs": {"name": "Dried furs", "min": 2, "kinds": ["dried_wolf_pelt", "dried_fox_pelt", "dried_marten_pelt", "dried_mink_pelt", "dried_fisher_pelt", "dried_raccoon_pelt"]}
+  "furs": {"name": "Dried furs", "min": 2, "kinds": ["dried_wolf_pelt", "dried_fox_pelt", "dried_marten_pelt", "dried_mink_pelt", "dried_fisher_pelt", "dried_raccoon_pelt"]},
+  "tobacco": {"name": "Tobacco leaves", "min": 6, "kinds": ["tobacco_leaves"]},
+  "flax": {"name": "Flax", "min": 6, "kinds": ["flax"]}
  },
- "chain_names": {"teach": "Family: teaching the children", "butcher": "Game: carcass to table", "hunt": "Game: the hunt to the table", "firewood": "Wood: from the woods to the fires", "forage": "Foraging"},
+ "chain_names": {"teach": "Family: teaching the children", "butcher": "Game: carcass to table", "hunt": "Game: the hunt to the table", "firewood": "Wood: from the woods to the fires", "forage": "Foraging", "hoe": "Farm: the beds to the table"},
  "jobs": [
   {
    "id": "tend", "name": "Tend the fire", "stage": "upkeep", "where": "home", "needs": "fire", "priority": 10,
@@ -64,7 +67,7 @@
    "inputs": {"@raw_food": 1}, "outputs": {"@cooked": 1},
    "batch": {"rule": "kcal"},
    "variants": [
-    {"id": "roast", "inputs": {"@raw_food": "batch"}, "params": {}, "input_params": ["item", "qty"], "text": "Roasting %s", "text_by_kind": {"cornmeal": "Baking johnnycake"}, "outputs": {"@cooked": 1}}
+    {"id": "roast", "inputs": {"@raw_food": "batch"}, "params": {}, "input_params": ["item", "qty"], "text": "Roasting %s", "text_by_kind": {"cornmeal": "Baking johnnycake", "beans": "Boiling a pot of beans"}, "outputs": {"@cooked": 1}}
    ],
    "keep": {},
    "how": {"type": "survival", "action": "cook.roast", "result": "cook"}, "tags": ["meat", "food"]
@@ -129,6 +132,23 @@
    "inputs": {}, "outputs": {"firewood": 4},
    "keep": {}, "how": {"type": "survival", "action": "wood.split_firewood", "result": "deposit", "verb": "brings back", "none": "finds nothing"}, "tags": ["wood", "heavy"],
    "tools": {"need": [["hatchet", "axe", "stone_axe", "tomahawk"]], "note": "TOOLS: wood.split_firewood's axe (the first free of these)"}
+  },
+  {
+   "id": "hoe", "name": "Hoe the beds", "stage": "gather", "where": "home", "needs": "bed_to_hoe", "priority": 65,
+   "text": "Hoeing the beds", "idle": "the beds need no hoeing",
+   "demand": "stock", "offer": "farm", "skill": "husbandry",
+   "inputs": {}, "outputs": {}, "feeds": ["farm"],
+   "keep": {}, "how": {"type": "timed", "done": "farm", "minutes": {"break": 120, "till": 90, "weed": 40}, "skill_scale": [1.2, 0.8]}, "tags": ["farm", "heavy"],
+   "tools": {"need": [["hoe", "digging_stick"]], "optional": [{"any": ["hoe"], "speed": 0.5}], "note": "FARM: a hoe or the digging stick; the hoe at twice the stick's bite (gathering.json: the stick's power 0.5), so the minutes are the stick's and the hoe halves them"},
+   "note": "FARM (scripts/companion/farm_job.gd): break ground for a new bed while the household has fewer than it keeps round home (HouseholdCrew.beds_wanted, the Tasks tab), finish breaking one, hoe the weeds out of a growing bed. It feeds the sowing (feeds: the worked beds are its ground; the sowing is fed from outside too: the player's own beds), so the fields' pull reaches it."
+  },
+  {
+   "id": "farm", "name": "Sow and harvest", "stage": "gather", "where": "home", "needs": "bed_to_tend", "priority": 45,
+   "text": "Working the beds", "idle": "no bed to sow or harvest",
+   "demand": "site", "offer": "farm", "skill": "husbandry", "fed_from_outside": true,
+   "inputs": {"@seed": 1}, "outputs": {"corn": 6, "beans": 3, "squash": 2, "tobacco_leaves": 5, "flax": 5},
+   "keep": {}, "how": {"type": "timed", "done": "farm", "minutes": {"sow": 25, "harvest": 45, "clear": 20}, "skill_scale": [1.2, 0.8]}, "tags": ["farm", "food"],
+   "note": "FARM (scripts/companion/farm_job.gd): harvest a ripe bed into the store (the seed saved back with it), pull up frost-killed plants, sow a worked bed with seed from the store: the sowing the shortages want most (the Three Sisters for the meals through the cook, tobacco or flax for their stores; the Three Sisters when nothing is short). Both farm jobs are Husbandry's: the worker's own (SpouseCore.husbandry), trained by the work, sets the yield. The outputs are a bed's nominal (farming.json), for the chain and the pull."
   },
   {
    "id": "teach", "name": "Teach the children", "stage": "upkeep", "where": "home", "needs": "none", "priority": 5,

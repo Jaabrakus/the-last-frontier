@@ -208,6 +208,12 @@ static func _g() -> Dictionary:
 				(down[a] as Array).append(b)
 			if _shares(outs, inputs_of(b, true)):
 				(aux_up[b] as Array).append(a)
+	# a link the pack kinds do not make: `feeds` (the hoe's worked beds are the sowing's ground, FARM)
+	for a: String in ids_:
+		for b: Variant in job(a).get("feeds", []):
+			if up.has(String(b)) and not (up[String(b)] as Array).has(a):
+				(up[String(b)] as Array).append(a)
+				(down[a] as Array).append(String(b))
 	_graph = {"up": up, "down": down, "aux_up": aux_up, "chains": _build_chains(up, down)}
 	return _graph
 
@@ -252,45 +258,59 @@ static func _reach(id: String, edges: Dictionary) -> Array:
 	return out
 
 
+## The supply chains: one for each source (a job nothing feeds), with every job it feeds after it, in working order. A job
+## that feeds on two sources is in both chains (the cook: the hunt's venison and the fields' crops; user 2026-09-29: "hunt is
+## a different supply chain and farming is a different supply chain"); a job no source reaches has a chain of its own.
 static func _build_chains(up: Dictionary, down: Dictionary) -> Array:
-	var comp := {}
-	var groups := []
-	for id: String in ids():
-		if comp.has(id):
-			continue
-		var members := [id]
-		comp[id] = groups.size()
-		var i := 0
-		while i < members.size():
-			var c: String = members[i]
-			i += 1
-			for n: String in (up.get(c, []) as Array) + (down.get(c, []) as Array):
-				if not comp.has(n):
-					comp[n] = groups.size()
-					members.append(n)
-		groups.append(members)
+	var cn: Dictionary = book().chain_names
 	var out := []
-	for members: Array in groups:
-		var depth := {}
+	var placed := {}
+	for id: String in ids():
+		if not (up.get(id, []) as Array).is_empty():
+			continue
+		var members: Array = [id] + _reach(id, down)
+		out.append({"id": id, "name": String(cn.get(id, "%s chain" % name_of(id))), "jobs": _in_order(members, up)})
 		for m: String in members:
-			depth[m] = 0
-		for _pass in members.size():
-			for m: String in members:
-				for u: String in up.get(m, []):
-					if depth.has(u):
-						depth[m] = maxi(int(depth[m]), int(depth[u]) + 1)
-		members.sort_custom(func(a: String, b: String) -> bool:
-			if depth[a] != depth[b]:
-				return depth[a] < depth[b]
-			if stage_index(a) != stage_index(b):
-				return stage_index(a) < stage_index(b)
-			return int(job(a).priority) < int(job(b).priority))
-		var first: String = members[0]
-		var cn: Dictionary = book().chain_names
-		out.append({"id": first, "name": String(cn.get(first, "%s chain" % name_of(first))), "jobs": members})
+			placed[m] = true
+	for id: String in ids():
+		if not placed.has(id):
+			out.append({"id": id, "name": String(cn.get(id, "%s chain" % name_of(id))), "jobs": [id]})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return ids().find(a.id) < ids().find(b.id))
 	return out
+
+
+## `members` in working order: after what feeds them (within the set), then by stage, then priority.
+static func _in_order(members: Array, up: Dictionary) -> Array:
+	var depth := {}
+	for m: String in members:
+		depth[m] = 0
+	for _pass in members.size():
+		for m: String in members:
+			for u: String in up.get(m, []):
+				if depth.has(u):
+					depth[m] = maxi(int(depth[m]), int(depth[u]) + 1)
+	var sorted := members.duplicate()
+	sorted.sort_custom(func(a: String, b: String) -> bool:
+		if depth[a] != depth[b]:
+			return depth[a] < depth[b]
+		if stage_index(a) != stage_index(b):
+			return stage_index(a) < stage_index(b)
+		return int(job(a).priority) < int(job(b).priority))
+	return sorted
+
+
+## The jobs of chain `chain_id` that no other chain has (switching the chain off leaves the shared ones: the cook).
+static func own_jobs(chain_id: String) -> Array:
+	var mine := []
+	var others := {}
+	for c: Dictionary in _g().chains:
+		for j: String in c.jobs:
+			if c.id == chain_id:
+				mine.append(j)
+			else:
+				others[j] = true
+	return mine.filter(func(j: String) -> bool: return not others.has(j))
 
 
 static func chains() -> Array:

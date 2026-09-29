@@ -227,7 +227,7 @@ func _care(c: Dictionary, n: float) -> void:
 		if int(c.get("worker_id", -1)) >= 0:
 			return   # a worker feeds and rests on its own core
 		if Growth.meal_due(c, n):
-			Growth.feed(c, n, func(kinds: Array) -> String: return _take_meal(kinds))
+			Growth.feed(c, n, func(kinds: Array) -> String: return _take_meal(kinds, String(c.get("name", ""))))
 		ctx["fed"] = Growth.fed(c, n)
 		var g := guardian(c)
 		var b: Variant = bodies.get(String(c.id))
@@ -244,9 +244,9 @@ func has_level() -> bool:
 	return house.body != null and is_instance_valid(house.body)
 
 
-func _take_meal(kinds: Array) -> String:
+func _take_meal(kinds: Array, who := "") -> String:
 	for k: String in kinds:
-		if house.stock.take(k, 1) >= 1:
+		if house.stock.take(k, 1, who, "a child's meal") >= 1:   # LEDGER
 			return k
 	return ""
 
