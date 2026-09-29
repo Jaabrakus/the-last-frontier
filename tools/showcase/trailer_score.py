@@ -13,7 +13,7 @@ D minor at 100 BPM (a beat 0.6 s = 18 frames at 30 fps; a bar 2.4 s). The sectio
     title   the chord rings out under the title, the flute's motif once more
     sting   near silence; a thud (the stinger) and the end card's last low boom
 `accents` (seconds, kind) from the edit add hits where the picture has them: "boom" (taiko, sub), "hit" (the big
-one), "thud" (low, short).
+one), "thud" (low, short), "cry" (a newborn's cry: the yoga's punchline).
 """
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ SECTIONS = {
 	"dark": (30, 38),
 	"climax": (38, 39),
 	"title": (39, 42),
-	"sting": (42, 46),
+	"sting": (42, 48),              # (two bars more: the mammoth shot and climbed before the charge)
 }
 
 # chords: [bass midi, pad voicing (midi)]
@@ -397,6 +397,8 @@ def render(total_s: float, sr: int = 48000, accents=(), seed: int = 1765) -> np.
 		elif kind == "thud":
 			mx.add(t, taiko(sr, r), 0.6, 0.0, 0.2)
 			mx.add(t, sub(sr, 34.0, 1.2, 0.35), 0.5, 0.0, 0.0)
+		elif kind == "cry":
+			mx.add(t, baby_cry(sr, r), 0.5, 0.1, 0.25)
 
 	# the room, then the master: a gentle glue, peaks to -1 dBFS
 	n_out = int(round(total_s * sr))
@@ -406,6 +408,35 @@ def render(total_s: float, sr: int = 48000, accents=(), seed: int = 1765) -> np.
 	pk = np.max(np.abs(y)) + 1e-9
 	y = np.tanh(y / pk * 1.25) / math.tanh(1.25)
 	return y * 10 ** (-1.0 / 20.0)
+
+
+def baby_cry(sr: int, r) -> np.ndarray:
+	"""A newborn's cry, two breaths of it ("waah ... waah-ah"): a pitched voice (a fundamental about 450 Hz, rough with
+	jitter, bright harmonics) through the vowel formants of an open "wa" to "ah", the pitch climbing and breaking."""
+	out = []
+	for (dur, f0, f1, gap) in ((0.95, 430.0, 520.0, 0.28), (1.3, 470.0, 560.0, 0.0)):
+		n = int(dur * sr)
+		t = np.arange(n) / sr
+		u = t / dur
+		f = f0 + (f1 - f0) * np.sin(np.pi * np.minimum(u * 1.3, 1.0)) - 60.0 * np.maximum(u - 0.75, 0.0) / 0.25
+		f = f * (1.0 + 0.012 * r.standard_normal(n).cumsum() / np.sqrt(np.arange(1, n + 1)))
+		f = f * (1.0 + 0.02 * np.sin(2 * np.pi * 7.0 * t))
+		ph = 2 * np.pi * np.cumsum(f) / sr
+		src = sum((0.8 ** (k - 1)) * np.sin(k * ph) for k in range(1, 14))
+		# the vowel: formants moving from "w" (closed) to "ah" (open)
+		env_open = np.clip(u / 0.12, 0.0, 1.0)
+		y = np.zeros(n)
+		for (fa, fb, bw, g) in ((500.0, 1000.0, 90.0, 1.0), (900.0, 1500.0, 120.0, 0.7), (2400.0, 2900.0, 200.0, 0.35)):
+			fc = fa + (fb - fa) * env_open
+			# a resonator by sinc-free band emphasis: the harmonics near the formant weighted
+			w = np.exp(-0.5 * ((np.outer(np.arange(1, 14), f) - fc) / (bw * 3.0)) ** 2)
+			y += g * sum(w[k - 1] * (0.8 ** (k - 1)) * np.sin(k * ph) for k in range(1, 14))
+		a = np.minimum(1.0, t / 0.05) * np.minimum(1.0, (dur - t) / 0.18)
+		y = y * a * (0.85 + 0.15 * np.sin(2 * np.pi * 5.0 * t))
+		out.append(y / (np.max(np.abs(y)) + 1e-9))
+		out.append(np.zeros(int(gap * sr)))
+	y = np.concatenate(out)
+	return np.stack([y, y], axis=1) * 0.9
 
 
 def _big_hit(mx: Mix, sr: int, r, t: float, bm: np.ndarray, tk: np.ndarray) -> None:

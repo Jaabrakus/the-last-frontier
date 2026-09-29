@@ -14,16 +14,21 @@ extends "res://tools/showcase/clips.gd"
 
 ## (climb_tree before chop: clips.gd's tree picks do not skip a tree an earlier take felled.)
 const SHOTS := ["dawn_river", "valley", "herd", "gate", "walk", "climb_tree", "chop", "build", "forage", "cast", "fight",
-		"ride", "stalk", "musket", "throw", "vault", "wolves", "storm", "camp", "torch", "owl", "wall", "night_shot", "dusk",
-		"bison", "stampede", "charge", "reload", "reload_walk", "reload_crouch", "reload_crouch_walk",
-		"mammoth"]
+		"ride", "stalk", "musket", "throw", "vault", "wolves", "storm", "camp", "torch", "owl", "night_shot", "dusk",
+		"bison", "stampede", "charge", "reload", "autumn", "winter_walk", "river_ice", "yoga", "mammoth"]
+## Takes the cut does not use, recorded only when named (only=): the musket's reload walking and crouched (to check
+## it), the shot from the palisade's firing step (the rebuilt fort's step moved: it does not fire from there).
+const EXTRA := ["wall", "reload_walk", "reload_crouch", "reload_crouch_walk"]
 
 var marks := PackedStringArray()
 var hide_arc := false               ## the throw's aim arc kept out of the picture
+## The take's date, a survival calendar day (the core's date is the sky's, the leaves' and the snow's: _clock() sets it).
+## Late August unless a take says otherwise (a new game starts in September, and the evenings had gone dark).
+var season := "aug_late"
 
 
 func _order() -> Array:
-	return SHOTS
+	return SHOTS + EXTRA if args.has("only") else SHOTS
 
 
 # --- the picture: the film camera's alone ------------------------------------------------------------------------------
@@ -97,6 +102,7 @@ func _begin_segment() -> void:
 	show_vitals = false
 	marks = PackedStringArray()
 	hide_arc = false
+	season = "aug_late"
 	cine_takes_over = false
 	aim_target = Vector3.INF
 	DirAccess.make_dir_recursive_absolute(out.path_join(cur_id).path_join("frames"))
@@ -111,6 +117,47 @@ func _begin_segment() -> void:
 	var fg := FishingGear.find(player)
 	if fg and fg.gear != "" and cur_id != "fight":
 		fg.put_away()
+	# the hands on the weapons again (the camp's take stows them: a weapon takes no fire hands-free, so every shot
+	# after it silently failed to go off), and every gun loaded (one fired in an earlier take is empty: fire then
+	# starts a reload instead of a shot)
+	if player.hands_free:
+		player.toggle_hands_free()
+	for w: Variant in player.weapons.values():
+		if w is Firearm and not (w as Firearm).loaded:
+			(w as Firearm).loaded = true
+			(w as Firearm).state = Firearm.State.READY
+	# the body never faded for the game's own camera (it comes in close as a gun is shouldered: the film camera saw
+	# him turn see-through; user 2026-09-29 "the user becomes transparent")
+	if player.grip:
+		player.grip.near_fade_m = Vector2(-2.0, -1.0)
+		player.grip.aim_fade = 0.0
+
+
+## The take's hour on its date (`season`), the snow its winter would have on the ground: the survival core carries the
+## date (it drives the sky clock, SeasonLeaves and SnowCover), so it is set there, not only on the sky.
+func _clock(hour: float, weather := "fair", cover := -1.0) -> void:
+	super(hour, weather, cover)
+	var b := SurvivalBridge.find(self)
+	if b == null or b.core == null:
+		return
+	var core := b.core
+	core.state.minutes = SurvivalClock.minutes_at(core, season, SurvivalClock.year(core), hour)
+	core.state.world["clock_acc"] = 0.0
+	core.state.weather["snow_depth_cm"] = SurvivalWeather.normal_snow_depth(core)
+	for sc in level.find_children("*", "SnowCover", true, false):
+		sc.set("_last_core_cm", -1.0)
+	_rested()
+	print("TRAILER %s: %s %.2f h" % [cur_id, SurvivalClock.date_string(core), hour])
+
+
+## Snow falling (the sky overcast with its drizzle: in winter it falls as snow, SnowFall).
+func _snowing() -> void:
+	var w: Node = get_first_node_in_group(&"weather")
+	if w and w.has_method(&"force_weather"):
+		w.call(&"force_weather", "overcast")
+		var ws: Variant = w.get("weather")
+		if ws:
+			ws.set("drizzle", true)
 
 
 func _end_segment() -> void:
@@ -738,7 +785,9 @@ func seg_climb_tree() -> void:
 
 ## A wolf pack at its kill in the evening, low in the grass.
 func seg_wolves() -> void:
-	_clock(18.9, "fair", 0.2)
+	# (on the snow, a January afternoon: the season's wolves on their trails, in the low sun)
+	season = "jan_mid"
+	_clock(15.0, "fair", 0.2)
 	var w := WildlifeSpawner.find(self)
 	var pk := _herd("wolf_pack")
 	if w == null or pk == null:
@@ -966,7 +1015,7 @@ func seg_night_shot() -> void:
 
 ## Sunset over the treeline: he stands looking west, the camera low behind him, drifting in (the title's ground).
 func seg_dusk() -> void:
-	_clock(19.05, "fair", 0.3)
+	_clock(18.45, "fair", 0.3)
 	await _equip("musket")
 	var p0 := _on(Vector3(26.0, 0.0, -120.0))
 	_place(p0.x, p0.z, p0 + Vector3(-60.0, 0.0, 6.0))
@@ -1084,9 +1133,10 @@ func seg_charge() -> void:
 
 # --- the musket's reload (MusketReload) -------------------------------------------------------------------------------
 
-## Fired, then loaded standing: the drill's way (the butt grounded); from ahead of him to his left.
+## Fired, then loaded standing at dusk behind the palisade (MusketReload's drill); from ahead of him to his left.
 func seg_reload() -> void:
-	_clock(10.5, "fair", 0.2)
+	# (the evening's last light: the cut has it before the night shot, loading behind the palisade)
+	_clock(18.1, "fair", 0.2)
 	var tgt := Vector3(2.5, 1.25, -70.0)
 	_place(1.0, FrontierStructures.FIRING_LINE_Z - 1.3, tgt)
 	await _equip("musket")
@@ -1106,6 +1156,9 @@ func seg_reload() -> void:
 	aim_target = Vector3.INF
 	await _tap(&"reload")
 	mark("reload")
+	# the ball rammed: the first stroke (MusketReload's clips: 4.22 s into the reload)
+	await _sec(4.22)
+	mark("ram")
 	await _until(func() -> bool: return m.loaded, 9.0)
 	mark("loaded")
 	await _sec(1.2)
@@ -1203,18 +1256,29 @@ func _gun_low(m: Firearm) -> float:
 
 ## The mammoth: a ball behind a knee and it goes down (scene=res://scenes/climb_yard.tscn).
 func seg_mammoth() -> void:
-	var yard = level.get("yard")
-	if yard == null or yard.giant == null:
-		print("TRAILER: no climbing yard (scene=res://scenes/climb_yard.tscn)")
-		return
 	_clock(17.4, "fair", 0.2)
-	var gi = yard.giant
+	var yard = level.get("yard")
+	var gi: StandInGiant = yard.giant if yard != null and yard.get("giant") != null else null
+	if gi == null:
+		# on the great plains (user 2026-09-29: "the mammoth needs to be in the great plains"): the climbing yard's
+		# mammoth set down in the open grass beyond the bison, the herd behind it
+		var hs := _bison_herds()
+		var at := _on(hs[0].centroid() + Vector3(26.0, 0.0, 8.0)) if not hs.is_empty() else _on(Vector3(-130.0, 0.0, 30.0))
+		gi = StandInGiant.new()
+		gi.name = "Mammoth"
+		gi.player = player
+		level.add_child(gi)
+		gi.build(Transform3D(Basis(Vector3.UP, deg_to_rad(-70.0)), at))
+		spawned.append(gi)
+		print("TRAILER mammoth: on the plains at %s" % at)
+	var plains := yard == null
 	gi.paces = false
 	await _equip("musket")
 	await _warm(30)
 	var wk: Node3D = null
 	var best := -INF
-	var body: Vector3 = gi.global_position
+	# (the beast's body, a child set where build() put it: the node itself stays at its parent's origin)
+	var body: Vector3 = (gi.get("body") as Node3D).global_position if gi.get("body") is Node3D else gi.global_position
 	var fwd: Vector3 = -(gi.get("body") as Node3D).global_basis.z if gi.get("body") is Node3D else -gi.global_basis.z
 	for z: Node3D in gi.weak:
 		var back := -(z.global_position - body).dot(fwd)
@@ -1227,7 +1291,12 @@ func seg_mammoth() -> void:
 	_place(stand.x, stand.z, aim_pt)
 	aim_target = aim_pt
 	aim_rate = 5.0
-	_cam_rel(Vector3(-2.4, 0.8, 3.8), Vector3(0.8, 2.6, -9.0), 50.0, 3.0)
+	if plains:
+		# (over his shoulder, above the flowers: the hunter and the beast ahead of him; user 2026-09-29 "the user isnt
+		# in it i want the shot and then climbing the mammoth")
+		_cam_rel(Vector3(1.6, 1.8, 3.2), Vector3(-0.6, 1.2, -6.0), 55.0, 3.0)
+	else:
+		_cam_rel(Vector3(-2.4, 0.8, 3.8), Vector3(0.8, 2.6, -9.0), 50.0, 3.0)
 	await _warm(40)
 	await _roll("", "", "", 10)
 	await _sec(0.6)
@@ -1240,4 +1309,129 @@ func seg_mammoth() -> void:
 		gi.apply_hit(60.0, aim_pt, -from_dir, player, "knee_" + String(wk.name).trim_prefix("Weak_").trim_prefix("knee_"))
 	aim_target = Vector3.INF
 	mark("buckle")
-	await _sec(3.5)
+	if not plains:
+		await _sec(3.5)
+		return
+	# while it is down: at its flank, G takes hold, W climbs onto its back (as the climbing yard's clip)
+	await _sec(1.2)
+	var bb: Basis = (gi.get("body") as Node3D).global_basis if gi.get("body") is Node3D else Basis()
+	var flank := (bb * Vector3(-1.0, 0.0, 0.0)).normalized()
+	var st2 := body + flank * 1.65
+	_place(st2.x, st2.z, body + Vector3.UP * 2.6)
+	player.pitch = 0.15
+	_cam_at(_on(body + flank * 9.0 - fwd * 2.5, 2.8), func() -> Vector3: return player.global_position + Vector3.UP * 1.3, 50.0, 4.0)
+	await _warm(6)
+	mark("grab")
+	_press(&"grip")
+	await _sec(0.8)
+	_press(&"move_forward")
+	await _until(func() -> bool: return player.grip.state == PlayerGrip.OFF \
+			or (player.grip.anchor != null and player.grip.anchor.global_basis.y.y > 0.93), 12.0)
+	_release(&"move_forward")
+	_release(&"grip")
+	mark("top")
+	print("TRAILER mammoth: climbed (grip %s)" % player.grip.state)
+	await _sec(1.6)
+
+
+# --- the seasons (the take's date: SeasonLeaves turns the broadleaves, SnowCover lays the winter) ----------------------
+
+## The valley in the fall: over the woods toward the fort, mid-October, the maples and oaks turned (the pines green).
+func seg_autumn() -> void:
+	season = "oct_mid"
+	_clock(10.0, "fair", 0.25)
+	_place(0.0, 6.0, Vector3(0, 0, -40))
+	cine_takes_over = true
+	_cam_path([[Vector3(-120.0, 58.0, 105.0), Vector3(0.0, 0.0, -10.0)],
+			[Vector3(-74.0, 36.0, 62.0), Vector3(0.0, 1.0, -8.0)],
+			[Vector3(-38.0, 19.0, 30.0), Vector3(0.0, 2.0, -6.0)]], 8.0, 50.0)
+	await _roll("", "", "", 150)
+	await _sec(8.0)
+
+
+## A snowing January morning in the woods: he walks through it, his prints behind him.
+func seg_winter_walk() -> void:
+	season = "jan_mid"
+	_clock(10.0, "overcast", 0.85)
+	_snowing()
+	await _equip("musket")
+	var dir := Vector3(1, 0, 0)
+	var a := _lane(Vector3(30.0, 0.0, -95.0), dir, 36.0, -3.0, 3.0)
+	_place(a.x, a.z, a + dir * 60.0)
+	player.traversal.controller.teleported()
+	_cam_rel(Vector3(-1.4, 1.2, -3.6), Vector3(0.2, 1.1, 0.8), 42.0, 3.0)
+	await _roll("", "", "", 90)
+	_press(&"walk")
+	_press(&"move_forward")
+	await _sec(8.0)
+	_release(&"move_forward")
+	_release(&"walk")
+
+
+## The river frozen across in deep winter, a clear cold morning: he walks out onto the ice from the bank.
+func seg_river_ice() -> void:
+	season = "jan_late"
+	_clock(9.5, "clear", 0.05)
+	await _equip("musket")
+	var z := 20.0
+	var rx := WorldRiver.x_at(z)
+	_place(rx - 14.0, z, Vector3(rx + 20.0, 0.0, z))
+	player.traversal.controller.teleported()
+	_cam_rel(Vector3(2.2, 1.1, -4.2), Vector3(0.0, 1.0, 0.5), 44.0, 3.0)
+	await _roll("", "", "", 90)
+	_press(&"walk")
+	_press(&"move_forward")
+	await _sec(8.0)
+	_release(&"move_forward")
+	_release(&"walk")
+
+
+# --- home ----------------------------------------------------------------------------------------------------------------
+
+## Yoga together in the woods (the household's tandem pose, the crawl: the woman leads, her husband joins, kneeling
+## behind), held, from down the open lane (user 2026-09-29: "have it in the woods use crawl"); the cut puts a newborn's
+## cry on the next shot. The player is the man here: his wife's stand-in body (TandemProxy, as Household's TandemLink
+## does) is set down 2.5 m ahead of him on the lane, lands, and starts the pose alone; then he joins by the game's own
+## join, which puts him in his place behind her. A pair found on top of each other is not filmed.
+func seg_yoga() -> void:
+	_clock(11.0, "fair", 0.25)
+	var house := level.find_child("Household", true, false) as Household
+	var pt := TandemProxy.controller_of(player)
+	if pt == null or pt.is_woman(player):
+		print("TRAILER: no yoga (the player leads only as a man's partner here)")
+		return
+	var dir := Vector3(1, 0, 0)
+	var a := _lane(Vector3(30.0, 0.0, -95.0), dir, 24.0, -3.0, 3.0)
+	var back := a - dir * 2.5
+	_place(back.x, back.z, a + dir * 20.0)
+	player.traversal.controller.teleported()
+	var look: Dictionary = house.sc.look if house and house.sc else {}
+	var wife := TandemProxy.make(player.get_parent(), look, _on(a), player.rotation.y)
+	spawned.append(wife)
+	await _warm(30)
+	var lead := TandemProxy.add_lead(wife, pt)
+	await _warm(4)
+	if not lead.start_pose("crawl"):
+		print("TRAILER: yoga did not start (the wife's stand-in: on the floor %s)" % wife.is_on_floor())
+		return
+	await _sec(1.5)
+	var t1 := seg_t
+	while not pt.join_nearby() and seg_t - t1 < 4.0:
+		await _sec(0.25)
+	await _until(func() -> bool: return bool(lead.joined), 6.0)
+	await _sec(1.0)
+	var gap := Vector2(wife.global_position.x - player.global_position.x, wife.global_position.z - player.global_position.z).length()
+	print("TRAILER yoga: paired %s, %.2f m apart (at %.2f / %.2f m up)" % [lead.joined, gap,
+			wife.global_position.y, player.global_position.y])
+	# (joined, he kneels close behind her: 0.3 m between their feet is his place; less than 0.15 is one on the other)
+	if not lead.joined or gap < 0.15:
+		print("TRAILER: no yoga (not paired, or on top of each other)")
+		lead.stop_pose()
+		return
+	mark("paired")
+	var c: Vector3 = wife.global_position
+	var side := dir.cross(Vector3.UP).normalized()
+	_cam_at(_on(c + dir * 3.6 + side * 1.9, 0.95), func() -> Vector3: return c + Vector3.UP * 0.45 - dir * 0.4, 42.0, 3.0)
+	await _roll("", "", "", 30)
+	await _sec(4.0)
+	lead.stop_pose()

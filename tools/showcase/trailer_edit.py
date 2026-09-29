@@ -59,7 +59,8 @@ class Clip:
 	gain: float | None = -8.0      ## dB of the take's own sound (None: silent)
 	pre: float = 0.0               ## seconds its sound starts before its picture
 	shift: int = 0                 ## px the picture moves up (+) or down in the letterbox (reframing)
-	accents: tuple = ()            ## ((mark, kind), ...): a hit in the score at the mark ("boom", "hit", "thud")
+	accents: tuple = ()            ## ((mark, kind), ...): a hit in the score at the mark ("boom", "hit", "thud", "cry";
+	                               ## a number for the mark: that many beats into the clip)
 
 	@property
 	def end(self) -> int:
@@ -83,9 +84,12 @@ class Title:
 
 S = trailer_score.SECTIONS
 EDIT = [
-	# open: the land (the river's sound comes up under the black)
-	Clip("dawn_river", B(1), 12, src=0.3, fade_in=40, gain=-3.0, pre=2.2),
-	Clip("valley", B(4), 8, src=0.8, xfade=24, gain=-9.0),
+	# open: the game's own loading screen (its painting of the river), dissolving into the river at dawn; the valley in
+	# summer, then in the fall (the seasons)
+	Clip("load", B(0), 5, src=0.0, fade_in=12, gain=None),
+	Clip("dawn_river", B(1, 1), 11, src=0.3, xfade=30, gain=-3.0, pre=2.2),
+	Clip("valley", B(4), 4, src=0.8, xfade=24, gain=-9.0),
+	Clip("autumn", B(5), 4, src=1.0, xfade=18, gain=-9.0),
 	Clip("herd", B(6), 8, src=0.6, xfade=24, gain=-7.0),
 	Clip("gate", B(8), 8, src=0.5, xfade=18, gain=-5.0),
 	# grow: make a life
@@ -93,7 +97,9 @@ EDIT = [
 	Clip("chop", B(12), 4, sync=("felled", B(13)), gain=-2.0),
 	Clip("chop", B(13), 8, sync=("felled", B(13)), gain=-2.0, accents=(("down", "boom"),)),
 	Clip("build", B(15), 8, src=0.3, speed=1.6, gain=None),
-	Clip("forage", B(17), 4, src=0.4, gain=-6.0),
+	# yoga together, quick, and a newborn's cry on the cut
+	Clip("yoga", B(17), 2, sync=("paired", B(17)), gain=None, accents=((2.0, "cry"),)),
+	Clip("forage", B(17, 2), 2, src=0.4, gain=-6.0),
 	Clip("cast", B(18), 4, sync=("cast", B(18, 1)), gain=-6.0),
 	Clip("fight", B(19), 4, sync=("strike", B(19, 0.5)), gain=-5.0),
 	Clip("ride", B(20), 8, src=0.6, gain=-5.0),
@@ -101,23 +107,30 @@ EDIT = [
 	Clip("bison", B(22), 4, src=1.5, gain=-7.0),
 	Clip("stalk", B(23), 6, sync=("loose", B(24, 1)), gain=-4.0),
 	Clip("musket", B(24, 2), 6, sync=("shot", B(25, 2)), gain=-1.0),
-	Clip("throw", B(26), 4, sync=("hit", B(26, 3)), gain=-3.0),
+	Clip("throw", B(26), 4, sync=("release", B(26, 1.5)), gain=-3.0),
 	Clip("vault", B(27), 2, src=0.9, gain=-5.0),
 	Clip("climb_tree", B(27, 2), 2, sync=("grip", B(27, 1)), gain=-5.0),
 	Clip("stampede", B(28), 8, sync=("shot", B(28, 0.5)), gain=-2.0),
 	# dark: the weather and the night
 	Clip("storm", B(30), 8, src=6.0, gain=-1.0),
-	Clip("wolves", B(32), 4, src=1.0, gain=-3.0),
-	Clip("owl", B(33), 4, src=0.5, gain=-6.0),
-	Clip("torch", B(34), 8, src=0.6, gain=-5.0),
+	# winter: snow falling in the woods, the river frozen across, the wolves on the snow
+	Clip("winter_walk", B(32), 4, src=1.5, gain=-6.0),
+	Clip("river_ice", B(33), 4, src=2.0, gain=-6.0),
+	Clip("wolves", B(34), 4, src=1.0, gain=-3.0),
+	Clip("torch", B(35), 4, src=0.6, gain=-5.0),
 	Clip("camp", B(36), 4, src=3.0, gain=-5.0),
-	Clip("wall", B(37), 4, sync=("shot", B(37, 2)), gain=-2.0, accents=(("shot", "boom"),)),
+	Clip("reload", B(37), 4, sync=("ram", B(37, 1)), gain=-2.0, accents=(("ram", "thud"),)),
 	# climax: a beat of black, then the shot in the dark on the hit
 	Clip("night_shot", B(38, 1), 3, sync=("shot", B(38, 2)), gain=0.0),
 	# title
 	Clip("dusk", B(39), 12, src=0.5, fade_in=3, fade_out=36, gain=-12.0),
 	# sting
-	Clip("charge", B(42, 2), 6, sync=("down", B(43, 3)), gain=-1.0, fade_out=8),
+	# the mammoth on the plains: shot behind the knee over his shoulder, going down; he takes hold of its flank and
+	# climbs onto its back; then the charge's shot
+	# (straight on from the title, no black between)
+	Clip("mammoth", B(42), 4, sync=("shot", B(42, 1)), gain=-1.0, accents=(("buckle", "boom"),)),
+	Clip("mammoth", B(43), 7, sync=("grab", B(43)), speed=1.4, gain=None),
+	Clip("charge", B(44, 3), 5, sync=("shot", B(45, 1)), gain=-1.0, fade_out=8),
 ]
 
 TITLES = [
@@ -126,7 +139,7 @@ TITLES = [
 	Title(B(22, 0.5), 6, [("LIVE OFF THE LAND", "tag")], where="low"),
 	Title(B(30, 0.5), 6, [("ENDURE THE WILD", "tag")], where="low"),
 	Title(B(39, 1), 10, [("FRONTIER", "title"), ("IN DEVELOPMENT", "place")], fade=20),
-	Title(B(44), 8, [("FRONTIER", "title_small"), ("In development", "sub"), ("", "gap"),
+	Title(B(46), 8, [("FRONTIER", "title_small"), ("In development", "sub"), ("", "gap"),
 			("Deer and wolves: Quaternius (CC0)  ·  Bison and great horned owl: Poly by Google (CC-BY 3.0)", "small"),
 			("Textures: Poly Haven (CC0)  ·  Sounds: Kenney, kheetor, rubberduck (CC0) and public-domain recordings", "small"),
 			("Recorded in the game  ·  Music synthesized for the trailer  ·  Full credits: CREDITS.md", "small")], fade=14),
@@ -261,9 +274,13 @@ class Plan:
 	def __init__(self, takes: dict[str, Take], edit: list[Clip], titles: list[Title], end: int):
 		self.takes = takes
 		self.edit = [c for c in edit if c.shot in takes]
-		for c in edit:
-			if c.shot not in takes:
-				print("EDIT: no take '%s': left black" % c.shot)
+		missing = sorted({c.shot for c in edit if c.shot not in takes})
+		if missing:
+			# (a missing take used to be left black: the whole of a draft's second half went out that way)
+			if os.environ.get("ALLOW_BLACK", "") != "1":
+				raise SystemExit("EDIT: no take for %s: record them (trailer.gd only=...) or ALLOW_BLACK=1" % ", ".join(missing))
+			for m in missing:
+				print("EDIT: no take '%s': left black" % m)
 		self.titles = titles
 		self.end = end
 		self.bar = int(round((H - W / LETTERBOX) / 2))
@@ -386,7 +403,9 @@ def mix(plan: Plan, runs: list[str], music: str | None) -> tuple[np.ndarray, int
 	for k, c in enumerate(edit):
 		t = plan.takes[c.shot]
 		for m, kind in c.accents:
-			if m in t.marks:
+			if isinstance(m, (int, float)):
+				accents.append(((c.at + m * BEAT_F) / FPS, kind))
+			elif m in t.marks:
 				accents.append(((c.at + (t.marks[m] - src0(c, t)) / c.speed) / FPS, kind))
 		if c.gain is None or c.speed != 1.0 or t.run not in avis:
 			continue
