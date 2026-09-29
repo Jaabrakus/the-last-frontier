@@ -178,6 +178,8 @@ const SKIRT_CLOSED_GRAVITY_MAX_DEG := 110.0
 const SKIRT_CLOSED_SPRING := Vector2(90.0, 11.0)    # 1/s^2 (about 1.5 Hz), 1/s (a little sway that settles)
 const SKIRT_CLOSED_SWAY_M := 0.1
 const SKIRT_CLOSED_OUT_M := 0.26
+## The back panel's push out is a swing about the hip joint: as far out at this depth below it (m) as the push asks.
+const SKIRT_CLOSED_BACK_LEVER_M := 0.45
 const SKIRT_CLOSED_FLOOR_MAX_DEG := 35.0
 const SKIRT_CLOSED_FLOOR_SINK := 0.1
 const SKIRT_CLOSED_BUNCH_DEG := Vector2(55.0, 100.0)
@@ -1064,6 +1066,13 @@ func _closed_skirt(g: Array, down: Vector3, floor_h: float, diag) -> Dictionary:
 			x = fx
 		x = minf(x, SKIRT_CLOSED_OUT_M)
 		var r := qp * rots[i]
+		# the back panel swings out from the hip instead of moving out: its cloth reaches up under the waistband (the
+		# crawl rolls it off the seat), and moved out whole it had rounded the seat into a bustle as she walked (the
+		# user 2026-09-29: "it makes the booty fatter"); swung, the seat barely moves and the calves are still cleared
+		var shift := x
+		if int(d.panel) == 2:
+			r = Quaternion((qp * ax).normalized(), atan2(x, SKIRT_CLOSED_BACK_LEVER_M)) * r
+			shift = 0.0
 		# bunched: lifted above the level it shortens; on the ground it pools (shortens to rest SKIRT_CLOSED_FLOOR_SINK
 		# into it); what is still below then swings out (about its own axis) as a coat skirt's does
 		var e := r * e0
@@ -1083,7 +1092,7 @@ func _closed_skirt(g: Array, down: Vector3, floor_h: float, diag) -> Dictionary:
 		var bunch := Basis(Vector3.RIGHT - dir * ((1.0 - k) * dir.x), Vector3.UP - dir * ((1.0 - k) * dir.y),
 				Vector3.BACK - dir * ((1.0 - k) * dir.z))
 		var bb := bunch * Basis(r.normalized())
-		res[d.bone] = Transform3D(bb, jp - bb * jb + (r * u) * x + (qp * Vector3.UP) * float(info[i][7]))
+		res[d.bone] = Transform3D(bb, jp - bb * jb + (r * u) * shift + (qp * Vector3.UP) * float(info[i][7]))
 		if diag is Array:
 			(diag as Array).append({"bone": d.bone, "panel": d.panel, "pushed": turn[i] > 0.0 or out_m[i] > 0.0,
 					"floored": lift != 0.0, "hang": rad_to_deg((r * Vector3.DOWN).angle_to(down)), "bunch": k, "out": x})
