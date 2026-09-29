@@ -2,8 +2,8 @@
  "files": [
   {
    "path": "assets/horse/horse.glb",
-   "sha256": "bb7ca952d4a8bd7a50f86625e0dfc9f0512024d1d30476d248f4334010c4d1c6",
-   "bytes": 6646716,
+   "sha256": "2d7992df46bc56c4d7cd3d2c6dc1f47f77b0990c47f100797fc5ebb8cb9c664a",
+   "bytes": 6630756,
    "source": "generated",
    "generator": "tools/horse/build_horse.py",
    "license": "project-generated",
@@ -16,32 +16,32 @@
   },
   {
    "path": "assets/horse/textures/horse_coat_detail.png",
-   "sha256": "26bc49eafd34122deb2b6e7199114f80999e02dc10bbd1b7936f8d1211b55143",
-   "bytes": 4925357,
+   "sha256": "a06c3da3e67ec64419b94aa401bc0f30628240469162d0088d3c5619b07377bb",
+   "bytes": 5683095,
    "source": "generated",
    "generator": "tools/horse/coat.py",
    "license": "project-generated"
   },
   {
    "path": "assets/horse/textures/horse_coat_flow.png",
-   "sha256": "7b6916a472a8fb74d33b39653f84628ba5f8ac7a91806e6287e1afb445ee9017",
-   "bytes": 1640756,
+   "sha256": "0c81cf06b06985b47281918da4553e7e1b3ddb7b5de81d1e255f56f5aed554e4",
+   "bytes": 1808997,
    "source": "generated",
    "generator": "tools/horse/coat.py",
    "license": "project-generated"
   },
   {
    "path": "assets/horse/textures/horse_coat_masks.png",
-   "sha256": "586de11cc97ceb015e4ae4f4d596860534182d2c7001cedefadca727e2cb1c5f",
-   "bytes": 1844664,
+   "sha256": "314d48d5b612ee50224551251577cc4b85ecf897ffaf1f6ad3fa4a56c4086800",
+   "bytes": 2041030,
    "source": "generated",
    "generator": "tools/horse/coat.py",
    "license": "project-generated"
   },
   {
    "path": "assets/horse/textures/horse_coat_normal.png",
-   "sha256": "937265ecfe82a9a76d61e826defb5be87acaeda627d814c00d73c210660f633d",
-   "bytes": 4529829,
+   "sha256": "0e838ac289eb8d05c027ad0f3287c349350a1c1669f18381c8b19586606f0ae1",
+   "bytes": 5269680,
    "source": "generated",
    "generator": "tools/horse/coat.py",
    "license": "project-generated"

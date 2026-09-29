@@ -429,6 +429,13 @@ func _clip_global(a: Animation, bone: int) -> Transform3D:
 	return x
 
 
+## Up at once, however the body lies (user 2026-09-28: "grabbing while down should be okay to mount": G at a wild
+## horse from the ground takes its mane and swings him up onto it, HorseBreaking): the ragdoll and the get-up end now.
+func recover_now() -> void:
+	if phase != "":
+		_finish()
+
+
 func _finish() -> void:
 	if sim and sim.active:
 		sim.physical_bones_stop_simulation()

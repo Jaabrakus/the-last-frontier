@@ -1,6 +1,6 @@
 class_name WildlifeEcology
 extends RefCounted
-## A square's wildlife as numbers: how many deer, wolves, foxes, mammoths and bison it holds, and how that changes (user
+## A square's wildlife as numbers: how many deer, wolves, foxes, mammoths, bison and wild horses it holds, and how that changes (user
 ## 2026-09-27: "a global power level for animals if they keep eating without dying they populate more we take out there
 ## bar", "we need a max amount right? or a max amount of animals? because if we kill to many wolves then more deers grow
 ## if we kill to many deer the wolves begin to attack mammoth and humans more"). No bar for the player: the land shows
@@ -22,7 +22,8 @@ extends RefCounted
 ##   max        the most the square holds of it, whatever the food (the hard cap: bodies in the world): its type's
 ##              (WorldSquares: dense woods hold 40 deer and no bison, open land 40 bison and 4 mammoths; `caps` to new());
 ##              none of it (0), it does not live there (which is not its being gone). Bison graze the grass (forage) and
-##              are the wolves' prey too (BISON_PREY of a deer to find, a kill feeding as two)
+##              are the wolves' prey too (BISON_PREY of a deer to find, a kill feeding as two); wild horses graze it as
+##              the bison do (the wolves take only a weak one, in the world: not in these numbers)
 ##   floor      fewer than this, a few wander in from beyond (`rec` a day, times `refill`: WildlifeLand, from the
 ##              squares beside it, faster when they are full): nothing is gone for good (user 2026-09-27: "we should
 ##              never extint a animal or a plant"; the plants: ForageField.ROOT_BACK_DAYS)
@@ -41,6 +42,7 @@ const SPEC := {
 	"fox": {"start": 0.4, "floor": 1.0, "max": 8.0, "r": 0.25, "die": 0.2, "rec": 0.3},
 	"mammoth": {"start": 0.5, "floor": 1.0, "max": 1.0, "r": 0.03, "die": 0.05, "rec": 0.05},
 	"bison": {"start": 0.6, "floor": 2.0, "max": 0.0, "r": 0.2, "die": 0.2, "rec": 0.3},
+	"horse": {"start": 0.6, "floor": 2.0, "max": 0.0, "r": 0.15, "die": 0.2, "rec": 0.3},
 }
 ## Deer a square carries stripped (grass only), as a share of its most (the woods: 6 of 40).
 const DEER_LOW := 0.15
@@ -51,7 +53,7 @@ const FOX_SHARE := 0.625
 ## A bison as the wolves' prey: this much of a deer to find (a herd, horns), a kill feeding as two.
 const BISON_PREY := 0.5
 ## The forage: what grows back a day (of what is missing), what a deer grazes a day (of what stands); a bison grazes as
-## two deer, a mammoth as five.
+## two deer, a wild horse as one and a half, a mammoth as five.
 const REGROW := 0.25
 const GRAZE := 0.004
 ## Deer a wolf takes a day across the land (when there are PER_WOLF or more each; fewer, fewer).
@@ -117,7 +119,7 @@ func capacity(s: String) -> float:
 			k = c * FOX_SHARE
 		"mammoth":
 			k = c * lerpf(0.5, 1.0, food)
-		"bison":
+		"bison", "horse":
 			k = lerpf(c * 0.3, c, clampf(forage, 0.0, 1.0))
 	return clampf(k, 0.0, c)
 
@@ -136,7 +138,7 @@ func advance(d: float, refill := {}) -> void:
 		var step := minf(d, 1.0)
 		d -= step
 		days += step
-		var grazers := float(pop.deer) + 2.0 * float(pop.bison) + 5.0 * float(pop.mammoth)
+		var grazers := float(pop.deer) + 2.0 * float(pop.bison) + 1.5 * float(pop.horse) + 5.0 * float(pop.mammoth)
 		forage = clampf(forage + (REGROW * (1.0 - forage) - GRAZE * grazers * forage) * step, 0.0, 1.0)
 		# the wolves' hunting across the square (less the kills already seen), deer and bison as they are found
 		var w := float(pop.wolf)

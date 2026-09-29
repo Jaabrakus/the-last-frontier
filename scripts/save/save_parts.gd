@@ -24,9 +24,11 @@ extends RefCounted
 ##               doors hung in openings; the gate open or shut
 ##   items       weapons put down (on the ground or in a rack, a built one by its piece's id, with their state), thrown
 ##               weapons lying or stuck, dropped torches (still burning, or not)
-##   wildlife    every herd and pack (kind, home, what it is doing) and each animal (where, how hurt, hungry and tired);
+##   wildlife    every herd and pack (kind, home, what it is doing) and each animal (where, how hurt, hungry and tired;
+##               a wild horse's coat and how far it was broken);
 ##               carcasses with the meat left and how far they are dressed; every square's numbers (WildlifeLand)
-##   horse       where the horse stands (a load on its chain is left lying where it is)
+##   horse       where the horse stands (a load on its chain is left lying where it is), and every wild horse broken
+##               to the player: where it stands, its coat, mare or stallion
 ##   wheelbarrow where it stands, the pack things in it, and what rode in it (a carcass or a log, saved where they lay:
 ##               taken back into the bed)
 ##   cart        the horse cart (HorseCart): where it stands, the goods in it, whether the horse is in its shafts, and
@@ -595,6 +597,12 @@ static func save_wildlife(level: Node) -> Dictionary:
 static func _animal(a: WildAnimal) -> Dictionary:
 	var e := {"species": a.species, "xf": xf(a.global_transform), "health": a.health, "hunger": a.hunger,
 			"fatigue": a.get("fatigue"), "dead": a.is_dead()}
+	# its build (a bison cow's or bull's), a wild horse's coat and how far it was broken before it threw its rider
+	if not is_equal_approx(a.size, 1.0):
+		e["size"] = a.size
+	if a is WildHorse:
+		e["coat"] = (a as WildHorse).coat
+		e["gentled"] = (a as WildHorse).gentled
 	if a.is_dead():
 		e["meat"] = a.meat_left
 		e["dress"] = a.dress_step
@@ -660,6 +668,11 @@ static func _make_animal(sp: WildlifeSpawner, g: WildGroup, m: Dictionary) -> Wi
 	sp.set("_serial", int(sp.get("_serial")) + 1)
 	a.name = "%s_%d" % [String(m.species).capitalize(), int(sp.get("_serial"))]
 	a.setup(String(m.species), sp, g, 1765 + int(sp.get("_serial")) * 7919)
+	if m.has("size"):
+		a.set_size(float(m.size))
+	if a is WildHorse:
+		(a as WildHorse).coat = String(m.get("coat", (a as WildHorse).coat))
+		(a as WildHorse).gentled = float(m.get("gentled", 0.0))
 	sp.add_child(a)
 	a.global_transform = to_xf(m.xf)
 	a.health = float(m.health)
@@ -685,19 +698,37 @@ static func _make_animal(sp: WildlifeSpawner, g: WildGroup, m: Dictionary) -> Wi
 
 # --- Horse -------------------------------------------------------------------------------------------------
 
+## The level's own horse (the first that was not caught wild; none being broken) and the wild ones broken to the
+## player (HorseBreaking: "tamed", with their coat and whether a mare or a stallion). One still being ridden out is not
+## kept (it was wild: the wildlife's, and gone from it while it bucks).
 static func save_horse(level: Node) -> Dictionary:
-	var hs := level.find_children("*", "Horse", true, false)
-	if hs.is_empty():
-		return {}
-	var h := hs[0] as Horse
-	return {"xf": xf(h.global_transform)}
+	var own := _own_horse(level)
+	var d := {}
+	if own:
+		d["xf"] = xf(own.global_transform)
+	var tamed := []
+	for h: Horse in level.find_children("*", "Horse", true, false):
+		if h.get_meta(&"tamed", false):
+			tamed.append({"xf": xf(h.global_transform), "coat": h.coat,
+					"species": String(h.get_meta(&"wild_species", "horse"))})
+	if not tamed.is_empty() or own:
+		d["tamed"] = tamed
+	return d
+
+
+static func _own_horse(level: Node) -> Horse:
+	for h: Horse in level.find_children("*", "Horse", true, false):
+		if not h.get_meta(&"tamed", false) and not h.has_meta(&"breaking"):
+			return h
+	return null
 
 
 static func load_horse(level: Node, d: Dictionary) -> void:
-	var hs := level.find_children("*", "Horse", true, false)
-	if hs.is_empty() or not d.has("xf"):
+	if d.has("tamed"):
+		_load_tamed(level, d.tamed)
+	var h := _own_horse(level)
+	if h == null or not d.has("xf"):
 		return
-	var h := hs[0] as Horse
 	var haul := h.get_node_or_null("Haul") as HorseHaul
 	if haul and haul.load != null:
 		haul.unhitch()
@@ -707,6 +738,29 @@ static func load_horse(level: Node, d: Dictionary) -> void:
 	h.global_transform = to_xf(d.xf)
 	h.velocity = Vector3.ZERO
 	h.speed = 0.0
+
+
+## The broken wild horses as saved: the level's go (the player off any first), the saved ones come back saddled for
+## riding as they were (their bridle and bit, a HorseMount).
+static func _load_tamed(level: Node, list: Array) -> void:
+	var p := _player(level)
+	for h: Horse in level.find_children("*", "Horse", true, false):
+		if not h.get_meta(&"tamed", false) and not h.has_meta(&"breaking"):
+			continue
+		if p and p.riding == h:
+			p.dismount()
+		h.get_parent().remove_child(h)
+		h.free()
+	for e in list:
+		var h := Horse.new()
+		h.coat = String(e.get("coat", "bay"))
+		h.name = "Horse_%s" % h.coat.capitalize()
+		h.set_meta(&"tamed", true)
+		h.set_meta(&"wild_species", String(e.get("species", "horse")))
+		level.add_child(h)
+		h.global_transform = to_xf(e.xf)
+		WildHorse.dress(h.visual, WildHorse.HEADSTALL)
+		HorseMount.attach_to(h)
 
 
 # --- Forage ------------------------------------------------------------------------------------------------

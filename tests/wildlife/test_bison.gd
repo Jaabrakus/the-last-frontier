@@ -6,7 +6,8 @@ extends SceneTree
 ##
 ##   land      the open land east of the fort (square 1,0) holds its herds, to its numbers (WildlifeLand); none in the
 ##             fort's woods, whose deer, buck, foxes and pack are stocked as ever
-##   model     the rigged bison: its bones for the hit zones, ~1.9 m at the hump
+##   model     the rigged bison: its bones for the hit zones, a bull's build (~1.97 m at the hump, 3.3 m long), the cows
+##             smaller, every one bigger than the horse
 ##   herd      grazing, a herd keeps its room (spread round its leader, not piled up) and its land (its square)
 ##   stampede  one bolting, the herd goes with it, the same way
 ##   charge    shot and hurt with the hunter close, a bison turns and charges him: the butt hurts and throws him down
@@ -114,15 +115,32 @@ func _herd() -> WildGroup:
 	return best
 
 
+## The rigged bison at a bull's build (user 2026-09-28: "make the bisons accurate make them bigger they can not be smaller
+## than the horse"): the bulls ~1.97 m at the hump and 3.3 m long, the cows smaller; every one taller and longer than the
+## horse (1.43 m at the withers, 2.4 m long).
 func _model(g: WildGroup) -> void:
 	var a := g.alive()[0]
 	var sk := a.find_children("*", "Skeleton3D", true, false)
-	var mi := a.find_children("*", "MeshInstance3D", true, false)
-	var h := 0.0
-	for m: MeshInstance3D in mi:
-		h = maxf(h, m.get_aabb().size.y * m.global_basis.get_scale().y)
+	var hs: Array[float] = []
+	var ls: Array[float] = []
+	var bulls := 0
+	for b in g.alive():
+		var h := 0.0
+		var l := 0.0
+		for m: MeshInstance3D in b.find_children("*", "MeshInstance3D", true, false):
+			var sc := m.global_basis.get_scale()
+			h = maxf(h, m.get_aabb().size.y * sc.y)
+			l = maxf(l, m.get_aabb().size.z * sc.z)
+		hs.append(h)
+		ls.append(l)
+		if b.size > 0.95:
+			bulls += 1
 	_expect(not sk.is_empty() and (sk[0] as Skeleton3D).find_bone("Torso3") >= 0 and (sk[0] as Skeleton3D).find_bone("Head") >= 0
-			and h > 1.7 and h < 2.1, "model: the rigged bison, its hit zones' bones there, %.2f m tall" % h)
+			and hs.max() > 1.85 and hs.max() < 2.1 and ls.max() > 3.1 and ls.max() < 3.6,
+			"model: the rigged bison, its hit zones' bones there, a bull's build (%.2f m at the hump, %.2f m long)" % [hs.max(), ls.max()])
+	_expect(hs.min() > 1.55 and ls.min() > 2.6 and bulls >= 1 and bulls < g.alive().size(),
+			"model: bulls (%d) and cows (%d), the smallest %.2f m tall and %.2f m long, all bigger than the horse (1.43, 2.4)" % [
+			bulls, g.alive().size() - bulls, hs.min(), ls.min()])
 
 
 ## The player 110 m off the herd (it is awake within WildlifeSpawner.ACTIVE_D), downwind-agnostic: far enough not to

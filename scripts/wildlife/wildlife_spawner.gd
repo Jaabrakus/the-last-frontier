@@ -1,7 +1,8 @@
 class_name WildlifeSpawner
 extends Node3D
 ## The level's wildlife (first playable wildlife, 2026-09-26): herds of deer (does with a buck in some), a lone buck,
-## foxes and a wolf pack, placed in the forest round the fort and kept stocked; the world state the animals read.
+## foxes, a wolf pack and a band of wild horses (WildHorse; caught whole and given back, take_alive / release:
+## HorseBreaking), placed in the forest round the fort and kept stocked; the world state the animals read.
 ##
 ##   var w := WildlifeSpawner.new(); w.name = "Wildlife"; add_child(w); w.setup(player, vegetation, environment_rig)
 ##
@@ -107,6 +108,8 @@ const STOCK := {
 	"lone_buck": {"count": 1},
 	"fox": {"count": 3},
 	"wolf_pack": {"count": 1},
+	# (a band of woods horses, strays gone wild: user 2026-09-28, "a herd of wild horses that can be tamed")
+	"horse_herd": {"count": 1},
 }
 ## The herd seen from the firing line: grazing in the meadow at the right of the lane's far end (off the targets' line).
 const RANGE_HERD_HOME := Vector3(22.0, 0.0, -148.0)
@@ -213,7 +216,7 @@ func _populate() -> void:
 				_spawn_group(kind, home, false)
 	# the land's numbers start as the woods were stocked (a save's come back over them: SaveParts.load_wildlife)
 	var live := live_counts(Vector2i.ZERO)
-	for s: String in ["deer", "wolf", "fox"]:
+	for s: String in ["deer", "wolf", "fox", "horse"]:
 		ecology.pop[s] = float(live.get(s, 0))
 	# the squares beyond: bodies to their numbers (the open land's bison herds, its deer, wolves and foxes)
 	for sq in stocked_squares():
@@ -354,7 +357,7 @@ func _add_member(g: WildGroup, sp: String, in_lane := false) -> WildAnimal:
 	var pos := _near(g.home, 7.0 * float(WildlifeSpecies.get_data(sp).get("spacing", 1.0)), in_lane)
 	if pos == Vector3.INF:
 		return null
-	var a := WildAnimal.new()
+	var a := WildlifeSpecies.make(sp)
 	_serial += 1
 	a.name = "%s_%d" % [sp.capitalize(), _serial]
 	a.setup(sp, self, g, 1765 + _serial * 7919)
@@ -362,6 +365,52 @@ func _add_member(g: WildGroup, sp: String, in_lane := false) -> WildAnimal:
 	a.global_position = pos + Vector3.UP * 0.02     # on the ground: an animal far away starts asleep (_lod)
 	a.rotation.y = r.randf() * TAU
 	g.members.append(a)
+	return a
+
+
+## A living animal taken out of the wild whole (HorseBreaking: a wild horse caught): out of its group, which takes
+## alarm and remembers the place, and one fewer in the land's numbers; the body goes.
+func take_alive(a: WildAnimal) -> void:
+	var pos := a.global_position
+	if a.group:
+		a.group.members.erase(a)
+		a.group.raise_alarm(pos, now)
+		a.group.remember(pos, 1.0, now)
+	var e := land.at(pos)
+	var s := WildlifeEcology.kind_of(a.species)
+	if e.pop.has(s):
+		e.pop[s] = maxf(float(e.pop[s]) - 1.0, 0.0)
+	remove_animal(a)
+
+
+## One taken out whole back in the wild (a wild horse that threw its rider): `species` at `xf` as it was (`st`: its
+## health, hunger, fatigue, coat, gentled, whatever it has of them), in `g` when that group still lives within 400 m,
+## else in a group of its own; one more in the land's numbers. It bolts from `from`.
+func release(species: String, xf: Transform3D, st: Dictionary, g: WildGroup, from: Vector3) -> WildAnimal:
+	var d := WildlifeSpecies.get_data(species)
+	if g == null or g.alive().is_empty() or g.centroid().distance_to(xf.origin) > 400.0:
+		var kind := String(d.get("group", ""))
+		g = WildGroup.new()
+		g.home = xf.origin
+		g.species = String((WildlifeSpecies.GROUPS.get(kind, {}) as Dictionary).get("species", species))
+		g.activity_since = now
+		groups.append({"kind": kind, "group": g})
+	var a := WildlifeSpecies.make(species)
+	_serial += 1
+	a.name = "%s_%d" % [species.capitalize(), _serial]
+	a.setup(species, self, g, 1765 + _serial * 7919)
+	for k: String in st:
+		if k in a:
+			a.set(k, st[k])
+	var flat := -xf.basis.z
+	a.transform = global_transform.affine_inverse() * Transform3D(Basis(Vector3.UP, atan2(-flat.x, -flat.z)), xf.origin)
+	add_child(a)
+	g.members.append(a)
+	var e := land.at(xf.origin)
+	var s := WildlifeEcology.kind_of(species)
+	if e.pop.has(s):
+		e.pop[s] = minf(float(e.pop[s]) + 1.0, e.cap_of(s) + 1.0)
+	a._start_flee(from)
 	return a
 
 

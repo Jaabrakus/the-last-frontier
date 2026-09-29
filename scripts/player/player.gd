@@ -1045,6 +1045,9 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector3.ZERO
 		target_speed = 0.0
 		wish_local = Vector2.ZERO
+		# knocked down (PlayerRagdoll): G by a wild horse still takes its mane, up onto its back (HorseBreaking)
+		if grip and kneeling is PlayerRagdoll and controls.just_pressed(&"grip"):
+			HorseBreaking.try_grab(self)
 		return
 	# Gripping (PlayerGrip): G held at a grippable surface; while it holds on it moves the body itself.
 	if grip and grip.tick(delta):
@@ -1515,6 +1518,10 @@ func _ride(delta: float) -> void:
 	if not is_instance_valid(riding):
 		riding = null
 		return
+	# G riding alongside a wild horse: over onto its back (HorseBreaking; on one being ridden out, G lets go)
+	if grip and controls.just_pressed(&"grip") and HorseBreaking.try_grab(self):
+		if riding == null:
+			return
 	global_position = riding.global_position
 	_ride_eye = lerpf(_ride_eye, 1.25, 1.0 - exp(-4.0 * delta))
 	camera_pivot.position.y = _eye_y + _ride_eye

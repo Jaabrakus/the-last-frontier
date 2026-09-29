@@ -312,7 +312,10 @@ func _brains() -> void:
 	pack.activity = WildGroup.Activity.PATROL
 	pack.prey = null
 	pack.dest_set = false
-	victim.apply_hit(60.0, victim.global_position + Vector3.UP * 0.6, Vector3(1, 0, 0), null, "body")
+	# (through the haunch from the side: a leg wound, lamed and bleeding, not dead where it stands, whichever way the
+	# deer happens to face; the wound is where the shot goes through the body, WildAnimal.wound_at)
+	var vb := victim.global_basis
+	victim.apply_hit(60.0, victim.global_position + Vector3.UP * 0.6 + vb.z * 0.45 - vb.x * 0.2, vb.x, null, "body")
 	var chased := false
 	var ate := false
 	var meat0 := -1.0

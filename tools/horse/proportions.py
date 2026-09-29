@@ -134,7 +134,8 @@ REF = {  # (low, high) in metres or as ratios to the withers height (keys ending
     "leg_to_chest_ratio": (0.95, 1.15, "ground-to-girth / chest depth: about equal"),
     "head_length_ratio": (0.36, 0.42, "head length / height (a short head: 0.36-0.39)"),
     "neck_to_head_ratio": (1.1, 1.6, "neck topline / head length"),
-    "croup_minus_withers": (-0.03, 0.03, "croup level with the withers (m)"),
+    # (revision 6, user 2026-09-28: the croup's mound behind the saddle brought down: built a little uphill)
+    "croup_minus_withers": (-0.07, 0.03, "croup level with or a little below the withers (m)"),
     "fore_cannon_girth": (0.18, 0.23, "fore cannon girth (m): 7-9 in of bone for a heavy-boned 14.1"),
     "forearm_girth_under_elbow": (0.40, 0.50, "forearm girth just under the elbow (m), heavy bone"),
     "point_of_buttock_behind_hip_joint": (0.25, 0.30, "point of buttock behind the hip joint (m)"),

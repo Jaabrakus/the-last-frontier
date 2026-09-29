@@ -17,8 +17,9 @@ bison as they move the stag. The joints are placed from the two bodies' landmark
     the leg IK and its poles  with their hooves (they are not weighted: the clips' leg rotations are baked)
 The clips' moves (the body's bounce, the shoulders' shift) are scaled with the animal's size. The mesh is weighted to the
 anatomical bones by distance to each bone's reach (its joint to the next joint on), the legs' flesh only to that leg's
-bones and the body's only to the trunk's, neck's, head's, tail's and the legs' tops. Everything in metres: the bison
-about 1.9 m at the hump, 2.8 m long, facing the stag's way (-Y here: +Z in the glTF, as the game's animals).
+bones and the body's only to the trunk's, neck's, head's, tail's and the legs' tops. Everything in metres: the bison a
+bull's size (BULL: about 1.97 m at the hump, 3.3 m long, 1.05 m across), facing the stag's way (-Y here: +Z in the glTF,
+as the game's animals).
 """
 
 import sys
@@ -33,6 +34,12 @@ STAG = PROJECT + "/assets/wildlife/quaternius/stag.glb"
 BISON = PROJECT + "/assets/wildlife/polypizza/bison.glb"
 # the bison mesh's units to metres (about 1.9 m at the hump; scripts/climb/climb_yard.gd BISON_SCALE)
 BISON_SCALE = 0.135
+# a bull's build (user 2026-09-28: "make the bisons accurate make them bigger they can not be smaller than the horse"):
+# the mesh as scaled is a bull's height but short and narrow (2.8 m long, 0.85 m across); a plains bull is 1.9-2.0 m at
+# the hump, 3.0-3.8 m from nose to rump and about a metre through the shoulders. Stretched [across, along, up] before
+# the rig is fitted to it: about 1.05 m across, 3.3 m long, 1.97 m at the hump. (The herd's cows are the same body made
+# smaller in the game: WildlifeSpecies "sizes".)
+BULL = (1.22, 1.18, 1.03)
 LEGS = {
     "Front.L": ["FrontShoulder.L", "FrontUpperLeg.L", "FrontLowerLeg.L"],
     "Front.R": ["FrontShoulder.R", "FrontUpperLeg.R", "FrontLowerLeg.R"],
@@ -126,6 +133,9 @@ def main():
     for o in bpy.context.view_layer.objects:
         o.select_set(o == bison)
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    # (the bull's build: across X, along Y, up Z, about its feet's middle)
+    bison.scale = Vector(BULL)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     B = Body(world_verts(bison))
     k = ((B.hind_y - B.fore_y) / (S.hind_y - S.fore_y) + B.h / S.h) * 0.5      # the stag to the bison, about
     print("BISON RIG stag h %.2f fore %.2f hind %.2f belly %.2f | bison h %.2f fore %.2f hind %.2f belly %.2f | k %.3f"
