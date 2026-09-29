@@ -481,13 +481,7 @@ func _fort_mesh_cells() -> void:
 	var faces := PackedVector3Array()
 	var headless_palisade := [false]
 	_collect_faces(s, faces, headless_palisade)
-	if headless_palisade[0]:
-		# The dummy renderer keeps no MultiMesh data: the palisade goes in as the variant-0 log at
-		# every logical log transform (as check_fort_integration.gd does).
-		var logs_mesh := ((s.fort.get_node("Palisade/Logs0") as MultiMeshInstance3D).multimesh.mesh as Mesh).get_faces()
-		for t: Transform3D in s._logs:
-			for v in logs_mesh:
-				faces.append(t * v)
+	# (the palisade is a build-menu piece since 2026-09-28: it is not among FrontierStructures' meshes)
 	s.queue_free()
 	await process_frame
 	_mesh_tris = faces.size() / 3

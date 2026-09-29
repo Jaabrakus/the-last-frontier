@@ -13,7 +13,7 @@ extends SceneTree
 ##              boxes, the fire pit), straw (the four trusses); footstep mapping for the tops
 ##   roof       the cabin roof prism is solid (rays land on its slopes and ridge, a capsule in
 ##              the attic overlaps it) and it and the cabin box are traversal-excluded
-##   ramps      the player walks up and back down both ramps at three lateral offsets
+##   ramps      the player walks up and back down both ramps (the ramp pieces) at three lateral offsets
 ##   los_mesh   the line of sight from the spawn eye, the gameplay camera and the firing line to
 ##              the dummies is clear of the fort's VISUAL meshes too (trimesh of every structure
 ##              triangle, dummies excluded), not only of its colliders (check_layout.gd does those)
@@ -24,7 +24,7 @@ const OLD_GATE_HALF := 3.0
 var player: FrontierPlayer
 var space: PhysicsDirectSpaceState3D
 var failures := PackedStringArray()
-var _headless_palisade := false
+var _headless_palisade := false        ## (set by _collect when a palisade MultiMesh is met; the palisade is no part of FrontierStructures any more)
 
 
 func _initialize() -> void:
@@ -44,7 +44,7 @@ func _initialize() -> void:
 	_check_rng()
 	_check_surfaces()
 	await _check_roof()
-	for r: Array in [[Vector3(14.0, 0.1, -8.0), "east"], [Vector3(-12.0, 0.1, -8.0), "west"]]:
+	for r: Array in [[Vector3(12.0, 0.1, -8.0), "east"], [Vector3(-12.0, 0.1, -8.0), "west"]]:
 		for off: float in [-0.3, 0.0, 0.3]:
 			await _check_ramp((r[0] as Vector3) + Vector3(off, 0, 0), "%s %+.1f" % [r[1], off])
 	await _check_visual_los()
@@ -119,7 +119,7 @@ func _check_surfaces() -> void:
 		["storehouse", Vector3(9, 1, 9), Vector3(9, 1, 0), "wood", 6.0],
 		["flag pole", Vector3(-6, 3, 0), Vector3(-6, 3, -4), "wood", -1.93],
 	]
-	for x: float in FrontierStructures.WALKWAY_POSTS:
+	for x: float in [3.0, 6.0, 9.0, -3.0, -6.0, -9.0]:        # (a firing step piece's post stands at each section's middle)
 		side.append(["walkway post x=%.1f" % x, Vector3(x, 1.0, -12.0), Vector3(x, 1.0, -16.0), "wood", -14.21])
 	for c: Array in side:
 		var from: Vector3 = c[1]
@@ -141,8 +141,8 @@ func _check_surfaces() -> void:
 		["woodpile", -9.0, 4.12, "wood", 1.04, "wood"],
 		["walkway deck east", 8.0, -15.0, "wood", 2.275, "wood"],
 		["walkway deck west", -8.0, -15.0, "wood", 2.275, "wood"],
-		["east ramp", 14.0, -11.6, "wood", 1.15, "wood"],
-		["west ramp", -12.0, -11.6, "wood", 1.15, "wood"],
+		["east ramp", 12.0, -11.7, "wood", 1.1375, "wood"],
+		["west ramp", -12.0, -11.7, "wood", 1.1375, "wood"],
 		["crate", 4.75, -6.0, "wood", 0.8, "wood"],
 		["barrel", 7.0, -3.0, "wood", 1.0, "wood"],
 		["under the walkway", 5.1, -15.0, "wood", 2.125, "wood"],
@@ -263,14 +263,8 @@ func _check_visual_los() -> void:
 	await process_frame
 	var faces := PackedVector3Array()
 	_collect(s, faces)
-	if _headless_palisade:
-		# The dummy renderer keeps no MultiMesh data (every instance reads as identity): the
-		# palisade goes in as the variant-0 log at every logical log transform (no per-log yaw).
-		var logs_mesh := ((s.fort.get_node("Palisade/Logs0") as MultiMeshInstance3D).multimesh.mesh as Mesh).get_faces()
-		for t: Transform3D in s._logs:
-			for v in logs_mesh:
-				faces.append(t * v)
-		print("  los_mesh: headless, palisade from the %d logical log transforms" % s._logs.size())
+	# (the palisade, the gate, the firing step and the blockhouses are build-menu pieces since 2026-09-28, not part of
+	# FrontierStructures: FortPlan.stamp_structure, tests/building/test_fort_structure.gd checks them)
 	s.queue_free()
 	await process_frame
 	# A separate physics world: only the triangles, nothing of the level.
