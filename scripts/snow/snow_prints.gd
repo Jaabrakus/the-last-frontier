@@ -121,8 +121,11 @@ func _find_walkers(player: Node3D) -> void:
 
 ## A walker's prints: one every stride along its way, left and right, while it is on the snow.
 func _walk(w: Dictionary) -> void:
+	# (checked before the cast: an animal freed since the last scan is a freed object, and casting one is an error)
+	if not is_instance_valid(w.node):
+		return
 	var n := w.node as Node3D
-	if n == null or not is_instance_valid(n):
+	if n == null:
 		return
 	var p := n.global_position
 	if n is FrontierPlayer and (n as FrontierPlayer).riding != null:

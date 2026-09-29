@@ -629,8 +629,9 @@ static func touch(c: Node) -> void:
 
 
 ## How far from carcass `c`'s middle a scavenger eats (its eat_radius: a mammoth's side, a leg's length; 0 a deer).
-static func carcass_rim(c: Node) -> float:
-	var r: Variant = c.get(&"eat_radius") if c != null else null
+## Untyped: a scavenger may still hold a carcass that has since been eaten up and freed (0 then).
+static func carcass_rim(c) -> float:
+	var r: Variant = c.get(&"eat_radius") if c != null and is_instance_valid(c) else null
 	return float(r) if r != null else 0.0
 
 
