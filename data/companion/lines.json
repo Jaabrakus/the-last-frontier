@@ -23,7 +23,8 @@
     "smoke": ["I'll hang venison in the smokehouse and keep the smudge going.", "Bring me the venison. I'll smoke it."],
     "jerky": ["I'll cut strips and dry them over the fire.", "Jerky keeps through winter. I'll make it."],
     "tan": ["I'll work the hides at the frame.", "Bring the hides and brains, and I'll dress them."],
-    "stretch": ["I'll stretch the pelts on the hoop.", "Furs want stretching before they spoil."]
+    "stretch": ["I'll stretch the pelts on the hoop.", "Furs want stretching before they spoil."],
+    "teach": ["I'll sit down with the little one and show it how.", "It's time for a lesson."]
   },
   "home_set": ["Then this is home.", "Aye, this will do."],
   "nothing": ["There's nothing to do just now.", "All in hand here."],

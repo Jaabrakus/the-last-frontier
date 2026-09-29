@@ -74,6 +74,8 @@ static func age_days(child: Dictionary, now: float) -> float:
 
 ## Whether the child is carried always (a newborn or infant: never left on the ground).
 static func carried(child: Dictionary, now: float) -> bool:
+	if child.has("stage"):   # GROWTH (growth.gd): a child with a growth stage is carried while newborn or infant, by milestones not by age
+		return Growth.carried(child)
 	return bool(stage_row(age_days(child, now)).get("carried", true))
 
 

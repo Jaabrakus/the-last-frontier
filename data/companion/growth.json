@@ -1,0 +1,141 @@
+{
+  "format": "frontier-growth",
+  "version": 1,
+  "summary": "How the household's children grow up (Growth, Teaching, Father read it; GrowthLink and ChildBody are the node side). Growth is by MILESTONES ONLY (user 2026-09-28), not by a real-time age formula: a child moves to the next stage when its `next` requirements are ALL met: the game days spent in the stage, the average care it has had in the stage (0..1), the lessons taken in all, the times it has watched a parent work, the distinct topics it has learnt, and (for the last steps) the core curriculum. Every number is here. The stage lives in the child's record (`stage`, `stage_at`, `care_sum`, `care_n`, `lessons`, `watched`, `topics`, ...): an old record without them is placed by its age once (normalize).",
+
+  "stages": [
+    {
+      "id": "newborn", "name": "Newborn", "carried": true, "body": false, "scale": 1.0, "head": 1.0,
+      "next": {"min_days": 8, "care": 0.0},
+      "summary": "Carried, sleeps and feeds (BabyLink)."
+    },
+    {
+      "id": "infant", "name": "Infant", "carried": true, "body": false, "scale": 1.0, "head": 1.0,
+      "next": {"min_days": 22, "care": 0.45},
+      "summary": "Sits up and crawls once it has had days and enough contentment (BabyLink still carries it until its first steps; a Blender infant is the next art step)."
+    },
+    {
+      "id": "toddler", "name": "Toddler", "carried": false, "body": true, "scale": 0.45, "head": 1.42,
+      "shape": "neutral", "walk_speed": 0.85, "run_speed": 1.7, "watch_mult": 0.8, "lesson_mult": 0.0, "helper_bonus": 0.0,
+      "can": {"walk": true, "follow": true, "watch": true, "lesson": false, "carry": false, "work": false},
+      "next": {"min_days": 40, "care": 0.5, "watched": 2},
+      "summary": "First steps: walks and follows a parent, watches, cannot work."
+    },
+    {
+      "id": "child", "name": "Child", "carried": false, "body": true, "scale": 0.7, "head": 1.22,
+      "shape": "neutral", "walk_speed": 1.05, "run_speed": 2.5, "watch_mult": 1.3, "lesson_mult": 1.0, "helper_bonus": 0.04,
+      "can": {"walk": true, "follow": true, "watch": true, "lesson": true, "carry": true, "work": false, "chores": true},
+      "next": {"min_days": 90, "care": 0.5, "lessons": 4, "topics": 3},
+      "summary": "Carries small things, helps with light chores, learns."
+    },
+    {
+      "id": "teen", "name": "Teen", "carried": false, "body": true, "scale": 0.9, "head": 1.08,
+      "shape": {"neutral_days": 40, "sex_fit": 0.35, "bust_max": 0.05}, "walk_speed": 1.2, "run_speed": 3.0, "watch_mult": 1.15, "lesson_mult": 1.2, "helper_bonus": 0.1,
+      "can": {"walk": true, "follow": true, "watch": true, "lesson": true, "carry": true, "work": true, "chores": true},
+      "junior": {"skill_cap": 35.0, "jobs": ["tend", "woodpile", "cook", "forage", "firewood"], "needs_core": true},
+      "next": {"min_days": 130, "care": 0.5, "lessons": 9, "topics": 6, "core": true},
+      "summary": "Works light jobs from the job book under a skill cap once the core curriculum is done; learns fast."
+    },
+    {
+      "id": "adult", "name": "Adult", "carried": false, "body": true, "scale": 1.0, "head": 1.0,
+      "shape": "adult", "walk_speed": 1.3, "run_speed": 3.4, "watch_mult": 1.0, "lesson_mult": 1.0, "helper_bonus": 0.0,
+      "can": {"walk": true, "follow": true, "watch": true, "lesson": true, "carry": true, "work": true, "chores": true},
+      "summary": "A full worker of the household: their own core, everything they learned kept."
+    }
+  ],
+
+  "shapes": {
+    "summary": "The body shape of a stage (Growth.shape_of / body_look). A baby, toddler and child have the flat, asexual child body (ChildLook.body_for_stage: no breasts, no genital shape, flat pelvis, `sex` fit neutral). A teen keeps that body for `neutral_days` days of the stage, then only a modest change: the `sex` fit `sex_fit` of the way from neutral to its look's own, the bust at most `bust_max`, no genital shape, no body hair, no stubble. Clothed always (the default outfit covers torso and hips). An adult has the look's own body (the parents' inherited bust and build).",
+    "adult_stubble_boy": 0.2
+  },
+
+  "requirement_names": {
+    "min_days": "days in this stage",
+    "care": "care",
+    "lessons": "lessons taken",
+    "watched": "times watching a parent work",
+    "topics": "things learnt",
+    "core": "core lessons"
+  },
+
+  "care": {
+    "summary": "Care quality is sampled every `sample_min` game minutes of the stage: for a baby its contentment (1 - distress, from BabyCare); from the toddler on 0.6 fed within `meal` hours + 0.4 a parent within `attend_m` and awake. `prior` is the average before any sample.",
+    "sample_min": 60.0,
+    "max_catch_up": 48,
+    "prior": 0.6,
+    "fed_weight": 0.6,
+    "attended_weight": 0.4,
+    "attend_m": 14.0
+  },
+
+  "meal": {
+    "summary": "A child with a body eats from the household store every `hours` game hours (the first kind found).",
+    "hours": 7.0,
+    "grace": 1.6,
+    "kinds": ["johnnycake", "roast_venison", "roast_small_game", "roast_fish", "smoked_venison", "jerky", "charred_venison", "charred_small_game", "charred_fish", "blackberries", "strawberries", "elderberries", "crabapples", "hazelnuts", "acorns"]
+  },
+
+  "curriculum": {
+    "summary": "What a parent can teach. `kid` is the survival knowledge id (the child's core gets it as known, taught by the parent) and `skill` the skill that gets the points; `xp` is multiplied by the stage's lesson_mult. `min_stage` and `requires` (topic ids the child must have learnt) gate it; `teacher_skill` is the level the teaching parent needs in `skill`, and the parent's own core must know `kid`. `where`: 'home' (the teach job at the hearth) or 'field' (the parent's real job `job` is the lesson: the child goes along and watches it, and the lesson is given when the job finishes with the child near). `actions` are the player's own survival actions a child can watch. `watch_min` game minutes of watching gives one watch credit. `core`: part of the core curriculum.",
+    "lesson_daily_max": 2,
+    "lesson_topic_daily_max": 1,
+    "repeat_mult": 0.5,
+    "watch": {"radius_m": 12.0, "xp_frac": 0.3, "performer_min_lead": 10.0, "daily_cap_per_skill": 1.0, "credit_every_min": 30.0},
+    "topics": [
+      {"id": "fire", "name": "Making and minding a fire", "skill": "survival", "kid": "fire.strike_flint_steel", "actions": ["fire.strike_flint_steel", "fire.gather", "fire.nurse", "fire.bank"], "job": "tend", "where": "home", "min_stage": "child", "requires": [], "teacher_skill": 10.0, "minutes": 40.0, "xp": 1.6, "watch_min": 25.0, "core": true},
+      {"id": "foraging", "name": "Foraging", "skill": "survival", "kid": "forage.search", "actions": ["forage.search", "forage.dig_groundnut"], "job": "forage", "where": "field", "min_stage": "child", "requires": [], "teacher_skill": 8.0, "minutes": 45.0, "xp": 1.4, "watch_min": 30.0, "core": true},
+      {"id": "firewood", "name": "Gathering firewood", "skill": "woodcraft", "kid": "wood.split_firewood", "actions": ["wood.split_firewood"], "job": "firewood", "where": "field", "min_stage": "child", "requires": [], "teacher_skill": 8.0, "minutes": 40.0, "xp": 1.4, "watch_min": 30.0, "core": true},
+      {"id": "cooking", "name": "Cooking", "skill": "provisions", "kid": "cook.roast", "actions": ["cook.roast", "cook.boil"], "job": "cook", "where": "home", "min_stage": "child", "requires": [], "teacher_skill": 8.0, "minutes": 35.0, "xp": 1.5, "watch_min": 25.0, "core": true},
+      {"id": "shelter", "name": "Building a shelter", "skill": "survival", "kid": "shelter.brush_leanto", "actions": ["shelter.brush_leanto", "shelter.bough_bed"], "job": "", "where": "home", "min_stage": "child", "requires": ["fire"], "teacher_skill": 10.0, "minutes": 50.0, "xp": 1.6, "watch_min": 40.0, "core": true},
+      {"id": "trapping", "name": "Trapping", "skill": "trapping", "kid": "trap.deadfall_set", "actions": ["trap.deadfall_set", "trap.check"], "job": "", "where": "home", "min_stage": "teen", "requires": ["foraging"], "teacher_skill": 15.0, "minutes": 50.0, "xp": 1.8, "watch_min": 40.0, "core": false},
+      {"id": "tracking", "name": "Tracking", "skill": "hunting", "kid": "hunt.track", "actions": ["hunt.track"], "job": "", "where": "home", "min_stage": "teen", "requires": ["trapping"], "teacher_skill": 15.0, "minutes": 55.0, "xp": 1.8, "watch_min": 40.0, "core": false},
+      {"id": "butchering", "name": "Butchering game", "skill": "hunting", "kid": "butcher.field_dress", "actions": ["butcher.field_dress", "fur.skin"], "job": "butcher", "where": "field", "min_stage": "teen", "requires": ["cooking"], "teacher_skill": 15.0, "minutes": 60.0, "xp": 1.8, "watch_min": 35.0, "core": false},
+      {"id": "hunting", "name": "Hunting basics", "skill": "hunting", "kid": "", "actions": [], "job": "", "where": "home", "min_stage": "teen", "requires": ["tracking"], "teacher_skill": 20.0, "minutes": 60.0, "xp": 2.0, "watch_min": 45.0, "core": false}
+    ]
+  },
+
+  "growing_up": {
+    "summary": "A teen who has done the core curriculum is taken on as a JUNIOR worker of the household (their own SurvivalCore, the `junior.jobs` switched on, their skills held at `junior.skill_cap`); at adulthood the cap is lifted and every job may be given. The skills and knowledge come from the child's own core (its lessons and watching); `baseline_skill * vigor` is the floor of the working skills.",
+    "baseline_skill": 4.0,
+    "junior_body": true
+  },
+
+  "father": {
+    "summary": "The NPC father (the husband when the player is a woman; Father.decide). A day in blocks; his role in each: provider (works outside), teacher (teaches a child due a lesson, the teach job), protector (keeps home and the family together). `take_along` children of at least that stage go with him on his outside jobs; danger (a live predator within danger_m of the home) keeps everyone home for danger_hold_min game minutes.",
+    "blocks": [
+      {"id": "teach", "from": 6.0, "to": 9.5, "role": "teacher"},
+      {"id": "work", "from": 9.5, "to": 17.5, "role": "provider"},
+      {"id": "home", "from": 17.5, "to": 21.5, "role": "protector"},
+      {"id": "rest", "from": 21.5, "to": 6.0, "role": "protector"}
+    ],
+    "take_along_min_stage": "toddler",
+    "take_along_blocks": ["work"],
+    "danger_m": 55.0,
+    "danger_hold_min": 45.0,
+    "baby": {"carry_when_mother_busy": true}
+  },
+
+  "player_commands": {
+    "summary": "The player as a parent: E on a child, or the Family section of the household screen.",
+    "follow_text": "Take %s along",
+    "stay_text": "Ask %s to stay here",
+    "teach_text": "Teach %s..."
+  },
+
+  "lines": {
+    "stage": {
+      "infant": "{name} is sitting up and reaching for everything.",
+      "toddler": "{name} has taken first steps. Toddling after us already.",
+      "child": "{name} is growing fast: old enough to help and to learn.",
+      "teen": "{name} is nearly grown, and quick to learn.",
+      "adult": "{name} has grown up. A full hand of the household now."
+    },
+    "junior": "{name} has learnt the core of it and takes light work now.",
+    "lesson_done": ["{teacher} has shown {name} {topic}.", "{name} listened well: {topic}."],
+    "watch_done": "{name} watched {teacher} and picked something up.",
+    "come": ["Coming, {parent}!", "Wait for me!"],
+    "stay": ["I'll stay here.", "Here?"],
+    "teach": ["Show me how!", "I'm ready."],
+    "refuse": {"stage": "{name} is too young for that.", "skill": "{teacher} does not know enough of it to teach.", "known": "{name} has learnt that already.", "requires": "{name} has to learn {need} first.", "daily": "Enough for one day: let {name} practise.", "far": "{name} is not close enough to hear."}
+  }
+}

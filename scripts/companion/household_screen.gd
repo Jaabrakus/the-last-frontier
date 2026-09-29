@@ -11,7 +11,7 @@ const HEAD := Color(0.93, 0.84, 0.62)
 const TEXT := Color(0.9, 0.87, 0.8)
 const DIM := Color(0.62, 0.58, 0.52)
 const LIT := Color(0.98, 0.9, 0.55)
-const TABS := [["talk", "Talk"], ["tasks", "Tasks"], ["stats", "Stats"]]
+const TABS := [["talk", "Talk"], ["tasks", "Tasks"], ["stats", "Stats"], ["family", "Family"]]   # GROWTH: the Family tab
 const ROLE_NAMES := {"follow": "Come with me", "stay": "Wait here", "home": "Keep the house", "outside": "Go out for the day"}
 const ROLE_HINT := {"follow": "stays with you", "stay": "waits where she is", "home": "cooks and butchers what you bring home",
 		"outside": "forages and gathers firewood by day"}
@@ -20,6 +20,8 @@ var house: Household
 var tab := "talk"
 ## The worker the tabs are about (her worker id; 0 is the wife).
 var sel := 0
+## GROWTH: the child whose Teach... picker is open on the Family tab.
+var family_child := ""
 var _was_mouse := Input.MOUSE_MODE_CAPTURED
 var _content: VBoxContainer
 var _tab_buttons := {}
@@ -134,6 +136,8 @@ func _show(id: String) -> void:
 			_build_tasks()
 		"stats":
 			_build_stats()
+		"family":
+			GrowthPanel.build(self)   # GROWTH (growth_panel.gd)
 
 
 # ---------------------------------------------------------------- talk
@@ -424,7 +428,8 @@ func _build_family(sc: SpouseCore) -> void:
 	_content.add_child(_label("Family", 17, HEAD))
 	for c: Dictionary in house.family:
 		var fr := _pair(String(c.name), "")
-		(fr.get_child(1) as Label).text = Pregnancy.age_text(c, sc.core.state.minutes) + (", a girl" if float(c.sex) < 0.5 else ", a boy")
+		(fr.get_child(1) as Label).text = Pregnancy.age_text(c, sc.core.state.minutes) + (", a girl" if float(c.sex) < 0.5 else ", a boy") \
+				+ (", " + Growth.stage_name(c).to_lower() if c.has("stage") else "")   # GROWTH
 		_content.add_child(fr)
 
 

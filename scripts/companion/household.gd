@@ -29,6 +29,8 @@ var pregnancy: PregnancyLink
 var family: Array = []
 ## BABY (scripts/companion/baby_link.gd): the newest child's body, its needs and who holds it. Saved as "baby".
 var baby: BabyLink
+## GROWTH (scripts/companion/growth_link.gd): the children's stages, bodies, lessons and the NPC father's day. State lives in the family records.
+var growth: GrowthLink
 var _rng := RandomNumberGenerator.new()
 
 
@@ -69,6 +71,10 @@ func _ready() -> void:
 	baby.name = "BabyLink"
 	baby.house = self
 	add_child(baby)
+	growth = GrowthLink.new()   # GROWTH
+	growth.name = "GrowthLink"
+	growth.house = self
+	add_child(growth)
 
 
 ## The household's workers: the wife first.
@@ -118,6 +124,12 @@ func _spawn(w: SpouseCore, at: Vector3) -> Spouse:
 		b.home = home
 	_set_hearth()
 	return b
+
+
+## GROWTH: takes a ready-made worker (a grown child, Growth.make_worker) into the household and spawns her body.
+func adopt(w: SpouseCore, at: Vector3) -> Spouse:
+	w.join(stock)   # (her own id first: _spawn looks the body up by it)
+	return _spawn(w, at)
 
 
 func body_of(w: SpouseCore) -> Spouse:
@@ -286,6 +298,8 @@ func save_data() -> Dictionary:
 			ats.append([home.x, home.y, home.z])
 	var d := stock.crew.to_dict(ats)
 	d["home"] = [home.x, home.y, home.z]
+	if growth != null:
+		growth.flush()   # GROWTH: each child's learning core goes into its record
 	d["family"] = family.duplicate(true)
 	if baby != null:
 		d["baby"] = baby.save_data()   # BABY: the needs and the holder
@@ -294,6 +308,8 @@ func save_data() -> Dictionary:
 
 func load_data(d: Dictionary) -> void:
 	family = Pregnancy.family_from(d.get("family"))   # old saves have none
+	if growth != null:
+		growth.reset()   # GROWTH: the records carry the stages; cores and bodies are made again from them
 	if baby != null:
 		baby.load_data(d.get("baby"))   # BABY: an old save has none: the defaults, the wife holding
 	if not (d.has("workers") or d.has("spouse")) or bridge == null or bridge.core == null:

@@ -16,7 +16,7 @@
   "leather": {"name": "Leather", "min": 4, "kinds": ["buckskin", "rawhide"]},
   "furs": {"name": "Dried furs", "min": 2, "kinds": ["dried_wolf_pelt", "dried_fox_pelt", "dried_marten_pelt", "dried_mink_pelt", "dried_fisher_pelt", "dried_raccoon_pelt"]}
  },
- "chain_names": {"butcher": "Game: carcass to table", "firewood": "Wood: from the woods to the fires", "forage": "Foraging"},
+ "chain_names": {"teach": "Family: teaching the children", "butcher": "Game: carcass to table", "firewood": "Wood: from the woods to the fires", "forage": "Foraging"},
  "jobs": [
   {
    "id": "tend", "name": "Tend the fire", "stage": "upkeep", "where": "home", "needs": "fire", "priority": 10,
@@ -111,6 +111,13 @@
    "demand": "target", "offer": "gather", "skill": "woodcraft",
    "inputs": {}, "outputs": {"firewood": 4},
    "keep": {}, "how": {"type": "survival", "action": "wood.split_firewood", "result": "deposit", "verb": "brings back", "none": "finds nothing"}, "tags": ["wood", "heavy"]
+  },
+  {
+   "id": "teach", "name": "Teach the children", "stage": "upkeep", "where": "home", "needs": "none", "priority": 5,
+   "text": "Teaching a lesson", "idle": "no child to teach",
+   "demand": "site", "offer": "lesson", "skill": "",
+   "inputs": {}, "outputs": {},
+   "keep": {}, "how": {"type": "timed", "done": "teach", "minutes": 40}, "tags": ["family"]
   }
  ]
 }

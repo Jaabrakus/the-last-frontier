@@ -54,6 +54,9 @@ const STOCK_SCORE := 0.1
 
 var name := ""
 var look := {}
+## GROWTH: the look she is DRAWN with when it differs from `look` (a young worker: the child's flat body, the teen's modest one); empty: `look`.
+## `look` stays the logic (her sex, her face). Saved.
+var body_look := {}
 var role := "home"
 ## Her place in the household (0: the wife), and the jobs she does: {job id: bool}, every job in the book.
 var worker_id := 0
@@ -87,6 +90,10 @@ var fire_finder := Callable()
 ## pile: wood_room(), add_wood_units(n); smoke: larder_raw(), smudge_min(), smudge_room(), add_venison(n), add_wood_units(n);
 ## rack, frame, hoop: only where she works (the body walks to them).
 var finders := {}
+## GROWTH (growth_link.gd): the teach job. lesson_source: Callable(worker) -> {child, topic, minutes, text} (or {}: nobody to teach);
+## lesson_done: Callable(worker, that dictionary) -> the line she says when the lesson is given.
+var lesson_source := Callable()
+var lesson_done := Callable()
 ## Pelts drying on her hoop: [{pelt, dried, ready_at}] (game minutes on her clock). Saved.
 var hoop: Array = []
 ## INTIMACY (scripts/companion/intimacy.gd): the gauge 0..1, the cooldown after a yoga session and after a declined offer
@@ -183,6 +190,7 @@ static func from_dict(d: Dictionary, main: SurvivalCore) -> SpouseCore:
 	s.name = String(d.get("name", "Wife"))
 	s.worker_id = int(d.get("id", 0))
 	s.look = (d.get("look", {}) as Dictionary).duplicate(true)
+	s.body_look = (d.get("body_look", {}) as Dictionary).duplicate(true) if d.get("body_look") is Dictionary else {}   # GROWTH
 	s.role = String(d.get("role", "home")) if ROLES.has(String(d.get("role", "home"))) else "home"
 	# jobs the save does not know (an old save, a job added since) are on
 	for k: String in JobBook.ids():
@@ -206,7 +214,7 @@ func to_dict() -> Dictionary:
 	# a job in the middle of its work is given up (her food and materials go back to the store)
 	cancel("saved")
 	SurvivalStreams.sync(core)   # PREGNANCY: her named streams are saved with her core
-	return {"id": worker_id, "name": name, "look": look.duplicate(true), "role": role if role_saved == "" else role_saved,
+	return {"id": worker_id, "name": name, "look": look.duplicate(true), "body_look": body_look.duplicate(true), "role": role if role_saved == "" else role_saved,
 			"enabled": enabled.duplicate(), "core": core.state.to_dict(), "journal": journal.duplicate(), "hoop": hoop.duplicate(true),
 			"intimacy": intimacy, "intimacy_cd": intimacy_cd, "intimacy_offer_cd": intimacy_offer_cd,
 			"pregnancy": pregnancy.duplicate(true)}
@@ -515,6 +523,8 @@ func offer(id: String) -> Dictionary:
 			o = _offer_feed(job, obj)
 		"smokehouse":
 			o = _offer_smoke(job, obj)
+		"lesson":   # GROWTH
+			o = _offer_lesson()
 		_:
 			o = _offer_variants(job, obj)
 	if o.is_empty():
@@ -555,6 +565,16 @@ func _offer_feed(job: Dictionary, obj: Object) -> Dictionary:
 	if n <= 0:
 		return {}
 	return {"inputs": {kind: n}}
+
+
+## GROWTH: a lesson to give a child (the teach job): the source names the child and the topic; it takes the topic's minutes.
+func _offer_lesson() -> Dictionary:
+	if not lesson_source.is_valid():
+		return {}
+	var d: Dictionary = lesson_source.call(self)
+	if d.is_empty():
+		return {}
+	return {"inputs": {}, "text": String(d.text), "minutes": float(d.minutes), "lesson": d}
 
 
 ## What the smokehouse wants now: raw venison to hang (the larder holds so many), sticks for the smudge when it is low.
@@ -695,7 +715,8 @@ func begin(id: String) -> bool:
 	_hold(o)
 	var how: Dictionary = o.how
 	if String(how.get("type", "")) == "timed":
-		minutes_left = _minutes(job, o)
+		# a timed job always takes some time: one of 0 minutes would never finish (sync ends a job as it runs out)
+		minutes_left = maxf(_minutes(job, o), 1.0)
 		_start(id, o)
 		return true
 	set_place("woods" if String(job.where) == "outside" else "home")
@@ -826,6 +847,8 @@ func _timed_done() -> void:
 			_done_smoke()
 		"takedown":
 			_done_takedown()
+		"teach":   # GROWTH
+			_done_teach()
 		_:
 			_end_task()
 
@@ -909,6 +932,15 @@ func _done_feed() -> void:
 			stock.put(kind, taken - n)
 	_finish_timed("%s %s %d %s %s." % [name, cfg.verb, n, "stick" if n == 1 else "sticks", cfg.noun] if n > 0 \
 			else "%s %s." % [name, cfg.full])
+
+
+## GROWTH: the lesson is over: the child learns (if it is still near), and she says so.
+func _done_teach() -> void:
+	var d: Dictionary = _run.get("lesson", {})
+	var text := "%s finds nobody to teach." % name
+	if lesson_done.is_valid() and not d.is_empty():
+		text = String(lesson_done.call(self, d))
+	_finish_timed(text)
 
 
 func _done_smoke() -> void:

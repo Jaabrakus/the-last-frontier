@@ -122,13 +122,27 @@ func _build_model() -> void:
 	ap = aps[0] as AnimationPlayer if not aps.is_empty() else null
 	var body := CharacterBodyMesh.attach(sk, ap, BODY_PATH)
 	if body:
-		PlayerAppearance.dress(body, AppearanceStore.validate(sc.look))
+		PlayerAppearance.dress(body, AppearanceStore.validate(sc.body_look if not sc.body_look.is_empty() else sc.look))   # GROWTH: a young worker is drawn at its stage body
 	if ap:
 		for c in [CLIP_IDLE, CLIP_WALK, CLIP_RUN, CLIP_WORK]:
 			var full := "%s/%s" % [LIB, c]
 			if ap.has_animation(full):
 				ap.get_animation(full).loop_mode = Animation.LOOP_LINEAR
 	_show(CLIP_IDLE)
+
+
+## GROWTH: a young worker's proportions (a junior: growth.json stage scale and head): the model scaled, the head bigger, the collider to fit.
+func set_proportions(scale_v: float, head_v: float) -> void:
+	if _model == null:
+		return
+	_model.scale = Vector3.ONE * scale_v
+	ChildProportion.attach(sk).head_scale = head_v
+	for c in get_children():
+		if c is CollisionShape3D and (c as CollisionShape3D).shape is CapsuleShape3D:
+			var cap := (c as CollisionShape3D).shape as CapsuleShape3D
+			cap.radius = maxf(0.3 * scale_v, 0.14)
+			cap.height = maxf(1.7 * scale_v, cap.radius * 2.0 + 0.05)
+			(c as CollisionShape3D).position.y = cap.height * 0.5
 
 
 func _player_yaw_offset() -> float:
@@ -256,6 +270,13 @@ func _chores(dt: float) -> Array:
 
 ## Gives up a plan whose spot she cannot reach (stuck against something for a while).
 func _plan_check() -> void:
+	# the woods are everywhere out there: stuck among the trees short of a woods spot, she works where she stands (a field
+	# lesson's child is with her either way) instead of giving the plan up
+	if _stuck_t > 1.5 and String(_plan.get("site", "")) == "woods" \
+			and Vector2(global_position.x - home.x, global_position.z - home.z).length() >= WOODS_RANGE.x * 0.5:
+		_goal = Vector3(global_position.x, _goal.y, global_position.z)
+		_stuck_t = 0.0
+		return
 	if _stuck_t > 4.0:
 		_plan = {}
 		_has_goal = false
@@ -360,6 +381,19 @@ func _carcass_near_home(skip: Array = []) -> Object:
 
 # ---------------------------------------------------------------- at work
 func _start_work() -> void:
+	if sc.task == "teach":   # GROWTH: a lesson is given standing, turned to the child
+		_phase = "lesson"
+		_phase_t = 0.0
+		_has_goal = false
+		_look_on = false
+		var h := Household.find(get_tree())
+		var kid: Node3D = h.growth.lesson_child(sc) if h != null and h.growth != null else null
+		if kid != null:
+			_look_at = kid.global_position
+			_look_on = true
+		_clip = ""
+		_show(CLIP_IDLE)
+		return
 	_phase = "in"
 	_phase_t = 0.0
 	_has_goal = false
@@ -394,6 +428,11 @@ func _work_step(dt: float) -> void:
 		var to := _look_at - global_position
 		_face = atan2(-to.x, -to.z)
 	match _phase:
+		"lesson":   # GROWTH
+			if not sc.busy():
+				_phase = ""
+				_look_on = false
+				_show(CLIP_IDLE)
 		"in":
 			var l := _len(CLIP_WORK_IN)
 			if _phase_t >= l:
