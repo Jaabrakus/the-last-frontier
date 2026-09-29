@@ -777,6 +777,17 @@ static func load_cart(level: Node, d: Dictionary) -> void:
 		c.load_data(d)
 
 
+static func save_household(level: Node) -> Dictionary:
+	var h := Household.find(level.get_tree())
+	return h.save_data() if h else {}
+
+
+static func load_household(level: Node, d: Dictionary) -> void:
+	var h := Household.find(level.get_tree())
+	if h and not d.is_empty():
+		h.load_data(d)
+
+
 static func save_forage(level: Node) -> Dictionary:
 	var f := ForageField.find(level.get_tree())
 	if f == null:

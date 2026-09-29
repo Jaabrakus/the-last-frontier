@@ -1,0 +1,24 @@
+{
+  "greet": {
+    "morning": ["Good morning. Sleep well?", "Morning. The day is young."],
+    "day": ["Hello. What do you need?", "I was just seeing to things."],
+    "evening": ["Evening. It's been a long day.", "Come to the fire when you can."],
+    "night": ["It's late. Shouldn't we be resting?", "Quietly, now. The night is for sleeping."],
+    "hungry": ["I could eat something.", "My stomach's been grumbling."],
+    "hurt": ["I'm not quite myself today.", "I've felt better."]
+  },
+  "role": {
+    "follow": ["Of course. I'll stay close.", "Lead on."],
+    "stay": ["I'll wait right here.", "Here, then. Don't be long."],
+    "home": ["I'll keep the house, and cook what you bring in.", "Leave the house to me."],
+    "outside": ["I'll go out and see what the woods will give.", "I'll gather what I can, and be back by dark."]
+  },
+  "task": {
+    "cook": ["I'll see to the cooking.", "Bring it here and I'll cook it."],
+    "butcher": ["I'll butcher what you've brought home.", "Leave the carcass with me."],
+    "forage": ["I'll go and forage.", "There should be berries and nuts about."],
+    "firewood": ["I'll fetch firewood.", "We'll want wood before the cold."]
+  },
+  "home_set": ["Then this is home.", "Aye, this will do."],
+  "nothing": ["There's nothing to do just now.", "All in hand here."]
+}

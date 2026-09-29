@@ -361,6 +361,21 @@ func add_wood(player: Node) -> bool:
 	return true
 
 
+## Lays up to `n` sticks of firewood on the fire without a pack behind it (the spouse tending it): how many went on.
+func add_wood_units(n: int) -> int:
+	var added := 0
+	while added < n and wood_left() < MAX_WOOD:
+		if not record().is_empty():
+			link.add_fuel(fire_id, FUEL_MIN_PER_WOOD)
+			_linked_fuel = fuel_min()
+			state.burn_left = _linked_fuel
+		else:
+			state.burn_left += FUEL_PER_WOOD
+			state.burn_total = maxf(state.burn_total, state.burn_left)
+		added += 1
+	return added
+
+
 func smother() -> void:
 	if state.lit:
 		state.snuff("snuffed")

@@ -97,6 +97,9 @@ func _ready() -> void:
 		survival.name = "Survival"
 		survival.setup(player, environment_rig)
 		add_child(survival)
+		# the spouse (scripts/companion): a wife or husband for the player's character, with her own survival core on the
+		# player's clock (needs the bridge's core, so the same switch)
+		Household.install(self, player)
 	StartupProfile.mark("survival")
 	# forage (scripts/forage): berries, nuts and herbs where they grow; the deer feed on them too
 	var forage := ForageField.new()
