@@ -5,3 +5,5 @@ __pycache__/
 .DS_Store
 # Godot import temp files left by an interrupted import
 *.import-*
+# Raw AGLS extraction (licensed for Unreal Engine use; its raw files must not be shared)
+AGLS_extracted/
