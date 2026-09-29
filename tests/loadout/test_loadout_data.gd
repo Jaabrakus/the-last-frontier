@@ -199,6 +199,10 @@ func _test_capacity(carry: Dictionary) -> void:
 func _test_handover_and_fit(carry: Dictionary, fit: Dictionary) -> void:
 	for key: String in carry.points:
 		var e: Dictionary = carry.points[key]
+		# hand-placed items (the climbing stakes) were never run through the body-fit survey; they say so in their basis
+		if String(e.get("basis", "")).begins_with("hand-placed"):
+			_check(not fit.placements.has(key) and not e.has("fit"), "%s: hand-placed, no fit claimed" % key)
+			continue
 		_check(fit.placements.has(key), "%s: fit check present" % key)
 		if not (e.draw as Array).is_empty() and e.has("stow"):
 			_check(e.has("handover"), "%s: handover recorded" % key)

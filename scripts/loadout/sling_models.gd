@@ -110,6 +110,8 @@ static func unit(kind: String) -> Node3D:
 			return quiver(24)
 		"powder_horn":
 			return powder_horn()
+		"climbing_stakes_wood", "climbing_stakes_bone", "climbing_stakes_stone", "climbing_stakes_iron":
+			return climbing_stakes(kind.trim_prefix("climbing_stakes_"))
 	push_warning("SlingModels: no unit model for " + kind)
 	return Node3D.new()
 
@@ -266,6 +268,81 @@ static func _ties(root: Node3D, center: Vector3, zs: Array, r: float, _asset_nam
 		var t := _mesh_node(root, tube_mesh(-0.009, 0.009, r, r, 12, false), mat("thong", Color(0.3, 0.19, 0.1), 0.85, 0.0, false, true),
 				Transform3D(Basis(Vector3.RIGHT, PI / 2), center + Vector3(0, 0, z)), "Tie%d" % i)
 		t.set_meta("sling_tie", true)
+
+
+## A pair of climbing stakes (the four tiers of loadout_items.json: wood, bone, stone, iron), side by side along X,
+## tied together at the grips. Each 0.20 m: a rawhide (iron: leather) grip from z +0.10 to +0.035, the working end
+## to the point at z -0.10. Model frame: -Z = point, +Y out of the body (carry_gear.json back_left.climbing_stakes_*).
+static func climbing_stakes(tier: String) -> Node3D:
+	var root := Node3D.new()
+	root.name = "ClimbingStakes_" + tier
+	for i in 2:
+		var s := climbing_stake(tier)
+		s.name = "Stake%d" % i
+		s.position = Vector3(0.019 * (1 if i == 0 else -1), 0.0, 0.006 * i)
+		root.add_child(s)
+	_ties(root, Vector3.ZERO, [0.07], 0.034, "")
+	return root
+
+
+## One climbing stake of `tier` (see climbing_stakes), its grip centred at z +0.068, the point at z -0.10.
+static func climbing_stake(tier: String) -> Node3D:
+	var root := Node3D.new()
+	var grip := mat("stake_rawhide", Color(0.72, 0.62, 0.45), 0.9) if tier != "iron" else leather()
+	var up := Basis(Vector3.RIGHT, -PI / 2)      # tube_mesh runs along +Y; turned to run along -Z
+	_mesh_node(root, tube_mesh(-0.10, -0.035, 0.0115, 0.0125, 10), grip, Transform3D(up, Vector3.ZERO), "Grip")
+	_mesh_node(root, tube_mesh(-0.105, -0.10, 0.014, 0.014, 10), grip, Transform3D(up, Vector3.ZERO), "Butt")
+	match tier:
+		"wood":
+			var w := mat("stake_wood", Color(0.42, 0.29, 0.17), 0.8)
+			_mesh_node(root, tube_mesh(-0.035, 0.05, 0.011, 0.008, 10), w, Transform3D(up, Vector3.ZERO), "Shaft")
+			_mesh_node(root, tube_mesh(0.05, 0.10, 0.008, 0.0, 8), mat("stake_charred", Color(0.09, 0.07, 0.06), 0.95),
+					Transform3D(up, Vector3.ZERO), "Point")
+		"bone":
+			var b := mat("stake_bone", Color(0.86, 0.82, 0.7), 0.55)
+			_mesh_node(root, tube_mesh(-0.035, 0.04, 0.012, 0.009, 9), b, Transform3D(up, Vector3.ZERO), "Shaft")
+			_mesh_node(root, tube_mesh(0.04, 0.10, 0.009, 0.0, 7), b, Transform3D(up, Vector3.ZERO), "Point")
+		"stone":
+			_mesh_node(root, tube_mesh(-0.035, 0.035, 0.0105, 0.0095, 10), wood(), Transform3D(up, Vector3.ZERO), "Shaft")
+			var f := mat("stake_flint", Color(0.36, 0.33, 0.3), 0.35)
+			var flat := Basis.from_scale(Vector3(1.0, 1.0, 0.35))
+			_mesh_node(root, tube_mesh(0.03, 0.05, 0.009, 0.016, 6), f, Transform3D(up * flat, Vector3.ZERO), "Belly")
+			_mesh_node(root, tube_mesh(0.05, 0.10, 0.016, 0.0, 6), f, Transform3D(up * flat, Vector3.ZERO), "Point")
+			var sinew := mat("stake_sinew", Color(0.82, 0.76, 0.62), 0.9)
+			for k in 3:
+				_mesh_node(root, tube_mesh(-0.003, 0.003, 0.0118, 0.0118, 10, false), sinew,
+						Transform3D(up, Vector3(0, 0, -0.022 - 0.007 * k)), "Lash%d" % k)
+		_:
+			var m := iron()
+			_mesh_node(root, tube_mesh(-0.037, -0.031, 0.016, 0.016, 4), m, Transform3D(up, Vector3.ZERO), "Guard")
+			_mesh_node(root, tube_mesh(-0.031, 0.10, 0.0085, 0.0, 4), m, Transform3D(up, Vector3.ZERO), "Spike")
+	return root
+
+
+## A grip claw tied under one foot: a thin iron plate under the forefoot with four short spikes and two small front
+## points just past the toes, tied on with two thin rawhide thongs round the foot. Origin at the sole under the ball
+## of the foot, +Y up (the instep), -Z forward (the toes).
+static func climbing_claw() -> Node3D:
+	var root := Node3D.new()
+	root.name = "ClimbingClaw"
+	var m := iron()
+	var plate := BoxMesh.new()
+	plate.size = Vector3(0.055, 0.004, 0.07)
+	_mesh_node(root, plate, m, Transform3D(Basis(), Vector3(0, -0.002, 0.005)), "Plate")
+	for ix in 2:
+		for iz in 2:
+			_mesh_node(root, tube_mesh(0.0, -0.013, 0.0035, 0.0, 4, false), m,
+					Transform3D(Basis(), Vector3(0.019 * (ix * 2 - 1), -0.004, 0.028 * iz - 0.012)), "Spike%d%d" % [ix, iz])
+		_mesh_node(root, tube_mesh(0.0, 0.02, 0.0035, 0.0, 4, false), m,
+				Transform3D(Basis(Vector3.RIGHT, -PI / 2 - 0.3), Vector3(0.012 * (ix * 2 - 1), -0.002, -0.03)), "Front%d" % ix)
+	# the thongs: thin bands round the foot (axis along the foot), flattened to its section
+	var thong := mat("thong", Color(0.3, 0.19, 0.1), 0.85, 0.0, false, true)
+	for k in 2:
+		var r := 0.043 + 0.006 * k
+		_mesh_node(root, tube_mesh(-0.0035, 0.0035, r, r, 18, false), thong,
+				Transform3D(Basis.from_scale(Vector3(1.0, 0.62, 1.0)) * Basis(Vector3.RIGHT, PI / 2), Vector3(0, 0.026, 0.0 + 0.045 * k)),
+				"Thong%d" % k)
+	return root
 
 
 ## The belt hook of a hooked pistol: a flat steel bar on the left flat of the stock (-X), screwed on at

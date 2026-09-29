@@ -17,7 +17,7 @@ const CARRY_POINT_NAMES := {
 	"chest_R": "pistol sling (right chest)", "chest_L": "pistol sling (left chest)", "back": "belt (back)",
 	"back_2": "belt (back, stacked)", "back_left": "belt (behind the left hip)", "pouch_strap": "shot-pouch strap",
 	"long_A": "back (over the left shoulder)", "long_B": "back (over the right shoulder)", "quiver": "back (quiver)",
-	"tool_loop": "pack (tool loop behind the right shoulder)",
+	"tool_loop": "pack (tool loop behind the right shoulder)", "feet": "on the feet (while climbing)",
 }
 
 

@@ -2214,6 +2214,138 @@
     "residual_cm": -0.6,
     "n_clips_below_contact": 0
    }
+  },
+  "back_left.climbing_stakes_wood": {
+   "point": "back_left",
+   "kind": "climbing_stakes_wood",
+   "bone": "pelvis",
+   "attach": "rigid",
+   "basis": "hand-placed (user 2026-09-29): the belt horn's line (sling_runtime.json horn.belt) mirrored to the left, just past the tomahawk's head, at the knife's back_left angle; not measured by the body-fit survey",
+   "note": "A pair of climbing stakes tied on the belt or sash behind the left hip, points slanting down along the belt toward the left hip (the horn's mirror). Model frame: -Z = point, +Y out of the body, the pair side by side along X.",
+   "yield_deg": 0.0,
+   "capsules_bind": [],
+   "stow": {
+    "bone": "pelvis",
+    "local": "Transform3D(-0.302963, -0.690035, 0.657317, -0.370289, 0.720773, 0.585980, -0.878123, -0.065867, -0.473880, -0.215000, 0.196176, 0.021075)",
+    "q": [
+     -0.335464,
+     0.790192,
+     0.164553,
+     0.48578
+    ],
+    "o": [
+     -0.215,
+     0.19618,
+     0.02107
+    ],
+    "bind": "Transform3D(0.302963, 0.690035, -0.657317, 0.878123, 0.065866, 0.473880, 0.370288, -0.720773, -0.585980, 0.215000, 0.875000, -0.175000)",
+    "bind_o": [
+     0.215,
+     0.875,
+     -0.175
+    ],
+    "angle_deg": 230.9
+   },
+   "draw": []
+  },
+  "back_left.climbing_stakes_bone": {
+   "point": "back_left",
+   "kind": "climbing_stakes_bone",
+   "bone": "pelvis",
+   "attach": "rigid",
+   "basis": "hand-placed (user 2026-09-29): the belt horn's line (sling_runtime.json horn.belt) mirrored to the left, just past the tomahawk's head, at the knife's back_left angle; not measured by the body-fit survey",
+   "note": "A pair of climbing stakes tied on the belt or sash behind the left hip, points slanting down along the belt toward the left hip (the horn's mirror). Model frame: -Z = point, +Y out of the body, the pair side by side along X.",
+   "yield_deg": 0.0,
+   "capsules_bind": [],
+   "stow": {
+    "bone": "pelvis",
+    "local": "Transform3D(-0.302963, -0.690035, 0.657317, -0.370289, 0.720773, 0.585980, -0.878123, -0.065867, -0.473880, -0.215000, 0.196176, 0.021075)",
+    "q": [
+     -0.335464,
+     0.790192,
+     0.164553,
+     0.48578
+    ],
+    "o": [
+     -0.215,
+     0.19618,
+     0.02107
+    ],
+    "bind": "Transform3D(0.302963, 0.690035, -0.657317, 0.878123, 0.065866, 0.473880, 0.370288, -0.720773, -0.585980, 0.215000, 0.875000, -0.175000)",
+    "bind_o": [
+     0.215,
+     0.875,
+     -0.175
+    ],
+    "angle_deg": 230.9
+   },
+   "draw": []
+  },
+  "back_left.climbing_stakes_stone": {
+   "point": "back_left",
+   "kind": "climbing_stakes_stone",
+   "bone": "pelvis",
+   "attach": "rigid",
+   "basis": "hand-placed (user 2026-09-29): the belt horn's line (sling_runtime.json horn.belt) mirrored to the left, just past the tomahawk's head, at the knife's back_left angle; not measured by the body-fit survey",
+   "note": "A pair of climbing stakes tied on the belt or sash behind the left hip, points slanting down along the belt toward the left hip (the horn's mirror). Model frame: -Z = point, +Y out of the body, the pair side by side along X.",
+   "yield_deg": 0.0,
+   "capsules_bind": [],
+   "stow": {
+    "bone": "pelvis",
+    "local": "Transform3D(-0.302963, -0.690035, 0.657317, -0.370289, 0.720773, 0.585980, -0.878123, -0.065867, -0.473880, -0.215000, 0.196176, 0.021075)",
+    "q": [
+     -0.335464,
+     0.790192,
+     0.164553,
+     0.48578
+    ],
+    "o": [
+     -0.215,
+     0.19618,
+     0.02107
+    ],
+    "bind": "Transform3D(0.302963, 0.690035, -0.657317, 0.878123, 0.065866, 0.473880, 0.370288, -0.720773, -0.585980, 0.215000, 0.875000, -0.175000)",
+    "bind_o": [
+     0.215,
+     0.875,
+     -0.175
+    ],
+    "angle_deg": 230.9
+   },
+   "draw": []
+  },
+  "back_left.climbing_stakes_iron": {
+   "point": "back_left",
+   "kind": "climbing_stakes_iron",
+   "bone": "pelvis",
+   "attach": "rigid",
+   "basis": "hand-placed (user 2026-09-29): the belt horn's line (sling_runtime.json horn.belt) mirrored to the left, just past the tomahawk's head, at the knife's back_left angle; not measured by the body-fit survey",
+   "note": "A pair of climbing stakes tied on the belt or sash behind the left hip, points slanting down along the belt toward the left hip (the horn's mirror). Model frame: -Z = point, +Y out of the body, the pair side by side along X.",
+   "yield_deg": 0.0,
+   "capsules_bind": [],
+   "stow": {
+    "bone": "pelvis",
+    "local": "Transform3D(-0.302963, -0.690035, 0.657317, -0.370289, 0.720773, 0.585980, -0.878123, -0.065867, -0.473880, -0.215000, 0.196176, 0.021075)",
+    "q": [
+     -0.335464,
+     0.790192,
+     0.164553,
+     0.48578
+    ],
+    "o": [
+     -0.215,
+     0.19618,
+     0.02107
+    ],
+    "bind": "Transform3D(0.302963, 0.690035, -0.657317, 0.878123, 0.065866, 0.473880, 0.370288, -0.720773, -0.585980, 0.215000, 0.875000, -0.175000)",
+    "bind_o": [
+     0.215,
+     0.875,
+     -0.175
+    ],
+    "angle_deg": 230.9
+   },
+   "draw": []
   }
  },
  "gear": {
@@ -2240,7 +2372,11 @@
      "tomahawk"
     ],
     "back_left": [
-     "knife"
+     "knife",
+     "climbing_stakes_wood",
+     "climbing_stakes_bone",
+     "climbing_stakes_stone",
+     "climbing_stakes_iron"
     ]
    },
    "exclusive": [
@@ -2315,6 +2451,12 @@
     ],
     "back_2": [
      "tomahawk"
+    ],
+    "back_left": [
+     "climbing_stakes_wood",
+     "climbing_stakes_bone",
+     "climbing_stakes_stone",
+     "climbing_stakes_iron"
     ]
    },
    "exclusive": [
@@ -2373,6 +2515,12 @@
     "L_hip": [
      "saber",
      "pistol"
+    ],
+    "back_left": [
+     "climbing_stakes_wood",
+     "climbing_stakes_bone",
+     "climbing_stakes_stone",
+     "climbing_stakes_iron"
     ]
    },
    "blocks": [
@@ -2470,6 +2618,9 @@
      "felling_axe",
      "mattock",
      "hoe"
+    ],
+    "feet": [
+     "climbing_claws"
     ]
    },
    "evidence": "B (slung muskets, bows and quivers on the back)"

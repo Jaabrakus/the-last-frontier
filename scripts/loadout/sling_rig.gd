@@ -407,8 +407,8 @@ func _style_xf(kind: String, bind: Transform3D, point_spec := {}) -> Transform3D
 
 func _make_entry(it: Dictionary, p: String) -> void:
 	var k := String(it.kind)
-	if data.kind_class(k) == "tool":
-		return   # the gathering tools on the pack's tool loop are drawn by GatherTools
+	if data.kind_class(k) in ["tool", "worn"]:
+		return   # the gathering tools on the pack's tool loop are drawn by GatherTools; worn gear (the climbing claws) shows only in use
 	var spec := data.point(p, k)
 	if spec.is_empty() or not spec.has("stow"):
 		push_warning("SlingRig: no stowed placement for %s at %s" % [k, p])
@@ -3190,6 +3190,12 @@ func _follow_model(item_id: String, held: bool) -> void:
 
 ## Items whose weapon the player put down (not carried): their copies are hidden.
 var _absent := {}
+
+
+## Hides an item's stowed copy while something else shows it (PlayerGrip: the climbing stakes in the hands), or shows
+## it again.
+func hide_stowed(item_id: String, hidden: bool) -> void:
+	_set_present(item_id, not hidden)
 
 
 func _set_present(item_id: String, on: bool) -> void:

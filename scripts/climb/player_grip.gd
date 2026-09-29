@@ -317,6 +317,8 @@ func tick(dt: float) -> bool:
 	var held := _latched
 	if not raw:
 		_need_press = false
+	if state == OFF and _gear_on:
+		_feed_gear()
 	if state == OFF and perched:
 		return _perch_tick(dt)
 	if state == OFF:
@@ -354,7 +356,122 @@ func tick(dt: float) -> bool:
 	_blend.update(dt)
 	_place()
 	_feed_legs(dt)
+	_feed_gear()
 	return true
+
+
+# Climbing gear (user 2026-09-29: "stakes have 3 levels wood has less grip stamina stone more and iron the best, we
+# can add grip claw feet stakes to allow hanging without using a lot of stamina", "bone stakes as well"): the loadout's
+# climbing_stakes_* (data/loadout/loadout_items.json: climb.drain_mult, wood 0.85, bone 0.75, stone 0.65, iron 0.5) ride
+# on the belt or sash behind the left hip and come into the hands while gripping, points into the surface; the
+# climbing_claws (climb.hang_drain_mult 0.35) are strapped under the feet while gripping.
+# --------------------------------------------------------------------------------------------------
+
+var _gear_on := false
+var _gear_kind := ""             ## the stakes' kind the hand copies were built for
+var _gear_nodes := {}            ## "l" / "r": a stake in that hand; "lf" / "rf": a claw under that foot
+var _gear_stowed := ""           ## the stakes' item id whose belt copy is hidden
+
+
+## The loadout item id of the climbing stakes carried ("" = none).
+func stakes_item() -> String:
+	var lo: Loadout = player.get("loadout")
+	if lo == null:
+		return ""
+	for it: Dictionary in lo.items:
+		if String(it.kind).begins_with("climbing_stakes_"):
+			return String(it.id)
+	return ""
+
+
+## The stakes' tier factor on the whole grip drain (1 without stakes).
+func stakes_drain_mult() -> float:
+	var id := stakes_item()
+	if id == "":
+		return 1.0
+	var k := String((player.loadout as Loadout).item(id).kind)
+	return float(LoadoutData.get_default().kind(k).get("climb", {}).get("drain_mult", 1.0))
+
+
+func has_claws() -> bool:
+	var lo: Loadout = player.get("loadout")
+	return lo != null and lo.has_kind("climbing_claws")
+
+
+## The claws' factor on the drain of holding still (1 without claws).
+func claws_hang_mult() -> float:
+	if not has_claws():
+		return 1.0
+	return float(LoadoutData.get_default().kind("climbing_claws").get("climb", {}).get("hang_drain_mult", 1.0))
+
+
+## Shows the gear while holding on (stakes in the hands and their belt copy hidden, claws under the feet) and puts it
+## away otherwise.
+func _feed_gear() -> void:
+	var on := (state == GRAB or state == HOLD or state == FAIL) and is_instance_valid(anchor)
+	var id := stakes_item()
+	var kind := String((player.loadout as Loadout).item(id).kind) if id != "" else ""
+	if kind != _gear_kind:
+		for key in ["l", "r"]:
+			if _gear_nodes.has(key):
+				(_gear_nodes[key] as Node3D).queue_free()
+				_gear_nodes.erase(key)
+		_gear_kind = kind
+	var gear_rig: SlingRig = player.get("gear")
+	var hide_id := id if on else ""
+	if hide_id != _gear_stowed and gear_rig:
+		if _gear_stowed != "":
+			gear_rig.hide_stowed(_gear_stowed, false)
+		if hide_id != "":
+			gear_rig.hide_stowed(hide_id, true)
+		_gear_stowed = hide_id
+	_gear_on = on
+	var sk := player.skeleton
+	var n: Vector3 = anchor.global_basis.y if on else Vector3.UP
+	for side in ["l", "r"]:
+		var show := on and kind != ""
+		var st: Node3D = _gear_nodes.get(side)
+		if show and st == null:
+			st = SlingModels.climbing_stake(kind.trim_prefix("climbing_stakes_"))
+			st.top_level = true
+			sk.add_child(st)
+			_gear_nodes[side] = st
+		if st == null:
+			continue
+		st.visible = show
+		if show:
+			# held like a dagger, point out of the bottom of the fist into the surface at about 33 deg below its normal
+			# plane's horizontal: the grip, the guard and the start of the spike stay in sight, the rest is in the
+			# surface (the hands are on it; model: -Z = point, grip at z +0.068)
+			var palm := sk.to_global(sk.get_bone_global_pose(sk.find_bone(side + "_palm")).origin) + n * 0.03
+			var z := -(-n * 0.55 + Vector3.DOWN * 0.83).normalized()
+			var y := (n - z * n.dot(z)).normalized()
+			if y.length_squared() < 0.5:
+				y = Vector3.UP
+			var b := Basis(y.cross(z).normalized(), y, z).orthonormalized()
+			st.global_transform = Transform3D(b, palm - b.z * 0.068)
+	for side in ["l", "r"]:
+		var key: String = side + "f"
+		var show := on and has_claws()
+		var cl: Node3D = _gear_nodes.get(key)
+		if show and cl == null:
+			cl = SlingModels.climbing_claw()
+			cl.top_level = true
+			sk.add_child(cl)
+			_gear_nodes[key] = cl
+		if cl == null:
+			continue
+		cl.visible = show
+		if show:
+			# under the ball of the foot: -Z along the foot (ankle -> ball), +Y up the shin
+			var ank := sk.to_global(sk.get_bone_global_pose(sk.find_bone(side + "_ankle")).origin)
+			var ball := sk.to_global(sk.get_bone_global_pose(sk.find_bone(side + "_ball")).origin)
+			var knee := sk.to_global(sk.get_bone_global_pose(sk.find_bone(side + "_knee")).origin)
+			var fwd := (ball - ank).normalized()
+			var up := (knee - ank)
+			up = (up - fwd * up.dot(fwd)).normalized()
+			var b := Basis(up.cross(-fwd).normalized(), up, -fwd).orthonormalized()
+			cl.global_transform = Transform3D(b, ball - up * 0.035 - fwd * 0.02)
 
 
 ## The legs' sway: the surface under them and how hard it shakes; faded out for the pull-up and standing (their clips
@@ -607,8 +724,10 @@ func _hold(dt: float, held: bool) -> void:
 	elif not _hang_idle and slope > hang_idle_deg:
 		_hang_idle = true
 	_pendulum(dt)
-	# stamina
+	# stamina (the climbing claws ease holding still; the stakes' tier eases all of it: climb_gear_mult)
 	var drain := drain_hold + drain_steep * clampf((slope - 45.0) / 45.0, 0.0, 1.0)
+	if _moving == "":
+		drain *= claws_hang_mult()
 	if _moving != "":
 		drain += drain_move
 	if _float == "md":
@@ -618,7 +737,7 @@ func _hold(dt: float, held: bool) -> void:
 	drain += drain_swing * _swing_v.length() + drain_jolt * _jolt.length() + drain_shaken * shake_amt
 	if hang_aim:
 		drain += drain_one_hand
-	stamina = maxf(stamina - drain * drain_mult * dt, 0.0)
+	stamina = maxf(stamina - drain * drain_mult * stakes_drain_mult() * dt, 0.0)
 	if stamina <= 0.0:
 		_end_hang_aim()
 		state = FAIL
