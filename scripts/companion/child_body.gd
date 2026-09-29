@@ -37,6 +37,8 @@ var interact_reach := 2.4
 
 var _model: Node3D
 var _prop: ChildProportion
+var body: CharacterBodyMesh
+var _stage := ""
 var _shape: CollisionShape3D
 var _clip := ""
 var _face := 0.0
@@ -46,6 +48,28 @@ var _mood := "idle"        ## "idle" | "play" | "sit" | "watch"
 var _mood_t := 0.0
 var _stuck_t := 0.0
 var _last := Vector3.ZERO
+
+
+## A child's body at `stage` on the skeleton `sk`: the game's body v4 dressed from `look` (its drawn look: Growth.body_look) in a child's
+## clothes (ChildLook.dress_look: `sex` the child's own), then shaped (shape_body). Null without the body.
+static func dress_body(sk: Skeleton3D, anim: AnimationPlayer, look: Dictionary, sex: float, stage: String) -> CharacterBodyMesh:
+	var b := CharacterBodyMesh.attach_parts(sk, anim, {"head": BodyMaterials.BODY_GLB})
+	if b == null:
+		return null
+	PlayerAppearance.dress(b, AppearanceStore.validate(ChildLook.dress_look(ChildLook.young(look, stage), sex, stage)))
+	shape_body(b, look, stage)
+	return b
+
+
+## The stage's proportions (ChildProportion, the stage's form: nothing for an adult), the head's rounding (HeadRound: the stage's and
+## the look's child_round) and the skin's smoothness (ChildSkin) on a dressed body.
+static func shape_body(b: CharacterBodyMesh, look: Dictionary, stage: String) -> ChildProportion:
+	var form := ChildLook.stage_form(stage)
+	var p: ChildProportion = null
+	if not form.is_empty():
+		p = ChildProportion.shape(b, form, ChildLook.roundness(look, stage))
+	ChildSkin.apply(b, ChildLook.skin_smooth(stage))
+	return p
 
 
 static func spawn(l: GrowthLink, c: Dictionary, at: Vector3) -> ChildBody:
@@ -81,26 +105,35 @@ func _build_model() -> void:
 	sk = _model.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
 	var aps := _model.find_children("*", "AnimationPlayer", true, false)
 	ap = aps[0] as AnimationPlayer if not aps.is_empty() else null
-	var body := CharacterBodyMesh.attach(sk, ap, BODY_PATH)
-	if body:
-		# the flat asexual child body at every stage that has this body (ChildLook.body_for_stage through Growth.body_look), clothed
-		PlayerAppearance.dress(body, AppearanceStore.validate(Growth.body_look(child, link.now() if link != null and link._ok() else 0.0)))
+	# the flat asexual child body at every stage that has this body (ChildLook.body_for_stage through Growth.body_look), clothed for a
+	# child, with the stage's proportions, rounded head and soft skin (ChildProportion, HeadRound, ChildSkin)
+	_stage = Growth.stage_of(child)
+	body = dress_body(sk, ap, Growth.body_look(child, link.now() if link != null and link._ok() else 0.0), float(child.get("sex", 0.0)), _stage)
 	if ap:
 		for c in [CLIP_IDLE, CLIP_WALK, CLIP_RUN, CLIP_PLAY, CLIP_SIT, CLIP_WATCH]:
 			var full := "%s/%s" % [LIB, c]
 			if ap.has_animation(full):
 				ap.get_animation(full).loop_mode = Animation.LOOP_LINEAR
-	_prop = ChildProportion.attach(sk)
+	_prop = ChildProportion.of(body)
+	if body != null:
+		var blink := FaceBlink.new()           # (the face engine's blink, on the child's own meshes)
+		blink.name = "FaceBlink"
+		_model.add_child(blink)
+		blink.body = body
 	_show(CLIP_IDLE)
 
 
 ## The stage's proportions (after the stage changes): the model's scale, the head, the collider.
 func refresh() -> void:
 	var s := scale_now()
+	if _model != null and _stage != "" and Growth.stage_of(child) != _stage:
+		# a new stage: the body made again at its proportions
+		_model.queue_free()
+		_model = null
+		_clip = ""
+		_build_model()
 	if _model != null:
 		_model.scale = Vector3.ONE * s
-	if _prop != null:
-		_prop.head_scale = Growth.num(child, "head", 1.0)
 	var cap := _shape.shape as CapsuleShape3D
 	cap.radius = maxf(0.3 * s, 0.14)
 	cap.height = maxf(1.7 * s, cap.radius * 2.0 + 0.05)
@@ -109,6 +142,11 @@ func refresh() -> void:
 
 func scale_now() -> float:
 	return Growth.num(child, "scale", 1.0)
+
+
+## The legs' length at the stage (the model's scale x the form's legs): the walk clip's stride.
+func leg_now() -> float:
+	return scale_now() * (_prop.leg_scale() if _prop != null else 1.0)
 
 
 func _show(clip: String, speed := 1.0) -> void:
@@ -186,9 +224,9 @@ func _move(dir: Vector3, speed: float, dt: float) -> void:
 		_face = lerp_angle(_face, atan2(-want.x, -want.z), clampf(dt * 8.0, 0.0, 1.0))
 		var run := speed > Growth.num(child, "walk_speed", 1.0) + 0.3
 		if run:
-			_show(CLIP_RUN, speed / (FOOT_RUN * s))
+			_show(CLIP_RUN, speed / (FOOT_RUN * leg_now()))
 		else:
-			_show(CLIP_WALK, speed / (FOOT_WALK * s))   # the stride scaled: short legs step quicker
+			_show(CLIP_WALK, speed / (FOOT_WALK * leg_now()))   # the stride scaled: short legs step quicker
 	else:
 		v.x = move_toward(v.x, 0.0, 12.0 * dt)
 		v.z = move_toward(v.z, 0.0, 12.0 * dt)

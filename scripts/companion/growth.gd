@@ -389,6 +389,7 @@ static func shape_of(child: Dictionary, now: float) -> String:
 static func body_look(child: Dictionary, now: float) -> Dictionary:
 	var look: Dictionary = (child.get("look", {}) as Dictionary) if child.get("look") is Dictionary else {}
 	var neutral := ChildLook.body_for_stage(look, "child")
+	neutral["stage"] = stage_of(child)   # (the body's form, clothes and skin of the stage: ChildBody.shape_body, Spouse._build_model)
 	match shape_of(child, now):
 		"neutral":
 			return neutral
@@ -401,5 +402,6 @@ static func body_look(child: Dictionary, now: float) -> Dictionary:
 			out["body_hair"] = 0.0
 			out["stubble"] = 0.0
 			out["stature"] = 1.0
+			out["stage"] = "teen"
 			return out
 	return look.duplicate(true)

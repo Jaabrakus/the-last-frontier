@@ -59,7 +59,7 @@ func _data() -> void:
 	var scales := []
 	for id in ["toddler", "child", "teen", "adult"]:
 		scales.append(Growth.stage_row(id).scale)
-	_expect(scales == [0.45, 0.7, 0.9, 1.0], "body scales grow with the stage (%s)" % str(scales))
+	_expect(scales == [0.5, 0.7, 0.93, 1.0], "body scales grow with the stage (%s)" % str(scales))
 	_expect(float(Growth.stage_row("toddler").head) > float(Growth.stage_row("child").head) and float(Growth.stage_row("child").head) > 1.0, "the head is bigger on the young")
 	_expect(Growth.carried({"stage": "newborn"}) and Growth.carried({"stage": "infant"}) and not Growth.carried({"stage": "toddler"}), "newborn and infant are carried, a toddler walks")
 	_expect(not Growth.has_body({"stage": "infant"}) and Growth.has_body({"stage": "toddler"}), "bodies from the toddler on")

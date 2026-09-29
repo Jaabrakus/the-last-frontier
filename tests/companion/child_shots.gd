@@ -27,7 +27,7 @@ func _frames(n: int) -> void:
 
 func _shot(name: String) -> void:
 	await _frames(3)
-	await RenderingServer.frame_post_draw
+	await _frames(2)
 	root.get_viewport().get_texture().get_image().save_png(out.path_join(name + ".png"))
 	print("saved ", name)
 

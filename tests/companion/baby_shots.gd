@@ -26,7 +26,7 @@ func _frames(n: int) -> void:
 
 func _shot(name: String) -> void:
 	await _frames(3)
-	await RenderingServer.frame_post_draw
+	await _frames(2)
 	root.get_viewport().get_texture().get_image().save_png(out.path_join(name + ".png"))
 	print("saved ", name)
 
@@ -34,15 +34,33 @@ func _shot(name: String) -> void:
 var cam: Camera3D
 
 
-func _view(low := 1.2) -> void:
+func _view(low := 1.2, close := false) -> void:
 	var b := h.body
 	var f := b.global_basis.z
 	var at := b.global_position + Vector3(0, low, 0)
+	if close and h.baby != null and h.baby.baby != null:
+		at = h.baby.baby.global_position          # a close-up on the baby itself
 	if cam == null:
 		cam = Camera3D.new()
 		current_scene.add_child(cam)
 	cam.current = true
-	cam.global_position = at - f * 1.9 - b.global_basis.x * 0.7 + Vector3(0, 0.25, 0)   # (the body's -Z is the way she faces)
+	# from the wife's front and side (the body's -Z is the way she faces), the first spot a wall or a post does not stand in
+	var space := b.get_world_3d().direct_space_state
+	var spot := at - f * 1.9 - b.global_basis.x * 0.7 + Vector3(0, 0.25, 0)
+	var found := false
+	for turn: float in [0.0, 25.0, -25.0, 50.0, -50.0, 80.0, -80.0, 120.0, -120.0, 160.0]:
+		for dist: float in ([0.85, 0.7, 0.55] if close else [1.9, 1.4, 1.0]):
+			var dir := (-f).rotated(Vector3.UP, deg_to_rad(turn))
+			var cand := at + dir * dist + b.global_basis.x * 0.3 + Vector3(0, 0.25, 0)
+			var q := PhysicsRayQueryParameters3D.create(at, cand)
+			q.exclude = [b.get_rid()]
+			if space.intersect_ray(q).is_empty():
+				spot = cand
+				found = true
+				break
+		if found:
+			break
+	cam.global_position = spot
 	cam.look_at(at, Vector3.UP)
 
 
@@ -71,8 +89,12 @@ func _run() -> void:
 		for i in 90:
 			h.baby.errand = {}            # no laying-down errand while the pose is photographed
 			await process_frame
+		var rg: Variant = h.baby.rigs.get("spouse")
+		print(pose, ": holder ", h.baby.care.holder_of(h.baby.focus), " tx ", h.baby.tx.keys(), " rig pose ", (rg as BabyHold).pose_name if rg is BabyHold else "-", " engaged ", (rg as BabyHold).engaged() if rg is BabyHold else false, " wife clip ", h.body._clip if "_clip" in h.body else "?")
 		_view()
 		await _shot("hold_" + pose)
+		_view(1.2, true)
+		await _shot("hold_" + pose + "_close")
 	# laying down: a cradle in front of her, the real lay errand, photographed on the way and after
 	h.baby.errand = {}
 	var fwd := -h.body.global_basis.z

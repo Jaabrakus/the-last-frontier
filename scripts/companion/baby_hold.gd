@@ -288,6 +288,15 @@ func _process_modification() -> void:
 		var pivot := sk.get_bone_global_pose(_ids[SPINE[0]]).origin
 		var lean := _lean_to(reach_sk, pivot, plan.y * reach_w, cfg_h)
 		q_total = lean * q_total
+	# ---- upright: whatever the clip under the hold does with the back (a work crouch, a hunched sitting clip), the chest is brought
+	# back toward upright (hold.upright of the way; not while reaching), so the baby is held, and seen, at the chest
+	var up_w := float(cfg_h.get("upright", 0.8)) * (1.0 - reach_w)
+	if up_w > 0.0:
+		var tc0 := sk.get_bone_global_pose(_ids[CHEST])
+		var d0: Basis = tc0.basis.orthonormalized() * (_rest.chest as Basis).orthonormalized().inverse()
+		var up_now := (d0 * Vector3.UP).normalized()
+		if up_now.dot(Vector3.UP) < 0.9995:
+			q_total = Quaternion.IDENTITY.slerp(Quaternion(up_now, Vector3.UP), up_w) * q_total
 	var shares: Dictionary = cfg_h.get("spine_share", {"spinea": 0.4, "spineb": 0.3, "spinec": 0.3})
 	for n: String in SPINE:
 		var i: int = _ids[n]

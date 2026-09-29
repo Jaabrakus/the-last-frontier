@@ -229,7 +229,8 @@ func _ensure_body() -> void:
 		baby.queue_free()
 	var c := _child(focus)
 	var mels := [_melanin(house.sc.look), _melanin(_player_look())]
-	baby = BabyModel.create(c, mels, float(BabyCare.stage_row(BabyCare.age_days(c, _now())).get("size", 1.0)))
+	var look := ChildLook.from_parents(house.sc.look, _player_look(), float(c.get("sex", 0.0)), int(c.get("seed", 1)))
+	baby = BabyModel.create(c, mels, float(BabyCare.stage_row(BabyCare.age_days(c, _now())).get("size", 1.0)), look)
 	add_child(baby)
 	if touch == null or not is_instance_valid(touch):
 		touch = Touch.new()
@@ -256,6 +257,7 @@ func _look() -> void:
 	var s := state()
 	var feeding := _pose_of(care.holder_of(focus)) == "feed"
 	baby.set_state(BabyCare.mood(s), BabyCare.cry_level(s), bool(s.asleep), feeding)
+	baby.set_burping(_pose_of(care.holder_of(focus)) == "shoulder")
 	baby.visible = true
 
 

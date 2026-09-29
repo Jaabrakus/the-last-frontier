@@ -5,31 +5,41 @@
 
   "stages": [
     {
-      "id": "newborn", "name": "Newborn", "carried": true, "body": false, "scale": 1.0, "head": 1.0,
+      "id": "newborn", "name": "Newborn", "carried": true, "body": false, "scale": 1.0, "head": 1.0, "skin_smooth": 1.0,
       "next": {"min_days": 8, "care": 0.0},
       "summary": "Carried, sleeps and feeds (BabyLink)."
     },
     {
-      "id": "infant", "name": "Infant", "carried": true, "body": false, "scale": 1.0, "head": 1.0,
+      "id": "infant", "name": "Infant", "carried": true, "body": false, "scale": 1.0, "head": 1.0, "skin_smooth": 0.95,
       "next": {"min_days": 22, "care": 0.45},
       "summary": "Sits up and crawls once it has had days and enough contentment (BabyLink still carries it until its first steps; a Blender infant is the next art step)."
     },
     {
-      "id": "toddler", "name": "Toddler", "carried": false, "body": true, "scale": 0.45, "head": 1.42,
+      "id": "toddler", "name": "Toddler", "carried": false, "body": true, "scale": 0.5, "head": 1.84, "skin_smooth": 0.8, "young_face": 0.7,
+      "form": {"head": [1.84, 1.84, 1.88], "neck": [1.15, 0.6, 1.15], "chest": [1.1, 1.2, 1.3], "belly": [1.15, 1.2, 1.45], "pelvis": [1.0, 1.15, 1.2],
+               "clavicle": [1.15, 0.95], "upper_arm": [1.15, 0.9], "forearm": [1.12, 0.9], "hand": [1.05, 1.0],
+               "thigh": [1.12, 0.86], "shin": [1.1, 0.86], "foot": [1.1, 1.0],
+               "eyes": 1.1, "face": 0.6, "round": 0.55, "trunk": {"k": 0.85, "depth": 0.86, "belly": {"y": [0.88, 1.12], "amount": 0.12}}},
       "shape": "neutral", "walk_speed": 0.85, "run_speed": 1.7, "watch_mult": 0.8, "lesson_mult": 0.0, "helper_bonus": 0.0,
       "can": {"walk": true, "follow": true, "watch": true, "lesson": false, "carry": false, "work": false},
       "next": {"min_days": 40, "care": 0.5, "watched": 2},
       "summary": "First steps: walks and follows a parent, watches, cannot work."
     },
     {
-      "id": "child", "name": "Child", "carried": false, "body": true, "scale": 0.7, "head": 1.22,
+      "id": "child", "name": "Child", "carried": false, "body": true, "scale": 0.7, "head": 1.36, "skin_smooth": 0.55, "young_face": 0.45,
+      "form": {"head": [1.38, 1.36, 1.4], "neck": [1.0, 0.85, 1.0], "chest": [1.0, 1.1, 1.05], "belly": [1.0, 1.1, 1.1], "pelvis": [0.95, 1.1, 1.0],
+               "clavicle": [1.0, 0.98], "upper_arm": [0.97, 0.97], "forearm": [0.96, 0.97], "hand": [1.0, 1.0],
+               "thigh": [0.97, 1.0], "shin": [0.96, 1.0], "foot": [1.0, 1.0],
+               "eyes": 1.05, "face": 0.3, "round": 0.3, "trunk": {"k": 0.7, "depth": 0.78}},
       "shape": "neutral", "walk_speed": 1.05, "run_speed": 2.5, "watch_mult": 1.3, "lesson_mult": 1.0, "helper_bonus": 0.04,
       "can": {"walk": true, "follow": true, "watch": true, "lesson": true, "carry": true, "work": false, "chores": true},
       "next": {"min_days": 90, "care": 0.5, "lessons": 4, "topics": 3},
       "summary": "Carries small things, helps with light chores, learns."
     },
     {
-      "id": "teen", "name": "Teen", "carried": false, "body": true, "scale": 0.9, "head": 1.08,
+      "id": "teen", "name": "Teen", "carried": false, "body": true, "scale": 0.93, "head": 1.11, "skin_smooth": 0.25, "young_face": 0.15,
+      "form": {"head": [1.12, 1.11, 1.11], "neck": [0.97, 0.95, 0.97], "upper_arm": [0.96, 1.0], "forearm": [0.96, 1.0], "thigh": [0.97, 1.02], "shin": [0.97, 1.02],
+               "eyes": 1.0, "round": 0.1, "trunk": {"k": 0.35, "depth": 0.72}},
       "shape": {"neutral_days": 40, "sex_fit": 0.35, "bust_max": 0.05}, "walk_speed": 1.2, "run_speed": 3.0, "watch_mult": 1.15, "lesson_mult": 1.2, "helper_bonus": 0.1,
       "can": {"walk": true, "follow": true, "watch": true, "lesson": true, "carry": true, "work": true, "chores": true},
       "junior": {"skill_cap": 35.0, "jobs": ["tend", "woodpile", "cook", "forage", "firewood"], "needs_core": true},
@@ -37,7 +47,7 @@
       "summary": "Works light jobs from the job book under a skill cap once the core curriculum is done; learns fast."
     },
     {
-      "id": "adult", "name": "Adult", "carried": false, "body": true, "scale": 1.0, "head": 1.0,
+      "id": "adult", "name": "Adult", "carried": false, "body": true, "scale": 1.0, "head": 1.0, "skin_smooth": 0.0,
       "shape": "adult", "walk_speed": 1.3, "run_speed": 3.4, "watch_mult": 1.0, "lesson_mult": 1.0, "helper_bonus": 0.0,
       "can": {"walk": true, "follow": true, "watch": true, "lesson": true, "carry": true, "work": true, "chores": true},
       "summary": "A full worker of the household: their own core, everything they learned kept."
@@ -46,7 +56,8 @@
 
   "shapes": {
     "summary": "The body shape of a stage (Growth.shape_of / body_look). A baby, toddler and child have the flat, asexual child body (ChildLook.body_for_stage: no breasts, no genital shape, flat pelvis, `sex` fit neutral). A teen keeps that body for `neutral_days` days of the stage, then only a modest change: the `sex` fit `sex_fit` of the way from neutral to its look's own, the bust at most `bust_max`, no genital shape, no body hair, no stubble. Clothed always (the default outfit covers torso and hips). An adult has the look's own body (the parents' inherited bust and build).",
-    "adult_stubble_boy": 0.2
+    "adult_stubble_boy": 0.2,
+    "forms": "Each stage with a body has a `form` (ChildProportion, baked into the child's own copies of the game's meshes: [x, y, z] for the trunk, neck and head, [thickness, length] along the limbs, relative to the adult at the stage's `scale`; `round` the head's rounding (HeadRound, the look's child_round moves it), `eyes` the eyes' size, `face` the young face's fields, `trunk` the barrel; data/companion/baby_body.json has the fields), `head` its head's height factor, `skin_smooth` (ChildSkin: 1 a newborn .. 0 an adult) and `young_face` (ChildLook.young: the face engine's weights that far toward the infant's). Heights with the stages: about 0.87 m and 4.7 heads (toddler), 1.19 m and 6.1 (child), 1.51 m and 7.2 (teen), against the adult's 7.7."
   },
 
   "requirement_names": {

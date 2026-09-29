@@ -19,6 +19,9 @@ const CLIP_RUN := "actor_b-p-run-fw"
 const CLIP_WORK_IN := "actor_b-cap-ambi-search-low-in-place-entry"
 const CLIP_WORK := "actor_b-cap-ambi-search-low-in-place"
 const CLIP_WORK_OUT := "actor_b-cap-ambi-search-low-in-place-exit"
+## GROWTH: a young worker (a child's or teen's body) works at waist height, standing: the low search folds a small body flat on the
+## ground like a crawl.
+const CLIP_WORK_YOUNG := ["actor_b-cap-ambi-search-1m-in-place-entry", "actor_b-cap-ambi-search-1m-in-place", "actor_b-cap-ambi-search-1m-in-place-exit"]
 const BODY_PATH := "res://assets/character/actor_b_body.glb"
 ## The walk clip's foot speed (m/s), and how fast she goes to catch up.
 const WALK_SPEED := 1.3
@@ -112,6 +115,10 @@ func _ready() -> void:
 		sc.task_finished.connect(_on_task_finished)
 
 
+var _body: CharacterBodyMesh
+var _work_clips: Array = [CLIP_WORK_IN, CLIP_WORK, CLIP_WORK_OUT]
+
+
 func _build_model() -> void:
 	var scene := BackgroundLoad.take("res://characters/Actor_B.tscn") as PackedScene
 	_model = scene.instantiate() as Node3D
@@ -122,9 +129,18 @@ func _build_model() -> void:
 	ap = aps[0] as AnimationPlayer if not aps.is_empty() else null
 	var body := CharacterBodyMesh.attach(sk, ap, BODY_PATH)
 	if body:
-		PlayerAppearance.dress(body, AppearanceStore.validate(sc.body_look if not sc.body_look.is_empty() else sc.look))   # GROWTH: a young worker is drawn at its stage body
+		# GROWTH: a young worker is drawn at its stage body (Growth.body_look), in a child's clothes with its stage's proportions, rounded
+		# head and soft skin (ChildBody.shape_body); an adult as she is
+		var st := String(sc.body_look.get("stage", "")) if not sc.body_look.is_empty() else ""
+		if st != "" and st != "adult":
+			PlayerAppearance.dress(body, AppearanceStore.validate(ChildLook.dress_look(ChildLook.young(sc.body_look, st), float(sc.look.get("sex", 0.0)), st)))
+			ChildBody.shape_body(body, sc.body_look, st)
+			_work_clips = CLIP_WORK_YOUNG
+		else:
+			PlayerAppearance.dress(body, AppearanceStore.validate(sc.body_look if not sc.body_look.is_empty() else sc.look))
+		_body = body
 	if ap:
-		for c in [CLIP_IDLE, CLIP_WALK, CLIP_RUN, CLIP_WORK]:
+		for c in [CLIP_IDLE, CLIP_WALK, CLIP_RUN, CLIP_WORK, CLIP_WORK_YOUNG[1]]:
 			var full := "%s/%s" % [LIB, c]
 			if ap.has_animation(full):
 				ap.get_animation(full).loop_mode = Animation.LOOP_LINEAR
@@ -136,7 +152,9 @@ func set_proportions(scale_v: float, head_v: float) -> void:
 	if _model == null:
 		return
 	_model.scale = Vector3.ONE * scale_v
-	ChildProportion.attach(sk).head_scale = head_v
+	# a body shaped for its stage has its head baked in (ChildProportion.shape); an older one only takes the head scale
+	if ChildProportion.of(_body) == null:
+		ChildProportion.attach(sk).head_scale = head_v
 	for c in get_children():
 		if c is CollisionShape3D and (c as CollisionShape3D).shape is CapsuleShape3D:
 			var cap := (c as CollisionShape3D).shape as CapsuleShape3D
@@ -264,7 +282,7 @@ func _chores(dt: float) -> Array:
 	_look_at = _chore_face
 	_phase = "in"
 	_phase_t = 0.0
-	_play_work(CLIP_WORK_IN)
+	_play_work(_work_clips[0])
 	return [Vector3.ZERO, 0.0]
 
 
@@ -407,9 +425,9 @@ func _start_work() -> void:
 		if at != Vector3.INF:
 			_look_at = at
 			_look_on = true
-	_show(CLIP_WORK)
+	_show(_work_clips[1])
 	_clip = ""
-	_play_work(CLIP_WORK_IN)
+	_play_work(_work_clips[0])
 
 
 func _play_work(clip: String) -> void:
@@ -434,18 +452,18 @@ func _work_step(dt: float) -> void:
 				_look_on = false
 				_show(CLIP_IDLE)
 		"in":
-			var l := _len(CLIP_WORK_IN)
+			var l := _len(_work_clips[0])
 			if _phase_t >= l:
 				_phase = "work"
 				_phase_t = 0.0
-				_play_work(CLIP_WORK)
+				_play_work(_work_clips[1])
 		"work":
 			if (_chore and (sc.busy() or _phase_t >= _chore_len)) or (not _chore and not sc.busy()):
 				_phase = "out"
 				_phase_t = 0.0
-				_play_work(CLIP_WORK_OUT)
+				_play_work(_work_clips[2])
 		"out":
-			if _phase_t >= minf(1.4, _len(CLIP_WORK_OUT)):
+			if _phase_t >= minf(1.4, _len(_work_clips[2])):
 				_phase = ""
 				_chore = false
 				_show(CLIP_IDLE)

@@ -56,12 +56,24 @@ static func from_parents(mother: Dictionary, father: Dictionary, sex: float, see
 	return out
 
 
+## baby.json "infant": its active variant (the face targets, the blend), or the table itself when it has no variants.
+static func infant_cfg() -> Dictionary:
+	var cfg: Dictionary = BabyCare.cfg().get("infant", {})
+	var vs: Variant = cfg.get("variants")
+	if vs is Dictionary and (vs as Dictionary).has(String(cfg.get("active", ""))):
+		var out: Dictionary = cfg.duplicate()
+		for k: String in (vs as Dictionary)[String(cfg.active)]:
+			out[k] = (vs as Dictionary)[String(cfg.active)][k]
+		return out
+	return cfg
+
+
 ## The look of the same child as an infant (BabyModel's head): the parents' blended face weights nudged toward baby proportions
 ## (baby.json "infant": `blend` of the way to each target, targets in -1..1 face weights: a short broad face, high forehead (no
 ## brow ridge), large low-set eyes, a button nose, full round cheeks, a tiny chin), soft flushed skin, no weathering, wispy hair.
 ## The child's own features still show through (the rest of its face stays the parents' blend).
 static func infant(look: Dictionary) -> Dictionary:
-	var cfg: Dictionary = BabyCare.cfg().get("infant", {})
+	var cfg: Dictionary = infant_cfg()
 	var out := look.duplicate(true)
 	var face: Dictionary = {}
 	var f: Variant = out.get("face", {})
@@ -77,7 +89,7 @@ static func infant(look: Dictionary) -> Dictionary:
 	out["freckles"] = 0.0
 	out["stubble"] = 0.0
 	out["marks"] = {}
-	out["brows"] = {"thickness": 0.3, "arch": 0.4, "density": 0.45}
+	out["brows"] = {"thickness": 0.18, "arch": 0.3, "density": 0.12}
 	out["hair"] = {"style": String(cfg.get("hair_style", "hair_shaved")), "color": (look.get("hair", {}) as Dictionary).get("color", "dark_brown")}
 	return out
 
@@ -90,9 +102,84 @@ static func body_for_stage(look: Dictionary, stage: String) -> Dictionary:
 	if stage in ["teen", "adult"]:
 		return look.duplicate(true)
 	var out := look.duplicate(true)
-	out["sex"] = float((BabyCare.cfg().get("body", {}) as Dictionary).get("neutral_sex", 1.0))
+	out["sex"] = float((BabyCare.cfg().get("body", {}) as Dictionary).get("neutral_sex", 0.0))
 	out["bust"] = -1.0
 	out["genital"] = 0.0
 	out["body_hair"] = 0.0
 	out["stature"] = 1.0
+	return out
+
+
+## The body form of a life stage (ChildProportion.shape): its bones' scales, head rounding, eyes and trunk. The newborn and infant are
+## baby.json body "form" (the infant's "infant_form" when it has one); toddler, child and teen growth.json's stage "form"; an adult
+## none ({}).
+static func stage_form(stage: String) -> Dictionary:
+	if stage in ["newborn", "infant", "baby"]:
+		var bd: Dictionary = BabyCare.cfg().get("body", {})
+		return (bd.get("infant_form", bd.get("form", {})) if stage == "infant" else bd.get("form", {})) as Dictionary
+	return (Growth.stage_row(stage).get("form", {}) as Dictionary) if stage != "adult" else {}
+
+
+## The head's rounding (HeadRound) of a child at `stage`: the stage's own ("round" in its form) times 1 + spread x the look's
+## `child_round` (-1 less round .. 1 rounder; baby_body.json round.gauge). 0 for an adult.
+static func roundness(look: Dictionary, stage: String) -> float:
+	var base := float(stage_form(stage).get("round", 0.0))
+	if base == 0.0:
+		return 0.0
+	var spread := float(((ChildProportion.cfg().get("round", {}) as Dictionary).get("gauge", {}) as Dictionary).get("spread", 0.6))
+	return clampf(base * (1.0 + spread * clampf(float(look.get("child_round", 0.0)), -1.0, 1.0)), -0.4, 1.0)
+
+
+## The skin's smoothness at `stage` (growth.json stage "skin_smooth": newborn 1 .. adult 0; ChildSkin).
+static func skin_smooth(stage: String) -> float:
+	if stage == "baby":
+		stage = "newborn"
+	return float(Growth.stage_row(stage).get("skin_smooth", 0.0)) if stage != "adult" else 0.0
+
+
+## A child's clothes at `stage` (PlayerOutfit slots; the look's own outfit wins): the baby a linen shift (a little gown), a toddler of
+## either sex a shift and a petticoat (the "coats" small children wore until breeching), from the child on a boy a shirt and breeches
+## and a girl a shift and a petticoat. `sex` the child's own (its drawn body's is the neutral fit).
+static func outfit_for(sex: float, stage: String) -> Dictionary:
+	if stage in ["newborn", "infant", "baby"]:
+		return {"shirt": {"id": "shift_linen", "colors": {}}, "legs.lower": {"id": "-", "colors": {}}}
+	if stage == "toddler" or sex < 0.5:
+		return {"shirt": {"id": "shift_linen", "colors": {}}, "legs.lower": {"id": "petticoat", "colors": {}}}
+	return {"shirt": {"id": "shirt_linen", "colors": {}}, "legs.lower": {"id": "breeches", "colors": {}}}
+
+
+## The look a child's body is dressed with at `stage` (after Growth.body_look / body_for_stage): its clothes (outfit_for, unless the
+## look has its own), no jewellery or facial hair, the full fit.
+static func dress_look(look: Dictionary, sex: float, stage: String) -> Dictionary:
+	var out := look.duplicate(true)
+	var of: Variant = out.get("outfit", {})
+	if not of is Dictionary or (of as Dictionary).is_empty():
+		out["outfit"] = outfit_for(sex, stage)
+	out.erase("jewellery")
+	out.erase("facial_hair")
+	out["stubble"] = 0.0 if stage != "adult" else float(out.get("stubble", 0.0))
+	return out
+
+
+## The child's face at `stage`, from its (adult) look: the face engine's weights `young_face` of the way (growth.json stage) toward the
+## infant targets (infant_cfg: a shorter face, a small button nose, full cheeks, a soft small jaw and chin, no brow ridge), lighter
+## brows, no weathering; the rest of the face stays the parents' blend. The newborn and infant use infant() itself.
+static func young(look: Dictionary, stage: String) -> Dictionary:
+	if stage in ["newborn", "infant", "baby"]:
+		return infant(look)
+	var amt := float(Growth.stage_row(stage).get("young_face", 0.0)) if stage != "adult" else 0.0
+	if amt <= 0.0:
+		return look
+	var ic := infant_cfg()
+	var out := look.duplicate(true)
+	var face: Dictionary = (out.get("face", {}) as Dictionary).duplicate() if out.get("face") is Dictionary else {}
+	var targets: Dictionary = ic.get("targets", {})
+	for k: String in targets:
+		face[k] = snappedf(clampf(lerpf(float(face.get(k, 0.0)), float(targets[k]), amt), -1.0, 1.0), 0.001)
+	out["face"] = face
+	out["weathering"] = lerpf(float(out.get("weathering", 0.3)), 0.0, clampf(amt * 2.0, 0.0, 1.0))
+	var b: Dictionary = (out.get("brows", {}) as Dictionary).duplicate() if out.get("brows") is Dictionary else {}
+	b["thickness"] = lerpf(float(b.get("thickness", 0.7)), 0.35, amt)
+	b["density"] = lerpf(float(b.get("density", 0.8)), 0.5, amt)
+	out["brows"] = b
 	return out

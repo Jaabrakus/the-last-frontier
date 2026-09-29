@@ -1,0 +1,83 @@
+{
+  "format": "frontier-child-body",
+  "version": 1,
+  "summary": "The shape fields and the skin of a child's body at every stage (ChildProportion, HeadRound, ChildSkin): coordinates are the ADULT body v4's bind pose (metres, skeleton space: x the left, y up, z front). The per-stage values (a stage's form: its bones' scales, its head rounding, its eyes, its skin smoothness) are in growth.json (toddler, child, teen) and baby.json body.form (the newborn and infant).",
+
+  "round": {
+    "summary": "HeadRound (the round-face gauge): the head (ellipsoid radii round the cranium's centre) pulled toward the sphere of the same volume, by direction (k_jaw below, k_crown above, k_back behind, k_mid across, k_face over the band of the eyes, nose and mouth), times the stage's rounding (and the look's child_round); fading into the neck (neck_y) and out beyond reach (m from the centre: the shoulders, a queue of hair). The sphere is `size` of the one of the same volume: the head never gets bigger, a long face becomes shorter and broader. (radii: the ellipsoid used when the head's own radii are unknown.)",
+    "centre": [0.0, 1.5, 0.025],
+    "radii": [0.078, 0.12, 0.1],
+    "size": 0.96,
+    "k_mid": 0.9,
+    "k_crown": 0.9,
+    "k_forehead": 0.1,
+    "k_jaw": 0.5,
+    "k_back": 0.8,
+    "k_face": 0.08,
+    "face_band": [1.35, 1.56],
+    "face_z": [0.0, 0.06],
+    "neck_y": [1.3, 1.37],
+    "reach": [0.17, 0.23],
+    "gauge": {"summary": "ChildLook.roundness: the stage's rounding times (1 + spread x child_round), child_round -1..1 in the look.", "spread": 0.6}
+  },
+
+  "eyes": {
+    "summary": "The eyes larger about each eyeball's centre (the lids and lashes with it, the eyeball rigid inside r0, back to the face's own size at r1). The stage's form says how much (eyes 1.0 = none).",
+    "centre": [0.0311, 1.4836, 0.1002],
+    "r0": 0.017,
+    "r1": 0.05
+  },
+
+  "face": {
+    "summary": "A young face's local fields (the stage's form `face`: 1 a newborn's, 0 none), each round a point of the adult's face: within r[0] the skin is scaled about it by `scale` and moved by `push` (metres), fading out by r[1]; `mirror` for both sides. The nose smaller, lower and flatter (a button), the mouth smaller and a little full, the cheeks fuller, the chin smaller.",
+    "nose": {"at": [0.0, 1.452, 0.116], "r": [0.012, 0.034], "scale": [0.72, 0.68, 0.5], "push": [0.0, -0.002, -0.001]},
+    "mouth": {"at": [0.0, 1.411, 0.118], "r": [0.012, 0.03], "scale": [0.78, 0.9, 0.9], "push": [0.0, 0.0, 0.001]},
+    "cheek": {"at": [0.048, 1.428, 0.084], "r": [0.014, 0.046], "scale": [1.0, 1.0, 1.0], "push": [0.008, 0.001, 0.011], "mirror": true},
+    "lower_front": {"at": [0.0, 1.40, 0.095], "r": [0.03, 0.07], "scale": [1.0, 1.0, 1.0], "push": [0.0, 0.0, 0.005]},
+    "mouth_corner": {"at": [0.021, 1.409, 0.106], "r": [0.004, 0.014], "scale": [1.0, 1.0, 1.0], "push": [-0.0005, 0.0012, 0.0], "mirror": true},
+    "chin": {"at": [0.0, 1.37, 0.105], "r": [0.012, 0.035], "scale": [0.85, 0.85, 0.85], "push": [0.0, 0.0, 0.0]},
+    "lower_face": {"y": 1.478, "scale": 0.8, "z": [0.0, 0.06]}
+  },
+
+  "trunk": {
+    "summary": "The trunk pulled toward a smooth round barrel between the heights y (fading in and out over 5 cm): each section's side half-width is the body's own, smoothed over smooth_m of height (no waist-hip curve), the depth `depth` of it, the belly bulging in front by belly.amount over belly.y; `k` how far (the stage's form may override depth, belly and k). The chest's and the glutes' bulges go; the garment follows the skin.",
+    "y": [0.8, 1.25],
+    "k": 0.85,
+    "depth": 0.8,
+    "smooth_m": 0.14,
+    "skin_inset": 0.005,
+    "belly": {"y": [0.88, 1.12], "amount": 0.0}
+  },
+
+  "mouth": {
+    "summary": "The made blend shape mouth_open: everything below the lip line turned down `deg` about a hinge before the ears, fading into the neck (neck_y) and to the sides (half_w). lip_y is measured on the child's own face (the lips' middle), this is the fallback.",
+    "hinge": [0.0, 1.448, 0.035],
+    "lip_y": 1.411,
+    "deg": 17.0,
+    "neck_y": 1.335,
+    "half_w": 0.05
+  },
+
+  "breath": {
+    "summary": "The made blend shape breath: the trunk (and what lies on it) out by m metres (adult) between the heights y, more in front.",
+    "y": [0.92, 1.28],
+    "m": 0.014
+  },
+
+  "skin": {
+    "summary": "ChildSkin: the skin at smoothness 1 (a newborn's; a stage's smoothness blends from the look's own adult skin to this). skin.gdshader parameters on the child's own material; `fuzz` is the soft grazing sheen of fine hair (a copy of the shader with RIM). Matte, no oil, a warm glow of light through the skin, the fine detail almost gone.",
+    "head_detail_strength": 0.12,
+    "body_detail_strength": 0.08,
+    "detail_strength": 0.05,
+    "weathering": 0.0,
+    "roughness_base": 0.74,
+    "skin_specular": 0.1,
+    "oil_sheen": 0.0,
+    "sss_strength": 0.48,
+    "head_sss": 1.7,
+    "albedo_scale": 0.84,
+    "haemoglobin_min": 0.55,
+    "fuzz": 0.08,
+    "fuzz_tint": 0.2
+  }
+}
