@@ -18,7 +18,7 @@ const SHOTS := ["dawn_river", "valley", "herd", "gate", "walk", "climb_tree", "c
 		"bison", "stampede", "charge", "reload", "autumn", "winter_walk", "river_ice", "yoga", "baby", "mammoth"]
 ## Takes the cut does not use, recorded only when named (only=): the musket's reload walking and crouched (to check
 ## it), the shot from the palisade's firing step (the rebuilt fort's step moved: it does not fire from there).
-const EXTRA := ["wall", "reload_walk", "reload_crouch", "reload_crouch_walk", "arms_check"]
+const EXTRA := ["wall", "reload_walk", "reload_crouch", "reload_crouch_walk", "arms_check", "hands"]
 
 var marks := PackedStringArray()
 var hide_arc := false               ## the throw's aim arc kept out of the picture
@@ -1482,6 +1482,56 @@ func seg_baby() -> void:
 
 ## (a check, not in the cut) the left arm on the carried musket while he jogs, then walks, then crouch-walks: from his
 ## left, the elbow's side (user 2026-09-29: "fix the left elbow on walking or jogging animations again")
+## Review take (not in the cut): the right hand on the musket, close, from its outside: the carry standing, the aim, the
+## shot, each step of the reload (the user 2026-09-29: "the right hand on the rifle is off, not gripping the stock; the
+## reload has the right placement but the fingers do not align: we need an alignment pass"). Marks: carry, aim, shot,
+## bite, prime, pour, ram, return, loaded.
+func seg_hands() -> void:
+	_clock(11.0, "fair", 0.2)
+	var tgt := Vector3(2.5, 1.25, -70.0)
+	_place(1.0, FrontierStructures.FIRING_LINE_Z - 1.3, tgt)
+	await _equip("musket")
+	var m := player.weapon as Firearm
+	m.loaded = true
+	m.state = Firearm.State.READY
+	var sk := player.skeleton
+	var wrist := sk.find_bone("r_wrist")
+	# (the hand as shown: MusketReload's attachment on the wrist follows the final pose, the bone pose here the tree's)
+	var shown := sk.get_node_or_null("ReloadHand") as Node3D
+	_cam_fn(func(_dt: float) -> Array:
+		var hand := shown.global_position if shown else sk.global_transform * sk.get_bone_global_pose(wrist).origin
+		var right := (sk.global_basis * Vector3(-1, 0, 0)).normalized()
+		var fwd := (sk.global_basis * Vector3(0, 0, 1)).normalized()
+		var k := float(args.get("hands_dist", 1.0))       # (hands_dist=0.5: closer; hands_view=front: from before him)
+		var off := (fwd * 0.7 + right * 0.15 + Vector3.UP * 0.3) if String(args.get("hands_view", "side")) == "front" \
+				else (right * 0.65 + fwd * 0.25 + Vector3.UP * 0.12)
+		return [hand + off * k, hand + fwd * 0.05, 34.0])
+	await _roll("", "", "", 30)
+	mark("carry")
+	await _sec(1.6)
+	aim_target = tgt
+	aim_rate = 5.0
+	_press_ev(&"aim")
+	await _sec(1.2)
+	mark("aim")
+	await _sec(0.6)
+	_mark_fire()
+	_press_ev(&"fire")
+	await _sec(0.8)
+	_release_ev(&"fire")
+	_release_ev(&"aim")
+	aim_target = Vector3.INF
+	await _sec(0.8)
+	await _tap(&"reload")
+	# (MusketReload's steps: bite 1.0, prime 1.2, pour 1.4, ram 1.7, return 1.0 s)
+	for step: Array in [["bite", 0.5], ["prime", 1.1], ["pour", 1.3], ["ram", 1.4], ["return", 1.5]]:
+		await _sec(float(step[1]))
+		mark(String(step[0]))
+	await _until(func() -> bool: return m.loaded, 6.0)
+	mark("loaded")
+	await _sec(1.0)
+
+
 func seg_arms_check() -> void:
 	_clock(11.0, "fair", 0.2)
 	await _equip("musket")

@@ -344,6 +344,9 @@ var right_arm: LeftArmPose
 var torch_hand := false
 var torch_ik: TorchCarryIK
 var mid_ik: GunMiddleCarryIK
+## The right hand seated on the stock (RightSeatIK) and its index on the trigger (TriggerFinger), after the hands' IK.
+var right_seat: RightSeatIK
+var trigger_finger: TriggerFinger
 var holds: HandHolds
 ## The relaxed one-hand carry is on (relax_after_s); read by tests and the debug overlay.
 var relaxed := false
@@ -480,6 +483,15 @@ func setup(p_player: FrontierPlayer, ap: AnimationPlayer, sk: Skeleton3D, weapon
 	mid_ik.set_reference(ap.get_animation(ref) if ap.has_animation(ref) else null, sk)
 	mid_ik.torch = torch_ik
 	sk.add_child(mid_ik)            # the last of the hands' modifiers (it places the held gun and torch)
+	right_seat = RightSeatIK.new()
+	right_seat.name = "RightSeatIK"
+	trigger_finger = TriggerFinger.new()
+	trigger_finger.name = "TriggerFinger"
+	if player != null:
+		right_seat.offset = player.musket_offset
+		trigger_finger.offset = player.musket_offset
+	sk.add_child(right_seat)        # the right hand onto the gun as it is held at last
+	sk.add_child(trigger_finger)    # then its index on the trigger
 	holds = HandHolds.new(self, torch_ik, mid_ik)
 	_torch_ik_options()
 	loco.transitioned.connect(_on_loco_transition)
@@ -1015,6 +1027,14 @@ func manual_step(dt: float) -> void:
 			if take_over and right_arm.enabled:
 				right_arm.take_over(take_over_s)
 		right_arm.advance(dt)
+	if trigger_finger != null:
+		# (the musket held as the gun: carried, aimed and fired; off for the reload, the switch, the free hands, the
+		# middle carry and the torch)
+		var reloading := player != null and player.weapon is Firearm and (player.weapon as Firearm).state == Firearm.State.RELOADING
+		trigger_finger.wanted = String(_weapon) == "musket" and not (one_hand or hands_free or torch or mid or reloading) \
+				and not (player != null and player.is_switching())
+		if right_seat != null:
+			right_seat.wanted = trigger_finger.wanted
 	if left_grip != null:
 		if one_hand or hands_free or torch or mid:
 			left_grip.enabled = false
