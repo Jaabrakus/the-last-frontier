@@ -348,6 +348,11 @@ func _load() -> void:
 	var fires := level.find_children("*", "Campfire", true, false)
 	check(fires.size() == 1 and (fires[0] as Campfire).state.lit, "the campfire burns")
 	var cf := fires[0] as Campfire if fires.size() == 1 else null
+	# (CampLink links the fires to their records every 0.25 s: give it a moment)
+	for i in 120:
+		if cf == null or cf.fire_id != "":
+			break
+		await physics_frame
 	check(cf != null and cf.fire_id != "" and absf(cf.fuel_min() - float(want.fire_fuel)) < 10.0,
 			"on its own record in the core, its wood as it was (%.0f of %.0f game min)" % [cf.fuel_min() if cf else -1.0, float(want.fire_fuel)])
 	var dry := w.by_id(int(want.dry_piece))

@@ -400,7 +400,8 @@ static func save_building(level: Node) -> Dictionary:
 			e["cuts"] = PalisadeCuts.to_save(p.cuts)      # the windows cut in a palisade section
 		for c in p.find_children("*", "Campfire", true, false):
 			var cf := c as Campfire
-			e["fire"] = {"lit": cf.state.lit, "left": cf.state.burn_left, "total": cf.state.burn_total, "coals": cf._coals}
+			e["fire"] = {"lit": cf.state.lit, "left": cf.state.burn_left, "total": cf.state.burn_total, "coals": cf._coals,
+					"fuel_min": cf.fuel_min()}
 			break
 		var chest := p.get_node_or_null("Chest") as StorageChest
 		if chest:
@@ -467,6 +468,12 @@ static func _restore_fire(p: BuiltPiece, f: Dictionary) -> void:
 			continue
 		cf.state.burn_left = float(f.left)
 		cf.state.burn_total = float(f.total)
+		if f.has("fuel_min"):
+			# a fire kept by the survival core holds its fuel in game minutes (Campfire.attach), not in the torch state's
+			# real seconds: restored before it is linked again, it is given its wood in seconds, so the new link reads the
+			# same fuel back (it came back halved before)
+			cf.state.burn_left = float(f.fuel_min) / Campfire.FUEL_MIN_PER_WOOD * Campfire.FUEL_PER_WOOD
+			cf.state.burn_total = maxf(cf.state.burn_total, cf.state.burn_left)
 		cf._coals = float(f.get("coals", 0.0))
 		if bool(f.lit) and not cf.state.lit:
 			cf.light()
