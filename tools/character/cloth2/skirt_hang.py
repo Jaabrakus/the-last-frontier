@@ -15,7 +15,7 @@ The weights: the runtime drives a closed skirt's six panels round both legs (Cha
 l/r_upper_leg_front_helper, _thigh_helper, _rear_helper, at 40, 90 and 140 degrees round from the front). The build
 weighted the skirt's lower part only about 70 % to them and the rest to the pelvis and spine, so a knee pushing a panel
 moved the cloth there only part of the way and came through. Below the hips the cloth goes over to the panels (none at
-HIP_Y, all at FULL_Y: SKIRT_CLOSED_SHARE_Y in CharacterBodyMesh), blended between the two nearest panels by the angle
+HIP_Y, all at FULL_Y; the back half from higher up: SKIRT_CLOSED_SHARE_Y and _BACK in CharacterBodyMesh), blended between the two nearest panels by the angle
 round the body (half and half at the centre front and back), the rest keeping its own pelvis / spine weights. At most
 four influences. Prints the hems (SKIRT_HEMS layout) for the catalog's skirt.hems_godot.
 """
@@ -29,6 +29,12 @@ import numpy as np
 
 HIP_Y = 0.88
 FULL_Y = 0.62
+# the back half from higher up (just under the waistband), so a back rolled up takes the cloth over the seat with it
+# (the user: "for the crawl ... the back skirt up towards the lower back", "we can still see some skirt"): the ramp
+# goes over from HIP_Y / FULL_Y to BACK_HIP_Y / BACK_FULL_Y from BACK_AZ[0] to BACK_AZ[1] degrees round from the front
+BACK_HIP_Y = 0.98
+BACK_FULL_Y = 0.76
+BACK_AZ = (100.0, 150.0)
 TOP_Y = 0.62
 NARROW = 0.17
 FOLDS = 16
@@ -85,8 +91,11 @@ def hang(P, F, N):
 
 def weights(P, J, W, names):
     panel_idx = [names.index(n) for _, n in PANELS]
-    share = _smooth((HIP_Y - P[:, 1]) / (HIP_Y - FULL_Y))
     az = np.degrees(np.arctan2(P[:, 0], P[:, 2])) % 360.0
+    back = _smooth((np.minimum(az, 360.0 - az) - BACK_AZ[0]) / (BACK_AZ[1] - BACK_AZ[0]))
+    hip = HIP_Y + (BACK_HIP_Y - HIP_Y) * back
+    full = FULL_Y + (BACK_FULL_Y - FULL_Y) * back
+    share = _smooth((hip - P[:, 1]) / (hip - full))
     newJ = J.copy()
     newW = W.copy()
     for i in np.nonzero(share > 0.0)[0]:

@@ -155,6 +155,8 @@ const SKIRT_FEET := ["l_heel", "l_ball", "r_heel", "r_ball"]
 ## 90 and 140 degrees round from the front; tools/character/cloth2/skirt_hang.py prints them).
 const SKIRT_CLOSED_HEMS := [Vector3(0.163, 0.26, 0.262), Vector3(0.255, 0.26, 0.066), Vector3(0.163, 0.26, -0.13)]
 const SKIRT_CLOSED_SHARE_Y := Vector2(0.88, 0.62)
+## ... and at the back panels' place (the back half is the panels' from higher up: skirt_hang.py BACK_*).
+const SKIRT_CLOSED_SHARE_Y_BACK := Vector2(0.967, 0.742)
 ## The panels' places round the body in the skirt's weights (degrees from the front, left leg; skirt_hang.py PANELS),
 ## and the skirt's round at bind (skirt_hang.py prints it): its distance from the body's axis (m) at the heights
 ## SKIRT_CLOSED_ROUND_Y, each row every 30 degrees from the front (0) round to the back (180), the same both sides.
@@ -191,7 +193,9 @@ const SKIRT_CLOSED_BUNCH := 0.62
 const SKIRT_CLOSED_TUCK := 0.08
 const SKIRT_CLOSED_TUCK_LIFT_M := 0.14
 const SKIRT_CLOSED_TUCK_SHARE := Vector3(1.0, 0.5, 0.0)
-const SKIRT_CLOSED_TUCK_BACK_SHARE := Vector3(0.0, 0.5, 1.0)
+const SKIRT_CLOSED_TUCK_BACK_SHARE := Vector3(0.0, 0.8, 1.0)
+## The back rolls up higher than the front: onto the lower back ("roll it higher to the lower back").
+const SKIRT_CLOSED_TUCK_BACK_LIFT_M := 0.3
 ## The leg joints that push a closed skirt (per side, "l_" / "r_"), plus points along the thigh and the shin, and how
 ## thick the leg is there (m from the bone: the cloth clears the leg's surface, not its bone).
 const SKIRT_LEG_JOINTS := ["upper_leg", "knee", "ankle", "heel", "ball"]
@@ -935,7 +939,6 @@ func _closed_skirt(g: Array, down: Vector3, floor_h: float, diag) -> Dictionary:
 	azs.resize(n)
 	var info: Array = []
 	var reach := Vector2(deg_to_rad(SKIRT_CLOSED_REACH_DEG.x), deg_to_rad(SKIRT_CLOSED_REACH_DEG.y))
-	var sy := SKIRT_CLOSED_SHARE_Y
 	for i in n:
 		var d: Dictionary = panels[i]
 		var jb := _org(d.joint)
@@ -948,10 +951,11 @@ func _closed_skirt(g: Array, down: Vector3, floor_h: float, diag) -> Dictionary:
 		var gs := gv.dot(ax)                                # gravity's turn (from the bind) in its plane
 		azs[i] = atan2(hem.x, hem.z)
 		# tucked up: its length (share of the bind's), its lift and the lowest the cloth then reaches (bind height)
-		var tuck := maxf(clampf(skirt_tuck, 0.0, 1.0) * SKIRT_CLOSED_TUCK_SHARE[int(d.panel)],
-				clampf(skirt_tuck_back, 0.0, 1.0) * SKIRT_CLOSED_TUCK_BACK_SHARE[int(d.panel)])
+		var tuck_f := clampf(skirt_tuck, 0.0, 1.0) * SKIRT_CLOSED_TUCK_SHARE[int(d.panel)]
+		var tuck_b := clampf(skirt_tuck_back, 0.0, 1.0) * SKIRT_CLOSED_TUCK_BACK_SHARE[int(d.panel)]
+		var tuck := maxf(tuck_f, tuck_b)
 		var tk := lerpf(1.0, SKIRT_CLOSED_TUCK, tuck)
-		var lift_m := SKIRT_CLOSED_TUCK_LIFT_M * tuck
+		var lift_m := maxf(SKIRT_CLOSED_TUCK_LIFT_M * tuck_f, SKIRT_CLOSED_TUCK_BACK_LIFT_M * tuck_b)
 		var low := jb.y + e0.y * tk + lift_m - 0.03
 		var best := 0.0
 		for pi in pts.size():
@@ -968,6 +972,7 @@ func _closed_skirt(g: Array, down: Vector3, floor_h: float, diag) -> Dictionary:
 			if l < 0.08 or l > e0.length() * tk + 0.05:      # (beyond the cloth's reach: out from under it)
 				continue
 			# high on the body (little of the cloth there is the panel's) a raised thigh turns the panel up
+			var sy := SKIRT_CLOSED_SHARE_Y_BACK if int(d.panel) == 2 else SKIRT_CLOSED_SHARE_Y
 			if smoothstep(sy.x, sy.y, pa.y) < 0.35:
 				best = maxf(best, w * (atan2(a, b) + asin(minf((SKIRT_CLOSED_CLEAR + prad[pi]) / l, 1.0)) - th0 - gs))
 		turn[i] = best
@@ -1017,7 +1022,8 @@ func _closed_skirt(g: Array, down: Vector3, floor_h: float, diag) -> Dictionary:
 			var pa := rots[i].inverse() * (pb - jb) + jb      # as this panel sees it (turned back to its bind)
 			# (tucked up, the cloth at the point's height is what hung lower at the bind)
 			var yb := jb.y + (pa.y - float(info[i][7]) - jb.y) / float(info[i][6])
-			var share := smoothstep(SKIRT_CLOSED_SHARE_Y.x, SKIRT_CLOSED_SHARE_Y.y, yb)
+			var sy := SKIRT_CLOSED_SHARE_Y_BACK if int(panels[i].panel) == 2 else SKIRT_CLOSED_SHARE_Y
+			var share := smoothstep(sy.x, sy.y, yb)
 			if share < 0.35 or yb < jb.y + e0.y - 0.05:
 				continue
 			var rel := Vector2(pa.x, pa.z)
