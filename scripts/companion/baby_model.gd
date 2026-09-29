@@ -44,6 +44,9 @@ var _swaddle_fit := 0      ## 0 not fitted, 1 to fit on the next update (a swadd
 
 ## Tests: build the code-made bundle even though the game's character is there.
 static var no_rig := false
+## The body's proportions baked off the main thread (BabyBody async: hidden until they are on): 1 always, 0 never, -1 when a scene is
+## running (the game; a test script's bare tree bakes at once, so what it measures is there).
+static var async_bake := -1
 
 ## Animations the baby plays wrapped in the swaddle (fitted round it: fit_swaddle); the others it plays in its little linen gown.
 const SWADDLED := ["idle_breathe", "sleep", "wake_yawn", "fuss", "cry", "suckle", "burp_pat"]
@@ -140,10 +143,13 @@ func _build(rng: RandomNumberGenerator) -> void:
 func _build_rig() -> bool:
 	if no_rig:
 		return false
-	_bb = BabyBody.create(_look, "infant" if String(child.get("stage", "")) == "infant" else "newborn")
+	var tree := Engine.get_main_loop() as SceneTree
+	var async := async_bake == 1 or (async_bake == -1 and tree != null and tree.current_scene != null)
+	_bb = BabyBody.create(_look, "infant" if String(child.get("stage", "")) == "infant" else "newborn", async)
 	if _bb == null:
 		return false
 	add_child(_bb)
+	_bb.shaped.connect(_on_shaped)
 	_anim = _bb.ap
 	_swaddle = MeshInstance3D.new()
 	_swaddle.name = "baby_swaddle"
@@ -362,14 +368,24 @@ func play(name: String, blend := 0.25) -> bool:
 	if is_inside_tree():
 		_bb.play(name, blend)
 	if _swaddle != null:
-		_swaddle.visible = name in SWADDLED and bool(cfg().get("swaddle", true))
+		_swaddle.visible = name in SWADDLED and bool(cfg().get("swaddle", true)) and _bb.ready_body
 		if _swaddle.visible:
 			_swaddle_fit = 1           # (fitted again to this clip's pose on the next update)
 	return true
 
 
+## The async bake is on: the swaddle (fitted to the new body) shows with it.
+func _on_shaped() -> void:
+	if _swaddle != null and _cur != "":
+		_swaddle.visible = _cur in SWADDLED and bool(cfg().get("swaddle", true))
+		if _swaddle.visible:
+			_swaddle_fit = 1
+
+
 ## The face from the animation's cue (baby.json "cues"): the eyes held shut or blinking, the mouth's dark mesh by the cry level.
 func _face() -> void:
+	if not _bb.ready_body:
+		return
 	if _swaddle_fit == 1:
 		fit_swaddle()
 	var breath: Array = _cue.get("breath", [0.4, 0.6])

@@ -93,7 +93,7 @@ static func of(b: CharacterBodyMesh) -> ChildProportion:
 # ---------------------------------------------------------------------------------------------------- run time
 func _process_modification() -> void:
 	var sk := get_skeleton()
-	if sk == null:
+	if sk == null or _pending:
 		return
 	apply_offsets(sk)
 	if not is_equal_approx(head_scale, 1.0):
@@ -209,12 +209,144 @@ func map_face(bone: String, p: Vector3) -> Vector3:
 
 
 # ---------------------------------------------------------------------------------------------------- the bake
+## Bumped when the bake's output changes (the disk cache's older entries are then not used).
+const BAKE_VERSION := 5
+const CACHE_DIR := "user://child_bake"
+## Entries kept in the disk cache (the oldest go beyond it) and bakes kept in memory.
+const DISK_MAX := 40
+const MEM_MAX := 6
+## Main-thread time an async bake may take in one frame to put its meshes on (it always puts on at least one).
+const FRAME_BUDGET_US := 6000
+
+## The disk cache (user://child_bake: a bake done once is read back when the same child at the same stage is made again, a game loaded).
+static var disk_cache := true
+## The source meshes' data (body.glb, the garments): their arrays and blend shapes, read once a run (and the blend shapes' deltas kept
+## on disk). Source mesh instance id -> {mesh, names, surfs: [{arrays, fmt, prim, mat, sname, sparse}], raw, mutex, path}.
+static var _src := {}
+static var _mem := {}          ## bake key -> {meshes: [ArrayMesh per mesh], ctx, t}
+static var _jobs: Array = []
+static var _poller: _Poll
+static var _mem_n := 0
+
+## An async bake is on its way: the offsets wait for the new meshes and binds.
+var _pending := false
+
+
+class _Poll extends RefCounted:
+	func tick() -> void:
+		ChildProportion._poll()
+
+
+## A bake's worker side (the job's data only: no node is touched off the main thread).
+class _Work extends RefCounted:
+	var job: Dictionary
+	func run() -> void:
+		ChildProportion._compute(job)
+
+
 ## Shapes `b` (dressed: its blend shapes set by apply_look) to `f` (a form: the groups above; "round" the head's rounding 0..1,
 ## "eyes" the eyes' size, "trunk" the barrel {k, depth, belly}), with `round_override` >= -1 replacing the form's rounding. Shaped
-## again from the same meshes when called again (HeadRound.apply). Returns the modifier (null without the bind pose).
+## again from the same meshes when called again (HeadRound.apply). Returns the modifier (null without the bind pose). All on the
+## calling thread (a second or more for a new look and stage; at once from the caches): shape_async does the heavy part off it.
 static func shape(b: CharacterBodyMesh, f: Dictionary, round_override := -9.0) -> ChildProportion:
-	if b == null or b.skeleton == null or b._bind_g.is_empty():
+	var job := _begin(b, f, round_override)
+	if job.is_empty():
 		return null
+	if not job.has("hit"):
+		_compute(job)
+	while int(job.i) < (job.items as Array).size():
+		_apply_item(job)
+	_finish(job)
+	return job.p
+
+
+## shape() with the heavy work off the main thread (the game: a child made or grown, a baby born or loaded): the joints are solved at
+## once (the returned modifier's bind_global, leg_scale), the meshes are mixed and baked on a WorkerThreadPool task and put on over
+## the next frames (a few ms each), then `done` is called with the modifier. Until then the body shows its old meshes without the new
+## offsets: the caller keeps it hidden (or shows the body it replaces). A bake in memory is on at once (done called before this returns).
+static func shape_async(b: CharacterBodyMesh, f: Dictionary, round_override := -9.0, done := Callable()) -> ChildProportion:
+	var job := _begin(b, f, round_override)
+	if job.is_empty():
+		return null
+	job["done"] = done
+	var p: ChildProportion = job.p
+	if job.has("hit"):
+		while int(job.i) < (job.items as Array).size():
+			_apply_item(job)
+		_finish(job)
+		return p
+	p._pending = true
+	var w := _Work.new()
+	w.job = job
+	job["task"] = WorkerThreadPool.add_task(w.run, false, "child bake")
+	job["work"] = w
+	_jobs.append(job)
+	var tree := Engine.get_main_loop() as SceneTree
+	if _poller == null:
+		_poller = _Poll.new()
+	if tree != null and not tree.process_frame.is_connected(_poller.tick):
+		tree.process_frame.connect(_poller.tick)
+	return p
+
+
+## This script's own source (a changed field changes every bake's key; empty where the source is not shipped: BAKE_VERSION then).
+static var _code := ""
+static func _code_sig() -> String:
+	if _code == "":
+		var sc := load("res://scripts/companion/child_proportion.gd") as GDScript
+		_code = sc.source_code.sha256_text().substr(0, 16) if sc != null and not sc.source_code.is_empty() else "-"
+	return _code
+
+
+## Empties the caches in memory (tests; the disk cache stays).
+static func clear_caches() -> void:
+	_mem.clear()
+	_src.clear()
+
+
+## True while `b` waits for an async bake.
+static func pending(b: CharacterBodyMesh) -> bool:
+	var p := of(b)
+	return p != null and p._pending
+
+
+## The main thread's side of the async bakes, once a frame: a finished task's meshes put on within the frame's budget, then finished.
+static func _poll() -> void:
+	var t0 := Time.get_ticks_usec()
+	for job: Dictionary in _jobs.duplicate():
+		if int(job.stage) == 1:
+			if not WorkerThreadPool.is_task_completed(int(job.task)):
+				continue
+			WorkerThreadPool.wait_for_task_completion(int(job.task))
+			job.stage = 2
+		if not _alive(job):
+			_jobs.erase(job)
+			continue
+		var n := 0
+		while int(job.i) < (job.items as Array).size() and (n == 0 or Time.get_ticks_usec() - t0 < FRAME_BUDGET_US):
+			_apply_item(job)
+			n += 1
+		if int(job.i) >= (job.items as Array).size():
+			_finish(job)
+			_jobs.erase(job)
+		if Time.get_ticks_usec() - t0 >= FRAME_BUDGET_US:
+			break
+	if _jobs.is_empty():
+		var tree := Engine.get_main_loop() as SceneTree
+		if tree != null and _poller != null and tree.process_frame.is_connected(_poller.tick):
+			tree.process_frame.disconnect(_poller.tick)
+
+
+static func _alive(job: Dictionary) -> bool:
+	return is_instance_valid(job.p) and is_instance_valid(job.b) and not (job.p as ChildProportion).is_queued_for_deletion()
+
+
+## The main thread's start of a bake: the joints solved, each mesh's source data and blend weights gathered, the bake's key (a
+## bake in memory is taken at once; the disk is read by the worker).
+static func _begin(b: CharacterBodyMesh, f: Dictionary, round_override: float) -> Dictionary:
+	if b == null or b.skeleton == null or b._bind_g.is_empty():
+		return {}
+	var t0 := Time.get_ticks_usec()
 	var sk := b.skeleton
 	var p := of(b)
 	if p == null:
@@ -222,44 +354,613 @@ static func shape(b: CharacterBodyMesh, f: Dictionary, round_override := -9.0) -
 		p.body = b
 	p.form = f.duplicate(true)
 	p.round_k = float(f.get("round", 0.0)) if round_override < -1.5 else round_override
-	var t0 := Time.get_ticks_msec()
 	var sol := p.rig(sk, b._bind_g, f)
-	# the meshes
-	var ctx := _context(b, sk, sol, f, p.round_k)
-	p._ctx = ctx
-	p.lip_y = float((ctx.mouth as Dictionary).get("lip_y", 0.0))
-	var skins := {}
+	var n := sk.get_bone_count()
+	var head := PackedFloat32Array()
+	var trunk := PackedFloat32Array()
+	head.resize(n)
+	trunk.resize(n)
+	for nm: String in HEAD_BONES:
+		var i := sk.find_bone(nm)
+		if i >= 0:
+			head[i] = 1.0
+	# the trunk's weight: everything but the arms and the head (the hips' sides are the thighs' bones: they belong to the barrel above
+	# the crotch; below it the height band leaves the legs alone)
+	for i in n:
+		var nm := sk.get_bone_name(i)
+		var arm := false
+		for k: String in ARM_PARTS:
+			if nm.contains(k):
+				arm = true
+				break
+		trunk[i] = 0.0 if arm or head[i] > 0.0 or nm == "neck" else 1.0
+	var heads := b.part_meshes("head")
+	var items := []
+	var sig := PackedStringArray([str(BAKE_VERSION), _code_sig(), JSON.stringify(cfg()), JSON.stringify(f), str(snappedf(p.round_k, 0.0001))])
 	for mi: MeshInstance3D in b.meshes:
 		if not is_instance_valid(mi) or not mi.visible or mi.mesh == null:
 			continue
-		_bake_mesh(mi, ctx)
-		var src_skin: Skin = mi.get_meta("cp_skin", mi.skin)
-		if not mi.has_meta("cp_skin"):
-			mi.set_meta("cp_skin", src_skin)
-		if src_skin != null:
-			if not skins.has(src_skin):
-				var ns := Skin.new()
-				for k in src_skin.get_bind_count():
-					var bone := src_skin.get_bind_bone(k)
-					ns.add_bind(bone, (p._g[bone] as Transform3D).affine_inverse())
-				skins[src_skin] = ns
-			mi.skin = skins[src_skin]
+		var it := _gather(mi)
+		it["head"] = mi in heads
+		items.append(it)
+		sig.append("%s|%s|%s" % [String((it.src as Mesh).resource_path), (it.src as Mesh).get_surface_count(), str(it.w)])
+	var key := "|".join(sig).sha256_text().substr(0, 24)
+	var job := {"p": p, "b": b, "sol": sol, "form": f, "round_k": p.round_k, "items": items, "key": key, "cfg": cfg(), "head": head,
+			"trunk": trunk, "i": 0, "stage": 1, "t0": t0, "main_us": Time.get_ticks_usec() - t0}
+	if _mem.has(key):
+		job["hit"] = _mem[key]
+		job.stage = 2
+		_mem_n += 1
+		(_mem[key] as Dictionary).t = _mem_n
+	return job
+
+
+## A mesh's part of the bake: its source mesh (the one it was dressed with: kept when the body is shaped again) and that mesh's
+## data (read once a run), its blend weights (the face shapes; blink open), its skin's binds' bones, its surfaces' materials.
+static func _gather(mi: MeshInstance3D) -> Dictionary:
+	if not mi.has_meta("cp_src"):
+		var wts := {}
+		for i in mi.get_blend_shape_count():
+			wts[String(mi.mesh.get_blend_shape_name(i))] = mi.get_blend_shape_value(i)
+		mi.set_meta("cp_src", mi.mesh)
+		mi.set_meta("cp_w", wts)
+	var src: Mesh = mi.get_meta("cp_src")
+	var wts: Dictionary = mi.get_meta("cp_w")
+	var e := _source(src)
+	var w := PackedFloat32Array()
+	for nm: String in e.names:
+		w.append(snappedf(float(wts.get(nm, 0.0)), 0.0001) if nm != "blink" else 0.0)
+	var skin: Skin = mi.get_meta("cp_skin", mi.skin)
+	if not mi.has_meta("cp_skin"):
+		mi.set_meta("cp_skin", skin)
+	var bb := PackedInt32Array()
+	if skin != null:
+		for k in skin.get_bind_count():
+			bb.append(skin.get_bind_bone(k))
+	return {"mi": mi, "src": src, "e": e, "w": w, "skin": skin, "bb": bb}
+
+
+## The source mesh's data for the bake (main thread, once a run: its arrays; the blend shapes' own arrays are read here the first time
+## ever and turned into sparse deltas by the worker, which keeps them on disk; later runs read the deltas from there on the worker).
+static func _source(src: Mesh) -> Dictionary:
+	var id := src.get_instance_id()
+	if _src.has(id):
+		return _src[id]
+	var am := src as ArrayMesh
+	var names := PackedStringArray()
+	if am != null:
+		for i in am.get_blend_shape_count():
+			names.append(String(am.get_blend_shape_name(i)))
+	var surfs := []
+	var sig := PackedStringArray([str(BAKE_VERSION), src.resource_path, ",".join(names)])
+	for s in src.get_surface_count():
+		var arr := src.surface_get_arrays(s)
+		var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+		var mat := src.surface_get_material(s)
+		surfs.append({"arrays": arr, "fmt": src.surface_get_format(s), "prim": src.surface_get_primitive_type(s), "mat": mat,
+				"mname": mat.resource_name if mat != null else "", "sname": am.surface_get_name(s) if am != null else ""})
+		sig.append("%d:%s:%s" % [v.size(), str(v[0]) if not v.is_empty() else "", str(v[v.size() / 2]) if not v.is_empty() else ""])
+	var e := {"mesh": src, "names": names, "surfs": surfs, "mutex": Mutex.new(),
+			"path": CACHE_DIR.path_join("src_%s.bin" % "|".join(sig).sha256_text().substr(0, 24))}
+	if not names.is_empty() and not (disk_cache and FileAccess.file_exists(String(e.path))):
+		var raw := []
+		for s in src.get_surface_count():
+			raw.append(am.surface_get_blend_shape_arrays(s))
+		e["raw"] = raw
+	_src[id] = e
+	return e
+
+
+## The source's blend shapes as sparse deltas from its base (worker: made from the raw arrays and written to disk, or read from there).
+static func _sparse(e: Dictionary) -> void:
+	var m: Mutex = e.mutex
+	m.lock()
+	if e.has("sparse") or (e.names as PackedStringArray).is_empty():
+		if not e.has("sparse"):
+			e["sparse"] = []
+			for s in (e.surfs as Array).size():
+				(e.sparse as Array).append([])
+		m.unlock()
+		return
+	if not e.has("raw") and disk_cache and FileAccess.file_exists(String(e.path)):
+		var fa := FileAccess.open_compressed(String(e.path), FileAccess.READ, FileAccess.COMPRESSION_ZSTD)
+		if fa != null:
+			var d: Variant = fa.get_var()
+			fa.close()
+			if d is Array and (d as Array).size() == (e.surfs as Array).size():
+				e["sparse"] = d
+				m.unlock()
+				return
+	if not e.has("raw"):
+		m.unlock()
+		push_warning("ChildProportion: no blend shape data for %s" % String((e.mesh as Mesh).resource_path))
+		e["sparse"] = []
+		return
+	var out := []
+	for s in (e.surfs as Array).size():
+		var base: Array = (e.surfs[s] as Dictionary).arrays
+		var bv: PackedVector3Array = base[Mesh.ARRAY_VERTEX]
+		var bn: PackedVector3Array = base[Mesh.ARRAY_NORMAL] if base[Mesh.ARRAY_NORMAL] != null else PackedVector3Array()
+		var bt: PackedFloat32Array = base[Mesh.ARRAY_TANGENT] if base[Mesh.ARRAY_TANGENT] != null else PackedFloat32Array()
+		var shapes := []
+		for sa: Array in (e.raw as Array)[s]:
+			var sv: PackedVector3Array = sa[Mesh.ARRAY_VERTEX]
+			var sn: PackedVector3Array = sa[Mesh.ARRAY_NORMAL] if sa[Mesh.ARRAY_NORMAL] != null else PackedVector3Array()
+			var stn: PackedFloat32Array = sa[Mesh.ARRAY_TANGENT] if sa[Mesh.ARRAY_TANGENT] != null else PackedFloat32Array()
+			var idx := PackedInt32Array()
+			var dv := PackedVector3Array()
+			var dn := PackedVector3Array()
+			var dt := PackedFloat32Array()
+			var hn := sn.size() == bn.size() and not bn.is_empty()
+			var ht := stn.size() == bt.size() and not bt.is_empty()
+			for i in bv.size():
+				var d := sv[i] - bv[i]
+				var nd := sn[i] - bn[i] if hn else Vector3.ZERO
+				if d.length_squared() < 1e-14 and nd.length_squared() < 1e-10:
+					continue
+				idx.append(i)
+				dv.append(d)
+				if hn:
+					dn.append(nd)
+				if ht:
+					dt.append(stn[i * 4] - bt[i * 4])
+					dt.append(stn[i * 4 + 1] - bt[i * 4 + 1])
+					dt.append(stn[i * 4 + 2] - bt[i * 4 + 2])
+			shapes.append([idx, dv, dn, dt])
+		out.append(shapes)
+	e["sparse"] = out
+	e.erase("raw")
+	if disk_cache:
+		DirAccess.make_dir_recursive_absolute(CACHE_DIR)
+		var fa := FileAccess.open_compressed(String(e.path), FileAccess.WRITE, FileAccess.COMPRESSION_ZSTD)
+		if fa != null:
+			fa.store_var(out)
+			fa.close()
+	m.unlock()
+
+
+## A surface's positions, normals and tangents at the weights `w` (the blend shapes' deltas added, the normals made unit again).
+static func _mix(e: Dictionary, s: int, w: PackedFloat32Array) -> Array:
+	var base: Array = (e.surfs[s] as Dictionary).arrays
+	var v: PackedVector3Array = (base[Mesh.ARRAY_VERTEX] as PackedVector3Array).duplicate()
+	var n: PackedVector3Array = (base[Mesh.ARRAY_NORMAL] as PackedVector3Array).duplicate() if base[Mesh.ARRAY_NORMAL] != null else PackedVector3Array()
+	var t: PackedFloat32Array = (base[Mesh.ARRAY_TANGENT] as PackedFloat32Array).duplicate() if base[Mesh.ARRAY_TANGENT] != null else PackedFloat32Array()
+	var sp: Array = (e.sparse as Array)[s] if s < (e.sparse as Array).size() else []
+	var touched := PackedByteArray()
+	touched.resize(v.size())
+	for si in mini(sp.size(), w.size()):
+		var ww := w[si]
+		if ww == 0.0:
+			continue
+		var sh: Array = sp[si]
+		var idx: PackedInt32Array = sh[0]
+		var dv: PackedVector3Array = sh[1]
+		var dn: PackedVector3Array = sh[2]
+		var dt: PackedFloat32Array = sh[3]
+		var hn := dn.size() == idx.size() and not n.is_empty()
+		var ht := dt.size() == idx.size() * 3 and not t.is_empty()
+		for k in idx.size():
+			var i := idx[k]
+			v[i] += dv[k] * ww
+			if hn:
+				n[i] += dn[k] * ww
+			if ht:
+				t[i * 4] += dt[k * 3] * ww
+				t[i * 4 + 1] += dt[k * 3 + 1] * ww
+				t[i * 4 + 2] += dt[k * 3 + 2] * ww
+			touched[i] = 1
+	for i in v.size():
+		if touched[i] == 0:
+			continue
+		if not n.is_empty():
+			n[i] = n[i].normalized()
+		if not t.is_empty():
+			var tv := Vector3(t[i * 4], t[i * 4 + 1], t[i * 4 + 2]).normalized()
+			t[i * 4] = tv.x
+			t[i * 4 + 1] = tv.y
+			t[i * 4 + 2] = tv.z
+	return [v, n, t]
+
+
+## The heavy part (a WorkerThreadPool task, or inline for shape()): the bake read from disk, or each mesh mixed (open and shut), the
+## fields' context measured on the head, every mesh baked (and written to disk). Only the job's data is touched.
+static func _compute(job: Dictionary) -> void:
+	var path := CACHE_DIR.path_join("%s.bin" % String(job.key))
+	if disk_cache and FileAccess.file_exists(path):
+		var fa := FileAccess.open_compressed(path, FileAccess.READ, FileAccess.COMPRESSION_ZSTD)
+		if fa != null:
+			var d: Variant = fa.get_var()
+			fa.close()
+			if d is Dictionary and int((d as Dictionary).get("v", 0)) == BAKE_VERSION and ((d as Dictionary).get("items", []) as Array).size() == (job.items as Array).size():
+				job["ctx"] = d.ctx
+				var outs := []
+				for k in (job.items as Array).size():
+					outs.append(_expand(job.items[k], d.items[k]))
+				job["out"] = outs
+				job["from_disk"] = true
+				return
+	var lc: Dictionary = (job.cfg as Dictionary).get("lids", {})
+	var mixes := []
+	for it: Dictionary in job.items:
+		var e: Dictionary = it.e
+		_sparse(e)
+		var names: PackedStringArray = e.names
+		var w0: PackedFloat32Array = it.w
+		var bi := names.find("blink")
+		var per := []
+		for s in (e.surfs as Array).size():
+			var m0 := _mix(e, s, w0)
+			var m1: Array = []
+			if bi >= 0:
+				# shut: the lids' own face shapes left out (the blink's lids meet as on the neutral face), and further along the blink
+				# than the game's (it leaves a slit at 1: a sleeping child's lids meet)
+				var w1 := w0.duplicate()
+				w1[bi] = 1.0
+				for nm: Variant in (lc.get("shut_neutral", []) as Array):
+					var si := names.find(String(nm))
+					if si >= 0:
+						w1[si] = 0.0
+				m1 = _mix(e, s, w1)
+				var gain := float(lc.get("shut_gain", 1.0))
+				var v0: PackedVector3Array = m0[0]
+				var v1: PackedVector3Array = m1[0]
+				if gain != 1.0:
+					for i in v1.size():
+						if v1[i] != v0[i]:
+							v1[i] = v0[i] + (v1[i] - v0[i]) * gain
+					m1[0] = v1
+			per.append([m0, m1])
+		mixes.append(per)
+	var ctx := _context(job, mixes)
+	var outs := []
+	var packs := []
+	for k in (job.items as Array).size():
+		var pk := _bake_item(job.items[k], mixes[k], ctx)
+		packs.append(pk)
+		outs.append(_expand(job.items[k], pk))
+	job["ctx"] = ctx
+	job["out"] = outs
+	if disk_cache:
+		DirAccess.make_dir_recursive_absolute(CACHE_DIR)
+		var fa := FileAccess.open_compressed(path, FileAccess.WRITE, FileAccess.COMPRESSION_ZSTD)
+		if fa != null:
+			fa.store_var({"v": BAKE_VERSION, "ctx": ctx, "items": packs})
+			fa.close()
+		_prune_disk()
+
+
+## The disk cache kept to DISK_MAX bakes (the oldest removed).
+static func _prune_disk() -> void:
+	var files := []
+	for fn in DirAccess.get_files_at(CACHE_DIR):
+		if fn.ends_with(".bin") and not fn.begins_with("src_"):
+			files.append([FileAccess.get_modified_time(CACHE_DIR.path_join(fn)), fn])
+	if files.size() <= DISK_MAX:
+		return
+	files.sort_custom(func(a: Array, b: Array) -> bool: return int(a[0]) < int(b[0]))
+	for i in files.size() - DISK_MAX:
+		DirAccess.remove_absolute(CACHE_DIR.path_join(String(files[i][1])))
+
+
+## One mesh's surfaces baked: [shape names, per surface {v, n, t, shapes: [[idx, v, n, t] per made shape, sparse from v]}].
+static func _bake_item(it: Dictionary, mixes: Array, ctx: Dictionary) -> Dictionary:
+	var e: Dictionary = it.e
+	var is_body := false
+	for sd: Dictionary in e.surfs:
+		if String(sd.mname) == "skin":
+			is_body = true
+	var shapes := []
+	if (e.names as PackedStringArray).has("blink"):
+		shapes.append("blink")
+	if is_body:
+		shapes.append("mouth_open")
+	shapes.append("breath")
+	var surfs := []
+	for s in (e.surfs as Array).size():
+		surfs.append(_bake_surface(it, s, mixes[s][0], mixes[s][1], ctx, shapes, is_body))
+	return {"shapes": shapes, "surfs": surfs}
+
+
+static func _bake_surface(it: Dictionary, s: int, m0: Array, m1: Array, ctx: Dictionary, shapes: Array, is_body: bool) -> Dictionary:
+	var sd: Dictionary = (it.e.surfs as Array)[s]
+	var base: Array = sd.arrays
+	var surf := String(sd.mname)
+	var bbones: PackedInt32Array = it.bb
+	var head: PackedFloat32Array = ctx.head
+	var trunk: PackedFloat32Array = ctx.trunk
+	var A: Array = ctx.A
+	var C: PackedVector3Array = ctx.C
+	var v: PackedVector3Array = m0[0]
+	var nrm: PackedVector3Array = m0[1]
+	var tan: PackedFloat32Array = m0[2]
+	var bo: PackedInt32Array = base[Mesh.ARRAY_BONES] if base[Mesh.ARRAY_BONES] != null else PackedInt32Array()
+	var w: PackedFloat32Array = base[Mesh.ARRAY_WEIGHTS] if base[Mesh.ARRAY_WEIGHTS] != null else PackedFloat32Array()
+	var nv := v.size()
+	var nb := bo.size() / maxi(nv, 1)
+	var has1 := not m1.is_empty()
+	var v1: PackedVector3Array = m1[0] if has1 else PackedVector3Array()
+	var n1: PackedVector3Array = m1[1] if has1 else PackedVector3Array()
+	var t1: PackedFloat32Array = m1[2] if has1 else PackedFloat32Array()
+	var ov := PackedVector3Array()
+	var on := PackedVector3Array()
+	var ot := PackedFloat32Array()
+	ov.resize(nv)
+	on.resize(nrm.size())
+	ot.resize(tan.size())
+	var bv := PackedVector3Array()
+	var bn := PackedVector3Array()
+	var bt := PackedFloat32Array()
+	if has1:
+		bv = v.duplicate()
+		bn = nrm.duplicate()
+		bt = tan.duplicate()
+	var eye := surf == "eye"
+	var hw_arr := PackedFloat32Array()
+	var tw_arr := PackedFloat32Array()
+	var aw_arr: Array = []
+	var cw_arr := PackedVector3Array()
+	cw_arr.resize(nv)
+	hw_arr.resize(nv)
+	tw_arr.resize(nv)
+	aw_arr.resize(nv)
+	for i in nv:
+		var aw := Basis(Vector3.ZERO, Vector3.ZERO, Vector3.ZERO)
+		var cw := Vector3.ZERO
+		var hw := 0.0
+		var tw := 0.0
+		var ws := 0.0
+		for k in nb:
+			var ww := w[i * nb + k]
+			if ww <= 0.0:
+				continue
+			var bone := bbones[bo[i * nb + k]] if not bbones.is_empty() else 0
+			var ab: Basis = A[bone]
+			aw = Basis(aw.x + ab.x * ww, aw.y + ab.y * ww, aw.z + ab.z * ww)
+			cw += C[bone] * ww
+			hw += ww * head[bone]
+			tw += ww * trunk[bone]
+			ws += ww
+		if ws <= 0.0:
+			aw = Basis()
+		elif absf(ws - 1.0) > 0.001:
+			aw = Basis(aw.x / ws, aw.y / ws, aw.z / ws)
+			cw /= ws
+			hw /= ws
+			tw /= ws
+		if eye:
+			hw = 1.0
+		hw_arr[i] = hw
+		tw_arr[i] = tw
+		aw_arr[i] = aw
+		cw_arr[i] = cw
+		var res := _map(v[i], aw, cw, hw, tw, ctx, eye)
+		ov[i] = res[0]
+		var J: Basis = res[1]
+		var jit := J.inverse().transposed()
+		if not nrm.is_empty():
+			on[i] = (jit * nrm[i]).normalized()
+		if not tan.is_empty():
+			var tv := (J * Vector3(tan[i * 4], tan[i * 4 + 1], tan[i * 4 + 2])).normalized()
+			ot[i * 4] = tv.x
+			ot[i * 4 + 1] = tv.y
+			ot[i * 4 + 2] = tv.z
+			ot[i * 4 + 3] = tan[i * 4 + 3]
+		if has1:
+			if v1[i] != v[i] or (not n1.is_empty() and n1[i] != nrm[i]):
+				var r1 := _map(v1[i], aw, cw, hw, tw, ctx, eye)
+				bv[i] = r1[0]
+				var j1: Basis = r1[1]
+				if not n1.is_empty():
+					bn[i] = (j1.inverse().transposed() * n1[i]).normalized()
+				if not t1.is_empty():
+					var tv1 := (j1 * Vector3(t1[i * 4], t1[i * 4 + 1], t1[i * 4 + 2])).normalized()
+					bt[i * 4] = tv1.x
+					bt[i * 4 + 1] = tv1.y
+					bt[i * 4 + 2] = tv1.z
+					bt[i * 4 + 3] = t1[i * 4 + 3]
+			else:
+				bv[i] = ov[i]
+				if not n1.is_empty():
+					bn[i] = on[i]
+				if not t1.is_empty():
+					for q in 4:
+						bt[i * 4 + q] = ot[i * 4 + q]
+	# the trunk's skin a few millimetres in under the clothes (the flattened chest never pokes through a thin gown)
+	if surf == "skin":
+		var inset := float((ctx.tc as Dictionary).get("skin_inset", 0.004))
+		var iy: Array = (ctx.tc as Dictionary).get("y", [0.8, 1.25])
+		for i in nv:
+			if tw_arr[i] > 0.3 and v[i].y > float(iy[0]) and v[i].y < float(iy[1]) + 0.03 and not on.is_empty():
+				ov[i] -= on[i] * inset * tw_arr[i] * (aw_arr[i] as Basis).get_scale().x
+				if has1:
+					bv[i] = ov[i]
+	# the made shapes: the jaw dropped (the head's skin) and the breath (the trunk and what lies on it), sparse from the baked mesh
+	var out_shapes := []
+	for nm: String in shapes:
+		var idx := PackedInt32Array()
+		var sv := PackedVector3Array()
+		var sn := PackedVector3Array()
+		var st := PackedFloat32Array()
+		match nm:
+			"blink":
+				for i in nv:
+					if bv[i] != ov[i] or (not bn.is_empty() and bn[i] != on[i]):
+						idx.append(i)
+						sv.append(bv[i])
+						if not bn.is_empty():
+							sn.append(bn[i])
+						if not bt.is_empty():
+							for q in 4:
+								st.append(bt[i * 4 + q])
+			"mouth_open":
+				if surf == "skin":
+					var mc: Dictionary = ctx.mouth
+					for i in nv:
+						if hw_arr[i] > 0.05:
+							var q := _mouth(v[i], hw_arr[i], mc, nrm[i] if not nrm.is_empty() else Vector3.UP)
+							if q != v[i]:
+								idx.append(i)
+								sv.append(_map(q, aw_arr[i], cw_arr[i], hw_arr[i], tw_arr[i], ctx, eye)[0])
+			_:
+				var bc: Dictionary = ctx.breath
+				var bamt := float(bc.get("m", 0.012))
+				var byr: Array = bc.get("y", [0.9, 1.28])
+				for i in nv:
+					if tw_arr[i] > 0.05 and v[i].y > float(byr[0]) and v[i].y < float(byr[1]):
+						var hd := Vector3(v[i].x, 0.0, v[i].z).normalized()
+						var band := smoothstep(float(byr[0]), float(byr[0]) + 0.08, v[i].y) * (1.0 - smoothstep(float(byr[1]) - 0.08, float(byr[1]), v[i].y))
+						var fr := 0.4 + 0.6 * maxf(hd.z, 0.0)
+						idx.append(i)
+						sv.append(ov[i] + (aw_arr[i] as Basis) * (hd * bamt * band * fr * tw_arr[i]))
+		out_shapes.append([idx, sv, sn, st])
+	return {"v": ov, "n": on, "t": ot, "shapes": out_shapes}
+
+
+## The arrays of one mesh for ArrayMesh.add_surface_from_arrays (worker): the source's arrays with the baked positions, normals and
+## tangents, the adult position in CUSTOM1 on the skin (ChildSkin's shader), and the made blend shapes (whole, from the sparse ones).
+static func _expand(it: Dictionary, pk: Dictionary) -> Dictionary:
+	var e: Dictionary = it.e
+	var surfs := []
+	for s in (e.surfs as Array).size():
+		var sd: Dictionary = (e.surfs as Array)[s]
+		var bk: Dictionary = (pk.surfs as Array)[s]
+		var arr: Array = (sd.arrays as Array).duplicate()
+		var ov: PackedVector3Array = bk.v
+		var on: PackedVector3Array = bk.n
+		var ot: PackedFloat32Array = bk.t
+		var flags_extra := 0
+		if String(sd.mname) == "skin" and arr[Mesh.ARRAY_CUSTOM1] == null:
+			var src_v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+			var ap := PackedFloat32Array()
+			ap.resize(src_v.size() * 3)
+			for i in src_v.size():
+				ap[i * 3] = src_v[i].x
+				ap[i * 3 + 1] = src_v[i].y
+				ap[i * 3 + 2] = src_v[i].z
+			arr[Mesh.ARRAY_CUSTOM1] = ap
+			flags_extra = Mesh.ARRAY_CUSTOM_RGB_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM1_SHIFT
+		arr[Mesh.ARRAY_VERTEX] = ov
+		if not on.is_empty():
+			arr[Mesh.ARRAY_NORMAL] = on
+		if not ot.is_empty():
+			arr[Mesh.ARRAY_TANGENT] = ot
+		var bsa := []
+		for sh: Array in bk.shapes:
+			var idx: PackedInt32Array = sh[0]
+			var sv: PackedVector3Array = sh[1]
+			var sn: PackedVector3Array = sh[2]
+			var st: PackedFloat32Array = sh[3]
+			var vv := ov.duplicate()
+			var nn := on.duplicate()
+			var tt := ot.duplicate()
+			for k in idx.size():
+				var i := idx[k]
+				vv[i] = sv[k]
+				if sn.size() == idx.size() and not nn.is_empty():
+					nn[i] = sn[k]
+				if st.size() == idx.size() * 4 and not tt.is_empty():
+					for q in 4:
+						tt[i * 4 + q] = st[k * 4 + q]
+			var sa := []
+			sa.resize(Mesh.ARRAY_MAX)
+			sa[Mesh.ARRAY_VERTEX] = vv
+			if not nn.is_empty():
+				sa[Mesh.ARRAY_NORMAL] = nn
+			if not tt.is_empty():
+				sa[Mesh.ARRAY_TANGENT] = tt
+			bsa.append(sa)
+		var fmt := int(sd.fmt)
+		var flags := (fmt & ~((1 << Mesh.ARRAY_FORMAT_CUSTOM_BASE) - 1) & ((1 << 35) - 1)) | flags_extra
+		surfs.append({"arr": arr, "bsa": bsa, "flags": flags})
+	return {"shapes": pk.shapes, "surfs": surfs}
+
+
+## Main thread: the next mesh put on (made from the worker's arrays, or the bake in memory), with its own skin at the new binds.
+static func _apply_item(job: Dictionary) -> void:
+	var k := int(job.i)
+	job.i = k + 1
+	var it: Dictionary = (job.items as Array)[k]
+	var mi: MeshInstance3D = it.mi
+	if not is_instance_valid(mi):
+		return
+	var mesh: ArrayMesh
+	if job.has("hit"):
+		mesh = ((job.hit as Dictionary).meshes as Array)[k]
+	else:
+		var o: Dictionary = (job.out as Array)[k]
+		var e: Dictionary = it.e
+		mesh = ArrayMesh.new()
+		mesh.blend_shape_mode = Mesh.BLEND_SHAPE_MODE_NORMALIZED
+		for nm: String in o.shapes:
+			mesh.add_blend_shape(nm)
+		for s in (o.surfs as Array).size():
+			var so: Dictionary = (o.surfs as Array)[s]
+			var sd: Dictionary = (e.surfs as Array)[s]
+			mesh.add_surface_from_arrays(int(sd.prim), so.arr, so.bsa, {}, int(so.flags))
+			mesh.surface_set_material(s, sd.mat)
+			mesh.surface_set_name(s, String(sd.sname))
+		if not job.has("meshes"):
+			job["meshes"] = []
+		(job.meshes as Array).append(mesh)
+		(o as Dictionary).clear()           # (the arrays are in the mesh now)
+	mi.mesh = mesh
+	for i in mesh.get_blend_shape_count():     # (a new mesh keeps the old one's weights by index)
+		mi.set_blend_shape_value(i, 0.0)
+	var src_skin: Skin = it.skin
+	if src_skin != null:
+		if not job.has("skins"):
+			job["skins"] = {}
+		var p: ChildProportion = job.p
+		if not (job.skins as Dictionary).has(src_skin):
+			var ns := Skin.new()
+			for q in src_skin.get_bind_count():
+				var bone := src_skin.get_bind_bone(q)
+				ns.add_bind(bone, (p._g[bone] as Transform3D).affine_inverse())
+			job.skins[src_skin] = ns
+		mi.skin = job.skins[src_skin]
+
+
+## Main thread: the bake finished: the body's binds, drivers and skirt hems at the new joints, the fields' context kept (map_face), the
+## bake kept in memory, `done` called.
+static func _finish(job: Dictionary) -> void:
+	var p: ChildProportion = job.p
+	var b: CharacterBodyMesh = job.b
+	var sk := b.skeleton
+	var sol: Dictionary = job.sol
+	var ctx: Dictionary = (job.hit as Dictionary).ctx if job.has("hit") else job.ctx
+	p._ctx = ctx
+	p.lip_y = float((ctx.mouth as Dictionary).get("lip_y", 0.0))
 	for bone: int in b._bind.keys():
 		b._bind[bone] = p._g[bone]
 	b._setup_drivers()
 	var hems: Array = b.skirt_hems if b.skirt_hems.size() == 3 else CharacterBodyMesh.SKIRT_HEMS
 	var nh := []
+	var li := sk.find_bone("l_upper_leg")
 	for k in 3:
 		var h: Vector3 = hems[k]
-		var li := sk.find_bone("l_upper_leg")
 		nh.append(sol.n[li] + (sol.A[li] as Basis) * (h - (b._bind_g[li] as Transform3D).origin))
 	b.set_skirt_hems(nh)
 	b.soft_tissue = 0.0
 	b.genital_swing = 0.0
-	p.set_meta("bake_ms", Time.get_ticks_msec() - t0)
+	p._pending = false
+	p.set_meta("bake_ms", (Time.get_ticks_usec() - int(job.t0)) / 1000)
+	p.set_meta("bake_from", "memory" if job.has("hit") else ("disk" if job.has("from_disk") else "baked"))
+	if not job.has("hit") and job.has("meshes"):
+		_mem_n += 1
+		_mem[job.key] = {"meshes": job.meshes, "ctx": ctx, "t": _mem_n}
+		while _mem.size() > MEM_MAX:
+			var old := ""
+			var ot := 1 << 62
+			for k: String in _mem:
+				if int((_mem[k] as Dictionary).t) < ot:
+					ot = int((_mem[k] as Dictionary).t)
+					old = k
+			_mem.erase(old)
 	for fb in sk.get_parent().find_children("*", "FaceBlink", true, false) if sk.get_parent() != null else []:
 		(fb as FaceBlink)._mesh_count = -1
-	return p
+	var done: Callable = job.get("done", Callable())
+	if done.is_valid():
+		done.call(p)
 
 
 ## The joints only (no meshes): the new binds and the run-time offsets for `f` on `sk` whose bind globals are `g` (tools: the baby's
@@ -406,62 +1107,48 @@ static func _owner(sk: Skeleton3D, i: int, o: PackedVector3Array, inh: Dictionar
 	return best
 
 
-## What every mesh's bake needs: the bones' scalings, the head and trunk bones, the fields' settings, the trunk's section table.
-static func _context(b: CharacterBodyMesh, sk: Skeleton3D, sol: Dictionary, f: Dictionary, round_k: float) -> Dictionary:
-	var c := cfg()
-	var n := sk.get_bone_count()
+## What every mesh's bake needs (worker): the bones' scalings, the head and trunk bones, the fields' settings, and measured on the head's
+## own mixed surfaces the eyeballs' centres, the trunk's section table, the head's radii and the lips' line.
+static func _context(job: Dictionary, mixes: Array) -> Dictionary:
+	var c: Dictionary = job.cfg
+	var sol: Dictionary = job.sol
+	var f: Dictionary = job.form
 	var A: Array = sol.A
+	var n := A.size()
 	var C := PackedVector3Array()
 	C.resize(n)
 	for i in n:
 		C[i] = sol.n[i] - (A[i] as Basis) * sol.o[i]
-	var head := PackedFloat32Array()
-	var trunk := PackedFloat32Array()
-	head.resize(n)
-	trunk.resize(n)
-	for nm: String in HEAD_BONES:
-		var i := sk.find_bone(nm)
-		if i >= 0:
-			head[i] = 1.0
-	# the trunk's weight: everything but the arms and the head (the hips' sides are the thighs' bones: they belong to the barrel above
-	# the crotch; below it the height band leaves the legs alone)
-	for i in n:
-		var nm := sk.get_bone_name(i)
-		var arm := false
-		for k: String in ARM_PARTS:
-			if nm.contains(k):
-				arm = true
-				break
-		trunk[i] = 0.0 if arm or head[i] > 0.0 or nm == "neck" else 1.0
+	var head: PackedFloat32Array = job.head
+	var trunk: PackedFloat32Array = job.trunk
 	var rc: Dictionary = c.get("round", {})
 	var ec: Dictionary = c.get("eyes", {})
 	var tc: Dictionary = (c.get("trunk", {}) as Dictionary).duplicate()
 	var tf: Dictionary = f.get("trunk", {})
 	for k in tf:
 		tc[k] = tf[k]
-	var ctx := {"A": A, "C": C, "head": head, "trunk": trunk, "round_k": clampf(round_k, -0.4, 1.0), "rc": rc,
+	var ctx := {"A": A, "C": C, "head": head, "trunk": trunk, "round_k": clampf(float(job.round_k), -0.4, 1.0), "rc": rc,
 			"eye_k": float(f.get("eyes", 1.0)), "ec": ec, "tc": tc, "eye_c": [], "table": {},
 			"face_k": float(f.get("face", 0.0)), "face_fields": _face_fields(c.get("face", {})),
-			"lower": (c.get("face", {}) as Dictionary).get("lower_face", {}),
+			"lower": (c.get("face", {}) as Dictionary).get("lower_face", {}), "lids": c.get("lids", {}),
 			"breath": c.get("breath", {}), "mouth": c.get("mouth", {})}
 	# the eyeballs' centres (after the face shapes: the child's own eyes) and the trunk's sections, from the body part
-	for mi: MeshInstance3D in b.part_meshes("head"):
-		if not is_instance_valid(mi) or mi.mesh == null:
+	for k in (job.items as Array).size():
+		var it: Dictionary = job.items[k]
+		if not bool(it.head):
 			continue
-		var src: Mesh = mi.get_meta("cp_src", mi.mesh)
-		for s in src.get_surface_count():
-			var mat := src.surface_get_material(s)
-			if mat != null and mat.resource_name == "eye":
-				_restore(mi)
-				var mixed := mi.bake_mesh_from_current_blend_shape_mix()
-				ctx.eye_c = _eye_centres(mixed.surface_get_arrays(s)[Mesh.ARRAY_VERTEX])
-			elif mat != null and mat.resource_name == "skin":
-				_restore(mi)
-				var mixed := mi.bake_mesh_from_current_blend_shape_mix()
-				var sa := mixed.surface_get_arrays(s)
-				ctx.table = _trunk_table(sa, mi.get_meta("cp_skin", mi.skin), trunk, tc)
+		var e: Dictionary = it.e
+		for s in (e.surfs as Array).size():
+			var sd: Dictionary = (e.surfs as Array)[s]
+			var mv: PackedVector3Array = ((mixes[k] as Array)[s] as Array)[0][0]
+			if String(sd.mname) == "eye":
+				ctx.eye_c = _eye_centres(mv)
+			elif String(sd.mname) == "skin":
+				var sa: Array = (sd.arrays as Array).duplicate()
+				sa[Mesh.ARRAY_VERTEX] = mv
+				ctx.table = _trunk_table(sa, it.bb, trunk, tc)
 				ctx.rc = (ctx.rc as Dictionary).duplicate()
-				ctx.rc["table"] = _head_table(sa, mi.get_meta("cp_skin", mi.skin), head, ctx.rc)
+				ctx.rc["table"] = _head_table(sa, it.bb, head, ctx.rc)
 				var ly := _lip_y(sa)
 				if ly > 0.0:
 					ctx.mouth = (ctx.mouth as Dictionary).duplicate()
@@ -513,7 +1200,7 @@ const H_EL := 12
 ## The head's own radius from the cranium's centre by direction (H_AZ azimuth bins round from the front, H_EL elevation bins from below):
 ## the median distance of the head's skin in each (the ears left out), empty bins from their neighbours; and the radius of the sphere
 ## of the same volume ("rs").
-static func _head_table(arr: Array, skin: Skin, head: PackedFloat32Array, rc: Dictionary) -> Dictionary:
+static func _head_table(arr: Array, bb: PackedInt32Array, head: PackedFloat32Array, rc: Dictionary) -> Dictionary:
 	var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
 	var bo: PackedInt32Array = arr[Mesh.ARRAY_BONES]
 	var w: PackedFloat32Array = arr[Mesh.ARRAY_WEIGHTS]
@@ -528,16 +1215,16 @@ static func _head_table(arr: Array, skin: Skin, head: PackedFloat32Array, rc: Di
 		var p := v[i]
 		var hw := 0.0
 		for k in nb:
-			hw += w[i * nb + k] * head[skin.get_bind_bone(bo[i * nb + k])]
+			hw += w[i * nb + k] * head[bb[bo[i * nb + k]]]
 		if hw < 0.9 or p.y < 1.37:
 			continue
 		if absf(p.x) > 0.064 and p.y > 1.42 and p.y < 1.52 and p.z > -0.035 and p.z < 0.045:
 			continue                     # an ear
 		var d := p - c
 		var bi := _hbin(d)
-		var bb: PackedFloat32Array = bins[bi]
-		bb.append(d.length())
-		bins[bi] = bb
+		var bin: PackedFloat32Array = bins[bi]
+		bin.append(d.length())
+		bins[bi] = bin
 	var rad := PackedFloat32Array()
 	rad.resize(H_AZ * H_EL)
 	for i in bins.size():
@@ -702,7 +1389,7 @@ const T_ANG := 24
 ## The body's own section radius of the trunk by height (1 cm bins) and angle (T_ANG bins, 0 = front, toward the left side first),
 ## and the smooth barrel it is pulled to: the section's centre, the side half-width smoothed along the height (no waist or hip curve),
 ## the depth from it (`depth` of the width), the belly's bulge in front.
-static func _trunk_table(arr: Array, skin: Skin, trunk: PackedFloat32Array, tc: Dictionary) -> Dictionary:
+static func _trunk_table(arr: Array, bb: PackedInt32Array, trunk: PackedFloat32Array, tc: Dictionary) -> Dictionary:
 	var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
 	var bo: PackedInt32Array = arr[Mesh.ARRAY_BONES]
 	var w: PackedFloat32Array = arr[Mesh.ARRAY_WEIGHTS]
@@ -724,7 +1411,7 @@ static func _trunk_table(arr: Array, skin: Skin, trunk: PackedFloat32Array, tc: 
 			continue
 		var tw := 0.0
 		for k in nb:
-			tw += w[i * nb + k] * trunk[skin.get_bind_bone(bo[i * nb + k])]
+			tw += w[i * nb + k] * trunk[bb[bo[i * nb + k]]]
 		if tw < 0.95:
 			continue
 		var yi := int((p.y - y0) / 0.01)
@@ -824,7 +1511,7 @@ static func _smooth(a: PackedFloat32Array, rad: int) -> PackedFloat32Array:
 # ---------------------------------------------------------------------------------------------------- the fields
 ## The shape fields at `p` (adult bind space): the eyes (hw: the head's weight; eye: an eyeball's vertex), the rounded head, the
 ## flattened trunk (tw: the trunk's weight).
-static func _field(p: Vector3, hw: float, tw: float, ctx: Dictionary) -> Vector3:
+static func _field(p: Vector3, hw: float, tw: float, ctx: Dictionary, eye := false) -> Vector3:
 	if hw > 0.0 or p.y > 1.28:
 		var ek: float = ctx.eye_k
 		if ek != 1.0:
@@ -839,20 +1526,55 @@ static func _field(p: Vector3, hw: float, tw: float, ctx: Dictionary) -> Vector3
 					t = t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
 					p = c + d * lerpf(1.0, lerpf(ek, 1.0, t), hw)
 		var fk: float = ctx.face_k
-		if fk > 0.0 and hw > 0.0:
+		if fk > 0.0 and hw > 0.0 and not eye:
+			p = _lids(p, hw * fk, ctx)
+		if fk > 0.0 and (hw > 0.0 or p.y > 1.3):
+			# (the fields reach into the neck's top as the rounding does: the under-chin's fullness has no fold at the neck)
+			var hwn := maxf(hw, smoothstep(1.3, 1.37, p.y))
 			for ff: Dictionary in ctx.face_fields:
-				p = _feature(p, hw * fk, ff)
+				p = _feature(p, hwn * fk, ff)
 			var lf: Dictionary = ctx.lower
 			if not lf.is_empty() and p.y < float(lf.y):
 				# the lower face shorter (the chin up toward the eyes' line), the front of the face only
 				var lz: Array = lf.z
-				var k := fk * hw * smoothstep(float(lz[0]), float(lz[1]), p.z) * smoothstep(0.0, 0.03, float(lf.y) - p.y)
+				var k := fk * hwn * smoothstep(float(lz[0]), float(lz[1]), p.z) * smoothstep(0.0, 0.03, float(lf.y) - p.y)
 				p.y = float(lf.y) + (p.y - float(lf.y)) * lerpf(1.0, float(lf.scale), k)
 		var rk: float = ctx.round_k
 		if rk != 0.0:
 			p = _round(p, hw, rk, ctx.rc)
 	if tw > 0.0 and not (ctx.table as Dictionary).is_empty():
 		p = _barrel(p, tw, ctx)
+	return p
+
+
+## The lids opened wider (baby_body.json "lids": a young face's round, open eyes): the skin, lids and lashes round each eyeball turned
+## about the eyeball's centre across the face, the upper lid up by up_deg and the lower down by down_deg (the eyeball itself stays),
+## fully within r[0] of the centre and fading out by r[1], toward the corners (half_w across) and behind the eye's front (z); the
+## turn changes sign smoothly across the eye's middle (band m) so the corners and a shut lid's seam stay joined. `k` how much.
+static func _lids(p: Vector3, k: float, ctx: Dictionary) -> Vector3:
+	var lc: Dictionary = ctx.get("lids", {})
+	if lc.is_empty():
+		return p
+	var up := deg_to_rad(float(lc.get("up_deg", 0.0)))
+	var dn := deg_to_rad(float(lc.get("down_deg", 0.0)))
+	var r: Array = lc.get("r", [0.015, 0.03])
+	var hwid: Array = lc.get("half_w", [0.006, 0.016])
+	var zr: Array = lc.get("z", [-0.004, 0.004])
+	var band := float(lc.get("band", 0.003))
+	var yc := float(lc.get("y_off", 0.0))
+	for c: Vector3 in ctx.eye_c:
+		var d := p - c
+		var dl := d.length()
+		if dl >= float(r[1]):
+			continue
+		var w := k * (1.0 - smoothstep(float(r[0]), float(r[1]), dl)) * smoothstep(float(zr[0]), float(zr[1]), d.z) \
+				* (1.0 - smoothstep(float(hwid[0]), float(hwid[1]), absf(d.x)))
+		if w <= 0.0:
+			continue
+		var s := clampf((d.y - yc) / band, -1.0, 1.0)
+		s = s * (1.5 - 0.5 * s * s)                      # (smooth through the middle)
+		var ang := (up if s > 0.0 else dn) * s * w
+		p = c + d.rotated(Vector3.RIGHT, -ang)
 	return p
 
 
@@ -995,231 +1717,15 @@ static func _restore(mi: MeshInstance3D) -> void:
 				mi.set_blend_shape_value(i, wts[k])
 
 
-static func _bake_mesh(mi: MeshInstance3D, ctx: Dictionary) -> void:
-	_restore(mi)
-	var bi := mi.find_blend_shape_by_name(&"blink")
-	if bi >= 0:
-		mi.set_blend_shape_value(bi, 0.0)
-	var m0 := mi.bake_mesh_from_current_blend_shape_mix()
-	var m1: ArrayMesh = null
-	if bi >= 0:
-		mi.set_blend_shape_value(bi, 1.0)
-		m1 = mi.bake_mesh_from_current_blend_shape_mix()
-		mi.set_blend_shape_value(bi, 0.0)
-	var skin: Skin = mi.get_meta("cp_skin", mi.skin)
-	var head: PackedFloat32Array = ctx.head
-	var trunk: PackedFloat32Array = ctx.trunk
-	var A: Array = ctx.A
-	var C: PackedVector3Array = ctx.C
-	var out := ArrayMesh.new()
-	out.blend_shape_mode = Mesh.BLEND_SHAPE_MODE_NORMALIZED
-	var src_mesh: Mesh = mi.get_meta("cp_src", mi.mesh)
-	var is_body := false
-	for s in m0.get_surface_count():
-		var mat := src_mesh.surface_get_material(s)
-		if mat != null and mat.resource_name == "skin":
-			is_body = true
-	var shapes := []
-	if m1 != null:
-		shapes.append("blink")
-	if is_body:
-		shapes.append("mouth_open")
-	shapes.append("breath")
-	for nm: String in shapes:
-		out.add_blend_shape(nm)
-	for s in m0.get_surface_count():
-		var arr := m0.surface_get_arrays(s)
-		var mat := src_mesh.surface_get_material(s)
-		var surf := mat.resource_name if mat != null else ""
-		var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
-		var nrm: PackedVector3Array = arr[Mesh.ARRAY_NORMAL] if arr[Mesh.ARRAY_NORMAL] != null else PackedVector3Array()
-		var tan: PackedFloat32Array = arr[Mesh.ARRAY_TANGENT] if arr[Mesh.ARRAY_TANGENT] != null else PackedFloat32Array()
-		var bo: PackedInt32Array = arr[Mesh.ARRAY_BONES] if arr[Mesh.ARRAY_BONES] != null else PackedInt32Array()
-		var w: PackedFloat32Array = arr[Mesh.ARRAY_WEIGHTS] if arr[Mesh.ARRAY_WEIGHTS] != null else PackedFloat32Array()
-		var nv := v.size()
-		var nb := bo.size() / maxi(nv, 1)
-		var v1: PackedVector3Array = PackedVector3Array()
-		var n1: PackedVector3Array = PackedVector3Array()
-		var t1: PackedFloat32Array = PackedFloat32Array()
-		if m1 != null:
-			var a1 := m1.surface_get_arrays(s)
-			v1 = a1[Mesh.ARRAY_VERTEX]
-			n1 = a1[Mesh.ARRAY_NORMAL] if a1[Mesh.ARRAY_NORMAL] != null else PackedVector3Array()
-			t1 = a1[Mesh.ARRAY_TANGENT] if a1[Mesh.ARRAY_TANGENT] != null else PackedFloat32Array()
-		var ov := PackedVector3Array()
-		var on := PackedVector3Array()
-		var ot := PackedFloat32Array()
-		ov.resize(nv)
-		on.resize(nrm.size())
-		ot.resize(tan.size())
-		var bv := PackedVector3Array()
-		var bn := PackedVector3Array()
-		var bt := PackedFloat32Array()
-		if m1 != null:
-			bv = v.duplicate()
-			bn = nrm.duplicate()
-			bt = tan.duplicate()
-		var mv := PackedVector3Array()        # mouth_open
-		var brv := PackedVector3Array()       # breath
-		var eye := surf == "eye"
-		var hw_arr := PackedFloat32Array()
-		var tw_arr := PackedFloat32Array()
-		var aw_arr: Array = []
-		var cw_arr := PackedVector3Array()
-		cw_arr.resize(nv)
-		hw_arr.resize(nv)
-		tw_arr.resize(nv)
-		aw_arr.resize(nv)
-		for i in nv:
-			var aw := Basis(Vector3.ZERO, Vector3.ZERO, Vector3.ZERO)
-			var cw := Vector3.ZERO
-			var hw := 0.0
-			var tw := 0.0
-			var ws := 0.0
-			for k in nb:
-				var ww := w[i * nb + k]
-				if ww <= 0.0:
-					continue
-				var bone := skin.get_bind_bone(bo[i * nb + k]) if skin != null else 0
-				var ab: Basis = A[bone]
-				aw = Basis(aw.x + ab.x * ww, aw.y + ab.y * ww, aw.z + ab.z * ww)
-				cw += C[bone] * ww
-				hw += ww * head[bone]
-				tw += ww * trunk[bone]
-				ws += ww
-			if ws <= 0.0:
-				aw = Basis()
-			elif absf(ws - 1.0) > 0.001:
-				aw = Basis(aw.x / ws, aw.y / ws, aw.z / ws)
-				cw /= ws
-				hw /= ws
-				tw /= ws
-			if eye:
-				hw = 1.0
-			hw_arr[i] = hw
-			tw_arr[i] = tw
-			aw_arr[i] = aw
-			cw_arr[i] = cw
-			var res := _map(v[i], aw, cw, hw, tw, ctx, eye)
-			ov[i] = res[0]
-			var J: Basis = res[1]
-			var jit := J.inverse().transposed()
-			if not nrm.is_empty():
-				on[i] = (jit * nrm[i]).normalized()
-			if not tan.is_empty():
-				var tv := (J * Vector3(tan[i * 4], tan[i * 4 + 1], tan[i * 4 + 2])).normalized()
-				ot[i * 4] = tv.x
-				ot[i * 4 + 1] = tv.y
-				ot[i * 4 + 2] = tv.z
-				ot[i * 4 + 3] = tan[i * 4 + 3]
-			if m1 != null:
-				if v1[i] != v[i] or (not n1.is_empty() and n1[i] != nrm[i]):
-					var r1 := _map(v1[i], aw, cw, hw, tw, ctx, eye)
-					bv[i] = r1[0]
-					var j1: Basis = r1[1]
-					if not n1.is_empty():
-						bn[i] = (j1.inverse().transposed() * n1[i]).normalized()
-					if not t1.is_empty():
-						var tv1 := (j1 * Vector3(t1[i * 4], t1[i * 4 + 1], t1[i * 4 + 2])).normalized()
-						bt[i * 4] = tv1.x
-						bt[i * 4 + 1] = tv1.y
-						bt[i * 4 + 2] = tv1.z
-						bt[i * 4 + 3] = t1[i * 4 + 3]
-				else:
-					bv[i] = ov[i]
-					if not n1.is_empty():
-						bn[i] = on[i]
-					if not t1.is_empty():
-						for q in 4:
-							bt[i * 4 + q] = ot[i * 4 + q]
-		# the trunk's skin a few millimetres in under the clothes (the flattened chest never pokes through a thin gown)
-		if surf == "skin":
-			var inset := float((ctx.tc as Dictionary).get("skin_inset", 0.004))
-			var iy: Array = (ctx.tc as Dictionary).get("y", [0.8, 1.25])
-			for i in nv:
-				if tw_arr[i] > 0.3 and v[i].y > float(iy[0]) and v[i].y < float(iy[1]) + 0.03 and not on.is_empty():
-					ov[i] -= on[i] * inset * tw_arr[i] * (aw_arr[i] as Basis).get_scale().x
-					if m1 != null:
-						bv[i] = ov[i]
-		# the made shapes: the jaw dropped (the head's skin) and the breath (the trunk and what lies on it)
-		if is_body:
-			mv = ov.duplicate()
-			if surf == "skin":
-				var mc: Dictionary = ctx.mouth
-				for i in nv:
-					if hw_arr[i] > 0.05:
-						var q := _mouth(v[i], hw_arr[i], mc, nrm[i] if not nrm.is_empty() else Vector3.UP)
-						if q != v[i]:
-							mv[i] = _map(q, aw_arr[i], cw_arr[i], hw_arr[i], tw_arr[i], ctx, eye)[0]
-		brv = ov.duplicate()
-		var bc: Dictionary = ctx.breath
-		var bamt := float(bc.get("m", 0.012))
-		var byr: Array = bc.get("y", [0.9, 1.28])
-		for i in nv:
-			if tw_arr[i] > 0.05 and v[i].y > float(byr[0]) and v[i].y < float(byr[1]):
-				var hd := Vector3(v[i].x, 0.0, v[i].z - 0.0).normalized()
-				var band := smoothstep(float(byr[0]), float(byr[0]) + 0.08, v[i].y) * (1.0 - smoothstep(float(byr[1]) - 0.08, float(byr[1]), v[i].y))
-				var fr := 0.4 + 0.6 * maxf(hd.z, 0.0)
-				brv[i] = ov[i] + (aw_arr[i] as Basis) * (hd * bamt * band * fr * tw_arr[i])
-		arr[Mesh.ARRAY_VERTEX] = ov
-		var flags_extra := 0
-		if surf == "skin" and arr[Mesh.ARRAY_CUSTOM1] == null:
-			# the adult bind position of each vertex (ChildSkin's shader keys the neck's gradients to it)
-			var ap := PackedFloat32Array()
-			ap.resize(nv * 3)
-			for i in nv:
-				ap[i * 3] = v[i].x
-				ap[i * 3 + 1] = v[i].y
-				ap[i * 3 + 2] = v[i].z
-			arr[Mesh.ARRAY_CUSTOM1] = ap
-			flags_extra = Mesh.ARRAY_CUSTOM_RGB_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM1_SHIFT
-		if not nrm.is_empty():
-			arr[Mesh.ARRAY_NORMAL] = on
-		if not tan.is_empty():
-			arr[Mesh.ARRAY_TANGENT] = ot
-		var bsa := []
-		for nm: String in shapes:
-			var sa := []
-			sa.resize(Mesh.ARRAY_MAX)
-			match nm:
-				"blink":
-					sa[Mesh.ARRAY_VERTEX] = bv
-					if not nrm.is_empty():
-						sa[Mesh.ARRAY_NORMAL] = bn
-					if not tan.is_empty():
-						sa[Mesh.ARRAY_TANGENT] = bt
-				"mouth_open":
-					sa[Mesh.ARRAY_VERTEX] = mv
-					if not nrm.is_empty():
-						sa[Mesh.ARRAY_NORMAL] = on
-					if not tan.is_empty():
-						sa[Mesh.ARRAY_TANGENT] = ot
-				_:
-					sa[Mesh.ARRAY_VERTEX] = brv
-					if not nrm.is_empty():
-						sa[Mesh.ARRAY_NORMAL] = on
-					if not tan.is_empty():
-						sa[Mesh.ARRAY_TANGENT] = ot
-			bsa.append(sa)
-		var fmt := m0.surface_get_format(s)
-		var flags := (fmt & ~((1 << Mesh.ARRAY_FORMAT_CUSTOM_BASE) - 1) & ((1 << 35) - 1)) | flags_extra
-		out.add_surface_from_arrays(m0.surface_get_primitive_type(s), arr, bsa, {}, flags)
-		out.surface_set_material(s, mat)
-		out.surface_set_name(s, src_mesh.surface_get_name(s))
-	mi.mesh = out
-	for i in out.get_blend_shape_count():     # (a new mesh keeps the old one's weights by index)
-		mi.set_blend_shape_value(i, 0.0)
-
-
 ## [the mapped point, the map's Jacobian] of an adult bind-space point: the fields, then the bones' blended scaling.
 static func _map(p: Vector3, aw: Basis, cw: Vector3, hw: float, tw: float, ctx: Dictionary, eye: bool) -> Array:
-	var q := _field(p, hw, tw, ctx)
+	var q := _field(p, hw, tw, ctx, eye)
 	var J := aw
 	if q != p or hw > 0.0 or tw > 0.0 or p.y > 1.28:
 		const E := 0.0005
-		var jx := (_field(p + Vector3(E, 0, 0), hw, tw, ctx) - q) / E
-		var jy := (_field(p + Vector3(0, E, 0), hw, tw, ctx) - q) / E
-		var jz := (_field(p + Vector3(0, 0, E), hw, tw, ctx) - q) / E
+		var jx := (_field(p + Vector3(E, 0, 0), hw, tw, ctx, eye) - q) / E
+		var jy := (_field(p + Vector3(0, E, 0), hw, tw, ctx, eye) - q) / E
+		var jz := (_field(p + Vector3(0, 0, E), hw, tw, ctx, eye) - q) / E
 		J = aw * Basis(jx, jy, jz)
 	return [aw * q + cw, J]
 

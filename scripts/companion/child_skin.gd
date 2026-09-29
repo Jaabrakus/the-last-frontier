@@ -9,13 +9,16 @@ extends RefCounted
 ##   ChildSkin.apply(body, 0.8)
 
 const FUZZ_CODE := "\tRIM = child_fuzz;\n\tRIM_TINT = child_fuzz_tint;\n"
-const FUZZ_UNIFORMS := "uniform float child_fuzz : hint_range(0.0, 1.0) = 0.0;\nuniform float child_fuzz_tint : hint_range(0.0, 1.0) = 0.3;\nuniform int child_adult_pos = 0;\nuniform float child_flat = 0.0;\n"
+const FUZZ_UNIFORMS := "uniform float child_fuzz : hint_range(0.0, 1.0) = 0.0;\nuniform float child_fuzz_tint : hint_range(0.0, 1.0) = 0.3;\nuniform int child_adult_pos = 0;\nuniform float child_flat = 0.0;\nuniform float child_lip = 0.0;\nuniform float child_soft_ao = 0.0;\n"
 ## The skin shader's neck and seam gradients are keyed to the adult's heights: on a child's baked mesh (ChildProportion writes each
 ## vertex's adult bind position into CUSTOM1) they read that instead of the child's own.
 const ADULT_POS := [["v_h = VERTEX.y;", "vec3 cap = child_adult_pos == 1 ? CUSTOM1.xyz : VERTEX;\n\tv_h = cap.y;"],
 		["float dsig = VERTEX.y - (1.367 - 0.35 * VERTEX.z);", "float dsig = cap.y - (1.367 - 0.35 * cap.z);"],
 		["length(vec2(VERTEX.x, VERTEX.z - 0.009))", "length(vec2(cap.x, cap.z - 0.009))"],
-		["areola = d.a;", "areola = d.a * (1.0 - child_flat);"]]
+		["areola = d.a;", "areola = d.a * (1.0 - child_flat);"],
+		# a young mouth: the lips pinker and lighter, the baked seams (the mouth's line, the lids' pockets, the nostrils) softer
+		["albedo = mix(albedo, lip, mucosa);", "lip = mix(lip, lip * vec3(1.1, 0.9, 0.95) + vec3(0.045, 0.012, 0.02), child_lip);\n\t\talbedo = mix(albedo, lip, mucosa);"],
+		["AO = mix(0.35, 1.0, cavity);", "AO = mix(mix(0.35, 1.0, child_soft_ao), 1.0, cavity);"]]
 const NUMS := ["head_detail_strength", "body_detail_strength", "detail_strength", "weathering", "roughness_base", "skin_specular",
 		"oil_sheen", "sss_strength", "head_sss", "albedo_scale"]
 ## skin.gdshader's own defaults (when the material does not set one).
@@ -69,6 +72,49 @@ static func apply(body: CharacterBodyMesh, smooth: float, flat := true) -> void:
 			m.set_shader_parameter("child_flat", 1.0 if flat else 0.0)
 			m.set_shader_parameter("child_fuzz", float(c.get("fuzz", 0.2)) * s)
 			m.set_shader_parameter("child_fuzz_tint", float(c.get("fuzz_tint", 0.35)))
+			m.set_shader_parameter("child_lip", float(c.get("lip_pink", 0.0)) * s)
+			m.set_shader_parameter("child_soft_ao", float(c.get("soft_ao", 0.0)) * s)
+	_eyes(body, s, c)
+
+
+## A young eye (baby_body.json skin "eye", by the smoothness): a touch larger iris, a cleaner, bluer white, less of the lid's shadow on
+## it (the eye material is the body's own: BodyMaterials.apply_look makes one per look).
+static func _eyes(body: CharacterBodyMesh, s: float, c: Dictionary) -> void:
+	var ec: Dictionary = c.get("eye", {})
+	for mi: MeshInstance3D in body.meshes:
+		if not is_instance_valid(mi) or mi.mesh == null:
+			continue
+		for i in mi.mesh.get_surface_count():
+			var m := mi.get_surface_override_material(i) as ShaderMaterial
+			if m != null and m.shader == BodyMaterials.FACE_HAIR_SHADER:
+				# fine, short, softer lashes
+				var ol: Dictionary = m.get_meta("adult_lash", {})
+				if ol.is_empty():
+					var ll: Variant = m.get_shader_parameter("lash_length")
+					var lc: Variant = m.get_shader_parameter("lash_color")
+					ol = {"len": float(ll) if ll != null else 0.85, "col": lc if lc is Color else Color(0.04, 0.03, 0.025)}
+					m.set_meta("adult_lash", ol)
+				m.set_shader_parameter("lash_length", lerpf(float(ol.len), float(ec.get("lash_length", ol.len)), s))
+				m.set_shader_parameter("lash_color", (ol.col as Color).lerp(Color(0.5, 0.4, 0.35), float(ec.get("lash_light", 0.0)) * s))
+				continue
+			if m == null or m.shader != BodyMaterials.EYE_SHADER:
+				continue
+			var own: Dictionary = m.get_meta("adult_eye", {})
+			if own.is_empty():
+				for k: String in ["iris_radius", "pupil_radius", "lid_shadow", "sclera_color"]:
+					own[k] = m.get_shader_parameter(k)
+				own["iris_radius"] = float(own.iris_radius) if own.iris_radius != null else 0.0058
+				own["pupil_radius"] = float(own.pupil_radius) if own.pupil_radius != null else 0.0021
+				own["lid_shadow"] = float(own.lid_shadow) if own.lid_shadow != null else 0.6
+				own["sclera_color"] = own.sclera_color if own.sclera_color is Color else Color(0.66, 0.62, 0.57)
+				m.set_meta("adult_eye", own)
+			var ir := lerpf(float(own.iris_radius), float(ec.get("iris_radius", own.iris_radius)), s)
+			m.set_shader_parameter("iris_radius", ir)
+			m.set_shader_parameter("pupil_radius", float(own.pupil_radius) * ir / float(own.iris_radius))
+			m.set_shader_parameter("lid_shadow", lerpf(float(own.lid_shadow), float(ec.get("lid_shadow", own.lid_shadow)), s))
+			var sc: Array = ec.get("sclera", [])
+			if sc.size() >= 3:
+				m.set_shader_parameter("sclera_color", (own.sclera_color as Color).lerp(Color(float(sc[0]), float(sc[1]), float(sc[2])), s))
 
 
 ## The smoothness a skin material has now (0 adult .. 1 newborn; tests).

@@ -10,6 +10,10 @@ extends Node3D
 ## tools/baby/make_baby_anims.gd) are added to Actor_B's AnimationPlayer as the library "baby".
 ##   var b := BabyBody.create(look); b.play("cry"); b.set_frame(false); b.set_eyes(1.0); b.set_mouth(0.8)
 ## `frame` holds the model: lying on its back (head +x, front +y, left +z: the baby frame BabyHold carries) or upright (`ground`).
+## Made with `async` the proportions are baked off the main thread (ChildProportion.shape_async): the body stays hidden until they are
+## on (`shaped`, ready_body), a few frames from the caches, two or three seconds for a look and stage never baked before.
+
+signal shaped   ## the async bake is on (the body shows)
 
 const ACTOR := "res://characters/Actor_B.tscn"
 const ANIMS := "res://assets/baby/baby_anims.res"
@@ -28,6 +32,7 @@ var props: ChildProportion
 var mouth_node: MeshInstance3D
 var mouth_attachment: BoneAttachment3D
 var ground := false
+var ready_body := true
 var stage := "newborn"
 var look := {}
 var _eyes := 0.0
@@ -45,8 +50,8 @@ static func cfg() -> Dictionary:
 
 
 ## The body dressed with `look` (the child's look; infant() and the child body are applied here). Null if the game's character is missing.
-static func create(lk: Dictionary, stage_id := "newborn") -> BabyBody:
-	var scene := load(ACTOR) as PackedScene
+static func create(lk: Dictionary, stage_id := "newborn", async := false) -> BabyBody:
+	var scene := BackgroundLoad.take(ACTOR) as PackedScene
 	if scene == null or not ResourceLoader.exists(BodyMaterials.BODY_GLB):
 		return null
 	var b := BabyBody.new()
@@ -66,7 +71,7 @@ static func create(lk: Dictionary, stage_id := "newborn") -> BabyBody:
 		return null
 	b._rng.randomize()
 	b._next = b._rng.randf_range(2.0, 5.0)
-	b.dress(lk)
+	b.dress(lk, async)
 	b._load_anims()
 	b.set_frame(false)
 	return b
@@ -103,12 +108,34 @@ static func baby_look(lk: Dictionary, stage_id := "newborn") -> Dictionary:
 	return out
 
 
-func dress(lk: Dictionary) -> void:
+func dress(lk: Dictionary, async := false) -> void:
 	look = lk.duplicate(true)
 	PlayerAppearance.dress(body, AppearanceStore.validate(baby_look(lk, stage)))
 	var form := ChildLook.stage_form(stage)
-	props = ChildProportion.shape(body, form, ChildLook.roundness(lk, stage) if round_head else 0.0)
+	var rk := ChildLook.roundness(lk, stage) if round_head else 0.0
+	if async:
+		ready_body = false
+		visible = false
+		props = ChildProportion.shape_async(body, form, rk, _on_shaped)      # (from memory: on before this returns)
+	else:
+		props = ChildProportion.shape(body, form, rk)
+		ChildSkin.apply(body, ChildLook.skin_smooth(stage) if soften else 0.0)
+		_after_shape()
+
+
+func _on_shaped(p: ChildProportion) -> void:
+	if not is_instance_valid(self) or is_queued_for_deletion():
+		return
+	props = p
 	ChildSkin.apply(body, ChildLook.skin_smooth(stage) if soften else 0.0)
+	_after_shape()
+	set_frame(ground)
+	ready_body = true
+	visible = true
+	shaped.emit()
+
+
+func _after_shape() -> void:
 	_add_mouth()
 	_mouth = -1.0
 	_breath = -1.0
@@ -224,6 +251,8 @@ func set_breath(v: float) -> void:
 
 
 func _shape(n: StringName, v: float) -> void:
+	if not ready_body:
+		return
 	for mi: MeshInstance3D in body.meshes:
 		if is_instance_valid(mi) and mi.mesh and mi.visible:
 			var i := mi.find_blend_shape_by_name(n)

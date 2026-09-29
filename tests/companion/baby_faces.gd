@@ -2,9 +2,10 @@ extends SceneTree
 ## Close-ups of the baby's face, windowed, on a plain backdrop in soft light: two children of different parents (a fair and a darker
 ## one), each from the front, three-quarter and the side, awake (idle_breathe), asleep and crying (faces_babies.png); and the skin as
 ## the game's adult skin next to the baby's soft one (faces_skin.png).
-##   Godot --path . --resolution 1280x720 -s tests/companion/baby_faces.gd -- out=<abs dir> [only=babies,skin]
+##   Godot --path . --resolution 1280x720 -s tests/companion/baby_faces.gd -- out=<abs dir> [only=babies,skin] [close=1]
 var out := ""
 var only: PackedStringArray = []
+var close := false
 var cam: Camera3D
 
 const W := 400
@@ -15,6 +16,8 @@ func _initialize() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("out="):
 			out = a.get_slice("=", 1)
+		elif a == "close=1":
+			close = true
 		elif a.begins_with("only="):
 			only = a.get_slice("=", 1).split(",")
 	_run.call_deferred()
@@ -35,11 +38,23 @@ func _snap() -> Image:
 	return img
 
 
-## One baby in `anim` at `t`, its head up and its face toward +z, photographed from `view` (0 front, 1 three-quarter, 2 side).
+## One baby in `anim` at `t`, its head up and its face toward +z, photographed from `view` (0 front, 1 three-quarter, 2 side). The
+## baby of a look is made once and posed again for each view.
+var _babies := {}
+
+
 func _face(look: Dictionary, anim: String, t: float, view: int) -> Image:
-	var b := BabyModel.create({"id": "c", "name": "x", "sex": float(look.get("sex", 0.0)), "seed": 3}, [0.3, 0.3], 1.0, look)
-	root.add_child(b)
-	b.set_process(false)
+	var key := hash([look, BabyBody.soften])
+	var b: BabyModel = _babies.get(key)
+	if b == null:
+		for o: BabyModel in _babies.values():
+			o.visible = false
+		b = BabyModel.create({"id": "c", "name": "x", "sex": float(look.get("sex", 0.0)), "seed": 3}, [0.3, 0.3], 1.0, look)
+		root.add_child(b)
+		b.set_process(false)
+		_babies[key] = b
+	for o: BabyModel in _babies.values():
+		o.visible = o == b
 	b.play(anim, 0.0)
 	b._anim.play("baby/" + anim)
 	b._anim.seek(t, true)
@@ -49,17 +64,20 @@ func _face(look: Dictionary, anim: String, t: float, view: int) -> Image:
 	b._cry = 0.9
 	b._t = t
 	b._face()
+	b._bb.set_process(false)             # (no random blink in a shot)
+	b._bb.set_blink(b._eyes_v)
 	await _frames(3)
 	var sk := b._bb.sk
 	var at := sk.global_transform * b._bb.props.posed_global("headb").origin
+	if close:
+		# the middle of the face (the adult's nose root, where this face has it), posed
+		var pr := b._bb.props
+		at = sk.global_transform * pr.posed_global("headb") * pr.bind_global("headb").affine_inverse() * pr.map_face("headb", Vector3(0.0, 1.45, 0.07))
 	var dirs := [Vector3(0, 0.08, 1), Vector3(0.72, 0.1, 0.68), Vector3(1, 0.06, 0.02)]
 	var hb := b._bb.props.head_basis()                  # the views are the head's own (the clip turns and tilts it)
-	cam.global_position = at + hb * (dirs[view] as Vector3).normalized() * 0.48
-	cam.look_at(at - hb.y * 0.012, hb.y)
-	var img := await _snap()
-	b.free()
-	await _frames(1)
-	return img
+	cam.global_position = at + hb * (dirs[view] as Vector3).normalized() * (0.3 if close else 0.48)
+	cam.look_at(at - hb.y * (0.0 if close else 0.012), hb.y)
+	return await _snap()
 
 
 func _run() -> void:

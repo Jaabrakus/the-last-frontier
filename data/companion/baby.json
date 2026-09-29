@@ -132,16 +132,16 @@
         }
       },
       "b": {
-        "note": "soft: big wide-eyed look, tiny button nose, round cheeks, tiny chin, small low ears",
+        "note": "sweet: round open eyes (lids up, a fuller eye), a soft brow, full round cheeks, a small button nose, a tiny soft mouth, a small round chin",
         "blend": 1.0, "sex_scale": 0.3, "head_mult": [1.0, 1.0, 1.0],
         "targets": {
-          "face_breadth": 0.8, "face_length": -1.0, "face_cheek_fullness": 0.6, "face_cheekbones": -0.6,
-          "face_midface": 0.0, "face_chin_projection": -0.3, "face_chin_height": -1.0, "face_chin_width": -0.7,
-          "face_jaw_width": -0.9, "face_jaw_angle": 0.5, "face_prognathism": 0.0, "face_brow_ridge": -1.0,
-          "face_eye_height": 0.3, "face_eye_depth": -1.0, "face_eye_tilt": 0.35, "face_lid_fold": -0.5, "face_under_eye": 0.0,
-          "face_epicanthus": 0.2, "face_nasal_root": -1.0, "face_nose_bridge": -1.0, "face_nose_length": -1.0,
-          "face_nose_width": -0.6, "face_nose_tip": -0.3, "face_nose_upturn": 0.6, "face_nose_hump": -1.0,
-          "face_lips_upper": 0.4, "face_lips_lower": 0.5, "face_mouth_width": -0.7, "face_ears": -0.6
+          "face_breadth": 0.8, "face_length": -1.0, "face_cheek_fullness": 1.0, "face_cheekbones": -0.6,
+          "face_midface": 0.5, "face_chin_projection": 0.2, "face_chin_height": -1.0, "face_chin_width": -0.5,
+          "face_jaw_width": -0.9, "face_jaw_angle": 0.5, "face_prognathism": -0.5, "face_brow_ridge": -1.0,
+          "face_eye_height": 1.0, "face_eye_depth": -1.0, "face_eye_tilt": 0.1, "face_lid_fold": -1.0, "face_lid_crease": 0.0,
+          "face_under_eye": 0.2, "face_epicanthus": 0.2, "face_nasal_root": -1.0, "face_nose_bridge": -0.8, "face_nose_length": -1.0,
+          "face_nose_width": -0.5, "face_nose_tip": 0.0, "face_nose_upturn": 0.8, "face_nose_hump": -1.0,
+          "face_lips_upper": 0.2, "face_lips_lower": -0.4, "face_mouth_width": -1.0, "face_ears": -0.6
         }
       },
       "c": {
@@ -175,7 +175,7 @@
 
   "cues": {
     "summary": "What the face does in each animation (the glb has no face bones): eyes 0 open .. 1 shut (0 blinks on its own), mouth 0 shut .. 1 wide open (pulse: the mouth opens and closes that many times a second, by that much), width the mouth's share of its full width.",
-    "idle_breathe": {"eyes": 0.05, "mouth": 0.0, "breath": [0.4, 1.0]},
+    "idle_breathe": {"eyes": 0.0, "mouth": 0.0, "breath": [0.4, 1.0]},
     "sleep": {"eyes": 1.0, "mouth": 0.08, "width": 0.5, "breath": [0.25, 0.8]},
     "wake_yawn": {"eyes": 0.9, "mouth": 0.9, "width": 0.8, "yawn": true},
     "fuss": {"eyes": 0.55, "mouth": 0.35, "width": 0.7, "pulse": 2.0, "pulse_amp": 0.3},

@@ -10,7 +10,7 @@
     "size": 0.96,
     "k_mid": 0.9,
     "k_crown": 0.9,
-    "k_forehead": 0.1,
+    "k_forehead": 0.4,
     "k_jaw": 0.5,
     "k_back": 0.8,
     "k_face": 0.08,
@@ -29,14 +29,30 @@
   },
 
   "face": {
-    "summary": "A young face's local fields (the stage's form `face`: 1 a newborn's, 0 none), each round a point of the adult's face: within r[0] the skin is scaled about it by `scale` and moved by `push` (metres), fading out by r[1]; `mirror` for both sides. The nose smaller, lower and flatter (a button), the mouth smaller and a little full, the cheeks fuller, the chin smaller.",
-    "nose": {"at": [0.0, 1.452, 0.116], "r": [0.012, 0.034], "scale": [0.72, 0.68, 0.5], "push": [0.0, -0.002, -0.001]},
-    "mouth": {"at": [0.0, 1.411, 0.118], "r": [0.012, 0.03], "scale": [0.78, 0.9, 0.9], "push": [0.0, 0.0, 0.001]},
-    "cheek": {"at": [0.048, 1.428, 0.084], "r": [0.014, 0.046], "scale": [1.0, 1.0, 1.0], "push": [0.008, 0.001, 0.011], "mirror": true},
-    "lower_front": {"at": [0.0, 1.40, 0.095], "r": [0.03, 0.07], "scale": [1.0, 1.0, 1.0], "push": [0.0, 0.0, 0.005]},
-    "mouth_corner": {"at": [0.021, 1.409, 0.106], "r": [0.004, 0.014], "scale": [1.0, 1.0, 1.0], "push": [-0.0005, 0.0012, 0.0], "mirror": true},
-    "chin": {"at": [0.0, 1.37, 0.105], "r": [0.012, 0.035], "scale": [0.85, 0.85, 0.85], "push": [0.0, 0.0, 0.0]},
+    "summary": "A young face's local fields (the stage's form `face`: 1 a newborn's, 0 none), each round a point of the adult's face: within r[0] the skin is scaled about it by `scale` and moved by `push` (metres), fading out by r[1]; `mirror` for both sides. The nose smaller, lower and flatter (a button) but sitting forward, the mouth small and soft with its corners turned up a little, the cheeks full and forward (apple cheeks), the mid-face and the eyes forward (no flat, receding profile), a small round chin under the lips and a soft fullness under it, the hollow under the eyes filled (no crease there).",
+    "nose": {"at": [0.0, 1.452, 0.116], "r": [0.012, 0.034], "scale": [0.72, 0.68, 0.6], "push": [0.0, -0.002, 0.001]},
+    "mouth": {"at": [0.0, 1.411, 0.118], "r": [0.011, 0.03], "scale": [0.6, 0.8, 0.85], "push": [0.0, 0.0, -0.002]},
+    "cheek": {"at": [0.038, 1.414, 0.088], "r": [0.016, 0.052], "scale": [1.0, 1.0, 1.0], "push": [0.006, 0.0, 0.016], "mirror": true},
+    "lower_front": {"at": [0.0, 1.40, 0.095], "r": [0.035, 0.075], "scale": [1.0, 1.0, 1.0], "push": [0.0, 0.0, 0.006]},
+    "mouth_corner": {"at": [0.015, 1.412, 0.12], "r": [0.006, 0.016], "scale": [1.0, 1.0, 1.0], "push": [0.0, 0.006, -0.002], "mirror": true},
+    "chin": {"at": [0.0, 1.37, 0.105], "r": [0.012, 0.035], "scale": [0.8, 0.85, 0.85], "push": [0.0, 0.003, 0.006]},
+    "under_chin": {"at": [0.0, 1.35, 0.065], "r": [0.02, 0.05], "scale": [1.0, 1.0, 1.0], "push": [0.0, -0.005, 0.012]},
+    "midface": {"at": [0.0, 1.44, 0.1], "r": [0.02, 0.055], "scale": [1.0, 1.0, 1.0], "push": [0.0, 0.0, 0.004]},
+    "eyes_fwd": {"at": [0.0311, 1.4836, 0.1002], "r": [0.02, 0.04], "scale": [1.0, 1.0, 1.0], "push": [0.0, 0.0, 0.004], "mirror": true},
+    "under_eye": {"at": [0.03, 1.445, 0.094], "r": [0.01, 0.026], "scale": [1.0, 1.0, 1.0], "push": [0.0, 0.0, 0.004], "mirror": true},
     "lower_face": {"y": 1.478, "scale": 0.8, "z": [0.0, 0.06]}
+  },
+
+  "lids": {
+    "summary": "A young face's open, round eyes (ChildProportion._lids, at the stage's form `face`): the lids, the skin round them and the lashes turned about each eyeball's centre, the upper lid up by up_deg, the lower down by down_deg; fully within r[0] of the centre, gone by r[1]; toward the corners (|x| from the centre over half_w) and behind the eye's front (z) it fades; `band` the height over which the turn changes sign at the eye's middle. `shut_neutral`: the face shapes left out of the shut lids (the blink closes as on the neutral face); `shut_gain` how far along the game's blink the shut lids go (it leaves a slit at 1: a sleeping child's eyes are shut).",
+    "up_deg": 6.0,
+    "down_deg": 5.0,
+    "r": [0.015, 0.028],
+    "half_w": [0.004, 0.015],
+    "z": [-0.004, 0.004],
+    "band": 0.003,
+    "shut_gain": 1.45,
+    "shut_neutral": ["face_eye_height", "face_lid_fold", "face_lid_crease", "face_epicanthus", "face_under_eye"]
   },
 
   "trunk": {
@@ -78,6 +94,9 @@
     "albedo_scale": 0.84,
     "haemoglobin_min": 0.55,
     "fuzz": 0.08,
-    "fuzz_tint": 0.2
+    "fuzz_tint": 0.2,
+    "lip_pink": 0.6,
+    "soft_ao": 0.45,
+    "eye": {"iris_radius": 0.0078, "lid_shadow": 0.3, "sclera": [0.74, 0.73, 0.72], "lash_length": 0.6, "lash_light": 0.35}
   }
 }
