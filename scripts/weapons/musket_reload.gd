@@ -28,8 +28,8 @@ const CARTRIDGE_SIZE := Vector2(0.009, 0.07)
 ## The right fist's hole in the wrist bone's frame, where the clips close it on the rod and the cartridge
 ## (pose_solver.fist_rel("r", author_reload.gd FIST): the author prints it); the cartridge runs through it, out of the
 ## thumb's side (+Y).
-const FIST_HOLE := Transform3D(Basis(Vector3(0.519926, -0.823586, 0.226678), Vector3(0.441342, 0.031794, -0.896776),
-		Vector3(0.731365, 0.566299, 0.380014)), Vector3(-0.010589, 0.003074, -0.084851))
+const FIST_HOLE := Transform3D(Basis(Vector3(-0.209989, 0.414662, -0.885416), Vector3(0.943614, -0.151098, -0.294555),
+		Vector3(-0.255924, -0.897343, -0.359552)), Vector3(-0.000327, 0.034926, -0.068744))
 const FADE_IN := 0.2
 const FADE_OUT := 0.25
 ## The crouched twins' names: the clip's with this after it; blended in over the standing ones in this many seconds.

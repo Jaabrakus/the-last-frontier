@@ -428,6 +428,7 @@ func measure(post: Dictionary, pre: Dictionary) -> Dictionary:
 		var rq := to_model * (post.r_palm as Transform3D).origin
 		var wz := clampf(rq.z, -0.03, 0.07)
 		rec.rhand_gap = maxf(Vector3(rq.x, rq.y, rq.z - wz).length() - 0.02, 0.0)
+		rec.rhand_q = [snappedf(rq.x, 0.0001), snappedf(rq.y, 0.0001), snappedf(rq.z, 0.0001)]
 		var lg := model.get_node_or_null("LeftGrip") as Node3D
 		if lg == null:
 			lg = model.find_child("LeftGrip", true, false) as Node3D

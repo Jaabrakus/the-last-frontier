@@ -68,6 +68,8 @@ const ROD_HOME := 5.88
 const MUZZLE := Vector3(0.0, 0.035, -1.298)
 const PAN := Vector3(0.029, 0.0372, -0.1445)
 const FRIZZEN := Vector3(0.03, 0.0335, -0.168)
+## The middle of the barrel and the stock under it, near the muzzle (the model's y): what the left fist closes round.
+const BARREL_Y := 0.025
 const RR_HEAD := Vector3(0.0, 0.015766, -1.286)       ## the ramrod's head, stowed (its origin; the rod runs +Z)
 const RR_LEN := 1.151
 ## The butt plate's toe (the model's frame): what rests on the ground.
@@ -211,6 +213,12 @@ func _stance(solver, st: String) -> void:
 	BARREL_LOW = Vector3(0.0, 0.0, float(lk.bar_low))
 	POUCH = lk.pouch
 	var rest: Dictionary = solver.rest
+	# the right fist is the torch's (the knife attack HandHolds lays under the torch hold, its first key): a hammer grip
+	# that closes round the rod and the cartridge on this body's hand (the solver's own curl splayed open on it; the user
+	# 2026-09-29: "the ramrod motion can use the same grip as holding the torch", "the hands need to look like it's
+	# holding the ramrod"); the rod and the cartridge run through its hole
+	if not solver.finger_pose.has("r"):
+		solver.finger_pose["r"] = _clip_fingers(solver.sk, "r", RIGHT_FIST_CLIP)
 	for side: String in ["r", "l"]:
 		FIST_REL[side] = solver.fist_rel(side, FIST)
 		PROP_REL[side] = (rest[side + "_wrist"] as Transform3D).affine_inverse() * rest[side + "_hand_prop_attachment"]
@@ -240,6 +248,30 @@ func _stance(solver, st: String) -> void:
 	_tracks()
 	print("RELOAD %s: hips %s, forestock (model frame) %s, mouth %s, the right fist's hole (wrist frame) %s" % [st,
 			HIPS, FORESTOCK.origin.snappedf(0.001), MOUTH.snappedf(0.001), FIST_REL.r])
+
+
+const RIGHT_FIST_CLIP := "actor_b/atk-actor_b-knife-v-thug-hit1-intro"
+
+
+## A hand's finger and thumb rotations in a clip at its first key: {bone: local rotation}.
+func _clip_fingers(sk: Skeleton3D, side: String, clip: String) -> Dictionary:
+	var out := {}
+	var aps := root.find_children("*", "AnimationPlayer", true, false)
+	for ap: AnimationPlayer in aps:
+		if not ap.has_animation(clip):
+			continue
+		var a := ap.get_animation(clip)
+		for i in a.get_track_count():
+			if a.track_get_type(i) != Animation.TYPE_ROTATION_3D:
+				continue
+			var bn := String(a.track_get_path(i).get_concatenated_subnames())
+			if bn.begins_with(side + "_") and ["thumb", "index", "middle", "ring", "pinky"].any(func(k: String) -> bool: return bn.contains(k)) \
+					and sk.find_bone(bn) >= 0:
+				out[bn] = a.rotation_track_interpolate(i, 0.0)
+		break
+	if out.is_empty():
+		push_warning("author_reload: no %s fingers in %s" % [side, clip])
+	return out
 
 
 static func _turn_key(b: Basis) -> Dictionary:
@@ -443,6 +475,20 @@ func _fore_at(z: float) -> Callable:
 		return _held("l", gun_at(t) * slid)
 
 
+## The left fist round the barrel at `z` (the model's z) with the gun stood up to be loaded: the barrel through the
+## fist's hole, its thumb up it toward the muzzle, turned about it as the wrist is straightest (pose_solver's
+## wrist_neutral), a little toward the carry's turn (`keep`: how much). The carry's grip slid up the barrel held it 40
+## degrees off the barrel's line and folded the hand back off the forearm (the user 2026-09-29: "the wrist still
+## bends in weird ways, not natural").
+func _barrel(z: float, keep: float) -> Callable:
+	return func(t: float) -> Array:
+		var g := gun_at(t)
+		var way := (g.basis * Vector3(0.0, 0.0, -1.0)).normalized()
+		var carry: Vector3 = _fore_at(z).call(t)[2]
+		var edge := (carry - way * carry.dot(way)).normalized() * keep
+		return [g * Vector3(0.0, BARREL_Y, z), way, edge]
+
+
 ## The hands' tracks (for the stance: set by _stance()).
 func _tracks() -> void:
 	var down := Vector3(0, 0, 1)                  # (the fist's +Y down the barrel: the cartridge's end toward the muzzle)
@@ -479,8 +525,8 @@ func _tracks() -> void:
 	]
 	_left = [
 		[0.0, _fore()], [CAST_FROM + 0.24, _fore()],
-		[CAST_AT, _fore_at(BARREL_GRIP.z)], [RET_FROM, _fore_at(BARREL_GRIP.z)],
-		[RET_UP, _fore_at(BARREL_LOW.z)], [RET_AT, _fore()], [TOTAL, _fore()],
+		[CAST_AT, _barrel(BARREL_GRIP.z, 0.15)], [RET_FROM, _barrel(BARREL_GRIP.z, 0.15)],
+		[RET_UP, _barrel(BARREL_LOW.z, 0.5)], [RET_AT, _fore()], [TOTAL, _fore()],
 	]
 
 
@@ -617,6 +663,8 @@ func _preview() -> void:
 	await process_frame
 	var solver = Solver.new(sk)
 	solver.hold = "musket"
+	solver.wrist_neutral = true
+	solver.neutral_tilt = {"r": true}
 	_stance(solver, str(args.get("stance", "stand")))
 	var musket := WeaponModels.build("musket")
 	world.add_child(musket)
@@ -636,6 +684,7 @@ func _preview() -> void:
 	for k in moments.size():
 		var t: float = moments[k]
 		var r := pose_at(t)
+		solver.reset_neutral()
 		solver.pose(r[0])
 		sk.force_update_all_bone_transforms()
 		var prop := sk.get_bone_global_pose(sk.find_bone("r_hand_prop_attachment"))
@@ -673,6 +722,8 @@ func _bake() -> void:
 	await process_frame
 	var solver = Solver.new(sk)
 	solver.hold = "musket"
+	solver.wrist_neutral = true
+	solver.neutral_tilt = {"r": true}
 	var box := _box(WeaponModels.build("musket"))
 	var ref_lib := load("res://animations_extra/Actor_B_from_A.res") as AnimationLibrary
 	var ref := ref_lib.get_animation(ref_lib.get_animation_list()[0])
@@ -695,6 +746,18 @@ func _bake() -> void:
 		while t <= TOTAL + 1e-4:
 			low = minf(low, lowest(gun_at(t), box))
 			t += 1.0 / FPS
+		# the hands' grips planned over the whole reload first (pose_solver wrist_neutral: every frame, as the bake
+		# poses them), then posed along the plan
+		solver.reset_neutral(true)
+		solver.neutral_mode = "collect"
+		var tc := 0.0
+		for s: Array in STEPS:
+			for f in int(round(float(s[1]) * FPS)) + 1:
+				solver.pose(pose_at(tc + minf(float(f) / FPS, float(s[1])))[0])
+			tc += float(s[1])
+		solver.plan_neutral()
+		solver.neutral_mode = "replay"
+		solver.reset_neutral()
 		var t0 := 0.0
 		for s: Array in STEPS:
 			var nm := StringName(str(s[0]) + (CROUCH_SUFFIX if st == "crouch" else ""))
