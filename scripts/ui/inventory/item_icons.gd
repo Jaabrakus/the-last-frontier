@@ -22,11 +22,11 @@ const SKETCH_MARGIN := 1.06
 ## Framing closer than the whole model: the dart bundle's five thin 1.65 m darts come out as hairlines across
 ## the square, so its icon frames the tied middle (the darts about twice as thick). The long guns show the lock and
 ## the stock, the barrel running off the corner (user 2026-09-27: "some items look weak": whole, they were hairlines).
-const ZOOM := {"dart_bundle": 0.55, "musket": 0.62, "over_under": 0.62, "spear_pair": 0.5, "pole": 0.55,
+const ZOOM := {"dart_bundle": 0.55, "musket": 0.62, "over_under": 0.62, "spear_pair": 0.5, "spear": 0.5, "pole": 0.55,
 		"atlatl": 0.8, "blackberries": 0.72, "hazelnuts": 0.7, "acorns": 0.75, "wintergreen": 0.8, "clay_pipe": 0.62}
 ## Where a cropped item's frame sits along its length, from its middle (fractions of its length, + toward the butt;
 ## the spears show their heads).
-const FOCUS := {"musket": 0.2, "over_under": 0.2, "spear_pair": -0.3, "clay_pipe": 0.28}
+const FOCUS := {"musket": 0.2, "over_under": 0.2, "spear_pair": -0.3, "spear": -0.3, "clay_pipe": 0.28}
 ## Things seen from above at three quarters, not from the side: food, stone, hides (a side view showed a pile of
 ## berries or nuts as a flat row of blobs).
 const FROM_ABOVE := ["stone", "flint", "venison", "deer_hide", "wolf_pelt", "fox_pelt", "antler", "bison_robe", "tallow",
@@ -143,7 +143,7 @@ func _run() -> void:
 		var own := _bounds(m)            # along the model's own axes, before it is turned
 		# lie it diagonally across the square, then frame its bounds
 		# (the models run along their Z, up +Y; the camera looks at their side from +X)
-		m.rotation = Vector3(deg_to_rad(40.0), 0.0, 0.0) if kind in ["musket", "over_under", "spear_pair", "atlatl", "dart_bundle", "pistol", "torch",
+		m.rotation = Vector3(deg_to_rad(40.0), 0.0, 0.0) if kind in ["musket", "over_under", "spear_pair", "spear", "atlatl", "dart_bundle", "pistol", "torch",
 				"log", "firewood", "branches", "pole", "bow", "clay_pipe"] else Vector3.ZERO
 		if kind in ["felling_axe", "mattock", "hoe", "digging_stick"]:
 			m.rotation = Vector3(deg_to_rad(-42.0), 0.0, 0.0)   # the haft (+Y) from bottom left, the head top right
@@ -270,8 +270,10 @@ func _model(kind: String) -> Node3D:
 	if GearModels.has(kind):
 		return GearModels.build(kind)
 	match kind:
-		"musket", "bow", "pistol":
+		"musket", "pistol":
 			return WeaponModels.build(kind)
+		"bow":
+			return _bow_model()
 		"over_under":
 			return WeaponModels.build("musket")
 		"dried_wolf_pelt":
@@ -284,6 +286,10 @@ func _model(kind: String) -> Node3D:
 			return ThrowableModels.build(kind)
 		"spear_pair":
 			return LoadoutModels.build("spear_pair") if LoadoutModels.has_glb("spear_pair") else ThrowableModels.build("spear")
+		"spear":
+			# the weapon key the slot strip asks by (user 2026-09-28: "how come bow and spear icons do not show up": only
+			# the pack's spear_pair was known, so the strip's spear slot stayed empty)
+			return ThrowableModels.build("spear")
 		"dart_bundle":
 			# the bundle glb is only the ties: the five darts in them, as carried on the back
 			return SlingModels.stowed("dart_bundle", 5, "long_B")
@@ -292,6 +298,20 @@ func _model(kind: String) -> Node3D:
 		"torch":
 			return TorchModels.build()
 	return null
+
+
+## The bow as its icon draws it: the game's own model (WeaponModels), its stave broader and its draw deeper on the
+## picture, its string thicker (whole, a 7-16 mm stave over 1.44 m and a 3 mm string came out a hairline arc in the
+## slot strip). The camera looks from +X: Z is the stave's breadth on screen and the draw's depth.
+static func _bow_model() -> Node3D:
+	var b := WeaponModels.build("bow")
+	b.scale = Vector3(1.0, 1.0, 2.2)
+	for c in b.find_children("*", "MeshInstance3D", true, false):
+		var cm := (c as MeshInstance3D).mesh as CylinderMesh
+		if cm and cm.top_radius < 0.003:
+			cm.top_radius = 0.006
+			cm.bottom_radius = 0.006
+	return b
 
 
 ## The render drawn as a sketch (icon_sketch.gdshader) in the painter's viewport, read back.
