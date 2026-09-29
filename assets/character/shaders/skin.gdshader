@@ -99,6 +99,7 @@ uniform float head_sss : hint_range(0.5, 3.0) = 1.8;
 varying flat uint v_region;
 varying flat uint v_zone;
 varying float v_ny;     // the vertex normal's height component in model space (-1 faces down)
+varying float v_nz;     // ... and its forward component (+1 faces the way the body faces)
 varying float v_tube;   // 1 on the head piece's neck tube (above the seam plane by less than 3 cm, within 7 cm of the neck's axis), else 0
 varying float v_dseam;  // distance (m) from the head/body seam plane (z = 1.367 - 0.35 * forward; body v4): the detail maps' UV islands meet there
 varying float v_h;      // model-space height (the neck's tone and detail blend along it, not step at the region borders)
@@ -112,6 +113,7 @@ void vertex() {
 	v_mh = CUSTOM0.xy;
 	v_h = VERTEX.y;
 	v_ny = NORMAL.y;
+	v_nz = NORMAL.z;
 	float dsig = VERTEX.y - (1.367 - 0.35 * VERTEX.z);
 	v_dseam = abs(dsig);
 	v_tube = (1.0 - smoothstep(0.02, 0.04, dsig)) * (1.0 - smoothstep(0.060, 0.075, length(vec2(VERTEX.x, VERTEX.z - 0.009))));
@@ -368,7 +370,10 @@ void fragment() {
 	CLEARCOAT = clamp(oil * oil_sheen * shine * mix(0.35, 1.0, clamp(pore * 1.2 - 0.2, 0.0, 1.0)) * (1.0 - 0.6 * beard), 0.0, 1.0);
 	CLEARCOAT_ROUGHNESS = oil_roughness;
 	AO = mix(0.35, 1.0, cavity);
-	EMISSION = albedo * (neck_bounce * skin_bounce * nzf * (1.0 - smoothstep(-0.2, 0.6, v_ny)) * smoothstep(1.27, 1.33, v_h));
+	// (the bounce from the chest and the ground lands under the chin and on the throat, never on the nape: facing back,
+	// the neck had glowed at the back in the dark)
+	EMISSION = albedo * (neck_bounce * skin_bounce * nzf * (1.0 - smoothstep(-0.2, 0.6, v_ny)) * smoothstep(1.27, 1.33, v_h)
+			* smoothstep(-0.5, 0.0, v_nz));
 	AO_LIGHT_AFFECT = 0.35;
 	// (less under hair: the light the strips let through reddened the hairline into a glowing band)
 	SSS_STRENGTH = debug_view == 0 ? sss * (v_region <= 1u ? head_sss : 1.0) * (1.0 - 0.75 * hair_cover) : 0.0;
