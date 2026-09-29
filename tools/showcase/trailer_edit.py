@@ -137,22 +137,10 @@ EDIT = [
 
 TITLES = [
 	Title(B(1, 3), 8, [("THE UPPER MOHAWK VALLEY", "place"), ("1765", "year")], where="low", fade=16),
-	Title(B(5, 0.5), 3, [("THE SEASONS TURN", "tag")], where="low"),
-	Title(B(10, 0.5), 6, [("CARVE OUT A LIFE", "tag")], where="low"),
-	# what is happening (user 2026-09-29: "at least have titles of what is happening")
-	Title(B(12, 1), 5, [("FELL THE FOREST", "tag")], where="low"),
-	Title(B(14, 2.5), 6, [("BUILD A HOMESTEAD", "tag")], where="low"),
+	# only the three big lines over the picture: the captions of what is happening (fell the forest, build a homestead,
+	# hunt with bow and musket ...) are out (user 2026-09-29: "i dont like those titles", "is dumb")
 	Title(B(17), 6, [("MAKE A LIFE", "tag")], where="low"),
-	Title(B(18, 2.5), 5, [("FISH THE RIVERS", "tag")], where="low"),
-	Title(B(20, 0.5), 6, [("TAME AND RIDE HORSES", "tag")], where="low"),
-	Title(B(22, 0.5), 6, [("LIVE OFF THE LAND", "tag")], where="low"),
-	Title(B(24), 5, [("HUNT WITH BOW AND MUSKET", "tag")], where="low"),
-	Title(B(27), 4, [("CLIMB ANYTHING", "tag")], where="low"),
-	Title(B(28, 1), 5, [("THE HERDS STAMPEDE", "tag")], where="low"),
 	Title(B(30, 0.5), 6, [("ENDURE THE WILD", "tag")], where="low"),
-	Title(B(34, 0.5), 3, [("WOLVES HUNT TOO", "tag")], where="low"),
-	Title(B(36, 0.5), 3, [("MAKE CAMP", "tag")], where="low"),
-	Title(B(37, 0.5), 3, [("LOAD BY HAND", "tag")], where="low"),
 	Title(B(39, 1), 10, [("FRONTIER", "title"), ("IN DEVELOPMENT", "place")], fade=20),
 	Title(B(42, 0.5), 6, [("BRING DOWN GIANTS", "tag")], where="low"),
 	Title(B(44, 3), 9, [("FRONTIER", "title_small"), ("In development", "sub"), ("", "gap"),
