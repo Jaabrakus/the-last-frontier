@@ -22,6 +22,9 @@ var plane_normal := Vector3.UP
 var pull_calm := 16.0
 var pull_shaken := 2.2
 var gravity := 9.8
+## How much of the clip's thigh and knee bend shows (1 as animated, less: the legs tamed toward the rest pose). The
+## crawl clips swing the legs far wider than a climber's (user 2026-09-28: "the legs are too exaggerated").
+var leg_amount := 1.0
 
 var _ids: Array = []
 var _pos: Array = []            ## per leg: [knee, ankle] (world)
@@ -53,6 +56,11 @@ func _process_modification() -> void:
 	var damp := exp(-1.4 * k * dt)
 	for li in _ids.size():
 		var ids: Array = _ids[li]
+		if leg_amount < 0.999:
+			for j in 2:
+				var rest := sk.get_bone_rest(ids[j]).basis.get_rotation_quaternion()
+				var cur := sk.get_bone_pose_rotation(ids[j])
+				sk.set_bone_pose_rotation(ids[j], rest.slerp(cur, leg_amount))
 		var hg := sk.get_bone_global_pose(ids[0])
 		var kg := sk.get_bone_global_pose(ids[1])
 		var ag := sk.get_bone_global_pose(ids[2])

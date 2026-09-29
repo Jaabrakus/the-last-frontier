@@ -5,12 +5,12 @@ extends Node
 ## shaken' clip... Climb up onto flat parts, and fall off when the grip gives out"), with the Actor_C grip and hang clips
 ## on the player's own skeleton (animations_extra/Actor_B_from_C.res, library actor_b_from_c).
 ##
-##   hold G at a grippable surface (GripSurface: a rock face, a giant's fur)   grab it: a catch ("hang") at a wall ahead,
+##   press G at a grippable surface (G again lets go) (GripSurface: a rock face, a giant's fur)   grab it: a catch ("hang") at a wall ahead,
 ##                     in the air as well, or a crouch onto it ("grip_start") when standing on it
 ##   W A S D           crawl over the surface: up / down the slope and to the sides (grip_move_f1 / f2, _b, _l, _r);
 ##                     the body moves as far as the clip's planted hands and feet (climb_clips.json "travel"), wraps
 ##                     round corners, and at the top edge pulls up onto a flat top (hang_up) and stands (grip_end)
-##   let go of G       drop off (on a flat part: stand up)
+##   G again           drop off (on a flat part: stand up)
 ##   stamina           drains while holding on, faster crawling, hanging on a steep face and when shaken; at zero the
 ##                     grip gives out (grip_fail1) and the player falls; refills on the ground (the ring by the crosshair)
 ##
@@ -133,6 +133,8 @@ var drain_mult := 1.0
 ## Thrown clear when the grip gives out on a moving body: up and away from its middle (m/s).
 @export var throw_up := 2.6
 @export var throw_out := 3.4
+## The share of the clips' leg bend shown while crawling (the source's crawl swings the legs too wide), and held still.
+@export var crawl_leg_amount := 0.55
 @export var side_hi := 0.6                 ## rad sideways: the big sideways swing clip
 
 var player: FrontierPlayer
@@ -179,6 +181,7 @@ var _up := {}                    ## the climb onto a top
 var _ret_t := -1.0
 var _ret_from: Transform3D
 var _grip_held_t := 0.0
+var _latched := false            ## G toggled on: gripping until the next press
 var _need_press := false         ## after standing up on a top: G must be let go and pressed again to grip
 var _travel_last := Vector3.ZERO
 var _prev_fade := DEFAULT_FADE
@@ -302,16 +305,20 @@ func spend(amount: float) -> bool:
 func tick(dt: float) -> bool:
 	_cool = maxf(_cool - dt, 0.0)
 	_rest = maxf(_rest - dt, 0.0)
-	var held := player.controls.pressed(&"grip")
-	_grip_held_t = _grip_held_t + dt if held else 0.0
-	if not held:
+	var raw := player.controls.pressed(&"grip")
+	var tapped := player.controls.just_pressed(&"grip")
+	# G toggles (user 2026-09-28: "it should be toggle g not a hold"): a press grabs, the next press lets go
+	if tapped and state != OFF:
+		_latched = false
+	var held := _latched
+	if not raw:
 		_need_press = false
 	if state == OFF and perched:
 		return _perch_tick(dt)
 	if state == OFF:
 		if player.is_on_floor() and _rest <= 0.0:
 			stamina = move_toward(stamina, stamina_max, regain * dt)
-		if held and not _need_press and _cool <= 0.0 and stamina > 5.0 and _can_grab():
+		if tapped and not _need_press and _cool <= 0.0 and stamina > 5.0 and _can_grab():
 			return _try_grab()
 		return false
 	if player.is_dead:
@@ -353,6 +360,7 @@ func _feed_legs(dt: float) -> void:
 	if legs.plane_on:
 		legs.plane_point = anchor.global_position
 		legs.plane_normal = anchor.global_basis.y
+	legs.leg_amount = move_toward(legs.leg_amount, crawl_leg_amount if _moving != "" else 1.0, dt / 0.25)
 	legs.influence = move_toward(legs.influence, 1.0 if on else 0.0, dt / 0.3)
 
 
@@ -474,6 +482,7 @@ func _begin(col: Object, point: Vector3, n: Vector3, fwd: Vector3, clip: String)
 	var from := player.skeleton.global_transform
 	if player.begin_climb(self) == null:
 		return false
+	_latched = true
 	gripped = col as CollisionObject3D
 	kind = GripSurface.kind_of(col)
 	anchor = Node3D.new()
@@ -556,6 +565,7 @@ func _stand_done() -> void:
 
 
 func _end_grip() -> void:
+	_latched = false
 	_end_hang_aim()
 	_ret_from = _rig.global_transform
 	_ret_t = 0.0

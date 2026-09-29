@@ -1,5 +1,5 @@
 class_name GripSurface
-## What the player can grip (PlayerGrip, hold G): a collider tagged with the meta "grip" (its kind: "rock" for a climbable
+## What the player can grip (PlayerGrip, press G): a collider tagged with the meta "grip" (its kind: "rock" for a climbable
 ## rock face, "fur" for a giant's fur), or in the group "grip". Everything else is not grippable (a plain wall, a fence,
 ## the ground). A body that moves its gripped parts on a skeleton can offer `grip_parent(point) -> Node3D` (the node the
 ## grip's anchor goes under, e.g. a BoneAttachment3D); otherwise the anchor goes under the collider itself, so anything

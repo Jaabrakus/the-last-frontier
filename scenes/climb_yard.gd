@@ -1,8 +1,8 @@
 extends "res://scripts/world/frontier_level.gd"
 ## The climbing test scene (user 2026-09-27: "yea a test scene to see it in action"): the whole level, with the climbing
 ## yard (ClimbYard: rock step, cliff, slab, the woolly mammoth and a bison) at the far end of the range lane and the
-## player standing in front of it. Open scenes/climb_yard.tscn and press F6. Hold G at a rock face or the mammoth's fur
-## to grip, W A S D to crawl, let go of G to drop (on a flat part: stand up).
+## player standing in front of it. Open scenes/climb_yard.tscn and press F6. Press G at a rock face or the mammoth's fur
+## to grip, W A S D to crawl, press G again to drop (on a flat part: stand up).
 ##   Godot --path . res://scenes/climb_yard.tscn [-- station=cliff|step|slab|giant|bison]
 
 const YARD := Vector3(0.0, 0.0, -160.0)
