@@ -252,6 +252,16 @@ static func dress(body: CharacterBodyMesh, outfit: Dictionary, sex := 0.0) -> Di
 		res.hide_hair_zones.append_array(e.get("hides_hair_zones", []))
 		if slot == "head":
 			res.has_hat = true
+	# a closed skirt (the petticoat: its catalog skirt.closed) hangs round both legs as one (CharacterBodyMesh)
+	var skirt := {}
+	for slot: String in worn:
+		var s = entry(worn[slot]).get("skirt")
+		if s is Dictionary and bool((s as Dictionary).get("closed", false)):
+			skirt = s
+	var hems: Array = []
+	for h in skirt.get("hems_godot", []):
+		hems.append(Vector3(float(h[0]), float(h[1]), float(h[2])))
+	body.set_skirt_closed(not skirt.is_empty(), hems)
 	res.bulk_slots = worn if not worn.is_empty() else {"bare": true}
 	return res
 

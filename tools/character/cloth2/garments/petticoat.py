@@ -24,6 +24,10 @@ def build(g):
     g.tails(hem=0.26, side_hem=0.26, flare=0.20, folds=0.022, steps=12, z_full=0.40, x_limit=0.6, gap=0.032)
     g.zone(1, above=1.0)
     g.uv(axis_top=1.05, axis_bottom=0.3, limbs=())
+    # a closed skirt: the runtime drives its six panels round both legs as one (CharacterBodyMesh SKIRT_CLOSED_*).
+    # After the build run tools/character/cloth2/skirt_hang.py on the glb (the hang drawn in and folded, the panel
+    # weights), then cloth_bake.py; it prints the hems for here.
+    g.skirt = {"closed": True, "hems_godot": [[0.163, 0.26, 0.262], [0.255, 0.26, 0.066], [0.163, 0.26, -0.13]]}
 
 
 build_and_export = G.runner(SPEC, build)

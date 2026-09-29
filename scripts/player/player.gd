@@ -1018,6 +1018,7 @@ func _equip_drawn() -> void:
 
 func _physics_process(delta: float) -> void:
 	_sway(delta)
+	_skirt_tuck(delta)
 	# Recoil kicks the view and then settles back most of the way.
 	var settle := 1.0 - exp(-7.0 * delta)
 	var back := _recoil * settle
@@ -1207,6 +1208,22 @@ func apply_hit(damage: float, point: Vector3, direction: Vector3, source: Node =
 ## down): the caller may push the player instead.
 func knock_down(v: Vector3) -> bool:
 	return PlayerRagdoll.of(self).knock(v)
+
+
+## A closed skirt (a petticoat) is tucked up at the front while climbing: a ladder (traversal CLIMB), a trunk or a giant
+## (PlayerGrip), a branch (perch); at the back in the tandem crawl; let down again after (CharacterBodyMesh.skirt_tuck,
+## skirt_tuck_back; the user 2026-09-29: "for climbing and ladder ... the skirt rolls up at the front", "for the crawl
+## yoga pose we need the back skirt up towards the lower back").
+func _skirt_tuck(delta: float) -> void:
+	var body := appearance.body if appearance else null
+	if body == null or not body.skirt_closed:
+		return
+	var up := climbing != null or perch != null or (traversal != null and traversal.controller != null
+			and traversal.controller.mode == TraversalController.Mode.CLIMB)
+	body.skirt_tuck = move_toward(body.skirt_tuck, 1.0 if up else 0.0, delta / 0.5)
+	# on all fours in the tandem crawl (FrontierTandem: `kneeling`, its mode) the back is rolled up to the lower back
+	var back := kneeling != null and str(kneeling.get(&"mode")) == "crawl"
+	body.skirt_tuck_back = move_toward(body.skirt_tuck_back, 1.0 if back else 0.0, delta / 0.5)
 
 
 ## Too much drink: the aim wanders, slow and uneven (two waves on yaw and pitch), by `aim_sway` degrees. Only the change

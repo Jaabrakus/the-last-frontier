@@ -26626,7 +26626,26 @@
    "excludes": [],
    "requires": [],
    "variants": {},
-   "skirt": null,
+   "skirt": {
+    "closed": true,
+    "hems_godot": [
+     [
+      0.163,
+      0.26,
+      0.262
+     ],
+     [
+      0.255,
+      0.26,
+      0.066
+     ],
+     [
+      0.163,
+      0.26,
+      -0.13
+     ]
+    ]
+   },
    "helpers": [],
    "body_fit": {
     "shapes": [

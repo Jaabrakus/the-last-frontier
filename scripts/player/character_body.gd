@@ -133,6 +133,75 @@ const SKIRT_FLOOR_MAX_DEG := 70.0
 const SKIRT_FLOOR_TILT_DEG := Vector2(35.0, 60.0)
 ## Foot joints for the floor height (their bind height is their height above the sole).
 const SKIRT_FEET := ["l_heel", "l_ball", "r_heel", "r_ball"]
+## A closed skirt (a petticoat; `skirt_closed`, PlayerOutfit sets it from the catalog's skirt.closed; the user
+## 2026-09-29: "fix skirts from animations glitch out of the skirt", "it is like a bell that flies and looks too
+## stiff", "maybe it should have like fluid properties in a confined space"). The six panels are one piece of cloth
+## round both legs, not a coat's flaps on each thigh, and it flows inside set bounds:
+##  - it hangs toward world-down (gravity about the hip joints, at most SKIRT_CLOSED_GRAVITY_MAX_DEG: bent over, it
+##    falls from the hips);
+##  - the legs are walls inside it: the knees, shins, heels and toes of BOTH legs within SKIRT_CLOSED_REACH_DEG of a
+##    panel's place round the body push that panel's cloth out, SKIRT_CLOSED_CLEAR past them. Low on the legs (where
+##    the skirt is all the panel's: its weights, SKIRT_CLOSED_SHARE_Y) the panel is moved out, not turned, so the
+##    cloth below a knee hangs straight down instead of the hem swinging out; only a thigh raised high (a squat, a
+##    seat) turns the panel up about the hip joint, at most SKIRT_CLOSED_MAX_DEG. A panel takes SKIRT_CLOSED_SPREAD of
+##    its neighbours' push (the cloth between them), so the skirt gives round a knee instead of splitting;
+##  - it flows: each panel's move out is a damped spring (SKIRT_CLOSED_SPRING) that a leg pushes at once and that falls
+##    back softly, and the whole hem trails the hips as they speed up, slow and turn (their acceleration, the same
+##    spring, at most SKIRT_CLOSED_SWAY_M); never further out than SKIRT_CLOSED_OUT_M;
+##  - on the floor (a squat, sitting) it pools: a panel shortens to rest SKIRT_CLOSED_FLOOR_SINK into the ground (to
+##    SKIRT_CLOSED_BUNCH at most), then swings out at most SKIRT_CLOSED_FLOOR_MAX_DEG; turned up above the level (knees
+##    drawn up) it bunches the same way (SKIRT_CLOSED_BUNCH_DEG), so it lies over the knees instead of standing out.
+## Its hems (bind skeleton space, left leg) default to SKIRT_CLOSED_HEMS (the petticoat's at the panels' places: 40,
+## 90 and 140 degrees round from the front; tools/character/cloth2/skirt_hang.py prints them).
+const SKIRT_CLOSED_HEMS := [Vector3(0.163, 0.26, 0.262), Vector3(0.255, 0.26, 0.066), Vector3(0.163, 0.26, -0.13)]
+const SKIRT_CLOSED_SHARE_Y := Vector2(0.88, 0.62)
+## The panels' places round the body in the skirt's weights (degrees from the front, left leg; skirt_hang.py PANELS),
+## and the skirt's round at bind (skirt_hang.py prints it): its distance from the body's axis (m) at the heights
+## SKIRT_CLOSED_ROUND_Y, each row every 30 degrees from the front (0) round to the back (180), the same both sides.
+const SKIRT_CLOSED_PANEL_AZ := Vector3(40.0, 90.0, 140.0)
+const SKIRT_CLOSED_ROUND_Y := [0.88, 0.8, 0.72, 0.64, 0.56, 0.48, 0.4, 0.33, 0.26]
+const SKIRT_CLOSED_ROUND := [
+	[0.143, 0.152, 0.176, 0.188, 0.172, 0.148, 0.128], [0.159, 0.166, 0.186, 0.205, 0.187, 0.167, 0.14],
+	[0.175, 0.181, 0.2, 0.208, 0.19, 0.166, 0.144], [0.196, 0.202, 0.217, 0.221, 0.202, 0.171, 0.155],
+	[0.222, 0.226, 0.236, 0.236, 0.216, 0.189, 0.173], [0.236, 0.238, 0.246, 0.244, 0.222, 0.198, 0.182],
+	[0.252, 0.256, 0.258, 0.253, 0.23, 0.204, 0.193], [0.268, 0.269, 0.27, 0.264, 0.24, 0.214, 0.206],
+	[0.284, 0.283, 0.282, 0.275, 0.253, 0.226, 0.221]]
+## A raised thigh's turn reaches the neighbouring panels less than a push out does.
+const SKIRT_CLOSED_TURN_SPREAD := 0.25
+const SKIRT_CLOSED_CLEAR := 0.02
+const SKIRT_CLOSED_REACH_DEG := Vector2(30.0, 75.0)
+const SKIRT_CLOSED_SPREAD := 0.35
+const SKIRT_CLOSED_MAX_DEG := 100.0
+const SKIRT_CLOSED_GRAVITY_MAX_DEG := 110.0
+const SKIRT_CLOSED_SPRING := Vector2(90.0, 11.0)    # 1/s^2 (about 1.5 Hz), 1/s (a little sway that settles)
+const SKIRT_CLOSED_SWAY_M := 0.1
+const SKIRT_CLOSED_OUT_M := 0.26
+const SKIRT_CLOSED_FLOOR_MAX_DEG := 35.0
+const SKIRT_CLOSED_FLOOR_SINK := 0.1
+const SKIRT_CLOSED_BUNCH_DEG := Vector2(55.0, 100.0)
+const SKIRT_CLOSED_BUNCH := 0.62
+## Tucked up (`skirt_tuck` 1: climbing a ladder, a trunk, a giant; FrontierPlayer sets it; the user 2026-09-29: "for
+## climbing and ladder ... the skirt rolls up at the front", "the front half is tucked in above the knee with physics
+## but the back half is not rolled up", "maybe it has to roll up to the navel"): the front panels roll up to
+## SKIRT_CLOSED_TUCK of their length and SKIRT_CLOSED_TUCK_LIFT_M up (gathered at the waist; what the pelvis holds of
+## the cloth there stays), the sides half as much, the back not at all (panels front, side, back:
+## SKIRT_CLOSED_TUCK_SHARE); the legs below a tucked hem no longer push it, and it flows as ever. The lift is along
+## the pelvis's up, toward the waist. `skirt_tuck_back` rolls the back up the same way (on all fours in the crawl: up
+## toward the lower back; the user 2026-09-29), the front not at all (SKIRT_CLOSED_TUCK_BACK_SHARE).
+const SKIRT_CLOSED_TUCK := 0.08
+const SKIRT_CLOSED_TUCK_LIFT_M := 0.14
+const SKIRT_CLOSED_TUCK_SHARE := Vector3(1.0, 0.5, 0.0)
+const SKIRT_CLOSED_TUCK_BACK_SHARE := Vector3(0.0, 0.5, 1.0)
+## The leg joints that push a closed skirt (per side, "l_" / "r_"), plus points along the thigh and the shin, and how
+## thick the leg is there (m from the bone: the cloth clears the leg's surface, not its bone).
+const SKIRT_LEG_JOINTS := ["upper_leg", "knee", "ankle", "heel", "ball"]
+const SKIRT_LEG_RADII := [0.0, 0.06, 0.04, 0.045, 0.035]
+const SKIRT_THIGH_RADII := Vector2(0.085, 0.07)   # half and four fifths of the way to the knee
+const SKIRT_SHIN_RADII := Vector2(0.055, 0.045)   # half and four fifths of the way to the ankle
+## How far each of those points may push the cloth out (m): a heel kicked up behind in a run slips out under the hem
+## instead of holding the back of the skirt out like a bustle.
+const SKIRT_LEG_PUSH_M := [0.0, 1.0, 0.1, 0.05, 0.04]
+const SKIRT_SHIN_PUSH_M := Vector2(0.2, 0.14)
 ## The twist angles are wrapped into [center - 180, center + 180) degrees (left arm; the
 ## right arm mirrored). The centers keep every measured game pose away from the wrap,
 ## where the fractional twist bones would flip: over all 2490 clips (8 samples each) the
@@ -160,6 +229,11 @@ var report := {}
 var parts := {}
 ## Skirt hems of a garment worn over the legacy coat (set_skirt_hems); empty = SKIRT_HEMS.
 var skirt_hems: Array = []
+## A closed skirt is worn (set_skirt_closed): the panels are driven as one (SKIRT_CLOSED_*).
+var skirt_closed := false
+## 0..1: how far a closed skirt is tucked up at the front, and at the back (SKIRT_CLOSED_TUCK).
+var skirt_tuck := 0.0
+var skirt_tuck_back := 0.0
 
 ## Bind globals (skeleton space) of the bones the skin uses: bone index -> Transform3D.
 var _bind := {}
@@ -174,6 +248,21 @@ var _skins_by_joints := {}
 var _drivers: Array = []
 ## Foot joints (bone indices) for the skirt's floor height.
 var _feet := PackedInt32Array()
+## The leg joints (bone indices, SKIRT_LEG_JOINTS) of each leg, left then right, for a closed skirt.
+var _legs: Array[PackedInt32Array] = []
+var _leg_radii: Array[PackedFloat32Array] = []
+var _leg_push: Array[PackedFloat32Array] = []
+## A closed skirt's flow (the live update only; tools and tests see it at rest): per panel bone [x, v] (its move out,
+## m, and its speed), the hem's sway and its speed (pelvis frame), the hips' last position and velocity (skeleton
+## space), and what the next _drive steps: _skirt_dt (s; 0 = no flow) with the hips' acceleration _skirt_acc.
+var _skirt_flow := {}
+var _skirt_sway := Vector3.ZERO
+var _skirt_sway_v := Vector3.ZERO
+var _skirt_pp := Vector3.INF
+var _skirt_pv := Vector3.ZERO
+var _skirt_usec := 0
+var _skirt_dt := 0.0
+var _skirt_acc := Vector3.ZERO
 
 ## Soft tissue (body v4, 2026-09-28): each breast on the rig's own breast bone (l_breast / r_breast,
 ## a child of spined; tools/character/lib/helpers BREAST_BONES), a damped spring in the chest's bind
@@ -544,6 +633,22 @@ func _setup_drivers() -> void:
 		var fb := skeleton.find_bone(f)
 		if fb >= 0 and _bind.has(fb):
 			_feet.append(fb)
+	_legs.clear()
+	_leg_radii.clear()
+	_leg_push.clear()
+	for side in ["l_", "r_"]:
+		var leg := PackedInt32Array()
+		var rad := PackedFloat32Array()
+		var push := PackedFloat32Array()
+		for k in SKIRT_LEG_JOINTS.size():
+			var jb := skeleton.find_bone(side + String(SKIRT_LEG_JOINTS[k]))
+			if jb >= 0 and _bind.has(jb):
+				leg.append(jb)
+				rad.append(float(SKIRT_LEG_RADII[k]))
+				push.append(float(SKIRT_LEG_PUSH_M[k]))
+		_legs.append(leg)
+		_leg_radii.append(rad)
+		_leg_push.append(push)
 	for side in ["l", "r"]:
 		var sg := 1.0 if side == "l" else -1.0
 		var refs := {}
@@ -611,8 +716,16 @@ func set_skirt_hems(hems: Array) -> void:
 			d.hem = Vector3(hem.x * float(d.sign), hem.y, hem.z)
 
 
+## A closed skirt worn (`on`) or not, with its hems (SKIRT_HEMS layout; empty = SKIRT_CLOSED_HEMS when closed).
+func set_skirt_closed(on: bool, hems: Array = []) -> void:
+	skirt_closed = on
+	set_skirt_hems(hems)
+
+
 func _hem(panel: int) -> Vector3:
-	return skirt_hems[panel] if skirt_hems.size() == 3 else SKIRT_HEMS[panel]
+	if skirt_hems.size() == 3:
+		return skirt_hems[panel]
+	return SKIRT_CLOSED_HEMS[panel] if skirt_closed else SKIRT_HEMS[panel]
 
 
 func _org(bone: int) -> Vector3:
@@ -638,6 +751,7 @@ func _drive(g: Array, down := Vector3.DOWN, diag = null) -> Array:
 		floor_h = INF
 		for f in _feet:
 			floor_h = minf(floor_h, -(g[f] as Transform3D).origin.dot(down) - _org(f).y)
+	var closed := _closed_skirt(g, down, floor_h, diag) if skirt_closed else {}
 	for d: Dictionary in _drivers:
 		var mp := _skinning(g, d.parent)
 		var qp := mp.basis.get_rotation_quaternion()
@@ -656,13 +770,13 @@ func _drive(g: Array, down := Vector3.DOWN, diag = null) -> Array:
 			Kind.FOREARM:
 				r = qp * Quaternion(axis, _twist(rel, axis, d.sign, d.center) * float(d.a))
 			Kind.SKIRT:
-				r = _skirt(d, qp, rel, down, jb, jp, floor_h, diag)
+				r = _skirt(d, qp, rel, down, jb, jp, floor_h, diag) if not closed.has(d.bone) else Quaternion.IDENTITY
 			Kind.QUEUE:
 				r = _queue(qp, down)
 				jb = QUEUE_ROOT
 				jp = _skinning(g, d.child) * QUEUE_ROOT
 		var rb := Basis(r.normalized())
-		var m := Transform3D(rb, jp - rb * jb)
+		var m: Transform3D = closed[d.bone] if closed.has(d.bone) else Transform3D(rb, jp - rb * jb)
 		bones.append(d.bone)
 		out.append(m * (d.bind as Transform3D))
 	return [bones, out]
@@ -735,6 +849,273 @@ func _skirt(d: Dictionary, qp: Quaternion, rel: Quaternion, down: Vector3, jb: V
 		(diag as Array).append({"bone": d.bone, "panel": d.panel, "pushed": pushed, "floored": floored,
 				"hang": rad_to_deg((r * Vector3.DOWN).angle_to(down))})
 	return r
+
+
+## The time since the last live update and the hips' acceleration, for the closed skirt's flow (_skirt_dt, _skirt_acc).
+func _skirt_step(sk: Skeleton3D, g: Array) -> void:
+	var now := Time.get_ticks_usec()
+	var dt := clampf(float(now - _skirt_usec) / 1e6, 0.0, 0.05) if _skirt_usec > 0 else 0.0
+	_skirt_usec = now
+	if soft_step > 0.0:
+		dt = soft_step
+	var p := sk.global_transform * (g[_pelvis] as Transform3D).origin
+	var basis_inv := sk.global_basis.orthonormalized().inverse()
+	if dt <= 0.0 or not _skirt_pp.is_finite() or p.distance_to(_skirt_pp) > 2.0:
+		_skirt_pp = p
+		_skirt_pv = Vector3.ZERO
+		_skirt_acc = Vector3.ZERO
+		_skirt_dt = dt
+		return
+	var v := (p - _skirt_pp) / dt
+	_skirt_acc = basis_inv * ((v - _skirt_pv) / dt).limit_length(BREAST_ACCEL_MAX)
+	_skirt_pp = p
+	_skirt_pv = v
+	_skirt_dt = dt
+
+
+## The skinning transforms (bind -> posed skeleton space) of a closed skirt's panels, by bone (see SKIRT_CLOSED_HEMS).
+## `g`: the bone globals (the pelvis, the hips and the SKIRT_LEG_JOINTS at least), `down`: world-down in skeleton
+## space. Flows by _skirt_dt when a live update set it; at rest otherwise.
+func _closed_skirt(g: Array, down: Vector3, floor_h: float, diag) -> Dictionary:
+	var panels: Array = []
+	for d: Dictionary in _drivers:
+		if int(d.kind) == Kind.SKIRT:
+			panels.append(d)
+	if panels.is_empty():
+		return {}
+	var qp := _skinning(g, int(panels[0].parent)).basis.get_rotation_quaternion()
+	var qi := qp.inverse()
+	# gravity: the bind hang direction (down) -> world-down in the pelvis frame, limited
+	var dl := (qi * down).normalized()
+	var gv := _rotvec(Quaternion(Vector3.DOWN, dl)) if dl.dot(Vector3.DOWN) > -0.9999 else Vector3(-PI, 0.0, 0.0)
+	var gmax := deg_to_rad(SKIRT_CLOSED_GRAVITY_MAX_DEG)
+	if gv.length() > gmax:
+		gv *= gmax / gv.length()
+	# the hem's sway: trails the hips' acceleration (pelvis frame, across the hang), a damped spring
+	var dt := _skirt_dt
+	var kk := SKIRT_CLOSED_SPRING.x
+	var cc := SKIRT_CLOSED_SPRING.y
+	if dt > 0.0:
+		var ap := qi * _skirt_acc
+		ap.y = 0.0
+		var steps := ceili(dt / SOFT_SUBSTEP)
+		var h := dt / steps
+		for i in steps:
+			_skirt_sway_v += (-kk * _skirt_sway - cc * _skirt_sway_v - ap) * h
+			_skirt_sway += _skirt_sway_v * h
+		_skirt_sway = _skirt_sway.limit_length(SKIRT_CLOSED_SWAY_M)
+	# the legs inside: the knee, ankle, heel and toes, and along the thigh and the shin, with their thickness
+	var pts: Array[Vector3] = []
+	var prad := PackedFloat32Array()
+	var pmax := PackedFloat32Array()
+	for li in _legs.size():
+		var leg := _legs[li]
+		for k in leg.size():
+			var p := (g[leg[k]] as Transform3D).origin
+			if k > 0:
+				pts.append(p)
+				prad.append(_leg_radii[li][k])
+				pmax.append(_leg_push[li][k])
+			if k == 1 or k == 2:
+				var q := (g[leg[k - 1]] as Transform3D).origin
+				var rr := SKIRT_THIGH_RADII if k == 1 else SKIRT_SHIN_RADII
+				var pm := Vector2(1.0, 1.0) if k == 1 else SKIRT_SHIN_PUSH_M
+				pts.append(q.lerp(p, 0.5))
+				prad.append(rr.x)
+				pmax.append(pm.x)
+				pts.append(q.lerp(p, 0.8))
+				prad.append(rr.y)
+				pmax.append(pm.y)
+	var n := panels.size()
+	var turn := PackedFloat32Array()        # how far past its gravity hang a raised thigh turns each panel (rad)
+	turn.resize(n)
+	var out_m := PackedFloat32Array()       # how far out the legs push its cloth (m)
+	out_m.resize(n)
+	var azs := PackedFloat32Array()
+	azs.resize(n)
+	var info: Array = []
+	var reach := Vector2(deg_to_rad(SKIRT_CLOSED_REACH_DEG.x), deg_to_rad(SKIRT_CLOSED_REACH_DEG.y))
+	var sy := SKIRT_CLOSED_SHARE_Y
+	for i in n:
+		var d: Dictionary = panels[i]
+		var jb := _org(d.joint)
+		var jp := (g[d.joint] as Transform3D).origin
+		var hem: Vector3 = d.hem
+		var e0 := hem - jb
+		var u := Vector3(e0.x, 0.0, e0.z).normalized()     # outward, where the panel hangs round the body
+		var ax := Vector3.DOWN.cross(u)                     # turns it from down toward u
+		var th0 := atan2(e0.dot(u), -e0.y)                  # its flare at the bind
+		var gs := gv.dot(ax)                                # gravity's turn (from the bind) in its plane
+		azs[i] = atan2(hem.x, hem.z)
+		# tucked up: its length (share of the bind's), its lift and the lowest the cloth then reaches (bind height)
+		var tuck := maxf(clampf(skirt_tuck, 0.0, 1.0) * SKIRT_CLOSED_TUCK_SHARE[int(d.panel)],
+				clampf(skirt_tuck_back, 0.0, 1.0) * SKIRT_CLOSED_TUCK_BACK_SHARE[int(d.panel)])
+		var tk := lerpf(1.0, SKIRT_CLOSED_TUCK, tuck)
+		var lift_m := SKIRT_CLOSED_TUCK_LIFT_M * tuck
+		var low := jb.y + e0.y * tk + lift_m - 0.03
+		var best := 0.0
+		for pi in pts.size():
+			var v := qi * (pts[pi] - jp)                    # pelvis bind frame, from the panel's hip joint
+			var pa := v + jb
+			if Vector2(pa.x, pa.z).length() < 0.05:
+				continue
+			var w := 1.0 - smoothstep(reach.x, reach.y, absf(angle_difference(azs[i], atan2(pa.x, pa.z))))
+			if w <= 0.0 or pa.y < low:
+				continue
+			var a := v.dot(u)
+			var b := -v.y
+			var l := sqrt(a * a + b * b)
+			if l < 0.08 or l > e0.length() * tk + 0.05:      # (beyond the cloth's reach: out from under it)
+				continue
+			# high on the body (little of the cloth there is the panel's) a raised thigh turns the panel up
+			if smoothstep(sy.x, sy.y, pa.y) < 0.35:
+				best = maxf(best, w * (atan2(a, b) + asin(minf((SKIRT_CLOSED_CLEAR + prad[pi]) / l, 1.0)) - th0 - gs))
+		turn[i] = best
+		info.append([ax, th0, jb, jp, gs, e0, tk, lift_m])
+	var order := range(n)
+	order.sort_custom(func(x: int, y: int) -> bool: return azs[x] < azs[y])
+	turn = _skirt_spread(turn, order, SKIRT_CLOSED_TURN_SPREAD)
+	# the rotations (gravity, the turn), then how far out the legs lower down push the cloth: the skirt at bind is a
+	# cone round its axis; a leg point outside it (seen as the two panels either side of it see it, turned) needs
+	# those panels moved out by its depth past the cloth, over the share of the cloth there that is theirs
+	var paz := PackedFloat32Array()              # each panel's place in the weights (rad from the front, + left)
+	for i in n:
+		var d: Dictionary = panels[i]
+		var az := deg_to_rad(SKIRT_CLOSED_PANEL_AZ[int(d.panel)])
+		paz.append(az * float(d.sign))
+	var rots: Array[Quaternion] = []
+	for i in n:
+		var ax: Vector3 = info[i][0]
+		var th0: float = info[i][1]
+		var gs: float = info[i][4]
+		var sw := minf(gs + turn[i], deg_to_rad(SKIRT_CLOSED_MAX_DEG) - th0)
+		var rv := ax * sw + (gv - ax * gs)                 # (gravity's sideways part as it is: the skirt sways as one)
+		rots.append(Quaternion(rv.normalized(), rv.length()) if rv.length() > 1e-9 else Quaternion.IDENTITY)
+	for i in n:
+		out_m[i] = 0.0
+	var jb0: Vector3 = info[0][2]
+	var jp0: Vector3 = info[0][3]
+	for pi in pts.size():
+		var pb := qi * (pts[pi] - jp0) + jb0               # the point in the pelvis's bind frame
+		var az := atan2(pb.x, pb.z)
+		# the two panels nearest round the body: the ones whose cloth is there in the weights
+		var near := [-1, -1]
+		var dist := [INF, INF]
+		for i in n:
+			var da := absf(angle_difference(az, paz[i]))
+			if da < dist[0]:
+				near = [i, near[0]]
+				dist = [da, dist[0]]
+			elif da < dist[1]:
+				near[1] = i
+				dist[1] = da
+		for i: int in near:
+			if i < 0:
+				continue
+			var jb: Vector3 = info[i][2]
+			var e0: Vector3 = info[i][5]
+			var pa := rots[i].inverse() * (pb - jb) + jb      # as this panel sees it (turned back to its bind)
+			# (tucked up, the cloth at the point's height is what hung lower at the bind)
+			var yb := jb.y + (pa.y - float(info[i][7]) - jb.y) / float(info[i][6])
+			var share := smoothstep(SKIRT_CLOSED_SHARE_Y.x, SKIRT_CLOSED_SHARE_Y.y, yb)
+			if share < 0.35 or yb < jb.y + e0.y - 0.05:
+				continue
+			var rel := Vector2(pa.x, pa.z)
+			var depth := rel.length() + prad[pi] + SKIRT_CLOSED_CLEAR - _skirt_round(yb, absf(atan2(pa.x, pa.z)))
+			if depth <= 0.0:
+				continue
+			var ui := Vector2(sin(paz[i]), cos(paz[i]))
+			out_m[i] = maxf(out_m[i], minf(depth / (share * maxf(ui.dot(rel.normalized()), 0.7)), pmax[pi]))
+	out_m = _skirt_spread(out_m, order)
+	var upright := 1.0 - smoothstep(deg_to_rad(SKIRT_FLOOR_TILT_DEG.x), deg_to_rad(SKIRT_FLOOR_TILT_DEG.y),
+			(qp * Vector3.UP).angle_to(-down))
+	var res := {}
+	for i in n:
+		var d: Dictionary = panels[i]
+		var ax: Vector3 = info[i][0]
+		var jb: Vector3 = info[i][2]
+		var jp: Vector3 = info[i][3]
+		var e0: Vector3 = info[i][5]
+		var u := Vector3(sin(paz[i]), 0.0, cos(paz[i]))
+		# the flow: a spring toward the hem's sway, pushed out at once by the legs, never past the bounds
+		var x := out_m[i]
+		if dt > 0.0:
+			var st: Array = _skirt_flow.get(d.bone, [x, 0.0])
+			var fx: float = st[0]
+			var fv: float = st[1]
+			var target := _skirt_sway.dot(u)
+			var steps := ceili(dt / SOFT_SUBSTEP)
+			var h := dt / steps
+			for j in steps:
+				fv += (-kk * (fx - target) - cc * fv) * h
+				fx += fv * h
+			if fx < out_m[i]:
+				fx = out_m[i]
+				fv = maxf(fv, 0.0)
+			fx = clampf(fx, -SKIRT_CLOSED_CLEAR, SKIRT_CLOSED_OUT_M)
+			_skirt_flow[d.bone] = [fx, fv]
+			x = fx
+		x = minf(x, SKIRT_CLOSED_OUT_M)
+		var r := qp * rots[i]
+		# bunched: lifted above the level it shortens; on the ground it pools (shortens to rest SKIRT_CLOSED_FLOOR_SINK
+		# into it); what is still below then swings out (about its own axis) as a coat skirt's does
+		var e := r * e0
+		var k := lerpf(1.0, SKIRT_CLOSED_BUNCH, smoothstep(deg_to_rad(SKIRT_CLOSED_BUNCH_DEG.x),
+				deg_to_rad(SKIRT_CLOSED_BUNCH_DEG.y), e.angle_to(down)))
+		k = minf(k, float(info[i][6]))
+		var drop := e.dot(down)
+		var room := -jp.dot(down) - floor_h + SKIRT_CLOSED_FLOOR_SINK
+		if drop > 1e-4 and drop * k > room:
+			k = minf(k, maxf(room / drop, SKIRT_CLOSED_BUNCH))
+		var axp := (qp * ax).normalized()
+		var lift := upright * _lift(e * k, axp, -down, floor_h - SKIRT_CLOSED_FLOOR_SINK + jp.dot(down),
+				deg_to_rad(SKIRT_CLOSED_FLOOR_MAX_DEG))
+		if lift != 0.0:
+			r = Quaternion(axp, lift) * r
+		var dir := (r * e0).normalized()
+		var bunch := Basis(Vector3.RIGHT - dir * ((1.0 - k) * dir.x), Vector3.UP - dir * ((1.0 - k) * dir.y),
+				Vector3.BACK - dir * ((1.0 - k) * dir.z))
+		var bb := bunch * Basis(r.normalized())
+		res[d.bone] = Transform3D(bb, jp - bb * jb + (r * u) * x + (qp * Vector3.UP) * float(info[i][7]))
+		if diag is Array:
+			(diag as Array).append({"bone": d.bone, "panel": d.panel, "pushed": turn[i] > 0.0 or out_m[i] > 0.0,
+					"floored": lift != 0.0, "hang": rad_to_deg((r * Vector3.DOWN).angle_to(down)), "bunch": k, "out": x})
+	return res
+
+
+## The closed skirt's distance from the body's axis at bind height `y`, `az` radians round from the front (0..PI).
+static func _skirt_round(y: float, az: float) -> float:
+	var ys: Array = SKIRT_CLOSED_ROUND_Y
+	var fy := 0.0
+	var iy := 0
+	if y >= float(ys[0]):
+		iy = 0
+	elif y <= float(ys[ys.size() - 1]):
+		iy = ys.size() - 2
+		fy = 1.0
+	else:
+		while iy < ys.size() - 2 and y < float(ys[iy + 1]):
+			iy += 1
+		fy = (float(ys[iy]) - y) / (float(ys[iy]) - float(ys[iy + 1]))
+	var t := clampf(rad_to_deg(az) / 30.0, 0.0, 6.0)
+	var ia := mini(int(t), 5)
+	var fa := t - ia
+	var r0: Array = SKIRT_CLOSED_ROUND[iy]
+	var r1: Array = SKIRT_CLOSED_ROUND[iy + 1]
+	return lerpf(lerpf(float(r0[ia]), float(r0[ia + 1]), fa), lerpf(float(r1[ia]), float(r1[ia + 1]), fa), fy)
+
+
+## `v` (one value per panel) with each panel taking `share` of its neighbours' round the body (`order`:
+## the panels by their angle round it), twice.
+static func _skirt_spread(v: PackedFloat32Array, order: Array, share := SKIRT_CLOSED_SPREAD) -> PackedFloat32Array:
+	var n := v.size()
+	for pass_i in 2:
+		var nxt := v.duplicate()
+		for k in n:
+			var nb := maxf(v[order[(k + n - 1) % n]], v[order[(k + 1) % n]])
+			nxt[order[k]] = maxf(v[order[k]], share * nb)
+		v = nxt
+	return v
 
 
 ## Smallest rotation angle about the unit axis `u`, in the direction that raises `v`
@@ -831,7 +1212,14 @@ func _process_modification() -> void:
 	for f in _feet:
 		if g[f] == null:
 			g[f] = sk.get_bone_global_pose(f)
+	if skirt_closed:
+		for leg in _legs:
+			for b in leg:
+				if g[b] == null:
+					g[b] = sk.get_bone_global_pose(b)
+		_skirt_step(sk, g)
 	var res := _drive(g, sk.global_basis.orthonormalized().inverse() * Vector3.DOWN)
+	_skirt_dt = 0.0
 	var bones: PackedInt32Array = res[0]
 	for i in bones.size():
 		sk.set_bone_global_pose(bones[i], res[1][i])
