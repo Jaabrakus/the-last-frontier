@@ -46,6 +46,13 @@ const ELBOW_SIDE_MIN_DEG := -10.0
 const ELBOW_SIDE_MAX_DEG := 60.0
 const ELBOW_SIDE_PREF_DEG := 30.0
 const ELBOW_SIDE_SOFT_DEG := 25.0
+## Walking and jogging the gun is carried this far further out before the chest (m, the chest's forward; added to
+## the gun's target through pull_in(), so GunCarryDamper's spring carries it out and back): with the hand close
+## before the chest the left elbow sat at the torso's side, in the shirt (the hand 10-27 cm before the shoulder);
+## reaching forward to the stock, the elbow comes level with the torso's front or before it, still pointing out
+## (user 2026-09-29: "the elbow does need to point out but the elbow arm need to be forward align torso or in front
+## of torso"). Standing holds (`moving` 0) are as they were.
+const CARRY_FORWARD_M := 0.12
 ## Fastest turn of the grip's bend side about the shoulder-target line (rad/s).
 const SIDE_RATE := 6.0
 ## The wrist correction at full weight up to this turn (deg), none from WRIST_TURN_NONE.
@@ -54,6 +61,8 @@ const WRIST_TURN_NONE := 160.0
 
 ## Grip wanted (set every frame by PlayerAnim).
 var enabled := false
+## 0 standing .. 1 walking or jogging (set every frame by PlayerAnim, eased): the gun carried CARRY_FORWARD_M out.
+var moving := 0.0
 ## Current grip weight 0..1 (after the fade).
 var grip_weight := 0.0
 ## The elbow side used last frame and the clip's own carried over (deg, see ELBOW_SIDE_MIN_DEG), for tests
@@ -73,6 +82,7 @@ var _have_side := false
 ## The chest's (spined) left and down axes in its own frame (from the rest pose).
 var _chest_left := Vector3.RIGHT
 var _chest_down := Vector3.DOWN
+var _chest_fwd := Vector3.BACK
 
 
 func advance(dt: float) -> void:
@@ -111,7 +121,13 @@ func pull_in(sk: Skeleton3D) -> Vector3:
 	if grip_weight <= 0.0:
 		return Vector3.ZERO
 	var g := _grip(sk, false)
-	return g.get("pull", Vector3.ZERO)
+	var pull: Vector3 = g.get("pull", Vector3.ZERO)
+	if moving > 0.0 and not _ids.is_empty():
+		var fwd := sk.get_bone_global_pose(_ids[5]).basis.orthonormalized() * _chest_fwd
+		fwd.y = 0.0
+		if fwd.length() > 1e-3:
+			pull += fwd.normalized() * CARRY_FORWARD_M * smoothstep(0.0, 1.0, moving) * grip_weight
+	return pull
 
 
 ## The left wrist's grip rotation {q} (the left prop takes the right prop's rotation) and the gun's pull
@@ -128,6 +144,7 @@ func _grip(sk: Skeleton3D, apply := true) -> Dictionary:
 		var rest := sk.get_bone_global_rest(_ids[5]).basis.orthonormalized()
 		_chest_left = (rest.inverse() * Vector3.RIGHT).normalized()
 		_chest_down = (rest.inverse() * Vector3.DOWN).normalized()
+		_chest_fwd = (rest.inverse() * Vector3.BACK).normalized()
 	var gw := sk.get_bone_global_pose(_ids[0])
 	var gl := sk.get_bone_global_pose(_ids[1])
 	var gr := sk.get_bone_global_pose(_ids[2])

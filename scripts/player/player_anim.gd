@@ -1024,6 +1024,12 @@ func manual_step(dt: float) -> void:
 					left_grip.enabled = long_gun and not busy and not moving_carry
 				_:
 					left_grip.enabled = long_gun and not busy
+		# walking or jogging: the gun carried a little further out, the left arm reaching forward to it
+		# (LeftGripIK.moving). On with the first step (the locomotion's own moving, not a speed reached a step later:
+		# the arm drifted out after the body and the elbow looked loose, user 2026-09-29 "the elbow is not stiff when
+		# movement starts"), quickly and eased (LeftGripIK smoothsteps it), never a pop.
+		var walk_w := 1.0 if (moving_carry and not (player != null and player.is_crouching)) else 0.0
+		left_grip.moving = move_toward(left_grip.moving, walk_w, dt / 0.22)
 		left_grip.advance(dt)
 	if gun_damper != null:
 		# (with the gun in the left hand, GunMiddleCarryIK's own spring smooths it in the character's frame; on the way
