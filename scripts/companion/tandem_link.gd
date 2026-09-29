@@ -87,7 +87,7 @@ func _process(dt: float) -> void:
 
 func _ctx() -> Dictionary:
 	var sc := house.sc
-	return {"hour": sc.hour(), "busy": sc.busy(), "danger": _danger, "combat": _hurt_t > 0.0, "dist": _dist,
+	return {"minor": not AdultsOnly.is_adult(house, sc), "hour": sc.hour(), "busy": sc.busy(), "danger": _danger, "combat": _hurt_t > 0.0, "dist": _dist,
 			"alive": not sc.core.is_dead() and not house.player.is_dead}
 
 

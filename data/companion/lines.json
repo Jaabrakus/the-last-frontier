@@ -47,6 +47,7 @@
     },
     "ask": {
       "accepted_spouse": ["I'd like that. Come, choose where we'll begin.", "Gladly. I'll come to you."],
+      "minor": ["No. Not with a child.", "That is not for the young."],
       "accepted_player": ["Gladly. I'll come to you, and you may choose.", "I'd like that. Lead on."],
       "not_full": ["Not yet. Let's spend more time together first.", "Ask me again when we know each other better."],
       "cooldown": ["We've only just done so. Give it a day.", "Not so soon. We should rest a while."],

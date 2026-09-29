@@ -18,7 +18,7 @@ const DEFAULTS := {"start": 0.1, "full_at": 0.999, "near_m": 6.0, "together_per_
 		"poses": [{"id": "crawl", "name": "The crawl"}, {"id": "yoga", "name": "Happy Baby"}],
 		"levels": [{"upto": 1.01, "word": "Close"}], "fills_line": "", "reasons": {}}
 ## The order the gate looks at its reasons in.
-const REASONS := ["dead", "not_full", "cooldown", "night", "danger", "combat", "far", "busy"]
+const REASONS := ["minor", "dead", "not_full", "cooldown", "night", "danger", "combat", "far", "busy"]
 
 var sc: SpouseCore
 var cfg := {}
@@ -171,6 +171,8 @@ func calm_hour(hour: float) -> bool:
 ## Why yoga cannot be had now ("" when it can). ctx: hour, busy, danger, combat, dist (to the player), alive (default true).
 ## `stop_ok`: the player asked, so she puts a job down (busy is not a reason then).
 func gate(ctx: Dictionary, stop_ok := false) -> String:
+	if bool(ctx.get("minor", false)):
+		return "minor"      # adults only (AdultsOnly): never with a child or a teen
 	if not bool(ctx.get("alive", true)):
 		return "dead"
 	if not full():
@@ -198,6 +200,8 @@ func calm_reason(ctx: Dictionary, stop_ok := false) -> String:
 ## An offer may be made now: the gauge is full, not powering down after a decline, calm, she is not at a job and
 ## is near the player.
 func offer_ok(ctx: Dictionary) -> bool:
+	if bool(ctx.get("minor", false)):
+		return false
 	return sc.intimacy >= float(cfg.offer_at) and sc.intimacy_offer_cd <= 0.0 \
 			and float(ctx.get("dist", 1e9)) <= float(cfg.offer_range_m) and gate(ctx, false) == ""
 

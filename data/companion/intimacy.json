@@ -46,6 +46,7 @@
   ],
   "fills_line": "Time together, talk, meals shared, small gifts and finished work draw you closer. Long absences cool it a little.",
   "reasons": {
+    "minor": "Only between grown adults",
     "not_full": "Not close enough yet",
     "cooldown": "Not again so soon",
     "night": "Not at night",

@@ -53,6 +53,8 @@ func _parents(kind: String) -> Dictionary:
 func on_session() -> Dictionary:
 	if house == null or house.sc == null or house.bridge == null:
 		return {}
+	if not AdultsOnly.is_adult(house, house.sc):
+		return {}      # adults only
 	var main := house.bridge.core
 	var on := Pregnancy.enabled(main)
 	if woman() == Pregnancy.KIND_SPOUSE:

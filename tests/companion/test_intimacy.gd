@@ -328,5 +328,29 @@ func _initialize() -> void:
 	st = _events(f, "start")
 	_expect(st.size() == 1 and st[0].leader == "player" and st[0].pose == "crawl", "a female player leads the crawl and the husband joins")
 
+	# ---- adults only: a child or teen is never offered intimacy or yoga
+	wife.intimacy = 1.0
+	wife.intimacy_cd = 0.0
+	wife.intimacy_offer_cd = 0.0
+	var it2 := Intimacy.new(wife)
+	_expect(it2.gate(_m(calm, {"minor": true})) == "minor" and not it2.offer_ok(_m(calm, {"minor": true})), "a minor: refused and never offered")
+	var f2 := YogaFlow.new(it2)
+	f2.idle_step(10.0, _m(calm, {"minor": true, "dist": 8.0}))
+	_expect(f2.state == YogaFlow.S.IDLE and f2.ask(_m(calm, {"minor": true})) == "minor", "no offer to or from a minor, and asking is refused")
+	var fake_house := {"family": [{"worker_id": 7, "stage": "teen", "name": "T"}]}
+	var teen := SpouseCore.new()
+	teen.worker_id = 7
+	var grown := SpouseCore.new()
+	grown.worker_id = 8
+	_expect(not AdultsOnly.is_adult(_HouseStub.new(fake_house.family), teen) and AdultsOnly.is_adult(_HouseStub.new(fake_house.family), grown),
+			"a teen of the family is a minor, an unrelated adult worker is not")
+
 	print("\n%s" % ("ALL INTIMACY CHECKS PASSED" if fails == 0 else "%d FAILED" % fails))
 	quit(1 if fails > 0 else 0)
+
+
+class _HouseStub extends Node:
+	var family: Array = []
+
+	func _init(f: Array) -> void:
+		family = f
