@@ -252,7 +252,9 @@ def masks(B, Nb, P, node):
     for sg in (1.0, -1.0):
         pn, dn, la = A._nostril_frame(sg)
         nos = np.maximum(nos, smooth(0.034, 0.02, np.linalg.norm(B - pn, axis=1)))
-    lid = smooth(0.034, 0.028, eye_d) * head
+    # (the eyelid rim: a thin dark line round the eyeball, its size with it: user 2026-09-28, "those eyes look insane":
+    # fixed at revision 4's eyeball it was a thick black ring round the smaller one)
+    lid = smooth(A.EYE_R + 0.0065, A.EYE_R + 0.0015, eye_d) * head
     inear = on_ear * smooth(0.2, 0.7, Nb @ np.array([0.0, -1.0, 0.0])) * smooth(1.60, 1.62, z)
     horn = np.zeros(len(B))
     for sg in (1.0, -1.0):

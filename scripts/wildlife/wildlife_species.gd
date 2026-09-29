@@ -45,6 +45,14 @@ extends RefCounted
 ##   defend            prey that turn on the player: hurt under `hurt` of its health and him within `reach`, it strikes
 ##                     (`damage`); with `charge` (m) it runs at him from that far (the bison), `knock` knocks him down
 ##   spacing           a herd's members spread this far apart round the leader (m; a spiral: a big herd keeps its room)
+##   sizes             the builds it comes in against its model: [[share, smallest, largest], ...] (the bison: its model a
+##                     bull's, the cows smaller); each animal picks one (WildAnimal.set_size: body, zones, reach scaled)
+##   rig               the body it wears: none, a stand-in's (its clips by name, WildAnimal); "horse" the project's own
+##                     horse (WildHorse: its gait clips by speed, its head carried by a pose, the tack off)
+##   tires             running winds it: its fatigue climbs this much faster in flight, and winded (WildAnimal.winded)
+##                     its run falls off to a trot (the wild horse: run hard, it can be caught)
+##   tame              it can be caught and broken (HorseBreaking): `spirit`, how long it bucks under a rider
+##   coats             the coats it comes in (HorseLook; one picked for each animal, the more often the more it is listed)
 
 const VITALS_MULT := 2.2
 const HEAD_MULT := 2.5
@@ -134,15 +142,19 @@ const DATA := {
 	},
 	# The plains bison (user 2026-09-28: "bison behavior in the open plains a lot of them"; "lets work on the bison so we
 	# can reuse a lot of the animal things"): Poly by Google's bison (CC-BY 3.0) rigged on Quaternius's stag armature
-	# (CC0) with the stag's clips, in metres (tools/wildlife/bison_rig.py; assets/wildlife/bison/SOURCE.md): ~1.9 m at
-	# the hump, 2.8 m long. Poor eyes, a keen nose and ears; big herds on open ground, bedding down in the open; a
+	# (CC0) with the stag's clips, in metres (tools/wildlife/bison_rig.py; assets/wildlife/bison/SOURCE.md): a bull's
+	# build (~1.97 m at the hump, 3.3 m long), the cows smaller ("sizes"). Poor eyes, a keen nose and ears; big herds on open ground, bedding down in the open; a
 	# gallop near 50 km/h for a short way. Hard to kill (a ball through the lungs, not the shoulder), and a hurt one, or
 	# any one crowded, may turn and charge. The wolves take only the weak ones.
 	"bison": {
 		"name": "bison", "model": "res://assets/wildlife/bison/bison.glb", "scale": 1.0, "kind": "prey",
 		"health": 520.0, "walk": 1.1, "run": 12.5, "walk_ref": 0.95, "run_ref": 5.4, "turn": 2.6,
 		"sight": 38.0, "fov": 300.0, "hearing": 1.2, "scent": 150.0,
-		"body": [0.44, 2.2, 1.6, -0.35], "vitals": [0.3, "Torso3"], "head": [0.24, "Head"],
+		# (a bull's body, the model's: user 2026-09-28, "make the bisons accurate make them bigger they can not be smaller
+		# than the horse": ~1.97 m at the hump, 3.3 m long, 1.05 m across; the cows ~0.87 of it, ~1.7 m and 2.9 m, all
+		# of them well over the horse's 1.43 m and 2.4 m)
+		"body": [0.53, 2.6, 1.65, -0.41], "vitals": [0.34, "Torso3"], "head": [0.27, "Head"],
+		"sizes": [[0.35, 0.97, 1.03], [0.65, 0.84, 0.9]],
 		# (its meat is venison: in 1765 the word was any game's flesh, the buffalo's too)
 		"skin": {"bison_robe": 1}, "butcher": {"venison": 14, "tongue": 1, "tallow": 3, "sinew": 4, "brains": 1},
 		"skin_s": 16.0, "butcher_s": 24.0,
@@ -150,9 +162,47 @@ const DATA := {
 				"jump": "Gallop_Jump", "attack": "Attack_Headbutt", "hit_l": "Idle_HitReact_Left",
 				"hit_r": "Idle_HitReact_Right", "death": "Death", "low": "Idle_Headlow", "eat": "Eating"},
 		"brain": "herd", "group": "bison_herd", "fill": {"group": "bison_herd", "min": 1, "size": [6, 14], "join": 18},
-		"lead": 1.0, "eats": "graze", "beds": "open", "hunted": "weak", "strike_h": [0.6, 1.3], "reach": 3.0, "meat": 6.0,
-		"spacing": 4.5,
-		"defend": {"hurt": 0.75, "reach": 3.0, "damage": 45.0, "charge": 14.0, "crowd": 6.0, "knock": 7.0},
+		"lead": 1.0, "eats": "graze", "beds": "open", "hunted": "weak", "strike_h": [0.6, 1.3], "reach": 3.4, "meat": 6.0,
+		"spacing": 5.2,
+		"defend": {"hurt": 0.75, "reach": 3.4, "damage": 45.0, "charge": 14.0, "crowd": 6.0, "knock": 7.0},
+	},
+	# The wild horse (user 2026-09-28: "use the bison or deer logic to build a herd of wild horses that can be tamed"):
+	# the project's own horse (tools/horse: the rideable Horse's model, its tack off) on WildHorse, with the deer's and
+	# the bison's herd brain. A band: a lead mare leads, the stallion follows at its back and turns on a man who crowds
+	# it. Eyes nearly all round (a blind spot straight behind), keen ears and nose; fast, but it winds ("tires"): run
+	# hard, it falls off to a trot. Caught (G at its side, HorseBreaking) and ridden out, it is broken to a Horse.
+	"horse": {
+		"name": "wild horse", "model": "res://assets/horse/horse.glb", "scale": 1.0, "kind": "prey", "rig": "horse",
+		"health": 300.0, "walk": 1.4, "run": 13.5, "walk_ref": 1.38, "run_ref": 10.0, "turn": 3.2,
+		"sight": 65.0, "fov": 340.0, "hearing": 1.5, "scent": 100.0,
+		"body": [0.34, 1.5, 1.45], "vitals": [0.16, "chest"], "head": [0.2, "head"],
+		# (a horse's hide went for rawhide; its meat is venison as the bison's is)
+		"skin": {"rawhide": 2}, "butcher": {"venison": 8, "sinew": 3, "tallow": 2, "brains": 1},
+		"skin_s": 14.0, "butcher_s": 20.0,
+		"clips": {"idle": ["idle"], "graze": "graze", "alert": "alert", "walk": "walk", "run": "run", "jump": "idle",
+				"attack": "rear", "hit_l": "idle", "hit_r": "idle", "death": "death", "low": "rest", "eat": "graze"},
+		"brain": "herd", "group": "horse_herd", "fill": {"group": "horse_herd", "min": 2, "size": [4, 8], "join": 10},
+		"lead": 1.0, "eats": "graze", "beds": "open", "hunted": "weak", "strike_h": [0.4, 1.2], "reach": 2.6,
+		"meat": 3.5, "spacing": 3.0, "tires": 4.0,
+		"defend": {"hurt": 0.5, "reach": 2.4, "damage": 18.0, "knock": 4.0},
+		"tame": {"spirit": 70.0},
+		"coats": ["bay", "bay", "dun", "dun", "chestnut", "brown", "black", "grey"],
+	},
+	"stallion": {
+		"name": "wild stallion", "model": "res://assets/horse/horse.glb", "scale": 1.0, "kind": "prey", "rig": "horse",
+		"health": 340.0, "walk": 1.4, "run": 13.5, "walk_ref": 1.38, "run_ref": 10.0, "turn": 3.2,
+		"sight": 65.0, "fov": 340.0, "hearing": 1.5, "scent": 100.0,
+		"body": [0.35, 1.55, 1.45], "vitals": [0.16, "chest"], "head": [0.2, "head"],
+		"skin": {"rawhide": 2}, "butcher": {"venison": 9, "sinew": 3, "tallow": 2, "brains": 1},
+		"skin_s": 14.0, "butcher_s": 20.0,
+		"clips": {"idle": ["idle"], "graze": "graze", "alert": "alert", "walk": "walk", "run": "run", "jump": "idle",
+				"attack": "rear", "hit_l": "idle", "hit_r": "idle", "death": "death", "low": "rest", "eat": "graze"},
+		"eco": "horse", "brain": "herd", "group": "horse_herd", "lead": 0.0, "eats": "graze", "beds": "open",
+		"hunted": "weak", "strike_h": [0.9, 1.6], "reach": 2.8, "meat": 3.8, "spacing": 3.0, "tires": 4.0,
+		# (he rears and strikes at a man who crowds the band, and comes at one who hurts it)
+		"defend": {"hurt": 0.7, "reach": 2.6, "damage": 24.0, "charge": 12.0, "crowd": 6.0, "knock": 5.5},
+		"tame": {"spirit": 110.0},
+		"coats": ["bay", "dun", "black", "chestnut", "brown", "grey"],
 	},
 }
 
@@ -165,6 +215,8 @@ const GROUPS := {
 	"fox": {"species": "fox", "members": ["fox"], "size": [1, 1], "starts": "feed"},
 	"wolf_pack": {"species": "wolf", "members": ["wolf"], "size": [3, 4], "starts": "bed"},
 	"bison_herd": {"species": "bison", "members": ["bison"], "size": [8, 14], "starts": "feed"},
+	# (a band: its stallion, and mares led by the first of them)
+	"horse_herd": {"species": "horse", "members": ["stallion", 1.0, "horse"], "size": [4, 8], "starts": "feed"},
 }
 
 
@@ -183,7 +235,8 @@ static func eco_of(species: String) -> String:
 	return String((DATA.get(species, {}) as Dictionary).get("eco", species))
 
 
-## The land's kinds that have bodies in the world (WildlifeSpawner keeps them to the numbers): deer, wolf, fox, bison.
+## The land's kinds that have bodies in the world (WildlifeSpawner keeps them to the numbers): deer, wolf, fox, bison,
+## horse.
 static func eco_kinds() -> Array[String]:
 	var out: Array[String] = []
 	for sp: String in DATA:
@@ -204,6 +257,13 @@ static func filler(eco: String) -> Dictionary:
 ## A species' brain (its group's planner): herd, pack, fox.
 static func brain(species: String) -> String:
 	return String((DATA.get(species, {}) as Dictionary).get("brain", "herd"))
+
+
+## A new body for `species` (not yet set up): its rig's (WildHorse for "horse"), else a WildAnimal.
+static func make(species: String) -> WildAnimal:
+	if String(get_data(species).get("rig", "")) == "horse":
+		return WildHorse.new()
+	return WildAnimal.new()
 
 
 ## The species' model, its clips set to loop once (the imported Animation resources are shared by every instance).

@@ -22,6 +22,7 @@ Open the folder in Godot and press **F5**.
 | E at a tree, trunk or rock | Takes out the right tool and swings it once |
 | B | Build mode on / off (wheel: the piece, R: turn it, hold E: build it; see Building) |
 | E at a horse | At its saddle: mount (hold E on horseback: get off); at its head: lead it / Stay (see Horses) |
+| G at a wild horse's side | Grab its mane and swing up bareback (on foot, or from the saddle riding alongside it); W A S D keep your balance while it bucks, G lets go (see Horses, Wild horses) |
 | E by a felled tree with the horse near | Hitch the trunk to the horse and drag it (see Horses) |
 | E at a dead animal's neck with the horse near | Rope the carcass to the horse and drag it home (see Horses) |
 | E at a dead animal's neck on foot | Drag it on a rope in the left hand; T puts a torch in the right; E lets go (see Horses) |
@@ -568,6 +569,26 @@ Shift spurs it up a gait, Alt holds a walk, Space jumps from a canter; **hold E*
   *Take out* what went in last, or *Load the cart*: the chest screen, as the wheelbarrow's, the goods shown in the
   bed. At most 700 kg in it. Saved with the game: where it stands, the horse still in its shafts, the goods, and the
   deer, logs or wheelbarrow in the bed.
+- **Wild horses** (`scripts/wildlife/wild_horse.gd`, `scripts/horse/horse_breaking.gd`; user 2026-09-28: "a herd of
+  wild horses that can be tamed"). Bands of them live on the open land east of the fort (and the fields and the lake
+  shore), and one band of strayed woods horses in the fort's own woods: a stallion and three to seven mares, a mare
+  leading and the stallion at the back, the project's own horse in bay, dun, chestnut, brown, black or grey, no tack.
+  They have the deer's and the bison's herd brain (grazing heads down, one standing sentry, bedding down in the open,
+  bolting together, keeping away from where they met danger). They see nearly all the way round (only straight behind
+  is blind), hear and smell well, and outrun anything, but they **tire**: run hard, a horse falls off to a trot and
+  can be caught (chase a band on your own horse and the one that tires drops behind). A crowded stallion rears and
+  strikes; one behind a fresh horse gets kicked. **Catch**: **G** at its side (not its head: it bolts, or the
+  stallion rears at you) grabs a fistful of mane and swings you up bareback; from the saddle, riding alongside it, G
+  takes you across onto its back. Its band bolts. **Break it**: it bucks, crow-hops, rears, spins and bolts. Under the
+  crosshair a ring shows your balance as a dot, a mark on the ring's edge the way it is throwing you, and round it
+  the horse's spirit. **W A S D** shift your weight and move the dot: lean against the throw (a buck throws you
+  forward: S; a rear back: W; a spin outward: lean into it). The dot out of the ring, or the grip's stamina spent
+  (its own ring, draining faster the further off balance you are), and you are thrown (knocked down and bruised).
+  **G** lets go (off on your feet). Each move you sit takes some of its spirit, more the better you sat it; none
+  left, it is **broken** and yours: ridden, led and hitched like any horse, with a rope bridle for the reins and no
+  saddle, kept in the save. A horse that threw you runs off wild again but remembers the ride: the next one is
+  shorter. A tired horse (run down first) has less spirit, a hurt one too; a fresh stallion is the hardest ride.
+  Shot, a wild horse is game like the rest (rawhide, venison, sinew, tallow).
 - Not yet: a sled (snow), a four-wheeled wagon, several horses in a team, the harness as a model (it is drawn),
   keeping a load on a rope through a save (a save leaves it lying where it is), game packed across the saddle,
   laying a log from the horse's chain straight into a barricade (unhitch it, then pull it into place on foot).
@@ -588,7 +609,9 @@ hands, a trunk, setting down, a deer and a log in and out, pack things and Load 
 jump); `tests/horse/wheelbarrow_shots.gd` (windowed: parked, pushed, a deer, a log, the screen, a load in the bed);
 `tests/horse/test_horse_cart.gd` (headless: parked, hitched, drawn round a turn, its pace empty and loaded, goods, a
 deer, logs, the wheelbarrow in and out, caught between two trunks and worked free, unhitched, ridden with the real
-keys).
+keys); `tests/wildlife/test_wild_horses.gd` (headless, `-- wildlife=on`: the bands, gaits, grazing, flight and
+winding, G at the head, behind and at the side, a ride broken with the real keys, riding it, the save, a rider
+thrown and the horse wild again, the catch from the saddle, the carcass).
 
 ## Layout
 

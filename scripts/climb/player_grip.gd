@@ -323,6 +323,9 @@ func tick(dt: float) -> bool:
 		return false
 	if player.is_dead:
 		_let_go(0.0, "dead")
+			# beside a wild horse: its mane, and up onto its back (HorseBreaking); the player is on it now
+			if HorseBreaking.try_grab(player):
+				return true
 		return false
 	if not is_instance_valid(anchor) or not is_instance_valid(gripped):
 		_let_go(0.0, "lost")

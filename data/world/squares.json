@@ -17,23 +17,23 @@
     ["marsh", "field_land", "lake"]
   ],
   "types": {
-    "fort_woods": {"name": "dense woods", "animals": {"deer": 40, "wolf": 10, "fox": 8, "mammoth": 1, "bison": 0},
+    "fort_woods": {"name": "dense woods", "animals": {"deer": 40, "wolf": 10, "fox": 8, "mammoth": 1, "bison": 0, "horse": 6},
       "trees": 1.0, "stone": 0.3, "water": "brook", "built": true},
-    "deep_woods": {"name": "deep woods", "animals": {"deer": 34, "wolf": 12, "fox": 7, "mammoth": 0, "bison": 0},
+    "deep_woods": {"name": "deep woods", "animals": {"deer": 34, "wolf": 12, "fox": 7, "mammoth": 0, "bison": 0, "horse": 0},
       "trees": 1.0, "stone": 0.2, "water": "brook"},
-    "old_woods": {"name": "old-growth woods", "animals": {"deer": 28, "wolf": 10, "fox": 6, "mammoth": 0, "bison": 0},
+    "old_woods": {"name": "old-growth woods", "animals": {"deer": 28, "wolf": 10, "fox": 6, "mammoth": 0, "bison": 0, "horse": 0},
       "trees": 1.0, "stone": 0.3, "water": "brook"},
-    "woods_ridge": {"name": "wooded ridge", "animals": {"deer": 24, "wolf": 8, "fox": 6, "mammoth": 0, "bison": 0},
+    "woods_ridge": {"name": "wooded ridge", "animals": {"deer": 24, "wolf": 8, "fox": 6, "mammoth": 0, "bison": 0, "horse": 0},
       "trees": 0.8, "stone": 0.6, "water": "spring"},
-    "cliffs": {"name": "cliffs", "animals": {"deer": 8, "wolf": 4, "fox": 4, "mammoth": 0, "bison": 0},
+    "cliffs": {"name": "cliffs", "animals": {"deer": 8, "wolf": 4, "fox": 4, "mammoth": 0, "bison": 0, "horse": 0},
       "trees": 0.3, "stone": 1.0, "water": "spring"},
-    "open_land": {"name": "open land", "animals": {"deer": 16, "wolf": 8, "fox": 6, "mammoth": 4, "bison": 40},
+    "open_land": {"name": "open land", "animals": {"deer": 16, "wolf": 8, "fox": 6, "mammoth": 4, "bison": 40, "horse": 24},
       "trees": 0.15, "stone": 0.2, "water": "river", "built": true},
-    "field_land": {"name": "open fields", "animals": {"deer": 18, "wolf": 6, "fox": 6, "mammoth": 2, "bison": 24},
+    "field_land": {"name": "open fields", "animals": {"deer": 18, "wolf": 6, "fox": 6, "mammoth": 2, "bison": 24, "horse": 18},
       "trees": 0.2, "stone": 0.2, "water": "river"},
-    "lake": {"name": "lake shore", "animals": {"deer": 14, "wolf": 4, "fox": 5, "mammoth": 1, "bison": 10},
+    "lake": {"name": "lake shore", "animals": {"deer": 14, "wolf": 4, "fox": 5, "mammoth": 1, "bison": 10, "horse": 8},
       "trees": 0.4, "stone": 0.3, "water": "lake"},
-    "marsh": {"name": "marsh", "animals": {"deer": 12, "wolf": 4, "fox": 6, "mammoth": 0, "bison": 0},
+    "marsh": {"name": "marsh", "animals": {"deer": 12, "wolf": 4, "fox": 6, "mammoth": 0, "bison": 0, "horse": 4},
       "trees": 0.3, "stone": 0.1, "water": "marsh"}
   }
 }

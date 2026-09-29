@@ -34,6 +34,10 @@ KY = 1.05
 KX = 1.02
 K = np.array([KX, KY, KZ])
 LEG_THICK = 1.12           # stocky: leg, cannon and joint radii on the base
+# The body's width (revision 6, user 2026-09-28: "make the body slimmer too"): the torso and the girdle muscles (the
+# barrel, the chest, the quarters) scaled across about the midline; the legs, the neck and the head keep theirs, and
+# the tack is fitted to the scaled torso.
+BODY_W = 1.0
 HOOF_K = 1.12              # larger, sound hooves
 
 # ---------------------------------------------------------------------------
@@ -315,20 +319,27 @@ TORSO_ROWS = [
     (-0.745, 1.14, 0.865, 0.16, 0.45, 2.0, 2.0),
     (-0.65, 1.21, 0.785, 0.205, 0.44, 1.9, 2.0),
     (-0.52, 1.27, 0.72, 0.23, 0.42, 1.45, 2.1),
-    (-0.40, 1.31, 0.685, 0.242, 0.40, 1.30, 2.2),      # withers narrower on top (revision 4: the rider's knees)
-    (-0.27, 1.25, 0.675, 0.254, 0.41, 1.85, 2.2),     # a little narrower on top in front of the saddle (the knees)
+    # (revision 6, user 2026-09-28: "you see that lumps thats what i dont like", "why raise the back instead of
+    # makeing the other things smaller": the withers and the croup stood up as humps either side of the back under
+    # the saddle; they are brought down toward it, the back and the saddle where they were. The horse is the lower
+    # for it at the withers: about 14 hands)
+    (-0.40, 1.285, 0.685, 0.242, 0.40, 1.30, 2.2),     # withers narrower on top (revision 4: the rider's knees)
+    (-0.27, 1.235, 0.675, 0.254, 0.41, 1.85, 2.2),    # a little narrower on top in front of the saddle (the knees)
     (-0.12, 1.195, 0.68, 0.262, 0.42, 2.4, 2.2),
     (0.00, 1.18, 0.69, 0.268, 0.43, 2.5, 2.2),
     (0.14, 1.185, 0.705, 0.27, 0.45, 2.5, 2.2),
-    (0.27, 1.21, 0.745, 0.265, 0.48, 2.4, 2.2),
-    (0.38, 1.25, 0.81, 0.255, 0.52, 2.3, 2.2),
+    (0.27, 1.205, 0.745, 0.265, 0.48, 2.4, 2.2),
+    (0.38, 1.215, 0.81, 0.255, 0.52, 2.3, 2.2),
     # croup and quarters (revision 4): the croup slopes from its highest point behind the
     # point of hip down to the tail head; the point of buttock sits under the tail head,
     # about 0.28 m behind the hip joint
-    (0.47, 1.29, 0.87, 0.243, 0.53, 2.3, 2.2),
-    (0.55, 1.285, 0.905, 0.225, 0.55, 2.3, 2.2),
-    (0.62, 1.245, 0.925, 0.188, 0.56, 2.2, 2.2),
-    (0.665, 1.20, 0.94, 0.13, 0.56, 2.1, 2.0),
+    # (revision 6: the quarters 0.9 as wide, the flank a little deeper: less of the thigh shows under it; the croup
+    # lower and flatter, no mound behind the saddle, a little below the withers (built uphill), falling off gently to
+    # the tail)
+    (0.47, 1.232, 0.85, 0.218, 0.53, 2.3, 2.2),
+    (0.55, 1.232, 0.885, 0.200, 0.55, 2.3, 2.2),
+    (0.62, 1.218, 0.925, 0.168, 0.56, 2.2, 2.2),
+    (0.665, 1.19, 0.94, 0.13, 0.56, 2.1, 2.0),
     (0.695, 1.16, 0.985, 0.07, 0.56, 2.0, 2.0),
     (0.712, 1.135, 1.03, 0.03, 0.56, 2.0, 2.0),
 ]
@@ -441,8 +452,11 @@ HEAD_PROFILE = [(-0.02, 0.046, -0.080, 0.060, 2.2, 2.0), (0.05, 0.063, -0.150, 0
                 (0.50, 0.054, -0.070, 0.056, 2.2, 2.0), (0.55, 0.047, -0.058, 0.053, 2.0, 2.0)]
 EYE = hp(0.213, 0.026, 0.093)
 EYE_POS = S(EYE)            # horse space
-EYE_R = 0.027               # eyeball radius (base)
-EYE_SET = 0.006             # eyeball centre inside the eye point (base): a prominent eye that fills the lids
+# (revision 6, user 2026-09-28: "horses eye balls are still to big", "those eyes look insane": the eyeball 0.78 of
+# revision 5's and set deeper under the lids, no bulge; the lids and the eye opening made smaller with it, the opening
+# an almond, twice as long as it is high)
+EYE_R = 0.021               # eyeball radius (base)
+EYE_SET = 0.009             # eyeball centre inside the eye point (base)
 
 
 def _eye_c(sg):
@@ -528,7 +542,7 @@ def _head_base():
         add += [
             _hell(0.15, -0.115, sg * 0.052, (0.042, 0.105, 0.080)),                        # jowl (round cheek)
             _hell(0.215, -0.060, sg * 0.070, (0.022, 0.080, 0.055)),                       # masseter
-            Ellipsoid(tuple(_eye_c(sg) + sg * 0.002 * EX), (0.023, 0.035, 0.028), HEAD_R),     # eyelids
+            Ellipsoid(tuple(_eye_c(sg) + sg * 0.002 * EX), (0.020, 0.030, 0.024), HEAD_R),     # eyelids
         ]
         ridges.append(RoundCone(hp(0.19, -0.004, sg * 0.084), hp(0.335, -0.028, sg * 0.064), 0.007, 0.005))  # facial crest
         ridges.append(RoundCone(hp(0.172, 0.058, sg * 0.074), hp(0.25, 0.052, sg * 0.074), 0.009, 0.006))    # orbit rim
@@ -548,7 +562,7 @@ def _head_base():
         eye[0] += sg * 0.001
         c, sn = math.cos(-0.18), math.sin(-0.18)
         R = np.stack([EX, c * HEAD_AX + sn * HEAD_FR, -sn * HEAD_AX + c * HEAD_FR], 1)
-        cuts.append(Ellipsoid(tuple(eye + sg * 0.014 * EX), (0.022, 0.029, 0.0165), R))     # eye opening
+        cuts.append(Ellipsoid(tuple(eye + sg * 0.009 * EX), (0.0165, 0.0225, 0.0105), R))   # eye opening (almond)
         p, d, la = _nostril_frame(sg)
         F = _frame(la, d)
         cuts.append(Ellipsoid(tuple(p + d * 0.004 + la * 0.006), (0.011, 0.026, 0.030), F))   # nostril
@@ -587,16 +601,21 @@ def eye_mesh(n_u=18, n_v=12):
 # centre x, centre y, half width, half depth to the front (-y) and to the back (+y). The
 # front line runs from the flank to the stifle and on to the front of the hock, the back
 # line from the point of buttock down the hamstrings to the point of hock.
+# Revision 6 (user 2026-09-28, "the bigg booty", "the top part of the leg is to high or big", "the hind legs needs to
+# be drastic": the quarters read far too heavy, the hind leg one thick column from the rump down to the hock): the
+# thigh and gaskin about half as wide as revision 4's (0.5-0.7) and much shallower (0.7-0.75 front to back, the
+# hamstring line behind 0.6-0.75), the thigh's top fading out low into the body; the rows just above the hock as they
+# were, to meet it.
 THIGH_ROWS = [
-    (1.08, 0.125, 0.455, 0.045, 0.110, 0.140),
-    (1.02, 0.148, 0.455, 0.068, 0.150, 0.180),
-    (0.94, 0.162, 0.452, 0.080, 0.172, 0.200),
-    (0.86, 0.170, 0.450, 0.082, 0.182, 0.192),
-    (0.78, 0.174, 0.448, 0.078, 0.182, 0.172),
-    (0.71, 0.174, 0.450, 0.068, 0.178, 0.145),
-    (0.665, 0.170, 0.470, 0.062, 0.158, 0.128),
-    (0.62, 0.164, 0.500, 0.055, 0.125, 0.112),
-    (0.56, 0.152, 0.537, 0.047, 0.086, 0.090),
+    (1.08, 0.112, 0.455, 0.010, 0.060, 0.060),
+    (1.02, 0.130, 0.455, 0.024, 0.095, 0.095),
+    (0.94, 0.146, 0.452, 0.036, 0.118, 0.115),
+    (0.86, 0.156, 0.450, 0.043, 0.130, 0.118),
+    (0.78, 0.162, 0.448, 0.045, 0.135, 0.110),
+    (0.71, 0.166, 0.450, 0.043, 0.128, 0.100),
+    (0.665, 0.166, 0.470, 0.040, 0.112, 0.092),
+    (0.62, 0.162, 0.500, 0.037, 0.092, 0.082),
+    (0.56, 0.152, 0.537, 0.036, 0.068, 0.072),
     (0.49, 0.140, 0.574, 0.040, 0.058, 0.066),
 ]
 
@@ -697,7 +716,8 @@ def landmarks(s):
         _ell_along(m((0.205, -0.395, 0.865)), (0, -0.33, 0.97), (0, -0.46, 0.74), (0.05, 0.13, 0.075)),
     ]
     # the flank fold: the skin web from the belly to the stifle (revision 4)
-    add.append(_ell_along(m((0.172, 0.255, 0.78)), (0, 0.16, 0.835), (0, 0.33, 0.715), (0.048, 0.125, 0.042)))
+    # (revision 6: thinner, the hind leg's top was too heavy)
+    add.append(_ell_along(m((0.165, 0.255, 0.78)), (0, 0.16, 0.835), (0, 0.33, 0.715), (0.036, 0.105, 0.032)))
     cut = []
     return add, cut
 
@@ -710,13 +730,15 @@ def muscles(s):
         # quarters (revision 4): the gluteal mass over the hip joint from the point of hip to
         # the tail head, the point of hip (tuber coxae) ahead of the hip joint, the point of
         # buttock (tuber ischii) under the tail head
-        _ell_along(m((0.148, 0.49, 1.08)), (0, 0.33, 1.15), (0, 0.66, 1.06), (0.088, 0.19, 0.115)),  # gluteal mass
+        # (revision 6: much smaller, 0.65 across and 0.68 deep: the quarters were far too heavy)
+        _ell_along(m((0.130, 0.49, 1.08)), (0, 0.33, 1.15), (0, 0.66, 1.06), (0.058, 0.16, 0.078)),  # gluteal mass
         # (revision 5: flatter, it stood out of the topline as a knob)
         Ellipsoid(m((0.182, 0.315, 1.152)), (0.032, 0.040, 0.034)),                              # point of hip
-        Ellipsoid(m((0.115, 0.635, 0.945)), (0.068, 0.058, 0.078)),                              # point of buttock
+        Ellipsoid(m((0.105, 0.625, 0.950)), (0.045, 0.042, 0.052)),                              # point of buttock
         # inner thigh (semimembranosus): fills the quarters between the hind legs down to the
-        # gaskins, so that from behind the two thighs meet under the tail
-        _ell_along(m((0.062, 0.600, 0.80)), (0, 0.645, 0.97), (0, 0.58, 0.60), (0.058, 0.19, 0.062)),
+        # gaskins, so that from behind the two thighs meet under the tail (revision 6: out against the slimmer
+        # thigh and ending above the gaskin; left where it was it hung between the legs as a lump of its own)
+        _ell_along(m((0.088, 0.600, 0.85)), (0, 0.645, 0.97), (0, 0.59, 0.70), (0.040, 0.13, 0.042)),
     ]
 
 
@@ -736,8 +758,13 @@ class Warped(Node):
         return self.a.f(X, yu, Z) * _dwarp_y(yu)
 
 
+def _slim(node):
+    """`node` scaled across by BODY_W (about the midline)."""
+    return node if BODY_W == 1.0 else Scaled(node, (BODY_W, 1.0, 1.0))
+
+
 def _torso_only_base():
-    return Union([_torso_base()] + muscles("l") + muscles("r"), k=0.07)
+    return _slim(Union([_torso_base()] + muscles("l") + muscles("r"), k=0.07))
 
 
 def torso_only():
@@ -758,7 +785,7 @@ def horse_body():
     tors = Union([_torso_base()] + ml[2:] + mr[2:], k=0.07)
     tors = Union([tors, ml[0], mr[0]], k=0.09)         # shoulder
     tors = Union([tors, ml[1], mr[1]], k=0.07)         # pectoral
-    body = Union([tors, nh], k=0.10)
+    body = Union([_slim(tors), nh], k=0.10)
     add, cut = [], []
     for s in ("l", "r"):
         a, c = landmarks(s)

@@ -81,6 +81,11 @@ const FAR_SIM_D := 60.0
 ## A prey's charge ("defend" with "charge"): at most this long (s), at this share of its run.
 const CHARGE_S := 4.0
 const CHARGE_PACE := 0.85
+## Winded (a species that "tires", WildlifeSpecies: its fatigue climbs that much faster while it runs): between these
+## shares of its fatigue its run falls off to a trot of WINDED_TROT x its walk (user 2026-09-28, the wild horses: run
+## down, they can be caught).
+const WINDED := Vector2(0.6, 0.95)
+const WINDED_TROT := 2.6
 ## Prey keep this far from the fort's centre (m); wolves do not come closer than FORT_KEEP_OUT.
 const FORT_AVOID := 45.0
 const FORT_KEEP_OUT := 26.0
@@ -120,6 +125,9 @@ var killed_by := ""
 ## Who wounded it last ("player", "wolf"; "" not known): the player's wounded and dead are wolves' only when the land is
 ## short of deer (WildPlanner.TRACK_HUNGER).
 var hurt_by := ""
+## Its build against its species' model (WildlifeSpecies "sizes": a cow's or a bull's): the body, the hit zones and the
+## reach are scaled by it (set_size).
+var size := 1.0
 
 var rng := RandomNumberGenerator.new()
 var _t := 0.0
@@ -174,6 +182,43 @@ func setup(p_species: String, p_spawner: WildlifeSpawner, p_group: WildGroup, se
 	hunger = rng.randf_range(0.1, 0.5)
 	fatigue = rng.randf_range(0.0, 0.4)
 	_call_t = rng.randf_range(40.0, 160.0)
+	set_size(_pick_size())
+
+
+## A build from the species' "sizes" ([[share, smallest, largest], ...]: a bull's, a cow's), 1 without.
+func _pick_size() -> float:
+	var sizes: Array = data.get("sizes", [])
+	if sizes.is_empty():
+		return 1.0
+	var r := rng.randf()
+	for e: Array in sizes:
+		r -= float(e[0])
+		if r <= 0.0:
+			return rng.randf_range(float(e[1]), float(e[2]))
+	var last: Array = sizes[sizes.size() - 1]
+	return rng.randf_range(float(last[1]), float(last[2]))
+
+
+## Its build `s` (before it is in the tree: a save's animal is given its own): its own copy of the species' data with
+## the model's scale, the body (collision and hit capsule), the vitals' and the head's spheres, its reach, its defence's
+## reach and the herd's spacing scaled.
+func set_size(s: float) -> void:
+	size = s
+	data = WildlifeSpecies.get_data(species)
+	if is_equal_approx(s, 1.0):
+		return
+	data = data.duplicate(true)
+	data.scale = float(data.scale) * s
+	var body: Array = data.body
+	for i in body.size():
+		body[i] = float(body[i]) * s
+	(data.vitals as Array)[0] = float((data.vitals as Array)[0]) * s
+	(data.head as Array)[0] = float((data.head as Array)[0]) * s
+	for k in ["reach", "spacing"]:
+		if data.has(k):
+			data[k] = float(data[k]) * s
+	if data.has("defend") and (data.defend as Dictionary).has("reach"):
+		data.defend.reach = float(data.defend.reach) * s
 
 
 func _ready() -> void:
@@ -381,7 +426,8 @@ func _needs(dt: float) -> void:
 	if state == State.REST:
 		fatigue = maxf(fatigue - REST_RATE * k, 0.0)
 	elif not resting:
-		fatigue = minf(fatigue + FATIGUE_RATE * k * (3.0 if state in [State.FLEE, State.CHASE] else 1.0), 1.0)
+		var run := 3.0 * float(data.get("tires", 1.0))
+		fatigue = minf(fatigue + FATIGUE_RATE * k * (run if state in [State.FLEE, State.CHASE] else 1.0), 1.0)
 
 
 ## A species' own call (its "call": the fox's; the pack's howl is WildlifeSpawner's, from WildPlanner).
@@ -591,6 +637,7 @@ func _flee_tick(dt: float) -> void:
 	_flee_run += dt
 	var speed := float(data.run) * (0.82 if _flee_run > 12.0 else 1.0) * (0.75 if health < float(data.health) * 0.5 else 1.0) \
 			* (LAME_SPEED if lame() else 1.0)
+	speed = lerpf(speed, minf(speed, float(data.walk) * WINDED_TROT), winded())
 	_move(_keep_off_fort(dir), speed, dt, true)
 	_play(String(data.clips.run), 0.2, clampf(_speed / float(data.run_ref), 0.6, 2.4))
 	if _t > _len and global_position.distance_to(threat_pos) > 80.0:
@@ -654,7 +701,8 @@ func _charge_tick(dt: float) -> void:
 		_enter(State.FLEE, 6.0)
 		return
 	threat_pos = p.global_position
-	_move(to, float(data.run) * CHARGE_PACE * (LAME_SPEED if lame() else 1.0), dt, true)
+	var pace := float(data.run) * CHARGE_PACE * (LAME_SPEED if lame() else 1.0)
+	_move(to, lerpf(pace, minf(pace, float(data.walk) * WINDED_TROT), winded()), dt, true)
 	_play(String(data.clips.run), 0.15, clampf(_speed / float(data.run_ref), 0.6, 2.4))
 
 
@@ -1223,6 +1271,13 @@ func wound_look() -> String:
 ## Weak: under WEAK_HEALTH of its health, or lamed (a wolf leaves the chase to the pack).
 func weak() -> bool:
 	return health < float(data.health) * WEAK_HEALTH or lame()
+
+
+## How winded it is: 0 fresh .. 1 blown (a species that "tires", from WINDED of its fatigue; others never).
+func winded() -> float:
+	if not data.has("tires"):
+		return 0.0
+	return smoothstep(WINDED.x, WINDED.y, fatigue)
 
 
 ## Lamed: a leg wound still bleeding LAME_BLEED or more.

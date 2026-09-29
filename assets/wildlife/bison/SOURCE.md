@@ -10,7 +10,9 @@
   (`assets/wildlife/quaternius/stag.glb`, unmodified; `assets/wildlife/quaternius/SOURCE.md`).
 
 **Changes made by this project** (the CC-BY notice of modification):
-- The bison mesh was scaled to metres (about 1.9 m at the hump, 2.8 m long).
+- The bison mesh was scaled to metres and stretched to a plains bull's build (about 1.97 m at the hump, 3.3 m long,
+  1.05 m across: 1.22 across, 1.18 along and 1.03 up on its first scale; re-run 2026-09-28). The game makes the herd's
+  cows smaller from it (WildlifeSpecies "sizes").
 - The mesh was skinned to the stag's armature. The armature's joints were moved to the bison's anatomy (spine,
   shoulders, legs, neck and head, tail), measured off both meshes. The weights are this project's own, by distance
   to each bone.
@@ -22,5 +24,5 @@ texture `bison_BisonPlains_BaseColor.png` is the Poly by Google model's own, as 
 
 | File | Bytes | SHA-256 |
 | --- | --- | --- |
-| bison.glb | 2920824 | c8436a038cb980f3ca49417c0c1c920267df51910ee0ccc6b81abdf5edf4c0d3 |
+| bison.glb | 2909232 | 9cf55485cb4d76dba918623ec0b15f8e70b87aeb41401500b9d94c020d2ccc83 |
 | bison_BisonPlains_BaseColor.png | 1375873 | 5c3bb42bd691caf799105d5df78fb6be0bc42bc3cfb0a40465ab9bd9b3ce61aa |
