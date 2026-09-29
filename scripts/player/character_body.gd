@@ -286,8 +286,15 @@ const BREAST_MAX := 0.04            # m: the shown offset approaches this softly
 const BREAST_ACCEL_MAX := 40.0      # m/s^2: a teleport or a cut is not a jolt
 const SOFT_HELD := 0.5
 const SOFT_SUBSTEP := 1.0 / 120.0   # s: the springs' longest step
-## A flinch's jolt (breast_jolt): the springs' velocity kicked up and forward (m/s, chest bind frame: y up, z forward).
-const BREAST_JOLT := Vector3(0.0, 0.85, 0.35)
+## A flinch's jolt (breast_jolt): its own spring's velocity kicked up and forward (m/s, chest bind frame: y up, z
+## forward) at a strength of 1 (the man's genital rating at its top), x strength^JOLT_CURVE below it; the spring
+## softer and looser than the everyday one, so it rings through a few bounces, and its own soft limit (JOLT_MAX). The
+## same clothed or not. Exaggerated (the user 2026-09-29: "i want it exaergated please for the 1.0 gentlies more jiggle").
+const BREAST_JOLT := Vector3(0.0, 1.0, 0.45)
+const JOLT_CURVE := 1.5
+const JOLT_STIFFNESS := 300.0       # 1/s^2 (about 2.8 Hz)
+const JOLT_DAMPING := 6.0           # 1/s: several bounces before it settles
+const JOLT_MAX := 0.07              # m (tanh soft limit; the state kept within 2x)
 ## The male genitals (body v4): on an unused rig bone (GENITAL_HELPER: keyed by the clips, no mesh
 ## used it; like the queue's wrinklemaps), always carried by the pelvis. Bare (`genital_swing` 1:
 ## BodyMaterials, a man with nothing over the pelvis) they bounce on a small spring (the offset, pelvis
@@ -630,7 +637,8 @@ func _setup_drivers() -> void:
 	for bn: String in BREAST_BONES:
 		var bb := skeleton.find_bone(bn)
 		if bb >= 0 and _bind.has(bb) and _bind.has(_chest):
-			_breasts.append({"bone": bb, "x": Vector3.ZERO, "v": Vector3.ZERO, "pp": Vector3.ZERO, "pv": Vector3.ZERO, "n": 0})
+			_breasts.append({"bone": bb, "x": Vector3.ZERO, "v": Vector3.ZERO, "pp": Vector3.ZERO, "pv": Vector3.ZERO, "n": 0,
+					"jx": Vector3.ZERO, "jv": Vector3.ZERO})
 	_genital = {}
 	_pelvis = skeleton.find_bone("pelvis")
 	var gb := skeleton.find_bone(GENITAL_HELPER)
@@ -1278,20 +1286,27 @@ func _soft(sk: Skeleton3D) -> void:
 					d.v = (d.v as Vector3) * 0.5
 			d.pv = vel
 			d.n = int(d.n) + 1
+			# a flinch's jolt rings on its own bare spring (breast_jolt)
+			if (d.jv as Vector3) != Vector3.ZERO or (d.jx as Vector3) != Vector3.ZERO:
+				var jv := _spring(d.jx, d.jv, JOLT_STIFFNESS, JOLT_DAMPING, Vector3.ZERO, dt)
+				d.jx = (jv[0] as Vector3).limit_length(2.0 * JOLT_MAX)
+				d.jv = jv[1]
+				if (d.jx as Vector3).length() < 1e-5 and (d.jv as Vector3).length() < 1e-4:
+					d.jx = Vector3.ZERO
+					d.jv = Vector3.ZERO
 		d.pp = p
 		sk.set_bone_global_pose(d.bone, _breast_global(gc, d))
 
 
 ## A flinch jolts the breasts (features/tandem: a woman's flinch in the tandem poses, as full as the pair's flinch gauge
 ## from the man's genital rating; the user 2026-09-29: "women breast jiggle effects on flinch based on the male
-## gentials ratings"): each spring's velocity is kicked by BREAST_JOLT x `strength`, the two a little unevenly, and they
-## bounce and settle as they do after a landing. Held by clothes the springs are stiffer and settle sooner: the kick is
-## up to twice as hard there so it still shows.
+## gentials ratings"): a jolt spring of its own per breast is kicked by BREAST_JOLT x `strength`, the two a little
+## unevenly, and bounces and settles as bare tissue does; the same clothed or not (the user: "a universal jolt for non
+## clothed and clothed its the same"): the clothes stiffen only the everyday spring (a run, a landing).
 func breast_jolt(strength: float) -> void:
-	var held := clampf(soft_support, 0.0, 1.0)
 	for i in _breasts.size():
 		var d: Dictionary = _breasts[i]
-		d.v = (d.v as Vector3) + BREAST_JOLT * strength * (1.0 + held) * (1.08 if i == 0 else 0.92)
+		d.jv = (d.jv as Vector3) + BREAST_JOLT * pow(maxf(strength, 0.0), JOLT_CURVE) * (1.08 if i == 0 else 0.92)
 
 
 ## A damped spring x'' = -k x - c x' + f over `dt`, in steps of at most SOFT_SUBSTEP (stable at any
@@ -1314,6 +1329,11 @@ func _breast_global(chest_global: Transform3D, d: Dictionary) -> Transform3D:
 	if L > 1e-6:
 		x *= BREAST_MAX * tanh(L / BREAST_MAX) / L        # a soft limit, no hard stop
 	var off: Vector3 = x * clampf(soft_tissue, 0.0, 1.5) * lerpf(1.0, SOFT_HELD, clampf(soft_support, 0.0, 1.0))
+	# the flinch's jolt: not held by the clothes
+	var j: Vector3 = d.get("jx", Vector3.ZERO)
+	var jl := j.length()
+	if jl > 1e-6:
+		off += j * (JOLT_MAX * tanh(jl / JOLT_MAX) / jl) * clampf(soft_tissue, 0.0, 1.5)
 	return sc * Transform3D(Basis(), off) * (_bind[d.bone] as Transform3D)
 
 
