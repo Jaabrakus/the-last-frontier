@@ -36,6 +36,8 @@ const ARMS_LAG := 0.07
 const BACK_SHOULDER_SWING := 0.12
 const BACK_SPINE_SWING := 0.3
 const BACK_SWING := 0.6
+## Backward jogs keep this share of the graph's hips bounce (9 cm; our forward jog has 5 cm).
+const BACK_BOUNCE := 0.55
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
 
 var args := {}
@@ -694,6 +696,13 @@ func _backward(dir: String, fwd: Animation) -> Animation:
 		var swing := type == Animation.TYPE_ROTATION_3D and upper.has(bone) and fi >= 0
 		var bm := _mean_q(bw, ti) if swing else Quaternion.IDENTITY
 		var fm := _mean_q(fwd, fi) if swing else Quaternion.IDENTITY
+		# the hips' bounce (the root's height through the cycle): the graph's backward jog bobs 9 cm, our forward jog 5: less of it
+		# (user 2026-09-30: "the backwards the player is too bouncy")
+		var mean_y := 0.0
+		if type == Animation.TYPE_POSITION_3D and bone == "root":
+			for f in n:
+				mean_y += bw.position_track_interpolate(ti, float(f) / FPS).y
+			mean_y /= float(n)
 		for f in n + 1:
 			var t := minf(float(f) / FPS, bw.length)
 			if type == Animation.TYPE_ROTATION_3D:
@@ -703,7 +712,10 @@ func _backward(dir: String, fwd: Animation) -> Animation:
 					q = bm * Quaternion.IDENTITY.slerp(delta, _swing_scale(bone))
 				out.rotation_track_insert_key(tr, t, q)
 			else:
-				out.position_track_insert_key(tr, t, bw.position_track_interpolate(ti, t))
+				var v: Vector3 = bw.position_track_interpolate(ti, t)
+				if bone == "root":
+					v.y = mean_y + (v.y - mean_y) * BACK_BOUNCE
+				out.position_track_insert_key(tr, t, v)
 	return out
 
 
