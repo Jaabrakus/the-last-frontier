@@ -7,8 +7,8 @@ extends RefCounted
 ## is an attack in the way the move keys held at the click say (data/melee/felling_axe.json):
 ##   D           right to left              A        left to right (D mirrored)
 ##   W           overhead, down             S        the high block (no attack: the haft held up across against W)
-##   W/S + A/D   the stab: a two-handed thrust of the head straight ahead (our own, keyed by hand:
-##               tools/anim_author/author_thrust.gd)
+##   S + A/D     the stab, for a tool that has one (the club; the felling axe has none since 2026-09-30: S + A / S + D
+##               swing A / D like W + A / W + D) (our own thrust, keyed by hand: tools/anim_author/author_thrust.gd)
 ##   A + D       the parry sweep against a stab (no damage: counters come with opponents)
 ##   none        the data's default (D)
 ## Nothing locks the player into an attack (user 2026-09-27: "make sure none of the attacks are on a animation lock",
@@ -172,10 +172,13 @@ func guard() -> Array:
 
 
 ## The attack the move keys held now ask for.
-static func direction_of(w: bool, a: bool, s: bool, d: bool, default := "D") -> String:
+static func direction_of(w: bool, a: bool, s: bool, d: bool, default := "D", stab := true) -> String:
 	if a and d:
 		return "AD"
-	if (w or s) and (a or d):
+	# (the stab is back + a side key only, and only for a tool that has one (the club): W + A / W + D swing A / D, walking
+	# forward into the cut, and the felling axe has no stab at all; user 2026-09-30: "no thrust for WA and WD", "remove
+	# thrust all together for axe")
+	if stab and s and (a or d):
 		return "STAB"
 	if a:
 		return "A"
@@ -191,7 +194,7 @@ static func direction_of(w: bool, a: bool, s: bool, d: bool, default := "D") -> 
 func direction() -> String:
 	var c := player.controls
 	return direction_of(c.pressed(&"move_forward"), c.pressed(&"move_left"), c.pressed(&"move_back"), c.pressed(&"move_right"),
-			str(data.get("default", "D")))
+			str(data.get("default", "D")), (data.get("swings", {}) as Dictionary).has("STAB"))
 
 
 ## RMB, a jump or a sprint: the attack is broken off (a feint; nothing locks the player into an attack).

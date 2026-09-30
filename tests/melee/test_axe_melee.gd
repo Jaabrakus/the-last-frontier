@@ -60,7 +60,7 @@ func _fr(n: int) -> void:
 
 func _keys_table() -> void:
 	var cases := [[[false, true, false, false], "A"], [[false, false, false, true], "D"], [[true, false, false, false], "W"],
-			[[false, false, true, false], "S"], [[true, true, false, false], "STAB"], [[true, false, false, true], "STAB"],
+			[[false, false, true, false], "S"], [[true, true, false, false], "A"], [[true, false, false, true], "D"],
 			[[false, true, true, false], "STAB"], [[false, false, true, true], "STAB"], [[false, true, false, true], "AD"],
 			[[false, false, false, false], "D"]]
 	var bad := []
@@ -70,6 +70,15 @@ func _keys_table() -> void:
 		if got != c[1]:
 			bad.append("%s->%s (want %s)" % [k, got, c[1]])
 	_expect(bad.is_empty(), "keys: W/A/S/D and their pairs pick the attacks %s" % str(bad))
+	# a tool with no stab (the felling axe): back + a side key swings the side
+	var nostab := [[[false, true, true, false], "A"], [[false, false, true, true], "D"], [[true, true, false, false], "A"]]
+	var bad2 := []
+	for c: Array in nostab:
+		var k: Array = c[0]
+		var got := AxeMelee.direction_of(k[0], k[1], k[2], k[3], "D", false)
+		if got != c[1]:
+			bad2.append("%s->%s (want %s)" % [k, got, c[1]])
+	_expect(bad2.is_empty(), "keys: with no stab S + A / S + D swing A / D %s" % str(bad2))
 
 
 ## (a dummy builds its parts where it is added: placed first)
@@ -97,8 +106,8 @@ func _attacks() -> void:
 	var dummy := _dummy(SPOT + Vector3(0.0, 0.0, -1.05))
 	await _fr(30)
 	var keys := {"A": ["move_left"], "D": ["move_right"], "W": ["move_forward"], "S": ["move_back"],
-			"STAB": ["move_forward", "move_right"], "AD": ["move_left", "move_right"]}
-	for dir: String in ["D", "A", "W", "S", "STAB", "AD"]:
+			"AD": ["move_left", "move_right"]}
+	for dir: String in ["D", "A", "W", "S", "AD"]:
 		var target := dummy
 		# (the keys walk the player: back to the spot between attacks)
 		p.global_position = SPOT + Vector3(0, 0.05, 0)

@@ -265,10 +265,7 @@ func _exchange() -> void:
 	r = await _beat(sp, ["move_right"], "", 0)
 	_expect(float(r.took) > 0.0 and not g.melee.last_contact.has("glance") and not g.melee.last_contact.has("blocked"),
 			"guard: the D on the partner's guard lands whole (took %.0f, met %s)" % [r.took, _met(g.melee.last_contact)])
-	# the parry turns a stab, nothing else
-	r = await _beat(sp, ["move_left", "move_right"], "STAB", -10)
-	_expect(bool(sp.last_contact.has("blocked")) and int(r.hits) == 0,
-			"parry: the partner's stab is stopped, no harm (partner met %s, player struck %d)" % [_met(sp.last_contact), r.hits])
+	# the parry turns a stab, nothing else (the felling axe has no stab since 2026-09-30: only the cut is checked)
 	r = await _beat(sp, ["move_left", "move_right"], "D", -10)
 	_expect(String(r.dir) == "AD", "parry: A+D is the parry (%s)" % r.dir)
 	_expect(float(r.hurt) > 0.0 and not sp.last_contact.has("blocked"), "parry: the partner's D is not a stab: it lands (player lost %.0f, partner met %s)" % [r.hurt, _met(sp.last_contact)])
@@ -280,10 +277,9 @@ func _exchange() -> void:
 	Input.action_release("move_left")
 	Input.action_release("move_right")
 	Input.action_release("fire")
-	var pb_stab := g.melee.block_power("STAB", Vector3.ZERO, Vector3.FORWARD)
 	var pb_d := g.melee.block_power("D", Vector3.ZERO, Vector3.FORWARD)
-	_expect(String(g._swing.get("dir", "")) == "AD" and pb_stab >= AxeMelee.BLOCK_FULL and pb_d == 0.0,
-			"parry: it blocks a stab whole (%.2f) and a cut not at all (%.2f)" % [pb_stab, pb_d])
+	_expect(String(g._swing.get("dir", "")) == "AD" and pb_d == 0.0,
+			"parry: it blocks a cut not at all (%.2f)" % pb_d)
 	for i in 200:
 		await physics_frame
 		if g.phase == GatherTools.Phase.READY and g._swing.is_empty():
@@ -385,17 +381,16 @@ func _fairness() -> void:
 	_expect(p.grip.stamina <= low, "stamina: none back while resting after a spend (%.1f)" % p.grip.stamina)
 	await _fr(int(PlayerGrip.REST_S * 120.0))
 	_expect(p.grip.stamina > low + 5.0, "stamina: then it comes back (%.1f)" % p.grip.stamina)
-	# the stab slower; no head bonus on the partner
+	# S + D is a D now, not a stab (the felling axe has no stab); no head bonus on the partner
 	await _home()
-	Input.action_press("move_forward")
+	Input.action_press("move_back")
 	Input.action_press("move_right")
 	Input.action_press("fire")
 	await _fr(2)
-	Input.action_release("move_forward")
+	Input.action_release("move_back")
 	Input.action_release("move_right")
 	Input.action_release("fire")
-	_expect(String(g._swing.get("dir", "")) == "STAB" and absf(float(g._swing.get("rate", 0.0)) - 0.8) < 0.01,
-			"stab: played at 0.8 (%.2f)" % float(g._swing.get("rate", 0.0)))
+	_expect(String(g._swing.get("dir", "")) == "D", "no stab: S + D swings D (%s)" % String(g._swing.get("dir", "")))
 	var t0 := sp.damage_taken
 	Hit.deliver(sp._head, 10.0, sp._head.global_position, Vector3(0, 0, 1), p, false)
 	var melee_head := sp.damage_taken - t0

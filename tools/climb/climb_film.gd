@@ -460,8 +460,8 @@ func _seg_axe() -> void:
 	recording = true
 	await _run(20)
 	var keys := {"D": ["move_right"], "A": ["move_left"], "W": ["move_forward"], "S": ["move_back"],
-			"STAB": ["move_forward", "move_right"], "AD": ["move_left", "move_right"]}
-	for dir: String in ["D", "A", "W", "S", "STAB", "AD"]:
+			"AD": ["move_left", "move_right"]}
+	for dir: String in ["D", "A", "W", "S", "AD"]:
 		p.global_position = spot + Vector3(0, 0.05, 0)
 		p.velocity = Vector3.ZERO
 		p.yaw = 0.0
@@ -793,8 +793,6 @@ func _seg_fight() -> void:
 	await _fight_beat(spot, ["move_left"], "A", 0.0, 0.45)
 	# the partner's W (the overhand chop), the player's high block (S) against it
 	await _fight_beat(spot, ["move_back"], "W", -0.11, 0.45)
-	# the partner's stab, the player's parry (A+D) against it
-	await _fight_beat(spot, ["move_left", "move_right"], "STAB", -0.03, 0.45)
 	# the partner's D a moment ahead of the player's A: it lands first, the player flinches, their A lost
 	await _fight_beat(spot, ["move_left"], "D", -0.1, 0.45)
 	# the player's D a moment ahead of the partner's W (slower to land): the partner flinches, its W lost

@@ -15,7 +15,7 @@ const REACT_JITTER_S := 0.08
 const HOLD_TICKS := 2
 ## The keys of each attack (the move keys held with LMB, as a player presses them).
 const KEYS := {"D": [&"move_right"], "A": [&"move_left"], "W": [&"move_forward"], "S": [&"move_back"],
-		"STAB": [&"move_forward", &"move_right"], "AD": [&"move_left", &"move_right"]}
+		"STAB": [&"move_back", &"move_right"], "AD": [&"move_left", &"move_right"]}
 
 var me: FrontierPlayer
 var opponent: FrontierPlayer
@@ -27,7 +27,7 @@ var feint_chance := 0.15
 ## The distance it keeps from its opponent (m), walking in or backing off between its presses.
 var keep_range := Vector2(0.95, 1.25)
 ## (S is the high block, AD the parry: answers, not attacks)
-var attack_mix := {"D": 3.0, "A": 3.0, "W": 1.5, "STAB": 1.5}
+var attack_mix := {"D": 3.0, "A": 3.0, "W": 1.5}
 var enabled := true
 
 var seen := 0              ## attacks of the opponent it saw begin

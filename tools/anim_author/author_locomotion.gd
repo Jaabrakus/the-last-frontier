@@ -24,8 +24,9 @@ const STOP_RATE := 1.12
 const ARMS_SWING := 0.7
 const ARMS_LAG := 0.07
 ## Backward jogs: the share of our upper body's swing they take (the shoulder girdle; the rest).
-const BACK_SHOULDER_SWING := 0.4
-const BACK_SWING := 0.75
+const BACK_SHOULDER_SWING := 0.12
+const BACK_SPINE_SWING := 0.3
+const BACK_SWING := 0.6
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
 
 var args := {}
@@ -304,6 +305,10 @@ static func _swing_scale(bone: String) -> float:
 	for part in ["clavicle", "scapula", "shoulder", "deltoid", "trap"]:
 		if part in bone:
 			return BACK_SHOULDER_SWING
+	# (the spine's twist is what sways the shoulders: much less of it too)
+	for part in ["spine", "chest", "neck"]:
+		if part in bone:
+			return BACK_SPINE_SWING
 	return BACK_SWING
 
 
