@@ -23,6 +23,9 @@ const STOP_RATE := 1.12
 ## The forward stops' length (s): the graph's 1.8 s shortened to the backward stops' (user 2026-09-30: "match it with the backwards stop,
 ## it seems quicker").
 const STOP_FW_LEN := 0.8
+## The forward stops ease out of the jog's lean over this (the chest upright while the arms change to the medium ready: the gun's
+## height falls smoothly through the stop).
+const STOP_FW_EASE_S := 0.25
 ## Our stop keeps this share of the graph's movement: the arms, the shoulder girdle, the spine.
 const STOP_ARMS := 0.4
 const STOP_GIRDLE := 0.25
@@ -116,13 +119,15 @@ func _bake() -> void:
 		var upper_from := ""
 		var stop_len := 0.0
 		var stop_rate := 0.0
+		var ease_s := 0.0
 		if dir.begins_with("fw"):
+			ease_s = STOP_FW_EASE_S
 			upper_from = "actor_b-p-run-bw" + dir.trim_prefix("fw") + "^idle"
 			# the forward stop as short as the backward ones (0.7-0.8 s; the graph's is 1.8 s of which the last second is standing):
 			# its stepping as quick as theirs, the state over as soon
 			stop_len = STOP_FW_LEN
 			stop_rate = lib.get_animation(stop_name).length / STOP_FW_LEN
-		out.add_animation(StringName(tn), _own_stop(clip, stop_name, upper_from, stop_len, stop_rate))
+		out.add_animation(StringName(tn), _own_stop(clip, stop_name, upper_from, stop_len, stop_rate, ease_s))
 		wired[stop_name] = {"lib": "frontier_locomotion", "clip": tn, "length": snappedf(stop_len if stop_len > 0.0 else lib.get_animation(stop_name).length, 0.000001)}
 		if stop_len > 0.0:
 			wired[stop_name]["time_scale"] = snappedf(stop_rate, 0.0001)
@@ -139,6 +144,7 @@ func _bake() -> void:
 	# the rifle's own low ready (idle, walking and running backward) and medium ready (crouch walk): the graph's arms turned at the
 	# shoulders, the right decides where the gun points and the left hand is the IK's
 	var low_bones := _bake_rifle_pose(out, "own-rifle-low-ready", "actor_b-p-rifle-idle-arms", LOW_TURN_R, LOW_TURN_L)
+	_bake_rifle_pose(out, "own-rifle-mid-ready", "actor_b-p-rifle-idle-arms", MIDIDLE_TURN_R, MIDIDLE_TURN_L)
 	var mid_bones := _bake_rifle_pose(out, "own-rifle-crouch-mid", "actor_b-p-rifle-crouch-run-arms", MID_TURN_R, MID_TURN_L, HIP_PULL, GUN_YAW_BACK, "actor_b-p-crouch-walk-bw")
 	_bake_rifle_pose(out, "own-rifle-crouch-mid-fw", "actor_b-p-rifle-crouch-run-arms", MID_FW_TURN_R, MID_FW_TURN_L, HIP_PULL, GUN_YAW_FW, "actor_b-p-crouch-walk-fw")
 	var idle_bones := _bake_rifle_pose(out, "own-rifle-crouch-idle", "actor_b-p-rifle-crouch-idle-arms", Vector3.ZERO, Vector3.ZERO, HIP_PULL_IDLE, GUN_YAW_IDLE, "actor_b-p-crouch-idle")
@@ -221,6 +227,7 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array,
 		"clips": {"own-axe-carry": {"lib": "frontier_locomotion", "clip": "own-axe-carry", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-axe-grip": {"lib": "frontier_locomotion", "clip": "own-axe-grip", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-rifle-low-ready": {"lib": "frontier_locomotion", "clip": "own-rifle-low-ready", "length": snappedf(1.0 / 30.0, 0.000001)},
+				"own-rifle-mid-ready": {"lib": "frontier_locomotion", "clip": "own-rifle-mid-ready", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-rifle-crouch-mid": {"lib": "frontier_locomotion", "clip": "own-rifle-crouch-mid", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-rifle-crouch-mid-fw": {"lib": "frontier_locomotion", "clip": "own-rifle-crouch-mid-fw", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-rifle-crouch-idle": {"lib": "frontier_locomotion", "clip": "own-rifle-crouch-idle", "length": snappedf(1.0 / 30.0, 0.000001)},
@@ -329,6 +336,9 @@ func _rifle_side_preview() -> void:
 
 ## The rifle low ready and the crouch walk's medium ready: the turns at the shoulders (degrees, pitch yaw roll in the shoulder's own
 ## frame: +Y lowers the hand and the gun's end on that side) of the graph's arm poses.
+## The standing medium ready: half the way (idle barrel about 18 deg up between the low ready's 7 and the graph's 30).
+const MIDIDLE_TURN_R := Vector3(0.0, 17.0, 0.0)
+const MIDIDLE_TURN_L := Vector3(0.0, 17.0, 0.0)
 const LOW_TURN_R := Vector3(0.0, 35.0, 0.0)
 const LOW_TURN_L := Vector3(0.0, 35.0, 0.0)
 const MID_TURN_R := Vector3(0.0, 12.0, 0.0)
@@ -581,7 +591,8 @@ func _reversed(a: Animation) -> Animation:
 ## (its lean, arm swing and torso twist, slowing as the gait does) eases into the graph's stop over STOP_S seconds; the whole
 ## stop runs STOP_RATE times as fast, holding its last pose (the standing pose) for the rest of the graph's length, which the
 ## tables time the state by.
-func _own_stop(new_jog: Animation, orig_name: String, upper_from := "", out_len := 0.0, rate := 0.0) -> Animation:
+func _own_stop(new_jog: Animation, orig_name: String, upper_from := "", out_len := 0.0, rate := 0.0, ease_s := 0.0) -> Animation:
+	var es := ease_s if ease_s > 0.0 else STOP_S
 	var orig := lib.get_animation(orig_name)
 	var src_len := orig.length
 	var stop_rate := rate if rate > 0.0 else STOP_RATE
@@ -599,7 +610,7 @@ func _own_stop(new_jog: Animation, orig_name: String, upper_from := "", out_len 
 	var p := phase * new_jog.length
 	for f in n + 1:
 		ph.append(p)
-		p += (1.0 - smoothstep(0.0, STOP_S, float(f) / FPS)) / FPS
+		p += (1.0 - smoothstep(0.0, es, float(f) / FPS)) / FPS
 	var upper := _upper_bones()
 	for ti in orig.get_track_count():
 		var type := orig.track_get_type(ti)
@@ -619,7 +630,7 @@ func _own_stop(new_jog: Animation, orig_name: String, upper_from := "", out_len 
 		for f in n + 1:
 			var t := minf(float(f) / FPS, big)
 			var ts := minf(t * stop_rate, src_len)
-			var w := smoothstep(0.0, STOP_S, t)
+			var w := smoothstep(0.0, es, t)
 			var mix := upper.has(bone) and ji >= 0
 			if type == Animation.TYPE_ROTATION_3D:
 				var q: Quaternion = orig.rotation_track_interpolate(ti, ts)

@@ -52,6 +52,11 @@
 			"clip": "own-rifle-low-ready",
 			"length": 0.033333,
 			"lib": "frontier_locomotion"
+		},
+		"own-rifle-mid-ready": {
+			"clip": "own-rifle-mid-ready",
+			"length": 0.033333,
+			"lib": "frontier_locomotion"
 		}
 	},
 	"rules": [
