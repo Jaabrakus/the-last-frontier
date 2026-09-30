@@ -1206,6 +1206,122 @@
    },
    "origin": "A Native form, learned by colonial hunters and soldiers; wording under consultation (GDD section 13, rule 9).",
    "later_teachers": "archetype:canadien_voyageur, archetype:town_hunter (M4-M5, after sign-off for the town hunter)"
+  },
+  {
+   "id": "know.canoe_bed",
+   "name": "Laying a canoe bed",
+   "status": "slice",
+   "sources": [
+    "K:9.7"
+   ],
+   "milestone": "M2a",
+   "covers": [],
+   "skill": "woodcraft",
+   "routes": {
+    "taught_by": [
+     "npc.woods.old_hunter",
+     "player"
+    ],
+    "watch": [
+     "activity:boat_build"
+    ],
+    "trial": {
+     "from": [
+      "heard_of",
+      "seen"
+     ]
+    }
+   },
+   "origin": "A Native craft (the Algonquian nations' bark canoe), adopted by French voyageurs and colonial traders; wording under consultation (GDD section 13, rule 9).",
+   "notes": "The building bed: stakes driven into gravel by the water to hold the mould the bark is shaped on (the frame, the length and the sheer set by eye and measure).",
+   "later_teachers": "archetype:canadien_voyageur (M4-M5)"
+  },
+  {
+   "id": "know.bark_sewing",
+   "name": "Fitting and sewing bark",
+   "status": "slice",
+   "sources": [
+    "K:9.7"
+   ],
+   "milestone": "M2a",
+   "covers": [],
+   "skill": "woodcraft",
+   "routes": {
+    "taught_by": [
+     "npc.woods.old_hunter",
+     "player"
+    ],
+    "watch": [
+     "activity:boat_build"
+    ],
+    "trial": {
+     "from": [
+      "heard_of",
+      "seen"
+     ]
+    }
+   },
+   "origin": "A Native craft (the Algonquian nations' bark canoe), adopted by French voyageurs and colonial traders; wording under consultation (GDD section 13, rule 9).",
+   "notes": "Laying the bark skin over the bed with even pressure, gores set in for the sides, and stitching it with spruce root through awl holes.",
+   "later_teachers": "archetype:canadien_voyageur (M4-M5)"
+  },
+  {
+   "id": "know.canoe_gunwales",
+   "name": "Gunwales, ribs and sheathing",
+   "status": "slice",
+   "sources": [
+    "K:9.7"
+   ],
+   "milestone": "M2a",
+   "covers": [],
+   "skill": "woodcraft",
+   "routes": {
+    "taught_by": [
+     "npc.woods.old_hunter",
+     "player"
+    ],
+    "watch": [
+     "activity:boat_build"
+    ],
+    "trial": {
+     "from": [
+      "heard_of",
+      "seen"
+     ]
+    }
+   },
+   "origin": "A Native craft (the Algonquian nations' bark canoe), adopted by French voyageurs and colonial traders; wording under consultation (GDD section 13, rule 9).",
+   "notes": "Sandwiching the bark between inner and outer gunwales, pegged; then steamed cedar ribs and sheathing driven tight to stretch the skin.",
+   "later_teachers": "archetype:canadien_voyageur (M4-M5)"
+  },
+  {
+   "id": "know.pitching_seams",
+   "name": "Pitching seams",
+   "status": "slice",
+   "sources": [
+    "K:9.7"
+   ],
+   "milestone": "M2a",
+   "covers": [],
+   "skill": "woodcraft",
+   "routes": {
+    "taught_by": [
+     "npc.woods.old_hunter",
+     "player"
+    ],
+    "watch": [
+     "activity:boat_build"
+    ],
+    "trial": {
+     "from": [
+      "heard_of",
+      "seen"
+     ]
+    }
+   },
+   "origin": "A Native craft (the Algonquian nations' bark canoe), adopted by French voyageurs and colonial traders; wording under consultation (GDD section 13, rule 9).",
+   "notes": "Sealing every seam with rendered spruce pitch, tallow and charcoal, spread evenly, no thin place.",
+   "later_teachers": "archetype:canadien_voyageur (M4-M5)"
   }
  ]
 }
