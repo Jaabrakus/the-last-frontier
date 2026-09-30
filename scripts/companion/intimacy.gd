@@ -15,8 +15,7 @@ const DEFAULTS := {"start": 0.1, "full_at": 0.999, "near_m": 6.0, "together_per_
 		"after_session": 0.35, "cooldown_hours": 0.0, "offer_at": 0.999, "decline_fade": 0.3, "decline_drain_per_hour": 0.05,
 		"offer_range_m": 12.0, "offer_check_s": 5.0, "call_range_m": 40.0, "danger_m": 45.0, "combat_s": 30.0,
 		"calm_hours": [0.0, 24.1], "come_m": 2.9, "follow_timeout_s": 0.0, "start_timeout_s": 10.0,
-		"poses": [{"id": "crawl", "name": "The crawl"}, {"id": "yoga", "name": "Happy Baby"},
-				{"id": "wide", "name": "Wide Kneel on the Reverse Plank"}],
+		"poses": [{"id": "yoga", "name": "Happy Baby"}, {"id": "puppy", "name": "Puppy"}],
 		"levels": [{"upto": 1.01, "word": "Close"}], "fills_line": "", "reasons": {}}
 ## The order the gate looks at its reasons in.
 const REASONS := ["minor", "dead", "not_full", "cooldown", "night", "danger", "combat", "far", "busy"]

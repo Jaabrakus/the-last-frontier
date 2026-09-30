@@ -49,12 +49,13 @@ const GAUGE_AT_MINUS_ONE := 0.25
 ## Cinematic camera: side-on to the pair, a little above, slowly drifting; eased in over CINE_BLEND_S.
 const CINE_BLEND_S := 1.4
 const CINE_PITCH := -0.10
-const CINE_DIST := {"crawl": 2.6, "yoga": 2.7, "wide": 2.6}
-const CINE_PIVOT_Y := {"crawl": 0.55, "yoga": 0.6, "wide": 0.8}
+const CINE_DIST := {"crawl": 2.6, "yoga": 2.7, "puppy": 2.6}
+const CINE_PIVOT_Y := {"crawl": 0.55, "yoga": 0.6, "puppy": 0.5}
 ## Which side of the pair the shot is taken from: +1 her right (where the crawl's arm is lifted and held), -1 her
 ## left. Measured against her own shoulders (the rig faces +Z, the game -Z: her right is +1 here).
-const CINE_SIDE := {"crawl": 1.0, "yoga": 1.0, "wide": 1.0}
+const CINE_SIDE := {"crawl": 1.0, "yoga": 1.0, "puppy": 1.0}
 @export var crawl_offset := Vector3(0, 0, -0.30)
+@export var yoga_offset := Vector3(0, 0, 0.057)
 @export var reaction_delay := 0.15
 @export var cinematic := true
 var player: FrontierPlayer
@@ -76,6 +77,8 @@ var _health := 0.0
 var _peer_health := 0.0
 var _crawl_stamina := 100.0
 var _kneel_stamina := 100.0
+## Shift+I invites the separate upright crawl-kneel variant.
+@export var upright_kneel := false
 var _invite_left := 0.0
 var _retry := 0.0
 var _join_t := 1.0
@@ -84,16 +87,27 @@ var _cine := 0.0
 var _cine_time := 0.0
 var _cine_mode := "crawl"
 var _cam0: Dictionary = {}
-## The Reverse Plank pair's camera: before the woman on top (its eased yaw; INF: not yet).
-var _cine_front := INF
 ## Partners under a player's own control that stood up inside the pose: collision comes back once they are clear.
 var _separating: Dictionary = {}
 var _exiting := false
 ## The partner's right hand on the crawler's right bicep (the crawl), and the partner's answers to her backward flinch.
 var _arm_hold: Node
 var _arm_lift: Node
+var _crawl_lead_motion: Node
+var _crawl_partner_motion: Node
+var _crawl_brace: Node
+var _crawl_inside_hold: Node
+var _crawl_chest_mode := false
+var _crawl_motion_until_ms := 0
+var _crawl_motion_blend := 0.0
 var _partner_back: Array[float] = []
 var _bars: Control
+var _happy_motion: Node
+var _plank_motion: Node
+var _happy_brace: Node
+var _plank_gaze: Node
+var _happy_gaze: Node
+var _plank_thigh: Node
 var _plank_stamina := PLANK_MAX
 var _plank_rest := 0.0
 
@@ -109,15 +123,17 @@ func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	if player.is_local and "--two-pose-preview" in args:
 		call_deferred("_preview_two_poses")
+	elif player.is_local and "--tandem-upright-preview" in args:
+		upright_kneel = true
+		call_deferred("_preview", "crawl")
 	elif player.is_local and "--tandem-preview" in args:
 		call_deferred("_preview", "crawl")
 	elif player.is_local and "--tandem-preview-yoga" in args:
 		call_deferred("_preview", "yoga")
 
 func _input(event: InputEvent) -> void:
-	# The solo wide-kneel controller owns its keys and pose.
-	if player.kneeling != null and player.kneeling.name in ["WideKneel", "ReversePlank"]: return
-	if event is InputEventKey and event.ctrl_pressed and event.physical_keycode == KEY_N: return
+	# The solo puppy controller owns its keys and pose.
+	if player.kneeling != null and player.kneeling.name == "PuppyPose": return
 	if not event is InputEventKey or not event.pressed or event.echo:
 		return
 	var key: int = event.physical_keycode
@@ -125,13 +141,17 @@ func _input(event: InputEvent) -> void:
 		match key:
 			KEY_N, KEY_BACKSPACE, KEY_ESCAPE, KEY_W, KEY_A, KEY_S, KEY_D, KEY_SPACE:
 				stop_pose()
-			KEY_I: invite_partner()
+			KEY_I:
+				if mode == "crawl" and not joined and not invited: upright_kneel = event.shift_pressed
+				invite_partner()
 			KEY_C: cinematic = not cinematic
 			KEY_ENTER:
 				if joined and mode == "yoga": partner_enter()
 				elif invited: accept_partner()
 			KEY_K: partner_reaction()
 			KEY_B: lead_backward()
+			KEY_O, KEY_U:
+				play_motion("wave" if key == KEY_O else "sway", "crawl" if event.ctrl_pressed else ("upright" if event.shift_pressed else "both"))
 		# Pose mode owns keyboard actions; weapon/build/inventory keys cannot steal it.
 	elif is_instance_valid(_lead):
 		match key:
@@ -140,8 +160,10 @@ func _input(event: InputEvent) -> void:
 			KEY_C: cinematic = not cinematic
 			KEY_ENTER: _lead.partner_enter()
 			KEY_K: _lead.partner_reaction()
-	elif key == KEY_N and is_woman(player):
-		start_pose("yoga" if event.shift_pressed else "crawl")
+			KEY_O, KEY_U:
+				_lead.play_motion("wave" if key == KEY_O else "sway", "upright" if event.ctrl_pressed else ("crawl" if event.shift_pressed else "both"))
+	elif key == KEY_N and event.shift_pressed and is_woman(player):
+		start_pose("yoga")   # (the crawl is out of the game: Happy Baby and the puppy are the tandem poses)
 	elif not (key == KEY_I and join_nearby()):
 		return
 	get_viewport().set_input_as_handled()
@@ -165,12 +187,23 @@ func _process(delta: float) -> void:
 				_drop_partner()
 			else:
 				_align_partner(delta)
-				if is_instance_valid(_arm_hold): _arm_hold.hold = smoothstep(0.0, 1.0, _join_t)
-				if is_instance_valid(_arm_lift): _arm_lift.lift = smoothstep(0.0, 1.0, _join_t)
+				var want_brace := 1.0 if _crawl_chest_mode or Time.get_ticks_msec() < _crawl_motion_until_ms else 0.0
+				_crawl_motion_blend = move_toward(_crawl_motion_blend, want_brace, delta / 0.3)
+				var grip := smoothstep(0.0, 1.0, _join_t) * (1.0 - smoothstep(0.0, 1.0, _crawl_motion_blend))
+				if is_instance_valid(_arm_hold): _arm_hold.hold = grip
+				if is_instance_valid(_arm_lift): _arm_lift.lift = grip
+				if is_instance_valid(_happy_brace): _happy_brace.hold = smoothstep(0.0, 1.0, _join_t)
+				if is_instance_valid(_plank_gaze): _plank_gaze.hold = smoothstep(0.0, 1.0, _join_t)
+				if is_instance_valid(_happy_gaze): _happy_gaze.hold = smoothstep(0.0, 1.0, _join_t)
+				if is_instance_valid(_crawl_brace): _crawl_brace.hold = smoothstep(0.0, 1.0, _crawl_motion_blend)
+				if is_instance_valid(_crawl_lead_motion): _crawl_lead_motion.crawl_support = smoothstep(0.0, 1.0, _crawl_motion_blend)
+				if is_instance_valid(_crawl_inside_hold): _crawl_inside_hold.hold = smoothstep(0.0, 1.0, _crawl_motion_blend)
 				for i in _partner_back.size(): _partner_back[i] -= delta
 				while not _partner_back.is_empty() and _partner_back[0] <= 0:
 					_partner_back.pop_front()
-					if mode == "crawl" and is_instance_valid(partner_pose): partner_pose.flinch_backward(flinch_gauge())
+					if mode == "crawl" and is_instance_valid(partner_pose):
+						partner_pose.flinch_backward(flinch_gauge())
+						if _crawl_chest_mode and is_instance_valid(_crawl_brace): _crawl_brace.jolt_hand()
 				for i in _responses.size(): _responses[i] -= delta
 				while not _responses.is_empty() and _responses[0] <= 0:
 					_responses.pop_front()
@@ -201,6 +234,7 @@ func _available(p: FrontierPlayer) -> bool:
 		and p.drag_speed_cap == INF
 
 func start_pose(which: String) -> bool:
+	if which != "yoga": return false   # Happy Baby is the only pose started here; the puppy has its own controller (puppy_pose.gd)
 	if not mode.is_empty() or is_instance_valid(_lead) or not is_woman(player) or not _available(player):
 		return false
 	var ap := _claim(player)
@@ -249,12 +283,6 @@ func join_nearby() -> bool:
 	var best_d := JOIN_RANGE_M
 	for n: Node in player.get_parent().get_children():
 		if n == player or not n is FrontierPlayer: continue
-		# someone in the Reverse Plank with nobody over them: a woman kneels over them (reverse_plank.gd)
-		var rp := n.get_node_or_null("ReversePlank")
-		if rp != null and rp.active and not rp.joined and not rp.inviting and is_woman(player) \
-				and player.global_position.distance_to((n as Node3D).global_position) < best_d:
-			rp.take_partner(player)
-			return true
 		var t := n.get_node_or_null("TandemPoses")
 		if t == null or t.mode.is_empty() or t.joined: continue
 		var d := player.global_position.distance_to((n as Node3D).global_position)
@@ -284,6 +312,7 @@ func take_partner(p: FrontierPlayer) -> bool:
 ## The partner's keys, from whoever leads: a dip in Happy Baby, a reaction in the crawl.
 func partner_enter() -> void:
 	if joined and mode == "yoga" and _plank_stamina >= PLANK_DIP_COST:
+		_cancel_crawl_motion()
 		partner_pose.request_dip()
 
 ## A dip began (also one buffered from an earlier press): it costs the partner, and strains the lead a little.
@@ -291,7 +320,8 @@ func _on_dipped() -> void:
 	_plank_stamina = maxf(_plank_stamina - PLANK_DIP_COST, 0.0)
 	_plank_rest = PLANK_REST_S
 	if is_instance_valid(base_pose): base_pose.stamina = maxf(base_pose.stamina - DIP_LEAD_COST, 0.0)
-	_responses.append(DIP_REACT_DELAY)
+	if is_instance_valid(_plank_motion): _plank_motion.tuck()
+	_responses.append(0.1625 if is_instance_valid(_plank_motion) else DIP_REACT_DELAY)
 
 ## The lead's flinch answering her partner: in the crawl a partner's flinch, in Happy Baby a dip.
 func _lead_reacts() -> void:
@@ -301,8 +331,8 @@ func _lead_reacts() -> void:
 	jiggle(player, flinch_gauge())
 
 ## Her breasts jolt with her flinch (CharacterBodyMesh.breast_jolt), as full as the flinch plays (the flinch gauge from
-## the man's genital rating; the user 2026-09-29); a man's chest none. The crawl and Happy Baby here, the Wide Kneel
-## (wide_kneel.gd react) too.
+## the man's genital rating; the user 2026-09-29); a man's chest none. Happy Baby here (the puppy's own controller
+## does its own).
 func jiggle(p: FrontierPlayer, strength: float) -> void:
 	if not is_instance_valid(p) or not is_woman(p) or not is_instance_valid(p.skeleton): return
 	var body := p.skeleton.get_node_or_null("Body") as CharacterBodyMesh
@@ -328,12 +358,15 @@ func flinch_gauge() -> float:
 
 ## The lead's own backward flinch; her partner rocks back after it (his own backward flinch, at the gauge).
 func lead_backward() -> void:
+	_cancel_crawl_motion()
 	if mode == "crawl" and base_pose.flinch_backward():
 		jiggle(player, flinch_gauge() if joined else 1.0)
 		if joined: _partner_back.append(reaction_delay)
 
 func partner_reaction() -> void:
+	_cancel_crawl_motion()
 	if mode == "crawl" and joined and base_pose.stamina > 0 and partner_pose.flinch(flinch_gauge()):
+		if _crawl_chest_mode and is_instance_valid(_crawl_brace): _crawl_brace.jolt_hand()
 		base_pose.pause_recovery()
 		_responses.append(reaction_delay)
 
@@ -403,7 +436,7 @@ func _answer_invitation(delta: float) -> void:
 
 func accept_partner() -> bool:
 	if not invited or not _available(companion): return false
-	var offset: Vector3 = player.skeleton.get_parent().global_basis * (crawl_offset if mode == "crawl" else Vector3.ZERO)
+	var offset: Vector3 = player.skeleton.get_parent().global_basis * (crawl_offset if mode == "crawl" else yoga_offset)
 	var at: Vector3 = player.global_position + offset
 	var ray := PhysicsRayQueryParameters3D.create(at + Vector3.UP * 0.4, at - Vector3.UP * 0.5)
 	ray.exclude = [player.get_rid(), companion.get_rid()]
@@ -422,18 +455,31 @@ func accept_partner() -> bool:
 		partner_pose.anim_player = ap
 		partner_pose.library = &"tandem_kneel"
 		partner_pose.backward_clip = CLIPS.retarget(load("res://features/tandem/kneel_backward_flinch.tres"), ap, companion.skeleton)
+		if upright_kneel:
+			if not ap.has_animation_library(&"kneel_upright"):
+				var variant := AnimationLibrary.new()
+				for kind in ["idle", "flinch"]:
+					variant.add_animation(kind, CLIPS.retarget(load("res://features/tandem/kneel_upright_" + kind + ".tres"), ap, companion.skeleton))
+				ap.add_animation_library(&"kneel_upright", variant)
+			partner_pose.library = &"kneel_upright"
+			partner_pose.loop_clip = "idle"
+			partner_pose.flinch_clip = "flinch"
+			partner_pose.backward_clip = CLIPS.retarget(load("res://features/tandem/kneel_upright_backward.tres"), ap, companion.skeleton)
 		add_child(partner_pose)
 		partner_pose.stamina = _kneel_stamina
 		_hold_her_arm()
+		if upright_kneel: _install_crawl_motions()
 	else:
 		CLIPS.install(ap, companion.skeleton, "res://features/tandem/actor_b_yoga.glb", &"tandem_yoga")
 		partner_pose = PLANK.new()
 		partner_pose.animation_player = ap
 		partner_pose.library = &"tandem_yoga"
 		partner_pose.base_clip = &"flow"
+		partner_pose.procedural_tuck = true
 		partner_pose.read_input = false
 		partner_pose.dipped.connect(_on_dipped)
 		add_child(partner_pose)
+		_install_happy_motions()
 	companion.camera_pivot.position.y = 0.8
 	joined = true
 	invited = false
@@ -454,6 +500,87 @@ func _hold_her_arm() -> void:
 	_arm_hold.lead_lift = _arm_lift
 	_put_before_body(companion.skeleton, _arm_hold)
 
+func _install_crawl_motions() -> void:
+	_crawl_lead_motion = load("res://features/tandem/crawl_yoga_motion.gd").new()
+	_crawl_lead_motion.name = "CrawlYogaMotion"
+	_crawl_lead_motion.crawl_pose = true
+	_put_before_body(player.skeleton, _crawl_lead_motion)
+	_crawl_partner_motion = load("res://features/tandem/yoga_motion.gd").new()
+	_crawl_partner_motion.name = "UprightCrawlMotion"
+	_put_before_body(companion.skeleton, _crawl_partner_motion)
+	_crawl_brace = load("res://features/tandem/crawl_chest_brace.gd").new()
+	_crawl_brace.name = "CrawlChestBrace"
+	_crawl_brace.lead = player.skeleton
+	_crawl_brace.lead_motion = _crawl_lead_motion
+	_put_before_body(companion.skeleton, _crawl_brace)
+	_crawl_inside_hold = load("res://features/tandem/crawl_inside_arm_hold.gd").new()
+	_crawl_inside_hold.name = "CrawlInsideArmHold"
+	_crawl_inside_hold.brace = _crawl_brace
+	_put_before_body(player.skeleton, _crawl_inside_hold)
+
+func _install_happy_motions() -> void:
+	base_pose.set_torso_flinch(player.skeleton, true)
+	_happy_motion = load("res://features/tandem/happy_baby_motion.gd").new()
+	_happy_motion.name = "HappyBabyMotion"
+	_put_before_body(player.skeleton, _happy_motion)
+	_plank_motion = load("res://features/tandem/kneeling_plank.gd").new()
+	_plank_motion.name = "KneelingPlankMotion"
+	_plank_motion.puppy_pose = true
+	_plank_motion.puppy_wave_pitch_degrees = 8.0
+	_put_before_body(companion.skeleton, _plank_motion)
+	_plank_thigh = load("res://features/tandem/tandem_thigh_alignment.gd").new()
+	_plank_thigh.name = "PlankThighAlignment"
+	_put_before_body(companion.skeleton, _plank_thigh)
+	_plank_gaze = load("res://features/tandem/tandem_eye_contact.gd").new()
+	_plank_gaze.name = "PlankEyeContact"
+	_plank_gaze.solve_iterations = 8
+	_plank_gaze.peer = player.skeleton
+	_put_before_body(companion.skeleton, _plank_gaze)
+	_happy_brace = load("res://features/tandem/happy_baby_brace.gd").new()
+	_happy_brace.name = "HappyBabyBrace"
+	_happy_brace.partner = companion.skeleton
+	_happy_brace.partner_motion = _plank_motion
+	_put_before_body(player.skeleton, _happy_brace)
+	_happy_gaze = load("res://features/tandem/tandem_eye_contact.gd").new()
+	_happy_gaze.name = "HappyBabyEyeContact"
+	_happy_gaze.solve_iterations = 8
+	_happy_gaze.peer = companion.skeleton
+	_happy_gaze.peer_gaze = _plank_gaze
+	_put_before_body(player.skeleton, _happy_gaze)
+	_plank_gaze.peer_gaze = _happy_gaze
+
+func play_motion(kind: String, who := "both") -> bool:
+	if mode == "yoga":
+		if not joined or _join_t < 1.0 or kind not in ["wave", "sway"]: return false
+		if who not in ["both", "crawl", "upright", "happy", "plank"] or partner_pose.is_dipping(): return false
+		var start_ms := Time.get_ticks_msec()
+		_responses.clear()
+		_responses.append(_plank_motion.duration / 3.0)
+		if kind == "sway":
+			_happy_motion.play_motion(kind, start_ms)
+			_plank_motion.play_motion(kind, start_ms)
+			return true
+		if who in ["both", "crawl", "happy"]: _happy_motion.play_motion(kind, start_ms)
+		if who in ["both", "upright", "plank"]: _plank_motion.play_motion(kind, start_ms)
+		return true
+	if mode != "crawl" or not upright_kneel or not joined or _join_t < 1.0: return false
+	if kind not in ["wave", "sway"] or who not in ["both", "crawl", "upright"]: return false
+	if base_pose._flinch_left > 0.0 or partner_pose.is_flinching(): return false
+	_responses.clear()
+	_partner_back.clear()
+	_crawl_chest_mode = true
+	# Release the arm and establish the chest brace before the pelvic cycle begins.
+	var start_ms := Time.get_ticks_msec() + 300
+	_crawl_motion_until_ms = start_ms + int(_crawl_lead_motion.duration * 1000.0)
+	if who in ["both", "crawl"]: _crawl_lead_motion.play_motion(kind, start_ms)
+	if who in ["both", "upright"]: _crawl_partner_motion.play_motion(kind, start_ms)
+	return true
+
+func _cancel_crawl_motion() -> void:
+	_crawl_motion_until_ms = 0
+	for motion: Node in [_crawl_lead_motion, _crawl_partner_motion, _happy_motion, _plank_motion]:
+		if is_instance_valid(motion): motion.cancel()
+
 ## A modifier on a skeleton, before the props' last placement and the body mesh (which keeps itself last).
 func _put_before_body(sk: Skeleton3D, m: Node) -> void:
 	sk.add_child(m)
@@ -469,6 +596,7 @@ func _align_partner(delta: float) -> void:
 	if mode == "crawl":
 		tf.origin += player.skeleton.get_parent().global_basis * crawl_offset
 	else:
+		tf.origin += player.skeleton.get_parent().global_basis * yoga_offset
 		tf.basis = tf.basis.rotated(Vector3.UP, PI)
 	if _join_t < 1.0:
 		_join_t = minf(_join_t + delta / JOIN_S, 1.0)
@@ -528,8 +656,27 @@ func stop_pose() -> void:
 ## player across the map and snapped the partner back to where she stood.
 func _drop_partner(was_crawl := mode == "crawl") -> void:
 	if not joined: return
+	if mode == "yoga" and is_instance_valid(base_pose):
+		base_pose.set_torso_flinch(player.skeleton, false)
 	_responses.clear()
 	_partner_back.clear()
+	_cancel_crawl_motion()
+	_crawl_motion_blend = 0.0
+	_crawl_chest_mode = false
+	for modifier: Node in [_crawl_brace, _crawl_lead_motion, _crawl_partner_motion, _happy_brace, _happy_motion, _plank_motion, _plank_gaze, _happy_gaze, _plank_thigh]:
+		if is_instance_valid(modifier):
+			modifier.active = false
+			modifier.queue_free()
+	_happy_gaze = null
+	_plank_thigh = null
+	_plank_gaze = null
+	_happy_brace = null
+	_happy_motion = null
+	_plank_motion = null
+	_crawl_inside_hold = null
+	_crawl_brace = null
+	_crawl_lead_motion = null
+	_crawl_partner_motion = null
 	if is_instance_valid(_arm_hold): _arm_hold.queue_free()
 	_arm_hold = null
 	if is_instance_valid(_arm_lift): _arm_lift.queue_free()
@@ -609,23 +756,17 @@ func partner_fraction() -> float:
 	if mode == "yoga": return _plank_stamina / PLANK_MAX
 	return partner_pose.stamina / partner_pose.stamina_max if is_instance_valid(partner_pose) else 1.0
 
-## (yours, the other's) for the bars while this player is paired in a pose, else (-1, -1). The Reverse Plank pair
-## (reverse_plank.gd, wide_kneel.gd): his stamina holding her, hers for her flinches.
+## (yours, the other's) for the bars while this player is paired in a pose, else (-1, -1).
 func _pair_stamina() -> Vector2:
-	var k: Node = player.kneeling
-	if k != null and k.name == "ReversePlank" and k.joined and is_instance_valid(k.partner_pose):
-		return Vector2(k.stamina / k.stamina_max, k.partner_pose.stamina / k.partner_pose.stamina_max)
-	if k != null and k.name == "WideKneel" and is_instance_valid(k.base) and k.base.joined:
-		return Vector2(k.stamina / k.stamina_max, k.base.stamina / k.base.stamina_max)
 	if is_instance_valid(_lead):
 		return Vector2(_lead.partner_fraction(), _lead.lead_fraction()) if _lead.joined else Vector2(-1.0, -1.0)
 	return Vector2(lead_fraction(), partner_fraction()) if joined else Vector2(-1.0, -1.0)
 
 ## The pose this player is paired in, as lead or partner ("" when alone).
 func _pair_mode() -> String:
-	var k: Node = player.kneeling
-	if k != null and ((k.name == "ReversePlank" and k.joined) or (k.name == "WideKneel" and is_instance_valid(k.base))):
-		return "wide"
+	var pp: Node = player.get_node_or_null("PuppyTandem")
+	if pp != null and pp.joined:
+		return "puppy"
 	if is_instance_valid(_lead): return _lead.mode if _lead.joined else ""
 	return mode if joined else ""
 
@@ -637,7 +778,6 @@ func _cinematic(delta: float) -> void:
 	if want and _cine <= 0.0:
 		_cine_mode = pair
 		_cine_time = 0.0
-		_cine_front = INF
 		_cam0 = {"yaw": player.yaw, "pitch": player.pitch, "dist": player.spring_arm.spring_length,
 				"y": player.camera_pivot.position.y}
 	if not want and _cine <= 0.0: return
@@ -646,27 +786,10 @@ func _cinematic(delta: float) -> void:
 	var e := smoothstep(0.0, 1.0, _cine)
 	var facing: float = _lead.player.rotation.y if is_instance_valid(_lead) else player.rotation.y
 	var yaw_to: float = facing + PI * 0.5 * float(CINE_SIDE[_cine_mode]) + sin(_cine_time * 0.4) * 0.16
-	var her := _wide_upper() if _cine_mode == "wide" else null
-	if her != null:
-		# the Reverse Plank pair (user 2026-09-29: "the camera face the partner on top"): out before the woman kneeling
-		# on top, looking at her (her rig's +Z is her front), easing round when she turns about (R)
-		var f: Vector3 = her.skeleton.get_parent().global_basis.z
-		var front := atan2(f.x, f.z) + sin(_cine_time * 0.4) * 0.12
-		_cine_front = front if _cine_front == INF else lerp_angle(_cine_front, front, minf(1.0, delta * 2.5))
-		yaw_to = _cine_front
 	player.yaw = lerp_angle(_cam0.yaw, yaw_to, e)
 	player.pitch = lerpf(_cam0.pitch, CINE_PITCH, e)
 	player.spring_arm.spring_length = lerpf(_cam0.dist, CINE_DIST[_cine_mode], e)
 	player.camera_pivot.position.y = lerpf(_cam0.y, CINE_PIVOT_Y[_cine_mode], e)
-
-## The woman kneeling on top in the Reverse Plank pair: this player, or the one over this player's plank; else null.
-func _wide_upper() -> FrontierPlayer:
-	var k: Node = player.kneeling
-	if k != null and k.name == "ReversePlank" and is_instance_valid(k.partner) and k.joined:
-		return k.partner
-	if k != null and k.name == "WideKneel" and is_instance_valid(k.base):
-		return player
-	return null
 
 func _release_camera() -> void:
 	if _cine <= 0.0 or _cam0.is_empty(): return

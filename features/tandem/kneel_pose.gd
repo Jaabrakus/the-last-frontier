@@ -23,6 +23,10 @@ signal session_stopped
 const LOOP := "actor_b-kneel-stick"
 const FLINCH := "actor_b-kneel-stick-flinch"
 
+## Optional pose variant; defaults preserve the original imported clips.
+@export var loop_clip := LOOP
+@export var flinch_clip := FLINCH
+
 @export var anim_player: AnimationPlayer
 @export var library: StringName = &""
 ## The backward recoil answering the crawling lead's own backward flinch (tools/author_kneel_backward.gd).
@@ -115,7 +119,7 @@ func flinch(fullness := 1.0) -> bool:
 	_recovery_left = recovery_delay
 	_flinch_lane = "flinch_b" if _flinch_lane == "flinch_a" else "flinch_a"
 	var node := (tree.tree_root as AnimationNodeBlendTree).get_node(_flinch_lane) as AnimationNodeAnimation
-	var want := CLIPS.variant(anim_player, library, FLINCH, fullness)
+	var want := CLIPS.variant(anim_player, library, flinch_clip, fullness)
 	if node.animation != want:
 		node.animation = want
 	_play(_flinch_lane, flinch_fade_in)
@@ -161,9 +165,9 @@ func _clip(anim: String) -> AnimationNodeAnimation:
 
 
 func _build_tree() -> void:
-	anim_player.get_animation(_qualified(LOOP)).loop_mode = Animation.LOOP_LINEAR
-	anim_player.get_animation(_qualified(FLINCH)).loop_mode = Animation.LOOP_NONE
-	_flinch_len = anim_player.get_animation(_qualified(FLINCH)).length
+	anim_player.get_animation(_qualified(loop_clip)).loop_mode = Animation.LOOP_LINEAR
+	anim_player.get_animation(_qualified(flinch_clip)).loop_mode = Animation.LOOP_NONE
+	_flinch_len = anim_player.get_animation(_qualified(flinch_clip)).length
 
 	var bt := AnimationNodeBlendTree.new()
 	_state = AnimationNodeTransition.new()
@@ -172,9 +176,9 @@ func _build_tree() -> void:
 	_state.set_input_reset(0, true)    # back from a flinch, the loop starts from its first frame
 	_state.set_input_reset(2, true)
 	_state.set_input_reset(1, true)    # each flinch plays from the top
-	bt.add_node("hold", _clip(LOOP), Vector2(-300, -40))
-	bt.add_node("flinch_a", _clip(FLINCH), Vector2(-300, 80))
-	bt.add_node("flinch_b", _clip(FLINCH), Vector2(-300, 160))
+	bt.add_node("hold", _clip(loop_clip), Vector2(-300, -40))
+	bt.add_node("flinch_a", _clip(flinch_clip), Vector2(-300, 80))
+	bt.add_node("flinch_b", _clip(flinch_clip), Vector2(-300, 160))
 	bt.add_node("state", _state, Vector2(-60, 20))
 	bt.connect_node("state", 0, "hold")
 	bt.connect_node("state", 1, "flinch_a")

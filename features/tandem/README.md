@@ -116,79 +116,36 @@ mannequins and separate `tandem_` actions. Their controls are shown on screen.
 `tools/author_crawl_backward.gd` reproduces the baked recoil resource.
 `source_manifest.json` records the original standalone source and packaged files.
 
-## Solo wide upright kneel
+## The two tandem poses in the game (the rest were taken out: user 2026-09-30)
 
-Ctrl+N enters the wide-knee upright kneel, with arms hanging down. K plays a short dip and rise through the pelvis and thighs; B plays a forward/back pelvic tilt. Repeated presses restart the selected reaction. Backspace, Escape, or movement exits and restores normal animation and controls.
+**Happy Baby** (Shift+N, a woman leads; anyone joins with I; the yoga-together menu offers it) and the **puppy** (Ctrl+P, a crawl-derived
+solo pose; I invites an upright kneeling partner behind). Happy Baby has the updated motions (`happy_baby_motion.gd`,
+`kneeling_plank.gd`, `happy_baby_brace.gd`, `tandem_eye_contact.gd`, `tandem_thigh_alignment.gd`, started from `frontier_tandem.gd`
+`_install_happy_motions`). The crawl, the Wide Kneel and the Reverse Plank (and the pairs of them) are no longer reachable: `start_pose`
+only starts "yoga", and `wide_kneel.gd` / `reverse_plank.gd` and their clips and tools are gone. The old crawl and upright-crawl code is
+dormant in `frontier_tandem.gd`.
 
-The pose is independent of the paired interactions. `--wide-kneel-preview` launches it on the clothed female base character.
+## Solo puppy pose
 
-Edit `tools/author_wide_kneel.gd`: `KNEE_X` is half the knee spacing (0.28 m), `HIP_BACK` controls the resting hip offset, `BOUNCE` is the rise before settling (0.015 m), and the wave uses a 2-degree pelvic tilt plus a distributed spine curl. Re-bake with Godot's headless `--script res://features/tandem/tools/author_wide_kneel.gd`. The baker preserves thigh/shin lengths and checks planted knees and ankles at every sample.
+Ctrl+P enters a crawl-derived puppy pose with hips above the knees, lowered chest, and arms extended forward. Backspace or movement exits. Pose shaping constants live in `tools/author_puppy.gd`; run that script to rebuild `puppy_idle.tres`. Use `--puppy-preview` to preview in Frontier.
 
-Verification: `--headless --script res://features/tandem/tools/check_wide_kneel.gd` checks actual FrontierPlayer pose ownership, grounded contacts during both reactions, visible pelvis motion, return to idle, rapid reaction switching, and movement restoration. Initial run: 0 failures. Idle pose visually inspected in the Frontier world.
+Puppy reference update: deeper chest lowering (55 degrees), a 65 degree neck counter rotation for the forward chin, near-straight arms and flatter hands. Knees and feet keep the crawl ground anchors. Tune `CHEST_DROP_DEG`, `NECK_LIFT_DEG`, and `HAND_FLATTEN_DEG` in `tools/author_puppy.gd`.
 
-## Solo reverse plank
+Puppy saddle update: knees spread to 0.56 m, hips lowered geometrically to keep the knees planted without stretching the thighs. The torso lowering is reduced to 45 degrees to give the chest more forward reach. Tune `KNEE_HALF_WIDTH` to adjust the stance width.
 
-Ctrl+Shift+N enters the face-up reverse plank; K plays the shallow pelvis dip and recovery (0.8 seconds, 4.5 cm drop). Backspace or movement exits. Ctrl+N still selects the wide kneel. The pose uses planted palms and heels, with two-bone solves preserving arm and leg lengths.
+Wide puppy reference update: lower legs flare outward by 20 degrees and the ankles/toes relax backward close to the floor. A gentle upper back extension lengthens the chest reach. Tune `SHIN_FLARE_DEG`, `ANKLE_HEIGHT`, `TOE_DROP`, and `UPPER_BACK_EXTENSION_DEG` in the authoring script.
 
-Tune `HIP_HEIGHT` and `DIP` in `tools/author_reverse_plank.gd`, then bake via Godot `--headless --script res://features/tandem/tools/author_reverse_plank.gd`. Native-player regression: `--headless --script res://features/tandem/tools/check_reverse_plank.gd`. Preview: `--reverse-plank-preview` (clothed female base character).
+Lower-back arch: `LOWER_BACK_ARCH_DEG` adds a downward arch at the pelvis-to-`spinea` connection by rotating `upper_base` and its spine subtree around the fixed low torso anchor beside the pelvis. `spineb` compensates to maintain the chest angle. Bone lengths remain unchanged, and hands are solved back to ground height.
 
-Pose calculations use skeleton-relative global bone poses as documented in [Godot Skeleton3D](https://docs.godotengine.org/en/latest/classes/class_skeleton3d.html); runtime verified on installed Godot 4.7.2. Native regression passed with fixed hand/ankle contacts, a 4.49 cm dip, idle recovery, immediate repeat input, and normal movement restoration.
+Pelvis apex adjustment: `PELVIS_TILT_DEG` tilts the pelvis at the peak of the torso/thigh V. The grounded legs are re-solved after the tilt; the stronger waist-only arch is reduced.
 
-## Wide Kneel supported by a supine partner
+Puppy forward flinch: press K while holding puppy. Hips and upper body advance 4.5 cm, peak after 0.12 s and return by 0.55 s. Knees and every bone below them keep their idle world transforms; the thighs re-solve without stretching. Repeated K restarts the flinch. Tune `FLINCH_FORWARD`, `FLINCH_LENGTH`, and `FLINCH_PEAK_TIME` in `tools/author_puppy.gd`.
 
-In Reverse Plank, I invites a clothed female Wide Kneel companion. Once she is ready, the base lowers onto her back and turns her open palms upward beneath the companion's hips. The companion's knees remain grounded on either side of the lower torso. `partner_offset` in `reverse_plank.gd` controls her position (default rig-space Z -0.02 m).
+## Puppy + upright kneel tandem
 
-In the pair, K and B control Wide Kneel’s existing flinches. When the flinch completes and its 0.10 s return-to-idle blend settles, the lower player plays a backward upper-body stamina recoil and returns to the supported hold. Backspace or movement releases the pose and removes the preview companion. Losing the partner's pose/death also releases the support.
+Ctrl+P enters puppy; I invites an upright kneeling companion behind the lead. K starts the kneeling flinch, followed by the puppy forward flinch after 0.15 seconds. Backspace/movement exits and releases the companion. Both use their grounded lower-leg animations. In `pose_test.tscn`, button/key 4 selects the pair; `--puppy-tandem-test` starts the test with it. Placement is adjustable with `partner_offset` in `puppy_tandem.gd`.
 
-`--reverse-wide-preview` opens the pair in Frontier. Bake the support with `--headless --script res://features/tandem/tools/author_hip_support.gd`. Rendered native-player check: `--script res://features/tandem/tools/check_hip_support.gd` (requires a visible window; writes side/front screenshots to /private/tmp). Initial check: 0 failures, grounded upper knees, 0.27 m pelvis-center separation, normal animation restored on exit. Hand placement and the resting-back pose inspected from two angles.
+### Puppy and upright kneel wave/sway
 
-Support-pose revision: upper partner shifted 0.14 m toward the base pelvis; hand targets follow at Z -0.03 m. Base feet are aligned by the heel-to-ball axis (toes up), with ankle height 0.095 m so heels rest at ground level. Updated rendered native-player check: 0 failures, including upright toes and heel clearance.
+While in puppy, press O for a pelvic wave or U for a side-to-side sway. With a partner, these move both players on one clock. Ctrl+O/U moves only puppy; Shift+O/U moves only upright kneel. The isolated pose test offers the same choices in its Motion dropdown. Each press plays one 1.8-second cycle and settles back into the existing hold. Flinch cancels the motion, and leaving removes the modifiers. These are procedural skeleton animations after the base clips, with knees/shins/feet fixed and thigh lengths constrained. Tune duration and offsets in `yoga_motion.gd`.
 
-## Stamina reaction after settling
-
-Wide Kneel emits `settled(kind)` only for the completed current flinch. Restarting a flinch cancels the previous pending completion; leaving cancels delayed notifications. The lower player reacts to that signal rather than reacting on button press. The lower pelvis stays at rest, and support hands and heels remain fixed throughout its recoil.
-
-Upper flinch cost: 5/100; lower completed-settle reaction cost: 10/100. Both recover 3 stamina/second after 0.75 seconds of rest. Controls in the companion preview: K upper bounce, B upper wave, Backspace exit.
-
-Native timing/lifecycle regression: Godot `--headless --script res://features/tandem/tools/check_settle_reaction.gd`. Initial result: 0 failures, no early response, one response after settling, actual stamina drain and idle recovery, immediate repeat input, and no response after exiting.
-
-## C-shaped spine wave
-
-B now rounds the torso forward into a C curve and releases it back to the original hold over 0.9 seconds. Extra curl at peak: spineb 6 degrees, spinec 9, spined 9, neck 8; the pelvis has a small 2-degree rocking envelope. Knees and feet remain fixed. This is baked animation; the limb solves happen during authoring, rather than live IK during play.
-
-Rendered native check: `--script res://features/tandem/tools/check_c_spine_wave.gd`. Initial result: 0 failures; knee grounding, visible peak curvature, and return to the original resting pose verified. Screenshots: /private/tmp/wide-c-wave-0.0.png, wide-c-wave-0.45.png, wide-c-wave-0.9.png.
-
-Entry now selects the supine hip-support hold immediately. Hands stay in that same palms-up position before joining, during the pair, after recoil, and after the partner leaves. Solo K uses the upper-body recoil while retaining support hands and grounded heels.
-
-## Reversed Wide Kneel variant
-
-R switches the supported Wide Kneel partner between original facing and 180-degree reversed facing while idle. The rotation preserves the world-space pelvis anchor, so the lower player's hip-support hands keep their placement. K/B retain the same flinches and delayed lower-player stamina response. R before inviting selects which facing the companion enters with.
-
-Preview the reversed pair with `--reverse-wide-reversed-preview`; the original `--reverse-wide-preview` is retained. `partner_reversed` in `reverse_plank.gd` also selects the initial variant.
-
-Rendered native-player regression: `--script res://features/tandem/tools/check_reversed_wide_kneel.gd`. Initial result: 0 failures; reversed entry, toggling both ways without anchor drift, grounded knees, and one delayed recoil after the reversed wave all verified. Side/front screenshots: /private/tmp/reversed-wide-kneel-side.png and reversed-wide-kneel-front.png.
-
-## Who may take which pose
-
-The Reverse Plank is the only pose anyone may take, a man or a woman, alone or under a partner; the one who kneels over
-it (the Wide Kneel) is always a woman (the user 2026-09-29: "reverse plank is the only postion where both sexes can use
-but only women can enter as a partner"). The Wide Kneel alone (Ctrl+N), the crawl and Happy Baby are led by women, as
-before; a look changed to a man's mid-pose stands the Wide Kneel up. `reverse_plank.gd` `take_partner` turns a man away.
-
-## The Reverse Plank pair in play
-
-Like the crawl and Happy Baby pairs:
-- **Joining**: in the Reverse Plank, **I** invites the companion (a woman) to kneel over you; as a woman next to someone in
-  the Reverse Plank with nobody over them, **I** kneels over them (`FrontierTandem.join_nearby`).
-- **Stamina**: the tandem bars (yours left, the other's right) while the pair holds. Her flinches (**K** a dip and rise,
-  **B** the C-spine wave, from either of you) cost her 5 of 100 and stop when she is spent; each one, once it settles,
-  makes him recoil under her at 10 of 100; both regain 3 a second after 0.75 s at rest. Spent holding her up, he gives out
-  and the pose ends (as Happy Baby collapses).
-- **Flinch gauge**: her flinches and his recoil play as full as the genital stat of the man in the plank gives
-  (`FrontierTandem.gauge_for`; a woman there: the authored clip).
-- **Checks**: either of them hurt or killed ends it (she hurt or standing up: he lies back alone); his breeches down at the
-  knees while she kneels over him (`companion` / `joined` / `mode`, as FrontierPlayer._skirt_tuck reads the tandem poses).
-- **Camera**: the cinematic camera (**C**) frames the pair side-on.
-- **Yoga together** (scripts/companion/tandem_link.gd): the pose menu's "Wide Kneel on the Reverse Plank"; the woman
-  kneels (the wife over a male player, a woman player over her husband), the
-  man lies in the plank; the session, its end and the pregnancy roll after it as the other poses'.

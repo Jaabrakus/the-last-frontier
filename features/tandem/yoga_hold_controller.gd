@@ -203,6 +203,25 @@ func flinch(cost := flinch_cost, fullness := 1.0) -> bool:
 	return true
 
 
+## Keep paired reactions in the torso while the held lower-body pose stays intact.
+func set_torso_flinch(sk: Skeleton3D, enabled: bool) -> void:
+	var shot := (tree.tree_root as AnimationNodeBlendTree).get_node("flinch_shot") as AnimationNodeOneShot
+	if enabled:
+		var torso := sk.find_bone("upper_base")
+		assert(torso >= 0, "Happy Baby torso bone missing")
+		var bones: Array[int] = [torso]
+		var names: Array[StringName] = []
+		while not bones.is_empty():
+			var bone: int = bones.pop_back()
+			names.append(sk.get_bone_name(bone))
+			bones.append_array(sk.get_bone_children(bone))
+		var clip := animation_player.get_animation(_clip("flinch"))
+		for track in clip.get_track_count():
+			var path := clip.track_get_path(track)
+			shot.set_filter_path(path, path.get_subname_count() > 0 and StringName(path.get_subname(0)) in names)
+	shot.filter_enabled = enabled
+
+
 ## The flinch clip at this fullness (the flinch gauge: 1 as authored, see TandemClips.variant); only between flinches.
 func _set_fullness(fullness: float) -> void:
 	var node := (tree.tree_root as AnimationNodeBlendTree).get_node("flinch") as AnimationNodeAnimation

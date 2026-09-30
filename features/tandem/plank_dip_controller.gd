@@ -29,6 +29,8 @@ signal session_stopped
 @export var clip_prefix := "actor_b-yoga-plank"
 ## The looping pose clip suffix; use "flow" for the authored continuous plank flow.
 @export var base_clip: StringName = &"hold"
+@export var procedural_tuck := false
+@export var tuck_length := 0.65
 @export var fade_in := 0.05
 @export var fade_out := 0.2
 ## A press this close to the end of a dip queues the next one.
@@ -48,7 +50,7 @@ func _ready() -> void:
 	assert(hold != null and dip != null, "missing %s-%s / -dip" % [clip_prefix, base_clip])
 	hold.loop_mode = Animation.LOOP_LINEAR
 	dip.loop_mode = Animation.LOOP_NONE
-	_dip_len = dip.length
+	_dip_len = tuck_length if procedural_tuck else dip.length
 	tree = AnimationTree.new()
 	tree.name = "PlankDipTree"
 	add_child(tree)
@@ -123,11 +125,12 @@ func request_dip() -> bool:
 
 
 func is_dipping() -> bool:
-	return _session_active and bool(tree.get("parameters/dip_shot/active"))
+	return _session_active and (_dip_left > 0.0 if procedural_tuck else bool(tree.get("parameters/dip_shot/active")))
 
 
 func _fire() -> void:
-	tree.set("parameters/dip_shot/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+	if not procedural_tuck:
+		tree.set("parameters/dip_shot/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
 	_dip_left = _dip_len
 	dipped.emit()
 

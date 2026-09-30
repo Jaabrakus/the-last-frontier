@@ -74,7 +74,7 @@ func _ready() -> void:
 	StartupProfile.mark("vegetation")
 	var player := FrontierPlayer.new()
 	player.name = "Player"
-	if "--wide-kneel-preview" in OS.get_cmdline_user_args() or "--reverse-plank-preview" in OS.get_cmdline_user_args() or "--reverse-wide-preview" in OS.get_cmdline_user_args() or "--reverse-wide-reversed-preview" in OS.get_cmdline_user_args():
+	if "--puppy-preview" in OS.get_cmdline_user_args():
 		player.use_appearance = false
 		player.show_gear = false
 	for preview_arg in ["--tandem-preview", "--tandem-preview-yoga"]:
@@ -91,12 +91,20 @@ func _ready() -> void:
 		player.add_child(tandem)
 	else:
 		push_error("Tandem poses did not load; the level goes on without them.")
-	var wide: Node = load("res://features/tandem/wide_kneel.gd").new()
-	wide.player = player
-	player.add_child(wide)
-	var reverse: Node = load("res://features/tandem/reverse_plank.gd").new()
-	reverse.player = player
-	player.add_child(reverse)
+	# the second tandem pose: the solo puppy (Ctrl+P), and the upright kneeling partner it invites (I); Happy Baby is Shift+N above
+	# (a broken feature script must not stop the level either)
+	var puppy_script := load("res://features/tandem/puppy_pose.gd") as GDScript
+	var pair_script := load("res://features/tandem/puppy_tandem.gd") as GDScript
+	if puppy_script != null and puppy_script.can_instantiate() and pair_script != null and pair_script.can_instantiate():
+		var puppy: Node = puppy_script.new()
+		puppy.player = player
+		player.add_child(puppy)
+		var puppy_pair: Node = pair_script.new()
+		puppy_pair.player = player
+		puppy_pair.puppy = puppy
+		player.add_child(puppy_pair)
+	else:
+		push_error("The puppy pose did not load; the level goes on without it.")
 	StartupProfile.mark("player")
 	environment_rig.track(player)
 	_audio(player)

@@ -6,7 +6,7 @@ extends RefCounted
 ## place, dressed in her look, and the Spouse body is hidden and parked; afterwards she takes over again where the proxy
 ## stands. Nothing in features/tandem is changed.
 ##   as the LEAD (the wife, for a male player): the proxy carries its own TandemPoses controller (as the tandem
-##     feature's two-pose preview does): lead.start_pose("crawl"|"yoga"), then the player's controller join_nearby().
+##     feature's two-pose preview does): lead.start_pose("yoga"), then the player's controller join_nearby().
 ##   as the PARTNER (the husband, for a woman player): the player's own controller takes him: take_partner(proxy).
 
 const NAME := "SpouseTandem"
