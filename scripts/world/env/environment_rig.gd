@@ -199,10 +199,13 @@ func _build_sun() -> void:
 	_sun.shadow_blur = 1.2
 	_sun.directional_shadow_max_distance = settings.shadow_max_distance
 	_sun.directional_shadow_fade_start = 0.85
-	# No pancaking: with the forest's shadow-only crown proxies (cells ~45 m tall, 60-80 m wide)
-	# in the near splits, the default 20 m pancake dropped the cabin's and the palisade's shadows
-	# on the fort floor (measured on the live level, 2026-09-24).
-	_sun.directional_shadow_pancake_size = 0.0
+	# Pancaking on, 60 m: with it off (0, from 2026-09-24, when the default 20 m seemed to drop the cabin's and the
+	# palisade's shadows on the fort floor) the nearest split clipped the casters above its near plane, so round the
+	# player the trees' and the saplings' shade was missing: a lit patch with an edge that walked with the player
+	# (user 2026-09-30, "as the player moves in the forest no shadow is effect on them and things close to them lighter").
+	# Measured 2026-09-30: 60 m brings the near shade back (the floor round the player ~13 % darker, as the rest of the
+	# forest) and the fort's cabin and palisade shadows are unchanged at 20, 60 and 120 m.
+	_sun.directional_shadow_pancake_size = 60.0
 	if settings.shadow_splits >= 4:
 		_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 		_sun.directional_shadow_split_1 = 0.06
