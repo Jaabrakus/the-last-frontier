@@ -1975,6 +1975,72 @@
    "notes": "The real Japanese foot claws, iron. Not craftable (no forge in the game yet); examining a pair makes know.ashiko heard of.",
    "milestone": "M2a",
    "status": "slice"
+  },
+  {
+   "id": "item.material.canoe_stake",
+   "name": "Building stake",
+   "cat": "material",
+   "unit": "stake",
+   "kg": 0.4,
+   "stack": 10,
+   "notes": "A peeled sapling stake driven into the gravel to hold a canoe's building bed.",
+   "status": "slice",
+   "milestone": "M2a"
+  },
+  {
+   "id": "item.material.birch_bark_sheet",
+   "name": "Birch bark sheet",
+   "cat": "material",
+   "unit": "sheet",
+   "kg": 2.0,
+   "stack": 4,
+   "notes": "A whole sheet of white-birch bark peeled in a piece, the skin of a canoe.",
+   "status": "slice",
+   "milestone": "M2a"
+  },
+  {
+   "id": "item.material.spruce_root",
+   "name": "Spruce root",
+   "cat": "material",
+   "unit": "bundle",
+   "kg": 0.2,
+   "stack": 20,
+   "notes": "Split, soaked spruce root (wattap): the thread a bark canoe is sewn with.",
+   "status": "slice",
+   "milestone": "M2a"
+  },
+  {
+   "id": "item.material.cedar_strip",
+   "name": "Cedar strip",
+   "cat": "material",
+   "unit": "strip",
+   "kg": 0.5,
+   "stack": 10,
+   "notes": "A long strip of white cedar, split for a canoe's gunwales.",
+   "status": "slice",
+   "milestone": "M2a"
+  },
+  {
+   "id": "item.material.cedar_rib",
+   "name": "Cedar rib",
+   "cat": "material",
+   "unit": "rib",
+   "kg": 0.15,
+   "stack": 30,
+   "notes": "A thin white-cedar rib, split and shaved; steamed, it bends to the canoe's curve.",
+   "status": "slice",
+   "milestone": "M2a"
+  },
+  {
+   "id": "item.material.spruce_pitch",
+   "name": "Spruce pitch",
+   "cat": "material",
+   "unit": "lump",
+   "kg": 0.1,
+   "stack": 20,
+   "notes": "Spruce gum rendered down with tallow and charcoal: the seam sealer of a bark canoe.",
+   "status": "slice",
+   "milestone": "M2a"
   }
  ],
  "durability_rule": {
