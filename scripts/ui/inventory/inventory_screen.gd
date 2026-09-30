@@ -344,6 +344,8 @@ func _show_detail(kind: String) -> void:
 	_d_name.text = String(info.name)
 	_d_tag.text = String(info.tag).to_upper()
 	_d_text.text = String(info.text)
+	if String(info.get("history", "")) != "":
+		_d_text.text += "\n\nHistory. " + String(info.history)
 	var b := "[table=2]"
 	for r: Array in info.rows:
 		b += "[cell][color=#a0968a]%s[/color][/cell][cell][color=%s]%s[/color][/cell]" % [r[0], TONES.get(r[2], TONES[""]), r[1]]

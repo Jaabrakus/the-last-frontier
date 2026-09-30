@@ -364,13 +364,16 @@ func tick(dt: float) -> bool:
 # can add grip claw feet stakes to allow hanging without using a lot of stamina", "bone stakes as well"): the loadout's
 # climbing_stakes_* (data/loadout/loadout_items.json: climb.drain_mult, wood 0.85, bone 0.75, stone 0.65, iron 0.5) ride
 # on the belt or sash behind the left hip and come into the hands while gripping, points into the surface; the
-# climbing_claws (climb.hang_drain_mult 0.35) are strapped under the feet while gripping.
+# climbing_claws_* (climb.hang_drain_mult: wood 0.6, bone 0.5, stone 0.42, iron 0.35) are strapped under the feet while
+# gripping (user: "make it out of wood bone stone and iron", "have a leather strap").
 # --------------------------------------------------------------------------------------------------
 
 var _gear_on := false
 var _gear_kind := ""             ## the stakes' kind the hand copies were built for
 var _gear_nodes := {}            ## "l" / "r": a stake in that hand; "lf" / "rf": a claw under that foot
 var _gear_stowed := ""           ## the stakes' item id whose belt copy is hidden
+var _gear_n := Vector3.UP        ## the gripped surface's normal the stakes point into
+var _claw_off := {}              ## "l" / "r": a claw in its ball bone's frame (from the rest pose)
 
 
 ## The loadout item id of the climbing stakes carried ("" = none).
@@ -393,16 +396,27 @@ func stakes_drain_mult() -> float:
 	return float(LoadoutData.get_default().kind(k).get("climb", {}).get("drain_mult", 1.0))
 
 
-func has_claws() -> bool:
+## The kind of the climbing claws carried ("" = none).
+func claws_kind() -> String:
 	var lo: Loadout = player.get("loadout")
-	return lo != null and lo.has_kind("climbing_claws")
+	if lo == null:
+		return ""
+	for it: Dictionary in lo.items:
+		if String(it.kind).begins_with("climbing_claws_"):
+			return String(it.kind)
+	return ""
 
 
-## The claws' factor on the drain of holding still (1 without claws).
+func has_claws() -> bool:
+	return claws_kind() != ""
+
+
+## The claws' tier factor on the drain of holding still (1 without claws).
 func claws_hang_mult() -> float:
-	if not has_claws():
+	var k := claws_kind()
+	if k == "":
 		return 1.0
-	return float(LoadoutData.get_default().kind("climbing_claws").get("climb", {}).get("hang_drain_mult", 1.0))
+	return float(LoadoutData.get_default().kind(k).get("climb", {}).get("hang_drain_mult", 1.0))
 
 
 ## Shows the gear while holding on (stakes in the hands and their belt copy hidden, claws under the feet) and puts it
@@ -427,7 +441,7 @@ func _feed_gear() -> void:
 		_gear_stowed = hide_id
 	_gear_on = on
 	var sk := player.skeleton
-	var n: Vector3 = anchor.global_basis.y if on else Vector3.UP
+	_gear_n = anchor.global_basis.y if on else Vector3.UP
 	for side in ["l", "r"]:
 		var show := on and kind != ""
 		var st: Node3D = _gear_nodes.get(side)
@@ -436,10 +450,40 @@ func _feed_gear() -> void:
 			st.top_level = true
 			sk.add_child(st)
 			_gear_nodes[side] = st
-		if st == null:
-			continue
-		st.visible = show
-		if show:
+		if st != null:
+			st.visible = show
+		var key: String = side + "f"
+		var ck := claws_kind()
+		var claw := on and ck != ""
+		var cl: Node3D = _gear_nodes.get(key)
+		if cl != null and String(cl.get_meta("kind", "")) != ck:
+			cl.queue_free()
+			_gear_nodes.erase(key)
+			cl = null
+		if claw and cl == null:
+			cl = SlingModels.climbing_claw(ck.trim_prefix("climbing_claws_"))
+			cl.set_meta("kind", ck)
+			cl.top_level = true
+			sk.add_child(cl)
+			_gear_nodes[key] = cl
+		if cl != null:
+			cl.visible = claw
+	if on and not sk.skeleton_updated.is_connected(_place_gear):
+		sk.skeleton_updated.connect(_place_gear)
+	elif not on and sk.skeleton_updated.is_connected(_place_gear):
+		sk.skeleton_updated.disconnect(_place_gear)
+	if on:
+		_place_gear()
+
+
+## Puts the shown gear on the final pose (after the skeleton's modifiers: GripLegSway turns the legs, so a foot read
+## before them is not where it is drawn).
+func _place_gear() -> void:
+	var sk := player.skeleton
+	var n := _gear_n
+	for side in ["l", "r"]:
+		var st: Node3D = _gear_nodes.get(side)
+		if st != null and st.visible:
 			# held like a dagger, point out of the bottom of the fist into the surface at about 33 deg below its normal
 			# plane's horizontal: the grip, the guard and the start of the spike stay in sight, the rest is in the
 			# surface (the hands are on it; model: -Z = point, grip at z +0.068)
@@ -450,28 +494,18 @@ func _feed_gear() -> void:
 				y = Vector3.UP
 			var b := Basis(y.cross(z).normalized(), y, z).orthonormalized()
 			st.global_transform = Transform3D(b, palm - b.z * 0.068)
-	for side in ["l", "r"]:
-		var key: String = side + "f"
-		var show := on and has_claws()
-		var cl: Node3D = _gear_nodes.get(key)
-		if show and cl == null:
-			cl = SlingModels.climbing_claw()
-			cl.top_level = true
-			sk.add_child(cl)
-			_gear_nodes[key] = cl
-		if cl == null:
-			continue
-		cl.visible = show
-		if show:
-			# under the ball of the foot: -Z along the foot (ankle -> ball), +Y up the shin
-			var ank := sk.to_global(sk.get_bone_global_pose(sk.find_bone(side + "_ankle")).origin)
-			var ball := sk.to_global(sk.get_bone_global_pose(sk.find_bone(side + "_ball")).origin)
-			var knee := sk.to_global(sk.get_bone_global_pose(sk.find_bone(side + "_knee")).origin)
-			var fwd := (ball - ank).normalized()
-			var up := (knee - ank)
-			up = (up - fwd * up.dot(fwd)).normalized()
-			var b := Basis(up.cross(-fwd).normalized(), up, -fwd).orthonormalized()
-			cl.global_transform = Transform3D(b, ball - up * 0.035 - fwd * 0.02)
+		var cl: Node3D = _gear_nodes.get(side + "f")
+		if cl != null and cl.visible:
+			# on the sole under the forefoot, riding the ankle bone (the forefoot's skin follows it; the grip clips roll
+			# the ball bone on its own): where that sole is in the rest pose (the character stands on y = 0, the toes to
+			# +Z), carried by the bone's pose
+			var bi := sk.find_bone(side + "_ankle")
+			if not _claw_off.has(side):
+				var r := sk.get_bone_global_rest(bi)
+				var ball := sk.get_bone_global_rest(sk.find_bone(side + "_ball")).origin
+				var at := Transform3D(Basis(Vector3.LEFT, Vector3.UP, Vector3.FORWARD), Vector3(ball.x, 0.0, ball.z - 0.035))
+				_claw_off[side] = r.affine_inverse() * at
+			cl.global_transform = sk.global_transform * sk.get_bone_global_pose(bi) * (_claw_off[side] as Transform3D)
 
 
 ## The legs' sway: the surface under them and how hard it shakes; faded out for the pull-up and standing (their clips

@@ -1080,7 +1080,13 @@
    "rcp.smoked_fish"
   ],
   "common_heard_of": [
-   "fire.gunlock_ignite"
+   "fire.gunlock_ignite",
+   "rcp.climbing_stakes_wood",
+   "rcp.climbing_stakes_bone",
+   "rcp.climbing_stakes_stone",
+   "rcp.climbing_claws_wood",
+   "rcp.climbing_claws_bone",
+   "rcp.climbing_claws_stone"
   ],
   "tier_notices": "reaching a tier moves the skill's tier_unlocks notices from unknown to heard_of (a journal line)",
   "routes_rule": "every recipe and technique lists at least two routes to known, at least one needing no coin and no particular background (rule L2); community-held knowledge lists taught and watched only (redesign_skills.md 5.4)",

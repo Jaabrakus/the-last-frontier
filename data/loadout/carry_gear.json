@@ -2620,7 +2620,10 @@
      "hoe"
     ],
     "feet": [
-     "climbing_claws"
+     "climbing_claws_wood",
+     "climbing_claws_bone",
+     "climbing_claws_stone",
+     "climbing_claws_iron"
     ]
    },
    "evidence": "B (slung muskets, bows and quivers on the back)"

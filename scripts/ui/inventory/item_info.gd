@@ -84,11 +84,23 @@ static func of(kind: String, player: Node, count := 0) -> Dictionary:
 	_material_rows(kind, tree, rows)
 	_vice_rows(kind, rows)
 	_use_rows(kind, tree, rows)
+	_climb_rows(kind, rows)
 	return {"name": InventoryState.name_of(kind), "tag": String(t.get("tag", "")), "text": String(t.get("text", "")),
-			"rows": rows}
+			"history": String(t.get("history", "")), "rows": rows}
 
 
 # --- the rows -----------------------------------------------------------------------------------------
+
+## Climbing gear (loadout_items.json climbing_stakes_* / climbing_claws_*: climb.drain_mult, climb.hang_drain_mult).
+static func _climb_rows(kind: String, rows: Array) -> void:
+	var climb: Dictionary = LoadoutData.get_default().kind(kind).get("climb", {})
+	if climb.has("drain_mult"):
+		rows.append(["Climb", "the grip tires at x%s the rate while you hold on (stakes in the fists)" % str(climb.drain_mult), GOOD])
+	if climb.has("hang_drain_mult"):
+		rows.append(["Climb", "hanging still costs x%s of the grip (claws under the feet)" % str(climb.hang_drain_mult), GOOD])
+	if kind.begins_with("climbing_stakes_"):
+		rows.append(["Carried", "on the belt or sash, behind the left hip", ""])
+
 
 static func _food_rows(kind: String, count: int, tree: SceneTree, rows: Array) -> void:
 	if not _food.has(kind):

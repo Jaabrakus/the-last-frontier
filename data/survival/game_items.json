@@ -68,7 +68,13 @@
   "dried_marten_pelt": {"item": "item.pelt.marten", "qty": 1, "note": "a marten pelt stretched and dried on the hoop"},
   "dried_mink_pelt": {"item": "item.pelt.mink", "qty": 1, "note": "a mink pelt stretched and dried on the hoop"},
   "dried_fisher_pelt": {"item": "item.pelt.fisher", "qty": 1, "note": "a fisher pelt stretched and dried on the hoop"},
-  "dried_raccoon_pelt": {"item": "item.pelt.raccoon", "qty": 1, "note": "a raccoon pelt stretched and dried on the hoop"}
+  "dried_raccoon_pelt": {"item": "item.pelt.raccoon", "qty": 1, "note": "a raccoon pelt stretched and dried on the hoop"},
+  "climbing_stakes_wood": {"item": "item.tool.climbing_stakes_wood", "qty": 1, "note": "a pair of climbing stakes; the loadout carries them on the belt or sash (loadout_items.json)"},
+  "climbing_claws_wood": {"item": "item.tool.climbing_claws_wood", "qty": 1, "note": "a pair of grip claws; worn under the feet while climbing (loadout_items.json)"},
+  "climbing_stakes_bone": {"item": "item.tool.climbing_stakes_bone", "qty": 1, "note": "a pair of climbing stakes; the loadout carries them on the belt or sash (loadout_items.json)"},
+  "climbing_claws_bone": {"item": "item.tool.climbing_claws_bone", "qty": 1, "note": "a pair of grip claws; worn under the feet while climbing (loadout_items.json)"},
+  "climbing_stakes_stone": {"item": "item.tool.climbing_stakes_stone", "qty": 1, "note": "a pair of climbing stakes; the loadout carries them on the belt or sash (loadout_items.json)"},
+  "climbing_claws_stone": {"item": "item.tool.climbing_claws_stone", "qty": 1, "note": "a pair of grip claws; worn under the feet while climbing (loadout_items.json)"}
  },
  "fuel": {"firewood": {"item": "item.fuel.split_wood", "qty": 1, "note": "a pack firewood on a campfire: an armload of split wood, 120 game minutes of fire (Campfire.FUEL_MIN_PER_WOOD; the fire's fuel is the core's record, CampLink)"}},
  "start_gear": ["steel_trap", "bar_lead", "bullet_mould", "hooks_line", "sinew"],

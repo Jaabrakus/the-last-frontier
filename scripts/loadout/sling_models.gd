@@ -319,29 +319,48 @@ static func climbing_stake(tier: String) -> Node3D:
 	return root
 
 
-## A grip claw tied under one foot: a thin iron plate under the forefoot with four short spikes and two small front
-## points just past the toes, tied on with two thin rawhide thongs round the foot. Origin at the sole under the ball
-## of the foot, +Y up (the instep), -Z forward (the toes).
-static func climbing_claw() -> Node3D:
+## A grip claw strapped under one foot, of `tier` (wood, bone, stone, iron: loadout_items.json climbing_claws_*; after
+## the Japanese ashiko, user reference 2026-09-29): a plate under the forefoot a little wider than the foot, four teeth
+## out of its toe edge pointing forward and down past the toes, a wide leather band over the forefoot and a buckled
+## leather strap round the ankle. Origin at the sole under the middle of the plate, +Y up (the instep), -Z forward.
+static func climbing_claw(tier := "iron") -> Node3D:
 	var root := Node3D.new()
-	root.name = "ClimbingClaw"
-	var m := iron()
+	root.name = "ClimbingClaw_" + tier
+	var plate_m: Material
+	var tooth_m: Material
+	match tier:
+		"wood":
+			plate_m = mat("stake_wood", Color(0.42, 0.29, 0.17), 0.8)
+			tooth_m = mat("stake_charred", Color(0.09, 0.07, 0.06), 0.95)
+		"bone":
+			plate_m = mat("stake_bone", Color(0.86, 0.82, 0.7), 0.55)
+			tooth_m = plate_m
+		"stone":
+			plate_m = wood()
+			tooth_m = mat("stake_flint", Color(0.36, 0.33, 0.3), 0.35)
+		_:
+			plate_m = iron()
+			tooth_m = plate_m
+	var thick := 0.005 if tier == "iron" else 0.011
 	var plate := BoxMesh.new()
-	plate.size = Vector3(0.055, 0.004, 0.07)
-	_mesh_node(root, plate, m, Transform3D(Basis(), Vector3(0, -0.002, 0.005)), "Plate")
-	for ix in 2:
-		for iz in 2:
-			_mesh_node(root, tube_mesh(0.0, -0.013, 0.0035, 0.0, 4, false), m,
-					Transform3D(Basis(), Vector3(0.019 * (ix * 2 - 1), -0.004, 0.028 * iz - 0.012)), "Spike%d%d" % [ix, iz])
-		_mesh_node(root, tube_mesh(0.0, 0.02, 0.0035, 0.0, 4, false), m,
-				Transform3D(Basis(Vector3.RIGHT, -PI / 2 - 0.3), Vector3(0.012 * (ix * 2 - 1), -0.002, -0.03)), "Front%d" % ix)
-	# the thongs: thin bands round the foot (axis along the foot), flattened to its section
-	var thong := mat("thong", Color(0.3, 0.19, 0.1), 0.85, 0.0, false, true)
-	for k in 2:
-		var r := 0.043 + 0.006 * k
-		_mesh_node(root, tube_mesh(-0.0035, 0.0035, r, r, 18, false), thong,
-				Transform3D(Basis.from_scale(Vector3(1.0, 0.62, 1.0)) * Basis(Vector3.RIGHT, PI / 2), Vector3(0, 0.026, 0.0 + 0.045 * k)),
-				"Thong%d" % k)
+	plate.size = Vector3(0.092, thick, 0.11)
+	_mesh_node(root, plate, plate_m, Transform3D(Basis(), Vector3(0, -thick * 0.5, 0.0)), "Plate")
+	for i in 4:
+		# teeth from the toe edge, forward and 25 deg down (stone: flat flint flakes)
+		var t := _mesh_node(root, tube_mesh(0.0, 0.04, 0.0075 if tier != "iron" else 0.0065, 0.0, 4 if tier != "stone" else 6, false),
+				tooth_m, Transform3D(Basis(Vector3.RIGHT, -PI / 2 - 0.44), Vector3(-0.033 + 0.022 * i, -thick * 0.6, -0.052)), "Tooth%d" % i)
+		if tier == "stone":
+			t.transform.basis = t.transform.basis * Basis.from_scale(Vector3(1.0, 1.0, 0.4))
+	var band := leather()
+	# the forefoot band (0.038 wide), round the foot's section, its lower run under the plate
+	_mesh_node(root, tube_mesh(-0.019, 0.019, 0.057, 0.057, 22, false), band,
+			Transform3D(Basis.from_scale(Vector3(1.0, 0.68, 1.0)) * Basis(Vector3.RIGHT, PI / 2), Vector3(0, 0.03, 0.012)), "Band")
+	# the ankle strap (0.024 wide) with its iron buckle on the outside
+	var ankle := Transform3D(Basis(Vector3.RIGHT, 0.35), Vector3(0, 0.088, 0.09))
+	_mesh_node(root, tube_mesh(-0.012, 0.012, 0.055, 0.055, 22, false), band, ankle, "AnkleStrap")
+	var buckle := BoxMesh.new()
+	buckle.size = Vector3(0.007, 0.028, 0.024)
+	_mesh_node(root, buckle, iron(), ankle * Transform3D(Basis(), Vector3(0.057, 0.0, 0.0)), "Buckle")
 	return root
 
 

@@ -247,17 +247,57 @@
    "note": "A pair of climbing stakes (a square forged iron spike out of a leather-wrapped grip): tied on the belt or sash behind the left hip (the powder horn's place mirrored past the tomahawk); in the hands while gripping a surface (PlayerGrip), where they cut the grip's stamina drain to x0.5. Tiers: wood 0.85, bone 0.75, stone 0.65, iron 0.5.",
    "model": "SlingModels.climbing_stakes('iron')"
   },
-  "climbing_claws": {
+  "climbing_claws_wood": {
    "class": "worn",
    "family": "climbing_claws",
+   "tier": "wood",
+   "points": [
+    "feet"
+   ],
+   "climb": {
+    "hang_drain_mult": 0.6
+   },
+   "note": "Grip claws (a fire-hardened hardwood plate and teeth, after the Japanese ashiko) on leather straps under the feet while gripping a surface (PlayerGrip): holding still costs x0.6 of the stamina; crawling and being shaken cost as before. In the pouch otherwise (nothing shown on the body). Tiers: wood 0.6, bone 0.5, stone 0.42, iron 0.35.",
+   "model": "SlingModels.climbing_claw('wood') on each foot while gripping"
+  },
+  "climbing_claws_bone": {
+   "class": "worn",
+   "family": "climbing_claws",
+   "tier": "bone",
+   "points": [
+    "feet"
+   ],
+   "climb": {
+    "hang_drain_mult": 0.5
+   },
+   "note": "Grip claws (a flat of split bone with ground bone teeth, after the Japanese ashiko) on leather straps under the feet while gripping a surface (PlayerGrip): holding still costs x0.5 of the stamina; crawling and being shaken cost as before. In the pouch otherwise (nothing shown on the body). Tiers: wood 0.6, bone 0.5, stone 0.42, iron 0.35.",
+   "model": "SlingModels.climbing_claw('bone') on each foot while gripping"
+  },
+  "climbing_claws_stone": {
+   "class": "worn",
+   "family": "climbing_claws",
+   "tier": "stone",
+   "points": [
+    "feet"
+   ],
+   "climb": {
+    "hang_drain_mult": 0.42
+   },
+   "note": "Grip claws (a wooden plate with knapped flint teeth set in, after the Japanese ashiko) on leather straps under the feet while gripping a surface (PlayerGrip): holding still costs x0.42 of the stamina; crawling and being shaken cost as before. In the pouch otherwise (nothing shown on the body). Tiers: wood 0.6, bone 0.5, stone 0.42, iron 0.35.",
+   "model": "SlingModels.climbing_claw('stone') on each foot while gripping"
+  },
+  "climbing_claws_iron": {
+   "class": "worn",
+   "family": "climbing_claws",
+   "tier": "iron",
    "points": [
     "feet"
    ],
    "climb": {
     "hang_drain_mult": 0.35
    },
-   "note": "Grip claws strapped to the feet while gripping a surface (PlayerGrip): holding still costs x0.35 of the stamina; crawling and being shaken cost as before. In the pouch otherwise (nothing shown on the body).",
-   "model": "SlingModels.climbing_claw() on each foot while gripping"
+   "note": "Grip claws (a forged iron plate and teeth, after the Japanese ashiko) on leather straps under the feet while gripping a surface (PlayerGrip): holding still costs x0.35 of the stamina; crawling and being shaken cost as before. In the pouch otherwise (nothing shown on the body). Tiers: wood 0.6, bone 0.5, stone 0.42, iron 0.35.",
+   "model": "SlingModels.climbing_claw('iron') on each foot while gripping"
   }
  },
  "long_slot_rule": "assign long items in the order long guns, bow, spear pair, dart bundle; each takes its first free slot in `slots`; at most two long items; the quiver comes with the bow and sits under long_B",

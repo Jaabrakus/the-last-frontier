@@ -246,11 +246,12 @@ func _check_milestones() -> void:
 	if m1 > 14:
 		_fail("scope: M1 has %d actions (at most 14)" % m1)
 	# Fix round 1 (redesign_balance_report.md F1-F3): casting balls and hook-and-line fishing are live, 42 at M2a and 46
-	# in the slice (was 40 and 44).
-	if m1 + m2a > 42:
-		_fail("scope: M1 and M2a have %d actions (the M2a gate allows at most 42)" % (m1 + m2a))
-	if m1 + m2a + m2b > 46:
-		_fail("scope: the slice has %d actions (the M2b gate allows at most 46)" % (m1 + m2a + m2b))
+	# in the slice (was 40 and 44). The climbing gear (craft.carve_climbing_gear, user 2026-09-29: "why cap why not
+	# expand it") makes it 43 and 47; the gates are a design scope guard, not a runtime limit.
+	if m1 + m2a > 43:
+		_fail("scope: M1 and M2a have %d actions (the M2a gate allows at most 43)" % (m1 + m2a))
+	if m1 + m2a + m2b > 47:
+		_fail("scope: the slice has %d actions (the M2b gate allows at most 47)" % (m1 + m2a + m2b))
 	if int(counts.get("conditions_M1", 0)) != 6:
 		_fail("scope: M1 has exactly six conditions (hunger, cold, wet, fatigue, a cut, a light drink)")
 	var bgs := 0

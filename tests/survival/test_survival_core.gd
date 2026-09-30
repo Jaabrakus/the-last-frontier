@@ -4,7 +4,7 @@ extends SceneTree
 ## the wake rules, trapping and hunting, the economy and the credit year, save/load determinism, the almanac, NPC
 ## schedules, signals and the M3 backlog actions.
 ##
-## v4 (the self-sufficiency, barter and learning redesign) rewrote these on purpose: test_data_loads (46 live actions),
+## v4 (the self-sufficiency, barter and learning redesign) rewrote these on purpose: test_data_loads (47 live actions),
 ## test_clock_real_rate and test_runtime_node (the fixed-quantum update driver, multiplayer_readiness.md P0-1),
 ## test_skill_growth_rules (growth v4: challenge, level curve, repeats, first success, caps, no background multiplier),
 ## test_backgrounds_differ (the Clear start owes no one; debts are start variants; habits replace perks),
@@ -130,7 +130,7 @@ func test_00_smoke() -> void:
 func test_data_loads() -> void:
 	var d := SurvivalCore.load_data()
 	ok(d.is_ok(), "live data loads without errors")
-	ok(d.actions.size() == 46, "46 live actions in M1, M2a and M2b (%d; fix round 1 added casting balls and hook and line)" % d.actions.size())
+	ok(d.actions.size() == 47, "47 live actions in M1, M2a and M2b (%d; fix round 1 added casting balls and hook and line, the climbing gear one more)" % d.actions.size())
 	ok(d.month_ids.size() == 12 and d.day_ids.size() == 36, "12 months, 36 game days")
 	ok(d.backgrounds.has("bg.backcountry_hunter") and d.backgrounds.has("bg.provincial_ranger"), "both slice backgrounds")
 	ok(d.modifier_keys.has("aim_sway_mult") and d.modifier_keys.has("move_speed_mult"), "modifier contract keys indexed")
