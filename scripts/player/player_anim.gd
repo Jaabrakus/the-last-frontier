@@ -1000,12 +1000,12 @@ func manual_step(dt: float) -> void:
 	# (standing still the gun is at low ready too, the sprint's hold: user 2026-09-30, "for idle have low ready as well")
 	if hold_ok and not loco.moving:
 		_run_hold_on = true
-		_run_hold_gait = "sprint"
+		_run_hold_gait = "low"
 	var run_hold := _run_hold_on
 	if run_hold and loco.moving and (String(loco.mode) in ["run", "sprint"] or (back and String(loco.mode) == "walk")):
 		# (moving backward holds the gun low like the sprint does, not at port arms: user 2026-09-30, "backwards rifle
 		# walk doesn't have the rifle low like the sprint in forward")
-		_run_hold_gait = "sprint" if (String(loco.mode) == "sprint" or loco.hemi == &"bw") else "run"
+		_run_hold_gait = "low" if back else ("sprint" if String(loco.mode) == "sprint" else "run")
 	var run_clip := _run_hold_clip(_run_hold_gait)
 	# a one-handed weapon aimed: the left arm off it, hanging as it does in the relaxed swing
 	var one_hand_aim := one_hand_aim_on and String(_weapon) in ONE_HAND_AIM_WEAPONS and (aiming or aim_wanted) and not busy and not hands_free and not torch
@@ -1021,7 +1021,7 @@ func manual_step(dt: float) -> void:
 			elif mode == "source":
 				var grip_clip := run_clip if run_hold else TAKEOFF_ARMS
 				if String(loco.stance) == "crouch":
-					grip_clip = CROUCH_GRIP_ARMS if loco.moving else CROUCH_IDLE_ARMS
+					grip_clip = (CROUCH_GRIP_ARMS if loco.hemi == &"bw" else CROUCH_GRIP_ARMS_FW) if loco.moving else CROUCH_IDLE_ARMS
 				left_arm.set_sources(grip_clip, _clip_sources(grip_clip), STANCE_ARM_XFADE_S)
 			else:
 				left_arm.set_sources("grip", _arm_layer_sources())
@@ -1249,6 +1249,10 @@ const AIR_RIFLE_ARM := "actor_b-p-fall--rifle-part"
 const TAKEOFF_ARMS := "actor_b-p-rifle-run-arms"
 ## The standing hold's arms (long_gun_run_hold "idle", and "port_low" at a sprint: low ready).
 const IDLE_HOLD_ARMS := "actor_b-p-rifle-idle-arms"
+## Our own low ready (tools/anim_author/author_locomotion.gd: the standing hold's arms turned down at the shoulders): standing
+## still and moving backward, where the body does not lean into the sprint's low carry (user 2026-09-30: "idle low ready",
+## "backwards like the sprint's rifle low").
+const LOW_READY_ARMS := "own-rifle-low-ready"
 ## The run hold's speed margin (m/s): on from this at a run or sprint ...
 const RUN_HOLD_ON_MS := 2.4
 ## ... off under this.
@@ -1270,11 +1274,15 @@ func _run_hold_clip(gait: String) -> String:
 		"idle":
 			return IDLE_HOLD_ARMS
 		"port_low":
+			if gait == "low":
+				return LOW_READY_ARMS
 			return IDLE_HOLD_ARMS if gait == "sprint" else TAKEOFF_ARMS
 	return TAKEOFF_ARMS
 ## The crouched two-hand grip arm of the moving carries (the crouch-walk carry's arms layer, one pose), and
 ## of the crouch idle (its arms layer, one pose: the in-place crouch change ends on it).
-const CROUCH_GRIP_ARMS := "actor_b-p-rifle-crouch-run-arms"
+## Our own medium ready, backward and forward (tools/anim_author/author_locomotion.gd: the crouch run arms turned down at the shoulders).
+const CROUCH_GRIP_ARMS := "own-rifle-crouch-mid"
+const CROUCH_GRIP_ARMS_FW := "own-rifle-crouch-mid-fw"
 const CROUCH_IDLE_ARMS := "actor_b-p-rifle-crouch-idle-arms"
 ## Seconds the grip arms take from one stance's to the other's (the musket turns 40-60 deg between them).
 const STANCE_ARM_XFADE_S := 0.35

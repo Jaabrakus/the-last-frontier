@@ -10,6 +10,21 @@
 			"clip": "own-axe-grip",
 			"length": 0.033333,
 			"lib": "frontier_locomotion"
+		},
+		"own-rifle-crouch-mid": {
+			"clip": "own-rifle-crouch-mid",
+			"length": 0.033333,
+			"lib": "frontier_locomotion"
+		},
+		"own-rifle-crouch-mid-fw": {
+			"clip": "own-rifle-crouch-mid-fw",
+			"length": 0.033333,
+			"lib": "frontier_locomotion"
+		},
+		"own-rifle-low-ready": {
+			"clip": "own-rifle-low-ready",
+			"length": 0.033333,
+			"lib": "frontier_locomotion"
 		}
 	},
 	"rules": [
@@ -204,20 +219,86 @@
 			"layers": [
 				{
 					"bones": [
+						"l_clavicle",
+						"l_scapula",
+						"l_shoulder",
+						"l_deltoid",
+						"l_elbow",
+						"l_wrist",
+						"l_trap",
 						"r_clavicle",
+						"r_scapula",
+						"r_shoulder",
 						"r_deltoid",
 						"r_elbow",
-						"r_shoulder",
-						"r_trap",
-						"r_wrist"
+						"r_wrist",
+						"r_trap"
 					],
-					"clip": "own-axe-carry",
+					"clip": "own-rifle-crouch-mid",
 					"kind": "partial",
 					"sample_s": 0.0,
 					"slot": "arms",
 					"status": "frontier",
 					"superseded_by": null,
-					"weight": 1.0,
+					"weight": 0.8,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"crouch"
+			],
+			"roles_except": [
+				"idle"
+			],
+			"roles_only": [
+				"bw",
+				"bw_lt",
+				"bw_rt",
+				"start_bw",
+				"start_bw_lt",
+				"start_bw_rt",
+				"stop_bw",
+				"stop_bw_lt",
+				"stop_bw_rt",
+				"rev_bw_fw",
+				"rev_bw_fw_lt",
+				"rev_bw_fw_rt",
+				"rev_fw_bw",
+				"rev_fw_bw_lt",
+				"rev_fw_bw_rt"
+			],
+			"slots": [
+				"arms"
+			],
+			"weapon": "musket",
+			"why": "the rifle crouch walk holds it at medium ready (user 2026-09-30): the crouch run arms turned down at the shoulders (own-rifle-crouch-mid); the left hand is the grip IK's"
+		},
+		{
+			"layers": [
+				{
+					"bones": [
+						"l_clavicle",
+						"l_scapula",
+						"l_shoulder",
+						"l_deltoid",
+						"l_elbow",
+						"l_wrist",
+						"l_trap",
+						"r_clavicle",
+						"r_scapula",
+						"r_shoulder",
+						"r_deltoid",
+						"r_elbow",
+						"r_wrist",
+						"r_trap"
+					],
+					"clip": "own-rifle-crouch-mid-fw",
+					"kind": "partial",
+					"sample_s": 0.0,
+					"slot": "arms",
+					"status": "frontier",
+					"superseded_by": null,
+					"weight": 0.8,
 					"weight_curve": null
 				}
 			],
@@ -231,36 +312,20 @@
 				"fw",
 				"fw_lt",
 				"fw_rt",
-				"bw",
-				"bw_lt",
-				"bw_rt",
 				"start_fw",
 				"start_fw_lt",
 				"start_fw_rt",
-				"start_bw",
-				"start_bw_lt",
-				"start_bw_rt",
 				"stop_fw",
 				"stop_fw_lt",
 				"stop_fw_rt",
-				"stop_bw",
-				"stop_bw_lt",
-				"stop_bw_rt",
-				"rev_bw_fw",
-				"rev_bw_fw_lt",
-				"rev_bw_fw_rt",
-				"rev_fw_bw",
-				"rev_fw_bw_lt",
-				"rev_fw_bw_rt",
 				"turn_l",
 				"turn_r"
 			],
 			"slots": [
-				"arms",
-				"arms_add"
+				"arms"
 			],
 			"weapon": "musket",
-			"why": "the rifle crouch walk holds it like the felling axe's carry (user 2026-09-30): the right arm hangs low at the side, the left hand stays on the rifle (LeftGripIK closes it onto the forestock); the crouch idle keeps its own"
+			"why": "the rifle crouch walk forward, medium ready: the same, the arms turned further (the forward crouch walk's torso is more upright)"
 		},
 		{
 			"copy_from": "pistol",

@@ -115,8 +115,13 @@ func _bake() -> void:
 	# axe is in the hand, walking, sprinting and crouched), as a one-frame pose the spear's sprint and crouch take
 	var axe_bones := _bake_axe_carry(out, "own-axe-carry", ["clavicle", "scapula", "shoulder", "deltoid", "elbow", "wrist", "forarm", "trap"])
 	var grip_bones := _bake_axe_carry(out, "own-axe-grip", ["palm", "index", "middle", "pinky", "ring", "thumb"])
+	# the rifle's own low ready (idle, walking and running backward) and medium ready (crouch walk): the graph's arms turned at the
+	# shoulders, the right decides where the gun points and the left hand is the IK's
+	var low_bones := _bake_rifle_pose(out, "own-rifle-low-ready", "actor_b-p-rifle-idle-arms", LOW_TURN_R, LOW_TURN_L)
+	var mid_bones := _bake_rifle_pose(out, "own-rifle-crouch-mid", "actor_b-p-rifle-crouch-run-arms", MID_TURN_R, MID_TURN_L)
+	_bake_rifle_pose(out, "own-rifle-crouch-mid-fw", "actor_b-p-rifle-crouch-run-arms", MID_FW_TURN_R, MID_FW_TURN_L)
 	print(ResourceSaver.save(out, OUT_LIB, ResourceSaver.FLAG_COMPRESS))
-	_write_carry_patches(axe_bones, grip_bones)
+	_write_carry_patches(axe_bones, grip_bones, low_bones, mid_bones)
 	var f := FileAccess.open(WIRED, FileAccess.WRITE)
 	f.store_string(JSON.stringify({"about": "Clips that stand in for the graph's own (AnimGraphData.apply_clip_overrides): the graph clip name -> the library and clip played instead, its measured travel speed (m/s, tools/anim_author/author_locomotion.gd) and length (s). The plant phases and the rest of the metrics stay the original clip's.", "clips": wired}, "\t") + "\n")
 	f.close()
@@ -175,22 +180,31 @@ func _bake_axe_carry(out: AnimationLibrary, clip_name: String, parts: Array) -> 
 
 ## data/anim_author/carry_patches.json: arm layers the graph's roles get in place of their own (AnimGraphData.apply_carry_patches)
 ## because the tables cannot be regenerated here; "clips" are graph clips of our own library.
-func _write_carry_patches(axe_bones: Array, grip_bones: Array) -> void:
+func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array, mid_bones: Array) -> void:
 	var axe_layer := {"clip": "own-axe-carry", "kind": "partial", "slot": "arms", "status": "frontier", "weight": 1.0,
 			"sample_s": 0.0, "bones": axe_bones, "superseded_by": null, "weight_curve": null}
 	var grip_layer := {"clip": "own-axe-grip", "kind": "partial", "slot": "hands", "status": "frontier", "weight": 1.0,
 			"sample_s": 0.0, "bones": grip_bones, "superseded_by": null, "weight_curve": null}
+	var mid_layer := {"clip": "own-rifle-crouch-mid", "kind": "partial", "slot": "arms", "status": "frontier", "weight": 0.8,
+			"sample_s": 0.0, "bones": mid_bones, "superseded_by": null, "weight_curve": null}
+	var mid_fw_layer := mid_layer.duplicate()
+	mid_fw_layer["clip"] = "own-rifle-crouch-mid-fw"
 	var doc := {
 		"about": "Arm layers the graph's roles take in place of their own (AnimGraphData.apply_carry_patches; written by tools/anim_author/author_locomotion.gd). clips: graph clips of our own library. rules: weapon / modes / roles (all but roles_except) / slots replaced, by layers, or copied from another weapon's same role (copy_from).",
 		"clips": {"own-axe-carry": {"lib": "frontier_locomotion", "clip": "own-axe-carry", "length": snappedf(1.0 / 30.0, 0.000001)},
-				"own-axe-grip": {"lib": "frontier_locomotion", "clip": "own-axe-grip", "length": snappedf(1.0 / 30.0, 0.000001)}},
+				"own-axe-grip": {"lib": "frontier_locomotion", "clip": "own-axe-grip", "length": snappedf(1.0 / 30.0, 0.000001)},
+				"own-rifle-low-ready": {"lib": "frontier_locomotion", "clip": "own-rifle-low-ready", "length": snappedf(1.0 / 30.0, 0.000001)},
+				"own-rifle-crouch-mid": {"lib": "frontier_locomotion", "clip": "own-rifle-crouch-mid", "length": snappedf(1.0 / 30.0, 0.000001)},
+				"own-rifle-crouch-mid-fw": {"lib": "frontier_locomotion", "clip": "own-rifle-crouch-mid-fw", "length": snappedf(1.0 / 30.0, 0.000001)}},
 		"rules": [
 			{"why": "the spear sprints and crouches with the felling axe's carry: its arm and its grip (user 2026-09-30: \"hold it like the fell axe\"); its idle keeps the javelin carry",
 			"weapon": "spear", "modes": ["sprint"], "roles_except": ["idle"], "roles_only": MOVE_ROLES, "slots": ["arms", "hands"], "layers": [grip_layer, axe_layer]},
 			{"why": "the spear crouches with the felling axe's carry: its arm and its grip (user 2026-09-30)",
 			"weapon": "spear", "modes": ["crouch"], "roles_except": [], "roles_only": MOVE_ROLES + ["idle"], "slots": ["arms", "hands"], "layers": [grip_layer, axe_layer]},
-			{"why": "the rifle crouch walk holds it like the felling axe's carry (user 2026-09-30): the right arm hangs low at the side, the left hand stays on the rifle (LeftGripIK closes it onto the forestock); the crouch idle keeps its own",
-			"weapon": "musket", "modes": ["crouch"], "roles_except": ["idle"], "roles_only": MOVE_ROLES, "slots": ["arms", "arms_add"], "layers": [axe_layer]},
+			{"why": "the rifle crouch walk holds it at medium ready (user 2026-09-30): the crouch run arms turned down at the shoulders (own-rifle-crouch-mid); the left hand is the grip IK's",
+			"weapon": "musket", "modes": ["crouch"], "roles_except": ["idle"], "roles_only": BACK_ROLES, "slots": ["arms"], "layers": [mid_layer]},
+			{"why": "the rifle crouch walk forward, medium ready: the same, the arms turned further (the forward crouch walk's torso is more upright)",
+			"weapon": "musket", "modes": ["crouch"], "roles_except": ["idle"], "roles_only": FWD_ROLES, "slots": ["arms"], "layers": [mid_fw_layer]},
 			{"why": "the tomahawk crouches like the pistol (user 2026-09-30): the pistol's crouch arm on every role",
 			"weapon": "tomahawk", "modes": ["crouch"], "roles_except": [], "slots": ["arms", "arms_add"], "copy_from": "pistol"},
 		],
@@ -262,6 +276,53 @@ func _rifle_side_preview() -> void:
 		var b := rls[mini(i, rls.size() - 1)].split(",")
 		out.add_animation(StringName("v%d" % i), _rifle_side(Vector3(float(a[0]), float(a[1]), float(a[2])), Vector3(float(b[0]), float(b[1]), float(b[2])), false))
 	print(ResourceSaver.save(out, PREVIEW_LIB))
+
+
+## The rifle low ready and the crouch walk's medium ready: the turns at the shoulders (degrees, pitch yaw roll in the shoulder's own
+## frame: +Y lowers the hand and the gun's end on that side) of the graph's arm poses.
+const LOW_TURN_R := Vector3(0.0, 35.0, 0.0)
+const LOW_TURN_L := Vector3(0.0, 35.0, 0.0)
+const MID_TURN_R := Vector3(0.0, 12.0, 0.0)
+const MID_TURN_L := Vector3(0.0, 12.0, 0.0)
+## (forward the crouch walk's torso is more upright, so the arms turn further for the same barrel height)
+const MID_FW_TURN_R := Vector3(0.0, 32.0, 0.0)
+const MID_FW_TURN_L := Vector3(0.0, 32.0, 0.0)
+const FWD_ROLES := ["fw", "fw_lt", "fw_rt", "start_fw", "start_fw_lt", "start_fw_rt", "stop_fw", "stop_fw_lt", "stop_fw_rt", "turn_l", "turn_r"]
+const BACK_ROLES := ["bw", "bw_lt", "bw_rt", "start_bw", "start_bw_lt", "start_bw_rt", "stop_bw", "stop_bw_lt", "stop_bw_rt",
+		"rev_bw_fw", "rev_bw_fw_lt", "rev_bw_fw_rt", "rev_fw_bw", "rev_fw_bw_lt", "rev_fw_bw_rt"]
+
+
+## A one-frame arms pose `clip_name` in `out`: `src_name`'s arms at its first frame, the shoulders turned by `rr` / `rl`; returns
+## the bones it keys.
+func _bake_rifle_pose(out: AnimationLibrary, clip_name: String, src_name: String, rr: Vector3, rl: Vector3) -> Array:
+	var src := lib.get_animation(src_name)
+	var pose := _stamp(Animation.new(), src)
+	pose.length = 1.0 / 30.0
+	pose.set_meta(&"authored", "Frontier: %s's arms with the shoulders turned (%s; tools/anim_author/author_locomotion.gd)" % [src_name, clip_name])
+	var turn := {"r_shoulder": Quaternion.from_euler(Vector3(deg_to_rad(rr.x), deg_to_rad(rr.y), deg_to_rad(rr.z))),
+			"l_shoulder": Quaternion.from_euler(Vector3(deg_to_rad(rl.x), deg_to_rad(rl.y), deg_to_rad(rl.z)))}
+	var bones: Array = []
+	for ti in src.get_track_count():
+		var type := src.track_get_type(ti)
+		if type != Animation.TYPE_ROTATION_3D:
+			continue
+		var bone := String(src.track_get_path(ti).get_concatenated_subnames())
+		var keep := false
+		for part in ["clavicle", "scapula", "shoulder", "deltoid", "elbow", "wrist", "forarm", "trap"]:
+			if (bone.begins_with("r_") or bone.begins_with("l_")) and part in bone:
+				keep = true
+		if not keep:
+			continue
+		var tr := pose.add_track(type)
+		pose.track_set_path(tr, src.track_get_path(ti))
+		var q: Quaternion = src.rotation_track_interpolate(ti, 0.0)
+		if turn.has(bone):
+			q = q * (turn[bone] as Quaternion)
+		pose.rotation_track_insert_key(tr, 0.0, q)
+		if not bones.has(bone):
+			bones.append(bone)
+	out.add_animation(StringName(clip_name), pose)
+	return bones
 
 
 ## A clip with its arms made our own: each arm bone's movement about its mean through the clip is scaled (ARMS_SWING) and

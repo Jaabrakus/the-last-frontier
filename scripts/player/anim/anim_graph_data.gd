@@ -168,22 +168,29 @@ func apply_carry_patches() -> void:
 			var role: Dictionary = (graph.roles[key] as Dictionary).duplicate(false)
 			var layers: Array = []
 			var had := false
+			var at := -1
 			for l: Dictionary in role.get("layers", []):
 				if slots.has(String(l.get("slot", ""))):
+					if not had:
+						at = layers.size()
 					had = true
 				else:
 					layers.append(l)
 			# (only the roles that carry such a layer: the air, landing, hit and death roles have none)
 			if not had:
 				continue
+			# (the new layers go where the first replaced one was: the partial arms come before their additive)
+			var put: Array = []
 			if rule.has("copy_from"):
 				# (copy_mode: from that mode's role instead of the same mode's: the walk's backward roles from the sprint's)
 				var src: Dictionary = graph.roles.get("%s/%s/%s" % [rule.copy_from, rule.get("copy_mode", parts[1]), parts[2]], {})
 				for l: Dictionary in src.get("layers", []):
 					if slots.has(String(l.get("slot", ""))):
-						layers.append(l)
+						put.append(l)
 			else:
-				layers.append_array(rule.get("layers", []))
+				put.append_array(rule.get("layers", []))
+			for i in put.size():
+				layers.insert(at + i, put[i])
 			role["layers"] = layers
 			graph.roles[key] = role
 
