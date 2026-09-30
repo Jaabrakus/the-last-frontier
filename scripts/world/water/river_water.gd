@@ -394,6 +394,11 @@ func interact_point() -> Vector3:
 	return _offer.get("point", Vector3.INF)
 
 
+## Drinking is a hold-E thing (user 2026-09-29): in the list a hold brings up, never the tap's prompt.
+func interact_hold_only() -> bool:
+	return true
+
+
 func distance_from(pt: Vector3) -> float:
 	if _offer.is_empty():
 		return INF

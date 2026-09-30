@@ -46,7 +46,7 @@ extends Node
 ## first, puts it down: the hold's old meaning, the placement showing while that row is chosen. With nothing to do
 ## in reach a hold is the placement as before. "Hold E: 2 more" under the prompt says when there is more than the tap.
 ## What an interactable may add for the list: interact_actions(player) -> [{id, text}] (the first is the tap's) and
-## interact_action(player, id).
+## interact_action(player, id); interact_hold_only() -> true: it is never the tap's, only in the list (the river's drink).
 ##
 ## The player's side: FrontierPlayer.is_carried() / set_carried() (a weapon put down is not carried until it
 ## is taken again) and the hands-free state.
@@ -364,7 +364,13 @@ func _find_item() -> Node:
 		if s < INF:
 			_cands.append([s - LOOK_BONUS * _look_at(pk, pk.global_position, look) - ITEM_LEAD, pk])
 	_cands.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
-	return null if _cands.is_empty() else _cands[0][1]
+	# the tap's is the best that is not for the hold alone (an interactable's interact_hold_only(): the river's drink, user 2026-09-29: "i always
+	# wanted that to be a hold E interaction"); those are only in the list a hold brings up
+	for c: Array in _cands:
+		var n: Node = c[1]
+		if not (n.has_method("interact_hold_only") and bool(n.interact_hold_only())):
+			return n
+	return null
 
 
 ## The crosshair's line: {from, to} (the camera to where it lands, or RAY_LEN on), and where it lands {position,
@@ -967,6 +973,10 @@ func _update_label() -> void:
 					(throw.land as Vector3).z - player.global_position.z).length())) if not throw.is_empty() else "Look where to throw the torch"
 		else:
 			_label.text = ("Click  %s" % place.what) if not place.is_empty() else _place_hint()
+	elif target == null and not _cands.is_empty() and not _placing and place.is_empty():
+		# only things for the hold in reach (the river's drink): say so
+		var hn: Node = _cands[0][1]
+		_label.text = "Hold %s  %s" % [key_name, hn.interact_prompt(player)] if hn != null and hn.has_method("interact_prompt") else ""
 	elif not place.is_empty():
 		_label.text = "Release %s  %s" % [key_name, place.what]
 	elif _placing:

@@ -7,8 +7,9 @@ extends Node
 ##   W / S     the crew strokes ahead / backs water (Boat.drive throttle)
 ##   A / D     steers left / right
 ##   C         crouches low in the boat (the game's own crouch: the paddle laid back where it lay): they can equip weapons and hold aim to
-##             shoot from the boat, hidden below the gunwale as a crouched player is (the wild sees them less); the boat drifts. C again
-##             (or jumping / sprinting, which stand a crouched player up) kneels to the paddle again.
+##             shoot from the boat, hidden below the gunwale as a crouched player is (the wild sees them less); the boat drifts. They are
+##             free to move about the floor as in any crouch (the boat carries them: their place is kept in its frame), jump out over the
+##             gunwale (Space at the edge), or stand (C again) to kneel to the paddle again.
 ##   E         gets out, on the bank side if there is one, the paddle laid back where it was
 ## The camera goes on orbiting the player as when they kneel. The boat carries them; nothing else about them changes.
 ## The paddle: in the hand (a BoneAttachment3D on the right palm), swung with the boat's stroke so the blade dips as it pulls.
@@ -43,6 +44,11 @@ var _crouch_t := 0.0
 var side := ""
 var _last_ph := 0.0
 var _moving := false
+## Crouched: their place in the boat's frame, carried as it moves and turns; the last world place set (their own walking is what moved them since).
+var _local := Vector3.ZERO
+var _last_world := Vector3.ZERO
+const EDGE_M := 0.1     ## how near the gunwale counts as at the edge (jumping out)
+const JUMP_OUT := Vector3(2.6, 3.6, 0.0)
 
 
 static func attach_to(b: Boat) -> BoatRider:
@@ -72,6 +78,9 @@ func interact_prompt(player: Node) -> String:
 
 
 func interact_point() -> Vector3:
+	# aboard: at the player, so "Get out" is always in reach whichever way they look (the interactor counts what is at the feet)
+	if aboard():
+		return rider.global_position + Vector3.UP * 0.9
 	return boat.global_position + Vector3.UP * 0.5
 
 
@@ -134,6 +143,7 @@ func _enter_paddle() -> bool:
 	if _ap == null:
 		return false
 	player._set_body_collision(false)
+	player.aboard = self
 	player.velocity = Vector3.ZERO
 	player.global_position = seat_position()
 	_face(true)
@@ -154,16 +164,24 @@ func _drop_blender() -> void:
 	_blender = null
 
 
-## Down into the game's own crouch, low in the boat: the paddle back where it lay, the player's own animation and weapons.
+## The floor a crouched player moves about, half its width and length (the boat's frame).
+func floor_half() -> Vector2:
+	return Vector2(maxf(boat.num("beam", 1.0) * 0.5 - 0.2, 0.18), boat.num("length", 4.0) * 0.5 - 0.5)
+
+
+## Down into the game's own crouch, low in the boat: the paddle back where it lay, the player's own animation, weapons and walking.
 func _enter_crouch() -> void:
 	var p := rider
 	boat.drive(0.0, 0.0)
 	_put_paddle_back()
 	_drop_blender()
 	p.end_kneel()
+	p.aboard = null                     # free to move about the boat
 	p._set_body_collision(true)
 	p.set_crouched(true)
 	p.global_position = seat_position()
+	_local = boat.to_local(p.global_position)
+	_last_world = p.global_position
 	mode = "crouch"
 	_crouch_t = 0.0
 
@@ -252,9 +270,12 @@ func _physics_process(dt: float) -> void:
 	if mode == "crouch":
 		_crouch_t += dt
 		boat.drive(0.0, 0.0)
-		p.global_position = seat_position()
-		p.velocity = Vector3.ZERO
-		# stood up (C again, a jump or a sprint key): back to the paddle
+		_carry(p)
+		# Space at the gunwale: over the side and out (anywhere else it stands them, which is the paddle again below)
+		if Input.is_action_just_pressed("jump") and _at_edge():
+			_jump_out(p)
+			return
+		# stood up (C again, or a jump inboard): back to the paddle
 		if not p.is_crouching and _crouch_t > 0.25:
 			p.set_crouched(false)
 			if not _enter_paddle():
@@ -294,6 +315,39 @@ func _choose_side(steer: float) -> void:
 		side = "-l"
 	elif steer < -0.3:
 		side = ""
+
+
+## Carries the player with the boat: what their own walking did since last frame is kept (in the boat's frame), the rest of their place
+## goes with the boat as it moves and turns, and they stay on the floor (a step out over the edge is held at it).
+func _carry(p: FrontierPlayer) -> void:
+	var walked := p.global_position - _last_world
+	walked.y = 0.0
+	_local += boat.basis.inverse() * walked
+	var half := floor_half()
+	_local.x = clampf(_local.x, -half.x, half.x)
+	_local.z = clampf(_local.z, -half.y, half.y)
+	_local.y = boat.floor_y()
+	p.global_position = boat.to_global(_local)
+	p.velocity = Vector3(0.0, 0.0, 0.0) if not p.is_on_floor() else Vector3(p.velocity.x, 0.0, p.velocity.z)
+	_last_world = p.global_position
+
+
+func _at_edge() -> bool:
+	var half := floor_half()
+	return absf(_local.x) >= half.x - EDGE_M or absf(_local.z) >= half.y - EDGE_M
+
+
+## Over the gunwale and out: on the side they are nearest, with a hop.
+func _jump_out(p: FrontierPlayer) -> void:
+	var out := signf(_local.x) if absf(_local.x) >= floor_half().x - EDGE_M else 0.0
+	if out == 0.0:
+		out = 1.0
+	var side := boat.right() * out
+	boat.drive(0.0, 0.0)
+	var q := boat.to_global(Vector3(out * (boat.num("beam", 1.0) * 0.5 + 0.35), boat.floor_y() + 0.3, _local.z))
+	leave()
+	p.global_position = q
+	p.velocity = side * JUMP_OUT.x + Vector3.UP * JUMP_OUT.y
 
 
 func _just_boarded() -> bool:
