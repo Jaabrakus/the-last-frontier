@@ -355,6 +355,17 @@ var one_hand := false
 var _no_aim_t := 0.0
 ## Graph weapon keys whose left hand LeftGripIK keeps on the gun (the over-under plays the musket's).
 const LEFT_GRIP_WEAPONS := ["musket"]
+## Weapons aimed with one hand (user 2026-09-29: "have pistols aim with one hand not 2"): while one is aimed the left arm is the
+## relaxed free arm (LeftArmPose "free"), not the two-handed aim clip's; a reload, a draw and every other action keep the tree's arm.
+const ONE_HAND_AIM_WEAPONS := ["pistol"]
+## Off: the pistol is aimed in both hands as the source's clip has it (the look-check compares).
+var one_hand_aim_on := true
+## The left arm of a one-handed aim: the source's plain idle arm, hanging at the side (user 2026-09-29 chose it from the lineup of arm
+## poses: the fall's and the jump's arms out were tried and passed over); crouched, the plain crouch idle's arm.
+var one_hand_left_arm := "actor_b-p-relax-idle"
+## The phase (0..1) of that clip the arm is taken at.
+var one_hand_left_phase := 0.0
+const ONE_HAND_LEFT_ARM_CROUCH := "actor_b-p-crouch-idle"
 ## A foot counts as planted when the animated ball / ankle is this low (skeleton space, m; the
 ## walk, run, sprint and crouch-walk clips plant the ball at 0.00-0.04 and the ankle at 0.06-0.10).
 const STANCE_PLANT_BALL := Vector2(0.045, 0.09)
@@ -984,11 +995,15 @@ func manual_step(dt: float) -> void:
 	if run_hold and String(loco.mode) in ["run", "sprint"]:
 		_run_hold_gait = String(loco.mode)
 	var run_clip := _run_hold_clip(_run_hold_gait)
+	# a one-handed weapon aimed: the left arm off it, hanging as it does in the relaxed swing
+	var one_hand_aim := one_hand_aim_on and String(_weapon) in ONE_HAND_AIM_WEAPONS and (aiming or aim_wanted) and not busy and not hands_free and not torch
 	if left_arm != null and not owned.l:
-		left_arm.enabled = hands_free or takeoff_two or grip_arm
+		left_arm.enabled = hands_free or takeoff_two or grip_arm or one_hand_aim
 		if left_arm.enabled or left_arm.weight > 0.0:
 			if takeoff_two:
 				left_arm.set_sources(TAKEOFF_ARMS, _clip_sources(TAKEOFF_ARMS))
+			elif one_hand_aim:
+				left_arm.set_sources("one_hand_aim/" + String(loco.stance), _one_hand_left_sources(), STANCE_ARM_XFADE_S)
 			elif hands_free or mode == "one_hand":
 				left_arm.set_sources("free", _relax_sources())
 			elif mode == "source":
@@ -1265,6 +1280,13 @@ func _clip_sources(clip: String, phase := 0.0) -> Array:
 		return []
 	var a := _ap.get_animation(nm)
 	return [{"anim": a, "time": fposmod(phase, 1.0) * a.length, "w": 1.0}]
+
+
+## The hanging idle arm, for the left arm of a one-handed aim.
+func _one_hand_left_sources() -> Array:
+	if String(loco.stance) == "crouch":
+		return _clip_sources(ONE_HAND_LEFT_ARM_CROUCH)
+	return _clip_sources(one_hand_left_arm, one_hand_left_phase)
 
 
 ## The lower-body clips playing now, as LeftArmPose sources: [{anim, time, w}] (the free arm).

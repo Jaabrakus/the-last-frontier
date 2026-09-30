@@ -56,6 +56,8 @@ const PISTOL_GRIP_M := 0.06
 const BOW_HAND_M := 0.06
 const BOW_STRING_M := 0.11
 ## BEFORE values (2026-09-25, no left-hand IK) of the free-hand guards, "<weapon>/<stance>/<phase>/<metric>".
+## The left palm this far off a pistol's grip when it is aimed with one hand.
+const ONE_HAND_LEFT_OFF_M := 0.25
 const OTHER_BASE := {"pistol/stand/carry/lpalm_grip": 0.448, "pistol/stand/aim/lpalm_grip": 0.049,
 		"pistol/crouch/carry/lpalm_grip": 0.347, "pistol/crouch/aim/lpalm_grip": 0.038}
 const FREE_HAND_TOL_M := 0.03
@@ -845,10 +847,14 @@ func _check_other(ctx: AnimTestContext, r: Dictionary) -> void:
 	match String(r.weapon):
 		"pistol":
 			ctx.check(float(r.rpalm_grip) <= PISTOL_GRIP_M, "%s: right palm %.3f m from the grip (<= %.2f)" % [tag, r.rpalm_grip, PISTOL_GRIP_M])
-			# The pistol's left hand must not be pulled by a musket left-hand IK: same as before it.
+			# The pistol is aimed with one hand (PlayerAnim.one_hand_aim_on, user 2026-09-29): the left hand is off the grip while it is
+			# aimed (the source's two-handed aim had it 4-5 cm from it); carried it is the game's own free hand, unchanged.
 			var bl := float(OTHER_BASE.get("%s/lpalm_grip" % tag.replace(" ", "/"), -1.0))
 			if bl >= 0.0:
-				ctx.check(absf(float(r.lpalm_grip) - bl) <= FREE_HAND_TOL_M, "%s: left palm %.3f m from the grip (before: %.3f, +- %.2f)" % [tag, r.lpalm_grip, bl, FREE_HAND_TOL_M])
+				if String(r.phase) == "aim":
+					ctx.check(float(r.lpalm_grip) >= ONE_HAND_LEFT_OFF_M, "%s: left palm %.3f m from the grip (one hand: >= %.2f m; two hands were %.3f)" % [tag, r.lpalm_grip, ONE_HAND_LEFT_OFF_M, bl])
+				else:
+					ctx.check(absf(float(r.lpalm_grip) - bl) <= FREE_HAND_TOL_M, "%s: left palm %.3f m from the grip (before: %.3f, +- %.2f)" % [tag, r.lpalm_grip, bl, FREE_HAND_TOL_M])
 		"bow":
 			ctx.check(float(r.lpalm_handle) <= BOW_HAND_M, "%s: bow hand (l_palm) %.3f m from the handle (<= %.2f)" % [tag, r.lpalm_handle, BOW_HAND_M])
 			if r.has("draw_string_x"):
