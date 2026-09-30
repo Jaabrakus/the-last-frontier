@@ -908,11 +908,13 @@ func nearest_carcass(pos: Vector3, r: float, who: String) -> Node3D:
 	for n in get_tree().get_nodes_in_group(&"carcasses"):
 		var c := n as Node3D
 		if c == null or c.is_queued_for_deletion() or float(c.get(&"meat_left")) <= 0.1 or c.get_meta("bones", false) \
-				or c.get_meta(&"on_chain", false):
-			continue
+				or c.get_meta(&"on_chain", false) or c.has_meta(&"hunted_by"):
+			continue   # (hunted_by: a household hunter's kill, left while she fetches the horse or the barrow: HuntRun)
 		if who == "wolf" and players_game(c) and (hunger < WildPlanner.TRACK_HUNGER or (hunger < WildPlanner.STARVE_HUNGER
 				and player != null and player.global_position.distance_to(c.global_position) < WildPlanner.KILL_GUARD_M)):
 			continue
+		if who == "wolf" and hunger < WildPlanner.STARVE_HUNGER and not people_near(c.global_position, WildPlanner.KILL_GUARD_M, player).is_empty():
+			continue   # (PEOPLE: a worker at it keeps the pack off, as the player does)
 		var d := c.global_position.distance_to(pos)
 		if d < bd and (who != "fox" or safe_for_fox(c)):
 			bd = d
@@ -924,7 +926,24 @@ func safe_for_fox(c: Node3D) -> bool:
 	for w in wolves_now():
 		if w.global_position.distance_to(c.global_position) < 25.0:
 			return false
-	return player == null or player.global_position.distance_to(c.global_position) > 30.0
+	return people_near(c.global_position, 30.0).is_empty()
+
+
+## PEOPLE: the humans the wild keeps away from as it does from the player (user 2026-09-29: "the scavengers should be scared
+## of the npc like human, the same things as the player model"): the player and the household's and the recruits' bodies,
+## each in the group PEOPLE. Those alive within `r` of `pos` (not `but`).
+const PEOPLE := &"people"
+
+
+func people_near(pos: Vector3, r: float, but: Node = null) -> Array:
+	var out := []
+	for n in get_tree().get_nodes_in_group(PEOPLE):
+		var b := n as Node3D
+		if b == null or b == but or not is_instance_valid(b) or b.is_queued_for_deletion() or b.get(&"is_dead") == true:
+			continue
+		if b.global_position.distance_to(pos) < r:
+			out.append(b)
+	return out
 
 
 ## A call at pos (the recorded wolf chorus, fox, raven; Sfx), logged for the tests.
@@ -952,7 +971,8 @@ func _ravens() -> void:
 		if c == null or c.is_queued_for_deletion():
 			continue
 		var meat := float(c.get(&"meat_left"))
-		if meat <= 0.05 or now - float(c.get_meta("died_at", now)) < RAVEN_AFTER or c.get_meta(&"on_chain", false):
+		if meat <= 0.05 or now - float(c.get_meta("died_at", now)) < RAVEN_AFTER or c.get_meta(&"on_chain", false) \
+				or c.has_meta(&"hunted_by"):
 			continue
 		if player and c.global_position.distance_to(player.global_position) > ACTIVE_D:
 			continue

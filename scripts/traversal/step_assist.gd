@@ -14,6 +14,10 @@ extends RefCounted
 ##   is off the floor for those ticks)
 
 const MAX_RISE := 0.55
+## The highest step this assist takes (m); MAX_RISE for the player, a body of its own (BodyStep: a worker, an animal) sets it.
+var max_rise := MAX_RISE
+## A character under the probe (a parent, a child, an animal) is not a step (BodyStep: a walker beside another).
+var skip_characters := false
 const MIN_RISE := 0.06
 const RADIUS := 0.3               ## the player capsule radius
 const REFINE := 7                 ## bisection steps of the face distance between two probes (1 mm)
@@ -56,7 +60,7 @@ func step(body: CharacterBody3D, probe: TraversalProbe, dir: Vector3, speed: flo
 		if hit.is_empty():
 			d_miss = d
 			continue
-		if float(hit.rise) >= MAX_RISE:
+		if float(hit.rise) >= max_rise:
 			return 0.0
 		if float(hit.rise) > MIN_RISE and float(hit.ny) > 0.7:
 			face_d = d
@@ -70,7 +74,7 @@ func step(body: CharacterBody3D, probe: TraversalProbe, dir: Vector3, speed: flo
 		for k in REFINE:
 			var mid := (lo + hi) * 0.5
 			var h2 := _top_at(probe, p, dir, mid, base)
-			if not h2.is_empty() and float(h2.rise) > MIN_RISE and float(h2.rise) < MAX_RISE and float(h2.ny) > 0.7:
+			if not h2.is_empty() and float(h2.rise) > MIN_RISE and float(h2.rise) < max_rise and float(h2.ny) > 0.7:
 				hi = mid
 			else:
 				lo = mid
@@ -127,8 +131,8 @@ func stepping() -> bool:
 ## The top under the probe point `d` ahead of the capsule's front: {y, rise (above base), ny} or {}.
 func _top_at(probe: TraversalProbe, p: Vector3, dir: Vector3, d: float, base: float) -> Dictionary:
 	var q := p + dir * (RADIUS + d)
-	var h := probe.ray(q + Vector3.UP * (MAX_RISE + 0.1), q - Vector3.UP * 0.1)
-	if h.is_empty():
+	var h := probe.ray(q + Vector3.UP * (max_rise + 0.1), q - Vector3.UP * 0.1)
+	if h.is_empty() or (skip_characters and h.get("collider") is CharacterBody3D):
 		return {}
 	var hy: float = (h.position as Vector3).y
 	return {"y": hy, "rise": hy - base, "ny": (h.normal as Vector3).y}

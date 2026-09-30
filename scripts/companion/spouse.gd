@@ -28,6 +28,9 @@ const BODY_PATH := "res://assets/character/actor_b_body.glb"
 const WALK_SPEED := 1.3
 const RUN_SPEED := 3.4
 const GRAVITY := 18.0
+## Her pace comes up and goes down this fast (m/s per s), not in one step (user 2026-09-30: "the npc walking is not fluid").
+const ACCEL := 3.5
+const DECEL := 6.0
 ## Follows to within this (m), starts again from this far; runs to catch up from this far.
 const FOLLOW_NEAR := 2.6
 const FOLLOW_FAR := 4.0
@@ -68,12 +71,31 @@ var _look_on := false
 ## PATHS: her way on the navigation mesh (scripts/world/nav/nav_mover.gd); _nav_dir: this frame's direction came from it
 ## (walked as it is, not turned aside by the probe).
 var nav: NavMover
+## STEP: up on to a log or a stump in her way (BodyStep: the player's step assist, up to 0.45 m), and VAULT: over a rock or a
+## log too high for that, the player's own moves on her rig (WorkerTraversal); busy while a move plays (her clips are its).
+var step := BodyStep.new(self, 0.45)
+var trav: WorkerTraversal
+var trav_busy := false
 var _nav_dir := false
 var _dt := 0.0
 ## BABY (scripts/companion/baby_link.gd): while valid it is called each physics frame as errand(dt) and answers [direction, speed]
 ## (her walk to the cradle or the player) or null (no errand now); it takes precedence over her work and chores. `idle_clip` is
 ## the clip she stands in when not walking ("" the plain idle): the sit and kneel of feeding and changing the baby.
 var errand := Callable()
+## RIDING: the horse she sits on (HuntRide seats her and carries her body with it; her errand steers it); null on foot. The
+## lead and the wildlife read it as they read the player's.
+var riding: Horse = null
+## ORDERS: places the leader sent her to (WorkerOrders: point and click), walked to one after another before anything else;
+## the walk there is planned once and walked with rays adjusting it (NavMover.use_grid).
+var orders: Array = []
+## The walk to an order: planned once with rays (true), or the mesh's paths (false: the tests' comparison).
+var order_grid := true
+## The route the leader chose for each place in `orders` (WalkGrid.routes: PackedVector3Array; empty: the best one, planned
+## when she sets off), and whether the one in hand has been given to her walk.
+var order_ways: Array = []
+var _order_set := false
+## What she can do (WalkGrid: step_m, climb_m with a tool for it, wade_m); the tool pool fills it (a pair of climbing stakes).
+var abilities := {}
 var idle_clip := ""
 ## Her chores when there is no task: a spot to go to, and how long she works at it (s); 0 when she is not at one.
 var _chore := false
@@ -97,6 +119,7 @@ static func spawn(parent: Node, core: SpouseCore, p: Node3D, at: Vector3) -> Spo
 func _ready() -> void:
 	add_to_group(KEEP)
 	add_to_group(PlacedWeapon.GROUP)
+	add_to_group(WildlifeSpawner.PEOPLE)   # PEOPLE: the wild keeps off her as off the player
 	collision_layer = 1
 	collision_mask = 1
 	_rng.seed = hash(sc.name) if sc else 1
@@ -108,6 +131,8 @@ func _ready() -> void:
 	cap.position.y = 0.85
 	add_child(cap)
 	_build_model()
+	if sk != null and ap != null:
+		trav = WorkerTraversal.install(self)
 	nav = NavMover.new(self, 0.3)
 	if sc:
 		sc.carcass_finder = _carcass_near_home
@@ -125,6 +150,7 @@ func _ready() -> void:
 		}
 		sc.task_finished.connect(_on_task_finished)
 		HuntRun.attach(self)   # HUNT: the hunt drives her through `errand` (scripts/companion/hunt_run.gd)
+		WorkerOrders.ensure(get_tree())   # ORDERS: L to pick her, L on the ground to send her (scripts/companion/worker_orders.gd)
 
 
 var _body: CharacterBodyMesh
@@ -182,7 +208,7 @@ func _player_yaw_offset() -> float:
 
 
 func _show(clip: String, speed := 1.0) -> void:
-	if ap == null:
+	if ap == null or trav_busy:
 		return
 	var full := "%s/%s" % [LIB, clip]
 	if not ap.has_animation(full):
@@ -203,6 +229,30 @@ func _physics_process(dt: float) -> void:
 	_dt = dt
 	if nav != null:
 		nav.home = home
+	if riding != null:
+		if errand.is_valid():
+			errand.call(dt)                  # RIDING: her errand rides the horse (HuntRide); her own walk and clips are off
+		return
+	if not orders.is_empty():
+		_phase = ""
+		var o: Vector3 = orders[0]
+		if nav != null:
+			nav.use_grid = order_grid
+			nav.can = abilities
+			if not _order_set:
+				_order_set = true
+				var chosen: PackedVector3Array = order_ways[0] if not order_ways.is_empty() else PackedVector3Array()
+				if order_grid and chosen.size() >= 2:
+					nav.use_route(chosen, o)
+		var ow := walk_to(o, WALK_SPEED, 0.5)
+		if Vector2(o.x - global_position.x, o.z - global_position.z).length() <= 0.6:
+			orders.pop_front()
+			if not order_ways.is_empty():
+				order_ways.pop_front()
+			_order_set = false
+			ow = [Vector3.ZERO, 0.0]
+		_move(ow[0], ow[1], dt)
+		return
 	var baby_errand: Variant = errand.call(dt) if errand.is_valid() else null   # BABY
 	if baby_errand is Array:
 		if _phase != "":
@@ -509,27 +559,48 @@ func _len(clip: String) -> float:
 
 # ---------------------------------------------------------------- moving
 func _move(dir: Vector3, speed: float, dt: float) -> void:
+	if trav != null:
+		# VAULT: a rock or a log ahead she can get over: the traversal's move plays, and owns her body while it does
+		var going := dir.length() > 0.01 and speed > 0.0
+		var yaw_in := atan2(-dir.x, -dir.z) if going else _face
+		if trav.pre({"move": Vector2(0.0, -1.0) if going else Vector2.ZERO, "yaw": yaw_in}, dt):
+			trav.post(true, dt)
+			_last = global_position
+			return
 	var v := velocity
 	if not is_on_floor():
 		v.y -= GRAVITY * dt
 	else:
 		v.y = -0.5
 	var moving := dir.length() > 0.01 and speed > 0.0
+	var hv := Vector2(v.x, v.z)
 	if moving:
 		var want := dir.normalized() if _nav_dir else _steer(dir.normalized())
-		v.x = want.x * speed
-		v.z = want.z * speed
+		var tv := Vector2(want.x, want.z) * speed
+		hv = hv.move_toward(tv, (ACCEL if tv.length() >= hv.length() - 0.05 else DECEL) * dt)
+		v.x = hv.x
+		v.z = hv.y
 		_face = lerp_angle(_face, atan2(-want.x, -want.z), clampf(dt * 8.0, 0.0, 1.0))
+		# (the step's clip at the pace she has, not the one she heads for)
+		var pace := maxf(hv.length(), 0.35)
 		_show(CLIP_RUN if speed > WALK_SPEED + 0.5 and ap and ap.has_animation("%s/%s" % [LIB, CLIP_RUN]) else CLIP_WALK,
-				speed / WALK_SPEED if speed <= WALK_SPEED + 0.5 else speed / RUN_SPEED)
+				pace / WALK_SPEED if speed <= WALK_SPEED + 0.5 else pace / RUN_SPEED)
 	else:
-		v.x = move_toward(v.x, 0.0, 12.0 * dt)
-		v.z = move_toward(v.z, 0.0, 12.0 * dt)
+		hv = hv.move_toward(Vector2.ZERO, DECEL * dt)
+		v.x = hv.x
+		v.z = hv.y
 		if _phase == "":
-			_show(CLIP_IDLE if idle_clip == "" else idle_clip)   # BABY: idle_clip while sitting or kneeling with the baby
+			if hv.length() > 0.3:
+				_show(CLIP_WALK, hv.length() / WALK_SPEED)   # (the last steps as she comes to a stand)
+			else:
+				_show(CLIP_IDLE if idle_clip == "" else idle_clip)   # BABY: idle_clip while sitting or kneeling with the baby
 	velocity = v
 	rotation.y = lerp_angle(rotation.y, _face, clampf(dt * 10.0, 0.0, 1.0))
+	if moving:
+		step.step(Vector3(v.x, 0.0, v.z), speed, dt)   # STEP: up on to a log in her way, and over
 	move_and_slide()
+	if trav != null:
+		trav.post(false, dt)
 	if moving and global_position.distance_to(_last) < speed * dt * 0.25:
 		_stuck_t += dt
 	else:
@@ -548,7 +619,7 @@ func walk_to(to: Vector3, speed: float, arrive := ARRIVE * 0.9) -> Array:
 		if nav.on_path:
 			_nav_dir = true
 			return [d, speed if d != Vector3.ZERO else 0.0]
-	var st := to - global_position
+	var st := (nav.trip.next(get_tree(), global_position, to) if nav != null else to) - global_position   # LANDMARKS: by the gate
 	st.y = 0.0
 	return [st.normalized() if st.length() > 0.05 else Vector3.ZERO, speed]
 

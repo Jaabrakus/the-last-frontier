@@ -49,6 +49,7 @@ var _sitting := false
 var _rng := RandomNumberGenerator.new()
 ## NAV: its way on the navigation mesh; this frame's direction came from it; the step-throughs it needed (tests).
 var nav: NavMover
+var step: BodyStep                ## STEP: over a log in the way
 var _nav_dir := false
 var ghosts := 0
 
@@ -65,6 +66,7 @@ static func spawn(parent: Node, at: Vector3, the_look: Dictionary, drawn: Dictio
 
 func _ready() -> void:
 	add_to_group(PlacedWeapon.GROUP)
+	add_to_group(WildlifeSpawner.PEOPLE)   # PEOPLE
 	collision_layer = 1
 	collision_mask = 1
 	_rng.seed = hash(rec_id + person_name)
@@ -85,6 +87,7 @@ func _ready() -> void:
 		cap.position.y = shape.height * 0.5
 	_last = global_position
 	nav = NavMover.new(self, shape.radius)   # NAV
+	step = BodyStep.new(self, 0.45)          # STEP: over a log in the way
 
 
 func _build_model() -> void:
@@ -227,6 +230,8 @@ func _move(dir: Vector3, dt: float) -> void:
 		v.y = -0.5
 	velocity = v
 	rotation.y = lerp_angle(rotation.y, _face, clampf(dt * 10.0, 0.0, 1.0))
+	if moving and _ghost_t <= 0.0 and step != null:
+		step.step(Vector3(v.x, 0.0, v.z), speed, dt)
 	move_and_slide()
 	if global_position.y < FrontierTerrain.height_at(global_position.x, global_position.z) - 2.0:
 		global_position.y = FrontierTerrain.height_at(global_position.x, global_position.z) + 0.2

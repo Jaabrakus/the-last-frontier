@@ -60,8 +60,8 @@ func _process_modification() -> void:
 				_bones.append([i, float(e[1])])
 	var ri := sk.find_bone(R_PROP)
 	var li := sk.find_bone(L_PROP)
-	if ri < 0 or li < 0 or _bones.is_empty():
-		return
+	if ri < 0 or li < 0 or _bones.is_empty() or not target.is_finite():
+		return                               # (no target: the quarry gone while the aim fades out)
 	var t := sk.global_transform.affine_inverse() * target
 	var w := smoothstep(0.0, 1.0, weight)
 	for _pass in 2:

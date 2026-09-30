@@ -165,10 +165,9 @@ func _enter(m: Mode) -> void:
 func _disturbed(c: Vector3) -> bool:
 	if spawner == null:
 		return false
-	var p := spawner.player
-	if p != null and not p.is_dead:
-		if p.global_position.distance_to(c) < SHY_M or p.global_position.distance_to(global_position) < SHY_M:
-			return true
+	# (PEOPLE: the player or anyone of his household or camp)
+	if not spawner.people_near(c, SHY_M).is_empty() or not spawner.people_near(global_position, SHY_M).is_empty():
+		return true
 	return spawner.now - spawner.last_shot_time < 3.0 and spawner.last_shot_pos.distance_to(global_position) < 90.0
 
 

@@ -52,6 +52,17 @@ var waiting_door: BuildDoor
 ## Where the last path ended when it could not reach its target ("unreachable": a spot in a thicket, on a rock): the nearest
 ## the way goes (the caller may take it instead); INF otherwise.
 var reach_end := Vector3.INF
+## LANDMARKS: a walk that crosses the palisade goes by the gate (NavLandmarks.leg: to its near side, through, on), each leg
+## a short path on the mesh; off for a walker that should not.
+var landmarks := true
+var trip := LandmarkTrip.new()
+## THE WALK: planned once on the walk grid and walked with rays adjusting it (WalkPath; user 2026-09-30: "the path finder
+## sees it then the raycasting looks for obstacles from here and there and adjust"), instead of the mesh's paths asked
+## again and again. Its walk (null until first used).
+var use_grid := false
+var walk: WalkPath
+## What the walker can do (WalkGrid: step_m, climb_m, wade_m); empty: a person on foot.
+var can := {}
 
 var _i := 0
 var _path_to := Vector3.INF
@@ -104,7 +115,19 @@ func release() -> void:
 
 
 ## Forgets the path (a new errand); the next steer asks again.
+## The walker takes the route `chosen` to `to` (the leader picked it among WalkGrid.routes).
+func use_route(chosen: PackedVector3Array, to: Vector3) -> void:
+	use_grid = true
+	if walk == null:
+		walk = WalkPath.new(body, radius)
+	walk.can = can
+	walk.use_route(chosen, to)
+
+
 func reset() -> void:
+	trip.reset()
+	if walk != null:
+		walk.reset()
 	path = PackedVector3Array()
 	_path_to = Vector3.INF
 	status = IDLE
@@ -120,12 +143,28 @@ func steer(to: Vector3, dt: float, arrive := 0.6) -> Vector3:
 	_clock += dt
 	on_path = false
 	target = to
+	if use_grid:
+		if walk == null:
+			walk = WalkPath.new(body, radius)
+		walk.can = can
+		var gd := walk.steer(to, dt, arrive)
+		on_path = walk.status != "no_way"
+		status = ARRIVED if walk.status == "arrived" else (FAILED if walk.status == "no_way" else MOVING)
+		reason = "no_path" if walk.status == "no_way" else ""
+		path = walk.way
+		return gd
 	if world == null or not is_instance_valid(world):
 		world = null
 		attach()
 		if world == null:
 			return _fail("no_nav")
 	var at := body.global_position
+	if landmarks:
+		var lg := trip.next(body.get_tree(), at, to)
+		if lg != to:
+			to = lg              # (the gate's side: passed on to the next leg before it is reached, no stop there)
+			arrive = minf(arrive, 0.5)
+			target = to
 	var flat := Vector2(to.x - at.x, to.z - at.z).length()
 	if flat <= arrive:
 		status = ARRIVED
@@ -194,6 +233,8 @@ static func walled(a: CollisionObject3D, b: Node3D) -> bool:
 
 ## The length of the path left (m; INF without one).
 func remaining() -> float:
+	if use_grid and walk != null and body != null:
+		return walk.remaining(body.global_position)
 	if path.is_empty() or body == null:
 		return INF
 	var s := 0.0

@@ -16,6 +16,13 @@ extends Node
 ## stood (the horse stands where it stood, the cart is parked in its place, the barrow set down in its place or back in the
 ## cart). Transport is free when nobody rides, leads, pushes or loads it and no other worker has it (meta hunt_by: her worker
 ## id while she has it); a horse that is being broken or ridden by the player (player_input) is not free.
+## RIDING (user 2026-09-29: "if the horse is available they should ride the horse for the hunt", "saddle the carcass and head
+## home", "park the horse ... in locations they remember where they put it, pick it up and go home"): a hunter who took the
+## horse out as her stalk began (HuntRun._horse_first: ridden, or led by the young) left it standing out of the quarry's sight
+## (horse_out; the horse keeps who left it, where, when and why: meta left_by). For the kill she goes back to it, rides it to
+## the kill (HuntRide), lays a deer or a buck across the saddle (CarcassPack, up to ride.pack_max_kg) and leads it home, or
+## ropes a heavier one behind it and rides home; the horse from home she rides out the same way. The horse she has out comes
+## home with her in the end (begin_stow), ridden.
 ## The real hauling code does the work: HorseLead (the horse follows her as it follows the player), HorseHaul (the rope, the
 ## pull caps its pace), HorseCart (the shafts, the bed), Wheelbarrow (the bed, the pace by the load). She pushes the barrow as
 ## the player does (its pose in front of her, from Wheelbarrow's own grips and wheel).
@@ -60,6 +67,17 @@ var _cart_was_hitched := false
 var _barrow_cart: HorseCart = null
 ## The barrow she took out with her and left where her stalk began (or null).
 var barrow_out: Wheelbarrow = null
+## The horse she took out as her stalk began (ridden or led) and left standing out of the quarry's sight (or null).
+var horse_out: Horse = null
+## The kill across its saddle (CarcassPack), or null.
+var pack: CarcassPack = null
+## This trip is ridden (HuntRide), not led.
+var rides := false
+## The kill goes behind the saddle (she rides home), not across it (she leads the horse).
+var pack_behind := false
+## Where she was as she set off for the saddle: the side she gets up on is chosen once from there (the nearer one), not
+## again at every step (the goal flipping from side to side as she came round the horse).
+var _saddle_from := Vector3.INF
 var _exceptions: Array[PhysicsBody3D] = []
 ## What happened (tests, the look-check log).
 var log: Array = []
@@ -105,6 +123,9 @@ static func kg_of(species: String, node: Object = null) -> float:
 ## barrow_out (the one she took out)}), "drag" (by hand), "quarter" (dressed and carried in trips) or "dress" (one trip).
 static func choose(smart_v: float, kg: float, dist_home: float, free: Dictionary) -> String:
 	var c := tcfg()
+	# (the horse she brought out is used whatever her smarts: that is what she brought it for)
+	if bool(free.get("horse_out", false)) and (kg <= pack_max_kg() or HorseHaul.can_start(kg)):
+		return "horse"
 	if smart_v >= float(c.get("smart_min", 0.35)):
 		var near := dist_home <= float(c.get("horse_fetch_m", 260.0))
 		if bool(free.get("horse", false)) and near and HorseHaul.can_start(kg):
@@ -126,6 +147,16 @@ static func dress_trips(kg: float) -> int:
 	var c := tcfg()
 	return clampi(ceili(kg * float(c.get("meat_share", 0.55)) / maxf(float(c.get("carry_kg", 30.0)), 1.0) - 0.001), 1,
 			int(c.get("max_trips", 4)))
+
+
+## The heaviest kill laid across the saddle (kg); a heavier one goes on the rope.
+static func pack_max_kg() -> float:
+	return float((tcfg().get("ride", {}) as Dictionary).get("pack_max_kg", 100.0))
+
+
+## The heaviest kill behind the saddle with its rider up (kg): the horse carries both.
+static func ride_pack_max_kg() -> float:
+	return float((tcfg().get("ride", {}) as Dictionary).get("ride_pack_max_kg", 90.0))
 
 
 ## Whether she takes the wheelbarrow out with her when her stalk begins (smart enough, and it is free near her).
@@ -243,12 +274,15 @@ func available() -> Dictionary:
 			out["barrow"] = b
 	if barrow_out != null and is_instance_valid(barrow_out) and _mine(barrow_out) and why_not_barrow(barrow_out) == "":
 		out["barrow_out"] = barrow_out
+	if horse_out != null and is_instance_valid(horse_out) and _mine(horse_out) and why_not_horse(horse_out) == "":
+		out["horse_out"] = horse_out
 	return out
 
 
 ## The flags choose() takes from available().
 static func flags(av: Dictionary) -> Dictionary:
-	return {"horse": av.has("horse"), "cart": av.has("cart"), "barrow": av.has("barrow"), "barrow_out": av.has("barrow_out")}
+	return {"horse": av.has("horse"), "cart": av.has("cart"), "barrow": av.has("barrow"), "barrow_out": av.has("barrow_out"),
+			"horse_out": av.has("horse_out")}
 
 
 # ================================================================ taking it and putting it back
@@ -283,17 +317,46 @@ func take_barrow_out(b: Wheelbarrow) -> bool:
 	return true
 
 
+## The horse out with her as her stalk begins (reserved; she mounts it, or takes its lead, where it stands). False: not free.
+func take_horse_out(h: Horse) -> bool:
+	if h == null or why_not_horse(h) != "":
+		return false
+	_reserve(h)
+	horse_out = h
+	horse = h
+	log.append("horse_out")
+	return true
+
+
+## The horse she has out left standing where it is (she goes on on foot): off her lead, and the horse keeps who left it,
+## where, when and why (meta left_by: {id, who, at, t, why}), for her to come back to.
+func park_horse(why: String) -> void:
+	if horse_out == null or not is_instance_valid(horse_out):
+		return
+	var l := horse_out.get_node_or_null("Lead") as HorseLead
+	if l != null and l.leading and l.leader == body:
+		l.stop()
+	horse_out.drive(0.0, 0.0)
+	horse_out.set_meta(&"left_by", {"id": sc.worker_id, "who": sc.name, "at": horse_out.global_position,
+			"t": StoreLedger.now(body.get_tree()), "why": why})
+	log.append("parked")
+
+
 ## Begins the trip with transport `k` for `a` (the carcass): reserves it and lays out the steps. False: not free now.
 func begin(k: String, a: Node3D, av: Dictionary) -> bool:
 	carcass = a
 	steps = []
 	match k:
 		"horse":
-			horse = av.get("horse")
+			horse = av.get("horse_out", av.get("horse"))
 			if horse == null:
 				return false
 			_reserve(horse)
-			steps = ["to_horse", "lead", "to_carcass", "hitch_carcass", "to_drop", "unhitch_carcass", "to_horse_place", "stay"]
+			var kg := kg_of(String(sc.hunt.get("species", "")), a)
+			var up := HuntRide.can_ride(sc)
+			pack_behind = up and kg <= ride_pack_max_kg()
+			steps = horse_steps(up, kg <= (ride_pack_max_kg() if up else pack_max_kg()),
+					run.ride != null and run.ride.on and run.ride.horse == horse)
 		"cart":
 			cart = av.get("cart")
 			if cart == null:
@@ -338,11 +401,38 @@ func begin(k: String, a: Node3D, av: Dictionary) -> bool:
 	return true
 
 
+## The horse's trip: `ride` (a grown worker: to it, up, and out to the kill in the saddle; else she leads it), `packed` (the
+## kill on its back: behind the saddle and she rides home, or, led, across the saddle; else on the rope behind it, ridden
+## home), `mounted` (she is up already).
+static func horse_steps(ride: bool, packed: bool, mounted := false) -> Array:
+	var out: Array = []
+	if ride:
+		out += ([] if mounted else ["to_saddle", "mount"]) + ["to_carcass", "dismount"]
+		if packed:
+			out += ["to_carcass", "pack_carcass", "to_saddle", "mount", "to_drop", "dismount", "unpack_carcass", "lead",
+					"to_horse_place", "stay"]
+		else:
+			out += ["hitch_carcass", "to_saddle", "mount", "to_drop", "dismount", "unhitch_carcass", "lead", "to_horse_place", "stay"]
+		return out
+	out += ["to_horse", "lead", "to_carcass"]
+	if packed:
+		out += ["pack_carcass", "to_drop", "unpack_carcass"]
+	else:
+		out += ["hitch_carcass", "to_drop", "unhitch_carcass"]
+	return out + ["to_horse_place", "stay"]
+
+
 ## Lets go of everything (the hunt ended, wolves, a step that cannot be done): the carcass off the horse or out of the barrow
 ## where it is, the lead dropped (the horse stands), the handles let go (the barrow set down), the reservations off. Returns
 ## the carcass (where it lies now) or null.
-func abort(why := "") -> Node3D:
+func abort(why := "", keep_horse := false) -> Node3D:
 	var a := carcass
+	if run != null and run.ride != null and run.ride.on:
+		run.ride.dismount()
+	if pack != null:
+		var rp: Node3D = pack.release()
+		pack = null
+		a = rp if rp != null else a
 	if horse != null and is_instance_valid(horse):
 		var hh := HorseCart.haul_of(horse)
 		if hh != null and hh.load != null and _mine(horse):
@@ -360,12 +450,20 @@ func abort(why := "") -> Node3D:
 	if barrow != null and is_instance_valid(barrow) and barrow.load_node == carcass and carcass != null:
 		var r := barrow.tip_out()
 		a = r if r != null else a
-	for n in [horse, cart, barrow, barrow_out, _barrow_cart]:
-		_free(n)
+	# (the horse she brought out stays hers, standing where it is, to be taken home: begin_stow)
+	var keep := horse_out if keep_horse and horse_out != null and is_instance_valid(horse_out) else null
+	for n in [horse, cart, barrow, barrow_out, _barrow_cart, horse_out]:
+		if n != keep:
+			_free(n)
+	if keep != null:
+		keep.drive(0.0, 0.0)
+		if not keep.has_meta(&"left_by"):
+			park_horse(String(sc.hunt.get("species", "the hunt")))
 	if why != "":
 		log.append("abort %s" % why)
 	aborted = why if why != "" else "given up"
-	horse = null
+	horse_out = keep
+	horse = keep
 	cart = null
 	barrow = null
 	barrow_out = null
@@ -399,6 +497,10 @@ func begin_return() -> bool:
 ## her: she takes them home with her (stow_steps then puts them back). Returns the carcass where it lies, or null.
 func let_go_load(why: String) -> Node3D:
 	var a := carcass
+	if pack != null:
+		var rp: Node3D = pack.release()
+		pack = null
+		a = rp if rp != null else a
 	if horse != null and is_instance_valid(horse):
 		var hh := HorseCart.haul_of(horse)
 		if hh != null and hh.load != null:
@@ -426,7 +528,8 @@ func let_go_load(why: String) -> Node3D:
 
 ## Whether she has the household's transport out with her (a horse on her lead, the cart, the barrow).
 func has_out() -> bool:
-	return (horse != null and is_instance_valid(horse) and _mine(horse)) or (cart != null and is_instance_valid(cart) and _mine(cart)) \
+	return (horse != null and is_instance_valid(horse) and _mine(horse)) or (horse_out != null and is_instance_valid(horse_out) and _mine(horse_out)) \
+			or (cart != null and is_instance_valid(cart) and _mine(cart)) \
 			or (barrow != null and is_instance_valid(barrow) and _mine(barrow))
 
 
@@ -436,13 +539,21 @@ func begin_stow() -> bool:
 	if not has_out():
 		return false
 	steps = []
+	if horse == null and horse_out != null and is_instance_valid(horse_out):
+		horse = horse_out
 	if horse != null and is_instance_valid(horse):
 		var l := horse.get_node_or_null("Lead") as HorseLead
-		if l == null or not l.leading or l.leader != body:
-			steps += ["to_horse", "lead"]
-		if cart != null and is_instance_valid(cart) and not _cart_was_hitched and cart.is_hitched():
-			steps += ["to_cart_place", "unhitch_cart"]
-		steps += ["to_horse_place", "stay"]
+		var up := run != null and run.ride != null and run.ride.on and run.ride.horse == horse
+		var in_cart := cart != null and is_instance_valid(cart) and not _cart_was_hitched and cart.is_hitched()
+		if (up or HuntRide.can_ride(sc)) and not in_cart:
+			# (ridden home, off at its place)
+			steps += ([] if up else ["to_saddle", "mount"]) + ["to_horse_place", "dismount", "stay"]
+		else:
+			if l == null or not l.leading or l.leader != body:
+				steps += ["to_horse", "lead"]
+			if in_cart:
+				steps += ["to_cart_place", "unhitch_cart"]
+			steps += ["to_horse_place", "stay"]
 	elif barrow != null and is_instance_valid(barrow):
 		if not pushing:
 			steps += ["to_barrow", "handles"]
@@ -534,15 +645,23 @@ static func _pitch_for(y: float, z: float, dy: float) -> float:
 func _text() -> String:
 	var sp := String(sc.hunt.get("species", "carcass"))
 	match step_name:
-		"to_horse", "lead":
-			return "Fetching the horse"
+		"to_horse", "lead", "to_saddle", "mount":
+			return "Fetching the horse" if horse_out == null else "Going back to the horse"
+		"pack_carcass":
+			return "Laying the %s across the saddle" % sp
+		"dismount":
+			return "Getting down"
 		"to_shafts", "hitch_cart":
 			return "Putting the horse to the cart"
 		"to_barrow", "barrow_from_cart", "handles":
 			return "Fetching the wheelbarrow"
 		"to_carcass", "hitch_carcass", "cart_in", "barrow_in":
 			return "Bringing the %s to the %s" % [_noun(), sp]
-		"to_drop", "unhitch_carcass", "cart_out", "barrow_out":
+		"to_drop", "unhitch_carcass", "cart_out", "barrow_out", "unpack_carcass":
+			if kind == "horse" and pack != null:
+				if pack.behind:
+					return "Riding home with the %s behind the saddle" % sp
+				return "Leading the horse home with the %s across the saddle" % sp
 			return "Bringing the %s home %s" % [sp, "behind the horse" if kind == "horse" else "in the " + _noun()]
 	return "Putting the %s back" % _noun()
 
@@ -561,11 +680,17 @@ func _goal(s: String) -> Vector3:
 			var hf := -horse.global_basis.z
 			hf.y = 0.0
 			return horse.global_position + hf.normalized() * 1.7
+		"to_saddle":
+			if _saddle_from == Vector3.INF:
+				_saddle_from = body.global_position
+			return HuntRide.mount_point(horse, _saddle_from) if horse else Vector3.INF
 		"to_barrow":
 			return barrow.grips_point() if barrow else Vector3.INF
 		"to_carcass":
 			if carcass == null or not is_instance_valid(carcass):
 				return Vector3.INF
+			if kind == "horse" and ("pack_carcass" in steps or _riding()):
+				return carcass.global_position   # (up to it: the horse stands by it for the lift; ridden, beside it)
 			if kind in ["horse", "cart"]:
 				# (past it, away from home: the horse's hitch, or the cart's tail, comes up by it)
 				var away := carcass.global_position - _home()
@@ -599,13 +724,21 @@ func _arrive(s: String) -> float:
 	match s:
 		"to_horse":
 			return 0.9
+		"to_saddle":
+			return HuntRide.MOUNT_AT_M
 		"to_carcass":
+			if _riding():
+				return 3.0
 			return 2.4 if kind == "barrow" else AT
 		"to_drop":
 			return 1.4
 		"to_barrow", "to_cart_tail", "to_barrow_place":
 			return 1.2
 	return AT
+
+
+func _riding() -> bool:
+	return run != null and run.ride != null and run.ride.on
 
 
 ## One frame of the trip: [dir, speed] for her body; ["done"] when it is over (the carcass home and the transport back),
@@ -618,6 +751,7 @@ func step(dt: float) -> Array:
 		return ["done"]
 	if step_name == "":
 		step_name = String(steps.pop_front())
+		_saddle_from = Vector3.INF
 		_t = 0.0
 		_best = INF
 		_best_t = 0.0
@@ -625,14 +759,14 @@ func step(dt: float) -> Array:
 	_t += dt
 	if _t > STEP_GIVE_UP_S:
 		var why := "stuck at %s" % step_name
-		abort(why)
+		abort(why, true)
 		return ["failed", why]
 	var g := _goal(step_name)
 	if step_name.begins_with("to_"):
 		if g == Vector3.INF:
 			return _next()
 		var d := _flat(body.global_position, g)
-		if d <= _arrive(step_name):
+		if d <= _arrive(step_name) or (step_name == "to_saddle" and HuntRide.at_saddle(horse, body.global_position)):
 			return _next()
 		var lag := _horse_lag()
 		if lag > HORSE_WAIT_M or (_waiting_horse and lag > HORSE_ON_M):
@@ -645,7 +779,7 @@ func step(dt: float) -> Array:
 			else:
 				_horse_t += dt
 			if _horse_t > HORSE_STUCK_S:
-				abort("the horse would not follow")
+				abort("the horse would not follow", true)
 				return ["failed", "the horse would not follow"]
 			return [Vector3.ZERO, 0.0]
 		_waiting_horse = false
@@ -658,14 +792,14 @@ func step(dt: float) -> Array:
 			_best_t += dt
 		if _best_t > NO_HEADWAY_S:
 			var why2 := "no way through to %s" % step_name.trim_prefix("to_")
-			abort(why2)
+			abort(why2, true)
 			return ["failed", why2]
 		return _go(g, _arrive(step_name))
 	var r := _act(step_name)
 	if r == "wait":
 		return [Vector3.ZERO, 0.0]
 	if r != "":
-		abort(r)
+		abort(r, true)
 		return ["failed", r]
 	return _next()
 
@@ -699,6 +833,42 @@ func _horse_lag() -> float:
 ## A step that is not a walk: "" done, "wait" not yet, else why it cannot be done.
 func _act(s: String) -> String:
 	match s:
+		"mount":
+			if horse == null or not is_instance_valid(horse):
+				return "the horse is gone"
+			if absf(horse.speed) > 0.4:
+				return "wait" if _t < 10.0 else "the horse would not stand"
+			return "" if run.ride.mount(horse) else ("wait" if _t < 5.0 else "the horse cannot be mounted")
+		"dismount":
+			if _riding() and absf(run.ride.horse.speed) > 0.35 and _t < 6.0:
+				return "wait"                   # (reined in: HuntRide)
+			if _riding():
+				# (on the side toward what she does next: the carcass, or home)
+				var nxt: Vector3 = carcass.global_position if carcass != null and is_instance_valid(carcass) and pack == null else _home()
+				run.ride.dismount(nxt)
+			return ""
+		"pack_carcass":
+			if carcass == null or not is_instance_valid(carcass):
+				return "the carcass is gone"
+			if _flat(horse.global_position, carcass.global_position) > 4.5 or absf(horse.speed) > 0.4:
+				return "wait" if _t < 30.0 else "the horse would not stand by the carcass"
+			if not CarcassLoad.haulable(carcass):
+				return "wait" if _t < 5.0 else "the carcass cannot be taken"
+			if _t < 2.0:
+				return "wait"                   # (the lift)
+			pack = CarcassPack.pack(carcass, horse, pack_behind)
+			return "" if pack != null else "the %s does not go on the horse" % String(sc.hunt.get("species", "carcass"))
+		"unpack_carcass":
+			if absf(horse.speed) > 0.4 and _t < 6.0:
+				return "wait"
+			if _t < 1.5:
+				return "wait"
+			if pack != null:
+				var a: Node3D = pack.release()
+				pack = null
+				if a != null:
+					carcass = a
+			return ""
 		"lead":
 			var l := horse.get_node_or_null("Lead") as HorseLead if horse else null
 			if l == null or why_not_horse(horse) != "":
@@ -714,6 +884,8 @@ func _act(s: String) -> String:
 				return "wait" if _t < 25.0 else cart.why_not_hitch(horse)
 			return ""
 		"hitch_carcass":
+			if carcass == null or not is_instance_valid(carcass):
+				return "the carcass is gone"
 			if _flat(HorseCart.haul_of(horse).hitch_point(), carcass.global_position) > 5.0 or absf(horse.speed) > 0.5:
 				return "wait" if _t < 30.0 else "the horse would not come to the carcass"
 			if not CarcassLoad.haulable(carcass):
@@ -728,6 +900,8 @@ func _act(s: String) -> String:
 				carcass = a
 			return ""
 		"cart_in":
+			if carcass == null or not is_instance_valid(carcass):
+				return "the carcass is gone"
 			if cart.tail_point().distance_to(carcass.global_position) > 6.0 or absf(horse.speed) > 0.4:
 				return "wait" if _t < 30.0 else "the cart would not come to the carcass"
 			if not CarcassLoad.haulable(carcass):
@@ -753,8 +927,12 @@ func _act(s: String) -> String:
 			var l := horse.get_node_or_null("Lead") as HorseLead
 			if l != null and l.leader == body:
 				l.stop()
+			if horse.has_meta(&"left_by"):
+				horse.remove_meta(&"left_by")   # (home: nobody need remember where it was left)
 			_free(horse)
 			_free(cart)
+			if horse == horse_out:
+				horse_out = null
 			horse = null
 			cart = null
 			return ""
@@ -767,6 +945,8 @@ func _act(s: String) -> String:
 			return "" if pushing or _take_handles() else "the barrow cannot be pushed"
 		"barrow_in":
 			_set_down()
+			if carcass == null or not is_instance_valid(carcass):
+				return "the carcass is gone"
 			if not CarcassLoad.haulable(carcass):
 				if _t < 5.0:
 					return "wait"

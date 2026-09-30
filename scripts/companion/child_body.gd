@@ -58,6 +58,10 @@ var _last := Vector3.ZERO
 ## PATHS: its way on the navigation mesh; this frame's direction came from it; how long it has had no way to its guardian;
 ## how many times it was brought back (the last resort; tests).
 var nav: NavMover
+var step: BodyStep                ## STEP: over a log in the way
+## Following her guardian: from when it is further than `far` till it is within `near` (a stop for a door's swing is not the end
+## of it: the clip it was walking in is not the state).
+var _following := false
 var _nav_dir := false
 var _lost_t := 0.0
 var teleports := 0
@@ -99,6 +103,7 @@ static func spawn(l: GrowthLink, c: Dictionary, at: Vector3) -> ChildBody:
 
 
 func _ready() -> void:
+	add_to_group(WildlifeSpawner.PEOPLE)   # PEOPLE: the wild keeps off a child as off the player
 	add_to_group(PlacedWeapon.GROUP)   # an interactable (Player interactor: interact_prompt, interact_point, interact)
 	collision_layer = CHILD_LAYER   # its own layer: the ground and walls stop it, but it does not block the parents' walk (or each other)
 	collision_mask = 1
@@ -111,6 +116,7 @@ func _ready() -> void:
 	_build_model()
 	refresh()
 	nav = NavMover.new(self, 0.2)
+	step = BodyStep.new(self, 0.35)
 
 
 func _build_model(old: Node3D = null) -> void:
@@ -221,7 +227,8 @@ func _physics_process(dt: float) -> void:
 		var far := FAR_BASE + 1.2 * s
 		# near but with a wall between (the palisade, a shut door): the way round is the way to go
 		var walled := d > 1.2 and d <= far and NavMover.walled(self, g)
-		if d > far or walled or (_clip in [CLIP_WALK, CLIP_RUN] and d > near):
+		if d > far or walled or (_following and d > near):
+			_following = true
 			var long := d > RUN_FROM or (nav != null and nav.on_path and nav.remaining() > RUN_FROM)
 			speed = Growth.num(child, "run_speed", 2.0) if long else Growth.num(child, "walk_speed", 1.0)
 			move = _way(g.global_position, dt, 0.9 if walled else near * 0.9)
@@ -233,9 +240,11 @@ func _physics_process(dt: float) -> void:
 			else:
 				_lost_t = maxf(_lost_t - dt * 2.0, 0.0)
 		else:
+			_following = false
 			_lost_t = 0.0
 			_stand(dt, to, link.guardian_busy(child))
 	else:
+		_following = false
 		_lost_t = 0.0
 		_stand(dt, Vector3.ZERO, false)
 	_move(move, speed, dt)
@@ -302,6 +311,8 @@ func _move(dir: Vector3, speed: float, dt: float) -> void:
 				_show(CLIP_IDLE)
 	velocity = v
 	rotation.y = lerp_angle(rotation.y, _face, clampf(dt * 10.0, 0.0, 1.0))
+	if moving and step != null:
+		step.step(Vector3(v.x, 0.0, v.z), speed, dt)   # STEP: up on to a log in the way, and over (BodyStep)
 	move_and_slide()
 	if moving and global_position.distance_to(_last) < speed * dt * 0.25:
 		_stuck_t += dt

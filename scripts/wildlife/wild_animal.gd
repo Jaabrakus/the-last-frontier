@@ -94,6 +94,8 @@ const WORLD_LIMIT := 330.0
 var home_sq := Vector2i.ZERO
 ## Needs per game second (x WildlifeSpawner.time_scale): hunger fills in ~6 min for prey, ~8 min for wolves.
 const HUNGER_RATE := {"prey": 1.0 / 360.0, "predator": 1.0 / 480.0}
+## PEOPLE other than the player within this are looked for (m: past its sight, hearing and scent).
+const PERSON_SENSE_M := 120.0
 const FATIGUE_RATE := 1.0 / 600.0
 const GRAZE_FEED := 1.0 / 90.0
 const REST_RATE := 1.0 / 120.0
@@ -467,6 +469,12 @@ func _perceive(dt: float) -> void:
 		gain += _sense_player(p, dt)
 	if is_prey() and spawner:
 		gain += _sense_wolves(dt)
+		# PEOPLE: the household's and the camp's bodies as the player (a hunter out after it: her hunt notices her, HuntRun)
+		for n: Node3D in spawner.people_near(global_position, PERSON_SENSE_M, p):
+			var hsc: Variant = n.get(&"sc")
+			if hsc is SpouseCore and (hsc as SpouseCore).task == HuntJob.JOB:
+				continue
+			gain += _sense_body(n, dt)
 	if gain > 0.0:
 		awareness = minf(awareness + gain * dt * nerves, 1.3)
 	else:
@@ -474,26 +482,41 @@ func _perceive(dt: float) -> void:
 
 
 func _sense_player(p: FrontierPlayer, dt: float) -> float:
+	return _sense_body(p, dt)
+
+
+## How much `p` (the player, or anyone of the PEOPLE: their velocity, is_crouching, riding, kneeling as the player has
+## them, where they have them) raises its awareness this step: seen, heard, scented; the player's fresh blood too.
+func _sense_body(p: Node3D, dt: float) -> float:
 	var pp := p.global_position
 	var to_p := pp - global_position
 	to_p.y = 0.0
 	var d := to_p.length()
-	var pv := Vector2(p.velocity.x, p.velocity.z).length()
-	var riding := p.riding != null
-	if riding and "velocity" in p.riding:
-		pv = Vector2(p.riding.velocity.x, p.riding.velocity.z).length()
+	var v: Variant = p.get(&"velocity")
+	var pv := Vector2((v as Vector3).x, (v as Vector3).z).length() if v is Vector3 else 0.0
+	var rd: Variant = p.get(&"riding")
+	var riding := rd is Node
+	if riding and "velocity" in rd:
+		pv = Vector2(rd.velocity.x, rd.velocity.z).length()
+	var crouching: bool = p.get(&"is_crouching") == true
+	var kneeling := p.get(&"kneeling") is Node
 	var gain := 0.0
-	var sight := float(data.sight) * _sight_mult() * (0.55 if p.is_crouching else 1.0) * (0.65 if pv < 0.3 else 1.0) \
-			* (1.4 if riding else 1.0) * (0.6 if p.kneeling != null else 1.0)
+	var sight := float(data.sight) * _sight_mult() * (0.55 if crouching else 1.0) * (0.65 if pv < 0.3 else 1.0) \
+			* (1.4 if riding else 1.0) * (0.6 if kneeling else 1.0)
 	if d < sight:
 		var fwd := -global_basis.z
 		var ang := absf(rad_to_deg(Vector2(fwd.x, fwd.z).angle_to(Vector2(to_p.x, to_p.z))))
 		if ang < float(data.fov) * 0.5:
-			_los_t -= dt
-			if _los_t <= 0.0:
-				_los_t = 0.4
-				_los_ok = _line_of_sight(pp)
-			if _los_ok:
+			var seen := false
+			if p == _player():
+				_los_t -= dt
+				if _los_t <= 0.0:
+					_los_t = 0.4
+					_los_ok = _line_of_sight(pp, p)
+				seen = _los_ok
+			else:
+				seen = _line_of_sight(pp, p)   # (another of the PEOPLE: its own look, not the player's kept one)
+			if seen:
 				gain += (1.0 - d / sight) * (1.2 + 0.35 * minf(pv, 6.0)) * 0.6
 	var noise := 0.0
 	if riding and pv > 1.0:
@@ -503,7 +526,7 @@ func _sense_player(p: FrontierPlayer, dt: float) -> float:
 	elif pv > 2.2:
 		noise = 12.0
 	elif pv > 0.3:
-		noise = 3.5 if p.is_crouching else 7.0
+		noise = 3.5 if crouching else 7.0
 	noise *= float(data.hearing)
 	if d < noise:
 		gain += (1.0 - d / noise) * 1.5
@@ -514,7 +537,7 @@ func _sense_player(p: FrontierPlayer, dt: float) -> float:
 			if k > 0.8:
 				gain += (1.0 - d / float(data.scent)) * (k - 0.8) * 5.0 * (0.5 + spawner.wind_strength)
 	# his blood on the ground, fresh: the scent of him (the wolves)
-	if data.get("blood_scent", false) and spawner:
+	if p == _player() and data.get("blood_scent", false) and spawner:
 		var b := spawner.fresh_player_blood(global_position, BLOOD_SMELL_R, BLOOD_FRESH_S)
 		if not b.is_empty():
 			gain += 0.7 * (1.0 - global_position.distance_to(b.pos as Vector3) / BLOOD_SMELL_R)
@@ -550,12 +573,12 @@ func _sense_wolves(dt: float) -> float:
 	return best
 
 
-func _line_of_sight(target: Vector3) -> bool:
+func _line_of_sight(target: Vector3, who: Node = null) -> bool:
 	var eye := global_position + Vector3.UP * (float(data.body[2]) + 0.25)
 	var q := PhysicsRayQueryParameters3D.create(eye, target + Vector3.UP * 1.3, 1)
 	q.exclude = _exclude()
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
-	return hit.is_empty() or hit.collider == _player()
+	return hit.is_empty() or hit.collider == (who if who != null else _player())
 
 
 func _exclude() -> Array[RID]:

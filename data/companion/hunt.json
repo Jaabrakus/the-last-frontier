@@ -326,6 +326,13 @@
    "hard_working": 0.05,
    "restless": -0.1,
    "proud": -0.05
+  },
+  "ride": {
+   "note": "RIDING (user 2026-09-29: 'if the horse is available they should ride the horse for the hunt', 'park it far enough out of the animal's sight', 'saddle the carcass and head home'): a hunter with the horse free at home rides it out (a grown worker; the young lead it) when the quarry is more than ride_min_m beyond where she leaves it: HuntRide.park_distance, out of the quarry's sight of a rider when it is most watchful (its sight x 1.5 x 1.4, WildAnimal._sense_body) and of the sound of the horse (35 m x its hearing), and park_margin_m more. A rider lays a kill of ride_pack_max_kg or less behind the saddle across the horse's hindquarters and rides home (user 2026-09-30: 'they cannot ride the horse back?'); the young, who lead, lay one of pack_max_kg or less across the saddle; a heavier one goes on the rope, ridden home. Design values (basis D; a saddle horse packs about a fifth of its weight, some 90-110 kg, from memory).",
+   "park_margin_m": 15.0,
+   "ride_min_m": 40.0,
+   "pack_max_kg": 100.0,
+   "ride_pack_max_kg": 90.0
   }
  }
 }

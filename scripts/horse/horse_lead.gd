@@ -12,6 +12,9 @@ extends Node
 ## WHISKER_DEG either side, LOOK_M plus a second at the current speed): something ahead turns it to the freer
 ## side and slows it; something on one side turns it away. A horse held up (wanting to go, not moving) for
 ## STUCK_S turns toward the freer side before it goes on.
+## Footsteps (user 2026-09-29: the way the leader came): it goes by where the leader walked, a point each CRUMB_M, rather
+## than straight at him, so it comes round the corner he went round (a gate, the end of a palisade) instead of into it;
+## straight to him when he is within DIRECT_M with nothing between them (a ray at chest height) and few steps are left.
 
 ## The head stops this far from the place it follows to (m).
 const FOLLOW_M := 1.6
@@ -26,6 +29,12 @@ const LOOK_M := 2.2
 const STUCK_S := 1.2
 ## Trot at most, unless this far behind (m): then a canter to catch up.
 const CANTER_GAP := 4.5
+const CRUMB_M := 1.0
+const CRUMBS_MAX := 80
+## Straight to the leader within this (m) when nothing stands between; a footstep is passed within CRUMB_AT_M of the chest.
+const DIRECT_M := 4.0
+const CRUMB_AT_M := 1.6
+const CRUMB_SKIP_S := 3.0
 
 var horse: Horse
 var leading := false
@@ -46,6 +55,9 @@ var _tick := 0
 var _rope: MeshInstance3D
 var _rope_mesh: ImmediateMesh
 var _ray: PhysicsRayQueryParameters3D
+var _crumbs := PackedVector3Array()   ## the leader's footsteps, oldest first (the next one the horse goes to)
+var _crumb_best := INF
+var _crumb_t := 0.0
 
 
 static func attach_to(h: Horse) -> HorseLead:
@@ -75,6 +87,7 @@ func start(p: Node3D) -> void:
 	_moving = false
 	_stuck_t = 0.0
 	_dir = Vector3.ZERO
+	_crumbs = PackedVector3Array()
 
 
 ## "Stay": the horse stops and stands.
@@ -139,14 +152,36 @@ func _follow(delta: float) -> void:
 	# heading: toward the spot from the body (the head swings round as the body turns)
 	var goal := spot - me
 	goal.y = 0.0
+	var crumb := _footstep(me, lp)
+	if crumb != Vector3.INF:
+		goal = crumb - me   # (round the corner he went round)
+		goal.y = 0.0
+	_drive(me, fwd, goal, want, _moving, gap > 0.3, delta)
+
+
+## A rider's steering (user 2026-09-29: "the horse needs to be smart enough to avoid things"; HuntRide): toward `point` at
+## `want` m/s with the same feelers and the same turn to the freer side when it is held up as on the lead.
+func drive_to(point: Vector3, want: float, delta: float) -> void:
+	var me := horse.global_position
+	var fwd := -horse.global_basis.z
+	fwd.y = 0.0
+	fwd = fwd.normalized()
+	var goal := point - me
+	goal.y = 0.0
+	_drive(me, fwd, goal, want, want > 0.05, goal.length() > 0.3, delta)
+
+
+## Steers toward `goal` (flat, from the body) at `want` m/s: the heading, the feelers' turn and slowing, and the turn to the
+## freer side after STUCK_S held up. `moving`: it means to go; `turn_in_place`: standing, it turns to face the goal.
+func _drive(me: Vector3, fwd: Vector3, goal: Vector3, want: float, moving: bool, turn_in_place: bool, delta: float) -> void:
 	var ang := fwd.signed_angle_to(goal.normalized(), Vector3.UP) if goal.length() > 0.3 else 0.0
 	var steer := clampf(ang / deg_to_rad(40.0), -1.0, 1.0)
 	steer_goal = steer
-	if _moving and absf(ang) > deg_to_rad(100.0) and want < 1.0:
+	if moving and absf(ang) > deg_to_rad(100.0) and want < 1.0:
 		want = 1.0                       # behind it: walk round rather than a slow turn in place
-	elif not _moving and absf(ang) > deg_to_rad(70.0) and gap > 0.3:
+	elif not moving and absf(ang) > deg_to_rad(70.0) and turn_in_place:
 		pass                             # standing off from him: turn in place toward him (no throttle)
-	elif not _moving:
+	elif not moving:
 		steer = 0.0
 	# feelers
 	_tick += 1
@@ -168,12 +203,12 @@ func _follow(delta: float) -> void:
 		avoid -= (1.0 - left / side_look) * 0.9
 	if right < side_look:
 		avoid += (1.0 - right / side_look) * 0.9
-	steer_avoid = avoid if _moving else 0.0
-	if _moving:
+	steer_avoid = avoid if moving else 0.0
+	if moving:
 		steer = clampf(steer + avoid, -1.0, 1.0)
 	# held up: turn toward the freer side a while
 	var real := Vector2(horse.get_real_velocity().x, horse.get_real_velocity().z).length()
-	if _moving and want > 0.3 and real < 0.15:
+	if moving and want > 0.3 and real < 0.15:
 		_stuck_t += delta
 	else:
 		_stuck_t = maxf(_stuck_t - delta * 2.0, 0.0)
@@ -188,6 +223,55 @@ func _follow(delta: float) -> void:
 	want_speed = want
 	horse.set_cruise_gait(Horse.Gait.CANTER)
 	horse.drive(want / Horse.CRUISE[Horse.Gait.CANTER], steer)
+
+
+## The leader's next footstep for the horse to go to (Vector3.INF: straight to him): his way noted a point each CRUMB_M;
+## the oldest the horse has not come up to (within CRUMB_AT_M), one passed over when it makes no headway to it for
+## CRUMB_SKIP_S; straight to him when he is within DIRECT_M with nothing between them and few steps left.
+func _footstep(me: Vector3, lp: Vector3) -> Vector3:
+	if _crumbs.is_empty() or _flat(_crumbs[_crumbs.size() - 1], lp) >= CRUMB_M:
+		_crumbs.append(lp)
+		if _crumbs.size() > CRUMBS_MAX:
+			_crumbs = _crumbs.slice(_crumbs.size() - CRUMBS_MAX)
+	var dt := get_physics_process_delta_time()
+	while _crumbs.size() > 1:
+		var d := _flat(_crumbs[0], me)
+		if d < CRUMB_AT_M:
+			_crumbs.remove_at(0)
+			_crumb_best = INF
+			_crumb_t = 0.0
+			continue
+		if d < _crumb_best - 0.2:
+			_crumb_best = d
+			_crumb_t = 0.0
+		else:
+			_crumb_t += dt
+		if _crumb_t > CRUMB_SKIP_S:
+			_crumbs.remove_at(0)
+			_crumb_best = INF
+			_crumb_t = 0.0
+			continue
+		break
+	if _crumbs.size() <= 3 and _flat(lp, me) < DIRECT_M and _clear_to(me, lp):
+		return Vector3.INF
+	return _crumbs[0] if not _crumbs.is_empty() else Vector3.INF
+
+
+## Nothing static between the horse's chest and the leader's (a wall, a post, a trunk).
+func _clear_to(me: Vector3, lp: Vector3) -> bool:
+	var space := horse.get_world_3d().direct_space_state
+	var q := PhysicsRayQueryParameters3D.create(me + Vector3.UP * 0.95, lp + Vector3.UP * 0.95)
+	q.exclude = [horse.get_rid()]
+	var hit := space.intersect_ray(q)
+	if hit.is_empty():
+		return true
+	var col := hit.collider as Node
+	return col == null or col is CharacterBody3D or col is AnimatableBody3D or col.is_in_group(&"terrain") \
+			or col.is_in_group(FrontierVegetation.LOW_GROUP)
+
+
+static func _flat(a: Vector3, b: Vector3) -> float:
+	return Vector2(a.x - b.x, a.z - b.z).length()
 
 
 ## Rays ahead of the chest: [left, ahead, right] distances (INF: clear). The ground, stumps and logs (the
@@ -211,12 +295,25 @@ func _feelers(me: Vector3, fwd: Vector3) -> void:
 			if hit.is_empty():
 				break
 			var col := hit.collider as Node
-			if col == null or col is CharacterBody3D or col is AnimatableBody3D or col.is_in_group(&"terrain") \
-					or col.is_in_group(FrontierVegetation.LOW_GROUP):
+			if col == null or col is CharacterBody3D or (col is AnimatableBody3D and not _door_leaf(col)) \
+					or col.is_in_group(&"terrain") or col.is_in_group(FrontierVegetation.LOW_GROUP):
 				ex.append(hit.rid)
 				continue
 			_feel[i] = from.distance_to(hit.position)
 			break
+
+
+## A door's or a gate's leaf (BuildDoor: an AnimatableBody3D on its hinge): felt as a wall (a doorway with its door in it is
+## not a way through for a horse).
+static func _door_leaf(n: Node) -> bool:
+	var p := n.get_parent()
+	for _i in 3:
+		if p == null:
+			return false
+		if p is BuildDoor:
+			return true
+		p = p.get_parent()
+	return false
 
 
 ## The bit (the rope's end on the horse, global).

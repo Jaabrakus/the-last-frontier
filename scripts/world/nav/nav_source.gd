@@ -8,7 +8,11 @@ extends RefCounted
 ##   - every other static collider in the box (one physics shape query): boxes, concave meshes and small convex hulls as
 ##     faces (floors, ramps, walls, roofs: Recast walks what it can stand on), upright cylinders and capsules (tree trunks,
 ##     posts, stumps) and big convex hulls (rocks) as projected obstructions (a hole the agent's radius wide round them in
-##     the ground under them, so no island on a trunk's top), lying cylinders (felled trunks, logs) as prisms;
+##     the ground under them, so no island on a trunk's top), lying cylinders (felled trunks) as prisms; the logs and stumps
+##     lying about (FrontierVegetation.LOW_GROUP: a horse steps over them) as obstructions of their footprint (walked round;
+##     the mesh over a log's top made an island the path could not reach), except a log no higher than BodyStep.STEP_M,
+##     which is not baked at all: the path runs straight over it and the walker steps up on to it and over (BodyStep, user
+##     2026-09-29: "ik feet to walk over things");
 ##   - a BuildDoor's leaves (AnimatableBody3D hinges) where they stand OPEN, shut or not: the doorway is open on the mesh (the
 ##     NavMover opens a shut door as it comes to it) and the path keeps off the open leaf;
 ##   - not: moving bodies (characters, animals, the player's horse), rigid bodies, other AnimatableBody3Ds.
@@ -107,6 +111,7 @@ static func _colliders(world: World3D, box: AABB, out: NavigationMeshSourceGeome
 		if not _takes(body):
 			n_skip += 1
 			continue
+		var low := body.is_in_group(FrontierVegetation.LOW_GROUP)
 		for owner_id in body.get_shape_owners():
 			var cs := body.shape_owner_get_owner(owner_id) as CollisionShape3D
 			if cs == null or cs.disabled or cs.shape == null:
@@ -115,7 +120,7 @@ static func _colliders(world: World3D, box: AABB, out: NavigationMeshSourceGeome
 			if not _bounds(cs.shape, xf).intersects(grown):
 				continue
 			n_shapes += 1
-			n_obs += _shape(cs.shape, xf, faces, out)
+			n_obs += _low_shape(cs.shape, xf, faces, out) if low else _shape(cs.shape, xf, faces, out)
 	if not faces.is_empty():
 		out.add_faces(faces, Transform3D.IDENTITY)
 	stats["faces"] = int(stats.get("faces", 0)) + faces.size() / 3
@@ -223,6 +228,50 @@ static func _shape(shape: Shape3D, xf: Transform3D, faces: PackedVector3Array, o
 	elif shape is HeightMapShape3D:
 		_heightmap(faces, xf, shape as HeightMapShape3D)
 	return 0
+
+
+## A log or a stump lying about (LOW_GROUP): its footprint an obstruction (walked round, not over); what is neither a
+## cylinder nor a box as any shape.
+static func _low_shape(shape: Shape3D, xf: Transform3D, faces: PackedVector3Array, out: NavigationMeshSourceGeometryData3D) -> int:
+	var r := -1.0
+	var h := 0.0
+	if shape is CylinderShape3D:
+		r = (shape as CylinderShape3D).radius
+		h = (shape as CylinderShape3D).height
+	elif shape is CapsuleShape3D:
+		r = (shape as CapsuleShape3D).radius
+		h = (shape as CapsuleShape3D).height
+	elif shape is BoxShape3D:
+		var e := (shape as BoxShape3D).size * 0.5
+		var ring := PackedVector3Array()
+		var ys := []
+		for c: Vector3 in [Vector3(-e.x, 0, -e.z), Vector3(e.x, 0, -e.z), Vector3(e.x, 0, e.z), Vector3(-e.x, 0, e.z)]:
+			ring.append(xf * c)
+		for sy: float in [-e.y, e.y]:
+			ys.append((xf * Vector3(0, sy, 0)).y)
+		if absf(float(ys[1]) - float(ys[0])) <= BodyStep.STEP_M:
+			return 0                              # (stepped over)
+		var lo := minf(float(ys[0]), float(ys[1])) - 0.2
+		out.add_projected_obstruction(ring, lo, absf(float(ys[1]) - float(ys[0])) + 0.4, false)
+		return 1
+	if r < 0.0:
+		return _shape(shape, xf, faces, out)
+	var ax := xf.basis.y.normalized()
+	if ax.dot(Vector3.UP) >= UPRIGHT_COS:
+		return _column(faces, out, xf, r, h)   # (a stump: its ring, as a trunk's)
+	var sc := xf.basis.get_scale()
+	var rr := r * maxf(sc.x, sc.z)
+	var hh := h * sc.y
+	var top := xf.origin + ax * hh * 0.5
+	var bot := xf.origin - ax * hh * 0.5
+	var along := Vector3(ax.x, 0.0, ax.z)
+	along = along.normalized() if along.length() > 0.01 else Vector3.RIGHT
+	var side := Vector3(-along.z, 0.0, along.x) * rr
+	var ends := along * rr * 0.5
+	var ring := PackedVector3Array([bot - ends + side, top + ends + side, top + ends - side, bot - ends - side])
+	var lo := minf(top.y, bot.y) - rr
+	out.add_projected_obstruction(ring, lo, absf(top.y - bot.y) + rr * 2.0 + 0.2, false)
+	return 1
 
 
 ## A triangle wound for Recast: its cross product against the outward normal `n`.

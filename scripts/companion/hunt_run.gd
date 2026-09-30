@@ -21,6 +21,9 @@ extends Node
 ##   safety     wolves near (HuntJob.must_stop): she hurries home, lets go of a carcass when one is close, and fires at one that
 ##              closes while she has a shot; dusk: home
 ##   the kill home  HuntHaul (the household's horse, cart or wheelbarrow, when she is smart enough and it is free), else by hand
+##   the horse  free at home as her stalk begins and the quarry far enough off, she rides it out (HuntRide; the young lead it)
+##              and leaves it standing out of the quarry's sight and hearing (HuntRide.park_distance), goes on on foot, and comes
+##              back to it for the kill (_horse_first; HuntHaul: the kill across the saddle and the horse led home)
 ## The weapon: slung on her back while she walks (WorkerGear, the game's SlingRig: the household's gun she took from the rack),
 ## in her hands while she stalks crouched, aims and fires (off its sling: WorkerGear.hold), aimed as the player aims (HuntAim:
 ## the aim clip's two-hand hold, stock at the shoulder, the left hand on the fore-end, the upper body turned to lay the barrel on
@@ -36,6 +39,17 @@ const ARRIVE := 1.4
 const AT_CARCASS := 1.9
 ## Her walk behind the wheelbarrow.
 const PUSH := "actor_b-p-push-fw"
+## The way she came: a point each this far (m); a loop cut when she comes within TRAIL_LOOP_M of an earlier point; at most
+## TRAIL_MAX points (thinned); used when the goal is within TRAIL_NEAR_M of it and she within TRAIL_JOIN_M; a point is
+## reached within TRAIL_AT_M, passed when she makes no headway to it for TRAIL_SKIP_S; rejoined after TRAIL_STUCK_S.
+const TRAIL_STEP_M := 2.0
+const TRAIL_LOOP_M := 1.2
+const TRAIL_MAX := 800
+const TRAIL_NEAR_M := 10.0
+const TRAIL_JOIN_M := 14.0
+const TRAIL_AT_M := 1.3
+const TRAIL_SKIP_S := 4.0
+const TRAIL_STUCK_S := 4.0
 
 var body: Spouse
 var sc: SpouseCore
@@ -52,6 +66,8 @@ var _knife_on := false
 var _drag: HuntDrag
 ## The household's transport for the kill (the horse, the cart, the wheelbarrow): HuntHaul.
 var haul: HuntHaul
+## Her seat on the horse and its steering (HuntRide).
+var ride: HuntRide
 ## The aim: the upper body turned to put the weapon on the animal, the weapon laid in the aim clip's two-hand hold (HuntAim).
 var aim: HuntAim
 ## The stance of the aim: "stand" in the open, "crouch" close in or behind cover (_stance).
@@ -85,6 +101,24 @@ var _was_hunting := false
 var _last_shot := {}
 ## The animal she has marked as hers (meta hunted_by: another hunter leaves it), unmarked when the hunt ends.
 var _marked: WildAnimal = null
+## The way she came (user 2026-09-29: "for the hunting trail it should really be the way they came back, and if it gets
+## stuck on something"): where her feet went from where the hunt began, a point each TRAIL_STEP_M (a loop she walked cut
+## out: the shortest way she knows). She walks it back home, out again to the kill with the horse or the barrow and back
+## with the kill (walk(), the haul's), carrying the meat home and back for more; and in any walk she rejoins it when she
+## makes no headway (a post, a trunk, a thicket the mesh does not know) for TRAIL_STUCK_S. Not while she follows it.
+var trail := PackedVector3Array()
+var _trail_i := -1                 ## the point of it she walks to now (-1: not on it)
+var _trail_end := -1               ## the point nearest the goal: she leaves it there
+var _trail_goal := Vector3.INF     ## the goal the trail walk is for
+var _trail_t := 0.0                ## no headway at the point she walks to (s)
+var _trail_best := INF
+var _no_way_t := 0.0               ## no headway in a walk, through the sidesteps (s)
+var _way := PackedVector3Array()   ## the stretch of the trail she rides now (to the goal), and for which goal and frame
+var _way_goal := Vector3.INF
+var _way_f := -100
+var _way_used_f := -100
+## Where she was as she set off for the horse (the side she gets up on, chosen once from there).
+var _mount_from := Vector3.INF
 
 
 ## Puts a HuntRun on a worker's body (Spouse._ready, HUNT) and the "game" finder on her core.
@@ -113,6 +147,11 @@ func _ready() -> void:
 	haul.body = body
 	haul.sc = sc
 	add_child(haul)
+	ride = HuntRide.new()
+	ride.name = "HuntRide"
+	ride.run = self
+	ride.body = body
+	add_child(ride)
 	if body.sk:
 		aim = HuntAim.attach(body.sk)
 	_cb = Callable(self, "_errand")
@@ -209,7 +248,14 @@ func _physics_process(_dt: float) -> void:
 		if _was_hunting:
 			_stop()
 		return
+	if not _was_hunting:
+		trail = PackedVector3Array([body.global_position])   # (a new hunt: the way starts here)
+		_trail_i = -1
+		_trail_goal = Vector3.INF
 	_was_hunting = true
+	_trail_note()
+	if ride.on:
+		return                               # (in the saddle: the riding clips are the horse's, HuntRide)
 	# her walk as the stalk's crouched walk (over the body's own walk clip)
 	var ap := body.ap
 	var moving := Vector2(body.velocity.x, body.velocity.z).length() > 0.08
@@ -232,7 +278,7 @@ func _physics_process(_dt: float) -> void:
 func _stop() -> void:
 	_was_hunting = false
 	_drag.let_go()
-	if haul.kind != "" or haul.pushing or haul.barrow_out != null:
+	if haul.kind != "" or haul.pushing or haul.barrow_out != null or haul.horse_out != null or ride.on:
 		var left := haul.abort("the hunt is over")
 		if left != null and left.has_meta(&"hunted_by"):
 			left.remove_meta(&"hunted_by")
@@ -267,7 +313,7 @@ func _safety(dt: float) -> Array:
 		if haul.kind != "" and haul.carcass != null and dw < float(_dcfg().get("let_go_m", 30.0)):
 			haul.let_go_load("wolves")          # (the horse, the cart, the barrow come home with her)
 			sc._note("%s leaves the %s where it is: wolves." % [sc.name, String(sc.hunt.get("species", "carcass"))])
-		if wolf and dw < float(_dcfg().get("defend_m", 18.0)) and _reload_t <= 0.0 \
+		if wolf and dw < float(_dcfg().get("defend_m", 18.0)) and _reload_t <= 0.0 and not ride.on \
 				and HuntJob.kit_shots(sc, HuntJob.weapon_cfg(String(sc.hunt.weapon))) > 0:
 			_wolf = wolf
 			_wolf_t = 0.0
@@ -333,7 +379,10 @@ func _step(ph: String, dt: float) -> Array:
 
 func _quarry() -> WildAnimal:
 	var q: Variant = sc.hunt.get("quarry")
-	return q as WildAnimal if q is WildAnimal and is_instance_valid(q) and not (q as Node).is_queued_for_deletion() else null
+	# (freed first: `is` on a freed instance is an error, the quarry freed under her when it was taken off the ground)
+	if q == null or not is_instance_valid(q):
+		return null
+	return q as WildAnimal if q is WildAnimal and not (q as Node).is_queued_for_deletion() else null
 
 
 func _scfg() -> Dictionary:
@@ -368,11 +417,14 @@ func _stalk(dt: float) -> Array:
 	var me := body.global_position
 	var d := _flat(me, q.global_position)
 	var shot_d := HuntJob.shot_distance(sc)
+	if _approach == Vector3.INF:
+		_approach = _approach_point(q, shot_d)
+	var mount := _horse_first(q, d, shot_d)
+	if not mount.is_empty():
+		return mount
 	var fetch := _barrow_first(d, shot_d)
 	if not fetch.is_empty():
 		return fetch
-	if _approach == Vector3.INF:
-		_approach = _approach_point(q, shot_d)
 	if d <= shot_d and _clear(q) and _flat(me, sc.hunt.get("blocked_at", Vector3.INF)) > 2.5:
 		_approach = Vector3.INF
 		HuntJob.set_phase(sc, "aim", "Taking aim at a %s" % String(sc.hunt.species))
@@ -397,6 +449,92 @@ func _stalk(dt: float) -> Array:
 		_move_ref = float(_scfg().get("crouch_ref", 0.9))
 		return _walk(goal, float(_scfg().get("speed", 0.55)), 0.3)
 	return _walk(goal, Spouse.WALK_SPEED, 0.3)
+
+
+## RIDING (user 2026-09-29: "if the horse is available they should ride the horse for the hunt"; "the hunter should bring the
+## horse if available or ride"; "park it far enough out of the animal's sight"): the household's horse free at home and near
+## her as her stalk begins, and the quarry far enough off, she takes it: rides it (a grown worker: HuntRide) toward the quarry
+## until she is HuntRide.park_distance off it (out of its sight of a rider, and of the sound of the horse), or leads it (the
+## young) to where her crouched stalk begins; there it is left standing (HuntHaul.park_horse: the horse keeps who left it,
+## where, when and why) and she goes on on foot. [] when she goes on with the stalk on foot this frame.
+func _horse_first(q: WildAnimal, d: float, shot_d: float) -> Array:
+	var plan := String(sc.hunt.get("horse_plan", ""))
+	var walk_until := minf(float(_scfg().get("walk_until_m", 90.0)), shot_d + float(_scfg().get("crouch_margin_m", 20.0)))
+	var park := HuntRide.park_distance(q)
+	var sp := String(sc.hunt.get("species", "game"))
+	if plan == "":
+		plan = "no"
+		if ride.on:
+			plan = "ride"
+		elif haul.horse_out != null and is_instance_valid(haul.horse_out):
+			plan = "parked"
+		else:
+			var rc: Dictionary = HuntHaul.tcfg().get("ride", {})
+			var rides := HuntRide.can_ride(sc)
+			var far := d > (park + float(rc.get("ride_min_m", 40.0)) if rides else walk_until + 25.0)
+			var h: Horse = haul.available().get("horse")
+			if far and h != null and _flat(h.global_position, body.global_position) <= float(HuntHaul.tcfg().get("near_home_m", 70.0)) \
+					and haul.take_horse_out(h):
+				plan = "fetch_ride" if rides else "fetch_lead"
+				sc._note(("%s rides out after the %s." if rides else "%s takes the horse along for the %s.") % [sc.name, sp])
+		sc.hunt["horse_plan"] = plan
+	match plan:
+		"fetch_ride", "fetch_lead":
+			var h := haul.horse_out
+			if h == null or not is_instance_valid(h) or haul.why_not_horse(h) != "":
+				sc.hunt["horse_plan"] = "no"
+				return []
+			_t = 0.0                             # (the stalk's clock waits while she saddles up)
+			sc.task_text = "Fetching the horse"
+			if plan == "fetch_ride":
+				if _mount_from == Vector3.INF:
+					_mount_from = body.global_position
+				var at := HuntRide.mount_point(h, _mount_from)
+				if HuntRide.at_saddle(h, body.global_position):
+					_mount_from = Vector3.INF
+					sc.hunt["horse_plan"] = "ride" if ride.mount(h) else "no"
+					return [Vector3.ZERO, 0.0]
+				return _walk(at, Spouse.WALK_SPEED, 0.5)
+			var hf := -h.global_basis.z
+			hf.y = 0.0
+			var head := h.global_position + hf.normalized() * 1.7
+			if _flat(body.global_position, head) <= 0.9:
+				var l := h.get_node_or_null("Lead") as HorseLead
+				if l == null:
+					sc.hunt["horse_plan"] = "no"
+					return []
+				l.start(body)
+				sc.hunt["horse_plan"] = "lead"
+				return [Vector3.ZERO, 0.0]
+			return _walk(head, Spouse.WALK_SPEED, 0.8)
+		"ride":
+			if not ride.on:
+				sc.hunt["horse_plan"] = "parked" if haul.horse_out != null else "no"
+				return []
+			_t = 0.0
+			_face_to = Vector3.INF
+			if d <= park:
+				# (reined in, then down: the horse stands here)
+				sc.task_text = "Leaving the horse"
+				if absf(ride.horse.speed) < 0.35:
+					ride.dismount(_approach if _approach != Vector3.INF else q.global_position)
+					haul.park_horse("the %s" % sp)
+					sc.hunt["horse_plan"] = "parked"
+					sc._note("%s leaves the horse %d m off the %s and goes on on foot." % [sc.name, roundi(d), sp])
+				return [Vector3.ZERO, 0.0]
+			sc.task_text = "Riding out after a %s" % sp
+			ride.to(_approach if _approach != Vector3.INF else q.global_position, 1.0, HuntRide.TROT)
+			return [Vector3.ZERO, 0.0]
+		"lead":
+			if d <= walk_until:
+				haul.park_horse("the %s" % sp)
+				sc.hunt["horse_plan"] = "parked"
+				sc._note("%s leaves the horse standing and goes on crouched." % sc.name)
+				return []
+			if haul._horse_lag() > HuntHaul.HORSE_WAIT_M:
+				_t = 0.0
+				return [Vector3.ZERO, 0.0]       # (she waits for the horse to come up)
+	return []
 
 
 ## A smart hunter takes the wheelbarrow out with her as her stalk begins (HuntHaul.plans_barrow; free and near her): she
@@ -566,6 +704,7 @@ func _to_carcass() -> Array:
 		av.erase(k)                          # (a way that failed her this hunt is not tried again)
 		if k == "horse":
 			av.erase("cart")
+			av.erase("horse_out")
 		if k == "barrow":
 			av.erase("barrow_out")
 	var smart := HuntHaul.smart(sc)
@@ -679,7 +818,7 @@ func _back_to_cache() -> Array:
 		_load_share()
 		HuntJob.set_phase(sc, "carry", "Carrying the meat home (%d of %d)" % [int(sc.hunt.trips_all) - int(sc.hunt.trips), int(sc.hunt.trips_all)])
 		return [Vector3.ZERO, 0.0]
-	return _walk(at, Spouse.WALK_SPEED, AT_CARCASS)
+	return _walk(at, Spouse.WALK_SPEED, AT_CARCASS, true)
 
 
 ## The carcass on her rope, home to a spot by the hearth; caught for good, left where it is when that is near enough home for
@@ -709,7 +848,7 @@ func _haul() -> Array:
 		sc.hunt["trips_all"] = 1
 		_start_dress("dress")
 		return [Vector3.ZERO, 0.0]
-	return _walk(_drop, minf(Spouse.WALK_SPEED, _drag.cap()), ARRIVE * 0.7)
+	return _walk(_drop, minf(Spouse.WALK_SPEED, _drag.cap()), ARRIVE * 0.7, true)
 
 
 ## Where a kill is left at home: on the ring round the hearth on the side she comes from.
@@ -752,6 +891,9 @@ func _end(text := "") -> void:
 func _homeward(ph: String) -> Array:
 	_show_gun(ph == "retreat" and _wolf != null)
 	body.idle_clip = ""
+	var pick := _pick_up_horse(ph == "retreat")
+	if not pick.is_empty():
+		return pick
 	var goal := body.hearth
 	var d := _flat(body.global_position, goal)
 	var stuck := _watch(d, 8.0)
@@ -773,7 +915,41 @@ func _homeward(ph: String) -> Array:
 		else:
 			_end()
 		return [Vector3.ZERO, 0.0]
-	return _walk(goal, Spouse.RUN_SPEED if ph == "retreat" else Spouse.WALK_SPEED, 2.5)
+	return _walk(goal, Spouse.RUN_SPEED if ph == "retreat" else Spouse.WALK_SPEED, 2.5, true)
+
+
+## RIDING (user 2026-09-29: "park the horse ... in locations they remember where they put it, pick it up and go home"): the
+## horse she left standing on the way out is picked up on her way home: to it (the horse keeps where she left it: meta
+## left_by), up into the saddle (the young take its lead), and home on it; at home the trip that puts it back (_end,
+## HuntHaul.begin_stow) has her ride it to its place. [] when she has no horse out to pick up.
+func _pick_up_horse(hurry: bool) -> Array:
+	var h := haul.horse_out
+	if h == null or not is_instance_valid(h) or ride.on or haul.kind != "":
+		return []
+	var l := h.get_node_or_null("Lead") as HorseLead
+	if l != null and l.leading and l.leader == body:
+		return []                                   # (on her lead already)
+	if haul.why_not_horse(h) != "":
+		return []
+	sc.task_text = "Going back to the horse"
+	var speed := Spouse.RUN_SPEED if hurry else Spouse.WALK_SPEED
+	if HuntRide.can_ride(sc):
+		if _mount_from == Vector3.INF:
+			_mount_from = body.global_position
+		var at := HuntRide.mount_point(h, _mount_from)
+		if HuntRide.at_saddle(h, body.global_position):
+			_mount_from = Vector3.INF
+			ride.mount(h)
+			return [Vector3.ZERO, 0.0]
+		return _walk(at, speed, 0.5, true)
+	var hf := -h.global_basis.z
+	hf.y = 0.0
+	var head := h.global_position + hf.normalized() * 1.7
+	if _flat(body.global_position, head) <= 0.9:
+		if l != null:
+			l.start(body)
+		return [Vector3.ZERO, 0.0]
+	return _walk(head, speed, 0.8, true)
 
 
 # ---------------------------------------------------------------- the shot
@@ -926,22 +1102,146 @@ static func _flat(a: Vector3, b: Vector3) -> float:
 ## a while when she has made no headway (_watch).
 ## (HuntHaul walks her through this)
 func walk(goal: Vector3, speed: float, arrive := 0.8) -> Array:
-	return _walk(goal, speed, arrive)
+	return _walk(goal, speed, arrive, true)   # (the haul's: to the horse or the barrow at home and out again, the kill home)
 
 
-func _walk(goal: Vector3, speed: float, arrive := 0.8) -> Array:
+# ---------------------------------------------------------------- the way she came
+## A point on the way she came when she has gone TRAIL_STEP_M from the last (not while she walks it); back within
+## TRAIL_LOOP_M of an earlier point, the loop since is cut out.
+func _trail_note() -> void:
+	if _trail_i >= 0 or trail.is_empty() or (ride.on and not _way.is_empty() and Engine.get_physics_frames() - _way_used_f < 5):
+		return
+	var p := body.global_position
+	if _flat(p, trail[trail.size() - 1]) < TRAIL_STEP_M:
+		return
+	for i in range(0, trail.size() - 3):
+		if _flat(p, trail[i]) < TRAIL_LOOP_M:
+			trail.resize(i + 1)
+			break
+	trail.append(p)
+	if trail.size() > TRAIL_MAX:
+		var thin := PackedVector3Array()
+		for i in trail.size():
+			if i % 2 == 0 or i == trail.size() - 1:
+				thin.append(trail[i])
+		trail = thin
+
+
+## The stretch of the way she came from the point nearest her to the point nearest `goal`, and the goal (empty when it does
+## not serve, as _trail_walk): the way a rider goes by (HuntRide.to). Kept for a second for the same goal.
+func _trail_way(goal: Vector3) -> PackedVector3Array:
+	var f := Engine.get_physics_frames()
+	if _way_goal != Vector3.INF and _flat(_way_goal, goal) < 1.0 and f - _way_f < 60:
+		_way_used_f = f
+		return _way
+	_way_goal = goal
+	_way_f = f
+	_way_used_f = f
+	_way = PackedVector3Array()
+	if trail.size() < 3:
+		return _way
+	var gi := _trail_nearest(goal)
+	var bi := _trail_nearest(body.global_position)
+	if gi < 0 or _flat(trail[gi], goal) > TRAIL_NEAR_M or _flat(trail[bi], body.global_position) > TRAIL_JOIN_M or absi(gi - bi) <= 1:
+		return _way
+	var i := bi
+	var st := signi(gi - bi)
+	while true:
+		_way.append(trail[i])
+		if i == gi:
+			break
+		i += st
+	_way.append(goal)
+	return _way
+
+
+func _trail_nearest(p: Vector3) -> int:
+	var best := -1
+	var bd := INF
+	for i in trail.size():
+		var d := _flat(p, trail[i])
+		if d < bd:
+			bd = d
+			best = i
+	return best
+
+
+func _following_trail(goal: Vector3) -> bool:
+	return _trail_i >= 0 and _trail_goal != Vector3.INF and _flat(goal, _trail_goal) < 1.5
+
+
+## A step along the way she came toward `goal` ([] when it does not serve: the goal off it, she far from it, or the
+## goal at hand): from the point nearest her to the point nearest the goal, then the goal. `use`: she may take it now.
+func _trail_walk(goal: Vector3, speed: float, use: bool) -> Array:
+	if not use or trail.size() < 3:
+		_trail_i = -1
+		return []
+	if not _following_trail(goal):
+		var gi := _trail_nearest(goal)
+		var bi := _trail_nearest(body.global_position)
+		if gi < 0 or _flat(trail[gi], goal) > TRAIL_NEAR_M or _flat(trail[bi], body.global_position) > TRAIL_JOIN_M \
+				or absi(gi - bi) <= 1:
+			_trail_i = -1
+			return []
+		_trail_i = bi
+		_trail_end = gi
+		_trail_goal = goal
+		_trail_t = 0.0
+		_trail_best = INF
 	var dt := get_physics_process_delta_time()
+	var p := trail[_trail_i]
+	var d := _flat(body.global_position, p)
+	if d < _trail_best - 0.3:
+		_trail_best = d
+		_trail_t = 0.0
+	else:
+		_trail_t += dt
+	if d <= TRAIL_AT_M or _trail_t > TRAIL_SKIP_S:
+		if _trail_i == _trail_end:
+			# (the trail's end by the goal: the last stretch as any walk; the trail not taken up again for this goal)
+			_trail_i = -1
+			_prog_t = 0.0
+			_no_way_t = 0.0
+			return []
+		_trail_i += signi(_trail_end - _trail_i)
+		_trail_t = 0.0
+		_trail_best = INF
+		p = trail[_trail_i]
+	var r: Array = body.call("walk_to", p, speed, 0.4) if body.has_method("walk_to") else []
+	var nav: Variant = body.get("nav")
+	if not r.is_empty() and nav != null and bool(nav.get("on_path")):
+		return r
+	var to := p - body.global_position
+	to.y = 0.0
+	return [to.normalized() if to.length() > 0.01 else Vector3.ZERO, speed]
+
+
+func _walk(goal: Vector3, speed: float, arrive := 0.8, by_trail := false) -> Array:
+	var dt := get_physics_process_delta_time()
+	if ride.on:
+		# (in the saddle: the horse is ridden there, at a trot, a canter to hurry, by the way she came when it serves)
+		var way := _trail_way(goal) if by_trail or _following_trail(goal) else PackedVector3Array()
+		ride.to(goal, maxf(arrive, 1.0), HuntRide.CANTER if speed > Spouse.WALK_SPEED + 0.5 else HuntRide.TROT, way)
+		return [Vector3.ZERO, 0.0]
 	var to := goal - body.global_position
 	to.y = 0.0
 	if to.length() <= arrive:
+		_trail_i = -1
 		return [Vector3.ZERO, 0.0]
+	# the way she came: back home, out to the kill and back with it; any walk that has made no headway for a while (not
+	# the last TRAIL_NEAR_M to the goal: there she goes straight to it, not along a stretch of the way that passes by)
+	var tw := _trail_walk(goal, speed, (by_trail or _no_way_t > TRAIL_STUCK_S or _following_trail(goal)) and to.length() > TRAIL_NEAR_M)
+	if not tw.is_empty():
+		return tw
 	# no headway for a while (a path through something the mesh does not know, a post, a trunk): a sidestep, off the path
 	var f := Engine.get_physics_frames()
 	if _prog_at.distance_to(body.global_position) > 0.4 or f - _prog_f > 5:
 		_prog_at = body.global_position
 		_prog_t = 0.0
+		_no_way_t = 0.0
 	else:
 		_prog_t += dt
+		_no_way_t += dt   # (not reset by a sidestep: the way she came, after TRAIL_STUCK_S of it)
 	_prog_f = f
 	if _prog_t > 2.0 and _detour_t <= 0.0:
 		var side := to.normalized().cross(Vector3.UP) * (1.0 if rng.randf() < 0.5 else -1.0)

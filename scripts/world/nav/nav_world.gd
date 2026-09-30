@@ -327,12 +327,18 @@ func door_on(a: Vector3, b: Vector3, reach := 0.8) -> BuildDoor:
 	return best
 
 
-## A walker opens a shut door; it is shut again once none is near (only if a walker opened it).
-func open_door(d: BuildDoor) -> void:
-	if d == null or d.is_open:
+## A walker opens a shut door; it is shut again once none is near (only if a walker opened it). `hold_r`: it stays open
+## while a walker is within this of it (a rider opens a gate from the saddle further off, and comes on at a trot).
+func open_door(d: BuildDoor, hold_r := 2.3) -> void:
+	if d == null:
+		return
+	var id := d.get_instance_id()
+	if _opened.has(id):
+		_opened[id]["r"] = maxf(float(_opened[id].get("r", 2.3)), hold_r)
+	if d.is_open:
 		return
 	d.set_open(true)
-	_opened[d.get_instance_id()] = {"door": d, "clear": 0.0}
+	_opened[id] = {"door": d, "clear": 0.0, "r": hold_r}
 
 
 func _close_doors(dt: float) -> void:
@@ -344,8 +350,9 @@ func _close_doors(dt: float) -> void:
 			continue
 		var c := d.global_position
 		var near := false
+		var hold := float(e.get("r", 2.3))
 		for m in movers:
-			if m.body != null and is_instance_valid(m.body) and Vector2(m.body.global_position.x - c.x, m.body.global_position.z - c.z).length() < 2.3:
+			if m.body != null and is_instance_valid(m.body) and Vector2(m.body.global_position.x - c.x, m.body.global_position.z - c.z).length() < hold:
 				near = true
 				break
 		if not near and _player != null and is_instance_valid(_player) and _player.global_position.distance_to(c) < 1.6:
@@ -577,8 +584,11 @@ func _probe_of(nm: NavigationMesh) -> Vector3:
 	return at
 
 
-## Marks the tiles round a box of the world to bake again.
+## Marks the tiles round a box of the world to bake again (and the walk grid's sectors there to be read again).
 func dirty(center: Vector3, r: float) -> void:
+	var wg := get_parent().get_node_or_null(WalkGrid.NODE_NAME) as WalkGrid if get_parent() else null
+	if wg != null:
+		wg.dirty(center, r)
 	var a := key_of(center - Vector3(r, 0, r))
 	var b := key_of(center + Vector3(r, 0, r))
 	for z in range(a.y, b.y + 1):

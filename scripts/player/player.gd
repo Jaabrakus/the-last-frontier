@@ -330,6 +330,7 @@ const RIDE_CAMERA_BACK := 1.8   ## m further back than on foot
 func _ready() -> void:
 	InputSetup.ensure()
 	add_to_group("player")
+	add_to_group(WildlifeSpawner.PEOPLE)   # PEOPLE: one of the humans the wild keeps off (with the household's)
 	yaw = rotation.y
 	health = max_health
 	_build_body()
