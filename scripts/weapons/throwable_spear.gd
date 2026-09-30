@@ -172,10 +172,6 @@ func _init() -> void:
 	source_fallback_drop_crouch = 0.12
 	# The graph's draw for the spear (PlayerAnim reads the graph table; this table is documentation):
 	# the long-gun draw from the back (spear pair slung on the back, loadout_design.md 5.2).
-	# The carry's grip (user 2026-09-29: "the right hand doesnt grip the spear"): the fist point from the knife grip the
-	# tomahawk uses (a handle about as thick as the shaft) instead of the brick's, whose prop point sat about 6 cm out
-	# from the closed fingers, so the shaft ran beside the fist instead of through it.
-	grip_clip_carry = "atk-actor_b-knife-v-thug-hit1-intro"
 	clips["draw"] = "actor_b-lg-stealth-draw^idle--arm-r"
 	clips["equip"] = "actor_b-lg-stealth-draw^idle--arm-r"
 
