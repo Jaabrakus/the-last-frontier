@@ -306,8 +306,8 @@ const HIP_PULL_IDLE := 0.45
 ## about the body's vertical, + to the left) from where the graph's poses leave it (measured in the level: idle 75 deg left of the
 ## player's facing, walking 52 / 57: 60 is 10 o'clock).
 const GUN_YAW_IDLE := -28.0
-const GUN_YAW_FW := 70.0
-const GUN_YAW_BACK := 60.0
+const GUN_YAW_FW := 24.0
+const GUN_YAW_BACK := 16.0
 const MID_FW_TURN_R := Vector3(0.0, 32.0, 0.0)
 const MID_FW_TURN_L := Vector3(0.0, 32.0, 0.0)
 const FWD_ROLES := ["fw", "fw_lt", "fw_rt", "start_fw", "start_fw_lt", "start_fw_rt", "stop_fw", "stop_fw_lt", "stop_fw_rt", "turn_l", "turn_r"]
