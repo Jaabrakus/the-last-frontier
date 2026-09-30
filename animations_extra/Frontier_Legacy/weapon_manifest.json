@@ -1,0 +1,1265 @@
+{
+	"clips": [
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_bow_walk_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw",
+				"actor_b-p-bow-move--arms",
+				"actor_b-p-bow-hands"
+			],
+			"source_native_ids": [
+				"6f099cbaa4ebba94ff6778c3c2b01a7894070a7406e7f4bc4a6bb581dae42176",
+				"40ab865949dbe0a71de40ef0a7a876613659b06a9afa21563fb4c7f417802b63",
+				"e8e6af1acfc7877e99ec82d480a054a93f6ec5453644c208aa5a69b711201800"
+			],
+			"weapon": "bow"
+		},
+		{
+			"duration": 0.933333337306976,
+			"name": "frontier_legacy_bow_walk_backward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-bw",
+				"actor_b-p-bow-move--arms",
+				"actor_b-p-bow-hands"
+			],
+			"source_native_ids": [
+				"d3a1586e28363954dc869e0e14369035c5f674f26092ffea2fd1ee87bad961b5",
+				"40ab865949dbe0a71de40ef0a7a876613659b06a9afa21563fb4c7f417802b63",
+				"e8e6af1acfc7877e99ec82d480a054a93f6ec5453644c208aa5a69b711201800"
+			],
+			"weapon": "bow"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_bow_walk_left",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw-lt",
+				"actor_b-p-bow-move--arms",
+				"actor_b-p-bow-hands"
+			],
+			"source_native_ids": [
+				"587c94c56be2723c714c88e7833aafc557b563e3382c91b45dab7aeb10096f63",
+				"40ab865949dbe0a71de40ef0a7a876613659b06a9afa21563fb4c7f417802b63",
+				"e8e6af1acfc7877e99ec82d480a054a93f6ec5453644c208aa5a69b711201800"
+			],
+			"weapon": "bow"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_bow_walk_right",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw-rt",
+				"actor_b-p-bow-move--arms",
+				"actor_b-p-bow-hands"
+			],
+			"source_native_ids": [
+				"8a4720474d1e39bacfa806a00c550af9ce664e1bae28f87ea2ff58eaa9922214",
+				"40ab865949dbe0a71de40ef0a7a876613659b06a9afa21563fb4c7f417802b63",
+				"e8e6af1acfc7877e99ec82d480a054a93f6ec5453644c208aa5a69b711201800"
+			],
+			"weapon": "bow"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_bow_run_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw",
+				"actor_b-p-sprint-fingers",
+				"actor_b-p-bow-move--arms",
+				"actor_b-p-bow-hands"
+			],
+			"source_native_ids": [
+				"158f6f20eaa1ef61dcb68475f6b952833f4efa34e25dceafb85c4983f9a16d58",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"40ab865949dbe0a71de40ef0a7a876613659b06a9afa21563fb4c7f417802b63",
+				"e8e6af1acfc7877e99ec82d480a054a93f6ec5453644c208aa5a69b711201800"
+			],
+			"weapon": "bow"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_bow_run_backward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-bw",
+				"actor_b-p-sprint-fingers",
+				"actor_b-p-bow-move--arms",
+				"actor_b-p-bow-hands"
+			],
+			"source_native_ids": [
+				"2038aedf8ddb4d27e096ba0ae32f6ab0d893adfdca75148e903c027759a8d556",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"40ab865949dbe0a71de40ef0a7a876613659b06a9afa21563fb4c7f417802b63",
+				"e8e6af1acfc7877e99ec82d480a054a93f6ec5453644c208aa5a69b711201800"
+			],
+			"weapon": "bow"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_bow_run_left",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw-lt",
+				"actor_b-p-sprint-fingers",
+				"actor_b-p-bow-move--arms",
+				"actor_b-p-bow-hands"
+			],
+			"source_native_ids": [
+				"2813598eac5fc34699eb355e683858d1bb925bed84bdb344dc44ea9e020838b6",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"40ab865949dbe0a71de40ef0a7a876613659b06a9afa21563fb4c7f417802b63",
+				"e8e6af1acfc7877e99ec82d480a054a93f6ec5453644c208aa5a69b711201800"
+			],
+			"weapon": "bow"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_bow_run_right",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw-rt",
+				"actor_b-p-sprint-fingers",
+				"actor_b-p-bow-move--arms",
+				"actor_b-p-bow-hands"
+			],
+			"source_native_ids": [
+				"0f4fd56f0dbd434fb0a946cc32d6ab0f42f87d1e6b7830da49db87d66ef158bc",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"40ab865949dbe0a71de40ef0a7a876613659b06a9afa21563fb4c7f417802b63",
+				"e8e6af1acfc7877e99ec82d480a054a93f6ec5453644c208aa5a69b711201800"
+			],
+			"weapon": "bow"
+		},
+		{
+			"duration": 1.33333337306976,
+			"name": "frontier_legacy_bow_sprint_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-sprint-fw",
+				"actor_b-p-sprint-fingers",
+				"actor_b-p-bow-sprint--arms",
+				"actor_b-p-bow-hands"
+			],
+			"source_native_ids": [
+				"faa131e67ee9a850f09bf518e9ece2ac940c414eccf7f7c016fb8bba4b6e520a",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"781f56484b3e23cffd6393e4b27c7eb3262614239bafae355f5f869f613dbb85",
+				"e8e6af1acfc7877e99ec82d480a054a93f6ec5453644c208aa5a69b711201800"
+			],
+			"weapon": "bow"
+		},
+		{
+			"duration": 10.0,
+			"name": "frontier_legacy_bow_carry_idle_stand",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-relax-idle",
+				"actor_b-p-bow-move--arms",
+				"actor_b-p-bow-hands"
+			],
+			"source_native_ids": [
+				"stream_4a1e91d33219ca6d51e650bfd37016e598aef280471a4713ab8d8d6d4de4194c",
+				"40ab865949dbe0a71de40ef0a7a876613659b06a9afa21563fb4c7f417802b63",
+				"e8e6af1acfc7877e99ec82d480a054a93f6ec5453644c208aa5a69b711201800"
+			],
+			"weapon": "bow"
+		},
+		{
+			"duration": 10.0,
+			"name": "frontier_legacy_bow_carry_idle_crouch",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-crouch-idle",
+				"actor_b-p-crouch-idle--hands",
+				"actor_b-p-bow-crouch-idle--arms",
+				"actor_b-p-bow-hands"
+			],
+			"source_native_ids": [
+				"stream_e8b15b5854913f894832f3d3487f1d66dd810e072130b81917932a7c4d20b1ad",
+				"stream_81e800dec1b6a9e94cecce6b60fabef45eda1fc07049b51ac92cb7de91782258",
+				"8341aa9f78967fa0f85e4eff312850f212e6431f06197fda698fe1a9175d571b",
+				"e8e6af1acfc7877e99ec82d480a054a93f6ec5453644c208aa5a69b711201800"
+			],
+			"weapon": "bow"
+		},
+		{
+			"duration": 1.0,
+			"name": "frontier_legacy_bow_aim_idle_stand",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-arms-relaxed--part",
+				"actor_b-p-bow-aim-idle",
+				"actor_b-p-bow-aim-hands-idle",
+				"actor_b-p-bow-blocked-aim",
+				"actor_b-p-bow-aim-down--add",
+				"actor_b-p-bow-aim-up--add"
+			],
+			"source_native_ids": [
+				"bb543c1ee5686847baf2867a9a93f515c4f42485a6b1edde9dcdd01aefcbc996",
+				"d4006f3a325faabac3be361f12f4be24d04a6420b46091420e5715abba76fbd2",
+				"9330a84ae139965135838d8896df38faac7a9f52c545493395bcae0ccf584f87",
+				"a24ffc2c6551aff0a7c5eeb8747d74a5ae82918c3e14c3b12ba875fc4a3a4970",
+				"e885cac67745a2f67f969fa947fbc1222130db04de591e0087f32b869b32b892",
+				"5f84041b591a358b2ffb8ff4a787525064e7bb0eefe439154ab78be6b376f0a8"
+			],
+			"weapon": "bow"
+		},
+		{
+			"duration": 1.0,
+			"name": "frontier_legacy_bow_aim_idle_crouch",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-arms-relaxed--part",
+				"actor_b-p-bow-aim-crouch-idle",
+				"actor_b-p-bow-aim-crouch-hands-idle",
+				"actor_b-p-bow-blocked-aim",
+				"actor_b-p-bow-crouch-aim-down--add",
+				"actor_b-p-bow-crouch-aim-up--add"
+			],
+			"source_native_ids": [
+				"bb543c1ee5686847baf2867a9a93f515c4f42485a6b1edde9dcdd01aefcbc996",
+				"9d7897f1e4188b5342f1f0511ee003535538bae901786af4e4adac6c6d26b2a1",
+				"3553fc00d78954bb9f923053ffa0bb7fc08d30cde3c4116a4bbcc5664ab74383",
+				"a24ffc2c6551aff0a7c5eeb8747d74a5ae82918c3e14c3b12ba875fc4a3a4970",
+				"1ff4f3e8d69d4e83230443499f1c0a3c2d3dea26889075c8d556d92fb0fa864a",
+				"35465dcb6c8aa4fec2dce929638d96520fca235f21d668614784a9831f399a40"
+			],
+			"weapon": "bow"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_musket_walk_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw",
+				"actor_b-p-rifle-crouch-idle--hands",
+				"actor_b-p-rifle-idle-arms",
+				"actor_b-p-rifle-idle-arms--add",
+				"actor_b-p-rifle-idle-spine--add"
+			],
+			"source_native_ids": [
+				"6f099cbaa4ebba94ff6778c3c2b01a7894070a7406e7f4bc4a6bb581dae42176",
+				"17c8c532ac9cbcf25e10d29eee331a1d7197f27676a1d2aaee8b9001c476ec88",
+				"19a425c4c0700d8ea23de2c0945706802e4ef9eafc2a6414da8407b4cbda1b9e",
+				"b5aa675cba57be28983236ddef64382b281766113b078d100fdd8b3d5737f0f5",
+				"74b379c2bc3f43f2b47c61c13e984ac8b2c7917f55a218061ec7152de7103b3b"
+			],
+			"weapon": "musket"
+		},
+		{
+			"duration": 0.933333337306976,
+			"name": "frontier_legacy_musket_walk_backward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-bw",
+				"actor_b-p-rifle-crouch-idle--hands",
+				"actor_b-p-rifle-idle-arms",
+				"actor_b-p-rifle-idle-arms--add",
+				"actor_b-p-rifle-idle-spine--add"
+			],
+			"source_native_ids": [
+				"d3a1586e28363954dc869e0e14369035c5f674f26092ffea2fd1ee87bad961b5",
+				"17c8c532ac9cbcf25e10d29eee331a1d7197f27676a1d2aaee8b9001c476ec88",
+				"19a425c4c0700d8ea23de2c0945706802e4ef9eafc2a6414da8407b4cbda1b9e",
+				"b5aa675cba57be28983236ddef64382b281766113b078d100fdd8b3d5737f0f5",
+				"74b379c2bc3f43f2b47c61c13e984ac8b2c7917f55a218061ec7152de7103b3b"
+			],
+			"weapon": "musket"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_musket_walk_left",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw-lt",
+				"actor_b-p-rifle-crouch-idle--hands",
+				"actor_b-p-rifle-idle-arms",
+				"actor_b-p-rifle-idle-arms--add",
+				"actor_b-p-rifle-idle-spine--add"
+			],
+			"source_native_ids": [
+				"587c94c56be2723c714c88e7833aafc557b563e3382c91b45dab7aeb10096f63",
+				"17c8c532ac9cbcf25e10d29eee331a1d7197f27676a1d2aaee8b9001c476ec88",
+				"19a425c4c0700d8ea23de2c0945706802e4ef9eafc2a6414da8407b4cbda1b9e",
+				"b5aa675cba57be28983236ddef64382b281766113b078d100fdd8b3d5737f0f5",
+				"74b379c2bc3f43f2b47c61c13e984ac8b2c7917f55a218061ec7152de7103b3b"
+			],
+			"weapon": "musket"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_musket_walk_right",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw-rt",
+				"actor_b-p-rifle-crouch-idle--hands",
+				"actor_b-p-rifle-idle-arms",
+				"actor_b-p-rifle-idle-arms--add",
+				"actor_b-p-rifle-idle-spine--add"
+			],
+			"source_native_ids": [
+				"8a4720474d1e39bacfa806a00c550af9ce664e1bae28f87ea2ff58eaa9922214",
+				"17c8c532ac9cbcf25e10d29eee331a1d7197f27676a1d2aaee8b9001c476ec88",
+				"19a425c4c0700d8ea23de2c0945706802e4ef9eafc2a6414da8407b4cbda1b9e",
+				"b5aa675cba57be28983236ddef64382b281766113b078d100fdd8b3d5737f0f5",
+				"74b379c2bc3f43f2b47c61c13e984ac8b2c7917f55a218061ec7152de7103b3b"
+			],
+			"weapon": "musket"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_musket_run_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw",
+				"actor_b-p-rifle-crouch-idle--hands",
+				"actor_b-p-rifle-run-arms",
+				"actor_b-p-rifle-run-arms--add",
+				"actor_b-p-rifle-idle-spine--add"
+			],
+			"source_native_ids": [
+				"158f6f20eaa1ef61dcb68475f6b952833f4efa34e25dceafb85c4983f9a16d58",
+				"17c8c532ac9cbcf25e10d29eee331a1d7197f27676a1d2aaee8b9001c476ec88",
+				"cbce4cd6809b90772b59227379f62e2f3fc13abacc7d0394e1ddacd43cb71321",
+				"e8bf36fd349cd5016df5277a7cd44079387b976dbcb16c29f2691553204613bb",
+				"74b379c2bc3f43f2b47c61c13e984ac8b2c7917f55a218061ec7152de7103b3b"
+			],
+			"weapon": "musket"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_musket_run_backward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-bw",
+				"actor_b-p-rifle-crouch-idle--hands",
+				"actor_b-p-rifle-run-arms",
+				"actor_b-p-rifle-run-arms--add",
+				"actor_b-p-rifle-idle-spine--add"
+			],
+			"source_native_ids": [
+				"2038aedf8ddb4d27e096ba0ae32f6ab0d893adfdca75148e903c027759a8d556",
+				"17c8c532ac9cbcf25e10d29eee331a1d7197f27676a1d2aaee8b9001c476ec88",
+				"cbce4cd6809b90772b59227379f62e2f3fc13abacc7d0394e1ddacd43cb71321",
+				"e8bf36fd349cd5016df5277a7cd44079387b976dbcb16c29f2691553204613bb",
+				"74b379c2bc3f43f2b47c61c13e984ac8b2c7917f55a218061ec7152de7103b3b"
+			],
+			"weapon": "musket"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_musket_run_left",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw-lt",
+				"actor_b-p-rifle-crouch-idle--hands",
+				"actor_b-p-rifle-run-arms",
+				"actor_b-p-rifle-run-arms--add",
+				"actor_b-p-rifle-idle-spine--add"
+			],
+			"source_native_ids": [
+				"2813598eac5fc34699eb355e683858d1bb925bed84bdb344dc44ea9e020838b6",
+				"17c8c532ac9cbcf25e10d29eee331a1d7197f27676a1d2aaee8b9001c476ec88",
+				"cbce4cd6809b90772b59227379f62e2f3fc13abacc7d0394e1ddacd43cb71321",
+				"e8bf36fd349cd5016df5277a7cd44079387b976dbcb16c29f2691553204613bb",
+				"74b379c2bc3f43f2b47c61c13e984ac8b2c7917f55a218061ec7152de7103b3b"
+			],
+			"weapon": "musket"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_musket_run_right",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw-rt",
+				"actor_b-p-rifle-crouch-idle--hands",
+				"actor_b-p-rifle-run-arms",
+				"actor_b-p-rifle-run-arms--add",
+				"actor_b-p-rifle-idle-spine--add"
+			],
+			"source_native_ids": [
+				"0f4fd56f0dbd434fb0a946cc32d6ab0f42f87d1e6b7830da49db87d66ef158bc",
+				"17c8c532ac9cbcf25e10d29eee331a1d7197f27676a1d2aaee8b9001c476ec88",
+				"cbce4cd6809b90772b59227379f62e2f3fc13abacc7d0394e1ddacd43cb71321",
+				"e8bf36fd349cd5016df5277a7cd44079387b976dbcb16c29f2691553204613bb",
+				"74b379c2bc3f43f2b47c61c13e984ac8b2c7917f55a218061ec7152de7103b3b"
+			],
+			"weapon": "musket"
+		},
+		{
+			"duration": 1.33333337306976,
+			"name": "frontier_legacy_musket_sprint_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-sprint-fw",
+				"actor_b-p-rifle-crouch-idle--hands",
+				"actor_b-p-rifle-run-arms",
+				"actor_b-p-rifle-run-arms--add"
+			],
+			"source_native_ids": [
+				"faa131e67ee9a850f09bf518e9ece2ac940c414eccf7f7c016fb8bba4b6e520a",
+				"17c8c532ac9cbcf25e10d29eee331a1d7197f27676a1d2aaee8b9001c476ec88",
+				"cbce4cd6809b90772b59227379f62e2f3fc13abacc7d0394e1ddacd43cb71321",
+				"e8bf36fd349cd5016df5277a7cd44079387b976dbcb16c29f2691553204613bb"
+			],
+			"weapon": "musket"
+		},
+		{
+			"duration": 10.0,
+			"name": "frontier_legacy_musket_carry_idle_stand",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-relax-idle",
+				"actor_b-p-rifle-crouch-idle--hands",
+				"actor_b-p-rifle-run-arms",
+				"actor_b-p-rifle-idle-spine--add"
+			],
+			"source_native_ids": [
+				"stream_4a1e91d33219ca6d51e650bfd37016e598aef280471a4713ab8d8d6d4de4194c",
+				"17c8c532ac9cbcf25e10d29eee331a1d7197f27676a1d2aaee8b9001c476ec88",
+				"cbce4cd6809b90772b59227379f62e2f3fc13abacc7d0394e1ddacd43cb71321",
+				"74b379c2bc3f43f2b47c61c13e984ac8b2c7917f55a218061ec7152de7103b3b"
+			],
+			"weapon": "musket"
+		},
+		{
+			"duration": 10.0,
+			"name": "frontier_legacy_musket_carry_idle_crouch",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-crouch-idle",
+				"actor_b-p-rifle-crouch-idle-arms"
+			],
+			"source_native_ids": [
+				"stream_e8b15b5854913f894832f3d3487f1d66dd810e072130b81917932a7c4d20b1ad",
+				"adfd116f81479f3d2459b96355f16709afece1ef11ae8b0a089de213b3d30aea"
+			],
+			"weapon": "musket"
+		},
+		{
+			"duration": 1.0,
+			"name": "frontier_legacy_musket_aim_idle_stand",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-arms-relaxed--part",
+				"actor_b-p-rifle-idle-aim",
+				"actor_b-p-rifle-idle-aim--hands",
+				"actor_b-p-rifle-blocked-aim",
+				"actor_b-p-rifle-idle-aim-down--add",
+				"actor_b-p-rifle-idle-aim-up--add"
+			],
+			"source_native_ids": [
+				"bb543c1ee5686847baf2867a9a93f515c4f42485a6b1edde9dcdd01aefcbc996",
+				"39931657fa7926c4e33425715a73b45a70767dbbb2ee7de460301c07665fb106",
+				"459d8266362ec895740dfe09d6bdc8deb48f4a3044ab83563f702fc66153e603",
+				"631d2c500bad4d0b4e1f0b8f65925807ad971b07c7199a4e87682f3a191fb743",
+				"732f875de0bf1368b2447727df0f678068bf84db5f00f7efa5f961c9bd90758a",
+				"62ecfe3e0250489260c4285fe4b351c4e8ed565c218feb47b6c0d1a07cf6fbcc"
+			],
+			"weapon": "musket"
+		},
+		{
+			"duration": 1.0,
+			"name": "frontier_legacy_musket_aim_idle_crouch",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-arms-relaxed--part",
+				"actor_b-p-rifle-aim-crouch-idle",
+				"actor_b-p-rifle-aim-crouch-idle--hands",
+				"actor_b-p-rifle-blocked-aim",
+				"actor_b-p-rifle-idle-crouch-aim-down--add",
+				"actor_b-p-rifle-idle-crouch-aim-up--add"
+			],
+			"source_native_ids": [
+				"bb543c1ee5686847baf2867a9a93f515c4f42485a6b1edde9dcdd01aefcbc996",
+				"256fcf8472469ad82ae76dbc944f265fe91911cb902523909c0cc2b7727f40ab",
+				"df28a6c47af4350a1ca09f7ea35a014b8ee3e2981b36e410e2a86890bd4890ab",
+				"631d2c500bad4d0b4e1f0b8f65925807ad971b07c7199a4e87682f3a191fb743",
+				"73c5ab5a5df1864b829f84486fa55f84e2ac2fb1559d4778040e26a89a0b1a0e",
+				"fb06abe9c051f71bdc67520cd2eac3b30464f0e7fa8ed877c66939df83def9b7"
+			],
+			"weapon": "musket"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_pistol_walk_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw",
+				"actor_b-r-arm-gun-idle",
+				"actor_b-r-hand-gun--add"
+			],
+			"source_native_ids": [
+				"6f099cbaa4ebba94ff6778c3c2b01a7894070a7406e7f4bc4a6bb581dae42176",
+				"d57aca532aaf1abfbd128b0c5944b2448c5b045b5c1a29af87dd4385ebd309e6",
+				"e082c28c10760e65b69495a00a980d1fdf85932eba5874aa7d79879a5d85fe6d"
+			],
+			"weapon": "pistol"
+		},
+		{
+			"duration": 0.933333337306976,
+			"name": "frontier_legacy_pistol_walk_backward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-bw",
+				"actor_b-r-arm-gun-idle",
+				"actor_b-r-hand-gun--add"
+			],
+			"source_native_ids": [
+				"d3a1586e28363954dc869e0e14369035c5f674f26092ffea2fd1ee87bad961b5",
+				"d57aca532aaf1abfbd128b0c5944b2448c5b045b5c1a29af87dd4385ebd309e6",
+				"e082c28c10760e65b69495a00a980d1fdf85932eba5874aa7d79879a5d85fe6d"
+			],
+			"weapon": "pistol"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_pistol_walk_left",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw-lt",
+				"actor_b-r-arm-gun-idle",
+				"actor_b-r-hand-gun--add"
+			],
+			"source_native_ids": [
+				"587c94c56be2723c714c88e7833aafc557b563e3382c91b45dab7aeb10096f63",
+				"d57aca532aaf1abfbd128b0c5944b2448c5b045b5c1a29af87dd4385ebd309e6",
+				"e082c28c10760e65b69495a00a980d1fdf85932eba5874aa7d79879a5d85fe6d"
+			],
+			"weapon": "pistol"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_pistol_walk_right",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw-rt",
+				"actor_b-r-arm-gun-idle",
+				"actor_b-r-hand-gun--add"
+			],
+			"source_native_ids": [
+				"8a4720474d1e39bacfa806a00c550af9ce664e1bae28f87ea2ff58eaa9922214",
+				"d57aca532aaf1abfbd128b0c5944b2448c5b045b5c1a29af87dd4385ebd309e6",
+				"e082c28c10760e65b69495a00a980d1fdf85932eba5874aa7d79879a5d85fe6d"
+			],
+			"weapon": "pistol"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_pistol_run_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw",
+				"actor_b-p-sprint-fingers",
+				"actor_b-r-arm-gun"
+			],
+			"source_native_ids": [
+				"158f6f20eaa1ef61dcb68475f6b952833f4efa34e25dceafb85c4983f9a16d58",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"3a3c36d7018292dcb188761fedd7544c964a74fb8ab53d2e66313bfaa72b8488"
+			],
+			"weapon": "pistol"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_pistol_run_backward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-bw",
+				"actor_b-p-sprint-fingers",
+				"actor_b-r-arm-gun"
+			],
+			"source_native_ids": [
+				"2038aedf8ddb4d27e096ba0ae32f6ab0d893adfdca75148e903c027759a8d556",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"3a3c36d7018292dcb188761fedd7544c964a74fb8ab53d2e66313bfaa72b8488"
+			],
+			"weapon": "pistol"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_pistol_run_left",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw-lt",
+				"actor_b-p-sprint-fingers",
+				"actor_b-r-arm-gun"
+			],
+			"source_native_ids": [
+				"2813598eac5fc34699eb355e683858d1bb925bed84bdb344dc44ea9e020838b6",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"3a3c36d7018292dcb188761fedd7544c964a74fb8ab53d2e66313bfaa72b8488"
+			],
+			"weapon": "pistol"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_pistol_run_right",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw-rt",
+				"actor_b-p-sprint-fingers",
+				"actor_b-r-arm-gun"
+			],
+			"source_native_ids": [
+				"0f4fd56f0dbd434fb0a946cc32d6ab0f42f87d1e6b7830da49db87d66ef158bc",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"3a3c36d7018292dcb188761fedd7544c964a74fb8ab53d2e66313bfaa72b8488"
+			],
+			"weapon": "pistol"
+		},
+		{
+			"duration": 1.33333337306976,
+			"name": "frontier_legacy_pistol_sprint_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-sprint-fw",
+				"actor_b-p-sprint-fingers"
+			],
+			"source_native_ids": [
+				"faa131e67ee9a850f09bf518e9ece2ac940c414eccf7f7c016fb8bba4b6e520a",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198"
+			],
+			"weapon": "pistol"
+		},
+		{
+			"duration": 10.0,
+			"name": "frontier_legacy_pistol_carry_idle_stand",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-relax-idle"
+			],
+			"source_native_ids": [
+				"stream_4a1e91d33219ca6d51e650bfd37016e598aef280471a4713ab8d8d6d4de4194c"
+			],
+			"weapon": "pistol"
+		},
+		{
+			"duration": 10.0,
+			"name": "frontier_legacy_pistol_carry_idle_crouch",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-crouch-idle",
+				"actor_b-p-crouch-idle--hands"
+			],
+			"source_native_ids": [
+				"stream_e8b15b5854913f894832f3d3487f1d66dd810e072130b81917932a7c4d20b1ad",
+				"stream_81e800dec1b6a9e94cecce6b60fabef45eda1fc07049b51ac92cb7de91782258"
+			],
+			"weapon": "pistol"
+		},
+		{
+			"duration": 1.0,
+			"name": "frontier_legacy_pistol_aim_idle_stand",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-arms-relaxed--part",
+				"actor_b-p-pistol-aim-idle",
+				"actor_b-r-hand-revolver-aim",
+				"actor_b-p-pistol-aim-blocked",
+				"actor_b-p-pistol-aim-down",
+				"actor_b-p-pistol-aim-up"
+			],
+			"source_native_ids": [
+				"bb543c1ee5686847baf2867a9a93f515c4f42485a6b1edde9dcdd01aefcbc996",
+				"19f8bb75e6edfef48c148631ff5c3a4cf44a4a3d3322cae2e3933bb83286cf26",
+				"c850a83143f1098cfe542d0a20410bfd3bf82f107c39687e4e513bf8bbbfa828",
+				"d9a0f8b100fd2b024952745137d94a25ab82ff542120d8724aecb9e644e9509e",
+				"288698fc8a9c061eed41ce5ff30a55613cf7f371098afdfef67564e4c9c7a0e8",
+				"e526dc1a046c60b0b2b2a441dde3c4b90ac6daa6d5596eeb17756690b886ab69"
+			],
+			"weapon": "pistol"
+		},
+		{
+			"duration": 1.0,
+			"name": "frontier_legacy_pistol_aim_idle_crouch",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-arms-relaxed--part",
+				"actor_b-p-pistol-aim-idle-crouch",
+				"actor_b-r-hand-revolver-aim",
+				"actor_b-p-pistol-aim-crouch-blocked",
+				"actor_b-p-pistol-aim-down",
+				"actor_b-p-pistol-aim-up"
+			],
+			"source_native_ids": [
+				"bb543c1ee5686847baf2867a9a93f515c4f42485a6b1edde9dcdd01aefcbc996",
+				"fe0a8fc24d18240e85d22d1bd6f23cdae56cac94922481f0dd44da1998e2a727",
+				"c850a83143f1098cfe542d0a20410bfd3bf82f107c39687e4e513bf8bbbfa828",
+				"1abda74bc64bd9e112be8b99df9e08685303c1c40e055fa3f11fb53ffdadce6a",
+				"288698fc8a9c061eed41ce5ff30a55613cf7f371098afdfef67564e4c9c7a0e8",
+				"e526dc1a046c60b0b2b2a441dde3c4b90ac6daa6d5596eeb17756690b886ab69"
+			],
+			"weapon": "pistol"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_spear_walk_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-aim-throw^aim"
+			],
+			"source_native_ids": [
+				"6f099cbaa4ebba94ff6778c3c2b01a7894070a7406e7f4bc4a6bb581dae42176",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"7d0c1669ed52a0d775457b469680e4d0433a9f21acab061afabaee4aee1cdaaa"
+			],
+			"weapon": "spear"
+		},
+		{
+			"duration": 0.933333337306976,
+			"name": "frontier_legacy_spear_walk_backward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-bw",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-aim-throw^aim"
+			],
+			"source_native_ids": [
+				"d3a1586e28363954dc869e0e14369035c5f674f26092ffea2fd1ee87bad961b5",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"7d0c1669ed52a0d775457b469680e4d0433a9f21acab061afabaee4aee1cdaaa"
+			],
+			"weapon": "spear"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_spear_walk_left",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw-lt",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-aim-throw^aim"
+			],
+			"source_native_ids": [
+				"587c94c56be2723c714c88e7833aafc557b563e3382c91b45dab7aeb10096f63",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"7d0c1669ed52a0d775457b469680e4d0433a9f21acab061afabaee4aee1cdaaa"
+			],
+			"weapon": "spear"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_spear_walk_right",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw-rt",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-aim-throw^aim"
+			],
+			"source_native_ids": [
+				"8a4720474d1e39bacfa806a00c550af9ce664e1bae28f87ea2ff58eaa9922214",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"7d0c1669ed52a0d775457b469680e4d0433a9f21acab061afabaee4aee1cdaaa"
+			],
+			"weapon": "spear"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_spear_run_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw",
+				"actor_b-p-sprint-fingers",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-aim-throw^aim"
+			],
+			"source_native_ids": [
+				"158f6f20eaa1ef61dcb68475f6b952833f4efa34e25dceafb85c4983f9a16d58",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"7d0c1669ed52a0d775457b469680e4d0433a9f21acab061afabaee4aee1cdaaa"
+			],
+			"weapon": "spear"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_spear_run_backward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-bw",
+				"actor_b-p-sprint-fingers",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-aim-throw^aim"
+			],
+			"source_native_ids": [
+				"2038aedf8ddb4d27e096ba0ae32f6ab0d893adfdca75148e903c027759a8d556",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"7d0c1669ed52a0d775457b469680e4d0433a9f21acab061afabaee4aee1cdaaa"
+			],
+			"weapon": "spear"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_spear_run_left",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw-lt",
+				"actor_b-p-sprint-fingers",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-aim-throw^aim"
+			],
+			"source_native_ids": [
+				"2813598eac5fc34699eb355e683858d1bb925bed84bdb344dc44ea9e020838b6",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"7d0c1669ed52a0d775457b469680e4d0433a9f21acab061afabaee4aee1cdaaa"
+			],
+			"weapon": "spear"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_spear_run_right",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw-rt",
+				"actor_b-p-sprint-fingers",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-aim-throw^aim"
+			],
+			"source_native_ids": [
+				"0f4fd56f0dbd434fb0a946cc32d6ab0f42f87d1e6b7830da49db87d66ef158bc",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"7d0c1669ed52a0d775457b469680e4d0433a9f21acab061afabaee4aee1cdaaa"
+			],
+			"weapon": "spear"
+		},
+		{
+			"duration": 1.33333337306976,
+			"name": "frontier_legacy_spear_sprint_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-sprint-fw",
+				"own-axe-grip",
+				"own-axe-carry"
+			],
+			"source_native_ids": [
+				"faa131e67ee9a850f09bf518e9ece2ac940c414eccf7f7c016fb8bba4b6e520a",
+				"be7189e253673e3bf844598007ffcbf219cf895dd5cf5a04befc1e54256dbe8a",
+				"be7189e253673e3bf844598007ffcbf219cf895dd5cf5a04befc1e54256dbe8a"
+			],
+			"weapon": "spear"
+		},
+		{
+			"duration": 10.0,
+			"name": "frontier_legacy_spear_carry_idle_stand",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-relax-idle",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-aim-throw^aim"
+			],
+			"source_native_ids": [
+				"stream_4a1e91d33219ca6d51e650bfd37016e598aef280471a4713ab8d8d6d4de4194c",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"7d0c1669ed52a0d775457b469680e4d0433a9f21acab061afabaee4aee1cdaaa"
+			],
+			"weapon": "spear"
+		},
+		{
+			"duration": 10.0,
+			"name": "frontier_legacy_spear_carry_idle_crouch",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-crouch-idle",
+				"own-axe-grip",
+				"own-axe-carry"
+			],
+			"source_native_ids": [
+				"stream_e8b15b5854913f894832f3d3487f1d66dd810e072130b81917932a7c4d20b1ad",
+				"be7189e253673e3bf844598007ffcbf219cf895dd5cf5a04befc1e54256dbe8a",
+				"be7189e253673e3bf844598007ffcbf219cf895dd5cf5a04befc1e54256dbe8a"
+			],
+			"weapon": "spear"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_tomahawk_walk_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw",
+				"atk-actor_b-knife-v-thug-hit1-intro",
+				"actor_b-p-knife--arm"
+			],
+			"source_native_ids": [
+				"6f099cbaa4ebba94ff6778c3c2b01a7894070a7406e7f4bc4a6bb581dae42176",
+				"719c254be84c78669be3c253658d42aba001f5c0b8fc48b6c94333913cd967db",
+				"ad9fbf91fdfb17b7d783123aecb07e810ef42275c4a60f20b00a1c47c35257bf"
+			],
+			"weapon": "tomahawk"
+		},
+		{
+			"duration": 0.933333337306976,
+			"name": "frontier_legacy_tomahawk_walk_backward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-bw",
+				"atk-actor_b-knife-v-thug-hit1-intro",
+				"actor_b-p-knife--arm"
+			],
+			"source_native_ids": [
+				"d3a1586e28363954dc869e0e14369035c5f674f26092ffea2fd1ee87bad961b5",
+				"719c254be84c78669be3c253658d42aba001f5c0b8fc48b6c94333913cd967db",
+				"ad9fbf91fdfb17b7d783123aecb07e810ef42275c4a60f20b00a1c47c35257bf"
+			],
+			"weapon": "tomahawk"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_tomahawk_walk_left",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw-lt",
+				"atk-actor_b-knife-v-thug-hit1-intro",
+				"actor_b-p-knife--arm"
+			],
+			"source_native_ids": [
+				"587c94c56be2723c714c88e7833aafc557b563e3382c91b45dab7aeb10096f63",
+				"719c254be84c78669be3c253658d42aba001f5c0b8fc48b6c94333913cd967db",
+				"ad9fbf91fdfb17b7d783123aecb07e810ef42275c4a60f20b00a1c47c35257bf"
+			],
+			"weapon": "tomahawk"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_tomahawk_walk_right",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw-rt",
+				"atk-actor_b-knife-v-thug-hit1-intro",
+				"actor_b-p-knife--arm"
+			],
+			"source_native_ids": [
+				"8a4720474d1e39bacfa806a00c550af9ce664e1bae28f87ea2ff58eaa9922214",
+				"719c254be84c78669be3c253658d42aba001f5c0b8fc48b6c94333913cd967db",
+				"ad9fbf91fdfb17b7d783123aecb07e810ef42275c4a60f20b00a1c47c35257bf"
+			],
+			"weapon": "tomahawk"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_tomahawk_run_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw",
+				"actor_b-p-sprint-fingers",
+				"atk-actor_b-knife-v-thug-hit1-intro",
+				"actor_b-p-knife--arm"
+			],
+			"source_native_ids": [
+				"158f6f20eaa1ef61dcb68475f6b952833f4efa34e25dceafb85c4983f9a16d58",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"719c254be84c78669be3c253658d42aba001f5c0b8fc48b6c94333913cd967db",
+				"ad9fbf91fdfb17b7d783123aecb07e810ef42275c4a60f20b00a1c47c35257bf"
+			],
+			"weapon": "tomahawk"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_tomahawk_run_backward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-bw",
+				"actor_b-p-sprint-fingers",
+				"atk-actor_b-knife-v-thug-hit1-intro",
+				"actor_b-p-knife--arm"
+			],
+			"source_native_ids": [
+				"2038aedf8ddb4d27e096ba0ae32f6ab0d893adfdca75148e903c027759a8d556",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"719c254be84c78669be3c253658d42aba001f5c0b8fc48b6c94333913cd967db",
+				"ad9fbf91fdfb17b7d783123aecb07e810ef42275c4a60f20b00a1c47c35257bf"
+			],
+			"weapon": "tomahawk"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_tomahawk_run_left",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw-lt",
+				"actor_b-p-sprint-fingers",
+				"atk-actor_b-knife-v-thug-hit1-intro",
+				"actor_b-p-knife--arm"
+			],
+			"source_native_ids": [
+				"2813598eac5fc34699eb355e683858d1bb925bed84bdb344dc44ea9e020838b6",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"719c254be84c78669be3c253658d42aba001f5c0b8fc48b6c94333913cd967db",
+				"ad9fbf91fdfb17b7d783123aecb07e810ef42275c4a60f20b00a1c47c35257bf"
+			],
+			"weapon": "tomahawk"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_tomahawk_run_right",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw-rt",
+				"actor_b-p-sprint-fingers",
+				"atk-actor_b-knife-v-thug-hit1-intro",
+				"actor_b-p-knife--arm"
+			],
+			"source_native_ids": [
+				"0f4fd56f0dbd434fb0a946cc32d6ab0f42f87d1e6b7830da49db87d66ef158bc",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"719c254be84c78669be3c253658d42aba001f5c0b8fc48b6c94333913cd967db",
+				"ad9fbf91fdfb17b7d783123aecb07e810ef42275c4a60f20b00a1c47c35257bf"
+			],
+			"weapon": "tomahawk"
+		},
+		{
+			"duration": 1.33333337306976,
+			"name": "frontier_legacy_tomahawk_sprint_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-sprint-fw",
+				"actor_b-p-sprint-fingers",
+				"atk-actor_b-knife-v-thug-hit1-intro",
+				"actor_b-p-knife--arm"
+			],
+			"source_native_ids": [
+				"faa131e67ee9a850f09bf518e9ece2ac940c414eccf7f7c016fb8bba4b6e520a",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"719c254be84c78669be3c253658d42aba001f5c0b8fc48b6c94333913cd967db",
+				"ad9fbf91fdfb17b7d783123aecb07e810ef42275c4a60f20b00a1c47c35257bf"
+			],
+			"weapon": "tomahawk"
+		},
+		{
+			"duration": 10.0,
+			"name": "frontier_legacy_tomahawk_carry_idle_stand",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-relax-idle",
+				"atk-actor_b-knife-v-thug-hit1-intro",
+				"actor_b-p-knife--arm"
+			],
+			"source_native_ids": [
+				"stream_4a1e91d33219ca6d51e650bfd37016e598aef280471a4713ab8d8d6d4de4194c",
+				"719c254be84c78669be3c253658d42aba001f5c0b8fc48b6c94333913cd967db",
+				"ad9fbf91fdfb17b7d783123aecb07e810ef42275c4a60f20b00a1c47c35257bf"
+			],
+			"weapon": "tomahawk"
+		},
+		{
+			"duration": 10.0,
+			"name": "frontier_legacy_tomahawk_carry_idle_crouch",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-crouch-idle",
+				"actor_b-p-crouch-idle--hands",
+				"atk-actor_b-knife-v-thug-hit1-intro"
+			],
+			"source_native_ids": [
+				"stream_e8b15b5854913f894832f3d3487f1d66dd810e072130b81917932a7c4d20b1ad",
+				"stream_81e800dec1b6a9e94cecce6b60fabef45eda1fc07049b51ac92cb7de91782258",
+				"719c254be84c78669be3c253658d42aba001f5c0b8fc48b6c94333913cd967db"
+			],
+			"weapon": "tomahawk"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_atlatl_walk_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-arm--part"
+			],
+			"source_native_ids": [
+				"6f099cbaa4ebba94ff6778c3c2b01a7894070a7406e7f4bc4a6bb581dae42176",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"6616e7a28e20d9f87e41124f3d0fa431162f5e7b318609ac95c3a34ef7199976"
+			],
+			"weapon": "atlatl"
+		},
+		{
+			"duration": 0.933333337306976,
+			"name": "frontier_legacy_atlatl_walk_backward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-bw",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-arm--part"
+			],
+			"source_native_ids": [
+				"d3a1586e28363954dc869e0e14369035c5f674f26092ffea2fd1ee87bad961b5",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"6616e7a28e20d9f87e41124f3d0fa431162f5e7b318609ac95c3a34ef7199976"
+			],
+			"weapon": "atlatl"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_atlatl_walk_left",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw-lt",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-arm--part"
+			],
+			"source_native_ids": [
+				"587c94c56be2723c714c88e7833aafc557b563e3382c91b45dab7aeb10096f63",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"6616e7a28e20d9f87e41124f3d0fa431162f5e7b318609ac95c3a34ef7199976"
+			],
+			"weapon": "atlatl"
+		},
+		{
+			"duration": 1.13333332538605,
+			"name": "frontier_legacy_atlatl_walk_right",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-walk-fw-rt",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-arm--part"
+			],
+			"source_native_ids": [
+				"8a4720474d1e39bacfa806a00c550af9ce664e1bae28f87ea2ff58eaa9922214",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"6616e7a28e20d9f87e41124f3d0fa431162f5e7b318609ac95c3a34ef7199976"
+			],
+			"weapon": "atlatl"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_atlatl_run_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw",
+				"actor_b-p-sprint-fingers",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-arm--part"
+			],
+			"source_native_ids": [
+				"158f6f20eaa1ef61dcb68475f6b952833f4efa34e25dceafb85c4983f9a16d58",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"6616e7a28e20d9f87e41124f3d0fa431162f5e7b318609ac95c3a34ef7199976"
+			],
+			"weapon": "atlatl"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_atlatl_run_backward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-bw",
+				"actor_b-p-sprint-fingers",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-arm--part"
+			],
+			"source_native_ids": [
+				"2038aedf8ddb4d27e096ba0ae32f6ab0d893adfdca75148e903c027759a8d556",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"6616e7a28e20d9f87e41124f3d0fa431162f5e7b318609ac95c3a34ef7199976"
+			],
+			"weapon": "atlatl"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_atlatl_run_left",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw-lt",
+				"actor_b-p-sprint-fingers",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-arm--part"
+			],
+			"source_native_ids": [
+				"2813598eac5fc34699eb355e683858d1bb925bed84bdb344dc44ea9e020838b6",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"6616e7a28e20d9f87e41124f3d0fa431162f5e7b318609ac95c3a34ef7199976"
+			],
+			"weapon": "atlatl"
+		},
+		{
+			"duration": 0.733333349227905,
+			"name": "frontier_legacy_atlatl_run_right",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-run-fw-rt",
+				"actor_b-p-sprint-fingers",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-arm--part"
+			],
+			"source_native_ids": [
+				"0f4fd56f0dbd434fb0a946cc32d6ab0f42f87d1e6b7830da49db87d66ef158bc",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"6616e7a28e20d9f87e41124f3d0fa431162f5e7b318609ac95c3a34ef7199976"
+			],
+			"weapon": "atlatl"
+		},
+		{
+			"duration": 1.33333337306976,
+			"name": "frontier_legacy_atlatl_sprint_forward",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-sprint-fw",
+				"actor_b-p-sprint-fingers",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-arm--part"
+			],
+			"source_native_ids": [
+				"faa131e67ee9a850f09bf518e9ece2ac940c414eccf7f7c016fb8bba4b6e520a",
+				"9797edbb41d2bc01d35ae969de654ddc9fbb611d8ec7631df2e1ee9c7c87d198",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"6616e7a28e20d9f87e41124f3d0fa431162f5e7b318609ac95c3a34ef7199976"
+			],
+			"weapon": "atlatl"
+		},
+		{
+			"duration": 10.0,
+			"name": "frontier_legacy_atlatl_carry_idle_stand",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-relax-idle",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-arm--part"
+			],
+			"source_native_ids": [
+				"stream_4a1e91d33219ca6d51e650bfd37016e598aef280471a4713ab8d8d6d4de4194c",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"6616e7a28e20d9f87e41124f3d0fa431162f5e7b318609ac95c3a34ef7199976"
+			],
+			"weapon": "atlatl"
+		},
+		{
+			"duration": 10.0,
+			"name": "frontier_legacy_atlatl_carry_idle_crouch",
+			"runtime_grip_and_aim_modifiers_required": true,
+			"source_clips": [
+				"actor_b-p-crouch-idle",
+				"actor_b-p-crouch-idle--hands",
+				"actor_b-p-fingers-brick",
+				"actor_b-p-1h-arm--part",
+				"actor_b-p-1h-arm-crouch--part"
+			],
+			"source_native_ids": [
+				"stream_e8b15b5854913f894832f3d3487f1d66dd810e072130b81917932a7c4d20b1ad",
+				"stream_81e800dec1b6a9e94cecce6b60fabef45eda1fc07049b51ac92cb7de91782258",
+				"fff9a5bfa1e0c1a8d73fb5017d1199e777b85700ff15e814ea0b16378c95ca6f",
+				"6616e7a28e20d9f87e41124f3d0fa431162f5e7b318609ac95c3a34ef7199976",
+				"7dc5134e7f91ed20f6a6746ff50f229637a996b33b0a410b7cfba7f4ece59b01"
+			],
+			"weapon": "atlatl"
+		}
+	],
+	"method": "Baked from the existing Frontier AnimationTree and carry/aim controllers over Frontier Legacy base motion",
+	"name": "Frontier Legacy weapon poses",
+	"runtime_grip_and_aim_modifiers_required": true
+}

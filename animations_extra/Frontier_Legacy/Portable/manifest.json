@@ -1,0 +1,489 @@
+{
+	"bow_clip_count": 7,
+	"format": "Godot AnimationLibrary with embedded Animation resources",
+	"libraries": [
+		{
+			"clips": [
+				{
+					"duration": 1.13333332538605,
+					"name": "frontier_legacy_walk_forward",
+					"source_agls_clip": "ALS_N_Walk_F",
+					"source_agls_sha256": "23eb6681194bc6574bcc28950f1af1b9f8e43f2d3492920a4694982822057d1f",
+					"variant_identity": "d1216b4b2fe6f8d9e51a84099980beb624a05715d53251eb0a93723c74bf0e5a"
+				},
+				{
+					"duration": 0.733333349227905,
+					"name": "frontier_legacy_run_forward",
+					"source_agls_clip": "ALS_N_Run_F",
+					"source_agls_sha256": "6eb7afc84d1075c94a3eba34e5c2040e95ae9cef32a4921f4aa6730d0e4375d2",
+					"variant_identity": "371813da762a7f2085507d7c6bc67dad22a8a528329a09115452e8b1f1fcab2f"
+				},
+				{
+					"duration": 1.33333337306976,
+					"name": "frontier_legacy_sprint_forward",
+					"source_agls_clip": "ALS_N_Sprint_F",
+					"source_agls_sha256": "ef8f42f3a9e2fa54cfab800e28c1ec0a0e181f9576c8c18e19a6ea23e8722d75",
+					"variant_identity": "9c45be477945bf26390e223fde5ac539bb0c2ddd1e2f1fddef1f1a39b3d76567"
+				},
+				{
+					"duration": 0.899999976158142,
+					"name": "frontier_legacy_jump",
+					"source_agls_clip": "ALSv2_JumpSeq_Idle",
+					"source_agls_sha256": "eec6999393634f9b70d9360de9041e0bded273ee495d3d4649503508e317f4c7",
+					"variant_identity": "b2486b0cc53d95a2e9a6607469d2087684206afeb638a489169eae23090615f0"
+				},
+				{
+					"duration": 1.3,
+					"name": "frontier_legacy_vault_left_hand",
+					"source_agls_clip": "ALSv2_N_Vault_1m_LH",
+					"source_agls_sha256": "39fea5f68168d20fa07aa5ff8cc550bc8f471500b443302ebdde24852b7f1075",
+					"variant_identity": "b7baa8fafa43f6ad1d9c9c49e513fd619cadf91b074288864f043b2add5ca6d7"
+				},
+				{
+					"duration": 1.3,
+					"name": "frontier_legacy_vault_right_hand",
+					"source_agls_clip": "ALSv2_N_Vault_1m_RH",
+					"source_agls_sha256": "87c9128fb6c28540d0918bf020913d2212797f84b20dcb310473b7e6ef7d4d05",
+					"variant_identity": "0f35b71fc32c2918bd3238963438af86d3f884d5ed916ffb60b415fafe657c4b"
+				},
+				{
+					"duration": 0.933333337306976,
+					"name": "frontier_legacy_walk_backward",
+					"source_agls_clip": "ALS_N_Walk_B",
+					"source_agls_sha256": "65133bb6b805a981200f247dc86c9e45386e5a03f669f017dda71b316eb309d1",
+					"variant_identity": "c7dc4e94f0558a502e02d8fcd978a82d0bc7ca5ccd60c7941c9afc4a5bd4bd21"
+				},
+				{
+					"duration": 1.13333332538605,
+					"name": "frontier_legacy_walk_left",
+					"source_agls_clip": "ALS_N_Walk_LF",
+					"source_agls_sha256": "a1e94aaf0bb5631021fb6f72529dee42ea7383822ac1e79702e98e9adbb1c272",
+					"variant_identity": "da665b732c2eadd927455dfa5e1a63da5155d076a7dc53bcc9973e36b5e3c3f5"
+				},
+				{
+					"duration": 1.13333332538605,
+					"name": "frontier_legacy_walk_right",
+					"source_agls_clip": "ALS_N_Walk_RF",
+					"source_agls_sha256": "b905e82b31cfcffda71190f434b05d1532762fcb8c2c01824336ab8e770b867f",
+					"variant_identity": "d605f60426fa7cc3899729dbddf6ba9d7744a01351ef5e4eb867583fd04807c7"
+				},
+				{
+					"duration": 0.733333349227905,
+					"name": "frontier_legacy_run_backward",
+					"source_agls_clip": "ALS_N_Run_B",
+					"source_agls_sha256": "3788f6e0a2b71f1576ca4e9a94465a19bf7480670e593e66c1c6eb617d0976de",
+					"variant_identity": "6bca43e80d02445aeb6986e93b9c1cab973e80d07ef933c2b6ca796e037a2beb"
+				},
+				{
+					"duration": 0.733333349227905,
+					"name": "frontier_legacy_run_left",
+					"source_agls_clip": "ALS_N_Run_LF",
+					"source_agls_sha256": "506121d1fcbf2d67e298db1c06bee4dcbde7f2d56148b9b5383e668faa7ca8a3",
+					"variant_identity": "59dfbf759ca2414efa76e8418efad2335e52550e9ebaf4e7c054c7ce1bd33b5c"
+				},
+				{
+					"duration": 0.733333349227905,
+					"name": "frontier_legacy_run_right",
+					"source_agls_clip": "ALS_N_Run_RF",
+					"source_agls_sha256": "062f39065fb35142c255a621945466908c341bd0a4f74fa5b8cd84a3c0177300",
+					"variant_identity": "80d6a57d945b84d6f572575b9988e07ac5e0c792eb892d90955bc0dd70bf0f00"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_aim",
+					"source_agls_clip": "ALS_Props_Bow_Aim_Sweep",
+					"source_agls_sha256": "3bc83db195bc94f55bd42469c10a164b0a9d1676bf14a85e9add3f0b5966a4d1",
+					"variant_identity": "80716f017d286941a70aa962267fd87263bddf3cfcf2977d39d4f56d50e96489"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_aim_crouch",
+					"source_agls_clip": "ALS_Props_Bow_Aim_Sweep_Crouched",
+					"source_agls_sha256": "421ba0672660e46286bdc62ae940cbb83b7fde213060152f5c304b2dfe16a41f",
+					"variant_identity": "7065024b97fc39be0fec31aafbd9b8e79f6806168755a6c2af9c2d7b402882a3"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_draw",
+					"source_agls_clip": "ALS_Props_RecurveBow_Draw_Stand",
+					"source_agls_sha256": "9792241138b8227949ab2dcfede80b232d094ff7c1d870a2fe59a10d6427a513",
+					"variant_identity": "228bddda64be345965cf522f8709a1a177590d429890c5b98a190dfe03cd5774"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_draw_crouch",
+					"source_agls_clip": "ALS_Props_RecurveBow_Draw_Crouch",
+					"source_agls_sha256": "264d52b6dde6a4220ad81ca275c38cb202c4587c530bbab4bfc1765d54531409",
+					"variant_identity": "9368fef73a8c79a185e01122bfaa81b888c0fc72df335af2557dd26cea039b9f"
+				},
+				{
+					"duration": 0.633333325386047,
+					"name": "frontier_legacy_bow_release",
+					"source_agls_clip": "ALS_Props_RecurveBow_Recoil",
+					"source_agls_sha256": "0c44eda5e25d4bf3e34ece0e216270c83900ad6a541c1bd935d296bc0db1b134",
+					"variant_identity": "216451258ca5b6eb051b6b2ab79e3d48f10fe38277bd43c7ecac6889c24f4611"
+				},
+				{
+					"duration": 1.16666662693024,
+					"name": "frontier_legacy_bow_sheath",
+					"source_agls_clip": "ALS_Props_Bow_Sheath_Stand",
+					"source_agls_sha256": "3a4e57742150e3d074db8643816bae8f354b0882aa9c369762787ac9036826f4",
+					"variant_identity": "80eac2ff497d55b3169fba33246d062e4a7cea02a23790135f66e2624aa797b0"
+				},
+				{
+					"duration": 1.16666662693024,
+					"name": "frontier_legacy_bow_sheath_crouch",
+					"source_agls_clip": "ALS_Props_Bow_Sheath_Crouch",
+					"source_agls_sha256": "84832be4be2cc6348eb119bd05411469a11a865bedd6a743189f27540e39d1cc",
+					"variant_identity": "b1ec67a99e2278aa80efa2fea6f3c328059635d6c69c1142818d94bba65148d2"
+				}
+			],
+			"external_dependencies": [],
+			"file": "Frontier_Legacy_Movement.res",
+			"preset": "Approved",
+			"sha256": "41296ba4c7faaf5b3da594d2f03501236001ff4c033832748222db2390ecf736"
+		},
+		{
+			"clips": [
+				{
+					"duration": 1.25925925042894,
+					"name": "frontier_legacy_walk_forward",
+					"source_agls_clip": "ALS_N_Walk_F",
+					"source_agls_sha256": "23eb6681194bc6574bcc28950f1af1b9f8e43f2d3492920a4694982822057d1f",
+					"variant_identity": "1529d29109093da315ea4265caf8ba9446bcd07d0ba091210ab924b5563ec56f"
+				},
+				{
+					"duration": 0.78014186088075,
+					"name": "frontier_legacy_run_forward",
+					"source_agls_clip": "ALS_N_Run_F",
+					"source_agls_sha256": "6eb7afc84d1075c94a3eba34e5c2040e95ae9cef32a4921f4aa6730d0e4375d2",
+					"variant_identity": "ef55bf29b73932cc6a24a4e859ec7333afae3c7370ba714701b6e97391f9ef9b"
+				},
+				{
+					"duration": 1.36054425823445,
+					"name": "frontier_legacy_sprint_forward",
+					"source_agls_clip": "ALS_N_Sprint_F",
+					"source_agls_sha256": "ef8f42f3a9e2fa54cfab800e28c1ec0a0e181f9576c8c18e19a6ea23e8722d75",
+					"variant_identity": "e899fbdfa17d847a2193b2dd18432c63cafb860fda08f245cd12d0e308d9324e"
+				},
+				{
+					"duration": 0.947368395955939,
+					"name": "frontier_legacy_jump",
+					"source_agls_clip": "ALSv2_JumpSeq_Idle",
+					"source_agls_sha256": "eec6999393634f9b70d9360de9041e0bded273ee495d3d4649503508e317f4c7",
+					"variant_identity": "f68abca193e780e53a826707aeed6da851d588dbbd56bde456e00d3eaaab5ba0"
+				},
+				{
+					"duration": 1.34020618556701,
+					"name": "frontier_legacy_vault_left_hand",
+					"source_agls_clip": "ALSv2_N_Vault_1m_LH",
+					"source_agls_sha256": "39fea5f68168d20fa07aa5ff8cc550bc8f471500b443302ebdde24852b7f1075",
+					"variant_identity": "f8a96d26c6510beb197555f6e53226f538d23defd9b665250047569f8436419f"
+				},
+				{
+					"duration": 1.34020618556701,
+					"name": "frontier_legacy_vault_right_hand",
+					"source_agls_clip": "ALSv2_N_Vault_1m_RH",
+					"source_agls_sha256": "87c9128fb6c28540d0918bf020913d2212797f84b20dcb310473b7e6ef7d4d05",
+					"variant_identity": "360f46b3f6e03118e0be734e5f989ec5891bc51bf71f4ee0dcbf97610f2d6c69"
+				},
+				{
+					"duration": 1.0370370414522,
+					"name": "frontier_legacy_walk_backward",
+					"source_agls_clip": "ALS_N_Walk_B",
+					"source_agls_sha256": "65133bb6b805a981200f247dc86c9e45386e5a03f669f017dda71b316eb309d1",
+					"variant_identity": "957fe12370f6474c21f23e240c3b2a19ae2a4ad50aa49d60d9f269d92ae8d232"
+				},
+				{
+					"duration": 1.25925925042894,
+					"name": "frontier_legacy_walk_left",
+					"source_agls_clip": "ALS_N_Walk_LF",
+					"source_agls_sha256": "a1e94aaf0bb5631021fb6f72529dee42ea7383822ac1e79702e98e9adbb1c272",
+					"variant_identity": "45fa58678591ad7a3c925651256075f312ff80de7090ab7a04f7ae61b40813c8"
+				},
+				{
+					"duration": 1.25925925042894,
+					"name": "frontier_legacy_walk_right",
+					"source_agls_clip": "ALS_N_Walk_RF",
+					"source_agls_sha256": "b905e82b31cfcffda71190f434b05d1532762fcb8c2c01824336ab8e770b867f",
+					"variant_identity": "e9bb58c02912ab99e63672da1d70b6ecb44119ae2ef9354f08fdab70a5cbcc17"
+				},
+				{
+					"duration": 0.78014186088075,
+					"name": "frontier_legacy_run_backward",
+					"source_agls_clip": "ALS_N_Run_B",
+					"source_agls_sha256": "3788f6e0a2b71f1576ca4e9a94465a19bf7480670e593e66c1c6eb617d0976de",
+					"variant_identity": "d35444351a9c279fc2e6a67c02f0ced45cc3d6be8a0aa66e6803969298262ca0"
+				},
+				{
+					"duration": 0.78014186088075,
+					"name": "frontier_legacy_run_left",
+					"source_agls_clip": "ALS_N_Run_LF",
+					"source_agls_sha256": "506121d1fcbf2d67e298db1c06bee4dcbde7f2d56148b9b5383e668faa7ca8a3",
+					"variant_identity": "39f6630cbe1f038802f1051c2c06b6060e093dc9e2603a5538f6c0b96a6bfd85"
+				},
+				{
+					"duration": 0.78014186088075,
+					"name": "frontier_legacy_run_right",
+					"source_agls_clip": "ALS_N_Run_RF",
+					"source_agls_sha256": "062f39065fb35142c255a621945466908c341bd0a4f74fa5b8cd84a3c0177300",
+					"variant_identity": "9c8a9241589aed12dbd8cea87320083ecb18ff28a4e34d0e655de3cf48ef7580"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_aim",
+					"source_agls_clip": "ALS_Props_Bow_Aim_Sweep",
+					"source_agls_sha256": "3bc83db195bc94f55bd42469c10a164b0a9d1676bf14a85e9add3f0b5966a4d1",
+					"variant_identity": "67b18e4d8158eecfc683f3be5761fbe9659890bec5a081d282e808cc6c1572a2"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_aim_crouch",
+					"source_agls_clip": "ALS_Props_Bow_Aim_Sweep_Crouched",
+					"source_agls_sha256": "421ba0672660e46286bdc62ae940cbb83b7fde213060152f5c304b2dfe16a41f",
+					"variant_identity": "b1d4b08e431c4fb6dcd4a388197eebdf54800c8c0b2bc2bc7a1f0369b6c9acba"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_draw",
+					"source_agls_clip": "ALS_Props_RecurveBow_Draw_Stand",
+					"source_agls_sha256": "9792241138b8227949ab2dcfede80b232d094ff7c1d870a2fe59a10d6427a513",
+					"variant_identity": "b3f0f3653c1861d2e1881f001e4404930310a37afaad814c0fec30adc317cc0a"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_draw_crouch",
+					"source_agls_clip": "ALS_Props_RecurveBow_Draw_Crouch",
+					"source_agls_sha256": "264d52b6dde6a4220ad81ca275c38cb202c4587c530bbab4bfc1765d54531409",
+					"variant_identity": "9f35d4e45a9963fad3dfe2e9300c27bee1214f240b18888a75cf49518d48fbb7"
+				},
+				{
+					"duration": 0.633333325386047,
+					"name": "frontier_legacy_bow_release",
+					"source_agls_clip": "ALS_Props_RecurveBow_Recoil",
+					"source_agls_sha256": "0c44eda5e25d4bf3e34ece0e216270c83900ad6a541c1bd935d296bc0db1b134",
+					"variant_identity": "4520c495fae7e3e7f82272ef92a18eb8a6eef30cc57c3a8730d8497e2dc339c8"
+				},
+				{
+					"duration": 1.16666662693024,
+					"name": "frontier_legacy_bow_sheath",
+					"source_agls_clip": "ALS_Props_Bow_Sheath_Stand",
+					"source_agls_sha256": "3a4e57742150e3d074db8643816bae8f354b0882aa9c369762787ac9036826f4",
+					"variant_identity": "72f9bf924ab9eb415bdde524e03ea611c3155e407d8d7be1d92f3a7d816456b6"
+				},
+				{
+					"duration": 1.16666662693024,
+					"name": "frontier_legacy_bow_sheath_crouch",
+					"source_agls_clip": "ALS_Props_Bow_Sheath_Crouch",
+					"source_agls_sha256": "84832be4be2cc6348eb119bd05411469a11a865bedd6a743189f27540e39d1cc",
+					"variant_identity": "90cee824bad211336c541c07b42e404c63ffa75647dac4402dc0408f328e321e"
+				}
+			],
+			"external_dependencies": [],
+			"file": "Frontier_Legacy_Movement_Grounded.res",
+			"preset": "Grounded",
+			"sha256": "d7f97708c2340411cf2767dbe2992477381cad3ddc460a849908a6fe94821893"
+		},
+		{
+			"clips": [
+				{
+					"duration": 1.04938270869078,
+					"name": "frontier_legacy_walk_forward",
+					"source_agls_clip": "ALS_N_Walk_F",
+					"source_agls_sha256": "23eb6681194bc6574bcc28950f1af1b9f8e43f2d3492920a4694982822057d1f",
+					"variant_identity": "d801377549311838df0cab3ea7e2d568912ccfb9124573e0b55f74c868b092a4"
+				},
+				{
+					"duration": 0.654761918953487,
+					"name": "frontier_legacy_run_forward",
+					"source_agls_clip": "ALS_N_Run_F",
+					"source_agls_sha256": "6eb7afc84d1075c94a3eba34e5c2040e95ae9cef32a4921f4aa6730d0e4375d2",
+					"variant_identity": "b9a869263c5f33b2d0b7d70b705b30b9ac5827787da4a0313c6575d859c13564"
+				},
+				{
+					"duration": 1.21212124824524,
+					"name": "frontier_legacy_sprint_forward",
+					"source_agls_clip": "ALS_N_Sprint_F",
+					"source_agls_sha256": "ef8f42f3a9e2fa54cfab800e28c1ec0a0e181f9576c8c18e19a6ea23e8722d75",
+					"variant_identity": "bf4ea93ae7b20a032bf8e5809e588fe9b37aa707d9b1d822af4c994835c81fc0"
+				},
+				{
+					"duration": 0.873786384619555,
+					"name": "frontier_legacy_jump",
+					"source_agls_clip": "ALSv2_JumpSeq_Idle",
+					"source_agls_sha256": "eec6999393634f9b70d9360de9041e0bded273ee495d3d4649503508e317f4c7",
+					"variant_identity": "0c49b5dcd6dfa35ec4fe0f6b789e4feb2f5ae8f1a7901b98459848f7c56d9e1e"
+				},
+				{
+					"duration": 1.23809523809524,
+					"name": "frontier_legacy_vault_left_hand",
+					"source_agls_clip": "ALSv2_N_Vault_1m_LH",
+					"source_agls_sha256": "39fea5f68168d20fa07aa5ff8cc550bc8f471500b443302ebdde24852b7f1075",
+					"variant_identity": "1c91bd7e22c287526b5be7e24c70bbaf516112a34bc29672b077e72171f89b55"
+				},
+				{
+					"duration": 1.23809523809524,
+					"name": "frontier_legacy_vault_right_hand",
+					"source_agls_clip": "ALSv2_N_Vault_1m_RH",
+					"source_agls_sha256": "87c9128fb6c28540d0918bf020913d2212797f84b20dcb310473b7e6ef7d4d05",
+					"variant_identity": "153670a4339f342c23eb6333063e648722f9097c852680a4f4074fdfaad631c0"
+				},
+				{
+					"duration": 0.864197534543497,
+					"name": "frontier_legacy_walk_backward",
+					"source_agls_clip": "ALS_N_Walk_B",
+					"source_agls_sha256": "65133bb6b805a981200f247dc86c9e45386e5a03f669f017dda71b316eb309d1",
+					"variant_identity": "4407e5aa48bbf4ce5ef84d3520ad5c24b96b16dbc24b47c1915d3389777b22ea"
+				},
+				{
+					"duration": 1.04938270869078,
+					"name": "frontier_legacy_walk_left",
+					"source_agls_clip": "ALS_N_Walk_LF",
+					"source_agls_sha256": "a1e94aaf0bb5631021fb6f72529dee42ea7383822ac1e79702e98e9adbb1c272",
+					"variant_identity": "b06f5bafa174fb0ba72c4ee262b29933d655f5e755e614a0a3555ce132f3f2f9"
+				},
+				{
+					"duration": 1.04938270869078,
+					"name": "frontier_legacy_walk_right",
+					"source_agls_clip": "ALS_N_Walk_RF",
+					"source_agls_sha256": "b905e82b31cfcffda71190f434b05d1532762fcb8c2c01824336ab8e770b867f",
+					"variant_identity": "e6a1c937b6dca2576fdec12bef8d5fac8f96eb569ece9a82c222696d08764740"
+				},
+				{
+					"duration": 0.654761918953487,
+					"name": "frontier_legacy_run_backward",
+					"source_agls_clip": "ALS_N_Run_B",
+					"source_agls_sha256": "3788f6e0a2b71f1576ca4e9a94465a19bf7480670e593e66c1c6eb617d0976de",
+					"variant_identity": "7f11448bd2d607747f1941099b0175231825c42e8a24edcfc312c49a1d0a6cc7"
+				},
+				{
+					"duration": 0.654761918953487,
+					"name": "frontier_legacy_run_left",
+					"source_agls_clip": "ALS_N_Run_LF",
+					"source_agls_sha256": "506121d1fcbf2d67e298db1c06bee4dcbde7f2d56148b9b5383e668faa7ca8a3",
+					"variant_identity": "0dc9934b8f3d04aa836bdea24ade29be9e3f4a27b33c6a8aa7f95100f8b7ae83"
+				},
+				{
+					"duration": 0.654761918953487,
+					"name": "frontier_legacy_run_right",
+					"source_agls_clip": "ALS_N_Run_RF",
+					"source_agls_sha256": "062f39065fb35142c255a621945466908c341bd0a4f74fa5b8cd84a3c0177300",
+					"variant_identity": "4b37f953d3b43f7d446c23496b7689d661debb520fb81db1af34945c730d8829"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_aim",
+					"source_agls_clip": "ALS_Props_Bow_Aim_Sweep",
+					"source_agls_sha256": "3bc83db195bc94f55bd42469c10a164b0a9d1676bf14a85e9add3f0b5966a4d1",
+					"variant_identity": "867a77cfcc2746488232ad62fb901d89f22443d78b0cae6f748dcb9d34a25796"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_aim_crouch",
+					"source_agls_clip": "ALS_Props_Bow_Aim_Sweep_Crouched",
+					"source_agls_sha256": "421ba0672660e46286bdc62ae940cbb83b7fde213060152f5c304b2dfe16a41f",
+					"variant_identity": "a1aa49004edf00413c8c6279a4e26f9dd22e1d6efe7f5d5f0dab06d56bd3107c"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_draw",
+					"source_agls_clip": "ALS_Props_RecurveBow_Draw_Stand",
+					"source_agls_sha256": "9792241138b8227949ab2dcfede80b232d094ff7c1d870a2fe59a10d6427a513",
+					"variant_identity": "a97b237bd820cbd1af5dbf087db6a9fd684805aeb907352055bc2449b84fd4ee"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_draw_crouch",
+					"source_agls_clip": "ALS_Props_RecurveBow_Draw_Crouch",
+					"source_agls_sha256": "264d52b6dde6a4220ad81ca275c38cb202c4587c530bbab4bfc1765d54531409",
+					"variant_identity": "806ee82fcca3781ab4cf1128bfc7c68fc8edc8fb618dada7ea3b5014ed9d88a9"
+				},
+				{
+					"duration": 0.633333325386047,
+					"name": "frontier_legacy_bow_release",
+					"source_agls_clip": "ALS_Props_RecurveBow_Recoil",
+					"source_agls_sha256": "0c44eda5e25d4bf3e34ece0e216270c83900ad6a541c1bd935d296bc0db1b134",
+					"variant_identity": "99cc7256b3d4c2681aa3cef834da5e9b65d9636ba4990bf42552482296a35ef6"
+				},
+				{
+					"duration": 1.16666662693024,
+					"name": "frontier_legacy_bow_sheath",
+					"source_agls_clip": "ALS_Props_Bow_Sheath_Stand",
+					"source_agls_sha256": "3a4e57742150e3d074db8643816bae8f354b0882aa9c369762787ac9036826f4",
+					"variant_identity": "309873da4d267b1bd6e5a91cb49f0757ff5bdf5b06b24f16ba68ff7a7b8f19ce"
+				},
+				{
+					"duration": 1.16666662693024,
+					"name": "frontier_legacy_bow_sheath_crouch",
+					"source_agls_clip": "ALS_Props_Bow_Sheath_Crouch",
+					"source_agls_sha256": "84832be4be2cc6348eb119bd05411469a11a865bedd6a743189f27540e39d1cc",
+					"variant_identity": "7f406565eafa476e7907c6e1f52b4baa4796b213872d4f9c3387e0e316dc2476"
+				}
+			],
+			"external_dependencies": [],
+			"file": "Frontier_Legacy_Movement_Athletic.res",
+			"preset": "Athletic",
+			"sha256": "45a92b3e9eaba2d81e4abc76eda9028b8cb93301099654d5b6cce5352df355cc"
+		},
+		{
+			"clips": [
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_aim",
+					"source_agls_clip": "ALS_Props_Bow_Aim_Sweep",
+					"source_agls_sha256": "3bc83db195bc94f55bd42469c10a164b0a9d1676bf14a85e9add3f0b5966a4d1",
+					"variant_identity": "80716f017d286941a70aa962267fd87263bddf3cfcf2977d39d4f56d50e96489"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_aim_crouch",
+					"source_agls_clip": "ALS_Props_Bow_Aim_Sweep_Crouched",
+					"source_agls_sha256": "421ba0672660e46286bdc62ae940cbb83b7fde213060152f5c304b2dfe16a41f",
+					"variant_identity": "7065024b97fc39be0fec31aafbd9b8e79f6806168755a6c2af9c2d7b402882a3"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_draw",
+					"source_agls_clip": "ALS_Props_RecurveBow_Draw_Stand",
+					"source_agls_sha256": "9792241138b8227949ab2dcfede80b232d094ff7c1d870a2fe59a10d6427a513",
+					"variant_identity": "228bddda64be345965cf522f8709a1a177590d429890c5b98a190dfe03cd5774"
+				},
+				{
+					"duration": 1.0,
+					"name": "frontier_legacy_bow_draw_crouch",
+					"source_agls_clip": "ALS_Props_RecurveBow_Draw_Crouch",
+					"source_agls_sha256": "264d52b6dde6a4220ad81ca275c38cb202c4587c530bbab4bfc1765d54531409",
+					"variant_identity": "9368fef73a8c79a185e01122bfaa81b888c0fc72df335af2557dd26cea039b9f"
+				},
+				{
+					"duration": 0.633333325386047,
+					"name": "frontier_legacy_bow_release",
+					"source_agls_clip": "ALS_Props_RecurveBow_Recoil",
+					"source_agls_sha256": "0c44eda5e25d4bf3e34ece0e216270c83900ad6a541c1bd935d296bc0db1b134",
+					"variant_identity": "216451258ca5b6eb051b6b2ab79e3d48f10fe38277bd43c7ecac6889c24f4611"
+				},
+				{
+					"duration": 1.16666662693024,
+					"name": "frontier_legacy_bow_sheath",
+					"source_agls_clip": "ALS_Props_Bow_Sheath_Stand",
+					"source_agls_sha256": "3a4e57742150e3d074db8643816bae8f354b0882aa9c369762787ac9036826f4",
+					"variant_identity": "80eac2ff497d55b3169fba33246d062e4a7cea02a23790135f66e2624aa797b0"
+				},
+				{
+					"duration": 1.16666662693024,
+					"name": "frontier_legacy_bow_sheath_crouch",
+					"source_agls_clip": "ALS_Props_Bow_Sheath_Crouch",
+					"source_agls_sha256": "84832be4be2cc6348eb119bd05411469a11a865bedd6a743189f27540e39d1cc",
+					"variant_identity": "b1ec67a99e2278aa80efa2fea6f3c328059635d6c69c1142818d94bba65148d2"
+				}
+			],
+			"external_dependencies": [],
+			"file": "Frontier_Legacy_Bow.res",
+			"preset": "Bow",
+			"sha256": "ba7ea950f2d940d2d033d790c9b40c94c0573b8eab38f9807eee68cc25c7ac78"
+		}
+	],
+	"movement_clip_count": 12,
+	"primary_file": "Frontier_Legacy_Movement.res",
+	"target": "Godot 4.7.2 / Frontier Actor_B skeleton"
+}

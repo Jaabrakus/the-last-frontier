@@ -179,6 +179,8 @@ func _ready() -> void:
 	if not SaveGame._is_script_run():
 		GameSettings.apply_to(player)
 		PauseMenu.install(self, player)
+	if "--agls-preview" in OS.get_cmdline_user_args():
+		preload("res://tools/agls_comparison/game_overlay.gd").install(player)
 	StartupProfile.watch(self)
 
 

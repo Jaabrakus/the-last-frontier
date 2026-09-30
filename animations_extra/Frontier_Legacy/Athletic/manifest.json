@@ -1,0 +1,247 @@
+{
+	"clips": [
+		{
+			"duration": 1.0,
+			"name": "frontier_legacy_bow_aim",
+			"original_duration": 1.0,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 1.0,
+			"name": "frontier_legacy_bow_aim_crouch",
+			"original_duration": 1.0,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 1.0,
+			"name": "frontier_legacy_bow_draw",
+			"original_duration": 1.0,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 1.0,
+			"name": "frontier_legacy_bow_draw_crouch",
+			"original_duration": 1.0,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 0.633333325386047,
+			"name": "frontier_legacy_bow_release",
+			"original_duration": 0.633333325386047,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 1.16666662693024,
+			"name": "frontier_legacy_bow_sheath",
+			"original_duration": 1.16666662693024,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 1.16666662693024,
+			"name": "frontier_legacy_bow_sheath_crouch",
+			"original_duration": 1.16666662693024,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 2.20000004768372,
+			"name": "frontier_legacy_climb_up",
+			"original_duration": 2.20000004768372,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 2.46913587605512,
+			"name": "frontier_legacy_crouch_walk_backward",
+			"original_duration": 2.66666674613953,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 2.46913587605512,
+			"name": "frontier_legacy_crouch_walk_forward",
+			"original_duration": 2.66666674613953,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 2.46913587605512,
+			"name": "frontier_legacy_crouch_walk_left",
+			"original_duration": 2.66666674613953,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 2.46913587605512,
+			"name": "frontier_legacy_crouch_walk_right",
+			"original_duration": 2.66666674613953,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 0.873786384619555,
+			"name": "frontier_legacy_jump",
+			"original_duration": 0.899999976158142,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 0.600000023841858,
+			"name": "frontier_legacy_ladder_down",
+			"original_duration": 0.600000023841858,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 3.0,
+			"name": "frontier_legacy_ladder_exit_top",
+			"original_duration": 3.0,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 4.40000009536743,
+			"name": "frontier_legacy_ladder_mount_top",
+			"original_duration": 4.40000009536743,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 0.5,
+			"name": "frontier_legacy_ladder_up",
+			"original_duration": 0.5,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 8.39999961853027,
+			"name": "frontier_legacy_ledge_idle",
+			"original_duration": 8.39999961853027,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 1.10000002384186,
+			"name": "frontier_legacy_mantle_idle",
+			"original_duration": 1.10000002384186,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 2.0,
+			"name": "frontier_legacy_mantle_run",
+			"original_duration": 2.0,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 1.0,
+			"name": "frontier_legacy_rifle_aim",
+			"original_duration": 1.0,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 1.0,
+			"name": "frontier_legacy_rifle_aim_crouch",
+			"original_duration": 1.0,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": false
+		},
+		{
+			"duration": 0.654761918953487,
+			"name": "frontier_legacy_run_backward",
+			"original_duration": 0.733333349227905,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 0.654761918953487,
+			"name": "frontier_legacy_run_forward",
+			"original_duration": 0.733333349227905,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 0.654761918953487,
+			"name": "frontier_legacy_run_left",
+			"original_duration": 0.733333349227905,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 0.654761918953487,
+			"name": "frontier_legacy_run_right",
+			"original_duration": 0.733333349227905,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 1.21212124824524,
+			"name": "frontier_legacy_sprint_forward",
+			"original_duration": 1.33333337306976,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 1.23809523809524,
+			"name": "frontier_legacy_vault_left_hand",
+			"original_duration": 1.3,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 1.23809523809524,
+			"name": "frontier_legacy_vault_right_hand",
+			"original_duration": 1.3,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 0.864197534543497,
+			"name": "frontier_legacy_walk_backward",
+			"original_duration": 0.933333337306976,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 1.04938270869078,
+			"name": "frontier_legacy_walk_forward",
+			"original_duration": 1.13333332538605,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 1.04938270869078,
+			"name": "frontier_legacy_walk_left",
+			"original_duration": 1.13333332538605,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		},
+		{
+			"duration": 1.04938270869078,
+			"name": "frontier_legacy_walk_right",
+			"original_duration": 1.13333332538605,
+			"source_permission_requirements_retained": true,
+			"timing_and_pose_authored": true
+		}
+	],
+	"name": "Frontier Legacy Athletic",
+	"settings": {
+		"counter_roll_degrees": 2.5,
+		"forward_lean_degrees": 5.0,
+		"jump_tempo": 1.03,
+		"run_tempo": 1.12,
+		"sprint_tempo": 1.1,
+		"stance_bias": -0.022,
+		"swing_knee_flex_degrees": 8.0,
+		"vault_tempo": 1.05,
+		"walk_tempo": 1.08
+	}
+}
