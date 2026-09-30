@@ -1283,7 +1283,8 @@ func _run_hold_clip(gait: String) -> String:
 ## Our own medium ready, backward and forward (tools/anim_author/author_locomotion.gd: the crouch run arms turned down at the shoulders).
 const CROUCH_GRIP_ARMS := "own-rifle-crouch-mid"
 const CROUCH_GRIP_ARMS_FW := "own-rifle-crouch-mid-fw"
-const CROUCH_IDLE_ARMS := "actor_b-p-rifle-crouch-idle-arms"
+## Our own crouch idle arms: the graph's with the right hand drawn toward the right hip (tools/anim_author/author_locomotion.gd).
+const CROUCH_IDLE_ARMS := "own-rifle-crouch-idle"
 ## Seconds the grip arms take from one stance's to the other's (the musket turns 40-60 deg between them).
 const STANCE_ARM_XFADE_S := 0.35
 ## The one-hand crouch-move hold (push n01): the source's rifle arm for moving crouched along low cover (the

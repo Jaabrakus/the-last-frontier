@@ -118,12 +118,13 @@ func _bake() -> void:
 	# the rifle's own low ready (idle, walking and running backward) and medium ready (crouch walk): the graph's arms turned at the
 	# shoulders, the right decides where the gun points and the left hand is the IK's
 	var low_bones := _bake_rifle_pose(out, "own-rifle-low-ready", "actor_b-p-rifle-idle-arms", LOW_TURN_R, LOW_TURN_L)
-	var mid_bones := _bake_rifle_pose(out, "own-rifle-crouch-mid", "actor_b-p-rifle-crouch-run-arms", MID_TURN_R, MID_TURN_L)
-	_bake_rifle_pose(out, "own-rifle-crouch-mid-fw", "actor_b-p-rifle-crouch-run-arms", MID_FW_TURN_R, MID_FW_TURN_L)
+	var mid_bones := _bake_rifle_pose(out, "own-rifle-crouch-mid", "actor_b-p-rifle-crouch-run-arms", MID_TURN_R, MID_TURN_L, HIP_PULL)
+	_bake_rifle_pose(out, "own-rifle-crouch-mid-fw", "actor_b-p-rifle-crouch-run-arms", MID_FW_TURN_R, MID_FW_TURN_L, HIP_PULL)
+	var idle_bones := _bake_rifle_pose(out, "own-rifle-crouch-idle", "actor_b-p-rifle-crouch-idle-arms", Vector3.ZERO, Vector3.ZERO, HIP_PULL)
 	_bake_bow_nock_hand(out, "actor_b-p-bow-reload--part", "own-bow-nock-hand")
 	_bake_bow_nock_hand(out, "actor_b-p-crouch-bow-reload--part", "own-bow-nock-hand-crouch")
 	print(ResourceSaver.save(out, OUT_LIB, ResourceSaver.FLAG_COMPRESS))
-	_write_carry_patches(axe_bones, grip_bones, low_bones, mid_bones)
+	_write_carry_patches(axe_bones, grip_bones, low_bones, mid_bones, idle_bones)
 	var f := FileAccess.open(WIRED, FileAccess.WRITE)
 	f.store_string(JSON.stringify({"about": "Clips that stand in for the graph's own (AnimGraphData.apply_clip_overrides): the graph clip name -> the library and clip played instead, its measured travel speed (m/s, tools/anim_author/author_locomotion.gd) and length (s). The plant phases and the rest of the metrics stay the original clip's.", "clips": wired}, "\t") + "\n")
 	f.close()
@@ -182,13 +183,15 @@ func _bake_axe_carry(out: AnimationLibrary, clip_name: String, parts: Array) -> 
 
 ## data/anim_author/carry_patches.json: arm layers the graph's roles get in place of their own (AnimGraphData.apply_carry_patches)
 ## because the tables cannot be regenerated here; "clips" are graph clips of our own library.
-func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array, mid_bones: Array) -> void:
+func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array, mid_bones: Array, idle_bones: Array) -> void:
 	var axe_layer := {"clip": "own-axe-carry", "kind": "partial", "slot": "arms", "status": "frontier", "weight": 1.0,
 			"sample_s": 0.0, "bones": axe_bones, "superseded_by": null, "weight_curve": null}
 	var grip_layer := {"clip": "own-axe-grip", "kind": "partial", "slot": "hands", "status": "frontier", "weight": 1.0,
 			"sample_s": 0.0, "bones": grip_bones, "superseded_by": null, "weight_curve": null}
 	var mid_layer := {"clip": "own-rifle-crouch-mid", "kind": "partial", "slot": "arms", "status": "frontier", "weight": 0.8,
 			"sample_s": 0.0, "bones": mid_bones, "superseded_by": null, "weight_curve": null}
+	var idle_layer := {"clip": "own-rifle-crouch-idle", "kind": "partial", "slot": "arms", "status": "frontier", "weight": 1.0,
+			"sample_s": 0.0, "bones": idle_bones, "superseded_by": null, "weight_curve": null}
 	var mid_fw_layer := mid_layer.duplicate()
 	mid_fw_layer["clip"] = "own-rifle-crouch-mid-fw"
 	var doc := {
@@ -198,6 +201,7 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array,
 				"own-rifle-low-ready": {"lib": "frontier_locomotion", "clip": "own-rifle-low-ready", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-rifle-crouch-mid": {"lib": "frontier_locomotion", "clip": "own-rifle-crouch-mid", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-rifle-crouch-mid-fw": {"lib": "frontier_locomotion", "clip": "own-rifle-crouch-mid-fw", "length": snappedf(1.0 / 30.0, 0.000001)},
+				"own-rifle-crouch-idle": {"lib": "frontier_locomotion", "clip": "own-rifle-crouch-idle", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-bow-nock-hand": {"lib": "frontier_locomotion", "clip": "own-bow-nock-hand", "length": snappedf(NOCK_HAND_LEN, 0.000001)},
 				"own-bow-nock-hand-crouch": {"lib": "frontier_locomotion", "clip": "own-bow-nock-hand-crouch", "length": snappedf(NOCK_HAND_LEN, 0.000001)}},
 		"actions": {
@@ -210,6 +214,8 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array,
 			"weapon": "spear", "modes": ["crouch"], "roles_except": [], "roles_only": MOVE_ROLES + ["idle"], "slots": ["arms", "hands"], "layers": [grip_layer, axe_layer]},
 			{"why": "the rifle crouch walk holds it at medium ready (user 2026-09-30): the crouch run arms turned down at the shoulders (own-rifle-crouch-mid); the left hand is the grip IK's",
 			"weapon": "musket", "modes": ["crouch"], "roles_except": ["idle"], "roles_only": BACK_ROLES, "slots": ["arms"], "layers": [mid_layer]},
+			{"why": "the rifle crouch idle with the right hand nearer the right hip (user 2026-09-30)",
+			"weapon": "musket", "modes": ["crouch"], "roles_except": [], "roles_only": ["idle"], "slots": ["arms"], "layers": [idle_layer]},
 			{"why": "the rifle crouch walk forward, medium ready: the same, the arms turned further (the forward crouch walk's torso is more upright)",
 			"weapon": "musket", "modes": ["crouch"], "roles_except": ["idle"], "roles_only": FWD_ROLES, "slots": ["arms"], "layers": [mid_fw_layer]},
 			{"why": "the tomahawk crouches like the pistol (user 2026-09-30): the pistol's crouch arm on every role",
@@ -292,6 +298,8 @@ const LOW_TURN_L := Vector3(0.0, 35.0, 0.0)
 const MID_TURN_R := Vector3(0.0, 12.0, 0.0)
 const MID_TURN_L := Vector3(0.0, 12.0, 0.0)
 ## (forward the crouch walk's torso is more upright, so the arms turn further for the same barrel height)
+## The share of the way from the right hand to the right hip the crouch poses draw the hand (user 2026-09-30).
+const HIP_PULL := 0.2
 const MID_FW_TURN_R := Vector3(0.0, 32.0, 0.0)
 const MID_FW_TURN_L := Vector3(0.0, 32.0, 0.0)
 const FWD_ROLES := ["fw", "fw_lt", "fw_rt", "start_fw", "start_fw_lt", "start_fw_rt", "stop_fw", "stop_fw_lt", "stop_fw_rt", "turn_l", "turn_r"]
@@ -301,7 +309,7 @@ const BACK_ROLES := ["bw", "bw_lt", "bw_rt", "start_bw", "start_bw_lt", "start_b
 
 ## A one-frame arms pose `clip_name` in `out`: `src_name`'s arms at its first frame, the shoulders turned by `rr` / `rl`; returns
 ## the bones it keys.
-func _bake_rifle_pose(out: AnimationLibrary, clip_name: String, src_name: String, rr: Vector3, rl: Vector3) -> Array:
+func _bake_rifle_pose(out: AnimationLibrary, clip_name: String, src_name: String, rr: Vector3, rl: Vector3, hip_pull := 0.0) -> Array:
 	var src := lib.get_animation(src_name)
 	var pose := _stamp(Animation.new(), src)
 	pose.length = 1.0 / 30.0
@@ -328,8 +336,67 @@ func _bake_rifle_pose(out: AnimationLibrary, clip_name: String, src_name: String
 		pose.rotation_track_insert_key(tr, 0.0, q)
 		if not bones.has(bone):
 			bones.append(bone)
+	if hip_pull > 0.0:
+		_pull_to_hip(pose, hip_pull)
 	out.add_animation(StringName(clip_name), pose)
 	return bones
+
+
+## The right hand of a one-frame arms pose drawn toward the right hip (user 2026-09-30: "the right hand closer to the right hip"):
+## the prop bone (the gun's grip) moves `pull` of the way from where it is to the hip joint, keeping its turn, by turning the right
+## shoulder, elbow and wrist (a search over their turns on the skeleton: the arm chain is plain forward kinematics). Judged on the
+## rest torso: the arms' rotations are the chest's, whatever the body clip under them does.
+func _pull_to_hip(pose: Animation, pull: float) -> void:
+	_rig.reset_bone_poses()
+	var track := {}
+	for ti in pose.get_track_count():
+		var bone := String(pose.track_get_path(ti).get_concatenated_subnames())
+		track[bone] = ti
+		_rig.set_bone_pose_rotation(_rig.find_bone(bone), pose.rotation_track_interpolate(ti, 0.0))
+	_rig.force_update_all_bone_transforms()
+	var prop := _rig.find_bone("r_hand_prop_attachment")
+	var g0 := _rig.get_bone_global_pose(prop)
+	var hip := _rig.get_bone_global_pose(_rig.find_bone("r_upper_leg")).origin
+	var target := g0.origin + (hip - g0.origin) * pull
+	var joints := ["r_shoulder", "r_elbow", "r_wrist"]
+	var base: Array = []
+	for j in joints:
+		base.append(_rig.get_bone_pose_rotation(_rig.find_bone(j)))
+	var v := PackedFloat32Array([0, 0, 0, 0, 0, 0, 0, 0, 0])
+	var best := _hip_cost(joints, base, v, g0, target)
+	var step := 10.0
+	while step > 0.25:
+		var improved := false
+		for i in 9:
+			for sgn in [1.0, -1.0]:
+				var w := v.duplicate()
+				w[i] += step * sgn
+				var c := _hip_cost(joints, base, w, g0, target)
+				if c < best:
+					best = c
+					v = w
+					improved = true
+		if not improved:
+			step *= 0.5
+	_hip_cost(joints, base, v, g0, target)
+	var after := _rig.get_bone_global_pose(prop)
+	print("hip pull %.2f: hand moved %.3f m (asked %.3f), grip turned %.1f deg, cost %.4f" % [pull, (after.origin - g0.origin).length(), (target - g0.origin).length(), rad_to_deg(g0.basis.get_rotation_quaternion().angle_to(after.basis.get_rotation_quaternion())), best])
+	for k in joints.size():
+		var ti: int = track[joints[k]]
+		pose.rotation_track_insert_key(ti, 0.0, _rig.get_bone_pose_rotation(_rig.find_bone(joints[k])))
+
+
+## The cost of turns `v` (degrees, three per joint) on the arm chain: the grip's distance from the target, plus its turn off where
+## it was (the gun must not turn), plus a little for turning the joints at all. Leaves the skeleton posed so.
+func _hip_cost(joints: Array, base: Array, v: PackedFloat32Array, g0: Transform3D, target: Vector3) -> float:
+	var reg := 0.0
+	for k in joints.size():
+		var e := Vector3(deg_to_rad(v[k * 3]), deg_to_rad(v[k * 3 + 1]), deg_to_rad(v[k * 3 + 2]))
+		_rig.set_bone_pose_rotation(_rig.find_bone(joints[k]), (base[k] as Quaternion) * Quaternion.from_euler(e))
+		reg += e.length()
+	_rig.force_update_all_bone_transforms()
+	var g := _rig.get_bone_global_pose(_rig.find_bone("r_hand_prop_attachment"))
+	return (g.origin - target).length() * 4.0 + g0.basis.get_rotation_quaternion().angle_to(g.basis.get_rotation_quaternion()) * 0.6 + reg * 0.01
 
 
 ## The bow's nock with an arrow in the hand (user 2026-09-30: "with arrows in hand the user doesn't need to pull arrows out the
