@@ -74,6 +74,7 @@ static func _from_glb(file: String, root_name: String, need_muzzle: bool) -> Nod
 		return null
 	var model := inst as Node3D
 	model.name = root_name
+	_dull_steel(model)
 	for marker in MARKERS:
 		if not _to_marker(model, marker) and marker == "Muzzle" and need_muzzle:
 			push_warning("%s.glb has no Muzzle node; using the placeholder" % file)
@@ -110,6 +111,34 @@ static func _to_marker(model: Node3D, node_name: String) -> bool:
 	model.add_child(mk)
 	mk.owner = model
 	return true
+
+
+## The guns' bare steel (metallic 1, albedo 0.68) mirrors the sky whether or not the sun reaches it, so a barrel
+## carried through the forest's shade glowed as a bright silver line (user 2026-09-30, the run through the woods: "that line
+## when players walk in the forest or the fort or shadows they make the shadows brighter"). The same steel with a darker,
+## browned face and a softer polish: it keeps its sheen in the sun and no longer outshines the shade.
+const STEEL := ["Iron", "PistolSteel", "PistolBarrel"]
+const STEEL_ALBEDO := 0.5           ## share of the source steel's albedo kept
+const STEEL_ROUGHNESS := 0.55       ## at least this rough
+static var _dulled := {}
+
+
+static func _dull_steel(model: Node) -> void:
+	for n in model.find_children("*", "MeshInstance3D", true, false):
+		var mi := n as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		for i in mi.mesh.get_surface_count():
+			var src := mi.mesh.surface_get_material(i) as StandardMaterial3D
+			if src == null or not STEEL.has(src.resource_name):
+				continue
+			if not _dulled.has(src):
+				var m := src.duplicate() as StandardMaterial3D
+				m.albedo_color = Color(src.albedo_color.r * STEEL_ALBEDO, src.albedo_color.g * STEEL_ALBEDO,
+						src.albedo_color.b * STEEL_ALBEDO, src.albedo_color.a)
+				m.roughness = maxf(src.roughness, STEEL_ROUGHNESS)
+				_dulled[src] = m
+			mi.set_surface_override_material(i, _dulled[src])
 
 
 static func _mat(key: String, color: Color, metallic := 0.0, roughness := 0.7) -> StandardMaterial3D:

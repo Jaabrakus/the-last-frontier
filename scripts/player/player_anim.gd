@@ -237,8 +237,9 @@ const TRACE_KEEP := 64
 ## right hand free (user 2026-09-26: "yes i want the middle grip on the crouch walk as well", "allows user to have the
 ## right hand to throwables and easily switch back to rifle"; HandHolds, GunMiddleCarryIK; the arm is the source's
 ## one-hand crouch-move rifle arm ONE_HAND_LOW_ARM, mirrored); shown only while crouch-moving (one_hand; user
-## 2026-09-25), until the player raises the gun (fire / aim), reloads or switches. 0 = off.
-@export var relax_after_s := 6.0
+## 2026-09-25), until the player raises the gun (fire / aim), reloads or switches. 0 = off (user 2026-09-30: "the one handed
+## musket hold for crouch i do not like that we should remove that for now": off; set this back to 6.0 to bring it back).
+@export var relax_after_s := 0.0
 ## The long gun's hold while running and sprinting (standing, both hands on the gun, not aiming; walking keeps the
 ## graph's). "graph": the graph's run carry layer (actor_b-p-rifle-run-arms at 0.8-0.9 over the empty-handed arm
 ## swing: the right arm swung the gun up and back over the shoulder with every stride, user 2026-09-27: "you see how
