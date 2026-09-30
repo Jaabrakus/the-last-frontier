@@ -37,15 +37,19 @@
 			"lib": "frontier_locomotion"
 		},
 		"actor_b-p-jump-long": {
-			"clip": "own-arms-jump-long",
+			"clip": "frontier_legacy_jump",
+			"lib": "frontier_legacy",
 			"length": 0.9,
-			"lib": "frontier_locomotion"
+			"source_agls_clip": "ALSv2_JumpSeq_Idle",
+			"source_base_alias": "actor_b-p-jump-long"
 		},
 		"actor_b-p-run-bw": {
-			"clip": "own-jog-bw-k100",
-			"length": 0.733333,
-			"lib": "frontier_locomotion",
-			"speed": 2.368
+			"clip": "frontier_legacy_run_backward",
+			"length": 0.733333349227905,
+			"lib": "frontier_legacy",
+			"source_agls_clip": "ALS_N_Run_B",
+			"source_base_alias": "actor_b-p-run-bw",
+			"speed": 2.473959
 		},
 		"actor_b-p-run-bw-lt": {
 			"clip": "own-jog-bw-lt-k100",
@@ -75,16 +79,20 @@
 			"lib": "frontier_locomotion"
 		},
 		"actor_b-p-run-fw": {
-			"clip": "own-jog-fw-k100",
-			"length": 0.733333,
-			"lib": "frontier_locomotion",
-			"speed": 3.08
+			"clip": "frontier_legacy_run_forward",
+			"length": 0.733333349227905,
+			"lib": "frontier_legacy",
+			"source_agls_clip": "ALS_N_Run_F",
+			"source_base_alias": "actor_b-p-run-fw",
+			"speed": 3.343179
 		},
 		"actor_b-p-run-fw-lt": {
-			"clip": "own-jog-fw-lt-k100",
-			"length": 0.733333,
-			"lib": "frontier_locomotion",
-			"speed": 3.648
+			"clip": "frontier_legacy_run_left",
+			"length": 0.733333349227905,
+			"lib": "frontier_legacy",
+			"source_agls_clip": "ALS_N_Run_LF",
+			"source_base_alias": "actor_b-p-run-fw-lt",
+			"speed": 3.419947
 		},
 		"actor_b-p-run-fw-lt^idle": {
 			"clip": "own-stop-fw-lt-k100",
@@ -92,10 +100,12 @@
 			"lib": "frontier_locomotion"
 		},
 		"actor_b-p-run-fw-rt": {
-			"clip": "own-jog-fw-rt-k100",
-			"length": 0.733333,
-			"lib": "frontier_locomotion",
-			"speed": 3.387
+			"clip": "frontier_legacy_run_right",
+			"length": 0.733333349227905,
+			"lib": "frontier_legacy",
+			"source_agls_clip": "ALS_N_Run_RF",
+			"source_base_alias": "actor_b-p-run-fw-rt",
+			"speed": 3.384015
 		},
 		"actor_b-p-run-fw-rt^idle": {
 			"clip": "own-stop-fw-rt-k100",
@@ -106,6 +116,47 @@
 			"clip": "own-stop-fw-k100",
 			"length": 1.8,
 			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-sprint-fw": {
+			"clip": "frontier_legacy_sprint_forward",
+			"length": 1.33333337306976,
+			"lib": "frontier_legacy",
+			"source_agls_clip": "ALS_N_Sprint_F",
+			"source_base_alias": "actor_b-p-sprint-fw",
+			"speed": 4.243699
+		},
+		"actor_b-p-walk-bw": {
+			"clip": "frontier_legacy_walk_backward",
+			"length": 0.933333337306976,
+			"lib": "frontier_legacy",
+			"source_agls_clip": "ALS_N_Walk_B",
+			"source_base_alias": "actor_b-p-walk-bw",
+			"speed": 1.467096
+		},
+		"actor_b-p-walk-fw": {
+			"clip": "frontier_legacy_walk_forward",
+			"length": 1.13333332538605,
+			"lib": "frontier_legacy",
+			"source_agls_clip": "ALS_N_Walk_F",
+			"source_base_alias": "actor_b-p-walk-fw",
+			"speed": 1.263476
+		},
+		"actor_b-p-walk-fw-lt": {
+			"clip": "frontier_legacy_walk_left",
+			"length": 1.13333332538605,
+			"lib": "frontier_legacy",
+			"source_agls_clip": "ALS_N_Walk_LF",
+			"source_base_alias": "actor_b-p-walk-fw-lt",
+			"speed": 1.240631
+		},
+		"actor_b-p-walk-fw-rt": {
+			"clip": "frontier_legacy_walk_right",
+			"length": 1.13333332538605,
+			"lib": "frontier_legacy",
+			"source_agls_clip": "ALS_N_Walk_RF",
+			"source_base_alias": "actor_b-p-walk-fw-rt",
+			"speed": 1.260965
 		}
-	}
+	},
+	"frontier_legacy_profile": "approved"
 }

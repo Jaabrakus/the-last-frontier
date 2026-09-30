@@ -1556,7 +1556,10 @@ func _write_charge() -> void:
 	var cw := 0.0
 	for w in _charge_weapons:
 		cw += float(_ww.get(w, 0.0))
-	var amt := clampf(_charge_on * cw * _aim_w, 0.0, 1.0)
+	# Approved bow draw adapters already contain the progression at their seek time.
+	# The native held-pose clips still use charge as their additive weight.
+	var draw_weight := 1.0 if bool(data.graph.get("frontier_legacy_charge_trajectory", false)) else _charge_on
+	var amt := clampf(draw_weight * cw * _aim_w, 0.0, 1.0)
 	var was := float(_written.get(index.charge.add, 0.0))
 	_setp(index.charge.add, amt)
 	if amt > 0.0 or was > 0.0:

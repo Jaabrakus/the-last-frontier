@@ -7,3 +7,6 @@ __pycache__/
 *.import-*
 # Raw AGLS extraction (licensed for Unreal Engine use; its raw files must not be shared)
 AGLS_extracted/
+
+# Local AGLS conversion inputs and rendered reports
+.comparison-private/

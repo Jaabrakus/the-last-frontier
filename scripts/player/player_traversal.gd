@@ -30,6 +30,21 @@ const OVERHEAD_ONLY_MOVES := ["climb_hang_3m", "climb_hang_3m_idle"]
 const EXIT_INERT_S := 0.3
 const RIG_RETURN_S := 0.25
 
+## The approved vaults use the existing four stage clocks and root paths.
+var legacy_vault_hand := "left"
+var _legacy_vaults := {}
+
+func set_legacy_vault_hand(hand: String) -> bool:
+	if showing or not _legacy_vaults.has(hand):
+		return false
+	legacy_vault_hand = hand
+	_slot_clip = ["", "", "", ""]
+	return true
+
+func _anim_name(clip: String) -> String:
+	var paths: Dictionary = _legacy_vaults.get(legacy_vault_hand, {})
+	return String(paths.get(clip, str(LIB) + "/" + clip))
+
 var player: FrontierPlayer
 var controller: TraversalController
 var world_ready := false
@@ -57,6 +72,9 @@ static func install(p: FrontierPlayer) -> PlayerTraversal:
 
 ## Instead of TravPreviewActor.build(): the player's own rig, skeleton and AnimationPlayer.
 func adopt() -> void:
+	var cfg := AnimGraphData._read_json(AnimGraphData.LEGACY_GAMEPLAY_PATH)
+	if bool(cfg.get("enabled", false)) and "--frontier-legacy-off" not in OS.get_cmdline_user_args():
+		_legacy_vaults = cfg.get("vaults", {})
 	lib = TravMoveLibrary.shared()
 	skeleton = player.skeleton
 	rig = skeleton.get_parent() as Node3D

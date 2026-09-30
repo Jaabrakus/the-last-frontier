@@ -1,0 +1,25 @@
+{
+  "sample_rate": 120.0,
+  "grounded": {
+    "walk_tempo": 0.90,
+    "run_tempo": 0.94,
+    "sprint_tempo": 0.98,
+    "jump_tempo": 0.95,
+    "vault_tempo": 0.97,
+    "stance_bias": 0.035,
+    "forward_lean_degrees": 3.0,
+    "counter_roll_degrees": 1.2,
+    "swing_knee_flex_degrees": 3.0
+  },
+  "athletic": {
+    "walk_tempo": 1.08,
+    "run_tempo": 1.12,
+    "sprint_tempo": 1.10,
+    "jump_tempo": 1.03,
+    "vault_tempo": 1.05,
+    "stance_bias": -0.022,
+    "forward_lean_degrees": 5.0,
+    "counter_roll_degrees": 2.5,
+    "swing_knee_flex_degrees": 8.0
+  }
+}

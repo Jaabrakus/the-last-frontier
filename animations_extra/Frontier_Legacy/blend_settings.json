@@ -1,0 +1,45 @@
+{
+  "sample_rate": 120.0,
+  "locomotion": {
+    "torso": 0.25,
+    "arms": 0.35,
+    "hands": 0.3,
+    "head": 0.1,
+    "hips": 0.0,
+    "legs": 0.0
+  },
+  "jump": {
+    "torso": 0.3,
+    "arms": 0.4,
+    "hands": 0.3,
+    "head": 0.1,
+    "hips": 0.25,
+    "legs": 0.3
+  },
+  "vault": {
+    "torso": 0.55,
+    "arms": 0.7,
+    "hands": 0.7,
+    "head": 0.15,
+    "hips": 0.55,
+    "legs": 0.75
+  },
+  "action_edge_fade": 0.08,
+  "vault_reference_move": "vault_sprint",
+  "weapon": {
+    "torso": 0.25,
+    "arms": 0.35,
+    "hands": 0.3,
+    "head": 0.1,
+    "hips": 0.0,
+    "legs": 0.0
+  },
+  "climb": {
+    "torso": 0.35,
+    "arms": 0.45,
+    "hands": 0.35,
+    "head": 0.1,
+    "hips": 0.25,
+    "legs": 0.35
+  }
+}

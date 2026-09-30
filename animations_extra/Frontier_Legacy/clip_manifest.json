@@ -1,0 +1,680 @@
+{
+	"base": "Frontier",
+	"clips": [
+		{
+			"agls_phase_offset": 0.616666666666667,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_CLF_Walk_B",
+			"duration": 2.66666674613953,
+			"frontier_legacy_clip": "frontier_legacy_crouch_walk_backward",
+			"frontier_reference": "actor_b-p-crouch-walk-bw",
+			"leg_tracks_identical": true,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "bca5cfb08cd640bc61ee0fc81b6b32cf46fe4d3661eeaf254252ae1c678608d2",
+			"variant_identity": "42ff957e5302a414ab07814b67bf374b54f18e9314b50495152d3b9e780ebb40"
+		},
+		{
+			"agls_phase_offset": 0.9,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_CLF_Walk_F",
+			"duration": 2.66666674613953,
+			"frontier_legacy_clip": "frontier_legacy_crouch_walk_forward",
+			"frontier_reference": "actor_b-p-crouch-walk-fw",
+			"leg_tracks_identical": true,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "0c766506315565232e4a5b24b85e01fe32b4e0cd3dc7e086b2a372464499108e",
+			"variant_identity": "fd6a8d2ab0557792eac8fe4e25d102c149d40749db0ab593eaa1cc8c608cbb11"
+		},
+		{
+			"agls_phase_offset": 0.5,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_CLF_Walk_L",
+			"duration": 2.66666674613953,
+			"frontier_legacy_clip": "frontier_legacy_crouch_walk_left",
+			"frontier_reference": "actor_b-p-crouch-walk-fw-lt",
+			"leg_tracks_identical": true,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "bb7a5b654884dac2ddf6c233d660c410cc375b7bd878f98a50b56f9347e023dd",
+			"variant_identity": "c68d6340ca395bea758d11c9221c6ec67e879c6452973d2836760a5c6349af56"
+		},
+		{
+			"agls_phase_offset": 0.666666666666667,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_CLF_Walk_R",
+			"duration": 2.66666674613953,
+			"frontier_legacy_clip": "frontier_legacy_crouch_walk_right",
+			"frontier_reference": "actor_b-p-crouch-walk-fw-rt",
+			"leg_tracks_identical": true,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "1739d786b8ba1c7a15b90ce5dfe93d7b830d1d30c8bb6a835c3467579718300c",
+			"variant_identity": "6625a5e518db84137459782dc45703048f7dedcc2995b09602e88bacd5565ee1"
+		},
+		{
+			"agls_phase_offset": 0.716666666666667,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_N_Run_B",
+			"duration": 0.733333349227905,
+			"frontier_legacy_clip": "frontier_legacy_run_backward",
+			"frontier_reference": "actor_b-p-run-bw",
+			"leg_tracks_identical": true,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "3788f6e0a2b71f1576ca4e9a94465a19bf7480670e593e66c1c6eb617d0976de",
+			"variant_identity": "6bca43e80d02445aeb6986e93b9c1cab973e80d07ef933c2b6ca796e037a2beb"
+		},
+		{
+			"agls_phase_offset": 0.15,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_N_Run_F",
+			"duration": 0.733333349227905,
+			"frontier_legacy_clip": "frontier_legacy_run_forward",
+			"frontier_reference": "actor_b-p-run-fw",
+			"leg_tracks_identical": true,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "6eb7afc84d1075c94a3eba34e5c2040e95ae9cef32a4921f4aa6730d0e4375d2",
+			"variant_identity": "371813da762a7f2085507d7c6bc67dad22a8a528329a09115452e8b1f1fcab2f"
+		},
+		{
+			"agls_phase_offset": 0.15,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_N_Run_LF",
+			"duration": 0.733333349227905,
+			"frontier_legacy_clip": "frontier_legacy_run_left",
+			"frontier_reference": "actor_b-p-run-fw-lt",
+			"leg_tracks_identical": true,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "506121d1fcbf2d67e298db1c06bee4dcbde7f2d56148b9b5383e668faa7ca8a3",
+			"variant_identity": "59dfbf759ca2414efa76e8418efad2335e52550e9ebaf4e7c054c7ce1bd33b5c"
+		},
+		{
+			"agls_phase_offset": 0.15,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_N_Run_RF",
+			"duration": 0.733333349227905,
+			"frontier_legacy_clip": "frontier_legacy_run_right",
+			"frontier_reference": "actor_b-p-run-fw-rt",
+			"leg_tracks_identical": true,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "062f39065fb35142c255a621945466908c341bd0a4f74fa5b8cd84a3c0177300",
+			"variant_identity": "80d6a57d945b84d6f572575b9988e07ac5e0c792eb892d90955bc0dd70bf0f00"
+		},
+		{
+			"agls_phase_offset": 0.133333333333333,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_N_Sprint_F",
+			"duration": 1.33333337306976,
+			"frontier_legacy_clip": "frontier_legacy_sprint_forward",
+			"frontier_reference": "actor_b-p-sprint-fw",
+			"leg_tracks_identical": true,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "ef8f42f3a9e2fa54cfab800e28c1ec0a0e181f9576c8c18e19a6ea23e8722d75",
+			"variant_identity": "9c45be477945bf26390e223fde5ac539bb0c2ddd1e2f1fddef1f1a39b3d76567"
+		},
+		{
+			"agls_phase_offset": 0.2,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_N_Walk_B",
+			"duration": 0.933333337306976,
+			"frontier_legacy_clip": "frontier_legacy_walk_backward",
+			"frontier_reference": "actor_b-p-walk-bw",
+			"leg_tracks_identical": true,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "65133bb6b805a981200f247dc86c9e45386e5a03f669f017dda71b316eb309d1",
+			"variant_identity": "c7dc4e94f0558a502e02d8fcd978a82d0bc7ca5ccd60c7941c9afc4a5bd4bd21"
+		},
+		{
+			"agls_phase_offset": 0.283333333333333,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_N_Walk_F",
+			"duration": 1.13333332538605,
+			"frontier_legacy_clip": "frontier_legacy_walk_forward",
+			"frontier_reference": "actor_b-p-walk-fw",
+			"leg_tracks_identical": true,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "23eb6681194bc6574bcc28950f1af1b9f8e43f2d3492920a4694982822057d1f",
+			"variant_identity": "d1216b4b2fe6f8d9e51a84099980beb624a05715d53251eb0a93723c74bf0e5a"
+		},
+		{
+			"agls_phase_offset": 0.283333333333333,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_N_Walk_LF",
+			"duration": 1.13333332538605,
+			"frontier_legacy_clip": "frontier_legacy_walk_left",
+			"frontier_reference": "actor_b-p-walk-fw-lt",
+			"leg_tracks_identical": true,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "a1e94aaf0bb5631021fb6f72529dee42ea7383822ac1e79702e98e9adbb1c272",
+			"variant_identity": "da665b732c2eadd927455dfa5e1a63da5155d076a7dc53bcc9973e36b5e3c3f5"
+		},
+		{
+			"agls_phase_offset": 0.283333333333333,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_N_Walk_RF",
+			"duration": 1.13333332538605,
+			"frontier_legacy_clip": "frontier_legacy_walk_right",
+			"frontier_reference": "actor_b-p-walk-fw-rt",
+			"leg_tracks_identical": true,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "b905e82b31cfcffda71190f434b05d1532762fcb8c2c01824336ab8e770b867f",
+			"variant_identity": "d605f60426fa7cc3899729dbddf6ba9d7744a01351ef5e4eb867583fd04807c7"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_Props_Bow_Aim_Sweep",
+			"duration": 1.0,
+			"frontier_legacy_clip": "frontier_legacy_bow_aim",
+			"frontier_reference": "actor_b-p-bow-aim-idle",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "3bc83db195bc94f55bd42469c10a164b0a9d1676bf14a85e9add3f0b5966a4d1",
+			"variant_identity": "80716f017d286941a70aa962267fd87263bddf3cfcf2977d39d4f56d50e96489"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_Props_Bow_Aim_Sweep_Crouched",
+			"duration": 1.0,
+			"frontier_legacy_clip": "frontier_legacy_bow_aim_crouch",
+			"frontier_reference": "actor_b-p-bow-aim-crouch-idle",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "421ba0672660e46286bdc62ae940cbb83b7fde213060152f5c304b2dfe16a41f",
+			"variant_identity": "7065024b97fc39be0fec31aafbd9b8e79f6806168755a6c2af9c2d7b402882a3"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_Props_Bow_Sheath_Crouch",
+			"duration": 1.16666662693024,
+			"frontier_legacy_clip": "frontier_legacy_bow_sheath_crouch",
+			"frontier_reference": "actor_b-p-crouch-idle",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "84832be4be2cc6348eb119bd05411469a11a865bedd6a743189f27540e39d1cc",
+			"variant_identity": "b1ec67a99e2278aa80efa2fea6f3c328059635d6c69c1142818d94bba65148d2"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_Props_Bow_Sheath_Stand",
+			"duration": 1.16666662693024,
+			"frontier_legacy_clip": "frontier_legacy_bow_sheath",
+			"frontier_reference": "actor_b-p-relax-idle",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "3a4e57742150e3d074db8643816bae8f354b0882aa9c369762787ac9036826f4",
+			"variant_identity": "80eac2ff497d55b3169fba33246d062e4a7cea02a23790135f66e2624aa797b0"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_Props_RecurveBow_Draw_Crouch",
+			"duration": 1.0,
+			"frontier_legacy_clip": "frontier_legacy_bow_draw_crouch",
+			"frontier_reference": "actor_b-p-bow-aim-crouch-idle",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "264d52b6dde6a4220ad81ca275c38cb202c4587c530bbab4bfc1765d54531409",
+			"variant_identity": "9368fef73a8c79a185e01122bfaa81b888c0fc72df335af2557dd26cea039b9f"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_Props_RecurveBow_Draw_Stand",
+			"duration": 1.0,
+			"frontier_legacy_clip": "frontier_legacy_bow_draw",
+			"frontier_reference": "actor_b-p-bow-aim-idle",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "9792241138b8227949ab2dcfede80b232d094ff7c1d870a2fe59a10d6427a513",
+			"variant_identity": "228bddda64be345965cf522f8709a1a177590d429890c5b98a190dfe03cd5774"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_Props_RecurveBow_Recoil",
+			"duration": 0.633333325386047,
+			"frontier_legacy_clip": "frontier_legacy_bow_release",
+			"frontier_reference": "actor_b-p-bow-aim-idle",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "0c44eda5e25d4bf3e34ece0e216270c83900ad6a541c1bd935d296bc0db1b134",
+			"variant_identity": "216451258ca5b6eb051b6b2ab79e3d48f10fe38277bd43c7ecac6889c24f4611"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_Props_Rifle_Aim_Sweep",
+			"duration": 1.0,
+			"frontier_legacy_clip": "frontier_legacy_rifle_aim",
+			"frontier_reference": "actor_b-p-rifle-idle-aim",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "ddc67d279cf09998d3444867f472cbeab0154805d3bcf59d11b1b709f9e9b84f",
+			"variant_identity": "06b02b8112225ed478126b035baccc8563ed1978c5af287664c2ce526fbbccd8"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.35,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.0,
+				"legs": 0.0,
+				"torso": 0.25
+			},
+			"clip": "ALS_Props_Rifle_Aim_Sweep_Crouched",
+			"duration": 1.0,
+			"frontier_legacy_clip": "frontier_legacy_rifle_aim_crouch",
+			"frontier_reference": "actor_b-p-rifle-aim-crouch-idle",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "46efd9c30de0b39ff1916220bdf3fb58b776c5b7189b91b73f712c6eda100d5d",
+			"variant_identity": "b6541f70b5b837888b4cc942165c2a5d61a4bdcc309f58d613632155141a2e68"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.4,
+				"hands": 0.3,
+				"head": 0.1,
+				"hips": 0.25,
+				"legs": 0.3,
+				"torso": 0.3
+			},
+			"clip": "ALSv2_JumpSeq_Idle",
+			"duration": 0.899999976158142,
+			"frontier_legacy_clip": "frontier_legacy_jump",
+			"frontier_reference": "actor_b-p-jump-long",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "eec6999393634f9b70d9360de9041e0bded273ee495d3d4649503508e317f4c7",
+			"variant_identity": "b2486b0cc53d95a2e9a6607469d2087684206afeb638a489169eae23090615f0"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.45,
+				"hands": 0.35,
+				"head": 0.1,
+				"hips": 0.25,
+				"legs": 0.35,
+				"torso": 0.35
+			},
+			"clip": "ALSv2_Mantle_2m_Walking_01",
+			"duration": 1.10000002384186,
+			"frontier_legacy_clip": "frontier_legacy_mantle_idle",
+			"frontier_reference": "actor_b-p-ledge-chest-climb-up^idle",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "2dd3e5ce089c313b817a0a6e64b08f09e1dc94de3a05d920075c86e67548efe0",
+			"variant_identity": "03eb6cfb3b30dba1acf36aad3203e71f51bedfebacacd76a34f954ab8c5994d1"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.45,
+				"hands": 0.35,
+				"head": 0.1,
+				"hips": 0.25,
+				"legs": 0.35,
+				"torso": 0.35
+			},
+			"clip": "ALSv2_Mantle_2m_Walking_02",
+			"duration": 2.0,
+			"frontier_legacy_clip": "frontier_legacy_mantle_run",
+			"frontier_reference": "actor_b-p-ledge-chest-climb-up^run",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "ca8a6ffa0855d9e298a06a51478259a41c09198c6048c88cdf66cabaaefcbd0d",
+			"variant_identity": "77c22b869f0ab801942c971cacb40d5ad276e6afcaf644289ff2ee084568e6ca"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.7,
+				"hands": 0.7,
+				"head": 0.15,
+				"hips": 0.55,
+				"legs": 0.75,
+				"torso": 0.55
+			},
+			"clip": "ALSv2_N_Vault_1m_LH",
+			"duration": 1.3,
+			"frontier_legacy_clip": "frontier_legacy_vault_left_hand",
+			"frontier_reference": "vault_sprint",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "39fea5f68168d20fa07aa5ff8cc550bc8f471500b443302ebdde24852b7f1075",
+			"variant_identity": "b7baa8fafa43f6ad1d9c9c49e513fd619cadf91b074288864f043b2add5ca6d7"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.7,
+				"hands": 0.7,
+				"head": 0.15,
+				"hips": 0.55,
+				"legs": 0.75,
+				"torso": 0.55
+			},
+			"clip": "ALSv2_N_Vault_1m_RH",
+			"duration": 1.3,
+			"frontier_legacy_clip": "frontier_legacy_vault_right_hand",
+			"frontier_reference": "vault_sprint",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "87c9128fb6c28540d0918bf020913d2212797f84b20dcb310473b7e6ef7d4d05",
+			"variant_identity": "0f35b71fc32c2918bd3238963438af86d3f884d5ed916ffb60b415fafe657c4b"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.45,
+				"hands": 0.35,
+				"head": 0.1,
+				"hips": 0.25,
+				"legs": 0.35,
+				"torso": 0.35
+			},
+			"clip": "CMC_Climb_Hanging_Idle_Loop",
+			"duration": 8.39999961853027,
+			"frontier_legacy_clip": "frontier_legacy_ledge_idle",
+			"frontier_reference": "actor_b-p-ledge-idle",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "0870af4d7c74733085ead299ca44537dcd04cca99723cd79f1b0ca21e5dd9525",
+			"variant_identity": "5c3630b51fe92589b58bc7ec89bb63fa82a0e1985c2da3dfd5da841f4c2eb201"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.45,
+				"hands": 0.35,
+				"head": 0.1,
+				"hips": 0.25,
+				"legs": 0.35,
+				"torso": 0.35
+			},
+			"clip": "CMC_Shimmy_Long_LH_U",
+			"duration": 2.20000004768372,
+			"frontier_legacy_clip": "frontier_legacy_climb_up",
+			"frontier_reference": "actor_b-p-ledge-hang-climb-up^ledge-knee",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "f6fcc74f7bef6db44a7763e374cb66dc13568f8221b5e900f2dcd5de3856f529",
+			"variant_identity": "39714144ab1c4f92028cef1626bf14429dbc23c8865679e4de3d1a16bff205d9"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.45,
+				"hands": 0.35,
+				"head": 0.1,
+				"hips": 0.25,
+				"legs": 0.35,
+				"torso": 0.35
+			},
+			"clip": "LMv2_Enter_Ladder_Down_01",
+			"duration": 4.40000009536743,
+			"frontier_legacy_clip": "frontier_legacy_ladder_mount_top",
+			"frontier_reference": "actor_b-p-ladder-mount-top",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "f5f22c8e0e10f0677cfc0dffae09e25e1c865f1f61613547ca9baed4000c05b1",
+			"variant_identity": "f5648031b44186c80fff3278c933a4108292ee9ea65f669e223f122ab56d8c41"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.45,
+				"hands": 0.35,
+				"head": 0.1,
+				"hips": 0.25,
+				"legs": 0.35,
+				"torso": 0.35
+			},
+			"clip": "LMv2_Exit_Ladder_Up_01",
+			"duration": 3.0,
+			"frontier_legacy_clip": "frontier_legacy_ladder_exit_top",
+			"frontier_reference": "actor_b-p-ladder-dismount--top-start",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "a2a7eb9d06a7b86c7bbb95549822d17409ffec90d6b6f86b2c1da09eb322592b",
+			"variant_identity": "cc123caae2165792a1adc6eacc06fc60959d8a8b933cdcd069678ed2879fe469"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.45,
+				"hands": 0.35,
+				"head": 0.1,
+				"hips": 0.25,
+				"legs": 0.35,
+				"torso": 0.35
+			},
+			"clip": "LMv2_Movement_Down_01",
+			"duration": 0.600000023841858,
+			"frontier_legacy_clip": "frontier_legacy_ladder_down",
+			"frontier_reference": "actor_b-p-ladder-climb-down",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "fcf2007bc1542289ce70aae877655b65401f527755916c855f7734e885eeeae1",
+			"variant_identity": "4fac066d91f3580512b2b882fc6ef4036b916057500ea0d3dc051f0fd61b54c8"
+		},
+		{
+			"agls_phase_offset": 0.0,
+			"agls_rotation_weights": {
+				"arms": 0.45,
+				"hands": 0.35,
+				"head": 0.1,
+				"hips": 0.25,
+				"legs": 0.35,
+				"torso": 0.35
+			},
+			"clip": "LMv2_Movement_Up_01",
+			"duration": 0.5,
+			"frontier_legacy_clip": "frontier_legacy_ladder_up",
+			"frontier_reference": "actor_b-p-ladder-climb-up",
+			"leg_tracks_identical": false,
+			"root_and_position_tracks_identical": true,
+			"source_sha256": "e043e90ce869d35555e36c0c5ad7200279e946e1ba5d36f3f4ea40c0ad17c568",
+			"variant_identity": "7e2f8ffe44dedd89d1d2240ba9af9797c7186f9a8ef91137d4f76e9152def07f"
+		}
+	],
+	"config": {
+		"action_edge_fade": 0.08,
+		"climb": {
+			"arms": 0.45,
+			"hands": 0.35,
+			"head": 0.1,
+			"hips": 0.25,
+			"legs": 0.35,
+			"torso": 0.35
+		},
+		"jump": {
+			"arms": 0.4,
+			"hands": 0.3,
+			"head": 0.1,
+			"hips": 0.25,
+			"legs": 0.3,
+			"torso": 0.3
+		},
+		"locomotion": {
+			"arms": 0.35,
+			"hands": 0.3,
+			"head": 0.1,
+			"hips": 0.0,
+			"legs": 0.0,
+			"torso": 0.25
+		},
+		"sample_rate": 120.0,
+		"vault": {
+			"arms": 0.7,
+			"hands": 0.7,
+			"head": 0.15,
+			"hips": 0.55,
+			"legs": 0.75,
+			"torso": 0.55
+		},
+		"vault_reference_move": "vault_sprint",
+		"weapon": {
+			"arms": 0.35,
+			"hands": 0.3,
+			"head": 0.1,
+			"hips": 0.0,
+			"legs": 0.0,
+			"torso": 0.25
+		}
+	},
+	"method": "Authored blend of existing Frontier and AGLS motion",
+	"name": "Frontier Legacy",
+	"source_library_sha256": "7513a6da541dc780ca0433242d686d78ee5a6f8338f7eac1737a305cbc7096fa"
+}

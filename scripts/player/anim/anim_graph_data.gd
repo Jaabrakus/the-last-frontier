@@ -27,8 +27,14 @@ const METRICS_PATH := "res://animations/actor_b_clip_metrics.json"
 ## {lib, clip, speed, length}; the libraries they live in, by name.
 const CLIP_OVERRIDES_PATH := "res://data/anim_author/locomotion_clips.json"
 ## Arm layers the roles take in place of their own (tools/anim_author/author_locomotion.gd writes it).
+const LEGACY_GAMEPLAY_PATH := "res://data/anim_author/frontier_legacy_gameplay.json"
+const LEGACY_BASELINE_PATH := "res://data/anim_author/frontier_legacy_baseline.json"
 const CARRY_PATCHES_PATH := "res://data/anim_author/carry_patches.json"
-const OVERRIDE_LIBS := {"frontier_locomotion": "res://animations_extra/Frontier_Locomotion.res"}
+const OVERRIDE_LIBS := {"frontier_legacy_runtime": "res://animations_extra/Frontier_Legacy/Frontier_Legacy_Runtime.res",
+	"frontier_locomotion": "res://animations_extra/Frontier_Locomotion.res",
+	"frontier_legacy": "res://animations_extra/Frontier_Legacy/Frontier_Legacy.res",
+	"frontier_legacy_grounded": "res://animations_extra/Frontier_Legacy/Grounded/Frontier_Legacy_Grounded.res",
+	"frontier_legacy_athletic": "res://animations_extra/Frontier_Legacy/Athletic/Frontier_Legacy_Athletic.res"}
 const FIXTURE_GRAPH := "res://tools/anim_graph/fixtures/mini_graph.json"
 const FIXTURE_METRICS := "res://tests/anim/fixtures/mini_metrics.json"
 const LIB := &"actor_b"
@@ -78,6 +84,7 @@ static func load_files(p_graph := GRAPH_PATH, p_metrics := METRICS_PATH) -> Anim
 	if p_graph == GRAPH_PATH:
 		d.apply_clip_overrides()
 		d.apply_carry_patches()
+		d.apply_legacy_gameplay()
 	d.graph_path = p_graph
 	d.metrics_path = p_metrics
 	if p_metrics != "" and m.is_empty():
@@ -109,7 +116,7 @@ static func clear_cache() -> void:
 ## speed and its stride (speed * length) replaced; the rest of its entry and metrics (the plant phases, the loop) are
 ## the original's. Copies the entries it changes, so the parsed-file cache stays as the files have it.
 func apply_clip_overrides() -> void:
-	var t := _read_json(CLIP_OVERRIDES_PATH)
+	var t := _read_json(LEGACY_BASELINE_PATH if "--frontier-legacy-off" in OS.get_cmdline_user_args() else CLIP_OVERRIDES_PATH)
 	if t.is_empty():
 		return
 	graph = graph.duplicate(false)
@@ -123,6 +130,7 @@ func apply_clip_overrides() -> void:
 			continue
 		var info: Dictionary = (graph.clips[name] as Dictionary).duplicate(false)
 		info["godot"] = "%s/%s" % [lib, o.clip]
+		info["length"] = float(o.get("length", info.get("length", 0)))
 		graph.clips[name] = info
 		_override_libs[lib] = OVERRIDE_LIBS[lib]
 		if o.has("speed") and metrics.clips.has(name):
@@ -209,6 +217,43 @@ func apply_carry_patches() -> void:
 				layers.insert(at + i, put[i])
 			role["layers"] = layers
 			graph.roles[key] = role
+
+
+## Worktree-only adapters of the approved bow poses. Native graph identities remain intact;
+## only effective resource paths change, and other weapon profiles keep their own entries.
+func apply_legacy_gameplay() -> void:
+	if "--frontier-legacy-off" in OS.get_cmdline_user_args():
+		return
+	var cfg := _read_json(LEGACY_GAMEPLAY_PATH)
+	if not bool(cfg.get("enabled", false)):
+		return
+	graph = graph.duplicate(false)
+	graph["clips"] = (graph.get("clips", {}) as Dictionary).duplicate(false)
+	graph["actions"] = (graph.get("actions", {}) as Dictionary).duplicate(false)
+	for name: String in cfg.get("clips", {}):
+		var spec: Dictionary = cfg.clips[name]
+		var entry: Dictionary = (graph.clips.get(name, {}) as Dictionary).duplicate(false)
+		entry["godot"] = String(spec.lib) + "/" + String(spec.clip)
+		entry["length"] = float(spec.length)
+		if not graph.clips.has(name):
+			entry.merge({"original_name": name, "source_names": [name], "source_kind": "clip", "additive": false, "alternatives": [], "graph_names": []})
+		graph.clips[name] = entry
+		_alias[name] = name
+		_override_libs[spec.lib] = OVERRIDE_LIBS[spec.lib]
+	for key: String in cfg.get("actions", {}):
+		if not graph.actions.has(key):
+			continue
+		var action: Dictionary = (graph.actions[key] as Dictionary).duplicate(true)
+		action.merge(cfg.actions[key], true)
+		if action.get("partial_role") is Dictionary:
+			action.partial_role["clip"] = action.partial
+			action.partial_role["graph_clip"] = action.partial
+		graph.actions[key] = action
+	graph["frontier_legacy_charge_trajectory"] = bool(cfg.get("charge_trajectory", false))
+	metrics = metrics.duplicate(false)
+	metrics["pitch"] = (metrics.get("pitch", {}) as Dictionary).duplicate(false)
+	for key: String in cfg.get("pitch", {}):
+		metrics.pitch[key] = cfg.pitch[key]
 
 
 ## Libraries the overriding clips live in: name -> resource path.
