@@ -59,6 +59,16 @@
 			"lib": "frontier_locomotion"
 		}
 	},
+	"crouch_change": {
+		"bow/crouch_to_stand": {
+			"layers_of": "bow/run/idle",
+			"why": "and through the change up"
+		},
+		"bow/stand_to_crouch": {
+			"layers_of": "bow/run/idle",
+			"why": "the bow stays where it is through the change down: the standing idle's layers"
+		}
+	},
 	"rules": [
 		{
 			"layers": [
@@ -621,6 +631,23 @@
 			],
 			"weapon": "tomahawk",
 			"why": "the tomahawk crouches like the pistol (user 2026-09-30): the pistol's crouch arm on every role"
+		},
+		{
+			"copy_from": "bow",
+			"copy_mode": "run",
+			"modes": [
+				"crouch"
+			],
+			"roles_except": [],
+			"roles_only": [
+				"idle"
+			],
+			"slots": [
+				"arms",
+				"hands"
+			],
+			"weapon": "bow",
+			"why": "the bow's crouch idle holds it as the standing idle does (user 2026-09-30: \"we just keep the bow where its at\"): the standing idle's arm and hand layers"
 		}
 	]
 }

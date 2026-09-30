@@ -254,6 +254,19 @@ func apply_carry_patches() -> void:
 				layers.insert(at + i, put[i])
 			role["layers"] = layers
 			graph.roles[key] = role
+	# the stand-in crouch change clips (no arm layers in the graph, for any weapon) take the arm and hand layers of a role of
+	# ours: the bow keeps its hold through the change (user 2026-09-30: "we just keep the bow where its at")
+	var changes: Dictionary = t.get("crouch_change", {})
+	if not changes.is_empty():
+		graph["crouch_change"] = (graph.get("crouch_change", {}) as Dictionary).duplicate(false)
+		for key: String in changes:
+			var e: Dictionary = (graph.crouch_change.get(key, {}) as Dictionary).duplicate(false)
+			if e.is_empty() or not graph.roles.has(String(changes[key].layers_of)):
+				continue
+			var full: Dictionary = (e.get("full", {}) as Dictionary).duplicate(false)
+			full["layers"] = (graph.roles[String(changes[key].layers_of)].get("layers", []) as Array).duplicate(false)
+			e["full"] = full
+			graph.crouch_change[key] = e
 
 
 ## Worktree-only adapters of the approved bow poses. Native graph identities remain intact;
