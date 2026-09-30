@@ -64,6 +64,7 @@ var _mods_off: Array = []            ## PlayerAnim's modifiers switched off whil
 var _assist := TravStepAssist.new()
 var _assist_ready := false
 var step_ik: StepFootIK
+var stop_ik: StopFootIK
 
 
 static func install(p: FrontierPlayer) -> PlayerTraversal:
@@ -126,6 +127,12 @@ func adopt() -> void:
 	step_ik.stepping = Callable(_assist, "stepping")
 	skeleton.add_child(step_ik)
 	skeleton.move_child(step_ik, first + 2)
+	# the legs of a stop after a run forward (no stop clip: the feet planted as the body skids, then the back foot steps up)
+	stop_ik = StopFootIK.new()
+	stop_ik.name = "StopFootIK"
+	stop_ik.player = player
+	skeleton.add_child(stop_ik)
+	skeleton.move_child(stop_ik, first + 3)
 	_build_tree()
 	tree.active = false
 	call_deferred(&"_bake_world")
