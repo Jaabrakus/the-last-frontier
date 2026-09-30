@@ -200,6 +200,7 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array,
 			"sample_s": 0.0, "bones": grip_bones, "superseded_by": null, "weight_curve": null}
 	var mid_layer := {"clip": "own-rifle-crouch-mid", "kind": "partial", "slot": "arms", "status": "frontier", "weight": 0.8,
 			"sample_s": 0.0, "bones": mid_bones, "superseded_by": null, "weight_curve": null}
+	var pistol_idle_arm := {"clip": "actor_b-r-arm-gun-idle", "kind": "partial", "slot": "arms", "status": "resolved", "weight": 1.0, "superseded_by": null, "weight_curve": null}
 	var idle_layer := {"clip": "own-rifle-crouch-idle", "kind": "partial", "slot": "arms", "status": "frontier", "weight": 1.0,
 			"sample_s": 0.0, "bones": idle_bones, "superseded_by": null, "weight_curve": null}
 	var mid_fw_layer := mid_layer.duplicate()
@@ -234,9 +235,14 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array,
 			{"why": "the pistol held bent at the crouch idle (Pistol.relaxed crouch_idle: arm-gun-crouch-idle)",
 			"weapon": "pistol", "modes": ["crouch"], "roles_except": [], "roles_only": ["idle"], "append": true,
 			"layers": [{"clip": "actor_b-r-arm-gun-crouch-idle", "kind": "partial", "slot": "arms", "status": "resolved", "weight": 1.0, "superseded_by": null, "weight_curve": null}]},
-			{"why": "the pistol is up (the idle arm) from the start of the run's stop (user 2026-09-30: \"for the pistol stop have the pistol up for that split second\"): the graph's stop takes the idle arm at 0.8 over the run's hanging one; ours takes it whole",
-			"weapon": "pistol", "modes": ["run"], "roles_except": [], "roles_only": ["stop_fw", "stop_fw_lt", "stop_fw_rt", "stop_bw", "stop_bw_lt", "stop_bw_rt"],
-			"slots": ["arms", "arms_add"], "layers": [{"clip": "actor_b-r-arm-gun-idle", "kind": "partial", "slot": "arms", "status": "resolved", "weight": 1.0, "superseded_by": null, "weight_curve": null}]},
+			{"why": "the pistol keeps the idle arm running and jogging (user 2026-09-30: \"for pistol run and jog keep the idle arm\"): its own idle arm (muzzle up) in place of the run's arm (muzzle down 72 deg), on every role of the run and the sprint that has an arm layer; stops included",
+			"weapon": "pistol", "modes": ["run"], "roles_except": [], "roles_only": MOVE_ROLES, "slots": ["arms", "arms_add"], "layers": [pistol_idle_arm]},
+			{"why": "the pistol's sprint stops: the idle arm too",
+			"weapon": "pistol", "modes": ["sprint"], "roles_except": [], "roles_only": ["stop_fw", "stop_fw_lt", "stop_fw_rt", "stop_bw", "stop_bw_lt", "stop_bw_rt"], "slots": ["arms", "arms_add"], "layers": [pistol_idle_arm]},
+			{"why": "the roles of the run the graph gives no arm: the idle arm (the pistol would drop to the base pose, muzzle down, for the turn)",
+			"weapon": "pistol", "modes": ["run"], "roles_except": [], "roles_only": ["rev_bw_fw", "rev_bw_fw_lt", "rev_bw_fw_rt", "rev_fw_bw", "rev_fw_bw_lt", "rev_fw_bw_rt", "turn_l", "turn_r", "turn_l_180", "turn_r_180", "quick_turn_180"], "append": true, "layers": [pistol_idle_arm]},
+			{"why": "the roles of the sprint with no arm layer: the idle arm",
+			"weapon": "pistol", "modes": ["sprint"], "roles_except": [], "roles_only": ["fw", "fw_lt", "fw_rt", "bw", "bw_lt", "bw_rt", "start_fw", "start_fw_lt", "start_fw_rt", "start_bw", "start_bw_lt", "start_bw_rt", "rev_bw_fw", "rev_bw_fw_lt", "rev_bw_fw_rt", "rev_fw_bw", "rev_fw_bw_lt", "rev_fw_bw_rt", "turn_l", "turn_r", "turn_l_180", "turn_r_180", "quick_turn_180"], "append": true, "layers": [pistol_idle_arm]},
 			{"why": "the tomahawk crouches like the pistol (user 2026-09-30): the pistol's crouch arm on every role",
 			"weapon": "tomahawk", "modes": ["crouch"], "roles_except": [], "slots": ["arms", "arms_add"], "copy_from": "pistol"},
 		],

@@ -461,6 +461,57 @@
 			],
 			"roles_except": [],
 			"roles_only": [
+				"fw",
+				"fw_lt",
+				"fw_rt",
+				"bw",
+				"bw_lt",
+				"bw_rt",
+				"start_fw",
+				"start_fw_lt",
+				"start_fw_rt",
+				"start_bw",
+				"start_bw_lt",
+				"start_bw_rt",
+				"stop_fw",
+				"stop_fw_lt",
+				"stop_fw_rt",
+				"stop_bw",
+				"stop_bw_lt",
+				"stop_bw_rt",
+				"rev_bw_fw",
+				"rev_bw_fw_lt",
+				"rev_bw_fw_rt",
+				"rev_fw_bw",
+				"rev_fw_bw_lt",
+				"rev_fw_bw_rt",
+				"turn_l",
+				"turn_r"
+			],
+			"slots": [
+				"arms",
+				"arms_add"
+			],
+			"weapon": "pistol",
+			"why": "the pistol keeps the idle arm running and jogging (user 2026-09-30: \"for pistol run and jog keep the idle arm\"): its own idle arm (muzzle up) in place of the run's arm (muzzle down 72 deg), on every role of the run and the sprint that has an arm layer; stops included"
+		},
+		{
+			"layers": [
+				{
+					"clip": "actor_b-r-arm-gun-idle",
+					"kind": "partial",
+					"slot": "arms",
+					"status": "resolved",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"sprint"
+			],
+			"roles_except": [],
+			"roles_only": [
 				"stop_fw",
 				"stop_fw_lt",
 				"stop_fw_rt",
@@ -473,7 +524,85 @@
 				"arms_add"
 			],
 			"weapon": "pistol",
-			"why": "the pistol is up (the idle arm) from the start of the run's stop (user 2026-09-30: \"for the pistol stop have the pistol up for that split second\"): the graph's stop takes the idle arm at 0.8 over the run's hanging one; ours takes it whole"
+			"why": "the pistol's sprint stops: the idle arm too"
+		},
+		{
+			"append": true,
+			"layers": [
+				{
+					"clip": "actor_b-r-arm-gun-idle",
+					"kind": "partial",
+					"slot": "arms",
+					"status": "resolved",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"run"
+			],
+			"roles_except": [],
+			"roles_only": [
+				"rev_bw_fw",
+				"rev_bw_fw_lt",
+				"rev_bw_fw_rt",
+				"rev_fw_bw",
+				"rev_fw_bw_lt",
+				"rev_fw_bw_rt",
+				"turn_l",
+				"turn_r",
+				"turn_l_180",
+				"turn_r_180",
+				"quick_turn_180"
+			],
+			"weapon": "pistol",
+			"why": "the roles of the run the graph gives no arm: the idle arm (the pistol would drop to the base pose, muzzle down, for the turn)"
+		},
+		{
+			"append": true,
+			"layers": [
+				{
+					"clip": "actor_b-r-arm-gun-idle",
+					"kind": "partial",
+					"slot": "arms",
+					"status": "resolved",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"sprint"
+			],
+			"roles_except": [],
+			"roles_only": [
+				"fw",
+				"fw_lt",
+				"fw_rt",
+				"bw",
+				"bw_lt",
+				"bw_rt",
+				"start_fw",
+				"start_fw_lt",
+				"start_fw_rt",
+				"start_bw",
+				"start_bw_lt",
+				"start_bw_rt",
+				"rev_bw_fw",
+				"rev_bw_fw_lt",
+				"rev_bw_fw_rt",
+				"rev_fw_bw",
+				"rev_fw_bw_lt",
+				"rev_fw_bw_rt",
+				"turn_l",
+				"turn_r",
+				"turn_l_180",
+				"turn_r_180",
+				"quick_turn_180"
+			],
+			"weapon": "pistol",
+			"why": "the roles of the sprint with no arm layer: the idle arm"
 		},
 		{
 			"copy_from": "pistol",
