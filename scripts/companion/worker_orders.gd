@@ -16,6 +16,7 @@ const REACH_M := 160.0
 const PICK_M := 1.3
 const LINE_UP := 0.08
 const BLUE := Color(0.3, 0.6, 1.0)
+const RED := Color(1.0, 0.18, 0.15)
 const KIND_COLOR := {"best": Color(0.3, 0.6, 1.0), "around": Color(0.35, 0.85, 0.4), "other": Color(1.0, 0.6, 0.2), "over": Color(0.75, 0.4, 1.0)}
 ## The preview is made again when the crosshair has moved this far on the ground (m), at most every PREVIEW_S.
 const PREVIEW_MOVE_M := 2.0
@@ -35,6 +36,10 @@ var _posts: Array[MeshInstance3D] = []
 var routes: Array = []
 var _routes_at := Vector3.INF
 var _routes_t := 0.0
+## RouteDecision's answer for the same point: {} with a way, else {at, why} where the straight line is stopped (drawn in red).
+var blocked: Dictionary = {}
+var _refuse_t := 0.0
+var _blocked_label: Label3D
 var _routes_mesh: ImmediateMesh
 var _routes_node: MeshInstance3D
 var _labels: Array[Label3D] = []
@@ -112,8 +117,10 @@ func _physics_process(dt: float) -> void:
 ## The ways to the point under the crosshair while a worker is picked (made again when it has moved, and not too often).
 func _preview(dt: float) -> void:
 	_routes_t -= dt
+	_refuse_t = maxf(_refuse_t - dt, 0.0)
 	if picked == null or _routes_node == null:
 		routes = []
+		blocked = {}
 		_routes_at = Vector3.INF
 		return
 	if _routes_t > 0.0:
@@ -121,6 +128,7 @@ func _preview(dt: float) -> void:
 	var a := aim()
 	if a.is_empty() or a.get("worker") != null:
 		routes = []
+		blocked = {}
 		_routes_at = Vector3.INF
 		return
 	var p: Vector3 = a.pos
@@ -128,7 +136,23 @@ func _preview(dt: float) -> void:
 		return
 	_routes_t = PREVIEW_S
 	_routes_at = p
-	routes = routes_for(picked, p)
+	routes = _decided(picked, p, routes_for(picked, p))
+
+
+## The ways put in the order RouteDecision would take them (the one it picks first: what L sends her by), or none and `blocked`
+## says where the straight line is stopped.
+func _decided(w: Spouse, p: Vector3, rs: Array) -> Array:
+	var d := RouteDecision.decide(w, p, rs)
+	blocked = {} if bool(d.ok) else (d.blocked as Dictionary)
+	if not bool(d.ok):
+		return []
+	var out: Array = (d.routes as Array).duplicate()
+	var pk := int(d.pick)
+	if pk > 0:
+		var first: Variant = out[pk]
+		out.remove_at(pk)
+		out.push_front(first)
+	return out
 
 
 ## The ways for `w` to `p`: WalkGrid.routes with what she can do.
@@ -190,7 +214,13 @@ func click(queue := false, pick := 0) -> void:
 	var act := next_act
 	if not queue:
 		next_act = ""
-	var rs := routes_for(picked, a.pos) if routes.is_empty() or _routes_at == Vector3.INF or Vector2(a.pos.x - _routes_at.x, a.pos.z - _routes_at.z).length() > PREVIEW_MOVE_M else routes
+	var fresh := routes.is_empty() or _routes_at == Vector3.INF or Vector2(a.pos.x - _routes_at.x, a.pos.z - _routes_at.z).length() > PREVIEW_MOVE_M
+	var rs := _decided(picked, a.pos, routes_for(picked, a.pos)) if fresh else routes
+	if rs.is_empty():
+		# no way there: the order is not given; the red line stays up a moment with what stops it
+		_refuse_t = 2.5
+		_routes_at = a.pos
+		return
 	var way := PackedVector3Array()
 	if not rs.is_empty():
 		way = (rs[mini(pick, rs.size() - 1)] as Dictionary).way
@@ -315,9 +345,35 @@ func _ribbon(a: Vector3, b: Vector3, half: float) -> void:
 		_line_mesh.surface_add_vertex(p0 + side)
 
 
+## No way to the crosshair: a red ribbon from her to where the straight line is stopped, and what stops it.
+func _draw_blocked() -> void:
+	if _blocked_label == null:
+		_blocked_label = Label3D.new()
+		_blocked_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		_blocked_label.no_depth_test = true
+		_blocked_label.fixed_size = true
+		_blocked_label.pixel_size = 0.0011
+		_blocked_label.font_size = 40
+		_blocked_label.outline_size = 10
+		_blocked_label.modulate = RED
+		_blocked_label.top_level = true
+		add_child(_blocked_label)
+	var show := picked != null and not blocked.is_empty() and routes.is_empty()
+	_blocked_label.visible = show
+	if not show:
+		return
+	var at: Vector3 = blocked.at
+	_routes_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+	_strip(picked.global_position, at, 0.22, RED)
+	_routes_mesh.surface_end()
+	_blocked_label.text = "No way: %s" % String(blocked.why)
+	_blocked_label.global_position = Vector3(at.x, at.y + 1.6, at.z)
+
+
 ## The ways to the crosshair, each a coloured ribbon on the ground with its length over it.
 func _draw_routes() -> void:
 	_routes_mesh.clear_surfaces()
+	_draw_blocked()
 	if picked == null or routes.is_empty():
 		for l in _labels:
 			l.visible = false
@@ -355,6 +411,8 @@ func _draw_routes() -> void:
 			var tag: String = {"best": "fastest", "around": "round", "other": "or this way", "over": "over"}.get(String(r2.kind), "")
 			if bool(r2.over):
 				tag = "over"
+			elif not (r2.get("doors", []) as Array).is_empty():
+				tag = "through %s" % ("the door" if (r2.doors as Array).size() == 1 else "%d doors" % (r2.doors as Array).size())
 			_labels[i].text = "%s  %d m%s" % [tag, roundi(float(r2.len)), "" if i == 0 else ("  (Ctrl+L)" if i == 1 else "  (Alt+L)")]
 			_labels[i].modulate = KIND_COLOR.get(String(r2.kind), BLUE)
 			_labels[i].global_position = Vector3(mid.x, FrontierTerrain.height_at(mid.x, mid.z) + 1.6 + 0.35 * i, mid.z)
