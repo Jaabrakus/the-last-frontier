@@ -1,0 +1,17 @@
+{
+ "_doc": "Where a canoe's parts come from (user 2026-09-29: 'gathering first so you can build a real boat from scratch'). TreeHarvest reads 'harvest': what E (hold, the list) offers on a standing tree: species it works on, the tool (any of: an 'item.' id is the survival kit's, 'gather:' a gathering tool, else a pack kind), seconds of work, what it gives (pack kinds), and how often one tree can be used (limit; 'peel' is one sheet a tree: a sheet is a big part of it). Pine pitch is not here: it is foraged from the pines' wounds already (data/forage/forage.json). The boat stand reads 'make': parts cut from poles at the stand (from, takes, makes, tool, seconds). Nothing here is a recipe of the survival core: these are the boat builder's own preparation. Pack kinds: data/survival/game_items.json 'materials'.",
+ "harvest": {
+  "peel": {"text": "Peel a sheet of birch bark", "verb": "Peeling birch bark", "species": ["birch"], "tool": ["item.tool.knife", "item.tool.flint_knife", "item.tool.hatchet", "gather:felling_axe", "item.tool.axe", "item.tool.stone_axe"],
+           "seconds": 8.0, "gives": {"birch_bark_sheet": 1}, "limit": 1, "spent": "This birch has been peeled as far as it should be."},
+  "roots": {"text": "Dig roots for wattap", "verb": "Digging roots", "species": ["white_pine", "hemlock"], "tool": ["digging_stick", "item.tool.hatchet", "gather:felling_axe", "item.tool.axe", "item.tool.stone_axe", "item.tool.knife"],
+            "seconds": 9.0, "gives": {"wattap": 2}, "limit": 3, "spent": "There are no more roots worth digging here."}
+ },
+ "make": {
+  "canoe_stake": {"text": "Cut building stakes", "verb": "Cutting stakes", "from": "pole", "takes": 1, "makes": 3, "seconds": 4.0,
+                  "tool": ["item.tool.knife", "item.tool.flint_knife", "item.tool.hatchet", "gather:felling_axe", "item.tool.axe", "item.tool.stone_axe"]},
+  "canoe_strip": {"text": "Split gunwale strips", "verb": "Splitting strips", "from": "pole", "takes": 1, "makes": 2, "seconds": 6.0,
+                  "tool": ["item.tool.knife", "item.tool.flint_knife", "item.tool.hatchet", "gather:felling_axe", "item.tool.axe", "item.tool.stone_axe"]},
+  "canoe_rib": {"text": "Split and shave ribs", "verb": "Shaving ribs", "from": "pole", "takes": 1, "makes": 6, "seconds": 8.0,
+                "tool": ["item.tool.knife", "item.tool.flint_knife", "item.tool.hatchet", "gather:felling_axe", "item.tool.axe", "item.tool.stone_axe"]}
+ }
+}

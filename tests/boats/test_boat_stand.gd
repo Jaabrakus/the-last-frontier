@@ -54,48 +54,78 @@ func _run() -> void:
 	await process_frame
 	_expect(stand.build != null and stand.build.stages().size() == 5, "the stand has the canoe's five stages")
 	var core := b.core
-	# no parts, no knowledge
+	var g := player.gather
+	# ---- the raw materials, from the trees
+	TreeHarvest.used.clear()
+	g.target = {"type": "tree", "species": "birch", "i": 1001, "pos": bank, "point": bank, "name_disp": "birch"}
+	var acts := TreeHarvest.actions(g)
+	_expect(acts.size() == 1 and acts[0].id == "peel", "a birch offers its bark (%s)" % str(acts))
+	g.target = {"type": "tree", "species": "hemlock", "i": 1002, "pos": bank, "point": bank, "name_disp": "hemlock"}
+	acts = TreeHarvest.actions(g)
+	_expect(acts.size() == 1 and acts[0].id == "roots", "a hemlock offers its roots")
+	g.target = {"type": "tree", "species": "oak", "i": 1003, "pos": bank, "point": bank, "name_disp": "oak"}
+	_expect(TreeHarvest.actions(g).is_empty(), "an oak offers nothing for a canoe")
+	g.target = {"type": "tree", "species": "birch", "i": 1001, "pos": bank, "point": bank, "name_disp": "birch"}
+	var told := TreeHarvest.begin("peel", g, true)
+	if not TreeHarvest.has_any(player, g, ["item.tool.knife", "gather:felling_axe"]):
+		_expect(told.contains("You need"), "no knife or axe: it will not peel (%s)" % told)
+		SurvivalInventory.add(core, "item.tool.knife", 1.0)
+		told = TreeHarvest.begin("peel", g, true)
+	_expect(TreeHarvest.pack_count(player, "birch_bark_sheet") == 1, "a knife, and a birch gives a sheet of bark to the pack (%s)" % told)
+	told = TreeHarvest.begin("peel", g, true)
+	_expect(TreeHarvest.pack_count(player, "birch_bark_sheet") == 1 and told.contains("peeled"), "the same birch gives no more (%s)" % told)
+	for i in [1011, 1012]:
+		g.target = {"type": "tree", "species": "birch", "i": i, "pos": bank, "point": bank, "name_disp": "birch"}
+		TreeHarvest.begin("peel", g, true)
+	_expect(TreeHarvest.pack_count(player, "birch_bark_sheet") == 3, "three birches, three sheets")
+	for i in [2001, 2002, 2003, 2004]:
+		g.target = {"type": "tree", "species": "white_pine" if i % 2 == 0 else "hemlock", "i": i, "pos": bank, "point": bank, "name_disp": "pine"}
+		for k in 3:
+			TreeHarvest.begin("roots", g, true)
+	_expect(TreeHarvest.pack_count(player, "wattap") == 24, "four trees' roots dug three times: %d bundles of wattap, and a tree runs out after three" % TreeHarvest.pack_count(player, "wattap"))
+	# the parts from poles at the stand
+	stand.instant_work = true
+	TreeHarvest.pack_add(player, "pole", 10)
+	told = stand.make_part("canoe_stake")
+	_expect(TreeHarvest.pack_count(player, "canoe_stake") == 3 and TreeHarvest.pack_count(player, "pole") == 9, "a pole cut into three stakes (%s)" % told)
+	for i in 4:
+		stand.make_part("canoe_stake")
+	for i in 2:
+		stand.make_part("canoe_strip")
+	for i in 3:
+		stand.make_part("canoe_rib")
+	_expect(TreeHarvest.pack_count(player, "canoe_stake") == 15 and TreeHarvest.pack_count(player, "canoe_strip") == 4 and TreeHarvest.pack_count(player, "canoe_rib") == 18, "stakes, strips and ribs from the poles (%d, %d, %d)" % [TreeHarvest.pack_count(player, "canoe_stake"), TreeHarvest.pack_count(player, "canoe_strip"), TreeHarvest.pack_count(player, "canoe_rib")])
+	_expect(stand.make_rows().size() == 3 and stand.make_part("canoe_rib") != "", "the stand lists the parts it makes")
+	TreeHarvest.pack_add(player, "pine_pitch", 3)   # foraged from the pines already
+	# ---- the build
 	var msg := stand.pick("bed")
-	_expect(msg.contains("not all here") or msg.contains("Not"), "no parts brought: it says what is missing (%s)" % msg)
-	for id in ["item.material.canoe_stake"]:
-		SurvivalInventory.add(core, id, 14.0)
-	msg = stand.pick("bed")
-	_expect(int(stand.build.store.get("item.material.canoe_stake", 0)) == 14 and SurvivalInventory.count(core, "item.material.canoe_stake") < 0.5, "the stakes come out of the kit and go to the stand (%s)" % msg)
+	_expect(int(stand.build.store.get("canoe_stake", 0)) == 14 and TreeHarvest.pack_count(player, "canoe_stake") == 1, "the stakes come out of the pack and go to the stand (%s)" % msg)
 	var st0 := SurvivalLearning.state_of(core, "know.canoe_bed")
 	msg = stand.pick("bed")
 	if st0 == "unknown":
 		_expect(msg.contains("do not know"), "not knowing how: it cannot be done (%s)" % msg)
 		SurvivalLearning.set_state(core, "know.canoe_bed", "known", "taught", "the old hunter")
-	else:
-		_expect(true, "the builder knows the bed (%s)" % st0)
-	SurvivalInventory.add(core, "item.tool.hatchet", 1.0)
 	msg = stand.pick("bed")
-	_expect(stand.build.done.has("bed"), "taught, with a hatchet, the bed is laid (%s)" % msg)
+	_expect(stand.build.done.has("bed"), "taught, with a knife or axe, the bed is laid (%s)" % msg)
 	_expect(float(stand.hull.frac["stakes"]) > 0.99, "the stakes stand on the ground")
-	# the skin: out of order for the wrong pick, then in order
 	for id in ["know.bark_sewing", "know.canoe_gunwales", "know.pitching_seams"]:
 		SurvivalLearning.set_state(core, id, "known", "taught", "the old hunter")
 	SurvivalInventory.add(core, "item.tool.awl", 1.0)
-	SurvivalInventory.add(core, "item.material.birch_bark_sheet", 3.0)
-	SurvivalInventory.add(core, "item.material.spruce_root", 14.0)
 	stand.pick("skin")
 	stand.pick("skin")
 	_expect(stand.build.waiting or stand.build.done.has("skin"), "the skin's work is done: it waits for the fitting")
 	msg = stand.pick("skin")
 	_expect(stand.build.done.has("skin") and float(stand.hull.frac["skin"]) > 0.99, "fitted: the skin is on (%s)" % msg)
-	SurvivalInventory.add(core, "item.material.cedar_strip", 4.0)
 	stand.pick("gunwales")
 	stand.pick("gunwales")
 	_expect(stand.build.done.has("gunwales") and float(stand.hull.frac["gunwales"]) > 0.99, "the gunwales are on")
-	SurvivalInventory.add(core, "item.material.cedar_rib", 18.0)
 	stand.pick("ribs")
 	stand.pick("ribs")
 	_expect(stand.build.done.has("ribs") and float(stand.hull.frac["ribs"]) > 0.99, "the ribs are set")
-	SurvivalInventory.add(core, "item.material.spruce_pitch", 3.0)
 	stand.pick("seams")
 	stand.pick("seams")
 	stand.pick("seams")
-	_expect(stand.build.is_complete(), "the seams are pitched: the canoe is built")
+	_expect(stand.build.is_complete(), "the seams are pitched: the canoe is built from what the woods gave")
 	_expect(float(stand.hull.frac["stakes"]) < 0.01 and float(stand.hull.frac["pitch"]) > 0.99, "the bed comes away and the pitch shows")
 	var st := stand.build.stats()
 	_expect(float(st.quality) > 0.4, "it has a grade (%.2f, %s)" % [float(st.quality), st.word])

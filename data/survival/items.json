@@ -1999,46 +1999,46 @@
    "milestone": "M2a"
   },
   {
-   "id": "item.material.spruce_root",
-   "name": "Spruce root",
+   "id": "item.material.wattap",
+   "name": "Wattap",
    "cat": "material",
    "unit": "bundle",
    "kg": 0.2,
    "stack": 20,
-   "notes": "Split, soaked spruce root (wattap): the thread a bark canoe is sewn with.",
+   "notes": "Split, soaked conifer root (wattap): the thread a bark canoe is sewn with.",
    "status": "slice",
    "milestone": "M2a"
   },
   {
-   "id": "item.material.cedar_strip",
-   "name": "Cedar strip",
+   "id": "item.material.canoe_strip",
+   "name": "Split strip",
    "cat": "material",
    "unit": "strip",
    "kg": 0.5,
    "stack": 10,
-   "notes": "A long strip of white cedar, split for a canoe's gunwales.",
+   "notes": "A long strip split from a pole: the gunwales of a canoe.",
    "status": "slice",
    "milestone": "M2a"
   },
   {
-   "id": "item.material.cedar_rib",
-   "name": "Cedar rib",
+   "id": "item.material.canoe_rib",
+   "name": "Canoe rib",
    "cat": "material",
    "unit": "rib",
    "kg": 0.15,
    "stack": 30,
-   "notes": "A thin white-cedar rib, split and shaved; steamed, it bends to the canoe's curve.",
+   "notes": "A thin rib split and shaved from a pole; steamed, it bends to the canoe's curve.",
    "status": "slice",
    "milestone": "M2a"
   },
   {
-   "id": "item.material.spruce_pitch",
-   "name": "Spruce pitch",
+   "id": "item.material.pine_pitch",
+   "name": "Pine pitch",
    "cat": "material",
    "unit": "lump",
    "kg": 0.1,
    "stack": 20,
-   "notes": "Spruce gum rendered down with tallow and charcoal: the seam sealer of a bark canoe.",
+   "notes": "Pine resin boiled down with tallow and charcoal: the seam sealer of a bark canoe.",
    "status": "slice",
    "milestone": "M2a"
   }

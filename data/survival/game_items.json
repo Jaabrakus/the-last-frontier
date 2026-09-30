@@ -74,7 +74,13 @@
   "climbing_stakes_bone": {"item": "item.tool.climbing_stakes_bone", "qty": 1, "note": "a pair of climbing stakes; the loadout carries them on the belt or sash (loadout_items.json)"},
   "climbing_claws_bone": {"item": "item.tool.climbing_claws_bone", "qty": 1, "note": "a pair of grip claws; worn under the feet while climbing (loadout_items.json)"},
   "climbing_stakes_stone": {"item": "item.tool.climbing_stakes_stone", "qty": 1, "note": "a pair of climbing stakes; the loadout carries them on the belt or sash (loadout_items.json)"},
-  "climbing_claws_stone": {"item": "item.tool.climbing_claws_stone", "qty": 1, "note": "a pair of grip claws; worn under the feet while climbing (loadout_items.json)"}
+  "climbing_claws_stone": {"item": "item.tool.climbing_claws_stone", "qty": 1, "note": "a pair of grip claws; worn under the feet while climbing (loadout_items.json)"},
+  "canoe_stake": {"item": "item.material.canoe_stake", "qty": 1, "note": "a stake cut from a pole: the building bed of a canoe (the boat stand)"},
+  "birch_bark_sheet": {"item": "item.material.birch_bark_sheet", "qty": 1, "note": "a whole sheet of birch bark, peeled in one piece: the skin of a bark canoe"},
+  "wattap": {"item": "item.material.wattap", "qty": 1, "note": "a bundle of split conifer root: bark canoes are sewn with it"},
+  "canoe_strip": {"item": "item.material.canoe_strip", "qty": 1, "note": "a long strip split from a pole: a canoe's gunwales"},
+  "canoe_rib": {"item": "item.material.canoe_rib", "qty": 1, "note": "a thin rib split from a pole: set in a canoe under the gunwales"},
+  "pine_pitch": {"item": "item.material.pine_pitch", "qty": 1, "note": "pine resin: sealed into a canoe's seams with tallow and charcoal"}
  },
  "fuel": {"firewood": {"item": "item.fuel.split_wood", "qty": 1, "note": "a pack firewood on a campfire: an armload of split wood, 120 game minutes of fire (Campfire.FUEL_MIN_PER_WOOD; the fire's fuel is the core's record, CampLink)"}},
  "start_gear": ["steel_trap", "bar_lead", "bullet_mould", "hooks_line", "sinew"],

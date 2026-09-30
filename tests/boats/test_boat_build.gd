@@ -40,12 +40,12 @@ func _initialize() -> void:
 		w += float(s.weight)
 	_expect(is_equal_approx(w, 1.0), "the stages' weights make one (%.2f)" % w)
 	_expect(b.can_start("bed").reason == "parts" and b.missing("bed").size() == 1, "no parts at the stand: it cannot be started (needs %s)" % str(b.missing("bed")))
-	b.deliver("item.material.canoe_stake", 14)
+	b.deliver("canoe_stake", 14)
 	_expect(bool(b.can_start("bed").ok), "with its stakes brought it can")
 	b.has_tool = func(_t: Array) -> bool: return false
 	_expect(b.can_start("bed").reason == "tool", "and no tool: it cannot")
 	b.has_tool = func(_t: Array) -> bool: return true
-	_expect(b.start("bed") and int(b.store.get("item.material.canoe_stake", 0)) == 0, "starting attaches the parts (out of the store)")
+	_expect(b.start("bed") and int(b.store.get("canoe_stake", 0)) == 0, "starting attaches the parts (out of the store)")
 	_expect(b.work(20.0) == "" and b.progress == 20.0, "work goes on by the minute")
 	_expect(b.work(30.0) == "done" and b.done.has("bed") and b.current == "", "and finishes on its own where there is no puzzle")
 	_expect(b.grade_of("bed") > 0.5, "a plain job by skill gives a middling grade (%.2f)" % b.grade_of("bed"))

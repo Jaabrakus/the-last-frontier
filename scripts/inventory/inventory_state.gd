@@ -71,6 +71,9 @@ const NAMES := {"musket": "Flintlock Musket", "over_under": "Over-and-Under", "b
 		"fish_spear": "Fish Spear",
 		# the knapping stone's tools (the start with nothing)
 		"flint_knife": "Flint Knife", "stone_axe": "Stone Axe", "bow_drill": "Bow Drill", "bone_awl": "Bone Awl",
+		# the canoe's parts (TreeHarvest, the boat stand)
+		"canoe_stake": "Building Stake", "birch_bark_sheet": "Birch Bark Sheet", "wattap": "Wattap", "canoe_strip": "Split Strip",
+		"canoe_rib": "Canoe Rib",
 		# the forge's (bog iron from the hollows, clay from the banks, charcoal from the mound)
 		"bog_iron": "Bog Iron Ore", "clay": "Clay", "charcoal": "Charcoal", "bar_iron": "Bar Iron",
 		# a gun's parts (the forge's barrel and lock, the workbench's stock; assembled at the workbench)

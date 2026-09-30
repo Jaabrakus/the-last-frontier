@@ -22,6 +22,7 @@ var last := ""
 ## Tests: the work is done at once (no kneeling, no bar).
 var instant_work := false
 var _bridge: SurvivalBridge
+var _player: Node
 var _t0 := 0
 var _secs := 0.0
 var _min_left := 0.0
@@ -65,13 +66,17 @@ func _know(kid: String) -> String:
 
 
 func _has_tool(ids: Array) -> bool:
-	var c := _core()
-	if c == null:
-		return true
-	for id: String in ids:
-		if SurvivalInventory.count(c, id) > 0.0:
-			return true
-	return false
+	var pl := _pl()
+	return TreeHarvest.has_any(pl, (pl.get("gather") as GatherTools) if pl != null else null, ids)
+
+
+## The player at the stand (the last one to open it, else the level's).
+func _pl(p: Node = null) -> Node:
+	if p != null and is_instance_valid(p):
+		_player = p
+	if _player == null or not is_instance_valid(_player):
+		_player = get_tree().get_first_node_in_group(&"player") if is_inside_tree() else null
+	return _player
 
 
 ## The builder's skill 0..1 (woodcraft).
@@ -132,13 +137,13 @@ func interact_prompt(_player: Node) -> String:
 func interact(player: Node) -> void:
 	if _build_mode_on() or bridge() == null:
 		return
+	_pl(player)
 	open_menu(player)
 
 
 ## The stages' rows: [{text, detail, ok}], for the menu (and tests).
 func rows() -> Array:
 	var out: Array = []
-	var c := _core()
 	for s: Dictionary in build.stages():
 		var sid := String(s.id)
 		var row := {"text": String(s.name), "detail": "", "ok": true}
@@ -158,8 +163,8 @@ func rows() -> Array:
 			for k: String in (s.get("needs", {}) as Dictionary):
 				var need := int((s.needs as Dictionary)[k])
 				var at := int(build.store.get(k, 0))
-				var kit := int(SurvivalInventory.count(c, k)) if c != null else 0
-				parts.append("%d %s (%d here, %d in your kit)" % [need, InventoryState.name_of(k) if InventoryState.name_of(k) != "" else k.get_slice(".", 2).replace("_", " "), at, kit])
+				var kit := TreeHarvest.pack_count(_pl(), k)
+				parts.append("%d %s (%d here, %d in your pack)" % [need, InventoryState.name_of(k).to_lower(), at, kit])
 			var why := build.can_start(sid)
 			var know_state := build.knowledge(sid)
 			var note := ""
@@ -184,13 +189,16 @@ func rows() -> Array:
 func _tool_names(s: Dictionary) -> String:
 	var names: Array[String] = []
 	for id: String in s.get("tool", []):
-		names.append(id.get_slice(".", 2).replace("_", " "))
+		var n := id.get_slice(":", 1) if id.begins_with("gather:") else id.get_slice(".", 2) if id.begins_with("item.") else id
+		names.append(n.replace("_", " "))
 	return " or ".join(names)
 
 
 func open_menu(player: Node) -> void:
+	_pl(player)
 	var title := String(build.plan.get("name", "Boat")) + (" (%s)" % build.stats().word if build.is_complete() else "")
 	var r := rows()
+	r.append_array(make_rows())
 	if build.is_complete():
 		r.append({"text": "Launch it onto the water", "detail": "a %s canoe; %s" % [build.stats().word, _stats_line()], "ok": true})
 	if last != "":
@@ -208,19 +216,39 @@ func open_menu(player: Node) -> void:
 	choose(i, player)
 
 
+## The parts made at the stand from poles (data/boats/parts.json "make"): rows for the menu.
+func make_rows() -> Array:
+	var out: Array = []
+	if build.is_complete():
+		return out
+	var make: Dictionary = TreeHarvest.cfg().get("make", {})
+	for k: String in make:
+		var m: Dictionary = make[k]
+		var have := TreeHarvest.pack_count(_pl(), String(m.from))
+		out.append({"text": "%s  (%d %s makes %d)" % [String(m.text), int(m.takes), String(m.from), int(m.makes)],
+				"detail": "%d %s in your pack" % [have, String(m.from)] + ("" if have >= int(m.takes) else "  |  cut a sapling for a pole"), "ok": have >= int(m.takes)})
+	return out
+
+
 func _stats_line() -> String:
 	var st := build.stats()
 	return "speed x%.2f, %.0f l/h leaks, wear x%.2f" % [float(st.speed_mult), float(st.leak_l_per_h), float(st.wear_mult)]
 
 
-## The stage row `i` was picked (or the launch row after them).
+## Menu row `i` was picked: a stage, a part to make, or the launch row after them.
 func choose(i: int, player: Node = null) -> void:
 	var st := build.stages()
-	if i >= st.size():
+	var kinds: Array = (TreeHarvest.cfg().get("make", {}) as Dictionary).keys() if not build.is_complete() else []
+	if i >= st.size() + kinds.size():
 		var boat := launch()
 		last = "It slides into the water." if boat != null else "There is no water within reach to launch it."
 		refresh()
 		if boat == null:
+			open_menu(player)
+		return
+	if i >= st.size():
+		last = make_part(String(kinds[i - st.size()]))
+		if last != "" and not _working():
 			open_menu(player)
 		return
 	var sid := String((st[i] as Dictionary).id)
@@ -229,13 +257,41 @@ func choose(i: int, player: Node = null) -> void:
 		open_menu(player)
 
 
+## Makes a part from poles: the tool, the poles, a little work; the parts go to the pack. Returns what to tell ("" while the work goes on).
+func make_part(kind: String) -> String:
+	var make: Dictionary = TreeHarvest.cfg().get("make", {})
+	if not make.has(kind):
+		return ""
+	var m: Dictionary = make[kind]
+	var pl := _pl()
+	var tools := (pl.get("gather") as GatherTools) if pl != null else null
+	if not TreeHarvest.has_any(pl, tools, m.get("tool", [])):
+		return "You need a knife, a hatchet or an axe for that."
+	if TreeHarvest.pack_count(pl, String(m.from)) < int(m.takes):
+		return "You need a %s for that: cut a sapling." % String(m.from)
+	var finish := func() -> String:
+		if TreeHarvest.pack_take(pl, String(m.from), int(m.takes)) < int(m.takes):
+			return "You need a %s for that." % String(m.from)
+		TreeHarvest.pack_add(pl, kind, int(m.makes))
+		return "%d %s made." % [int(m.makes), InventoryState.name_of(kind).to_lower()]
+	var b := bridge()
+	if instant_work or b == null or b.work == null:
+		return String(finish.call())
+	if not b.work.begin(global_position, "low", String(m.verb), float(m.seconds), "", func(done: bool) -> void:
+			last = String(finish.call()) if done else "You stop before it is done."
+			open_menu(_pl())):
+		return "You cannot work at it now."
+	return ""
+
+
 func _working() -> bool:
 	var b := bridge()
 	return b != null and b.work != null and b.work.working
 
 
 ## What picking a stage does: bring its parts, begin it, work it, or play its puzzle. Returns what to tell ("" when work began).
-func pick(sid: String, _player: Node = null) -> String:
+func pick(sid: String, p: Node = null) -> String:
+	_pl(p)
 	var s := build.stage(sid)
 	if s.is_empty():
 		return ""
@@ -271,22 +327,20 @@ func pick(sid: String, _player: Node = null) -> String:
 func _short(miss: Dictionary) -> String:
 	var bits: Array[String] = []
 	for k: String in miss:
-		bits.append("%d more %s" % [int(miss[k]), k.get_slice(".", 2).replace("_", " ")])
+		bits.append("%d more %s" % [int(miss[k]), InventoryState.name_of(k).to_lower()])
 	return ", ".join(bits)
 
 
-## Brings the parts a stage needs from the kit to the stand: how many were brought.
+## Brings the parts a stage needs from the pack to the stand: how many were brought.
 func bring(sid: String) -> int:
-	var c := _core()
-	if c == null:
+	var pl := _pl()
+	if pl == null:
 		return 0
 	var n := 0
 	var miss := build.missing(sid)
 	for k: String in miss:
-		var have := int(SurvivalInventory.count(c, k))
-		var take := mini(have, int(miss[k]))
+		var take := TreeHarvest.pack_take(pl, k, int(miss[k]))
 		if take > 0:
-			SurvivalInventory.remove(c, k, float(take))
 			build.deliver(k, take)
 			n += take
 	return n

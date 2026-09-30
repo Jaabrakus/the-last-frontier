@@ -35,6 +35,24 @@ func interact(_player: Node) -> void:
 		tools.use_target()
 
 
+## Hold E's list: the tap's own (felling, cutting, bucking) and, at a standing tree, what else it gives (TreeHarvest: birch bark,
+## pine pitch, roots for a canoe).
+func interact_actions(player: Node) -> Array:
+	var first := interact_prompt(player)
+	if first == "":
+		return []
+	var out: Array = [{"id": "", "text": first}]
+	out.append_array(TreeHarvest.actions(tools))
+	return out
+
+
+func interact_action(player: Node, id: String) -> void:
+	if id == "":
+		interact(player)
+	else:
+		TreeHarvest.do(id, tools)
+
+
 ## Nothing glows: trees and rocks are instances in shared MultiMeshes, and a felled tree lit whole (crown and
 ## all) drowned the forest in the highlight.
 func highlight_targets() -> Array:
