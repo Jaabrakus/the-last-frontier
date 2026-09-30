@@ -92,6 +92,13 @@ const RECORD_ARG := "--anim-record="
 const TRACE_KEEP := 64
 
 @export_group("Gameplay overrides")
+## No stop clip after a run forward (user 2026-09-30: "there's still a stop animation"): the run blends straight to idle, as the start
+## blends from it. The backward stop and the start keep their clips.
+@export var no_forward_stop_anim := true:
+	set(v):
+		no_forward_stop_anim = v
+		if loco:
+			loco.no_forward_stop_anim = v
 ## G1: no start, stop or quick-reversal clips (the graph's own use_transition_anims = false
 ## branch). Off = the graph plays them.
 @export var override_no_transition_anims := false:
@@ -460,6 +467,7 @@ func setup(p_player: FrontierPlayer, ap: AnimationPlayer, sk: Skeleton3D, weapon
 	loco = LocoBrain.new(data, self, index, L, upper.W)
 	loco.join_fade_s = join_fade_s
 	loco.release_grace_s = stick_release_grace_s
+	loco.no_forward_stop_anim = no_forward_stop_anim
 	loco.start_rate_boost = override_start_rate_boost
 	loco.stop_root_motion = not override_crisp_stops
 	loco.crouch_pending_while_moving = crouch_pending_while_moving
