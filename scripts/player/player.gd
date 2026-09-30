@@ -1059,7 +1059,7 @@ func _physics_process(delta: float) -> void:
 		wish_local = Vector2.ZERO
 		return
 
-	var input := Vector2.ZERO if is_dead or perch != null or aboard != null else controls.move_vector()
+	var input := Vector2.ZERO if is_dead or perch != null or (aboard != null and not bool(aboard.get(&"free"))) else controls.move_vector()
 	# Crouch is a toggle. Sprinting or jumping stands you back up.
 	var want_crouch := is_crouching
 	if controls.just_pressed(&"crouch") and not is_dead:

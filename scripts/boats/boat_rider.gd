@@ -9,7 +9,8 @@ extends Node
 ##   C         (tap) toggles between paddling and crouching: crouched is the game's own crouch (the paddle laid back where it lay inside),
 ##             free to move about the floor (the boat carries them: their place is kept in its frame), with weapons and aim as the player
 ##             has them. Nobody stands up in a boat.
-##   Space     hops out over the side they face (from anywhere in the boat); on the bank facing a boat close by it hops in, crouched.
+##   Space     on the bank facing a boat close by it hops in, crouched. In the boat it does nothing: there is no standing or hopping out of a
+##             crouched boat (E gets out).
 ##   E         gets out, on the bank side if there is one, the paddle laid back where it was
 ## The camera goes on orbiting the player as when they kneel. The boat carries them; nothing else about them changes.
 ## The paddle: in the hand (a BoneAttachment3D on the right palm), swung with the boat's stroke so the blade dips as it pulls.
@@ -38,6 +39,8 @@ var _attach: BoneAttachment3D
 var _inert := false
 ## "paddle": kneeling with the paddle; "crouch": crouched in the game's own pose, carried by the boat.
 var mode := "paddle"
+## Crouched they move about the floor (the player's walking is not blocked while aboard); paddling they do not.
+var free := false
 var _crouch_t := 0.0
 ## The side paddled on ("" right, "-l" left), chosen at the start of each stroke: to turn right they paddle on the left, to turn left on
 ## the right; going straight they keep the side they have.
@@ -55,7 +58,6 @@ var _hop_t := -1.0
 var _hop_from := Vector3.ZERO
 var _hop_to := Vector3.ZERO
 const TAP_S := 0.3           ## s: C let go sooner than this is a tap
-const JUMP_OUT := Vector3(2.6, 3.6, 0.0)
 const HOP_IN_REACH := 1.9    ## m from the hull a hop in can start
 const HOP_IN_ANGLE := 70.0   ## deg off facing the boat
 const HOP_S := 0.3           ## s a hop in takes
@@ -176,6 +178,7 @@ func _enter_paddle() -> bool:
 	_blender.update(0.0)
 	_take_paddle()
 	mode = "paddle"
+	free = false
 	return true
 
 
@@ -198,7 +201,8 @@ func _enter_crouch() -> void:
 	_put_paddle_back()
 	_drop_blender()
 	p.end_kneel()
-	p.aboard = null                     # free to move about the boat
+	p.aboard = self                     # the boat carries them; `free`: their own walking about the floor is not blocked, jumping is
+	free = true
 	p._set_body_collision(true)
 	p.set_crouched(true)
 	p.global_position = seat_position()
@@ -218,6 +222,7 @@ func leave() -> void:
 	_drop_blender()
 	if is_instance_valid(p):
 		p.aboard = null
+		free = false
 		p.global_position = _bank_point()
 		p.velocity = Vector3.ZERO
 		p._set_body_collision(true)
@@ -354,9 +359,6 @@ func _crouch_frame(p: FrontierPlayer, dt: float, c_pressed: bool, c_down: bool, 
 	if not p.is_crouching:
 		p.set_crouched(true)
 	_carry(p)
-	if Input.is_action_just_pressed("jump"):
-		_hop_out(p)
-		return
 	if c_released and not _c_from_paddle and _c_t < TAP_S:
 		# a tap: back to paddling
 		_enter_paddle_from_crouch()
@@ -385,21 +387,6 @@ func _carry(p: FrontierPlayer) -> void:
 	_last_world = p.global_position
 
 
-## Space: over the side they face (from anywhere in the boat: no edge to find, a hop), landing outside with a hop of their own.
-func _hop_out(p: FrontierPlayer) -> void:
-	var f := -p.global_basis.z
-	f.y = 0.0
-	var dot := f.normalized().dot(boat.right()) if f.length() > 0.01 else 0.0
-	var out := signf(dot) if absf(dot) > 0.3 else (signf(_local.x) if absf(_local.x) > 0.05 else 1.0)
-	var half := floor_half()
-	var q := boat.to_global(Vector3(out * (boat.num("beam", 1.0) * 0.5 + 0.35), boat.floor_y() + 0.3, clampf(_local.z, -half.y, half.y)))
-	var side := boat.right() * out
-	boat.drive(0.0, 0.0)
-	leave()
-	p.global_position = q
-	p.velocity = side * JUMP_OUT.x + Vector3.UP * JUMP_OUT.y
-
-
 ## Space on the bank, facing a boat close by: a hop in, crouched, landing on its floor.
 func _try_hop_in() -> void:
 	if not Input.is_action_just_pressed("jump") or not is_inside_tree():
@@ -423,7 +410,8 @@ func _try_hop_in() -> void:
 
 func _hop_in(p: FrontierPlayer, land_local: Vector3) -> void:
 	rider = p
-	p.aboard = null
+	p.aboard = self
+	free = true
 	p.set_crouched(true)
 	p._set_body_collision(true)
 	boat.crew_on = 1
