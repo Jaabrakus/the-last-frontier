@@ -280,6 +280,10 @@ var L: XFadeSelector
 var W: XFadeSelector
 
 var state: StringName = IDLE
+## True: a run forward goes straight to idle, blending, with no stop clip (the graph's use_transition_anims = false branch taken
+## from MOVE while the hemisphere is forward: reversals out of a forward run lose their clips too). Off here (the graph's own
+## transitions, which the tests check); the player's PlayerAnim turns it on.
+var no_forward_stop_anim := false
 var graph_state := "idle"
 var mode: StringName = &"run"
 var stance := "stand"
@@ -1081,7 +1085,9 @@ func _fill_expr_vals() -> void:
 	_expr_vals[0] = loco_enabled
 	_expr_vals[1] = _move_speed()
 	_expr_vals[2] = move_dir_deg
-	_expr_vals[3] = _uta()
+	# (no stop clip after a forward run: MOVE goes to IDLE on the graph's own use_transition_anims = false branch; the backward stop and the
+	# start from idle keep theirs; user 2026-09-30: "there's still a stop animation")
+	_expr_vals[3] = _uta() and not (no_forward_stop_anim and state == MOVE and hemi == &"fw")
 	_expr_vals[4] = 1 if crouch_change_pending else 0
 	_expr_vals[5] = idle_turn_deg
 	_expr_vals[6] = 0.0

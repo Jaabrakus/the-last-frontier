@@ -92,6 +92,13 @@ const RECORD_ARG := "--anim-record="
 const TRACE_KEEP := 64
 
 @export_group("Gameplay overrides")
+## No stop clip after a run forward (user 2026-09-30: "there's still a stop animation"): the run blends straight to idle, as the start
+## blends from it. The backward stop and the start keep their clips.
+@export var no_forward_stop_anim := true:
+	set(v):
+		no_forward_stop_anim = v
+		if loco:
+			loco.no_forward_stop_anim = v
 ## G1: no start, stop or quick-reversal clips (the graph's own use_transition_anims = false
 ## branch). Off = the graph plays them.
 @export var override_no_transition_anims := false:
@@ -460,6 +467,7 @@ func setup(p_player: FrontierPlayer, ap: AnimationPlayer, sk: Skeleton3D, weapon
 	loco = LocoBrain.new(data, self, index, L, upper.W)
 	loco.join_fade_s = join_fade_s
 	loco.release_grace_s = stick_release_grace_s
+	loco.no_forward_stop_anim = no_forward_stop_anim
 	loco.start_rate_boost = override_start_rate_boost
 	loco.stop_root_motion = not override_crisp_stops
 	loco.crouch_pending_while_moving = crouch_pending_while_moving
@@ -993,14 +1001,17 @@ func manual_step(dt: float) -> void:
 	var back := loco.hemi == &"bw" and loco.moving
 	var on_v := RUN_BACK_HOLD_ON_MS if back else RUN_HOLD_ON_MS
 	var off_v := RUN_BACK_HOLD_OFF_MS if back else RUN_HOLD_OFF_MS
-	if not hold_ok or body_v < off_v:
+	# (a stop keeps the hold it has: the body's speed falling through the hold's threshold would drop the arms to the graph's carry
+	# and bring them back at rest, the blend from the jog to the stop that was not clean; user 2026-09-30)
+	var stopping := String(loco.state) == "STOP"
+	if not hold_ok or (body_v < off_v and not stopping):
 		_run_hold_on = false
 	elif loco.moving and (String(loco.mode) in ["run", "sprint"] or (back and String(loco.mode) == "walk")) and body_v >= on_v:
 		_run_hold_on = true
-	# (standing still the gun is at low ready too, the sprint's hold: user 2026-09-30, "for idle have low ready as well")
-	if hold_ok and not loco.moving:
+	# (standing still, and through a stop, the gun is at medium ready: the low ready is the backward walk's; user 2026-09-30)
+	if hold_ok and (not loco.moving or stopping):
 		_run_hold_on = true
-		_run_hold_gait = "low"
+		_run_hold_gait = "mid"
 	var run_hold := _run_hold_on
 	if run_hold and loco.moving and (String(loco.mode) in ["run", "sprint"] or (back and String(loco.mode) == "walk")):
 		# (moving backward holds the gun low like the sprint does, not at port arms: user 2026-09-30, "backwards rifle
@@ -1253,6 +1264,8 @@ const IDLE_HOLD_ARMS := "actor_b-p-rifle-idle-arms"
 ## still and moving backward, where the body does not lean into the sprint's low carry (user 2026-09-30: "idle low ready",
 ## "backwards like the sprint's rifle low").
 const LOW_READY_ARMS := "own-rifle-low-ready"
+## Our own medium ready (the standing hold's arms turned down part of the way): standing still and through the stop.
+const MID_READY_ARMS := "own-rifle-mid-ready"
 ## The run hold's speed margin (m/s): on from this at a run or sprint ...
 const RUN_HOLD_ON_MS := 2.4
 ## ... off under this.
@@ -1276,6 +1289,8 @@ func _run_hold_clip(gait: String) -> String:
 		"port_low":
 			if gait == "low":
 				return LOW_READY_ARMS
+			if gait == "mid":
+				return MID_READY_ARMS
 			return IDLE_HOLD_ARMS if gait == "sprint" else TAKEOFF_ARMS
 	return TAKEOFF_ARMS
 ## The crouched two-hand grip arm of the moving carries (the crouch-walk carry's arms layer, one pose), and
@@ -1283,7 +1298,8 @@ func _run_hold_clip(gait: String) -> String:
 ## Our own medium ready, backward and forward (tools/anim_author/author_locomotion.gd: the crouch run arms turned down at the shoulders).
 const CROUCH_GRIP_ARMS := "own-rifle-crouch-mid"
 const CROUCH_GRIP_ARMS_FW := "own-rifle-crouch-mid-fw"
-const CROUCH_IDLE_ARMS := "actor_b-p-rifle-crouch-idle-arms"
+## Our own crouch idle arms: the graph's with the right hand drawn toward the right hip (tools/anim_author/author_locomotion.gd).
+const CROUCH_IDLE_ARMS := "own-rifle-crouch-idle"
 ## Seconds the grip arms take from one stance's to the other's (the musket turns 40-60 deg between them).
 const STANCE_ARM_XFADE_S := 0.35
 ## The one-hand crouch-move hold (push n01): the source's rifle arm for moving crouched along low cover (the

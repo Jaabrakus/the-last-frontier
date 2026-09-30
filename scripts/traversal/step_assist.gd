@@ -20,6 +20,8 @@ var max_rise := MAX_RISE
 var radius := RADIUS
 ## A character under the probe (a parent, a child, an animal) is not a step (BodyStep: a walker beside another).
 var skip_characters := false
+## Only a rise with a steep face in front of it is a step (the player's: a slope is walked, not stepped).
+var require_face := false
 const MIN_RISE := 0.06
 const RADIUS := 0.3               ## the player capsule radius
 const REFINE := 7                 ## bisection steps of the face distance between two probes (1 mm)
@@ -88,6 +90,14 @@ func step(body: CharacterBody3D, probe: TraversalProbe, dir: Vector3, speed: flo
 			var cl := probe.ray(Vector3(over.x, top + 0.05, over.z), Vector3(over.x, top + 1.5, over.z))
 			if not cl.is_empty():
 				return 0.0
+			# A step has a face: a ray forward at half its height meets a steep surface (a slope's ground is no step: the player walks
+			# up it on the floor, where a rise of 6 cm every 35 cm would have lifted the body in stairs, user 2026-09-30 "jittery")
+			if require_face:
+				var ry := base + clampf((top - base) * 0.5, 0.03, 0.3)
+				var ro := Vector3(p.x, ry, p.z)
+				var fr := probe.ray(ro, ro + dir * (radius + face_d + 0.2))
+				if fr.is_empty() or absf((fr.normal as Vector3).y) > 0.5:
+					return 0.0
 		_face = p + dir * (radius + face_d)
 		_top_y = top
 	elif was and _face != Vector3.INF:

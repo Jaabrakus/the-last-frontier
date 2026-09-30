@@ -133,6 +133,33 @@ func apply_clip_overrides() -> void:
 		info["length"] = float(o.get("length", info.get("length", 0)))
 		graph.clips[name] = info
 		_override_libs[lib] = OVERRIDE_LIBS[lib]
+		if o.has("time_scale") and metrics.clips.has(name):
+			# a stop played `time_scale` times as fast, its length shortened to `length`: the clip's own metrics follow (the
+			# body's slide, which the player's speed follows: the same distance in the shorter time)
+			var mc: Dictionary = (metrics.clips[name] as Dictionary).duplicate(false)
+			var k := float(o.time_scale)
+			mc["length"] = float(o.length)
+			var bp: Variant = mc.get("body_profile")
+			if bp is Dictionary:
+				var src: Dictionary = bp
+				var rate := float(src.get("rate", 10.0))
+				var n := int(round(float(o.length) * rate)) + 1
+				var nb: Dictionary = src.duplicate(false)
+				for key: String in ["fwd", "side", "speed"]:
+					var arr: Array = src.get(key, [])
+					if arr.is_empty():
+						continue
+					var out_arr: Array = []
+					for j in n:
+						var f := minf(float(j) / rate * k * rate, float(arr.size() - 1))
+						var i0 := int(floor(f))
+						var i1 := mini(i0 + 1, arr.size() - 1)
+						var v := lerpf(float(arr[i0]), float(arr[i1]), f - float(i0))
+						out_arr.append(v * (k if key == "speed" else 1.0))
+					nb[key] = out_arr
+				mc["body_profile"] = nb
+			mc["sample_count"] = int(round(float(o.length) * float(mc.get("sample_rate", 10.0)))) + 1
+			metrics.clips[name] = mc
 		if o.has("speed") and metrics.clips.has(name):
 			var mc: Dictionary = (metrics.clips[name] as Dictionary).duplicate(false)
 			var tr: Dictionary = (mc.get("travel", {}) as Dictionary).duplicate(false)
@@ -200,14 +227,23 @@ func apply_carry_patches() -> void:
 					had = true
 				else:
 					layers.append(l)
-			# (only the roles that carry such a layer: the air, landing, hit and death roles have none)
+			# (only the roles that carry such a layer: the air, landing, hit and death roles have none; an "append" rule adds its
+			# layers to the role as it is)
+			if rule.has("append"):
+				var grown: Array = []
+				for l: Dictionary in role.get("layers", []):
+					grown.append(l)
+				grown.append_array(rule.get("layers", []))
+				role["layers"] = grown
+				graph.roles[key] = role
+				continue
 			if not had:
 				continue
 			# (the new layers go where the first replaced one was: the partial arms come before their additive)
 			var put: Array = []
 			if rule.has("copy_from"):
 				# (copy_mode: from that mode's role instead of the same mode's: the walk's backward roles from the sprint's)
-				var src: Dictionary = graph.roles.get("%s/%s/%s" % [rule.copy_from, rule.get("copy_mode", parts[1]), parts[2]], {})
+				var src: Dictionary = graph.roles.get("%s/%s/%s" % [rule.copy_from, rule.get("copy_mode", parts[1]), rule.get("copy_role", parts[2])], {})
 				for l: Dictionary in src.get("layers", []):
 					if slots.has(String(l.get("slot", ""))):
 						put.append(l)
@@ -740,7 +776,8 @@ func validate(ap: AnimationPlayer, lib := LIB) -> PackedStringArray:
 	for c in metrics.get("clips", {}):
 		if not ap.has_animation(StringName("%s/%s" % [lib, c])):
 			errs.append("metrics clip %s: not in library %s" % [c, lib])
-		elif absf(ap.get_animation(StringName("%s/%s" % [lib, c])).length - float(metrics.clips[c].get("length", -1.0))) > 1e-3:
+		elif absf(ap.get_animation(StringName("%s/%s" % [lib, c])).length - float(metrics.clips[c].get("length", -1.0))) > 1e-3 \
+				and not _override_libs.has(String((graph.get("clips", {}).get(c, {}) as Dictionary).get("godot", "")).get_slice("/", 0)):
 			errs.append("metrics clip %s: length differs from the library" % c)
 	return errs
 

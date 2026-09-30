@@ -59,6 +59,11 @@ var _momentum := false               ## the move playing keeps the body's speed 
 var _rig_seen := false
 var _gun_away := ""                  ## the weapon put away for the move, drawn again after it
 var _mods_off: Array = []            ## PlayerAnim's modifiers switched off while a move plays
+## Our own step over (user 2026-09-30): low steps are stepped onto without a clip, at any speed: the capsule rises (TravStepAssist)
+## and the feet are carried over the step and set on it (StepFootIK); nothing owns the pose, the upper body goes on as it was.
+var _assist := TravStepAssist.new()
+var _assist_ready := false
+var step_ik: StepFootIK
 
 
 static func install(p: FrontierPlayer) -> PlayerTraversal:
@@ -114,9 +119,29 @@ func adopt() -> void:
 			first = i + 1
 	skeleton.move_child(inert, first)
 	skeleton.move_child(ik, first + 1)
+	# the legs of a step (before the animation's inertializer: the feet are its own business only while a clip plays)
+	step_ik = StepFootIK.new()
+	step_ik.name = "StepFootIK"
+	step_ik.player = player
+	step_ik.stepping = Callable(_assist, "stepping")
+	skeleton.add_child(step_ik)
+	skeleton.move_child(step_ik, first + 2)
 	_build_tree()
 	tree.active = false
 	call_deferred(&"_bake_world")
+
+
+## Our own step over: called by the player's ground movement before move_and_slide() while no move owns the body. Lifts the capsule
+## onto a low step (TravStepAssist, under 0.55 m) at any speed; StepFootIK shows the legs stepping.
+func step_assist(wish: Vector3, delta: float) -> void:
+	if controller == null or controller.probe == null or controller.mode != TraversalController.Mode.OFF or showing:
+		return
+	if not _assist_ready:
+		_assist.require_face = true
+		_assist_ready = true
+	var h := Vector3(player.velocity.x, 0.0, player.velocity.z)
+	var dir := h if h.length() > 0.5 else wish
+	_assist.step(player, controller.probe, dir, maxf(h.length(), wish.length() * 3.0), delta)
 
 
 ## The level's ledges and beams, once its colliders are in the physics space.

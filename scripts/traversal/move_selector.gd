@@ -220,7 +220,8 @@ func _wall(info: TravObstacleInfo, ctx: Dictionary) -> TravMovePlan:
 	var deep := info.depth == INF or info.depth > 1.4
 	# (Walking takes the authored step-on clip, p-walk-jump-up-0-5m; running and sprinting keep
 	# their stride with the step assist.)
-	var striding := float(ctx.get("speed", 0.0)) >= 2.5
+	# (our own step over, user 2026-09-30: at any pace, walking too: no clip, the legs are StepFootIK's)
+	var striding := float(ctx.get("speed", 0.0)) >= 0.3
 	if striding and ((not deep and h < sa_over) or (deep and h < sa_onto and bool(info.support_area.get("knee", false)))):
 		var sp := TravMovePlan.new()
 		sp.kind = "step_assist"

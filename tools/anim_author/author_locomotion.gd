@@ -20,10 +20,21 @@ const FPS := 30.0
 ## Our own stop: seconds our upper body takes to ease into the graph's stop, and how much faster than the graph's it runs.
 const STOP_S := 0.6
 const STOP_RATE := 1.12
+## The forward stops' length (s): the graph's 1.8 s shortened to the backward stops' (user 2026-09-30: "match it with the backwards stop,
+## it seems quicker").
+const STOP_FW_LEN := 0.8
+## The forward stops ease out of the jog's lean over this (the chest upright while the arms change to the medium ready: the gun's
+## height falls smoothly through the stop).
+const STOP_FW_EASE_S := 0.25
 ## Our stop keeps this share of the graph's movement: the arms, the shoulder girdle, the spine.
 const STOP_ARMS := 0.4
 const STOP_GIRDLE := 0.25
 const STOP_SPINE := 0.7
+## The forward stops keep almost none of the graph's upper body (user 2026-09-30: "the stop animations going forward I do not like at
+## all, make it similar to the back"): its skid throws the arms out and leans the chest back; ours is the jog's upper body settling
+## to the standing pose, as the backward one does.
+const STOP_FW_UPPER := 0.08
+const STOP_FW_SPINE := 0.2
 ## The jump and fall arms: the share of the graph's arm movement the left arm keeps (the right keeps all of it), and both arms' lag behind the body (s).
 const ARMS_SWING := 0.7
 const ARMS_LAG := 0.07
@@ -31,6 +42,8 @@ const ARMS_LAG := 0.07
 const BACK_SHOULDER_SWING := 0.12
 const BACK_SPINE_SWING := 0.3
 const BACK_SWING := 0.6
+## Backward jogs keep this share of the graph's hips bounce (9 cm; our forward jog has 5 cm).
+const BACK_BOUNCE := 0.55
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
 
 var args := {}
@@ -103,8 +116,21 @@ func _bake() -> void:
 		# the stop out of it: the graph's steps, our own upper body and timing
 		var stop_name: String = "actor_b-p-run-" + dir + "^idle"
 		var tn: String = "own-stop-%s-k%d" % [dir, int(round(k * 100.0))]
-		out.add_animation(StringName(tn), _own_stop(clip, stop_name))
-		wired[stop_name] = {"lib": "frontier_locomotion", "clip": tn, "length": snappedf(lib.get_animation(stop_name).length, 0.000001)}
+		var upper_from := ""
+		var stop_len := 0.0
+		var stop_rate := 0.0
+		var ease_s := 0.0
+		if dir.begins_with("fw"):
+			ease_s = STOP_FW_EASE_S
+			upper_from = "actor_b-p-run-bw" + dir.trim_prefix("fw") + "^idle"
+			# the forward stop as short as the backward ones (0.7-0.8 s; the graph's is 1.8 s of which the last second is standing):
+			# its stepping as quick as theirs, the state over as soon
+			stop_len = STOP_FW_LEN
+			stop_rate = lib.get_animation(stop_name).length / STOP_FW_LEN
+		out.add_animation(StringName(tn), _own_stop(clip, stop_name, upper_from, stop_len, stop_rate, ease_s))
+		wired[stop_name] = {"lib": "frontier_locomotion", "clip": tn, "length": snappedf(stop_len if stop_len > 0.0 else lib.get_animation(stop_name).length, 0.000001)}
+		if stop_len > 0.0:
+			wired[stop_name]["time_scale"] = snappedf(stop_rate, 0.0001)
 	# the jump and the fall: the graph's body with our own arms (user 2026-09-30: "the jump animation, tweak the arms so it
 	# does not look identical")
 	for cn in ["actor_b-p-jump-long", "actor_b-p-fall"]:
@@ -118,12 +144,14 @@ func _bake() -> void:
 	# the rifle's own low ready (idle, walking and running backward) and medium ready (crouch walk): the graph's arms turned at the
 	# shoulders, the right decides where the gun points and the left hand is the IK's
 	var low_bones := _bake_rifle_pose(out, "own-rifle-low-ready", "actor_b-p-rifle-idle-arms", LOW_TURN_R, LOW_TURN_L)
-	var mid_bones := _bake_rifle_pose(out, "own-rifle-crouch-mid", "actor_b-p-rifle-crouch-run-arms", MID_TURN_R, MID_TURN_L)
-	_bake_rifle_pose(out, "own-rifle-crouch-mid-fw", "actor_b-p-rifle-crouch-run-arms", MID_FW_TURN_R, MID_FW_TURN_L)
+	_bake_rifle_pose(out, "own-rifle-mid-ready", "actor_b-p-rifle-idle-arms", MIDIDLE_TURN_R, MIDIDLE_TURN_L)
+	var mid_bones := _bake_rifle_pose(out, "own-rifle-crouch-mid", "actor_b-p-rifle-crouch-run-arms", MID_TURN_R, MID_TURN_L, HIP_PULL, GUN_YAW_BACK, "actor_b-p-crouch-walk-bw")
+	_bake_rifle_pose(out, "own-rifle-crouch-mid-fw", "actor_b-p-rifle-crouch-run-arms", MID_FW_TURN_R, MID_FW_TURN_L, HIP_PULL, GUN_YAW_FW, "actor_b-p-crouch-walk-fw")
+	var idle_bones := _bake_rifle_pose(out, "own-rifle-crouch-idle", "actor_b-p-rifle-crouch-idle-arms", Vector3.ZERO, Vector3.ZERO, HIP_PULL_IDLE, GUN_YAW_IDLE, "actor_b-p-crouch-idle")
 	_bake_bow_nock_hand(out, "actor_b-p-bow-reload--part", "own-bow-nock-hand")
 	_bake_bow_nock_hand(out, "actor_b-p-crouch-bow-reload--part", "own-bow-nock-hand-crouch")
 	print(ResourceSaver.save(out, OUT_LIB, ResourceSaver.FLAG_COMPRESS))
-	_write_carry_patches(axe_bones, grip_bones, low_bones, mid_bones)
+	_write_carry_patches(axe_bones, grip_bones, low_bones, mid_bones, idle_bones)
 	var f := FileAccess.open(WIRED, FileAccess.WRITE)
 	f.store_string(JSON.stringify({"about": "Clips that stand in for the graph's own (AnimGraphData.apply_clip_overrides): the graph clip name -> the library and clip played instead, its measured travel speed (m/s, tools/anim_author/author_locomotion.gd) and length (s). The plant phases and the rest of the metrics stay the original clip's.", "clips": wired}, "\t") + "\n")
 	f.close()
@@ -182,13 +210,16 @@ func _bake_axe_carry(out: AnimationLibrary, clip_name: String, parts: Array) -> 
 
 ## data/anim_author/carry_patches.json: arm layers the graph's roles get in place of their own (AnimGraphData.apply_carry_patches)
 ## because the tables cannot be regenerated here; "clips" are graph clips of our own library.
-func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array, mid_bones: Array) -> void:
+func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array, mid_bones: Array, idle_bones: Array) -> void:
 	var axe_layer := {"clip": "own-axe-carry", "kind": "partial", "slot": "arms", "status": "frontier", "weight": 1.0,
 			"sample_s": 0.0, "bones": axe_bones, "superseded_by": null, "weight_curve": null}
 	var grip_layer := {"clip": "own-axe-grip", "kind": "partial", "slot": "hands", "status": "frontier", "weight": 1.0,
 			"sample_s": 0.0, "bones": grip_bones, "superseded_by": null, "weight_curve": null}
 	var mid_layer := {"clip": "own-rifle-crouch-mid", "kind": "partial", "slot": "arms", "status": "frontier", "weight": 0.8,
 			"sample_s": 0.0, "bones": mid_bones, "superseded_by": null, "weight_curve": null}
+	var pistol_idle_arm := {"clip": "actor_b-r-arm-gun-idle", "kind": "partial", "slot": "arms", "status": "resolved", "weight": 1.0, "superseded_by": null, "weight_curve": null}
+	var idle_layer := {"clip": "own-rifle-crouch-idle", "kind": "partial", "slot": "arms", "status": "frontier", "weight": 1.0,
+			"sample_s": 0.0, "bones": idle_bones, "superseded_by": null, "weight_curve": null}
 	var mid_fw_layer := mid_layer.duplicate()
 	mid_fw_layer["clip"] = "own-rifle-crouch-mid-fw"
 	var doc := {
@@ -196,8 +227,10 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array,
 		"clips": {"own-axe-carry": {"lib": "frontier_locomotion", "clip": "own-axe-carry", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-axe-grip": {"lib": "frontier_locomotion", "clip": "own-axe-grip", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-rifle-low-ready": {"lib": "frontier_locomotion", "clip": "own-rifle-low-ready", "length": snappedf(1.0 / 30.0, 0.000001)},
+				"own-rifle-mid-ready": {"lib": "frontier_locomotion", "clip": "own-rifle-mid-ready", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-rifle-crouch-mid": {"lib": "frontier_locomotion", "clip": "own-rifle-crouch-mid", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-rifle-crouch-mid-fw": {"lib": "frontier_locomotion", "clip": "own-rifle-crouch-mid-fw", "length": snappedf(1.0 / 30.0, 0.000001)},
+				"own-rifle-crouch-idle": {"lib": "frontier_locomotion", "clip": "own-rifle-crouch-idle", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-bow-nock-hand": {"lib": "frontier_locomotion", "clip": "own-bow-nock-hand", "length": snappedf(NOCK_HAND_LEN, 0.000001)},
 				"own-bow-nock-hand-crouch": {"lib": "frontier_locomotion", "clip": "own-bow-nock-hand-crouch", "length": snappedf(NOCK_HAND_LEN, 0.000001)}},
 		"actions": {
@@ -210,8 +243,24 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array,
 			"weapon": "spear", "modes": ["crouch"], "roles_except": [], "roles_only": MOVE_ROLES + ["idle"], "slots": ["arms", "hands"], "layers": [grip_layer, axe_layer]},
 			{"why": "the rifle crouch walk holds it at medium ready (user 2026-09-30): the crouch run arms turned down at the shoulders (own-rifle-crouch-mid); the left hand is the grip IK's",
 			"weapon": "musket", "modes": ["crouch"], "roles_except": ["idle"], "roles_only": BACK_ROLES, "slots": ["arms"], "layers": [mid_layer]},
+			{"why": "the rifle crouch idle with the right hand nearer the right hip (user 2026-09-30)",
+			"weapon": "musket", "modes": ["crouch"], "roles_except": [], "roles_only": ["idle"], "slots": ["arms"], "layers": [idle_layer]},
 			{"why": "the rifle crouch walk forward, medium ready: the same, the arms turned further (the forward crouch walk's torso is more upright)",
 			"weapon": "musket", "modes": ["crouch"], "roles_except": ["idle"], "roles_only": FWD_ROLES, "slots": ["arms"], "layers": [mid_fw_layer]},
+			{"why": "the pistol held bent at idle, not pointing down (user 2026-09-30): the pistol's own idle arm (Pistol.relaxed idle: arm-gun-idle) on the idle roles, which the graph leaves to the base pose",
+			"weapon": "pistol", "modes": ["walk", "run", "sprint"], "roles_except": [], "roles_only": ["idle"], "append": true,
+			"layers": [{"clip": "actor_b-r-arm-gun-idle", "kind": "partial", "slot": "arms", "status": "resolved", "weight": 1.0, "superseded_by": null, "weight_curve": null}]},
+			{"why": "the pistol held bent at the crouch idle (Pistol.relaxed crouch_idle: arm-gun-crouch-idle)",
+			"weapon": "pistol", "modes": ["crouch"], "roles_except": [], "roles_only": ["idle"], "append": true,
+			"layers": [{"clip": "actor_b-r-arm-gun-crouch-idle", "kind": "partial", "slot": "arms", "status": "resolved", "weight": 1.0, "superseded_by": null, "weight_curve": null}]},
+			{"why": "the pistol keeps the idle arm running and jogging (user 2026-09-30: \"for pistol run and jog keep the idle arm\"): its own idle arm (muzzle up) in place of the run's arm (muzzle down 72 deg), on every role of the run and the sprint that has an arm layer; stops included",
+			"weapon": "pistol", "modes": ["run"], "roles_except": [], "roles_only": MOVE_ROLES, "slots": ["arms", "arms_add"], "layers": [pistol_idle_arm]},
+			{"why": "the pistol's sprint stops: the idle arm too",
+			"weapon": "pistol", "modes": ["sprint"], "roles_except": [], "roles_only": ["stop_fw", "stop_fw_lt", "stop_fw_rt", "stop_bw", "stop_bw_lt", "stop_bw_rt"], "slots": ["arms", "arms_add"], "layers": [pistol_idle_arm]},
+			{"why": "the roles of the run the graph gives no arm: the idle arm (the pistol would drop to the base pose, muzzle down, for the turn)",
+			"weapon": "pistol", "modes": ["run"], "roles_except": [], "roles_only": ["rev_bw_fw", "rev_bw_fw_lt", "rev_bw_fw_rt", "rev_fw_bw", "rev_fw_bw_lt", "rev_fw_bw_rt", "turn_l", "turn_r", "turn_l_180", "turn_r_180", "quick_turn_180"], "append": true, "layers": [pistol_idle_arm]},
+			{"why": "the roles of the sprint with no arm layer: the idle arm",
+			"weapon": "pistol", "modes": ["sprint"], "roles_except": [], "roles_only": ["fw", "fw_lt", "fw_rt", "bw", "bw_lt", "bw_rt", "start_fw", "start_fw_lt", "start_fw_rt", "start_bw", "start_bw_lt", "start_bw_rt", "rev_bw_fw", "rev_bw_fw_lt", "rev_bw_fw_rt", "rev_fw_bw", "rev_fw_bw_lt", "rev_fw_bw_rt", "turn_l", "turn_r", "turn_l_180", "turn_r_180", "quick_turn_180"], "append": true, "layers": [pistol_idle_arm]},
 			{"why": "the tomahawk crouches like the pistol (user 2026-09-30): the pistol's crouch arm on every role",
 			"weapon": "tomahawk", "modes": ["crouch"], "roles_except": [], "slots": ["arms", "arms_add"], "copy_from": "pistol"},
 		],
@@ -287,11 +336,24 @@ func _rifle_side_preview() -> void:
 
 ## The rifle low ready and the crouch walk's medium ready: the turns at the shoulders (degrees, pitch yaw roll in the shoulder's own
 ## frame: +Y lowers the hand and the gun's end on that side) of the graph's arm poses.
+## The standing medium ready: half the way (idle barrel about 18 deg up between the low ready's 7 and the graph's 30).
+const MIDIDLE_TURN_R := Vector3(0.0, 17.0, 0.0)
+const MIDIDLE_TURN_L := Vector3(0.0, 17.0, 0.0)
 const LOW_TURN_R := Vector3(0.0, 35.0, 0.0)
 const LOW_TURN_L := Vector3(0.0, 35.0, 0.0)
 const MID_TURN_R := Vector3(0.0, 12.0, 0.0)
 const MID_TURN_L := Vector3(0.0, 12.0, 0.0)
 ## (forward the crouch walk's torso is more upright, so the arms turn further for the same barrel height)
+## The share of the way from the right hand to the right hip the crouch poses draw the hand (user 2026-09-30: "close to the hip"
+## for the idle, "very close" for the crouch walk).
+const HIP_PULL := 0.6
+const HIP_PULL_IDLE := 0.45
+## The hold points the gun across the body, about 10 o'clock when the hand is at the hip (user 2026-09-30); these turn it (degrees
+## about the body's vertical, + to the left) from where the graph's poses leave it (measured in the level: idle 75 deg left of the
+## player's facing, walking 52 / 57: 60 is 10 o'clock).
+const GUN_YAW_IDLE := -28.0
+const GUN_YAW_FW := 8.0
+const GUN_YAW_BACK := 3.0
 const MID_FW_TURN_R := Vector3(0.0, 32.0, 0.0)
 const MID_FW_TURN_L := Vector3(0.0, 32.0, 0.0)
 const FWD_ROLES := ["fw", "fw_lt", "fw_rt", "start_fw", "start_fw_lt", "start_fw_rt", "stop_fw", "stop_fw_lt", "stop_fw_rt", "turn_l", "turn_r"]
@@ -301,7 +363,7 @@ const BACK_ROLES := ["bw", "bw_lt", "bw_rt", "start_bw", "start_bw_lt", "start_b
 
 ## A one-frame arms pose `clip_name` in `out`: `src_name`'s arms at its first frame, the shoulders turned by `rr` / `rl`; returns
 ## the bones it keys.
-func _bake_rifle_pose(out: AnimationLibrary, clip_name: String, src_name: String, rr: Vector3, rl: Vector3) -> Array:
+func _bake_rifle_pose(out: AnimationLibrary, clip_name: String, src_name: String, rr: Vector3, rl: Vector3, hip_pull := 0.0, gun_yaw := 0.0, body_clip := "") -> Array:
 	var src := lib.get_animation(src_name)
 	var pose := _stamp(Animation.new(), src)
 	pose.length = 1.0 / 30.0
@@ -328,8 +390,107 @@ func _bake_rifle_pose(out: AnimationLibrary, clip_name: String, src_name: String
 		pose.rotation_track_insert_key(tr, 0.0, q)
 		if not bones.has(bone):
 			bones.append(bone)
+	if hip_pull > 0.0:
+		_pull_to_hip(pose, hip_pull, gun_yaw, body_clip)
 	out.add_animation(StringName(clip_name), pose)
 	return bones
+
+
+## The right hand of a one-frame arms pose drawn toward the right hip (user 2026-09-30: "the right hand closer to the right hip"):
+## the prop bone (the gun's grip) moves `pull` of the way from where it is to the hip joint, keeping its turn, by turning the right
+## shoulder, elbow and wrist (a search over their turns on the skeleton: the arm chain is plain forward kinematics). Judged on the
+## rest torso: the arms' rotations are the chest's, whatever the body clip under them does.
+func _pull_to_hip(pose: Animation, pull: float, gun_yaw := 0.0, body_clip := "") -> void:
+	# the chest's turn off the rest pose in the body clip the arms go under (the crouch leans it): the gun's yaw is wanted about the
+	# world's vertical, which in the chest's frame is that turned
+	var crel := _chest_turn(body_clip)
+	_rig.reset_bone_poses()
+	var track := {}
+	for ti in pose.get_track_count():
+		var bone := String(pose.track_get_path(ti).get_concatenated_subnames())
+		track[bone] = ti
+		_rig.set_bone_pose_rotation(_rig.find_bone(bone), pose.rotation_track_interpolate(ti, 0.0))
+	_rig.force_update_all_bone_transforms()
+	var prop := _rig.find_bone("r_hand_prop_attachment")
+	var g0 := _rig.get_bone_global_pose(prop)
+	var hip := _rig.get_bone_global_pose(_rig.find_bone("r_upper_leg")).origin
+	var target := g0.origin + (hip - g0.origin) * pull
+	var joints := ["r_shoulder", "r_elbow", "r_wrist"]
+	var base: Array = []
+	for j in joints:
+		base.append(_rig.get_bone_pose_rotation(_rig.find_bone(j)))
+	var v := PackedFloat32Array([0, 0, 0, 0, 0, 0, 0, 0, 0])
+	# (the gun's turn: where it was, turned `gun_yaw` degrees about the body's vertical, + to the left: how the hold points it across the body)
+	var d_world := Basis(Vector3.UP, deg_to_rad(gun_yaw))
+	var g_want := Transform3D(crel.inverse() * d_world * crel * g0.basis, g0.origin)
+	var best := _hip_cost(joints, base, v, g_want, target)
+	var step := 10.0
+	while step > 0.25:
+		var improved := false
+		for i in 9:
+			for sgn in [1.0, -1.0]:
+				var w := v.duplicate()
+				w[i] += step * sgn
+				var c := _hip_cost(joints, base, w, g_want, target)
+				if c < best:
+					best = c
+					v = w
+					improved = true
+		if not improved:
+			step *= 0.5
+	_hip_cost(joints, base, v, g_want, target)
+	var after := _rig.get_bone_global_pose(prop)
+	print("hip pull %.2f: hand moved %.3f m (asked %.3f), grip %.1f deg off the wanted turn (%.0f asked), cost %.4f" % [pull, (after.origin - g0.origin).length(), (target - g0.origin).length(), rad_to_deg(g_want.basis.get_rotation_quaternion().angle_to(after.basis.get_rotation_quaternion())), gun_yaw, best])
+	for k in joints.size():
+		var ti: int = track[joints[k]]
+		pose.rotation_track_insert_key(ti, 0.0, _rig.get_bone_pose_rotation(_rig.find_bone(joints[k])))
+
+
+## How far the chest (the top spine bone) is turned off the rest pose in `body_clip` (averaged over the clip's cycle, a Basis); identity
+## for "".
+func _chest_turn(body_clip: String) -> Basis:
+	if body_clip == "":
+		return Basis.IDENTITY
+	var a := lib.get_animation(body_clip)
+	_rig.reset_bone_poses()
+	_rig.force_update_all_bone_transforms()
+	var spined := _rig.find_bone("spined")
+	var rest := _rig.get_bone_global_pose(spined).basis
+	var acc := Vector4.ZERO
+	var ref := Quaternion.IDENTITY
+	for i in 8:
+		_rig.reset_bone_poses()
+		var t := a.length * float(i) / 8.0
+		for ti in a.get_track_count():
+			if a.track_get_type(ti) != Animation.TYPE_ROTATION_3D:
+				continue
+			var bone := _rig.find_bone(String(a.track_get_path(ti).get_concatenated_subnames()))
+			if bone < 0:
+				continue
+			_rig.set_bone_pose_rotation(bone, a.rotation_track_interpolate(ti, t))
+		_rig.force_update_all_bone_transforms()
+		var q := (_rig.get_bone_global_pose(spined).basis * rest.inverse()).get_rotation_quaternion()
+		if i == 0:
+			ref = q
+		if q.dot(ref) < 0.0:
+			q = Quaternion(-q.x, -q.y, -q.z, -q.w)
+		acc += Vector4(q.x, q.y, q.z, q.w)
+	acc = acc.normalized()
+	_rig.reset_bone_poses()
+	return Basis(Quaternion(acc.x, acc.y, acc.z, acc.w))
+
+
+## The cost of turns `v` (degrees, three per joint) on the arm chain: the grip's distance from the target, plus its turn off where
+## it was (the gun must not turn), plus a little for turning the joints at all. Leaves the skeleton posed so.
+func _hip_cost(joints: Array, base: Array, v: PackedFloat32Array, g0: Transform3D, target: Vector3) -> float:
+	var reg := 0.0
+	for k in joints.size():
+		var e := Vector3(deg_to_rad(v[k * 3]), deg_to_rad(v[k * 3 + 1]), deg_to_rad(v[k * 3 + 2]))
+		_rig.set_bone_pose_rotation(_rig.find_bone(joints[k]), (base[k] as Quaternion) * Quaternion.from_euler(e))
+		reg += e.length()
+	_rig.force_update_all_bone_transforms()
+	var g := _rig.get_bone_global_pose(_rig.find_bone("r_hand_prop_attachment"))
+	return (g.origin - target).length() * 4.0 + g0.basis.get_rotation_quaternion().angle_to(g.basis.get_rotation_quaternion()) * 0.6 + reg * 0.01
 
 
 ## The bow's nock with an arrow in the hand (user 2026-09-30: "with arrows in hand the user doesn't need to pull arrows out the
@@ -430,9 +591,16 @@ func _reversed(a: Animation) -> Animation:
 ## (its lean, arm swing and torso twist, slowing as the gait does) eases into the graph's stop over STOP_S seconds; the whole
 ## stop runs STOP_RATE times as fast, holding its last pose (the standing pose) for the rest of the graph's length, which the
 ## tables time the state by.
-func _own_stop(new_jog: Animation, orig_name: String) -> Animation:
+func _own_stop(new_jog: Animation, orig_name: String, upper_from := "", out_len := 0.0, rate := 0.0, ease_s := 0.0) -> Animation:
+	var es := ease_s if ease_s > 0.0 else STOP_S
 	var orig := lib.get_animation(orig_name)
-	var big := orig.length
+	var src_len := orig.length
+	var stop_rate := rate if rate > 0.0 else STOP_RATE
+	# the upper body of another of the graph's stops (the forward stops take the backward ones': user 2026-09-30, "the backwards
+	# movement when we stop looks nice, apply those to the forward"), at its own pace; the legs stay this stop's
+	var up_src := lib.get_animation(upper_from) if upper_from != "" else orig
+	var up_rate := 1.0 if upper_from != "" else STOP_RATE
+	var big := out_len if out_len > 0.0 else orig.length
 	var phase := _match_phase(orig, 0.0, new_jog)
 	var out := _stamp(Animation.new(), orig)
 	out.length = big
@@ -442,7 +610,7 @@ func _own_stop(new_jog: Animation, orig_name: String) -> Animation:
 	var p := phase * new_jog.length
 	for f in n + 1:
 		ph.append(p)
-		p += (1.0 - smoothstep(0.0, STOP_S, float(f) / FPS)) / FPS
+		p += (1.0 - smoothstep(0.0, es, float(f) / FPS)) / FPS
 	var upper := _upper_bones()
 	for ti in orig.get_track_count():
 		var type := orig.track_get_type(ti)
@@ -455,14 +623,19 @@ func _own_stop(new_jog: Animation, orig_name: String) -> Animation:
 		out.track_set_path(tr, path)
 		# (the graph's stop throws the arms out as it settles: ours moves them less, about the standing pose it rests in)
 		var damp := _stop_damp(bone) if upper.has(bone) else 1.0
-		var rest_q := orig.rotation_track_interpolate(ti, big) if type == Animation.TYPE_ROTATION_3D else Quaternion.IDENTITY
+		var ui := up_src.find_track(path, type) if upper.has(bone) else -1
+		var rest_q := Quaternion.IDENTITY
+		if type == Animation.TYPE_ROTATION_3D:
+			rest_q = up_src.rotation_track_interpolate(ui, up_src.length) if ui >= 0 else orig.rotation_track_interpolate(ti, src_len)
 		for f in n + 1:
 			var t := minf(float(f) / FPS, big)
-			var ts := minf(t * STOP_RATE, big)
-			var w := smoothstep(0.0, STOP_S, t)
+			var ts := minf(t * stop_rate, src_len)
+			var w := smoothstep(0.0, es, t)
 			var mix := upper.has(bone) and ji >= 0
 			if type == Animation.TYPE_ROTATION_3D:
 				var q: Quaternion = orig.rotation_track_interpolate(ti, ts)
+				if ui >= 0:
+					q = up_src.rotation_track_interpolate(ui, minf(t * up_rate, up_src.length))
 				if damp < 1.0:
 					q = rest_q * Quaternion.IDENTITY.slerp(rest_q.inverse() * q, damp)
 				if mix:
@@ -571,6 +744,13 @@ func _backward(dir: String, fwd: Animation) -> Animation:
 		var swing := type == Animation.TYPE_ROTATION_3D and upper.has(bone) and fi >= 0
 		var bm := _mean_q(bw, ti) if swing else Quaternion.IDENTITY
 		var fm := _mean_q(fwd, fi) if swing else Quaternion.IDENTITY
+		# the hips' bounce (the root's height through the cycle): the graph's backward jog bobs 9 cm, our forward jog 5: less of it
+		# (user 2026-09-30: "the backwards the player is too bouncy")
+		var mean_y := 0.0
+		if type == Animation.TYPE_POSITION_3D and bone == "root":
+			for f in n:
+				mean_y += bw.position_track_interpolate(ti, float(f) / FPS).y
+			mean_y /= float(n)
 		for f in n + 1:
 			var t := minf(float(f) / FPS, bw.length)
 			if type == Animation.TYPE_ROTATION_3D:
@@ -580,7 +760,10 @@ func _backward(dir: String, fwd: Animation) -> Animation:
 					q = bm * Quaternion.IDENTITY.slerp(delta, _swing_scale(bone))
 				out.rotation_track_insert_key(tr, t, q)
 			else:
-				out.position_track_insert_key(tr, t, bw.position_track_interpolate(ti, t))
+				var v: Vector3 = bw.position_track_interpolate(ti, t)
+				if bone == "root":
+					v.y = mean_y + (v.y - mean_y) * BACK_BOUNCE
+				out.position_track_insert_key(tr, t, v)
 	return out
 
 

@@ -1155,6 +1155,8 @@ func _physics_process(delta: float) -> void:
 		else:
 			velocity.y -= _gravity * delta
 
+		if traversal and perch == null and aboard == null:
+			traversal.step_assist(wish, delta)
 		move_and_slide()
 		local_move = Vector2(velocity.dot(global_basis.x), velocity.dot(-global_basis.z))
 	if traversal:

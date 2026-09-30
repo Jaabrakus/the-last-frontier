@@ -33,6 +33,11 @@
 			"length": 0.3,
 			"lib": "frontier_locomotion"
 		},
+		"own-rifle-crouch-idle": {
+			"clip": "own-rifle-crouch-idle",
+			"length": 0.033333,
+			"lib": "frontier_locomotion"
+		},
 		"own-rifle-crouch-mid": {
 			"clip": "own-rifle-crouch-mid",
 			"length": 0.033333,
@@ -45,6 +50,11 @@
 		},
 		"own-rifle-low-ready": {
 			"clip": "own-rifle-low-ready",
+			"length": 0.033333,
+			"lib": "frontier_locomotion"
+		},
+		"own-rifle-mid-ready": {
+			"clip": "own-rifle-mid-ready",
 			"length": 0.033333,
 			"lib": "frontier_locomotion"
 		}
@@ -314,6 +324,48 @@
 						"r_wrist",
 						"r_trap"
 					],
+					"clip": "own-rifle-crouch-idle",
+					"kind": "partial",
+					"sample_s": 0.0,
+					"slot": "arms",
+					"status": "frontier",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"crouch"
+			],
+			"roles_except": [],
+			"roles_only": [
+				"idle"
+			],
+			"slots": [
+				"arms"
+			],
+			"weapon": "musket",
+			"why": "the rifle crouch idle with the right hand nearer the right hip (user 2026-09-30)"
+		},
+		{
+			"layers": [
+				{
+					"bones": [
+						"l_clavicle",
+						"l_scapula",
+						"l_shoulder",
+						"l_deltoid",
+						"l_elbow",
+						"l_wrist",
+						"l_trap",
+						"r_clavicle",
+						"r_scapula",
+						"r_shoulder",
+						"r_deltoid",
+						"r_elbow",
+						"r_wrist",
+						"r_trap"
+					],
 					"clip": "own-rifle-crouch-mid-fw",
 					"kind": "partial",
 					"sample_s": 0.0,
@@ -348,6 +400,214 @@
 			],
 			"weapon": "musket",
 			"why": "the rifle crouch walk forward, medium ready: the same, the arms turned further (the forward crouch walk's torso is more upright)"
+		},
+		{
+			"append": true,
+			"layers": [
+				{
+					"clip": "actor_b-r-arm-gun-idle",
+					"kind": "partial",
+					"slot": "arms",
+					"status": "resolved",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"walk",
+				"run",
+				"sprint"
+			],
+			"roles_except": [],
+			"roles_only": [
+				"idle"
+			],
+			"weapon": "pistol",
+			"why": "the pistol held bent at idle, not pointing down (user 2026-09-30): the pistol's own idle arm (Pistol.relaxed idle: arm-gun-idle) on the idle roles, which the graph leaves to the base pose"
+		},
+		{
+			"append": true,
+			"layers": [
+				{
+					"clip": "actor_b-r-arm-gun-crouch-idle",
+					"kind": "partial",
+					"slot": "arms",
+					"status": "resolved",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"crouch"
+			],
+			"roles_except": [],
+			"roles_only": [
+				"idle"
+			],
+			"weapon": "pistol",
+			"why": "the pistol held bent at the crouch idle (Pistol.relaxed crouch_idle: arm-gun-crouch-idle)"
+		},
+		{
+			"layers": [
+				{
+					"clip": "actor_b-r-arm-gun-idle",
+					"kind": "partial",
+					"slot": "arms",
+					"status": "resolved",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"run"
+			],
+			"roles_except": [],
+			"roles_only": [
+				"fw",
+				"fw_lt",
+				"fw_rt",
+				"bw",
+				"bw_lt",
+				"bw_rt",
+				"start_fw",
+				"start_fw_lt",
+				"start_fw_rt",
+				"start_bw",
+				"start_bw_lt",
+				"start_bw_rt",
+				"stop_fw",
+				"stop_fw_lt",
+				"stop_fw_rt",
+				"stop_bw",
+				"stop_bw_lt",
+				"stop_bw_rt",
+				"rev_bw_fw",
+				"rev_bw_fw_lt",
+				"rev_bw_fw_rt",
+				"rev_fw_bw",
+				"rev_fw_bw_lt",
+				"rev_fw_bw_rt",
+				"turn_l",
+				"turn_r"
+			],
+			"slots": [
+				"arms",
+				"arms_add"
+			],
+			"weapon": "pistol",
+			"why": "the pistol keeps the idle arm running and jogging (user 2026-09-30: \"for pistol run and jog keep the idle arm\"): its own idle arm (muzzle up) in place of the run's arm (muzzle down 72 deg), on every role of the run and the sprint that has an arm layer; stops included"
+		},
+		{
+			"layers": [
+				{
+					"clip": "actor_b-r-arm-gun-idle",
+					"kind": "partial",
+					"slot": "arms",
+					"status": "resolved",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"sprint"
+			],
+			"roles_except": [],
+			"roles_only": [
+				"stop_fw",
+				"stop_fw_lt",
+				"stop_fw_rt",
+				"stop_bw",
+				"stop_bw_lt",
+				"stop_bw_rt"
+			],
+			"slots": [
+				"arms",
+				"arms_add"
+			],
+			"weapon": "pistol",
+			"why": "the pistol's sprint stops: the idle arm too"
+		},
+		{
+			"append": true,
+			"layers": [
+				{
+					"clip": "actor_b-r-arm-gun-idle",
+					"kind": "partial",
+					"slot": "arms",
+					"status": "resolved",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"run"
+			],
+			"roles_except": [],
+			"roles_only": [
+				"rev_bw_fw",
+				"rev_bw_fw_lt",
+				"rev_bw_fw_rt",
+				"rev_fw_bw",
+				"rev_fw_bw_lt",
+				"rev_fw_bw_rt",
+				"turn_l",
+				"turn_r",
+				"turn_l_180",
+				"turn_r_180",
+				"quick_turn_180"
+			],
+			"weapon": "pistol",
+			"why": "the roles of the run the graph gives no arm: the idle arm (the pistol would drop to the base pose, muzzle down, for the turn)"
+		},
+		{
+			"append": true,
+			"layers": [
+				{
+					"clip": "actor_b-r-arm-gun-idle",
+					"kind": "partial",
+					"slot": "arms",
+					"status": "resolved",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"sprint"
+			],
+			"roles_except": [],
+			"roles_only": [
+				"fw",
+				"fw_lt",
+				"fw_rt",
+				"bw",
+				"bw_lt",
+				"bw_rt",
+				"start_fw",
+				"start_fw_lt",
+				"start_fw_rt",
+				"start_bw",
+				"start_bw_lt",
+				"start_bw_rt",
+				"rev_bw_fw",
+				"rev_bw_fw_lt",
+				"rev_bw_fw_rt",
+				"rev_fw_bw",
+				"rev_fw_bw_lt",
+				"rev_fw_bw_rt",
+				"turn_l",
+				"turn_r",
+				"turn_l_180",
+				"turn_r_180",
+				"quick_turn_180"
+			],
+			"weapon": "pistol",
+			"why": "the roles of the sprint with no arm layer: the idle arm"
 		},
 		{
 			"copy_from": "pistol",
