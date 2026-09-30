@@ -7,13 +7,13 @@
   "hull": {"length": 5.2, "beam": 0.95, "depth": 0.42, "sheer_rise": 0.16, "end_taper": 2.2, "bottom_round": 0.75},
   "stages": [
    {"id": "bed", "name": "Lay the building bed", "know": "know.canoe_bed", "needs": {"canoe_stake": 14}, "work_min": 45,
-    "tool": ["item.tool.hatchet", "item.tool.axe", "item.tool.stone_axe", "gather:felling_axe"], "puzzle": "", "shows": ["stakes"], "weight": 0.15, "what": "shape"},
+    "tool": ["item.tool.hatchet", "item.tool.axe", "item.tool.stone_axe", "gather:felling_axe"], "puzzle": "bed_stakes", "shows": ["stakes"], "weight": 0.15, "what": "shape"},
    {"id": "skin", "name": "Lay, shape and sew the bark", "know": "know.bark_sewing", "needs": {"birch_bark_sheet": 3, "wattap": 8}, "work_min": 150,
     "tool": ["item.tool.awl", "item.tool.bone_awl", "bone_awl"], "puzzle": "bark_fit", "shows": ["skin"], "weight": 0.35, "what": "watertight"},
    {"id": "gunwales", "name": "Fit the gunwales", "know": "know.canoe_gunwales", "needs": {"canoe_strip": 4, "wattap": 6}, "work_min": 100,
-    "tool": ["item.tool.awl", "item.tool.bone_awl", "bone_awl"], "puzzle": "", "shows": ["gunwales"], "weight": 0.1, "what": "stiff"},
+    "tool": ["item.tool.awl", "item.tool.bone_awl", "bone_awl"], "puzzle": "lashing", "shows": ["gunwales"], "weight": 0.1, "what": "stiff"},
    {"id": "ribs", "name": "Steam and set the ribs", "know": "know.canoe_gunwales", "needs": {"canoe_rib": 18}, "work_min": 150,
-    "tool": [], "puzzle": "", "shows": ["ribs"], "weight": 0.2, "what": "strong"},
+    "tool": [], "puzzle": "rib_steam", "shows": ["ribs"], "weight": 0.2, "what": "strong"},
    {"id": "seams", "name": "Pitch the seams", "know": "know.pitching_seams", "needs": {"pine_pitch": 3}, "work_min": 60,
     "tool": [], "puzzle": "pitch", "shows": ["pitch"], "weight": 0.2, "what": "watertight"}
   ],

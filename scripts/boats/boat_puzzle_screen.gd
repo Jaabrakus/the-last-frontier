@@ -21,12 +21,26 @@ var _time_bar: ProgressBar
 var _info: Label
 
 
-## A puzzle screen of `kind` ("bark_fit", "pitch") opened over the game.
-static func open(tree: SceneTree, kind: String, p_guided: bool, lumps := 3.0) -> BoatPuzzleScreen:
-	var s: BoatPuzzleScreen = BarkFitScreen.new() if kind == "bark_fit" else PitchScreen.new()
+## A puzzle screen of `kind` ("bed_stakes", "bark_fit", "lashing", "rib_steam", "pitch") opened over the game. `extra`: the plan's
+## "hull" numbers for the bed, the "lumps" of pitch for the seams.
+static func open(tree: SceneTree, kind: String, p_guided: bool, extra := {}) -> BoatPuzzleScreen:
+	var s: BoatPuzzleScreen
+	match kind:
+		"bed_stakes":
+			var st := StakeBedScreen.new()
+			st.hull = extra.get("hull", {})
+			s = st
+		"bark_fit":
+			s = BarkFitScreen.new()
+		"lashing":
+			s = LashingScreen.new()
+		"rib_steam":
+			s = RibSteamScreen.new()
+		_:
+			var ps := PitchScreen.new()
+			ps.lumps = float(extra.get("lumps", 3.0))
+			s = ps
 	s.guided = p_guided
-	if s is PitchScreen:
-		(s as PitchScreen).lumps = lumps
 	tree.root.add_child(s)
 	return s
 

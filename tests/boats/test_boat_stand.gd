@@ -12,6 +12,7 @@ var checks := 0
 var fails: Array[String] = []
 var b: SurvivalBridge
 var player: FrontierPlayer
+var stand: BoatStand
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -49,7 +50,7 @@ func _run() -> void:
 	var holder := Node3D.new()
 	current_scene.add_child(holder)
 	holder.global_position = bank
-	var stand := BoatStand.attach(holder)
+	stand = BoatStand.attach(holder)
 	stand.instant_work = true
 	await process_frame
 	_expect(stand.build != null and stand.build.stages().size() == 5, "the stand has the canoe's five stages")
@@ -105,26 +106,22 @@ func _run() -> void:
 	if st0 == "unknown":
 		_expect(msg.contains("do not know"), "not knowing how: it cannot be done (%s)" % msg)
 		SurvivalLearning.set_state(core, "know.canoe_bed", "known", "taught", "the old hunter")
-	msg = stand.pick("bed")
+	msg = _stage("bed")
 	_expect(stand.build.done.has("bed"), "taught, with a knife or axe, the bed is laid (%s)" % msg)
 	_expect(float(stand.hull.frac["stakes"]) > 0.99, "the stakes stand on the ground")
 	for id in ["know.bark_sewing", "know.canoe_gunwales", "know.pitching_seams"]:
 		SurvivalLearning.set_state(core, id, "known", "taught", "the old hunter")
 	SurvivalInventory.add(core, "item.tool.awl", 1.0)
-	stand.pick("skin")
-	stand.pick("skin")
-	_expect(stand.build.waiting or stand.build.done.has("skin"), "the skin's work is done: it waits for the fitting")
+	stand.pick("skin")   # the parts brought
+	stand.pick("skin")   # begun and worked
+	_expect(stand.build.waiting, "the skin's work is done: it waits for the fitting")
 	msg = stand.pick("skin")
 	_expect(stand.build.done.has("skin") and float(stand.hull.frac["skin"]) > 0.99, "fitted: the skin is on (%s)" % msg)
-	stand.pick("gunwales")
-	stand.pick("gunwales")
+	_stage("gunwales")
 	_expect(stand.build.done.has("gunwales") and float(stand.hull.frac["gunwales"]) > 0.99, "the gunwales are on")
-	stand.pick("ribs")
-	stand.pick("ribs")
+	_stage("ribs")
 	_expect(stand.build.done.has("ribs") and float(stand.hull.frac["ribs"]) > 0.99, "the ribs are set")
-	stand.pick("seams")
-	stand.pick("seams")
-	stand.pick("seams")
+	_stage("seams")
 	_expect(stand.build.is_complete(), "the seams are pitched: the canoe is built from what the woods gave")
 	_expect(float(stand.hull.frac["stakes"]) < 0.01 and float(stand.hull.frac["pitch"]) > 0.99, "the bed comes away and the pitch shows")
 	var st := stand.build.stats()
@@ -144,6 +141,16 @@ func _run() -> void:
 		_expect(w != WaterSurface.NO_WATER and boat.position.y < w and boat.position.y > w - 0.5, "and floats there (y %.2f, water %.2f)" % [boat.position.y, w])
 	_expect(stand.build.next_id() == "bed" and stand.build.done.is_empty(), "the stand is bare for the next boat")
 	_end()
+
+
+## Picks a stage until it is done: bring the parts, begin it, its work, its puzzle (played for the builder, headless).
+func _stage(sid: String) -> String:
+	var msg := ""
+	for i in 5:
+		msg = stand.pick(sid)
+		if stand.build.done.has(sid):
+			break
+	return msg
 
 
 func _end() -> void:

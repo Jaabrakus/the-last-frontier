@@ -47,9 +47,10 @@ func _initialize() -> void:
 	b.has_tool = func(_t: Array) -> bool: return true
 	_expect(b.start("bed") and int(b.store.get("canoe_stake", 0)) == 0, "starting attaches the parts (out of the store)")
 	_expect(b.work(20.0) == "" and b.progress == 20.0, "work goes on by the minute")
-	_expect(b.work(30.0) == "done" and b.done.has("bed") and b.current == "", "and finishes on its own where there is no puzzle")
-	_expect(b.grade_of("bed") > 0.5, "a plain job by skill gives a middling grade (%.2f)" % b.grade_of("bed"))
-	# the skin has a puzzle
+	_expect(b.work(30.0) == "puzzle" and b.done.is_empty() and b.waiting, "and every stage waits for its puzzle when the work is done")
+	b.finish(0.6)
+	_expect(b.done.has("bed") and b.current == "" and is_equal_approx(b.grade_of("bed"), 0.6), "the puzzle's score is the stage's grade (%.2f)" % b.grade_of("bed"))
+	# the skin
 	_stock(b)
 	_expect(b.start("skin"), "the skin next")
 	_expect(b.work(100.0) == "" and b.work(60.0) == "puzzle" and b.waiting, "its work done it waits for its puzzle")

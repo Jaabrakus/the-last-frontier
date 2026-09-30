@@ -407,7 +407,7 @@ func play_puzzle() -> String:
 		return _puzzle_done(score)
 	var guided := build.knowledge(build.current) in ["known", "practised", "mastered"]
 	var lumps := float((build.stage(build.current).get("needs", {}) as Dictionary).get("pine_pitch", 3))
-	var scr := BoatPuzzleScreen.open(get_tree(), pid, guided, lumps)
+	var scr := BoatPuzzleScreen.open(get_tree(), pid, guided, {"lumps": lumps, "hull": build.plan.get("hull", {})})
 	scr.finished.connect(func(score: float) -> void:
 		last = _puzzle_done(score)
 		refresh()

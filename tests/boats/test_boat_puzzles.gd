@@ -91,6 +91,60 @@ func _initialize() -> void:
 		if run_out.time > 30.0:
 			break
 	_expect(run_out.used >= run_out.supply - 0.0001, "the pitch is only so much: it runs out (%.2f of %.2f used)" % [run_out.used, run_out.supply])
+	# the bed of stakes
+	var hull: Dictionary = (BoatBuild.plans().birchbark as Dictionary).hull
+	var good_bed := StakeBed.make(hull)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	for tg in good_bed.targets.duplicate():
+		good_bed.place(tg + Vector2(rng.randf_range(-0.1, 0.1), rng.randf_range(-0.1, 0.1)))
+	var sloppy_bed := StakeBed.make(hull)
+	for i in sloppy_bed.wanted():
+		sloppy_bed.place(Vector2(rng.randf_range(-1.5, 1.5), rng.randf_range(-2.6, 2.6)))
+	var half_bed := StakeBed.make(hull)
+	for i in half_bed.wanted() / 2:
+		half_bed.place(half_bed.targets[i])
+	_expect(good_bed.wanted() == 14 and good_bed.full() and good_bed.score() > 0.7, "a bed set within a hand of every place scores well (%.2f)" % good_bed.score())
+	_expect(sloppy_bed.score() < 0.3, "stakes driven anywhere score badly (%.2f)" % sloppy_bed.score())
+	_expect(half_bed.score() > 0.4 and half_bed.score() < 0.55, "half the stakes, right, is half the bed (%.2f)" % half_bed.score())
+	_expect(good_bed.place(Vector2.ZERO) == -1.0, "no more stakes than the bed wants")
+	# the lashing
+	var nimble := Lashing.make(true, 0.1)
+	while not nimble.done():
+		# pull as the marker crosses the middle
+		var prev := nimble.pos
+		nimble.step(0.004)
+		if (prev - 0.5) * (nimble.pos - 0.5) <= 0.0:
+			nimble.pull()
+	var greedy := Lashing.make(true, 0.1)
+	for i in Lashing.STITCHES:
+		greedy.step(0.13)
+		greedy.pull()
+	var idle_l := Lashing.make(true, 0.1)
+	_expect(nimble.score() > 0.85, "stitches pulled as the marker crosses the middle score well (%.2f)" % nimble.score())
+	_expect(greedy.score() < nimble.score() - 0.3, "stitches pulled at random do far worse (%.2f)" % greedy.score())
+	_expect(idle_l.score() == 0.0 and not idle_l.done(), "no stitches pulled, nothing sewn")
+	_expect(Lashing.make(true, 0.1)._speed < nimble._speed, "the marker quickens with every stitch")
+	# the ribs
+	var steamer := RibSteam.make(true, 2)
+	while not steamer.done():
+		var w := steamer.window()
+		while steamer.heat < (w.x + w.y) * 0.5:
+			steamer.hold(0.02)
+		steamer.release()
+	var hasty := RibSteam.make(true, 2)
+	while not hasty.done():
+		hasty.hold(0.1)
+		hasty.release()
+	var boiled := RibSteam.make(true, 2)
+	while not boiled.done():
+		while boiled.heat < 0.98:
+			boiled.hold(0.05)
+		boiled.release()
+	_expect(steamer.score() > 0.9, "each rib steamed to the middle of its window is set well (%.2f)" % steamer.score())
+	_expect(hasty.score() < 0.5, "ribs set before they are supple crack (%.2f)" % hasty.score())
+	_expect(boiled.score() < 0.35, "ribs left in the steam go mushy (%.2f)" % boiled.score())
+	_expect(RibSteam.make(true, 1).release() == -1.0, "a rib not put in the steam cannot be set")
 	if fails.is_empty():
 		print("BOAT PUZZLES TEST PASSED (%d checks)" % checks)
 	else:

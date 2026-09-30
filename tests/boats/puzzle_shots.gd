@@ -53,4 +53,44 @@ func _run() -> void:
 	p._down = true
 	p._x = 0.7
 	await _shot("pitch_guided")
+	p.queue_free()
+	paused = false
+	await process_frame
+	var hull: Dictionary = (BoatBuild.plans().birchbark as Dictionary).hull
+	var sb := BoatPuzzleScreen.open(self, "bed_stakes", true, {"hull": hull}) as StakeBedScreen
+	await process_frame
+	for i in 9:
+		var tg: Vector2 = sb.puzzle.targets[i]
+		sb.puzzle.place(tg + Vector2(0.09 * float(i % 3 - 1), 0.12 * float(i % 2)) * (2.0 if i == 4 else 1.0))
+	await _shot("bed_guided")
+	sb.queue_free()
+	paused = false
+	await process_frame
+	var su := BoatPuzzleScreen.open(self, "bed_stakes", false, {"hull": hull}) as StakeBedScreen
+	await process_frame
+	for i in 5:
+		su.puzzle.place(Vector2(0.75, -2.2 + 0.9 * float(i)))
+	await _shot("bed_unguided")
+	su.queue_free()
+	paused = false
+	await process_frame
+	var la := BoatPuzzleScreen.open(self, "lashing", true) as LashingScreen
+	await process_frame
+	for i in 7:
+		la.puzzle.pos = 0.5 + 0.2 * sin(float(i) * 2.1)
+		la.puzzle.pull()
+	la.puzzle.pos = 0.62
+	await _shot("lashing_guided")
+	la.queue_free()
+	paused = false
+	await process_frame
+	var rb := BoatPuzzleScreen.open(self, "rib_steam", true) as RibSteamScreen
+	await process_frame
+	var w := rb.puzzle.window()
+	for i in 4:
+		rb.puzzle.heat = (w.x + w.y) * 0.5 + (0.25 if i == 2 else 0.0)
+		rb.puzzle.release()
+	rb.puzzle.heat = 0.5
+	rb._down = true
+	await _shot("ribs_guided")
 	quit()
