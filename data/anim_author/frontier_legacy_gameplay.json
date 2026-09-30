@@ -83,7 +83,7 @@
 			"lib": "frontier_legacy_runtime"
 		}
 	},
-	"enabled": true,
+	"enabled": false,
 	"library": "res://animations_extra/Frontier_Legacy/Frontier_Legacy_Runtime.res",
 	"library_name": "frontier_legacy_runtime",
 	"pitch": {
