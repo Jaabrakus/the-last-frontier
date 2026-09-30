@@ -39,7 +39,10 @@ func _check_table(ctx: AnimTestContext, rig: RigFixture, label: String, d: AnimG
 	var add_bad := []
 	var id_bad := []
 	for name in clips:
+		# (a clip of our own in a library of its own, AnimGraphData.apply_carry_patches: the pose the spear carries)
 		var path := StringName("actor_b/" + name)
+		if not rig.ap.has_animation(path) and d.override_libraries().has(String(clips[name].get("godot", "")).get_slice("/", 0)):
+			continue
 		if not rig.ap.has_animation(path):
 			missing.append(name)
 			continue

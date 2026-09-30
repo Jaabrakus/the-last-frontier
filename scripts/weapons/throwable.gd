@@ -145,6 +145,8 @@ const RELEASE_PHASE := 0.3125
 ## Seconds for the lowered carry's weight to swing fully in or out (0: it follows the fist at once, which
 ## snapped the object round in one frame when the arm dropped fast at a jump's take-off).
 @export var carry_low_time := 0.0
+## The lowered carry also holds while crouched (the spear: with the felling axe's carry arm the fist hangs low crouched too).
+@export var carry_low_crouched := false
 ## The carry (level and lowered) turns about the character's up with this fraction of the hips' yaw (the line
 ## between the hip joints), low-passed over carry_follow_time s: the body turns into strafes and diagonal runs,
 ## so a carry fixed to the character's facing crossed the legs or the chest there. 0: off.
@@ -934,14 +936,14 @@ func _advance_carry() -> void:
 ## Target weight of the lowered carry (carry_low_rot_deg): the fist below the shoulder (carry_low_band), not
 ## behind it (carry_low_back), standing (it fades out as the body crouches).
 func _low_target(cb: Basis, fist: Vector3) -> float:
-	if carry_low_band.y <= carry_low_band.x or not _palm_ok or _shoulder_bone < 0 or _crouch_w >= 1.0:
+	if carry_low_band.y <= carry_low_band.x or not _palm_ok or _shoulder_bone < 0 or (_crouch_w >= 1.0 and not carry_low_crouched):
 		return 0.0
 	var cy := _carry_frame_basis(cb)
 	var rel := player.skeleton.global_transform * _shoulder_final - fist
 	var t := _smooth01((rel.dot(cb.y) - carry_low_band.x) / (carry_low_band.y - carry_low_band.x))
 	if carry_low_back.y > carry_low_back.x:
 		t *= 1.0 - _smooth01((rel.dot(-cy.z) - carry_low_back.x) / (carry_low_back.y - carry_low_back.x))
-	return t * (1.0 - _crouch_w)
+	return t if carry_low_crouched else t * (1.0 - _crouch_w)
 
 
 ## The character frame turned by the hips' yaw (carry_follow_hips): the carry's frame.

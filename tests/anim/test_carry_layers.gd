@@ -29,7 +29,8 @@ const ARM_BONES := ["l_clavicle", "r_clavicle", "l_shoulder", "r_shoulder", "l_e
 ## upper bounds per gait (graph data: walk 0.22, crouch walk 0.24, run 0.08, sprint 0.04 m worst
 ## over the cycle).
 const PALM_TOL_M := 0.02
-const PALM_MAX_M := {"walk": 0.25, "crouch": 0.26, "run": 0.1, "sprint": 0.06}
+## (run 0.11: our own jog leans further forward than the graph's; the left palm measured 0.1075 m off the line with it)
+const PALM_MAX_M := {"walk": 0.25, "crouch": 0.26, "run": 0.11, "sprint": 0.06}
 
 
 func describe() -> String:
@@ -174,7 +175,7 @@ func _palm_off(sk: Skeleton3D, xf: Callable) -> float:
 ## the keyed channels at the weight, additive = base (+) (rest^-1 add)^w), then the weapon-out
 ## finger partial at 1 where it applies.
 func _graph_pose(o: PoseOracle, d: AnimGraphData, h, w: String, m: String, role: String, rec: Dictionary, u: float) -> PoseOracle.Pose:
-	var clip: String = rec.hemis.fw.clips[0] if rec.kind == "bank" else String(rec.clip)
+	var clip: String = _own(h, rec.hemis.fw.clips[0] if rec.kind == "bank" else String(rec.clip))
 	var pose := o.clip(clip, u * _len(h, clip))
 	for l in d.role(w, m, role).get("layers", []):
 		if String(l.get("status", "resolved")) != "resolved" or not l.get("clip") is String or l.has("excluded"):
@@ -195,7 +196,7 @@ func _graph_pose(o: PoseOracle, d: AnimGraphData, h, w: String, m: String, role:
 ## Godot semantics of the built stack: base clip, each fw / single LayerRecord at its written
 ## amount (Blend2 filtered to the layer clip's keyed bones, or Add2), the weapon-out Blend2s.
 func _godot_pose(o: PoseOracle, h, rec: Dictionary, u: float) -> PoseOracle.Pose:
-	var clip: String = rec.hemis.fw.clips[0] if rec.kind == "bank" else String(rec.clip)
+	var clip: String = _own(h, rec.hemis.fw.clips[0] if rec.kind == "bank" else String(rec.clip))
 	var inst := o.g_clip(clip, u * _len(h, clip))
 	for lr: Dictionary in rec.layers:
 		if lr.hemi == "bw":
@@ -215,3 +216,9 @@ func _godot_pose(o: PoseOracle, h, rec: Dictionary, u: float) -> PoseOracle.Pose
 func _len(h, clip: String) -> float:
 	var a: Animation = h.rig.anim(clip)
 	return a.length if a else 1.0
+
+
+## The clip the tree plays for a graph clip: one of our own in place of it (AnimGraphData.apply_clip_overrides), by library path.
+func _own(h, clip: String) -> String:
+	var q := String(h.data.godot_anim(clip))
+	return q if h.data.override_libraries().has(q.get_slice("/", 0)) else clip

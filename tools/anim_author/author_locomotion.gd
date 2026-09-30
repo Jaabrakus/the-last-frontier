@@ -20,8 +20,8 @@ const FPS := 30.0
 ## Our own stop: seconds our upper body takes to ease into the graph's stop, and how much faster than the graph's it runs.
 const STOP_S := 0.6
 const STOP_RATE := 1.12
-## The jump and fall arms: the share of the graph's arm movement kept, and the lag behind the body (s).
-const ARMS_SWING := 0.75
+## The jump and fall arms: the share of the graph's arm movement the left arm keeps (the right keeps all of it), and both arms' lag behind the body (s).
+const ARMS_SWING := 0.7
 const ARMS_LAG := 0.07
 ## Backward jogs: the share of our upper body's swing they take (the shoulder girdle; the rest).
 const BACK_SHOULDER_SWING := 0.4
@@ -206,7 +206,8 @@ func _arms_variant(a: Animation) -> Animation:
 				if part in bone:
 					is_arm = true
 		var mean := _mean_q(a, ti) if is_arm else Quaternion.IDENTITY
-		var scale := ARMS_SWING * (0.88 if bone.begins_with("l_") else 1.0)
+		# (the right arm keeps its reach, the graph's: the spear and the torch ride it, and pulling it in puts them in the thigh)
+		var scale := ARMS_SWING if bone.begins_with("l_") else 1.0
 		for f in n + 1:
 			var t := minf(float(f) / FPS, a.length)
 			if type == Animation.TYPE_ROTATION_3D:

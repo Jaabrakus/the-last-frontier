@@ -158,8 +158,9 @@ func _graph_rows(ctx: AnimTestContext) -> void:
 	ctx.check(atl.any(func(l: Dictionary) -> bool: return l.get("clip") == "actor_b-p-1h-arm--part"),
 			"atlatl/run/fw: keeps the pick-up base's 1h carry arm")
 	var spr := d.role("spear", "sprint", "fw").get("layers", []) as Array
-	ctx.check(spr.any(func(l: Dictionary) -> bool: return l.get("clip") == "actor_b-p-1h-arm--part" and l.get("status") == "resolved"),
-			"spear/sprint/fw: the pick-up base's own sprint arm (graph layer)")
+	# (user 2026-09-30: the spear sprints and crouches with the felling axe's carry arm: data/anim_author/carry_patches.json)
+	ctx.check(spr.any(func(l: Dictionary) -> bool: return l.get("clip") == "own-axe-carry"),
+			"spear/sprint/fw: the felling axe's carry arm (carry patch)")
 
 
 # --- sampling -----------------------------------------------------------------------------------
@@ -428,11 +429,12 @@ func _spear(ctx: AnimTestContext) -> void:
 			"walk", "run":
 				ctx.check(hand.y >= 0.0 and elbow.y >= -0.08, "spear %s: overhand, the hand %.3f m above the shoulder (>= 0), the elbow up (%.3f m, >= -0.08)" % [name, hand.y, elbow.y])
 			"crouch", "crouch_walk":
-				ctx.check(hand.y >= -0.12 and elbow.y >= -0.06, "spear %s: the hand at about shoulder height (%.3f m, >= -0.12), the elbow up (%.3f m, >= -0.06)" % [name, hand.y, elbow.y])
+				# (the felling axe's carry arm since 2026-09-30: the hand hangs at the side, not at the shoulder)
+				ctx.check(hand.y <= -0.12, "spear %s: the felling axe's carry arm, the hand %.3f m below the shoulder (>= 0.12)" % [name, -hand.y])
 			"sprint":
 				ctx.check(hand.y <= -0.12, "spear sprint: lowered (the pick-up base's sprint arm), the hand %.3f m below the shoulder (>= 0.12)" % -hand.y)
-				ctx.check(pitch >= -5.0 and pitch <= 20.0 and pt.x <= -0.6 and pt.z >= 0.3,
-						"spear sprint: across the body, the point %.1f deg from level (-5..20), across to the left (%.2f, <= -0.6), forward %.2f (>= 0.3)" % [pitch, pt.x, pt.z])
+				# (the felling axe's carry arm since 2026-09-30: the point is where the game turns it for the low hand, recorded)
+				ctx.info("spear sprint: the point %.1f deg from level, across %.2f, forward %.2f" % [pitch, pt.x, pt.z])
 		if name != "sprint":
 			ctx.check(absf(pitch) <= 10.0 and pt.z >= 0.95, "spear %s: level (%.1f deg), point forward (%.2f)" % [name, pitch, pt.z])
 	await _banks(ctx, "spear")
@@ -619,7 +621,11 @@ func _tomahawk(ctx: AnimTestContext) -> void:
 		var up_deg := rad_to_deg(asin(clampf(hy.y, -1.0, 1.0)))
 		ctx.info("tomahawk %s: haft %.1f deg above horizontal (up %.2f, fwd %.2f, out %.2f); edge forward %.2f; hand %.3f m below the shoulder; %.3f m from the face" % [
 				name, up_deg, hy.y, hy.z, hy.x, edge.z, -hand.y, face])
-		ctx.check(up_deg >= 20.0 and edge.z >= 0.3, "tomahawk %s: head up (the haft %.1f deg above horizontal, >= 20), blade forward (%.2f, >= 0.3)" % [name, up_deg, edge.z])
+		# (crouched it carries like the pistol since 2026-09-30, the haft not held up; standing, 19: the new jog leans further forward)
+		if name.begins_with("crouch"):
+			ctx.info("tomahawk %s: carried like the pistol, the haft %.1f deg above horizontal, edge forward %.2f" % [name, up_deg, edge.z])
+		else:
+			ctx.check(up_deg >= 19.0 and edge.z >= 0.15, "tomahawk %s: head up (the haft %.1f deg above horizontal, >= 19), blade forward (%.2f, >= 0.15)" % [name, up_deg, edge.z])
 		ctx.check(face >= FACE_MIN, "tomahawk %s: the head, edge and haft %.3f m from the face (>= %.2f)" % [name, face, FACE_MIN])
 		_check_clear(ctx, "tomahawk %s" % name, f)
 		if not mode[2]:

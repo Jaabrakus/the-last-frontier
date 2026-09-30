@@ -147,6 +147,7 @@ func _init() -> void:
 	# carry (level and across) turns with 0.4 of the hips' yaw, low-passed over 0.15 s, so it follows the body into
 	# strafes and diagonal runs (tests/anim/test_throw_carry.gd measures every direction bank, jumps and drops).
 	carry_low_rot_deg = Vector3(5.0, 55.0, 0.0)
+	carry_low_crouched = true
 	carry_low_band = Vector2(0.05, 0.17)
 	carry_low_back = Vector2(0.05, 0.2)
 	carry_low_time = 0.25
