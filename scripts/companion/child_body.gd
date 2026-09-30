@@ -116,6 +116,8 @@ func _ready() -> void:
 	_build_model()
 	refresh()
 	nav = NavMover.new(self, 0.2)
+	nav.use_grid = Spouse.grid_walk
+	nav.can = WalkGrid.CHILD
 	step = BodyStep.new(self, 0.35)
 
 

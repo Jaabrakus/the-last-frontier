@@ -7,8 +7,9 @@ extends Node
 ##   seat     her own Actor_B rig on the saddle by the player's HorseRiderLink (the riding clips at the horse's phase, the
 ##            feet in the stirrups, the hands on the reins); her body carried with the horse (Spouse.riding: her own walk,
 ##            clips and collider off; the wildlife see a rider as they see the player on a horse: WildAnimal._sense_body)
-##   the way  the horse steered as a rider steers it: toward a point RIDE_AHEAD_M along her way (the navigation mesh's path
-##            for the horse's own body, NavMover, or the way she came, HuntRun.trail), with the lead's feelers
+##   the way  the horse steered as a rider steers it: toward a point RIDE_AHEAD_M along her way (planned once on the walk grid
+##            for the horse's own width and what it can do, WalkGrid.HORSE: the gaps it cannot turn in are not planned through, a
+##            log it steps over is not a wall; or the way she came, HuntRun.trail), with the lead's feelers
 ##            (HorseLead.drive_to: round trunks, rocks and walls, slower where they are close, a turn to the freer side when
 ##            it is held up); slower into a sharp bend and as it comes up to the goal
 ##   stood    a frame nobody asks it to go (the hunt's phase has her doing something else), the horse is reined in
@@ -25,7 +26,7 @@ const CANTER := 6.0
 ## Into a bend sharper than this (deg) she slows to a walk.
 const BEND_DEG := 55.0
 ## The horse's own way on the navigation mesh keeps this far off walls and trunks (m).
-const HORSE_R := 0.7
+const HORSE_R := 0.75
 ## After she gets down her body and the horse's do not collide for this long (s): she steps off and away, not into it.
 const CLEAR_S := 2.5
 ## A gate is opened from the saddle this far off (m), and held open till she is through.
@@ -41,13 +42,12 @@ var horse: Horse = null
 ## In the saddle.
 var on := false
 var _link: HorseRiderLink
-var _nav: NavMover
+var _walk: WalkPath
 var _model: Node3D
 var _model_local := Transform3D()
 var _mods: Array = []
 var _layers := [1, 1]
 var _drove := -1
-var _trip := LandmarkTrip.new()
 
 
 ## Whether worker `w` rides (a grown worker; the young lead the horse).
@@ -117,7 +117,9 @@ func mount(h: Horse) -> bool:
 	_link.name = "RiderLink_%d" % body.get_instance_id()
 	h.add_child(_link)
 	_link.attach(h, _model, body.ap)
-	_nav = NavMover.new(h, HORSE_R)
+	_walk = WalkPath.new(h, HORSE_R)
+	_walk.can = WalkGrid.HORSE
+	_walk.rays = false            # (its own feelers: HorseLead.drive_to)
 	on = true
 	return true
 
@@ -130,9 +132,7 @@ func dismount(toward := Vector3.INF) -> void:
 	on = false
 	var h := horse
 	horse = null
-	if _nav != null:
-		_nav.release()
-		_nav = null
+	_walk = null
 	if _link:
 		_link.horse = null   # (no last sync onto the saddle)
 		_link.set_physics_process(false)
@@ -187,17 +187,14 @@ func to(goal: Vector3, arrive: float, pace := TROT, way := PackedVector3Array())
 	if d <= arrive:
 		horse.drive(0.0, 0.0)
 		return absf(horse.speed) < 0.35
-	# LANDMARKS: out of the fort (or in) by the gate (NavLandmarks); each leg on the mesh's path for the horse's body
-	var leg := _trip.next(horse.get_tree(), me, goal)
-	var aim := leg
+	# the plan for the horse's body on the walk grid (out of the fort by the gate is in it), or the way she came
+	var aim := goal
 	if way.size() >= 2:
 		aim = carrot(way, me, RIDE_AHEAD_M)
-	elif _nav != null:
-		_nav.steer(goal, dt, arrive)
-		if _nav.on_path and _nav.path.size() >= 2:
-			aim = carrot(_nav.path, me, RIDE_AHEAD_M)
-	if (_flat(aim, goal) < 0.5 or d < RIDE_AHEAD_M) and leg == goal:
-		aim = goal
+	elif _walk != null:
+		var a2 := _walk.follow(goal, dt, arrive, RIDE_AHEAD_M)
+		if a2 != Vector3.INF:
+			aim = a2
 	# (a shut gate before her: opened from the saddle, and shut again behind once she is through: NavWorld)
 	var gate := NavLandmarks.gate_near(horse.get_tree(), me, GATE_OPEN_M)
 	if gate != null:

@@ -20,9 +20,10 @@ var _assist := TravStepAssist.new()
 var _probe: TraversalProbe
 
 
-func _init(b: CharacterBody3D, rise := RISE_M) -> void:
+func _init(b: CharacterBody3D, rise := RISE_M, radius := TravStepAssist.RADIUS) -> void:
 	body = b
 	_assist.max_rise = rise
+	_assist.radius = radius
 	_assist.skip_characters = true
 
 

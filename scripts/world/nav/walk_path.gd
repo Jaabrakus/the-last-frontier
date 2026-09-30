@@ -26,6 +26,21 @@ const FAN_DEG := [25.0, -25.0, 50.0, -50.0, 75.0, -75.0]
 ## what is lower is stepped over or vaulted (BodyStep, WorkerTraversal), not detoured round.
 const RAY_OVER_M := 0.1
 const RAY_UP_M := 0.7
+## No headway after this many new plans in a row: the walk is given up (status "no_way": the caller's own steer takes over,
+## as it did when the navigation mesh gave up) for RETRY_S.
+const REPLANS := 3
+const RETRY_S := 6.0
+## A door she is at is waited for while its leaf swings (within this of it), at most DOOR_WAIT_S.
+const DOOR_NEAR_M := 1.8
+const DOOR_WAIT_S := 4.0
+## A DOOR STEP (user 2026-09-30: "add npc in the route they can use e to interact"): each door the plan goes through is a step
+## of the walk: she comes up to it, and within DOOR_USE_M of a shut one stops facing it, takes DOOR_PRESS_S (her E) and opens
+## it (NavWorld.use_door: held open while she, or anyone behind her using it, is near; shut behind them), waits for the swing
+## and walks through. A door already open is only passed (and held for her). The plan passes within DOOR_ON_M of the door's
+## middle for the door to be on it.
+const DOOR_USE_M := 1.3
+const DOOR_PRESS_S := 0.35
+const DOOR_ON_M := 0.9
 
 var body: CharacterBody3D
 var radius := 0.3
@@ -40,7 +55,23 @@ var status := ""
 ## Counters for the tests and the debug view; the last rays' hit (INF: clear).
 var plans := 0
 var detours := 0
+var doors_opened := 0
 var last_hit := Vector3.INF
+## Rays ahead of her (true), or only the plan (a rider: the horse has its own feelers, HorseLead).
+var rays := true
+## The door she waits for while its leaf swings (null: none).
+var waiting_door: BuildDoor = null
+## The door she is pressing E at now (null: none): a body may play its reach for it.
+var using_door: BuildDoor = null
+## The doors on the plan still before her, in order.
+var doors_ahead: Array[BuildDoor] = []
+var _press := 0.0
+var _door_side := 0.0
+var _door: BuildDoor = null
+var _door_wait := 0.0
+var _clock := 0.0
+var _blocked_until := -1.0
+var _replans := 0
 var _ray_t := 0.0
 var _detour := Vector3.ZERO
 var _detour_t := 0.0
@@ -59,6 +90,7 @@ func _init(b: CharacterBody3D, r := 0.3) -> void:
 func use_route(chosen: PackedVector3Array, to: Vector3) -> void:
 	way = chosen
 	goal = to
+	_find_doors()
 	status = "walking"
 	_detour_t = 0.0
 	_best = INF
@@ -70,50 +102,106 @@ func reset() -> void:
 	way = PackedVector3Array()
 	goal = Vector3.INF
 	status = ""
+	_blocked_until = -1.0
+	_replans = 0
+	_door = null
+	waiting_door = null
+	using_door = null
+	doors_ahead.clear()
+	_press = 0.0
 	_detour_t = 0.0
 	_best = INF
 	_best_t = 0.0
 
 
-## The way to go this frame toward `to` (horizontal, unit length; ZERO when within `arrive`).
-func steer(to: Vector3, dt: float, arrive: float) -> Vector3:
+## The point to make for now on the way to `to`: `ahead` m along the plan from where she is (Vector3.INF when she is within
+## `arrive` of it). The plan is made when the goal is new or has moved, and again when she makes no headway; REPLANS of those
+## in a row and the walk is given up for RETRY_S (status "no_way": the point returned is `to` itself).
+func follow(to: Vector3, dt: float, arrive: float, ahead := AHEAD_M) -> Vector3:
+	_clock += dt
 	var at := body.global_position
 	var d := _flat(at, to)
 	if d <= arrive:
 		status = "arrived"
 		_best = INF
-		return Vector3.ZERO
+		_replans = 0
+		return Vector3.INF
+	if _clock < _blocked_until:
+		status = "no_way"
+		return to
 	if goal == Vector3.INF or _flat(goal, to) > maxf(REPLAN_M, d * 0.15):
 		_plan(at, to)
 	# headway: none for STUCK_S, a new plan from here
 	if d < _best - 0.3:
 		_best = d
 		_best_t = 0.0
+		_replans = 0
 	else:
 		_best_t += dt
-	if _best_t > STUCK_S:
+	if _best_t > STUCK_S and not waiting_door:
 		_best_t = 0.0
 		_best = d
+		_replans += 1
+		if _replans > REPLANS:
+			_replans = 0
+			_blocked_until = _clock + RETRY_S
+			way = PackedVector3Array()
+			goal = Vector3.INF
+			status = "no_way"
+			return to
 		_plan(at, to)
 	if way.is_empty():
 		status = "no_way"
-		return _flat_dir(to - at)
+		_blocked_until = _clock + 2.0           # (no way on the grid: the caller's own steer for a moment, then it is asked again)
+		goal = Vector3.INF
+		return to
 	status = "walking"
+	var aim := carrot(way, at, ahead)
+	if d < ahead or _flat(aim, to) < 0.3:
+		aim = to
+	return aim
+
+
+## The way to go this frame toward `to` (horizontal, unit length; ZERO when within `arrive` or at a door that swings).
+func steer(to: Vector3, dt: float, arrive: float) -> Vector3:
+	var at := body.global_position
+	var aim := follow(to, dt, arrive)
+	if aim == Vector3.INF:
+		return Vector3.ZERO
+	if status == "no_way":
+		return _flat_dir(to - at)
+	if not rays:
+		return _flat_dir(aim - at)
+	# the next door of the plan: E pressed at it, and gone through
+	waiting_door = null
+	var ds := _door_step(at, dt)
+	if ds != Vector3.INF:
+		return ds
+	# a door she is at: waited for while its leaf swings in
+	if _door != null and is_instance_valid(_door):
+		var dd := _flat(at, _door.global_position)
+		if dd > 3.0:
+			_door = null
+			_door_wait = 0.0
+		elif _door.swing() < 0.95 and dd < DOOR_NEAR_M and dd > 0.3 and _door_wait < DOOR_WAIT_S:
+			_door_wait += dt
+			waiting_door = _door
+			_best_t = 0.0
+			return Vector3.ZERO
+	else:
+		_door_wait = 0.0
 	if _detour_t > 0.0:
 		_detour_t -= dt
-		var dd := _flat_dir(_detour - at)
-		if dd != Vector3.ZERO and _flat(_detour, at) > 0.3:
-			return dd
+		var dv := _flat_dir(_detour - at)
+		if dv != Vector3.ZERO and _flat(_detour, at) > 0.3:
+			return dv
 		_detour_t = 0.0
-	var aim := carrot(way, at, AHEAD_M)
-	if d < AHEAD_M or _flat(aim, to) < 0.3:
-		aim = to
 	var dir := _flat_dir(aim - at)
 	_ray_t -= dt
 	if _ray_t <= 0.0 and dir != Vector3.ZERO:
 		_ray_t = RAY_S
 		# (from here to the point it walks for and a little past: not round the corner beyond it)
-		var look := minf(minf(LOOK_M, d), _flat(aim, at) + 0.8)
+		var look := minf(minf(LOOK_M, _flat(at, to)), _flat(aim, at) + 0.8)
 		var hit := _look(at, dir, look)
 		last_hit = hit
 		if hit != Vector3.INF:
@@ -132,6 +220,84 @@ func _plan(at: Vector3, to: Vector3) -> void:
 	_detour_t = 0.0
 	var g := WalkGrid.of(body.get_tree())
 	way = g.plan(at, to, radius, can) if g != null else PackedVector3Array()
+	_find_doors()
+
+
+## The doors the plan goes through, in the order she comes to them (doors_ahead).
+func _find_doors() -> void:
+	doors_ahead.clear()
+	using_door = null
+	_press = 0.0
+	var g := WalkGrid.of(body.get_tree())
+	if g == null or way.size() < 2:
+		return
+	var found := []
+	for d: BuildDoor in g._door_list():
+		if not is_instance_valid(d):
+			continue
+		var c := d.global_position
+		var nb := _nearest(way, c)
+		if _flat(nb[1], c) > DOOR_ON_M:
+			continue
+		# (how far along the plan: the segment, then the point on it)
+		found.append([int(nb[0]) * 1000.0 + _flat(way[int(nb[0])], nb[1]), d])
+	found.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+	for f: Array in found:
+		doors_ahead.append(f[1])
+	if not doors_ahead.is_empty():
+		_door_side = _side_of(doors_ahead[0], body.global_position)
+
+
+## Which side of door `d` point `p` is on (the sign along its normal).
+static func _side_of(d: BuildDoor, p: Vector3) -> float:
+	var n := d.global_basis.z
+	return signf((p.x - d.global_position.x) * n.x + (p.z - d.global_position.z) * n.z)
+
+
+## The door step: ZERO while she presses E at the next door or waits for its swing, INF when there is none to do now.
+func _door_step(at: Vector3, dt: float) -> Vector3:
+	using_door = null
+	while not doors_ahead.is_empty():
+		var d := doors_ahead[0]
+		if not is_instance_valid(d):
+			doors_ahead.pop_front()
+			continue
+		# gone through: on the other side and clear of it
+		var side := _side_of(d, at)
+		var dd := _flat(at, d.global_position)
+		if _door_side != 0.0 and side != 0.0 and side != _door_side and dd > 0.5:
+			doors_ahead.pop_front()
+			_press = 0.0
+			if not doors_ahead.is_empty():
+				_door_side = _side_of(doors_ahead[0], at)
+			continue
+		if _door_side == 0.0:
+			_door_side = side
+		if dd > DOOR_USE_M:
+			return Vector3.INF
+		var nw := NavWorld.of(body.get_tree())
+		if not d.is_open:
+			# her E: a beat facing it, then it opens
+			_press += dt
+			using_door = d
+			_best_t = 0.0
+			waiting_door = d
+			if _press < DOOR_PRESS_S:
+				return Vector3.ZERO
+			if nw != null:
+				nw.use_door(d, body)
+			else:
+				d.set_open(true)
+			doors_opened += 1
+			_door = d
+			_door_wait = 0.0
+			return Vector3.ZERO
+		_press = 0.0
+		if nw != null:
+			nw.use_door(d, body)          # (held open for her while she goes through)
+		_door = d
+		return Vector3.INF
+	return Vector3.INF
 
 
 ## The first thing in the way ahead along `dir` within `look` (its point; INF: clear). A shut door is opened as it is met.
@@ -172,19 +338,35 @@ func _cast(from: Vector3, to: Vector3) -> Vector3:
 		if col == null or col.is_in_group(&"terrain") or col.is_in_group(FrontierVegetation.LOW_GROUP):
 			ex.append(hit.rid)                    # (the ground; a log, a stump: stepped over)
 			continue
-		if col is AnimatableBody3D and col.get_parent() is BuildDoor:
-			var door := col.get_parent() as BuildDoor
-			if not door.is_open:
-				var nw := NavWorld.of(body.get_tree())
-				if nw != null:
-					nw.open_door(door)
-			ex.append(hit.rid)                    # (a door: opened as she comes, walked through)
+		var door := _door_of(col)
+		if door != null and doors_ahead.has(door):
+			ex.append(hit.rid)                        # (a door of the plan: its door step opens it, her E at it)
 			continue
-		if col.get_parent() is BuildDoor or (col is Node and col.get_parent() != null and col.get_parent().get_parent() is BuildDoor):
+		if door != null:
+			var nw := NavWorld.of(body.get_tree())
+			if not door.is_open:
+				doors_opened += 1
+			if nw != null:
+				nw.use_door(door, body)
+			else:
+				door.set_open(true)
+			_door = door                          # (a door: opened as she comes, waited for while it swings, walked through)
 			ex.append(hit.rid)
 			continue
 		return hit.position
 	return Vector3.INF
+
+
+## The door a leaf (or any part of a door) belongs to, or null.
+static func _door_of(n: Node) -> BuildDoor:
+	var p := n
+	for _i in 4:
+		if p == null:
+			return null
+		if p is BuildDoor:
+			return p as BuildDoor
+		p = p.get_parent()
+	return null
 
 
 ## The point `ahead` m along polyline `pts` from the point of it nearest `at` (the pursuit point a walker or a rider

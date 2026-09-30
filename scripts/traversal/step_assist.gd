@@ -16,6 +16,8 @@ extends RefCounted
 const MAX_RISE := 0.55
 ## The highest step this assist takes (m); MAX_RISE for the player, a body of its own (BodyStep: a worker, an animal) sets it.
 var max_rise := MAX_RISE
+## The body's radius (m): the probe points run from its edge (the player's capsule 0.3; a bison 0.5).
+var radius := RADIUS
 ## A character under the probe (a parent, a child, an animal) is not a step (BodyStep: a walker beside another).
 var skip_characters := false
 const MIN_RISE := 0.06
@@ -82,11 +84,11 @@ func step(body: CharacterBody3D, probe: TraversalProbe, dir: Vector3, speed: flo
 	if face_d < INF and (d_miss > 0.0 or not was or _face == Vector3.INF):
 		if not was:
 			# Room to stand on the top.
-			var over := p + dir * (RADIUS + face_d + 0.12)
+			var over := p + dir * (radius + face_d + 0.12)
 			var cl := probe.ray(Vector3(over.x, top + 0.05, over.z), Vector3(over.x, top + 1.5, over.z))
 			if not cl.is_empty():
 				return 0.0
-		_face = p + dir * (RADIUS + face_d)
+		_face = p + dir * (radius + face_d)
 		_top_y = top
 	elif was and _face != Vector3.INF:
 		# The capsule's front is past the face: the remembered face and top.
@@ -96,16 +98,16 @@ func step(body: CharacterBody3D, probe: TraversalProbe, dir: Vector3, speed: flo
 		return 0.0
 	# Centre to face along the travel.
 	var face_c := (_face - p).dot(dir)
-	if face_c > RADIUS + L + 0.2:
+	if face_c > radius + L + 0.2:
 		_face = Vector3.INF
 		return 0.0
 	if p.y >= top - 0.03 and face_c < 0.05:
 		var under := probe.ray(Vector3(p.x, top + 0.2, p.z), Vector3(p.x, top - 0.06, p.z))
-		if not under.is_empty() or face_c < -RADIUS:
+		if not under.is_empty() or face_c < -radius:
 			# Up: the centre stands over the top, whose floor takes over.
 			_face = Vector3.INF
 			return 0.0
-	var u := clampf(1.0 - (face_c - 0.05) / (RADIUS + L - 0.05), 0.0, 1.0)
+	var u := clampf(1.0 - (face_c - 0.05) / (radius + L - 0.05), 0.0, 1.0)
 	var want := base + (top - base) * smoothstep(0.0, 1.0, u)
 	if face_c <= 0.05:
 		want = top + 0.005
@@ -130,7 +132,7 @@ func stepping() -> bool:
 
 ## The top under the probe point `d` ahead of the capsule's front: {y, rise (above base), ny} or {}.
 func _top_at(probe: TraversalProbe, p: Vector3, dir: Vector3, d: float, base: float) -> Dictionary:
-	var q := p + dir * (RADIUS + d)
+	var q := p + dir * (radius + d)
 	var h := probe.ray(q + Vector3.UP * (max_rise + 0.1), q - Vector3.UP * 0.1)
 	if h.is_empty() or (skip_characters and h.get("collider") is CharacterBody3D):
 		return {}

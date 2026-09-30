@@ -80,7 +80,7 @@ func _run() -> void:
 	var w := h.add_worker(781, 1.0, ["woodcutting"])
 	w.role = "home"
 	var hb := h.body_of(w)
-	hb.order_grid = not old
+	hb.nav.use_grid = not old
 	await _frames(20)
 	var start := hb.hearth + Vector3(2.0, 0.0, 3.0)
 	hb.global_position = Vector3(start.x, FrontierTerrain.height_at(start.x, start.z) + 0.1, start.z)

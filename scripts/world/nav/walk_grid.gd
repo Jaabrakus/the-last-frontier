@@ -37,6 +37,12 @@ const MAX_REGION_M := 320.0
 ## A cell with a log or a low stump in it costs this much more to cross.
 const STEP_COST := 2.5
 const QUERY_MAX := 4096
+## What the walkers can do (`can`: step_m the height it steps up on, low_step_m the same for a log or a stump lying about, climb_m
+## what it gets over with a mini-vault or a mantle (the player's moves, WorkerTraversal; a tool raises it), wade_m the depth of
+## water it walks in, slope_max the steepest ground in degrees).
+const PERSON := {"step_m": 0.45, "low_step_m": 0.75, "climb_m": 1.0, "wade_m": 0.6, "slope_max": 38.0}
+const CHILD := {"step_m": 0.3, "low_step_m": 0.35, "climb_m": 0.0, "wade_m": 0.3, "slope_max": 32.0}
+const HORSE := {"step_m": 0.3, "low_step_m": 0.9, "climb_m": 0.0, "wade_m": 0.9, "slope_max": 28.0}
 ## What a walker can do when it says nothing: step over what is under 0.5 m, climb nothing, wade to 0.6 m.
 const CAN_STEP_M := 0.5
 ## Logs and stumps lying about are stepped over up to this (BodyStep.STEP_M), by anyone.
@@ -62,6 +68,12 @@ const NEAR_FREE := 8
 ## Cells this near a wall, a trunk or a rock cost NEAR_COST more: a walk keeps a little off them where there is room.
 const NEAR_M := 0.6
 const NEAR_COST := 1.6
+## A door is a portal: a corridor DOOR_HALF_M / GATE_HALF_M to each side of its middle and DOOR_DEEP_M through it is opened in
+## the grid whatever its walls grew to (a doorway of 1.05 m is under a cell wider than a person's 0.6 m grows the wall ends by).
+const DOOR_HALF_M := 0.3
+const GATE_HALF_M := 0.5
+const DOOR_DEEP_M := 0.8
+const DOOR_COST := 1.3
 ## The fort's ring (NavLandmarks) is always wholly in a plan's grid that meets it, with this much round it (m): a way
 ## round it is not cut off by the grid's edge. A plan more than RETRY_LONGER times the straight way is tried again on a
 ## grid RETRY_GROW times as wide.
@@ -69,14 +81,39 @@ const RING_ROOM_M := 14.0
 const RETRY_LONGER := 1.8
 const RETRY_GROW := 2.5
 
+## FOLIAGE (user 2026-09-30: "terrain and foliage should raycast as obstacles ... route"): the plants have no colliders and
+## are walked through, but dearer, so a way keeps to the open where it can: a hazel's clump (SHRUB_R times its scale round
+## its stem) costs SHRUB_COST more, a sapling's SAPLING_COST, a brush pile's BRUSH_COST, a fern's FERN_COST (the clutter the
+## vegetation built: none in a headless run); and the understory under a thick canopy, from forest density UNDER_FROM up to
+## 1, up to UNDER_COST more on every cell (always: the terrain's own density).
+const SHRUB_R := 0.9
+const SHRUB_COST := 2.5
+const SAPLING_R := 0.5
+const SAPLING_COST := 1.2
+const BRUSH_R := 1.3
+const BRUSH_COST := 4.0
+const FERN_R := 0.5
+const FERN_COST := 0.3
+const UNDER_FROM := 0.55
+const UNDER_COST := 0.6
+
 ## sector -> [{poly: PackedVector2Array (a footprint, convex) or c: Vector2 + r: float (a circle), step: bool}]
 var _sectors := {}
+## sector -> [[c: Vector2, r: float, cost: float]] the plants in it (built once from the vegetation's layout); the
+## understory's cost on the ground lattice per sector.
+var _foliage := {}
+var _foliage_built := false
+var _under := {}
+## Off: plans as if the plants were not there (the before/after shot).
+var foliage := true
 ## sector -> PackedFloat32Array (SECTOR_M / GROUND_M squared, rows of x): the slope in degrees and (next array) the water's
 ## depth at each lattice point; the ground does not change, so they are kept.
 var _slope := {}
 var _depth := {}
 var _qshape: BoxShape3D
 var _low := false
+var _doors: Array = []
+var _doors_ms := -100000
 ## The last plan's grid (the debug view draws it), and counters for the tests.
 var last := {}
 var plans := 0
@@ -103,6 +140,7 @@ static func sector_of(p: Vector3) -> Vector2i:
 func dirty(center: Vector3, r: float) -> void:
 	var a := sector_of(center - Vector3(r, 0, r))
 	var b := sector_of(center + Vector3(r, 0, r))
+	_doors_ms = -100000
 	for z in range(a.y, b.y + 1):
 		for x in range(a.x, b.x + 1):
 			_sectors.erase(Vector2i(x, z))
@@ -355,7 +393,9 @@ func _plan(from: Vector3, to: Vector3, radius: float, margin: float, can: Dictio
 				else:
 					blocks.append(o)
 	# the ground's own cost first: the slope and the water (steeper than SLOPE_MAX, or deeper than she wades: solid)
-	_ground_cost(ag, lo, cell, w, h, float(can.get("wade_m", CAN_WADE_M)))
+	_ground_cost(ag, lo, cell, w, h, float(can.get("wade_m", CAN_WADE_M)), float(can.get("slope_max", SLOPE_MAX)))
+	if foliage:
+		_foliage_cost(ag, lo, cell, w, h)
 	# (near a wall or a trunk: a higher cost; a log or a low stump: higher still; in it: solid)
 	for o: Dictionary in blocks:
 		_fill(ag, o, radius + NEAR_M, lo, cell, w, h, false, NEAR_COST)
@@ -366,6 +406,7 @@ func _plan(from: Vector3, to: Vector3, radius: float, margin: float, can: Dictio
 	for o: Dictionary in blocks:
 		n_obs += 1
 		_fill(ag, o, radius, lo, cell, w, h, true)
+	_carve_doors(ag, lo, cell, w, h)
 	if avoid.size() >= 2:
 		_dear(ag, avoid, lo, cell, w, h)
 	var a := _cell_of(from, lo, cell, w, h)
@@ -385,12 +426,18 @@ func _plan(from: Vector3, to: Vector3, radius: float, margin: float, can: Dictio
 		var wgt := ag.get_point_weight_scale(ids[i])
 		if i > 0:
 			cost += wgt * (Vector2(ids[i]) - Vector2(ids[i - 1])).length() * cell
-		if not over and not climbs.is_empty() and wgt > 1.0:
-			# (over something she climbs: a cell of the route inside one of the footprints she climbs)
+		if not over and not climbs.is_empty() and wgt >= CLIMB_COST - 0.01:
+			# (over something she climbs: a cell of the route with the climb's cost in one of the footprints she climbs, grown
+			# as its cost was and by half a cell: a coarse grid's cell middles can straddle a thin one)
 			var pc := lo + (Vector2(ids[i]) + Vector2(0.5, 0.5)) * cell
+			var grow := radius * 0.5 + cell * 0.75
 			for o: Dictionary in climbs:
-				if (o.has("c") and pc.distance_to(o.c) <= float(o.r)) or (o.has("poly") and Geometry2D.is_point_in_polygon(pc, o.poly)):
+				if o.has("c") and pc.distance_to(o.c) <= float(o.r) + grow:
 					over = true
+				elif o.has("poly"):
+					var gp := Geometry2D.offset_polygon(o.poly, grow, Geometry2D.JOIN_ROUND)
+					over = not gp.is_empty() and Geometry2D.is_point_in_polygon(pc, gp[0])
+				if over:
 					break
 	var pull := _pull(ag, ids)
 	out.append(from)
@@ -407,7 +454,7 @@ func _plan(from: Vector3, to: Vector3, radius: float, margin: float, can: Dictio
 
 
 ## The ground's slope and water into the grid: a GROUND_M block at a time from the kept lattice.
-func _ground_cost(ag: AStarGrid2D, lo: Vector2, cell: float, w: int, h: int, wade: float) -> void:
+func _ground_cost(ag: AStarGrid2D, lo: Vector2, cell: float, w: int, h: int, wade: float, slope_max := SLOPE_MAX) -> void:
 	var sa := sector_of(Vector3(lo.x, 0, lo.y))
 	var sb := sector_of(Vector3(lo.x + w * cell, 0, lo.y + h * cell))
 	var per := int(SECTOR_M / GROUND_M)
@@ -416,11 +463,14 @@ func _ground_cost(ag: AStarGrid2D, lo: Vector2, cell: float, w: int, h: int, wad
 			var k := Vector2i(sx, sz)
 			var sl: PackedFloat32Array = _slope_of(k)
 			var dp: PackedFloat32Array = _depth_of(k)
+			var un: PackedFloat32Array = _under_of(k) if foliage else PackedFloat32Array()
+			un.resize(per * per)
 			for j in per:
 				for i in per:
 					var slope := sl[j * per + i]
 					var depth := dp[j * per + i]
-					if slope <= SLOPE_EASY and depth < 0.08:
+					var under := un[j * per + i]
+					if slope <= SLOPE_EASY and depth < 0.08 and under <= 0.0:
 						continue
 					var x0 := sx * SECTOR_M + i * GROUND_M
 					var z0 := sz * SECTOR_M + j * GROUND_M
@@ -430,13 +480,85 @@ func _ground_cost(ag: AStarGrid2D, lo: Vector2, cell: float, w: int, h: int, wad
 					var r := Rect2i(c0, r0, span, span).intersection(Rect2i(0, 0, w, h))
 					if r.size.x <= 0 or r.size.y <= 0:
 						continue
-					if slope > SLOPE_MAX or depth > wade:
+					if slope > slope_max or depth > wade:
 						ag.fill_solid_region(r, true)
 					else:
 						var c := 1.0 + maxf(slope - SLOPE_EASY, 0.0) / (SLOPE_MAX - SLOPE_EASY) * 5.0
 						if depth >= 0.08:
 							c += WATER_COST
-						ag.fill_weight_scale_region(r, c)
+						ag.fill_weight_scale_region(r, c + under)
+
+
+## The understory's cost on a sector's ground lattice (UNDER_COST at full forest density).
+func _under_of(k: Vector2i) -> PackedFloat32Array:
+	var got: Variant = _under.get(k)
+	if got != null:
+		return got
+	var per := int(SECTOR_M / GROUND_M)
+	var out := PackedFloat32Array()
+	out.resize(per * per)
+	for j in per:
+		for i in per:
+			var x := k.x * SECTOR_M + (i + 0.5) * GROUND_M
+			var z := k.y * SECTOR_M + (j + 0.5) * GROUND_M
+			var fd := FrontierTerrain.forest_density(x, z)
+			out[j * per + i] = UNDER_COST * clampf((fd - UNDER_FROM) / (1.0 - UNDER_FROM), 0.0, 1.0) if FrontierTerrain.flat_distance(x, z) > 2.0 else 0.0
+	_under[k] = out
+	return out
+
+
+## The plants' clumps into the grid: each cell whose middle is in one costs its cost more (on top of the ground's).
+func _foliage_cost(ag: AStarGrid2D, lo: Vector2, cell: float, w: int, h: int) -> void:
+	if not _foliage_built:
+		_build_foliage()
+	if _foliage.is_empty():
+		return
+	var sa := sector_of(Vector3(lo.x, 0, lo.y))
+	var sb := sector_of(Vector3(lo.x + w * cell, 0, lo.y + h * cell))
+	for sz in range(sa.y, sb.y + 1):
+		for sx in range(sa.x, sb.x + 1):
+			for f: Array in _foliage.get(Vector2i(sx, sz), []):
+				var c: Vector2 = f[0]
+				var rr: float = f[1]
+				var cost: float = f[2]
+				var c0 := maxi(ceili((c.x - rr - lo.x) / cell - 0.5), 0)
+				var c1 := mini(floori((c.x + rr - lo.x) / cell - 0.5), w - 1)
+				var r0 := maxi(ceili((c.y - rr - lo.y) / cell - 0.5), 0)
+				var r1 := mini(floori((c.y + rr - lo.y) / cell - 0.5), h - 1)
+				for row in range(r0, r1 + 1):
+					for col in range(c0, c1 + 1):
+						var pc := lo + (Vector2(col, row) + Vector2(0.5, 0.5)) * cell
+						if pc.distance_squared_to(c) > rr * rr:
+							continue
+						var k := Vector2i(col, row)
+						ag.set_point_weight_scale(k, ag.get_point_weight_scale(k) + cost)
+
+
+## The plants of the vegetation's layout (saplings, hazels; brush piles, ferns), bucketed by sector, once.
+func _build_foliage() -> void:
+	var scene := get_tree().current_scene if is_inside_tree() else null
+	var v := scene.get_node_or_null("Vegetation") as FrontierVegetation if scene != null else null
+	if v == null or v.layout == null:
+		return                                  # (not built yet: asked again next plan)
+	_foliage_built = true
+	var L := v.layout
+	const A := preload("res://scripts/world/vegetation/veg_assets.gd")
+	for i in L.plant_pos.size():
+		var shrub := L.plant_kind[i] == A.SHRUB_HAZEL
+		_add_foliage(L.plant_pos[i], (SHRUB_R if shrub else SAPLING_R) * L.plant_scale[i], SHRUB_COST if shrub else SAPLING_COST)
+	for i in L.prop_pos.size():
+		var kd := L.prop_kind[i]
+		if kd == A.BRUSH:
+			_add_foliage(L.prop_pos[i], BRUSH_R * L.prop_scale[i], BRUSH_COST)
+		elif kd >= A.FERN_FIRST and kd < A.FERN_FIRST + 4:
+			_add_foliage(L.prop_pos[i], FERN_R * L.prop_scale[i], FERN_COST)
+
+
+func _add_foliage(p: Vector3, r: float, cost: float) -> void:
+	var k := sector_of(p)
+	if not _foliage.has(k):
+		_foliage[k] = []
+	(_foliage[k] as Array).append([Vector2(p.x, p.z), r, cost])
 
 
 func _slope_of(k: Vector2i) -> PackedFloat32Array:
@@ -542,9 +664,9 @@ static func _fill(ag: AStarGrid2D, o: Dictionary, grow: float, lo: Vector2, cell
 
 
 static func _run(ag: AStarGrid2D, row: int, xa: float, xb: float, lo: Vector2, cell: float, w: int, block: bool, cost: float) -> void:
-	# (the cells the span covers, a cell counted when any of it is in: the walker's radius is in the span already)
-	var c0 := maxi(floori((xa - lo.x) / cell), 0)
-	var c1 := mini(floori((xb - lo.x) / cell), w - 1)
+	# (the cells whose middle the span takes in: the walker's radius is in the span already)
+	var c0 := maxi(ceili((xa - lo.x) / cell - 0.5), 0)
+	var c1 := mini(floori((xb - lo.x) / cell - 0.5), w - 1)
 	if c1 < c0:
 		return
 	var r := Rect2i(c0, row, c1 - c0 + 1, 1)
@@ -552,6 +674,42 @@ static func _run(ag: AStarGrid2D, row: int, xa: float, xb: float, lo: Vector2, c
 		ag.fill_solid_region(r, true)
 	else:
 		ag.fill_weight_scale_region(r, cost)
+
+
+## The doors in the level (BuildDoor: the interactables; kept a moment, dirty() makes them read again).
+func _door_list() -> Array:
+	var now := Time.get_ticks_msec()
+	if now - _doors_ms < 3000:
+		return _doors
+	_doors_ms = now
+	_doors = []
+	for n in get_tree().get_nodes_in_group(PlacedWeapon.GROUP):
+		if n is BuildDoor and is_instance_valid(n):
+			_doors.append(n)
+	return _doors
+
+
+## Opens a corridor through each door in the grid (a portal: the gap in its wall is wider than the walker, and the wall's
+## growth closed it under the cell size).
+func _carve_doors(ag: AStarGrid2D, lo: Vector2, cell: float, w: int, h: int) -> void:
+	for d: BuildDoor in _door_list():
+		var c := Vector2(d.global_position.x, d.global_position.z)
+		if c.x < lo.x - 2.0 or c.y < lo.y - 2.0 or c.x > lo.x + w * cell + 2.0 or c.y > lo.y + h * cell + 2.0:
+			continue
+		var ax := Vector2(d.global_basis.x.x, d.global_basis.x.z).normalized()
+		var nm := Vector2(d.global_basis.z.x, d.global_basis.z.z).normalized()
+		var half := GATE_HALF_M if d.kind == "gate" else DOOR_HALF_M
+		var reach := ceili((DOOR_DEEP_M + half) / cell) + 1
+		var c0 := Vector2i(floori((c.x - lo.x) / cell), floori((c.y - lo.y) / cell))
+		for dz in range(-reach, reach + 1):
+			for dx in range(-reach, reach + 1):
+				var k := c0 + Vector2i(dx, dz)
+				if k.x < 0 or k.y < 0 or k.x >= w or k.y >= h:
+					continue
+				var pc := lo + (Vector2(k) + Vector2(0.5, 0.5)) * cell - c
+				if absf(pc.dot(ax)) <= half and absf(pc.dot(nm)) <= DOOR_DEEP_M:
+					ag.set_point_solid(k, false)
+					ag.set_point_weight_scale(k, DOOR_COST)
 
 
 ## `c` when free, else the nearest free cell within NEAR_FREE (Vector2i(-1, -1): none).
@@ -581,6 +739,12 @@ static func _pull(ag: AStarGrid2D, ids: Array[Vector2i]) -> Array[Vector2i]:
 	var out: Array[Vector2i] = [ids[0]]
 	var i := 0
 	var n := ids.size()
+	# (the planned cells' cost from the first: a straight cut is taken only where it costs no more than the cells it cuts
+	# out, so a way round the bushes, the wet or the steep is not pulled straight back through them)
+	var acc := PackedFloat32Array()
+	acc.resize(n)
+	for q in range(1, n):
+		acc[q] = acc[q - 1] + ag.get_point_weight_scale(ids[q]) * (Vector2(ids[q]) - Vector2(ids[q - 1])).length()
 	while i < n - 1:
 		# (the furthest in sight: out in doubling strides to the first one not in sight, then halved back between them)
 		var j := i + 1
@@ -588,7 +752,7 @@ static func _pull(ag: AStarGrid2D, ids: Array[Vector2i]) -> Array[Vector2i]:
 		var s := 1
 		while true:
 			var k := mini(i + s, n - 1)
-			if _clear(ag, ids[i], ids[k]):
+			if _clear(ag, ids[i], ids[k], acc[k] - acc[i]):
 				j = k
 				if k == n - 1:
 					break
@@ -598,7 +762,7 @@ static func _pull(ag: AStarGrid2D, ids: Array[Vector2i]) -> Array[Vector2i]:
 				break
 		while bad - j > 1:
 			var m := (j + bad) / 2
-			if _clear(ag, ids[i], ids[m]):
+			if _clear(ag, ids[i], ids[m], acc[m] - acc[i]):
 				j = m
 			else:
 				bad = m
@@ -608,17 +772,23 @@ static func _pull(ag: AStarGrid2D, ids: Array[Vector2i]) -> Array[Vector2i]:
 
 
 ## Whether the straight line between two cells crosses no solid cell (a ray along the grid, both of its sides looked at
-## where it runs diagonally: it does not squeeze between two cells that touch at a corner).
-static func _clear(ag: AStarGrid2D, a: Vector2i, b: Vector2i) -> bool:
+## where it runs diagonally: it does not squeeze between two cells that touch at a corner), and, given `budget` (the cost
+## of the planned cells it would stand for, in cells), costs no more than that.
+static func _clear(ag: AStarGrid2D, a: Vector2i, b: Vector2i, budget := INF) -> bool:
 	var d := b - a
 	var steps := maxi(absi(d.x), absi(d.y))
 	if steps == 0:
 		return true
 	var prev := a
+	var per := Vector2(d).length() / steps
+	var cost := 0.0
 	for s in range(1, steps + 1):
 		var t := float(s) / float(steps)
 		var c := Vector2i(roundi(a.x + d.x * t), roundi(a.y + d.y * t))
 		if ag.is_point_solid(c):
+			return false
+		cost += ag.get_point_weight_scale(c) * per
+		if cost > budget * 1.02 + 0.5:
 			return false
 		if c.x != prev.x and c.y != prev.y:
 			if ag.is_point_solid(Vector2i(c.x, prev.y)) or ag.is_point_solid(Vector2i(prev.x, c.y)):

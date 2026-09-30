@@ -87,6 +87,8 @@ func _ready() -> void:
 		cap.position.y = shape.height * 0.5
 	_last = global_position
 	nav = NavMover.new(self, shape.radius)   # NAV
+	nav.use_grid = Spouse.grid_walk
+	nav.can = WalkGrid.PERSON.duplicate()
 	step = BodyStep.new(self, 0.45)          # STEP: over a log in the way
 
 

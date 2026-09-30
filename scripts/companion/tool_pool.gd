@@ -1011,6 +1011,12 @@ func seed_start(force := false) -> void:
 		var fm: Dictionary = st.get("farm", {})
 		for k: String in fm:
 			add(k, int(fm[k]))
+	if not bool(seeded.get("climb", false)) and chests_ok:
+		# CLIMB: the workers' climbing stakes, once on their own: a game saved before them gets them too
+		seeded["climb"] = true
+		var cl: Dictionary = st.get("climb", {})
+		for k: String in cl:
+			add(k, int(cl[k]))
 	if not bool(seeded.get("rack", false)) and racks_ok:
 		seeded["rack"] = true
 		var rk: Dictionary = st.get("rack", {})

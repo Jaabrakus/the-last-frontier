@@ -113,7 +113,7 @@
    "inputs": {}, "outputs": {"carcass": 1},
    "note": "data/companion/hunt.json, scripts/companion/hunt_job.gd (the logic) and hunt_run.gd (the body): reads sign (the core's hunt.track), stalks and shoots real game, and hauls the kill home for the butcher or dresses it where it fell. The carcass is not a store kind: it links the hunt to the butcher in the chain (the meals, jerky, leather and furs shortages pull it through the butcher); the butcher is fed_from_outside too (the player's kills), so switching the hunt off never takes the butcher with it.",
    "keep": {}, "how": {"type": "survival", "action": "hunt.track", "result": "hunt"}, "tags": ["meat", "hide", "heavy"],
-   "tools": {"need": [["musket", "over_under", "bow", "spear_pair", "pistol"]], "optional": [["trade_knife", "flint_knife"]],
+   "tools": {"need": [["musket", "over_under", "bow", "spear_pair", "pistol"]], "optional": [["trade_knife", "flint_knife"], ["climb_stakes"]],
     "use_by": {"musket": {"musket_balls": 4, "powder": 1}, "over_under": {"musket_balls": 4, "powder": 1}, "pistol": {"musket_balls": 4, "powder": 1}, "bow": {"arrows": 8}, "spear_pair": {}},
     "food": ["jerky", "johnnycake", "roast_venison", "roast_small_game", "roast_fish", "smoked_venison"],
     "note": "TOOLS/HUNT: a weapon (any of these; HuntKit takes the one she is best at that has shot for it: marksmanship, archery, close combat), a knife to dress the kill (optional), and per trip the shot for her weapon (use_by: the weapon's `use`, the whole units she takes: a pound of powder is 40 charges) and a meal from the store (food: the first there is). HuntKit checks them out of the pool (ToolPool.checkout / take), spends each shot fired and each arrow or spear lost (ToolPool.spend), and returns the rest after the hunt."}
@@ -123,7 +123,8 @@
    "text": "Foraging", "idle": "not now",
    "demand": "target", "offer": "gather", "skill": "survival",
    "inputs": {}, "outputs": {"blackberries": 4, "strawberries": 4, "elderberries": 4, "crabapples": 4, "hazelnuts": 4, "acorns": 4},
-   "keep": {}, "how": {"type": "survival", "action": "forage.search", "result": "deposit", "verb": "brings back", "none": "finds nothing"}, "tags": ["food"]
+   "keep": {}, "how": {"type": "survival", "action": "forage.search", "result": "deposit", "verb": "brings back", "none": "finds nothing"}, "tags": ["food"],
+   "tools": {"optional": [["climb_stakes"]], "note": "TOOLS: climbing stakes for getting over what is chest high on the way (optional)"}
   },
   {
    "id": "firewood", "name": "Gather firewood", "stage": "gather", "where": "outside", "needs": "none", "priority": 80,
@@ -131,7 +132,7 @@
    "demand": "target", "offer": "gather", "skill": "woodcraft",
    "inputs": {}, "outputs": {"firewood": 4},
    "keep": {}, "how": {"type": "survival", "action": "wood.split_firewood", "result": "deposit", "verb": "brings back", "none": "finds nothing"}, "tags": ["wood", "heavy"],
-   "tools": {"need": [["hatchet", "axe", "stone_axe", "tomahawk"]], "note": "TOOLS: wood.split_firewood's axe (the first free of these)"}
+   "tools": {"need": [["hatchet", "axe", "stone_axe", "tomahawk"]], "optional": [["climb_stakes"]], "note": "TOOLS: wood.split_firewood's axe (the first free of these); climbing stakes for getting over what is chest high on the way (optional)"}
   },
   {
    "id": "hoe", "name": "Hoe the beds", "stage": "gather", "where": "home", "needs": "bed_to_hoe", "priority": 65,

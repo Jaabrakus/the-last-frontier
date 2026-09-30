@@ -10,6 +10,7 @@
   "hatchet": {"name": "Hatchet", "class": "tool", "store": "chest", "item": "item.tool.hatchet", "durability": 160, "break_chance": 0.002, "model": ["throwable", "tomahawk"], "grip": 0.12},
   "axe": {"name": "Felling Axe", "class": "tool", "store": "chest", "item": "item.tool.axe", "durability": 240, "break_chance": 0.001, "model": ["gather", "felling_axe"], "grip": 0.46},
   "stone_axe": {"name": "Stone Axe", "class": "tool", "store": "chest", "item": "item.tool.stone_axe", "durability": 40, "break_chance": 0.01, "model": ["gather", "stone_axe"], "grip": 0.3},
+  "climb_stakes": {"name": "Climbing stakes", "class": "tool", "store": "chest", "item": "item.tool.climbing_stakes_wood", "durability": 300, "break_chance": 0.0005, "model": [], "note": "a pair of climbing stakes: the workers carry them on the jobs outside, and with them get over what is chest high (1.5 m, a mantle) where without them a mini-vault takes 1.0 m (Spouse.abilities, WalkGrid.PERSON)"},
   "farm_hoe": {"name": "Hoe", "class": "tool", "store": "chest", "item": "item.tool.hoe", "durability": 200, "break_chance": 0.001, "model": ["gather", "hoe"], "grip": 0.46},
   "farm_stick": {"name": "Digging Stick", "class": "tool", "store": "chest", "item": "item.tool.digging_stick", "durability": 50, "break_chance": 0.008, "model": ["gather", "digging_stick"], "grip": 0.3},
   "trade_knife": {"name": "Knife", "class": "tool", "store": "chest", "item": "item.tool.knife", "durability": 200, "break_chance": 0.001, "model": ["wildlife", "skinning_knife"], "grip": 0.0},
@@ -47,6 +48,7 @@
  "start_note": "A new game's pool, put in the fort's chests and racks once the fort is furnished (FortPlan): chest kinds by count, rack kinds by pieces (each a rack weapon with its state). farm: the fields' tools (FARM: the hoe job), put in the chests once on their own, so an older save gets them too.",
  "start": {
   "farm": {"farm_hoe": 1, "farm_stick": 1},
+  "climb": {"climb_stakes": 2},
   "chest": {"hatchet": 2, "axe": 1, "trade_knife": 3, "flint_steel": 2, "awl": 1, "bullet_mould": 1, "hooks_line": 1, "steel_trap": 2, "stake_set": 2, "cordage": 8, "powder": 2, "musket_balls": 24, "bar_lead": 1},
   "rack": {"musket": [{"loaded": false, "reserve": 0}], "spear_pair": [{"count": 2}, {"count": 2}]}
  },

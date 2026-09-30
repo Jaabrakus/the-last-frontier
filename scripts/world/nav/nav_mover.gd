@@ -149,9 +149,15 @@ func steer(to: Vector3, dt: float, arrive := 0.6) -> Vector3:
 		walk.can = can
 		var gd := walk.steer(to, dt, arrive)
 		on_path = walk.status != "no_way"
-		status = ARRIVED if walk.status == "arrived" else (FAILED if walk.status == "no_way" else MOVING)
+		status = ARRIVED if walk.status == "arrived" else (FAILED if walk.status == "no_way" else (WAIT if walk.waiting_door != null else MOVING))
 		reason = "no_path" if walk.status == "no_way" else ""
 		path = walk.way
+		paths = walk.plans
+		doors_opened = walk.doors_opened
+		waiting_door = walk.waiting_door
+		if walk.status == "no_way" and reason == "no_path":
+			give_ups += 1 if _fail_to != to else 0
+			_fail_to = to
 		return gd
 	if world == null or not is_instance_valid(world):
 		world = null

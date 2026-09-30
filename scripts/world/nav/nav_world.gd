@@ -341,6 +341,20 @@ func open_door(d: BuildDoor, hold_r := 2.3) -> void:
 	_opened[id] = {"door": d, "clear": 0.0, "r": hold_r}
 
 
+## Door `d` used by walker `by` (its E on the way, WalkPath's door steps): opened if shut, and held open while `by` or any
+## other walker using it is within `hold_r`; shut behind them as open_door's are. A door the player opened is only passed.
+func use_door(d: BuildDoor, by: Node3D, hold_r := 2.3) -> void:
+	if d == null:
+		return
+	open_door(d, hold_r)
+	var id := d.get_instance_id()
+	if _opened.has(id):
+		var us: Array = _opened[id].get("users", [])
+		if not us.has(by):
+			us.append(by)
+		_opened[id]["users"] = us
+
+
 func _close_doors(dt: float) -> void:
 	for id: int in _opened.keys():
 		var e: Dictionary = _opened[id]
@@ -355,6 +369,9 @@ func _close_doors(dt: float) -> void:
 			if m.body != null and is_instance_valid(m.body) and Vector2(m.body.global_position.x - c.x, m.body.global_position.z - c.z).length() < hold:
 				near = true
 				break
+		for u: Variant in e.get("users", []):
+			if not near and is_instance_valid(u) and Vector2((u as Node3D).global_position.x - c.x, (u as Node3D).global_position.z - c.z).length() < hold:
+				near = true
 		if not near and _player != null and is_instance_valid(_player) and _player.global_position.distance_to(c) < 1.6:
 			near = true   # never shut on the player standing in the doorway
 		e.clear = 0.0 if near else float(e.clear) + dt

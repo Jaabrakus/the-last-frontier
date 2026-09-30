@@ -96,6 +96,9 @@ var home_sq := Vector2i.ZERO
 const HUNGER_RATE := {"prey": 1.0 / 360.0, "predator": 1.0 / 480.0}
 ## PEOPLE other than the player within this are looked for (m: past its sight, hearing and scent).
 const PERSON_SENSE_M := 120.0
+## How high it steps up (m; the species' `step`) and the step assist that lifts it over a low log or stump.
+var step_m := 0.5
+var _step: BodyStep
 const FATIGUE_RATE := 1.0 / 600.0
 const GRAZE_FEED := 1.0 / 90.0
 const REST_RATE := 1.0 / 120.0
@@ -233,6 +236,9 @@ func _ready() -> void:
 	collision_layer = 1
 	collision_mask = 1
 	var body: Array = data.body
+	# STEP: up on to a log or a stump in its way and over (the species' `step`; the player's step assist, BodyStep)
+	step_m = float(data.get("step", 0.5))
+	_step = BodyStep.new(self, step_m, float(body[0]))
 	var col := CollisionShape3D.new()
 	var cap := CapsuleShape3D.new()
 	cap.radius = float(body[0])
@@ -1613,6 +1619,8 @@ func _move(dir: Vector3, speed: float, dt: float, running: bool) -> void:
 	_far = false
 	_fall(dt)
 	var before := global_position
+	if _step != null:
+		_step.step(Vector3(velocity.x, 0.0, velocity.z), _speed, dt)
 	move_and_slide()
 	var got := Vector2(global_position.x - before.x, global_position.z - before.z).length()
 	if _speed > 0.8 and got < _speed * dt * 0.25:
@@ -1628,7 +1636,8 @@ func _move(dir: Vector3, speed: float, dt: float, running: bool) -> void:
 ## Steering round trunks, rocks and walls: 0 when the way ahead is clear, else the smallest clear turn.
 func _probe(dir: Vector3, reach: float) -> float:
 	var space := get_world_3d().direct_space_state
-	var from := global_position + Vector3.UP * minf(float(data.body[2]) * 0.6, 0.6)
+	# (over what it steps over: a log or a stump lower than its step is not an obstacle)
+	var from := global_position + Vector3.UP * maxf(minf(float(data.body[2]) * 0.6, 0.6), step_m + 0.1)
 	var ex := _exclude()
 	var p := _player()
 	if p and not is_prey():

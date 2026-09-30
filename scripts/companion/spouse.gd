@@ -88,14 +88,18 @@ var riding: Horse = null
 ## ORDERS: places the leader sent her to (WorkerOrders: point and click), walked to one after another before anything else;
 ## the walk there is planned once and walked with rays adjusting it (NavMover.use_grid).
 var orders: Array = []
-## The walk to an order: planned once with rays (true), or the mesh's paths (false: the tests' comparison).
-var order_grid := true
+## Every walk is planned once on the walk grid and walked with rays adjusting it (NavMover.use_grid); NAV_MESH=1 in the
+## environment walks the old way, on the navigation mesh (the tests' comparison).
+static var grid_walk := not OS.has_environment("NAV_MESH")
 ## The route the leader chose for each place in `orders` (WalkGrid.routes: PackedVector3Array; empty: the best one, planned
 ## when she sets off), and whether the one in hand has been given to her walk.
 var order_ways: Array = []
 var _order_set := false
 ## What she can do (WalkGrid: step_m, climb_m with a tool for it, wade_m); the tool pool fills it (a pair of climbing stakes).
-var abilities := {}
+var abilities := WalkGrid.PERSON.duplicate()
+## Climbing stakes in hand (the tool pool: climb_stakes): what she gets over rises from a mini-vault to a mantle.
+const CLIMB_STAKES_M := 1.5
+var _abil_t := 0.0
 var idle_clip := ""
 ## Her chores when there is no task: a spot to go to, and how long she works at it (s); 0 when she is not at one.
 var _chore := false
@@ -134,6 +138,8 @@ func _ready() -> void:
 	if sk != null and ap != null:
 		trav = WorkerTraversal.install(self)
 	nav = NavMover.new(self, 0.3)
+	nav.use_grid = grid_walk
+	nav.can = abilities
 	if sc:
 		sc.carcass_finder = _carcass_near_home
 		sc.fire_finder = _fire_needing_wood
@@ -223,6 +229,10 @@ func _show(clip: String, speed := 1.0) -> void:
 func _physics_process(dt: float) -> void:
 	if sc == null or player == null or not is_instance_valid(player):
 		return
+	_abil_t -= dt
+	if _abil_t <= 0.0:
+		_abil_t = 1.0
+		refresh_abilities()
 	var move := Vector3.ZERO
 	var speed := WALK_SPEED
 	_nav_dir = false
@@ -237,12 +247,10 @@ func _physics_process(dt: float) -> void:
 		_phase = ""
 		var o: Vector3 = orders[0]
 		if nav != null:
-			nav.use_grid = order_grid
-			nav.can = abilities
 			if not _order_set:
 				_order_set = true
 				var chosen: PackedVector3Array = order_ways[0] if not order_ways.is_empty() else PackedVector3Array()
-				if order_grid and chosen.size() >= 2:
+				if nav.use_grid and chosen.size() >= 2:
 					nav.use_route(chosen, o)
 		var ow := walk_to(o, WALK_SPEED, 0.5)
 		if Vector2(o.x - global_position.x, o.z - global_position.z).length() <= 0.6:
@@ -272,6 +280,14 @@ func _physics_process(dt: float) -> void:
 		move = d[0]
 		speed = d[1]
 	_move(move, speed * Pregnancy.speed_mult(sc.pregnancy, sc.core.state.minutes), dt)   # PREGNANCY: slower late on
+
+
+## What she can get over follows what she carries: climbing stakes (the pool's climb_stakes) give her a mantle's 1.5 m, else a
+## mini-vault's 1.0 m (WalkGrid.PERSON). The dictionary is kept (the walk reads it).
+func refresh_abilities() -> void:
+	var tp := ToolPool.of(sc)
+	var stakes := tp != null and tp.held_by(sc).has("climb_stakes")
+	abilities["climb_m"] = CLIMB_STAKES_M if stakes else float(WalkGrid.PERSON.climb_m)
 
 
 ## What she does now when not at work: [direction, speed].
