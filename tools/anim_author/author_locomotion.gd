@@ -120,7 +120,7 @@ func _bake() -> void:
 	var low_bones := _bake_rifle_pose(out, "own-rifle-low-ready", "actor_b-p-rifle-idle-arms", LOW_TURN_R, LOW_TURN_L)
 	var mid_bones := _bake_rifle_pose(out, "own-rifle-crouch-mid", "actor_b-p-rifle-crouch-run-arms", MID_TURN_R, MID_TURN_L, HIP_PULL)
 	_bake_rifle_pose(out, "own-rifle-crouch-mid-fw", "actor_b-p-rifle-crouch-run-arms", MID_FW_TURN_R, MID_FW_TURN_L, HIP_PULL)
-	var idle_bones := _bake_rifle_pose(out, "own-rifle-crouch-idle", "actor_b-p-rifle-crouch-idle-arms", Vector3.ZERO, Vector3.ZERO, HIP_PULL)
+	var idle_bones := _bake_rifle_pose(out, "own-rifle-crouch-idle", "actor_b-p-rifle-crouch-idle-arms", Vector3.ZERO, Vector3.ZERO, HIP_PULL_IDLE)
 	_bake_bow_nock_hand(out, "actor_b-p-bow-reload--part", "own-bow-nock-hand")
 	_bake_bow_nock_hand(out, "actor_b-p-crouch-bow-reload--part", "own-bow-nock-hand-crouch")
 	print(ResourceSaver.save(out, OUT_LIB, ResourceSaver.FLAG_COMPRESS))
@@ -298,8 +298,10 @@ const LOW_TURN_L := Vector3(0.0, 35.0, 0.0)
 const MID_TURN_R := Vector3(0.0, 12.0, 0.0)
 const MID_TURN_L := Vector3(0.0, 12.0, 0.0)
 ## (forward the crouch walk's torso is more upright, so the arms turn further for the same barrel height)
-## The share of the way from the right hand to the right hip the crouch poses draw the hand (user 2026-09-30).
-const HIP_PULL := 0.2
+## The share of the way from the right hand to the right hip the crouch poses draw the hand (user 2026-09-30: "close to the hip"
+## for the idle, "very close" for the crouch walk).
+const HIP_PULL := 0.6
+const HIP_PULL_IDLE := 0.45
 const MID_FW_TURN_R := Vector3(0.0, 32.0, 0.0)
 const MID_FW_TURN_L := Vector3(0.0, 32.0, 0.0)
 const FWD_ROLES := ["fw", "fw_lt", "fw_rt", "start_fw", "start_fw_lt", "start_fw_rt", "stop_fw", "stop_fw_lt", "stop_fw_rt", "turn_l", "turn_r"]
