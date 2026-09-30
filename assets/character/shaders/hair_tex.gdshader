@@ -8,6 +8,7 @@
 // Hidden regions (hats) collapse as in hair.gdshader.
 shader_type spatial;
 render_mode blend_mix, depth_prepass_alpha, cull_disabled, diffuse_burley, specular_schlick_ggx;
+#include "res://shaders/common/canopy.gdshaderinc"
 
 #include "res://assets/character/shaders/hair_common.gdshaderinc"
 
@@ -91,4 +92,10 @@ void fragment() {
 		ALPHA = 1.0;
 		ALBEDO = vec3(fract(UV.x * 8.0), fract(UV.y), 0.3);
 	}
+	// Under the forest canopy the same shade as the floor it stands on (canopy.gdshaderinc: the crowns take part of the sky
+	// light and scatter some of the sun down; neutral without the forest light). Without it a body kept the open sky's
+	// light under the trees and stood out lit in the shade (user 2026-09-30).
+	float canopy_c = canopy_cover((INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xz);
+	AO *= canopy_sky_factor(canopy_c, 1.0);
+	EMISSION += ALBEDO * canopy_scatter(canopy_c, 1.0, (INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).y) * AO;
 }

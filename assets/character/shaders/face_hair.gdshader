@@ -15,6 +15,7 @@
 // (COLOR_0.g = 1); the lower lashes (COLOR_0.g = 0) are not drawn (the skin paints the lid line).
 shader_type spatial;
 render_mode blend_mix, depth_draw_never, cull_disabled, diffuse_burley, specular_schlick_ggx;
+#include "res://shaders/common/canopy.gdshaderinc"
 
 uniform uvec2 hide_mask = uvec2(0u, 0u);
 uniform vec3 brow_color : source_color = vec3(0.12, 0.08, 0.05);
@@ -146,4 +147,10 @@ void fragment() {
 	ALPHA = a;
 	ROUGHNESS = 0.6;
 	SPECULAR = 0.3;
+	// Under the forest canopy the same shade as the floor it stands on (canopy.gdshaderinc: the crowns take part of the sky
+	// light and scatter some of the sun down; neutral without the forest light). Without it a body kept the open sky's
+	// light under the trees and stood out lit in the shade (user 2026-09-30).
+	float canopy_c = canopy_cover((INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xz);
+	AO *= canopy_sky_factor(canopy_c, 1.0);
+	EMISSION += ALBEDO * canopy_scatter(canopy_c, 1.0, (INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).y) * AO;
 }
