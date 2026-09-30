@@ -47,7 +47,10 @@ func _check_table(ctx: AnimTestContext, rig: RigFixture, label: String, d: AnimG
 			missing.append(name)
 			continue
 		var a := rig.ap.get_animation(path)
-		if absf(a.length - float(clips[name].length)) > 1e-3:
+		# (a clip of ours in its place, AnimGraphData.apply_clip_overrides, may be shorter than the graph's: the forward stops;
+		# validate() checks it against its own clip)
+		var own := d.override_libraries().has(String(clips[name].get("godot", "")).get_slice("/", 0))
+		if not own and absf(a.length - float(clips[name].length)) > 1e-3:
 			len_bad.append("%s %.4f vs %.4f" % [name, clips[name].length, a.length])
 		if not a.has_meta(&"additive_source") or bool(a.get_meta(&"additive_source")) != bool(clips[name].additive):
 			add_bad.append(name)
@@ -96,7 +99,8 @@ func _check_table(ctx: AnimTestContext, rig: RigFixture, label: String, d: AnimG
 	var m_bad := []
 	for c in d.metrics.get("clips", {}):
 		var p := StringName("actor_b/" + c)
-		if not rig.ap.has_animation(p) or absf(rig.ap.get_animation(p).length - float(d.metrics.clips[c].length)) > 1e-3:
+		var own_c := d.override_libraries().has(String((d.graph.clips.get(c, {}) as Dictionary).get("godot", "")).get_slice("/", 0))
+		if not rig.ap.has_animation(p) or (not own_c and absf(rig.ap.get_animation(p).length - float(d.metrics.clips[c].length)) > 1e-3):
 			m_bad.append(c)
 	ctx.check(d.has_metrics() and m_bad.is_empty(), "%s: %d metrics clips exist with the library lengths %s" % [label, d.metrics.get("clips", {}).size(), m_bad.slice(0, 5)])
 	var errs := d.validate(rig.ap)

@@ -20,6 +20,9 @@ const FPS := 30.0
 ## Our own stop: seconds our upper body takes to ease into the graph's stop, and how much faster than the graph's it runs.
 const STOP_S := 0.6
 const STOP_RATE := 1.12
+## The forward stops' length (s): the graph's 1.8 s shortened to the backward stops' (user 2026-09-30: "match it with the backwards stop,
+## it seems quicker").
+const STOP_FW_LEN := 0.8
 ## Our stop keeps this share of the graph's movement: the arms, the shoulder girdle, the spine.
 const STOP_ARMS := 0.4
 const STOP_GIRDLE := 0.25
@@ -111,10 +114,18 @@ func _bake() -> void:
 		var stop_name: String = "actor_b-p-run-" + dir + "^idle"
 		var tn: String = "own-stop-%s-k%d" % [dir, int(round(k * 100.0))]
 		var upper_from := ""
+		var stop_len := 0.0
+		var stop_rate := 0.0
 		if dir.begins_with("fw"):
 			upper_from = "actor_b-p-run-bw" + dir.trim_prefix("fw") + "^idle"
-		out.add_animation(StringName(tn), _own_stop(clip, stop_name, upper_from))
-		wired[stop_name] = {"lib": "frontier_locomotion", "clip": tn, "length": snappedf(lib.get_animation(stop_name).length, 0.000001)}
+			# the forward stop as short as the backward ones (0.7-0.8 s; the graph's is 1.8 s of which the last second is standing):
+			# its stepping as quick as theirs, the state over as soon
+			stop_len = STOP_FW_LEN
+			stop_rate = lib.get_animation(stop_name).length / STOP_FW_LEN
+		out.add_animation(StringName(tn), _own_stop(clip, stop_name, upper_from, stop_len, stop_rate))
+		wired[stop_name] = {"lib": "frontier_locomotion", "clip": tn, "length": snappedf(stop_len if stop_len > 0.0 else lib.get_animation(stop_name).length, 0.000001)}
+		if stop_len > 0.0:
+			wired[stop_name]["time_scale"] = snappedf(stop_rate, 0.0001)
 	# the jump and the fall: the graph's body with our own arms (user 2026-09-30: "the jump animation, tweak the arms so it
 	# does not look identical")
 	for cn in ["actor_b-p-jump-long", "actor_b-p-fall"]:
@@ -570,13 +581,15 @@ func _reversed(a: Animation) -> Animation:
 ## (its lean, arm swing and torso twist, slowing as the gait does) eases into the graph's stop over STOP_S seconds; the whole
 ## stop runs STOP_RATE times as fast, holding its last pose (the standing pose) for the rest of the graph's length, which the
 ## tables time the state by.
-func _own_stop(new_jog: Animation, orig_name: String, upper_from := "") -> Animation:
+func _own_stop(new_jog: Animation, orig_name: String, upper_from := "", out_len := 0.0, rate := 0.0) -> Animation:
 	var orig := lib.get_animation(orig_name)
+	var src_len := orig.length
+	var stop_rate := rate if rate > 0.0 else STOP_RATE
 	# the upper body of another of the graph's stops (the forward stops take the backward ones': user 2026-09-30, "the backwards
 	# movement when we stop looks nice, apply those to the forward"), at its own pace; the legs stay this stop's
 	var up_src := lib.get_animation(upper_from) if upper_from != "" else orig
 	var up_rate := 1.0 if upper_from != "" else STOP_RATE
-	var big := orig.length
+	var big := out_len if out_len > 0.0 else orig.length
 	var phase := _match_phase(orig, 0.0, new_jog)
 	var out := _stamp(Animation.new(), orig)
 	out.length = big
@@ -602,10 +615,10 @@ func _own_stop(new_jog: Animation, orig_name: String, upper_from := "") -> Anima
 		var ui := up_src.find_track(path, type) if upper.has(bone) else -1
 		var rest_q := Quaternion.IDENTITY
 		if type == Animation.TYPE_ROTATION_3D:
-			rest_q = up_src.rotation_track_interpolate(ui, up_src.length) if ui >= 0 else orig.rotation_track_interpolate(ti, big)
+			rest_q = up_src.rotation_track_interpolate(ui, up_src.length) if ui >= 0 else orig.rotation_track_interpolate(ti, src_len)
 		for f in n + 1:
 			var t := minf(float(f) / FPS, big)
-			var ts := minf(t * STOP_RATE, big)
+			var ts := minf(t * stop_rate, src_len)
 			var w := smoothstep(0.0, STOP_S, t)
 			var mix := upper.has(bone) and ji >= 0
 			if type == Animation.TYPE_ROTATION_3D:

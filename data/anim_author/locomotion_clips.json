@@ -45,7 +45,7 @@
 			"clip": "own-jog-bw-k100",
 			"length": 0.733333,
 			"lib": "frontier_locomotion",
-			"speed": 2.368
+			"speed": 2.354
 		},
 		"actor_b-p-run-bw-lt": {
 			"clip": "own-jog-bw-lt-k100",
@@ -62,7 +62,7 @@
 			"clip": "own-jog-bw-rt-k100",
 			"length": 0.733333,
 			"lib": "frontier_locomotion",
-			"speed": 2.375
+			"speed": 2.371
 		},
 		"actor_b-p-run-bw-rt^idle": {
 			"clip": "own-stop-bw-rt-k100",
@@ -88,8 +88,9 @@
 		},
 		"actor_b-p-run-fw-lt^idle": {
 			"clip": "own-stop-fw-lt-k100",
-			"length": 1.8,
-			"lib": "frontier_locomotion"
+			"length": 0.8,
+			"lib": "frontier_locomotion",
+			"time_scale": 2.25
 		},
 		"actor_b-p-run-fw-rt": {
 			"clip": "own-jog-fw-rt-k100",
@@ -99,13 +100,15 @@
 		},
 		"actor_b-p-run-fw-rt^idle": {
 			"clip": "own-stop-fw-rt-k100",
-			"length": 1.8,
-			"lib": "frontier_locomotion"
+			"length": 0.8,
+			"lib": "frontier_locomotion",
+			"time_scale": 2.25
 		},
 		"actor_b-p-run-fw^idle": {
 			"clip": "own-stop-fw-k100",
-			"length": 1.8,
-			"lib": "frontier_locomotion"
+			"length": 0.8,
+			"lib": "frontier_locomotion",
+			"time_scale": 2.25
 		}
 	}
 }
