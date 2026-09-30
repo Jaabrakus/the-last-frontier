@@ -14,8 +14,12 @@ const SPECS := {
 func _initialize() -> void:
  call_deferred("run")
 func run() -> void:
+ var selected_profile := ""
+ for arg in OS.get_cmdline_user_args():
+  if arg.begins_with("profile="): selected_profile = arg.trim_prefix("profile=")
  var agls: AnimationLibrary = load("res://animations_extra/AGLS_Preview.res")
  for profile in ["Original", "Updated"]:
+  if selected_profile != "" and profile != selected_profile: continue
   var rig := RigFixture.actor_b(root)
   var data := AnimGraphData.from_dicts(JSON.parse_string(FileAccess.get_file_as_string("res://.comparison-private/actor_b_graph_original.json")), JSON.parse_string(FileAccess.get_file_as_string("res://.comparison-private/actor_b_clip_metrics_original.json"))) if profile == "Original" else AnimGraphData.load_files()
   var idx := TreeBuilder.build(data, rig.ap, rig.sk)

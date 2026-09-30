@@ -2,7 +2,7 @@
 
 Worktree: `/Users/kiwimango/Downloads/Frontier_wt/agls-comparison`  
 Branch: `codex/agls-comparison`  
-Integrated main commit: `5613e62b1b62717df6d55bdb29514578aeb38445`.
+Integrated main commit: `bff5ffcbae7098c72b40ebef0995bfb542797565`.
 
 Open `launch-frontier-legacy.command` from the worktree root. The viewer starts on crouch walking with four columns: **Frontier Old**, **Frontier Updated**, **Frontier Blend**, **AGLS Retargeted**. Updated uses a frozen copy of main's current locomotion selection, rather than the old clips. Actions that main has not changed have the same reference in both columns.
 
@@ -19,6 +19,8 @@ Choose an action in the first dropdown. The second dropdown selects the approved
 The comparison includes 16 standing movement/jump/vault and crouch actions, nine bow/rifle actions, and eight mantle/ladder/ledge actions (33 total). Four crouch directions and all bow/rifle clips come from the supplied AGLS FK animation data. Frontier weapon references sample the actual weapon graph, including aim elevation, bow draw, release and holster. The complete Frontier ladder top exit is assembled from its traversal parts.
 
 ## Game integration
+
+Main’s forward-run stopping update is merged: planted feet during braking, a settle step, and direct blending to idle after short or long forward runs. Step assist, current native carry layers, and main’s other locomotion overrides are retained. The “Frontier Updated” comparison snapshot is refreshed to the commit above.
 
 `launch-frontier-legacy-game.command` opens the actual worktree game with the bow equipped. The approved twelve movement clips are active: nine standing walk/run/sprint clips, jump, and two vault variants. Seven approved bow clips feed standing/crouched aim, draw, recoil, and sheath adapters. Rifle, crouch locomotion and climbing comparison blends remain preview only.
 
@@ -46,7 +48,7 @@ From the worktree root, use the installed Godot 4.7.2 executable:
 GODOT=/Applications/Godot_mono.app/Contents/MacOS/Godot
 "$GODOT" --headless --path . -s tools/agls_comparison/build_preview.gd
 "$GODOT" --headless --path . -s tools/agls_comparison/author_upper.gd
-"$GODOT" --headless --path . -s tools/agls_comparison/build_weapon_references.gd
+"$GODOT" --headless --path . -s tools/agls_comparison/build_weapon_references.gd -- --frontier-legacy-off
 "$GODOT" --headless --path . -s tools/agls_comparison/author_frontier.gd
 "$GODOT" --headless --path . -s tools/agls_comparison/author_styles.gd
 "$GODOT" --headless --path . -s tools/agls_comparison/build_updated.gd
@@ -63,10 +65,10 @@ These resources are authored derivatives of existing Frontier and AGLS motion. S
 
 - Source FK reconstruction checks passed for all 33 clips; maximum position discrepancy is below 0.000001 m.
 - The actual four-column viewer loaded 99 clip/preset combinations with finite poses. Run, crouch walk and ladder playback changed pose in all four columns for all three Legacy presets (36 movement checks).
-- Direction weights, locomotion graph and tree builder: **181 checks passed** after integration.
+- Tree construction, direction weights, locomotion graph and air/landing: **209 checks passed** after the latest main merge.
 - Carry-layer checks: 29 passed, three musket crouch failures. Current main's frozen configuration produces the same three values/failures; these predate Legacy integration.
 - Full level weapon checks stopped during scene cleanup with Godot's `_exit_world` static-string error. This run did not produce a complete result; it is not counted as a pass.
-- The audit checks the native library bytes, trim count, effective nine overrides, source identities, style clip sets and 72 weapon exports.
+- The audit checks the native library bytes, trim count, effective ten overrides, source identities, style clip sets and 72 weapon exports.
 
 Rendered captures and machine-readable reports are under `.comparison-private/reports/`. Official engine references: [AnimationPlayer](https://docs.godotengine.org/en/stable/classes/class_animationplayer.html), [Animation](https://docs.godotengine.org/en/stable/classes/class_animation.html), [Skeleton3D](https://docs.godotengine.org/en/stable/classes/class_skeleton3d.html).
 
