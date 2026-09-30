@@ -395,14 +395,32 @@ func _last_done() -> String:
 	return best
 
 
-## The puzzle of the current stage. The skill games come next (bark fitting, pitch spreading); until they do it is played for the
-## builder: a score from their skill, a little luck either way.
+## The puzzle of the current stage (BarkFit, PitchSpread on their screens; a builder who knows the technique is shown the band). The
+## screen ends with the score; giving up leaves the stage waiting. Where there is no screen (tests, headless) it is played for the
+## builder: a score from their skill, a little luck either way. Returns what to tell ("" while the screen is up).
 func play_puzzle() -> String:
 	var pid := build.puzzle_id()
 	if pid == "":
 		return ""
-	var score := clampf(0.5 + 0.4 * skill01() + randf_range(-0.12, 0.12), 0.0, 1.0)
+	if instant_work or DisplayServer.get_name() == "headless":
+		var score := clampf(0.5 + 0.4 * skill01() + randf_range(-0.12, 0.12), 0.0, 1.0)
+		return _puzzle_done(score)
+	var guided := build.knowledge(build.current) in ["known", "practised", "mastered"]
+	var lumps := float((build.stage(build.current).get("needs", {}) as Dictionary).get("pine_pitch", 3))
+	var scr := BoatPuzzleScreen.open(get_tree(), pid, guided, lumps)
+	scr.finished.connect(func(score: float) -> void:
+		last = _puzzle_done(score)
+		refresh()
+		open_menu(_pl()))
+	return ""
+
+
+func _puzzle_done(score: float) -> String:
+	if build.current == "":
+		return ""
 	var name := String(build.stage(build.current).name)
+	if score < 0.0:
+		return "You leave %s for now: the work is done and waits to be fitted." % name.to_lower()
 	var g := build.finish(score, skill01())
 	refresh()
 	return "%s: %s work." % [name, build.grade_word(g)]
