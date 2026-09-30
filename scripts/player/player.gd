@@ -297,8 +297,8 @@ var riding: Horse = null
 ## Kneeling over work on the ground (FieldDressing: skinning, butchering): the node that owns the body. Movement input
 ## is ignored, the camera orbits the kneeling body, PlayerAnim is suspended (begin_kneel / end_kneel).
 var kneeling: Node = null
-## Carried by a boat (BoatRider): the boat holds the body where it is (the rider places it every physics frame); jumping is ignored, and walking
-## too unless the rider is `free` (crouched, walking about the floor); the crouch, the aim and the weapons are the player's own, so they can
+## Carried by a boat (BoatRider): the boat holds the body where it is (the rider places it every physics frame); walking and jumping are ignored
+## unless the rider is `free` (crouched: on their own, carried while on the boat's floor); the crouch, the aim and the weapons are the player's own, so they can
 ## equip and shoot from the boat.
 var aboard: Node = null
 ## Gripping a surface or a moving body (PlayerGrip, hold G): the node that owns the body while it holds on, or null.
@@ -1143,7 +1143,7 @@ func _physics_process(delta: float) -> void:
 		velocity.z = horiz.z
 
 		if is_on_floor() and perch == null:
-			if controls.just_pressed(&"jump") and not is_crouching and not is_dead and aboard == null \
+			if controls.just_pressed(&"jump") and not is_crouching and not is_dead and (aboard == null or bool(aboard.get(&"free"))) \
 					and (traversal == null or traversal.allows_jump()):
 				velocity.y = jump_velocity
 		else:

@@ -6,11 +6,11 @@ extends Node
 ## drives the body and the pose), and takes up one of the boat's paddles or oars from where it lay inside. While aboard:
 ##   W / S     the crew strokes ahead / backs water (Boat.drive throttle)
 ##   A / D     steers left / right
-##   C         (tap) toggles between paddling and crouching: crouched is the game's own crouch (the paddle laid back where it lay inside),
-##             free to move about the floor (the boat carries them: their place is kept in its frame), with weapons and aim as the player
-##             has them. Nobody stands up in a boat.
-##   Space     on the bank facing a boat close by it hops in, crouched. In the boat it does nothing: there is no standing or hopping out of a
-##             crouched boat (E gets out).
+##   C         (tap) toggles between paddling and crouching: crouched is the game's own crouch (the paddle laid back where it lay inside), with
+##             weapons and aim as the player has them. Nobody stands up in a boat.
+##   crouched  they are free, as anywhere: they walk about the floor and jump on their own, and the boat carries them while they are on its
+##             floor (a step or a jump over the side and they are out of it, on their own: nothing holds them in and nothing throws them out).
+##   Space     on the bank facing a boat close by it hops in, crouched.
 ##   E         gets out, on the bank side if there is one, the paddle laid back where it was
 ## The camera goes on orbiting the player as when they kneel. The boat carries them; nothing else about them changes.
 ## The paddle: in the hand (a BoneAttachment3D on the right palm), swung with the boat's stroke so the blade dips as it pulls.
@@ -57,11 +57,16 @@ var _c_from_paddle := false
 var _hop_t := -1.0
 var _hop_from := Vector3.ZERO
 var _hop_to := Vector3.ZERO
+## Crouched: the boat's transform last frame (they are carried by what it has moved), and how long they have been off its floor.
+var _prev_xf := Transform3D()
+var _off_t := 0.0
 const TAP_S := 0.3           ## s: C let go sooner than this is a tap
 const HOP_IN_REACH := 1.9    ## m from the hull a hop in can start
 const HOP_IN_ANGLE := 70.0   ## deg off facing the boat
 const HOP_S := 0.3           ## s a hop in takes
 const HOP_ARC := 0.55        ## m the hop rises
+const OFF_S := 0.8           ## s off its floor (in the air, or past its side) and they are out of the boat
+const OFF_M := 0.6           ## m past the floor's side, or under it, and they are out
 
 
 ## The rider of the boat `p` is in (null: in none).
@@ -208,6 +213,8 @@ func _enter_crouch() -> void:
 	p.global_position = seat_position()
 	_local = boat.to_local(p.global_position)
 	_last_world = p.global_position
+	_prev_xf = boat.global_transform
+	_off_t = 0.0
 	mode = "crouch"
 	_crouch_t = 0.0
 
@@ -358,7 +365,9 @@ func _crouch_frame(p: FrontierPlayer, dt: float, c_pressed: bool, c_down: bool, 
 	# nobody stands up in a boat: their own crouch toggle (C, a jump, a sprint) is put back at once; a tap of C goes back to paddling
 	if not p.is_crouching:
 		p.set_crouched(true)
-	_carry(p)
+	_carry(p, dt)
+	if not aboard():
+		return
 	if c_released and not _c_from_paddle and _c_t < TAP_S:
 		# a tap: back to paddling
 		_enter_paddle_from_crouch()
@@ -372,19 +381,46 @@ func _enter_paddle_from_crouch() -> void:
 		p.set_crouched(true)
 
 
-## Carries the player with the boat: what their own walking did since last frame is kept (in the boat's frame), the rest of their place
-## goes with the boat as it moves and turns, and they stay on the floor (a step out over the edge is held at it).
-func _carry(p: FrontierPlayer) -> void:
-	var walked := p.global_position - _last_world
-	walked.y = 0.0
-	_local += boat.basis.inverse() * walked
+## Whether the player is on the boat's floor now: over it (the floor's sides and ends, a little to spare), at its height and standing on it.
+func _on_floor(p: FrontierPlayer) -> bool:
+	var l := boat.to_local(p.global_position)
 	var half := floor_half()
-	_local.x = clampf(_local.x, -half.x, half.x)
-	_local.z = clampf(_local.z, -half.y, half.y)
-	_local.y = boat.floor_y()
-	p.global_position = boat.to_global(_local)
-	p.velocity = Vector3(0.0, 0.0, 0.0) if not p.is_on_floor() else Vector3(p.velocity.x, 0.0, p.velocity.z)
+	return absf(l.x) <= half.x + 0.12 and absf(l.z) <= half.y + 0.12 and absf(l.y - boat.floor_y()) < 0.3 and p.is_on_floor()
+
+
+## Carries the player with the boat while they are on its floor: what the boat has moved and turned since last frame is theirs too (their
+## own walking and jumping are theirs and untouched). Off its floor (a jump, a step over the side) they are not carried, and take the boat's
+## speed with them as they go; a while off it, or well past its side or under it, and they are out of the boat, on their own.
+func _carry(p: FrontierPlayer, dt: float) -> void:
+	var l := boat.to_local(p.global_position)
+	var half := floor_half()
+	if _on_floor(p):
+		var old_local := _prev_xf.affine_inverse() * p.global_position
+		p.global_position = boat.global_transform * old_local
+		var turn := wrapf(boat.rotation.y - _prev_xf.basis.get_euler().y, -PI, PI)
+		p.yaw += turn
+		_off_t = 0.0
+	else:
+		if _off_t <= 0.0:
+			p.velocity += Vector3(boat.vel.x, 0.0, boat.vel.z)   # leaving it: the boat's way goes with them
+		_off_t += dt
+		var past := maxf(absf(l.x) - half.x, absf(l.z) - half.y)
+		if _off_t > OFF_S or past > OFF_M or l.y < boat.floor_y() - OFF_M:
+			_release(p)
+	_prev_xf = boat.global_transform
+	_local = boat.to_local(p.global_position)
 	_last_world = p.global_position
+
+
+## Out of the boat on their own: the boat lets go of them.
+func _release(p: FrontierPlayer) -> void:
+	boat.drive(0.0, 0.0)
+	p.aboard = null
+	p.set_crouched(false)   # out of the boat they are on their feet as anywhere
+	rider = null
+	free = false
+	mode = "paddle"
+	_off_t = 0.0
 
 
 ## Space on the bank, facing a boat close by: a hop in, crouched, landing on its floor.
@@ -438,6 +474,8 @@ func _hop_step(p: FrontierPlayer, dt: float) -> void:
 	if u >= 1.0:
 		_hop_t = -1.0
 		_local = _hop_to
+		_prev_xf = boat.global_transform
+		_off_t = 0.0
 
 
 func _just_boarded() -> bool:
