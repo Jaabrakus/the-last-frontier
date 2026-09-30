@@ -212,6 +212,39 @@
 			],
 			"weapon": "tomahawk",
 			"why": "the tomahawk crouches like the pistol (user 2026-09-30): the pistol's crouch arm on every role"
+		},
+		{
+			"copy_from": "musket",
+			"copy_mode": "sprint",
+			"modes": [
+				"walk",
+				"run"
+			],
+			"roles_except": [],
+			"roles_only": [
+				"bw",
+				"bw_lt",
+				"bw_rt",
+				"start_bw",
+				"start_bw_lt",
+				"start_bw_rt",
+				"stop_bw",
+				"stop_bw_lt",
+				"stop_bw_rt",
+				"rev_bw_fw",
+				"rev_bw_fw_lt",
+				"rev_bw_fw_rt",
+				"rev_fw_bw",
+				"rev_fw_bw_lt",
+				"rev_fw_bw_rt"
+			],
+			"slots": [
+				"arms",
+				"arms_add",
+				"spine_add"
+			],
+			"weapon": "musket",
+			"why": "the rifle backward walking and running holds low like the sprint (user 2026-09-30): the musket's sprint arms, hands and spine layers on the backward roles of walk and run"
 		}
 	]
 }
