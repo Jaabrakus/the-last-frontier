@@ -106,9 +106,10 @@ func _bake() -> void:
 		wired[cn] = {"lib": "frontier_locomotion", "clip": an, "length": snappedf(lib.get_animation(cn).length, 0.000001)}
 	# the felling axe's carry arm (GatherTools: the last frame of the draw's return, the right arm only, held while the
 	# axe is in the hand, walking, sprinting and crouched), as a one-frame pose the spear's sprint and crouch take
-	var axe_bones := _bake_axe_carry(out)
+	var axe_bones := _bake_axe_carry(out, "own-axe-carry", ["clavicle", "scapula", "shoulder", "deltoid", "elbow", "wrist", "forarm", "trap"])
+	var grip_bones := _bake_axe_carry(out, "own-axe-grip", ["palm", "index", "middle", "pinky", "ring", "thumb"])
 	print(ResourceSaver.save(out, OUT_LIB, ResourceSaver.FLAG_COMPRESS))
-	_write_carry_patches(axe_bones)
+	_write_carry_patches(axe_bones, grip_bones)
 	var f := FileAccess.open(WIRED, FileAccess.WRITE)
 	f.store_string(JSON.stringify({"about": "Clips that stand in for the graph's own (AnimGraphData.apply_clip_overrides): the graph clip name -> the library and clip played instead, its measured travel speed (m/s, tools/anim_author/author_locomotion.gd) and length (s). The plant phases and the rest of the metrics stay the original clip's.", "clips": wired}, "\t") + "\n")
 	f.close()
@@ -126,24 +127,30 @@ static func _stamp(a: Animation, from: Animation) -> Animation:
 const AXE_CARRY_SRC := "res://animations_extra/Actor_B_from_A.res"
 const AXE_CARRY_CLIP := "machete-draw--grab^idle--part"
 const CARRY_PATCHES := "res://data/anim_author/carry_patches.json"
+## The roles a carry on the feet concerns: the direction banks, starts, stops, reversals and turns (not the air, landing, hit and
+## death roles, which the weapons' inputs share).
+const MOVE_ROLES := ["fw", "fw_lt", "fw_rt", "bw", "bw_lt", "bw_rt", "start_fw", "start_fw_lt", "start_fw_rt", "start_bw", "start_bw_lt",
+		"start_bw_rt", "stop_fw", "stop_fw_lt", "stop_fw_rt", "stop_bw", "stop_bw_lt", "stop_bw_rt", "rev_bw_fw", "rev_bw_fw_lt", "rev_bw_fw_rt",
+		"rev_fw_bw", "rev_fw_bw_lt", "rev_fw_bw_rt", "turn_l", "turn_r"]
 
 
-## The felling axe's carry arm as a one-frame clip "own-axe-carry" in `out`; returns the bones it keys.
-func _bake_axe_carry(out: AnimationLibrary) -> Array:
+## The felling axe's carry as a one-frame clip `clip_name` in `out` (the last frame of the draw's return, on the bones named
+## by `parts`, right side); returns the bones it keys. "own-axe-carry": the arm; "own-axe-grip": the palm and fingers (the
+## fist round the haft). The prop bone is left to the game, which places the spear (Throwable).
+func _bake_axe_carry(out: AnimationLibrary, clip_name: String, parts: Array) -> Array:
 	var src := (load(AXE_CARRY_SRC) as AnimationLibrary).get_animation(AXE_CARRY_CLIP)
 	var pose := _stamp(Animation.new(), src)
 	pose.length = 1.0 / 30.0
-	pose.set_meta(&"authored", "Frontier: the felling axe's carry arm, the last frame of %s (tools/anim_author/author_locomotion.gd)" % AXE_CARRY_CLIP)
+	pose.set_meta(&"authored", "Frontier: the felling axe's carry (%s), the last frame of %s (tools/anim_author/author_locomotion.gd)" % [clip_name, AXE_CARRY_CLIP])
 	var bones: Array = []
 	for ti in src.get_track_count():
 		var type := src.track_get_type(ti)
 		if type != Animation.TYPE_ROTATION_3D and type != Animation.TYPE_POSITION_3D:
 			continue
 		var bone := String(src.track_get_path(ti).get_concatenated_subnames())
-		# (the right arm chain: the hand's fingers and prop bone are the spear's own hands layers')
 		var keep := false
-		for part in ["clavicle", "scapula", "shoulder", "deltoid", "elbow", "wrist", "forarm", "trap"]:
-			if bone.begins_with("r_") and part in bone:
+		for part in parts:
+			if bone.begins_with("r_") and part in bone and not "prop" in bone:
 				keep = true
 		if not keep:
 			continue
@@ -155,23 +162,26 @@ func _bake_axe_carry(out: AnimationLibrary) -> Array:
 			pose.rotation_track_insert_key(tr, 0.0, src.rotation_track_interpolate(ti, src.length))
 		else:
 			pose.position_track_insert_key(tr, 0.0, src.position_track_interpolate(ti, src.length))
-	out.add_animation(&"own-axe-carry", pose)
+	out.add_animation(StringName(clip_name), pose)
 	return bones
 
 
 ## data/anim_author/carry_patches.json: arm layers the graph's roles get in place of their own (AnimGraphData.apply_carry_patches)
 ## because the tables cannot be regenerated here; "clips" are graph clips of our own library.
-func _write_carry_patches(axe_bones: Array) -> void:
+func _write_carry_patches(axe_bones: Array, grip_bones: Array) -> void:
 	var axe_layer := {"clip": "own-axe-carry", "kind": "partial", "slot": "arms", "status": "frontier", "weight": 1.0,
 			"sample_s": 0.0, "bones": axe_bones, "superseded_by": null, "weight_curve": null}
+	var grip_layer := {"clip": "own-axe-grip", "kind": "partial", "slot": "hands", "status": "frontier", "weight": 1.0,
+			"sample_s": 0.0, "bones": grip_bones, "superseded_by": null, "weight_curve": null}
 	var doc := {
 		"about": "Arm layers the graph's roles take in place of their own (AnimGraphData.apply_carry_patches; written by tools/anim_author/author_locomotion.gd). clips: graph clips of our own library. rules: weapon / modes / roles (all but roles_except) / slots replaced, by layers, or copied from another weapon's same role (copy_from).",
-		"clips": {"own-axe-carry": {"lib": "frontier_locomotion", "clip": "own-axe-carry", "length": snappedf(1.0 / 30.0, 0.000001)}},
+		"clips": {"own-axe-carry": {"lib": "frontier_locomotion", "clip": "own-axe-carry", "length": snappedf(1.0 / 30.0, 0.000001)},
+				"own-axe-grip": {"lib": "frontier_locomotion", "clip": "own-axe-grip", "length": snappedf(1.0 / 30.0, 0.000001)}},
 		"rules": [
-			{"why": "the spear sprints and crouches with the felling axe's carry arm (user 2026-09-30); its idle keeps the javelin carry",
-			"weapon": "spear", "modes": ["sprint"], "roles_except": ["idle"], "slots": ["arms"], "layers": [axe_layer]},
-			{"why": "the spear crouches with the felling axe's carry arm (user 2026-09-30)",
-			"weapon": "spear", "modes": ["crouch"], "roles_except": [], "slots": ["arms"], "layers": [axe_layer]},
+			{"why": "the spear sprints and crouches with the felling axe's carry: its arm and its grip (user 2026-09-30: \"hold it like the fell axe\"); its idle keeps the javelin carry",
+			"weapon": "spear", "modes": ["sprint"], "roles_except": ["idle"], "roles_only": MOVE_ROLES, "slots": ["arms", "hands"], "layers": [grip_layer, axe_layer]},
+			{"why": "the spear crouches with the felling axe's carry: its arm and its grip (user 2026-09-30)",
+			"weapon": "spear", "modes": ["crouch"], "roles_except": [], "roles_only": MOVE_ROLES + ["idle"], "slots": ["arms", "hands"], "layers": [grip_layer, axe_layer]},
 			{"why": "the tomahawk crouches like the pistol (user 2026-09-30): the pistol's crouch arm on every role",
 			"weapon": "tomahawk", "modes": ["crouch"], "roles_except": [], "slots": ["arms", "arms_add"], "copy_from": "pistol"},
 		],

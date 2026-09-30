@@ -5,11 +5,48 @@
 			"clip": "own-axe-carry",
 			"length": 0.033333,
 			"lib": "frontier_locomotion"
+		},
+		"own-axe-grip": {
+			"clip": "own-axe-grip",
+			"length": 0.033333,
+			"lib": "frontier_locomotion"
 		}
 	},
 	"rules": [
 		{
 			"layers": [
+				{
+					"bones": [
+						"r_index_metacarpal",
+						"r_indexa",
+						"r_indexb",
+						"r_indexc",
+						"r_middle_metacarpal",
+						"r_middlea",
+						"r_middleb",
+						"r_middlec",
+						"r_palm",
+						"r_pinkya",
+						"r_pinkyb",
+						"r_pinkyc",
+						"r_pinkyd",
+						"r_ring_metacarpal",
+						"r_ringa",
+						"r_ringb",
+						"r_ringc",
+						"r_thumba",
+						"r_thumbb",
+						"r_thumbc"
+					],
+					"clip": "own-axe-grip",
+					"kind": "partial",
+					"sample_s": 0.0,
+					"slot": "hands",
+					"status": "frontier",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				},
 				{
 					"bones": [
 						"r_clavicle",
@@ -35,14 +72,75 @@
 			"roles_except": [
 				"idle"
 			],
+			"roles_only": [
+				"fw",
+				"fw_lt",
+				"fw_rt",
+				"bw",
+				"bw_lt",
+				"bw_rt",
+				"start_fw",
+				"start_fw_lt",
+				"start_fw_rt",
+				"start_bw",
+				"start_bw_lt",
+				"start_bw_rt",
+				"stop_fw",
+				"stop_fw_lt",
+				"stop_fw_rt",
+				"stop_bw",
+				"stop_bw_lt",
+				"stop_bw_rt",
+				"rev_bw_fw",
+				"rev_bw_fw_lt",
+				"rev_bw_fw_rt",
+				"rev_fw_bw",
+				"rev_fw_bw_lt",
+				"rev_fw_bw_rt",
+				"turn_l",
+				"turn_r"
+			],
 			"slots": [
-				"arms"
+				"arms",
+				"hands"
 			],
 			"weapon": "spear",
-			"why": "the spear sprints and crouches with the felling axe's carry arm (user 2026-09-30); its idle keeps the javelin carry"
+			"why": "the spear sprints and crouches with the felling axe's carry: its arm and its grip (user 2026-09-30: \"hold it like the fell axe\"); its idle keeps the javelin carry"
 		},
 		{
 			"layers": [
+				{
+					"bones": [
+						"r_index_metacarpal",
+						"r_indexa",
+						"r_indexb",
+						"r_indexc",
+						"r_middle_metacarpal",
+						"r_middlea",
+						"r_middleb",
+						"r_middlec",
+						"r_palm",
+						"r_pinkya",
+						"r_pinkyb",
+						"r_pinkyc",
+						"r_pinkyd",
+						"r_ring_metacarpal",
+						"r_ringa",
+						"r_ringb",
+						"r_ringc",
+						"r_thumba",
+						"r_thumbb",
+						"r_thumbc"
+					],
+					"clip": "own-axe-grip",
+					"kind": "partial",
+					"sample_s": 0.0,
+					"slot": "hands",
+					"status": "frontier",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				},
 				{
 					"bones": [
 						"r_clavicle",
@@ -66,11 +164,41 @@
 				"crouch"
 			],
 			"roles_except": [],
+			"roles_only": [
+				"fw",
+				"fw_lt",
+				"fw_rt",
+				"bw",
+				"bw_lt",
+				"bw_rt",
+				"start_fw",
+				"start_fw_lt",
+				"start_fw_rt",
+				"start_bw",
+				"start_bw_lt",
+				"start_bw_rt",
+				"stop_fw",
+				"stop_fw_lt",
+				"stop_fw_rt",
+				"stop_bw",
+				"stop_bw_lt",
+				"stop_bw_rt",
+				"rev_bw_fw",
+				"rev_bw_fw_lt",
+				"rev_bw_fw_rt",
+				"rev_fw_bw",
+				"rev_fw_bw_lt",
+				"rev_fw_bw_rt",
+				"turn_l",
+				"turn_r",
+				"idle"
+			],
 			"slots": [
-				"arms"
+				"arms",
+				"hands"
 			],
 			"weapon": "spear",
-			"why": "the spear crouches with the felling axe's carry arm (user 2026-09-30)"
+			"why": "the spear crouches with the felling axe's carry: its arm and its grip (user 2026-09-30)"
 		},
 		{
 			"copy_from": "pistol",

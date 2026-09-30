@@ -496,6 +496,11 @@ func _club_end(show_gun: bool) -> void:
 	drop_now()
 
 
+## A stroke or an attack is under way (the legs walk at Player.swing_walk_speed meanwhile).
+func swinging() -> bool:
+	return phase == Phase.SWING
+
+
 ## The tool in the hand now ("" none, or while it goes away).
 func in_hand() -> String:
 	return tool if phase in [Phase.DRAW_GRAB, Phase.DRAW_OUT, Phase.READY, Phase.SWING] else ""
@@ -890,9 +895,11 @@ func _apply_layers() -> void:
 			layers.append({"anim": _clip("draw_out"), "time": _t, "weight": smoothstep(0.0, 1.0, _w), "mask": "arm_r"})
 		Phase.STOW_PLACE:
 			layers.append({"anim": _clip("stow_place"), "time": _t, "weight": smoothstep(0.0, 1.0, _w), "mask": "arm_r"})
-	# standing still the whole body swings (its footwork too); moving or crouched only the upper body
-	var still := player.horizontal_speed() < 0.35 and player.is_on_floor() and not player.is_crouching
-	var mask := "full" if still else "upper"
+	# the swings are upper body only, standing too (user 2026-09-30: felling and combat "lock it to the torso like aim down
+	# sights, lower half body"): the legs keep the locomotion, at the swing walk pace (Player.swing_walk_speed), as
+	# aiming a gun does
+	var still := false
+	var mask := "upper"
 	var pw := 0.0
 	var bw := 0.0                  ## (the club: how much a one-handed attack holds it in the blade frame)
 	# the swing fading out under a chained one stays at full weight; the new one fades in over it

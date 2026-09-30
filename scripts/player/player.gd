@@ -42,6 +42,9 @@ const CHARACTER_SCENE := "res://characters/Actor_B.tscn"
 ## While aiming, speed eases down to the pace of the aim-walk clips (measured
 ## Actor_B walk-fw foot speed ~1.3 m/s) so the feet don't slide.
 @export var aim_walk_speed := 1.3
+## While a felling stroke or a melee attack is under way the legs walk at this pace (between the aim-walk and the jog:
+## like aiming a gun, not the jog's speed; GatherTools.swinging()).
+@export var swing_walk_speed := 2.0
 @export var ground_accel := 14.0
 @export var ground_decel := 18.0
 @export var air_accel := 2.5
@@ -1090,6 +1093,8 @@ func _physics_process(delta: float) -> void:
 	if not is_sprinting:
 		speed *= weapon.speed_mult()
 		speed = lerpf(speed, minf(speed, aim_walk_speed), weapon.aim)
+		if gather != null and gather.swinging():
+			speed = minf(speed, swing_walk_speed)
 	speed *= survival_speed_mult
 	speed = minf(speed, drag_speed_cap)
 	# For the lower body (plan 8.1): the band speed whenever there is input; the analog magnitude

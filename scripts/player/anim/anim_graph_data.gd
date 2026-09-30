@@ -157,9 +157,13 @@ func apply_carry_patches() -> void:
 	for rule: Dictionary in t.get("rules", []):
 		var slots: Array = rule.get("slots", [])
 		var except: Array = rule.get("roles_except", [])
+		var only: Array = rule.get("roles_only", [])
 		for key: String in graph.roles.keys():
 			var parts := key.split("/")
 			if parts.size() != 3 or parts[0] != String(rule.weapon) or not (rule.modes as Array).has(parts[1]) or except.has(parts[2]):
+				continue
+			# (roles_only: the air, landing, hit and death roles keep their own, they are shared between the weapons' inputs)
+			if not only.is_empty() and not only.has(parts[2]):
 				continue
 			var role: Dictionary = (graph.roles[key] as Dictionary).duplicate(false)
 			var layers: Array = []
