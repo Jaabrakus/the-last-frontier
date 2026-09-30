@@ -1962,6 +1962,19 @@
    "notes": "Plates with teeth strapped under the feet with buckskin while gripping a surface (loadout_items.json climb.hang_drain_mult).",
    "milestone": "M2a",
    "status": "slice"
+  },
+  {
+   "id": "item.tool.climbing_claws_iron",
+   "name": "Iron ashiko",
+   "cat": "tool",
+   "unit": "pair",
+   "kg": 0.6,
+   "stack": 1,
+   "uses": null,
+   "loadout_kind": "climbing_claws_iron",
+   "notes": "The real Japanese foot claws, iron. Not craftable (no forge in the game yet); examining a pair makes know.ashiko heard of.",
+   "milestone": "M2a",
+   "status": "slice"
   }
  ],
  "durability_rule": {

@@ -1620,6 +1620,25 @@
         }
        }
       ]
+     },
+     {
+      "id": "know.ashiko",
+      "asks": [
+       {
+        "friendship": 5
+       },
+       {
+        "labour": {
+         "job": "job.old_hunter_line",
+         "hours": 3
+        }
+       },
+       {
+        "goods": {
+         "item.trade.tobacco": 1
+        }
+       }
+      ]
      }
     ],
     "declines_when": [

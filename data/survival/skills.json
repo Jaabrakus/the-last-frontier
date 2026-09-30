@@ -1083,10 +1083,7 @@
    "fire.gunlock_ignite",
    "rcp.climbing_stakes_wood",
    "rcp.climbing_stakes_bone",
-   "rcp.climbing_stakes_stone",
-   "rcp.climbing_claws_wood",
-   "rcp.climbing_claws_bone",
-   "rcp.climbing_claws_stone"
+   "rcp.climbing_stakes_stone"
   ],
   "tier_notices": "reaching a tier moves the skill's tier_unlocks notices from unknown to heard_of (a journal line)",
   "routes_rule": "every recipe and technique lists at least two routes to known, at least one needing no coin and no particular background (rule L2); community-held knowledge lists taught and watched only (redesign_skills.md 5.4)",
@@ -1119,6 +1116,34 @@
   "notices_rule": "Only simple, generic work has notices (redesign_skills.md 8); complex work (snowshoes, dressing a hide, moccasins, the half-faced camp, ice fishing) needs heard of first, from examining the thing, talk, a lesson or watching."
  },
  "knowledge": [
+  {
+   "id": "know.ashiko",
+   "name": "Making ashiko (foot claws) from the woods",
+   "status": "slice",
+   "milestone": "M2a",
+   "covers": [
+    "rcp.climbing_claws_wood",
+    "rcp.climbing_claws_bone",
+    "rcp.climbing_claws_stone"
+   ],
+   "skill": "woodcraft",
+   "routes": {
+    "taught_by": [
+     "npc.woods.old_hunter",
+     "player"
+    ],
+    "examine": "item.tool.climbing_claws_iron",
+    "trial": {
+     "from": [
+      "heard_of",
+      "seen"
+     ]
+    }
+   },
+   "origin": "Handed-down knowledge (user 2026-09-29: 'iron is the real one the others will be handed down knowledge'): the old hunter's copies of the Japanese ashiko, from a Dutch sailor's iron pair (Dejima, the Dutch post in Japan, 1641-1854). The tale is the game's own.",
+   "basis": "D",
+   "sources": []
+  },
   {
    "id": "know.hide_dressing",
    "name": "Dressing deerskins",

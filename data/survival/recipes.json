@@ -1204,30 +1204,13 @@
     "good",
     "fine"
    ],
-   "routes": {
-    "taught_by": [
-     "player"
-    ],
-    "trial": {
-     "from": [
-      "heard_of",
-      "seen"
-     ],
-     "notice": {
-      "text": "A hardwood plate under the foot with fire-hardened teeth, strapped on, would bite where a moccasin slips.",
-      "carrying": [
-       "item.fuel.split_wood",
-       "item.skin.dressed_buckskin"
-      ]
-     }
-    }
-   },
-   "origin": "Spiked plates under the feet are an old idea (crampons, creepers, the Japanese ashiko); this wooden pair is the game's own.",
+   "origin": "A hardwood copy of the Japanese ashiko, made from knowledge handed down (the old hunter's tale of a Dutch sailor's iron pair); the tale and the copy are the game's own.",
    "notes": "Two hardwood soles with four fire-hardened teeth at the toe, strapped on with buckskin over the forefoot and round the ankle.",
    "basis": "D",
    "milestone": "M2a",
    "status": "slice",
-   "station": "world.campfire:lit"
+   "station": "world.campfire:lit",
+   "knowledge": "know.ashiko"
   },
   {
    "id": "rcp.climbing_claws_bone",
@@ -1257,29 +1240,12 @@
     "good",
     "fine"
    ],
-   "routes": {
-    "taught_by": [
-     "player"
-    ],
-    "trial": {
-     "from": [
-      "heard_of",
-      "seen"
-     ],
-     "notice": {
-      "text": "Split leg bone ground into teeth and set in a flat of bone under the foot would hold on bark.",
-      "carrying": [
-       "item.material.bone",
-       "item.skin.dressed_buckskin"
-      ]
-     }
-    }
-   },
-   "origin": "Spiked plates under the feet are an old idea (crampons, creepers, the Japanese ashiko); this bone pair is the game's own.",
+   "origin": "A bone copy of the Japanese ashiko, made from knowledge handed down (the old hunter's tale of a Dutch sailor's iron pair); the tale and the copy are the game's own.",
    "notes": "Two soles of split bone with ground bone teeth, strapped on with buckskin.",
    "basis": "D",
    "milestone": "M2a",
-   "status": "slice"
+   "status": "slice",
+   "knowledge": "know.ashiko"
   },
   {
    "id": "rcp.climbing_claws_stone",
@@ -1311,29 +1277,12 @@
     "good",
     "fine"
    ],
-   "routes": {
-    "taught_by": [
-     "player"
-    ],
-    "trial": {
-     "from": [
-      "heard_of",
-      "seen"
-     ],
-     "notice": {
-      "text": "Flint flakes set into a wooden sole and lashed with sinew would bite into rock itself.",
-      "carrying": [
-       "item.tool.flint",
-       "item.material.sinew"
-      ]
-     }
-    }
-   },
-   "origin": "Spiked plates under the feet are an old idea (crampons, creepers, the Japanese ashiko); this flint pair is the game's own.",
+   "origin": "A flint-toothed copy of the Japanese ashiko, made from knowledge handed down (the old hunter's tale of a Dutch sailor's iron pair); the tale and the copy are the game's own.",
    "notes": "Two hardwood soles with knapped flint teeth set in and bound with sinew, strapped on with buckskin.",
    "basis": "D",
    "milestone": "M2a",
-   "status": "slice"
+   "status": "slice",
+   "knowledge": "know.ashiko"
   }
  ],
  "critical": {
