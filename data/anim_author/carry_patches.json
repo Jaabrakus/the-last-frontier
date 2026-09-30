@@ -397,9 +397,65 @@
 			"why": "the rifle crouch walk forward, medium ready: the same, the arms turned further (the forward crouch walk's torso is more upright)"
 		},
 		{
-			"copy_from": "pistol",
-			"copy_mode": "run",
-			"copy_role": "fw",
+			"append": true,
+			"layers": [
+				{
+					"clip": "actor_b-r-arm-gun-idle",
+					"kind": "partial",
+					"slot": "arms",
+					"status": "resolved",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"walk",
+				"run",
+				"sprint"
+			],
+			"roles_except": [],
+			"roles_only": [
+				"idle"
+			],
+			"weapon": "pistol",
+			"why": "the pistol held bent at idle, not pointing down (user 2026-09-30): the pistol's own idle arm (Pistol.relaxed idle: arm-gun-idle) on the idle roles, which the graph leaves to the base pose"
+		},
+		{
+			"append": true,
+			"layers": [
+				{
+					"clip": "actor_b-r-arm-gun-crouch-idle",
+					"kind": "partial",
+					"slot": "arms",
+					"status": "resolved",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"crouch"
+			],
+			"roles_except": [],
+			"roles_only": [
+				"idle"
+			],
+			"weapon": "pistol",
+			"why": "the pistol held bent at the crouch idle (Pistol.relaxed crouch_idle: arm-gun-crouch-idle)"
+		},
+		{
+			"layers": [
+				{
+					"clip": "actor_b-r-arm-gun-idle",
+					"kind": "partial",
+					"slot": "arms",
+					"status": "resolved",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
 			"modes": [
 				"run"
 			],
@@ -417,7 +473,7 @@
 				"arms_add"
 			],
 			"weapon": "pistol",
-			"why": "the pistol stays up through the run's stop (user 2026-09-30: \"instead of the pistol down have it in the pistol up for that split second on the pistol stop\"): the run's own arm on the stops (the graph's stop lowers it to the idle arm)"
+			"why": "the pistol is up (the idle arm) from the start of the run's stop (user 2026-09-30: \"for the pistol stop have the pistol up for that split second\"): the graph's stop takes the idle arm at 0.8 over the run's hanging one; ours takes it whole"
 		},
 		{
 			"copy_from": "pistol",

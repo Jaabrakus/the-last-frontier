@@ -192,7 +192,16 @@ func apply_carry_patches() -> void:
 					had = true
 				else:
 					layers.append(l)
-			# (only the roles that carry such a layer: the air, landing, hit and death roles have none)
+			# (only the roles that carry such a layer: the air, landing, hit and death roles have none; an "append" rule adds its
+			# layers to the role as it is)
+			if rule.has("append"):
+				var grown: Array = []
+				for l: Dictionary in role.get("layers", []):
+					grown.append(l)
+				grown.append_array(rule.get("layers", []))
+				role["layers"] = grown
+				graph.roles[key] = role
+				continue
 			if not had:
 				continue
 			# (the new layers go where the first replaced one was: the partial arms come before their additive)

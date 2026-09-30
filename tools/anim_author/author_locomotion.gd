@@ -110,7 +110,10 @@ func _bake() -> void:
 		# the stop out of it: the graph's steps, our own upper body and timing
 		var stop_name: String = "actor_b-p-run-" + dir + "^idle"
 		var tn: String = "own-stop-%s-k%d" % [dir, int(round(k * 100.0))]
-		out.add_animation(StringName(tn), _own_stop(clip, stop_name))
+		var upper_from := ""
+		if dir.begins_with("fw"):
+			upper_from = "actor_b-p-run-bw" + dir.trim_prefix("fw") + "^idle"
+		out.add_animation(StringName(tn), _own_stop(clip, stop_name, upper_from))
 		wired[stop_name] = {"lib": "frontier_locomotion", "clip": tn, "length": snappedf(lib.get_animation(stop_name).length, 0.000001)}
 	# the jump and the fall: the graph's body with our own arms (user 2026-09-30: "the jump animation, tweak the arms so it
 	# does not look identical")
@@ -225,9 +228,15 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array,
 			"weapon": "musket", "modes": ["crouch"], "roles_except": [], "roles_only": ["idle"], "slots": ["arms"], "layers": [idle_layer]},
 			{"why": "the rifle crouch walk forward, medium ready: the same, the arms turned further (the forward crouch walk's torso is more upright)",
 			"weapon": "musket", "modes": ["crouch"], "roles_except": ["idle"], "roles_only": FWD_ROLES, "slots": ["arms"], "layers": [mid_fw_layer]},
-			{"why": "the pistol stays up through the run's stop (user 2026-09-30: \"instead of the pistol down have it in the pistol up for that split second on the pistol stop\"): the run's own arm on the stops (the graph's stop lowers it to the idle arm)",
+			{"why": "the pistol held bent at idle, not pointing down (user 2026-09-30): the pistol's own idle arm (Pistol.relaxed idle: arm-gun-idle) on the idle roles, which the graph leaves to the base pose",
+			"weapon": "pistol", "modes": ["walk", "run", "sprint"], "roles_except": [], "roles_only": ["idle"], "append": true,
+			"layers": [{"clip": "actor_b-r-arm-gun-idle", "kind": "partial", "slot": "arms", "status": "resolved", "weight": 1.0, "superseded_by": null, "weight_curve": null}]},
+			{"why": "the pistol held bent at the crouch idle (Pistol.relaxed crouch_idle: arm-gun-crouch-idle)",
+			"weapon": "pistol", "modes": ["crouch"], "roles_except": [], "roles_only": ["idle"], "append": true,
+			"layers": [{"clip": "actor_b-r-arm-gun-crouch-idle", "kind": "partial", "slot": "arms", "status": "resolved", "weight": 1.0, "superseded_by": null, "weight_curve": null}]},
+			{"why": "the pistol is up (the idle arm) from the start of the run's stop (user 2026-09-30: \"for the pistol stop have the pistol up for that split second\"): the graph's stop takes the idle arm at 0.8 over the run's hanging one; ours takes it whole",
 			"weapon": "pistol", "modes": ["run"], "roles_except": [], "roles_only": ["stop_fw", "stop_fw_lt", "stop_fw_rt", "stop_bw", "stop_bw_lt", "stop_bw_rt"],
-			"slots": ["arms", "arms_add"], "copy_from": "pistol", "copy_mode": "run", "copy_role": "fw"},
+			"slots": ["arms", "arms_add"], "layers": [{"clip": "actor_b-r-arm-gun-idle", "kind": "partial", "slot": "arms", "status": "resolved", "weight": 1.0, "superseded_by": null, "weight_curve": null}]},
 			{"why": "the tomahawk crouches like the pistol (user 2026-09-30): the pistol's crouch arm on every role",
 			"weapon": "tomahawk", "modes": ["crouch"], "roles_except": [], "slots": ["arms", "arms_add"], "copy_from": "pistol"},
 		],
@@ -555,8 +564,12 @@ func _reversed(a: Animation) -> Animation:
 ## (its lean, arm swing and torso twist, slowing as the gait does) eases into the graph's stop over STOP_S seconds; the whole
 ## stop runs STOP_RATE times as fast, holding its last pose (the standing pose) for the rest of the graph's length, which the
 ## tables time the state by.
-func _own_stop(new_jog: Animation, orig_name: String) -> Animation:
+func _own_stop(new_jog: Animation, orig_name: String, upper_from := "") -> Animation:
 	var orig := lib.get_animation(orig_name)
+	# the upper body of another of the graph's stops (the forward stops take the backward ones': user 2026-09-30, "the backwards
+	# movement when we stop looks nice, apply those to the forward"), at its own pace; the legs stay this stop's
+	var up_src := lib.get_animation(upper_from) if upper_from != "" else orig
+	var up_rate := 1.0 if upper_from != "" else STOP_RATE
 	var big := orig.length
 	var phase := _match_phase(orig, 0.0, new_jog)
 	var out := _stamp(Animation.new(), orig)
@@ -579,8 +592,11 @@ func _own_stop(new_jog: Animation, orig_name: String) -> Animation:
 		var tr := out.add_track(type)
 		out.track_set_path(tr, path)
 		# (the graph's stop throws the arms out as it settles: ours moves them less, about the standing pose it rests in)
-		var damp := _stop_damp(bone, "run-fw" in orig_name) if upper.has(bone) else 1.0
-		var rest_q := orig.rotation_track_interpolate(ti, big) if type == Animation.TYPE_ROTATION_3D else Quaternion.IDENTITY
+		var damp := _stop_damp(bone) if upper.has(bone) else 1.0
+		var ui := up_src.find_track(path, type) if upper.has(bone) else -1
+		var rest_q := Quaternion.IDENTITY
+		if type == Animation.TYPE_ROTATION_3D:
+			rest_q = up_src.rotation_track_interpolate(ui, up_src.length) if ui >= 0 else orig.rotation_track_interpolate(ti, big)
 		for f in n + 1:
 			var t := minf(float(f) / FPS, big)
 			var ts := minf(t * STOP_RATE, big)
@@ -588,6 +604,8 @@ func _own_stop(new_jog: Animation, orig_name: String) -> Animation:
 			var mix := upper.has(bone) and ji >= 0
 			if type == Animation.TYPE_ROTATION_3D:
 				var q: Quaternion = orig.rotation_track_interpolate(ti, ts)
+				if ui >= 0:
+					q = up_src.rotation_track_interpolate(ui, minf(t * up_rate, up_src.length))
 				if damp < 1.0:
 					q = rest_q * Quaternion.IDENTITY.slerp(rest_q.inverse() * q, damp)
 				if mix:
@@ -600,16 +618,16 @@ func _own_stop(new_jog: Animation, orig_name: String) -> Animation:
 
 ## How much of the graph's stop movement our stop keeps, by bone: the arms much less, the shoulder girdle less still, the
 ## spine a little less (user 2026-09-30: "we don't move the arms as much").
-static func _stop_damp(bone: String, forward := false) -> float:
+static func _stop_damp(bone: String) -> float:
 	for part in ["clavicle", "scapula", "deltoid", "trap"]:
 		if part in bone:
-			return STOP_FW_UPPER if forward else STOP_GIRDLE
+			return STOP_GIRDLE
 	for part in ["shoulder", "elbow", "wrist", "forarm"]:
 		if part in bone:
-			return STOP_FW_UPPER if forward else STOP_ARMS
+			return STOP_ARMS
 	for part in ["spine", "chest", "neck"]:
 		if part in bone:
-			return STOP_FW_SPINE if forward else STOP_SPINE
+			return STOP_SPINE
 	return 1.0
 
 
