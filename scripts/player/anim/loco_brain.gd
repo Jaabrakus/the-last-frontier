@@ -996,6 +996,10 @@ func _eval_records(aim_stance: bool) -> bool:
 		var res := _resolve(tgt)
 		if res.is_empty():
 			continue
+		# no stop clip after a forward run however short: the start's own stop record (phase >= 0.2) is not on use_transition_anims, so
+		# it is passed over here and the start's next record (straight to idle) fires; user 2026-09-30: "that forward stop is terrible"
+		if no_forward_stop_anim and res.rt == STOP and state == START and hemi == &"fw":
+			continue
 		var key := _key_for(rec_off)
 		var use: Dictionary = data.transition_use(key, rec_off) if key != "graph_record" else record_use(r)
 		if not _conditions_ok(r, use, ph):
