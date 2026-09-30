@@ -35,13 +35,13 @@
 			"clip": "own-jog-bw-k100",
 			"length": 0.733333,
 			"lib": "frontier_locomotion",
-			"speed": 3.239
+			"speed": 2.368
 		},
 		"actor_b-p-run-bw-lt": {
 			"clip": "own-jog-bw-lt-k100",
 			"length": 0.733333,
 			"lib": "frontier_locomotion",
-			"speed": 3.35
+			"speed": 2.363
 		},
 		"actor_b-p-run-bw-lt^idle": {
 			"clip": "own-stop-bw-lt-k100",
@@ -52,7 +52,7 @@
 			"clip": "own-jog-bw-rt-k100",
 			"length": 0.733333,
 			"lib": "frontier_locomotion",
-			"speed": 3.505
+			"speed": 2.375
 		},
 		"actor_b-p-run-bw-rt^idle": {
 			"clip": "own-stop-bw-rt-k100",
@@ -68,13 +68,13 @@
 			"clip": "own-jog-fw-k100",
 			"length": 0.733333,
 			"lib": "frontier_locomotion",
-			"speed": 3.239
+			"speed": 3.08
 		},
 		"actor_b-p-run-fw-lt": {
 			"clip": "own-jog-fw-lt-k100",
 			"length": 0.733333,
 			"lib": "frontier_locomotion",
-			"speed": 3.505
+			"speed": 3.648
 		},
 		"actor_b-p-run-fw-lt^idle": {
 			"clip": "own-stop-fw-lt-k100",
@@ -85,7 +85,7 @@
 			"clip": "own-jog-fw-rt-k100",
 			"length": 0.733333,
 			"lib": "frontier_locomotion",
-			"speed": 3.35
+			"speed": 3.387
 		},
 		"actor_b-p-run-fw-rt^idle": {
 			"clip": "own-stop-fw-rt-k100",

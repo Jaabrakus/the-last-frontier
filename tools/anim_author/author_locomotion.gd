@@ -17,8 +17,9 @@ const METRICS := "res://animations/actor_b_clip_metrics.json"
 const OUT_LIB := "res://animations_extra/Frontier_Locomotion.res"
 const WIRED := "res://data/anim_author/locomotion_clips.json"
 const FPS := 30.0
-## Seconds the jog takes to slow to a stand in our own stop.
-const STOP_S := 0.7
+## Our own stop: seconds our upper body takes to ease into the graph's stop, and how much faster than the graph's it runs.
+const STOP_S := 0.6
+const STOP_RATE := 1.12
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
 
 var args := {}
@@ -71,23 +72,25 @@ func _bake() -> void:
 		var shift: float = await _best_shift(dir, k)
 		print("jog ", dir, ": sprint shifted ", snappedf(shift, 0.001), " s")
 		jogs[dir] = _blend(dir, k, shift)
-	for pair in [["bw", "fw"], ["bw-lt", "fw-rt"], ["bw-rt", "fw-lt"]]:
-		jogs[pair[0]] = _reversed(jogs[pair[1]])
+	# the backward jogs: the graph's own legs (a forward jog reversed looked wrong: user 2026-09-30) under our upper body, its
+	# arm swing and torso twist on the backward jog's own upright posture
+	for dir in ["bw", "bw-lt", "bw-rt"]:
+		jogs[dir] = _backward(dir, jogs["fw" + dir.trim_prefix("bw")])
 	for dir: String in jogs:
 		var clip: Animation = jogs[dir]
 		out.add_animation(StringName(_name(dir, k)), clip)
 		var sp: Array = await _fk_speed(clip)
 		wired["actor_b-p-run-" + dir] = {"lib": "frontier_locomotion", "clip": _name(dir, k), "speed": snappedf(sp[0], 0.001), "length": snappedf(clip.length, 0.000001)}
 		print("  ", dir, " ", snappedf(sp[0], 0.01), " m/s")
-		# the starts and stops into and out of it: the start the graph's own with the new jog eased in, the stop our own
-		# (the jog slowing to a stand; nothing of the graph's stop but the pose it comes to rest in)
-		var start_name := "actor_b-p-idle^run-" + dir
-		var stop_name := "actor_b-p-run-" + dir + "^idle"
-		var sn := "own-start-%s-k%d" % [dir, int(round(k * 100.0))]
-		var tn := "own-stop-%s-k%d" % [dir, int(round(k * 100.0))]
+		# the start into it: the graph's own with the new jog eased in
+		var start_name: String = "actor_b-p-idle^run-" + dir
+		var sn: String = "own-start-%s-k%d" % [dir, int(round(k * 100.0))]
 		out.add_animation(StringName(sn), _transition(dir, true, clip, start_name))
-		out.add_animation(StringName(tn), _own_stop(clip, stop_name))
 		wired[start_name] = {"lib": "frontier_locomotion", "clip": sn, "length": snappedf(lib.get_animation(start_name).length, 0.000001)}
+		# the stop out of it: the graph's steps, our own upper body and timing
+		var stop_name: String = "actor_b-p-run-" + dir + "^idle"
+		var tn: String = "own-stop-%s-k%d" % [dir, int(round(k * 100.0))]
+		out.add_animation(StringName(tn), _own_stop(clip, stop_name))
 		wired[stop_name] = {"lib": "frontier_locomotion", "clip": tn, "length": snappedf(lib.get_animation(stop_name).length, 0.000001)}
 	print(ResourceSaver.save(out, OUT_LIB, ResourceSaver.FLAG_COMPRESS))
 	var f := FileAccess.open(WIRED, FileAccess.WRITE)
@@ -127,48 +130,127 @@ func _reversed(a: Animation) -> Animation:
 	return r
 
 
-## Our own stop: the jog (from the phase the graph's stop begins in) slowing to a stand over STOP_S seconds and settling into
-## the pose the graph's stop comes to rest in (its last frame: just a standing pose). Runs as long as the graph's stop, which
-## the tables time the state by.
+## Our own stop: the graph's steps (its legs and hips, as they are) with our own upper body and timing. The jog's upper body
+## (its lean, arm swing and torso twist, slowing as the gait does) eases into the graph's stop over STOP_S seconds; the whole
+## stop runs STOP_RATE times as fast, holding its last pose (the standing pose) for the rest of the graph's length, which the
+## tables time the state by.
 func _own_stop(new_jog: Animation, orig_name: String) -> Animation:
 	var orig := lib.get_animation(orig_name)
 	var big := orig.length
 	var phase := _match_phase(orig, 0.0, new_jog)
 	var out := _stamp(Animation.new(), orig)
 	out.length = big
-	out.set_meta(&"authored", "Frontier: the jog slowing to a stand, our own (tools/anim_author/author_locomotion.gd; rests in the pose of %s's last frame)" % orig_name)
+	out.set_meta(&"authored", "Frontier: the graph's steps, our own upper body and timing (tools/anim_author/author_locomotion.gd; %s)" % orig_name)
 	var n := int(round(big * FPS))
-	# the gait's phase over time, slowing to a halt
 	var ph: Array = []
 	var p := phase * new_jog.length
 	for f in n + 1:
-		var t := float(f) / FPS
 		ph.append(p)
-		p += (1.0 - smoothstep(0.0, STOP_S, t)) / FPS
+		p += (1.0 - smoothstep(0.0, STOP_S, float(f) / FPS)) / FPS
+	var upper := _upper_bones()
 	for ti in orig.get_track_count():
 		var type := orig.track_get_type(ti)
 		if type != Animation.TYPE_ROTATION_3D and type != Animation.TYPE_POSITION_3D:
 			continue
 		var path := orig.track_get_path(ti)
+		var bone := String(path.get_concatenated_subnames())
 		var ji := new_jog.find_track(path, type)
 		var tr := out.add_track(type)
 		out.track_set_path(tr, path)
 		for f in n + 1:
 			var t := minf(float(f) / FPS, big)
+			var ts := minf(t * STOP_RATE, big)
 			var w := smoothstep(0.0, STOP_S, t)
-			var tj := fposmod(float(ph[f]), new_jog.length)
+			var mix := upper.has(bone) and ji >= 0
 			if type == Animation.TYPE_ROTATION_3D:
-				var rest: Quaternion = orig.rotation_track_interpolate(ti, big)
-				var q := rest
-				if ji >= 0:
-					q = new_jog.rotation_track_interpolate(ji, tj).slerp(rest, w)
+				var q: Quaternion = orig.rotation_track_interpolate(ti, ts)
+				if mix:
+					q = new_jog.rotation_track_interpolate(ji, fposmod(float(ph[f]), new_jog.length)).slerp(q, w)
 				out.rotation_track_insert_key(tr, t, q)
 			else:
-				var rest_p: Vector3 = orig.position_track_interpolate(ti, big)
-				var v := rest_p
-				if ji >= 0:
-					v = new_jog.position_track_interpolate(ji, tj).lerp(rest_p, w)
-				out.position_track_insert_key(tr, t, v)
+				out.position_track_insert_key(tr, t, orig.position_track_interpolate(ti, ts))
+	return out
+
+
+## The bones of the upper body (the clip metrics' bone set).
+func _upper_bones() -> Dictionary:
+	var out := {}
+	var m: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(METRICS))
+	for b in m.bone_sets.upper:
+		out[String(b)] = true
+	return out
+
+
+## The mean rotation of a track over a clip.
+static func _mean_q(a: Animation, ti: int) -> Quaternion:
+	var acc := Vector4.ZERO
+	var ref := a.rotation_track_interpolate(ti, 0.0)
+	for i in 24:
+		var q := a.rotation_track_interpolate(ti, a.length * float(i) / 24.0)
+		if q.dot(ref) < 0.0:
+			q = Quaternion(-q.x, -q.y, -q.z, -q.w)
+		acc += Vector4(q.x, q.y, q.z, q.w)
+	acc = acc.normalized()
+	return Quaternion(acc.x, acc.y, acc.z, acc.w)
+
+
+## A backward jog: the graph's own (legs, hips, everything below the chest) with the upper body of our forward jog `fwd` worked
+## in: each upper bone's swing about its own mean (how far it moves from where it sits through the cycle) is ours, the mean
+## stays the backward jog's (it stands upright with its hands held in), and the swing is timed against the backward legs
+## as the original's arms are (the time shift whose swing is nearest the original's).
+func _backward(dir: String, fwd: Animation) -> Animation:
+	var bw := lib.get_animation("actor_b-p-run-" + dir)
+	var upper := _upper_bones()
+	var out := _stamp(Animation.new(), bw)
+	out.length = bw.length
+	out.loop_mode = Animation.LOOP_LINEAR
+	out.set_meta(&"authored", "Frontier: the graph's backward legs under our upper body's swing (tools/anim_author/author_locomotion.gd)")
+	# the timing of our swing against the legs: the shift whose swing is nearest the original's over the arms and spine
+	var swing_bones := ["l_shoulder", "r_shoulder", "l_elbow", "r_elbow", "spinea", "spineb", "spinec", "spined"]
+	var best := 1e9
+	var shift := 0.0
+	for i in 48:
+		var sh := bw.length * float(i) / 48.0
+		var cost := 0.0
+		for bone in swing_bones:
+			var path := NodePath("Skeleton3D:" + bone)
+			var bi := bw.find_track(path, Animation.TYPE_ROTATION_3D)
+			var fi := fwd.find_track(path, Animation.TYPE_ROTATION_3D)
+			if bi < 0 or fi < 0:
+				continue
+			var bm := _mean_q(bw, bi)
+			var fm := _mean_q(fwd, fi)
+			for j in 12:
+				var t := bw.length * float(j) / 12.0
+				var db: Quaternion = bm.inverse() * bw.rotation_track_interpolate(bi, t)
+				var df: Quaternion = fm.inverse() * fwd.rotation_track_interpolate(fi, fposmod(t + sh, fwd.length))
+				cost += db.angle_to(df)
+		if cost < best:
+			best = cost
+			shift = sh
+	print("backward ", dir, ": our swing shifted ", snappedf(shift, 0.001), " s")
+	var n := int(round(bw.length * FPS))
+	for ti in bw.get_track_count():
+		var type := bw.track_get_type(ti)
+		if type != Animation.TYPE_ROTATION_3D and type != Animation.TYPE_POSITION_3D:
+			continue
+		var path := bw.track_get_path(ti)
+		var bone := String(path.get_concatenated_subnames())
+		var fi := fwd.find_track(path, type)
+		var tr := out.add_track(type)
+		out.track_set_path(tr, path)
+		var swing := type == Animation.TYPE_ROTATION_3D and upper.has(bone) and fi >= 0
+		var bm := _mean_q(bw, ti) if swing else Quaternion.IDENTITY
+		var fm := _mean_q(fwd, fi) if swing else Quaternion.IDENTITY
+		for f in n + 1:
+			var t := minf(float(f) / FPS, bw.length)
+			if type == Animation.TYPE_ROTATION_3D:
+				var q: Quaternion = bw.rotation_track_interpolate(ti, t)
+				if swing:
+					q = bm * (fm.inverse() * fwd.rotation_track_interpolate(fi, fposmod(t + shift, fwd.length)))
+				out.rotation_track_insert_key(tr, t, q)
+			else:
+				out.position_track_insert_key(tr, t, bw.position_track_interpolate(ti, t))
 	return out
 
 
@@ -451,25 +533,42 @@ func _speed() -> void:
 			print("SPEED %-7s %-6s %.2f m/s" % [dir, r[0], await _clip_speed(ap, ch[1], r[1], len)])
 
 
-## The shift, tried over the sprint's cycle, whose blend at `k` travels at the jog's speed with the planted foot steadiest
-## (the heel curves alone cannot tell a strafe's phase).
+## The shift, tried over the sprint's cycle, whose blend at `k` keeps the jog's own legs in step: the legs' poses (both thighs,
+## knees and ankles) nearest the original jog's over the whole cycle. The graph's forward, forward-left and forward-right
+## jogs start on the same foot phase, and the direction banks blend them at the same moment of the cycle; a shift chosen
+## for each alone (the planted foot's steadiness) put them out of step and the diagonals crossed the legs.
 func _best_shift(dir: String, k: float) -> float:
-	var jog_speed: float = (await _fk_speed(lib.get_animation("actor_b-p-run-" + dir)))[0]
+	var jog := lib.get_animation("actor_b-p-run-" + dir)
 	var spr := lib.get_animation("actor_b-p-sprint-" + dir)
 	var cycle := spr.length / float(int(metrics["actor_b-p-sprint-" + dir].travel.cycles))
 	var best := 1e9
 	var best_s := 0.0
-	var steps := 24
+	var steps := 60
 	for i in steps:
 		var sh := cycle * float(i) / float(steps)
-		var r: Array = await _fk_speed(_blend(dir, k, sh))
-		var cost: float = absf(r[0] - jog_speed) / jog_speed + 2.0 * r[1] / maxf(r[0], 0.5)
+		var clip := _blend(dir, k, sh)
+		var cost := 0.0
+		for j in 24:
+			var t := clip.length * float(j) / 24.0
+			cost += _leg_dist(clip, t, jog, t)
 		if args.has("debug"):
-			print("  shift ", snappedf(sh, 0.001), " speed ", snappedf(r[0], 0.01), " spread ", snappedf(r[1], 0.01), " cost ", snappedf(cost, 0.001))
+			print("  shift ", snappedf(sh, 0.001), " leg distance ", snappedf(cost / 24.0, 0.001))
 		if cost < best:
 			best = cost
 			best_s = sh
 	return best_s
+
+
+## Sum of the angles between the legs' rotations in two clips at two moments.
+func _leg_dist(a: Animation, ta: float, b: Animation, tb: float) -> float:
+	var d := 0.0
+	for bone in ["l_upper_leg", "l_knee", "l_ankle", "r_upper_leg", "r_knee", "r_ankle"]:
+		var path := NodePath("Skeleton3D:" + bone)
+		var i := a.find_track(path, Animation.TYPE_ROTATION_3D)
+		var j := b.find_track(path, Animation.TYPE_ROTATION_3D)
+		if i >= 0 and j >= 0:
+			d += a.rotation_track_interpolate(i, ta).angle_to(b.rotation_track_interpolate(j, tb))
+	return d
 
 
 ## [travel speed, spread] of a clip by the planted heel (see _clip_speed): the clip played on the character (the heels
