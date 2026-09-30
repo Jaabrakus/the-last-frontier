@@ -4361,6 +4361,27 @@
    "from_year": 1761,
    "persona_rule": "family, opinion and seasonal line from the pools",
    "milestone": "M5"
+  },
+  {
+   "id": "npc.wanderer.shinobi",
+   "archetype": "wanderer",
+   "name": "The quiet man from the far East (name to come)",
+   "status": "later",
+   "milestone": "M4",
+   "home": "none (moves along the ridges; never found the same place twice)",
+   "persona": {
+    "family": "none he speaks of",
+    "opinions": [
+     "a track is a letter to your enemy",
+     "iron remembers the hand that forged it"
+    ],
+    "life_lines": [
+     "winter: seen on the ice at dawn, gone by the time anyone walks out to him",
+     "summer: trades a little for rice and salt at the far end of the valley"
+    ]
+   },
+   "design_note": "User 2026-09-29: 'we need like a Japanese ninja npc that will give the user a quest'. He holds the real iron ashiko (item.tool.climbing_claws_iron) and the knowledge behind the woods copies (know.ashiko): a quest line earns his trust, then a lesson and, at its end, an iron pair (or the right to have one forged). The wood claws' description hints at him. Fiction to handle with care: Japan's seclusion edicts (1635) made leaving the country a capital crime, so a Japanese man in 1765 New York can only be a castaway or a man carried off by a foreign ship (real castaways did reach Russia, e.g. Dembei, about 1700); the game says it is its own tale. Old Pieter's version (a Dutch sailor's pair from Dejima) is the rumour the player hears first.",
+   "rule": "Items the player needs come from an NPC (trade, a lesson through the knowledge journal, a quest) or are made by the player; repeated making raises the knowledge to practised and mastered, which opens the better standards (good, fine, masterwork)."
   }
  ],
  "name_pools": {
