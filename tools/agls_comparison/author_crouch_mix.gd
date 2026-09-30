@@ -4,7 +4,7 @@ extends SceneTree
 ## 1 deg at the right moments), so each Frontier frame is matched to its Grounded moment by the legs (a monotonic time warp) and
 ## the upper body is read there: the arms stay in step with Frontier's feet. Bones the Frontier clip does not key (the fingers)
 ## are left out, so the grip keeps the hands. bw-lt and bw-rt take the backward upper body (Grounded has four directions).
-##   bake:  Godot --headless --path . -s tools/agls_comparison/author_crouch_mix.gd -- bake
+##   bake:  Godot --headless --path . -s tools/agls_comparison/author_crouch_mix.gd -- bake [parts=all|torso]
 ##          writes animations_extra/Frontier_Legacy/Frontier_Legacy_Crouch.res (library frontier_legacy_crouch) and wires
 ##          data/anim_author/locomotion_clips.json
 ##   sheet: Godot --path . -s tools/agls_comparison/author_crouch_mix.gd -- sheet out=<dir> [dir=fw]
@@ -141,6 +141,9 @@ func _mix(dir: String) -> Animation:
 			continue
 		var bone := String(out.track_get_path(ti).get_concatenated_subnames())
 		if not upper.has(bone):
+			continue
+		# parts=torso: the spine, neck and head only; the arms (clavicles down) stay Frontier's
+		if str(args.get("parts", "all")) == "torso" and (bone.begins_with("l_") or bone.begins_with("r_")):
 			continue
 		var gi := g.find_track(out.track_get_path(ti), Animation.TYPE_ROTATION_3D)
 		if gi < 0:
