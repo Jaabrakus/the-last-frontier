@@ -42,6 +42,7 @@ const TRIM_LIE_ROT := Vector3(0.0, 0.0, 1.40)
 
 var kind := "spear"                 ## Ammo kind handed back by the pickup.
 var model_kind := "spear"           ## ThrowableModels kind drawn.
+var grade := ""                     ## A made spear's standard (StationPractice), handed back by the pickup.
 var flight := Flight.POINT_FIRST
 var velocity := Vector3.ZERO
 var gravity := 9.8
@@ -381,6 +382,7 @@ func _make_pickup() -> void:
 	pickup = ThrownPickup.new()
 	pickup.kind = kind
 	pickup.model_kind = model_kind
+	pickup.grade = grade
 	pickup.item = self
 	add_child(pickup)
 	rested.emit(pickup)

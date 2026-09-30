@@ -26,6 +26,8 @@ var kind := "spear"
 ## ThrowableModels kind of the item ("tomahawk_pipe" vs "tomahawk"): it goes back to the
 ## weapon that throws that model when there is one with room.
 var model_kind := ""
+## A made spear's standard (StationPractice) handed back with it.
+var grade := ""
 var amount := 1
 var item: Node3D
 ## Walk-over distance from the player's chest.
@@ -110,7 +112,7 @@ func try_give(p: Node) -> bool:
 	var w := find_taker(p, kind, model_kind)
 	if w == null:
 		return false
-	var took := w.add_items(amount)
+	var took := w.add_items_from(amount, model_kind, grade)
 	if took <= 0:
 		return false
 	_taken = true

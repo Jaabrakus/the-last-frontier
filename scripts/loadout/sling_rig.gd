@@ -3158,6 +3158,8 @@ func _sync_player(_dt_s: float, first := false) -> void:
 			var c := int((w as Throwable).count)
 			if not it.is_empty() and int(it.count) != c:
 				set_count(id, c)
+			if w is ThrowableSpear:
+				_restyle_spears(id, w as ThrowableSpear)
 		elif w is Bow:
 			var qid := String(loadout.first_of_kind("quiver").get("id", ""))
 			if qid != "":
@@ -3166,6 +3168,20 @@ func _sync_player(_dt_s: float, first := false) -> void:
 				var qit := loadout.item(qid)
 				if int(qit.state.get("arrows", -1)) != maxi(arrows, 0):
 					set_count(qid, maxi(arrows, 0))
+
+
+## The slung spears and the draw's stand-in show their heads (ThrowableSpear.heads, the next one first: with one in
+## the hand the body shows the others; user 2026-09-29, spears by their heads). Only a changed head rebuilds a mesh.
+func _restyle_spears(item_id: String, w: ThrowableSpear) -> void:
+	var off := 1 if mode_of(item_id) in [Mode.IN_HAND, Mode.HELD, Mode.HOLSTER] else 0
+	var i := 0
+	for e: Entry in entries_of(item_id):
+		for u: Variant in e.units:
+			if i + off < w.heads.size():
+				ThrowableModels.restyle(u as Node3D, ThrowableSpear.model_of(String(w.heads[i + off].head)))
+			i += 1
+		if e.flyer != null and is_instance_valid(e.flyer) and not w.heads.is_empty():
+			ThrowableModels.restyle(e.flyer, ThrowableSpear.model_of(String(w.heads[0].head)))
 
 
 ## A thrown weapon's entry follows the weapon's own model (see _sync_player()): in the hand (HELD: one unit

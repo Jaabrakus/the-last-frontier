@@ -14,6 +14,8 @@ static func capture(w: Weapon) -> Dictionary:
 		s.quiver = (w as Bow).quiver + (w as Bow).held
 	if w is Throwable:
 		s.count = (w as Throwable).count
+	if w is ThrowableSpear:
+		s.heads = (w as ThrowableSpear).heads.duplicate(true)
 	return s
 
 
@@ -29,6 +31,8 @@ static func apply(w: Weapon, s: Dictionary) -> void:
 		b.quiver = int(s.get("quiver", b.quiver))
 	if w is Throwable:
 		(w as Throwable).count = int(s.get("count", (w as Throwable).count))
+	if w is ThrowableSpear:
+		(w as ThrowableSpear).set_heads(s.get("heads", []))
 
 
 ## A short description for prompts: "loaded", "empty", "18 arrows", "2 spears".

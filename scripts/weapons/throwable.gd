@@ -458,6 +458,12 @@ func add_items(n: int) -> int:
 	return took
 
 
+## A thrown one coming back (ThrownPickup): `model` the ThrowableModels kind it flew as, `grade` its made standard.
+## Here as add_items(); ThrowableSpear keeps which head came back.
+func add_items_from(n: int, _model: String, _grade := "") -> int:
+	return add_items(n)
+
+
 func can_take(kind: String) -> bool:
 	return kind == ammo_kind and count < max_count
 

@@ -46,8 +46,19 @@ const BENCH := {
 	"arrows": {"text": "Arrows (6)", "inputs": {"shoots": 2, "flint": 1, "feathers": 1}, "or": {"shoots": "branches"}, "weapon": "bow",
 			"n": 6, "seconds": 8.0, "verb": "Straightening shafts, knapping points and fletching",
 			"detail": "2 straight shoots (or branches), a flint and turkey feathers: 6 fletched arrows into the quiver"},
-	"spear": {"text": "Throwing spear", "inputs": {"pole": 1, "flint": 1}, "weapon": "spear", "n": 1, "seconds": 6.0,
-			"verb": "Shaving a pole and hafting a point", "detail": "a pole and a flint point: a throwing spear"},
+	# throwing spears by their heads (user 2026-09-29, after "I Made Mankind's Oldest Weapons"; ThrowableSpear.HEADS):
+	# "spear" keeps its id (the flint one, as it always was); an iron head comes from the forge (FORGE spear_iron)
+	"spear_wood": {"text": "Throwing spear, fire-hardened", "inputs": {"pole": 1}, "weapon": "spear", "head": "wood", "knife": true,
+			"n": 1, "seconds": 7.0, "verb": "Shaving a pole to a point and hardening it in the coals",
+			"detail": "a pole whittled to a point and fire-hardened: the oldest spear there is (a light hit)"},
+	"spear_bone": {"text": "Throwing spear, bone-tipped", "inputs": {"pole": 1, "bone": 1, "sinew": 1}, "or": {"sinew": "cordage"},
+			"weapon": "spear", "head": "bone", "n": 1, "seconds": 8.0, "verb": "Grinding a bone point, splitting the shaft and binding it in",
+			"detail": "a pole, a leg bone and a binding (sinew, or cordage): a bone-pointed spear"},
+	"spear_antler": {"text": "Throwing spear, antler-tipped", "inputs": {"pole": 1, "antler": 1, "sinew": 1}, "or": {"sinew": "cordage"},
+			"weapon": "spear", "head": "antler", "n": 1, "seconds": 8.0, "verb": "Cutting an antler tine, setting it in the shaft and binding it",
+			"detail": "a pole, an antler tine and a binding: a spear that bites a little harder than bone"},
+	"spear": {"text": "Throwing spear, flint-tipped", "inputs": {"pole": 1, "flint": 1}, "weapon": "spear", "head": "flint", "n": 1, "seconds": 6.0,
+			"verb": "Shaving a pole and hafting a point", "detail": "a pole and a knapped flint blade: a throwing spear"},
 	"darts": {"text": "Atlatl darts (2)", "inputs": {"shoots": 2, "flint": 1, "feathers": 1}, "or": {"shoots": "branches"}, "weapon": "atlatl",
 			"n": 2, "seconds": 7.0, "verb": "Cutting dart shafts, knapping points and fletching",
 			"detail": "2 straight shoots (or branches), a flint and feathers: 2 darts for the atlatl"},
@@ -106,6 +117,9 @@ const FORGE := {
 	"climbing_stakes_iron": {"text": "Climbing spikes, iron", "inputs": {"bar_iron": 1, "charcoal": 1, "rawhide": 1}, "or": {"rawhide": "cordage"},
 			"n": 1, "seconds": 14.0, "verb": "Drawing two square spikes, hardening the points, wrapping the grips",
 			"detail": "a bar of iron, charcoal and a grip wrap: the best climbing spikes there are"},
+	"spear_iron": {"text": "Throwing spear, iron-headed", "weapon": "spear", "head": "iron", "inputs": {"bar_iron": 1, "charcoal": 1, "pole": 1},
+			"n": 1, "seconds": 16.0, "verb": "Drawing a leaf blade and a socket, hafting it on a pole",
+			"detail": "a bar of iron, charcoal and a pole: the trade spear's forged head, the hardest hitting"},
 	"gunlock": {"text": "Gunlock", "inputs": {"bar_iron": 2, "charcoal": 2}, "n": 1, "seconds": 26.0,
 			"verb": "Forging the plate, cock, frizzen and springs, filing and fitting them",
 			"detail": "2 bar iron, 2 charcoal: a flintlock (a flint goes in its cock)"},
@@ -553,6 +567,9 @@ func _table_row(player: Node, id: String, g: Dictionary) -> Dictionary:
 		why = "needs a knife (a flint knife: the knapping stone)"
 	if not _knows(g):
 		why = "you do not know how (Old Pieter, the old hunter, could teach you)"
+	var gw: Variant = (player.get("weapons") as Dictionary).get(String(g.get("weapon", ""))) if g.has("weapon") and player.get("weapons") is Dictionary else null
+	if why == "" and gw is Throwable and (gw as Throwable).count >= (gw as Throwable).max_count:
+		why = "you carry all you can (%d)" % (gw as Throwable).max_count
 	var st := StationPractice.standard_at(StationPractice.makes(_core(), id))
 	if why == "" and st != "plain":
 		return {"id": id, "text": "%s  (%s)" % [String(g.text), st], "ok": true, "detail": String(g.detail)}
@@ -701,6 +718,8 @@ func _bench_why(player: Node, r: Dictionary) -> String:
 				if alt != "":
 					w += " or %s" % BuildSnap._item_word(alt, int(r.inputs[k]))
 				return w
+	if bool(r.get("knife", false)) and not _has_knife(player):
+		return "needs a knife (a flint knife: the knapping stone)"
 	var key := String(r.weapon)
 	if key != "spear" and player.has_method("is_carried") and not bool(player.call("is_carried", key)):
 		return "needs %s" % ("a bow" if key == "bow" else "an atlatl")
@@ -909,8 +928,15 @@ func _bench_make(player: Node, id: String) -> bool:
 	var ok := bridge().work.begin(global_position, "low" if kind == "work_stone" else "table", String(r.verb), float(r.seconds), "", func(done: bool) -> void:
 		if done:
 			var n := int(r.n)
+			var st := StationPractice.note_make(_core(), id)
 			if w is Bow:
 				(w as Bow).add_arrows(n)
+			elif w is ThrowableSpear and r.has("head"):
+				n = 1 if (w as ThrowableSpear).add_spear(String(r.head), st) else 0
+				if player.has_method("is_carried") and not bool(player.call("is_carried", String(r.weapon))):
+					player.call("set_carried", String(r.weapon), true, false)
+				_result(id, true, "You make %s: %s" % [StationPractice.named(st, String(ThrowableSpear.HEADS[r.head].name)), _arms_text(w)], {id: n})
+				return
 			elif w is Throwable:
 				n = (w as Throwable).add_items(n)
 				# a spear made from nothing is the player's (put on the back where it fits)
@@ -994,7 +1020,9 @@ func _gear_make(player: Node, id: String) -> bool:
 		elif done and g.has("weapon"):
 			# a thrown weapon forged: one more carried (it is the player's, if it was not)
 			var w: Variant = (player.get("weapons") as Dictionary).get(String(g.weapon))
-			if w is Throwable:
+			if w is ThrowableSpear and g.has("head"):
+				(w as ThrowableSpear).add_spear(String(g.head), StationPractice.standard_at(StationPractice.makes(_core(), id)))
+			elif w is Throwable:
 				(w as Throwable).add_items(made)
 			if player.has_method("is_carried") and not bool(player.call("is_carried", String(g.weapon))):
 				player.call("set_carried", String(g.weapon), true, false)

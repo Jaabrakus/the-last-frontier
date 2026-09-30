@@ -519,7 +519,8 @@ static func save_items(level: Node) -> Dictionary:
 		var tp := n as ThrownProjectile
 		if tp.collected or tp.is_queued_for_deletion() or not (tp.phase in [ThrownProjectile.Phase.STUCK, ThrownProjectile.Phase.LYING]):
 			continue
-		thrown.append({"kind": tp.kind, "model": tp.model_kind, "flight": int(tp.flight), "phase": int(tp.phase), "xf": xf(tp.global_transform)})
+		thrown.append({"kind": tp.kind, "model": tp.model_kind, "grade": tp.grade, "flight": int(tp.flight), "phase": int(tp.phase),
+				"xf": xf(tp.global_transform)})
 	var torches := []
 	for n in tree.current_scene.find_children("*", "DroppedTorch", true, false):
 		var dt := n as DroppedTorch
@@ -563,6 +564,7 @@ static func load_items(level: Node, d: Dictionary) -> void:
 		var tp := ThrownProjectile.new()
 		tp.kind = String(e.kind)
 		tp.model_kind = String(e.model)
+		tp.grade = String(e.get("grade", ""))
 		tp.flight = int(e.get("flight", 0)) as ThrownProjectile.Flight
 		tp.whoosh = false
 		tp.phase = int(e.phase) as ThrownProjectile.Phase

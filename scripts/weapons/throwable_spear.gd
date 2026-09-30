@@ -8,6 +8,107 @@ extends Throwable
 ## Numbers: experimental hand-thrown spears leave the hand at roughly 12-20 m/s and
 ## still hit hard out to about 20 m (design doc section 1 has the sources); here a
 ## quick throw is 13 m/s and a full wind-up 22 m/s.
+##
+## Heads (user 2026-09-29, after Ben Kilner's "I Made Mankind's Oldest Weapons": "wood spear designs stone spear and
+## etc"): each carried spear has its own head, a fire-hardened wooden point, a bone or antler point, a knapped flint
+## blade or a forged iron one (HEADS), and the standard it was made at (StationPractice). The next one thrown flies
+## with its head's model and strength and comes back as the same spear when picked up; the one in the hand shows
+## its head. Spears from before heads (a save, a rack, the kit) are iron.
+
+## What a head does: `damage` scales the throw's damage (iron 1), `wood_bite` how deep the point sticks in timber (m).
+const HEADS := {
+	"wood": {"damage": 0.55, "wood_bite": 0.02, "name": "fire-hardened spear"},
+	"bone": {"damage": 0.72, "wood_bite": 0.035, "name": "bone-tipped spear"},
+	"antler": {"damage": 0.78, "wood_bite": 0.04, "name": "antler-tipped spear"},
+	"flint": {"damage": 0.9, "wood_bite": 0.05, "name": "flint-tipped spear"},
+	"iron": {"damage": 1.0, "wood_bite": 0.06, "name": "iron-headed spear"},
+}
+## One per carried spear, the next thrown first: {head, standard}.
+var heads: Array = []
+var _shown := "spear"               ## The ThrowableModels kind the hand model shows.
+
+
+static func model_of(head: String) -> String:
+	return "spear" if head == "iron" or head == "" else "spear_" + head
+
+
+static func head_of(model: String) -> String:
+	return "iron" if model == "" or model == "spear" else model.trim_prefix("spear_")
+
+
+## Keeps one head per carried spear (new ones iron: a rack, the kit, an old save).
+func _fit_heads() -> void:
+	while heads.size() < count:
+		heads.append({"head": "iron", "standard": "plain"})
+	while heads.size() > count:
+		heads.pop_back()
+
+
+func set_heads(hs: Variant) -> void:
+	heads = []
+	if hs is Array:
+		for h: Variant in hs:
+			if h is Dictionary and HEADS.has(String((h as Dictionary).get("head", ""))):
+				heads.append({"head": String(h.head), "standard": String((h as Dictionary).get("standard", "plain"))})
+	_fit_heads()
+	show_next()
+
+
+## One more spear with `head`, made at `standard` (the workbench, the knapping stone, the forge). False when full.
+func add_spear(head: String, standard := "plain") -> bool:
+	if count >= max_count or not HEADS.has(head):
+		return false
+	_fit_heads()
+	count += 1
+	heads.append({"head": head, "standard": standard})
+	show_next()
+	return true
+
+
+func add_items(n: int) -> int:
+	_fit_heads()
+	var took := super.add_items(n)
+	_fit_heads()
+	show_next()
+	return took
+
+
+func add_items_from(n: int, model: String, grade := "") -> int:
+	_fit_heads()
+	var took := clampi(n, 0, maxi(max_count - count, 0))
+	for i in took:
+		count += 1
+		heads.append({"head": head_of(model), "standard": grade if grade != "" else "plain"})
+	show_next()
+	return took
+
+
+## The next spear's head ({} when none is carried).
+func next_head() -> Dictionary:
+	_fit_heads()
+	return heads[0] if not heads.is_empty() else {}
+
+
+## The hand model shows the next spear's head (its meshes swapped in place; the markers stay).
+func show_next() -> void:
+	var h := next_head()
+	if h.is_empty() or model == null:
+		return
+	var want := model_of(String(h.head))
+	if want == _shown:
+		return
+	ThrowableModels.restyle(model, want)
+	_shown = want
+
+
+func _setup_model() -> void:
+	show_next()
+
+
+## The next spear drawn shows its own head.
+func _start_draw() -> void:
+	show_next()
+	super._start_draw()
 
 
 func _init() -> void:
@@ -76,10 +177,19 @@ func _init() -> void:
 
 
 func _configure_projectile(p: ThrownProjectile, _origin: Vector3, _dir: Vector3, _speed: float) -> void:
+	# the next spear's head: its model, its strength (a better-made one a little more: StationPractice), its grade
+	var h := next_head()
+	var head := String(h.get("head", "iron"))
+	var st := String(h.get("standard", "plain"))
+	if not heads.is_empty():
+		heads.pop_front()
+	p.model_kind = model_of(head)
+	p.grade = st
+	p.damage *= float(HEADS[head].damage) * (1.0 + (StationPractice.mult(st) - 1.0) * 0.5)
 	p.flight = ThrownProjectile.Flight.POINT_FIRST
 	p.stick_speed = 7.0
 	p.stick_depth = 0.14             # Straw, soft ground.
-	p.stick_depth_wood = 0.06        # A forged point bites a few centimetres into timber.
+	p.stick_depth_wood = float(HEADS[head].wood_bite)   # A forged point bites a few centimetres into timber.
 	p.stick_max_incidence_deg = 70.0
 	p.blunt_damage = 15.0
 	p.whoosh_pitch = 0.62

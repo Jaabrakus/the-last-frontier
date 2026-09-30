@@ -20,6 +20,10 @@ class_name ThrowableModels
 ##                  of the cutting edge), Head (eye centre), COM, Butt (haft end).
 ##   "tomahawk_pipe" pipe tomahawk variant from the same tomahawk.glb (VARIANT_KINDS):
 ##                  same axes and markers, pipe bowl on the poll, plus Mouthpiece.
+##   "spear_wood" / "spear_bone" / "spear_antler" / "spear_flint"
+##                  the throwing spear with a hand-made head (SPEAR_HEADS; user 2026-09-29, after Ben Kilner's "I Made
+##                  Mankind's Oldest Weapons"): spear.glb's own shaft, grip and trim with its iron head cut away
+##                  (_spear_shaft), and the head built here in its place; same axes and markers as "spear".
 ##   "atlatl"       spear-thrower board. Origin at the grip (front end); the board runs
 ##                  back along +Z to the carved hook. Markers: Spur (where the dart's
 ##                  butt sits), Muzzle (tip of a loaded dart), COM.
@@ -57,6 +61,30 @@ static var _scenes := {}
 
 ## A fresh model for `kind` (one of KINDS or VARIANT_KINDS). Never null.
 static func build(kind: String) -> Node3D:
+	var m := _build(kind)
+	m.set_meta("model_kind", kind)
+	return m
+
+
+## Restyles `target` (a model from build()) as `kind` in place: its meshes swapped for the new kind's, its markers and
+## its own transform kept (a spear's head: the one in the hand, the slung pair, the draw's stand-in).
+static func restyle(target: Node3D, kind: String) -> void:
+	if target == null or String(target.get_meta("model_kind", "")) == kind:
+		return
+	var src := _build(kind)
+	for c in target.get_children():
+		if not (c is Marker3D):
+			target.remove_child(c)
+			c.queue_free()
+	for c in src.get_children():
+		if not (c is Marker3D):
+			src.remove_child(c)
+			target.add_child(c)
+	src.free()
+	target.set_meta("model_kind", kind)
+
+
+static func _build(kind: String) -> Node3D:
 	var file := _file_of(kind)
 	var keep: String = VARIANT_KINDS[kind][1] if VARIANT_KINDS.has(kind) else ""
 	var model := _from_glb(file, kind.to_pascal_case() + "Model", keep)
@@ -64,6 +92,7 @@ static func build(kind: String) -> Node3D:
 		return model
 	match file:
 		"spear": return _spear()
+		"spear_wood", "spear_bone", "spear_antler", "spear_flint": return _spear_headed(file.trim_prefix("spear_"))
 		"tomahawk": return _tomahawk()
 		"atlatl": return _atlatl()
 		"atlatl_dart": return _atlatl_dart()
@@ -238,6 +267,96 @@ static func _spear() -> Node3D:
 	_marker(root, "Tip", tip)
 	_marker(root, "COM", Vector3.ZERO)
 	_marker(root, "Butt", Vector3(0, 0, SPEAR_BUTT))
+	return root
+
+
+## The hand-made spear heads (ThrowableSpear.HEADS carries their strength).
+const SPEAR_HEADS: Array[String] = ["wood", "bone", "antler", "flint"]
+## Where spear.glb's iron socket begins (its head runs from here to the point): the cut for the hand-made heads.
+const SPEAR_SOCKET_Z := -0.56
+static var _shaft_mesh: Mesh = null
+
+
+## spear.glb's mesh with every face at or past the iron socket removed (cached): the textured shaft, grip and trim.
+static func _spear_shaft(src: Mesh) -> Mesh:
+	if _shaft_mesh != null:
+		return _shaft_mesh
+	var mdt := MeshDataTool.new()
+	if mdt.create_from_surface(src as ArrayMesh, 0) != OK:
+		return src
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for f in mdt.get_face_count():
+		var keep := true
+		for i in 3:
+			if mdt.get_vertex(mdt.get_face_vertex(f, i)).z < SPEAR_SOCKET_Z + 0.004:
+				keep = false
+		if not keep:
+			continue
+		for i in 3:
+			var v := mdt.get_face_vertex(f, i)
+			st.set_normal(mdt.get_vertex_normal(v))
+			st.set_uv(mdt.get_vertex_uv(v))
+			st.set_tangent(mdt.get_vertex_tangent(v))
+			st.add_vertex(mdt.get_vertex(v))
+	st.set_material(src.surface_get_material(0))
+	_shaft_mesh = st.commit()
+	return _shaft_mesh
+
+
+## A throwing spear with a hand-made `head` (wood, bone, antler, flint) on spear.glb's shaft (the primitive shaft
+## without the GLB). The head runs from the socket to the point at -SPEAR_TIP; blade flats face +/-Y as the iron's.
+static func _spear_headed(head: String) -> Node3D:
+	var root := _from_glb("spear", "Spear%sModel" % head.capitalize())
+	if root:
+		var mi := root.get_node_or_null("Spear") as MeshInstance3D
+		if mi and mi.mesh:
+			mi.mesh = _spear_shaft(mi.mesh)
+	else:
+		root = Node3D.new()
+		root.name = "Spear%sModel" % head.capitalize()
+		_rod(root, Vector3(0, 0, SPEAR_BUTT), Vector3(0, 0, SPEAR_SOCKET_Z), 0.0105, 0.012, _ash())
+		_rod(root, Vector3(0, 0, -0.08), Vector3(0, 0, 0.08), 0.0135, 0.0135, _leather())
+		var tip0 := Vector3(0, 0, -SPEAR_TIP)
+		_marker(root, "Muzzle", tip0)
+		_marker(root, "Tip", tip0)
+		_marker(root, "COM", Vector3.ZERO)
+		_marker(root, "Butt", Vector3(0, 0, SPEAR_BUTT))
+	var z0 := SPEAR_SOCKET_Z + 0.03
+	var tip := -SPEAR_TIP
+	var sinew := _mat("sinew_wrap", Color(0.78, 0.7, 0.55), 0.0, 0.85)
+	match head:
+		"wood":
+			# the shaft whittled on to a point, the last hand's breadth hardened black in the coals
+			_rod(root, Vector3(0, 0, z0), Vector3(0, 0, -0.69), 0.0118, 0.0068, _mat("ash_whittled", Color(0.6, 0.45, 0.28), 0.0, 0.7), 10)
+			_rod(root, Vector3(0, 0, -0.69), Vector3(0, 0, -0.745), 0.0068, 0.0042, _mat("ash_scorched", Color(0.3, 0.2, 0.12), 0.0, 0.8), 10)
+			_rod(root, Vector3(0, 0, -0.745), Vector3(0, 0, tip), 0.0042, 0.0004, _mat("ash_charred", Color(0.08, 0.06, 0.05), 0.0, 0.95), 10)
+		"bone":
+			# a split cannon bone ground to a slender point, set in the split shaft and bound with sinew
+			var bone := _mat("bone_point", Color(0.78, 0.73, 0.6), 0.0, 0.62)
+			var p := _rod(root, Vector3(0, 0, z0 + 0.02), Vector3(0, 0, -0.66), 0.0105, 0.0098, bone, 7)
+			p.scale = Vector3(1.0, 1.0, 0.8)
+			_rod(root, Vector3(0, 0, -0.66), Vector3(0, 0, tip), 0.0098, 0.0005, bone, 7).scale = Vector3(1.0, 1.0, 0.8)
+			_rod(root, Vector3(0, 0, z0 + 0.03), Vector3(0, 0, z0 - 0.04), 0.0128, 0.0118, sinew, 10)
+		"antler":
+			# an antler tine, a little curved, its root set in the shaft and bound with sinew; paler toward the tip
+			var ant := _mat("antler_tine", Color(0.46, 0.37, 0.28), 0.0, 0.62)
+			var ant_tip := _mat("antler_tip", Color(0.8, 0.74, 0.61), 0.0, 0.5)
+			var a := Vector3(0, 0, z0 + 0.02)
+			var b := Vector3(0, 0.004, -0.68)
+			var c := Vector3(0, 0.011, tip + 0.004)
+			_rod(root, a, b, 0.0125, 0.0092, ant, 9)
+			_rod(root, b, c, 0.0092, 0.0008, ant_tip, 9)
+			_rod(root, Vector3(0, 0, z0 + 0.03), Vector3(0, 0, z0 - 0.045), 0.0132, 0.0122, sinew, 10)
+		"flint":
+			# a knapped leaf-shaped chert blade, flat (its faces to +/-Y), set in a split socket and bound with sinew
+			var chert := _mat("chert_blade", Color(0.42, 0.38, 0.33), 0.05, 0.34)
+			var shoulder := -0.675
+			var stem := _rod(root, Vector3(0, 0, z0 + 0.01), Vector3(0, 0, shoulder), 0.008, 0.024, chert, 6)
+			stem.scale = Vector3(1.0, 1.0, 0.3)
+			var blade := _rod(root, Vector3(0, 0, shoulder), Vector3(0, 0, tip), 0.024, 0.0006, chert, 6)
+			blade.scale = Vector3(1.0, 1.0, 0.3)
+			_rod(root, Vector3(0, 0, z0 + 0.035), Vector3(0, 0, z0 - 0.04), 0.0135, 0.0125, sinew, 10)
 	return root
 
 
