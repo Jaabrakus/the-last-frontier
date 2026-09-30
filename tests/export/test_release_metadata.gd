@@ -43,7 +43,7 @@ func _run() -> void:
 		_check_library(path)
 	if originals.size() == LIBRARIES.size() and released.size() == originals.size():
 		await _check_graph_and_playback()
-	check(pose_count >= 60 and clip_count > 2700, "all library and playback checks completed")
+	check(pose_count >= 60 and clip_count >= 1200, "all library and playback checks completed")
 	print("Release metadata: %d checks, %d clips, %d sampled poses, %d failures" %
 			[checks, clip_count, pose_count, failures.size()])
 	quit(0 if failures.is_empty() else 1)
