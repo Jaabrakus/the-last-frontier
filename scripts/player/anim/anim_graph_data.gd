@@ -199,7 +199,7 @@ func apply_carry_patches() -> void:
 			var put: Array = []
 			if rule.has("copy_from"):
 				# (copy_mode: from that mode's role instead of the same mode's: the walk's backward roles from the sprint's)
-				var src: Dictionary = graph.roles.get("%s/%s/%s" % [rule.copy_from, rule.get("copy_mode", parts[1]), parts[2]], {})
+				var src: Dictionary = graph.roles.get("%s/%s/%s" % [rule.copy_from, rule.get("copy_mode", parts[1]), rule.get("copy_role", parts[2])], {})
 				for l: Dictionary in src.get("layers", []):
 					if slots.has(String(l.get("slot", ""))):
 						put.append(l)

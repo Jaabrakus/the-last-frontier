@@ -398,6 +398,29 @@
 		},
 		{
 			"copy_from": "pistol",
+			"copy_mode": "run",
+			"copy_role": "fw",
+			"modes": [
+				"run"
+			],
+			"roles_except": [],
+			"roles_only": [
+				"stop_fw",
+				"stop_fw_lt",
+				"stop_fw_rt",
+				"stop_bw",
+				"stop_bw_lt",
+				"stop_bw_rt"
+			],
+			"slots": [
+				"arms",
+				"arms_add"
+			],
+			"weapon": "pistol",
+			"why": "the pistol stays up through the run's stop (user 2026-09-30: \"instead of the pistol down have it in the pistol up for that split second on the pistol stop\"): the run's own arm on the stops (the graph's stop lowers it to the idle arm)"
+		},
+		{
+			"copy_from": "pistol",
 			"modes": [
 				"crouch"
 			],

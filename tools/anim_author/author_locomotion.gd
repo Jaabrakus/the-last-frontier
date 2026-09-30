@@ -24,6 +24,11 @@ const STOP_RATE := 1.12
 const STOP_ARMS := 0.4
 const STOP_GIRDLE := 0.25
 const STOP_SPINE := 0.7
+## The forward stops keep almost none of the graph's upper body (user 2026-09-30: "the stop animations going forward I do not like at
+## all, make it similar to the back"): its skid throws the arms out and leans the chest back; ours is the jog's upper body settling
+## to the standing pose, as the backward one does.
+const STOP_FW_UPPER := 0.08
+const STOP_FW_SPINE := 0.2
 ## The jump and fall arms: the share of the graph's arm movement the left arm keeps (the right keeps all of it), and both arms' lag behind the body (s).
 const ARMS_SWING := 0.7
 const ARMS_LAG := 0.07
@@ -218,6 +223,9 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array,
 			"weapon": "musket", "modes": ["crouch"], "roles_except": [], "roles_only": ["idle"], "slots": ["arms"], "layers": [idle_layer]},
 			{"why": "the rifle crouch walk forward, medium ready: the same, the arms turned further (the forward crouch walk's torso is more upright)",
 			"weapon": "musket", "modes": ["crouch"], "roles_except": ["idle"], "roles_only": FWD_ROLES, "slots": ["arms"], "layers": [mid_fw_layer]},
+			{"why": "the pistol stays up through the run's stop (user 2026-09-30: \"instead of the pistol down have it in the pistol up for that split second on the pistol stop\"): the run's own arm on the stops (the graph's stop lowers it to the idle arm)",
+			"weapon": "pistol", "modes": ["run"], "roles_except": [], "roles_only": ["stop_fw", "stop_fw_lt", "stop_fw_rt", "stop_bw", "stop_bw_lt", "stop_bw_rt"],
+			"slots": ["arms", "arms_add"], "copy_from": "pistol", "copy_mode": "run", "copy_role": "fw"},
 			{"why": "the tomahawk crouches like the pistol (user 2026-09-30): the pistol's crouch arm on every role",
 			"weapon": "tomahawk", "modes": ["crouch"], "roles_except": [], "slots": ["arms", "arms_add"], "copy_from": "pistol"},
 		],
@@ -569,7 +577,7 @@ func _own_stop(new_jog: Animation, orig_name: String) -> Animation:
 		var tr := out.add_track(type)
 		out.track_set_path(tr, path)
 		# (the graph's stop throws the arms out as it settles: ours moves them less, about the standing pose it rests in)
-		var damp := _stop_damp(bone) if upper.has(bone) else 1.0
+		var damp := _stop_damp(bone, "run-fw" in orig_name) if upper.has(bone) else 1.0
 		var rest_q := orig.rotation_track_interpolate(ti, big) if type == Animation.TYPE_ROTATION_3D else Quaternion.IDENTITY
 		for f in n + 1:
 			var t := minf(float(f) / FPS, big)
@@ -590,16 +598,16 @@ func _own_stop(new_jog: Animation, orig_name: String) -> Animation:
 
 ## How much of the graph's stop movement our stop keeps, by bone: the arms much less, the shoulder girdle less still, the
 ## spine a little less (user 2026-09-30: "we don't move the arms as much").
-static func _stop_damp(bone: String) -> float:
+static func _stop_damp(bone: String, forward := false) -> float:
 	for part in ["clavicle", "scapula", "deltoid", "trap"]:
 		if part in bone:
-			return STOP_GIRDLE
+			return STOP_FW_UPPER if forward else STOP_GIRDLE
 	for part in ["shoulder", "elbow", "wrist", "forarm"]:
 		if part in bone:
-			return STOP_ARMS
+			return STOP_FW_UPPER if forward else STOP_ARMS
 	for part in ["spine", "chest", "neck"]:
 		if part in bone:
-			return STOP_SPINE
+			return STOP_FW_SPINE if forward else STOP_SPINE
 	return 1.0
 
 
