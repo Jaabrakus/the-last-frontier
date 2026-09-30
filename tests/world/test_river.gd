@@ -222,6 +222,12 @@ func _drinking() -> void:
 		edge += 0.5
 	_put(Vector3(cx + edge + 1.2, 0.0, z), Vector3.LEFT)
 	await _fr(20)
+	p.pitch = 0.0
+	await _fr(5)
+	_expect(river.interact_prompt(p) == "", "drinking: not offered looking straight ahead")
+	p.pitch = -0.7   # looking down at the water
+	await _fr(5)
+	_expect(river.interact_hold_only(), "drinking: a hold-E interaction (never the tap's)")
 	var prompt := river.interact_prompt(p)
 	_expect(prompt == "Drink from the river" and river.distance_from(p.global_position) < RiverWater.DRINK_REACH,
 			"drinking: at the water's edge E offers \"%s\"" % prompt)

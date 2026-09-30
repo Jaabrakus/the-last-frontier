@@ -196,6 +196,8 @@ func _preview(clips: Dictionary) -> void:
 		solver.space = str(clip.get("space", "body"))
 		var len_s := float(clip.length)
 		var moments: Array = [0.0, 0.25, 0.5, 0.75, 1.0] if name == "paddle_stroke" else [0.0, 0.5]
+		if name in ["paddle_crouch_l", "paddle_stroke_l", "paddle_crouch"] and not args.has("all"):
+			continue
 		var views := {"side": [Vector3(-2.9, 0.95, 0.4), Vector3(0, 0.75, 0.4)],
 				"front": [Vector3(-1.2, 1.2, 2.6), Vector3(0, 0.75, 0.3)],
 				"back": [Vector3(-1.4, 1.5, -2.5), Vector3(0, 0.85, 0.4)]}
@@ -249,6 +251,7 @@ func _check(clips: Dictionary) -> void:
 		var worst := INF
 		var worst_t := 0.0
 		var worst_head := INF
+		var head_top := -INF
 		var steps := 24
 		for i in steps + 1:
 			var t := float(clip.length) * float(i) / float(steps)
@@ -258,6 +261,7 @@ func _check(clips: Dictionary) -> void:
 			for bn: String in SPINE_LINE:
 				line.append(sk.get_bone_global_pose(sk.find_bone(bn)).origin)
 			var head := sk.get_bone_global_pose(sk.find_bone("headb")).origin
+			head_top = maxf(head_top, head.y)
 			var lp := sk.get_bone_global_pose(sk.find_bone("l_palm")).origin
 			var rp := sk.get_bone_global_pose(sk.find_bone("r_palm")).origin
 			var tw: Transform3D = solver.tool_world

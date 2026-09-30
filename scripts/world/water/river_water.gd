@@ -19,7 +19,7 @@ extends Node3D
 ##   wading    over the ankles the player slows, WADE_SLOW.x of a run at WADE_DEPTH.x of water to .y at .y (chest
 ##             deep): FrontierPlayer.drag_speed_cap, as FootDrag and the wheelbarrow cap it (never over a cap of
 ##             theirs, and let go on the bank); splashes about the legs as they go
-##   drinking  E at the water's edge (PlayerInteractor's "any other interactable": "Drink from the river"): kneels at
+##   drinking  hold E at the water's edge, looking down at it (PlayerInteractor's "any other interactable": "Drink from the river"): kneels at
 ##             it (FrontierPlayer.begin_kneel, the search-low clips), DRINK_S s, a drink (SurvivalFood.drink_water when
 ##             thirst is on); moving gets up. Not offered with fishing gear out (FishingGear.gear_out)
 ## Headless (tests): no meshes; the water, the wading and the drinking all the same.
@@ -42,6 +42,8 @@ const RAPID_SLOW := 0.75
 const WADE_DEPTH := Vector2(0.15, 1.2)
 const WADE_SLOW := Vector2(0.85, 0.4)
 const SPLASH_S := 0.32
+## The camera pitch (rad; down is negative) at which they are looking down at the water: the drink is offered from here.
+const LOOK_DOWN_RAD := -0.4
 const DRINK_REACH := 2.4
 const DRINK_S := 2.6
 const OUT_S := 1.3
@@ -365,6 +367,9 @@ func _update_offer() -> void:
 	_offer = {}
 	if drinking or player.is_dead or player.riding != null or player.climbing != null or FishingGear.gear_out(player):
 		return
+	# offered when they look down at the water (user 2026-09-29), never from a boat, where E is getting out
+	if player.pitch > LOOK_DOWN_RAD or BoatRider.of(player) != null:
+		return
 	var pos := player.global_position
 	var z := pos.z
 	var zr := WorldRiver.z_range()
@@ -394,7 +399,8 @@ func interact_point() -> Vector3:
 	return _offer.get("point", Vector3.INF)
 
 
-## Drinking is a hold-E thing (user 2026-09-29): in the list a hold brings up, never the tap's prompt.
+## Drinking is a hold-E interaction (user 2026-09-29: "drinking is a hold E, and when you look down an interaction icon shows like the other
+## times"): never the tap's, in the list a hold brings up, its "Hold E" hint showing when they look down at the water.
 func interact_hold_only() -> bool:
 	return true
 

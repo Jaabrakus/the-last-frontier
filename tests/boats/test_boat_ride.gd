@@ -96,7 +96,7 @@ func _run() -> void:
 	# free to move about the floor, carried by the boat, held in by the gunwales
 	var l0 := b.to_local(player.global_position)
 	player.yaw = b.rotation.y
-	player.rotation.y = b.rotation.y + PI   # facing along the boat (the player's forward is -Z)
+	player.yaw = b.rotation.y + PI   # facing along the boat (the player's forward is -Z)
 	Input.action_press("move_forward")
 	await _frames(90)
 	Input.action_release("move_forward")
@@ -124,23 +124,50 @@ func _run() -> void:
 	Input.action_release("crouch")
 	await _frames(40)
 	_expect(b.rider.mode == "paddle" and player.kneeling == b.rider and not player.is_crouching, "C again: up to the paddle (%s)" % b.rider.mode)
-	# at the edge Space is over the side and out
+	# Space hops out over the side they face, from anywhere in the boat (no edge to find)
 	Input.action_press("crouch")
 	await _frames(4)
 	Input.action_release("crouch")
 	await _frames(20)
-	_expect(b.rider.mode == "crouch", "crouched again to try the edge")
-	var hh := b.rider.floor_half()
-	player.global_position = b.to_global(Vector3(hh.x, b.floor_y(), 0.0))
+	_expect(b.rider.mode == "crouch" and player.is_crouching, "crouched again to try the hop")
+	player.global_position = b.to_global(Vector3(0.0, b.floor_y(), 0.3))   # the middle of the boat
 	await _frames(3)
+	player.yaw = atan2(-b.right().x, -b.right().z)                         # facing the right side
+	await _frames(2)
 	Input.action_press("jump")
 	await _frames(3)
 	Input.action_release("jump")
 	await _frames(4)
-	_expect(not b.rider.aboard() and player.aboard == null and player.kneeling == null, "Space at the gunwale jumps them out of the boat")
+	_expect(not b.rider.aboard() and player.aboard == null and player.kneeling == null, "Space from the middle hops them out of the boat")
 	_expect(player.velocity.y > 0.5 or not player.is_on_floor(), "with a hop (vy %.1f)" % player.velocity.y)
 	await _frames(60)
-	_expect(b.to_local(player.global_position).length() > b.num("beam") * 0.5, "and they land outside it (%.1f m from its middle)" % b.to_local(player.global_position).length())
+	var lo := b.to_local(player.global_position)
+	_expect(lo.x > b.num("beam") * 0.5, "over the side they faced, the right (x %.2f)" % lo.x)
+	# and on the bank, facing the boat, Space hops in, crouched
+	var bk := b.to_global(Vector3(b.num("beam") * 0.5 + 1.1, 0.0, 0.0))
+	player.global_position = Vector3(bk.x, FrontierTerrain.height_at(bk.x, bk.z) + 0.05, bk.z)
+	player.velocity = Vector3.ZERO
+	await _frames(20)
+	var toward := b.global_position - player.global_position
+	toward.y = 0.0
+	player.yaw = atan2(-toward.x, -toward.z)   # facing the boat
+	await _frames(3)
+	Input.action_press("jump")
+	await _frames(3)
+	Input.action_release("jump")
+	await _frames(30)
+	_expect(b.rider.aboard() and b.rider.mode == "crouch" and player.is_crouching, "Space on the bank facing the boat hops them in, crouched")
+	var lin := b.to_local(player.global_position)
+	_expect(absf(lin.x) <= b.rider.floor_half().x + 0.05 and absf(lin.y - b.floor_y()) < 0.3, "landing on its floor (x %.2f, y %.2f)" % [lin.x, lin.y])
+	# C toggles, and nobody stands: a sprint or jump key does not stand them up in the boat
+	Input.action_press("sprint")
+	Input.action_press("move_forward")
+	await _frames(30)
+	Input.action_release("sprint")
+	Input.action_release("move_forward")
+	_expect(player.is_crouching and b.rider.mode == "crouch", "they stay crouched whatever they press (no standing in a boat)")
+	b.rider.leave()
+	await _frames(5)
 	# get out
 	b.rider.leave()
 	await _frames(5)
