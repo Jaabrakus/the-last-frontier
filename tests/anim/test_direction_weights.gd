@@ -55,7 +55,10 @@ func run(ctx: AnimTestContext) -> void:
 			continue
 		for hem in ["fw", "bw"]:
 			var hr: Dictionary = rec.hemis[hem]
-			var clips: Array = hr.clips
+			# (a clip our own stands in for, AnimGraphData.apply_clip_overrides: the oracle plays the one the tree plays)
+			var clips: Array = (hr.clips as Array).map(func(c: String) -> String:
+					var q := String(h.data.godot_anim(c))
+					return q if h.data.override_libraries().has(q.get_slice("/", 0)) else c)
 			var bones := {}
 			for c in clips:
 				for b in h.rig.keyed_bones(String(c)):

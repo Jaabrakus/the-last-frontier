@@ -1,0 +1,561 @@
+extends SceneTree
+## This project's own unarmed jog (user 2026-09-30: "we use the sprint but matching the jog rhythm for the jog, so not the
+## same dramatic swings"). The sprint's motion, retimed onto the jog's stride and phase-matched to its feet, then eased
+## part of the way back to the jog's own pose (`k`: 1 is the sprint retimed, 0 the jog): the arms, torso and legs carry
+## the sprint's shapes with less of its drive.
+##   variants: Godot --headless --path . -s tools/anim_author/author_locomotion.gd -- bake [k=0.55,0.65,0.75]
+##             writes animations_extra/Frontier_Locomotion.res (library frontier_locomotion, clips "own-jog-<dir>-k<pct>")
+##   speed:    Godot --headless --path . -s tools/anim_author/author_locomotion.gd -- speed [dir=fw,fw-lt,fw-rt] [k=0.75]
+##             the travel speed the planted foot gives each variant (the jog and sprint too, as the yardstick)
+##   sheet:    Godot --path . -s tools/anim_author/author_locomotion.gd -- sheet out=<dir> [dir=fw] [k=0.55,0.65,0.75]
+##             frames of the jog, each variant and the sprint, side view, at the same moments of the gait cycle
+## The feet: each direction's sprint is shifted in time until its heel heights (the clip metrics) follow the jog's over
+## the cycle; the sprint's two gait cycles (1.33 s) become two of the jog's (0.73 s each).
+
+const CLIPS := "res://animations/Actor_B.res"
+const METRICS := "res://animations/actor_b_clip_metrics.json"
+const OUT_LIB := "res://animations_extra/Frontier_Locomotion.res"
+const WIRED := "res://data/anim_author/locomotion_clips.json"
+const FPS := 30.0
+## Seconds the jog takes to slow to a stand in our own stop.
+const STOP_S := 0.7
+const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
+
+var args := {}
+var lib: AnimationLibrary
+var metrics := {}
+var _rig: Skeleton3D
+var _ap: AnimationPlayer
+var wired := {}
+
+
+func _initialize() -> void:
+	for a in OS.get_cmdline_user_args():
+		var s := a.trim_prefix("--")
+		args[s.get_slice("=", 0)] = s.substr(s.find("=") + 1) if "=" in s else true
+	lib = load(CLIPS) as AnimationLibrary
+	metrics = JSON.parse_string(FileAccess.get_file_as_string(METRICS)).clips
+	if args.has("bake"):
+		await _bake()
+	elif args.has("sheet"):
+		await _sheet()
+	elif args.has("strip"):
+		await _strip()
+	elif args.has("speed"):
+		await _speed()
+	quit()
+
+
+func _ks() -> Array:
+	var out: Array = []
+	for s in str(args.get("k", "0.55,0.65,0.75")).split(",", false):
+		out.append(float(s))
+	return out
+
+
+static func _name(dir: String, k: float) -> String:
+	return "own-jog-%s-k%d" % [dir, int(round(k * 100.0))]
+
+
+func _bake() -> void:
+	var ch := _character()
+	_rig = ch[1]
+	_ap = ch[2]
+	_ap.speed_scale = 0.0
+	var out := AnimationLibrary.new()
+	var k: float = _ks().back()
+	# the forward jogs are the sprint's (see the header); the backward ones are those played in reverse (a backward jog
+	# is the forward one run the other way: the backward-left strafe is the forward-right one reversed, and so on)
+	var jogs := {}
+	for dir in ["fw", "fw-lt", "fw-rt"]:
+		var shift: float = await _best_shift(dir, k)
+		print("jog ", dir, ": sprint shifted ", snappedf(shift, 0.001), " s")
+		jogs[dir] = _blend(dir, k, shift)
+	for pair in [["bw", "fw"], ["bw-lt", "fw-rt"], ["bw-rt", "fw-lt"]]:
+		jogs[pair[0]] = _reversed(jogs[pair[1]])
+	for dir: String in jogs:
+		var clip: Animation = jogs[dir]
+		out.add_animation(StringName(_name(dir, k)), clip)
+		var sp: Array = await _fk_speed(clip)
+		wired["actor_b-p-run-" + dir] = {"lib": "frontier_locomotion", "clip": _name(dir, k), "speed": snappedf(sp[0], 0.001), "length": snappedf(clip.length, 0.000001)}
+		print("  ", dir, " ", snappedf(sp[0], 0.01), " m/s")
+		# the starts and stops into and out of it: the start the graph's own with the new jog eased in, the stop our own
+		# (the jog slowing to a stand; nothing of the graph's stop but the pose it comes to rest in)
+		var start_name := "actor_b-p-idle^run-" + dir
+		var stop_name := "actor_b-p-run-" + dir + "^idle"
+		var sn := "own-start-%s-k%d" % [dir, int(round(k * 100.0))]
+		var tn := "own-stop-%s-k%d" % [dir, int(round(k * 100.0))]
+		out.add_animation(StringName(sn), _transition(dir, true, clip, start_name))
+		out.add_animation(StringName(tn), _own_stop(clip, stop_name))
+		wired[start_name] = {"lib": "frontier_locomotion", "clip": sn, "length": snappedf(lib.get_animation(start_name).length, 0.000001)}
+		wired[stop_name] = {"lib": "frontier_locomotion", "clip": tn, "length": snappedf(lib.get_animation(stop_name).length, 0.000001)}
+	print(ResourceSaver.save(out, OUT_LIB, ResourceSaver.FLAG_COMPRESS))
+	var f := FileAccess.open(WIRED, FileAccess.WRITE)
+	f.store_string(JSON.stringify({"about": "Clips that stand in for the graph's own (AnimGraphData.apply_clip_overrides): the graph clip name -> the library and clip played instead, its measured travel speed (m/s, tools/anim_author/author_locomotion.gd) and length (s). The plant phases and the rest of the metrics stay the original clip's.", "clips": wired}, "\t") + "\n")
+	f.close()
+
+
+## A clip of ours carries the asset id and attribution of the clip it is made from (the baked bank clips keep their sources'
+## ids, and a clip of ours has to name one).
+static func _stamp(a: Animation, from: Animation) -> Animation:
+	for m in [&"native_asset_id", &"source_attribution"]:
+		if from.has_meta(m):
+			a.set_meta(m, from.get_meta(m))
+	return a
+
+
+## A clip played backwards (a loop stays a loop).
+func _reversed(a: Animation) -> Animation:
+	var r := _stamp(Animation.new(), a)
+	r.length = a.length
+	r.loop_mode = a.loop_mode
+	r.set_meta(&"authored", "Frontier: a forward jog played backwards (tools/anim_author/author_locomotion.gd)")
+	var n := int(round(a.length * FPS))
+	for ti in a.get_track_count():
+		var type := a.track_get_type(ti)
+		if type != Animation.TYPE_ROTATION_3D and type != Animation.TYPE_POSITION_3D:
+			continue
+		var tr := r.add_track(type)
+		r.track_set_path(tr, a.track_get_path(ti))
+		for f in n + 1:
+			var t := minf(float(f) / FPS, a.length)
+			var src := fposmod(a.length - t, a.length) if t < a.length else 0.0
+			if type == Animation.TYPE_ROTATION_3D:
+				r.rotation_track_insert_key(tr, t, a.rotation_track_interpolate(ti, src))
+			else:
+				r.position_track_insert_key(tr, t, a.position_track_interpolate(ti, src))
+	return r
+
+
+## Our own stop: the jog (from the phase the graph's stop begins in) slowing to a stand over STOP_S seconds and settling into
+## the pose the graph's stop comes to rest in (its last frame: just a standing pose). Runs as long as the graph's stop, which
+## the tables time the state by.
+func _own_stop(new_jog: Animation, orig_name: String) -> Animation:
+	var orig := lib.get_animation(orig_name)
+	var big := orig.length
+	var phase := _match_phase(orig, 0.0, new_jog)
+	var out := _stamp(Animation.new(), orig)
+	out.length = big
+	out.set_meta(&"authored", "Frontier: the jog slowing to a stand, our own (tools/anim_author/author_locomotion.gd; rests in the pose of %s's last frame)" % orig_name)
+	var n := int(round(big * FPS))
+	# the gait's phase over time, slowing to a halt
+	var ph: Array = []
+	var p := phase * new_jog.length
+	for f in n + 1:
+		var t := float(f) / FPS
+		ph.append(p)
+		p += (1.0 - smoothstep(0.0, STOP_S, t)) / FPS
+	for ti in orig.get_track_count():
+		var type := orig.track_get_type(ti)
+		if type != Animation.TYPE_ROTATION_3D and type != Animation.TYPE_POSITION_3D:
+			continue
+		var path := orig.track_get_path(ti)
+		var ji := new_jog.find_track(path, type)
+		var tr := out.add_track(type)
+		out.track_set_path(tr, path)
+		for f in n + 1:
+			var t := minf(float(f) / FPS, big)
+			var w := smoothstep(0.0, STOP_S, t)
+			var tj := fposmod(float(ph[f]), new_jog.length)
+			if type == Animation.TYPE_ROTATION_3D:
+				var rest: Quaternion = orig.rotation_track_interpolate(ti, big)
+				var q := rest
+				if ji >= 0:
+					q = new_jog.rotation_track_interpolate(ji, tj).slerp(rest, w)
+				out.rotation_track_insert_key(tr, t, q)
+			else:
+				var rest_p: Vector3 = orig.position_track_interpolate(ti, big)
+				var v := rest_p
+				if ji >= 0:
+					v = new_jog.position_track_interpolate(ji, tj).lerp(rest_p, w)
+				out.position_track_insert_key(tr, t, v)
+	return out
+
+
+## The phase (0..1) of `jog` whose pose is nearest the pose of `a` at `at`.
+func _match_phase(a: Animation, at: float, jog: Animation) -> float:
+	var best := 1e9
+	var phase := 0.0
+	for i in 44:
+		var u := float(i) / 44.0
+		var d := _pose_dist(a, clampf(at, 0.0, a.length - 0.001), jog, u * jog.length)
+		if d < best:
+			best = d
+			phase = u
+	return phase
+
+
+## Seconds to shift the sprint clip so its feet meet the jog's: the two heel-height curves (both feet) over one gait
+## cycle, the jog's against each of the sprint's two cycles, scaled to the same range; the shift with the least
+## difference. Returns seconds into the sprint clip where the jog's cycle begins.
+func _phase_shift(jog: String, sprint: String) -> float:
+	var hj: Dictionary = metrics[jog].heel_z
+	var hs: Dictionary = metrics[sprint].heel_z
+	var sl: float = lib.get_animation(sprint).length
+	var cycle := sl / float(int(metrics[sprint].travel.cycles))
+	var best := 1e9
+	var best_s := 0.0
+	for i in 200:
+		var u := float(i) / 200.0
+		var err := 0.0
+		for foot in ["l", "r"]:
+			var a: Array = _norm(hj[foot])
+			var b: Array = _norm(hs[foot])
+			for j in 24:
+				var p := float(j) / 24.0
+				err += pow(_samp(a, p) - _samp(b, fposmod(u + p, 1.0) / float(int(metrics[sprint].travel.cycles))), 2.0)
+		if err < best:
+			best = err
+			best_s = u * cycle
+	return best_s
+
+
+## A heel-height curve as zero mean and unit spread (the last sample repeats the first: dropped).
+static func _norm(v: Array) -> Array:
+	var a: Array = v.slice(0, v.size() - 1)
+	var mean := 0.0
+	for x in a:
+		mean += float(x)
+	mean /= a.size()
+	var sd := 0.0
+	for x in a:
+		sd += pow(float(x) - mean, 2.0)
+	sd = maxf(sqrt(sd / a.size()), 1e-4)
+	return a.map(func(x: float) -> float: return (x - mean) / sd)
+
+
+## A looped curve at phase p in [0, 1).
+static func _samp(a: Array, p: float) -> float:
+	var f := fposmod(p, 1.0) * a.size()
+	var i := int(floor(f))
+	var w := f - i
+	return lerpf(float(a[i % a.size()]), float(a[(i + 1) % a.size()]), w)
+
+
+## One clip: the jog's two cycles long, every bone the sprint's, eased back toward the jog by (1 - k).
+func _blend(dir: String, k: float, shift: float) -> Animation:
+	var jog := lib.get_animation("actor_b-p-run-" + dir)
+	var spr := lib.get_animation("actor_b-p-sprint-" + dir)
+	var cycles := int(metrics["actor_b-p-sprint-" + dir].travel.cycles)
+	var cyc := spr.length / float(cycles)
+	var length := jog.length
+	var anim := _stamp(Animation.new(), spr)
+	anim.length = length
+	anim.loop_mode = Animation.LOOP_LINEAR
+	anim.set_meta(&"authored", "Frontier: the sprint's motion at the jog's stride, k=%.2f (tools/anim_author/author_locomotion.gd)" % k)
+	var n := int(round(length * FPS))
+	for t_i in jog.get_track_count():
+		var type := jog.track_get_type(t_i)
+		if type != Animation.TYPE_ROTATION_3D and type != Animation.TYPE_POSITION_3D:
+			continue
+		var path := jog.track_get_path(t_i)
+		var s_i := spr.find_track(path, type)
+		var tr := anim.add_track(type)
+		anim.track_set_path(tr, path)
+		for f in n + 1:
+			var t := minf(float(f) / FPS, length)
+			var u := t / length
+			var tj := u * jog.length
+			var ts := shift + u * cyc
+			if type == Animation.TYPE_ROTATION_3D:
+				var qj: Quaternion = jog.rotation_track_interpolate(t_i, tj)
+				var q := qj
+				if s_i >= 0:
+					q = qj.slerp(_sprint_q(spr, s_i, ts, cyc, cycles), k)
+				anim.rotation_track_insert_key(tr, t, q)
+			else:
+				var pj: Vector3 = jog.position_track_interpolate(t_i, tj)
+				var p := pj
+				if s_i >= 0:
+					p = pj.lerp(_sprint_p(spr, s_i, ts, cyc, cycles), k)
+				anim.position_track_insert_key(tr, t, p)
+	return anim
+
+
+## A start (idle into the jog) or stop (the jog into idle) of the graph with the new jog in it: where the clip meets the jog
+## (its last frame for a start, its first for a stop) the pose is the new jog's, at the phase the original jog would be
+## in there (the pose of the clip matched to the original jog's poses over its cycle); away from it the clip is the
+## graph's own, eased over part of its length so no old jog shows before the new one.
+func _transition(dir: String, is_start: bool, new_jog: Animation, orig_name: String) -> Animation:
+	var orig := lib.get_animation(orig_name)
+	var jog := new_jog
+	var big := orig.length
+	var at := big if is_start else 0.0
+	var phase := _match_phase(orig, at, new_jog)
+	var out := _stamp(Animation.new(), orig)
+	out.length = big
+	out.set_meta(&"authored", "Frontier: the graph's %s with the new jog eased in (tools/anim_author/author_locomotion.gd)" % orig_name)
+	var n := int(round(big * FPS))
+	for ti in orig.get_track_count():
+		var type := orig.track_get_type(ti)
+		if type != Animation.TYPE_ROTATION_3D and type != Animation.TYPE_POSITION_3D:
+			continue
+		var path := orig.track_get_path(ti)
+		var ji := new_jog.find_track(path, type)
+		var tr := out.add_track(type)
+		out.track_set_path(tr, path)
+		for f in n + 1:
+			var t := minf(float(f) / FPS, big)
+			var tj := fposmod(phase * jog.length - (big - t), jog.length) if is_start else fposmod(phase * jog.length + t, jog.length)
+			var w := smoothstep(big * 0.4, big, t) if is_start else 1.0 - smoothstep(0.0, big * 0.4, t)
+			if type == Animation.TYPE_ROTATION_3D:
+				var q: Quaternion = orig.rotation_track_interpolate(ti, t)
+				if ji >= 0:
+					q = q.slerp(new_jog.rotation_track_interpolate(ji, tj), w)
+				out.rotation_track_insert_key(tr, t, q)
+			else:
+				var p: Vector3 = orig.position_track_interpolate(ti, t)
+				if ji >= 0:
+					p = p.lerp(new_jog.position_track_interpolate(ji, tj), w)
+				out.position_track_insert_key(tr, t, p)
+	return out
+
+
+## Sum of the angles between the legs' and spine's rotations in two clips at two moments.
+func _pose_dist(a: Animation, ta: float, b: Animation, tb: float) -> float:
+	var d := 0.0
+	for bone in ["l_upper_leg", "l_knee", "r_upper_leg", "r_knee", "l_ankle", "r_ankle", "spine"]:
+		var path := NodePath("Skeleton3D:" + bone)
+		var i := a.find_track(path, Animation.TYPE_ROTATION_3D)
+		var j := b.find_track(path, Animation.TYPE_ROTATION_3D)
+		if i >= 0 and j >= 0:
+			d += a.rotation_track_interpolate(i, ta).angle_to(b.rotation_track_interpolate(j, tb))
+	return d
+
+
+## The sprint's pose at phase `ts` with its gait cycles averaged (the two of them differ a little: one cycle of the
+## mean loops without a seam).
+static func _sprint_q(spr: Animation, i: int, ts: float, cyc: float, cycles: int) -> Quaternion:
+	var q: Quaternion = spr.rotation_track_interpolate(i, fposmod(ts, spr.length))
+	for c in range(1, cycles):
+		q = q.slerp(spr.rotation_track_interpolate(i, fposmod(ts + c * cyc, spr.length)), 1.0 / float(c + 1))
+	return q
+
+
+static func _sprint_p(spr: Animation, i: int, ts: float, cyc: float, cycles: int) -> Vector3:
+	var p: Vector3 = spr.position_track_interpolate(i, fposmod(ts, spr.length))
+	for c in range(1, cycles):
+		p = p.lerp(spr.position_track_interpolate(i, fposmod(ts + c * cyc, spr.length)), 1.0 / float(c + 1))
+	return p
+
+
+# --- contact sheet -----------------------------------------------------------------------------------------------
+
+func _character() -> Array:
+	var n := (load("res://characters/Actor_B.tscn") as PackedScene).instantiate() as Node3D
+	root.add_child(n)
+	var sk := n.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	var aps := n.find_children("*", "AnimationPlayer", true, false)
+	CharacterBodyMesh.attach(sk, aps[0] if not aps.is_empty() else null, "res://assets/character/actor_b_body.glb")
+	return [n, sk, aps[0]]
+
+
+func _sheet() -> void:
+	var out := str(args.get("out", "user://locomotion"))
+	var dir := str(args.get("dir", "fw"))
+	DirAccess.make_dir_recursive_absolute(out)
+	var world := Node3D.new()
+	root.add_child(world)
+	var env := WorldEnvironment.new()
+	var e := Environment.new()
+	e.background_mode = Environment.BG_COLOR
+	e.background_color = Color(0.55, 0.62, 0.68)
+	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	e.ambient_light_color = Color(0.7, 0.72, 0.75)
+	e.ambient_light_energy = 0.6
+	env.environment = e
+	world.add_child(env)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-50, -30, 0)
+	sun.light_energy = 1.3
+	world.add_child(sun)
+	var ch := _character()
+	var ap := ch[2] as AnimationPlayer
+	ap.speed_scale = 0.0
+	var own := load(OUT_LIB) as AnimationLibrary
+	var variants: Array = []      # [label, library key, clip, cycle length s]
+	var jog_len := lib.get_animation("actor_b-p-run-" + dir).length
+	variants.append(["jog", "actor_b", "actor_b-p-run-" + dir, jog_len])
+	for k in _ks():
+		variants.append(["k%d" % int(round(k * 100.0)), "own", _name(dir, k), jog_len])
+	var spr_len := lib.get_animation("actor_b-p-sprint-" + dir).length / float(int(metrics["actor_b-p-sprint-" + dir].travel.cycles))
+	variants.append(["sprint", "actor_b", "actor_b-p-sprint-" + dir, spr_len])
+	ap.add_animation_library("own", own)
+	var view = OffscreenView.new()
+	root.add_child(view)
+	view.setup(root, Vector2i(260, 360))
+	var cam: Camera3D = view.camera
+	cam.fov = 38.0
+	await process_frame
+	await process_frame
+	var frames := int(args.get("frames", 8))
+	for v in variants:
+		ap.play("%s/%s" % [v[1], v[2]])
+		for f in frames:
+			ap.seek(float(f) / float(frames) * float(v[3]), true)
+			var sk := ch[1] as Skeleton3D
+			sk.force_update_all_bone_transforms()
+			var base := Vector3(0, 0.95, 0)
+			cam.global_position = base + Vector3(-3.3, 0.25, 0.0)
+			cam.look_at(base)
+			for i in 3:
+				await process_frame
+			view.get_texture().get_image().save_png("%s/%s_%d.png" % [out, v[0], f])
+	print("SHEET ", out, " ", variants.map(func(v: Array) -> String: return v[0]))
+
+
+# --- travel speed ------------------------------------------------------------------------------------------------
+
+## Body speed (m/s) from the planted foot: of the two heels the lower one is planted (within 2 cm of the lowest height
+## of the cycle), and it slides back at the body's speed. The same estimate on the jog reads what the clip metrics
+## give it (3.34), the yardstick.
+func _clip_speed(ap: AnimationPlayer, sk: Skeleton3D, path: String, length: float) -> float:
+	ap.play(path)
+	var dt := 1.0 / 60.0
+	var n := int(round(length / dt))
+	var lo := 1e9
+	var pts: Array = []
+	for f in n + 1:
+		ap.seek(minf(float(f) * dt, length), true)
+		await process_frame
+		sk.force_update_all_bone_transforms()
+		var row: Array = []
+		for foot in ["l_heel", "r_heel"]:
+			var g := sk.get_bone_global_pose(sk.find_bone(foot)).origin
+			row.append(g)
+			lo = minf(lo, g.y)
+		pts.append(row)
+	var v: Array = []
+	for f in n:
+		for i in 2:
+			var a: Vector3 = pts[f][i]
+			var b: Vector3 = pts[f + 1][i]
+			# (the lower heel of the pair, near the cycle's lowest: planted)
+			if a.y < lo + 0.05 and b.y < lo + 0.05 and a.y <= pts[f][1 - i].y:
+				v.append(Vector2(b.x - a.x, b.z - a.z).length() / dt)
+	v.sort()
+	return float(v[v.size() / 2]) if not v.is_empty() else 0.0
+
+
+func _speed() -> void:
+	var ch := _character()
+	var ap := ch[2] as AnimationPlayer
+	ap.speed_scale = 0.0
+	ap.add_animation_library("own", load(OUT_LIB) as AnimationLibrary)
+	for dir in str(args.get("dir", "fw,fw-lt,fw-rt")).split(",", false):
+		var rows: Array = [["jog", "actor_b/actor_b-p-run-" + dir], ["sprint", "actor_b/actor_b-p-sprint-" + dir]]
+		for k in _ks():
+			rows.append(["k%d" % int(round(k * 100.0)), "own/" + _name(dir, k)])
+		for r in rows:
+			var len := ap.get_animation(r[1]).length
+			print("SPEED %-7s %-6s %.2f m/s" % [dir, r[0], await _clip_speed(ap, ch[1], r[1], len)])
+
+
+## The shift, tried over the sprint's cycle, whose blend at `k` travels at the jog's speed with the planted foot steadiest
+## (the heel curves alone cannot tell a strafe's phase).
+func _best_shift(dir: String, k: float) -> float:
+	var jog_speed: float = (await _fk_speed(lib.get_animation("actor_b-p-run-" + dir)))[0]
+	var spr := lib.get_animation("actor_b-p-sprint-" + dir)
+	var cycle := spr.length / float(int(metrics["actor_b-p-sprint-" + dir].travel.cycles))
+	var best := 1e9
+	var best_s := 0.0
+	var steps := 24
+	for i in steps:
+		var sh := cycle * float(i) / float(steps)
+		var r: Array = await _fk_speed(_blend(dir, k, sh))
+		var cost: float = absf(r[0] - jog_speed) / jog_speed + 2.0 * r[1] / maxf(r[0], 0.5)
+		if args.has("debug"):
+			print("  shift ", snappedf(sh, 0.001), " speed ", snappedf(r[0], 0.01), " spread ", snappedf(r[1], 0.01), " cost ", snappedf(cost, 0.001))
+		if cost < best:
+			best = cost
+			best_s = sh
+	return best_s
+
+
+## [travel speed, spread] of a clip by the planted heel (see _clip_speed): the clip played on the character (the heels
+## are placed by the rig's modifiers, so it takes frames), sampled at 30 Hz.
+func _fk_speed(a: Animation) -> Array:
+	var dt := 1.0 / 30.0
+	var n := int(round(a.length / dt))
+	var tmp := AnimationLibrary.new()
+	tmp.add_animation(&"c", a)
+	if _ap.has_animation_library("cand"):
+		_ap.remove_animation_library("cand")
+	_ap.add_animation_library("cand", tmp)
+	_ap.play("cand/c")
+	var lh := _rig.find_bone("l_heel")
+	var rh := _rig.find_bone("r_heel")
+	var pts: Array = []
+	var lo := 1e9
+	for f in n + 1:
+		_ap.seek(minf(float(f) * dt, a.length), true)
+		await process_frame
+		_rig.force_update_all_bone_transforms()
+		var row := [_rig.get_bone_global_pose(lh).origin, _rig.get_bone_global_pose(rh).origin]
+		pts.append(row)
+		lo = minf(lo, minf(row[0].y, row[1].y))
+	var v: Array = []
+	for f in n:
+		for i in 2:
+			var p: Vector3 = pts[f][i]
+			var q: Vector3 = pts[f + 1][i]
+			if p.y < lo + 0.05 and q.y < lo + 0.05 and p.y <= pts[f][1 - i].y:
+				v.append(Vector2(q.x - p.x, q.z - p.z).length() / dt)
+	if v.is_empty():
+		return [0.0, 9.0]
+	v.sort()
+	var med: float = v[v.size() / 2]
+	var dev: Array = v.map(func(x: float) -> float: return absf(x - med))
+	dev.sort()
+	return [med, dev[dev.size() / 2]]
+
+
+## strip: Godot --path . -s tools/anim_author/author_locomotion.gd -- strip out=<dir> rows=label=lib/clip,... [frames=8]
+## frames across each whole clip, side view, one PNG per row and frame (label_<n>.png)
+func _strip() -> void:
+	var out := str(args.get("out", "user://locomotion"))
+	DirAccess.make_dir_recursive_absolute(out)
+	var world := Node3D.new()
+	root.add_child(world)
+	var env := WorldEnvironment.new()
+	var e := Environment.new()
+	e.background_mode = Environment.BG_COLOR
+	e.background_color = Color(0.55, 0.62, 0.68)
+	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	e.ambient_light_color = Color(0.7, 0.72, 0.75)
+	e.ambient_light_energy = 0.6
+	env.environment = e
+	world.add_child(env)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-50, -30, 0)
+	sun.light_energy = 1.3
+	world.add_child(sun)
+	var ch := _character()
+	var ap := ch[2] as AnimationPlayer
+	ap.speed_scale = 0.0
+	ap.add_animation_library("own", load(OUT_LIB) as AnimationLibrary)
+	var view = OffscreenView.new()
+	root.add_child(view)
+	view.setup(root, Vector2i(260, 360))
+	var cam: Camera3D = view.camera
+	cam.fov = 38.0
+	await process_frame
+	await process_frame
+	var frames := int(args.get("frames", 8))
+	for row in str(args.rows).split(",", false):
+		var label := row.get_slice("=", 0)
+		var path := row.get_slice("=", 1)
+		ap.play(path)
+		var length := ap.get_animation(path).length
+		for f in frames:
+			ap.seek(float(f) / float(frames - 1) * length * 0.999, true)
+			(ch[1] as Skeleton3D).force_update_all_bone_transforms()
+			var base := Vector3(0, 0.95, 0)
+			cam.global_position = base + Vector3(-3.3, 0.25, 0.0)
+			cam.look_at(base)
+			for i in 3:
+				await process_frame
+			if args.has("debug"):
+				print(label, f, " t ", snappedf(ap.current_animation_position, 0.01), " anim ", ap.current_animation, " active ", ap.active, " leg ", (ch[1] as Skeleton3D).get_bone_pose_rotation((ch[1] as Skeleton3D).find_bone("l_upper_leg")))
+			view.get_texture().get_image().save_png("%s/%s_%d.png" % [out, label, f])
+	print("STRIP ", out)

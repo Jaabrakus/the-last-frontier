@@ -45,8 +45,9 @@ const XFADE_TOL_RAD := 0.15
 ## slerp (the wiring itself is exact, XFADE_WIRING_TOL_RAD). THROW2 review: the spear's run -> sprint
 ## fade, from the raised javelin carry (0.9) into the graph's own lowered sprint arm (the pick-up base's
 ## p-1h-arm--part below weight 1, on its own 0.097 rad from the oracle at r_wrist, as in the atlatl's
-## sprint), reaches 0.069 rad at f 0.75 (0.034 with the first THROW2 build's knife--arm sprint trail).
-const THROW_XFADE_EXCESS_RAD := 0.075
+## sprint), reaches 0.069 rad at f 0.75 (0.034 with the first THROW2 build's knife--arm sprint trail). With our own
+## jog (the sprint's arms, data/anim_author/locomotion_clips.json) the atlatl's run -> land_soft_run reaches 0.0751.
+const THROW_XFADE_EXCESS_RAD := 0.08
 ## Default carry layout vs the Godot evaluation of the plan D4 composition (wiring; float32).
 const XFADE_WIRING_TOL_RAD := 1e-3
 const XFADE_WIRING_TOL_M := 1e-4

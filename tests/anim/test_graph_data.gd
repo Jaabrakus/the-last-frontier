@@ -86,7 +86,7 @@ func _check_table(ctx: AnimTestContext, rig: RigFixture, label: String, d: AnimG
 			var amb: Array = d.ambiguous_aliases().get(String(o), [])
 			if r != name and not amb.has(name) and not clips.has(String(o)):
 				alias_bad.append("%s -> %s (want %s)" % [o, r, name])
-		if d.godot_anim(name) != StringName("actor_b/" + name):
+		if d.godot_anim(name) != StringName("actor_b/" + name) and not d.override_libraries().has(String(d.godot_anim(name)).get_slice("/", 0)):
 			alias_bad.append("%s godot path %s" % [name, d.godot_anim(name)])
 	ctx.check(alias_bad.is_empty(), "%s: %d aliases resolve to their action %s" % [label, n_alias, alias_bad.slice(0, 5)])
 	ctx.info("%s: %d ambiguous aliases (listed with every action) %s" % [label, d.ambiguous_aliases().size(), d.ambiguous_aliases().keys().slice(0, 5)])
@@ -139,7 +139,11 @@ func _check_accessors(ctx: AnimTestContext, real: AnimGraphData, fixture: AnimGr
 			"role_clip: musket/run/fw run-fw, bow/crouch/idle crouch-idle")
 	ctx.check(real.role_clip("musket", "run", "pre_fall") == "", "a missing role has no clip (pre_fall)")
 	ctx.check(real.stance_of("crouch") == "crouch" and real.stance_of("sprint") == "stand", "stance_of")
-	ctx.near(real.clip_speed("actor_b-p-run-fw"), 3.344, 0.1, "metrics: run-fw speed")
+	# (our own jog stands in for it: its measured speed, data/anim_author/locomotion_clips.json)
+	var jog_speed := 3.344
+	if real.override_libraries().has("frontier_locomotion"):
+		jog_speed = float(AnimGraphData._read_json(AnimGraphData.CLIP_OVERRIDES_PATH).clips["actor_b-p-run-fw"].speed)
+	ctx.near(real.clip_speed("actor_b-p-run-fw"), jog_speed, 0.1, "metrics: run-fw speed")
 	ctx.check(real.bone_set("upper").has("spined") and real.bone_set("hands").has("r_hand_prop_attachment"), "metrics bone sets upper / hands")
 	ctx.near(real.chest_height("stand"), float(real.metrics.chest_height.stand), 1e-9, "chest height from metrics")
 

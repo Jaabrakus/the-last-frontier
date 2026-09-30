@@ -1,0 +1,101 @@
+{
+	"about": "Clips that stand in for the graph's own (AnimGraphData.apply_clip_overrides): the graph clip name -> the library and clip played instead, its measured travel speed (m/s, tools/anim_author/author_locomotion.gd) and length (s). The plant phases and the rest of the metrics stay the original clip's.",
+	"clips": {
+		"actor_b-p-idle^run-bw": {
+			"clip": "own-start-bw-k100",
+			"length": 0.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-idle^run-bw-lt": {
+			"clip": "own-start-bw-lt-k100",
+			"length": 0.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-idle^run-bw-rt": {
+			"clip": "own-start-bw-rt-k100",
+			"length": 0.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-idle^run-fw": {
+			"clip": "own-start-fw-k100",
+			"length": 1.5,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-idle^run-fw-lt": {
+			"clip": "own-start-fw-lt-k100",
+			"length": 1.5,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-idle^run-fw-rt": {
+			"clip": "own-start-fw-rt-k100",
+			"length": 1.5,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-run-bw": {
+			"clip": "own-jog-bw-k100",
+			"length": 0.733333,
+			"lib": "frontier_locomotion",
+			"speed": 3.239
+		},
+		"actor_b-p-run-bw-lt": {
+			"clip": "own-jog-bw-lt-k100",
+			"length": 0.733333,
+			"lib": "frontier_locomotion",
+			"speed": 3.35
+		},
+		"actor_b-p-run-bw-lt^idle": {
+			"clip": "own-stop-bw-lt-k100",
+			"length": 0.7,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-run-bw-rt": {
+			"clip": "own-jog-bw-rt-k100",
+			"length": 0.733333,
+			"lib": "frontier_locomotion",
+			"speed": 3.505
+		},
+		"actor_b-p-run-bw-rt^idle": {
+			"clip": "own-stop-bw-rt-k100",
+			"length": 0.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-run-bw^idle": {
+			"clip": "own-stop-bw-k100",
+			"length": 0.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-run-fw": {
+			"clip": "own-jog-fw-k100",
+			"length": 0.733333,
+			"lib": "frontier_locomotion",
+			"speed": 3.239
+		},
+		"actor_b-p-run-fw-lt": {
+			"clip": "own-jog-fw-lt-k100",
+			"length": 0.733333,
+			"lib": "frontier_locomotion",
+			"speed": 3.505
+		},
+		"actor_b-p-run-fw-lt^idle": {
+			"clip": "own-stop-fw-lt-k100",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-run-fw-rt": {
+			"clip": "own-jog-fw-rt-k100",
+			"length": 0.733333,
+			"lib": "frontier_locomotion",
+			"speed": 3.35
+		},
+		"actor_b-p-run-fw-rt^idle": {
+			"clip": "own-stop-fw-rt-k100",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-run-fw^idle": {
+			"clip": "own-stop-fw-k100",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		}
+	}
+}

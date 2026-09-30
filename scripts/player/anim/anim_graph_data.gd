@@ -23,6 +23,10 @@ extends RefCounted
 
 const GRAPH_PATH := "res://animations/actor_b_graph.json"
 const METRICS_PATH := "res://animations/actor_b_clip_metrics.json"
+## Clips that stand in for the graph's own (tools/anim_author/author_locomotion.gd writes it): graph clip name ->
+## {lib, clip, speed, length}; the libraries they live in, by name.
+const CLIP_OVERRIDES_PATH := "res://data/anim_author/locomotion_clips.json"
+const OVERRIDE_LIBS := {"frontier_locomotion": "res://animations_extra/Frontier_Locomotion.res"}
 const FIXTURE_GRAPH := "res://tools/anim_graph/fixtures/mini_graph.json"
 const FIXTURE_METRICS := "res://tests/anim/fixtures/mini_metrics.json"
 const LIB := &"actor_b"
@@ -53,6 +57,7 @@ var _option_set := {}         ## option -> value set at runtime (wins over overr
 var _alias := {}              ## any known name -> action name
 var _alias_ambiguous := {}    ## name -> [action names]
 var _bank_role_names := {}    ## role -> true
+var _override_libs := {}      ## library name -> resource path, of the clips standing in for the graph's own
 
 static var _json_cache := {}  ## path -> [modified_time, Dictionary]
 
@@ -68,6 +73,8 @@ static func load_files(p_graph := GRAPH_PATH, p_metrics := METRICS_PATH) -> Anim
 	if p_metrics != "":
 		m = _read_json(p_metrics)
 	var d := AnimGraphData.from_dicts(g, m)
+	if p_graph == GRAPH_PATH:
+		d.apply_clip_overrides()
 	d.graph_path = p_graph
 	d.metrics_path = p_metrics
 	if p_metrics != "" and m.is_empty():
@@ -93,6 +100,40 @@ static func from_dicts(g: Dictionary, m := {}) -> AnimGraphData:
 ## Drops the parsed-JSON cache (the files are re-read on the next load_files()).
 static func clear_cache() -> void:
 	_json_cache.clear()
+
+
+## Our own clips in place of some of the graph's (CLIP_OVERRIDES_PATH: the jog): the clip's library path, its travel
+## speed and its stride (speed * length) replaced; the rest of its entry and metrics (the plant phases, the loop) are
+## the original's. Copies the entries it changes, so the parsed-file cache stays as the files have it.
+func apply_clip_overrides() -> void:
+	var t := _read_json(CLIP_OVERRIDES_PATH)
+	if t.is_empty():
+		return
+	graph = graph.duplicate(false)
+	graph["clips"] = (graph.get("clips", {}) as Dictionary).duplicate(false)
+	metrics = metrics.duplicate(false)
+	metrics["clips"] = (metrics.get("clips", {}) as Dictionary).duplicate(false)
+	for name: String in t.get("clips", {}):
+		var o: Dictionary = t.clips[name]
+		var lib := String(o.lib)
+		if not graph.clips.has(name) or not OVERRIDE_LIBS.has(lib):
+			continue
+		var info: Dictionary = (graph.clips[name] as Dictionary).duplicate(false)
+		info["godot"] = "%s/%s" % [lib, o.clip]
+		graph.clips[name] = info
+		_override_libs[lib] = OVERRIDE_LIBS[lib]
+		if o.has("speed") and metrics.clips.has(name):
+			var mc: Dictionary = (metrics.clips[name] as Dictionary).duplicate(false)
+			var tr: Dictionary = (mc.get("travel", {}) as Dictionary).duplicate(false)
+			tr["speed"] = float(o.speed)
+			tr["stride_m"] = float(o.speed) * float(o.length)
+			mc["travel"] = tr
+			metrics.clips[name] = mc
+
+
+## Libraries the overriding clips live in: name -> resource path.
+func override_libraries() -> Dictionary:
+	return _override_libs
 
 
 static func _read_json(path: String) -> Dictionary:
@@ -532,8 +573,18 @@ func validate(ap: AnimationPlayer, lib := LIB) -> PackedStringArray:
 	for name in clips:
 		var info: Dictionary = clips[name]
 		var path := StringName(info.get("godot", "%s/%s" % [lib, name]))
-		if String(path) != "%s/%s" % [lib, name]:
+		# (a clip of our own in place of the graph's: it lives in its own library, which the player gets when the tree is
+		# built; its length is the original's, its asset id ours)
+		var own := _override_libs.has(String(path).get_slice("/", 0))
+		if String(path) != "%s/%s" % [lib, name] and not own:
 			errs.append("clip %s: godot path %s is not %s/%s" % [name, path, lib, name])
+		if own and not ap.has_animation(path):
+			var ol := load(String(_override_libs[String(path).get_slice("/", 0)])) as AnimationLibrary
+			if ol == null or not ol.has_animation(String(path).get_slice("/", 1)):
+				errs.append("clip %s: %s not in its own library" % [name, path])
+			elif absf(ol.get_animation(String(path).get_slice("/", 1)).length - float(info.get("length", -1.0))) > 1e-3:
+				errs.append("clip %s: length differs from the clip standing in for it" % name)
+			continue
 		if not ap.has_animation(path):
 			errs.append("clip %s: not in library %s" % [name, lib])
 			continue

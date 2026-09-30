@@ -212,6 +212,10 @@ func _build() -> TreeIndex:
 		idx.errors.append("unknown bank_kind '%s' (diff | blendspace); using diff" % idx.bank_kind)
 		idx.bank_kind = "diff"
 	_lib_name = String(opts.lib)
+	var extra := data.override_libraries()
+	for l: String in extra:
+		if not ap.has_animation_library(l):
+			ap.add_animation_library(l, load(String(extra[l])) as AnimationLibrary)
 	idx.carry_mode = String(opts.carry)
 	if not idx.carry_mode in ["shared", "input", "none"]:
 		idx.errors.append("unknown carry '%s' (input | shared | none); using input" % idx.carry_mode)
@@ -1715,7 +1719,7 @@ func _godot(clip: String) -> StringName:
 	if _pose_names.has(clip):
 		return _pose_names[clip]
 	var p := data.godot_anim(clip)
-	if not String(p).begins_with(_lib_name + "/"):
+	if not String(p).begins_with(_lib_name + "/") and not data.override_libraries().has(String(p).get_slice("/", 0)):
 		p = StringName("%s/%s" % [_lib_name, data.resolve_alias(clip)])
 	return p
 
