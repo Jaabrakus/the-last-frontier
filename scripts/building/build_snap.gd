@@ -31,7 +31,7 @@ const FOOT := {"bough_bed": [Vector2(0.5, 1.0), 0.3], "pole_bed": [Vector2(0.48,
 		"drying_rack": [Vector2(1.05, 0.45), 0.5], "tanning_frame": [Vector2(1.3, 0.7), 0.45],
 		"alchemy_table": [Vector2(0.64, 0.29), 0.2], "workbench": [Vector2(0.8, 0.3), 0.2],
 		"stretching_hoop": [Vector2(0.4, 0.35), 0.5], "storage_chest": [Vector2(0.42, 0.22), 0.15], "cradle": [Vector2(0.27, 0.48), 0.15],
-		"woodpile": [Vector2(0.95, 0.28), 0.3], "smokehouse": [Vector2(1.0, 0.9), 0.35]}
+		"woodpile": [Vector2(0.95, 0.28), 0.3], "boat_stand": [Vector2(0.9, 2.9), 0.5], "smokehouse": [Vector2(1.0, 0.9), 0.35]}
 ## Socket kinds a snapped piece rests on: taking the socket's piece down needs this one gone first.
 const SUPPORTING := ["edge", "corner", "wall_top", "roof_end"]
 ## Socket kinds whose piece stands on the ground like the socket's own piece.
@@ -146,6 +146,8 @@ static func inner_local(type: String) -> Array:
 				for sz: float in [-1.0, 1.0]:
 					out.append([Transform3D(Basis(), Vector3(sx * (G.DRY_W * 0.5 - 0.05), 0.8, sz * (G.DRY_D * 0.5 - 0.05))), Vector3(0.06, 0.7, 0.06)])
 			return out
+		"boat_stand":
+			return [[Transform3D(Basis(), Vector3(0, 0.1, 0)), Vector3(0.8, 0.1, G.BOAT_L * 0.5)]]
 		"tanning_frame":
 			return [[Transform3D(Basis(), Vector3(0, 1.0, -0.2)), Vector3(G.TAN_W * 0.5, 0.9, 0.45)],
 					[Transform3D(Basis(), Vector3(G.TAN_W * 0.5 + 0.45, 0.5, 0.25)), Vector3(0.14, 0.42, 0.6)]]
@@ -199,6 +201,8 @@ static func center_local(type: String) -> Vector3:
 			return Vector3(0, 0.35, 0)
 		"drying_rack":
 			return Vector3(0, 1.0, 0)
+		"boat_stand":
+			return Vector3(0, 0.6, 0)
 		"tanning_frame":
 			return Vector3(0, 1.0, 0)
 		"alchemy_table":
@@ -418,7 +422,7 @@ static func _ground(type: String, xf: Transform3D, kind: String, grounded: bool,
 			o.y = hi
 			if hi - lo > (0.3 if type == "campfire" else 0.6):
 				return {"reason": "Needs flatter ground"}
-		"bough_bed", "pole_bed", "musket_rack", "spear_barrel", "drying_rack", "tanning_frame", "alchemy_table", "workbench", \
+		"bough_bed", "pole_bed", "musket_rack", "spear_barrel", "drying_rack", "tanning_frame", "boat_stand", "alchemy_table", "workbench", \
 				"stretching_hoop", "storage_chest", "cradle", "woodpile", "smokehouse", "walkway", "walkway_ramp", "ladder", "blockhouse", "flagpole":
 			# the corners of its footprint and the middle on the ground (or a floor); it sits at the highest
 			var f: Array = FOOT[type] if FOOT.has(type) else FortPieces.foot(type)
@@ -432,6 +436,8 @@ static func _ground(type: String, xf: Transform3D, kind: String, grounded: bool,
 			o.y = hi
 			if hi - lo > float(f[1]):
 				return {"reason": "Needs flatter ground"}
+			if type == "boat_stand" and not _water_near(o):
+				return {"reason": "Build it by the water"}
 		"palisade", "palisade_gate":
 			var pts: Array = []
 			var dx := G.L / G.STAKES
@@ -520,3 +526,13 @@ static func _blocker(space: PhysicsDirectSpaceState3D, xf: Transform3D, half: Ve
 		if n is StaticBody3D or n is AnimatableBody3D:
 			return "Something is in the way"
 	return ""
+
+
+## Whether there is water deep enough for a boat within reach of `o` (a boat stand's launch: 3 to 14 m round it).
+static func _water_near(o: Vector3) -> bool:
+	for r in [3.0, 6.0, 9.0, 12.0, 14.0]:
+		for k in 16:
+			var a := TAU * float(k) / 16.0
+			if WaterSurface.depth_at(o.x + sin(a) * float(r), o.z + cos(a) * float(r)) >= 0.5:
+				return true
+	return false

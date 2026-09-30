@@ -90,7 +90,9 @@ func _test_data() -> void:
 			# the knapping stone: the start with nothing's first station (tests/forage/test_forage.gd has its materials)
 			"work_stone": {},
 			# the charcoal mound and the forge (tests/survival_game/test_bare.gd)
-			"charcoal_mound": {"firewood": 8, "clay": 1}, "forge": {"stone": 10, "clay": 3, "log": 1, "rawhide": 1}}
+			"charcoal_mound": {"firewood": 8, "clay": 1}, "forge": {"stone": 10, "clay": 3, "log": 1, "rawhide": 1},
+			# the baby's cradle (the household's), the boat stand (tests/boats/test_boat_stand.gd)
+			"cradle": {"log": 2, "rawhide": 1}, "boat_stand": {"pole": 6, "log": 2}}
 	# (and the two ways to close an opening cut in the palisade, PalisadeCuts: no pieces of their own)
 	var fixes := {"opening_repair": {"log": 2}, "opening_cover": {"log": 1}}
 	_check(d.order.size() == want.size() + fixes.size(), "the menu has the %d pieces and %d wall fixes (%d)" % [want.size(), fixes.size(), d.order.size()])

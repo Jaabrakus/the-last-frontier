@@ -79,6 +79,8 @@ const BARREL_H := 0.62
 const DRY_W := 2.2
 const DRY_D := 1.0
 const DRY_H := 1.45
+const BOAT_L := 5.6
+const BOAT_W := 1.4
 const TAN_W := 1.8
 const TAN_H := 1.9
 const TABLE_W := 1.4
@@ -221,6 +223,8 @@ static func mesh(type: String, variant: int, ctx: Dictionary, detail := true, ca
 			_drying_rack(kit, rng)
 		"tanning_frame":
 			_tanning_frame(kit, rng)
+		"boat_stand":
+			_boat_stand(kit, rng)
 		"alchemy_table":
 			_alchemy_table(kit, rng)
 		"workbench":
@@ -761,6 +765,16 @@ static func _drying_rack(kit: K, rng: RandomNumberGenerator) -> void:
 
 ## A tanning frame: two uprights, a top and a bottom bar the hide is laced between (CampStation lays the hide in),
 ## two props behind; beside it the fleshing beam, a hewn log slanting from the ground onto two short legs.
+## A boat stand: two barked skids the length of the hull on a low bed of gravel logs, crossed by chocks the keel rests on.
+static func _boat_stand(kit: K, rng: RandomNumberGenerator) -> void:
+	var hz := BOAT_L * 0.5
+	for sx: float in [-1.0, 1.0]:
+		_pole_between(kit, Vector3(sx * 0.42, 0.1, -hz), Vector3(sx * 0.42, 0.1, hz), 0.08, rng)
+	for k in 6:
+		var z := -hz + 0.5 + (BOAT_L - 1.0) * float(k) / 5.0
+		_pole_between(kit, Vector3(-0.62, 0.05, z), Vector3(0.62, 0.05, z), 0.05, rng)
+
+
 static func _tanning_frame(kit: K, rng: RandomNumberGenerator) -> void:
 	var hx := TAN_W * 0.5
 	for sx: float in [-1.0, 1.0]:
@@ -1506,6 +1520,8 @@ static func colliders(type: String, ctx: Dictionary) -> Array:
 			for sx: float in [-1.0, 1.0]:
 				for sz: float in [-1.0, 1.0]:
 					out.append(_box(Vector3(sx * (DRY_W * 0.5 - 0.05), DRY_H * 0.5, sz * (DRY_D * 0.5 - 0.05)), Vector3(0.1, DRY_H, 0.1), wood))
+		"boat_stand":
+			out.append(_box(Vector3(0, 0.1, 0), Vector3(1.3, 0.2, BOAT_L), {"surface": "wood"}))
 		"tanning_frame":
 			var wood := {"surface": "wood", "no_traverse": true}
 			for sx: float in [-1.0, 1.0]:

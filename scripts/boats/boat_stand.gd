@@ -1,0 +1,397 @@
+class_name BoatStand
+extends Node3D
+## The boat stand by the water (a built piece, "boat_stand"; user 2026-09-29: "a boat stand by the river ... they bring materials to
+## it and attach to it and they can see it grow into something real"). E opens its list of stages (StationMenu): the craft's own steps
+## in order, each with what it needs (in the kit and at the stand), whether the builder knows how, and its state. Picking one brings the
+## parts it needs from the kit, then starts it and works it (SurvivalBridge.work: kneeling at it, a bar, moving stops it and the work
+## done so far stays), and a stage with a puzzle then waits to be played. The hull (HullMesh) grows as the stages go, and the finished
+## boat is launched onto the water (Boat, with the grades' stats). The logic is BoatBuild's; this is the piece, the menu and the world.
+## Parts come out of the core's inventory (SurvivalInventory, the survival items' ids); knowledge is SurvivalLearning's.
+
+const GROUP := &"interactables"
+const STANDS := &"boat_stands"
+const SKILL := "woodcraft"
+const LAUNCH_SEARCH_M := 30.0
+
+var boat_id := "birchbark"
+var build: BoatBuild
+var hull: HullMesh
+var interact_reach := 2.8
+## The last thing said at the stand (the menu's first line; tests).
+var last := ""
+## Tests: the work is done at once (no kneeling, no bar).
+var instant_work := false
+var _bridge: SurvivalBridge
+var _t0 := 0
+var _secs := 0.0
+var _min_left := 0.0
+
+
+static func attach(piece: Node3D, id := "birchbark") -> BoatStand:
+	var s := BoatStand.new()
+	s.name = "BoatStand"
+	s.boat_id = id
+	piece.add_child(s)
+	return s
+
+
+func _ready() -> void:
+	add_to_group(GROUP)
+	add_to_group(STANDS)
+	build = BoatBuild.make(boat_id)
+	build.know = _know
+	build.has_tool = _has_tool
+	hull = HullMesh.new()
+	hull.name = "Hull"
+	add_child(hull)
+	hull.setup(build.plan.get("hull", {}))
+	refresh()
+
+
+func bridge() -> SurvivalBridge:
+	if _bridge == null or not is_instance_valid(_bridge):
+		_bridge = SurvivalBridge.find(get_tree())
+	return _bridge
+
+
+func _core() -> SurvivalCore:
+	var b := bridge()
+	return b.core if b != null else null
+
+
+func _know(kid: String) -> String:
+	var c := _core()
+	return SurvivalLearning.state_of(c, kid) if c != null else "known"
+
+
+func _has_tool(ids: Array) -> bool:
+	var c := _core()
+	if c == null:
+		return true
+	for id: String in ids:
+		if SurvivalInventory.count(c, id) > 0.0:
+			return true
+	return false
+
+
+## The builder's skill 0..1 (woodcraft).
+func skill01() -> float:
+	var c := _core()
+	return clampf(SurvivalSkills.level(c, SKILL) / 100.0, 0.0, 1.0) if c != null else 0.5
+
+
+# ---------------------------------------------------------------- the hull grows
+## The parts of the hull shown for what is done and what is being worked.
+func refresh() -> void:
+	var show := {"stakes": 0.0, "skin": 0.0, "gunwales": 0.0, "ribs": 0.0, "pitch": 0.0}
+	for s: Dictionary in build.stages():
+		var sid := String(s.id)
+		var f := 0.0
+		if build.done.has(sid):
+			f = 1.0
+		elif build.current == sid:
+			f = clampf(build.progress / maxf(build.work_min(sid), 1.0), 0.0, 1.0)
+			if build.waiting:
+				f = 1.0
+		if f > 0.0:
+			for part: String in s.get("shows", []):
+				show[part] = maxf(float(show[part]), f)
+	if build.is_complete():
+		show["stakes"] = 0.0   # the boat is lifted off its bed
+	for id: String in show:
+		hull.set_part(id, float(show[id]))
+
+
+# ---------------------------------------------------------------- E
+func _build_mode_on() -> bool:
+	return is_instance_valid(BuildMode.current) and BuildMode.current.active
+
+
+func interact_point() -> Vector3:
+	return global_transform * Vector3(0.0, 0.6, 0.0)
+
+
+func distance_from(p: Vector3) -> float:
+	return p.distance_to(interact_point())
+
+
+func highlight_targets() -> Array:
+	var p := get_parent() as BuiltPiece
+	return p.highlight_targets() if p else []
+
+
+func interact_prompt(_player: Node) -> String:
+	if _build_mode_on():
+		return ""
+	var b := bridge()
+	if b == null or (b.work and b.work.working):
+		return ""
+	return "Build the %s" % String(build.plan.get("name", "boat")).to_lower() if not build.is_complete() else "The %s is ready" % String(build.plan.get("name", "boat")).to_lower()
+
+
+func interact(player: Node) -> void:
+	if _build_mode_on() or bridge() == null:
+		return
+	open_menu(player)
+
+
+## The stages' rows: [{text, detail, ok}], for the menu (and tests).
+func rows() -> Array:
+	var out: Array = []
+	var c := _core()
+	for s: Dictionary in build.stages():
+		var sid := String(s.id)
+		var row := {"text": String(s.name), "detail": "", "ok": true}
+		if build.done.has(sid):
+			var g := build.grade_of(sid)
+			row.text = "Done: %s" % String(s.name)
+			row.detail = "%s work%s" % [build.grade_word(g), " (out of order)" if not bool((build.done[sid] as Dictionary).ordered) else ""]
+		elif build.current == sid:
+			if build.waiting:
+				row.text = "%s: play the puzzle" % String(s.name)
+				row.detail = "the work is done; how well it is fitted is up to you"
+			else:
+				row.text = "%s: carry on" % String(s.name)
+				row.detail = "%d%% done" % roundi(100.0 * build.progress / maxf(build.work_min(sid), 1.0))
+		else:
+			var parts: Array[String] = []
+			for k: String in (s.get("needs", {}) as Dictionary):
+				var need := int((s.needs as Dictionary)[k])
+				var at := int(build.store.get(k, 0))
+				var kit := int(SurvivalInventory.count(c, k)) if c != null else 0
+				parts.append("%d %s (%d here, %d in your kit)" % [need, InventoryState.name_of(k) if InventoryState.name_of(k) != "" else k.get_slice(".", 2).replace("_", " "), at, kit])
+			var why := build.can_start(sid)
+			var know_state := build.knowledge(sid)
+			var note := ""
+			if know_state == "unknown":
+				note = "you do not know how yet: ask someone who does"
+				row.ok = false
+			elif know_state == "heard_of" or know_state == "seen":
+				note = "you only %s how: it will go clumsily" % ("have heard" if know_state == "heard_of" else "have seen")
+			if String(why.reason) == "tool":
+				note = "needs a tool: %s" % _tool_names(s)
+				row.ok = false
+			if build.current != "":
+				note = "finish the current stage first"
+				row.ok = false
+			elif sid != build.next_id():
+				note = (note + "; " if note != "" else "") + "this is not the next step"
+			row.detail = "; ".join(parts) + ("" if note == "" else "  |  " + note)
+		out.append(row)
+	return out
+
+
+func _tool_names(s: Dictionary) -> String:
+	var names: Array[String] = []
+	for id: String in s.get("tool", []):
+		names.append(id.get_slice(".", 2).replace("_", " "))
+	return " or ".join(names)
+
+
+func open_menu(player: Node) -> void:
+	var title := String(build.plan.get("name", "Boat")) + (" (%s)" % build.stats().word if build.is_complete() else "")
+	var r := rows()
+	if build.is_complete():
+		r.append({"text": "Launch it onto the water", "detail": "a %s canoe; %s" % [build.stats().word, _stats_line()], "ok": true})
+	if last != "":
+		r.push_front({"text": last, "detail": "", "ok": true})
+	var m := StationMenu.open(get_tree(), title, r)
+	var i: int = await m.picked
+	if i < 0:
+		return
+	if last != "":
+		i -= 1
+		last = ""
+		if i < 0:
+			open_menu(player)
+			return
+	choose(i, player)
+
+
+func _stats_line() -> String:
+	var st := build.stats()
+	return "speed x%.2f, %.0f l/h leaks, wear x%.2f" % [float(st.speed_mult), float(st.leak_l_per_h), float(st.wear_mult)]
+
+
+## The stage row `i` was picked (or the launch row after them).
+func choose(i: int, player: Node = null) -> void:
+	var st := build.stages()
+	if i >= st.size():
+		var boat := launch()
+		last = "It slides into the water." if boat != null else "There is no water within reach to launch it."
+		refresh()
+		if boat == null:
+			open_menu(player)
+		return
+	var sid := String((st[i] as Dictionary).id)
+	last = pick(sid, player)
+	if last != "" and not _working():
+		open_menu(player)
+
+
+func _working() -> bool:
+	var b := bridge()
+	return b != null and b.work != null and b.work.working
+
+
+## What picking a stage does: bring its parts, begin it, work it, or play its puzzle. Returns what to tell ("" when work began).
+func pick(sid: String, _player: Node = null) -> String:
+	var s := build.stage(sid)
+	if s.is_empty():
+		return ""
+	if build.done.has(sid):
+		return "%s is done: %s work." % [String(s.name), build.grade_word(build.grade_of(sid))]
+	if build.current != "" and build.current != sid:
+		return "Finish %s first." % String(build.stage(build.current).name).to_lower()
+	if build.current == sid:
+		if build.waiting:
+			return play_puzzle()
+		return _work(sid)
+	var miss := build.missing(sid)
+	if not miss.is_empty():
+		var got := bring(sid)
+		miss = build.missing(sid)
+		if not miss.is_empty():
+			return ("Brought some of the parts; still needed: %s." if got > 0 else "Not all the parts are here; needed: %s.") % _short(miss)
+		return "All the parts for this are here. Pick it again to begin."
+	var why := build.can_start(sid)
+	match String(why.reason):
+		"unknown":
+			return "You do not know how to do this yet. Ask someone who does."
+		"tool":
+			return "You need a tool for it: %s." % _tool_names(s)
+		"busy":
+			return "Finish the stage you are on first."
+	if not build.start(sid):
+		return "It cannot be started."
+	refresh()
+	return _work(sid)
+
+
+func _short(miss: Dictionary) -> String:
+	var bits: Array[String] = []
+	for k: String in miss:
+		bits.append("%d more %s" % [int(miss[k]), k.get_slice(".", 2).replace("_", " ")])
+	return ", ".join(bits)
+
+
+## Brings the parts a stage needs from the kit to the stand: how many were brought.
+func bring(sid: String) -> int:
+	var c := _core()
+	if c == null:
+		return 0
+	var n := 0
+	var miss := build.missing(sid)
+	for k: String in miss:
+		var have := int(SurvivalInventory.count(c, k))
+		var take := mini(have, int(miss[k]))
+		if take > 0:
+			SurvivalInventory.remove(c, k, float(take))
+			build.deliver(k, take)
+			n += take
+	return n
+
+
+## Works the current stage: kneels at the stand while the bar fills; moving stops it and what was done stays.
+func _work(sid: String) -> String:
+	var left := maxf(build.work_min(sid) - build.progress, 0.0)
+	_min_left = left
+	_secs = clampf(build.work_min(sid) / 10.0, 5.0, 20.0) * left / maxf(build.work_min(sid), 1.0)
+	_secs = maxf(_secs, 2.0)
+	_t0 = Time.get_ticks_msec()
+	var b := bridge()
+	if instant_work or b == null or b.work == null:
+		return _worked(left)
+	var text := "%s" % String(build.stage(sid).name)
+	if not b.work.begin(global_position, "low", text, _secs, "", _on_work_end):
+		return "You cannot work at it now."
+	return ""
+
+
+func _on_work_end(done: bool) -> void:
+	var mins := _min_left
+	if not done:
+		var el := float(Time.get_ticks_msec() - _t0) / 1000.0
+		mins = _min_left * clampf(el / maxf(_secs, 0.1), 0.0, 1.0)
+	last = _worked(mins)
+	refresh()
+	var p := get_tree().get_first_node_in_group(&"player")
+	if last != "":
+		open_menu(p)
+
+
+## `mins` of work done on the current stage: what to say.
+func _worked(mins: float) -> String:
+	var name := String(build.stage(build.current).name)
+	var r := build.work(mins, 1.0, skill01())
+	refresh()
+	match r:
+		"done":
+			return "%s: done, %s work." % [name, build.grade_word(build.grade_of(_last_done()))]
+		"puzzle":
+			return "%s: the work is done, it wants fitting well." % name
+	return "%s: %d%% done." % [name, roundi(100.0 * build.progress / maxf(build.work_min(), 1.0))]
+
+
+func _last_done() -> String:
+	var best := ""
+	for s: Dictionary in build.stages():
+		if build.done.has(String(s.id)):
+			best = String(s.id)
+	return best
+
+
+## The puzzle of the current stage. The skill games come next (bark fitting, pitch spreading); until they do it is played for the
+## builder: a score from their skill, a little luck either way.
+func play_puzzle() -> String:
+	var pid := build.puzzle_id()
+	if pid == "":
+		return ""
+	var score := clampf(0.5 + 0.4 * skill01() + randf_range(-0.12, 0.12), 0.0, 1.0)
+	var name := String(build.stage(build.current).name)
+	var g := build.finish(score, skill01())
+	refresh()
+	return "%s: %s work." % [name, build.grade_word(g)]
+
+
+# ---------------------------------------------------------------- launch
+## The finished boat put on the water nearest the stand: the Boat with the grades' numbers. Null when there is no water in reach.
+func launch() -> Boat:
+	if not build.is_complete():
+		return null
+	var here := global_position
+	var best := Vector3.INF
+	var bd := INF
+	var r := 2.0
+	while r <= LAUNCH_SEARCH_M:
+		for k in 24:
+			var a := TAU * float(k) / 24.0
+			var q := here + Vector3(sin(a), 0.0, cos(a)) * r
+			if WaterSurface.depth_at(q.x, q.z) >= 0.6 and r < bd:
+				best = q
+				bd = r
+		if best != Vector3.INF:
+			break
+		r += 2.0
+	if best == Vector3.INF:
+		return null
+	var b := Boat.make(boat_id, best, atan2(here.x - best.x, here.z - best.z) + PI * 0.5)
+	b.grade = build.stats()
+	get_tree().current_scene.add_child(b)
+	# the stand is bare again for the next
+	build = BoatBuild.make(boat_id)
+	build.know = _know
+	build.has_tool = _has_tool
+	refresh()
+	return b
+
+
+func to_dict() -> Dictionary:
+	return build.to_dict()
+
+
+func load_dict(d: Dictionary) -> void:
+	build = BoatBuild.from_dict(d)
+	build.know = _know
+	build.has_tool = _has_tool
+	refresh()

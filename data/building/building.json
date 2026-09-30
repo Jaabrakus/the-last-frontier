@@ -3,7 +3,7 @@
   "version": 1,
   "summary": "Build mode (B): log cabins, windows, doors, palisade forts and chimneys from the logs and stone in the pack (scripts/building/). Every number here is a design value and tunable. Pieces are 3 m modules: they snap to each other's sockets (floor edges, wall ends and tops, roof ends, wall faces) or stand on the ground on a 0.25 m / 15 degree grid.",
   "provenance": "Pieces, meshes and colliders are the project's own, generated in code (scripts/building/build_geometry.gd) with the fort's StructureMeshKit and StructureMaterials (the CC0 Poly Haven textures processed for the fort, assets/environment/structures/textures/SOURCES.md). No animation data is used.",
-  "order": ["floor", "wall", "wall_window", "wall_door", "post", "gable", "roof", "hearth", "campfire", "lean_to", "bough_bed", "drying_rack", "woodpile", "smokehouse", "pole_bed", "cradle", "musket_rack", "spear_barrel", "storage_chest", "tanning_frame", "alchemy_table", "workbench", "stretching_hoop", "work_stone", "charcoal_mound", "forge", "trap_steel", "trap_snare", "trap_deadfall", "palisade", "palisade_gate", "walkway", "walkway_ramp", "ladder", "blockhouse", "flagpole", "opening_repair", "opening_cover"],
+  "order": ["floor", "wall", "wall_window", "wall_door", "post", "gable", "roof", "hearth", "campfire", "lean_to", "bough_bed", "drying_rack", "woodpile", "smokehouse", "pole_bed", "cradle", "musket_rack", "spear_barrel", "storage_chest", "tanning_frame", "alchemy_table", "workbench", "stretching_hoop", "boat_stand", "work_stone", "charcoal_mound", "forge", "trap_steel", "trap_snare", "trap_deadfall", "palisade", "palisade_gate", "walkway", "walkway_ramp", "ladder", "blockhouse", "flagpole", "opening_repair", "opening_cover"],
   "pieces": {
     "walkway": {
       "group": "Fort",
@@ -198,6 +198,13 @@
       "name": "Tanning frame",
       "summary": "A fleshing beam and a pole frame to lace a hide in. E works a deer hide: scraped into rawhide, or with brains (or cornmeal) worked in and smoked over a lit fire beside it, dressed into soft buckskin.",
       "cost": {"pole": 4, "log": 1},
+      "free": true
+    },
+    "boat_stand": {
+      "group": "Crafting",
+      "name": "Boat stand",
+      "summary": "A cradle of two skids and chocks on a gravel bed by the water, where a boat is built. Bring the parts to it: E lists the craft's stages, and the hull grows on it as each is done. A finished boat is launched from it onto the water.",
+      "cost": {"pole": 6, "log": 2},
       "free": true
     },
     "alchemy_table": {

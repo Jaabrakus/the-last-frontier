@@ -26,6 +26,8 @@ var throttle := 0.0
 var steer := 0.0
 var crew_on := 1
 var cargo_kg := 0.0
+## What it was built to (BoatBuild.stats: speed_mult, leak_l_per_h, wear_mult ...): empty for a boat with no maker's grade.
+var grade := {}
 ## How much of its hull is on the ground (0 floating .. 1 aground) and whether it is on water at all.
 var grounded := 0.0
 var afloat := true
@@ -80,7 +82,10 @@ func right() -> Vector3:
 
 
 func num(key: String, dflt := 0.0) -> float:
-	return float(spec.get(key, dflt))
+	var v := float(spec.get(key, dflt))
+	if key == "max_mps" and not grade.is_empty():
+		v *= float(grade.get("speed_mult", 1.0))   # a truer hull is quicker
+	return v
 
 
 func speed() -> float:

@@ -141,6 +141,8 @@ func dress(new_ctx: Dictionary, detail := true) -> void:
 		st.name = "Station"
 		st.kind = type
 		add_child(st)
+	if type == "boat_stand" and get_node_or_null("BoatStand") == null:
+		BoatStand.attach(self)   # BOATS: the boat that grows on it
 
 
 ## The look of a piece under `parent`: its mesh, a palisade's stakes (MultiMeshes), for a ghost (`solid` off)
