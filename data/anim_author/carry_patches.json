@@ -1,5 +1,17 @@
 {
 	"about": "Arm layers the graph's roles take in place of their own (AnimGraphData.apply_carry_patches; written by tools/anim_author/author_locomotion.gd). clips: graph clips of our own library. rules: weapon / modes / roles (all but roles_except) / slots replaced, by layers, or copied from another weapon's same role (copy_from).",
+	"actions": {
+		"bow/crouch/nock_hand": {
+			"copy_of": "bow/crouch/nock",
+			"frontier_key": "nock_hand",
+			"partial": "own-bow-nock-hand-crouch"
+		},
+		"bow/stand/nock_hand": {
+			"copy_of": "bow/stand/nock",
+			"frontier_key": "nock_hand",
+			"partial": "own-bow-nock-hand"
+		}
+	},
 	"clips": {
 		"own-axe-carry": {
 			"clip": "own-axe-carry",
@@ -9,6 +21,16 @@
 		"own-axe-grip": {
 			"clip": "own-axe-grip",
 			"length": 0.033333,
+			"lib": "frontier_locomotion"
+		},
+		"own-bow-nock-hand": {
+			"clip": "own-bow-nock-hand",
+			"length": 0.3,
+			"lib": "frontier_locomotion"
+		},
+		"own-bow-nock-hand-crouch": {
+			"clip": "own-bow-nock-hand-crouch",
+			"length": 0.3,
 			"lib": "frontier_locomotion"
 		},
 		"own-rifle-crouch-mid": {

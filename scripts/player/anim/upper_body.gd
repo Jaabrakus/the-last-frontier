@@ -96,7 +96,7 @@ extends RefCounted
 const STANCES := ["stand", "crouch"]
 ## Frontier action keys without a graph action of that frontier_key, mapped to the graph action
 ## whose clip plays them (today's behaviour).
-const ACTION_ALIAS := {"grab": "nock"}
+const ACTION_ALIAS := {"grab": "nock", "nock_hand": "nock"}
 const REQ_FIRE := AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE
 const REQ_FADE_OUT := AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT
 ## Pitch fallback when a weapon / stance has no calibration table: degrees at full up / down add.

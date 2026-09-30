@@ -145,6 +145,7 @@ func apply_carry_patches() -> void:
 	graph = graph.duplicate(false)
 	graph["clips"] = (graph.get("clips", {}) as Dictionary).duplicate(false)
 	graph["roles"] = (graph.get("roles", {}) as Dictionary).duplicate(false)
+	graph["actions"] = (graph.get("actions", {}) as Dictionary).duplicate(false)
 	for name: String in t.get("clips", {}):
 		var c: Dictionary = t.clips[name]
 		var lib := String(c.lib)
@@ -154,6 +155,21 @@ func apply_carry_patches() -> void:
 				"length": float(c.length), "original_name": name, "source_kind": "clip", "source_names": [name]}
 		_alias[name] = name
 		_override_libs[lib] = OVERRIDE_LIBS[lib]
+	# actions of our own (a copy of a graph action under a key of its own, playing a clip of ours): the bow's nock from the hand
+	for key: String in t.get("actions", {}):
+		var spec: Dictionary = t.actions[key]
+		var src: Dictionary = graph.actions.get(String(spec.copy_of), {})
+		if src.is_empty():
+			continue
+		var e: Dictionary = src.duplicate(false)
+		e["frontier_key"] = String(spec.frontier_key)
+		e["partial"] = String(spec.partial)
+		if e.get("partial_role") is Dictionary:
+			var pr: Dictionary = (e.partial_role as Dictionary).duplicate(false)
+			pr["clip"] = String(spec.partial)
+			pr["graph_clip"] = String(spec.partial)
+			e["partial_role"] = pr
+		graph.actions[key] = e
 	for rule: Dictionary in t.get("rules", []):
 		var slots: Array = rule.get("slots", [])
 		var except: Array = rule.get("roles_except", [])

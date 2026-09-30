@@ -121,6 +121,8 @@ func _bake() -> void:
 	var mid_bones := _bake_rifle_pose(out, "own-rifle-crouch-mid", "actor_b-p-rifle-crouch-run-arms", MID_TURN_R, MID_TURN_L)
 	_bake_rifle_pose(out, "own-rifle-crouch-mid-fw", "actor_b-p-rifle-crouch-run-arms", MID_FW_TURN_R, MID_FW_TURN_L)
 	print(ResourceSaver.save(out, OUT_LIB, ResourceSaver.FLAG_COMPRESS))
+	_bake_bow_nock_hand(out, "actor_b-p-bow-reload--part", "own-bow-nock-hand")
+	_bake_bow_nock_hand(out, "actor_b-p-crouch-bow-reload--part", "own-bow-nock-hand-crouch")
 	_write_carry_patches(axe_bones, grip_bones, low_bones, mid_bones)
 	var f := FileAccess.open(WIRED, FileAccess.WRITE)
 	f.store_string(JSON.stringify({"about": "Clips that stand in for the graph's own (AnimGraphData.apply_clip_overrides): the graph clip name -> the library and clip played instead, its measured travel speed (m/s, tools/anim_author/author_locomotion.gd) and length (s). The plant phases and the rest of the metrics stay the original clip's.", "clips": wired}, "\t") + "\n")
@@ -195,7 +197,12 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array,
 				"own-axe-grip": {"lib": "frontier_locomotion", "clip": "own-axe-grip", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-rifle-low-ready": {"lib": "frontier_locomotion", "clip": "own-rifle-low-ready", "length": snappedf(1.0 / 30.0, 0.000001)},
 				"own-rifle-crouch-mid": {"lib": "frontier_locomotion", "clip": "own-rifle-crouch-mid", "length": snappedf(1.0 / 30.0, 0.000001)},
-				"own-rifle-crouch-mid-fw": {"lib": "frontier_locomotion", "clip": "own-rifle-crouch-mid-fw", "length": snappedf(1.0 / 30.0, 0.000001)}},
+				"own-rifle-crouch-mid-fw": {"lib": "frontier_locomotion", "clip": "own-rifle-crouch-mid-fw", "length": snappedf(1.0 / 30.0, 0.000001)},
+				"own-bow-nock-hand": {"lib": "frontier_locomotion", "clip": "own-bow-nock-hand", "length": snappedf(NOCK_HAND_LEN, 0.000001)},
+				"own-bow-nock-hand-crouch": {"lib": "frontier_locomotion", "clip": "own-bow-nock-hand-crouch", "length": snappedf(NOCK_HAND_LEN, 0.000001)}},
+		"actions": {
+			"bow/stand/nock_hand": {"copy_of": "bow/stand/nock", "frontier_key": "nock_hand", "partial": "own-bow-nock-hand"},
+			"bow/crouch/nock_hand": {"copy_of": "bow/crouch/nock", "frontier_key": "nock_hand", "partial": "own-bow-nock-hand-crouch"}},
 		"rules": [
 			{"why": "the spear sprints and crouches with the felling axe's carry: its arm and its grip (user 2026-09-30: \"hold it like the fell axe\"); its idle keeps the javelin carry",
 			"weapon": "spear", "modes": ["sprint"], "roles_except": ["idle"], "roles_only": MOVE_ROLES, "slots": ["arms", "hands"], "layers": [grip_layer, axe_layer]},
@@ -323,6 +330,35 @@ func _bake_rifle_pose(out: AnimationLibrary, clip_name: String, src_name: String
 			bones.append(bone)
 	out.add_animation(StringName(clip_name), pose)
 	return bones
+
+
+## The bow's nock with an arrow in the hand (user 2026-09-30: "with arrows in hand the user doesn't need to pull arrows out the
+## quiver"): the last part of the graph's reload, the hand already past the quiver and on its way to the string.
+const NOCK_HAND_FROM := 0.9
+const NOCK_HAND_LEN := 0.3
+
+
+func _bake_bow_nock_hand(out: AnimationLibrary, src_name: String, clip_name: String) -> void:
+	var src := lib.get_animation(src_name)
+	var a := _stamp(Animation.new(), src)
+	a.length = NOCK_HAND_LEN
+	a.loop_mode = Animation.LOOP_NONE
+	a.set_meta(&"authored", "Frontier: the end of %s, from %.2f s: the arrow nocked from the bow hand (tools/anim_author/author_locomotion.gd)" % [src_name, NOCK_HAND_FROM])
+	var n := int(round(NOCK_HAND_LEN * FPS))
+	for ti in src.get_track_count():
+		var type := src.track_get_type(ti)
+		if type != Animation.TYPE_ROTATION_3D and type != Animation.TYPE_POSITION_3D:
+			continue
+		var tr := a.add_track(type)
+		a.track_set_path(tr, src.track_get_path(ti))
+		for f in n + 1:
+			var t := minf(float(f) / FPS, NOCK_HAND_LEN)
+			var ts := minf(NOCK_HAND_FROM + t, src.length)
+			if type == Animation.TYPE_ROTATION_3D:
+				a.rotation_track_insert_key(tr, t, src.rotation_track_interpolate(ti, ts))
+			else:
+				a.position_track_insert_key(tr, t, src.position_track_interpolate(ti, ts))
+	out.add_animation(StringName(clip_name), a)
 
 
 ## A clip with its arms made our own: each arm bone's movement about its mean through the clip is scaled (ARMS_SWING) and

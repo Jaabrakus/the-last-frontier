@@ -256,12 +256,15 @@ func _fire() -> void:
 func _start_nock() -> void:
 	state = State.NOCKING
 	_nock_duration = nock_time
-	if held > 0:
+	# (an arrow already in the bow hand is nocked from there, with no reach back to the quiver: its own action, "nock_hand";
+	# user 2026-09-30: "with arrows in hand the user doesn't need to pull arrows out the quiver")
+	var from_hand := held > 0
+	if from_hand:
 		held -= 1
 		_nock_duration = hand_nock_time
 	_nock_duration *= player.reload_time_mult if player else 1.0    # a pipe: a little quicker (Vices)
 	_nock_left = _nock_duration
-	action_started.emit("nock", _nock_duration)
+	action_started.emit("nock_hand" if from_hand else "nock", _nock_duration)
 
 
 ## Arrow speed if released now (used by the shot and the trajectory arc).

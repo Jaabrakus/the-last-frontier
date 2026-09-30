@@ -178,9 +178,9 @@ func _on_action(action: String, duration: float, w: Weapon) -> void:
 		var stage: int = (w as Firearm)._stage
 		if stage >= 0 and stage < stages.size():
 			_timeline(w, key, stages[stage], duration)
-	elif action == "nock":
+	elif action == "nock" or action == "nock_hand":
 		var bow := w as Bow
-		_timeline(w, key, HAND_NOCK if bow and duration < bow.nock_time * 0.8 else NOCK, duration)
+		_timeline(w, key, HAND_NOCK if action == "nock_hand" or (bow and duration < bow.nock_time * 0.8) else NOCK, duration)
 	elif action == "grab":
 		_timeline(w, key, GRAB, duration)
 
