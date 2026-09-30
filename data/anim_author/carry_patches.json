@@ -1,0 +1,89 @@
+{
+	"about": "Arm layers the graph's roles take in place of their own (AnimGraphData.apply_carry_patches; written by tools/anim_author/author_locomotion.gd). clips: graph clips of our own library. rules: weapon / modes / roles (all but roles_except) / slots replaced, by layers, or copied from another weapon's same role (copy_from).",
+	"clips": {
+		"own-axe-carry": {
+			"clip": "own-axe-carry",
+			"length": 0.033333,
+			"lib": "frontier_locomotion"
+		}
+	},
+	"rules": [
+		{
+			"layers": [
+				{
+					"bones": [
+						"r_clavicle",
+						"r_deltoid",
+						"r_elbow",
+						"r_shoulder",
+						"r_trap",
+						"r_wrist"
+					],
+					"clip": "own-axe-carry",
+					"kind": "partial",
+					"sample_s": 0.0,
+					"slot": "arms",
+					"status": "frontier",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"sprint"
+			],
+			"roles_except": [
+				"idle"
+			],
+			"slots": [
+				"arms"
+			],
+			"weapon": "spear",
+			"why": "the spear sprints and crouches with the felling axe's carry arm (user 2026-09-30); its idle keeps the javelin carry"
+		},
+		{
+			"layers": [
+				{
+					"bones": [
+						"r_clavicle",
+						"r_deltoid",
+						"r_elbow",
+						"r_shoulder",
+						"r_trap",
+						"r_wrist"
+					],
+					"clip": "own-axe-carry",
+					"kind": "partial",
+					"sample_s": 0.0,
+					"slot": "arms",
+					"status": "frontier",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"crouch"
+			],
+			"roles_except": [],
+			"slots": [
+				"arms"
+			],
+			"weapon": "spear",
+			"why": "the spear crouches with the felling axe's carry arm (user 2026-09-30)"
+		},
+		{
+			"copy_from": "pistol",
+			"modes": [
+				"crouch"
+			],
+			"roles_except": [],
+			"slots": [
+				"arms",
+				"arms_add"
+			],
+			"weapon": "tomahawk",
+			"why": "the tomahawk crouches like the pistol (user 2026-09-30): the pistol's crouch arm on every role"
+		}
+	]
+}

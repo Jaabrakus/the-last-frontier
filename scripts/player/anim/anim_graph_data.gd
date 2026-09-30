@@ -26,6 +26,8 @@ const METRICS_PATH := "res://animations/actor_b_clip_metrics.json"
 ## Clips that stand in for the graph's own (tools/anim_author/author_locomotion.gd writes it): graph clip name ->
 ## {lib, clip, speed, length}; the libraries they live in, by name.
 const CLIP_OVERRIDES_PATH := "res://data/anim_author/locomotion_clips.json"
+## Arm layers the roles take in place of their own (tools/anim_author/author_locomotion.gd writes it).
+const CARRY_PATCHES_PATH := "res://data/anim_author/carry_patches.json"
 const OVERRIDE_LIBS := {"frontier_locomotion": "res://animations_extra/Frontier_Locomotion.res"}
 const FIXTURE_GRAPH := "res://tools/anim_graph/fixtures/mini_graph.json"
 const FIXTURE_METRICS := "res://tests/anim/fixtures/mini_metrics.json"
@@ -75,6 +77,7 @@ static func load_files(p_graph := GRAPH_PATH, p_metrics := METRICS_PATH) -> Anim
 	var d := AnimGraphData.from_dicts(g, m)
 	if p_graph == GRAPH_PATH:
 		d.apply_clip_overrides()
+		d.apply_carry_patches()
 	d.graph_path = p_graph
 	d.metrics_path = p_metrics
 	if p_metrics != "" and m.is_empty():
@@ -129,6 +132,55 @@ func apply_clip_overrides() -> void:
 			tr["stride_m"] = float(o.speed) * float(o.length)
 			mc["travel"] = tr
 			metrics.clips[name] = mc
+
+
+## Arm layers the roles take in place of their own (CARRY_PATCHES_PATH): for each rule the roles of its weapon in its modes
+## (but `roles_except`) lose their layers in `slots` and take the rule's `layers`, or the same role's layers of the weapon
+## in `copy_from` (none when that role has none in those slots). `clips` adds graph clips from our own libraries, which the
+## patched layers name. Copies what it changes.
+func apply_carry_patches() -> void:
+	var t := _read_json(CARRY_PATCHES_PATH)
+	if t.is_empty():
+		return
+	graph = graph.duplicate(false)
+	graph["clips"] = (graph.get("clips", {}) as Dictionary).duplicate(false)
+	graph["roles"] = (graph.get("roles", {}) as Dictionary).duplicate(false)
+	for name: String in t.get("clips", {}):
+		var c: Dictionary = t.clips[name]
+		var lib := String(c.lib)
+		if not OVERRIDE_LIBS.has(lib):
+			continue
+		graph.clips[name] = {"additive": false, "alternatives": [], "godot": "%s/%s" % [lib, c.clip], "graph_names": [],
+				"length": float(c.length), "original_name": name, "source_kind": "clip", "source_names": [name]}
+		_alias[name] = name
+		_override_libs[lib] = OVERRIDE_LIBS[lib]
+	for rule: Dictionary in t.get("rules", []):
+		var slots: Array = rule.get("slots", [])
+		var except: Array = rule.get("roles_except", [])
+		for key: String in graph.roles.keys():
+			var parts := key.split("/")
+			if parts.size() != 3 or parts[0] != String(rule.weapon) or not (rule.modes as Array).has(parts[1]) or except.has(parts[2]):
+				continue
+			var role: Dictionary = (graph.roles[key] as Dictionary).duplicate(false)
+			var layers: Array = []
+			var had := false
+			for l: Dictionary in role.get("layers", []):
+				if slots.has(String(l.get("slot", ""))):
+					had = true
+				else:
+					layers.append(l)
+			# (only the roles that carry such a layer: the air, landing, hit and death roles have none)
+			if not had:
+				continue
+			if rule.has("copy_from"):
+				var src: Dictionary = graph.roles.get("%s/%s/%s" % [rule.copy_from, parts[1], parts[2]], {})
+				for l: Dictionary in src.get("layers", []):
+					if slots.has(String(l.get("slot", ""))):
+						layers.append(l)
+			else:
+				layers.append_array(rule.get("layers", []))
+			role["layers"] = layers
+			graph.roles[key] = role
 
 
 ## Libraries the overriding clips live in: name -> resource path.

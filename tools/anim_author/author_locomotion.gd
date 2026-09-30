@@ -20,6 +20,12 @@ const FPS := 30.0
 ## Our own stop: seconds our upper body takes to ease into the graph's stop, and how much faster than the graph's it runs.
 const STOP_S := 0.6
 const STOP_RATE := 1.12
+## The jump and fall arms: the share of the graph's arm movement kept, and the lag behind the body (s).
+const ARMS_SWING := 0.75
+const ARMS_LAG := 0.07
+## Backward jogs: the share of our upper body's swing they take (the shoulder girdle; the rest).
+const BACK_SHOULDER_SWING := 0.4
+const BACK_SWING := 0.75
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
 
 var args := {}
@@ -92,7 +98,17 @@ func _bake() -> void:
 		var tn: String = "own-stop-%s-k%d" % [dir, int(round(k * 100.0))]
 		out.add_animation(StringName(tn), _own_stop(clip, stop_name))
 		wired[stop_name] = {"lib": "frontier_locomotion", "clip": tn, "length": snappedf(lib.get_animation(stop_name).length, 0.000001)}
+	# the jump and the fall: the graph's body with our own arms (user 2026-09-30: "the jump animation, tweak the arms so it
+	# does not look identical")
+	for cn in ["actor_b-p-jump-long", "actor_b-p-fall"]:
+		var an: String = "own-arms-" + cn.trim_prefix("actor_b-p-")
+		out.add_animation(StringName(an), _arms_variant(lib.get_animation(cn)))
+		wired[cn] = {"lib": "frontier_locomotion", "clip": an, "length": snappedf(lib.get_animation(cn).length, 0.000001)}
+	# the felling axe's carry arm (GatherTools: the last frame of the draw's return, the right arm only, held while the
+	# axe is in the hand, walking, sprinting and crouched), as a one-frame pose the spear's sprint and crouch take
+	var axe_bones := _bake_axe_carry(out)
 	print(ResourceSaver.save(out, OUT_LIB, ResourceSaver.FLAG_COMPRESS))
+	_write_carry_patches(axe_bones)
 	var f := FileAccess.open(WIRED, FileAccess.WRITE)
 	f.store_string(JSON.stringify({"about": "Clips that stand in for the graph's own (AnimGraphData.apply_clip_overrides): the graph clip name -> the library and clip played instead, its measured travel speed (m/s, tools/anim_author/author_locomotion.gd) and length (s). The plant phases and the rest of the metrics stay the original clip's.", "clips": wired}, "\t") + "\n")
 	f.close()
@@ -105,6 +121,105 @@ static func _stamp(a: Animation, from: Animation) -> Animation:
 		if from.has_meta(m):
 			a.set_meta(m, from.get_meta(m))
 	return a
+
+
+const AXE_CARRY_SRC := "res://animations_extra/Actor_B_from_A.res"
+const AXE_CARRY_CLIP := "machete-draw--grab^idle--part"
+const CARRY_PATCHES := "res://data/anim_author/carry_patches.json"
+
+
+## The felling axe's carry arm as a one-frame clip "own-axe-carry" in `out`; returns the bones it keys.
+func _bake_axe_carry(out: AnimationLibrary) -> Array:
+	var src := (load(AXE_CARRY_SRC) as AnimationLibrary).get_animation(AXE_CARRY_CLIP)
+	var pose := _stamp(Animation.new(), src)
+	pose.length = 1.0 / 30.0
+	pose.set_meta(&"authored", "Frontier: the felling axe's carry arm, the last frame of %s (tools/anim_author/author_locomotion.gd)" % AXE_CARRY_CLIP)
+	var bones: Array = []
+	for ti in src.get_track_count():
+		var type := src.track_get_type(ti)
+		if type != Animation.TYPE_ROTATION_3D and type != Animation.TYPE_POSITION_3D:
+			continue
+		var bone := String(src.track_get_path(ti).get_concatenated_subnames())
+		# (the right arm chain: the hand's fingers and prop bone are the spear's own hands layers')
+		var keep := false
+		for part in ["clavicle", "scapula", "shoulder", "deltoid", "elbow", "wrist", "forarm", "trap"]:
+			if bone.begins_with("r_") and part in bone:
+				keep = true
+		if not keep:
+			continue
+		var tr := pose.add_track(type)
+		pose.track_set_path(tr, src.track_get_path(ti))
+		if not bones.has(bone):
+			bones.append(bone)
+		if type == Animation.TYPE_ROTATION_3D:
+			pose.rotation_track_insert_key(tr, 0.0, src.rotation_track_interpolate(ti, src.length))
+		else:
+			pose.position_track_insert_key(tr, 0.0, src.position_track_interpolate(ti, src.length))
+	out.add_animation(&"own-axe-carry", pose)
+	return bones
+
+
+## data/anim_author/carry_patches.json: arm layers the graph's roles get in place of their own (AnimGraphData.apply_carry_patches)
+## because the tables cannot be regenerated here; "clips" are graph clips of our own library.
+func _write_carry_patches(axe_bones: Array) -> void:
+	var axe_layer := {"clip": "own-axe-carry", "kind": "partial", "slot": "arms", "status": "frontier", "weight": 1.0,
+			"sample_s": 0.0, "bones": axe_bones, "superseded_by": null, "weight_curve": null}
+	var doc := {
+		"about": "Arm layers the graph's roles take in place of their own (AnimGraphData.apply_carry_patches; written by tools/anim_author/author_locomotion.gd). clips: graph clips of our own library. rules: weapon / modes / roles (all but roles_except) / slots replaced, by layers, or copied from another weapon's same role (copy_from).",
+		"clips": {"own-axe-carry": {"lib": "frontier_locomotion", "clip": "own-axe-carry", "length": snappedf(1.0 / 30.0, 0.000001)}},
+		"rules": [
+			{"why": "the spear sprints and crouches with the felling axe's carry arm (user 2026-09-30); its idle keeps the javelin carry",
+			"weapon": "spear", "modes": ["sprint"], "roles_except": ["idle"], "slots": ["arms"], "layers": [axe_layer]},
+			{"why": "the spear crouches with the felling axe's carry arm (user 2026-09-30)",
+			"weapon": "spear", "modes": ["crouch"], "roles_except": [], "slots": ["arms"], "layers": [axe_layer]},
+			{"why": "the tomahawk crouches like the pistol (user 2026-09-30): the pistol's crouch arm on every role",
+			"weapon": "tomahawk", "modes": ["crouch"], "roles_except": [], "slots": ["arms", "arms_add"], "copy_from": "pistol"},
+		],
+	}
+	var f := FileAccess.open(CARRY_PATCHES, FileAccess.WRITE)
+	f.store_string(JSON.stringify(doc, "\t") + "\n")
+	f.close()
+
+
+## A clip with its arms made our own: each arm bone's movement about its mean through the clip is scaled (ARMS_SWING) and
+## run ARMS_LAG seconds behind the body's, the left arm a little less than the right, so the arms no longer trace the graph's
+## path at the graph's moments. Everything else is the graph's.
+func _arms_variant(a: Animation) -> Animation:
+	var out := _stamp(Animation.new(), a)
+	out.length = a.length
+	out.loop_mode = a.loop_mode
+	out.set_meta(&"authored", "Frontier: the graph's body with our own arms (tools/anim_author/author_locomotion.gd)")
+	var arm := ["clavicle", "scapula", "shoulder", "deltoid", "elbow", "wrist", "forarm", "trap"]
+	var n := int(round(a.length * FPS))
+	for ti in a.get_track_count():
+		var type := a.track_get_type(ti)
+		if type != Animation.TYPE_ROTATION_3D and type != Animation.TYPE_POSITION_3D:
+			continue
+		var path := a.track_get_path(ti)
+		var bone := String(path.get_concatenated_subnames())
+		var tr := out.add_track(type)
+		out.track_set_path(tr, path)
+		var is_arm := type == Animation.TYPE_ROTATION_3D and (bone.begins_with("l_") or bone.begins_with("r_"))
+		if is_arm:
+			is_arm = false
+			for part in arm:
+				if part in bone:
+					is_arm = true
+		var mean := _mean_q(a, ti) if is_arm else Quaternion.IDENTITY
+		var scale := ARMS_SWING * (0.88 if bone.begins_with("l_") else 1.0)
+		for f in n + 1:
+			var t := minf(float(f) / FPS, a.length)
+			if type == Animation.TYPE_ROTATION_3D:
+				var q: Quaternion = a.rotation_track_interpolate(ti, t)
+				if is_arm:
+					# (a looping clip lags round its loop, so the seam stays closed)
+					var tl := fposmod(t - ARMS_LAG, a.length) if a.loop_mode != Animation.LOOP_NONE else maxf(t - ARMS_LAG, 0.0)
+					var lagged: Quaternion = a.rotation_track_interpolate(ti, tl)
+					q = mean * Quaternion.IDENTITY.slerp(mean.inverse() * lagged, scale)
+				out.rotation_track_insert_key(tr, t, q)
+			else:
+				out.position_track_insert_key(tr, t, a.position_track_interpolate(ti, t))
+	return out
 
 
 ## A clip played backwards (a loop stays a loop).
@@ -170,6 +285,15 @@ func _own_stop(new_jog: Animation, orig_name: String) -> Animation:
 			else:
 				out.position_track_insert_key(tr, t, orig.position_track_interpolate(ti, ts))
 	return out
+
+
+## How much of our swing the backward jog takes, by bone (user 2026-09-30: "backwards shoulders too exaggerated, tone it
+## down"): the shoulder girdle least, the arms and spine most.
+static func _swing_scale(bone: String) -> float:
+	for part in ["clavicle", "scapula", "shoulder", "deltoid", "trap"]:
+		if part in bone:
+			return BACK_SHOULDER_SWING
+	return BACK_SWING
 
 
 ## The bones of the upper body (the clip metrics' bone set).
@@ -247,7 +371,8 @@ func _backward(dir: String, fwd: Animation) -> Animation:
 			if type == Animation.TYPE_ROTATION_3D:
 				var q: Quaternion = bw.rotation_track_interpolate(ti, t)
 				if swing:
-					q = bm * (fm.inverse() * fwd.rotation_track_interpolate(fi, fposmod(t + shift, fwd.length)))
+					var delta: Quaternion = fm.inverse() * fwd.rotation_track_interpolate(fi, fposmod(t + shift, fwd.length))
+					q = bm * Quaternion.IDENTITY.slerp(delta, _swing_scale(bone))
 				out.rotation_track_insert_key(tr, t, q)
 			else:
 				out.position_track_insert_key(tr, t, bw.position_track_interpolate(ti, t))

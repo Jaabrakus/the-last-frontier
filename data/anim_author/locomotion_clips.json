@@ -1,6 +1,11 @@
 {
 	"about": "Clips that stand in for the graph's own (AnimGraphData.apply_clip_overrides): the graph clip name -> the library and clip played instead, its measured travel speed (m/s, tools/anim_author/author_locomotion.gd) and length (s). The plant phases and the rest of the metrics stay the original clip's.",
 	"clips": {
+		"actor_b-p-fall": {
+			"clip": "own-arms-fall",
+			"length": 2.0,
+			"lib": "frontier_locomotion"
+		},
 		"actor_b-p-idle^run-bw": {
 			"clip": "own-start-bw-k100",
 			"length": 0.8,
@@ -29,6 +34,11 @@
 		"actor_b-p-idle^run-fw-rt": {
 			"clip": "own-start-fw-rt-k100",
 			"length": 1.5,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-jump-long": {
+			"clip": "own-arms-jump-long",
+			"length": 0.9,
 			"lib": "frontier_locomotion"
 		},
 		"actor_b-p-run-bw": {
