@@ -297,6 +297,9 @@ var riding: Horse = null
 ## Kneeling over work on the ground (FieldDressing: skinning, butchering): the node that owns the body. Movement input
 ## is ignored, the camera orbits the kneeling body, PlayerAnim is suspended (begin_kneel / end_kneel).
 var kneeling: Node = null
+## Carried by a boat (BoatRider), crouched at the gunwale: the boat holds the body where it is (the rider pins it every physics frame), walking and
+## jumping are ignored; the crouch, the aim and the weapons are the player's own, so they can equip and shoot from the boat.
+var aboard: Node = null
 ## Gripping a surface or a moving body (PlayerGrip, hold G): the node that owns the body while it holds on, or null.
 ## Movement input goes to the grip, the collision capsule is off, PlayerAnim is suspended (begin_climb / end_climb).
 var climbing: Node = null
@@ -1056,7 +1059,7 @@ func _physics_process(delta: float) -> void:
 		wish_local = Vector2.ZERO
 		return
 
-	var input := Vector2.ZERO if is_dead or perch != null else controls.move_vector()
+	var input := Vector2.ZERO if is_dead or perch != null or aboard != null else controls.move_vector()
 	# Crouch is a toggle. Sprinting or jumping stands you back up.
 	var want_crouch := is_crouching
 	if controls.just_pressed(&"crouch") and not is_dead:
@@ -1139,7 +1142,7 @@ func _physics_process(delta: float) -> void:
 		velocity.z = horiz.z
 
 		if is_on_floor() and perch == null:
-			if controls.just_pressed(&"jump") and not is_crouching and not is_dead \
+			if controls.just_pressed(&"jump") and not is_crouching and not is_dead and aboard == null \
 					and (traversal == null or traversal.allows_jump()):
 				velocity.y = jump_velocity
 		else:

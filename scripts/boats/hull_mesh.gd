@@ -16,6 +16,8 @@ const A_STEPS := 8
 const RIB_COUNT := 17
 const STAKE_PAIRS := 7
 
+## Planked or dug out (wood, no bark): the skin is boards or a hollowed log, not birch bark.
+var wooden := false
 var hull: Dictionary = {}
 var parts := {}
 var frac := {}
@@ -167,6 +169,10 @@ func _ts(f: float) -> Array[float]:
 
 
 func _skin(parent: Node3D, f: float) -> void:
+	if wooden:
+		_mi(parent, _skin_mesh(f, false), _wood(Color(0.62, 0.5, 0.38)))
+		_mi(parent, _skin_mesh(f, true), _wood(Color(0.72, 0.6, 0.46)))
+		return
 	_mi(parent, _skin_mesh(f, false), _birch(true))   # the outside: the tan inner bark
 	_mi(parent, _skin_mesh(f, true), _birch(false))   # the inside: the white
 

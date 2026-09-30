@@ -28,6 +28,11 @@ var crew_on := 1
 var cargo_kg := 0.0
 ## What it was built to (BoatBuild.stats: speed_mult, leak_l_per_h, wear_mult ...): empty for a boat with no maker's grade.
 var grade := {}
+## The visible hull and the paddles inside (not built headless).
+var hull_mesh: HullMesh
+## Getting in and paddling it (BoatRider).
+var rider: BoatRider
+var paddles: Array[Node3D] = []
 ## How much of its hull is on the ground (0 floating .. 1 aground) and whether it is on water at all.
 var grounded := 0.0
 var afloat := true
@@ -68,7 +73,68 @@ func _ready() -> void:
 	if spec.is_empty():
 		spec = spec_of(id)
 	process_physics_priority = 5
+	if DisplayServer.get_name() != "headless":
+		_build_model()
+	rider = BoatRider.attach_to(self)
+	_make_floor()
 	_settle()
+
+
+## The hull's numbers for its mesh: the plan's (data/boats/plans.json) or made from the boat's own (length, beam, draft, freeboard).
+func hull_numbers() -> Dictionary:
+	var plan: Dictionary = (BoatBuild.plans().get(id, {}) as Dictionary).get("hull", {})
+	if not plan.is_empty():
+		return plan
+	return {"length": num("length", 4.0), "beam": num("beam", 1.0), "depth": num("draft", 0.2) * 0.6 + num("freeboard", 0.35), "sheer_rise": 0.14,
+			"end_taper": 2.0 if id == "war_canoe" else 2.6, "bottom_round": 0.75 if id != "rowboat" else 1.2}
+
+
+## Where the floor is inside the hull, in the boat's frame (a paddler kneels or crouches on it).
+func floor_y() -> float:
+	return -num("draft", 0.2) * 0.7 + 0.07
+
+
+## A floor to stand on inside the hull: a thin box, for the player crouched aboard (they stand on it while the boat carries them; it is
+## solid to walk into from the bank as well, which is only the hull's own presence).
+func _make_floor() -> void:
+	var body := StaticBody3D.new()
+	body.name = "Floor"
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(maxf(num("beam", 1.0) * 0.6, 0.4), 0.1, maxf(num("length", 4.0) * 0.7, 1.0))
+	cs.shape = box
+	cs.position = Vector3(0.0, floor_y() - 0.05, 0.0)
+	body.add_child(cs)
+	add_child(body)
+
+
+## The visible boat: its hull whole (no bed of stakes) and its paddles or oars lying inside.
+func _build_model() -> void:
+	hull_mesh = HullMesh.new()
+	hull_mesh.name = "Hull"
+	hull_mesh.wooden = id in ["rowboat", "dugout"]
+	add_child(hull_mesh)
+	hull_mesh.setup(hull_numbers())
+	for part in ["skin", "gunwales", "ribs"]:
+		hull_mesh.set_part(part, 1.0)
+	hull_mesh.set_part("pitch", 1.0 if id == "birchbark" else 0.0)
+	hull_mesh.position.y = -num("draft", 0.2) * 0.7
+	var kind := String(spec.get("kind", "paddle"))
+	var count := mini(int(spec.get("crew", 1)), 2 if id != "war_canoe" else 4)
+	for k in count:
+		var g := BoatGear.make(kind)
+		g.name = "Paddle%d" % k
+		add_child(g)
+		paddles.append(g)
+		_stow(g, k)
+
+
+## A paddle or an oar lying inside along the floor, one to a side.
+func _stow(g: Node3D, k: int) -> void:
+	var side := 1.0 if k % 2 == 0 else -1.0
+	var lay := 0.12 + 0.03 * float(k / 2)
+	g.position = Vector3(side * lay, floor_y(), -num("length", 4.0) * 0.28 + 0.1 * float(k / 2))
+	g.rotation = Vector3(0.0, (0.05 if side > 0.0 else -0.05), 0.0)
 
 
 func forward() -> Vector3:
