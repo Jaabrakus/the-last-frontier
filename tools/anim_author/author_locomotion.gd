@@ -51,6 +51,8 @@ func _initialize() -> void:
 		await _bake()
 	elif args.has("sheet"):
 		await _sheet()
+	elif args.has("rifleside"):
+		_rifle_side_preview()
 	elif args.has("strip"):
 		await _strip()
 	elif args.has("speed"):
@@ -187,6 +189,8 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array) -> void:
 			"weapon": "spear", "modes": ["sprint"], "roles_except": ["idle"], "roles_only": MOVE_ROLES, "slots": ["arms", "hands"], "layers": [grip_layer, axe_layer]},
 			{"why": "the spear crouches with the felling axe's carry: its arm and its grip (user 2026-09-30)",
 			"weapon": "spear", "modes": ["crouch"], "roles_except": [], "roles_only": MOVE_ROLES + ["idle"], "slots": ["arms", "hands"], "layers": [grip_layer, axe_layer]},
+			{"why": "the rifle crouch walk holds it like the felling axe's carry (user 2026-09-30): the right arm hangs low at the side, the left hand stays on the rifle (LeftGripIK closes it onto the forestock); the crouch idle keeps its own",
+			"weapon": "musket", "modes": ["crouch"], "roles_except": ["idle"], "roles_only": MOVE_ROLES, "slots": ["arms", "arms_add"], "layers": [axe_layer]},
 			{"why": "the tomahawk crouches like the pistol (user 2026-09-30): the pistol's crouch arm on every role",
 			"weapon": "tomahawk", "modes": ["crouch"], "roles_except": [], "slots": ["arms", "arms_add"], "copy_from": "pistol"},
 		],
@@ -194,6 +198,70 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array) -> void:
 	var f := FileAccess.open(CARRY_PATCHES, FileAccess.WRITE)
 	f.store_string(JSON.stringify(doc, "\t") + "\n")
 	f.close()
+
+
+## Rifle crouch walk "like the aim animation but on the user's side, the right side, low" (user 2026-09-30): the arms of the
+## graph's crouched aim walk with both shoulders turned by `rr` / `rl` (degrees, pitch yaw roll in the shoulder's own frame).
+const RIFLE_SRC := "actor_b-p-rifle-aim-crouch-walk-fw"
+const PREVIEW_LIB := "user://preview_lib.res"
+
+
+## The aim walk's body clip with its shoulders turned: the preview, and (arms only) the pose the game takes.
+func _rifle_side(rr: Vector3, rl: Vector3, arms_only: bool) -> Animation:
+	var src := lib.get_animation(RIFLE_SRC)
+	var out := Animation.new()
+	out.length = src.length
+	out.loop_mode = src.loop_mode
+	var re := _vec_arg("re")
+	var le := _vec_arg("le")
+	var turn := {"r_shoulder": Quaternion.from_euler(Vector3(deg_to_rad(rr.x), deg_to_rad(rr.y), deg_to_rad(rr.z))),
+			"l_shoulder": Quaternion.from_euler(Vector3(deg_to_rad(rl.x), deg_to_rad(rl.y), deg_to_rad(rl.z))),
+			"r_elbow": Quaternion.from_euler(Vector3(deg_to_rad(re.x), deg_to_rad(re.y), deg_to_rad(re.z))),
+			"l_elbow": Quaternion.from_euler(Vector3(deg_to_rad(le.x), deg_to_rad(le.y), deg_to_rad(le.z)))}
+	var keep := ["clavicle", "scapula", "shoulder", "deltoid", "elbow", "wrist", "forarm", "trap"]
+	var n := int(round(src.length * FPS))
+	for ti in src.get_track_count():
+		var type := src.track_get_type(ti)
+		if type != Animation.TYPE_ROTATION_3D and type != Animation.TYPE_POSITION_3D:
+			continue
+		var bone := String(src.track_get_path(ti).get_concatenated_subnames())
+		if arms_only:
+			var ok := false
+			for part in keep:
+				if (bone.begins_with("r_") or bone.begins_with("l_")) and part in bone:
+					ok = true
+			if not ok:
+				continue
+		var tr := out.add_track(type)
+		out.track_set_path(tr, src.track_get_path(ti))
+		for f in n + 1:
+			var t := minf(float(f) / FPS, src.length)
+			if type == Animation.TYPE_ROTATION_3D:
+				var q: Quaternion = src.rotation_track_interpolate(ti, t)
+				if turn.has(bone):
+					q = q * (turn[bone] as Quaternion)
+				out.rotation_track_insert_key(tr, t, q)
+			else:
+				out.position_track_insert_key(tr, t, src.position_track_interpolate(ti, t))
+	return out
+
+
+func _vec_arg(key: String) -> Vector3:
+	var p := str(args.get(key, "0,0,0")).split(",")
+	return Vector3(float(p[0]), float(p[1]), float(p[2]))
+
+
+## rifleside rr=x,y,z rl=x,y,z: previews of the turned aim walk into user://preview_lib.res (library "pre", clips "a".."g": the
+## variants named by rr / rl lists separated by ';').
+func _rifle_side_preview() -> void:
+	var out := AnimationLibrary.new()
+	var rrs := str(args.get("rr", "0,0,0")).split(";")
+	var rls := str(args.get("rl", "0,0,0")).split(";")
+	for i in maxi(rrs.size(), rls.size()):
+		var a := rrs[mini(i, rrs.size() - 1)].split(",")
+		var b := rls[mini(i, rls.size() - 1)].split(",")
+		out.add_animation(StringName("v%d" % i), _rifle_side(Vector3(float(a[0]), float(a[1]), float(a[2])), Vector3(float(b[0]), float(b[1]), float(b[2])), false))
+	print(ResourceSaver.save(out, PREVIEW_LIB))
 
 
 ## A clip with its arms made our own: each arm bone's movement about its mean through the clip is scaled (ARMS_SWING) and
@@ -798,6 +866,8 @@ func _strip() -> void:
 	var ap := ch[2] as AnimationPlayer
 	ap.speed_scale = 0.0
 	ap.add_animation_library("own", load(OUT_LIB) as AnimationLibrary)
+	if ResourceLoader.exists(PREVIEW_LIB):
+		ap.add_animation_library("pre", ResourceLoader.load(PREVIEW_LIB, "", ResourceLoader.CACHE_MODE_IGNORE) as AnimationLibrary)
 	var view = OffscreenView.new()
 	root.add_child(view)
 	view.setup(root, Vector2i(260, 360))
@@ -806,16 +876,66 @@ func _strip() -> void:
 	await process_frame
 	await process_frame
 	var frames := int(args.get("frames", 8))
+	# rifle=1: a stand-in musket on the right hand's prop bone (barrel along the prop's +Z) and the stock end
+	var rifle: MeshInstance3D = null
+	var armpit: MeshInstance3D = null
+	var have_local := false
+	var rifle_local := Vector3.FORWARD
+	if args.has("rifle"):
+		rifle = MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = Vector3(0.05, 0.07, 1.4)
+		rifle.mesh = bm
+		var rm := StandardMaterial3D.new()
+		rm.albedo_color = Color(0.45, 0.25, 0.1)
+		rifle.material_override = rm
+		world.add_child(rifle)
+		armpit = MeshInstance3D.new()
+		var sm := SphereMesh.new()
+		sm.radius = 0.04
+		sm.height = 0.08
+		armpit.mesh = sm
+		var am := StandardMaterial3D.new()
+		am.albedo_color = Color(0.9, 0.1, 0.1)
+		armpit.material_override = am
+		world.add_child(armpit)
+	var front := str(args.get("view", "side")) == "front"
+	var top := str(args.get("view", "side")) == "top"
 	for row in str(args.rows).split(",", false):
 		var label := row.get_slice("=", 0)
 		var path := row.get_slice("=", 1)
+		# "arms:<clip>" in place of the row's own arms: a preview of `ours` = body clip + arm tracks of our pose
 		ap.play(path)
 		var length := ap.get_animation(path).length
 		for f in frames:
 			ap.seek(float(f) / float(frames - 1) * length * 0.999, true)
-			(ch[1] as Skeleton3D).force_update_all_bone_transforms()
+			var skel := ch[1] as Skeleton3D
+			skel.force_update_all_bone_transforms()
+			if rifle != null:
+				# (the gun rides the right hand's prop bone, as the game hangs it; the left hand is the IK's, it closes on the
+				# gun wherever the right puts it: the barrel's way in the prop's frame is the aim pose's hand-to-hand line)
+				var prop_xf := skel.global_transform * skel.get_bone_global_pose(skel.find_bone("r_hand_prop_attachment"))
+				if not have_local:
+					var rp0 := (skel.global_transform * skel.get_bone_global_pose(skel.find_bone("r_palm"))).origin
+					var lp0 := (skel.global_transform * skel.get_bone_global_pose(skel.find_bone("l_palm"))).origin
+					rifle_local = prop_xf.basis.inverse() * (lp0 - rp0).normalized()
+					have_local = true
+				var d := (prop_xf.basis * rifle_local).normalized()
+				var rp := prop_xf.origin
+				var up := Vector3.UP if absf(d.dot(Vector3.UP)) < 0.95 else Vector3.RIGHT
+				var bz := d
+				var bx := up.cross(bz).normalized()
+				var by := bz.cross(bx)
+				rifle.global_transform = Transform3D(Basis(bx, by, bz), rp + d * 0.4)
+				if armpit != null:
+					armpit.global_position = (skel.global_transform * skel.get_bone_global_pose(skel.find_bone("r_shoulder"))).origin + Vector3(0, -0.11, 0)
 			var base := Vector3(0, 0.95, 0)
-			cam.global_position = base + Vector3(-3.3, 0.25, 0.0)
+			var off := Vector3(-3.3, 0.25, 0.0)
+			if front:
+				off = Vector3(0.0, 0.25, 3.3)
+			elif top:
+				off = Vector3(0.0, 3.3, 0.6)
+			cam.global_position = base + off
 			cam.look_at(base)
 			for i in 3:
 				await process_frame

@@ -995,14 +995,14 @@ func manual_step(dt: float) -> void:
 	var off_v := RUN_BACK_HOLD_OFF_MS if back else RUN_HOLD_OFF_MS
 	if not hold_ok or body_v < off_v:
 		_run_hold_on = false
-	elif loco.moving and String(loco.mode) in ["run", "sprint"] and body_v >= on_v:
+	elif loco.moving and (String(loco.mode) in ["run", "sprint"] or (back and String(loco.mode) == "walk")) and body_v >= on_v:
 		_run_hold_on = true
 	# (standing still the gun is at low ready too, the sprint's hold: user 2026-09-30, "for idle have low ready as well")
 	if hold_ok and not loco.moving:
 		_run_hold_on = true
 		_run_hold_gait = "sprint"
 	var run_hold := _run_hold_on
-	if run_hold and loco.moving and String(loco.mode) in ["run", "sprint"]:
+	if run_hold and loco.moving and (String(loco.mode) in ["run", "sprint"] or (back and String(loco.mode) == "walk")):
 		# (moving backward holds the gun low like the sprint does, not at port arms: user 2026-09-30, "backwards rifle
 		# walk doesn't have the rifle low like the sprint in forward")
 		_run_hold_gait = "sprint" if (String(loco.mode) == "sprint" or loco.hemi == &"bw") else "run"

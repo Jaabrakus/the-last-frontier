@@ -201,6 +201,68 @@
 			"why": "the spear crouches with the felling axe's carry: its arm and its grip (user 2026-09-30)"
 		},
 		{
+			"layers": [
+				{
+					"bones": [
+						"r_clavicle",
+						"r_deltoid",
+						"r_elbow",
+						"r_shoulder",
+						"r_trap",
+						"r_wrist"
+					],
+					"clip": "own-axe-carry",
+					"kind": "partial",
+					"sample_s": 0.0,
+					"slot": "arms",
+					"status": "frontier",
+					"superseded_by": null,
+					"weight": 1.0,
+					"weight_curve": null
+				}
+			],
+			"modes": [
+				"crouch"
+			],
+			"roles_except": [
+				"idle"
+			],
+			"roles_only": [
+				"fw",
+				"fw_lt",
+				"fw_rt",
+				"bw",
+				"bw_lt",
+				"bw_rt",
+				"start_fw",
+				"start_fw_lt",
+				"start_fw_rt",
+				"start_bw",
+				"start_bw_lt",
+				"start_bw_rt",
+				"stop_fw",
+				"stop_fw_lt",
+				"stop_fw_rt",
+				"stop_bw",
+				"stop_bw_lt",
+				"stop_bw_rt",
+				"rev_bw_fw",
+				"rev_bw_fw_lt",
+				"rev_bw_fw_rt",
+				"rev_fw_bw",
+				"rev_fw_bw_lt",
+				"rev_fw_bw_rt",
+				"turn_l",
+				"turn_r"
+			],
+			"slots": [
+				"arms",
+				"arms_add"
+			],
+			"weapon": "musket",
+			"why": "the rifle crouch walk holds it like the felling axe's carry (user 2026-09-30): the right arm hangs low at the side, the left hand stays on the rifle (LeftGripIK closes it onto the forestock); the crouch idle keeps its own"
+		},
+		{
 			"copy_from": "pistol",
 			"modes": [
 				"crouch"
