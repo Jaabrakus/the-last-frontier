@@ -988,9 +988,14 @@ func manual_step(dt: float) -> void:
 	var hold_ok := long_gun_run_hold != "graph" and gun_free and mode == "source" and not airborne \
 			and String(loco.stance) != "crouch" and not torch and not mid and not one_hand and not change_hold
 	var body_v := player.horizontal_speed() if player != null else (RUN_HOLD_ON_MS if loco.moving else 0.0)
-	if not hold_ok or body_v < RUN_HOLD_OFF_MS:
+	# (moving backward the hold is on from the first steps: the gun is low ready at once, not port arms until the body
+	# has reached a run's speed; user 2026-09-30)
+	var back := loco.hemi == &"bw" and loco.moving
+	var on_v := RUN_BACK_HOLD_ON_MS if back else RUN_HOLD_ON_MS
+	var off_v := RUN_BACK_HOLD_OFF_MS if back else RUN_HOLD_OFF_MS
+	if not hold_ok or body_v < off_v:
 		_run_hold_on = false
-	elif loco.moving and String(loco.mode) in ["run", "sprint"] and body_v >= RUN_HOLD_ON_MS:
+	elif loco.moving and String(loco.mode) in ["run", "sprint"] and body_v >= on_v:
 		_run_hold_on = true
 	var run_hold := _run_hold_on
 	if run_hold and String(loco.mode) in ["run", "sprint"]:
@@ -1244,6 +1249,9 @@ const IDLE_HOLD_ARMS := "actor_b-p-rifle-idle-arms"
 const RUN_HOLD_ON_MS := 2.4
 ## ... off under this.
 const RUN_HOLD_OFF_MS := 1.9
+## Moving backward the hold comes on from the first steps and stays until the body is nearly still.
+const RUN_BACK_HOLD_ON_MS := 0.4
+const RUN_BACK_HOLD_OFF_MS := 0.25
 ## The run hold's arms fade in over this (during a start: the start clip moves the arms too) ...
 const RUN_HOLD_FADE_IN_S := 0.5
 ## ... and out over this (LeftArmPose.FADE_S is 0.25).

@@ -20,6 +20,10 @@ const FPS := 30.0
 ## Our own stop: seconds our upper body takes to ease into the graph's stop, and how much faster than the graph's it runs.
 const STOP_S := 0.6
 const STOP_RATE := 1.12
+## Our stop keeps this share of the graph's movement: the arms, the shoulder girdle, the spine.
+const STOP_ARMS := 0.4
+const STOP_GIRDLE := 0.25
+const STOP_SPINE := 0.7
 ## The jump and fall arms: the share of the graph's arm movement the left arm keeps (the right keeps all of it), and both arms' lag behind the body (s).
 const ARMS_SWING := 0.7
 const ARMS_LAG := 0.07
@@ -284,6 +288,9 @@ func _own_stop(new_jog: Animation, orig_name: String) -> Animation:
 		var ji := new_jog.find_track(path, type)
 		var tr := out.add_track(type)
 		out.track_set_path(tr, path)
+		# (the graph's stop throws the arms out as it settles: ours moves them less, about the standing pose it rests in)
+		var damp := _stop_damp(bone) if upper.has(bone) else 1.0
+		var rest_q := orig.rotation_track_interpolate(ti, big) if type == Animation.TYPE_ROTATION_3D else Quaternion.IDENTITY
 		for f in n + 1:
 			var t := minf(float(f) / FPS, big)
 			var ts := minf(t * STOP_RATE, big)
@@ -291,12 +298,29 @@ func _own_stop(new_jog: Animation, orig_name: String) -> Animation:
 			var mix := upper.has(bone) and ji >= 0
 			if type == Animation.TYPE_ROTATION_3D:
 				var q: Quaternion = orig.rotation_track_interpolate(ti, ts)
+				if damp < 1.0:
+					q = rest_q * Quaternion.IDENTITY.slerp(rest_q.inverse() * q, damp)
 				if mix:
 					q = new_jog.rotation_track_interpolate(ji, fposmod(float(ph[f]), new_jog.length)).slerp(q, w)
 				out.rotation_track_insert_key(tr, t, q)
 			else:
 				out.position_track_insert_key(tr, t, orig.position_track_interpolate(ti, ts))
 	return out
+
+
+## How much of the graph's stop movement our stop keeps, by bone: the arms much less, the shoulder girdle less still, the
+## spine a little less (user 2026-09-30: "we don't move the arms as much").
+static func _stop_damp(bone: String) -> float:
+	for part in ["clavicle", "scapula", "deltoid", "trap"]:
+		if part in bone:
+			return STOP_GIRDLE
+	for part in ["shoulder", "elbow", "wrist", "forarm"]:
+		if part in bone:
+			return STOP_ARMS
+	for part in ["spine", "chest", "neck"]:
+		if part in bone:
+			return STOP_SPINE
+	return 1.0
 
 
 ## How much of our swing the backward jog takes, by bone (user 2026-09-30: "backwards shoulders too exaggerated, tone it
