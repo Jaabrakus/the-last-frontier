@@ -392,8 +392,9 @@ func stakes_drain_mult() -> float:
 	var id := stakes_item()
 	if id == "":
 		return 1.0
-	var k := String((player.loadout as Loadout).item(id).kind)
-	return float(LoadoutData.get_default().kind(k).get("climb", {}).get("drain_mult", 1.0))
+	var it := (player.loadout as Loadout).item(id)
+	var base := float(LoadoutData.get_default().kind(String(it.kind)).get("climb", {}).get("drain_mult", 1.0))
+	return StationPractice.eased(base, StationPractice.of_state(it.get("state", {})))   # a better-made pair eases more
 
 
 ## The kind of the climbing claws carried ("" = none).
@@ -416,7 +417,11 @@ func claws_hang_mult() -> float:
 	var k := claws_kind()
 	if k == "":
 		return 1.0
-	return float(LoadoutData.get_default().kind(k).get("climb", {}).get("hang_drain_mult", 1.0))
+	var st: String = "plain"
+	for it: Dictionary in (player.loadout as Loadout).items:
+		if String(it.kind) == k:
+			st = StationPractice.of_state(it.get("state", {}))
+	return StationPractice.eased(float(LoadoutData.get_default().kind(k).get("climb", {}).get("hang_drain_mult", 1.0)), st)
 
 
 ## Shows the gear while holding on (stakes in the hands and their belt copy hidden, claws under the feet) and puts it

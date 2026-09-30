@@ -18,7 +18,12 @@ const NAMES := {"musket": "Flintlock Musket", "over_under": "Over-and-Under", "b
 		"pistol": "Flintlock Pistol", "powder_horn": "Powder Horn", "torch": "Pine-knot Torch",
 		# gathering (data/gathering/gathering.json): the tools and what they gather
 		"felling_axe": "Felling Axe", "mattock": "Mattock", "log": "Log", "firewood": "Firewood", "branches": "Branches",
-		"pole": "Pole", "stone": "Stone", "flint": "Flint",
+		"pole": "Pole", "stone": "Stone", "flint": "Flint", "bone": "Deer Leg Bone",
+		# climbing gear (loadout_items.json climbing_stakes_* / climbing_claws_*): the knapping stone and the forge
+		"climbing_stakes_wood": "Fire-hardened Climbing Stakes", "climbing_stakes_bone": "Bone Climbing Stakes",
+		"climbing_stakes_stone": "Flint-pointed Climbing Stakes", "climbing_stakes_iron": "Iron Climbing Spikes",
+		"climbing_claws_wood": "Hardwood Ashiko", "climbing_claws_bone": "Bone Ashiko", "climbing_claws_stone": "Flint-toothed Ashiko",
+		"climbing_claws_iron": "Iron Ashiko",
 		# wildlife (scripts/wildlife, WildlifeSpecies yields): what skinning gives
 		"skinning_knife": "Skinning Knife", "fire_steel": "Flint and Steel", "venison": "Venison", "deer_hide": "Deer Hide", "antler": "Antler", "wolf_pelt": "Wolf Pelt", "fox_pelt": "Fox Pelt",
 		"bison_robe": "Buffalo Robe", "tallow": "Tallow", "tongue": "Buffalo Tongue",
@@ -228,7 +233,7 @@ func can_wear(kind: String, p: String) -> Dictionary:
 		same.points = pts
 		same.count = pts.size()
 	else:
-		lo.add_item(kind, [p], _unit_count(kind))
+		lo.add_item(kind, [p], _unit_count(kind), _stack_state(kind))
 	var errs := LoadoutRules.validate(lo, data)
 	var hard: Array = []
 	var soft: Array = []
@@ -248,7 +253,7 @@ func wear(kind: String, p: String) -> bool:
 		return false
 	var there := item_at(p)
 	if not there.is_empty():
-		_to_pack(String(there.kind), 1 if String(there.kind) == "tomahawk" else int(there.get("count", 1)))
+		_to_pack(String(there.kind), 1 if String(there.kind) == "tomahawk" else int(there.get("count", 1)), there.get("state", {}))
 	_from_pack(kind, _unit_count(kind))
 	worn = r.loadout
 	return true
@@ -259,7 +264,7 @@ func unwear_point(p: String) -> void:
 	var it := item_at(p)
 	if it.is_empty():
 		return
-	_to_pack(String(it.kind), 1 if String(it.kind) == "tomahawk" else int(it.get("count", 1)))
+	_to_pack(String(it.kind), 1 if String(it.kind) == "tomahawk" else int(it.get("count", 1)), it.get("state", {}))
 	_take_point(worn, it, p)
 
 
@@ -281,12 +286,22 @@ func _unit_count(kind: String) -> int:
 	return 1
 
 
-func _to_pack(kind: String, n: int) -> void:
+## A pack stack's state (a made thing's standard: StationPractice), copied for the body when it is worn.
+func _stack_state(kind: String) -> Dictionary:
+	for e in pack:
+		if String(e.kind) == kind:
+			return (e.get("state", {}) as Dictionary).duplicate(true)
+	return {}
+
+
+func _to_pack(kind: String, n: int, state: Variant = {}) -> void:
+	var st := StationPractice.of_state(state)
 	for e in pack:
 		if String(e.kind) == kind:
 			e.count = int(e.count) + n
+			StationPractice.stamp(pack, kind, st)
 			return
-	pack.append({"kind": kind, "count": n, "state": {}})
+	pack.append({"kind": kind, "count": n, "state": (state as Dictionary).duplicate(true) if state is Dictionary else {}})
 
 
 func _from_pack(kind: String, n: int) -> void:

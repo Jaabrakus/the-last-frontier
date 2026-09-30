@@ -103,6 +103,9 @@ const FORGE := {
 			"verb": "Welding a skelp round a mandrel, boring and breeching it", "detail": "4 bar iron, 4 charcoal: a smoothbore barrel"},
 	"pistol_barrel": {"text": "Pistol barrel", "inputs": {"bar_iron": 2, "charcoal": 2}, "n": 1, "seconds": 20.0,
 			"verb": "Welding a short skelp round a mandrel and boring it", "detail": "2 bar iron, 2 charcoal: a pistol barrel"},
+	"climbing_stakes_iron": {"text": "Climbing spikes, iron", "inputs": {"bar_iron": 1, "charcoal": 1, "rawhide": 1}, "or": {"rawhide": "cordage"},
+			"n": 1, "seconds": 14.0, "verb": "Drawing two square spikes, hardening the points, wrapping the grips",
+			"detail": "a bar of iron, charcoal and a grip wrap: the best climbing spikes there are"},
 	"gunlock": {"text": "Gunlock", "inputs": {"bar_iron": 2, "charcoal": 2}, "n": 1, "seconds": 26.0,
 			"verb": "Forging the plate, cock, frizzen and springs, filing and fitting them",
 			"detail": "2 bar iron, 2 charcoal: a flintlock (a flint goes in its cock)"},
@@ -155,6 +158,29 @@ const STONE := {
 	"digging_stick": {"text": "Digging stick", "inputs": {"pole": 1}, "knife": true, "n": 1, "seconds": 6.0,
 			"verb": "Whittling a point and hardening it in the fire",
 			"detail": "a pole whittled to a point and fire-hardened: breaks ground for a bed, slowly (half a hoe's bite)"},
+	# climbing gear (user 2026-09-29): stakes carried on the belt or sash, ashiko copies strapped under the feet while
+	# gripping (PlayerGrip). The ashiko copies are handed-down knowledge (know.ashiko: Old Pieter teaches it; the real
+	# iron pair is the far-East stranger's, npc.wanderer.shinobi in the backlog).
+	"climbing_stakes_wood": {"text": "Climbing stakes, fire-hardened", "inputs": {"branches": 2, "rawhide": 1}, "or": {"rawhide": "cordage"},
+			"knife": true, "n": 1, "seconds": 9.0, "verb": "Whittling two hardwood points and hardening them in the coals",
+			"detail": "2 branches and a grip wrap (rawhide, or cordage): a pair of stakes for the fists while you climb"},
+	"climbing_stakes_bone": {"text": "Climbing stakes, bone", "inputs": {"bone": 2, "rawhide": 1}, "or": {"rawhide": "cordage"},
+			"n": 1, "seconds": 11.0, "verb": "Splitting two leg bones and grinding them to points on the stone",
+			"detail": "2 deer leg bones and a grip wrap: stakes that bite deeper than wood"},
+	"climbing_stakes_stone": {"text": "Climbing stakes, flint-pointed", "inputs": {"flint": 2, "branches": 2, "sinew": 1}, "or": {"sinew": "cordage"},
+			"n": 1, "seconds": 12.0, "verb": "Knapping two points and binding them into split hafts",
+			"detail": "2 flints, 2 branches and a binding (sinew, or cordage): stakes that bite into bark and cracks"},
+	"climbing_claws_wood": {"text": "Ashiko, hardwood", "inputs": {"branches": 2, "buckskin": 1}, "or": {"buckskin": "rawhide"},
+			"knife": true, "needs_know": "know.ashiko", "n": 1, "seconds": 11.0,
+			"verb": "Carving two soles with teeth at the toe, hardening them, cutting the straps",
+			"detail": "2 branches and straps (buckskin, or rawhide): foot claws that ease hanging still"},
+	"climbing_claws_bone": {"text": "Ashiko, bone", "inputs": {"bone": 2, "buckskin": 1}, "or": {"buckskin": "rawhide"},
+			"needs_know": "know.ashiko", "n": 1, "seconds": 13.0, "verb": "Splitting bone into soles, grinding the teeth, cutting the straps",
+			"detail": "2 deer leg bones and straps: foot claws that hold better than wood"},
+	"climbing_claws_stone": {"text": "Ashiko, flint-toothed", "inputs": {"flint": 2, "branches": 1, "sinew": 1, "buckskin": 1},
+			"or": {"sinew": "cordage", "buckskin": "rawhide"}, "needs_know": "know.ashiko", "n": 1, "seconds": 14.0,
+			"verb": "Setting knapped teeth in two wooden soles and binding them",
+			"detail": "2 flints, a branch, a binding and straps: foot claws that bite into rock"},
 	"cornmeal": {"text": "Cornmeal", "inputs": {"corn": 4}, "n": 1, "seconds": 7.0,
 			"verb": "Shelling the ears and pounding the corn on the stone",
 			"detail": "4 ears of corn shelled and pounded: a pound of cornmeal (bake it into johnnycake on a fire)"},
@@ -525,6 +551,11 @@ func _table_row(player: Node, id: String, g: Dictionary) -> Dictionary:
 	var why := _gear_why(player, g) if _inputs_for(player, g).is_empty() else ""
 	if why == "" and bool(g.get("knife", false)) and not _has_knife(player):
 		why = "needs a knife (a flint knife: the knapping stone)"
+	if not _knows(g):
+		why = "you do not know how (Old Pieter, the old hunter, could teach you)"
+	var st := StationPractice.standard_at(StationPractice.makes(_core(), id))
+	if why == "" and st != "plain":
+		return {"id": id, "text": "%s  (%s)" % [String(g.text), st], "ok": true, "detail": String(g.detail)}
 	return {"id": id, "text": String(g.text), "ok": why == "", "detail": String(g.detail) if why == "" else why}
 
 
@@ -933,10 +964,22 @@ func _gear_def(id: String) -> Dictionary:
 	return {}
 
 
+## Handed-down knowledge a station recipe needs (`needs_know`): heard of is enough to try (a make promotes it).
+func _knows(g: Dictionary) -> bool:
+	var kid := String(g.get("needs_know", ""))
+	var core := _core()
+	return kid == "" or core == null or SurvivalLearning.rank(SurvivalLearning.state_of(core, kid)) >= SurvivalLearning.rank("heard_of")
+
+
+func _core() -> SurvivalCore:
+	var b := bridge()
+	return b.core if b else null
+
+
 func _gear_make(player: Node, id: String) -> bool:
 	var g := _gear_def(id)
 	var ins := gear_inputs(player, id)
-	if g.is_empty() or ins.is_empty() or (bool(g.get("knife", false)) and not _has_knife(player)):
+	if g.is_empty() or ins.is_empty() or (bool(g.get("knife", false)) and not _has_knife(player)) or not _knows(g):
 		return false
 	var inv := InventoryState.from_player(player)
 	for k: String in ins:
@@ -960,11 +1003,18 @@ func _gear_make(player: Node, id: String) -> bool:
 		else:
 			for k2: String in ins:
 				inv2.add(k2, int(ins[k2]))
+		# practice: the standard this make came out at (StationPractice), stamped on the pack's stack
+		var st: String = StationPractice.note_make(_core(), id) if done else "plain"
+		if done:
+			StationPractice.stamp(inv2.pack, makes, st)
+			var kid := String(g.get("needs_know", ""))
+			if kid != "" and _core() and SurvivalLearning.state_of(_core(), kid) in ["heard_of", "seen"]:
+				SurvivalLearning.record_result(_core(), kid, "success")
 		player.set("inventory_pack", inv2.pack.duplicate(true))
 		if done:
 			bridge().sync_carried_tools()
 			var nm := InventoryState.name_of(makes).to_lower()
-			_result(id, true, "You make %s" % (("a " + nm) if made == 1 else "%d lengths of %s" % [made, nm]
+			_result(id, true, "You make %s" % (StationPractice.named(st, nm) if made == 1 else "%d lengths of %s" % [made, nm]
 					if makes == "cordage" else "%d %s" % [made, nm]), {makes: made})
 		else:
 			_result(id, false, "", {}))
