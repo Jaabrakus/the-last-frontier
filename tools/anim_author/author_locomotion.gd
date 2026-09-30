@@ -118,9 +118,9 @@ func _bake() -> void:
 	# the rifle's own low ready (idle, walking and running backward) and medium ready (crouch walk): the graph's arms turned at the
 	# shoulders, the right decides where the gun points and the left hand is the IK's
 	var low_bones := _bake_rifle_pose(out, "own-rifle-low-ready", "actor_b-p-rifle-idle-arms", LOW_TURN_R, LOW_TURN_L)
-	var mid_bones := _bake_rifle_pose(out, "own-rifle-crouch-mid", "actor_b-p-rifle-crouch-run-arms", MID_TURN_R, MID_TURN_L, HIP_PULL)
-	_bake_rifle_pose(out, "own-rifle-crouch-mid-fw", "actor_b-p-rifle-crouch-run-arms", MID_FW_TURN_R, MID_FW_TURN_L, HIP_PULL)
-	var idle_bones := _bake_rifle_pose(out, "own-rifle-crouch-idle", "actor_b-p-rifle-crouch-idle-arms", Vector3.ZERO, Vector3.ZERO, HIP_PULL_IDLE)
+	var mid_bones := _bake_rifle_pose(out, "own-rifle-crouch-mid", "actor_b-p-rifle-crouch-run-arms", MID_TURN_R, MID_TURN_L, HIP_PULL, GUN_YAW_BACK, "actor_b-p-crouch-walk-bw")
+	_bake_rifle_pose(out, "own-rifle-crouch-mid-fw", "actor_b-p-rifle-crouch-run-arms", MID_FW_TURN_R, MID_FW_TURN_L, HIP_PULL, GUN_YAW_FW, "actor_b-p-crouch-walk-fw")
+	var idle_bones := _bake_rifle_pose(out, "own-rifle-crouch-idle", "actor_b-p-rifle-crouch-idle-arms", Vector3.ZERO, Vector3.ZERO, HIP_PULL_IDLE, GUN_YAW_IDLE, "actor_b-p-crouch-idle")
 	_bake_bow_nock_hand(out, "actor_b-p-bow-reload--part", "own-bow-nock-hand")
 	_bake_bow_nock_hand(out, "actor_b-p-crouch-bow-reload--part", "own-bow-nock-hand-crouch")
 	print(ResourceSaver.save(out, OUT_LIB, ResourceSaver.FLAG_COMPRESS))
@@ -302,6 +302,12 @@ const MID_TURN_L := Vector3(0.0, 12.0, 0.0)
 ## for the idle, "very close" for the crouch walk).
 const HIP_PULL := 0.6
 const HIP_PULL_IDLE := 0.45
+## The hold points the gun across the body, about 10 o'clock when the hand is at the hip (user 2026-09-30); these turn it (degrees
+## about the body's vertical, + to the left) from where the graph's poses leave it (measured in the level: idle 75 deg left of the
+## player's facing, walking 52 / 57: 60 is 10 o'clock).
+const GUN_YAW_IDLE := -28.0
+const GUN_YAW_FW := 8.0
+const GUN_YAW_BACK := 3.0
 const MID_FW_TURN_R := Vector3(0.0, 32.0, 0.0)
 const MID_FW_TURN_L := Vector3(0.0, 32.0, 0.0)
 const FWD_ROLES := ["fw", "fw_lt", "fw_rt", "start_fw", "start_fw_lt", "start_fw_rt", "stop_fw", "stop_fw_lt", "stop_fw_rt", "turn_l", "turn_r"]
@@ -311,7 +317,7 @@ const BACK_ROLES := ["bw", "bw_lt", "bw_rt", "start_bw", "start_bw_lt", "start_b
 
 ## A one-frame arms pose `clip_name` in `out`: `src_name`'s arms at its first frame, the shoulders turned by `rr` / `rl`; returns
 ## the bones it keys.
-func _bake_rifle_pose(out: AnimationLibrary, clip_name: String, src_name: String, rr: Vector3, rl: Vector3, hip_pull := 0.0) -> Array:
+func _bake_rifle_pose(out: AnimationLibrary, clip_name: String, src_name: String, rr: Vector3, rl: Vector3, hip_pull := 0.0, gun_yaw := 0.0, body_clip := "") -> Array:
 	var src := lib.get_animation(src_name)
 	var pose := _stamp(Animation.new(), src)
 	pose.length = 1.0 / 30.0
@@ -339,7 +345,7 @@ func _bake_rifle_pose(out: AnimationLibrary, clip_name: String, src_name: String
 		if not bones.has(bone):
 			bones.append(bone)
 	if hip_pull > 0.0:
-		_pull_to_hip(pose, hip_pull)
+		_pull_to_hip(pose, hip_pull, gun_yaw, body_clip)
 	out.add_animation(StringName(clip_name), pose)
 	return bones
 
@@ -348,7 +354,10 @@ func _bake_rifle_pose(out: AnimationLibrary, clip_name: String, src_name: String
 ## the prop bone (the gun's grip) moves `pull` of the way from where it is to the hip joint, keeping its turn, by turning the right
 ## shoulder, elbow and wrist (a search over their turns on the skeleton: the arm chain is plain forward kinematics). Judged on the
 ## rest torso: the arms' rotations are the chest's, whatever the body clip under them does.
-func _pull_to_hip(pose: Animation, pull: float) -> void:
+func _pull_to_hip(pose: Animation, pull: float, gun_yaw := 0.0, body_clip := "") -> void:
+	# the chest's turn off the rest pose in the body clip the arms go under (the crouch leans it): the gun's yaw is wanted about the
+	# world's vertical, which in the chest's frame is that turned
+	var crel := _chest_turn(body_clip)
 	_rig.reset_bone_poses()
 	var track := {}
 	for ti in pose.get_track_count():
@@ -365,7 +374,10 @@ func _pull_to_hip(pose: Animation, pull: float) -> void:
 	for j in joints:
 		base.append(_rig.get_bone_pose_rotation(_rig.find_bone(j)))
 	var v := PackedFloat32Array([0, 0, 0, 0, 0, 0, 0, 0, 0])
-	var best := _hip_cost(joints, base, v, g0, target)
+	# (the gun's turn: where it was, turned `gun_yaw` degrees about the body's vertical, + to the left: how the hold points it across the body)
+	var d_world := Basis(Vector3.UP, deg_to_rad(gun_yaw))
+	var g_want := Transform3D(crel.inverse() * d_world * crel * g0.basis, g0.origin)
+	var best := _hip_cost(joints, base, v, g_want, target)
 	var step := 10.0
 	while step > 0.25:
 		var improved := false
@@ -373,19 +385,53 @@ func _pull_to_hip(pose: Animation, pull: float) -> void:
 			for sgn in [1.0, -1.0]:
 				var w := v.duplicate()
 				w[i] += step * sgn
-				var c := _hip_cost(joints, base, w, g0, target)
+				var c := _hip_cost(joints, base, w, g_want, target)
 				if c < best:
 					best = c
 					v = w
 					improved = true
 		if not improved:
 			step *= 0.5
-	_hip_cost(joints, base, v, g0, target)
+	_hip_cost(joints, base, v, g_want, target)
 	var after := _rig.get_bone_global_pose(prop)
-	print("hip pull %.2f: hand moved %.3f m (asked %.3f), grip turned %.1f deg, cost %.4f" % [pull, (after.origin - g0.origin).length(), (target - g0.origin).length(), rad_to_deg(g0.basis.get_rotation_quaternion().angle_to(after.basis.get_rotation_quaternion())), best])
+	print("hip pull %.2f: hand moved %.3f m (asked %.3f), grip %.1f deg off the wanted turn (%.0f asked), cost %.4f" % [pull, (after.origin - g0.origin).length(), (target - g0.origin).length(), rad_to_deg(g_want.basis.get_rotation_quaternion().angle_to(after.basis.get_rotation_quaternion())), gun_yaw, best])
 	for k in joints.size():
 		var ti: int = track[joints[k]]
 		pose.rotation_track_insert_key(ti, 0.0, _rig.get_bone_pose_rotation(_rig.find_bone(joints[k])))
+
+
+## How far the chest (the top spine bone) is turned off the rest pose in `body_clip` (averaged over the clip's cycle, a Basis); identity
+## for "".
+func _chest_turn(body_clip: String) -> Basis:
+	if body_clip == "":
+		return Basis.IDENTITY
+	var a := lib.get_animation(body_clip)
+	_rig.reset_bone_poses()
+	_rig.force_update_all_bone_transforms()
+	var spined := _rig.find_bone("spined")
+	var rest := _rig.get_bone_global_pose(spined).basis
+	var acc := Vector4.ZERO
+	var ref := Quaternion.IDENTITY
+	for i in 8:
+		_rig.reset_bone_poses()
+		var t := a.length * float(i) / 8.0
+		for ti in a.get_track_count():
+			if a.track_get_type(ti) != Animation.TYPE_ROTATION_3D:
+				continue
+			var bone := _rig.find_bone(String(a.track_get_path(ti).get_concatenated_subnames()))
+			if bone < 0:
+				continue
+			_rig.set_bone_pose_rotation(bone, a.rotation_track_interpolate(ti, t))
+		_rig.force_update_all_bone_transforms()
+		var q := (_rig.get_bone_global_pose(spined).basis * rest.inverse()).get_rotation_quaternion()
+		if i == 0:
+			ref = q
+		if q.dot(ref) < 0.0:
+			q = Quaternion(-q.x, -q.y, -q.z, -q.w)
+		acc += Vector4(q.x, q.y, q.z, q.w)
+	acc = acc.normalized()
+	_rig.reset_bone_poses()
+	return Basis(Quaternion(acc.x, acc.y, acc.z, acc.w))
 
 
 ## The cost of turns `v` (degrees, three per joint) on the arm chain: the grip's distance from the target, plus its turn off where
