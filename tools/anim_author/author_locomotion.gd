@@ -128,9 +128,6 @@ static func _stamp(a: Animation, from: Animation) -> Animation:
 const AXE_CARRY_SRC := "res://animations_extra/Actor_B_from_A.res"
 const AXE_CARRY_CLIP := "machete-draw--grab^idle--part"
 const CARRY_PATCHES := "res://data/anim_author/carry_patches.json"
-## The roles of moving backward: the banks, the starts, the stops and the reversals to and from it.
-const BACK_ROLES := ["bw", "bw_lt", "bw_rt", "start_bw", "start_bw_lt", "start_bw_rt", "stop_bw", "stop_bw_lt", "stop_bw_rt",
-		"rev_bw_fw", "rev_bw_fw_lt", "rev_bw_fw_rt", "rev_fw_bw", "rev_fw_bw_lt", "rev_fw_bw_rt"]
 ## The roles a carry on the feet concerns: the direction banks, starts, stops, reversals and turns (not the air, landing, hit and
 ## death roles, which the weapons' inputs share).
 const MOVE_ROLES := ["fw", "fw_lt", "fw_rt", "bw", "bw_lt", "bw_rt", "start_fw", "start_fw_lt", "start_fw_rt", "start_bw", "start_bw_lt",
@@ -188,9 +185,6 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array) -> void:
 			"weapon": "spear", "modes": ["crouch"], "roles_except": [], "roles_only": MOVE_ROLES + ["idle"], "slots": ["arms", "hands"], "layers": [grip_layer, axe_layer]},
 			{"why": "the tomahawk crouches like the pistol (user 2026-09-30): the pistol's crouch arm on every role",
 			"weapon": "tomahawk", "modes": ["crouch"], "roles_except": [], "slots": ["arms", "arms_add"], "copy_from": "pistol"},
-			{"why": "the rifle backward walking and running holds low like the sprint (user 2026-09-30): the musket's sprint arms, hands and spine layers on the backward roles of walk and run",
-			"weapon": "musket", "modes": ["walk", "run"], "roles_except": [], "roles_only": BACK_ROLES, "slots": ["arms", "arms_add", "spine_add"],
-			"copy_from": "musket", "copy_mode": "sprint"},
 		],
 	}
 	var f := FileAccess.open(CARRY_PATCHES, FileAccess.WRITE)

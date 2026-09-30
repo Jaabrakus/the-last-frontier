@@ -994,7 +994,9 @@ func manual_step(dt: float) -> void:
 		_run_hold_on = true
 	var run_hold := _run_hold_on
 	if run_hold and String(loco.mode) in ["run", "sprint"]:
-		_run_hold_gait = String(loco.mode)
+		# (moving backward holds the gun low like the sprint does, not at port arms: user 2026-09-30, "backwards rifle
+		# walk doesn't have the rifle low like the sprint in forward")
+		_run_hold_gait = "sprint" if (String(loco.mode) == "sprint" or loco.hemi == &"bw") else "run"
 	var run_clip := _run_hold_clip(_run_hold_gait)
 	# a one-handed weapon aimed: the left arm off it, hanging as it does in the relaxed swing
 	var one_hand_aim := one_hand_aim_on and String(_weapon) in ONE_HAND_AIM_WEAPONS and (aiming or aim_wanted) and not busy and not hands_free and not torch
