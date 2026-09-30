@@ -4,7 +4,6 @@
 // strands (anisotropy along them), some translucency against the low sun.
 shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_disabled, diffuse_burley, specular_schlick_ggx;
-#include "res://shaders/common/canopy.gdshaderinc"
 
 uniform sampler2D strands : hint_default_white, filter_linear_mipmap_anisotropic;
 uniform float alpha_cut : hint_range(0.0, 1.0) = 0.42;
@@ -28,10 +27,4 @@ void fragment() {
 	ANISOTROPY_FLOW = vec2(0.0, 1.0);
 	AO = mix(0.55, 1.0, s.g);
 	BACKLIGHT = c * 0.3;
-	// Under the forest canopy the same shade as the floor it stands on (canopy.gdshaderinc: the crowns take part of the sky
-	// light and scatter some of the sun down; neutral without the forest light). Without it a body kept the open sky's
-	// light under the trees and stood out lit in the shade (user 2026-09-30).
-	float canopy_c = canopy_cover((INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xz);
-	AO *= canopy_sky_factor(canopy_c, 1.0);
-	EMISSION += ALBEDO * canopy_scatter(canopy_c, 1.0, (INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).y) * AO;
 }

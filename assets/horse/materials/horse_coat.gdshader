@@ -6,7 +6,6 @@
 //   flow_tex    RG hair direction in tangent space (anisotropic sheen along the hair)
 shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
-#include "res://shaders/common/canopy.gdshaderinc"
 
 uniform sampler2D masks_tex : hint_default_black, filter_linear_mipmap_anisotropic;
 uniform sampler2D detail_tex : hint_default_white, filter_linear_mipmap_anisotropic;
@@ -66,10 +65,4 @@ void fragment() {
 	ANISOTROPY_FLOW = fl / max(fl_len, 1e-4);
 	RIM = sheen * (1.0 - skin);
 	RIM_TINT = 0.55;
-	// Under the forest canopy the same shade as the floor it stands on (canopy.gdshaderinc: the crowns take part of the sky
-	// light and scatter some of the sun down; neutral without the forest light). Without it a body kept the open sky's
-	// light under the trees and stood out lit in the shade (user 2026-09-30).
-	float canopy_c = canopy_cover((INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xz);
-	AO *= canopy_sky_factor(canopy_c, 1.0);
-	EMISSION += ALBEDO * canopy_scatter(canopy_c, 1.0, (INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).y) * AO;
 }

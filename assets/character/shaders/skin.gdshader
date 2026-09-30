@@ -26,7 +26,6 @@
 // regions, 2 the zones, 3 the COLOR channels (r flush, g mucosa, b occlusion).
 shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx, sss_mode_skin;
-#include "res://shaders/common/canopy.gdshaderinc"
 
 uniform uvec2 hide_mask = uvec2(0u, 0u);
 uniform float melanin : hint_range(0.0, 1.0) = 0.3;
@@ -389,10 +388,4 @@ void fragment() {
 		SSS_TRANSMITTANCE_DEPTH = 0.012;
 		SSS_TRANSMITTANCE_BOOST = 0.15;
 	}
-	// Under the forest canopy the same shade as the floor it stands on (canopy.gdshaderinc: the crowns take part of the sky
-	// light and scatter some of the sun down; neutral without the forest light). Without it a body kept the open sky's
-	// light under the trees and stood out lit in the shade (user 2026-09-30).
-	float canopy_c = canopy_cover((INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xz);
-	AO *= canopy_sky_factor(canopy_c, 1.0);
-	EMISSION += ALBEDO * canopy_scatter(canopy_c, 1.0, (INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).y) * AO;
 }
