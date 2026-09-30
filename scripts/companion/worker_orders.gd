@@ -24,6 +24,9 @@ const PREVIEW_S := 0.4
 const ALTERNATIVES_M := 120.0
 
 var picked: Spouse = null
+## The job the next place sent is for ("" just go there): set by the Talk tab's "Send her out to", spent by the click.
+var next_act := ""
+var _hint: Label3D
 var _ring: MeshInstance3D
 var _line: MeshInstance3D
 var _line_mesh: ImmediateMesh
@@ -180,26 +183,38 @@ func click(queue := false, pick := 0) -> void:
 	var w: Spouse = a.get("worker")
 	if w != null:
 		picked = null if w == picked else w
+		next_act = ""
 		return
 	if picked == null:
 		return
+	var act := next_act
+	if not queue:
+		next_act = ""
 	var rs := routes_for(picked, a.pos) if routes.is_empty() or _routes_at == Vector3.INF or Vector2(a.pos.x - _routes_at.x, a.pos.z - _routes_at.z).length() > PREVIEW_MOVE_M else routes
 	var way := PackedVector3Array()
 	if not rs.is_empty():
 		way = (rs[mini(pick, rs.size() - 1)] as Dictionary).way
-	order(picked, a.pos, queue, way)
+	order(picked, a.pos, queue, way, act)
 
 
-## Sends `w` to `p` (after the places she has, with `queue`).
-static func order(w: Spouse, p: Vector3, queue := false, way := PackedVector3Array()) -> void:
+## The Talk tab's "Send her out to <job>": picks her, and the next place pointed at (L) is where she does it.
+func ask(w: Spouse, job: String) -> void:
+	picked = w
+	next_act = job
+
+
+## Sends `w` to `p` (after the places she has, with `queue`), to do `act` there ("": only go).
+static func order(w: Spouse, p: Vector3, queue := false, way := PackedVector3Array(), act := "") -> void:
 	if not queue:
 		w.orders.clear()
 		w.order_ways.clear()
+		w.order_acts.clear()
 		w._order_set = false
 		if w.nav != null:
 			w.nav.reset()
 	w.orders.append(p)
 	w.order_ways.append(way)
+	w.order_acts.append(act)
 
 
 func _draw() -> void:
@@ -207,6 +222,7 @@ func _draw() -> void:
 		return
 	_draw_routes()
 	_ring.visible = picked != null
+	_draw_hint()
 	if picked == null:
 		_line_mesh.clear_surfaces()
 		for m in _posts:
@@ -237,6 +253,16 @@ func _draw() -> void:
 		m.mesh = cm
 		m.material_override = _mat(BLUE)
 		m.top_level = true
+		var tl := Label3D.new()
+		tl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		tl.no_depth_test = true
+		tl.fixed_size = true
+		tl.pixel_size = 0.0011
+		tl.font_size = 36
+		tl.outline_size = 8
+		tl.modulate = BLUE
+		tl.position = Vector3(0, 0.9, 0)
+		m.add_child(tl)
 		add_child(m)
 		_posts.append(m)
 	for i in _posts.size():
@@ -244,6 +270,30 @@ func _draw() -> void:
 		if _posts[i].visible:
 			var o: Vector3 = picked.orders[i]
 			_posts[i].global_position = Vector3(o.x, FrontierTerrain.height_at(o.x, o.z) + 0.6, o.z)
+			var act := String(picked.order_acts[i]) if i < picked.order_acts.size() else ""
+			var tag := _posts[i].get_child(0) as Label3D if _posts[i].get_child_count() > 0 else null
+			if tag != null:
+				tag.visible = act != ""
+				tag.text = JobBook.name_of(act) if act != "" else ""
+
+
+## Over the picked worker while a job waits for its place: what to do, and to point at where (L).
+func _draw_hint() -> void:
+	if _hint == null:
+		_hint = Label3D.new()
+		_hint.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		_hint.no_depth_test = true
+		_hint.fixed_size = true
+		_hint.pixel_size = 0.0011
+		_hint.font_size = 40
+		_hint.outline_size = 10
+		_hint.modulate = BLUE
+		_hint.top_level = true
+		add_child(_hint)
+	_hint.visible = picked != null and next_act != ""
+	if _hint.visible:
+		_hint.text = "%s: point where (L)" % JobBook.name_of(next_act)
+		_hint.global_position = picked.global_position + Vector3.UP * 2.3
 
 
 ## A flat strip from `a` to `b` over the ground (its points each set on the ground a metre apart).

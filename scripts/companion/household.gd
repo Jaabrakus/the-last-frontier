@@ -238,6 +238,7 @@ func set_role(role: String, w: SpouseCore = null) -> String:
 	var b := body_of(w)
 	if b:
 		b._plan = {}
+		b.work_at = Vector3.INF
 	return pick(["role", role])
 
 
@@ -254,6 +255,7 @@ func order(task: String, w: SpouseCore = null) -> String:
 	var b := body_of(w)
 	if b:
 		b._plan = {}
+		b.work_at = Vector3.INF
 	return pick(["task", task])
 
 

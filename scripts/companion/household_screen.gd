@@ -177,6 +177,18 @@ func _build_talk() -> void:
 		if sc.focus == id:
 			b.modulate = LIT
 		tasks.add_child(b)
+	_content.add_child(_label("Send her out to (then point where with L)", 17, HEAD))
+	var out := _row()
+	for t in JobBook.ids():
+		var oid: String = t
+		if JobBook.role_of(oid) != "outside":
+			continue
+		out.add_child(_reply(String(JobBook.name_of(oid)), func() -> void:
+			var b := house.body_of(_sc())
+			var wo := WorkerOrders.ensure(get_tree())
+			if b != null and wo != null:
+				wo.ask(b, oid)
+				queue_free()))
 	_content.add_child(_label("Or", 17, HEAD))
 	var more := _row()
 	more.add_child(_reply("This is our home", func() -> void: _say = house.set_home_here()))

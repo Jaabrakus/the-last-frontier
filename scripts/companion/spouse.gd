@@ -88,6 +88,11 @@ var riding: Horse = null
 ## ORDERS: places the leader sent her to (WorkerOrders: point and click), walked to one after another before anything else;
 ## the walk there is planned once and walked with rays adjusting it (NavMover.use_grid).
 var orders: Array = []
+## What she does on arriving at each place in `orders` ("" just goes there; else a job id: "forage", "firewood", "hunt" ...).
+var order_acts: Array = []
+## Where her outside work is (an order with a job at a place sets it: she forages / gathers / hunts round there, not round
+## home); INF: round home.
+var work_at := Vector3.INF
 ## Every walk is planned once on the walk grid and walked with rays adjusting it (NavMover.use_grid); NAV_MESH=1 in the
 ## environment walks the old way, on the navigation mesh (the tests' comparison).
 static var grid_walk := not OS.has_environment("NAV_MESH")
@@ -257,6 +262,8 @@ func _physics_process(dt: float) -> void:
 			orders.pop_front()
 			if not order_ways.is_empty():
 				order_ways.pop_front()
+			if not order_acts.is_empty():
+				_do_order_act(String(order_acts.pop_front()), o)
 			_order_set = false
 			ow = [Vector3.ZERO, 0.0]
 		_move(ow[0], ow[1], dt)
@@ -408,6 +415,19 @@ func _follow() -> Array:
 	return [Vector3.ZERO, 0.0]
 
 
+## Arrived at a place she was sent to with a job: she takes the job on its role's ground, round that place.
+func _do_order_act(act: String, at: Vector3) -> void:
+	if act == "" or not JobBook.has(act):
+		return
+	sc.cancel("new orders")
+	sc.enabled[act] = true
+	sc.role = JobBook.role_of(act)
+	sc.focus = act
+	sc._cool = 0.0
+	work_at = at if sc.role == "outside" else Vector3.INF
+	_plan = {}
+
+
 ## Where a plan's work is.
 func _site_for(plan: Dictionary) -> Vector3:
 	match String(plan.site):
@@ -422,7 +442,11 @@ func _site_for(plan: Dictionary) -> Vector3:
 	# the woods: a spot round home, on the ground
 	var ang := _rng.randf() * TAU
 	var r := _rng.randf_range(WOODS_RANGE.x, WOODS_RANGE.y)
-	var p := home + Vector3(cos(ang), 0.0, sin(ang)) * r
+	var centre := home
+	if work_at != Vector3.INF:
+		centre = work_at
+		r = _rng.randf_range(1.5, 7.0)      # (round the place she was sent to)
+	var p := centre + Vector3(cos(ang), 0.0, sin(ang)) * r
 	p.y = FrontierTerrain.height_at(p.x, p.z)
 	return _snap(p)
 
