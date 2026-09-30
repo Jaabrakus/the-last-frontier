@@ -47,6 +47,7 @@ var _mods_off: Array = []            ## PlayerAnim's modifiers switched off whil
 ## Our own step over (user 2026-09-30): low steps are stepped onto without a clip, at any speed: the capsule rises (TravStepAssist)
 ## and the feet are carried over the step and set on it (StepFootIK); nothing owns the pose, the upper body goes on as it was.
 var _assist := TravStepAssist.new()
+var _assist_ready := false
 var step_ik: StepFootIK
 
 
@@ -117,6 +118,9 @@ func adopt() -> void:
 func step_assist(wish: Vector3, delta: float) -> void:
 	if controller == null or controller.probe == null or controller.mode != TraversalController.Mode.OFF or showing:
 		return
+	if not _assist_ready:
+		_assist.require_face = true
+		_assist_ready = true
 	var h := Vector3(player.velocity.x, 0.0, player.velocity.z)
 	var dir := h if h.length() > 0.5 else wish
 	_assist.step(player, controller.probe, dir, maxf(h.length(), wish.length() * 3.0), delta)
