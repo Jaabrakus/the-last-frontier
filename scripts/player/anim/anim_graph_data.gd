@@ -33,6 +33,7 @@ const CARRY_PATCHES_PATH := "res://data/anim_author/carry_patches.json"
 const OVERRIDE_LIBS := {"frontier_legacy_runtime": "res://animations_extra/Frontier_Legacy/Frontier_Legacy_Runtime.res",
 	"frontier_locomotion": "res://animations_extra/Frontier_Locomotion.res",
 	"frontier_legacy": "res://animations_extra/Frontier_Legacy/Frontier_Legacy.res",
+	"frontier_legacy_crouch": "res://animations_extra/Frontier_Legacy/Frontier_Legacy_Crouch.res",
 	"frontier_legacy_grounded": "res://animations_extra/Frontier_Legacy/Grounded/Frontier_Legacy_Grounded.res",
 	"frontier_legacy_athletic": "res://animations_extra/Frontier_Legacy/Athletic/Frontier_Legacy_Athletic.res"}
 const FIXTURE_GRAPH := "res://tools/anim_graph/fixtures/mini_graph.json"

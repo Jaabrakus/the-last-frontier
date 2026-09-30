@@ -1,6 +1,36 @@
 {
 	"about": "Clips that stand in for the graph's own (AnimGraphData.apply_clip_overrides): the graph clip name -> the library and clip played instead, its measured travel speed (m/s, tools/anim_author/author_locomotion.gd) and length (s). The plant phases and the rest of the metrics stay the original clip's.",
 	"clips": {
+		"actor_b-p-crouch-walk-bw": {
+			"clip": "frontier_legacy_crouch_walk_bw",
+			"length": 2.666667,
+			"lib": "frontier_legacy_crouch"
+		},
+		"actor_b-p-crouch-walk-bw-lt": {
+			"clip": "frontier_legacy_crouch_walk_bw_lt",
+			"length": 2.666667,
+			"lib": "frontier_legacy_crouch"
+		},
+		"actor_b-p-crouch-walk-bw-rt": {
+			"clip": "frontier_legacy_crouch_walk_bw_rt",
+			"length": 2.666667,
+			"lib": "frontier_legacy_crouch"
+		},
+		"actor_b-p-crouch-walk-fw": {
+			"clip": "frontier_legacy_crouch_walk_fw",
+			"length": 2.666667,
+			"lib": "frontier_legacy_crouch"
+		},
+		"actor_b-p-crouch-walk-fw-lt": {
+			"clip": "frontier_legacy_crouch_walk_fw_lt",
+			"length": 2.666667,
+			"lib": "frontier_legacy_crouch"
+		},
+		"actor_b-p-crouch-walk-fw-rt": {
+			"clip": "frontier_legacy_crouch_walk_fw_rt",
+			"length": 2.666667,
+			"lib": "frontier_legacy_crouch"
+		},
 		"actor_b-p-fall": {
 			"clip": "own-arms-fall",
 			"length": 2.0,
@@ -38,8 +68,8 @@
 		},
 		"actor_b-p-jump-long": {
 			"clip": "frontier_legacy_jump",
-			"lib": "frontier_legacy",
 			"length": 0.9,
+			"lib": "frontier_legacy",
 			"source_agls_clip": "ALSv2_JumpSeq_Idle",
 			"source_base_alias": "actor_b-p-jump-long"
 		},
