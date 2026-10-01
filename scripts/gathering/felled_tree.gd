@@ -328,7 +328,8 @@ static func make_stump(d: Dictionary, stump_h: float, visuals: bool) -> StaticBo
 	var p: Vector3 = d.pos
 	var body := StaticBody3D.new()
 	body.name = "Stump_%d" % int(d.get("i", 0))
-	body.add_to_group(FrontierVegetation.LOW_GROUP)
+	if stump_h <= 0.6:
+		body.add_to_group(FrontierVegetation.LOW_GROUP)   # (a tall stump, cut high, is not stepped over)
 	body.set_meta(&"surface", "wood")
 	body.position = p
 	var cs := CollisionShape3D.new()

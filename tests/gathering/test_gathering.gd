@@ -288,6 +288,9 @@ func _level_fell(h: VegHarvest) -> void:
 	var felled := [null]
 	gt.felled.connect(func(ft: FelledTree) -> void: felled[0] = ft)
 	var need := gt.strokes_to_fell(tree)
+	# the crosshair low on the trunk: the cut goes in there (GatherTools._aim_height; user 2026-10-01 "it cuts where the axe is")
+	player.pitch = -0.6
+	await _frames(4)
 	Input.action_press(&"fire")
 	var ok := await _until(func() -> bool: return felled[0] != null, 120 * 60)
 	Input.action_release(&"fire")
@@ -307,6 +310,7 @@ func _level_fell(h: VegHarvest) -> void:
 	_check(h.describe("tree", "tree", best).is_empty(), "the felled tree is no longer a target")
 	var stumps := current_scene.find_children("Stump_*", "StaticBody3D", false, false)
 	_check(stumps.size() == 1 and (stumps[0] as Node).is_in_group(FrontierVegetation.LOW_GROUP), "a stump stays (low: a horse steps over)")
+	_check(ft_cut_ok(stumps), "cut low, where the axe went in: the stump is under 0.7 m (%.2f m; pitch %.2f, cam y %.2f, feet %.2f)" % [((stumps[0] as Node).get_child(0).shape as CylinderShape3D).height - 0.3 if not stumps.is_empty() else -1.0, player.pitch, player.camera.global_position.y, player.global_position.y])
 	var ft: FelledTree = felled[0]
 	_check(ft.state == FelledTree.State.FALLING, "the tree is falling")
 	var away := Vector3(tree.pos.x - player.global_position.x, 0, tree.pos.z - player.global_position.z).normalized()
@@ -527,3 +531,10 @@ func _level_torch() -> void:
 	var back := await _until(func() -> bool: return gt.tool == "" and gt.phase == GatherTools.Phase.IDLE, 400)
 	_check(back and gt.on_loop == "felling_axe", "the torch sends the axe back to the loop (tool '%s')" % gt.tool)
 	tr.put_away()
+
+
+func ft_cut_ok(stumps: Array) -> bool:
+	if stumps.is_empty():
+		return false
+	var cs := (stumps[0] as Node).get_child(0) as CollisionShape3D
+	return cs != null and (cs.shape as CylinderShape3D).height - 0.3 < 0.7

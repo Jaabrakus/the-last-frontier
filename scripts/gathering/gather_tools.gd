@@ -122,6 +122,7 @@ var _queued := 0               ## strokes asked for by E during a swing
 var _swing := {}               ## the current swing
 var _prev_swing := {}          ## the swing fading out under it (a chained stroke)
 var _work := {}                ## "tree:i" / "sap:src:i" -> stroke power so far
+var _cut := {}                 ## "tree:i" -> the height (world y) the last stroke went in at: where it is cut through
 var _rock := {}                ## prop index -> {total, left, work}
 var _tick := 0
 var _socket_hand: BoneAttachment3D
@@ -951,6 +952,7 @@ func _impact(t: Dictionary) -> void:
 			var need := strokes_to_fell(cur)
 			_work[key] = float(_work.get(key, 0.0)) + power
 			skills.award(sk, skills.xp(sk, "stroke"))
+			_cut[key] = point.y          # (the height of the last stroke: the cut, CUT_REACH)
 			GatherFx.wood_chips(scene, point, normal)
 			_rec_or(GatherSfx.chop(point, 2.0 * float(cur.get("radius", 0.3))), "axe_chop", point, 0.0, &"ball_hit_wood")
 			if float(_work[key]) >= need:
@@ -1126,16 +1128,22 @@ func rock_state(i: int) -> Dictionary:
 ## The tree comes down: its instances and collider go (VegHarvest), a FelledTree topples away from the player,
 ## a stump stays.
 func _fell(cur: Dictionary) -> void:
-	fell_tree(int(cur.i), player.global_position, player.global_basis.z * -1.0, true)
+	var key := "tree:%d" % int(cur.i)
+	fell_tree(int(cur.i), player.global_position, player.global_basis.z * -1.0, true, float(_cut.get(key, INF)))
+	_cut.erase(key)
 
 
 ## Tree `i` comes down away from `from` (where the feller stands; `ahead` when they stand on it): its instances and collider go
 ## (VegHarvest), a FelledTree topples, a stump stays. `award` is the player's own felling (his woodcutting grows, he is told);
 ## a worker's (RtsFell) is not. Returns the felled tree (null: it was gone already).
-func fell_tree(i: int, from: Vector3, ahead := Vector3.FORWARD, award := false) -> FelledTree:
+func fell_tree(i: int, from: Vector3, ahead := Vector3.FORWARD, award := false, cut_y := INF) -> FelledTree:
 	var d := harvest.remove_tree(i)
 	if d.is_empty():
 		return null
+	# the cut where the strokes went in (`cut_y`, world): the stump that tall, the tree that much shorter; else the usual stump
+	var cfg: Dictionary = data.felling.duplicate()
+	if cut_y != INF:
+		cfg["stump_height_m"] = clampf(cut_y - float(d.pos.y), 0.15, 2.4)
 	_work.erase("tree:%d" % i)
 	var sp: Dictionary = data.species.get(String(d.species), {})
 	d["name"] = String(sp.get("name", String(d.species).replace("_", " ")))
@@ -1147,7 +1155,7 @@ func fell_tree(i: int, from: Vector3, ahead := Vector3.FORWARD, award := false) 
 	var scatter := float(data.felling.get("scatter_deg_safe" if safe else "scatter_deg_novice", 30.0))
 	away = away.rotated(Vector3.UP, deg_to_rad(rng.randf_range(-scatter, scatter)))
 	var visuals := DisplayServer.get_name() != "headless"
-	var ft := FelledTree.create(d, away, data.felling, visuals)
+	var ft := FelledTree.create(d, away, cfg, visuals)
 	var scene := get_tree().current_scene
 	scene.add_child(ft)
 	ft.landed.connect(_on_tree_landed)
@@ -1156,7 +1164,7 @@ func fell_tree(i: int, from: Vector3, ahead := Vector3.FORWARD, award := false) 
 	if not Sfx.has(fall_id):
 		ft.landing_soon.connect(func(f: FelledTree) -> void: _sound("tree_fall", f.hinge + f.axis() * f.length * 0.5, 6.0, &"land_dirt"))
 		_sound("tree_crack", d.pos + Vector3.UP * 1.5, 2.0, &"land_wood")
-	var stump := FelledTree.make_stump(d, float(data.felling.get("stump_height_m", 0.45)), visuals)
+	var stump := FelledTree.make_stump(d, float(cfg.get("stump_height_m", 0.45)), visuals)
 	scene.add_child(stump)
 	if award:
 		var diam := 2.0 * float(d.radius)
@@ -1356,6 +1364,8 @@ func _finish_target(c: Dictionary) -> void:
 			var to := Vector3(p.x - ax.x, 0.0, p.z - ax.z)
 			var n := to.normalized() if to.length() > 1e-3 else -player.global_basis.z
 			var y := p.y + (0.95 if String(c.type) == "tree" else 0.6)
+			if String(c.type) == "tree":
+				y = _aim_height(ax, float(c.radius), p)   # (where the crosshair is on the trunk: the cut goes there)
 			if String(c.type) == "trunk":
 				var ft: FelledTree = c.felled
 				y = ft.bole_point(p).y + 0.05
@@ -1735,3 +1745,16 @@ func _sound(id: String, pos: Vector3, gain_db: float, fallback: StringName) -> v
 	p.global_position = pos
 	p.finished.connect(p.queue_free)
 	p.play()
+
+
+## FELLING WHERE THE AXE IS (user 2026-10-01: "where ever the axe is at it cuts only to that point"): the height on a standing trunk
+## (axis `ax`, radius `r`) the crosshair points at, within the axe's reach from the feet at `p` (CUT_REACH); the strokes go in there
+## and the tree comes down from there, leaving a stump that tall.
+const CUT_REACH := Vector2(0.25, 1.85)
+
+
+func _aim_height(_ax: Vector3, _r: float, p: Vector3) -> float:
+	# by the look's pitch, not the crosshair's ray: the third-person camera climbs as it looks down, so the ray would want a
+	# player staring at their feet for a low cut. Level: waist height (as before); down to the root; up to over the head.
+	var pitch := float(player.get("pitch")) if player.get("pitch") != null else 0.0
+	return p.y + clampf(1.0 + pitch * 0.75, CUT_REACH.x, CUT_REACH.y)
