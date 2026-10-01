@@ -145,8 +145,11 @@ static func outfit_of(core: SurvivalCore, base: Dictionary) -> Dictionary:
 
 
 ## A start with nothing: the player's look is dressed from what is worn (nothing: naked). A normal start is left as the creator made it.
+## The look's own clothes are kept aside (`outfit_kept`) while a start with nothing strips it, so the character's saved look (the creator
+## saves it) never stays naked: a normal start puts them back (user 2026-10-01: "the clothes are stripped still when i have start with
+## nothing off").
 static func sync_look(bridge: SurvivalBridge) -> void:
-	if bridge == null or bridge.core == null or not bridge.is_bare():
+	if bridge == null or bridge.core == null:
 		return
 	var p := bridge.player
 	if p == null or not is_instance_valid(p) or p.get("appearance") == null:
@@ -155,8 +158,39 @@ static func sync_look(bridge: SurvivalBridge) -> void:
 	if ap == null or ap.body == null:
 		return
 	var look := ap.look.duplicate(true)
-	look["outfit"] = outfit_of(bridge.core, look.get("outfit", {}) if look.get("outfit") is Dictionary else {})
+	var outfit: Dictionary = look.get("outfit", {}) if look.get("outfit") is Dictionary else {}
+	if not bridge.is_bare():
+		var back := restored(look)
+		if back.hash() != look.hash():
+			ap.apply(back)
+			AppearanceStore.save_current(ap.look)
+		return
+	if not look.has("outfit_kept"):
+		look["outfit_kept"] = outfit.duplicate(true)
+	look["outfit"] = outfit_of(bridge.core, outfit)
 	ap.apply(look)
+
+
+## `look` with its own clothes again: what a start with nothing kept aside, or (a look stripped before that was kept) the zones'
+## slots that are all "nothing" taken off so the basic dress shows.
+static func restored(look: Dictionary) -> Dictionary:
+	var out := look.duplicate(true)
+	if out.has("outfit_kept"):
+		out["outfit"] = (out.outfit_kept as Dictionary).duplicate(true) if out.outfit_kept is Dictionary else {}
+		out.erase("outfit_kept")
+		return out
+	var outfit: Dictionary = (out.get("outfit", {}) as Dictionary).duplicate(true) if out.get("outfit") is Dictionary else {}
+	var all_off := true
+	for z: Dictionary in ZONES:
+		for slot: String in z.slots:
+			if String((outfit.get(slot, {}) as Dictionary).get("id", "")) != "-":
+				all_off = false
+	if all_off:
+		for z: Dictionary in ZONES:
+			for slot: String in z.slots:
+				outfit.erase(slot)
+		out["outfit"] = outfit
+	return out
 
 
 ## The same for a worker (the Gear tab of her sheet): a garment on in its slot over what was there, and her look dressed to what she wears.

@@ -45,7 +45,8 @@ static func install(player: Node, skeleton: Skeleton3D) -> PlayerAppearance:
 	pa.name = "Appearance"
 	pa.body = b
 	player.add_child(pa)
-	pa.apply(AppearanceStore.load_current())
+	var saved := AppearanceStore.load_current()
+	pa.apply(saved if SurvivalBridge.bare_ahead() else ClothesSlots.restored(saved))     # (a normal start in its own clothes)
 	ensure_input()
 	if offer_creator() or MainMenu.take_new_game():     # (the first launch, or the main menu's New game)
 		pa._offer_creator.call_deferred()

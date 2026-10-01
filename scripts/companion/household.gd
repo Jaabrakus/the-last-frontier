@@ -100,6 +100,8 @@ func _new_spouse() -> void:
 	if sc != null or not is_instance_valid(player):
 		return
 	var look: Dictionary = player.appearance.look if player.appearance != null else AppearanceStore.load_current()
+	if not bridge.is_bare():
+		look = ClothesSlots.restored(look)      # (her clothes from the player's own look, not one a start with nothing stripped)
 	var seed_v := int(bridge.core.state.rng_seed) ^ 0xA11CE
 	sc = SpouseCore.create(bridge.core, look, seed_v)
 	sc.role = "home"
