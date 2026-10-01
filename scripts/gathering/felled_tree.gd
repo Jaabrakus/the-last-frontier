@@ -102,7 +102,10 @@ func _build_visual(stump_h: float) -> void:
 	_visual = MultiMeshInstance3D.new()
 	_visual.name = "Tree"
 	_visual.multimesh = mm
-	_visual.material_override = Assets.tree_material(int(info.kind))
+	# the piece above the cut only (tree.gdshader cut_below): the trunk under the cut stands as the stump; its own copy of the material
+	var mat := Assets.tree_material(int(info.kind)).duplicate() as ShaderMaterial
+	mat.set_shader_parameter("cut_below", stump_h)
+	_visual.material_override = mat
 	_visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	_visual.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 	# a felled tree left lying is a full-detail tree: not drawn from afar (the forest's own LODs end ~100 m)
@@ -125,11 +128,10 @@ func _apply_pose() -> void:
 	basis = Basis(Vector3.UP.cross(fall_dir).normalized(), theta)
 	position = hinge
 	if _visual:
-		# the tree's mesh starts at the ground, the pivot is the cut: over the first 12 deg the butt slides up
-		# the pole onto the stump, so no stub of trunk swings out behind the stump as it goes over
-		var slide := _stump_h * smoothstep(0.0, deg_to_rad(12.0), theta)
+		# the tree's mesh starts at the ground and is drawn from the cut up (cut_below): the cut face stays on the hinge, on the
+		# stump, all the way down (the piece under the cut is not drawn, so no stub swings out behind)
 		var xf := _visual.multimesh.get_instance_transform(0)
-		xf.origin = Vector3(0, -_stump_h + slide, 0)
+		xf.origin = Vector3(0, -_stump_h, 0)
 		_visual.multimesh.set_instance_transform(0, xf)
 
 
@@ -339,6 +341,41 @@ static func make_stump(d: Dictionary, stump_h: float, visuals: bool) -> StaticBo
 	cs.shape = cyl
 	cs.position = Vector3(0, (stump_h - 0.3) * 0.5, 0)
 	body.add_child(cs)
+	if visuals and stump_h > 0.6:
+		# cut high: the tree itself stands to the cut (its own trunk and any limbs below it: tree.gdshader cut_above), with the
+		# cut's face on top (user 2026-10-01: "it should stay if I didn't cut lower than that")
+		var Assets := VegHarvest.Assets
+		var mesh := Assets.tree_mesh(int(d.get("kind", 0)), int(d.get("variant", 0)), 0)
+		if mesh != null:
+			var mm := MultiMesh.new()
+			mm.transform_format = MultiMesh.TRANSFORM_3D
+			mm.use_custom_data = true
+			mm.mesh = mesh
+			mm.instance_count = 1
+			var s := float(d.get("scale", 1.0))
+			mm.set_instance_transform(0, Transform3D(Basis.from_euler(Vector3(0, float(d.get("yaw", 0.0)), 0)).scaled(Vector3.ONE * s), Vector3.ZERO))
+			mm.set_instance_custom_data(0, d.get("custom", Color(0.5, 0.5, 0.5, 0.0)))
+			var mmi := MultiMeshInstance3D.new()
+			mmi.name = "StandingCut"
+			mmi.multimesh = mm
+			var mat := Assets.tree_material(int(d.get("kind", 0))).duplicate() as ShaderMaterial
+			mat.set_shader_parameter("cut_above", stump_h)
+			mmi.material_override = mat
+			mmi.visibility_range_end = 140.0
+			body.add_child(mmi)
+			var face := MeshInstance3D.new()
+			var disc := CylinderMesh.new()
+			disc.top_radius = r * 1.02
+			disc.bottom_radius = r * 1.02
+			disc.height = 0.03
+			face.mesh = disc
+			var wood := StandardMaterial3D.new()
+			wood.albedo_color = Color(0.78, 0.64, 0.45)
+			wood.roughness = 0.9
+			face.material_override = wood
+			face.position = Vector3(0, stump_h - 0.015, 0)
+			body.add_child(face)
+			return body
 	if visuals:
 		var m := GatherModels.stump(r, stump_h, String(d.get("species", "")))
 		m.rotation = Vector3(0, float(d.get("yaw", 0.0)), 0)

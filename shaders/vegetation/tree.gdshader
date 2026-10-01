@@ -19,11 +19,17 @@ uniform float leaf_glow_strength = 1.0;
 varying float v_canopy;
 varying vec2 v_lod;
 varying float v_leaf_s;
+/// A cut tree (FelledTree, user 2026-10-01: "the whole tree falls over instead of a piece"): only the part of the model between these
+/// heights along the tree's own axis (m, from its base) is drawn: the falling piece above the cut, the standing part below.
+uniform float cut_below = -1.0e9;
+uniform float cut_above = 1.0e9;
+varying float v_axis_h;
 
 void vertex() {
 	v_col = COLOR;
 	v_custom = INSTANCE_CUSTOM;
 	v_height = (MODEL_MATRIX * vec4(VERTEX, 1.0)).y - MODEL_MATRIX[3].y;
+	v_axis_h = VERTEX.y * length(MODEL_MATRIX[1].xyz);
 	VERTEX += tree_wind(VERTEX, MODEL_MATRIX, COLOR, UV2);
 	v_canopy = canopy_cover(MODEL_MATRIX[3].xz);
 	v_leaf_s = leaf_season_at(MODEL_MATRIX[3].xyz, leaf_early);
@@ -35,6 +41,9 @@ void vertex() {
 }
 
 void fragment() {
+	if (v_axis_h < cut_below || v_axis_h > cut_above) {
+		discard;
+	}
 	// the LOD hand-over: this LOD's share of the tree's pixels (before any texture fetch)
 	if (!IN_SHADOW_PASS && frontier_lod_dither(FRAGCOORD.xy, v_lod)) {
 		discard;
