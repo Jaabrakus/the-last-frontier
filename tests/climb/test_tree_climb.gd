@@ -151,10 +151,8 @@ func _climb() -> void:
 		var d := Vector2(spot.x - axis.x, spot.z - axis.z).length()
 		_expect(d > radius + 0.2 and d < radius + 0.8, "perch: out on the branch (%.2f m from the axis)" % d)
 		# the move keys do not walk off it; a tap of Space does not jump off
-		Input.action_press("move_forward")
 		Input.action_press("move_right")
 		await _fr(120)
-		Input.action_release("move_forward")
 		Input.action_release("move_right")
 		Input.action_press("jump")
 		await _fr(12)
@@ -184,6 +182,25 @@ func _climb() -> void:
 		Input.action_release("aim")
 		await _fr(60)
 		_expect(p.spring_arm.spring_length > 1.9 and p.spring_arm.spring_length < 2.6, "perch: not aiming, the branch's nearer camera (%.2f m)" % p.spring_arm.spring_length)
+		# higher: W held climbs to the branch above, S held back down (user 2026-10-01: "add more branches to climb higher")
+		var y0 := p.global_position.y
+		Input.action_press("move_forward")
+		await _fr(150)
+		Input.action_release("move_forward")
+		await _fr(30)
+		var y1 := p.global_position.y
+		_expect(g.perched and y1 > y0 + 1.2, "higher: W held climbs to the branch above (%.2f -> %.2f m)" % [y0, y1])
+		Input.action_press("move_forward")
+		await _fr(150)
+		Input.action_release("move_forward")
+		await _fr(30)
+		print("two branches up at %.2f m" % p.global_position.y)
+		Input.action_press("move_back")
+		for k in 4:
+			await _fr(150)
+		Input.action_release("move_back")
+		await _fr(30)
+		_expect(g.perched and absf(p.global_position.y - y0) < 0.3, "lower: S held climbs back down to the first branches (%.2f m, first %.2f)" % [p.global_position.y, y0])
 		# back onto the trunk: G again
 		Input.action_press("grip")
 		await _fr(150)

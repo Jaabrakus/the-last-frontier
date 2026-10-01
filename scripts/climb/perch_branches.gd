@@ -22,6 +22,10 @@ const R_TIP := 0.045
 const RISE_DEG := 9.0
 ## The branch's root below the collider's top (the crown's start).
 const DROP := 0.2
+## The branches above the first: one every TIER_STEP m up the crown, at most MAX_TIERS, none within TOP_ROOM m of the top.
+const TIER_STEP := 1.8
+const MAX_TIERS := 5
+const TOP_ROOM := 1.5
 
 var player: FrontierPlayer
 var _veg: Node
@@ -85,8 +89,19 @@ func _gather() -> bool:
 		# top: vegetation.gd sinks it 0.3 m, and lengthens it by what it sinks more on a slope)
 		for k in 3:
 			var ak := a + TAU * float(k) / 3.0
-			_trees.append({"i": i * 4 + k, "tree": i, "axis": pos, "r": r, "top": pos.y + h - 0.3 + 0.12 * float(k - 1),
+			_trees.append({"i": i * 16 + k, "tree": i, "tier": 0, "axis": pos, "r": r, "top": pos.y + h - 0.3 + 0.12 * float(k - 1),
 					"dir": Vector3(sin(ak), 0.0, cos(ak)), "birch": birch})
+		# higher up, a branch every TIER_STEP m through the crown (user 2026-10-01: "add more branches to allow us to climb higher"),
+		# each round the trunk from the one under it, thinner as the trunk thins, to TOP_ROOM under the tree's top
+		var full := float(info.get("height", h + 4.0)) * s
+		var top0 := pos.y + h - 0.3
+		for t in range(1, MAX_TIERS + 1):
+			var y := top0 + TIER_STEP * float(t)
+			if y > pos.y + full - TOP_ROOM:
+				break
+			var at := a + TAU * 0.38 * float(t)
+			_trees.append({"i": i * 16 + 2 + t, "tree": i, "tier": t, "axis": pos, "r": maxf(r * (1.0 - 0.14 * float(t)), 0.1), "top": y,
+					"dir": Vector3(sin(at), 0.0, cos(at)), "birch": birch})
 	return true
 
 
@@ -189,9 +204,13 @@ func perch_at(point: Vector3, out := -1.0) -> Dictionary:
 		var d := rel.length()
 		if d > float(tr.r) + 0.6:
 			continue
+		# the branches at the point's height (the first set for a climber at the trunk's top)
+		var dy := absf(point.y - float(tr.top))
+		if dy > TIER_STEP * 0.6:
+			continue
 		# nearest trunk first, then the branch most toward the point
 		var dir: Vector3 = tr.dir
-		var score := d - 0.1 * rel.normalized().dot(Vector2(dir.x, dir.z))
+		var score := d - 0.1 * rel.normalized().dot(Vector2(dir.x, dir.z)) + 0.2 * dy
 		if score < bd:
 			bd = score
 			best = tr
@@ -211,4 +230,28 @@ static func _perch(tr: Dictionary, out := -1.0) -> Dictionary:
 	var seat := _base(tr) + way * along + Vector3.UP * rad
 	var dir: Vector3 = tr.dir
 	return {"seat": seat, "dir": dir, "side": Vector3.UP.cross(dir).normalized(), "axis": tr.axis, "r": tr.r,
-			"tree": tr.i}
+			"tree": tr.i, "tree_index": int(tr.tree), "tier": int(tr.get("tier", 0))}
+
+
+## The branch `step` tiers up (or down, `step` < 0) from tier `tier` on tree `tree_index` (a layout index), as perch_at gives
+## it ({} when that tree has none there, or it is not built near the player). Tier 0 is the first set (the branch most toward
+## `toward` of its three).
+func perch_tier(tree_index: int, tier: int, step: int, toward := Vector3.ZERO) -> Dictionary:
+	var want := tier + step
+	if want < 0:
+		return {}
+	var best := {}
+	var bs := -INF
+	for tr: Dictionary in _trees:
+		if int(tr.tree) != tree_index or int(tr.get("tier", 0)) != want or not _live.has(tr.i):
+			continue
+		var dir: Vector3 = tr.dir
+		var s := dir.dot(toward)
+		if s > bs:
+			bs = s
+			best = tr
+	if best.is_empty():
+		return {}
+	var pr := _perch(best)
+	pr["floor"] = (_live[best.i] as Array)[1]
+	return pr

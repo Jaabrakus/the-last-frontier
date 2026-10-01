@@ -196,6 +196,14 @@ var _perch_up := false           ## the pull-up playing goes onto a branch
 var _perch_dir := Vector3.FORWARD
 var _perch_face := Vector3.FORWARD
 var _jump_hold := 0.0
+## The branch sat on now (PerchBranches._perch: seat, dir, tree_index, tier), and a climb to the one above or below: {from, to,
+## t, pr} while it lasts (user 2026-10-01: "add more branches to allow us to climb higher"): W held climbs a tier, S held one down.
+var _perch_cur := {}
+var _hop := {}
+var _tier_hold := 0.0
+const TIER_HOLD_S := 0.35
+const TIER_HOP_S := 0.9
+const TIER_STAMINA := 6.0
 var _off_t := 0.0
 var _clear_w := 0.0              ## the line-of-sight fade's strength (veg_clear_*)
 var _crown_r := 0.0              ## the crown clear's radius now (kept while the fade goes out)
@@ -1249,6 +1257,7 @@ func _start_perch() -> bool:
 	face.y = 0.0
 	_perch_face = side if side.dot(face) >= 0.0 else -side
 	_perch_dir = pr.dir
+	_perch_cur = pr
 	_perch_up = true
 	_up = {"col": pr.floor, "point": pr.seat, "n": Vector3.UP, "dir": Vector3.UP, "face": _perch_face}
 	_start_climb_up()
@@ -1279,15 +1288,36 @@ func _perch_tick(dt: float) -> bool:
 	if player.perch != self or player.is_dead:
 		_unperch()
 		return false
+	if not _hop.is_empty():
+		return _hop_tick(dt)
 	var aiming := player.weapon != null and player.weapon.aim > 0.3
 	if not aiming:
 		stamina = move_toward(stamina, stamina_max, perch_regain * dt)
+	# W held: up to the branch above; S held: down to the one below (the first set's S does nothing: G takes the trunk there)
+	var want := 1 if player.controls.pressed(&"move_forward") else (-1 if player.controls.pressed(&"move_back") else 0)
+	_tier_hold = _tier_hold + dt if want != 0 and not aiming else 0.0
+	if _tier_hold >= TIER_HOLD_S and perch != null and not _perch_cur.is_empty() and stamina > TIER_STAMINA:
+		_tier_hold = 0.0
+		var look := Vector3(-sin(player.yaw), 0.0, -cos(player.yaw))
+		var nx := perch.perch_tier(int(_perch_cur.get("tree_index", -1)), int(_perch_cur.get("tier", 0)), want, look)
+		if not nx.is_empty():
+			stamina -= TIER_STAMINA
+			_hop = {"from": player.global_position, "to": (nx.seat as Vector3) + Vector3.UP * 0.03, "t": 0.0, "pr": nx}
+			return false
 	# (the look is free on a branch: all the way round to face the trunk, or back along the branch; user 2026-10-01 "allow them to
 	# turn towards the trunk or free the look". The camera's spring arm keeps out of the bark and a shot at it hits the bark)
 	if player.controls.just_pressed(&"grip"):
+		if int(_perch_cur.get("tier", 0)) > 0:
+			if player.interactor:
+				player.interactor.notice("Climb down to the lowest branches first (hold S)", 2.5)
+			return false
 		return _leave_perch()
 	_jump_hold = _jump_hold + dt if player.controls.pressed(&"jump") else 0.0
 	if _jump_hold >= PERCH_JUMP_S:
+		# off the first set the drop is safe (user 2026-10-01: "the first set is okay to jump down"); higher up a fall hurts
+		if int(_perch_cur.get("tier", 0)) == 0:
+			var ground := FrontierTerrain.height_at(player.global_position.x, player.global_position.z)
+			player.fall_safe_m = maxf(player.global_position.y - ground + 1.0, FrontierPlayer.FALL_SAFE_M)
 		_unperch()
 		player.set_crouched(false)
 		player.velocity = _perch_dir * 2.4 + Vector3.UP * 3.0
@@ -1300,7 +1330,36 @@ func _perch_tick(dt: float) -> bool:
 	return false
 
 
+## A climb from branch to branch: the body carried up (or down) the trunk in an arc to the next seat, crouched, then sat there facing
+## across that branch as on the first.
+func _hop_tick(dt: float) -> bool:
+	_hop.t = float(_hop.t) + dt / TIER_HOP_S
+	var k := minf(float(_hop.t), 1.0)
+	var e := k * k * (3.0 - 2.0 * k)
+	var a: Vector3 = _hop.from
+	var b: Vector3 = _hop.to
+	var p := a.lerp(b, e)
+	# in toward the trunk through the middle of the climb (round it, not through the crown's air)
+	var pr: Dictionary = _hop.pr
+	var axis: Vector3 = pr.axis
+	var inward := Vector3(axis.x - p.x, 0.0, axis.z - p.z)
+	p += inward * 0.35 * sin(PI * e)
+	player.global_position = p
+	player.velocity = Vector3.ZERO
+	_off_t = 0.0
+	if k >= 1.0:
+		_perch_cur = pr
+		_perch_dir = pr.dir
+		var side: Vector3 = pr.side
+		var face := Vector3(-sin(player.yaw), 0.0, -cos(player.yaw))
+		_perch_face = side if side.dot(face) >= 0.0 else -side
+		_hop = {}
+	return false
+
+
 func _unperch() -> void:
+	_hop = {}
+	_tier_hold = 0.0
 	if player.perch == self:
 		player.perch = null
 	perched = false

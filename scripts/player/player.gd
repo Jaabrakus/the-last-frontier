@@ -212,6 +212,18 @@ var survival_speed_mult := 1.0
 ## wound knits.
 var maim_legs := false
 var broken_leg := false
+## FALLS (user 2026-10-01: "fall damage with broken bones if they jump from too high up; the first set is okay to jump down"):
+## the highest point since the feet left the ground; a drop past fall_safe_m hurts, FALL_DMG_PER_M a metre past it, and from
+## FALL_BREAK_M past it a leg breaks (slowed until it knits). Jumping off a tree's first branches is safe (PlayerGrip sets
+## fall_safe_m to that branch's height above the ground).
+const FALL_SAFE_M := 4.5
+const FALL_DMG_PER_M := 13.0
+const FALL_BREAK_M := 3.0
+## How long a fall's break slows the player without the survival rules (with them it knits as its leg wound does).
+const FALL_BREAK_S := 600.0
+var fall_safe_m := FALL_SAFE_M
+var _fall_top := -INF
+var _break_t := 0.0
 var sprint_allowed := true
 ## Drink and tobacco (Vices): reload stages x this (a pipe: 0.92), the shot spread x this (drunk: 1.25), and the aim's
 ## slow sway in degrees (drunk).
@@ -1074,9 +1086,11 @@ func _physics_process(delta: float) -> void:
 	if quick != null:
 		quick.tick(delta)
 	if riding != null:
+		_fall_top = -INF
 		_ride(delta)
 		return
 	if kneeling != null:
+		_fall_top = -INF
 		velocity = Vector3.ZERO
 		target_speed = 0.0
 		wish_local = Vector2.ZERO
@@ -1088,7 +1102,9 @@ func _physics_process(delta: float) -> void:
 	if grip and grip.tick(delta):
 		target_speed = 0.0
 		wish_local = Vector2.ZERO
+		_fall_top = -INF        # (held on: a fall is measured from where the grip lets go)
 		return
+	_track_fall(delta)
 
 	var input := Vector2.ZERO if is_dead or perch != null or (aboard != null and not bool(aboard.get(&"free"))) else controls.move_vector()
 	# Crouch is a toggle. Sprinting or jumping stands you back up.
@@ -1306,19 +1322,19 @@ func _maim(fx: Dictionary) -> void:
 ## The speed Iron Man's injuries leave (1 with it off, or unhurt): the legs gone for good, a leg broken until its wound has
 ## knit (LastingConditions), a mortal wound's stagger.
 func _maim_speed() -> float:
-	if not GameSettings.iron_man():
-		return 1.0
+	var iron := GameSettings.iron_man()
 	var m := 1.0
-	if maim_legs:
+	if iron and maim_legs:
 		m = 0.15
 	if broken_leg:
 		var b := SurvivalBridge.find(get_tree())
-		var open := b == null or b.lasting == null or b.lasting.has_wound("l_leg") or b.lasting.has_wound("r_leg")
+		# (a fall's break without the survival rules knits on a clock: FALL_BREAK_S)
+		var open := (b == null or b.lasting == null) and _break_t > 0.0 or (b != null and b.lasting != null and (b.lasting.has_wound("l_leg") or b.lasting.has_wound("r_leg")))
 		if open:
 			m = minf(m, 0.55)
 		else:
 			broken_leg = false
-	if wounds and wounds.mortal():
+	if iron and wounds and wounds.mortal():
 		m = minf(m, 0.5)
 	return m
 
@@ -1379,6 +1395,50 @@ func _sway(delta: float) -> void:
 	_sway_off = want
 	yaw += d.x
 	pitch += d.y
+
+
+## The fall since the feet left the ground (FALLS): measured at the landing from the highest point reached.
+func _track_fall(delta: float) -> void:
+	_break_t = maxf(_break_t - delta, 0.0)
+	if is_dead:
+		_fall_top = -INF
+		return
+	if not is_on_floor():
+		_fall_top = maxf(_fall_top, global_position.y)
+		return
+	if _fall_top == -INF:
+		return
+	var drop := _fall_top - global_position.y
+	_fall_top = -INF
+	var safe := fall_safe_m
+	fall_safe_m = FALL_SAFE_M
+	var over := drop - safe
+	if over > 0.0:
+		_fall_hurt(over)
+
+
+## Landed `over` m past the safe drop: hurt, and from FALL_BREAK_M a leg broken (the survival rules keep it as a leg wound that
+## knits; without them it mends in FALL_BREAK_S); a long fall kills.
+func _fall_hurt(over: float) -> void:
+	var dmg := FALL_DMG_PER_M * over + 4.0
+	health = maxf(health - dmg, 0.0)
+	hurt.emit(Vector2.ZERO, dmg, true)
+	var b := SurvivalBridge.find(get_tree())
+	if over >= FALL_BREAK_M:
+		broken_leg = true
+		_break_t = FALL_BREAK_S
+		var side := "l_leg" if randf() < 0.5 else "r_leg"
+		if b and b.lasting:
+			b.lasting.hit(side, "front", "blunt", maxf(dmg, 20.0))
+		if interactor:
+			interactor.notice("You land hard: your %s leg is broken" % ("left" if side == "l_leg" else "right"), 4.0)
+	elif interactor:
+		interactor.notice("You land hard", 2.0)
+	if health <= 0.0:
+		if b:
+			b.death_cause = "a fall"
+		_death_push = Vector3.ZERO
+		_die(Vector2.ZERO)
 
 
 ## Blood lost from a bleeding wound (PlayerWounds): the health drains; at none the player has bled to death.
