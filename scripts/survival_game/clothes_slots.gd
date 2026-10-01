@@ -185,6 +185,8 @@ static func take_off_worker(sc: SpouseCore, zone: String) -> bool:
 
 ## Her look's outfit follows what she wears (the slots the zones cover), and her body is dressed again.
 static func sync_worker(sc: SpouseCore, body: Node = null) -> void:
+	if not sc.bare:
+		return      # (a normal start: she keeps the clothes her look has; only a start with nothing dresses her from what she wears)
 	sc.look["outfit"] = outfit_of(sc.core, sc.look.get("outfit", {}) if sc.look.get("outfit") is Dictionary else {})
 	if body != null and is_instance_valid(body) and body.has_method(&"redress"):
 		body.call(&"redress")
