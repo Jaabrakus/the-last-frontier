@@ -276,6 +276,11 @@ func _door_step(at: Vector3, dt: float) -> Vector3:
 		if dd > DOOR_USE_M:
 			return Vector3.INF
 		var nw := NavWorld.of(body.get_tree())
+		if d.locked:
+			# barred since the plan was made: that door is off the plan, and a new plan is made without it
+			doors_ahead.pop_front()
+			goal = Vector3.INF
+			continue
 		if not d.is_open:
 			# her E: a beat facing it, then it opens
 			_press += dt

@@ -330,7 +330,7 @@ func door_on(a: Vector3, b: Vector3, reach := 0.8) -> BuildDoor:
 ## A walker opens a shut door; it is shut again once none is near (only if a walker opened it). `hold_r`: it stays open
 ## while a walker is within this of it (a rider opens a gate from the saddle further off, and comes on at a trot).
 func open_door(d: BuildDoor, hold_r := 2.3) -> void:
-	if d == null:
+	if d == null or d.locked:
 		return
 	var id := d.get_instance_id()
 	if _opened.has(id):

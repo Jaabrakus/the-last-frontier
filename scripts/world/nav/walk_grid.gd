@@ -181,6 +181,11 @@ func _obstacles(k: Vector2i) -> Array:
 			if cs == null or cs.disabled or cs.shape == null:
 				continue
 			_add_shape(cs.shape, cs.global_transform, r2, out, body.is_in_group(FrontierVegetation.LOW_GROUP))
+	# (a barred door is a wall: its leaves count, shut, where the doorway is)
+	for d: BuildDoor in _door_list():
+		if d.locked and is_instance_valid(d) and r2.has_point(Vector2(d.global_position.x, d.global_position.z)):
+			for ls: Array in d.leaf_shapes():
+				_add_shape(ls[0], ls[1], r2, out, false)
 	_sectors[k] = out
 	return out
 
@@ -296,6 +301,11 @@ func plan(from: Vector3, to: Vector3, radius := 0.3, can := {}, avoid := PackedV
 	return out
 
 
+## How far the end of a way stops short of the place (m): a place the walker cannot get to is planned to the nearest cell it can.
+static func _gap(way: PackedVector3Array, to: Vector3) -> float:
+	return Vector2(way[way.size() - 1].x - to.x, way[way.size() - 1].z - to.z).length() if not way.is_empty() else INF
+
+
 static func _length(pts: PackedVector3Array) -> float:
 	var s := 0.0
 	for i in pts.size() - 1:
@@ -310,16 +320,16 @@ func routes(from: Vector3, to: Vector3, radius := 0.3, can := {}, alternatives :
 	var best := plan(from, to, radius, can)
 	if best.is_empty() or not alternatives:
 		if not best.is_empty():
-			out.append({"kind": "best", "way": best, "len": _length(best), "cost": float(last.get("cost", 0.0)), "over": bool(last.get("over", false))})
+			out.append({"kind": "best", "way": best, "len": _length(best), "cost": float(last.get("cost", 0.0)), "over": bool(last.get("over", false)), "gap": _gap(best, to)})
 		return out
 	var lb := last.duplicate()
-	out.append({"kind": "best", "way": best, "len": _length(best), "cost": float(lb.get("cost", 0.0)), "over": bool(lb.get("over", false))})
+	out.append({"kind": "best", "way": best, "len": _length(best), "cost": float(lb.get("cost", 0.0)), "over": bool(lb.get("over", false)), "gap": _gap(best, to)})
 	if bool(lb.get("over", false)):
 		var nc := can.duplicate()
 		nc["climb_m"] = 0.0
 		var ar := plan(from, to, radius, nc)
 		if not ar.is_empty():
-			out.append({"kind": "around", "way": ar, "len": _length(ar), "cost": float(last.get("cost", 0.0)), "over": false})
+			out.append({"kind": "around", "way": ar, "len": _length(ar), "cost": float(last.get("cost", 0.0)), "over": false, "gap": _gap(ar, to)})
 	var alt := plan(from, to, radius, can, best)
 	if not alt.is_empty() and _length(alt) <= _length(best) * OTHER_LONGER and _apart(alt, best) >= OTHER_DIFF:
 		var dup := false
@@ -327,7 +337,7 @@ func routes(from: Vector3, to: Vector3, radius := 0.3, can := {}, alternatives :
 			if _apart(alt, r.way) < OTHER_DIFF:
 				dup = true
 		if not dup:
-			out.append({"kind": "other", "way": alt, "len": _length(alt), "cost": float(last.get("cost", 0.0)), "over": bool(last.get("over", false))})
+			out.append({"kind": "other", "way": alt, "len": _length(alt), "cost": float(last.get("cost", 0.0)), "over": bool(last.get("over", false)), "gap": _gap(alt, to)})
 	return out
 
 
@@ -693,6 +703,8 @@ func _door_list() -> Array:
 ## growth closed it under the cell size).
 func _carve_doors(ag: AStarGrid2D, lo: Vector2, cell: float, w: int, h: int) -> void:
 	for d: BuildDoor in _door_list():
+		if d.locked:
+			continue
 		var c := Vector2(d.global_position.x, d.global_position.z)
 		if c.x < lo.x - 2.0 or c.y < lo.y - 2.0 or c.x > lo.x + w * cell + 2.0 or c.y > lo.y + h * cell + 2.0:
 			continue

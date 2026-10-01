@@ -364,7 +364,13 @@ func _draw_blocked() -> void:
 		return
 	var at: Vector3 = blocked.at
 	_routes_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
-	_strip(picked.global_position, at, 0.22, RED)
+	if blocked.has("way"):
+		# (as near as she can get: the way there in red, to where it stops)
+		var wy: PackedVector3Array = blocked.way
+		for k in wy.size() - 1:
+			_strip(wy[k], wy[k + 1], 0.22, RED)
+	else:
+		_strip(picked.global_position, at, 0.22, RED)
 	_routes_mesh.surface_end()
 	_blocked_label.text = "No way: %s" % String(blocked.why)
 	_blocked_label.global_position = Vector3(at.x, at.y + 1.6, at.z)

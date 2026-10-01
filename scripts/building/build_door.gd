@@ -13,6 +13,18 @@ const OPEN_ANGLE := 1.75
 
 var kind := "door"
 var is_open := false
+## Barred: it stays shut, E does not open it, no walker opens it, and the walk grid counts it a wall (WalkGrid) so the ways
+## there go round it or are none.
+var locked := false:
+	set(v):
+		if v == locked:
+			return
+		locked = v
+		if v:
+			set_open(false, true)      # (barred shut: its leaves are the wall the walk grid counts)
+		var g := WalkGrid.of(get_tree()) if is_inside_tree() else null
+		if g != null:
+			g.dirty(global_position, 8.0)
 var interact_reach := 2.4
 var _hinges: Array[Node3D] = []
 var _open_yaw: Array[float] = []
@@ -137,11 +149,26 @@ func distance_from(p: Vector3) -> float:
 
 
 func interact_prompt(_player: Node) -> String:
+	if locked:
+		return "The %s is barred" % kind
 	return "%s the %s" % ["Shut" if is_open else "Open", kind]
 
 
 func interact(_player: Node) -> void:
+	if locked:
+		return
 	is_open = not is_open
+
+
+## The leaves' collision boxes as they stand now: [[Shape3D, Transform3D]] (the walk grid counts them a wall while barred).
+func leaf_shapes() -> Array:
+	var out := []
+	for b in _bodies:
+		for c in b.get_children():
+			var cs := c as CollisionShape3D
+			if cs != null and cs.shape != null:
+				out.append([cs.shape, cs.global_transform])
+	return out
 
 
 func highlight_targets() -> Array:

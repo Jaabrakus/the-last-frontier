@@ -15,6 +15,8 @@ const DOOR_COST := 6.0
 const OVER_COST := 25.0
 const DOOR_ON_M := 1.6
 ## The straight line is tried at these heights over her feet (a knee, the chest).
+## A way that ends further than this from the place (m) does not get there: the place is walled off, or across deep water.
+const GAP_M := 2.0
 const RAY_HEIGHTS: Array[float] = [0.45, 1.2]
 
 
@@ -26,6 +28,14 @@ static func decide(w: Spouse, to: Vector3, routes: Array = []) -> Dictionary:
 		return out
 	var g := WalkGrid.of(w.get_tree())
 	var doors: Array = g._door_list() if g != null else []
+	# every way stops short of the place: it cannot be reached from here (the way that gets nearest is shown in red)
+	var near: Dictionary = rs[0]
+	for r0: Dictionary in rs:
+		near = r0 if float(r0.get("gap", 0.0)) < float(near.get("gap", 0.0)) else near
+	if float(near.get("gap", 0.0)) > GAP_M:
+		var wy: PackedVector3Array = near.way
+		out.blocked = {"at": wy[wy.size() - 1], "why": "it cannot be reached from here", "way": wy}
+		return out
 	var best := INF
 	for i in rs.size():
 		var r: Dictionary = (rs[i] as Dictionary).duplicate()
