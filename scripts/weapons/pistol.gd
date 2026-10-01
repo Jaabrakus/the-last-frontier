@@ -26,6 +26,8 @@ func _init() -> void:
 	aim_mult = 0.6
 	fire_bloom = 2.0
 	aim_fov_mult = 0.9
+	fire_shake = 0.5
+	fire_shake_s = 0.22
 	aim_speed_mult = 0.7
 	aim_yaw_offset_deg = 3.5
 	aim_pitch_offset_deg = 7.6

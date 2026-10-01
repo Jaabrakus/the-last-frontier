@@ -29,6 +29,14 @@ const LEVELS := {"mild": [0.6, 0.6], "medium": [1.0, 1.0], "mediumstrong": [1.25
 	# (user 2026-09-30: "do away with some loosen, make the torso more stiff, remove the little mocap jitters"): a third of the lag, the
 	# torso's swing reduced the most, and a light smoothing that takes the frame-to-frame shake out
 	"stiff": {"lag": 0.35, "amp": 1.2, "torso_amp": 1.75, "sigma": 1.5},
+	# (user 2026-10-01, the jog and the sprint: "the head and shoulders show a mocap looseness, can we stiffen those and make it like AI
+	# generated it"): "stiff", with the head, the neck and the shoulder girdle held almost still on the chest (their own swing kept
+	# absolutely: `groups`, [swing kept, lag]), no trailing behind it, and a wider smoothing
+	"clean": {"lag": 0.35, "amp": 1.2, "torso_amp": 1.75, "sigma": 2.0, "groups": {"neck": [0.10, 0.0], "heada": [0.05, 0.0],
+		"headb": [0.05, 0.0], "clavicle": [0.30, 0.0], "scapula": [0.30, 0.0], "trap": [0.30, 0.0],
+		# (the head and the shoulder line rode the spine's sway, 8 deg at its base: the spine calmed too; the head then held in the
+		# world, stabilize_head())
+		"spinea": [0.40, 0.0], "spineb": [0.40, 0.0], "spinec": [0.40, 0.0], "spined": [0.40, 0.0]}},
 	# jitter only, for the one-shot moves (vaults, climbs): no lag, no swing change, the ends of each clip exactly kept
 	"dejitter": {"lag": 0.0, "amp": 0.0, "torso_amp": 0.0, "sigma": 1.5}}
 ## The torso: the bones whose swing "stiff" reduces the most.
@@ -130,6 +138,10 @@ static func downgrade(src: Animation, level: String, loops: bool) -> Animation:
 		var lag: float = float((GROUPS[g] as Array)[1]) * lag_k
 		if bone.begins_with("l_"):
 			lag += LEFT_EXTRA_S * lag_k
+		var over: Dictionary = (lv as Dictionary).get("groups", {}) if lv is Dictionary else {}
+		if over.has(g):
+			amp = float((over[g] as Array)[0])
+			lag = float((over[g] as Array)[1])
 		# the lagged samples, the shake taken out, then the swing about the mean
 		var samples: Array[Quaternion] = []
 		var prev := Quaternion.IDENTITY
@@ -154,7 +166,7 @@ static func downgrade(src: Animation, level: String, loops: bool) -> Animation:
 		prev = Quaternion.IDENTITY
 		for i in n + 1:
 			var q := samples[i]
-			if amp < 0.999:
+			if amp < 0.999 and amp >= 0.0:
 				q = mean.slerp(q if q.dot(mean) >= 0.0 else -q, amp).normalized()
 			if i > 0 and prev.dot(q) < 0.0:
 				q = -q
@@ -261,3 +273,33 @@ static func _anim_global(a: Animation, sk: Skeleton3D, b: int, t: float) -> Basi
 	var ri := a.find_track(NodePath("Skeleton3D:" + sk.get_bone_name(b)), Animation.TYPE_ROTATION_3D)
 	var x := Basis(a.rotation_track_interpolate(ri, t).normalized()) if ri >= 0 else sk.get_bone_rest(b).basis
 	return _anim_global(a, sk, sk.get_bone_parent(b), t) * x
+
+
+## The head held still in the world through a cycle (user 2026-10-01, the jog and the sprint: "make it like AI generated"): each frame
+## the head's turn in the skeleton's space (the hips', the spine's and the neck's turns all under it) drawn toward the cycle's mean turn,
+## `keep` of its sway left; the head bone takes the difference, the rest of the body as it is. A one-shot (loops false) is left alone.
+static func stabilize_head(a: Animation, sk: Skeleton3D, keep := 0.2, loops := true) -> void:
+	if not loops:
+		return
+	var hb := sk.find_bone("headb")
+	var ti := a.find_track(NodePath("Skeleton3D:headb"), Animation.TYPE_ROTATION_3D)
+	if hb < 0 or ti < 0:
+		return
+	var par := sk.get_bone_parent(hb)
+	var n := a.track_get_key_count(ti)
+	var gs: Array[Quaternion] = []
+	var acc := Vector4.ZERO
+	for k in n:
+		var t := a.track_get_key_time(ti, k)
+		var g := (_anim_global(a, sk, par, t) * Basis((a.track_get_key_value(ti, k) as Quaternion).normalized())).get_rotation_quaternion()
+		if not gs.is_empty() and gs[0].dot(g) < 0.0:
+			g = -g
+		gs.append(g)
+		acc += Vector4(g.x, g.y, g.z, g.w)
+	acc = acc.normalized()
+	var mean := Quaternion(acc.x, acc.y, acc.z, acc.w)
+	for k in n:
+		var t := a.track_get_key_time(ti, k)
+		var g2 := mean.slerp(gs[k], keep)
+		var pg := _anim_global(a, sk, par, t).get_rotation_quaternion()
+		a.track_set_key_value(ti, k, (pg.inverse() * g2).normalized())

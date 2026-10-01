@@ -917,7 +917,7 @@ func manual_step(dt: float) -> void:
 	_time += dt
 	for e: Dictionary in events:
 		_apply_event(e)
-	loco.tick(inp, edges, dt, _weapon, upper.aim_stance(inp))
+	loco.tick(inp, edges, dt, _weapon, upper.aim_stance(inp) or (loco.moving and upper.reload_walk(inp)))
 	if fall_pose != null:
 		loco.own_landing = fall_pose.active and fall_pose.showing()
 		if player != null and player.get("traversal") != null and player.traversal.controller != null:

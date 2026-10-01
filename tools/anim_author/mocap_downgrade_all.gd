@@ -60,6 +60,9 @@ func _initialize() -> void:
 	var metrics: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(METRICS)).clips
 	var own: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(LOCO)).clips
 	var re := RegEx.create_from_string(PATTERN)
+	var ch := (load("res://characters/Actor_B.tscn") as PackedScene).instantiate() as Node3D
+	root.add_child(ch)
+	var sk := ch.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
 	var out := AnimationLibrary.new()
 	var wired := {}
 	var names: Array = graph.clips.keys()
@@ -73,13 +76,13 @@ func _initialize() -> void:
 		var src := lib.get_animation(name)
 		if src.length < 0.5:
 			continue
-		var a: Animation = Downgrade.downgrade(src, LEVEL, true)
+		# (the sprints "clean": the head and shoulders held still, user 2026-10-01; the walks and crouch walks LEVEL)
+		var a: Animation = Downgrade.downgrade(src, "clean" if name.contains("-sprint-") else LEVEL, true)
+		if name.contains("-sprint-"):
+			Downgrade.stabilize_head(a, sk)
 		out.add_animation(StringName(name), a)
 		wired[name] = {"lib": "frontier_downgraded", "clip": name, "length": snappedf(a.length, 0.000001)}
 		print("  ", name, " ", snappedf(a.length, 0.001), " s")
-	var ch := (load("res://characters/Actor_B.tscn") as PackedScene).instantiate() as Node3D
-	root.add_child(ch)
-	var sk := ch.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
 	for name: String in STEADY:
 		if not lib.has_animation(name) or not graph.clips.has(name):
 			continue

@@ -122,7 +122,9 @@ const AIM_IDLE_POSES := {"bow/crouch": "actor_b-p-bow-aim-crouch-idle", "musket/
 const AIM_IDLE_S := 0.45   ## s into the aim clip the upper body is taken
 const AIM_IDLE_PITCH_PATH := "res://data/anim_author/aim_idle_pitch.json"
 const AIM_IDLE_LEGS := "actor_b-p-crouch^stand--base"
-const AIM_IDLE_LEGS_S := 0.45
+## (0.45 s: root 0.69 m, the musket's muzzle 0.93 m, under a 0.95 m wall; user 2026-10-01 "raise all the crouch idle aim higher so
+## they can shoot over the wall": 0.65 s, root 0.85 m)
+const AIM_IDLE_LEGS_S := 0.65
 const AIM_IDLE_LIFT := 0.0
 
 

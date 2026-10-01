@@ -190,7 +190,7 @@ func progress() -> Array:
 ## "zeroed": it leaves on the arc that a projectile of that speed needs to land
 ## exactly on the crosshair point (so drop is compensated), before spread.
 func _launch(kind: Projectile.Kind, speed: float, gravity: float, drag: float, damage: float, zero_speed := -1.0) -> Projectile:
-	var origin := launch_origin()
+	var origin := shot_origin(launch_origin())
 	var target := player.get_aim_point()
 	var dir := (target - origin).normalized()
 	if zero_speed > 0.0:
@@ -259,6 +259,25 @@ static func _height_at(dist: float, theta: float, speed: float, g: float, drag: 
 		if vx < 0.5:
 			break
 	return NAN
+
+
+## A shot's start kept on the shooter's side of a wall (user 2026-10-01: "if a gun pokes through a wall they can fire"): from the
+## chest (its spine bone, or 1.35 m up from the feet) to `origin`; anything solid between them (the player excluded) and the shot
+## starts just short of it, so it strikes that wall rather than leaving from the muzzle beyond it.
+func shot_origin(origin: Vector3) -> Vector3:
+	if player == null or not player.is_inside_tree():
+		return origin
+	var chest := player.global_position + Vector3.UP * 1.35
+	if player.skeleton != null:
+		var b := player.skeleton.find_bone("spined")
+		if b >= 0:
+			chest = player.skeleton.global_transform * player.skeleton.get_bone_global_pose(b).origin
+	var q := PhysicsRayQueryParameters3D.create(chest, origin)
+	q.exclude = [player.get_rid()]
+	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)
+	if hit.is_empty():
+		return origin
+	return (hit.position as Vector3) + (chest - origin).normalized() * 0.05
 
 
 ## Where shots leave from. Firearms: the muzzle. The bow overrides this with

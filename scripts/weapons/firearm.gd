@@ -34,6 +34,9 @@ signal sfx(id: StringName, at: Vector3)
 @export var recoil_yaw_deg := 0.8
 @export var smoke_scale := 1.0
 @export var pan_distance := 1.0        ## Lock/pan position behind the muzzle.
+## The view's tremble kick on the shot (CameraShake.kick: 0..1 and its seconds; the bow hold's kind of shake; user 2026-10-01 "a camera shake on musket fire and pistol fire").
+@export var fire_shake := 0.35
+@export var fire_shake_s := 0.3
 
 @export_group("Trigger")
 ## Hold to aim, release to fire. Off = the shot goes as soon as the weapon is up.
@@ -212,6 +215,8 @@ func _discharge() -> void:
 	_launch(Projectile.Kind.BALL, muzzle_speed, ball_gravity, ball_drag, damage, muzzle_speed)
 	Fx.muzzle_blast(player.get_tree().current_scene, muzzle.global_transform, smoke_scale)
 	player.add_recoil(recoil_pitch_deg, randf_range(-recoil_yaw_deg, recoil_yaw_deg))
+	if fire_shake > 0.0 and player.get("camera") is Camera3D:
+		CameraShake.of(player.camera).kick(fire_shake, fire_shake_s)
 	state = State.RECOIL
 	_timer = recoil_time
 

@@ -144,11 +144,13 @@ const LOOK := {
 		# (the test above, crouched: it was [(-0.02, 0.84, 0.3), (-0.8, 0.45, -0.4)])
 		# (then "the crouch we can lower, and the left hand": 10 cm lower and further out; "a little more": 8 cm more;
 		# then mirrored to the right side, as standing)
-		# (and leaned in toward the left hand, as standing)
-		"ram": [Vector3(-0.1, 0.78, 0.1), Vector3(0.22, 0.472, 0.853), Vector3(0.0, 0.3, 1.0)],
+		# (and leaned in toward the left hand, as standing; then "keep the right hand in front of the player, angle the gun down":
+		# the muzzle 12 cm further forward and 6 cm lower, the gun flatter, the chest leaned and turned further over it so the
+		# left hand still reaches the rod)
+		"ram": [Vector3(-0.06, 0.72, 0.22), Vector3(0.26, 0.435, 0.862), Vector3(0.0, 0.3, 1.0)],
 		"up": [Vector3(-0.06, 0.42, 0.34), Vector3(0.12, 0.98, 0.06), Vector3(-1.0, 0.1, 0.0)],
 		"pouch": Vector3(-0.26, 0.44, -0.1),
-		"chest_prime": [-12.0, 24.0], "chest": [-16.0, 20.0], "chest_up": [0.0, 28.0], "head": 0.0, "bar": -1.16,
+		"chest_prime": [-12.0, 24.0], "chest": [-28.0, 32.0], "chest_up": [0.0, 28.0], "head": 0.0, "bar": -1.16,
 		"bar_low": -0.5,
 		"butt": true},
 }

@@ -77,6 +77,8 @@ const CHARACTER_SCENE := "res://characters/Actor_B.tscn"
 @export var aim_zoom_share := 0.4
 ## Seconds the camera takes to move to the shoulder and back.
 @export var aim_camera_s := 0.15
+## The view's steady shake while sprinting (CameraShake.sustain, 0..1).
+@export var sprint_shake := 0.6
 
 @export_group("Health")
 @export var max_health := 100.0
@@ -1114,6 +1116,9 @@ func _physics_process(delta: float) -> void:
 	if not is_sprinting:
 		speed *= weapon.speed_mult()
 		speed = lerpf(speed, minf(speed, aim_walk_speed), weapon.aim)
+		# (reloading the musket on the move: the aim walk's pace, its legs, UpperBody.reload_walk)
+		if weapon is Firearm and (weapon as Firearm).state == Firearm.State.RELOADING and weapon_key == "musket":
+			speed = minf(speed, aim_walk_speed)
 		if gather != null and gather.swinging():
 			speed = minf(speed, swing_walk_speed)
 	speed *= survival_speed_mult * _maim_speed()
@@ -1196,6 +1201,10 @@ func _physics_process(delta: float) -> void:
 	if riding == null and spring_arm != null:
 		spring_arm.spring_length = cam_distance_now()
 		spring_arm.position.x = cam_shoulder_now()
+	# the sprint's footfalls in the view (user 2026-10-01 "a camera shake on sprint"): a light steady shake while sprinting on the
+	# ground, eased in and out (CameraShake.sustain)
+	if is_sprinting and is_on_floor() and Vector2(velocity.x, velocity.z).length() > 3.0 and camera != null:
+		CameraShake.of(camera).sustain(sprint_shake)
 	var fov_target := fov * (1.0 - (1.0 - weapon.fov_mult()) * aim_zoom_share)
 	camera.fov = lerpf(camera.fov, fov_target, 1.0 - exp(-10.0 * delta))
 

@@ -34,6 +34,8 @@ func _init() -> void:
 	aim_mult = 0.35
 	fire_bloom = 2.5
 	aim_fov_mult = 0.75
+	fire_shake = 0.75         # (the heavy charge: a hard jolt that settles over a third of a second)
+	fire_shake_s = 0.35
 	aim_yaw_offset_deg = 4.9
 	aim_pitch_offset_deg = 1.0
 	aim_yaw_offset_crouch_deg = 4.4

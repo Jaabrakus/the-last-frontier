@@ -48,7 +48,7 @@ const BACK_BOUNCE := 0.55
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
 const Downgrade := preload("res://tools/anim_author/mocap_downgrade.gd")
 ## The level (mocap_downgrade.gd LEVELS) the jogs' upper bodies get.
-const JOG_DOWNGRADE := "stiff"
+const JOG_DOWNGRADE := "clean"
 
 var args := {}
 var lib: AnimationLibrary
@@ -110,6 +110,7 @@ func _bake() -> void:
 	# every jog's upper body stiffened and loosened, the legs and hips as they are; the starts and stops below are built from these
 	for dir: String in jogs:
 		jogs[dir] = Downgrade.downgrade(jogs[dir], JOG_DOWNGRADE, true)
+		Downgrade.stabilize_head(jogs[dir], _rig)    # (the head held still in the world, user 2026-10-01)
 	for dir: String in jogs:
 		var clip: Animation = jogs[dir]
 		out.add_animation(StringName(_name(dir, k)), clip)

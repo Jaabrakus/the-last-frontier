@@ -746,7 +746,7 @@ func _throw_dir(origin: Vector3, target: Vector3) -> Vector3:
 
 ## Spawns the projectile at the object's centre of mass, zeroed on the aim point.
 func _launch_thrown() -> ThrownProjectile:
-	var origin := launch_origin()
+	var origin := shot_origin(launch_origin())   # (not from beyond a wall the hand reached through: Weapon.shot_origin())
 	var target := player.get_aim_point()
 	var dir := _throw_dir(origin, target)
 	dir = apply_spread(dir, deg_to_rad(spread))
