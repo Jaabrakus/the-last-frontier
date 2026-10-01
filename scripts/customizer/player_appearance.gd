@@ -213,6 +213,10 @@ func open_customizer() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.is_action_pressed(ACTION) and not event.echo:
+		# (not in a pose: O is the tandem poses' wave there, kneeling or lying in one)
+		var p := get_parent() as FrontierPlayer
+		if p != null and p.kneeling != null:
+			return
 		if not is_instance_valid(overlay):
 			open_customizer()
 			get_viewport().set_input_as_handled()

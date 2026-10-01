@@ -109,6 +109,8 @@ func _adopt(p: FrontierPlayer) -> bool:
 func _input(e: InputEvent) -> void:
 	if not joined or not is_instance_valid(partner) or not partner.is_local or player.is_local or not e is InputEventKey or not e.pressed or e.echo: return
 	if e.physical_keycode == KEY_K: react()
+	elif e.physical_keycode in [KEY_O, KEY_U]:
+		play_motion("wave" if e.physical_keycode == KEY_O else "sway", "upright" if e.ctrl_pressed else ("puppy" if e.shift_pressed else "both"))
 	elif e.physical_keycode in [KEY_BACKSPACE, KEY_ESCAPE, KEY_N, KEY_W, KEY_A, KEY_S, KEY_D, KEY_SPACE]: stop_pair()
 	else: return
 	get_viewport().set_input_as_handled()
