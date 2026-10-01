@@ -727,7 +727,7 @@ func _test_level() -> void:
 # --- Carcasses -------------------------------------------------------------------------------------------
 
 ## A dead animal lying at `at` with its head toward `head_dir` (no spawner: its death clip is its clock).
-func _dead(species: String, parent: Node, at: Vector3, head_dir: Vector3) -> WildAnimal:
+func _dead(species: String, parent: Node, at: Vector3, head_dir: Vector3, settle := true) -> WildAnimal:
 	var a := WildAnimal.new()
 	a.setup(species, null, null, 11)
 	a.name = "Dead_%s" % species
@@ -737,6 +737,12 @@ func _dead(species: String, parent: Node, at: Vector3, head_dir: Vector3) -> Wil
 	a._yaw = a.rotation.y
 	await _frames(2)
 	a.apply_hit(9999.0, a.global_position + Vector3.UP * 0.6, Vector3.RIGHT, null, "vitals")
+	# (it falls as a ragdoll: on to the test once it lies still, BoneRagdoll.MAX_S at most)
+	for i in int(9.0 * 120) if settle else 0:
+		var rag: Variant = a.get(&"_rag")
+		if rag == null or (rag as BoneRagdoll).frozen:
+			break
+		await physics_frame
 	return a
 
 
@@ -745,9 +751,14 @@ func _test_carcass() -> void:
 	var haul := h.get_node("Haul") as HorseHaul
 	var d := HorseHaul.data()
 	var hp := h.get_hitch_point()
-	var deer := await _dead("deer", world, Vector3(hp.x, 0.0, hp.z + 2.6), Vector3.FORWARD)
+	var deer := await _dead("deer", world, Vector3(hp.x, 0.0, hp.z + 2.6), Vector3.FORWARD, false)
 	_check(deer.is_dead() and CarcassLoad.is_carcass(deer), "a shot deer is a carcass")
-	_check(not CarcassLoad.haulable(deer), "it is not taken while its death clip plays")
+	_check(not CarcassLoad.haulable(deer), "it is not taken while it is still falling")
+	for i in int(9.0 * 120):
+		var rag: Variant = deer.get(&"_rag")
+		if rag == null or (rag as BoneRagdoll).frozen:
+			break
+		await physics_frame
 	# (it falls as a ragdoll and is taken once it lies still: a few seconds at most, BoneRagdoll.MAX_S)
 	for i in int(9.0 * 120):
 		if CarcassLoad.haulable(deer):

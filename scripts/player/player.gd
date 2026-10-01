@@ -233,6 +233,8 @@ var wish_local := Vector2.ZERO
 var target_speed := 0.0
 var health := 100.0
 var is_dead := false
+## What a ranged hit does to a person against a beast (the hunt's numbers): multiplayer fights last a few shots (user 2026-10-01).
+const HUMAN_RANGED_MULT := 0.45
 ## The command mode (F1: the camera over the land, the household commanded like an army: RtsMode).
 var rts: RtsMode
 var _death_push := Vector3.ZERO      ## the blow that may kill: the push it gives the body (PlayerRagdoll)
@@ -1253,7 +1255,9 @@ func apply_hit(damage: float, point: Vector3, direction: Vector3, source: Node =
 		if an:
 			an.add_wound(point, direction, damage)
 			fx = Anatomy.effect(an.last_hits, damage)
-			damage *= float(fx.dmg_mult)
+			# a ball or an arrow into a person does HUMAN_RANGED_MULT of what it does to a beast (the hunt is balanced for those):
+			# a plain body shot is two or three hits and the rest bleeds out; the brain is still instant, the heart still mortal
+			damage *= float(fx.dmg_mult) * HUMAN_RANGED_MULT
 			if bool(fx.lethal):
 				# (the brain: it is over)
 				health = 0.0
@@ -1263,7 +1267,7 @@ func apply_hit(damage: float, point: Vector3, direction: Vector3, source: Node =
 	_death_push = direction.normalized() * clampf(damage * 0.1, 1.5, 7.0) + Vector3.UP * 1.0 if direction.length_squared() > 1e-8 \
 			else Vector3.ZERO
 	# a bleeding wound takes part of it now and keeps the rest as blood still to lose (PlayerWounds); blunt force all now
-	var now := wounds.take(damage, source, point, direction, float(fx.get("bleed_mult", 1.0))) if wounds else damage
+	var now := wounds.take(damage, source, point, direction, float(fx.get("bleed_mult", 1.0)), float(fx.get("drain_mult", 1.0))) if wounds else damage
 	health = maxf(health - now, 0.0)
 	if health <= 0.0:
 		_die(local)

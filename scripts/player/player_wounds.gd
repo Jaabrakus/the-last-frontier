@@ -71,6 +71,8 @@ const REGIONS := {
 
 var player: Node
 var pool := 0.0
+## How fast the pool drains, against DRAIN: the blend of the wounds in it (Anatomy.effect drain_mult).
+var drain_mult := 1.0
 ## A mortal wound (the heart, the cord high up): seconds left, and the health lost each second so it ends with them.
 var mortal_left := 0.0
 var mortal_age := 0.0
@@ -105,7 +107,7 @@ static func kind_of(source: Node) -> String:
 
 ## A hit of `damage` from `source` at `point`, going `direction`: the health that comes off now (the caller takes it); a
 ## bleeding wound's pool is kept here. Where it landed is told (struck).
-func take(damage: float, source: Node, point := Vector3.INF, direction := Vector3.ZERO, bleed_mult := 1.0) -> float:
+func take(damage: float, source: Node, point := Vector3.INF, direction := Vector3.ZERO, bleed_mult := 1.0, drain := 1.0) -> float:
 	var kind := kind_of(source)
 	if kind != "" and damage > 0.0:
 		struck.emit(region_at(player, point), side_of(player, direction), kind, damage)
@@ -114,7 +116,10 @@ func take(damage: float, source: Node, point := Vector3.INF, direction := Vector
 		return 0.0
 	if kind != "bleed":
 		return damage
-	pool += damage * (1.0 - BLEED_NOW) * bleed_mult     # (what it tore through: Anatomy.effect)
+	var add := damage * (1.0 - BLEED_NOW) * bleed_mult     # (what it tore through: Anatomy.effect)
+	# the pool drains at the pace of what is in it: each wound's blood at its own rate (the heart fast, the gut slow)
+	drain_mult = (drain_mult * pool + drain * add) / maxf(pool + add, 0.001) if pool > 0.0 else drain
+	pool += add
 	_dressed = 0.0
 	wounded.emit(damage)
 	return damage * BLEED_NOW
@@ -221,6 +226,7 @@ func mortal() -> bool:
 
 
 func clear() -> void:
+	drain_mult = 1.0
 	mortal_left = 0.0
 	mortal_age = 0.0
 	treated = false
@@ -255,11 +261,12 @@ func _physics_process(dt: float) -> void:
 			player.call(&"lose_blood", hp / maxf(mortal_left + dt, dt) * dt if mortal_left > 0.0 else hp + 1.0)
 	if pool <= 0.0:
 		return
-	var lost := minf(pool * DRAIN * dt, pool)
+	var lost := minf(pool * DRAIN * drain_mult * dt, pool)
 	var closed := pool * CLOT * clot_mult() * dt
 	pool = maxf(0.0, pool - lost - closed)
 	if pool < STOP:
 		pool = 0.0
+		drain_mult = 1.0
 	if lost > 0.0:
 		player.call(&"lose_blood", lost)
 	_notify()

@@ -222,6 +222,14 @@ func worlds() -> Dictionary:
 	return out
 
 
+## Lets go of the skeleton at once (its modifier stops driving the bones now, not when the node is freed).
+func release() -> void:
+	if is_instance_valid(_mod):
+		_mod.rag = null
+		_mod.queue_free()
+	_mod = null
+
+
 func _exit_tree() -> void:
 	if is_instance_valid(_mod):
 		_mod.queue_free()

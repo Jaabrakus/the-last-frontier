@@ -22,6 +22,8 @@ const WOUND := Color(0.92, 0.05, 0.05, 0.95)
 ## How far the body's skin fades while the map is shown (0 solid .. 1 gone).
 const SKIN_FADE := 0.72
 ## How long a heart wound, or the cord high up, leaves a body on its feet (s) untreated.
+## How fast each kind of wound loses blood against the base drain (PlayerWounds.DRAIN).
+const FLESH_DRAIN := 0.7
 const MORTAL_HEART_S := 8.0
 const MORTAL_CORD_S := 12.0
 ## A brief slow-down of time on a mortal hit: scale and real seconds (not in headless runs or tests).
@@ -638,6 +640,8 @@ func add_wound(point: Vector3, direction: Vector3, damage := 50.0, reach := -1.0
 
 ## What a wound that went through `hits` (Anatomy.last_hits) does, for a blow of `damage`: {
 ##   lethal      dies at once (the brain)
+##   drain_mult  how fast the blood goes (x PlayerWounds.DRAIN): the heart and lungs fast, the liver and kidneys steady, the stomach
+##               and gut slow, a flesh wound slower still, so a body shot always bleeds, at the pace of what it went through
 ##   mortal_s    a mortal wound: dead in this many seconds, on their feet till then (the heart 8, the cord high up 12; treatment stretches it: PlayerWounds)
 ##   dmg_mult    x the blow's damage (what it tore through)
 ##   bleed_mult  x the blood it loses after
@@ -646,15 +650,18 @@ func add_wound(point: Vector3, direction: Vector3, damage := 50.0, reach := -1.0
 ##   kind        an animal's wound kind (WildlifeSpecies.WOUNDS: heart, lungs, spine, head, gut, leg) the worst part gives, "" none
 ##   why         the part that decided it }
 static func effect(hits: Array, damage: float) -> Dictionary:
-	var out := {"lethal": false, "mortal_s": 0.0, "dmg_mult": 1.0, "bleed_mult": 1.0, "legs": false, "limb": "", "kind": "", "why": ""}
+	var out := {"lethal": false, "mortal_s": 0.0, "dmg_mult": 1.0, "bleed_mult": 1.0, "drain_mult": -1.0, "legs": false, "limb": "", "kind": "", "why": ""}
 	var rank := {"": 0, "graze": 1, "leg": 2, "gut": 3, "lungs": 4, "head": 5, "spine": 6, "heart": 7}
 	var serious := damage >= 25.0
 	var levels: Array[int] = []
+	var organ_dr := -1.0                # (what an organ or the cord does sets the pace; a bone only if none was hit)
+	var other_dr := -1.0
 	for h: Dictionary in hits:
 		var nm := String(h.name)
 		var kind := ""
 		var dm := 1.0
 		var bm := 1.0
+		var dr := FLESH_DRAIN
 		match String(h.kind):
 			"organ":
 				match nm:
@@ -662,6 +669,7 @@ static func effect(hits: Array, damage: float) -> Dictionary:
 						kind = "heart"
 						dm = 2.0
 						bm = 2.5
+						dr = 3.0
 						if serious:
 							out.mortal_s = maxf(float(out.mortal_s), MORTAL_HEART_S)
 					"Brain":
@@ -673,16 +681,20 @@ static func effect(hits: Array, damage: float) -> Dictionary:
 						kind = "lungs"
 						dm = 1.4
 						bm = 1.8
+						dr = 1.7
 					"Liver", "Kidney":
 						kind = "gut"
 						dm = 1.3
 						bm = 2.0
+						dr = 1.3
 					_:
 						kind = "gut"
 						bm = 1.5
+						dr = 0.5
 			"cord":
 				kind = "spine"
 				dm = 1.5
+				dr = 1.0
 				levels.append(_level(nm.get_slice("injured at ", 1)))
 			"bone":
 				if nm == "Skull":
@@ -702,7 +714,12 @@ static func effect(hits: Array, damage: float) -> Dictionary:
 			out.why = nm
 		out.dmg_mult = maxf(float(out.dmg_mult), dm)
 		out.bleed_mult = maxf(float(out.bleed_mult), bm)
+		if String(h.kind) == "organ" or String(h.kind) == "cord":
+			organ_dr = maxf(organ_dr, dr)
+		else:
+			other_dr = maxf(other_dr, dr)
 	out.dmg_mult = minf(float(out.dmg_mult), 3.0)
+	out.drain_mult = organ_dr if organ_dr >= 0.0 else (other_dr if other_dr >= 0.0 else FLESH_DRAIN)   # (nothing of note: flesh)
 	# (the cord at the middle of the levels it went through: the neck and the chest down to T6, the breath goes with it, and it
 	# is over; below that the legs go)
 	if serious and not levels.is_empty():

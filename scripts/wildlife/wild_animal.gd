@@ -1403,6 +1403,24 @@ func lie_dead(by: String) -> void:
 	_ap.seek(_ap.get_animation(_anim).length, true)
 
 
+## A carcass about to be hauled (CarcassLoad.from_carcass: a rope, a drag) lies as its death clip ends, the pose the hauling is
+## built for, in place of the pose its ragdoll came to rest in (a sprawl no rope can sensibly slide).
+func settle_for_haul() -> void:
+	if _rag == null:
+		return
+	_rag.release()
+	_rag.queue_free()
+	_rag = null
+	if _ap != null and _ap.has_animation(_anim):
+		_ap.stop()
+		_ap.play(_anim, 0.0)
+		_ap.seek(_ap.get_animation(_anim).length, true)
+		_ap.advance(0.0)                  # (the bones take the pose now: the rope measures it at once)
+		_ap.pause()
+	if _skel != null:
+		_skel.force_update_all_bone_transforms()
+
+
 func _die(by: String, ragdoll := true) -> void:
 	if state == State.DEAD:
 		return
@@ -1486,8 +1504,11 @@ func _on_rag_rested() -> void:
 		fwd = b2.global_position - hips.global_position
 		fwd.y = 0.0
 	var at := hips.global_position if hips else global_position
-	var q := PhysicsRayQueryParameters3D.create(at + Vector3.UP * 1.0, at + Vector3.DOWN * 4.0)
-	q.exclude = [get_rid()]
+	var q := PhysicsRayQueryParameters3D.create(at + Vector3.UP * 1.5, at + Vector3.DOWN * 4.0)
+	var ex: Array[RID] = [get_rid()]
+	for rb: RigidBody3D in _rag.bodies.values():
+		ex.append(rb.get_rid())             # (not its own body: that is not the ground)
+	q.exclude = ex
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	var ground := (hit.position as Vector3).y if not hit.is_empty() else at.y - 0.3
 	_visual.rotation.x = 0.0

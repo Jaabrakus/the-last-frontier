@@ -96,6 +96,23 @@ func _run() -> void:
 	_expect(p.is_dead, "the cord at T3 kills within seconds")
 	_fresh()
 	await _fr(120)
+	# a musket ball (120) into the body no longer kills outright: it bleeds, each wound at the pace of what it went through
+	_shoot("Left femur", 120.0)
+	_expect(not p.is_dead and p.health > 40.0, "a musket ball through the thigh does not kill (%.0f health, the rest bleeds: pool %.0f)" % [p.health, p.wounds.pool])
+	var flesh_drain := p.wounds.drain_mult
+	_fresh()
+	await _fr(60)
+	_shoot("Intestines", 120.0)
+	var gut_drain := p.wounds.drain_mult
+	_expect(not p.is_dead and p.wounds.pool > 0.0, "a ball through the gut: alive and bleeding")
+	_fresh()
+	await _fr(60)
+	_shoot("Lung", 120.0)
+	var lung_drain := p.wounds.drain_mult
+	_expect(not p.is_dead and lung_drain > flesh_drain and flesh_drain > gut_drain and lung_drain > gut_drain,
+			"it bleeds at the pace of what it went through (lung %.1f, flesh %.1f, gut %.1f)" % [lung_drain, flesh_drain, gut_drain])
+	_fresh()
+	await _fr(120)
 	# a heart wound treated and survived: stretched a long way by the dressings, and it holds
 	_shoot("Heart")
 	_expect(p.wounds.mortal(), "heart: mortal again")

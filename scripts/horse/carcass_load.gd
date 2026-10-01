@@ -185,6 +185,8 @@ static func from_carcass(a: Node3D, c: Dictionary, visuals: bool) -> CarcassLoad
 	var s := CarcassLoad.new()
 	s.name = "Carcass_%s" % a.name
 	s.animal = a
+	if a.has_method(&"settle_for_haul"):
+		a.call(&"settle_for_haul")          # (its ragdoll's sprawl gives way to the lying pose the rope is built for)
 	var cc: Dictionary = c.get("carcass", {})
 	var cf := c.duplicate()
 	cf["mu_axial"] = float(cc.get("mu_axial", 0.5))
