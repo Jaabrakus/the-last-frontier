@@ -1,5 +1,10 @@
 # Release animation metadata
 
+For animation authorship and input-lineage review, start with
+[the animation authoring record](../../animations/SOURCE.md) and
+[the provenance review](../../docs/animation_provenance.md). Metadata minimization
+alone does not establish third-party origin or unauthorized use.
+
 This editor plugin is enabled in `project.godot`. Godot calls it during release exports,
 including release PCK/ZIP exports. It works on export copies; the editor, play sessions and
 debug exports use the original animation resources and tables.

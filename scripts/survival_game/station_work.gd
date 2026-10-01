@@ -1,7 +1,7 @@
 class_name StationWork
 extends Node
 ## The player at work at a station (SurvivalBridge.work; CampStation's tanning frame, drying rack and alchemy table):
-## they turn to it and work it, low (kneeling: the extracted Actor_B low-search clips, as FieldDressing), at a table
+## they turn to it and work it, low (kneeling: the bundled Actor_B low-search clips, as FieldDressing), at a table
 ## (the 1 m search clips) or up high (hanging meat on a rack: the high search clips), while a bar fills. The work is a
 ## job of the survival core (its time and its check: the bar follows the job, and it ends when the job does) or, with
 ## no job, `seconds` of real time. Moving, jumping, aiming or a weapon drawn stops it: a core job is cancelled (the

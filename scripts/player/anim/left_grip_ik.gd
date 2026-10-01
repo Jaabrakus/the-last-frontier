@@ -12,8 +12,8 @@ extends ReachIK
 ## sprinting, actor_b-p-rifle-crouch-run-arms crouch-walking): a fifth of the empty-handed arm swing
 ## mixes into both arms, so the left hand floats off the gun and slides along it with every step (in
 ## the level, before push n01: the left palm 13-35 cm off its grip point walking, jogging, sprinting,
-## turning and stopping; tests/anim/test_weapon_holds.gd). The source game keeps the hand on its gun
-## there; this does it here.
+## turning and stopping; tests/anim/test_weapon_holds.gd). This IK keeps the hand on the gun
+## during those moving carries.
 ##
 ## How: with weight w, the left wrist turns so that the left prop bone takes the right prop bone's
 ## rotation, then the arm (shoulder, elbow) is solved so the left prop origin reaches the right prop

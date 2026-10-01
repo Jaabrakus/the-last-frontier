@@ -5,7 +5,7 @@ extends Node3D
 ## prop bones are skipped. Replace this with a real skinned mesh bound to the
 ## same skeleton when you have one.
 ##
-## The capsules follow the live joint positions every frame. (The extracted
+## The capsules follow the live joint positions every frame. (The bundled
 ## animations use different bone-local axes than the rest pose, so offsets
 ## taken from the rest pose would not line up with the animated joints.)
 ## They update in Skeleton3D.skeleton_updated, i.e. on the final pose after the

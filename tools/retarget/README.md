@@ -1,6 +1,10 @@
 # Actor_A -> Actor_B clip retarget
 
-Offline tools that turn clips of the extracted Actor_A rig into clips for the game's
+For the owner's reported authoring workflow and the interpretation of historical
+source wording, see [the animation authoring record](../../animations/SOURCE.md)
+and [the provenance review](../../docs/animation_provenance.md).
+
+Offline tools that turn clips of the bundled Actor_A rig into clips for the game's
 Actor_B rig (the player). Design, evidence and numbers:
 - prototype and method: `source/graph_analysis/melee_horse_prone/retarget.md`
 - production library `actor_b_from_a`: `.../melee_horse_prone/actor_b_from_a.md`

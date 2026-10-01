@@ -1,5 +1,10 @@
 # Optional animation source inputs
 
+This page documents rebuild inputs. The owner's reported creation workflow is in
+[the animation authoring record](../animations/SOURCE.md). For observed generator
+behavior and the distinction between authored motion, input lineage, and inherited
+tracking tags, see [the animation provenance review](../docs/animation_provenance.md).
+
 The game runs with its bundled animation libraries and generated tables. Offline rebuilds
 need an external source tree configured explicitly:
 

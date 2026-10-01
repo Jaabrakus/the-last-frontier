@@ -1,6 +1,6 @@
 extends Node3D
 ## Loadout preview (scenes/loadout_preview.tscn): Actor_B with the skinned body (CharacterBodyMesh),
-## posed straight from the AnimationPlayer's clips (LoadoutClipPoser: the clips as extracted, layered
+## posed straight from the AnimationPlayer's clips (LoadoutClipPoser: the clips as bundled, layered
 ## base + partial + additive twin like the graph composes them), a loadout preset stowed on the body
 ## by SlingRig, and a handoff mode that plays every draw set's grab / equip clips and their reverse,
 ## swapping the model between the body and the hand at the data's clip phases.

@@ -18,7 +18,7 @@ const SHOTS := ["dawn_river", "valley", "herd", "gate", "walk", "climb_tree", "c
 		"bison", "stampede", "charge", "reload", "autumn", "winter_walk", "river_ice", "yoga", "baby", "mammoth"]
 ## Takes the cut does not use, recorded only when named (only=): the musket's reload walking and crouched (to check
 ## it), the shot from the palisade's firing step (the rebuilt fort's step moved: it does not fire from there).
-const EXTRA := ["wall", "reload_walk", "reload_crouch", "reload_crouch_walk", "arms_check", "hands"]
+const EXTRA := ["wall", "reload_walk", "reload_crouch", "reload_crouch_walk", "arms_check", "hands", "hunt_map", "man_down", "duel"]
 
 var marks := PackedStringArray()
 var hide_arc := false               ## the throw's aim arc kept out of the picture
@@ -699,6 +699,122 @@ func seg_stalk() -> void:
 		Hit.deliver(vit as StaticBody3D, 150.0, vit.global_position, Vector3(1, 0, 0), player)
 	aim_target = Vector3.INF
 	await _sec(2.4)
+
+
+# --- the damage system, quietly (user 2026-09-30: "a trailer of this game now system, easy, not too flashy, human like") -----
+
+## A slow drift round `body` (a Node3D, or a point) at `dist` m, `rate` rad/s, from `a0`.
+func _orbit(centre: Callable, dist: float, a0: float, rate: float, high: float, fov := 38.0) -> void:
+	var t0 := seg_t
+	_cam_fn(func(_dt: float) -> Array:
+		var c: Vector3 = centre.call()
+		var a := a0 + (seg_t - t0) * rate
+		return [_on(c + Vector3(cos(a) * dist, 0.0, sin(a) * dist), high), c + Vector3.UP * 0.3, fov])
+
+
+## The hunt: the evening stalk, the one shot, the deer going down where it stood (seg_stalk); then, in the same quiet, the
+## map under it fades in and the camera drifts round: what the shot went through, written beside it.
+func seg_hunt_map() -> void:
+	Anatomy.slowmo_on = false
+	await seg_stalk()
+	var deer: WildAnimal = null
+	for n in spawned:
+		if n is WildAnimal:
+			deer = n
+	if deer == null or not deer.is_dead():
+		print("TRAILER hunt_map: the deer did not fall")
+		return
+	await _until(func() -> bool: return deer.get("_rag") == null or (deer.get("_rag") as BoneRagdoll).frozen, 9.0)
+	await _sec(1.0)
+	mark("down")
+	var sk := deer.get("_skel") as Skeleton3D
+	var an := Anatomy.attach_to(sk)
+	print("TRAILER hunt_map: the map %s, the wound went through %s" % [an != null, an.last_hits.map(func(h: Dictionary) -> String: return String(h.name)) if an else []])
+	var at := func() -> Vector3: return sk.global_transform * sk.get_bone_global_pose(sk.find_bone("Back")).origin
+	_orbit(at, 3.6, 0.7, 0.14, 1.4)
+	await _sec(1.2)
+	mark("map")
+	Anatomy.set_shown(true, self, 2.0)
+	await _sec(9.0)
+
+
+## A man shot through the chest in a meadow: he walks on a few steps, as a man does, and goes down; the map fades in over
+## him and the camera drifts round. (The shot is out of the picture; nothing else is in it.)
+func seg_man_down() -> void:
+	Anatomy.slowmo_on = false
+	_clock(17.4, "fair", 0.15)
+	var dr := DeathRule.find(self)
+	if dr:
+		dr.set_process(false)                 # (he does not wake in the middle of the take)
+	_place(9.0, -84.0, Vector3(9.0, 0.0, -120.0))
+	player.set_crouched(false)
+	var back := func() -> Vector3:
+		return player.global_position + player.global_basis.z * 3.4 + player.global_basis.x * 2.2 + Vector3.UP * 1.55
+	cine_takes_over = true
+	_cam_fn(func(_dt: float) -> Array: return [back.call(), player.global_position + Vector3.UP * 1.15, 38.0])
+	await _roll("", "", "", 40)
+	_press(&"walk")
+	_press(&"move_forward")
+	await _sec(3.2)
+	var an := Anatomy.attach_to(player.skeleton)
+	var shooter := Node.new()
+	level.add_child(shooter)
+	spawned.append(shooter)
+	var heart := Vector3.INF
+	for d in an.parts:
+		if d.name == "Heart":
+			heart = (d.node as Node3D).global_position
+	var dir := (-player.global_basis.x * 0.85 - player.global_basis.z * 0.25).normalized()
+	player.apply_hit(40.0, heart - dir * 0.3, dir, shooter, "body")
+	mark("shot")
+	print("TRAILER man_down: through %s, mortal %s" % [an.last_hits.map(func(h: Dictionary) -> String: return String(h.name)), player.wounds.mortal()])
+	await _sec(4.5)
+	_release(&"move_forward")
+	_release(&"walk")
+	await _until(func() -> bool: return player.is_dead, 12.0)
+	await _sec(3.5)
+	mark("down")
+	var hips := func() -> Vector3:
+		return player.skeleton.global_transform * player.skeleton.get_bone_global_pose(player.skeleton.find_bone("root")).origin
+	_orbit(hips, 2.6, 0.9, 0.16, 1.5, 36.0)
+	await _sec(1.0)
+	mark("map")
+	Anatomy.set_shown(true, self, 2.0)
+	await _sec(8.0)
+	Anatomy.set_shown(false, self)
+	player.respawn()
+
+
+## Two men at it with felling axes in the meadow, side on, the camera drifting round: the sparring stand-ins (SparringPartner:
+## no AI, the film drives them), each swing met or going home as the weapons meet (they clash, bounce back, flinch when struck).
+func seg_duel() -> void:
+	_clock(17.0, "fair", 0.15)
+	var a := _on(Vector3(9.0, 0.0, -84.0))
+	var left := SparringPartner.new()
+	var right := SparringPartner.new()
+	level.add_child(left)
+	level.add_child(right)
+	spawned.append(left)
+	spawned.append(right)
+	left.global_position = a + Vector3(-0.85, 0.0, 0.0)
+	right.global_position = a + Vector3(0.85, 0.0, 0.0)
+	left.rotation.y = PI * 0.5            # (a partner faces its +Z)
+	right.rotation.y = -PI * 0.5
+	_place(a.x + 0.0, a.z + 9.0, a + Vector3.UP)
+	cine_takes_over = true
+	var t0 := seg_t
+	_cam_fn(func(_dt: float) -> Array:
+		var ang := PI * 0.5 + (seg_t - t0) * 0.12
+		return [a + Vector3(cos(ang) * 4.4, 1.35, sin(ang) * 4.4), a + Vector3(0.0, 1.15, 0.0), 36.0])
+	await _roll("", "", "", 40)
+	await _sec(1.0)
+	mark("duel")
+	for k in 6:
+		left.swing("D" if k % 2 == 0 else "A")
+		await _sec(0.55)
+		right.swing("D" if k % 2 == 0 else "A")
+		await _sec(1.35)
+	await _sec(1.5)
 
 
 ## The musket at the firing line in the golden hour: shouldered, the pan flash, the shot and its smoke; a camera

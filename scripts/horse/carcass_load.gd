@@ -18,7 +18,7 @@ extends SkidLoad
 ## DROP_M of the drag it leaves a drop of blood (WildlifeSpawner.blood_drop).
 ## The animals are CC0 stand-in models (assets/wildlife/quaternius/SOURCE.md); the rope and the collar are drawn here.
 
-## A carcass is taken once its death clip has played out (the longest is 1.08 s).
+## A carcass is taken once its death clip has played out (the longest is 1.08 s), or its ragdoll has come to rest (BoneRagdoll).
 const SETTLE_S := 1.6
 ## A drop of blood every this far of the drag (m).
 const DROP_M := 2.5
@@ -53,6 +53,10 @@ static func is_carcass(n: Node) -> bool:
 ## not on a rope already.
 static func haulable(n: Node) -> bool:
 	if not is_carcass(n) or n.get_meta(&"on_chain", false):
+		return false
+	# still falling or settling as a ragdoll (BoneRagdoll): it is taken once it lies still (frozen where it lay)
+	var rag: Variant = n.get(&"_rag")
+	if rag is BoneRagdoll and not (rag as BoneRagdoll).frozen:
 		return false
 	# the last step of field dressing takes it out of the interactables (WildAnimal.finish_dress)
 	if not n.is_in_group(PlacedWeapon.GROUP):

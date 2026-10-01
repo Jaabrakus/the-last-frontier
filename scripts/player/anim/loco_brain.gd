@@ -36,13 +36,13 @@ extends RefCounted
 ## coasts after a release) and off below moving_off_speed; move_dir_deg (f32@C0+144)
 ## = the stick direction (wish) while there is move input, else the velocity direction above
 ## dir_from_velocity_above, else held; + = left. The graph reads it as the desired direction (its
-## reversal and hemisphere records react to the stick; the source game's motion follows the
+## reversal and hemisphere records react to the stick; body motion is assumed to follow the
 ## animation), so Frontier's physics lag must not delay them (plan 6.5 took velocity first; that
 ## bounces a reversal straight back to its start state). blend angle (f32@C8+4): the graph's
 ## direction chains read one angle a, the fw chain as clamp(a, -90, 90) and the bw chain as
 ## clamp(angle-mod(int(a) + 180), -90, 90); each chain saturates at its +-90 seam, where the fw
 ## chain jumps from full *-rt to full *-lt (a = +-180) and the bw chain likewise (a = 0). The
-## source game's smoothing of C8+4 is native code (not in the data), so LocoBrain keeps one
+## graph data does not specify smoothing of C8+4, so LocoBrain keeps one
 ## position per hemisphere (blend_pos: those two clamped values of move_dir_deg), each smoothed
 ## linearly at blend_angle_rate (at most blend_angle_max_dps; a hemisphere with no weight on
 ## screen takes its target at once), so neither crosses its seam and a strafe reversal (D <-> A)
@@ -228,8 +228,8 @@ var join_fade_s := 0.0
 ## Stick release (INFERRED; 0 = the graph's move_speed drops on the release frame): > 0 keeps
 ## `moving` this long (s) after the stick is released, so a keyboard direction change with a gap
 ## (W released, S pressed a few frames later) still takes the reversal instead of a stop and a
-## backward start, at the cost of starting a real stop that much later. The data does not say how
-## the source game filters the stick (tuning stick_release_grace_s overrides it).
+## backward start, at the cost of starting a real stop that much later. The data does not specify
+## stick filtering (tuning stick_release_grace_s overrides it).
 var release_grace_s := 0.0
 ## Speed limit (deg/s) of the chain positions on top of the blend_angle_rate approach (proposed,
 ## hybrid proposal's 720 deg/s): a 180 deg stick change then takes 0.25 s instead of moving 18 %
@@ -1585,7 +1585,7 @@ func _start_speed() -> float:
 ## by the direction weights, then by the hemisphere weights) at their current phase,
 ## times the speed they play at (_align_rate); the same through a graph stop (STOP) with its stop
 ## bank (stop_root_motion); -1 in every other state, where the body moves at the gameplay speed and
-## the loops follow it (ratio). The source game's body is taken to follow the animation (INFERRED; see
+## the loops follow it (ratio). Body motion is assumed to follow the animation (INFERRED; see
 ## stop_entry_speed()), so a start from standing moves the body at the start clip's own speed:
 ## FrontierPlayer limits its speed to this through a start
 ## (PlayerAnim.body_speed_cap(); PlayerAnim.override_free_start_speed keeps player.gd's

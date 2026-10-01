@@ -2,7 +2,7 @@ class_name BindRest
 extends RefCounted
 ## Runtime guard for the Actor_B rest pose (plan WP0, section 4.4).
 ##
-## The extracted clips, and the game's additive composition base * (null-add^-1 * add),
+## The bundled clips, and the game's additive composition base * (null-add^-1 * add),
 ## are authored against the bind pose held in the 1-frame clip `null-add`. The asset
 ## pipeline (source/godot_export/tools/build_libraries.gd) bakes that
 ## pose into the Skeleton3D rest: every channel `null-add` keys at t = 0 becomes the rest
@@ -12,7 +12,7 @@ extends RefCounted
 ##
 ## verify() checks that convention; ensure() re-applies it if a rig ever arrives without
 ## it. With the shipped rig ensure() is a no-op. Neither function touches animation data
-## (asset IDs, native_asset_id and source_attribution metadata stay as extracted), and
+## (asset IDs, native_asset_id and source_attribution metadata remain unchanged), and
 ## ensure() only edits this Skeleton3D instance, never the shared AnimationLibrary.
 ##
 ## Call order in the game: ensure() right after the rig is instantiated, before anything

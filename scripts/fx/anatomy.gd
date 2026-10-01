@@ -13,6 +13,8 @@ extends Node3D
 
 ## On or off for every body (N).
 static var shown := false
+## The hit-cam's slow-mo (off for films: the trailer sets it so).
+static var slowmo_on := true
 
 const BONE := Color(0.96, 0.94, 0.86, 0.5)
 const CORD := Color(1.0, 0.92, 0.25, 0.85)
@@ -805,26 +807,42 @@ static func _seg_dist(a0: Vector3, a1: Vector3, b0: Vector3, b1: Vector3) -> flo
 
 
 ## Every body's underlay on or off (the N key); bodies built since follow.
-static func set_shown(on: bool, tree: SceneTree) -> void:
+static func set_shown(on: bool, tree: SceneTree, fade_s := 0.0) -> void:
 	shown = on
 	for n in tree.get_nodes_in_group(&"anatomy"):
-		(n as Anatomy).show_map(on)
+		(n as Anatomy).show_map(on, fade_s)
 
 
-## The map on or off for this body: the body's skin fades so it can be seen inside (and comes back).
-func show_map(on: bool) -> void:
-	visible = on
+## The map on or off for this body: the body's skin fades so it can be seen inside (and comes back). `fade_s` > 0: it comes
+## in (or goes) over that long (a film's), the parts' own transparency with the skin's.
+func show_map(on: bool, fade_s := 0.0) -> void:
+	visible = on or fade_s > 0.0
+	var skin: Array[MeshInstance3D] = []
 	for mi in skeleton.find_children("*", "MeshInstance3D", true, false):
-		if is_ancestor_of(mi):
-			continue
-		var g := mi as MeshInstance3D
-		if on:
-			if not g.has_meta(&"anatomy_was"):
-				g.set_meta(&"anatomy_was", g.transparency)
-			g.transparency = maxf(g.transparency, SKIN_FADE)
-		elif g.has_meta(&"anatomy_was"):
-			g.transparency = float(g.get_meta(&"anatomy_was"))
-			g.remove_meta(&"anatomy_was")
+		if not is_ancestor_of(mi):
+			skin.append(mi as MeshInstance3D)
+	for g in skin:
+		if on and not g.has_meta(&"anatomy_was"):
+			g.set_meta(&"anatomy_was", g.transparency)
+	var apply := func(k: float) -> void:
+		# k 0 .. 1 toward the map shown
+		for g in skin:
+			if is_instance_valid(g) and g.has_meta(&"anatomy_was"):
+				var was := float(g.get_meta(&"anatomy_was"))
+				g.transparency = lerpf(was, maxf(was, SKIN_FADE), k)
+		for d in parts:
+			if is_instance_valid(d.node):
+				(d.node as GeometryInstance3D).transparency = 1.0 - k
+		if k <= 0.0:
+			visible = false
+			for g in skin:
+				if is_instance_valid(g) and g.has_meta(&"anatomy_was"):
+					g.remove_meta(&"anatomy_was")
+	if fade_s > 0.0 and is_inside_tree():
+		var tw := create_tween()
+		tw.tween_method(apply, 0.0 if on else 1.0, 1.0 if on else 0.0, fade_s)
+	else:
+		apply.call(1.0 if on else 0.0)
 
 
 func _enter_tree() -> void:
@@ -833,7 +851,7 @@ func _enter_tree() -> void:
 
 ## Time slows for SLOWMO.y real seconds (a clean kill, a mortal wound): the hit seen. Not headless.
 static func slowmo(tree: SceneTree) -> void:
-	if tree == null or DisplayServer.get_name() == "headless" or Engine.time_scale < 0.99:
+	if not slowmo_on or tree == null or DisplayServer.get_name() == "headless" or Engine.time_scale < 0.99:
 		return
 	Engine.time_scale = SLOWMO.x
 	tree.create_timer(SLOWMO.y, true, false, true).timeout.connect(func() -> void: Engine.time_scale = 1.0)

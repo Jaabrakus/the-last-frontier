@@ -82,6 +82,8 @@ var _dt := 0.0
 ## (her walk to the cradle or the player) or null (no errand now); it takes precedence over her work and chores. `idle_clip` is
 ## the clip she stands in when not walking ("" the plain idle): the sit and kneel of feeding and changing the baby.
 var errand := Callable()
+## A task the commander gave (RtsFell: fell a tree): called each tick, returns [direction, speed] while it goes on, null when done.
+var rts_task := Callable()
 ## RIDING: the horse she sits on (HuntRide seats her and carries her body with it; her errand steers it); null on foot. The
 ## lead and the wildlife read it as they read the player's.
 var riding: Horse = null
@@ -268,6 +270,12 @@ func _physics_process(dt: float) -> void:
 			ow = [Vector3.ZERO, 0.0]
 		_move(ow[0], ow[1], dt)
 		return
+	if rts_task.is_valid():
+		var rt: Variant = rts_task.call(dt)
+		if rt is Array:
+			_move(rt[0], rt[1], dt)
+			return
+		rts_task = Callable()
 	var baby_errand: Variant = errand.call(dt) if errand.is_valid() else null   # BABY
 	if baby_errand is Array:
 		if _phase != "":

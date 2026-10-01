@@ -5,7 +5,7 @@
                                                      [--report animations/actor_b_graph_report.md]
                                                      [--fixture tools/anim_graph/fixtures/mini_graph.json] [--check]
 
-Reads (never writes) the extracted graph in external animation source (SOURCE_ROOT):
+Reads (never writes) the input graph in external animation source (SOURCE_ROOT):
   player_blending/player_blending.json, blender_animation_index.csv,
   graph_analysis/graph/{state_subgraph.json, movement_modes_actor_b.json, actor_b_library_dump.json}
 plus tools/anim_graph/frontier_bindings.json and the Weapon.relaxed / Weapon.clips tables of
@@ -451,7 +451,7 @@ class Exporter:
         if mr["overlay"] in self.db.sets:
             sel["move"] = mr["overlay"]
         else:
-            self.warn(f"mode {mode_key}: move overlay {mr['overlay']} not extracted")
+            self.warn(f"mode {mode_key}: move overlay {mr['overlay']} not present in the input graph")
         if mr["crouch"]:
             sel["crouch"] = self.B["crouch_overlay"]
         prof = self.B["profiles"][weapon]

@@ -14,7 +14,7 @@ extends Node
 ##   stamina           drains while holding on, faster crawling, hanging on a steep face and when shaken; at zero the
 ##                     grip gives out (grip_fail1) and the player falls; refills on the ground (the ring by the crosshair)
 ##
-## The clips turn the bones only (the source game moved the body itself), so this places the skeleton: the grip's
+## The clips turn the bones only, so this places the skeleton: the grip's
 ## anchor is a Node3D under the gripped collider (or the node it offers, GripSurface.parent_for) whose basis is the
 ## surface frame (Y the surface normal, Z the body's forward along it); a clip authored lying on the surface ("S") shows in
 ## that frame, a clip hanging upright ("H") in the frame turned 90 degrees about X, and a cross-fade between the two
@@ -24,7 +24,7 @@ extends Node
 ## (grip2_float_<dir>_lo for a lurch of the surface toward <dir>, grip_float_u_md / _hi while the body is flung off the
 ## surface, grip_float_l_hi / r_hi for a big sideways swing).
 ##
-## The cross-fades and the follow-on clips come from the source game's own tree (data/climb/climb_tree.json: the rows'
+## The cross-fades and the follow-on clips come from the climb animation tree (data/climb/climb_tree.json: the rows'
 ## blend frames at 30 fps). Its pendulum setup table is kept in that file but its fields are not decoded; the swing here
 ## uses its own constants (below).
 

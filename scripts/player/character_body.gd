@@ -24,7 +24,7 @@ extends SkeletonModifier3D
 ##
 ## Bind pose. The glb vertices are modeled in skeleton space (+Y up, facing +Z) at the
 ## game's bind pose, the one-frame clip `null-add` (the additive identity that the
-## extracted clips are authored against). Each bind is therefore
+## bundled clips are authored against). Each bind is therefore
 ## inverse(skeleton-space global transform of the bone in null-add). It is computed
 ## from the clip's track data: keyed channels at t = 0, and the Skeleton3D rest for the
 ## channels null-add does not key (root position, pelvis rotation, lower_base /
@@ -35,7 +35,7 @@ extends SkeletonModifier3D
 ##
 ## Poses that must NOT be used for the binds (measured by the character probe):
 ##  - the Skeleton3D rest (get_bone_global_rest, create_skin_from_rest_transforms, the
-##    glTF importer's defaults on another rig). The extracted clips use other bone-local
+##    glTF importer's defaults on another rig). The bundled clips use other bone-local
 ##    axes (up to 180 degrees per bone), so the mesh would land about 0.57 m off;
 ##  - bindpose-anim. It has the same shape, but its root has scale 1.0596 and a +0.10 m Z
 ##    offset, and it keys none of the channels null-add lacks, apart from those root values.

@@ -21,7 +21,7 @@ extends RefCounted
 ##    (negative: inside the wood), plus the distance beyond either end.
 ##  - LeftGrip: a Marker3D "LeftGrip" on the model, when one exists (hands builders may add one):
 ##    |P - marker| is reported too.
-##  - SOURCE FORESTOCK (intent): where the source game's rifle fore-end lies in the right-hand prop
+##  - SOURCE FORESTOCK (intent): where the reference rifle fore-end lies in the right-hand prop
 ##    frame (r_hand_prop_attachment; +Z = barrel, +Y = up): a cylinder along +Z through the centre
 ##    of the left hand's closed grip in the source's own two-hand grips (reference poses: the
 ##    standing and crouched aim --hands clips and the standing carry idle role), radius = the palm

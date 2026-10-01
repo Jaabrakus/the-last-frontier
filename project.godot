@@ -15,8 +15,8 @@ config/description="Colonial frontier third-person shooter: bow, musket and flin
 run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.7")
 boot_splash/bg_color=Color(0.03, 0.022, 0.014, 1)
-boot_splash/image="res://assets/ui/splash.png"
 boot_splash/stretch_mode=4
+boot_splash/image="res://assets/ui/splash.png"
 boot_splash/minimum_display_time=1200
 
 [display]
@@ -63,7 +63,6 @@ skin_bounce={
 "type": "float",
 "value": 1.0
 }
-
 sky_time={
 "type": "float",
 "value": 0.0

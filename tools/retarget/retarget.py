@@ -649,8 +649,8 @@ class Retargeter:
         return np.median(rel, axis=0)
 
     def synthetic_two_hand(self, GPA, GRA, loop, cfg, span_delta=0.0):
-        """The weapon frame of a two-handed clip that keys no prop (the guard clips: the source game
-        placed the weapon in code), from where Actor_A's two hands put the haft.
+        """The weapon frame of a two-handed clip that keys no prop (the guard clips),
+        inferred from where Actor_A's two hands put the haft.
 
         Grip points: each palm plus the haft clips' grip point offset (weapon_frames: the palm
         projected onto the keyed haft axis). In the keyed haft clips the line through the two grip

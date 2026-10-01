@@ -1126,16 +1126,22 @@ func rock_state(i: int) -> Dictionary:
 ## The tree comes down: its instances and collider go (VegHarvest), a FelledTree topples away from the player,
 ## a stump stays.
 func _fell(cur: Dictionary) -> void:
-	var i := int(cur.i)
+	fell_tree(int(cur.i), player.global_position, player.global_basis.z * -1.0, true)
+
+
+## Tree `i` comes down away from `from` (where the feller stands; `ahead` when they stand on it): its instances and collider go
+## (VegHarvest), a FelledTree topples, a stump stays. `award` is the player's own felling (his woodcutting grows, he is told);
+## a worker's (RtsFell) is not. Returns the felled tree (null: it was gone already).
+func fell_tree(i: int, from: Vector3, ahead := Vector3.FORWARD, award := false) -> FelledTree:
 	var d := harvest.remove_tree(i)
 	if d.is_empty():
-		return
+		return null
 	_work.erase("tree:%d" % i)
 	var sp: Dictionary = data.species.get(String(d.species), {})
 	d["name"] = String(sp.get("name", String(d.species).replace("_", " ")))
-	var away := Vector3(d.pos.x - player.global_position.x, 0.0, d.pos.z - player.global_position.z)
+	var away := Vector3(d.pos.x - from.x, 0.0, d.pos.z - from.z)
 	if away.length() < 0.05:
-		away = -player.global_basis.z
+		away = ahead
 	away = away.normalized()
 	var safe := String(skills.tier("woodcutting").id) != "novice"
 	var scatter := float(data.felling.get("scatter_deg_safe" if safe else "scatter_deg_novice", 30.0))
@@ -1152,12 +1158,14 @@ func _fell(cur: Dictionary) -> void:
 		_sound("tree_crack", d.pos + Vector3.UP * 1.5, 2.0, &"land_wood")
 	var stump := FelledTree.make_stump(d, float(data.felling.get("stump_height_m", 0.45)), visuals)
 	scene.add_child(stump)
-	var diam := 2.0 * float(d.radius)
-	var sk := "woodcutting"
-	skills.award(sk, maxf(skills.xp(sk, "felled_per_m") * diam, skills.xp(sk, "felled_min")))
-	_note("The %s comes down" % d.name)
-	target = {}
+	if award:
+		var diam := 2.0 * float(d.radius)
+		var sk := "woodcutting"
+		skills.award(sk, maxf(skills.xp(sk, "felled_per_m") * diam, skills.xp(sk, "felled_min")))
+		_note("The %s comes down" % d.name)
+		target = {}
 	felled.emit(ft)
+	return ft
 
 
 func _on_tree_landed(ft: FelledTree) -> void:

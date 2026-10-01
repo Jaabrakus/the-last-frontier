@@ -48,7 +48,7 @@ enum Hand { LEFT, RIGHT }
 ## aim, up, down, fire (+ "_crouch" variants), plus any action keys.
 var clips := {}
 ## Relaxed carry while not aiming: arm-pose clips laid over locomotion, with
-## the layer weights authored in the extracted weapon-base overlays.
+## the layer weights authored in the bundled weapon-base overlays.
 ## Keys idle / walk / run / sprint / crouch_idle / crouch_walk -> [clip, weight].
 var relaxed := {}
 ## 0 = weapon lowered (relaxed carry), 1 = fully aimed. Drives the anim layers.

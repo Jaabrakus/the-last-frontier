@@ -3,7 +3,7 @@ extends RefCounted
 ## Reference pose evaluator for the animation tests (plan section 10). It computes local bone
 ## poses directly from Animation resources, without an AnimationTree, in two semantics:
 ##
-## Graph semantics (what the extracted player graph means; rest = null-add, plan D7):
+## Graph semantics (what the bundled player graph means; rest = null-add, plan D7):
 ##   clip(c, t)               keyed channels from the clip, rest (bind pose) elsewhere
 ##   crossfade(a, b, w)       binary crossfade: per-bone slerp (rotation) / lerp (position, scale)
 ##   partial(base, layer, w)  override of the channels the layer keys, with weight w

@@ -1,7 +1,7 @@
 class_name PlayerAnim
 extends AnimationTree
 ## The player's animation facade (plan section 6.12, WP6): the AnimationTree that plays the
-## extracted player animation graph on the Actor_B rig.
+## bundled player animation graph on the Actor_B rig.
 ##
 ## setup() builds the tree from the generated graph table (TreeBuilder over AnimGraphData:
 ## animations/actor_b_graph.json + actor_b_clip_metrics.json), and each frame runs the two
@@ -171,7 +171,7 @@ const TRACE_KEEP := 64
 ## of following the clip's body speed (body_speed_cap(); LocoBrain.root_motion_speed(); INFERRED
 ## from the metrics' foot-contact body_profile): the body is at full speed in about 0.25 s while
 ## the start clip accelerates over 0.8-3 s, so the feet slide. Off = the body follows the start
-## clip (the source game's body is taken to follow the animation).
+## clip (body motion is assumed to follow the animation).
 @export var override_free_start_speed := false:
 	set(v):
 		override_free_start_speed = v
@@ -212,7 +212,7 @@ const TRACE_KEEP := 64
 ## toggle while the lower body is not moving, which plays the graph's in-place crouch change
 ## (crouch-change-idle^idle); a toggle while moving takes the graph's change-move-mode record to the
 ## other stance's locomotion bank (0x0002a970 / 0x000252f0 0.5 s, aimed 0x00030a50 0.25 s) with the
-## crouch-change additive on top (the source game's moving crouch changes come from a runtime clip
+## crouch-change additive on top (moving crouch changes use a runtime clip
 ## grid that Actor_B's data does not have). On: every toggle sets it (the earlier reading: while
 ## moving, the in-place change, idle, then the crouch start clip, while the body keeps moving).
 @export var crouch_pending_while_moving := false:
@@ -685,7 +685,7 @@ func graph_key(roster_key: String) -> String:
 
 ## Speed limit (m/s) the gameplay puts on the body this physics tick: through a graph start or stop
 ## clip the body follows the clip's body speed (LocoBrain.root_motion_speed(), INFERRED from the
-## metrics' foot-contact body_profile: the source game's body is taken to follow the animation);
+## metrics' foot-contact body_profile: body motion is assumed to follow the animation);
 ## INF otherwise, before setup, in a start with override_free_start_speed and in a stop with
 ## override_crisp_stops.
 func body_speed_cap() -> float:

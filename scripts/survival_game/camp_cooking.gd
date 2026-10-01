@@ -5,7 +5,7 @@ extends Node
 ## fresh fish first, then fresh venison and the trap line's small game (they will not keep), else cornmeal, as much as one roast takes (SurvivalJobs.COOK_MAX_GAME_KCAL:
 ## a game day's food, 3 venison or 7 cornmeal). The food goes into the core and its roast runs (the core's cook.roast
 ## job: 15-40 game minutes in 6-9 real seconds, a Provisions check, the fire must stay lit); the player kneels facing
-## the fire (the extracted Actor_B low-search clips, as FieldDressing) while a bar fills. Moving, F again, a weapon or
+## the fire (the bundled Actor_B low-search clips, as FieldDressing) while a bar fills. Moving, F again, a weapon or
 ## a hit stops it and the raw food comes back to the pack (the core keeps the roast's progress for a while).
 ## The roast's outcome sets what comes back, one pack unit for each put on (game_items.json maps each to the core):
 ##   cooked or a little underdone   roast venison / roast small game / johnnycake (cornmeal baked in the ashes)

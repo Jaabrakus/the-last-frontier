@@ -425,7 +425,7 @@ it, and with the wheelbarrow in it, saved and loaded);
 Berries, nuts and herbs grow in the woods round the fort where they would (`scripts/forage/`, plants and numbers in
 `data/forage/forage.json`; the plants are the project's own models). Every one of them is also deer food, so a patch
 in season is where the deer feed. **E** at a plant picks a handful into the pack: the player bends, reaches or kneels
-to it (the extracted Actor_B clips: pick-flower for low plants, a search low, at a metre or high), a bar fills, then
+to it (the bundled Actor_B clips: pick-flower for low plants, a search low, at a metre or high), a bar fills, then
 *+1 Blackberries*. Moving, jumping, aiming or a hit stops it with nothing taken.
 
 | Plant | Where | Gives | In season |
@@ -498,7 +498,7 @@ the hoe's side is GatherTools' `"ground"` target (`FarmField.ground_candidates`,
 ## Horses
 
 A stocky 14.1-hand colonial saddle horse stands saddled near the start (the project's own model; the riding
-clips are extracted Actor_B data, see CREDITS.md). **E** at its saddle mounts it: W / S go and stop, A / D steer,
+clips are bundled Actor_B data, see CREDITS.md). **E** at its saddle mounts it: W / S go and stop, A / D steer,
 Shift spurs it up a gait, Alt holds a walk, Space jumps from a canter; **hold E** (half a second) to get off.
 
 - **Leading** (`scripts/horse/horse_lead.gd`): **E** at the horse's head, *Lead horse*: it follows you on a lead
@@ -777,4 +777,6 @@ Tests: `tests/snow/test_snow.gd` (windowed: the cover, the falling snow, prints 
 the shelter, the slowed walk; `shots=<dir>`), `tests/snow/test_seasons.gd` (windowed: the calendar, the snow stripping
 the last leaves, the winter canopy; `shots=<dir>`: two views of the woods in every season).
 
-See CREDITS.md for animation provenance.
+For animation authorship and input lineage, see
+[animations/SOURCE.md](animations/SOURCE.md) and
+[docs/animation_provenance.md](docs/animation_provenance.md).

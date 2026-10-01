@@ -334,7 +334,7 @@ func root_velocity() -> Vector3:
 # Helpers (also used by the controller's capsule and path offsets)
 # --------------------------------------------------------------------------------------------------
 
-## The extracted clips are key-reduced (about 10 keys a second on the root and limbs) and stored
+## The bundled clips are key-reduced (about 10 keys a second on the root and limbs) and stored
 ## with LINEAR interpolation: every key is a velocity kink of every bone (1-2 cm per frame^2 of
 ## the pelvis at 120 fps, "micro-pops" at 10 Hz inside every move). Cubic interpolation in time
 ## through the same keys keeps every key and makes the motion between them continuous in velocity.

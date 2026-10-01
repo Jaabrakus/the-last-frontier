@@ -1,6 +1,6 @@
 class_name SurvivalSleep
 extends Node
-## Sleep (Z; SurvivalBridge.sleeper). The player sits down on the ground and dozes (the extracted Actor_B sit-floor
+## Sleep (Z; SurvivalBridge.sleeper). The player sits down on the ground and dozes (the bundled Actor_B sit-floor
 ## clips through a HorsePhaseBlender, as FieldDressing kneels), the screen dims, and the core's sleep job runs
 ## (rest.sleep: at night until half an hour after sunrise, by day a nap; its game hours pass in 5-12 real seconds, the
 ## sky with them, since the core drives the sky). It ends when the job is done, or early on the core's wake rules (a

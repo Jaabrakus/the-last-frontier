@@ -29,7 +29,7 @@ extends Node3D
 ##           a leg, on the model's back (TORSO_BONE), so it goes down with the kneel
 ##   Head    a box over the dome of the skull and the face, on the model's head bone
 ##   Legs    four capsules from the hip to the toe, on the model's leg bones (they step with the walk)
-## It is this project's own stand-in, not a giant from the source game (their models, clips and behaviour are not used).
+## It is this project's own stand-in; its geometry and behavior are implemented here.
 ##
 ## The model hangs from Body, which paces its beat (walking forward; at each end it may stop to eat, or to drink with
 ## water within its trunk's reach, and turns round on the spot, its feet stepping round: Turn_L / Turn_R, Eat, Drink,

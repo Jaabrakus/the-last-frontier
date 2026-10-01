@@ -1,6 +1,12 @@
 # tools/anim_graph: Actor_B graph exporter (WP1)
 
-Converts the extracted player animation graph into the tables Frontier's graph-driven
+For the owner's reported animation authoring workflow and the interpretation of
+inherited tags and historical extraction wording, read
+[the authoring record](../../animations/SOURCE.md) and
+[the provenance review](../../docs/animation_provenance.md). This tool's input
+formats and tracking keys do not alone establish the creator of the input data.
+
+Converts the bundled player animation graph into the tables Frontier's graph-driven
 `PlayerAnim` reads at runtime. Offline only; nothing here runs in the game.
 
 **Provenance.** Every generated file keeps numeric asset IDs, the 32-bit symbol IDs (copied, never

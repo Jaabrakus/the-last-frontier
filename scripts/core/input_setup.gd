@@ -24,6 +24,7 @@ const KEYS := {
 	"grip": [KEY_G],         # hold to grip a rock face or a giant's fur (PlayerGrip)
 	"drink": [KEY_U],        # hold: a pull from the rum, as long as it is held (Vices; G is the climbing grip)
 	"smoke": [KEY_Y],        # hold: a draw on the clay pipe (Vices)
+	"rts": [KEY_F1],         # command mode: the camera over the land, the household commanded (RtsMode)
 	"anatomy": [KEY_N],      # the skeleton map under every body, on or off (Anatomy)
 	"household": [KEY_J],    # the household screen: your wife or husband, their tasks and stats (Household)
 }

@@ -1,6 +1,6 @@
 class_name ForagePick
 extends Node
-## Picking a plant (ForageField's E): the player turns to it and works at it with an extracted Actor_B clip for the
+## Picking a plant (ForageField's E): the player turns to it and works at it with an bundled Actor_B clip for the
 ## plant's height (forage.json clips: "low" pick-flower for the rosettes and sprigs, "ground" search-low for acorns and
 ## digging a root, "waist" search at a metre for the brambles, "high" search-high for the hazel), while a bar fills
 ## over the plant's pick_s; then a handful goes into the pack (ForageField.take) and the player gets up. Moving,

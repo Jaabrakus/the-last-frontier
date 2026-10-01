@@ -736,7 +736,7 @@
   {
    "id": "anim.crafting_pack",
    "for": "carving stakes, cordage, sewing, char cloth, casting balls, arrows, bandages, any bench-less craft",
-   "fit": "good (the source game's own crafting motion)",
+   "fit": "good (crafting motion)",
    "clips": [
     {
      "clip": "actor_b-search-backpack-intro",

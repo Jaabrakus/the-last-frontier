@@ -936,7 +936,7 @@ HAND_CLIPS = [  # (blend, action, sample index; negative from the end, label)
     ("Actor_B_001.blend", "atk-actor_b-knife-v-thug-hit3-intro", -1, "hit3_contact"),
     ("Actor_B_014.blend", "actor_b-p-knife--fingers", 0, "carry_fingers"),
 ]
-HAND_SEGS = [  # capsules between joint heads (the extracted bones' tails are arbitrary)
+HAND_SEGS = [  # capsules between joint heads (the input bones' tails are arbitrary)
     ("r_wrist", "r_middle_metacarpal", 0.020), ("r_wrist", "r_index_metacarpal", 0.012),
     ("r_wrist", "r_pinkya", 0.012), ("r_index_metacarpal", "r_indexa", 0.009),
     ("r_middle_metacarpal", "r_middlea", 0.009), ("r_ring_metacarpal", "r_ringa", 0.009),

@@ -53,7 +53,7 @@ extends RefCounted
 ## once whenever the body moves or leaves the ground (over the move exit's 0.4 s / take-off's
 ## 0.1 s) or the stance changes (over the crouch-change exit's 0.5 s): Frontier moves and crouches
 ## the body by physics (capsule and camera at once), so standing throw legs on a moving or crouched
-## body would slide or stand tall (the source game's body follows the clip); the lower body's own
+## body would slide or stand tall (body motion is assumed to follow the clip); the lower body's own
 ## crouch change shows through as they fade.
 ## Rate: gameplay's throw action lasts release_time + follow_time; release-start + release-end play
 ## over it (Throwable.throw_anim_rate()), so the release frame lands on release_time. The recover

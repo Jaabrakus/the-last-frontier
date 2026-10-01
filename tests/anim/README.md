@@ -482,7 +482,7 @@ the absolute foot slip; the absolute 0.15 m/s count is printed next to each.
   1.74 m/s median slip (run W) because `player.gd` reached full speed in 0.25 s (ground_accel 14)
   while the start clip accelerates over 0.8-3.3 s. Through a start the body now moves at the
   start clip's body speed (`LocoBrain.root_motion_speed()`; `PlayerAnim.body_speed_cap()`), as
-  the source game's body is taken to follow the animation (INFERRED). That speed is INFERRED as
+  body motion is assumed to follow the animation (INFERRED). That speed is INFERRED as
   well: the clips carry no root or align track, so it is the derivative of the metrics'
   `body_profile` displacement, a foot-contact estimate (`measure_clips.gd`: "the contact path")
   with partial coverage on some starts (idle^run-bw 0.39, the idle^sprint clips 0.48-0.73);

@@ -2,7 +2,7 @@ class_name TravMomentum
 extends RefCounted
 ## Vaults keep the body's speed at a steady tempo (user 2026-09-26, after the first momentum push: "the sprint
 ## vault some things are fast somethings are slow it should just be normal speed yo"; before it: "when we vault the
-## char model should not slow down"). The source clips were made for the source game's gaits (the sprint vault
+## char model should not slow down"). The input clips have their own measured gait speeds (the sprint vault
 ## enters at about 2.4 m/s and moves 1.8 m/s on average, the standing vault 1.6 / 1.4 m/s; Frontier runs at 3.3-3.6
 ## and sprints at 5.6 m/s). The first push ran each vault's clock at a rate per sample (up to 3.6-4.5 x where the
 ## clip's own body was slow, capped by the joints' speed): the hand plant and the leg swing fast-forwarded while

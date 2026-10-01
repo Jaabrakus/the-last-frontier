@@ -13,7 +13,7 @@ extends RefCounted
 ##   - skin check when assets/character/actor_b_body.glb exists (binds == inverse(global rest) 1e-4,
 ##     skinned-at-rest vertices == bind-space vertices 1 mm), else SKIP
 ##   - Actor_B.res animation content (names, metadata incl. native_asset_id / source_attribution,
-##     tracks, keys) hashes to the pinned value: no work package may alter the extracted data.
+##     tracks, keys) hashes to the pinned value: no work package may alter the pinned animation data.
 ##
 ## Suite contract (plan section 10): `func run(ctx)` using ctx.check(cond, msg) and, when present,
 ## ctx.skip(msg) / ctx.warn(msg) / ctx.allow_error(substring). It is a duck-typed suite (extends
@@ -26,7 +26,7 @@ const RIG := "res://characters/Actor_B.tscn"
 const LIB := &"actor_b"
 const GRAPH := "res://animations/actor_b_graph.json"
 const BODY := "res://assets/character/actor_b_body.glb"
-## Content hash of res://animations/Actor_B.res (2490 animations) as extracted and converted.
+## Content hash of res://animations/Actor_B.res (2490 animations) in the bundled library.
 ## Update only when the rig is deliberately re-exported from the source libraries.
 const CONTENT_SHA256 := "5d025429dd007cb1f768b2cc3d566b88b663e2e17e3cb6693d02c0c9b87f0324"
 const ADD2_CLIPS := ["actor_b-p-stealth-idle", "actor_b-p-run-fw", "actor_b-p-rifle-idle-aim", "actor_b-p-bow-aim-idle"]

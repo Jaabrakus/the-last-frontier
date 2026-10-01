@@ -1,6 +1,6 @@
 """Weapon frames of the hand prop bone (`r_hand_prop_attachment`) for the actor_b_from_a library.
 
-The source game attaches every weapon model to the hand prop bone with a per-weapon offset, so
+The input clips use per-weapon offsets relative to the hand prop bone, so
 the prop frame's axes mean different things in different clip families. The library ships one
 frame per weapon family, so a weapon attached once (one offset) never flips or jumps when the
 game blends between clip families. Everything here is measured from the source clips at build

@@ -748,7 +748,11 @@ func _test_carcass() -> void:
 	var deer := await _dead("deer", world, Vector3(hp.x, 0.0, hp.z + 2.6), Vector3.FORWARD)
 	_check(deer.is_dead() and CarcassLoad.is_carcass(deer), "a shot deer is a carcass")
 	_check(not CarcassLoad.haulable(deer), "it is not taken while its death clip plays")
-	await _frames(int(1.6 * 120))
+	# (it falls as a ragdoll and is taken once it lies still: a few seconds at most, BoneRagdoll.MAX_S)
+	for i in int(9.0 * 120):
+		if CarcassLoad.haulable(deer):
+			break
+		await physics_frame
 	_check(CarcassLoad.haulable(deer), "it is taken once it lies still")
 	var root0 := deer.global_position
 	var s := haul.hitch_carcass(deer)

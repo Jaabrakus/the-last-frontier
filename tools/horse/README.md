@@ -161,7 +161,7 @@ keeps those names keeps the hills.
 
   `horse_meta.json` also lists each hoof's toe (`sockets.hoof_toes`).
 
-Provenance: the gait timing comes from the extracted Actor_B riding clips. The horse
+Provenance: the gait timing comes from the bundled Actor_B riding clips. The horse
 asset contains no data from those clips.
 
 ## Look

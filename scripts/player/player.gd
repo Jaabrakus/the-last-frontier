@@ -9,7 +9,7 @@ extends CharacterBody3D
 ## The whole player is built in code, so it can be dropped into any scene:
 ##   var p := FrontierPlayer.new(); add_child(p)
 ##
-## Animation (PlayerAnim, the extracted player graph; plan section 8, WP7): the player publishes
+## Animation (PlayerAnim, the bundled player graph; plan section 8, WP7): the player publishes
 ## wish_local / target_speed for the lower body, health with the hurt / died / respawned signals
 ## (apply_hit(), so Hit.deliver() works on the player; Shift+F9, F10-F12 of the debug overlay go through it),
 ## plays the graph's weapon switch (holster, finish, grab, then the draw; switch_weapon()), and
@@ -75,7 +75,7 @@ const CHARACTER_SCENE := "res://characters/Actor_B.tscn"
 @export var heavy_hit_damage := 40.0
 
 @export_group("Gameplay overrides")
-## Animation overrides of the extracted graph's own behaviour, copied onto PlayerAnim's exports of
+## Animation overrides of the bundled graph's own behaviour, copied onto PlayerAnim's exports of
 ## the same name before its setup (off = graph-faithful; all off by default except
 ## override_start_rate_boost, on pending the owner's decision; see PlayerAnim.DEFAULT_ON). At run
 ## time use anim.set_option(name, value).
@@ -221,6 +221,8 @@ var wish_local := Vector2.ZERO
 var target_speed := 0.0
 var health := 100.0
 var is_dead := false
+## The command mode (F1: the camera over the land, the household commanded like an army: RtsMode).
+var rts: RtsMode
 var _death_push := Vector3.ZERO      ## the blow that may kill: the push it gives the body (PlayerRagdoll)
 
 var collision: CollisionShape3D
@@ -367,6 +369,7 @@ func _ready() -> void:
 	if is_local:
 		equip_wheel = EquipWheel.install(self)
 		building = BuildMode.install(self)
+		rts = RtsMode.install(self)
 	if enable_traversal:
 		traversal = PlayerTraversal.install(self)
 	if enable_grip:
@@ -1121,7 +1124,7 @@ func _physics_process(delta: float) -> void:
 				"jump": controls.just_pressed(&"jump") and not is_dead, "crouch": controls.just_pressed(&"crouch") and not is_dead,
 				"crouched": is_crouching, "yaw": yaw}, delta)
 	# Graph start clips (user requirement 1): through a start from standing the body moves at the
-	# start clip's body speed, as the source game's body is taken to follow the animation (INFERRED
+	# start clip's body speed, assuming body motion follows the animation (INFERRED
 	# root motion: the clips have no root track, the speed is the metrics' foot-contact
 	# body_profile estimate; up to it at once, down at ground_decel; a start whose clip overshoots
 	# mid-way moves faster than the target for a moment), and reaches the target speed as the clip

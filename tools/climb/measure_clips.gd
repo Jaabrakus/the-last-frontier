@@ -1,6 +1,6 @@
 extends SceneTree
 ## Measures the Actor_C grip / hang clips on the Actor_B rig (animations_extra/Actor_B_from_C.res) for PlayerGrip, into
-## data/climb/climb_clips.json. The clips turn the bones only (the source game moved the body itself), so the grip
+## data/climb/climb_clips.json. The clips turn the bones only, so the grip
 ## system needs, per clip:
 ##   frame     "S" when the clip is authored lying on the surface (the surface is the clip's floor, the head along +Z),
 ##             "H" when it hangs upright facing the surface (the surface ahead at +Z), from where the hands are, at the

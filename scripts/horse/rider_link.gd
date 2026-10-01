@@ -42,7 +42,7 @@ const SOLE := 0.03
 ## 1.6), so the gallop clip stands in for them. [start s, end s, stand-in clip].
 const STAND_IN := {"actor_b/actor_b-horse-gallop^jump-over": [0.09, 0.37, "actor_b/actor_b-horse-gallop-fw"]}
 const STAND_IN_FADE := 0.08
-## The incline additive (extracted Actor_B clip) and the slope (deg) that reaches its end frames.
+## The incline additive (bundled Actor_B clip) and the slope (deg) that reaches its end frames.
 const INCLINE := "actor_b/actor_b-horse-idle-incline--add-up-down"
 const INCLINE_FULL := 60.0
 ## Foot IK fades out when the foot is further than this from its tread (m): [full, zero].
