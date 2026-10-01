@@ -66,7 +66,17 @@ const CHARACTER_SCENE := "res://characters/Actor_B.tscn"
 @export var crouch_eye_drop := 0.5
 @export var shoulder_offset := 0.0
 @export var camera_distance := 3.6
-@export var fov := 70.0
+## The view's width (deg). (User 2026-10-01: the musket's old right-click zoom, 70 x 0.75, is now the view all the time.)
+@export var fov := 52.5
+## Aiming (right click; the weapon's aim weight): the camera eases off center over the right shoulder, closer in (user
+## 2026-10-01: "the new aim camera view is off center"), and zooms in by this share of the weapon's own aim zoom
+## (Firearm.aim_fov_mult; the default view already has the old zoom). Shots still land under the crosshair
+## (get_aim_point() casts from the camera's center).
+@export var aim_shoulder_offset := 0.55
+@export var aim_camera_distance := 2.4
+@export var aim_zoom_share := 0.4
+## Seconds the camera takes to move to the shoulder and back.
+@export var aim_camera_s := 0.15
 
 @export_group("Health")
 @export var max_health := 100.0
@@ -334,6 +344,7 @@ var appearance: PlayerAppearance
 var _ride_mods: Array = []
 var _ride_eye := 0.0
 var _ride_back := 0.0
+var _aim_cam_w := 0.0               ## how far the camera has gone over the shoulder for the aim (0..1)
 const RIDE_CAMERA_BACK := 1.8   ## m further back than on foot
 
 
@@ -1176,7 +1187,16 @@ func _physics_process(delta: float) -> void:
 	_eye_y = lerpf(_eye_y, eye_target, 1.0 - exp(-12.0 * delta))
 	camera_pivot.position.y = _eye_y
 
-	var fov_target := fov * weapon.fov_mult()
+	# the aim's camera: over the right shoulder and closer in while the weapon aims (not riding: the ride has its own)
+	# (the aim button only: firing from the hip raises the gun's aim too, and the view stays centered for it, user 2026-10-01
+	# "left click I don't want it off center")
+	var aiming_cam := weapon != null and weapon.active and not hands_free and riding == null \
+			and Input.is_action_pressed("aim") and weapon.aim > 0.3
+	_aim_cam_w = move_toward(_aim_cam_w, 1.0 if aiming_cam else 0.0, delta / maxf(aim_camera_s, 0.01))
+	if riding == null and spring_arm != null:
+		spring_arm.spring_length = cam_distance_now()
+		spring_arm.position.x = cam_shoulder_now()
+	var fov_target := fov * (1.0 - (1.0 - weapon.fov_mult()) * aim_zoom_share)
 	camera.fov = lerpf(camera.fov, fov_target, 1.0 - exp(-10.0 * delta))
 
 	# A switch runs its stages; the new weapon is drawn when they end (see switch_weapon()) and
@@ -1438,6 +1458,16 @@ func aim_pitch() -> float:
 	var chest := global_position + Vector3.UP * (1.35 if not is_crouching else 0.95)
 	var d := get_aim_point() - chest
 	return atan2(d.y, Vector2(d.x, d.z).length())
+
+
+## The camera's distance behind and its offset to the right now: the default view's, eased toward the aim's (PlayerGrip's
+## branch camera starts from these).
+func cam_distance_now() -> float:
+	return lerpf(camera_distance, aim_camera_distance, smoothstep(0.0, 1.0, _aim_cam_w))
+
+
+func cam_shoulder_now() -> float:
+	return lerpf(shoulder_offset, aim_shoulder_offset, smoothstep(0.0, 1.0, _aim_cam_w))
 
 
 ## Where the crosshair points in the world. Shots are launched from the muzzle

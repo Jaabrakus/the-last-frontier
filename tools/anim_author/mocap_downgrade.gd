@@ -216,3 +216,48 @@ func _sheet(src: Animation, clip_name: String) -> void:
 				view.get_texture().get_image().save_png("%s/%s_%s_%d.png" % [out, vname, v, f])
 	print("SHEET ", out)
 	quit()
+
+
+## The head brought upright (user 2026-10-01: "the mocap for the bow and arrow draw, the head tilts inwards, we have to remove that"):
+## each frame the head (headb) turned about its own forward way until its ear-to-ear line leans no more than `keep_deg` from level (the
+## bow's aim clips lean it 17-19 deg; the relaxed idle 3-5). The face turns with it; the chest, the arms and the aim stay.
+static func untilt_head(a: Animation, sk: Skeleton3D, keep_deg := 4.0) -> void:
+	var hb := sk.find_bone("headb")
+	var ti := a.find_track(NodePath("Skeleton3D:headb"), Animation.TYPE_ROTATION_3D)
+	if hb < 0 or ti < 0:
+		return
+	var rest_g := _rest_global(sk, hb)
+	var times: Array[float] = []
+	for k in a.track_get_key_count(ti):
+		times.append(a.track_get_key_time(ti, k))
+	var vals: Array[Quaternion] = []
+	for t in times:
+		var par := _anim_global(a, sk, sk.get_bone_parent(hb), t)
+		var local := a.rotation_track_interpolate(ti, t).normalized()
+		var g := par * Basis(local)
+		var d := g * rest_g.inverse()
+		var ear := d * Vector3.RIGHT
+		var tilt := asin(clampf(ear.y, -1.0, 1.0))
+		var excess := tilt - signf(tilt) * minf(absf(tilt), deg_to_rad(keep_deg))
+		var fwd := (d * Vector3.BACK).normalized()
+		# (turning about the forward way by -excess brings the ear line down by about that much; the sign taken from the result)
+		var g2 := Basis(fwd, excess) * g
+		if absf(asin(clampf((g2 * rest_g.inverse() * Vector3.RIGHT).y, -1.0, 1.0))) > absf(tilt):
+			g2 = Basis(fwd, -excess) * g
+		vals.append((par.inverse() * g2).get_rotation_quaternion().normalized())
+	for k in times.size():
+		a.track_set_key_value(ti, k, vals[k])
+
+
+static func _rest_global(sk: Skeleton3D, b: int) -> Basis:
+	var par := sk.get_bone_parent(b)
+	var x := sk.get_bone_rest(b).basis
+	return x if par < 0 else _rest_global(sk, par) * x
+
+
+static func _anim_global(a: Animation, sk: Skeleton3D, b: int, t: float) -> Basis:
+	if b < 0:
+		return Basis()
+	var ri := a.find_track(NodePath("Skeleton3D:" + sk.get_bone_name(b)), Animation.TYPE_ROTATION_3D)
+	var x := Basis(a.rotation_track_interpolate(ri, t).normalized()) if ri >= 0 else sk.get_bone_rest(b).basis
+	return _anim_global(a, sk, sk.get_bone_parent(b), t) * x

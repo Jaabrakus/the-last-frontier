@@ -958,6 +958,7 @@ func _bake_step(solver, sk: Skeleton3D, chain: Dictionary, path_pre: String, t0:
 				(posi[nm] as Array).append([t, sk.get_bone_pose_position(b)])
 		rod_p.append([t, (rod_at(t0 + t)[0] as Transform3D)])
 	_clean_arms(sk, rot, posi)
+	_fingers_to_carry(sk, rot, t0, length)
 	for nm: String in rot:
 		var tr := anim.add_track(Animation.TYPE_ROTATION_3D)
 		anim.track_set_path(tr, NodePath(path_pre + ":" + nm))
@@ -1142,3 +1143,36 @@ func _fk(sk: Skeleton3D, b: int, rot: Dictionary, posi: Dictionary, f: int) -> T
 	var x := Transform3D(Basis(q), o)
 	var par := sk.get_bone_parent(b)
 	return x if par < 0 else _fk(sk, par, rot, posi, f) * x
+
+
+## The fingers onto the carry's own grip over the reload's last FINGER_EASE seconds (user 2026-10-01: the hands "squeeze" the gun as
+## the reload hands back to the carry: fading from the reload's fist to the carry's grip, the fingers passed through a looser hand
+## on the way, 398 -> 213 -> 262 deg of curl on the right). Ending on the carry's grip, the fade-out has nothing left to change.
+const FINGER_EASE := 0.3
+const CARRY_GRIP := {"stand": "actor_b-p-rifle-run-arms", "crouch": "actor_b-p-rifle-crouch-run-arms"}
+
+
+func _fingers_to_carry(sk: Skeleton3D, rot: Dictionary, t0: float, length: float) -> void:
+	if t0 + length < TOTAL - 1e-3:
+		return
+	var lib := load("res://animations/Actor_B.res") as AnimationLibrary
+	var cn: String = CARRY_GRIP.get(stance, CARRY_GRIP.stand)
+	if not lib.has_animation(cn):
+		cn = CARRY_GRIP.stand
+	var carry := lib.get_animation(cn)
+	for nm: String in rot:
+		if not (nm.begins_with("l_") or nm.begins_with("r_")):
+			continue
+		if not ["thumb", "index", "middle", "ring", "pinky"].any(func(f: String) -> bool: return nm.contains(f)):
+			continue
+		var ci := carry.find_track(NodePath("Skeleton3D:" + nm), Animation.TYPE_ROTATION_3D)
+		if ci < 0:
+			continue
+		var g: Quaternion = carry.rotation_track_interpolate(ci, 0.0).normalized()
+		for k: Array in rot[nm]:
+			var u := smooth((t0 + float(k[0]) - (TOTAL - FINGER_EASE)) / FINGER_EASE)
+			if u > 0.0:
+				var q: Quaternion = k[1]
+				if q.dot(g) < 0.0:
+					q = -q
+				k[1] = q.slerp(g, u).normalized()

@@ -148,6 +148,8 @@ func _bake() -> void:
 				continue
 			var an: String = "own-aimwalk-%s-%s" % [wn, dir]
 			var aw := _aim_walk(lib.get_animation(cn), jogs[dir])
+			if wn == "bow":
+				Downgrade.untilt_head(aw, _rig)     # (the bow's aim with the head upright: mocap_downgrade.gd)
 			out.add_animation(StringName(an), aw)
 			wired[cn] = {"lib": "frontier_locomotion", "clip": an, "length": snappedf(aw.length, 0.000001)}
 			if args.has("debug"):

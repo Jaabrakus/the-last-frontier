@@ -365,6 +365,8 @@ var one_hand := false
 var _no_aim_t := 0.0
 ## Graph weapon keys whose left hand LeftGripIK keeps on the gun (the over-under plays the musket's).
 const LEFT_GRIP_WEAPONS := ["musket"]
+## How far into a long gun's draw (0..1) the left hand takes the forestock (LeftGripIK).
+const LEFT_GRIP_DRAW_FROM := 0.1
 ## Weapons aimed with one hand (user 2026-09-29: "have pistols aim with one hand not 2"): while one is aimed the left arm is the
 ## relaxed free arm (LeftArmPose "free"), not the two-handed aim clip's; a reload, a draw and every other action keep the tree's arm.
 const ONE_HAND_AIM_WEAPONS := ["pistol"]
@@ -939,6 +941,12 @@ func manual_step(dt: float) -> void:
 	_stance_feet()
 	var long_gun := String(_weapon) in LEFT_GRIP_WEAPONS
 	var busy := upper.action_playing() or (player != null and player.is_switching())
+	# (a long gun's draw: the left hand on the forestock from LEFT_GRIP_DRAW_FROM of the draw, as the gun comes round to the front,
+	# rather than from its end: the hand hung where the carry would have it while the gun swung round, then caught it and slid
+	# along it, user 2026-10-01 "before the animation settles they take the hand off the rifle")
+	var w_now: Weapon = player.weapon if player != null else null
+	var drawing_late := w_now != null and w_now.is_equipping() and w_now.equip_time > 0.0 \
+			and 1.0 - w_now._equip_left / w_now.equip_time >= LEFT_GRIP_DRAW_FROM
 	# the long gun's left hand (long_gun_move_carry; the relaxed one-hand carry after relax_after_s)
 	var aiming := upper.upper_aim_w() >= 0.05
 	# (the aim asked for counts: with the gun in the left hand the aim waits for it to come back, Weapon.aim_hold)
@@ -1096,11 +1104,11 @@ func manual_step(dt: float) -> void:
 					# (user 2026-09-25: "the gun bounces in the left hand when we move": the moving carries play
 					# their arm layers at 0.8-0.9 and the hand slid 13-35 cm along the gun); where the source holds
 					# the gun with both hands (the idles) this moves nothing; while aiming the source holds it
-					left_grip.enabled = long_gun and not busy and not aiming
+					left_grip.enabled = long_gun and (not busy or drawing_late) and not aiming
 				"one_hand":
-					left_grip.enabled = long_gun and not busy and not moving_carry
+					left_grip.enabled = long_gun and (not busy or drawing_late) and not moving_carry
 				_:
-					left_grip.enabled = long_gun and not busy
+					left_grip.enabled = long_gun and (not busy or drawing_late)
 		# walking or jogging: the gun carried a little further out, the left arm reaching forward to it
 		# (LeftGripIK.moving). On with the first step (the locomotion's own moving, not a speed reached a step later:
 		# the arm drifted out after the body and the elbow looked loose, user 2026-09-29 "the elbow is not stiff when

@@ -1,6 +1,96 @@
 {
-	"about": "Looping body cycles with the upper body stiffened and loosened (tools/anim_author/mocap_downgrade_all.gd, level stiff): graph clip name -> the library and clip played instead (AnimGraphData.apply_downgraded_clips). Same length and legs as the graph's own.",
+	"about": "Looping body cycles with the upper body stiffened and loosened (tools/anim_author/mocap_downgrade_all.gd, level stiff), and the long gun's clips with steady grips (STEADY): graph clip name -> the library and clip played instead (AnimGraphData.apply_downgraded_clips). Same length and legs as the graph's own.",
 	"clips": {
+		"actor_b-lg-stealth-draw^idle--arm-r": {
+			"clip": "actor_b-lg-stealth-draw^idle--arm-r",
+			"length": 0.9,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-lg-stealth-idle^grab--arm-r": {
+			"clip": "actor_b-lg-stealth-idle^grab--arm-r",
+			"length": 0.4,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-lg-stealth-stow^idle--arm-r": {
+			"clip": "actor_b-lg-stealth-stow^idle--arm-r",
+			"length": 0.7,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-bow-aim-crouch-hands-idle": {
+			"clip": "actor_b-p-bow-aim-crouch-hands-idle",
+			"length": 0.001,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-bow-aim-crouch-idle": {
+			"clip": "actor_b-p-bow-aim-crouch-idle",
+			"length": 3.4,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-bow-aim-crouch-walk-bw": {
+			"clip": "actor_b-p-bow-aim-crouch-walk-bw",
+			"length": 1.5,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-bow-aim-crouch-walk-bw-lt": {
+			"clip": "actor_b-p-bow-aim-crouch-walk-bw-lt",
+			"length": 1.4,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-bow-aim-crouch-walk-bw-rt": {
+			"clip": "actor_b-p-bow-aim-crouch-walk-bw-rt",
+			"length": 1.4,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-bow-aim-crouch-walk-fw": {
+			"clip": "actor_b-p-bow-aim-crouch-walk-fw",
+			"length": 1.5,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-bow-aim-crouch-walk-fw-lt": {
+			"clip": "actor_b-p-bow-aim-crouch-walk-fw-lt",
+			"length": 1.4,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-bow-aim-crouch-walk-fw-rt": {
+			"clip": "actor_b-p-bow-aim-crouch-walk-fw-rt",
+			"length": 1.4,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-bow-aim-hands-idle": {
+			"clip": "actor_b-p-bow-aim-hands-idle",
+			"length": 0.001,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-bow-aim-idle": {
+			"clip": "actor_b-p-bow-aim-idle",
+			"length": 1.5,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-bow-blocked-aim": {
+			"clip": "actor_b-p-bow-blocked-aim",
+			"length": 0.001,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-bow-draw-grab^idle--part": {
+			"clip": "actor_b-p-bow-draw-grab^idle--part",
+			"length": 0.9,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-bow-stow-grab^idle--part": {
+			"clip": "actor_b-p-bow-stow-grab^idle--part",
+			"length": 0.3,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-crouch-hr-fw--rifle": {
+			"clip": "actor_b-p-crouch-hr-fw--rifle",
+			"length": 1.8,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-crouch-idle^p-grab--arm-r": {
+			"clip": "actor_b-p-crouch-idle^p-grab--arm-r",
+			"length": 0.2,
+			"lib": "frontier_downgraded"
+		},
 		"actor_b-p-crouch-walk-bw": {
 			"clip": "actor_b-p-crouch-walk-bw",
 			"length": 2.666667,
@@ -31,6 +121,36 @@
 			"length": 2.666667,
 			"lib": "frontier_downgraded"
 		},
+		"actor_b-p-rifle-idle-aim-reload-begin--part": {
+			"clip": "actor_b-p-rifle-idle-aim-reload-begin--part",
+			"length": 0.933333,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-rifle-idle-aim-reload-mid--part": {
+			"clip": "actor_b-p-rifle-idle-aim-reload-mid--part",
+			"length": 0.7,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-rifle-idle-aim-reload-over--part": {
+			"clip": "actor_b-p-rifle-idle-aim-reload-over--part",
+			"length": 1.1,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-rifle-idle-crouch-aim-reload-begin--part": {
+			"clip": "actor_b-p-rifle-idle-crouch-aim-reload-begin--part",
+			"length": 0.933333,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-rifle-idle-crouch-aim-reload-mid--part": {
+			"clip": "actor_b-p-rifle-idle-crouch-aim-reload-mid--part",
+			"length": 0.7,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-rifle-idle-crouch-aim-reload-over--part": {
+			"clip": "actor_b-p-rifle-idle-crouch-aim-reload-over--part",
+			"length": 1.1,
+			"lib": "frontier_downgraded"
+		},
 		"actor_b-p-sprint-bw": {
 			"clip": "actor_b-p-sprint-bw",
 			"length": 1.066667,
@@ -49,6 +169,11 @@
 		"actor_b-p-sprint-fw-rt": {
 			"clip": "actor_b-p-sprint-fw-rt",
 			"length": 1.333333,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-stealth-stow-p^idle--arm-r": {
+			"clip": "actor_b-p-stealth-stow-p^idle--arm-r",
+			"length": 0.3,
 			"lib": "frontier_downgraded"
 		},
 		"actor_b-p-walk-bw": {

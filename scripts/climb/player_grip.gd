@@ -557,10 +557,11 @@ func _perch_camera(delta: float) -> void:
 	var aiming := (perched or hang_aim) and player.weapon != null and player.weapon.aim > 0.3
 	_cam_w = move_toward(_cam_w, 1.0 if perched else 0.0, delta / 0.5)
 	_aim_w = move_toward(_aim_w, 1.0 if aiming else 0.0, delta / 0.25)
-	if _cam_w > 0.0 or _aim_w > 0.0 or player.spring_arm.spring_length != player.camera_distance:
-		var base := lerpf(player.camera_distance, perch_cam_distance, _cam_w)
+	if _cam_w > 0.0 or _aim_w > 0.0:
+		# (from the player's own view now: its aim camera's too, Player.cam_distance_now())
+		var base := lerpf(player.cam_distance_now(), perch_cam_distance, _cam_w)
 		player.spring_arm.spring_length = lerpf(base, perch_aim_distance, _aim_w)
-		var sh := lerpf(player.shoulder_offset, perch_shoulder, _cam_w)
+		var sh := lerpf(player.cam_shoulder_now(), perch_shoulder, _cam_w)
 		player.spring_arm.position.x = lerpf(sh, perch_aim_shoulder, _aim_w)
 	# the body out of the way of the view
 	var cam_d := player.camera.global_position.distance_to(player.global_position + Vector3.UP * 1.3)
