@@ -28,13 +28,23 @@ static func is_animation_table(path: String) -> bool:
 	return false
 
 
+const Rights := preload("res://addons/release_metadata/rights.gd")
+
+
 static func copy_resource(resource: Resource) -> Resource:
+	var copy := _copy_resource(resource)
+	Rights.stamp(copy)
+	return copy
+
+
+static func _copy_resource(resource: Resource) -> Resource:
 	if resource is AnimationLibrary:
 		var source := resource as AnimationLibrary
 		var copy := source.duplicate(false) as AnimationLibrary
 		_remove_resource_fields(copy)
 		for name in source.get_animation_list():
-			var animation := copy_resource(source.get_animation(name)) as Animation
+			var animation := _copy_resource(source.get_animation(name)) as Animation
+			Rights.stamp(animation)
 			copy.remove_animation(name)
 			copy.add_animation(name, animation)
 		return copy

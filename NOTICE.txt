@@ -1,5 +1,5 @@
 Frontier
-Copyright (c) [YEAR] [STUDIO OR OWNER LEGAL NAME]. All rights reserved.
+Copyright (c) 2026 Thang Nguyen. All rights reserved.
 
 Use of this game is subject to its End User Licence Agreement (EULA.txt).
 
