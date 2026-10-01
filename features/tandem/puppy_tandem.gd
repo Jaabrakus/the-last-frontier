@@ -65,6 +65,12 @@ func take_partner(p: FrontierPlayer) -> bool:
 	_own_partner = false
 	player.add_collision_exception_with(p)
 	p.add_collision_exception_with(player)
+	# into the kneeling place behind her, facing as she faces (as invite_partner puts its own partner): the pair is joined at the hips
+	var at: Vector3 = player.global_position + player.skeleton.get_parent().global_basis * partner_offset
+	p.velocity = Vector3.ZERO
+	p.global_transform = player.global_transform
+	p.global_position = Vector3(at.x, player.global_position.y + 0.04, at.z)
+	p.yaw = player.rotation.y
 	if _adopt(p): return true
 	partner = null
 	player.remove_collision_exception_with(p)
