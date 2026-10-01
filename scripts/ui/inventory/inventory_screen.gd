@@ -41,6 +41,7 @@ var start_tab := "gear"
 var tab := ""
 var _gear: VBoxContainer
 var _skills: SkillsPanel
+var _clothes: ClothesPanel
 var _condition: ConditionPanel    ## the body and the vices (user 2026-09-27: "add these stats when we hit tab")
 var _tab_buttons := {}
 
@@ -93,8 +94,11 @@ const SKILLS_KEY := KEY_K
 
 ## Shows a tab: "gear", "skills" or "condition".
 func show_tab(t: String) -> void:
-	tab = t if t in ["gear", "skills", "condition"] else "gear"
+	tab = t if t in ["gear", "clothes", "skills", "condition"] else "gear"
 	_gear.visible = tab == "gear"
+	_clothes.visible = tab == "clothes"
+	if tab == "clothes":
+		_clothes.refresh()
 	_skills.visible = tab == "skills"
 	_condition.visible = tab == "condition"
 	if tab == "condition":
@@ -148,7 +152,7 @@ func _build_ui() -> void:
 	var tabs := HBoxContainer.new()
 	tabs.add_theme_constant_override("separation", 6)
 	outer.add_child(tabs)
-	for pair: Array in [["gear", "Gear  (Tab)"], ["skills", "Skills  (K)"], ["condition", "Condition"]]:
+	for pair: Array in [["gear", "Gear  (Tab)"], ["clothes", "Clothes"], ["skills", "Skills  (K)"], ["condition", "Condition"]]:
 		var tb := Button.new()
 		tb.text = String(pair[1])
 		tb.toggle_mode = true
@@ -167,6 +171,8 @@ func _build_ui() -> void:
 	outer.add_child(_skills)
 	_condition = ConditionPanel.make(player)
 	outer.add_child(_condition)
+	_clothes = ClothesPanel.make(self)
+	outer.add_child(_clothes)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 18)
 	_gear.add_child(row)
@@ -575,6 +581,14 @@ func auto_wear(kind: String) -> void:
 			or Vices.can_use(kind) or Vices.can_choose(kind):
 		use_item(kind)   # a torch or a herb is not worn: double-clicking it uses it, like right-clicking
 		return
+	if InventoryState.GEAR_KINDS.has(kind):
+		# rope gear (a belt, a sling): put on, and the body offers its carry points
+		if inv.wear_gear(kind):
+			say("The %s is on." % InventoryState.name_of(kind).to_lower())
+			_refresh()
+		else:
+			say("The %s is on already." % InventoryState.name_of(kind).to_lower(), true)
+		return
 	var p := inv.best_point(kind)
 	if p == "":
 		say("No place on the body for the %s with this gear." % InventoryState.name_of(kind).to_lower(), true)
@@ -586,6 +600,9 @@ func _doll_can_drop(_at: Vector2, d: Variant) -> bool:
 	if not (d is Dictionary) or String(d.get("from", "")) != "pack":
 		return false
 	var k := String(d.kind)
+	if InventoryState.GEAR_KINDS.has(k):
+		say("%s: put it on" % InventoryState.name_of(k))
+		return true
 	var p := inv.best_point(k)
 	if p == "":
 		say("No place on the body for the %s with this gear." % InventoryState.name_of(k).to_lower(), true)

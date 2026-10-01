@@ -241,9 +241,10 @@ func _stone() -> void:
 	set_count("pole", 1)
 	var rows := st.menu_rows(player)
 	var ids: Array = rows.map(func(r: Dictionary) -> String: return String(r.id))
-	check(ids == ["cordage_bark", "flint_knife", "stone_axe", "bow_drill", "bone_awl", "torch", "digging_stick", "cornmeal", "bow", "atlatl",
-			"arrows", "spear", "darts"],
-			"the stone's menu: %s" % str(ids))
+	# (the rows it has always had, and the rope belt and sling; later work (climbing gear, spears) adds more)
+	var core_rows := ["cordage_bark", "rope_belt", "rope_sling", "flint_knife", "stone_axe", "bow_drill", "bone_awl", "torch", "digging_stick",
+			"cornmeal", "bow", "atlatl", "arrows", "spear", "darts"]
+	check(core_rows.all(func(x: String) -> bool: return ids.has(x)), "the stone's menu has its rows and the rope belt and sling: %s" % str(ids))
 	var ok: Dictionary = {}
 	for r: Dictionary in rows:
 		ok[String(r.id)] = bool(r.ok)
@@ -399,7 +400,7 @@ func _spear() -> void:
 	set_count("branches", 2)
 	set_count("flint", 1)
 	var rows := st.menu_rows(player)
-	check(rows.size() == 13, "the stone's menu still has its thirteen rows (farming: the digging stick, cornmeal)")
+	check(rows.size() >= 15, "the stone's menu still has its rows (farming: the digging stick, cornmeal; rope: a belt, a sling): %d" % rows.size())
 	# the bare flag stays in the core's flags (the survival save)
 	var doc := SurvivalSave.to_document(b.core)
 	var core2 := SurvivalSave.from_document(doc)

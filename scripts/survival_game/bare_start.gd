@@ -45,7 +45,8 @@ static func apply(b: SurvivalBridge) -> void:
 			lo.remove_item(String(it.id))
 		# (and the kit's gear: the starting loadout's horn strap had left a powder horn on the back of a character who
 		# owns nothing, the user 2026-09-29)
-		lo.gear = PackedStringArray(Array(lo.gear).filter(func(g: String) -> bool: return not g in KIT_GEAR))
+		# (and no belt, no sash, no slings: nothing to carry on until a rope belt and a rope sling are made from bark cord)
+		lo.gear = PackedStringArray([LoadoutRules.NO_FREE_SLINGS])
 	p.apply_loadout(lo, [])
 	if p.gather:
 		p.gather._ensure_owned()            # (the axe that rode the pack's loop is gone: it re-reads the loadout)
@@ -53,3 +54,4 @@ static func apply(b: SurvivalBridge) -> void:
 	if p.torch:
 		p.torch.pack.clear()
 		p.torch.changed.emit()
+	ClothesSlots.sync_look(b)               # (naked: nothing in any clothes slot; the look follows what is worn)

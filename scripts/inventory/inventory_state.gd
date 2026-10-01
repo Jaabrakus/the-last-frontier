@@ -66,7 +66,7 @@ const NAMES := {"musket": "Flintlock Musket", "over_under": "Over-and-Under", "b
 		"dried_raccoon_pelt": "Dried Raccoon Pelt", "small_game": "Small Game", "roast_small_game": "Roast Small Game",
 		"charred_small_game": "Charred Small Game",
 		# the trapper's and the shot-maker's gear (GearModels; the workbench and the fire make some)
-		"cordage": "Cordage", "stake_set": "Deadfall Stakes", "steel_trap": "Steel Trap", "bar_lead": "Bar Lead",
+		"cordage": "Cordage", "rope_belt": "Rope Belt", "rope_sling": "Rope Sling", "stake_set": "Deadfall Stakes", "steel_trap": "Steel Trap", "bar_lead": "Bar Lead",
 		"bullet_mould": "Bullet Mould", "hooks_line": "Hooks and Line", "fishing_rod": "Fishing Rod",
 		"fish_spear": "Fish Spear",
 		# the knapping stone's tools (the start with nothing)
@@ -87,6 +87,10 @@ const KIND_OF_KEY := {"musket": "musket", "over_under": "over_under", "bow": "bo
 		"spear": "spear_pair", "tomahawk": "tomahawk", "atlatl": "atlatl"}
 ## Torches ride in the pack only (PlayerTorch keeps them: one stack, the count of torches not in the hand).
 const TORCH := "torch"
+## Carry gear made from rope (user 2026-10-01: a start with nothing makes its sling rig from tree-bark rope): the pack kind and
+## the loadout gear it is when worn (carry_gear.json): a tied belt (hip and back points), a sling (the back slings: the long
+## weapons, the quiver strap, the tool loop).
+const GEAR_KINDS := {"rope_belt": "belt_tied_behind", "rope_sling": "back_slings"}
 
 var data: LoadoutData
 var worn: Loadout
@@ -320,3 +324,41 @@ static func _plain(e: String) -> String:
 	for k in NAMES:
 		e = e.replace(String(k), String(NAMES[k]).to_lower())
 	return e.replace("_", " ")
+
+# --- rope gear ----------------------------------------------------------------------------------------------------------
+
+## Whether the rope gear `kind` (a GEAR_KINDS key) is worn now.
+func gear_worn(kind: String) -> bool:
+	var gid := String(GEAR_KINDS.get(kind, ""))
+	return gid != "" and worn.gear.has(gid)
+
+
+## Puts on the rope gear `kind` from the pack. True when done.
+func wear_gear(kind: String) -> bool:
+	var gid := String(GEAR_KINDS.get(kind, ""))
+	if gid == "" or gear_worn(kind) or pack_count(kind) <= 0:
+		return false
+	_from_pack(kind, 1)
+	var g := Array(worn.gear)
+	g.append(gid)
+	worn.gear = PackedStringArray(g)
+	return true
+
+
+## Takes the rope gear `kind` off into the pack, and what hung on its points with it (a knife on a belt, a musket on a sling).
+func unwear_gear(kind: String) -> bool:
+	var gid := String(GEAR_KINDS.get(kind, ""))
+	if gid == "" or not gear_worn(kind):
+		return false
+	worn.gear = PackedStringArray(Array(worn.gear).filter(func(x: String) -> bool: return x != gid))
+	_to_pack(kind, 1)
+	var gp := LoadoutRules.gear_points(worn.gear, worn.shoulder_ew_sash, data)
+	for it: Dictionary in worn.items.duplicate():
+		var supported := true
+		for p in (it.points as Array):
+			if not (gp.points as Dictionary).has(p):
+				supported = false
+		if not supported:
+			_to_pack(String(it.kind), int(it.get("count", 1)), it.get("state", {}))
+			worn.remove_item(String(it.id))
+	return true

@@ -330,6 +330,10 @@ func _attach(c: SurvivalCore) -> void:
 		cook.hook(core)
 	if camp:
 		camp.told = {}
+	# a start with nothing wears what it makes: its look is dressed from the worn garments (ClothesSlots), a moment on, once the
+	# body is there (a new game's bare flag is set just after this; a loaded bare save has it already)
+	if is_inside_tree():
+		get_tree().create_timer(0.6).timeout.connect(func() -> void: ClothesSlots.sync_look(self))
 
 
 ## The food of the core's starting kit goes into the game's pack (whole units), the rest stays with the core.

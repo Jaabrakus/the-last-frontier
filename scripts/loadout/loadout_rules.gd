@@ -25,6 +25,10 @@ static func _d(data: LoadoutData) -> LoadoutData:
 	return data if data else LoadoutData.get_default()
 
 
+## A gear id that stops the back slings being given free (BareStart): they are worn gear then (a rope sling).
+const NO_FREE_SLINGS := "no_free_slings"
+
+
 ## Carry points of a set of worn gear after blocks: {point: [kinds]} and the exclusive pairs.
 ## Returns {"points": Dictionary, "exclusive": Array, "requires": Dictionary, "blocked": Array}.
 static func gear_points(gear: PackedStringArray, shoulder_ew_sash := false, data: LoadoutData = null) -> Dictionary:
@@ -35,7 +39,9 @@ static func gear_points(gear: PackedStringArray, shoulder_ew_sash := false, data
 	var req := {}
 	var baldric := {}
 	var g_list := Array(gear)
-	if not g_list.has("back_slings"):
+	# (the back slings come with everyone, unless the gear says the character has none yet: a start with nothing, until a
+	# rope sling is made)
+	if not g_list.has("back_slings") and not g_list.has(NO_FREE_SLINGS):
 		g_list.append("back_slings")
 	for gid: String in g_list:
 		var g := d.gear(gid)
