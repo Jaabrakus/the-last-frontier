@@ -9,10 +9,17 @@ var tree: SceneTree
 var home := Vector3.ZERO
 
 
+var _chests_cache := []
+var _chests_frame := -1
+
+
 func _chests(smokehouses_last := false) -> Array:
 	var out := []
 	if tree == null:
 		return out
+	# (the nearest-first list, made once a frame: the planner asks for it hundreds of times)
+	if not smokehouses_last and _chests_frame == Engine.get_process_frames():
+		return _chests_cache.filter(func(c: Variant) -> bool: return is_instance_valid(c))
 	for n in tree.get_nodes_in_group(StorageChest.GROUP):
 		if is_instance_valid(n) and not (n as Node).is_queued_for_deletion():
 			out.append(n)
@@ -20,18 +27,43 @@ func _chests(smokehouses_last := false) -> Array:
 		if smokehouses_last and (a is Smokehouse) != (b is Smokehouse):
 			return b is Smokehouse
 		return a.global_position.distance_squared_to(home) < b.global_position.distance_squared_to(home))
+	if not smokehouses_last:
+		_chests_cache = out.duplicate()
+		_chests_frame = Engine.get_process_frames()
 	return out
+
+
+## The chests' totals for this frame ({kind: n}; venison hung in a smokehouse not counted): the planner asks hundreds of counts a
+## frame (a job's shortages, each kind), each had walked and sorted every chest (user 2026-10-01: "the game is burning hot"; the
+## profiler: ChestStock.count 300 calls a frame). Made again each frame, or after a take or a put.
+var _snap := {}
+var _snap_frame := -1
+
+
+func _totals() -> Dictionary:
+	var f := Engine.get_process_frames()
+	if f != _snap_frame:
+		_snap_frame = f
+		_snap = {}
+		if tree != null:
+			for n in tree.get_nodes_in_group(StorageChest.GROUP):
+				if not is_instance_valid(n) or (n as Node).is_queued_for_deletion():
+					continue
+				var smoke := n is Smokehouse
+				var seen := {}
+				for e: Dictionary in (n as StorageChest).items:
+					var k := String(e.kind)
+					if (smoke and k == "venison") or seen.has(k):
+						continue        # (a chest's first stack of a kind, as count_of reads it)
+					seen[k] = true
+					_snap[k] = int(_snap.get(k, 0)) + int(e.count)
+	return _snap
 
 
 func count(kind: String) -> int:
 	if ToolPool.is_rack(kind):   # TOOLS: the weapons stand in the racks and barrels
 		return ToolRacks.count(tree, kind)
-	var n := 0
-	for c: StorageChest in _chests():
-		if kind == "venison" and c is Smokehouse:
-			continue
-		n += c.count_of(kind)
-	return n
+	return int(_totals().get(kind, 0))
 
 
 func all() -> Dictionary:
@@ -43,6 +75,7 @@ func all() -> Dictionary:
 
 
 func take(kind: String, n: int, who := "", why := "") -> int:
+	_snap_frame = -1
 	if ToolPool.is_rack(kind):   # TOOLS
 		return ToolRacks.take(tree, home, kind, n).size()
 	var got := 0
@@ -57,6 +90,7 @@ func take(kind: String, n: int, who := "", why := "") -> int:
 
 
 func put(kind: String, n: int, who := "", why := "") -> int:
+	_snap_frame = -1
 	if n <= 0:
 		return 0
 	if ToolPool.is_rack(kind):   # TOOLS
