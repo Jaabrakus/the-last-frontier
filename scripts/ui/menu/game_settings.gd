@@ -12,7 +12,7 @@ const PATH := "user://settings.cfg"
 const DEFAULTS := {
 	"audio": {"master": 1.0, "effects": 1.0, "ambience": 1.0},
 	"controls": {"mouse": 2.0, "invert_y": false},
-	"display": {"fullscreen": false, "vsync": true},
+	"display": {"fullscreen": false, "vsync": true, "cap_60": true},
 	"game": {"iron_man": false},
 }
 const BUSES := {"master": &"Master", "effects": &"SFX", "ambience": &"Ambience"}
@@ -76,6 +76,8 @@ static func apply_global() -> void:
 	if fs != (mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN):
 		DisplayServer.window_set_mode(want)
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if bool(get_value("display", "vsync")) else DisplayServer.VSYNC_DISABLED)
+	# at most 60 frames a second (user 2026-10-01: "the game is burning hot"): a 120 Hz display ran it at 120 with vsync alone
+	Engine.max_fps = 60 if bool(get_value("display", "cap_60")) else 0
 
 
 ## The look's sensitivity and invert onto the player, and the rest (apply_global).
@@ -112,6 +114,9 @@ static func rows(player: Node = null) -> VBoxContainer:
 		apply_global()))
 	v.add_child(MenuUI.toggle("Vertical sync", bool(get_value("display", "vsync")), func(on: bool) -> void:
 		set_value("display", "vsync", on)
+		apply_global()))
+	v.add_child(MenuUI.toggle("Cap at 60 frames a second (cooler, quieter)", bool(get_value("display", "cap_60")), func(on: bool) -> void:
+		set_value("display", "cap_60", on)
 		apply_global()))
 	if player == null:
 		# (chosen before a game, not in the middle of one)

@@ -91,6 +91,7 @@ var _torch_bar: ProgressBar
 var _torch_text: Label
 var _needs_row: HBoxContainer     ## food, warmth, wet and thirst as small badges: dim when well, amber then red as they worsen
 var _need_icons := {}             ## need id -> TextureRect
+var _needs_t := 0.0
 var _stam_row: HBoxContainer      ## the grip's stamina (climbing, hanging, crouched on a branch), shown while it is not full
 var _stam_bar: ProgressBar
 var _ammo: Label                  ## the weapon's ammo and state under the slot strip (one small line)
@@ -551,7 +552,9 @@ func _update_vitals() -> void:
 		_torch_text.text = "Torches ×%d  (T)" % n
 	# the needs as badges; the grip's stamina while it is not full
 	_needs_row.visible = b != null and b.core != null
-	if _needs_row.visible:
+	_needs_t -= get_process_delta_time()
+	if _needs_row.visible and _needs_t <= 0.0:
+		_needs_t = 0.5           # (the stages change over game minutes: twice a second is plenty)
 		var st := b.core.need_stages()
 		for id: String in _need_icons:
 			var ic := _need_icons[id] as TextureRect
