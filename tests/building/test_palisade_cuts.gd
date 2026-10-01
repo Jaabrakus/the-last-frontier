@@ -78,13 +78,12 @@ func _initialize() -> void:
 	sec = _make()
 	await _ticks(4)
 
-	# --- from the ground: belly (1.0 m over the feet), pieces of 1.0 m stacking upward, none below ---
-	_check(_aim(1, 0.5, 0.0).is_empty(), "aimed below belly height (0.5 m): no target, no hole down to the ground")
+	# --- anywhere (user 2026-09-30, "no rules"): the 1.0 m piece round the crosshair's height, any height, any order ---
 	var c1 := _aim(1, 1.6, 0.0)
-	_check(not c1.is_empty() and absf(float(c1.h0) - 1.0) < 0.001 and absf(float(c1.h1) - 2.0) < 0.001 and int(c1.k) == 1,
-			"from the ground the first piece is 1.0 - 2.0 m over the feet (%s)" % str([c1.get("h0"), c1.get("h1")]))
+	_check(not c1.is_empty() and absf(float(c1.h0) - 1.1) < 0.001 and absf(float(c1.h1) - 2.1) < 0.001 and int(c1.k) == 1,
+			"the piece round the crosshair (1.6 m) is 1.1 - 2.1 m (%s)" % str([c1.get("h0"), c1.get("h1")]))
 	_check(not c1.is_empty() and str(c1.name) == "palisade" and str(c1.type) == "wall", "it is the gathering target 'wall' named palisade")
-	_check(PalisadeCuts.WORK == 8.0 and PalisadeCuts.PIECE_H == 1.0 and PalisadeCuts.BELLY == 1.0, "constants: 8 strokes, 1.0 m pieces, belly 1.0 m")
+	_check(PalisadeCuts.WORK == 8.0 and PalisadeCuts.PIECE_H == 1.0, "constants: 8 strokes, 1.0 m pieces")
 	var d1 := PalisadeCuts.describe(world, str(c1.key), Vector3(-0.5 * (PalisadeCuts.x_range(1).x + PalisadeCuts.x_range(1).y), 0.0, 1.0))
 	_check(not d1.is_empty() and str(d1.key) == str(c1.key), "the target key describes it again")
 	# strokes
@@ -95,7 +94,7 @@ func _initialize() -> void:
 	await _ticks(4)
 	_check(done >= 1.0 and sec.cuts.size() == 1, "the 8th stroke cuts the piece (%d holes)" % sec.cuts.size())
 	_check(not _ray_stops(1, 1.5) and _ray_stops(1, 0.8) and _ray_stops(1, 2.5), "a ray passes the opening; under it and over it the wall stops it")
-	_check(_ray_stops(0, 1.5) and _ray_stops(2, 1.5), "beside the opening (the next pairs of stakes) the wall stops it")
+	_check(_ray_stops(0, 1.5) and _ray_stops(2, 1.5) and _ray_stops(0, 3.8), "beside the opening the wall stops it, up to its points")
 	var stakes := 0
 	var cut_stakes := 0
 	for c in sec.get_children():
@@ -106,48 +105,38 @@ func _initialize() -> void:
 			else:
 				cut_stakes += 1
 	_check(stakes == 6 and cut_stakes >= 2 and cut_stakes <= 4, "6 stakes stand whole, the 2 cut ones show pieces (%d whole, %d pieces)" % [stakes, cut_stakes])
-	# the same aim now: the opening is air, the piece over it is next
 	_check(_aim(1, 1.6, 0.0).is_empty(), "aimed into the opening: nothing to cut (air)")
-	var c2 := _aim(1, 2.6, 0.0)
-	_check(not c2.is_empty() and absf(float(c2.h0) - 2.0) < 0.001 and absf(float(c2.h1) - 3.0) < 0.001, "the next piece is the next one up (%s)" % str([c2.get("h0"), c2.get("h1")]))
+	# under it, down to the ground (what is left under the opening is less than a piece and goes with it)
+	var c2 := _aim(1, 0.5, 0.0)
+	_check(not c2.is_empty() and float(c2.h0) <= PalisadeCuts.FOOT + 0.001 and absf(float(c2.h1) - 1.1) < 0.001,
+			"aimed low: the piece goes down to the ground and up to the opening (%s)" % str([c2.get("h0"), c2.get("h1")]))
 	_stroke(c2)
 	await _ticks(4)
+	# near the points: the top comes off with the piece
 	var c3 := _aim(1, 3.2, 0.0)
-	_check(not c3.is_empty() and absf(float(c3.h0) - 3.0) < 0.001 and float(c3.h1) >= PalisadeCuts.TOP + 0.4, "the third takes the top off, points and all (%s)" % str([c3.get("h0"), c3.get("h1")]))
+	_check(not c3.is_empty() and absf(float(c3.h0) - 2.7) < 0.001 and float(c3.h1) >= PalisadeCuts.TOP + 0.4,
+			"aimed near the points: the top comes off with the piece (%s)" % str([c3.get("h0"), c3.get("h1")]))
 	_stroke(c3)
 	await _ticks(4)
 	var open := PalisadeCuts.removed(sec.cuts, 1, false)
-	_check(open.size() == 1 and absf(float(open[0][0]) - 1.0) < 0.001 and float(open[0][1]) >= PalisadeCuts.TOP, "the three cuts are one opening from belly height to the top (%s)" % str(open))
-	_check(_aim(1, 3.2, 0.0).is_empty() and _aim(1, 0.9, 0.0).is_empty(), "nothing more to cut in that pair; the foot under belly stays")
-	_check(_ray_stops(1, 0.5) and _ray_stops(1, 0.95), "the wall under belly height still stands there (a hole is never cut down to the ground)")
-	# the other pairs are still whole
+	_check(open.size() == 2 and float(open[0][0]) <= PalisadeCuts.FOOT + 0.001 and absf(float(open[0][1]) - 2.1) < 0.001,
+			"a gap from the ground to 2.1 m and the top off over 2.7 m (%s)" % str(open))
+	_check(not _ray_stops(1, 0.3) and _ray_stops(1, 2.4) and not _ray_stops(1, 3.5), "a ray passes at the foot and over the stub; the stub between stops one")
 	var c4 := _aim(2, 1.6, 0.0)
-	_check(not c4.is_empty() and absf(float(c4.h0) - 1.0) < 0.001, "the pair beside it starts at belly height again (%s)" % str(c4.get("h0", "-")))
+	_check(not c4.is_empty() and absf(float(c4.h0) - 1.1) < 0.001, "the pair beside it is whole (%s)" % str(c4.get("h0", "-")))
 
-	# --- the collider is boxes round the opening ---
-	var boxes := PalisadeCuts.colliders(sec.ctx, sec.cuts)
-	_check(boxes.size() == 3, "the collider is three boxes: the stakes beside, the foot under the opening on one pair (%d)" % boxes.size())
-
-	# --- from the firing step's deck ---
+	# --- from the firing step's deck: the same rule, the crosshair's height ---
 	sec = _make()
 	await _ticks(4)
 	var deck := _aim(2, 3.6, 2.275)
-	_check(not deck.is_empty() and absf(float(deck.h0) - 3.275) < 0.001 and float(deck.h1) >= PalisadeCuts.TOP + 0.4,
-			"from the deck the first cut takes everything from belly height (3.275 m) to the top in one go (%s)" % str([deck.get("h0"), deck.get("h1")]))
-	_check(_aim(2, 3.0, 2.275).is_empty(), "from the deck, aimed under belly height: no target")
-	_check(not _aim(2, 3.9, 2.275).is_empty(), "from the deck the crosshair over the collider's top (3.9 m) still finds the stakes")
+	_check(not deck.is_empty() and float(deck.h1) >= PalisadeCuts.TOP + 0.4,
+			"from the deck, aimed near the points: the top comes off (%s)" % str([deck.get("h0"), deck.get("h1")]))
+	_check(not _aim(2, 3.9, 2.275).is_empty(), "from the deck the crosshair at the points (3.9 m) still finds the stakes")
 	if not deck.is_empty():
 		_stroke(deck)
 	await _ticks(4)
-	_check(_aim(2, 3.6, 2.275).is_empty(), "one cut was all it took from the deck")
-	_check(not _ray_stops(2, 3.3) and _ray_stops(2, 3.0), "a shot over the deck passes the notch; the wall under it stops one")
-
-	# --- halfway up the ramp: the feet measure ---
-	sec = _make()
-	await _ticks(4)
-	var ramp := _aim(0, 2.4, 1.15)
-	_check(not ramp.is_empty() and absf(float(ramp.h0) - 2.15) < 0.001 and absf(float(ramp.h1) - 3.15) < 0.001,
-			"halfway up the ramp (feet 1.15 m) the base rises to 2.15 m (%s)" % str([ramp.get("h0", "-"), ramp.get("h1", "-")]))
+	_check(_aim(2, 3.6, 2.275).is_empty(), "one cut was all it took for the notch")
+	_check(not _ray_stops(2, 3.3) and _ray_stops(2, float(deck.get("h0", 3.0)) - 0.2), "a shot over the deck passes the notch; the wall under it stops one")
 
 	# --- filling an opening in again ---
 	sec = _make()

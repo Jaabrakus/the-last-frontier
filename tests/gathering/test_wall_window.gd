@@ -87,8 +87,8 @@ func _initialize() -> void:
 		_finish()
 		return
 	var base_y := sec.global_position.y
-	_check(absf(float(tgt.h0) - (p.global_position.y + PalisadeCuts.BELLY - base_y)) < 0.05 and absf(float(tgt.h1) - float(tgt.h0) - 1.0) < 0.05,
-			"from the ground it starts at belly height (%.2f m over the feet) and is 1.0 m tall (%.2f - %.2f)" % [PalisadeCuts.BELLY, float(tgt.h0), float(tgt.h1)])
+	_check(float(tgt.h1) - float(tgt.h0) >= PalisadeCuts.PIECE_H - 0.05,
+			"from the ground the piece round the crosshair is a piece tall, or more where it snaps (%.2f - %.2f)" % [float(tgt.h0), float(tgt.h1)])
 	Input.action_press("fire")
 	t = 0.0
 	while t < 40.0 and sec.cuts.is_empty():
@@ -113,32 +113,32 @@ func _initialize() -> void:
 		return _ray_hits_wall(q + nrm, q - nrm)
 	var xm := 0.5 * (xr.x + xr.y)
 	_check(not across.call(xm, 0.5 * (h0 + h1)), "a ray through the opening passes the wall")
-	_check(across.call(xm, h0 - 0.4) and across.call(xm, h1 + 0.2) and across.call(xr.x - 0.3, 0.5 * (h0 + h1)) and across.call(xr.y + 0.3, 0.5 * (h0 + h1)),
-			"under (no hole down to the ground), over and beside the opening the wall still stops it")
+	_check(across.call(xm, h0 - 0.4) and across.call(xr.x - 0.3, 0.5 * (h0 + h1)) and across.call(xr.y + 0.3, 0.5 * (h0 + h1)),
+			"under and beside the opening the wall still stops it")
 	_check(across.call(xm, 0.3) and across.call(xm, h0 - 0.05), "the foot of the wall under belly height stands")
 	Input.action_press("move_forward")
 	await _ticks(150)
 	Input.action_release("move_forward")
 	_check(p.global_position.x < 15.9, "the body does not walk through an opening at chest height (x %.2f)" % p.global_position.x)
 
-	# the next pieces up (synthetic aims at the same stakes)
+	# the next pieces down (synthetic aims at the same stakes)
 	var into := -sec.global_transform.basis.z          # from the wall toward the fort
 	var at_wall: Vector3 = loc.call(xm, 0.0)
 	var aim_at := func(y: float) -> Dictionary:
 		var eye: Vector3 = Vector3(at_wall.x, y, at_wall.z) + into * 1.2
 		return PalisadeCuts.aim(world, eye, -into, Vector3(eye.x, 0.02, eye.z) + into * 0.0, [p.get_rid()])
-	var c2: Dictionary = aim_at.call(h1 + 0.4)
-	_check(not c2.is_empty() and absf(float(c2.h0) - h1) < 0.02, "the next piece is the next one up (%s)" % str(c2.get("h0", "-")))
+	var c2: Dictionary = aim_at.call(h0 - 0.4)
+	_check(not c2.is_empty() and absf(float(c2.h1) - h0) < 0.02, "the next piece is the next one down (%s)" % str(c2.get("h1", "-")))
 	if not c2.is_empty():
 		PalisadeCuts.cut(world, sec.piece_id, int(c2.k), float(c2.h0), float(c2.h1))
 		await _ticks(4)
-	var c3: Dictionary = aim_at.call(3.2)
-	_check(not c3.is_empty() and float(c3.h1) > PalisadeCuts.TOP + 0.3, "then the top comes off, points and all (%s)" % str(c3.get("h1", "-")))
+	var c3: Dictionary = aim_at.call(3.7)
+	_check(not c3.is_empty() and float(c3.h1) > PalisadeCuts.TOP + 0.3, "aimed near the points, the top comes off (%s)" % str(c3.get("h1", "-")))
 	if not c3.is_empty():
 		PalisadeCuts.cut(world, sec.piece_id, int(c3.k), float(c3.h0), float(c3.h1))
 		await _ticks(4)
 	var open := PalisadeCuts.removed(sec.cuts, k, false)
-	_check(open.size() == 1 and absf(float(open[0][0]) - h0) < 0.02, "the pieces join into one opening from belly height up (%s)" % str(open))
+	_check(open.size() >= 1 and float(open[0][1]) - float(open[0][0]) >= 1.9, "the two pieces join into one opening (%s)" % str(open))
 	g.put_away()
 	await _ticks(10)
 
@@ -149,8 +149,8 @@ func _initialize() -> void:
 	_check(not over.is_empty(), "on the walkway the wall over the boards can be cut")
 	if not over.is_empty():
 		var osec := world.by_id(int(over.piece))
-		_check(absf(float(over.h0) - (deck_feet.y + 1.0 - osec.global_position.y)) < 0.02 and float(over.h1) > PalisadeCuts.TOP + 0.3,
-				"from the deck the piece takes everything from belly height (%.2f) to the top in one go (%.2f)" % [float(over.h0), float(over.h1)])
+		_check(float(over.h1) > PalisadeCuts.TOP + 0.3,
+				"from the deck the crosshair is near the points: the piece takes the top off (%.2f - %.2f)" % [float(over.h0), float(over.h1)])
 		PalisadeCuts.cut(world, osec.piece_id, int(over.k), float(over.h0), float(over.h1))
 		await _ticks(4)
 		var xo := 0.5 * (PalisadeCuts.x_range(int(over.k)).x + PalisadeCuts.x_range(int(over.k)).y)

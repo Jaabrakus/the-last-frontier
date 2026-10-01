@@ -1,18 +1,17 @@
 class_name PalisadeCuts
 extends RefCounted
-## Windows cut through the BUILT palisade, in pieces, from belly height up (user 2026-09-28, replacing the axe-chopping of
+## Windows cut through the BUILT palisade, in pieces, anywhere (user 2026-09-28, replacing the axe-chopping of
 ## the classic fort's walls, WallCuts: "the fort should be recreated from builder pieces"; "windows are made by cutting the
 ## built palisade in pieces, from belly height up, measured from where the player stands, deck or ground"; the old slot
 ## "was too small from the ramp/deck, needed two cuts"; "no cutting below belly height, no chopping a hole down to the
 ## ground"; "a cut opening can be filled back in"; "halfway up the ramp measure from the feet too").
 ##
-## The rules (all heights are measured over the player's FEET, so a deck, a ramp or a slope moves them):
-##   * the base of the first cut is the feet's height + BELLY (1.0 m); nothing below it is ever cut;
-##   * a cut takes the lowest piece of stakes at or over that base that is still standing: two stakes wide (a quarter of
-##     the 3 m section, 0.75 m) and PIECE_H (1.0 m) tall; every further cut takes the next piece up;
-##   * a piece that would end within TOP_SNAP of the stakes' points takes the top off, points and all: from the firing
-##     step (its deck 2.275 m over the ground) the first cut takes everything from belly height to the top in one go, a
-##     notch to shoot over (and from the ground the third cut takes the top off);
+## The rules (user 2026-09-30: "no rules, users can cut anywhere to their hearts' content"; they were belly height up, then
+## top down):
+##   * a cut takes the piece of stakes where the axe is (the crosshair's height on the wall), two stakes wide (a quarter of
+##     the 3 m section, 0.75 m) and PIECE_H (1.0 m) tall, at any height down to the ground and in any order (span_at);
+##   * a piece that would leave less than TOP_SNAP of stake over or under it takes that too: near the points the top comes
+##     off, points and all; near the ground it goes down to the foot;
 ##   * WORK strokes of the felling axe cut a piece (GatherTools: aim at a built palisade within REACH, "Chop through the
 ##     palisade", the same feel as the old chop); the palisade gate is a builder piece with its own doors and is not cut.
 ## A cut opening is a hole [k, h0, h1, covered] of its BuiltPiece (`cuts`; k the pair of stakes 0..3 along the section,
@@ -23,14 +22,16 @@ extends RefCounted
 ## cut stakes stay cut; chopping into a cover knocks it out). Everything works on BuiltPiece / BuildWorld and needs no node.
 
 const WORK := 8.0                    ## strokes of power 1 to cut a piece
-const BELLY := 1.0                   ## the first cut's base over the feet
+const BELLY := 1.0                   ## (no longer a rule: user 2026-09-30, cut anywhere) kept for callers
+const FOOT := -0.15                  ## the stakes' foot (mesh space) over the section's origin: a cut can go down to it
 const PIECE_H := 1.0                 ## a piece's height
 const STAKES_PER_CUT := 2            ## a piece is this many stakes wide
 const TOP := 3.95                    ## the stakes' points over the section's origin on level ground
 const TOP_SNAP := 0.4                ## a piece whose top would come this close to the points takes the top off
 const TOP_OVER := 0.5                ## ... up to this far over them
 const MIN_LEFT := 0.2                ## a base this close to the points (or over them) has nothing left to cut
-const BOX_TOP := 3.4                 ## the collider's top over the section's lowest ground
+const BOX_TOP := 3.95                ## the collider's top over the section's lowest ground: the stakes' points (it was
+                                     ## 3.4, and shots went through the top of the wall, user 2026-09-30)
 const THICK := 0.4                   ## the collider's depth
 const REACH := 1.5                   ## the aim's point at most this far from the chest (horizontally)
 const AIM_PAST := 0.6                ## the camera's aim ray reaches this far past REACH from the chest (a third-person
@@ -103,18 +104,26 @@ static func solid_spans(y0: float, y1: float, spans: Array) -> Array:
 	return solid
 
 
-## The span the next cut of pair k takes when the base (over the section's origin) is `base`: the lowest piece at or over
-## it that is still standing, PIECE_H tall, the top off when it would end near the points. [] when nothing is left.
-static func next_span(cuts: Array, k: int, base: float) -> Array:
-	var y0 := base
-	for sp: Array in removed(cuts, k):
-		if float(sp[0]) <= y0 + 0.02 and float(sp[1]) > y0:
-			y0 = float(sp[1])
-	if y0 > TOP - MIN_LEFT:
+## The span a cut of pair k takes when the axe is at height `y` (over the section's origin): a piece PIECE_H tall round
+## that height, inside the standing part of the stakes there (user 2026-09-30: "no rules, users can cut anywhere to their
+## hearts' content": any height, down to the ground, in any order). A piece that would leave less than TOP_SNAP of stake
+## above or below it takes that too (near the points: the points with it; near the ground: down to the foot). [] when the
+## stakes are not there.
+static func span_at(cuts: Array, k: int, y: float) -> Array:
+	var part: Array = []
+	for so: Array in solid_spans(FOOT, TOP + TOP_OVER, removed(cuts, k)):
+		if y >= float(so[0]) - 0.02 and y <= float(so[1]) + 0.02 and float(so[1]) - float(so[0]) >= 0.02:
+			part = so
+	if part.is_empty() or float(part[0]) > TOP - MIN_LEFT:
 		return []
-	var y1 := y0 + PIECE_H
-	if y1 >= TOP - TOP_SNAP:
-		y1 = TOP + TOP_OVER
+	var lo := float(part[0])
+	var hi := minf(float(part[1]), TOP)
+	var y0 := clampf(y - PIECE_H * 0.5, lo, maxf(lo, hi - PIECE_H))
+	var y1 := minf(y0 + PIECE_H, hi)
+	if y0 - lo < TOP_SNAP:
+		y0 = lo
+	if hi - y1 < TOP_SNAP:
+		y1 = float(part[1]) if float(part[1]) < TOP else TOP + TOP_OVER
 	return [y0, y1]
 
 
@@ -312,7 +321,7 @@ static func aim(world: BuildWorld, eye: Vector3, look: Vector3, feet: Vector3, e
 		if t <= 0.0 or t > d_hit + THICK * 0.5 + 0.05 or t >= best_t:
 			continue
 		var loc := o + d * t
-		if absf(loc.x) > BuildGeometry.L * 0.5 or loc.y > TOP or loc.y < belly_of(p, feet) - BELOW_SLACK:
+		if absf(loc.x) > BuildGeometry.L * 0.5 or loc.y > TOP or loc.y < FOOT:
 			continue
 		var k := clampi(int(floor((loc.x + BuildGeometry.L * 0.5) / (BuildGeometry.L / float(pairs())))), 0, pairs() - 1)
 		# (open air where a hole is cut: the stakes are not there to be aimed at)
@@ -336,7 +345,7 @@ static func aim(world: BuildWorld, eye: Vector3, look: Vector3, feet: Vector3, e
 		if int(c[0]) == int(best.k) and int(c[3]) != 0 and float(best.y) >= float(c[1]) and float(best.y) <= float(c[2]):
 			span = [float(c[1]), float(c[2])]
 	if span.is_empty():
-		span = next_span(bp.cuts, int(best.k), belly_of(bp, feet))
+		span = span_at(bp.cuts, int(best.k), float(best.y))
 	if span.is_empty():
 		return {}
 	return _candidate(bp, int(best.k), float(span[0]), float(span[1]), chest, float(best.dist))
