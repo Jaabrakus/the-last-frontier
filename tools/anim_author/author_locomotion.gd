@@ -45,6 +45,9 @@ const BACK_SWING := 0.6
 ## Backward jogs keep this share of the graph's hips bounce (9 cm; our forward jog has 5 cm).
 const BACK_BOUNCE := 0.55
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
+const Downgrade := preload("res://tools/anim_author/mocap_downgrade.gd")
+## The level (mocap_downgrade.gd LEVELS) the jogs' upper bodies get.
+const JOG_DOWNGRADE := "stiff"
 
 var args := {}
 var lib: AnimationLibrary
@@ -102,6 +105,10 @@ func _bake() -> void:
 	# arm swing and torso twist on the backward jog's own upright posture
 	for dir in ["bw", "bw-lt", "bw-rt"]:
 		jogs[dir] = _backward(dir, jogs["fw" + dir.trim_prefix("bw")])
+	# the mocap downgrader (user 2026-09-30: "more stiff on upper body", "loosen the perfect sync"; "medium in between strong"):
+	# every jog's upper body stiffened and loosened, the legs and hips as they are; the starts and stops below are built from these
+	for dir: String in jogs:
+		jogs[dir] = Downgrade.downgrade(jogs[dir], JOG_DOWNGRADE, true)
 	for dir: String in jogs:
 		var clip: Animation = jogs[dir]
 		out.add_animation(StringName(_name(dir, k)), clip)
@@ -135,8 +142,16 @@ func _bake() -> void:
 	# does not look identical")
 	for cn in ["actor_b-p-jump-long", "actor_b-p-fall"]:
 		var an: String = "own-arms-" + cn.trim_prefix("actor_b-p-")
-		out.add_animation(StringName(an), _arms_variant(lib.get_animation(cn)))
+		out.add_animation(StringName(an), _legs_smaller(_arms_variant(lib.get_animation(cn)), lib.get_animation("actor_b-p-jump-long")))
 		wired[cn] = {"lib": "frontier_locomotion", "clip": an, "length": snappedf(lib.get_animation(cn).length, 0.000001)}
+	# the landings (user 2026-09-30: "the jump landing is too exaggerated"): the graph's landings with a smaller squat and a calmer body,
+	# the damaged ones left as they are (their collapse is meant)
+	for cn: String in lib.get_animation_list():
+		if not cn.begins_with("actor_b-p-land-") or "damage" in cn or (cn in wired):
+			continue
+		var ln: String = "own-" + cn.trim_prefix("actor_b-p-")
+		out.add_animation(StringName(ln), _land_smaller(lib.get_animation(cn)))
+		wired[cn] = {"lib": "frontier_locomotion", "clip": ln, "length": snappedf(lib.get_animation(cn).length, 0.000001)}
 	# the felling axe's carry arm (GatherTools: the last frame of the draw's return, the right arm only, held while the
 	# axe is in the hand, walking, sprinting and crouched), as a one-frame pose the spear's sprint and crouch take
 	var axe_bones := _bake_axe_carry(out, "own-axe-carry", ["clavicle", "scapula", "shoulder", "deltoid", "elbow", "wrist", "forarm", "trap"])
@@ -526,6 +541,70 @@ func _bake_bow_nock_hand(out: AnimationLibrary, src_name: String, clip_name: Str
 			else:
 				a.position_track_insert_key(tr, t, src.position_track_interpolate(ti, ts))
 	out.add_animation(StringName(clip_name), a)
+
+## A landing with less of its squat: every bone keeps LAND_KEEP of its swing from the pose the landing ends in (standing, so the
+## hand-off to the idle or the gait stays closed), the hips keep LAND_DROP_KEEP of their drop below it.
+const LAND_KEEP := 0.65
+const LAND_DROP_KEEP := 0.6
+
+
+func _land_smaller(src: Animation) -> Animation:
+	var a: Animation = src.duplicate(true)
+	for ti in a.get_track_count():
+		var type := a.track_get_type(ti)
+		var kc := a.track_get_key_count(ti)
+		if kc < 2:
+			continue
+		var bone := String(a.track_get_path(ti).get_concatenated_subnames())
+		if type == Animation.TYPE_ROTATION_3D:
+			var ref: Quaternion = a.rotation_track_interpolate(ti, a.length).normalized()
+			for k in kc:
+				var q: Quaternion = (a.track_get_key_value(ti, k) as Quaternion).normalized()
+				if q.dot(ref) < 0.0:
+					q = -q
+				a.track_set_key_value(ti, k, ref.slerp(q, LAND_KEEP).normalized())
+		elif type == Animation.TYPE_POSITION_3D and bone == "root":
+			var ref_y: float = (a.position_track_interpolate(ti, a.length) as Vector3).y
+			for k in kc:
+				var v: Vector3 = a.track_get_key_value(ti, k)
+				if v.y < ref_y:
+					v.y = ref_y + (v.y - ref_y) * LAND_DROP_KEEP
+				a.track_set_key_value(ti, k, v)
+	a.set_meta(&"authored", "Frontier: a smaller landing (tools/anim_author/author_locomotion.gd)")
+	return a
+
+
+## The jump's and the fall's legs pulled towards the standing pose (user 2026-09-30: "make the jump animation smaller or the legs not as
+## wide"; the knees splayed 30 cm apart, standing 22): the thighs keep JUMP_HIP_KEEP of their swing from the pose `stand` starts in
+## (the same pose for the jump and the fall, so the hand-off between them stays closed), the knees JUMP_KNEE_KEEP.
+const JUMP_HIP_KEEP := 0.6
+const JUMP_KNEE_KEEP := 0.85
+
+
+func _legs_smaller(a: Animation, stand: Animation) -> Animation:
+	for ti in a.get_track_count():
+		if a.track_get_type(ti) != Animation.TYPE_ROTATION_3D:
+			continue
+		var path := a.track_get_path(ti)
+		var bone := String(path.get_concatenated_subnames())
+		var keep := 1.0
+		if bone == "l_upper_leg" or bone == "r_upper_leg":
+			keep = JUMP_HIP_KEEP
+		elif bone == "l_knee" or bone == "r_knee":
+			keep = JUMP_KNEE_KEEP
+		else:
+			continue
+		var si := stand.find_track(path, Animation.TYPE_ROTATION_3D)
+		if si < 0:
+			continue
+		var ref: Quaternion = stand.rotation_track_interpolate(si, 0.0).normalized()
+		for k in a.track_get_key_count(ti):
+			var q: Quaternion = (a.track_get_key_value(ti, k) as Quaternion).normalized()
+			if q.dot(ref) < 0.0:
+				q = -q
+			a.track_set_key_value(ti, k, ref.slerp(q, keep).normalized())
+	return a
+
 
 
 ## A clip with its arms made our own: each arm bone's movement about its mean through the clip is scaled (ARMS_SWING) and

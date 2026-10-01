@@ -284,8 +284,10 @@ static func apply_spread(dir: Vector3, cone: float) -> Vector3:
 
 func _fire_input_enabled() -> bool:
 	# (and only while this weapon is out: a slung weapon takes no fire / aim input; nor while the torch mode has the
-	# mouse, PlayerTorch.blocks_fire)
+	# mouse, PlayerTorch.blocks_fire; nor while a vault or climb plays, the weapon kept in the hand through it:
+	# PlayerTraversal.keep_weapon)
 	return active and not clubbed and not (player != null and player.hands_free) \
+			and not (player != null and player.get("traversal") != null and player.traversal.showing) \
 			and not (player != null and player.get("equip_wheel") != null and player.equip_wheel.blocks_fire()) \
 			and not (player != null and player.get("torch") != null and player.torch.blocks_fire()) \
 			and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or player.ignore_mouse_capture)

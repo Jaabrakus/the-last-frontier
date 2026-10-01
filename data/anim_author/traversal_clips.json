@@ -1,0 +1,18 @@
+{
+	"about": "Our own traversal clips in place of the source's (tools/anim_author/blender/install_traversal.gd); played by default (--source-traversal for the source clips).",
+	"clips": {
+		"actor_b-p-idle-jump-up-3m^ledge-hang-begin": "frontier_traversal/own-idle-jump-up-3m^ledge-hang-begin",
+		"actor_b-p-idle-jump-up-3m^ledge-hang-end": "frontier_traversal/own-idle-jump-up-3m^ledge-hang-end",
+		"actor_b-p-idle-jump-up-3m^ledge-hang-mid": "frontier_traversal/own-idle-jump-up-3m^ledge-hang-mid",
+		"actor_b-p-ledge-hang-climb-up^ledge-knee": "frontier_traversal/own-ledge-hang-climb-up^ledge-knee",
+		"actor_b-p-ledge-knee-climb-up^idle": "frontier_traversal/own-ledge-knee-climb-up^idle",
+		"actor_b-p-ledge-knee-climb-up^run": "frontier_traversal/own-ledge-knee-climb-up^run",
+		"actor_b-p-sprint-vault-1": "frontier_traversal/own-sprint-vault-1",
+		"actor_b-p-sprint-vault-2": "frontier_traversal/own-sprint-vault-2",
+		"actor_b-p-sprint-vault-3": "frontier_traversal/own-sprint-vault-3",
+		"actor_b-p-sprint-vault-4": "frontier_traversal/own-sprint-vault-4"
+	},
+	"libraries": {
+		"frontier_traversal": "res://animations_extra/Frontier_Traversal.res"
+	}
+}

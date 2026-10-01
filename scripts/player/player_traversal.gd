@@ -43,6 +43,13 @@ var _rig_ret_s := RIG_RETURN_S       ## this return's length
 var _momentum := false               ## the move playing keeps the body's speed (TravMomentum)
 var _rig_seen := false
 var _gun_away := ""                  ## the weapon put away for the move, drawn again after it
+## The weapon in the hands stays there through vaults and climbs (user 2026-09-30: "keep whatever is equipped in the hands, we don't
+## have to sling it"); off, it is slung or stowed for the move and drawn again after it.
+@export var keep_weapon := true
+## The vaults' lower half (TravVaultLegs): "adapt" (the clip's legs kept clear of the real obstacle's top), "procedural" (the legs a
+## computed tuck in the air, clear of the top), or "off" (the clip's legs). User 2026-09-30: "procedural IK for the lower half of those vaults".
+@export_enum("off", "adapt", "procedural") var vault_legs_mode := "adapt"
+var vault_legs: TravVaultLegs
 var _mods_off: Array = []            ## PlayerAnim's modifiers switched off while a move plays
 ## Our own step over (user 2026-09-30): low steps are stepped onto without a clip, at any speed: the capsule rises (TravStepAssist)
 ## and the feet are carried over the step and set on it (StepFootIK); nothing owns the pose, the upper body goes on as it was.
@@ -72,6 +79,7 @@ func adopt() -> void:
 		rig = skeleton.get_parent() as Node3D
 	_rig_local = rig.transform
 	anim_player = player.anim.get_node(player.anim.anim_player) as AnimationPlayer
+	_add_own_libraries()
 	inert = TravInertializer.new()
 	inert.name = "TravInertializer"
 	skeleton.add_child(inert)
@@ -115,6 +123,11 @@ func adopt() -> void:
 	stop_ik.player = player
 	skeleton.add_child(stop_ik)
 	skeleton.move_child(stop_ik, first + 3)
+	# the vaults' procedural lower half: after the animation, before the contact IK (its plants and guards stay last)
+	vault_legs = TravVaultLegs.new()
+	vault_legs.name = "TravVaultLegs"
+	skeleton.add_child(vault_legs)
+	skeleton.move_child(vault_legs, ik.get_index())
 	_build_tree()
 	tree.active = false
 	call_deferred(&"_bake_world")
@@ -228,8 +241,8 @@ func _begin() -> void:
 	showing = true
 	_rig_back = -1.0
 	_momentum = controller.momentum_active()
-	# the weapon onto the body for the move
-	if player.weapon and player.weapon.active and not player.hands_free:
+	# the weapon onto the body for the move (unless it is kept in the hands: keep_weapon)
+	if not keep_weapon and player.weapon and player.weapon.active and not player.hands_free:
 		_gun_away = player.weapon_key
 		player.hands_free = true
 		player.anim.hands_free = true
@@ -246,7 +259,7 @@ func _begin() -> void:
 	player.anim.auto_process = false
 	_mods_off.clear()
 	for c in skeleton.get_children():
-		if c is SkeletonModifier3D and c != inert and c != ik and not (c is CharacterBodyMesh) and (c as SkeletonModifier3D).active:
+		if c is SkeletonModifier3D and c != inert and c != ik and c != vault_legs and not (c is CharacterBodyMesh) and (c as SkeletonModifier3D).active:
 			(c as SkeletonModifier3D).active = false
 			_mods_off.append(c)
 	# the locomotion pose stands in the fade stack as the content before: the move's entry is inertialized
@@ -269,8 +282,22 @@ func _begin() -> void:
 	tree.active = true
 
 
+## (TravPreviewActor feeds the contact IK every tick of a move; the vault legs ride along.)
+func _apply_ik(pins: Array, guards: Array) -> void:
+	super(pins, guards)
+	if vault_legs == null:
+		return
+	var p := controller.plan if controller != null else null
+	var on := controller != null and controller.mode == TraversalController.Mode.MOVE and p != null \
+			and str(p.move.get("class", "")) == "vault"
+	vault_legs.feed(on, vault_legs_mode, controller.t_move if controller != null else 0.0, p.move.get("windows", {}) if on else {},
+			p.info if on else null)
+
+
 func _end(st: Dictionary) -> void:
 	showing = false
+	if vault_legs != null:
+		vault_legs.in_move = false
 	tree.active = false
 	for c in _mods_off:
 		if is_instance_valid(c):

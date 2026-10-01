@@ -131,6 +131,7 @@ func build() -> void:
 	anim_player = rig.find_children("*", "AnimationPlayer", true, false)[0]
 	anim_player.stop()
 	BindRest.ensure(skeleton, anim_player, LIB)
+	_add_own_libraries()
 	anim_player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
 	if use_body_mesh:
 		body_mesh = CharacterBodyMesh.attach(skeleton, anim_player)
@@ -238,7 +239,34 @@ func _build_tree() -> void:
 
 
 func _anim_name(clip: String) -> String:
+	var own := TravPreviewActor.own_clips()
+	if not own.is_empty() and (own.get("clips", {}) as Dictionary).has(clip):
+		return String(own.clips[clip])
 	return str(LIB) + "/" + clip
+
+
+## Our own authored traversal clips in place of the source's (tools/anim_author/blender/install_traversal.gd writes OWN_CLIPS): on by
+## default (user 2026-09-30: "lets use ours"); the user argument --source-traversal plays the source clips instead. {libraries: {name: path}, clips: {source clip:
+## "library/clip"}}; the moves' timing, world paths and contact windows stay the table's (the clips are authored on them).
+const OWN_CLIPS := "res://data/anim_author/traversal_clips.json"
+static var _own: Dictionary = {}
+static var _own_read := false
+
+
+static func own_clips() -> Dictionary:
+	if not _own_read:
+		_own_read = true
+		if not ("--source-traversal" in OS.get_cmdline_user_args()) and FileAccess.file_exists(OWN_CLIPS):
+			_own = JSON.parse_string(FileAccess.get_file_as_string(OWN_CLIPS))
+	return _own
+
+
+## Adds the own clips' libraries to the AnimationPlayer the moves play on (unless --source-traversal).
+func _add_own_libraries() -> void:
+	var own := TravPreviewActor.own_clips()
+	for name: String in own.get("libraries", {}):
+		if not anim_player.has_animation_library(name):
+			anim_player.add_animation_library(name, load(String(own.libraries[name])) as AnimationLibrary)
 
 
 func _set_slot_clip(slot: int, clip: String) -> void:

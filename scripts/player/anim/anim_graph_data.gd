@@ -28,7 +28,11 @@ const METRICS_PATH := "res://animations/actor_b_clip_metrics.json"
 const CLIP_OVERRIDES_PATH := "res://data/anim_author/locomotion_clips.json"
 ## Arm layers the roles take in place of their own (tools/anim_author/author_locomotion.gd writes it).
 const CARRY_PATCHES_PATH := "res://data/anim_author/carry_patches.json"
-const OVERRIDE_LIBS := {"frontier_locomotion": "res://animations_extra/Frontier_Locomotion.res"}
+## The looping body cycles with their upper bodies stiffened and loosened (tools/anim_author/mocap_downgrade_all.gd writes it): graph clip
+## name -> {lib, clip, length}; same timing and legs as the graph's own, so the metrics stand. A clip CLIP_OVERRIDES_PATH already replaces keeps that.
+const DOWNGRADED_PATH := "res://data/anim_author/downgraded_clips.json"
+const OVERRIDE_LIBS := {"frontier_locomotion": "res://animations_extra/Frontier_Locomotion.res",
+		"frontier_downgraded": "res://animations_extra/Frontier_Downgraded.res"}
 const FIXTURE_GRAPH := "res://tools/anim_graph/fixtures/mini_graph.json"
 const FIXTURE_METRICS := "res://tests/anim/fixtures/mini_metrics.json"
 const LIB := &"actor_b"
@@ -77,6 +81,7 @@ static func load_files(p_graph := GRAPH_PATH, p_metrics := METRICS_PATH) -> Anim
 	var d := AnimGraphData.from_dicts(g, m)
 	if p_graph == GRAPH_PATH:
 		d.apply_clip_overrides()
+		d.apply_downgraded_clips()
 		d.apply_carry_patches()
 		d.apply_aim_idle_poses()
 	d.graph_path = p_graph
@@ -146,6 +151,26 @@ func apply_aim_idle_poses() -> void:
 	metrics["pitch"] = (metrics.get("pitch", {}) as Dictionary).duplicate(false)
 	for k: String in tables:
 		metrics.pitch[k] = tables[k]
+
+
+## The downgraded cycles (DOWNGRADED_PATH) in place of the graph's own, except where an override above already stands in.
+func apply_downgraded_clips() -> void:
+	var t := _read_json(DOWNGRADED_PATH)
+	if t.is_empty():
+		return
+	graph = graph.duplicate(false)
+	graph["clips"] = (graph.get("clips", {}) as Dictionary).duplicate(false)
+	for name: String in t.get("clips", {}):
+		var o: Dictionary = t.clips[name]
+		var lib := String(o.lib)
+		if not graph.clips.has(name) or not OVERRIDE_LIBS.has(lib):
+			continue
+		var info: Dictionary = (graph.clips[name] as Dictionary).duplicate(false)
+		if String(info.get("godot", "")).get_slice("/", 0) != String(LIB):
+			continue   # (another library's clip already stands in for it)
+		info["godot"] = "%s/%s" % [lib, o.clip]
+		graph.clips[name] = info
+		_override_libs[lib] = OVERRIDE_LIBS[lib]
 
 
 ## Our own clips in place of some of the graph's (CLIP_OVERRIDES_PATH: the jog): the clip's library path, its travel
@@ -303,7 +328,6 @@ func apply_carry_patches() -> void:
 			full["layers"] = (graph.roles[String(changes[key].layers_of)].get("layers", []) as Array).duplicate(false)
 			e["full"] = full
 			graph.crouch_change[key] = e
-
 
 
 ## Libraries the overriding clips live in: name -> resource path.

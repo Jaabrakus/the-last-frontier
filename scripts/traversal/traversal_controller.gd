@@ -93,6 +93,9 @@ var _handback_ticks := 0
 var _history: Array = []
 var _air := {}
 var _drop_cooldown := 0.0
+## Running off an edge plays no drop move (drop_fall): the body runs off and our own fall (FallPose) steps it off (set by PlayerAnim
+## while our fall is on). The standing hop (drop_hop) stays.
+var own_run_off := false
 var _mount := {}
 var _content_key := ""
 var _beam := {}                   ## BEAM director {beam, dir, shape}
@@ -106,6 +109,8 @@ var _cap_vel := Vector3.ZERO      ## the body's (capsule's) velocity over the la
 var _cap_last := Vector3.INF
 var _approach := {}               ## see approach()
 var _latched := false             ## careful: a move asked for with Space stays wanted on the approach
+## An overhead lip's jump starts at most this far (m) before its solved start; pressed earlier, the press waits for the body to get there.
+const OVERHEAD_EARLY_M := 0.5
 var _leftover_s := 0.0            ## real time of the last move tick past the move's end (see _segment_tick)
 const CAP_VEL_MAX := 8.0          ## m/s: clamp of a carried capsule velocity (a teleport is no velocity)
 ## m/s^2: the approach deceleration the player's ground movement should use (at least; more when
@@ -451,6 +456,8 @@ func _off_step(input: Dictionary, delta: float) -> void:
 		pending = p
 		_approach = _approach_of(p, ctx)
 		return
+	if p.move_id == "drop_fall" and own_run_off:
+		return
 	if p.move_id in ["drop_fall", "drop_hop"]:
 		var edge_d := (p.info.face_point - (ctx.feet as Vector3)).dot(ctx.heading) if p.info else 0.0
 		if (edge_d <= speed * delta * 2.0 + 0.08 or p.move_id == "drop_hop") and _drop_cooldown <= 0.0:
@@ -488,6 +495,12 @@ func _off_step(input: Dictionary, delta: float) -> void:
 	# (A jump up to an overhead lip starts on the Space press, from where the body is: the lip is 0.3-0.8 m
 	# ahead and the jump's flight carries the difference.)
 	var overhead := p.info != null and p.info.kind == "overhead"
+	# (Seen from further than OVERHEAD_EARLY_M before S, the Space press is held (_latched) and the jump starts when the body
+	# reaches S; started where it was pressed, the flight carried the difference: a leap from metres away, user 2026-09-30 "the
+	# user flies into the leap from far away".)
+	if overhead and along > reach + lead + OVERHEAD_EARLY_M and not blocked:
+		_latched = true
+		return
 	if p.kind == "crawl" or p.intent == "gap" or overhead or along <= reach + lead or speed < 0.3 or blocked:
 		if profile == "careful" and _jump_buffer <= 0.0 and p.kind not in ["crawl", "mount"]:
 			return

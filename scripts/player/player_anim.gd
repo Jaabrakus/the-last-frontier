@@ -331,6 +331,8 @@ var inertializer: StanceInertializer
 ## stance's legs are already straight or bent, which pushed a planted foot through the floor and
 ## dragged it (stand-up at a run: 13 cm under the floor, 1-2 m/s slide). Empty pins otherwise.
 var stance_foot_ik: TraversalIK
+## Our own procedural fall (FallPose), in place of the source's fall clip while the player falls.
+var fall_pose: FallPose
 ## Left hand on the long gun's forestock while it is carried with both hands (LeftGripIK; user playtests:
 ## the crouch-walk rifle hold, the gun bouncing in the left hand). Off while aiming, in the one-hand hold,
 ## hands free, during actions (reload, draw, holster), switches and death.
@@ -484,6 +486,11 @@ func setup(p_player: FrontierPlayer, ap: AnimationPlayer, sk: Skeleton3D, weapon
 	right_arm.name = "RightArmPose"
 	right_arm.side = "r"
 	sk.add_child(right_arm)
+	fall_pose = FallPose.new()
+	fall_pose.name = "FallPose"
+	fall_pose.body = player
+	loco.own_land = fall_pose.land
+	sk.add_child(fall_pose)         # after the arm poses (free arms are ours in a fall), before the hands' (a held gun stays held)
 	torch_ik = TorchCarryIK.new()
 	torch_ik.name = "TorchCarryIK"
 	var grip := data.godot_anim(TorchCarryIK.GRIP_CLIP)
@@ -909,6 +916,12 @@ func manual_step(dt: float) -> void:
 	for e: Dictionary in events:
 		_apply_event(e)
 	loco.tick(inp, edges, dt, _weapon, upper.aim_stance(inp))
+	if fall_pose != null:
+		loco.own_landing = fall_pose.active and fall_pose.showing()
+		if player != null and player.get("traversal") != null and player.traversal.controller != null:
+			player.traversal.controller.own_run_off = fall_pose.active
+		fall_pose.feed(loco.state == LocoBrain.FALL, inp.air_time, inp.vertical_speed,
+				player == null or player.hands_free or player.weapon == null or not player.weapon.active)
 	if loco.inertia_request > 0.0:
 		if inertializer != null:
 			inertializer.start(loco.inertia_request)

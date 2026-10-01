@@ -272,6 +272,11 @@ var drive_carry := false
 var drive_crouch_add := false
 ## Tests: when true, tick() only derives the fields and drives the banks (no state changes).
 var frozen := false
+## Our own landing (FallPose, user 2026-09-30: rebuild the fall's step off and landing): set per tick by PlayerAnim while our fall
+## is showing. A landing then goes straight to the idle or the run (FallPose absorbs it on top, called through own_land) instead of
+## the graph's landing clip; the damage landings stay the graph's.
+var own_landing := false
+var own_land := Callable()
 
 var data: AnimGraphData
 var tree: AnimationTree
@@ -1161,6 +1166,8 @@ func _enter_gs(gs: String, key: String, fade: float, reason: String, use := {}) 
 
 func _land(impact: float) -> void:
 	var sel := landing_role(impact)
+	if own_landing and not String(sel.role).contains("damage") and _own_land(impact, sel):
+		return
 	var role := String(sel.role)
 	var gs := String(_gs_of_role.get(role, ""))
 	var res := _resolve(gs)
@@ -1183,6 +1190,27 @@ func _land(impact: float) -> void:
 	var info := _info("air_to_land", use, "landed at %.2f m/s: %s %s %s -> %s" % [impact, sel.kind, sel.band, sel.dir, role])
 	info["landing"] = sel
 	_enter(gs, res, float(use.get("fade_s", 0.1)), info)
+
+
+## Our own landing: straight into the run (moving) or the idle, FallPose's absorb on top. False when neither resolves.
+func _own_land(impact: float, sel: Dictionary) -> bool:
+	sel = sel.duplicate()
+	sel["own"] = true
+	if moving:
+		var fw := absf(move_dir_deg) <= float(data.threshold("hemi_enter_deg", 90.0))
+		if _enter_gs("run-fw" if fw else "run-bkwd", "land_to_move", 0.12, "our own landing at %.2f m/s: into the run" % impact):
+			last_landing = sel
+			if own_land.is_valid():
+				own_land.call(impact)
+			return true
+	var res := _resolve("idle")
+	if res.is_empty():
+		return false
+	last_landing = sel
+	_enter("idle", res, 0.12, _info("air_to_land", {}, "our own landing at %.2f m/s: to the idle" % impact))
+	if own_land.is_valid():
+		own_land.call(impact)
+	return true
 
 
 ## The landing table (graph `landing`, proposed): {role, kind, band, dir, impact}.
