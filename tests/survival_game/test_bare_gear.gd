@@ -164,6 +164,13 @@ func _run() -> void:
 	panel._toggle_gear("rope_belt")
 	_expect(scr.inv.gear_worn("rope_belt") and scr.inv.points().has("R_hip"), "and the body offers its hip points")
 	scr.close()
+	var h: Household = null
+	for n in current_scene.get_children():
+		if n is Household:
+			h = n
+	_expect(h != null and h.sc != null and h.body != null, "a spouse stands at the start")
+	if h and h.sc:
+		_expect(h.sc.intimacy > 0.99 and h.sc.intimacy_cd == 0.0, "her intimacy is open from the start (%.2f)" % h.sc.intimacy)
 	if fails.is_empty():
 		print("BARE GEAR TEST PASSED (%d checks)" % checks)
 	else:

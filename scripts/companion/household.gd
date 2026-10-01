@@ -103,8 +103,17 @@ func _new_spouse() -> void:
 	sc = SpouseCore.create(bridge.core, look, seed_v)
 	sc.role = "home"
 	sc.worker_id = 0
+	open_intimacy(sc)
 	sc.join(stock)
 	_spawn(sc, _start_point())
+
+
+## A start with nothing opens the intimacy at once (user 2026-10-01: "open the intimacy option at start"): the gauge full.
+func open_intimacy(w: SpouseCore) -> void:
+	if bridge != null and bridge.is_bare():
+		w.intimacy = 1.0
+		w.intimacy_cd = 0.0
+		w.intimacy_offer_cd = 0.0
 
 
 func _start_point() -> Vector3:
