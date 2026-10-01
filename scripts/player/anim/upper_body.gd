@@ -155,6 +155,11 @@ var strict_graph_cuts := false
 var weapon := &""
 var stance := "stand"
 
+const BOW_AIM_ROLL_DEG := 33.5
+const BOW_AIM_ROLL_CROUCH_DEG := -21.24
+## The bow's prop bone in the standing idle hold, skeleton space (relax idle + bow-move arms 0.85 + bow hands, measured): the
+## crouched carry holds the bow at this angle (user 2026-09-30: "stay in that crouch, the bow in the same clock position").
+const BOW_HOLD_PROP_Q := Quaternion(0.158103, 0.043876, 0.503698, 0.848155)
 var _aim_w := 0.0
 var _suppress := 0.0
 var _heavy_t := INF
@@ -536,7 +541,11 @@ func post_advance() -> void:
 		stabilizer.aim_root_q = Quaternion(acc.x, acc.y, acc.z, acc.w)
 		stabilizer.weight = clampf(a + tw, 0.0, 1.0)
 	stabilizer.influence = 1.0
-	stabilizer.active = stabilizer.weight > 1e-4
+	var bow_w := float(_ww.get("bow", 0.0))
+	stabilizer.carry_prop_bone = &"l_hand_prop_attachment"
+	stabilizer.carry_prop_q = BOW_HOLD_PROP_Q
+	stabilizer.carry_prop_w = bow_w * G.weight(&"crouch") * (1.0 - _aim_w) * (0.0 if action_playing() else 1.0)
+	stabilizer.active = stabilizer.weight > 1e-4 or stabilizer.carry_prop_w > 1e-4
 	stabilizer.trim_bone = StringName(data.prop_bone(String(weapon))) if weapon != &"" else &""
 	stabilizer.trim_target = _inp.aim_point if _inp != null and not _inp.fallbacks.has("aim_point") else Vector3.INF
 	stabilizer.trim_weight = 1.0 - _blocked
@@ -549,6 +558,9 @@ func post_advance() -> void:
 		stabilizer.trim_ff = Vector2.ZERO
 		stabilizer.trim_learn = false
 	stabilizer.trim_hold = false
+	# The bow's aims are rolled about the arrow so the bow shows the idle hold's slant seen from behind (measured with the aim grips:
+	# hold 62 deg off upright, standing aim 29 -> +33.5 deg, crouched aim 90 -> -21.24 deg); the crouched aim keeps its hunch.
+	stabilizer.prop_roll_deg = lerpf(BOW_AIM_ROLL_DEG, BOW_AIM_ROLL_CROUCH_DEG, G.weight(&"crouch")) if weapon == &"bow" else 0.0
 	stabilizer.step_dt = _last_dt
 
 
@@ -1019,7 +1031,9 @@ func _update_stance(inp: AnimInputs) -> void:
 		stabilizer.reset_trim()
 	G.request(StringName(st), float(data.tuning("stance_fade_s", 0.25)))
 	_request_aim(false)
-	if drive_crouch_change_add and not _dead and bool(data.option("crouch_change_add", true)):
+	# (not while a weapon is raised: the crouch-change additive threw the aimed torso back on standing up, bow and rifle,
+	# user 2026-09-30)
+	if drive_crouch_change_add and not _dead and bool(data.option("crouch_change_add", true)) and _aim_w <= 0.05:
 		var dir := "stand_to_crouch" if crouched else "crouch_to_stand"
 		var rec := index.oneshot("CC", String(index.crouch_add.get("%s/%s" % [weapon, dir], "")))
 		if not rec.is_empty():

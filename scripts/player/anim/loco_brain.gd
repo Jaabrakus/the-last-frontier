@@ -926,6 +926,11 @@ func _aim_rules(aim_stance: bool) -> bool:
 			if moving:
 				return _enter_gs(_aim_run_for_dir(), "aim_enter_move", fade, "aim_stance while moving")
 			return _enter_gs("aim-idle", "idle_to_aimidle", fade, "aim_stance")
+		CCHANGE:
+			# (a crouch change while aiming held its last frame, the deep crouch, for as long as the aim lasted: no record
+			# leaves it in an aim stance; user 2026-09-30) once the change has played out, the aim idle of the new stance
+			if phase() >= 0.98:
+				return _enter_gs("aim-idle", "idle_to_aimidle", fade, "aim_stance after a crouch change")
 		MOVE:
 			if not aimed:
 				# Relabel only: the aim-run state on the same move-bank input and hemisphere (no

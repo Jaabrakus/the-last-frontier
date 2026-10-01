@@ -236,6 +236,10 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array,
 		"actions": {
 			"bow/stand/nock_hand": {"copy_of": "bow/stand/nock", "frontier_key": "nock_hand", "partial": "own-bow-nock-hand"},
 			"bow/crouch/nock_hand": {"copy_of": "bow/crouch/nock", "frontier_key": "nock_hand", "partial": "own-bow-nock-hand-crouch"}},
+		# the stand-in crouch change clips have no arm layers for any weapon: the bow's take the standing idle's (AnimGraphData)
+		"crouch_change": {
+			"bow/crouch_to_stand": {"layers_of": "bow/run/idle", "why": "and through the change up"},
+			"bow/stand_to_crouch": {"layers_of": "bow/run/idle", "why": "the bow stays where it is through the change down: the standing idle's layers"}},
 		"rules": [
 			{"why": "the spear sprints and crouches with the felling axe's carry: its arm and its grip (user 2026-09-30: \"hold it like the fell axe\"); its idle keeps the javelin carry",
 			"weapon": "spear", "modes": ["sprint"], "roles_except": ["idle"], "roles_only": MOVE_ROLES, "slots": ["arms", "hands"], "layers": [grip_layer, axe_layer]},
@@ -263,6 +267,8 @@ func _write_carry_patches(axe_bones: Array, grip_bones: Array, low_bones: Array,
 			"weapon": "pistol", "modes": ["sprint"], "roles_except": [], "roles_only": ["fw", "fw_lt", "fw_rt", "bw", "bw_lt", "bw_rt", "start_fw", "start_fw_lt", "start_fw_rt", "start_bw", "start_bw_lt", "start_bw_rt", "rev_bw_fw", "rev_bw_fw_lt", "rev_bw_fw_rt", "rev_fw_bw", "rev_fw_bw_lt", "rev_fw_bw_rt", "turn_l", "turn_r", "turn_l_180", "turn_r_180", "quick_turn_180"], "append": true, "layers": [pistol_idle_arm]},
 			{"why": "the tomahawk crouches like the pistol (user 2026-09-30): the pistol's crouch arm on every role",
 			"weapon": "tomahawk", "modes": ["crouch"], "roles_except": [], "slots": ["arms", "arms_add"], "copy_from": "pistol"},
+			{"why": "the bow's crouch idle holds it as the standing idle does (user 2026-09-30: \"we just keep the bow where its at\"): the standing idle's arm and hand layers",
+			"weapon": "bow", "modes": ["crouch"], "roles_except": [], "roles_only": ["idle"], "slots": ["arms", "hands"], "copy_from": "bow", "copy_mode": "run"},
 		],
 	}
 	var f := FileAccess.open(CARRY_PATCHES, FileAccess.WRITE)

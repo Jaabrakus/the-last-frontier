@@ -55,6 +55,14 @@ extends SkeletonModifier3D
 ## (test_aim_pitch reports it). The yaw part turns the torso against the legs in AIM_IDLE.
 @export var trim_max_yaw_deg := 25.0
 @export var trim_max_pitch_deg := 12.0
+## Roll of the trim bone (the weapon's prop bone) about its barrel axis, degrees (x the modifier weight): the bow's aim takes the
+## slant of its idle hold with the arms as they are (UpperBody sets it).
+var prop_roll_deg := 0.0
+## A held weapon's prop bone in a fixed skeleton-space rotation, faded in by carry_prop_w (UpperBody: the bow carried crouched
+## keeps the standing hold's angle whatever the crouched torso does; the hand stays where the pose puts it).
+var carry_prop_bone := &""
+var carry_prop_q := Quaternion.IDENTITY
+var carry_prop_w := 0.0
 ## How fast the closed-loop residual follows (deg/s).
 @export var trim_rate_deg_s := 60.0
 
@@ -158,6 +166,7 @@ func _process_modification() -> void:
 	if w <= 0.0:
 		_last_applied = 0.0
 		_applied = Vector2.ZERO
+		_apply_carry_prop(sk)
 		return
 	var c := (sk.get_bone_pose_rotation(_root).inverse() * aim_root_q).normalized()
 	_last_c = PoseMath.angle(c)
@@ -178,6 +187,24 @@ func _process_modification() -> void:
 		_apply_trim(sk, w)
 	else:
 		_applied = Vector2.ZERO
+	if absf(prop_roll_deg) > 1e-3 and trim_bone != &"":
+		var rb := sk.find_bone(String(trim_bone))
+		if rb >= 0:
+			sk.set_bone_pose_rotation(rb, (sk.get_bone_pose_rotation(rb) * Quaternion(Vector3.BACK, deg_to_rad(prop_roll_deg) * w)).normalized())
+	_apply_carry_prop(sk)
+
+
+func _apply_carry_prop(sk: Skeleton3D) -> void:
+	var cw := clampf(carry_prop_w, 0.0, 1.0)
+	if cw <= 1e-4 or carry_prop_bone == &"":
+		return
+	var pb := sk.find_bone(String(carry_prop_bone))
+	var par := sk.get_bone_parent(pb) if pb >= 0 else -1
+	if par < 0:
+		return
+	var pg := sk.get_bone_global_pose(par).basis.get_rotation_quaternion()
+	var cur := sk.get_bone_pose_rotation(pb)
+	sk.set_bone_pose_rotation(pb, cur.slerp((pg.inverse() * carry_prop_q).normalized(), cw).normalized())
 
 
 ## Yaw about +Y and pitch about the horizontal axis across the barrel, about the root origin.

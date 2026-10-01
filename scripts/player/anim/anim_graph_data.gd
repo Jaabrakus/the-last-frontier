@@ -78,6 +78,7 @@ static func load_files(p_graph := GRAPH_PATH, p_metrics := METRICS_PATH) -> Anim
 	if p_graph == GRAPH_PATH:
 		d.apply_clip_overrides()
 		d.apply_carry_patches()
+		d.apply_aim_idle_poses()
 	d.graph_path = p_graph
 	d.metrics_path = p_metrics
 	if p_metrics != "" and m.is_empty():
@@ -103,6 +104,48 @@ static func from_dicts(g: Dictionary, m := {}) -> AnimGraphData:
 ## Drops the parsed-JSON cache (the files are re-read on the next load_files()).
 static func clear_cache() -> void:
 	_json_cache.clear()
+
+
+## The crouched aim idle of the bow, the rifle and the pistol is one frozen frame (user 2026-09-30): the upper body of the aim
+## clip in AIM_IDLE_POSES (the bow's own hunched crouch aim; the rifle's and the pistol's crouched aim walk, forward) over
+## the legs and hips of the crouch-to-stand change frozen a little past halfway up (root 0.69 m, between the crouch's 0.37
+## and the stand's 0.88). The legs keep their own facing; only the torso takes the aim's (AimIdlePose). The aim tree's base
+## samples it (TreeBuilder._aim_base_clip); the barrel tables of the new poses are in AIM_IDLE_PITCH_PATH
+## (tools/anim_author/measure_aim_idle_trim.gd).
+const AIM_IDLE_POSES := {"bow/crouch": "actor_b-p-bow-aim-crouch-idle", "musket/crouch": "actor_b-p-rifle-aim-crouch-walk-fw",
+		"pistol/crouch": "actor_b-p-pistol-aim-crouch-walk-fw"}
+const AIM_IDLE_S := 0.45   ## s into the aim clip the upper body is taken
+const AIM_IDLE_PITCH_PATH := "res://data/anim_author/aim_idle_pitch.json"
+const AIM_IDLE_LEGS := "actor_b-p-crouch^stand--base"
+const AIM_IDLE_LEGS_S := 0.45
+const AIM_IDLE_LIFT := 0.0
+
+
+func apply_aim_idle_poses() -> void:
+	if not graph.has("aim_trees"):
+		return
+	graph = graph.duplicate(false)
+	graph["aim_trees"] = (graph.aim_trees as Dictionary).duplicate(false)
+	for k: String in AIM_IDLE_POSES:
+		if not graph.aim_trees.has(k) or not (graph.aim_trees[k] as Dictionary).get("base") is Dictionary:
+			continue
+		var at: Dictionary = (graph.aim_trees[k] as Dictionary).duplicate(false)
+		var base: Dictionary = (at.base as Dictionary).duplicate(false)
+		base["sample_clip"] = AIM_IDLE_POSES[k]
+		base["sample_s"] = AIM_IDLE_S
+		base["legs_clip"] = AIM_IDLE_LEGS
+		base["legs_s"] = AIM_IDLE_LEGS_S
+		base["lift"] = AIM_IDLE_LIFT
+		at["base"] = base
+		graph.aim_trees[k] = at
+	# The barrel tables of the new pose in place of the old base's (measure_aim_idle_trim.gd).
+	var tables: Dictionary = _read_json(AIM_IDLE_PITCH_PATH).get("tables", {})
+	if tables.is_empty():
+		return
+	metrics = metrics.duplicate(false)
+	metrics["pitch"] = (metrics.get("pitch", {}) as Dictionary).duplicate(false)
+	for k: String in tables:
+		metrics.pitch[k] = tables[k]
 
 
 ## Our own clips in place of some of the graph's (CLIP_OVERRIDES_PATH: the jog): the clip's library path, its travel
@@ -247,6 +290,20 @@ func apply_carry_patches() -> void:
 				layers.insert(at + i, put[i])
 			role["layers"] = layers
 			graph.roles[key] = role
+	# the stand-in crouch change clips (no arm layers in the graph, for any weapon) take the arm and hand layers of a role of
+	# ours: the bow keeps its hold through the change (user 2026-09-30: "we just keep the bow where its at")
+	var changes: Dictionary = t.get("crouch_change", {})
+	if not changes.is_empty():
+		graph["crouch_change"] = (graph.get("crouch_change", {}) as Dictionary).duplicate(false)
+		for key: String in changes:
+			var e: Dictionary = (graph.crouch_change.get(key, {}) as Dictionary).duplicate(false)
+			if e.is_empty() or not graph.roles.has(String(changes[key].layers_of)):
+				continue
+			var full: Dictionary = (e.get("full", {}) as Dictionary).duplicate(false)
+			full["layers"] = (graph.roles[String(changes[key].layers_of)].get("layers", []) as Array).duplicate(false)
+			e["full"] = full
+			graph.crouch_change[key] = e
+
 
 
 ## Libraries the overriding clips live in: name -> resource path.

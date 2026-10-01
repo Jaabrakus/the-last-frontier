@@ -11,9 +11,8 @@ extends AnimTestSuite
 ##     crosshair, replacing the per-weapon aim_yaw / aim_pitch offsets) the barrel direction is
 ##     within 2.5 deg of the muzzle -> crosshair direction (plan threshold), also for a 4 m target;
 ##   - the trim's pitch part stays small (the additives do the pitch; <= 4 deg);
-##   - the crouched bow is held sideways (the prop's up axis 90 +- 10 deg from vertical about the
-##     arrow, from actor_b-p-bow-aim-crouch-idle), the standing bow near upright (< 35 deg, the
-##     authored cant), the firearms upright (< 15 deg);
+##   - the bow, standing and crouched, is held at the idle hold's slant (the prop's up axis 62 +- 10 deg
+##     from vertical about the arrow: UpperBody's bow roll), the firearms upright (< 15 deg);
 ##   - blocked (graph C8+172): an obstacle closer than half the weapon's length drives the
 ##     blocked pose to 1 within 0.6 s and turns the trim off (trim weight 1 - blocked);
 ##   - beyond the plan's range (the camera allows +-80 deg, player.gd pitch_limit_deg): with the
@@ -98,10 +97,9 @@ func run(ctx: AnimTestContext) -> void:
 			h.step(12)
 			await h.frame()
 			var cant := _cant(h, w)
-			if w == "bow" and st == "crouch":
-				ctx.near(absf(cant), 90.0, 10.0, "bow/crouch held sideways: cant (deg) %.1f" % cant)
-			elif w == "bow":
-				ctx.at_most(absf(cant), 35.0, "bow/stand held near upright (the authored archer's cant; today's game 13-20 deg): |cant| (deg)")
+			if w == "bow":
+				# (user 2026-09-30: the aimed bow takes the idle hold's slant, 62 deg from upright, standing and crouched)
+				ctx.near(absf(cant), 62.0, 10.0, "bow/%s held at the idle hold's slant: cant (deg) %.1f" % [st, cant])
 			else:
 				ctx.at_most(absf(cant), 15.0, "%s/%s held upright: |cant| (deg)" % [w, st])
 			# Near target (4 m, lever arm of the muzzle): still on the crosshair with the trim.

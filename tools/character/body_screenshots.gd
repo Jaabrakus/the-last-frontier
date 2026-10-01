@@ -73,7 +73,7 @@ const CLOSE_VIEWS := [["front", Vector3(0, 0.1, 1)], ["left", Vector3(1, 0.1, 0)
 ## Game scenarios, run in order by _scenario().
 ## Reloads come last: they leave the firearms mid-reload, which blocks aiming.
 const SCENARIOS := ["idle", "walk", "run", "sprint", "crouch_walk", "musket_aim",
-		"crouch_musket_aim", "pistol_aim", "bow_draw", "musket_reload", "pistol_reload"]
+		"crouch_musket_aim", "bow_stance_change", "crouch_bow_aim", "bow_aim_then_crouch", "pistol_aim", "bow_draw", "musket_reload", "pistol_reload"]
 ## Game views: [name, offset in the character's frame (+Z = the way it faces), focus]
 ## focus: "hips" (orbit), "chest" (spined), "knees" (between hips and knees), "nape" (neck).
 const VIEWS := [["front", Vector3(0.0, 0.25, 4.4), "hips"], ["side", Vector3(4.4, 0.25, 0.0), "hips"],
@@ -239,6 +239,12 @@ func _state(player: FrontierPlayer, s: String) -> Array:
 		"musket_aim", "crouch_musket_aim":
 			ok = player.weapon_key == "musket" and aim >= 0.99 and v < 0.1 \
 					and player.is_crouching == s.begins_with("crouch")
+		"bow_aim_then_crouch":
+			ok = player.weapon_key == "bow" and aim >= 0.99 and v < 0.1 and player.is_crouching
+		"crouch_bow_aim":
+			ok = player.weapon_key == "bow" and aim >= 0.99 and v < 0.1 and player.is_crouching
+		"bow_stance_change":
+			ok = player.weapon_key == "bow" and v < 0.1
 		"pistol_aim":
 			ok = player.weapon_key == "pistol" and aim >= 0.99 and v < 0.1
 		"bow_draw":
@@ -292,6 +298,22 @@ func _scenario(player: FrontierPlayer, s: String) -> Array:
 				await _tap_now("crouch")
 			await _physics(40)
 			Input.action_press("aim")
+		"bow_aim_then_crouch":
+			player.switch_weapon("bow")
+			await _physics(60)
+			Input.action_press("fire")
+			await _physics(60)
+			await _tap_now("crouch")
+			await _physics(180)
+		"crouch_bow_aim":
+			player.switch_weapon("bow")
+			await _tap_now("crouch")
+			await _physics(60)
+			Input.action_press("fire")
+		"bow_stance_change":
+			player.switch_weapon("bow")
+			await _physics(60)
+			await _tap_now("crouch")
 		"pistol_aim":
 			player.switch_weapon("pistol")
 			await _physics(40)

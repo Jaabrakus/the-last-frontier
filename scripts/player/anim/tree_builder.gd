@@ -85,6 +85,7 @@ extends RefCounted
 ## The baked difference clips (library frontier_bank) are derived from the source clips and carry
 ## their source_attribution and native_asset_id in their metadata.
 
+const AIM_IDLE_POSE := preload("res://scripts/player/anim/aim_idle_pose.gd")
 const NONE := &"frontier/none"
 ## The weapon prop bones (the weapon models hang off them, BoneAttachment3D). An action partial
 ## (X) leaves them out of its filter, so the tree's pose of these bones is the pose under the
@@ -482,7 +483,7 @@ func _aimidle_specs() -> Array:
 			if lw != w:
 				var joined := false
 				for ls: Dictionary in specs:
-					if ls.id == "aimidle__%s__%s" % [lw, st] and ls.clip == String(base.clip) \
+					if ls.id == "aimidle__%s__%s" % [lw, st] and ls.clip == _aim_base_clip(base) \
 							and JSON.stringify(ls.layers[lw]) == JSON.stringify(_layers(base)):
 						ls.keys.append("%s/%s/aimidle" % [w, st])
 						ls.weapons.append(w)
@@ -491,10 +492,42 @@ func _aimidle_specs() -> Array:
 				if joined:
 					continue
 			specs.append({"kind": "single", "group": "aimidle", "modes": data.modes_of_stance(st), "weapons": [w],
-					"keys": ["%s/%s/aimidle" % [w, st]], "clip": String(base.clip), "loop": bool(base.get("loop", true)),
+					"keys": ["%s/%s/aimidle" % [w, st]], "clip": _aim_base_clip(base), "loop": bool(base.get("loop", true)),
 					"layers": {w: _layers(base)}, "order": order, "id": "aimidle__%s__%s" % [w, st], "own_weapon": true})
 			order += 1
 	return specs
+
+
+## The clip an aim tree's base plays: the base's own, or (`sample_clip`, AnimGraphData.apply_aim_idle_poses) one frame
+## held: the arms and body of the crouched aim walk over the legs and hips of the plain crouch walk (`legs_clip`), which
+## is what the aimed crouch walk shows (options.aim_walk off: the aim walk plays the move bank).
+func _aim_base_clip(base: Dictionary) -> String:
+	var src := String(base.get("sample_clip", ""))
+	var legs := String(base.get("legs_clip", ""))
+	if src == "" or legs == "" or not _has(src) or not _has(legs):
+		return String(base.clip)
+	var src_s := float(base.get("sample_s", 0.0))
+	var legs_s := float(base.get("legs_s", 0.0))
+	var lift := float(base.get("lift", 0.0))
+	var key := "aimidle__%s__%d__%s__%d__%d__%s" % [clip_key(data.resolve_alias(src)), roundi(src_s * 1000.0),
+			clip_key(data.resolve_alias(legs)), roundi(legs_s * 1000.0), roundi(lift * 1000.0),
+			"v2"]
+	var name := POSE_PREFIX + key
+	if _pose_names.has(name):
+		return name
+	if _bank_lib == null:
+		_bank_lib = _bank_library()
+	if not _bank_lib.has_animation(StringName(key)):
+		var b2 := base.duplicate(false)
+		var ub := sk.find_bone("upper_base") if sk != null else -1
+		if ub >= 0:
+			b2["upper_base_rest"] = sk.get_bone_rest(ub)
+		var pose: Animation = AIM_IDLE_POSE.from_base(b2, func(c: String) -> Animation: return ap.get_animation(_godot(c)),
+				data.bone_set("lower"))
+		pose.loop_mode = Animation.LOOP_NONE
+		_bank_lib.add_animation(StringName(key), pose)
+	_pose_names[name] = StringName(name)
+	return name
 
 
 ## Aim-walk banks (graph aim-run-forward / aim-run-backward; options.aim_walk, WP10).
@@ -1093,7 +1126,7 @@ func _build_aim(root: AnimationNodeBlendTree, top: String) -> String:
 				continue
 			var id := "A__%s__%s" % [w, st]
 			var bt := AnimationNodeBlendTree.new()
-			var base_clip := String(base.clip)
+			var base_clip := _aim_base_clip(base)
 			bt.add_node("base", _anim(base_clip, "norm", true))
 			var t := "base"
 			var rec := {"input": id, "node": id, "clips": {"base": base_clip}, "length": _length(base_clip)}
