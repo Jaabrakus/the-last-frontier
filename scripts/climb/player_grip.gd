@@ -36,8 +36,6 @@ enum { OFF, GRAB, HOLD, UP, STAND, FAIL }
 
 const LIB := "actor_b_from_c"
 const PRE := "actor_c-"
-## Crouched on a branch the camera turns this far (rad) either side of the branch's way out, not round into the trunk.
-const PERCH_YAW := 2.0
 ## Space held this long jumps off a branch (a tap does nothing: no falling off by mistake).
 const PERCH_JUMP_S := 0.35
 ## The weapons one hand can use while the other holds on (user 2026-09-27: "for hanging i think being able to shoot
@@ -1284,12 +1282,8 @@ func _perch_tick(dt: float) -> bool:
 	var aiming := player.weapon != null and player.weapon.aim > 0.3
 	if not aiming:
 		stamina = move_toward(stamina, stamina_max, perch_regain * dt)
-	# (not round into the trunk: the camera would be in it, the shots too)
-	var look := Vector3(-sin(player.yaw), 0.0, -cos(player.yaw))
-	var ang := _perch_dir.signed_angle_to(look, Vector3.UP)
-	if absf(ang) > PERCH_YAW:
-		var f := _perch_dir.rotated(Vector3.UP, clampf(ang, -PERCH_YAW, PERCH_YAW))
-		player.yaw = atan2(-f.x, -f.z)
+	# (the look is free on a branch: all the way round to face the trunk, or back along the branch; user 2026-10-01 "allow them to
+	# turn towards the trunk or free the look". The camera's spring arm keeps out of the bark and a shot at it hits the bark)
 	if player.controls.just_pressed(&"grip"):
 		return _leave_perch()
 	_jump_hold = _jump_hold + dt if player.controls.pressed(&"jump") else 0.0

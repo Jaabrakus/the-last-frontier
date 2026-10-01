@@ -4,7 +4,7 @@ extends SceneTree
 ##   grab     G facing the trunk grabs it (the trunks are GripSurface "bark")
 ##   up       W climbs the bare trunk to where the crown starts (the collider's top): no pulling up onto the trunk's
 ##            top, the climber pulls up onto a branch there and crouches on it (PerchBranches)
-##   perch    the move keys and a tap of Space keep the climber on the branch; the grip refills there; the player's
+##   perch    the look is free (it turns all the way round to the trunk); the move keys and a tap of Space keep the climber on the branch; the grip refills there; the player's
 ##            own weapon is in hand and aims (the camera in nearer, the body faded); G again takes hold of the trunk
 ##   round    D crawls round the trunk, staying on its bark
 ##   down     S climbs down; near the ground the climber lets go and drops onto it
@@ -161,6 +161,12 @@ func _climb() -> void:
 		Input.action_release("jump")
 		await _fr(60)
 		_expect(g.perched and p.global_position.distance_to(spot) < 0.15, "perch: the move keys and a tap of Space keep it on the branch (moved %.2f m)" % p.global_position.distance_to(spot))
+		# the look is free on the branch: round to face the trunk (the way back along the branch's way out) and it stays
+		var toward: Vector3 = -g._perch_dir
+		p.yaw = atan2(-toward.x, -toward.z)
+		await _fr(30)
+		var seen := Vector3(-sin(p.yaw), 0.0, -cos(p.yaw))
+		_expect(g.perched and seen.dot(toward) > 0.98, "perch: the look can turn all the way round to face the trunk (%.2f)" % seen.dot(toward))
 		# resting, and a weapon in hand works there
 		Input.action_release("grip")
 		g.stamina = 30.0
