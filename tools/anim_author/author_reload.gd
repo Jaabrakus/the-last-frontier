@@ -33,6 +33,10 @@ extends SceneTree
 ##            views of the pose at those moments (seconds into the reload, 0 .. 6.3), with the musket and its ramrod;
 ##            each moment's views in <out>/r_<k>_<view>.png; per moment the gun's lowest point, how far each hand is
 ##            from where it was sent and how far the right one reaches from its shoulder; focus=r|l: close on that hand
+##   film:    Godot --path . -s tools/anim_author/author_reload.gd -- film out=<abs dir> [stance=crouch] [fps=15] [ram=...]
+##            [views=front,right,back,left]
+##            the whole reload as the bake makes it (the plan, the solve, the arms cleaned), played on the character
+##            frame by frame: <out>/f_<n>_<front|right>.png
 ##   bake:    Godot --headless --path . -s tools/anim_author/author_reload.gd -- bake
 ##            both stances' five steps into animations_extra/Frontier_Own.res beside the clips there (STEPS' names and
 ##            their "-crouch" twins), 30 fps, with the ramrod's place (tracks "Props:ramrod": position and rotation in
@@ -119,19 +123,32 @@ const GAME := {
 const LOOK := {
 	"stand": {"prime": [Vector3(-0.14, 1.08, 0.2), Vector3(0.3, 0.5, 0.81), Vector3(-0.3, 1.0, 0.0)],
 		"cast": [Vector3(0.0, 0.8, 0.34), Vector3(0.05, 1.0, 0.05)],
-		"ram": [Vector3(-0.04, 1.22, 0.26), Vector3(-0.703, 0.643, -0.301), Vector3(0.0, 0.3, 1.0)],
+		# (user 2026-10-01, a test: the gun front to back like the spear, "drop the stock to the ground": on the left side,
+		# the butt on the ground behind, the muzzle up before the chest; it was [(-0.04, 1.22, 0.26), (-0.703, 0.643, -0.301)],
+		# slanted across the front with the butt out to the front left)
+		# (then "stick the left hand out a little": the gun, and the left hand on it, 8 cm further out to the left; then the
+		# hands' work swapped, "the right does the primer, then pulls it back in the left position but mirrored for the
+		# right, and then the left hand does the ramrod": the same place mirrored to the right side)
+		# (the left arm, crossing over, could not reach the rod 0.4 m up from a muzzle out at the right side, 20-29 cm short:
+		# the muzzle 14 cm right of the middle and leaned in toward the left hand, the butt out behind on the right, clear
+		# of the hip; the chest turned toward it, "chest" below)
+		"ram": [Vector3(-0.14, 1.18, 0.3), Vector3(0.258, 0.724, 0.639), Vector3(0.0, 0.3, 1.0)],
 		"up": [Vector3(-0.06, 0.86, 0.36), Vector3(0.18, 0.98, -0.05), Vector3(-1.0, 0.18, 0.0)],
 		"pouch": Vector3(-0.21, 0.97, 0.02),
-		"chest_prime": [-12.0, 8.0], "chest": [6.0, 4.0], "chest_up": [0.0, 6.0], "head": 0.0, "bar": -1.1,
+		"chest_prime": [-12.0, 8.0], "chest": [-20.0, 6.0], "chest_up": [0.0, 6.0], "head": 0.0, "bar": -1.1,
 		"bar_low": -0.7},
 	# (crouched: the muzzle at the shoulder as standing, so the gun flatter, its butt just off the ground: user
 	# 2026-09-28 "crouch reload gun needs to be lower")
 	"crouch": {"prime": [Vector3(-0.12, 0.6, 0.16), Vector3(0.5, 0.25, 0.8), Vector3(-0.3, 1.0, 0.0)],
 		"cast": [Vector3(0.0, 0.42, 0.32), Vector3(0.05, 1.0, 0.04)],
-		"ram": [Vector3(-0.02, 0.84, 0.3), Vector3(-0.8, 0.45, -0.4), Vector3(0.0, 0.3, 1.0)],
+		# (the test above, crouched: it was [(-0.02, 0.84, 0.3), (-0.8, 0.45, -0.4)])
+		# (then "the crouch we can lower, and the left hand": 10 cm lower and further out; "a little more": 8 cm more;
+		# then mirrored to the right side, as standing)
+		# (and leaned in toward the left hand, as standing)
+		"ram": [Vector3(-0.1, 0.78, 0.1), Vector3(0.22, 0.472, 0.853), Vector3(0.0, 0.3, 1.0)],
 		"up": [Vector3(-0.06, 0.42, 0.34), Vector3(0.12, 0.98, 0.06), Vector3(-1.0, 0.1, 0.0)],
 		"pouch": Vector3(-0.26, 0.44, -0.1),
-		"chest_prime": [-12.0, 24.0], "chest": [6.0, 20.0], "chest_up": [0.0, 28.0], "head": 0.0, "bar": -1.16,
+		"chest_prime": [-12.0, 24.0], "chest": [-16.0, 20.0], "chest_up": [0.0, 28.0], "head": 0.0, "bar": -1.16,
 		"bar_low": -0.5,
 		"butt": true},
 }
@@ -149,6 +166,8 @@ var FORESTOCK := Transform3D()
 ## back (the model's frame; the fist's +Y up the barrel).
 var BARREL_GRIP := Vector3.ZERO
 var BARREL_LOW := Vector3.ZERO
+## Where the right fist holds the barrel while the left hand works the ramrod: below the left's grip (the model's frame).
+var BARREL_GRIP_R := Vector3.ZERO
 var POUCH := Vector3.ZERO
 var MOUTH := Vector3.ZERO             ## body space, at the bite
 var HIPS := {}                       ## the pose's "hips": the game's root for the stance
@@ -170,6 +189,8 @@ func _initialize() -> void:
 		args[s.get_slice("=", 0)] = s.substr(s.find("=") + 1) if "=" in s else true
 	if args.has("bake"):
 		await _bake()
+	elif args.has("film"):
+		await _film()
 	else:
 		await _preview()
 	quit()
@@ -201,16 +222,36 @@ func _stance(solver, st: String) -> void:
 	var pr: Array = lk.prime
 	G_PRIME = gun_x(pr[0], pr[1], pr[2])
 	var rm: Array = lk.ram
+	if args.has("ram"):
+		# (a trial loading place: ram=mx,my,mz,dx,dy,dz, the muzzle and its way)
+		var v := str(args.ram).split(",")
+		rm = [Vector3(float(v[0]), float(v[1]), float(v[2])), Vector3(float(v[3]), float(v[4]), float(v[5])),
+				Vector3(float(v[6]), float(v[7]), float(v[8])) if v.size() >= 9 else rm[2]]
 	var g := gun(Vector3.ZERO, rm[1], rm[2])
 	g.origin = (rm[0] as Vector3) - g.basis * MUZZLE
 	G_RAM = g
+	# the stock swung back (user 2026-10-01: "angle the stock back" so it does not stick out in front during the reload,
+	# the left hand kept where it is, "like a ball joint"): the slanted gun turned about the left fist's grip on the barrel,
+	# about the upright, by stock_back degrees (the butt from out in front round to the left, then behind)
+	var sb := float(args.get("stock_back", lk.get("stock_back", 0.0)))
+	if str(args.get("parallel", lk.get("parallel", false))) in ["true", "True", "1"]:
+		# (user 2026-10-01: "the musket parallel to the user", the hands where they are: the gun across the body in its
+		# side-to-side plane, the butt straight out to the left rather than out in front; the turn that takes the butt's
+		# horizontal way onto the left)
+		var bz := G_RAM.basis.z
+		sb = rad_to_deg(atan2(bz.z, bz.x))
+	if absf(sb) > 1e-3:
+		var piv := G_RAM * Vector3(0.0, 0.0, float(args.get("bar", lk.bar)))
+		var turn := Basis(Vector3.UP, deg_to_rad(sb))
+		G_RAM = Transform3D(turn * G_RAM.basis, piv + turn * (G_RAM.origin - piv))
 	var ca: Array = lk.cast
 	var mid := Basis(G_PRIME.basis.get_rotation_quaternion().slerp(G_RAM.basis.get_rotation_quaternion(), 0.5))
 	G_CAST = gun(ca[0], ca[1], mid.y)
 	var up: Array = lk.up
 	G_UP = gun(up[0], up[1], up[2])
-	BARREL_GRIP = Vector3(0.0, 0.0, float(lk.bar))
+	BARREL_GRIP = Vector3(0.0, 0.0, float(args.get("bar", lk.bar)))
 	BARREL_LOW = Vector3(0.0, 0.0, float(lk.bar_low))
+	BARREL_GRIP_R = Vector3(0.0, 0.0, float(args.get("bar_r", lk.get("bar_r", float(lk.bar) + 0.2))))
 	POUCH = lk.pouch
 	var rest: Dictionary = solver.rest
 	# the right fist is the torch's (the knife attack HandHolds lays under the torch hold, its first key): a hammer grip
@@ -229,6 +270,8 @@ func _stance(solver, st: String) -> void:
 	HIPS = {"pos": _a((root[0] as Vector3) - rr.origin), "yaw": ha[0], "pitch": ha[1], "roll": ha[2]}
 	var cp: Array = lk.chest_prime
 	var ch: Array = lk.chest
+	if args.has("chest"):
+		ch = Array(str(args.chest).split(",")).map(func(x: String) -> float: return float(x))
 	var cu: Array = lk.chest_up
 	CHEST_PRIME = Solver.euler(float(cp[0]), float(cp[1]), 0.0)
 	CHEST_RAM = Solver.euler(float(ch[0]), float(ch[1]), 0.0)
@@ -448,7 +491,8 @@ func _held(side: String, prop: Transform3D) -> Array:
 	return [h.origin, h.basis.y.normalized(), -h.basis.z]
 
 
-## The right hand on the ramrod, thumb down the barrel; once it is home, where it let go of it.
+## A hand on the ramrod (the left, since the hands' work was swapped), thumb down the barrel; once it is home, where it let
+## go of it.
 func _rod() -> Callable:
 	return func(t: float) -> Array:
 		var at: Variant = rod_at(t)[1]
@@ -480,12 +524,14 @@ func _fore_at(z: float) -> Callable:
 ## wrist_neutral), a little toward the carry's turn (`keep`: how much). The carry's grip slid up the barrel held it 40
 ## degrees off the barrel's line and folded the hand back off the forearm (the user 2026-09-29: "the wrist still
 ## bends in weird ways, not natural").
-func _barrel(z: float, keep: float) -> Callable:
+func _barrel(z: float, keep: float, side := "l") -> Callable:
 	return func(t: float) -> Array:
 		var g := gun_at(t)
 		var way := (g.basis * Vector3(0.0, 0.0, -1.0)).normalized()
-		var carry: Vector3 = _fore_at(z).call(t)[2]
-		var edge := (carry - way * carry.dot(way)).normalized() * keep
+		var edge := Vector3.ZERO
+		if side == "l":
+			var carry: Vector3 = _fore_at(z).call(t)[2]
+			edge = (carry - way * carry.dot(way)).normalized() * keep
 		return [g * Vector3(0.0, BARREL_Y, z), way, edge]
 
 
@@ -518,15 +564,18 @@ func _tracks() -> void:
 		[2.36, _on_gun(MUZZLE + Vector3(0, 0.0, -0.09), down)], [2.55, _on_gun(MUZZLE + Vector3(0, 0.01, -0.1), down)],
 		[2.75, _on_gun(MUZZLE + Vector3(0, 0.0, -0.09), down)],
 		[2.9, _on_gun(MUZZLE + Vector3(0, 0.0, -0.1), down)], [3.17, _on_gun(MUZZLE + Vector3(0, 0.0, -0.04), down)],
-		# the ramrod's head taken and the rod worked, home again
-		[DRAW_FROM, _rod()], [ROD_HOME, _rod()],
-		# let go: down to the wrist of the stock as the gun comes up (full cock 6.11)
-		[RET_UP + 0.02, _grip()], [TOTAL, _grip()],
+		# (user 2026-10-01: the hands' work swapped for the ramrod) down the barrel to hold the gun, below the left hand,
+		# which takes the ramrod; it raises the gun upright as the rod goes home, and goes back to the wrist of the stock
+		# for the carry (full cock 6.11)
+		[DRAW_FROM, _barrel(BARREL_GRIP_R.z, 0.0, "r")], [RET_FROM, _barrel(BARREL_GRIP_R.z, 0.0, "r")],
+		[RET_UP, _barrel(BARREL_LOW.z, 0.0, "r")], [RET_AT, _grip()], [TOTAL, _grip()],
 	]
 	_left = [
 		[0.0, _fore()], [CAST_FROM + 0.24, _fore()],
-		[CAST_AT, _barrel(BARREL_GRIP.z, 0.15)], [RET_FROM, _barrel(BARREL_GRIP.z, 0.15)],
-		[RET_UP, _barrel(BARREL_LOW.z, 0.5)], [RET_AT, _fore()], [TOTAL, _fore()],
+		# the barrel held under the muzzle while the right hand pours; then the ramrod's head taken (it is at the hand),
+		# the rod worked and pushed home; back to the forestock for the carry
+		[CAST_AT, _barrel(BARREL_GRIP.z, 0.15)], [3.17, _barrel(BARREL_GRIP.z, 0.15)],
+		[DRAW_FROM, _rod()], [ROD_HOME, _rod()], [RET_AT, _fore()], [TOTAL, _fore()],
 	]
 
 
@@ -713,6 +762,119 @@ func _preview() -> void:
 	print("RELOAD PREVIEW %s %d moments -> %s" % [stance, moments.size(), out])
 
 
+# --- film ------------------------------------------------------------------------------------------------------------
+
+func _film() -> void:
+	var out := str(args.get("out", "user://reload_film"))
+	DirAccess.make_dir_recursive_absolute(out)
+	var world := Node3D.new()
+	root.add_child(world)
+	var env := WorldEnvironment.new()
+	var e := Environment.new()
+	e.background_mode = Environment.BG_COLOR
+	e.background_color = Color(0.55, 0.62, 0.68)
+	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	e.ambient_light_color = Color(0.7, 0.72, 0.75)
+	e.ambient_light_energy = 0.6
+	env.environment = e
+	world.add_child(env)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-50, -30, 0)
+	sun.light_energy = 1.3
+	world.add_child(sun)
+	var floor := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(20, 20)
+	floor.mesh = pm
+	var fm := StandardMaterial3D.new()
+	fm.albedo_color = Color(0.62, 0.56, 0.45)
+	floor.material_override = fm
+	world.add_child(floor)
+	var ch := _character()
+	var sk: Skeleton3D = ch[1]
+	await process_frame
+	await process_frame
+	var solver = Solver.new(sk)
+	solver.hold = "musket"
+	solver.wrist_neutral = true
+	solver.neutral_tilt = {"r": true}
+	var st := str(args.get("stance", "stand"))
+	_stance(solver, st)
+	# the clips as the bake makes them
+	solver.reset_neutral(true)
+	solver.neutral_mode = "collect"
+	var tc := 0.0
+	for s: Array in STEPS:
+		for f in int(round(float(s[1]) * FPS)) + 1:
+			solver.pose(pose_at(tc + minf(float(f) / FPS, float(s[1])))[0])
+		tc += float(s[1])
+	solver.plan_neutral()
+	solver.neutral_mode = "replay"
+	solver.reset_neutral()
+	var chain := Swings._chain_bones(sk)
+	var clips: Array = []
+	var t0 := 0.0
+	for s: Array in STEPS:
+		clips.append([t0, float(s[1]), _bake_step(solver, sk, chain, "Skeleton3D", t0, float(s[1]))])
+		t0 += float(s[1])
+	var musket := WeaponModels.build("musket")
+	world.add_child(musket)
+	var rod := musket.find_child("Ramrod", true, false) as Node3D
+	var view = OffscreenView.new()
+	root.add_child(view)
+	view.setup(root, Vector2i(360, 440))
+	var cam: Camera3D = view.camera
+	cam.fov = 40.0
+	await process_frame
+	var fps := float(args.get("fps", 15.0))
+	var up := 0.6 if stance == "crouch" else 1.1
+	var n := int(round(TOTAL * fps))
+	for k in n + 1:
+		var t := minf(float(k) / fps, TOTAL)
+		var c: Array = clips[clips.size() - 1]
+		for cc: Array in clips:
+			if t <= float(cc[0]) + float(cc[1]) + 1e-4:
+				c = cc
+				break
+		var a: Animation = c[2]
+		var lt := clampf(t - float(c[0]), 0.0, a.length)
+		for ti in a.get_track_count():
+			var path := String(a.track_get_path(ti))
+			if not path.begins_with("Skeleton3D:"):
+				continue
+			var b := sk.find_bone(path.get_slice(":", 1))
+			if b < 0:
+				continue
+			if a.track_get_type(ti) == Animation.TYPE_ROTATION_3D:
+				sk.set_bone_pose_rotation(b, a.rotation_track_interpolate(ti, lt))
+			elif a.track_get_type(ti) == Animation.TYPE_POSITION_3D:
+				sk.set_bone_pose_position(b, a.position_track_interpolate(ti, lt))
+		sk.force_update_all_bone_transforms()
+		var prop := _fk_pose(sk, sk.find_bone("r_hand_prop_attachment"))
+		musket.global_transform = sk.global_transform * prop * Solver.MUSKET
+		if rod:
+			rod.transform = rod_at(t)[0]
+		for side: String in str(args.get("views", "front,right")).split(","):
+			var base := Vector3(0.05, up, 0.15)
+			var off: Vector3 = {"front": Vector3(-1.1, 0.35, 2.3), "right": Vector3(-2.5, 0.3, 0.6),
+					"back": Vector3(1.0, 0.35, -2.3), "left": Vector3(2.5, 0.3, 0.6)}[side]
+			cam.global_position = base + off
+			cam.look_at(base)
+			for i in 3:
+				await process_frame
+				if not DisplayServer.window_can_draw():
+					RenderingServer.force_draw(false)
+			view.get_texture().get_image().save_png(out + "/f_%03d_%s.png" % [k, side])
+	print("RELOAD FILM %s %d frames -> %s" % [stance, n + 1, out])
+
+
+## A bone's skeleton-space transform from the skeleton's local poses (not its cached globals).
+static func _fk_pose(sk: Skeleton3D, b: int) -> Transform3D:
+	var x := Transform3D(Basis(sk.get_bone_pose_rotation(b)), sk.get_bone_pose_position(b))
+	var par := sk.get_bone_parent(b)
+	return x if par < 0 else _fk_pose(sk, par) * x
+
+
 # --- bake ------------------------------------------------------------------------------------------------------------
 
 func _bake() -> void:
@@ -795,6 +957,7 @@ func _bake_step(solver, sk: Skeleton3D, chain: Dictionary, path_pre: String, t0:
 					posi[nm] = []
 				(posi[nm] as Array).append([t, sk.get_bone_pose_position(b)])
 		rod_p.append([t, (rod_at(t0 + t)[0] as Transform3D)])
+	_clean_arms(sk, rot, posi)
 	for nm: String in rot:
 		var tr := anim.add_track(Animation.TYPE_ROTATION_3D)
 		anim.track_set_path(tr, NodePath(path_pre + ":" + nm))
@@ -814,3 +977,168 @@ func _bake_step(solver, sk: Skeleton3D, chain: Dictionary, path_pre: String, t0:
 		anim.position_track_insert_key(rp, float(k[0]), x.origin)
 		anim.rotation_track_insert_key(rr, float(k[0]), x.basis.get_rotation_quaternion())
 	return anim
+
+
+# --- the arms, cleaned (user 2026-09-30: "the reload animation, it's too jittery") ----------------------------------------
+## The solver poses each frame on its own and shares the arm's turn between the shoulder, the elbow and the wrist as it
+## finds it: frame to frame the share flipped (the elbow and the wrist 40-117 deg off the line through their neighbours,
+## the hand itself steady). Rebuilt here as a body's arm moves (the reference motion: the elbow a pure hinge about its
+## own axis, no twist; the forearm's roll in the wrist): each frame the hand (the wrist's place and turn, so the gun) is
+## kept as solved, the elbow put where the solved elbows are, smoothed over ELBOW_SMOOTH frames (and set at the arm's
+## length from the shoulder and the wrist), the upper arm pointed at it with the hinge across the arm's plane, the elbow
+## bent about its hinge alone, and the wrist turned to the hand.
+const ELBOW_SMOOTH := 2.0
+const HAND_SMOOTH := 1.5
+## The elbow's hinge in its own rest frame (the mocap clips' bend axis).
+const ELBOW_HINGE := Vector3(-0.06, -1.0, 0.0)
+
+
+func _clean_arms(sk: Skeleton3D, rot: Dictionary, posi: Dictionary) -> void:
+	var n := (rot.values()[0] as Array).size()
+	for s: String in ["r", "l"]:
+		var sh := sk.find_bone(s + "_shoulder")
+		var el := sk.find_bone(s + "_elbow")
+		var wr := sk.find_bone(s + "_wrist")
+		if sh < 0 or el < 0 or wr < 0 or not rot.has(s + "_shoulder") or not rot.has(s + "_elbow") or not rot.has(s + "_wrist"):
+			continue
+		var cl := sk.get_bone_parent(sh)
+		var r_el := sk.get_bone_rest(el)
+		var r_wr := sk.get_bone_rest(wr)
+		var l1 := r_el.origin.length()
+		var l2 := r_wr.origin.length()
+		var d_u := r_el.origin.normalized()            # the upper arm's way, in its own frame
+		var d_f := r_wr.origin.normalized()            # the forearm's, in the elbow's
+		var hinge := ELBOW_HINGE.normalized()
+		var hinge_u := (r_el.basis * hinge).normalized()   # the hinge in the upper arm's frame, the elbow at rest
+		# the solved frames: the clavicle's place, the shoulder, the elbow and the wrist (skeleton space)
+		var cg: Array[Transform3D] = []
+		var sp: Array[Vector3] = []
+		var ep: Array[Vector3] = []
+		var wg: Array[Transform3D] = []
+		for f in n:
+			var c := _fk(sk, cl, rot, posi, f)
+			var u := c * Transform3D(Basis(rot[s + "_shoulder"][f][1] as Quaternion), sk.get_bone_rest(sh).origin)
+			var e := u * Transform3D(Basis(rot[s + "_elbow"][f][1] as Quaternion), r_el.origin)
+			var w := e * Transform3D(Basis(rot[s + "_wrist"][f][1] as Quaternion), r_wr.origin)
+			cg.append(c)
+			sp.append(u.origin)
+			ep.append(e.origin)
+			wg.append(w)
+		# the gun's own place (the hand's prop bone, solved: its path is the planned one, smooth), kept as it is below
+		var prop: String = s + "_hand_prop_attachment"
+		var palm := sk.find_bone(s + "_palm")
+		var keep_prop := rot.has(prop) and posi.has(prop) and palm >= 0 and rot.has(s + "_palm")
+		var prop_g: Array[Transform3D] = []
+		if keep_prop:
+			for f in n:
+				prop_g.append(wg[f] * Transform3D(Basis(rot[s + "_palm"][f][1] as Quaternion), sk.get_bone_rest(palm).origin)
+						* Transform3D(Basis(rot[prop][f][1] as Quaternion), posi[prop][f][1] as Vector3))
+		# the hand's own path smoothed (the solver's hand shook too, and the gun with it): over HAND_SMOOTH frames, the
+		# turn and the place, in the skeleton's space (the left hand on the gun is smoothed alike, so it stays on it)
+		var wsm: Array[Transform3D] = []
+		for f in n:
+			var acc_p := Vector3.ZERO
+			var acc_q := Vector4.ZERO
+			var ref := wg[f].basis.get_rotation_quaternion()
+			var ws0 := 0.0
+			for k in range(maxi(0, f - 5), mini(n, f + 6)):
+				var g := exp(-0.5 * pow(float(k - f) / HAND_SMOOTH, 2.0))
+				var q := wg[k].basis.get_rotation_quaternion()
+				if q.dot(ref) < 0.0:
+					q = -q
+				acc_p += wg[k].origin * g
+				acc_q += Vector4(q.x, q.y, q.z, q.w) * g
+				ws0 += g
+			acc_q = acc_q.normalized()
+			wsm.append(Transform3D(Basis(Quaternion(acc_q.x, acc_q.y, acc_q.z, acc_q.w)), acc_p / ws0))
+		wg = wsm
+		# the elbows smoothed, in the clavicle's frame (the body's own sway stays)
+		var el_c: Array[Vector3] = []
+		for f in n:
+			el_c.append(cg[f].affine_inverse() * ep[f])
+		for f in n:
+			var acc := Vector3.ZERO
+			var ws := 0.0
+			for k in range(maxi(0, f - 6), mini(n, f + 7)):
+				var g := exp(-0.5 * pow(float(k - f) / ELBOW_SMOOTH, 2.0))
+				acc += el_c[k] * g
+				ws += g
+			var pole := cg[f] * (acc / ws)
+			# the elbow at the arm's lengths, on the side of the smoothed one
+			var a := sp[f]
+			var w := wg[f].origin
+			var aw := w - a
+			var d := clampf(aw.length(), absf(l1 - l2) + 1e-4, l1 + l2 - 1e-4)
+			var ax := aw.normalized()
+			var ca := clampf((l1 * l1 + d * d - l2 * l2) / (2.0 * l1 * d), -1.0, 1.0)
+			var perp := (pole - a) - ax * (pole - a).dot(ax)
+			perp = perp.normalized() if perp.length() > 1e-5 else (ep[f] - a - ax * (ep[f] - a).dot(ax)).normalized()
+			var e := a + (ax * ca + perp * sqrt(1.0 - ca * ca)) * l1
+			# the upper arm: its way to the elbow, the hinge across the arm's plane (the side the elbow bends to)
+			var e1 := (e - a).normalized()
+			var nrm := e1.cross((w - e).normalized()).normalized()
+			var best := Basis()
+			var best_q := Quaternion()
+			var best_ok := false
+			for sign in [1.0, -1.0]:
+				var ub := _frame_to(d_u, hinge_u, e1, nrm * sign)
+				var eb := ub * r_el.basis
+				var tgt := (eb.inverse() * (w - e)).normalized()
+				# the bend about the hinge carrying the forearm's way to the wrist
+				var th := _signed(d_f, tgt, hinge)
+				if th >= -0.05:
+					best = ub
+					best_q = Quaternion(hinge, th)
+					best_ok = true
+					break
+			if not best_ok:
+				continue
+			var cb := cg[f].basis.orthonormalized()
+			var u_local := (cb.inverse() * best).get_rotation_quaternion()
+			var e_local := (r_el.basis.get_rotation_quaternion() * best_q).normalized()
+			var fg := best * Basis(e_local)
+			var w_local := (fg.orthonormalized().inverse() * wg[f].basis.orthonormalized()).get_rotation_quaternion()
+			rot[s + "_shoulder"][f][1] = u_local
+			rot[s + "_elbow"][f][1] = e_local
+			rot[s + "_wrist"][f][1] = w_local
+			if keep_prop:
+				var pg := wg[f] * Transform3D(Basis(rot[s + "_palm"][f][1] as Quaternion), sk.get_bone_rest(palm).origin)
+				var pl := pg.affine_inverse() * prop_g[f]
+				rot[prop][f][1] = pl.basis.orthonormalized().get_rotation_quaternion()
+				posi[prop][f][1] = pl.origin
+		# (keyed rotations kept on one side of the sphere, frame to frame)
+		for b in [s + "_shoulder", s + "_elbow", s + "_wrist", prop]:
+			if not rot.has(b):
+				continue
+			var arr: Array = rot[b]
+			for f in range(1, n):
+				var q: Quaternion = arr[f][1]
+				if (arr[f - 1][1] as Quaternion).dot(q) < 0.0:
+					arr[f][1] = -q
+
+
+## A basis taking the local pair (a, b) onto the pair (ta, tb) (each orthonormalized against its first).
+static func _frame_to(a: Vector3, b: Vector3, ta: Vector3, tb: Vector3) -> Basis:
+	var b1 := (b - a * b.dot(a)).normalized()
+	var tb1 := (tb - ta * tb.dot(ta)).normalized()
+	var src := Basis(a, b1, a.cross(b1))
+	var dst := Basis(ta, tb1, ta.cross(tb1))
+	return dst * src.inverse()
+
+
+## The angle (rad) about `axis` from `v` to `t` (both projected on the plane across it).
+static func _signed(v: Vector3, t: Vector3, axis: Vector3) -> float:
+	var a := (v - axis * v.dot(axis)).normalized()
+	var b := (t - axis * t.dot(axis)).normalized()
+	return atan2(axis.dot(a.cross(b)), a.dot(b))
+
+
+## A bone's skeleton-space transform at frame `f` of the sampled locals (the rest for bones not sampled).
+func _fk(sk: Skeleton3D, b: int, rot: Dictionary, posi: Dictionary, f: int) -> Transform3D:
+	var nm := sk.get_bone_name(b)
+	var r := sk.get_bone_rest(b)
+	var q: Quaternion = rot[nm][f][1] if rot.has(nm) else r.basis.get_rotation_quaternion()
+	var o: Vector3 = posi[nm][f][1] if posi.has(nm) else r.origin
+	var x := Transform3D(Basis(q), o)
+	var par := sk.get_bone_parent(b)
+	return x if par < 0 else _fk(sk, par, rot, posi, f) * x

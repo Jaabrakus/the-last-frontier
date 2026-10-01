@@ -38,6 +38,7 @@ func load_table(path: String) -> bool:
 		return false
 	data = d
 	moves = data.get("moves", {})
+	TravMoveMirror.add_moves(moves)     # (the moves for the other hand: the right-hand sprint vault)
 	settings = data.get("settings", {})
 	loco = data.get("loco", {})
 	hub_records = data.get("hub_records", [])

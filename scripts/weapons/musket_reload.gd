@@ -49,6 +49,7 @@ const FULL_COCK_AT := 0.81          ## step 5
 var gun: Firearm
 var _lib: AnimationLibrary
 var _pose: ToolPose
+var _butt: MusketButtGround          ## the butt on the real ground while it rests there (after _pose)
 var _model: Node3D
 var _rod: Node3D
 var _cock: Node3D
@@ -165,12 +166,31 @@ func _apply_pose() -> void:
 		_pose = ToolPose.new()
 		_pose.name = "MusketReloadPose"
 		gun.player.skeleton.add_child(_pose)
+		_butt = MusketButtGround.new()
+		_butt.name = "MusketButtGround"
+		gun.player.skeleton.add_child(_butt)
+		gun.player.skeleton.move_child(_butt, _pose.get_index() + 1)
+	_butt.feed(_w * _butt_down() if _anim else 0.0, gun.player.musket_offset, gun.player)
 	var ls := []
 	if _w > 0.0 and _anim:
 		ls.append({"anim": _anim, "time": _t, "weight": _w, "mask": "upper"})
 		if _anim_c and _c > 0.0:
 			ls.append({"anim": _anim_c, "time": _t, "weight": _w * _c, "mask": "upper"})
 	_pose.layers = ls
+
+
+## How much the reload has the gun's butt down on the ground behind (MusketButtGround): from the gun cast about into the
+## ramming place (author_reload.gd CAST_AT) until it is raised again (RET_FROM), eased over BUTT_EASE seconds.
+const STEP_FROM := [0.0, 1.0, 2.2, 3.6, 5.3]
+const BUTT_DOWN := [2.2, 5.8]
+const BUTT_EASE := 0.12
+
+
+func _butt_down() -> float:
+	if _anim == null or gun._stage >= STEP_FROM.size():
+		return 0.0
+	var t := float(STEP_FROM[gun._stage]) + _t
+	return smoothstep(BUTT_DOWN[0] - BUTT_EASE, BUTT_DOWN[0], t) * (1.0 - smoothstep(BUTT_DOWN[1] - BUTT_EASE, BUTT_DOWN[1], t))
 
 
 ## The ramrod where the step has it (home when no step plays).

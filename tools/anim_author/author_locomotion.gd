@@ -5,6 +5,7 @@ extends SceneTree
 ## the sprint's shapes with less of its drive.
 ##   variants: Godot --headless --path . -s tools/anim_author/author_locomotion.gd -- bake [k=0.55,0.65,0.75]
 ##             writes animations_extra/Frontier_Locomotion.res (library frontier_locomotion, clips "own-jog-<dir>-k<pct>")
+##             also the aim walks with our jog's legs (_aim_walk; "debug" prints each one's phase shift and speed against the graph's)
 ##   speed:    Godot --headless --path . -s tools/anim_author/author_locomotion.gd -- speed [dir=fw,fw-lt,fw-rt] [k=0.75]
 ##             the travel speed the planted foot gives each variant (the jog and sprint too, as the yardstick)
 ##   sheet:    Godot --path . -s tools/anim_author/author_locomotion.gd -- sheet out=<dir> [dir=fw] [k=0.55,0.65,0.75]
@@ -138,6 +139,21 @@ func _bake() -> void:
 		wired[stop_name] = {"lib": "frontier_locomotion", "clip": tn, "length": snappedf(stop_len if stop_len > 0.0 else lib.get_animation(stop_name).length, 0.000001)}
 		if stop_len > 0.0:
 			wired[stop_name]["time_scale"] = snappedf(stop_rate, 0.0001)
+	# the aim walks (user 2026-09-30: "for the aim lower half I want it to be the jogging legs but try to match the walking legs"):
+	# each weapon's aim walk keeps its upper body, its root and its plants; its legs are our jog's, retimed onto the walk's cycle
+	for wn: String in AIM_WALKS:
+		for dir in ["fw", "fw-lt", "fw-rt", "bw", "bw-lt", "bw-rt"]:
+			var cn: String = "actor_b-p-%s-aim-walk-%s" % [wn, dir]
+			if not lib.has_animation(cn):
+				continue
+			var an: String = "own-aimwalk-%s-%s" % [wn, dir]
+			var aw := _aim_walk(lib.get_animation(cn), jogs[dir])
+			out.add_animation(StringName(an), aw)
+			wired[cn] = {"lib": "frontier_locomotion", "clip": an, "length": snappedf(aw.length, 0.000001)}
+			if args.has("debug"):
+				var sp: Array = await _fk_speed(aw)
+				var sp0: Array = await _fk_speed(lib.get_animation(cn))
+				print("  aim walk ", wn, " ", dir, ": ", snappedf(sp[0], 0.01), " m/s (the graph's ", snappedf(sp0[0], 0.01), " measured the same way)")
 	# the jump and the fall: the graph's body with our own arms (user 2026-09-30: "the jump animation, tweak the arms so it
 	# does not look identical")
 	for cn in ["actor_b-p-jump-long", "actor_b-p-fall"]:
@@ -170,6 +186,175 @@ func _bake() -> void:
 	var f := FileAccess.open(WIRED, FileAccess.WRITE)
 	f.store_string(JSON.stringify({"about": "Clips that stand in for the graph's own (AnimGraphData.apply_clip_overrides): the graph clip name -> the library and clip played instead, its measured travel speed (m/s, tools/anim_author/author_locomotion.gd) and length (s). The plant phases and the rest of the metrics stay the original clip's.", "clips": wired}, "\t") + "\n")
 	f.close()
+
+
+## The aim walks given our jog's legs (_aim_walk), by the weapon part of their names.
+const AIM_WALKS := ["rifle", "bow", "pistol", "1h"]
+## The aim walk's legs: AIMWALK_JOG of the jog's (its swing about its own mean kept to AIMWALK_SWING, the jog's stride being 2.5 times
+## the walk's), the rest the walk's; the hips take AIMWALK_HIPS of the jog's turn about its mean and AIMWALK_BOB of its bounce.
+const AIMWALK_JOG := 0.7
+const AIMWALK_SWING := 0.55
+const AIMWALK_HIPS := 0.4
+const AIMWALK_BOB := 0.5
+## A foot is held where the walk plants it (IK) while its heel or ball is within these heights (m) of its lowest: fully up to the first,
+## let go by the second (the swing in between is the jog's).
+const AIMWALK_PLANT_LO := 0.025
+const AIMWALK_PLANT_HI := 0.07
+## A swinging foot's heel and ball are kept this far (m) above their lowest (the jog's low backward swing scuffed the ground).
+const AIMWALK_SWING_CLEAR := 0.04
+const AIMWALK_LEGS := ["l_upper_leg", "l_knee", "l_ankle", "l_ball", "l_heel", "r_upper_leg", "r_knee", "r_ankle", "r_ball", "r_heel"]
+
+
+## An aim walk with our jog's legs: the jog retimed onto the walk's one cycle and phase-matched to its legs (the time shift whose
+## legs are nearest the walk's), its leg swing scaled to the walk's stride and blended over the walk's legs; then each foot pinned by
+## IK to where the walk's is while the walk has it down, so the plants, the stride and the speed are the walk's and the swing is the
+## jog's. Upper body and root: the walk's.
+func _aim_walk(walk: Animation, jog: Animation) -> Animation:
+	var wl := walk.length
+	var jl := jog.length
+	var best := 1e9
+	var shift := 0.0
+	for i in 60:
+		var sh := jl * float(i) / 60.0
+		var cost := 0.0
+		for j in 24:
+			var u := float(j) / 24.0
+			cost += _leg_dist(walk, u * wl, jog, fposmod(sh + u * jl, jl))
+		if cost < best:
+			best = cost
+			shift = sh
+	if args.has("debug"):
+		print("    ", walk.resource_name, " shift ", snappedf(shift / jl, 0.01), " of the jog's cycle, leg distance ", snappedf(best / 24.0, 0.01))
+	var a := Animation.new()
+	_stamp(a, walk)
+	a.length = wl
+	a.loop_mode = walk.loop_mode
+	a.set_meta(&"authored", "Frontier: the aim walk with our jog's legs (tools/anim_author/author_locomotion.gd)")
+	var mine := {}
+	for b: String in AIMWALK_LEGS + ["pelvis"]:
+		mine[b] = true
+	# the walk's tracks other than the legs' and the hips', as they are
+	for ti in walk.get_track_count():
+		var b := String(walk.track_get_path(ti).get_concatenated_subnames())
+		var tp := walk.track_get_type(ti)
+		if mine.has(b) and (tp == Animation.TYPE_ROTATION_3D or (b == "pelvis" and tp == Animation.TYPE_POSITION_3D)):
+			continue
+		var nt := a.add_track(tp)
+		a.track_set_path(nt, walk.track_get_path(ti))
+		a.track_set_interpolation_type(nt, walk.track_get_interpolation_type(ti))
+		for k in walk.track_get_key_count(ti):
+			a.track_insert_key(nt, walk.track_get_key_time(ti, k), walk.track_get_key_value(ti, k), walk.track_get_key_transition(ti, k))
+	var out_rot := {}
+	for b: String in mine:
+		var nt := a.add_track(Animation.TYPE_ROTATION_3D)
+		a.track_set_path(nt, NodePath("Skeleton3D:" + b))
+		out_rot[b] = nt
+	var pel_pos := a.add_track(Animation.TYPE_POSITION_3D)
+	a.track_set_path(pel_pos, NodePath("Skeleton3D:pelvis"))
+	var pp := NodePath("Skeleton3D:pelvis")
+	var jog_mean := {}
+	for b: String in mine:
+		var ti := jog.find_track(NodePath("Skeleton3D:" + b), Animation.TYPE_ROTATION_3D)
+		if ti >= 0:
+			jog_mean[b] = _mean_q(jog, ti)
+	var jpi := jog.find_track(pp, Animation.TYPE_POSITION_3D)
+	var jp_mean := Vector3.ZERO
+	if jpi >= 0:
+		for i in 24:
+			jp_mean += jog.position_track_interpolate(jpi, jl * float(i) / 24.0) / 24.0
+	var n := int(round(wl * FPS))
+	# the walk's heel heights over the cycle (skeleton space), for the plant weights
+	# (and the balls': walking backward the toe is down first, the heel still up)
+	var heel_lo := {"l_heel": INF, "r_heel": INF, "l_ball": INF, "r_ball": INF}
+	for f in n:
+		_pose_rig(walk, float(f) / FPS)
+		for b: String in heel_lo:
+			heel_lo[b] = minf(heel_lo[b], _rig.get_bone_global_pose(_rig.find_bone(b)).origin.y)
+	for f in n + 1:
+		var t := minf(float(f) / FPS, wl)
+		var u := t / wl
+		var tj := fposmod(shift + u * jl, jl)
+		_pose_rig(walk, t)
+		var w_ankle := {}
+		var w_plant := {}
+		for sd in ["l", "r"]:
+			w_ankle[sd] = _rig.get_bone_global_pose(_rig.find_bone(sd + "_ankle"))
+			var hy := minf(_rig.get_bone_global_pose(_rig.find_bone(sd + "_heel")).origin.y - float(heel_lo[sd + "_heel"]),
+					_rig.get_bone_global_pose(_rig.find_bone(sd + "_ball")).origin.y - float(heel_lo[sd + "_ball"]))
+			w_plant[sd] = 1.0 - smoothstep(AIMWALK_PLANT_LO, AIMWALK_PLANT_HI, hy)
+		# the blended legs and hips
+		for b: String in mine:
+			var bi := _rig.find_bone(b)
+			var wi := walk.find_track(NodePath("Skeleton3D:" + b), Animation.TYPE_ROTATION_3D)
+			var ji := jog.find_track(NodePath("Skeleton3D:" + b), Animation.TYPE_ROTATION_3D)
+			var qw: Quaternion = walk.rotation_track_interpolate(wi, t) if wi >= 0 else _rig.get_bone_pose_rotation(bi)
+			if ji < 0 or not jog_mean.has(b):
+				_rig.set_bone_pose_rotation(bi, qw)
+				continue
+			var qj: Quaternion = jog.rotation_track_interpolate(ji, tj)
+			var m: Quaternion = jog_mean[b]
+			if b == "pelvis":
+				var d := (m.inverse() * qj).normalized()
+				_rig.set_bone_pose_rotation(bi, (qw * Quaternion.IDENTITY.slerp(d, AIMWALK_HIPS)).normalized())
+			else:
+				if qj.dot(m) < 0.0:
+					qj = -qj
+				var qs := m.slerp(qj, AIMWALK_SWING)
+				if qs.dot(qw) < 0.0:
+					qs = -qs
+				_rig.set_bone_pose_rotation(bi, qw.slerp(qs, AIMWALK_JOG).normalized())
+		var wpi := walk.find_track(pp, Animation.TYPE_POSITION_3D)
+		var pw: Vector3 = walk.position_track_interpolate(wpi, t) if wpi >= 0 else _rig.get_bone_pose_position(_rig.find_bone("pelvis"))
+		if jpi >= 0:
+			pw += (jog.position_track_interpolate(jpi, tj) - jp_mean) * AIMWALK_BOB
+		_rig.set_bone_pose_position(_rig.find_bone("pelvis"), pw)
+		# the planted feet back where the walk has them; the swinging ones clear of the ground
+		for sd in ["l", "r"]:
+			var wp := float(w_plant[sd])
+			if wp < 0.999:
+				var low := INF
+				for sub in ["_heel", "_ball"]:
+					low = minf(low, _rig.get_bone_global_pose(_rig.find_bone(sd + sub)).origin.y - float(heel_lo[sd + sub]))
+				var need := AIMWALK_SWING_CLEAR * (1.0 - wp) - low
+				if need > 0.0:
+					var ai := _rig.find_bone(sd + "_ankle")
+					var ao := _rig.get_bone_global_pose(ai).origin
+					TraversalIK.solve_live(_rig, _rig.find_bone(sd + "_upper_leg"), _rig.find_bone(sd + "_knee"), ai, ao, ao + Vector3.UP * need, 1.0)
+			if wp <= 0.001:
+				continue
+			var hip := _rig.find_bone(sd + "_upper_leg")
+			var knee := _rig.find_bone(sd + "_knee")
+			var ankle := _rig.find_bone(sd + "_ankle")
+			var wa: Transform3D = w_ankle[sd]
+			TraversalIK.solve_live(_rig, hip, knee, ankle, _rig.get_bone_global_pose(ankle).origin, wa.origin, wp)
+			# the planted foot as the walk sets it down
+			var kg := _rig.get_bone_global_pose(knee)
+			var cur := _rig.get_bone_global_pose(ankle).basis.orthonormalized().get_rotation_quaternion()
+			var tgt := wa.basis.orthonormalized().get_rotation_quaternion()
+			var g := cur.slerp(tgt, wp)
+			_rig.set_bone_pose_rotation(ankle, (kg.basis.orthonormalized().get_rotation_quaternion().inverse() * g).normalized())
+			for sub in ["_ball", "_heel"]:
+				var si := walk.find_track(NodePath("Skeleton3D:" + sd + sub), Animation.TYPE_ROTATION_3D)
+				if si >= 0:
+					var sb := _rig.find_bone(sd + sub)
+					_rig.set_bone_pose_rotation(sb, _rig.get_bone_pose_rotation(sb).slerp(walk.rotation_track_interpolate(si, t), wp))
+		for b: String in mine:
+			a.rotation_track_insert_key(out_rot[b], t, _rig.get_bone_pose_rotation(_rig.find_bone(b)))
+		a.position_track_insert_key(pel_pos, t, _rig.get_bone_pose_position(_rig.find_bone("pelvis")))
+	return a
+
+
+## Sets the rig to a clip's pose at `t` (its rotation and position tracks, no modifiers).
+func _pose_rig(c: Animation, t: float) -> void:
+	for ti in c.get_track_count():
+		var tp := c.track_get_type(ti)
+		var bi := _rig.find_bone(String(c.track_get_path(ti).get_concatenated_subnames()))
+		if bi < 0:
+			continue
+		if tp == Animation.TYPE_ROTATION_3D:
+			_rig.set_bone_pose_rotation(bi, c.rotation_track_interpolate(ti, t))
+		elif tp == Animation.TYPE_POSITION_3D:
+			_rig.set_bone_pose_position(bi, c.position_track_interpolate(ti, t))
 
 
 ## A clip of ours carries the asset id and attribution of the clip it is made from (the baked bank clips keep their sources'

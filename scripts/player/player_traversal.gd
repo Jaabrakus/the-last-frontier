@@ -171,7 +171,22 @@ func _bake_world() -> void:
 	# (the stick ends a climb onto a top once the feet are on it: user 2026-09-26 "as long as you dont lock
 	# movement when climb up something")
 	controller.input_exit = true
+	controller.foot_hint = _lead_foot
 	world_ready = true
+
+
+## The foot ahead of the other along the body's facing ("l" / "r"): the side a move made for either hand is taken from.
+func _lead_foot() -> String:
+	if skeleton == null:
+		return ""
+	var l := skeleton.find_bone("l_ankle")
+	var r := skeleton.find_bone("r_ankle")
+	if l < 0 or r < 0:
+		return ""
+	var fwd := -player.global_basis.z
+	var gx := skeleton.global_transform
+	var d := (gx * skeleton.get_bone_global_pose(l).origin - gx * skeleton.get_bone_global_pose(r).origin).dot(fwd)
+	return "l" if d >= 0.0 else "r"
 
 
 ## Per physics tick, from the player: the controller's input step. True while the controller owns the body

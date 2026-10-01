@@ -261,12 +261,14 @@ static func own_clips() -> Dictionary:
 	return _own
 
 
-## Adds the own clips' libraries to the AnimationPlayer the moves play on (unless --source-traversal).
+## Adds the own clips' libraries to the AnimationPlayer the moves play on (unless --source-traversal), and the mirrored moves' clips.
 func _add_own_libraries() -> void:
 	var own := TravPreviewActor.own_clips()
 	for name: String in own.get("libraries", {}):
 		if not anim_player.has_animation_library(name):
 			anim_player.add_animation_library(name, load(String(own.libraries[name])) as AnimationLibrary)
+	# and the mirrored moves' clips (TravMoveMirror), from whatever plays for the originals
+	TravMoveMirror.ensure_clips(anim_player, skeleton, lib, _anim_name, LIB)
 
 
 func _set_slot_clip(slot: int, clip: String) -> void:

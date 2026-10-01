@@ -96,6 +96,9 @@ var _drop_cooldown := 0.0
 ## Running off an edge plays no drop move (drop_fall): the body runs off and our own fall (FallPose) steps it off (set by PlayerAnim
 ## while our fall is on). The standing hop (drop_hop) stays.
 var own_run_off := false
+## The foot the body is on ("l" / "r": the one ahead), for the moves made for either hand (TravMoveMirror; the selector prefers
+## the one whose lead foot it is). Set by PlayerTraversal; unset, the table's order stands.
+var foot_hint := Callable()
 var _mount := {}
 var _content_key := ""
 var _beam := {}                   ## BEAM director {beam, dir, shape}
@@ -227,7 +230,8 @@ func context(input := {}) -> Dictionary:
 	return {"feet": body.global_position, "heading": _heading(input), "speed": speed, "gait": gait,
 			"stance": "crouch" if bool(input.get("crouched", false)) else "stand",
 			"profile": "freerun" if sprint else "careful", "trigger": _jump_buffer > 0.0 or _latched,
-			"alt": bool(input.get("walk", false)), "want_climb": mv.y < -0.3 or sprint}
+			"alt": bool(input.get("walk", false)), "want_climb": mv.y < -0.3 or sprint,
+			"lead": String(foot_hint.call()) if foot_hint.is_valid() else ""}
 
 
 ## Probe and select for the body's current state; the earliest start point wins.

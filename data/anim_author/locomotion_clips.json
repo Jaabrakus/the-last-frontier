@@ -1,6 +1,66 @@
 {
 	"about": "Clips that stand in for the graph's own (AnimGraphData.apply_clip_overrides): the graph clip name -> the library and clip played instead, its measured travel speed (m/s, tools/anim_author/author_locomotion.gd) and length (s). The plant phases and the rest of the metrics stay the original clip's.",
 	"clips": {
+		"actor_b-p-1h-aim-walk-bw": {
+			"clip": "own-aimwalk-1h-bw",
+			"length": 1.5,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-1h-aim-walk-bw-lt": {
+			"clip": "own-aimwalk-1h-bw-lt",
+			"length": 1.5,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-1h-aim-walk-bw-rt": {
+			"clip": "own-aimwalk-1h-bw-rt",
+			"length": 1.5,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-1h-aim-walk-fw": {
+			"clip": "own-aimwalk-1h-fw",
+			"length": 1.5,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-1h-aim-walk-fw-lt": {
+			"clip": "own-aimwalk-1h-fw-lt",
+			"length": 1.5,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-1h-aim-walk-fw-rt": {
+			"clip": "own-aimwalk-1h-fw-rt",
+			"length": 1.5,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-bow-aim-walk-bw": {
+			"clip": "own-aimwalk-bow-bw",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-bow-aim-walk-bw-lt": {
+			"clip": "own-aimwalk-bow-bw-lt",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-bow-aim-walk-bw-rt": {
+			"clip": "own-aimwalk-bow-bw-rt",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-bow-aim-walk-fw": {
+			"clip": "own-aimwalk-bow-fw",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-bow-aim-walk-fw-lt": {
+			"clip": "own-aimwalk-bow-fw-lt",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-bow-aim-walk-fw-rt": {
+			"clip": "own-aimwalk-bow-fw-rt",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
 		"actor_b-p-fall": {
 			"clip": "own-arms-fall",
 			"length": 2.0,
@@ -184,6 +244,66 @@
 		"actor_b-p-land-soft^walk-bw": {
 			"clip": "own-land-soft^walk-bw",
 			"length": 0.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-pistol-aim-walk-bw": {
+			"clip": "own-aimwalk-pistol-bw",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-pistol-aim-walk-bw-lt": {
+			"clip": "own-aimwalk-pistol-bw-lt",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-pistol-aim-walk-bw-rt": {
+			"clip": "own-aimwalk-pistol-bw-rt",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-pistol-aim-walk-fw": {
+			"clip": "own-aimwalk-pistol-fw",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-pistol-aim-walk-fw-lt": {
+			"clip": "own-aimwalk-pistol-fw-lt",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-pistol-aim-walk-fw-rt": {
+			"clip": "own-aimwalk-pistol-fw-rt",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-rifle-aim-walk-bw": {
+			"clip": "own-aimwalk-rifle-bw",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-rifle-aim-walk-bw-lt": {
+			"clip": "own-aimwalk-rifle-bw-lt",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-rifle-aim-walk-bw-rt": {
+			"clip": "own-aimwalk-rifle-bw-rt",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-rifle-aim-walk-fw": {
+			"clip": "own-aimwalk-rifle-fw",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-rifle-aim-walk-fw-lt": {
+			"clip": "own-aimwalk-rifle-fw-lt",
+			"length": 1.8,
+			"lib": "frontier_locomotion"
+		},
+		"actor_b-p-rifle-aim-walk-fw-rt": {
+			"clip": "own-aimwalk-rifle-fw-rt",
+			"length": 1.8,
 			"lib": "frontier_locomotion"
 		},
 		"actor_b-p-run-bw": {

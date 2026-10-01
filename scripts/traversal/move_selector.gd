@@ -108,7 +108,14 @@ func _candidates(intent: String, ctx: Dictionary, h: float, info: TravObstacleIn
 		out.append(id)
 	if out.is_empty() and height_hit:
 		last_reason = "wrong_speed"
-	out.sort_custom(func(a, b): return int(lib.moves[a].get("priority", 0)) > int(lib.moves[b].get("priority", 0)))
+	# (equal priorities: the move whose lead foot the body is on first, TravMoveMirror's left- and right-hand versions)
+	var lead := str(ctx.get("lead", ""))
+	out.sort_custom(func(a, b):
+		var pa := int(lib.moves[a].get("priority", 0))
+		var pb := int(lib.moves[b].get("priority", 0))
+		if pa != pb:
+			return pa > pb
+		return lead != "" and str(lib.moves[a].get("lead", "")) == lead and str(lib.moves[b].get("lead", "")) != lead)
 	return out
 
 
