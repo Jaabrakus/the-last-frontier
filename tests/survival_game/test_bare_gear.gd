@@ -205,6 +205,11 @@ func _her_sheet(h: Household, b: SurvivalBridge, p: FrontierPlayer) -> void:
 	var inv := InventoryState.from_player(p)
 	inv.add("rope_belt", 1)
 	p.inventory_pack = inv.pack.duplicate(true)
+	var found_cust := false
+	for c in hs._content.get_children():
+		if c is Button and (c as Button).text.begins_with("Customize"):
+			found_cust = true
+	_expect(found_cust, "her Gear tab has the Customize button")
 	_expect(tab._yours_cloth().has("item.cloth.linen_shirt") and tab._yours_rope().has("rope_belt"), "the shirt and belt show on the player's side")
 	_expect(tab.move({"what": "cloth", "id": "item.cloth.linen_shirt", "src": "you"}, "her", true), "the shirt is dragged onto her body slot")
 	_expect(ClothesSlots.worn_in(sc.core, "body") == "item.cloth.linen_shirt" and SurvivalInventory.count(b.core, "item.cloth.linen_shirt") == shirts0 - 1.0, "she wears it; the player no longer has it")
@@ -238,3 +243,37 @@ func _by_hand(p: FrontierPlayer) -> void:
 		if InventoryState.from_player(p).pack_count("cordage") >= 2:
 			break
 	_expect(InventoryState.from_player(p).pack_count("cordage") >= 2 and InventoryState.from_player(p).pack_count("elm_bark") == 0, "two lengths of cordage for the two barks")
+	# no bark about: cord from branches; then a stone axe and a stone pick, by hand
+	var inv2 := InventoryState.from_player(p)
+	inv2.take("cordage", 99)
+	inv2.add("branches", 3)
+	p.inventory_pack = inv2.pack.duplicate(true)
+	_expect(HandCraft.make(p, "cordage_branch"), "cord from branches starts")
+	await _wait_for(p, "cordage", 2)
+	_expect(InventoryState.from_player(p).pack_count("cordage") == 2 and InventoryState.from_player(p).pack_count("branches") == 0, "3 branches make 2 lengths of cordage")
+	var inv3 := InventoryState.from_player(p)
+	inv3.add("flint", 4)
+	inv3.add("pole", 2)
+	inv3.add("cordage", 2)
+	p.inventory_pack = inv3.pack.duplicate(true)
+	_expect(HandCraft.make(p, "stone_axe"), "a stone axe is made by hand")
+	await _wait_for(p, "stone_axe", 1)
+	_expect(HandCraft.make(p, "stone_pick"), "a stone pick is made by hand")
+	await _wait_for(p, "stone_pick", 1)
+	var have := InventoryState.from_player(p)
+	_expect(have.pack_count("stone_axe") == 1 and have.pack_count("stone_pick") == 1, "the stone axe and the stone pick are in the pack")
+	_expect(p.gather.owns("felling_axe") and p.gather.owns("mattock"), "the stone axe fells and the stone pick breaks rock")
+	_expect(GatherModels.build("stone_pick") != null, "the stone pick has its model")
+
+
+func _wait_for(p: FrontierPlayer, kind: String, n: int) -> void:
+	for i in 1200:
+		await physics_frame
+		if InventoryState.from_player(p).pack_count(kind) >= n:
+			break
+	var br := SurvivalBridge.find(self)
+	for i in 600:
+		if br == null or not br.work.working:
+			break
+		await physics_frame
+	await process_frame

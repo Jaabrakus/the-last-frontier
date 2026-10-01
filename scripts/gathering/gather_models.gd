@@ -45,6 +45,8 @@ static func build(kind: String) -> Node3D:
 			return _stone(0.055, 3, "flint")
 		"stone_axe":
 			return _stone_axe()
+		"stone_pick":
+			return _stone_pick()
 		"hoe":
 			return _hoe()
 		"digging_stick":
@@ -53,7 +55,7 @@ static func build(kind: String) -> Node3D:
 
 
 static func has(kind: String) -> bool:
-	return kind in ["felling_axe", "mattock", "log", "firewood", "branches", "pole", "stone", "flint", "stone_axe", "hoe", "digging_stick"]
+	return kind in ["felling_axe", "mattock", "log", "firewood", "branches", "pole", "stone", "flint", "stone_axe", "stone_pick", "hoe", "digging_stick"]
 
 
 # --- Tools -----------------------------------------------------------------------------------------
@@ -117,6 +119,36 @@ static func _stone_axe() -> Node3D:
 		tm.position = Vector3(0, y, 0)
 		root.add_child(tm)
 	_markers(root, Vector3(0, EYE_Y, -0.118))
+	return root
+
+
+## A stone pick (by hand): a long chert point, narrowing both ways from the middle, through a split in a stout haft and lashed
+## above and below. Carried and swung as the mattock is.
+static func _stone_pick() -> Node3D:
+	var root := Node3D.new()
+	root.name = "StonePick"
+	_haft(root)
+	var st: Array = [
+		[0.14, 0.004, -0.004, 0.003], [0.10, 0.016, -0.016, 0.012], [0.05, 0.026, -0.026, 0.020], [0.0, 0.030, -0.030, 0.024],
+		[-0.05, 0.026, -0.026, 0.020], [-0.10, 0.016, -0.016, 0.012], [-0.14, 0.004, -0.004, 0.003]]
+	var mi := MeshInstance3D.new()
+	mi.name = "HeadMesh"
+	mi.mesh = _loft_z(st, EYE_Y, 12, 0.35)
+	mi.material_override = _mat("chert", Color(0.3, 0.3, 0.31), 0.0, 0.62)
+	root.add_child(mi)
+	var cord := _mat("lashing", Color(0.62, 0.52, 0.36), 0.0, 0.9)
+	for y: float in [EYE_Y - 0.05, EYE_Y - 0.038, EYE_Y + 0.038, EYE_Y + 0.05]:
+		var t := TorusMesh.new()
+		t.inner_radius = 0.0135
+		t.outer_radius = 0.0185
+		t.rings = 12
+		t.ring_segments = 5
+		var tm := MeshInstance3D.new()
+		tm.mesh = t
+		tm.material_override = cord
+		tm.position = Vector3(0, y, 0)
+		root.add_child(tm)
+	_markers(root, Vector3(0, EYE_Y, -0.14))
 	return root
 
 

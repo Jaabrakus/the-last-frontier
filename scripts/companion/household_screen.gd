@@ -235,6 +235,7 @@ func _intimacy_block(sc: SpouseCore, with_yoga: bool) -> void:
 	if link == null or link.intim == null or sc != house.sc:
 		return
 	var it := link.intim
+	link.prewarm()
 	if it.anytime():
 		_yoga_row(sc, link, it, with_yoga)
 		return

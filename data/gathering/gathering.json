@@ -98,6 +98,8 @@
  "stone_tools": {
   "stone_axe": {"name": "Stone Axe", "power": 0.45, "kg": 1.6, "stands_for": "felling_axe",
    "summary": "A chert head knapped to a thick wedge, ground at the bit and lashed into a split haft (the start with nothing: made at the knapping stone). It fells trees and cuts saplings as the felling axe does, at about 45% of a steel axe's bite: more strokes for the same tree. The felling axe's key and swings; it is drawn as its own model."},
+  "stone_pick": {"name": "Stone Pick", "power": 0.4, "kg": 2.0, "stands_for": "mattock",
+   "summary": "A long chert point lashed to a stout haft (made by hand). It breaks rock and digs ore as the mattock does, at about 40% of its bite: more strokes for the same stone. The mattock's key and swings; drawn as its own model."},
   "digging_stick": {"name": "Digging Stick", "power": 0.5, "kg": 0.8, "stands_for": "hoe",
    "summary": "A hardwood stick with a fire-hardened point (the start with nothing: made at the knapping stone or the workbench). It breaks ground and hoes out weeds as the hoe does, at half the hoe's bite: more strokes for the same bed. The hoe's swings; drawn as its own model."}
  },

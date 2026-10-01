@@ -103,6 +103,7 @@
   "feathers": {"tag": "Material", "text": "Wild turkey wing and tail feathers from under the oaks, split and trimmed for fletching arrows."},
   "flint_knife": {"tag": "Tool", "text": "A chert blade knapped sharp and bound into a split handle: it skins, butchers and cuts as a belt knife does."},
   "stone_axe": {"tag": "Tool", "text": "A chert head lashed into a split haft: it fells trees and cuts saplings as an axe does, slowly. Draw it with the axe key."},
+  "stone_pick": {"tag": "Tool", "text": "A long chert point lashed to a stout haft: it breaks rock and digs ore as a mattock does, slowly. Draw it with the tool key."},
   "bog_iron": {"tag": "Ore", "text": "Rusty lumps of limonite dug from the wet hollows: smelted with charcoal in the forge's shaft, bar iron."},
   "clay": {"tag": "Material", "text": "Grey clay from a cut bank: it lines a smelting shaft and a forge's hearth, and seals a charcoal mound."},
   "charcoal": {"tag": "Fuel", "text": "Wood charred slowly under earth: the only fire hot enough to smelt iron and weld it."},

@@ -131,6 +131,8 @@ func step(dt: float, ctx: Dictionary) -> void:
 					_end(why, true)
 		S.STARTING:
 			_t += dt
+			if bool(ctx.get("waiting", false)):
+				_t = 0.0      # (she is in her pose and waits for the partner to press the join key: no timeout)
 			if bool(ctx.get("paired", false)):
 				state = S.SESSION
 				_paired_seen = true

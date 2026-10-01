@@ -39,6 +39,16 @@ var _try_t := 0.0
 var _start_failed := false
 var _finish_t := 0.0
 var _dist := 0.0
+const JOIN_RANGE_M := 3.0
+var _pre: FrontierPlayer
+## She is in her pose and the player has not joined: the partner presses I (user 2026-10-01: "the other partner presses a button to
+## join", not entering by itself).
+var _waiting_join := false
+var _hint_layer: CanvasLayer
+var _hint: Label
+var _pre_layer := 1
+var _pre_mask := 1
+var _pre_look := 0
 
 
 func _bind(sc: SpouseCore) -> void:
@@ -67,6 +77,9 @@ func _process(dt: float) -> void:
 	var at: Vector3 = proxy.global_position if is_instance_valid(proxy) else (body.global_position if body else Vector3.INF)
 	_dist = house.player.global_position.distance_to(at) if at != Vector3.INF else 1e9
 	_watch(dt, now)
+	if _waiting_join and _paired():
+		_waiting_join = false
+	_update_hint()
 	intim.tick(dm, _dist <= float(intim.cfg.near_m) and not flow.active(), sc.awake() and not house.player.is_dead, now)
 	if _finish_t > 0.0:
 		_finish_t -= dt
@@ -82,12 +95,52 @@ func _process(dt: float) -> void:
 			_start_tick(dt)
 		ctx["role_changed"] = _borrowed and sc.role != "follow"
 		ctx["paired"] = _paired()
+		ctx["waiting"] = _waiting_join
 		ctx["start_failed"] = _start_failed
 		flow.step(dt, ctx)
 	for e: Dictionary in flow.drain():
 		var line := _do(e)
 		if line != "":
 			_toast(line)
+
+
+func _unhandled_input(e: InputEvent) -> void:
+	if not _waiting_join or not (e is InputEventKey) or not e.pressed or e.echo or e.physical_keycode != KEY_I:
+		return
+	if _pose == "puppy" and is_instance_valid(_pup_pair) and leader == "spouse":
+		if _near_enough() and _pup_pair.take_partner(house.player):
+			_waiting_join = false
+			get_viewport().set_input_as_handled()
+
+
+## Within the range the tandem poses join from.
+func _near_enough() -> bool:
+	var at: Vector3 = proxy.global_position if is_instance_valid(proxy) else (house.body.global_position if is_instance_valid(house.body) else Vector3.INF)
+	return at != Vector3.INF and house.player.global_position.distance_to(at) <= JOIN_RANGE_M
+
+
+func _update_hint() -> void:
+	var show := _waiting_join and not _paired() and flow != null and flow.state == YogaFlow.S.STARTING
+	if not show:
+		if _hint_layer != null:
+			_hint_layer.visible = false
+		return
+	if _hint_layer == null:
+		_hint_layer = CanvasLayer.new()
+		_hint_layer.layer = 6
+		add_child(_hint_layer)
+		_hint = Label.new()
+		_hint.add_theme_font_size_override("font_size", 22)
+		_hint.add_theme_color_override("font_color", Color(0.98, 0.9, 0.62))
+		_hint.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+		_hint.add_theme_constant_override("outline_size", 6)
+		_hint.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+		_hint.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		_hint.offset_top = -170.0
+		_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_hint_layer.add_child(_hint)
+	_hint_layer.visible = true
+	_hint.text = ("Press I to join %s" if _near_enough() else "Go to %s and press I to join") % house.sc.name
 
 
 func _ctx() -> Dictionary:
@@ -239,6 +292,7 @@ func _end_follow() -> void:
 
 ## The stand-in goes, her own body takes over where it stood, and her role comes back (unless the player gave new orders).
 func _park_end() -> void:
+	_waiting_join = false
 	var sc := house.sc
 	if is_instance_valid(proxy):
 		var at := proxy.global_position
@@ -263,6 +317,7 @@ func _park_end() -> void:
 
 
 func _stop_poses() -> void:
+	_waiting_join = false
 	if is_instance_valid(_pup):
 		_pup.stop()
 	_pup = null
@@ -290,7 +345,7 @@ func _begin_pose(pose: String, who: String) -> void:
 		_begin_puppy(who, pt)
 		return
 	if who == "spouse":
-		_swap_in(true)
+		_swap_in()
 		lead = TandemProxy.add_lead(proxy, pt)
 		lead.set_meta(&"pose", pose)
 	else:
@@ -302,7 +357,7 @@ func _begin_pose(pose: String, who: String) -> void:
 func _begin_puppy(who: String, pt: Node) -> void:
 	var woman: FrontierPlayer = house.player
 	if who == "spouse":
-		_swap_in(true)
+		_swap_in()
 		woman = proxy
 		lead = TandemProxy.add_lead(proxy, pt)
 	_pup = woman.get_node_or_null("PuppyPose")
@@ -317,36 +372,50 @@ func _begin_puppy(who: String, pt: Node) -> void:
 		woman.add_child(_pup_pair)
 
 
+## The stand-in is built ahead of the pose, parked unseen and switched off, so asking for yoga does not build a whole body in the
+## frame the pose begins (user 2026-10-01: "when we do a yoga pose it spawns in, not cool"). The Talk tab asks for it when it opens.
+func prewarm() -> void:
+	if is_instance_valid(proxy) or is_instance_valid(_pre) or house == null or house.sc == null or not is_instance_valid(house.body):
+		return
+	var b := house.body
+	_pre = TandemProxy.make(house.player.get_parent(), house.sc.look, b.global_position, b.rotation.y)
+	_pre_layer = _pre.collision_layer
+	_pre_mask = _pre.collision_mask
+	_pre_look = house.sc.look.hash()
+	_pre.collision_layer = 0
+	_pre.collision_mask = 0
+	_pre.visible = false
+	_pre.process_mode = Node.PROCESS_MODE_DISABLED
+
+
+func _exit_tree() -> void:
+	if is_instance_valid(_pre):
+		_pre.queue_free()
+
+
 ## The spouse's body is hidden and parked, a stand-in FrontierPlayer takes her place (see TandemProxy).
-## `hidden`: the stand-in is made unseen and she stays as she is until it is in its pose (_reveal), so there is no pop of a body
-## appearing in its first frames as she vanishes (user 2026-10-01: "when we do a yoga pose it spawns in, not cool").
-var _hidden_t := 0.0
-
-
-func _swap_in(hidden := false) -> void:
+func _swap_in() -> void:
 	if is_instance_valid(proxy):
 		return
 	var b := house.body
-	proxy = TandemProxy.make(house.player.get_parent(), house.sc.look, b.global_position, b.rotation.y)
-	if hidden:
-		_hidden_t = 0.0
-		proxy.visible = false
-		return
-	_hide_body()
-
-
-func _hide_body() -> void:
-	var b := house.body
+	if is_instance_valid(_pre):
+		# the stand-in made ahead (prewarm): put where she stands, in her look, and switched on
+		proxy = _pre
+		_pre = null
+		proxy.process_mode = Node.PROCESS_MODE_INHERIT
+		proxy.collision_layer = _pre_layer
+		proxy.collision_mask = _pre_mask
+		proxy.global_position = b.global_position + Vector3.UP * 0.05
+		proxy.rotation.y = b.rotation.y
+		proxy.yaw = b.rotation.y
+		if _pre_look != house.sc.look.hash():
+			TandemProxy.dress(proxy, house.sc.look)
+		proxy.visible = true
+	else:
+		proxy = TandemProxy.make(house.player.get_parent(), house.sc.look, b.global_position, b.rotation.y)
 	b.visible = false
 	b.collision_layer = 0
 	b.process_mode = Node.PROCESS_MODE_DISABLED
-
-
-## The stand-in is posed: it is shown and she is put away in the same frame.
-func _reveal() -> void:
-	if is_instance_valid(proxy) and not proxy.visible:
-		proxy.visible = true
-		_hide_body()
 
 
 ## Every quarter second until the pair is in the pose: the lead starts it, the partner joins.
@@ -359,31 +428,25 @@ func _start_tick(dt: float) -> void:
 	if pt == null:
 		_start_failed = true
 		return
-	if is_instance_valid(proxy) and not proxy.visible:
-		_hidden_t += 0.25
-		if _hidden_t > 3.0:
-			_reveal()          # (never left unseen: the pose did not begin in time)
 	if _pose == "puppy":
 		if not is_instance_valid(_pup) or not is_instance_valid(_pup_pair):
 			_start_failed = true
 		elif not _pup.active:
 			_pup.start()
-		elif _pup.active and is_instance_valid(proxy) and not proxy.visible:
-			_reveal()
 		elif not _pup_pair.joined and not _pup_pair.inviting:
-			if leader == "player":
+			if leader == "spouse":
+				_waiting_join = true      # she kneels as the puppy and waits: the player presses I to kneel behind her
+			else:
 				_swap_in()
-			_pup_pair.take_partner(house.player if leader == "spouse" else proxy)
+				_pup_pair.take_partner(proxy)
 		return
 	if leader == "spouse":
 		if not is_instance_valid(lead):
 			return
 		if lead.mode.is_empty():
 			lead.start_pose(String(lead.get_meta(&"pose", "yoga")))
-		elif is_instance_valid(proxy) and not proxy.visible:
-			_reveal()
 		elif not lead.joined:
-			pt.join_nearby()
+			_waiting_join = true          # she holds the pose; the player presses I beside her to join (TandemPoses)
 	else:
 		if pt.mode.is_empty():
 			pt.start_pose(String(pt.get_meta(&"pose", "yoga")))

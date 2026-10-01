@@ -160,12 +160,18 @@ const STONE := {
 			"detail": "2 lengths of cordage (bark rope): a tied belt, with carry points at the hip and the back: a knife, a hatchet"},
 	"rope_sling": {"text": "Rope sling", "inputs": {"cordage": 3}, "n": 1, "seconds": 10.0, "verb": "Plaiting cord into a long sling and knotting it",
 			"detail": "3 lengths of cordage (bark rope): a sling over the shoulder to carry a long weapon, a quiver or a tool on the back"},
+	"cordage_branch": {"text": "Cordage from branches (2)", "makes": "cordage", "inputs": {"branches": 3}, "n": 2, "seconds": 9.0,
+			"verb": "Peeling green branches, splitting the bark into strips and twisting them into cord",
+			"detail": "3 branches: peel the bark into strips and twist 2 lengths of cordage (slower than elm bark)"},
 	"flint_knife": {"text": "Flint knife", "inputs": {"flint": 1, "branches": 1, "cordage": 1}, "n": 1, "seconds": 9.0,
 			"verb": "Knapping a blade and binding it into a split handle",
 			"detail": "a flint, a branch and a cord: a knife that skins, butchers and cuts, as a belt knife does"},
 	"stone_axe": {"text": "Stone axe", "inputs": {"flint": 2, "pole": 1, "cordage": 1}, "n": 1, "seconds": 12.0,
 			"verb": "Knapping an axe head, splitting the haft and lashing it in",
 			"detail": "2 flints, a pole and a cord: an axe that fells trees and cuts saplings, slowly (under half a steel axe's bite)"},
+	"stone_pick": {"text": "Stone pick", "inputs": {"flint": 2, "pole": 1, "cordage": 1}, "n": 1, "seconds": 12.0,
+			"verb": "Knapping a long point, splitting the haft and lashing it in",
+			"detail": "2 flints, a pole and a cord: a pick that breaks rock and digs ore, slowly (about 40% of a mattock's bite)"},
 	"bow_drill": {"text": "Bow drill", "inputs": {"branches": 2, "cordage": 1}, "n": 1, "seconds": 8.0,
 			"verb": "Cutting a bow, a spindle and a hearth board", "detail": "2 branches and a cord: fire from friction, without flint and steel"},
 	"bone_awl": {"text": "Bone awl", "inputs": {"antler": 1}, "knife": true, "n": 1, "seconds": 8.0,
@@ -205,7 +211,7 @@ const STONE := {
 }
 ## The knapping stone's things the workbench makes too.
 ## What is made by hand, with no station (the Craft tab of the character screen, HandCraft): from the pack, kneeling where you stand.
-const HAND := ["cordage_bark", "rope_belt", "rope_sling", "bow_drill", "torch"]
+const HAND := ["cordage_bark", "cordage_branch", "rope_belt", "rope_sling", "flint_knife", "stone_axe", "stone_pick", "bow_drill", "torch"]
 const STONE_AT_BENCH := ["bone_awl", "torch", "digging_stick"]
 ## The workbench's gunstock (a log cut and carved; the forge makes the barrel and lock).
 const BENCH_WOOD := {
