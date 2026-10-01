@@ -196,6 +196,10 @@ var is_walking := false
 var is_sprinting := false
 ## The survival core's move_speed_mult and sprint_allowed (hunger, cold, fatigue; SurvivalBridge sets them).
 var survival_speed_mult := 1.0
+## Iron Man (GameSettings.iron_man): what a wound broke. The legs gone stay so for good (a new game); a broken leg until its
+## wound knits.
+var maim_legs := false
+var broken_leg := false
 var sprint_allowed := true
 ## Drink and tobacco (Vices): reload stages x this (a pipe: 0.92), the shot spread x this (drunk: 1.25), and the aim's
 ## slow sway in degrees (drunk).
@@ -217,6 +221,7 @@ var wish_local := Vector2.ZERO
 var target_speed := 0.0
 var health := 100.0
 var is_dead := false
+var _death_push := Vector3.ZERO      ## the blow that may kill: the push it gives the body (PlayerRagdoll)
 
 var collision: CollisionShape3D
 var visual: Node3D
@@ -752,6 +757,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_wheel_step(1 if event.is_action_pressed("weapon_next") else -1)
 		if InputMap.has_action(HANDS_FREE) and event.is_action_pressed(HANDS_FREE):
 			toggle_hands_free()
+		if InputMap.has_action(&"anatomy") and event.is_action_pressed(&"anatomy"):
+			toggle_anatomy()
 		if InputMap.has_action(INVENTORY) and event.is_action_pressed(INVENTORY) and not is_dead and riding == null \
 				and (_inv_screen == null or not is_instance_valid(_inv_screen)):
 			get_viewport().set_input_as_handled()
@@ -1095,7 +1102,7 @@ func _physics_process(delta: float) -> void:
 		speed = lerpf(speed, minf(speed, aim_walk_speed), weapon.aim)
 		if gather != null and gather.swinging():
 			speed = minf(speed, swing_walk_speed)
-	speed *= survival_speed_mult
+	speed *= survival_speed_mult * _maim_speed()
 	speed = minf(speed, drag_speed_cap)
 	# For the lower body (plan 8.1): the band speed whenever there is input; the analog magnitude
 	# scales the wish only, as `target` below.
@@ -1206,13 +1213,89 @@ func apply_hit(damage: float, point: Vector3, direction: Vector3, source: Node =
 		from = point - global_position
 	var local := Vector2(from.dot(global_basis.x), from.dot(-global_basis.z))
 	local = local.normalized() if local.length_squared() > 1e-8 else Vector2.ZERO
+	# its channel through the body, on the skeleton map (a bite from an animal has none), and what it went through decides
+	# the damage (Anatomy.effect: the heart, the brain, the lungs, the gut, the cord, a bone)
+	var fx := {}
+	if not (source is WildAnimal) and skeleton != null and direction.length_squared() > 1e-8 and PlayerWounds.kind_of(source) == "bleed":
+		var an := Anatomy.attach_to(skeleton)
+		if an:
+			an.add_wound(point, direction, damage)
+			fx = Anatomy.effect(an.last_hits, damage)
+			damage *= float(fx.dmg_mult)
+			if bool(fx.lethal):
+				# (the brain: it is over)
+				health = 0.0
+				_die(local)
+				return
+	# what the blow does to the body if it kills: pushed the way it went (a ball hard, an arrow light)
+	_death_push = direction.normalized() * clampf(damage * 0.1, 1.5, 7.0) + Vector3.UP * 1.0 if direction.length_squared() > 1e-8 \
+			else Vector3.ZERO
 	# a bleeding wound takes part of it now and keeps the rest as blood still to lose (PlayerWounds); blunt force all now
-	var now := wounds.take(damage, source, point, direction) if wounds else damage
+	var now := wounds.take(damage, source, point, direction, float(fx.get("bleed_mult", 1.0))) if wounds else damage
 	health = maxf(health - now, 0.0)
 	if health <= 0.0:
 		_die(local)
 	else:
 		hurt.emit(local, damage, damage >= heavy_hit_damage)
+		if not fx.is_empty():
+			_maim(fx)
+
+
+## A wound that went through the cord or a limb's bone leaves the body maimed (Anatomy.effect): the cord below the chest takes
+## the legs (crawling at a fraction of a walk; respawn clears it), a broken leg bone slows, and the cord throws the player
+## down where they stand.
+func _maim(fx: Dictionary) -> void:
+	var iron := GameSettings.iron_man()
+	var limb := String(fx.limb)
+	if float(fx.mortal_s) > 0.0:
+		# mortal: on their feet a few seconds yet (the heart, the cord high up): time to answer back; in Iron Man staggering
+		wounds.set_mortal(float(fx.mortal_s))
+		if interactor:
+			interactor.notice("Mortally wounded", 3.0)
+		Anatomy.slowmo(get_tree())
+	if bool(fx.legs):
+		# the cord: thrown down; in Iron Man the legs are gone for good
+		if iron:
+			maim_legs = true
+		if interactor:
+			interactor.notice("Your legs will not answer" if iron else "Thrown down", 4.0)
+		knock_down(Vector3.ZERO)
+	elif iron and (limb.contains("femur") or limb.contains("shin") or limb.contains("foot")):
+		broken_leg = true
+		if interactor:
+			interactor.notice("%s broken" % limb, 3.0)
+
+
+## The speed Iron Man's injuries leave (1 with it off, or unhurt): the legs gone for good, a leg broken until its wound has
+## knit (LastingConditions), a mortal wound's stagger.
+func _maim_speed() -> float:
+	if not GameSettings.iron_man():
+		return 1.0
+	var m := 1.0
+	if maim_legs:
+		m = 0.15
+	if broken_leg:
+		var b := SurvivalBridge.find(get_tree())
+		var open := b == null or b.lasting == null or b.lasting.has_wound("l_leg") or b.lasting.has_wound("r_leg")
+		if open:
+			m = minf(m, 0.55)
+		else:
+			broken_leg = false
+	if wounds and wounds.mortal():
+		m = minf(m, 0.5)
+	return m
+
+
+## The skeleton map under every body on or off (Anatomy): the player's, and the wild animals' near enough to see.
+func toggle_anatomy() -> void:
+	var on := not Anatomy.shown
+	if on:
+		Anatomy.attach_to(skeleton)
+		for n in get_tree().get_nodes_in_group(&"wildlife"):
+			var sk = n.get(&"_skel")
+			if sk is Skeleton3D and n is Node3D and (n as Node3D).global_position.distance_to(global_position) < 60.0:
+				Anatomy.attach_to(sk)
+	Anatomy.set_shown(on, get_tree())
 
 
 ## Knocked down and thrown with velocity `v` (m/s): a ragdoll, then the game's get-up clip (PlayerRagdoll; user
@@ -1274,6 +1357,7 @@ func lose_blood(amount: float) -> void:
 				b.sleeper.stop_now()
 		if interactor:
 			interactor.notice("You bled to death", 4.0)
+		_death_push = Vector3.ZERO
 		_die(Vector2.ZERO)
 
 
@@ -1284,11 +1368,15 @@ func lose_blood(amount: float) -> void:
 ## the corpse) in one frame, as on a teleport.
 func respawn() -> void:
 	health = max_health
+	broken_leg = false
 	if wounds:
 		wounds.clear()
 	if not is_dead:
 		return
 	is_dead = false
+	var rag := get_node_or_null(^"Ragdoll") as PlayerRagdoll
+	if rag and rag.is_down():
+		rag.recover_now()          # up from where the body lies: the player's own animation and the weapon back
 	var retake := false
 	if _dead_weapon != null:
 		if _dead_weapon != weapon:
@@ -1311,6 +1399,9 @@ func respawn() -> void:
 ## takes the new one), and during the finish or grab nothing (the old model is put away and the
 ## new weapon is only reached by its draw). The switch ends there; respawn() draws the new weapon.
 func _die(local_dir: Vector2) -> void:
+	# a ragdoll, carried on by the way it was going and the blow that killed (when it cannot be: the death clip)
+	var ragdolled := PlayerRagdoll.of(self).knock(_death_push + Vector3(velocity.x, 0.0, velocity.z) * 0.6, true)
+	_death_push = Vector3.ZERO
 	is_dead = true
 	is_sprinting = false
 	is_walking = false
@@ -1330,6 +1421,8 @@ func _die(local_dir: Vector2) -> void:
 				old.model.visible = false
 	if weapon and weapon.active:
 		weapon.unequip()
+	if ragdolled:
+		in_hand = null          # (slung on the body with the ragdoll)
 	if in_hand and in_hand.model:
 		in_hand.model.visible = not (in_hand is Throwable) or (in_hand as Throwable).death_shows_model()
 	died.emit(local_dir)

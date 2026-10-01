@@ -97,10 +97,12 @@ static func of(p: FrontierPlayer) -> PlayerRagdoll:
 	return r
 
 
-## Thrown with velocity `v` (m/s). False when the player cannot be knocked down now (dead, riding, climbing, kneeling,
+## Thrown with velocity `v` (m/s). `dying` (FrontierPlayer._die, just before it marks the player dead; user 2026-09-30: "ragdoll
+## physics on deaths"): the body goes limp and stays down (no get-up: respawn() ends it), the weapon is slung, not dropped.
+## False when the player cannot be knocked down now (dead, riding, climbing, kneeling,
 ## mid-vault, or already down).
-func knock(v: Vector3) -> bool:
-	if phase != "" or player == null or player.is_dead:
+func knock(v: Vector3, dying := false) -> bool:
+	if phase != "" or player == null or (player.is_dead and not dying):
 		return false
 	skeleton = player.skeleton
 	if skeleton == null:
@@ -108,7 +110,7 @@ func knock(v: Vector3) -> bool:
 	_let_go_all()
 	# the weapon in the hands, as it is (before the knock slings it), if the dice say it goes
 	var held: Weapon = player.weapon if player.weapon and player.weapon.active and not player.hands_free \
-			and randf() < drop_chance else null
+			and not dying and randf() < drop_chance else null
 	var held_key := player.weapon_key
 	var held_xf := held.model.global_transform if held and held.model else Transform3D()
 	var ahead := player.global_position - player.global_basis.z
@@ -116,7 +118,7 @@ func knock(v: Vector3) -> bool:
 	if _ap == null:
 		return false
 	dropped = null
-	dropped_tool = _lose_tool(v)
+	dropped_tool = _lose_tool(v) if not dying else null
 	if held:
 		dropped = _knock_out(held, held_key, held_xf, v)
 	if sim == null:

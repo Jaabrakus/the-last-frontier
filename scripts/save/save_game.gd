@@ -90,12 +90,14 @@ func _ready() -> void:
 		var doc := pending
 		var slot := pending_slot
 		pending = {}
+		GameSettings.set_run(bool((doc.get("meta", {}) as Dictionary).get("iron", false)))
 		_apply.call_deferred(doc, slot)
 	elif not _launched and not _is_script_run() and not _has_arg("new_game"):
 		var slot := latest_slot()
 		if slot != "":
 			var doc := read_slot(slot)
 			if not doc.is_empty():
+				GameSettings.set_run(bool((doc.get("meta", {}) as Dictionary).get("iron", false)))
 				_apply.call_deferred(doc, slot)
 	_launched = true
 
@@ -132,6 +134,10 @@ func _input(event: InputEvent) -> void:
 	var k := event as InputEventKey
 	if k == null or not k.pressed or k.echo or k.shift_pressed or k.ctrl_pressed or k.alt_pressed or k.meta_pressed:
 		return
+	if GameSettings.iron_man() and (k.physical_keycode == KEY_F5 or k.physical_keycode == KEY_F9):
+		get_viewport().set_input_as_handled()
+		_tell("Iron Man: no quick save or load")
+		return
 	if k.physical_keycode == KEY_F5:
 		get_viewport().set_input_as_handled()
 		if save_game("quick") == OK:
@@ -154,7 +160,8 @@ func build_doc(slot := "") -> Dictionary:
 	var parts := {}
 	for part: String in PARTS:
 		parts[part] = _save_part(part)
-	var meta := {"saved_unix": Time.get_unix_time_from_system(), "slot": slot, "godot": Engine.get_version_info().string}
+	var meta := {"saved_unix": Time.get_unix_time_from_system(), "slot": slot, "godot": Engine.get_version_info().string,
+			"iron": GameSettings.iron_man()}
 	var b := SurvivalBridge.find(get_tree())
 	if b:
 		meta["date"] = SurvivalClock.date_string(b.core)
@@ -182,6 +189,14 @@ func save_game(slot: String) -> Error:
 	last_saved_slot = slot
 	saved.emit(slot)
 	return OK
+
+
+## Every save gone (Iron Man: the character died).
+static func erase_all() -> void:
+	for slot: String in SLOTS:
+		var path := dir() + slot + ".json"
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
 
 
 static func read_slot(slot: String) -> Dictionary:

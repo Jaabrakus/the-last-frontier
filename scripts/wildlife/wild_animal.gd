@@ -339,6 +339,31 @@ func _update_zones() -> void:
 ## leg or tail bone swings with the stride: a tomahawk in the flank, carried by the thigh's bone, hung under the belly.
 const STUCK_BONES := ["Body", "Back", "Torso", "Torso2", "Torso3", "Neck1", "Neck2", "Neck3", "Head"]
 
+## The ragdoll's bodies on the stand-in models' shared rig (BoneRagdoll rows: bone, to, radius as a part of length, share
+## of the mass, swing, twist, jointed to): the barrel in two, the neck, the head, each leg in two.
+const RAG_ROWS := [
+	["Back", "Torso2", 0.40, 0.26, 0.0, 0.0, ""],
+	["Torso2", "Neck1", 0.36, 0.28, 35.0, 20.0, "Back"],
+	["Neck1", "Head", 0.26, 0.07, 45.0, 30.0, "Torso2"],
+	["Head", "", 0.30, 0.06, 50.0, 35.0, "Neck1"],
+	["FrontUpperLeg.L", "FrontLowerLeg.L", 0.13, 0.035, 70.0, 20.0, "Torso2"],
+	["FrontLowerLeg.L", "", 0.10, 0.02, 70.0, 10.0, "FrontUpperLeg.L"],
+	["FrontUpperLeg.R", "FrontLowerLeg.R", 0.13, 0.035, 70.0, 20.0, "Torso2"],
+	["FrontLowerLeg.R", "", 0.10, 0.02, 70.0, 10.0, "FrontUpperLeg.R"],
+	["BackUpperLeg.L", "BackLowerLeg.L", 0.13, 0.045, 70.0, 20.0, "Back"],
+	["BackLowerLeg.L", "", 0.10, 0.02, 70.0, 10.0, "BackUpperLeg.L"],
+	["BackUpperLeg.R", "BackLowerLeg.R", 0.13, 0.045, 70.0, 20.0, "Back"],
+	["BackLowerLeg.R", "", 0.10, 0.02, 70.0, 10.0, "BackUpperLeg.R"],
+]
+## Its push from a blow that kills it (m/s from the damage: a ball is hard, an arrow is light), and the most.
+const DEATH_PUSH := Vector2(0.04, 5.0)
+## The carcass lying on the ground (BoneRagdoll; null: a clip's pose, or a ragdoll frozen where it lay: `_rag.frozen`).
+var _rag: BoneRagdoll
+var _death_v := Vector3.ZERO
+var _report: Array[String] = []              ## what the last wound went through (Anatomy), for the hunter's report
+var _death_push := Vector3.ZERO
+var _death_at := Vector3.ZERO
+
 
 ## The node that carries what sticks in the animal at `point` (a thrown weapon, an arrow; user 2026-09-27: "thrown
 ## weapons and animals ... lets do this"): a BoneAttachment3D on the trunk, neck or head bone nearest to the point
@@ -393,7 +418,7 @@ func set_active(on: bool) -> void:
 	# tick had them at the world's origin, the fort's middle, where a shot or a load on a rope ran into them)
 	if not on and state != State.DEAD and is_inside_tree():
 		_update_zones()
-	if _ap:
+	if _ap and _rag == null:
 		if on:
 			_ap.play()
 		else:
@@ -1198,6 +1223,20 @@ func _attack_tick(dt: float, damage: float, quarry: Node3D) -> void:
 # --- Hits, blood, death, the carcass -------------------------------------------------------------
 
 func apply_hit(damage: float, point: Vector3, direction: Vector3, source: Node = null, part := "body") -> void:
+	if damage > 0.0 and not (source is WildAnimal) and _skel != null and direction.length_squared() > 1e-8:
+		# the channel through the body on its skeleton map (Anatomy)
+		var an := Anatomy.attach_to(_skel)
+		if an:
+			_report = an.add_wound(point, direction, damage)
+			# the brain: a clean kill, whatever the animal's health
+			if bool(Anatomy.effect(an.last_hits, damage).lethal) and state != State.DEAD:
+				health = 0.0
+	elif _skel != null and _skel.has_node(^"Anatomy"):
+		(_skel.get_node(^"Anatomy") as Anatomy).last_hits.clear()     # (a bite has no channel: the old rules)
+	if state == State.DEAD and _rag != null and not _rag.frozen and damage > 0.0:
+		# a shot or an arrow into a body still falling or lying loose: it is knocked by it
+		_rag.push(point, _blow(damage, direction))
+		return
 	if state == State.DEAD or damage <= 0.0:
 		return
 	var kind := wound_at(point, direction, part)
@@ -1214,6 +1253,8 @@ func apply_hit(damage: float, point: Vector3, direction: Vector3, source: Node =
 	hurt_by = "wolf" if by_wolf else ("player" if source is FrontierPlayer else "")
 	# (the spine: down where it stands)
 	if health <= 0.0 or kind == "spine":
+		_death_push = _blow(damage, direction)
+		_death_at = point
 		_die("wolf" if by_wolf else "player")
 		return
 	_wounds.append({"kind": kind, "rate": damage * float(wd.bleed), "clot": float(wd.clot), "look": String(wd.look)})
@@ -1239,6 +1280,13 @@ func apply_hit(damage: float, point: Vector3, direction: Vector3, source: Node =
 ## where it went in: on the vitals sphere (the spine's bone) the spine, a path passing the body's axis far out a graze,
 ## the gut's length the gut (GUT_ALONG), the shoulder or the haunch a leg.
 func wound_at(point: Vector3, direction: Vector3, part := "body") -> String:
+	# what the shot went through on its skeleton map decides it (Anatomy.effect), when it went through anything of note
+	if _skel != null and not (_skel.get_node_or_null(^"Anatomy") as Anatomy == null):
+		var an := _skel.get_node(^"Anatomy") as Anatomy
+		var fx := Anatomy.effect(an.last_hits, 60.0)
+		var k := String(fx.kind)
+		if k != "" and not (k == "leg" and part == "head"):
+			return k
 	if part == "head":
 		return "head"
 	var cap := _body_capsule()
@@ -1347,7 +1395,7 @@ func _bleed_tick(dt: float) -> void:
 
 ## Dead already (a save's carcass, SaveParts): lying as its death clip ends, not falling again.
 func lie_dead(by: String) -> void:
-	_die(by)
+	_die(by, false)
 	if _ap == null or not _ap.has_animation(_anim):
 		return
 	_ap.stop()
@@ -1355,18 +1403,27 @@ func lie_dead(by: String) -> void:
 	_ap.seek(_ap.get_animation(_anim).length, true)
 
 
-func _die(by: String) -> void:
+func _die(by: String, ragdoll := true) -> void:
 	if state == State.DEAD:
 		return
 	state = State.DEAD
 	killed_by = by
 	_t = 0.0
+	_death_v = Vector3(velocity.x, 0.0, velocity.z)
 	velocity = Vector3.ZERO
 	_wounds.clear()
 	_zones_off()
 	collision_layer = 0
 	meat_left = meat_full()
 	_play(String(data.clips.death), 0.1)
+	if ragdoll and is_inside_tree():
+		_start_ragdoll()
+	# the hunter's report: what the shot went through, and the moment seen (a heart or a brain)
+	var pl := _player()
+	if ragdoll and by == "player" and pl != null and pl.interactor != null and not _report.is_empty():
+		pl.interactor.notice(Anatomy.report(_report), 3.5)
+		if _report.any(func(l: String) -> bool: return l.begins_with("Heart") or l.begins_with("Brain")):
+			Anatomy.slowmo(get_tree())
 	set_meta("died_at", now())
 	if spawner:
 		spawner.animal_died(self, by)            # one fewer in the land (WildlifeEcology)
@@ -1379,6 +1436,66 @@ func _die(by: String) -> void:
 		if group.alpha == self:
 			group.alpha_down(now())
 	died.emit(self)
+
+
+## The push of a blow of `damage` along `direction` (m/s on the body it lands in), a ball's hard, an arrow light.
+func _blow(damage: float, direction: Vector3) -> Vector3:
+	var d := direction.normalized() if direction.length_squared() > 1e-6 else Vector3.ZERO
+	return d * clampf(damage * DEATH_PUSH.x, 0.8, DEATH_PUSH.y)
+
+
+func _mass_kg() -> float:
+	var body: Array = data.body
+	var r := float(body[0])
+	return clampf(PI * r * r * float(body[1]) * 800.0, 3.0, 900.0)
+
+
+## Down as a ragdoll: the bodies on its bones where they are, going on the way it ran and struck by the blow that killed it.
+func _start_ragdoll() -> void:
+	if _rag != null or _skel == null or not _skel.is_inside_tree():
+		return
+	# (no ground under it yet, the land round it not loaded: it falls as its clip has it)
+	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3.UP * 1.5, global_position + Vector3.DOWN * 3.0)
+	q.exclude = [get_rid()]
+	if get_world_3d().direct_space_state.intersect_ray(q).is_empty():
+		return
+	if _ap:
+		_ap.pause()
+	_rag = BoneRagdoll.build(_skel, RAG_ROWS, _mass_kg(), self)
+	if _rag.bodies.is_empty():
+		_rag.queue_free()
+		_rag = null
+		return
+	_rag.launch(_death_v * 0.9 + _death_push * 0.5)
+	if _death_push != Vector3.ZERO:
+		var at := _death_at if _death_at != Vector3.ZERO else _skel.global_position
+		_rag.push(at, _death_push)
+	_rag.rested.connect(_on_rag_rested)
+
+
+## At rest: the animal goes where the body lies (its hips on the ground, turned along the barrel), the pose kept in its
+## own frame, the bodies freed: a carcass as before, where it fell.
+func _on_rag_rested() -> void:
+	if _rag == null or _rag.frozen:
+		return
+	var worlds := _rag.worlds()
+	var hips := _rag.root_body()
+	var fwd := Vector3.ZERO
+	var b2 := _rag.bodies.get("Torso2") as RigidBody3D
+	if hips and b2:
+		fwd = b2.global_position - hips.global_position
+		fwd.y = 0.0
+	var at := hips.global_position if hips else global_position
+	var q := PhysicsRayQueryParameters3D.create(at + Vector3.UP * 1.0, at + Vector3.DOWN * 4.0)
+	q.exclude = [get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	var ground := (hit.position as Vector3).y if not hit.is_empty() else at.y - 0.3
+	_visual.rotation.x = 0.0
+	if fwd.length() > 0.05:
+		rotation.y = atan2(-fwd.x, -fwd.z)
+	global_position = Vector3(at.x, ground, at.z)
+	_rag.freeze(worlds)
+	_update_zones()
 
 
 ## Marks this wolf the pack's alpha (larger, its coat darker) or takes the mark off.
@@ -1432,6 +1549,8 @@ func interact_prompt(_p: Node) -> String:
 	# the death clip plays out first (the dead animal's own clock stops: _physics_process returns)
 	if state != State.DEAD or (spawner != null and now() - float(get_meta("died_at", 0.0)) < 1.0) or meat_left <= 0.02:
 		return ""
+	if _rag != null and not _rag.frozen:
+		return ""          # still falling, it comes to rest first
 	var s := _next_step()
 	if s.is_empty():
 		return ""

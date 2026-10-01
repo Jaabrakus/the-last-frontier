@@ -5,6 +5,7 @@ extends RefCounted
 ##   [audio]     master, effects, ambience (0..1 of full volume; the buses SFX and Ambience once Sfx has made them)
 ##   [controls]  mouse (the look's sensitivity, FrontierPlayer.cs_sensitivity), invert_y
 ##   [display]   fullscreen, vsync
+##   [game]      iron_man (Iron Man: injuries stay; see iron_man())
 ## The level applies them to its player and buses (FrontierLevel: apply_to(player) after its audio is set up).
 
 const PATH := "user://settings.cfg"
@@ -12,6 +13,7 @@ const DEFAULTS := {
 	"audio": {"master": 1.0, "effects": 1.0, "ambience": 1.0},
 	"controls": {"mouse": 2.0, "invert_y": false},
 	"display": {"fullscreen": false, "vsync": true},
+	"game": {"iron_man": false},
 }
 const BUSES := {"master": &"Master", "effects": &"SFX", "ambience": &"Ambience"}
 
@@ -27,6 +29,37 @@ static func set_value(section: String, key: String, v: Variant) -> void:
 	cf.load(PATH)
 	cf.set_value(section, key, v)
 	cf.save(PATH)
+
+
+## Iron Man (user 2026-09-30: "this should be a iron man mode", "do it" to permadeath and to saving the injury): what a wound
+## breaks stays broken (a cut cord keeps the legs gone for good, a broken leg slows until its wound has knit, a mortal wound
+## staggers: FrontierPlayer._maim), a death ends the character (DeathRule: the saves are erased, back to the main menu), and
+## there is no quick save or quick load (SaveGame: the autosave only). Off (the default) nothing a wound does touches the
+## movement speed (the lasting wounds' own rules, LastingConditions) and a death costs the pack.
+## The mode belongs to the run, and its save: a new game takes the Settings toggle (the main menu's, not changed in a game), a
+## save carries its own (SaveGame meta "iron"), so turning the toggle off does not free an Iron Man save. The argument
+## ironman=on sets it for a run (tests).
+static var _run_set := false
+static var _run_iron := false
+
+
+static func iron_man() -> bool:
+	for a in OS.get_cmdline_user_args():
+		if a == "ironman=on":
+			return true
+	return _run_iron if _run_set else bool(get_value("game", "iron_man"))
+
+
+## The run is Iron Man or not whatever the toggle says (a save loaded).
+static func set_run(iron: bool) -> void:
+	_run_set = true
+	_run_iron = iron
+
+
+## The run follows the toggle again (a new game, the main menu).
+static func clear_run() -> void:
+	_run_set = false
+	_run_iron = false
 
 
 ## The volumes onto the buses there are, the window's mode and vsync.
@@ -80,5 +113,9 @@ static func rows(player: Node = null) -> VBoxContainer:
 	v.add_child(MenuUI.toggle("Vertical sync", bool(get_value("display", "vsync")), func(on: bool) -> void:
 		set_value("display", "vsync", on)
 		apply_global()))
+	if player == null:
+		# (chosen before a game, not in the middle of one)
+		v.add_child(MenuUI.toggle("Iron Man: injuries stay", bool(get_value("game", "iron_man")), func(on: bool) -> void:
+			set_value("game", "iron_man", on)))
 	v.add_child(MenuUI.label("Graphics: F2 in the game.", 16, MenuUI.FAINT))
 	return v

@@ -202,7 +202,7 @@ static func save_player(level: Node) -> Dictionary:
 	return {"pos": v3(at), "yaw": p.yaw, "pitch": p.pitch, "health": p.health,
 			"loadout": plain(p.loadout.to_dict()) if p.loadout else {}, "pack": plain(p.inventory_pack),
 			"carried": plain(p.carried), "weapons": ws, "weapon_key": p.weapon_key, "hands_free": p.hands_free,
-			"torch": torch, "skills": skills}
+			"torch": torch, "skills": skills, "maim": {"legs": p.maim_legs, "broken": p.broken_leg}}
 
 
 static func load_player(level: Node, d: Dictionary) -> void:
@@ -217,6 +217,9 @@ static func load_player(level: Node, d: Dictionary) -> void:
 	p.rotation.y = p.yaw
 	p.pitch = float(d.get("pitch", p.pitch))
 	p.health = float(d.get("health", p.max_health))
+	var maim: Dictionary = d.get("maim", {})
+	p.maim_legs = bool(maim.get("legs", false))          # (Iron Man: a cut cord is kept)
+	p.broken_leg = bool(maim.get("broken", false))
 	for k in d.get("weapons", {}):
 		if p.weapons.has(k):
 			WeaponState.apply(p.weapons[k], d.weapons[k])

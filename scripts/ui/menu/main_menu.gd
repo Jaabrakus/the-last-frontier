@@ -291,6 +291,7 @@ func _play_new() -> void:
 	background_id = _chosen_bg
 	bare_start = _bare
 	new_game = true
+	GameSettings.clear_run()          # (a new game takes the Iron Man toggle)
 	LoadingScreen.go(get_tree(), GAME_SCENE)
 
 

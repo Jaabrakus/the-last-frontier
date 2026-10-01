@@ -8,6 +8,8 @@ extends Node
 ## (SaveGame). DeathRule saves its part: the home and the drops (SaveParts calls save_data / load_data).
 
 signal respawned
+## Iron Man: the character is dead for good (the saves are gone; the main menu follows).
+signal run_ended
 
 const DEATH_S := 5.0
 ## The fort's yard, where a player who has not slept anywhere comes back.
@@ -20,6 +22,7 @@ var home_yaw := 0.0
 var has_home := false
 
 var _dead_t := -1.0
+var _iron_over := false
 var _death_at := Vector3.ZERO
 var _was_sleeping := false
 var _layer: CanvasLayer
@@ -65,7 +68,10 @@ func _process(delta: float) -> void:
 	if _dead_t >= 0.0:
 		_dead_t += delta
 		if _dead_t >= DEATH_S:
-			respawn()
+			if _iron_over:
+				_end_run()
+			else:
+				respawn()
 
 
 func _on_died(_dir: Vector2) -> void:
@@ -77,7 +83,26 @@ func _on_died(_dir: Vector2) -> void:
 	var cause := b.death_cause if b else ""
 	var how: String = {"starvation": "You starved to death", "cold": "You froze to death", "bleeding": "You bled to death"}.get(cause, "You died")
 	_msg.text = "%s.\nYou will wake %s; your pack lies where you fell." % [how, "where you last slept" if has_home else "at the fort"]
+	if GameSettings.iron_man():
+		# Iron Man: this is the end of them. The saves go now (not after the screen: closing the game cannot undo it)
+		_msg.text = "%s.\nIron Man: your story ends here." % how
+		_iron_over = true
+		SaveGame.erase_all()
+		var sg := SaveGame.find(get_tree())
+		if sg:
+			sg.loading = true            # (no autosave over the end)
 	_msg.visible = true
+
+
+## Iron Man: the run is over: back to the main menu (a new game is all there is).
+func _end_run() -> void:
+	_dead_t = -1.0
+	_msg.visible = false
+	GameSettings.clear_run()
+	run_ended.emit()
+	if get_tree().current_scene != null and get_tree().current_scene.scene_file_path != "res://scenes/main_menu.tscn" \
+			and DisplayServer.get_name() != "headless":
+		get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
 
 
 ## Back from the dead: the pack left where the player fell, the player at home with what they wear.

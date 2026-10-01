@@ -68,7 +68,7 @@ const HEAD_MULT := 2.5
 ##   leg    (shoulder or haunch) bleeds hard at first, clots, limps (LAME_SPEED); usually lives
 ##   graze  a shot glancing along it: a few drops, soon stops
 const WOUNDS := {
-	"heart": {"mult": 2.6, "bleed": 0.12, "clot": 0.0, "look": "red"},
+	"heart": {"mult": 2.6, "bleed": 0.2, "clot": 0.0, "look": "red"},
 	"lungs": {"mult": 2.2, "bleed": 0.045, "clot": 0.0, "look": "froth"},
 	"spine": {"mult": 2.2, "bleed": 0.1, "clot": 0.0, "look": "red"},
 	"head": {"mult": 1.0, "bleed": 0.08, "clot": 0.0, "look": "red"},

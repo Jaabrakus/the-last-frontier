@@ -31,9 +31,18 @@ signal bleeding_changed(on: bool)
 ## (LastingConditions: a wound left undressed festers).
 signal wounded(amount: float)
 signal dressed
+## A mortal wound that held (treated and survived): no longer mortal.
+signal stabilized
 ## A hit that hurt: its region (REGIONS), "front" or "back", "bleed" or "blunt", and its health.
 signal struck(region: String, side: String, kind: String, amount: float)
 
+## A mortal wound (the heart, the cord high up; Anatomy.effect): a clock to death, stretched a long way by treatment (a
+## poultice or a salve: dress; yarrow packed in: stanch) up to MORTAL_CAP, and a wound that is treated and survived
+## STABLE_S long stops being mortal: it becomes the chest's lasting wound (LastingConditions) that heals as any other.
+const MORTAL_DRESS_S := 30.0       ## a poultice adds this long (x its strength: a salve more)
+const MORTAL_STANCH_S := 25.0      ## yarrow packed in adds this long (x the share it stanches)
+const MORTAL_CAP := 120.0
+const STABLE_S := 40.0             ## alive this long since the wound, and treated: it holds
 const BLEED_NOW := 0.4
 const DRAIN := 0.04          ## of the pool a second, into lost health
 const CLOT := 0.02           ## of the pool a second, closed without loss (x clot_mult)
@@ -62,6 +71,10 @@ const REGIONS := {
 
 var player: Node
 var pool := 0.0
+## A mortal wound (the heart, the cord high up): seconds left, and the health lost each second so it ends with them.
+var mortal_left := 0.0
+var mortal_age := 0.0
+var treated := false
 var _dressed := 0.0
 var _was := false
 
@@ -92,7 +105,7 @@ static func kind_of(source: Node) -> String:
 
 ## A hit of `damage` from `source` at `point`, going `direction`: the health that comes off now (the caller takes it); a
 ## bleeding wound's pool is kept here. Where it landed is told (struck).
-func take(damage: float, source: Node, point := Vector3.INF, direction := Vector3.ZERO) -> float:
+func take(damage: float, source: Node, point := Vector3.INF, direction := Vector3.ZERO, bleed_mult := 1.0) -> float:
 	var kind := kind_of(source)
 	if kind != "" and damage > 0.0:
 		struck.emit(region_at(player, point), side_of(player, direction), kind, damage)
@@ -101,7 +114,7 @@ func take(damage: float, source: Node, point := Vector3.INF, direction := Vector
 		return 0.0
 	if kind != "bleed":
 		return damage
-	pool += damage * (1.0 - BLEED_NOW)
+	pool += damage * (1.0 - BLEED_NOW) * bleed_mult     # (what it tore through: Anatomy.effect)
 	_dressed = 0.0
 	wounded.emit(damage)
 	return damage * BLEED_NOW
@@ -155,12 +168,14 @@ func drunk() -> bool:
 
 ## A poultice or a salve on the wound: it closes within seconds (`strength` 1: a poultice; more for a salve).
 func dress(strength := 1.0) -> void:
+	_extend(MORTAL_DRESS_S * strength)
 	_dressed = DRESSED_S * strength
 	dressed.emit()
 
 
 ## Something packed into the wound (yarrow): `frac` of the blood still to lose closes at once.
 func stanch(frac: float) -> void:
+	_extend(MORTAL_STANCH_S * clampf(frac, 0.0, 1.0))
 	pool *= 1.0 - clampf(frac, 0.0, 1.0)
 	if pool < STOP:
 		pool = 0.0
@@ -180,7 +195,35 @@ func clot_mult() -> float:
 	return m
 
 
+## Dead in `secs` unless treated: the health runs down to it, on their feet.
+func set_mortal(secs: float) -> void:
+	if secs <= 0.0 or (mortal_left > 0.0 and mortal_left <= secs):
+		return
+	mortal_left = secs
+	if mortal_age <= 0.0:
+		treated = false
+	bleeding_changed.emit(true)
+
+
+## Treatment stretches the clock (a poultice, a salve, yarrow), up to MORTAL_CAP.
+func _extend(secs: float) -> void:
+	if mortal_left <= 0.0:
+		return
+	mortal_left = minf(mortal_left + secs, MORTAL_CAP)
+	treated = true
+	var n: Variant = player.get("interactor")
+	if n != null:
+		n.notice("The wound holds a while longer", 2.5)
+
+
+func mortal() -> bool:
+	return mortal_left > 0.0
+
+
 func clear() -> void:
+	mortal_left = 0.0
+	mortal_age = 0.0
+	treated = false
 	pool = 0.0
 	_dressed = 0.0
 	_notify()
@@ -194,6 +237,22 @@ func _physics_process(dt: float) -> void:
 			clear()
 		return
 	_dressed = maxf(0.0, _dressed - dt)
+	if mortal_left > 0.0:
+		mortal_age += dt
+		if treated and mortal_age >= STABLE_S:
+			# treated and survived: it holds. What is left is a wound like any other (the chest's, LastingConditions)
+			mortal_left = 0.0
+			mortal_age = 0.0
+			treated = false
+			stabilized.emit()
+			var n: Variant = player.get("interactor")
+			if n != null:
+				n.notice("The bleeding has slowed: you will live if you rest", 4.0)
+		else:
+			mortal_left = maxf(0.0, mortal_left - dt)
+			var hp := float(player.get("health"))
+			# the health runs down to nothing as the clock does (a poultice's healing only buys the time it adds)
+			player.call(&"lose_blood", hp / maxf(mortal_left + dt, dt) * dt if mortal_left > 0.0 else hp + 1.0)
 	if pool <= 0.0:
 		return
 	var lost := minf(pool * DRAIN * dt, pool)
