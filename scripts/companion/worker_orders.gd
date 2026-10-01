@@ -24,6 +24,11 @@ const PREVIEW_S := 0.4
 ## The alternatives are shown for places within this of the worker (m): planning three ways takes 60-130 ms on a long trip.
 const ALTERNATIVES_M := 120.0
 
+## Direct orders (user 2026-10-01: "for the L to direct play movement remove the path finding thing"): L sends her straight at the
+## spot (she only steps round what is close ahead of her, Spouse._steer), no routes planned, previewed or refused. The planner
+## comes back with the user arg routes=on.
+static var direct := not ("routes=on" in OS.get_cmdline_user_args() or "--routes=on" in OS.get_cmdline_user_args())
+
 var picked: Spouse = null
 ## The job the next place sent is for ("" just go there): set by the Talk tab's "Send her out to", spent by the click.
 var next_act := ""
@@ -118,7 +123,7 @@ func _physics_process(dt: float) -> void:
 func _preview(dt: float) -> void:
 	_routes_t -= dt
 	_refuse_t = maxf(_refuse_t - dt, 0.0)
-	if picked == null or _routes_node == null:
+	if picked == null or _routes_node == null or direct:
 		routes = []
 		blocked = {}
 		_routes_at = Vector3.INF
@@ -214,6 +219,9 @@ func click(queue := false, pick := 0) -> void:
 	var act := next_act
 	if not queue:
 		next_act = ""
+	if direct:
+		order(picked, a.pos, queue, PackedVector3Array(), act)
+		return
 	var fresh := routes.is_empty() or _routes_at == Vector3.INF or Vector2(a.pos.x - _routes_at.x, a.pos.z - _routes_at.z).length() > PREVIEW_MOVE_M
 	var rs := _decided(picked, a.pos, routes_for(picked, a.pos)) if fresh else routes
 	if rs.is_empty():

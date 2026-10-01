@@ -268,7 +268,14 @@ func _physics_process(dt: float) -> void:
 				var chosen: PackedVector3Array = order_ways[0] if not order_ways.is_empty() else PackedVector3Array()
 				if nav.use_grid and chosen.size() >= 2:
 					nav.use_route(chosen, o)
-		var ow := walk_to(o, WALK_SPEED, 0.5)
+		var ow: Array
+		if WorkerOrders.direct:
+			# straight at the spot, stepping round only what is close ahead (no route planned)
+			var st := o - global_position
+			st.y = 0.0
+			ow = [_steer(st.normalized()) if st.length() > 0.05 else Vector3.ZERO, WALK_SPEED]
+		else:
+			ow = walk_to(o, WALK_SPEED, 0.5)
 		if Vector2(o.x - global_position.x, o.z - global_position.z).length() <= 0.6:
 			orders.pop_front()
 			if not order_ways.is_empty():
