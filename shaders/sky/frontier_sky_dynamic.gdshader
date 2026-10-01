@@ -291,8 +291,12 @@ void sky() {
 		COLOR = sky_color(d, 12, ground_view_radiance, tr);
 		ALPHA = dot(tr, vec3(0.3333));
 	} else if (AT_HALF_RES_PASS) {
-		// step jitter: white noise per pixel, rotated every frame for the temporal AA to resolve
-		float jit = fract(hash13(vec3(FRAGCOORD.xy, 7.0)) + cloud_jitter_anim * 0.61803 * floor(sky_time * 60.0));
+		// step jitter: interleaved gradient noise (Jimenez), its pattern shifted each frame for the temporal AA. White noise
+		// per pixel came through MetalFX and the half-res upscale as static in the clouds (user 2026-10-01: "the clouds have
+		// static points"); this one is low-discrepancy, so neighbours differ smoothly and the frames average out.
+		float fr = cloud_jitter_anim * mod(floor(sky_time * 60.0), 64.0);
+		vec2 q = FRAGCOORD.xy + 5.588238 * fr;
+		float jit = fract(52.9829189 * fract(dot(q, vec2(0.06711056, 0.00583715))));
 		vec4 cl = ce_sky_clouds(d, POSITION, QUARTER_RES_COLOR.rgb, jit);
 		COLOR = cloud_debug == 1 ? vec3(1.0 - cl.a) : cl.rgb;
 		ALPHA = cloud_debug == 1 ? 1.0 : cl.a;

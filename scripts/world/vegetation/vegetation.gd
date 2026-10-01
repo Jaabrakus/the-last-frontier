@@ -102,12 +102,12 @@ const LOD_BAND_MIN := 3.0
 const LOD_REACH := 18.0
 ## Props (25 m cells): LOD ends. Rocks keep 3 LODs; stumps, logs, roots and brush use LOD0 and
 ## LOD1 only.
-const ROCK_LOD := [15.0, 50.0, 130.0]
-const PROP_LOD := [15.0, 70.0]
+const ROCK_LOD := [15.0, 60.0, 250.0]
+const PROP_LOD := [20.0, 150.0]
 ## Undergrowth: LOD0 end, LOD1 end.
-const FERN_LOD := [16.0, 40.0]
-const SHRUB_LOD := [25.0, 70.0]
-const SAPLING_LOD := [25.0, 80.0]
+const FERN_LOD := [20.0, 90.0]
+const SHRUB_LOD := [30.0, 160.0]
+const SAPLING_LOD := [30.0, 180.0]   # (drawn far: user 2026-10-01, "all the vegetation to show up, not only where we walk")
 ## SDFGI sees the LOD1 trees (spec 4.1: crowns STATIC). Off makes all vegetation GI_MODE_DISABLED.
 ## Forest lighting (2026-09-26): the crowns stay out of SDFGI while the forest light runs (gi_blobs()).
 const TREES_IN_GI := true

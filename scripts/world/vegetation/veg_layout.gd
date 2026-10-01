@@ -33,7 +33,7 @@ const TREE_CELL := 7.4               ## Jittered grid: ~1 tree per 55 m2 near th
 const FAR_KEEP := 0.61               ## 55 / 90: ~1 per 90 m2 beyond NEAR.
 const MAX_SLOPE_Y := 0.848           ## cos 32 deg
 const CORRIDOR_LENGTH := 200.0
-const CLUTTER_RADIUS := 230.0        ## Saplings, shrubs, ferns only within this range of the fort.
+const CLUTTER_RADIUS := WORLD       ## Saplings, shrubs, ferns everywhere on the land (user 2026-10-01: "all the vegetation to show up", not only round the fort; was 230 m).
 const CELL := 50.0                   ## Render cell of vegetation.gd (variant choice per cell).
 const CLUTTER_CELL := 25.0
 

@@ -47,7 +47,7 @@ const Upscaling := preload("res://scripts/world/settings/upscaling.gd")
 ## Fraction of the full grass blade/tuft density.
 @export_range(0.0, 1.0) var grass_density := 1.0
 ## Distance (m) where grass has faded out completely.
-@export var grass_distance := 55.0
+@export var grass_distance := 80.0
 ## Detail layers: close-up detail normals, triplanar rock on slopes, parallax-free height blend.
 @export var terrain_detail := true
 
@@ -127,7 +127,7 @@ static func preset(q: String) -> WorldSettings:
 			s.auto_exposure = false
 			s.terrain_lod_scale = 0.6
 			s.grass_density = 0.35
-			s.grass_distance = 25.0
+			s.grass_distance = 35.0
 			s.terrain_detail = false
 			s.vegetation_distance_scale = 0.6
 			s.clutter_density = 0.4
@@ -148,7 +148,7 @@ static func preset(q: String) -> WorldSettings:
 			s.auto_exposure = true
 			s.terrain_lod_scale = 0.8
 			s.grass_density = 0.65
-			s.grass_distance = 40.0
+			s.grass_distance = 60.0
 			s.terrain_detail = true
 			s.vegetation_distance_scale = 0.8
 			s.clutter_density = 0.7
