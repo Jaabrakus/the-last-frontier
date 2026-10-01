@@ -62,6 +62,18 @@ static func dir() -> String:
 	return TEST_DIR if _is_script_run() else DIR
 
 
+## Whether the save this level is about to load (the one pending, or the latest continued at launch) is of a start with nothing: the
+## level is built without its fort before the save is read.
+static func incoming_bare() -> bool:
+	if not pending.is_empty():
+		return bool((pending.get("meta", {}) as Dictionary).get("bare", false))
+	if not _launched and not _is_script_run() and not _has_arg("new_game"):
+		var slot := latest_slot()
+		if slot != "":
+			return bool((read_slot(slot).get("meta", {}) as Dictionary).get("bare", false))
+	return false
+
+
 static func _is_script_run() -> bool:
 	var args := OS.get_cmdline_args()
 	return "-s" in args or "--script" in args
@@ -161,7 +173,7 @@ func build_doc(slot := "") -> Dictionary:
 	for part: String in PARTS:
 		parts[part] = _save_part(part)
 	var meta := {"saved_unix": Time.get_unix_time_from_system(), "slot": slot, "godot": Engine.get_version_info().string,
-			"iron": GameSettings.iron_man()}
+			"iron": GameSettings.iron_man(), "bare": SurvivalBridge.bare_of(get_tree())}
 	var b := SurvivalBridge.find(get_tree())
 	if b:
 		meta["date"] = SurvivalClock.date_string(b.core)

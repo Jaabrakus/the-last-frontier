@@ -47,6 +47,7 @@ func _ready() -> void:
 	StartupPrefetch.start(get_tree())
 	rng.seed = 1776
 	settings = WorldSettings.from_args()
+	FrontierTerrain.open_ground = SurvivalBridge.bare_ahead()      # (a start with nothing: no fort, its ground grown over)
 	environment_rig = EnvironmentRig.new()
 	environment_rig.name = "EnvironmentRig"
 	add_child(environment_rig)
@@ -66,6 +67,9 @@ func _ready() -> void:
 	structures.name = "Structures"
 	add_child(structures)
 	structures.build(settings, rng)
+	var bridge_bare := SurvivalBridge.bare_ahead()
+	if bridge_bare:
+		structures.clear_fort()          # (a start with nothing: open ground, no stockade, cabin or range)
 	StartupProfile.mark("structures")
 	vegetation = FrontierVegetation.new()
 	vegetation.name = "Vegetation"
@@ -121,7 +125,8 @@ func _ready() -> void:
 		Household.install(self, player)
 	StartupProfile.mark("survival")
 	# the fort's furnishing from the build menu's pieces (scripts/building/fort_plan.gd): the wife's work
-	FortPlan.install(self)
+	if not bridge_bare:
+		FortPlan.install(self)
 	# forage (scripts/forage): berries, nuts and herbs where they grow; the deer feed on them too
 	var forage := ForageField.new()
 	forage.name = "Forage"

@@ -55,3 +55,16 @@ static func apply(b: SurvivalBridge) -> void:
 		p.torch.pack.clear()
 		p.torch.changed.emit()
 	ClothesSlots.sync_look(b)               # (naked: nothing in any clothes slot; the look follows what is worn)
+
+
+## The spouse starts with nothing as well (user 2026-10-01: "in bare mode she starts as naked as well"): her kit and clothes gone, her
+## look dressed from what she wears (nothing), no tools of hers for the pool, no plain belt.
+static func strip_spouse(sc: SpouseCore) -> void:
+	sc.bare = true
+	sc.core.state.inventory = []
+	sc.core.state.worn = []
+	sc.core._on_inventory_changed()
+	sc.tool_kit_new = false
+	sc.rope_bag = {}
+	sc.rope_worn = []
+	ClothesSlots.sync_worker(sc)

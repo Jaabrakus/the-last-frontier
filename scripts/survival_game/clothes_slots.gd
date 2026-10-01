@@ -157,3 +157,34 @@ static func sync_look(bridge: SurvivalBridge) -> void:
 	var look := ap.look.duplicate(true)
 	look["outfit"] = outfit_of(bridge.core, look.get("outfit", {}) if look.get("outfit") is Dictionary else {})
 	ap.apply(look)
+
+
+## The same for a worker (the Gear tab of her sheet): a garment on in its slot over what was there, and her look dressed to what she wears.
+static func wear_worker(sc: SpouseCore, item_id: String) -> bool:
+	var zone := zone_of(sc.core, item_id)
+	if zone == "":
+		return false
+	var there := worn_in(sc.core, zone)
+	if there == item_id:
+		return true
+	if there != "":
+		SurvivalInventory.take_off(sc.core, there)
+	var ok := SurvivalInventory.wear(sc.core, item_id)
+	sync_worker(sc)
+	return ok
+
+
+static func take_off_worker(sc: SpouseCore, zone: String) -> bool:
+	var there := worn_in(sc.core, zone)
+	if there == "":
+		return false
+	var ok := SurvivalInventory.take_off(sc.core, there)
+	sync_worker(sc)
+	return ok
+
+
+## Her look's outfit follows what she wears (the slots the zones cover), and her body is dressed again.
+static func sync_worker(sc: SpouseCore, body: Node = null) -> void:
+	sc.look["outfit"] = outfit_of(sc.core, sc.look.get("outfit", {}) if sc.look.get("outfit") is Dictionary else {})
+	if body != null and is_instance_valid(body) and body.has_method(&"redress"):
+		body.call(&"redress")

@@ -389,9 +389,10 @@ func _ready() -> void:
 		traversal = PlayerTraversal.install(self)
 	if enable_grip:
 		grip = PlayerGrip.install(self)
-	if demo_horse:
+	var owns_nothing := SurvivalBridge.bare_ahead()      # (a start with nothing: no demo horse, cart or barrow stands by)
+	if demo_horse and not owns_nothing:
 		HorseMount.ensure_demo_horse.call_deferred(self)
-	if demo_wheelbarrow:
+	if demo_wheelbarrow and not owns_nothing:
 		Wheelbarrow.ensure_demo.call_deferred(self)
 	_ensure_hands_free_input()
 	if is_local:

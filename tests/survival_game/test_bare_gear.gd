@@ -152,18 +152,21 @@ func _run() -> void:
 	await process_frame
 	var panel: ClothesPanel = scr._clothes
 	panel.refresh()
-	var feet_row := panel._rows["feet"] as OptionButton
-	_expect(scr.tab == "clothes" and panel.visible and feet_row.item_count == 2, "the Clothes tab lists the moccasins for the feet (%d choices)" % feet_row.item_count)
-	panel._chosen("feet", 1)
+	var listed := panel._list.get_children().filter(func(c: Node) -> bool: return c is ClothesPanel.Cell and String((c as ClothesPanel.Cell).payload.get("id", "")) == "item.cloth.moccasins")
+	_expect(scr.tab == "clothes" and panel.visible and listed.size() == 1, "the Clothes tab lists the moccasins to drag (%d)" % listed.size())
+	var cell := panel._slot_cells["feet"] as ClothesPanel.Cell
+	_expect(cell._can_drop_data(Vector2.ZERO, {"from": "cloth", "id": "item.cloth.moccasins"}) and not (panel._slot_cells["head"] as ClothesPanel.Cell)._can_drop_data(Vector2.ZERO, {"from": "cloth", "id": "item.cloth.moccasins"}), "the feet slot takes moccasins, the head slot does not")
+	cell._drop_data(Vector2.ZERO, {"from": "cloth", "id": "item.cloth.moccasins"})
 	_expect(ClothesSlots.worn_in(b.core, "feet") == "item.cloth.moccasins", "choosing them in the tab puts them on")
-	panel._chosen("feet", 0)
+	panel._list_drop(Vector2.ZERO, {"from": "worn_cloth", "zone": "feet"})
 	_expect(ClothesSlots.worn_in(b.core, "feet") == "", "choosing nothing takes them off")
 	scr.inv.add("rope_belt", 1)
 	panel.refresh()
-	_expect(not (panel._gear_rows["rope_belt"] as Button).disabled, "a rope belt in the pack can be put on from the tab")
+	_expect(not (panel._gear_rows["rope_belt"] as ClothesPanel.Cell).disabled, "a rope belt in the pack can be put on from the tab")
 	panel._toggle_gear("rope_belt")
 	_expect(scr.inv.gear_worn("rope_belt") and scr.inv.points().has("R_hip"), "and the body offers its hip points")
 	scr.close()
+	await _by_hand(p)
 	var h: Household = null
 	for n in current_scene.get_children():
 		if n is Household:
@@ -171,8 +174,67 @@ func _run() -> void:
 	_expect(h != null and h.sc != null and h.body != null, "a spouse stands at the start")
 	if h and h.sc:
 		_expect(h.sc.intimacy > 0.99 and h.sc.intimacy_cd == 0.0, "her intimacy is open from the start (%.2f)" % h.sc.intimacy)
+	if h and h.sc:
+		await _her_sheet(h, b, p)
 	if fails.is_empty():
 		print("BARE GEAR TEST PASSED (%d checks)" % checks)
 	else:
 		print("BARE GEAR TEST FAILED (%d of %d)" % [fails.size(), checks])
 	quit(0 if fails.is_empty() else 1)
+
+
+## No fort in a start with nothing, the spouse naked, her Gear tab: garments and rope dragged to her, worn, handed back.
+func _her_sheet(h: Household, b: SurvivalBridge, p: FrontierPlayer) -> void:
+	var st := current_scene.get_node_or_null("Structures")
+	_expect(st != null and st.get_child_count() == 0 and get_nodes_in_group(&"fort_part").is_empty(), "no fort: the structures node is empty (%d)" % (st.get_child_count() if st else -1))
+	_expect(current_scene.get_node_or_null("FortPlan") == null and get_nodes_in_group(WeaponRack.GROUP).is_empty(), "no fort furnishing and no demo racks")
+	var sc := h.sc
+	_expect(sc.core.state.worn.is_empty() and sc.core.state.inventory.is_empty(), "she owns and wears nothing")
+	var outfit: Dictionary = sc.look.get("outfit", {})
+	var naked := true
+	for z: Dictionary in ClothesSlots.ZONES:
+		for slot: String in z.slots:
+			if String((outfit.get(slot, {}) as Dictionary).get("id", "-")) != "-":
+				naked = false
+	_expect(naked, "her look has nothing in any clothes slot")
+	var hs := HouseholdScreen.open_for(h, "gear")
+	await process_frame
+	var tab := GearTab.build(hs)
+	SurvivalInventory.add(b.core, "item.cloth.linen_shirt", 1.0)
+	var shirts0 := SurvivalInventory.count(b.core, "item.cloth.linen_shirt")
+	var inv := InventoryState.from_player(p)
+	inv.add("rope_belt", 1)
+	p.inventory_pack = inv.pack.duplicate(true)
+	_expect(tab._yours_cloth().has("item.cloth.linen_shirt") and tab._yours_rope().has("rope_belt"), "the shirt and belt show on the player's side")
+	_expect(tab.move({"what": "cloth", "id": "item.cloth.linen_shirt", "src": "you"}, "her", true), "the shirt is dragged onto her body slot")
+	_expect(ClothesSlots.worn_in(sc.core, "body") == "item.cloth.linen_shirt" and SurvivalInventory.count(b.core, "item.cloth.linen_shirt") == shirts0 - 1.0, "she wears it; the player no longer has it")
+	var shirt_id := String(((sc.look.get("outfit", {}) as Dictionary).get("shirt", {}) as Dictionary).get("id", ""))
+	_expect(shirt_id != "" and shirt_id != "-", "her look wears it (%s)" % shirt_id)
+	_expect(tab.move({"what": "rope", "id": "rope_belt", "src": "you"}, "her", true) and sc.rope_worn.has("rope_belt") and InventoryState.from_player(p).pack_count("rope_belt") == 0, "the rope belt is handed over and put on")
+	var wg := WorkerGear.of(h.body_of(sc))
+	await process_frame
+	_expect(wg != null and wg.loadout != null or wg == null, "her rig reads it")
+	_expect(tab.move({"what": "cloth", "id": "item.cloth.linen_shirt", "src": "her"}, "you", false) and ClothesSlots.worn_in(sc.core, "body") == "" and SurvivalInventory.count(b.core, "item.cloth.linen_shirt") == shirts0, "the shirt is dragged back: off her, in the player's hands")
+	_expect(tab.move({"what": "rope", "id": "rope_belt", "src": "her"}, "you", false) and sc.rope_worn.is_empty() and InventoryState.from_player(p).pack_count("rope_belt") == 1, "the belt comes back to the pack")
+	hs.queue_free()
+
+
+## The Craft tab's work: cord from bark with no station, made by the hands (HandCraft).
+func _by_hand(p: FrontierPlayer) -> void:
+	var inv := InventoryState.from_player(p)
+	inv.take("cordage", 99)
+	inv.add("elm_bark", 2)
+	p.inventory_pack = inv.pack.duplicate(true)
+	var rows := HandCraft.rows(p)
+	var cord := rows.filter(func(r: Dictionary) -> bool: return String(r.id) == "cordage_bark")
+	_expect(cord.size() == 1 and bool(cord[0].ok), "the Craft tab offers cordage from bark with no station (%d rows)" % rows.size())
+	var scr := InventoryScreen.open_for(p, "craft")
+	await process_frame
+	_expect(scr.tab == "craft" and scr._craft.visible, "the Craft tab opens")
+	scr.close()
+	_expect(HandCraft.make(p, "cordage_bark"), "making it starts the work")
+	for i in 900:
+		await physics_frame
+		if InventoryState.from_player(p).pack_count("cordage") >= 2:
+			break
+	_expect(InventoryState.from_player(p).pack_count("cordage") >= 2 and InventoryState.from_player(p).pack_count("elm_bark") == 0, "two lengths of cordage for the two barks")

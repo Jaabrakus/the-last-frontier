@@ -237,6 +237,27 @@ static func start_bare() -> bool:
 	return v
 
 
+## Whether the level being built is of a start with nothing, before the bridge exists (the menu's switch or the arg, not taken; or the
+## save about to load): such a level has no fort.
+static func bare_ahead() -> bool:
+	if MainMenu.bare_start:
+		return true
+	for a in OS.get_cmdline_user_args():
+		if a.trim_prefix("--") == "start=bare":
+			return true
+	return SaveGame.incoming_bare()
+
+
+## Whether this new game has a spouse (the New game screen's switch, taken once; or the user arg spouse=off for tests and tools).
+static func spouse_wanted() -> bool:
+	var v := MainMenu.spouse_start
+	MainMenu.spouse_start = true
+	for a in OS.get_cmdline_user_args():
+		if a.trim_prefix("--") == "spouse=off":
+			v = false
+	return v
+
+
 ## Whether this character started with nothing (kept in the core's flags, so a save keeps it): no tool, weapon,
 ## clothes or food is handed out again (GatherTools, FieldDressing, Campfire.ensure_striker).
 func is_bare() -> bool:

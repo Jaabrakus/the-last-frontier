@@ -1228,7 +1228,7 @@ func _do_place() -> void:
 ## The demo's rack of three loaded muskets and barrel of three spears beside the spawn (user 2026-09-25:
 ## "place rifles in bins ... for quick equip without reloading"), unless the level has racks of its own.
 func _ensure_demo_props() -> void:
-	if not get_tree().get_nodes_in_group(WeaponRack.GROUP).is_empty() or player == null:
+	if not get_tree().get_nodes_in_group(WeaponRack.GROUP).is_empty() or player == null or SurvivalBridge.bare_of(get_tree()):
 		return
 	var scene := get_tree().current_scene
 	if scene == null:

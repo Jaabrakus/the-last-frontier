@@ -145,6 +145,8 @@ func _run() -> void:
 	mode = player.get_node_or_null("BuildMode") as BuildMode
 	SurvivalWeather.set_external(b.core, "clear", 2.0, 250.0)
 	await _nothing()
+	check(current_scene.get_node_or_null("Wheelbarrow") == null and current_scene.find_children("*", "Horse", false, false).is_empty(), "no demo horse, cart or barrow stands by in a start with nothing")
+	await process_frame
 	await _by_hand()
 	await _stone()
 	await _knife()

@@ -35,6 +35,8 @@ static var background_id := ""
 static var new_game := false
 ## Set by New game's "Start with nothing": no tool, weapon, clothes or food (SurvivalBridge.start_bare(), taken once).
 static var bare_start := false
+## Whether this new game has a spouse (the New game screen's switch; taken once by the household).
+static var spouse_start := true
 
 var _a: TextureRect
 var _b: TextureRect
@@ -47,6 +49,7 @@ var _t := 0.0
 var _fade := -1.0
 var _chosen_bg := ""
 var _bare := false
+var _spouse := true
 var _museum: Control
 var _museum_pic: TextureRect
 var _museum_room: Label
@@ -281,6 +284,7 @@ func _play_save(slot: String) -> void:
 	SaveGame._launched = true
 	new_game = false
 	bare_start = false
+	spouse_start = true
 	background_id = ""              # (a save has its own)
 	LoadingScreen.go(get_tree(), GAME_SCENE, true)
 
@@ -290,6 +294,7 @@ func _play_new() -> void:
 	SaveGame._launched = true         # (a new game: the latest save is not continued)
 	background_id = _chosen_bg
 	bare_start = _bare
+	spouse_start = _spouse
 	new_game = true
 	GameSettings.clear_run()          # (a new game takes the Iron Man toggle)
 	LoadingScreen.go(get_tree(), GAME_SCENE)
@@ -410,6 +415,7 @@ func _museum_show(i: int) -> void:
 
 func _open_new_game() -> void:
 	_bare = false
+	_spouse = true
 	_open_panel()
 	_panel.add_child(MenuUI.heading("A new life"))
 	_panel.add_child(MenuUI.label("Who were you before you came to the manor woods?", 19, MenuUI.DIM, true))
@@ -461,6 +467,14 @@ func _open_new_game() -> void:
 		if t:
 			t.text = "Start with nothing:  %s" % ("on" if _bare else "off"))
 	_panel.add_child(bare_row)
+	# a spouse at the start (a wife or husband who follows orders), or a life alone
+	var spouse_row := MenuUI.item("Spouse:  on", 22, "a wife or husband beside you from the start who takes orders (gather, fell, carry); off: you begin alone")
+	spouse_row.pressed.connect(func() -> void:
+		_spouse = not _spouse
+		var t := spouse_row.find_child("Text", true, false) as Label
+		if t:
+			t.text = "Spouse:  %s" % ("on" if _spouse else "off"))
+	_panel.add_child(spouse_row)
 	if SaveGame.latest_slot() != "":
 		_panel.add_child(MenuUI.label("Your saves stay as they are; the autosave is written over as you play.", 16, MenuUI.FAINT, true))
 	begin.pressed.connect(_play_new)

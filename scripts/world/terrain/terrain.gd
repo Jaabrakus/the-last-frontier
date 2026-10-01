@@ -145,10 +145,16 @@ var square_textures := {}
 var square_materials := {}
 
 
+## A level with no fort (a start with nothing): the fort's clearing and the range lane are open ground, grown over like the rest.
+static var open_ground := false
+
+
 # --- Static API ------------------------------------------------------------------------------
 
 ## Distance (m) from (x, z) to the nearest flat zone (0 inside one).
 static func flat_distance(x: float, z: float) -> float:
+	if open_ground:
+		return 1000.0
 	var fx := maxf(absf(x) - FORT_FLAT_HALF, 0.0)
 	var fz := maxf(absf(z) - FORT_FLAT_HALF, 0.0)
 	var d_fort := Vector2(fx, fz).length()
@@ -159,6 +165,8 @@ static func flat_distance(x: float, z: float) -> float:
 
 
 static func in_flat_zone(x: float, z: float) -> bool:
+	if open_ground:
+		return false
 	return (absf(x) <= FORT_FLAT_HALF and absf(z) <= FORT_FLAT_HALF) \
 			or (absf(x) <= LANE_FLAT_HALF_X and z >= LANE_FLAT_Z_MIN and z <= LANE_FLAT_Z_MAX)
 
@@ -775,8 +783,9 @@ func _build_placeholder() -> void:
 	m.material_override = grass_mat
 	add_child(m)
 	var dirt := _mat("dirt", Color(0.45, 0.37, 0.26), 1.0)
-	_flat(Vector3(0, 0.01, 0), Vector2(FORT_HALF * 2, FORT_HALF * 2), dirt)
-	_flat(Vector3(0, 0.01, FIRING_LINE_Z - 70), Vector2(10, 140), dirt)
+	if not SurvivalBridge.bare_ahead():        # (no fort yard and no firing lane in a start with nothing)
+		_flat(Vector3(0, 0.01, 0), Vector2(FORT_HALF * 2, FORT_HALF * 2), dirt)
+		_flat(Vector3(0, 0.01, FIRING_LINE_Z - 70), Vector2(10, 140), dirt)
 	var body := StaticBody3D.new()
 	body.name = "GroundFloor"
 	body.add_to_group(&"terrain")

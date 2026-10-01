@@ -77,6 +77,12 @@ func _process(dt: float) -> void:
 	refresh()
 
 
+## Her outfit changed (the Gear tab): the worn slots are read again.
+func redress() -> void:
+	_slots = {}
+	refresh(true)
+
+
 ## Rebuilds the worn loadout when what she holds has changed.
 func refresh(force := false) -> void:
 	var p := pool()
@@ -86,6 +92,7 @@ func refresh(force := false) -> void:
 	var sig := ""
 	for k: String in keys:
 		sig += "%s:%d," % [k, int(held[k])]
+	sig += "|" + ",".join(sc.rope_worn.map(func(x: Variant) -> String: return String(x)))
 	if sig == signature and not force:
 		return
 	signature = sig
@@ -112,16 +119,20 @@ static func outfit_slots(look: Dictionary) -> Dictionary:
 
 
 ## The Loadout for what she holds ({pool kind: n}) over her outfit (`slots`).
-static func loadout_for(held: Dictionary, slots: Dictionary) -> Loadout:
+static func loadout_for(held: Dictionary, slots: Dictionary, rope := [], plain_belt := true) -> Loadout:
 	var lo := Loadout.new()
 	var g := LoadoutRules.gear_from_appearance(slots, false)
 	lo.gear = PackedStringArray(g.get("gear", []))
 	lo.shoulder_ew_sash = bool(g.get("shoulder_ew_sash", false))
+	for kind: String in rope:       # (the rope belt and sling made from bark cord and put on from her Gear tab)
+		var gid := String(InventoryState.GEAR_KINDS.get(kind, ""))
+		if gid != "" and not lo.gear.has(gid):
+			lo.gear.append(gid)
 	var waist := false
 	for id: String in lo.gear:
 		if id != "back_slings" and id != "ew_sash" and id != "horn_strap" and id != "shot_pouch_strap" and id != "pistol_sling":
 			waist = true
-	if not waist:
+	if not waist and plain_belt:
 		lo.gear.append("belt_tied_behind")      # (a plain belt tied behind: something for the hooks)
 	if int(held.get("powder", 0)) > 0 and not lo.gear.has("horn_strap"):
 		lo.gear.append("horn_strap")
@@ -170,7 +181,7 @@ func _build(held: Dictionary) -> void:
 		if st != "" and st != "adult":
 			look = ChildLook.dress_look(ChildLook.young(sc.body_look, st), float(sc.look.get("sex", 0.0)), st)
 		_slots = outfit_slots(AppearanceStore.validate(look))
-	loadout = loadout_for(held, _slots)
+	loadout = loadout_for(held, _slots, sc.rope_worn, not sc.bare)
 	for id: String in _hand:
 		if is_instance_valid(_hand[id]):
 			(_hand[id] as Node).queue_free()

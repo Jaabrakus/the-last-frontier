@@ -140,6 +140,14 @@ func build(world_settings: WorldSettings, rng: RandomNumberGenerator) -> void:
 	stats["build_ms"] = (Time.get_ticks_usec() - t0) / 1000.0
 
 
+## A level with no fort (a start with nothing): the stockade, cabin, range, their colliders and the grass they cleared are taken out.
+func clear_fort() -> void:
+	for c in get_children():
+		c.queue_free()
+	fort = null
+	range_root = null
+
+
 ## The shared material / dummy caches are static: release them with the level so they do not
 ## outlive the RenderingServer at quit (they are rebuilt on the next build()).
 func _exit_tree() -> void:

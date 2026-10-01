@@ -8,7 +8,7 @@ extends RefCounted
 ## All times are game minutes.
 
 const PATH := "res://data/companion/intimacy.json"
-const DEFAULTS := {"start": 0.1, "full_at": 0.999, "near_m": 6.0, "together_per_min": 0.0006, "together_day_cap": 0.2,
+const DEFAULTS := {"anytime": true, "start": 0.1, "full_at": 0.999, "near_m": 6.0, "together_per_min": 0.0006, "together_day_cap": 0.2,
 		"talk": 0.02, "talk_cooldown_min": 60.0, "meal_shared": 0.03, "meal_cooked_bonus": 0.02, "meal_kcal": 120.0,
 		"meal_cooldown_min": 120.0, "cooked_recent_min": 360.0, "gift": 0.008, "gift_cooldown_min": 60.0, "job": 0.01,
 		"job_day_cap": 0.05, "day_cap": 0.4, "away_grace_days": 2.0, "drain_per_day": 0.03, "floor": 0.05,
@@ -32,12 +32,24 @@ var _job_today := 0.0
 var _away_min := 0.0
 
 
+## Settings laid over the file's (a test of the gauge's rules turns `anytime` off).
+static var cfg_override := {}
+
+
+## Yoga together at any time (user 2026-10-01: "we should be able to do yoga anytime, do not have the ask for it gauge"): no gauge to
+## fill, no wait after a session, no offers of hers; only the moment's safety (danger, a fight, too far, a minor) stops it.
+func anytime() -> bool:
+	return bool(cfg.get("anytime", false))
+
+
 static func load_cfg() -> Dictionary:
 	var out: Dictionary = DEFAULTS.duplicate(true)
 	var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(PATH)) if FileAccess.file_exists(PATH) else null
 	if d is Dictionary:
 		for k in d:
 			out[k] = d[k]
+	for k in cfg_override:
+		out[k] = cfg_override[k]
 	return out
 
 
@@ -160,6 +172,8 @@ func on_job(now: float) -> float:
 # ---------------------------------------------------------------- yoga
 ## After a session: the gauge drops to `after_session` (never up) and the cooldown starts.
 func finish_session() -> void:
+	if anytime():
+		return
 	sc.intimacy = minf(sc.intimacy, float(cfg.after_session))
 	sc.intimacy_cd = float(cfg.cooldown_hours) * 60.0
 
@@ -175,9 +189,9 @@ func gate(ctx: Dictionary, stop_ok := false) -> String:
 		return "minor"      # adults only (AdultsOnly): never with a child or a teen
 	if not bool(ctx.get("alive", true)):
 		return "dead"
-	if not full():
+	if not anytime() and not full():
 		return "not_full"
-	if sc.intimacy_cd > 0.0:
+	if not anytime() and sc.intimacy_cd > 0.0:
 		return "cooldown"
 	return calm_reason(ctx, stop_ok)
 
@@ -200,7 +214,7 @@ func calm_reason(ctx: Dictionary, stop_ok := false) -> String:
 ## An offer may be made now: the gauge is full, not powering down after a decline, calm, she is not at a job and
 ## is near the player.
 func offer_ok(ctx: Dictionary) -> bool:
-	if bool(ctx.get("minor", false)):
+	if bool(ctx.get("minor", false)) or anytime():
 		return false
 	return sc.intimacy >= float(cfg.offer_at) and sc.intimacy_offer_cd <= 0.0 \
 			and float(ctx.get("dist", 1e9)) <= float(cfg.offer_range_m) and gate(ctx, false) == ""

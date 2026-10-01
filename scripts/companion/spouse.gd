@@ -198,6 +198,15 @@ func _build_model() -> void:
 	_show(CLIP_IDLE)
 
 
+## Her look changed (the Gear tab): her body is dressed again, and what she wears on her belt is read again.
+func redress() -> void:
+	if _body != null:
+		PlayerAppearance.dress(_body, AppearanceStore.validate(sc.body_look if not sc.body_look.is_empty() else sc.look))
+	var g := WorkerGear.of(self)
+	if g != null:
+		g.redress()
+
+
 ## GROWTH: a young worker's proportions (a junior: growth.json stage scale and head): the model scaled, the head bigger, the collider to fit.
 func set_proportions(scale_v: float, head_v: float) -> void:
 	if _model == null:

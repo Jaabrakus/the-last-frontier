@@ -323,6 +323,8 @@ static func surface_of(collider: Object, point: Vector3, normal: Vector3) -> Str
 
 ## Packed dirt: the fort floor and the range lane (frontier_level.gd).
 static func is_dirt(p: Vector3) -> bool:
+	if FrontierTerrain.open_ground:
+		return false
 	return (absf(p.x) < 16.0 and absf(p.z) < 16.0) or (absf(p.x) < 5.0 and p.z < -20.0 and p.z > -160.0)
 
 

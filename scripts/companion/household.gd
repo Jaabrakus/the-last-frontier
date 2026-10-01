@@ -62,7 +62,8 @@ func _ready() -> void:
 	stock = ChestStock.new()
 	stock.tree = get_tree()
 	ToolPool.install(stock)   # TOOLS: the household's tools, weapons and consumables the workers borrow
-	_new_spouse.call_deferred()
+	if SurvivalBridge.spouse_wanted():
+		_new_spouse.call_deferred()
 	link = TandemLink.new()
 	link.name = "TandemLink"
 	link.house = self
@@ -104,6 +105,8 @@ func _new_spouse() -> void:
 	sc.role = "home"
 	sc.worker_id = 0
 	open_intimacy(sc)
+	if bridge.is_bare():
+		BareStart.strip_spouse(sc)
 	sc.join(stock)
 	_spawn(sc, _start_point())
 
@@ -312,7 +315,7 @@ func greeting(w: SpouseCore = null) -> String:
 ## {"workers": [{unit, at}], "home"}: the wife first. (An older save has "spouse" and "at" for her alone: load_data reads it.)
 func save_data() -> Dictionary:
 	if sc == null:
-		return {}
+		return {"no_spouse": true}      # (a life alone: a load must not make one)
 	var ats := []
 	for w: SpouseCore in stock.crew.workers:
 		var b := body_of(w)
@@ -335,7 +338,21 @@ func save_data() -> Dictionary:
 	return d
 
 
+## A life alone: the spouse made at the start is taken away again (a load of a save with none).
+func remove_spouse() -> void:
+	for b: Variant in bodies.values():
+		if b is Node and is_instance_valid(b):
+			(b as Node).queue_free()
+	bodies.clear()
+	stock.crew.workers.clear()
+	sc = null
+	body = null
+
+
 func load_data(d: Dictionary) -> void:
+	if bool(d.get("no_spouse", false)):
+		remove_spouse()
+		return
 	family = Pregnancy.family_from(d.get("family"))   # old saves have none
 	if growth != null:
 		growth.reset()   # GROWTH: the records carry the stages; cores and bodies are made again from them

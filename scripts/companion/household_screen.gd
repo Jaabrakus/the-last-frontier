@@ -11,7 +11,7 @@ const HEAD := Color(0.93, 0.84, 0.62)
 const TEXT := Color(0.9, 0.87, 0.8)
 const DIM := Color(0.62, 0.58, 0.52)
 const LIT := Color(0.98, 0.9, 0.55)
-const TABS := [["talk", "Talk"], ["tasks", "Tasks"], ["stats", "Stats"], ["family", "Family"]]   # GROWTH: the Family tab
+const TABS := [["talk", "Talk"], ["tasks", "Tasks"], ["gear", "Gear"], ["stats", "Stats"], ["family", "Family"]]   # GROWTH: the Family tab
 const ROLE_NAMES := {"follow": "Come with me", "stay": "Wait here", "home": "Keep the house", "outside": "Go out for the day"}
 const ROLE_HINT := {"follow": "stays with you", "stay": "waits where she is", "home": "cooks and butchers what you bring home",
 		"outside": "forages and gathers firewood by day"}
@@ -134,6 +134,8 @@ func _show(id: String) -> void:
 			_build_talk()
 		"tasks":
 			_build_tasks()
+		"gear":
+			GearTab.build(self)   # (gear_tab.gd: what she wears and carries, dragged on and off)
 		"stats":
 			_build_stats()
 		"family":
@@ -233,6 +235,9 @@ func _intimacy_block(sc: SpouseCore, with_yoga: bool) -> void:
 	if link == null or link.intim == null or sc != house.sc:
 		return
 	var it := link.intim
+	if it.anytime():
+		_yoga_row(sc, link, it, with_yoga)
+		return
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	var n := _label("Closeness", 17, TEXT)
@@ -273,6 +278,26 @@ func _intimacy_block(sc: SpouseCore, with_yoga: bool) -> void:
 		yrow.add_child(_label("Then choose the pose; the woman leads.", 15, DIM))
 	var how := _reply("How are we, you and I?", func() -> void: _say = house.pick(["intimacy", "level", str(it.level_index())]))
 	yrow.add_child(how)
+
+
+## Yoga together at any time: one button, no gauge (Intimacy.anytime): only what is happening round you says not now.
+func _yoga_row(sc: SpouseCore, link: TandemLink, it: Intimacy, with_yoga: bool) -> void:
+	if not with_yoga:
+		return
+	var why := link.yoga_gate()
+	var yb := _reply("Yoga together", func() -> void: _say = link.ask())
+	yb.disabled = why != ""
+	if link.following():
+		yb = _reply("Choose a yoga pose", func() -> void: link.request_pose())
+		why = ""
+	var yrow := _row()
+	yrow.add_child(yb)
+	if link.following():
+		yrow.add_child(_label("%s follows you until you choose." % sc.name, 15, DIM))
+	elif why != "":
+		yrow.add_child(_label(it.reason_text(why), 15, DIM))
+	elif sc.busy():
+		yrow.add_child(_label("%s will put down the work." % sc.name, 15, DIM))
 
 
 # ---------------------------------------------------------------- tasks

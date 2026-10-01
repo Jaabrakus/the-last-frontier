@@ -290,7 +290,7 @@ func _begin_pose(pose: String, who: String) -> void:
 		_begin_puppy(who, pt)
 		return
 	if who == "spouse":
-		_swap_in()
+		_swap_in(true)
 		lead = TandemProxy.add_lead(proxy, pt)
 		lead.set_meta(&"pose", pose)
 	else:
@@ -302,7 +302,7 @@ func _begin_pose(pose: String, who: String) -> void:
 func _begin_puppy(who: String, pt: Node) -> void:
 	var woman: FrontierPlayer = house.player
 	if who == "spouse":
-		_swap_in()
+		_swap_in(true)
 		woman = proxy
 		lead = TandemProxy.add_lead(proxy, pt)
 	_pup = woman.get_node_or_null("PuppyPose")
@@ -318,14 +318,35 @@ func _begin_puppy(who: String, pt: Node) -> void:
 
 
 ## The spouse's body is hidden and parked, a stand-in FrontierPlayer takes her place (see TandemProxy).
-func _swap_in() -> void:
+## `hidden`: the stand-in is made unseen and she stays as she is until it is in its pose (_reveal), so there is no pop of a body
+## appearing in its first frames as she vanishes (user 2026-10-01: "when we do a yoga pose it spawns in, not cool").
+var _hidden_t := 0.0
+
+
+func _swap_in(hidden := false) -> void:
 	if is_instance_valid(proxy):
 		return
 	var b := house.body
 	proxy = TandemProxy.make(house.player.get_parent(), house.sc.look, b.global_position, b.rotation.y)
+	if hidden:
+		_hidden_t = 0.0
+		proxy.visible = false
+		return
+	_hide_body()
+
+
+func _hide_body() -> void:
+	var b := house.body
 	b.visible = false
 	b.collision_layer = 0
 	b.process_mode = Node.PROCESS_MODE_DISABLED
+
+
+## The stand-in is posed: it is shown and she is put away in the same frame.
+func _reveal() -> void:
+	if is_instance_valid(proxy) and not proxy.visible:
+		proxy.visible = true
+		_hide_body()
 
 
 ## Every quarter second until the pair is in the pose: the lead starts it, the partner joins.
@@ -338,11 +359,17 @@ func _start_tick(dt: float) -> void:
 	if pt == null:
 		_start_failed = true
 		return
+	if is_instance_valid(proxy) and not proxy.visible:
+		_hidden_t += 0.25
+		if _hidden_t > 3.0:
+			_reveal()          # (never left unseen: the pose did not begin in time)
 	if _pose == "puppy":
 		if not is_instance_valid(_pup) or not is_instance_valid(_pup_pair):
 			_start_failed = true
 		elif not _pup.active:
 			_pup.start()
+		elif _pup.active and is_instance_valid(proxy) and not proxy.visible:
+			_reveal()
 		elif not _pup_pair.joined and not _pup_pair.inviting:
 			if leader == "player":
 				_swap_in()
@@ -353,6 +380,8 @@ func _start_tick(dt: float) -> void:
 			return
 		if lead.mode.is_empty():
 			lead.start_pose(String(lead.get_meta(&"pose", "yoga")))
+		elif is_instance_valid(proxy) and not proxy.visible:
+			_reveal()
 		elif not lead.joined:
 			pt.join_nearby()
 	else:

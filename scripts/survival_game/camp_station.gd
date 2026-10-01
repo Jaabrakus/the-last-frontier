@@ -204,6 +204,8 @@ const STONE := {
 			"detail": "4 ears of corn shelled and pounded: a pound of cornmeal (bake it into johnnycake on a fire)"},
 }
 ## The knapping stone's things the workbench makes too.
+## What is made by hand, with no station (the Craft tab of the character screen, HandCraft): from the pack, kneeling where you stand.
+const HAND := ["cordage_bark", "rope_belt", "rope_sling", "bow_drill", "torch"]
 const STONE_AT_BENCH := ["bone_awl", "torch", "digging_stick"]
 ## The workbench's gunstock (a log cut and carved; the forge makes the barrel and lock).
 const BENCH_WOOD := {
@@ -251,6 +253,8 @@ static var _mats := {}
 
 
 func _ready() -> void:
+	if kind == "hand":
+		return          # (the player's own two hands, HandCraft: not a station in the world)
 	add_to_group(PlacedWeapon.GROUP)
 	add_to_group(&"camp_stations")
 	_goods = Node3D.new()
@@ -529,6 +533,9 @@ func menu_rows(player: Node) -> Array:
 		rows.append({"id": "rcp.dress_robe", "text": "Dress a buffalo robe with the hair on",
 				"detail": ("the green robe and %s, worked soft on the frame: a fur robe to wear and sleep under" % agent) if rwhy == "" else rwhy,
 				"ok": rwhy == "", "agent": agent})
+	elif kind == "hand":
+		for id: String in HAND:
+			rows.append(_table_row(player, id, STONE[id]))
 	elif kind == "alchemy_table":
 		var fire := _fire_near(TABLE_FIRE_M) != null
 		for id: String in Remedies.RECIPES:
@@ -656,7 +663,7 @@ func _arm_make(player: Node, id: String) -> bool:
 		inv.take(k, int(ins[k]))
 	player.set("inventory_pack", inv.pack.duplicate(true))
 	var key := String(g.weapon)
-	var ok := bridge().work.begin(global_position, "low" if kind == "work_stone" else "table", String(g.verb), float(g.seconds), "", func(done: bool) -> void:
+	var ok := bridge().work.begin(global_position, "low" if kind == "work_stone" or kind == "hand" else "table", String(g.verb), float(g.seconds), "", func(done: bool) -> void:
 		if done:
 			player.call("set_carried", key, true, false)
 			var then := {"bow": "make arrows for its quiver", "atlatl": "make darts for it"}.get(key, "load it with powder and ball") as String
@@ -929,7 +936,7 @@ func _bench_make(player: Node, id: String) -> bool:
 	for k: String in ins:
 		inv.take(k, int(ins[k]))
 	player.set("inventory_pack", inv.pack.duplicate(true))
-	var ok := bridge().work.begin(global_position, "low" if kind == "work_stone" else "table", String(r.verb), float(r.seconds), "", func(done: bool) -> void:
+	var ok := bridge().work.begin(global_position, "low" if kind == "work_stone" or kind == "hand" else "table", String(r.verb), float(r.seconds), "", func(done: bool) -> void:
 		if done:
 			var n := int(r.n)
 			var st := StationPractice.note_make(_core(), id)
@@ -989,6 +996,8 @@ func _gear_def(id: String) -> Dictionary:
 		return BENCH_WOOD[id]
 	if kind == "forge" and FORGE.has(id):
 		return FORGE[id]
+	if kind == "hand" and id in HAND:
+		return STONE[id]
 	if STONE.has(id) and (kind == "work_stone" or (kind == "workbench" and id in STONE_AT_BENCH)):
 		return STONE[id]
 	return {}
@@ -1017,7 +1026,7 @@ func _gear_make(player: Node, id: String) -> bool:
 	player.set("inventory_pack", inv.pack.duplicate(true))
 	var made := int(g.n)
 	var makes := String(g.get("makes", id))
-	var ok := bridge().work.begin(global_position, "low" if kind == "work_stone" else "table", String(g.verb), float(g.seconds), "", func(done: bool) -> void:
+	var ok := bridge().work.begin(global_position, "low" if kind == "work_stone" or kind == "hand" else "table", String(g.verb), float(g.seconds), "", func(done: bool) -> void:
 		var inv2 := InventoryState.from_player(player)
 		if done and makes == InventoryState.TORCH:
 			player.torch.add_torches(made)      # (torches ride in the pack through PlayerTorch)

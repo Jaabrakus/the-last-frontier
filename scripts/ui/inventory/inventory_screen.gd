@@ -42,6 +42,7 @@ var tab := ""
 var _gear: VBoxContainer
 var _skills: SkillsPanel
 var _clothes: ClothesPanel
+var _craft: CraftPanel
 var _condition: ConditionPanel    ## the body and the vices (user 2026-09-27: "add these stats when we hit tab")
 var _tab_buttons := {}
 
@@ -94,11 +95,14 @@ const SKILLS_KEY := KEY_K
 
 ## Shows a tab: "gear", "skills" or "condition".
 func show_tab(t: String) -> void:
-	tab = t if t in ["gear", "clothes", "skills", "condition"] else "gear"
+	tab = t if t in ["gear", "clothes", "craft", "skills", "condition"] else "gear"
 	_gear.visible = tab == "gear"
 	_clothes.visible = tab == "clothes"
 	if tab == "clothes":
 		_clothes.refresh()
+	_craft.visible = tab == "craft"
+	if tab == "craft":
+		_craft.refresh()
 	_skills.visible = tab == "skills"
 	_condition.visible = tab == "condition"
 	if tab == "condition":
@@ -152,7 +156,7 @@ func _build_ui() -> void:
 	var tabs := HBoxContainer.new()
 	tabs.add_theme_constant_override("separation", 6)
 	outer.add_child(tabs)
-	for pair: Array in [["gear", "Gear  (Tab)"], ["clothes", "Clothes"], ["skills", "Skills  (K)"], ["condition", "Condition"]]:
+	for pair: Array in [["gear", "Gear  (Tab)"], ["clothes", "Clothes"], ["craft", "Craft"], ["skills", "Skills  (K)"], ["condition", "Condition"]]:
 		var tb := Button.new()
 		tb.text = String(pair[1])
 		tb.toggle_mode = true
@@ -173,6 +177,8 @@ func _build_ui() -> void:
 	outer.add_child(_condition)
 	_clothes = ClothesPanel.make(self)
 	outer.add_child(_clothes)
+	_craft = CraftPanel.make(self)
+	outer.add_child(_craft)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 18)
 	_gear.add_child(row)
@@ -199,6 +205,7 @@ func _build_ui() -> void:
 	_view = SubViewport.new()
 	_view.own_world_3d = true
 	_view.msaa_3d = Viewport.MSAA_4X
+	_view.render_target_update_mode = SubViewport.UPDATE_ALWAYS     # (the Clothes tab shows the same figure)
 	_view_box.add_child(_view)
 	eq_row.add_child(_slot_column(RIGHT_SLOTS))
 	var turn := HBoxContainer.new()

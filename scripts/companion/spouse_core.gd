@@ -125,6 +125,11 @@ var work_mult := 1.0
 ## TOOLS (scripts/companion/tool_pool.gd): made in this session (create/_build): her background's kit is not hers; a worker loaded
 ## from a save before the pool has it and brings it into the pool once (ToolPool.adopt).
 var tool_kit_new := false
+## Her rope gear (the sheet's Gear tab): the belt and the sling in her pack ({kind: n}) and worn (kinds, InventoryState.GEAR_KINDS).
+var rope_bag := {}
+## Started with nothing (BareStart.strip_spouse): no plain belt of hers, her look follows what she wears.
+var bare := false
+var rope_worn: Array = []
 ## The running job's offer (what it took and where).
 var _run := {}
 var _moved := {}
@@ -227,6 +232,9 @@ static func from_dict(d: Dictionary, main: SurvivalCore) -> SpouseCore:
 	s.fuel = SurvivalBridge.load_items("fuel")
 	s.core = SurvivalCore.from_state(SurvivalState.from_dict(d.get("core", {})), {"data": main.data})
 	s.hoop = (d.get("hoop", []) as Array).duplicate(true)
+	s.bare = bool(d.get("bare", false))
+	s.rope_bag = (d.get("rope_bag", {}) as Dictionary).duplicate() if d.get("rope_bag") is Dictionary else {}
+	s.rope_worn = (d.get("rope_worn", []) as Array).duplicate() if d.get("rope_worn") is Array else []
 	s._wire()
 	s.journal = (d.get("journal", []) as Array).duplicate()
 	# intimacy (old saves have none: the default start)
@@ -247,7 +255,8 @@ func to_dict() -> Dictionary:
 	return {"id": worker_id, "name": name, "look": look.duplicate(true), "body_look": body_look.duplicate(true), "role": role if role_saved == "" else role_saved, "sleep_from": sleep_from, "sleep_h": sleep_h,
 			"enabled": enabled.duplicate(), "core": core.state.to_dict(), "journal": journal.duplicate(), "hoop": hoop.duplicate(true),
 			"intimacy": intimacy, "intimacy_cd": intimacy_cd, "intimacy_offer_cd": intimacy_offer_cd,
-			"pregnancy": pregnancy.duplicate(true), "recruit": recruit.duplicate(true), "gather": gather.to_dict()}   # RECRUIT, FARM
+			"pregnancy": pregnancy.duplicate(true), "recruit": recruit.duplicate(true), "gather": gather.to_dict(),
+			"rope_bag": rope_bag.duplicate(), "bare": bare, "rope_worn": rope_worn.duplicate()}   # RECRUIT, FARM
 
 
 func _wire() -> void:

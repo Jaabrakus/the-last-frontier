@@ -32,6 +32,7 @@ func _initialize() -> void:
 	var wife := SpouseCore.create(main, male_look, 11)
 	var female_look: Dictionary = CharacterPeoples.preset_look("english_f_a") if not CharacterPeoples.preset("english_f_a").is_empty() else {"sex": 0.0}
 	var husband := SpouseCore.create(main, female_look, 12)
+	Intimacy.cfg_override = {"anytime": false}      # (these are the gauge's rules)
 	var cfg := Intimacy.load_cfg()
 
 	# ---- the sex rule: the woman leads
