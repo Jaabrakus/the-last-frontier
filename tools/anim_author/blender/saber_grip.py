@@ -50,34 +50,46 @@ def bend(arm, pb, axis_local, angle):
     bpy.context.view_layer.update()
 
 
-def curl_finger(arm, names, c, a, n):
-    """Each joint from the knuckle out: turned about its bend axis (the bone's X, the sign that closes toward the palm) in
-    small steps until the joint after it (or the tip) reaches the grip's surface."""
+def bend_world(arm, pb, axis_w, angle):
+    """The joint turned by `angle` about the world axis `axis_w` (through the joint), from its rest turn: the axis taken into the
+    frame its rotation acts in (the bone's own frame with no turn of its own)."""
+    pb.rotation_mode = "QUATERNION"
+    pb.rotation_quaternion = Quaternion()
+    bpy.context.view_layer.update()
+    m = (arm.matrix_world @ pb.matrix).to_3x3().normalized()
+    ax = (m.inverted() @ axis_w).normalized()
+    pb.rotation_quaternion = Quaternion(ax, angle)
+    bpy.context.view_layer.update()
+
+
+def curl_finger(arm, names, c, a, n, across):
+    """A finger closed the way a fist closes: each joint from the knuckle out turned about the knuckles' line (the hinge every
+    finger joint shares), the way that takes its tip toward the palm, in small steps until the joint after it (or the tip)
+    lies on the grip's surface, a finger's half-thickness off it. (The bones' own X is not the hinge on this rig: turning
+    about it bent the fingers sideways and they never closed.)"""
+    s = None
     for i, nm in enumerate(names):
         pb = arm.pose.bones[nm]
         nxt = names[i + 1] if i + 1 < len(names) else None
         def tip():
             return world(arm, arm.pose.bones[nxt]) if nxt else world(arm, pb, tail=True)
-        # which way closes the hand: a small turn each way, the one that brings the tip toward the palm's side
-        best = 1.0
+        bend_world(arm, pb, across, 0.0)
         t0 = tip()
-        bend(arm, pb, Vector((1, 0, 0)), math.radians(8))
-        t_plus = tip()
-        bend(arm, pb, Vector((1, 0, 0)), math.radians(-8))
-        t_minus = tip()
-        best = 1.0 if (t_plus - t0).dot(n) > (t_minus - t0).dot(n) else -1.0
+        if s is None:
+            # (the way a finger folds, taken at its knuckle: every joint of it folds the same way about the same line)
+            bend_world(arm, pb, across, math.radians(10))
+            s = 1.0 if (tip() - t0).dot(n) > 0.0 else -1.0
         want = GRIP_R + FINGER_HALF
         ang = 0.0
         last = dist_to_axis(t0, c, a)
-        while ang < math.radians(100):
+        while ang < math.radians(110):
             ang += math.radians(2.0)
-            bend(arm, pb, Vector((1, 0, 0)), best * ang)
+            bend_world(arm, pb, across, s * ang)
             d = dist_to_axis(tip(), c, a)
-            # past the grip's near side and on round it: stop where it is on the surface
-            if d <= want or (d > last and ang > math.radians(30)):
+            if d <= want:
                 break
             last = d
-        print("GRIP %-10s %5.1f deg  tip %.4f m off the axis" % (nm, best * math.degrees(ang), dist_to_axis(tip(), c, a)))
+        print("GRIP %-10s %5.1f deg  tip %.4f m off the axis" % (nm, s * math.degrees(ang), dist_to_axis(tip(), c, a)))
 
 
 def lift_arm(arm):
@@ -159,9 +171,9 @@ def main():
     across = (k_index - k_pinky).normalized()                  # the knuckles' line, toward the thumb
     out = (k_mid - wrist).normalized()                         # along the hand, toward the fingers
     n = across.cross(out).normalized()                         # the palm's normal (one of the two ways)
-    if n.dot(world(arm, pb["r_thumba"]) - (k_mid + wrist) * 0.5) < 0.0:
-        pass
-    n = -n                                                     # (the thumb's base lies toward the back here: the palm the other way)
+    # the palm is the side the fingers already curl toward at rest (the middle finger's tip off the plane of its knuckles)
+    if n.dot(world(arm, pb["r_middlec"], tail=True) - k_mid) < 0.0:
+        n = -n
     # the grip: slanting across the palm from the index's base toward the heel, its middle a grip's radius and the palm's
     # flesh off the palm, between the knuckles and the wrist; the blade out past the thumb
     a = (across * math.cos(math.radians(SLANT_DEG)) + out * math.sin(math.radians(SLANT_DEG))).normalized()
@@ -170,7 +182,7 @@ def main():
     c = knuckles.lerp(wrist, 0.32) + n * (GRIP_R + 0.012)
     # the saber: model -Z (blade) along a, model +Y (edge, knuckle bow) away from the palm (round over the fingers' backs)
     zb = -a
-    yb = (n - zb * n.dot(zb)).normalized()      # (the knuckle bow round the outside of the fingers: measured in the renders)
+    yb = (-n - zb * (-n).dot(zb)).normalized()   # (the knuckle bow round the outside of the fingers, away from the palm)
     xb = yb.cross(zb).normalized()
     # (Blender holds the model Z-up: the glTF import turned it; its own axes in Blender are the model's (x, -z, y))
     m_godot = Matrix((xb, yb, zb)).transposed()                 # columns: the model's x, y, z in world
@@ -182,7 +194,7 @@ def main():
     saber.matrix_world = Matrix.Translation(c) @ rot
     bpy.context.view_layer.update()
     for f, js in FINGERS.items():
-        curl_finger(arm, ["r_%s%s" % (f, j) for j in js], c, a, n)
+        curl_finger(arm, ["r_%s%s" % (f, j) for j in js], c, a, n, across)
     close_thumb(arm, n)
     # the saber rides on the wrist bone (its place relative to the hand: what the game needs)
     mw = saber.matrix_world.copy()
@@ -224,9 +236,12 @@ def render(out_dir, arm, c, a, n):
             o.data.materials.append(skin)
     back = -n
     side = a.cross(n).normalized()
-    for name, d in (("back", back * 0.9 + side * 0.25), ("palm", n * 0.8 + side * 0.3), ("thumb", a * 0.6 + back * 0.5),
-                    ("below", side * 0.8 + back * 0.3)):
-        cam.location = c + d.normalized() * 0.42
+    for o in bpy.data.objects:
+        if o.type == "MESH" and o.name == "Face":
+            o.hide_render = True                                   # (the head is beside the raised hand: out of the shots)
+    for name, d in (("back", back * 0.9 + side * 0.25), ("palm", n * 0.9 - side * 0.3 + a * 0.2), ("pinky", -a * 0.7 + back * 0.5 + side * 0.2),
+                    ("thumb_side", a * 0.35 + side * 0.8 + back * 0.3)):
+        cam.location = c + d.normalized() * 0.5
         cam.rotation_euler = (c - cam.location).to_track_quat("-Z", "Y").to_euler()
         sc.render.filepath = os.path.join(out_dir, "grip_%s.png" % name)
         bpy.ops.render.render(write_still=True)
