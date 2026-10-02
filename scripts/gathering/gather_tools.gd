@@ -189,6 +189,7 @@ static func ensure_input() -> void:
 func _ready() -> void:
 	ensure_input()
 	rng.seed = 1765
+	_give_from_args.call_deferred()
 	data = GatherData.get_default()
 	var headless_test := DisplayServer.get_name() == "headless"
 	skills = GatherSkills.new() if headless_test else GatherSkills.for_player()
@@ -1859,3 +1860,19 @@ func remove_stump(i: int, award := false) -> void:
 				give("firewood", clampi(roundi(h * 6.0), 1, 4))
 			_note("The stump is out")
 		return
+
+
+## A launch's things to try (the user arg give=<kind>[,<kind>...], e.g. give=saber): into the pack once the level is up.
+func _give_from_args() -> void:
+	for a in OS.get_cmdline_user_args():
+		var s := a.trim_prefix("--")
+		if not s.begins_with("give="):
+			continue
+		await get_tree().create_timer(2.0).timeout
+		if player == null or not is_instance_valid(player):
+			return
+		var inv := InventoryState.from_player(player)
+		for k in s.get_slice("=", 1).split(",", false):
+			inv.add(String(k), 1)
+		player.inventory_pack = inv.pack.duplicate(true)
+		_note("Given: %s" % s.get_slice("=", 1))
