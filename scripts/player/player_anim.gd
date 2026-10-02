@@ -1064,6 +1064,11 @@ func manual_step(dt: float) -> void:
 	var one_hand_aim := one_hand_aim_on and String(_weapon) in ONE_HAND_AIM_WEAPONS and (aiming or aim_wanted) and not busy and not hands_free and not torch
 	var jog_aim := one_hand_aim and String(loco.stance) != "crouch" and JOG_AIM_ARM.has(String(_weapon))
 	var jog_left := jog_aim and loco.moving         # (on the move the left arm swings as the jog's; standing it hangs at the side)
+	# (raised from the carry, the arm's aim is in at once: easing it in let the tree's own aim, the standing stance, show for the
+	# first 0.2 s of a shot on the move: user 2026-10-02, "it tries to do the standing aim animation before it goes to the
+	# moving pistol aim"; easing stays for a change while already aimed)
+	if jog_aim and player != null and player.weapon != null and player.weapon.aim < 0.5:
+		_jog_aim_w = 1.0
 	_jog_aim_w = move_toward(_jog_aim_w, 1.0 if jog_aim else 0.0, dt / JOG_AIM_FADE_S)
 	upper.torso_free = _jog_aim_w
 	if jog_aim_arm != null:

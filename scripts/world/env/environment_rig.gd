@@ -72,6 +72,9 @@ const SUN_COLOR := Color(1.0, 0.909, 0.781)
 ## E_sun / pi / luma(colour) with E_sun = 7.638 (removed normal irradiance): the energy at
 ## which the sun and the sky (at energy 1) have the photograph's own ratio.
 const SUN_ENERGY := 2.93
+## The moon's god rays against the sun's (GodRays at night), and its glow streamed round it (GodRays.halo).
+const MOON_RAYS := 0.35
+const MOON_HALO := 0.6
 
 ## Base exposure (tonemap_exposure) and the auto-exposure calibration (see _camera_attributes).
 ## The look the user picked on 2026-09-24 (the focused lighting pass's tuning run "u10"):
@@ -90,6 +93,7 @@ var _sun: DirectionalLight3D
 var _attributes: CameraAttributesPractical
 var _sky_material: ShaderMaterial
 var _motes: GPUParticles3D
+var _god_rays: GodRays
 var _player: Node3D
 var _globals := {}              ## uniform -> declared in project.godot?
 var _headless := false
@@ -170,6 +174,16 @@ func _process(_delta: float) -> void:
 		var cam := follow_camera if is_instance_valid(follow_camera) else get_viewport().get_camera_3d()
 		if cam:
 			_motes.global_position = cam.global_position
+	if _god_rays and _sun:
+		# toward the key light: the sun by day, the moon at night (DayNight turns the one light onto the moon and gives
+		# it the moon's colour); the rays in its colour at its share of its full strength. The night sky is dark, so the
+		# moon's rays stream its own glow round it (halo), pale blue and fainter than the sun's.
+		_god_rays.sun_dir = _sun.global_basis.z.normalized()
+		var moon := _sun.light_color.is_equal_approx(DayNight.MOON_COLOR)
+		var full := DayNight.MOON_ENERGY if moon else SUN_ENERGY
+		var share := clampf(_sun.light_energy / full, 0.0, 1.25) if _sun.visible else 0.0
+		_god_rays.tint = Color(_sun.light_color.srgb_to_linear()) * share * (MOON_RAYS if moon else 1.0)
+		_god_rays.halo = MOON_HALO if moon else 0.0
 
 
 ## Sets a global shader uniform if project.godot declares it ([shader_globals]). The
@@ -340,6 +354,12 @@ func _build_environment() -> void:
 	we.camera_attributes = _attributes
 	# the sky's motion vectors for the TAA: stars sharp while the camera turns (SkyMotionVectors)
 	we.compositor = SkyMotionVectors.compositor()
+	# shafts of sunlight between the trees (GodRays; the key light's way and colour set every frame in _process)
+	if settings.god_rays and not _headless:
+		_god_rays = GodRays.new()
+		var effects := we.compositor.compositor_effects
+		effects.append(_god_rays)
+		we.compositor.compositor_effects = effects
 	add_child(we)
 
 

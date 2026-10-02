@@ -38,6 +38,8 @@ const Upscaling := preload("res://scripts/world/settings/upscaling.gd")
 @export var ssao := true
 @export var ssil := false
 @export var volumetric_fog := true
+## Screen-space god rays (GodRays: shafts of sunlight between the trees; off on low, whose FXAA leaves their noise).
+@export var god_rays := true
 @export var glow := true
 @export var auto_exposure := true
 
@@ -123,6 +125,7 @@ static func preset(q: String) -> WorldSettings:
 			s.ssao = false
 			s.ssil = false
 			s.volumetric_fog = false
+			s.god_rays = false
 			s.glow = true
 			s.auto_exposure = false
 			s.terrain_lod_scale = 0.6
