@@ -1139,12 +1139,10 @@ func _fell(cur: Dictionary) -> void:
 ## Tree `i` comes down away from `from` (where the feller stands; `ahead` when they stand on it): its instances and collider go
 ## (VegHarvest), a FelledTree topples, a stump stays. `award` is the player's own felling (his woodcutting grows, he is told);
 ## a worker's (RtsFell) is not. Returns the felled tree (null: it was gone already).
-func fell_tree(i: int, from: Vector3, ahead := Vector3.FORWARD, award := false, cut_y := INF) -> FelledTree:
+func fell_tree(i: int, from: Vector3, ahead := Vector3.FORWARD, award := false, cut_y := INF, fall := Vector3.ZERO) -> FelledTree:
 	var d := harvest.remove_tree(i)
 	if d.is_empty():
 		return null
-	# (the others see it come down too: NetSession)
-	NetSession.world_event(get_tree(), "fell", {"i": i, "from": from, "ahead": ahead, "cut": cut_y})
 	# the cut where the strokes went in (`cut_y`, world): the stump that tall, the tree that much shorter; else the usual stump
 	var cfg: Dictionary = data.felling.duplicate()
 	if cut_y != INF:
@@ -1156,9 +1154,14 @@ func fell_tree(i: int, from: Vector3, ahead := Vector3.FORWARD, award := false, 
 	if away.length() < 0.05:
 		away = ahead
 	away = away.normalized()
-	var safe := String(skills.tier("woodcutting").id) != "novice"
-	var scatter := float(data.felling.get("scatter_deg_safe" if safe else "scatter_deg_novice", 30.0))
-	away = away.rotated(Vector3.UP, deg_to_rad(rng.randf_range(-scatter, scatter)))
+	if fall != Vector3.ZERO:
+		away = fall           # (the way it fell on the feller's machine: the same for everyone)
+	else:
+		var safe := String(skills.tier("woodcutting").id) != "novice"
+		var scatter := float(data.felling.get("scatter_deg_safe" if safe else "scatter_deg_novice", 30.0))
+		away = away.rotated(Vector3.UP, deg_to_rad(rng.randf_range(-scatter, scatter)))
+	# (the others see it come down too, the same way: NetSession)
+	NetSession.world_event(get_tree(), "fell", {"i": i, "from": from, "ahead": ahead, "cut": cut_y, "dir": away})
 	var visuals := DisplayServer.get_name() != "headless"
 	var ft := FelledTree.create(d, away, cfg, visuals)
 	var scene := get_tree().current_scene

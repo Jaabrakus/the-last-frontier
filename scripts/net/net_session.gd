@@ -646,7 +646,7 @@ func _do_event(kind: String, d: Dictionary) -> void:
 		"fell":
 			var g: GatherTools = player.gather if player else null
 			if g:
-				g.fell_tree(int(d.i), SaveParts.to_v3(d.from), SaveParts.to_v3(d.ahead, Vector3.FORWARD), false, float(d.get("cut", INF)))
+				g.fell_tree(int(d.i), SaveParts.to_v3(d.from), SaveParts.to_v3(d.ahead, Vector3.FORWARD), false, float(d.get("cut", INF)), SaveParts.to_v3(d.get("dir"), Vector3.ZERO))
 		"sapling":
 			var h := VegHarvest.find(get_tree())
 			if h:

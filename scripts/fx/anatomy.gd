@@ -868,6 +868,10 @@ func _enter_tree() -> void:
 
 ## Time slows for SLOWMO.y real seconds (a clean kill, a mortal wound): the hit seen. Not headless.
 static func slowmo(tree: SceneTree) -> void:
+	# (not in a shared world: time is everyone's there, one machine's slow motion would put it out of step)
+	var ns := NetSession.find(tree) if tree else null
+	if ns != null and ns.in_session():
+		return
 	if not slowmo_on or tree == null or DisplayServer.get_name() == "headless" or Engine.time_scale < 0.99:
 		return
 	Engine.time_scale = SLOWMO.x
