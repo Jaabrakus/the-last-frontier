@@ -1868,7 +1868,12 @@ func _give_from_args() -> void:
 		var s := a.trim_prefix("--")
 		if not s.begins_with("give="):
 			continue
-		await get_tree().create_timer(2.0).timeout
+		# after a continued save has put its pack in (it applies some frames in, and the first frames are long): frames, not seconds
+		for i in 240:
+			await get_tree().process_frame
+		var sg := SaveGame.find(get_tree())
+		while sg != null and sg.loading:
+			await get_tree().process_frame
 		if player == null or not is_instance_valid(player):
 			return
 		var inv := InventoryState.from_player(player)
