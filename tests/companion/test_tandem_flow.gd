@@ -58,6 +58,20 @@ func _initialize() -> void:
 						ok = true
 						break
 			_c(ok, "%s led by %s: the pair connects (stand-in %s)" % [pose, who, "shown" if is_instance_valid(link.proxy) and link.proxy.visible else "hidden"])
+			if ok and pose == "yoga" and who == "spouse":
+				var lead_tp: Node = link.lead
+				var s1: float = lead_tp._plank_stamina
+				var ev := InputEventKey.new()
+				ev.physical_keycode = KEY_K
+				ev.pressed = true
+				p.get_node("TandemPoses")._input(ev)
+				var flinched := false
+				for i in 40:
+					await physics_frame
+					if lead_tp._responses.is_empty() and lead_tp._plank_stamina < s1:
+						flinched = true
+						break
+				_c(flinched, "Happy Baby: K reacts (plank stamina %.0f -> %.0f) and she answers" % [s1, lead_tp._plank_stamina])
 			if ok and pose == "puppy" and is_instance_valid(link._pup_pair):
 				var pp = link._pup_pair
 				var spot: Vector3 = pp.player.global_position + pp.player.skeleton.get_parent().global_basis * pp.partner_offset

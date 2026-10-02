@@ -47,6 +47,8 @@ const GAUGE_AT_ONE := 1.0
 const GAUGE_AT_ZERO := 0.5
 const GAUGE_AT_MINUS_ONE := 0.25
 ## Cinematic camera: side-on to the pair, a little above, slowly drifting; eased in over CINE_BLEND_S.
+## Happy Baby's K (partner_reaction): what the partner's reaction costs the plank's stamina.
+const YOGA_REACT_COST := 8.0
 const CINE_BLEND_S := 1.4
 const CINE_PITCH := -0.10
 const CINE_DIST := {"crawl": 2.6, "yoga": 2.7, "puppy": 2.6}
@@ -386,6 +388,17 @@ func partner_reaction() -> void:
 		if _crawl_chest_mode and is_instance_valid(_crawl_brace): _crawl_brace.jolt_hand()
 		base_pose.pause_recovery()
 		_responses.append(reaction_delay)
+	elif mode == "yoga" and is_instance_valid(base_pose):
+		# Happy Baby (user 2026-10-01: "the K button doesn't work for Happy Baby"; it was the crawl's alone): with a partner, his
+		# reaction (a little of the plank's stamina) and her flinch answering it a moment on, as a dip's; alone, her own flinch
+		if joined:
+			if _plank_stamina < YOGA_REACT_COST:
+				return
+			_plank_stamina -= YOGA_REACT_COST
+			_plank_rest = PLANK_REST_S
+			_responses.append(reaction_delay)
+		elif base_pose.flinch(0.0, flinch_gauge()):
+			jiggle(player, flinch_gauge())
 
 ## The partner stands up; the lead stays in her pose.
 func stop_partner() -> void:
