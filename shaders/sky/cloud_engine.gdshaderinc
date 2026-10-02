@@ -153,7 +153,9 @@ float ce_density(vec3 wp, float lod, bool detail, out float amb, out float gnd, 
 	float c = clamp((n - (1.0 - e)) / max(e, 0.05) * sharp, 0.0, 1.0) * dscale;
 	if (detail && c > 0.0 && c < 0.5 * dscale) {
 		vec3 qd = vec3(q.x, h * CE_VSCALE - cloud_evolve * 1.5, q.z) / CE_DETAIL_TILE;
-		float dn = textureLod(cloud_noise, qd, lod).g;
+		// the detail octave tiles CE_BASE_TILE / CE_DETAIL_TILE (6x) as often as the base: its mip is that much coarser for the same step,
+		// or it aliases into grain on the cloud edges far off (user 2026-10-01: "dotted pattern on cloud edges and near the horizon")
+		float dn = textureLod(cloud_noise, qd, lod + 2.585).g;
 		float hf = clamp((h - cu_base) / max(cu_top - cu_base, 1.0), 0.0, 1.0);
 		dn = mix(1.0 - dn, dn, smoothstep(0.05, 0.4, hf));   // wisps at the base, billows above
 		c = clamp((c - dn * 0.4 * dscale) / (1.0 - dn * 0.4), 0.0, 1.0);

@@ -38,7 +38,7 @@ const STORM_SHADE := 0.995          ## ... under a sky covered by a deck or a st
 const SHADE_PERIOD := 0.1           ## s between the CPU mirror's marches toward the sun
 ## Raymarch steps and light-march steps per quality preset (WorldSettings.quality), and whether the step jitter
 ## changes every frame (a temporal AA / upscaler resolves it; FXAA on low does not).
-const CLOUD_QUALITY := {"high": [28, 3, 1.0], "medium": [24, 3, 1.0], "low": [18, 2, 0.0]}
+const CLOUD_QUALITY := {"high": [40, 3, 1.0], "medium": [32, 3, 1.0], "low": [18, 2, 0.0]}
 const MILKY_WAY := 0.03
 const EXPOSURE_OPEN_MAX := 3.2       ## how far the eye opens at night (x the day exposure)
 ## Group of the nodes that tell the rain at a point (rain_intensity(pos)); the torch reads it (TorchState.rain_at).
