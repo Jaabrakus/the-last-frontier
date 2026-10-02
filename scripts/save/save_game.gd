@@ -27,7 +27,7 @@ const AUTOSAVE_S := 300.0
 ## Frames the level is given before a save is applied to it.
 const APPLY_AFTER_FRAMES := 8
 ## The parts, in the order they are applied.
-const PARTS := ["survival", "sky", "vegetation", "building", "fort", "items", "wildlife", "horse", "wheelbarrow", "cart", "forage", "household", "player", "death"]
+const PARTS := ["survival", "sky", "vegetation", "building", "fort", "items", "wildlife", "horse", "wheelbarrow", "cart", "forage", "household", "story", "player", "death"]
 
 ## A save to apply to the next level that loads (load_slot sets it and rebuilds the level).
 static var pending: Dictionary = {}
@@ -300,6 +300,7 @@ func _save_part(part: String) -> Dictionary:
 
 func _load_part(part: String, d: Dictionary) -> void:
 	match part:
+		"story": return SaveParts.save_story(level)
 		"survival": SaveParts.load_survival(level, d)
 		"sky": SaveParts.load_sky(level, d)
 		"vegetation": SaveParts.load_vegetation(level, d, notes)
@@ -319,6 +320,7 @@ func _load_part(part: String, d: Dictionary) -> void:
 
 
 func _tell(text: String) -> void:
+		"story": SaveParts.load_story(level, d)
 	var p: Node = level.get_node_or_null("Player") if level else null
 	var it: Node = p.get("interactor") if p else null
 	if it and it.has_method(&"notice"):

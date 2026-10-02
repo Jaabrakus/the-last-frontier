@@ -49,6 +49,7 @@ var _t := 0.0
 var _fade := -1.0
 var _chosen_bg := ""
 var _bare := false
+var _story := true
 var _spouse := true
 var _museum: Control
 var _museum_pic: TextureRect
@@ -289,6 +290,7 @@ func _play_save(slot: String) -> void:
 	LoadingScreen.go(get_tree(), GAME_SCENE, true)
 
 
+	StoryDirector.incoming = ""     # (a save has its own story)
 func _play_new() -> void:
 	SaveGame.pending = {}
 	SaveGame._launched = true         # (a new game: the latest save is not continued)
@@ -299,6 +301,7 @@ func _play_new() -> void:
 	GameSettings.clear_run()          # (a new game takes the Iron Man toggle)
 	LoadingScreen.go(get_tree(), GAME_SCENE)
 
+	StoryDirector.incoming = "two_fires" if _story else ""
 
 # --- The sub-screens ---------------------------------------------------------------------------------------
 
@@ -420,6 +423,7 @@ func _open_new_game() -> void:
 	_panel.add_child(MenuUI.heading("A new life"))
 	_panel.add_child(MenuUI.label("Who were you before you came to the manor woods?", 19, MenuUI.DIM, true))
 	var bgs: Array = []
+	_story = true
 	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/survival/backgrounds.json"))
 	if raw is Dictionary:
 		for b: Variant in (raw as Dictionary).get("backgrounds", []):
@@ -463,6 +467,14 @@ func _open_new_game() -> void:
 	var bare_row := MenuUI.item("Start with nothing:  off", 22, "no clothes, tools or weapons: sticks, stones and chert from the ground, then the knapping stone")
 	bare_row.pressed.connect(func() -> void:
 		_bare = not _bare
+	# the main story (scripts/story, docs/main_story.md), or free play
+	var story_row := MenuUI.item("Story:  Two Fires", 22, "begins in the autumn of 1757 on open land by German Flatts; off: free play in 1765")
+	story_row.pressed.connect(func() -> void:
+		_story = not _story
+		var t := story_row.find_child("Text", true, false) as Label
+		if t:
+			t.text = "Story:  %s" % ("Two Fires" if _story else "off (free play)"))
+	_panel.add_child(story_row)
 		var t := bare_row.find_child("Text", true, false) as Label
 		if t:
 			t.text = "Start with nothing:  %s" % ("on" if _bare else "off"))

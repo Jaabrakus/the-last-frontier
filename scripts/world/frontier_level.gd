@@ -125,6 +125,8 @@ func _ready() -> void:
 		Household.install(self, player)
 	StartupProfile.mark("survival")
 	# the fort's furnishing from the build menu's pieces (scripts/building/fort_plan.gd): the wife's work
+		# the story (scripts/story): the storyline's missions, their cards, marker and key hints (docs/main_story.md)
+		StoryDirector.install(self, player)
 	if not bridge_bare:
 		FortPlan.install(self)
 	# forage (scripts/forage): berries, nuts and herbs where they grow; the deer feed on them too

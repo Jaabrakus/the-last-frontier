@@ -1,0 +1,298 @@
+class_name StoryHUD
+extends CanvasLayer
+## The story on screen (StoryDirector), in the HUD's own manner (FrontierHUD: serif lettering with a soft shadow over
+## the world, nothing boxed but the cards):
+##   top left    the mission's title in gold, the step to do under it (and a count, "2 / 4"), then the mission's key
+##               hints, dimmer (the first-time tutorial: the keys of what this mission asks)
+##   top centre  the mission's title large for a few seconds as it starts (under the compass)
+##   the world   a gold diamond on the step's place, its distance under it; held at the screen's edge when off screen
+##   centre      the story cards: a title, the text, "Enter  continue". The game waits under them (paused).
+
+const INK := FrontierHUD.INK
+const TEXT := FrontierHUD.TEXT
+const DIM := FrontierHUD.DIM
+const GOLD := FrontierHUD.GOLD
+const BANNER_S := 4.0
+const EDGE := 48.0
+
+var marker_at: Variant = null       ## Vector3 or null
+var marker_dist := -1.0
+
+var _root: Control
+var _panel: VBoxContainer
+var _panel_shade: TextureRect
+var _title: Label
+var _text: Label
+var _count: Label
+var _hints: VBoxContainer
+var _banner: Label
+var _banner_t := 0.0
+var _marks: Control
+var _veil: ColorRect
+var _card: VBoxContainer
+var _card_title: Label
+var _card_text: Label
+var _card_more: Label
+var _cards: Array = []
+var _card_done: Callable
+var _card_i := 0
+var _card_open_t := 0.0
+var _paused_by_us := false
+var _waiting: Array = []           ## [cards, done] held while the character creator is open
+## Seconds at the level's start the cards wait for the character creator to open (it opens a few frames in).
+var _creator_grace := 0.0           ## (set by the director as a new game's storyline begins)
+
+
+func _ready() -> void:
+	layer = 5
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	_root = Control.new()
+	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var th := Theme.new()
+	th.default_font = FrontierHUD.serif()
+	_root.theme = th
+	add_child(_root)
+	_marks = Control.new()
+	_marks.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_marks.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_marks.draw.connect(_draw_marker)
+	_root.add_child(_marks)
+	# top left: the mission and its hints (over the HUD's soft shade, so they read over a bright sky)
+	_panel_shade = TextureRect.new()
+	_panel_shade.texture = FrontierHUD.shade()
+	_panel_shade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_panel_shade.stretch_mode = TextureRect.STRETCH_SCALE
+	_panel_shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_panel_shade)
+	_panel = VBoxContainer.new()
+	_panel.add_theme_constant_override("separation", 2)
+	_panel.position = Vector2(28, 22)
+	_panel.custom_minimum_size = Vector2(380, 0)
+	_root.add_child(_panel)
+	_title = _label(17, GOLD)
+	_panel.add_child(_title)
+	_text = _label(21, INK)
+	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_text.custom_minimum_size = Vector2(380, 0)
+	_panel.add_child(_text)
+	_count = _label(17, TEXT)
+	_panel.add_child(_count)
+	_hints = VBoxContainer.new()
+	_hints.add_theme_constant_override("separation", 0)
+	_panel.add_child(_hints)
+	_panel.visible = false
+	# top centre: the banner
+	_banner = _label(40, INK)
+	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_banner.position = Vector2(-400, 96)
+	_banner.size = Vector2(800, 60)
+	_banner.modulate.a = 0.0
+	_root.add_child(_banner)
+	# centre: the cards
+	_veil = ColorRect.new()
+	_veil.color = Color(0.02, 0.015, 0.01, 0.72)
+	_veil.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_veil.mouse_filter = Control.MOUSE_FILTER_STOP
+	_veil.visible = false
+	_root.add_child(_veil)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_veil.add_child(center)
+	_card = VBoxContainer.new()
+	_card.add_theme_constant_override("separation", 18)
+	_card.custom_minimum_size = Vector2(720, 0)
+	center.add_child(_card)
+	_card_title = _label(34, GOLD)
+	_card_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_card.add_child(_card_title)
+	_card_text = _label(22, INK)
+	_card_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_card_text.custom_minimum_size = Vector2(720, 0)
+	_card.add_child(_card_text)
+	_card_more = _label(16, DIM)
+	_card_more.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_card.add_child(_card_more)
+
+
+func _label(size: int, col: Color) -> Label:
+	var l := Label.new()
+	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_color_override("font_color", col)
+	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.75))
+	l.add_theme_constant_override("shadow_offset_x", 1)
+	l.add_theme_constant_override("shadow_offset_y", 2)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
+
+
+## The mission at hand (title "" hides the panel).
+func set_mission(title: String, text: String, count: String, hints: Array) -> void:
+	_panel.visible = title != "" or text != ""
+	_title.text = title.to_upper()
+	_text.text = text
+	_count.text = count
+	_count.visible = count != ""
+	var want := "\n".join(hints)
+	if String(_hints.get_meta(&"keys", "")) != want:
+		_hints.set_meta(&"keys", want)
+		for c in _hints.get_children():
+			c.queue_free()
+		if not hints.is_empty():
+			var gap := Control.new()
+			gap.custom_minimum_size = Vector2(0, 10)
+			_hints.add_child(gap)
+		for h: String in hints:
+			var l := _label(16, TEXT)
+			l.text = h
+			_hints.add_child(l)
+
+
+func banner(text: String) -> void:
+	_banner.text = text
+	_banner_t = BANNER_S
+
+
+# --- Cards ---------------------------------------------------------------------------------------------------
+
+## Show `cards` ([{title, text}]) one after another; `done` runs after the last. The game waits under them.
+func show_cards(cards: Array, done: Callable) -> void:
+	if _creator_open():
+		_waiting = [cards, done]                     # (a new game's character creator first: the cards after it)
+		return
+	_cards = cards
+	_card_done = done
+	_card_i = 0
+	_veil.visible = true
+	if not get_tree().paused:
+		get_tree().paused = true
+		_paused_by_us = true
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_show_card()
+
+
+func cards_open() -> bool:
+	return _veil.visible or not _waiting.is_empty()
+
+
+## The character creator a new game opens over the level (PlayerAppearance), still open, or about to open.
+func _creator_open() -> bool:
+	if _creator_grace > 0.0:
+		return true
+	return not get_tree().root.find_children("*", "CharacterCreator", true, false).is_empty()
+
+
+func clear_cards() -> void:
+	_waiting = []
+	_cards = []
+	_card_done = Callable()
+	_close_cards()
+
+
+func _show_card() -> void:
+	var c: Dictionary = _cards[_card_i]
+	_card_title.text = String(c.get("title", ""))
+	_card_title.visible = _card_title.text != ""
+	_card_text.text = String(c.get("text", ""))
+	_card_more.text = "Enter  continue" if _card_i < _cards.size() - 1 else "Enter  close"
+	_card_open_t = 0.35          # (a held key from before the card does not skip it)
+	_card.modulate.a = 0.0
+	create_tween().tween_property(_card, "modulate:a", 1.0, 0.3)
+
+
+func _next_card() -> void:
+	_card_i += 1
+	if _card_i < _cards.size():
+		_show_card()
+		return
+	var done := _card_done
+	_close_cards()
+	if done.is_valid():
+		done.call()
+
+
+func _close_cards() -> void:
+	_veil.visible = false
+	if _paused_by_us:
+		get_tree().paused = false
+		_paused_by_us = false
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not _veil.visible or _card_open_t > 0.0:
+		return
+	var go := false
+	if event is InputEventKey and event.pressed and not event.echo:
+		go = (event as InputEventKey).keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE, KEY_E]
+	elif event is InputEventMouseButton and event.pressed:
+		go = (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT
+	if go:
+		get_viewport().set_input_as_handled()
+		_next_card()
+
+
+func _process(delta: float) -> void:
+	_creator_grace = maxf(0.0, _creator_grace - delta)
+	if not _waiting.is_empty() and not _creator_open():
+		var w := _waiting
+		_waiting = []
+		show_cards(w[0], w[1])
+	if _veil.visible:
+		_card_open_t -= delta
+		if not get_tree().paused and _paused_by_us == false:
+			get_tree().paused = true                 # (the pause menu let go over a card: the card still holds the game)
+			_paused_by_us = true
+	if _banner_t > 0.0:
+		_banner_t -= delta
+		_banner.modulate.a = clampf(minf(BANNER_S - _banner_t, _banner_t) / 0.6, 0.0, 1.0)
+	_panel_shade.visible = _panel.visible and not _veil.visible
+	if _panel_shade.visible:
+		var r := Rect2(_panel.position, _panel.size).grow_individual(60, 40, 90, 50)
+		_panel_shade.position = r.position
+		_panel_shade.size = r.size
+	_marks.queue_redraw()
+
+
+# --- The marker ----------------------------------------------------------------------------------------------
+
+func _draw_marker() -> void:
+	if marker_at == null or _veil.visible:
+		return
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	var p: Vector3 = (marker_at as Vector3) + Vector3(0, 2.0, 0)
+	var size := _marks.size
+	if size.x < EDGE * 3.0 or size.y < EDGE * 3.0:
+		return
+	var behind := cam.is_position_behind(p)
+	var s := cam.unproject_position(p)
+	if behind:
+		s = size - s                                 # (behind the camera: mirrored, then held to the edge)
+	var on := not behind and Rect2(Vector2.ZERO, size).grow(-EDGE).has_point(s)
+	if not on:
+		var c := size * 0.5
+		var d := s - c
+		if d.length() < 1.0:
+			d = Vector2(0, 1)
+		var k := minf((c.x - EDGE) / maxf(absf(d.x), 0.001), (c.y - EDGE) / maxf(absf(d.y), 0.001))
+		s = c + d * k
+	var r := 9.0
+	var pts := PackedVector2Array([s + Vector2(0, -r), s + Vector2(r, 0), s + Vector2(0, r), s + Vector2(-r, 0), s + Vector2(0, -r)])
+	_marks.draw_polyline(pts, Color(0, 0, 0, 0.6), 4.0, true)
+	_marks.draw_polyline(pts, GOLD, 2.0, true)
+	_marks.draw_circle(s, 2.5, GOLD)
+	var dist := marker_dist
+	if dist < 0.0:
+		var pl := get_tree().get_first_node_in_group("player") as Node3D
+		if pl:
+			dist = Vector2(pl.global_position.x, pl.global_position.z).distance_to(Vector2(p.x, p.z))
+	if dist >= 0.0:
+		var f := FrontierHUD.serif()
+		var t := "%d m" % roundi(dist)
+		var w := f.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
+		_marks.draw_string(f, s + Vector2(-w * 0.5 + 1, r + 19), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(0, 0, 0, 0.7))
+		_marks.draw_string(f, s + Vector2(-w * 0.5, r + 18), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, TEXT)

@@ -1,0 +1,23 @@
+{
+  "format": "frontier-storyline",
+  "version": 1,
+  "id": "story.two_fires",
+  "name": "Two Fires",
+  "summary": "The main story (docs/main_story.md): 1757-1775, one character from a homestead in the open land, through captivity and adoption, the burning of the town, the line and the tax, to the eve of the Revolution. Built so far: the Prologue (Open Land) on the valley map.",
+  "start": {
+    "_doc": "How a new game of this storyline starts: the survival core's start (SurvivalCore.new_game options) and where the player stands.",
+    "year": 1757,
+    "day": "oct_early",
+    "hour": 8.0,
+    "player_at": [0.0, 6.0]
+  },
+  "places": {
+    "_doc": "Named points on the map, [x, z] in metres (the valley: the fort's square, +-416 m). The stockade stands in for the fort at German Flatts in 1757 (H: Fort Herkimer, the stone house fortified in 1756; verify). The homestead plot is in the woods south-east of it: the player clears it.",
+    "flatts_fort": [0.0, 0.0],
+    "homestead": [78.0, 64.0]
+  },
+  "parts": [
+    {"id": "part.prologue", "name": "Prologue: Open Land", "years": "1757", "map": "valley", "missions": ["m.tf.open_land", "m.tf.clearing", "m.tf.shelter", "m.tf.fire", "m.tf.meat", "m.tf.house", "m.tf.raid"]},
+    {"id": "part.taken_in", "name": "Part 1: Taken In", "years": "1757-59", "map": "north_woods", "missions": [], "status": "needs the North Woods map (docs/maps.md) and the nation's office (docs/main_story.md)"}
+  ]
+}

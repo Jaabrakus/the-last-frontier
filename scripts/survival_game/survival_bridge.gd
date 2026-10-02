@@ -191,7 +191,9 @@ func _ready() -> void:
 	vices.bridge = self
 	add_child(vices)
 	if core == null:
-		new_game(start_background(), {"bare": start_bare()})
+		var start := {"bare": start_bare()}
+		start.merge(StoryDirector.start_opts())     # (a storyline's year, day and hour)
+		new_game(start_background(), start)
 	sleeper = SurvivalSleep.new()
 	sleeper.name = "Sleep"
 	sleeper.bridge = self

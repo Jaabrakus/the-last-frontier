@@ -812,6 +812,18 @@ static func load_household(level: Node, d: Dictionary) -> void:
 		h.load_data(d)
 
 
+## story       the storyline and the mission at hand (StoryDirector): which mission, which step
+static func save_story(level: Node) -> Dictionary:
+	var s := StoryDirector.find(level.get_tree())
+	return s.save_data() if s else {}
+
+
+static func load_story(level: Node, d: Dictionary) -> void:
+	var s := StoryDirector.find(level.get_tree())
+	if s and not d.is_empty():
+		s.load_data(d)
+
+
 static func save_forage(level: Node) -> Dictionary:
 	var f := ForageField.find(level.get_tree())
 	if f == null:

@@ -1,0 +1,112 @@
+{
+  "format": "frontier-missions",
+  "version": 1,
+  "storyline": "story.two_fires",
+  "summary": "The missions of Two Fires, in order. StoryDirector runs them: a mission starts when the one before it is done and its `when` holds, shows its intro cards, then its steps one at a time (each a world check: StoryObjectives), then its outro cards and its `effect`. `hints` are the key prompts shown top-left while it runs (the first-time tutorial). Places are named in the storyline's `places`.",
+  "_kinds": {
+    "go_to": "stand within r m of place",
+    "fell": "fell `count` trees (anywhere) since the step began",
+    "build": "built pieces of one of `types` within r m of place; `count` of them",
+    "fire_lit": "a lit campfire or hearth within r m of place",
+    "kill": "`count` dead animals of `species` that were not dead when the step began",
+    "wait_for": "the date is in `window` (day ids) and the hour is in `hours` [from, to] (wrapping midnight)"
+  },
+  "missions": [
+    {
+      "id": "m.tf.open_land",
+      "title": "Open Land",
+      "intro": [
+        {"title": "Autumn, 1757", "text": "The war between the French and the English is three years old. On the upper Mohawk the farms of German Flatts end at the river, and past them the woods run on, unclaimed by anyone you have met.\n\nYou came up the valley with an axe, a gun and what you could carry. Nobody here knows your name. That will have to be made."},
+        {"title": "The Flatts", "text": "The Palatine farmers gave you a night inside their stockade and a look at you that said they would not give you two. One of them pointed south-east, into the trees: open ground there, a spring, good timber. If you want it, go and take it."}
+      ],
+      "hints": ["W A S D  walk", "Shift  run    Alt  walk slowly", "Space  jump", "Mouse  look", "F1  all the controls"],
+      "steps": [
+        {"kind": "go_to", "place": "homestead", "r": 12.0, "text": "Find the open ground south-east of the Flatts"}
+      ],
+      "outro": [
+        {"title": "Your ground", "text": "A slope that drains, a trickle of water, oaks and pines standing close. It is not much to look at. It is yours if you can hold it through a winter."}
+      ]
+    },
+    {
+      "id": "m.tf.clearing",
+      "title": "Clearing",
+      "hints": ["7  take out the felling axe", "LMB (hold) at a tree  keep chopping", "E at a tree  one swing", "E at a felled crown  limb it into a log"],
+      "steps": [
+        {"kind": "fell", "count": 3, "text": "Fell trees to clear your ground"}
+      ],
+      "outro": [
+        {"title": "Light through the trees", "text": "Three trunks down, and the sky is wider than it was. The logs will be walls before the snow, if you work."}
+      ]
+    },
+    {
+      "id": "m.tf.shelter",
+      "title": "A Roof of Brush",
+      "hints": ["B  build mode on / off", "Mouse wheel  choose the piece", "R  turn it", "hold E  build it"],
+      "steps": [
+        {"kind": "build", "types": ["lean_to"], "place": "homestead", "r": 35.0, "count": 1, "text": "Build a brush lean-to on your ground"}
+      ],
+      "outro": [
+        {"title": "First night", "text": "A lean-to is a poor house, but a dry one. Z sleeps on the ground anywhere; under brush and by a fire you will wake far better."}
+      ]
+    },
+    {
+      "id": "m.tf.fire",
+      "title": "Fire",
+      "hints": ["B  then choose the Campfire", "E at the laid fire  light it (flint and steel)", "F at a lit fire  cook", "T  a torch from the pack"],
+      "steps": [
+        {"kind": "build", "types": ["campfire", "hearth"], "place": "homestead", "r": 35.0, "count": 1, "text": "Lay a campfire by your shelter"},
+        {"kind": "fire_lit", "place": "homestead", "r": 35.0, "text": "Light it"}
+      ],
+      "outro": [
+        {"title": "A fire of your own", "text": "Smoke goes up through the trees where there was none before. Anyone watching the woods knows now that someone lives here."}
+      ]
+    },
+    {
+      "id": "m.tf.meat",
+      "title": "Meat for Winter",
+      "intro": [
+        {"title": "The hungry months", "text": "Corn from the Flatts costs coin you do not have. The woods are full of deer, and a deer is meat, hide and sinew. Hunt one."}
+      ],
+      "hints": ["1 bow  2 musket", "LMB (hold)  aim, release to shoot", "RMB  steady the aim", "Ctrl / C  crouch and creep", "E at its neck  drag it home"],
+      "steps": [
+        {"kind": "kill", "species": ["deer", "buck"], "count": 1, "text": "Hunt a deer"}
+      ],
+      "outro": [
+        {"title": "Venison", "text": "Dress it, roast it, smoke what you cannot eat. A rack and a smokehouse turn a good hunt into a winter."}
+      ]
+    },
+    {
+      "id": "m.tf.house",
+      "title": "A House and a Home",
+      "intro": [
+        {"title": "Before the snow", "text": "A lean-to will not see you through a Mohawk winter. Lay a floor, raise log walls, put a roof over them. A house on this ground says to the Flatts and to the land office alike: someone has settled here."}
+      ],
+      "hints": ["B  build mode: Floor, then the log Walls", "Wall with door  your way in", "Gable ends and a Roof  on top", "Felled logs and stone  are what it costs"],
+      "steps": [
+        {"kind": "build", "types": ["floor"], "place": "homestead", "r": 40.0, "count": 1, "text": "Lay a floor"},
+        {"kind": "build", "types": ["wall", "wall_door", "wall_window"], "place": "homestead", "r": 40.0, "count": 4, "text": "Raise the log walls"},
+        {"kind": "build", "types": ["roof"], "place": "homestead", "r": 40.0, "count": 1, "text": "Put a roof on"}
+      ],
+      "outro": [
+        {"title": "A house", "text": "Four walls of your own logs and a roof that keeps the rain off. At the Flatts they call it the newcomer's place now. It is not a name yet, but it is a start."}
+      ]
+    },
+    {
+      "id": "m.tf.raid",
+      "title": "The Night of the Raid",
+      "waiting": "Ready the homestead for winter: wood, meat, a fire. The Flatts are quiet. (Sleep to let the days pass; something comes in mid-November.)",
+      "steps": [
+        {"kind": "wait_for", "window": ["nov_mid", "feb_late"], "hours": [20.0, 4.0], "text": "Night falls in mid-November"}
+      ],
+      "outro": [
+        {"title": "12 November 1757", "text": "Shots, far off, toward the Flatts. Then many shots. Then the sky over the river turns orange.\n\nA French officer and some three hundred men, French soldiers, Canadian militia and the warriors allied to them, have come down on German Flatts in the dark. The farms outside the fort are burning."},
+        {"title": "", "text": "You run for the river with your gun. You get as far as the edge of your own clearing.\n\nThere are men in the trees, more than you can count. One of them takes the gun out of your hands as if it weighed nothing. Another looks at you a long moment, says something in a language you do not know, and they do not kill you."},
+        {"title": "Taken", "text": "By dawn the Flatts are ash and about a hundred and fifty people are being walked north, you among them. The house you built stands empty behind you, the fire going out.\n\nWhat waits at the end of the march is a town you have never seen, and a family that has lost someone."},
+        {"title": "End of the Prologue", "text": "Part 1, Taken In, comes next: it needs the North Woods map and is written together with the office of the nation whose town it is (docs/main_story.md, docs/maps.md).\n\nUntil then the valley stays open. Your homestead is still yours to keep."}
+      ],
+      "effect": "raid_night",
+      "_review": "Draft text: the raid shows warriors of nations allied to the French; it goes to those nations' offices with Part 1 before release (docs/main_story.md, consultation).",
+      "_basis": "H: the raid on German Flatts, 12 November 1757, led by Picoté de Belestre, about 300 French, Canadians and allied warriors, about 150 captives; verify every figure before release."
+    }
+  ]
+}
