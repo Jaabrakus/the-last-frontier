@@ -102,6 +102,9 @@ var _crawl_motion_until_ms := 0
 var _crawl_motion_blend := 0.0
 var _partner_back: Array[float] = []
 var _bars: Control
+## The keys of the pose for this player's part in it, at the left of the screen (user 2026-10-01: "we need hud of all the buttons to
+## press for those two tandem poses").
+var _keys: Label
 var _happy_motion: Node
 var _plank_motion: Node
 var _happy_brace: Node
@@ -120,6 +123,19 @@ func _ready() -> void:
 		add_child(layer)
 		_bars = BARS.new()
 		layer.add_child(_bars)
+		_keys = Label.new()
+		_keys.name = "TandemKeys"
+		_keys.add_theme_font_override("font", FrontierHUD.serif())
+		_keys.add_theme_font_size_override("font_size", 17)
+		_keys.add_theme_color_override("font_color", FrontierHUD.TEXT)
+		_keys.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
+		_keys.add_theme_constant_override("shadow_offset_x", 1)
+		_keys.add_theme_constant_override("shadow_offset_y", 2)
+		_keys.set_anchors_preset(Control.PRESET_CENTER_LEFT)
+		_keys.position = Vector2(28, -90)
+		_keys.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_keys.visible = false
+		layer.add_child(_keys)
 	var args := OS.get_cmdline_user_args()
 	if player.is_local and "--two-pose-preview" in args:
 		call_deferred("_preview_two_poses")
@@ -218,6 +234,7 @@ func _process(delta: float) -> void:
 		_plank_stamina = minf(_plank_stamina + PLANK_REGAIN * delta, PLANK_MAX)
 	_cinematic(delta)
 	if _bars != null: _bars.show_values(_pair_stamina(), delta)
+	if _keys != null: _show_keys()
 
 ## Only women lead these poses (the crawl and Happy Baby). A player without a customizer look (use_appearance
 ## off) wears the legacy clothed female base body; otherwise the look's sex decides (CreatorOptions.is_male).
@@ -757,15 +774,30 @@ func partner_fraction() -> float:
 	return partner_pose.stamina / partner_pose.stamina_max if is_instance_valid(partner_pose) else 1.0
 
 ## (yours, the other's) for the bars while this player is paired in a pose, else (-1, -1).
+## The puppy pair this player is in (as the puppy: its own PuppyTandem; as the man kneeling behind: the one whose partner it is),
+## or null.
+func _puppy_pair() -> Node:
+	var own: Node = player.get_node_or_null("PuppyTandem")
+	if own != null and own.joined:
+		return own
+	for n: Node in player.get_parent().get_children():
+		if n == player or not n is FrontierPlayer: continue
+		var pp: Node = n.get_node_or_null("PuppyTandem")
+		if pp != null and pp.joined and pp.partner == player:
+			return pp
+	return null
+
 func _pair_stamina() -> Vector2:
+	var pp := _puppy_pair()
+	if pp != null:
+		return Vector2(pp.lead_fraction(), pp.partner_fraction()) if pp.player == player else Vector2(pp.partner_fraction(), pp.lead_fraction())
 	if is_instance_valid(_lead):
 		return Vector2(_lead.partner_fraction(), _lead.lead_fraction()) if _lead.joined else Vector2(-1.0, -1.0)
 	return Vector2(lead_fraction(), partner_fraction()) if joined else Vector2(-1.0, -1.0)
 
 ## The pose this player is paired in, as lead or partner ("" when alone).
 func _pair_mode() -> String:
-	var pp: Node = player.get_node_or_null("PuppyTandem")
-	if pp != null and pp.joined:
+	if _puppy_pair() != null:
 		return "puppy"
 	if is_instance_valid(_lead): return _lead.mode if _lead.joined else ""
 	return mode if joined else ""
@@ -781,10 +813,14 @@ func _cinematic(delta: float) -> void:
 		_cam0 = {"yaw": player.yaw, "pitch": player.pitch, "dist": player.spring_arm.spring_length,
 				"y": player.camera_pivot.position.y}
 	if not want and _cine <= 0.0: return
+	if not want:
+		_release_camera()      # (the pair apart: the camera back at once; the pose owners put its height back)
+		return
 	_cine = move_toward(_cine, 1.0 if want else 0.0, delta / CINE_BLEND_S)
 	_cine_time += delta
 	var e := smoothstep(0.0, 1.0, _cine)
-	var facing: float = _lead.player.rotation.y if is_instance_valid(_lead) else player.rotation.y
+	var pup := _puppy_pair()
+	var facing: float = pup.player.rotation.y if pup != null else (_lead.player.rotation.y if is_instance_valid(_lead) else player.rotation.y)
 	var yaw_to: float = facing + PI * 0.5 * float(CINE_SIDE[_cine_mode]) + sin(_cine_time * 0.4) * 0.16
 	player.yaw = lerp_angle(_cam0.yaw, yaw_to, e)
 	player.pitch = lerpf(_cam0.pitch, CINE_PITCH, e)
@@ -879,3 +915,26 @@ func _preview_two_poses() -> void:
 			if poses.start_pose(spec[1]): break
 		placed.append(poses.mode)
 	print("TWO_FEMALE_POSES_READY ", placed)
+
+## The pose's keys for this player's part: leading Happy Baby, the plank over it, the puppy, kneeling behind it.
+func _show_keys() -> void:
+	var lines: PackedStringArray = []
+	var pup := _puppy_pair()
+	var solo: Node = player.get_node_or_null("PuppyPose")
+	if pup != null and pup.partner == player:
+		lines = ["PUPPY  ·  behind her", "K  react (costs stamina)", "O / U  wave / sway together", "C  camera", "Backspace or move  stand up"]
+	elif solo != null and solo.active:
+		lines = ["PUPPY  ·  you lead"]
+		if pup == null:
+			lines.append("I  invite a partner")
+		lines.append_array(["K  flinch" if pup == null else "K  react together", "O / U  wave / sway", "C  camera", "P or Backspace  stop"])
+	elif is_instance_valid(_lead) and _lead.joined:
+		lines = ["HAPPY BABY  ·  the plank over her", "Enter  dip (costs stamina)", "K  react", "O / U  wave / sway", "C  camera", "Backspace or move  stand up"]
+	elif mode == "yoga":
+		lines = ["HAPPY BABY  ·  you lead"]
+		if not joined:
+			lines.append("Enter  accept a partner" if invited else "I  invite a partner")
+		lines.append_array(["K  react", "O / U  wave / sway", "C  camera", "N or Backspace  stand up"])
+	_keys.visible = not lines.is_empty()
+	if _keys.visible:
+		_keys.text = "\n".join(lines)

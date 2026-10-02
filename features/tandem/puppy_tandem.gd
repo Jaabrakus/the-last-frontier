@@ -18,6 +18,19 @@ var _own_partner := true
 var _health := 0.0
 var _generation := 0
 var _responses: Array[float] = []
+## The pair's stamina (user 2026-10-01: "for the puppy pose we need a stamina bar"), as the crawl's: a pool of 100 each; the
+## partner's reaction (K) costs him REACT_COST and the lead's answering flinch costs her FLINCH_COST; both come back REGAIN a
+## second while idle. TandemBars shows them (TandemPoses._pair_stamina).
+const STAMINA_MAX := 100.0
+const REACT_COST := 10.0
+const FLINCH_COST := 5.0
+const REGAIN := 4.0
+var lead_stamina := STAMINA_MAX
+var partner_stamina := STAMINA_MAX
+var _rest := 0.0
+
+func lead_fraction() -> float: return lead_stamina / STAMINA_MAX
+func partner_fraction() -> float: return partner_stamina / STAMINA_MAX
 func _ready() -> void: name = "PuppyTandem"
 func invite_partner() -> bool:
 	if not puppy.active or joined or inviting: return false
@@ -109,6 +122,9 @@ func _adopt(p: FrontierPlayer) -> bool:
 func _input(e: InputEvent) -> void:
 	if not joined or not is_instance_valid(partner) or not partner.is_local or player.is_local or not e is InputEventKey or not e.pressed or e.echo: return
 	if e.physical_keycode == KEY_K: react()
+	elif e.physical_keycode == KEY_C:
+		var tp: Node = partner.get_node_or_null("TandemPoses")
+		if tp != null: tp.cinematic = not tp.cinematic
 	elif e.physical_keycode in [KEY_O, KEY_U]:
 		play_motion("wave" if e.physical_keycode == KEY_O else "sway", "upright" if e.ctrl_pressed else ("puppy" if e.shift_pressed else "both"))
 	elif e.physical_keycode in [KEY_BACKSPACE, KEY_ESCAPE, KEY_N, KEY_W, KEY_A, KEY_S, KEY_D, KEY_SPACE]: stop_pair()
@@ -123,7 +139,10 @@ func play_motion(kind: String, who := "both") -> bool:
 	return true
 func react() -> bool:
 	if not joined or not puppy.active or not is_instance_valid(partner_pose): return false
+	if partner_stamina < REACT_COST: return false
 	if not partner_pose.flinch(): return false
+	partner_stamina -= REACT_COST
+	_rest = 0.75
 	motion.cancel()
 	puppy.motion.cancel()
 	_responses.append(reaction_delay)
@@ -137,10 +156,15 @@ func _process(delta: float) -> void:
 		stop_pair()
 		return
 	support.hold = minf(1.0, support.hold + delta / 0.25)
+	_rest -= delta
+	if _rest <= 0.0:
+		lead_stamina = minf(lead_stamina + REGAIN * delta, STAMINA_MAX)
+		partner_stamina = minf(partner_stamina + REGAIN * delta, STAMINA_MAX)
 	for i in _responses.size(): _responses[i] -= delta
 	while not _responses.is_empty() and _responses[0] <= 0:
 		_responses.pop_front()
 		puppy.flinch()
+		lead_stamina = maxf(lead_stamina - FLINCH_COST, 0.0)
 func stop_pair() -> void:
 	_generation += 1
 	joined = false

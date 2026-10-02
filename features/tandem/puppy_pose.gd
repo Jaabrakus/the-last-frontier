@@ -18,6 +18,9 @@ func _input(e: InputEvent) -> void:
 		elif e.physical_keycode == KEY_K:
 			if pair != null and pair.joined: pair.react()
 			else: flinch()
+		elif e.physical_keycode == KEY_C:
+			var tp: Node = player.get_node_or_null("TandemPoses")
+			if tp != null: tp.cinematic = not tp.cinematic
 		elif e.physical_keycode in [KEY_O, KEY_U]:
 			var kind := "wave" if e.physical_keycode == KEY_O else "sway"
 			if pair != null and pair.joined:

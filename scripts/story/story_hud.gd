@@ -138,16 +138,7 @@ func set_mission(title: String, text: String, count: String, hints: Array) -> vo
 	var want := "\n".join(hints)
 	if String(_hints.get_meta(&"keys", "")) != want:
 		_hints.set_meta(&"keys", want)
-		for c in _hints.get_children():
-			c.queue_free()
-		if not hints.is_empty():
-			var gap := Control.new()
-			gap.custom_minimum_size = Vector2(0, 10)
-			_hints.add_child(gap)
-		for h: String in hints:
-			var l := _label(16, TEXT)
-			l.text = h
-			_hints.add_child(l)
+		_build_checklist(hints)
 
 
 func banner(text: String) -> void:
@@ -236,6 +227,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	_creator_grace = maxf(0.0, _creator_grace - delta)
+	_tick_checklist(delta)
 	if not _waiting.is_empty() and not _creator_open():
 		var w := _waiting
 		_waiting = []
@@ -296,3 +288,139 @@ func _draw_marker() -> void:
 		var w := f.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
 		_marks.draw_string(f, s + Vector2(-w * 0.5 + 1, r + 19), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(0, 0, 0, 0.7))
 		_marks.draw_string(f, s + Vector2(-w * 0.5, r + 18), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, TEXT)
+
+
+# --- The keys checklist ----------------------------------------------------------------------------------------
+## The mission's key hints as a checklist (user 2026-10-01: "it should be a checklist, removed if it's there the first time"):
+## each hint whose key is pressed is ticked, fades and goes; a hint ticked once is remembered (SEEN_PATH) and not shown again,
+## in any mission or game after. A hint with no key in it ("Wall with door  your way in") stays as a plain note.
+const SEEN_PATH := "user://tutorial_seen.cfg"
+const DONE_FADE_S := 1.2
+const CHECK_OFF := "☐  "
+const CHECK_ON := "✓  "
+const GREEN := Color(0.62, 0.86, 0.5)
+var _rows: Array = []              ## [{label, hint, triggers, done_t}]
+static var _seen := {}
+static var _seen_loaded := false
+
+
+static func _seen_set() -> Dictionary:
+	if not _seen_loaded:
+		_seen_loaded = true
+		var cf := ConfigFile.new()
+		if cf.load(SEEN_PATH) == OK:
+			for k in cf.get_section_keys("seen") if cf.has_section("seen") else []:
+				_seen[k] = true
+	return _seen
+
+
+static func _mark_seen(hint: String) -> void:
+	_seen_set()[hint] = true
+	var cf := ConfigFile.new()
+	cf.load(SEEN_PATH)
+	cf.set_value("seen", hint, true)
+	cf.save(SEEN_PATH)
+
+
+func _build_checklist(hints: Array) -> void:
+	for c in _hints.get_children():
+		_hints.remove_child(c)
+		c.queue_free()
+	_rows.clear()
+	var seen := _seen_set()
+	var any := false
+	for h: String in hints:
+		if seen.has(h):
+			continue
+		var tr := _triggers(h)
+		var l := _label(16, TEXT)
+		l.text = (CHECK_OFF if not tr.is_empty() else "") + h
+		if not any:
+			var gap := Control.new()
+			gap.custom_minimum_size = Vector2(0, 10)
+			_hints.add_child(gap)
+			any = true
+		_hints.add_child(l)
+		_rows.append({"label": l, "hint": h, "triggers": tr, "done_t": -1.0})
+
+
+## What ticks a hint: the keys named before its first double space ("W A S D", "Shift", "LMB (hold) at a tree", "Ctrl / C",
+## "hold E", "1 bow", "Mouse wheel"). [] when it names none.
+static func _triggers(h: String) -> Array:
+	var label := h.split("  ")[0]
+	var out: Array = []
+	if label.begins_with("Mouse wheel"):
+		return [{"t": "wheel"}]
+	for raw in label.replace("/", " ").replace("(", " ").replace(")", " ").split(" ", false):
+		var w := String(raw)
+		match w:
+			"Mouse":
+				out.append({"t": "motion"})
+			"LMB":
+				out.append({"t": "mouse", "b": MOUSE_BUTTON_LEFT})
+			"RMB":
+				out.append({"t": "mouse", "b": MOUSE_BUTTON_RIGHT})
+			"Shift":
+				out.append({"t": "key", "k": KEY_SHIFT})
+			"Space":
+				out.append({"t": "key", "k": KEY_SPACE})
+			"Alt":
+				out.append({"t": "key", "k": KEY_ALT})
+			"Ctrl":
+				out.append({"t": "key", "k": KEY_CTRL})
+			"Tab":
+				out.append({"t": "key", "k": KEY_TAB})
+			"Enter":
+				out.append({"t": "key", "k": KEY_ENTER})
+			_:
+				if w.length() == 1 and (w >= "A" and w <= "Z" or w >= "0" and w <= "9"):
+					out.append({"t": "key", "k": OS.find_keycode_from_string(w)})
+				elif w.length() >= 2 and w.length() <= 3 and w.begins_with("F") and w.substr(1).is_valid_int():
+					out.append({"t": "key", "k": OS.find_keycode_from_string(w)})
+	return out
+
+
+func _input(event: InputEvent) -> void:
+	if _rows.is_empty() or _veil.visible:
+		return
+	for r: Dictionary in _rows:
+		if float(r.done_t) >= 0.0 or (r.triggers as Array).is_empty():
+			continue
+		for t: Dictionary in r.triggers:
+			if _hit(t, event):
+				r.done_t = DONE_FADE_S
+				var l := r.label as Label
+				l.text = CHECK_ON + String(r.hint)
+				l.add_theme_color_override("font_color", GREEN)
+				_mark_seen(String(r.hint))
+				break
+
+
+static func _hit(t: Dictionary, e: InputEvent) -> bool:
+	match String(t.t):
+		"key":
+			return e is InputEventKey and e.pressed and not e.echo and ((e as InputEventKey).physical_keycode == int(t.k) or (e as InputEventKey).keycode == int(t.k))
+		"mouse":
+			return e is InputEventMouseButton and e.pressed and (e as InputEventMouseButton).button_index == int(t.b)
+		"wheel":
+			return e is InputEventMouseButton and e.pressed and (e as InputEventMouseButton).button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]
+		"motion":
+			return e is InputEventMouseMotion and (e as InputEventMouseMotion).relative.length() > 4.0
+	return false
+
+
+func _tick_checklist(delta: float) -> void:
+	var gone := false
+	for r: Dictionary in _rows.duplicate():
+		if float(r.done_t) < 0.0:
+			continue
+		r.done_t = float(r.done_t) - delta
+		var l := r.label as Label
+		l.modulate.a = clampf(float(r.done_t) / 0.5, 0.0, 1.0)
+		if float(r.done_t) <= 0.0:
+			l.queue_free()
+			_rows.erase(r)
+			gone = true
+	if gone and _rows.is_empty():
+		for c in _hints.get_children():
+			c.queue_free()

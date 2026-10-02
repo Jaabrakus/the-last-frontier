@@ -63,6 +63,14 @@ func _initialize() -> void:
 				var spot: Vector3 = pp.player.global_position + pp.player.skeleton.get_parent().global_basis * pp.partner_offset
 				var d := Vector2(pp.partner.global_position.x - spot.x, pp.partner.global_position.z - spot.z).length()
 				_c(d < 0.15, "puppy by %s: the partner kneels in her place behind her (%.2f m off)" % [who, d])
+				var tp: Node = p.get_node("TandemPoses")
+				if who == "spouse":
+					await physics_frame
+					_c(tp._pair_mode() == "puppy" and tp._pair_stamina().x >= 0.0, "puppy behind her: the pair's stamina bars show (%s)" % [tp._pair_stamina()])
+					_c(tp._keys != null and tp._keys.visible and tp._keys.text.contains("behind her"), "puppy behind her: the keys are on screen")
+					var s0: float = pp.partner_stamina
+					pp.react()
+					_c(pp.partner_stamina < s0, "puppy: K costs the partner stamina (%.0f -> %.0f)" % [s0, pp.partner_stamina])
 			if ok:
 				_c(is_instance_valid(link.proxy) and link.proxy.visible and not h.body.visible, "%s by %s: the stand-in is shown and she is put away" % [pose, who])
 			link._stop_poses()
