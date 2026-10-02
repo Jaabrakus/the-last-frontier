@@ -34,6 +34,9 @@ var veg: FrontierVegetation
 var lay: Object
 ## Tree index -> true once felled.
 var felled := {}
+## Stumps: the height each felled tree was cut at (its stump, saved) and the ones chopped or grubbed out (gone for good).
+var stump_h := {}
+var stump_gone := {}
 ## "tree:i" / "plant:i" -> true once cut (saplings).
 var cut := {}
 ## Prop index -> fraction of the rock's size left (1 untouched, 0 gone).

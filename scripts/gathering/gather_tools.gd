@@ -67,7 +67,7 @@ const AXE := "felling_axe"
 const STONE_AXE := "stone_axe"
 const SKILL_OF := {"felling_axe": "woodcutting", "mattock": "mining", "hoe": "husbandry"}
 ## Target types each tool works on.
-const WORKS := {"felling_axe": ["tree", "sapling", "trunk", "crown", "wall", "carcass"], "mattock": ["rock"], "hoe": ["ground"]}
+const WORKS := {"felling_axe": ["tree", "sapling", "trunk", "crown", "wall", "carcass", "stump"], "mattock": ["rock", "stump"], "hoe": ["ground"]}
 ## The swing each target type takes.
 ## The musket as a club (see the top).
 const CLUB := "musket_club"
@@ -77,7 +77,7 @@ const FLIP_S := 0.35
 ## The tools that attack on LMB when there is nothing to work in front (AxeMelee; data/melee/<tool>.json).
 const MELEE_TOOLS := ["felling_axe", "musket_club"]
 const SWING_OF := {"tree": "side", "sapling": "side", "trunk": "chop", "crown": "side", "rock": "chop", "wall": "side",
-		"carcass": "chop", "ground": "chop"}
+		"carcass": "chop", "ground": "chop", "stump": "chop"}
 ## Seconds after a draw starts before the hand closes on the tool (clip time), the draw's play rate.
 const DRAW_RATE := 1.35
 const STOW_RATE := 1.4
@@ -957,6 +957,16 @@ func _impact(t: Dictionary) -> void:
 			_rec_or(GatherSfx.chop(point, 2.0 * float(cur.get("radius", 0.3))), "axe_chop", point, 0.0, &"ball_hit_wood")
 			if float(_work[key]) >= need:
 				_fell(cur)
+		"stump":
+			var sk_key := "stump:%d" % int(cur.i)
+			_work[sk_key] = float(_work.get(sk_key, 0.0)) + power
+			skills.award(sk, skills.xp(sk, "stroke"))
+			GatherFx.wood_chips(scene, point, normal)
+			_rec_or(GatherSfx.chop(point, 2.0 * float(cur.get("radius", 0.3))), "axe_chop", point, 0.0, &"ball_hit_wood")
+			if float(_work[sk_key]) >= stump_work(cur):
+				_work.erase(sk_key)
+				remove_stump(int(cur.i), true)
+				target = {}
 		"sapling":
 			var key := "sap:%s:%d" % [cur.src, int(cur.i)]
 			_work[key] = float(_work.get(key, 0.0)) + mult
@@ -1172,6 +1182,7 @@ func fell_tree(i: int, from: Vector3, ahead := Vector3.FORWARD, award := false, 
 	if not Sfx.has(fall_id):
 		ft.landing_soon.connect(func(f: FelledTree) -> void: _sound("tree_fall", f.hinge + f.axis() * f.length * 0.5, 6.0, &"land_dirt"))
 		_sound("tree_crack", d.pos + Vector3.UP * 1.5, 2.0, &"land_wood")
+	harvest.stump_h[i] = float(cfg.get("stump_height_m", 0.45))
 	var stump := FelledTree.make_stump(d, float(cfg.get("stump_height_m", 0.45)), visuals)
 	scene.add_child(stump)
 	if award:
@@ -1286,6 +1297,17 @@ func _find_target() -> void:
 		for wn in awork:
 			if wn.has_method(&"axe_candidates"):
 				cands.append_array(wn.axe_candidates(p + Vector3.UP * 1.0, eye, look, [player.get_rid()]))
+	# stumps (user 2026-10-01: "we need to be able to remove the tree stump"): chopped out with the axe or grubbed out with the mattock
+	for sn in get_tree().get_nodes_in_group(FelledTree.STUMP_GROUP):
+		var sb := sn as Node3D
+		if sb == null or sb.is_queued_for_deletion():
+			continue
+		var sr := float(sb.get_meta(&"radius", 0.3))
+		var sdist := Vector2(sb.global_position.x - p.x, sb.global_position.z - p.z).length() - sr
+		if sdist < 2.0:
+			cands.append({"type": "stump", "src": "stump", "i": int(sb.get_meta(&"tree_i", -1)), "node": sb,
+					"pos": sb.global_position + Vector3.UP * minf(float(sb.get_meta(&"height", 0.45)) * 0.5, 0.6), "radius": sr, "dist": sdist,
+					"species": String(sb.get_meta(&"species", "")), "height": float(sb.get_meta(&"height", 0.45))})
 	# the ground the hoe works (farming, FarmField): beds that want breaking or weeding; open ground with the hoe out
 	var farm := FarmField.find(get_tree())
 	if farm and owns("hoe"):
@@ -1334,6 +1356,8 @@ func _reach_of(type: String) -> float:
 			return 2.4
 		"ground":
 			return 2.2
+		"stump":
+			return 1.5
 	return 1.5
 
 
@@ -1367,6 +1391,12 @@ func _rock_contact(c: Dictionary) -> Dictionary:
 func _finish_target(c: Dictionary) -> void:
 	var p := player.global_position
 	match String(c.type):
+		"stump":
+			var sax: Vector3 = c.pos
+			var sto := Vector3(p.x - sax.x, 0.0, p.z - sax.z)
+			var sn2 := sto.normalized() if sto.length() > 1e-3 else -player.global_basis.z
+			c["point"] = sax + sn2 * float(c.radius)
+			c["normal"] = sn2
 		"tree", "sapling", "trunk":
 			var ax: Vector3 = c.pos
 			var to := Vector3(p.x - ax.x, 0.0, p.z - ax.z)
@@ -1415,6 +1445,16 @@ func _refresh(t: Dictionary) -> Dictionary:
 		return {}
 	var p := player.global_position
 	match String(t.type):
+		"stump":
+			var sn: Variant = t.get("node")
+			if not (sn is Node3D) or not is_instance_valid(sn) or (sn as Node).is_queued_for_deletion():
+				return {}
+			var sb := sn as Node3D
+			if Vector2(sb.global_position.x - p.x, sb.global_position.z - p.z).length() - float(t.radius) > _reach_of("stump") + 0.4:
+				return {}
+			var os := t.duplicate()
+			_finish_target(os)
+			return os
 		"trunk":
 			var ft: Variant = t.get("felled")
 			if not (ft is FelledTree) or not is_instance_valid(ft) or not (ft as FelledTree).is_down():
@@ -1553,6 +1593,9 @@ func prompt() -> String:
 		"ground":
 			var fm := FarmField.find(get_tree())
 			return fm.hoe_prompt(String(target.key)) if fm else ""
+		"stump":
+			var sd := float(_work.get("stump:%d" % int(target.i), 0.0))
+			return "%s the stump%s" % ["Grub out" if tool == "mattock" else "Chop out", "" if sd <= 0.0 else "  %d%%" % int(clampf(sd / stump_work(target), 0.0, 0.99) * 100.0)]
 	return ""
 
 
@@ -1766,3 +1809,33 @@ func _aim_height(_ax: Vector3, _r: float, p: Vector3) -> float:
 	# player staring at their feet for a low cut. Level: waist height (as before); down to the root; up to over the head.
 	var pitch := float(player.get("pitch")) if player.get("pitch") != null else 0.0
 	return p.y + clampf(1.0 + pitch * 0.75, CUT_REACH.x, CUT_REACH.y)
+
+
+## STUMPS (user 2026-10-01: "we need to be able to remove the tree stump"): a stump is chopped out with the axe or grubbed out with
+## the mattock: the work of felling a tree its size, less for a low stump, more for a tall one (STUMP_WORK of the felling at a
+## knee-high stump); out, it gives its wood (a log from one cut a man's height or more, else firewood) and leaves the ground
+## clear for good (VegHarvest.stump_gone, saved; the others in a shared world see it go).
+const STUMP_WORK := 0.6
+
+
+func stump_work(c: Dictionary) -> float:
+	var h := float(c.get("height", 0.45))
+	return maxf(strokes_to_fell(c) * STUMP_WORK * clampf(0.6 + h * 0.6, 0.6, 2.0), 2.0)
+
+
+func remove_stump(i: int, award := false) -> void:
+	for sn in get_tree().get_nodes_in_group(FelledTree.STUMP_GROUP):
+		if int(sn.get_meta(&"tree_i", -1)) != i:
+			continue
+		var h := float(sn.get_meta(&"height", 0.45))
+		(sn as Node).queue_free()
+		if harvest:
+			harvest.stump_gone[i] = true
+		NetSession.world_event(get_tree(), "stump", {"i": i})
+		if award:
+			if h >= 1.2:
+				give("log", 1)
+			else:
+				give("firewood", clampi(roundi(h * 6.0), 1, 4))
+			_note("The stump is out")
+		return

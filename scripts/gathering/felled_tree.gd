@@ -325,11 +325,20 @@ func species_name() -> String:
 
 ## The stump a felled tree leaves (GatherModels.stump: the trunk's bark and the fresh cut) with a wood collider
 ## low enough for a horse to step over.
+## Stumps (GatherTools chops or grubs them out): the group, and on each its tree's index, height, radius and species.
+const STUMP_GROUP := &"stumps"
+
+
 static func make_stump(d: Dictionary, stump_h: float, visuals: bool) -> StaticBody3D:
 	var r := float(d.get("radius", 0.3))
 	var p: Vector3 = d.pos
 	var body := StaticBody3D.new()
 	body.name = "Stump_%d" % int(d.get("i", 0))
+	body.add_to_group(STUMP_GROUP)
+	body.set_meta(&"tree_i", int(d.get("i", -1)))
+	body.set_meta(&"height", stump_h)
+	body.set_meta(&"radius", r)
+	body.set_meta(&"species", String(d.get("species", "")))
 	if stump_h <= 0.6:
 		body.add_to_group(FrontierVegetation.LOW_GROUP)   # (a tall stump, cut high, is not stepped over)
 	body.set_meta(&"surface", "wood")

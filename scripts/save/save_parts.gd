@@ -271,6 +271,8 @@ static func save_vegetation(level: Node) -> Dictionary:
 	var out := {"sig": layout_signature(level)}
 	if h:
 		out["felled"] = h.felled.keys()
+		out["stump_h"] = plain(h.stump_h)
+		out["stump_gone"] = h.stump_gone.keys()
 		out["cut"] = h.cut.keys()
 		out["rocks"] = plain(h.rock_size)
 	if p and p.gather:
@@ -313,10 +315,17 @@ static func load_vegetation(level: Node, d: Dictionary, notes: Array) -> void:
 	var visuals := DisplayServer.get_name() != "headless"
 	var scene := level.get_tree().current_scene
 	if h:
+		var sh: Dictionary = d.get("stump_h", {})
+		var gone: Array = d.get("stump_gone", [])
 		for i in d.get("felled", []):
 			var desc := h.remove_tree(int(i))
-			if not desc.is_empty():
-				scene.add_child(FelledTree.make_stump(desc, float(cfg.get("stump_height_m", 0.45)), visuals))
+			# (its stump at the height it was cut at, unless it was taken out)
+			var hgt := float(sh.get(str(int(i)), sh.get(int(i), cfg.get("stump_height_m", 0.45))))
+			h.stump_h[int(i)] = hgt
+			if gone.has(int(i)) or gone.has(float(i)):
+				h.stump_gone[int(i)] = true
+			elif not desc.is_empty():
+				scene.add_child(FelledTree.make_stump(desc, hgt, visuals))
 		for key in d.get("cut", []):
 			var parts := String(key).split(":")
 			if parts.size() == 2:

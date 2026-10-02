@@ -47,7 +47,7 @@ const BADGE_BAD := Color(0.92, 0.3, 0.26)
 const RESTED := Color(0.55, 0.72, 1.0)
 ## Game hours of the sleep's boost that fill the rested bar (eight hours slept; a better sleep keeps it full longer).
 const REST_FULL_H := SurvivalBridge.REST_MAX_SLEPT_H * SurvivalBridge.REST_H_PER_H
-const HELP := "WASD move · Shift sprint · Alt walk · Ctrl/C crouch (toggle) · Space jump / climb\n" \
+const HELP := "WASD move · Shift sprint · Ctrl/C crouch (toggle) · Space jump / climb\n" \
 		+ "1-6 or wheel: weapons · 7: tools · hold Q: equip wheel · E use (hold E: all there is to do) · T torch · B build\n" \
 		+ "LMB hold to aim, release to fire · RMB raise / steady aim (bow: let down) · R reload\n" \
 		+ "Z rest, hold Z sleep (a lean-to and a fire make it better) · V eat · F cook at a lit campfire\n" \
@@ -92,8 +92,6 @@ var _torch_text: Label
 var _needs_row: HBoxContainer     ## food, warmth, wet and thirst as small badges: dim when well, amber then red as they worsen
 var _need_icons := {}             ## need id -> TextureRect
 var _needs_t := 0.0
-var _stam_row: HBoxContainer      ## the grip's stamina (climbing, hanging, crouched on a branch), shown while it is not full
-var _stam_bar: ProgressBar
 var _ammo: Label                  ## the weapon's ammo and state under the slot strip (one small line)
 var _slots_row: HBoxContainer
 var _slot_boxes: Array = []      ## [Control (meta active), TextureRect (meta kind), Label]
@@ -281,15 +279,6 @@ func _build_vitals() -> void:
 		ic.tooltip_text = String(nd[2])
 		_needs_row.add_child(ic)
 		_need_icons[String(nd[0])] = ic
-	_stam_row = HBoxContainer.new()
-	_stam_row.name = "Stamina"
-	_stam_row.add_theme_constant_override("separation", 8)
-	_stam_row.visible = false
-	v.add_child(_stam_row)
-	_stam_row.add_child(_icon_rect("need_rest", 22, Color(0.5, 0.82, 0.45)))
-	_stam_bar = _bar(190, 4, Color(0.5, 0.82, 0.45))
-	_stam_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_stam_row.add_child(_stam_bar)
 	_root.add_child(v)
 	_place(v, Vector2(0, 1), Vector2(24, -22), Vector2(0, 1))
 
@@ -550,7 +539,7 @@ func _update_vitals() -> void:
 	else:
 		_torch_bar.visible = false
 		_torch_text.text = "Torches ×%d  (T)" % n
-	# the needs as badges; the grip's stamina while it is not full
+	# the needs as badges (the grip's stamina is GripRing's circle, not here)
 	_needs_row.visible = b != null and b.core != null
 	_needs_t -= get_process_delta_time()
 	if _needs_row.visible and _needs_t <= 0.0:
@@ -562,13 +551,9 @@ func _update_vitals() -> void:
 			if ic.visible:
 				var sev := SurvivalNeeds.stage_severity(b.core, id, String(st[id]))
 				ic.modulate = BADGE_OK if sev <= 0 else BADGE_WARN if sev == 1 else BADGE_BAD
-	var gp: PlayerGrip = player.grip if player.get("grip") != null else null
-	_stam_row.visible = gp != null and (gp.stamina < gp.stamina_max - 0.5 or gp.state != PlayerGrip.OFF or gp.perched)
-	if _stam_row.visible:
-		_stam_bar.value = clampf(gp.stamina / gp.stamina_max, 0.0, 1.0)
 	# all well: the vitals step back
 	var vit := _health_bar.get_parent().get_parent().get_parent() as Control
-	var calm := _health_bar.value >= 0.999 and held == null and not _stam_row.visible
+	var calm := _health_bar.value >= 0.999 and held == null
 	vit.modulate.a = move_toward(vit.modulate.a, 0.55 if calm else 1.0, get_process_delta_time() * 2.0)
 
 
