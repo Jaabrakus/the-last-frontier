@@ -83,6 +83,16 @@
    "carry_grip_m": 0.46,
    "kg": 2.8
   },
+  "saber": {
+   "name": "Saber",
+   "summary": "A hanger of the Pattern 1751 (a short saber): a slightly curved blade of about 65 cm on a cast brass hilt with a knuckle bow. Not a tool: it is drawn with the tool key and fought with as the axe is (its swings are the axe's, data/melee/saber.json), held where the axe's haft is held, the blade where the haft and head were.",
+   "skill": "woodcutting",
+   "works": [],
+   "crafted": true,
+   "haft_m": 1.15,
+   "carry_grip_m": 0.45,
+   "kg": 0.76
+  },
   "hoe": {
    "name": "Hoe",
    "summary": "A planter's broad hoe of the 1760s: a wide iron blade set at an angle to a straight ash haft, forged at the forge (2 bar iron, charcoal, a pole) or traded for; breaks ground for a bed and hoes out the weeds (farming, FarmField). Not in the kit (crafted).",

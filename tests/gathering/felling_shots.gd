@@ -59,6 +59,12 @@ func _initialize() -> void:
 	if "pose" in what:
 		await _poses("felling_axe")
 		await _poses("mattock")
+	if "saber" in what:
+		# the saber on the axe's clips (GatherModels._saber): one in the pack, drawn with the tool key
+		var inv := InventoryState.from_player(player)
+		inv.add("saber", 1)
+		player.inventory_pack = inv.pack.duplicate(true)
+		await _poses("saber")
 	if "fell" in what:
 		await _fell()
 	if "sapling" in what:

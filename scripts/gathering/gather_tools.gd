@@ -62,10 +62,10 @@ const CYCLE_KEY := KEY_7
 const ACTIONS := {"felling_axe": &"tool_axe", "mattock": &"tool_mattock", "hoe": &"tool_hoe"}
 const KEYS := {}
 ## The tools in the button's and the wheel's order.
-const ORDER := ["felling_axe", "mattock", "hoe"]
+const ORDER := ["felling_axe", "mattock", "hoe", "saber"]
 const AXE := "felling_axe"
 const STONE_AXE := "stone_axe"
-const SKILL_OF := {"felling_axe": "woodcutting", "mattock": "mining", "hoe": "husbandry"}
+const SKILL_OF := {"felling_axe": "woodcutting", "mattock": "mining", "hoe": "husbandry", "saber": "woodcutting"}
 ## Target types each tool works on.
 const WORKS := {"felling_axe": ["tree", "sapling", "trunk", "crown", "wall", "carcass", "stump"], "mattock": ["rock", "stump"], "hoe": ["ground"]}
 ## The swing each target type takes.
@@ -75,7 +75,7 @@ const CLUB_ACTION := &"club_grip"
 const CLUB_WEAPONS := ["musket", "over_under"]
 const FLIP_S := 0.35
 ## The tools that attack on LMB when there is nothing to work in front (AxeMelee; data/melee/<tool>.json).
-const MELEE_TOOLS := ["felling_axe", "musket_club"]
+const MELEE_TOOLS := ["felling_axe", "musket_club", "saber"]
 const SWING_OF := {"tree": "side", "sapling": "side", "trunk": "chop", "crown": "side", "rock": "chop", "wall": "side",
 		"carcass": "chop", "ground": "chop", "stump": "chop"}
 ## Seconds after a draw starts before the hand closes on the tool (clip time), the draw's play rate.

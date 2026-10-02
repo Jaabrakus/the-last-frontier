@@ -70,7 +70,7 @@ const NAMES := {"musket": "Flintlock Musket", "over_under": "Over-and-Under", "b
 		"bullet_mould": "Bullet Mould", "hooks_line": "Hooks and Line", "fishing_rod": "Fishing Rod",
 		"fish_spear": "Fish Spear",
 		# the knapping stone's tools (the start with nothing)
-		"flint_knife": "Flint Knife", "stone_axe": "Stone Axe", "stone_pick": "Stone Pick", "bow_drill": "Bow Drill", "bone_awl": "Bone Awl",
+		"flint_knife": "Flint Knife", "stone_axe": "Stone Axe", "stone_pick": "Stone Pick", "saber": "Saber", "bow_drill": "Bow Drill", "bone_awl": "Bone Awl",
 		# the canoe's parts (TreeHarvest, the boat stand)
 		"canoe_stake": "Building Stake", "birch_bark_sheet": "Birch Bark Sheet", "wattap": "Wattap", "canoe_strip": "Split Strip",
 		"canoe_rib": "Canoe Rib",

@@ -31,6 +31,8 @@ static func build(kind: String) -> Node3D:
 			return _axe()
 		"mattock":
 			return _mattock()
+		"saber":
+			return _saber()
 		"log":
 			return _log()
 		"firewood":
@@ -55,7 +57,7 @@ static func build(kind: String) -> Node3D:
 
 
 static func has(kind: String) -> bool:
-	return kind in ["felling_axe", "mattock", "log", "firewood", "branches", "pole", "stone", "flint", "stone_axe", "stone_pick", "hoe", "digging_stick"]
+	return kind in ["saber", "felling_axe", "mattock", "log", "firewood", "branches", "pole", "stone", "flint", "stone_axe", "stone_pick", "hoe", "digging_stick"]
 
 
 # --- Tools -----------------------------------------------------------------------------------------
@@ -792,3 +794,33 @@ static func _grain_texture() -> Texture2D:
 			var g := 0.5 + 0.5 * sin(x * 0.9 + float(cols[x]) * 1.5 + y * 0.02)
 			img.set_pixel(x, y, Color(1.0, 1.0, 1.0).lerp(Color(0.8, 0.74, 0.66), g * 0.6))
 	return ImageTexture.create_from_image(img)
+
+
+## The saber on the axe's frame (user 2026-10-01: "we copy the axe animations but we chop off the wood behind it and build in front of
+## it"): the felling axe's clips hold the haft with the right hand SABER_GRIP_M up from the knob (one-handed: carry_grip_m; in the
+## two-handed swings the upper hand is there too), so the saber's grip goes there and its blade runs on up the haft's line, past
+## where the axe's head was; nothing behind the hand (the left hand of the two-handed swings closes on air). Its edge where the
+## axe's edge is (-Z). Markers for AxeMelee's sweep: Grip, Head (the blade's middle), Edge (by the point).
+const SABER_GRIP_M := 0.45
+const SABER_GLB := "res://assets/weapons/saber.glb"
+
+
+static func _saber() -> Node3D:
+	var root := Node3D.new()
+	root.name = "SaberTool"
+	var ps := load(SABER_GLB) as PackedScene
+	if ps:
+		var s := ps.instantiate() as Node3D
+		var sc := s.find_child("Scabbard", true, false) as Node3D
+		if sc:
+			sc.visible = false
+		# the model's blade (-Z) up the haft (+Y), its edge (+Y) along the axe's edge (-Z), its grip's middle at the hand
+		s.transform = Transform3D(Basis(Vector3(-1, 0, 0), Vector3(0, 0, -1), Vector3(0, -1, 0)), Vector3(0, SABER_GRIP_M, 0))
+		root.add_child(s)
+	for pair in [["Butt", Vector3(0, SABER_GRIP_M - 0.08, 0)], ["Grip", Vector3(0, SABER_GRIP_M, 0)],
+			["Head", Vector3(0, SABER_GRIP_M + 0.42, -0.01)], ["Edge", Vector3(0, SABER_GRIP_M + 0.66, -0.03)]]:
+		var m := Marker3D.new()
+		m.name = pair[0]
+		m.position = pair[1]
+		root.add_child(m)
+	return root
