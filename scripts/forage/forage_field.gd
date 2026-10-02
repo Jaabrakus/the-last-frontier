@@ -27,8 +27,8 @@ extends Node3D
 ## while the plant is in season (forage.json game_day_s).
 ##
 ## E (PlayerInteractor's "any other interactable" contract; this one node answers for every plant): at a plant in
-## reach, "Pick blackberries" (ForagePick: the player bends to it, a handful into the pack); out of season or picked
-## clean the prompt names the plant and E says when it bears. A patch deer have fed at shows it ("deer have been
+## reach, "Pick blackberries" (ForagePick: an arm reaches out and grabs a handful into the pack, on the move; the bar fills
+## as the patch is picked clean); out of season or picked clean the prompt names the plant and E says when it bears. A patch deer have fed at shows it ("deer have been
 ## feeding here").
 ##
 ## For the wildlife: deer_spots() / deer_feed_spot() (where there is food for deer now, weighted by what they eat in
@@ -629,6 +629,17 @@ func _grow(pi: int) -> void:
 
 
 ## Handfuls left in patch `pi`.
+## How much of patch `pi`'s crop has been picked (0: full, 1: picked clean): ForagePick's bar.
+func picked_share(pi: int) -> float:
+	var left := stock_of(pi)
+	var full := 0.0
+	var kind := String(patches[pi].kind)
+	for pl: Dictionary in patches[pi].plants:
+		if not pl.gone:
+			full += _full_of(kind, pl)
+	return clampf(1.0 - left / full, 0.0, 1.0) if full > 0.0 else 1.0
+
+
 func stock_of(pi: int) -> float:
 	_grow(pi)
 	var s := 0.0
@@ -688,7 +699,7 @@ func _physics_process(delta: float) -> void:
 ## The plant E offers now: {patch, plant, point, text, can}, or {}.
 func _find_offer() -> Dictionary:
 	var p := _player
-	if p == null or p.get("is_dead") == true or p.get("riding") != null or (picker and picker.working):
+	if p == null or p.get("is_dead") == true or p.get("riding") != null:
 		return {}
 	var chest := p.global_position + Vector3.UP * 1.2
 	var yaw := float(p.get("yaw")) if p.get("yaw") != null else p.rotation.y
@@ -724,7 +735,7 @@ func _find_offer() -> Dictionary:
 	var sign := " (deer have been feeding here)" if now - float(pa.deer_t) < DEER_SIGN_DAYS * float(data.get("game_day_s", 3456.0)) else ""
 	if in_season(kind) and left >= 0.5:
 		best["can"] = true
-		best["text"] = String(d.get("take", "Pick")) + sign
+		best["text"] = "%s  (%d left)%s" % [String(d.get("take", "Pick")), int(left), sign]
 	else:
 		best["can"] = false
 		best["text"] = String(d.get("name", kind)).capitalize() + sign

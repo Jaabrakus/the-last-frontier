@@ -4,10 +4,11 @@ extends SkeletonModifier3D
 ## sampled at its own time on a set of bones with a weight, applied in order (a later layer over the pose the
 ## earlier ones left), so a cross-fade is two layers: the old at full weight, the new at the fade.
 ##
-##   pose.layers = [{"anim": Animation, "time": s, "weight": 0..1, "mask": "arm_r" | "upper" | "full"}, ...]
+##   pose.layers = [{"anim": Animation, "time": s, "weight": 0..1, "mask": "arm_r" | "reach_r" | "reach_l" | "upper" | "full"}, ...]
 ##
 ## Masks (only bones the clip keys are touched):
 ##   arm_r   the right arm, hand and fingers and the right-hand prop bone (the draw, the stow, the one-hand carry)
+##   reach_r, reach_l   above the hips without the other arm (ForagePick's grab: the torso and the head toward the reach)
 ##   upper   everything above the hips: the spine, neck, head, both arms and hands (a stroke while walking)
 ##   full    every keyed bone, with the root's and the pelvis's positions (a stroke standing: the footwork too)
 ## Rotations are slerped from the pose so far toward the clip's; positions lerped for the prop bones (the tool's
@@ -100,6 +101,12 @@ func _mask(sk: Skeleton3D, mask: String) -> Dictionary:
 		match mask:
 			"arm_r":
 				if n.begins_with("r_") and not leg and not n in ["r_chest", "r_breast", "r_breast_end"]:
+					out[b] = true
+			"reach_r", "reach_l":
+				# above the hips without the other arm (ForagePick's grab: the spine and the head toward the reaching arm)
+				var other := "l_" if mask == "reach_r" else "r_"
+				var other_arm := n.begins_with(other) and not n in [other + "chest", other + "breast", other + "breast_end"]
+				if not leg and not other_arm and not n in POSITION_BONES:
 					out[b] = true
 			"upper":
 				if not leg and not n in POSITION_BONES:

@@ -4,12 +4,6 @@
  "summary": "Wild food and herb plants (scripts/forage: ForageField places and draws them and offers E, ForagePick picks, ForageModels builds them). User 2026-09-26: 'we need to add edible plants and herbs; plants and herbs will be the same things deer eat so we know where they will be'. Every plant here is gathered by people and eaten by white-tailed deer, so a patch in season is where deer feed (ForageField.deer_feed_spot / deer_eat for the wildlife).",
  "basis": "Plants of the upper Mohawk valley woods in the 1760s and their seasons at about 43 N, and the deer's use of them, are general natural-history knowledge written from memory; they are not checked against a source in this workspace. Yields, stocks and times are design values.",
  "calendar": "Seasons use the survival calendar's day ids (data/survival/seasons.json calendar.day_ids): a month and its early (1-10), mid (11-20) or late (21-) part. A window [from, to] wraps round the new year when to is before from.",
- "clips": {
-  "low": ["actor_b-cap-casual-pick-flower-enter", "actor_b-cap-casual-pick-flower-loop", "actor_b-cap-casual-pick-flower-exit"],
-  "ground": ["actor_b-cap-ambi-search-low-in-place-entry", "actor_b-cap-ambi-search-low-in-place", "actor_b-cap-ambi-search-low-in-place-exit"],
-  "waist": ["actor_b-cap-ambi-search-1m-in-place-entry", "actor_b-cap-ambi-search-1m-in-place", "actor_b-cap-ambi-search-1m-in-place-exit"],
-  "high": ["actor_b-cap-ambi-search-high-in-place-entry", "actor_b-cap-ambi-search-high-in-place", "actor_b-cap-ambi-search-high-in-place-exit"]
- },
  "game_day_s": 3456,
  "game_day_note": "Real seconds in a game day (seasons.json clock: 2.4 real minutes a game hour); stocks regrow on this clock.",
  "stock_note": "stock: handfuls (the pack's units) each plant of a patch holds when it is full (a cane, a rosette, an acorn, a nut cluster); regrow_days: game days a picked plant takes to fill again (0: not this season).",

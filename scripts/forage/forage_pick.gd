@@ -1,19 +1,25 @@
 class_name ForagePick
 extends Node
-## Picking a plant (ForageField's E): the player turns to it and works at it with an bundled Actor_B clip for the
-## plant's height (forage.json clips: "low" pick-flower for the rosettes and sprigs, "ground" search-low for acorns and
-## digging a root, "waist" search at a metre for the brambles, "high" search-high for the hazel), while a bar fills
-## over the plant's pick_s; then a handful goes into the pack (ForageField.take) and the player gets up. Moving,
-## jumping, crouching, aiming, firing, drawing a weapon or E again stops it (nothing taken); a hit stops it at once.
-## The same pattern as FieldDressing (FrontierPlayer.begin_kneel / end_kneel, a HorsePhaseBlender on the player's
-## AnimationPlayer).
+## Picking a plant (ForageField's E), on the move (user 2026-10-02: "i just want it to be arms, where they press the button and
+## there arm reaches out and gets something", "instead of a timer we should have it like a progress bar like felling where they
+## can grab keep some, it keeps the idea of being mobile like i got shot i can quickly grab something put in pack"):
+## each E is one grab: an arm reaches out, closes on a handful and brings it back to the pack (our own clip, keyed in Blender:
+## tools/anim_author/blender/forage_grab.py, installed by tools/anim_author/install_forage.gd), over whatever the body is doing
+## (walking, running, standing: the legs are the game's; ToolPose "reach_r", or "reach_l" when the right hand is on a gun:
+## the torso leans and bends toward the reaching arm, the other arm left to the game).
+## Nothing stops the player. Every grab yields (user: "each grab yield material"): a handful into the pack (ForageField.take)
+## as the fingers close; the bar under the prompt is the patch picked (ForageField.picked_share), filling with each grab
+## as a felling stroke's does, and the prompt says how many handfuls are left ("Pick blackberries  (5 left)").
 
 signal picked(kind: String, item: String)
 
-const LIB := "actor_b"
-## The exit clip is played this far (s); PlayerAnim takes the rest.
-const OUT_S := 1.2
-const CANCEL_ACTIONS := ["jump", "crouch", "aim", "fire", "reload", "sprint", "interact"]
+const CLIPS := "res://animations_extra/Frontier_Forage.res"
+const BLEND_IN_S := 0.12             ## the arm eased onto the clip from what it was doing, and back off it
+const BLEND_OUT_S := 0.18
+const SHOW_S := 2.5                  ## the bar stays this long after a grab
+
+## The player now grabbing (HowTo's "forage"), or null.
+static var grabbing: Node = null
 
 var field: ForageField
 var player: FrontierPlayer
@@ -21,84 +27,92 @@ var working := false
 var patch := -1
 var plant := -1
 var kind := ""
-var progress := 0.0
+var progress := 0.0                  ## the bar: the patch picked (0..1)
 
-var _clips: Array = []
-var _blender: HorsePhaseBlender
-var _ap: AnimationPlayer
-var _phase := 0            ## 0 bending to it, 1 working, 2 getting up
+var _lib: AnimationLibrary
+var _pose: ToolPose
+var _anim: Animation
+var _mask := "reach_r"
 var _t := 0.0
-var _dur := 3.0
+var _counted := false
+var _show_t := 0.0
 var _layer: CanvasLayer
 var _label: Label
 var _bar: ProgressBar
-var _hurt_hooked := false
 
 
 func _ready() -> void:
 	_build_ui()
 
 
-## Starts picking plant `li` of patch `pi` at `point`; false when the player cannot now.
+## One grab at plant `li` of patch `pi` (at `point`); false when the player cannot now (a grab still going, riding, dead...).
 func start(p: FrontierPlayer, pi: int, li: int, point: Vector3) -> bool:
-	if working or p == null or field == null:
+	if working or p == null or field == null or p.is_dead or p.riding != null or p.climbing != null or p.kneeling != null:
 		return false
-	var pa: Dictionary = field.patches[pi]
-	var d: Dictionary = field.data.plants[pa.kind]
-	_ap = p.begin_kneel(self, point)
-	if _ap == null:
+	if _lib == null:
+		_lib = load(CLIPS) as AnimationLibrary
+	if _lib == null:
 		return false
 	player = p
-	if not _hurt_hooked:
-		p.hurt.connect(_on_hurt)
-		_hurt_hooked = true
 	working = true
+	grabbing = p
 	patch = pi
 	plant = li
-	kind = String(pa.kind)
-	progress = 0.0
-	_dur = float(d.get("pick_s", 3.0))
-	_clips = (field.data.get("clips", {}) as Dictionary).get(String(d.get("clip", "low")), [])
-	_phase = 0
+	kind = String(field.patches[pi].kind)
+	progress = field.picked_share(pi)
+	# the right hand on a gun (the musket, the pistol): the left reaches
+	var right_busy := p.weapon != null and p.weapon.active and not p.hands_free and p.weapon.hand == Weapon.Hand.RIGHT
+	_mask = "reach_l" if right_busy else "reach_r"
+	_anim = _lib.get_animation(&"own-forage-grab-l" if right_busy else &"own-forage-grab-r")
 	_t = 0.0
-	_blender = HorsePhaseBlender.new(_ap, p, LIB)
-	_blender.show_clip(_clips[0], 0.0, 0.0)
-	_blender.update(0.0)
-	_label.text = String(d.get("take", "Pick"))
-	_bar.value = 0.0
-	_layer.visible = true
+	_counted = false
+	if _pose == null or not is_instance_valid(_pose):
+		_pose = ToolPose.new()
+		_pose.name = "ForageGrab"
+	if _pose.get_parent() != p.skeleton:
+		if _pose.get_parent():
+			_pose.get_parent().remove_child(_pose)
+		p.skeleton.add_child(_pose)
+	p.skeleton.move_child(_pose, -1)            # over the tree and every other modifier
+	_pose.active = true
+	_label.text = String(field.data.plants[kind].get("take", "Pick"))
+	_bar.value = progress
+	_show()
 	return true
 
 
 func _physics_process(dt: float) -> void:
+	if _show_t > 0.0:
+		_show_t -= dt
+		if _show_t <= 0.0:
+			_layer.visible = false
 	if not working:
 		return
-	if player.is_dead or player.kneeling != self:
+	if not is_instance_valid(player) or player.is_dead or player.riding != null or player.climbing != null:
 		_stop()
 		return
-	# E pressed to start is still down on the first ticks: only a fresh press stops it
-	if _phase < 2 and (_t > 0.1 or _phase > 0) and _cancel_pressed():
-		_get_up()
 	_t += dt
-	match _phase:
-		0:
-			_blender.show_clip(_clips[0], minf(_t, _len(_clips[0])), 0.15)
-			if _t >= _len(_clips[0]):
-				_phase = 1
-				_t = 0.0
-		1:
-			_blender.show_clip(_clips[1], fposmod(_t, _len(_clips[1])), 0.3)
-			progress = minf(progress + dt / _dur, 1.0)
-			_bar.value = progress
-			if progress >= 1.0:
-				_give()
-				_get_up()
-		2:
-			_blender.show_clip(_clips[2], minf(_t, _len(_clips[2])), 0.2)
-			if _t >= minf(OUT_S, _len(_clips[2])):
-				_stop()
-				return
-	_blender.update(dt)
+	var len := _anim.length
+	var w := minf(clampf(_t / BLEND_IN_S, 0.0, 1.0), clampf((len - _t) / BLEND_OUT_S, 0.0, 1.0))
+	_pose.layers = [{"anim": _anim, "time": minf(_t, len), "weight": w, "mask": _mask}]
+	if not _counted and _t >= float(_anim.get_meta(&"grab_s", 0.33)):
+		_counted = true
+		_grab()
+	if _t >= len:
+		_stop()
+
+
+## The fingers closed on it: a handful into the pack, the bar on.
+func _grab() -> void:
+	_give()
+	progress = field.picked_share(patch)
+	_bar.value = progress
+	_show()
+
+
+func _show() -> void:
+	_layer.visible = true
+	_show_t = SHOW_S
 
 
 ## A handful (or the root) into the pack, a note on screen.
@@ -115,44 +129,13 @@ func _give() -> void:
 	picked.emit(kind, item)
 
 
-func _cancel_pressed() -> bool:
-	if Input.get_vector("move_left", "move_right", "move_forward", "move_back").length() > 0.3:
-		return true
-	for a: String in CANCEL_ACTIONS:
-		if InputMap.has_action(a) and Input.is_action_just_pressed(a):
-			return true
-	return not player.hands_free        # a weapon key drew a weapon
-
-
-func _get_up() -> void:
-	if _phase == 2:
-		return
-	_phase = 2
-	_t = 0.0
-	_layer.visible = false
-
-
-func _on_hurt(_dir: Vector2, _amount: float, _heavy: bool) -> void:
-	if working:
-		_stop()         # up at once: something is attacking
-
-
 func _stop() -> void:
 	working = false
-	_layer.visible = false
-	if _blender and is_instance_valid(_blender.tree):
-		_blender.tree.active = false
-		_blender.tree.queue_free()
-	_blender = null
-	if player and player.kneeling == self:
-		player.end_kneel()
-	patch = -1
-	plant = -1
-
-
-func _len(clip: String) -> float:
-	var full := "%s/%s" % [LIB, clip]
-	return _ap.get_animation(full).length if _ap and _ap.has_animation(full) else 1.0
+	if grabbing == player:
+		grabbing = null
+	if _pose and is_instance_valid(_pose):
+		_pose.layers = []
+		_pose.active = false
 
 
 func _build_ui() -> void:

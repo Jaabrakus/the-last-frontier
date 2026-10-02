@@ -3,7 +3,8 @@ extends SceneTree
 ##
 ##   Godot --headless --path . -s tests/forage/test_forage.gd
 ##
-##   data      every plant's item has a name, its windows and clips exist, its models and the items' icons build
+##   data      every plant's item has a name, its windows and height, its models and the items' icons build; our own grab
+##             clips (both arms, the grab's moment) are there
 ##   calendar  day ids, the survival calendar's thirds of a month, windows that wrap the new year
 ##   place     in the level: enough patches of each plant (no hazel headless: the vegetation places its shrubs only
 ##             with a window), on the ground, off the dirt and out of the fort, clear of trunks and rocks, apart,
@@ -13,9 +14,10 @@ extends SceneTree
 ##             the same every time
 ##   season    25 August: blackberries, plantain, ginseng and the first acorns (a quarter crop) are in, strawberries
 ##             out, wintergreen's berries not yet; a field built for mid June has the strawberries
-##   pick      with the real E: the prompt at a bramble, E bends to it and fills the bar, a handful in the pack and one
-##             less on the plant; moving stops it with nothing taken; out of season E says when it bears; picked
-##             clean it grows back in season; a ginseng root dug is gone
+##   pick      with the real E: the prompt at a bramble (handfuls left), E is one grab of an arm (the legs the game's: the
+##             player is not held), a handful in the pack and one less on the plant, the bar up by the share; a grab
+##             walking still yields; out of season E says when it bears; picked clean it grows back in season; a ginseng
+##             root dug is gone
 ##   deer      feeding spots near a patch, one drawn by weight, a deer feeding eats the ripe food first and leaves its
 ##             sign on the prompt
 ##   wild      with a wildlife spawner in the level: a deer herd's feeding places (WildlifeSpawner.find_place "open")
@@ -100,17 +102,16 @@ func _test_data() -> void:
 	# of the woods' materials (dry sticks, fallen limbs, arrowwood, pine pitch, turkey feathers), and the three for a start
 	# with nothing (fieldstones, chert nodules, dead saplings), and the forge's two (bog iron ore, clay)
 	check(plants.size() == 26, "forage.json reads: 26 plants (%d)" % plants.size())
-	var lib := load("res://animations/Actor_B.res") as AnimationLibrary
+	var grab := load(ForagePick.CLIPS) as AnimationLibrary
+	for side in ["r", "l"]:
+		var a: Animation = grab.get_animation(StringName("own-forage-grab-" + side)) if grab else null
+		check(a != null and a.has_meta(&"grab_s") and float(a.get_meta(&"grab_s")) < a.length, "our own grab for the %s arm, its grab inside it" % side)
 	for kind: String in plants:
 		var p: Dictionary = plants[kind]
 		var item := String(p.get("item", ""))
 		check(InventoryState.NAMES.has(item), "%s gives a named item (%s)" % [kind, item])
 		check(ForageField.day_id_index(String(p.ripe[0])) >= 0 and ForageField.day_id_index(String(p.ripe[1])) >= 0, "%s: its window is two day ids" % kind)
-		var clips: Array = (d.clips as Dictionary).get(String(p.get("clip", "")), [])
-		var have := clips.size() == 3
-		for c in clips:
-			have = have and lib.has_animation(StringName(c))
-		check(have, "%s: its three %s clips are in the Actor_B library" % [kind, p.get("clip", "")])
+		check(String(p.get("clip", "")) in ["ground", "low", "waist", "high"], "%s: its height is one of the four (%s)" % [kind, p.get("clip", "")])
 		# (the sticks and the fallen limb are all "fruit": they go when gathered)
 		if not (kind in ["hazelnuts", "deadwood", "windfall", "fieldstones", "flint_nodules", "dead_pole", "clay_bank", "bog_ore"]):
 			check(ForageModels.plant_mesh(kind, 0) != null, "%s: its plant model builds" % kind)
@@ -338,32 +339,35 @@ func _test_pick() -> void:
 	var pl0: Dictionary = f.patches[pi].plants[0]
 	_stand_at(pi, 0)
 	await frames(10)
-	check(it.target == f and it._label.text.ends_with("Pick blackberries"), "at a bramble: %s" % it._label.text)
+	check(it.target == f and it._label.text.contains("Pick blackberries"), "at a bramble: %s" % it._label.text)
 	var stock0 := f.stock_of(pi)
 	var have0 := InventoryState.from_player(player).pack_count("blackberries")
+	check(it._label.text.contains("left)"), "the prompt says how many handfuls are left: %s" % it._label.text)
 	await _tap_e()
 	await frames(10)
-	check(f.picker.working and player.kneeling == f.picker, "E: the player works at the bramble")
+	check(f.picker.working and player.kneeling == null and ForagePick.grabbing == player, "E: an arm grabs, the player not held")
 	var t := 0
-	while f.picker.working and t < 120 * 12:
+	while f.picker.working and t < 120 * 3:
 		await physics_frame
 		t += 1
-	report["pick_s"] = snappedf(float(t) / 120.0, 0.1)
-	check(not f.picker.working and player.kneeling == null, "and gets up after %.1f s" % (float(t) / 120.0))
+	report["grab_s"] = snappedf(float(t + 17) / 120.0, 0.01)
+	check(not f.picker.working and float(t + 17) / 120.0 < 1.0, "the grab is over in under a second (%.2f s)" % (float(t + 17) / 120.0))
 	check(InventoryState.from_player(player).pack_count("blackberries") == have0 + 1, "a handful of blackberries in the pack")
 	check(absf(f.stock_of(pi) - (stock0 - 1.0)) < 0.01, "one less on the bramble (%.2f -> %.2f)" % [stock0, f.stock_of(pi)])
-	# moving stops it with nothing taken
+	check(f.picker._bar.value > 0.0 and absf(f.picker._bar.value - f.picked_share(pi)) < 0.01, "the bar is the patch picked (%.2f)" % f.picker._bar.value)
+	# a grab walking past still yields
 	await frames(20)
 	_stand_at(pi, 0)
 	await frames(10)
 	var stock1 := f.stock_of(pi)
+	var have1 := InventoryState.from_player(player).pack_count("blackberries")
+	Input.action_press(&"move_left")
+	await frames(2)
 	await _tap_e()
-	await frames(40)
-	Input.action_press(&"move_back")
-	await frames(20)
-	Input.action_release(&"move_back")
-	await seconds(2.0)
-	check(not f.picker.working and absf(f.stock_of(pi) - stock1) < 0.01, "walking off stops it: nothing taken")
+	await frames(100)
+	Input.action_release(&"move_left")
+	check(InventoryState.from_player(player).pack_count("blackberries") == have1 + 1 and absf(f.stock_of(pi) - (stock1 - 1.0)) < 0.01,
+			"a grab while walking yields a handful too")
 	# picked clean: the prompt names it, E says it bears again; three game days later it has
 	for k in 30:
 		if f.stock_of(pi) < 0.5:
