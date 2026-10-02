@@ -267,8 +267,12 @@ def masks(B, Nb, P, node):
             cb = A.to_base(np.array(A.SL(m(c))))
             horn = np.maximum(horn, smooth(r, r * 0.6, np.linalg.norm(B - cb, axis=1)))
     skin = np.clip(np.maximum.reduce([lips, nos, lid, inear, horn]), 0, 1)
-    return dict(points=np.clip(pts, 0, 1), dapple=np.clip(dap, 0, 1), shade=shade, white=np.clip(white, 0, 1),
-                mealy=mealy, skin=skin)
+    out = dict(points=np.clip(pts, 0, 1), dapple=np.clip(dap, 0, 1), shade=shade, white=np.clip(white, 0, 1),
+               mealy=mealy, skin=skin)
+    # another animal on the horse's rig repaints the channels (the bison: its cape in G, no white markings)
+    if hasattr(A, "coat_masks"):
+        out = A.coat_masks(B, Nb, out, dict(head=head, neck=neck, legs=legs, belly=belly, noise=nz))
+    return out
 
 
 def ribs(B, Nb):

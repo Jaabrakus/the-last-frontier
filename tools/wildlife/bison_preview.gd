@@ -1,11 +1,11 @@
 extends SceneTree
 ## Stills of the rigged bison (tools/wildlife/bison_rig.py) in its clips, from the side and three-quarters, on a plain
 ## ground in daylight (no text on the pictures):
-##   Godot --path . -s tools/wildlife/bison_preview.gd -- out=<dir> [size=960x540]
+##   Godot --path . -s tools/wildlife/bison_preview.gd -- out=<dir> [size=960x540] [model=res://...glb]
 ## One still per [clip, time]; the sheet is made from them outside.
 
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
-const MODEL := "res://assets/wildlife/bison/bison.glb"
+var MODEL := "res://assets/wildlife/bison/bison.glb"
 const POSES := [["Idle", 0.5], ["Walk", 0.25], ["Walk", 0.6], ["Gallop", 0.2], ["Gallop", 0.45], ["Eating", 1.0],
 		["Attack_Headbutt", 0.45], ["Idle_HitReact_Left", 0.3], ["Death", 3.0]]
 
@@ -17,6 +17,8 @@ func _initialize() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("out="):
 			out = a.substr(4)
+		elif a.begins_with("model="):
+			MODEL = a.substr(6)
 		elif a.begins_with("size="):
 			var wh := a.substr(5).split("x")
 			size = Vector2i(int(wh[0]), int(wh[1]))

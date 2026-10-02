@@ -122,7 +122,7 @@ static func try_grab(p: FrontierPlayer) -> bool:
 	var bd := reach
 	for a in sp.animals():
 		var h := a as WildHorse
-		if h == null or h.is_dead():
+		if h == null or h.is_dead() or not h.catchable():
 			continue
 		var d := h.grab_distance(p.global_position)
 		if d < bd:

@@ -387,6 +387,10 @@ GAITS = {
     "rear": dict(rider="actor_a-horse-rear", length=4.0, kind="rear", speed=0.0, open=(0, 12), hip_rom=60.0),
 }
 GAITS["turn_r"] = dict(GAITS["turn_l"], yaw_rate=-GAITS["turn_l"]["yaw_rate"], look=-10.0)
+# Another animal on the horse's rig (tools/bison/anatomy.py) changes the gaits it needs (strides, carriage, the back's
+# flexion) before the variants are made from them.
+for _g, _o in getattr(A, "GAIT_OVERRIDES", {}).items():
+    GAITS[_g] = dict(GAITS[_g], **_o)
 
 # Short-stride variants (same rider clip, timing and duty; the runtime blends them with
 # the full stride by speed). Stride ratio and the scale of the swing lift and flexion.
@@ -1211,6 +1215,9 @@ class Solver:
         upv = Rb @ UP
         bend = self._bend(name, g)
         pose["chest"] = pose["body"] @ r.rel["chest"]
+        if spine_flex and A.SPINE_FLEX.get("chest", 0.0):
+            # the forehand tips down as the loin and croup tuck under (the bison's curl; the horse has no chest share)
+            pose["chest"] = about(pose["chest"][:3, 3], rot(lat, -spine_flex * A.SPINE_FLEX["chest"])) @ pose["chest"]
         if bend:
             pose["chest"] = about(pose["chest"][:3, 3], rot(upv, bend * A.SPINE_BEND["chest"])) @ pose["chest"]
         pose["back"] = pose["body"] @ r.rel["back"]

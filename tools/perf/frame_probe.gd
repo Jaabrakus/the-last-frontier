@@ -71,6 +71,10 @@ func _initialize() -> void:
 		await byscript()
 	if "groups" in OS.get_cmdline_user_args():
 		await groups()
+	if "cost" in OS.get_cmdline_user_args():
+		await cost()
+	if "mixers" in OS.get_cmdline_user_args():
+		await mixers()
 	quit()
 
 
@@ -238,3 +242,84 @@ func byscript() -> void:
 	rows.sort_custom(func(x, y) -> bool: return float(x[0]) > float(y[0]))
 	for r in rows.slice(0, 20):
 		print("PROBE script saves %6.2f ms  x%-3d %s" % [float(r[0]), int(r[2]), String(r[1])])
+
+
+## cost: byscript with the hitches taken out: each script's nodes off and on 3 times, 12 frames each, compared by the median frame
+## (the level's frame swings 35-115 ms, so byscript's means are mostly noise).
+func cost() -> void:
+	print("PROBE cost start")
+	var by := {}
+	var nodes: Array = []
+	_gather(root, nodes)
+	for n: Node in nodes:
+		var sc := n.get_script() as Script
+		var key: String = sc.resource_path.get_file() if sc != null and sc.resource_path != "" else n.get_class()
+		if not by.has(key):
+			by[key] = []
+		(by[key] as Array).append(n)
+	var rows := []
+	for key: String in by:
+		var on: Array[float] = []
+		var off: Array[float] = []
+		for round in 3:
+			on.append_array(await _frames(12))
+			var states := []
+			for n: Node in by[key]:
+				if is_instance_valid(n):
+					states.append([n, n.is_processing(), n.is_physics_processing()])
+					n.set_process(false)
+					n.set_physics_process(false)
+			await process_frame
+			off.append_array(await _frames(12))
+			for s: Array in states:
+				if is_instance_valid(s[0]):
+					(s[0] as Node).set_process(bool(s[1]))
+					(s[0] as Node).set_physics_process(bool(s[2]))
+			await process_frame
+		rows.append([_median(on) - _median(off), key, (by[key] as Array).size()])
+	rows.sort_custom(func(x, y) -> bool: return float(x[0]) > float(y[0]))
+	for r in rows.slice(0, 25):
+		print("PROBE cost %6.2f ms  x%-3d %s" % [float(r[0]), int(r[2]), String(r[1])])
+
+
+## Each frame's process + physics time in ms.
+func _frames(count: int) -> Array[float]:
+	var out: Array[float] = []
+	for i in count:
+		await process_frame
+		out.append((Performance.get_monitor(Performance.TIME_PROCESS) + Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)) * 1000.0)
+	return out
+
+
+func _median(a: Array[float]) -> float:
+	var b := a.duplicate()
+	b.sort()
+	return b[b.size() / 2] if not b.is_empty() else 0.0
+
+
+## mixers: each active AnimationMixer (player or tree) off and on 3 times, 12 frames each, by the median frame; its owner and track count.
+func mixers() -> void:
+	var all := root.find_children("*", "AnimationMixer", true, false)
+	var act := all.filter(func(m: Node) -> bool: return (m as AnimationMixer).active and m.is_inside_tree() and m.can_process())
+	print("PROBE mixers %d (active %d)" % [all.size(), act.size()])
+	var rows := []
+	for m: AnimationMixer in act:
+		var on: Array[float] = []
+		var off: Array[float] = []
+		for round in 3:
+			on.append_array(await _frames(12))
+			if not is_instance_valid(m):
+				break
+			m.active = false
+			await process_frame
+			off.append_array(await _frames(12))
+			if is_instance_valid(m):
+				m.active = true
+			await process_frame
+		var owner_path := "?"
+		if is_instance_valid(m):
+			owner_path = str(m.get_path()).trim_prefix("/root/")
+		rows.append([_median(on) - _median(off), owner_path, m.get_class() if is_instance_valid(m) else ""])
+	rows.sort_custom(func(x, y) -> bool: return float(x[0]) > float(y[0]))
+	for r in rows.slice(0, 25):
+		print("PROBE mixer %6.2f ms  %-16s %s" % [float(r[0]), String(r[2]), String(r[1])])

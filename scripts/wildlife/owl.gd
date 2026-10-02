@@ -11,7 +11,7 @@ extends Node3D
 
 enum Mode { PERCH, GONE }
 
-const MODEL := "res://assets/wildlife/polypizza/great_horned_owl.glb"
+const MODEL := "res://assets/wildlife/smooth/great_horned_owl.glb"
 const SCALE := 0.06                    ## model units to metres: the owl ~0.43 m tall on a 0.6 m branch
 const BRANCH_Y := 2.3                  ## model units: the branch below, the bird above
 const EYES := [Vector3(-0.44, 7.9, 2.62), Vector3(0.44, 7.9, 2.62)]    ## model units (the texture's yellow eyes)

@@ -97,7 +97,7 @@ func _on(pos: Vector3) -> Vector3:
 func _horses() -> Array[WildHorse]:
 	var out: Array[WildHorse] = []
 	for a in w.animals():
-		if a is WildHorse and not a.is_dead():
+		if a is WildHorse and (a as WildHorse).catchable() and not a.is_dead():
 			out.append(a as WildHorse)
 	return out
 

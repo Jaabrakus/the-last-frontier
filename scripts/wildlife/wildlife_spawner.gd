@@ -577,6 +577,18 @@ func nearest_player(pos: Vector3) -> FrontierPlayer:
 	return best
 
 
+## Seconds between an animal's animation updates at `d` m from the nearest player: every frame up close, 30 a second
+## to 90 m, 15 to 150 m, 8 beyond (a few pixels tall there: the steps do not show).
+static func anim_step_at(d: float) -> float:
+	if d < 40.0:
+		return 0.0
+	if d < 90.0:
+		return 1.0 / 30.0
+	if d < 150.0:
+		return 1.0 / 15.0
+	return 1.0 / 8.0
+
+
 func _lod() -> void:
 	if player == null:
 		return
@@ -585,6 +597,7 @@ func _lod() -> void:
 		var busy := a.state in [WildAnimal.State.FLEE, WildAnimal.State.CHASE, WildAnimal.State.STALK]
 		a.set_active(d < ACTIVE_D or busy)
 		a.visible = d < VISIBLE_D
+		a.anim_step = anim_step_at(d)
 		if a.is_dead():
 			pass                           # (carcasses: _sweep_carcasses)
 		else:

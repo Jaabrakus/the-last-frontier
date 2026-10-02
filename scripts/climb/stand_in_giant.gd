@@ -48,7 +48,7 @@ const SHAKES := [
 ]
 ## The warning before a big shake (seconds).
 const WARN_S := 1.1
-const MODEL := "res://assets/wildlife/ice_age/mammoth.glb"
+const MODEL := "res://assets/wildlife/smooth/mammoth.glb"
 const MODEL_SCALE := 1.2
 const CLIP_IDLE := "Idle"
 const CLIP_WALK := "Walk"
@@ -325,6 +325,7 @@ func _build_model() -> void:
 				w.roughness = 1.0
 				w.metallic_specular = 0.2
 				m.set_surface_override_material(si, w)
+	AnimalHair.apply(model)
 	anim = model.find_children("*", "AnimationPlayer", true, false)[0] as AnimationPlayer
 	anim.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
 	for c in [CLIP_IDLE, CLIP_WALK, CLIP_SHAKE, CLIP_TURN_L, CLIP_TURN_R, CLIP_EAT, CLIP_DRINK, CLIP_BROWSE]:

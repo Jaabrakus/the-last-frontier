@@ -120,6 +120,10 @@ var active := true
 ## Another machine's animal as this one shows it (NetWildlife: a joiner's world): placed and played from the host's,
 ## its own brain off; what hits it goes to the host's.
 var mirrored := false
+## Seconds between animation updates for its distance (WildlifeSpawner._lod: 0 every frame near the player, longer far
+## off); off-screen it updates every OFFSCREEN_ANIM_S. The pose is the same when it updates: the clip is advanced by all
+## the time since (user 2026-10-02: the animals' animation was ~29 ms of a 35 ms frame).
+var anim_step := 0.0
 var interact_reach := 2.4
 var hunger := 0.3
 var fatigue := 0.2
@@ -167,6 +171,7 @@ var _model: Node3D
 var _ap: AnimationPlayer
 var _skel: Skeleton3D
 var _anim := ""
+var _anim_acc := 0.0
 var _zones: Array[StaticBody3D] = []
 var _zone_bones: Array[int] = []
 var _pitch := 0.0
@@ -254,11 +259,13 @@ func _ready() -> void:
 	add_child(_visual)
 	_model = WildlifeSpecies.model(species).instantiate() as Node3D
 	_visual.add_child(_model)
+	AnimalHair.apply(_model)
 	_visual.rotation.y = PI            # the models face +Z; the animal's forward is -Z
 	_base_scale = float(data.scale)
 	_visual.scale = Vector3.ONE * _base_scale
 	_visual.position.y = -0.04
 	_ap = _model.find_children("*", "AnimationPlayer", true, false)[0] as AnimationPlayer
+	_ap.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL     # (stepped in _process)
 	_skel = _model.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
 	_yaw = rotation.y
 	_last_pos = global_position
@@ -426,6 +433,29 @@ func set_active(on: bool) -> void:
 			_ap.play()
 		else:
 			_ap.pause()
+
+
+## Off-screen, the animation updates this often (s).
+const OFFSCREEN_ANIM_S := 0.25
+
+
+func _process(delta: float) -> void:
+	_step_anim(delta)
+
+
+## The clip advanced every anim_step (every frame at 0), every OFFSCREEN_ANIM_S out of the camera's view.
+func _step_anim(delta: float) -> void:
+	if _ap == null or not _ap.is_playing():
+		_anim_acc = 0.0
+		return
+	_anim_acc += delta
+	var step := anim_step
+	var cam := get_viewport().get_camera_3d()
+	if cam and not cam.is_position_in_frustum(global_position + Vector3.UP):
+		step = maxf(step, OFFSCREEN_ANIM_S)
+	if _anim_acc >= step:
+		_ap.advance(_anim_acc)
+		_anim_acc = 0.0
 
 
 func _physics_process(dt: float) -> void:

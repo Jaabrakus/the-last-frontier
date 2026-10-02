@@ -231,6 +231,7 @@ def main():
         tot = sum(ws)
         for (d, n), w in zip(ds, ws):
             bison.vertex_groups[n].add([vi], w / tot, 'REPLACE')
+    smooth(bison)
     mod = bison.modifiers.new("Armature", 'ARMATURE')
     mod.object = arm
     bison.parent = arm
@@ -242,6 +243,35 @@ def main():
                               export_animation_mode='ACTIONS', export_force_sampling=True, export_yup=True,
                               export_def_bones=False, export_optimize_animation_size=False)
     print("BISON RIG WROTE", OUT, "clips", sorted(a.name for a in bpy.data.actions))
+
+
+# The faceted low-poly look smoothed (user 2026-10-02: "smooth out the poly to make it less angle"): the faces' corners
+# welded where they meet (the UVs stay per corner, so the palette texture is kept), one Catmull-Clark step with the UVs
+# left linear (smoothed UVs would slide colours across the palette's patches), the weights carried along, smooth shading.
+SUBDIV = 1
+WELD_M = 0.002
+
+
+def smooth(ob):
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(ob.data)
+    n0 = len(bm.verts)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=WELD_M)
+    n1 = len(bm.verts)
+    bm.to_mesh(ob.data)
+    bm.free()
+    for o in bpy.context.view_layer.objects:
+        o.select_set(o == ob)
+    bpy.context.view_layer.objects.active = ob
+    sub = ob.modifiers.new("Smooth", 'SUBSURF')
+    sub.levels = sub.render_levels = SUBDIV
+    sub.uv_smooth = 'NONE'
+    sub.boundary_smooth = 'ALL'
+    bpy.ops.object.modifier_apply(modifier=sub.name)
+    ob.data.shade_smooth()
+    print("BISON RIG smoothed: %d -> %d vertices welded; %d vertices, %d faces after subdivision"
+          % (n0, n1, len(ob.data.vertices), len(ob.data.polygons)))
 
 
 def _fcurves(act):

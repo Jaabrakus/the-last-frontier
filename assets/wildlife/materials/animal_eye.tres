@@ -1,0 +1,8 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://assets/wildlife/materials/animal_eye.gdshader" id="1_shader"]
+
+[resource]
+resource_name = "animal_eye"
+render_priority = 0
+shader = ExtResource("1_shader")

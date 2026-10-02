@@ -89,7 +89,7 @@ const RUN_BLEED := 1.4
 
 const DATA := {
 	"deer": {
-		"step": 0.6, "name": "deer", "model": "res://assets/wildlife/quaternius/deer.glb", "scale": 0.38, "kind": "prey",
+		"step": 0.6, "name": "deer", "model": "res://assets/wildlife/smooth/deer.glb", "scale": 0.38, "kind": "prey",
 		"health": 110.0, "walk": 1.2, "run": 9.0, "walk_ref": 0.75, "run_ref": 4.2, "turn": 5.0,
 		"sight": 55.0, "fov": 300.0, "hearing": 1.3, "scent": 70.0,
 		"body": [0.24, 1.25, 0.82], "vitals": [0.17, "Torso3"], "head": [0.11, "Head"],
@@ -101,7 +101,7 @@ const DATA := {
 		"forage": true, "eats": "graze", "beds": "cover", "hunted": "any", "strike_h": [0.8, 1.4],
 	},
 	"stag": {
-		"step": 0.6, "name": "buck", "model": "res://assets/wildlife/quaternius/stag.glb", "scale": 0.37, "kind": "prey",
+		"step": 0.6, "name": "buck", "model": "res://assets/wildlife/smooth/stag.glb", "scale": 0.37, "kind": "prey",
 		"health": 140.0, "walk": 1.25, "run": 9.5, "walk_ref": 0.75, "run_ref": 4.3, "turn": 4.5,
 		"sight": 60.0, "fov": 300.0, "hearing": 1.3, "scent": 80.0,
 		"body": [0.27, 1.35, 0.9], "vitals": [0.19, "Torso3"], "head": [0.12, "Head"],
@@ -114,7 +114,7 @@ const DATA := {
 		"defend": {"hurt": 0.6, "reach": 2.4, "damage": 20.0},
 	},
 	"wolf": {
-		"step": 0.55, "name": "wolf", "model": "res://assets/wildlife/quaternius/wolf.glb", "scale": 0.43, "kind": "predator",
+		"step": 0.55, "name": "wolf", "model": "res://assets/wildlife/smooth/wolf.glb", "scale": 0.43, "kind": "predator",
 		"health": 80.0, "walk": 1.5, "run": 10.5, "walk_ref": 0.8, "run_ref": 4.6, "turn": 6.0,
 		"sight": 70.0, "fov": 250.0, "hearing": 1.5, "scent": 110.0,
 		"body": [0.2, 1.05, 0.72], "vitals": [0.14, "Torso3"], "head": [0.1, "Head"],
@@ -128,7 +128,7 @@ const DATA := {
 		"blood_scent": true, "eat_ring": 1.3,
 	},
 	"fox": {
-		"step": 0.35, "name": "fox", "model": "res://assets/wildlife/quaternius/fox.glb", "scale": 0.2, "kind": "prey",
+		"step": 0.35, "name": "fox", "model": "res://assets/wildlife/smooth/fox.glb", "scale": 0.2, "kind": "prey",
 		"health": 35.0, "walk": 0.9, "run": 8.0, "walk_ref": 0.4, "run_ref": 2.3, "turn": 7.0,
 		"sight": 45.0, "fov": 260.0, "hearing": 1.6, "scent": 60.0,
 		"body": [0.1, 0.55, 0.36], "vitals": [0.08, "Torso3"], "head": [0.06, "Head"],
@@ -147,7 +147,7 @@ const DATA := {
 	# gallop near 50 km/h for a short way. Hard to kill (a ball through the lungs, not the shoulder), and a hurt one, or
 	# any one crowded, may turn and charge. The wolves take only the weak ones.
 	"bison": {
-		"step": 0.8, "name": "bison", "model": "res://assets/wildlife/bison/bison.glb", "scale": 1.0, "kind": "prey",
+		"step": 0.8, "name": "bison", "model": "res://assets/wildlife/smooth/bison.glb", "scale": 1.0, "kind": "prey",
 		"health": 520.0, "walk": 1.1, "run": 12.5, "walk_ref": 0.95, "run_ref": 5.4, "turn": 2.6,
 		"sight": 38.0, "fov": 300.0, "hearing": 1.2, "scent": 150.0,
 		# (a bull's body, the model's: user 2026-09-28, "make the bisons accurate make them bigger they can not be smaller

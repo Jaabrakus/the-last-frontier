@@ -23,6 +23,12 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+# Another animal on the horse's rig (FRONTIER_SPECIES=bison: tools/bison/anatomy.py in place of this folder's, its
+# assets in assets/<species>/; no tack, mane or feathers; its horns)
+SPECIES = os.environ.get("FRONTIER_SPECIES", "horse")
+HORSE = SPECIES == "horse"
+if not HORSE:
+    sys.path.insert(0, os.path.join(HERE, "..", SPECIES))
 sys.dont_write_bytecode = True      # keep tools/horse free of __pycache__
 
 import anatomy as A           # noqa: E402
@@ -35,10 +41,10 @@ import sdf                    # noqa: E402
 import skinning as SK         # noqa: E402
 
 PROJECT = os.environ.get("FRONTIER_PROJECT") or os.path.abspath(os.path.join(HERE, "..", ".."))
-OUT_GLB = os.path.join(PROJECT, "assets", "horse", "horse.glb")
-OUT_META = os.path.join(PROJECT, "assets", "horse", "horse_meta.json")
-OUT_MANIFEST = os.path.join(PROJECT, "assets", "horse", "MANIFEST.json")
-TEX_DIR = os.path.join(PROJECT, "assets", "horse", "textures")
+OUT_GLB = os.path.join(PROJECT, "assets", SPECIES, SPECIES + ".glb")
+OUT_META = os.path.join(PROJECT, "assets", SPECIES, SPECIES + "_meta.json")
+OUT_MANIFEST = os.path.join(PROJECT, "assets", SPECIES, "MANIFEST.json")
+TEX_DIR = os.path.join(PROJECT, "assets", SPECIES, "textures")
 POLYHAVEN = os.path.join(PROJECT, "assets", "polyhaven", "textures", "clothing")
 T0 = time.time()
 CLIPS = list(G.CLIP_ORDER)
@@ -52,7 +58,7 @@ DUMP_SKIN = None           # --dump-skin PATH: save the skin and its heat weight
 
 
 def log(*a):
-    print("[horse %6.1fs]" % (time.time() - T0), *a, flush=True)
+    print("[%s %6.1fs]" % (SPECIES, time.time() - T0), *a, flush=True)
 
 
 def args():
@@ -160,6 +166,8 @@ def build_meshes():
     for s in ("l", "r"):
         for hind in (False, True):
             V, F, UV = A.hoof_mesh_detail(s, hind)
+            if hasattr(A, "cloven"):
+                V, F, UV = A.cloven(V, F, UV, s, hind)
             if s == "r" and hind:
                 UV = UV + np.array([2.0, 0.0])      # the hoof under the white sock (horse_hoof.gdshader)
             Vs.append(V)
@@ -175,6 +183,11 @@ def build_meshes():
     # eyes
     V, F = A.eye_mesh()
     parts["Eyes"] = U.mesh_object("Eyes", V, F, mats["eye"])
+    if not HORSE:
+        parts["Horns"] = poly("Horns", A.horns(), 0.004, mats["hoof"], 3000)
+        for n, o in parts.items():
+            log("  %-12s %6d tris" % (n, U.tri_count(o)))
+        return parts, mats, body_node
     # hair cards
     for name, cards in (("Mane", H.mane(body_node)), ("Forelock", H.forelock(body_node)), ("Tail", H.tail(body_node))):
         V, F, UV = cards.arrays()
@@ -546,6 +559,10 @@ def skin(parts, arm_ob, rest):
                 body.vertex_groups.new(name=bn).add([v.index], 1.0, "REPLACE")
     revision5_weights(body)
     rigid(parts["Eyes"], "head")
+    if not HORSE:
+        rigid(parts["Horns"], "head")
+        _hooves_and_parent(parts, arm_ob)
+        return
     rigid(parts["Forelock"], "head")
     rigid(parts["Bridle"], "head")
     rigid(parts["Bit"], "head")
@@ -554,6 +571,10 @@ def skin(parts, arm_ob, rest):
     for s in ("l", "r"):
         rigid(parts["StirrupLeather_" + s], "stirrup_" + s)
         rigid(parts["StirrupIron_" + s], "stirrup_iron_" + s)
+    _hooves_and_parent(parts, arm_ob, ("Mane", "Feathers", "Tail"), rest)
+
+
+def _hooves_and_parent(parts, arm_ob, hair=(), rest=None):
     # hooves: by side / fore-hind
     hv = parts["Hooves"]
     V = U.verts(hv)
@@ -566,11 +587,13 @@ def skin(parts, arm_ob, rest):
         hv.vertex_groups.new(name=b).add(idx, 1.0, "REPLACE")
     # the mane follows the skin it lies on: each card vertex takes the weights of the
     # nearest skin vertex, so the neck never swallows the locks when it bends
-    copy_skin_weights(body, parts["Mane"])
-    # (so do the fetlock feathers, which bend with the fetlock's helper)
-    copy_skin_weights(body, parts["Feathers"])
-    by_segments(parts["Tail"], ["hips", "tail_1", "tail_2", "tail_3", "tail_4"], rest, 0.07)
-    limit_normalize(parts["Tail"])
+    body = parts["HorseBody"]
+    if "Mane" in hair:
+        copy_skin_weights(body, parts["Mane"])
+        # (so do the fetlock feathers, which bend with the fetlock's helper)
+        copy_skin_weights(body, parts["Feathers"])
+        by_segments(parts["Tail"], ["hips", "tail_1", "tail_2", "tail_3", "tail_4"], rest, 0.07)
+        limit_normalize(parts["Tail"])
     for n, o in parts.items():
         if n == "HorseBody":
             continue
@@ -1010,12 +1033,14 @@ def write_manifest(path, tack=()):
 
     def rel(p):
         return os.path.relpath(p, PROJECT)
-    files = [{"path": "assets/horse/glb", "sha256": sha(path), "bytes": os.path.getsize(path),
+    note = ("Procedural horse (mesh, rig, tack, gaits, hair cards): a stocky 14.1-hand colonial saddle horse (1.45 m "
+            "at the withers). No third-party mesh." if HORSE else
+            "Procedural %s on the horse's rig (tools/%s/anatomy.py through tools/horse/build_horse.py: mesh, rig, "
+            "gaits, horns). No third-party mesh." % (SPECIES, SPECIES))
+    files = [{"path": rel(path), "sha256": sha(path), "bytes": os.path.getsize(path),
               "source": "generated", "generator": "tools/horse/build_horse.py", "license": "project-generated",
-              "notes": "Procedural horse (mesh, rig, tack, gaits, hair cards): a stocky 14.1-hand colonial saddle "
-                       "horse (1.45 m at the withers). No third-party mesh."},
-             {"path": "assets/horse/horse_meta.json", "source": "generated", "generator": "tools/horse/build_horse.py"}]
-    files[0]["path"] = "assets/horse/horse.glb"
+              "notes": note},
+             {"path": rel(OUT_META), "source": "generated", "generator": "tools/horse/build_horse.py"}]
     for f in sorted(os.listdir(TEX_DIR)):
         if f.endswith(".png"):
             p = os.path.join(TEX_DIR, f)
@@ -1066,7 +1091,7 @@ def main():
         return
     parts, mats, body_node = build_meshes()
     samples = bake_coat(parts["HorseBody"], body_node)
-    tack = tack_textures()
+    tack = tack_textures() if HORSE else ()
     skin(parts, arm_ob, rest)
     for c in CLIPS:
         write_action(arm_ob, rig, c, clips[c])

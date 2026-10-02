@@ -1,0 +1,13 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3]
+
+[ext_resource type="Shader" path="res://assets/wildlife/materials/animal_hair.gdshader" id="1_shader"]
+[ext_resource type="Texture2D" path="res://assets/character/hair/tex/hair_atlas.png" id="2_atlas"]
+
+[resource]
+resource_name = "animal_hair"
+render_priority = 0
+shader = ExtResource("1_shader")
+shader_parameter/strands = ExtResource("2_atlas")
+shader_parameter/brightness = 1.0
+shader_parameter/root_dark = 0.72
+shader_parameter/cut = 0.42

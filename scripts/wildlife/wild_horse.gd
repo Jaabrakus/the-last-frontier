@@ -51,8 +51,9 @@ var _head_want := Vector2.ZERO
 var _dying := -1.0
 var _lie_side := 1.0
 
-static var _meta := {}
-static var _looped := false
+## The asset data per model (its species' "meta", else the horse's), and the models whose clips are looped.
+static var _metas := {}
+static var _looped := {}
 
 
 func setup(p_species: String, p_spawner: WildlifeSpawner, p_group: WildGroup, seed_: int) -> void:
@@ -64,11 +65,12 @@ func setup(p_species: String, p_spawner: WildlifeSpawner, p_group: WildGroup, se
 
 func _ready() -> void:
 	super._ready()
-	HorseLook.apply(_model, coat)
+	HorseLook.apply(_model, coat, data.get("materials", {}))
 	dress(_model, [])
-	if not _looped:
-		_looped = true
-		var clips: Dictionary = meta().get("clips", {})
+	var mp := meta_path()
+	if not _looped.has(mp):
+		_looped[mp] = true
+		var clips: Dictionary = meta(mp).get("clips", {})
 		for a in _ap.get_animation_list():
 			var loops: bool = (clips.get(String(a), {}) as Dictionary).get("loop", false)
 			_ap.get_animation(a).loop_mode = Animation.LOOP_LINEAR if loops else Animation.LOOP_NONE
@@ -77,17 +79,38 @@ func _ready() -> void:
 	_skel.add_child(_pose)
 
 
-## The horse's asset data (horse_meta.json: the clips' speeds and loops), read once.
-static func meta() -> Dictionary:
-	if _meta.is_empty():
-		var m = JSON.parse_string(FileAccess.get_file_as_string(META_PATH))
-		_meta = m if m is Dictionary else {"clips": {}}
-	return _meta
+## The model's asset data (horse_meta.json, or another animal's on the horse's rig: the bison's; the clips' speeds
+## and loops), read once each.
+static func meta(path := META_PATH) -> Dictionary:
+	if not _metas.has(path):
+		var m = JSON.parse_string(FileAccess.get_file_as_string(path))
+		_metas[path] = m if m is Dictionary else {"clips": {}}
+	return _metas[path]
+
+
+## Its model's asset data path (the species' "meta"; the horse's).
+func meta_path() -> String:
+	return String(data.get("meta", META_PATH)) if data else META_PATH
 
 
 ## A clip's no-slip ground speed at rate 1 (m/s).
-static func clip_speed(c: String) -> float:
-	return float(((meta().get("clips", {}) as Dictionary).get(c, {}) as Dictionary).get("design_speed", 1.0))
+static func clip_speed(c: String, path := META_PATH) -> float:
+	return float(((meta(path).get("clips", {}) as Dictionary).get(c, {}) as Dictionary).get("design_speed", 1.0))
+
+
+## A head carriage (neck, head deg: WildHorsePose) by name: its species' "head_poses" (the bison's short neck and low
+## head), else the horse's.
+func _head_pose(nm: String, horse: Vector2) -> Vector2:
+	var hp: Dictionary = data.get("head_poses", {})
+	if hp.has(nm):
+		var v: Array = hp[nm]
+		return Vector2(float(v[0]), float(v[1]))
+	return horse
+
+
+## Whether it can be caught and broken (HorseBreaking): a species with a "tame" spirit (the horses; not the bison).
+func catchable() -> bool:
+	return data.has("tame")
 
 
 ## Shows only the tack meshes named in `keep` on a horse model (a Horse's visual or a wild one's).
@@ -116,19 +139,24 @@ func _play(clip: String, blend := 0.3, speed := 1.0) -> void:
 				super._play("idle", blend, 1.0)
 			else:
 				var g: String = GAITS[_gait]
-				super._play(g, 0.25, clampf(_speed / clip_speed(g), RATE.x, RATE.y))
+				super._play(g, 0.25, clampf(_speed / clip_speed(g, meta_path()), RATE.x, RATE.y))
 		"graze":
-			_head_want = WildHorsePose.GRAZE
+			_head_want = _head_pose("graze", WildHorsePose.GRAZE)
 			super._play("idle", blend, 0.8)
 		"alert":
-			_head_want = WildHorsePose.ALERT
+			_head_want = _head_pose("alert", WildHorsePose.ALERT)
 			super._play("idle", blend, 1.0)
 		"rest":
-			_head_want = WildHorsePose.DOZE
+			_head_want = _head_pose("doze", WildHorsePose.DOZE)
 			super._play("idle", blend, 0.5)
 		"rear":
 			_head_want = Vector2.ZERO
 			super._play("rear", 0.15, 1.0)
+		"butt":
+			# (the bison's strike: the head down and in, from the gait it comes on in)
+			_head_want = _head_pose("butt", WildHorsePose.GRAZE * 0.6)
+			_gait = _gait_for(_speed)
+			super._play(String(GAITS[maxi(_gait, 1)]), 0.15, 1.0)
 		"death":
 			_head_want = Vector2.ZERO
 			if _dying < 0.0:
@@ -150,6 +178,7 @@ func _gait_for(v: float) -> int:
 
 
 func _process(delta: float) -> void:
+	super._process(delta)
 	if _pose and (active or _dying >= 0.0):
 		var k := 1.0 - exp(-HEAD_RATE * delta)
 		_pose.neck_deg = lerpf(_pose.neck_deg, _head_want.x, k)
@@ -174,7 +203,8 @@ func _lay_over(k: float) -> void:
 	var phi := _lie_side * PI * 0.5 * k * k
 	var s := sin(phi)
 	var b := Basis(Vector3.BACK, phi) * Basis(Vector3.UP, PI) * Basis.from_scale(Vector3.ONE * _base_scale)
-	_visual.transform = Transform3D(b, Vector3(BARREL_H * s, LIE_H * absf(s) - 0.04, 0.0))
+	var lie: Array = data.get("lie", [LIE_H, BARREL_H])
+	_visual.transform = Transform3D(b, Vector3(float(lie[1]) * s, float(lie[0]) * absf(s) - 0.04, 0.0))
 
 
 # --- The catch -----------------------------------------------------------------------------------

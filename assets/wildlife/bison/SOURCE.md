@@ -22,7 +22,12 @@
 The rig was built by another of this project's sessions ("Systems showcase video") and taken into the game here. The
 texture `bison_BisonPlains_BaseColor.png` is the Poly by Google model's own, as written out with the rigged glTF.
 
+**Smoothed (2026-10-02, user: "smooth out the poly to make it less angle"):** the rig script now welds the mesh's face
+corners where they meet, gives it one Catmull-Clark subdivision step (UVs kept linear, so the palette texture's colours
+stay put) and smooth shading before it is weighted (`bison_rig.py` `smooth()`): the same shape and dimensions with the
+facets rounded. The game uses the copy with hair added (`assets/wildlife/smooth/bison.glb`, see its SOURCE.md).
+
 | File | Bytes | SHA-256 |
 | --- | --- | --- |
-| bison.glb | 2909232 | 9cf55485cb4d76dba918623ec0b15f8e70b87aeb41401500b9d94c020d2ccc83 |
+| bison.glb | 3043924 | 5a1adecf8ec8519b40942cc34f3fdec88284803cbed1951398d45d4cce616363 |
 | bison_BisonPlains_BaseColor.png | 1375873 | 5c3bb42bd691caf799105d5df78fb6be0bc42bc3cfb0a40465ab9bd9b3ce61aa |
