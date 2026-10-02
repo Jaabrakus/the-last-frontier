@@ -78,6 +78,8 @@ const FLIP_S := 0.35
 const MELEE_TOOLS := ["felling_axe", "musket_club", "saber"]
 ## Fought one-handed on the axe's two-handed swings: their left arm left out (ToolPose mask "upper_one_hand").
 const ONE_HANDED := ["saber"]
+## Where the axe's two-handed swings have the right fist on the haft (m up from the knob, measured with tools/perf/saber_grip_probe.gd).
+const SWING_GRIP_M := 0.22
 const SWING_OF := {"tree": "side", "sapling": "side", "trunk": "chop", "crown": "side", "rock": "chop", "wall": "side",
 		"carcass": "chop", "ground": "chop", "stump": "chop"}
 ## Seconds after a draw starts before the hand closes on the tool (clip time), the draw's play rate.
@@ -128,6 +130,7 @@ var _cut := {}                 ## "tree:i" -> the height (world y) the last stro
 var _rock := {}                ## prop index -> {total, left, work}
 var _tick := 0
 var _socket_hand: BoneAttachment3D
+var _palm_att: BoneAttachment3D
 var _socket_back: BoneAttachment3D
 var _model_hand: Node3D
 var _model_back: Node3D
@@ -213,6 +216,11 @@ func _build_rig() -> void:
 	_socket_hand.name = "gather_tool_socket"
 	_socket_hand.bone_name = "r_hand_prop_attachment"
 	sk.add_child(_socket_hand)
+	# the right palm, as the pose leaves it: where a one-handed blade's grip goes along the haft (ONE_HANDED)
+	_palm_att = BoneAttachment3D.new()
+	_palm_att.name = "gather_palm"
+	_palm_att.bone_name = "r_palm"
+	sk.add_child(_palm_att)
 	_socket_back = BoneAttachment3D.new()
 	_socket_back.name = "gather_pack_socket"
 	_socket_back.bone_name = String(data.carry.get("bone", "spined"))
@@ -1687,6 +1695,14 @@ func _place_hand_model() -> void:
 	var a := blade_offset(tool)
 	var b := two_hand_offset(tool)
 	_model_hand.transform = a.interpolate_with(b, clampf(_pipe_w, 0.0, 1.0))
+	if tool in ONE_HANDED and _palm_att != null and _socket_hand != null:
+		# the axe's clips slide the right hand along the haft (measured: 0.46 m up from the knob at the carry, 0.21-0.38 in the
+		# two-handed swings): the saber's short grip follows it along the haft's line, where the palm is now, so the handle stays in
+		# the fist (user 2026-10-01: "the handle point is not in the hand"); its markers ride with it
+		var base := _model_hand.transform
+		var at := (_socket_hand.global_transform * base).affine_inverse() * _palm_att.global_position
+		var shift := clampf(at.y - GatherModels.SABER_GRIP_M, -0.4, 0.3)
+		_model_hand.transform = base * Transform3D(Basis(), Vector3(0, shift, 0))
 	if tool == CLUB:
 		# the gun turning end for end in the hands, from where it was held to shoot
 		var gun := _model_hand.get_node_or_null("Gun") as Node3D
