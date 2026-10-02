@@ -209,6 +209,7 @@ func _launch(kind: Projectile.Kind, speed: float, gravity: float, drag: float, d
 	p.look_at(origin + dir, Vector3.UP if absf(dir.y) < 0.99 else Vector3.RIGHT)
 	_bloom += fire_bloom
 	fired.emit()
+	NetSession.shot(player, p, false)       # (the others see it fly)
 	return p
 
 
@@ -305,7 +306,10 @@ func _fire_input_enabled() -> bool:
 	# (and only while this weapon is out: a slung weapon takes no fire / aim input; nor while the torch mode has the
 	# mouse, PlayerTorch.blocks_fire; nor while a vault or climb plays, the weapon kept in the hand through it:
 	# PlayerTraversal.keep_weapon)
+	# (and only for this machine's player: another player's weapons, an AI's or the network's, never take this
+	# keyboard's fire: FrontierPlayer.is_local)
 	return active and not clubbed and not (player != null and player.hands_free) \
+			and (player == null or not ("is_local" in player) or player.is_local) \
 			and not (player != null and player.get("traversal") != null and player.traversal.showing) \
 			and not (player != null and player.get("equip_wheel") != null and player.equip_wheel.blocks_fire()) \
 			and not (player != null and player.get("torch") != null and player.torch.blocks_fire()) \

@@ -18,6 +18,9 @@ var min_damage_speed := 15.0
 var exclude: Array[RID] = []
 var shooter: Node
 var max_life := 20.0
+## Another player's shot as this machine sees it (NetSession): it flies, sounds and sticks, but hurts nothing here
+## (the shooter's machine decides its hits) and shows no hit marker.
+var ghost := false
 
 var _stuck := false
 var _life := 0.0
@@ -77,10 +80,10 @@ func _on_impact(collider: Object, point: Vector3, normal: Vector3) -> void:
 	_whoosh = null
 	# Damage falls off with lost speed, so long lobbed shots hit softer.
 	var dmg := damage * clampf(speed / _start_speed, 0.35, 1.0)
-	if speed >= min_damage_speed:
+	if speed >= min_damage_speed and not ghost:
 		Hit.deliver(collider, dmg, point, velocity.normalized(), shooter)
 	hit.emit(collider, point)
-	if shooter:
+	if shooter and not ghost:
 		shooter.get_tree().call_group("hit_listeners", "on_projectile_hit", collider, point)
 
 	if kind == Kind.ARROW:

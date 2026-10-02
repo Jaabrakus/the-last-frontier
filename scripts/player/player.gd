@@ -1259,6 +1259,11 @@ func horizontal_speed() -> float:
 func apply_hit(damage: float, point: Vector3, direction: Vector3, source: Node = null, _part := "body") -> void:
 	if is_dead or damage <= 0.0 or source == self:
 		return
+	# another machine's player (NetSession): this machine's own shots and blows go to that machine, which takes them; it
+	# is never hurt here
+	if has_meta(&"net_peer"):
+		NetSession.forward_hit(self, damage, point, direction, source, _part)
+		return
 	var from := -direction
 	if from.length_squared() < 1e-8:
 		from = point - global_position

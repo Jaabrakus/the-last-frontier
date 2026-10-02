@@ -170,7 +170,14 @@ func _notification(what: int) -> void:
 ## The whole save: meta and every part.
 func build_doc(slot := "") -> Dictionary:
 	var parts := {}
+	# (playing in another's world, NetSession: the world is theirs; this save keeps its own homestead as it was)
+	var net := NetSession.find(get_tree())
+	var guest := net != null and net.in_session() and not net.is_host()
 	for part: String in PARTS:
+		if guest and part in NetSession.ALL_WORLD:
+			if NetSession.own_world.has(part):
+				parts[part] = NetSession.own_world[part]
+			continue
 		parts[part] = _save_part(part)
 	var meta := {"saved_unix": Time.get_unix_time_from_system(), "slot": slot, "godot": Engine.get_version_info().string,
 			"iron": GameSettings.iron_man(), "bare": SurvivalBridge.bare_of(get_tree())}
@@ -293,6 +300,7 @@ func _save_part(part: String) -> Dictionary:
 		"cart": return SaveParts.save_cart(level)
 		"forage": return SaveParts.save_forage(level)
 		"household": return SaveParts.save_household(level)
+		"story": return SaveParts.save_story(level)
 		"player": return SaveParts.save_player(level)
 		"death": return death.save_data() if death else {}
 	return {}
@@ -300,7 +308,6 @@ func _save_part(part: String) -> Dictionary:
 
 func _load_part(part: String, d: Dictionary) -> void:
 	match part:
-		"story": return SaveParts.save_story(level)
 		"survival": SaveParts.load_survival(level, d)
 		"sky": SaveParts.load_sky(level, d)
 		"vegetation": SaveParts.load_vegetation(level, d, notes)
@@ -313,6 +320,7 @@ func _load_part(part: String, d: Dictionary) -> void:
 		"cart": SaveParts.load_cart(level, d)
 		"forage": SaveParts.load_forage(level, d)
 		"household": SaveParts.load_household(level, d)
+		"story": SaveParts.load_story(level, d)
 		"player": SaveParts.load_player(level, d)
 		"death":
 			if death:
@@ -320,7 +328,6 @@ func _load_part(part: String, d: Dictionary) -> void:
 
 
 func _tell(text: String) -> void:
-		"story": SaveParts.load_story(level, d)
 	var p: Node = level.get_node_or_null("Player") if level else null
 	var it: Node = p.get("interactor") if p else null
 	if it and it.has_method(&"notice"):

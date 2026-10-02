@@ -132,6 +132,9 @@ var dressing: FieldDressing
 var forage: ForageField
 ## Needs run this much faster than game time (tests; 1 in play).
 var time_scale := 1.0
+## A joiner's spawner (NetWildlife): no animals of its own, only the host's shown here (WildAnimal.mirrored); its land's
+## numbers, plans and restocking are the host's.
+var mirror := false
 ## Living wolves and prey (refreshed twice a second).
 var live_wolves: Array[WildAnimal] = []
 var live_prey: Array[WildAnimal] = []
@@ -203,7 +206,8 @@ func _ready() -> void:
 	dressing.spawner = self
 	add_child(dressing)
 	_hook_weapons.call_deferred()
-	_populate.call_deferred()
+	if not mirror:
+		_populate.call_deferred()
 
 
 func _populate() -> void:
@@ -503,6 +507,8 @@ func _find_spot(min_d: float, max_d: float, center: Vector3, unseen: bool, sq :=
 
 func _physics_process(dt: float) -> void:
 	now += dt
+	if mirror:
+		return
 	_eco_t -= dt
 	if _eco_t <= 0.0:
 		_eco_t = 2.0
@@ -554,12 +560,28 @@ func _physics_process(dt: float) -> void:
 		_note_label.modulate.a = clampf(_note_t, 0.0, 1.0)
 
 
+## The player nearest `pos`: this machine's, or in a session (NetSession) another machine's shown here.
+func nearest_player(pos: Vector3) -> FrontierPlayer:
+	var best := player
+	var n := NetSession.find(get_tree()) if is_inside_tree() else null
+	if n == null or n.remotes.is_empty():
+		return best
+	var bd := player.global_position.distance_squared_to(pos) if player else INF
+	for id: int in n.remotes:
+		var r: FrontierPlayer = n.remotes[id]
+		if is_instance_valid(r) and not r.is_dead:
+			var d := r.global_position.distance_squared_to(pos)
+			if d < bd:
+				bd = d
+				best = r
+	return best
+
+
 func _lod() -> void:
 	if player == null:
 		return
-	var pp := player.global_position
 	for a in animals():
-		var d := a.global_position.distance_to(pp)
+		var d := nearest_player(a.global_position).global_position.distance_to(a.global_position)   # (anyone in a session)
 		var busy := a.state in [WildAnimal.State.FLEE, WildAnimal.State.CHASE, WildAnimal.State.STALK]
 		a.set_active(d < ACTIVE_D or busy)
 		a.visible = d < VISIBLE_D

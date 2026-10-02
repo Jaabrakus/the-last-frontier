@@ -117,6 +117,9 @@ var awareness := 0.0
 var threat_pos := Vector3.ZERO
 ## Processing on (WildlifeSpawner turns far animals off).
 var active := true
+## Another machine's animal as this one shows it (NetWildlife: a joiner's world): placed and played from the host's,
+## its own brain off; what hits it goes to the host's.
+var mirrored := false
 var interact_reach := 2.4
 var hunger := 0.3
 var fatigue := 0.2
@@ -426,6 +429,10 @@ func set_active(on: bool) -> void:
 
 
 func _physics_process(dt: float) -> void:
+	if mirrored:
+		if state != State.DEAD:
+			_update_zones()
+		return
 	if not active or state == State.DEAD:
 		return
 	_t += dt
@@ -477,7 +484,7 @@ func _calls(dt: float) -> void:
 # --- Senses --------------------------------------------------------------------------------------
 
 func _player() -> FrontierPlayer:
-	return spawner.player if spawner else null
+	return spawner.nearest_player(global_position) if spawner else null      # (in a session: whoever is nearest)
 
 
 ## How well this animal sees just now (the sentry keen, grazing / dozing heads down).
@@ -1223,6 +1230,9 @@ func _attack_tick(dt: float, damage: float, quarry: Node3D) -> void:
 # --- Hits, blood, death, the carcass -------------------------------------------------------------
 
 func apply_hit(damage: float, point: Vector3, direction: Vector3, source: Node = null, part := "body") -> void:
+	if mirrored:
+		NetWildlife.forward_hit(self, damage, point, direction, source, part)     # (the host's animal takes it)
+		return
 	if damage > 0.0 and not (source is WildAnimal) and _skel != null and direction.length_squared() > 1e-8:
 		# the channel through the body on its skeleton map (Anatomy)
 		var an := Anatomy.attach_to(_skel)

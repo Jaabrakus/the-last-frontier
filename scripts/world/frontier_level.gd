@@ -111,6 +111,8 @@ func _ready() -> void:
 		push_error("The puppy pose did not load; the level goes on without it.")
 	StartupProfile.mark("player")
 	environment_rig.track(player)
+	# playing together (scripts/net): host or join as the menu asked; the other players shown here
+	NetSession.install(self, player)
 	_audio(player)
 	StartupProfile.mark("audio")
 	# survival (scripts/survival_game): the core (needs, the clock, the kit) through its one bridge; the core drives
@@ -123,10 +125,10 @@ func _ready() -> void:
 		# the spouse (scripts/companion): a wife or husband for the player's character, with her own survival core on the
 		# player's clock (needs the bridge's core, so the same switch)
 		Household.install(self, player)
-	StartupProfile.mark("survival")
-	# the fort's furnishing from the build menu's pieces (scripts/building/fort_plan.gd): the wife's work
 		# the story (scripts/story): the storyline's missions, their cards, marker and key hints (docs/main_story.md)
 		StoryDirector.install(self, player)
+	StartupProfile.mark("survival")
+	# the fort's furnishing from the build menu's pieces (scripts/building/fort_plan.gd): the wife's work
 	if not bridge_bare:
 		FortPlan.install(self)
 	# forage (scripts/forage): berries, nuts and herbs where they grow; the deer feed on them too
@@ -148,6 +150,7 @@ func _ready() -> void:
 		var wildlife := WildlifeSpawner.new()
 		wildlife.name = "Wildlife"
 		wildlife.setup(player, vegetation, environment_rig)
+		wildlife.mirror = NetSession.is_guest(get_tree())       # (in another's world: their animals, NetWildlife)
 		add_child(wildlife)
 	# fish (scripts/wildlife/fish): the river's fish near the player, each with its own ways, to the water's numbers
 	# (the spawner's when there is one)

@@ -769,6 +769,7 @@ func _launch_thrown() -> ThrownProjectile:
 	_bloom += fire_bloom
 	fired.emit()
 	thrown.emit(p)
+	NetSession.shot(player, p, true)        # (the others see it fly)
 	return p
 
 

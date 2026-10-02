@@ -50,6 +50,7 @@ var _fade := -1.0
 var _chosen_bg := ""
 var _bare := false
 var _story := true
+var _squad := 1
 var _spouse := true
 var _museum: Control
 var _museum_pic: TextureRect
@@ -229,7 +230,9 @@ func _build_items() -> void:
 	var mu := MenuUI.item("Museum", 32)
 	mu.pressed.connect(_open_museum)
 	_items.add_child(mu)
-	_items.add_child(MenuUI.item("Co-op", 32, "", "coming"))
+	var co := MenuUI.item("Co-op", 32, "host a game or join a friend's")
+	co.pressed.connect(_open_coop)
+	_items.add_child(co)
 	_items.add_child(MenuUI.item("Campaigns", 32, "", "coming"))
 	var st := MenuUI.item("Settings", 32)
 	st.pressed.connect(_open_settings)
@@ -286,22 +289,22 @@ func _play_save(slot: String) -> void:
 	new_game = false
 	bare_start = false
 	spouse_start = true
+	StoryDirector.incoming = ""     # (a save has its own story)
 	background_id = ""              # (a save has its own)
 	LoadingScreen.go(get_tree(), GAME_SCENE, true)
 
 
-	StoryDirector.incoming = ""     # (a save has its own story)
 func _play_new() -> void:
 	SaveGame.pending = {}
 	SaveGame._launched = true         # (a new game: the latest save is not continued)
 	background_id = _chosen_bg
 	bare_start = _bare
 	spouse_start = _spouse
+	StoryDirector.incoming = "two_fires" if _story else ""
 	new_game = true
 	GameSettings.clear_run()          # (a new game takes the Iron Man toggle)
 	LoadingScreen.go(get_tree(), GAME_SCENE)
 
-	StoryDirector.incoming = "two_fires" if _story else ""
 
 # --- The sub-screens ---------------------------------------------------------------------------------------
 
@@ -419,11 +422,11 @@ func _museum_show(i: int) -> void:
 func _open_new_game() -> void:
 	_bare = false
 	_spouse = true
+	_story = true
 	_open_panel()
 	_panel.add_child(MenuUI.heading("A new life"))
 	_panel.add_child(MenuUI.label("Who were you before you came to the manor woods?", 19, MenuUI.DIM, true))
 	var bgs: Array = []
-	_story = true
 	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/survival/backgrounds.json"))
 	if raw is Dictionary:
 		for b: Variant in (raw as Dictionary).get("backgrounds", []):
@@ -463,10 +466,6 @@ func _open_new_game() -> void:
 			begin.grab_focus())
 		row.set_meta(&"name", nm)
 		rows.add_child(row)
-	# a start with nothing: no clothes, tools, weapons or food; everything made from what lies on the ground
-	var bare_row := MenuUI.item("Start with nothing:  off", 22, "no clothes, tools or weapons: sticks, stones and chert from the ground, then the knapping stone")
-	bare_row.pressed.connect(func() -> void:
-		_bare = not _bare
 	# the main story (scripts/story, docs/main_story.md), or free play
 	var story_row := MenuUI.item("Story:  Two Fires", 22, "begins in the autumn of 1757 on open land by German Flatts; off: free play in 1765")
 	story_row.pressed.connect(func() -> void:
@@ -475,6 +474,10 @@ func _open_new_game() -> void:
 		if t:
 			t.text = "Story:  %s" % ("Two Fires" if _story else "off (free play)"))
 	_panel.add_child(story_row)
+	# a start with nothing: no clothes, tools, weapons or food; everything made from what lies on the ground
+	var bare_row := MenuUI.item("Start with nothing:  off", 22, "no clothes, tools or weapons: sticks, stones and chert from the ground, then the knapping stone")
+	bare_row.pressed.connect(func() -> void:
+		_bare = not _bare
 		var t := bare_row.find_child("Text", true, false) as Label
 		if t:
 			t.text = "Start with nothing:  %s" % ("on" if _bare else "off"))
@@ -505,6 +508,58 @@ static func _money(d: int) -> String:
 	if p > 0:
 		out.append("%d pence" % p)
 	return " ".join(out) if not out.is_empty() else "nothing"
+
+
+## Co-op (NetSession; docs/multiplayer_readiness.md): host this machine's game, or join one by its address. The game
+## starts as Continue would (the latest save, else a new game) with the session asked for.
+func _open_coop() -> void:
+	_open_panel()
+	_panel.add_child(MenuUI.heading("Co-op"))
+	_panel.add_child(MenuUI.label("Play the valley together: your squad side by side, other squads to fight or to leave be.", 18, MenuUI.DIM, true))
+	# the squad (Arc Raiders' way): the same squad is co-op, no friendly fire; another squad can be fought
+	var sq := MenuUI.item("Squad:  %d" % _squad, 22, "friends on the same squad fight together; other squads can fight you")
+	sq.pressed.connect(func() -> void:
+		_squad = _squad % NetSession.SQUADS + 1
+		var t := sq.find_child("Text", true, false) as Label
+		if t:
+			t.text = "Squad:  %d" % _squad)
+	_panel.add_child(sq)
+	var hb := MenuUI.item("Host a game", 26, "others join with this machine's address, port %d" % NetSession.PORT)
+	hb.pressed.connect(func() -> void: _play_net({"mode": "host", "squad": _squad}))
+	_panel.add_child(hb)
+	var addr := LineEdit.new()
+	addr.placeholder_text = "the host's address, e.g. 192.168.1.20"
+	addr.text = "127.0.0.1"
+	addr.custom_minimum_size = Vector2(420, 44)
+	addr.add_theme_font_size_override("font_size", 20)
+	_panel.add_child(addr)
+	var jb := MenuUI.item("Join", 26, "the game at the address above")
+	var note := MenuUI.label("", 17, MenuUI.DIM, true)
+	jb.pressed.connect(func() -> void:
+		# connect first, then the host's world comes and the game loads into it with your latest save's character
+		var a := addr.text.strip_edges()
+		note.text = "Joining %s ..." % a
+		var n := NetSession.join_from_menu(get_tree(), a, _squad)
+		if not n.multiplayer.connection_failed.is_connected(_join_failed):
+			n.multiplayer.connection_failed.connect(_join_failed.bind(note)))
+	_panel.add_child(jb)
+	_panel.add_child(note)
+	hb.grab_focus.call_deferred()
+
+
+func _join_failed(note: Label) -> void:
+	if is_instance_valid(note):
+		note.text = "Could not reach the host. Check the address, and that the host's game is open."
+
+
+func _play_net(mode: Dictionary) -> void:
+	NetSession.incoming = mode
+	var latest := SaveGame.latest_slot()
+	if latest != "":
+		_play_save(latest)
+	else:
+		_story = false
+		_play_new()
 
 
 func _open_load() -> void:

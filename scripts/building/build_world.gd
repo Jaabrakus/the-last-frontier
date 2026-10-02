@@ -139,6 +139,7 @@ func add_piece(type: String, xf: Transform3D, grounded: bool, support: int, grou
 	_redress_near(xf.origin, p)
 	grass.mark()
 	changed.emit()
+	NetSession.built(self, p, support)       # (the others build it too)
 	return p
 
 
@@ -146,6 +147,7 @@ func remove_piece(p: BuiltPiece) -> void:
 	if p == null or not is_instance_valid(p):
 		return
 	var at := p.global_position
+	NetSession.unbuilt(self, p)              # (the others take it down too)
 	remove_child(p)
 	p.queue_free()
 	_redress_near(at, null)

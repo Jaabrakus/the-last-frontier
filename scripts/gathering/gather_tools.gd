@@ -964,6 +964,7 @@ func _impact(t: Dictionary) -> void:
 			_rec_or(GatherSfx.sapling(point), "axe_buck", point, -4.0, &"arrow_hit_wood")
 			if float(_work[key]) >= float(sapling_strokes()):
 				harvest.remove_sapling(String(cur.src), int(cur.i))
+				NetSession.world_event(get_tree(), "sapling", {"src": String(cur.src), "i": int(cur.i)})   # (the others' too)
 				_work.erase(key)
 				var y: Dictionary = data.saplings.get("yield", {})
 				for item: String in y:
@@ -1105,12 +1106,14 @@ func _break_stone(cur: Dictionary, power: float, point: Vector3, normal: Vector3
 		var frac := float(st.left) / maxf(float(st.total), 1.0)
 		if int(st.left) <= 0:
 			harvest.shrink_rock(i, 0.0)
+			NetSession.world_event(get_tree(), "rock", {"i": i, "f": 0.0})
 			skills.award("mining", skills.xp("mining", "exhausted"))
 			_note("Nothing left of the %s" % String(info.get("name", "rock")))
 			target = {}
 		else:
 			var ms := float(data.rocks.get("min_scale", 0.4))
 			harvest.shrink_rock(i, lerpf(ms, 1.0, pow(frac, 1.0 / 3.0)))
+			NetSession.world_event(get_tree(), "rock", {"i": i, "f": float(harvest.rock_size.get(i, 1.0))})
 
 
 ## A rock's quarrying state: {total stones, left, work into the next}.
@@ -1140,6 +1143,8 @@ func fell_tree(i: int, from: Vector3, ahead := Vector3.FORWARD, award := false, 
 	var d := harvest.remove_tree(i)
 	if d.is_empty():
 		return null
+	# (the others see it come down too: NetSession)
+	NetSession.world_event(get_tree(), "fell", {"i": i, "from": from, "ahead": ahead, "cut": cut_y})
 	# the cut where the strokes went in (`cut_y`, world): the stump that tall, the tree that much shorter; else the usual stump
 	var cfg: Dictionary = data.felling.duplicate()
 	if cut_y != INF:

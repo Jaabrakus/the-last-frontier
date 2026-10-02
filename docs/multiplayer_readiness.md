@@ -8,6 +8,41 @@ Status 2026-10-01: no networking in the game yet. This is the plan `SurvivalCore
 identical to single player (user: "an exact local-like structure, no differences at all"): the same character, weapons,
 building and world. Not cross-play. (P8 below was written for 100; at 16 most of it is optional.)
 
+## The shape of play: PvPvE, like Arc Raiders (user 2026-10-01)
+
+"lets do both pvp and co-op like arc raiders": one session holds both.
+
+- **Squads.** You play alone or with a squad of friends (1 to 4). Your squad is co-op: shared map marks, no friendly
+  fire by default, you can revive or carry a downed squadmate.
+- **Other squads are people, not enemies by rule.** Anyone else in the session can fight you, trade with you or walk
+  past. Reputation (docs/main_story.md) decides how the world treats a killer or a good neighbour.
+- **The world threatens everyone (the E).** Wolves, bears and weather now; raiders and war parties later, as the AI
+  fighters arrive. A gunshot is heard by everyone near it, players and AI alike.
+- **Home and expeditions.** Your homestead and household are your home base (Arc Raiders' hub). You set out with what
+  you choose to carry, hunt, gather and loot, and bring home what you still carry. Dying drops your pack where you fall
+  (DeathRule already does this): anyone can take it, so risk is real.
+- **The story** stays your own (single player or your squad); sessions are free roam.
+
+## Built (2026-10-01): P1 to P6
+
+The session is `scripts/net/net_session.gd` (NetSession, at /root/Net so it outlasts a level's loading) and
+`scripts/net/net_wildlife.gd` (its child "Wild"). ENet on port 24565, up to 16 players. Each phase has a two-process
+test in `tests/net/` (run one with `-- net=host ...`, the other with `-- net=join:127.0.0.1 ...`):
+
+| Phase | What works | Test |
+|---|---|---|
+| P1 | Host / Join (main menu Co-op); each machine's player shown on the others (FrontierPlayer is_local false, driven by its held keys, pulled to the sent place), its look, a name tag gold for your squad and red for others | `test_net_pair.gd` |
+| P2 | Shots: a shot flies for real on the shooter's machine and as a ghost on the others (Projectile.ghost); a hit on a remote player goes to its machine, which takes it on its own player (wounds, bleeding, head shots, death); deaths and respawns shown; kill messages; squads (same squad = co-op, no friendly fire) | `test_net_fight.gd` (`squad=1` / `squad=2`) |
+| P3 | One world, the host's: the join's snapshot (sky, felled trees, quarried rocks, cut saplings, built pieces, the fort, things lying about, forage); live felling, cutting, quarrying, building and taking down sent as they happen (world_event, piece keys "<peer>:<id>"); the host's clock is everyone's; a joiner's saves keep its own homestead (SaveGame.build_doc) | `test_net_world.gd` |
+| P4 | Survival per player (each machine's own core); sleep: a sleeper's night passes for them, the world's clock only skips while everyone sleeps | `test_net_sleep.gd` |
+| P5 | The host's animals are the world's: their senses and LOD over every player (WildlifeSpawner.nearest_player); a joiner's spawner is a mirror showing the host's animals near it (WildAnimal.mirrored); a joiner's hit goes to the host's animal | `test_net_wild.gd` |
+| P6 | Joining from the menu: connect, the host's world comes, the game loads into it with the joiner's own character; a shared world never pauses for one player's menu | `test_net_menu_join.gd` (`role=join`) |
+
+Not yet: Steam (P7: GodotSteam swaps the ENet peer); a remote player's firing, reload and tool animations (it aims and
+moves, the shot itself is the ghost); a felled trunk's limbing, logs and drags; fires lit, doors, chests, dropped items
+after the join; carcasses dressed by a joiner (its meat is not taken off the host's); wild horses caught or ridden by a
+joiner; the household and horse in another's world; interest management and animation LOD for 16 (P8).
+
 ## Architecture
 
 - **One code path.** Single player is a server with one player on the same machine: the same server code runs the world
