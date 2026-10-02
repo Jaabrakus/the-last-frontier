@@ -847,6 +847,19 @@ def add_empty(name, p):
     return e
 
 
+VARIANT = ""
+
+
+def _guard(o):
+    """The trade gun's big trigger-guard bow (room for a mittened finger): grown 1.35x about the trigger."""
+    if VARIANT == "trade":
+        c = G((0.0, -0.035, -0.0555))
+        for v in o.data.vertices:
+            w = o.matrix_world @ v.co
+            v.co = o.matrix_world.inverted() @ (c + (w - c) * 1.35)
+    return o
+
+
 def build_musket(texture_png=None):
     make_materials(texture_png)
     straps, bow, rear_swivel, front_swivel = build_furniture()
@@ -857,13 +870,13 @@ def build_musket(texture_png=None):
         build_screws().build(sharp=50.0),
         build_pipes().build(sharp=45.0),
         straps.build(sharp=30.0),
-        bow.build(sharp=50.0),
+        _guard(bow.build(sharp=50.0)),
         build_side_plate().build(bevel=0.0006),
         build_trigger().build(bevel=0.0006),
         build_swivels(rear_swivel, front_swivel).build(sharp=80.0),
-        build_lock_plate().build(bevel=0.0007, segments=2),
-        build_lock_parts().build(bevel=0.0005),
     ]
+    if VARIANT != "hall":      # (the Hall's lock is on its breech block: no side lock)
+        body += [build_lock_plate().build(bevel=0.0007, segments=2), build_lock_parts().build(bevel=0.0005)]
     musket = join(body, "Musket")
     cock = join(build_cock(), "Cock", (COCK_X, COCK_PIVOT[1], COCK_PIVOT[0]))
     frizzen = join([build_frizzen().build(bevel=0.0005)], "Frizzen",
@@ -1144,12 +1157,19 @@ def main():
     ap.add_argument("--renders", default=None, help="re-import the GLB and render previews here")
     ap.add_argument("--blend", default=None)
     ap.add_argument("--texture-png", default=None, help="also write the walnut texture here")
+    ap.add_argument("--variant", default="", help="hall (M1819 Hall rifle) or trade (Northwest trade gun); none: the Brown Bess")
     args = ap.parse_args(argv)
+    global VARIANT
+    VARIANT = args.variant
+    if VARIANT and args.out.endswith("musket.glb"):
+        args.out = os.path.join(project, "assets", "weapons", {"hall": "hall_rifle.glb", "trade": "trade_musket.glb"}[VARIANT])
 
     for o in list(bpy.data.objects):
         bpy.data.objects.remove(o, do_unlink=True)
 
     objs = build_musket(args.texture_png)
+    if VARIANT:
+        objs = apply_variant(objs, VARIANT)
     total = 0
     for o in objs:
         if o.type == "MESH":
@@ -1165,6 +1185,129 @@ def main():
     reimport_report(args.out)
     if args.renders:
         render_previews(args.renders)
+
+
+# --------------------------------------------------------------------------
+# Variants (user 2026-10-01: "blender the new Hall rifle and an Indian trade musket"; the game spans decades)
+# --------------------------------------------------------------------------
+# Built from the Long Land Pattern above and then changed: the barrel and fore-end shortened (everything ahead of the breech
+# reinforce, Z_REINF, pulled back toward it: barrel, stock, pipes, ramrod, swivel, muzzle), then each gun's own parts.
+#   hall   US M1819 Hall breech-loading rifle (Harpers Ferry): 32.7 in barrel, .52 rifled; iron (browned) furniture, three
+#          barrel bands, and the hinged breech block ("Breech": its own node, origin on the hinge at its rear, so the game can
+#          tip its front up to load a paper cartridge into the chamber's mouth)
+#   trade  the Northwest (Indian) trade gun: a light .58 smoothbore, 38 in barrel; brass, a big trigger-guard bow (a mittened
+#          finger), a wooden ramrod
+VARIANTS = {
+    "hall": {"barrel": 0.831, "name": "HallRifle"},
+    "trade": {"barrel": 0.965, "name": "TradeMusket"},
+}
+
+
+def compress_forward(objs, barrel_len):
+    """Pull everything ahead of Z_REINF back toward it so the barrel is `barrel_len` long (Blender y = -Godot z)."""
+    y0 = -Z_REINF
+    y_old = -Z_MUZZLE
+    y_new = -(Z_BREECH - barrel_len)
+    k = (y_new - y0) / (y_old - y0)
+
+    def squash(p):
+        if p.y > y0:
+            p.y = y0 + (p.y - y0) * k
+        return p
+    for o in objs:
+        world = [o.matrix_world @ v.co for v in o.data.vertices] if o.type == "MESH" else None
+        loc = o.location.copy()
+        o.location = squash(loc)
+        bpy.context.view_layer.update()
+        if world is not None:
+            inv = o.matrix_world.inverted()
+            for v, w in zip(o.data.vertices, world):
+                v.co = inv @ squash(w.copy())
+    return lambda z: -squash(Vector((0.0, -z, 0.0))).y      # a Godot z before -> after
+
+
+def _ring(name, z, r_out, width, y_c, mat):
+    """An iron band round the barrel and fore-end at Godot z (a short tube along the bore)."""
+    bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=r_out, depth=width, location=G((0.0, y_c, z)),
+                                        rotation=(math.radians(90.0), 0.0, 0.0))
+    o = bpy.context.active_object
+    o.name = name
+    o.data.materials.append(mat)
+    bpy.ops.object.shade_smooth()
+    return o
+
+
+def _block(name, c, s, mat):
+    """A box (Godot centre and size) as its own object."""
+    bpy.ops.mesh.primitive_cube_add(size=1.0, location=G(c))
+    o = bpy.context.active_object
+    o.scale = (s[0], s[2], s[1])
+    bpy.ops.object.transform_apply(scale=True)
+    o.name = name
+    o.data.materials.append(mat)
+    bev = o.modifiers.new("bevel", "BEVEL")
+    bev.width = 0.0012
+    bev.segments = 2
+    with bpy.context.temp_override(object=o, active_object=o):
+        bpy.ops.object.modifier_apply(modifier=bev.name)
+    return o
+
+
+def apply_variant(objs, variant):
+    v = VARIANTS[variant]
+    by = {o.name: o for o in objs}
+    gun = by["Musket"]
+    if variant == "trade":
+        # the big bow: the guard grown about its own middle before the shortening (it is behind the breech, untouched by it)
+        pass
+    zmap = compress_forward(objs, v["barrel"])
+    z_muzzle = zmap(Z_MUZZLE)
+    if variant == "hall":
+        # browned iron for what was brass
+        iron = principled("BrownedIron", color=(0.17, 0.14, 0.11), metallic=1.0, roughness=0.5)
+        for slot in gun.material_slots:
+            if slot.material and slot.material.name.startswith("Brass"):
+                slot.material = iron
+        # three bands: by the muzzle, the middle, and ahead of the lock
+        bands = []
+        for i, z in enumerate((z_muzzle + 0.085, lerp(z_muzzle + 0.085, -0.42, 0.5), -0.42)):
+            bands.append(_ring("Band%d" % i, z, 0.0235 if i else 0.0205, 0.014 if i else 0.022, AXIS_Y - 0.012, iron))
+        gun = join([gun] + bands, "Musket")
+        # the breech block: a steel box over the chamber, hinged at its rear; its front face is the chamber's mouth
+        steel = MATS["Iron"]
+        blk = _block("Breech", (0.0, AXIS_Y + 0.004, -0.092), (0.034, 0.040, 0.160), steel)
+        mouth = _block("BreechMouth", (0.0, AXIS_Y, -0.1725), (0.020, 0.020, 0.004), MATS["Dark"])
+        breech = join([blk, mouth], "Breech", (0.0, AXIS_Y + 0.004, -0.012))
+        # its lock on top: the hammer at the rear, the frizzen and pan at the front, all in one plane just right of the middle,
+        # raised from the side lock's place onto the block's top, and carried on the block (they tip up with it)
+        lift = G((-0.026, 0.024, 0.0)) - G((0.0, 0.0, 0.0))
+        for nm in ("Cock", "Frizzen", "Pan"):
+            o = by.get(nm)
+            if o is None:
+                continue
+            o.location = o.location + lift
+            bpy.context.view_layer.update()
+            mw = o.matrix_world.copy()
+            o.parent = breech
+            o.matrix_world = mw
+        browned = principled("BrownedBarrel", color=(0.20, 0.16, 0.12), metallic=1.0, roughness=0.45)
+        for slot in gun.material_slots:
+            if slot.material and slot.material.name.startswith("Iron"):
+                slot.material = browned
+        objs = [o for o in objs if o.name != "Musket"] + [gun, breech]
+        gun.name = v["name"]
+        gun.data.name = v["name"]
+        return objs
+    if variant == "trade":
+        wood = principled("RamrodWood", color=(0.36, 0.22, 0.11), roughness=0.7)
+        rr = by.get("Ramrod")
+        if rr:
+            rr.data.materials.clear()
+            rr.data.materials.append(wood)
+        gun.name = v["name"]
+        gun.data.name = v["name"]
+    return objs
+
 
 
 if __name__ == "__main__":
