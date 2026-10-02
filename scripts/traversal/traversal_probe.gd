@@ -534,6 +534,10 @@ func probe_ceiling(feet: Vector3, heading: Vector3) -> TravObstacleInfo:
 	var up := ray(Vector3(p.x, y0 + 0.2, p.z), Vector3(p.x, y0 + 2.0, p.z))
 	if up.is_empty():
 		return TravObstacleInfo.none("no_obstacle")
+	# only the world's fixed things are a roof to crawl under (user 2026-10-02: "i can crawl under a horse"): a body that
+	# moves (the horse, a wild animal, a person, a thing in the physics) is never one
+	if not _fixed(up.get("collider")):
+		return TravObstacleInfo.none("not_a_roof")
 	var ch: float = (up.position as Vector3).y - y0
 	var lo := float(_s("clearance.crouch_under_min", 1.07))
 	var hi := float(_s("clearance.crouch_under_max", 1.4))
@@ -548,6 +552,16 @@ func probe_ceiling(feet: Vector3, heading: Vector3) -> TravObstacleInfo:
 	info.kind = "none"
 	info.reason = "no_clearance" if ch < lo else "no_obstacle"
 	return info
+
+
+## Whether a collider is part of the fixed world (a StaticBody3D: terrain, buildings, props; a CSG shape or a GridMap),
+## not something that moves (a CharacterBody3D, a RigidBody3D, an AnimatableBody3D).
+static func _fixed(c: Object) -> bool:
+	if c == null:
+		return false
+	if c is CharacterBody3D or c is RigidBody3D or c is AnimatableBody3D or c is PhysicalBone3D:
+		return false
+	return true
 
 
 ## Marker volumes around a point (layer 9 Area3Ds): [{node, kind, ...}].
