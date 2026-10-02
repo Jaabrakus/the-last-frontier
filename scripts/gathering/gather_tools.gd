@@ -76,6 +76,8 @@ const CLUB_WEAPONS := ["musket", "over_under"]
 const FLIP_S := 0.35
 ## The tools that attack on LMB when there is nothing to work in front (AxeMelee; data/melee/<tool>.json).
 const MELEE_TOOLS := ["felling_axe", "musket_club", "saber"]
+## Fought one-handed on the axe's two-handed swings: their left arm left out (ToolPose mask "upper_one_hand").
+const ONE_HANDED := ["saber"]
 const SWING_OF := {"tree": "side", "sapling": "side", "trunk": "chop", "crown": "side", "rock": "chop", "wall": "side",
 		"carcass": "chop", "ground": "chop", "stump": "chop"}
 ## Seconds after a draw starts before the hand closes on the tool (clip time), the draw's play rate.
@@ -903,6 +905,8 @@ func _apply_layers() -> void:
 	var mask := "upper"
 	var pw := 0.0
 	var bw := 0.0                  ## (the club: how much a one-handed attack holds it in the blade frame)
+	# the saber is one-handed (user 2026-10-01): the axe's two-handed swings drive the right arm and the body, not the left arm
+	var one_hand := tool in ONE_HANDED
 	# the swing fading out under a chained one stays at full weight; the new one fades in over it
 	for pair: Array in [[_prev_swing, true], [_swing, false]]:
 		var s: Dictionary = pair[0]
@@ -916,11 +920,11 @@ func _apply_layers() -> void:
 			var sw := move_toward(float(s.get("still_w", 1.0 if still else 0.0)), 1.0 if still else 0.0,
 					get_physics_process_delta_time() / 0.2)
 			s["still_w"] = sw
-			layers.append({"anim": cl[0], "time": cl[1], "weight": w, "mask": "upper"})
+			layers.append({"anim": cl[0], "time": cl[1], "weight": w, "mask": "upper_one_hand" if one_hand else "upper"})
 			if sw > 0.0:
-				layers.append({"anim": cl[0], "time": cl[1], "weight": w * sw, "mask": "full"})
+				layers.append({"anim": cl[0], "time": cl[1], "weight": w * sw, "mask": "full_one_hand" if one_hand else "full"})
 		else:
-			layers.append({"anim": cl[0], "time": cl[1], "weight": w, "mask": mask})
+			layers.append({"anim": cl[0], "time": cl[1], "weight": w, "mask": "upper_one_hand" if one_hand else mask})
 		# (a one-handed attack's clip holds the tool in the blade frame)
 		var pipe := 0.0 if str(s.get("frame", "pipe")) == "blade" else 1.0
 		pw = 1.0 - (1.0 - pw) * (1.0 - w * pipe)

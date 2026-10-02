@@ -104,6 +104,11 @@ func _mask(sk: Skeleton3D, mask: String) -> Dictionary:
 			"upper":
 				if not leg and not n in POSITION_BONES:
 					out[b] = true
+			"upper_one_hand", "full_one_hand":
+				# a one-handed weapon on two-handed clips (the saber on the axe's swings): the left arm left out, to its own motion
+				var l_arm := n.begins_with("l_") and not leg and not n in ["l_chest", "l_breast", "l_breast_end"]
+				if not l_arm and (mask == "full_one_hand" or (not leg and not n in POSITION_BONES)):
+					out[b] = true
 			_:
 				out[b] = true
 	_mask_cache[mask] = out
