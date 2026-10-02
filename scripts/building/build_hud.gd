@@ -49,7 +49,7 @@ func _build() -> void:
 		box.add_child(l)
 		_rows.append(l)
 	_keys = _label(FONT - 3, DIM_COL)
-	_keys.text = "Wheel  piece     R  turn     Hold E  build     B  done"
+	_keys.text = "Wheel  piece     R  turn     Hold %s  snap     Hold E  build     B  done" % HowToKey.key_name("Alt")
 	box.add_child(_keys)
 	_status = _label(FONT + 3, OK_COL)
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

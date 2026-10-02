@@ -44,6 +44,15 @@ alone do not establish theft or identify a commercial source."
 | `tools/animation_sources.md` | Specifies optional external inputs for offline rebuilding. | A filesystem layout is not an authorship or licence record. |
 | `addons/release_metadata/README.md` | Says release customization leaves development resources intact and does not establish ownership or permission. | Release metadata minimization and provenance documentation are separate concerns. |
 
+## Correction: reload finger inputs (2026-10-01)
+
+`tools/anim_author/provenance_compare.gd` labelled the reload pairs "no source frames". `tools/anim_author/author_reload.gd`
+poses the body with the solver from key poses, but reads the right hand's finger rotations from the first key of the source clip
+`atk-actor_b-knife-v-thug-hit1-intro` (lines 263-264 and 298) and, over the last 0.3 s, eases the fingers of both hands onto
+frame 0 of the source clip `actor_b-p-rifle-run-arms` (crouch: `actor_b-p-rifle-crouch-run-arms`), loaded from
+`animations/Actor_B.res` (lines 1150-1180). The label now says that. This concerns the reload clips' finger channels only and says
+nothing about other `own-*` clips.
+
 ## Accurate corrections
 
 For each library or clip family, record the creator, creation method, authoring

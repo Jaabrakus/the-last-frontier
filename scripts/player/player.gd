@@ -416,6 +416,7 @@ func _ready() -> void:
 		Wheelbarrow.ensure_demo.call_deferred(self)
 	_ensure_hands_free_input()
 	if is_local:
+		HowTo.install(self)                # the first time each thing is done, its keys (HowTo)
 		hud = FrontierHUD.new()
 		hud.player = self
 		add_child(hud)

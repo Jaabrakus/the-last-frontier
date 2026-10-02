@@ -1,0 +1,123 @@
+{
+ "files": [
+  {
+   "path": "assets/bison/bison.glb",
+   "sha256": "310c9ecd002403b9752226ce42ab7c6a10de927e1e4932ab1ee825903be4165d",
+   "bytes": 5756976,
+   "source": "generated",
+   "generator": "tools/horse/build_horse.py",
+   "license": "project-generated",
+   "notes": "Procedural bison on the horse's rig (tools/bison/anatomy.py through tools/horse/build_horse.py: mesh, rig, gaits, horns). No third-party mesh."
+  },
+  {
+   "path": "assets/bison/bison_meta.json",
+   "source": "generated",
+   "generator": "tools/horse/build_horse.py"
+  },
+  {
+   "path": "assets/bison/textures/horse_coat_detail.png",
+   "sha256": "585a81cce145e14ee28abee3315702dd32c66d61362cabb6017f0b2330ce2045",
+   "bytes": 6076043,
+   "source": "generated",
+   "generator": "tools/horse/coat.py",
+   "license": "project-generated"
+  },
+  {
+   "path": "assets/bison/textures/horse_coat_flow.png",
+   "sha256": "1267f62395694a60e5e7437c8a8bc7025834f3e703459ab3f96ecb5a04dc54cc",
+   "bytes": 1742980,
+   "source": "generated",
+   "generator": "tools/horse/coat.py",
+   "license": "project-generated"
+  },
+  {
+   "path": "assets/bison/textures/horse_coat_masks.png",
+   "sha256": "db6094d441888edac31efd5ce00105c5b2cb1eaf5068457a844f5a92ec989c52",
+   "bytes": 1236122,
+   "source": "generated",
+   "generator": "tools/horse/coat.py",
+   "license": "project-generated"
+  },
+  {
+   "path": "assets/bison/textures/horse_coat_normal.png",
+   "sha256": "d690b2308607e43170b12f76ef02f07131d011da88ae00671f506405ac21af72",
+   "bytes": 5854944,
+   "source": "generated",
+   "generator": "tools/horse/coat.py",
+   "license": "project-generated"
+  },
+  {
+   "path": "assets/bison/textures/horse_hair_strands.png",
+   "sha256": "303b3a4f397543ebba109e5a5f504cc094cd501adcb144533c2c31e4f2c6d6c0",
+   "bytes": 1052932,
+   "source": "generated",
+   "generator": "tools/horse/hair.py",
+   "license": "project-generated"
+  },
+  {
+   "path": "assets/horse/materials/horse_coat.gdshader",
+   "source": "hand-written",
+   "license": "project"
+  },
+  {
+   "path": "assets/horse/materials/horse_coat.tres",
+   "source": "hand-written",
+   "license": "project"
+  },
+  {
+   "path": "assets/horse/materials/horse_eye.gdshader",
+   "source": "hand-written",
+   "license": "project"
+  },
+  {
+   "path": "assets/horse/materials/horse_eye.tres",
+   "source": "hand-written",
+   "license": "project"
+  },
+  {
+   "path": "assets/horse/materials/horse_hair.gdshader",
+   "source": "hand-written",
+   "license": "project"
+  },
+  {
+   "path": "assets/horse/materials/horse_hair.tres",
+   "source": "hand-written",
+   "license": "project"
+  },
+  {
+   "path": "assets/horse/materials/horse_hoof.gdshader",
+   "source": "hand-written",
+   "license": "project"
+  },
+  {
+   "path": "assets/horse/materials/horse_hoof.tres",
+   "source": "hand-written",
+   "license": "project"
+  },
+  {
+   "path": "assets/horse/materials/tack_bridle.tres",
+   "source": "hand-written",
+   "license": "project"
+  },
+  {
+   "path": "assets/horse/materials/tack_cloth.tres",
+   "source": "hand-written",
+   "license": "project"
+  },
+  {
+   "path": "assets/horse/materials/tack_girth.tres",
+   "source": "hand-written",
+   "license": "project"
+  },
+  {
+   "path": "assets/horse/materials/tack_iron.tres",
+   "source": "hand-written",
+   "license": "project"
+  },
+  {
+   "path": "assets/horse/materials/tack_leather.tres",
+   "source": "hand-written",
+   "license": "project"
+  }
+ ]
+}

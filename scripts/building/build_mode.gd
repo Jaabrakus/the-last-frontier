@@ -11,6 +11,9 @@ extends Node
 ##   B            build mode on / off (a weapon key, H, 7 / 8 or mounting a horse also ends it)
 ##   mouse wheel  the piece to build; the last choice is Take down
 ##   R            turn the piece a quarter (on a socket: end for end)
+##   hold Alt     (Option on a Mac) snap: onto the other pieces' sockets and the ground's grid (user 2026-10-02: "i dont like the snap
+##                effect, we should allow them to put it freely"); without it the piece goes where the crosshair is,
+##                turned with the camera, at any angle (a gable and a roof always snap: they rest on wall tops)
 ##   hold E       brighter ghost; letting go of E builds it there (the placement convention of PlayerInteractor)
 ##   tap E        as ever: open a door, take an item; with Take down chosen, takes the piece under the crosshair
 ##                down (its prompt says what comes back)
@@ -21,6 +24,8 @@ signal taken_down(type: String, refund: Dictionary)
 
 const ACTION := &"build_mode"
 const KEY := KEY_B
+## Held, the piece snaps (Alt: the horse's walking gait, nothing on foot; build mode ends on a horse).
+const SNAP_ACTION := &"walk"
 const AIM_RANGE := 24.0
 const SOUND_PATH := "res://audio/sfx/gathering/%s_%02d.wav"
 const GHOST_OK := Color(0.42, 1.0, 0.5, 0.42)
@@ -53,6 +58,8 @@ var armed := false
 var aim_at := Vector3.INF
 ## With aim_at: the ray comes from here through aim_at instead (a wall's face from the side).
 var aim_from := Vector3.INF
+## With aim_at the placement snaps as with Alt held (the tests and the films aim at sockets) unless this is set.
+var scripted_free := false
 var hud: BuildHud
 var rng := RandomNumberGenerator.new()
 
@@ -65,7 +72,7 @@ var _was_b := false
 var _was_r := false
 var _streams := {}
 var _tick := 0
-var _last_sel := Vector2i(-1, -1)
+var _last_sel := Vector3i(-1, -1, -1)
 
 
 static func install(p: FrontierPlayer) -> BuildMode:
@@ -149,7 +156,7 @@ func set_active(on: bool) -> void:
 		armed = false
 		_press_t = -1.0
 	active = on
-	_last_sel = Vector2i(-1, -1)
+	_last_sel = Vector3i(-1, -1, -1)
 	hud.visible = on
 	if _ghost:
 		_ghost.visible = false
@@ -180,9 +187,9 @@ func _physics_process(delta: float) -> void:
 		steps += 1
 	_was_r = r
 	# the placement is worked out every REFRESH_EVERY ticks (the checks cast a few dozen rays and boxes), and at
-	# once when the piece or its turn changes
+	# once when the piece, its turn or the snap changes
 	_tick += 1
-	var sel := Vector2i(index, steps)
+	var sel := Vector3i(index, steps, int(snapping()))
 	if _tick % REFRESH_EVERY == 0 or sel != _last_sel:
 		_last_sel = sel
 		aim = _cast()
@@ -250,6 +257,13 @@ func _cast() -> Dictionary:
 	return hit
 
 
+## Whether the piece snaps (Alt held; a scripted aim always, unless scripted_free).
+func snapping() -> bool:
+	if aim_at.is_finite():
+		return not scripted_free
+	return InputMap.has_action(SNAP_ACTION) and Input.is_action_pressed(SNAP_ACTION)
+
+
 func aim_point() -> Vector3:
 	return aim.get("position", player.global_position) as Vector3
 
@@ -274,8 +288,11 @@ func refresh_placement() -> void:
 		return
 	var type := piece_type()
 	var world := BuildWorld.of(get_tree(), false)
-	var list: Array = BuildSnap.candidates(type, world, aim.position, data.snap_radius, steps % 2 == 1) if world else []
-	var free := _free_candidate(type)
+	# snapping (or a piece that only rests on others): the sockets near the crosshair, then the ground on the grid;
+	# free: only where the crosshair is
+	var snap := snapping() or not data.free_standing(type)
+	var list: Array = BuildSnap.candidates(type, world, aim.position, data.snap_radius, steps % 2 == 1) if world and snap else []
+	var free := _free_candidate(type, snap)
 	if not free.is_empty():
 		list.append(free)
 	if list.is_empty():
@@ -296,8 +313,9 @@ func refresh_placement() -> void:
 			break
 
 
-## The piece standing on its own under the crosshair: on the ground (or, for a hearth or a post, on a floor).
-func _free_candidate(type: String) -> Dictionary:
+## The piece standing on its own under the crosshair: on the ground (or, for a hearth or a post, on a floor; placed
+## freely a wall too). `snap`: on the ground's grid and turned in its steps; else exactly there, at any angle.
+func _free_candidate(type: String, snap := true) -> Dictionary:
 	if not data.free_standing(type):
 		return {}
 	var col: Object = aim.get("collider")
@@ -310,7 +328,8 @@ func _free_candidate(type: String) -> Dictionary:
 		var p := piece_of(node)
 		if p != null and (BuildSnap.OVERLAP_OK.get(type, []) as Array).has(p.type):
 			pass                                   # aimed at a piece it may stand over (a drying rack over a campfire)
-		elif p == null or p.type != "floor" or not (type in ["hearth", "post"] or data.on_floor(type)):
+		elif p == null or p.type != "floor" or not (type in ["hearth", "post"] or data.on_floor(type)
+				or (not snap and type in ["wall", "wall_window", "wall_door"])):
 			return {}
 		else:
 			grounded = false
@@ -319,7 +338,8 @@ func _free_candidate(type: String) -> Dictionary:
 	var cam := player.get_viewport().get_camera_3d()
 	var fwd := -cam.global_transform.basis.z if cam else -player.global_transform.basis.z
 	var view_yaw := atan2(-fwd.x, -fwd.z)
-	return {"xf": BuildSnap.free_xf(aim.position, view_yaw, steps, data.grid, data.yaw_step), "kind": "", "support": -1,
+	var xf := BuildSnap.free_xf(aim.position, view_yaw, steps, data.grid if snap else 0.0, data.yaw_step if snap else 0.0)
+	return {"xf": xf, "kind": "", "support": -1,
 			"grounded": grounded, "score": data.snap_radius}
 
 

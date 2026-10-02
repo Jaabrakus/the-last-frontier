@@ -11,7 +11,7 @@ extends SceneTree
 ##             hold E builds a floor, four walls (window, door), two gables, a roof, a hearth: each where its
 ##             socket puts it, the pack paying exactly, Building experience; notched corners; R flips a wall;
 ##             validity (an occupied edge, a roof on the ground, a tree, a steep slope, the player standing
-##             there, an empty pack); a palisade line with a corner and a gate; E opens the door and the player
+##             there, an empty pack); placed freely (no Alt) off the grid and the sockets; a palisade line with a corner and a gate; E opens the door and the player
 ##             walks in through the doorway, a wall stops them; take down (refused under a roof, the refund);
 ##             a weapon key ends build mode
 ##
@@ -377,6 +377,7 @@ func _test_level() -> void:
 			% [i0, mode.index, player.weapon_key])
 	await _level_cabin()
 	await _level_validity()
+	await _level_free()
 	await _level_palisade()
 	await _level_fort()
 	await _level_walk()
@@ -538,6 +539,50 @@ func _level_validity() -> void:
 	_check(world.pieces().size() == n0 and String(mode.verdict.get("reason", "")).contains("more logs"),
 			"with one log E builds no wall (%s)" % mode.verdict.get("reason", ""))
 	_set_pack("log", logs)
+
+
+## Placed freely (no Alt; user 2026-10-02: "i dont like the snap effect, we should allow them to put it freely"): the
+## piece where the crosshair is, off the grid and off the floor's sockets beside the cabin; with Alt (a scripted aim) on the
+## grid and on a socket; a roof still only on a wall top.
+func _level_free() -> void:
+	_stand(CABIN + Vector3(0, 0, 12.0), Vector3.FORWARD)
+	await _frames(4)
+	var off := CABIN + Vector3(0.13, 0, 9.07)
+	mode.select_type("floor")
+	mode.scripted_free = true
+	mode.aim_at = off
+	await _frames(3)
+	var o: Vector3 = (mode.cand.get("xf", Transform3D()) as Transform3D).origin
+	_check(String(mode.cand.get("kind", "?")) == "" and absf(o.x - off.x) < 0.01 and absf(o.z - off.z) < 0.01,
+			"a free floor goes exactly under the crosshair (%s at %s)" % [o, off])
+	_check(not mode.snapping(), "free: the placement does not snap")
+	mode.scripted_free = false
+	await _frames(3)
+	o = (mode.cand.get("xf", Transform3D()) as Transform3D).origin
+	_check(is_equal_approx(snappedf(o.x, 0.25), o.x) and is_equal_approx(snappedf(o.z, 0.25), o.z),
+			"snapping: the floor on the 0.25 m grid (%s)" % o)
+	# right beside the cabin's floor: a socket when snapping, none placed freely
+	var fo := _floor.global_position if _floor else CABIN
+	if _floor:
+		_stand(fo - _floor.global_transform.basis.z * 7.5, _floor.global_transform.basis.z)
+		await _frames(4)
+	mode.select_type("floor")
+	mode.aim_at = fo - _floor.global_transform.basis.z * 3.9 + _floor.global_transform.basis.x * 0.4 if _floor else fo
+	await _frames(3)
+	var snapped_kind := String(mode.cand.get("kind", ""))
+	mode.scripted_free = true
+	await _frames(3)
+	_check(snapped_kind != "" and String(mode.cand.get("kind", "?")) == "",
+			"by the cabin a floor snaps to a socket (%s) only with Alt; free it has none (%s, %s)" % [snapped_kind,
+			mode.cand.get("kind", "?"), mode.verdict.get("reason", "")])
+	_stand(CABIN + Vector3(0, 0, 12.0), Vector3.FORWARD)
+	mode.select_type("roof")
+	mode.aim_at = off
+	await _frames(4)
+	_check(not bool(mode.verdict.get("ok", true)) and String(mode.verdict.get("reason", "")).contains("wall"),
+			"free, a roof on the bare ground still needs a wall (%s)" % mode.verdict.get("reason", ""))
+	mode.scripted_free = false
+	mode.aim_at = Vector3.INF
 
 
 ## A spot outside the flat zones where the ground drops more than a floor's footing over its 3 m.

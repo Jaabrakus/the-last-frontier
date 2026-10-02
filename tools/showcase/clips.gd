@@ -51,15 +51,7 @@ const FADE_S := 0.35           ## each clip fades in from black and out to it
 const FLASH_S := 0.35          ## a tapped key stays lit at least this long
 const ROWS_MAX := 6
 ## The keys the steps name, and the game's actions they light for.
-const CAP_ACTIONS := {
-	"W": [&"move_forward"], "A": [&"move_left"], "S": [&"move_back"], "D": [&"move_right"],
-	"Space": [&"jump"], "Shift": [&"sprint"], "Alt": [&"walk"], "C": [&"crouch"], "R": [&"reload"],
-	"T": [&"torch"], "E": [&"interact"], "Q": [&"equip_wheel"], "B": [&"build_mode"], "Tab": [&"inventory"],
-	"Z": [&"sleep"], "F": [&"cook"], "G": [&"grip"], "V": [&"eat"], "X": [&"sling_all"],
-	"1": [&"weapon_1"], "2": [&"weapon_2"], "3": [&"weapon_3"], "4": [&"weapon_4"], "5": [&"weapon_5"],
-	"6": [&"weapon_6"], "7": [&"tool_axe"], "8": [&"tool_mattock"],
-	"LMB": [&"fire"], "RMB": [&"aim"], "MMB": [&"club_grip"], "Wheel": [&"weapon_next", &"weapon_prev"],
-}
+const CAP_ACTIONS := HowTo.CAP_ACTIONS
 
 var tut_view: SubViewport
 var tut_layer: CanvasLayer
@@ -83,88 +75,7 @@ var _sans_b: SystemFont
 
 
 ## A key drawn as a key cap (or a mouse with its button lit), lit while the action is held or just tapped.
-class KeyCap extends Control:
-	var label := ""
-	var host: Object
-	var s := 1.0
-	var font: Font
-	var live := true            ## only the current step's keys light
 
-	func _init(l: String, h: Object, sc: float, f: Font) -> void:
-		label = l
-		host = h
-		s = sc
-		font = f
-		mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var w := 46.0
-		if _mouse():
-			w = 34.0
-		elif label.length() > 1:
-			w = 26.0 + font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, int(23 * s)).x / s
-		custom_minimum_size = Vector2(maxf(w, 46.0 if not _mouse() else 34.0), 46.0) * s
-		size_flags_vertical = Control.SIZE_SHRINK_CENTER
-
-	func _mouse() -> bool:
-		return label in ["LMB", "RMB", "MMB", "Wheel"]
-
-	func _draw() -> void:
-		var lit: bool = live and host.call("is_lit", label)
-		var gold := Color(0.95, 0.74, 0.36)
-		var ink := Color(0.97, 0.94, 0.87)
-		if _mouse():
-			var r := Rect2(Vector2(3, 0) * s, Vector2(28, 46) * s)
-			var body := StyleBoxFlat.new()
-			body.bg_color = Color(0.05, 0.05, 0.06, 0.55)
-			body.set_corner_radius_all(int(12 * s))
-			body.border_color = ink
-			body.set_border_width_all(maxi(1, int(2 * s)))
-			draw_style_box(body, r)
-			var mid := r.position.x + r.size.x * 0.5
-			var split := r.position.y + r.size.y * 0.42
-			draw_line(Vector2(r.position.x, split), Vector2(r.end.x, split), ink, maxf(1.0, 1.5 * s))
-			if label != "Wheel":
-				draw_line(Vector2(mid, r.position.y), Vector2(mid, split), ink, maxf(1.0, 1.5 * s))
-			var inset := 2.5 * s
-			if label == "LMB" or label == "RMB" or label == "MMB":
-				if lit and label != "MMB":
-					var left := label == "LMB"
-					var x0 := r.position.x + inset if left else mid + 1.0 * s
-					var x1 := mid - 1.0 * s if left else r.end.x - inset
-					var btn := StyleBoxFlat.new()
-					btn.bg_color = gold
-					if left:
-						btn.corner_radius_top_left = int(10 * s)
-					else:
-						btn.corner_radius_top_right = int(10 * s)
-					draw_style_box(btn, Rect2(x0, r.position.y + inset, x1 - x0, split - inset * 0.6 - r.position.y - inset))
-				elif label == "MMB":
-					var wr := Rect2(Vector2(mid - 3 * s, r.position.y + 5 * s), Vector2(6, 12) * s)
-					var wheel := StyleBoxFlat.new()
-					wheel.bg_color = gold if lit else Color(ink, 0.0)
-					wheel.border_color = ink
-					wheel.set_border_width_all(maxi(1, int(1.5 * s)))
-					wheel.set_corner_radius_all(int(3 * s))
-					draw_style_box(wheel, wr)
-			else:
-				var wr := Rect2(Vector2(mid - 3 * s, r.position.y + 5 * s), Vector2(6, 12) * s)
-				var wheel := StyleBoxFlat.new()
-				wheel.bg_color = gold if lit else Color(ink, 0.0)
-				wheel.border_color = ink
-				wheel.set_border_width_all(maxi(1, int(1.5 * s)))
-				wheel.set_corner_radius_all(int(3 * s))
-				draw_style_box(wheel, wr)
-			return
-		var box := StyleBoxFlat.new()
-		box.bg_color = gold if lit else Color(0.05, 0.05, 0.06, 0.55)
-		box.set_corner_radius_all(int(7 * s))
-		box.border_color = gold if lit else ink
-		box.set_border_width_all(maxi(1, int(2 * s)))
-		box.border_width_bottom = maxi(2, int(4 * s))
-		draw_style_box(box, Rect2(Vector2.ZERO, size))
-		var fs := int(23 * s)
-		var ts := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
-		var at := Vector2((size.x - ts.x) * 0.5, (size.y - 2 * s + font.get_ascent(fs) - font.get_descent(fs)) * 0.5)
-		draw_string(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.08, 0.06, 0.04) if lit else ink)
 
 
 func _order() -> Array:
@@ -245,7 +156,7 @@ func _step(spec: String) -> void:
 		bar.color.a = 0.0
 	for c in tut_caps:
 		if is_instance_valid(c):
-			(c as KeyCap).live = false
+			(c as HowToKey).live = false
 	while tut_rows.get_child_count() >= ROWS_MAX:
 		var old := tut_rows.get_child(0)
 		tut_rows.remove_child(old)
@@ -264,7 +175,7 @@ func _step(spec: String) -> void:
 		var txt := spec.substr(at, m.get_start() - at).strip_edges()
 		if txt != "":
 			row.add_child(_row_text(txt, s))
-		var cap := KeyCap.new(m.get_string(1), self, s, _sans_b)
+		var cap := HowToKey.new(m.get_string(1), is_lit, s, _sans_b)
 		tut_caps.append(cap)
 		row.add_child(cap)
 		at = m.get_end()
@@ -1545,37 +1456,53 @@ func seg_build() -> void:
 	await _sec(0.5)
 	_step("[Wheel]  Choose a piece  ·  [R]  turn it")
 	await _sec(0.8)
-	_step("Hold [E] , let go  Build it where it snaps")
+	_step("Hold [Alt]  Snap it to the others")
+	_press(&"walk")
+	await _sec(0.8)
+	_step("Hold [E] , let go  Build it")
 	var G := BuildGeometry
 	var fl := await _build_with_e(mode, "floor", c)
 	if fl:
-		var fo := fl.global_position
+		# every aim in the floor's own frame (its snap turns it; trailer.gd's cabin): the gable ends at local +-Z, the
+		# door in an eave side, the hearth on the plain gable wall's inner face (aimed at from inside: its fire opens
+		# into the room, its stack up through the gable)
+		var fx := fl.global_transform
 		var top := float(G.FLOOR_H)
 		var walls := {}
-		for sp: Array in [["wall", Vector3(1.3, 0, 0)], ["wall_window", Vector3(-1.3, 0, 0)], ["wall_door", Vector3(0, 0, 1.3)],
-				["wall", Vector3(0, 0, -1.3)]]:
-			walls[sp[1]] = await _build_with_e(mode, String(sp[0]), fo + (sp[1] as Vector3) + Vector3(0, top, 0))
-		for k: Vector3 in [Vector3(1.3, 0, 0), Vector3(-1.3, 0, 0)]:
+		# the door in the eave side the camera's orbit passes (its middle, about 1.35 rad round)
+		var dx := 1.3 if fx.basis.x.dot(Vector3(sin(1.35), 0.0, cos(1.35))) > 0.0 else -1.3
+		for sp: Array in [["wall", Vector3(0, 0, 1.3)], ["wall_window", Vector3(0, 0, -1.3)], ["wall_door", Vector3(dx, 0, 0)],
+				["wall", Vector3(-dx, 0, 0)]]:
+			walls[sp[1]] = await _build_with_e(mode, String(sp[0]), fx * ((sp[1] as Vector3) + Vector3(0, top, 0)))
+		for k: Vector3 in [Vector3(0, 0, 1.3), Vector3(0, 0, -1.3)]:
 			var w: BuiltPiece = walls.get(k)
 			if w:
 				await _build_with_e(mode, "gable", w.global_transform * Vector3(0, float(G.WALL_H) + 0.01, 0))
-		await _build_with_e(mode, "roof", fo + Vector3(0, top, 0))
-		await _build_with_e(mode, "hearth", fo + Vector3(2.3, 0, 0))
+		await _build_with_e(mode, "roof", fx * Vector3(0, top, 0))
+		await _build_with_e(mode, "hearth", fx * Vector3(0, top + 1.0, 0.5 * float(G.L) - float(G.T) * 0.5),
+				fx * Vector3(0, top + 1.0, -0.5))
+		var door: BuiltPiece = walls.get(Vector3(dx, 0, 0))
+		if door and door.door:
+			door.door.set_open(true)
 		for sp in level.find_children("*", "BuiltPiece", true, false):
 			spawned.append(sp)
+			var bp := sp as BuiltPiece
+			var rel := fx.affine_inverse() * bp.global_transform
+			print("CLIPS build %-12s at %s  yaw %4.0f" % [bp.type, rel.origin.snappedf(0.01), rad_to_deg(rel.basis.get_euler().y)])
 	mode.aim_at = Vector3.INF
+	mode.aim_from = Vector3.INF
+	_release(&"walk")
 	_step("[B]  Done")
-	await _sec(0.8)
-	await _tap(&"build_mode")
-	await _sec(1.2)
+	await _tap(&"build_mode")             # at once: lingering, the ghost of another hearth showed by the player
+	await _sec(2.0)
 
 
 ## A piece built the player's way: chosen (the wheel), its ghost where it snaps, E held and let go.
-func _build_with_e(mode: BuildMode, type: String, p: Vector3) -> BuiltPiece:
+func _build_with_e(mode: BuildMode, type: String, p: Vector3, from := Vector3.INF) -> BuiltPiece:
 	mode.select_type(type)
 	_flash(&"weapon_next", 0.4)
 	mode.aim_at = p
-	mode.aim_from = Vector3.INF
+	mode.aim_from = from
 	await _sec(0.35)
 	var n0 := level.find_children("*", "BuiltPiece", true, false).size()
 	_press(&"interact")
@@ -1722,3 +1649,10 @@ func seg_mammoth() -> void:
 	await _sec(0.6)
 	_release(&"grip")
 	await _sec(1.0)
+
+
+## The tutorial's own layer stays in its view: redirected into the game's view it was drawn into the clean cut too.
+func _redirect(n: Node) -> void:
+	if tut_view != null and tut_view.is_ancestor_of(n):
+		return
+	super(n)

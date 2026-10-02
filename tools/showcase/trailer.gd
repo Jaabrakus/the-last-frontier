@@ -18,7 +18,7 @@ const SHOTS := ["dawn_river", "valley", "herd", "gate", "walk", "climb_tree", "c
 		"bison", "stampede", "charge", "reload", "autumn", "winter_walk", "river_ice", "yoga", "baby", "mammoth"]
 ## Takes the cut does not use, recorded only when named (only=): the musket's reload walking and crouched (to check
 ## it), the shot from the palisade's firing step (the rebuilt fort's step moved: it does not fire from there).
-const EXTRA := ["wall", "reload_walk", "reload_crouch", "reload_crouch_walk", "arms_check", "hands", "hunt_map", "man_down", "duel"]
+const EXTRA := ["wall", "reload_walk", "reload_crouch", "reload_crouch_walk", "arms_check", "hands", "hunt_map", "man_down", "duel", "ambush_wide", "ambush_branch"]
 
 var marks := PackedStringArray()
 var hide_arc := false               ## the throw's aim arc kept out of the picture
@@ -815,6 +815,204 @@ func seg_duel() -> void:
 		right.swing("D" if k % 2 == 0 else "A")
 		await _sec(1.35)
 	await _sec(1.5)
+
+
+# --- the ambush (user 2026-10-01: "people in trees as a hunting party walks by and shoots them on branches, someone hauling a
+# carcass, they get ambushed"): scripted by the film (FilmActor: no AI), the same scene filmed from two places ----------------
+
+## How many trees (trunks over 15 cm) stand within `r` m of the line a-b (sampled every 2 m).
+func _trunks_on(h: VegHarvest, a: Vector3, b: Vector3, r: float) -> int:
+	var seen := {}
+	var n := maxi(int(a.distance_to(b) / 2.0), 1)
+	for i in n + 1:
+		var q := a.lerp(b, float(i) / n)
+		for d: Dictionary in h.near(q, r):
+			if String(d.type) == "tree" and float(d.radius) > 0.15:
+				seen[int(d.i)] = true
+	return seen.size()
+
+
+## A tree to hide in near `near` (a perch on a branch of it: PerchBranches) and a trail past it that the camera can see: the one of
+## several trees with the clearest trail and sight lines. {pos, a, b (the perches), out, along, trail0, trail1, cam}.
+func _ambush_site(near: Vector3) -> Dictionary:
+	var h := VegHarvest.find(self)
+	var pb := player.grip.perch if player.grip else null
+	if h == null or pb == null:
+		return {}
+	var best := {}
+	var best_score := INF
+	var tried := 0
+	for d: Dictionary in h.near(near, 90.0):
+		if String(d.type) != "tree" or float(d.radius) < 0.2 or float(d.radius) > 0.5 or float(d.height) < 10.0:
+			continue
+		tried += 1
+		if tried > 14:
+			break
+		var pos: Vector3 = d.pos
+		# the player by it so its branches are there to stand on
+		player.global_position = _on(pos + Vector3(2.5, 0.0, 0.0), 0.2)
+		await _sec(1.1)
+		var a := pb.perch_at(pos)
+		if a.is_empty():
+			continue
+		var out: Vector3 = a.dir
+		var along := Vector3(-out.z, 0.0, out.x)
+		var t0 := _on(pos + out * 8.0 - along * 24.0)
+		var t1 := _on(pos + out * 8.0 + along * 24.0)
+		var cam := _on(pos + out * 17.0, 1.7)
+		var mid := _on(pos + out * 8.0)
+		var score := _trunks_on(h, t0, t1, 1.4) * 3.0 + _trunks_on(h, cam, mid + Vector3.UP * 1.2, 0.9) * 2.0 \
+				+ _trunks_on(h, cam, a.seat, 0.9) + absf(_ground(t0.x, t0.z) - _ground(t1.x, t1.z)) * 4.0
+		print("TRAILER ambush site %s score %.1f" % [pos, score])
+		if score < best_score:
+			best_score = score
+			var b := pb.perch_at(pos, float(d.radius) + 1.3)
+			best = {"pos": pos, "a": a, "b": b, "out": out, "along": along, "trail0": t0, "trail1": t1, "cam": cam}
+	if best.is_empty():
+		return {}
+	# back by the best one, its branches live again
+	player.global_position = _on((best.pos as Vector3) + Vector3(2.5, 0.0, 0.0), 0.2)
+	await _sec(1.2)
+	best["a"] = pb.perch_at(best.pos)
+	best["b"] = pb.perch_at(best.pos, 1.7)
+	return best
+
+
+## The scene: two on the branch, a party of three along the trail below them (the last hauling a deer on a rope). `cam` is the film
+## camera: "wide" from across the trail, "branch" from the branch over the ambusher's shoulder.
+func _ambush(cam: String) -> void:
+	Anatomy.slowmo_on = false
+	_clock(6.9, "fair", 0.15)
+	var site := await _ambush_site(_on(Vector3(9.0, 0.0, -84.0)))
+	if site.is_empty():
+		print("TRAILER ambush: no tree with a branch near the meadow")
+		return
+	var seat_a: Vector3 = site.a.seat
+	var seat_b: Vector3 = site.b.seat if not site.b.is_empty() else seat_a + (site.a.dir as Vector3) * 0.9
+	var out: Vector3 = site.out
+	var base: Vector3 = site.pos
+	var along: Vector3 = site.along
+	var trail0: Vector3 = site.trail0
+	var trail1: Vector3 = site.trail1
+	var way := (trail1 - trail0).normalized()
+	var scene := level
+	var amb_a := FilmActor.new()
+	var amb_b := FilmActor.new()
+	amb_b.look = "haudenosaunee_f_a"
+	var party: Array[FilmActor] = []
+	for k in 3:
+		var f := FilmActor.new()
+		if k == 1:
+			f.look = "haudenosaunee_f_a"
+		party.append(f)
+	for f: FilmActor in [amb_a, amb_b] + party:
+		scene.add_child(f)
+		spawned.append(f)
+	await _frame()
+	amb_a.global_position = seat_a
+	amb_b.global_position = seat_b
+	amb_a.face(seat_a + out * 5.0)
+	amb_b.face(seat_b + out * 5.0)
+	amb_a.give_gun("musket")
+	amb_b.give_gun("musket")
+	amb_a.play(FilmActor.CROUCH)
+	amb_b.play(FilmActor.CROUCH)
+	# the party walks the trail, a pace apart, the last pulling a deer
+	var carcass := WildAnimal.new()
+	carcass.setup("deer", WildlifeSpawner.find(self), null, 33)
+	scene.add_child(carcass)
+	spawned.append(carcass)
+	carcass.lie_dead("player")
+	var pos0 := trail0 - way * 3.0
+	for k in party.size():
+		party[k].global_position = pos0 - way * (2.4 * k)
+		party[k].face(pos0 + way * 5.0)
+		party[k].give_gun("musket")
+		party[k].play(FilmActor.WALK, 0.2, 0.9)
+	var rope := MeshInstance3D.new()
+	rope.mesh = ImmediateMesh.new()
+	var rm := StandardMaterial3D.new()
+	rm.albedo_color = Color(0.45, 0.36, 0.25)
+	rm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	rope.material_override = rm
+	rope.top_level = true
+	scene.add_child(rope)
+	spawned.append(rope)
+	var st := {"t": 0.0, "lead_down": false, "flee": false}
+	var hauler := party[2]
+	# the cameras
+	cine_takes_over = true
+	var mid := func() -> Vector3:
+		return (party[0].global_position + party[1].global_position + party[2].global_position) / 3.0 + Vector3.UP * 1.2
+	if cam == "wide":
+		var from: Vector3 = site.cam
+		_cam_fn(func(_dt: float) -> Array: return [from, mid.call(), 34.0])
+	else:
+		var back := seat_a - out * 1.1 + Vector3.UP * 0.7 + along * 0.5
+		_cam_fn(func(_dt: float) -> Array:
+			var look: Vector3 = mid.call()
+			return [back, look, 34.0])
+	await _roll("", "", "", 40)
+	var t0 := seg_t
+	var shot_a := false
+	var shot_b := false
+	var shot_c := false
+	var runs := false
+	var step := 1.0 / float(fps)
+	while seg_t - t0 < 21.0:
+		var t := seg_t - t0
+		# the party walks until the first shot
+		for k in party.size():
+			var f := party[k]
+			if f.alive and not runs:
+				f.global_position += way * 1.25 * step
+			elif f.alive and runs:
+				f.global_position += way * 4.2 * step
+			f.global_position.y = _ground(f.global_position.x, f.global_position.z)
+		# the deer follows its rope
+		var hp := hauler.global_position
+		var cp := hp - way * 2.3
+		cp.y = _ground(cp.x, cp.z)
+		carcass.global_position = cp
+		carcass.rotation.y = atan2(-way.x, -way.z)
+		var im := rope.mesh as ImmediateMesh
+		im.clear_surfaces()
+		im.surface_begin(Mesh.PRIMITIVE_LINES)
+		im.surface_add_vertex(hp + Vector3.UP * 0.9)
+		im.surface_add_vertex(cp + Vector3.UP * 0.3)
+		im.surface_end()
+		# the ambush: A aims at the lead at 6 s and fires at 8; B at the second; then the hauler
+		if t >= 5.5 and not shot_a:
+			amb_a.aim_at(party[0].global_position + Vector3.UP * 1.25)
+		if t >= 7.8 and not shot_a:
+			shot_a = true
+			mark("shot")
+			amb_a.fire(party[0].global_position + Vector3.UP * 1.25, 80.0)
+			runs = true
+			for k in [1, 2]:
+				party[k].play(FilmActor.RUN, 0.15, 1.0)
+			amb_b.aim_at(party[1].global_position + Vector3.UP * 1.25)
+		if t >= 9.4 and not shot_b:
+			shot_b = true
+			amb_b.aim_at(party[1].global_position + Vector3.UP * 1.25)
+			amb_b.fire(party[1].global_position + Vector3.UP * 1.25, 80.0)
+			amb_a.reload()
+		if shot_b and t >= 11.0 and not shot_c:
+			shot_c = true
+			amb_a.aim_at(hauler.global_position + Vector3.UP * 1.25)
+		if shot_c and t >= 12.3 and amb_a.loaded:
+			amb_a.fire(hauler.global_position + Vector3.UP * 1.25, 80.0)
+			mark("last")
+		await _frame()
+	mark("end")
+
+
+func seg_ambush_wide() -> void:
+	await _ambush("wide")
+
+
+func seg_ambush_branch() -> void:
+	await _ambush("branch")
 
 
 ## The musket at the firing line in the golden hour: shouldered, the pan flash, the shot and its smoke; a camera

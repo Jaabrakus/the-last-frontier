@@ -289,7 +289,7 @@ static func candidates(type: String, world: BuildWorld, aim: Vector3, radius: fl
 
 
 ## The placement on the ground at `aim` (no socket): on the grid, facing the camera (`view_yaw`: the camera's
-## yaw), plus `steps` quarter turns.
+## yaw), plus `steps` quarter turns. A grid or yaw step of 0: exactly there, at any angle (BuildMode without Alt).
 static func free_xf(aim: Vector3, view_yaw: float, steps: int, grid: float, yaw_step: float) -> Transform3D:
 	var yaw := snappedf(view_yaw + steps * PI * 0.5, yaw_step)
 	var p := Vector3(snappedf(aim.x, grid), aim.y, snappedf(aim.z, grid))
