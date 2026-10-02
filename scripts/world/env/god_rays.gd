@@ -34,6 +34,12 @@ var tint := Color(1, 1, 1)
 @export var cap := 3.0
 ## The open sky takes this much of the rays (it already glows round the sun).
 @export var sky_share := 0.35
+## Where the way to the sun is broken once at most (a skyline over open land, the plains), the rays are this share of
+## their strength; they come in with the breaks between sky and geometry on the way (trunks, leaves, roofs), full from
+## `breaks_full` (user 2026-10-02: "the god rays are too strong in the open plains").
+@export_range(0.0, 1.0) var open_floor := 0.12
+@export var breaks_start := 1.5
+@export var breaks_full := 4.0
 ## The light's own glow added to the open sky round it in the march (EnvironmentRig: 0 by day, the moon's at night,
 ## when the dark sky alone streams nothing).
 var halo := 0.0
@@ -137,6 +143,7 @@ func _render_callback(callback_type: int, render_data: RenderData) -> void:
 		sun_uv.x, sun_uv.y, float(half.x), float(half.y),
 		float(size.x) / float(size.y), density, decay, radius,
 		cap, SKY_DEPTH, float(steps), halo,
+		open_floor, breaks_start, breaks_full, 0.0,
 	]).to_byte_array()
 	var set1 := UniformSetCacheRD.get_cache(_rays_shader, 0, [
 		_sampled(0, _nearest, depth), _sampled(1, _linear, color), _image(2, rays)])

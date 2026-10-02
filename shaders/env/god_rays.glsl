@@ -27,13 +27,22 @@ layout(push_constant, std430) uniform Params {
 	float sky_depth;  // the depth buffer's value where nothing was drawn (reverse Z: 0)
 	float steps;      // samples per pixel
 	float halo;       // the light's own glow on the open sky round it (the moon's: the night sky is dark)
+	float open_floor; // the rays' share where the way to the sun is broken once at most (a skyline over open land)
+	float breaks_lo;  // from this many breaks (sky <-> geometry) on the way to the sun the shafts come in ...
+	float breaks_hi;  // ... to full by this many (the gaps between trunks and leaves)
+	float pad;
 } params;
 
-vec3 open_sky(vec2 uv) {
+// Whether uv is open sky (on screen, nothing drawn there).
+bool is_sky(vec2 uv) {
 	if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)))) {
-		return vec3(0.0);
+		return false;
 	}
-	if (textureLod(depth_buffer, uv, 0.0).r != params.sky_depth) {
+	return textureLod(depth_buffer, uv, 0.0).r == params.sky_depth;
+}
+
+vec3 open_sky(vec2 uv) {
+	if (!is_sky(uv)) {
 		return vec3(0.0);
 	}
 	vec2 d = (uv - params.sun_uv) * vec2(params.aspect, 1.0);
@@ -62,11 +71,20 @@ void main() {
 	float w = 1.0;
 	float total = 0.0;
 	vec3 sum = vec3(0.0);
+	// shafts are light broken up on its way (user 2026-10-02: "the god rays are too strong in the open plains"): the
+	// times the march passes between sky and geometry; over open land it crosses the skyline once and the whole sky
+	// round the sun streamed at full strength, a wash over the frame, not rays
+	float breaks = 0.0;
+	bool was = is_sky(p);
 	for (int i = 0; i < n; i++) {
+		bool sky = is_sky(p);
+		breaks += sky != was ? 1.0 : 0.0;
+		was = sky;
 		sum += open_sky(p) * w;
 		total += w;
 		w *= params.decay;
 		p += step_uv;
 	}
-	imageStore(rays_image, pos, vec4(sum / max(total, 1e-4), 1.0));
+	float shafts = mix(params.open_floor, 1.0, smoothstep(params.breaks_lo, params.breaks_hi, breaks));
+	imageStore(rays_image, pos, vec4(sum / max(total, 1e-4) * shafts, 1.0));
 }

@@ -2,6 +2,7 @@ extends SceneTree
 ## God rays before / after (GodRays, scripts/world/env/god_rays.gd): from a few spots, the camera turned toward the sun,
 ## each view rendered with the rays off, on and off again, saved side by side. Needs a window.
 ##   Godot --path . --resolution 1280x720 -s tools/environment/god_rays_shots.gd -- out=<dir> [quality=medium] [hour=17]
+##        [only=plains,forest] [open_floor=0.12] (open_floor=1: as before the rays faded over open land)
 
 ## [name, camera position, metres toward the sun's bearing the camera looks, look height]
 const VIEWS := [
@@ -9,6 +10,9 @@ const VIEWS := [
 	["forest_edge", Vector3(-30.0, 1.7, -45.0), 30.0, 7.0],
 	["spawn", Vector3(0.0, 1.7, -10.0), 30.0, 6.0],
 	["range", Vector3(0.0, 1.7, -90.0), 30.0, 6.0],
+	# the open plains east of the fort (WorldSquares (1, 0); user 2026-10-02: "too strong in the open plains")
+	["plains", Vector3(800.0, 1.7, 40.0), 30.0, 5.0],
+	["plains_low", Vector3(860.0, 1.7, -60.0), 30.0, 2.0],
 ]
 
 var args := {}
@@ -56,6 +60,8 @@ func _initialize() -> void:
 		if not only.is_empty() and not String(v[0]) in only:
 			continue
 		var p: Vector3 = v[1]
+		player.global_position = p          # (the land streams in round the player)
+		await _frames(30)
 		var q := PhysicsRayQueryParameters3D.create(p + Vector3.UP * 60.0, p + Vector3.DOWN * 60.0)
 		var hit := cam.get_world_3d().direct_space_state.intersect_ray(q)
 		if hit and hit.position.y < p.y + 8.0:
@@ -67,6 +73,7 @@ func _initialize() -> void:
 		var shots: Array[Image] = []
 		for on in [false, true, false]:
 			if rays:
+				rays.open_floor = float(args.get("open_floor", str(rays.open_floor)))
 				rays.strength = float(args.get("strength", str(GodRays.new().strength))) if on else 0.0
 			await _frames(40)
 			RenderingServer.force_draw(false)
