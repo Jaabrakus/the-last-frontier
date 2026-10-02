@@ -42,6 +42,12 @@ const CHARACTER_SCENE := "res://characters/Actor_B.tscn"
 ## While aiming, speed eases down to the pace of the aim-walk clips (measured
 ## Actor_B walk-fw foot speed ~1.3 m/s) so the feet don't slide.
 @export var aim_walk_speed := 1.3
+## Weapons aimed on the move at the jog's pace, the legs jogging (user 2026-10-01: "for the bow aim we should unlock the feet
+## and have jog be able and for the throwing weapons"): no aim-walk cap for them; PlayerAnim keeps their legs on the jog.
+const JOG_AIM_WEAPONS := ["bow", "spear", "tomahawk", "atlatl", "pistol"]
+## Their pace aimed on the move, of the jog's (eased in with the aim): one for all of them (user 2026-10-01: the pistol fired from
+## the hip kept the whole jog, "slow it down to what the other bowables and throwables are", their draw and wind-up at 0.7).
+const JOG_AIM_PACE := 0.7
 ## While a felling stroke or a melee attack is under way the legs walk at this pace (between the aim-walk and the jog:
 ## like aiming a gun, not the jog's speed; GatherTools.swinging()).
 @export var swing_walk_speed := 2.0
@@ -65,7 +71,8 @@ const CHARACTER_SCENE := "res://characters/Actor_B.tscn"
 @export var eye_height := 2.3
 @export var crouch_eye_drop := 0.5
 @export var shoulder_offset := 0.0
-@export var camera_distance := 3.6
+## (User 2026-10-01: "pann the camera out a little it is a little to close": 3.6 -> 4.1.)
+@export var camera_distance := 4.1
 ## The view's width (deg). (User 2026-10-01: the musket's old right-click zoom, 70 x 0.75, is now the view all the time.)
 @export var fov := 52.5
 ## Aiming (right click; the weapon's aim weight): the camera eases off center over the right shoulder, closer in (user
@@ -74,11 +81,12 @@ const CHARACTER_SCENE := "res://characters/Actor_B.tscn"
 ## (get_aim_point() casts from the camera's center).
 @export var aim_shoulder_offset := 0.55
 @export var aim_camera_distance := 2.4
+## How much lower the camera sits over the shoulder while aiming (user 2026-10-01: "for the aim right offset lower the
+## camera a little"); eased in with the shoulder offset.
+@export var aim_eye_drop := 0.35
 @export var aim_zoom_share := 0.4
 ## Seconds the camera takes to move to the shoulder and back.
 @export var aim_camera_s := 0.15
-## The view's steady shake while sprinting (CameraShake.sustain, 0..1).
-@export var sprint_shake := 0.6
 
 @export_group("Health")
 @export var max_health := 100.0
@@ -1120,7 +1128,8 @@ func _physics_process(delta: float) -> void:
 			is_crouching = want_crouch
 			_set_capsule_height(crouch_height if is_crouching else stand_height)
 
-	is_walking = controls.pressed(&"walk") and not is_crouching and not is_dead
+	# (no slow walk on foot: user 2026-10-01, "remove the walk for alt"; Alt is still the horse's walking gait, Horse)
+	is_walking = false
 	is_sprinting = controls.pressed(&"sprint") and input.y < -0.1 \
 			and not is_crouching and weapon.can_sprint() and is_on_floor() and not is_dead and sprint_allowed \
 			and drag_speed_cap >= sprint_speed
@@ -1134,7 +1143,10 @@ func _physics_process(delta: float) -> void:
 		speed = walk_speed
 	if not is_sprinting:
 		speed *= weapon.speed_mult()
-		speed = lerpf(speed, minf(speed, aim_walk_speed), weapon.aim)
+		if not weapon_key in JOG_AIM_WEAPONS:
+			speed = lerpf(speed, minf(speed, aim_walk_speed), weapon.aim)
+		else:
+			speed = lerpf(speed, minf(speed, run_speed * JOG_AIM_PACE), weapon.aim)
 		# (reloading the musket on the move: the aim walk's pace, its legs, UpperBody.reload_walk)
 		if weapon is Firearm and (weapon as Firearm).state == Firearm.State.RELOADING and weapon_key == "musket":
 			speed = minf(speed, aim_walk_speed)
@@ -1207,7 +1219,8 @@ func _physics_process(delta: float) -> void:
 	if traversal:
 		traversal.post(owned, delta)
 
-	var eye_target := eye_height - (crouch_eye_drop if is_crouching else 0.0)
+	var eye_target := eye_height - (crouch_eye_drop if is_crouching else 0.0) \
+			- aim_eye_drop * smoothstep(0.0, 1.0, _aim_cam_w)
 	_eye_y = lerpf(_eye_y, eye_target, 1.0 - exp(-12.0 * delta))
 	camera_pivot.position.y = _eye_y
 
@@ -1220,10 +1233,7 @@ func _physics_process(delta: float) -> void:
 	if riding == null and spring_arm != null:
 		spring_arm.spring_length = cam_distance_now()
 		spring_arm.position.x = cam_shoulder_now()
-	# the sprint's footfalls in the view (user 2026-10-01 "a camera shake on sprint"): a light steady shake while sprinting on the
-	# ground, eased in and out (CameraShake.sustain)
-	if is_sprinting and is_on_floor() and Vector2(velocity.x, velocity.z).length() > 3.0 and camera != null:
-		CameraShake.of(camera).sustain(sprint_shake)
+	# (no shake while sprinting: user 2026-10-01, "the screen shake on sprint is bad")
 	var fov_target := fov * (1.0 - (1.0 - weapon.fov_mult()) * aim_zoom_share)
 	camera.fov = lerpf(camera.fov, fov_target, 1.0 - exp(-10.0 * delta))
 

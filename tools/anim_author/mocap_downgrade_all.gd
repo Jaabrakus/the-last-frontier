@@ -49,6 +49,30 @@ const ARM_STRAIGHT := {"actor_b-lg-stealth-draw^idle--arm-r": 0.75}
 ## 23-40 cm as it came round, 180 deg in 0.13 s, and kicked up 4 cm), the right arm (the gun) smoothed over 2 frames.
 const HOLD_ON := {"actor_b-lg-stealth-draw^idle--arm-r": 0.45}
 const RIGHT_ARM := ["r_clavicle", "r_shoulder", "r_elbow", "r_wrist"]
+## The pistol's reload (the source graph's revolver reload: user 2026-10-01 "we should just keep that revolver one but make it
+## less like a revolver"): the pistol flipped muzzle up to empty a cylinder and snapped back, rolled on its side to close it and
+## flicked up: the right arm and the pistol's hold calmed (CALM_SIGMA frames of smoothing) and their swing shrunk to CALM_KEEP of
+## its own about the line from the clip's first pose to its last (the clip still begins and ends where it did, on the aim).
+## clip -> how much of its swing it keeps; the middle step, the rounds put into the cylinder (user 2026-10-01: "remove the
+## revolver part of the reload putting bullets in the cylinder"), keeps none: a still hold eased from its first pose to its last.
+const CALM := {"actor_b-p-pistol-rev-reload-begin--part": 0.4, "actor_b-p-pistol-rev-reload-mid--part": 0.0,
+		"actor_b-p-pistol-rev-reload-over--part": 0.4}
+## Both arms: the right holds the pistol, the left worked the cylinder (swung it out, fed it, shut it).
+const CALM_BONES := ["r_clavicle", "r_shoulder", "r_elbow", "r_wrist", "r_hand_prop_attachment",
+		"l_clavicle", "l_shoulder", "l_elbow", "l_wrist"]
+const CALM_SIGMA := 4.0
+## The aim stances (user 2026-10-01, from a lineup): the bow's aim with the spine rounded like the jog's, 2/3 of the way to the
+## jog's hunch (its spine averaged over the cycle), the arms and the head kept where they point ("2/3 jog spine is nice"); the
+## pistol's aim in the bow's stance mirrored (the body side-on, twisted as the bow's), its right arm the pistol aim's own arm
+## (one-handed: the left hangs at the side in the game, PlayerAnim one_hand_aim). Both their graph clips' lengths.
+const BOW_AIM := "actor_b-p-bow-aim-idle"
+const PISTOL_AIM := "actor_b-p-pistol-aim-idle"
+const JOG_LIB := "res://animations_extra/Frontier_Locomotion.res"
+const JOG_CLIP := "own-jog-fw-k100"
+const BOW_SPINE_K := 0.65
+const PISTOL_BOW_ARM := "own-pistol-bow-arm"
+const BOW_AIM_CROUCH := "actor_b-p-bow-aim-crouch-idle"
+const SPINE := ["spinea", "spineb", "spinec", "spined"]
 const LEFT_ARM := ["l_clavicle", "l_shoulder", "l_elbow", "l_wrist"]
 const TO_CARRY := {"actor_b-lg-stealth-idle^grab--arm-r": {"l": "last"}, "actor_b-lg-stealth-draw^idle--arm-r": {"l": "both"},
 		"actor_b-lg-stealth-stow^idle--arm-r": {"l": "first"}}
@@ -98,6 +122,15 @@ func _initialize() -> void:
 		out.add_animation(StringName(name), a)
 		wired[name] = {"lib": "frontier_downgraded", "clip": name, "length": snappedf(a.length, 0.000001)}
 		print("  steady grip ", name)
+	for name: String in CALM:
+		if not lib.has_animation(name) or not graph.clips.has(name):
+			continue
+		var a: Animation = Downgrade.downgrade(lib.get_animation(name), "dejitter", false)
+		_smooth_bones(a, CALM_BONES, CALM_SIGMA)
+		_shrink_bones(a, CALM_BONES, float(CALM[name]))
+		out.add_animation(StringName(name), a)
+		wired[name] = {"lib": "frontier_downgraded", "clip": name, "length": snappedf(a.length, 0.000001)}
+		print("  calmed ", name)
 	# the bow's aim with the head upright (Downgrade.untilt_head); its aim walks are author_locomotion.gd's, which do the same
 	var bow_re := RegEx.create_from_string("^actor_b-p-bow-(aim|blocked-aim)")
 	for name: String in names:
@@ -110,9 +143,32 @@ func _initialize() -> void:
 		out.add_animation(StringName(name), a)
 		wired[name] = {"lib": "frontier_downgraded", "clip": name, "length": snappedf(a.length, 0.000001)}
 		print("  head upright ", name)
+	# the aim stances (on the head-upright bow aim made above)
+	var bow_up: Animation = out.get_animation(BOW_AIM) if out.has_animation(BOW_AIM) else lib.get_animation(BOW_AIM)
+	var jog := (load(JOG_LIB) as AnimationLibrary).get_animation(JOG_CLIP)
+	# (the spine rounded like the jog's, _jog_spine, BOW_SPINE_K, was liked first; then, user 2026-10-02: "for the bow standing i
+	# like the upper body placement of the crouch": the crouched aim's upper body on the standing legs)
+	# (the crouched aim's upper body, _crouch_upper, was tried and taken back the same day: "nevermind on the bow standing")
+	var bow_round := _jog_spine(bow_up, jog, sk, BOW_SPINE_K)
+	if out.has_animation(BOW_AIM):
+		out.remove_animation(BOW_AIM)
+	out.add_animation(BOW_AIM, bow_round)
+	wired[BOW_AIM] = {"lib": "frontier_downgraded", "clip": BOW_AIM, "length": snappedf(bow_round.length, 0.000001)}
+	print("  jog spine ", BOW_AIM)
+	# (the pistol's aim in the bow's stance mirrored with the arm grafted on, _bow_stance, was taken back, user 2026-10-01: the
+	# graph's aim layers, made for its own pose, bent the grafted arm off the aim. Now the body alone is twisted under the
+	# pistol aim's own arm: "i want the stand aim similar to the mirror bow animation where the body twist")
+	var pis := _twisted_stance(bow_up, lib.get_animation(PISTOL_AIM), sk)
+	out.add_animation(PISTOL_AIM, pis)
+	wired[PISTOL_AIM] = {"lib": "frontier_downgraded", "clip": PISTOL_AIM, "length": snappedf(pis.length, 0.000001)}
+	print("  twisted stance ", PISTOL_AIM)
+	# the bow's aim mirrored, whole, for the pistol's straight arm standing (PlayerAnim takes its right arm: the bow arm, held
+	# out straight; user 2026-10-01 "i liked the bow because the arm was straight and pointed to cursor"); not wired in the graph
+	out.add_animation(PISTOL_BOW_ARM, TravMoveMirror.mirror_clip(bow_up, sk))
+	print("  mirrored bow arm ", PISTOL_BOW_ARM)
 	print(ResourceSaver.save(out, OUT_LIB, ResourceSaver.FLAG_COMPRESS), " ", wired.size(), " clips")
 	var f := FileAccess.open(WIRED, FileAccess.WRITE)
-	f.store_string(JSON.stringify({"about": "Looping body cycles with the upper body stiffened and loosened (tools/anim_author/mocap_downgrade_all.gd, level " + LEVEL + "), and the long gun's clips with steady grips (STEADY): graph clip name -> the library and clip played instead (AnimGraphData.apply_downgraded_clips). Same length and legs as the graph's own.", "clips": wired}, "\t") + "\n")
+	f.store_string(JSON.stringify({"about": "Looping body cycles with the upper body stiffened and loosened (tools/anim_author/mocap_downgrade_all.gd, level " + LEVEL + "), the long gun's clips with steady grips (STEADY) and the pistol's reload calmed (CALM): graph clip name -> the library and clip played instead (AnimGraphData.apply_downgraded_clips). Same length and legs as the graph's own.", "clips": wired}, "\t") + "\n")
 	f.close()
 	quit()
 
@@ -237,6 +293,31 @@ static func _smooth_bones(a: Animation, bones: Array, sigma: float) -> void:
 			a.rotation_track_insert_key(ti, minf(i / fps, a.length), (sm[i] * corr).normalized())
 
 
+## The bones' swing shrunk to `keep` of its own: each frame's turn taken that far from the eased line between the first frame's
+## and the last's (smoothstep) toward its own (0: the line alone, 1: unchanged); the ends stay.
+static func _shrink_bones(a: Animation, bones: Array, keep: float) -> void:
+	var fps := 30.0
+	var n := int(round(a.length * fps))
+	if n < 2:
+		return
+	for b: String in bones:
+		var ti := a.find_track(NodePath("Skeleton3D:" + b), Animation.TYPE_ROTATION_3D)
+		if ti < 0:
+			continue
+		var q: Array[Quaternion] = []
+		for f in n + 1:
+			var s := a.rotation_track_interpolate(ti, minf(f / fps, a.length)).normalized()
+			if f > 0 and q[f - 1].dot(s) < 0.0:
+				s = -s
+			q.append(s)
+		while a.track_get_key_count(ti) > 0:
+			a.track_remove_key(ti, 0)
+		for i in n + 1:
+			var u := float(i) / float(n)
+			var line := q[0].slerp(q[n], u * u * (3.0 - 2.0 * u))
+			a.rotation_track_insert_key(ti, minf(i / fps, a.length), line.slerp(q[i], keep).normalized())
+
+
 ## The bones' tracks replaced by one eased turn from their first frame to their last (smoothstep, done by `by` of the clip).
 static func _straight_bones(a: Animation, bones: Array, by: float) -> void:
 	var fps := 30.0
@@ -312,3 +393,188 @@ static func _pose(a: Animation, sk: Skeleton3D, t: float) -> void:
 				sk.set_bone_pose_rotation(b, a.rotation_track_interpolate(ti, t))
 			Animation.TYPE_POSITION_3D:
 				sk.set_bone_pose_position(b, a.position_track_interpolate(ti, t))
+
+
+# --- the aim stances ------------------------------------------------------------------------------------------
+
+## Bone `b` and every bone under it (parents first).
+static func _below(sk: Skeleton3D, b: String) -> Array:
+	var out_b := []
+	var i := sk.find_bone(b)
+	if i < 0:
+		return out_b
+	var stack := [i]
+	while not stack.is_empty():
+		var j: int = stack.pop_front()
+		out_b.append(sk.get_bone_name(j))
+		for c in sk.get_bone_children(j):
+			stack.append(c)
+	return out_b
+
+
+static func _g(sk: Skeleton3D, bones: Array) -> Dictionary:
+	sk.force_update_all_bone_transforms()
+	var d := {}
+	for bn: String in bones:
+		var b := sk.find_bone(bn)
+		if b >= 0:
+			d[bn] = sk.get_bone_global_pose(b).basis.get_rotation_quaternion()
+	return d
+
+
+## The bones turned in the world as `g` has them, parents first (their places follow their parents).
+static func _set_g(sk: Skeleton3D, g: Dictionary, order: Array) -> void:
+	for bn: String in order:
+		if not g.has(bn):
+			continue
+		sk.force_update_all_bone_transforms()
+		var b := sk.find_bone(bn)
+		var p := sk.get_bone_parent(b)
+		var pg := sk.get_bone_global_pose(p).basis.get_rotation_quaternion() if p >= 0 else Quaternion()
+		sk.set_bone_pose_rotation(b, (pg.inverse() * (g[bn] as Quaternion)).normalized())
+
+
+## A clip of the skeleton's poses: `sample(t)` poses it at each frame of `length`; the bones in `bones` keyed (rotations), the
+## root's place too.
+static func _bake_frames(sk: Skeleton3D, length: float, bones: Array, sample: Callable) -> Animation:
+	var a := Animation.new()
+	a.length = length
+	a.loop_mode = Animation.LOOP_LINEAR
+	var fps := 30.0
+	var n := int(round(length * fps))
+	var tr := {}
+	for bn: String in bones:
+		var t := a.add_track(Animation.TYPE_ROTATION_3D)
+		a.track_set_path(t, NodePath("Skeleton3D:" + bn))
+		tr[bn] = t
+	var rp := a.add_track(Animation.TYPE_POSITION_3D)
+	a.track_set_path(rp, NodePath("Skeleton3D:root"))
+	var root := sk.find_bone("root")
+	var last := {}
+	for f in n + 1:
+		var t := minf(f / fps, length)
+		sample.call(t)
+		for bn: String in bones:
+			var q := sk.get_bone_pose_rotation(sk.find_bone(bn)).normalized()
+			if last.has(bn) and (last[bn] as Quaternion).dot(q) < 0.0:
+				q = -q
+			last[bn] = q
+			a.rotation_track_insert_key(tr[bn], t, q)
+		a.position_track_insert_key(rp, t, sk.get_bone_pose_position(root))
+	a.set_meta(&"authored", "Frontier: tools/anim_author/mocap_downgrade_all.gd (aim stance from the graph's own clips)")
+	return a
+
+
+static func _keyed(a: Animation) -> Array:
+	var out_b := []
+	for ti in a.get_track_count():
+		if a.track_get_type(ti) == Animation.TYPE_ROTATION_3D:
+			out_b.append(String(a.track_get_path(ti).get_concatenated_subnames()))
+	return out_b
+
+
+## The aim with its spine turned `k` of the way to the jog's (averaged over its cycle), the arms and the head kept.
+static func _jog_spine(src: Animation, jog: Animation, sk: Skeleton3D, k: float) -> Animation:
+	var avg := {}
+	for bn: String in SPINE:
+		var ti := jog.find_track(NodePath("Skeleton3D:" + bn), Animation.TYPE_ROTATION_3D)
+		if ti < 0:
+			continue
+		var ref := jog.rotation_track_interpolate(ti, 0.0)
+		var acc := Vector4.ZERO
+		for i in 12:
+			var q := jog.rotation_track_interpolate(ti, jog.length * i / 12.0)
+			if q.dot(ref) < 0.0:
+				q = -q
+			acc += Vector4(q.x, q.y, q.z, q.w)
+		acc = acc.normalized()
+		avg[bn] = Quaternion(acc.x, acc.y, acc.z, acc.w)
+	var kept_roots := ["r_clavicle", "l_clavicle", "neck"]
+	var bones := _keyed(src)
+	for bn: String in SPINE + kept_roots:
+		if not bones.has(bn):
+			bones.append(bn)
+	return _bake_frames(sk, src.length, bones, func(t: float) -> void:
+		_pose(src, sk, t)
+		var keep := _g(sk, kept_roots)
+		for bn: String in avg:
+			var b := sk.find_bone(bn)
+			sk.set_bone_pose_rotation(b, sk.get_bone_pose_rotation(b).slerp(avg[bn], k).normalized())
+		_set_g(sk, keep, kept_roots))
+
+
+## The pistol's aim in the bow's stance mirrored, at the pistol aim's length: the body the mirrored bow aim's, the right arm
+## (the clavicle down, the prop bone with it) turned in the world as the pistol aim has it.
+static func _bow_stance(bow: Animation, pistol: Animation, sk: Skeleton3D) -> Animation:
+	var mir := TravMoveMirror.mirror_clip(bow, sk)
+	var arm := _below(sk, "r_clavicle")
+	var bones := _keyed(mir)
+	for bn: String in arm:
+		if not bones.has(bn):
+			bones.append(bn)
+	var scale := mir.length / maxf(pistol.length, 1e-3)
+	return _bake_frames(sk, pistol.length, bones, func(t: float) -> void:
+		_pose(pistol, sk, t)
+		var g := _g(sk, arm)
+		_pose(mir, sk, fposmod(t * scale, mir.length))
+		_set_g(sk, g, arm))
+
+
+## The pistol's aim with the body twisted as the bow's stance mirrored: the hips, the legs, the spine and the left arm the mirrored
+## bow aim's (time-fitted to the pistol aim's length); the right arm the pistol aim's own, untouched below its clavicle (only the
+## clavicle turned so it stays where the pistol aim has it: the arm's own bones keep their turns, so the graph's aim layers on
+## them, the pitch additives and the hand, still fit); the head and the arm's driver bones (root children) kept as they were.
+static func _twisted_stance(bow: Animation, pistol: Animation, sk: Skeleton3D) -> Animation:
+	var mir := TravMoveMirror.mirror_clip(bow, sk)
+	var kept := ["r_clavicle", "neck"]
+	for b in sk.get_bone_count():
+		var n := sk.get_bone_name(b)
+		if n.begins_with("r_") and n.ends_with("_offset"):
+			kept.append(n)
+	var from_bow := []
+	for bn: String in _keyed(mir):
+		if bn == "root" or bn == "upper_base" or SPINE.has(bn) or bn.begins_with("l_") \
+				or bn.contains("upper_leg") or bn.contains("knee") or bn.contains("ankle") or bn.contains("heel") or bn.contains("ball"):
+			from_bow.append(bn)
+	var bones := _keyed(pistol)
+	for bn: String in from_bow + kept:
+		if not bones.has(bn):
+			bones.append(bn)
+	var scale := mir.length / maxf(pistol.length, 1e-3)
+	var root_i := sk.find_bone("root")
+	return _bake_frames(sk, pistol.length, bones, func(t: float) -> void:
+		_pose(pistol, sk, t)
+		var g := _g(sk, kept)
+		# the mirrored bow's body, its bones only
+		var bt := fposmod(t * scale, mir.length)
+		for ti in mir.get_track_count():
+			var bn := String(mir.track_get_path(ti).get_concatenated_subnames())
+			if not from_bow.has(bn):
+				continue
+			var b := sk.find_bone(bn)
+			if mir.track_get_type(ti) == Animation.TYPE_ROTATION_3D:
+				sk.set_bone_pose_rotation(b, mir.rotation_track_interpolate(ti, bt))
+			elif mir.track_get_type(ti) == Animation.TYPE_POSITION_3D and b == root_i:
+				sk.set_bone_pose_position(b, mir.position_track_interpolate(ti, bt))
+		_set_g(sk, g, kept))
+
+
+## The standing aim with the crouched aim's upper body: every bone from upper_base up (the spine, the neck and head, the arms) and
+## the arms' driver bones turned in the world as the crouched aim has them (time-fitted to the standing clip), on the standing
+## clip's hips and legs.
+static func _crouch_upper(stand: Animation, crouch: Animation, sk: Skeleton3D) -> Animation:
+	var upper := _below(sk, "upper_base")
+	for b in sk.get_bone_count():
+		var n := sk.get_bone_name(b)
+		if n.ends_with("_offset") and not upper.has(n):
+			upper.append(n)
+	var bones := _keyed(stand)
+	for bn: String in upper:
+		if not bones.has(bn):
+			bones.append(bn)
+	var scale := crouch.length / maxf(stand.length, 1e-3)
+	return _bake_frames(sk, stand.length, bones, func(t: float) -> void:
+		_pose(crouch, sk, fposmod(t * scale, crouch.length))
+		var g := _g(sk, upper)
+		_pose(stand, sk, t)
+		_set_g(sk, g, upper))

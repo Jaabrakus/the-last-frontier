@@ -296,9 +296,19 @@ func _build_held_arrows() -> void:
 		_held_models.append(a)
 
 
+## The bow canted as it is drawn (user 2026-10-01: "we need to make the bow 7 to 2 oclock"): the aim clips hold it across, its
+## limbs at 3 and 9 o'clock seen from behind; rolled about the arrow's line through the grip by CANT_DEG at full aim (negative:
+## the upper limb up from 3 toward 2, the lower down toward 7 or 8; the first try turned it the wrong way, "wrong way"), eased in
+## and out with the aim. The arrow on the string follows it (_place_nocked_arrow: the rest is the bow's).
+const CANT_DEG := -35.0
+
+
 func _process(_delta: float) -> void:
 	for i in _held_models.size():
 		_held_models[i].visible = active and i < held
+	if model != null and player != null:
+		var k := smoothstep(0.0, 1.0, aim if active else 0.0)
+		model.transform = player.bow_offset * Transform3D(Basis(Vector3(0.0, 0.0, -1.0), deg_to_rad(CANT_DEG) * k), Vector3.ZERO)
 
 
 ## The arrow on the string lies from the string fingers (nock) through the

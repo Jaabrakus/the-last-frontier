@@ -19,7 +19,7 @@
         {"title": "Autumn, 1757", "text": "The war between the French and the English is three years old. On the upper Mohawk the farms of German Flatts end at the river, and past them the woods run on, unclaimed by anyone you have met.\n\nYou came up the valley with an axe, a gun and what you could carry. Nobody here knows your name. That will have to be made."},
         {"title": "The Flatts", "text": "The Palatine farmers gave you a night inside their stockade and a look at you that said they would not give you two. One of them pointed south-east, into the trees: open ground there, a spring, good timber. If you want it, go and take it."}
       ],
-      "hints": ["W A S D  walk", "Shift  run    Alt  walk slowly", "Space  jump", "Mouse  look", "F1  all the controls"],
+      "hints": ["W A S D  walk", "Shift  run", "Space  jump", "Mouse  look"],
       "steps": [
         {"kind": "go_to", "place": "homestead", "r": 12.0, "text": "Find the open ground south-east of the Flatts"}
       ],

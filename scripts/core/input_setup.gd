@@ -9,7 +9,7 @@ const KEYS := {
 	"move_right": [KEY_D],
 	"jump": [KEY_SPACE],
 	"crouch": [KEY_CTRL, KEY_C],
-	"walk": [KEY_ALT],
+	"walk": [KEY_ALT],       # the horse's walking gait (on foot: none, FrontierPlayer)
 	"sprint": [KEY_SHIFT],
 	"reload": [KEY_R],
 	"weapon_1": [KEY_1],

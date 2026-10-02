@@ -422,6 +422,12 @@ func reload_walk(inp: AnimInputs) -> bool:
 			and (inp.speed > 0.3 or inp.wish_local.length() > 0.2)
 
 
+## How far the moving body keeps its own torso under an aim (PlayerAnim: the pistol aimed on the jog, user 2026-10-01 "the
+## pistol shot doesnt have the jog torso at all"): the upper-body aim (U_aim, the AimStabilizer with it) eased out by it, the
+## aimed arm carried by its own arm pose instead.
+var torso_free := 0.0
+
+
 func upper_aim_w() -> float:
 	return _aim_w
 
@@ -455,7 +461,7 @@ func tick(inp: AnimInputs, lower_state: StringName, dt: float, lower := {}) -> v
 	var sf: Array = data.tuning("upper_suppress_fade_s", [0.1, 0.2])
 	var sfs := float(sf[0]) if sup_target > _suppress else float(sf[1])
 	_suppress = move_toward(_suppress, sup_target, dt / maxf(sfs, 1e-3)) if dt > 0.0 else _suppress
-	_aim_w = clampf(inp.weapon_aim, 0.0, 1.0) * (1.0 - _suppress)
+	_aim_w = clampf(inp.weapon_aim, 0.0, 1.0) * (1.0 - _suppress) * (1.0 - torso_free)
 
 	# Pitch input: critically damped filter (pitch_smooth_s).
 	var e := inp.aim_elev_deg

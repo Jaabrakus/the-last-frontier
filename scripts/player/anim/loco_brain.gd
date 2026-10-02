@@ -2022,6 +2022,10 @@ func _resolve(gs: String, arg := "") -> Dictionary:
 	var id := &""
 	match String(spec.kind):
 		"bank":
+			# (no idle-to-sprint start: user 2026-10-01, "remove the idle to sprint"; a sprint from standing begins on the jog's
+			# start, then sprints)
+			if String(spec.group) == "start" and m == "sprint":
+				m = "run"
 			id = idx.input_for("%s/%s/%s" % [w, m, spec.group])
 			if id != &"" and not idx.lower_record(id).get("hemis", {}).has(spec.hemi):
 				id = &""

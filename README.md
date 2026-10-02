@@ -9,7 +9,7 @@ Open the folder in Godot and press **F5**.
 
 | Input | Action |
 |---|---|
-| WASD / Shift / Alt | Move / sprint / walk |
+| WASD / Shift | Move / sprint (Alt: a walk on horseback) |
 | Ctrl or C, Space | Crouch (toggle), jump |
 | 1 2 3 4 5 6, mouse wheel | Bow, musket, pistol, spear, tomahawk, atlatl (the wheel cycles all six) |
 | LMB | Hold to aim, release to shoot (bow: draw; musket/pistol: shoulder, then fire on release; thrown weapons: wind up, then throw on release) |

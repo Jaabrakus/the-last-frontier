@@ -64,7 +64,7 @@ func _run() -> void:
 	await _through_cards()
 	_expect(not paused and story.phase == StoryDirector.Phase.STEPS, "the cards closed, the game runs and the first step is on")
 	_expect(story.hud._text.text.begins_with("Find the open ground"), "the step is on screen: %s" % story.hud._text.text)
-	_expect(story.hud._hints.get_child_count() >= 5, "and the mission's key hints under it")
+	_expect(story.hud._hints.get_child_count() >= 4, "and the mission's key hints under it")
 	_expect(story.hud.marker_at is Vector3, "the marker shows the plot")
 	# ---- open land: walk there
 	var home: Vector3 = StoryObjectives.place_point({"place": "homestead"}, story.places())

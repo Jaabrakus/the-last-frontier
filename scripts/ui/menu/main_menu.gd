@@ -7,8 +7,8 @@ extends Control
 ## the paintings"), one after another, each drifting slowly nearer and crossfading to the next; the title and the menu
 ## at the left over a soft shade; the picture's title and caption at the lower left.
 ##   Continue      the latest save (its date and hour under it); only when there is one
-##   New game      the background (the survival rules' two: the backcountry hunter, the discharged provincial or
-##                 ranger) and Begin: the level fresh, the character creator first (PlayerAppearance)
+##   New game      the start's switches (the story, a start with nothing, a spouse) and Begin: the level fresh, the
+##                 character creator first (PlayerAppearance); no background to pick (everyone the default newcomer)
 ##   Load game     the saves (quick, auto), each with its date and when it was saved
 ##   Museum        the history of the time and the place (user 2026-09-28: "those paintings we put in a museum about
 ##                 the history around that day and age"): the period's paintings (MenuPaintings.museum()),
@@ -425,47 +425,10 @@ func _open_new_game() -> void:
 	_story = true
 	_open_panel()
 	_panel.add_child(MenuUI.heading("A new life"))
-	_panel.add_child(MenuUI.label("Who were you before you came to the manor woods?", 19, MenuUI.DIM, true))
-	var bgs: Array = []
-	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/survival/backgrounds.json"))
-	if raw is Dictionary:
-		for b: Variant in (raw as Dictionary).get("backgrounds", []):
-			if b is Dictionary and String((b as Dictionary).get("status", "")) != "cut":
-				bgs.append(b)
-	var rows := VBoxContainer.new()
-	rows.add_theme_constant_override("separation", 10)
-	_panel.add_child(rows)
-	var begin := MenuUI.item("Begin", 30, "", "choose who you were")
-	for b: Dictionary in bgs:
-		var id := String(b.get("id", ""))
-		var nm := String(b.get("name", id))
-		var money := int(b.get("starting_money_d", 0))
-		var sub := "%s  ·  %s to your name" % [String(b.get("life_history", "")).get_slice(";", 0).get_slice(".", 0), _money(money)]
-		var row := MenuUI.item(nm, 24, sub)
-		row.custom_minimum_size.y = 76
-		var sub_l := row.find_child("Sub", true, false) as Label
-		if sub_l:
-			sub_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			sub_l.custom_minimum_size = Vector2(560, 0)
-			sub_l.add_theme_font_size_override("font_size", 16)
-			row.custom_minimum_size.y = 96
-		row.pressed.connect(func() -> void:
-			_chosen_bg = id
-			for r in rows.get_children():
-				var t := r.find_child("Text", true, false) as Label
-				if t:
-					t.text = String(r.get_meta(&"name")) + ("   ·  chosen" if r == row else "")
-			begin.disabled = false
-			var bs := begin.find_child("Sub", true, false) as Label
-			if bs:
-				bs.text = nm
-				bs.add_theme_color_override("font_color", MenuUI.DIM)
-			var bt := begin.find_child("Text", true, false) as Label
-			if bt:
-				bt.add_theme_color_override("font_color", MenuUI.INK)
-			begin.grab_focus())
-		row.set_meta(&"name", nm)
-		rows.add_child(row)
+	# (no background to choose: user 2026-10-01, "we shouldnt need to pick back country officers and etc"; you start as
+	# the default newcomer, SurvivalBridge.BACKGROUND, and make your name in the game)
+	_chosen_bg = ""
+	var begin := MenuUI.item("Begin", 30)
 	# the main story (scripts/story, docs/main_story.md), or free play
 	var story_row := MenuUI.item("Story:  Two Fires", 22, "begins in the autumn of 1757 on open land by German Flatts; off: free play in 1765")
 	story_row.pressed.connect(func() -> void:
@@ -494,20 +457,7 @@ func _open_new_game() -> void:
 		_panel.add_child(MenuUI.label("Your saves stay as they are; the autosave is written over as you play.", 16, MenuUI.FAINT, true))
 	begin.pressed.connect(_play_new)
 	_panel.add_child(begin)
-	if rows.get_child_count() > 0:
-		(rows.get_child(0) as Button).grab_focus.call_deferred()
-
-
-## Pence in the period's words: "2 shillings", "5 shillings", "11 pence", "1 shilling 6 pence".
-static func _money(d: int) -> String:
-	var s := d / 12
-	var p := d % 12
-	var out: Array = []
-	if s > 0:
-		out.append("%d shilling%s" % [s, "" if s == 1 else "s"])
-	if p > 0:
-		out.append("%d pence" % p)
-	return " ".join(out) if not out.is_empty() else "nothing"
+	begin.grab_focus.call_deferred()
 
 
 ## Co-op (NetSession; docs/multiplayer_readiness.md): host this machine's game, or join one by its address. The game

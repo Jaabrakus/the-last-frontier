@@ -1,5 +1,5 @@
 {
-	"about": "Looping body cycles with the upper body stiffened and loosened (tools/anim_author/mocap_downgrade_all.gd, level stiff), and the long gun's clips with steady grips (STEADY): graph clip name -> the library and clip played instead (AnimGraphData.apply_downgraded_clips). Same length and legs as the graph's own.",
+	"about": "Looping body cycles with the upper body stiffened and loosened (tools/anim_author/mocap_downgrade_all.gd, level stiff), the long gun's clips with steady grips (STEADY) and the pistol's reload calmed (CALM): graph clip name -> the library and clip played instead (AnimGraphData.apply_downgraded_clips). Same length and legs as the graph's own.",
 	"clips": {
 		"actor_b-lg-stealth-draw^idle--arm-r": {
 			"clip": "actor_b-lg-stealth-draw^idle--arm-r",
@@ -119,6 +119,26 @@
 		"actor_b-p-crouch-walk-fw-rt": {
 			"clip": "actor_b-p-crouch-walk-fw-rt",
 			"length": 2.666667,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-pistol-aim-idle": {
+			"clip": "actor_b-p-pistol-aim-idle",
+			"length": 1.2,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-pistol-rev-reload-begin--part": {
+			"clip": "actor_b-p-pistol-rev-reload-begin--part",
+			"length": 0.7,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-pistol-rev-reload-mid--part": {
+			"clip": "actor_b-p-pistol-rev-reload-mid--part",
+			"length": 0.4,
+			"lib": "frontier_downgraded"
+		},
+		"actor_b-p-pistol-rev-reload-over--part": {
+			"clip": "actor_b-p-pistol-rev-reload-over--part",
+			"length": 0.766667,
 			"lib": "frontier_downgraded"
 		},
 		"actor_b-p-rifle-idle-aim-reload-begin--part": {

@@ -378,6 +378,20 @@ var one_hand_left_arm := "actor_b-p-relax-idle"
 ## The phase (0..1) of that clip the arm is taken at.
 var one_hand_left_phase := 0.0
 const ONE_HAND_LEFT_ARM_CROUCH := "actor_b-p-crouch-idle"
+## A one-handed weapon aimed standing up, moving or still (user 2026-10-01: "the pistol shot doesnt have the jog torso at all"):
+## the torso is the legs' clip's, the jog's or the aim idle's twisted stance (UpperBody.torso_free eases the upper-body aim out), the
+## right arm alone takes an aim arm (right_arm; JogAimArm puts it and the head on the crosshair), the left arm swings with the jog
+## or hangs at the side. The shot still goes to the crosshair (it is cast from the camera).
+const JOG_AIM_ARM := {"pistol": "actor_b-p-pistol-aim-idle"}
+const JOG_AIM_FADE_S := 0.2
+## Standing, the pistol's arm is the bow's aim arm mirrored (held out straight: user 2026-10-01 "i liked the bow because the arm
+## was straight and pointed to cursor"; tools/anim_author/mocap_downgrade_all.gd bakes it), on the twisted stance the legs' aim
+## idle plays; JogAimArm points it at the crosshair, as on the move.
+const STAND_AIM_ARM_LIB := "res://animations_extra/Frontier_Downgraded.res"
+const STAND_AIM_ARM := "own-pistol-bow-arm"
+var _stand_arm: Animation
+var _jog_aim_w := 0.0
+var jog_aim_arm: JogAimArm
 ## A foot counts as planted when the animated ball / ankle is this low (skeleton space, m; the
 ## walk, run, sprint and crouch-walk clips plant the ball at 0.00-0.04 and the ankle at 0.06-0.10).
 const STANCE_PLANT_BALL := Vector2(0.045, 0.09)
@@ -521,6 +535,11 @@ func setup(p_player: FrontierPlayer, ap: AnimationPlayer, sk: Skeleton3D, weapon
 		trigger_finger.offset = player.musket_offset
 	sk.add_child(right_seat)        # the right hand onto the gun as it is held at last
 	sk.add_child(trigger_finger)    # then its index on the trigger
+	jog_aim_arm = JogAimArm.new()
+	jog_aim_arm.name = "JogAimArm"
+	if player != null:
+		jog_aim_arm.offset = player.pistol_offset
+	sk.add_child(jog_aim_arm)       # the pistol's arm onto the crosshair aimed on the move, at last
 	holds = HandHolds.new(self, torch_ik, mid_ik)
 	_torch_ik_options()
 	loco.transitioned.connect(_on_loco_transition)
@@ -917,7 +936,9 @@ func manual_step(dt: float) -> void:
 	_time += dt
 	for e: Dictionary in events:
 		_apply_event(e)
-	loco.tick(inp, edges, dt, _weapon, upper.aim_stance(inp) or (loco.moving and upper.reload_walk(inp)))
+	# (the bow and the thrown weapons aim on the jog's legs while moving: FrontierPlayer.JOG_AIM_WEAPONS; standing, the aim stance)
+	var legs_aim := upper.aim_stance(inp) and not (loco.moving and String(_weapon) in FrontierPlayer.JOG_AIM_WEAPONS)
+	loco.tick(inp, edges, dt, _weapon, legs_aim or (loco.moving and upper.reload_walk(inp)))
 	if fall_pose != null:
 		loco.own_landing = fall_pose.active and fall_pose.showing()
 		if player != null and player.get("traversal") != null and player.traversal.controller != null:
@@ -1041,12 +1062,20 @@ func manual_step(dt: float) -> void:
 	var run_clip := _run_hold_clip(_run_hold_gait)
 	# a one-handed weapon aimed: the left arm off it, hanging as it does in the relaxed swing
 	var one_hand_aim := one_hand_aim_on and String(_weapon) in ONE_HAND_AIM_WEAPONS and (aiming or aim_wanted) and not busy and not hands_free and not torch
+	var jog_aim := one_hand_aim and String(loco.stance) != "crouch" and JOG_AIM_ARM.has(String(_weapon))
+	var jog_left := jog_aim and loco.moving         # (on the move the left arm swings as the jog's; standing it hangs at the side)
+	_jog_aim_w = move_toward(_jog_aim_w, 1.0 if jog_aim else 0.0, dt / JOG_AIM_FADE_S)
+	upper.torso_free = _jog_aim_w
+	if jog_aim_arm != null:
+		jog_aim_arm.weight = _jog_aim_w
+		if _jog_aim_w > 0.0 and player != null and player.skeleton != null:
+			jog_aim_arm.target = player.skeleton.global_transform.affine_inverse() * player.get_aim_point()
 	if left_arm != null and not owned.l:
-		left_arm.enabled = hands_free or takeoff_two or grip_arm or one_hand_aim
+		left_arm.enabled = hands_free or takeoff_two or grip_arm or (one_hand_aim and not jog_left)
 		if left_arm.enabled or left_arm.weight > 0.0:
 			if takeoff_two:
 				left_arm.set_sources(TAKEOFF_ARMS, _clip_sources(TAKEOFF_ARMS))
-			elif one_hand_aim:
+			elif one_hand_aim and not jog_left:
 				left_arm.set_sources("one_hand_aim/" + String(loco.stance), _one_hand_left_sources(), STANCE_ARM_XFADE_S)
 			elif hands_free or mode == "one_hand":
 				left_arm.set_sources("free", _relax_sources())
@@ -1064,7 +1093,7 @@ func manual_step(dt: float) -> void:
 		# The graph's in-place crouch change (CCHANGE; a stand-in clip, the source's own change is missing from the
 		# data) swings the gun 25-35 cm in its first 0.1 s: the right arm keeps the carry's two-hand arm of the
 		# stance meanwhile, in at once from the pose shown (change_hold, take_over()).
-		right_arm.enabled = hands_free or takeoff_two or air_one or change_hold or run_hold
+		right_arm.enabled = hands_free or takeoff_two or air_one or change_hold or run_hold or jog_aim
 		if run_hold or (_right_src == run_clip and not (hands_free or takeoff_two or air_one or change_hold)):
 			right_arm.fade_s = RUN_HOLD_FADE_IN_S if run_hold else RUN_HOLD_FADE_OUT_S
 		if run_hold:
@@ -1075,11 +1104,15 @@ func manual_step(dt: float) -> void:
 			_right_src = AIR_RIFLE_ARM
 		elif change_hold:
 			_right_src = CROUCH_IDLE_ARMS if String(loco.stance) == "crouch" else TAKEOFF_ARMS
+		elif jog_aim:
+			_right_src = String(JOG_AIM_ARM[String(_weapon)]) if loco.moving else STAND_AIM_ARM
 		elif hands_free:
 			_right_src = ""
 		if right_arm.enabled or right_arm.weight > 0.0:
 			if _right_src == "":
 				right_arm.set_sources("free", _relax_sources())
+			elif _right_src == STAND_AIM_ARM:
+				right_arm.set_sources(STAND_AIM_ARM, _stand_arm_sources())
 			else:
 				right_arm.set_sources(_right_src, _clip_sources(_right_src),
 						STANCE_ARM_XFADE_S if change_hold else LeftArmPose.SOURCE_XFADE_S)
@@ -1332,6 +1365,15 @@ var _right_src := ""               ## the clip the right arm pose shows ("" = th
 var _takeoff_was := false          ## last frame's two-hand jump hold (its first frame takes the arms over)
 var _change_hold_was := false      ## last frame's in-place crouch change hold (likewise)
 ## One clip as an arm pose source, at `phase` (0..1) of its length (its first frame by default).
+## The standing pistol aim's arm (STAND_AIM_ARM), from its own library.
+func _stand_arm_sources() -> Array:
+	if _stand_arm == null and ResourceLoader.exists(STAND_AIM_ARM_LIB):
+		var lib := load(STAND_AIM_ARM_LIB) as AnimationLibrary
+		if lib and lib.has_animation(STAND_AIM_ARM):
+			_stand_arm = lib.get_animation(STAND_AIM_ARM)
+	return [{"anim": _stand_arm, "time": 0.0, "w": 1.0}] if _stand_arm else []
+
+
 func _clip_sources(clip: String, phase := 0.0) -> Array:
 	if _ap == null:
 		return []
