@@ -146,6 +146,7 @@ var _last_loadout: Loadout
 ## given back by _ensure_owned until found again.
 var lost := {}
 var _pipe_w := 0.0
+var _one_hand_shift := 0.0       ## a one-handed grip's place along the hand, measured at the carry
 ## Directional attacks with the felling axe when there is nothing to work in front (AxeMelee).
 var melee: AxeMelee
 var _melee_next := ""          ## an attack asked for during a swing, begun at its chain time
@@ -960,6 +961,10 @@ func _apply_layers() -> void:
 		var pipe := 0.0 if str(s.get("frame", "pipe")) == "blade" else 1.0
 		pw = 1.0 - (1.0 - pw) * (1.0 - w * pipe)
 		bw = 1.0 - (1.0 - bw) * (1.0 - w * (1.0 - pipe))
+	# a one-handed grip's fist kept through the swings (user 2026-10-03, the hand holding the grip throughout the motion): the
+	# carry's fingers over whatever the swing's clips do with them, as far as a swing plays
+	if one_hand and carry and (pw > 0.0 or bw > 0.0):
+		layers.append({"anim": carry, "time": carry.length, "weight": maxf(pw, bw), "mask": "fingers_r"})
 	if tool == CLUB:
 		pw = 1.0 - bw                # (the club is two-handed but in a one-handed attack)
 	if phase != Phase.STOW_BACK:
@@ -1745,14 +1750,15 @@ func _place_hand_model() -> void:
 	var a := blade_offset(tool)
 	var b := two_hand_offset(tool)
 	_model_hand.transform = a.interpolate_with(b, clampf(_pipe_w, 0.0, 1.0))
-	if tool in ONE_HANDED and _palm_att != null and _socket_hand != null:
-		# the axe's clips slide the right hand along the haft (measured: 0.46 m up from the knob at the carry, 0.21-0.38 in the
-		# two-handed swings): the saber's short grip follows it along the haft's line, where the palm is now, so the handle stays in
-		# the fist (user 2026-10-01: "the handle point is not in the hand"); its markers ride with it
-		var base := _model_hand.transform
-		var at := (_socket_hand.global_transform * base).affine_inverse() * _palm_att.global_position
-		var shift := clampf(at.y - GatherModels.SABER_GRIP_M, -0.4, 0.3)
-		_model_hand.transform = base * Transform3D(Basis(), Vector3(0, shift, 0))
+	if tool in ONE_HANDED:
+		# held in the fist all through, as at the carry (user 2026-10-03: the hand holding the grip throughout the motion):
+		# never on the two-handed swings' haft line between the hands, where the grip floated off the palm; the grip's place
+		# along the hand measured at the carry only (the palm's attachment lags a frame, by a hand's breadth in a fast swing),
+		# and held
+		if phase != Phase.SWING and _palm_att != null and _socket_hand != null:
+			var at := (_socket_hand.global_transform * a).affine_inverse() * _palm_att.global_position
+			_one_hand_shift = clampf(at.y - GatherModels.SABER_GRIP_M, -0.15, 0.15)
+		_model_hand.transform = a * Transform3D(Basis(), Vector3(0, _one_hand_shift, 0))
 	if tool == CLUB:
 		# the gun turning end for end in the hands, from where it was held to shoot
 		var gun := _model_hand.get_node_or_null("Gun") as Node3D

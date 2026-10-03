@@ -10,6 +10,7 @@ extends SkeletonModifier3D
 ##   arm_r   the right arm, hand and fingers and the right-hand prop bone (the draw, the stow, the one-hand carry)
 ##   reach_r, reach_l   above the hips without the other arm (ForagePick's grab: the torso and the head toward the reach)
 ##   upper   everything above the hips: the spine, neck, head, both arms and hands (a stroke while walking)
+##   fingers_r   the right hand's fingers and thumb (a one-handed grip's fist held through the swings)
 ##   full    every keyed bone, with the root's and the pelvis's positions (a stroke standing: the footwork too)
 ## Rotations are slerped from the pose so far toward the clip's; positions lerped for the prop bones (the tool's
 ## place in the hand) and, "full" only, the root and the pelvis.
@@ -147,10 +148,19 @@ func _mask(sk: Skeleton3D, mask: String) -> Dictionary:
 			"upper":
 				if not leg and not n in POSITION_BONES:
 					out[b] = true
+			"fingers_r":
+				# the right hand's fingers and thumb only (GatherTools: the carry's fist kept round a one-handed grip
+				# through the swings; user 2026-10-03, the hand holding the grip throughout the motion)
+				for k: String in ["r_thumb", "r_index", "r_middle", "r_ring", "r_pinky"]:
+					if n.begins_with(k) and not n.contains("metacarpal"):
+						out[b] = true
+						break
 			"upper_one_hand", "full_one_hand":
 				# a one-handed weapon on two-handed clips (the saber on the axe's swings): the left arm left out, to its own motion
 				var l_arm := n.begins_with("l_") and not leg and not n in ["l_chest", "l_breast", "l_breast_end"]
-				if not l_arm and (mask == "full_one_hand" or (not leg and not n in POSITION_BONES)):
+				# (nor the prop bones: the two-handed clips slide the haft through the hand, and a one-handed grip stays where
+				# the carry holds it, in the fist; user 2026-10-03, the hand holding the grip throughout the motion)
+				if not l_arm and not n in PROP_BONES and (mask == "full_one_hand" or (not leg and not n in POSITION_BONES)):
 					out[b] = true
 			_:
 				out[b] = true
