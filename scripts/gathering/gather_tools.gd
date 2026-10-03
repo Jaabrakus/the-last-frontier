@@ -965,6 +965,10 @@ func _apply_layers() -> void:
 	if phase != Phase.STOW_BACK:
 		_pipe_w = pw
 	pose.layers = layers
+	# the saber's high block across to the left (turn_blade): the right hand reversed as an IK target, the blade level
+	# across to the left, the grip seated in the fist as ever (user 2026-10-03: "just reverse the hand right on IK";
+	# turning the blade in the fist instead left the fingers mangled)
+	pose.hand_reverse = _blade_turn()
 	_place_hand_model()
 
 
@@ -1716,8 +1720,9 @@ func two_hand_offset(_kind: String) -> Transform3D:
 	return Transform3D(Basis(Vector3(1, 0, 0), Vector3(0, 0, 1), Vector3(0, -1, 0)), Vector3(0, 0, -0.035))
 
 
-## How far the blade is turned end for end in the fist now (0..1): the playing attacks whose swing has "turn_blade",
-## by their weight (it turns as the swing blends in and back as it fades out).
+## How far the blade is turned across now (0..1): the playing attacks whose swing has "turn_blade" (the saber's high
+## block: the axe's block holds the head to the right, user 2026-10-03 "the block s is having the sword at right when
+## it needs to be left"), by their weight (it turns as the swing blends in and back as it fades out).
 func _blade_turn() -> float:
 	if melee == null:
 		return 0.0
@@ -1748,14 +1753,6 @@ func _place_hand_model() -> void:
 		var at := (_socket_hand.global_transform * base).affine_inverse() * _palm_att.global_position
 		var shift := clampf(at.y - GatherModels.SABER_GRIP_M, -0.4, 0.3)
 		_model_hand.transform = base * Transform3D(Basis(), Vector3(0, shift, 0))
-		# a swing that turns the blade end for end in the fist (the saber's high block, "turn_blade" in its data; user
-		# 2026-10-03: "the block s is having the sword at right when it needs to be left"): the axe's block holds the head
-		# to the right, so the saber turns about its grip (the edge's axis: the edge stays up) to lie across to the left
-		var k := _blade_turn()
-		if k > 0.0:
-			var g := Vector3(0, GatherModels.SABER_GRIP_M, 0)
-			_model_hand.transform = _model_hand.transform * Transform3D(Basis(), g) \
-					* Transform3D(Basis(Vector3(0, 0, 1), PI * k), Vector3.ZERO) * Transform3D(Basis(), -g)
 	if tool == CLUB:
 		# the gun turning end for end in the hands, from where it was held to shoot
 		var gun := _model_hand.get_node_or_null("Gun") as Node3D

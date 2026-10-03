@@ -27,6 +27,13 @@ var layers: Array = []
 ## toward the crosshair's height).
 var lean := 0.0
 const LEAN_BONES := ["spinea", "spineb", "spinec", "spined"]
+## Reverses the right hand after the layers, 0..1 (GatherTools: the saber's high block turned to the left; user
+## 2026-10-03: "just reverse the hand right on IK"): the hand, as an IK target, turned half round the vertical through
+## its own place, so what it holds points the other way and stays as level as it was (the blade across over the head to
+## the left, the grip seated in the fist: turning the blade in the fist instead mangled the fingers). The forearm takes
+## FOREARM_SHARE of the roll about its own axis (at the elbow), the wrist the rest, to the target's turn exactly.
+var hand_reverse := 0.0
+const FOREARM_SHARE := 0.6
 
 var _tracks := {}      ## Animation -> {bone index: [rotation track, position track]}
 var _mask_cache := {}  ## mask -> PackedInt32Array of bone indices (skeleton-wide, before the clip filter)
@@ -64,6 +71,35 @@ func _process_modification() -> void:
 			if b >= 0:
 				var g := sk.get_bone_global_pose(b)
 				sk.set_bone_global_pose(b, Transform3D(share * g.basis, g.origin))
+	if hand_reverse > 1e-4:
+		_reverse_hand(sk)
+
+
+## The right hand turned hand_reverse of half round the vertical through the wrist (the body faces +Z: the turn takes
+## what it holds from the right round in front to the left); the forearm rolls its share of that about its own axis and
+## the wrist is set to the target's turn exactly (the hand and the prop on it follow; the wrist stays where it was).
+func _reverse_hand(sk: Skeleton3D) -> void:
+	var e := sk.find_bone("r_elbow")
+	var wr := sk.find_bone("r_wrist")
+	if e < 0 or wr < 0:
+		return
+	var w0 := sk.get_bone_global_pose(wr)
+	var axis := w0.origin - sk.get_bone_global_pose(e).origin
+	if axis.length_squared() < 1e-8:
+		return
+	axis = axis.normalized()
+	var turn := Basis(Vector3.UP, PI * clampf(hand_reverse, 0.0, 1.0))
+	var target := turn * w0.basis
+	# the turn's twist about the forearm (swing-twist): the forearm takes its share, so the wrist is not wrung the whole way
+	var q := turn.get_rotation_quaternion()
+	var qv := Vector3(q.x, q.y, q.z)
+	var tw := Quaternion(axis.x * qv.dot(axis), axis.y * qv.dot(axis), axis.z * qv.dot(axis), q.w)
+	if tw.length_squared() > 1e-10:
+		tw = tw.normalized()
+		var ang := 2.0 * atan2(Vector3(tw.x, tw.y, tw.z).dot(axis), tw.w)
+		var g := sk.get_bone_global_pose(e)
+		sk.set_bone_global_pose(e, Transform3D(Basis(axis, ang * FOREARM_SHARE) * g.basis, g.origin))
+	sk.set_bone_global_pose(wr, Transform3D(target, sk.get_bone_global_pose(wr).origin))
 
 
 func _clip_tracks(sk: Skeleton3D, anim: Animation) -> Dictionary:
