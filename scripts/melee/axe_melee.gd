@@ -11,6 +11,9 @@ extends RefCounted
 ##               swing A / D like W + A / W + D) (our own thrust, keyed by hand: tools/anim_author/author_thrust.gd)
 ##   A + D       the parry sweep against a stab (no damage: counters come with opponents)
 ##   none        the data's default (D)
+## RMB is the reverse of the same keys' attack (user 2026-10-03, every melee weapon: REVERSE): D right-click cuts left to
+## right as A does, A right to left, W rises into the high block (S) and S comes down overhead (W); the parry and the
+## stab are their own. The other button breaks an attack off (RMB a LMB one, LMB a RMB one), as a jump or a sprint does.
 ## Nothing locks the player into an attack (user 2026-09-27: "make sure none of the attacks are on a animation lock",
 ## "be able to move ... right click to cancel", "juke move like in jedi academy"): the body moves as ever under the
 ## swing (the upper body swings, the legs take its footwork only standing, eased as the player stops and moves); RMB,
@@ -197,9 +200,26 @@ func direction() -> String:
 			str(data.get("default", "D")), (data.get("swings", {}) as Dictionary).has("STAB"))
 
 
-## RMB, a jump or a sprint: the attack is broken off (a feint; nothing locks the player into an attack).
-func cancel_asked() -> bool:
-	return player.controls.just_pressed(&"aim") or player.controls.just_pressed(&"jump") or player.is_sprinting
+## The reverse of each attack (user 2026-10-03: "right click is the reverse attack so if d left click is right to left d
+## right click is [left to right]", for every melee weapon; W's reverse rises, "rising cut is block"): RMB plays the
+## move keys' attack reversed. The parry and the stab have none (they are their own).
+const REVERSE := {"D": "A", "A": "D", "W": "S", "S": "W"}
+
+
+static func reverse_of(dir: String) -> String:
+	return String(REVERSE.get(dir, dir))
+
+
+## The attack's button: "L" (LMB, `fire`) or "R" (RMB, `aim`: the reverse).
+static func button_action(button: String) -> StringName:
+	return &"aim" if button == "R" else &"fire"
+
+
+## The other button, a jump or a sprint: the attack is broken off (a feint; nothing locks the player into an attack).
+## (user 2026-10-03: with RMB the reverse attack, "other button cancels": RMB breaks off a LMB attack and LMB a RMB one)
+func cancel_asked(button := "L") -> bool:
+	return player.controls.just_pressed(button_action("L" if button == "R" else "R")) \
+			or player.controls.just_pressed(&"jump") or player.is_sprinting
 
 
 ## Stamina (user 2026-09-27, the fairness pass: "attacks, feints and parries cost stamina"): the player's own, the
@@ -225,6 +245,11 @@ func pressed(fire_held: bool) -> bool:
 	var p := fire_held and not _was_fire
 	_was_fire = fire_held
 	return p
+
+
+## RMB went down this tick (the reverse attack, or the feint of a LMB one).
+func alt_pressed() -> bool:
+	return player.controls.just_pressed(&"aim")
 
 
 func spec(dir: String) -> Dictionary:

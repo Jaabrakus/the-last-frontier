@@ -149,6 +149,7 @@ var _pipe_w := 0.0
 ## Directional attacks with the felling axe when there is nothing to work in front (AxeMelee).
 var melee: AxeMelee
 var _melee_next := ""          ## an attack asked for during a swing, begun at its chain time
+var _melee_next_button := "L"   ## the button that asked for it
 var _club_key := ""            ## the weapon clubbed ("" none)
 var _club_flip := 0.0          ## 0 the shooting grip .. 1 held as a club
 var _club_to := 0.0            ## where the flip is going
@@ -680,21 +681,40 @@ func _step(delta: float) -> void:
 	if melee != null:
 		melee.tick(delta)
 	# (struck a moment ago: the flinch, no attack; AxeMelee._on_hurt)
-	var attack := melee != null and melee.pressed(_fire_held()) and tool in MELEE_TOOLS and not _valid_for_tool() \
+	# LMB attacks as the move keys say, RMB the reverse of it (user 2026-10-03: "right click is the reverse attack",
+	# every melee weapon: AxeMelee.REVERSE)
+	var lmb := melee != null and melee.pressed(_fire_held())
+	var rmb := melee != null and melee.alt_pressed()
+	var can_attack := melee != null and tool in MELEE_TOOLS and not _valid_for_tool() \
 			and (tool != CLUB or _club_to > 0.0 and _club_flip >= 0.8) and not melee.flinching()
 	# no attack is a lock (user 2026-09-27: "make sure none of the attacks are on a animation lock", "be able to move
-	# ... right click to cancel", "juke move like in jedi academy"): the body moves as ever under the swing, and RMB,
-	# a jump or a sprint breaks it off at once (a feint); the next attack can begin straight away
-	# (a feint costs stamina: too little, the attack goes on: AxeMelee.pay)
-	if phase == Phase.SWING and bool(_swing.get("melee", false)) and not bool(_swing.get("cancel", false)) \
-			and melee.cancel_asked() and melee.pay("feint"):
+	# ... right click to cancel", "juke move like in jedi academy"): the body moves as ever under the swing, and the
+	# other button (2026-10-03: RMB breaks off a LMB attack, LMB a RMB one), a jump or a sprint breaks it off at once (a
+	# feint); the next attack can begin straight away (a feint costs stamina: too little, the attack goes on: AxeMelee.pay)
+	var swinging := phase == Phase.SWING and bool(_swing.get("melee", false)) and not bool(_swing.get("cancel", false))
+	var btn := String(_swing.get("button", "L"))
+	var feinted := false
+	if swinging and melee.cancel_asked(btn) and melee.pay("feint"):
 		_cancel_melee()
+		feinted = true
+	# (the press that broke an attack off begins nothing; during an attack only its own button chains the next)
+	var press := ""
+	if can_attack and not feinted:
+		if lmb and (not swinging or btn == "L"):
+			press = "L"
+		elif rmb and (not swinging or btn == "R"):
+			press = "R"
+	var attack := press != ""
+	var attack_dir := ""
+	if attack:
+		attack_dir = melee.direction() if press == "L" else AxeMelee.reverse_of(melee.direction())
 	if attack and phase == Phase.SWING:
 		# (broken off, or stopped by what it met and done holding there: the next begins at once)
 		if bool(_swing.get("cancel", false)) or bool(_swing.get("free", false)):
-			_start_melee(melee.direction())
+			_start_melee(attack_dir, press)
 		else:
-			_melee_next = melee.direction()
+			_melee_next = attack_dir
+			_melee_next_button = press
 	match phase:
 		Phase.HOLSTER:
 			_t += delta
@@ -734,7 +754,7 @@ func _step(delta: float) -> void:
 			if _wants_stroke():
 				_start_swing()
 			elif attack:
-				_start_melee(melee.direction())
+				_start_melee(attack_dir, press)
 		Phase.SWING:
 			_carry_w = 1.0
 			_advance_swing(delta, trav)
@@ -817,8 +837,9 @@ func _cancel_melee() -> void:
 	_melee_next = ""
 
 
-## An attack (AxeMelee) in `dir`: its clips as a swing, chained over the one playing.
-func _start_melee(dir: String) -> void:
+## An attack (AxeMelee) in `dir`: its clips as a swing, chained over the one playing; `button` the mouse button that
+## began it ("L", "R": the other one breaks it off).
+func _start_melee(dir: String, button := "L") -> void:
 	# (too tired for it: nothing begins; AxeMelee.pay)
 	if not melee.can_pay(dir):
 		_melee_next = ""
@@ -826,6 +847,7 @@ func _start_melee(dir: String) -> void:
 	var s := melee.make_swing(dir, _clips)
 	if s.is_empty():
 		return
+	s["button"] = button
 	melee.pay(dir)
 	if not _swing.is_empty():
 		if not _prev_swing.is_empty() and bool(_prev_swing.get("melee", false)):
@@ -846,7 +868,7 @@ func _advance_swing(delta: float, trav: bool) -> void:
 	if bool(s.get("melee", false)):
 		melee.step(s, delta)
 		if _melee_next != "" and (float(s.u) >= float(s.chain) or bool(s.get("free", false))) and not trav:
-			_start_melee(_melee_next)
+			_start_melee(_melee_next, _melee_next_button)
 			return
 	var fade_in := FADE_IN_S if _prev_swing.is_empty() else CHAIN_FADE_S
 	s.w = move_toward(float(s.w), 0.0 if trav else 1.0, delta / fade_in)
@@ -1694,6 +1716,24 @@ func two_hand_offset(_kind: String) -> Transform3D:
 	return Transform3D(Basis(Vector3(1, 0, 0), Vector3(0, 0, 1), Vector3(0, -1, 0)), Vector3(0, 0, -0.035))
 
 
+## How far the blade is turned end for end in the fist now (0..1): the playing attacks whose swing has "turn_blade",
+## by their weight (it turns as the swing blends in and back as it fades out).
+func _blade_turn() -> float:
+	if melee == null:
+		return 0.0
+	var k := 0.0
+	# (weighted as the pose weighs them: the one fading out under a chained one at full weight, the new one by its blend in;
+	# both by w2, the fade out)
+	for pair: Array in [[_prev_swing, true], [_swing, false]]:
+		var s: Dictionary = pair[0]
+		if s.is_empty() or not bool(s.get("melee", false)):
+			continue
+		if not bool(melee.spec(String(s.get("dir", ""))).get("turn_blade", false)):
+			continue
+		k = maxf(k, float(s.get("w2", 1.0)) * (1.0 if bool(pair[1]) else smoothstep(0.0, 1.0, float(s.get("w", 0.0)))))
+	return smoothstep(0.0, 1.0, k)
+
+
 func _place_hand_model() -> void:
 	if _model_hand == null or tool == "":
 		return
@@ -1708,6 +1748,14 @@ func _place_hand_model() -> void:
 		var at := (_socket_hand.global_transform * base).affine_inverse() * _palm_att.global_position
 		var shift := clampf(at.y - GatherModels.SABER_GRIP_M, -0.4, 0.3)
 		_model_hand.transform = base * Transform3D(Basis(), Vector3(0, shift, 0))
+		# a swing that turns the blade end for end in the fist (the saber's high block, "turn_blade" in its data; user
+		# 2026-10-03: "the block s is having the sword at right when it needs to be left"): the axe's block holds the head
+		# to the right, so the saber turns about its grip (the edge's axis: the edge stays up) to lie across to the left
+		var k := _blade_turn()
+		if k > 0.0:
+			var g := Vector3(0, GatherModels.SABER_GRIP_M, 0)
+			_model_hand.transform = _model_hand.transform * Transform3D(Basis(), g) \
+					* Transform3D(Basis(Vector3(0, 0, 1), PI * k), Vector3.ZERO) * Transform3D(Basis(), -g)
 	if tool == CLUB:
 		# the gun turning end for end in the hands, from where it was held to shoot
 		var gun := _model_hand.get_node_or_null("Gun") as Node3D

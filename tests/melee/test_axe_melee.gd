@@ -7,6 +7,7 @@ extends SceneTree
 ##   aim       the crosshair high leans the swing back, low leans it forward (ToolPose.lean)
 ##   chain     LMB again during a swing begins the next attack at the swing's chain time
 ##   no lock   RMB breaks an attack off (a feint) and LMB begins the next at once; the player walks under a swing
+##   reverse   RMB attacks the keys' attack reversed (D <-> A, W <-> S); LMB breaks a RMB attack off
 ##   trees     at a tree LMB still fells it (the gathering stroke), no attack
 ##
 ##   Godot --headless --path . -s tests/melee/test_axe_melee.gd -- --no-capture
@@ -209,6 +210,39 @@ func _attacks() -> void:
 		if g.phase == GatherTools.Phase.READY:
 			break
 	_expect(dummy.health < hp, "cancel: the attack after the feint lands")
+	# RMB is the reverse attack (user 2026-10-03): the keys' attack reversed (D <-> A, W <-> S; the parry its own), and LMB
+	# breaks a RMB attack off (the other button) without beginning one
+	for dir: String in ["D", "A", "W", "S", "AD"]:
+		p.global_position = SPOT + Vector3(0, 0.05, 0)
+		p.velocity = Vector3.ZERO
+		p.yaw = 0.0
+		p.grip.stamina = p.grip.stamina_max
+		for i in 200:
+			await physics_frame
+			if g.phase == GatherTools.Phase.READY:
+				break
+		for a: String in keys[dir]:
+			Input.action_press(a)
+		Input.action_press("aim")
+		await _fr(2)
+		for a: String in keys[dir]:
+			Input.action_release(a)
+		Input.action_release("aim")
+		var rs: Dictionary = g._swing
+		var want := AxeMelee.reverse_of(dir)
+		_expect(bool(rs.get("melee", false)) and String(rs.get("dir", "")) == want and String(rs.get("button", "")) == "R",
+				"reverse: RMB with %s is %s (swing %s, button %s)" % [dir, want, rs.get("dir", "-"), rs.get("button", "-")])
+		if dir == "D":
+			await _fr(12)
+			Input.action_press("fire")
+			await _fr(2)
+			Input.action_release("fire")
+			_expect(bool(rs.get("cancel", false)) and g._swing == rs,
+					"reverse: LMB breaks the RMB attack off and begins none (cancel %s)" % rs.get("cancel", false))
+	for i in 200:
+		await physics_frame
+		if g.phase == GatherTools.Phase.READY:
+			break
 	# walking while a swing plays: the body moves (no lock)
 	var at := p.global_position
 	Input.action_press("fire")
