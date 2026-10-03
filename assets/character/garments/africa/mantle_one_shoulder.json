@@ -1,0 +1,379 @@
+{
+ "id": "mantle_one_shoulder",
+ "name": "Mantle (over one shoulder)",
+ "description": "A large cotton cloth across the back and over the right shoulder, passing under the left arm and across the breast, the left arm bare, hanging to above the knee.",
+ "kind": "garment",
+ "set": "africa",
+ "slot": "accessories.wrap",
+ "alt_slots": [],
+ "layer": {
+  "default": 50
+ },
+ "glb": "res://assets/character/garments/africa/mantle_one_shoulder.glb",
+ "mesh": "mantle_one_shoulder",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "mantle_one_shoulder"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "chest_upper_back",
+  "chest_upper_front",
+  "chest_upper_side",
+  "neck_lower",
+  "pelvis_center",
+  "pelvis_side",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r",
+  "upper_arm_r"
+ ],
+ "hides_regions": [
+  "abdomen_front",
+  "pelvis_side"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "strip cotton",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "indigo_mid",
+    "cotton_white",
+    "indigo_pale",
+    "stroud_blue",
+    "straw",
+    "madder_red",
+    "yellow",
+    "logwood_black"
+   ],
+   "default": "indigo_mid",
+   "pattern": {
+    "options": [
+     "none",
+     "stripe",
+     "check"
+    ],
+    "default": "stripe",
+    "stripe": {
+     "colors": [
+      "indigo_mid",
+      "cotton_white",
+      "indigo_pale"
+     ],
+     "scale_m": 0.16
+    },
+    "check": {
+     "colors": [
+      "indigo_mid",
+      "cotton_white",
+      "yellow"
+     ],
+     "scale_m": 0.08
+    },
+    "note": "strip cotton, or silk-and-cotton strip cloth for the better-off (no named Akan kente or adinkra designs: plain strips and checks only)"
+   },
+   "bands": null,
+   "palette_hex": {
+    "indigo_mid": "#34507A",
+    "cotton_white": "#EEEBE1",
+    "indigo_pale": "#6E8BB1",
+    "stroud_blue": "#1E2B4A",
+    "straw": "#C6AC6E",
+    "madder_red": "#8E2B21",
+    "yellow": "#D0A93A",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 2675,
+    "verts": 1825,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "neck_lower",
+     "pelvis_center",
+     "pelvis_side",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r",
+     "upper_arm_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "r_clavicle",
+     "neck",
+     "l_breast",
+     "r_breast",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_shoulder_twist_a",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 2675,
+  "verts": 1825,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.1311,
+   "breast_large": 0.1084,
+   "breast_small": 0.1067
+  },
+  "coverage": {
+   "neck_upper": {
+    "normal": 0.062,
+    "cone": 0.01
+   },
+   "neck_lower": {
+    "normal": 0.406,
+    "cone": 0.354
+   },
+   "chest_upper_front": {
+    "normal": 0.688,
+    "cone": 0.604
+   },
+   "chest_upper_side": {
+    "normal": 0.448,
+    "cone": 0.448
+   },
+   "chest_upper_back": {
+    "normal": 0.635,
+    "cone": 0.604
+   },
+   "chest_front": {
+    "normal": 0.917,
+    "cone": 0.885
+   },
+   "chest_side": {
+    "normal": 0.479,
+    "cone": 0.458
+   },
+   "chest_back": {
+    "normal": 0.844,
+    "cone": 0.802
+   },
+   "abdomen_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_side": {
+    "normal": 0.792,
+    "cone": 0.74
+   },
+   "abdomen_back": {
+    "normal": 0.99,
+    "cone": 0.948
+   },
+   "pelvis_center": {
+    "normal": 0.552,
+    "cone": 0.292
+   },
+   "pelvis_side": {
+    "normal": 0.99,
+    "cone": 0.99
+   },
+   "upper_arm_l": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "forearm_b_l": {
+    "normal": 0.177,
+    "cone": 0.01
+   },
+   "forearm_c_l": {
+    "normal": 0.198,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.208,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.625,
+    "cone": 0.562
+   },
+   "forearm_a_r": {
+    "normal": 0.135,
+    "cone": 0.021
+   },
+   "forearm_b_r": {
+    "normal": 0.156,
+    "cone": 0.01
+   },
+   "forearm_c_r": {
+    "normal": 0.167,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.229,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.958,
+    "cone": 0.677
+   },
+   "thigh_lower_l": {
+    "normal": 0.281,
+    "cone": 0.156
+   },
+   "thigh_upper_r": {
+    "normal": 0.948,
+    "cone": 0.698
+   },
+   "thigh_lower_r": {
+    "normal": 0.333,
+    "cone": 0.177
+   }
+  },
+  "glb_kb": 443.3
+ },
+ "budget": {
+  "tris_max": 5000
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Over the wrapper Gold Coast and Gambian men threw a large cloth across the back and over one shoulder, the other arm left free; the better-off wore a larger one of silk-and-cotton strips. Equiano remembered it 'somewhat in the form of a highland plaid ... usually dyed blue' [AF-A2][AF-A4][AF-C1].",
+ "sources": [
+  "AF-A2",
+  "AF-A4",
+  "AF-C1"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "africa",
+  "west_african",
+  "central_african"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 1.73,
+    "p05_mm": 12.75,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 2.03,
+    "p05_mm": 12.19,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 3.21,
+    "p05_mm": 12.7,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 3.03,
+    "p05_mm": 12.83,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/mantle_one_shoulder.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/mantle_one_shoulder.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "shift_linen",
+  "wrapper_knee"
+ ],
+ "extra": {
+  "presets": {
+   "strip_indigo": {
+    "0": "indigo_mid"
+   },
+   "white": {
+    "0": "cotton_white",
+    "pattern": "none"
+   },
+   "blue": {
+    "0": "stroud_blue",
+    "pattern": "none"
+   }
+  },
+  "styles_note": "Styles from the same recipe: large (about 2.6 x 1.6 m, lower), plaid (wound round the body). M-L for Kongo commoners.",
+  "recipe_note": "cloth2.dress.drape anchor one_shoulder: the envelope over the shoulders (the right shoulder's cap in it above 1.17, no arms below), cut to its outline; the rolled top edge raised 2.8 mm; below 0.95 it swings with the skirt panels.",
+  "animation_note": "The left arm is bare and free; the cloth over the right shoulder follows the right shoulder and upper arm.",
+  "references": [
+   "[AF-A2] Moore: https://archive.org/details/travelsintoinlan00moor",
+   "[AF-A4] Equiano, Interesting Narrative: https://www.gutenberg.org/ebooks/15399",
+   "[AF-C1] Fromont 2017: https://revistas.usp.br/anaismp/article/view/139689"
+  ]
+ }
+}

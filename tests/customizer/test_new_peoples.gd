@@ -74,9 +74,9 @@ func _initialize() -> void:
 			DirAccess.make_dir_recursive_absolute(_shots)
 			if not _headless():
 				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
-	_had_file = FileAccess.file_exists(AppearanceStore.CURRENT)
+	_had_file = FileAccess.file_exists(AppearanceStore.current_path())
 	if _had_file:
-		_backup = FileAccess.get_file_as_string(AppearanceStore.CURRENT)
+		_backup = FileAccess.get_file_as_string(AppearanceStore.current_path())
 	_test_peoples()
 	_test_facial_hair()
 	_test_rows()
@@ -84,11 +84,11 @@ func _initialize() -> void:
 	_test_store()
 	await _test_ui()
 	if _had_file:
-		var f := FileAccess.open(AppearanceStore.CURRENT, FileAccess.WRITE)
+		var f := FileAccess.open(AppearanceStore.current_path(), FileAccess.WRITE)
 		f.store_string(_backup)
 		f.close()
-	elif FileAccess.file_exists(AppearanceStore.CURRENT):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.CURRENT))
+	elif FileAccess.file_exists(AppearanceStore.current_path()):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.current_path()))
 	print("NEW PEOPLES TEST %s (%d checks%s)" % ["OK" if _fails.is_empty() else "FAILED", _checks,
 			"" if _fails.is_empty() else ", %d failed" % _fails.size()])
 	quit(0 if _fails.is_empty() else 1)
@@ -196,14 +196,16 @@ func _test_rows() -> void:
 				"%s has an emblem" % pid)
 		em.free()
 		for bt in [1, 2]:
-			var jw: Array = CreatorOptions.options("jewellery", _look(pid, bt)).map(func(o: Dictionary) -> String: return String(o.id))
-			_check(jw.size() >= 1 and jw[0] == "none", "%s %d: jewellery starts with none (%s)" % [pid, bt, jw])
-			for j: String in jw:
+			# every piece offered to everyone (2026-10-03); the documented ones are the people's own
+			var lk := _look(pid, bt)
+			var jw: Array = CreatorOptions.options("jewel_ears", lk).map(func(o: Dictionary) -> String: return String(o.id))
+			_check(jw.size() > 10 and jw[0] == "none", "%s %d: every earring offered, none first (%d)" % [pid, bt, jw.size()])
+			for j: String in CreatorOptions.jewel_own(lk, "ears") + CreatorOptions.jewel_own(lk, "nose"):
 				_check(jw_ids.has(j), "%s: jewellery %s exists" % [pid, j])
 			if bt == 2 and pid in ["arab", "kurdish", "egyptian"]:
-				_check("nose_ring_gold" in jw, "%s women: a nose ring offered (%s)" % [pid, jw])
+				_check("nose_ring_gold" in CreatorOptions.jewel_own(lk, "nose"), "%s women: the nose ring their own" % pid)
 			if bt == 1 and pid == "ethiopian":
-				_check(jw == ["none"], "Ethiopian men: no earrings (%s)" % [jw])
+				_check(CreatorOptions.jewel_own(lk, "ears").is_empty(), "Ethiopian men: no earrings of their own")
 
 
 # --- the model ----------------------------------------------------------------------------------------
@@ -251,7 +253,7 @@ func _test_store() -> void:
 			lk["name"] = pid.capitalize()
 			CreatorOptions.step("face", lk, 1)
 			CreatorOptions.step("hair_style", lk, 1)
-			CreatorOptions.step("jewellery", lk, 1)
+			CreatorOptions.step("jewel_ears", lk, 1)
 			var want := {}
 			for r: String in CreatorOptions.rows(lk):
 				want[r] = CreatorOptions.current(r, lk)
@@ -273,8 +275,8 @@ func _test_store() -> void:
 # --- the creator UI -------------------------------------------------------------------------------------
 
 func _test_ui() -> void:
-	if FileAccess.file_exists(AppearanceStore.CURRENT):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.CURRENT))
+	if FileAccess.file_exists(AppearanceStore.current_path()):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.current_path()))
 	var c := CharacterCreator.open(null)
 	await _frames(5)
 	c.look = _look("english", 1)
@@ -311,5 +313,5 @@ func _test_ui() -> void:
 	_check(is_equal_approx(panel.size.x, 372.0), "the panel keeps its width (%.0f)" % panel.size.x)
 	c.close(true)
 	await _frames(3)
-	var saved := AppearanceStore.load_file(AppearanceStore.CURRENT)
+	var saved := AppearanceStore.load_file(AppearanceStore.current_path())
 	_check(String(saved.get("people", "")) == longest, "Accept saves the chosen people (%s)" % saved.get("people"))

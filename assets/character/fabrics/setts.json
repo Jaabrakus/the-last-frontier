@@ -1,0 +1,140 @@
+{
+ "format": "frontier-setts",
+ "version": 1,
+ "note": "Plaid setts the cloth shader draws (ClothMaterials.pattern_spec, cloth.gdshader pat_kind 2): our own designs, not registered or clan tartans. A sett is a list of [palette token or #hex, width] stripes, the widths relative (thread counts); symmetric = the list runs from pivot to pivot and is mirrored (the full repeat is the list and then its inner stripes back); scale_m = the full repeat in metres. A catalog zone or a look names one ('sett': 'hill_green') or gives its own list.",
+ "palette_hex": {
+  "butternut": "#957549",
+  "deep_green": "#213A2A",
+  "drab": "#8B7A5C",
+  "kersey_blue": "#2B3A55",
+  "linen_white": "#E8E3D3",
+  "logwood_black": "#1C1B20",
+  "madder_red": "#8E2B21",
+  "slate_grey": "#6B6A66",
+  "stroud_blue": "#1E2B4A",
+  "walnut_brown": "#5A3F2C",
+  "yellow": "#D0A93A"
+ },
+ "setts": {
+  "hill_green": {
+   "label": "Hill green",
+   "note": "A dark green ground, a broad blue band between black bars, a fine yellow line at the pivot.",
+   "sett": [
+    [
+     "deep_green",
+     30
+    ],
+    [
+     "logwood_black",
+     10
+    ],
+    [
+     "stroud_blue",
+     22
+    ],
+    [
+     "logwood_black",
+     3
+    ],
+    [
+     "yellow",
+     2
+    ]
+   ],
+   "symmetric": true,
+   "scale_m": 0.17
+  },
+  "madder_red": {
+   "label": "Madder red",
+   "note": "A madder red ground crossed by green and dark blue bands, a white line at the pivot.",
+   "sett": [
+    [
+     "madder_red",
+     32
+    ],
+    [
+     "deep_green",
+     12
+    ],
+    [
+     "madder_red",
+     4
+    ],
+    [
+     "stroud_blue",
+     10
+    ],
+    [
+     "linen_white",
+     2
+    ]
+   ],
+   "symmetric": true,
+   "scale_m": 0.16
+  },
+  "drab_hodden": {
+   "label": "Drab and brown",
+   "note": "Undyed drab with walnut brown bands and a butternut line: a working plaid of country dyes.",
+   "sett": [
+    [
+     "drab",
+     24
+    ],
+    [
+     "walnut_brown",
+     10
+    ],
+    [
+     "butternut",
+     3
+    ],
+    [
+     "walnut_brown",
+     3
+    ]
+   ],
+   "symmetric": true,
+   "scale_m": 0.12
+  },
+  "grey_blue": {
+   "label": "Grey and blue",
+   "note": "Kersey blue and slate grey, black bars, a white line.",
+   "sett": [
+    [
+     "kersey_blue",
+     26
+    ],
+    [
+     "slate_grey",
+     14
+    ],
+    [
+     "logwood_black",
+     6
+    ],
+    [
+     "linen_white",
+     2
+    ]
+   ],
+   "symmetric": true,
+   "scale_m": 0.15
+  },
+  "shepherd": {
+   "label": "Shepherd's check",
+   "note": "Small black-and-white check of equal stripes.",
+   "sett": [
+    [
+     "linen_white",
+     1
+    ],
+    [
+     "logwood_black",
+     1
+    ]
+   ],
+   "symmetric": false,
+   "scale_m": 0.01
+  }
+ }
+}

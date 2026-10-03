@@ -58,9 +58,7 @@ func _run() -> void:
 		seen[String(e.file)] = true
 		check(String(e.title) != "" and String(e.caption).length() > 40, "%s: a title and a caption" % e.file)
 	check(seen.size() == all.size(), "a round shows each before a repeat (%d)" % seen.size())
-	# money
-	check(MainMenu._money(24) == "2 shillings" and MainMenu._money(60) == "5 shillings" and MainMenu._money(18) == "1 shilling 6 pence",
-			"money in shillings and pence (%s, %s, %s)" % [MainMenu._money(24), MainMenu._money(60), MainMenu._money(18)])
+	# (money: the background picker and its purse are gone from New game, 2026-10-01, and _money with them)
 	# credits
 	var cr := MainMenu.credits()
 	var heads := cr.map(func(b: Array) -> String: return String(b[0]))

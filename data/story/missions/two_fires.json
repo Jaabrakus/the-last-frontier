@@ -146,7 +146,8 @@
       "steps": [
         {"kind": "build", "types": ["floor"], "place": "homestead", "r": 40.0, "count": 1, "text": "Lay a floor"},
         {"kind": "build", "types": ["wall", "wall_door", "wall_window"], "place": "homestead", "r": 40.0, "count": 4, "text": "Raise the log walls"},
-        {"kind": "build", "types": ["roof"], "place": "homestead", "r": 40.0, "count": 1, "text": "Put a roof on"}
+        {"kind": "build", "types": ["roof"], "place": "homestead", "r": 40.0, "count": 1, "text": "Put a roof on",
+          "effects": [{"do": "music", "cue": "story_home"}]}
       ],
       "outro": [
         {"title": "A house", "text": "Four walls of your own logs and a roof that keeps the rain off. At the Flatts they call it the newcomer's place now. It is not a name yet, but it is a start."},
@@ -293,7 +294,8 @@
         {"id": "let_go", "kind": "talk", "convo": "leclerc_turns", "text": "Seen", "next": "to_wreck"},
         {"id": "to_wreck", "kind": "go_to", "place": "wreck", "r": 18.0, "text": "Reach the fallen ship"},
         {"id": "smoke", "kind": "talk", "convo": "wreck_smoke", "text": "The burning keel"},
-        {"id": "look", "kind": "stay_unseen", "seconds": 8.0, "text": "Look up at the broken sky", "fail_outcome": "seen"},
+        {"id": "look", "kind": "stay_unseen", "seconds": 8.0, "text": "Look up at the broken sky", "fail_outcome": "seen",
+          "start_effects": [{"do": "music", "cue": "story_wonder"}]},
         {"id": "spar", "kind": "talk", "convo": "wreck_spar", "place": "wreck", "r": 40.0, "text": "Someone is calling"},
         {"id": "lock", "kind": "lock_cast", "target_tag": "Spar", "target": "Spar", "move": "first_lock", "place": "wreck", "text": "Hold the spar in your eye until the ring closes",
           "effects": [{"do": "set_flag", "flag": "tf.spar_lifted"},
@@ -336,7 +338,7 @@
       "id": "m.tf.ash_told",
       "title": "Ash",
       "start_effects": [{"do": "end_stages", "stages": ["march", "rook"]}, {"do": "cache_back"},
-        {"do": "give", "item": "item.trade.blanket", "count": 1}],
+        {"do": "give", "item": "item.trade.blanket", "count": 1}, {"do": "music", "cue": "story_sorrow"}],
       "intro": [
         {"title": "14-20 November 1757", "text": "The raiders have gone west by the Carry with their captives. Across the river the farms are black squares in the frost, and the fort, which held, is full of people with nowhere else to go.\n\nYour house is a black square too. You have hidden the stranger in its stone root cellar, under the ash, where nobody thinks to look. For three nights his wound burns with fever, and then it does not.\n\nWhatever you buried by the fallen oak is still there. Silas Vane walks out from the fort with a wool blanket over his arm, to wear for a coat: pay him in the spring, he says."}
       ],

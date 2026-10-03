@@ -224,6 +224,9 @@ func _ready() -> void:
 	add_child(body)
 	body.build(look)
 	body.drop_parts()                     # (no hit parts: nobody here is a target)
+	if size < 0.85 and body.mesh:
+		# a child's own body (as the household's children: ChildBody, Growth's "child" stage), not a grown body shrunk
+		ChildBody.shape_body(body.mesh, look, "child")
 	if not is_equal_approx(size, 1.0):
 		body.scale = Vector3.ONE * size
 	nav = NavMover.new(null, RADIUS * size)

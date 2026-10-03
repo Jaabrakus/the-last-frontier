@@ -231,6 +231,7 @@ var _clip := ""
 func build(at: Transform3D, _fur: Material = null, _stone: Material = null) -> void:
 	_home = at
 	spawn = at
+	add_to_group(&"giants")          # (MusicDirector scores a fight with it)
 	# its blows (a ram, the trunk, a stomp) are blunt force (PlayerWounds.kind_of)
 	set_meta(&"damage_kind", "blunt")
 	body = Node3D.new()

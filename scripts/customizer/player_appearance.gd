@@ -64,7 +64,7 @@ static func offer_creator(check_run := true) -> bool:
 		for a in OS.get_cmdline_user_args():
 			if a.begins_with("--appearance") or a == "--no-creator":
 				return false
-	return not FileAccess.file_exists(AppearanceStore.CURRENT)
+	return not FileAccess.file_exists(AppearanceStore.current_path())
 
 
 func _offer_creator() -> void:

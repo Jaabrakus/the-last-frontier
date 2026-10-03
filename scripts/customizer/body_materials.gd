@@ -270,6 +270,8 @@ static func skin_material(look: Dictionary) -> ShaderMaterial:
 	m.set_shader_parameter("mark_scar", int(mk.get("scar", 0)))
 	m.set_shader_parameter("mark_pox", float(mk.get("pox", 0.0)))
 	m.set_shader_parameter("mark_paint", float(mk.get("paint", 0.0)))
+	# the creator's Tattoos row: the look's tattoos where their skin shows (Tattoos, tattoo.gdshaderinc)
+	Tattoos.apply(m, look)
 	set_face_warp(m)
 	set_head_detail(m)
 	var style := String((look.get("hair", {}) as Dictionary).get("style", "")) if look.get("hair") is Dictionary else ""

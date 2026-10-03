@@ -9,6 +9,9 @@ extends SkeletonModifier3D
 const FINGER_KEYS := ["r_thumb", "r_index", "r_middle", "r_ring", "r_pinky"]
 ## Seconds the hand takes to close or open.
 const FADE_S := 0.12
+## How far the fist closes, from the hand's rest (0) to the clip's fist (1) (user 2026-10-03, "how come the knuckles look
+## crazy": closed all the way, the knuckles' skin pinched and the fingers ran into each other and the palm).
+const CURL := 0.8
 
 var anim: Animation
 var time := 0.0
@@ -48,5 +51,5 @@ func _process_modification() -> void:
 				_tracks[b] = i
 	var t := clampf(time, 0.0, anim.length)
 	for b: int in _tracks:
-		var q := anim.rotation_track_interpolate(int(_tracks[b]), t)
+		var q := sk.get_bone_rest(b).basis.get_rotation_quaternion().slerp(anim.rotation_track_interpolate(int(_tracks[b]), t), CURL)
 		sk.set_bone_pose_rotation(b, sk.get_bone_pose_rotation(b).slerp(q, weight).normalized())

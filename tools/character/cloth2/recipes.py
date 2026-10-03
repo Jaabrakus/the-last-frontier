@@ -15,6 +15,10 @@
   leggings(g, style)              wool leggings (a side flap, garters) and gaiters (buttons down the outer side)
   belt(g, style), sash(g, style), harness(g, style), pouch_belt(g, style)
                                   strap accessories: bands round the body, straps along it, rigid hardware
+  robe, tunic, trousers, wrap_skirt, drape, cloak, head_wrap, lathe_hat, hose
+                                  the peoples' dress types (2026-10-03): defined in cloth2.dress (its docstring and
+                                  garment.py's list every key), wrapped here; sash(g, {"turns": n}) winds a sash,
+                                  soft_cap "skullcap", shirt(bottom=, slits=, front_slit=, sleeve_wide=)
 
 Zones by convention: 0 the cloth, 1 facings / lining / trim, 2 buttons and metal, 3 lace, piping or a glow cord
 (spec.Zone(..., glow=Glow()) flags it emissive). Heights are on the reference fit (the female base: waist ~1.02,
@@ -34,17 +38,38 @@ from cloth2.parts import angle_from_front, closed_skirt_weights, split_sides
 
 def shirt(g, hem=0.60, side_hem=0.69, sleeve_end=0.925, neck=None, dip=0.0, dip_width=0.09, gather=0.008,
           sleeve_ease=(0.006, 0.013), ease=0.0055, slit_top=0.74, collar=True, band_t=0.88, steps=9, flare=0.06,
-          tail_gap=0.024, z_full=0.72):
-    """A linen shirt or shift: the body and sleeves as one shell, tails from the hips."""
+          tail_gap=0.024, z_full=0.72, bottom=0.905, slits=None, front_slit=None, sleeve_wide=0.0, wide_from=0.45,
+          over=(), over_gap=0.004):
+    """A linen shirt or shift: the body and sleeves as one shell, tails from the hips.
+
+    The hem cuts (2026-10-03, the peoples' dress): `bottom` is where the shell ends and the tails begin (a hem at or
+    above it is a short shirt cut straight there, no tails: the Filipino baro at 0.96); `slits` replaces the side slits
+    [(from deg, to deg, up to z)] (default the side slits to slit_top); `front_slit` {"z0", "w": (bottom, top half-
+    width), "x", "angle"} an open slit down from the neck (dress.front_slit: the collarless shirt's to 1.20, the
+    Persian left-shoulder opening at an angle); `sleeve_wide` (m) the sleeves widening toward an open cuff from arm
+    parameter `wide_from` (band_t None: no wrist band); `over` the garments it is fitted over (a frock worn over the
+    clothes)."""
     g.shell(G.TORSO + G.ARMS)
-    g.neckline(dip=dip, dip_width=dip_width, **(neck or {})).bottom(0.905)
-    g.sleeves(end=sleeve_end, ease=sleeve_ease, gather=gather)
+    tails = min(hem, side_hem) < bottom - 0.01
+    g.neckline(dip=dip, dip_width=dip_width, **(neck or {})).bottom(bottom if tails else max(hem, side_hem))
+    if sleeve_wide:
+        g.sleeves(end=sleeve_end, ease=sleeve_ease, gather=-sleeve_wide, gather_from=wide_from)
+    else:
+        g.sleeves(end=sleeve_end, ease=sleeve_ease, gather=gather)
     g.seams()
     g.fit(ease=ease)
-    g.tails(hem=hem, side_hem=side_hem, flare=flare, steps=steps, slits=[(84.0, 96.0, slit_top)], gap=tail_gap, z_full=z_full)
+    if tails:
+        g.tails(hem=hem, side_hem=side_hem, flare=flare, steps=steps,
+                slits=[(84.0, 96.0, slit_top)] if slits is None else slits, gap=tail_gap, z_full=z_full)
+    if over:
+        g.over(over, over_gap)
+    if front_slit:
+        from cloth2 import dress as DR
+        DR.front_slit(g, **front_slit)
     if collar:
         g.collar_zone(1, 0.035)
-    g.zone(1, limb=("arm_l", "arm_r"), t_above=band_t if sleeve_end > 0.9 else sleeve_end - 0.05)
+    if band_t is not None:
+        g.zone(1, limb=("arm_l", "arm_r"), t_above=band_t if sleeve_end > 0.9 else sleeve_end - 0.05)
     g.uv()
 
 
@@ -76,6 +101,10 @@ COAT = {
     "opening": [(0.40, 0.11), (0.52, 0.10), (0.62, 0.085), (0.75, 0.06), (0.86, 0.03), (0.93, 0.012), (1.0, 0.0),
                 (1.6, 0.0)],            # front opening half-width by height (m): buttoned to the waist, cut away below
     "overlap": None,                    # instead of an opening: {"x": -0.05, "split_below": 0.86, "h": 0.003}
+    "overlap_line": None,               # the robes' overlap (cloth2.dress.ROBE): {"line": [(z, theta deg)], "split_below",
+                                        # "w", "h", "outer", "split_weights"}: an edge running round the body
+    "slits": None,                      # side slits in the skirts [(from deg, to deg, up to z)] (both sides)
+    "over_relax": 0,                    # rounds of smoothing the skirts and fitting them over the layers again
     "vent": 0.80,                       # back vent up to (m), or None
     "cuffs": {"t0": 0.64, "h": 0.005, "flare": 0.007},  # round cuffs from arm parameter t0, flaring at the top
     "lapels": None,                     # {"z": (z0, z1), "w": (w0, w1), "h": 0.0022}: facing-coloured lapels
@@ -138,9 +167,16 @@ def coat(g, st=None):
     hung = min(front, side, back) < st["bottom"] - 0.01
     if hung:
         g.tails(hem=hem_by_angle(front, side, back), flare=st["flare"], folds=st["folds"], steps=st["steps"],
-                z_full=st["z_full"], pleats=st["pleats"], gap=st["skirt_gap"])
+                z_full=st["z_full"], pleats=st["pleats"], gap=st["skirt_gap"], slits=st.get("slits"))
     if st["over"]:
         g.over(st["over"], st["over_gap"])
+        if hung and st.get("over_relax"):
+            # (the robes' skirts over wide trousers: each push smoothed out over the hanging cloth, then fitted again)
+            zh = getattr(g, "_hung_z", st["bottom"])
+            for _ in range(int(st["over_relax"])):
+                arm = np.maximum(g.m.A["m_arm_l"], g.m.A["m_arm_r"])
+                g.m.smooth(4, 0.5, weights=smoothstep(zh + 0.01, zh - 0.08, g.P[:, 2]) * (1.0 - arm))
+                g.over(st["over"], st["over_gap"])
     if st.get("bust"):
         from cloth2 import bridge as BR
         BR.flat_front(g, **st["bust"])
@@ -159,6 +195,9 @@ def coat(g, st=None):
             BIG_FIELD * smoothstep(-0.04, 0.0, P[:, 1])
         g.m = g.m.clip(f, 0.0)
         split_sides(g.fits, g.m, (g.P[:, 1] < 0.0) & (g.P[:, 2] < z_hung) & (np.abs(g.P[:, 0] - x0) < 0.04), x0=x0)
+    if st.get("overlap_line") and hung:
+        from cloth2 import dress as DR
+        DR.overlap_cut(g, st["overlap_line"], z_hung)
     if st["vent"] and hung:
         g.vent(st["vent"])
     # the skirt lining: a copy of the plain skirts made now, joined at the end (raised flaps must not move it)
@@ -174,6 +213,9 @@ def coat(g, st=None):
         ov = st["overlap"]
         g.raised(lambda P: np.maximum(np.abs(P[:, 0] - (ov["x"] + 0.022)) - 0.022, P[:, 2] - 1.30) +
                  BIG_FIELD * smoothstep(-0.04, 0.0, P[:, 1]), ov["h"], None)
+    if st.get("overlap_line"):
+        from cloth2 import dress as DR
+        DR.overlap_raise(g, st["overlap_line"])
     if st["turnbacks"] and hung:
         _turnbacks(g, st, z_hung)
     if st["pockets"] and hung:
@@ -469,6 +511,9 @@ SOFT_CAP = {
               "tail": {"len": 0.25, "r0": 0.048, "r1": 0.018, "side": 1.0}, "caul": 0.0, "frill": None},
     "womens": {"edge": (68.0, 104.0, 134.0), "ease": 0.010, "band": {"width": 0.03, "h": 0.002, "front_deg": 105.0},
                "tail": None, "caul": 0.036, "frill": {"depth": 0.026, "front_deg": 78.0}},
+    # the plain skullcap of the peoples' dress (2026-10-03): a small close cap on the crown, no band (the core under
+    # the turbans, cloth2.dress.head_wrap; the Ottoman women's cap, the Chinese guapimao as styles)
+    "skullcap": {"edge": (60.0, 72.0, 80.0), "ease": 0.0068, "band": None, "tail": None, "caul": 0.0, "frill": None},
 }
 
 
@@ -610,7 +655,11 @@ def belt(g, st=None):
 
 
 def sash(g, st=None):
-    """A worsted sash: two turns round the waist (a band), knotted at the left hip, the ends hanging (fringed)."""
+    """A worsted sash: two turns round the waist (a band), knotted at the left hip, the ends hanging (fringed). With
+    "turns" (2026-10-03) the sash wound several times on a helix, the end tucked (cloth2.dress.wound_sash)."""
+    if (st or {}).get("turns"):
+        from cloth2 import dress as DR
+        return DR.wound_sash(g, st)
     st = style(SASH, **(st or {}))
     Z = st["zones"]
     g.m = None
@@ -678,3 +727,60 @@ def pouch_belt(g, st=None):
     g.hardware([p], HW.box(*st["pouch"]["size"]), Z["pouch"], lift=0.034, up=(0.0, 0.0, 1.0))
     g.uv(axis_top=1.4, axis_bottom=0.8, limbs=())
     return g
+
+
+# ======================================================================================================================
+# the peoples' dress types (cloth2.dress, 2026-10-03: docs/research/peoples_dress_1750s.md section 2)
+# ======================================================================================================================
+def robe(g, st=None):
+    """T2: a long robe or kaftan (dress.ROBE / OPEN_ROBE)."""
+    from cloth2 import dress as DR
+    return DR.robe(g, st)
+
+
+def tunic(g, st=None):
+    """T3: a long pull-over tunic with a closed skirt (dress.TUNIC)."""
+    from cloth2 import dress as DR
+    return DR.tunic(g, st)
+
+
+def trousers(g, st=None):
+    """T6: drawers, wide trousers, wide breeches (dress.TROUSERS / DRAWERS / WIDE_BREECHES)."""
+    from cloth2 import dress as DR
+    return DR.trousers(g, st)
+
+
+def wrap_skirt(g, st=None):
+    """T5: a wrapped or tube skirt (dress.WRAP_SKIRT)."""
+    from cloth2 import dress as DR
+    return DR.wrap_skirt(g, st)
+
+
+def drape(g, st=None):
+    """T8: a drape cut to an outline (dress.DRAPE, the belted plaid dress.BELTED)."""
+    from cloth2 import dress as DR
+    return DR.drape(g, st)
+
+
+def cloak(g, st=None):
+    """T9: a cloak from the neck (dress.CLOAK)."""
+    from cloth2 import dress as DR
+    return DR.cloak(g, st)
+
+
+def head_wrap(g, st=None):
+    """T10: cloth wound round the head (dress.HEAD_WRAP turban, HEAD_BAND)."""
+    from cloth2 import dress as DR
+    return DR.head_wrap(g, st)
+
+
+def lathe_hat(g, st):
+    """rigid_hat profiles of revolution (dress.DOME_FINIAL, CONE, UMBRELLA, TALL_CROWN)."""
+    from cloth2 import dress as DR
+    return DR.lathe_hat(g, st)
+
+
+def hose(g, st=None):
+    """Stockings with gartering: the cuff turned down, the garter's ends hanging (dress.HOSE)."""
+    from cloth2 import dress as DR
+    return DR.hose(g, st)

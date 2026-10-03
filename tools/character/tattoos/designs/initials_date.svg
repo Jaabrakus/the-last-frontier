@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<path d="M 84 92 L 116.6 242 L 152 137 L 187.4 242 L 220 92" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 54.1 92 L 113.9 92" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 190.1 92 L 249.9 92" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 256 152 L 268 166 L 256 180 L 244 166 Z" fill="#ffffff"/>
+<path d="M 307.8 92 L 307.8 242 M 402.2 92 L 402.2 242 M 307.8 167 L 402.2 167" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 281.8 92 L 333.8 92" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 281.8 242 L 333.8 242" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 376.2 92 L 428.2 92" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 376.2 242 L 428.2 242" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 80 280 L 222 280 M 290 280 L 432 280" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 256 262 L 276 280 L 256 298 L 236 280 Z" fill="#ffffff"/>
+<path d="M 117.6 342.8 L 135 322 L 135 426" fill="none" stroke="#ffffff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 118.6 426 L 151.4 426" fill="none" stroke="#ffffff" stroke-width="10.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 191.1 322 L 250 322 L 212.8 426" fill="none" stroke="#ffffff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 191.1 322 L 191.1 336.6" fill="none" stroke="#ffffff" stroke-width="10.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 330.9 322 L 281.3 322 L 278.2 368.8 C 296.8 357.4 337.1 365.7 334 394.8 C 330.9 431.2 284.4 431.2 272 413.5" fill="none" stroke="#ffffff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 359.1 322 L 418 322 L 380.8 426" fill="none" stroke="#ffffff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 359.1 322 L 359.1 336.6" fill="none" stroke="#ffffff" stroke-width="10.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

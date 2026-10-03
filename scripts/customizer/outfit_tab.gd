@@ -5,7 +5,9 @@ extends ScrollContainer
 ## for the body type and their colours (the costume bible's palette). A slot left on "Basic" wears the basic dress of
 ## the body type (a shirt and breeches, a shift and a petticoat); "None" takes it off. Items of evidence grade C say so
 ## ("Artistic licence") and name the documented forms. A slot's garments are listed set by set under the catalog's set
-## names (Colonial, Drift sky crews).
+## names (Colonial, Drift sky crews). A garment's cloth can take a pattern (2026-10-03: "add patterns"): a check, stripes,
+## a plaid of a sett, ticking, a calico print or a herringbone, on any garment (its catalog's documented ones say so), in
+## the colours picked under it (the zone's own colour is the pattern's first; ClothMaterials.pattern_spec).
 ##
 ##   tabs.add_child(OutfitTab.create(look_getter, changed_callback))
 
@@ -57,6 +59,10 @@ const FACTION_PRESETS := [
 	["Valley militiaman", "militia"], ["Watchman", "city_guard"], ["French marine, campaign", "french_marine"],
 	["Canadian militiaman", "canadian_militia"], ["Sky crew deckhand", "sky_crew"],
 ]
+
+## Colours a pattern's other colours may take beside the zone's own palette: the common dyes and linens of the time.
+const DYES := ["linen_white", "linen_unbleached", "tow", "check_blue", "indigo_mid", "stroud_blue", "madder_red",
+		"stroud_red", "deep_green", "full_green", "yellow", "butternut", "walnut_brown", "drab", "slate_grey", "logwood_black"]
 
 var _get_look: Callable
 var _changed: Callable
@@ -245,6 +251,7 @@ func _refresh_colors(slot: String) -> void:
 			b.add_theme_stylebox_override("normal", sb)
 			var t := String(tok)
 			b.pressed.connect(func() -> void:
+				var before := _pattern_state(slot)
 				var o := _outfit()
 				if not o.get(slot) is Dictionary:
 					o[slot] = {"id": "", "colors": {}}
@@ -254,5 +261,131 @@ func _refresh_colors(slot: String) -> void:
 				d.colors[key] = t
 				if key == "bands" and not d.colors.has("bands_rows"):
 					d.colors["bands_rows"] = 2
+				_keep_pattern(before, d.colors, key, t)
+				_changed.call())
+			box.add_child(b)
+	_add_pattern_rows(slot, box)
+
+
+## The pattern zone of the garment shown in `slot` and what it shows: {id, pz, zd, tok, colors (resolved), spec} ({} when
+## nothing is worn there).
+func _pattern_state(slot: String) -> Dictionary:
+	var id := _shown_id(slot)
+	var e := PlayerOutfit.entry(id) if id != "" and id != "-" else {}
+	if e.is_empty():
+		return {}
+	var v: Variant = _outfit().get(slot, {})
+	var raw: Dictionary = (v as Dictionary).colors if v is Dictionary and (v as Dictionary).get("colors") is Dictionary else {}
+	var cols := PlayerOutfit.resolve_colors(id, raw)
+	var pz := ClothMaterials.pattern_zone(e, cols)
+	var zd := {}
+	for z: Dictionary in e.get("zones", []):
+		if int(z.get("zone", -1)) == pz:
+			zd = z
+	if zd.is_empty():
+		return {}
+	var tok := str(cols.get(str(pz), zd.get("default", "")))
+	return {"id": id, "pz": pz, "zd": zd, "tok": tok, "colors": cols,
+			"spec": ClothMaterials.pattern_spec(zd, tok, cols, pz, pz)}
+
+
+## The look's colours of `slot` (made when it has none).
+func _slot_colors(slot: String) -> Dictionary:
+	var o := _outfit()
+	if not o.get(slot) is Dictionary:
+		o[slot] = {"id": "", "colors": {}}
+	var d: Dictionary = o[slot]
+	if not d.get("colors") is Dictionary:
+		d["colors"] = {}
+	return d.colors
+
+
+## A colour picked for the pattern zone while it showed a pattern (`before`): the pattern stays, in the new colour (the
+## look now chooses it: a check shirt picked red is a red check, not a plain red shirt).
+func _keep_pattern(before: Dictionary, colors: Dictionary, key: String, tok: String) -> void:
+	if before.is_empty() or (before.spec as Dictionary).is_empty() or key != str(int(before.pz)):
+		return
+	var name := str(before.spec.name)
+	if not colors.has("pattern"):
+		colors["pattern"] = name
+	if colors.get(name) is Array and not (colors[name] as Array).is_empty():
+		colors[name][0] = tok
+
+
+## The pattern row under a garment's colours: its patterns (any of ClothMaterials.PATTERNS; the catalog's documented
+## ones say so), a plaid's setts, and the pattern's other colours.
+func _add_pattern_rows(slot: String, box: HFlowContainer) -> void:
+	var st := _pattern_state(slot)
+	if st.is_empty() or not ClothMaterials.patternable(st.zd):
+		return
+	var spec: Dictionary = st.spec
+	var cur := str(spec.get("name", "none"))
+	var documented := ClothMaterials.zone_patterns(st.zd)
+	var lab := Label.new()
+	lab.text = "Pattern:"
+	box.add_child(lab)
+	for pn: String in ClothMaterials.PATTERNS:
+		var b := Button.new()
+		b.text = String(ClothMaterials.PATTERN_LABELS.get(pn, pn))
+		b.toggle_mode = true
+		b.button_pressed = pn == cur
+		b.tooltip_text = "Documented for this garment" if pn in documented and pn != "none" else ""
+		b.pressed.connect(func() -> void:
+			_slot_colors(slot)["pattern"] = pn
+			_refresh_colors(slot)
+			_changed.call())
+		box.add_child(b)
+	if spec.is_empty():
+		return
+	if cur == "plaid":
+		var sl := Label.new()
+		sl.text = "Sett:"
+		box.add_child(sl)
+		var setts := ClothMaterials.setts()
+		for sn: String in setts:
+			if not setts[sn] is Dictionary or not (setts[sn] as Dictionary).has("sett"):
+				continue
+			var b := Button.new()
+			b.text = String(setts[sn].get("label", sn))
+			b.tooltip_text = String(setts[sn].get("note", ""))
+			b.toggle_mode = true
+			b.button_pressed = str(st.colors.get("sett", "")) == sn
+			b.pressed.connect(func() -> void:
+				var c := _slot_colors(slot)
+				c["pattern"] = "plaid"
+				c["sett"] = sn
+				c.erase("plaid")
+				_refresh_colors(slot)
+				_changed.call())
+			box.add_child(b)
+	var cols: Array = spec.colors
+	var pal: Array = []
+	for t: Variant in (st.zd.get("palette", []) as Array) + cols + DYES:
+		if not str(t) in pal:
+			pal.append(str(t))
+	for i in range(0 if cur == "plaid" else 1, mini(cols.size(), 4)):
+		var cl := Label.new()
+		cl.text = "%s %d:" % [String(ClothMaterials.PATTERN_LABELS.get(cur, cur)), i + 1]
+		box.add_child(cl)
+		for tok: String in pal:
+			var b := Button.new()
+			b.custom_minimum_size = Vector2(26, 22)
+			b.tooltip_text = tok.replace("_", " ")
+			var sb := StyleBoxFlat.new()
+			sb.bg_color = ClothMaterials.token_color(st.zd, tok)
+			if tok == str(cols[i]):
+				sb.set_border_width_all(2)
+				sb.border_color = Color(0.95, 0.8, 0.5)
+			b.add_theme_stylebox_override("normal", sb)
+			var at := i
+			b.pressed.connect(func() -> void:
+				var c := _slot_colors(slot)
+				var now: Dictionary = _pattern_state(slot).get("spec", {})
+				var list: Array = (now.get("colors", cols) as Array).duplicate()
+				if at < list.size():
+					list[at] = tok
+				c["pattern"] = cur
+				c[cur] = list
+				_refresh_colors(slot)
 				_changed.call())
 			box.add_child(b)

@@ -12,7 +12,12 @@
   "common": "Common",
   "hair": "Hair",
   "colonial": "Colonial",
-  "drift": "Drift sky crews"
+  "drift": "Drift sky crews",
+  "africa": "Africa",
+  "highland": "Highland",
+  "middle_east": "Middle East",
+  "southeast_asia": "Southeast Asia",
+  "spanish": "Spanish"
  },
  "set_tooltips": {
   "woodlands": "Clothing of the Native nations of the Northeast, such as the Haudenosaunee, Lenape, Shawnee and Wabanaki, in the mid-1700s: wool and linen trade cloth, quillwork and silverwork.",
@@ -38409,6 +38414,5217 @@
     "period_note": "After summer 1758 (the cut-down dress); 1770s-80s civilian fashion.",
     "references": [
      "https://www.fortticonderoga.org/wp-content/uploads/2023/11/1759-Siege-of-Carillon-British-Regulars-Guidelines.pdf"
+    ]
+   }
+  },
+  "mantle_one_shoulder": {
+   "id": "mantle_one_shoulder",
+   "name": "Mantle (over one shoulder)",
+   "description": "A large cotton cloth across the back and over the right shoulder, passing under the left arm and across the breast, the left arm bare, hanging to above the knee.",
+   "kind": "garment",
+   "set": "africa",
+   "slot": "accessories.wrap",
+   "alt_slots": [],
+   "layer": {
+    "default": 50
+   },
+   "glb": "res://assets/character/garments/africa/mantle_one_shoulder.glb",
+   "mesh": "mantle_one_shoulder",
+   "surfaces": [
+    {
+     "surface": "main",
+     "name": "mantle_one_shoulder"
+    }
+   ],
+   "occupies_regions": [
+    "abdomen_back",
+    "abdomen_front",
+    "abdomen_side",
+    "chest_back",
+    "chest_front",
+    "chest_side",
+    "chest_upper_back",
+    "chest_upper_front",
+    "chest_upper_side",
+    "neck_lower",
+    "pelvis_center",
+    "pelvis_side",
+    "thigh_lower_l",
+    "thigh_lower_r",
+    "thigh_upper_l",
+    "thigh_upper_r",
+    "upper_arm_r"
+   ],
+   "hides_regions": [
+    "abdomen_front",
+    "pelvis_side"
+   ],
+   "hides_hair_zones": [],
+   "hair_zones": [],
+   "excludes": [],
+   "requires": [],
+   "variants": {},
+   "skirt": null,
+   "helpers": [],
+   "body_fit": {
+    "shapes": [
+     "sex",
+     "breast_large",
+     "breast_small"
+    ],
+    "female": true,
+    "male": true
+   },
+   "zones": [
+    {
+     "zone": 0,
+     "name": "strip cotton",
+     "role": "cloth",
+     "fabric": "LIN",
+     "palette": [
+      "indigo_mid",
+      "cotton_white",
+      "indigo_pale",
+      "stroud_blue",
+      "straw",
+      "madder_red",
+      "yellow",
+      "logwood_black"
+     ],
+     "default": "indigo_mid",
+     "pattern": {
+      "options": [
+       "none",
+       "stripe",
+       "check"
+      ],
+      "default": "stripe",
+      "stripe": {
+       "colors": [
+        "indigo_mid",
+        "cotton_white",
+        "indigo_pale"
+       ],
+       "scale_m": 0.16
+      },
+      "check": {
+       "colors": [
+        "indigo_mid",
+        "cotton_white",
+        "yellow"
+       ],
+       "scale_m": 0.08
+      },
+      "note": "strip cotton, or silk-and-cotton strip cloth for the better-off (no named Akan kente or adinkra designs: plain strips and checks only)"
+     },
+     "bands": null,
+     "palette_hex": {
+      "indigo_mid": "#34507A",
+      "cotton_white": "#EEEBE1",
+      "indigo_pale": "#6E8BB1",
+      "stroud_blue": "#1E2B4A",
+      "straw": "#C6AC6E",
+      "madder_red": "#8E2B21",
+      "yellow": "#D0A93A",
+      "logwood_black": "#1C1B20"
+     },
+     "fabrics": [
+      "LIN"
+     ],
+     "metal": false
+    }
+   ],
+   "stats": {
+    "surfaces": {
+     "main": {
+      "tris": 2675,
+      "verts": 1825,
+      "zones": [
+       0
+      ],
+      "regions": [
+       "abdomen_back",
+       "abdomen_front",
+       "abdomen_side",
+       "chest_back",
+       "chest_front",
+       "chest_side",
+       "chest_upper_back",
+       "chest_upper_front",
+       "chest_upper_side",
+       "neck_lower",
+       "pelvis_center",
+       "pelvis_side",
+       "thigh_lower_l",
+       "thigh_lower_r",
+       "thigh_upper_l",
+       "thigh_upper_r",
+       "upper_arm_r"
+      ],
+      "max_influences": 4,
+      "bones": [
+       "pelvis",
+       "spinea",
+       "spineb",
+       "spinec",
+       "spined",
+       "l_clavicle",
+       "r_clavicle",
+       "neck",
+       "l_breast",
+       "r_breast",
+       "l_upper_leg_thigh_helper",
+       "r_upper_leg_thigh_helper",
+       "l_shoulder_twist_a",
+       "r_shoulder_twist_a",
+       "r_shoulder_twist_c",
+       "r_shoulder_twist_b",
+       "r_shoulder_twist_d",
+       "l_upper_leg_front_helper",
+       "l_upper_leg_rear_helper",
+       "r_upper_leg_front_helper",
+       "r_upper_leg_rear_helper"
+      ]
+     }
+    },
+    "tris": 2675,
+    "verts": 1825,
+    "surface_count": 1,
+    "shapes": {
+     "sex": 0.1311,
+     "breast_large": 0.1084,
+     "breast_small": 0.1067
+    },
+    "coverage": {
+     "neck_upper": {
+      "normal": 0.062,
+      "cone": 0.01
+     },
+     "neck_lower": {
+      "normal": 0.406,
+      "cone": 0.354
+     },
+     "chest_upper_front": {
+      "normal": 0.688,
+      "cone": 0.604
+     },
+     "chest_upper_side": {
+      "normal": 0.448,
+      "cone": 0.448
+     },
+     "chest_upper_back": {
+      "normal": 0.635,
+      "cone": 0.604
+     },
+     "chest_front": {
+      "normal": 0.917,
+      "cone": 0.885
+     },
+     "chest_side": {
+      "normal": 0.479,
+      "cone": 0.458
+     },
+     "chest_back": {
+      "normal": 0.844,
+      "cone": 0.802
+     },
+     "abdomen_front": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "abdomen_side": {
+      "normal": 0.792,
+      "cone": 0.74
+     },
+     "abdomen_back": {
+      "normal": 0.99,
+      "cone": 0.948
+     },
+     "pelvis_center": {
+      "normal": 0.552,
+      "cone": 0.292
+     },
+     "pelvis_side": {
+      "normal": 0.99,
+      "cone": 0.99
+     },
+     "upper_arm_l": {
+      "normal": 0.031,
+      "cone": 0.0
+     },
+     "forearm_a_l": {
+      "normal": 0.073,
+      "cone": 0.0
+     },
+     "forearm_b_l": {
+      "normal": 0.177,
+      "cone": 0.01
+     },
+     "forearm_c_l": {
+      "normal": 0.198,
+      "cone": 0.0
+     },
+     "wrist_l": {
+      "normal": 0.208,
+      "cone": 0.0
+     },
+     "hand_l": {
+      "normal": 0.042,
+      "cone": 0.0
+     },
+     "upper_arm_r": {
+      "normal": 0.625,
+      "cone": 0.562
+     },
+     "forearm_a_r": {
+      "normal": 0.135,
+      "cone": 0.021
+     },
+     "forearm_b_r": {
+      "normal": 0.156,
+      "cone": 0.01
+     },
+     "forearm_c_r": {
+      "normal": 0.167,
+      "cone": 0.0
+     },
+     "wrist_r": {
+      "normal": 0.229,
+      "cone": 0.0
+     },
+     "hand_r": {
+      "normal": 0.042,
+      "cone": 0.0
+     },
+     "thigh_upper_l": {
+      "normal": 0.958,
+      "cone": 0.677
+     },
+     "thigh_lower_l": {
+      "normal": 0.281,
+      "cone": 0.156
+     },
+     "thigh_upper_r": {
+      "normal": 0.948,
+      "cone": 0.698
+     },
+     "thigh_lower_r": {
+      "normal": 0.333,
+      "cone": 0.177
+     }
+    },
+    "glb_kb": 443.3
+   },
+   "budget": {
+    "tris_max": 5000
+   },
+   "evidence": "A",
+   "licence_note": null,
+   "history": "Over the wrapper Gold Coast and Gambian men threw a large cloth across the back and over one shoulder, the other arm left free; the better-off wore a larger one of silk-and-cotton strips. Equiano remembered it 'somewhat in the form of a highland plaid ... usually dyed blue' [AF-A2][AF-A4][AF-C1].",
+   "sources": [
+    "AF-A2",
+    "AF-A4",
+    "AF-C1"
+   ],
+   "aliases": [],
+   "tags": [
+    "men",
+    "women",
+    "africa",
+    "west_african",
+    "central_african"
+   ],
+   "checks": {
+    "clearance": {
+     "f": {
+      "min_mm": 1.73,
+      "p05_mm": 12.75,
+      "inside_skin": 0
+     },
+     "m": {
+      "min_mm": 2.03,
+      "p05_mm": 12.19,
+      "inside_skin": 0
+     },
+     "bl": {
+      "min_mm": 3.21,
+      "p05_mm": 12.7,
+      "inside_skin": 0
+     },
+     "bs": {
+      "min_mm": 3.03,
+      "p05_mm": 12.83,
+      "inside_skin": 0
+     }
+    },
+    "envelope": {
+     "ok": true,
+     "layer": "cloth2",
+     "groups": {}
+    }
+   },
+   "generator": "tools/character/cloth2/garments/mantle_one_shoulder.py",
+   "lib_version": 2,
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/mantle_one_shoulder.py (cloth2: grown from the MakeHuman body's surface).",
+   "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+   "review": null,
+   "fit_over": [
+    "shift_linen",
+    "wrapper_knee"
+   ],
+   "extra": {
+    "presets": {
+     "strip_indigo": {
+      "0": "indigo_mid"
+     },
+     "white": {
+      "0": "cotton_white",
+      "pattern": "none"
+     },
+     "blue": {
+      "0": "stroud_blue",
+      "pattern": "none"
+     }
+    },
+    "styles_note": "Styles from the same recipe: large (about 2.6 x 1.6 m, lower), plaid (wound round the body). M-L for Kongo commoners.",
+    "recipe_note": "cloth2.dress.drape anchor one_shoulder: the envelope over the shoulders (the right shoulder's cap in it above 1.17, no arms below), cut to its outline; the rolled top edge raised 2.8 mm; below 0.95 it swings with the skirt panels.",
+    "animation_note": "The left arm is bare and free; the cloth over the right shoulder follows the right shoulder and upper arm.",
+    "references": [
+     "[AF-A2] Moore: https://archive.org/details/travelsintoinlan00moor",
+     "[AF-A4] Equiano, Interesting Narrative: https://www.gutenberg.org/ebooks/15399",
+     "[AF-C1] Fromont 2017: https://revistas.usp.br/anaismp/article/view/139689"
+    ]
+   }
+  },
+  "skullcap": {
+   "id": "skullcap",
+   "name": "Skullcap",
+   "description": "A small close cap on the crown of the head, of white cotton, felt or red cloth.",
+   "kind": "garment",
+   "set": "africa",
+   "slot": "head",
+   "alt_slots": [],
+   "layer": {
+    "default": 80
+   },
+   "glb": "res://assets/character/garments/africa/skullcap.glb",
+   "mesh": "skullcap",
+   "surfaces": [
+    {
+     "surface": "main",
+     "name": "skullcap"
+    }
+   ],
+   "occupies_regions": [],
+   "hides_regions": [],
+   "hides_hair_zones": [
+    "crown"
+   ],
+   "hair_zones": [],
+   "excludes": [],
+   "requires": [],
+   "variants": {},
+   "skirt": null,
+   "helpers": [],
+   "body_fit": {
+    "shapes": [
+     "sex",
+     "breast_large",
+     "breast_small"
+    ],
+    "female": true,
+    "male": true
+   },
+   "zones": [
+    {
+     "zone": 0,
+     "name": "cap",
+     "role": "cloth",
+     "fabric": "LIN",
+     "palette": [
+      "cotton_white",
+      "undyed_white_wool",
+      "undyed_brown",
+      "scarlet",
+      "indigo_mid",
+      "madder_red",
+      "logwood_black"
+     ],
+     "default": "cotton_white",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "cotton_white": "#EEEBE1",
+      "undyed_white_wool": "#E0D8C5",
+      "undyed_brown": "#6C523E",
+      "scarlet": "#A8161E",
+      "indigo_mid": "#34507A",
+      "madder_red": "#8E2B21",
+      "logwood_black": "#1C1B20"
+     },
+     "fabrics": [
+      "LIN"
+     ],
+     "metal": false
+    }
+   ],
+   "stats": {
+    "surfaces": {
+     "main": {
+      "tris": 608,
+      "verts": 321,
+      "zones": [
+       0
+      ],
+      "regions": [
+       "head"
+      ],
+      "max_influences": 1,
+      "bones": [
+       "headb"
+      ]
+     }
+    },
+    "tris": 608,
+    "verts": 321,
+    "surface_count": 1,
+    "shapes": {
+     "sex": 0.0057,
+     "breast_large": 0.0,
+     "breast_small": 0.0,
+     "sex_head": 0.0057
+    },
+    "coverage": {
+     "head": {
+      "normal": 0.042,
+      "cone": 0.01
+     }
+    },
+    "glb_kb": 131.8
+   },
+   "budget": {
+    "tris_max": 1200
+   },
+   "evidence": "A",
+   "licence_note": null,
+   "history": "A close cap was worn across West Africa (Moore's white cotton caps on the Gambia), in every Middle Eastern people (white or brown felt, the red cap of North Africa) and by Muslim Ethiopians, alone or under the turban [AF-A2][LAN][SHA].",
+   "sources": [
+    "AF-A2",
+    "LAN",
+    "SHA"
+   ],
+   "aliases": [],
+   "tags": [
+    "men",
+    "women",
+    "africa",
+    "middle_east",
+    "west_african",
+    "ethiopian",
+    "north_african",
+    "kurdish",
+    "arab",
+    "egyptian",
+    "levantine",
+    "ottoman_turkish"
+   ],
+   "checks": {
+    "clearance": {
+     "f": {
+      "min_mm": 3.38,
+      "p05_mm": 5.03,
+      "inside_skin": 0
+     },
+     "m": {
+      "min_mm": 3.53,
+      "p05_mm": 4.83,
+      "inside_skin": 0
+     },
+     "bl": {
+      "min_mm": 3.38,
+      "p05_mm": 5.03,
+      "inside_skin": 0
+     },
+     "bs": {
+      "min_mm": 3.38,
+      "p05_mm": 5.03,
+      "inside_skin": 0
+     }
+    },
+    "envelope": {
+     "ok": true,
+     "layer": "cloth2",
+     "groups": {}
+    },
+    "scalp_clearance_mm": {
+     "f": [
+      4.4,
+      5.4
+     ],
+     "m": [
+      4.2,
+      5.0
+     ],
+     "bl": [
+      4.4,
+      5.4
+     ],
+     "bs": [
+      4.4,
+      5.4
+     ]
+    }
+   },
+   "generator": "tools/character/cloth2/garments/skullcap.py",
+   "lib_version": 2,
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/skullcap.py (cloth2: grown from the MakeHuman body's surface).",
+   "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+   "review": null,
+   "extra": {
+    "presets": {
+     "white_cotton": {
+      "0": "cotton_white"
+     },
+     "felt": {
+      "0": "undyed_white_wool"
+     },
+     "red": {
+      "0": "scarlet"
+     },
+     "indigo": {
+      "0": "indigo_mid"
+     }
+    },
+    "status_note": "Feathers and goat-tail tufts on West African caps marked status: not offered as free picks.",
+    "fabric_note": "LIN for cotton (COT kit later); a felt preset reads with the WOOL kit's nap via the id only for hats: the zone fabric stays LIN.",
+    "references": [
+     "[AF-A2] Moore: https://archive.org/details/travelsintoinlan00moor"
+    ]
+   }
+  },
+  "wrapper_knee": {
+   "id": "wrapper_knee",
+   "name": "Wrapper (knee length)",
+   "description": "A cotton cloth wound one and a half times round the waist, its top rolled into a band, hanging to the knee, the overlap open at the front.",
+   "kind": "garment",
+   "set": "africa",
+   "slot": "legs.lower",
+   "alt_slots": [
+    "accessories.waist"
+   ],
+   "layer": {
+    "default": 30,
+    "hips": 35
+   },
+   "glb": "res://assets/character/garments/africa/wrapper_knee.glb",
+   "mesh": "wrapper_knee",
+   "surfaces": [
+    {
+     "surface": "main",
+     "name": "wrapper_knee"
+    }
+   ],
+   "occupies_regions": [
+    "abdomen_back",
+    "abdomen_front",
+    "abdomen_side",
+    "pelvis_center",
+    "pelvis_side",
+    "thigh_lower_l",
+    "thigh_lower_r",
+    "thigh_upper_l",
+    "thigh_upper_r"
+   ],
+   "hides_regions": [
+    "pelvis_side"
+   ],
+   "hides_hair_zones": [],
+   "hair_zones": [],
+   "excludes": [],
+   "requires": [],
+   "variants": {},
+   "skirt": {
+    "closed": true,
+    "hems_godot": [
+     [
+      0.105,
+      0.44,
+      0.157
+     ],
+     [
+      0.168,
+      0.44,
+      0.022
+     ],
+     [
+      0.105,
+      0.44,
+      -0.112
+     ]
+    ]
+   },
+   "helpers": [],
+   "body_fit": {
+    "shapes": [
+     "sex",
+     "breast_large",
+     "breast_small"
+    ],
+    "female": true,
+    "male": true
+   },
+   "zones": [
+    {
+     "zone": 0,
+     "name": "cotton",
+     "role": "cloth",
+     "fabric": "LIN",
+     "palette": [
+      "indigo_mid",
+      "cotton_white",
+      "stroud_blue",
+      "indigo_pale",
+      "straw",
+      "tukula_red",
+      "madder_red",
+      "check_blue"
+     ],
+     "default": "indigo_mid",
+     "pattern": {
+      "options": [
+       "none",
+       "stripe",
+       "check"
+      ],
+      "default": "stripe",
+      "stripe": {
+       "colors": [
+        "indigo_mid",
+        "cotton_white",
+        "indigo_pale"
+       ],
+       "scale_m": 0.16
+      },
+      "check": {
+       "colors": [
+        "madder_red",
+        "indigo_mid",
+        "cotton_white"
+       ],
+       "scale_m": 0.05
+      },
+      "note": "hand-spun narrow-strip cotton: strips about 0.16 m wide sewn edge to edge, indigo and white (strip_seams once the shader draws them); check and stripes; raffia panels for Kongo"
+     },
+     "bands": null,
+     "palette_hex": {
+      "indigo_mid": "#34507A",
+      "cotton_white": "#EEEBE1",
+      "stroud_blue": "#1E2B4A",
+      "indigo_pale": "#6E8BB1",
+      "straw": "#C6AC6E",
+      "tukula_red": "#8E3B24",
+      "madder_red": "#8E2B21",
+      "check_blue": "#2F4166"
+     },
+     "fabrics": [
+      "LIN"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 1,
+     "name": "rolled band",
+     "role": "trim",
+     "fabric": "LIN",
+     "palette": [
+      "indigo_mid",
+      "cotton_white",
+      "stroud_blue",
+      "indigo_pale",
+      "straw",
+      "tukula_red",
+      "madder_red",
+      "check_blue"
+     ],
+     "default": "indigo_mid",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "indigo_mid": "#34507A",
+      "cotton_white": "#EEEBE1",
+      "stroud_blue": "#1E2B4A",
+      "indigo_pale": "#6E8BB1",
+      "straw": "#C6AC6E",
+      "tukula_red": "#8E3B24",
+      "madder_red": "#8E2B21",
+      "check_blue": "#2F4166"
+     },
+     "fabrics": [
+      "LIN"
+     ],
+     "metal": false
+    }
+   ],
+   "stats": {
+    "surfaces": {
+     "main": {
+      "tris": 2259,
+      "verts": 1529,
+      "zones": [
+       0,
+       1
+      ],
+      "regions": [
+       "abdomen_back",
+       "abdomen_front",
+       "abdomen_side",
+       "chest_back",
+       "chest_front",
+       "chest_side",
+       "pelvis_center",
+       "pelvis_side",
+       "thigh_lower_l",
+       "thigh_lower_r",
+       "thigh_upper_l",
+       "thigh_upper_r"
+      ],
+      "max_influences": 4,
+      "bones": [
+       "pelvis",
+       "spinea",
+       "spineb",
+       "spinec",
+       "spined",
+       "l_upper_leg_thigh_helper",
+       "r_upper_leg_thigh_helper",
+       "l_upper_leg_front_helper",
+       "l_upper_leg_rear_helper",
+       "r_upper_leg_front_helper",
+       "r_upper_leg_rear_helper"
+      ]
+     }
+    },
+    "tris": 2259,
+    "verts": 1529,
+    "surface_count": 1,
+    "shapes": {
+     "sex": 0.0641,
+     "breast_large": 0.0491,
+     "breast_small": 0.0488
+    },
+    "coverage": {
+     "chest_front": {
+      "normal": 0.052,
+      "cone": 0.0
+     },
+     "chest_side": {
+      "normal": 0.052,
+      "cone": 0.0
+     },
+     "chest_back": {
+      "normal": 0.083,
+      "cone": 0.0
+     },
+     "abdomen_front": {
+      "normal": 1.0,
+      "cone": 0.917
+     },
+     "abdomen_side": {
+      "normal": 1.0,
+      "cone": 0.823
+     },
+     "abdomen_back": {
+      "normal": 0.969,
+      "cone": 0.75
+     },
+     "pelvis_center": {
+      "normal": 0.646,
+      "cone": 0.458
+     },
+     "pelvis_side": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "upper_arm_l": {
+      "normal": 0.021,
+      "cone": 0.0
+     },
+     "forearm_a_l": {
+      "normal": 0.146,
+      "cone": 0.01
+     },
+     "forearm_b_l": {
+      "normal": 0.135,
+      "cone": 0.0
+     },
+     "forearm_c_l": {
+      "normal": 0.135,
+      "cone": 0.0
+     },
+     "wrist_l": {
+      "normal": 0.167,
+      "cone": 0.0
+     },
+     "hand_l": {
+      "normal": 0.031,
+      "cone": 0.0
+     },
+     "upper_arm_r": {
+      "normal": 0.031,
+      "cone": 0.0
+     },
+     "forearm_a_r": {
+      "normal": 0.104,
+      "cone": 0.0
+     },
+     "forearm_b_r": {
+      "normal": 0.115,
+      "cone": 0.0
+     },
+     "forearm_c_r": {
+      "normal": 0.094,
+      "cone": 0.0
+     },
+     "wrist_r": {
+      "normal": 0.198,
+      "cone": 0.0
+     },
+     "hand_r": {
+      "normal": 0.021,
+      "cone": 0.0
+     },
+     "thigh_upper_l": {
+      "normal": 1.0,
+      "cone": 0.948
+     },
+     "thigh_lower_l": {
+      "normal": 0.833,
+      "cone": 0.604
+     },
+     "thigh_upper_r": {
+      "normal": 1.0,
+      "cone": 0.969
+     },
+     "thigh_lower_r": {
+      "normal": 0.812,
+      "cone": 0.656
+     }
+    },
+    "glb_kb": 385.5
+   },
+   "budget": {
+    "tris_max": 5000
+   },
+   "evidence": "A",
+   "licence_note": null,
+   "history": "On the Gambia and the Gold Coast men wore a cloth of narrow-strip cotton wrapped round the waist to the knee, often indigo and white, the better-off a longer and finer one; in Kongo raffia panels sewn side by side. The same plain rectangle, told apart by its cloth, was the Yemeni futa, the South Indian lungi and the Malay sarong worn over drawers [AF-A2][AF-C3][NIE][SA7][ML1].",
+   "sources": [
+    "AF-A2",
+    "AF-C3",
+    "NIE",
+    "SA7",
+    "ML1"
+   ],
+   "aliases": [],
+   "tags": [
+    "men",
+    "women",
+    "africa",
+    "west_african",
+    "central_african",
+    "arab",
+    "south_asian",
+    "malay"
+   ],
+   "checks": {
+    "clearance": {
+     "f": {
+      "min_mm": 21.87,
+      "p05_mm": 25.58,
+      "inside_skin": 0
+     },
+     "m": {
+      "min_mm": 22.64,
+      "p05_mm": 25.16,
+      "inside_skin": 0
+     },
+     "bl": {
+      "min_mm": 18.79,
+      "p05_mm": 25.42,
+      "inside_skin": 0
+     },
+     "bs": {
+      "min_mm": 21.85,
+      "p05_mm": 25.54,
+      "inside_skin": 0
+     }
+    },
+    "envelope": {
+     "ok": true,
+     "layer": "cloth2",
+     "groups": {}
+    }
+   },
+   "generator": "tools/character/cloth2/garments/wrapper_knee.py",
+   "lib_version": 2,
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/wrapper_knee.py (cloth2: grown from the MakeHuman body's surface).",
+   "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+   "review": null,
+   "fit_over": [
+    "shift_linen",
+    "shirt_linen"
+   ],
+   "extra": {
+    "presets": {
+     "strip_indigo": {
+      "0": "indigo_mid",
+      "1": "indigo_mid"
+     },
+     "white": {
+      "0": "cotton_white",
+      "1": "cotton_white",
+      "pattern": "none"
+     },
+     "raffia": {
+      "0": "straw",
+      "1": "straw",
+      "pattern": "none"
+     },
+     "futa_check": {
+      "0": "madder_red",
+      "1": "madder_red",
+      "pattern": "check"
+     }
+    },
+    "recipe_note": "cloth2.dress.wrap_skirt: the petticoat's shell from 1.035 (a 3.2 cm band rolled 6 mm proud), hem 0.44, flare 0.05; the overlap's edge at -30 deg (the wearer's right front) split from the hem to the band with a 4.5 cm fold raised on its outer side; the closed-skirt weights, each side of the edge on its own leg's front panel (dress.slit_weights).",
+    "references": [
+     "[AF-A2] Moore, Travels into the Inland Parts of Africa: https://archive.org/details/travelsintoinlan00moor",
+     "[NIE] Niebuhr: https://archive.org/details/b28773263_0001"
+    ]
+   }
+  },
+  "scots_hose_cut": {
+   "id": "scots_hose_cut",
+   "name": "Cut hose (Highland)",
+   "description": "Hose of woollen cloth cut on the bias in a red-and-white dicing, from the toes to below the knee, the top turned down into a cuff and a garter tied under it, its ends hanging at the outer side.",
+   "kind": "garment",
+   "set": "highland",
+   "slot": "legs.over",
+   "alt_slots": [],
+   "layer": {
+    "default": 10
+   },
+   "glb": "res://assets/character/garments/highland/scots_hose_cut.glb",
+   "mesh": "scots_hose_cut",
+   "surfaces": [
+    {
+     "surface": "main",
+     "name": "scots_hose_cut"
+    }
+   ],
+   "occupies_regions": [
+    "ankle_l",
+    "ankle_r",
+    "foot_l",
+    "foot_r",
+    "shin_lower_l",
+    "shin_lower_r",
+    "shin_upper_l",
+    "shin_upper_r"
+   ],
+   "hides_regions": [
+    "ankle_l",
+    "ankle_r",
+    "foot_l",
+    "foot_r",
+    "shin_lower_l",
+    "shin_lower_r",
+    "shin_upper_r"
+   ],
+   "hides_hair_zones": [],
+   "hair_zones": [],
+   "excludes": [],
+   "requires": [],
+   "variants": {},
+   "skirt": null,
+   "helpers": [],
+   "body_fit": {
+    "shapes": [
+     "sex",
+     "breast_large",
+     "breast_small"
+    ],
+    "female": true,
+    "male": true
+   },
+   "zones": [
+    {
+     "zone": 0,
+     "name": "cloth",
+     "role": "cloth",
+     "fabric": "WOOL",
+     "palette": [
+      "madder_red",
+      "linen_white",
+      "stroud_blue",
+      "full_green",
+      "logwood_black",
+      "slate_grey",
+      "deep_green"
+     ],
+     "default": "madder_red",
+     "pattern": {
+      "options": [
+       "none",
+       "check",
+       "plaid"
+      ],
+      "default": "check",
+      "check": {
+       "colors": [
+        "madder_red",
+        "linen_white"
+       ],
+       "scale_m": 0.036,
+       "angle": 45.0
+      },
+      "plaid": {
+       "sett": "madder_red",
+       "scale_m": 0.12,
+       "angle": 45.0
+      },
+      "note": "dicing: a check cut on the bias (45 deg); or the plaid's own sett"
+     },
+     "bands": null,
+     "palette_hex": {
+      "madder_red": "#8E2B21",
+      "linen_white": "#E8E3D3",
+      "stroud_blue": "#1E2B4A",
+      "full_green": "#2E5134",
+      "logwood_black": "#1C1B20",
+      "slate_grey": "#6B6A66",
+      "deep_green": "#213A2A"
+     },
+     "fabrics": [
+      "WOOL"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 1,
+     "name": "garter",
+     "role": "ribbon",
+     "fabric": "WOOL",
+     "palette": [
+      "madder_red",
+      "linen_white",
+      "logwood_black",
+      "stroud_blue",
+      "ribbon_red"
+     ],
+     "default": "madder_red",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "madder_red": "#8E2B21",
+      "linen_white": "#E8E3D3",
+      "logwood_black": "#1C1B20",
+      "stroud_blue": "#1E2B4A",
+      "ribbon_red": "#B2202C"
+     },
+     "fabrics": [
+      "WOOL"
+     ],
+     "metal": false
+    }
+   ],
+   "stats": {
+    "surfaces": {
+     "main": {
+      "tris": 3396,
+      "verts": 2326,
+      "zones": [
+       0,
+       1
+      ],
+      "regions": [
+       "ankle_l",
+       "ankle_r",
+       "foot_l",
+       "foot_r",
+       "shin_lower_l",
+       "shin_lower_r",
+       "shin_upper_l",
+       "shin_upper_r",
+       "thigh_lower_l",
+       "thigh_lower_r"
+      ],
+      "max_influences": 4,
+      "bones": [
+       "pelvis",
+       "l_upper_leg",
+       "l_knee",
+       "l_ankle",
+       "l_heel",
+       "l_ball",
+       "r_upper_leg",
+       "r_knee",
+       "r_ankle",
+       "r_heel",
+       "r_ball"
+      ]
+     }
+    },
+    "tris": 3396,
+    "verts": 2326,
+    "surface_count": 1,
+    "shapes": {
+     "sex": 0.0302,
+     "breast_large": 0.0012,
+     "breast_small": 0.001
+    },
+    "coverage": {
+     "thigh_lower_l": {
+      "normal": 0.146,
+      "cone": 0.115
+     },
+     "shin_upper_l": {
+      "normal": 1.0,
+      "cone": 0.958
+     },
+     "shin_lower_l": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "ankle_l": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "foot_l": {
+      "normal": 0.99,
+      "cone": 0.99
+     },
+     "thigh_lower_r": {
+      "normal": 0.177,
+      "cone": 0.115
+     },
+     "shin_upper_r": {
+      "normal": 1.0,
+      "cone": 0.979
+     },
+     "shin_lower_r": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "ankle_r": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "foot_r": {
+      "normal": 0.99,
+      "cone": 0.99
+     }
+    },
+    "glb_kb": 404.3
+   },
+   "budget": {
+    "tris_max": 4000
+   },
+   "evidence": "A",
+   "licence_note": null,
+   "history": "With the philabeg and the plaid Highlanders wore short hose of tartan or diced cloth cut on the bias and sewn, reaching to below the knee and gartered there, the top turned down (the NMS kilt suit's hose; Burt describes the dress in the 1720s-30s) [EU-H2][EU-H5b]. Highland dress was banned in Scotland 'for man or boy' from 1747 to 1782 (soldiers exempt; the Act did not run in America) [EU-H1].",
+   "sources": [
+    "EU-H2",
+    "EU-H5b",
+    "EU-H1"
+   ],
+   "aliases": [],
+   "tags": [
+    "men",
+    "women",
+    "highland"
+   ],
+   "checks": {
+    "clearance": {
+     "f": {
+      "min_mm": 1.49,
+      "p05_mm": 2.86,
+      "inside_skin": 0
+     },
+     "m": {
+      "min_mm": 1.51,
+      "p05_mm": 2.9,
+      "inside_skin": 0
+     },
+     "bl": {
+      "min_mm": 1.49,
+      "p05_mm": 2.86,
+      "inside_skin": 0
+     },
+     "bs": {
+      "min_mm": 1.49,
+      "p05_mm": 2.86,
+      "inside_skin": 0
+     }
+    },
+    "envelope": {
+     "ok": true,
+     "layer": "cloth2",
+     "groups": {}
+    }
+   },
+   "generator": "tools/character/cloth2/garments/scots_hose_cut.py",
+   "lib_version": 2,
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/scots_hose_cut.py (cloth2: grown from the MakeHuman body's surface).",
+   "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+   "review": null,
+   "extra": {
+    "presets": {
+     "dicing": {
+      "0": "madder_red",
+      "1": "madder_red"
+     },
+     "sett": {
+      "0": "madder_red",
+      "1": "linen_white",
+      "pattern": "plaid"
+     },
+     "plain": {
+      "0": "stroud_blue",
+      "1": "madder_red",
+      "pattern": "none"
+     }
+    },
+    "set_note": "The Highland dress is a clothing set (the owner, 2026-10-03), not a people: offered to everyone.",
+    "law_note": "Dress Act 1747-82 (Scotland only; soldiers exempt): historical context, never enforced.",
+    "recipe_note": "cloth2.dress.hose: SockTube to 0.46, the top 4 cm raised 2.4 mm (the turned-down cuff), a garter band at 0.414-0.428 raised 3.2 mm with two ends of 6 / 4.8 cm hanging at the outer side.",
+    "references": [
+     "[EU-H2] Burt via https://en.wikipedia.org/wiki/Arisaid",
+     "[EU-H5b] NMS kilt suit: https://nms.ac.uk/explore-our-collections/stories/scottish-history-and-archaeology/highland-style/highland-style-sub-pages/kilt-suit-c1790-1800",
+     "[EU-H1] The Dress Act: https://historyofparliament.com/2020/11/17/banning-scottish-highland-dress-in-the-aftermath-of-culloden/"
+    ]
+   }
+  },
+  "scots_philabeg": {
+   "id": "scots_philabeg",
+   "name": "Philabeg (little kilt)",
+   "description": "A tartan little kilt wrapped round the waist and belted, two flat aprons in front, the right over the left, loose pleats from the hips round the back, to the knee.",
+   "kind": "garment",
+   "set": "highland",
+   "slot": "legs.lower",
+   "alt_slots": [],
+   "layer": {
+    "default": 30,
+    "hips": 35
+   },
+   "glb": "res://assets/character/garments/highland/scots_philabeg.glb",
+   "mesh": "scots_philabeg",
+   "surfaces": [
+    {
+     "surface": "main",
+     "name": "scots_philabeg"
+    }
+   ],
+   "occupies_regions": [
+    "abdomen_back",
+    "abdomen_front",
+    "abdomen_side",
+    "pelvis_center",
+    "pelvis_side",
+    "thigh_lower_l",
+    "thigh_lower_r",
+    "thigh_upper_l",
+    "thigh_upper_r"
+   ],
+   "hides_regions": [
+    "pelvis_side",
+    "thigh_upper_l"
+   ],
+   "hides_hair_zones": [],
+   "hair_zones": [],
+   "excludes": [],
+   "requires": [],
+   "variants": {},
+   "skirt": {
+    "closed": true,
+    "hems_godot": [
+     [
+      0.12,
+      0.53,
+      0.181
+     ],
+     [
+      0.185,
+      0.53,
+      0.041
+     ],
+     [
+      0.12,
+      0.53,
+      -0.099
+     ]
+    ]
+   },
+   "helpers": [],
+   "body_fit": {
+    "shapes": [
+     "sex",
+     "breast_large",
+     "breast_small"
+    ],
+    "female": true,
+    "male": true
+   },
+   "zones": [
+    {
+     "zone": 0,
+     "name": "tartan",
+     "role": "cloth",
+     "fabric": "WOOL",
+     "palette": [
+      "madder_red",
+      "deep_green",
+      "stroud_blue",
+      "full_green",
+      "logwood_black",
+      "indigo_mid",
+      "deep_yellow",
+      "drab"
+     ],
+     "default": "madder_red",
+     "pattern": {
+      "options": [
+       "plaid",
+       "none",
+       "check"
+      ],
+      "default": "plaid",
+      "plaid": {
+       "sett": "madder_red",
+       "scale_m": 0.16
+      },
+      "check": {
+       "colors": [
+        "logwood_black",
+        "linen_white"
+       ],
+       "scale_m": 0.012
+      },
+      "note": "a 'hard tartan' worsted: our own setts (assets/character/fabrics/setts.json), not registered or clan tartans; its sett aligned with the plaid's (scots_plaid_shoulder)"
+     },
+     "bands": null,
+     "palette_hex": {
+      "madder_red": "#8E2B21",
+      "deep_green": "#213A2A",
+      "stroud_blue": "#1E2B4A",
+      "full_green": "#2E5134",
+      "logwood_black": "#1C1B20",
+      "indigo_mid": "#34507A",
+      "deep_yellow": "#C38E26",
+      "drab": "#8B7A5C"
+     },
+     "fabrics": [
+      "WOOL"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 1,
+     "name": "waistband",
+     "role": "trim",
+     "fabric": "WOOL",
+     "palette": [
+      "madder_red",
+      "deep_green",
+      "stroud_blue",
+      "full_green",
+      "logwood_black",
+      "indigo_mid",
+      "deep_yellow",
+      "drab"
+     ],
+     "default": "madder_red",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "madder_red": "#8E2B21",
+      "deep_green": "#213A2A",
+      "stroud_blue": "#1E2B4A",
+      "full_green": "#2E5134",
+      "logwood_black": "#1C1B20",
+      "indigo_mid": "#34507A",
+      "deep_yellow": "#C38E26",
+      "drab": "#8B7A5C"
+     },
+     "fabrics": [
+      "WOOL"
+     ],
+     "metal": false
+    }
+   ],
+   "stats": {
+    "surfaces": {
+     "main": {
+      "tris": 3806,
+      "verts": 2646,
+      "zones": [
+       0,
+       1
+      ],
+      "regions": [
+       "abdomen_back",
+       "abdomen_front",
+       "abdomen_side",
+       "chest_back",
+       "chest_front",
+       "chest_side",
+       "pelvis_center",
+       "pelvis_side",
+       "thigh_lower_l",
+       "thigh_lower_r",
+       "thigh_upper_l",
+       "thigh_upper_r"
+      ],
+      "max_influences": 4,
+      "bones": [
+       "pelvis",
+       "spinea",
+       "spineb",
+       "spinec",
+       "spined",
+       "l_upper_leg_thigh_helper",
+       "r_upper_leg_thigh_helper",
+       "l_upper_leg_front_helper",
+       "l_upper_leg_rear_helper",
+       "r_upper_leg_front_helper",
+       "r_upper_leg_rear_helper"
+      ]
+     }
+    },
+    "tris": 3806,
+    "verts": 2646,
+    "surface_count": 1,
+    "shapes": {
+     "sex": 0.0682,
+     "breast_large": 0.0291,
+     "breast_small": 0.005
+    },
+    "coverage": {
+     "chest_front": {
+      "normal": 0.031,
+      "cone": 0.0
+     },
+     "chest_back": {
+      "normal": 0.062,
+      "cone": 0.0
+     },
+     "abdomen_front": {
+      "normal": 0.99,
+      "cone": 0.885
+     },
+     "abdomen_side": {
+      "normal": 0.927,
+      "cone": 0.76
+     },
+     "abdomen_back": {
+      "normal": 0.969,
+      "cone": 0.802
+     },
+     "pelvis_center": {
+      "normal": 0.604,
+      "cone": 0.417
+     },
+     "pelvis_side": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "upper_arm_l": {
+      "normal": 0.031,
+      "cone": 0.0
+     },
+     "forearm_a_l": {
+      "normal": 0.146,
+      "cone": 0.01
+     },
+     "forearm_b_l": {
+      "normal": 0.135,
+      "cone": 0.0
+     },
+     "forearm_c_l": {
+      "normal": 0.135,
+      "cone": 0.0
+     },
+     "wrist_l": {
+      "normal": 0.156,
+      "cone": 0.0
+     },
+     "hand_l": {
+      "normal": 0.031,
+      "cone": 0.0
+     },
+     "upper_arm_r": {
+      "normal": 0.031,
+      "cone": 0.0
+     },
+     "forearm_a_r": {
+      "normal": 0.104,
+      "cone": 0.0
+     },
+     "forearm_b_r": {
+      "normal": 0.115,
+      "cone": 0.0
+     },
+     "forearm_c_r": {
+      "normal": 0.094,
+      "cone": 0.0
+     },
+     "wrist_r": {
+      "normal": 0.198,
+      "cone": 0.0
+     },
+     "hand_r": {
+      "normal": 0.021,
+      "cone": 0.0
+     },
+     "thigh_upper_l": {
+      "normal": 1.0,
+      "cone": 0.979
+     },
+     "thigh_lower_l": {
+      "normal": 0.5,
+      "cone": 0.365
+     },
+     "thigh_upper_r": {
+      "normal": 1.0,
+      "cone": 0.958
+     },
+     "thigh_lower_r": {
+      "normal": 0.448,
+      "cone": 0.312
+     }
+    },
+    "glb_kb": 598.6
+   },
+   "budget": {
+    "tris_max": 6000
+   },
+   "evidence": "A",
+   "licence_note": null,
+   "history": "By the 1720s-40s many Highlanders wore the philabeg, the little kilt cut from the lower half of the belted plaid: two flat aprons wrapped over in front, the pleats laid in at the belt from the hips round the back, the hem at the knee, of 'hard tartan' worsted [EU-H2][EU-H3]. It was banned in Scotland with the rest of Highland dress from 1747 to 1782 [EU-H1].",
+   "sources": [
+    "EU-H2",
+    "EU-H3",
+    "EU-H1"
+   ],
+   "aliases": [],
+   "tags": [
+    "men",
+    "women",
+    "highland"
+   ],
+   "checks": {
+    "clearance": {
+     "f": {
+      "min_mm": 17.66,
+      "p05_mm": 26.23,
+      "inside_skin": 0
+     },
+     "m": {
+      "min_mm": 17.08,
+      "p05_mm": 25.92,
+      "inside_skin": 0
+     },
+     "bl": {
+      "min_mm": 17.66,
+      "p05_mm": 26.18,
+      "inside_skin": 0
+     },
+     "bs": {
+      "min_mm": 17.66,
+      "p05_mm": 26.23,
+      "inside_skin": 0
+     }
+    },
+    "envelope": {
+     "ok": true,
+     "layer": "cloth2",
+     "groups": {}
+    }
+   },
+   "generator": "tools/character/cloth2/garments/scots_philabeg.py",
+   "lib_version": 2,
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/scots_philabeg.py (cloth2: grown from the MakeHuman body's surface).",
+   "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+   "review": null,
+   "fit_over": [
+    "shirt_linen",
+    "shift_linen"
+   ],
+   "extra": {
+    "presets": {
+     "red_sett": {
+      "0": "madder_red",
+      "1": "madder_red"
+     },
+     "green_sett": {
+      "0": "deep_green",
+      "1": "deep_green",
+      "sett": "hill_green"
+     },
+     "hodden": {
+      "0": "drab",
+      "1": "drab",
+      "sett": "drab_hodden"
+     }
+    },
+    "set_note": "The Highland dress is a clothing set (the owner, 2026-10-03), not a people: offered to everyone.",
+    "recipe_note": "cloth2.dress.wrap_skirt: top 1.04 (a 3 cm band), hem 0.53 front / 0.55 behind, the overlap edge at -18 deg (the right apron over the left), pleats from 55 to 180 deg (14 folds 1.2 cm deep, growing to the hem), little flare; the closed-skirt weights.",
+    "references": [
+     "[EU-H2] Burt via https://en.wikipedia.org/wiki/Arisaid",
+     "[EU-H3] Pennant 1769: https://www.dsl.ac.uk/entry/snd/tunag"
+    ]
+   }
+  },
+  "scots_plaid_shoulder": {
+   "id": "scots_plaid_shoulder",
+   "name": "Belted plaid (shoulder)",
+   "description": "A great tartan plaid tucked under the belt behind, over the back to the left shoulder and pinned there with a ring brooch, the right arm free, the end hanging behind.",
+   "kind": "garment",
+   "set": "highland",
+   "slot": "accessories.wrap",
+   "alt_slots": [],
+   "layer": {
+    "default": 50
+   },
+   "glb": "res://assets/character/garments/highland/scots_plaid_shoulder.glb",
+   "mesh": "scots_plaid_shoulder",
+   "surfaces": [
+    {
+     "surface": "main",
+     "name": "scots_plaid_shoulder"
+    }
+   ],
+   "occupies_regions": [
+    "abdomen_back",
+    "abdomen_front",
+    "abdomen_side",
+    "chest_back",
+    "chest_upper_back",
+    "chest_upper_side",
+    "neck_lower",
+    "pelvis_side",
+    "upper_arm_l"
+   ],
+   "hides_regions": [],
+   "hides_hair_zones": [],
+   "hair_zones": [],
+   "excludes": [],
+   "requires": [],
+   "variants": {},
+   "skirt": null,
+   "helpers": [],
+   "body_fit": {
+    "shapes": [
+     "sex",
+     "breast_large",
+     "breast_small"
+    ],
+    "female": true,
+    "male": true
+   },
+   "zones": [
+    {
+     "zone": 0,
+     "name": "tartan",
+     "role": "cloth",
+     "fabric": "WOOL",
+     "palette": [
+      "madder_red",
+      "deep_green",
+      "stroud_blue",
+      "full_green",
+      "logwood_black",
+      "indigo_mid",
+      "deep_yellow",
+      "drab"
+     ],
+     "default": "madder_red",
+     "pattern": {
+      "options": [
+       "plaid",
+       "none",
+       "check"
+      ],
+      "default": "plaid",
+      "plaid": {
+       "sett": "madder_red",
+       "scale_m": 0.16
+      },
+      "check": {
+       "colors": [
+        "logwood_black",
+        "linen_white"
+       ],
+       "scale_m": 0.012
+      },
+      "note": "our own setts (assets/character/fabrics/setts.json), never registered or clan tartans; the sett aligned with the philabeg's"
+     },
+     "bands": null,
+     "palette_hex": {
+      "madder_red": "#8E2B21",
+      "deep_green": "#213A2A",
+      "stroud_blue": "#1E2B4A",
+      "full_green": "#2E5134",
+      "logwood_black": "#1C1B20",
+      "indigo_mid": "#34507A",
+      "deep_yellow": "#C38E26",
+      "drab": "#8B7A5C"
+     },
+     "fabrics": [
+      "WOOL"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 2,
+     "name": "belt",
+     "role": "leather",
+     "fabric": "LEA",
+     "palette": [
+      "leather_black",
+      "leather_brown"
+     ],
+     "default": "leather_black",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "leather_black": "#1D1B19",
+      "leather_brown": "#5B3D26"
+     },
+     "fabrics": [
+      "LEA"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 3,
+     "name": "brooch and buckle",
+     "role": "metal",
+     "fabric": "MET",
+     "palette": [
+      "silver",
+      "brass",
+      "pewter"
+     ],
+     "default": "silver",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "silver": "#C8CACC",
+      "brass": "#B58F4A",
+      "pewter": "#9A9C9A"
+     },
+     "fabrics": [
+      "MET"
+     ],
+     "metal": true
+    }
+   ],
+   "stats": {
+    "surfaces": {
+     "main": {
+      "tris": 1658,
+      "verts": 1167,
+      "zones": [
+       0,
+       2,
+       3
+      ],
+      "regions": [
+       "abdomen_back",
+       "abdomen_front",
+       "abdomen_side",
+       "chest_back",
+       "chest_front",
+       "chest_side",
+       "chest_upper_back",
+       "chest_upper_front",
+       "chest_upper_side",
+       "neck_lower",
+       "pelvis_center",
+       "pelvis_side",
+       "thigh_lower_l",
+       "thigh_upper_l",
+       "upper_arm_l"
+      ],
+      "max_influences": 4,
+      "bones": [
+       "pelvis",
+       "l_upper_leg",
+       "spinea",
+       "spineb",
+       "spinec",
+       "spined",
+       "l_clavicle",
+       "l_shoulder",
+       "r_clavicle",
+       "neck",
+       "l_breast",
+       "l_upper_leg_thigh_helper",
+       "l_shoulder_twist_a",
+       "l_shoulder_twist_c",
+       "l_shoulder_twist_b",
+       "l_shoulder_twist_d",
+       "l_upper_leg_rear_helper",
+       "r_upper_leg_rear_helper"
+      ]
+     }
+    },
+    "tris": 1658,
+    "verts": 1167,
+    "surface_count": 1,
+    "shapes": {
+     "sex": 0.0905,
+     "breast_large": 0.0299,
+     "breast_small": 0.0302
+    },
+    "coverage": {
+     "head": {
+      "normal": 0.01,
+      "cone": 0.0
+     },
+     "neck_upper": {
+      "normal": 0.062,
+      "cone": 0.042
+     },
+     "neck_lower": {
+      "normal": 0.333,
+      "cone": 0.323
+     },
+     "chest_upper_side": {
+      "normal": 0.312,
+      "cone": 0.281
+     },
+     "chest_upper_back": {
+      "normal": 0.562,
+      "cone": 0.49
+     },
+     "chest_front": {
+      "normal": 0.021,
+      "cone": 0.0
+     },
+     "chest_side": {
+      "normal": 0.042,
+      "cone": 0.0
+     },
+     "chest_back": {
+      "normal": 0.708,
+      "cone": 0.573
+     },
+     "abdomen_front": {
+      "normal": 0.562,
+      "cone": 0.125
+     },
+     "abdomen_side": {
+      "normal": 0.521,
+      "cone": 0.094
+     },
+     "abdomen_back": {
+      "normal": 0.729,
+      "cone": 0.5
+     },
+     "pelvis_center": {
+      "normal": 0.094,
+      "cone": 0.042
+     },
+     "pelvis_side": {
+      "normal": 0.25,
+      "cone": 0.198
+     },
+     "upper_arm_l": {
+      "normal": 0.719,
+      "cone": 0.635
+     },
+     "forearm_a_l": {
+      "normal": 0.219,
+      "cone": 0.115
+     },
+     "forearm_b_l": {
+      "normal": 0.01,
+      "cone": 0.0
+     },
+     "upper_arm_r": {
+      "normal": 0.031,
+      "cone": 0.0
+     },
+     "forearm_a_r": {
+      "normal": 0.031,
+      "cone": 0.0
+     },
+     "thigh_upper_l": {
+      "normal": 0.115,
+      "cone": 0.094
+     },
+     "thigh_lower_l": {
+      "normal": 0.062,
+      "cone": 0.042
+     },
+     "thigh_upper_r": {
+      "normal": 0.042,
+      "cone": 0.0
+     },
+     "thigh_lower_r": {
+      "normal": 0.042,
+      "cone": 0.0
+     }
+    },
+    "glb_kb": 312.2
+   },
+   "budget": {
+    "tris_max": 7000
+   },
+   "evidence": "A",
+   "licence_note": null,
+   "history": "The belted plaid was a great length of tartan pleated and belted round the waist, its upper half thrown over the left shoulder and pinned with a brooch, the end hanging behind; with the philabeg the upper part was worn on its own the same way [EU-H2][EU-H3][EU-H8b]. Highland dress was banned in Scotland 'for man or boy' from 1 August 1747 to 1782; soldiers were exempt and the Act did not run in America [EU-H1].",
+   "sources": [
+    "EU-H2",
+    "EU-H3",
+    "EU-H8b",
+    "EU-H1"
+   ],
+   "aliases": [],
+   "tags": [
+    "men",
+    "women",
+    "highland"
+   ],
+   "checks": {
+    "clearance": {
+     "f": {
+      "min_mm": 9.2,
+      "p05_mm": 12.65,
+      "inside_skin": 0
+     },
+     "m": {
+      "min_mm": 8.6,
+      "p05_mm": 12.43,
+      "inside_skin": 0
+     },
+     "bl": {
+      "min_mm": 9.2,
+      "p05_mm": 12.77,
+      "inside_skin": 0
+     },
+     "bs": {
+      "min_mm": 9.2,
+      "p05_mm": 12.72,
+      "inside_skin": 0
+     }
+    },
+    "envelope": {
+     "ok": true,
+     "layer": "cloth2",
+     "groups": {}
+    }
+   },
+   "generator": "tools/character/cloth2/garments/scots_plaid_shoulder.py",
+   "lib_version": 2,
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/scots_plaid_shoulder.py (cloth2: grown from the MakeHuman body's surface).",
+   "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+   "review": null,
+   "fit_over": [
+    "shirt_linen",
+    "scots_philabeg"
+   ],
+   "extra": {
+    "presets": {
+     "red_sett": {
+      "0": "madder_red",
+      "2": "leather_black",
+      "3": "silver"
+     },
+     "green_sett": {
+      "0": "deep_green",
+      "2": "leather_black",
+      "3": "silver",
+      "sett": "hill_green"
+     },
+     "hodden": {
+      "0": "drab",
+      "2": "leather_brown",
+      "3": "brass",
+      "sett": "drab_hodden"
+     }
+    },
+    "set_note": "The Highland dress is a clothing set (the owner, 2026-10-03), not a people: offered to everyone.",
+    "law_note": "Dress Act 1747-82 (Scotland only; soldiers exempt): historical context, never enforced.",
+    "recipe_note": "cloth2.dress.drape anchor belted: the envelope over the left shoulder and arm (above 1.12), cut to the outline: under the belt behind at 0.99, over the back to the left shoulder, the front flap to 1.23, the end behind over the left of the back to 0.56; a belt 0.965-1.005 with a buckle, a ring brooch r 2.8 cm at 1.27, 32 deg.",
+    "references": [
+     "[EU-H2] Burt via https://en.wikipedia.org/wiki/Arisaid",
+     "[EU-H8b] Full plaid: https://en.wikipedia.org/wiki/Full_plaid",
+     "[EU-H1] The Dress Act: https://historyofparliament.com/2020/11/17/banning-scottish-highland-dress-in-the-aftermath-of-culloden/"
+    ]
+   }
+  },
+  "entari": {
+   "id": "entari",
+   "name": "Entari (long robe)",
+   "description": "A long robe fitted to the hip, the fronts wrapped left over right and tied at the right side, a round collarless neck, sleeves to the wrist with small buttons, skirts to below the knees with side slits.",
+   "kind": "garment",
+   "set": "middle_east",
+   "slot": "vest",
+   "alt_slots": [],
+   "layer": {
+    "default": 36
+   },
+   "glb": "res://assets/character/garments/middle_east/entari.glb",
+   "mesh": "entari",
+   "surfaces": [
+    {
+     "surface": "main",
+     "name": "entari"
+    }
+   ],
+   "occupies_regions": [
+    "abdomen_back",
+    "abdomen_front",
+    "abdomen_side",
+    "chest_back",
+    "chest_front",
+    "chest_side",
+    "chest_upper_back",
+    "chest_upper_front",
+    "chest_upper_side",
+    "forearm_a_l",
+    "forearm_a_r",
+    "forearm_b_l",
+    "forearm_b_r",
+    "forearm_c_l",
+    "forearm_c_r",
+    "neck_lower",
+    "pelvis_center",
+    "pelvis_side",
+    "thigh_lower_l",
+    "thigh_lower_r",
+    "thigh_upper_l",
+    "thigh_upper_r",
+    "upper_arm_l",
+    "upper_arm_r"
+   ],
+   "hides_regions": [
+    "abdomen_back",
+    "abdomen_front",
+    "abdomen_side",
+    "chest_back",
+    "chest_front",
+    "chest_side",
+    "chest_upper_front",
+    "forearm_a_l",
+    "forearm_a_r",
+    "pelvis_side"
+   ],
+   "hides_hair_zones": [],
+   "hair_zones": [],
+   "excludes": [],
+   "requires": [],
+   "variants": {},
+   "skirt": null,
+   "helpers": [],
+   "body_fit": {
+    "shapes": [
+     "sex",
+     "breast_large",
+     "breast_small"
+    ],
+    "female": true,
+    "male": true
+   },
+   "zones": [
+    {
+     "zone": 0,
+     "name": "striped silk-cotton",
+     "role": "cloth",
+     "fabric": "LIN",
+     "palette": [
+      "crimson",
+      "yellow",
+      "full_green",
+      "linen_white",
+      "indigo_mid",
+      "madder_red",
+      "cotton_white",
+      "logwood_black"
+     ],
+     "default": "crimson",
+     "pattern": {
+      "options": [
+       "none",
+       "stripe",
+       "check"
+      ],
+      "default": "stripe",
+      "stripe": {
+       "colors": [
+        "crimson",
+        "cotton_white",
+        "yellow"
+       ],
+       "scale_m": 0.022
+      },
+      "check": {
+       "colors": [
+        "indigo_mid",
+        "cotton_white"
+       ],
+       "scale_m": 0.014
+      },
+      "note": "striped silk-cotton (the stripes often figured), Aleppo flowered stuffs, Indian silk-cottons, calico; plain indigo or madder for the common sort"
+     },
+     "bands": null,
+     "palette_hex": {
+      "crimson": "#9D1D30",
+      "yellow": "#D0A93A",
+      "full_green": "#2E5134",
+      "linen_white": "#E8E3D3",
+      "indigo_mid": "#34507A",
+      "madder_red": "#8E2B21",
+      "cotton_white": "#EEEBE1",
+      "logwood_black": "#1C1B20"
+     },
+     "fabrics": [
+      "LIN"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 1,
+     "name": "cuffs and facings",
+     "role": "trim",
+     "fabric": "LIN",
+     "palette": [
+      "crimson",
+      "yellow",
+      "full_green",
+      "linen_white",
+      "indigo_mid",
+      "madder_red",
+      "cotton_white",
+      "logwood_black"
+     ],
+     "default": "crimson",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "crimson": "#9D1D30",
+      "yellow": "#D0A93A",
+      "full_green": "#2E5134",
+      "linen_white": "#E8E3D3",
+      "indigo_mid": "#34507A",
+      "madder_red": "#8E2B21",
+      "cotton_white": "#EEEBE1",
+      "logwood_black": "#1C1B20"
+     },
+     "fabrics": [
+      "LIN"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 2,
+     "name": "buttons",
+     "role": "button",
+     "fabric": "MET",
+     "palette": [
+      "brass",
+      "silver",
+      "logwood_black",
+      "linen_white"
+     ],
+     "default": "brass",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "brass": "#B58F4A",
+      "silver": "#C8CACC",
+      "logwood_black": "#1C1B20",
+      "linen_white": "#E8E3D3"
+     },
+     "fabrics": [
+      "MET"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 3,
+     "name": "tapes",
+     "role": "ribbon",
+     "fabric": "FLAT",
+     "palette": [
+      "ribbon_red",
+      "ribbon_yellow",
+      "ribbon_green",
+      "ribbon_white",
+      "ribbon_black"
+     ],
+     "default": "ribbon_red",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "ribbon_red": "#B2202C",
+      "ribbon_yellow": "#D8B23A",
+      "ribbon_green": "#2E6B40",
+      "ribbon_white": "#ECE8DE",
+      "ribbon_black": "#151417"
+     },
+     "fabrics": [
+      "FLAT"
+     ],
+     "metal": false
+    }
+   ],
+   "stats": {
+    "surfaces": {
+     "main": {
+      "tris": 7847,
+      "verts": 4785,
+      "zones": [
+       0,
+       1,
+       2,
+       3
+      ],
+      "regions": [
+       "abdomen_back",
+       "abdomen_front",
+       "abdomen_side",
+       "chest_back",
+       "chest_front",
+       "chest_side",
+       "chest_upper_back",
+       "chest_upper_front",
+       "chest_upper_side",
+       "forearm_a_l",
+       "forearm_a_r",
+       "forearm_b_l",
+       "forearm_b_r",
+       "forearm_c_l",
+       "forearm_c_r",
+       "neck_lower",
+       "pelvis_center",
+       "pelvis_side",
+       "shin_upper_l",
+       "shin_upper_r",
+       "thigh_lower_l",
+       "thigh_lower_r",
+       "thigh_upper_l",
+       "thigh_upper_r",
+       "upper_arm_l",
+       "upper_arm_r",
+       "wrist_l",
+       "wrist_r"
+      ],
+      "max_influences": 4,
+      "bones": [
+       "pelvis",
+       "l_upper_leg",
+       "r_upper_leg",
+       "spinea",
+       "spineb",
+       "spinec",
+       "spined",
+       "l_clavicle",
+       "l_shoulder",
+       "l_elbow",
+       "l_wrist",
+       "r_clavicle",
+       "r_shoulder",
+       "r_elbow",
+       "r_wrist",
+       "neck",
+       "l_breast",
+       "r_breast",
+       "l_forarm_twist_a",
+       "l_forarm_twist_c",
+       "l_forarm_twist_b",
+       "r_forarm_twist_a",
+       "r_forarm_twist_c",
+       "r_forarm_twist_b",
+       "l_upper_leg_thigh_helper",
+       "r_upper_leg_thigh_helper",
+       "l_shoulder_twist_a",
+       "l_shoulder_twist_c",
+       "l_shoulder_twist_b",
+       "l_shoulder_twist_d",
+       "r_shoulder_twist_a",
+       "r_shoulder_twist_c",
+       "r_shoulder_twist_b",
+       "r_shoulder_twist_d",
+       "l_upper_leg_front_helper",
+       "l_upper_leg_rear_helper",
+       "r_upper_leg_front_helper",
+       "r_upper_leg_rear_helper"
+      ]
+     }
+    },
+    "tris": 7847,
+    "verts": 4785,
+    "surface_count": 1,
+    "shapes": {
+     "sex": 0.067,
+     "breast_large": 0.0874,
+     "breast_small": 0.0221
+    },
+    "coverage": {
+     "neck_lower": {
+      "normal": 0.802,
+      "cone": 0.688
+     },
+     "chest_upper_front": {
+      "normal": 1.0,
+      "cone": 0.99
+     },
+     "chest_upper_side": {
+      "normal": 0.906,
+      "cone": 0.854
+     },
+     "chest_upper_back": {
+      "normal": 0.969,
+      "cone": 0.948
+     },
+     "chest_front": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "chest_side": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "chest_back": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "abdomen_front": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "abdomen_side": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "abdomen_back": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "pelvis_center": {
+      "normal": 0.562,
+      "cone": 0.333
+     },
+     "pelvis_side": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "upper_arm_l": {
+      "normal": 0.958,
+      "cone": 0.927
+     },
+     "forearm_a_l": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "forearm_b_l": {
+      "normal": 0.958,
+      "cone": 0.625
+     },
+     "forearm_c_l": {
+      "normal": 0.458,
+      "cone": 0.0
+     },
+     "wrist_l": {
+      "normal": 0.146,
+      "cone": 0.0
+     },
+     "hand_l": {
+      "normal": 0.062,
+      "cone": 0.0
+     },
+     "upper_arm_r": {
+      "normal": 0.958,
+      "cone": 0.927
+     },
+     "forearm_a_r": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "forearm_b_r": {
+      "normal": 0.948,
+      "cone": 0.615
+     },
+     "forearm_c_r": {
+      "normal": 0.458,
+      "cone": 0.0
+     },
+     "wrist_r": {
+      "normal": 0.156,
+      "cone": 0.0
+     },
+     "hand_r": {
+      "normal": 0.042,
+      "cone": 0.0
+     },
+     "thigh_upper_l": {
+      "normal": 0.896,
+      "cone": 0.688
+     },
+     "thigh_lower_l": {
+      "normal": 0.729,
+      "cone": 0.5
+     },
+     "shin_upper_l": {
+      "normal": 0.167,
+      "cone": 0.042
+     },
+     "thigh_upper_r": {
+      "normal": 0.917,
+      "cone": 0.719
+     },
+     "thigh_lower_r": {
+      "normal": 0.833,
+      "cone": 0.542
+     },
+     "shin_upper_r": {
+      "normal": 0.188,
+      "cone": 0.073
+     }
+    },
+    "glb_kb": 1054.0
+   },
+   "budget": {
+    "tris_max": 9000
+   },
+   "evidence": "A",
+   "licence_note": null,
+   "history": "The entari (the Levant's kunbaz, the Egyptian kuftan) was the robe of every townsman over the shirt and drawers: fitted to the hip, the fronts wrapped over and tied with tapes at the side, a round collarless neck, the sleeves to the wrist with small buttons and loops, the skirts 'under the knees' with slits at the sides from the hip; of striped silk-cotton, Aleppo flowered stuffs, Indian silk-cottons or calico, muslin in summer. 'The common people ... are content with the breeches, the enteri, and the benisch' [RUS][NIE][LAN].",
+   "sources": [
+    "RUS",
+    "NIE",
+    "LAN"
+   ],
+   "aliases": [],
+   "tags": [
+    "men",
+    "women",
+    "middle_east",
+    "ottoman_turkish",
+    "levantine",
+    "armenian",
+    "kurdish",
+    "arab",
+    "egyptian"
+   ],
+   "checks": {
+    "clearance": {
+     "f": {
+      "min_mm": 8.1,
+      "p05_mm": 9.94,
+      "inside_skin": 0
+     },
+     "m": {
+      "min_mm": 8.06,
+      "p05_mm": 10.24,
+      "inside_skin": 0
+     },
+     "bl": {
+      "min_mm": 7.75,
+      "p05_mm": 10.34,
+      "inside_skin": 0
+     },
+     "bs": {
+      "min_mm": 8.09,
+      "p05_mm": 9.88,
+      "inside_skin": 0
+     }
+    },
+    "envelope": {
+     "ok": true,
+     "layer": "cloth2",
+     "groups": {}
+    }
+   },
+   "generator": "tools/character/cloth2/garments/entari.py",
+   "lib_version": 2,
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/entari.py (cloth2: grown from the MakeHuman body's surface).",
+   "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+   "review": null,
+   "fit_over": [
+    "shirt_collarless",
+    "salvar_mens",
+    "shift_linen"
+   ],
+   "extra": {
+    "presets": {
+     "striped": {
+      "0": "crimson",
+      "1": "crimson",
+      "2": "brass",
+      "3": "ribbon_red"
+     },
+     "indigo": {
+      "0": "indigo_mid",
+      "1": "indigo_mid",
+      "2": "logwood_black",
+      "3": "ribbon_black",
+      "pattern": "none"
+     },
+     "madder": {
+      "0": "madder_red",
+      "1": "madder_red",
+      "2": "brass",
+      "3": "ribbon_yellow",
+      "pattern": "none"
+     }
+    },
+    "recipe_note": "cloth2.dress.robe mode crossed: the overlap line runs from the left of the neck across the breast to the right of the waist and straight down; the skirts split along it below 0.86 (the line's fold raised 2.8 mm), side slits from 0.85 (recipes.coat slits).",
+    "fabric_note": "LIN until the COT and SILK kits exist (docs/research/peoples_dress_1750s.md 2.4).",
+    "references": [
+     "[RUS] Russell, Natural History of Aleppo: https://archive.org/details/naturalhistoryof01russ",
+     "[NIE] Niebuhr: https://archive.org/details/b28773263_0001",
+     "[LAN] Lane: https://archive.org/details/accountofmanners00lane"
+    ]
+   }
+  },
+  "salvar_mens": {
+   "id": "salvar_mens",
+   "name": "Salvar (wide trousers)",
+   "description": "Wide woollen trousers gathered on a rolled drawstring at the waist, the crotch hanging low, the legs very full at the knee and narrowing into an ankle band.",
+   "kind": "garment",
+   "set": "middle_east",
+   "slot": "legs.lower",
+   "alt_slots": [],
+   "layer": {
+    "default": 30
+   },
+   "glb": "res://assets/character/garments/middle_east/salvar_mens.glb",
+   "mesh": "salvar_mens",
+   "surfaces": [
+    {
+     "surface": "main",
+     "name": "salvar_mens"
+    }
+   ],
+   "occupies_regions": [
+    "abdomen_back",
+    "abdomen_front",
+    "abdomen_side",
+    "pelvis_center",
+    "pelvis_side",
+    "shin_lower_l",
+    "shin_lower_r",
+    "shin_upper_l",
+    "shin_upper_r",
+    "thigh_lower_l",
+    "thigh_lower_r",
+    "thigh_upper_l",
+    "thigh_upper_r"
+   ],
+   "hides_regions": [
+    "abdomen_back",
+    "abdomen_front",
+    "abdomen_side",
+    "pelvis_center",
+    "pelvis_side",
+    "shin_upper_l",
+    "shin_upper_r",
+    "thigh_lower_l",
+    "thigh_lower_r",
+    "thigh_upper_l",
+    "thigh_upper_r"
+   ],
+   "hides_hair_zones": [],
+   "hair_zones": [],
+   "excludes": [],
+   "requires": [],
+   "variants": {},
+   "skirt": null,
+   "helpers": [],
+   "body_fit": {
+    "shapes": [
+     "sex",
+     "breast_large",
+     "breast_small"
+    ],
+    "female": true,
+    "male": true
+   },
+   "zones": [
+    {
+     "zone": 0,
+     "name": "wool",
+     "role": "cloth",
+     "fabric": "WOOL",
+     "palette": [
+      "undyed_brown",
+      "slate_grey",
+      "indigo_mid",
+      "logwood_black",
+      "scarlet",
+      "stroud_blue",
+      "cotton_white",
+      "linen_unbleached"
+     ],
+     "default": "undyed_brown",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "undyed_brown": "#6C523E",
+      "slate_grey": "#6B6A66",
+      "indigo_mid": "#34507A",
+      "logwood_black": "#1C1B20",
+      "scarlet": "#A8161E",
+      "stroud_blue": "#1E2B4A",
+      "cotton_white": "#EEEBE1",
+      "linen_unbleached": "#C8BA9A"
+     },
+     "fabrics": [
+      "WOOL"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 1,
+     "name": "drawstring band and ankle bands",
+     "role": "trim",
+     "fabric": "WOOL",
+     "palette": [
+      "undyed_brown",
+      "slate_grey",
+      "indigo_mid",
+      "logwood_black",
+      "scarlet",
+      "stroud_blue",
+      "cotton_white",
+      "linen_unbleached"
+     ],
+     "default": "undyed_brown",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "undyed_brown": "#6C523E",
+      "slate_grey": "#6B6A66",
+      "indigo_mid": "#34507A",
+      "logwood_black": "#1C1B20",
+      "scarlet": "#A8161E",
+      "stroud_blue": "#1E2B4A",
+      "cotton_white": "#EEEBE1",
+      "linen_unbleached": "#C8BA9A"
+     },
+     "fabrics": [
+      "WOOL"
+     ],
+     "metal": false
+    }
+   ],
+   "stats": {
+    "surfaces": {
+     "main": {
+      "tris": 3967,
+      "verts": 2408,
+      "zones": [
+       0,
+       1
+      ],
+      "regions": [
+       "abdomen_back",
+       "abdomen_front",
+       "abdomen_side",
+       "ankle_l",
+       "ankle_r",
+       "pelvis_center",
+       "pelvis_side",
+       "shin_lower_l",
+       "shin_lower_r",
+       "shin_upper_l",
+       "shin_upper_r",
+       "thigh_lower_l",
+       "thigh_lower_r",
+       "thigh_upper_l",
+       "thigh_upper_r"
+      ],
+      "max_influences": 4,
+      "bones": [
+       "pelvis",
+       "l_upper_leg",
+       "l_knee",
+       "l_ankle",
+       "l_heel",
+       "r_upper_leg",
+       "r_knee",
+       "r_ankle",
+       "r_heel",
+       "spinea",
+       "spineb",
+       "spinec",
+       "spined"
+      ]
+     }
+    },
+    "tris": 3967,
+    "verts": 2408,
+    "surface_count": 1,
+    "shapes": {
+     "sex": 0.0595,
+     "breast_large": 0.0013,
+     "breast_small": 0.0084
+    },
+    "coverage": {
+     "chest_back": {
+      "normal": 0.021,
+      "cone": 0.0
+     },
+     "abdomen_front": {
+      "normal": 0.99,
+      "cone": 0.865
+     },
+     "abdomen_side": {
+      "normal": 0.948,
+      "cone": 0.812
+     },
+     "abdomen_back": {
+      "normal": 1.0,
+      "cone": 0.76
+     },
+     "pelvis_center": {
+      "normal": 0.844,
+      "cone": 0.615
+     },
+     "pelvis_side": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "upper_arm_l": {
+      "normal": 0.021,
+      "cone": 0.0
+     },
+     "forearm_a_l": {
+      "normal": 0.115,
+      "cone": 0.0
+     },
+     "forearm_b_l": {
+      "normal": 0.062,
+      "cone": 0.0
+     },
+     "forearm_c_l": {
+      "normal": 0.021,
+      "cone": 0.0
+     },
+     "wrist_l": {
+      "normal": 0.021,
+      "cone": 0.0
+     },
+     "hand_l": {
+      "normal": 0.021,
+      "cone": 0.0
+     },
+     "upper_arm_r": {
+      "normal": 0.031,
+      "cone": 0.0
+     },
+     "forearm_a_r": {
+      "normal": 0.083,
+      "cone": 0.0
+     },
+     "forearm_b_r": {
+      "normal": 0.052,
+      "cone": 0.0
+     },
+     "wrist_r": {
+      "normal": 0.052,
+      "cone": 0.0
+     },
+     "hand_r": {
+      "normal": 0.01,
+      "cone": 0.0
+     },
+     "thigh_upper_l": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "thigh_lower_l": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "shin_upper_l": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "shin_lower_l": {
+      "normal": 0.99,
+      "cone": 0.875
+     },
+     "ankle_l": {
+      "normal": 0.229,
+      "cone": 0.0
+     },
+     "thigh_upper_r": {
+      "normal": 1.0,
+      "cone": 0.99
+     },
+     "thigh_lower_r": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "shin_upper_r": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "shin_lower_r": {
+      "normal": 1.0,
+      "cone": 0.833
+     },
+     "ankle_r": {
+      "normal": 0.208,
+      "cone": 0.0
+     }
+    },
+    "glb_kb": 475.7
+   },
+   "budget": {
+    "tris_max": 7000
+   },
+   "evidence": "A",
+   "licence_note": null,
+   "history": "The Ottoman, Levantine, Armenian and Egyptian men's trousers were cut very wide, of wool broadcloth or a coarse woollen (red broadcloth for the better-off, camlet in summer), drawn on a cord at the waist, the seat hanging low and the legs gathered into a band at the ankle; the Persian and Kurdish kind were narrower, 'loose ... without any tight ligaments' [NIE][RUS][HAN][CHE].",
+   "sources": [
+    "NIE",
+    "RUS",
+    "HAN",
+    "CHE"
+   ],
+   "aliases": [],
+   "tags": [
+    "men",
+    "women",
+    "pants",
+    "middle_east",
+    "ottoman_turkish",
+    "levantine",
+    "armenian",
+    "egyptian",
+    "arab",
+    "moorish",
+    "persian",
+    "kurdish"
+   ],
+   "checks": {
+    "clearance": {
+     "f": {
+      "min_mm": 2.0,
+      "p05_mm": 5.31,
+      "inside_skin": 0
+     },
+     "m": {
+      "min_mm": -0.78,
+      "p05_mm": 4.69,
+      "inside_skin": 1
+     },
+     "bl": {
+      "min_mm": 2.0,
+      "p05_mm": 5.31,
+      "inside_skin": 0
+     },
+     "bs": {
+      "min_mm": 2.0,
+      "p05_mm": 5.32,
+      "inside_skin": 0
+     }
+    },
+    "envelope": {
+     "ok": false,
+     "layer": "cloth2",
+     "groups": {}
+    }
+   },
+   "generator": "tools/character/cloth2/garments/salvar_mens.py",
+   "lib_version": 2,
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/salvar_mens.py (cloth2: grown from the MakeHuman body's surface).",
+   "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+   "review": null,
+   "fit_over": [
+    "shirt_collarless"
+   ],
+   "extra": {
+    "presets": {
+     "brown": {
+      "0": "undyed_brown",
+      "1": "undyed_brown"
+     },
+     "indigo": {
+      "0": "indigo_mid",
+      "1": "indigo_mid"
+     },
+     "red_broadcloth": {
+      "0": "scarlet",
+      "1": "scarlet"
+     }
+    },
+    "shirt_note": "Over the shirt's body at the waist; the collarless shirt's tails hang outside over the legs (under the entari), or wear a tucked shirt.",
+    "styles_note": "Styles to build from the same recipe: narrow (Persian, drop ~0.10, hem open at 0.08), knee (Moroccan linen, hem 0.40), cakshir (to 0.06, sewn to yellow leather socks).",
+    "recipe_note": "cloth2.dress.trousers kind wide: the legs eased up to 7 cm more at the knee and meeting at the midline down to it (the low-hanging crotch's look; the crotch itself lowered 3 cm and bridged as the slops'), soft folds round each leg, the rolled band 1.025-1.06, the ankle bands gathered.",
+    "references": [
+     "[NIE] Niebuhr: https://archive.org/details/b28773263_0001",
+     "[RUS] Russell: https://archive.org/details/naturalhistoryof01russ",
+     "[HAN] Hanway: https://archive.org/details/b30414702_0001",
+     "[CHE] Chenier: https://archive.org/details/b28771515_0001"
+    ]
+   }
+  },
+  "sash_shawl": {
+   "id": "sash_shawl",
+   "name": "Shawl sash",
+   "description": "A long shawl or striped silk girdle wound two or three times round the waist over the robe, the end tucked in at the left and a short end hanging.",
+   "kind": "garment",
+   "set": "middle_east",
+   "slot": "accessories.waist",
+   "alt_slots": [],
+   "layer": {
+    "default": 38
+   },
+   "glb": "res://assets/character/garments/middle_east/sash_shawl.glb",
+   "mesh": "sash_shawl",
+   "surfaces": [
+    {
+     "surface": "main",
+     "name": "sash_shawl"
+    }
+   ],
+   "occupies_regions": [
+    "abdomen_back",
+    "abdomen_front",
+    "abdomen_side",
+    "chest_back"
+   ],
+   "hides_regions": [],
+   "hides_hair_zones": [],
+   "hair_zones": [],
+   "excludes": [],
+   "requires": [],
+   "variants": {},
+   "skirt": null,
+   "helpers": [],
+   "body_fit": {
+    "shapes": [
+     "sex",
+     "breast_large",
+     "breast_small"
+    ],
+    "female": true,
+    "male": true
+   },
+   "zones": [
+    {
+     "zone": 0,
+     "name": "shawl",
+     "role": "cloth",
+     "fabric": "WOOL",
+     "palette": [
+      "madder_red",
+      "crimson",
+      "cotton_white",
+      "undyed_white_wool",
+      "yellow",
+      "full_green",
+      "indigo_mid",
+      "logwood_black",
+      "saffron"
+     ],
+     "default": "crimson",
+     "pattern": {
+      "options": [
+       "none",
+       "stripe",
+       "check"
+      ],
+      "default": "stripe",
+      "stripe": {
+       "colors": [
+        "crimson",
+        "yellow",
+        "cotton_white"
+       ],
+       "scale_m": 0.036,
+       "axis": "h"
+      },
+      "check": {
+       "colors": [
+        "madder_red",
+        "cotton_white"
+       ],
+       "scale_m": 0.02
+      },
+      "note": "stripes along the sash (axis h: round the body); a Kerman or Kashmir shawl's boteh once the shader draws it; white figured muslin; white or red wool in Egypt"
+     },
+     "bands": null,
+     "palette_hex": {
+      "madder_red": "#8E2B21",
+      "crimson": "#9D1D30",
+      "cotton_white": "#EEEBE1",
+      "undyed_white_wool": "#E0D8C5",
+      "yellow": "#D0A93A",
+      "full_green": "#2E5134",
+      "indigo_mid": "#34507A",
+      "logwood_black": "#1C1B20",
+      "saffron": "#DCA523"
+     },
+     "fabrics": [
+      "WOOL"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 3,
+     "name": "fringe",
+     "role": "fringe",
+     "fabric": "WOOL",
+     "palette": [
+      "madder_red",
+      "crimson",
+      "cotton_white",
+      "undyed_white_wool",
+      "yellow",
+      "full_green",
+      "indigo_mid",
+      "logwood_black",
+      "saffron"
+     ],
+     "default": "crimson",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "madder_red": "#8E2B21",
+      "crimson": "#9D1D30",
+      "cotton_white": "#EEEBE1",
+      "undyed_white_wool": "#E0D8C5",
+      "yellow": "#D0A93A",
+      "full_green": "#2E5134",
+      "indigo_mid": "#34507A",
+      "logwood_black": "#1C1B20",
+      "saffron": "#DCA523"
+     },
+     "fabrics": [
+      "WOOL"
+     ],
+     "metal": false
+    }
+   ],
+   "stats": {
+    "surfaces": {
+     "main": {
+      "tris": 1256,
+      "verts": 881,
+      "zones": [
+       0
+      ],
+      "regions": [
+       "abdomen_back",
+       "abdomen_front",
+       "abdomen_side",
+       "chest_back",
+       "chest_front",
+       "chest_side",
+       "pelvis_side"
+      ],
+      "max_influences": 4,
+      "bones": [
+       "pelvis",
+       "l_upper_leg",
+       "spinea",
+       "spineb",
+       "spinec",
+       "spined"
+      ]
+     }
+    },
+    "tris": 1256,
+    "verts": 881,
+    "surface_count": 1,
+    "shapes": {
+     "sex": 0.0537,
+     "breast_large": 0.0567,
+     "breast_small": 0.0201
+    },
+    "coverage": {
+     "chest_front": {
+      "normal": 0.208,
+      "cone": 0.156
+     },
+     "chest_side": {
+      "normal": 0.177,
+      "cone": 0.146
+     },
+     "chest_back": {
+      "normal": 0.344,
+      "cone": 0.26
+     },
+     "abdomen_front": {
+      "normal": 0.729,
+      "cone": 0.615
+     },
+     "abdomen_side": {
+      "normal": 0.781,
+      "cone": 0.667
+     },
+     "abdomen_back": {
+      "normal": 0.771,
+      "cone": 0.552
+     },
+     "pelvis_side": {
+      "normal": 0.01,
+      "cone": 0.0
+     },
+     "upper_arm_l": {
+      "normal": 0.052,
+      "cone": 0.0
+     },
+     "forearm_a_l": {
+      "normal": 0.073,
+      "cone": 0.0
+     },
+     "upper_arm_r": {
+      "normal": 0.031,
+      "cone": 0.0
+     },
+     "forearm_a_r": {
+      "normal": 0.031,
+      "cone": 0.0
+     }
+    },
+    "glb_kb": 254.3
+   },
+   "budget": {
+    "tris_max": 4500
+   },
+   "evidence": "A",
+   "licence_note": null,
+   "history": "Over the entari every man wore a girdle wound several times round the waist, a Kerman or Kashmir shawl for the better-off, white figured muslin, white or red wool in Egypt, a striped silk one at Fez (a V&A sash measures 0.565 x 0.145 m folded); a dagger or a scribe's inkhorn was stuck in it [NIE][RUS][LAN][SHA][VA-O364379].",
+   "sources": [
+    "NIE",
+    "RUS",
+    "LAN",
+    "SHA",
+    "VA-O364379"
+   ],
+   "aliases": [],
+   "tags": [
+    "men",
+    "women",
+    "middle_east",
+    "ottoman_turkish",
+    "levantine",
+    "persian",
+    "arab",
+    "armenian",
+    "kurdish",
+    "north_african",
+    "moorish",
+    "egyptian"
+   ],
+   "checks": {
+    "clearance": {
+     "f": {
+      "min_mm": 18.18,
+      "p05_mm": 23.02,
+      "inside_skin": 0
+     },
+     "m": {
+      "min_mm": 18.21,
+      "p05_mm": 22.0,
+      "inside_skin": 0
+     },
+     "bl": {
+      "min_mm": 5.66,
+      "p05_mm": 18.45,
+      "inside_skin": 0
+     },
+     "bs": {
+      "min_mm": 18.25,
+      "p05_mm": 22.86,
+      "inside_skin": 0
+     }
+    },
+    "envelope": {
+     "ok": true,
+     "layer": "cloth2",
+     "groups": {}
+    }
+   },
+   "generator": "tools/character/cloth2/garments/sash_shawl.py",
+   "lib_version": 2,
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/sash_shawl.py (cloth2: grown from the MakeHuman body's surface).",
+   "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+   "review": null,
+   "fit_over": [
+    "shirt_collarless",
+    "salvar_mens",
+    "entari"
+   ],
+   "extra": {
+    "presets": {
+     "fez_stripe": {
+      "0": "crimson",
+      "3": "crimson"
+     },
+     "red_wool": {
+      "0": "madder_red",
+      "3": "madder_red",
+      "pattern": "none"
+     },
+     "white_muslin": {
+      "0": "cotton_white",
+      "3": "cotton_white",
+      "pattern": "none"
+     }
+    },
+    "gear_note": "A dagger, a jambiya or an inkhorn in the sash is gear (weapons), not part of the garment.",
+    "recipe_note": "recipes.sash with turns 3 (cloth2.dress.wound_sash): three bands 7.2 cm tall on a helix from 0.94 to 1.09, each 3.2 mm over the one under it, open at 52 deg (the tuck at the left front), a short end of 12 cm hanging there.",
+    "references": [
+     "[VA-O364379] V&A Moroccan sash: https://collections.vam.ac.uk/item/O364379",
+     "[RUS] Russell: https://archive.org/details/naturalhistoryof01russ"
+    ]
+   }
+  },
+  "shirt_collarless": {
+   "id": "shirt_collarless",
+   "name": "Collarless shirt",
+   "description": "A long white shirt with a round collarless neck slit down the front, very wide straight sleeves hanging open at the wrist and side slits from the hips; tucked into the trousers or worn outside.",
+   "kind": "garment",
+   "set": "middle_east",
+   "slot": "shirt",
+   "alt_slots": [],
+   "layer": {
+    "default": 10
+   },
+   "glb": "res://assets/character/garments/middle_east/shirt_collarless.glb",
+   "mesh": "shirt_collarless",
+   "surfaces": [
+    {
+     "surface": "main",
+     "name": "shirt_collarless"
+    }
+   ],
+   "occupies_regions": [
+    "abdomen_back",
+    "abdomen_front",
+    "abdomen_side",
+    "chest_back",
+    "chest_front",
+    "chest_side",
+    "chest_upper_back",
+    "chest_upper_front",
+    "chest_upper_side",
+    "forearm_a_l",
+    "forearm_a_r",
+    "forearm_b_l",
+    "forearm_b_r",
+    "forearm_c_l",
+    "forearm_c_r",
+    "neck_lower",
+    "pelvis_center",
+    "pelvis_side",
+    "thigh_lower_l",
+    "thigh_lower_r",
+    "thigh_upper_l",
+    "thigh_upper_r",
+    "upper_arm_l",
+    "upper_arm_r",
+    "wrist_l",
+    "wrist_r"
+   ],
+   "hides_regions": [
+    "abdomen_back",
+    "abdomen_front",
+    "abdomen_side",
+    "chest_back",
+    "chest_front",
+    "chest_side",
+    "forearm_a_l",
+    "forearm_a_r",
+    "pelvis_side",
+    "upper_arm_l",
+    "upper_arm_r"
+   ],
+   "hides_hair_zones": [],
+   "hair_zones": [],
+   "excludes": [],
+   "requires": [],
+   "variants": {},
+   "skirt": null,
+   "helpers": [],
+   "body_fit": {
+    "shapes": [
+     "sex",
+     "breast_large",
+     "breast_small"
+    ],
+    "female": true,
+    "male": true
+   },
+   "zones": [
+    {
+     "zone": 0,
+     "name": "linen or cotton",
+     "role": "cloth",
+     "fabric": "LIN",
+     "palette": [
+      "linen_white",
+      "cotton_white",
+      "linen_unbleached",
+      "indigo_pale",
+      "undyed_white_wool"
+     ],
+     "default": "linen_white",
+     "pattern": {
+      "options": [
+       "none",
+       "stripe",
+       "check"
+      ],
+      "default": "none",
+      "stripe": {
+       "colors": [
+        "cotton_white",
+        "indigo_pale"
+       ],
+       "scale_m": 0.012,
+       "duty": 0.3
+      },
+      "check": {
+       "colors": [
+        "cotton_white",
+        "indigo_pale"
+       ],
+       "scale_m": 0.01
+      }
+     },
+     "bands": null,
+     "palette_hex": {
+      "linen_white": "#E8E3D3",
+      "cotton_white": "#EEEBE1",
+      "linen_unbleached": "#C8BA9A",
+      "indigo_pale": "#6E8BB1",
+      "undyed_white_wool": "#E0D8C5"
+     },
+     "fabrics": [
+      "LIN"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 1,
+     "name": "neck binding",
+     "role": "trim",
+     "fabric": "LIN",
+     "palette": [
+      "linen_white",
+      "cotton_white",
+      "linen_unbleached",
+      "indigo_pale",
+      "undyed_white_wool"
+     ],
+     "default": "linen_white",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "linen_white": "#E8E3D3",
+      "cotton_white": "#EEEBE1",
+      "linen_unbleached": "#C8BA9A",
+      "indigo_pale": "#6E8BB1",
+      "undyed_white_wool": "#E0D8C5"
+     },
+     "fabrics": [
+      "LIN"
+     ],
+     "metal": false
+    }
+   ],
+   "stats": {
+    "surfaces": {
+     "main": {
+      "tris": 5668,
+      "verts": 3086,
+      "zones": [
+       0,
+       1
+      ],
+      "regions": [
+       "abdomen_back",
+       "abdomen_front",
+       "abdomen_side",
+       "chest_back",
+       "chest_front",
+       "chest_side",
+       "chest_upper_back",
+       "chest_upper_front",
+       "chest_upper_side",
+       "forearm_a_l",
+       "forearm_a_r",
+       "forearm_b_l",
+       "forearm_b_r",
+       "forearm_c_l",
+       "forearm_c_r",
+       "neck_lower",
+       "pelvis_center",
+       "pelvis_side",
+       "thigh_lower_l",
+       "thigh_lower_r",
+       "thigh_upper_l",
+       "thigh_upper_r",
+       "upper_arm_l",
+       "upper_arm_r",
+       "wrist_l",
+       "wrist_r"
+      ],
+      "max_influences": 4,
+      "bones": [
+       "pelvis",
+       "l_upper_leg",
+       "r_upper_leg",
+       "spinea",
+       "spineb",
+       "spinec",
+       "spined",
+       "l_clavicle",
+       "l_shoulder",
+       "l_elbow",
+       "l_wrist",
+       "l_thumba",
+       "r_clavicle",
+       "r_shoulder",
+       "r_elbow",
+       "r_wrist",
+       "r_thumba",
+       "neck",
+       "l_breast",
+       "r_breast",
+       "l_forarm_twist_a",
+       "l_forarm_twist_c",
+       "l_forarm_twist_b",
+       "r_forarm_twist_a",
+       "r_forarm_twist_c",
+       "r_forarm_twist_b",
+       "l_upper_leg_thigh_helper",
+       "r_upper_leg_thigh_helper",
+       "l_shoulder_twist_a",
+       "l_shoulder_twist_c",
+       "l_shoulder_twist_b",
+       "l_shoulder_twist_d",
+       "r_shoulder_twist_a",
+       "r_shoulder_twist_c",
+       "r_shoulder_twist_b",
+       "r_shoulder_twist_d",
+       "l_upper_leg_front_helper",
+       "l_upper_leg_rear_helper",
+       "r_upper_leg_front_helper",
+       "r_upper_leg_rear_helper"
+      ]
+     }
+    },
+    "tris": 5668,
+    "verts": 3086,
+    "surface_count": 1,
+    "shapes": {
+     "sex": 0.0536,
+     "breast_large": 0.0869,
+     "breast_small": 0.022
+    },
+    "coverage": {
+     "neck_lower": {
+      "normal": 0.667,
+      "cone": 0.625
+     },
+     "chest_upper_front": {
+      "normal": 0.99,
+      "cone": 0.958
+     },
+     "chest_upper_side": {
+      "normal": 0.896,
+      "cone": 0.896
+     },
+     "chest_upper_back": {
+      "normal": 0.969,
+      "cone": 0.969
+     },
+     "chest_front": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "chest_side": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "chest_back": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "abdomen_front": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "abdomen_side": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "abdomen_back": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "pelvis_center": {
+      "normal": 0.552,
+      "cone": 0.323
+     },
+     "pelvis_side": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "upper_arm_l": {
+      "normal": 0.979,
+      "cone": 0.979
+     },
+     "forearm_a_l": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "forearm_b_l": {
+      "normal": 0.969,
+      "cone": 0.802
+     },
+     "forearm_c_l": {
+      "normal": 0.698,
+      "cone": 0.365
+     },
+     "wrist_l": {
+      "normal": 0.448,
+      "cone": 0.01
+     },
+     "hand_l": {
+      "normal": 0.042,
+      "cone": 0.0
+     },
+     "upper_arm_r": {
+      "normal": 0.979,
+      "cone": 0.979
+     },
+     "forearm_a_r": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "forearm_b_r": {
+      "normal": 0.969,
+      "cone": 0.823
+     },
+     "forearm_c_r": {
+      "normal": 0.719,
+      "cone": 0.396
+     },
+     "wrist_r": {
+      "normal": 0.438,
+      "cone": 0.031
+     },
+     "hand_r": {
+      "normal": 0.052,
+      "cone": 0.0
+     },
+     "thigh_upper_l": {
+      "normal": 0.917,
+      "cone": 0.656
+     },
+     "thigh_lower_l": {
+      "normal": 0.26,
+      "cone": 0.146
+     },
+     "thigh_upper_r": {
+      "normal": 0.917,
+      "cone": 0.646
+     },
+     "thigh_lower_r": {
+      "normal": 0.281,
+      "cone": 0.156
+     }
+    },
+    "glb_kb": 694.0
+   },
+   "budget": {
+    "tris_max": 6000
+   },
+   "evidence": "A",
+   "licence_note": null,
+   "history": "Under the robe the townsmen of the Ottoman lands, the Levant, Arabia, Egypt and Morocco wore a white linen or cotton shirt, collarless, the neck slit in front, with straight sleeves so wide at the wrist that they hung open; the better-off had it of silk gauze [NIE][SHA][LAN][CHE]. Women wore the same cut longer (thob_womens).",
+   "sources": [
+    "NIE",
+    "SHA",
+    "LAN",
+    "CHE"
+   ],
+   "aliases": [],
+   "tags": [
+    "men",
+    "women",
+    "middle_east",
+    "ottoman_turkish",
+    "levantine",
+    "arab",
+    "armenian",
+    "kurdish",
+    "moorish",
+    "egyptian"
+   ],
+   "checks": {
+    "clearance": {
+     "f": {
+      "min_mm": 1.95,
+      "p05_mm": 3.0,
+      "inside_skin": 0
+     },
+     "m": {
+      "min_mm": 2.0,
+      "p05_mm": 3.08,
+      "inside_skin": 0
+     },
+     "bl": {
+      "min_mm": 2.0,
+      "p05_mm": 3.11,
+      "inside_skin": 0
+     },
+     "bs": {
+      "min_mm": 1.95,
+      "p05_mm": 3.01,
+      "inside_skin": 0
+     }
+    },
+    "envelope": {
+     "ok": true,
+     "layer": "cloth2",
+     "groups": {}
+    }
+   },
+   "generator": "tools/character/cloth2/garments/shirt_collarless.py",
+   "lib_version": 2,
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/shirt_collarless.py (cloth2: grown from the MakeHuman body's surface).",
+   "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+   "review": null,
+   "extra": {
+    "presets": {
+     "white": {
+      "0": "linen_white",
+      "1": "linen_white"
+     },
+     "cotton": {
+      "0": "cotton_white",
+      "1": "cotton_white"
+     },
+     "striped": {
+      "0": "cotton_white",
+      "1": "cotton_white",
+      "pattern": "stripe"
+     }
+    },
+    "worn_note": "Worn outside over the trousers, its tails hanging over them (salvar_mens is fitted over its body at the waist only); a tucked shirt is shirt_tucked.",
+    "recipe_note": "recipes.shirt with the 2026-10-03 options: hem 0.62 (side slits to 0.80), collar=False, band_t=None (no wrist band), front_slit to 1.20, sleeve_wide 0.045 from arm parameter 0.42 (about 0.50 m round at the wrist).",
+    "references": [
+     "[NIE] Niebuhr, Travels through Arabia: https://archive.org/details/b28773263_0001",
+     "[SHA] Shaw, Travels: https://archive.org/details/travelsobservati00shaw",
+     "[LAN] Lane, Modern Egyptians: https://archive.org/details/accountofmanners00lane",
+     "[CHE] Chenier, Morocco: https://archive.org/details/b28771515_0001"
+    ]
+   }
+  },
+  "thawb": {
+   "id": "thawb",
+   "name": "Thawb (long shirt)",
+   "description": "A long pull-over shirt to the ankles, the neck slit down the breast, very wide open sleeves, the slit and the cuffs worked with needlework.",
+   "kind": "garment",
+   "set": "middle_east",
+   "slot": "shirt",
+   "alt_slots": [],
+   "layer": {
+    "default": 10,
+    "hips": 36,
+    "thighs": 36
+   },
+   "glb": "res://assets/character/garments/middle_east/thawb.glb",
+   "mesh": "thawb",
+   "surfaces": [
+    {
+     "surface": "main",
+     "name": "thawb"
+    }
+   ],
+   "occupies_regions": [
+    "abdomen_back",
+    "abdomen_front",
+    "abdomen_side",
+    "chest_back",
+    "chest_front",
+    "chest_side",
+    "chest_upper_back",
+    "chest_upper_front",
+    "chest_upper_side",
+    "forearm_a_l",
+    "forearm_a_r",
+    "forearm_b_l",
+    "forearm_b_r",
+    "forearm_c_l",
+    "forearm_c_r",
+    "neck_lower",
+    "pelvis_center",
+    "pelvis_side",
+    "shin_lower_l",
+    "shin_upper_l",
+    "shin_upper_r",
+    "thigh_lower_l",
+    "thigh_lower_r",
+    "thigh_upper_l",
+    "thigh_upper_r",
+    "upper_arm_l",
+    "upper_arm_r",
+    "wrist_l",
+    "wrist_r"
+   ],
+   "hides_regions": [
+    "abdomen_back",
+    "abdomen_front",
+    "abdomen_side",
+    "chest_back",
+    "chest_front",
+    "chest_side",
+    "forearm_a_l",
+    "forearm_a_r",
+    "pelvis_side",
+    "thigh_upper_l",
+    "thigh_upper_r",
+    "upper_arm_r"
+   ],
+   "hides_hair_zones": [],
+   "hair_zones": [],
+   "excludes": [],
+   "requires": [],
+   "variants": {},
+   "skirt": {
+    "closed": true,
+    "hems_godot": [
+     [
+      0.157,
+      0.16,
+      0.19
+     ],
+     [
+      0.245,
+      0.16,
+      -0.0
+     ],
+     [
+      0.157,
+      0.16,
+      -0.19
+     ]
+    ]
+   },
+   "helpers": [],
+   "body_fit": {
+    "shapes": [
+     "sex",
+     "breast_large",
+     "breast_small"
+    ],
+    "female": true,
+    "male": true
+   },
+   "zones": [
+    {
+     "zone": 0,
+     "name": "cotton",
+     "role": "cloth",
+     "fabric": "LIN",
+     "palette": [
+      "indigo_mid",
+      "cotton_white",
+      "stroud_blue",
+      "undyed_brown",
+      "linen_unbleached",
+      "logwood_black",
+      "indigo_pale"
+     ],
+     "default": "indigo_mid",
+     "pattern": {
+      "options": [
+       "none",
+       "stripe",
+       "check"
+      ],
+      "default": "none",
+      "stripe": {
+       "colors": [
+        "indigo_mid",
+        "cotton_white"
+       ],
+       "scale_m": 0.02,
+       "duty": 0.25
+      },
+      "check": {
+       "colors": [
+        "indigo_mid",
+        "cotton_white"
+       ],
+       "scale_m": 0.016
+      },
+      "note": "the Yemen highland shirt of linen checked blue and white"
+     },
+     "bands": null,
+     "palette_hex": {
+      "indigo_mid": "#34507A",
+      "cotton_white": "#EEEBE1",
+      "stroud_blue": "#1E2B4A",
+      "undyed_brown": "#6C523E",
+      "linen_unbleached": "#C8BA9A",
+      "logwood_black": "#1C1B20",
+      "indigo_pale": "#6E8BB1"
+     },
+     "fabrics": [
+      "LIN"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 1,
+     "name": "needlework",
+     "role": "trim",
+     "fabric": "LIN",
+     "palette": [
+      "indigo_mid",
+      "cotton_white",
+      "stroud_blue",
+      "undyed_brown",
+      "linen_unbleached",
+      "logwood_black",
+      "indigo_pale",
+      "madder_red",
+      "yellow",
+      "crimson"
+     ],
+     "default": "madder_red",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "indigo_mid": "#34507A",
+      "cotton_white": "#EEEBE1",
+      "stroud_blue": "#1E2B4A",
+      "undyed_brown": "#6C523E",
+      "linen_unbleached": "#C8BA9A",
+      "logwood_black": "#1C1B20",
+      "indigo_pale": "#6E8BB1",
+      "madder_red": "#8E2B21",
+      "yellow": "#D0A93A",
+      "crimson": "#9D1D30"
+     },
+     "fabrics": [
+      "LIN"
+     ],
+     "metal": false
+    }
+   ],
+   "stats": {
+    "surfaces": {
+     "main": {
+      "tris": 6809,
+      "verts": 3553,
+      "zones": [
+       0,
+       1
+      ],
+      "regions": [
+       "abdomen_back",
+       "abdomen_front",
+       "abdomen_side",
+       "chest_back",
+       "chest_front",
+       "chest_side",
+       "chest_upper_back",
+       "chest_upper_front",
+       "chest_upper_side",
+       "foot_l",
+       "foot_r",
+       "forearm_a_l",
+       "forearm_a_r",
+       "forearm_b_l",
+       "forearm_b_r",
+       "forearm_c_l",
+       "forearm_c_r",
+       "neck_lower",
+       "pelvis_center",
+       "pelvis_side",
+       "shin_lower_l",
+       "shin_lower_r",
+       "shin_upper_l",
+       "shin_upper_r",
+       "thigh_lower_l",
+       "thigh_lower_r",
+       "thigh_upper_l",
+       "thigh_upper_r",
+       "upper_arm_l",
+       "upper_arm_r",
+       "wrist_l",
+       "wrist_r"
+      ],
+      "max_influences": 4,
+      "bones": [
+       "pelvis",
+       "l_upper_leg",
+       "r_upper_leg",
+       "spinea",
+       "spineb",
+       "spinec",
+       "spined",
+       "l_clavicle",
+       "l_shoulder",
+       "l_elbow",
+       "l_wrist",
+       "r_clavicle",
+       "r_shoulder",
+       "r_elbow",
+       "r_wrist",
+       "neck",
+       "l_breast",
+       "r_breast",
+       "l_forarm_twist_a",
+       "l_forarm_twist_c",
+       "l_forarm_twist_b",
+       "r_forarm_twist_a",
+       "r_forarm_twist_c",
+       "r_forarm_twist_b",
+       "l_upper_leg_thigh_helper",
+       "r_upper_leg_thigh_helper",
+       "l_shoulder_twist_a",
+       "l_shoulder_twist_c",
+       "l_shoulder_twist_b",
+       "l_shoulder_twist_d",
+       "r_shoulder_twist_a",
+       "r_shoulder_twist_c",
+       "r_shoulder_twist_b",
+       "r_shoulder_twist_d",
+       "l_upper_leg_front_helper",
+       "l_upper_leg_rear_helper",
+       "r_upper_leg_front_helper",
+       "r_upper_leg_rear_helper"
+      ]
+     }
+    },
+    "tris": 6809,
+    "verts": 3553,
+    "surface_count": 1,
+    "shapes": {
+     "sex": 0.0536,
+     "breast_large": 0.0868,
+     "breast_small": 0.0216
+    },
+    "coverage": {
+     "neck_lower": {
+      "normal": 0.646,
+      "cone": 0.604
+     },
+     "chest_upper_front": {
+      "normal": 0.927,
+      "cone": 0.812
+     },
+     "chest_upper_side": {
+      "normal": 0.896,
+      "cone": 0.896
+     },
+     "chest_upper_back": {
+      "normal": 0.969,
+      "cone": 0.969
+     },
+     "chest_front": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "chest_side": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "chest_back": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "abdomen_front": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "abdomen_side": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "abdomen_back": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "pelvis_center": {
+      "normal": 0.656,
+      "cone": 0.469
+     },
+     "pelvis_side": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "upper_arm_l": {
+      "normal": 0.979,
+      "cone": 0.969
+     },
+     "forearm_a_l": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "forearm_b_l": {
+      "normal": 0.938,
+      "cone": 0.708
+     },
+     "forearm_c_l": {
+      "normal": 0.698,
+      "cone": 0.25
+     },
+     "wrist_l": {
+      "normal": 0.479,
+      "cone": 0.0
+     },
+     "hand_l": {
+      "normal": 0.083,
+      "cone": 0.0
+     },
+     "upper_arm_r": {
+      "normal": 0.979,
+      "cone": 0.979
+     },
+     "forearm_a_r": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "forearm_b_r": {
+      "normal": 0.948,
+      "cone": 0.677
+     },
+     "forearm_c_r": {
+      "normal": 0.698,
+      "cone": 0.292
+     },
+     "wrist_r": {
+      "normal": 0.5,
+      "cone": 0.0
+     },
+     "hand_r": {
+      "normal": 0.062,
+      "cone": 0.0
+     },
+     "thigh_upper_l": {
+      "normal": 1.0,
+      "cone": 0.99
+     },
+     "thigh_lower_l": {
+      "normal": 0.896,
+      "cone": 0.698
+     },
+     "shin_upper_l": {
+      "normal": 0.635,
+      "cone": 0.51
+     },
+     "shin_lower_l": {
+      "normal": 0.26,
+      "cone": 0.031
+     },
+     "ankle_l": {
+      "normal": 0.073,
+      "cone": 0.0
+     },
+     "foot_l": {
+      "normal": 0.073,
+      "cone": 0.0
+     },
+     "thigh_upper_r": {
+      "normal": 1.0,
+      "cone": 0.979
+     },
+     "thigh_lower_r": {
+      "normal": 0.885,
+      "cone": 0.802
+     },
+     "shin_upper_r": {
+      "normal": 0.625,
+      "cone": 0.479
+     },
+     "shin_lower_r": {
+      "normal": 0.229,
+      "cone": 0.052
+     },
+     "ankle_r": {
+      "normal": 0.125,
+      "cone": 0.0
+     },
+     "foot_r": {
+      "normal": 0.083,
+      "cone": 0.0
+     }
+    },
+    "glb_kb": 821.6
+   },
+   "budget": {
+    "tris_max": 7000
+   },
+   "evidence": "A",
+   "licence_note": null,
+   "history": "The long shirt was the whole dress of the poorer Arabs and Egyptians, men and women: coarse cotton, indigo-dyed cotton or linen ('blue shirts and drawers'), brown wool for the herders; the neck slit down the breast, the sleeves wide and hanging open, to the feet in the towns and to mid-calf among herders, needlework at the slit and the cuffs [LAN][NIE][BUR].",
+   "sources": [
+    "LAN",
+    "NIE",
+    "BUR"
+   ],
+   "aliases": [],
+   "tags": [
+    "men",
+    "women",
+    "middle_east",
+    "arab",
+    "egyptian",
+    "levantine"
+   ],
+   "checks": {
+    "clearance": {
+     "f": {
+      "min_mm": 1.98,
+      "p05_mm": 3.65,
+      "inside_skin": 0
+     },
+     "m": {
+      "min_mm": 2.0,
+      "p05_mm": 3.97,
+      "inside_skin": 0
+     },
+     "bl": {
+      "min_mm": 2.0,
+      "p05_mm": 3.79,
+      "inside_skin": 0
+     },
+     "bs": {
+      "min_mm": 2.0,
+      "p05_mm": 4.0,
+      "inside_skin": 0
+     }
+    },
+    "envelope": {
+     "ok": true,
+     "layer": "cloth2",
+     "groups": {}
+    }
+   },
+   "generator": "tools/character/cloth2/garments/thawb.py",
+   "lib_version": 2,
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/thawb.py (cloth2: grown from the MakeHuman body's surface).",
+   "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+   "review": null,
+   "extra": {
+    "presets": {
+     "blue": {
+      "0": "indigo_mid",
+      "1": "madder_red"
+     },
+     "white": {
+      "0": "cotton_white",
+      "1": "indigo_mid"
+     },
+     "herder": {
+      "0": "undyed_brown",
+      "1": "undyed_brown"
+     }
+    },
+    "recipe_note": "cloth2.dress.tunic: the shirt's shell, sleeves widening by 6 cm toward the wrist (about 0.6 m round), the skirt from the hips to 0.16 with the closed-skirt weights (skirt.closed, hems_godot from the build).",
+    "references": [
+     "[LAN] Lane: https://archive.org/details/accountofmanners00lane",
+     "[NIE] Niebuhr: https://archive.org/details/b28773263_0001",
+     "[BUR] Burckhardt, Notes on the Bedouins: https://archive.org/details/notesonbedouins00burcgoog"
+    ]
+   }
+  },
+  "turban_common": {
+   "id": "turban_common",
+   "name": "Turban (common)",
+   "description": "Coarse white cloth wound loosely in four rolls round a small red felt cap, the cap's crown showing at the top, the end tucked in at the side.",
+   "kind": "garment",
+   "set": "middle_east",
+   "slot": "head",
+   "alt_slots": [],
+   "layer": {
+    "default": 80
+   },
+   "glb": "res://assets/character/garments/middle_east/turban_common.glb",
+   "mesh": "turban_common",
+   "surfaces": [
+    {
+     "surface": "main",
+     "name": "turban_common"
+    }
+   ],
+   "occupies_regions": [],
+   "hides_regions": [],
+   "hides_hair_zones": [
+    "crown",
+    "sides",
+    "back"
+   ],
+   "hair_zones": [],
+   "excludes": [],
+   "requires": [],
+   "variants": {},
+   "skirt": null,
+   "helpers": [],
+   "body_fit": {
+    "shapes": [
+     "sex",
+     "breast_large",
+     "breast_small"
+    ],
+    "female": true,
+    "male": true
+   },
+   "zones": [
+    {
+     "zone": 0,
+     "name": "wound cloth",
+     "role": "cloth",
+     "fabric": "LIN",
+     "palette": [
+      "cotton_white",
+      "linen_white",
+      "undyed_white_wool",
+      "madder_red",
+      "saffron",
+      "yellow",
+      "indigo_mid",
+      "logwood_black",
+      "crimson"
+     ],
+     "default": "cotton_white",
+     "pattern": {
+      "options": [
+       "none",
+       "stripe",
+       "check"
+      ],
+      "default": "none",
+      "stripe": {
+       "colors": [
+        "cotton_white",
+        "indigo_mid"
+       ],
+       "scale_m": 0.014,
+       "axis": "h"
+      },
+      "check": {
+       "colors": [
+        "cotton_white",
+        "madder_red"
+       ],
+       "scale_m": 0.012
+      },
+      "note": "preset christian: a red cap wrapped in blue-and-white striped linen"
+     },
+     "bands": null,
+     "palette_hex": {
+      "cotton_white": "#EEEBE1",
+      "linen_white": "#E8E3D3",
+      "undyed_white_wool": "#E0D8C5",
+      "madder_red": "#8E2B21",
+      "saffron": "#DCA523",
+      "yellow": "#D0A93A",
+      "indigo_mid": "#34507A",
+      "logwood_black": "#1C1B20",
+      "crimson": "#9D1D30"
+     },
+     "fabrics": [
+      "LIN"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 1,
+     "name": "cap",
+     "role": "cloth",
+     "fabric": "WOOL",
+     "palette": [
+      "scarlet",
+      "madder_red",
+      "cotton_white",
+      "undyed_white_wool",
+      "logwood_black"
+     ],
+     "default": "scarlet",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "scarlet": "#A8161E",
+      "madder_red": "#8E2B21",
+      "cotton_white": "#EEEBE1",
+      "undyed_white_wool": "#E0D8C5",
+      "logwood_black": "#1C1B20"
+     },
+     "fabrics": [
+      "WOOL"
+     ],
+     "metal": false
+    }
+   ],
+   "stats": {
+    "surfaces": {
+     "main": {
+      "tris": 3096,
+      "verts": 1570,
+      "zones": [
+       0,
+       1
+      ],
+      "regions": [
+       "head"
+      ],
+      "max_influences": 1,
+      "bones": [
+       "headb"
+      ]
+     }
+    },
+    "tris": 3096,
+    "verts": 1570,
+    "surface_count": 1,
+    "shapes": {
+     "sex": 0.0068,
+     "breast_large": 0.0,
+     "breast_small": 0.0,
+     "sex_head": 0.0068
+    },
+    "coverage": {
+     "head": {
+      "normal": 0.146,
+      "cone": 0.042
+     }
+    },
+    "glb_kb": 308.9
+   },
+   "budget": {
+    "tris_max": 3600
+   },
+   "evidence": "A",
+   "licence_note": null,
+   "history": "The common man's turban was a coarse cloth, white and washed fresh, a red or yellow woollen shawl, or plain cotton, wound in a few loose rolls round a small cloth or low scarlet felt cap; Christians at Aleppo wrapped the red cap in blue-and-white striped linen, the Copts wore dark ones [SHA][LAN][RUS][NIE][RIC]. Green was reserved for the descendants of the Prophet and is not offered.",
+   "sources": [
+    "SHA",
+    "LAN",
+    "RUS",
+    "NIE",
+    "RIC"
+   ],
+   "aliases": [],
+   "tags": [
+    "men",
+    "women",
+    "middle_east",
+    "ottoman_turkish",
+    "levantine",
+    "armenian",
+    "kurdish",
+    "moorish",
+    "egyptian",
+    "arab",
+    "north_african",
+    "ethiopian"
+   ],
+   "checks": {
+    "clearance": {
+     "f": {
+      "min_mm": 6.46,
+      "p05_mm": 8.55,
+      "inside_skin": 0
+     },
+     "m": {
+      "min_mm": 6.37,
+      "p05_mm": 8.48,
+      "inside_skin": 0
+     },
+     "bl": {
+      "min_mm": 6.46,
+      "p05_mm": 8.55,
+      "inside_skin": 0
+     },
+     "bs": {
+      "min_mm": 6.46,
+      "p05_mm": 8.55,
+      "inside_skin": 0
+     }
+    },
+    "envelope": {
+     "ok": true,
+     "layer": "cloth2",
+     "groups": {}
+    },
+    "scalp_clearance_mm": {
+     "f": [
+      6.6,
+      8.6
+     ],
+     "m": [
+      6.9,
+      8.5
+     ],
+     "bl": [
+      6.6,
+      8.6
+     ],
+     "bs": [
+      6.6,
+      8.6
+     ]
+    }
+   },
+   "generator": "tools/character/cloth2/garments/turban_common.py",
+   "lib_version": 2,
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/turban_common.py (cloth2: grown from the MakeHuman body's surface).",
+   "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+   "review": null,
+   "extra": {
+    "presets": {
+     "white": {
+      "0": "cotton_white",
+      "1": "scarlet"
+     },
+     "christian": {
+      "0": "cotton_white",
+      "1": "scarlet",
+      "pattern": "stripe"
+     },
+     "copt": {
+      "0": "logwood_black",
+      "1": "logwood_black"
+     },
+     "kurdish": {
+      "0": "madder_red",
+      "1": "madder_red"
+     }
+    },
+    "no_green_note": "No green token: green turbans were reserved for the descendants of the Prophet.",
+    "recipe_note": "cloth2.dress.head_wrap kind turban: the core a small cap (hats.head_grid, edge 58/70/78 deg); four rolls (tubes r 14.5 mm) on a helix rising 16 mm a turn from the front of the band plane, an ellipse 0.20 m across growing 4 mm a turn, never nearer the scalp than 9.5 mm; rigid on headb.",
+    "references": [
+     "[RUS] Russell: https://archive.org/details/naturalhistoryof01russ",
+     "[LAN] Lane: https://archive.org/details/accountofmanners00lane",
+     "[SHA] Shaw: https://archive.org/details/travelsobservati00shaw"
+    ]
+   }
+  },
+  "filipino_salakot": {
+   "id": "filipino_salakot",
+   "name": "Salakot (domed hat)",
+   "description": "A wide domed hat of split bamboo or rattan with a knob on top, held by an inner head band and a chin strap.",
+   "kind": "garment",
+   "set": "southeast_asia",
+   "slot": "head",
+   "alt_slots": [],
+   "layer": {
+    "default": 80
+   },
+   "glb": "res://assets/character/garments/southeast_asia/filipino_salakot.glb",
+   "mesh": "filipino_salakot",
+   "surfaces": [
+    {
+     "surface": "main",
+     "name": "filipino_salakot"
+    }
+   ],
+   "occupies_regions": [],
+   "hides_regions": [],
+   "hides_hair_zones": [
+    "crown"
+   ],
+   "hair_zones": [],
+   "excludes": [],
+   "requires": [],
+   "variants": {},
+   "skirt": null,
+   "helpers": [],
+   "body_fit": {
+    "shapes": [
+     "sex",
+     "breast_large",
+     "breast_small"
+    ],
+    "female": true,
+    "male": true
+   },
+   "zones": [
+    {
+     "zone": 0,
+     "name": "bamboo",
+     "role": "cloth",
+     "fabric": "HES",
+     "palette": [
+      "bamboo",
+      "straw",
+      "walnut_brown",
+      "logwood_black"
+     ],
+     "default": "bamboo",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "bamboo": "#B49A60",
+      "straw": "#C6AC6E",
+      "walnut_brown": "#5A3F2C",
+      "logwood_black": "#1C1B20"
+     },
+     "fabrics": [
+      "HES"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 1,
+     "name": "head band",
+     "role": "trim",
+     "fabric": "HES",
+     "palette": [
+      "straw",
+      "bamboo",
+      "walnut_brown"
+     ],
+     "default": "straw",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "straw": "#C6AC6E",
+      "bamboo": "#B49A60",
+      "walnut_brown": "#5A3F2C"
+     },
+     "fabrics": [
+      "HES"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 2,
+     "name": "finial",
+     "role": "trim",
+     "fabric": "WOOL",
+     "palette": [
+      "walnut_brown",
+      "bamboo",
+      "silver",
+      "logwood_black"
+     ],
+     "default": "walnut_brown",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "walnut_brown": "#5A3F2C",
+      "bamboo": "#B49A60",
+      "silver": "#C8CACC",
+      "logwood_black": "#1C1B20"
+     },
+     "fabrics": [
+      "WOOL"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 3,
+     "name": "chin strap",
+     "role": "ribbon",
+     "fabric": "FLAT",
+     "palette": [
+      "leather_brown",
+      "straw",
+      "logwood_black"
+     ],
+     "default": "leather_brown",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "leather_brown": "#5B3D26",
+      "straw": "#C6AC6E",
+      "logwood_black": "#1C1B20"
+     },
+     "fabrics": [
+      "FLAT"
+     ],
+     "metal": false
+    }
+   ],
+   "stats": {
+    "surfaces": {
+     "main": {
+      "tris": 1778,
+      "verts": 965,
+      "zones": [
+       0,
+       1,
+       2,
+       3
+      ],
+      "regions": [
+       "head"
+      ],
+      "max_influences": 1,
+      "bones": [
+       "headb"
+      ]
+     }
+    },
+    "tris": 1778,
+    "verts": 965,
+    "surface_count": 1,
+    "shapes": {
+     "sex": 0.0115,
+     "breast_large": 0.0,
+     "breast_small": 0.0,
+     "sex_head": 0.0115
+    },
+    "coverage": {
+     "head": {
+      "normal": 0.198,
+      "cone": 0.073
+     },
+     "chest_upper_side": {
+      "normal": 0.01,
+      "cone": 0.0
+     },
+     "chest_upper_back": {
+      "normal": 0.01,
+      "cone": 0.0
+     }
+    },
+    "glb_kb": 220.0
+   },
+   "budget": {
+    "tris_max": 2600
+   },
+   "evidence": "A",
+   "licence_note": null,
+   "history": "The salakot of the Tagalog and Visayan lowlands was a wide dome of bamboo, rattan or nito about 0.45 m across, standing above the head on an inner band (the baat), with a finial knob or spike, worn by farmers, boatmen and the Manila men of the galleon trade; silver-trimmed ones marked the better-off [PH5][PH3].",
+   "sources": [
+    "PH5",
+    "PH3"
+   ],
+   "aliases": [],
+   "tags": [
+    "men",
+    "women",
+    "southeast_asia",
+    "filipino"
+   ],
+   "checks": {
+    "clearance": {
+     "f": {
+      "min_mm": 3.99,
+      "p05_mm": 13.04,
+      "inside_skin": 0
+     },
+     "m": {
+      "min_mm": 1.54,
+      "p05_mm": 12.21,
+      "inside_skin": 0
+     },
+     "bl": {
+      "min_mm": -137.48,
+      "p05_mm": 12.99,
+      "inside_skin": 2
+     },
+     "bs": {
+      "min_mm": 3.99,
+      "p05_mm": 13.04,
+      "inside_skin": 0
+     }
+    },
+    "envelope": {
+     "ok": false,
+     "layer": "cloth2",
+     "groups": {}
+    },
+    "scalp_clearance_mm": {
+     "f": [
+      10.1,
+      21.9
+     ],
+     "m": [
+      10.9,
+      19.9
+     ],
+     "bl": [
+      10.1,
+      21.9
+     ],
+     "bs": [
+      10.1,
+      21.9
+     ]
+    }
+   },
+   "generator": "tools/character/cloth2/garments/filipino_salakot.py",
+   "lib_version": 2,
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/filipino_salakot.py (cloth2: grown from the MakeHuman body's surface).",
+   "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+   "review": null,
+   "extra": {
+    "presets": {
+     "bamboo": {
+      "0": "bamboo",
+      "1": "straw",
+      "2": "walnut_brown",
+      "3": "leather_brown"
+     },
+     "better_off": {
+      "0": "walnut_brown",
+      "1": "straw",
+      "2": "silver",
+      "3": "logwood_black"
+     }
+    },
+    "recipe_note": "cloth2.dress.lathe_hat DOME_FINIAL: a dome of revolution 0.225 m in radius rising 0.145 m from its rim, 5 mm thick, on an inner elliptic band (0.083 x 0.105 m) at the hat band plane, a finial knob 4 cm, a chin strap kept 7 mm off the face; rigid on headb.",
+    "fabric_note": "HES (a coarse weave) until the STRAW kit exists.",
+    "references": [
+     "[PH5] The salakot: https://en.wikipedia.org/wiki/Salakot"
+    ]
+   }
+  },
+  "spanish_capa": {
+   "id": "spanish_capa",
+   "name": "Capa (Spanish cape)",
+   "description": "A long circle cape of broadcloth from a small stand collar to the shins, clasped at the throat and thrown back from the arms, the fronts turned back to show their velvet facings.",
+   "kind": "garment",
+   "set": "spanish",
+   "slot": "accessories.wrap",
+   "alt_slots": [],
+   "layer": {
+    "default": 50
+   },
+   "glb": "res://assets/character/garments/spanish/spanish_capa.glb",
+   "mesh": "spanish_capa",
+   "surfaces": [
+    {
+     "surface": "main",
+     "name": "spanish_capa"
+    }
+   ],
+   "occupies_regions": [
+    "abdomen_back",
+    "chest_back",
+    "chest_side",
+    "chest_upper_back",
+    "chest_upper_front",
+    "chest_upper_side",
+    "forearm_a_l",
+    "forearm_a_r",
+    "neck_lower",
+    "neck_upper",
+    "pelvis_side",
+    "shin_upper_l",
+    "shin_upper_r",
+    "thigh_lower_l",
+    "thigh_lower_r",
+    "upper_arm_l",
+    "upper_arm_r"
+   ],
+   "hides_regions": [
+    "chest_upper_back"
+   ],
+   "hides_hair_zones": [],
+   "hair_zones": [],
+   "excludes": [],
+   "requires": [],
+   "variants": {},
+   "skirt": null,
+   "helpers": [],
+   "body_fit": {
+    "shapes": [
+     "sex",
+     "breast_large",
+     "breast_small"
+    ],
+    "female": true,
+    "male": true
+   },
+   "zones": [
+    {
+     "zone": 0,
+     "name": "broadcloth",
+     "role": "cloth",
+     "fabric": "WOOL",
+     "palette": [
+      "undyed_brown",
+      "walnut_brown",
+      "logwood_black",
+      "stroud_blue",
+      "slate_grey",
+      "madder_red"
+     ],
+     "default": "undyed_brown",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "undyed_brown": "#6C523E",
+      "walnut_brown": "#5A3F2C",
+      "logwood_black": "#1C1B20",
+      "stroud_blue": "#1E2B4A",
+      "slate_grey": "#6B6A66",
+      "madder_red": "#8E2B21"
+     },
+     "fabrics": [
+      "WOOL"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 1,
+     "name": "embozos (front facings)",
+     "role": "lining",
+     "fabric": "WOOL",
+     "palette": [
+      "undyed_brown",
+      "walnut_brown",
+      "logwood_black",
+      "stroud_blue",
+      "slate_grey",
+      "madder_red",
+      "scarlet",
+      "full_green",
+      "deep_green"
+     ],
+     "default": "madder_red",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "undyed_brown": "#6C523E",
+      "walnut_brown": "#5A3F2C",
+      "logwood_black": "#1C1B20",
+      "stroud_blue": "#1E2B4A",
+      "slate_grey": "#6B6A66",
+      "madder_red": "#8E2B21",
+      "scarlet": "#A8161E",
+      "full_green": "#2E5134",
+      "deep_green": "#213A2A"
+     },
+     "fabrics": [
+      "WOOL"
+     ],
+     "metal": false
+    },
+    {
+     "zone": 2,
+     "name": "clasp",
+     "role": "metal",
+     "fabric": "MET",
+     "palette": [
+      "brass",
+      "silver",
+      "pewter"
+     ],
+     "default": "brass",
+     "pattern": null,
+     "bands": null,
+     "palette_hex": {
+      "brass": "#B58F4A",
+      "silver": "#C8CACC",
+      "pewter": "#9A9C9A"
+     },
+     "fabrics": [
+      "MET"
+     ],
+     "metal": true
+    }
+   ],
+   "stats": {
+    "surfaces": {
+     "main": {
+      "tris": 4048,
+      "verts": 2701,
+      "zones": [
+       0,
+       1,
+       2
+      ],
+      "regions": [
+       "abdomen_back",
+       "abdomen_side",
+       "chest_back",
+       "chest_front",
+       "chest_side",
+       "chest_upper_back",
+       "chest_upper_front",
+       "chest_upper_side",
+       "forearm_a_l",
+       "forearm_a_r",
+       "neck_lower",
+       "neck_upper",
+       "pelvis_center",
+       "pelvis_side",
+       "shin_lower_l",
+       "shin_lower_r",
+       "shin_upper_l",
+       "shin_upper_r",
+       "thigh_lower_l",
+       "thigh_lower_r",
+       "thigh_upper_l",
+       "thigh_upper_r",
+       "upper_arm_l",
+       "upper_arm_r"
+      ],
+      "max_influences": 4,
+      "bones": [
+       "pelvis",
+       "spinea",
+       "spineb",
+       "spinec",
+       "spined",
+       "l_clavicle",
+       "l_shoulder",
+       "l_elbow",
+       "r_clavicle",
+       "r_shoulder",
+       "r_elbow",
+       "neck",
+       "heada",
+       "headb",
+       "l_breast",
+       "r_breast",
+       "l_upper_leg_thigh_helper",
+       "r_upper_leg_thigh_helper",
+       "l_shoulder_twist_a",
+       "l_shoulder_twist_c",
+       "l_shoulder_twist_b",
+       "l_shoulder_twist_d",
+       "r_shoulder_twist_a",
+       "r_shoulder_twist_c",
+       "r_shoulder_twist_b",
+       "r_shoulder_twist_d",
+       "l_upper_leg_rear_helper",
+       "r_upper_leg_rear_helper"
+      ]
+     }
+    },
+    "tris": 4048,
+    "verts": 2701,
+    "surface_count": 1,
+    "shapes": {
+     "sex": 0.1728,
+     "breast_large": 0.0607,
+     "breast_small": 0.0597
+    },
+    "coverage": {
+     "head": {
+      "normal": 0.052,
+      "cone": 0.0
+     },
+     "neck_upper": {
+      "normal": 0.823,
+      "cone": 0.74
+     },
+     "neck_lower": {
+      "normal": 0.958,
+      "cone": 0.938
+     },
+     "chest_upper_front": {
+      "normal": 0.396,
+      "cone": 0.219
+     },
+     "chest_upper_side": {
+      "normal": 1.0,
+      "cone": 0.948
+     },
+     "chest_upper_back": {
+      "normal": 1.0,
+      "cone": 1.0
+     },
+     "chest_front": {
+      "normal": 0.073,
+      "cone": 0.0
+     },
+     "chest_side": {
+      "normal": 0.667,
+      "cone": 0.438
+     },
+     "chest_back": {
+      "normal": 1.0,
+      "cone": 0.875
+     },
+     "abdomen_side": {
+      "normal": 0.188,
+      "cone": 0.021
+     },
+     "abdomen_back": {
+      "normal": 1.0,
+      "cone": 0.906
+     },
+     "pelvis_center": {
+      "normal": 0.167,
+      "cone": 0.146
+     },
+     "pelvis_side": {
+      "normal": 0.594,
+      "cone": 0.521
+     },
+     "upper_arm_l": {
+      "normal": 0.792,
+      "cone": 0.719
+     },
+     "forearm_a_l": {
+      "normal": 0.333,
+      "cone": 0.219
+     },
+     "forearm_b_l": {
+      "normal": 0.021,
+      "cone": 0.0
+     },
+     "forearm_c_l": {
+      "normal": 0.021,
+      "cone": 0.0
+     },
+     "wrist_l": {
+      "normal": 0.021,
+      "cone": 0.0
+     },
+     "upper_arm_r": {
+      "normal": 0.823,
+      "cone": 0.719
+     },
+     "forearm_a_r": {
+      "normal": 0.365,
+      "cone": 0.24
+     },
+     "forearm_b_r": {
+      "normal": 0.031,
+      "cone": 0.0
+     },
+     "forearm_c_r": {
+      "normal": 0.031,
+      "cone": 0.0
+     },
+     "wrist_r": {
+      "normal": 0.021,
+      "cone": 0.0
+     },
+     "thigh_upper_l": {
+      "normal": 0.219,
+      "cone": 0.135
+     },
+     "thigh_lower_l": {
+      "normal": 0.385,
+      "cone": 0.281
+     },
+     "shin_upper_l": {
+      "normal": 0.344,
+      "cone": 0.177
+     },
+     "shin_lower_l": {
+      "normal": 0.052,
+      "cone": 0.0
+     },
+     "thigh_upper_r": {
+      "normal": 0.188,
+      "cone": 0.125
+     },
+     "thigh_lower_r": {
+      "normal": 0.438,
+      "cone": 0.333
+     },
+     "shin_upper_r": {
+      "normal": 0.396,
+      "cone": 0.24
+     },
+     "shin_lower_r": {
+      "normal": 0.062,
+      "cone": 0.0
+     }
+    },
+    "glb_kb": 608.8
+   },
+   "budget": {
+    "tris_max": 7000
+   },
+   "evidence": "A",
+   "licence_note": null,
+   "history": "The long cape and the broad hat were the dress of every Spaniard, high and low, until the decree of 10 March 1766 that cut them short and set off the Esquilache riots: a three-quarter to full circle of pa\u00f1o broadcloth from Segovia or Bejar, pardo brown for ordinary men, dark brown, black or blue with red or green velvet embozos for the better-off; muffled to the eyes (embozado) it hid the face [EU-S1][EU-S2].",
+   "sources": [
+    "EU-S1",
+    "EU-S2"
+   ],
+   "aliases": [],
+   "tags": [
+    "men",
+    "women",
+    "spanish"
+   ],
+   "checks": {
+    "clearance": {
+     "f": {
+      "min_mm": -4.98,
+      "p05_mm": 6.54,
+      "inside_skin": 1
+     },
+     "m": {
+      "min_mm": -7.69,
+      "p05_mm": 5.6,
+      "inside_skin": 5
+     },
+     "bl": {
+      "min_mm": 0.73,
+      "p05_mm": 6.48,
+      "inside_skin": 0
+     },
+     "bs": {
+      "min_mm": 0.43,
+      "p05_mm": 6.63,
+      "inside_skin": 0
+     }
+    },
+    "envelope": {
+     "ok": false,
+     "layer": "cloth2",
+     "groups": {}
+    }
+   },
+   "generator": "tools/character/cloth2/garments/spanish_capa.py",
+   "lib_version": 2,
+   "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/spanish_capa.py (cloth2: grown from the MakeHuman body's surface).",
+   "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+   "review": null,
+   "fit_over": [
+    "shirt_linen",
+    "veste_sleeved",
+    "breeches",
+    "stockings"
+   ],
+   "extra": {
+    "presets": {
+     "pardo": {
+      "0": "undyed_brown",
+      "1": "walnut_brown",
+      "2": "brass"
+     },
+     "better_off": {
+      "0": "logwood_black",
+      "1": "scarlet",
+      "2": "silver"
+     },
+     "blue": {
+      "0": "stroud_blue",
+      "1": "full_green",
+      "2": "brass"
+     }
+    },
+    "styles_note": "Styles from the same recipe: the short capa (hem 0.55), embozado (the right front thrown over the left shoulder: static, later), the esclavina (a shoulder cape to 1.12).",
+    "recipe_note": "cloth2.dress.cloak: the envelope over the shoulders and the upper arms (above 1.08), behind the forearms below, closed at the throat (+-3.5 deg) and parting to 92-104 deg below the arms (worn thrown back: the forearms come out in front of the edges); hem 0.22 at the fronts / 0.20 behind; the embozos a band 5 cm along each front edge raised 2.2 mm (zone 1); a 3.4 cm stand collar; two clasp discs at 1.33.",
+    "arms_note": "Muffled to the eyes with the arms inside (embozado) is a later static style: in the bind pose's A the arms cannot sit inside a cape that also hangs right when they come down.",
+    "references": [
+     "[EU-S1] Esquilache riots: https://en.wikipedia.org/wiki/Esquilache_Riots",
+     "[EU-S2] FIT, the Spanish cape: https://fashionhistory.fitnyc.edu/spanish-cape/"
     ]
    }
   }

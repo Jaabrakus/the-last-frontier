@@ -1,0 +1,434 @@
+{
+ "id": "spanish_capa",
+ "name": "Capa (Spanish cape)",
+ "description": "A long circle cape of broadcloth from a small stand collar to the shins, clasped at the throat and thrown back from the arms, the fronts turned back to show their velvet facings.",
+ "kind": "garment",
+ "set": "spanish",
+ "slot": "accessories.wrap",
+ "alt_slots": [],
+ "layer": {
+  "default": 50
+ },
+ "glb": "res://assets/character/garments/spanish/spanish_capa.glb",
+ "mesh": "spanish_capa",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "spanish_capa"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "chest_back",
+  "chest_side",
+  "chest_upper_back",
+  "chest_upper_front",
+  "chest_upper_side",
+  "forearm_a_l",
+  "forearm_a_r",
+  "neck_lower",
+  "neck_upper",
+  "pelvis_side",
+  "shin_upper_l",
+  "shin_upper_r",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "upper_arm_l",
+  "upper_arm_r"
+ ],
+ "hides_regions": [
+  "chest_upper_back"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "broadcloth",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "undyed_brown",
+    "walnut_brown",
+    "logwood_black",
+    "stroud_blue",
+    "slate_grey",
+    "madder_red"
+   ],
+   "default": "undyed_brown",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "undyed_brown": "#6C523E",
+    "walnut_brown": "#5A3F2C",
+    "logwood_black": "#1C1B20",
+    "stroud_blue": "#1E2B4A",
+    "slate_grey": "#6B6A66",
+    "madder_red": "#8E2B21"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "embozos (front facings)",
+   "role": "lining",
+   "fabric": "WOOL",
+   "palette": [
+    "undyed_brown",
+    "walnut_brown",
+    "logwood_black",
+    "stroud_blue",
+    "slate_grey",
+    "madder_red",
+    "scarlet",
+    "full_green",
+    "deep_green"
+   ],
+   "default": "madder_red",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "undyed_brown": "#6C523E",
+    "walnut_brown": "#5A3F2C",
+    "logwood_black": "#1C1B20",
+    "stroud_blue": "#1E2B4A",
+    "slate_grey": "#6B6A66",
+    "madder_red": "#8E2B21",
+    "scarlet": "#A8161E",
+    "full_green": "#2E5134",
+    "deep_green": "#213A2A"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "clasp",
+   "role": "metal",
+   "fabric": "MET",
+   "palette": [
+    "brass",
+    "silver",
+    "pewter"
+   ],
+   "default": "brass",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "brass": "#B58F4A",
+    "silver": "#C8CACC",
+    "pewter": "#9A9C9A"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": true
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 4048,
+    "verts": 2701,
+    "zones": [
+     0,
+     1,
+     2
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "forearm_a_r",
+     "neck_lower",
+     "neck_upper",
+     "pelvis_center",
+     "pelvis_side",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r",
+     "upper_arm_l",
+     "upper_arm_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "l_shoulder",
+     "l_elbow",
+     "r_clavicle",
+     "r_shoulder",
+     "r_elbow",
+     "neck",
+     "heada",
+     "headb",
+     "l_breast",
+     "r_breast",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_shoulder_twist_a",
+     "l_shoulder_twist_c",
+     "l_shoulder_twist_b",
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 4048,
+  "verts": 2701,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.1728,
+   "breast_large": 0.0607,
+   "breast_small": 0.0597
+  },
+  "coverage": {
+   "head": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "neck_upper": {
+    "normal": 0.823,
+    "cone": 0.74
+   },
+   "neck_lower": {
+    "normal": 0.958,
+    "cone": 0.938
+   },
+   "chest_upper_front": {
+    "normal": 0.396,
+    "cone": 0.219
+   },
+   "chest_upper_side": {
+    "normal": 1.0,
+    "cone": 0.948
+   },
+   "chest_upper_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_front": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "chest_side": {
+    "normal": 0.667,
+    "cone": 0.438
+   },
+   "chest_back": {
+    "normal": 1.0,
+    "cone": 0.875
+   },
+   "abdomen_side": {
+    "normal": 0.188,
+    "cone": 0.021
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 0.906
+   },
+   "pelvis_center": {
+    "normal": 0.167,
+    "cone": 0.146
+   },
+   "pelvis_side": {
+    "normal": 0.594,
+    "cone": 0.521
+   },
+   "upper_arm_l": {
+    "normal": 0.792,
+    "cone": 0.719
+   },
+   "forearm_a_l": {
+    "normal": 0.333,
+    "cone": 0.219
+   },
+   "forearm_b_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_c_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.823,
+    "cone": 0.719
+   },
+   "forearm_a_r": {
+    "normal": 0.365,
+    "cone": 0.24
+   },
+   "forearm_b_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_c_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.219,
+    "cone": 0.135
+   },
+   "thigh_lower_l": {
+    "normal": 0.385,
+    "cone": 0.281
+   },
+   "shin_upper_l": {
+    "normal": 0.344,
+    "cone": 0.177
+   },
+   "shin_lower_l": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "thigh_upper_r": {
+    "normal": 0.188,
+    "cone": 0.125
+   },
+   "thigh_lower_r": {
+    "normal": 0.438,
+    "cone": 0.333
+   },
+   "shin_upper_r": {
+    "normal": 0.396,
+    "cone": 0.24
+   },
+   "shin_lower_r": {
+    "normal": 0.062,
+    "cone": 0.0
+   }
+  },
+  "glb_kb": 608.8
+ },
+ "budget": {
+  "tris_max": 7000
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "The long cape and the broad hat were the dress of every Spaniard, high and low, until the decree of 10 March 1766 that cut them short and set off the Esquilache riots: a three-quarter to full circle of pa\u00f1o broadcloth from Segovia or Bejar, pardo brown for ordinary men, dark brown, black or blue with red or green velvet embozos for the better-off; muffled to the eyes (embozado) it hid the face [EU-S1][EU-S2].",
+ "sources": [
+  "EU-S1",
+  "EU-S2"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "spanish"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": -4.98,
+    "p05_mm": 6.54,
+    "inside_skin": 1
+   },
+   "m": {
+    "min_mm": -7.69,
+    "p05_mm": 5.6,
+    "inside_skin": 5
+   },
+   "bl": {
+    "min_mm": 0.73,
+    "p05_mm": 6.48,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 0.43,
+    "p05_mm": 6.63,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": false,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/spanish_capa.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/spanish_capa.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "shirt_linen",
+  "veste_sleeved",
+  "breeches",
+  "stockings"
+ ],
+ "extra": {
+  "presets": {
+   "pardo": {
+    "0": "undyed_brown",
+    "1": "walnut_brown",
+    "2": "brass"
+   },
+   "better_off": {
+    "0": "logwood_black",
+    "1": "scarlet",
+    "2": "silver"
+   },
+   "blue": {
+    "0": "stroud_blue",
+    "1": "full_green",
+    "2": "brass"
+   }
+  },
+  "styles_note": "Styles from the same recipe: the short capa (hem 0.55), embozado (the right front thrown over the left shoulder: static, later), the esclavina (a shoulder cape to 1.12).",
+  "recipe_note": "cloth2.dress.cloak: the envelope over the shoulders and the upper arms (above 1.08), behind the forearms below, closed at the throat (+-3.5 deg) and parting to 92-104 deg below the arms (worn thrown back: the forearms come out in front of the edges); hem 0.22 at the fronts / 0.20 behind; the embozos a band 5 cm along each front edge raised 2.2 mm (zone 1); a 3.4 cm stand collar; two clasp discs at 1.33.",
+  "arms_note": "Muffled to the eyes with the arms inside (embozado) is a later static style: in the bind pose's A the arms cannot sit inside a cape that also hangs right when they come down.",
+  "references": [
+   "[EU-S1] Esquilache riots: https://en.wikipedia.org/wiki/Esquilache_Riots",
+   "[EU-S2] FIT, the Spanish cape: https://fashionhistory.fitnyc.edu/spanish-cape/"
+  ]
+ }
+}

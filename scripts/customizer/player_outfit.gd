@@ -20,12 +20,22 @@ extends RefCounted
 
 const CATALOG := "res://assets/character/catalog.json"
 const RUNTIME := "res://data/loadout/sling_runtime.json"
-## Slots a character dresses in, in the customizer's order.
+## Slots a character dresses in, in the customizer's order (the catalog's slots, 2026-10-03: "add the missing slots"):
+## accessories.shoulder takes what is worn over the shoulders and across the body (a harness, a bandolier, cross-belts,
+## a shoulder cape), accessories.arms what is worn on the arms (bracers, arm bands, a wrist gauntlet). The catalog's
+## accessories.ears_nose is no garment slot: earrings and nose jewels are the creator's "jewellery" (FaceExtras places
+## them on the head's own ear lobes, ear rims, septum and nostril as its face shapes move them), so a garment of that slot
+## is not offered.
 const SLOTS := ["shirt", "vest", "outer", "legs.lower", "legs.over", "feet", "head", "accessories.neck",
-		"accessories.waist", "accessories.wrap", "accessories.hands"]
+		"accessories.waist", "accessories.shoulder", "accessories.wrap", "accessories.arms", "accessories.hands"]
 const SLOT_NAMES := {"shirt": "Shirt", "vest": "Waistcoat", "outer": "Coat", "legs.lower": "Breeches / skirt",
 		"legs.over": "Leggings", "feet": "Shoes", "head": "Hat", "accessories.neck": "Neckwear",
-		"accessories.waist": "Belt / sash", "accessories.wrap": "Cloak / blanket", "accessories.hands": "Gloves"}
+		"accessories.waist": "Belt / sash", "accessories.shoulder": "Harness / bandolier",
+		"accessories.wrap": "Cloak / blanket", "accessories.arms": "Bracers / arm bands", "accessories.hands": "Gloves"}
+## Alternative slots a garment was given only while its own slot was not one of SLOTS (cloth2's rigging_harness: offered
+## as a wrap until the shoulder slot came): own slot -> the stand-in. It is not offered there any more, and a look that
+## has it there moves it to its own slot (validate).
+const STAND_IN_SLOTS := {"accessories.shoulder": "accessories.wrap"}
 ## The basic dress: what a body wears when the look chooses nothing (the user, 2026-09-28: "the most basic clothes
 ## first"). Ids of the first cloth2 garments; a slot whose garment is missing from the catalog is left bare. A man's shirt
 ## is tucked into his breeches (2026-10-03: in the 1750s the tails served as drawers; shirt_linen's tails hanging over
@@ -162,7 +172,8 @@ static func offered(slot: String, sex := -1.0) -> Array:
 		var e: Dictionary = catalog()[id]
 		if not usable(id):
 			continue
-		if String(e.get("slot", "")) != slot and not slot in (e.get("alt_slots", []) as Array):
+		var own := String(e.get("slot", ""))
+		if own != slot and (not slot in (e.get("alt_slots", []) as Array) or stand_in(id, slot)):
 			continue
 		var tags: Array = e.get("tags", [])
 		if sex >= 0.0 and ("men" in tags or "women" in tags) and not body_type(sex) in tags:
@@ -264,7 +275,14 @@ static func bulk_key(slots: Dictionary) -> String:
 	return "bare"
 
 
-## Drops unknown slots and ids (a save from another build still loads).
+## Whether `slot` is only the stand-in of garment `id` (STAND_IN_SLOTS: its own slot is one of SLOTS now).
+static func stand_in(id: String, slot: String) -> bool:
+	var own := String(entry(id).get("slot", ""))
+	return own != slot and own in SLOTS and String(STAND_IN_SLOTS.get(own, "")) == slot
+
+
+## Drops unknown slots and ids (a save from another build still loads). A garment in its stand-in slot moves to its own
+## slot when the look has nothing there (a harness picked as a wrap before the shoulder slot came).
 static func validate(outfit) -> Dictionary:
 	var out := {}
 	if not outfit is Dictionary:
@@ -279,6 +297,12 @@ static func validate(outfit) -> Dictionary:
 			out[slot] = {"id": id, "colors": (d.get("colors", {}) as Dictionary).duplicate() if d.get("colors") is Dictionary else {}}
 		else:
 			push_warning("PlayerOutfit: %s not in the catalog; %s takes the basic piece." % [id, slot])
+	for slot: String in out.keys():
+		var id := String(out[slot].id)
+		var own := String(entry(id).get("slot", "")) if id != "" and id != "-" else ""
+		if own != "" and stand_in(id, slot) and String((out.get(own, {}) as Dictionary).get("id", "")) == "":
+			out[own] = out[slot]
+			out.erase(slot)
 	return out
 
 

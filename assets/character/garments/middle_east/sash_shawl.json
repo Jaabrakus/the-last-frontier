@@ -1,0 +1,314 @@
+{
+ "id": "sash_shawl",
+ "name": "Shawl sash",
+ "description": "A long shawl or striped silk girdle wound two or three times round the waist over the robe, the end tucked in at the left and a short end hanging.",
+ "kind": "garment",
+ "set": "middle_east",
+ "slot": "accessories.waist",
+ "alt_slots": [],
+ "layer": {
+  "default": 38
+ },
+ "glb": "res://assets/character/garments/middle_east/sash_shawl.glb",
+ "mesh": "sash_shawl",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "sash_shawl"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "shawl",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "madder_red",
+    "crimson",
+    "cotton_white",
+    "undyed_white_wool",
+    "yellow",
+    "full_green",
+    "indigo_mid",
+    "logwood_black",
+    "saffron"
+   ],
+   "default": "crimson",
+   "pattern": {
+    "options": [
+     "none",
+     "stripe",
+     "check"
+    ],
+    "default": "stripe",
+    "stripe": {
+     "colors": [
+      "crimson",
+      "yellow",
+      "cotton_white"
+     ],
+     "scale_m": 0.036,
+     "axis": "h"
+    },
+    "check": {
+     "colors": [
+      "madder_red",
+      "cotton_white"
+     ],
+     "scale_m": 0.02
+    },
+    "note": "stripes along the sash (axis h: round the body); a Kerman or Kashmir shawl's boteh once the shader draws it; white figured muslin; white or red wool in Egypt"
+   },
+   "bands": null,
+   "palette_hex": {
+    "madder_red": "#8E2B21",
+    "crimson": "#9D1D30",
+    "cotton_white": "#EEEBE1",
+    "undyed_white_wool": "#E0D8C5",
+    "yellow": "#D0A93A",
+    "full_green": "#2E5134",
+    "indigo_mid": "#34507A",
+    "logwood_black": "#1C1B20",
+    "saffron": "#DCA523"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 3,
+   "name": "fringe",
+   "role": "fringe",
+   "fabric": "WOOL",
+   "palette": [
+    "madder_red",
+    "crimson",
+    "cotton_white",
+    "undyed_white_wool",
+    "yellow",
+    "full_green",
+    "indigo_mid",
+    "logwood_black",
+    "saffron"
+   ],
+   "default": "crimson",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "madder_red": "#8E2B21",
+    "crimson": "#9D1D30",
+    "cotton_white": "#EEEBE1",
+    "undyed_white_wool": "#E0D8C5",
+    "yellow": "#D0A93A",
+    "full_green": "#2E5134",
+    "indigo_mid": "#34507A",
+    "logwood_black": "#1C1B20",
+    "saffron": "#DCA523"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1256,
+    "verts": 881,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "pelvis_side"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined"
+    ]
+   }
+  },
+  "tris": 1256,
+  "verts": 881,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0537,
+   "breast_large": 0.0567,
+   "breast_small": 0.0201
+  },
+  "coverage": {
+   "chest_front": {
+    "normal": 0.208,
+    "cone": 0.156
+   },
+   "chest_side": {
+    "normal": 0.177,
+    "cone": 0.146
+   },
+   "chest_back": {
+    "normal": 0.344,
+    "cone": 0.26
+   },
+   "abdomen_front": {
+    "normal": 0.729,
+    "cone": 0.615
+   },
+   "abdomen_side": {
+    "normal": 0.781,
+    "cone": 0.667
+   },
+   "abdomen_back": {
+    "normal": 0.771,
+    "cone": 0.552
+   },
+   "pelvis_side": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "upper_arm_l": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   }
+  },
+  "glb_kb": 254.3
+ },
+ "budget": {
+  "tris_max": 4500
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Over the entari every man wore a girdle wound several times round the waist, a Kerman or Kashmir shawl for the better-off, white figured muslin, white or red wool in Egypt, a striped silk one at Fez (a V&A sash measures 0.565 x 0.145 m folded); a dagger or a scribe's inkhorn was stuck in it [NIE][RUS][LAN][SHA][VA-O364379].",
+ "sources": [
+  "NIE",
+  "RUS",
+  "LAN",
+  "SHA",
+  "VA-O364379"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "middle_east",
+  "ottoman_turkish",
+  "levantine",
+  "persian",
+  "arab",
+  "armenian",
+  "kurdish",
+  "north_african",
+  "moorish",
+  "egyptian"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 18.18,
+    "p05_mm": 23.02,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 18.21,
+    "p05_mm": 22.0,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 5.66,
+    "p05_mm": 18.45,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 18.25,
+    "p05_mm": 22.86,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/sash_shawl.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/sash_shawl.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "shirt_collarless",
+  "salvar_mens",
+  "entari"
+ ],
+ "extra": {
+  "presets": {
+   "fez_stripe": {
+    "0": "crimson",
+    "3": "crimson"
+   },
+   "red_wool": {
+    "0": "madder_red",
+    "3": "madder_red",
+    "pattern": "none"
+   },
+   "white_muslin": {
+    "0": "cotton_white",
+    "3": "cotton_white",
+    "pattern": "none"
+   }
+  },
+  "gear_note": "A dagger, a jambiya or an inkhorn in the sash is gear (weapons), not part of the garment.",
+  "recipe_note": "recipes.sash with turns 3 (cloth2.dress.wound_sash): three bands 7.2 cm tall on a helix from 0.94 to 1.09, each 3.2 mm over the one under it, open at 52 deg (the tuck at the left front), a short end of 12 cm hanging there.",
+  "references": [
+   "[VA-O364379] V&A Moroccan sash: https://collections.vam.ac.uk/item/O364379",
+   "[RUS] Russell: https://archive.org/details/naturalhistoryof01russ"
+  ]
+ }
+}

@@ -961,10 +961,13 @@ func _apply_layers() -> void:
 		var pipe := 0.0 if str(s.get("frame", "pipe")) == "blade" else 1.0
 		pw = 1.0 - (1.0 - pw) * (1.0 - w * pipe)
 		bw = 1.0 - (1.0 - bw) * (1.0 - w * (1.0 - pipe))
-	# a one-handed grip's fist kept through the swings (user 2026-10-03, the hand holding the grip throughout the motion): the
-	# carry's fingers over whatever the swing's clips do with them, as far as a swing plays
-	if one_hand and carry and (pw > 0.0 or bw > 0.0):
-		layers.append({"anim": carry, "time": carry.length, "weight": maxf(pw, bw), "mask": "fingers_r"})
+	# the right hand's fist on the tool, eased off its clip (HeldFist.CURL; user 2026-10-03, "how come the knuckles look
+	# crazy": closed all the way the knuckles' skin pinched): over the carry, and for a one-handed grip through the swings
+	# too (the hand holding the grip throughout the motion: the carry's fingers over whatever the swing's clips do)
+	if carry and tool != CLUB:
+		var fw := _carry_w if not one_hand else maxf(_carry_w, maxf(pw, bw))
+		if fw > 0.0:
+			layers.append({"anim": carry, "time": carry.length, "weight": fw, "mask": "fingers_r", "curl": HeldFist.CURL})
 	if tool == CLUB:
 		pw = 1.0 - bw                # (the club is two-handed but in a one-handed attack)
 	if phase != Phase.STOW_BACK:

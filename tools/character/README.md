@@ -278,6 +278,7 @@ fist (skin:hands 2.9 / 5.2 %).
 | `Godot --headless --path . -s tests/customizer/test_sea_peoples.gd` (or windowed with `-- shots=DIR`) | the Vietnamese, Thai and Malay peoples: data (group, licence notes, skin, eyes, hair, means between the Chinese and Filipino means), six faces per body type in both face styles with the showcase faces first (shared features only), the Siamese hair styles (catalog, licence, budget, offered first), the creator rows (first face, 10 faces, jewellery), every face and hair style dressed on a body in both styles, save / restore, the creator's people buttons and note; restores the saved look |
 | `Godot --headless --path . -s tests/customizer/test_new_peoples.gd` (or windowed with `-- shots=DIR`) | the peoples added 2026-09-27 (Spanish; Ottoman Turkish, Persian, Arab, Armenian, Kurdish in the Middle East group with the Levantine; Moorish (Morocco) and Egyptian in North Africa with the North African; Ethiopian): groups and members, data, the men's moustache or beard carried onto the look and the Facial hair row, face 1's hair colour, emblems, jewellery (nose rings for Arab, Kurdish and Egyptian women), every face and hair style dressed in both styles, save / restore, the creator's people panel fitting six to a row and its longest note; restores the saved look |
 | `Godot --headless --path . -s tests/customizer/test_head_v3.gd` | the v3 head: body.glb shapes (sex, sex_head, blink, the 30 features, each moving the head 0.5-12 mm; no stylized shapes), triangle budgets, the Face mesh's shapes (the eyes move alike with sex and sex_head), provenance; realistic only (rows, a stylized save loads realistic, the default look); the face warp (knots, each landmark onto the v2 one, on the skin material) and landmarks; the look's weights and sex on a body, a full beard within the fur budget, FaceExtras at the new landmarks, the blink |
+| `Godot --headless --path . -s tests/customizer/test_jewellery.gd` (or windowed with `-- shots=DIR`: the lineups) | jewellery for everyone: every id a known piece or set (its items its parts'), every row offers every piece of its place to every people and body type with the people's own first, every piece on six peoples and both body types at its place and on its bones (headb, the neck and chest, the finger), the neck pieces outside the skin and the clothes, none on a gloved hand, four pieces at once, following the nose width, the ears, the bust gauge and the body type, save / load, every old single jewellery id loading into the rows and dressing the same, the dice wearing only the people's own pieces, the creator's rows and their scroll |
 | `Godot --headless --path . -s tests/customizer/test_creator.gd` (or windowed with `-- shots=DIR`) | the character creator: option data per people (ids, ranges, documented customs, emblems), every row of every people cycled, every choice of four peoples dressed on a body and read back (skin, face shapes, hair, beard shells and painted style, brows, iris, marks, jewellery), randomize, save / restore, keys and clicks, Back / Accept, O in game, the first-launch offer; restores the saved look |
 | `Godot --path . --resolution 1280x720 -s tools/character/creator_shots.gd -- out=DIR [peoples=..] [set=peoples\|styles\|emblems\|clothing\|all]` | screenshots of the creator: peoples x body types framed on body and face, facial hair styles front and 3/4, markings, jewellery, the emblem sheet, the Clothing view |
 
@@ -307,9 +308,17 @@ MMO character creators (inspiration only: every asset, emblem and name is the pr
   clean-shaven ... full beard, with period notes), Eyebrows (9 shapes), Eye colour (the
   people's), Markings (freckles, smallpox scars, three scars; vermilion cheek spots for
   Eastern Woodlands and mixed Native women only, bible 3.6; no tattoos, clan marks or
-  scarification until designed with the peoples concerned), Jewellery (per people and body
-  type where documented: trade-silver ear bobs and nose jewels, pearl, garnet and jade drops,
-  gold and silver hoops, studs, a nose stud or ring; none for Edo Japan and Joseon Korea).
+  scarification until designed with the peoples concerned), and the jewellery rows Earrings,
+  Nose, Neck and Rings (2026-10-03, the owner: "nose and jewellery and earrings unlock for
+  everyone"): one piece at each place, all worn together, every piece offered to every people
+  and both body types (earrings: studs, hoops, drops, ear bobs, a sailor's gold hoop; nose: studs,
+  rings, septum rings, a bone septum pin; neck: glass, coral, amber and pearl beads, a cord with
+  a bone or silver pendant, a chain with a cross or a locket, a silver or brass gorget, a black
+  neck ribbon; rings: gold, silver, brass, a signet, both hands, several). The people's
+  documented pieces (creator.json `jewellery_m` / `jewellery_f`: trade-silver ear bobs and nose
+  jewels, pearl drops, nose rings, trade beads ...) come first and are what the dice wear; the
+  people's note (none for Edo Japan and Joseon Korea) shows on an earring or nose piece without
+  a note of its own. A look saved with the single old `jewellery` id loads into the rows.
   A click on the value opens every choice (swatches for colours); the focused choice's period
   note shows below; Fine-tune opens `CustomizerOverlay` on the same look; Clothing swaps the
   rows for the garment rows (`OutfitTab`, the Outfit tab of the customizer) on a wider panel,
@@ -336,10 +345,20 @@ Rendering (`BodyMaterials.apply_look` calls `FaceExtras.apply`):
   2nd shell dropped beyond 5 m), no shadows.
 - Markings: `skin.gdshader` `mark_scar` (brow, cheek, lip), `mark_pox`, `mark_paint`; freckles
   as before.
-- Jewellery: small meshes (silver, gold, brass; pearl, garnet, jade) rigid on headb, placed at
-  the ear lobes, lobe and helix rim, septum or left ala of the head as its face shapes are now
-  (`FaceExtras.landmarks`: the landmark vertices with their shape offsets), rebuilt on every
-  apply; parts `facial_hair` and `jewellery` of the CharacterBodyMesh.
+- Jewellery (`FaceExtras`, our own procedural shapes; materials silver, gold, brass, bone,
+  pearl, garnet, jade, coral, amber, glass, cord, ribbon): one part, rebuilt on every apply. Ear
+  and nose pieces rigid on headb at the ear lobes, lobe and helix rim, the columella or an ala
+  (measured on the mesh: the tip, the subnasale, the ala's outer face; body.json's septum and
+  nostril_l were the tip and the cheek on the v4 head) as its face shapes are now
+  (`FaceExtras.landmarks`: the landmark vertices with their shape offsets). Neck pieces laid
+  round the neck over the skin and whatever is worn there (not the hat): 64 rays from inside
+  the neck, each re-aimed until it meets the surface at the strand's height (the back of the
+  neck's base, the corner of the neck and the shoulders, the front `drop` below), the outermost
+  of the first layers it leaves (the skin, shirt, waistcoat, a coat's collar, a stock) plus a
+  clearance, smoothed over bumps; each point skinned like the skin vertex under it; a pendant
+  (cross, locket, disc, bone tooth, a gorget's crescent) resting on the chest below the front;
+  the loops cached per body state. Rings on the finger bones, sized to the finger; none on a
+  gloved hand. Parts `facial_hair` and `jewellery` of the CharacterBodyMesh.
 
 ## Stylized faces (2026-09-26; retired 2026-09-27 with the v3 head: the creator is realistic only)
 

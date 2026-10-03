@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frontier Soundtrack</title>
+<!-- A listening page for audio/music/ (tools/music/). Serve the repo root (python3 -m http.server) and open
+     /tools/music/listen.html. Web Audio plays the files so the fight cues loop as the game loops them, and
+     "Hear a fight" crosses battle, upper hand and lament on bar lines as MusicDirector does. -->
+<style>
+:root {
+	--bg: #f4ede1; --panel: #fbf7ef; --ink: #2b2118; --soft: #6f5f4d; --faint: #a8977f; --line: #e2d6c3;
+	--brass: #9a6b1f; --brass-soft: #f0e2c4; --bar: #e8dcc8;
+}
+@media (prefers-color-scheme: dark) {
+	:root { --bg: #17120d; --panel: #211a13; --ink: #efe4d2; --soft: #bba98f; --faint: #7d6d58; --line: #3a2f23;
+		--brass: #d9a54a; --brass-soft: #3a2c17; --bar: #33291e; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 Georgia, "Iowan Old Style", serif;
+	padding-bottom: 120px; }
+header { max-width: 860px; margin: 0 auto; padding: 32px 16px 8px; }
+h1 { font-size: 34px; letter-spacing: 0.08em; margin: 0; font-weight: 600; }
+.sub { color: var(--soft); margin: 6px 0 0; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; align-items: center; }
+button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
+	color: var(--ink); padding: 8px 14px; }
+button.primary { background: var(--brass); border-color: var(--brass); color: #fff8ec; }
+button:hover { border-color: var(--brass); }
+label.tog { color: var(--soft); display: flex; gap: 6px; align-items: center; font-size: 14px; }
+main { max-width: 860px; margin: 0 auto; padding: 0 16px; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--brass); margin: 28px 0 8px;
+	font-family: system-ui, sans-serif; font-weight: 600; }
+.group-note { color: var(--faint); font-size: 13px; margin: -4px 0 8px; }
+.track { display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center; padding: 10px 12px;
+	border-radius: 10px; background: var(--panel); border: 1px solid var(--line); margin-bottom: 6px; cursor: pointer; }
+.track:hover { border-color: var(--brass); }
+.track.on { border-color: var(--brass); background: var(--brass-soft); }
+.num { color: var(--faint); font-family: system-ui, sans-serif; font-size: 13px; text-align: right; }
+.title { font-size: 17px; }
+.title small { color: var(--soft); font-size: 13px; margin-left: 6px; font-style: italic; }
+.desc { color: var(--soft); font-size: 13.5px; }
+.where { color: var(--faint); font-size: 12.5px; font-family: system-ui, sans-serif; margin-top: 2px; }
+.len { color: var(--faint); font-family: system-ui, sans-serif; font-size: 13px; }
+.loop { font-family: system-ui, sans-serif; font-size: 11px; color: var(--brass); border: 1px solid var(--brass);
+	border-radius: 999px; padding: 0 6px; margin-left: 6px; vertical-align: 2px; }
+footer.player { position: fixed; left: 0; right: 0; bottom: 0; background: var(--panel); border-top: 1px solid var(--line);
+	padding: 12px 16px; }
+.pinner { max-width: 860px; margin: 0 auto; display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+.controls { display: flex; gap: 6px; }
+.controls button { width: 42px; height: 38px; padding: 0; font-size: 16px; }
+.now { min-width: 0; }
+.now .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now .cap { color: var(--brass); font-size: 13px; min-height: 18px; }
+.seek { height: 8px; background: var(--bar); border-radius: 999px; margin-top: 6px; cursor: pointer; position: relative; }
+.seek > div { position: absolute; left: 0; top: 0; bottom: 0; background: var(--brass); border-radius: 999px; width: 0; }
+.times { display: flex; justify-content: space-between; color: var(--faint); font: 12px system-ui, sans-serif; margin-top: 3px; }
+@media (max-width: 560px) { .track { grid-template-columns: 26px 1fr; } .len { display: none; } h1 { font-size: 28px; } }
+</style>
+</head>
+<body>
+<header>
+	<h1>FRONTIER</h1>
+	<p class="sub">The soundtrack: 20 pieces, played on VSCO 2 Community Edition's orchestra (Versilian Studios, CC0), a
+		synthesized choir and music box. The giants and the land after Shadow of the Colossus, the night, home and
+		story after Fullmetal Alchemist. Our own themes throughout.</p>
+	<div class="actions">
+		<button class="primary" id="playall">▶ Play all</button>
+		<button id="fight">⚔ Hear a fight (as the game plays it)</button>
+		<label class="tog"><input type="checkbox" id="loopfight"> Loop the fight cues like the game</label>
+	</div>
+</header>
+<main id="list"></main>
+<footer class="player">
+	<div class="pinner">
+		<div class="controls">
+			<button id="prev" title="Previous">⏮</button>
+			<button id="pp" title="Play / pause">▶</button>
+			<button id="next" title="Next">⏭</button>
+		</div>
+		<div class="now">
+			<div class="t" id="nowt">Pick a piece</div>
+			<div class="cap" id="cap"></div>
+			<div class="seek" id="seek"><div id="fill"></div></div>
+			<div class="times"><span id="tcur">0:00</span><span id="tlen">0:00</span></div>
+		</div>
+	</div>
+</footer>
+<script>
+const BASE = "../../audio/music/";
+const GROUPS = [
+	["The menu", "", [
+		["main_theme", "Frontier", "The main theme: a folk air in D dorian, from a distant horn call to the whole orchestra and back to a lone flute.", "The main menu"],
+	]],
+	["The land", "Now and then while exploring, by the hour; mostly the land is left quiet.", [
+		["explore_day", "Open Country", "Harp, flute and oboe trading the theme's head in D major.", "By day"],
+		["explore_dusk", "Long Shadows", "A lone horn in B minor over the strings.", "Dusk and dawn"],
+		["explore_night", "Embers", "A clarinet low in D minor, a far flute, glockenspiel stars.", "Late dusk"],
+	]],
+	["Night", "After Fullmetal Alchemist: melody first, piano and solo strings. By turns, never the same twice running.", [
+		["night_waltz", "Hearth", "The family theme as a slow waltz: piano, solo violin, then the cellos.", "Night; home in the evening"],
+		["lullaby", "Lullaby", "A music box's tune, the piano taking it up, the box winding down.", "Night; by the sleeping baby"],
+		["night_elegy", "Elegy", "The cellos' song over the piano, a violin's lift, the choir.", "Night"],
+	]],
+	["Places", "Coming into a place after a while away plays its piece.", [
+		["loc_fort", "The Fort", "The settlers' hymn, a fife-and-drum tune, the hymn as a church sings it.", "The Flatts' fort"],
+		["loc_farms", "The Farms", "A Palatine country dance (Ländler): fiddle, clarinet, plucked strings.", "The farms and the mill (story)"],
+		["loc_river", "The Ford", "The harp rippling, a flute in F Lydian, the clarinet answering.", "The ford, the lake shore"],
+		["loc_woods", "Deep Woods", "A low drone, a clarinet, a far horn and its echo.", "Deep woods, old woods, the ridge"],
+		["loc_cliffs", "The Cliffs", "Horn calls echoing on open fifths, a broad tune.", "The cliffs"],
+		["loc_marsh", "The Marsh", "A bassoon, odd plucks, trembling violas, cold drops.", "The marsh"],
+		["loc_wreck", "The Wreck", "The wonder's motif hushed on a solo violin.", "The wreck's pine grove (story)"],
+	]],
+	["The giants", "After Shadow of the Colossus. In the game these cross on bar lines; try “Hear a fight”.", [
+		["giant_battle", "The Giant", "D minor, 144 BPM: the ostinato, the horns, the giant's theme, the climb.", "A mammoth turns on you"],
+		["giant_upper_hand", "The Upper Hand", "The Frontier theme turned heroic.", "A knee buckles, or you're on it"],
+		["giant_lament", "Lament", "Not a victory: the cellos, then the violins and choir.", "The giant falls"],
+	]],
+	["The story", "", [
+		["story_wonder", "Broken Sky", "The sky galleons: the choir's rising motif, then everyone.", "Two Fires: “Look up at the broken sky”"],
+		["story_sorrow", "Ash", "The Frontier theme on a solo violin over the piano.", "Ash: the farms burned"],
+		["story_home", "A House and a Home", "The family theme for orchestra, ending in E major.", "The roof goes on"],
+	]],
+];
+const LOOPS = {giant_battle: 3.3333, giant_upper_hand: 0.0};
+const BAR = 60 / 144 * 4;
+
+const order = [];
+const list = document.getElementById("list");
+let n = 0;
+for (const [g, note, tracks] of GROUPS) {
+	const h = document.createElement("h2"); h.textContent = g; list.appendChild(h);
+	if (note) { const p = document.createElement("p"); p.className = "group-note"; p.textContent = note; list.appendChild(p); }
+	for (const [id, title, desc, where] of tracks) {
+		n += 1;
+		const row = document.createElement("div");
+		row.className = "track"; row.id = "t_" + id;
+		row.innerHTML = `<div class="num">${n}</div><div><div class="title">${title}${id in LOOPS ? '<span class="loop">loops</span>' : ""}</div>` +
+			`<div class="desc">${desc}</div><div class="where">${where}</div></div><div class="len" id="len_${id}"></div>`;
+		row.onclick = () => playIndex(order.findIndex(o => o.id === id));
+		list.appendChild(row);
+		order.push({id, title});
+	}
+}
+
+let ctx = null;
+const buffers = {};
+let cur = null;      // {i, id, src, gain, startedAt, offset, playing}
+let fightTimers = [];
+let fightSources = [];
+const $ = s => document.getElementById(s);
+
+function ac() { if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); return ctx; }
+async function load(id) {
+	if (buffers[id]) return buffers[id];
+	$("cap").textContent = "Loading…";
+	const r = await fetch(BASE + id + ".wav");
+	const b = await ac().decodeAudioData(await r.arrayBuffer());
+	buffers[id] = b;
+	$("len_" + id).textContent = fmt(b.duration);
+	$("cap").textContent = "";
+	return b;
+}
+function fmt(s) { s = Math.max(0, s); return Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0"); }
+function loopsNow(id) { return id in LOOPS && $("loopfight").checked; }
+
+function startSource(id, offset, when, fadeIn) {
+	const b = buffers[id], c = ac();
+	const src = c.createBufferSource(); src.buffer = b;
+	const gain = c.createGain(); src.connect(gain).connect(c.destination);
+	if (loopsNow(id) || fightTimers.length) { src.loop = id in LOOPS; src.loopStart = LOOPS[id] || 0; src.loopEnd = b.duration; }
+	const t = when || c.currentTime;
+	if (fadeIn) { gain.gain.setValueAtTime(0.0001, t); gain.gain.exponentialRampToValueAtTime(1.0, t + fadeIn); }
+	src.start(t, offset);
+	return {src, gain, startedAt: t, offset};
+}
+function stopSource(s, fade) {
+	if (!s) return;
+	const c = ac(), t = c.currentTime;
+	try {
+		if (fade) { s.gain.gain.cancelScheduledValues(t); s.gain.gain.setValueAtTime(s.gain.gain.value, t);
+			s.gain.gain.exponentialRampToValueAtTime(0.0001, t + fade); s.src.stop(t + fade + 0.05); }
+		else s.src.stop();
+	} catch (e) {}
+	s.src.onended = null;
+}
+function position() {
+	if (!cur) return 0;
+	if (!cur.playing) return cur.offset;
+	const b = buffers[cur.id];
+	let p = cur.s.offset + (ac().currentTime - cur.s.startedAt);
+	if (cur.s.src.loop && p >= b.duration) { const ls = LOOPS[cur.id] || 0; p = ls + ((p - ls) % (b.duration - ls)); }
+	return p;
+}
+
+async function playIndex(i, offset = 0) {
+	if (i < 0 || i >= order.length) return;
+	cancelFight();
+	const id = order[i].id;
+	await load(id);
+	if (cur && cur.s) stopSource(cur.s, 0.15);
+	const s = startSource(id, offset, 0, offset > 0 ? 0.05 : 0);
+	cur = {i, id, s, playing: true, offset};
+	s.src.onended = () => { if (cur && cur.s === s && cur.playing) playIndex(cur.i + 1); };
+	mark(id, order[i].title);
+	prefetch(i + 1);
+}
+function prefetch(i) { if (i < order.length) load(order[i].id).catch(() => {}); $("cap").textContent = ""; }
+function mark(id, title, cap) {
+	document.querySelectorAll(".track.on").forEach(e => e.classList.remove("on"));
+	const row = $("t_" + id); if (row) { row.classList.add("on"); }
+	$("nowt").textContent = title; $("pp").textContent = "⏸";
+	if (cap !== undefined) $("cap").textContent = cap;
+}
+function pause() {
+	if (fightTimers.length) { cancelFight(); if (cur) { cur.playing = false; cur.offset = 0; } $("pp").textContent = "▶"; $("cap").textContent = ""; return; }
+	if (!cur || !cur.playing) return;
+	cur.offset = position(); cur.playing = false; stopSource(cur.s, 0.08); $("pp").textContent = "▶";
+}
+async function resume() {
+	if (!cur) return playIndex(0);
+	if (cur.playing) return;
+	const id = cur.id, i = cur.i, off = cur.offset;
+	await load(id);
+	const s = startSource(id, off, 0, 0.05);
+	cur = {i, id, s, playing: true, offset: off};
+	s.src.onended = () => { if (cur && cur.s === s && cur.playing) playIndex(cur.i + 1); };
+	$("pp").textContent = "⏸";
+}
+$("pp").onclick = () => (cur && cur.playing ? pause() : resume());
+$("next").onclick = () => playIndex(cur ? cur.i + 1 : 0);
+$("prev").onclick = () => playIndex(cur ? Math.max(0, (position() > 3 ? cur.i : cur.i - 1)) : 0);
+$("playall").onclick = () => playIndex(0);
+$("seek").onclick = e => {
+	if (!cur || fightTimers.length) return;
+	const b = buffers[cur.id]; if (!b) return;
+	const r = e.currentTarget.getBoundingClientRect();
+	const off = Math.min(Math.max((e.clientX - r.left) / r.width, 0), 0.999) * b.duration;
+	if (cur.playing) playIndex(cur.i, off); else cur.offset = off;
+};
+$("loopfight").onchange = () => { if (cur && cur.playing && cur.id in LOOPS) cur.s.src.loop = $("loopfight").checked; };
+
+// --- a fight as the game plays it: the battle, a knee buckles (the upper hand on the next bar line), it rises
+// (back to the battle's loop), it falls (the lament) ------------------------------------------------------------
+function cancelFight() {
+	fightTimers.forEach(clearTimeout); fightTimers = [];
+	fightSources.forEach(x => stopSource(x, 0.15)); fightSources = [];
+}
+async function fight() {
+	cancelFight();
+	for (const id of ["giant_battle", "giant_upper_hand", "giant_lament"]) await load(id);
+	if (cur && cur.s) stopSource(cur.s, 0.2);
+	const c = ac();
+	fightTimers = [1];
+	const t0 = c.currentTime + 0.1;
+	const steps = [
+		{at: 0, id: "giant_battle", off: 0, cap: "The mammoth turns on you: the giant's fight"},
+		{at: Math.ceil(28 / BAR) * BAR, id: "giant_upper_hand", off: 0, cap: "A knee buckles: the upper hand, on the bar line"},
+		{at: Math.ceil(28 / BAR) * BAR + Math.ceil(30 / BAR) * BAR, id: "giant_battle", off: LOOPS.giant_battle,
+			cap: "It rises: back to the battle's loop, on the bar line"},
+	];
+	steps.push({at: steps[2].at + Math.ceil(20 / BAR) * BAR, id: "giant_lament", off: 0, cap: "It falls: the lament", lament: true});
+	let prev = null;
+	steps.forEach((st, k) => {
+		const when = t0 + st.at;
+		const s = startSource(st.id, st.off, when, k === 0 ? 0 : (st.lament ? 2.0 : 0.35));
+		fightSources.push(s);
+		if (prev) {
+			const p = prev, fade = st.lament ? 2.5 : 0.7;
+			p.gain.gain.setValueAtTime(1.0, when);
+			p.gain.gain.exponentialRampToValueAtTime(0.0001, when + fade);
+			p.src.stop(when + fade + 0.05);
+		}
+		prev = s;
+		fightTimers.push(setTimeout(() => {
+			cur = {i: order.findIndex(o => o.id === st.id), id: st.id, s, playing: true, offset: st.off};
+			mark(st.id, "A fight · " + order[cur.i].title, st.cap);
+			if (st.lament) { s.src.onended = () => { fightTimers = []; fightSources = []; if (cur) cur.playing = false; $("cap").textContent = "The quiet after"; $("pp").textContent = "▶"; }; }
+		}, Math.max(0, (when - c.currentTime) * 1000)));
+	});
+}
+$("fight").onclick = fight;
+
+function tick() {
+	if (cur && buffers[cur.id]) {
+		const b = buffers[cur.id], p = position();
+		$("fill").style.width = Math.min(100, p / b.duration * 100) + "%";
+		$("tcur").textContent = fmt(p); $("tlen").textContent = fmt(b.duration);
+	}
+	requestAnimationFrame(tick);
+}
+tick();
+const LENS = {main_theme: 157.8, explore_day: 75.2, explore_dusk: 82.9, explore_night: 76.3, night_waltz: 98.3, lullaby: 81.9,
+	night_elegy: 116.3, loc_fort: 74.9, loc_farms: 63.6, loc_river: 81.0, loc_woods: 79.4, loc_cliffs: 66.4, loc_marsh: 70.6,
+	loc_wreck: 61.1, giant_battle: 56.7, giant_upper_hand: 53.3, giant_lament: 107.3, story_wonder: 83.0, story_sorrow: 74.2,
+	story_home: 41.3};
+for (const [id, l] of Object.entries(LENS)) { const e = $("len_" + id); if (e) e.textContent = fmt(l); }
+</script>
+</body>
+</html>

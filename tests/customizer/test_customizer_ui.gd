@@ -118,14 +118,14 @@ func _initialize() -> void:
 			if not _headless():
 				# a window behind others is throttled by the OS
 				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
-	if FileAccess.file_exists(AppearanceStore.CURRENT):
-		_backup = FileAccess.get_file_as_string(AppearanceStore.CURRENT)
+	if FileAccess.file_exists(AppearanceStore.current_path()):
+		_backup = FileAccess.get_file_as_string(AppearanceStore.current_path())
 	await _run()
 	# restore the saved look
 	if _backup.is_empty():
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.CURRENT))
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.current_path()))
 	else:
-		var f := FileAccess.open(AppearanceStore.CURRENT, FileAccess.WRITE)
+		var f := FileAccess.open(AppearanceStore.current_path(), FileAccess.WRITE)
 		f.store_string(_backup)
 		f.close()
 	print("CUSTOMIZER UI TEST %s (%d checks%s)" % ["OK" if _fails.is_empty() else "FAILED", _checks,
@@ -255,9 +255,9 @@ func _run() -> void:
 	_check(skin_ok, "the player's head skin has melanin 1")
 	_check(String(app.body.get_meta("hair_style", "")) == "hair_long_loose" and not app.body.part_meshes("hair").is_empty(),
 			"the player's hair part is the new style")
-	var saved := AppearanceStore.load_file(AppearanceStore.CURRENT)
+	var saved := AppearanceStore.load_file(AppearanceStore.current_path())
 	_check(String(saved.get("preset", "")) == want_preset and is_equal_approx(float(saved.melanin), 1.0),
-			"saved to %s" % AppearanceStore.CURRENT)
+			"saved to %s" % AppearanceStore.current_path())
 	await _frames(10)
 	await _shot("6_applied")
 	# --- O again shows the look; Esc closes without changes

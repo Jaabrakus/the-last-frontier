@@ -156,6 +156,8 @@ static func dress_look(look: Dictionary, sex: float, stage: String) -> Dictionar
 	if not of is Dictionary or (of as Dictionary).is_empty():
 		out["outfit"] = outfit_for(sex, stage)
 	out.erase("jewellery")
+	for k: String in CreatorOptions.JEWEL_ROWS:
+		out.erase(k)
 	out.erase("facial_hair")
 	out["stubble"] = 0.0 if stage != "adult" else float(out.get("stubble", 0.0))
 	return out

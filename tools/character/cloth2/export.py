@@ -4,7 +4,11 @@ its catalog entry and catalog.json.
   finish(ctx, fits, spec, mesh, uvparts, hem=None)
 
 `uvparts`: {part id: ("cyl", axis point a, axis point b, front direction) or ("planar", origin, u dir, v dir)}: the UV
-(metres, along the grain) of the faces of each `part` (mesh.fa["part"]); a cylinder's seam is at the back.
+(metres, along the grain) of the faces of each `part` (mesh.fa["part"]); a cylinder's seam is at the back. ("arc", ...)
+is a cylinder whose u is the angle times the part's median radius at that height (2026-10-03, cloth2.dress.arc_uv):
+"cyl" multiplies by each corner's own radius, so across the back (the angle near 180 degrees) every hollow and
+shoulder blade swung u by centimetres and a pattern's stripes swirled there. ("attr", u name, v name) takes the UV
+from two per-vertex attributes the garment laid (mesh.A; cloth2.dress.envelope_uv).
 """
 
 import heapq
@@ -46,7 +50,7 @@ def corner_uv(mesh, uvparts):
         spec = uvparts.get(int(pid), uvparts.get(0))
         f = np.nonzero(parts == pid)[0]
         Q = P[mesh.F[f]]                                   # (k, 3, 3)
-        if spec[0] == "cyl":
+        if spec[0] in ("cyl", "arc"):
             a, b, front = [np.asarray(x, float) for x in spec[1:4]]
             d = unit(b - a)
             e1 = unit(front - d * (front @ d))
@@ -61,15 +65,40 @@ def corner_uv(mesh, uvparts):
             thc = np.arctan2(rc @ e2, rc @ e1)[:, None]
             th = thc + (th - thc + np.pi) % (2 * np.pi) - np.pi
             rad = np.clip(np.linalg.norm(r, axis=-1), 0.03, 0.5)
+            if spec[0] == "arc":
+                rad = _arc_radius(h, rad)
             u = th * rad
             uv[f, :, 0] = u
             uv[f, :, 1] = h
+        elif spec[0] == "attr":
+            # the UV the garment laid itself as two per-vertex attributes (cloth2.dress.envelope_uv: a drape's or a
+            # cloak's own rows and columns, so a stripe or a sett follows the cloth over the shoulder)
+            uv[f, :, 0] = mesh.A[spec[1]][mesh.F[f]]
+            uv[f, :, 1] = mesh.A[spec[2]][mesh.F[f]]
         else:
             o, ud, vd = [np.asarray(x, float) for x in spec[1:4]]
             rel = Q - o
             uv[f, :, 0] = rel @ unit(ud)
             uv[f, :, 1] = rel @ unit(vd)
     return uv
+
+
+def _arc_radius(h, rad, step=0.02, smooth=2):
+    """The radius an "arc" part's u is measured at, by height along its axis: the median radius of its corners in each
+    `step` band, smoothed over `smooth` bands each way (u is then the arc round the body, straight down the back)."""
+    hf, rf = h.ravel(), rad.ravel()
+    edges = np.arange(hf.min(), hf.max() + step, step)
+    mids, meds = [], []
+    for e in edges:
+        sel = (hf >= e) & (hf < e + step)
+        if sel.sum() >= 3:
+            mids.append(e + step / 2.0)
+            meds.append(float(np.median(rf[sel])))
+    if len(mids) < 2:
+        return rad
+    k = 2 * smooth + 1
+    meds = np.convolve(np.pad(np.array(meds), smooth, mode="edge"), np.ones(k) / k, mode="valid")
+    return np.interp(h, np.array(mids), meds)
 
 
 # ---- distance along the surface to the hem / the openings -------------------------------------------

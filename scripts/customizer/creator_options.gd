@@ -12,11 +12,19 @@ extends RefCounted
 ##   look = CreatorOptions.with_people(look, "lenape")         # the people's first individual
 ##   look = CreatorOptions.randomized(look, rng)               # the dice
 ##
-## Rows (ROWS): face_style, skin, face, complexion (Stylized only), hair_style, hair_color,
-## facial_hair (body type 1 only), eyebrows, eyes, markings, jewellery. Faces, skin, eyes and hair
-## colours come from the people (assets/character/body/peoples.json, CharacterPeoples); face
-## styles, complexions, facial hair, eyebrows, markings and jewellery from
-## data/customizer/creator.json, per people where a documented custom differs. In the Stylized
+## Rows (ROWS), in the creator's order: face_style, skin, bust (body type 2 only), face, complexion
+## (Stylized only), hair_style, hair_color, facial_hair (body type 1 only), eyebrows, eyes, markings,
+## then what is worn on the body itself, from the head down: the jewellery rows jewel_ears,
+## jewel_nose, jewel_neck, jewel_hands (Earrings, Nose, Neck, Rings: one piece at each place, all
+## worn together) and tattoos last (the camera: the face, the bust, the hands, the bust; FACE_ROWS,
+## BUST_ROWS, HANDS_ROWS). The garments are the Clothing view's (OutfitTab, PlayerOutfit.SLOTS).
+## Faces, skin, eyes and hair colours come from the people
+## (assets/character/body/peoples.json, CharacterPeoples); face styles, complexions, facial hair,
+## eyebrows, markings and jewellery from data/customizer/creator.json, per people where a
+## documented custom differs. Jewellery is for everyone (the owner, 2026-10-03: "nose and jewellery
+## and earrings unlock for everyone"): every row offers every piece of its place to every people
+## and both body types; the people's documented pieces (its jewellery_m / jewellery_f list) come
+## first, marked `own`, and are what the dice choose from. In the Stylized
 ## face style (the default) the Face row lists the people's stylized faces first
 ## (CharacterPeoples.stylized_presets: six per body type for the East and Southeast Asian peoples,
 ## four for the others), then its presets and generated individuals. In the Realistic style it
@@ -31,20 +39,43 @@ extends RefCounted
 ##   facial_hair   creator.json facial_hair id (with `stubble`)
 ##   eyebrows      creator.json eyebrows id (with `brows`)
 ##   markings      creator.json markings id (with `freckles` and `marks` {pox, scar, paint})
-##   jewellery     creator.json jewellery id
+##   jewel_ears, jewel_nose, jewel_neck, jewel_hands
+##                 creator.json jewellery ids, one piece per place (JEWEL_ROWS; "none")
+##   jewellery     (looks saved before the jewellery rows) one creator.json jewellery id, a piece
+##                 or a set of pieces ("parts"); it still dresses (jewel_id), and
+##                 upgrade_jewellery (AppearanceStore.validate, any jewellery row's select) turns it
+##                 into the rows. options / select / current("jewellery") still pick a whole set.
+##   tattoos       the Tattoos row: a list of {design, place, x, y, scale, rotation, ink, fade}
+##                 (Tattoos, data/customizer/tattoos.json; for everyone, kept across people, body
+##                 type and the dice like the name)
 ## Body type 1 is the male fit (sex 1), body type 2 the female fit (sex 0).
 
 const PATH := "res://data/customizer/creator.json"
 const ROWS := ["face_style", "skin", "bust", "face", "complexion", "hair_style", "hair_color", "facial_hair", "eyebrows", "eyes",
-		"markings", "jewellery"]
+		"markings", "jewel_ears", "jewel_nose", "jewel_neck", "jewel_hands", "tattoos"]
 const ROW_LABELS := {
 	"face_style": "Face style", "skin": "Skin colour", "bust": "Bust", "face": "Face", "complexion": "Complexion", "hair_style": "Hair style", "hair_color": "Hair colour",
 	"facial_hair": "Facial hair", "eyebrows": "Eyebrows", "eyes": "Eye colour", "markings": "Markings",
-	"jewellery": "Jewellery",
+	"jewellery": "Jewellery", "jewel_ears": "Earrings", "jewel_nose": "Nose", "jewel_neck": "Neck", "jewel_hands": "Rings",
+	"tattoos": "Tattoos",
 }
 ## Rows the creator's camera frames at the face (the rest: the upper body).
 const FACE_ROWS := ["face_style", "face", "complexion", "hair_style", "hair_color", "facial_hair", "eyebrows", "eyes",
-		"markings", "jewellery"]
+		"markings", "jewellery", "jewel_ears", "jewel_nose"]
+## Rows the camera frames at the bust (the neck's jewellery shows with the shoulders).
+const BUST_ROWS := ["skin", "jewel_neck", "tattoos"]
+## Rows the camera frames at the hands (the rings; CreatorStage's "hands" framing).
+const HANDS_ROWS := ["jewel_hands"]
+## The jewellery rows (look keys) and the place of each: one piece at each place.
+const JEWEL_ROWS := {"jewel_ears": "ears", "jewel_nose": "nose", "jewel_neck": "neck", "jewel_hands": "hands"}
+## Where an item's `at` (creator.json jewellery items, FaceExtras) is worn.
+const JEWEL_AT := {"ears": "ears", "ear_l": "ears", "ear_r": "ears", "ear_rims": "ears", "septum": "nose",
+		"nostril_l": "nose", "nostril_r": "nose", "neck": "neck", "ring_l": "hands", "ring_r": "hands",
+		"middle_l": "hands", "middle_r": "hands", "index_l": "hands", "index_r": "hands", "pinky_l": "hands", "pinky_r": "hands"}
+## The dice: how often each jewellery row stays plain (then one of the people's own pieces).
+const JEWEL_PLAIN := {"jewel_ears": 0.5, "jewel_nose": 0.75, "jewel_neck": 0.6, "jewel_hands": 0.7}
+## The look key of a look saved before the jewellery rows (one jewellery id).
+const LEGACY_JEWELLERY := "jewellery"
 ## Faces per people and body type: (Stylized) its stylized faces, then its presets, then
 ## generated individuals.
 const FACE_VARIANTS := 10
@@ -159,7 +190,12 @@ static func options(row: String, look: Dictionary) -> Array:
 		"markings":
 			return _table_options("markings", _list(look, "markings_m" if is_male(look) else "markings_f"))
 		"jewellery":
-			return _table_options("jewellery", _list(look, "jewellery_m" if is_male(look) else "jewellery_f"))
+			# every piece and set (a whole look's jewellery at once; not a creator row)
+			return _table_options("jewellery", (data().get("jewellery", {}) as Dictionary).keys())
+		"jewel_ears", "jewel_nose", "jewel_neck", "jewel_hands":
+			return _jewel_options(look, row)
+		"tattoos":
+			return Tattoos.row_options(look)
 	return []
 
 
@@ -342,7 +378,11 @@ static func current(row: String, look: Dictionary, opts := []) -> int:
 				id = "none" if f < 0.05 else ("freckles_light" if f < 0.55 else "freckles")
 			return _index_of(opts, id)
 		"jewellery":
-			return _index_of(opts, String(look.get("jewellery", "none")))
+			return _index_of(opts, _jewel_set_id(look))
+		"jewel_ears", "jewel_nose", "jewel_neck", "jewel_hands":
+			return _index_of(opts, jewel_id(look, row))
+		"tattoos":
+			return Tattoos.row_current(look, opts)
 	return -1
 
 
@@ -420,7 +460,15 @@ static func select(row: String, look: Dictionary, i: int, opts := []) -> bool:
 			look["freckles"] = float(o.get("freckles", 0.0))
 			look["marks"] = {"pox": float(o.get("pox", 0.0)), "scar": int(o.get("scar", 0)), "paint": float(o.get("paint", 0.0))}
 		"jewellery":
-			look["jewellery"] = String(o.id)
+			upgrade_jewellery(look)
+			var parts := jewel_parts(String(o.id))
+			for r: String in JEWEL_ROWS:
+				look[r] = String(parts.get(JEWEL_ROWS[r], "none"))
+		"jewel_ears", "jewel_nose", "jewel_neck", "jewel_hands":
+			upgrade_jewellery(look)
+			look[row] = String(o.id)
+		"tattoos":
+			return Tattoos.row_select(look, i, opts)
 		_:
 			return false
 	return true
@@ -442,13 +490,14 @@ static func step(row: String, look: Dictionary, d: int) -> int:
 
 
 ## Keys that survive a change of people or body type (the rest come from the new individual).
-const KEEP := ["name", "outfit", "weathering", "face_style", "complexion"]
+const KEEP := ["name", "outfit", "weathering", "face_style", "complexion", "tattoos"]
 
 
 static func _keep(from: Dictionary, to: Dictionary) -> Dictionary:
 	for k: String in KEEP:
 		if from.has(k):
-			to[k] = from[k] if not from[k] is Dictionary else (from[k] as Dictionary).duplicate(true)
+			# (deep copies: the outfit's dictionary, the tattoos' list)
+			to[k] = from[k].duplicate(true) if from[k] is Dictionary or from[k] is Array else from[k]
 	return to
 
 
@@ -552,8 +601,9 @@ static func randomized(look: Dictionary, rng: RandomNumberGenerator) -> Dictiona
 		lk["stubble"] = 0.0
 	var mk := options("markings", lk)
 	select("markings", lk, _pick_style(mk, rng, 0.6), mk)
-	var jw := options("jewellery", lk)
-	select("jewellery", lk, _pick_style(jw, rng, 0.5), jw)
+	for r: String in JEWEL_ROWS:
+		var jw := options(r, lk)
+		select(r, lk, _pick_own(jw, rng, float(JEWEL_PLAIN[r])), jw)
 	_settle(lk)
 	lk["face_variant"] = current("face", lk, faces)
 	return lk
@@ -568,11 +618,129 @@ static func label(row: String, look: Dictionary, i: int, opts := []) -> String:
 	return String(opts[i].get("label", opts[i].get("id", "")))
 
 
-## The jewellery items of the look (creator.json "jewellery" entries), for FaceExtras.
+## The jewellery items of the look (creator.json "jewellery" entries: every row's piece, or a saved
+## look's single jewellery id), for FaceExtras.
 static func jewellery_items(look: Dictionary) -> Array:
-	var id := String(look.get("jewellery", "none"))
 	var t: Dictionary = data().get("jewellery", {})
-	return (t.get(id, {}) as Dictionary).get("items", [])
+	var out := []
+	for r: String in JEWEL_ROWS:
+		out.append_array((t.get(jewel_id(look, r), {}) as Dictionary).get("items", []))
+	return out
+
+
+## The place of a jewellery piece (JEWEL_ROWS values: ears, nose, neck, hands), "" for none and for a
+## set of pieces at several places (its "parts").
+static func jewel_place(id: String) -> String:
+	var e: Dictionary = (data().get("jewellery", {}) as Dictionary).get(id, {})
+	if e.has("parts"):
+		return ""
+	var place := ""
+	for it: Dictionary in e.get("items", []):
+		var p := String(JEWEL_AT.get(String(it.get("at", "ears")), ""))
+		if p.is_empty() or (not place.is_empty() and p != place):
+			return ""
+		place = p
+	return place
+
+
+## The pieces of a jewellery id by place: a set's "parts", a piece at its own place, {} for none.
+static func jewel_parts(id: String) -> Dictionary:
+	var e: Dictionary = (data().get("jewellery", {}) as Dictionary).get(id, {})
+	if e.get("parts") is Dictionary:
+		return (e.parts as Dictionary).duplicate()
+	var p := jewel_place(id)
+	return {} if p.is_empty() else {p: id}
+
+
+## The piece the look wears in jewellery row `row` (a saved look's single jewellery id counts).
+static func jewel_id(look: Dictionary, row: String) -> String:
+	if look.get(LEGACY_JEWELLERY) is String:
+		return String(jewel_parts(String(look[LEGACY_JEWELLERY])).get(JEWEL_ROWS.get(row, ""), "none"))
+	var id = look.get(row, "none")
+	return String(id) if id is String and not String(id).is_empty() else "none"
+
+
+## A look saved before the jewellery rows: its single jewellery id becomes the rows (in place).
+static func upgrade_jewellery(look: Dictionary) -> void:
+	if not look.has(LEGACY_JEWELLERY):
+		return
+	var old = look[LEGACY_JEWELLERY]
+	var parts := jewel_parts(String(old)) if old is String else {}
+	for r: String in JEWEL_ROWS:
+		look[r] = String(parts.get(JEWEL_ROWS[r], "none"))
+	look.erase(LEGACY_JEWELLERY)
+
+
+## The hand the look's Rings piece is worn on, "l" or "r" (its first ring's; the left with none): the creator turns that
+## hand to the camera on the Rings row.
+static func ring_hand(look: Dictionary) -> String:
+	var e: Dictionary = (data().get("jewellery", {}) as Dictionary).get(jewel_id(look, "jewel_hands"), {})
+	for it: Dictionary in e.get("items", []):
+		var at := String(it.get("at", ""))
+		if at.ends_with("_r"):
+			return "r"
+		if at.ends_with("_l"):
+			return "l"
+	return "l"
+
+
+## The people's documented pieces at `place` (its jewellery_m / jewellery_f list; a set gives its part there).
+static func jewel_own(look: Dictionary, place: String) -> Array:
+	var out := []
+	for id in _list(look, "jewellery_m" if is_male(look) else "jewellery_f"):
+		var p := String(jewel_parts(String(id)).get(place, ""))
+		if not p.is_empty() and not p in out:
+			out.append(p)
+	return out
+
+
+## Every piece of the row's place, for every people and body type: none, the people's own pieces, then
+## the rest in creator.json's order.
+static func _jewel_options(look: Dictionary, row: String) -> Array:
+	var place := String(JEWEL_ROWS.get(row, ""))
+	var t: Dictionary = data().get("jewellery", {})
+	var own := jewel_own(look, place)
+	var ids := ["none"] + own
+	for id: String in t:
+		if not id in ids and jewel_place(id) == place:
+			ids.append(id)
+	var out := []
+	for id: String in ids:
+		if not t.has(id):
+			continue
+		var o: Dictionary = (t[id] as Dictionary).duplicate()
+		o["id"] = id
+		o["own"] = id in own
+		out.append(o)
+	return out
+
+
+## The jewellery id (a piece or a set) that is what the look wears altogether: "none", the one piece,
+## or the set whose parts are its pieces; "" when no id matches.
+static func _jewel_set_id(look: Dictionary) -> String:
+	var worn := {}
+	for r: String in JEWEL_ROWS:
+		var id := jewel_id(look, r)
+		if id != "none":
+			worn[JEWEL_ROWS[r]] = id
+	if worn.is_empty():
+		return "none"
+	for id: String in data().get("jewellery", {}):
+		if jewel_parts(id) == worn:
+			return id
+	return ""
+
+
+## The dice for a jewellery row: plain (`plain_weight` of the time, or when the people has no piece of
+## its own), else one of the people's own pieces.
+static func _pick_own(opts: Array, rng: RandomNumberGenerator, plain_weight: float) -> int:
+	var own := []
+	for i in opts.size():
+		if bool((opts[i] as Dictionary).get("own", false)):
+			own.append(i)
+	if own.is_empty() or rng.randf() < plain_weight:
+		return 0
+	return int(own[rng.randi() % own.size()])
 
 
 ## The facial hair style of the look: {regions [moustache, chin, jaw, sideburns], length (m),

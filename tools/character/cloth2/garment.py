@@ -20,6 +20,64 @@ Most garments are one call of a recipe TYPE (cloth2.recipes: coat, jacket, capot
 soft_cap, rigid_hat, leggings, belt, sash, harness, pouch_belt, shirt) with a style dict; the operations below are
 what the types are made of, and what a new type uses.
 
+THE PEOPLES' DRESS TYPES (2026-10-03; cloth2.dress, re-exported by cloth2.recipes; docs/research/peoples_dress_1750s.md
+section 2). Each is a style dict of defaults (dress.<NAME>, override any key) and one call; the exemplar built with
+it is in brackets.
+  robe(g, st)        T2, a long robe or kaftan on the coat's cut (dress.ROBE; OPEN_ROBE edge to edge). mode "crossed"
+                     (left over right), "side_fastened", "under_arm" (the jama) or "open"; overlap_line {"line": [(z,
+                     theta deg)] (None: the mode's OVERLAP_LINES), "split_below" (the skirt fronts part along it),
+                     "w"/"h" (the fold raised on the "outer" side), "binding" (a zone band along the edge),
+                     "split_weights"}; slits (side slits, recipes.coat "slits"); sleeve_past {"len"} (sleeves over the
+                     hands: trims.extrude); ties [(theta, z)]; collar_band {"w", "h"}; over_relax (rounds of smoothing
+                     the skirts over the layers under them) [entari]
+  tunic(g, st)       T3, a long pull-over (dress.TUNIC): neck, slit {"z0", "w"}, sleeves {"end", "ease", "wide",
+                     "from"} (None: armholes), hem / side_hem / flare / folds, slits, hood (hood.hood_on_back keys),
+                     closed (the closed-skirt weights and skirt.hems_godot: dress.closed_weights), trim {"neck",
+                     "slit", "cuff"} (zone-1 needlework bands) [thawb]
+  trousers(g, st)    T6 (dress.TROUSERS wide; DRAWERS; WIDE_BREECHES): top / band / band_h (a rolled drawstring band),
+                     end and leg_ease (the legs), flare [(t, m)] (extra ease along each leg, drift.flare_legs, never
+                     across the midline: "keep"), folds {"amp", "count"} (round each leg), crotch {"drop", "width"}
+                     (Garment.crotch, then bridge.crotch_bridge: keep the drop small, the shell tears beyond ~0.04;
+                     the low crotch reads from the legs meeting at the midline), seat, cuff {"kind": band | fall |
+                     open, "len", "h"}, over and over_above (fitted over a shirt above the hips only: a long shirt's
+                     tails hang in front of the crotch). Tag `pants` [salvar_mens]
+  wrap_skirt(g, st)  T5 (dress.WRAP_SKIRT): top (1.03 waist .. 1.23 under the arms), band / band_h (the rolled top),
+                     hem / side_hem / flare / folds / pleats (parts.pleat_offset groups: the philabeg's), overlap
+                     {"deg" (signed: + the wearer's left), "outer", "w", "h", "split"} (the open edge split from the hem
+                     to the band, each side then on its own leg's closed panel: dress.slit_weights; the UV's seam
+                     on it), rims [(z, h)] (wound layers), closed [wrapper_knee, scots_philabeg]
+  drape(g, st)       T8 (dress.DRAPE one_shoulder; BELTED the belted plaid): an envelope over the shoulders
+                     (drift.envelope; arms: the arms it lies over above arm_z) cut to an outline: top / bottom
+                     [(theta, z)] round the body (dress.periodic); hang_from (below it the skirt panels), edge (a
+                     rolled edge), fringe, brooch {"theta", "z", "r"}, belt {"z", "lift", "buckle"} (fitted over the
+                     drape: it is tucked under), uv_seam; its UV is the cloth's own rows and columns
+                     (dress.envelope_uv, export "attr"), so a stripe or a sett follows it over the shoulder
+                     [mantle_one_shoulder, scots_plaid_shoulder]
+  cloak(g, st)       T9 (dress.CLOAK): the envelope over the shoulders and upper arms (arm_z; arms_inside: to the
+                     hem), front [(z, deg)] (closed at the throat, parting below the arms), hem (front edges, back),
+                     neck_cut, collar {"h"} (dress.neck_edge_collar), facing {"w", "h"} (the fronts turned back),
+                     clasp, hood; the cloth's own UV [spanish_capa]
+  head_wrap(g, st)   T10 (dress.HEAD_WRAP turban; HEAD_BAND): core {"edge", "ease"} (a small cap, hats.head_grid; None:
+                     the crown bare), rolls {"turns", "z0", "rise", "tilt", "r", "a0", "ab", "grow", "ease", "wobble",
+                     "r_var", "lift_var", "flat"} (hats.tube on a helix, never nearer the scalp than ease + r; flat
+                     squashes it into a folded band); rigid on headb [turban_common]
+  soft_cap "skullcap" a small close cap on the crown, no band (recipes.SOFT_CAP) [skullcap]
+  lathe_hat(g, st)   rigid_hat profiles of revolution (dress.DOME_FINIAL, CONE, UMBRELLA, TALL_CROWN): R / H / rim_z /
+                     exp (the profile), thick, band (the inner head band), finial, chin (a strap kept off the face),
+                     tilt / lower (hats.hat_frame) [filipino_salakot]
+  hose(g, st)        stockings with gartering (dress.HOSE): feet.SockTube to top, cuff {"len", "h"} (turned down),
+                     garter {"z", "h", "ends": {"len", "w", "deg"}} (its ends hanging at the outer side), the leg's
+                     UV down to the shoe [scots_hose_cut]
+  sash with "turns"  the sash wound several times (dress.wound_sash: z, turns, height, step, start (the tuck), end
+                     (a short end hanging)) [sash_shawl]
+  shirt options      recipes.shirt(bottom=) (a hem at or above it: a short shirt, no tails), slits, front_slit {"z0",
+                     "w", "x", "angle"} (dress.front_slit: the collarless shirt's, the Persian shoulder opening),
+                     sleeve_wide / wide_from (open sleeves), band_t=None (no wrist band), over [shirt_collarless]
+  coat options       recipes.coat "slits" (side slits through the skirts' tails), "overlap_line", "over_relax"
+UV kinds (cloth2.export): "arc" (dress.arc_uv: a cylinder measured at the part's median radius by height, so stripes run
+straight down the back) and "attr" (the per-vertex uv_u / uv_v a garment laid). Patterns are Spec zone data
+({"options", "default", "<name>": {"colors", "scale_m", "angle", "axis", "duty", "sett"}}: ClothMaterials.pattern_spec).
+
 THE API (2026-10-02; every method returns the Garment, so calls chain)
 
   the shell and its cuts

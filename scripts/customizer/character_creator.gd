@@ -10,7 +10,8 @@ extends CanvasLayer
 ##           note, and Body type 1 (male fit) / 2 (female fit).
 ##   Right   one row per category, "<  Label  value  N/M  >" (CreatorOptions: skin colour,
 ##           face, hair style, hair colour, facial hair, eyebrows, eye colour, markings,
-##           jewellery); a click on the value opens every choice (swatches for colours); the
+##           earrings, nose, neck, rings, tattoos; the rows scroll when they outgrow the panel, the
+##           focused one kept in view); a click on the value opens every choice (swatches for colours); the
 ##           period note of the focused choice below. Fine-tune opens the detailed sliders
 ##           (CustomizerOverlay) on the same look. Clothing (when the build has the garments
 ##           tab, OutfitTab) swaps the rows for the garment rows; the camera frames the whole
@@ -49,6 +50,10 @@ var stage: CreatorStage
 var focus_row := "face"
 var _nav: Array = []
 var _rows_box: VBoxContainer
+## The rows' scroll: they outgrow the panel at 720 p (the jewellery rows: twelve rows and more).
+var _rows_scroll: ScrollContainer
+## The frame until which the focused row is kept scrolled into view (the layout settles over a frame or two).
+var _scroll_until := 0
 var _row_ui := {}
 var _emblems := {}
 var _people_buttons := {}
@@ -68,6 +73,10 @@ var _rng := RandomNumberGenerator.new()
 var _prev_mouse := Input.MOUSE_MODE_CAPTURED
 var _prev_disable_3d := false
 var _fine: CustomizerOverlay
+## The Tattoos row's editor (TattooPanel, over the people panel) while it is open.
+var _tattoos: TattooPanel
+## The place the stage's close view shows (the editor's chosen tattoo's).
+var _tattoo_place := ""
 var _done := false
 ## The garments tab (OutfitTab) when the build has it, and whether it is showing.
 var _outfit_ui: Control
@@ -78,6 +87,10 @@ var _right_spacer: Control
 ## Right panel widths: the option rows, the garment rows (built for a wider column).
 const RIGHT_W := 360
 const RIGHT_W_CLOTHING := 470
+## The Rings row's view: the figure turned until the ring's hand faces the camera (CreatorOptions.ring_hand: the
+## left hand, the right), on the stage's "hands" framing; it turns back to face the camera off the row.
+const RING_YAW := {"l": -0.9, "r": 0.9}
+var _ring_turn := false
 
 
 ## Opens the creator on the player's look (the tree pauses).
@@ -305,12 +318,21 @@ func _build_right() -> void:
 	vb.add_theme_constant_override("separation", 6)
 	panel.add_child(vb)
 	vb.add_child(_label("Appearance", 22, GOLD))
+	_rows_scroll = ScrollContainer.new()
+	_rows_scroll.name = "RowsScroll"
+	_rows_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_rows_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vb.add_child(_rows_scroll)
+	_rows_scroll.sort_children.connect(func() -> void: _scroll_to_focus.call_deferred())
 	_rows_box = VBoxContainer.new()
 	_rows_box.add_theme_constant_override("separation", 3)
-	vb.add_child(_rows_box)
+	_rows_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_rows_scroll.add_child(_rows_box)
 	_right_panel = panel
+	# (the rows' scroll fills the height now; the spacer stays hidden)
 	_right_spacer = Control.new()
 	_right_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_right_spacer.visible = false
 	vb.add_child(_right_spacer)
 	_note = _label("", 12, DIM)
 	_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -324,7 +346,7 @@ func _build_right() -> void:
 		_outfit_ui.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		_outfit_ui.visible = false
 		vb.add_child(_outfit_ui)
-		vb.move_child(_outfit_ui, _rows_box.get_index() + 1)
+		vb.move_child(_outfit_ui, _rows_scroll.get_index() + 1)
 	var hb := HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 6)
 	vb.add_child(hb)
@@ -355,7 +377,7 @@ func _show_clothing(on: bool) -> void:
 	_clothing = on
 	_outfit_ui.visible = on
 	_rows_box.visible = not on
-	_right_spacer.visible = not on
+	_rows_scroll.visible = not on
 	_right_panel.offset_left = -16 - (RIGHT_W_CLOTHING if on else RIGHT_W)
 	_clothing_button.text = "Appearance" if on else "Clothing"
 	if on:
@@ -523,6 +545,8 @@ func _refresh_all() -> void:
 	var rows := CreatorOptions.rows(look)
 	if rows != _row_ui.keys():
 		for c in _rows_box.get_children():
+			# (out of the box at once: the new rows take their names, Row_<row>, while the old wait to be freed)
+			_rows_box.remove_child(c)
 			c.queue_free()
 		_row_ui.clear()
 		for r: String in rows:
@@ -562,6 +586,10 @@ func _refresh_row(row: String) -> void:
 	var i := CreatorOptions.current(row, look, opts)
 	(ui.value as Label).text = CreatorOptions.label(row, look, i, opts)
 	(ui.count as Label).text = "%s/%d" % [str(i + 1) if i >= 0 else "-", opts.size()]
+	if row == Tattoos.ROW:
+		# the tattoos worn, not the newest one's design
+		(ui.value as Label).text = Tattoos.summary(look)
+		(ui.count as Label).text = "%d/%d" % [Tattoos.list(look).size(), Tattoos.max_count()]
 	var chip := ui.chip as ColorRect
 	var has_color := i >= 0 and (opts[i] as Dictionary).has("color")
 	chip.visible = has_color or row in ["skin", "hair_color", "eyes"]
@@ -580,7 +608,8 @@ func _refresh_note() -> void:
 		var i := CreatorOptions.current(focus_row, look, opts)
 		if i >= 0:
 			t = String((opts[i] as Dictionary).get("note", ""))
-		if focus_row == "jewellery" and opts.size() <= 1:
+		# an earring or nose piece without a note of its own: the people's jewellery note
+		if focus_row in ["jewellery", "jewel_ears", "jewel_nose"] and t.is_empty():
 			t = String(((CreatorOptions.data().get("peoples", {}) as Dictionary).get(String(look.get("people", "")), {}) as Dictionary).get("note_jewellery", t))
 	elif focus_row == "people":
 		t = "Choose a people: each has its own faces, skin, eye and hair colours and period styles."
@@ -602,6 +631,19 @@ func _refresh_focus() -> void:
 	_body_panel.add_theme_stylebox_override("panel", _panel_style(ROW_FOCUS if focus_row == "body" else Color(0, 0, 0, 0),
 			GOLD if focus_row == "body" else Color(0, 0, 0, 0), 4.0))
 	_refresh_note()
+	# the focused row scrolled into view after the layout, and again after the scroll's sorts of the next frames (the
+	# note below the rows grows with a longer text a frame later and shortens the scroll)
+	_scroll_until = Engine.get_process_frames() + 3
+	_scroll_to_focus.call_deferred()
+
+
+func _scroll_to_focus() -> void:
+	if Engine.get_process_frames() > _scroll_until or not focus_row in _row_ui or not is_instance_valid(_rows_scroll) \
+			or not _rows_scroll.is_visible_in_tree():
+		return
+	var rp: Control = _row_ui[focus_row].panel
+	if is_instance_valid(rp) and rp.is_inside_tree():
+		_rows_scroll.ensure_control_visible(rp)
 
 
 ## Focuses a row and frames the camera for it (a row of the option list leaves the clothing
@@ -614,11 +656,25 @@ func _set_focus(row: String) -> void:
 	focus_row = row
 	if row in CreatorOptions.FACE_ROWS:
 		stage.frame("face")
-	elif row == "skin":
+	elif row in CreatorOptions.BUST_ROWS:
 		stage.frame("bust")
+	elif row in CreatorOptions.HANDS_ROWS and CreatorStage.FRAMES.has("hands"):
+		stage.frame("hands")
 	else:
 		stage.frame("body")
+	_ring_view(row)
 	_refresh_focus()
+	_tattoo_view()
+
+
+## On the Rings row: the ring's hand turned to the camera (again after a change of piece); off it: facing the camera again.
+func _ring_view(row: String) -> void:
+	if row in CreatorOptions.HANDS_ROWS and stage.frame_name == "hands":
+		stage.set_yaw(float(RING_YAW.get(CreatorOptions.ring_hand(look), 0.0)))
+		_ring_turn = true
+	elif _ring_turn:
+		_ring_turn = false
+		stage.set_yaw(0.0)
 
 
 # ---------------------------------------------------------------------------------------------
@@ -646,6 +702,10 @@ func _step(row: String, d: int) -> void:
 ## The rows after a change of `row`: the face style changes the row list (Complexion) and the
 ## Face row's faces, so every row is refreshed; any other row refreshes itself.
 func _after_change(row: String) -> void:
+	if row == Tattoos.ROW:
+		_tattoo_reveal()
+	if row in CreatorOptions.HANDS_ROWS and row == focus_row:
+		_ring_view(row)
 	if row == "face_style":
 		_refresh_all()
 	else:
@@ -670,6 +730,9 @@ func _randomize() -> void:
 
 
 func _open_picker(row: String) -> void:
+	if row == Tattoos.ROW:
+		_open_tattoos()
+		return
 	for c in _picker.get_children():
 		c.queue_free()
 	var opts := CreatorOptions.options(row, look)
@@ -708,6 +771,84 @@ func _open_picker(row: String) -> void:
 	_picker.reset_size()
 	var sz := _picker.get_contents_minimum_size()
 	_picker.popup(Rect2i(Vector2i(at.x - int(sz.x), at.y), Vector2i(sz)))
+
+
+# ---------------------------------------------------------------------------------------------
+# Tattoos (the Tattoos row and its editor, TattooPanel)
+# ---------------------------------------------------------------------------------------------
+
+## The stage shows the tattooed skin through the clothes (CreatorStage.reveal / bare_top) while the Tattoos row is
+## focused: the places of the look's tattoos and `place`; the upper garments off for a chest or back tattoo.
+func _tattoo_reveal(place := "") -> void:
+	if focus_row != Tattoos.ROW or _clothing:
+		stage.reveal = []
+		stage.bare_top = false
+		return
+	var ps := Tattoos.list(look).map(func(t: Dictionary) -> String: return String(t.get("place", "")))
+	if not place.is_empty():
+		ps.append(place)
+	stage.bare_top = Tattoos.on_torso(ps)
+	stage.reveal = Tattoos.regions_of(look, place)
+
+
+## After a focus change: the stage's tattoo view on or off (re-dressed when it changes), the editor closed off the row.
+func _tattoo_view() -> void:
+	var before := [stage.reveal.duplicate(), stage.bare_top]
+	_tattoo_reveal(_tattoos.selected_place() if is_instance_valid(_tattoos) else "")
+	if focus_row != Tattoos.ROW and is_instance_valid(_tattoos):
+		_close_tattoos()
+	if before != [stage.reveal, stage.bare_top]:
+		stage.show_look(look, not _clothing)
+
+
+func _open_tattoos() -> void:
+	if is_instance_valid(_tattoos):
+		return
+	if focus_row != Tattoos.ROW:
+		_set_focus(Tattoos.ROW)
+	_tattoos = TattooPanel.create(func() -> Dictionary: return look)
+	_tattoos.anchor_top = 0.0
+	_tattoos.anchor_bottom = 1.0
+	_tattoos.offset_left = 16
+	_tattoos.offset_top = 16
+	_tattoos.offset_right = 16 + TattooPanel.W
+	_tattoos.offset_bottom = -92
+	_tattoos.changed.connect(_on_tattoo_changed)
+	_tattoos.closed.connect(_close_tattoos)
+	_root.add_child(_tattoos)
+	_left_panel.visible = false
+	_on_tattoo_changed(_tattoos.selected_place())
+
+
+func _close_tattoos() -> void:
+	if is_instance_valid(_tattoos):
+		_tattoos.queue_free()
+	_tattoos = null
+	_tattoo_place = ""
+	_left_panel.visible = true
+	stage.set_yaw(0.0)
+	if focus_row == Tattoos.ROW:
+		stage.frame("bust")
+	_tattoo_reveal()
+	stage.show_look(look, not _clothing)
+
+
+## An edit in the panel: the row's text, the stage dressed to show the place, the camera on it (a close view of the
+## place's skin turned to the camera, CreatorStage.focus_skin; once per place, so a turn by hand stays while editing).
+func _on_tattoo_changed(place: String) -> void:
+	_refresh_row(Tattoos.ROW)
+	_tattoo_reveal(place)
+	stage.show_look(look, not _clothing)
+	if place == _tattoo_place:
+		return
+	_tattoo_place = place
+	var view := Tattoos.view_of(place)
+	if view.is_empty():
+		return
+	if view.has("bone") and view.has("at") and stage.focus_skin(String(view.bone), view.at, view.normal, float(view.get("dist", 0.8))):
+		return
+	stage.frame(String(view.get("frame", "bust")))
+	stage.set_yaw(float(view.get("yaw", 0.0)))
 
 
 func _open_fine_tune() -> void:
@@ -762,6 +903,10 @@ func _input(event: InputEvent) -> void:
 		if event.is_action_pressed("ui_cancel"):
 			_picker.hide()
 			get_viewport().set_input_as_handled()
+		return
+	if is_instance_valid(_tattoos) and event.is_action_pressed("ui_cancel"):
+		_close_tattoos()
+		get_viewport().set_input_as_handled()
 		return
 	if _name_edit.has_focus():
 		if event is InputEventKey and event.pressed and (event as InputEventKey).keycode in [KEY_ESCAPE, KEY_ENTER, KEY_KP_ENTER, KEY_TAB]:

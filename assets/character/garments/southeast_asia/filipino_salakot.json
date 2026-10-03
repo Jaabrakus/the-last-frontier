@@ -1,0 +1,273 @@
+{
+ "id": "filipino_salakot",
+ "name": "Salakot (domed hat)",
+ "description": "A wide domed hat of split bamboo or rattan with a knob on top, held by an inner head band and a chin strap.",
+ "kind": "garment",
+ "set": "southeast_asia",
+ "slot": "head",
+ "alt_slots": [],
+ "layer": {
+  "default": 80
+ },
+ "glb": "res://assets/character/garments/southeast_asia/filipino_salakot.glb",
+ "mesh": "filipino_salakot",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "filipino_salakot"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [
+  "crown"
+ ],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "bamboo",
+   "role": "cloth",
+   "fabric": "HES",
+   "palette": [
+    "bamboo",
+    "straw",
+    "walnut_brown",
+    "logwood_black"
+   ],
+   "default": "bamboo",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "bamboo": "#B49A60",
+    "straw": "#C6AC6E",
+    "walnut_brown": "#5A3F2C",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "HES"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "head band",
+   "role": "trim",
+   "fabric": "HES",
+   "palette": [
+    "straw",
+    "bamboo",
+    "walnut_brown"
+   ],
+   "default": "straw",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "straw": "#C6AC6E",
+    "bamboo": "#B49A60",
+    "walnut_brown": "#5A3F2C"
+   },
+   "fabrics": [
+    "HES"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "finial",
+   "role": "trim",
+   "fabric": "WOOL",
+   "palette": [
+    "walnut_brown",
+    "bamboo",
+    "silver",
+    "logwood_black"
+   ],
+   "default": "walnut_brown",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "walnut_brown": "#5A3F2C",
+    "bamboo": "#B49A60",
+    "silver": "#C8CACC",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 3,
+   "name": "chin strap",
+   "role": "ribbon",
+   "fabric": "FLAT",
+   "palette": [
+    "leather_brown",
+    "straw",
+    "logwood_black"
+   ],
+   "default": "leather_brown",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "leather_brown": "#5B3D26",
+    "straw": "#C6AC6E",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "FLAT"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1778,
+    "verts": 965,
+    "zones": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "regions": [
+     "head"
+    ],
+    "max_influences": 1,
+    "bones": [
+     "headb"
+    ]
+   }
+  },
+  "tris": 1778,
+  "verts": 965,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0115,
+   "breast_large": 0.0,
+   "breast_small": 0.0,
+   "sex_head": 0.0115
+  },
+  "coverage": {
+   "head": {
+    "normal": 0.198,
+    "cone": 0.073
+   },
+   "chest_upper_side": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "chest_upper_back": {
+    "normal": 0.01,
+    "cone": 0.0
+   }
+  },
+  "glb_kb": 220.0
+ },
+ "budget": {
+  "tris_max": 2600
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "The salakot of the Tagalog and Visayan lowlands was a wide dome of bamboo, rattan or nito about 0.45 m across, standing above the head on an inner band (the baat), with a finial knob or spike, worn by farmers, boatmen and the Manila men of the galleon trade; silver-trimmed ones marked the better-off [PH5][PH3].",
+ "sources": [
+  "PH5",
+  "PH3"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "southeast_asia",
+  "filipino"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 3.99,
+    "p05_mm": 13.04,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 1.54,
+    "p05_mm": 12.21,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": -137.48,
+    "p05_mm": 12.99,
+    "inside_skin": 2
+   },
+   "bs": {
+    "min_mm": 3.99,
+    "p05_mm": 13.04,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": false,
+   "layer": "cloth2",
+   "groups": {}
+  },
+  "scalp_clearance_mm": {
+   "f": [
+    10.1,
+    21.9
+   ],
+   "m": [
+    10.9,
+    19.9
+   ],
+   "bl": [
+    10.1,
+    21.9
+   ],
+   "bs": [
+    10.1,
+    21.9
+   ]
+  }
+ },
+ "generator": "tools/character/cloth2/garments/filipino_salakot.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/filipino_salakot.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "presets": {
+   "bamboo": {
+    "0": "bamboo",
+    "1": "straw",
+    "2": "walnut_brown",
+    "3": "leather_brown"
+   },
+   "better_off": {
+    "0": "walnut_brown",
+    "1": "straw",
+    "2": "silver",
+    "3": "logwood_black"
+   }
+  },
+  "recipe_note": "cloth2.dress.lathe_hat DOME_FINIAL: a dome of revolution 0.225 m in radius rising 0.145 m from its rim, 5 mm thick, on an inner elliptic band (0.083 x 0.105 m) at the hat band plane, a finial knob 4 cm, a chin strap kept 7 mm off the face; rigid on headb.",
+  "fabric_note": "HES (a coarse weave) until the STRAW kit exists.",
+  "references": [
+   "[PH5] The salakot: https://en.wikipedia.org/wiki/Salakot"
+  ]
+ }
+}

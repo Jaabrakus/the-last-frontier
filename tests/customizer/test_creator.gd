@@ -21,7 +21,8 @@ extends SceneTree
 ##   - the model: for four peoples and both body types every choice of every row is dressed
 ##     on a body (PlayerAppearance.dress) and read back: skin, face shapes, hair part and
 ##     colour, beard shells (part and shader) and painted style, brows, iris, marks,
-##     jewellery part; the beard shells follow the head's face shapes
+##     jewellery part (the Earrings, Nose, Neck and Rings rows; tests/customizer/test_jewellery.gd
+##     checks the pieces); the beard shells follow the head's face shapes
 ##   - randomize keeps the people, body type and name; changing the people and body type
 ##     keeps the name; every row then holds a choice of the new lists
 ##   - save / restore: the creator keys survive AppearanceStore (name, rows, marks) and
@@ -92,9 +93,9 @@ func _initialize() -> void:
 			DirAccess.make_dir_recursive_absolute(_shots)
 			if not _headless():
 				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
-	_had_file = FileAccess.file_exists(AppearanceStore.CURRENT)
+	_had_file = FileAccess.file_exists(AppearanceStore.current_path())
 	if _had_file:
-		_backup = FileAccess.get_file_as_string(AppearanceStore.CURRENT)
+		_backup = FileAccess.get_file_as_string(AppearanceStore.current_path())
 	_test_data()
 	_test_cycle_all()
 	await _test_model()
@@ -103,11 +104,11 @@ func _initialize() -> void:
 	await _test_ui()
 	await _test_game()
 	if _had_file:
-		var f := FileAccess.open(AppearanceStore.CURRENT, FileAccess.WRITE)
+		var f := FileAccess.open(AppearanceStore.current_path(), FileAccess.WRITE)
 		f.store_string(_backup)
 		f.close()
-	elif FileAccess.file_exists(AppearanceStore.CURRENT):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.CURRENT))
+	elif FileAccess.file_exists(AppearanceStore.current_path()):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.current_path()))
 	print("CREATOR TEST %s (%d checks%s)" % ["OK" if _fails.is_empty() else "FAILED", _checks,
 			"" if _fails.is_empty() else ", %d failed" % _fails.size()])
 	quit(0 if _fails.is_empty() else 1)
@@ -280,11 +281,12 @@ func _test_model() -> void:
 	PlayerAppearance.dress(body, lk)
 	var lm := FaceExtras.landmarks(head)
 	var jw: Array = body.part_meshes(FaceExtras.PART_JEWELLERY)
-	_check(jw.size() == 1 and lm.has("ear_l") and lm.has("ear_r"), "studs: part and ear landmarks")
-	if jw.size() == 1 and lm.has("ear_l"):
+	_check(jw.size() == 1 and lm.has("lobe_front_l") and lm.has("lobe_front_r"), "studs: part and ear landmarks")
+	if jw.size() == 1 and lm.has("lobe_front_l"):
+		# (a stud sits on the front of the lobe, where it is pierced)
 		var aabb := (jw[0] as MeshInstance3D).mesh.get_aabb()
-		_check(aabb.grow(0.004).has_point(lm.ear_l) and aabb.grow(0.004).has_point(lm.ear_r),
-				"studs at both ear lobes (%s, %s in %s)" % [lm.ear_l, lm.ear_r, aabb])
+		_check(aabb.grow(0.004).has_point(lm.lobe_front_l) and aabb.grow(0.004).has_point(lm.lobe_front_r),
+				"studs at both ear lobes (%s, %s in %s)" % [lm.lobe_front_l, lm.lobe_front_r, aabb])
 	_stage_inst.queue_free()
 	await _frames(2)
 
@@ -354,9 +356,9 @@ func _model_matches(body: CharacterBodyMesh, lk: Dictionary, row: String, o: Dic
 					or not is_equal_approx(float(skin.get_shader_parameter("mark_pox")), float(o.get("pox", 0.0))) \
 					or not is_equal_approx(float(skin.get_shader_parameter("mark_paint")), float(o.get("paint", 0.0))):
 				return "marks"
-		"jewellery":
+		"jewellery", "jewel_ears", "jewel_nose", "jewel_neck", "jewel_hands":
 			var parts: Array = body.part_meshes(FaceExtras.PART_JEWELLERY)
-			var want := not (o.get("items", []) as Array).is_empty()
+			var want := not CreatorOptions.jewellery_items(lk).is_empty()
 			if (not parts.is_empty()) != want:
 				return "part %s" % (not parts.is_empty())
 			if want and (parts[0] as MeshInstance3D).mesh.get_surface_count() == 0:
@@ -398,7 +400,7 @@ func _test_people_body_random() -> void:
 func _test_store() -> void:
 	var lk := _look("south_asian", 2)
 	lk["name"] = "  Priya\n "
-	for r in ["markings", "jewellery", "eyebrows"]:
+	for r in ["markings", "jewel_ears", "jewel_neck", "eyebrows"]:
 		CreatorOptions.step(r, lk, 2)
 	var want := {}
 	for r: String in CreatorOptions.rows(lk):
@@ -418,8 +420,10 @@ func _test_store() -> void:
 			"look": {"jewellery": "crown_jewels", "facial_hair": 5, "marks": {"scar": 9, "pox": 3}, "name": 12}}))
 	f.close()
 	var v := AppearanceStore.load_file(path)
-	_check(v.jewellery == "none" and not v.has("facial_hair") and int(v.marks.scar) == 3 and is_equal_approx(float(v.marks.pox), 1.0)
-			and v.name == "", "broken creator values fall back (%s)" % [[v.get("jewellery"), v.get("facial_hair"), v.marks, v.name]])
+	# (an unknown old single jewellery id wears nothing: the rows hold "none", the old key is gone)
+	_check(not v.has("jewellery") and v.get("jewel_ears") == "none" and not v.has("facial_hair") and int(v.marks.scar) == 3
+			and is_equal_approx(float(v.marks.pox), 1.0) and v.name == "",
+			"broken creator values fall back (%s)" % [[v.get("jewel_ears"), v.get("facial_hair"), v.marks, v.name]])
 	DirAccess.remove_absolute(path)
 
 
@@ -432,8 +436,8 @@ func _row_text(c: CharacterCreator, row: String) -> String:
 
 func _test_ui() -> void:
 	_check(not PlayerAppearance.offer_creator(), "no first-launch creator in a tool run")
-	if FileAccess.file_exists(AppearanceStore.CURRENT):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.CURRENT))
+	if FileAccess.file_exists(AppearanceStore.current_path()):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.current_path()))
 	var c := CharacterCreator.open(null)
 	await _frames(5)
 	_check(paused and is_instance_valid(c) and root.disable_3d, "the creator pauses and hides the world's 3D")
@@ -573,7 +577,7 @@ func _test_ui() -> void:
 	await _key(KEY_ESCAPE)
 	await _frames(2)
 	_check(not is_instance_valid(c) and not paused and not root.disable_3d, "Esc (Back) closes, unpauses, 3D back")
-	_check(not FileAccess.file_exists(AppearanceStore.CURRENT), "Back saves nothing")
+	_check(not FileAccess.file_exists(AppearanceStore.current_path()), "Back saves nothing")
 	# Accept saves
 	c = CharacterCreator.open(null)
 	await _frames(3)
@@ -583,9 +587,9 @@ func _test_ui() -> void:
 	var accept := c._root.find_child("Accept", true, false) as Button
 	accept.pressed.emit()
 	await _frames(2)
-	_check(not is_instance_valid(c) and FileAccess.file_exists(AppearanceStore.CURRENT)
-			and AppearanceStore.load_file(AppearanceStore.CURRENT).get("name", "") == "Oyo", "Accept saves the look")
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.CURRENT))
+	_check(not is_instance_valid(c) and FileAccess.file_exists(AppearanceStore.current_path())
+			and AppearanceStore.load_file(AppearanceStore.current_path()).get("name", "") == "Oyo", "Accept saves the look")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.current_path()))
 
 
 # --- in game ---------------------------------------------------------------------------------------
@@ -607,7 +611,7 @@ func _test_game() -> void:
 		return
 	await _frames(5)
 	c.look = _look("west_african", 1)
-	for r_id: Array in [["facial_hair", "beard_short"], ["jewellery", "gold_studs"], ["markings", "scar_cheek"]]:
+	for r_id: Array in [["facial_hair", "beard_short"], ["jewel_ears", "gold_studs"], ["markings", "scar_cheek"]]:
 		var opts := CreatorOptions.options(r_id[0], c.look)
 		CreatorOptions.select(r_id[0], c.look, opts.map(func(o: Dictionary) -> String: return String(o.id)).find(r_id[1]), opts)
 	c.look["name"] = "Kofi"
@@ -624,14 +628,14 @@ func _test_game() -> void:
 			"the player wears the beard shells and the studs")
 	var skin := _skin_mat(app.body)
 	_check(skin != null and int(skin.get_shader_parameter("mark_scar")) == 2, "the player's skin has the cheek scar")
-	var saved := AppearanceStore.load_file(AppearanceStore.CURRENT)
-	_check(saved.get("facial_hair", "") == "beard_short" and saved.get("jewellery", "") == "gold_studs", "saved")
+	var saved := AppearanceStore.load_file(AppearanceStore.current_path())
+	_check(saved.get("facial_hair", "") == "beard_short" and saved.get("jewel_ears", "") == "gold_studs", "saved")
 	await _frames(10)
 	await _shot("4_game_player")
 	# the first launch: no saved look -> the creator opens by itself ("New character"); Back
 	# keeps the look and saves it, so it is not offered again
-	var saved_text := FileAccess.get_file_as_string(AppearanceStore.CURRENT)
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.CURRENT))
+	var saved_text := FileAccess.get_file_as_string(AppearanceStore.current_path())
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.current_path()))
 	_check(PlayerAppearance.offer_creator(false) and not PlayerAppearance.offer_creator(), "offered without a saved look (not in tool runs)")
 	await app._offer_creator()
 	c = app.overlay as CharacterCreator
@@ -641,10 +645,10 @@ func _test_game() -> void:
 		await _shot("5_first_launch")
 		await _key(KEY_ESCAPE)
 		await _frames(2)
-	_check(not is_instance_valid(app.overlay) and not paused and FileAccess.file_exists(AppearanceStore.CURRENT)
+	_check(not is_instance_valid(app.overlay) and not paused and FileAccess.file_exists(AppearanceStore.current_path())
 			and not PlayerAppearance.offer_creator(false), "first launch: Back saves the look, no second offer")
-	_check(AppearanceStore.load_file(AppearanceStore.CURRENT).get("facial_hair", "") == "beard_short", "first launch: Back keeps the look")
-	var fw := FileAccess.open(AppearanceStore.CURRENT, FileAccess.WRITE)
+	_check(AppearanceStore.load_file(AppearanceStore.current_path()).get("facial_hair", "") == "beard_short", "first launch: Back keeps the look")
+	var fw := FileAccess.open(AppearanceStore.current_path(), FileAccess.WRITE)
 	fw.store_string(saved_text)
 	fw.close()
 	# O again: the creator shows the look; Esc closes without changes

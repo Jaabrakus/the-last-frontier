@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<path d="M 47.6 318 C 73.2 263.6 127.6 238 157.7 270 C 175.6 289.2 157.7 312.9 138.5 298.8 C 128.2 291.1 135.9 280.9 144.9 288.6 C 156.4 311.6 178.8 321.2 198 318" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 185.6 318 C 211.2 263.6 265.6 238 295.7 270 C 313.6 289.2 295.7 312.9 276.5 298.8 C 266.2 291.1 273.9 280.9 282.9 288.6 C 294.4 311.6 316.8 321.2 336 318" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 323.6 318 C 349.2 263.6 403.6 238 433.7 270 C 451.6 289.2 433.7 312.9 414.5 298.8 C 404.2 291.1 411.9 280.9 420.9 288.6 C 432.4 311.6 454.8 321.2 474 318" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 91.8 424 C 112.6 379.8 156.8 359 181.2 385 C 195.8 400.6 181.2 419.8 165.6 408.4 C 157.3 402.2 163.6 393.8 170.8 400.1 C 180.2 418.8 198.4 426.6 214 424" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 229.8 424 C 250.6 379.8 294.8 359 319.2 385 C 333.8 400.6 319.2 419.8 303.6 408.4 C 295.3 402.2 301.6 393.8 308.8 400.1 C 318.2 418.8 336.4 426.6 352 424" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 367.8 424 C 388.6 379.8 432.8 359 457.2 385 C 471.8 400.6 457.2 419.8 441.6 408.4 C 433.3 402.2 439.6 393.8 446.8 400.1 C 456.2 418.8 474.4 426.6 490 424" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 150 78 L 157.2 108 L 150 138 L 142.8 108 Z" fill="#ffffff"/>
+<path d="M 120 108 L 150 100.8 L 180 108 L 150 115.2 Z" fill="#ffffff"/>
+<path d="M 282 34 L 291.1 72 L 282 110 L 272.9 72 Z" fill="#ffffff"/>
+<path d="M 244 72 L 282 62.9 L 320 72 L 282 81.1 Z" fill="#ffffff"/>
+<path d="M 390 106 L 396.2 132 L 390 158 L 383.8 132 Z" fill="#ffffff"/>
+<path d="M 364 132 L 390 125.8 L 416 132 L 390 138.2 Z" fill="#ffffff"/>
+</svg>

@@ -12,6 +12,7 @@ extends Node3D
 ##
 ##   stage.show_look(look)        # every row change
 ##   stage.frame("face")          # face / bust / body
+##   stage.focus_skin("l_elbow", at, normal, 0.75)   # a close view of the skin (the Tattoos editor)
 
 const IDLE := &"actor_b/actor_b-p-relax-idle"
 const IDLE_FALLBACK := &"actor_b/actor_b-p-stealth-idle"
@@ -25,6 +26,9 @@ const FRAMES := {
 	"face": [Vector3(0.0, 0.05, 0.0), 1.2, 22.0, null],
 	"bust": [Vector3(0.0, -0.16, 0.0), 2.1, 26.0, null],
 	"body": [Vector3.ZERO, 3.9, 30.0, Vector3(0.0, 0.92, 0.0)],
+	# the Tattoos row (TattooPanel): the arms from the shoulders to the hands, and the hands
+	"arms": [Vector3(0.0, -0.56, 0.0), 1.75, 26.0, null],
+	"hands": [Vector3(0.0, -0.76, 0.0), 1.3, 26.0, null],
 }
 ## Screen offset of the figure (camera h_offset, m at the target's distance): the side panels
 ## are wider on the right.
@@ -45,6 +49,16 @@ var _cam_fov := 30.0
 var _head_bone := -1
 var _blink: FaceBlink
 var _ready_done := false
+## Skin shown through the clothes (the creator's Tattoos row): the body regions in `reveal` are drawn and the garments'
+## parts over them are not (a sleeve cut away from a tattooed forearm); `bare_top` takes the garments above the waist
+## off instead (a chest or back tattoo). Empty / false: dressed as worn.
+var reveal: Array = []
+var bare_top := false
+## The slots `bare_top` leaves on.
+const TOP_KEEP := ["legs.lower", "legs.over", "feet", "head", "accessories.waist"]
+## A close view of a point of the skin (focus_skin: the tattoo being edited) instead of a named framing: {bone, at,
+## dist, fov}. Empty: the named framings.
+var _focus := {}
 
 
 func _ready() -> void:
@@ -215,7 +229,39 @@ func show_look(look: Dictionary, hat_off := true) -> void:
 	for mi: MeshInstance3D in body.meshes:
 		if is_instance_valid(mi) and String(mi.name) == "Hat":
 			mi.visible = not hat_off
-	PlayerAppearance.dress(body, lk)
+	if bare_top:
+		if is_same(lk, look):
+			lk = look.duplicate(true)
+		var ob: Dictionary = (lk.get("outfit", {}) as Dictionary).duplicate(true) if lk.get("outfit") is Dictionary else {}
+		for slot: String in PlayerOutfit.SLOTS:
+			if not slot in TOP_KEEP:
+				ob[slot] = {"id": "-"}
+		lk["outfit"] = ob
+	var fit := PlayerAppearance.dress(body, lk)
+	if not reveal.is_empty():
+		_reveal(lk, fit)
+
+
+## The `reveal` regions drawn through the clothes: the skin's hide mask without them, the garments' with them.
+func _reveal(lk: Dictionary, fit: Dictionary) -> void:
+	var f := fit.duplicate(true)
+	f["hide_regions"] = (fit.get("hide_regions", []) as Array).filter(func(r: String) -> bool: return not r in reveal)
+	BodyMaterials.apply_look(body, PlayerAppearance.dressed_look(lk, f), ["head", "body_hair"])
+	var cut := BodyMaterials.hide_mask(reveal)
+	for tag: String in body.parts:
+		if not tag.begins_with("outfit:"):
+			continue
+		for mi: MeshInstance3D in body.part_meshes(tag):
+			if not is_instance_valid(mi) or mi.mesh == null:
+				continue
+			for si in mi.mesh.get_surface_count():
+				var m := mi.get_surface_override_material(si) as ShaderMaterial
+				if m == null or m.shader == null or not m.shader.get_shader_uniform_list().any(func(u: Dictionary) -> bool: return u.name == "hide_mask"):
+					continue
+				# (over what the garment already hides: an inner layer under a coat stays hidden)
+				var had = m.get_shader_parameter("hide_mask")
+				var h: Vector2i = had if had is Vector2i else Vector2i.ZERO
+				m.set_shader_parameter("hide_mask", Vector2i(h.x | cut.x, h.y | cut.y))
 
 
 ## The head's position in this world (the idle sways it).
@@ -228,6 +274,35 @@ func head_position() -> Vector3:
 func frame(which: String) -> void:
 	if FRAMES.has(which):
 		frame_name = which
+		_focus = {}
+
+
+## Frames a point of the skin (the creator's Tattoos editor): `at` and `nrm` in the body's bind pose (the skeleton's
+## rest), carried by `bone` as the figure idles. The camera follows the point at `dist`; the figure turns until the
+## skin there faces the camera. False (and the named framing kept) when the skeleton has no such bone.
+func focus_skin(bone: String, at: Vector3, nrm: Vector3, dist := 0.8, fov := 26.0) -> bool:
+	var b := skeleton.find_bone(bone) if skeleton != null else -1
+	if b < 0:
+		return false
+	_focus = {"bone": b, "at": at, "dist": dist, "fov": fov}
+	# the posed normal in the turning figure's own frame: the yaw that turns it toward the camera (+z)
+	var rel := _pivot.global_transform.affine_inverse() * skeleton.global_transform
+	var n := (rel.basis * _carry(b).basis * nrm).normalized()
+	if Vector2(n.x, n.z).length() > 0.2:
+		set_yaw(atan2(-n.x, n.z))
+	return true
+
+
+## The bone's move from the rest (the bind pose) to its pose now, in the skeleton's space.
+func _carry(b: int) -> Transform3D:
+	return skeleton.get_bone_global_pose(b) * skeleton.get_bone_global_rest(b).affine_inverse()
+
+
+## The point the close view looks at, as the figure stands now (world).
+func focus_point() -> Vector3:
+	if _focus.is_empty() or skeleton == null:
+		return Vector3.INF
+	return skeleton.global_transform * _carry(int(_focus.bone)) * (_focus.at as Vector3)
 
 
 ## Turns the figure by `amount` radians (mouse drag); it keeps turning a little after release.
@@ -243,6 +318,8 @@ func set_yaw(yaw: float) -> void:
 
 
 func _goal() -> Array:
+	if not _focus.is_empty() and skeleton != null:
+		return [focus_point(), float(_focus.dist), float(_focus.fov)]
 	var f: Array = FRAMES[frame_name]
 	var target: Vector3 = f[3] if f[3] != null else head_position() + (f[0] as Vector3)
 	return [target, float(f[1]), float(f[2])]

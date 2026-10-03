@@ -73,6 +73,15 @@ const LOOK_BEYOND := 1.0      ## m past a thing the crosshair may land and still
 const MENU_MAX := 6           ## rows in the hold-E list
 const GAP := "      "         ## a prompt's extra (a fire's "F  Cook ..."): the list keeps the action before it
 
+## Each notice() as it is shown (the classic HUD's chat log: HudClassicMap).
+signal noticed(text: String, secs: float)
+## The prompt, its "Hold E: 2 more" line and the hold-E list raised this many px (the classic HUD's action bar and renown
+## bar under them: ClassicFrames sets PROMPT_LIFT; 0 the minimal HUD's places).
+var prompt_lift := 0.0:
+	set(v):
+		prompt_lift = v
+		_lay_prompt()
+
 var player: FrontierPlayer
 var target: Node = null            ## the targeted item (PlacedWeapon / ThrownPickup), or null
 var place := {}                    ## the placement {kind: "rack"|"lean"|"lay", xf, rack, slot, what}, or {}
@@ -191,8 +200,23 @@ func _build_menu() -> void:
 	_menu_box.add_child(_menu_rows)
 
 
+## The prompt's lines at their places, `prompt_lift` px up (the "Hold E" line a few px more: closer under the prompt).
+func _lay_prompt() -> void:
+	if _label == null or _more == null or _menu_box == null:
+		return
+	var up := prompt_lift
+	var more_up := up + 4.0 if up > 0.0 else 0.0
+	_label.offset_top = -120.0 - up
+	_label.offset_bottom = -80.0 - up
+	_more.offset_top = -86.0 - more_up
+	_more.offset_bottom = -62.0 - more_up
+	_menu_box.offset_top = -104.0 - up
+	_menu_box.offset_bottom = -104.0 - up
+
+
 ## A short message at the top of the screen for a couple of seconds ("Kit: Musket and spears").
 func notice(text: String, secs := 2.5) -> void:
+	noticed.emit(text, secs)                 # (the classic HUD's chat log writes it too: HudClassicMap)
 	_notice.text = text
 	_notice_t = secs
 	_notice.modulate.a = 1.0

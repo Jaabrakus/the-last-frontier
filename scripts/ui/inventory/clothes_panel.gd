@@ -1,8 +1,8 @@
 class_name ClothesPanel
 extends PanelContainer
 ## The character screen's Clothes tab, laid out as the Gear tab's equipment (user 2026-10-01: "it should be the same as the equipment
-## tab we just drag it on to the character"): the body's slots in a column each side of the character (head, body, legs, feet, hands,
-## wrap; the rope belt and the rope sling), the character itself (the Gear tab's own figure, shown here too), and a list of what is
+## tab we just drag it on to the character"): the body's slots in a column each side of the character (head, shoulders, body, legs;
+## arms, hands, feet, wrap; the rope belt and the rope sling), the character itself (the Gear tab's own figure, shown here too), and a list of what is
 ## carried to drag from. A garment is dragged onto its slot or onto the character to put it on (what was there comes off); a worn one
 ## dragged onto the list, or right-clicked, comes off. A double-click on a carried one puts it on. Warmth always follows; in a start
 ## with nothing so does the look (ClothesSlots).
@@ -45,7 +45,8 @@ func _build() -> void:
 	row.add_theme_constant_override("separation", 14)
 	v.add_child(row)
 	var zones: Array = ClothesSlots.ZONES
-	row.add_child(_column(zones.slice(0, 3).map(func(z: Dictionary) -> Array: return ["zone", String(z.id), String(z.name)])
+	var half := ceili(zones.size() / 2.0)       # (the first half of the slots down the left of the figure, the rest down the right)
+	row.add_child(_column(zones.slice(0, half).map(func(z: Dictionary) -> Array: return ["zone", String(z.id), String(z.name)])
 			+ [["gear", "rope_belt", "Belt"]]))
 	_doll = TextureRect.new()
 	_doll.custom_minimum_size = Vector2(240, 444)
@@ -53,7 +54,7 @@ func _build() -> void:
 	_doll.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_doll.set_drag_forwarding(Callable(), _doll_can_drop, _doll_drop)
 	row.add_child(_doll)
-	row.add_child(_column(zones.slice(3).map(func(z: Dictionary) -> Array: return ["zone", String(z.id), String(z.name)])
+	row.add_child(_column(zones.slice(half).map(func(z: Dictionary) -> Array: return ["zone", String(z.id), String(z.name)])
 			+ [["gear", "rope_sling", "Sling"]]))
 	var side := VBoxContainer.new()
 	side.add_theme_constant_override("separation", 6)

@@ -55,17 +55,24 @@ static func validate(look: Dictionary) -> Dictionary:
 	out["face_style"] = BodyMaterials.face_style(out)
 	if not (CreatorOptions.data().get("complexion", {}) as Dictionary).has(String(out.get("complexion", ""))):
 		out["complexion"] = "smooth"
-	for k in ["facial_hair", "eyebrows", "markings", "jewellery"]:
+	for k in ["facial_hair", "eyebrows", "markings", "jewellery"] + CreatorOptions.JEWEL_ROWS.keys():
 		if out.has(k) and not out[k] is String:
 			out.erase(k)
 	if out.has("jewellery") and not (CreatorOptions.data().get("jewellery", {}) as Dictionary).has(out.jewellery):
 		out["jewellery"] = "none"
+	# jewellery: a look saved before the rows (one id) wears the same pieces in the rows; a row holds a piece of its place
+	CreatorOptions.upgrade_jewellery(out)
+	for r: String in CreatorOptions.JEWEL_ROWS:
+		if out.has(r) and out[r] != "none" and CreatorOptions.jewel_place(out[r]) != CreatorOptions.JEWEL_ROWS[r]:
+			out[r] = "none"
 	if out.has("facial_hair") and not String(out.facial_hair).is_empty() \
 			and not (CreatorOptions.data().get("facial_hair", {}) as Dictionary).has(out.facial_hair):
 		out.erase("facial_hair")
 	var mk: Dictionary = out.get("marks", {}) if out.get("marks") is Dictionary else {}
 	out["marks"] = {"pox": clampf(float(mk.get("pox", 0.0)), 0.0, 1.0), "scar": clampi(int(mk.get("scar", 0)), 0, 3),
 			"paint": clampf(float(mk.get("paint", 0.0)), 0.0, 1.0)}
+	# tattoos (the creator's Tattoos row): known designs at places they may go, numbers clamped (Tattoos.validate)
+	out["tattoos"] = Tattoos.validate(out.get("tattoos", []))
 	return out
 
 
@@ -98,15 +105,30 @@ static func load_current() -> Dictionary:
 	var c := from_cmdline()
 	if not c.is_empty():
 		return c
-	return load_file(CURRENT)
+	return load_file(current_path())
 
 
 static func save_current(look: Dictionary) -> bool:
-	return save_file(CURRENT, look)
+	return save_file(current_path(), look)
 
 
-## Atomic write: a temp file, then a rename.
+## Where the player's own look is kept: CURRENT, except in tool and test runs (-s), which keep theirs apart (TEST_CURRENT) so a
+## test never writes over the player's character (2026-10-03: a headless test saved an empty look over it and every character
+## the game made from it came out as the default body: the user, "all chars turned into women").
+const TEST_CURRENT := "user://appearance_test/current.json"
+
+
+static func current_path() -> String:
+	var args := OS.get_cmdline_args()
+	return TEST_CURRENT if ("-s" in args or "--script" in args) else CURRENT
+
+
+## Atomic write: a temp file, then a rename. A look with no body (empty, or without its sex: a look that was never built) is
+## never written: it would replace a character with the default one.
 static func save_file(path: String, look: Dictionary) -> bool:
+	if look.is_empty() or not look.has("sex"):
+		push_warning("AppearanceStore: not saving an empty look over %s" % path)
+		return false
 	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var tmp := path + ".tmp"
 	var f := FileAccess.open(tmp, FileAccess.WRITE)

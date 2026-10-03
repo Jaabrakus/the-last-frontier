@@ -1,0 +1,401 @@
+{
+ "id": "wrapper_knee",
+ "name": "Wrapper (knee length)",
+ "description": "A cotton cloth wound one and a half times round the waist, its top rolled into a band, hanging to the knee, the overlap open at the front.",
+ "kind": "garment",
+ "set": "africa",
+ "slot": "legs.lower",
+ "alt_slots": [
+  "accessories.waist"
+ ],
+ "layer": {
+  "default": 30,
+  "hips": 35
+ },
+ "glb": "res://assets/character/garments/africa/wrapper_knee.glb",
+ "mesh": "wrapper_knee",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "wrapper_knee"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "pelvis_center",
+  "pelvis_side",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_regions": [
+  "pelvis_side"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": {
+  "closed": true,
+  "hems_godot": [
+   [
+    0.105,
+    0.44,
+    0.157
+   ],
+   [
+    0.168,
+    0.44,
+    0.022
+   ],
+   [
+    0.105,
+    0.44,
+    -0.112
+   ]
+  ]
+ },
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "cotton",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "indigo_mid",
+    "cotton_white",
+    "stroud_blue",
+    "indigo_pale",
+    "straw",
+    "tukula_red",
+    "madder_red",
+    "check_blue"
+   ],
+   "default": "indigo_mid",
+   "pattern": {
+    "options": [
+     "none",
+     "stripe",
+     "check"
+    ],
+    "default": "stripe",
+    "stripe": {
+     "colors": [
+      "indigo_mid",
+      "cotton_white",
+      "indigo_pale"
+     ],
+     "scale_m": 0.16
+    },
+    "check": {
+     "colors": [
+      "madder_red",
+      "indigo_mid",
+      "cotton_white"
+     ],
+     "scale_m": 0.05
+    },
+    "note": "hand-spun narrow-strip cotton: strips about 0.16 m wide sewn edge to edge, indigo and white (strip_seams once the shader draws them); check and stripes; raffia panels for Kongo"
+   },
+   "bands": null,
+   "palette_hex": {
+    "indigo_mid": "#34507A",
+    "cotton_white": "#EEEBE1",
+    "stroud_blue": "#1E2B4A",
+    "indigo_pale": "#6E8BB1",
+    "straw": "#C6AC6E",
+    "tukula_red": "#8E3B24",
+    "madder_red": "#8E2B21",
+    "check_blue": "#2F4166"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "rolled band",
+   "role": "trim",
+   "fabric": "LIN",
+   "palette": [
+    "indigo_mid",
+    "cotton_white",
+    "stroud_blue",
+    "indigo_pale",
+    "straw",
+    "tukula_red",
+    "madder_red",
+    "check_blue"
+   ],
+   "default": "indigo_mid",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "indigo_mid": "#34507A",
+    "cotton_white": "#EEEBE1",
+    "stroud_blue": "#1E2B4A",
+    "indigo_pale": "#6E8BB1",
+    "straw": "#C6AC6E",
+    "tukula_red": "#8E3B24",
+    "madder_red": "#8E2B21",
+    "check_blue": "#2F4166"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 2259,
+    "verts": 1529,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "pelvis_center",
+     "pelvis_side",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 2259,
+  "verts": 1529,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0641,
+   "breast_large": 0.0491,
+   "breast_small": 0.0488
+  },
+  "coverage": {
+   "chest_front": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "chest_side": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "chest_back": {
+    "normal": 0.083,
+    "cone": 0.0
+   },
+   "abdomen_front": {
+    "normal": 1.0,
+    "cone": 0.917
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 0.823
+   },
+   "abdomen_back": {
+    "normal": 0.969,
+    "cone": 0.75
+   },
+   "pelvis_center": {
+    "normal": 0.646,
+    "cone": 0.458
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "upper_arm_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.146,
+    "cone": 0.01
+   },
+   "forearm_b_l": {
+    "normal": 0.135,
+    "cone": 0.0
+   },
+   "forearm_c_l": {
+    "normal": 0.135,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.167,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.104,
+    "cone": 0.0
+   },
+   "forearm_b_r": {
+    "normal": 0.115,
+    "cone": 0.0
+   },
+   "forearm_c_r": {
+    "normal": 0.094,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.198,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 1.0,
+    "cone": 0.948
+   },
+   "thigh_lower_l": {
+    "normal": 0.833,
+    "cone": 0.604
+   },
+   "thigh_upper_r": {
+    "normal": 1.0,
+    "cone": 0.969
+   },
+   "thigh_lower_r": {
+    "normal": 0.812,
+    "cone": 0.656
+   }
+  },
+  "glb_kb": 385.5
+ },
+ "budget": {
+  "tris_max": 5000
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "On the Gambia and the Gold Coast men wore a cloth of narrow-strip cotton wrapped round the waist to the knee, often indigo and white, the better-off a longer and finer one; in Kongo raffia panels sewn side by side. The same plain rectangle, told apart by its cloth, was the Yemeni futa, the South Indian lungi and the Malay sarong worn over drawers [AF-A2][AF-C3][NIE][SA7][ML1].",
+ "sources": [
+  "AF-A2",
+  "AF-C3",
+  "NIE",
+  "SA7",
+  "ML1"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "africa",
+  "west_african",
+  "central_african",
+  "arab",
+  "south_asian",
+  "malay"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 21.87,
+    "p05_mm": 25.58,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 22.64,
+    "p05_mm": 25.16,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 18.79,
+    "p05_mm": 25.42,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 21.85,
+    "p05_mm": 25.54,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/wrapper_knee.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/wrapper_knee.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "shift_linen",
+  "shirt_linen"
+ ],
+ "extra": {
+  "presets": {
+   "strip_indigo": {
+    "0": "indigo_mid",
+    "1": "indigo_mid"
+   },
+   "white": {
+    "0": "cotton_white",
+    "1": "cotton_white",
+    "pattern": "none"
+   },
+   "raffia": {
+    "0": "straw",
+    "1": "straw",
+    "pattern": "none"
+   },
+   "futa_check": {
+    "0": "madder_red",
+    "1": "madder_red",
+    "pattern": "check"
+   }
+  },
+  "recipe_note": "cloth2.dress.wrap_skirt: the petticoat's shell from 1.035 (a 3.2 cm band rolled 6 mm proud), hem 0.44, flare 0.05; the overlap's edge at -30 deg (the wearer's right front) split from the hem to the band with a 4.5 cm fold raised on its outer side; the closed-skirt weights, each side of the edge on its own leg's front panel (dress.slit_weights).",
+  "references": [
+   "[AF-A2] Moore, Travels into the Inland Parts of Africa: https://archive.org/details/travelsintoinlan00moor",
+   "[NIE] Niebuhr: https://archive.org/details/b28773263_0001"
+  ]
+ }
+}

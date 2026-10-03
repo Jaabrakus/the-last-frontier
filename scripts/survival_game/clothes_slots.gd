@@ -1,7 +1,7 @@
 class_name ClothesSlots
 extends RefCounted
 ## What a character wears, slot by slot (user 2026-10-01: "when we turn bare on ... we need to allow the players to add clothes slots
-## in the tab"): the survival core's worn garments (SurvivalInventory.wear / take_off: the warmth) in six body slots, the Clothes tab
+## in the tab"): the survival core's worn garments (SurvivalInventory.wear / take_off: the warmth) in eight body slots, the Clothes tab
 ## of the character screen (ClothesPanel) over them. Each garment is a core item with a clothing class (items.json clothing_classes:
 ## its insulation by body zone and the customizer garments it is drawn as); its slot is where the first of those garments goes
 ## (PlayerOutfit catalog "slot"): a shirt, a frock on the body; breeches, leggings on the legs; moccasins the feet; a cap the head;
@@ -10,12 +10,16 @@ extends RefCounted
 ## clothed. A normal start keeps the look the creator chose, and a garment put on or taken off in the Tab screen changes that
 ## slot of it (_look_slot).
 
+## (2026-10-03: the shoulder and arms slots of PlayerOutfit, a harness or bandolier and bracers or arm bands, have their
+## places on the figure too; in the panel's order: the first half down the left of the figure, the rest down the right.)
 const ZONES := [
 	{"id": "head", "name": "Head", "slots": ["head"]},
+	{"id": "shoulder", "name": "Shoulders", "slots": ["accessories.shoulder"]},
 	{"id": "body", "name": "Body", "slots": ["shirt", "vest", "outer"]},
 	{"id": "legs", "name": "Legs", "slots": ["legs.lower", "legs.over"]},
-	{"id": "feet", "name": "Feet", "slots": ["feet"]},
+	{"id": "arms", "name": "Arms", "slots": ["accessories.arms"]},
 	{"id": "hands", "name": "Hands", "slots": ["accessories.hands"]},
+	{"id": "feet", "name": "Feet", "slots": ["feet"]},
 	{"id": "wrap", "name": "Wrap", "slots": ["accessories.wrap"]},
 ]
 const ZONE_OF_INS := {"torso": "body", "legs": "legs", "feet": "feet", "hands": "hands", "head": "head"}
@@ -221,7 +225,8 @@ static func restored(look: Dictionary) -> Dictionary:
 	var all_off := true
 	for z: Dictionary in ZONES:
 		for slot: String in z.slots:
-			if String((outfit.get(slot, {}) as Dictionary).get("id", "")) != "-":
+			# (a slot the stripped look does not have counts as off: it was stripped before that slot was a zone's)
+			if outfit.has(slot) and String((outfit.get(slot, {}) as Dictionary).get("id", "")) != "-":
 				all_off = false
 	if all_off:
 		for z: Dictionary in ZONES:

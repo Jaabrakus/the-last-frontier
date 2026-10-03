@@ -1,0 +1,206 @@
+{
+ "id": "skullcap",
+ "name": "Skullcap",
+ "description": "A small close cap on the crown of the head, of white cotton, felt or red cloth.",
+ "kind": "garment",
+ "set": "africa",
+ "slot": "head",
+ "alt_slots": [],
+ "layer": {
+  "default": 80
+ },
+ "glb": "res://assets/character/garments/africa/skullcap.glb",
+ "mesh": "skullcap",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "skullcap"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [
+  "crown"
+ ],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "cap",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "cotton_white",
+    "undyed_white_wool",
+    "undyed_brown",
+    "scarlet",
+    "indigo_mid",
+    "madder_red",
+    "logwood_black"
+   ],
+   "default": "cotton_white",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "cotton_white": "#EEEBE1",
+    "undyed_white_wool": "#E0D8C5",
+    "undyed_brown": "#6C523E",
+    "scarlet": "#A8161E",
+    "indigo_mid": "#34507A",
+    "madder_red": "#8E2B21",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 608,
+    "verts": 321,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "head"
+    ],
+    "max_influences": 1,
+    "bones": [
+     "headb"
+    ]
+   }
+  },
+  "tris": 608,
+  "verts": 321,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0057,
+   "breast_large": 0.0,
+   "breast_small": 0.0,
+   "sex_head": 0.0057
+  },
+  "coverage": {
+   "head": {
+    "normal": 0.042,
+    "cone": 0.01
+   }
+  },
+  "glb_kb": 131.8
+ },
+ "budget": {
+  "tris_max": 1200
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "A close cap was worn across West Africa (Moore's white cotton caps on the Gambia), in every Middle Eastern people (white or brown felt, the red cap of North Africa) and by Muslim Ethiopians, alone or under the turban [AF-A2][LAN][SHA].",
+ "sources": [
+  "AF-A2",
+  "LAN",
+  "SHA"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "africa",
+  "middle_east",
+  "west_african",
+  "ethiopian",
+  "north_african",
+  "kurdish",
+  "arab",
+  "egyptian",
+  "levantine",
+  "ottoman_turkish"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 3.38,
+    "p05_mm": 5.03,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 3.53,
+    "p05_mm": 4.83,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 3.38,
+    "p05_mm": 5.03,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 3.38,
+    "p05_mm": 5.03,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  },
+  "scalp_clearance_mm": {
+   "f": [
+    4.4,
+    5.4
+   ],
+   "m": [
+    4.2,
+    5.0
+   ],
+   "bl": [
+    4.4,
+    5.4
+   ],
+   "bs": [
+    4.4,
+    5.4
+   ]
+  }
+ },
+ "generator": "tools/character/cloth2/garments/skullcap.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/skullcap.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "presets": {
+   "white_cotton": {
+    "0": "cotton_white"
+   },
+   "felt": {
+    "0": "undyed_white_wool"
+   },
+   "red": {
+    "0": "scarlet"
+   },
+   "indigo": {
+    "0": "indigo_mid"
+   }
+  },
+  "status_note": "Feathers and goat-tail tufts on West African caps marked status: not offered as free picks.",
+  "fabric_note": "LIN for cotton (COT kit later); a felt preset reads with the WOOL kit's nap via the id only for hats: the zone fabric stays LIN.",
+  "references": [
+   "[AF-A2] Moore: https://archive.org/details/travelsintoinlan00moor"
+  ]
+ }
+}

@@ -204,6 +204,13 @@ func _audio(player: FrontierPlayer) -> void:
 	bed.name = "AmbienceBed"
 	bed.player = player
 	add_child(bed)
+	# the music (MusicDirector: quiet pieces now and then, the giants' fights); not in tool and test runs unless asked
+	if not SaveGame._is_script_run() or "music=on" in OS.get_cmdline_user_args():
+		var music := MusicDirector.new()
+		music.name = "MusicDirector"
+		music.player = player
+		music.ambience = bed
+		add_child(music)
 	var steps := Footsteps.new()
 	steps.name = "Footsteps"
 	steps.player = player

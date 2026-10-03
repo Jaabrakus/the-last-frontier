@@ -70,6 +70,8 @@ static func take_new_game() -> bool:
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if not SaveGame._is_script_run():
+		MusicDirector.play_menu(self)       # the main theme (its bus made before the volumes are set)
 	GameSettings.apply_global()
 	var bg := ColorRect.new()
 	bg.color = Color(0.03, 0.022, 0.014)

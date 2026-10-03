@@ -19,6 +19,14 @@
 //   CUSTOM2   x = cavity (-1 ridge .. +1 fold valley), y = compression-fold zones (0..1)
 // The normal map uses a derivative (cotangent) frame, so no tangents are needed; TANGENT carries
 // the rigid gear's push direction instead.
+// Patterns (2026-10-03, ClothMaterials.pattern_spec): a zone's colour can be a woven or printed pattern drawn on the UVs
+// (metres), procedural and box-filtered by the pixel's footprint (it averages to the cloth's mean colour at a distance,
+// no moire, no textures): pat_kind 1 check (warp and weft of one stripe table, half and half: a plain-weave check),
+// 2 plaid (the same table as a sett in a 2/2 twill, the twill's diagonal close up: a tartan), 3 stripes (the table
+// across UV.x: stripes along the grain; ticking is a stripe table too), 4 calico (a small staggered print: ground,
+// sprig, eye and leaf), 5 herringbone (twill lines reversing every half repeat). The stripe tables of a surface's zones
+// sit one after another in pat_sett (linear rgb + width as a fraction of the repeat); calico and herringbone take
+// their colours from their first entries.
 shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_disabled, diffuse_burley, specular_schlick_ggx;
 
@@ -56,6 +64,14 @@ uniform float dust_amount : hint_range(0.0, 1.0) = 0.35;  // dust on up-facing c
 uniform vec4 push_m = vec4(0.0);             // legacy gear over a thicker coat: belt, strap, rigid
 uniform float inflate = 0.0;                 // m out along the normal: a wrap worn over a coat
 uniform int debug_view = 0;                  // 1 dirt/wear/sweat, 2 UV grid, 3 zones, 4 flat tint, 5 tint + normal map
+// patterns per zone (see the head): kind, repeat (m), angle on the UVs (radians), the zone's entries in pat_sett
+uniform vec4 pat_kind = vec4(0.0);
+uniform vec4 pat_scale = vec4(0.012);
+uniform vec4 pat_angle = vec4(0.0);
+uniform vec4 pat_start = vec4(0.0);
+uniform vec4 pat_count = vec4(0.0);
+uniform vec4 pat_sett[32];
+uniform float twill_pitch = 0.0016;          // m between a plaid's twill lines (they fade out beyond arm's length)
 
 varying flat uint v_zone;
 varying vec4 v_c0;
@@ -85,6 +101,100 @@ float lum(vec3 c) {
 
 vec4 zone_tint(int z) {
 	return z == 0 ? tint0 : (z == 1 ? tint1 : (z == 2 ? tint2 : tint3));
+}
+
+// The box-filtered fraction of [x - w/2, x + w/2] that lies in the first `d` of each unit (a square wave of duty d).
+float sq_cov(float x, float w, float d) {
+	float x0 = x - 0.5 * w;
+	float x1 = x + 0.5 * w;
+	float g1 = floor(x1) * d + min(fract(x1), d);
+	float g0 = floor(x0) * d + min(fract(x0), d);
+	return (g1 - g0) / w;
+}
+
+// The mean colour of a zone's stripe table (pat_sett[st .. st + n - 1], widths summing to one repeat) over
+// [x - w/2, x + w/2] (x, w in repeats): each stripe's share of the footprint by the integral of its indicator.
+vec3 sett_avg(float x, float w, int st, int n) {
+	float x0 = x - 0.5 * w;
+	float x1 = x + 0.5 * w;
+	float f0 = floor(x0);
+	float f1 = floor(x1);
+	float r0 = x0 - f0;
+	float r1 = x1 - f1;
+	vec3 acc = vec3(0.0);
+	float a = 0.0;
+	for (int i = 0; i < 32; i++) {
+		if (i >= n) {
+			break;
+		}
+		vec4 s = pat_sett[min(st + i, 31)];
+		float g1 = f1 * s.a + clamp(r1 - a, 0.0, s.a);
+		float g0 = f0 * s.a + clamp(r0 - a, 0.0, s.a);
+		acc += s.rgb * (g1 - g0);
+		a += s.a;
+	}
+	return acc / w;
+}
+
+// The colour (linear) of zone z's pattern at uv (m); duvx / duvy: the uv's screen derivatives (taken outside the
+// zone's branch).
+vec3 pattern_color(int z, vec2 uv, vec2 duvx, vec2 duvy, vec3 ground) {
+	float kind = pat_kind[z];
+	float sc = max(pat_scale[z], 1e-4);
+	float an = pat_angle[z];
+	mat2 rot = mat2(vec2(cos(an), -sin(an)), vec2(sin(an), cos(an)));
+	vec2 p = rot * uv / sc;                          // in repeats
+	vec2 dx = rot * duvx / sc;
+	vec2 dy = rot * duvy / sc;
+	float wx = max(abs(dx.x) + abs(dy.x), 1e-4);     // the pixel's footprint along each axis, in repeats
+	float wy = max(abs(dx.y) + abs(dy.y), 1e-4);
+	int st = int(pat_start[z] + 0.5);
+	int n = int(pat_count[z] + 0.5);
+	if (n < 1) {
+		return ground;
+	}
+	if (kind < 2.5) {
+		vec3 warp = sett_avg(p.x, wx, st, n);
+		vec3 weft = sett_avg(p.y, wy, st, n);
+		float t = 0.5;
+		if (kind > 1.5) {
+			// 2/2 twill: each thread shows over two and under two, the floats in diagonal lines
+			float tp = twill_pitch / sc;
+			t = 0.5 + 0.6 * (sq_cov((p.x + p.y) / tp, (wx + wy) / tp, 0.5) - 0.5);
+		}
+		return mix(warp, weft, t);
+	}
+	if (kind < 3.5) {
+		return sett_avg(p.x, wx, st, n);
+	}
+	vec3 ca = pat_sett[min(st, 31)].rgb;
+	vec3 cb = pat_sett[min(st + min(1, n - 1), 31)].rgb;
+	vec3 cc = pat_sett[min(st + min(2, n - 1), 31)].rgb;
+	if (kind < 4.5) {
+		// calico: a sprig in every cell of a staggered grid, each turned its own way (a hand-blocked print)
+		vec2 c = p;
+		c.x += 0.5 * mod(floor(c.y), 2.0);
+		vec2 cell = floor(c);
+		vec2 f = fract(c) - 0.5;
+		float h = c_hash(cell + vec2(17.0, 3.0));
+		float ra = h * 6.2831853;
+		vec2 q = mat2(vec2(cos(ra), sin(ra)), vec2(-sin(ra), cos(ra))) * f;
+		float pw = max(wx, wy);
+		float rad = length(q);
+		float lobes = 0.15 + 0.06 * cos(5.0 * atan(q.y, q.x));
+		float flower = 1.0 - smoothstep(lobes - pw, lobes + pw, rad);
+		float eye = 1.0 - smoothstep(0.045 - pw, 0.045 + pw, rad);
+		vec2 lq = (q - vec2(0.27, -0.13)) / vec2(0.11, 0.05);
+		float leaf = 1.0 - smoothstep(1.0 - pw * 12.0, 1.0 + pw * 12.0, length(lq));
+		vec3 sharp = mix(mix(ca, cb, flower), cc, max(eye, leaf));
+		vec3 mean = ca * 0.905 + cb * 0.071 + cc * 0.024;
+		return mix(sharp, mean, smoothstep(0.05, 0.22, pw));
+	}
+	// herringbone: twill lines four to a repeat, turned the other way every half repeat
+	float dir = mod(floor(p.x * 2.0), 2.0) < 0.5 ? 1.0 : -1.0;
+	float t = (p.y + dir * p.x) * 4.0;
+	float b = sq_cov(t, 4.0 * (wx + wy), 0.5);
+	return mix(ca, cb, b);
 }
 
 bool region_hidden(uint r) {
@@ -142,6 +252,11 @@ void fragment() {
 	vec4 tn = zone_tint(z);
 	float mode = wear_mode[z];
 	vec2 uvm = UV;
+	vec2 duvx = dFdx(uvm);
+	vec2 duvy = dFdy(uvm);
+	if (pat_kind[z] > 0.5) {
+		tn.rgb = pattern_color(z, uvm, duvx, duvy, tn.rgb);
+	}
 	vec2 suv = uvm / max(tile_m[z], 1e-3) + vec2(seed * 0.37, seed * 0.61);
 	vec4 d = texture(fabric_detail, vec3(suv, layer[z]));
 	vec3 nm = texture(fabric_normal, vec3(suv, layer[z])).rgb * 2.0 - 1.0;

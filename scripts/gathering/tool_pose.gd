@@ -59,6 +59,9 @@ func _process_modification() -> void:
 			var pair: Array = tr[b]
 			if int(pair[0]) >= 0:
 				var q := anim.rotation_track_interpolate(int(pair[0]), t)
+				if l.has("curl"):
+					# (a fist eased off its clip toward the hand's rest: "curl" of the way; GatherTools, the saber's grip)
+					q = sk.get_bone_rest(b).basis.get_rotation_quaternion().slerp(q, float(l.curl))
 				sk.set_bone_pose_rotation(b, sk.get_bone_pose_rotation(b).slerp(q, w).normalized())
 			var bn := sk.get_bone_name(b)
 			if int(pair[1]) >= 0 and (bn in PROP_BONES or mask == "full" and bn in POSITION_BONES):

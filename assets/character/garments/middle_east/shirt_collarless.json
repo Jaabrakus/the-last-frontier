@@ -1,0 +1,445 @@
+{
+ "id": "shirt_collarless",
+ "name": "Collarless shirt",
+ "description": "A long white shirt with a round collarless neck slit down the front, very wide straight sleeves hanging open at the wrist and side slits from the hips; tucked into the trousers or worn outside.",
+ "kind": "garment",
+ "set": "middle_east",
+ "slot": "shirt",
+ "alt_slots": [],
+ "layer": {
+  "default": 10
+ },
+ "glb": "res://assets/character/garments/middle_east/shirt_collarless.glb",
+ "mesh": "shirt_collarless",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "shirt_collarless"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "chest_upper_back",
+  "chest_upper_front",
+  "chest_upper_side",
+  "forearm_a_l",
+  "forearm_a_r",
+  "forearm_b_l",
+  "forearm_b_r",
+  "forearm_c_l",
+  "forearm_c_r",
+  "neck_lower",
+  "pelvis_center",
+  "pelvis_side",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r",
+  "upper_arm_l",
+  "upper_arm_r",
+  "wrist_l",
+  "wrist_r"
+ ],
+ "hides_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "forearm_a_l",
+  "forearm_a_r",
+  "pelvis_side",
+  "upper_arm_l",
+  "upper_arm_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "linen or cotton",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "linen_white",
+    "cotton_white",
+    "linen_unbleached",
+    "indigo_pale",
+    "undyed_white_wool"
+   ],
+   "default": "linen_white",
+   "pattern": {
+    "options": [
+     "none",
+     "stripe",
+     "check"
+    ],
+    "default": "none",
+    "stripe": {
+     "colors": [
+      "cotton_white",
+      "indigo_pale"
+     ],
+     "scale_m": 0.012,
+     "duty": 0.3
+    },
+    "check": {
+     "colors": [
+      "cotton_white",
+      "indigo_pale"
+     ],
+     "scale_m": 0.01
+    }
+   },
+   "bands": null,
+   "palette_hex": {
+    "linen_white": "#E8E3D3",
+    "cotton_white": "#EEEBE1",
+    "linen_unbleached": "#C8BA9A",
+    "indigo_pale": "#6E8BB1",
+    "undyed_white_wool": "#E0D8C5"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "neck binding",
+   "role": "trim",
+   "fabric": "LIN",
+   "palette": [
+    "linen_white",
+    "cotton_white",
+    "linen_unbleached",
+    "indigo_pale",
+    "undyed_white_wool"
+   ],
+   "default": "linen_white",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "linen_white": "#E8E3D3",
+    "cotton_white": "#EEEBE1",
+    "linen_unbleached": "#C8BA9A",
+    "indigo_pale": "#6E8BB1",
+    "undyed_white_wool": "#E0D8C5"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 5668,
+    "verts": 3086,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "forearm_a_r",
+     "forearm_b_l",
+     "forearm_b_r",
+     "forearm_c_l",
+     "forearm_c_r",
+     "neck_lower",
+     "pelvis_center",
+     "pelvis_side",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r",
+     "upper_arm_l",
+     "upper_arm_r",
+     "wrist_l",
+     "wrist_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "r_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "l_shoulder",
+     "l_elbow",
+     "l_wrist",
+     "l_thumba",
+     "r_clavicle",
+     "r_shoulder",
+     "r_elbow",
+     "r_wrist",
+     "r_thumba",
+     "neck",
+     "l_breast",
+     "r_breast",
+     "l_forarm_twist_a",
+     "l_forarm_twist_c",
+     "l_forarm_twist_b",
+     "r_forarm_twist_a",
+     "r_forarm_twist_c",
+     "r_forarm_twist_b",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_shoulder_twist_a",
+     "l_shoulder_twist_c",
+     "l_shoulder_twist_b",
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 5668,
+  "verts": 3086,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0536,
+   "breast_large": 0.0869,
+   "breast_small": 0.022
+  },
+  "coverage": {
+   "neck_lower": {
+    "normal": 0.667,
+    "cone": 0.625
+   },
+   "chest_upper_front": {
+    "normal": 0.99,
+    "cone": 0.958
+   },
+   "chest_upper_side": {
+    "normal": 0.896,
+    "cone": 0.896
+   },
+   "chest_upper_back": {
+    "normal": 0.969,
+    "cone": 0.969
+   },
+   "chest_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "pelvis_center": {
+    "normal": 0.552,
+    "cone": 0.323
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "upper_arm_l": {
+    "normal": 0.979,
+    "cone": 0.979
+   },
+   "forearm_a_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_l": {
+    "normal": 0.969,
+    "cone": 0.802
+   },
+   "forearm_c_l": {
+    "normal": 0.698,
+    "cone": 0.365
+   },
+   "wrist_l": {
+    "normal": 0.448,
+    "cone": 0.01
+   },
+   "hand_l": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.979,
+    "cone": 0.979
+   },
+   "forearm_a_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_r": {
+    "normal": 0.969,
+    "cone": 0.823
+   },
+   "forearm_c_r": {
+    "normal": 0.719,
+    "cone": 0.396
+   },
+   "wrist_r": {
+    "normal": 0.438,
+    "cone": 0.031
+   },
+   "hand_r": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.917,
+    "cone": 0.656
+   },
+   "thigh_lower_l": {
+    "normal": 0.26,
+    "cone": 0.146
+   },
+   "thigh_upper_r": {
+    "normal": 0.917,
+    "cone": 0.646
+   },
+   "thigh_lower_r": {
+    "normal": 0.281,
+    "cone": 0.156
+   }
+  },
+  "glb_kb": 694.0
+ },
+ "budget": {
+  "tris_max": 6000
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Under the robe the townsmen of the Ottoman lands, the Levant, Arabia, Egypt and Morocco wore a white linen or cotton shirt, collarless, the neck slit in front, with straight sleeves so wide at the wrist that they hung open; the better-off had it of silk gauze [NIE][SHA][LAN][CHE]. Women wore the same cut longer (thob_womens).",
+ "sources": [
+  "NIE",
+  "SHA",
+  "LAN",
+  "CHE"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "middle_east",
+  "ottoman_turkish",
+  "levantine",
+  "arab",
+  "armenian",
+  "kurdish",
+  "moorish",
+  "egyptian"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 1.95,
+    "p05_mm": 3.0,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 2.0,
+    "p05_mm": 3.08,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 2.0,
+    "p05_mm": 3.11,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 1.95,
+    "p05_mm": 3.01,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/shirt_collarless.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/shirt_collarless.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "presets": {
+   "white": {
+    "0": "linen_white",
+    "1": "linen_white"
+   },
+   "cotton": {
+    "0": "cotton_white",
+    "1": "cotton_white"
+   },
+   "striped": {
+    "0": "cotton_white",
+    "1": "cotton_white",
+    "pattern": "stripe"
+   }
+  },
+  "worn_note": "Worn outside over the trousers, its tails hanging over them (salvar_mens is fitted over its body at the waist only); a tucked shirt is shirt_tucked.",
+  "recipe_note": "recipes.shirt with the 2026-10-03 options: hem 0.62 (side slits to 0.80), collar=False, band_t=None (no wrist band), front_slit to 1.20, sleeve_wide 0.045 from arm parameter 0.42 (about 0.50 m round at the wrist).",
+  "references": [
+   "[NIE] Niebuhr, Travels through Arabia: https://archive.org/details/b28773263_0001",
+   "[SHA] Shaw, Travels: https://archive.org/details/travelsobservati00shaw",
+   "[LAN] Lane, Modern Egyptians: https://archive.org/details/accountofmanners00lane",
+   "[CHE] Chenier, Morocco: https://archive.org/details/b28771515_0001"
+  ]
+ }
+}

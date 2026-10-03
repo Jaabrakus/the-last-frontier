@@ -16,6 +16,8 @@ extends RefCounted
 ##   standing         `amount` of standing with `faction` (SurvivalEconomy.add_standing; `source` optional)
 ##   wonder_reveal    the sky opens, for good;  raid_night  the raid heard from far off (StoryDirector._effect)
 ##   burn_at          FireSpread.ignite_area(pos, radius): fire at the place over `r` m (on the level's FireSpread)
+##   music            MusicDirector.story(tree, cue): `cue` (story_wonder, story_sorrow, story_home, any of
+##                    audio/music/) once, over anything but a giant's fight; "" fades what plays
 ##   begin_captivity  Captivity.begin(player, captor, opts): the player taken (`captor`: a tag, or `captor_group`; the
 ##                    effect itself is the opts)
 ##   end_captivity    Captivity.end (`return_gear`, `parts` when given); a child slipped away with the player keeps by him
@@ -91,6 +93,8 @@ static func do_one(d: StoryDirector, e: Dictionary, key := "") -> void:
 			d.keep_spawned(call_by_name("NpcSquad", "spawn", pool(d, e)), key, e)
 		"burn_at":
 			call_by_name("FireSpread", "ignite_area", pool(d, e))
+		"music":
+			MusicDirector.story(tree, String(e.get("cue", "")))
 		"begin_captivity":
 			call_by_name("Captivity", "begin", pool(d, e))
 		"end_captivity":

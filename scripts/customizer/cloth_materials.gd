@@ -7,6 +7,11 @@ extends RefCounted
 ##   ClothMaterials.dress_legacy(body)                         # PlayerAppearance.dress() calls it
 ##   var mats := ClothMaterials.garment_materials(entry, {"0": "fur_wolf"})   # surface -> material
 ##   ClothMaterials.set_legacy_hidden(body, [LEGACY_PIECES.coat, ...])
+##   var spec := ClothMaterials.pattern_spec(zone, "check_blue", {"pattern": "check"})   # a zone's woven pattern
+##
+## Patterns (2026-10-03): a cloth zone can show a check, stripes, a plaid (a sett: SETTS_JSON or a catalog / look list of
+## stripes), ticking, a small calico print or a herringbone, drawn by the cloth shader on the UVs (pattern_spec says
+## which and in what colours: the catalog zone's "pattern" data, the look's "pattern" and colour keys).
 ##
 ## Fabric kits: assets/character/fabrics (tools/character/make_fabrics.py, from the approved CC0
 ## Poly Haven scans). The legacy glb's UVs, piece codes and wear / dirt / sweat masks come from
@@ -58,6 +63,10 @@ const FELT_WORDS := ["hat", "tricorn", "tricorne", "cap"]
 static var _fabrics := {}
 static var _detail: TextureLayered
 static var _normal: TextureLayered
+## The sett library (SETTS_JSON: name -> sett) and its palette; every palette token the catalog's zones name (token_color).
+static var _setts := {}
+static var _setts_hex := {}
+static var _catalog_hex := {}
 
 
 static func fabrics() -> Dictionary:
@@ -225,41 +234,358 @@ static func token_color(entry_zone: Dictionary, token: String) -> Color:
 	var ph: Dictionary = entry_zone.get("palette_hex", {})
 	var h := String(ph.get(token, token))
 	if not h.begins_with("#"):
-		h = String(TOKEN_HEX.get(h, "#808080"))
+		h = String(TOKEN_HEX.get(h, known_hex(h)))
 	return Color.html(h)
 
 
+## The "#hex" of a palette token that a zone's own palette does not list (a pattern's or a sett's colour): the sett
+## library's palette, else any catalog zone's palette_hex (together they hold every cloth2 palette token); "#808080"
+## when none knows it.
+static func known_hex(token: String) -> String:
+	if _catalog_hex.is_empty():
+		for e: Variant in PlayerOutfit.catalog().values():
+			for zd: Variant in (e as Dictionary).get("zones", []) if e is Dictionary else []:
+				var ph: Variant = (zd as Dictionary).get("palette_hex") if zd is Dictionary else null
+				if ph is Dictionary:
+					_catalog_hex.merge(ph)
+		_catalog_hex["\n"] = "#808080"            # (loaded, even when the catalog is empty)
+	setts()
+	return String(_setts_hex.get(token, _catalog_hex.get(token, "#808080")))
+
+
 ## The sRGB tint a zone renders in for token `tok` with the look's `colors`: the token's colour, or, for a zone in a
-## pattern (its catalog "pattern": {options, default, <name>: {colors}}; the look's "pattern" key, else the pattern's
-## default, picks one, and a look's "<name>" list replaces its colours), the mean of the pattern's colours, as the cloth
-## would read from a few metres (the shader draws no patterns yet: a check zone in its base token rendered solid navy,
-## 2026-10-03). The implicit default pattern applies when the token is one of its colours; "check_blue" always stands
-## for the blue-and-white check (it is no plain cloth) unless the look says "pattern": "none".
-static func zone_tint(zd: Dictionary, tok: String, colors := {}) -> Color:
-	var cols := pattern_colors(zd, tok, colors)
-	if cols.is_empty():
+## pattern (pattern_spec: the catalog zone's "pattern" {options, default, <name>: {colors, scale_m ...}} and the look's
+## "pattern" / "<name>" keys), the pattern's mean colour (its stripes by their widths), as the cloth reads from a few
+## metres (2026-10-03: a check zone in its base token rendered solid navy). The cloth shader draws the pattern itself
+## (set_patterns); the tint stays its mean. `pz`: the garment's pattern zone (pattern_zone; -1: zone 0).
+static func zone_tint(zd: Dictionary, tok: String, colors := {}, pz := -1) -> Color:
+	var spec := pattern_spec(zd, tok, colors, pz)
+	if spec.is_empty():
 		return token_color(zd, tok)
 	var sum := Color(0, 0, 0, 0)
-	for t: String in cols:
-		var c := token_color(zd, t)
-		sum += Color(c.r, c.g, c.b, 1.0)
+	var calico := int(spec.kind) == int(PATTERN_KIND.calico)
+	for i in (spec.table as Array).size():
+		var row: Array = spec.table[i]
+		var c := token_color(zd, str(row[0]))
+		var w: float = [0.905, 0.071, 0.024][i] if calico and i < 3 else float(row[1])
+		sum += Color(c.r * w, c.g * w, c.b * w, w)
+	if sum.a <= 0.0:
+		return token_color(zd, tok)
 	return Color(sum.r / sum.a, sum.g / sum.a, sum.b / sum.a, 1.0)
 
 
-## The colours of the pattern a zone shows for `tok` and the look's `colors` ([] when it is plain): see zone_tint.
-static func pattern_colors(zd: Dictionary, tok: String, colors := {}) -> Array:
+## The colours of the pattern a zone shows for `tok` and the look's `colors` ([] when it is plain): see pattern_spec.
+static func pattern_colors(zd: Dictionary, tok: String, colors := {}, pz := -1) -> Array:
+	var spec := pattern_spec(zd, tok, colors, pz)
+	return (spec.colors as Array).duplicate() if not spec.is_empty() else []
+
+
+# --- patterns -----------------------------------------------------------------------------------
+
+## The patterns the cloth shader draws, in the creator's order, and their cloth.gdshader pat_kind (ticking is a stripe
+## table); other names a catalog zone or a look uses for them (the cloth2 specs' "stripes", "calico_small"). A name not
+## here ("chevron", "beads", "end_stripes", "lace_stripes") is drawn plain.
+const PATTERNS := ["none", "check", "stripe", "plaid", "ticking", "calico", "herringbone"]
+const PATTERN_KIND := {"none": 0, "check": 1, "plaid": 2, "stripe": 3, "ticking": 3, "calico": 4, "herringbone": 5}
+const PATTERN_ALIAS := {"stripes": "stripe", "striped": "stripe", "tartan": "plaid", "sett": "plaid",
+		"calico_small": "calico", "print": "calico", "gingham": "check", "checked": "check", "checks": "check"}
+const PATTERN_LABELS := {"none": "Plain", "check": "Check", "stripe": "Stripes", "plaid": "Plaid", "ticking": "Ticking",
+		"calico": "Calico", "herringbone": "Herringbone"}
+## A pattern's repeat (m) and colours where the catalog zone does not give them (the zone's own colour takes the first
+## place); a plaid's sett by name (SETTS_JSON).
+const PATTERN_DEFAULTS := {
+	"check": {"scale_m": 0.012, "colors": ["check_blue", "linen_white"]},
+	"stripe": {"scale_m": 0.016, "colors": ["madder_red", "linen_unbleached"]},
+	"plaid": {"scale_m": 0.16, "sett": "hill_green"},
+	"ticking": {"scale_m": 0.03, "colors": ["linen_white", "indigo_mid"]},
+	"calico": {"scale_m": 0.022, "colors": ["linen_white", "madder_red", "indigo_mid"]},
+	"herringbone": {"scale_m": 0.012, "colors": ["slate_grey", "logwood_black"]},
+}
+const SETTS_JSON := "res://assets/character/fabrics/setts.json"
+## Entries of the shader's stripe table (pat_sett) that a surface's zones share.
+const PATTERN_TABLE_MAX := 32
+## Zones the creator offers no pattern on (woven and printed patterns are cloth's: not leather, metal, fur, beads).
+const UNPATTERNED_ROLES := ["leather", "metal", "button", "fur", "quill", "bead", "fringe"]
+const UNPATTERNED_FABRICS := ["LEA", "SUEDE", "FUR", "FLAT", "MET"]
+
+
+## The sett library: name -> {label, note, sett: [[token, width] ...], symmetric, scale_m}.
+static func setts() -> Dictionary:
+	if _setts.is_empty():
+		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(SETTS_JSON)) if FileAccess.file_exists(SETTS_JSON) else null
+		_setts = (d.get("setts", {}) if d is Dictionary and d.get("setts") is Dictionary else {}) as Dictionary
+		_setts_hex = (d.get("palette_hex", {}) if d is Dictionary and d.get("palette_hex") is Dictionary else {}) as Dictionary
+		if _setts.is_empty():
+			_setts["\n"] = {}                     # (loaded: no library)
+	return _setts
+
+
+## A pattern's name as the shader knows it ("stripes" -> "stripe"; unknown -> "none").
+static func pattern_name(n: Variant) -> String:
+	var s := str(n).to_lower() if n != null else "none"
+	s = str(PATTERN_ALIAS.get(s, s))
+	return s if PATTERN_KIND.has(s) else "none"
+
+
+## The patterns the catalog documents for a zone (its "pattern": {"options": [...]}, or the single {"type": ...}) by the
+## shader's names, "none" first; [] when it documents none.
+static func zone_patterns(zd: Dictionary) -> Array:
 	var p: Variant = zd.get("pattern")
-	var pat: Dictionary = p if p is Dictionary else {}
-	var explicit := colors.has("pattern")
-	var active := String(colors.get("pattern", pat.get("default", "none")))
-	if active != "none" and pat.get(active) is Dictionary:
-		var own: Variant = colors.get(active)
-		var pc: Array = own if own is Array else ((pat[active] as Dictionary).get("colors", []) as Array)
-		if explicit or tok in pc:
-			return pc.duplicate()
-	if tok == "check_blue" and not (explicit and active == "none"):
-		return ["check_blue", "linen_white"]
+	if not p is Dictionary:
+		return []
+	var names: Array = [(p as Dictionary).type] if (p as Dictionary).has("type") else (p as Dictionary).get("options", [])
+	var out := ["none"]
+	for n: Variant in names:
+		var k := pattern_name(n)
+		if not k in out:
+			out.append(k)
+	return out if out.size() > 1 else []
+
+
+## Whether a zone takes a woven or printed pattern (cloth; not leather, metal, fur, beads).
+static func patternable(zd: Dictionary) -> bool:
+	return not str(zd.get("role", "cloth")) in UNPATTERNED_ROLES and not str(zd.get("fabric", "WOOL")) in UNPATTERNED_FABRICS
+
+
+## The zone a garment's look-wide "pattern" goes on: the first zone whose catalog lists the look's pattern, else the
+## first that documents a pattern, else zone 0.
+static func pattern_zone(entry: Dictionary, colors := {}) -> int:
+	var zones: Array = entry.get("zones", [])
+	var want := pattern_name(colors.get("pattern")) if colors.has("pattern") else ""
+	for zd: Variant in zones:
+		if zd is Dictionary and want != "" and want in zone_patterns(zd):
+			return int((zd as Dictionary).get("zone", 0))
+	for zd: Variant in zones:
+		if zd is Dictionary and not zone_patterns(zd).is_empty():
+			return int((zd as Dictionary).get("zone", 0))
+	return 0
+
+
+## The catalog's definition of pattern `name` on a zone ({} when it has none): its "<name>" dictionary under any of the
+## pattern's names, or the single-pattern form itself.
+static func _pattern_def(zd: Dictionary, name: String) -> Dictionary:
+	var p: Variant = zd.get("pattern")
+	if not p is Dictionary:
+		return {}
+	if (p as Dictionary).has("type"):
+		return p if pattern_name((p as Dictionary).type) == name else {}
+	for k: Variant in p:
+		if not str(k) in ["options", "default", "note"] and p[k] is Dictionary and pattern_name(k) == name:
+			return p[k]
+	return {}
+
+
+## The look's own colour list for pattern `name` (its "<name><sfx>" under any of the pattern's names), [] if none.
+static func _look_list(colors: Dictionary, name: String, sfx: String) -> Array:
+	for k: Variant in colors:
+		var ks := str(k)
+		if not ks.ends_with(sfx) or not colors[k] is Array:
+			continue
+		var base := ks.substr(0, ks.length() - sfx.length())
+		if base != "" and base != "pattern" and not "." in base and pattern_name(base) == name:
+			return (colors[k] as Array).map(func(t: Variant) -> String: return str(t))
 	return []
+
+
+## A sett (a SETTS_JSON name, a list of [token, width], or {sett, symmetric, scale_m}) as {sett, symmetric, scale_m}
+## ({} when there is none).
+static func sett_of(v: Variant) -> Dictionary:
+	if v is String:
+		var d: Variant = setts().get(str(v))
+		if d is Dictionary and (d as Dictionary).get("sett") is Array:
+			return {"sett": d.sett, "symmetric": bool(d.get("symmetric", true)), "scale_m": float(d.get("scale_m", 0.16))}
+		push_warning("ClothMaterials: no sett %s." % v)
+		return {}
+	if v is Array:
+		return {"sett": v, "symmetric": true, "scale_m": float(PATTERN_DEFAULTS.plaid.scale_m)}
+	if v is Dictionary:
+		var b := sett_of((v as Dictionary).get("sett", PATTERN_DEFAULTS.plaid.sett))
+		if not b.is_empty():
+			b["symmetric"] = bool((v as Dictionary).get("symmetric", b.symmetric))
+			b["scale_m"] = float((v as Dictionary).get("scale_m", b.scale_m))
+		return b
+	return {}
+
+
+## The stripes of a sett over one full repeat: the list, mirrored about its pivots when symmetric (the first and the last
+## stripe once, the others twice), as [[token, width]] with the widths summing to 1.
+static func sett_table(sett: Array, symmetric := true) -> Array:
+	var rows := []
+	for r: Variant in sett:
+		if r is Array and (r as Array).size() >= 2 and float(r[1]) > 0.0:
+			rows.append([str(r[0]), float(r[1])])
+	if symmetric and rows.size() > 2:
+		for i in range(rows.size() - 2, 0, -1):
+			rows.append((rows[i] as Array).duplicate())
+	return _normalized(rows)
+
+
+static func _normalized(rows: Array) -> Array:
+	var total := 0.0
+	for r: Array in rows:
+		total += float(r[1])
+	if total <= 0.0:
+		return rows
+	return rows.map(func(r: Array) -> Array: return [r[0], float(r[1]) / total])
+
+
+## What a zone shows: {} when it is plain, else {"name", "kind" (cloth.gdshader pat_kind), "colors": [tokens], "table":
+## [[token, width] ...] (one repeat, the widths summing to 1), "scale_m" (the repeat), "angle" (degrees on the UVs),
+## "explicit"}. `zd`: the catalog zone (index `zi`; -1: its "zone"), `tok`: its colour token, `colors`: the look's
+## colours of the garment, `pz`: the garment's pattern zone (pattern_zone; -1: zone 0).
+##   Which: the look's "pattern.<zi>" for that zone; else the look's "pattern" on the zones whose catalog lists it and on
+## the pattern zone (any garment takes any pattern: a plaid waistcoat); else the catalog's default ("default", or the
+## single "type") when `tok` is one of its colours (a look that picks another colour wears the cloth plain); "check_blue"
+## alone stands for the blue-and-white check unless the look says "pattern": "none".
+##   Its colours: the look's "<name>" list ("<name>.<zi>" for a zone's own), else the catalog's, else PATTERN_DEFAULTS'
+## with the zone's colour first; a colour the look picked for the zone that is not among the catalog's takes the first
+## place when the look chose the pattern. A plaid's colours are its sett's in the order they first appear ("sett": a
+## SETTS_JSON name or a list of [token, width], symmetric), recoloured by the look's list the same way.
+##   Its size: the look's "pattern_scale" (m), "pattern_angle" (degrees) and "pattern_axis", else the catalog's scale_m,
+## angle and axis ("h" turns stripes across the grain; "v", along it, is the default), else the defaults.
+static func pattern_spec(zd: Dictionary, tok: String, colors := {}, pz := -1, zi := -1) -> Dictionary:
+	if zi < 0:
+		zi = int(zd.get("zone", 0))
+	var sfx := ""
+	var raw: Variant = null
+	if colors.has("pattern.%d" % zi):
+		raw = colors["pattern.%d" % zi]
+		sfx = ".%d" % zi
+	elif colors.has("pattern") and (pattern_name(colors.pattern) in zone_patterns(zd) or zi == maxi(pz, 0)):
+		raw = colors.pattern
+	var explicit := raw != null
+	var name := pattern_name(raw)
+	if not explicit:
+		var p: Variant = zd.get("pattern")
+		name = pattern_name((p as Dictionary).get("default", (p as Dictionary).get("type", "none"))) if p is Dictionary else "none"
+	var def := _pattern_def(zd, name) if name != "none" else {}
+	var cols := _base_colors(name, def, tok) if name != "none" else []
+	if not explicit and name != "none" and not tok in cols:
+		name = "none"
+	if name == "none" and not explicit and tok == "check_blue" \
+			and str(colors.get("pattern", "")) != "none" and str(colors.get("pattern.%d" % zi, "")) != "none":
+		name = "check"
+		def = _pattern_def(zd, "check")
+		cols = ["check_blue", "linen_white"]
+	if name == "none":
+		return {}
+	var sett := {}
+	if name == "plaid":
+		sett = sett_of(colors.get("sett" + sfx, def.get("sett", PATTERN_DEFAULTS.plaid.sett)))
+		if sett.is_empty():
+			return {}
+		cols = _sett_colors(sett.sett)
+	var own := _look_list(colors, name, sfx)
+	if not own.is_empty():
+		if name == "plaid":
+			for i in mini(own.size(), cols.size()):
+				cols[i] = own[i]
+		else:
+			cols = own.duplicate()
+	elif explicit and (colors.has(str(zi)) or colors.has(zi)) and not tok in cols and not cols.is_empty():
+		cols[0] = tok
+	var dflt: Dictionary = PATTERN_DEFAULTS.get(name, {})
+	var scale := float(colors.get("pattern_scale" + sfx, def.get("scale_m", sett.get("scale_m", dflt.get("scale_m", 0.012)))))
+	var angle := float(colors.get("pattern_angle" + sfx, def.get("angle", 0.0)))
+	if str(colors.get("pattern_axis" + sfx, def.get("axis", "v"))) == "h":
+		angle += 90.0
+	var table := _pattern_table(name, cols, def, sett)
+	if table.is_empty():
+		return {}
+	return {"name": name, "kind": int(PATTERN_KIND[name]), "colors": cols, "table": table, "scale_m": maxf(scale, 0.001),
+			"angle": angle, "explicit": explicit}
+
+
+## A sett's colours in the order they first appear.
+static func _sett_colors(sett: Array) -> Array:
+	var out := []
+	for r: Variant in sett:
+		if r is Array and not (r as Array).is_empty() and not str(r[0]) in out:
+			out.append(str(r[0]))
+	return out
+
+
+## A pattern's colours before the look's: the catalog's, else the defaults' with the zone's colour first (a plaid: its
+## sett's).
+static func _base_colors(name: String, def: Dictionary, tok: String) -> Array:
+	if name == "plaid":
+		return _sett_colors(sett_of(def.get("sett", PATTERN_DEFAULTS.plaid.sett)).get("sett", []))
+	var c: Variant = def.get("colors")
+	if c is Array and not (c as Array).is_empty():
+		return (c as Array).map(func(t: Variant) -> String: return str(t))
+	var out: Array = ((PATTERN_DEFAULTS.get(name, {}) as Dictionary).get("colors", []) as Array).duplicate()
+	if not out.is_empty() and tok != "" and not tok in out:
+		out[0] = tok
+	return out
+
+
+## The stripe table of a pattern: [[token, width]] over one repeat (calico and herringbone: their colours in order).
+static func _pattern_table(name: String, cols: Array, def: Dictionary, sett: Dictionary) -> Array:
+	if cols.is_empty():
+		return []
+	var a := str(cols[0])
+	var b := str(cols[1]) if cols.size() > 1 else a
+	var c := str(cols[2]) if cols.size() > 2 else b
+	match name:
+		"check":
+			return _normalized([[a, 0.5], [b, 0.5]] if cols.size() < 3 else [[a, 0.4], [b, 0.4], [c, 0.2]])
+		"stripe":
+			var d := clampf(float(def.get("duty", 0.5)), 0.05, 0.95)
+			return _normalized([[a, 1.0 - d], [b, d]] if cols.size() < 3 else [[a, 0.5], [b, 0.25], [c, 0.25]])
+		"ticking":
+			var thin := c if cols.size() > 2 else b
+			return _normalized([[a, 0.28], [thin, 0.04], [a, 0.05], [b, 0.16], [a, 0.05], [thin, 0.04], [a, 0.38]])
+		"plaid":
+			var src: Array = sett.get("sett", [])
+			var base := _sett_colors(src)
+			var rows := []
+			for r: Variant in src:
+				if r is Array and (r as Array).size() >= 2:
+					var i := base.find(str(r[0]))
+					rows.append([str(cols[i]) if i >= 0 and i < cols.size() else str(r[0]), float(r[1])])
+			return sett_table(rows, bool(sett.get("symmetric", true)))
+		"calico":
+			return [[a, 1.0], [b, 0.0], [c, 0.0]]
+		"herringbone":
+			return [[a, 0.5], [b, 0.5]]
+	return []
+
+
+## Sets the pattern uniforms of a cloth material from its zones' pattern_spec results (`specs[z]`; {}: plain); `zds[z]`:
+## the zone dictionaries their tokens resolve in. A zone whose table does not fit the shader's is drawn plain.
+static func set_patterns(m: ShaderMaterial, specs: Array, zds: Array) -> void:
+	var kind := Vector4.ZERO
+	var scale := Vector4(0.012, 0.012, 0.012, 0.012)
+	var angle := Vector4.ZERO
+	var start := Vector4.ZERO
+	var count := Vector4.ZERO
+	var table := PackedVector4Array()
+	for z in mini(specs.size(), 4):
+		var sp: Dictionary = specs[z] if specs[z] is Dictionary else {}
+		if sp.is_empty():
+			continue
+		var rows: Array = sp.table
+		if table.size() + rows.size() > PATTERN_TABLE_MAX:
+			push_warning("ClothMaterials: the %s of zone %d does not fit the stripe table (%d + %d > %d); drawn plain." \
+					% [sp.name, z, table.size(), rows.size(), PATTERN_TABLE_MAX])
+			continue
+		kind[z] = float(sp.kind)
+		scale[z] = float(sp.scale_m)
+		angle[z] = deg_to_rad(float(sp.angle))
+		start[z] = float(table.size())
+		count[z] = float(rows.size())
+		var zd: Dictionary = zds[z] if z < zds.size() and zds[z] is Dictionary else {}
+		for r: Array in rows:
+			var l := lin4(token_color(zd, str(r[0])))
+			table.append(Vector4(l.x, l.y, l.z, float(r[1])))
+	while table.size() < PATTERN_TABLE_MAX:
+		table.append(Vector4.ZERO)
+	m.set_shader_parameter("pat_kind", kind)
+	m.set_shader_parameter("pat_scale", scale)
+	m.set_shader_parameter("pat_angle", angle)
+	m.set_shader_parameter("pat_start", start)
+	m.set_shader_parameter("pat_count", count)
+	m.set_shader_parameter("pat_sett", table)
 
 
 ## Bible palette tokens that catalog entries reference outside their own palette_hex
@@ -291,19 +617,22 @@ static func garment_materials(entry: Dictionary, colors := {}) -> Dictionary:
 	for i in zones.size():
 		if zones[i] is Dictionary:
 			by_zone[int((zones[i] as Dictionary).get("zone", i))] = zones[i]
+	var pz := pattern_zone(entry, colors)
 	for s: Dictionary in entry.get("surfaces", []):
 		var sname := String(s.get("name", ""))
 		if not fur.is_empty() and sname == String(fur.get("surface", "")):
 			out[sname] = fur_material(entry, colors)
 			continue
 		var m := new_cloth()
+		var specs := [{}, {}, {}, {}]
+		var zds := [{}, {}, {}, {}]
 		for zi in 4:
 			# the zone's own entry by its index (an entry's zones may skip one: the mote belt's 0, 2, 3), else the last
 			var zd: Dictionary = by_zone.get(zi, zones[mini(zi, zones.size() - 1)]) if not zones.is_empty() else {}
 			var role := String(zd.get("role", "cloth"))
 			var code := String(zd.get("fabric", "WOOL"))
 			var tok := String(colors.get(str(zi), colors.get(zi, zd.get("default", "#808080"))))
-			var tint := zone_tint(zd, tok, colors)
+			var tint := zone_tint(zd, tok, colors, pz)
 			var extra := {}
 			if role == "metal" or (code == "FLAT" and tok in ["brass", "pewter", "silver", "gold_lace", "silver_lace", "false_gold"]):
 				extra["metal"] = 1.0
@@ -320,6 +649,9 @@ static func garment_materials(entry: Dictionary, colors := {}) -> Dictionary:
 			if extra.get("metal", 0.0) > 0.5:
 				mode = 2
 			set_zone(m, zi, code, tint, mode, float(ROLE_SHEEN.get(role, 0.2)) * (1.4 if felt else 1.0), extra)
+			if role != "fur":
+				specs[zi] = pattern_spec(zd, tok, colors, pz, zi)
+				zds[zi] = zd
 			var b := hem_bands(zd)
 			if zi == 0 and not b.is_empty():
 				var rows := int(colors.get("bands_rows", b.get("default_rows", 0)))
@@ -327,6 +659,7 @@ static func garment_materials(entry: Dictionary, colors := {}) -> Dictionary:
 				m.set_shader_parameter("band_rows", Vector4(rows, float(b.get("offset_m", 0.05)),
 						float(b.get("width_m", 0.035)), float(b.get("gap_m", 0.025))))
 				m.set_shader_parameter("band_color", lin4(token_color(zd, btok)))
+		set_patterns(m, specs, zds)
 		m.set_shader_parameter("seed", _seed(id + sname))
 		m.set_shader_parameter("hem_width", 0.0 if felt else 0.018)
 		out[sname] = m

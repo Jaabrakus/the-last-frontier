@@ -18,7 +18,7 @@
 // weights: moustache, chin, jaw / cheeks, side whiskers) paints the short hair of a facial
 // hair style and the skin under its shells (beard_shell.gdshader), `beard_density` thins it;
 // `mark_scar` (1 brow, 2 cheek, 3 lip), `mark_pox` and `mark_paint` (vermilion cheek spots)
-// are the Markings row.
+// are the Markings row. Tattoos (tattoo.gdshaderinc, Tattoos): the look's list of designs laid on the skin by place.
 //
 // Hiding: UV2.x = region + 64 * zone. A vertex whose region bit is set in `hide_mask`
 // (x: regions 0..31, y: 32..63) collapses to the origin in every pass (colour, depth,
@@ -105,6 +105,7 @@ varying float v_dseam;  // distance (m) from the head/body seam plane (z = 1.367
 varying float v_h;      // model-space height (the neck's tone and detail blend along it, not step at the region borders)
 
 #include "res://assets/character/shaders/skin_common.gdshaderinc"
+#include "res://assets/character/shaders/tattoo.gdshaderinc"
 
 void vertex() {
 	uint code = uint(UV2.x + 0.5);
@@ -255,6 +256,9 @@ void fragment() {
 	NORMAL_MAP_DEPTH = 1.0;
 	// oilier T-zone and cheeks (the flush map covers nose and cheeks), drier elsewhere
 	rough -= 0.06 * flush;
+	// tattoos (tattoo.gdshaderinc, the creator's Tattoos row): ink under the skin, under the stubble and the beard's short hair
+	float tat_ink_here;
+	albedo = tattoo_skin(albedo, UV, v_mh, v_region, VERTEX, NORMAL, tat_ink_here);
 	// stubble (beard mask in COLOR.a)
 	float beard = COLOR.a * stubble;
 	if (beard > 0.001) {
@@ -376,7 +380,7 @@ void fragment() {
 			* smoothstep(-0.5, 0.0, v_nz));
 	AO_LIGHT_AFFECT = 0.35;
 	// (less under hair: the light the strips let through reddened the hairline into a glowing band)
-	SSS_STRENGTH = debug_view == 0 ? sss * (v_region <= 1u ? head_sss : 1.0) * (1.0 - 0.75 * hair_cover) : 0.0;
+	SSS_STRENGTH = debug_view == 0 ? sss * (v_region <= 1u ? head_sss : 1.0) * (1.0 - 0.75 * hair_cover) * (1.0 - 0.9 * tat_ink_here) : 0.0;
 	// light through the thin parts of the head (the ears, the nostrils' wings): red, as blood
 	// colours the light that crosses the skin. Set on every fragment: the defaults elsewhere (a zero
 	// depth) turned the whole body below the head black.

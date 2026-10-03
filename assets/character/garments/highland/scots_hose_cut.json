@@ -1,0 +1,302 @@
+{
+ "id": "scots_hose_cut",
+ "name": "Cut hose (Highland)",
+ "description": "Hose of woollen cloth cut on the bias in a red-and-white dicing, from the toes to below the knee, the top turned down into a cuff and a garter tied under it, its ends hanging at the outer side.",
+ "kind": "garment",
+ "set": "highland",
+ "slot": "legs.over",
+ "alt_slots": [],
+ "layer": {
+  "default": 10
+ },
+ "glb": "res://assets/character/garments/highland/scots_hose_cut.glb",
+ "mesh": "scots_hose_cut",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "scots_hose_cut"
+  }
+ ],
+ "occupies_regions": [
+  "ankle_l",
+  "ankle_r",
+  "foot_l",
+  "foot_r",
+  "shin_lower_l",
+  "shin_lower_r",
+  "shin_upper_l",
+  "shin_upper_r"
+ ],
+ "hides_regions": [
+  "ankle_l",
+  "ankle_r",
+  "foot_l",
+  "foot_r",
+  "shin_lower_l",
+  "shin_lower_r",
+  "shin_upper_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "cloth",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "madder_red",
+    "linen_white",
+    "stroud_blue",
+    "full_green",
+    "logwood_black",
+    "slate_grey",
+    "deep_green"
+   ],
+   "default": "madder_red",
+   "pattern": {
+    "options": [
+     "none",
+     "check",
+     "plaid"
+    ],
+    "default": "check",
+    "check": {
+     "colors": [
+      "madder_red",
+      "linen_white"
+     ],
+     "scale_m": 0.036,
+     "angle": 45.0
+    },
+    "plaid": {
+     "sett": "madder_red",
+     "scale_m": 0.12,
+     "angle": 45.0
+    },
+    "note": "dicing: a check cut on the bias (45 deg); or the plaid's own sett"
+   },
+   "bands": null,
+   "palette_hex": {
+    "madder_red": "#8E2B21",
+    "linen_white": "#E8E3D3",
+    "stroud_blue": "#1E2B4A",
+    "full_green": "#2E5134",
+    "logwood_black": "#1C1B20",
+    "slate_grey": "#6B6A66",
+    "deep_green": "#213A2A"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "garter",
+   "role": "ribbon",
+   "fabric": "WOOL",
+   "palette": [
+    "madder_red",
+    "linen_white",
+    "logwood_black",
+    "stroud_blue",
+    "ribbon_red"
+   ],
+   "default": "madder_red",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "madder_red": "#8E2B21",
+    "linen_white": "#E8E3D3",
+    "logwood_black": "#1C1B20",
+    "stroud_blue": "#1E2B4A",
+    "ribbon_red": "#B2202C"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 3396,
+    "verts": 2326,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "foot_l",
+     "foot_r",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "l_ball",
+     "r_upper_leg",
+     "r_knee",
+     "r_ankle",
+     "r_heel",
+     "r_ball"
+    ]
+   }
+  },
+  "tris": 3396,
+  "verts": 2326,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0302,
+   "breast_large": 0.0012,
+   "breast_small": 0.001
+  },
+  "coverage": {
+   "thigh_lower_l": {
+    "normal": 0.146,
+    "cone": 0.115
+   },
+   "shin_upper_l": {
+    "normal": 1.0,
+    "cone": 0.958
+   },
+   "shin_lower_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "foot_l": {
+    "normal": 0.99,
+    "cone": 0.99
+   },
+   "thigh_lower_r": {
+    "normal": 0.177,
+    "cone": 0.115
+   },
+   "shin_upper_r": {
+    "normal": 1.0,
+    "cone": 0.979
+   },
+   "shin_lower_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "foot_r": {
+    "normal": 0.99,
+    "cone": 0.99
+   }
+  },
+  "glb_kb": 404.3
+ },
+ "budget": {
+  "tris_max": 4000
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "With the philabeg and the plaid Highlanders wore short hose of tartan or diced cloth cut on the bias and sewn, reaching to below the knee and gartered there, the top turned down (the NMS kilt suit's hose; Burt describes the dress in the 1720s-30s) [EU-H2][EU-H5b]. Highland dress was banned in Scotland 'for man or boy' from 1747 to 1782 (soldiers exempt; the Act did not run in America) [EU-H1].",
+ "sources": [
+  "EU-H2",
+  "EU-H5b",
+  "EU-H1"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "highland"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 1.49,
+    "p05_mm": 2.86,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 1.51,
+    "p05_mm": 2.9,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 1.49,
+    "p05_mm": 2.86,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 1.49,
+    "p05_mm": 2.86,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/scots_hose_cut.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/scots_hose_cut.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "presets": {
+   "dicing": {
+    "0": "madder_red",
+    "1": "madder_red"
+   },
+   "sett": {
+    "0": "madder_red",
+    "1": "linen_white",
+    "pattern": "plaid"
+   },
+   "plain": {
+    "0": "stroud_blue",
+    "1": "madder_red",
+    "pattern": "none"
+   }
+  },
+  "set_note": "The Highland dress is a clothing set (the owner, 2026-10-03), not a people: offered to everyone.",
+  "law_note": "Dress Act 1747-82 (Scotland only; soldiers exempt): historical context, never enforced.",
+  "recipe_note": "cloth2.dress.hose: SockTube to 0.46, the top 4 cm raised 2.4 mm (the turned-down cuff), a garter band at 0.414-0.428 raised 3.2 mm with two ends of 6 / 4.8 cm hanging at the outer side.",
+  "references": [
+   "[EU-H2] Burt via https://en.wikipedia.org/wiki/Arisaid",
+   "[EU-H5b] NMS kilt suit: https://nms.ac.uk/explore-our-collections/stories/scottish-history-and-archaeology/highland-style/highland-style-sub-pages/kilt-suit-c1790-1800",
+   "[EU-H1] The Dress Act: https://historyofparliament.com/2020/11/17/banning-scottish-highland-dress-in-the-aftermath-of-culloden/"
+  ]
+ }
+}

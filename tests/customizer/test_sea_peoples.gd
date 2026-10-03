@@ -75,9 +75,9 @@ func _initialize() -> void:
 			DirAccess.make_dir_recursive_absolute(_shots)
 			if not _headless():
 				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
-	_had_file = FileAccess.file_exists(AppearanceStore.CURRENT)
+	_had_file = FileAccess.file_exists(AppearanceStore.current_path())
 	if _had_file:
-		_backup = FileAccess.get_file_as_string(AppearanceStore.CURRENT)
+		_backup = FileAccess.get_file_as_string(AppearanceStore.current_path())
 	_test_peoples()
 	_test_pacific()
 	_test_faces()
@@ -87,11 +87,11 @@ func _initialize() -> void:
 	_test_store()
 	await _test_ui()
 	if _had_file:
-		var f := FileAccess.open(AppearanceStore.CURRENT, FileAccess.WRITE)
+		var f := FileAccess.open(AppearanceStore.current_path(), FileAccess.WRITE)
 		f.store_string(_backup)
 		f.close()
-	elif FileAccess.file_exists(AppearanceStore.CURRENT):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.CURRENT))
+	elif FileAccess.file_exists(AppearanceStore.current_path()):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.current_path()))
 	print("SEA PEOPLES TEST %s (%d checks%s)" % ["OK" if _fails.is_empty() else "FAILED", _checks,
 			"" if _fails.is_empty() else ", %d failed" % _fails.size()])
 	quit(0 if _fails.is_empty() else 1)
@@ -280,14 +280,17 @@ func _test_rows() -> void:
 				_check(String(faces[0].get("note", "")).begins_with("Showcase face") and not faces[2].has("note"),
 						"%s %d %s: the showcase note on the showcase faces" % [pid, bt, style])
 				_check(CreatorOptions.current("face", lk) == 0, "%s %d %s: the Face row on face 1" % [pid, bt, style])
-			var jw := CreatorOptions.options("jewellery", _look(pid, bt)).map(func(o: Dictionary) -> String: return String(o.id))
+			# every earring offered to everyone (2026-10-03); the documented ones are the people's own (first, the dice's)
+			var jw := CreatorOptions.options("jewel_ears", _look(pid, bt)).map(func(o: Dictionary) -> String: return String(o.id))
+			var own := CreatorOptions.jewel_own(_look(pid, bt), "ears")
+			_check(jw.size() > 10 and jw[0] == "none", "%s %d: every earring offered (%d)" % [pid, bt, jw.size()])
 			if pid in ["vietnamese", "malay"] and bt == 1:
-				_check(jw == ["none"], "%s men: no earrings (%s)" % [pid, jw])
+				_check(own.is_empty(), "%s men: no earrings of their own (%s)" % [pid, own])
 				_check(String((d.peoples[pid] as Dictionary).get("note_jewellery", "")).contains("women"), "%s: the jewellery note" % pid)
 			elif pid == "pacific_islander":
-				_check(jw == ["none", "pearl_drops"], "%s %d: pearls in the ears (%s)" % [pid, bt, jw])
+				_check(own == ["pearl_drops"], "%s %d: pearls in the ears their own (%s)" % [pid, bt, own])
 			else:
-				_check(jw.size() > 1, "%s %d: earrings offered (%s)" % [pid, bt, jw])
+				_check(not own.is_empty(), "%s %d: earrings of their own (%s)" % [pid, bt, own])
 
 
 # --- the model ----------------------------------------------------------------------------------------
@@ -333,7 +336,7 @@ func _test_store() -> void:
 		lk["name"] = pid.capitalize()
 		CreatorOptions.step("face", lk, 1)
 		CreatorOptions.step("hair_style", lk, 1)
-		CreatorOptions.step("jewellery", lk, 1)
+		CreatorOptions.step("jewel_ears", lk, 1)
 		var want := {}
 		for r: String in CreatorOptions.rows(lk):
 			want[r] = CreatorOptions.current(r, lk)
@@ -354,8 +357,8 @@ func _test_store() -> void:
 # --- the creator UI -------------------------------------------------------------------------------------
 
 func _test_ui() -> void:
-	if FileAccess.file_exists(AppearanceStore.CURRENT):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.CURRENT))
+	if FileAccess.file_exists(AppearanceStore.current_path()):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.current_path()))
 	var c := CharacterCreator.open(null)
 	await _frames(5)
 	c.look = _look("english", 2)
@@ -379,6 +382,6 @@ func _test_ui() -> void:
 		await _shot(pid)
 	c.close(true)
 	await _frames(3)
-	var saved := AppearanceStore.load_file(AppearanceStore.CURRENT)
+	var saved := AppearanceStore.load_file(AppearanceStore.current_path())
 	_check(String(saved.get("people", "")) == SIX[-1] and String(saved.get("preset", "")) == SIX[-1] + "_f_r1",
 			"Accept saves the chosen people and face (%s, %s)" % [saved.get("people"), saved.get("preset")])

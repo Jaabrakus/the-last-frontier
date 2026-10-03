@@ -512,10 +512,14 @@ func _refresh_sliders() -> void:
 	_suspend = false
 
 
-## A new face (people preset, new individual) keeps the clothes chosen on the Outfit tab.
+## A new face (people preset, new individual) keeps the clothes chosen on the Outfit tab, and the name and the tattoos
+## (the creator's rows keep them across a change of people too: CreatorOptions.KEEP).
 func _keep_outfit(lk: Dictionary) -> Dictionary:
 	if look.get("outfit") is Dictionary:
 		lk["outfit"] = (look.outfit as Dictionary).duplicate(true)
+	for k: String in ["name", "tattoos"]:
+		if look.has(k):
+			lk[k] = look[k].duplicate(true) if look[k] is Array else look[k]
 	return lk
 
 

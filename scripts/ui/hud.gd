@@ -19,6 +19,11 @@ extends CanvasLayer
 ##   right          toasts sliding in: what gathering gives ("+2 Firewood", the item's picture) and skill levels
 ##   edges          a red heartbeat at the edges of the screen when health is low; a flash when hurt
 ##   F1             the controls (hidden; a hint at the start), F3 the debug lines
+## The HUD style classic (ClassicSkin.style(); the owner 2026-10-03: "can the hud be similar to world of warcraft vanilla?")
+## adds the classic frames (`classic`, ClassicFrames: the player and target frames, the action bar, the renown bar, the
+## micro menu and the bags); the vitals and the slot strip step aside for them. With them the map corner and the chat
+## (HudClassicMap: the minimap, the quest tracker, the chat log): the compass, its clock, the toasts at the right and
+## the F1 hint step aside (`toasted` hands every toast to the chat; `toasts_shown`). apply_style() switches it in a game.
 ## Hooks kept: player, show_debug, on_projectile_hit(), on_target_killed() (group hit_listeners), toast().
 
 @export var color := Color(0.95, 0.92, 0.8)
@@ -27,6 +32,11 @@ extends CanvasLayer
 @export var min_gap := 3.0
 @export var dot_radius := 2.2
 @export var show_debug := false
+
+## Every toast as it comes (text, icon, key as toast() takes them): the classic HUD's chat log (HudClassicMap).
+signal toasted(text: String, icon: String, key: String)
+## The toasts at the right shown (false: the classic HUD's chat log has them instead).
+var toasts_shown := true
 
 const ICON_DIR := "res://assets/ui/icons/"
 const INK := Color(0.96, 0.9, 0.76)
@@ -108,6 +118,8 @@ var _help_t := 0.0
 var _icons: ItemIcons
 var _tex := {}
 var _heading := 0.0
+## The classic frames (ClassicFrames) when the HUD style is classic, else null.
+var classic: ClassicFrames
 
 
 ## The HUD's lettering: a serif of the machine's (Baskerville on a Mac), the engine's own font where there is none.
@@ -194,9 +206,34 @@ func _ready() -> void:
 	_place(_help_hint, Vector2(0, 1), Vector2(24, -112), Vector2(0, 1))
 	_help_t = HELP_HINT_S
 	if player:
+		apply_style(ClassicSkin.style())
 		for w: Weapon in player.weapons.values():
 			w.fired.connect(func() -> void: _shots += 1)
 		_hook_gathering.call_deferred()
+
+
+## The HUD style ("classic" or "minimal": ClassicSkin.style() when the HUD is built; the Settings row changes it in a game,
+## GameSettings): classic puts on the classic frames (ClassicFrames) and the map corner and chat (HudClassicMap), and the
+## vitals, the slot strip, the compass, the toasts and the F1 hint step aside; minimal takes them off and gives those back.
+func apply_style(s: String) -> void:
+	var want := s == ClassicSkin.CLASSIC and player != null
+	if want == (classic != null):
+		return
+	var vit := _root.get_node(^"Vitals") as Control
+	if want:
+		classic = ClassicFrames.install(self)       # (the vitals and the slot strip step aside: _update_card)
+		HudClassicMap.install(self)                 # (the minimap, the quest tracker, the chat log: the compass and toasts step aside)
+		vit.visible = false
+		# (the F3 lines right of the story's key hints, under the target frame: StoryHUD.TRACKED_AT keeps the left)
+		_debug.set_meta(&"hud_place", [Vector2(0, 0), Vector2(440, 112), Vector2(0, 0)])
+	else:
+		HudClassicMap.remove(self)
+		classic.get_parent().remove_child(classic)  # (out of the tree now: its groups and its hold on the interactor go)
+		classic.queue_free()
+		classic = null
+		vit.visible = true
+		_debug.set_meta(&"hud_place", [Vector2(0, 0), Vector2(16, 70), Vector2(0, 0)])
+	_reflow(_debug)
 
 
 ## Puts a control at an anchor point of the screen (`at`, 0..1 each), offset by `off` px, its own `pivot` (0..1) on
@@ -394,7 +431,8 @@ func _icon_rect(id: String, px: int, tint: Color) -> TextureRect:
 ## prefixed "ui:" ("ui:skill_woodcutting"). A toast with a `key` that is still showing is updated instead (several
 ## levels of one skill at once show the last).
 func toast(text: String, icon := "", key := "") -> void:
-	if _toasts == null:
+	toasted.emit(text, icon, key)           # (the classic HUD's chat log writes it: HudClassicMap)
+	if _toasts == null or not toasts_shown:
 		return
 	if key != "":
 		for c in _toasts.get_children():
@@ -596,7 +634,7 @@ func _update_card() -> void:
 	_ammo.text = line
 	_ammo.visible = line != ""
 	_update_slots(tool)
-	_slots_box.visible = _ammo.visible or _slots_shown > 0
+	_slots_box.visible = (_ammo.visible or _slots_shown > 0) and classic == null
 
 
 ## A readied spell's line: its name and mode, the caster's motes and its mastery when there is one ("Stone Form (cannonball)
