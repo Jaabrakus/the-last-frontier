@@ -120,3 +120,8 @@ func _place_held() -> void:
 	var nock := ThrowableModels.marker_pos(dart, "Nock")
 	# Dart space: tip at the origin, nock at +Z; put the nock on the hook.
 	dart.global_transform = Transform3D(b, spur - b * nock)
+
+
+## The board stays in the hand when the dart has gone (death_shows_model): the fist keeps it while the atlatl is out.
+func fist_held() -> bool:
+	return active and not is_queued_for_deletion()

@@ -215,7 +215,13 @@ enum SwitchPath { FIST, SOURCE, STOW }
 ## graph's pick-up grip, p-fingers-brick, on the aim trees and the throw chain).
 @export var grip_clip_carry := "actor_b-p-fingers-brick"
 @export var grip_sample_carry := 0.0
-@export var grip_clip_aim := "actor_b-p-fingers-brick"
+@export var grip_clip_aim := "atk-actor_b-knife-v-thug-hit1-intro"
+## The fist the right hand keeps on the object while it is in the hand (HeldFist; user 2026-10-03: the throwables held
+## as the saber is, the fingers closed through the wind-up and the throw instead of the graph's open brick grip): the
+## fingers and the thumb of `fist_clip` at `fist_sample` s, the same knife grip the aim now holds the object in
+## (grip_clip_aim), so the fingers close on it.
+@export var fist_clip := "atk-actor_b-knife-v-thug-hit1-intro"
+@export var fist_sample := 0.0
 
 var state := State.READY
 var charge := 0.0
@@ -329,6 +335,7 @@ var _q_sw_car := Quaternion.IDENTITY
 ## Aim carried over a weapon switch (THROW2 fix 2): Weapon.unequip() zeroes `aim` at once, but PlayerAnim keeps
 ## the arm's aim weight and lowers it over tuning weapon_fade_s, so the object follows the arm down with it.
 var _held_aim := 0.0
+var _held_fist: HeldFist
 const HELD_AIM_FADE_S := 0.25
 
 
@@ -856,6 +863,17 @@ func death_shows_model() -> bool:
 	return false
 
 
+func _exit_tree() -> void:
+	if _held_fist != null and is_instance_valid(_held_fist):
+		_held_fist.queue_free()
+	_held_fist = null
+
+
+## Whether the right hand is closed on the weapon now (HeldFist): the weapon out and its object in the hand.
+func fist_held() -> bool:
+	return active and not is_queued_for_deletion() and _object_in_hand()
+
+
 func _update_visibility() -> void:
 	if model:
 		model.visible = active and _object_in_hand()
@@ -877,6 +895,11 @@ func _connect_skeleton() -> void:
 		_hip_r_bone = sk.find_bone("r_upper_leg")
 	if model:
 		model.top_level = true
+	if _held_fist == null and hand == Hand.RIGHT:
+		var ap := _anim_player()
+		var path := StringName("actor_b/" + fist_clip)
+		if ap != null and ap.has_animation(path):
+			_held_fist = HeldFist.install(sk, ap.get_animation(path), fist_sample, fist_held)
 	if not sk.skeleton_updated.is_connected(_on_skeleton_updated):
 		sk.skeleton_updated.connect(_on_skeleton_updated)
 
