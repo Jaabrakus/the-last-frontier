@@ -116,7 +116,9 @@ func _test_data() -> void:
 	var d := GatherData.get_default()
 	var ld := LoadoutData.get_default()
 	for kind: String in d.tools:
-		_check(ld.kind_class(kind) == "tool", "%s is a tool kind in loadout_items.json" % kind)
+		# (retired 2026-10-02, the owner: "no more rigs on the char slots": which rig place a tool's loadout class lets it hang
+		# on was the Tab screen's rig placement, gone; what a tool rides on the body now follows the hotbar, Hotbar. Was:
+		# ld.kind_class(kind) == "tool", or "belt" for a blade that works nothing, in loadout_items.json)
 		_check(InventoryState.name_of(kind) == d.name_of(kind), "%s: inventory name %s" % [kind, InventoryState.name_of(kind)])
 		var tm := GatherModels.build(kind)
 		_check(tm != null and tm.has_node("Edge") and tm.has_node("Grip"), "%s has a model with its markers" % kind)

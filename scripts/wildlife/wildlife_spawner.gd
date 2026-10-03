@@ -974,7 +974,8 @@ func people_near(pos: Vector3, r: float, but: Node = null) -> Array:
 	var out := []
 	for n in get_tree().get_nodes_in_group(PEOPLE):
 		var b := n as Node3D
-		if b == null or b == but or not is_instance_valid(b) or b.is_queued_for_deletion() or b.get(&"is_dead") == true:
+		if b == null or b == but or not is_instance_valid(b) or b.is_queued_for_deletion() \
+				or (b.call(&"is_dead") if b.has_method(&"is_dead") else b.get(&"is_dead")) == true:     # (NpcFighter's is a method)
 			continue
 		if b.global_position.distance_to(pos) < r:
 			out.append(b)

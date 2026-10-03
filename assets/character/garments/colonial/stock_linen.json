@@ -1,0 +1,209 @@
+{
+ "id": "stock_linen",
+ "name": "Linen stock",
+ "description": "A stiffened band of pleated linen round the neck over the shirt's collar, fastened behind with a small buckle.",
+ "kind": "garment",
+ "set": "colonial",
+ "slot": "accessories.neck",
+ "alt_slots": [],
+ "layer": {
+  "default": 15
+ },
+ "glb": "res://assets/character/garments/colonial/stock_linen.glb",
+ "mesh": "stock_linen",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "stock_linen"
+  }
+ ],
+ "occupies_regions": [
+  "neck_lower",
+  "neck_upper"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "stock",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "linen_white",
+    "logwood_black",
+    "linen_unbleached"
+   ],
+   "default": "linen_white",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "linen_white": "#E8E3D3",
+    "logwood_black": "#1C1B20",
+    "linen_unbleached": "#C8BA9A"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "buckle",
+   "role": "metal",
+   "fabric": "MET",
+   "palette": [
+    "pewter",
+    "brass",
+    "silver"
+   ],
+   "default": "pewter",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "pewter": "#9A9C9A",
+    "brass": "#B58F4A",
+    "silver": "#C8CACC"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": true
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 539,
+    "verts": 346,
+    "zones": [
+     0,
+     2
+    ],
+    "regions": [
+     "chest_upper_back",
+     "chest_upper_side",
+     "neck_lower",
+     "neck_upper"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "r_clavicle",
+     "neck",
+     "heada",
+     "headb",
+     "l_breast",
+     "r_breast",
+     "l_shoulder_twist_a",
+     "r_shoulder_twist_a"
+    ]
+   }
+  },
+  "tris": 539,
+  "verts": 346,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0237,
+   "breast_large": 0.0006,
+   "breast_small": 0.0006
+  },
+  "coverage": {
+   "neck_upper": {
+    "normal": 0.76,
+    "cone": 0.75
+   },
+   "neck_lower": {
+    "normal": 0.271,
+    "cone": 0.26
+   },
+   "chest_upper_side": {
+    "normal": 0.135,
+    "cone": 0.083
+   },
+   "chest_upper_back": {
+    "normal": 0.062,
+    "cone": 0.042
+   }
+  },
+  "glb_kb": 143.5
+ },
+ "budget": {
+  "tris_max": 900
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "The everyday neckwear of the period for gentlemen and soldiers: a pleated linen stock buckled behind, or a roller or neckerchief [R20][M3]; linen neck stocks or rollers for the British regulars of 1759 (Fort Ticonderoga's guidelines) [S4].",
+ "sources": [
+  "R20",
+  "M3",
+  "S4"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "colonial",
+  "regulars"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 3.0,
+    "p05_mm": 3.96,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 3.0,
+    "p05_mm": 4.37,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 3.0,
+    "p05_mm": 3.98,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 3.0,
+    "p05_mm": 3.98,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/stock_linen.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/stock_linen.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "shirt_linen",
+  "shirt_tucked",
+  "shirt_check"
+ ],
+ "extra": {
+  "references": [
+   "https://www.fortticonderoga.org/wp-content/uploads/2023/11/1759-Siege-of-Carillon-British-Regulars-Guidelines.pdf"
+  ]
+ }
+}

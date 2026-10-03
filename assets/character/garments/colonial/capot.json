@@ -1,0 +1,517 @@
+{
+ "id": "capot",
+ "name": "Hooded capot",
+ "description": "A knee-length wool coat wrapped over in front and closed by one button at the neck and the sash, with a standing collar, round cuffs and a hood lying on the back.",
+ "kind": "garment",
+ "set": "colonial",
+ "slot": "outer",
+ "alt_slots": [],
+ "layer": {
+  "default": 40
+ },
+ "glb": "res://assets/character/garments/colonial/capot.glb",
+ "mesh": "capot",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "capot"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "chest_upper_back",
+  "chest_upper_front",
+  "chest_upper_side",
+  "forearm_a_l",
+  "forearm_a_r",
+  "forearm_b_l",
+  "forearm_b_r",
+  "forearm_c_l",
+  "forearm_c_r",
+  "neck_lower",
+  "pelvis_center",
+  "pelvis_side",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r",
+  "upper_arm_l",
+  "upper_arm_r"
+ ],
+ "hides_regions": [
+  "abdomen_back",
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "chest_upper_front",
+  "forearm_a_l",
+  "forearm_a_r",
+  "pelvis_side"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "cloth",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "grey_white",
+    "slate_grey",
+    "stroud_blue",
+    "walnut_brown",
+    "linen_white",
+    "drab",
+    "#E3DED0"
+   ],
+   "default": "grey_white",
+   "pattern": null,
+   "bands": {
+    "axis": "x",
+    "source": "CUSTOM0.x (height above the hem, or distance from the cuff end; metres)",
+    "rows_max": 3,
+    "default_rows": 0,
+    "offset_m": 0.05,
+    "width_m": 0.035,
+    "gap_m": 0.025,
+    "palette": [
+     "stroud_blue",
+     "madder_red",
+     "stroud_red",
+     "logwood_black"
+    ],
+    "default": "stroud_blue"
+   },
+   "palette_hex": {
+    "grey_white": "#D4D0C3",
+    "slate_grey": "#6B6A66",
+    "stroud_blue": "#1E2B4A",
+    "walnut_brown": "#5A3F2C",
+    "linen_white": "#E8E3D3",
+    "drab": "#8B7A5C",
+    "#E3DED0": "#E3DED0"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "hood and collar",
+   "role": "trim",
+   "fabric": "WOOL",
+   "palette": [
+    "stroud_red",
+    "stroud_blue",
+    "madder_red",
+    "grey_white",
+    "slate_grey",
+    "walnut_brown",
+    "royal_blue"
+   ],
+   "default": "stroud_red",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "stroud_red": "#8A1C1F",
+    "stroud_blue": "#1E2B4A",
+    "madder_red": "#8E2B21",
+    "grey_white": "#D4D0C3",
+    "slate_grey": "#6B6A66",
+    "walnut_brown": "#5A3F2C",
+    "royal_blue": "#233C78"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "button",
+   "role": "button",
+   "fabric": "MET",
+   "palette": [
+    "pewter",
+    "brass",
+    "logwood_black"
+   ],
+   "default": "pewter",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "pewter": "#9A9C9A",
+    "brass": "#B58F4A",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 3,
+   "name": "cuffs",
+   "role": "trim",
+   "fabric": "WOOL",
+   "palette": [
+    "grey_white",
+    "slate_grey",
+    "stroud_blue",
+    "walnut_brown",
+    "linen_white",
+    "drab",
+    "#E3DED0",
+    "stroud_red",
+    "royal_blue"
+   ],
+   "default": "grey_white",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "grey_white": "#D4D0C3",
+    "slate_grey": "#6B6A66",
+    "stroud_blue": "#1E2B4A",
+    "walnut_brown": "#5A3F2C",
+    "linen_white": "#E8E3D3",
+    "drab": "#8B7A5C",
+    "#E3DED0": "#E3DED0",
+    "stroud_red": "#8A1C1F",
+    "royal_blue": "#233C78"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 6731,
+    "verts": 3967,
+    "zones": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "forearm_a_r",
+     "forearm_b_l",
+     "forearm_b_r",
+     "forearm_c_l",
+     "forearm_c_r",
+     "neck_lower",
+     "pelvis_center",
+     "pelvis_side",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r",
+     "upper_arm_l",
+     "upper_arm_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "r_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "l_shoulder",
+     "l_elbow",
+     "l_wrist",
+     "r_clavicle",
+     "r_shoulder",
+     "r_elbow",
+     "r_wrist",
+     "neck",
+     "l_breast",
+     "r_breast",
+     "l_forarm_twist_a",
+     "l_forarm_twist_c",
+     "l_forarm_twist_b",
+     "r_forarm_twist_a",
+     "r_forarm_twist_c",
+     "r_forarm_twist_b",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_shoulder_twist_a",
+     "l_shoulder_twist_c",
+     "l_shoulder_twist_b",
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 6731,
+  "verts": 3967,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0479,
+   "breast_large": 0.0781,
+   "breast_small": 0.0227
+  },
+  "coverage": {
+   "head": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "neck_upper": {
+    "normal": 0.104,
+    "cone": 0.0
+   },
+   "neck_lower": {
+    "normal": 1.0,
+    "cone": 0.854
+   },
+   "chest_upper_front": {
+    "normal": 1.0,
+    "cone": 0.99
+   },
+   "chest_upper_side": {
+    "normal": 0.969,
+    "cone": 0.896
+   },
+   "chest_upper_back": {
+    "normal": 0.969,
+    "cone": 0.938
+   },
+   "chest_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_front": {
+    "normal": 0.99,
+    "cone": 0.948
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "pelvis_center": {
+    "normal": 0.552,
+    "cone": 0.292
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "upper_arm_l": {
+    "normal": 0.958,
+    "cone": 0.917
+   },
+   "forearm_a_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_l": {
+    "normal": 0.917,
+    "cone": 0.698
+   },
+   "forearm_c_l": {
+    "normal": 0.396,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.177,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.938,
+    "cone": 0.896
+   },
+   "forearm_a_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_r": {
+    "normal": 0.917,
+    "cone": 0.708
+   },
+   "forearm_c_r": {
+    "normal": 0.333,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.219,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 1.0,
+    "cone": 0.771
+   },
+   "thigh_lower_l": {
+    "normal": 0.604,
+    "cone": 0.333
+   },
+   "thigh_upper_r": {
+    "normal": 1.0,
+    "cone": 0.76
+   },
+   "thigh_lower_r": {
+    "normal": 0.615,
+    "cone": 0.281
+   }
+  },
+  "glb_kb": 899.6
+ },
+ "budget": {
+  "tris_max": 8000
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "The capot was the Canadian winter coat, issued to the militia and to the colonial regulars for campaigns: cut to overlap in front, the hood and collar often of another colour (d'Aleyrac), and worn with a sash, mitasses and moccasins; settlers and rangers wore it in winter too. Striped blanket capots were discouraged for the 1750s; plain cloth is the default, stripes an option [S2][S1][S3][M5][M7].",
+ "sources": [
+  "S2",
+  "S1",
+  "S3",
+  "M5",
+  "M7"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "colonial",
+  "canada",
+  "winter"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 7.43,
+    "p05_mm": 16.08,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 8.05,
+    "p05_mm": 16.12,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 7.45,
+    "p05_mm": 16.26,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 7.46,
+    "p05_mm": 15.83,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/capot.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/capot.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "shirt_linen",
+  "breeches",
+  "waistcoat_sb",
+  "veste_sleeved"
+ ],
+ "extra": {
+  "presets": {
+   "canadian": {
+    "0": "grey_white",
+    "1": "stroud_red",
+    "2": "pewter",
+    "3": "grey_white"
+   },
+   "canadian_blue": {
+    "0": "stroud_blue",
+    "1": "stroud_red",
+    "2": "pewter",
+    "3": "stroud_blue"
+   },
+   "marine_campaign": {
+    "0": "grey_white",
+    "1": "grey_white",
+    "2": "pewter",
+    "3": "grey_white"
+   },
+   "settler_brown": {
+    "0": "walnut_brown",
+    "1": "walnut_brown",
+    "2": "logwood_black",
+    "3": "walnut_brown"
+   }
+  },
+  "stripes_note": "Zone 0 bands: the 1770s white capot with blue bands, off by default for 1757 (Fort Ticonderoga's 1759 guidelines discourage striped-blanket capots).",
+  "references": [
+   "https://www.fortticonderoga.org/wp-content/uploads/2023/11/1759-Battle-on-Snowshoes-Canadian-Milice-Guidelines.pdf",
+   "https://www.fortticonderoga.org/wp-content/uploads/2019/06/Milice.pdf",
+   "https://thecanadianencyclopedia.ca/en/article/clothing-during-the-colonial-period"
+  ]
+ }
+}

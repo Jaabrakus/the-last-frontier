@@ -10,7 +10,8 @@ extends RefCounted
 ##   sky         the sky's weather (WeatherSystem: the spell, its hours, the wind, the next spell, its random stream);
 ##               the sky clock too when there is no survival core to drive it
 ##   player      where and how the player stands, health, the worn gear (Loadout), the pack, which weapons are carried,
-##               each weapon's state (charge, spare cartridges, count), the torches, the gathering skills
+##               each weapon's state (charge, spare cartridges, count), the torches, the gathering skills, the Sway's
+##               motes and moves (SwayCaster.save_of / load_of), the hotbar's slots (Hotbar.save_of / load_of)
 ##   vegetation  trees felled (hidden, their stumps back), saplings cut, rocks quarried (and their work so far), the felled
 ##               trees lying down (with the logs left in them), loose boles (and the barricade logs laid, LogPull) and log
 ##               piles. Tied to the forest's layout by a signature: a save of another layout skips this part (and
@@ -19,9 +20,13 @@ extends RefCounted
 ##               shut, the campfires and hearth fires (lit, the wood in them, the coals), what is in each chest, the
 ##               wood on each woodpile, a smokehouse's larder, its smudge and how smoked its venison is. With the survival core, a campfire's fuel and a
 ##               drying rack's venison are the core's records, tagged by the piece's id (CampLink), saved in its part:
-##               the pieces keep their ids, so they find them again
+##               the pieces keep their ids, so they find them again. A story layer's pieces keep their tags, and the
+##               layers the world has had are listed (StoryLayer: a load never places a layer's farms twice)
 ##   fort        the pieces chopped out of the palisade and the gate, in order; those since repaired; the covers and
 ##               doors hung in openings; the gate open or shut
+##   fire        the pieces burnt to ruins (each ruin's piece: type, place, look; its embers' age), the pieces alight (by
+##               id: the stage, how far through) and the count burnt (FireSpread; after the building, which no longer
+##               has the burnt pieces)
 ##   items       weapons put down (on the ground or in a rack, a built one by its piece's id, with their state), thrown
 ##               weapons lying or stuck, dropped torches (still burning, or not)
 ##   wildlife    every herd and pack (kind, home, what it is doing) and each animal (where, how hurt, hungry and tired;
@@ -35,6 +40,7 @@ extends RefCounted
 ##               what rides in the bed (the deer and logs saved where they lay, the wheelbarrow by its own part: each
 ##               taken back in)
 ##   forage      each wild plant patch's stock, dug plants (and when: they come back), browse and the deer's last visit
+##   captivity   taken captive (Captivity): the gear held by the captors, the bonds, the leash and the forced march
 ##   death       the respawn place (where the player last slept) and the pack drops (DeathRule)
 
 const FORMAT := "frontier-save"
@@ -202,7 +208,8 @@ static func save_player(level: Node) -> Dictionary:
 	return {"pos": v3(at), "yaw": p.yaw, "pitch": p.pitch, "health": p.health,
 			"loadout": plain(p.loadout.to_dict()) if p.loadout else {}, "pack": plain(p.inventory_pack),
 			"carried": plain(p.carried), "weapons": ws, "weapon_key": p.weapon_key, "hands_free": p.hands_free,
-			"torch": torch, "skills": skills, "maim": {"legs": p.maim_legs, "broken": p.broken_leg}}
+			"torch": torch, "skills": skills, "maim": {"legs": p.maim_legs, "broken": p.broken_leg},
+			"sway": SwayCaster.save_of(p), "hotbar": plain(Hotbar.save_of(p))}
 
 
 static func load_player(level: Node, d: Dictionary) -> void:
@@ -239,6 +246,8 @@ static func load_player(level: Node, d: Dictionary) -> void:
 	if p.gather and p.gather.skills and not (d.get("skills", {}) as Dictionary).is_empty():
 		for k in d.skills:
 			p.gather.skills.points[k] = float(d.skills[k])
+	SwayCaster.load_of(p, d.get("sway", {}))          # (the Sway's motes and moves: SwayCaster)
+	Hotbar.load_of(p, d.get("hotbar", {}))            # (the hotbar's slots, before the weapon is drawn again: Hotbar)
 	var key := String(d.get("weapon_key", ""))
 	if bool(d.get("hands_free", false)):
 		if not p.hands_free and p.has_method("toggle_hands_free"):
@@ -425,8 +434,10 @@ static func save_building(level: Node) -> Dictionary:
 		var smoke := p.get_node_or_null("Smokehouse") as Smokehouse
 		if smoke:
 			e["smokehouse"] = smoke.to_save_all()
+		StoryLayer.save_piece(p, e)                     # a story layer's piece keeps its tags (not placed twice)
 		ps.append(e)
-	return {"pieces": ps, "next_id": w.next_id, "stamped": w.stamped, "fort_built": w.fort_built}
+	return {"pieces": ps, "next_id": w.next_id, "stamped": w.stamped, "fort_built": w.fort_built,
+			"story_layers": StoryLayer.save_world(w)}
 
 
 static func load_building(level: Node, d: Dictionary) -> void:
@@ -451,6 +462,7 @@ static func load_building(level: Node, d: Dictionary) -> void:
 		for x in e.get("ground", []):
 			g.append(float(x))
 		var p := w.add_piece(String(e.type), to_xf(e.xf), bool(e.grounded), -1, g)
+		StoryLayer.load_piece(p, e)
 		var sup: Array[int] = []
 		for x in e.get("supports", []):
 			sup.append(int(x))
@@ -469,6 +481,7 @@ static func load_building(level: Node, d: Dictionary) -> void:
 		if e.has("smokehouse") and p.get_node_or_null("Smokehouse") is Smokehouse:
 			(p.get_node("Smokehouse") as Smokehouse).from_save_all(e.smokehouse)
 	w.next_id = maxi(w.next_id, int(d.get("next_id", w.next_id)))
+	StoryLayer.load_world(w, d)                         # the story layers this world has had (their pieces are among these)
 	if not had_fort and not w.fort_built and FortPlan.structure_enabled():
 		FortPlan.stamp_structure(w)
 
@@ -506,6 +519,25 @@ static func save_fort(_level: Node) -> Dictionary:
 
 static func load_fort(_level: Node, _d: Dictionary) -> void:
 	pass
+
+
+# --- Fire --------------------------------------------------------------------------------------------------
+
+static func save_fire(level: Node) -> Dictionary:
+	var f := FireSpread.find(level.get_tree())
+	return f.save_data() if f else {}
+
+
+static func load_fire(level: Node, d: Dictionary) -> void:
+	if d.is_empty():
+		# (a world saved with no fire in it: whatever burns here now is put out)
+		var f0 := FireSpread.find(level.get_tree())
+		if f0:
+			f0.clear()
+		return
+	var f := FireSpread.of(level.get_tree())
+	if f:
+		f.load_data(d)
 
 
 # --- Items -------------------------------------------------------------------------------------------------
@@ -831,6 +863,18 @@ static func load_story(level: Node, d: Dictionary) -> void:
 	var s := StoryDirector.find(level.get_tree())
 	if s and not d.is_empty():
 		s.load_data(d)
+
+
+## captivity   taken captive (Captivity): the held store, the bonds, the leash and the forced march; applied after the
+##             player's part (empty when the player is free)
+static func save_captivity(level: Node) -> Dictionary:
+	var c := Captivity.find(level.get_tree())
+	return c.save_data() if c else {}
+
+
+static func load_captivity(level: Node, d: Dictionary) -> void:
+	if bool(d.get("active", false)):
+		Captivity.install(level).load_data(d)
 
 
 static func save_forage(level: Node) -> Dictionary:

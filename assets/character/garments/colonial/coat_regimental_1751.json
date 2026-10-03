@@ -1,0 +1,475 @@
+{
+ "id": "coat_regimental_1751",
+ "name": "Regimental coat (1751)",
+ "description": "A red wool coat with facing-coloured lapels buttoned back from the neck to the waist and laced with white tape, small round cuffs, the skirts turned back to show the lining, pocket flaps and a shoulder strap on the left.",
+ "kind": "garment",
+ "set": "colonial",
+ "slot": "outer",
+ "alt_slots": [],
+ "layer": {
+  "default": 40
+ },
+ "glb": "res://assets/character/garments/colonial/coat_regimental_1751.glb",
+ "mesh": "coat_regimental_1751",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "coat_regimental_1751"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "chest_upper_back",
+  "chest_upper_front",
+  "chest_upper_side",
+  "forearm_a_l",
+  "forearm_a_r",
+  "forearm_b_l",
+  "forearm_b_r",
+  "forearm_c_l",
+  "forearm_c_r",
+  "neck_lower",
+  "pelvis_center",
+  "pelvis_side",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r",
+  "upper_arm_l",
+  "upper_arm_r"
+ ],
+ "hides_regions": [
+  "abdomen_back",
+  "abdomen_side",
+  "chest_back",
+  "chest_side",
+  "forearm_a_l",
+  "forearm_a_r",
+  "pelvis_side"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "coat",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "madder_red",
+    "scarlet",
+    "stroud_red"
+   ],
+   "default": "madder_red",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "madder_red": "#8E2B21",
+    "scarlet": "#A8161E",
+    "stroud_red": "#8A1C1F"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "facings and lining",
+   "role": "trim",
+   "fabric": "WOOL",
+   "palette": [
+    "buff",
+    "pale_buff",
+    "deep_yellow",
+    "yellow",
+    "pale_yellow",
+    "full_green",
+    "deep_green",
+    "royal_blue",
+    "white_facing",
+    "logwood_black",
+    "orange"
+   ],
+   "default": "buff",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "buff": "#D2B98A",
+    "pale_buff": "#DCCAA0",
+    "deep_yellow": "#C38E26",
+    "yellow": "#D0A93A",
+    "pale_yellow": "#D8C675",
+    "full_green": "#2E5134",
+    "deep_green": "#213A2A",
+    "royal_blue": "#233C78",
+    "white_facing": "#E4DECC",
+    "logwood_black": "#1C1B20",
+    "orange": "#C0632A"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "buttons",
+   "role": "button",
+   "fabric": "MET",
+   "palette": [
+    "pewter",
+    "brass",
+    "silver",
+    "gold_lace"
+   ],
+   "default": "pewter",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "pewter": "#9A9C9A",
+    "brass": "#B58F4A",
+    "silver": "#C8CACC",
+    "gold_lace": "#C9A54B"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 3,
+   "name": "lace",
+   "role": "trim",
+   "fabric": "WOOL",
+   "palette": [
+    "white_facing",
+    "linen_white",
+    "gold_lace",
+    "silver_lace"
+   ],
+   "default": "white_facing",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "white_facing": "#E4DECC",
+    "linen_white": "#E8E3D3",
+    "gold_lace": "#C9A54B",
+    "silver_lace": "#CFD2D4"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 7784,
+    "verts": 4961,
+    "zones": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "forearm_a_r",
+     "forearm_b_l",
+     "forearm_b_r",
+     "forearm_c_l",
+     "forearm_c_r",
+     "neck_lower",
+     "pelvis_center",
+     "pelvis_side",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r",
+     "upper_arm_l",
+     "upper_arm_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "r_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "l_shoulder",
+     "l_elbow",
+     "l_wrist",
+     "r_clavicle",
+     "r_shoulder",
+     "r_elbow",
+     "r_wrist",
+     "neck",
+     "l_breast",
+     "r_breast",
+     "l_forarm_twist_a",
+     "l_forarm_twist_c",
+     "l_forarm_twist_b",
+     "r_forarm_twist_a",
+     "r_forarm_twist_c",
+     "r_forarm_twist_b",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_shoulder_twist_a",
+     "l_shoulder_twist_c",
+     "l_shoulder_twist_b",
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 7784,
+  "verts": 4961,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0549,
+   "breast_large": 0.0883,
+   "breast_small": 0.0531
+  },
+  "coverage": {
+   "head": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "neck_lower": {
+    "normal": 0.688,
+    "cone": 0.552
+   },
+   "chest_upper_front": {
+    "normal": 0.562,
+    "cone": 0.448
+   },
+   "chest_upper_side": {
+    "normal": 0.896,
+    "cone": 0.854
+   },
+   "chest_upper_back": {
+    "normal": 0.958,
+    "cone": 0.938
+   },
+   "chest_front": {
+    "normal": 0.615,
+    "cone": 0.51
+   },
+   "chest_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_front": {
+    "normal": 0.396,
+    "cone": 0.24
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "pelvis_center": {
+    "normal": 0.302,
+    "cone": 0.198
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "upper_arm_l": {
+    "normal": 0.958,
+    "cone": 0.927
+   },
+   "forearm_a_l": {
+    "normal": 1.0,
+    "cone": 0.979
+   },
+   "forearm_b_l": {
+    "normal": 0.917,
+    "cone": 0.708
+   },
+   "forearm_c_l": {
+    "normal": 0.396,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.177,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.958,
+    "cone": 0.906
+   },
+   "forearm_a_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_r": {
+    "normal": 0.927,
+    "cone": 0.729
+   },
+   "forearm_c_r": {
+    "normal": 0.333,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.219,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.833,
+    "cone": 0.562
+   },
+   "thigh_lower_l": {
+    "normal": 0.458,
+    "cone": 0.24
+   },
+   "thigh_upper_r": {
+    "normal": 0.802,
+    "cone": 0.562
+   },
+   "thigh_lower_r": {
+    "normal": 0.385,
+    "cone": 0.219
+   }
+  },
+  "glb_kb": 1074.2
+ },
+ "budget": {
+  "tris_max": 8000
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "The 1751 Clothing Warrant fixed the cut of the British private's coat: red, lapels of the regiment's facing colour to the waist, small round cuffs, the skirts hooked back, the buttonholes bound with the regiment's worsted lace (Morier's grenadier paintings of 1751) [S17][S4]. A detachment of the 22nd Foot, red faced buff, wintered at the German Flatts in 1758 (Capt. Philip Townsend's letter of 1 March) [S16]. Its lace pattern is not confirmed, so the loops are plain white tape. Howe's cut-down coats came only in the summer of 1758.",
+ "sources": [
+  "S17",
+  "S16",
+  "S4",
+  "M1"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "colonial",
+  "regulars",
+  "british"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 9.06,
+    "p05_mm": 14.37,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 8.95,
+    "p05_mm": 14.49,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 9.05,
+    "p05_mm": 14.29,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 9.05,
+    "p05_mm": 14.27,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/coat_regimental_1751.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/coat_regimental_1751.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "shirt_linen",
+  "breeches",
+  "waistcoat_skirted",
+  "waistcoat_sb"
+ ],
+ "extra": {
+  "presets": {
+   "22nd_foot": {
+    "0": "madder_red",
+    "1": "buff",
+    "2": "pewter",
+    "3": "white_facing"
+   },
+   "officer": {
+    "0": "scarlet",
+    "1": "buff",
+    "2": "gold_lace",
+    "3": "gold_lace"
+   }
+  },
+  "regiment_note": "Facings by regiment: the old garments/military_lib/_regiments.BRITISH_FACINGS. The 22nd's lace pattern is unconfirmed (plain white tape).",
+  "references": [
+   "https://col.rct.uk/collection/405585/grenadiers-22nd-and-24th-regiments-of-foot-and-23rd-royal-welch-fusiliers-1751",
+   "https://cdn.rockislandauction.com/flipbooks/4093/BOOK+2/files/basic-html/page225.html",
+   "https://www.fortticonderoga.org/wp-content/uploads/2023/11/1759-Siege-of-Carillon-British-Regulars-Guidelines.pdf"
+  ],
+  "female_body_note": "Built for every fit; on a woman it is artistic licence."
+ }
+}

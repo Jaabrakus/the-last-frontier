@@ -27,7 +27,7 @@ const AUTOSAVE_S := 300.0
 ## Frames the level is given before a save is applied to it.
 const APPLY_AFTER_FRAMES := 8
 ## The parts, in the order they are applied.
-const PARTS := ["survival", "sky", "vegetation", "building", "fort", "items", "wildlife", "horse", "wheelbarrow", "cart", "forage", "household", "story", "player", "death"]
+const PARTS := ["survival", "sky", "vegetation", "building", "fort", "fire", "items", "wildlife", "horse", "wheelbarrow", "cart", "forage", "household", "story", "player", "captivity", "death"]
 
 ## A save to apply to the next level that loads (load_slot sets it and rebuilds the level).
 static var pending: Dictionary = {}
@@ -293,6 +293,7 @@ func _save_part(part: String) -> Dictionary:
 		"vegetation": return SaveParts.save_vegetation(level)
 		"building": return SaveParts.save_building(level)
 		"fort": return SaveParts.save_fort(level)
+		"fire": return SaveParts.save_fire(level)
 		"items": return SaveParts.save_items(level)
 		"wildlife": return SaveParts.save_wildlife(level)
 		"horse": return SaveParts.save_horse(level)
@@ -302,6 +303,7 @@ func _save_part(part: String) -> Dictionary:
 		"household": return SaveParts.save_household(level)
 		"story": return SaveParts.save_story(level)
 		"player": return SaveParts.save_player(level)
+		"captivity": return SaveParts.save_captivity(level)
 		"death": return death.save_data() if death else {}
 	return {}
 
@@ -313,6 +315,7 @@ func _load_part(part: String, d: Dictionary) -> void:
 		"vegetation": SaveParts.load_vegetation(level, d, notes)
 		"building": SaveParts.load_building(level, d)
 		"fort": SaveParts.load_fort(level, d)
+		"fire": SaveParts.load_fire(level, d)
 		"items": SaveParts.load_items(level, d)
 		"wildlife": SaveParts.load_wildlife(level, d)
 		"horse": SaveParts.load_horse(level, d)
@@ -322,6 +325,7 @@ func _load_part(part: String, d: Dictionary) -> void:
 		"household": SaveParts.load_household(level, d)
 		"story": SaveParts.load_story(level, d)
 		"player": SaveParts.load_player(level, d)
+		"captivity": SaveParts.load_captivity(level, d)
 		"death":
 			if death:
 				death.load_data(d)

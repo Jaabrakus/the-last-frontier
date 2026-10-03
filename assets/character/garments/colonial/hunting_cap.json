@@ -1,0 +1,224 @@
+{
+ "id": "hunting_cap",
+ "name": "Hunting cap (jockey cap)",
+ "description": "A close round cap of brown cloth with a band and a short stiff peak over the eyes, a button on top.",
+ "kind": "garment",
+ "set": "colonial",
+ "slot": "head",
+ "alt_slots": [],
+ "layer": {
+  "default": 80
+ },
+ "glb": "res://assets/character/garments/colonial/hunting_cap.glb",
+ "mesh": "hunting_cap",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "hunting_cap"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [
+  "crown"
+ ],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "cap",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "walnut_brown",
+    "snuff",
+    "ranger_green",
+    "logwood_black",
+    "drab"
+   ],
+   "default": "walnut_brown",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "walnut_brown": "#5A3F2C",
+    "snuff": "#6E4B2E",
+    "ranger_green": "#3B4A2E",
+    "logwood_black": "#1C1B20",
+    "drab": "#8B7A5C"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "band and peak",
+   "role": "leather",
+   "fabric": "LEA",
+   "palette": [
+    "leather_black",
+    "leather_brown",
+    "walnut_brown"
+   ],
+   "default": "leather_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "leather_black": "#1D1B19",
+    "leather_brown": "#5B3D26",
+    "walnut_brown": "#5A3F2C"
+   },
+   "fabrics": [
+    "LEA"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "button",
+   "role": "button",
+   "fabric": "MET",
+   "palette": [
+    "brass",
+    "pewter",
+    "logwood_black"
+   ],
+   "default": "logwood_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "brass": "#B58F4A",
+    "pewter": "#9A9C9A",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 964,
+    "verts": 643,
+    "zones": [
+     0,
+     1,
+     2
+    ],
+    "regions": [
+     "head"
+    ],
+    "max_influences": 1,
+    "bones": [
+     "headb"
+    ]
+   }
+  },
+  "tris": 964,
+  "verts": 643,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0064,
+   "breast_large": 0.0,
+   "breast_small": 0.0,
+   "sex_head": 0.0064
+  },
+  "coverage": {
+   "head": {
+    "normal": 0.115,
+    "cone": 0.052
+   }
+  },
+  "glb_kb": 175.4
+ },
+ "budget": {
+  "tris_max": 1400
+ },
+ "evidence": "B",
+ "licence_note": null,
+ "history": "By 1759 the rangers' best headwear was the brown cloth hunting cap or jockey's cap; a 1759 deserter notice describes a ranger's hat cut into the form of a jockey cap [S5]. Hunting caps were in supply for the ranger companies from the spring of 1758 [S5][S18].",
+ "sources": [
+  "S5",
+  "S18"
+ ],
+ "aliases": [],
+ "tags": [
+  "colonial",
+  "rangers"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 6.89,
+    "p05_mm": 8.6,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 6.54,
+    "p05_mm": 8.26,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 6.89,
+    "p05_mm": 8.6,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 6.89,
+    "p05_mm": 8.6,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  },
+  "scalp_clearance_mm": {
+   "f": [
+    7.7,
+    8.9
+   ],
+   "m": [
+    6.5,
+    8.2
+   ],
+   "bl": [
+    7.7,
+    8.9
+   ],
+   "bs": [
+    7.7,
+    8.9
+   ]
+  }
+ },
+ "generator": "tools/character/cloth2/garments/hunting_cap.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/hunting_cap.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "references": [
+   "https://www.fortticonderoga.org/wp-content/uploads/2023/11/1759-Siege-of-Carillon-Rogers-Rangers-Guidelines.pdf",
+   "https://www.military-history.org/feature/warrior-rogers-rangers.htm"
+  ]
+ }
+}

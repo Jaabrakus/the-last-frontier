@@ -410,8 +410,8 @@ func _read_keys() -> void:
 	_was_keys["_club"] = cl
 	for kind: String in ACTIONS:
 		var down := ctl.pressed(ACTIONS[kind])
-		if down and not bool(_was_keys.get(kind, false)):
-			toggle(kind)
+		if down and not bool(_was_keys.get(kind, false)) and Hotbar.allows_tool_of(player, kind):
+			toggle(kind)          # (a remapped tool key: the hotbar's tools only, Hotbar)
 		_was_keys[kind] = down
 
 
@@ -420,7 +420,7 @@ func _read_keys() -> void:
 func tools_cycle() -> void:
 	var owned: Array = []
 	for k: String in ORDER:
-		if data.is_tool(k) and owns(k):
+		if data.is_tool(k) and owns(k) and Hotbar.allows_tool_of(player, k):     # (the hotbar's tools only: Hotbar)
 			owned.append(k)
 	if owned.is_empty():
 		return
@@ -1560,6 +1560,10 @@ func use_target() -> void:
 	if need == "" or not owns(need):
 		_note("You have no %s" % data.name_of(need).to_lower())
 		return
+	if not Hotbar.allows_tool_of(player, need):
+		# (a tool off the hotbar is in the pack: only the bar's are taken out; Hotbar)
+		_note("The %s is not on the hotbar: Tab, and drag it onto a slot" % data.name_of(need).to_lower())
+		return
 	if tool == need and phase in [Phase.READY, Phase.SWING]:
 		_queued = mini(_queued + 1, 2)
 		return
@@ -1878,6 +1882,8 @@ func _give_from_args() -> void:
 			return
 		var inv := InventoryState.from_player(player)
 		for k in s.get_slice("=", 1).split(",", false):
+			if SwayCaster.give_arg(player, String(k)):
+				continue                          # (a spell, give=form: granted to the Sway caster, not put in the pack)
 			inv.add(String(k), 1)
 		player.inventory_pack = inv.pack.duplicate(true)
 		_note("Given: %s" % s.get_slice("=", 1))

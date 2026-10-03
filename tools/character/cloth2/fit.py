@@ -32,6 +32,7 @@ COVERED = ["neck_upper", "neck_lower", "chest_upper_front", "chest_upper_side", 
            "forearm_b_r", "forearm_c_r", "wrist_r", "thigh_upper_l", "thigh_lower_l", "shin_upper_l", "shin_lower_l",
            "ankle_l", "thigh_upper_r", "thigh_lower_r", "shin_upper_r", "shin_lower_r", "ankle_r"]
 PROXY_RATIO = 0.55
+OBSTACLE_REACH = 0.05      # Garment.over: obstacles (open garment sheets) farther than this from a point are ignored
 GENITAL_WEIGHT = 0.02      # a vertex with more weight than this on the genital bone belongs to the (hidden) genitals
 BODY_JSON = os.path.join(ASSETS, "body", "body.json")
 
@@ -237,7 +238,11 @@ class Fits:
     # ---- distances and clearance ------------------------------------------------------------------
     def dist(self, fit, P, surface="skin"):
         """Signed distance of points to the body of `fit` (positive outside), and the nearest point / normal.
-        `surface` "cloth": the smoothed cloth surface instead of the skin (hanging cloth)."""
+        `surface` "cloth": the smoothed cloth surface instead of the skin (hanging cloth); a dict {fit: BVHTree}: those
+        obstacles (the garments worn under, Garment.over: open sheets, so a point farther than OBSTACLE_REACH from
+        them counts as clear)."""
+        if isinstance(surface, dict):
+            return self._dist_obstacle(surface[fit], P)
         bv = (self.bvhc if surface == "cloth" else self.bvhs)[fit]
         d = np.zeros(len(P))
         loc = np.zeros_like(P)
@@ -249,12 +254,63 @@ class Fits:
             d[i], loc[i], nrm[i] = s * dd, l, n
         return d, loc, nrm
 
-    def clear(self, m, gap, iters=5, spread=0.5, surface="skin"):
+    def _dist_obstacle(self, ob, P):
+        """Signed distance to an obstacle (bvh, boundary-face mask): a nearest point on a sheet's open border (not
+        straight under the point) says nothing about inside or outside, so it counts as clear."""
+        bv, border = ob
+        d = np.full(len(P), 1.0)
+        loc = np.zeros_like(P)
+        nrm = np.zeros_like(P)
+        nrm[:, 2] = 1.0
+        for i, p in enumerate(P):
+            l, n, idx, dd = bv.find_nearest(Vector(p), OBSTACLE_REACH)
+            if l is None:
+                continue
+            l, n = np.array(l), np.array(n)
+            q = p - l
+            if border[idx] and np.linalg.norm(q - (q @ n) * n) > 0.0008:
+                continue
+            s = 1.0 if q @ n >= 0.0 else -1.0
+            d[i], loc[i], nrm[i] = s * dd, l, n
+        return d, loc, nrm
+
+    def obstacles(self, meshes):
+        """{fit: (BVHTree, boundary-face mask)} of garment meshes (cloth2 Mesh, every fit) to clear: Garment.over()."""
+        out = {}
+        Fs, off = [], 0
+        for m in meshes:
+            Fs.append(m.F + off)
+            off += m.n
+        F = np.concatenate(Fs)
+        E = np.sort(np.concatenate([F[:, [0, 1]], F[:, [1, 2]], F[:, [2, 0]]]), 1)
+        _, inv, cnt = np.unique(E, axis=0, return_inverse=True, return_counts=True)
+        open_e = (cnt[inv.ravel()] == 1).reshape(3, -1)
+        border = open_e.any(0)
+        for k in self.V:
+            if not all(k in m.V for m in meshes):
+                continue
+            V = np.concatenate([m.V[k] for m in meshes])
+            # faces that face into the body (the inside of a rim, a lining) are not a layer to clear: skipped like a border
+            C = V[F].mean(1)
+            fn = np.cross(V[F[:, 1]] - V[F[:, 0]], V[F[:, 2]] - V[F[:, 0]])
+            inward = np.zeros(len(F), bool)
+            bv = self.bvhs[k]
+            for i in range(len(F)):
+                _, bn, _, _ = bv.find_nearest(Vector(C[i]))
+                if bn is not None and (fn[i] @ np.array(bn)) < -0.2 * np.linalg.norm(fn[i]):
+                    inward[i] = True
+            out[k] = (BVHTree.FromPolygons([tuple(p) for p in V], [tuple(t) for t in F], all_triangles=True),
+                      border | inward)
+        return out
+
+    def clear(self, m, gap, iters=5, spread=0.5, surface="skin", max_push=None):
         """Pushes the vertices of every fit out of the body until every vertex, face centre and edge midpoint of the
         garment is `gap` m above its surface (a scalar, or per vertex). A sample that is short pushes the vertices
         it sits between along the body's outward normal at the nearest skin point; the push spreads to the
         neighbours (a soft correction, not a spike); the last pass is exact. Returns
-        {fit: (lowest clearance m, samples short)}."""
+        {fit: (lowest clearance m, samples short)}.
+        max_push: no vertex moves farther than this (m) from where it started (Garment.over: in a fold of the layer
+        under it the push can run on)."""
         n = m.n
         F = m.F
         nf = len(F)
@@ -272,8 +328,9 @@ class Fits:
             return np.concatenate([P, P[F].mean(1), (P[F[:, 0]] + P[F[:, 1]]) / 2, (P[F[:, 1]] + P[F[:, 2]]) / 2,
                                    (P[F[:, 2]] + P[F[:, 0]]) / 2])
         for k in m.V:
-            if k not in self.bvh:
+            if k not in self.bvh or (isinstance(surface, dict) and k not in surface):
                 continue
+            start = m.V[k].copy()
             for it in range(iters + 10):
                 P = m.V[k]
                 d, loc, nrm = self.dist(k, samples(P), surface)
@@ -291,13 +348,17 @@ class Fits:
                     break
                 if it >= iters:
                     m.V[k] = P + D * 1.05    # the exact passes: no spreading
-                    continue
-                acc = np.zeros_like(D)
-                c2 = np.zeros(n)
-                np.add.at(acc, E[:, 0], D[E[:, 1]])
-                np.add.at(c2, E[:, 0], 1.0)
-                Ds = acc / np.maximum(c2, 1.0)[:, None]
-                m.V[k] = P + np.where(sv[:, None] > 0, D, spread * Ds)
+                else:
+                    acc = np.zeros_like(D)
+                    c2 = np.zeros(n)
+                    np.add.at(acc, E[:, 0], D[E[:, 1]])
+                    np.add.at(c2, E[:, 0], 1.0)
+                    Ds = acc / np.maximum(c2, 1.0)[:, None]
+                    m.V[k] = P + np.where(sv[:, None] > 0, D, spread * Ds)
+                if max_push is not None:
+                    q = m.V[k] - start
+                    L = np.linalg.norm(q, axis=1, keepdims=True)
+                    m.V[k] = start + q * np.minimum(1.0, max_push / np.maximum(L, 1e-12))
             d, _, _ = self.dist(k, samples(m.V[k]), surface)
             report[k] = (float(d.min()), int((d < gs - 0.0007).sum()))
         m.recompute_normals()

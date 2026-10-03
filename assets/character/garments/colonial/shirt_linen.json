@@ -129,7 +129,7 @@
  "stats": {
   "surfaces": {
    "main": {
-    "tris": 6028,
+    "tris": 6027,
     "verts": 3235,
     "zones": [
      0,
@@ -206,7 +206,7 @@
     ]
    }
   },
-  "tris": 6028,
+  "tris": 6027,
   "verts": 3235,
   "surface_count": 1,
   "shapes": {
@@ -328,7 +328,7 @@
     "cone": 0.156
    }
   },
-  "glb_kb": 731.7
+  "glb_kb": 741.2
  },
  "budget": {
   "tris_max": 4400
@@ -354,7 +354,7 @@
    },
    "m": {
     "min_mm": 2.0,
-    "p05_mm": 3.0,
+    "p05_mm": 2.99,
     "inside_skin": 0
    },
    "bl": {

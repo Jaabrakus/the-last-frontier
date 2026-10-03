@@ -49,13 +49,25 @@ def skirt_weights(fits, P, top_w, z_top, z_full):
     return W
 
 
+def pleat_offset(ang, s, pleats):
+    """Outward offset (m) of hanging cloth at `ang` degrees from the front and fraction s (0 top .. 1 hem) of its
+    drop: pleats [(centre deg, width deg, count, depth m)], each a group of `count` folds across `width`, growing
+    toward the hem (a coat's side pleats; mirrored on both sides, the angle being |angle| from the front)."""
+    out = np.zeros_like(ang)
+    for c, w, count, depth in pleats or []:
+        u = (ang - (c - w / 2.0)) / w
+        win = smoothstep(-0.08, 0.06, u) * (1.0 - smoothstep(0.94, 1.08, u))
+        out = out + depth * win * np.cos(u * count * 2.0 * np.pi) * smoothstep(0.05, 0.6, s)
+    return out
+
+
 def hang(fits, m, edge_mask, hem, steps=8, flare=0.05, flare_pow=1.4, folds=0.0, fold_freq=9.0, z_full=0.72,
-         part=0, zone=0, slits=None):
+         part=0, zone=0, slits=None, pleats=None):
     """Extends the shell `m` downward from its boundary edges whose both vertices satisfy `edge_mask` (bool per vertex
     of m): `hem(P)` is the hem height per boundary vertex (reference position), `flare` the outward spread at the hem
     (m; a number or a function of the reference position), `folds` the amplitude of the folds (m; they grow toward
-    the hem). `slits`: [(from angle, to angle, up to z)] openings cut from the hem (side slits of tails). Returns
-    the shell and the hanging cloth as one Mesh."""
+    the hem), `pleats` localized pleat groups (pleat_offset). `slits`: [(from angle, to angle, up to z)] openings cut
+    from the hem (side slits of tails). Returns the shell and the hanging cloth as one Mesh."""
     be, onb = m.boundary()
     sel = edge_mask[be[:, 0]] & edge_mask[be[:, 1]]
     be = be[sel]
@@ -81,6 +93,8 @@ def hang(fits, m, edge_mask, hem, steps=8, flare=0.05, flare_pow=1.4, folds=0.0,
             s = i / K
             drop = (Vk[:, 2] - z_hem) * s
             out = fl * s ** flare_pow + folds * smoothstep(0.15, 1.0, s) * np.sin(fold_freq * ang + 1.7 * s) * 0.5
+            if pleats:
+                out = out + pleat_offset(np.degrees(ang), s, pleats)
             p = Vk + nh * out[:, None]
             p[:, 2] = Vk[:, 2] - drop
             rings.append(p)
@@ -127,3 +141,63 @@ def hang(fits, m, edge_mask, hem, steps=8, flare=0.05, flare_pow=1.4, folds=0.0,
         f = ang_v + 1000.0 * smoothstep(zmax, zmax + 0.03, out.V[REF][:, 2])
         out = out.cut_out(f, a1, a2)
     return out
+
+
+def split_sides(fits, m, sel, x0=0.0):
+    """The vertices `sel` (bool) of hanging cloth take only their own side's skirt panels (x > x0: the left leg's):
+    the two edges of a back vent or of an open front then part when the legs swing, instead of both following the
+    middle. Weight moved from the other side's panel goes to the same panel (front, thigh, rear) of this side."""
+    idx = {b: i for i, b in enumerate(fits.bones)}
+    W = m.A["W"]
+    x = m.V[REF][:, 0] - x0
+    for panel in ("front", "thigh", "rear"):
+        li, ri = idx[SKIRT_BONES["l"][panel]], idx[SKIRT_BONES["r"][panel]]
+        left = sel & (x > 0.0)
+        right = sel & (x <= 0.0)
+        W[left, li] += W[left, ri]
+        W[left, ri] = 0.0
+        W[right, ri] += W[right, li]
+        W[right, li] = 0.0
+    m.A["W"] = W
+    return m
+
+
+# the closed skirt's panels (cloth2/skirt_hang.py PANELS, the runtime's SKIRT_CLOSED_*): degrees round from the front
+# (+ toward the wearer's left), bone
+CLOSED_PANELS = [(40.0, "l_upper_leg_front_helper"), (90.0, "l_upper_leg_thigh_helper"), (140.0, "l_upper_leg_rear_helper"),
+                 (220.0, "r_upper_leg_rear_helper"), (270.0, "r_upper_leg_thigh_helper"), (320.0, "r_upper_leg_front_helper")]
+
+
+def closed_skirt_weights(fits, m, hip=0.88, full=0.62, back_hip=0.98, back_full=0.76, back_az=(100.0, 150.0)):
+    """Weights of cloth worn over a closed skirt (an apron over the petticoat): skirt_hang.weights in Blender space,
+    so it moves with the petticoat's six panels (none at `hip`, all at `full`, the back from higher up)."""
+    idx = {b: i for i, b in enumerate(fits.bones)}
+    P = m.V[REF]
+    W = m.A["W"].copy()
+    az = np.degrees(np.arctan2(P[:, 0], -P[:, 1])) % 360.0
+    back = smoothstep(back_az[0], back_az[1], np.minimum(az, 360.0 - az))
+    h0 = hip + (back_hip - hip) * back
+    h1 = full + (back_full - full) * back
+    share = smoothstep(0.0, 1.0, (h0 - P[:, 2]) / np.maximum(h0 - h1, 1e-6))
+    pid = [idx[b] for _, b in CLOSED_PANELS]
+    angs = [a for a, _ in CLOSED_PANELS]
+    for i in np.nonzero(share > 0.0)[0]:
+        a = az[i]
+        pan = np.zeros(W.shape[1])
+        for k in range(len(angs)):
+            a0 = angs[k]
+            a1 = angs[(k + 1) % len(angs)] + (360.0 if k == len(angs) - 1 else 0.0)
+            aa = a + 360.0 if a < a0 else a
+            if a0 <= aa <= a1:
+                f = (aa - a0) / (a1 - a0)
+                pan[pid[k]] += 1.0 - f
+                pan[pid[(k + 1) % len(angs)]] += f
+                break
+        own = W[i].copy()
+        own[pid] = 0.0
+        if own.sum() <= 0:
+            own[idx["pelvis"]] = 1.0
+        own /= own.sum()
+        W[i] = own * (1.0 - share[i]) + pan * share[i]
+    m.A["W"] = W
+    return m

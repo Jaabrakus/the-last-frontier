@@ -229,6 +229,39 @@ static func token_color(entry_zone: Dictionary, token: String) -> Color:
 	return Color.html(h)
 
 
+## The sRGB tint a zone renders in for token `tok` with the look's `colors`: the token's colour, or, for a zone in a
+## pattern (its catalog "pattern": {options, default, <name>: {colors}}; the look's "pattern" key, else the pattern's
+## default, picks one, and a look's "<name>" list replaces its colours), the mean of the pattern's colours, as the cloth
+## would read from a few metres (the shader draws no patterns yet: a check zone in its base token rendered solid navy,
+## 2026-10-03). The implicit default pattern applies when the token is one of its colours; "check_blue" always stands
+## for the blue-and-white check (it is no plain cloth) unless the look says "pattern": "none".
+static func zone_tint(zd: Dictionary, tok: String, colors := {}) -> Color:
+	var cols := pattern_colors(zd, tok, colors)
+	if cols.is_empty():
+		return token_color(zd, tok)
+	var sum := Color(0, 0, 0, 0)
+	for t: String in cols:
+		var c := token_color(zd, t)
+		sum += Color(c.r, c.g, c.b, 1.0)
+	return Color(sum.r / sum.a, sum.g / sum.a, sum.b / sum.a, 1.0)
+
+
+## The colours of the pattern a zone shows for `tok` and the look's `colors` ([] when it is plain): see zone_tint.
+static func pattern_colors(zd: Dictionary, tok: String, colors := {}) -> Array:
+	var p: Variant = zd.get("pattern")
+	var pat: Dictionary = p if p is Dictionary else {}
+	var explicit := colors.has("pattern")
+	var active := String(colors.get("pattern", pat.get("default", "none")))
+	if active != "none" and pat.get(active) is Dictionary:
+		var own: Variant = colors.get(active)
+		var pc: Array = own if own is Array else ((pat[active] as Dictionary).get("colors", []) as Array)
+		if explicit or tok in pc:
+			return pc.duplicate()
+	if tok == "check_blue" and not (explicit and active == "none"):
+		return ["check_blue", "linen_white"]
+	return []
+
+
 ## Bible palette tokens that catalog entries reference outside their own palette_hex
 ## (tools/character/lib/materials.py TOKENS; band colours).
 const TOKEN_HEX := {
@@ -237,6 +270,8 @@ const TOKEN_HEX := {
 	"ribbon_red": "#B2202C", "ribbon_blue": "#2D4F8C", "ribbon_black": "#151417", "ribbon_green": "#2E6B40",
 	"brass": "#B58F4A", "pewter": "#9A9C9A", "silver": "#C8CACC", "leather_brown": "#5B3D26", "drab": "#8B7A5C",
 	"slate_grey": "#6B6A66", "linen_white": "#E8E3D3", "grey_white": "#D4D0C3", "bead_white": "#EEEBE3",
+	# a pattern's colours (zone_tint) that a zone's own palette may not list
+	"check_blue": "#2F4166", "tow": "#A99570",
 }
 
 
@@ -252,6 +287,10 @@ static func garment_materials(entry: Dictionary, colors := {}) -> Dictionary:
 	for w: String in FELT_WORDS:
 		if id.contains(w):
 			felt = true
+	var by_zone := {}
+	for i in zones.size():
+		if zones[i] is Dictionary:
+			by_zone[int((zones[i] as Dictionary).get("zone", i))] = zones[i]
 	for s: Dictionary in entry.get("surfaces", []):
 		var sname := String(s.get("name", ""))
 		if not fur.is_empty() and sname == String(fur.get("surface", "")):
@@ -259,11 +298,12 @@ static func garment_materials(entry: Dictionary, colors := {}) -> Dictionary:
 			continue
 		var m := new_cloth()
 		for zi in 4:
-			var zd: Dictionary = zones[mini(zi, zones.size() - 1)] if not zones.is_empty() else {}
+			# the zone's own entry by its index (an entry's zones may skip one: the mote belt's 0, 2, 3), else the last
+			var zd: Dictionary = by_zone.get(zi, zones[mini(zi, zones.size() - 1)]) if not zones.is_empty() else {}
 			var role := String(zd.get("role", "cloth"))
 			var code := String(zd.get("fabric", "WOOL"))
 			var tok := String(colors.get(str(zi), colors.get(zi, zd.get("default", "#808080"))))
-			var tint := token_color(zd, tok)
+			var tint := zone_tint(zd, tok, colors)
 			var extra := {}
 			if role == "metal" or (code == "FLAT" and tok in ["brass", "pewter", "silver", "gold_lace", "silver_lace", "false_gold"]):
 				extra["metal"] = 1.0

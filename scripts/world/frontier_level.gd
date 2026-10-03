@@ -131,6 +131,10 @@ func _ready() -> void:
 	# the fort's furnishing from the build menu's pieces (scripts/building/fort_plan.gd): the wife's work
 	if not bridge_bare:
 		FortPlan.install(self)
+	# fire and ruin (scripts/fire): built pieces and the fort catch fire, spread it to their neighbours and fall to ruins
+	FireSpread.install(self)
+	# freezes in play written down with what came just before them (user://logs/hitches.log; not in tool or test runs)
+	HitchLog.install(self)
 	# forage (scripts/forage): berries, nuts and herbs where they grow; the deer feed on them too
 	var forage := ForageField.new()
 	forage.name = "Forage"

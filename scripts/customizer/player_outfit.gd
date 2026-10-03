@@ -9,7 +9,11 @@ extends RefCounted
 ## The look's "outfit" key (AppearanceStore saves it): {slot: {"id": catalog id, "colors": {...}}} with colours per
 ## zone index ("0", "1": palette token or "#hex"), "fur" (a fur preset token) and "bands" / "bands_rows" (capot
 ## stripes). A missing slot or an empty id = the basic dress of that slot for the body type (BASIC: a shirt and
-## breeches, a shift and a petticoat); the id "-" = nothing.
+## breeches, a shift and a petticoat); the id "-" = nothing. A "preset" key in the colours names one of the garment's
+## catalog colour presets (its extra.presets: "marine", "canadian", "ithel" ...), which the other keys override
+## (resolve_colors; the factions' and the story people's clothes use them).
+##
+## The catalog's sets ("colonial", "drift" ...) order the garments a slot offers (offered: set by set; set_label).
 ##
 ##   var res := PlayerOutfit.dress(body, look.get("outfit", {}), sex)     # PlayerAppearance.dress() calls it
 ##   res.has_hat, res.hide_regions, res.hide_hair_zones, res.bulk_slots (SlingRig), res.parts
@@ -23,9 +27,11 @@ const SLOT_NAMES := {"shirt": "Shirt", "vest": "Waistcoat", "outer": "Coat", "le
 		"legs.over": "Leggings", "feet": "Shoes", "head": "Hat", "accessories.neck": "Neckwear",
 		"accessories.waist": "Belt / sash", "accessories.wrap": "Cloak / blanket", "accessories.hands": "Gloves"}
 ## The basic dress: what a body wears when the look chooses nothing (the user, 2026-09-28: "the most basic clothes
-## first"). Ids of the first cloth2 garments; a slot whose garment is missing from the catalog is left bare.
+## first"). Ids of the first cloth2 garments; a slot whose garment is missing from the catalog is left bare. A man's shirt
+## is tucked into his breeches (2026-10-03: in the 1750s the tails served as drawers; shirt_linen's tails hanging over
+## the breeches read as a nightshirt), shirt_linen stays in the catalog for sleeping or under a cut-away coat.
 const BASIC := {
-	"men": {"shirt": "shirt_linen", "legs.lower": "breeches"},
+	"men": {"shirt": "shirt_tucked", "legs.lower": "breeches"},
 	"women": {"shirt": "shift_linen", "legs.lower": "petticoat"},
 }
 ## The genitals under clothes (the user, 2026-09-28: "only hide genitals if they wear underwear / pants; males hide
@@ -34,13 +40,18 @@ const BASIC := {
 ## under any garment over the pelvis (its catalog occupies_regions has pelvis_center, or it is worn on the legs).
 ## "pelvis_center" in hide_regions is what hides them (the body's region, the pubic hair, BodyMaterials.apply_look's
 ## genital_swing), so the rule decides whether a garment's pelvis_center counts.
-const CLOSED_IDS := ["breeches"]
+const CLOSED_IDS := ["breeches", "slops"]
 const CLOSED_TAGS := ["underwear", "pants"]
 const GENITALS := "pelvis_center"
 ## Colours used when the look does not choose them (over the catalog's zone defaults).
 const DEFAULT_COLORS := {}
 
 static var _catalog := {}
+## The catalog's sets: id -> label, in the catalog's order; their tooltips.
+static var _sets := {}
+static var _set_tips := {}
+## The garments' glb scenes by path (scene_of).
+static var _scenes := {}
 
 
 static func enabled() -> bool:
@@ -51,11 +62,56 @@ static func catalog() -> Dictionary:
 	if _catalog.is_empty():
 		var d = JSON.parse_string(FileAccess.get_file_as_string(CATALOG)) if FileAccess.file_exists(CATALOG) else null
 		_catalog = (d.get("items", {}) if d is Dictionary else {}) as Dictionary
+		_sets = (d.get("sets", {}) if d is Dictionary and d.get("sets") is Dictionary else {}) as Dictionary
+		_set_tips = (d.get("set_tooltips", {}) if d is Dictionary and d.get("set_tooltips") is Dictionary else {}) as Dictionary
 	return _catalog
 
 
 static func entry(id: String) -> Dictionary:
 	return catalog().get(id, {})
+
+
+## The catalog's label of a set ("drift" -> "Drift sky crews"; the id capitalized when it has none), and its tooltip.
+static func set_label(set_id: String) -> String:
+	catalog()
+	return String(_sets.get(set_id, set_id.capitalize()))
+
+
+static func set_tip(set_id: String) -> String:
+	catalog()
+	return String(_set_tips.get(set_id, ""))
+
+
+## A garment's glb scene, loaded once and kept (null when there is none): a part added by its path asks the resource loader
+## for it each time, about 1 ms a garment in the level, where the loader is busy with the world's own loads; a fighter of
+## eight or nine garments built in a frame (NpcSquad: a man a frame) paid it for each.
+static func scene_of(path: String) -> PackedScene:
+	var s: Variant = _scenes.get(path)
+	if s is PackedScene:
+		return s
+	if path == "" or not ResourceLoader.exists(path):
+		return null
+	var sc := load(path) as PackedScene
+	if sc != null:
+		_scenes[path] = sc
+	return sc
+
+
+## The colours of garment `id` with a "preset" key resolved: the catalog preset's keys (its extra.presets[name]), the
+## other keys over them. Colours without one come back as they are; an unknown preset name leaves the zone defaults.
+static func resolve_colors(id: String, colors: Dictionary) -> Dictionary:
+	if not colors.has("preset"):
+		return colors
+	var extra: Variant = entry(id).get("extra", {})
+	var presets: Variant = (extra as Dictionary).get("presets", {}) if extra is Dictionary else {}
+	var p: Variant = (presets as Dictionary).get(String(colors.preset)) if presets is Dictionary else null
+	var out: Dictionary = (p as Dictionary).duplicate(true) if p is Dictionary else {}
+	if not p is Dictionary:
+		push_warning("PlayerOutfit: %s has no colour preset %s." % [id, colors.preset])
+	for k: Variant in colors:
+		if String(k) != "preset":
+			out[k] = colors[k]
+	return out
 
 
 ## A garment the game dresses in: the cloth2 garments (catalog lib_version 2). The older ones (fitted to the old
@@ -97,7 +153,8 @@ static func effective(outfit: Dictionary, sex: float) -> Dictionary:
 	return out
 
 
-## The items of `slot` this build has for a body type (sex < 0: every one): "" (the basic piece) first, "-" (none) last.
+## The items of `slot` this build has for a body type (sex < 0: every one): "" (the basic piece) first, "-" (none) last,
+## the garments between set by set in the catalog's order of sets (its "set": colonial, then drift ...), by id in each.
 static func offered(slot: String, sex := -1.0) -> Array:
 	var out := [""]
 	var ids := []
@@ -111,7 +168,14 @@ static func offered(slot: String, sex := -1.0) -> Array:
 		if sex >= 0.0 and ("men" in tags or "women" in tags) and not body_type(sex) in tags:
 			continue
 		ids.append(id)
-	ids.sort()
+	var order: Array = _sets.keys()
+	var rank := func(id: String) -> int:
+		var i := order.find(String(entry(id).get("set", "")))
+		return i if i >= 0 else order.size()
+	ids.sort_custom(func(a: String, b: String) -> bool:
+		var ra: int = rank.call(a)
+		var rb: int = rank.call(b)
+		return ra < rb if ra != rb else a < b)
 	out.append_array(ids)
 	out.append("-")
 	return out
@@ -234,13 +298,15 @@ static func dress(body: CharacterBodyMesh, outfit: Dictionary, sex := 0.0) -> Di
 			continue
 		var cur: Array = body.part_meshes(tag)
 		if cur.is_empty() or not is_instance_valid(cur[0]) or String((cur[0] as Node).get_meta("garment", "")) != id:
-			var added := body.add_part(tag, String(e.get("glb", "")))
+			var glb := String(e.get("glb", ""))
+			var sc := scene_of(glb)
+			var added := body.add_part(tag, sc if sc != null else glb)
 			for mi: MeshInstance3D in added:
 				mi.set_meta("garment", id)
 		var colors: Dictionary = (DEFAULT_COLORS.get(id, {}) as Dictionary).duplicate()
 		if v is Dictionary and v.get("colors") is Dictionary:
 			colors.merge(v.colors, true)
-		_apply_materials(body.part_meshes(tag), e, colors)
+		_apply_materials(body.part_meshes(tag), e, resolve_colors(id, colors))
 		worn[slot] = id
 		res.parts.append(tag)
 		var hides: Array = (e.get("hides_regions", []) as Array).filter(func(r: String) -> bool: return r != GENITALS)

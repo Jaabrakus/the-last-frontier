@@ -114,5 +114,10 @@ class BuildContext:
                 raise SystemExit("no body cache %s: build the body first (build_character.sh --body)" % p)
             self._body = BodyData.load(p)
             if self._body.bones != self.bones:
-                raise SystemExit("body cache bones differ from the rig: rebuild the body")
+                # a rig copy whose bones are the same but listed in another order (the project's Blender backups of
+                # the Actor_B rig, 2026-09-30) builds in the cache's order: the weight columns follow the names
+                if set(self._body.bones) != set(self.bones):
+                    raise SystemExit("body cache bones differ from the rig: rebuild the body")
+                log("rig bones in another order than the body cache: using the cache's order")
+                self.bones = list(self._body.bones)
         return self._body

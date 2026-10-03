@@ -159,6 +159,20 @@ func _run() -> void:
 	_end()
 
 
+## A weapon made goes to the pack, never onto the hotbar by itself (Hotbar; the owner 2026-10-02: "pickups shouldnt auto
+## fill"): checked, then put on the bar as the player would drag it.
+func _onto_bar(key: String) -> void:
+	var hb := Hotbar.find(player)
+	if hb == null:
+		return
+	await physics_frame
+	await physics_frame
+	await physics_frame
+	await physics_frame
+	check(hb.slot_of("weapon", key) < 0, "the %s made goes to the pack, not onto the hotbar" % key)
+	hb.add(Hotbar.make("weapon", key))
+
+
 func _end() -> void:
 	if fails.is_empty():
 		print("BARE TEST OK (%d checks)" % checks)
@@ -396,6 +410,7 @@ func _spear() -> void:
 	check(not player.is_usable("spear") and not player.is_carried("spear"), "no spear yet")
 	check(st.make(player, "spear"), "a throwing spear made at the stone")
 	await wait_work()
+	await _onto_bar("spear")
 	check(player.is_carried("spear") and player.is_usable("spear"), "the spear is the player's and can be thrown (%s)" % st.last.get("text", ""))
 	check(count("pole") == 0 and count("flint") == 0, "the pole and the chert point taken")
 	# arrows want a bow: none made from nothing yet
@@ -426,6 +441,7 @@ func _arms() -> void:
 	await wait_work()
 	check(player.is_carried("bow") and bow.quiver == 0 and count("pole") == 0 and count("cordage") == 0,
 			"the bow is the player's, its quiver empty (%s)" % st.last.get("text", ""))
+	await _onto_bar("bow")
 	set_count("shoots", 2)
 	set_count("flint", 1)
 	set_count("feathers", 1)
@@ -445,6 +461,7 @@ func _arms() -> void:
 	set_count("feathers", 1)
 	check(st.make(player, "darts"), "darts for it")
 	await wait_work()
+	await _onto_bar("atlatl")
 	check(atl.count == 2 and player.is_usable("atlatl"), "2 darts: it can be thrown (%d)" % atl.count)
 	set_count("branches", 1)
 	set_count("pine_pitch", 1)
@@ -575,6 +592,7 @@ func _metal() -> void:
 	set_count("charcoal", 1)
 	set_count("branches", 1)
 	await _make(forge, "tomahawk", "a tomahawk")
+	await _onto_bar("tomahawk")
 	check(player.is_carried("tomahawk") and tom.count == 1 and player.is_usable("tomahawk"), "the tomahawk is the player's, to throw (%d)" % tom.count)
 	# the steel tools are the rules' and the gathering's
 	b.sync_carried_tools()

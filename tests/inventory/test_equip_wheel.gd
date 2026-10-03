@@ -1,6 +1,7 @@
 extends SceneTree
-## The equip wheel (hold Q; user 2026-09-26): its slots (weapons, tools, torch, bare hands), picking by direction,
-## taking a tool, the torch, a weapon and bare hands; the game at full speed throughout; no pick = no change.
+## The equip wheel (hold Q; user 2026-09-26): its slots (only the hotbar's, the owner 2026-10-02: "lists only hotbar
+## entries"; then bare hands), picking by direction, taking a tool, a weapon and bare hands; a weapon taken off the bar
+## leaves the wheel; the game at full speed throughout; no pick = no change. (The torch is T's: not on the wheel now.)
 ##
 ##   Godot --headless --path . -s tests/inventory/test_equip_wheel.gd
 ## "EQUIP WHEEL TEST OK" and exit 0 when every check passes. Run it under a hard time limit.
@@ -47,8 +48,26 @@ func _initialize() -> void:
 	var ids := []
 	for s: Dictionary in w.slots:
 		ids.append(String(s.id))
-	_check(ids.has("w:musket") and ids.has("t:felling_axe") and ids.has("t:mattock") and ids.has("torch") and ids.has("hands"),
-			"slots: weapons, tools, torch, bare hands (%s)" % str(ids))
+	var hb: Hotbar = p.hotbar
+	var want := []
+	for i in Hotbar.SLOTS:
+		var e := hb.entry(i)
+		if not e.is_empty():
+			want.append({"weapon": "w:", "tool": "t:", "spell": "s:"}[String(e.kind)] + String(e.id))
+	want.append("hands")
+	_check(ids == want and ids.has("w:musket") and ids.has("t:felling_axe") and not ids.has("torch"),
+			"slots: the hotbar's in order, then bare hands (%s)" % str(ids))
+	w.close(false)
+	var at := hb.slot_of("weapon", "bow")
+	hb.clear(at)
+	w.open()
+	ids = []
+	for s: Dictionary in w.slots:
+		ids.append(String(s.id))
+	_check(not ids.has("w:bow"), "the bow taken off the bar: not on the wheel (%s)" % str(ids))
+	w.close(false)
+	hb.assign(at, Hotbar.make("weapon", "bow"))
+	w.open()
 	w.pick_toward(Vector2(3, 2))
 	_check(w.sel == -1, "a small mouse move picks nothing")
 	w.close(true)
@@ -89,15 +108,7 @@ func _initialize() -> void:
 	Input.parse_input_event(up)
 	await _wait(300)
 	_check(p.weapon_key == "musket" and not p.hands_free, "taken by the click: the musket out (%s)" % p.weapon_key)
-	# the torch
-	w.open()
-	_check(_pick(w, "torch"), "the torch picked")
-	w.close(true)
-	await _wait(300)
-	_check(p.torch.holding(), "taken: a torch in the hand")
 	# bare hands
-	p.torch.put_away()
-	await _wait(60)
 	w.open()
 	_check(_pick(w, "hands"), "bare hands picked")
 	w.close(true)

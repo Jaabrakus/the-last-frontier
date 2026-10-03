@@ -1,0 +1,217 @@
+{
+ "id": "tar_hat",
+ "name": "Tar hat",
+ "description": "A low round hat of tarred black felt with a narrow brim turned down all round and a tarred cord band with a lanyard eye.",
+ "kind": "garment",
+ "set": "drift",
+ "slot": "head",
+ "alt_slots": [],
+ "layer": {
+  "default": 80
+ },
+ "glb": "res://assets/character/garments/drift/tar_hat.glb",
+ "mesh": "tar_hat",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tar_hat"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [
+  "crown"
+ ],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "tarred felt",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "tar_black",
+    "logwood_black",
+    "slate_grey"
+   ],
+   "default": "tar_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tar_black": "#26221D",
+    "logwood_black": "#1C1B20",
+    "slate_grey": "#6B6A66"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "cord band",
+   "role": "band",
+   "fabric": "TWILL",
+   "palette": [
+    "tar_black",
+    "hemp",
+    "linen_unbleached"
+   ],
+   "default": "tar_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tar_black": "#26221D",
+    "hemp": "#9C8460",
+    "linen_unbleached": "#C8BA9A"
+   },
+   "fabrics": [
+    "TWILL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 3,
+   "name": "lanyard eye",
+   "role": "metal",
+   "fabric": "MET",
+   "palette": [
+    "brass",
+    "pewter"
+   ],
+   "default": "brass",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "brass": "#B58F4A",
+    "pewter": "#9A9C9A"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": true
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1340,
+    "verts": 689,
+    "zones": [
+     0,
+     1,
+     3
+    ],
+    "regions": [
+     "head"
+    ],
+    "max_influences": 1,
+    "bones": [
+     "headb"
+    ]
+   }
+  },
+  "tris": 1340,
+  "verts": 689,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0078,
+   "breast_large": 0.0,
+   "breast_small": 0.0,
+   "sex_head": 0.0078
+  },
+  "coverage": {
+   "head": {
+    "normal": 0.219,
+    "cone": 0.094
+   }
+  },
+  "glb_kb": 192.8
+ },
+ "budget": {
+  "tris_max": 1700
+ },
+ "evidence": "B",
+ "licence_note": null,
+ "history": "By the 1770s the seaman's usual hat was low-crowned, flat-topped and narrow-brimmed, of black felt or tarred canvas; cocked hats, higher crowns and knitted caps were worn too [D1]. A hat tarred against the wet gave the seaman his nickname, a 'tarpaulin' (to be checked against period use).",
+ "sources": [
+  "D1"
+ ],
+ "aliases": [],
+ "tags": [
+  "drift",
+  "sailor"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 4.83,
+    "p05_mm": 11.28,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 3.87,
+    "p05_mm": 10.38,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": -57.39,
+    "p05_mm": 11.18,
+    "inside_skin": 1
+   },
+   "bs": {
+    "min_mm": 4.83,
+    "p05_mm": 11.28,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": false,
+   "layer": "cloth2",
+   "groups": {}
+  },
+  "scalp_clearance_mm": {
+   "f": [
+    12.1,
+    14.4
+   ],
+   "m": [
+    11.8,
+    14.0
+   ],
+   "bl": [
+    12.1,
+    14.4
+   ],
+   "bs": [
+    12.1,
+    14.4
+   ]
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tar_hat.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tar_hat.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "references": [
+   "[D1] HMS Richmond, Sailor's Dress of 1775: https://hmsrichmond.org/sailordress.htm"
+  ],
+  "felt_note": "Felt uses the WOOL kit with a soft nap (ClothMaterials FELT_WORDS: the id has 'hat')."
+ }
+}

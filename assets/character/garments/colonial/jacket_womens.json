@@ -1,0 +1,363 @@
+{
+ "id": "jacket_womens",
+ "name": "Jacket (women's)",
+ "description": "A fitted wool or linen jacket pinned edge to edge over the stays, a low wide neckline, sleeves to just past the elbow with turned-back cuffs, and a short basque over the petticoat.",
+ "kind": "garment",
+ "set": "colonial",
+ "slot": "outer",
+ "alt_slots": [],
+ "layer": {
+  "default": 40
+ },
+ "glb": "res://assets/character/garments/colonial/jacket_womens.glb",
+ "mesh": "jacket_womens",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "jacket_womens"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "chest_upper_back",
+  "chest_upper_front",
+  "chest_upper_side",
+  "neck_lower",
+  "pelvis_side",
+  "upper_arm_l",
+  "upper_arm_r"
+ ],
+ "hides_regions": [
+  "abdomen_back",
+  "abdomen_side",
+  "chest_back",
+  "chest_side"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "jacket",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "indigo_mid",
+    "walnut_brown",
+    "madder_red",
+    "butternut",
+    "drab",
+    "logwood_black",
+    "linen_unbleached",
+    "full_green"
+   ],
+   "default": "indigo_mid",
+   "pattern": {
+    "options": [
+     "none",
+     "stripes"
+    ],
+    "stripes": {
+     "colors": [
+      "madder_red",
+      "linen_unbleached"
+     ],
+     "axis": "v",
+     "scale_m": 0.014,
+     "note": "a striped worsted or linen"
+    }
+   },
+   "bands": null,
+   "palette_hex": {
+    "indigo_mid": "#34507A",
+    "walnut_brown": "#5A3F2C",
+    "madder_red": "#8E2B21",
+    "butternut": "#957549",
+    "drab": "#8B7A5C",
+    "logwood_black": "#1C1B20",
+    "linen_unbleached": "#C8BA9A",
+    "full_green": "#2E5134"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "cuffs and edges",
+   "role": "trim",
+   "fabric": "WOOL",
+   "palette": [
+    "indigo_mid",
+    "walnut_brown",
+    "madder_red",
+    "butternut",
+    "drab",
+    "logwood_black",
+    "linen_unbleached",
+    "full_green"
+   ],
+   "default": "indigo_mid",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "indigo_mid": "#34507A",
+    "walnut_brown": "#5A3F2C",
+    "madder_red": "#8E2B21",
+    "butternut": "#957549",
+    "drab": "#8B7A5C",
+    "logwood_black": "#1C1B20",
+    "linen_unbleached": "#C8BA9A",
+    "full_green": "#2E5134"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 4209,
+    "verts": 2449,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "forearm_a_r",
+     "neck_lower",
+     "pelvis_center",
+     "pelvis_side",
+     "upper_arm_l",
+     "upper_arm_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "r_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "l_shoulder",
+     "l_elbow",
+     "r_clavicle",
+     "r_shoulder",
+     "r_elbow",
+     "neck",
+     "l_breast",
+     "r_breast",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_shoulder_twist_a",
+     "l_shoulder_twist_c",
+     "l_shoulder_twist_b",
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 4209,
+  "verts": 2449,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0483,
+   "breast_large": 0.0715,
+   "breast_small": 0.0244
+  },
+  "coverage": {
+   "neck_lower": {
+    "normal": 0.427,
+    "cone": 0.365
+   },
+   "chest_upper_front": {
+    "normal": 0.427,
+    "cone": 0.281
+   },
+   "chest_upper_side": {
+    "normal": 0.802,
+    "cone": 0.719
+   },
+   "chest_upper_back": {
+    "normal": 0.927,
+    "cone": 0.896
+   },
+   "chest_front": {
+    "normal": 0.938,
+    "cone": 0.865
+   },
+   "chest_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_front": {
+    "normal": 0.719,
+    "cone": 0.594
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "pelvis_center": {
+    "normal": 0.083,
+    "cone": 0.073
+   },
+   "pelvis_side": {
+    "normal": 0.448,
+    "cone": 0.24
+   },
+   "upper_arm_l": {
+    "normal": 0.896,
+    "cone": 0.802
+   },
+   "forearm_a_l": {
+    "normal": 0.156,
+    "cone": 0.021
+   },
+   "hand_l": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.938,
+    "cone": 0.865
+   },
+   "forearm_a_r": {
+    "normal": 0.135,
+    "cone": 0.01
+   }
+  },
+  "glb_kb": 556.6
+ },
+ "budget": {
+  "tris_max": 4600
+ },
+ "evidence": "B",
+ "licence_note": null,
+ "history": "With a petticoat, a jacket was the commonest working dress of the 1750s: fitted over the stays, pinned edge to edge, sleeves to the elbow, in worsted, linen or printed cotton, striped stuffs common (the Fort Ticonderoga guidelines) [S6]. The loose Pennsylvania German shortgown belongs to the later decades and is not used for 1757 [S10][S9].",
+ "sources": [
+  "S6",
+  "S10",
+  "S9",
+  "M2"
+ ],
+ "aliases": [],
+ "tags": [
+  "women",
+  "colonial",
+  "settlers"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 9.49,
+    "p05_mm": 12.89,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 9.46,
+    "p05_mm": 13.02,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 9.56,
+    "p05_mm": 12.88,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 9.51,
+    "p05_mm": 12.96,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/jacket_womens.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/jacket_womens.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "shift_linen",
+  "stays_laced",
+  "petticoat",
+  "apron",
+  "kerchief_womens"
+ ],
+ "extra": {
+  "presets": {
+   "margaretha": {
+    "0": "indigo_mid",
+    "1": "indigo_mid"
+   },
+   "anna": {
+    "0": "logwood_black",
+    "1": "logwood_black"
+   },
+   "striped": {
+    "0": "linen_unbleached",
+    "1": "madder_red",
+    "pattern": "stripes"
+   }
+  },
+  "references": [
+   "https://fortticonderoga.org/wp-content/uploads/2024/06/Zipped-1759-Siege-of-Carillon-French-Women-Guidelines.pdf",
+   "https://marariley.net/jackets/shortgown.htm",
+   "https://marariley.net/jackets/jackets.htm"
+  ],
+  "male_body_note": "Built for every fit; on a man it is artistic licence."
+ }
+}

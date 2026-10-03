@@ -662,7 +662,7 @@ func _cancel_pressed() -> bool:
 		var c := bool(scripted_input.get("cancel", false))
 		scripted_input["cancel"] = false
 		return c
-	return _fire_input_enabled() and (Input.is_action_just_pressed("aim") or Input.is_action_just_pressed("reload"))
+	return (_aim_input_enabled() and Input.is_action_just_pressed("aim")) or (_fire_input_enabled() and Input.is_action_just_pressed("reload"))
 
 
 # --- Steps --------------------------------------------------------------------------

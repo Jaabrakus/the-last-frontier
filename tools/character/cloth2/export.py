@@ -158,7 +158,7 @@ def coverage(fits, mesh, per_region=96):
 
 
 # ---- the Blender object, the glb and the catalog entry ------------------------------------------------------
-def make_object(ctx, spec, mesh, uv, d_hem, d_open):
+def make_object(ctx, spec, mesh, uv, d_hem, d_open, shape_alias=None):
     name = spec.id
     me = bpy.data.meshes.new(name)
     me.from_pydata([tuple(p) for p in mesh.V[REF]], [], [tuple(t) for t in mesh.F])
@@ -185,11 +185,15 @@ def make_object(ctx, spec, mesh, uv, d_hem, d_open):
     for shape, fit in SHAPE_FIT.items():
         if fit in mesh.V:
             deltas[shape] = mesh.V[fit] - mesh.V[REF]
+    # extra shapes that repeat a fit (a hat's `sex_head`: the head-only male fit moves it like `sex`)
+    for shape, fit in (shape_alias or {}).items():
+        if fit in mesh.V:
+            deltas[shape] = mesh.V[fit] - mesh.V[REF]
     add_shape_keys(ob, deltas)
     return ob, used, deltas, W
 
 
-def finish(ctx, fits, spec, mesh, uvparts, hem=None, export=True, skirt=None):
+def finish(ctx, fits, spec, mesh, uvparts, hem=None, export=True, skirt=None, shape_alias=None, extra_checks=None):
     from cloth2.mesh import weld
     mesh = weld(mesh)
     mesh.recompute_normals()
@@ -200,6 +204,8 @@ def finish(ctx, fits, spec, mesh, uvparts, hem=None, export=True, skirt=None):
         print("BOUNDARY %s: %d open edges by height [0-.3,.3-.6,.6-.9,.9-.96,.96-1,1-1.04,1.04-1.2,1.2-1.4,>1.4]: %s" % (
             spec.id, len(be), hist))
     uv = corner_uv(mesh, uvparts)
+    if callable(hem):
+        hem = np.asarray(hem(mesh), bool)          # (after the weld: a garment's hem rule, Garment.hem)
     d_hem, d_open = edge_fields(mesh, hem)
     cov = coverage(fits, mesh)
     hides = sorted(set(r for r, (n, c) in cov.items() if c >= HIDE_SHARE) | set(spec.hides_force))
@@ -215,7 +221,7 @@ def finish(ctx, fits, spec, mesh, uvparts, hem=None, export=True, skirt=None):
                 bad = np.nonzero(d < thr)[0]
                 log("  DEEP %s: %d vertices inside, e.g. %s (d %s mm)" % (
                     k, len(bad), [mesh.V[k][i].round(3).tolist() for i in bad[:3]], [round(float(d[i]) * 1000) for i in bad[:3]]))
-    ob, used, deltas, W = make_object(ctx, spec, mesh, uv, d_hem, d_open)
+    ob, used, deltas, W = make_object(ctx, spec, mesh, uv, d_hem, d_open, shape_alias)
     rig = ctx.bind_rig()
     ob.parent = rig
     mod = ob.modifiers.new("Armature", "ARMATURE")
@@ -233,6 +239,8 @@ def finish(ctx, fits, spec, mesh, uvparts, hem=None, export=True, skirt=None):
              "coverage": {r: {"normal": round(n, 3), "cone": round(c, 3)} for r, (n, c) in cov.items() if n > 0}}
     ok = all(v["inside_skin"] == 0 for v in clear.values())
     checks = {"clearance": clear, "envelope": {"ok": ok, "layer": "cloth2", "groups": {}}}
+    if extra_checks:
+        checks.update(extra_checks)
     if tris > spec.budget:
         log("  BUDGET %s: %d tris > %d" % (spec.id, tris, spec.budget))
     log("  %s: %d tris %d verts, hides %d regions, clearance %s" % (spec.id, tris, len(ob.data.vertices), len(hides),

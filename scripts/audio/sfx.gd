@@ -401,6 +401,7 @@ static func _streams(key: String) -> Array:
 		var path: String = paths[i]
 		if not ResourceLoader.exists(path):
 			continue
+		HitchLog.note("sound loaded %s" % path.get_file())
 		var s := load(path) as AudioStream
 		if s == null:
 			continue

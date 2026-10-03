@@ -1,0 +1,1173 @@
+{
+  "format": "frontier-dialogue",
+  "version": 1,
+  "storyline": "two_fires",
+  "summary": "The talk of Two Fires (all of it text: StoryDialogue shows it, StoryContact opens it on E). Each conversation is a graph of nodes; open one as StoryDialogue.open(tree, \"two_fires/<name>\", on_done), on_done hearing the outcome. The slice (docs/main_story.md 15 item 1: missions 1-12 and 14) opens most of these from its talk steps (data/story/missions/two_fires.json); `rumours` is Margaretha's contact at the fort.",
+  "_format": {
+    "file": "data/story/dialogue/<storyline>.json: speakers (shared by its conversations; a contact's name is its speaker's), conversations {name: conversation}. The people to talk to in the world are the storyline file's \"contacts\" (data/story/storylines/<storyline>.json, docs/main_story.md section 3), placed by the director.",
+    "speakers": "{key: {name, about, hand?}}: a node's speaker is one of these keys (its name shows over the line) or a name written out; \"\" or \"narrator\" is narration (no name, plainer colour). A conversation may have speakers of its own over the file's. `hand` (not read yet) is the lettering docs/main_story.md 9.5 gives the speaker's community: fraktur (the Palatines), round (Vane, officers, deeds), ronde (the French and the Canadians), sailor (Rook), vessary (the dot script with English under it).",
+    "conversation": "{start: the first node's id (default \"start\"), nodes: {id: node}, speakers?}",
+    "node": "{speaker, text, do?, choices?, goto?, end?}. Shown: its `do` is done, its text typed out (any key or a click shows it whole). Then its choices if any can be given, else on: `end` ends the talk with that outcome, else `goto`; neither ends it with the outcome so far. A node with text \"\" shows its choices under the line already said (or goes straight on): the way back to a list of questions, and the way a count is kept (below).",
+    "choices": "[{text, if?, do?, goto? | end?, once?}], 2 to 4 shown (at most 4: the rest are dropped). A choice whose `if` does not hold is not shown; `once` hides it after it is taken (in this talk). Picked: its `do`, then its `end` (the talk ends, that the outcome) or `goto`; neither ends it.",
+    "goto": "a node id, or a list [{if, goto | end}] taken at the first whose `if` holds (one with no `if` always does): a branch on what the player has done.",
+    "if": "\"name\": the story flag is set; \"!name\": it is not; a list: all of them; {flag: name | [names], not_flag: name | [names], flag_is: {name: value}, standing: faction, min?, max? (SurvivalEconomy standing, -100..100; 0 without a survival game), item: kind, n? (at least n, default 1: a pack kind such as venison, or an item. id in the survival kit), no_item: kind, any: [conds], not: cond, when: a mission `when` (StoryDirector.condition: missions done, their outcomes, the date)}: every key given must hold. A mission `when`'s own keys written straight in (flags, done, not_done, outcome, window, hours, year, standing as {faction: limit}) are taken as that `when`; any other key (a typo) is warned of and does not hold.",
+    "do": "one effect or a list of them: \"name\" sets that flag; {set: name | [names], to?: value (default true)} or {set: {name: value}}; {clear: name | [names]}; {standing: faction, by: n, source?: an npcs.json standing source (its monthly cap)}; {give: kind, n?} and {take: kind, n?} (the pack, or an item. id in the survival kit; said on the HUD); {mission: id} (that mission of the storyline at hand starts once the talk is shut); {outcome: word} (the outcome if the talk ends without an `end` of its own).",
+    "flags": "The StoryDirector's flags, kept in the save with the storyline: name them after the storyline (tf.*). The slice's are listed in the missions file's `_flags`.",
+    "counts": "There is no add in `do`, so a count is kept as a ladder: a node with no text whose `goto` list reads the count's value (flag_is) and goes to the node that sets the next one ({set: {\"tf.warned_count\": 2}}). The three warn_* conversations keep the Third Warning's hidden count so (docs/main_story.md 10.1, mission 8: tf.warned_count, 0-3, which RaidStage reads as the neighbours waiting in the fields on the raid night); Rook's tally (10.6) will be kept the same way.",
+    "representation": "docs/main_story.md rule 4: a Native nation's people get no lines, names or missions until that nation's office signs off. Where the history needs them, a colonist retells it and the slot is marked. The warnings of autumn 1757 are such a slot: nobody here names who brought them (rumours, third_warning: `_slot`).",
+    "french": "French stays French until the player learns it (docs/main_story.md 9.5): the captors' lines are not glossed. Rook gives the first gloss (rook_ford: \"Not that one. He built a house.\")."
+  },
+  "speakers": {
+    "narrator": {"name": "", "about": "Narration (no name over the line)."},
+    "margaretha": {"name": "Margaretha Rauch", "hand": "fraktur", "about": "A Palatine farm wife of German Flatts, with her son Jost (9) and grandmother Anna (docs/main_story.md 9.4: a contact of Acts 1-2, the valley settlers' community). Her husband stays off screen. Check the Rauch name against the Burnetsfield list: invented until a real one is verified."},
+    "jost": {"name": "Jost Rauch", "hand": "fraktur", "about": "Margaretha's son, nine in 1757 (docs/main_story.md 9.4). He can be taken captive, never hurt (16.2: no child is harmed by the player or the AI). Invented; check against the Burnetsfield list."},
+    "anna": {"name": "Anna Rauch", "hand": "fraktur", "about": "Grandmother Anna, Margaretha's mother-in-law: came up the Rhine as a girl in 1709 and to the Flatts with the patent. Tells of the Irrlichter (the settlers' own lore: the hint anyone could explain away, docs/main_story.md 6.3) and teaches the evening hymn (our own lines: see neighbours._hymn)."},
+    "vane": {"name": "Silas Vane", "hand": "round", "about": "Albany man, partner of the sutler at Fort Herkimer (docs/main_story.md 9.3, modelled loosely on Lydius, H). Gives credit against a note. Sighted since he was eleven; he lets it show only in First Lesson (14). Never uses the Sway."},
+    "canadian": {"name": "The Canadian", "hand": "ronde", "about": "Toussaint Leclerc before the player knows his name: the Canadian militiaman who spares the player (docs/main_story.md 9.4)."},
+    "toussaint": {"name": "Toussaint", "hand": "ronde", "about": "Leclerc once he has given his first name (march_crust)."},
+    "leclerc": {"name": "Toussaint Leclerc", "hand": "ronde", "about": "Canadian militia, the captor who spared you (docs/main_story.md 9.4), once the marine has called him by his surname (camp_fire). His French is not glossed."},
+    "marine": {"name": "A marine", "hand": "ronde", "about": "A soldier of the troupes de la marine (grey-white coat, blue cuffs: H, check the 1757 dress). The raiders on screen are marines and Canadian militia only."},
+    "ithel_unknown": {"name": "The dying officer", "hand": "vessary", "about": "Captain Ithel before the name is given."},
+    "ithel": {"name": "Captain Ithel", "hand": "vessary", "about": "Master of the cutter Candlewake out of Vessary, which was carrying Rook and the Wayglass home for trial when the storm threw it through the Veil (docs/main_story.md 7.1). Dies at the wreck. Written without he or she: the owner may choose."},
+    "stranger": {"name": "The stranger", "hand": "sailor", "about": "Rook before he names himself, pinned under the spar."},
+    "rook": {"name": "Rook", "hand": "sailor", "about": "Matthias Raab, called Rook (docs/main_story.md 9.2): a Palatine boy of the Hudson tar camps who has lived 46 years in the Drift and casts no shadow under our sun. Warm, funny, patient. His real name comes much later (Act 4)."},
+    "brenner": {"name": "Konrad Brenner", "hand": "fraktur", "about": "Cooper and militia corporal at the Flatts, wife Liesel. Persuaded by a plain sum. Invented (D): check against the Burnetsfield list."},
+    "wendel": {"name": "Barbara Wendel", "hand": "fraktur", "about": "A widow with two grown sons, Philipp and Adam, and a cow. Persuaded by letting her sons laugh from the field, or by Margaretha going first. Invented (D): check against the Burnetsfield list."},
+    "ott": {"name": "Hans Ott", "hand": "fraktur", "about": "An old soldier of King George's War who laughs loudest, with his son Michel. Persuaded only if Brenner went first. Invented (D): check against the Burnetsfield list."},
+    "dominie": {"name": "Dominie Ehrhardt", "hand": "fraktur", "about": "The Flatts' minister, keeper of the register of the dead and taken (docs/main_story.md 9.4). Check Ehrhardt against the Burnetsfield list."}
+  },
+  "conversations": {
+    "rumours": {
+      "_doc": "The first warning nobody believed (docs/research/history_core.md section 1; H: at Croghan's inquiry of 30 November 1757 testimony said the Germans were warned about 15 days before the raid and urged into their fort, and laughed: High, primary testimony, verify before release). Who brought it is a [[consultation slot]] (docs/main_story.md rule 4, 10.1: the warners are not named or shown while the slot is empty), so a German neighbour retells it without naming them. Outcomes: left, doubted, warned (she will send word), will_speak (the player means to tell the men).",
+      "_slot": "The warners' own telling of the 1757 warnings: [[consultation slot]] (the Oneida offices, docs/main_story.md 16.2).",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "margaretha",
+          "text": "You are the newcomer who took the ground by the spring. Ja, I know you: the whole Flatts knows you by your smoke. Come, stand by the fire a moment.",
+          "goto": [{"if": "tf.heard_rumour", "goto": "again"}, {"goto": "news"}]
+        },
+        "news": {
+          "speaker": "margaretha",
+          "text": "Have you heard what they say at the fort? Word came down the river, from people who had it from the north. The French are gathering, they said, and mean to come here before the snow. They told us to bring our families inside the fort.",
+          "do": {"set": "tf.heard_rumour"},
+          "goto": "ask"
+        },
+        "again": {
+          "speaker": "margaretha",
+          "text": "No more word from the river. The men still laugh about it. I keep Jost's shoes by the door all the same.",
+          "goto": "ask"
+        },
+        "ask": {
+          "text": "",
+          "choices": [
+            {"text": "What did the men say to that?", "once": true, "goto": "laughed"},
+            {"text": "Do you believe it?", "goto": "believe"},
+            {"text": "I shot a deer. Take some venison for your family.", "if": [{"item": "venison"}, "!tf.gave_venison"],
+              "do": [{"take": "venison", "n": 1}, {"standing": "faction.settlers_valley", "by": 3}, {"set": "tf.gave_venison"}], "goto": "thanks"},
+            {"text": "I have work waiting at home.", "end": "left"}
+          ]
+        },
+        "laughed": {
+          "speaker": "margaretha",
+          "text": "They laughed. My husband too. Every autumn there is a story, and every autumn the French stay in Canada. A man would sooner sleep in his own bed than in a blockhouse with forty others and their dogs.",
+          "goto": "ask"
+        },
+        "thanks": {
+          "speaker": "margaretha",
+          "text": "Danke. That is kind, from someone who has so little. Jost will eat well tonight, and Anna will say a grace over it.",
+          "goto": "ask"
+        },
+        "believe": {
+          "speaker": "margaretha",
+          "text": "I do not know. The ones who brought it have no reason to frighten us for nothing, and it is a long way to come with a lie. But I am one woman, and nobody asked me.",
+          "choices": [
+            {"text": "I will speak to the men myself.", "if": "!tf.will_speak", "do": {"set": "tf.will_speak"}, "goto": "speak"},
+            {"text": "Send word to my place if more news comes.", "if": "!tf.neighbour_watch",
+              "do": [{"set": "tf.neighbour_watch"}, {"standing": "faction.settlers_valley", "by": 1}], "goto": "watch"},
+            {"text": "It is only talk.", "end": "doubted"}
+          ]
+        },
+        "speak": {
+          "speaker": "margaretha",
+          "text": "Speak, then. They will laugh at you as they laughed at the ones who brought it, and you a stranger with one coat. But speak.",
+          "end": "will_speak"
+        },
+        "watch": {
+          "speaker": "margaretha",
+          "text": "If Jost is not too frightened of the woods, I will send him. Go carefully on the path home.",
+          "end": "warned"
+        }
+      }
+    },
+
+    "neighbours": {
+      "_doc": "Mission 6, Neighbours (docs/main_story.md 10.1): at the Rauch farm, after the venison is handed over (the step before). Jost, Anna's Irrlichter (hint 1's stump comes up again; the marsh lights are the hint anyone could explain away, 6.3), and her evening hymn learned (tf.knows_hymn: the line that exists only if earned, 9.5; sung on Rook's fever night in Ash, a tally moment, 10.6). Margaretha names Vane's credit. Outcomes: sang (the hymn learned), left.",
+      "_hymn": "OUR OWN LINES (D), written for the game in the manner of a German evening hymn of the 17th century: not a real hymn, nothing quoted. The design asked for a real one ('Allein und doch nicht ganz allein', H: date and author unchecked) and the owner has not yet said whether a real hymn may be used (docs/main_story.md 21). A public-domain one could replace these lines if the owner agrees (for example Paul Gerhardt's evening hymn of 1647, 'Nun ruhen alle Wälder'; check the text against a period hymnal before use). Verse 1 (taught here): 'Die Sonne sinkt, der Wald wird still, / das Feld liegt kalt und leer; / und wer allein nun wachen will, / ist doch allein nicht mehr.' Verse 2 (for Ash: Rook, in his fever, answers the first verse with it, because he knows the song from the tar camps): 'Ob fern das Haus, ob kalt der Wind, / ob dunkel jeder Steg, / Er hält die Hand um jedes Kind / und kennt den rechten Weg.' Meter 8.6.8.6.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "margaretha",
+          "text": "Venison! And dressed clean, too. Jost, take it to the cold room before the dog finds it. Sit, sit. You walked all this way to bring us meat, and in this house that earns a chair by the fire.",
+          "goto": "jost"
+        },
+        "jost": {
+          "speaker": "jost",
+          "text": "Is it true you cleared your ground all alone? Herr Brenner says you will be gone by the snow.",
+          "choices": [
+            {"text": "Herr Brenner may be right.", "goto": "jost_doubt"},
+            {"text": "I mean to stay.", "do": {"set": "tf.told_jost_stay"}, "goto": "jost_stay"}
+          ]
+        },
+        "jost_doubt": {
+          "speaker": "jost",
+          "text": "Mutter says the ones who say they will go are the ones who stay.",
+          "goto": "anna"
+        },
+        "jost_stay": {
+          "speaker": "jost",
+          "text": "Then you need a dog. Ours is too old to walk as far as your place, or I would lend him to you.",
+          "goto": "anna"
+        },
+        "anna": {
+          "speaker": "anna",
+          "text": "Sit where I can see you. My eyes are going, but they still know a face. You are the one by the spring, where the old stump is.",
+          "goto": "anna_q"
+        },
+        "anna_q": {
+          "text": "",
+          "choices": [
+            {"text": "You know that stump?", "once": true, "goto": "stump"},
+            {"text": "Margaretha says you tell stories.", "goto": "tale"},
+            {"text": "I should go before the light does.", "goto": "leave_early"}
+          ]
+        },
+        "stump": {
+          "speaker": "anna",
+          "text": "Everyone knows it. It was there when we came up with the patent, before there was a house on this bank. No axe made that cut, and nobody ever found the tree. The men say a storm. A storm with a saw, I say.",
+          "goto": "anna_q"
+        },
+        "tale": {
+          "speaker": "anna",
+          "text": "Stories. Ja. In the Palatinate we had Irrlichter in the wet meadows: little lights, low over the reeds, going along like a man with a lantern. My mother said they were the souls of men who moved their neighbours' boundary stones, and must carry the stone for ever and never find where to put it down.",
+          "do": {"set": "tf.heard_irrlichter"},
+          "goto": "tale2"
+        },
+        "tale2": {
+          "speaker": "anna",
+          "text": "There are lights here too, in the wet ground below the mill. I have seen them three times in thirty years. But these do not wander, Kind. They go straight up, like sparks from a chimney, and they do not come down.",
+          "choices": [
+            {"text": "Marsh gas, Grossmutter. It burns.", "goto": "gas"},
+            {"text": "Where do they go?", "goto": "where"},
+            {"text": "Who else has seen them?", "goto": "who"}
+          ]
+        },
+        "gas": {
+          "speaker": "anna",
+          "text": "So says the dominie, and he has books. Then it is a gas that knows the way up. Good.",
+          "goto": "song"
+        },
+        "where": {
+          "speaker": "anna",
+          "text": "Where sparks go. Up, and up, and out. I am an old woman: I am allowed to say I watched them out of sight.",
+          "goto": "song"
+        },
+        "who": {
+          "speaker": "anna",
+          "text": "My husband, once, God rest him, and he made me promise not to tell the dominie. Now you. That is all.",
+          "goto": "song"
+        },
+        "song": {
+          "speaker": "margaretha",
+          "text": "Mutter, it is getting dark. Sing for us before our guest goes, so the walk home has something better in it than marsh lights.",
+          "choices": [
+            {"text": "I would like that.", "goto": "hymn"},
+            {"text": "Another night. I should go before the light does.", "goto": "leave_early"}
+          ]
+        },
+        "hymn": {
+          "speaker": "anna",
+          "text": "It is an evening song. My mother sang it on the boat, all the way down the Rhine. Listen, and then you sing it back to me.",
+          "goto": "hymn_sung"
+        },
+        "hymn_sung": {
+          "speaker": "narrator",
+          "text": "She sings, thin and true, and Jost mouths the words beside her:\n\nDie Sonne sinkt, der Wald wird still,\ndas Feld liegt kalt und leer;\nund wer allein nun wachen will,\nist doch allein nicht mehr.\n\nYou have enough German, or enough ear, for the shape of it: the sun going down, the woods falling quiet, and whoever must keep watch alone being alone no more.",
+          "goto": "hymn_back"
+        },
+        "hymn_back": {
+          "speaker": "anna",
+          "text": "Again. No: wachen, not machen. Again. There. Now it is yours, and nobody can take it from you, whatever else they take.",
+          "do": [{"set": "tf.knows_hymn"}, {"outcome": "sang"}],
+          "goto": "bye"
+        },
+        "leave_early": {
+          "speaker": "anna",
+          "text": "Go, then. The lights will keep.",
+          "do": {"outcome": "left"},
+          "goto": "bye"
+        },
+        "bye": {
+          "speaker": "margaretha",
+          "text": "Before you go: you will need more than meat to see a winter through. Herr Vane at the fort's store gives credit to new people. He is very kind about it, everyone says so. I have never needed his kindness, thank God.",
+          "do": {"set": "tf.vane_named"}
+        }
+      }
+    },
+
+    "vane_credit": {
+      "_doc": "Mission 6, Neighbours: Silas Vane at the store in Fort Herkimer gives credit against a note, 'because a man should start somewhere' (docs/main_story.md 9.3). The note (tf.vane_note, in shillings, New York money) is the debt his chains and The Ford (17) call in; the paper itself is the 'documents' item to come (item.tf_vane_note: not in the survival kit yet). No sky in his talk here: Act 1's only wonder is the title card and the three hints (7.5 rule 5). Outcomes: credit, refused, looked.",
+      "_basis": "H: New York currency in 1757 (pounds, shillings and pence, York money); the price is D.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "vane",
+          "text": "Ah: the newcomer from across the ford. Silas Vane, of Albany. I keep this store's books for my partner, and its door open for people who have more need than coin.",
+          "choices": [
+            {"text": "I need meal and lead for the winter.", "goto": "offer"},
+            {"text": "Margaretha Rauch says you give credit.", "if": "tf.vane_named", "goto": "offer_rauch"},
+            {"text": "I am only looking.", "goto": "looking"}
+          ]
+        },
+        "looking": {
+          "speaker": "vane",
+          "text": "Look as long as you like. Looking is free at the Flatts. Very little else is.",
+          "end": "looked"
+        },
+        "offer_rauch": {
+          "speaker": "vane",
+          "text": "Does she? Kind of her. She has never once needed it, which is more than most here can say.",
+          "goto": "offer"
+        },
+        "offer": {
+          "speaker": "vane",
+          "text": "Here is what I can do. Six pounds of meal, two bars of lead, two good flints. You sign a note for them, payable at the spring trade, and we are friends. Why? Because a man should start somewhere.",
+          "goto": "terms"
+        },
+        "terms": {
+          "text": "",
+          "choices": [
+            {"text": "I'll sign.", "goto": "sign",
+              "do": [{"give": "cornmeal", "n": 6}, {"give": "bar_lead", "n": 2}, {"give": "flint", "n": 2},
+                {"set": {"tf.vane_note": 44}}, {"standing": "faction.post", "by": 1}]},
+            {"text": "What does it cost me at the spring trade?", "once": true, "goto": "cost"},
+            {"text": "I'll pay as I go.", "goto": "refuse"}
+          ]
+        },
+        "cost": {
+          "speaker": "vane",
+          "text": "Two pounds four shillings, York money, or the same in prime pelts. Less, if you bring me something worth knowing. A person hears things out on the far bank.",
+          "goto": "terms"
+        },
+        "sign": {
+          "speaker": "vane",
+          "text": "There. Your mark, my name and the date, all in order. Keep your copy dry: on this frontier paper is the only thing that remembers.",
+          "end": "credit"
+        },
+        "refuse": {
+          "speaker": "vane",
+          "text": "A careful one. Good. Careful people last. The offer keeps, as offers do.",
+          "do": {"set": "tf.vane_refused"},
+          "end": "refused"
+        }
+      }
+    },
+
+    "third_warning": {
+      "_doc": "Mission 8, The Third Warning (docs/main_story.md 10.1): early November at the Rauch farm. Anna passes on the third warning (the design's line, 'this month' made 'this autumn': the first came about 15 days before the raid, H). Who brought it is a [[consultation slot]]: Anna will not tell it. Then the Rauchs' own choice: sleep at the fort (tf.rauchs_to_fort: Jost is not taken) or stay (Jost is taken at the raid). The order of the farms after it is Margaretha's: Brenner, Wendel, Ott; nobody else will move into the fort, but they can be made ready to run. Outcomes: to_fort, stay.",
+      "_slot": "The warners and the belt of the day before (H, High: about 15 days before, again from up the river, and with a belt the day before; no belt is ever an item) are a [[consultation slot]] (docs/main_story.md 10.1).",
+      "_basis": "H: three warnings in autumn 1757 (Croghan's inquiry, 30 Nov 1757; NYCD); verify wording before release.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "anna",
+          "text": "We have been warned three times this autumn, and the men laughed. Three times. In the old country we would have been packed by the second.",
+          "goto": "ask"
+        },
+        "ask": {
+          "text": "",
+          "choices": [
+            {"text": "Who brought the word?", "once": true, "goto": "who"},
+            {"text": "What does it say?", "once": true, "goto": "what"},
+            {"text": "What do you want me to do?", "goto": "plan"}
+          ]
+        },
+        "who": {
+          "speaker": "anna",
+          "text": "People who had it from people further up the river, who had no reason to walk so far for a joke. That is all I will say about who. It is not my story to tell.",
+          "goto": "ask"
+        },
+        "what": {
+          "speaker": "anna",
+          "text": "That the French are coming down before the snow, many of them, and that we should sleep inside the fort until they have gone. The same as before. Only this time they said: soon.",
+          "goto": "ask"
+        },
+        "plan": {
+          "speaker": "margaretha",
+          "text": "The men will not listen to me, and they will not listen to Mutter. They might listen to someone who has nothing to gain by saying it. Go farm to farm: Brenner first, then the widow Wendel, then old Ott at the top of the bank. If they will not sleep in the fort, make them sleep in their boots.",
+          "goto": "house"
+        },
+        "house": {
+          "speaker": "anna",
+          "text": "And this house, Margaretha?",
+          "choices": [
+            {"text": "Take Jost and Anna to sleep at the fort, tonight and every night until the snow.", "goto": "yes"},
+            {"text": "Ask your husband what he means to do.", "goto": "husband"},
+            {"text": "You know your own house best.", "goto": "no"}
+          ]
+        },
+        "husband": {
+          "speaker": "margaretha",
+          "text": "He means to sleep in his own bed with his gun beside it, as he has for twenty years. I know what my husband means to do. I am asking what I mean to do.",
+          "choices": [
+            {"text": "Take Jost and Anna to the fort. Let him mind the cows.", "goto": "yes"},
+            {"text": "Then stay with him. It may come to nothing.", "goto": "no"}
+          ]
+        },
+        "yes": {
+          "speaker": "margaretha",
+          "text": "Ja. Ja, you are right, and I knew it before you said it. Jost! Your blanket and your shoes. Tonight we sleep at the fort.",
+          "do": [{"set": "tf.rauchs_to_fort"}, {"standing": "faction.settlers_valley", "by": 2}],
+          "goto": "jost_yes"
+        },
+        "jost_yes": {
+          "speaker": "jost",
+          "text": "In the blockhouse? With the soldiers' dogs? Can I bring ours?",
+          "goto": "anna_yes"
+        },
+        "anna_yes": {
+          "speaker": "anna",
+          "text": "Bring the dog. Bring the hymnbook. And you: go and tell the others. They will laugh at you, but go.",
+          "end": "to_fort"
+        },
+        "no": {
+          "speaker": "margaretha",
+          "text": "It may. Every autumn there is a story. Go and tell the others. I will think on it.",
+          "goto": "anna_no"
+        },
+        "anna_no": {
+          "speaker": "anna",
+          "text": "She will think on it, and the cows will want milking, and it will be tomorrow. Go on. Tell the others.",
+          "end": "stay"
+        }
+      }
+    },
+
+    "warn_brenner": {
+      "_doc": "Mission 8: the first farm. One try: the plain sum persuades (tf.warned.brenner, and the hidden count up one); fear or his wife's sleep does not. Persuaded means ready, not moved: they will sleep in their clothes and, at the first shot, go out into the field and lie low until someone leads them to the ford (RaidStage: the warned wait in the fields for the player). The ladder from `persuaded` keeps the count (see _format.counts).",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "brenner",
+          "text": "The newcomer. Come to borrow a hoop-driver? No? Then you have come with the story. I can see it in your face. Everyone who comes with the story has that face.",
+          "choices": [
+            {"text": "The French are coming. They will burn you in your beds.", "goto": "fear"},
+            {"text": "Your wife would sleep easier in the fort.", "goto": "wife"},
+            {"text": "Sleep in your clothes until the snow. At the first shot, out into the field and lie low, and I will come and take you to the ford. If I am wrong, you lose some sleep.", "goto": "sum"}
+          ]
+        },
+        "fear": {
+          "speaker": "brenner",
+          "text": "Ha! Do you hear that, Liesel? We are to be burned in our beds. Go home, newcomer, before the French burn yours.",
+          "end": "laughed"
+        },
+        "wife": {
+          "speaker": "brenner",
+          "text": "My wife sleeps very well beside me, and my musket sleeps very well beside her. Go home.",
+          "end": "laughed"
+        },
+        "sum": {
+          "speaker": "brenner",
+          "text": "Hm. That is a cooper's sum: a cheap barrel against dear wine. Liesel! We sleep in our clothes until the snow, and the shoes by the back door. If the dominie laughs, let him.",
+          "goto": "persuaded"
+        },
+        "persuaded": {
+          "text": "",
+          "do": [{"set": "tf.warned.brenner"}, {"standing": "faction.settlers_valley", "by": 2}],
+          "goto": [{"if": {"flag_is": {"tf.warned_count": 2}}, "goto": "n3"}, {"if": {"flag_is": {"tf.warned_count": 1}}, "goto": "n2"}, {"goto": "n1"}]
+        },
+        "n1": {"text": "", "do": {"set": {"tf.warned_count": 1}}, "goto": "bye"},
+        "n2": {"text": "", "do": {"set": {"tf.warned_count": 2}}, "goto": "bye"},
+        "n3": {"text": "", "do": [{"set": {"tf.warned_count": 3}}, {"set": "tf.warned_all"}], "goto": "bye"},
+        "bye": {
+          "speaker": "brenner",
+          "text": "And if you are wrong, I will make you a barrel you cannot afford.",
+          "end": "persuaded"
+        }
+      }
+    },
+
+    "warn_wendel": {
+      "_doc": "Mission 8: the second farm. Two ways in: letting her sons laugh from the field, or Margaretha going first (only if the Rauchs went to the fort). Telling her her sons are wrong does not. Persuaded: ready to run, waiting in the field on the night (as Brenner). The ladder keeps the hidden count.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "wendel",
+          "text": "My boys are in the woods, cutting, and I am alone with the cow. If you have come to say the French are coming, Philipp says that is women's talk, and he is a man now, he tells me.",
+          "choices": [
+            {"text": "Then it is women's talk. Margaretha Rauch is taking her boy to the fort tonight.", "if": "tf.rauchs_to_fort", "goto": "rauch"},
+            {"text": "Let them laugh from the field. Sleep in your boots, and at the first shot take them out the back and lie low: I will come for you.", "goto": "field"},
+            {"text": "Your sons are wrong.", "goto": "sons"}
+          ]
+        },
+        "sons": {
+          "speaker": "wendel",
+          "text": "They are my sons. I will not have a stranger tell me so in my own yard.",
+          "end": "laughed"
+        },
+        "rauch": {
+          "speaker": "wendel",
+          "text": "Margaretha is? Then I am not a fool alone. I will not walk the cow to the fort every night, but we sleep in our boots, the boys too, if I have to tie them on.",
+          "goto": "persuaded"
+        },
+        "field": {
+          "speaker": "wendel",
+          "text": "Out the back and into the field. Well. That is not running away, that is only going out to see to the cow. Philipp can laugh at that if he likes.",
+          "goto": "persuaded"
+        },
+        "persuaded": {
+          "text": "",
+          "do": [{"set": "tf.warned.wendel"}, {"standing": "faction.settlers_valley", "by": 2}],
+          "goto": [{"if": {"flag_is": {"tf.warned_count": 2}}, "goto": "n3"}, {"if": {"flag_is": {"tf.warned_count": 1}}, "goto": "n2"}, {"goto": "n1"}]
+        },
+        "n1": {"text": "", "do": {"set": {"tf.warned_count": 1}}, "goto": "bye"},
+        "n2": {"text": "", "do": {"set": {"tf.warned_count": 2}}, "goto": "bye"},
+        "n3": {"text": "", "do": [{"set": {"tf.warned_count": 3}}, {"set": "tf.warned_all"}], "goto": "bye"},
+        "bye": {
+          "speaker": "wendel",
+          "text": "Go on, then. The whole Flatts will laugh at the widow Wendel in her boots. Let them.",
+          "end": "persuaded"
+        }
+      }
+    },
+
+    "warn_ott": {
+      "_doc": "Mission 8: the last farm, at the top of the bank. Old Ott moves only if Konrad Brenner already has (tf.warned.brenner): nobody will say Hans Ott was the last one too proud to be careful. Persuaded: ready to run, waiting in the field (as Brenner). The ladder keeps the hidden count.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "ott",
+          "text": "Sit, sit. Michel! The newcomer has come to frighten us. I have heard the French were coming every autumn since King George's war. In forty-six they were coming. In fifty-five they were coming. Do you know who came? The tax collector.",
+          "choices": [
+            {"text": "Konrad Brenner sleeps in his boots now.", "if": "tf.warned.brenner", "goto": "brenner"},
+            {"text": "Then laugh at me with your boots on.", "goto": "dare"},
+            {"text": "If it is only a story, it costs you a few cold nights.", "goto": "cost"}
+          ]
+        },
+        "dare": {
+          "speaker": "ott",
+          "text": "I will laugh at you from my own bed, which is warmer. Michel, give the newcomer a pipe for the walk home.",
+          "end": "laughed"
+        },
+        "cost": {
+          "speaker": "ott",
+          "text": "At my age a cold night is not cheap. Go home.",
+          "end": "laughed"
+        },
+        "brenner": {
+          "speaker": "ott",
+          "text": "Brenner? Brenner, who sleeps with his musket like a bride? Michel! Our boots stay on. If Konrad Brenner is ready and Hans Ott is not, they will say Hans Ott was afraid to be seen being careful.",
+          "goto": "persuaded"
+        },
+        "persuaded": {
+          "text": "",
+          "do": [{"set": "tf.warned.ott"}, {"standing": "faction.settlers_valley", "by": 2}],
+          "goto": [{"if": {"flag_is": {"tf.warned_count": 2}}, "goto": "n3"}, {"if": {"flag_is": {"tf.warned_count": 1}}, "goto": "n2"}, {"goto": "n1"}]
+        },
+        "n1": {"text": "", "do": {"set": {"tf.warned_count": 1}}, "goto": "bye"},
+        "n2": {"text": "", "do": {"set": {"tf.warned_count": 2}}, "goto": "bye"},
+        "n3": {"text": "", "do": [{"set": {"tf.warned_count": 3}}, {"set": "tf.warned_all"}], "goto": "bye"},
+        "bye": {
+          "speaker": "ott",
+          "text": "Out. Out, before I change my mind.",
+          "end": "persuaded"
+        }
+      }
+    },
+
+    "cache": {
+      "_doc": "Mission 8: bury what you can spare away from the house (docs/main_story.md 10.1: the cache pays off in Ash, 13). Each thing buried is taken from the pack and kept in a flag tf.cache.<kind> = how many; tf.cache is set when anything is. Ash gives them back (and the design's PackDrop cache can replace this once a story effect makes one). At most three things are offered so 'That will do.' is always among the four answers shown.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "narrator",
+          "text": "Away from the house, under the roots of a fallen oak, the ground is soft enough to dig. Whatever goes in here, a fire will not find, and neither will a stranger who does not know to look.",
+          "goto": "what"
+        },
+        "what": {
+          "text": "",
+          "choices": [
+            {"text": "Bury the deer hide.", "once": true, "if": {"item": "deer_hide"}, "do": [{"take": "deer_hide", "n": 1}, {"set": {"tf.cache.deer_hide": 1}}, {"set": "tf.cache"}], "goto": "what"},
+            {"text": "Bury a bar of lead.", "once": true, "if": {"item": "bar_lead"}, "do": [{"take": "bar_lead", "n": 1}, {"set": {"tf.cache.bar_lead": 1}}, {"set": "tf.cache"}], "goto": "what"},
+            {"text": "Bury two pounds of meal.", "once": true, "if": {"item": "cornmeal", "n": 2}, "do": [{"take": "cornmeal", "n": 2}, {"set": {"tf.cache.cornmeal": 2}}, {"set": "tf.cache"}], "goto": "what"},
+            {"text": "That will do.", "goto": [{"if": "tf.cache", "goto": "done"}, {"goto": "empty"}]}
+          ]
+        },
+        "done": {
+          "speaker": "narrator",
+          "text": "You fill the hole, lay the leaves back over it and walk away counting paces, so you will find it again: thirty-one to the corner of the house.",
+          "end": "buried"
+        },
+        "empty": {
+          "speaker": "narrator",
+          "text": "You stand over an empty hole. There is nothing you can spare, or nothing you mean to. You fill it in.",
+          "end": "nothing"
+        }
+      }
+    },
+
+    "raid_alarm": {
+      "_doc": "Mission 9, the slice's raid (docs/main_story.md 10.1): the night falls, the shots. As it opens the step's start effect stages the raid (raid_staged: RaidStage puts those you warned, tf.warned_count, lying low in the fields by their farms, waiting for someone to lead them to the ford). Outcome: run.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "narrator",
+          "text": "Shots. Far off at first, and then not far at all. Then many shots, and dogs, and a cow bellowing somewhere down the bank, and the sky over the farms turns orange.",
+          "goto": [{"if": {"any": ["tf.warned.brenner", "tf.warned.wendel", "tf.warned.ott"]}, "goto": "some"}, {"goto": "none"}]
+        },
+        "some": {
+          "speaker": "narrator",
+          "text": "Whoever listened to you is out in the dark fields now, lying low by their farms, waiting for someone to come for them. The ford is the way across: the fort's side holds.",
+          "choices": [
+            {"text": "Go and get them.", "end": "run"}
+          ]
+        },
+        "none": {
+          "speaker": "narrator",
+          "text": "Nobody you spoke to listened. They are in their beds, or were. Somebody is screaming a name you know, and the ford is the only way across: the fort's side holds.",
+          "choices": [
+            {"text": "Run.", "end": "run"}
+          ]
+        }
+      }
+    },
+
+    "raid_ford": {
+      "_doc": "Mission 9: at the ford. If the Rauchs stayed home, Jost went back for the dog and is taken (tf.jost_taken: taken, never hurt). Then back up the bank: the capture comes at your own clearing. Outcome: back.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "narrator",
+          "text": "At the ford the water is to the knee and loud. People go past you into it with whatever they could carry: a kettle, a child on a hip, a Bible. On the far bank there are torches: men from the fort, come down to the water and no further.",
+          "goto": [{"if": "tf.rauchs_to_fort", "goto": "lantern"}, {"goto": "jost"}]
+        },
+        "jost": {
+          "speaker": "margaretha",
+          "text": "Jost? Jost!",
+          "goto": "jost2"
+        },
+        "jost2": {
+          "speaker": "narrator",
+          "text": "He was behind her on the bank. He went back for the dog. Before you can move, Margaretha is in the water with Anna on her arm, and the dark up the bank has men in it.",
+          "do": {"set": "tf.jost_taken"},
+          "choices": [
+            {"text": "Go back for Jost.", "end": "back"}
+          ]
+        },
+        "lantern": {
+          "speaker": "narrator",
+          "text": "Up the bank behind you a lantern is still moving, where nobody should be.",
+          "choices": [
+            {"text": "Go back up the bank.", "end": "back"}
+          ]
+        }
+      }
+    },
+
+    "raid_taken": {
+      "_doc": "Mission 9: taken at the edge of your own clearing. It opens as the capturing party stands round you (the step names Leclerc, tag leclerc); then, in the world, RaidStage's Leclerc says the line in French, unglossed (RaidStage.LINE: 'Pas celui-là. Il a bâti une maison.', the 10.1 fix), the bonds go on (Captivity) and a marine puts a torch to your roof. The raiders on screen are marines (white coats) and Canadian militia (blanket coats) only. Outcome: taken (the mission's outro_by).",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "narrator",
+          "text": "You get as far as the edge of your own clearing. There are men in the trees, more than you can count: white coats, blanket coats, faces you will see in your sleep. One of them knocks your arm down and takes what was in your hand as if it weighed nothing.",
+          "goto": "butt"
+        },
+        "butt": {
+          "speaker": "narrator",
+          "text": "Another lifts his musket butt. A third, a Canadian in a blanket coat, catches it in his fist and looks at you a long moment. Then past you, at the house, its new roof pale in the firelight.",
+          "end": "taken"
+        }
+      }
+    },
+
+    "march_crust": {
+      "_doc": "Mission 10, The March (docs/main_story.md 10.1), at the raiders' camp on the bank above the upper rapid. On the way Leclerc has shared a crust (MarchStage: 'Tiens. Mange.', item.food.biscuit into the kit). Here: the view (the fort held), Jost if he was taken, the biscuit kept or given to Jost (tf.crust_to_jost; kept, it is the bread you can share with Rook in 12: the first tally moment, 10.6; eaten from the kit meanwhile, it is gone), and his first name. Outcomes: named, quiet.",
+      "_basis": "H: the force stayed through the 13th and drove back a sortie of about 50 (NYCD vol. 10); the fort held.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "narrator",
+          "text": "The camp is on the bank above the upper rapid: fires, kettles, men asleep where they sat down. Across the river, through the trees, a few lights show where the fort is. Its gate stayed shut. Down the bank behind you the farms are still glowing.",
+          "goto": [{"if": "tf.jost_taken", "goto": "jost"}, {"goto": "crust"}]
+        },
+        "jost": {
+          "speaker": "jost",
+          "text": "They let me keep my shoes. Mutter will be angry I went back.",
+          "goto": "crust"
+        },
+        "crust": {
+          "text": "",
+          "goto": [{"if": {"item": "item.food.biscuit"}, "goto": "biscuit"}, {"goto": "name"}]
+        },
+        "biscuit": {
+          "speaker": "narrator",
+          "text": "The Canadian's biscuit is still inside your shirt, hard as a roof slate.",
+          "choices": [
+            {"text": "Give it to Jost.", "if": "tf.jost_taken", "do": [{"take": "item.food.biscuit", "n": 1}, {"set": "tf.crust_to_jost"}], "goto": "jost_ate"},
+            {"text": "Keep it for later.", "goto": "name"}
+          ]
+        },
+        "jost_ate": {
+          "speaker": "narrator",
+          "text": "Jost eats it in four bites, crumbs and all. The Canadian, watching from the fire, looks at the boy and then at you, and says nothing.",
+          "goto": "name"
+        },
+        "name": {
+          "speaker": "narrator",
+          "text": "The Canadian who caught the musket butt comes and crouches beside you with his back to the fire. He does not smile, and he does not look away.",
+          "choices": [
+            {"text": "Touch your chest and say your name.", "goto": "who"},
+            {"text": "Say nothing.", "end": "quiet"}
+          ]
+        },
+        "who": {
+          "speaker": "narrator",
+          "text": "He thinks about it. Then he touches his own.",
+          "goto": "toussaint"
+        },
+        "toussaint": {
+          "speaker": "toussaint",
+          "text": "Toussaint.",
+          "do": {"set": "tf.knows_toussaint"},
+          "goto": "after"
+        },
+        "after": {
+          "speaker": "narrator",
+          "text": "Then he goes back to the fire, and does not look at you again.",
+          "end": "named"
+        }
+      }
+    },
+
+    "camp_fire": {
+      "_doc": "Mission 11, Two Fires (docs/main_story.md 10.2): the night of 12-13 November. Leclerc repeats his words to a marine, still unreadable; the marine gives his surname. It ends on the sky, the same sky as ever: the step's effect then drops the second fire (wreck_fall), seen in the world, not told. Outcome: looked_up.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "narrator",
+          "text": "Night. They let the captives sit near enough to the fires to live. At the nearest one the Canadian is talking with a marine in a white coat with blue cuffs, who looks your way and asks something.",
+          "goto": "marine"
+        },
+        "marine": {
+          "speaker": "marine",
+          "text": "Et celui-là ? Pourquoi on traîne celui-là ?",
+          "goto": "line"
+        },
+        "line": {
+          "speaker": "canadian",
+          "text": "Pas celui-là. Il a bâti une maison.",
+          "goto": "marine2"
+        },
+        "marine2": {
+          "speaker": "marine",
+          "text": "Une maison ! Tu es trop tendre, Leclerc.",
+          "goto": "named"
+        },
+        "named": {
+          "speaker": "narrator",
+          "text": "Leclerc. So that is the rest of his name.",
+          "do": {"set": "tf.knows_leclerc"},
+          "goto": "sky"
+        },
+        "sky": {
+          "speaker": "narrator",
+          "text": "You look up, because the sky is the one thing they have not taken. The same stars you have watched for six weeks from your own door. The pole star. The Wain, turning round it.",
+          "end": "looked_up"
+        }
+      }
+    },
+
+    "camp_scatters": {
+      "_doc": "Mission 11: the camp scatters after the fall. Slip your bonds, with Jost or without him (docs/main_story.md 10.2): tf.jost_free (he comes home with you) or tf.jost_held (marched on to Canada; Montreal, 7.4; aboard the Albany Venture in 33). Outcomes: with_jost, alone.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "narrator",
+          "text": "Every man at every fire is on his feet, half of them running for the pines with their muskets and the other half shouting at them to stop. Nobody is watching the captives. Above the camp the sky hangs open like a broken window, and something vast and ringed looks down through it. Leclerc is staring at the place where the fire came down.",
+          "goto": [{"if": "tf.jost_taken", "goto": "jost"}, {"goto": "slip_alone"}]
+        },
+        "jost": {
+          "speaker": "jost",
+          "text": "Was ist das? What was that?",
+          "choices": [
+            {"text": "Take Jost's hand and slip away with him.", "do": {"set": "tf.jost_free"}, "goto": "slip_with"},
+            {"text": "Tell Jost to stay. Alone you can be quick.", "do": {"set": "tf.jost_held"}, "goto": "stay"}
+          ]
+        },
+        "stay": {
+          "speaker": "jost",
+          "text": "I will stay. I will be good. Come back.",
+          "goto": "stay2"
+        },
+        "stay2": {
+          "speaker": "narrator",
+          "text": "You will hear that for a long time.",
+          "goto": "slip_alone"
+        },
+        "slip_alone": {
+          "speaker": "narrator",
+          "text": "The strap on your wrists was tied by a tired man. It takes you three tries.",
+          "end": "alone"
+        },
+        "slip_with": {
+          "speaker": "narrator",
+          "text": "The strap on your wrists was tied by a tired man. It takes you three tries. Jost's takes one.",
+          "end": "with_jost"
+        }
+      }
+    },
+
+    "leclerc_turns": {
+      "_doc": "Mission 11: only when the escape is seen (the stay_unseen step's fail_outcome 'seen'): it is Leclerc who sees, and turns his back (tf.leclerc_let_go: his conscience, his chain in 9.4). A fail made a beat, not a retry. Outcome: let_go.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "narrator",
+          "text": "At the edge of the firelight you come face to face with Leclerc. He has his musket. He looks at you, and at the pines where the fire is, and up at the sky. Then he turns his back on you and walks away toward the river, slowly, like a man who has seen nothing at all.",
+          "end": "let_go"
+        }
+      }
+    },
+
+    "wreck_smoke": {
+      "_doc": "Mission 11, the reveal (docs/main_story.md 6.3, 10.2): the burning keel's smoke, under a sky already broken open (the sky battle at the camp opened it: SkyTear, the flag wonder); the next step looks up at it (8 s) while the player has control. Outcome: breathed.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "narrator",
+          "text": "The ship lies broken across the pines: a ship, a real one, masts and rigging and a hull of planks, as if the sea had come all this way inland to drop it here. Under it, where a keel should be, lies a long pale stone, cracked and glowing like a coal, and a thin gold smoke comes off the crack that does not rise as smoke should. It pours along the ground toward you.",
+          "choices": [
+            {"text": "Breathe.", "end": "breathed"},
+            {"text": "Cover your mouth and go closer.", "goto": "cover"}
+          ]
+        },
+        "cover": {
+          "speaker": "narrator",
+          "text": "It makes no difference. It is in your eyes, your throat, your hair. It tastes like honey on a burn.",
+          "end": "breathed"
+        }
+      }
+    },
+
+    "wreck_spar": {
+      "_doc": "Mission 11: Captain Ithel dying, a stranger pinned under a spar (Rook, unnamed). 'Hold it in your eye. All of it.' (docs/main_story.md 10.2): the lesson for the first lock, which borrows the burning keel (11.2: not a move you keep). Outcome: lock.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "narrator",
+          "text": "Someone is calling, in a voice that is all breath. Two people by the broken hull: one sat against it, very still, in a long coat, and one flat on his back with a spar as thick as your thigh across his legs, alive and furious about it.",
+          "goto": "officer"
+        },
+        "officer": {
+          "speaker": "ithel_unknown",
+          "text": "You. You see it. You can see it, can't you? Up there.",
+          "choices": [
+            {"text": "I see it.", "goto": "pinned"},
+            {"text": "What is it?", "goto": "what"}
+          ]
+        },
+        "what": {
+          "speaker": "ithel_unknown",
+          "text": "Home. Mine, not yours. Never mind. There is no time.",
+          "goto": "pinned"
+        },
+        "pinned": {
+          "speaker": "stranger",
+          "text": "If the two of you are done admiring the view, there's a spar on my legs.",
+          "goto": "lesson"
+        },
+        "lesson": {
+          "speaker": "stranger",
+          "text": "No, don't try to lift it, you'll break your back and then there'll be two of us. Look at it. Hold it in your eye. All of it, every grain, until it's the only thing there is. The keel's still burning. It will do the rest.",
+          "end": "lock"
+        }
+      }
+    },
+
+    "ithel": {
+      "_doc": "Mission 11, after the first lock (the lock step sets tf.spar_lifted). Ithel gives the Wayglass: 'Take it to the Ninth Lantern. No one else.' (docs/main_story.md 10.2), eyes on the stranger. Then the coal of the keel into the tinderbox from Fire (tf.tinderbox): the second fire (tf.keel_coal; the motes' free floor, 11.3). tf.wayglass: the glass sewn into the coat lining (9.1); item.tf_wayglass is the item to come. The same conversation is the captain's contact (WreckFall.ITHEL_CONVO, E on the captain), so it can be opened before the lock (not_yet) and after the death (after). Outcomes: glass, not_yet, after.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "text": "",
+          "goto": [{"if": "tf.wayglass", "goto": "after"}, {"if": "tf.spar_lifted", "goto": "lifted"}, {"goto": "not_yet"}]
+        },
+        "not_yet": {
+          "speaker": "ithel_unknown",
+          "text": "Him first. The spar. He is my prisoner, and I will not lose him to a tree.",
+          "end": "not_yet"
+        },
+        "after": {
+          "speaker": "narrator",
+          "text": "The captain sits against the broken hull with open eyes full of the sky.",
+          "end": "after"
+        },
+        "lifted": {
+          "speaker": "narrator",
+          "text": "The spar lifts as if the air under it had thickened. It hangs there, turning slowly, and the stranger drags himself out from under it, swearing in three languages. Then it falls, and the ground jumps again.",
+          "goto": "name"
+        },
+        "name": {
+          "speaker": "ithel",
+          "text": "Ithel. Captain. Candlewake. That was my ship.",
+          "goto": "glass"
+        },
+        "glass": {
+          "speaker": "ithel",
+          "text": "Here. Sewn in my coat. Take it. Take it to the Ninth Lantern. No one else.",
+          "choices": [
+            {"text": "Where is the Ninth Lantern?", "goto": "where"},
+            {"text": "I will.", "do": {"set": "tf.promised_ithel"}, "goto": "gone"},
+            {"text": "Take it, and say nothing.", "goto": "gone"}
+          ]
+        },
+        "where": {
+          "speaker": "ithel",
+          "text": "Up. You will see it. You will see everything now. No one else.",
+          "goto": "gone"
+        },
+        "gone": {
+          "speaker": "narrator",
+          "text": "The captain's eyes go to the stranger as the words are said, and stay there. Then the captain is gone, between one breath and the next, with the ringed world turning in the sky above. In your hand is a small heavy disc of glass in a brass rim, warm as if it had been held a long time.",
+          "do": {"set": "tf.wayglass"},
+          "goto": [{"if": "tf.tinderbox", "goto": "coal_box"}, {"goto": "coal_cloth"}]
+        },
+        "coal_box": {
+          "speaker": "narrator",
+          "text": "The keel is still burning. You do not decide to do it. You find the little tin tinderbox in your shirt, the one thing they did not think worth taking, scoop a coal of the burning stone into it and shut the lid. It is warm against your ribs. It stays warm.",
+          "do": {"set": "tf.keel_coal"},
+          "end": "glass"
+        },
+        "coal_cloth": {
+          "speaker": "narrator",
+          "text": "The keel is still burning. You break a smouldering chip off the stone with a stick and wrap it in a scrap of the captain's coat. It is warm against your ribs. It stays warm.",
+          "do": {"set": "tf.keel_coal"},
+          "end": "glass"
+        }
+      }
+    },
+
+    "rook_free": {
+      "_doc": "Mission 12, The Man with No Shadow (docs/main_story.md 10.2): Rook names himself (not his real name: Matthias Raab, Act 4) and offers to walk you to the fort. If you learned Anna's hymn, its German makes him look up (the tar camps; the hymn itself is for his fever night in Ash). Outcome: walk.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "stranger",
+          "text": "Well. That's a debt, and I hate a debt.",
+          "goto": "name"
+        },
+        "name": {
+          "speaker": "rook",
+          "text": "They call me Rook. It isn't my name, but it's what I answer to. And that was Captain Ithel, who caught me fair and square and was taking me home to hang, and who deserved better than a pine tree. Say a word over the captain, if you know one.",
+          "choices": [
+            {"text": "Say a prayer.", "goto": [{"if": "tf.knows_hymn", "goto": "pray_hymn"}, {"goto": "pray"}]},
+            {"text": "Hang? For what?", "goto": "hang"},
+            {"text": "The French will be here soon.", "goto": "soon"}
+          ]
+        },
+        "pray_hymn": {
+          "speaker": "narrator",
+          "text": "The only words that come are Anna's: und wer allein nun wachen will. Rook's head comes up sharply at the German, as if you had called him by name. Then it goes down again.",
+          "goto": "go"
+        },
+        "pray": {
+          "speaker": "narrator",
+          "text": "You say what you remember of a prayer. Rook listens with his hat in his hand, and says amen in a language you do not know.",
+          "goto": "go"
+        },
+        "hang": {
+          "speaker": "rook",
+          "text": "For carrying things between places that would rather not be joined. Smuggling, your magistrates would call it. Mine call it worse.",
+          "goto": "go"
+        },
+        "soon": {
+          "speaker": "rook",
+          "text": "They're Frenchmen in the dark with a burning ship in front of them. They'll come slowly, and they'll come praying. We'll be gone.",
+          "goto": "go"
+        },
+        "go": {
+          "speaker": "rook",
+          "text": "Your fort's across the river? Then walk with me, and I'll walk with you, and between us we'll make one sensible person.",
+          "end": "walk"
+        }
+      }
+    },
+
+    "rook_ford": {
+      "_doc": "Mission 12 at the ford: share your bread or don't (the first tally moment, docs/main_story.md 10.6: tf.rook_tally 1, tf.tally.bread; it exists only if Leclerc's biscuit is still in your kit), repeat the captor's words and hear them glossed (tf.knows_house_words: 'Not that one. He built a house.', 6.3 point 8), and by the moon see that he casts no shadow. tf.rook_gusted: RookWalk's wolves came and Rook drove them off (the integrator sets it on wolves_fled). Outcome: ford.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "text": "",
+          "goto": [{"if": "tf.rook_gusted", "goto": "gusted"}, {"goto": "quiet"}]
+        },
+        "gusted": {
+          "speaker": "narrator",
+          "text": "Back at the field the wolves went over like leaves in a gale, though there was no gale. Rook has not said a word about it since.",
+          "goto": "sit"
+        },
+        "quiet": {
+          "speaker": "rook",
+          "text": "A quiet road, for a night like this one. I'll take it, and say thank you to nobody in particular.",
+          "goto": "sit"
+        },
+        "sit": {
+          "speaker": "narrator",
+          "text": "At the ford Rook sits down on a stone like an old man and rubs his legs where the spar was. The water is loud. Across it, the fort's torches.",
+          "goto": [{"if": {"item": "item.food.biscuit"}, "goto": "bread"}, {"goto": "talk"}]
+        },
+        "bread": {
+          "text": "",
+          "choices": [
+            {"text": "Share the Canadian's biscuit with him.", "do": [{"take": "item.food.biscuit", "n": 1}, {"set": {"tf.rook_tally": 1}}, {"set": "tf.tally.bread"}], "goto": "shared"},
+            {"text": "Keep it.", "goto": "kept"}
+          ]
+        },
+        "shared": {
+          "speaker": "rook",
+          "text": "Canadian biscuit. You can always tell: it fights back. Thank you. I'll remember it.",
+          "goto": "talk"
+        },
+        "kept": {
+          "speaker": "narrator",
+          "text": "He sees you not offer it. He says nothing at all.",
+          "goto": "talk"
+        },
+        "talk": {
+          "text": "",
+          "choices": [
+            {"text": "When they took me, one of them said: Pas celui-là. Il a bâti une maison.", "once": true, "goto": "words"},
+            {"text": "Who are you, really?", "once": true, "goto": "really"},
+            {"text": "We should cross.", "goto": "shadow"}
+          ]
+        },
+        "words": {
+          "speaker": "rook",
+          "text": "Did he? Sailors' French is all I have, but that's plain enough. 'Not that one. He built a house.'",
+          "do": {"set": "tf.knows_house_words"},
+          "goto": "words2"
+        },
+        "words2": {
+          "speaker": "rook",
+          "text": "Your house saved your life. Remember that, the next time somebody tells you a house is only logs.",
+          "goto": "talk"
+        },
+        "really": {
+          "speaker": "rook",
+          "text": "Someone who's been away a long time. Longer than you'd believe if I told you, so I won't. Not tonight.",
+          "goto": "talk"
+        },
+        "shadow": {
+          "speaker": "narrator",
+          "text": "He gets up. The moon has come out from behind the cloud, full on the frosted bank, and every post and stone and reed throws a long blue shadow toward the water. Yours goes out ahead of you. Beside his boots there is nothing at all.",
+          "end": "ford"
+        }
+      }
+    },
+
+    "register_told": {
+      "_doc": "Ash told (m.tf.ash_told), until Ash (13) has the burned layer: Dominie Ehrhardt reads the register of the dead and taken and strikes your name (docs/main_story.md 10.2), read before the wreck hunt (7.5 rule 4). Which named neighbours live is the hidden count's payoff (tf.warned.<family>: ready, out in the field, over the ford); the totals never change (7.5 rule 3). RaidStage leaves unsaved whoever was still waiting when you were taken (tf.raid_saved counts the saved): if the register should lose them too, clear their tf.warned.<family> as the raid ends (RaidStage knows the farm each waited by). The dead are told, not shown; no child is harmed (16.2): Jost is taken at most. Outcome: read.",
+      "_basis": "H: about 40 killed or drowned and nearly 150 taken (verify every figure before release). The names are invented (D).",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "narrator",
+          "text": "Days later, at the fort's gate, in the cold, Dominie Ehrhardt reads the register of the dead and the taken, one name at a time, and the people who are left listen for their own.",
+          "goto": [{"if": "tf.warned.brenner", "goto": "b_live"}, {"goto": "b_lost"}]
+        },
+        "b_live": {
+          "speaker": "narrator",
+          "text": "Konrad and Liesel Brenner were out in their field in their clothes when the raiders reached the house. Their barn is ash. They are not in the book.",
+          "goto": "w"
+        },
+        "b_lost": {
+          "speaker": "dominie",
+          "text": "Konrad Brenner, cooper, killed at his own door. Liesel Brenner, his wife: taken.",
+          "goto": "w"
+        },
+        "w": {
+          "text": "",
+          "goto": [{"if": "tf.warned.wendel", "goto": "w_live"}, {"goto": "w_lost"}]
+        },
+        "w_live": {
+          "speaker": "narrator",
+          "text": "The widow Wendel and her sons lay in the frozen field behind the cow pen until the shooting moved off, and the Flatts laughed at her boots for a week before that. They are not in the book.",
+          "goto": "o"
+        },
+        "w_lost": {
+          "speaker": "dominie",
+          "text": "Philipp Wendel, drowned at the ford. Barbara Wendel and Adam Wendel: taken.",
+          "goto": "o"
+        },
+        "o": {
+          "text": "",
+          "goto": [{"if": "tf.warned.ott", "goto": "o_live"}, {"goto": "o_lost"}]
+        },
+        "o_live": {
+          "speaker": "narrator",
+          "text": "Hans Ott and his son lay out in the stubble in their boots and came over the ford at dawn, grumbling. He is telling everyone that he always said so.",
+          "goto": "r"
+        },
+        "o_lost": {
+          "speaker": "dominie",
+          "text": "Hans Ott, killed. Michel Ott, his son: taken.",
+          "goto": "r"
+        },
+        "r": {
+          "text": "",
+          "goto": [{"if": "tf.rauchs_to_fort", "goto": "r_safe"}, {"if": "tf.jost_free", "goto": "r_back"}, {"goto": "r_taken"}]
+        },
+        "r_safe": {
+          "speaker": "narrator",
+          "text": "The Rauchs slept in the blockhouse with the soldiers' dogs, and Margaretha's husband came through the ford at a run with their own dog under his arm. Their house is ash. Nobody of that house is in the book.",
+          "goto": "you"
+        },
+        "r_back": {
+          "speaker": "dominie",
+          "text": "Jost Rauch, aged nine: taken.",
+          "goto": "r_back2"
+        },
+        "r_back2": {
+          "speaker": "narrator",
+          "text": "Margaretha stands up and says, loud enough for the back of the crowd, that he is not: he is asleep in the fort, because somebody brought him back. The dominie strikes it through.",
+          "goto": "you"
+        },
+        "r_taken": {
+          "speaker": "dominie",
+          "text": "Jost Rauch, aged nine: taken.",
+          "goto": "r_taken2"
+        },
+        "r_taken2": {
+          "speaker": "narrator",
+          "text": "Margaretha does not make a sound. Anna holds her arm.",
+          "goto": "you"
+        },
+        "you": {
+          "speaker": "dominie",
+          "text": "And the newcomer from the spring, whose name I do not have: taken.",
+          "goto": "struck"
+        },
+        "struck": {
+          "speaker": "narrator",
+          "text": "Then he looks up from the book and sees you in the crowd. After a moment he takes his pen and strikes it through.",
+          "goto": "totals"
+        },
+        "totals": {
+          "speaker": "narrator",
+          "text": "Forty or so dead or drowned. Nearly a hundred and fifty taken. The French have gone west with them. The fort still stands.",
+          "end": "read"
+        }
+      }
+    },
+
+    "rook_lesson": {
+      "_doc": "Mission 14, First Lesson (docs/main_story.md 10.2, 11): Rook teaches Gust on the frozen river at dusk ('The Drift rewards long patience': his rule of the lock, 9.2). The mission's effect grants the move (sway_grant) as the talk shuts. Outcome: lesson.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "rook",
+          "text": "Here's the whole of it, and it takes a lifetime. Your empty hand, ready. Look at the thing. Hold it in your eye the way you held the spar, and don't let go of it until it's yours. Then push.",
+          "goto": "patience"
+        },
+        "patience": {
+          "speaker": "rook",
+          "text": "People who give things names call it Gust. The Drift rewards long patience, and so does this. Let go too soon and you've only waved at it.",
+          "choices": [
+            {"text": "The Drift?", "goto": "drift"},
+            {"text": "Show me.", "end": "lesson"}
+          ]
+        },
+        "drift": {
+          "speaker": "rook",
+          "text": "What you saw over the pines. The sea above the sky. Sailors call it the Drift. Later. Lantern first.",
+          "end": "lesson"
+        }
+      }
+    },
+
+    "rook_motes": {
+      "_doc": "Mission 14, after the three locks: the tinderbox's coal breathes motes back (docs/main_story.md 11.3, the free floor). Outcome: done.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "narrator",
+          "text": "The tinderbox has gone warm against your ribs. Open it, and the coal inside is breathing out grains of pale light, slow as a sleeper: one, and then another.",
+          "goto": "rook"
+        },
+        "rook": {
+          "speaker": "rook",
+          "text": "Motes. The keel gives back what you spend, a little at a time, as long as you keep it. Don't lose that box.",
+          "goto": "rook2"
+        },
+        "rook2": {
+          "speaker": "rook",
+          "text": "That's the first thing. There are others, and none of them are for down here. Go and get warm. I'll be in the cellar, admiring the ash.",
+          "end": "done"
+        }
+      }
+    },
+
+    "vane_wall": {
+      "_doc": "Mission 14, that night on the fort's wall: Vane is Sighted (docs/main_story.md 9.3: he breathed keelstone smoke at eleven, in his father's counting house, from Rook's shore trade). 'Beautiful, isn't she? I was eleven.' The man with no shadow he names is Rook. Outcome: vane.",
+      "start": "start",
+      "nodes": {
+        "start": {
+          "speaker": "narrator",
+          "text": "From the fort's wall the ringed world stands over the pines across the river, enormous, turning round the pole star as it has every night since the wreck. Below you the sentry stamps his feet and does not look up.",
+          "goto": "vane"
+        },
+        "vane": {
+          "speaker": "vane",
+          "text": "Beautiful, isn't she?",
+          "goto": "beside"
+        },
+        "beside": {
+          "speaker": "narrator",
+          "text": "Silas Vane is beside you on the wall in a good coat, his hands behind his back, looking where you are looking. Not at the stars. At it.",
+          "goto": "eleven"
+        },
+        "eleven": {
+          "speaker": "vane",
+          "text": "I was eleven. My father bought some stones from a man who did not cast a shadow, and burned one in the counting house to see what it would do.",
+          "choices": [
+            {"text": "You can see it.", "goto": "see"},
+            {"text": "What man?", "goto": "man"},
+            {"text": "Say nothing.", "goto": "quiet"}
+          ]
+        },
+        "see": {
+          "speaker": "vane",
+          "text": "Every night of my life since. You'll find there are not many of us. It is lonely, at first. It needn't be.",
+          "goto": "bye"
+        },
+        "man": {
+          "speaker": "vane",
+          "text": "Oh, nobody you would know. He would be very old by now.",
+          "goto": "bye"
+        },
+        "quiet": {
+          "speaker": "vane",
+          "text": "Quite right. It is better seen than talked about.",
+          "goto": "bye"
+        },
+        "bye": {
+          "speaker": "vane",
+          "text": "Come and see me at the store when you have thought about it. We should talk, you and I, about what a person can do with a sky like that.",
+          "do": {"set": "tf.vane_sighted"},
+          "end": "vane"
+        }
+      }
+    }
+  }
+}

@@ -6,14 +6,14 @@ extends CanvasLayer
 ## by the way it is moved (the camera does not turn meanwhile); a left click takes the one picked (user "its left
 ## click to equip right"), and so does letting go of Q. Moving the mouse less than PICK_MIN px picks nothing: letting
 ## go then changes nothing. The weapon in the hands takes no fire / aim input while the wheel is open, nor while the
-## click that closed it is still held (blocks_fire()). 1-6, 7 (the tool button), T, H and the
-## mouse wheel keep working as before.
+## click that closed it is still held (blocks_fire()). 1-9 (the hotbar), T, H and the mouse wheel keep working as before.
 ##
 ##   EquipWheel.install(player)      # FrontierPlayer does it
 ##
-## Slots, clockwise from the top: the weapons in the player's order (FrontierPlayer.weapon_order), the tools the player
-## owns (GatherTools.ORDER), the torch (PlayerTorch), bare hands (H). A slot that cannot be taken now (a thrown weapon
-## with none left, no torch in the pack) is shown dimmed and cannot be picked.
+## Slots, clockwise from the top: only what is on the hotbar (the owner, 2026-10-02: the wheel "lists only hotbar
+## entries"; Hotbar), in its slots' order: a weapon "w:<key>", a tool "t:<kind>", a spell "s:<id>"; then bare hands (H).
+## Taken through the hotbar (Hotbar.take: as its number key, never a toggle). A slot that cannot be taken now is shown
+## dimmed and cannot be picked.
 
 const ACTION := &"equip_wheel"
 const KEY := KEY_Q
@@ -29,7 +29,7 @@ const COL_TEXT := Color(0.96, 0.9, 0.78)
 const COL_DIM := Color(0.6, 0.55, 0.5, 0.45)
 
 var player: FrontierPlayer
-## [{id: "w:<key>" | "t:<tool>" | "torch" | "hands", kind (icon), name, usable, note}]
+## [{id: "w:<key>" | "t:<tool>" | "s:<spell>" | "hands", slot (the hotbar's, -1 for hands), kind (icon), name, usable, note}]
 var slots: Array = []
 var sel := -1
 var is_open := false
@@ -167,57 +167,48 @@ func pick_toward(d: Vector2) -> void:
 	_refresh()
 
 
-## Takes `s`: a weapon (drawn, or the tool / torch put away first), a tool, the torch, or bare hands.
+## Takes `s`: a hotbar slot's thing (Hotbar.take), or bare hands.
 func take_slot(s: Dictionary) -> void:
-	var id := String(s.id)
-	var g: GatherTools = player.gather if player.get("gather") != null else null
-	if id.begins_with("w:"):
-		var key := id.trim_prefix("w:")
-		if g != null and g.in_hand() != "":
-			g.put_away()
-		if key == player.weapon_key and player.hands_free:
-			player._draw_from_hands_free()
+	var hb: Hotbar = player.hotbar
+	var i := int(s.get("slot", -1))
+	if String(s.id) == "hands":
+		if hb != null:
+			hb.hands_free()
 		else:
-			player.switch_weapon(key)
-	elif id.begins_with("t:"):
-		if g != null:
-			g.take_out(id.trim_prefix("t:"))
-	elif id == "torch":
-		var t: PlayerTorch = player.get("torch")
-		if t != null and not t.holding():
-			t.take_out()
-	elif id == "hands":
-		if g != null and g.in_hand() != "":
-			g.put_away()
-		if not player.hands_free:
-			player.toggle_hands_free()
+			var g: GatherTools = player.gather if player.get("gather") != null else null
+			if g != null and g.in_hand() != "":
+				g.put_away()
+			if not player.hands_free:
+				player.toggle_hands_free()
+	elif hb != null and i >= 0:
+		hb.take(i)
 
 
+## The hotbar's filled slots in order, then bare hands.
 func _build_slots() -> void:
 	slots.clear()
-	for key: String in player.weapon_order:
-		if not player.weapons.has(key):
-			continue
-		var kind := String(InventoryState.KIND_OF_KEY.get(key, key))
-		var w: Weapon = player.weapons[key]
-		var note := ""
-		if w is Throwable:
-			note = "x%d" % (w as Throwable).count
-		var ok := player.is_usable(key)
-		if not ok:
-			note = "none left" if w is Throwable else "not carried"
-		slots.append({"id": "w:" + key, "kind": kind, "name": InventoryState.name_of(kind), "usable": ok, "note": note})
-	var g: GatherTools = player.gather if player.get("gather") != null else null
-	if g != null:
-		for t: String in GatherTools.ORDER:
-			if g.owns(t):
-				slots.append({"id": "t:" + t, "kind": t, "name": InventoryState.name_of(t), "usable": true, "note": ""})
-	var torch: PlayerTorch = player.get("torch")
-	if torch != null:
-		var has := torch.holding() or torch.count() > 0
-		slots.append({"id": "torch", "kind": "torch", "name": InventoryState.name_of("torch"), "usable": has and not torch.holding(),
-				"note": "in hand" if torch.holding() else ("x%d" % torch.count() if torch.count() > 0 else "none left")})
-	slots.append({"id": "hands", "kind": "", "name": "Hands free", "usable": true, "note": "H"})
+	var hb: Hotbar = player.hotbar
+	if hb != null:
+		for i in Hotbar.SLOTS:
+			var e := hb.entry(i)
+			if e.is_empty():
+				continue
+			var id := String(e.id)
+			var kind := hb.icon_kind(i)
+			var note := "%d" % (i + 1)
+			var ok := true
+			match String(e.kind):
+				Hotbar.WEAPON:
+					var w: Weapon = player.weapons.get(id)
+					if w is Throwable:
+						note += "  x%d" % (w as Throwable).count
+					ok = player.is_usable(id)
+					slots.append({"id": "w:" + id, "slot": i, "kind": kind, "name": hb.label(i), "usable": ok, "note": note})
+				Hotbar.TOOL:
+					slots.append({"id": "t:" + id, "slot": i, "kind": kind, "name": hb.label(i), "usable": true, "note": note})
+				Hotbar.SPELL:
+					slots.append({"id": "s:" + id, "slot": i, "kind": "", "name": hb.label(i), "usable": true, "note": note})
+	slots.append({"id": "hands", "slot": -1, "kind": "", "name": "Hands free", "usable": true, "note": "H"})
 
 
 # --- drawing ---------------------------------------------------------------------------------------------------

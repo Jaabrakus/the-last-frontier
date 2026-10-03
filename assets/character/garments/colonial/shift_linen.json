@@ -121,7 +121,7 @@
  "stats": {
   "surfaces": {
    "main": {
-    "tris": 5655,
+    "tris": 5654,
     "verts": 3043,
     "zones": [
      0,
@@ -186,7 +186,7 @@
     ]
    }
   },
-  "tris": 5655,
+  "tris": 5654,
   "verts": 3043,
   "surface_count": 1,
   "shapes": {
@@ -312,7 +312,7 @@
     "cone": 0.531
    }
   },
-  "glb_kb": 692.9
+  "glb_kb": 702.5
  },
  "budget": {
   "tris_max": 4400

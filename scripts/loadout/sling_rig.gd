@@ -3094,8 +3094,9 @@ func _sync_player(_dt_s: float, first := false) -> void:
 		if id == "":
 			continue
 		var w: Weapon = p.weapons[key]
-		# a weapon the player put down in the world (PlayerInteractor): nothing of it on the body
-		if p.has_method("is_carried") and not p.is_carried(key):
+		# a weapon the player put down in the world (PlayerInteractor): nothing of it on the body; nor of one kept off
+		# the hotbar (Hotbar: it is in the pack)
+		if (p.has_method("is_carried") and not p.is_carried(key)) or not Hotbar.allows(p, key):
 			if mode_of(id) != Mode.STOWED:
 				snap_stowed(id)
 			_set_present(id, false)

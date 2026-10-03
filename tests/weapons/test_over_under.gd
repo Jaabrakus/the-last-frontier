@@ -247,6 +247,12 @@ func _boot() -> bool:
 		return false
 	player.ignore_mouse_capture = true
 	await _frames(30)
+	# (a weapon gained goes to the pack, never onto the hotbar by itself: put on its last slot, as the player would drag it;
+	# Hotbar, the owner 2026-10-02: "pickups shouldnt auto fill")
+	OverUnderKit.install(player, true)
+	var hb := Hotbar.find(player)
+	if hb != null:
+		hb.assign(Hotbar.SLOTS - 1, Hotbar.make("weapon", "over_under"))
 	w = OverUnderKit.select(player)
 	_check(w != null and player.weapons.get("over_under") == w and "over_under" in player.weapon_order,
 			"OverUnderKit.install: in player.weapons and weapon_order")

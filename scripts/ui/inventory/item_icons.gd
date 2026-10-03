@@ -269,6 +269,8 @@ func _model(kind: String) -> Node3D:
 		return FishModels.build(kind)
 	if GearModels.has(kind):
 		return GearModels.build(kind)
+	if FormModels.has(kind):
+		return FormModels.build(kind)        # (the hotbar's Form spells: the effect over its circle, SwayCaster.spell_icon)
 	match kind:
 		"musket", "pistol":
 			return WeaponModels.build(kind)

@@ -64,8 +64,8 @@ var _clock_t := 0.0
 ## The joiner's own save's world parts (its homestead), kept in its saves while it plays in the host's world.
 static var own_world := {}
 ## Parts of a save that are the world (the host's in a session), not the character.
-const WORLD_PARTS := ["sky", "vegetation", "building", "fort", "items", "forage"]
-const ALL_WORLD := ["sky", "vegetation", "building", "fort", "items", "wildlife", "horse", "wheelbarrow", "cart", "forage",
+const WORLD_PARTS := ["sky", "vegetation", "building", "fort", "fire", "items", "forage"]
+const ALL_WORLD := ["sky", "vegetation", "building", "fort", "fire", "items", "wildlife", "horse", "wheelbarrow", "cart", "forage",
 		"household", "story", "death"]
 const CLOCK_S := 2.0
 var _target := {}                    ## peer id -> the last state they sent
@@ -536,6 +536,7 @@ func world_doc() -> Dictionary:
 			"vegetation": parts[part] = SaveParts.save_vegetation(lv)
 			"building": parts[part] = SaveParts.save_building(lv)
 			"fort": parts[part] = SaveParts.save_fort(lv)
+			"fire": parts[part] = SaveParts.save_fire(lv)
 			"items": parts[part] = SaveParts.save_items(lv)
 			"forage": parts[part] = SaveParts.save_forage(lv)
 	return SaveParts.plain({"parts": parts, "bare": SurvivalBridge.bare_of(get_tree()), "clock": _clock()})
@@ -593,6 +594,8 @@ func _apply_world(doc: Dictionary) -> void:
 		SaveParts.load_building(level, parts.building)
 	if parts.has("fort"):
 		SaveParts.load_fort(level, parts.fort)
+	if parts.has("fire"):
+		SaveParts.load_fire(level, parts.fire)       # (the host's fires and ruins, after its pieces)
 	if parts.has("items"):
 		SaveParts.load_items(level, parts.items)
 	if parts.has("forage"):
@@ -673,6 +676,18 @@ func _do_event(kind: String, d: Dictionary) -> void:
 			var p := _piece(String(d.key))
 			if w and p:
 				w.remove_piece(p)
+		"ignite":
+			# a piece caught fire there (FireSpread): alight here too (it burns, spreads and falls here on its own)
+			var f := FireSpread.of(get_tree())
+			var p := _piece(String(d.key))
+			if f and p:
+				f.ignite(p, SaveParts.to_v3(d.get("at"), Vector3.INF))
+		"put_out":
+			# beaten out there (FireSpread.put_out): out here too
+			var fo := FireSpread.find(get_tree())
+			var po := _piece(String(d.key))
+			if fo and po:
+				fo.put_out(po, true)
 	applying = false
 
 

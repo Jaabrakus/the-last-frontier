@@ -10,8 +10,10 @@ extends CanvasLayer
 ##                  torch's burn (the pack's torches). The rest of the body (food, warmth, wet, the lasting harms, drink
 ##                  and tobacco) is in the Tab screen's Condition tab (user 2026-09-27: "i like the right more actually
 ##                  and a blue bar under it for rested the other badges users can look in the tab to find")
-##   bottom right   the slot strip (1-6 the weapons, 7 the tools): bare icons, the one in the hands bright with a gold
-##                  rule under it, the rest dimmed; one small line under it with the weapon's ammo and state
+##   bottom right   the hotbar (Hotbar; user 2026-10-02: "if nothing is equipped then nothing shows in the toolbar"):
+##                  only its filled slots, each with its number: bare icons (a spell's circle drawn), the one in the
+##                  hands bright with a gold rule under it, the rest dimmed; nothing at all when the bar is empty; one
+##                  small line under it with the weapon's ammo and state (a readied spell: its name and the motes)
 ##   top centre     the compass: a thin line fading at its ends, N E S W on it, a gold notch at the heading; the date
 ##                  and time under it (WorldClock), the sun or the moon
 ##   right          toasts sliding in: what gathering gives ("+2 Firewood", the item's picture) and skill levels
@@ -48,7 +50,7 @@ const RESTED := Color(0.55, 0.72, 1.0)
 ## Game hours of the sleep's boost that fill the rested bar (eight hours slept; a better sleep keeps it full longer).
 const REST_FULL_H := SurvivalBridge.REST_MAX_SLEPT_H * SurvivalBridge.REST_H_PER_H
 const HELP := "WASD move · Shift sprint · Ctrl/C crouch (toggle) · Space jump / climb\n" \
-		+ "1-6 or wheel: weapons · 7: tools · hold Q: equip wheel · E use (hold E: all there is to do) · T torch · B build\n" \
+		+ "1-9 or wheel: the hotbar (Tab: put things on it) · hold Q: equip wheel · E use (hold E: all there is to do) · T torch · B build\n" \
 		+ "LMB hold to aim, release to fire · RMB raise / steady aim (bow: let down) · R reload\n" \
 		+ "Z rest, hold Z sleep (a lean-to and a fire make it better) · V eat · F cook at a lit campfire\n" \
 		+ "T: tap light / raise, hold put away, double-tap set or throw it (click)  ·  hold U drink · hold Y smoke a pipe\n" \
@@ -94,7 +96,8 @@ var _need_icons := {}             ## need id -> TextureRect
 var _needs_t := 0.0
 var _ammo: Label                  ## the weapon's ammo and state under the slot strip (one small line)
 var _slots_row: HBoxContainer
-var _slot_boxes: Array = []      ## [Control (meta active), TextureRect (meta kind), Label]
+var _slots_box: Control           ## the strip and its line with their shade (hidden when neither shows anything)
+var _slot_boxes: Array = []      ## [Control (meta active, meta spell), TextureRect (meta kind), Label]
 var _compass: Control
 var _clock: Label
 var _clock_icon: TextureRect
@@ -298,6 +301,7 @@ func _build_slots() -> void:
 	var sh := _shaded(col, Vector2(34, 10))
 	_root.add_child(sh)
 	_place(sh, Vector2(1, 1), Vector2(-6, -8), Vector2(1, 1))
+	_slots_box = sh
 
 
 func _build_compass() -> void:
@@ -578,7 +582,11 @@ func _update_card() -> void:
 	var g: GatherTools = player.gather
 	var tool := g.in_hand() if g else ""
 	var line := ""
-	if tool == "" and player.weapon != null and player.weapon.active and not player.hands_free:
+	var hb: Hotbar = player.hotbar
+	var sp := hb.spell if hb != null else String(player.get_meta(&"sway_spell", ""))   # (spells only from the bar: Hotbar.spell)
+	if sp != "":
+		line = _spell_line(sp)
+	elif tool == "" and player.weapon != null and player.weapon.active and not player.hands_free:
 		var w := player.weapon
 		var parts := PackedStringArray()
 		for x: String in [w.ammo_text(), w.status_text()]:
@@ -588,17 +596,48 @@ func _update_card() -> void:
 	_ammo.text = line
 	_ammo.visible = line != ""
 	_update_slots(tool)
+	_slots_box.visible = _ammo.visible or _slots_shown > 0
+
+
+## A readied spell's line: its name and mode, the caster's motes and its mastery when there is one ("Stone Form (cannonball)
+##  ·  motes 2/3  ·  practised"; SwayCaster.spell_label, tier_name).
+func _spell_line(id: String) -> String:
+	var c := player.get_node_or_null("SwayCaster")
+	var line := String(c.call(&"spell_label", id)) if c != null and c.has_method(&"spell_label") else Hotbar.spell_label(id)
+	if c != null and c.get("motes") != null and c.get("belt_max") != null:
+		line += "  ·  motes %d/%d" % [int(c.get("motes")), int(c.get("belt_max"))]
+	if c != null and c.has_method(&"tier_name"):
+		line += "  ·  " + String(c.call(&"tier_name", id))
+	return line
+
+
+## Spell `id`'s mode on the player's caster ("" none).
+func _spell_mode(id: String) -> String:
+	var c := player.get_node_or_null("SwayCaster")
+	return String(c.call(&"mode_of", id)) if c != null and c.has_method(&"mode_of") else ""
+
+
+var _slots_shown := 0
 
 
 func _update_slots(tool: String) -> void:
 	var entries := []
-	for i in player.weapon_order.size():
-		var k := String(player.weapon_order[i])
-		entries.append([str(i + 1), k, k == player.weapon_key and tool == "" and not player.hands_free])
-	if player.gather:
-		for tk: String in GatherTools.ORDER:
-			if player.gather.owns(tk):
-				entries.append(["7", tk, tk == tool])
+	var hb: Hotbar = player.hotbar
+	if hb != null:
+		# the hotbar: only its filled slots, numbered by slot
+		var sel := hb.selected()
+		for i in Hotbar.SLOTS:
+			if hb.filled(i):
+				entries.append([str(i + 1), hb.icon_kind(i), i == sel])
+	else:
+		for i in player.weapon_order.size():
+			var k := String(player.weapon_order[i])
+			entries.append([str(i + 1), k, k == player.weapon_key and tool == "" and not player.hands_free])
+		if player.gather:
+			for tk: String in GatherTools.ORDER:
+				if player.gather.owns(tk):
+					entries.append(["7", tk, tk == tool])
+	_slots_shown = entries.size()
 	while _slot_boxes.size() < entries.size():
 		var ov := Control.new()
 		ov.custom_minimum_size = Vector2(56, 56)
@@ -617,6 +656,13 @@ func _update_slots(tool: String) -> void:
 		var l := _label(14, TEXT)
 		l.position = Vector2(1, -4)
 		ov.add_child(l)
+		# (a spell's mode mark over the icon: its own layer, drawn after the picture)
+		var mk := Control.new()
+		mk.name = "Mark"
+		mk.set_anchors_preset(Control.PRESET_FULL_RECT)
+		mk.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		mk.draw.connect(_draw_mark.bind(ov, mk))
+		ov.add_child(mk)
 		_slots_row.add_child(ov)
 		_slot_boxes.append([ov, tr, l])
 	for i in _slot_boxes.size():
@@ -631,13 +677,31 @@ func _update_slots(tool: String) -> void:
 		l.text = String(e[0])
 		l.add_theme_color_override("font_color", GOLD if on else TEXT)
 		var tr: TextureRect = box[1]
-		if _icons and (tr.texture == null or tr.get_meta(&"kind", "") != e[1]):
-			tr.texture = _icons.get_icon(String(e[1]))
+		var spell := String(e[1]).begins_with("spell:")
+		var sp_tex: Texture2D = spell_texture(String(e[1]).trim_prefix("spell:"), get_tree()) \
+				if spell and (tr.get_meta(&"kind", "") != e[1] or tr.texture == null) else null
+		if spell and (tr.get_meta(&"kind", "") != e[1] or sp_tex != null):
+			# a spell: its own icon when there is one (spell_texture: the svg, else ItemIcons' painting as it comes), else its
+			# circle is drawn
+			tr.texture = sp_tex
+			tr.modulate = GOLD if sp_tex != null and sp_tex.resource_path.ends_with(".svg") else Color.WHITE
 			tr.set_meta(&"kind", e[1])
+			ov.set_meta(&"spell", tr.texture == null)
+			ov.queue_redraw()
+		elif not spell and _icons and (tr.texture == null or tr.get_meta(&"kind", "") != e[1]):
+			tr.texture = _icons.get_icon(String(e[1]))
+			tr.modulate = Color.WHITE
+			tr.set_meta(&"kind", e[1])
+			ov.set_meta(&"spell", false)
 			ov.queue_redraw()
 		if bool(ov.get_meta(&"active", false)) != on:
 			ov.set_meta(&"active", on)
 			ov.queue_redraw()
+		var md := _spell_mode(String(e[1]).trim_prefix("spell:")) if spell else ""
+		if String(ov.get_meta(&"mode", "")) != md:
+			ov.set_meta(&"mode", md)             # (a spell's mode: its corner mark, draw_mode_mark)
+			ov.queue_redraw()
+			(ov.get_node(^"Mark") as Control).queue_redraw()
 		ov.modulate.a = move_toward(ov.modulate.a, 1.0 if on else 0.62, get_process_delta_time() * 4.0)
 
 
@@ -650,6 +714,8 @@ func _draw_slot(ov: Control) -> void:
 		ov.draw_texture_rect(shade(), Rect2(Vector2(-8, 0), s + Vector2(16, 0)), false, Color(1.0, 0.78, 0.4, 0.4))
 		ov.draw_line(Vector2(10, s.y - 2), Vector2(s.x - 10, s.y - 2), Color(0, 0, 0, 0.5), 4.0)
 		ov.draw_line(Vector2(10, s.y - 2), Vector2(s.x - 10, s.y - 2), GOLD, 2.0)
+	if bool(ov.get_meta(&"spell", false)):
+		draw_spell_circle(ov, Rect2(tr.position, tr.size))
 	if tr.texture:
 		var r := Rect2(tr.position, tr.size)
 		var ts := tr.texture.get_size()
@@ -657,6 +723,105 @@ func _draw_slot(ov: Control) -> void:
 		var fit := Rect2(r.position + (r.size - ts * k) * 0.5, ts * k)
 		for o: Vector2 in [Vector2(1.5, 1.5), Vector2(-1, 1), Vector2(1, -1), Vector2(-1, -1)]:
 			ov.draw_texture_rect(tr.texture, Rect2(fit.position + o, fit.size), false, Color(0, 0, 0, 0.45))
+
+
+## A spell slot's mode mark: a badge on the icon's bottom-right corner (over the picture, clear of the next slot's number).
+func _draw_mark(ov: Control, mk: Control) -> void:
+	var md := String(ov.get_meta(&"mode", ""))
+	if md != "":
+		var s := mk.size
+		draw_mode_mark(mk, Rect2(Vector2(s.x - 21, s.y - 27), Vector2(19, 19)), md, true)
+
+
+## A spell with no icon of its own: the Form circle's look in ink (FormCircle, shaders/sway/form_circle.gdshader: a surveyor's
+## compass card): a double outer ring, a band of compass ticks (the four quarters long), an inner ring, the quartering lines,
+## two crossed squares (one on the points, one on the faces) and a small ring at the heart; over a shadow.
+static func draw_spell_circle(ov: CanvasItem, r: Rect2) -> void:
+	var c := r.get_center()
+	var rad := minf(r.size.x, r.size.y) * 0.46
+	for pass_i in 2:
+		var shadow := pass_i == 0
+		var col := Color(0, 0, 0, 0.45) if shadow else Color(0.8, 0.9, 1.0, 0.95)
+		var w := 2.6 if shadow else 1.2
+		var o := Vector2(1.2, 1.2) if shadow else Vector2.ZERO
+		var m := c + o
+		# the outer double ring
+		ov.draw_arc(m, rad, 0.0, TAU, 48, col, w, true)
+		ov.draw_arc(m, rad * 0.9, 0.0, TAU, 44, col, w * 0.7, true)
+		# the compass ticks: sixteen, the four quarters reaching in further
+		for k in 16:
+			var a := TAU * float(k) / 16.0 - PI * 0.5
+			var d := Vector2(cos(a), sin(a))
+			var r0 := 0.66 if k % 4 == 0 else 0.74
+			ov.draw_line(m + d * rad * r0, m + d * rad * 0.84, col, w * (0.9 if k % 4 == 0 else 0.6), true)
+		# the inner ring
+		ov.draw_arc(m, rad * 0.58, 0.0, TAU, 36, col, w * 0.8, true)
+		# the quartering lines, ring to ring
+		for k in 4:
+			var a := TAU * float(k) / 4.0
+			var d := Vector2(cos(a), sin(a))
+			ov.draw_line(m + d * rad * 0.16, m + d * rad * 0.58, col, w * 0.55, true)
+		# two crossed squares inside the inner ring: one on the points (a diamond), one on the faces
+		for k in 2:
+			var pts := PackedVector2Array()
+			for j in 5:
+				var a := TAU * float(j % 4) / 4.0 + (PI * 0.25 if k == 1 else 0.0)
+				pts.append(m + Vector2(cos(a), sin(a)) * rad * 0.56)
+			ov.draw_polyline(pts, col, w * 0.7, true)
+		# the small ring at the heart
+		ov.draw_arc(m, rad * 0.14, 0.0, TAU, 20, col, w * 0.7, true)
+
+
+## A spell's mode as a small mark in the corner `r` of its slot (the mode key flips it: SwayCaster.flip_mode): "spike" a jagged
+## spike, "cannonball" a ringed ball (a ball with a ring round it and a dark pit: no plain dot, which is the fallback's and the
+## motes'), "self" a column under a figure's mark (an arrow up from a bar), "free" a small aiming circle; any other a dot. In
+## the HUD's ink over a shadow; `badge`: on a dark disc with a gold rim (over an icon, so it reads as a mark, not the icon's).
+static func draw_mode_mark(ci: CanvasItem, r: Rect2, mode: String, badge := false) -> void:
+	var c := r.get_center()
+	var k := minf(r.size.x, r.size.y) * 0.5
+	if badge:
+		ci.draw_circle(c, k * 1.02, Color(0.07, 0.06, 0.05, 0.82))
+		ci.draw_arc(c, k * 1.02, 0.0, TAU, 28, Color(GOLD.r, GOLD.g, GOLD.b, 0.9), 1.2, true)
+		k *= 0.78
+	for pass_i in 2:
+		var shadow := pass_i == 0
+		var col := Color(0, 0, 0, 0.55) if shadow else Color(1.0, 0.92, 0.7, 1.0)
+		var o := Vector2(1.0, 1.0) if shadow else Vector2.ZERO
+		var w := 2.6 if shadow else 1.4
+		var m := c + o
+		match mode:
+			"spike":
+				var pts := PackedVector2Array([m + Vector2(-0.55, 0.85) * k, m + Vector2(-0.3, 0.1) * k, m + Vector2(-0.42, -0.05) * k,
+						m + Vector2(-0.05, -0.9) * k, m + Vector2(0.12, -0.25) * k, m + Vector2(0.25, -0.33) * k, m + Vector2(0.5, 0.85) * k])
+				if shadow:
+					ci.draw_polyline(pts + PackedVector2Array([pts[0]]), col, w, true)
+				else:
+					ci.draw_colored_polygon(pts, col)
+			"cannonball":
+				ci.draw_circle(m, k * 0.48, col)
+				ci.draw_arc(m, k * 0.8, 0.0, TAU, 24, col, w * 0.8, true)
+				if not shadow:
+					ci.draw_circle(m + Vector2(-0.17, -0.17) * k, k * 0.13, Color(0.2, 0.17, 0.12, 0.9))
+			"self":
+				ci.draw_line(m + Vector2(-0.6, 0.8) * k, m + Vector2(0.6, 0.8) * k, col, w, true)
+				ci.draw_line(m + Vector2(0.0, 0.6) * k, m + Vector2(0.0, -0.75) * k, col, w, true)
+				ci.draw_polyline(PackedVector2Array([m + Vector2(-0.42, -0.32) * k, m + Vector2(0.0, -0.8) * k, m + Vector2(0.42, -0.32) * k]), col, w, true)
+			"free":
+				ci.draw_arc(m, k * 0.55, 0.0, TAU, 20, col, w, true)
+				for a in 4:
+					var dv := Vector2.from_angle(TAU * a / 4.0)
+					ci.draw_line(m + dv * k * 0.3, m + dv * k * 0.9, col, w * 0.8, true)
+			_:
+				ci.draw_circle(m, k * 0.3, col)
+
+
+## A spell's picture for the strip and the Tab screen: its own icon (assets/ui/icons/spell_<id>.svg), else ItemIcons'
+## painting of it (SwayCaster.spell_icon: null until painted); null: draw_spell_circle.
+static func spell_texture(id: String, tree: SceneTree) -> Texture2D:
+	var path := ICON_DIR + "spell_" + id + ".svg"
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return SwayCaster.spell_icon(id, tree)
 
 
 func _update_clock() -> void:

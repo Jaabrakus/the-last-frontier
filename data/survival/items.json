@@ -129,6 +129,7 @@
    "wet_keep": 0.2,
    "dry_h": 0.5,
    "garments": [
+    "shirt_linen",
     "shirt_check",
     "shirt_white",
     "ew_shirt_linen",

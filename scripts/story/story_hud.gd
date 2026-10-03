@@ -6,7 +6,8 @@ extends CanvasLayer
 ##               hints, dimmer (the first-time tutorial: the keys of what this mission asks)
 ##   top centre  the mission's title large for a few seconds as it starts (under the compass)
 ##   the world   a gold diamond on the step's place, its distance under it; held at the screen's edge when off screen
-##   centre      the story cards: a title, the text, "Enter  continue". The game waits under them (paused).
+##   centre      the story cards: a title, the text, "Enter  continue". The game waits under them (paused), but not
+##               in a shared world (co-op: the others play on; this player only stands while a card is up).
 
 const INK := FrontierHUD.INK
 const TEXT := FrontierHUD.TEXT
@@ -39,6 +40,12 @@ var _card_i := 0
 var _card_open_t := 0.0
 var _paused_by_us := false
 var _waiting: Array = []           ## [cards, done] held while the character creator is open
+## In a shared world the game runs on under a card: the player's controls let go of and its E interactor stopped while
+## it is up (Enter, Space, E or a click on the card does nothing in the world; the move keys do not walk), as under a
+## talk (StoryDialogue._hold_game); given back as the cards close.
+var _held: PlayerControls = null
+var _interactor: Node = null
+var _interactor_mode := Node.PROCESS_MODE_INHERIT
 ## Seconds at the level's start the cards wait for the character creator to open (it opens a few frames in).
 var _creator_grace := 0.0           ## (set by the director as a new game's storyline begins)
 
@@ -148,7 +155,8 @@ func banner(text: String) -> void:
 
 # --- Cards ---------------------------------------------------------------------------------------------------
 
-## Show `cards` ([{title, text}]) one after another; `done` runs after the last. The game waits under them.
+## Show `cards` ([{title, text}]) one after another; `done` runs after the last. The game waits under them (not in a
+## shared world: StoryDirector.shared_world).
 func show_cards(cards: Array, done: Callable) -> void:
 	if _creator_open():
 		_waiting = [cards, done]                     # (a new game's character creator first: the cards after it)
@@ -157,7 +165,9 @@ func show_cards(cards: Array, done: Callable) -> void:
 	_card_done = done
 	_card_i = 0
 	_veil.visible = true
-	if not get_tree().paused:
+	if StoryDirector.shared_world(get_tree()):
+		_hold_player()
+	elif not get_tree().paused:
 		get_tree().paused = true
 		_paused_by_us = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -209,7 +219,33 @@ func _close_cards() -> void:
 	if _paused_by_us:
 		get_tree().paused = false
 		_paused_by_us = false
+	_let_player_go()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+## The player stands under a card in a shared world (see _held).
+func _hold_player() -> void:
+	var p := StoryObjectives.player(get_tree())
+	if p == null:
+		return
+	if _held == null and p.controls != null and p.controls.from_input:
+		p.controls.from_input = false
+		p.controls.release_all()
+		_held = p.controls
+	var it: Node = p.interactor
+	if _interactor == null and it != null and it.process_mode != Node.PROCESS_MODE_DISABLED:
+		_interactor = it
+		_interactor_mode = it.process_mode
+		it.process_mode = Node.PROCESS_MODE_DISABLED
+
+
+func _let_player_go() -> void:
+	if _held != null:
+		_held.from_input = true
+		_held = null
+	if _interactor != null and is_instance_valid(_interactor):
+		_interactor.process_mode = _interactor_mode
+	_interactor = null
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -234,7 +270,9 @@ func _process(delta: float) -> void:
 		show_cards(w[0], w[1])
 	if _veil.visible:
 		_card_open_t -= delta
-		if not get_tree().paused and _paused_by_us == false:
+		if StoryDirector.shared_world(get_tree()):
+			_hold_player()                           # (a session begun under the card: the player stands from now)
+		elif not get_tree().paused and _paused_by_us == false:
 			get_tree().paused = true                 # (the pause menu let go over a card: the card still holds the game)
 			_paused_by_us = true
 	if _banner_t > 0.0:

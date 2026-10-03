@@ -1,7 +1,10 @@
 extends SceneTree
 ## Equipping from the pack (hotfix 2026-09-26, user: "when we equip things from our pack like a musket to back we
 ## should be able to equip that"): the pack lists what the player carries less what is worn, worked out fresh each
-## time; a musket from the pack goes on the back by a spot, by the figure or by a double-click, and can be drawn.
+## time; a musket from the pack goes on the back (InventoryState) and can be drawn. The screen (the owner 2026-10-02: "no
+## more rigs on the char slots"; Hotbar): the rig places on the figure are gone (their checks retired); a musket taken
+## off the hotbar is in the pack list, and dropped on the figure, or double-clicked, it goes in the first free hotbar
+## slot and can be drawn.
 ##
 ##   Godot --headless --path . -s tests/inventory/test_inventory_equip.gd
 ##   Godot --path . --resolution 1280x720 -s tests/inventory/test_inventory_equip.gd     (real mouse drag + double-click)
@@ -74,39 +77,38 @@ func _initialize() -> void:
 	_check(inv.pack_count("powder_horn") == 1, "other pack items are kept (powder horn x%d)" % inv.pack_count("powder_horn"))
 	p.inventory_pack = []
 
-	# 4) the screen: drop on the figure, double-click
+	# 4) the screen: the musket off the hotbar is in the pack list; dropped on the figure, or double-clicked, it goes on the
+	# bar in the first free slot (the old rig places, a back sling spot to drop on, are gone: those checks are retired)
+	var hb: Hotbar = p.hotbar
 	var scr := InventoryScreen.open_for(p)
 	await _frames(20)
-	scr.take_off("long_A")
-	_check(scr.inv.pack_count("musket") > 0, "screen: taken off into the pack")
+	_check(not ("_slot_cells" in scr), "screen: no rig places on the figure")
+	var at := hb.slot_of("weapon", "musket")
+	scr.hotbar_off(at)
+	_check(hb.slot_of("weapon", "musket") < 0 and _pack_cell(scr, "musket") != null, "screen: off the hotbar, the musket is in the pack list")
 	if _headless():
-		_check(scr._doll_can_drop(Vector2.ZERO, {"from": "pack", "kind": "musket"}), "screen: the figure accepts the musket")
-		scr._doll_drop(Vector2.ZERO, {"from": "pack", "kind": "musket"})
-		_check(_worn_kind(scr.inv, "long_A") == "musket", "screen: dropped on the figure -> on the back sling")
-		scr.take_off("long_A")
-		scr.auto_wear("musket")
-		_check(_worn_kind(scr.inv, "long_A") == "musket", "screen: auto wear -> on the back sling")
+		_check(scr.figure._can_drop_data(Vector2.ZERO, {"from": "pack", "kind": "musket"}), "screen: the figure accepts the musket")
+		scr.figure._drop_data(Vector2.ZERO, {"from": "pack", "kind": "musket"})
+		_check(hb.slot_of("weapon", "musket") == hb.first_free() or hb.slot_of("weapon", "musket") >= 0,
+				"screen: dropped on the figure -> on the hotbar (%d)" % hb.slot_of("weapon", "musket"))
+		scr.hotbar_off(hb.slot_of("weapon", "musket"))
+		scr.use_on_body("musket")
+		_check(hb.slot_of("weapon", "musket") >= 0, "screen: used on the body (a double-click) -> on the hotbar")
 	else:
 		await _frames(10)
 		var cell := _pack_cell(scr, "musket")
-		var drop := _doll_drop_control(scr)
-		_check(cell != null and drop != null, "screen: the musket's pack cell and the figure found")
+		var drop: Control = scr.figure
+		_check(cell != null and drop != null, "screen: the musket's pack row and the figure found")
 		if cell and drop:
 			var a := cell.get_global_rect().get_center()
 			var b := drop.get_global_rect().get_center()
 			await _drag(a, b)
-			_check(_worn_kind(scr.inv, "long_A") == "musket", "screen: dragged onto the figure with the mouse -> on the back sling")
-			scr.take_off("long_A")
+			_check(hb.slot_of("weapon", "musket") >= 0, "screen: dragged onto the figure with the mouse -> on the hotbar")
+			scr.hotbar_off(hb.slot_of("weapon", "musket"))
 			await _frames(5)
 			cell = _pack_cell(scr, "musket")
 			await _double_click(cell.get_global_rect().get_center())
-			_check(_worn_kind(scr.inv, "long_A") == "musket", "screen: double-clicked in the pack -> on the back sling")
-			scr.take_off("long_A")
-			await _frames(5)
-			cell = _pack_cell(scr, "musket")
-			var slot := _slot(scr, "long_A")
-			await _drag(cell.get_global_rect().get_center(), slot.get_global_rect().get_center())
-			_check(_worn_kind(scr.inv, "long_A") == "musket", "screen: dragged onto the back sling spot -> worn")
+			_check(hb.slot_of("weapon", "musket") >= 0, "screen: double-clicked in the pack -> on the hotbar")
 	scr.close()
 	await _frames(5)
 	_check(p.is_usable("musket") and p.loadout.first_of_kind("musket").size() > 0, "closed: the musket on the back and drawable")
@@ -128,18 +130,6 @@ func _pack_cell(scr: InventoryScreen, kind: String) -> Control:
 		if c is InventoryScreen.PackCell and (c as InventoryScreen.PackCell).kind == kind:
 			return c
 	return null
-
-
-func _slot(scr: InventoryScreen, point: String) -> Control:
-	for c in scr.find_children("*", "", true, false):
-		if c is InventoryScreen.SlotCell and (c as InventoryScreen.SlotCell).point == point:
-			return c
-	return null
-
-
-func _doll_drop_control(scr: InventoryScreen) -> Control:
-	var box: Control = scr._view_box.get_parent()
-	return box.get_child(box.get_child_count() - 1) as Control
 
 
 func _mouse(pos: Vector2, pressed: bool, dbl := false) -> void:

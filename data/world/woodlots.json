@@ -1,0 +1,25 @@
+{
+  "format": "frontier-woodlots",
+  "version": 1,
+  "_doc": [
+    "Small woods outside the forest's own square (VegWoodlots, scripts/world/vegetation/veg_woodlots.gd): FrontierVegetation's layout places the forest only round the fort (veg_layout.gd WORLD, +-396 m); each woodlot here is put into that same layout after it is built (appended, so every forest index before it stays as it was): felled, cut and quarried as the forest is (VegHarvest), drawn with its LODs, its trunks and rocks solid, kept by the save. Free play has them too: they are part of the land (data/world/squares.json gives the open land trees 0.15).",
+    "Fields: center [x, z], radii [x, z] (an ellipse), spacing (m between trees on a jittered grid), keep (the share kept inside; thinning toward the rim), species {id: weight} (white_pine, hemlock, oak, maple, birch), max_slope_deg, clear [[x, z, r], ...] (no tree within r: the ground a house goes on), saplings {count, ring [e0, e1] (the ellipse's 0..1 from its middle), species {...}}, rocks [[x, z, kind, scale], ...] (kind: rock_a..rock_e, boulder), props [{kind (log, stump_a, stump_b), at [x, z], yaw (deg), scale}], seed. A tree, sapling or rock in water (WorldRiver) or off the ground there is (FrontierTerrain.in_world) is left out."
+  ],
+  "woodlots": [
+    {
+      "id": "homestead_wood",
+      "_doc": "The stand of oaks and pines on the homestead's ground across the ford (data/story/storylines/two_fires.json places homestead [1000, 100] and cache [1016, 120]; docs/main_story.md 10.1 missions 1-7, Open Land's outro: 'a stand of oaks and pines for timber'): Clearing's three trees, the lean-to's poles, the fire's and the hearth's stone, the house's 32 logs within a short walk of where it goes. Open ground left round the homestead (clear) for the lean-to, the fire and the house (the missions' build steps are within 35-40 m of it). The cache's fallen oak lies at the wood's edge.",
+      "center": [1046.0, 128.0],
+      "radii": [44.0, 38.0],
+      "spacing": 8.0,
+      "keep": 0.82,
+      "species": {"oak": 0.34, "white_pine": 0.28, "maple": 0.14, "hemlock": 0.1, "birch": 0.14},
+      "max_slope_deg": 28.0,
+      "clear": [[1000.0, 100.0, 21.0]],
+      "saplings": {"count": 16, "ring": [0.82, 1.2], "species": {"white_pine": 0.35, "maple": 0.3, "birch": 0.25, "hemlock": 0.1}},
+      "rocks": [[1027.0, 79.0, "rock_a", 1.1], [1057.0, 90.0, "boulder", 0.95], [1069.0, 163.0, "rock_b", 1.2], [1020.0, 152.0, "rock_c", 1.05]],
+      "props": [{"kind": "log", "at": [1017.0, 123.0], "yaw": 15.0, "scale": 2.6}],
+      "seed": 1757
+    }
+  ]
+}

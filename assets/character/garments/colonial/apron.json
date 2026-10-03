@@ -1,0 +1,309 @@
+{
+ "id": "apron",
+ "name": "Apron",
+ "description": "A linen apron gathered on a narrow band round the waist and tied behind in a bow, covering the front of the petticoat to below the knee.",
+ "kind": "garment",
+ "set": "colonial",
+ "slot": "accessories.waist",
+ "alt_slots": [],
+ "layer": {
+  "default": 35
+ },
+ "glb": "res://assets/character/garments/colonial/apron.glb",
+ "mesh": "apron",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "apron"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "pelvis_center",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "apron",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "linen_white",
+    "linen_unbleached",
+    "check_blue",
+    "tow"
+   ],
+   "default": "linen_white",
+   "pattern": {
+    "options": [
+     "none",
+     "check"
+    ],
+    "check": {
+     "colors": [
+      "check_blue",
+      "linen_white"
+     ],
+     "scale_m": 0.012,
+     "note": "blue-and-white check linen"
+    }
+   },
+   "bands": null,
+   "palette_hex": {
+    "linen_white": "#E8E3D3",
+    "linen_unbleached": "#C8BA9A",
+    "check_blue": "#2F4166",
+    "tow": "#A99570"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "band and ties",
+   "role": "trim",
+   "fabric": "LIN",
+   "palette": [
+    "linen_white",
+    "linen_unbleached",
+    "check_blue",
+    "tow"
+   ],
+   "default": "linen_white",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "linen_white": "#E8E3D3",
+    "linen_unbleached": "#C8BA9A",
+    "check_blue": "#2F4166",
+    "tow": "#A99570"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1231,
+    "verts": 737,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "pelvis_center",
+     "pelvis_side",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 1231,
+  "verts": 737,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0522,
+   "breast_large": 0.0202,
+   "breast_small": 0.0023
+  },
+  "coverage": {
+   "abdomen_front": {
+    "normal": 1.0,
+    "cone": 0.833
+   },
+   "abdomen_side": {
+    "normal": 0.719,
+    "cone": 0.479
+   },
+   "abdomen_back": {
+    "normal": 0.365,
+    "cone": 0.01
+   },
+   "pelvis_center": {
+    "normal": 0.323,
+    "cone": 0.125
+   },
+   "pelvis_side": {
+    "normal": 0.24,
+    "cone": 0.177
+   },
+   "upper_arm_l": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_b_l": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_b_r": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_c_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.385,
+    "cone": 0.25
+   },
+   "thigh_lower_l": {
+    "normal": 0.135,
+    "cone": 0.021
+   },
+   "thigh_upper_r": {
+    "normal": 0.417,
+    "cone": 0.281
+   },
+   "thigh_lower_r": {
+    "normal": 0.177,
+    "cone": 0.052
+   }
+  },
+  "glb_kb": 255.0
+ },
+ "budget": {
+  "tris_max": 1600
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Women wore an apron over the petticoat for almost all work: white or checked linen, gathered to a band with ties, long enough to cover most of the petticoat's front (the Fort Ticonderoga guidelines discourage very short or narrow ones) [S6][S9]. Blue-and-white check linen was common in rural Pennsylvania German households [S9].",
+ "sources": [
+  "S6",
+  "S9",
+  "M2"
+ ],
+ "aliases": [],
+ "tags": [
+  "women",
+  "colonial",
+  "settlers"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 19.59,
+    "p05_mm": 22.2,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 19.69,
+    "p05_mm": 21.59,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 19.22,
+    "p05_mm": 22.04,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 19.57,
+    "p05_mm": 22.2,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/apron.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/apron.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "shift_linen",
+  "stays_laced",
+  "petticoat"
+ ],
+ "extra": {
+  "presets": {
+   "margaretha": {
+    "0": "check_blue",
+    "1": "linen_white",
+    "pattern": "check"
+   },
+   "anna": {
+    "0": "linen_white",
+    "1": "linen_white"
+   }
+  },
+  "pattern_note": "The check is stored on zone 0 (the cloth shader does not draw zone patterns yet: until it does a check apron renders in its base colour).",
+  "references": [
+   "https://fortticonderoga.org/wp-content/uploads/2024/06/Zipped-1759-Siege-of-Carillon-French-Women-Guidelines.pdf",
+   "https://goschenhoppen.org/colonial-clothing/"
+  ]
+ }
+}

@@ -1,0 +1,293 @@
+{
+ "id": "leggings_wool",
+ "name": "Wool leggings (mitasses)",
+ "description": "Coarse wool leggings from the instep to above the knee, sewn up the outer side with the edges standing out as a flap, tied under the knee with a garter.",
+ "kind": "garment",
+ "set": "colonial",
+ "slot": "legs.over",
+ "alt_slots": [],
+ "layer": {
+  "default": 30
+ },
+ "glb": "res://assets/character/garments/colonial/leggings_wool.glb",
+ "mesh": "leggings_wool",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "leggings_wool"
+  }
+ ],
+ "occupies_regions": [
+  "ankle_l",
+  "ankle_r",
+  "shin_lower_l",
+  "shin_lower_r",
+  "shin_upper_l",
+  "shin_upper_r",
+  "thigh_lower_l",
+  "thigh_lower_r"
+ ],
+ "hides_regions": [
+  "shin_lower_l",
+  "shin_lower_r",
+  "shin_upper_l",
+  "shin_upper_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "leggings",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "stroud_blue",
+    "stroud_red",
+    "ranger_green",
+    "royal_blue",
+    "grey_white",
+    "walnut_brown",
+    "drab",
+    "slate_grey"
+   ],
+   "default": "stroud_red",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "stroud_blue": "#1E2B4A",
+    "stroud_red": "#8A1C1F",
+    "ranger_green": "#3B4A2E",
+    "royal_blue": "#233C78",
+    "grey_white": "#D4D0C3",
+    "walnut_brown": "#5A3F2C",
+    "drab": "#8B7A5C",
+    "slate_grey": "#6B6A66"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "garters",
+   "role": "ribbon",
+   "fabric": "WOOL",
+   "palette": [
+    "stroud_blue",
+    "stroud_red",
+    "ranger_green",
+    "royal_blue",
+    "grey_white",
+    "walnut_brown",
+    "drab",
+    "slate_grey",
+    "madder_red",
+    "logwood_black",
+    "ribbon_red"
+   ],
+   "default": "madder_red",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "stroud_blue": "#1E2B4A",
+    "stroud_red": "#8A1C1F",
+    "ranger_green": "#3B4A2E",
+    "royal_blue": "#233C78",
+    "grey_white": "#D4D0C3",
+    "walnut_brown": "#5A3F2C",
+    "drab": "#8B7A5C",
+    "slate_grey": "#6B6A66",
+    "madder_red": "#8E2B21",
+    "logwood_black": "#1C1B20",
+    "ribbon_red": "#B2202C"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 2480,
+    "verts": 1688,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "l_ball",
+     "r_upper_leg",
+     "r_knee",
+     "r_ankle",
+     "r_heel",
+     "r_ball"
+    ]
+   }
+  },
+  "tris": 2480,
+  "verts": 1688,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0989,
+   "breast_large": 0.0001,
+   "breast_small": 0.0098
+  },
+  "coverage": {
+   "pelvis_center": {
+    "normal": 0.083,
+    "cone": 0.0
+   },
+   "thigh_lower_l": {
+    "normal": 0.865,
+    "cone": 0.833
+   },
+   "shin_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_l": {
+    "normal": 0.979,
+    "cone": 0.969
+   },
+   "thigh_upper_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "thigh_lower_r": {
+    "normal": 0.896,
+    "cone": 0.875
+   },
+   "shin_upper_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_r": {
+    "normal": 0.99,
+    "cone": 0.948
+   }
+  },
+  "glb_kb": 342.4
+ },
+ "budget": {
+  "tris_max": 2800
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Mitasses of coarse wool were what Canadians, the colonial regulars on campaign and rangers wore on the legs in the woods: about three quarters of a yard long, cut loose, the seam some four fingers in from the edges so the flap stands outside the leg, tied under the knee (d'Aleyrac; Knox, 1758). Blue, red or green [S2][S1][M1][M3]. Plain new builds of the documented French-Canadian and colonial-regular campaign wear, not the Eastern Woodlands set (the owner's consultation decision, 2026-10-03).",
+ "sources": [
+  "S2",
+  "S1",
+  "M1",
+  "M3"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "colonial",
+  "canada",
+  "winter"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 1.81,
+    "p05_mm": 7.68,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 1.92,
+    "p05_mm": 6.57,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 1.81,
+    "p05_mm": 7.68,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 1.81,
+    "p05_mm": 7.25,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/leggings_wool.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/leggings_wool.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "breeches"
+ ],
+ "extra": {
+  "presets": {
+   "canadian": {
+    "0": "stroud_red",
+    "1": "madder_red"
+   },
+   "marine": {
+    "0": "stroud_blue",
+    "1": "madder_red"
+   },
+   "ranger": {
+    "0": "ranger_green",
+    "1": "madder_red"
+   }
+  },
+  "slot_note": "Shares legs.over with stockings (worn instead of them).",
+  "references": [
+   "https://www.fortticonderoga.org/wp-content/uploads/2023/11/1759-Battle-on-Snowshoes-Canadian-Milice-Guidelines.pdf",
+   "https://www.fortticonderoga.org/wp-content/uploads/2023/11/1759-Siege-of-Carillon-British-Regulars-Guidelines.pdf"
+  ]
+ }
+}

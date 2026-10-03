@@ -1,0 +1,429 @@
+{
+ "id": "veste_sleeved",
+ "name": "Veste (sleeved waistcoat)",
+ "description": "A long wool waistcoat with narrow sleeves, buttoned from the neck to the waist, the skirts to the top of the thigh with pocket flaps.",
+ "kind": "garment",
+ "set": "colonial",
+ "slot": "vest",
+ "alt_slots": [
+  "outer"
+ ],
+ "layer": {
+  "default": 20,
+  "hips": 25,
+  "thighs": 25
+ },
+ "glb": "res://assets/character/garments/colonial/veste_sleeved.glb",
+ "mesh": "veste_sleeved",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "veste_sleeved"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "chest_upper_back",
+  "chest_upper_front",
+  "chest_upper_side",
+  "forearm_a_l",
+  "forearm_a_r",
+  "forearm_b_l",
+  "forearm_b_r",
+  "neck_lower",
+  "pelvis_side",
+  "thigh_upper_l",
+  "thigh_upper_r",
+  "upper_arm_l",
+  "upper_arm_r"
+ ],
+ "hides_regions": [
+  "abdomen_back",
+  "abdomen_side",
+  "chest_back",
+  "chest_side",
+  "forearm_a_l",
+  "forearm_a_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "cloth",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "royal_blue",
+    "stroud_blue",
+    "madder_red",
+    "grey_white",
+    "walnut_brown",
+    "drab",
+    "slate_grey",
+    "ranger_green",
+    "butternut"
+   ],
+   "default": "royal_blue",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "royal_blue": "#233C78",
+    "stroud_blue": "#1E2B4A",
+    "madder_red": "#8E2B21",
+    "grey_white": "#D4D0C3",
+    "walnut_brown": "#5A3F2C",
+    "drab": "#8B7A5C",
+    "slate_grey": "#6B6A66",
+    "ranger_green": "#3B4A2E",
+    "butternut": "#957549"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "lining",
+   "role": "lining",
+   "fabric": "LIN",
+   "palette": [
+    "linen_unbleached"
+   ],
+   "default": "linen_unbleached",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "linen_unbleached": "#C8BA9A"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "buttons",
+   "role": "button",
+   "fabric": "MET",
+   "palette": [
+    "brass",
+    "pewter",
+    "logwood_black"
+   ],
+   "default": "brass",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "brass": "#B58F4A",
+    "pewter": "#9A9C9A",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 5233,
+    "verts": 2962,
+    "zones": [
+     0,
+     2
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "forearm_a_r",
+     "forearm_b_l",
+     "forearm_b_r",
+     "forearm_c_l",
+     "forearm_c_r",
+     "neck_lower",
+     "pelvis_center",
+     "pelvis_side",
+     "thigh_upper_l",
+     "thigh_upper_r",
+     "upper_arm_l",
+     "upper_arm_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "r_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "l_shoulder",
+     "l_elbow",
+     "l_wrist",
+     "r_clavicle",
+     "r_shoulder",
+     "r_elbow",
+     "r_wrist",
+     "neck",
+     "l_breast",
+     "r_breast",
+     "l_forarm_twist_a",
+     "l_forarm_twist_c",
+     "l_forarm_twist_b",
+     "r_forarm_twist_a",
+     "r_forarm_twist_c",
+     "r_forarm_twist_b",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_shoulder_twist_a",
+     "l_shoulder_twist_c",
+     "l_shoulder_twist_b",
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 5233,
+  "verts": 2962,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0571,
+   "breast_large": 0.0868,
+   "breast_small": 0.0326
+  },
+  "coverage": {
+   "neck_upper": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "neck_lower": {
+    "normal": 0.573,
+    "cone": 0.521
+   },
+   "chest_upper_front": {
+    "normal": 0.771,
+    "cone": 0.688
+   },
+   "chest_upper_side": {
+    "normal": 0.917,
+    "cone": 0.896
+   },
+   "chest_upper_back": {
+    "normal": 0.969,
+    "cone": 0.969
+   },
+   "chest_front": {
+    "normal": 0.979,
+    "cone": 0.896
+   },
+   "chest_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_front": {
+    "normal": 0.844,
+    "cone": 0.719
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "pelvis_center": {
+    "normal": 0.219,
+    "cone": 0.156
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 0.958
+   },
+   "upper_arm_l": {
+    "normal": 0.958,
+    "cone": 0.938
+   },
+   "forearm_a_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_l": {
+    "normal": 0.812,
+    "cone": 0.635
+   },
+   "forearm_c_l": {
+    "normal": 0.115,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.135,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.958,
+    "cone": 0.948
+   },
+   "forearm_a_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_r": {
+    "normal": 0.812,
+    "cone": 0.646
+   },
+   "forearm_c_r": {
+    "normal": 0.083,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.167,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.365,
+    "cone": 0.292
+   },
+   "thigh_upper_r": {
+    "normal": 0.354,
+    "cone": 0.26
+   }
+  },
+  "glb_kb": 667.8
+ },
+ "budget": {
+  "tris_max": 5300
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "The colonial regulars of New France wore a blue veste with blue breeches and stockings under the grey-white justaucorps, and on campaign the veste was the coat under the capot; Canadians wore vestes of red, grey, brown or drab, and sleeved waistcoats were worn as the outer garment in the woods [M6][M4][M5][S2][S5].",
+ "sources": [
+  "M6",
+  "M4",
+  "M5",
+  "S2",
+  "S5"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "colonial",
+  "regulars",
+  "canada"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 7.08,
+    "p05_mm": 8.5,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 7.32,
+    "p05_mm": 8.74,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 7.07,
+    "p05_mm": 8.94,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 6.93,
+    "p05_mm": 8.54,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/veste_sleeved.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/veste_sleeved.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "shirt_linen",
+  "breeches"
+ ],
+ "extra": {
+  "presets": {
+   "marine": {
+    "0": "royal_blue",
+    "2": "brass"
+   },
+   "canadian_red": {
+    "0": "madder_red",
+    "2": "pewter"
+   },
+   "canadian_grey": {
+    "0": "grey_white",
+    "2": "pewter"
+   },
+   "ranger_1758": {
+    "0": "ranger_green",
+    "2": "pewter"
+   }
+  },
+  "zone_note": "Zone 1 (a linen back) is not used by this cut: the veste is wool all round.",
+  "female_body_note": "Built for every fit; on a woman it is artistic licence (vestes were men's).",
+  "references": [
+   "https://militaryheritage.com/c_franch.htm",
+   "https://www.fortticonderoga.org/wp-content/uploads/2023/11/1759-Battle-on-Snowshoes-French-Army-Colonial-Regulars-Guidelines-1.pdf",
+   "https://www.fortticonderoga.org/wp-content/uploads/2023/11/1759-Battle-on-Snowshoes-Canadian-Milice-Guidelines.pdf"
+  ]
+ }
+}

@@ -325,6 +325,9 @@ var torch: PlayerTorch
 var gather: GatherTools
 ## The equip wheel (hold Q; EquipWheel): weapons, tools, the torch and bare hands, picked with the mouse.
 var equip_wheel: EquipWheel
+## The hotbar (1-9 and the wheel; Hotbar, the local player's): the start's kit, then what the player drags on (Tab); a
+## weapon off it is not drawn.
+var hotbar: Hotbar
 ## Building (B): log cabins, palisades, chimneys from the pack's logs and stone (BuildMode, scripts/building/).
 var building: BuildMode
 ## E at a dead animal's neck: drag it on foot on a short rope, the right hand free for a torch (FootDrag).
@@ -416,6 +419,7 @@ func _ready() -> void:
 		Wheelbarrow.ensure_demo.call_deferred(self)
 	_ensure_hands_free_input()
 	if is_local:
+		hotbar = Hotbar.of(self)           # 1-9 and the wheel: the start's kit, then what is dragged on (Hotbar)
 		HowTo.install(self)                # the first time each thing is done, its keys (HowTo)
 		hud = FrontierHUD.new()
 		hud.player = self
@@ -789,12 +793,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		get_viewport().set_input_as_handled()
 	else:
-		for i in weapon_order.size():
-			var slot := "weapon_%d" % (i + 1)
-			if InputMap.has_action(slot) and event.is_action_pressed(slot):
-				switch_weapon(weapon_order[i])
-		if event.is_action_pressed("weapon_next") or event.is_action_pressed("weapon_prev"):
-			_wheel_step(1 if event.is_action_pressed("weapon_next") else -1)
+		if hotbar == null or not hotbar.handle_input(event):     # (the hotbar takes 1-9 and the wheel: its slots)
+			for i in weapon_order.size():
+				var slot := "weapon_%d" % (i + 1)
+				if InputMap.has_action(slot) and event.is_action_pressed(slot):
+					switch_weapon(weapon_order[i])
+			if event.is_action_pressed("weapon_next") or event.is_action_pressed("weapon_prev"):
+				_wheel_step(1 if event.is_action_pressed("weapon_next") else -1)
 		if InputMap.has_action(HANDS_FREE) and event.is_action_pressed(HANDS_FREE):
 			toggle_hands_free()
 		if InputMap.has_action(&"anatomy") and event.is_action_pressed(&"anatomy"):
@@ -853,6 +858,8 @@ func is_carried(key: String) -> bool:
 func is_usable(key: String) -> bool:
 	if not weapons.has(key) or not is_carried(key):
 		return false
+	if hotbar != null and not hotbar.allows_weapon(key):
+		return false      # (kept off the hotbar: in the pack, not drawn; Hotbar)
 	var w: Weapon = weapons[key]
 	return not (w is Throwable and (w as Throwable).count <= 0)
 
@@ -944,6 +951,9 @@ func _next_carried(from: String) -> String:
 ## The mouse wheel: the weapons in their order, then the tools the player owns (GatherTools.ORDER; user 2026-09-26),
 ## round again; unusable weapons and tools not owned are passed by.
 func _wheel_step(step: int) -> void:
+	if hotbar != null:
+		hotbar.step(step)      # (the hotbar's filled slots)
+		return
 	var ring: Array = []
 	for k: String in weapon_order:
 		ring.append(k)

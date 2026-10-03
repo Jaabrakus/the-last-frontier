@@ -2,6 +2,8 @@ class_name FrontierVegetation
 extends Node3D
 ## Trees, saplings, undergrowth, fallen wood and rocks around the fort (look-dev spec,
 ## section 7). Owner: package C.
+## Past the forest's square, the small woods of data/world/woodlots.json (VegWoodlots: the homestead's stand of oaks and pines
+## across the ford) go into the same layout once it is built, after everything in it, and are drawn, solid and felled as it is.
 ##
 ## Integration API (frozen; see the spec, section 11):
 ##   var v := FrontierVegetation.new(); v.name = "Vegetation"; add_child(v)
@@ -129,6 +131,7 @@ func build(world_settings: WorldSettings, level_rng: RandomNumberGenerator) -> v
 	layout = Layout.new(int(level_seed & 0x7FFFFFFF), EnvironmentRig.sun_direction())
 	layout.fix_clipping = _user_arg("veg_clip_fix") != "0"     # A/B: the layout before its clipping pass
 	layout.build(visuals, settings.clutter_density)
+	VegWoodlots.add(layout)                      # (the small woods past the forest's square: data/world/woodlots.json)
 	var t1 := Time.get_ticks_usec()
 	_colliders()
 	var t2 := Time.get_ticks_usec()

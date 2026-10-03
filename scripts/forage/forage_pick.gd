@@ -73,7 +73,7 @@ func start(p: FrontierPlayer, pi: int, li: int, point: Vector3) -> bool:
 		if _pose.get_parent():
 			_pose.get_parent().remove_child(_pose)
 		p.skeleton.add_child(_pose)
-	p.skeleton.move_child(_pose, -1)            # over the tree and every other modifier
+	SwayPose.put_last(p.skeleton, _pose)        # over the tree and every other modifier, the body (its helpers) still last
 	_pose.active = true
 	_label.text = String(field.data.plants[kind].get("take", "Pick"))
 	_bar.value = progress

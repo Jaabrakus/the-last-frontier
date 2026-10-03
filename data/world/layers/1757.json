@@ -1,0 +1,87 @@
+{
+  "format": "frontier-world-layer",
+  "version": 1,
+  "id": "1757",
+  "name": "The valley, autumn 1757",
+  "_doc": [
+    "The story's 1757 layer of the valley (docs/main_story.md 10.1's fixes table, docs/maps.md 1). StoryLayer.apply(level, \"1757\") puts it on the baked squares when a storyline whose world says \"layer\": \"1757\" runs (data/story/storylines/two_fires.json world.layer); free play never sees it.",
+    "The bank swap (critic B10): the stockade stands in for Fort Herkimer WEST of the river, so the game's west bank is the real south bank and its EAST bank is the real north bank, where the farms burned on 12 Nov 1757 (H). The farms and the mill are east of the river (x0 = 832, meandering about +-95 m) in the open land square.",
+    "The places and sites use the storyline's own names and points (two_fires.json places: rauch_farm, farm_brenner, farm_wendel, farm_ott, flatts_farms, mill, fort_church, raiders_camp, wreck, ford, homestead), so its missions find the buildings where they send the player. A farm's point is its yard: the house stands 5 m behind it, its door toward the river.",
+    "places: named points, [x, z] in metres, or {river_z, river_d}: river_d metres along x from the river's centre at river_z (WorldRiver.x_at; + east). StoryLayer.place(name) gives them on the ground. Every site is a place too (its `at`), with <id>_door (the ground in front of its first house door); a place listed here wins over a site's.",
+    "sites: what the layer builds. A site stands at `at` [x, z] or {river_z, river_d}, turned `yaw` degrees, or (face: river) with its front (local +Z) toward the river, `turn` degrees more. Its parts are in its own frame, x along its front, +z toward its front: a cabin (`cabin`: `bays` floor cells of 3 m along x, one deep; its `front`, `back`, `left`, `right` walls by type; a gable over each end, a roof bay over each cell; `hearth` inside the left or right end wall), or one build piece (`type`, `at`, `yaw` degrees), or a piece at a named place (`place`). Everything is the build menu's own pieces (BuildWorld.add_piece), free of cost, tagged as this layer's (saved with the building; never placed twice), so FireSpread burns them like any other: the raid's farms burn in stages and leave their stone hearths standing.",
+    "The mill (H: a water-mill burned with the farms) stands by the water, 22 m out from its yard (the storyline's mill point, 37 m east of the river's centre): its wheel turns in the river's edge on a shaft through its front wall (StoryLayerProps.mill_wheel: wood, burnable). The doc's creek (S) is not in the bake, so the river turns it.",
+    "The church (H: built 1753-67, walls unfinished in 1757) stands outside the stockade's north-east corner by the gate (the storyline's fort_church), its nave along z with the altar end north-east (-z): grey stone walls stepping down from that end, a door gap in the west end, opening onto the ground along the fort's east wall (StoryLayerProps.church: stone, not burnable; the fort's side did not burn). Along x it would stand on one of the forest's stumps.",
+    "The pine grove at the head of the open land (docs/maps.md: the wreck near the upper rapid). The ground there rises 10-16 degrees to the north ridge (18-20 m over the flats); the storyline's wreck point [1100, -380] is on that slope, and the one level bench within 40 m of it is wreck_site [1112, -387] (17.6 m up, 0.6-0.9 m of fall over a 26 x 10 m hull turned wreck_yaw 60 degrees): the wreck's clearing is round it, wide enough to hold [1100, -380] too. The pines (white pine and hemlock, the forest's own models) stand round it on the slope; the open land had no trees before (the forest's layout ends at the fort's square).",
+    "animals: the most of each species per square in this layer (docs/main_story.md 10.1: no mammoths and no bison in the valley's story layers, H: no record of bison in the Mohawk Valley in the 1750s; verify). `all` holds for every square type, a type's own entry over it; free play keeps data/world/squares.json's numbers. Horses stay (strays and free-ranging farm stock, D)."
+  ],
+  "animals": {
+    "all": {"mammoth": 0, "bison": 0}
+  },
+  "places": {
+    "flatts_fort": [0.0, 0.0],
+    "homestead": [1000.0, 100.0],
+    "flatts_farms": [910.0, -85.0],
+    "ford": [897.0, 60.0],
+    "ford_west": {"river_z": 60.0, "river_d": -19.0},
+    "ford_east": {"river_z": 60.0, "river_d": 19.0},
+    "raiders_camp": [835.0, -265.0],
+    "wreck": [1100.0, -380.0],
+    "wreck_site": [1112.0, -387.0],
+    "pine_grove": [1090.0, -368.0]
+  },
+  "wreck_yaw": 60.0,
+  "sites": [
+    {"id": "farm_ott", "kind": "farm", "name": "old Ott's farm", "at": [860.0, -200.0], "face": "river", "turn": 6.0,
+      "_doc": "At the top of the farms' bank, 93 m east of the river.",
+      "parts": [
+        {"cabin": "house", "at": [0.0, -5.0], "bays": 2, "front": ["wall_door", "wall_window"], "back": ["wall", "wall_window"],
+          "left": "wall", "right": "wall", "hearth": "left"},
+        {"type": "lean_to", "at": [5.9, -4.1], "yaw": 0.0},
+        {"type": "woodpile", "at": [-4.3, -4.4], "yaw": 90.0}
+      ]},
+    {"id": "farm_wendel", "kind": "farm", "name": "the widow Wendel's farm", "at": [880.0, -120.0], "face": "river", "turn": -5.0,
+      "parts": [
+        {"cabin": "house", "at": [0.0, -5.0], "bays": 2, "front": ["wall_window", "wall_door"], "back": ["wall_window", "wall"],
+          "left": "wall", "right": "wall", "hearth": "right"},
+        {"type": "lean_to", "at": [-6.0, -4.1], "yaw": 0.0},
+        {"type": "woodpile", "at": [4.3, -4.4], "yaw": 90.0}
+      ]},
+    {"id": "farm_brenner", "kind": "farm", "name": "the Brenners' farm", "at": [930.0, -45.0], "face": "river", "turn": -7.0,
+      "parts": [
+        {"cabin": "house", "at": [0.0, -5.0], "bays": 2, "front": ["wall_door", "wall_window"], "back": ["wall", "wall"],
+          "left": "wall_window", "right": "wall", "hearth": "left"},
+        {"type": "lean_to", "at": [5.9, -4.1], "yaw": 0.0},
+        {"type": "woodpile", "at": [-4.3, -4.4], "yaw": 90.0}
+      ]},
+    {"id": "rauch_farm", "kind": "farm", "name": "the Rauch farm", "at": [965.0, 20.0], "face": "river", "turn": 4.0,
+      "_doc": "Margaretha, Jost and grandmother Anna Rauch's farm (docs/main_story.md 9.4): the house with its hearth, a barn behind it across the yard, a byre lean-to, the woodpile and a drying rack in the yard. Across the ford and the nearest farm to the homestead (about 90 m): the Neighbours errand. Its people can stand in the yard (rauch_farm) or at rauch_farm_door.",
+      "parts": [
+        {"cabin": "house", "at": [0.0, -5.0], "bays": 2, "front": ["wall_door", "wall_window"], "back": ["wall", "wall_window"],
+          "left": "wall_window", "right": "wall", "hearth": "right"},
+        {"cabin": "barn", "at": [0.0, -13.0], "bays": 2, "front": ["wall_door", "wall_door"], "back": ["wall", "wall"],
+          "left": "wall", "right": "wall"},
+        {"type": "lean_to", "at": [6.9, -12.1], "yaw": 0.0},
+        {"type": "woodpile", "at": [4.4, -4.4], "yaw": 90.0},
+        {"type": "drying_rack", "at": [-3.8, -0.6], "yaw": 0.0}
+      ]},
+    {"id": "mill", "kind": "mill", "name": "the mill", "at": [800.0, -160.0], "face": "river", "turn": 0.0,
+      "parts": [
+        {"cabin": "house", "at": [0.0, 22.0], "bays": 2, "front": ["wall_window", "wall"], "back": ["wall_door", "wall"],
+          "left": "wall", "right": "wall_window"},
+        {"type": "woodpile", "at": [4.6, 20.3], "yaw": 90.0}
+      ],
+      "wheel": {"along": 1.5, "river_d": 8.5, "radius": 2.0, "width": 0.7}},
+    {"id": "ford", "kind": "marker", "name": "the ford",
+      "_doc": "The ford at the rapid (z about 60: shallow, stony white water, WorldRiver.rapid_at): a blazed post on each bank where the crossing starts.",
+      "parts": [
+        {"type": "post", "place": "ford_west"},
+        {"type": "post", "place": "ford_east"}
+      ]},
+    {"id": "fort_church", "kind": "church", "name": "the church", "at": [22.0, -22.0], "yaw": 90.0,
+      "_doc": "Beyond the stockade's north-east corner (the palisade at x 16 and z -16), on the fort's level ground: x 17.5-26.5, z -29 to -15. 14 x 9 m outside, its walls 0.7 m thick.",
+      "church": {"length": 14.0, "width": 9.0, "thick": 0.7, "east_h": 3.6, "west_h": 1.1, "door": 1.6}},
+    {"id": "pine_grove", "kind": "grove", "name": "the pines",
+      "grove": {"center": [1090.0, -366.0], "radii": [118.0, 50.0], "spacing": 8.0, "keep": 0.86, "min_h": 1.5,
+        "max_slope_deg": 30.0, "hemlock": 0.25, "clear": [{"place": "wreck_site", "r": 22.0}], "seed": 1757}}
+  ]
+}

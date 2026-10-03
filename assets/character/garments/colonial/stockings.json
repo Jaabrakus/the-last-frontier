@@ -1,0 +1,283 @@
+{
+ "id": "stockings",
+ "name": "Knit stockings",
+ "description": "Knitted wool stockings from the toes to just above the knee, tied below the knee with a garter under the breeches' knee band.",
+ "kind": "garment",
+ "set": "colonial",
+ "slot": "legs.over",
+ "alt_slots": [],
+ "layer": {
+  "default": 10
+ },
+ "glb": "res://assets/character/garments/colonial/stockings.glb",
+ "mesh": "stockings",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "stockings"
+  }
+ ],
+ "occupies_regions": [
+  "ankle_l",
+  "ankle_r",
+  "foot_l",
+  "foot_r",
+  "shin_lower_l",
+  "shin_lower_r",
+  "shin_upper_l",
+  "shin_upper_r"
+ ],
+ "hides_regions": [
+  "ankle_l",
+  "ankle_r",
+  "foot_l",
+  "foot_r",
+  "shin_lower_l",
+  "shin_lower_r",
+  "shin_upper_l",
+  "shin_upper_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "knit",
+   "role": "cloth",
+   "fabric": "KNIT",
+   "palette": [
+    "grey_white",
+    "linen_white",
+    "stroud_blue",
+    "royal_blue",
+    "drab",
+    "logwood_black",
+    "slate_grey",
+    "walnut_brown"
+   ],
+   "default": "grey_white",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "grey_white": "#D4D0C3",
+    "linen_white": "#E8E3D3",
+    "stroud_blue": "#1E2B4A",
+    "royal_blue": "#233C78",
+    "drab": "#8B7A5C",
+    "logwood_black": "#1C1B20",
+    "slate_grey": "#6B6A66",
+    "walnut_brown": "#5A3F2C"
+   },
+   "fabrics": [
+    "KNIT"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "garters",
+   "role": "ribbon",
+   "fabric": "WOOL",
+   "palette": [
+    "logwood_black",
+    "madder_red",
+    "linen_white",
+    "stroud_blue",
+    "leather_brown",
+    "grey_white"
+   ],
+   "default": "logwood_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "logwood_black": "#1C1B20",
+    "madder_red": "#8E2B21",
+    "linen_white": "#E8E3D3",
+    "stroud_blue": "#1E2B4A",
+    "leather_brown": "#5B3D26",
+    "grey_white": "#D4D0C3"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 2840,
+    "verts": 1730,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "foot_l",
+     "foot_r",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "l_ball",
+     "r_upper_leg",
+     "r_knee",
+     "r_ankle",
+     "r_heel",
+     "r_ball"
+    ]
+   }
+  },
+  "tris": 2840,
+  "verts": 1730,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0305,
+   "breast_large": 0.001,
+   "breast_small": 0.001
+  },
+  "coverage": {
+   "thigh_lower_l": {
+    "normal": 0.177,
+    "cone": 0.177
+   },
+   "shin_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "foot_l": {
+    "normal": 0.99,
+    "cone": 0.99
+   },
+   "thigh_lower_r": {
+    "normal": 0.219,
+    "cone": 0.208
+   },
+   "shin_upper_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "foot_r": {
+    "normal": 0.99,
+    "cone": 0.99
+   }
+  },
+  "glb_kb": 330.2
+ },
+ "budget": {
+  "tris_max": 3200
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "Knitted wool or worsted stockings were worn by men and women alike: white, grey, blue, brown or black; red and yellow were not usual. The colonial regulars of New France wore blue stockings with their blue veste and breeches (the 31 May 1758 prize sale lists 'Soldiers blue Stockings') [M4][M5][M3].",
+ "sources": [
+  "M4",
+  "M5",
+  "M3",
+  "M2"
+ ],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "colonial"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 1.17,
+    "p05_mm": 2.59,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 1.67,
+    "p05_mm": 2.79,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 1.17,
+    "p05_mm": 2.59,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 1.17,
+    "p05_mm": 2.59,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/stockings.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/stockings.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "presets": {
+   "marine": {
+    "0": "royal_blue",
+    "1": "royal_blue"
+   },
+   "settler": {
+    "0": "grey_white",
+    "1": "logwood_black"
+   },
+   "mourning": {
+    "0": "logwood_black",
+    "1": "logwood_black"
+   }
+  },
+  "construction": "cloth2.feet.SockTube: rings along the leg's joint line bent into the foot, each vertex the outermost point 3.2 mm off the skin along its ray (bridges the toes and the knee's hollow)",
+  "slot_note": "Shares legs.over with leggings_wool (one or the other: leggings go over bare legs or are worn instead of stockings).",
+  "references": [
+   "https://www.fortticonderoga.org/wp-content/uploads/2023/11/1759-Battle-on-Snowshoes-French-Army-Colonial-Regulars-Guidelines-1.pdf",
+   "https://fortticonderoga.org/wp-content/uploads/2024/06/Zipped-1759-Siege-of-Carillon-French-Women-Guidelines.pdf"
+  ]
+ }
+}

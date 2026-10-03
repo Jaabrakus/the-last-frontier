@@ -487,6 +487,10 @@ func take_down(p: BuiltPiece) -> bool:
 			player.interactor.notice("Take the %s off it first" % data.name_of(deps[0].type).to_lower())
 		return false
 	var back := refund_of(p.type)
+	# FIRE: a piece alight is pulled down (a firebreak) for nothing back: it burnt (FireSpread leaves its ruin)
+	var alight := FireSpread.alight(p)
+	if alight:
+		back = {}
 	var inv := InventoryState.from_player(player)
 	for k: String in back:
 		inv.add(k, int(back[k]))
@@ -497,7 +501,10 @@ func take_down(p: BuiltPiece) -> bool:
 		aimed_piece = null
 	world.remove_piece(p)
 	if player.interactor:
-		player.interactor.notice("Taken down: %s  (+%s)" % [data.name_of(type), BuildData.cost_text(back)])
+		if alight:
+			player.interactor.notice("Pulled down the burning %s" % data.name_of(type).to_lower())
+		else:
+			player.interactor.notice("Taken down: %s  (+%s)" % [data.name_of(type), BuildData.cost_text(back)])
 	taken_down.emit(type, back)
 	return true
 
@@ -516,6 +523,8 @@ func take_down_prompt() -> String:
 	var nm := data.name_of(aimed_piece.type).to_lower()
 	if not deps.is_empty():
 		return "The %s rests on the %s" % [data.name_of(deps[0].type).to_lower(), nm]
+	if FireSpread.alight(aimed_piece):
+		return "Pull down the burning %s  (nothing saved)" % nm
 	return "Take down the %s  (+%s)" % [nm, BuildData.cost_text(refund_of(aimed_piece.type))]
 
 

@@ -60,5 +60,15 @@
  "#A8793C": "#A8793C",
  "#E0D2A8": "#E0D2A8",
  "#3F2A1A": "#3F2A1A",
- "check_blue": "#2F4166"
+ "check_blue": "#2F4166",
+ "keel_glow": "#FFCC6B",
+ "dead_stone": "#8C8A84",
+ "tar_black": "#26221D",
+ "kersey_blue": "#2B3A55",
+ "logwood_plum": "#3B2A3A",
+ "sailcloth": "#D9CFB4",
+ "hemp": "#9C8460",
+ "lens_glass": "#6F86A0",
+ "drift_frost": "#DDE6EE",
+ "horn": "#8A7A5E"
 }

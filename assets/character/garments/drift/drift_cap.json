@@ -1,0 +1,287 @@
+{
+ "id": "drift_cap",
+ "name": "Drift cap",
+ "description": "A felted knit cap with a turned-up band and a long knitted tail ending in a brass-capped tassel round a glowing stone bead.",
+ "kind": "garment",
+ "set": "drift",
+ "slot": "head",
+ "alt_slots": [],
+ "layer": {
+  "default": 80
+ },
+ "glb": "res://assets/character/garments/drift/drift_cap.glb",
+ "mesh": "drift_cap",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "drift_cap"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [
+  "crown"
+ ],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "knit",
+   "role": "cloth",
+   "fabric": "KNIT",
+   "palette": [
+    "slate_grey",
+    "indigo_mid",
+    "tow",
+    "madder_red",
+    "walnut_brown"
+   ],
+   "default": "slate_grey",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "slate_grey": "#6B6A66",
+    "indigo_mid": "#34507A",
+    "tow": "#A99570",
+    "madder_red": "#8E2B21",
+    "walnut_brown": "#5A3F2C"
+   },
+   "fabrics": [
+    "KNIT"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "band",
+   "role": "band",
+   "fabric": "KNIT",
+   "palette": [
+    "slate_grey",
+    "indigo_mid",
+    "tow",
+    "madder_red",
+    "walnut_brown"
+   ],
+   "default": "slate_grey",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "slate_grey": "#6B6A66",
+    "indigo_mid": "#34507A",
+    "tow": "#A99570",
+    "madder_red": "#8E2B21",
+    "walnut_brown": "#5A3F2C"
+   },
+   "fabrics": [
+    "KNIT"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "brass cap",
+   "role": "metal",
+   "fabric": "MET",
+   "palette": [
+    "brass",
+    "pewter"
+   ],
+   "default": "brass",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "brass": "#B58F4A",
+    "pewter": "#9A9C9A"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": true
+  },
+  {
+   "zone": 3,
+   "name": "keelstone bead",
+   "role": "trim",
+   "fabric": "FLAT",
+   "palette": [
+    "dead_stone",
+    "keel_glow"
+   ],
+   "default": "dead_stone",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "dead_stone": "#8C8A84",
+    "keel_glow": "#FFCC6B"
+   },
+   "fabrics": [
+    "FLAT"
+   ],
+   "metal": false,
+   "glow": {
+    "strength": 1.2,
+    "pulse": 0.25,
+    "life": 1.0,
+    "color": "keel_glow",
+    "dead": "dead_stone"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1998,
+    "verts": 1244,
+    "zones": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "regions": [
+     "head"
+    ],
+    "max_influences": 1,
+    "bones": [
+     "headb"
+    ]
+   }
+  },
+  "tris": 1998,
+  "verts": 1244,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.008,
+   "breast_large": 0.0,
+   "breast_small": 0.0,
+   "sex_head": 0.008
+  },
+  "coverage": {
+   "head": {
+    "normal": 0.094,
+    "cone": 0.01
+   }
+  },
+  "glb_kb": 258.3
+ },
+ "budget": {
+  "tris_max": 2000
+ },
+ "evidence": "B",
+ "licence_note": null,
+ "history": "Knitted Monmouth caps and stocking caps were the seaman's caps from the 1600s on, close-fitting, some with a turned-up band, some long like a stocking [D1][D2]. The Drift crews knit the tail long and weight it with a keelstone bead, so it shows the current.",
+ "sources": [
+  "D1",
+  "D2"
+ ],
+ "aliases": [],
+ "tags": [
+  "drift",
+  "sailor"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 3.14,
+    "p05_mm": 15.82,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 3.05,
+    "p05_mm": 15.31,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 3.14,
+    "p05_mm": 15.82,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 3.14,
+    "p05_mm": 15.82,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  },
+  "tail_m": 0.224,
+  "scalp_clearance_mm": {
+   "f": [
+    3.1,
+    16.3
+   ],
+   "m": [
+    3.1,
+    15.5
+   ],
+   "bl": [
+    3.1,
+    16.3
+   ],
+   "bs": [
+    3.1,
+    16.3
+   ]
+  }
+ },
+ "generator": "tools/character/cloth2/garments/drift_cap.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/drift_cap.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "presets": {
+   "deckhand": {
+    "0": "slate_grey",
+    "1": "slate_grey",
+    "3": "dead_stone"
+   },
+   "indigo": {
+    "0": "indigo_mid",
+    "1": "indigo_mid",
+    "3": "dead_stone"
+   },
+   "tow": {
+    "0": "tow",
+    "1": "tow",
+    "3": "dead_stone"
+   },
+   "red": {
+    "0": "madder_red",
+    "1": "madder_red",
+    "3": "dead_stone"
+   },
+   "lit": {
+    "3": "keel_glow"
+   },
+   "on_earth": {
+    "3": "dead_stone",
+    "glow_life": 0.0
+   }
+  },
+  "glow_note": "The bead is dead stone by default (one glow per costume: a caster's is the mote belt, a watch crew's the night-watch cord); the 'lit' preset lights it.",
+  "tail_note": "The tail is rigid on headb; the Drift's lift (the bead rising, the tail streaming) is a runtime driver not built yet (the hair queue's pendulum is the model).",
+  "references": [
+   "[D1] HMS Richmond, Sailor's Dress of 1775: https://hmsrichmond.org/sailordress.htm",
+   "[D2] Reconstructing History, Breeches for Seamen (on the slop trade): https://reconstructinghistory.com/breeches-for-seamen/"
+  ]
+ }
+}

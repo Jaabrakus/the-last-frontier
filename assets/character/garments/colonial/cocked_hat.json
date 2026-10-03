@@ -1,0 +1,264 @@
+{
+ "id": "cocked_hat",
+ "name": "Cocked hat",
+ "description": "A black felt hat with the brim cocked up on three sides, bound with tape or lace, with a cockade on the left held by a loop and button.",
+ "kind": "garment",
+ "set": "colonial",
+ "slot": "head",
+ "alt_slots": [],
+ "layer": {
+  "default": 80
+ },
+ "glb": "res://assets/character/garments/colonial/cocked_hat.glb",
+ "mesh": "cocked_hat",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "cocked_hat"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [
+  "crown"
+ ],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "felt",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "logwood_black",
+    "walnut_brown",
+    "slate_grey"
+   ],
+   "default": "logwood_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "logwood_black": "#1C1B20",
+    "walnut_brown": "#5A3F2C",
+    "slate_grey": "#6B6A66"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "edge tape or lace",
+   "role": "trim",
+   "fabric": "WOOL",
+   "palette": [
+    "logwood_black",
+    "white_facing",
+    "false_gold",
+    "silver_lace",
+    "gold_lace"
+   ],
+   "default": "logwood_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "logwood_black": "#1C1B20",
+    "white_facing": "#E4DECC",
+    "false_gold": "#B89445",
+    "silver_lace": "#CFD2D4",
+    "gold_lace": "#C9A54B"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "cockade",
+   "role": "ribbon",
+   "fabric": "FLAT",
+   "palette": [
+    "ribbon_black",
+    "ribbon_white",
+    "logwood_black"
+   ],
+   "default": "ribbon_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ribbon_black": "#151417",
+    "ribbon_white": "#ECE8DE",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "FLAT"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 3,
+   "name": "button",
+   "role": "button",
+   "fabric": "MET",
+   "palette": [
+    "brass",
+    "pewter",
+    "silver",
+    "logwood_black"
+   ],
+   "default": "pewter",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "brass": "#B58F4A",
+    "pewter": "#9A9C9A",
+    "silver": "#C8CACC",
+    "logwood_black": "#1C1B20"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1452,
+    "verts": 768,
+    "zones": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "regions": [
+     "head"
+    ],
+    "max_influences": 1,
+    "bones": [
+     "headb"
+    ]
+   }
+  },
+  "tris": 1452,
+  "verts": 768,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0088,
+   "breast_large": 0.0,
+   "breast_small": 0.0,
+   "sex_head": 0.0088
+  },
+  "coverage": {
+   "head": {
+    "normal": 0.125,
+    "cone": 0.031
+   }
+  },
+  "glb_kb": 206.7
+ },
+ "budget": {
+  "tris_max": 1800
+ },
+ "evidence": "A",
+ "licence_note": null,
+ "history": "The three-cornered felt hat was the common hat of men in the 1750s, civilian and soldier: bound with white worsted tape for British privates, with false-gold lace for the French colonial regulars (the 1758 prize sale's hats with broad tinsel lace), the cockade black for the British and white for the French [M6][R25][M4].",
+ "sources": [
+  "M6",
+  "R25",
+  "M4"
+ ],
+ "aliases": [],
+ "tags": [
+  "colonial"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 6.4,
+    "p05_mm": 13.2,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 6.07,
+    "p05_mm": 14.87,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 6.4,
+    "p05_mm": 13.2,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 6.4,
+    "p05_mm": 13.2,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  },
+  "scalp_clearance_mm": {
+   "f": [
+    11.9,
+    19.5
+   ],
+   "m": [
+    13.2,
+    18.9
+   ],
+   "bl": [
+    11.9,
+    19.5
+   ],
+   "bs": [
+    11.9,
+    19.5
+   ]
+  }
+ },
+ "generator": "tools/character/cloth2/garments/cocked_hat.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/cocked_hat.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "presets": {
+   "civilian": {
+    "1": "logwood_black",
+    "2": "ribbon_black",
+    "3": "pewter"
+   },
+   "british_private": {
+    "1": "white_facing",
+    "2": "ribbon_black",
+    "3": "pewter"
+   },
+   "marine": {
+    "1": "false_gold",
+    "2": "ribbon_white",
+    "3": "brass"
+   }
+  },
+  "felt_note": "Felt uses the WOOL kit with a soft nap (ClothMaterials FELT_WORDS: the id has 'hat')."
+ }
+}

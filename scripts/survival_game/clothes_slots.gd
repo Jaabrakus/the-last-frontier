@@ -7,7 +7,8 @@ extends RefCounted
 ## (PlayerOutfit catalog "slot"): a shirt, a frock on the body; breeches, leggings on the legs; moccasins the feet; a cap the head;
 ## mitts the hands; a robe, a matchcoat the wrap.
 ## A start with nothing wears what it makes: its look is dressed from the worn garments (sync_look), so it is as naked as it is
-## clothed. A normal start keeps the look the creator chose (what it wears there is cosmetic as ever).
+## clothed. A normal start keeps the look the creator chose, and a garment put on or taken off in the Tab screen changes that
+## slot of it (_look_slot).
 
 const ZONES := [
 	{"id": "head", "name": "Head", "slots": ["head"]},
@@ -114,6 +115,10 @@ static func wear(bridge: SurvivalBridge, item_id: String) -> bool:
 		SurvivalInventory.take_off(core, there)
 	var ok := SurvivalInventory.wear(core, item_id)
 	sync_look(bridge)
+	if there != "":
+		_look_slot(bridge, there, false)
+	if ok:
+		_look_slot(bridge, item_id, true)
 	return ok
 
 
@@ -124,7 +129,40 @@ static func take_off(bridge: SurvivalBridge, zone: String) -> bool:
 		return false
 	var ok := SurvivalInventory.take_off(bridge.core, there)
 	sync_look(bridge)
+	if ok:
+		_look_slot(bridge, there, false)
 	return ok
+
+
+## A normal start: the garment put on (or taken off) in the Tab screen is drawn too (user 2026-10-03: "dragging a garment onto
+## your character in Tab changes your warmth but not your look ... fix this"): its customizer garment goes into the look's slot
+## (the colours kept when it is the same garment), and taken off the slot goes back to the basic dress. The look is saved as the
+## creator's would be. A start with nothing is dressed from what is worn by sync_look instead.
+static func _look_slot(bridge: SurvivalBridge, item_id: String, on: bool) -> void:
+	if bridge == null or bridge.core == null or bridge.is_bare():
+		return
+	var p := bridge.player
+	if p == null or not is_instance_valid(p) or p.get("appearance") == null:
+		return
+	var ap := p.get("appearance") as PlayerAppearance
+	if ap == null or ap.body == null:
+		return
+	var g := garment_of(bridge.core, item_id)
+	var slot := String(PlayerOutfit.entry(g).get("slot", "")) if g != "" else ""
+	if slot == "":
+		return
+	var look := ap.look.duplicate(true)
+	var outfit: Dictionary = (look.get("outfit", {}) as Dictionary).duplicate(true) if look.get("outfit") is Dictionary else {}
+	var cur: Dictionary = outfit.get(slot, {}) if outfit.get(slot) is Dictionary else {}
+	if on:
+		outfit[slot] = {"id": g, "colors": (cur.get("colors", {}) as Dictionary).duplicate() if String(cur.get("id", "")) == g else {}}
+	elif String(cur.get("id", "")) == g:
+		outfit.erase(slot)
+	else:
+		return
+	look["outfit"] = outfit
+	ap.apply(look)
+	AppearanceStore.save_current(ap.look)
 
 
 ## The outfit a start with nothing wears now: nothing in any slot the zones cover, then each worn garment in its own. {} if the

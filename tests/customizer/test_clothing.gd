@@ -177,8 +177,8 @@ func _test_player() -> void:
 	_check(shown.is_empty(), "no legacy outfit mesh drawn (%s)" % [shown])
 	var man := PlayerOutfit.effective({}, 1.0)
 	var woman := PlayerOutfit.effective({}, 0.0)
-	_check(String(man.get("shirt", {}).get("id", "")) == "shirt_linen" and String(man.get("legs.lower", {}).get("id", "")) == "breeches",
-			"a man's basic dress: a shirt and breeches (%s)" % [man.keys()])
+	_check(String(man.get("shirt", {}).get("id", "")) == "shirt_tucked" and String(man.get("legs.lower", {}).get("id", "")) == "breeches",
+			"a man's basic dress: a shirt tucked into breeches (%s)" % [man.keys()])
 	_check(String(woman.get("shirt", {}).get("id", "")) == "shift_linen" and String(woman.get("legs.lower", {}).get("id", "")) == "petticoat",
 			"a woman's basic dress: a shift and a petticoat (%s)" % [woman.keys()])
 	_check(not body.part_meshes("outfit:shirt").is_empty() and not body.part_meshes("outfit:legs.lower").is_empty(),

@@ -269,6 +269,12 @@ def weld(m, tol=1e-5):
     newidx = remap_of_first[group_first]
     F = newidx[m.F]
     ok = (F[:, 0] != F[:, 1]) & (F[:, 1] != F[:, 2]) & (F[:, 2] != F[:, 0])
+    # two slivers welded onto the same three vertices: keep one (a duplicate face makes the mesh invalid in Blender)
+    key = np.sort(F, 1)
+    _, first_f = np.unique(key, axis=0, return_index=True)
+    uniq = np.zeros(len(F), bool)
+    uniq[first_f] = True
+    ok &= uniq
     out = Mesh.__new__(Mesh)
     out.V = {k: v[keep] for k, v in m.V.items()}
     out.N = {k: v[keep] for k, v in m.N.items()}

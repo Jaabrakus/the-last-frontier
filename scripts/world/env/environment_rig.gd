@@ -94,6 +94,10 @@ var _attributes: CameraAttributesPractical
 var _sky_material: ShaderMaterial
 var _motes: GPUParticles3D
 var _god_rays: GodRays
+## The wonder look's amount (WonderLook: 0 the frontier's own sky .. 1 the world among the stars) and where it is going.
+var wonder := 0.0
+var _wonder_to := 0.0
+var _wonder_rate := 0.0
 var _player: Node3D
 var _globals := {}              ## uniform -> declared in project.godot?
 var _headless := false
@@ -137,6 +141,16 @@ func build(world_settings: WorldSettings) -> void:
 		apply_viewport(get_viewport())
 		if settings.quality != "low":
 			_build_dust_motes()
+		if clock_driver:
+			# sky galleons over the valley once the wonder is in (SkyTraffic waits for rig.wonder)
+			var traffic := SkyTraffic.new()
+			traffic.name = "SkyTraffic"
+			traffic.rig = self
+			add_child(traffic)
+		if WonderLook.requested() and clock_driver:
+			set_wonder(1.0)   # look=wonder: the frontier among the stars at once
+		elif WonderLook.reveal_requested() and clock_driver:
+			get_tree().create_timer(5.0).timeout.connect(reveal_wonder.bind(20.0))
 	print(log_line())
 
 
@@ -153,6 +167,21 @@ func log_line() -> String:
 
 func track(player: Node3D) -> void:
 	_player = player
+
+
+## The wonder at once (0 .. 1): look=wonder, a save made after the sky opened.
+func set_wonder(amount: float) -> void:
+	wonder = clampf(amount, 0.0, 1.0)
+	_wonder_to = wonder
+	_wonder_rate = 0.0
+	if clock_driver:
+		WonderLook.apply(_sky_material, _env, _motes, wonder)
+
+
+## The sky opens (the story's turn, StoryDirector effect "wonder_reveal"): the wonder fades in over `seconds`.
+func reveal_wonder(seconds := 20.0) -> void:
+	_wonder_to = 1.0
+	_wonder_rate = 1.0 / maxf(seconds, 0.01)
 
 
 func get_sun() -> DirectionalLight3D:
@@ -174,6 +203,11 @@ func _process(_delta: float) -> void:
 		var cam := follow_camera if is_instance_valid(follow_camera) else get_viewport().get_camera_3d()
 		if cam:
 			_motes.global_position = cam.global_position
+	if _wonder_rate > 0.0 and wonder != _wonder_to:
+		wonder = move_toward(wonder, _wonder_to, _wonder_rate * _delta)
+		var e := wonder * wonder * (3.0 - 2.0 * wonder)   # eased: the sky opens slowly, then all at once, then settles
+		if clock_driver:
+			WonderLook.apply(_sky_material, _env, _motes, e)
 	if _god_rays and _sun:
 		# toward the key light: the sun by day, the moon at night (DayNight turns the one light onto the moon and gives
 		# it the moon's colour); the rays in its colour at its share of its full strength. The night sky is dark, so the

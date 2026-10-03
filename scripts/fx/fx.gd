@@ -15,6 +15,7 @@ const SMOKE := Color(0.92, 0.92, 0.9)
 
 
 static func muzzle_blast(parent: Node, xform: Transform3D, scale := 1.0) -> void:
+	HitchLog.note("muzzle blast")
 	var dir := -xform.basis.z
 	var wind := _wind(parent)
 	var dim := _fire_dim(parent)

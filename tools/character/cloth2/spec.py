@@ -8,6 +8,11 @@ The zone fields are what ClothMaterials.garment_materials reads: role (cloth, tr
 ribbon, lining, band, fringe), fabric code (fabrics.json: LIN WOOL TWILL KNIT SUEDE LEA FUR HES FLAT, MET for metal),
 the palette tokens (palette.json: token -> "#hex") and the default one; up to four zones per surface. New tokens
 are added to palette.json (PALETTE_EXTRA below carries the ones the newer sets brought).
+
+Glow (2026-10-02): Zone(..., glow=Glow(strength, pulse, life)) marks an emissive zone (the Drift crews' piping, the
+mote belt's cells): the entry's zone gets "glow": {"strength", "pulse", "life", "color"} for ClothMaterials (the
+cloth shader does not draw it yet: a zone flagged glow renders as its colour until it does). `over`: the catalog ids
+the garment is fitted over (Garment.over clears their built meshes), recorded in the entry's "fit_over".
 """
 
 import json
@@ -22,6 +27,19 @@ BODY_SHAPES = ["sex", "breast_large", "breast_small"]
 
 
 @dataclass
+class Glow:
+    strength: float = 1.0       # emission at night in the Drift (x the zone colour; 0 = off)
+    pulse: float = 0.0          # slow pulse amplitude 0..1 (the galleon's glow: SkyTraffic._glow)
+    life: float = 1.0           # 1 alive .. 0 spent (fades the colour toward `dead`: under our sky)
+    color: str = "keel_glow"    # the glow's palette token (or "#hex")
+    dead: str = "dead_stone"
+
+    def entry(self):
+        return {"strength": self.strength, "pulse": self.pulse, "life": self.life, "color": self.color,
+                "dead": self.dead}
+
+
+@dataclass
 class Zone:
     idx: int
     name: str
@@ -32,6 +50,7 @@ class Zone:
     pattern: dict = None
     bands: dict = None
     metal: bool = False
+    glow: Glow = None
 
     def entry(self):
         hexes = {}
@@ -43,6 +62,8 @@ class Zone:
              "default": self.default, "pattern": self.pattern, "bands": self.bands, "palette_hex": hexes,
              "fabrics": [self.fabric]}
         d["metal"] = bool(self.metal or self.role == "metal")
+        if self.glow is not None:
+            d["glow"] = self.glow.entry()
         return d
 
 
@@ -69,11 +90,20 @@ class Spec:
     hides_force: list = field(default_factory=list)   # body regions the garment certainly covers (the ray test cannot tell: the crotch)
     licence_note: str = None
     extra: dict = field(default_factory=dict)
+    over: list = field(default_factory=list)          # catalog ids fitted over (Garment.over)
 
     def glb_rel(self):
         return "garments/%s/%s.glb" % (self.set, self.id)
 
     def entry(self, stats, occupies, hides, checks, generator, skirt=None):
+        d = self._entry(stats, occupies, hides, checks, generator, skirt)
+        if self.over:
+            d["fit_over"] = list(self.over)
+        if self.extra:
+            d["extra"] = dict(self.extra)
+        return d
+
+    def _entry(self, stats, occupies, hides, checks, generator, skirt=None):
         return {
             "id": self.id, "name": self.name, "description": self.description, "kind": "garment", "set": self.set,
             "slot": self.slot, "alt_slots": list(self.alt_slots), "layer": dict(self.layer),

@@ -1,0 +1,316 @@
+{
+ "id": "weather_cape",
+ "name": "Weather cape",
+ "description": "A short cape of tarred canvas to the elbow with a standing collar and a hemp toggle, patched with pieces of old sailcloth that glow faintly.",
+ "kind": "garment",
+ "set": "drift",
+ "slot": "accessories.wrap",
+ "alt_slots": [],
+ "layer": {
+  "default": 50
+ },
+ "glb": "res://assets/character/garments/drift/weather_cape.glb",
+ "mesh": "weather_cape",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "weather_cape"
+  }
+ ],
+ "occupies_regions": [
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "chest_upper_back",
+  "chest_upper_front",
+  "chest_upper_side",
+  "neck_lower",
+  "neck_upper",
+  "upper_arm_l",
+  "upper_arm_r"
+ ],
+ "hides_regions": [
+  "chest_upper_back"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "tarred canvas",
+   "role": "cloth",
+   "fabric": "TWILL",
+   "palette": [
+    "tar_black",
+    "slate_grey",
+    "snuff"
+   ],
+   "default": "tar_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tar_black": "#26221D",
+    "slate_grey": "#6B6A66",
+    "snuff": "#6E4B2E"
+   },
+   "fabrics": [
+    "TWILL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "toggle and loop",
+   "role": "trim",
+   "fabric": "TWILL",
+   "palette": [
+    "hemp",
+    "horn",
+    "tar_black"
+   ],
+   "default": "hemp",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "hemp": "#9C8460",
+    "horn": "#8A7A5E",
+    "tar_black": "#26221D"
+   },
+   "fabrics": [
+    "TWILL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 3,
+   "name": "sailcloth patches",
+   "role": "trim",
+   "fabric": "LIN",
+   "palette": [
+    "sailcloth",
+    "dead_stone",
+    "linen_unbleached"
+   ],
+   "default": "sailcloth",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "sailcloth": "#D9CFB4",
+    "dead_stone": "#8C8A84",
+    "linen_unbleached": "#C8BA9A"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false,
+   "glow": {
+    "strength": 0.25,
+    "pulse": 0.05,
+    "life": 1.0,
+    "color": "keel_glow",
+    "dead": "dead_stone"
+   }
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 2132,
+    "verts": 1396,
+    "zones": [
+     0,
+     1,
+     3
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "forearm_a_r",
+     "neck_lower",
+     "neck_upper",
+     "upper_arm_l",
+     "upper_arm_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "l_shoulder",
+     "l_elbow",
+     "r_clavicle",
+     "r_shoulder",
+     "r_elbow",
+     "neck",
+     "heada",
+     "headb",
+     "l_breast",
+     "r_breast",
+     "l_forarm_twist_a",
+     "l_forarm_twist_b",
+     "r_forarm_twist_a",
+     "r_forarm_twist_b",
+     "l_shoulder_twist_a",
+     "l_shoulder_twist_c",
+     "l_shoulder_twist_b",
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d"
+    ]
+   }
+  },
+  "tris": 2132,
+  "verts": 1396,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0522,
+   "breast_large": 0.0663,
+   "breast_small": 0.0474
+  },
+  "coverage": {
+   "head": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "neck_upper": {
+    "normal": 0.812,
+    "cone": 0.719
+   },
+   "neck_lower": {
+    "normal": 0.979,
+    "cone": 0.927
+   },
+   "chest_upper_front": {
+    "normal": 0.833,
+    "cone": 0.729
+   },
+   "chest_upper_side": {
+    "normal": 0.99,
+    "cone": 0.927
+   },
+   "chest_upper_back": {
+    "normal": 0.99,
+    "cone": 0.979
+   },
+   "chest_front": {
+    "normal": 0.792,
+    "cone": 0.635
+   },
+   "chest_side": {
+    "normal": 0.719,
+    "cone": 0.688
+   },
+   "chest_back": {
+    "normal": 0.594,
+    "cone": 0.479
+   },
+   "upper_arm_l": {
+    "normal": 0.802,
+    "cone": 0.719
+   },
+   "forearm_a_l": {
+    "normal": 0.229,
+    "cone": 0.177
+   },
+   "upper_arm_r": {
+    "normal": 0.833,
+    "cone": 0.729
+   },
+   "forearm_a_r": {
+    "normal": 0.229,
+    "cone": 0.135
+   }
+  },
+  "glb_kb": 365.4
+ },
+ "budget": {
+  "tris_max": 3600
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "The Drift's own gear, made from what a ship has: tarred canvas like a seaman's foul-weather clothes, patched with retired sails that sailed on light.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "drift",
+  "sailor"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 4.73,
+    "p05_mm": 12.04,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 2.66,
+    "p05_mm": 9.64,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 4.7,
+    "p05_mm": 11.95,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 4.73,
+    "p05_mm": 11.92,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/weather_cape.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/weather_cape.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "shirt_check",
+  "waistcoat_long",
+  "sea_jacket",
+  "shirt_linen"
+ ],
+ "extra": {
+  "presets": {
+   "rook_act2": {
+    "3": "dead_stone",
+    "glow_life": 0.0
+   },
+   "rook_act3": {
+    "3": "sailcloth",
+    "glow_life": 0.6
+   }
+  },
+  "motion_note": "The 5 cm standing collar meets the jaw when the head bows to aim a long gun."
+ }
+}

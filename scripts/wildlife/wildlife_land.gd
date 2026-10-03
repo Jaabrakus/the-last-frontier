@@ -29,7 +29,8 @@ var fish := {}
 func _init() -> void:
 	for sq in WorldSquares.squares():
 		var t := WorldSquares.type_of(sq)
-		squares[sq] = WildlifeEcology.new(t.get("animals", {}))
+		# (a story's year layer has its own numbers: StoryLayer.animals_of, the 1757 valley no mammoths or bison)
+		squares[sq] = WildlifeEcology.new(StoryLayer.animals_of(WorldSquares.type_id(sq), t.get("animals", {})))
 		meters[sq] = {"trees": float(t.get("trees", 1.0)), "stone": float(t.get("stone", 0.0)), "water": String(t.get("water", ""))}
 		var fs := FishStock.new(String(t.get("water", "")))
 		if fs.has_fish():

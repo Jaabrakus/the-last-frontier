@@ -1,0 +1,382 @@
+{
+ "id": "shirt_check",
+ "name": "Check shirt",
+ "description": "A seaman's shirt of checked linen, tucked into the slops, the neck slit open under a narrow collar band, full sleeves gathered into wrist bands.",
+ "kind": "garment",
+ "set": "drift",
+ "slot": "shirt",
+ "alt_slots": [],
+ "layer": {
+  "default": 10
+ },
+ "glb": "res://assets/character/garments/drift/shirt_check.glb",
+ "mesh": "shirt_check",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "shirt_check"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "chest_upper_back",
+  "chest_upper_front",
+  "chest_upper_side",
+  "forearm_a_l",
+  "forearm_a_r",
+  "forearm_b_l",
+  "forearm_b_r",
+  "forearm_c_l",
+  "forearm_c_r",
+  "neck_lower",
+  "pelvis_side",
+  "upper_arm_l",
+  "upper_arm_r"
+ ],
+ "hides_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "forearm_a_l",
+  "forearm_a_r",
+  "forearm_b_l",
+  "forearm_b_r",
+  "upper_arm_l",
+  "upper_arm_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "check linen",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "check_blue",
+    "linen_white",
+    "linen_unbleached",
+    "tow",
+    "madder_red",
+    "slate_grey"
+   ],
+   "default": "check_blue",
+   "pattern": {
+    "options": [
+     "none",
+     "check"
+    ],
+    "default": "check",
+    "check": {
+     "colors": [
+      "check_blue",
+      "linen_white"
+     ],
+     "scale_m": 0.012
+    }
+   },
+   "bands": null,
+   "palette_hex": {
+    "check_blue": "#2F4166",
+    "linen_white": "#E8E3D3",
+    "linen_unbleached": "#C8BA9A",
+    "tow": "#A99570",
+    "madder_red": "#8E2B21",
+    "slate_grey": "#6B6A66"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "collar and wrist bands",
+   "role": "trim",
+   "fabric": "LIN",
+   "palette": [
+    "linen_white",
+    "linen_unbleached",
+    "tow",
+    "check_blue"
+   ],
+   "default": "linen_white",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "linen_white": "#E8E3D3",
+    "linen_unbleached": "#C8BA9A",
+    "tow": "#A99570",
+    "check_blue": "#2F4166"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 4430,
+    "verts": 2346,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "forearm_a_r",
+     "forearm_b_l",
+     "forearm_b_r",
+     "forearm_c_l",
+     "forearm_c_r",
+     "neck_lower",
+     "pelvis_center",
+     "pelvis_side",
+     "upper_arm_l",
+     "upper_arm_r",
+     "wrist_l",
+     "wrist_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "r_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "l_shoulder",
+     "l_elbow",
+     "l_wrist",
+     "r_clavicle",
+     "r_shoulder",
+     "r_elbow",
+     "r_wrist",
+     "neck",
+     "l_breast",
+     "r_breast",
+     "l_forarm_twist_a",
+     "l_forarm_twist_c",
+     "l_forarm_twist_b",
+     "r_forarm_twist_a",
+     "r_forarm_twist_c",
+     "r_forarm_twist_b",
+     "l_shoulder_twist_a",
+     "l_shoulder_twist_c",
+     "l_shoulder_twist_b",
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d"
+    ]
+   }
+  },
+  "tris": 4430,
+  "verts": 2346,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0538,
+   "breast_large": 0.0865,
+   "breast_small": 0.0228
+  },
+  "coverage": {
+   "neck_upper": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "neck_lower": {
+    "normal": 0.594,
+    "cone": 0.583
+   },
+   "chest_upper_front": {
+    "normal": 0.979,
+    "cone": 0.958
+   },
+   "chest_upper_side": {
+    "normal": 0.906,
+    "cone": 0.896
+   },
+   "chest_upper_back": {
+    "normal": 0.969,
+    "cone": 0.969
+   },
+   "chest_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "pelvis_center": {
+    "normal": 0.083,
+    "cone": 0.083
+   },
+   "pelvis_side": {
+    "normal": 0.458,
+    "cone": 0.458
+   },
+   "upper_arm_l": {
+    "normal": 0.979,
+    "cone": 0.979
+   },
+   "forearm_a_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_c_l": {
+    "normal": 0.583,
+    "cone": 0.531
+   },
+   "upper_arm_r": {
+    "normal": 0.979,
+    "cone": 0.979
+   },
+   "forearm_a_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_c_r": {
+    "normal": 0.594,
+    "cone": 0.542
+   }
+  },
+  "glb_kb": 573.7
+ },
+ "budget": {
+  "tris_max": 6200
+ },
+ "evidence": "B",
+ "licence_note": null,
+ "history": "Checked linen shirts were the seaman's working shirt through the century; plain white, grey or red shirts appear too [D1]. Cut like any linen shirt of the 1750s (body and sleeves of rectangles, the neck slit and a narrow band); the Drift crews' are mended and faded, nothing new. Rook's is coarse tow.",
+ "sources": [
+  "D1"
+ ],
+ "aliases": [],
+ "tags": [
+  "drift",
+  "sailor"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 1.76,
+    "p05_mm": 2.57,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 1.71,
+    "p05_mm": 2.51,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 1.99,
+    "p05_mm": 2.6,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 1.79,
+    "p05_mm": 2.56,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/shirt_check.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/shirt_check.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "presets": {
+   "deckhand": {
+    "0": "check_blue",
+    "1": "linen_white"
+   },
+   "rook_tow": {
+    "0": "tow",
+    "1": "linen_unbleached",
+    "pattern": "check",
+    "check": [
+     "tow",
+     "linen_unbleached"
+    ]
+   },
+   "ithel_plain": {
+    "0": "linen_white",
+    "1": "linen_white",
+    "pattern": "none"
+   }
+  },
+  "ithel_note": "Captain Ithel wears it plain (fine white linen, no check) under the waistcoat and the sea officer's coat: its cut-away fronts showed the linen shirt's hanging tails as a white skirt.",
+  "pattern_note": "zone 0 pattern 'check' (1.2 cm, check_blue on linen_white) is stored for the cloth shader; until it draws patterns the zone renders as its colour.",
+  "references": [
+   "[D1] HMS Richmond, Sailor's Dress of 1775: https://hmsrichmond.org/sailordress.htm"
+  ],
+  "tucked_note": "No hanging tails: the shirt ends inside the slops / breeches waistband, so it is worn under either (a shirt with tails would come through the breeches' thighs)."
+ }
+}

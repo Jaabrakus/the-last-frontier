@@ -71,7 +71,7 @@ func is_busy() -> bool:
 
 
 func is_steady_aiming() -> bool:
-	return active and _fire_input_enabled() and Input.is_action_pressed("aim") \
+	return active and _aim_input_enabled() and Input.is_action_pressed("aim") \
 			and state != State.RELOADING and state != State.EMPTY and not player.is_sprinting
 
 
@@ -129,7 +129,7 @@ func _tick(delta: float) -> void:
 				return
 			# Cancel: RMB or R while shouldering lowers the weapon without firing
 			# (a new LMB press is needed to raise it again).
-			if enabled and (Input.is_action_just_pressed("aim") or Input.is_action_just_pressed("reload")):
+			if (_aim_input_enabled() and Input.is_action_just_pressed("aim")) or (enabled and Input.is_action_just_pressed("reload")):
 				_release_queued = false
 				state = State.READY
 				shot_cancelled.emit()

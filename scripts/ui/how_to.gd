@@ -26,7 +26,9 @@ const CAP_ACTIONS := {
 	"T": [&"torch"], "E": [&"interact"], "Q": [&"equip_wheel"], "B": [&"build_mode"], "Tab": [&"inventory"],
 	"Z": [&"sleep"], "F": [&"cook"], "G": [&"grip"], "V": [&"eat"], "X": [&"sling_all"],
 	"1": [&"weapon_1"], "2": [&"weapon_2"], "3": [&"weapon_3"], "4": [&"weapon_4"], "5": [&"weapon_5"],
-	"6": [&"weapon_6"], "7": [&"tool_cycle", &"tool_axe"], "8": [&"fish_gear", &"tool_mattock"], "H": [&"hands_free"],
+	"6": [&"weapon_6"], "7": [&"weapon_7", &"tool_cycle", &"tool_axe"], "8": [&"weapon_8", &"fish_gear", &"tool_mattock"],
+	"9": [&"weapon_9"], "1-9": [&"weapon_1", &"weapon_2", &"weapon_3", &"weapon_4", &"weapon_5", &"weapon_6", &"weapon_7",
+			&"weapon_8", &"weapon_9"], "H": [&"hands_free"],
 	"LMB": [&"fire"], "RMB": [&"aim"], "MMB": [&"club_grip"], "Wheel": [&"weapon_next", &"weapon_prev"],
 }
 
@@ -46,9 +48,9 @@ const TOPICS := {
 			"Hold [T]  Put it away"]},
 	"axe": {"title": "Felling, limbing and bucking", "steps": ["Hold [LMB]  at a trunk: fell it",
 			"[E]  in the crown: limb it, stroke by stroke", "[E]  along the log: buck off a length",
-			"[7]  Next tool: the mattock, then put away"]},
+			"[1-9]  The hotbar: its number again puts it away"]},
 	"mattock": {"title": "The mattock", "steps": ["Hold [LMB]  at a rock: break it into stone",
-			"[7]  Put it away"]},
+			"[1-9]  Its number again: put it away"]},
 	"bow": {"title": "The hunting bow", "steps": ["Hold [LMB]  Draw: longer, harder and flatter", "Let go of [LMB]  Loose",
 			"[RMB]  While drawn: let the string down", "[R]  Pull arrows into the bow hand: shoot fast"]},
 	"musket": {"title": "The flintlock musket", "steps": ["Hold [LMB]  Shoulder it", "Let go of [LMB]  Fire",

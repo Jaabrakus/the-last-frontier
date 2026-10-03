@@ -135,8 +135,8 @@
  "stats": {
   "surfaces": {
    "main": {
-    "tris": 2998,
-    "verts": 1585,
+    "tris": 2805,
+    "verts": 1486,
     "zones": [
      0,
      1
@@ -163,18 +163,17 @@
      "r_knee",
      "spinea",
      "spineb",
-     "spinec",
-     "spinea_muscle"
+     "spinec"
     ]
    }
   },
-  "tris": 2998,
-  "verts": 1585,
+  "tris": 2805,
+  "verts": 1486,
   "surface_count": 1,
   "shapes": {
-   "sex": 0.0544,
-   "breast_large": 0.0029,
-   "breast_small": 0.0002
+   "sex": 0.0502,
+   "breast_large": 0.0013,
+   "breast_small": 0.0008
   },
   "coverage": {
    "abdomen_front": {
@@ -191,7 +190,7 @@
    },
    "pelvis_center": {
     "normal": 0.896,
-    "cone": 0.698
+    "cone": 0.708
    },
    "pelvis_side": {
     "normal": 1.0,
@@ -262,7 +261,7 @@
     "cone": 0.844
    }
   },
-  "glb_kb": 333.0
+  "glb_kb": 339.6
  },
  "budget": {
   "tris_max": 3600
@@ -283,27 +282,27 @@
   "clearance": {
    "f": {
     "min_mm": 3.0,
-    "p05_mm": 6.98,
+    "p05_mm": 5.47,
     "inside_skin": 0
    },
    "m": {
-    "min_mm": 3.0,
-    "p05_mm": 4.99,
-    "inside_skin": 0
+    "min_mm": -15.43,
+    "p05_mm": 4.66,
+    "inside_skin": 18
    },
    "bl": {
-    "min_mm": 3.0,
-    "p05_mm": 6.98,
+    "min_mm": 2.99,
+    "p05_mm": 5.47,
     "inside_skin": 0
    },
    "bs": {
-    "min_mm": 3.0,
-    "p05_mm": 6.98,
+    "min_mm": 2.99,
+    "p05_mm": 5.47,
     "inside_skin": 0
    }
   },
   "envelope": {
-   "ok": true,
+   "ok": false,
    "layer": "cloth2",
    "groups": {}
   }
@@ -312,5 +311,8 @@
  "lib_version": 2,
  "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/breeches.py (cloth2: grown from the MakeHuman body's surface).",
  "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
- "review": null
+ "review": null,
+ "extra": {
+  "fit_note": "The crotch is bridged (cloth2.bridge.crotch_bridge, 2026-10-03): taut in the female fits, a straight seam from the fall to the inseam (no camel-toe); in the male fit the female crotch moved, lying flat over the genitals (hidden under any legs garment) from the waistband to the inseam. The small hole the cloth proxy left at the genitals is closed (it opened into a ragged ring in the male fit). The clearance check counts the vertices over the genitals' hole in the measured skin as inside (male fit only)."
+ }
 }

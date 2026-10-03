@@ -302,12 +302,21 @@ static func apply_spread(dir: Vector3, cone: float) -> Vector3:
 	return (dir + side * cos(phi) * r + up * sin(phi) * r).normalized()
 
 
+## The aim button (RMB) is this weapon's: fire input enabled and no Sway spell readied (an expert's spell readied with a
+## pistol or a tomahawk in the right hand: the RMB is the spell's lock, the LMB still the weapon's, "cast and shoot in the
+## same breath"; SwayCaster.SPELL_META).
+func _aim_input_enabled() -> bool:
+	return _fire_input_enabled() and not (player != null and player.has_meta(&"sway_spell"))
+
+
 func _fire_input_enabled() -> bool:
 	# (and only while this weapon is out: a slung weapon takes no fire / aim input; nor while the torch mode has the
 	# mouse, PlayerTorch.blocks_fire; nor while a vault or climb plays, the weapon kept in the hand through it:
 	# PlayerTraversal.keep_weapon)
 	# (and only for this machine's player: another player's weapons, an AI's or the network's, never take this
 	# keyboard's fire: FrontierPlayer.is_local)
+	# (a Sway spell readied, an expert's pistol or tomahawk in the other hand: it still fires (LMB), its aim is the spell's:
+	# _aim_input_enabled)
 	return active and not clubbed and not (player != null and player.hands_free) \
 			and (player == null or not ("is_local" in player) or player.is_local) \
 			and not (player != null and player.get("traversal") != null and player.traversal.showing) \

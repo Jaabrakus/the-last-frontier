@@ -1,0 +1,375 @@
+{
+ "id": "slops",
+ "name": "Slops",
+ "description": "Wide canvas breeches open at the knee, pleated into a waistband with a fly front, the hem band tarred, a patch of old sailcloth on the left knee.",
+ "kind": "garment",
+ "set": "drift",
+ "slot": "legs.lower",
+ "alt_slots": [],
+ "layer": {
+  "default": 30
+ },
+ "glb": "res://assets/character/garments/drift/slops.glb",
+ "mesh": "slops",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "slops"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "pelvis_center",
+  "pelvis_side",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "pelvis_center",
+  "pelvis_side",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "canvas",
+   "role": "cloth",
+   "fabric": "TWILL",
+   "palette": [
+    "linen_unbleached",
+    "sailcloth",
+    "tar_black",
+    "slate_grey",
+    "tow"
+   ],
+   "default": "linen_unbleached",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "linen_unbleached": "#C8BA9A",
+    "sailcloth": "#D9CFB4",
+    "tar_black": "#26221D",
+    "slate_grey": "#6B6A66",
+    "tow": "#A99570"
+   },
+   "fabrics": [
+    "TWILL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "waistband and tarred hem",
+   "role": "trim",
+   "fabric": "TWILL",
+   "palette": [
+    "tar_black",
+    "linen_unbleached",
+    "slate_grey"
+   ],
+   "default": "tar_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tar_black": "#26221D",
+    "linen_unbleached": "#C8BA9A",
+    "slate_grey": "#6B6A66"
+   },
+   "fabrics": [
+    "TWILL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "knee patch",
+   "role": "trim",
+   "fabric": "LIN",
+   "palette": [
+    "sailcloth",
+    "linen_white",
+    "dead_stone",
+    "tow"
+   ],
+   "default": "sailcloth",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "sailcloth": "#D9CFB4",
+    "linen_white": "#E8E3D3",
+    "dead_stone": "#8C8A84",
+    "tow": "#A99570"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 3,
+   "name": "buttons",
+   "role": "button",
+   "fabric": "MET",
+   "palette": [
+    "horn",
+    "brass",
+    "pewter",
+    "leather_black"
+   ],
+   "default": "horn",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "horn": "#8A7A5E",
+    "brass": "#B58F4A",
+    "pewter": "#9A9C9A",
+    "leather_black": "#1D1B19"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 3308,
+    "verts": 1920,
+    "zones": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "pelvis_center",
+     "pelvis_side",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "r_upper_leg",
+     "r_knee",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined"
+    ]
+   }
+  },
+  "tris": 3308,
+  "verts": 1920,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0527,
+   "breast_large": 0.0016,
+   "breast_small": 0.013
+  },
+  "coverage": {
+   "chest_back": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "abdomen_front": {
+    "normal": 0.99,
+    "cone": 0.865
+   },
+   "abdomen_side": {
+    "normal": 0.969,
+    "cone": 0.812
+   },
+   "abdomen_back": {
+    "normal": 0.99,
+    "cone": 0.781
+   },
+   "pelvis_center": {
+    "normal": 0.844,
+    "cone": 0.646
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "upper_arm_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.115,
+    "cone": 0.0
+   },
+   "forearm_b_l": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "forearm_c_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.083,
+    "cone": 0.0
+   },
+   "forearm_b_r": {
+    "normal": 0.062,
+    "cone": 0.0
+   },
+   "forearm_c_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "thigh_lower_l": {
+    "normal": 0.979,
+    "cone": 0.896
+   },
+   "shin_upper_l": {
+    "normal": 0.188,
+    "cone": 0.021
+   },
+   "thigh_upper_r": {
+    "normal": 1.0,
+    "cone": 0.99
+   },
+   "thigh_lower_r": {
+    "normal": 0.99,
+    "cone": 0.896
+   },
+   "shin_upper_r": {
+    "normal": 0.167,
+    "cone": 0.031
+   }
+  },
+  "glb_kb": 406.7
+ },
+ "budget": {
+  "tris_max": 4200
+ },
+ "evidence": "B",
+ "licence_note": null,
+ "history": "Slops were the seaman's own breeches: loose, straight-cut, of canvas or old sailcloth, pleated into a waistband and ending just below the knee, open there, worn by no other trade; wider 'petticoat breeches' were older and rarer [D1][D2]. Joseph Haycock's slop shop in 1699 sold them among its breeches [D2]. The Drift crews tar the hems and patch the knees with retired sails.",
+ "sources": [
+  "D1",
+  "D2"
+ ],
+ "aliases": [],
+ "tags": [
+  "drift",
+  "sailor"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 3.0,
+    "p05_mm": 5.64,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": -18.17,
+    "p05_mm": 4.75,
+    "inside_skin": 25
+   },
+   "bl": {
+    "min_mm": 3.0,
+    "p05_mm": 5.64,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 3.0,
+    "p05_mm": 5.66,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": false,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/slops.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/slops.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "shirt_check"
+ ],
+ "extra": {
+  "presets": {
+   "deckhand": {
+    "0": "linen_unbleached",
+    "1": "tar_black",
+    "2": "sailcloth"
+   },
+   "rook_tarred": {
+    "0": "tar_black",
+    "1": "tar_black",
+    "2": "dead_stone"
+   }
+  },
+  "fit_note": "The crotch hangs low and the seat is loose (2026-10-03); it is bridged (cloth2.bridge.crotch_bridge): taut in the female fits, a straight seam from the fly to the inseam (no camel-toe), and in the male fit the female crotch moved, lying smoothly over the genitals, which every legs garment hides; the clearance check counts those vertices (over the genitals' hole in the measured skin) as inside, male fit only, all over pelvis_center genital faces.",
+  "references": [
+   "[D1] HMS Richmond, Sailor's Dress of 1775: https://hmsrichmond.org/sailordress.htm",
+   "[D2] Reconstructing History, Breeches for Seamen (Haycock's 1699 slop shop inventory): https://reconstructinghistory.com/breeches-for-seamen/"
+  ]
+ }
+}
