@@ -11,7 +11,9 @@ extends RefCounted
 ##               the sky clock too when there is no survival core to drive it
 ##   player      where and how the player stands, health, the worn gear (Loadout), the pack, which weapons are carried,
 ##               each weapon's state (charge, spare cartridges, count), the torches, the gathering skills, the Sway's
-##               motes and moves (SwayCaster.save_of / load_of), the hotbar's slots (Hotbar.save_of / load_of)
+##               motes and moves (SwayCaster.save_of / load_of), the hotbar's slots (Hotbar.save_of / load_of), the bags
+##               (the sockets and the slot layout: PlayerBags.save_of / load_of; a save from before them: the haversack
+##               and a linen satchel, laid out afresh)
 ##   vegetation  trees felled (hidden, their stumps back), saplings cut, rocks quarried (and their work so far), the felled
 ##               trees lying down (with the logs left in them), loose boles (and the barricade logs laid, LogPull) and log
 ##               piles. Tied to the forest's layout by a signature: a save of another layout skips this part (and
@@ -209,7 +211,7 @@ static func save_player(level: Node) -> Dictionary:
 			"loadout": plain(p.loadout.to_dict()) if p.loadout else {}, "pack": plain(p.inventory_pack),
 			"carried": plain(p.carried), "weapons": ws, "weapon_key": p.weapon_key, "hands_free": p.hands_free,
 			"torch": torch, "skills": skills, "maim": {"legs": p.maim_legs, "broken": p.broken_leg},
-			"sway": SwayCaster.save_of(p), "hotbar": plain(Hotbar.save_of(p))}
+			"sway": SwayCaster.save_of(p), "hotbar": plain(Hotbar.save_of(p)), "bags": plain(PlayerBags.save_of(p))}
 
 
 static func load_player(level: Node, d: Dictionary) -> void:
@@ -248,6 +250,7 @@ static func load_player(level: Node, d: Dictionary) -> void:
 			p.gather.skills.points[k] = float(d.skills[k])
 	SwayCaster.load_of(p, d.get("sway", {}))          # (the Sway's motes and moves: SwayCaster)
 	Hotbar.load_of(p, d.get("hotbar", {}))            # (the hotbar's slots, before the weapon is drawn again: Hotbar)
+	PlayerBags.load_of(p, d.get("bags", {}))          # (the bags, after the pack and the bar they lay out: PlayerBags)
 	var key := String(d.get("weapon_key", ""))
 	if bool(d.get("hands_free", false)):
 		if not p.hands_free and p.has_method("toggle_hands_free"):

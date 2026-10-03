@@ -249,6 +249,12 @@ static func _align_long(holder: Node3D, axis: String) -> void:
 			inner.transform = Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3.ZERO) * inner.transform
 
 
+## A new model of `kind` (the one its icon is rendered from; null none): what a thing dropped from the bags lies on the
+## ground as (BagUI.drop_ground, DroppedItem).
+func model_of(kind: String) -> Node3D:
+	return _model(kind)
+
+
 func _model(kind: String) -> Node3D:
 	var sc := scanned(kind)
 	if sc:
@@ -269,6 +275,8 @@ func _model(kind: String) -> Node3D:
 		return FishModels.build(kind)
 	if GearModels.has(kind):
 		return GearModels.build(kind)
+	if BagModels.has(kind):
+		return BagModels.build(kind)         # (the bags: PlayerBags)
 	if FormModels.has(kind):
 		return FormModels.build(kind)        # (the hotbar's Form spells: the effect over its circle, SwayCaster.spell_icon)
 	match kind:

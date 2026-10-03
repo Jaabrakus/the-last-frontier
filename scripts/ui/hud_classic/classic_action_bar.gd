@@ -7,7 +7,10 @@ extends Control
 ## (SwayCaster.fill: a sweep clockwise from the top; full, the whole button lit; a hold, its rim bright). A spell's mode is
 ## the HUD's own corner badge (FrontierHUD.draw_mode_mark). The weapon's ammo and state, or the readied spell's line, is
 ## the one small line under the bar (FrontierHUD's: the same text). With the cursor free a button is clicked to take its
-## slot in hand (Hotbar.select), and its tooltip names what is on it.
+## slot in hand (Hotbar.select, on letting go: a drag is not a click), and its tooltip names what is on it. With the bags
+## open (BagWindows; the owner 2026-10-03, "WoW-style bags") a weapon, a tool or a spell dragged out of a bag onto a button
+## goes on the hotbar there (what was there goes off the bar into the pack), a button dragged onto another swaps them, and
+## one dragged into a bag (or out onto the world) comes off the bar (BagUI.drop_bar, BagWindows.drop_on_slot).
 ##   refresh(player, hud)   ten times a second (ClassicFrames); a button animates only while it glows or a lock is on
 ## Read by the test: buttons (ActionButton: kind, on, glow, lock), line.
 
@@ -19,6 +22,7 @@ const BAR_H := BTN + PAD * 2.0
 const LINE_H := 20.0
 
 var buttons: Array[ActionButton] = []
+var player: FrontierPlayer
 var line := ""
 var plate := Rect2()
 var _icons: ItemIcons
@@ -46,6 +50,7 @@ func _ready() -> void:
 
 
 func refresh(p: FrontierPlayer, hud: FrontierHUD) -> void:
+	player = p
 	if _icons == null:
 		_icons = ItemIcons.shared(get_tree())
 	var hb: Hotbar = p.hotbar
@@ -136,8 +141,10 @@ class ActionButton:
 	var lock := -1.0
 	var lock_state := 0
 	var mode := ""
+	var drop_state := ""               ## "", "ok" or "no": a drag over it now
 	var _t := 0.0
 	var _hover := false
+	var _down := false
 	var _player: FrontierPlayer
 
 	func _init() -> void:
@@ -183,11 +190,63 @@ class ActionButton:
 		queue_redraw()
 
 	func _gui_input(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
-			accept_event()
-			var hb: Hotbar = _player.hotbar if _player != null and is_instance_valid(_player) else null
-			if hb != null:
-				hb.select(index)
+		var mb := event as InputEventMouseButton
+		if mb == null or mb.button_index != MOUSE_BUTTON_LEFT:
+			return
+		accept_event()
+		if mb.pressed:
+			_down = true
+			return
+		if not _down or not Rect2(Vector2.ZERO, size).has_point(mb.position):
+			return
+		_down = false
+		var p := _owner()
+		var hb: Hotbar = p.hotbar if p != null else null
+		if hb != null:
+			hb.select(index)
+
+	func _owner() -> FrontierPlayer:
+		if _player != null and is_instance_valid(_player):
+			return _player
+		return bar.player if bar != null and bar.player != null and is_instance_valid(bar.player) else null
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_DRAG_BEGIN:
+			_down = false
+		if (what == NOTIFICATION_DRAG_END or what == NOTIFICATION_MOUSE_EXIT) and drop_state != "":
+			drop_state = ""
+			queue_redraw()
+
+	## Dragged: the slot ({from "hotbar", slot}), into a bag or onto another button.
+	func _get_drag_data(_at: Vector2) -> Variant:
+		if kind == "":
+			return null
+		_down = false
+		set_drag_preview(BagSlot.drag_preview(texture, kind.trim_prefix("spell:"), 38.0))
+		return {"from": "hotbar", "slot": index}
+
+	func _can_drop_data(_at: Vector2, d: Variant) -> bool:
+		var p := _owner()
+		if p == null or not (d is Dictionary):
+			return false
+		var v := BagUI.verdict_bar(p, index, d)
+		var st := "" if bool(v.ok) and String(v.reason) == "" else ("ok" if bool(v.ok) else "no")
+		if st != drop_state:
+			drop_state = st
+			queue_redraw()
+		return bool(v.ok) or String(v.reason) != ""
+
+	func _drop_data(_at: Vector2, d: Variant) -> void:
+		drop_state = ""
+		queue_redraw()
+		var p := _owner()
+		var w := BagWindows.for_player(p)
+		if w != null:
+			w.drop_on_bar(d, index)
+		elif p != null:
+			BagUI.drop_bar(p, index, d)
+		if bar != null and p != null:
+			bar.refresh(p, p.hud)
 
 	func _draw() -> void:
 		var r := Rect2(Vector2.ZERO, size)
@@ -221,6 +280,8 @@ class ActionButton:
 				draw_rect(r.grow(1.0 + k * 1.6), Color(art_col.r, art_col.g, art_col.b, (0.62 - k * 0.18) * pulse), false, 1.6)
 		if _hover:
 			draw_rect(r.grow(-0.5), Color(ClassicSkin.BRASS_HI.r, ClassicSkin.BRASS_HI.g, ClassicSkin.BRASS_HI.b, 0.7), false, 1.0)
+		if drop_state != "":
+			draw_rect(r.grow(-1.0), BagUI.GOOD if drop_state == "ok" else BagUI.BAD, false, 2.0)
 		var num_col := ClassicSkin.GOLD if on else (ClassicSkin.TEXT if not empty else Color(ClassicSkin.DIM.r, ClassicSkin.DIM.g, ClassicSkin.DIM.b, 0.6))
 		ClassicSkin.text(self, Vector2(4, 13), str(index + 1), 12, num_col)
 

@@ -19,11 +19,15 @@ extends CanvasLayer
 ##   right          toasts sliding in: what gathering gives ("+2 Firewood", the item's picture) and skill levels
 ##   edges          a red heartbeat at the edges of the screen when health is low; a flash when hurt
 ##   F1             the controls (hidden; a hint at the start), F3 the debug lines
+##   hold `         a free cursor in play (CursorHold, rebindable): the HUD's buttons, tooltips, the chat and the map's zoom
+##                  take the mouse; the camera stays and the crosshair hides while it is held
+##   M              the bags (BagWindows, rebindable; the owner 2026-10-03, "WoW-style bags"): each worn bag its own
+##                  window over the bottom right, the cursor free while one is open; on both HUD styles
 ## The HUD style classic (ClassicSkin.style(); the owner 2026-10-03: "can the hud be similar to world of warcraft vanilla?")
-## adds the classic frames (`classic`, ClassicFrames: the player and target frames, the action bar, the renown bar, the
-## micro menu and the bags); the vitals and the slot strip step aside for them. With them the map corner and the chat
-## (HudClassicMap: the minimap, the quest tracker, the chat log): the compass, its clock, the toasts at the right and
-## the F1 hint step aside (`toasted` hands every toast to the chat; `toasts_shown`). apply_style() switches it in a game.
+## adds the classic frames (`classic`, ClassicFrames: the player frame, the target's ring on the ground, the action bar, the
+## renown bar, the micro menu and the bags); the vitals and the slot strip step aside for them. With them the map corner
+## and the chat (HudClassicMap: the minimap, the quest tracker, the chat log): the compass, its clock, the toasts at the
+## right and the F1 hint step aside (`toasted` hands every toast to the chat; `toasts_shown`). apply_style() switches it in a game.
 ## Hooks kept: player, show_debug, on_projectile_hit(), on_target_killed() (group hit_listeners), toast().
 
 @export var color := Color(0.95, 0.92, 0.8)
@@ -64,7 +68,7 @@ const HELP := "WASD move · Shift sprint · Ctrl/C crouch (toggle) · Space jump
 		+ "LMB hold to aim, release to fire · RMB raise / steady aim (bow: let down) · R reload\n" \
 		+ "Z rest, hold Z sleep (a lean-to and a fire make it better) · V eat · F cook at a lit campfire\n" \
 		+ "T: tap light / raise, hold put away, double-tap set or throw it (click)  ·  hold U drink · hold Y smoke a pipe\n" \
-		+ "Tab gear · K skills · O character · F1 this help · F3 debug · Esc free mouse"
+		+ "Tab gear · {bags} bags · K skills · O character · F1 this help · F3 debug · Esc free mouse · hold {cursor} cursor (the HUD's buttons)"
 const EDGE_SHADER := "shader_type canvas_item;
 uniform float amount = 0.0;
 uniform vec4 tint : source_color = vec4(0.4, 0.02, 0.01, 1.0);
@@ -120,6 +124,10 @@ var _tex := {}
 var _heading := 0.0
 ## The classic frames (ClassicFrames) when the HUD style is classic, else null.
 var classic: ClassicFrames
+## The free cursor's hold (CursorHold; null without a player).
+var cursor: CursorHold
+## The bags' windows (BagWindows; null without a player).
+var bag_windows: BagWindows
 
 
 ## The HUD's lettering: a serif of the machine's (Baskerville on a Mac), the engine's own font where there is none.
@@ -192,8 +200,11 @@ func _ready() -> void:
 	_pickup.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_root.add_child(_pickup)
 	_place(_pickup, Vector2(0.5, 0.5), Vector2(0, 58), Vector2(0.5, 0))
+	if player:
+		cursor = CursorHold.install(self)             # (its action first: the help names its key)
+		bag_windows = BagWindows.install(self)        # (the bags' windows, both styles: their key in the help too)
 	var help := _label(17, TEXT)
-	help.text = HELP
+	help.text = HELP.replace("{cursor}", CursorHold.key_label()).replace("{bags}", BagWindows.key_label())
 	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_help_box = _shaded(help, Vector2(60, 26))
 	_help_box.name = "Help"
@@ -224,7 +235,7 @@ func apply_style(s: String) -> void:
 		classic = ClassicFrames.install(self)       # (the vitals and the slot strip step aside: _update_card)
 		HudClassicMap.install(self)                 # (the minimap, the quest tracker, the chat log: the compass and toasts step aside)
 		vit.visible = false
-		# (the F3 lines right of the story's key hints, under the target frame: StoryHUD.TRACKED_AT keeps the left)
+		# (the F3 lines right of the story's key hints, beside the player frame: StoryHUD.TRACKED_AT keeps the left)
 		_debug.set_meta(&"hud_place", [Vector2(0, 0), Vector2(440, 112), Vector2(0, 0)])
 	else:
 		HudClassicMap.remove(self)
@@ -946,6 +957,11 @@ static func _is_target(n: Node) -> bool:
 	return false
 
 
+## The crosshair (the aim dot, a tool's ring) is drawn: not while the cursor is free by its hold (CursorHold).
+func crosshair_shown() -> bool:
+	return cursor == null or not cursor.held
+
+
 func _draw_overlay() -> void:
 	if player == null or player.weapon == null:
 		return
@@ -956,7 +972,9 @@ func _draw_overlay() -> void:
 	if w is Bow and (w as Bow).fatigue() > 0.0:
 		col = color.lerp(Color(1.0, 0.55, 0.2), (w as Bow).fatigue())
 	var tool_out := player.gather != null and player.gather.in_hand() != ""
-	if tool_out:
+	if not crosshair_shown():
+		pass                                       # (the cursor free by its hold: no crosshair)
+	elif tool_out:
 		# a tool out: a small ring where it is aimed (a piece of wall is chopped where the camera aims)
 		_cross.draw_arc(c, 5.0, 0.0, TAU, 20, Color(0, 0, 0, 0.5), 3.0)
 		_cross.draw_arc(c, 5.0, 0.0, TAU, 20, Color(col.r, col.g, col.b, 0.85), 1.5)

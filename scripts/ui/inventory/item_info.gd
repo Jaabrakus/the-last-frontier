@@ -14,6 +14,8 @@ extends RefCounted
 ##   materials the build pieces it goes into (data/building/building.json); firewood's burn in a campfire, the
 ##             torch's (game time)
 ##   use       the mouse on the pack: right-click to eat, dress a wound, take a torch; double-click to wear
+##   bags      a bag's slots, what it holds (a specialty bag: only its own kinds), where it is worn, how it is got
+##             (PlayerBags, data/inventory/bags.json)
 ##
 ##   var info := ItemInfo.of("strawberries", player)   # {name, tag, text, rows: [[label, value, tone], ...]}
 ##
@@ -85,11 +87,29 @@ static func of(kind: String, player: Node, count := 0) -> Dictionary:
 	_vice_rows(kind, rows)
 	_use_rows(kind, tree, rows)
 	_climb_rows(kind, rows)
+	_bag_rows(kind, rows)
 	return {"name": InventoryState.name_of(kind), "tag": String(t.get("tag", "")), "text": String(t.get("text", "")),
 			"history": String(t.get("history", "")), "rows": rows}
 
 
 # --- the rows -----------------------------------------------------------------------------------------
+
+## A bag (PlayerBags, data/inventory/bags.json; the owner 2026-10-03, "WoW-style bags"): its slots, what it holds (a
+## specialty bag only its own kinds), where it is worn.
+static func _bag_rows(kind: String, rows: Array) -> void:
+	if not PlayerBags.is_bag(kind) and kind != PlayerBags.HAVERSACK:
+		return
+	var spec := PlayerBags.is_specialty(kind)
+	rows.append(["Bag", "%d slots" % PlayerBags.slots_of(kind), GOOD])
+	rows.append(["Holds", ("only " if spec else "") + PlayerBags.holds_text(kind), WARN if spec else ""])
+	if kind == PlayerBags.HAVERSACK:
+		rows.append(["Worn", "always: the base pack", ""])
+	else:
+		rows.append(["Wear", "in one of the four bag sockets of the bag bar", USE])
+		var got := String(PlayerBags.bag_def(kind).get("got", ""))
+		if got != "":
+			rows.append(["Got", got, ""])
+
 
 ## Climbing gear (loadout_items.json climbing_stakes_* / climbing_claws_*: climb.drain_mult, climb.hang_drain_mult).
 static func _climb_rows(kind: String, rows: Array) -> void:
