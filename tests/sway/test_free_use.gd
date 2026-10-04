@@ -14,9 +14,14 @@ extends SceneTree
 ##   free      every spell an expert's (tier 2, "expert": the user saw "untrained" on the free spells); Gust readied from the
 ##             bar and cast on a crate: the lock as an expert's (x0.8), a use counted (no "mastered"), the motes
 ##             unchanged; with the belt empty a cast is not refused (no "motes"); a stone (a 60 kg boulder) held and hurled:
-##             the motes unchanged; another held past its break: overstrained (dropped, no cast), no mote lost; a sail held
+##             the motes unchanged; another held 7 s: Gust's stone never breaks (hold.no_break: no strain), let go it is
+##             hurled; Gust's easy rules: a crate 3 deg off the crosshair still locks (its 6 deg aim zone, _cone_pick), and held
+##             3 s past the click it does not fizzle, let go it casts; a sail held
 ##             past two drains: no mote spent, still held; the HUD's spell line names no motes; Earth Wall (a Form spell)
 ##             cast with the belt empty: the wall up, the motes unchanged
+##   far/why   Stone Form aimed 40 m down the lane, past its reach: the circle at the reach's edge on the aim's line, the stone
+##             thrown (FormCast._edge_hit; the user: "i use right click and nothing happens"); Gust held on the bare ground
+##             and Mend on the sky: no lock, and a line says what to aim at (SwayCaster._say_why)
 ##   hint      the aim held with the hands free and nothing readied: no "No spell readied" line while no spell is on the bar
 ##             (every player knows every spell: not a sign of wanting one); with Gust on slot 9, "press its key (9)"
 ##   first     the wreck's first lock with nothing readied (Gust on the bar): the crosshair first off the spar, no "No spell
@@ -214,6 +219,7 @@ func _run() -> void:
 	await _free_stones()
 	await _free_sail()
 	await _free_form()
+	await _far_and_why()
 	await _unreadied_hint()
 	await _first_lock()
 	await _bound()
@@ -305,7 +311,7 @@ func _free_casts() -> void:
 	var m0 := c.motes
 	var at := func() -> Vector3: return crate.global_position
 	var ok := await _cast("gust", at)
-	_expect(ok and is_equal_approx(c.lock_s, 0.6 * 0.8) and c.uses_of("gust") == 1 and mastered.is_empty() and not c.rooted,
+	_expect(ok and is_equal_approx(c.lock_s, float(SwayMoves.move("gust").lock_s) * 0.8) and c.uses_of("gust") == 1 and mastered.is_empty() and not c.rooted,
 			"Gust cast on a crate: the lock as an expert's (%.2f s), not rooted, a use counted (%d), no 'mastered' line" % [c.lock_s, c.uses_of("gust")])
 	_expect(c.motes == m0 and ev.motes.is_empty(), "and the motes unchanged (%d of %d, %s)" % [c.motes, m0, str(ev.motes)])
 	var line := String(player.hud.call(&"_spell_line", "gust")) if player.hud != null else ""
@@ -322,6 +328,25 @@ func _free_casts() -> void:
 	_expect(ok and c.motes == 0 and c.hint != "motes" and ev.motes.is_empty(), "with the belt empty Gust is still cast (motes %d, hint '%s')" % [c.motes, c.hint])
 	await _secs(1.0)
 	crate2.queue_free()
+	await _ticks(3)
+	# Gust's easy rules: the aim zone catches a crate 3 deg off the crosshair, and full it never fizzles
+	var crate3 := _crate(_ground(LANE_X, -32.0))
+	await _secs(0.5)
+	_clear_ev()
+	var beside := func() -> Vector3:
+		var cam := player.camera.global_position
+		var to := crate3.global_position - cam
+		return cam + to.rotated(Vector3.UP, deg_to_rad(3.0))
+	await _hold_on(beside, 0.12)
+	Input.action_press("aim")
+	var tl := await _hold_on(beside, 1.5, func() -> bool: return c.state == SwayCaster.State.FULL)
+	_expect(tl < 1.5 and c.target == crate3, "a crate 3 deg off the crosshair: Gust's aim zone locks it (%.2f s)" % tl)
+	await _hold_on(beside, 3.0)
+	_expect(c.state == SwayCaster.State.FULL and c.last_break != "fizzled", "held 3 s past the click: no fizzle, still full")
+	await _release()
+	_expect(not ev.cast.is_empty() and String(ev.cast[0][0]) == "gust", "let go then: cast")
+	await _secs(1.0)
+	crate3.queue_free()
 	await _ticks(3)
 
 
@@ -348,7 +373,7 @@ func _free_stones() -> void:
 			"let go: hurled (cast), the motes unchanged (%d)" % c.motes)
 	if is_instance_valid(light):
 		light.queue_free()
-	# held past its break: the power breaks, no mote lost
+	# held long: Gust's stone never breaks (no strain), let go it is hurled
 	_place_player()
 	await _secs(0.3)
 	var stone := _boulder(_ground(LANE_X + 0.8, -30.0), 60.0)
@@ -359,12 +384,16 @@ func _free_stones() -> void:
 	Input.action_press("aim")
 	t = await _hold_on(on_stone, 2.5, func() -> bool: return c.state == SwayCaster.State.HOLDING)
 	var ahead := func() -> Vector3: return _ground(LANE_X, -40.0) + Vector3.UP * 1.5
-	var t2 := await _hold_on(ahead, 7.0, func() -> bool: return not ev.over.is_empty())
-	await _ticks(2)
-	_expect(t < 2.5 and t2 < 7.0 and ev.over.size() == 1 and ev.cast.is_empty() and c.last_break == "strain",
-			"held past its break (%.1f s): overstrained, dropped, no cast" % t2)
-	_expect(c.motes == 1 and ev.motes.is_empty(), "and no mote lost (%d)" % c.motes)
+	var strained := [0.0]
+	await _hold_on(ahead, 7.0, func() -> bool:
+		if c.hold != null and is_instance_valid(c.hold):
+			strained[0] = maxf(float(strained[0]), c.hold.strain)
+		return not ev.over.is_empty())
+	_expect(t < 2.5 and ev.over.is_empty() and c.state == SwayCaster.State.HOLDING and float(strained[0]) == 0.0,
+			"held 7 s: Gust's stone never breaks (no strain, still held)")
 	await _release()
+	await _ticks(2)
+	_expect(not ev.hurled.is_empty() and c.motes == 1 and ev.motes.is_empty(), "let go: hurled, no mote spent (%d)" % c.motes)
 	await _secs(0.5)
 	if is_instance_valid(stone):
 		stone.queue_free()
@@ -424,6 +453,65 @@ func _free_form() -> void:
 	if es >= 0:
 		hb.clear(es)
 	await _secs(1.5)                         # (the stand after the floor cast)
+
+
+# ---------------------------------------------------------------- an aim past the reach, and the reason said
+func _far_and_why() -> void:
+	_place_player()
+	await _secs(0.3)
+	var hb := player.hotbar
+	# Stone Form aimed 40 m down the lane: raised at the edge of its reach on the line of the aim
+	_expect(_ready_spell("stone_form") and c.readied_spell == "stone_form", "Stone Form readied")
+	var far := _ground(LANE_X, -64.0)
+	var at := func() -> Vector3: return far
+	var before := get_nodes_in_group(FormStone.GROUP)
+	var ok := await _cast("stone_form", at, 4.0)
+	# (the lock's circle at the edge of the reach; the stone then throws itself on along the aim: the user, 2026-10-03,
+	# "Stone Form throws itself", FormEffects.stone_form)
+	var pk: Dictionary = c.form.last_pick
+	var cp: Vector3 = pk.get("point", Vector3.INF)
+	var reach := c.range_of("stone_form")
+	var d := Vector2(cp.x - player.global_position.x, cp.z - player.global_position.z).length() if cp != Vector3.INF else INF
+	await _secs(0.4)
+	var fresh := get_nodes_in_group(FormStone.GROUP).filter(func(n: Node) -> bool: return not before.has(n))
+	_expect(ok and fresh.size() == 1 and bool(pk.get("edge", false)) and d > reach * 0.75 and d <= reach,
+			"Stone Form aimed 40 m off (its reach %d m): locked at the edge, %.1f m away, and thrown" % [roundi(reach), d])
+	for n in fresh:
+		n.queue_free()
+	c.ready_spell("")
+	var ss := hb.slot_of(Hotbar.SPELL, "stone_form")
+	if ss >= 0:
+		hb.clear(ss)
+	await _secs(0.6)
+	# Gust held on the bare ground: nothing to lock on, and it says what to aim at
+	_expect(_ready_spell("gust"), "Gust readied")
+	player.interactor.notice("", 0.1)
+	var ground := _ground(LANE_X, -29.0)
+	await _hold_on(func() -> Vector3: return ground, 0.12)
+	Input.action_press("aim")
+	await _hold_on(func() -> Vector3: return ground, 0.6)
+	_expect(c.state == SwayCaster.State.IDLE and c.hint == "none" and _notice().contains("aim at someone"),
+			"Gust on the bare ground: no lock, a line says what to aim at ('%s')" % _notice())
+	await _release()
+	c.ready_spell("")
+	var gs := hb.slot_of(Hotbar.SPELL, "gust")
+	if gs >= 0:
+		hb.clear(gs)
+	# Mend held on the sky: nothing in reach, and it says what to aim at
+	_expect(_ready_spell("mend"), "Mend readied")
+	player.interactor.notice("", 0.1)
+	var sky := player.global_position + Vector3(0.0, 40.0, -15.0)
+	await _hold_on(func() -> Vector3: return sky, 0.12)
+	Input.action_press("aim")
+	await _hold_on(func() -> Vector3: return sky, 0.6)
+	_expect(c.state == SwayCaster.State.IDLE and _notice().contains("Mend: aim at something built"),
+			"Mend on the sky: no lock, a line says what to aim at ('%s')" % _notice())
+	await _release()
+	c.ready_spell("")
+	var ms := hb.slot_of(Hotbar.SPELL, "mend")
+	if ms >= 0:
+		hb.clear(ms)
+	await _secs(0.5)
 
 
 # ---------------------------------------------------------------- the hint with nothing readied

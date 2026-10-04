@@ -4,22 +4,32 @@ extends RefCounted
 ## comes from the place: what is raised leaves a hollow where its earth came from (FormHollow), mending takes wood from the
 ## pack. Static.
 ##
-##   earth_wall    a wall of packed earth and stone (FormRaised "wall") rises across the caster's line just past the circle,
-##                 the hollow where the circle was
-##   stone_form    by the spell's mode (SwayCaster.mode_of): "spike", a jagged spike bursts up at the circle (a FormStone that
-##                 stays, FormSpikes' burst round it: who stands there is struck and knocked off their feet); "cannonball", a
-##                 round stone ball rises out of the ground there and rests on it (a FormStone in the physics). A hollow under
-##                 each; both are stones for Gust to lift and hurl (GustLift)
+##   earth_wall    a wall (FormRaised "wall") rises across the caster's line just past the circle, the hollow where the circle
+##                 was; of the matter it is raised from (FormMatter; the user, 2026-10-03: "it should be earth wall where if the
+##                 terrain is mud its a mud wall if its a tree i can make a tree wall you know"): packed earth, wet mud, grey
+##                 fieldstones, packed snow, its look, strength and size the matter's (earth_wall.wall.materials). The lock on a
+##                 standing tree's trunk: a palisade of its split logs just past its foot, the tree gone into it (tree_wall:
+##                 out of the forest as felling takes it, a stump left; the save keeps it)
+##   stone_form    thrown (the user, 2026-10-03: "Stone Form throws itself"): the stone of the spell's mode (SwayCaster.mode_of:
+##                 "spike" a jagged spike, "cannonball" a round stone ball; a FormStone) bursts up out of the ground a step in
+##                 front of the caster toward the aim (its hollow there), rises to chest height and flies at the crosshair
+##                 (Throw, GustLift's flight): the spike a lance through people, sticking where it meets the world; the ball
+##                 heavier, knocking people and things aside, rolling on. Both then lie as stones for Gust to lift and hurl.
+##                 Each in the look of a stone of the ground it came from (FormMatter.rock_material: stone_form.looks)
 ##   pillar        a column (FormRaised "pillar"), by the mode: "self" rises under the caster and carries them up; cast in
 ##                 stride while running (launch.run_mps; practised and up: the untrained floor cast holds the caster still)
 ##                 a quick short one launches them up and forward, a boost when the cast falls within plant_window_s (0.045 s)
 ##                 before a foot plant or plant_after_s (0.02 s) after one (plant_times: the step cycle; the ring beats on
-##                 each plant); cast in the air it rises where
-##                 they will land (landing_point). "free": at the aimed circle (mode_range_m). A ring of hollow round its foot
+##                 each plant); cast in the air it rises fast (air.rise_s) under where they will be by then, just tall enough
+##                 for its top to meet their feet (air_catch; the user, 2026-10-03: "the pillar should match the height so if
+##                 im jumping and cast a pillar underneath me it should quickly make a pillar just as big to catch me").
+##                 "free": at the aimed circle (mode_range_m). A ring of hollow round its foot. Its matter the ground's under
+##                 it (its look the wall's, its strength pillar.materials)
 ##   mend          the piece back one stage (mend_stage): a ruin stands again (charred), a piece alight is put out, a charred
 ##                 one made whole, a raised wall worn by shot packed again; wood from the pack for each (not the earth wall)
 ## Dust, stone chips and a grinding of stone with each (Sfx ids from moves.json form_sfx, when they exist).
 
+const FormMatter := preload("res://scripts/sway/form_matter.gd")
 const MOVES := ["earth_wall", "stone_form", "pillar", "mend"]
 
 
@@ -53,17 +63,59 @@ static func way_to(c: SwayCaster, at: Vector3) -> Vector3:
 
 
 # ---------------------------------------------------------------- the earth
-static func earth_wall(c: SwayCaster, at: Vector3, d: Dictionary) -> FormRaised:
+## The Earth Wall at `at` (the circle's middle) of `matter` ("": the lock's, FormCast.lock_matter, what the circle showed;
+## else the ground's there), or from tree `tree_i` (-1: the lock's tree, FormCast.lock_tree): see the header.
+static func earth_wall(c: SwayCaster, at: Vector3, d: Dictionary, matter := "", tree_i := -1) -> FormRaised:
 	var w: Dictionary = d.get("wall", {})
+	if matter == "" and tree_i < 0 and c.form != null and c.form.lock_matter != "":
+		matter = c.form.lock_matter
+		tree_i = c.form.lock_tree
+	if tree_i >= 0:
+		var tw := tree_wall(c, tree_i, d)
+		if tw != null:
+			return tw
+		matter = ""                                     # (the tree gone meanwhile: the ground at its foot)
+	if matter == "" or matter == "wood":
+		matter = FormMatter.of_ground(c.get_tree(), at)
+	var wn := FormMatter.numbers(w, FormMatter.entry("earth_wall", matter), matter)
 	var way := way_to(c, at)
-	var foot := ground_at(c, at + way * float(w.get("ahead_m", 0.75)))
+	var foot := ground_at(c, at + way * float(wn.get("ahead_m", 0.75)))
 	var across := Vector3.UP.cross(way).normalized()
 	var xf := Transform3D(Basis(across, Vector3.UP, way), foot)
 	var scn := c.get_tree().current_scene
-	var r := FormRaised.raise(scn, "wall", xf, w, absi(hash(foot)) % 97)
+	var r := FormRaised.raise(scn, "wall", xf, wn, absi(hash(foot)) % 97)
 	var h: Dictionary = d.get("hollow", {})
 	FormHollow.dig(scn, ground_at(c, at - way * 0.15), way, float(h.get("width_m", 3.0)), float(h.get("depth_m", 1.5)), float(h.get("fade_s", 600.0)))
-	_raised_fx(c, foot, float(w.get("width_m", 3.0)))
+	_raised_fx(c, foot, float(wn.get("width_m", 3.0)), matter)
+	return r
+
+
+## The Earth Wall from standing tree `i` (the lock on its trunk): a palisade of its split logs (matter "wood",
+## earth_wall.wall.materials.wood; its bark the species') standing across the caster's line just past the tree's foot (the
+## stump, tree.gap_m clear of it), and the tree gone into it (FormMatter.take_tree: out of the forest as felling takes it, a
+## stump left, the save's vegetation part keeps it; drawn, it shrinks into its stump as the wall rises). Null when the
+## tree is gone already.
+static func tree_wall(c: SwayCaster, i: int, d: Dictionary) -> FormRaised:
+	var hv := VegHarvest.find(c.get_tree())
+	var td := hv.describe("tree", "tree", i) if hv != null else {}
+	if td.is_empty():
+		return null
+	var wn := FormMatter.numbers(d.get("wall", {}), FormMatter.entry("earth_wall", "wood"), "wood")
+	var root := ground_at(c, td.pos)
+	var way := way_to(c, root)
+	var past := float(td.radius) + float(wn.get("thick_m", 0.4)) * 0.5 + float((d.get("tree", {}) as Dictionary).get("gap_m", 0.06))
+	var foot := ground_at(c, root + way * past)
+	var across := Vector3.UP.cross(way).normalized()
+	wn["species"] = String(td.species)
+	var scn := c.get_tree().current_scene
+	var r := FormRaised.raise(scn, "wall", Transform3D(Basis(across, Vector3.UP, way), foot), wn, absi(hash(foot)) % 97)
+	r.set_meta(&"tree_i", i)
+	FormMatter.take_tree(c.get_tree(), i, float(wn.get("rise_s", 0.7)))
+	GatherFx.fall_dust(scn, root, float(td.get("crown_radius", 3.0)) * 0.5)
+	for k in 3:
+		GatherFx.wood_chips(scn, root + Vector3.UP * (0.4 + 0.5 * k), -way, 12)
+	sfx("tree", root, 0.0, 1.0)
+	sfx("rumble", foot, -3.0, 0.9)
 	return r
 
 
@@ -79,11 +131,12 @@ static func pillar(c: SwayCaster, at: Vector3, d: Dictionary, mode := "self") ->
 	c.last_launch = {}
 	if mode == "self":
 		if not p.is_on_floor():
-			# (where they come down; its top rising to just under their feet now, so they land on it, never thrown by it)
+			# (fast, under where they will be by then, its top meeting their feet: they land on it, never thrown by it)
 			how = "air"
-			foot = landing_point(c)
-			pd["rise_s"] = float(ld.get("air_rise_s", 0.45))
-			pd["height_m"] = clampf(p.global_position.y - foot.y - 0.15, 0.4, float(pd.get("height_m", 3.0)))
+			var air := air_catch(c, pd.get("air", {}))
+			foot = air.foot
+			pd["rise_s"] = air.rise_s
+			pd["height_m"] = air.height_m
 		elif run.length() >= float(ld.get("run_mps", 2.6)) and c.tier("pillar") >= 1:        # (untrained: rooted, no launch)
 			how = "run"
 			way = run.normalized()
@@ -95,11 +148,12 @@ static func pillar(c: SwayCaster, at: Vector3, d: Dictionary, mode := "self") ->
 			foot = ground_at(c, p.global_position)
 	var xf := Transform3D(Basis(Vector3.UP.cross(way).normalized(), Vector3.UP, way), foot)
 	var scn := c.get_tree().current_scene
-	var r := FormRaised.raise(scn, "pillar", xf, pd, absi(hash(foot)) % 97)
+	var matter := FormMatter.of_ground(c.get_tree(), foot)
+	var r := FormRaised.raise(scn, "pillar", xf, FormMatter.numbers(pd, FormMatter.entry("pillar", matter), matter), absi(hash(foot)) % 97)
 	r.set_meta(&"pillar_mode", how)
 	var h: Dictionary = d.get("hollow", {})
 	FormHollow.dig(scn, foot, way, float(h.get("width_m", 2.1)), float(h.get("depth_m", 2.1)), float(h.get("fade_s", 600.0)))
-	_raised_fx(c, foot, float(pd.get("radius_m", 0.55)) * 2.0)
+	_raised_fx(c, foot, float(pd.get("radius_m", 0.55)) * 2.0, matter)
 	if how == "run":
 		# launched up and forward off the column coming up under the stride; on a foot plant, a boost
 		var gap := plant_gap(p)
@@ -145,55 +199,192 @@ static func plant_gap(p: Node) -> float:
 	return minf(acc, maxf(stride - acc, 0.0)) / speed
 
 
-## Where a player in the air will come down (world): their fall followed from their velocity (the player's gravity) until it
-## meets something fixed; under them when it meets nothing within 4 s.
-static func landing_point(c: SwayCaster) -> Vector3:
+## Where a pillar cast in the air catches the player (pillar.pillar.air): rise_s on along their flight (their velocity and
+## the player's gravity: where their feet will be when it is up), the ground under that point, and the height that brings
+## its top to their feet then (less gap_m, within min_m..max_m): {foot, feet, rise_s, height_m}.
+static func air_catch(c: SwayCaster, ad: Dictionary) -> Dictionary:
 	var p := c.player
-	var pos := p.global_position
-	var v := p.velocity
+	var t := float(ad.get("rise_s", 0.2))
 	var g := float(p.get(&"_gravity")) if p.get(&"_gravity") != null else 9.8
-	var space := p.get_world_3d().direct_space_state
-	var dt := 1.0 / 30.0
-	for i in 120:
-		var nxt := pos + v * dt
-		v.y -= g * dt
-		var q := PhysicsRayQueryParameters3D.create(pos + Vector3.UP * 0.05, nxt, 1, [p.get_rid()])
-		var h := space.intersect_ray(q)
-		if not h.is_empty() and not (h.collider is CharacterBody3D or h.collider is RigidBody3D):
-			return h.position
-		pos = nxt
-	return ground_at(c, pos)
+	var v := p.velocity
+	var feet := p.global_position + Vector3(v.x, 0.0, v.z) * t + Vector3.UP * (v.y * t - 0.5 * g * t * t)
+	var foot := ground_at(c, feet, 30.0)
+	var hgt := clampf(feet.y - foot.y - float(ad.get("gap_m", 0.03)), float(ad.get("min_m", 1.0)), float(ad.get("max_m", 8.0)))
+	return {"foot": foot, "feet": feet, "rise_s": t, "height_m": hgt}
 
 
 # ---------------------------------------------------------------- stone form
-## Stone Form of `mode` ("spike" or "cannonball") at `at`: the stone it leaves (a FormStone).
+## Stone Form of `mode` ("spike" or "cannonball"), thrown (the user, 2026-10-03, after raising a spike and then locking Gust on
+## it proved hard and not fun: "Stone Form throws itself": one spell, one aim): the stone bursts up out of the ground
+## throw.ahead_m in front of the caster toward the aim (its small hollow there), rises to throw.chest_m over their feet in
+## throw.rise_s (a spike turning its point toward the crosshair as it comes), then flies at the crosshair's point at that
+## moment (aim_point: the camera's ray past the stone; a man it is on, not the circle on the ground; far along the ray at the
+## sky) on a little arc for its drop: GustLift's flight (throw.hurl.<mode>: a spike a lance, fast and flat, through people
+## and sticking where it meets the world; a cannonball heavier, knocking people aside, rolling on), a thing it meets knocked
+## on (Throw). It lies its life_s after, a stone for Gust to lift. In the look of a stone of the ground it came out of. `at`
+## (the lock's circle) gives the way when there is no camera.
 static func stone_form(c: SwayCaster, at: Vector3, d: Dictionary, mode := "spike") -> FormStone:
-	var way := way_to(c, at)
-	var foot := ground_at(c, at)
+	var td: Dictionary = d.get("throw", {})
+	var aim := aim_point(c)
+	var way := way_to(c, aim if aim != Vector3.INF else at)
+	var foot := ground_at(c, c.player.global_position + way * float(td.get("ahead_m", 1.4)))
 	var scn := c.get_tree().current_scene
 	var seed := absi(hash(Vector3i(roundi(foot.x * 10.0), roundi(foot.y * 10.0), roundi(foot.z * 10.0)))) % 97
+	var matter := FormMatter.of_ground(c.get_tree(), foot)
 	var s: FormStone
 	if mode == "cannonball":
-		s = FormStone.ball(scn, foot, d.get("cannonball", {}), seed)
-		GatherFx.soil(scn, foot, Vector3.UP, 10)
-		GatherFx.stone_chips(scn, foot + Vector3.UP * 0.1, Vector3.UP, 8)
-		sfx("rise", foot, -2.0, 0.8)
+		s = FormStone.ball(scn, foot, d.get("cannonball", {}), seed, matter)
 	else:
-		var sd: Dictionary = d.get("spike", {})
-		s = FormStone.spike(scn, foot, way, sd, seed)
-		FormSpikes.burst(scn, c, foot, way, sd, s)
+		s = FormStone.spike(scn, foot, way, d.get("spike", {}), seed, matter)
 	var h: Dictionary = d.get("hollow", {})
 	FormHollow.dig(scn, foot, way, float(h.get("width_m", 1.3)), float(h.get("depth_m", 1.3)), float(h.get("fade_s", 600.0)))
+	sfx("rise", foot, -2.0, 0.9)
 	sfx("rumble", foot, -4.0, 1.1)
+	Throw.start(c, s, td)
 	return s
 
 
-static func _raised_fx(c: SwayCaster, foot: Vector3, width: float) -> void:
+## The crosshair's point now (world): the camera's ray (from `from`, else the camera) past the player and `ex` (RIDs: the
+## stone thrown), its hit, else 80 m along it; INF with no camera.
+static func aim_point(c: SwayCaster, ex: Array = [], from := Vector3.INF) -> Vector3:
+	var cam := c.player.camera if c != null and c.player != null else null
+	if cam == null or not cam.is_inside_tree():
+		return Vector3.INF
+	if from == Vector3.INF:
+		from = cam.global_position
+	var dir := -cam.global_basis.z
+	var exl: Array[RID] = [c.player.get_rid()]
+	for r in ex:
+		exl.append(r)
+	var h := c.player.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(from, from + dir * 120.0, 0xFFFFFFFF, exl))
+	return h.position if not h.is_empty() else from + dir * 80.0
+
+
+## A Stone Form stone thrown (stone_form): held up by a GustLift (its hold: from where it lies in the ground to chest height
+## over rise_s, a spike's point turning to the crosshair) and hurled at the crosshair as it is up, aimed a little high for its
+## drop on the way; GustLift flies it, strikes whom it meets (Hit.deliver) and lands it. The crosshair is followed live, from
+## where the camera stood over the shoulder as the spell was let go (its ray's way the camera's now, its start kept with the
+## player: the aim's view, though the camera eases back to its own as the aim is let go). A thing in the physics it meets is
+## knocked on (knock_mps.<kind> along its flight: SwayEffects.push_prop) and struck when it takes hits; a spike that met
+## one falls (nothing to stick in). Group GROUP while it runs (the tests: target, struck, knocked).
+class Throw:
+	extends Node
+
+	signal thrown(stone: FormStone, toward: Vector3)
+
+	const GROUP := &"form_throws"
+
+	var caster: SwayCaster
+	var lift: GustLift
+	var stone: FormStone
+	var td := {}
+	var rise_s := 0.25
+	var t := 0.0
+	var is_thrown := false
+	## Where it was hurled at (the crosshair then), whom it struck ([who, damage]) and what it knocked on.
+	var target := Vector3.INF
+	var struck: Array = []
+	var knocked: Array = []
+	## The aim camera's place from the player's as the spell was let go (INF: no camera).
+	var cam_off := Vector3.INF
+
+	static func start(c: SwayCaster, s: FormStone, p_td: Dictionary) -> Throw:
+		var th := Throw.new()
+		th.name = "FormThrow"
+		th.caster = c
+		th.stone = s
+		th.td = p_td
+		th.rise_s = maxf(float(p_td.get("rise_s", 0.25)), 0.05)
+		th.add_to_group(GROUP)
+		if c.player.camera != null and c.player.camera.is_inside_tree():
+			th.cam_off = c.player.camera.global_position - c.player.global_position
+		var scn := c.get_tree().current_scene
+		scn.add_child(th)
+		# (from where it lies buried to chest height over the caster's feet; no strain, no draw to wait for)
+		var rise_m := c.player.global_position.y + float(p_td.get("chest_m", 1.3)) - s.global_position.y
+		var md := {"hold": {"tear_s": 0.0, "rise_m": rise_m, "draw_s": th.rise_s, "strain_start_s": 1000.0, "break_s": 1001.0,
+				"tremble_deg": float(p_td.get("tremble_deg", 0.3))}, "hurl": p_td.get("hurl", {}), "mass_kg": 1000.0}
+		th.lift = GustLift.begin(c, s, md)
+		th.lift.aim = th._aim()
+		th.lift.struck.connect(func(who: Node, dmg: float) -> void: th.struck.append([who, dmg]))
+		th.lift.landed.connect(th._on_landed)
+		return th
+
+	func _physics_process(dt: float) -> void:
+		if lift == null or not is_instance_valid(lift) or stone == null or not is_instance_valid(stone):
+			queue_free()
+			return
+		t += dt
+		if is_thrown:
+			return                                # (GustLift flies it: _on_landed)
+		var aim := _aim()
+		if aim != Vector3.INF:
+			lift.aim = aim
+		if t >= rise_s:
+			is_thrown = true
+			target = lift.aim
+			lift.hurl(_arced(target))
+			thrown.emit(stone, target)
+
+	## The crosshair's point now, from the aim's view (cam_off).
+	func _aim() -> Vector3:
+		var from := caster.player.global_position + cam_off if cam_off != Vector3.INF else Vector3.INF
+		return FormEffects.aim_point(caster, [stone.get_rid()], from)
+
+	## `p` raised by the drop the flight's gravity gives it on the way there (so it arrives at `p`).
+	func _arced(p: Vector3) -> Vector3:
+		if p == Vector3.INF:
+			return p
+		var hd: Dictionary = lift._hurl_d()
+		var mps: Array = hd.get("mps", [20.0, 20.0])
+		var tf := stone.global_position.distance_to(p) / maxf(float(mps[mps.size() - 1]), 0.1)
+		return p + Vector3.UP * 0.5 * float(hd.get("gravity", 6.0)) * tf * tf
+
+	## It met the world at `at`: what is in the physics there is knocked on along its flight (and struck when it takes hits).
+	func _on_landed(at: Vector3) -> void:
+		var v := lift.velocity if is_instance_valid(lift) else Vector3.ZERO
+		if v.length_squared() > 1e-4 and stone != null and is_instance_valid(stone):
+			var q := PhysicsShapeQueryParameters3D.new()
+			var sph := SphereShape3D.new()
+			sph.radius = stone.radius + 0.35
+			q.shape = sph
+			q.transform = Transform3D(Basis.IDENTITY, at)
+			q.exclude = [stone.get_rid(), caster.player.get_rid()]
+			var kind := stone.kind
+			var k := float((td.get("knock_mps", {}) as Dictionary).get(kind, 4.0))
+			for hit in stone.get_world_3d().direct_space_state.intersect_shape(q, 8):
+				var b := hit.get("collider") as RigidBody3D
+				if b == null or b is FormStone or knocked.has(b):
+					continue
+				knocked.append(b)
+				SwayEffects.push_prop(b, v.normalized() * k + Vector3.UP * k * 0.25, at, 400.0)
+				if b.has_method(&"apply_hit"):
+					Hit.deliver(b, lift.damage_now(), at, v.normalized(), caster.player)
+					struck.append([b, lift.damage_now()])
+			if kind == "spike" and not knocked.is_empty():
+				stone.freeze = false              # (it met a thing that went on: nothing to stick in, it falls)
+				stone.sleeping = false
+		queue_free()
+
+
+## The ground breaking as it rises, by its matter: dust and clods and stones (earth), mud thrown up, stone chips, a white
+## cloud (snow).
+static func _raised_fx(c: SwayCaster, foot: Vector3, width: float, matter := "earth") -> void:
 	var scn := c.get_tree().current_scene
-	GatherFx.fall_dust(scn, foot, width * 0.5)
-	GatherFx.soil(scn, foot, Vector3.UP, 14)
-	GatherFx.stone_chips(scn, foot + Vector3.UP * 0.2, Vector3.UP, 10)
-	sfx("rise", foot, 0.0, 0.55)
+	match matter:
+		"mud":
+			GatherFx._dust(scn, foot + Vector3.UP * 0.1, Vector3.UP, 18, Vector2(0.08, 0.24), 1.0, Color(0.16, 0.11, 0.07, 0.75))
+		"snow":
+			GatherFx._dust(scn, foot + Vector3.UP * 0.2, Vector3.UP, 26, Vector2(0.25, 0.7), 1.8, Color(0.9, 0.93, 0.97, 0.5))
+			GatherFx.soil(scn, foot, Vector3.UP, 6)
+		"stone":
+			GatherFx.fall_dust(scn, foot, width * 0.5)
+			GatherFx.stone_chips(scn, foot + Vector3.UP * 0.2, Vector3.UP, 18)
+		_:
+			GatherFx.fall_dust(scn, foot, width * 0.5)
+			GatherFx.soil(scn, foot, Vector3.UP, 14)
+			GatherFx.stone_chips(scn, foot + Vector3.UP * 0.2, Vector3.UP, 10)
+	sfx("rise", foot, 0.0, 0.55 if matter != "mud" else 0.45)
 	sfx("rumble", foot, -2.0, 0.7)
 
 
@@ -268,7 +459,7 @@ static func mend(c: SwayCaster, t: Node3D, d: Dictionary) -> String:
 	match stage:
 		"worn":
 			(t as FormRaised).mend()
-			_tell(c, "The earth packed again")
+			_tell(c, (t as FormRaised).mended_line)       # (by its matter: "The stones set again", "The logs set again")
 		"alight":
 			var fs := FireSpread.find(t.get_tree())
 			if fs != null:
@@ -312,9 +503,9 @@ static func _name(t: Node) -> String:
 
 
 # ---------------------------------------------------------------- shared
-## The ground under `p` (world): a ray down through fixed bodies (not people, things in the physics, raised earth); the
-## terrain's height where it finds nothing.
-static func ground_at(n: Node, p: Vector3) -> Vector3:
+## The ground under `p` (world): a ray down (to `down` m under it) through fixed bodies (not people, things in the physics,
+## raised earth); the terrain's height where it finds nothing.
+static func ground_at(n: Node, p: Vector3, down := 4.0) -> Vector3:
 	var w := (n as Node3D).get_world_3d() if n is Node3D else null
 	if w == null and n is SwayCaster and (n as SwayCaster).player != null:
 		w = (n as SwayCaster).player.get_world_3d()
@@ -323,7 +514,7 @@ static func ground_at(n: Node, p: Vector3) -> Vector3:
 		var from := p + Vector3.UP * 1.5
 		var ex: Array[RID] = []
 		for i in 6:
-			var q := PhysicsRayQueryParameters3D.create(from, p + Vector3.DOWN * 4.0, 1, ex)
+			var q := PhysicsRayQueryParameters3D.create(from, p + Vector3.DOWN * down, 1, ex)
 			var h := space.intersect_ray(q)
 			if h.is_empty():
 				break

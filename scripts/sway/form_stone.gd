@@ -8,6 +8,9 @@ extends RigidBody3D
 ##               rests on it, in the physics (mass_kg): Gust pushes it, it rolls
 ## Both are stones Gust lifts and hurls (GustLift; group GROUP, meta sway_stone). Each lies life_s untouched and then
 ## sinks back into the ground in sink_s; one lifted begins its time again where it comes to rest (rest_again()).
+## Each looks like a stone of the ground it came out of (`matter`, FormMatter.rock_material: data/sway/moves.json
+## stone_form.looks; the user, 2026-10-03: "okay the stone spike is cool okay it works but we need to work on the textures"):
+## our own weathered fieldstone, its freshly broken faces lighter, the ground's stain on its foot.
 
 const GROUP := &"form_stones"
 
@@ -21,6 +24,8 @@ var life_s := 45.0
 var sink_s := 1.0
 var state := State.RISING
 var age := 0.0
+## The ground it came out of ("earth", "mud", "stone", "snow": FormMatter), its look.
+var matter := "stone"
 ## Where it stands risen (world): the spike's foot on the ground, its point up; the ball's middle.
 var base := Transform3D.IDENTITY
 var mesh_instance: MeshInstance3D
@@ -29,9 +34,11 @@ var _t := 0.0
 var _sink_from := Transform3D.IDENTITY
 
 
-## A spike of `d` (stone_form.spike) standing at `foot` (on the ground) under `parent`, leaning a little away from `way`.
-static func spike(parent: Node, foot: Vector3, way: Vector3, d: Dictionary, seed := 0) -> FormStone:
+## A spike of `d` (stone_form.spike) standing at `foot` (on the ground) under `parent`, leaning a little away from `way`, a
+## stone of `matter`'s ground.
+static func spike(parent: Node, foot: Vector3, way: Vector3, d: Dictionary, seed := 0, p_matter := "stone") -> FormStone:
 	var s := _make("spike", d)
+	s.matter = p_matter
 	s.radius = float(d.get("radius_m", 0.26))
 	s.height = float(d.get("height_m", 1.75))
 	s.mass = 30.0
@@ -50,16 +57,18 @@ static func spike(parent: Node, foot: Vector3, way: Vector3, d: Dictionary, seed
 	s.add_child(cs)
 	s.mesh_instance = MeshInstance3D.new()
 	s.mesh_instance.name = "Mesh"
-	s.mesh_instance.mesh = FormModels.spike_mesh(s.radius, s.height, 31 + seed % 7)
+	s.mesh_instance.mesh = FormModels.spike_mesh(s.radius, s.height, 31 + seed % 7, FormModels.BURY_M, p_matter)
+	s.mesh_instance.set_instance_shader_parameter(&"seed", float(seed))
 	s.add_child(s.mesh_instance)
 	parent.add_child(s)
 	s.global_transform = s._risen(0.0)
 	return s
 
 
-## A cannonball of `d` (stone_form.cannonball) rising out of the ground at `foot` under `parent`.
-static func ball(parent: Node, foot: Vector3, d: Dictionary, seed := 0) -> FormStone:
+## A cannonball of `d` (stone_form.cannonball) rising out of the ground at `foot` under `parent`, a stone of `matter`'s ground.
+static func ball(parent: Node, foot: Vector3, d: Dictionary, seed := 0, p_matter := "stone") -> FormStone:
 	var s := _make("cannonball", d)
+	s.matter = p_matter
 	s.radius = float(d.get("radius_m", 0.26))
 	s.height = s.radius * 2.0
 	s.mass = float(d.get("mass_kg", 45.0))
@@ -72,7 +81,8 @@ static func ball(parent: Node, foot: Vector3, d: Dictionary, seed := 0) -> FormS
 	s.add_child(cs)
 	s.mesh_instance = MeshInstance3D.new()
 	s.mesh_instance.name = "Mesh"
-	s.mesh_instance.mesh = FormModels.ball_mesh(s.radius, 41 + seed % 7)
+	s.mesh_instance.mesh = FormModels.ball_mesh(s.radius, 41 + seed % 7, p_matter)
+	s.mesh_instance.set_instance_shader_parameter(&"seed", float(seed))
 	s.add_child(s.mesh_instance)
 	parent.add_child(s)
 	s.global_transform = s._risen(0.0)

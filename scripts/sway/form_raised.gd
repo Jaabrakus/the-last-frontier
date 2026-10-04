@@ -1,11 +1,21 @@
 class_name FormRaised
 extends AnimatableBody3D
-## Earth a Form cast raised (FormEffects; SwayCaster's art "form"): the earth wall (kind "wall": a slab of packed earth and stone
-## width x height x thick, the player and fighters take cover behind it: NpcCover finds its box) or the pillar ("pillar": a
-## column to stand on and climb). It rises out of the ground over rise_s (an AnimatableBody3D moved in the physics step: whoever
-## stands on it is carried up), stands life_s, and crumbles (sinks back into the ground in a cloud of dust, its stones
-## breaking off) at the end of it or after `hits_max` musket hits of at least hit_min damage (Hit.deliver finds apply_hit
-## here). Mend packs a worn one again (mend(): its hits and its time back). Group GROUP.
+## Earth a Form cast raised (FormEffects; SwayCaster's art "form"): the earth wall (kind "wall": a slab of what it was raised
+## from, width x height x thick, the player and fighters take cover behind it: NpcCover finds its box, whatever its matter)
+## or the pillar ("pillar": a column to stand on and climb). It rises out of the ground over rise_s (an AnimatableBody3D moved
+## in the physics step: whoever stands on it is carried up), stands life_s, and crumbles at the end of it or after `hits_max`
+## musket hits of at least hit_min damage (Hit.deliver finds apply_hit here). Mend packs a worn one again (mend(): its hits
+## and its time back). Group GROUP.
+## Its matter (`matter`, FormMatter; the user, 2026-10-03: "it should be earth wall where if the terrain is mud its a mud wall
+## if its a tree i can make a tree wall you know"; data/sway/moves.json earth_wall.wall.materials) sets its look, its
+## strength and how it goes (`crumble`):
+##   earth  packed earth and fieldstones, turf on top ("dust": it sinks back in a cloud of dust, its stones breaking off)
+##   mud    wet mud, smoothed and slumped, weaker ("slump": it sags and spreads as it sinks, mud thrown off)
+##   stone  grey fieldstones packed, stronger ("rubble": it breaks and drops, its stones tumbling out round its foot)
+##   snow   packed snow over the earth, weaker ("snow": it sinks in a white cloud)
+##   wood   a palisade section of split logs from a tree, a medium strength ("splinters": it leans back as it sinks, the
+##          wood splintering off)
+## A shot that counts throws off its own matter (stone chips, clods, splinters, snow).
 
 signal crumbled(raised: FormRaised, why: String)
 
@@ -14,6 +24,10 @@ const GROUP := &"form_raised"
 enum State { RISING, UP, CRUMBLING }
 
 var kind := "wall"
+## What it is made of: "earth", "mud", "stone", "snow", "wood" (FormMatter).
+var matter := "earth"
+## How it goes: "dust", "slump", "rubble", "snow", "splinters".
+var crumble_style := "dust"
 ## Over the ground: x across, y up, z through (the wall); the pillar's x and z its diameter.
 var size := Vector3(3.0, 2.0, 0.6)
 var rise_s := 0.7
@@ -30,18 +44,24 @@ var state := State.RISING
 ## Where its base stands (world; the ground), and how it faces.
 var base := Transform3D.IDENTITY
 var mesh_instance: MeshInstance3D
+## What mend says packing it again ("The earth packed again").
+var mended_line := "The earth packed again"
 
 var _t := 0.0
 var _shape: CollisionShape3D
 var _crumble_why := ""
 
 
-## A raised wall or pillar at `xf` (its origin on the ground, +Y up, +Z through it) under `parent`; `d` the move's numbers.
+## A raised wall or pillar at `xf` (its origin on the ground, +Y up, +Z through it) under `parent`; `d` the move's numbers
+## with its matter's over them (FormMatter.numbers: matter, crumble, surface, mended; for a wall from a tree, species).
 static func raise(parent: Node, p_kind: String, xf: Transform3D, d: Dictionary, seed := 0) -> FormRaised:
 	var r := FormRaised.new()
 	r.name = "FormWall" if p_kind == "wall" else "FormPillar"
 	r.kind = p_kind
 	r.base = xf
+	r.matter = String(d.get("matter", "earth"))
+	r.crumble_style = String(d.get("crumble", "dust"))
+	r.mended_line = String(d.get("mended", r.mended_line))
 	if p_kind == "wall":
 		r.size = Vector3(float(d.get("width_m", 3.0)), float(d.get("height_m", 2.0)), float(d.get("thick_m", 0.6)))
 	else:
@@ -54,7 +74,7 @@ static func raise(parent: Node, p_kind: String, xf: Transform3D, d: Dictionary, 
 	r.crumble_s = float(d.get("crumble_s", 1.4))
 	r.ease_smooth = p_kind == "pillar"
 	r.sync_to_physics = true
-	r.set_meta(&"surface", "stone")
+	r.set_meta(&"surface", String(d.get("surface", "stone")))
 	r.add_to_group(GROUP)
 	var cs := CollisionShape3D.new()
 	cs.name = "Shape"
@@ -73,8 +93,14 @@ static func raise(parent: Node, p_kind: String, xf: Transform3D, d: Dictionary, 
 	r.add_child(cs)
 	r.mesh_instance = MeshInstance3D.new()
 	r.mesh_instance.name = "Mesh"
-	r.mesh_instance.mesh = FormModels.wall_mesh(r.size.x, r.size.y, r.size.z, seed) if p_kind == "wall" \
-			else FormModels.pillar_mesh(r.size.x * 0.5, r.size.y, seed)
+	if p_kind == "pillar":
+		r.mesh_instance.mesh = FormModels.pillar_mesh(r.size.x * 0.5, r.size.y, seed, bury, r.matter)
+	elif r.matter == "wood":
+		r.mesh_instance.mesh = FormModels.palisade_mesh(r.size.x, r.size.y, float(d.get("log_r", r.size.z * 0.45)), seed,
+				String(d.get("species", "")), bury)
+	else:
+		r.mesh_instance.mesh = FormModels.wall_mesh(r.size.x, r.size.y, r.size.z, seed, bury, r.matter)
+	r.mesh_instance.set_instance_shader_parameter(&"seed", float(seed % 97))
 	r.add_child(r.mesh_instance)
 	parent.add_child(r)
 	r.global_transform = r._at(0.0)
@@ -116,24 +142,63 @@ func _physics_process(dt: float) -> void:
 				crumble("time")
 		State.CRUMBLING:
 			var u := clampf(_t / maxf(crumble_s, 0.01), 0.0, 1.0)
-			var xf := _at(1.0 - u * u)
-			xf.origin += xf.basis * Vector3(sin(_t * 47.0), 0.0, cos(_t * 41.0)) * 0.02
-			global_transform = xf
+			_crumbling(u)
 			if u > 0.4 and _shape != null and not _shape.disabled:
 				_shape.disabled = true
 			if u >= 1.0:
 				queue_free()
 
 
-## Struck (Hit.deliver): a hit of at least hit_min counts, its chips flying; hits_max of them and it crumbles.
+## How it goes, `u` (0..1) of the way (crumble_style; see the header).
+func _crumbling(u: float) -> void:
+	var shake := Vector3(sin(_t * 47.0), 0.0, cos(_t * 41.0)) * 0.02
+	var xf: Transform3D
+	match crumble_style:
+		"slump":
+			# (it sags and spreads, sinking slower: mud going back to the ground)
+			xf = _at(1.0 - u * u * 0.85)
+			if mesh_instance != null:
+				mesh_instance.scale = Vector3(1.0 + 0.22 * u, 1.0 - 0.55 * smoothstep(0.0, 0.8, u), 1.0 + 0.45 * u)
+			shake *= 0.3
+		"rubble":
+			# (it breaks and drops fast, its stones tumbling out: Rubble)
+			xf = _at(1.0 - smoothstep(0.0, 0.7, u))
+			shake *= 2.0
+		"splinters":
+			# (it leans back, away from the caster, as it sinks)
+			xf = _at(1.0 - u * u)
+			xf.basis = xf.basis * Basis(Vector3.RIGHT, deg_to_rad(24.0) * smoothstep(0.0, 1.0, u))
+		_:
+			xf = _at(1.0 - u * u)
+	xf.origin += xf.basis * shake
+	global_transform = xf
+
+
+## Struck (Hit.deliver): a hit of at least hit_min counts, its matter thrown off; hits_max of them and it crumbles.
 func apply_hit(damage: float, point: Vector3, dir: Vector3, _source: Node = null, _part := "body") -> void:
 	if state == State.CRUMBLING or damage < hit_min:
 		return
 	hits += 1
 	if is_inside_tree():
-		GatherFx.stone_chips(get_tree().current_scene, point, -dir.normalized() if dir.length_squared() > 1e-6 else Vector3.UP, 10)
+		_chips(get_tree().current_scene, point, -dir.normalized() if dir.length_squared() > 1e-6 else Vector3.UP, 10)
 	if hits >= hits_max:
 		crumble("shot")
+
+
+## Its matter thrown off at `point` along `normal`.
+func _chips(scn: Node, point: Vector3, normal: Vector3, n: int) -> void:
+	match matter:
+		"wood":
+			GatherFx.wood_chips(scn, point, normal, n + 4)
+		"mud":
+			GatherFx._dust(scn, point + normal * 0.04, normal, n, Vector2(0.05, 0.16), 0.7, Color(0.16, 0.11, 0.07, 0.75))
+		"snow":
+			GatherFx._dust(scn, point + normal * 0.04, normal, n + 4, Vector2(0.06, 0.2), 0.9, Color(0.9, 0.93, 0.97, 0.7))
+		"earth":
+			GatherFx.stone_chips(scn, point, normal, n / 2)
+			GatherFx.soil(scn, point, normal, n)
+		_:
+			GatherFx.stone_chips(scn, point, normal, n)
 
 
 ## Worn by shot (mend can pack it again).
@@ -156,8 +221,90 @@ func crumble(why: String) -> void:
 	if is_inside_tree():
 		var scn := get_tree().current_scene
 		var at := global_transform.origin
-		GatherFx.fall_dust(scn, at, maxf(size.x, size.z) * 0.5)
-		for i in 3:
-			GatherFx.stone_chips(scn, global_transform * Vector3((float(i) - 1.0) * size.x * 0.3, size.y * 0.6, 0.0), Vector3.UP, 8)
-		FormEffects.sfx("crumble", at, -2.0, 0.8)
+		var wide := maxf(size.x, size.z) * 0.5
+		match crumble_style:
+			"snow":
+				GatherFx._dust(scn, at + Vector3.UP * 0.3, Vector3.UP, 30, Vector2(0.3, 0.8), 1.8, Color(0.9, 0.93, 0.97, 0.45))
+			"slump":
+				for i in 3:
+					GatherFx._dust(scn, global_transform * Vector3((float(i) - 1.0) * size.x * 0.3, size.y * 0.4, 0.0), Vector3.UP, 10,
+							Vector2(0.06, 0.18), 0.9, Color(0.16, 0.11, 0.07, 0.7))
+			"splinters":
+				GatherFx.fall_dust(scn, at, wide)
+				for i in 4:
+					GatherFx.wood_chips(scn, global_transform * Vector3((float(i) - 1.5) * size.x * 0.25, size.y * 0.55, 0.0), global_basis.z, 14)
+			"rubble":
+				GatherFx.fall_dust(scn, at, wide)
+				for i in 3:
+					GatherFx.stone_chips(scn, global_transform * Vector3((float(i) - 1.0) * size.x * 0.3, size.y * 0.6, 0.0), Vector3.UP, 10)
+				Rubble.spill(scn, self)
+			_:
+				GatherFx.fall_dust(scn, at, wide)
+				for i in 3:
+					GatherFx.stone_chips(scn, global_transform * Vector3((float(i) - 1.0) * size.x * 0.3, size.y * 0.6, 0.0), Vector3.UP, 8)
+		FormEffects.sfx("splinter" if matter == "wood" else "crumble", at, -2.0, 0.8)
 	crumbled.emit(self, why)
+
+
+## The stones a stone wall (or pillar) falls into (drawn only): fieldstone lumps tumbling out of it to its foot on both sides,
+## lying a moment, then sinking back into the ground. No physics: each a simple fall with a bounce, one node for them all.
+class Rubble:
+	extends Node3D
+
+	const N := 9
+	const LIE_S := 2.4
+	const SINK_S := 1.2
+	const G := 9.8
+
+	var _pieces: Array[MeshInstance3D] = []
+	var _vel: Array[Vector3] = []
+	var _spin: Array[Vector3] = []
+	var _floor: Array[float] = []
+	var _t := 0.0
+
+	static func spill(parent: Node, r: FormRaised) -> void:
+		if DisplayServer.get_name() == "headless" or parent == null:
+			return
+		var ru := Rubble.new()
+		ru.name = "FormRubble"
+		parent.add_child(ru)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = r.get_instance_id()
+		var mesh := FormModels.chunk_mesh(0.17, 7, "stone")
+		for i in N:
+			var mi := MeshInstance3D.new()
+			mi.mesh = mesh
+			mi.set_instance_shader_parameter(&"seed", float(i * 7))
+			var lp := Vector3(rng.randf_range(-0.45, 0.45) * r.size.x, rng.randf_range(0.3, 0.9) * r.size.y, 0.0)
+			var side := 1.0 if i % 2 == 0 else -1.0
+			ru.add_child(mi)
+			mi.global_position = r.global_transform * lp
+			mi.scale = Vector3.ONE * rng.randf_range(0.7, 1.35)
+			mi.rotation = Vector3(rng.randf(), rng.randf(), rng.randf()) * TAU
+			var out := r.global_basis.z * side * rng.randf_range(1.0, 2.4) + r.global_basis.x * rng.randf_range(-0.6, 0.6)
+			ru._pieces.append(mi)
+			ru._vel.append(out + Vector3.UP * rng.randf_range(0.5, 1.8))
+			ru._spin.append(Vector3(rng.randf_range(-6.0, 6.0), rng.randf_range(-3.0, 3.0), rng.randf_range(-6.0, 6.0)))
+			var at := mi.global_position + out * 0.6
+			ru._floor.append(FrontierTerrain.height_at(at.x, at.z))
+
+	func _process(dt: float) -> void:
+		_t += dt
+		for i in _pieces.size():
+			var mi := _pieces[i]
+			if _t < LIE_S:
+				var v := _vel[i]
+				v.y -= G * dt
+				var p := mi.global_position + v * dt
+				var fy := _floor[i] + 0.08 * mi.scale.x
+				if p.y < fy:
+					p.y = fy
+					v = Vector3(v.x * 0.45, absf(v.y) * 0.25, v.z * 0.45)
+					_spin[i] *= 0.5
+				_vel[i] = v
+				mi.global_position = p
+				mi.rotation += _spin[i] * dt
+			else:
+				mi.global_position.y -= dt * 0.35 / SINK_S
+		if _t >= LIE_S + SINK_S:
+			queue_free()

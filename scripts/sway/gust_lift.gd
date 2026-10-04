@@ -219,7 +219,9 @@ func _held(dt: float) -> void:
 	var s0 := float(h.get("strain_start_s", 2.5))
 	var s1 := maxf(float(h.get("break_s", 5.0)), s0 + 0.1)
 	draw = clampf((t - tear) / draw_s, 0.0, 1.0)
-	strain = clampf((t - s0) / (s1 - s0), 0.0, 1.0)
+	# (hold.no_break: held as long as the aim is, no strain and no break; Gust's, the user, 2026-10-03: "gust its hard and
+	# unenjoyable", chose "easier Gust everywhere")
+	strain = 0.0 if bool(h.get("no_break", false)) else clampf((t - s0) / (s1 - s0), 0.0, 1.0)
 	var up := float(h.get("rise_m", 1.5)) * smoothstep(0.0, tear + draw_s, t)
 	var shake := (0.012 + 0.05 * strain * strain) * (1.0 if t > tear else 1.6)
 	var jitter := Vector3(sin(t * 41.0 + 1.0), sin(t * 37.0) * 0.6, cos(t * 47.0)) * shake

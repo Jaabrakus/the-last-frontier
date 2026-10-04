@@ -115,7 +115,8 @@ func _draw() -> void:
 		_ring(c, RADIUS + wob, caster.fill, Color(bright.r, bright.g, bright.b, 0.95 * a), shape, WIDTH)
 		if full:
 			# the second left to let go: a thin inner arc running down
-			var left := clampf(1.0 - caster.full_t / maxf(caster.release_s, 0.01), 0.0, 1.0)
+			var rw := caster.release_window()          # (0: no limit, Gust's: the arc stays whole)
+			var left := 1.0 if rw <= 0.0 else clampf(1.0 - caster.full_t / rw, 0.0, 1.0)
 			draw_arc(c, RADIUS - 5.0, -PI * 0.5, -PI * 0.5 + TAU * left, 40, Color(bright.r, bright.g, bright.b, 0.5 * a), 1.2, true)
 		elif holding:
 			# a hold: a stone's draw filling (a bowstring's: GustLift), or the sail's wind (a mote's time running down)

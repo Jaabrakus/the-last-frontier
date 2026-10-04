@@ -179,6 +179,7 @@ func _run() -> void:
 		_end()
 		return
 	player.ignore_mouse_capture = true
+	_strict_gust()
 	for i in 60:
 		await process_frame
 	_place_player()
@@ -716,3 +717,14 @@ func _end() -> void:
 			printerr("FAIL: ", f)
 		print("SWAY TEST FAILED (%d of %d)" % [fails.size(), checks])
 		quit(1)
+
+## Gust under the strict rules these checks were written for: the art's cone, grace and release window, the 0.6 s and 0.8 s
+## locks, the stone's strain and break. Its own easier rules (lock_rules, the stone's no_break, the quicker locks: the
+## user's 2026-10-03 choice "easier Gust everywhere") are checked in tests/sway/test_free_use.gd. Set in memory only.
+func _strict_gust() -> void:
+	var g := SwayMoves.move("gust")
+	g.erase("lock_rules")
+	g["lock_s"] = 0.6
+	var st: Dictionary = g.get("stone", {})
+	st["lock_s"] = 0.8
+	(st.get("hold", {}) as Dictionary)["no_break"] = false

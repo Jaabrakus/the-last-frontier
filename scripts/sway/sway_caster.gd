@@ -26,7 +26,9 @@ extends Node
 ##              own target (FormCast.pick: the ground, a piece to mend)
 ##   the lock   fills over the move's lock time (x the tier's, stretched up to far_stretch at the end of its range, slower
 ##              while running: moving_mult); the aim off the target more than grace_s (0.15 s; a 2 deg cone round the
-##              crosshair still counts) breaks it, the ring flickering meanwhile and not filling. Full: a click (locked); let go
+##              crosshair still counts) breaks it, the ring flickering meanwhile and not filling. A move may have its own
+##              rules (moves.json lock_rules: Gust's wider cone that also catches a target near the crosshair, a longer
+##              grace and no fizzle: rule_of, release_window, _cone_pick). Full: a click (locked); let go
 ##              of the aim within release_s (1 s) and it casts (cast; the motes spent, a use counted), held longer it fizzles
 ##              (fizzled; the motes kept, and the aim must be let go before the next lock). Let go before it is full: no cast
 ##   holds      a lock that holds at full (state HOLDING, hold_started; the motes spent as it begins). Both are Gust's (the
@@ -706,6 +708,7 @@ func _physics_process(dt: float) -> void:
 		_wait_release = false
 		hint = ""
 		_hinted = ""
+		_why_key = ""
 		return
 	if _wait_release:
 		return
@@ -751,7 +754,7 @@ func _process(dt: float) -> void:
 			if off_t > 0.0:
 				s *= 0.35 + 0.65 * absf(sin(Time.get_ticks_msec() * 0.06))
 		thread.color = SwayMoves.art_color(art())
-		thread.set_line(hand_point(), locked_point() if on else thread.to, s)
+		thread.set_line(hand_point(), _thread_end() if on else thread.to, s)
 	if tone != null:
 		tone.on = state == State.LOCKING and off_t <= 0.0
 		tone.level = fill
@@ -885,6 +888,47 @@ func _knows_spells() -> bool:
 ## so the aim with the hands free is not a sign of wanting one): with free use while no spell is on the bar (the player has
 ## not taken one up: the Tab screen lists them), nor near a scripted lock (_scripted_near: the wreck's spar, where the hold
 ## may be for the first lock, which wants no spell).
+## Why the aim held with a spell readied takes no lock, said once a hold (the user, 2026-10-03: "i use right click and
+## nothing happens": a far aim, or the crosshair on nothing the spell works on, had said nothing). `hint` is set either way.
+func _say_why(key: String, text: String) -> void:
+	hint = key
+	# (said only once it has held WHY_DELAY_S: not for the crosshair passing over the ground on its way to a target)
+	if key != _why_key:
+		_why_key = key
+		_why_t = 0.0
+	_why_t += get_physics_process_delta_time()
+	if _why_t < WHY_DELAY_S:
+		return
+	if readied_spell == "" or _hinted == key or player.interactor == null or not player.is_local:
+		return
+	_hinted = key
+	player.interactor.notice(text, 1.8)
+
+
+var _why_key := ""
+var _why_t := 0.0
+## How long the aim must stay on nothing (or too far) before the reason is said.
+const WHY_DELAY_S := 0.35
+
+
+## Where the thread ends: the crosshair's own point on the target while it is on it, else the locked point (the user,
+## 2026-10-03: "the gust line is off aim": it ended where the lock first caught, 16-29 px off the crosshair once the camera
+## had come in over the shoulder).
+func _thread_end() -> Vector3:
+	if _q.has("point") and _alive(target):
+		var n: Variant = _q.get("node")
+		if n is Node and (n == target or target.is_ancestor_of(n)):
+			return _q.point
+	return locked_point()
+
+
+## The readied spell's crosshair on nothing it works on (Gust: someone, an animal, a thing, a fire or a stone).
+func _say_none() -> void:
+	if readied_spell == "" or FormCast.is_form(readied_spell):
+		return
+	_say_why("none", "%s: aim at someone, an animal, a thing, a fire or a stone" % spell_label(readied_spell))
+
+
 func _hint_unreadied() -> void:
 	hint = "unreadied"
 	if _hinted == "unreadied" or player.interactor == null or not player.is_local or not player.hands_free:
@@ -1156,17 +1200,28 @@ func _try_begin(q: Dictionary) -> void:
 		t = pk.get("node")
 		if t == null:
 			hint = String(pk.get("hint", ""))
+			if hint == "":                     # (FormCast says its own hints; with none, nothing in reach to work on)
+				_say_why("none", "%s: aim at %s" % [spell_label(readied_spell),
+						"something built that is damaged, within %d m" % roundi(range_of(readied_spell)) if readied_spell == "mend" else "the ground"])
 			return
 		m = readied_spell
 		point = pk.point
 	else:
 		t = q.get("node")
+		if (t == null or move_for(t) == "") and readied_spell != "":
+			# (a move with a wider aim zone, Gust's: the nearest target within its cone of the crosshair, not only under it)
+			var near := _cone_pick(q, readied_spell)
+			if not near.is_empty():
+				t = near.node
+				q = near
 		if t == null:
 			hint = ""
+			_say_none()
 			return
 		m = move_for(t)
 		if m == "":
 			hint = ""
+			_say_none()
 			return
 		point = q.point
 		if holds_stone(m, t) and GustLift.casters_needed(t) > 1:
@@ -1179,7 +1234,7 @@ func _try_begin(q: Dictionary) -> void:
 	var dist := reach_to(point, m)
 	var r := range_of(m, t)
 	if dist > r and not _self_cast(m):
-		hint = "far"
+		_say_why("far", "Too far: %s reaches %d m" % [spell_label(m) if is_spell(m) else "it", roundi(r)])
 		return
 	if cost_of(m) > motes:                     # (never with free use: it costs nothing)
 		hint = "motes"
@@ -1188,6 +1243,7 @@ func _try_begin(q: Dictionary) -> void:
 		_hinted = "motes"
 		return
 	hint = ""
+	_why_key = ""
 	state = State.LOCKING
 	move = m
 	target = t
@@ -1234,7 +1290,7 @@ func _hold(dt: float, q: Dictionary) -> void:
 		return
 	var on := _on_target(q)
 	off_t = 0.0 if on else off_t + dt
-	if off_t > grace_s:
+	if off_t > rule_of(move, "grace_s", grace_s):
 		_break("off")
 		return
 	if not _self_cast(move) and reach_to(locked_point(), move) > range_of(move, target) * RANGE_SLACK:
@@ -1251,7 +1307,8 @@ func _hold(dt: float, q: Dictionary) -> void:
 			_full()
 	else:
 		full_t += dt
-		if full_t > release_s:
+		var rw := release_window()
+		if rw > 0.0 and full_t > rw:
 			_fizzle()
 
 
@@ -1267,12 +1324,66 @@ func _on_target(q: Dictionary) -> bool:
 	var c := locked_point()
 	var from: Vector3 = q.from
 	var to := c - from
-	if to.length() < 0.05 or rad_to_deg((q.dir as Vector3).angle_to(to)) > cone_deg:
+	if to.length() < 0.05 or rad_to_deg((q.dir as Vector3).angle_to(to)) > rule_of(move, "cone_deg", cone_deg):
 		return false
 	var ray := PhysicsRayQueryParameters3D.create(from, c + to.normalized() * 0.05)
 	ray.exclude = [player.get_rid()]
 	var h := player.get_world_3d().direct_space_state.intersect_ray(ray)
 	return h.is_empty() or (h.position as Vector3).distance_to(c) < 0.35 or resolve(h.collider, h.position) == target
+
+
+## A lock rule of move `m`: its own (moves.json "lock_rules": Gust's easier cone, grace and release window; the user,
+## 2026-10-03, "gust its hard and unenjoyable") over the art's (lock: cone_deg, grace_s, release_s).
+func rule_of(m: String, key: String, def: float) -> float:
+	var r: Variant = SwayMoves.move(m).get("lock_rules", {})
+	return float((r as Dictionary).get(key, def)) if r is Dictionary else def
+
+
+## The seconds after the click within which letting go casts (0: no limit, no fizzle; Gust's).
+func release_window() -> float:
+	return rule_of(move, "release_s", release_s)
+
+
+## The nearest target for `m` within its cone of the crosshair when the crosshair's own ray is on none (the aim zone):
+## rays in two rings round the aim (half the cone, then the cone), the nearest to the crosshair first. The query as
+## _query's ({from, dir, point, collider, node}) of the one found, or {}. Only for a move with its own wider cone.
+const CONE_RAYS := 8
+func _cone_pick(q: Dictionary, m: String) -> Dictionary:
+	var cone := rule_of(m, "cone_deg", cone_deg)
+	if cone <= cone_deg + 0.01 or not q.has("from"):
+		return {}
+	var from: Vector3 = q.from
+	var dir: Vector3 = q.dir
+	var side := dir.cross(Vector3.UP)
+	if side.length_squared() < 1e-6:
+		side = Vector3.RIGHT
+	side = side.normalized()
+	var up := side.cross(dir).normalized()
+	var reach := range_of(m) + player.cam_distance_now() + 2.0
+	var space := player.get_world_3d().direct_space_state
+	var ex: Array[RID] = [player.get_rid()]
+	for ring in [0.5, 1.0]:
+		var a := deg_to_rad(cone * ring)
+		var best := {}
+		var best_off := INF
+		for i in CONE_RAYS:
+			var th := TAU * float(i) / CONE_RAYS
+			var d := (dir * cos(a) + (side * cos(th) + up * sin(th)) * sin(a)).normalized()
+			var r := PhysicsRayQueryParameters3D.create(from, from + d * reach)
+			r.exclude = ex
+			var hit := space.intersect_ray(r)
+			if hit.is_empty():
+				continue
+			var n := resolve(hit.collider, hit.position)
+			if n == null or move_for(n) != m:
+				continue
+			var off := dir.angle_to((hit.position as Vector3) - from)
+			if off < best_off:
+				best_off = off
+				best = {"from": from, "dir": dir, "point": hit.position, "collider": hit.collider, "node": n}
+		if not best.is_empty():
+			return best
+	return {}
 
 
 ## Whether a full lock of `m` on `t` holds instead of casting at the let go: Gust on a sail or on a stone.

@@ -24,10 +24,11 @@ extends SceneTree
 ##   pillar    self, standing: it rises under the player and lifts them about 3 m; self while running: launched up and
 ##             forward, a boost when let go on a foot plant (the step cycle) and none between; self in the air: it rises
 ##             where they come down; free: at the aimed circle, not under the player, and 8.5 m off (its 10 m reach)
-##   stone     spike: a jagged spike bursts up at the circle under a militiaman 7 m off, he is struck (Hit.deliver) and thrown
-##             off his feet, the spike stands (a FormStone); cannonball: a ball about 0.5 m across rises out of the ground and
-##             rests on it, in the physics
-##   gust      Gust's lock on the ball (a stone: GustLift.is_stone; a crate is none): it tears free and rises while held,
+##   stone     thrown (the user, 2026-10-03: "Stone Form throws itself"): spike: locked on the ground under a militiaman 7 m off,
+##             a jagged spike bursts up a step in front of the caster (a hollow there), flies at him and strikes him
+##             (Hit.deliver), staggering him; cannonball: a ball about 0.5 m across comes up in front of the caster, flies
+##             along the aim and rests on the ground on, in the physics
+##   gust      Gust's lock on a ball raised 3 m off (a stone: GustLift.is_stone; a crate is none): it tears free and rises while held,
 ##   stones    drawn like a bowstring (draw 0..1), the motes spent; let go along the aim at a militiaman: hurled, he is
 ##             struck, it lands and rolls. Held on a spike past its break: the power breaks, it drops, the caster staggers,
 ##             the motes lost (no cast). A boulder (group sway_boulders) too heavy for one: no lock, the hint "heavy"; a light
@@ -183,6 +184,7 @@ func _run() -> void:
 		_end()
 		return
 	player.ignore_mouse_capture = true
+	_strict_gust()
 	for i in 60:
 		await process_frame
 	_place_player()
@@ -679,7 +681,7 @@ func _run_launch(on_plant: bool) -> Dictionary:
 
 # ---------------------------------------------------------------- stone form: spike and cannonball
 func _stone() -> void:
-	# spike: under a militiaman 7 m off
+	# spike, thrown (the user, 2026-10-03: "Stone Form throws itself"): at a militiaman 7 m off
 	_place_player()
 	await _secs(0.4)
 	c.set_motes(c.belt_max)
@@ -694,44 +696,48 @@ func _stone() -> void:
 	var d0 := Vector2(f.global_position.x - pp.x, f.global_position.z - pp.z)
 	var at := func() -> Vector3: return NpcSenses.chest_of(f)
 	player.health = player.max_health
+	var before := get_nodes_in_group(FormStone.GROUP)
 	var ok := await _cast("stone_form", at)
 	_expect(ok and c.motes == c.belt_max - 2, "spike: locked on the ground under him, cast, two motes (%d left)" % c.motes)
-	var bursts := get_nodes_in_group(FormSpikes.GROUP)
-	var burst: FormSpikes = bursts[bursts.size() - 1] if not bursts.is_empty() else null
+	var fresh := get_nodes_in_group(FormStone.GROUP).filter(func(n: Node) -> bool: return not before.has(n))
+	var spike: FormStone = fresh[0] if not fresh.is_empty() else null
+	var off := Vector2(spike.global_position.x - pp.x, spike.global_position.z - pp.z).length() if spike else INF
+	_expect(spike != null and spike.kind == "spike" and spike.height > 1.5 and off < 2.3 and _hollows() == h0 + 1,
+			"spike: a jagged spike (%.2f m) bursts up a step in front of the caster (%.2f m), a hollow there" % [spike.height if spike else 0.0, off])
 	var flinched := false
 	var most := 0.0
-	for i in 40:
+	for i in 60:
 		await physics_frame
 		flinched = flinched or f.action == "flinch"
 		most = maxf(most, Vector2(f.global_position.x - pp.x, f.global_position.z - pp.z).distance_to(d0))
-	var spikes := _stones("spike")
-	var spike: FormStone = spikes[spikes.size() - 1] if not spikes.is_empty() else null
-	_expect(spike != null and spike.is_risen() and spike.freeze and Vector2(spike.global_position.x - d0.x - pp.x, spike.global_position.z - d0.y - pp.z).length() < 1.2
-			and spike.height > 1.5, "spike: a jagged spike burst up at the circle and stands there (a stone for Gust, %.2f m)" % (spike.height if spike else 0.0))
-	_expect(burst != null and burst.hit.has(f.get_instance_id()) and f.health < hp0, "spike: he is struck (%.0f -> %.0f)" % [hp0, f.health])
-	_expect(flinched and most > 0.4, "spike: and thrown off his feet (%.1f m, staggered %s)" % [most, flinched])
-	_expect(_hollows() == h0 + 1, "spike: a hollow under it")
-	_expect(burst != null and not burst.hit.has(player.get_instance_id()) and player.health >= player.max_health - 0.01, "spike: the caster untouched")
+	_expect(f.health < hp0, "spike: it flies at him and strikes him (%.0f -> %.0f)" % [hp0, f.health])
+	_expect(flinched or most > 0.2, "spike: and staggers him (%.1f m, staggered %s)" % [most, flinched])
+	_expect(player.health >= player.max_health - 0.01, "spike: the caster untouched")
 	sq.queue_free()
-	if spike:
+	if is_instance_valid(spike):
 		spike.queue_free()
 	await _secs(0.5)
-	# cannonball: a stone ball rises and rests
+	# cannonball: a stone ball rises in front of the caster, flies along the aim and rolls to rest
 	c.set_motes(c.belt_max)
 	c.set_mode("stone_form", "cannonball")
-	var g := _ground(LANE_X + 1.2, -27.0)
+	var g := _ground(LANE_X + 1.2, -29.0)
+	before = get_nodes_in_group(FormStone.GROUP)
 	ok = await _cast("stone_form", func() -> Vector3: return g)
-	var balls := _stones("cannonball")
-	var ball: FormStone = balls[balls.size() - 1] if not balls.is_empty() else null
-	_expect(ok and ball != null and absf(ball.radius * 2.0 - 0.5) < 0.1, "cannonball: cast, a stone ball %.2f m across" % ((ball.radius * 2.0) if ball else 0.0))
+	fresh = get_nodes_in_group(FormStone.GROUP).filter(func(n: Node) -> bool: return not before.has(n))
+	var ball: FormStone = fresh[0] if not fresh.is_empty() else null
+	off = Vector2(ball.global_position.x - pp.x, ball.global_position.z - pp.z).length() if ball else INF
+	_expect(ok and ball != null and absf(ball.radius * 2.0 - 0.5) < 0.1 and off < 2.3,
+			"cannonball: cast, a stone ball %.2f m across comes up in front of the caster" % ((ball.radius * 2.0) if ball else 0.0))
 	var y_mid := ball.global_position.y if ball else 0.0
-	await _secs(0.3)
-	var rising := ball != null and ball.global_position.y > y_mid + 0.05
-	await _secs(1.2)
+	await _secs(0.2)
+	var rising := ball != null and ball.global_position.y > y_mid + 0.3
+	await _secs(2.5)
 	var gy := FormEffects.ground_at(ball, ball.global_position).y if ball else 0.0      # (the ground under it, not the ball)
 	_expect(ball != null and rising and ball.is_risen() and not ball.freeze and absf(ball.global_position.y - gy - ball.radius) < 0.12
-			and Vector2(ball.global_position.x - g.x, ball.global_position.z - g.z).length() < 0.8,
-			"cannonball: it rose out of the ground and rests on it, in the physics (%.2f m over the ground)" % ((ball.global_position.y - gy) if ball else -1.0))
+			and Vector2(ball.global_position.x - pp.x, ball.global_position.z - pp.z).length() > 3.0,
+			"cannonball: it rose, flew along the aim and rests on the ground on, in the physics (%.2f m over the ground)" % ((ball.global_position.y - gy) if ball else -1.0))
+	if is_instance_valid(ball):
+		ball.queue_free()
 	c.set_mode("stone_form", "spike")
 
 
@@ -761,9 +767,10 @@ func _gust_stones() -> void:
 	c.set_motes(c.belt_max)
 	c.grant("gust", false)
 	c.set_uses("gust", 0)
-	var balls := _stones("cannonball")
-	var ball: FormStone = balls[balls.size() - 1] if not balls.is_empty() else null
-	_expect(ball != null, "gust stones: the cannonball lies 3 m off")
+	# (a ball raised 3 m off where it rests: Stone Form throws its own now, FormEffects.stone_form)
+	var ball := FormStone.ball(current_scene, _ground(LANE_X + 1.2, -27.0), SwayMoves.move("stone_form").get("cannonball", {}), 3)
+	await _secs(1.0)
+	_expect(ball != null and ball.is_risen(), "gust stones: the cannonball lies 3 m off")
 	if ball == null:
 		return
 	var crate := RigidBody3D.new()
@@ -824,9 +831,8 @@ func _gust_stones() -> void:
 	c.set_motes(c.belt_max)
 	c.set_mode("stone_form", "spike")
 	var sg := _ground(LANE_X + 1.0, -27.5)
-	var ok := await _cast("stone_form", func() -> Vector3: return sg)
-	var spikes := _stones("spike")
-	var spike: FormStone = spikes[spikes.size() - 1] if not spikes.is_empty() else null
+	var spike := FormStone.spike(current_scene, sg, Vector3.FORWARD, SwayMoves.move("stone_form").get("spike", {}), 5)
+	var ok := spike != null
 	await _secs(0.4)
 	c.set_motes(c.belt_max)
 	_expect(ok and spike != null, "gust stones: a spike raised 3.5 m off")
@@ -957,3 +963,14 @@ func _end() -> void:
 			printerr("FAIL: ", f)
 		print("FORM TEST FAILED (%d of %d)" % [fails.size(), checks])
 		quit(1)
+
+## Gust under the strict rules these checks were written for: the art's cone, grace and release window, the 0.6 s and 0.8 s
+## locks, the stone's strain and break. Its own easier rules (lock_rules, the stone's no_break, the quicker locks: the
+## user's 2026-10-03 choice "easier Gust everywhere") are checked in tests/sway/test_free_use.gd. Set in memory only.
+func _strict_gust() -> void:
+	var g := SwayMoves.move("gust")
+	g.erase("lock_rules")
+	g["lock_s"] = 0.6
+	var st: Dictionary = g.get("stone", {})
+	st["lock_s"] = 0.8
+	(st.get("hold", {}) as Dictionary)["no_break"] = false

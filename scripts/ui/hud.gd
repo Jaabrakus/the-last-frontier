@@ -605,6 +605,13 @@ func _update_card() -> void:
 func _spell_line(id: String) -> String:
 	var c := player.get_node_or_null("SwayCaster")
 	var line := String(c.call(&"spell_label", id)) if c != null and c.has_method(&"spell_label") else Hotbar.spell_label(id)
+	# (what the Form spell would raise from the place aimed at, the aim held: "Earth Wall: mud"; FormCast.matter_label; the
+	# user, 2026-10-03: "if the terrain is mud its a mud wall if its a tree i can make a tree wall")
+	var fm: Variant = c.get("form") if c != null else null
+	if fm is FormCast:
+		var ml := (fm as FormCast).matter_label(id)
+		if ml != "":
+			line += ": " + ml
 	if c != null and c.get("motes") != null and c.get("belt_max") != null and not SwayCaster.free_use():
 		line += "  ·  motes %d/%d" % [int(c.get("motes")), int(c.get("belt_max"))]
 	if c != null and c.has_method(&"tier_name"):

@@ -59,7 +59,8 @@ func _lay() -> void:
 		var h := _rng.randf_range(float(hr[0]), float(hr[1]))
 		var mi := MeshInstance3D.new()
 		mi.name = "Shard%d" % i
-		mi.mesh = FormModels.spike_mesh(_rng.randf_range(0.07, 0.11), h, 50 + i)
+		mi.mesh = FormModels.spike_mesh(_rng.randf_range(0.07, 0.11), h, 50 + i, FormModels.BURY_M, stone.matter if stone != null else "stone")
+		mi.set_instance_shader_parameter(&"seed", float(i * 13))
 		add_child(mi)
 		# (each leans out from the great spike)
 		var out := Vector3(off.x, 0.0, off.z).normalized()

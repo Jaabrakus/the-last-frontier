@@ -12,7 +12,8 @@
     "moves: art; label (the hotbar's name); lock_s; motes (cost); range_m; targets (kinds it locks on: fighter = NpcFighter, animal = WildAnimal, prop = a RigidBody3D, fire = a lit torch, campfire or a piece still catching, scripted = a node in group sway_targets, sail = a node in group sway_sails, stone = a stone Gust lifts: GustLift.is_stone); named_only: it locks only on a target whose meta sway_move names it; needs_grant false: usable without SwayCaster.grant and without a readied spell on a target that names it (a scripted lock, not a move you keep: the wreck's first lock); far_stretch the lock's stretch at the end of its range (design: up to 1.5x); moving_mult; push (gust: m/s given to people, animals, props; up_mps; heavy_kg above which a prop takes less; snuff_m fires blown out round the point); sail (gust held on a sail: the lock held keeps the wind in it, a mote every drain_s seconds after the first; SwayCaster.sail_wind); stone (gust locked on a stone, GustLift: a raised spike or cannonball, a node in group sway_boulders or with meta sway_stone, a small rock: a RigidBody3D whose meta surface is stone or rock; a crate is a prop, pushed. Its own range_m and lock_s; heavier than mass_kg it needs two casters, the hint heavy. At full lock it tears free (hold.tear_s) and rises hold.rise_m while the aim is held, its draw filling over draw_s like a bowstring (Bow.draw_time); held past strain_start_s the strain builds (the stone shakes, the aim trembles) to break_s, where the power breaks: it drops, the caster staggers, the motes are lost. Let go: it is hurled along the aim (hurl.<kind>: mps [none drawn, full draw], gravity m/s2, damage [min, max] through Hit.deliver, pierce: through people like a lance (spike), roll: rolls on landing (cannonball), mass_kg)); lift (first_lock: up_m, aside_m, s, the target then let fall); modes (a spell's modes, the first its default: the mode key flips them, SwayCaster.flip_mode) and mode_labels; mode_moving_mult and mode_range_m a mode's own moving_mult and range_m; mastery_uses overrides mastery.uses for the move; ai_factor is data for later (AI casters at 1.3x the player's time).",
     "mastery (docs/main_story.md 11.10; SwayCaster.tier): each spell grows by use (casts landed, counted per spell and saved with the motes). uses: the casts to reach each tier (untrained, practised, expert); lock_mult each tier's lock time; clips the cast each tier plays (SwayPose, animations_extra/Frontier_Form.res): untrained both hands empty and the floor cast (own-form-clap-press: clap, squat, palms to the ground; own-form-press-wall on an upright) for every spell including Gust; practised both hands empty, a two-handed standing push (own-sway-push-two); expert one palm (the left) pushes, the right hand may hold one of one_hand_weapons (own-sway-push-one, played without the right arm).",
     "sfx: Sfx ids played when they exist (none fit the rising tone: SwayTone makes a soft one).",
-    "form (the fifth art, the stone-shapers' circle-work: FormCast, FormEffects; the user 2026-10-02): the lock is a circle drawn on the ground at the target (FormCircle) instead of the ring round the crosshair (ring 'ground'). The matter comes from the place: earth raised leaves a hollow where it came from; mending takes wood from the pack. readied_only: it locks only once readied (every spell does in v2). targets: ground (the earth under the crosshair: a fixed body, not a built floor, not steep; a person or a thing hit stands for the ground under it), built (a built piece alight or charred, a fire's ruin, a raised wall worn by shot), circle_m the circle's radius; range_m is measured flat from the feet. wall: width_m, height_m, thick_m, ahead_m (from the circle's middle away from the caster), rise_s, life_s, hits (musket hits of at least hit_min damage before it crumbles), crumble_s. stone_form, mode spike: a jagged spike bursts up at the circle (height_m, radius_m, rise_s; who stands within hit_r is struck once: damage through Hit.deliver, a fighter tossed people_mps / up_mps and staggered down_s, an animal shoved animal_mps) with shards small spikes round it; it stands life_s (a stone for Gust to lift and hurl: FormStone kind spike) and sinks in sink_s. Mode cannonball: a round stone ball of radius_m (about 0.5 m across) rises out of the ground in rise_s and rests on it (a RigidBody3D of mass_kg; FormStone kind cannonball) for life_s (Gust lifts and hurls it too). pillar: modes self (rises under the caster; cast while running, practised and up (untrained, the floor cast holds the caster still), launch: run_mps, up_mps, fwd_mps, carry of the run's speed, rise_s, height_m, and a boost x boost when let go within plant_window_s before a foot plant or plant_after_s after one (the step cycle: Footsteps' strides; each plant heard as the step and shown as a beat in the ring while it locks); cast mid-air it rises where they will land) and free (at the aimed circle, out to mode_range_m.free: anywhere near, the owner's free mode); radius_m, height_m, rise_s (it carries whoever stands on it), life_s, under_m, hits, hit_min, crumble_s. hollow: the dark pit decal's width_m (across the caster's line) and depth_m (along it), fade_s. mend: each stage back costs wood.per_stage of the first of wood.kinds in the pack (a ruin stood up again costs wood.ruin): a ruin stands again charred, a piece alight is put out, a charred one made whole; a raised wall worn by shot is packed again (no wood). form_sfx: Sfx ids for the clap, the press, the rise, its rumble, a crumble, a spike, the mend, the crackle, and, for Gust's stones (GustLift), the tear, a hurl, a stone's strike and the break (played when they exist)."
+    "form (the fifth art, the stone-shapers' circle-work: FormCast, FormEffects; the user 2026-10-02): the lock is a circle drawn on the ground at the target (FormCircle) instead of the ring round the crosshair (ring 'ground'). The matter comes from the place: earth raised leaves a hollow where it came from; mending takes wood from the pack. readied_only: it locks only once readied (every spell does in v2). targets: ground (the earth under the crosshair: a fixed body, not a built floor, not steep; a person or a thing hit stands for the ground under it), built (a built piece alight or charred, a fire's ruin, a raised wall worn by shot), circle_m the circle's radius; range_m is measured flat from the feet. wall: width_m, height_m, thick_m, ahead_m (from the circle's middle away from the caster), rise_s, life_s, hits (musket hits of at least hit_min damage before it crumbles), crumble_s. stone_form throws itself (the user, 2026-10-03, after the spike then Gust proved hard: \"Stone Form throws itself\": one spell, one aim; FormEffects.stone_form, its Throw): the lock's circle at the aimed point as before (the edge of the reach when aimed past it); cast, the stone of the mode bursts up out of the ground throw.ahead_m in front of the caster toward the aim (its hollow there), rises to throw.chest_m over their feet in throw.rise_s (a spike turning its point to the crosshair), then flies at the crosshair's point at that moment (not the circle: on a man, at the man; far along the ray at the sky), aimed a little high for its drop, by GustLift's flight with throw.hurl.<mode> (mps [none drawn, full draw: the same], gravity, damage through Hit.deliver, pierce, roll; tremble_deg its scatter): mode spike (height_m, radius_m) a lance, fast and flat, through people, sticking where it meets the world; mode cannonball (radius_m, about 0.5 m across, mass_kg) heavier on a little arc, knocking people aside, rolling on. A thing in the physics it meets is knocked on throw.knock_mps.<mode> (and struck when it takes hits). Either lies life_s after (a stone for Gust to lift and hurl) and sinks in sink_s. (The spike's hit_r, damage, people_mps, up_mps, animal_mps, down_s, shards, shard_m are the burst's at the circle, FormSpikes: unused while it throws itself.) pillar: modes self (rises under the caster; cast while running, practised and up (untrained, the floor cast holds the caster still), launch: run_mps, up_mps, fwd_mps, carry of the run's speed, rise_s, height_m, and a boost x boost when let go within plant_window_s before a foot plant or plant_after_s after one (the step cycle: Footsteps' strides; each plant heard as the step and shown as a beat in the ring while it locks); cast mid-air it catches them: air.rise_s fast, under where they will be by then, its top at their feet less air.gap_m, air.min_m..air.max_m tall (the user, 2026-10-03: \"the pillar should match the height so if im jumping and cast a pillar underneath me it should quickly make a pillar just as big to catch me\")) and free (at the aimed circle, out to mode_range_m.free: anywhere near, the owner's free mode); radius_m, height_m, rise_s (it carries whoever stands on it), life_s, under_m, hits, hit_min, crumble_s. hollow: the dark pit decal's width_m (across the caster's line) and depth_m (along it), fade_s. mend: each stage back costs wood.per_stage of the first of wood.kinds in the pack (a ruin stood up again costs wood.ruin): a ruin stands again charred, a piece alight is put out, a charred one made whole; a raised wall worn by shot is packed again (no wood). form_sfx: Sfx ids for the clap, the press, the rise, its rumble, a crumble, a spike, the mend, the crackle, and, for Gust's stones (GustLift), the tear, a hurl, a stone's strike and the break (played when they exist); tree (a tree drawn into a wall), splinter (a wooden wall going).",
+    "matter (the user, 2026-10-03: \"it should be earth wall where if the terrain is mud its a mud wall if its a tree i can make a tree wall you know\"; FormMatter, scripts/sway/form_matter.gd): the Earth Wall, the Pillar and Stone Form's stones take their matter from where they are raised. form_ground: the rules, in order: the collider's meta surface named in surfaces (the terrain's GroundStone outcrops, a boulder) or a group in groups (the vegetation's rocks) -> its matter; snow lying at least snow_m (m, SnowCover.depth_at) -> snow; the terrain's splat rock at least rock_min -> stone, mud at least mud_min -> mud (the brook's bed, the river's banks and bed, the woods' wet hollows); the square's type in squares (the marsh) -> its matter; else earth. Earth Wall's targets have tree: the crosshair's ray on a standing tree's trunk within the reach locks the tree (its circle round the trunk's foot): a wall of its wood (matter wood) stands just past its stump (tree.gap_m clear of it) and the tree goes into it (out of the forest as felling takes it, a stump left, saved as a felled tree). earth_wall.wall.materials: each matter's label (the HUD's spell line, the lock's line), surface (the wall's meta surface: Sfx impacts), the wall's numbers over the wall's own (width_m, height_m, thick_m, hits, hit_min, crumble_s; log_r the palisade's logs), crumble (dust, slump: sags and spreads, rubble: stones tumble out, snow, splinters: leans back), circle (the lock circle's colour, drawn 0.7 of the way from the art's), mended (mend's line), shape (bump: how lumpy, batter_m: wider at the foot, top_m: how ragged the top, sag_m: mud's slump, round_m: how far down its top rounds over, fresh: how freshly broken the top), look (the procedural surface, shaders/sway/form_matter.gdshader: kind rock / earth / mud / snow / wood, colours a b c d fresh foot, foot_h, scale, rough, bump, wet, stones, top_k). pillar.pillar.materials: a pillar's strength by matter (its look the wall's). stone_form.looks: the look of a stone raised from each ground (the user: \"we need to work on the textures\")."
   ],
   "lock": {
     "grace_s": 0.15,
@@ -59,7 +60,8 @@
     "gust": {
       "label": "Gust",
       "art": "breath",
-      "lock_s": 0.6,
+      "lock_s": 0.35,
+      "lock_rules": {"_doc": "Gust's own, easier than the art's lock rules (the user, 2026-10-03, 'gust its hard and unenjoyable', chose 'easier Gust everywhere'): a wider aim zone (it also catches a target near the crosshair, not only under it), a longer grace, no fizzle (release_s 0: let go whenever after the click)", "cone_deg": 6.0, "grace_s": 0.4, "release_s": 0.0},
       "motes": 1,
       "range_m": 25.0,
       "targets": ["fighter", "animal", "prop", "fire", "scripted", "sail", "stone"],
@@ -71,9 +73,9 @@
       "sail": {"drain_s": 2.0},
       "stone": {
         "range_m": 14.0,
-        "lock_s": 0.8,
+        "lock_s": 0.45,
         "mass_kg": 90.0,
-        "hold": {"tear_s": 0.35, "rise_m": 1.5, "draw_s": 0.9, "strain_start_s": 2.5, "break_s": 5.0, "tremble_deg": 1.2},
+        "hold": {"no_break": true, "tear_s": 0.35, "rise_m": 1.5, "draw_s": 0.9, "strain_start_s": 2.5, "break_s": 5.0, "tremble_deg": 1.2},
         "hurl": {
           "spike": {"mps": [14.0, 34.0], "gravity": 3.0, "damage": [30.0, 85.0], "pierce": true, "mass_kg": 30.0},
           "cannonball": {"mps": [12.0, 30.0], "gravity": 6.0, "damage": [45.0, 110.0], "roll": true, "mass_kg": 45.0},
@@ -89,14 +91,31 @@
       "lock_s": 1.6,
       "motes": 2,
       "range_m": 3.2,
-      "targets": ["ground"],
+      "targets": ["ground", "tree"],
       "named_only": false,
       "needs_grant": true,
       "readied_only": true,
       "far_stretch": 1.0,
       "moving_mult": 0.5,
       "circle_m": 1.1,
-      "wall": {"width_m": 3.0, "height_m": 2.0, "thick_m": 0.6, "ahead_m": 0.75, "rise_s": 0.7, "life_s": 60.0, "hits": 4, "hit_min": 10.0, "crumble_s": 1.4},
+      "wall": {"width_m": 3.0, "height_m": 2.0, "thick_m": 0.6, "ahead_m": 0.75, "rise_s": 0.7, "life_s": 60.0, "hits": 4, "hit_min": 10.0, "crumble_s": 1.4,
+        "materials": {
+          "earth": {"label": "earth", "surface": "stone", "crumble": "dust", "circle": [0.5, 0.78, 1.0], "mended": "The earth packed again",
+            "shape": {"bump": 1.0, "batter_m": 0.08, "top_m": 0.12, "sag_m": 0.0},
+            "look": {"kind": "earth", "a": [0.31, 0.24, 0.17], "b": [0.42, 0.34, 0.24], "c": [0.46, 0.44, 0.41], "d": [0.32, 0.37, 0.17], "foot": [0.25, 0.19, 0.14], "foot_h": 0.35, "scale": 1.0, "rough": 0.95, "bump": 1.0, "stones": 0.28, "top_k": 1.0}},
+          "mud": {"label": "mud", "surface": "dirt", "hits": 2, "height_m": 1.75, "thick_m": 0.7, "crumble": "slump", "crumble_s": 2.2, "circle": [0.86, 0.6, 0.32], "mended": "The mud packed again",
+            "shape": {"bump": 0.6, "batter_m": 0.26, "top_m": 0.06, "sag_m": 0.22, "round_m": 0.65},
+            "look": {"kind": "mud", "a": [0.25, 0.18, 0.12], "b": [0.4, 0.31, 0.21], "c": [0.11, 0.08, 0.05], "d": [0.46, 0.39, 0.26], "foot": [0.13, 0.09, 0.06], "foot_h": 0.3, "scale": 1.0, "rough": 0.85, "bump": 1.0, "wet": 0.9}},
+          "stone": {"label": "stone", "surface": "stone", "hits": 7, "hit_min": 15.0, "crumble": "rubble", "crumble_s": 1.1, "circle": [0.85, 0.88, 0.95], "mended": "The stones set again",
+            "shape": {"bump": 1.25, "batter_m": 0.05, "top_m": 0.2, "sag_m": 0.0, "fresh": 0.6},
+            "look": {"kind": "rock", "a": [0.4, 0.4, 0.39], "b": [0.55, 0.54, 0.52], "c": [0.14, 0.11, 0.09], "d": [0.48, 0.5, 0.42], "fresh": [0.62, 0.61, 0.58], "foot": [0.3, 0.26, 0.21], "foot_h": 0.2, "scale": 1.0, "rough": 0.9, "bump": 1.0, "stones": 1.0}},
+          "snow": {"label": "snow", "surface": "dirt", "hits": 3, "crumble": "snow", "crumble_s": 1.6, "circle": [0.88, 0.95, 1.0], "mended": "The snow packed again",
+            "shape": {"bump": 0.55, "batter_m": 0.1, "top_m": 0.07, "sag_m": 0.05, "round_m": 0.45},
+            "look": {"kind": "snow", "a": [0.87, 0.9, 0.95], "b": [0.79, 0.83, 0.9], "d": [0.6, 0.68, 0.8], "foot": [0.3, 0.24, 0.18], "foot_h": 0.3, "scale": 1.0, "rough": 0.62, "bump": 0.8}},
+          "wood": {"label": "wood", "surface": "wood", "hits": 5, "height_m": 2.3, "thick_m": 0.4, "log_r": 0.17, "crumble": "splinters", "crumble_s": 1.3, "circle": [1.0, 0.76, 0.4], "mended": "The logs set again",
+            "look": {"kind": "wood", "a": [0.62, 0.5, 0.35], "b": [0.5, 0.39, 0.26], "d": [0.42, 0.31, 0.2], "fresh": [0.82, 0.7, 0.52], "foot": [0.3, 0.24, 0.18], "foot_h": 0.15, "scale": 1.0, "rough": 0.85, "bump": 1.0}}
+        }},
+      "tree": {"gap_m": 0.06},
       "hollow": {"width_m": 3.0, "depth_m": 1.5, "fade_s": 600.0},
       "ai_factor": 1.3,
       "mastery_uses": [0, 8, 30]
@@ -133,6 +152,17 @@
         "sink_s": 1.0
       },
       "cannonball": {"radius_m": 0.26, "rise_s": 0.6, "mass_kg": 45.0, "life_s": 120.0, "sink_s": 1.2},
+      "throw": {"ahead_m": 1.4, "chest_m": 1.3, "rise_s": 0.25, "tremble_deg": 0.3, "knock_mps": {"spike": 3.0, "cannonball": 7.0},
+        "hurl": {
+          "spike": {"mps": [34.0, 34.0], "gravity": 3.0, "damage": [70.0, 70.0], "pierce": true},
+          "cannonball": {"mps": [22.0, 22.0], "gravity": 6.0, "damage": [80.0, 80.0], "roll": true}
+        }},
+      "looks": {
+        "stone": {"kind": "rock", "a": [0.32, 0.32, 0.31], "b": [0.45, 0.45, 0.44], "c": [0.1, 0.09, 0.09], "d": [0.46, 0.47, 0.4], "fresh": [0.58, 0.57, 0.55], "foot": [0.3, 0.27, 0.23], "foot_h": 0.15, "scale": 1.0, "rough": 0.88, "bump": 1.0},
+        "earth": {"kind": "rock", "a": [0.3, 0.28, 0.25], "b": [0.42, 0.4, 0.36], "c": [0.11, 0.09, 0.07], "d": [0.48, 0.46, 0.36], "fresh": [0.55, 0.53, 0.49], "foot": [0.28, 0.21, 0.15], "foot_h": 0.3, "scale": 1.0, "rough": 0.9, "bump": 1.0},
+        "mud": {"kind": "rock", "a": [0.26, 0.24, 0.21], "b": [0.36, 0.33, 0.3], "c": [0.1, 0.08, 0.06], "d": [0.36, 0.4, 0.27], "fresh": [0.5, 0.48, 0.45], "foot": [0.15, 0.1, 0.07], "foot_h": 0.5, "scale": 1.0, "rough": 0.82, "bump": 1.0},
+        "snow": {"kind": "rock", "a": [0.3, 0.31, 0.33], "b": [0.43, 0.44, 0.46], "c": [0.12, 0.12, 0.13], "d": [0.5, 0.52, 0.47], "fresh": [0.57, 0.57, 0.58], "foot": [0.86, 0.89, 0.94], "foot_h": 0.2, "scale": 1.0, "rough": 0.88, "bump": 1.0, "top_k": 0.8}
+      },
       "hollow": {"width_m": 1.3, "depth_m": 1.3, "fade_s": 600.0},
       "ai_factor": 1.3
     },
@@ -171,9 +201,10 @@
           "height_m": 1.3,
           "plant_window_s": 0.045,
           "plant_after_s": 0.02,
-          "boost": 1.3,
-          "air_rise_s": 0.45
-        }
+          "boost": 1.3
+        },
+        "air": {"rise_s": 0.2, "min_m": 1.0, "max_m": 8.0, "gap_m": 0.03},
+        "materials": {"earth": {}, "mud": {"hits": 3}, "stone": {"hits": 9, "hit_min": 15.0}, "snow": {"hits": 4}}
       },
       "hollow": {"width_m": 2.1, "depth_m": 2.1, "fade_s": 600.0},
       "ai_factor": 1.3,
@@ -203,6 +234,7 @@
     "fizzle": "bow_let_down",
     "break": ""
   },
+  "form_ground": {"mud_min": 0.45, "rock_min": 0.5, "snow_m": 0.08, "surfaces": {"stone": "stone", "rock": "stone"}, "groups": {"rocks": "stone"}, "squares": {"marsh": "mud"}},
   "form_sfx": {
     "clap": "dummy_hit",
     "press": "land_dirt",
@@ -215,6 +247,8 @@
     "tear": "gather_rec_rock_split",
     "hurl": "arrow_whoosh",
     "strike": "gather_rec_pick_rock_hard",
-    "break": "gather_rec_rock_depleted"
+    "break": "gather_rec_rock_depleted",
+    "tree": "gather_rec_tree_crack",
+    "splinter": "gather_rec_axe_chop_big"
   }
 }
