@@ -6,9 +6,16 @@ extends Weapon
 ## minimum draw is reached, with less power and more spread. RMB lets the
 ## string down. Holding a full draw too long makes the aim tremble.
 ##
-## Rapid shooting: press R to pull a few arrows from the quiver and hold them
-## against the grip in the bow hand (a period archer's trick). Nocking from
-## the hand is about twice as fast as reaching back to the quiver.
+## Rapid shooting: a few arrows from the quiver held against the grip in the bow
+## hand (a period archer's trick). Nocking from the hand is about twice as fast
+## as reaching back to the quiver. The hand is kept at hand_capacity by itself
+## (auto_hand: the user, 2026-10-03, "i want the game to auto have 3 in hand and
+## reload automatically ... not single shot anymore"): a moment after the string
+## is let alone, the bow hand takes arrows from the quiver until it holds three,
+## so three shots go off on the quick hand nock before a reach to the quiver.
+## A draw cuts the grab short and keeps the arrows already pulled. R still takes
+## them at once. Shot arrows stick where they land and are picked up again with
+## E (Projectile, ThrownPickup's "arrow" kind).
 
 enum State { READY, DRAWING, HOLDING, NOCKING, EMPTY, GRABBING }
 
@@ -25,6 +32,10 @@ signal sfx(id: StringName, at: Vector3)
 @export var grab_time := 1.1          ## R: pull arrows from the quiver into the bow hand.
 @export var hand_nock_time := 0.35    ## Nocking an arrow held in the bow hand.
 @export var hand_capacity := 3
+## The bow hand topped up to hand_capacity from the quiver by itself (see the header).
+@export var auto_hand := true
+## Seconds the string must be let alone (READY, fire not held) before the hand is topped up.
+@export var auto_grab_idle := 0.3
 
 @export_group("Arrow")
 @export var min_arrow_speed := 22.0
@@ -47,6 +58,8 @@ var _wait_fire_release := false        ## After a let-down, LMB must be released
 var _nock_left := 0.0
 var _nock_duration := 0.75
 var _grab_left := 0.0
+var _grab_want := 0            ## Arrows the grab under way pulls into the hand.
+var _idle_t := 0.0             ## Seconds READY with the string let alone (auto_hand).
 ## Arrows held in the bow hand (counted in `quiver` too).
 var held := 0
 var _held_models: Array[Node3D] = []
@@ -175,17 +188,29 @@ func _tick(delta: float) -> void:
 			if fire_down and can_draw and not _wait_fire_release:
 				_start_draw()
 			elif _fire_input_enabled() and Input.is_action_just_pressed("reload") and _can_grab():
-				state = State.GRABBING
-				_grab_left = grab_time
-				action_started.emit("grab", grab_time)
+				_start_grab()
+			elif auto_hand and _fire_input_enabled() and not fire_down and _can_grab():
+				# (the hand kept at hand_capacity by itself, once the string has been let alone a moment)
+				_idle_t += delta
+				if _idle_t >= auto_grab_idle:
+					_start_grab()
+			else:
+				_idle_t = 0.0
 		State.GRABBING:
 			_grab_left -= delta
 			if player.is_sprinting:
 				state = State.READY
 				action_cancelled.emit()
 			elif _grab_left <= 0.0:
-				held = mini(hand_capacity, held + _spare())
+				held = mini(hand_capacity, held + mini(_grab_want, _spare()))
 				state = State.READY
+			elif fire_down and can_draw and not _wait_fire_release:
+				# A draw cuts the grab short: the arrows already pulled stay in the hand, then the nocked arrow is drawn.
+				var got := int(floor((1.0 - _grab_left / grab_time) * float(_grab_want)))
+				held = mini(hand_capacity, held + mini(got, _spare()))
+				action_cancelled.emit()
+				state = State.READY
+				_start_draw()
 		State.DRAWING:
 			hold_time = 0.0
 			charge = minf(charge + delta / draw_time, 1.0)
@@ -282,6 +307,15 @@ func _can_grab() -> bool:
 	return held < hand_capacity and _spare() > 0 and not player.is_sprinting and not is_equipping()
 
 
+## The bow hand reaching back to the quiver for what it lacks (R, or auto_hand).
+func _start_grab() -> void:
+	state = State.GRABBING
+	_idle_t = 0.0
+	_grab_want = mini(hand_capacity - held, _spare())
+	_grab_left = grab_time
+	action_started.emit("grab", grab_time)
+
+
 ## Arrows held against the grip, fanned slightly, tips forward (model -Z).
 func _build_held_arrows() -> void:
 	if not _held_models.is_empty() or model == null:
@@ -376,7 +410,7 @@ func status_text() -> String:
 func ammo_text() -> String:
 	if held > 0:
 		return "%d in hand  |  %d arrows" % [held, quiver]
-	return "%d arrows  (R: take %d in hand)" % [quiver, hand_capacity] if _spare() > 0 else "%d arrows" % quiver
+	return "%d arrows  (R: take %d in hand)" % [quiver, hand_capacity] if _spare() > 0 and not auto_hand else "%d arrows" % quiver
 
 
 func progress() -> Array:

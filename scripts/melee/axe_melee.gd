@@ -553,20 +553,24 @@ func _core_meet(s: Dictionary, frames: Array, pts: Dictionary) -> Dictionary:
 func _crunch(s: Dictionary, point: Vector3) -> void:
 	var cut: Dictionary = s.cut
 	var surface := String(cut.surface)
-	last_contact = {"surface": surface, "point": point, "collider": cut.collider, "u": float(s.u), "through": true}
+	# (the part it cut may be gone already, freed with the body the blow killed, 2026-10-03: what is passed on is checked)
+	var col: Variant = cut.collider
+	var alive := is_instance_valid(col)
+	last_contact = {"surface": surface, "point": point, "collider": col if alive else null, "u": float(s.u), "through": true}
 	if s.has("glance"):
 		last_contact["glance"] = s.glance
 	s.rate = float(cut.get("rate0", s.rate))
-	_pass(s, cut.collider)
+	if alive:
+		_pass(s, col)
 	s.erase("cut")
 	contacted.emit("core_" + surface, point)
 	last_contact["core"] = true
-	var core_node: Node = (cut.core as Dictionary).get("node")
-	last_contact["core_part"] = String(core_node.name) if core_node else ""
+	var cn: Variant = (cut.core as Dictionary).get("node")
+	last_contact["core_part"] = String((cn as Node).name) if is_instance_valid(cn) else ""
 	MeleeSweep.crunch(surface, point)
 	if surface == "flesh":
 		BloodFx.hit(player.get_tree().current_scene, point, cut.get("dir", -(cut.normal as Vector3)), cut.normal, 1.6,
-				_receiver(cut.collider))
+				_receiver(col) if alive else null)
 	player.add_recoil(0.7, randf_range(-0.35, 0.35))
 
 

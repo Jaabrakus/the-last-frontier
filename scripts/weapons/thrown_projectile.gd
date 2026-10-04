@@ -217,7 +217,8 @@ func _on_impact(collider: Object, point: Vector3, normal: Vector3, dir: Vector3)
 		# hit can remove the part it hit.
 		if shooter and shooter.is_inside_tree():
 			shooter.get_tree().call_group("hit_listeners", "on_projectile_hit", collider, point)
-		Hit.deliver(collider, dmg, point, dir, shooter)
+		# (what struck: the point or the blade when it stuck, the haft's blunt knock when it did not; Anatomy works out the path)
+		Hit.deliver(collider, dmg, point, dir, shooter, true, {"kind": _shot_kind() if stuck else "blunt", "speed": speed})
 		if was_valid and not is_instance_valid(collider):
 			gone = true                  # Freed by the hit (its owner's apply_hit): nothing to stick in.
 			collider = null
@@ -229,6 +230,15 @@ func _on_impact(collider: Object, point: Vector3, normal: Vector3, dir: Vector3)
 		_stick(collider, point, normal, dir, surface)
 	else:
 		_bounce(point, normal, speed, dir)
+
+
+## What struck, as the body it lands in reads it (BodyModel.SHOTS): a spear's point, an atlatl's dart, a tomahawk's blade.
+func _shot_kind() -> String:
+	if model_kind.begins_with("tomahawk"):
+		return "tomahawk"
+	if model_kind.contains("dart"):
+		return "dart"
+	return "spear"
 
 
 func _can_stick(surface: String, normal: Vector3, dir: Vector3, speed: float) -> bool:

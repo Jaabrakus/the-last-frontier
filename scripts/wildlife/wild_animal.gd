@@ -292,6 +292,7 @@ func _build_zones() -> void:
 	var torso := _zone("body", 1.0, _capsule(float(body[0]), float(body[1])), -1)
 	torso.set_meta("capsule_up", float(body[2]) * 0.72)
 	torso.set_meta("capsule_fwd", float(body[3]) if body.size() > 3 else 0.0)
+	_fit_torso(torso)
 	var vit: Array = data.vitals
 	_zone("vitals", WildlifeSpecies.VITALS_MULT, _sphere(float(vit[0])), _skel.find_bone(String(vit[1])))
 	var hd: Array = data.head
@@ -321,6 +322,49 @@ static func _sphere(r: float) -> SphereShape3D:
 	var s := SphereShape3D.new()
 	s.radius = r
 	return s
+
+
+## The trunk's capsule fitted round the animal's own body (BodyModel: the barrel and the chest as its skin has them, in the
+## rest pose), so the round is caught wherever the body is and what aims by the capsule (a hunter at the heart, WildlifeSpecies.HEART
+## and LUNGS) meets the organs where they are (the user, 2026-10-03: hits worked out in the fitted body; data.body's capsule sat a
+## hand under a doe's back). data.body's numbers stay when the rig is not known.
+func _fit_torso(torso: StaticBody3D) -> void:
+	var m := BodyModel.of(_skel) if _skel != null else null
+	if m == null or m.human:
+		return
+	var to_me := global_transform.affine_inverse() * _skel.global_transform
+	var mid := 0.0
+	var tops: Array[float] = []
+	var bottoms: Array[float] = []
+	var back := INF
+	var front := -INF
+	for s: Dictionary in m.shapes:
+		if String(s.kind) != "flesh" or not (String(s.name) == "Barrel" or String(s.name) == "Chest"):
+			continue
+		var w := to_me * _skel.get_bone_global_rest(int(s.bone)) * (s.xf as Transform3D)
+		var sz := s.s as Vector3
+		var y0 := (w * Vector3(0.0, 0.0, -sz.z)).y
+		var y1 := (w * Vector3(0.0, 0.0, sz.z)).y
+		tops.append(maxf(y0, y1))
+		bottoms.append(minf(y0, y1))
+		mid += (y0 + y1) * 0.5
+		for k: float in [-1.0, 1.0]:
+			var a := w * Vector3(0.0, sz.y * k, 0.0)
+			back = minf(back, -a.z)
+			front = maxf(front, -a.z)
+	if tops.size() < 3:
+		return
+	# (its axis through the trunk's middle, the slabs' mean; wide enough to take in the deepest of them: the withers, the brisket)
+	mid /= float(tops.size())
+	var r := 0.05
+	for i in tops.size():
+		r = maxf(r, maxf(tops[i] - mid, mid - bottoms[i]))
+	var length := maxf(front - back, r * 2.0 + 0.01)
+	var cap := (torso.get_child(0) as CollisionShape3D).shape as CapsuleShape3D
+	cap.radius = r
+	cap.height = length
+	torso.set_meta("capsule_up", mid)
+	torso.set_meta("capsule_fwd", (front + back) * 0.5)
 
 
 static func _capsule(r: float, length: float) -> CapsuleShape3D:
@@ -1264,11 +1308,13 @@ func apply_hit(damage: float, point: Vector3, direction: Vector3, source: Node =
 		NetWildlife.forward_hit(self, damage, point, direction, source, part)     # (the host's animal takes it)
 		return
 	if damage > 0.0 and not (source is WildAnimal) and _skel != null and direction.length_squared() > 1e-8:
-		# the channel through the body on its skeleton map (Anatomy)
+		# the round's path through its fitted body (Anatomy, the user 2026-10-03: the hit worked out in "a perfect skeleton")
 		var an := Anatomy.attach_to(_skel)
 		if an:
 			_report = an.add_wound(point, direction, damage)
-			# the brain: a clean kill, whatever the animal's health
+			if not an.last_shot.is_empty() and bool((an.last_shot.fx as Dictionary).missed):
+				return                          # (the hit zone caught it; the body was not there: it went by)
+			# the brain, the brainstem, the cord at the neck: a clean kill, whatever the animal's health
 			if bool(Anatomy.effect(an.last_hits, damage).lethal) and state != State.DEAD:
 				health = 0.0
 	elif _skel != null and _skel.has_node(^"Anatomy"):
@@ -1483,6 +1529,7 @@ func _die(by: String, ragdoll := true) -> void:
 		if _report.any(func(l: String) -> bool: return l.begins_with("Heart") or l.begins_with("Brain")):
 			Anatomy.slowmo(get_tree())
 	set_meta("died_at", now())
+	InspectView.ensure_hotkey(get_tree())
 	if spawner:
 		spawner.animal_died(self, by)            # one fewer in the land (WildlifeEcology)
 	add_to_group(PlacedWeapon.GROUP)      # the interactor's carcass hook
@@ -1624,6 +1671,32 @@ func interact_prompt(_p: Node) -> String:
 	if fd and not fd.has_knife():
 		line += " (needs a knife)"
 	return line
+
+
+## The hold-E list (PlayerInteractor): the dressing's next step (the tap's) and a look inside (InspectView: the body as the
+## shots left it; the user 2026-10-03).
+func interact_actions(p: Node) -> Array:
+	var out := []
+	var t := interact_prompt(p)
+	if t != "":
+		out.append({"id": "", "text": t})
+	if InspectView.can_inspect(self):
+		out.append({"id": "inspect", "text": InspectView.ROW})
+	return out
+
+
+func interact_action(_p: Node, id: String) -> void:
+	if id == "inspect":
+		InspectView.open_on(self)
+
+
+## The skeleton InspectView looks into, and the name it gives it.
+func inspect_skeleton() -> Skeleton3D:
+	return _skel
+
+
+func inspect_title() -> String:
+	return String(data.get("name", species)).capitalize()
 
 
 ## "skin", then "butcher" when the species has meat to take, then "" (done).

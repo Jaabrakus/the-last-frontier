@@ -255,7 +255,14 @@ func _hit_and_loot() -> void:
 	var kinds := []
 	for e in loot.items:
 		kinds.append(String(e.kind))
-	_expect("musket" in kinds and "powder_horn" in kinds, "his musket and powder horn are in it (%s)" % str(kinds))
+	# (his musket: in his pack, or laid down at his feet when a ball broke his arm and he let it fall: Anatomy, NpcFighter.arm_broken)
+	var dropped := []
+	for pk in f.packs:
+		if is_instance_valid(pk) and pk != loot:
+			for e in pk.items:
+				dropped.append(String(e.kind))
+	_expect(("musket" in kinds or ("musket" in dropped and f.arm_broken != "")) and "powder_horn" in kinds,
+			"his musket and powder horn are in it (%s; dropped %s%s)" % [str(kinds), str(dropped), ", his arm broken: " + f.arm_broken if f.arm_broken != "" else ""])
 	var before := InventoryState.from_player(player).pack_count("powder_horn")
 	loot.interact(player)
 	var after := InventoryState.from_player(player).pack_count("powder_horn")
@@ -525,10 +532,13 @@ func _player_axe() -> void:
 		if g.phase == GatherTools.Phase.READY:
 			break
 	var hits: Array = g.melee.last_hits.filter(func(h: Dictionary) -> bool:
-		return h.target is Node and is_instance_valid(h.target) and (h.target == f or f.is_ancestor_of(h.target)))
-	_expect(g.tool == "felling_axe" and f.health < h0 and f.hits_taken > n0 and hits.size() >= 1,
-			"the player's own felling-axe swing (AxeMelee's sweep, the D attack) strikes a militiaman (%.0f -> %.0f, %d hits, part %s)" % [
-			h0, f.health, hits.size(), str(hits[0].part) if not hits.is_empty() else "-"])
+		return is_instance_valid(h.target) and h.target is Node and (h.target == f or f.is_ancestor_of(h.target)))
+	# (a blow that kills him frees the part it struck with his body's: the kill is the strike then; what the edge cut, Anatomy's)
+	var an := Anatomy.of(f.body.sk) if f.body != null else null
+	_expect(g.tool == "felling_axe" and f.health < h0 and f.hits_taken > n0 and (hits.size() >= 1 or f.is_dead()),
+			"the player's own felling-axe swing (AxeMelee's sweep, the D attack) strikes a militiaman (%.0f -> %.0f, %d hits, part %s; %s)" % [
+			h0, f.health, hits.size(), str(hits[0].part) if not hits.is_empty() else "-",
+			" · ".join(an.last_shot.get("lines", [])) if an != null else "no wound"])
 	g.put_away()
 	for i in 240:
 		await physics_frame

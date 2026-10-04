@@ -979,7 +979,9 @@ func _shoot(q: WildAnimal, res: Dictionary) -> void:
 			continue
 		if col is Node and (col as Node).has_meta("hit_part"):
 			var owner_a := (col as Node).get_parent()
-			Hit.deliver(col, float(res.get("damage", 100.0)), hit.position, dir, body)
+			# (what struck: a ball, or the bow's arrow; the quarry's body works out its path, Anatomy)
+			Hit.deliver(col, float(res.get("damage", 100.0)), hit.position, dir, body, true,
+					{"kind": "arrow" if String(_wp().get("id", "")) == "bow" else "ball"})
 			_last_shot["hit_quarry"] = owner_a == q
 			_last_shot["part"] = String((col as Node).get_meta("hit_part", ""))
 			if String(_wp().get("id", "")) == "bow":

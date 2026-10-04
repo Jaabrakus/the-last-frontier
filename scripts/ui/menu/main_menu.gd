@@ -14,6 +14,8 @@ extends Control
 ##                 the history around that day and age"): the period's paintings (MenuPaintings.museum()),
 ##                 one at a time over the whole screen with their stories; the arrows or Previous / Next go through
 ##                 them, Esc or Back leaves
+##   Duel (test)   1 v 1 against a French marine who fights from cover (DuelMode; the user, 2026-10-04: "lets build a test
+##                 game where it is 1v1 npc can find cover aim and etc"): the level as a duel, no story, no needs, no save
 ##   Co-op, Campaigns   not yet (greyed, "coming")
 ##   Settings      volume, the mouse, invert, full screen, vsync (GameSettings)
 ##   Credits       the copyright and no-AI-training notice (NOTICE.txt), CREDITS.md as the project keeps it, and the
@@ -235,6 +237,9 @@ func _build_items() -> void:
 	var co := MenuUI.item("Co-op", 32, "host a game or join a friend's")
 	co.pressed.connect(_open_coop)
 	_items.add_child(co)
+	var du := MenuUI.item("Duel (test): 1 v 1", 32, "you against a French marine who fights from cover; first to %d" % DuelMode.TO_WIN)
+	du.pressed.connect(_play_duel)
+	_items.add_child(du)
 	_items.add_child(MenuUI.item("Campaigns", 32, "", "coming"))
 	var st := MenuUI.item("Settings", 32)
 	st.pressed.connect(_open_settings)
@@ -305,6 +310,19 @@ func _play_new() -> void:
 	StoryDirector.incoming = "two_fires" if _story else ""
 	new_game = true
 	GameSettings.clear_run()          # (a new game takes the Iron Man toggle)
+	LoadingScreen.go(get_tree(), GAME_SCENE)
+
+
+## The duel (test; DuelMode): the level as a duel, the story off, nothing continued or saved.
+func _play_duel() -> void:
+	SaveGame.pending = {}
+	SaveGame._launched = true
+	new_game = false
+	bare_start = false
+	spouse_start = false
+	StoryDirector.incoming = ""
+	background_id = ""
+	DuelMode.incoming = true
 	LoadingScreen.go(get_tree(), GAME_SCENE)
 
 

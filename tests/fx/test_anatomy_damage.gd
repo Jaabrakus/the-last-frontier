@@ -4,8 +4,9 @@ extends SceneTree
 ##   Godot --headless --fixed-fps 60 --path . -s tests/fx/test_anatomy_damage.gd -- wildlife=on [ironman=on]
 ## (run both ways: injuries touch the movement speed only in Iron Man, GameSettings.iron_man)
 ##
-##   player   heart: dead at once (a ball a quarter of the health); the thigh: a flesh wound, alive; lungs bleed harder than the
-##            arm; the cord at T10: alive, the legs gone (slow, thrown down); at T3: dead
+##   player   heart: mortal (dead in MORTAL_HEART_S); the thigh: the femur broken, alive; a lung bleeds harder than a limb; the cord at
+##            T10: alive, the legs gone (slow, thrown down); at T3: dead within seconds; the brain: dead at once (the fitted body,
+##            BodyModel: each shot from the body's front, a ball of the damage's energy)
 ##   animal   the wound kind is what the channel went through: the heart, the lungs, the gut (intestines), the spine (a vertebra)
 ## Ends with "ANATOMY DAMAGE TEST PASSED (<n> checks)" or "... FAILED (<f> of <n>)".
 
@@ -39,13 +40,21 @@ func _part(a: Anatomy, nm: String) -> Vector3:
 	return Vector3.INF
 
 
-## A ball (`damage`) from the front through the part `nm`.
-func _shoot(nm: String, damage := 30.0) -> void:
-	var fwd := -p.global_basis.z
-	p.apply_hit(damage, _part(an, nm) - fwd * 0.3, fwd, shooter, "body")
+## A ball (`damage`) from the front through the part `nm` (`off`: that far to the body's left of its middle, m): the shooter 0.3 m
+## before it on the body's own front (the fitted body's axes).
+func _shoot(nm: String, damage := 30.0, off := 0.0) -> void:
+	var b := p.skeleton.global_transform.basis.orthonormalized()
+	var front := (b * an.model.fwd).normalized()
+	var left := (b * an.model.left).normalized()
+	p.apply_hit(damage, _part(an, nm) + left * off + front * 0.3, -front, shooter, "body")
+	var fx: Dictionary = an.last_shot.get("fx", {})
+	print("   %s (%.0f): %s | mortal %.0f s, legs %s, dead %s, health %.0f, mortal_left %.1f" % [nm, damage, " · ".join(an.last_shot.get("lines", [])),
+			float(fx.get("mortal_s", 0.0)), fx.get("legs", false), p.is_dead, p.health, p.wounds.mortal_left])
 
 
 func _fresh() -> void:
+	if PlayerRagdoll.of(p).is_down():
+		PlayerRagdoll.of(p).recover_now()       # (a cord hit throws the body down: up again for the next shot)
 	p.respawn()
 	p.health = p.max_health
 	p.wounds.clear()
@@ -76,7 +85,7 @@ func _run() -> void:
 	var arm_pool := p.wounds.pool
 	_fresh()
 	await _fr(60)
-	_shoot("Lung")
+	_shoot("Left lung")
 	_expect(not p.is_dead, "a lung: alive")
 	_expect(p.wounds.pool > arm_pool * 1.3, "a lung bleeds harder than a limb (pool %.1f against %.1f)" % [p.wounds.pool, arm_pool])
 	_fresh()
@@ -102,12 +111,13 @@ func _run() -> void:
 	var flesh_drain := p.wounds.drain_mult
 	_fresh()
 	await _fr(60)
-	_shoot("Intestines", 120.0)
+	# (off the middle: the fitted body has the aorta and the spine behind the gut there, and a ball would go on into them)
+	_shoot("Intestines", 120.0, 0.06)
 	var gut_drain := p.wounds.drain_mult
 	_expect(not p.is_dead and p.wounds.pool > 0.0, "a ball through the gut: alive and bleeding")
 	_fresh()
 	await _fr(60)
-	_shoot("Lung", 120.0)
+	_shoot("Left lung", 120.0)
 	var lung_drain := p.wounds.drain_mult
 	_expect(not p.is_dead and lung_drain > flesh_drain and flesh_drain > gut_drain and lung_drain > gut_drain,
 			"it bleeds at the pace of what it went through (lung %.1f, flesh %.1f, gut %.1f)" % [lung_drain, flesh_drain, gut_drain])
@@ -148,12 +158,19 @@ func _run() -> void:
 		if a:
 			var sk: Skeleton3D = a.get("_skel")
 			var dn := Anatomy.attach_to(sk)
-			for case in [["Heart", "heart"], ["Lung", "lungs"], ["Intestines", "gut"], ["T8 vertebra", "spine"]]:
+			# (broadside, from its left: the musket's ball through the heart, the gut and the spine; a light arrow into the near lung,
+			# which it stops in: the wound kind is the worst of what the round went through)
+			var left := -a.global_basis.x
+			for case in [["Heart", "heart", {"kind": "ball", "speed": 320.0}], ["Left lung", "lungs", {"kind": "arrow", "speed": 40.0}],
+					["Intestines", "gut", {"kind": "ball", "speed": 320.0}], ["T8 vertebra", "spine", {"kind": "ball", "speed": 320.0}]]:
 				a.health = 1000.0
 				a.state = WildAnimal.State.IDLE
 				var at := _part(dn, case[0])
-				a.apply_hit(5.0, at + Vector3(0, 0, 0.5), Vector3(0, 0, -1), p, "body")
-				_expect(a.last_wound == case[1] or (case[1] == "spine" and a.is_dead()), "deer: a ball through the %s is a %s wound (%s)" % [case[0], case[1], a.last_wound])
+				Hit.shot = case[2]
+				a.apply_hit(5.0, at + left * 0.6, -left, p, "body")
+				Hit.shot = {}
+				_expect(a.last_wound == case[1] or (case[1] == "spine" and a.is_dead()), "deer: a %s through the %s is a %s wound (%s: %s)" % [
+						case[2].kind, case[0], case[1], a.last_wound, Anatomy.report(dn.last_shot.get("lines", []))])
 				if a.is_dead():
 					break
 	if fails.is_empty():

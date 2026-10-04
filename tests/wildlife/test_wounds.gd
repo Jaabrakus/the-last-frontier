@@ -4,8 +4,11 @@ extends SceneTree
 ##
 ##   Godot --headless --fixed-fps 60 --path . -s tests/wildlife/test_wounds.gd -- wildlife=on
 ##
-##   where     a shot from the side through the heart, the lungs, the gut's length, the shoulder, the haunch, the top of
-##             the withers, glancing along the back and at the head makes that wound
+##   where     a shot from the side through the heart, the lungs, the gut, the shoulder, the haunch, the spine at the withers,
+##             over the back and at the head makes that wound: each traced through the deer's fitted body (Anatomy; the user
+##             2026-10-03, hits worked out in the body), the worst of what it crossed the wound (WildAnimal.wound_at)
+##   (the wounds below are shot through it too: at its heart, its near lung (an arrow, stopping in it), its gut, its near femur,
+##   and just over its back for the graze)
 ##   heart     it drops within seconds, not far off; big drops close together
 ##   lungs     it runs on a while and drops; its drops are the lungs' froth
 ##   gut       it lives on minutes, the bleeding not stopping; unpushed it lies up; sparse wide dark drops
@@ -131,13 +134,58 @@ func _wound_through(a: WildAnimal, at: Vector3) -> String:
 	return "miss" if s.is_empty() else a.wound_at(s[0], s[1], s[2])
 
 
-## `a` shot from the side through `at` for `dmg` (by the player, from the fort's side).
-func _hit(a: WildAnimal, at: Vector3, dmg: float) -> String:
+## `a` shot from the side through `at` for `dmg` (by the player, from the fort's side); `shot`: what struck (Hit.deliver's).
+func _hit(a: WildAnimal, at: Vector3, dmg: float, shot := {}) -> String:
 	var s := _side_shot(a, at)
 	if s.is_empty():
 		return "miss"
-	Hit.deliver(_zone_of(a, String(s[2])), dmg, s[0], s[1], p)
+	Hit.deliver(_zone_of(a, String(s[2])), dmg, s[0], s[1], p, true, shot)
 	return a.last_wound
+
+
+## Where the deer's fitted body has `nm` now (Anatomy), the one of two nearer the side the shots come from (_side_shot's).
+func _fitted(a: WildAnimal, names: Array) -> Vector3:
+	var sk := a.inspect_skeleton()
+	var an := Anatomy.attach_to(sk)
+	if an == null:
+		return Vector3.INF
+	var side := ((_frame(a)[1] as Vector3).cross(Vector3.UP)).normalized()
+	var ov := BodyModel.overrides(sk)
+	var best := Vector3.INF
+	var best_d := -INF
+	for nm: String in names:
+		var i := an.model.find(nm)
+		if i < 0:
+			continue
+		var at := an.model.shape_world(sk, i, ov, {}).origin
+		if at.dot(side) > best_d:
+			best_d = at.dot(side)
+			best = at
+	return best
+
+
+## Just over the middle of the deer's back (its barrel's top there, 1.5 cm above the skin): a line there meets none of its body
+## (nothing stands above the back to get in its way, as the legs do under the belly) and only grazes it.
+func _over_back(a: WildAnimal) -> Vector3:
+	var sk := a.inspect_skeleton()
+	var an := Anatomy.attach_to(sk)
+	var m := an.model
+	var ov := BodyModel.overrides(sk)
+	var top := Vector3.INF
+	var c := _frame(a)[0] as Vector3
+	var best := INF
+	for i in m.shapes.size():
+		if String(m.shapes[i].name) != "Barrel":
+			continue
+		var w := m.shape_world(sk, i, ov, {})
+		var d := w.origin.distance_to(c)
+		if d < best:
+			best = d
+			var sz := m.shapes[i].s as Vector3
+			var y0 := w * Vector3(0.0, 0.0, -sz.z)
+			var y1 := w * Vector3(0.0, 0.0, sz.z)
+			top = (y0 if y0.y > y1.y else y1) + Vector3.UP * 0.015
+	return top
 
 
 func _zone_of(a: WildAnimal, part: String) -> Node:
@@ -157,27 +205,21 @@ func _where() -> void:
 	a._update_zones()
 	for i in 3:
 		await physics_frame              # (the zones where they were put, for the space's queries)
-	var f := _frame(a)
-	var c: Vector3 = f[0]
-	var axis: Vector3 = f[1]
-	var up: Vector3 = f[2]
-	var r: float = f[3]
-	var half: float = f[4]
-	var got := {
-		"heart": _wound_through(a, _organ(a, WildlifeSpecies.HEART)),
-		"lungs": _wound_through(a, _organ(a, WildlifeSpecies.LUNGS)),
-		"gut": _wound_through(a, c - axis * half * 0.15),
-		"leg (shoulder)": _wound_through(a, c + axis * half * 0.85 - up * r * 0.3),
-		"leg (haunch)": _wound_through(a, c - axis * half * 0.75),
-		"graze": _wound_through(a, c - axis * half * 0.2 + up * r * 0.92),
-		"spine": _wound_through(a, a._skel.global_transform * a._skel.get_bone_global_pose(
-				a._skel.find_bone(String((a.data.vitals as Array)[1]))).origin + Vector3.UP * 0.1),
-		"head": _wound_through(a, a._skel.global_transform * a._skel.get_bone_global_pose(
-				a._skel.find_bone(String((a.data.head as Array)[1]))).origin),
-	}
-	for k: String in got:
-		var want := k.split(" ")[0]
-		_expect(got[k] == want, "where: a side shot at the %s makes a %s wound (%s)" % [k, want, got[k]])
+	# each a side shot traced through its fitted body (Anatomy.add_wound: the record only, no harm done) and the wound it makes
+	# (wound_at: the worst of what the round went through); the lung and the shoulder with an arrow, which stops there
+	var side := ((_frame(a)[1] as Vector3).cross(Vector3.UP)).normalized()
+	var an := Anatomy.attach_to(a.inspect_skeleton())
+	var arrow := {"kind": "arrow", "speed": 45.0}
+	var cases := [["heart", _fitted(a, ["Heart"]), {}], ["lungs", _fitted(a, ["Left lung", "Right lung"]), arrow],
+			["gut", _fitted(a, ["Intestines"]), {}], ["leg (shoulder)", _fitted(a, ["Left humerus", "Right humerus"]), arrow],
+			["leg (haunch)", _fitted(a, ["Left femur", "Right femur"]), {}], ["graze", _over_back(a), {}],
+			["spine", _fitted(a, ["T8 vertebra"]), {}], ["head", _fitted(a, ["Brain"]), {}]]
+	for c: Array in cases:
+		var at: Vector3 = c[1]
+		an.add_wound(at + side * 0.6, -side, 30.0, -1.0, c[2])
+		var got := a.wound_at(at + side * 0.6, -side, "body")
+		var want := String(c[0]).split(" ")[0]
+		_expect(got == want, "where: a side shot at the %s makes a %s wound (%s: %s)" % [c[0], want, got, Anatomy.report(an.last_shot.get("lines", []))])
 	a.set_physics_process(true)
 
 
@@ -220,7 +262,7 @@ func _heart() -> void:
 		_expect(false, "heart: a deer")
 		return
 	await _secs(0.3)
-	var kind := _hit(a, _organ(a, WildlifeSpecies.HEART), 30.0)
+	var kind := _hit(a, _fitted(a, ["Heart"]), 30.0)
 	var r := await _watch(a, 20.0)
 	_expect(kind == "heart" and a.is_dead() and float(r[0]) < 8.0 and float(r[1]) < 80.0,
 			"heart: it drops within seconds, not far off (%s: dead %s after %.1f s, %.0f m on)" % [kind, str(a.is_dead()), r[0], r[1]])
@@ -236,7 +278,8 @@ func _lungs() -> void:
 		_expect(false, "lungs: a deer")
 		return
 	await _secs(0.3)
-	var kind := _hit(a, _organ(a, WildlifeSpecies.LUNGS), 30.0)
+	# (an arrow: it stops in the near lung; a ball would go on into the heart or the aorta behind it)
+	var kind := _hit(a, _fitted(a, ["Left lung", "Right lung"]), 30.0, {"kind": "arrow", "speed": 45.0})
 	var look := a.wound_look()
 	var r := await _watch(a, 60.0)
 	_expect(kind == "lungs" and a.is_dead() and float(r[0]) > 4.0 and float(r[0]) < 45.0,
@@ -251,8 +294,7 @@ func _gut() -> void:
 		_expect(false, "gut: a deer")
 		return
 	await _secs(0.3)
-	var f := _frame(a)
-	var kind := _hit(a, (f[0] as Vector3) - (f[1] as Vector3) * float(f[4]) * 0.15, 30.0)
+	var kind := _hit(a, _fitted(a, ["Intestines"]), 30.0)
 	var rate0 := a.bleed_rate()
 	var r := await _watch(a, 45.0)
 	var per_m := float(r[2]) / maxf(float(r[1]), 1.0)
@@ -271,8 +313,7 @@ func _leg() -> void:
 		_expect(false, "leg: a deer")
 		return
 	await _secs(0.3)
-	var f := _frame(a)
-	var kind := _hit(a, (f[0] as Vector3) - (f[1] as Vector3) * float(f[4]) * 0.75, 30.0)
+	var kind := _hit(a, _fitted(a, ["Left femur", "Right femur"]), 30.0)
 	var lame0 := a.lame()
 	var rate0 := a.bleed_rate()
 	await _secs(150.0)
@@ -287,9 +328,12 @@ func _graze() -> void:
 		_expect(false, "graze: a deer")
 		return
 	await _secs(0.3)
-	var f := _frame(a)
-	var at := (f[0] as Vector3) - (f[1] as Vector3) * float(f[4]) * 0.2 + (f[2] as Vector3) * float(f[3]) * 0.92
-	var kind := _hit(a, at, 30.0)
+	# (just over its back: the line meets none of its body, and grazes the skin it passes; dealt to its trunk's zone as a hit
+	# with no round, which lands on the flesh nearest it)
+	var side := ((_frame(a)[1] as Vector3).cross(Vector3.UP)).normalized()
+	var at := _over_back(a)
+	Hit.deliver(_zone_of(a, "body"), 30.0, at + side * 0.3, -side, p)
+	var kind := a.last_wound
 	var h0 := a.health
 	await _secs(40.0)
 	var h1 := a.health

@@ -1,735 +1,494 @@
 class_name Anatomy
 extends Node3D
 ## The skeleton map under every body (user 2026-09-30, from a ragdoll video: "we dont need a x ray we just need a underlay where
-## each person has a skeleton map"): bones, vertebrae, ribs, the spinal cord and the organs, procedural (no assets), each part
-## riding the bone it belongs to, so it goes with the body: the animation, the ragdoll. Drawn over the body as a translucent
-## underlay (N toggles it, Anatomy.shown).
-##   humans    the player's rig (PlayerBody names: root, spinea .. heada, l_shoulder ..)
-##   animals   the stand-in quadrupeds' shared rig (Back, Torso2, Neck1, FrontUpperLeg.L ..; bison, deer, wolf, fox)
-## Wounds are mapped onto it: add_wound(point, direction, damage) lays the channel of the ball or the arrow through the body
-## (a red line), and what it goes through is named in a label at the wound: "Heart, punctured", "Spinal cord, badly injured at
-## T10", "T8 vertebra", "Rib 5 fractured".
-## All sizes are metres: the skeleton's own scale (the animals' armature is 38x) is taken out in each part's transform.
+## each person has a skeleton map"), and since 2026-10-03 the body every shot is worked out in (the user, of another game's body
+## viewer: "i want that to be how our game detects hits and etc they have a perfect skeleton mesh"): the fitted body of BodyModel
+## (bones as they are, the organs, the brain and brainstem, the cord, the great vessels and the limbs' arteries and veins, the
+## flesh), one per kind of body, shared, read only.
+##
+## One Anatomy a body (attach_to: under its skeleton), light: it keeps the body's shots and makes nothing to draw until the map
+## is shown (N, show_map) or the body is inspected (InspectView); nothing of it runs per frame.
+##   add_wound(point, direction, damage)   a hit: the round's path through the body (BodyModel.trace: the shapes it crosses in
+##                       order, the energy each takes, in, out or stopped), the labels of what it did ("Heart, punctured",
+##                       "Left femoral artery, cut", "Spinal cord, badly injured at T10", "Left rib 5, fractured"), what it
+##                       comes to (effect: the damage table) and the shot kept (shots: entry, exit or stop, the path, every
+##                       structure crossed; the latest flagged). What struck is Hit.shot's (a ball, an arrow, a thrown spear, a
+##                       blade; its speed and mass), else a ball of the damage's energy. A line that crosses none of the body
+##                       grazes the flesh it passes within GRAZE_M of, else it is a clean miss (fx.missed: the coarse collider
+##                       caught it, the body was not there; the fighters and the animals take nothing from it); a hit a script
+##                       deals with no round (Hit.shot empty), and any on the player's own body, always lands (the nearest flesh)
+##   effect(hits, damage)                  the damage table (see DAMAGE below): the brain or brainstem dead at once, the heart and
+##                       the aorta down in seconds, the arteries fast and pulsing, the veins slower, the lungs slow and the
+##                       breath short, the cord by its level (C1-C4 dead, to T6 mortal and down, below that the legs), a long
+##                       bone broken (an arm cannot hold, a leg limps or gives), the gut a slow bleed, muscle light
+##   the map (N)          the bones, organs, vessels and cord drawn under the faded skin, a mesh a bone (BodyMeshes), and each
+##                       shot's channel (a red line) with its label, all riding the bones (the animation, the ragdoll)
+##
+##   humans    the player's and the fighters' rig (Actor_B)
+##   animals   the stand-in quadrupeds' rig (Back, Torso2, Neck1, FrontUpperLeg.L ..; bison, deer, wolf, fox)
+## All sizes are metres: the skeleton's own scale (the animals' armature is 38x) is taken out in each shape's frame.
 
 ## On or off for every body (N).
 static var shown := false
 ## The hit-cam's slow-mo (off for films: the trailer sets it so).
 static var slowmo_on := true
 
-const BONE := Color(0.96, 0.94, 0.86, 0.5)
-const CORD := Color(1.0, 0.92, 0.25, 0.85)
 const WOUND := Color(0.92, 0.05, 0.05, 0.95)
 ## How far the body's skin fades while the map is shown (0 solid .. 1 gone).
 const SKIN_FADE := 0.72
-## How long a heart wound, or the cord high up, leaves a body on its feet (s) untreated.
-## How fast each kind of wound loses blood against the base drain (PlayerWounds.DRAIN).
+## The map's colours' strength (the parts' own alpha times this).
+const MAP_ALPHA := 0.85
+## How fast a flesh wound loses blood against the base drain (PlayerWounds.DRAIN).
 const FLESH_DRAIN := 0.7
+## Mortal wounds: dead in this many seconds untreated, on their feet till then (treatment stretches it: PlayerWounds).
 const MORTAL_HEART_S := 8.0
 const MORTAL_CORD_S := 12.0
+const MORTAL_AORTA_S := 15.0
+const MORTAL_CAROTID_S := 30.0
+## A line that misses every shape of the body by no more than this (m) grazes the nearest flesh.
+const GRAZE_M := 0.035
 ## A brief slow-down of time on a mortal hit: scale and real seconds (not in headless runs or tests).
 const SLOWMO := Vector2(0.3, 0.55)
-## Organs, placed inside the body's own skin (the mesh's cross-section at their height, _slab): [name, colour, f (0 at the back ..
-## 1 at the front/belly of that cross-section), side (of its half width), radii: along (m for a human, of the torso's length for
-## an animal), depth (of the cross-section's depth), width (of its half width)].
-## A human's are placed by real distance (m, for a 1.75 m body) down from the base of the neck; an animal's by a part of the way
-## from the pelvis to the shoulders.
-const ORGANS_HUMAN := [
-	["Lung", Color(0.95, 0.55, 0.68, 0.72), 0.12, 0.5, 0.5, 0.12, 0.36, 0.38],
-	["Lung", Color(0.95, 0.55, 0.68, 0.72), 0.12, 0.5, -0.5, 0.12, 0.36, 0.38],
-	["Heart", Color(0.85, 0.06, 0.12, 0.88), 0.15, 0.66, 0.16, 0.055, 0.2, 0.2],
-	["Liver", Color(0.5, 0.17, 0.11, 0.82), 0.26, 0.58, -0.4, 0.05, 0.22, 0.4],
-	["Stomach", Color(0.9, 0.62, 0.3, 0.82), 0.26, 0.6, 0.4, 0.055, 0.2, 0.24],
-	["Kidney", Color(0.55, 0.15, 0.2, 0.85), 0.34, 0.24, 0.4, 0.045, 0.1, 0.1],
-	["Kidney", Color(0.55, 0.15, 0.2, 0.85), 0.34, 0.24, -0.4, 0.045, 0.1, 0.1],
-	["Intestines", Color(0.92, 0.72, 0.62, 0.74), 0.43, 0.58, 0.0, 0.075, 0.3, 0.55],
-]
-const ORGANS := [
-	["Heart", Color(0.85, 0.08, 0.14, 0.85), 0.78, 0.66, 0.0, 0.07, 0.22, 0.28],
-	["Lung", Color(0.95, 0.55, 0.68, 0.72), 0.8, 0.4, 0.5, 0.15, 0.3, 0.38],
-	["Lung", Color(0.95, 0.55, 0.68, 0.72), 0.8, 0.4, -0.5, 0.15, 0.3, 0.38],
-	["Liver", Color(0.5, 0.18, 0.12, 0.82), 0.58, 0.5, -0.35, 0.09, 0.22, 0.36],
-	["Stomach", Color(0.9, 0.62, 0.3, 0.82), 0.58, 0.55, 0.35, 0.1, 0.24, 0.34],
-	["Kidney", Color(0.55, 0.16, 0.2, 0.85), 0.45, 0.22, 0.35, 0.05, 0.1, 0.12],
-	["Kidney", Color(0.55, 0.16, 0.2, 0.85), 0.45, 0.22, -0.35, 0.05, 0.1, 0.12],
-	["Intestines", Color(0.92, 0.72, 0.62, 0.74), 0.3, 0.55, 0.0, 0.14, 0.3, 0.5],
-]
-## Real human sizes (m, for 1.75 m): the skull's height.
-const HUMAN_SKULL_H := 0.085
-
-## The two rigs: spine (pelvis .. the neck's base), neck (to the head), head bone, bone segments [from, to] (a name to ""
-## ends a limb a step past the last bone), the bones the limbs' roots are on.
-const HUMAN := {
-	"spine": ["root", "spinea", "spineb", "spined"],
-	"neck": ["spined", "neck", "heada"],
-	"head": "heada",
-	"segments": [["neck", "l_shoulder"], ["l_shoulder", "l_elbow"], ["l_elbow", "l_wrist"], ["neck", "r_shoulder"],
-			["r_shoulder", "r_elbow"], ["r_elbow", "r_wrist"], ["root", "l_upper_leg"], ["l_upper_leg", "l_knee"],
-			["l_knee", "l_ankle"], ["l_ankle", "l_ball"], ["root", "r_upper_leg"], ["r_upper_leg", "r_knee"],
-			["r_knee", "r_ankle"], ["r_ankle", "r_ball"]],
-	"names": {"l_shoulder": "Left humerus", "l_elbow": "Left forearm", "r_shoulder": "Right humerus", "r_elbow": "Right forearm",
-			"l_upper_leg": "Left femur", "l_knee": "Left shin", "r_upper_leg": "Right femur", "r_knee": "Right shin",
-			"l_ankle": "Left foot", "r_ankle": "Right foot"},
-	"up": ["root", "heada"],
+## THE DAMAGE TABLE (the user, 2026-10-03: "damage comes from what it crossed"). Organs and vessels by name (a vessel by its name
+## without its side): [the animals' wound kind (WildlifeSpecies.WOUNDS), damage x, blood lost x, drain x (PlayerWounds.DRAIN: how
+## fast it goes), mortal clock (s, 0 none)]. Nicked (the round's edge only), a vessel's drain and blood are NICKED of it, no clock.
+const DAMAGE := {
+	"Brain": ["head", 2.5, 1.0, 1.0, 0.0],
+	"Brainstem": ["head", 2.5, 1.0, 1.0, 0.0],
+	"Heart": ["heart", 2.0, 2.5, 3.0, MORTAL_HEART_S],
+	"Left lung": ["lungs", 1.3, 1.8, 1.7, 0.0],
+	"Right lung": ["lungs", 1.3, 1.8, 1.7, 0.0],
+	"Liver": ["gut", 1.3, 2.0, 1.3, 0.0],
+	"Spleen": ["gut", 1.3, 2.0, 1.3, 0.0],
+	"Left kidney": ["gut", 1.3, 2.0, 1.3, 0.0],
+	"Right kidney": ["gut", 1.3, 2.0, 1.3, 0.0],
+	"Stomach": ["gut", 1.0, 1.5, 0.5, 0.0],
+	"Intestines": ["gut", 1.0, 1.5, 0.5, 0.0],
+	"Aorta": ["heart", 1.6, 3.0, 3.5, MORTAL_AORTA_S],
+	"Superior vena cava": ["artery", 1.3, 2.2, 2.5, 0.0],
+	"Inferior vena cava": ["artery", 1.3, 2.2, 2.5, 0.0],
+	"Vena cava": ["artery", 1.3, 2.2, 2.5, 0.0],
+	"carotid artery": ["artery", 1.4, 2.5, 3.0, MORTAL_CAROTID_S],
+	"subclavian artery": ["artery", 1.2, 2.2, 2.8, 0.0],
+	"iliac artery": ["artery", 1.2, 2.2, 2.8, 0.0],
+	"femoral artery": ["artery", 1.2, 2.2, 2.8, 0.0],
+	"brachial artery": ["artery", 1.1, 1.8, 2.2, 0.0],
+	"popliteal artery": ["artery", 1.1, 1.8, 2.2, 0.0],
+	"radial artery": ["", 1.0, 1.3, 1.2, 0.0],
+	"ulnar artery": ["", 1.0, 1.3, 1.2, 0.0],
+	"jugular vein": ["vein", 1.1, 1.6, 1.6, 0.0],
+	"subclavian vein": ["vein", 1.0, 1.4, 1.4, 0.0],
+	"iliac vein": ["vein", 1.0, 1.4, 1.4, 0.0],
+	"femoral vein": ["vein", 1.0, 1.4, 1.4, 0.0],
+	"brachial vein": ["vein", 1.0, 1.2, 1.1, 0.0],
+	"popliteal vein": ["vein", 1.0, 1.2, 1.1, 0.0],
 }
-const QUAD := {
-	"spine": ["Back", "Torso", "Torso2", "Torso3"],
-	"neck": ["Torso3", "Neck1", "Neck2", "Neck3", "Head"],
-	"head": "Head",
-	"segments": [["FrontShoulder.L", "FrontUpperLeg.L"], ["FrontUpperLeg.L", "FrontLowerLeg.L"], ["FrontLowerLeg.L", ""],
-			["FrontShoulder.R", "FrontUpperLeg.R"], ["FrontUpperLeg.R", "FrontLowerLeg.R"], ["FrontLowerLeg.R", ""],
-			["BackShoulder.L", "BackLeg.L"], ["BackLeg.L", "BackUpperLeg.L"], ["BackUpperLeg.L", "BackLowerLeg.L"],
-			["BackLowerLeg.L", ""], ["BackShoulder.R", "BackLeg.R"], ["BackLeg.R", "BackUpperLeg.R"],
-			["BackUpperLeg.R", "BackLowerLeg.R"], ["BackLowerLeg.R", ""], ["Tail1", "Tail2"], ["Tail2", "Tail3"]],
-	"names": {"FrontUpperLeg.L": "Left foreleg", "FrontLowerLeg.L": "Left forehoof", "FrontUpperLeg.R": "Right foreleg",
-			"FrontLowerLeg.R": "Right forehoof", "BackUpperLeg.L": "Left thigh", "BackLowerLeg.L": "Left hindleg",
-			"BackUpperLeg.R": "Right thigh", "BackLowerLeg.R": "Right hindleg"},
-	"up": ["Body", "Back"],
-}
+const NICKED := 0.6
+## Bones: a long bone of a leg broken leaves this of the walk (1 whole; the femur gives way under the weight), chipped LIMP_CHIPPED.
+## (An animal's foreleg bones are its legs': the humerus, the radius, the cannons.)
+const LIMP := {"femur": 0.45, "tibia": 0.6, "fibula": 0.85, "foot": 0.7, "kneecap": 0.6, "Pelvis": 0.5, "humerus": 0.55,
+		"radius": 0.6, "fore cannon": 0.6, "hind cannon": 0.6}
+const LIMP_CHIPPED := 0.85
+## The animals' wound kinds, worst last.
+const RANK := {"": 0.0, "graze": 1.0, "leg": 2.0, "vein": 2.5, "gut": 3.0, "lungs": 4.0, "artery": 4.5, "head": 5.0, "spine": 6.0,
+		"heart": 7.0}
 
 var skeleton: Skeleton3D
-## The parts to test a wound against: {name, kind ("bone", "organ", "cord"), node, r (m), half (m, along its Y; 0 a ball)}.
-var parts: Array[Dictionary] = []
-var wounds: Array[Dictionary] = []
-## What the last wound went through, in order from the entry: [{name, kind ("organ", "cord", "bone", "rib")}].
-var last_hits: Array[Dictionary] = []
+var model: BodyModel
 var human := false
+## Every shot into this body, in order: {n, rec (BodyModel.trace), lines, fx (effect), hits, damage, kind, speed, energy, graze,
+## missed, latest, point, dir, at_ms}.
+var shots: Array[Dictionary] = []
+## The old record ({point, dir, lines} a wound) for what still reads it.
+var wounds: Array[Dictionary] = []
+## What the last shot went through, in order from the entry: [{name, kind ("organ" "cord" "bone" "rib" "vessel" "flesh" "miss"),
+## sub, res, lvl, vessel, side, limb}] (one row a structure).
+var last_hits: Array[Dictionary] = []
+var last_shot: Dictionary = {}
+## The player's own body: a line the capsule caught but the body did not is a graze, never a clean miss (the player's hit takes
+## the damage its effect says; a nothing would still be a blow felt, a spell or a swing broken off for it).
+var on_player := false
+## The drawn parts: {name, kind, node (a marker at its middle, riding its bone), i (the shape)}; made on first read (the map).
+var parts: Array[Dictionary]:
+	get:
+		_build_view()
+		return _parts
 
-var _rig: Dictionary
-var _k := 1.0                               ## the skeleton's global scale
-var _attach := {}                           ## bone index -> BoneAttachment3D
-var _mat_cache := {}
-var _up := Vector3.UP                       ## the body's up (skeleton space), its forward, its side
-var _fwd := Vector3.FORWARD
-var _side := Vector3.RIGHT
-var _dorsal := Vector3.UP
-var _torso_m := 0.5                         ## pelvis to the neck's base (m)
-var _width_m := 0.3
-var _tz := 1.0                              ## a human's torso length against a real one (the rig's is shorter)
-var _floor := 0.0                           ## the skin's lowest point along the body's up (skeleton units)
-var _skin: Array[Dictionary] = []           ## the body's skin for rays: {tri: TriangleMesh, to: the skeleton's rest frame to the mesh's own}
-var _s := 1.0                               ## a human's size against a 1.75 m body
+var _parts: Array[Dictionary] = []
+var _built := false
+var _attach := {}                     ## bone index -> BoneAttachment3D
+var _mat: StandardMaterial3D
+var _shot_nodes: Array[Node] = []
 
 
-## An anatomy on `sk` (a human rig when it has a bone "spined", else a quadruped's), or null when the rig is not known.
+## The anatomy of the body on `sk` (a human rig: bones "spined", "heada"; else a quadruped's), or null when the rig is not known.
 static func attach_to(sk: Skeleton3D) -> Anatomy:
+	if sk == null:
+		return null
 	var existing := sk.get_node_or_null(^"Anatomy") as Anatomy
 	if existing:
 		return existing
-	var is_human := sk.find_bone("spined") >= 0 and sk.find_bone("heada") >= 0
-	var rig: Dictionary = HUMAN if is_human else QUAD
-	for bn: String in rig.spine:
-		if sk.find_bone(bn) < 0:
-			return null
+	var m := BodyModel.of(sk)
+	if m == null:
+		return null
 	var a := Anatomy.new()
 	a.name = "Anatomy"
 	a.skeleton = sk
-	a.human = is_human
-	a._rig = rig
+	a.model = m
+	a.human = m.human
+	a.visible = false
+	var n: Node = sk
+	while n != null and not a.on_player:
+		a.on_player = n is FrontierPlayer
+		n = n.get_parent()
 	sk.add_child(a)
-	a._build()
-	a.show_map(shown)
+	if shown:
+		a.show_map(true)
 	return a
 
 
-func _rest_pos(bone: String) -> Vector3:
-	return skeleton.get_bone_global_rest(skeleton.find_bone(bone)).origin
+## The anatomy already on `sk` (null none: nothing has hit it).
+static func of(sk: Skeleton3D) -> Anatomy:
+	return sk.get_node_or_null(^"Anatomy") as Anatomy if sk != null else null
 
 
-func _along(names: Array, t: float) -> Vector3:
-	var pts: Array[Vector3] = []
-	for n: String in names:
-		pts.append(_rest_pos(n))
-	var total := 0.0
-	for i in pts.size() - 1:
-		total += pts[i].distance_to(pts[i + 1])
-	var at := t * total
-	for i in pts.size() - 1:
-		var l := pts[i].distance_to(pts[i + 1])
-		if at <= l or i == pts.size() - 2:
-			return pts[i].lerp(pts[i + 1], clampf(at / maxf(l, 1e-6), 0.0, 1.0))
-		at -= l
-	return pts[-1]
+func _enter_tree() -> void:
+	add_to_group(&"anatomy")
 
-
-## The point `d` m (of the rig's own metres) down the spine from the neck's base, and the bone it lies on.
-func _down(d: float) -> Array:
-	var sp: Array = _rig.spine.duplicate()
-	sp.reverse()                         # from the neck's base to the pelvis
-	if human:
-		sp.push_front("neck")
-	var at := d / _k
-	for i in sp.size() - 1:
-		var a := _rest_pos(sp[i])
-		var b := _rest_pos(sp[i + 1])
-		var l := a.distance_to(b)
-		if at <= l:
-			return [a.lerp(b, at / maxf(l, 1e-6)), sp[i] if at < l * 0.5 else sp[i + 1]]
-		at -= l
-	var a2 := _rest_pos(sp[-2])
-	var b2 := _rest_pos(sp[-1])
-	return [b2 + (b2 - a2).normalized() * at, sp[-1]]
-
-
-## The bone (of `names`) a point `t` along the chain rides.
-func _bone_at(names: Array, t: float) -> String:
-	var total := 0.0
-	for i in names.size() - 1:
-		total += _rest_pos(names[i]).distance_to(_rest_pos(names[i + 1]))
-	var at := t * total
-	for i in names.size() - 1:
-		var l := _rest_pos(names[i]).distance_to(_rest_pos(names[i + 1]))
-		if at <= l:
-			return names[i] if at < l * 0.5 else names[i + 1]
-		at -= l
-	return names[-1]
-
-
-func _build() -> void:
-	var sb := skeleton.global_transform.basis
-	_k = sb.get_scale().x
-	var spine: Array = _rig.spine
-	var pelvis := _rest_pos(spine[0])
-	var shoulders := _rest_pos(spine[-1])
-	_torso_m = maxf(pelvis.distance_to(shoulders) * _k, 0.1)
-	# the body's axes in the skeleton's frame
-	var upn: Array = _rig.up
-	_up = (_rest_pos(upn[1]) - _rest_pos(upn[0])).normalized()
-	if not human:
-		# an animal's up: from its feet to its back (the rigs' own axes differ: the stand-ins are Z up, the bison Y up)
-		var feet := Vector3.ZERO
-		var nf := 0
-		for fb in ["FrontLowerLeg.L", "FrontLowerLeg.R", "BackLowerLeg.L", "BackLowerLeg.R"]:
-			if skeleton.find_bone(fb) >= 0:
-				feet += _rest_pos(fb)
-				nf += 1
-		if nf > 0:
-			_up = ((_rest_pos("Back") + _rest_pos("Torso2")) * 0.5 - feet / float(nf)).normalized()
-	var along := (shoulders - pelvis).normalized()
-	if human:
-		# (a 1.75 m body: the head bone 1.5 m off the floor, the neck's base to the pelvis 0.53 m)
-		_s = maxf(((_rest_pos("heada") - _rest_pos("l_ball")).dot(_up) * _k) / 1.5, 0.3)
-		_tz = maxf((_rest_pos("neck") - _rest_pos("root")).length() * _k / 0.53, 0.3)
-		var toe := _rest_pos("l_ball") - _rest_pos("l_ankle")
-		_fwd = (toe - _up * toe.dot(_up)).normalized()
-		_dorsal = -_fwd
-	else:
-		var head := _rest_pos(_rig.head) - pelvis
-		_fwd = (head - _up * head.dot(_up)).normalized()
-		_dorsal = _up
-	_side = _fwd.cross(_up).normalized() if human else along.cross(_dorsal).normalized()
-	_width_m = _torso_m * (0.6 if human else 0.55)
-	_sample_skin()
-	if human:
-		_bone_parts_human()
-	else:
-		_bone_parts_quad()
-	_spine_parts()
-	_ribs()
-	_organs()
-	_skull()
-
-
-# ---------------------------------------------------------------------------------------------------------------------
-# Making parts
-
-
-func _mat(c: Color) -> StandardMaterial3D:
-	var key := c.to_html()
-	if _mat_cache.has(key):
-		return _mat_cache[key]
-	var m := StandardMaterial3D.new()
-	m.albedo_color = c
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	m.render_priority = 40          # (depth-tested: it lies inside the body, the skin faded over it)
-	m.cull_mode = BaseMaterial3D.CULL_DISABLED
-	_mat_cache[key] = m
-	return m
-
-
-func _attach_for(bone: String) -> BoneAttachment3D:
-	var bi := skeleton.find_bone(bone)
-	if bi < 0:
-		return null
-	if not _attach.has(bi):
-		var ba := BoneAttachment3D.new()
-		ba.name = "A_" + bone.replace(".", "_")
-		add_child(ba)
-		ba.use_external_skeleton = true
-		ba.external_skeleton = ba.get_path_to(skeleton)
-		ba.bone_idx = bi
-		_attach[bi] = ba
-	return _attach[bi]
-
-
-## A mesh of `mesh` (metres) riding `bone`, at `at` (the rest pose's skeleton space) with `basis` (orthonormal, skeleton
-## space), its metres kept by taking the skeleton's scale out of the transform.
-func _part(mesh: Mesh, bone: String, at: Vector3, basis: Basis, c: Color, nm: String, kind: String, r: float, half: float,
-		stretch := Vector3.ONE) -> MeshInstance3D:
-	var ba := _attach_for(bone)
-	if ba == null:
-		return null
-	var rest := skeleton.get_bone_global_rest(skeleton.find_bone(bone))
-	var local := rest.affine_inverse() * Transform3D(basis, at)
-	local.basis = local.basis.scaled(Vector3.ONE / _k) * Basis.from_scale(stretch)
-	var mi := MeshInstance3D.new()
-	mi.mesh = mesh
-	mi.material_override = _mat(c)
-	mi.transform = local
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	ba.add_child(mi)
-	parts.append({"name": nm, "kind": kind, "node": mi, "r": r, "half": half, "rest": at, "basis": basis, "stretch": stretch})
-	return mi
-
-
-## A rod of radius `r` m from skeleton-space point `a` to `b`, on `bone`.
-func _rod(a: Vector3, b: Vector3, bone: String, r: float, c: Color, nm: String, kind := "bone") -> void:
-	var len_m := a.distance_to(b) * _k
-	if len_m < 0.005:
-		return
-	var cap := CapsuleMesh.new()
-	cap.radius = r
-	cap.height = len_m + r * 2.0
-	cap.radial_segments = 8
-	cap.rings = 2
-	var y := (b - a).normalized()
-	_part(cap, bone, (a + b) * 0.5, _basis_y(y), c, nm, kind, r, len_m * 0.5)
-
-
-func _ball(at: Vector3, bone: String, radii: Vector3, c: Color, nm: String, kind: String, basis := Basis.IDENTITY) -> MeshInstance3D:
-	var sp := SphereMesh.new()
-	sp.radius = 1.0
-	sp.height = 2.0
-	sp.radial_segments = 10
-	sp.rings = 5
-	return _part(sp, bone, at, basis, c, nm, kind, (radii.x + radii.y + radii.z) / 3.0, 0.0, radii)
-
-
-## A basis (in the skeleton's frame) with Y along `y`.
-func _basis_y(y: Vector3) -> Basis:
-	var x := y.cross(_fwd if absf(y.dot(_fwd)) < 0.9 else _side).normalized()
-	return Basis(x, y, x.cross(y).normalized())
-
-
-func _bone_parts_human() -> void:
-	var names: Dictionary = _rig.names
-	for seg: Array in _rig.segments:
-		var a := _rest_pos(seg[0])
-		var b := _rest_pos(seg[1])
-		var nm := String(names.get(seg[0], names.get(seg[1], "")))
-		if nm == "":
-			nm = "Collarbone" if String(seg[0]) == "neck" else ("Pelvis" if String(seg[0]) == "root" else "Bone")
-		var r := clampf(a.distance_to(b) * _k * 0.03, 0.008, 0.018)
-		_rod(a, b, seg[0], r, BONE, nm)
-	# the pelvis: a bowl across the hips
-	var hips := _rest_pos("root")
-	_ball(hips - _up * (0.01 * _s) / _k, "root", Vector3(0.15, 0.065, 0.085) * _s, BONE, "Pelvis", "bone", Basis(_side, _up, _fwd).orthonormalized())
-
-
-func _bone_parts_quad() -> void:
-	var names: Dictionary = _rig.names
-	for seg: Array in _rig.segments:
-		var bone := String(seg[0])
-		if skeleton.find_bone(bone) < 0:
-			continue
-		var a := _rest_pos(bone)
-		var b: Vector3
-		if String(seg[1]) == "":
-			# the hoof: straight down from the last bone to the ground
-			var down := maxf(a.dot(_up) - _floor, 0.04 / _k)
-			b = a - _up * down
-			if _skin.is_empty():
-				var pi := skeleton.get_bone_parent(skeleton.find_bone(bone))
-				b = a + (a - _rest_pos(skeleton.get_bone_name(pi))) * 0.9
-		else:
-			if skeleton.find_bone(seg[1]) < 0:
-				continue
-			b = _rest_pos(seg[1])
-		var nm := String(names.get(bone, "Tail bone" if bone.begins_with("Tail") else "Leg bone"))
-		var r := clampf(a.distance_to(b) * _k * 0.035, 0.006, 0.025)
-		_rod(a, b, bone, r, BONE, nm)
-	var pelvis := _rest_pos(_rig.spine[0])
-	_ball(pelvis, _rig.spine[0], Vector3(_width_m * 0.28, _torso_m * 0.1, _torso_m * 0.1), BONE, "Pelvis", "bone",
-			_basis_y(_dorsal))
-
-
-## The body's skin for rays: a human's own skin meshes (head_Body, head_Face: not the clothes or the hair), an animal's the
-## skinned mesh with the most vertices (the bind pose, the rig's rest pose).
-func _sample_skin() -> void:
-	var best: MeshInstance3D = null
-	var best_n := 0
-	var own: Array[MeshInstance3D] = []
-	for mi in skeleton.find_children("*", "MeshInstance3D", true, false):
-		var m := mi as MeshInstance3D
-		if m.mesh == null or m.skin == null or is_ancestor_of(m):
-			continue
-		if human and String(m.name).begins_with("head_"):
-			own.append(m)
-		var n := 0
-		for si in m.mesh.get_surface_count():
-			n += m.mesh.surface_get_array_len(si)
-		if n > best_n:
-			best_n = n
-			best = m
-	if not human or own.is_empty():
-		own.clear()
-		if best:
-			own.append(best)
-	_floor = INF
-	for m in own:
-		var to_sk := skeleton.global_transform.affine_inverse() * m.global_transform
-		_skin.append({"tri": m.mesh.generate_triangle_mesh(), "to": to_sk.affine_inverse()})
-		var bb := m.mesh.get_aabb()
-		for i in 8:
-			_floor = minf(_floor, (to_sk * bb.get_endpoint(i)).dot(_up))
-	if _floor == INF:
-		_floor = 0.0
-
-
-## Distance to the first skin the ray from `from` along `dir` (skeleton space) meets, or INF.
-func _shoot(from: Vector3, dir: Vector3) -> float:
-	var best := INF
-	for sk: Dictionary in _skin:
-		var to: Transform3D = sk.to
-		var f := to * from
-		var d := (to.basis * dir).normalized()
-		var hit: Dictionary = (sk.tri as TriangleMesh).intersect_ray(f, d)
-		if hit.is_empty():
-			continue
-		best = minf(best, f.distance_to(hit.position as Vector3) * (to.basis.inverse() * d).length())
-	return best
-
-
-## The body's cross-section across `along` at `p` (skeleton space): {v0, v1: the skin's back and front along the ventral axis,
-## relative to p; hw: its half width (skeleton units)}, from rays through p. Without skin: the torso's own proportions.
-func _slab(p: Vector3, along: Vector3, dep_hint := -1.0) -> Dictionary:
-	var ventral := -_dorsal
-	var dep := _torso_m * (0.2 if human else 0.5) / _k
-	var fallback := {"v0": -dep * 0.5, "v1": dep * 0.5, "hw": _width_m * 0.5 / _k}
-	if _skin.is_empty():
-		return fallback
-	var far := 4.0 / _k
-	# (the plane across `along` through p: ventral and side are taken square to it)
-	var vdir := (ventral - along * ventral.dot(along)).normalized()
-	var sdir := (_side - along * _side.dot(along)).normalized()
-	var back := _shoot(p + (-vdir) * far, vdir)
-	var front := _shoot(p + vdir * far, -vdir)
-	if (back == INF or front == INF) and (dep_hint <= 0.0 or (back == INF and front == INF)):
-		return fallback
-	var v0 := -far + back                  # (along vdir from p: the back's coordinate)
-	var v1 := far - front
-	# (one side open, the face's hole in the skin: the depth it should have, from the side that is there)
-	if back == INF:
-		v0 = v1 - dep_hint
-	elif front == INF:
-		v1 = v0 + dep_hint
-	if v1 - v0 < 0.02 / _k:
-		return fallback
-	var c := p + vdir * ((v0 + v1) * 0.5)
-	var wl := _shoot(c + sdir * far, -sdir)
-	var wr := _shoot(c - sdir * far, sdir)
-	var hw := fallback.hw as float
-	if wl != INF and wr != INF:
-		hw = (far - wl + far - wr) * 0.5
-	elif wl != INF or wr != INF:
-		hw = far - minf(wl, wr)
-	if human:
-		# (the arms hang beside the chest: not past the shoulder)
-		hw = minf(hw, maxf(absf(_rest_pos("l_shoulder").x - _rest_pos("root").x), 0.05) * 0.95)
-	return {"v0": v0, "v1": v1, "hw": hw}
-
-
-## The frame of a part along `along`: X across the body, Y along `along`, Z front/back.
-func _frame(along: Vector3) -> Basis:
-	var y := along.normalized()
-	var x := (_side - y * _side.dot(y)).normalized()
-	return Basis(x, y, x.cross(y).normalized())
-
-
-## Vertebrae, C1..C7, T1..T12, L1..L5 from the head down to the pelvis, each riding the bone it lies on, set near the skin's
-## back, and the cord in front of them.
-func _spine_parts() -> void:
-	var chain: Array = []
-	var neck: Array = _rig.neck.duplicate()
-	neck.reverse()
-	chain.append_array(neck)
-	var sp: Array = _rig.spine.duplicate()
-	sp.reverse()
-	for i in range(1, sp.size()):
-		chain.append(sp[i])
-	var ventral := -_dorsal
-	var n := 24
-	var prev := Vector3.ZERO
-	for i in n:
-		var t := float(i) / float(n - 1)
-		var at := _along(chain, t)
-		var bone := _bone_at(chain, t)
-		var ax := _spine_dir(chain, t)
-		var fit := _slab(at, ax)
-		var dep: float = fit.v1 - fit.v0
-		# (the vertebral body a fifth of the way from the back: the canal and the spine's process behind it)
-		at += ventral * (float(fit.v0) + dep * (0.2 if human else 0.12))
-		var nm := "C%d vertebra" % (i + 1) if i < 7 else ("T%d vertebra" % (i - 6) if i < 19 else "L%d vertebra" % (i - 18))
-		var r := clampf(_torso_m * 0.03, 0.008, 0.03)
-		if human:
-			r = (0.013 + 0.012 * t) * _s
-		r = minf(r, dep * _k * 0.16)
-		var vm := _ball(at, bone, Vector3(r, r, r), BONE, nm, "bone")
-		if vm:
-			parts[-1].r = r * 1.3
-		if i > 0:
-			var cname := "Spinal cord, %s" % ("badly injured at " + nm.replace(" vertebra", ""))
-			_rod(prev, at + ventral * (r * 0.9 / _k), bone, r * 0.4, CORD, cname, "cord")
-		prev = at + ventral * (r * 0.9 / _k)
-
-
-## The direction the spine runs at a point `t` along `names` (skeleton space).
-func _spine_dir(names: Array, t: float) -> Vector3:
-	var a := _along(names, clampf(t - 0.04, 0.0, 1.0))
-	var b := _along(names, clampf(t + 0.04, 0.0, 1.0))
-	var d := b - a
-	return d.normalized() if d.length() > 1e-6 else _up
-
-
-func _ribs() -> void:
-	var spine: Array = _rig.spine
-	var ventral := -_dorsal
-	var n := 12 if human else 10
-	for i in n:
-		var k := float(i) / float(n - 1)
-		var at: Vector3
-		var bone: String
-		var ax: Vector3
-		if human:
-			var f := _down((0.03 + 0.021 * float(i)) * _tz)
-			at = f[0]
-			bone = f[1]
-			ax = _up
-		else:
-			var t := 0.55 + 0.42 * k
-			at = _along(spine, t)
-			bone = _bone_at(spine, t)
-			ax = (_rest_pos(spine[-1]) - _rest_pos(spine[0])).normalized()
-		var fit := _slab(at, ax)
-		var dep: float = fit.v1 - fit.v0
-		# narrow at the top, widest at the seventh, drawn in toward the last
-		var taper := 0.6 + 0.4 * sin(PI * clampf(0.15 + k * 0.75, 0.0, 1.0))
-		var centre := at + ventral * (float(fit.v0) + dep * 0.5)
-		var tm := TorusMesh.new()
-		tm.inner_radius = 0.475
-		tm.outer_radius = 0.5
-		tm.rings = 16
-		tm.ring_segments = 5
-		var w := float(fit.hw) * 0.86 * taper * _k
-		var d := dep * 0.42 * taper * _k
-		_part(tm, bone, centre, _frame(ax), BONE, "Rib %d" % (i + 1), "rib", w * 0.1, 0.0, Vector3(w * 2.0, 0.5, d * 2.0))
-
-
-func _organs() -> void:
-	var spine: Array = _rig.spine
-	var ventral := -_dorsal
-	for o: Array in (ORGANS_HUMAN if human else ORGANS):
-		var at: Vector3
-		var bone: String
-		var ax: Vector3
-		var along_m: float
-		if human:
-			var f := _down(float(o[2]) * _tz)
-			at = f[0]
-			bone = f[1]
-			ax = _up
-			along_m = float(o[5]) * _tz
-		else:
-			at = _along(spine, float(o[2]))
-			bone = _bone_at(spine, float(o[2]))
-			ax = (_rest_pos(spine[-1]) - _rest_pos(spine[0])).normalized()
-			along_m = float(o[5]) * _torso_m
-		var fit := _slab(at, ax)
-		var dep: float = fit.v1 - fit.v0
-		var hw: float = fit.hw
-		var centre := at + ventral * (float(fit.v0) + dep * float(o[3])) + _side * (float(o[4]) * hw)
-		# (radii in metres: across, along, front to back; kept inside the skin)
-		var rx := minf(float(o[7]) * hw * _k, maxf(hw * (1.0 - absf(float(o[4]))) * _k * 0.95, 0.01))
-		var rz := float(o[6]) * dep * _k
-		_ball(centre, bone, Vector3(rx, along_m, rz), o[1], String(o[0]), "organ", _frame(ax))
-
-
-func _skull() -> void:
-	var head_bone: String = _rig.head
-	var h := _rest_pos(head_bone)
-	var neck: Array = _rig.neck
-	var dir := (h - _rest_pos(neck[-2])).normalized()
-	var ventral := -_dorsal
-	if human:
-		# the skull round the brain, real size (the skin over the face is open, rays do not read it): its middle a hand above the
-		# head bone and a little forward, the jaw under it
-		var c := h + dir * (0.10 * _s) / _k + _fwd * (0.045 * _s) / _k
-		var rx := 0.068 * _s
-		var ry := 0.095 * _s
-		var rz := 0.078 * _s
-		_ball(c, head_bone, Vector3(rx, ry, rz), Color(0.96, 0.94, 0.86, 0.22), "Skull", "bone", _frame(dir))
-		_ball(c, head_bone, Vector3(rx * 0.78, ry * 0.8, rz * 0.78), Color(0.93, 0.66, 0.74, 0.7), "Brain", "organ", _frame(dir))
-		_ball(h + _fwd * (0.06 * _s) / _k - dir * (0.005 * _s) / _k, head_bone, Vector3(rx * 0.6, 0.03 * _s, rz * 0.55), BONE, "Jaw", "bone", _frame(dir))
-	else:
-		var hm := _torso_m * 0.22
-		var to := _fwd * hm * 1.5 / _k
-		_rod(h, h + to, head_bone, hm * 0.32, BONE, "Skull", "bone")
-		_ball(h + to * 0.15, head_bone, Vector3(hm * 0.22, hm * 0.28, hm * 0.25), Color(0.93, 0.74, 0.8, 0.85), "Brain", "organ", _frame(_fwd))
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Wounds
 
 
-## The channel of a ball or an arrow that struck at `point` going `direction` (world), through the body as far as `reach` m:
-## a red line in the underlay and a label at the wound naming what it passes through. `damage` sets the labels' words.
-## Returns the label's lines.
-func add_wound(point: Vector3, direction: Vector3, damage := 50.0, reach := -1.0) -> Array[String]:
+## A round that struck at `point` going `direction`: its path through the body worked out (BodyModel.trace), kept (shots), what it
+## did in words (returned: the label's lines) and in effect (last_hits for effect()). `shot`: what struck ({kind, speed, mass});
+## {} Hit.shot's, else a ball of `damage`'s energy. `_reach` is no longer used (the round's energy decides how far it goes).
+func add_wound(point: Vector3, direction: Vector3, damage := 50.0, _reach := -1.0, shot := {}) -> Array[String]:
 	var dir := direction.normalized() if direction.length_squared() > 1e-8 else Vector3.DOWN
-	if reach < 0.0:
-		reach = clampf(_torso_m * 0.9, 0.3, 1.2)
-	var end := point + dir * reach
-	var hits: Array[Dictionary] = []
-	for p: Dictionary in parts:
-		var node := p.node as MeshInstance3D
-		if not is_instance_valid(node):
-			continue
-		var centre := node.global_position
-		var half := float(p.half)
-		var d: float
-		if p.kind == "rib":
-			# a ring round the spine: struck where the channel enters at its rim
-			var lp: Vector3 = node.global_transform.affine_inverse() * point
-			var radial := Vector2(lp.x, lp.z).length()
-			if absf(radial - 0.46) < 0.13 and absf(lp.y) < 0.12:
-				hits.append({"p": p, "d": 0.0, "t": 0.0})
-			continue
-		if half > 0.0:
-			var ax := node.global_basis.y.normalized()
-			d = _seg_dist(point, end, centre - ax * half, centre + ax * half)
-		else:
-			d = _seg_point_dist(point, end, centre)
-		var r := float(p.r) * (1.25 if p.kind == "organ" else 1.1)
-		if d <= r:
-			hits.append({"p": p, "d": d, "t": clampf((centre - point).dot(dir) / reach, 0.0, 1.0)})
-	hits.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a.t) < float(b.t))
-	var lines: Array[String] = []
-	var seen := {}
-	for h in hits:
-		var p: Dictionary = h.p
-		var nm := String(p.name)
-		if seen.has(nm) and p.kind != "organ":
-			continue
-		seen[nm] = true
-		match String(p.kind):
-			"organ":
-				lines.append("%s, %s" % [nm, "punctured" if damage > 30.0 else "grazed"])
-			"cord":
-				lines.append(nm if damage > 30.0 else nm.replace("badly injured", "bruised"))
-			_:
-				lines.append("%s, %s" % [nm, "fractured" if damage > 30.0 else "chipped"] if not nm.contains("vertebra") else nm)
-		if lines.size() >= 5:
-			break
-	last_hits.clear()
-	for h in hits:
-		last_hits.append({"name": String((h.p as Dictionary).name), "kind": String((h.p as Dictionary).kind)})
-	_wound_line(point, end)
-	_wound_label(point, lines)
+	var sh: Dictionary = shot if not shot.is_empty() else Hit.shot
+	var rnd := BodyModel.round_of(sh, damage)
+	if String(rnd.kind) == "blunt":
+		last_hits.clear()
+		last_shot = {}
+		return []
+	var rec := model.trace(skeleton, point, dir, rnd)
+	var graze := ""
+	var graze_i := -1
+	if bool(rec.missed):
+		# (a clean miss only for a round that was really fired, Hit.shot's: a hit a script deals, with no round, still lands)
+		graze_i = _near_flesh(point, dir, on_player or sh.is_empty())
+		graze = String(model.shapes[graze_i].name) if graze_i >= 0 else ""
+	var hits := _hits_of(rec, graze)
+	var lines := lines_of(rec, hits, graze, human)
+	last_hits = hits
+	var fx := effect(hits, damage)
+	var entry := {"n": shots.size() + 1, "rec": rec, "lines": lines, "fx": fx, "hits": hits, "damage": damage, "kind": rnd.kind,
+			"speed": float(rnd.speed), "energy": float(rnd.energy), "graze": graze, "missed": bool(rec.missed) and graze == "",
+			"latest": true, "point": point, "dir": dir, "at_ms": Time.get_ticks_msec(),
+			"entry_a": (rec.holes[0] as Dictionary).a if not (rec.holes as Array).is_empty() else _anchor_near(point, graze_i)}
+	for s in shots:
+		s.latest = false
+	shots.append(entry)
+	last_shot = entry
 	wounds.append({"point": point, "dir": dir, "lines": lines})
+	if _built:
+		_draw_shot(entry)
 	return lines
 
 
-## What a wound that went through `hits` (Anatomy.last_hits) does, for a blow of `damage`: {
-##   lethal      dies at once (the brain)
-##   drain_mult  how fast the blood goes (x PlayerWounds.DRAIN): the heart and lungs fast, the liver and kidneys steady, the stomach
-##               and gut slow, a flesh wound slower still, so a body shot always bleeds, at the pace of what it went through
-##   mortal_s    a mortal wound: dead in this many seconds, on their feet till then (the heart 8, the cord high up 12; treatment stretches it: PlayerWounds)
-##   dmg_mult    x the blow's damage (what it tore through)
+## The flesh shape nearest the line (within GRAZE_M of it; `any`: at any distance), -1 none.
+func _near_flesh(point: Vector3, dir: Vector3, any := false) -> int:
+	var best := -1
+	var best_d := INF if any else GRAZE_M
+	var a := point - dir * model.back
+	var b := point + dir * model.reach
+	var ov := BodyModel.overrides(skeleton)
+	var memo := {}
+	for i in model.shapes.size():
+		var s := model.shapes[i]
+		if String(s.kind) != "flesh":
+			continue
+		var w := model.shape_world(skeleton, i, ov, memo)
+		var sz := s.s as Vector3
+		var r := maxf(sz.x, sz.z) if String(s.t) != "cap" else sz.x
+		var half := sz.y if String(s.t) != "ell" else 0.0
+		var ax := w.basis.y.normalized()
+		var d := BodyModel._seg_dist(a, b, w.origin - ax * half, w.origin + ax * half) - r
+		if d < best_d:
+			best_d = d
+			best = i
+	return best
+
+
+func _anchor_near(point: Vector3, i: int) -> Dictionary:
+	var ov := BodyModel.overrides(skeleton)
+	var memo := {}
+	if i >= 0:
+		return BodyModel.anchor(skeleton, int(model.shapes[i].bone), point, ov, memo)
+	var best := 0
+	var bd := INF
+	for b: int in model.groups:
+		var d := (skeleton.global_transform * BodyModel.pose(skeleton, b, ov, memo)).origin.distance_to(point)
+		if d < bd:
+			bd = d
+			best = b
+	return BodyModel.anchor(skeleton, best, point, ov, memo)
+
+
+## The rows of a record (one a structure, in order from the entry, the worst result kept): for effect().
+func _hits_of(rec: Dictionary, graze: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if bool(rec.missed):
+		if graze != "":
+			out.append({"name": graze, "kind": "flesh", "sub": "", "res": "grazed", "lvl": 0})
+		else:
+			out.append({"name": "Missed", "kind": "miss", "sub": "", "res": "", "lvl": 0})
+		return out
+	var at := {}
+	for row: Dictionary in rec.crossed:
+		var shp := model.shapes[int(row.i)]
+		var key := String(row.name) + ("@%d" % int(row.lvl) if String(row.kind) == "cord" else "")
+		var h := {"name": String(row.name), "kind": "rib" if String(shp.get("sub", "")) == "rib" else String(row.kind),
+				"sub": String(shp.get("sub", "")), "res": String(row.res), "lvl": int(row.lvl), "vessel": String(shp.get("vessel", "")),
+				"side": String(shp.get("side", "")), "limb": String(shp.get("limb", "")), "e_in": float(row.e_in),
+				"dep": float(row.get("dep", 0.0)), "lodged": bool(row.get("lodged", false))}
+		if at.has(key):
+			var old: Dictionary = out[int(at[key])]
+			if _worse(String(h.res), String(old.res)):
+				old.res = h.res
+			if String(old.sub) == "process" and String(h.sub) == "vertebra":
+				old.sub = "vertebra"          # (the arch or the body too: the cord's)
+			old.dep = float(old.dep) + float(h.dep)
+			old.lodged = bool(old.lodged) or bool(h.lodged)
+			continue
+		at[key] = out.size()
+		out.append(h)
+	return out
+
+
+static func _worse(a: String, b: String) -> bool:
+	var order := {"": 0, "torn": 1, "grazed": 2, "bruised": 2, "nicked": 3, "chipped": 3, "punctured": 4, "cut": 5, "injured": 5,
+			"fractured": 5}
+	return int(order.get(a, 0)) > int(order.get(b, 0))
+
+
+## A level's name: C1..C7, T1..T12 (an animal's T1..T13), L1.. (`lvl` 1 at the head).
+static func level_tag(lvl: int, is_human := true) -> String:
+	var nt := 12 if is_human else 13
+	if lvl <= 7:
+		return "C%d" % maxi(lvl, 1)
+	if lvl <= 7 + nt:
+		return "T%d" % (lvl - 7)
+	return "L%d" % (lvl - 7 - nt)
+
+
+## The label's lines for a record: each structure the round crossed, in order from the entry, in words ("Heart, punctured",
+## "Left femoral artery, cut", "Spinal cord, badly injured at T10", "Left rib 5, fractured"), the flesh only when nothing else
+## was hit, and where it went: "Through and through" or "Ball lodged in the left femur".
+static func lines_of(rec: Dictionary, hits: Array, graze := "", is_human := true) -> Array[String]:
+	var lines: Array[String] = []
+	if bool(rec.get("missed", false)):
+		if graze != "":
+			lines.append("%s, grazed" % graze)
+		return lines
+	var notable := hits.filter(func(h: Dictionary) -> bool: return String(h.kind) != "flesh")
+	for h: Dictionary in (notable if not notable.is_empty() else hits):
+		var nm := String(h.name)
+		match String(h.kind):
+			"cord":
+				lines.append("Spinal cord, %s at %s" % ["badly injured" if String(h.res) == "injured" else "bruised", level_tag(int(h.lvl), is_human)])
+			"flesh":
+				lines.append("%s, flesh wound" % nm)
+			_:
+				lines.append("%s, %s" % [nm, String(h.res)])
+		if lines.size() >= 6:
+			break
+	var what: String = {"ball": "Ball", "arrow": "Arrow", "dart": "Dart", "spear": "Spear", "tomahawk": "Blade", "blade": "Blade"}.get(
+			String((rec.round as Dictionary).get("kind", "ball")), "Ball")
+	if Vector3(rec.exit) != Vector3.INF:
+		lines.append("Through and through")
+	elif Vector3(rec.stop) != Vector3.INF and String(rec.stopped_in) != "":
+		var where := String(rec.stopped_in)
+		lines.append("%s lodged in the %s" % [what, where.to_lower() if not where.contains("vertebra") and not where.begins_with("T") else where])
+	return lines
+
+
+## What a wound that went through `hits` (last_hits) comes to, for a blow of `damage`: {
+##   lethal      dead at once (the brain, the brainstem, the cord at C1-C4)
+##   mortal_s    a mortal wound: dead in this many seconds, on their feet till then (the heart 8, the aorta 15, the cord to T6 12, a
+##               carotid 30; the soonest of them; treatment stretches it: PlayerWounds)
+##   dmg_mult    x the blow's damage (what it tore through; muscle alone 0.8, a graze 0.4, a clean miss 0)
 ##   bleed_mult  x the blood it loses after
-##   legs        the cord below the shoulders is cut: the legs are gone (a human is down for good, an animal drops)
-##   limb        a limb bone broken ("" none): the bone's name
-##   kind        an animal's wound kind (WildlifeSpecies.WOUNDS: heart, lungs, spine, head, gut, leg) the worst part gives, "" none
-##   why         the part that decided it }
+##   drain_mult  how fast the blood goes (x PlayerWounds.DRAIN): the arteries fastest, then the heart and great veins, the lungs, the
+##               liver and kidneys, the gut slow, a flesh wound slower still (FLESH_DRAIN)
+##   artery      a main artery cut: the bleed pulses; vein: a vein cut; breath: a lung (the breath is short: no running)
+##   legs, down  the cord below C4 cut, or both legs broken: the legs are gone, down for good; cord_lvl its level (1 at C1)
+##   limb        a limb's bone broken ("" none, the player's maiming reads it: "Left femur", "Left shin", "Left foot"); arm: an
+##               arm's bone broken (it cannot hold or aim); leg: a leg's; limp: what is left of the walk (1 whole)
+##   kind        an animal's wound kind (WildlifeSpecies.WOUNDS: heart, artery, lungs, spine, head, gut, vein, leg, graze), "" none
+##   why         the structure that decided it; missed: a clean miss (the coarse collider caught it, the body was not there) }
 static func effect(hits: Array, damage: float) -> Dictionary:
-	var out := {"lethal": false, "mortal_s": 0.0, "dmg_mult": 1.0, "bleed_mult": 1.0, "drain_mult": -1.0, "legs": false, "limb": "", "kind": "", "why": ""}
-	var rank := {"": 0, "graze": 1, "leg": 2, "gut": 3, "lungs": 4, "head": 5, "spine": 6, "heart": 7}
+	var out := {"lethal": false, "mortal_s": 0.0, "dmg_mult": 1.0, "bleed_mult": 1.0, "drain_mult": -1.0, "legs": false, "down": false,
+			"limb": "", "arm": "", "leg": "", "limp": 1.0, "kind": "", "why": "", "artery": false, "vein": false, "breath": false,
+			"cord_lvl": 0, "missed": false, "graze": false}
 	var serious := damage >= 25.0
 	var levels: Array[int] = []
-	var organ_dr := -1.0                # (what an organ or the cord does sets the pace; a bone only if none was hit)
+	var organ_dr := -1.0
 	var other_dr := -1.0
+	var notable := false
+	var mortal := INF
+	var legs_broken := {}
 	for h: Dictionary in hits:
 		var nm := String(h.name)
+		var res := String(h.get("res", ""))
+		var hk := String(h.kind)
 		var kind := ""
 		var dm := 1.0
 		var bm := 1.0
 		var dr := FLESH_DRAIN
-		match String(h.kind):
-			"organ":
-				match nm:
-					"Heart":
-						kind = "heart"
-						dm = 2.0
-						bm = 2.5
-						dr = 3.0
-						if serious:
-							out.mortal_s = maxf(float(out.mortal_s), MORTAL_HEART_S)
-					"Brain":
-						kind = "head"
-						dm = 2.5
-						if serious:
-							out.lethal = true
-					"Lung":
-						kind = "lungs"
-						dm = 1.4
-						bm = 1.8
-						dr = 1.7
-					"Liver", "Kidney":
-						kind = "gut"
-						dm = 1.3
-						bm = 2.0
-						dr = 1.3
-					_:
-						kind = "gut"
-						bm = 1.5
-						dr = 0.5
+		var vital := false
+		match hk:
+			"miss":
+				out.missed = true
+				out.dmg_mult = 0.0
+				out.drain_mult = 0.0
+				out.bleed_mult = 0.0
+				return out
+			"flesh":
+				if res == "grazed":
+					out.graze = true
+					kind = "graze"
+					dm = 0.4
+					dr = 0.4
+				else:
+					dm = 0.8
+			"organ", "vessel":
+				var row: Array = DAMAGE.get(nm, DAMAGE.get(_stem(nm), []))
+				if row.is_empty():
+					row = ["gut", 1.0, 1.5, 0.8, 0.0]
+				var nick := res == "nicked" or res == "grazed"
+				kind = String(row[0])
+				dm = float(row[1])
+				bm = float(row[2]) * (NICKED if nick else 1.0)
+				dr = float(row[3]) * (NICKED if nick else 1.0)
+				vital = true
+				if nm == "Brain" or nm == "Brainstem":
+					if res != "grazed" and (res == "punctured" or serious):
+						out.lethal = true
+				elif float(row[4]) > 0.0 and not nick and (res != "" or serious):
+					mortal = minf(mortal, float(row[4]))
+				if hk == "vessel":
+					if String(h.get("vessel", "")) == "vein" or nm.contains("vein") or nm.contains("vena"):
+						out.vein = true
+					else:
+						out.artery = true
+				if nm.ends_with("lung"):
+					out.breath = true
 			"cord":
-				kind = "spine"
-				dm = 1.5
-				dr = 1.0
-				levels.append(_level(nm.get_slice("injured at ", 1)))
-			"bone":
-				if nm == "Skull":
+				vital = true
+				if res == "injured" or (res == "" and serious):
+					kind = "spine"
+					dm = 1.5
+					dr = 1.0
+					var lv := int(h.get("lvl", 0))
+					if lv <= 0:
+						lv = _level(nm.get_slice("injured at ", 1))
+					levels.append(lv)
+				else:
+					dm = 1.2
+			"bone", "rib":
+				notable = true
+				var sub := String(h.get("sub", ""))
+				var broke := res == "fractured" or (res == "" and serious)
+				if nm == "Skull" or sub == "skull":
 					kind = "head"
 					dm = 1.5
+				elif sub == "jaw" or nm == "Jaw":
+					dm = 1.2
 				elif nm.contains("vertebra"):
-					# (a ball through a vertebra goes through the canal behind it: the cord at that level)
-					kind = "spine" if serious else ""
 					dm = 1.5
-					levels.append(_level(nm.get_slice(" ", 0)))
-				elif nm != "Pelvis" and nm != "Jaw":
-					kind = "leg"
-					if serious:
+					if broke and sub != "process":
+						# (a round through a vertebra's body or the arch round the canal breaks into it: the cord at that level; a
+						# spinous or transverse process broken off does not)
+						kind = "spine"
+						var lv2 := int(h.get("lvl", 0))
+						levels.append(lv2 if lv2 > 0 else _level(nm.get_slice(" ", 0)))
+				elif hk == "rib" or sub == "rib" or nm == "Sternum" or nm.ends_with("scapula") or nm == "Sacrum":
+					dm = 1.1
+				else:
+					var limb := String(h.get("limb", ""))
+					var stem := _stem(nm)
+					if nm == "Pelvis":
+						limb = "leg"
+						stem = "Pelvis"
+					elif nm.ends_with("clavicle"):
+						limb = "arm"
+					if limb == "arm" and broke:
+						out.arm = nm
 						out.limb = nm
-		if int(rank.get(kind, 0)) > int(rank.get(String(out.kind), 0)):
+						kind = "leg"
+					elif limb == "leg":
+						kind = "leg"
+						var lp := float(LIMP.get(stem, 0.7)) if broke else LIMP_CHIPPED
+						out.limp = minf(float(out.limp), lp)
+						if broke:
+							out.leg = nm
+							out.limb = _common(nm)
+							if lp <= 0.6:
+								legs_broken[String(h.get("side", nm.get_slice(" ", 0)))] = true
+		if hk != "flesh":
+			notable = true
+		if float(RANK.get(kind, 0.0)) > float(RANK.get(String(out.kind), 0.0)):
 			out.kind = kind
 			out.why = nm
-		out.dmg_mult = maxf(float(out.dmg_mult), dm)
+		out.dmg_mult = maxf(float(out.dmg_mult), dm) if hk != "flesh" else float(out.dmg_mult)
 		out.bleed_mult = maxf(float(out.bleed_mult), bm)
-		if String(h.kind) == "organ" or String(h.kind) == "cord":
+		if vital:
 			organ_dr = maxf(organ_dr, dr)
 		else:
 			other_dr = maxf(other_dr, dr)
+	if not notable and not hits.is_empty():
+		# muscle only: light (a graze lighter still)
+		out.dmg_mult = 0.4 if bool(out.graze) else 0.8
 	out.dmg_mult = minf(float(out.dmg_mult), 3.0)
-	out.drain_mult = organ_dr if organ_dr >= 0.0 else (other_dr if other_dr >= 0.0 else FLESH_DRAIN)   # (nothing of note: flesh)
-	# (the cord at the middle of the levels it went through: the neck and the chest down to T6, the breath goes with it, and it
-	# is over; below that the legs go)
-	if serious and not levels.is_empty():
+	out.drain_mult = organ_dr if organ_dr >= 0.0 else (other_dr if other_dr >= 0.0 else FLESH_DRAIN)
+	if mortal < INF:
+		out.mortal_s = mortal
+	if not levels.is_empty():
+		# the cord at the highest level it was hurt: C1-C4 the breath stops (dead); to T6 the breath fails (mortal) and the body
+		# goes down; below that the legs go, down for good
 		levels.sort()
-		var lvl: int = levels[levels.size() / 2]
-		if lvl <= 13:
-			out.mortal_s = maxf(float(out.mortal_s), MORTAL_CORD_S)
+		var lvl: int = levels[0]
+		out.cord_lvl = lvl
+		if lvl <= 4:
+			out.lethal = true
+		elif lvl <= 13:
+			out.mortal_s = minf(float(out.mortal_s), MORTAL_CORD_S) if float(out.mortal_s) > 0.0 else MORTAL_CORD_S
+			out.legs = true
+			out.down = true
 		else:
 			out.legs = true
+			out.down = true
+	if legs_broken.size() >= 2:
+		out.down = true
 	return out
+
+
+## A name without its side ("Left femoral artery" -> "femoral artery").
+static func _stem(nm: String) -> String:
+	if nm.begins_with("Left "):
+		return nm.substr(5)
+	if nm.begins_with("Right "):
+		return nm.substr(6)
+	return nm
+
+
+## The bone's everyday name for the player's notes ("Left tibia" -> "Left shin").
+static func _common(nm: String) -> String:
+	for b: String in ["tibia", "fibula"]:
+		if nm.ends_with(b):
+			return nm.replace(b, "shin")
+	return nm
 
 
 ## A vertebra's number down the whole column: C1..C7 1..7, T1..T12 8..19, L1..L5 20..24 ("T10" -> 17).
@@ -742,128 +501,9 @@ static func _level(tag: String) -> int:
 	return 19 + n
 
 
-## The nearest part's bone takes the channel (it moves with it).
-func _nearest_attach(world: Vector3) -> BoneAttachment3D:
-	var best: BoneAttachment3D = null
-	var best_d := INF
-	for bi: int in _attach:
-		var ba := _attach[bi] as BoneAttachment3D
-		var d := ba.global_position.distance_to(world)
-		if d < best_d:
-			best_d = d
-			best = ba
-	return best
-
-
-func _wound_line(a: Vector3, b: Vector3) -> void:
-	var ba := _nearest_attach(a)
-	if ba == null:
-		return
-	var cyl := CylinderMesh.new()
-	cyl.top_radius = 0.008
-	cyl.bottom_radius = 0.008
-	cyl.height = a.distance_to(b)
-	cyl.radial_segments = 6
-	var mi := MeshInstance3D.new()
-	mi.mesh = cyl
-	mi.material_override = _mat(WOUND)
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	ba.add_child(mi)
-	var y := (b - a).normalized()
-	var x := y.cross(Vector3.RIGHT if absf(y.x) < 0.9 else Vector3.FORWARD).normalized()
-	var w := Transform3D(Basis(x, y, x.cross(y).normalized()), (a + b) * 0.5)
-	mi.transform = ba.global_transform.affine_inverse() * w
-
-
-func _wound_label(at: Vector3, lines: Array[String]) -> void:
-	if lines.is_empty():
-		return
-	var ba := _nearest_attach(at)
-	if ba == null:
-		return
-	var l := Label3D.new()
-	l.text = "\n".join(lines)
-	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	l.no_depth_test = true          # (a label reads through the body)
-	l.fixed_size = true
-	l.pixel_size = 0.0006
-	l.font_size = 26
-	l.outline_size = 8
-	l.modulate = Color(1, 1, 1, 0.95)
-	l.outline_modulate = Color(0, 0, 0, 0.85)
-	l.render_priority = 60
-	ba.add_child(l)
-	# (on the parent's scale: world metres, offset a little off the body)
-	l.transform = Transform3D(Basis.from_scale(Vector3.ONE / _k), ba.global_transform.affine_inverse() * (at + Vector3.UP * 0.12))
-
-
-static func _seg_point_dist(a: Vector3, b: Vector3, p: Vector3) -> float:
-	var ab := b - a
-	var t := clampf((p - a).dot(ab) / maxf(ab.length_squared(), 1e-9), 0.0, 1.0)
-	return p.distance_to(a + ab * t)
-
-
-## Closest distance between segments a0-a1 and b0-b1.
-static func _seg_dist(a0: Vector3, a1: Vector3, b0: Vector3, b1: Vector3) -> float:
-	var u := a1 - a0
-	var v := b1 - b0
-	var w := a0 - b0
-	var a := u.dot(u)
-	var b := u.dot(v)
-	var c := v.dot(v)
-	var d := u.dot(w)
-	var e := v.dot(w)
-	var den := a * c - b * b
-	var s := 0.0
-	var t := 0.0
-	if den > 1e-9:
-		s = clampf((b * e - c * d) / den, 0.0, 1.0)
-	t = clampf((b * s + e) / maxf(c, 1e-9), 0.0, 1.0)
-	s = clampf((b * t - d) / maxf(a, 1e-9), 0.0, 1.0)
-	return (a0 + u * s).distance_to(b0 + v * t)
-
-
-## Every body's underlay on or off (the N key); bodies built since follow.
-static func set_shown(on: bool, tree: SceneTree, fade_s := 0.0) -> void:
-	shown = on
-	for n in tree.get_nodes_in_group(&"anatomy"):
-		(n as Anatomy).show_map(on, fade_s)
-
-
-## The map on or off for this body: the body's skin fades so it can be seen inside (and comes back). `fade_s` > 0: it comes
-## in (or goes) over that long (a film's), the parts' own transparency with the skin's.
-func show_map(on: bool, fade_s := 0.0) -> void:
-	visible = on or fade_s > 0.0
-	var skin: Array[MeshInstance3D] = []
-	for mi in skeleton.find_children("*", "MeshInstance3D", true, false):
-		if not is_ancestor_of(mi):
-			skin.append(mi as MeshInstance3D)
-	for g in skin:
-		if on and not g.has_meta(&"anatomy_was"):
-			g.set_meta(&"anatomy_was", g.transparency)
-	var apply := func(k: float) -> void:
-		# k 0 .. 1 toward the map shown
-		for g in skin:
-			if is_instance_valid(g) and g.has_meta(&"anatomy_was"):
-				var was := float(g.get_meta(&"anatomy_was"))
-				g.transparency = lerpf(was, maxf(was, SKIN_FADE), k)
-		for d in parts:
-			if is_instance_valid(d.node):
-				(d.node as GeometryInstance3D).transparency = 1.0 - k
-		if k <= 0.0:
-			visible = false
-			for g in skin:
-				if is_instance_valid(g) and g.has_meta(&"anatomy_was"):
-					g.remove_meta(&"anatomy_was")
-	if fade_s > 0.0 and is_inside_tree():
-		var tw := create_tween()
-		tw.tween_method(apply, 0.0 if on else 1.0, 1.0 if on else 0.0, fade_s)
-	else:
-		apply.call(1.0 if on else 0.0)
-
-
-func _enter_tree() -> void:
-	add_to_group(&"anatomy")
+## The wound report: the lines a channel went through, as one line ("Heart, punctured  ·  Lung, punctured").
+static func report(lines: Array) -> String:
+	return "  ·  ".join(lines.slice(0, 3))
 
 
 ## Time slows for SLOWMO.y real seconds (a clean kill, a mortal wound): the hit seen. Not headless.
@@ -878,6 +518,181 @@ static func slowmo(tree: SceneTree) -> void:
 	tree.create_timer(SLOWMO.y, true, false, true).timeout.connect(func() -> void: Engine.time_scale = 1.0)
 
 
-## The wound report: the lines a channel went through, as one line ("Heart, punctured  ·  Lung, punctured").
-static func report(lines: Array) -> String:
-	return "  ·  ".join(lines.slice(0, 3))
+# ---------------------------------------------------------------------------------------------------------------------
+# The map (N)
+
+
+## Every body's underlay on or off (the N key); bodies built since follow.
+static func set_shown(on: bool, tree: SceneTree, fade_s := 0.0) -> void:
+	shown = on
+	for n in tree.get_nodes_in_group(&"anatomy"):
+		(n as Anatomy).show_map(on, fade_s)
+
+
+## The map on or off for this body: the body's skin fades so it can be seen inside (and comes back). `fade_s` > 0: it comes
+## in (or goes) over that long (a film's). Hidden, what was drawn for it is let go (nothing of it stays to update).
+func show_map(on: bool, fade_s := 0.0) -> void:
+	if on:
+		_build_view()
+	visible = on or fade_s > 0.0
+	var skin: Array[MeshInstance3D] = []
+	for mi in skeleton.find_children("*", "MeshInstance3D", true, false):
+		if not is_ancestor_of(mi):
+			skin.append(mi as MeshInstance3D)
+	for g in skin:
+		if on and not g.has_meta(&"anatomy_was"):
+			g.set_meta(&"anatomy_was", g.transparency)
+	var apply := func(k: float) -> void:
+		# k 0 .. 1 toward the map shown
+		for g in skin:
+			if is_instance_valid(g) and g.has_meta(&"anatomy_was"):
+				var was := float(g.get_meta(&"anatomy_was"))
+				g.transparency = lerpf(was, maxf(was, SKIN_FADE), k)
+		if _mat:
+			_mat.albedo_color.a = MAP_ALPHA * k
+		if k <= 0.0:
+			visible = false
+			for g in skin:
+				if is_instance_valid(g) and g.has_meta(&"anatomy_was"):
+					g.remove_meta(&"anatomy_was")
+			_free_view()
+	if fade_s > 0.0 and is_inside_tree():
+		var tw := create_tween()
+		tw.tween_method(apply, 0.0 if on else 1.0, 1.0 if on else 0.0, fade_s)
+	else:
+		apply.call(1.0 if on else 0.0)
+
+
+func _attach_for(bone: int) -> BoneAttachment3D:
+	if not _attach.has(bone):
+		var ba := BoneAttachment3D.new()
+		ba.name = "A_%d" % bone
+		add_child(ba)
+		ba.use_external_skeleton = true
+		ba.external_skeleton = ba.get_path_to(skeleton)
+		ba.bone_idx = bone
+		# (placed now: a skeleton at rest for good is never updated again; as the body shows it, a ragdoll's pose over its own)
+		ba.transform = BodyModel.pose(skeleton, bone, BodyModel.overrides(skeleton), {})
+		_attach[bone] = ba
+	return _attach[bone]
+
+
+## The map drawn: a mesh a bone (its shapes merged, in their colours; the flesh not drawn: the faded skin is it), a marker at each
+## shape's middle (parts), each shot's channel and label.
+func _build_view() -> void:
+	if _built or model == null or skeleton == null:
+		return
+	_built = true
+	_mat = StandardMaterial3D.new()
+	_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_mat.vertex_color_use_as_albedo = true
+	_mat.albedo_color = Color(1, 1, 1, MAP_ALPHA)
+	_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_mat.render_priority = 40                 # (depth-tested: it lies inside the body, the skin faded over it)
+	for b: int in model.groups:
+		var list: Array = []
+		var xfs: Array = []
+		var cols: Array = []
+		var ba := _attach_for(b)
+		for i: int in model.groups[b].list:
+			var s := model.shapes[i]
+			var marker := MeshInstance3D.new()       # (no mesh: a place, read as the parts' nodes always were)
+			ba.add_child(marker)
+			marker.transform = s.xf
+			_parts.append({"name": String(s.name), "kind": String(s.kind), "node": marker, "i": i})
+			if String(s.kind) == "flesh":
+				continue
+			list.append(s)
+			xfs.append(s.xf)
+			cols.append(_colour(s))
+		if list.is_empty():
+			continue
+		var mi := MeshInstance3D.new()
+		mi.mesh = BodyMeshes.merged(list, xfs, cols)
+		mi.material_override = _mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		ba.add_child(mi)
+	for e in shots:
+		_draw_shot(e)
+
+
+## A shape's colour on the map.
+static func _colour(s: Dictionary) -> Color:
+	var c: Color = s.col
+	match String(s.kind):
+		"bone":
+			c.a = 0.22 if String(s.get("sub", "")) == "skull" else 0.55
+		"organ":
+			c.a = 0.7
+		"vessel":
+			c.a = 0.8
+		"cord":
+			c.a = 0.85
+	return c
+
+
+func _free_view() -> void:
+	if not _built:
+		return
+	_built = false
+	for ba: BoneAttachment3D in _attach.values():
+		if is_instance_valid(ba):
+			ba.queue_free()
+	_attach.clear()
+	_parts.clear()
+	_shot_nodes.clear()
+	_mat = null
+
+
+## A shot's channel (a red line from where it went in to where it came out or stopped) and its label, on the bone nearest each.
+func _draw_shot(e: Dictionary) -> void:
+	var rec: Dictionary = e.rec
+	var lines: Array = e.lines
+	var ov := BodyModel.overrides(skeleton)
+	var memo := {}
+	var a := BodyModel.where(skeleton, e.entry_a, ov, memo)
+	var b := Vector3.INF
+	var end_a: Dictionary = {}
+	if not (rec.path as Array).is_empty():
+		end_a = (rec.path as Array)[-1]
+		b = BodyModel.where(skeleton, end_a, ov, memo)
+	var ba := _attach_for(int((e.entry_a as Dictionary).b))
+	if b != Vector3.INF and a.distance_to(b) > 0.005:
+		var cyl := CylinderMesh.new()
+		cyl.top_radius = 0.006
+		cyl.bottom_radius = 0.006
+		cyl.height = a.distance_to(b)
+		cyl.radial_segments = 6
+		cyl.rings = 1
+		var mi := MeshInstance3D.new()
+		mi.mesh = cyl
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.albedo_color = WOUND
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.render_priority = 41
+		mi.material_override = m
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		ba.add_child(mi)
+		var y := (b - a).normalized()
+		var x := y.cross(Vector3.RIGHT if absf(y.x) < 0.9 else Vector3.FORWARD).normalized()
+		mi.global_transform = Transform3D(Basis(x, y, x.cross(y).normalized()), (a + b) * 0.5)
+		_shot_nodes.append(mi)
+	if lines.is_empty():
+		return
+	var l := Label3D.new()
+	l.text = "\n".join(lines)
+	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	l.no_depth_test = true          # (a label reads through the body)
+	l.fixed_size = true
+	l.pixel_size = 0.0006
+	l.font_size = 26
+	l.outline_size = 8
+	l.modulate = Color(1, 1, 1, 0.95)
+	l.outline_modulate = Color(0, 0, 0, 0.85)
+	l.render_priority = 60
+	ba.add_child(l)
+	l.global_position = a + Vector3.UP * 0.12
+	l.global_basis = Basis.IDENTITY
+	_shot_nodes.append(l)

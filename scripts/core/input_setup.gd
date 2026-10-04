@@ -26,6 +26,7 @@ const KEYS := {
 	"smoke": [KEY_Y],        # hold: a draw on the clay pipe (Vices)
 	"rts": [KEY_F1],         # command mode: the camera over the land, the household commanded (RtsMode)
 	"anatomy": [KEY_N],      # the skeleton map under every body, on or off (Anatomy)
+	"inspect": [KEY_M],      # a look inside the dead body in reach (InspectView; M closes it again)
 	"household": [KEY_J],    # the household screen: your wife or husband, their tasks and stats (Household)
 }
 const MOUSE := {

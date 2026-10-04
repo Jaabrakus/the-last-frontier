@@ -195,8 +195,13 @@ static func core_of(col: Object, shape_idx: int) -> Dictionary:
 
 ## How far `p` is from a core (core_of), and the core's point nearest it: [distance, point].
 static func to_core(core: Dictionary, p: Vector3) -> Array:
-	var sn := core.get("node") as Node3D
-	if sn == null or not is_instance_valid(sn) or not sn.is_inside_tree():
+	# (a part freed while the edge is still in its swing, its body killed by the blow, 2026-10-03: no core to meet; checked before
+	# the cast, which a freed object does not survive)
+	var nv: Variant = core.get("node")
+	if nv == null or not is_instance_valid(nv):
+		return [INF, p]
+	var sn := nv as Node3D
+	if sn == null or not sn.is_inside_tree():
 		return [INF, p]
 	var g := sn.global_transform
 	var ax := (g.basis * (core.axis as Vector3)).normalized()

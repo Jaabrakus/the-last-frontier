@@ -67,8 +67,12 @@ const HEAD_MULT := 2.5
 ##   gut    minutes; dark, sparse, green flecks; it lies up close by if not pushed (WildAnimal.BED_BLEED), pushed it runs
 ##   leg    (shoulder or haunch) bleeds hard at first, clots, limps (LAME_SPEED); usually lives
 ##   graze  a shot glancing along it: a few drops, soon stops
+##   artery a main artery cut (a carotid, a femoral, the vena cava; Anatomy's fitted body, 2026-10-03): it runs and drops within the
+##          minute, big bright drops; vein: a vein cut, a steady dark bleed that clots in a few minutes
 const WOUNDS := {
 	"heart": {"mult": 2.6, "bleed": 0.2, "clot": 0.0, "look": "red"},
+	"artery": {"mult": 1.6, "bleed": 0.1, "clot": 0.0, "look": "red"},
+	"vein": {"mult": 1.1, "bleed": 0.03, "clot": 0.008, "look": "red"},
 	"lungs": {"mult": 2.2, "bleed": 0.045, "clot": 0.0, "look": "froth"},
 	"spine": {"mult": 2.2, "bleed": 0.1, "clot": 0.0, "look": "red"},
 	"head": {"mult": 1.0, "bleed": 0.08, "clot": 0.0, "look": "red"},

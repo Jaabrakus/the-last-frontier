@@ -12,23 +12,44 @@ extends CharacterBody3D
 ##              it has moved well off the last plan's (GOAL_SNAP_M, GOAL_SNAP_FRAC of the way) and at most once each REPLAN_S
 ##              (each man's clock staggered); a new errand (a jump much bigger than that) is planned at once; a foe in sight
 ##              within STRAIGHT_M is run at straight (the brain says so: go(..., straight)), the grid left out until it is held up
-##   the musket to the shoulder and on the foe (HuntAim, the rifle aim clip), a moment's aim, then the game's own ball
-##              (NpcBall: a Projectile; aimed by Weapon.ballistic_dir, scattered by skill and range), the muzzle's fire and
-##              smoke (Fx.muzzle_blast, the one shared light: NpcSenses), the report (Sfx musket_shot), heard by the fighters
-##              (NpcSenses.noise) and the wildlife (WildlifeSpawner.shot); then the long reload (the rifle reload clips over
-##              the stance, the faction's reload_s), paused by moving or a flinch, kept where it got to
+##   the musket to the shoulder and on the foe (HuntAim, the rifle aim clip), aimed as a person aims (the user, 2026-10-04:
+##              "npc can find cover aim and etc"; begin_aim, aim_cfg by the skill: SKILLS, apply_skill): a REACTION when the foe
+##              has just come into sight (the brain says), then the aim SETTLING on him (the barrel comes up off to one side
+##              by err0_deg and closes in over settle_s: the faction's aim_s for a line fighter), laid on his chest or, when
+##              only his head shows over his cover, his head, AHEAD of him as he moves by his pace over the ball's flight (as
+##              much of it as its lead says); out of its sight it holds the aim where he went (hold_s) and fires once he is back
+##              (reacquire_s), else puts it down. Then the game's own ball (NpcBall: a Projectile; aimed by
+##              Weapon.ballistic_dir; a skill preset's line scattered about the aim by spread_deg, one sigma: more at a moving
+##              foe or a hurried shot, less crouched; a line fighter's in a disc about it by its skill and the range, as it
+##              always was: the raid's and the squads' fights go as they did), the muzzle's fire and smoke (Fx.muzzle_blast, the one shared light:
+##              NpcSenses), the report (Sfx musket_shot), heard by the fighters (NpcSenses.noise) and the wildlife
+##              (WildlifeSpawner.shot); each shot's error kept (last_shot, shot_errs); then the long reload (the rifle reload
+##              clips over the stance, the faction's reload_s x the skill's reload_mult), paused by moving or a flinch, kept
+##              where it got to
+##   tactics    "line" (the raid's and the squads': it fires where it has a shot and goes behind cover to load) or "cover"
+##              (NpcSkirmish: it fights from cover, peeking out to fire and back to load, cover to cover; the duel's
+##              opponent, DuelMode); a side-step out to peek keeps it facing the foe (face_lock: the aimed side-steps), a
+##              dash in his sight is a sprint (SPRINT_SPEED)
 ##   blows      the musket's butt or an axe (our own club stab and axe swing clips), struck through Hit.deliver as the
 ##              player's (no head bonus for a blow); the butt bruises the player, the axe cuts (SWINGS' kind: the damage_kind
 ##              meta PlayerWounds reads, on it for the blow only). A man with a musket clubs; the axe is for one without
 ##   hits       Hit.deliver finds apply_hit from its walking body (a capsule to the shoulders) or its hit parts (the torso and
-##              the head on its bones, NpcBody); a man takes HURT_MULT of what the hunt's numbers do to a beast (a ball in the
-##              body leaves him badly hurt, a second or a head shot kills); struck it flinches, the blood (BloodFx)
+##              the head on its bones, NpcBody): those only catch the round; its path through his fitted body (Anatomy: the
+##              bones, organs, vessels and cord; the user 2026-10-03, "how our game detects hits") decides what it does: a line
+##              past his body is a miss, else HURT_MULT of what the hunt's numbers do to a beast x what it tore through, BLEED_NOW
+##              of it at once and the rest bled over the next minute (the pool, at the wound's pace: an artery fast); the brain,
+##              the brainstem or the cord at the neck kill at once, the heart, the aorta, a carotid or the cord to T6 in seconds
+##              (the mortal clock); the cord below the shoulders or both legs broken and he goes down for good (down: alive,
+##              out of the fight); a leg's bone broken and he limps (no running: limp), a lung and he cannot run; an arm's bone
+##              broken and he drops his weapon and runs (arm_broken). Struck it flinches, the blood (BloodFx)
 ##   death      the death clip by the side the blow came from (or the crouched fall; played to its end even when the budget
 ##              had him frozen), its hit parts gone, a loot pack where it lies (NpcLoot: the faction's loot and its weapon),
 ##              died emitted; the player's kills counted by tag (kills). Settled, his body rests (NpcBody.rest) and he is
 ##              one of NpcSenses' dead; long after, unseen, his body is cleared (clear_away; the node stays for the story).
 ##              A man run off and far away a while leaves the field the same way (leave_field)
 ##   surrender  on its knees, its weapon laid down in a loot pack at its feet; E: "Let him go" (it walks off, out of the fight)
+##   inspect    dead, E (or M) on him: "Inspect the body" (InspectView: every shot's path through him); alive too with
+##              InspectView.debug_living
 ##   talk       a fighter not hostile to the player, not fighting: E talks (the faction's talk barks); barks over the head when
 ##              the player is near (alert, combat, flee, surrender)
 
@@ -39,6 +60,10 @@ const GROUP := &"npc_fighters"
 const WALK_SPEED := 1.3
 const RUN_SPEED := 3.4
 const CROUCH_SPEED := 0.85
+## A dash between covers in the foe's sight, and the aimed side-step out to peek and back (the aim walks' own pace is
+## 0.55 m/s: played a little fast).
+const SPRINT_SPEED := 4.4
+const STRAFE_SPEED := 0.85
 const GRAVITY := 18.0
 const ACCEL := 4.5
 const DECEL := 7.0
@@ -51,11 +76,35 @@ const HEALTH := 100.0
 const HURT_MULT := 0.7
 ## A blow or a ball of less than this does not make him flinch.
 const FLINCH_MIN := 8.0
+## A bleeding wound: this much of the hit comes off at once, the rest is the pool, bled at DRAIN of it a second (x the wound's
+## drain) while CLOT of it closes (as the player's PlayerWounds, without the rest and the dressings).
+const BLEED_NOW := 0.5
+const DRAIN := 0.04
+const CLOT := 0.02
 ## The musket's ball: the player's Musket's numbers.
 const BALL_SPEED := 320.0
 const BALL_GRAVITY := 9.8
 const BALL_DRAG := 0.25
 const BALL_DAMAGE := 120.0
+## The aim by skill (apply_skill; the duel's difficulty, DuelMode; a squad's opts "skill"; the user, 2026-10-04: "errors by a
+## SKILL value"): skill (0..1, as a faction's), the reaction to a foe newly in sight before the musket comes up (s), how long
+## the aim takes to settle on him (s), its error as it comes up and the ball's spread once settled (deg, one sigma of its
+## line), how much of a moving foe's lead it takes (1 all), how long it holds the aim where he went out of sight (s), how long
+## he must be back in sight before it fires (s), the reload's pace (x the faction's reload_s). A fighter with no preset
+## aims by its faction's numbers (FACTION_AIM).
+const SKILLS := {
+	"easy": {"skill": 0.3, "reaction_s": 0.85, "settle_s": 1.7, "err0_deg": 7.0, "spread_deg": 1.2, "lead": 0.45,
+			"hold_s": 0.7, "reacquire_s": 0.45, "reload_mult": 1.15},
+	"normal": {"skill": 0.6, "reaction_s": 0.5, "settle_s": 1.15, "err0_deg": 4.5, "spread_deg": 0.6, "lead": 0.8,
+			"hold_s": 1.5, "reacquire_s": 0.3, "reload_mult": 1.0},
+	"hard": {"skill": 0.85, "reaction_s": 0.28, "settle_s": 0.75, "err0_deg": 3.0, "spread_deg": 0.38, "lead": 0.95,
+			"hold_s": 2.4, "reacquire_s": 0.18, "reload_mult": 0.85},
+}
+## A line fighter's aim by its faction (no preset): no reaction beyond its aim_s (the settling), its ball in the disc it always
+## had (_fire: (0.12 + 0.02 d) (1.5 - skill) m about the aim; spread_deg the like spread for the record, SPREAD_K x (1.5 -
+## skill) deg), the lead half its skill and a half.
+const FACTION_AIM := {"reaction_s": 0.0, "settle_s": -1.0, "err0_deg": 3.5, "hold_s": 0.5, "reacquire_s": 0.2, "reload_mult": 1.0}
+const SPREAD_K := 0.48
 ## How far the blows reach (m) and each kind's clips, damage, strike time into its swing clip (s) and the wound it makes on the
 ## player (PlayerWounds.kind_of reads the striker's damage_kind meta: the musket's butt is blunt force, the axe cuts).
 const REACH := 1.9
@@ -96,6 +145,25 @@ var health_max := HEALTH
 ## 0..1: how close its ball goes to where it aims; how much it takes before it runs (the faction's).
 var skill := 0.5
 var courage := 0.5
+## How it fights (set before it enters the tree; NpcSquad's opts "tactics"): "line" or "cover" (NpcSkirmish; see tactics above).
+var tactics := "line"
+## Its aim's skill preset ("" its faction's numbers; "easy", "normal", "hard": SKILLS; NpcSquad's opts "skill"); apply_skill
+## sets it and aim_cfg, the numbers it aims by (reaction_s, settle_s, err0_deg, spread_deg, lead, hold_s, reacquire_s,
+## reload_mult).
+var skill_preset := ""
+var aim_cfg := {}
+## It runs when hurt past its courage (false: the duel's opponent falls back to cover further off and fights on; an arm's bone
+## broken, it still drops its weapon and runs).
+var flees := true
+## The foe it fights, out of its sight this long (s), is given up (NpcBrain.CALM_S; the duel's opponent never gives him up).
+var calm_s := NpcBrain.CALM_S
+## Held where it stands (the duel's countdown): its brain does not think, it does nothing.
+var held := false
+## Moving, it keeps facing this point (a side-step out past cover to peek and back: the aimed side-steps), INF: the way it goes.
+var face_lock := Vector3.INF
+## Its shots (tests, the debug view): the last {at, mark, err_deg, d, spread_deg, part, react} and the last few errors (deg).
+var last_shot := {}
+var shot_errs: Array[float] = []
 var loaded := true
 var squad: NpcSquad
 ## Where it stands when it has nothing to do; its patrol's points; its order ("attack": `order` a Node3D or a Vector3,
@@ -131,12 +199,40 @@ var away_t := 0.0
 ## Gone from the field (leave_field: run off or let go, far from everyone): no body, no frame, out of NpcSenses' lists; the
 ## node stays for the story (alive, routed).
 var left_field := false
+## His wounds (Anatomy.effect): the blood still to lose and how fast it goes, a mortal wound's clock (s; 0 none), what is left of
+## his walk (1 whole: a broken leg's bone, a lung: no running), the arm's bone broken ("" none: it cannot hold or aim), down for
+## good (the cord below the shoulders, both legs: alive, out of the fight).
+var pool := 0.0
+var drain_mult := 1.0
+var mortal_left := 0.0
+var limp := 1.0
+var arm_broken := ""
+var down := false
+var _hurt_by: Node = null
+## The legs whose bone is broken badly enough to give under him ("Left", "Right"): both, and he is down.
+var _legs_broken := {}
 ## The packs it left (its loot where it fell, its weapon laid down when it gave up): NpcSenses clears the untouched ones long
 ## after, when no one is near.
 var packs: Array[NpcLoot] = []
 
 var _act_t := 0.0
 var _aim_at: Node3D
+## The aim under way (begin_aim): what it aims at, the time since it began, the reaction and the settling, the hurried shot;
+## where it lays it on him (seen: his part, led), the first error's way across the line (a unit Vector2) and size (rad), how
+## long he has been out of its sight and back in it, and whether he went out of it during this aim.
+var _aim_part := "chest"
+var _aim_t := 0.0
+var _aim_react := 0.0
+var _aim_settle := 1.0
+## (the settling its error closes in over: the whole of it, also for a hurried shot fired halfway, its error still large)
+var _aim_settle_full := 1.0
+var _aim_hurry := false
+var _aim_spot := Vector3.ZERO
+var _aim_err_dir := Vector2.RIGHT
+var _aim_err0 := 0.0
+var _aim_unseen := 0.0
+var _aim_seen_for := 0.0
+var _aim_lost := false
 var _reload_left := 0.0
 var _reload_total := 0.0
 var _swing: Dictionary = {}
@@ -203,6 +299,7 @@ func _ready() -> void:
 	label = String(f.get("label", faction))
 	skill = float(f.get("skill", skill))
 	courage = float(f.get("courage", courage))
+	apply_skill(skill_preset)
 	if weapon == "default":
 		weapon = String(f.get("weapon", "musket"))
 	if sidearm == "default":
@@ -247,9 +344,9 @@ func is_dead() -> bool:
 	return _dead
 
 
-## Out of the fight: on its knees, or let go.
+## Out of the fight: on its knees, let go, or down (the cord, both legs).
 func surrendered() -> bool:
-	return (_surrendered or _released) and not _dead
+	return (_surrendered or _released or down) and not _dead
 
 
 ## On its knees now (surrendered, not let go yet).
@@ -350,31 +447,82 @@ func face_point(p: Vector3) -> void:
 
 ## Busy with its hands (it holds still meanwhile).
 func busy() -> bool:
-	return action in ["aim", "recoil", "reload", "swing", "flinch"]
+	return action in ["aim", "recoil", "reload", "swing", "flinch", "down"]
 
 
-## The musket to the shoulder and laid on `t`, fired after the faction's aim time (false: it cannot now).
-func begin_aim(t: Node3D) -> bool:
-	if gun == null or not gun.visible or not loaded or busy() or not NpcSenses.can_fight(t):
+## The aim's numbers for `preset` (SKILLS; "" or none of them: its faction's, FACTION_AIM with the spread from its skill and
+## its aim_s for the settling); _ready sets them, the duel's difficulty again (DuelMode.set_difficulty).
+func apply_skill(preset := skill_preset) -> void:
+	skill_preset = preset if SKILLS.has(preset) else ""
+	if skill_preset != "":
+		aim_cfg = (SKILLS[skill_preset] as Dictionary).duplicate()
+		skill = float(aim_cfg.skill)
+	else:
+		aim_cfg = FACTION_AIM.duplicate()
+		aim_cfg["skill"] = skill
+		aim_cfg["spread_deg"] = SPREAD_K * (1.5 - clampf(skill, 0.0, 1.0))
+		aim_cfg["lead"] = 0.5 + 0.5 * clampf(skill, 0.0, 1.0)
+
+
+## The musket to the shoulder and laid on `t` (false: it cannot now): `react` s for the foe newly in sight (the brain's call:
+## aim_cfg.reaction_s), then the aim settles on him over settle_s (the faction's aim_s when it has no preset; longer past
+## 50 m, halved when `hurry`: a foe on it, a snap shot), at his chest or his head (`part` "head": all of him that shows), led
+## as he moves; fired once settled with him in sight (see the header).
+func begin_aim(t: Node3D, part := "chest", react := 0.0, hurry := false) -> bool:
+	if gun == null or not gun.visible or not loaded or busy() or not NpcSenses.can_fight(t) or arm_broken != "":
 		return false
 	action = "aim"
 	_aim_at = t
+	_aim_part = part
 	var d := global_position.distance_to(t.global_position)
-	_act_t = NpcFactions.pick(faction, "aim_s", Vector2(1.0, 1.5), rng) * (1.3 if d > 50.0 else 1.0)
+	var settle := float(aim_cfg.get("settle_s", -1.0))
+	settle = NpcFactions.pick(faction, "aim_s", Vector2(1.0, 1.5), rng) if settle <= 0.0 else settle * rng.randf_range(0.85, 1.15)
+	_aim_settle_full = settle * (1.3 if d > 50.0 else 1.0)
+	_aim_settle = _aim_settle_full * (0.5 if hurry else 1.0)
+	_aim_react = maxf(react, 0.0)
+	_aim_hurry = hurry
+	_aim_t = 0.0
+	_aim_unseen = 0.0
+	_aim_seen_for = 0.0
+	_aim_lost = false
+	# (most of a man's first error is across, less up and down; a line fighter's drawn from no die of its own: its choices
+	# fall as they always did)
+	var a := rng.randf() * TAU if skill_preset != "" else float((get_instance_id() + shots * 7919) % 6283) * 0.001
+	_aim_err_dir = Vector2(cos(a), sin(a) * 0.6)
+	_aim_err0 = deg_to_rad(float(aim_cfg.get("err0_deg", 3.5)) * (rng.randf_range(0.7, 1.15) if skill_preset != "" else 1.0))
+	_aim_spot = _lead_point(t, part)
 	halt()
+	face_lock = Vector3.INF
 	face_point(t.global_position)
 	return true
 
 
+## The aim's error now (rad): the first error closing in over the settling, after the reaction (tests, the debug view).
+func aim_error_now() -> float:
+	return _aim_err0 * exp(-3.0 * maxf(_aim_t - _aim_react, 0.0) / maxf(_aim_settle_full, 0.05)) if action == "aim" else 0.0
+
+
+## Seconds into the aim under way, and when it may fire (its reaction and its settling), for the tests.
+func aim_clock() -> Vector2:
+	return Vector2(_aim_t, _aim_react + _aim_settle) if action == "aim" else Vector2(-1.0, -1.0)
+
+
 ## The reload begun, or taken up again where it was put by.
 func begin_reload() -> void:
-	if gun == null or not gun.visible or loaded or busy():
+	if gun == null or not gun.visible or loaded or busy() or arm_broken != "":
 		return
 	if _reload_left <= 0.0:
-		_reload_total = NpcFactions.pick(faction, "reload_s", Vector2(8.0, 9.0), rng)
+		_reload_total = NpcFactions.pick(faction, "reload_s", Vector2(8.0, 9.0), rng) * float(aim_cfg.get("reload_mult", 1.0))
 		_reload_left = _reload_total
 	action = "reload"
 	halt()
+
+
+## How much of the reload is done (0..1; 1 loaded).
+func reload_done() -> float:
+	if loaded:
+		return 1.0
+	return clampf(1.0 - _reload_left / maxf(_reload_total, 0.01), 0.0, 1.0) if _reload_left > 0.0 else 0.0
 
 
 ## Put the reload by (a foe on it): it keeps where it got to.
@@ -385,7 +533,7 @@ func cancel_reload() -> void:
 
 ## A blow at `t` (the musket's butt, or the axe; false: busy).
 func swing_at(t: Node3D) -> bool:
-	if action != "" and action != "reload":
+	if (action != "" and action != "reload") or arm_broken != "":
 		return false
 	_put_by()
 	var kind := "axe" if axe != null else "club"
@@ -406,7 +554,7 @@ func swing_at(t: Node3D) -> bool:
 
 ## On its knees, out of the fight: its weapon laid at its feet.
 func surrender() -> void:
-	if _surrendered or _dead:
+	if _surrendered or _dead or down:
 		return
 	_surrendered = true
 	_put_by()
@@ -441,8 +589,16 @@ func _physics_process(dt: float) -> void:
 	if _dead:
 		_dead_step(dt)
 		return
+	if pool > 0.0 or mortal_left > 0.0:
+		_bleed(dt)
+		if _dead:
+			return
 	_think_t -= dt
-	if _think_t <= 0.0:
+	if held:
+		# (the duel's countdown: it stands where it was put, its mind still)
+		halt()
+		face_lock = Vector3.INF
+	elif _think_t <= 0.0:
 		var st := THINK_S * (2.0 if frozen else 1.0)
 		_think_t = st
 		brain.think(st)
@@ -462,11 +618,25 @@ func _act(dt: float) -> void:
 			if not NpcSenses.can_fight(_aim_at):
 				_put_by()
 				return
-			var p := NpcSenses.chest_of(_aim_at)
+			_aim_t += dt
+			# (in its sight, by the brain's own look at him: NpcBrain.seen_now; out of it, the aim held where he went)
+			if _aim_sees():
+				_aim_unseen = 0.0
+				_aim_seen_for += dt
+				_aim_spot = _lead_point(_aim_at, _aim_part)
+			else:
+				_aim_unseen += dt
+				_aim_seen_for = 0.0
+				_aim_lost = true
+				if _aim_unseen > float(aim_cfg.get("hold_s", 0.5)):
+					_put_by()
+					return
+			var p := _aim_spot + _aim_offset()
 			face_point(p)
 			body.aim_at(p, gun)
-			_act_t -= dt
-			if _act_t <= 0.0:
+			var ready_t := _aim_react + _aim_settle
+			var back_for := float(aim_cfg.get("reacquire_s", 0.2)) if _aim_lost else 0.0
+			if _aim_t >= ready_t and _aim_unseen <= 0.0 and _aim_seen_for >= back_for:
 				var why := _shot_clear(p)
 				if why == "":
 					_fire(p)
@@ -534,15 +704,83 @@ func _muzzle() -> Vector3:
 	return origin if hit.is_empty() else (hit.position as Vector3) + (chest - origin).normalized() * 0.05
 
 
-## The shot at `p`: the ball scattered about the aim point by its skill and the range, the fire and smoke, the report.
+## Whether the foe it aims at is in its sight now (its brain's look at him; not the brain's foe, or no brain: as before, yes).
+func _aim_sees() -> bool:
+	if brain == null or brain.target != _aim_at:
+		return true
+	return brain.seen_now
+
+
+## Where to lay the musket on `t` now: his chest, or his head (`part`), ahead of him by his pace over the ball's flight, as
+## much of that as its lead says (aim_cfg.lead).
+func _lead_point(t: Node3D, part: String) -> Vector3:
+	var p := NpcSenses.head_of(t) if part == "head" else NpcSenses.chest_of(t)
+	var v := NpcSenses.velocity_of(t)
+	v.y = 0.0
+	var tof := eye().distance_to(p) / BALL_SPEED * 1.03         # (the drag slows the ball a little over the way)
+	return p + v * tof * float(aim_cfg.get("lead", 0.7))
+
+
+## How far off its mark the barrel lies now: the first error closing in as the aim settles (aim_error_now), and a little
+## sway of the arms.
+func _aim_offset() -> Vector3:
+	var to := _aim_spot - eye()
+	var d := to.length()
+	if d < 0.1:
+		return Vector3.ZERO
+	var side := to.cross(Vector3.UP)
+	side = side.normalized() if side.length_squared() > 1e-6 else Vector3.RIGHT
+	var up := side.cross(to / d).normalized()
+	var ang := aim_error_now() + deg_to_rad(0.12) * sin(_aim_t * 2.3 + float(get_instance_id() % 7))
+	return (side * _aim_err_dir.x + up * _aim_err_dir.y) * tan(ang) * d
+
+
+## The ball's spread for a shot now (deg, one sigma): its skill's (aim_cfg.spread_deg), a quarter more at a foe on the move
+## (> 2.5 m/s), a third more hurried, less crouched (steadier).
+func shot_spread_deg(moving := false, hurried := false, crouched := false) -> float:
+	return float(aim_cfg.get("spread_deg", 0.75)) * (1.25 if moving else 1.0) * (1.35 if hurried else 1.0) * (0.85 if crouched else 1.0)
+
+
+## A point about `p` (seen from `origin`) where a ball aimed there goes: its line off by a normal error of `sigma_deg` each
+## way across (Box-Muller: most shots near, a few far).
+func scatter(origin: Vector3, p: Vector3, sigma_deg: float) -> Vector3:
+	var to := p - origin
+	var d := to.length()
+	if d < 0.01:
+		return p
+	var dir := to / d
+	var side := dir.cross(Vector3.UP)
+	side = side.normalized() if side.length_squared() > 1e-6 else dir.cross(Vector3.RIGHT).normalized()
+	var up := side.cross(dir).normalized()
+	var r := deg_to_rad(sigma_deg) * sqrt(-2.0 * log(maxf(rng.randf(), 1e-6)))
+	var a := rng.randf() * TAU
+	return p + (side * cos(a) + up * sin(a)) * tan(r) * d
+
+
+## The shot at `p` (where the barrel lies: its mark, led, and what is left of the aim's settling): the ball's line scattered
+## by its spread (shot_spread_deg), the fire and smoke, the report; its error from his part where he stands kept (last_shot,
+## shot_errs).
 func _fire(p: Vector3) -> void:
 	loaded = false
 	shots += 1
 	var origin := _muzzle()
 	var d := origin.distance_to(p)
 	var moving := NpcSenses.speed_of(_aim_at) > 2.5
-	var spread := (0.12 + 0.02 * d) * (1.5 - skill) * (1.3 if moving else 1.0) * (0.85 if is_crouching else 1.0)
-	var aim_p := p + _disk((p - origin).normalized()) * spread
+	var sigma := shot_spread_deg(moving, _aim_hurry, is_crouching)
+	var aim_p: Vector3
+	if skill_preset != "":
+		aim_p = scatter(origin, p, sigma)
+	else:
+		# a line fighter's ball as it always was: in a disc about the aim, most near the middle
+		var spread := (0.12 + 0.02 * d) * (1.5 - skill) * (1.3 if moving else 1.0) * (0.85 if is_crouching else 1.0)
+		aim_p = p + _disk((p - origin).normalized()) * spread
+	var mark := (NpcSenses.head_of(_aim_at) if _aim_part == "head" else NpcSenses.chest_of(_aim_at)) if is_instance_valid(_aim_at) else p
+	var err := rad_to_deg((aim_p - origin).angle_to(mark - origin))
+	last_shot = {"at": aim_p, "mark": mark, "err_deg": err, "d": d, "spread_deg": sigma, "part": _aim_part, "react": _aim_react,
+			"aim_s": _aim_t, "moving": moving}
+	shot_errs.append(err)
+	if shot_errs.size() > 32:
+		shot_errs.remove_at(0)
 	var dir := Weapon.ballistic_dir(origin, aim_p, BALL_SPEED, BALL_GRAVITY, BALL_DRAG)
 	var up := Vector3.UP if absf(dir.y) < 0.99 else Vector3.RIGHT
 	var ball := NpcBall.new()
@@ -619,6 +857,9 @@ func _move(dt: float) -> void:
 		speed = w[1]
 	if is_crouching:
 		speed = minf(speed, CROUCH_SPEED)
+	if limp < 0.999:
+		# (a broken leg's bone: a limp at a part of the walk; short of breath: no running)
+		speed = minf(speed, WALK_SPEED * limp if limp < 0.95 else WALK_SPEED)
 	var v := velocity
 	if not is_on_floor():
 		v.y -= GRAVITY * dt
@@ -628,7 +869,11 @@ func _move(dt: float) -> void:
 	var moving := dir != Vector3.ZERO and speed > 0.0
 	if moving:
 		hv = hv.move_toward(Vector2(dir.x, dir.z) * speed, ACCEL * dt * (1.6 if speed > WALK_SPEED + 0.5 else 1.0))
-		_face = lerp_angle(_face, atan2(-dir.x, -dir.z), clampf(dt * 8.0, 0.0, 1.0))
+		if face_lock != Vector3.INF:
+			# (a side-step out to peek, or back: facing the foe, the aimed side-step clips)
+			face_point(face_lock)
+		else:
+			_face = lerp_angle(_face, atan2(-dir.x, -dir.z), clampf(dt * 8.0, 0.0, 1.0))
 	else:
 		hv = hv.move_toward(Vector2.ZERO, DECEL * dt)
 	v.x = hv.x
@@ -701,7 +946,7 @@ func _probe(dir: Vector3) -> float:
 
 ## The clip for what it is doing now (the actions that play their own keep theirs).
 func _pose() -> void:
-	if body == null or action in ["swing", "flinch", "dead"]:
+	if body == null or action in ["swing", "flinch", "dead", "down"]:
 		return
 	var has_gun := gun != null and gun.visible
 	if action == "aim" or action == "recoil":
@@ -730,11 +975,25 @@ func _pose() -> void:
 	var key := "idle"
 	var arms := ""
 	var rate := 1.0
-	if hs > 0.25:
+	if hs > 0.25 and face_lock != Vector3.INF and has_gun:
+		# a step out to peek and back, facing the foe: the aimed side-steps (left, right) and the step back, at their own pace
+		var fwd := forward()
+		var v := Vector3(velocity.x, 0.0, velocity.z)
+		var along := v.dot(fwd)
+		var across := v.dot(fwd.cross(Vector3.UP))
+		var c := "aim_crouch_walk" if is_crouching else "aim_walk"
+		key = c + ("_rt" if across > 0.0 else "_lt") if absf(across) >= absf(along) else (c + "_bw" if along < 0.0 else c)
+		rate = hs / 0.55
+	elif hs > 0.25:
 		if is_crouching:
 			key = "aim_crouch_walk" if alert and has_gun else "crouch_walk"
 			arms = "carry_crouch" if has_gun and key == "crouch_walk" else ""
 			rate = hs / CROUCH_SPEED
+		elif hs > RUN_SPEED + 0.45:
+			# (a dash between covers in the foe's sight)
+			key = "sprint"
+			arms = "carry" if has_gun else ""
+			rate = hs / 4.24
 		elif hs > WALK_SPEED + 0.6:
 			key = "run"
 			arms = "carry" if has_gun else ""
@@ -754,26 +1013,112 @@ func _pose() -> void:
 
 
 # ---------------------------------------------------------------- hits and death
-## Struck (Hit.deliver): HURT_MULT of the blow comes off; it flinches from the side it came, or goes down.
+## Struck (Hit.deliver): the round's path through his fitted body (Anatomy) decides it (see hits above): a miss goes by; else
+## HURT_MULT of the blow x what it tore through, a bleeding wound's BLEED_NOW of it now and the rest in the pool; maimed by what
+## it broke or cut (_maim); it flinches from the side it came, or goes down.
 func apply_hit(damage: float, point: Vector3, dir: Vector3, source: Node, part: String) -> void:
 	if _dead or damage <= 0.0 or source == self:
 		return
-	var dmg := damage * HURT_MULT
-	health -= dmg
+	var bleeding := PlayerWounds.kind_of(source) == "bleed"
+	var fx := {}
+	if bleeding and body != null and body.sk != null and dir.length_squared() > 1e-8:
+		var an := Anatomy.attach_to(body.sk)
+		if an != null:
+			an.add_wound(point, dir, damage)
+			if not an.last_shot.is_empty():
+				fx = an.last_shot.fx
+				if bool(fx.missed):
+					return                      # (the coarse part caught it; his body was not there: it went by)
+	var dmg := damage * HURT_MULT * float(fx.get("dmg_mult", 1.0))
 	hits_taken += 1
+	if source != null and is_instance_valid(source):
+		_hurt_by = source
 	if DisplayServer.get_name() != "headless":
 		BloodFx.hit(get_tree().current_scene, point, dir, -dir, clampf(dmg / 40.0, 0.4, 2.0), self)
 	if brain != null:
 		brain.hurt(source, dir)
+	if bool(fx.get("lethal", false)):
+		die(source, dir, part)
+		return
+	var now := dmg
+	if bleeding:
+		now = dmg * BLEED_NOW
+		var add := dmg * (1.0 - BLEED_NOW) * float(fx.get("bleed_mult", 1.0))
+		var dr := float(fx.get("drain_mult", 1.0))
+		drain_mult = (drain_mult * pool + dr * add) / maxf(pool + add, 0.001) if pool > 0.0 else dr
+		pool += add
+	health -= now
 	if health <= 0.0:
 		die(source, dir, part)
-	elif dmg >= FLINCH_MIN:
+		return
+	_maim(fx, dir)
+	if dmg >= FLINCH_MIN:
 		_flinch(dir)
+
+
+## What the wound broke or cut does to him (Anatomy.effect): a mortal clock, a limp, the arm that cannot hold (his weapon dropped,
+## he runs: NpcBrain._should_flee), down for good.
+func _maim(fx: Dictionary, dir: Vector3) -> void:
+	if fx.is_empty():
+		return
+	if float(fx.get("mortal_s", 0.0)) > 0.0:
+		mortal_left = float(fx.mortal_s) if mortal_left <= 0.0 else minf(mortal_left, float(fx.mortal_s))
+	limp = minf(limp, float(fx.get("limp", 1.0)))
+	if bool(fx.get("breath", false)):
+		limp = minf(limp, 0.9)
+	if String(fx.get("leg", "")) != "" and float(fx.get("limp", 1.0)) <= 0.6:
+		_legs_broken[String(fx.leg).get_slice(" ", 0)] = true
+	if String(fx.get("arm", "")) != "" and arm_broken == "":
+		arm_broken = String(fx.arm)
+		_put_by()
+		if action == "reload":
+			action = ""
+		_lay_down_weapon()
+	if (bool(fx.get("down", false)) or _legs_broken.size() >= 2) and not down:
+		_go_down(dir)
+
+
+## Down for good (the cord below the shoulders, both legs broken): he falls where he stands and lies there alive, out of the
+## fight (surrendered(): no one's foe), bleeding as he was; his walking body low.
+func _go_down(dir: Vector3) -> void:
+	down = true
+	_put_by()
+	halt()
+	action = "down"
+	if _cap != null:
+		_cap.height = 0.62
+		_col.position.y = 0.31
+	if body != null:
+		body.aim_off(gun)
+		body.set_arms("")
+		var key := "death_crouch"
+		if not is_crouching:
+			key = "death_back" if dir == Vector3.ZERO or dir.dot(forward()) < 0.0 else "death_front"
+		body.play_once(key, 0.08)
+		body.animate = true
+
+
+## The blood running out of his wounds (the pool) and a mortal wound's clock: dead when either runs out.
+func _bleed(dt: float) -> void:
+	if mortal_left > 0.0:
+		mortal_left = maxf(mortal_left - dt, 0.0)
+		if mortal_left <= 0.0:
+			die(_hurt_by if is_instance_valid(_hurt_by) else null, Vector3.ZERO)
+			return
+	if pool <= 0.0:
+		return
+	var lost := minf(pool * DRAIN * drain_mult * dt, pool)
+	pool = maxf(pool - lost - pool * CLOT * dt, 0.0)
+	if pool < 0.25:
+		pool = 0.0
+	health -= lost
+	if health <= 0.0:
+		die(_hurt_by if is_instance_valid(_hurt_by) else null, Vector3.ZERO)
 
 
 ## The hit reaction from the side the blow came from (the aim lowered, a reload put by).
 func _flinch(dir: Vector3) -> void:
-	if action == "swing" or body == null:
+	if action == "swing" or body == null or down:
 		return                              # (a blow under way goes on: who strikes first)
 	_put_by()
 	var from := -dir
@@ -802,7 +1147,14 @@ func die(killer: Node = null, dir := Vector3.ZERO, _part := "body") -> void:
 	collision_layer = 0                     # (no more in anyone's way, nor a target)
 	remove_from_group(WildlifeSpawner.PEOPLE)
 	_settle_t = 0.3
-	if body != null:
+	pool = 0.0
+	mortal_left = 0.0
+	InspectView.ensure_hotkey(get_tree())
+	if body != null and down:
+		# (down already: he lies where he fell, his fall played out)
+		_settle_t = maxf(body.clip_length(body.clip) - body.ap.current_animation_position, 0.0) + 0.3 if body.ap != null else 0.3
+		body.drop_parts()
+	elif body != null:
 		body.aim_off(gun)
 		body.set_arms("")
 		var key := "death_crouch"
@@ -967,6 +1319,8 @@ func bark(what: String) -> void:
 
 # ---------------------------------------------------------------- E
 func interact_point() -> Vector3:
+	if (_dead or down) and body != null:
+		return body.bone_pos("spined")         # (lying: his chest)
 	return global_position + Vector3.UP * 1.2
 
 
@@ -975,21 +1329,61 @@ func distance_from(p: Vector3) -> float:
 
 
 func interact_prompt(_p: Node) -> String:
-	if _dead or _released:
-		return ""
+	if _dead:
+		return InspectView.ROW if body != null else ""
+	if _released or down:
+		return InspectView.ROW if InspectView.debug_living and body != null else ""
 	if _surrendered:
 		return "Let the %s go" % label.to_lower()
 	if NpcFactions.hostile(faction, NpcFactions.PLAYER) or (brain != null and brain.state == NpcBrain.State.COMBAT):
-		return ""
+		return InspectView.ROW if InspectView.debug_living and body != null else ""
 	return "Talk to the %s" % label.to_lower()
 
 
+## The hold-E list (PlayerInteractor): what a tap does (talk, let go; dead: inspect), and with InspectView.debug_living a look
+## inside the living.
+func interact_actions(p: Node) -> Array:
+	var out := []
+	var t := interact_prompt(p)
+	if t != "":
+		out.append({"id": "", "text": t})
+	if not _dead and InspectView.debug_living and body != null and t != InspectView.ROW:
+		out.append({"id": "inspect", "text": InspectView.ROW})
+	return out
+
+
+func interact_action(_p: Node, id: String) -> void:
+	if id == "inspect":
+		InspectView.open_on(self)
+
+
+## Dead (and the debug view's living), scored behind what lies by him (his pack: a tap takes that first; the hold list has both).
+func interact_bias() -> float:
+	return 0.6 if _dead or down else 0.0
+
+
+## The body's skeleton InspectView looks into.
+func inspect_skeleton() -> Skeleton3D:
+	return body.sk if body != null else null
+
+
+## The name the inspect view gives him ("Marine").
+func inspect_title() -> String:
+	return label.capitalize()
+
+
 func interact(p: Node) -> void:
+	if _dead or ((down or _released) and InspectView.debug_living):
+		InspectView.open_on(self)
+		return
 	var it: Node = p.get("interactor") if p != null else null
 	if _surrendered:
 		release()
 		if it and it.has_method(&"notice"):
 			it.call(&"notice", "You let the %s go" % label.to_lower())
+		return
+	if InspectView.debug_living and interact_prompt(p) == InspectView.ROW:
+		InspectView.open_on(self)
 		return
 	var line := NpcFactions.bark(faction, "talk", rng)
 	if p is Node3D:

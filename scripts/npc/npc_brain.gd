@@ -14,7 +14,12 @@ extends RefCounted
 ##                  seen, and after CALM_S out of sight he is given up and it calms down. In a fight it sees its foe by the
 ##                  same rules as before it (the light, his stance, his cover), only further (SIGHT_MAX) and all round for
 ##                  TRACK_S after it last saw him: a man who gets away, or hides in the dark, is lost
+##                  A fighter of tactics "cover" (NpcFighter.tactics: the duel's opponent) fights from cover instead
+##                  (NpcSkirmish: it hides, peeks out to fire, ducks back to load, moves cover to cover, flanks a foe who stays
+##                  hidden, falls back hurt); a line fighter loading behind cover that the foe has come round (NpcCover.exposed)
+##                  puts the reload by and goes to cover from him there (the user, 2026-10-04: "npc can find cover aim and etc")
 ##   FLEE           badly hurt, or too many of its squad down (its courage says how many): it runs FLEE_M away from the foe
+##                  (NpcFighter.flees false: only with an arm's bone broken)
 ##   SURRENDER      caught while it runs (a foe within CORNER_M, or its way blocked with one near), or badly hurt with its
 ##                  musket empty and the foe on it: on its knees, its weapon down; let go (E), it walks off, out of the fight
 ##   DEAD
@@ -22,7 +27,8 @@ extends RefCounted
 ## PERCEPTION: for the nearest few foes (NpcSenses.foes_of), sight within a cone (FOV_CALM, wider once alert) to SIGHT_M by
 ## day, shortened by the dark (NpcSenses.daylight; a lit torch shows a man), by crouching and by keeping still, and to half
 ## again when only the head shows over cover; seen means a clear line from its eyes to the chest or the head (two rays at
-## most per foe each LOS_S, kept). Footfalls are heard near (running further, crouching less). Awareness of each foe rises
+## most per foe each LOS_S, kept). Footfalls are heard near (running further, crouching less; in a fight the foe's are
+## where it last heard him, heard_at, a step or two out, as his shot is). Awareness of each foe rises
 ## with what it sees and hears and falls off without: SUSPECT makes it suspicious, SPOT and it fights. A foe spotted is shouted
 ## to its side within SHARE_M (told: they fight too); a noise (NpcSenses.noise) makes it suspicious; a foe's hit, it fights
 ## back (a hit from its own side, or from the player when they are not foes, it takes for a mistake). Foes are the factions'
@@ -91,10 +97,17 @@ var _look_t := 0.0
 ## When it set off for the cover it has; the cover given up (it loads where it stands until loaded).
 var _cover_since := -100.0
 var _reload_here := false
+## Where and when (the brain's clock) it last heard the foe it fights (his shot, his feet near), INF never.
+var heard_at := Vector3.INF
+var heard_t := -100.0
+## The cover fighter (NpcFighter.tactics "cover"), null for a line fighter.
+var skirmish: NpcSkirmish = null
 
 
 func _init(f: NpcFighter) -> void:
 	me = f
+	if f.tactics == "cover":
+		skirmish = NpcSkirmish.new(self)
 
 
 func state_name() -> String:
@@ -189,6 +202,12 @@ func _sense(n: Node3D, d: float, eye: Vector3, fwd: Vector3, day: float) -> floa
 		noise = 4.0 if low else 8.0
 	if d < noise:
 		gain += (1.0 - d / noise) * 1.2
+		if n == target and state == State.COMBAT and r_eff <= 0.0:
+			# (out of sight in a fight: his feet tell where he is, a step or two out the further off)
+			# (the step or two out drawn from the clock, not its die: a line fighter's choices fall as they always did)
+			var off := d / noise * 2.0
+			heard_at = n.global_position + Vector3(sin(_clock * 12.99 + d), 0.0, cos(_clock * 78.23 + d)) * off
+			heard_t = _clock
 	return gain
 
 
@@ -248,8 +267,11 @@ func heard(pos: Vector3, _radius: float, source: Node) -> void:
 		return
 	var foe := _is_foe(source)
 	if state == State.COMBAT:
-		if source == target and _clock - seen_t > 1.0:
-			last_seen = pos
+		if source == target:
+			heard_at = pos
+			heard_t = _clock
+			if _clock - seen_t > 1.0:
+				last_seen = pos
 		return
 	if foe:
 		var id := source.get_instance_id()
@@ -285,6 +307,8 @@ func told(foe: Node3D, at: Vector3) -> void:
 		last_seen = at
 		seen_t = _clock - 1.0
 		aware[foe.get_instance_id()] = maxf(float(aware.get(foe.get_instance_id(), 0.0)), SPOT)
+		if skirmish != null:
+			skirmish.reset()
 		_to(State.COMBAT)
 		me.bark("alert")
 	else:
@@ -297,6 +321,9 @@ func on_died() -> void:
 
 ## The shot it was about to fire was blocked ("friend": one of its own in the way; "cover"): it steps aside a few metres.
 func shot_blocked(_why: String) -> void:
+	if skirmish != null:
+		skirmish.on_shot_blocked(_why)
+		return
 	_blocked_t = _clock
 	var side := me.forward().cross(Vector3.UP) * (1.0 if me.rng.randf() < 0.5 else -1.0)
 	_side_to = me.global_position + side * 3.0
@@ -317,6 +344,8 @@ func _engage(foe: Node3D) -> void:
 	seen_t = _clock
 	aware[foe.get_instance_id()] = maxf(float(aware.get(foe.get_instance_id(), 0.0)), SPOT)
 	if state != State.COMBAT:
+		if skirmish != null:
+			skirmish.reset()
 		_to(State.COMBAT)
 		me.bark("combat")
 		for a in NpcSenses.allies_of(me, SHARE_M):
@@ -383,6 +412,9 @@ func _calm(dt: float) -> void:
 func _calm_down() -> void:
 	target = null
 	cover = Vector3.INF
+	if skirmish != null:
+		skirmish.reset()
+	me.face_lock = Vector3.INF
 	_reload_here = false
 	seen_now = false
 	me.crouch(false)
@@ -413,7 +445,7 @@ func _suspicious(dt: float) -> void:
 		_calm_down()
 
 
-func _combat(_dt: float) -> void:
+func _combat(dt: float) -> void:
 	# the foe it fights: in sight by the rules it notices by (_seen_in), or not; out of sight CALM_S, he is given up
 	seen_now = false
 	if NpcSenses.can_fight(target):
@@ -422,7 +454,7 @@ func _combat(_dt: float) -> void:
 		if seen_now:
 			last_seen = target.global_position
 			seen_t = _clock
-		elif _clock - seen_t > CALM_S:
+		elif _clock - seen_t > me.calm_s:
 			aware.erase(target.get_instance_id())
 			target = null
 	if not NpcSenses.can_fight(target):
@@ -432,7 +464,7 @@ func _combat(_dt: float) -> void:
 			last_seen = target.global_position
 			seen_t = maxf(seen_t, _clock - 1.0)
 		else:
-			if last_seen == Vector3.INF or _clock - seen_t > CALM_S:
+			if last_seen == Vector3.INF or _clock - seen_t > me.calm_s:
 				_calm_down()
 				return
 			# gone from sight: where it was last seen
@@ -453,10 +485,18 @@ func _combat(_dt: float) -> void:
 		else:
 			_start_flee()
 		return
+	if skirmish != null:
+		skirmish.step(dt)
+		return
 	if me.busy():
 		# a reload put by for a foe that is on it: the butt for him instead
 		if me.action == "reload" and seen_now and d < CHARGE_M * 0.6:
 			me.cancel_reload()
+		elif me.action == "reload" and cover != Vector3.INF and seen_now and _clock - _cover_t > COVER_S \
+				and NpcCover.exposed(me, tp, target):
+			# loading behind cover he has come round (it hides it from him no more): put by, to cover from where he is now
+			me.cancel_reload()
+			_cover_t = -100.0
 		else:
 			return
 	if _clock - _blocked_t < 1.5 and _side_to != Vector3.INF:
@@ -468,7 +508,7 @@ func _combat(_dt: float) -> void:
 		_reload_here = false
 		if seen_now and d <= FIRE_M:
 			me.crouch(cover != Vector3.INF and _flat(me.global_position, cover) < 1.2)
-			me.begin_aim(target)
+			me.begin_aim(target, seen_part(target))
 			return
 		# no shot from here: nearer, or round to where it can see him
 		var goal := last_seen if last_seen != Vector3.INF else tp
@@ -485,7 +525,8 @@ func _combat(_dt: float) -> void:
 			return
 		if not _reload_here and _clock - _cover_t > COVER_S:
 			_cover_t = _clock
-			var c := NpcCover.find(me, tp)
+			# (from where it believes he is: in sight, where he is; else where it last saw him)
+			var c := NpcCover.find(me, tp if seen_now or last_seen == Vector3.INF else last_seen)
 			if c != Vector3.INF and (cover == Vector3.INF or _flat(c, cover) > 1.0):
 				_cover_since = _clock                # (a new spot: its own time to get there)
 			cover = c
@@ -525,9 +566,14 @@ func _close_in(tp: Vector3, d: float) -> void:
 		me.go(to, NpcFighter.RUN_SPEED, NpcFighter.REACH * 0.7, near)
 
 
-## Hurt past its courage, or too many of its squad down while it is hurt.
+## Hurt past its courage, or too many of its squad down while it is hurt, or an arm's bone broken (it cannot hold a weapon:
+## Anatomy, NpcFighter.arm_broken).
 func _should_flee(_d: float) -> bool:
 	if _routed:
+		return false
+	if me.arm_broken != "":
+		return true
+	if not me.flees:
 		return false
 	var hurt := me.health < me.health_max * (0.2 + 0.3 * (1.0 - me.courage))
 	var losses := me.squad != null and me.squad.lost_frac() > 0.45 + 0.4 * me.courage
@@ -562,6 +608,13 @@ func _flee(_dt: float) -> void:
 		me.halt()
 		return
 	me.go(_flee_to, NpcFighter.RUN_SPEED, 2.5)
+
+
+## What of `n` it saw at its last look: "chest" (his chest in sight), "head" (only his head over his cover; the musket is laid
+## on it then).
+func seen_part(n: Node3D) -> String:
+	var c: Array = _los.get(n.get_instance_id(), []) if n != null else []
+	return "head" if not c.is_empty() and float(c[1]) > 0.0 and float(c[1]) < 1.0 else "chest"
 
 
 ## Whether `n` is a foe of its faction that can still fight (the player, or a fighter of a hostile faction).

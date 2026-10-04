@@ -11,7 +11,8 @@ extends Node
 ## wave of the same size from where it first came after WAVE_S, under the same order.
 ## StoryEffects' spawn_squad calls spawn() by name: parent (the level), faction, count, at and opts are its fields.
 ## opts: tag, attack ("player", a [x, z] / Vector3 place, or a Node3D), patrol (points), hold (a place), face (a point
-## to face), weapon / sidearm (over the faction's), waves, wave_s, spacing, seed; faction (or squad, its older name) when
+## to face), weapon / sidearm (over the faction's), tactics ("line", "cover": NpcFighter.tactics), skill (an aim preset: "easy",
+## "normal", "hard", NpcFighter.SKILLS), waves, wave_s, spacing, seed; faction (or squad, its older name) when
 ## the `faction` given is none of data/npc/factions.json's (an unknown one is warned of: its men would have no foes).
 ## A WAVE COMES IN OVER FRAMES (a man is ~10 ms to build: seven at once was a hitch in the middle of a fight): its first man at
 ## once (spawn() hands back a squad with someone in it), then one each frame (spawning()); each takes the squad's order as he
@@ -41,6 +42,9 @@ var facing := Vector3.INF
 var spacing := SPACING
 var weapon := "default"
 var sidearm := "default"
+## How its men fight and the skill they aim with (NpcFighter.tactics, skill_preset; "" the fighter's own).
+var tactics := ""
+var skill_preset := ""
 var _order_kind := ""
 var _order: Variant = null
 var _rng := RandomNumberGenerator.new()
@@ -69,6 +73,8 @@ static func spawn(parent: Node, faction := "militia", count := 4, at := Vector3.
 	s.spacing = float(opts.get("spacing", SPACING))
 	s.weapon = String(opts.get("weapon", "default"))
 	s.sidearm = String(opts.get("sidearm", "default"))
+	s.tactics = String(opts.get("tactics", ""))
+	s.skill_preset = String(opts.get("skill", ""))
 	var sd := int(opts.get("seed", 0))
 	if sd != 0:
 		s._rng.seed = sd
@@ -171,6 +177,9 @@ func _spawn_next() -> void:
 	f.tag = tag
 	f.weapon = weapon
 	f.sidearm = sidearm
+	if tactics != "":
+		f.tactics = tactics
+	f.skill_preset = skill_preset
 	f.squad = self
 	f.rng_seed = _rng.randi() | 1
 	f.home = _ground(origin + off)

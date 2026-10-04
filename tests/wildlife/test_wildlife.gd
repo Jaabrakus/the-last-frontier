@@ -162,7 +162,12 @@ func _run() -> void:
 	if hurt:
 		hurt.set_active(true)
 		var drops0 := w._drops.size()
-		Hit.deliver(hurt, 55.0, hurt.global_position + Vector3.UP * 0.6, Vector3(1, 0, 0), player)
+		# (into its gut where its fitted body has it, Anatomy: a doe's belly is some 0.63 m up, a shot at 0.6 m only grazes it)
+		var gut := hurt.global_position + Vector3.UP * 0.8
+		var han := Anatomy.attach_to(hurt.inspect_skeleton())
+		if han != null and han.model.find("Intestines") >= 0:
+			gut = han.model.shape_world(hurt.inspect_skeleton(), han.model.find("Intestines")).origin
+		Hit.deliver(hurt, 55.0, gut - Vector3(1, 0, 0) * 0.3, Vector3(1, 0, 0), player)
 		check(not hurt.is_dead() and hurt.state == WildAnimal.State.FLEE, "a wounded deer runs")
 		var t := 0
 		var hz := Engine.physics_ticks_per_second

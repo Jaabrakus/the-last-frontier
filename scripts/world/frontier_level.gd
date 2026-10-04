@@ -24,6 +24,10 @@ extends Node3D
 ##   FishLife                         the river's fish near the player: rising, schooling, spooking, taking bait
 ##   FishingGear                      fishing: the rod and line, the spear (8 the gear button)
 ##   BirdLife, Fireflies              owls, flocks, fireflies (scripts/wildlife; off in -s tool / test runs)
+##   DuelMode                         the duel (test), the main menu's "Duel (test): 1 v 1" or the user arg mode=duel (the
+##                                    user, 2026-10-04: "lets build a test game where it is 1v1 npc can find cover aim and
+##                                    etc"): no survival, story, household, saves or wild animals; the arena on the open land
+##                                    and the duel's own Esc menu in the pause menu's place (scripts/duel)
 ## The level's rng (seed 1776) is shared by the structures and the vegetation, in that order.
 
 const FORT_HALF := FrontierStructures.FORT_HALF
@@ -41,6 +45,10 @@ var vegetation: FrontierVegetation
 
 func _ready() -> void:
 	StartupProfile.mark("boot")
+	# the duel (test: DuelMode): asked for by the main menu's row or the user arg mode=duel; no save is continued under it
+	var duel := DuelMode.take_request()
+	if duel:
+		SaveGame._launched = true
 	# Faster loading: the player's rig (77 MB of animation) and the level's meshes, textures and
 	# sounds load on worker threads while the world is built (BackgroundLoad, StartupPrefetch).
 	BackgroundLoad.request(FrontierPlayer.CHARACTER_SCENE)
@@ -121,7 +129,7 @@ func _ready() -> void:
 	SwayCaster.install_free(player)
 	# survival (scripts/survival_game): the core (needs, the clock, the kit) through its one bridge; the core drives
 	# the sky's clock (off in -s tool / test runs unless they pass survival=on)
-	if SurvivalBridge.enabled():
+	if SurvivalBridge.enabled() and not duel:
 		var survival := SurvivalBridge.new()
 		survival.name = "Survival"
 		survival.setup(player, environment_rig)
@@ -154,7 +162,7 @@ func _ready() -> void:
 	snow.name = "Snow"
 	add_child(snow)
 	# wildlife (scripts/wildlife): deer herds, a lone buck, foxes and a wolf pack in the woods round the fort
-	if WildlifeSpawner.enabled():
+	if WildlifeSpawner.enabled() and not duel:
 		var wildlife := WildlifeSpawner.new()
 		wildlife.name = "Wildlife"
 		wildlife.setup(player, vegetation, environment_rig)
@@ -172,7 +180,7 @@ func _ready() -> void:
 	# birds and fireflies (scripts/wildlife): owls in the trees at night, flocks by day and at a shot, fireflies at dusk
 	# death and saves (scripts/save): dying drops the pack and wakes you where you last slept; autosave, F5 / F9, the
 	# last save continued at launch (off in -s tool / test runs unless they pass save=on)
-	if SaveGame.enabled():
+	if SaveGame.enabled() and not duel:
 		var death := DeathRule.new()
 		death.name = "Death"
 		death.player = player
@@ -194,7 +202,12 @@ func _ready() -> void:
 	StartupProfile.mark("wildlife")
 	# the menus (scripts/ui/menu): the settings' volumes and look onto the player, and Esc's pause menu (not in -s tool
 	# and test runs)
-	if not SaveGame._is_script_run():
+	if duel:
+		# (the duel: its arena, its rounds, its own Esc menu in the pause menu's place)
+		if not SaveGame._is_script_run():
+			GameSettings.apply_to(player)
+		DuelMode.install(self, player)
+	elif not SaveGame._is_script_run():
 		GameSettings.apply_to(player)
 		PauseMenu.install(self, player)
 	StartupProfile.watch(self)

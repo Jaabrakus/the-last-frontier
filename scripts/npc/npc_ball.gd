@@ -17,7 +17,7 @@ func _on_impact(collider: Object, point: Vector3, normal: Vector3) -> void:
 	if not is_instance_valid(shooter):
 		shooter = null                  # (the shooter gone while the ball flew: the hit is no one's)
 	if speed >= min_damage_speed and not ghost:
-		Hit.deliver(collider, dmg, point, velocity.normalized(), shooter)
+		Hit.deliver(collider, dmg, point, velocity.normalized(), shooter, true, {"kind": "ball", "speed": speed})
 	hit.emit(collider, point)
 	# (no dust from flesh: the body bleeds)
 	if DisplayServer.get_name() != "headless" \

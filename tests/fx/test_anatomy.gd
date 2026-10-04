@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ##   Godot --headless --fixed-fps 60 --path . -s tests/fx/test_anatomy.gd -- wildlife=on
 ##
-##   built    the human: bones, 24 vertebrae, ribs, the cord and the organs, each a mesh in metres (the skeleton's scale out)
+##   built    the human: bones, 24 vertebrae, ribs, the cord and the organs (the fitted body, BodyModel: 2026-10-03), in metres
 ##   follows  a part goes with its bone: move the bone's pose and the part moves with it
 ##   wound    a ball through the chest names the heart or a lung; through the head the skull; through the back the cord
 ##   animal   the same on a deer (its armature is 38x): the parts are the size of the animal's, not 38 times
@@ -43,7 +43,8 @@ func _run() -> void:
 		_end()
 		return
 	var names := an.parts.map(func(d: Dictionary) -> String: return String(d.name))
-	_expect(names.has("T10 vertebra") and names.has("Skull") and names.has("Heart") and names.has("Rib 3"), "bones, vertebrae, skull, ribs, heart (%d parts)" % an.parts.size())
+	_expect(names.has("T10 vertebra") and names.has("Skull") and names.has("Heart") and names.has("Left rib 3") and names.has("Right rib 3"),
+			"bones, vertebrae, skull, ribs, heart (%d parts)" % an.parts.size())
 	_extent(an, "human", 0.9, 2.2)
 	# a ball through the chest, front to back
 	var chest: Vector3 = _part(an, "Heart").global_position

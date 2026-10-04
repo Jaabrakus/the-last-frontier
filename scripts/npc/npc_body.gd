@@ -41,6 +41,15 @@ const CLIPS := {
 	"aim_crouch": ["actor_b-p-rifle-aim-crouch-idle", true],
 	"aim_walk": ["actor_b-p-rifle-aim-walk-fw", true],
 	"aim_crouch_walk": ["actor_b-p-rifle-aim-crouch-walk-fw", true],
+	# the aimed side-steps and the step back (a peek out past cover and back: NpcSkirmish, NpcFighter.face_lock), the dash
+	# between covers in the foe's sight (NpcFighter.SPRINT_SPEED); the user, 2026-10-04: "npc can find cover aim and etc"
+	"aim_walk_lt": ["actor_b-p-rifle-aim-walk-fw-lt", true],
+	"aim_walk_rt": ["actor_b-p-rifle-aim-walk-fw-rt", true],
+	"aim_walk_bw": ["actor_b-p-rifle-aim-walk-bw", true],
+	"aim_crouch_walk_lt": ["actor_b-p-rifle-aim-crouch-walk-fw-lt", true],
+	"aim_crouch_walk_rt": ["actor_b-p-rifle-aim-crouch-walk-fw-rt", true],
+	"aim_crouch_walk_bw": ["actor_b-p-rifle-aim-crouch-walk-bw", true],
+	"sprint": ["actor_b-p-sprint-fw", true],
 	"look": ["actor_b-cap-explore-look-right-loop", true],
 	"reload_begin": ["actor_b-p-rifle-idle-aim-reload-begin--part", false],
 	"reload_mid": ["actor_b-p-rifle-idle-aim-reload-mid--part", true],
@@ -75,6 +84,12 @@ const ARMS := {
 }
 ## The bones what sticks in him rides on (stuck_anchor): the trunk's and the head's.
 const STUCK_BONES := ["pelvis", "spineb", "spinec", "spined", "neck", "heada"]
+## The hand props (the bones the musket and the axe ride on, and HuntAim lays the musket's line by): only the reload clips'
+## upper-body parts key them, and the clips are blended keeping what a clip does not key (the stance held under a part), so
+## after a reload they are put back as the body was built, over PROPS_BACK_S while the next clip blends in (2026-10-04, seen
+## in the duel: else the musket lay where the ramming left it, 0.3 m low in the hands, its shot into the wall it peeked over).
+const PROP_BONES := ["r_hand_prop_attachment", "l_hand_prop_attachment"]
+const PROPS_BACK_S := 0.45
 
 static var _lib: AnimationLibrary
 static var _arms_lib: AnimationLibrary
@@ -95,6 +110,11 @@ var clip := ""
 var arms := ""
 ## How many pose updates it has made (the budget's test reads it).
 var steps := 0
+## The hand props' pose as built ([bone, position, rotation]), a reload clip played since they were last put back, and how
+## long they are still put back (PROP_BONES).
+var _props: Array = []
+var _props_moved := false
+var _props_t := 0.0
 var torso: StaticBody3D
 var head: StaticBody3D
 var _model: Node3D
@@ -141,6 +161,10 @@ func build(look: Dictionary) -> void:
 	head = _part("head", 2.5, _sphere(0.13))
 	play("idle", 0.0)
 	_step(0.0)
+	for nm: String in PROP_BONES:
+		var bi := sk.find_bone(nm)
+		if bi >= 0:
+			_props.append([bi, sk.get_bone_pose_position(bi), sk.get_bone_pose_rotation(bi)])
 
 
 ## The clips the bodies share (built once): Actor_B's and our own swings, each looped or not as CLIPS has it (a copy where the
@@ -196,6 +220,7 @@ func play(key: String, blend := 0.2, speed := 1.0) -> void:
 	if clip == key:
 		return
 	clip = key
+	_props_after(key)
 	ap.play(LIB + "/" + key, blend)
 
 
@@ -205,9 +230,26 @@ func play_once(key: String, blend := 0.1, speed := 1.0) -> float:
 		return 0.0
 	ap.speed_scale = speed
 	clip = key
+	_props_after(key)
 	ap.play(LIB + "/" + key, blend)
 	ap.seek(0.0, false)
 	return clip_length(key) / maxf(speed, 0.01)
+
+
+## A reload clip moves the hand props; the next clip that does not puts them back as built (PROP_BONES).
+func _props_after(key: String) -> void:
+	if key.begins_with("reload"):
+		_props_moved = true
+		_props_t = 0.0
+	elif _props_moved:
+		_props_moved = false
+		_props_t = PROPS_BACK_S
+
+
+func _props_back() -> void:
+	for e: Array in _props:
+		sk.set_bone_pose_position(int(e[0]), e[1])
+		sk.set_bone_pose_rotation(int(e[0]), e[2])
 
 
 ## The arms pose laid over the stance ("" none).
@@ -310,11 +352,17 @@ func rest() -> void:
 	if aim != null:
 		aim.want = false
 		aim.active = false
-	if mesh != null:
-		mesh.active = false
 	if sk != null:
 		sk.modifier_callback_mode_process = Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_MANUAL
 		_manual = true
+		# the body's own drivers once more on the pose he lies in (2026-10-03, seen in the inspect view): a man who fell far off or
+		# out of sight had them off, and his arms' skin stayed pulled to the twist bones where a standing man's arms would be. Run
+		# outside the modifier pass, what they set stays (a modifier's own work is undone after each update; nothing animates
+		# this body again)
+		if mesh != null and mesh.has_method(&"_process_modification"):
+			mesh.call(&"_process_modification")
+	if mesh != null:
+		mesh.active = false
 	set_process(false)
 
 
@@ -364,6 +412,9 @@ func _process(delta: float) -> void:
 
 func _step(dt: float) -> void:
 	ap.advance(dt)
+	if _props_t > 0.0 and sk != null:
+		_props_back()
+		_props_t = maxf(_props_t - maxf(dt, 0.001), 0.0)
 	if arms != "" and arms_ap != null:
 		arms_ap.advance(0.0)
 	if _manual and sk != null:

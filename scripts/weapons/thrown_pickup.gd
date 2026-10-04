@@ -13,7 +13,12 @@ extends Node3D
 ##                  changed.
 ##
 ## With `require_interact` only the key works. Child of the ThrownProjectile it belongs
-## to; picking it up frees that node. All pickups are in the "thrown_pickups" group;
+## to; picking it up frees that node.
+##
+## The kind "arrow" (ARROW) is a shot arrow stuck where it landed (Projectile._keep_for_pickup;
+## the user, 2026-10-03: "have the ability to pick up arrows"): it goes back into the player's
+## Bow's quiver (find_bow), and every other armed arrow within ARROW_BUNDLE_M of it goes with
+## it in the same press ("E  pick up 3 arrows"). All pickups are in the "thrown_pickups" group;
 ## nearest_for(player) finds the one a HUD prompt would name (prompt()).
 
 signal picked_up(by: Node)
@@ -21,6 +26,9 @@ signal picked_up(by: Node)
 const INTERACT := &"interact"
 const INTERACT_KEY := KEY_E
 const GROUP := &"thrown_pickups"
+const ARROW := "arrow"
+## Arrows this close to the one picked up (a target's cluster, a volley in the turf) come with it.
+const ARROW_BUNDLE_M := 1.2
 
 var kind := "spear"
 ## ThrowableModels kind of the item ("tomahawk_pipe" vs "tomahawk"): it goes back to the
@@ -109,6 +117,8 @@ func distance_from(point: Vector3) -> float:
 func try_give(p: Node) -> bool:
 	if _taken:
 		return false
+	if kind == ARROW:
+		return _give_arrows(p)
 	var w := find_taker(p, kind, model_kind)
 	if w == null:
 		return false
@@ -128,6 +138,11 @@ func try_give(p: Node) -> bool:
 
 ## HUD prompt for this pickup, e.g. "E  pick up Throwing Spear" ("" when `p` cannot take it).
 func prompt(p: Node) -> String:
+	if kind == ARROW:
+		if find_bow(p) == null:
+			return ""
+		var n := arrow_bundle().size()
+		return "%s  pick up %s" % [OS.get_keycode_string(INTERACT_KEY), "arrow" if n == 1 else "%d arrows" % n]
 	var w := find_taker(p, kind, model_kind)
 	if w == null:
 		return ""
@@ -147,7 +162,7 @@ static func nearest_for(p: Node3D) -> ThrownPickup:
 		if pk == null or pk._taken or pk.is_queued_for_deletion() or not pk.is_armed():
 			continue
 		var d := pk.distance_from(chest)
-		if d <= pk.interact_radius and d < best_d and find_taker(p, pk.kind) != null:
+		if d <= pk.interact_radius and d < best_d and pk.can_give(p):
 			best = pk
 			best_d = d
 	return best
@@ -176,3 +191,50 @@ static func find_taker(p: Node, p_kind: String, p_model := "") -> Throwable:
 		if any == null:
 			any = w
 	return any
+
+
+## Whether `p` has somewhere to put this: a Throwable of its kind with room, or a Bow for an arrow.
+func can_give(p: Node) -> bool:
+	return find_bow(p) != null if kind == ARROW else find_taker(p, kind, model_kind) != null
+
+
+## `p`'s Bow (carried or not: the arrows go into its quiver), or null.
+static func find_bow(p: Node) -> Bow:
+	if not (p is FrontierPlayer):
+		return null
+	for w in (p as FrontierPlayer).weapons.values():
+		if w is Bow:
+			return w as Bow
+	return null
+
+
+## This arrow and every other armed one within ARROW_BUNDLE_M of it not yet taken.
+func arrow_bundle() -> Array[ThrownPickup]:
+	var out: Array[ThrownPickup] = [self]
+	if not is_inside_tree():
+		return out
+	for n in get_tree().get_nodes_in_group(GROUP):
+		var pk := n as ThrownPickup
+		if pk == null or pk == self or pk.kind != ARROW or pk._taken or pk.is_queued_for_deletion() or not pk.is_armed():
+			continue
+		if pk.global_position.distance_to(global_position) <= ARROW_BUNDLE_M:
+			out.append(pk)
+	return out
+
+
+## The arrows into `p`'s Bow: this one and its bundle, each node freed. True when any was taken.
+func _give_arrows(p: Node) -> bool:
+	var bow := find_bow(p)
+	if bow == null:
+		return false
+	var n := 0
+	for pk: ThrownPickup in arrow_bundle():
+		pk._taken = true
+		pk.remove_from_group(GROUP)
+		n += pk.amount
+		var node: Node = pk.item if pk.item else pk
+		node.queue_free()
+	bow.add_arrows(n)
+	Sfx.play_3d(&"gear_jostle", global_position, -6.0, 1.25)
+	picked_up.emit(p)
+	return true

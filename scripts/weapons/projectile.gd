@@ -81,7 +81,8 @@ func _on_impact(collider: Object, point: Vector3, normal: Vector3) -> void:
 	# Damage falls off with lost speed, so long lobbed shots hit softer.
 	var dmg := damage * clampf(speed / _start_speed, 0.35, 1.0)
 	if speed >= min_damage_speed and not ghost:
-		Hit.deliver(collider, dmg, point, velocity.normalized(), shooter)
+		# (what struck, for the body it lands in to work out its path: Anatomy, the user 2026-10-03)
+		Hit.deliver(collider, dmg, point, velocity.normalized(), shooter, true, {"kind": "ball" if kind == Kind.BALL else "arrow", "speed": speed})
 	hit.emit(collider, point)
 	if shooter and not ghost:
 		shooter.get_tree().call_group("hit_listeners", "on_projectile_hit", collider, point)
@@ -93,13 +94,41 @@ func _on_impact(collider: Object, point: Vector3, normal: Vector3) -> void:
 		var carrier := ThrownProjectile.stuck_parent(collider, global_position)
 		if carrier != null and carrier.is_inside_tree():
 			reparent(carrier)
-		max_life = 30.0
 		_life = 0.0
+		if ghost or not (shooter is FrontierPlayer):
+			max_life = 30.0
+		else:
+			_keep_for_pickup()
 	else:
 		# (no dust from an animal: the wildlife bleeds, WildAnimal)
 		if not (collider is Node and (collider as Node).get_meta(&"surface", "") == "flesh"):
 			Fx.dust_puff(get_tree().current_scene, point, normal)
 		queue_free()
+
+
+## A player's arrow stuck where it landed stays to be picked up again (the user, 2026-10-03: "have the ability to pick up
+## arrows"): a ThrownPickup of the "arrow" kind on its shaft (E, PlayerInteractor; it goes back into the shooter's Bow's
+## quiver, every arrow within ThrownPickup.ARROW_BUNDLE_M with it). It stays STUCK_LIFE_S; past MAX_STUCK arrows in the
+## world the oldest goes first. Another player's shot as this machine sees it (ghost) stays 30 s with none: its own
+## machine has the pickup.
+const STUCK_LIFE_S := 900.0
+const MAX_STUCK := 60
+static var _stuck_arrows: Array = []
+
+
+func _keep_for_pickup() -> void:
+	max_life = STUCK_LIFE_S
+	var pk := ThrownPickup.new()
+	pk.kind = ThrownPickup.ARROW
+	pk.item = self
+	pk.require_interact = true
+	pk.interact_radius = 2.5
+	add_child(pk)
+	pk.position = Vector3(0.0, 0.0, 0.36)      # (mid-shaft: the tip is the origin, the shaft runs back along +Z)
+	_stuck_arrows = _stuck_arrows.filter(func(a: Variant) -> bool: return is_instance_valid(a) and not (a as Node).is_queued_for_deletion())
+	_stuck_arrows.append(self)
+	while _stuck_arrows.size() > MAX_STUCK:
+		(_stuck_arrows.pop_front() as Node).queue_free()
 
 
 static func _mat(key: String, color: Color, metallic := 0.0) -> StandardMaterial3D:
