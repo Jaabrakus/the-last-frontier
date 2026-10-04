@@ -64,4 +64,12 @@ def build() -> Score:
 				vowel="u")
 	s.line("hn_solo", 14, arc(HORN2, 0.48, 0.58), send=0.65)
 	s.rit(17, 20, 50)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): a soft heartbeat drum, a sub under the roots."""
+	from _lib import chord_spans, heartbeat, sub_bass
+	heartbeat(s, 2, 16, 0.3)
+	sub_bass(s, chord_spans(CH), 0.32)

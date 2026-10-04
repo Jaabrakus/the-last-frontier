@@ -21,6 +21,9 @@ The samples (3 GB) are not in this repository. To render, download the repositor
 2026-10-03 (3,187 files, sizes checked against the repository's tree). The sampler caches each sample's measured level
 in `<VSCO>/.frontier_zone_levels.json`.
 
+Tuning: **A = 432 Hz** (user 2026-10-03; `orch.A4`, `A4=<Hz>` to render at another): every pitched note is played
+31.8 cents under the samples' A = 440; the unpitched percussion as recorded.
+
 The piano is VSCO 2 CE's upright, sampled by **Simon Dalzell (Ivy Audio)** and redistributed by Versilian Studios
 (its `Info.txt`: credit to both is encouraged). The choir and the music box are synthesized (formant tables of sung
 vowels; a steel tine's partials), no samples.
@@ -28,3 +31,10 @@ vowels; a steel tine's partials), no samples.
 Styles (user 2026-10-03): the giants' music and the land's after Shadow of the Colossus's soundtrack; the night's pieces,
 the home's and the story's after Fullmetal Alchemist's (melody first: solo violin, cello, piano, a waltz, a music box).
 Again only the manner: the themes are our own.
+
+Drums and bass (user 2026-10-03): VSCO 1's big drums, tenor drums, bass drums, frame drum, congas, bongos, log drum,
+tambourine and maracas (all in VSCO 2 CE's repository, CC0), and a synthesized sub bass (`orch.sub`).
+
+The peoples' themes (`cues/peoples.py`, user 2026-10-03: music for each people in the character creator) suggest each
+people's music with the orchestra's instruments; the Eastern Woodlands nations' themes are landscapes, not their songs,
+and like the Native dress they want those nations' word before they are final.

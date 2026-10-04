@@ -75,4 +75,15 @@ def build() -> Score:
 	piano_arp(s, [(26, 0, "Bm", 4)], 0.26, "B1", "D5")
 	for p, v in (("B1", 0.28), ("F#2", 0.22), ("D3", 0.2), ("C#4", 0.18), ("F#4", 0.2), ("B4", 0.22)):
 		s.note("piano", 27, 0, p, 8, v)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): a soft heartbeat drum from the lift on, a
+	plucked bass under the lift, the sub under the last verse."""
+	from _lib import bass_pulse, chord_spans, heartbeat, sub_bass
+	heartbeat(s, 10, 16, lambda b: 0.25 if b < 18 else 0.34)
+	bass_pulse(s, chord_spans(LIFT_CH, 10), "cb_pizz", 0.32, "B1", "A#2", beats=(0, 2))
+	sub_bass(s, chord_spans(LIFT_CH, 10), 0.24)
+	sub_bass(s, chord_spans(SONG_CH, 18), 0.32)

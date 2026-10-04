@@ -235,3 +235,93 @@ def piano_arp(s, spans, vel, lo="B2", hi="D5", step: float = 0.5, pedal: float =
 			s.note("piano", bar, beat + x, pat[k % len(pat)], pedal, v * (1.0 if k == 0 else 0.82))
 			x += step
 			k += 1
+
+
+# --- drums and bass (user 2026-10-03: "add more drums and bass") ---------------------------------------------------
+
+def sub_bass(s, spans, vel, lo="C1", hi="B1", length=None) -> None:
+	"""The sub bass (orch.sub) under each chord's bass note, an octave below the double basses."""
+	prev = None
+	for bar, beat, sym, ln in spans:
+		p = bass(sym, lo, hi, prev)
+		prev = p
+		v = vel(bar) if callable(vel) else vel
+		s.note("sub", bar, beat, p, length if length else ln, v)
+
+
+def bass_pulse(s, spans, inst, vel, lo="D2", hi="C#3", beats=(0, 2), length=0.9) -> None:
+	"""The basses on given beats of each span (a plucked or short bass line on the roots, the fifth on the third beat)."""
+	prev = None
+	for bar, beat, sym, ln in spans:
+		root = bass(sym, lo, hi, prev)
+		prev = root
+		_, pcs = chord(sym)
+		v = vel(bar) if callable(vel) else vel
+		for b in beats:
+			if b < ln:
+				p = root if b == 0 else near(pcs[2], lo, hi, root)
+				s.note(inst, bar, beat + b, p, length, v * (1.0 if b == 0 else 0.85))
+
+
+def war_drums(s, bar, n, vel, accents=(0, 1.5, 3), fill_every=4, beats=4) -> None:
+	"""The big drums of a fight: the giant drum on the accents, the low tenor drum on the beats between, the bass drum
+	on one; every `fill_every` bars a tenor-drum fill in sixteenths across the last beat."""
+	for b in range(bar, bar + n):
+		v = vel(b) if callable(vel) else vel
+		for k, a in enumerate(accents):
+			s.hit("giant_drum", b, a, v * (1.0 if k == 0 else 0.82))
+		for x in range(beats):
+			if all(abs(x - a) > 0.1 for a in accents):
+				s.hit("tenor_lo", b, x, v * 0.62)
+		s.hit("bd_big", b, 0, v * 0.9)
+		if fill_every and (b - bar) % fill_every == fill_every - 1:
+			for k in range(4):
+				s.hit("tenor_hi" if k % 2 == 0 else "tenor_lo", b, beats - 1 + k * 0.25, v * (0.55 + 0.1 * k))
+
+
+def march_drums(s, bar, n, vel, beats=4) -> None:
+	"""A heroic march: the bass drum on one and three, the giant drum on one, the tenor drums on the gallop."""
+	for b in range(bar, bar + n):
+		v = vel(b) if callable(vel) else vel
+		s.hit("bd_big", b, 0, v)
+		s.hit("bd_big", b, 2, v * 0.8)
+		if (b - bar) % 2 == 0:
+			s.hit("giant_drum", b, 0, v * 0.95)
+		for a, w in ((0, 0.8), (1.5, 0.6), (3, 0.7), (3.5, 0.5)):
+			s.hit("tenor_hi", b, a, v * w)
+
+
+def heartbeat(s, bar, n, vel, every=1, beat=0.0) -> None:
+	"""A soft low drum's lub-dub (the muted bass drum) every `every` bars."""
+	for b in range(bar, bar + n, every):
+		v = vel(b) if callable(vel) else vel
+		s.hit("bd_muted", b, beat, v)
+		s.hit("bd_muted", b, beat + 0.45, v * 0.7)
+
+
+def frame_groove(s, bar, n, vel, beats=4, shaker=True) -> None:
+	"""A light hand groove: the frame drum on one (and three), the tambourine on the off beats, a shaker in eighths."""
+	for b in range(bar, bar + n):
+		v = vel(b) if callable(vel) else vel
+		s.hit("frame", b, 0, v)
+		if beats == 4:
+			s.hit("frame", b, 2, v * 0.75)
+			for x in (1, 3):
+				s.hit("tamb", b, x, v * 0.8)
+		else:
+			for x in range(1, beats):
+				s.hit("tamb", b, x, v * 0.55)
+		if shaker:
+			for k in range(beats * 2):
+				s.hit("shaker", b, k * 0.5, v * (0.9 if k % 2 == 0 else 0.7))
+
+
+def hand_groove(s, bar, n, vel, beats=4) -> None:
+	"""Hand drums: the low conga on one and the and of two, the high conga and bongo answering."""
+	pat = [("conga_lo", 0, 1.0), ("bongo", 0.5, 0.5), ("conga_hi", 1, 0.7), ("conga_lo", 1.5, 0.8), ("bongo", 2, 0.5),
+			("conga_hi", 2.5, 0.65), ("conga_lo", 3, 0.75), ("bongo", 3.5, 0.55)]
+	for b in range(bar, bar + n):
+		v = vel(b) if callable(vel) else vel
+		for k, x, w in pat:
+			if x < beats:
+				s.hit(k, b, x, v * w)

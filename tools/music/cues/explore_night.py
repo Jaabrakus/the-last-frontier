@@ -59,4 +59,14 @@ def build() -> Score:
 	s.note("glock", 15, 1, "A6", 1, 0.2)
 	s.note("vln", 14, 0, "E5", 8, [(0, 0.05), (0.5, 0.14), (1, 0.02)])
 	s.rit(14, 16, 44)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): a frame drum's soft stroke every other bar, a
+	sub under the roots."""
+	from _lib import chord_spans, sub_bass
+	for b in range(2, 14, 2):
+		s.hit("frame", b, 0, 0.2)
+	sub_bass(s, chord_spans(CH), 0.25)

@@ -100,4 +100,17 @@ def build() -> Score:
 	s.choir(20, 0, ["C4", "G4", "B4", "E5"], 14, [(0, 0.5), (1, 0.03)], vowel="u")
 	s.note("cb_nv", 20, 0, "C2", 14, [(0, 0.4), (1, 0.02)])
 	s.rit(21, 24, 60)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): a heartbeat under the motif, the big drums
+	under the tutti, the sub under both."""
+	from _lib import chord_spans, heartbeat, sub_bass, war_drums
+	heartbeat(s, 4, 7, 0.3)
+	war_drums(s, 12, 4, 0.6, accents=(0, 2), fill_every=4)
+	war_drums(s, 16, 3, 0.8, fill_every=0)
+	s.hit("bd_big", 19, 0, 0.6)
+	sub_bass(s, chord_spans(MOTIF_CH, 4), 0.35)
+	sub_bass(s, chord_spans(TUTTI_CH, 12), 0.7)

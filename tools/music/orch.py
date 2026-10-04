@@ -39,6 +39,10 @@ import dsp  # noqa: E402
 
 SR = 44100
 VSCO = os.path.expanduser(os.environ.get("VSCO", "~/Downloads/VSCO-2-CE"))
+## The tuning (user 2026-10-03: "redo the music in 432 hz"): A4 in Hz. The samples were recorded at A = 440; every pitched
+## note is played this much lower (432: 31.8 cents); the unpitched percussion stays as recorded. A4=<Hz> overrides.
+A4 = float(os.environ.get("A4", "432"))
+TUNE = A4 / 440.0
 
 PCS = {"C": 0, "C#": 1, "Db": 1, "D": 2, "D#": 3, "Eb": 3, "E": 4, "F": 5, "F#": 6, "Gb": 6, "G": 7, "G#": 8,
 		"Ab": 8, "A": 9, "A#": 10, "Bb": 10, "B": 11, "Cb": 11}
@@ -112,6 +116,8 @@ KITS = {
 	# keys: Ivy Audio's upright piano (in VSCO 2 CE), its dampers down at the note's end (damp) unless pedalled longer
 	"piano": dict(_SH, dir="Keys/Upright Piano", match="Player_dyn*", pan=-0.08, width=0.85, top_db=-18.0,
 			range_db=24.0, max=7.0, send=0.26, rel=0.3, damp=True),
+	"marimba": dict(_SH, dir="Percussion/Marimba", oct=12, pan=0.2, top_db=-20.0, range_db=14.0, max=3.0, send=0.32),
+	"xylo": dict(_SH, dir="Percussion/Xylo", oct=12, pan=-0.2, top_db=-22.0, range_db=12.0, max=1.5, send=0.32),
 	# pitched percussion
 	"glock": dict(_SH, dir="Percussion/Glock", oct=12, pan=-0.3, top_db=-25.0, range_db=12.0, max=6.0, send=0.4),
 	"timp": dict(_P, dir="Percussion/Timpani", match="Timpani*_Hit_*", kind="short", pan=-0.1, top_db=-14.0,
@@ -128,6 +134,30 @@ KITS = {
 	"sus_cym": dict(_P, dir="Percussion", match="susCymb1-hit_*", pan=-0.25, top_db=-22.0, max=8.0, send=0.35),
 	"gong": dict(_P, dir="Percussion", match="gongHit_*", pan=0.0, top_db=-17.0, max=12.0, send=0.4),
 	"tri": dict(_P, dir="Percussion", match="Triangle3-Hit_*", pan=0.4, top_db=-28.0, max=4.0, send=0.35),
+	# more drums (user 2026-10-03: "add more drums and bass"): VSCO 1's big drums and hand drums
+	"giant_drum": dict(_P, dir="VSCO 1 Percussion/drums/other/ethnic/giant/mallet", pan=0.0, top_db=-13.0,
+			max=5.0, send=0.45),
+	"giant_hand": dict(_P, dir="VSCO 1 Percussion/drums/other/ethnic/giant/hand", match="*hit*", pan=-0.15,
+			top_db=-16.0, max=3.0, send=0.4),
+	"bd_big": dict(_P, dir="VSCO 1 Percussion/drums/bass", match="bdrum_*", exclude=["*muted*", "*roll*", "*special*"],
+			pan=0.05, top_db=-14.0, max=5.0, send=0.42),
+	"bd_muted": dict(_P, dir="VSCO 1 Percussion/drums/bass", match="bdrum_muted_*", pan=0.05, top_db=-16.0, max=2.0,
+			send=0.35),
+	"tenor_lo": dict(_P, dir="VSCO 1 Percussion/drums/tenor/tenor_lower", pan=-0.2, top_db=-16.0, max=2.5, send=0.4),
+	"tenor_hi": dict(_P, dir="VSCO 1 Percussion/drums/tenor/tenor_higher", pan=0.2, top_db=-17.0, max=2.0, send=0.4),
+	"frame": dict(_P, dir="Miscellania Raw/Misc 2", match="rtomtom_frame*", exclude=["*roll*"], pan=-0.1, top_db=-18.0,
+			max=2.0, send=0.35),
+	"conga_lo": dict(_P, dir="VSCO 1 Percussion/drums/other/ethnic/congo/open", match="ethnicLowOpen*", pan=0.25,
+			top_db=-18.0, max=1.5, send=0.3),
+	"conga_hi": dict(_P, dir="VSCO 1 Percussion/drums/other/ethnic/congo/open", match="ethnicHighOpen*", pan=0.3,
+			top_db=-19.0, max=1.2, send=0.3),
+	"bongo": dict(_P, dir="VSCO 1 Percussion/drums/other/Bongos", pan=-0.3, top_db=-20.0, max=1.0, send=0.3),
+	"logdrum": dict(_P, dir="VSCO 1 Percussion/varWood/log_drum", pan=0.15, top_db=-19.0, max=1.5, send=0.35),
+	"tamb": dict(_P, dir="Miscellania Raw/Misc 2", match="tamb3_?.wav", pan=0.35, top_db=-24.0, max=1.5, send=0.3),
+	"shaker": dict(_P, dir="VSCO 1 Percussion/varWood", match="maraca?.wav", pan=-0.35, top_db=-26.0, max=0.8,
+			send=0.25),
+	"sleigh": dict(_P, dir="Miscellania Raw/Misc 2", match="sleighbell1_hit_*", pan=0.4, top_db=-26.0, max=1.5,
+			send=0.3),
 }
 # The timpani are five drums at fixed pitches (measured: the strongest mode of each); a note takes the nearest.
 TIMP_PITCH = {"Timpani1": 41.5, "Timpani2": 53.5, "Timpani3": 56.3, "Timpani4": 58.9, "Timpani5": 61.3}
@@ -205,6 +235,8 @@ def kit(key: str) -> Kit:
 	k = Kit(key, spec)
 	for f in sorted(os.listdir(d)):
 		if not f.lower().endswith(".wav") or not fnmatch.fnmatch(f, spec.get("match", "*")):
+			continue
+		if any(fnmatch.fnmatch(f, x) for x in spec.get("exclude", [])):
 			continue
 		note, layer, rr = _parse(f, spec.get("oct", 0))
 		if key.startswith("timp"):
@@ -385,7 +417,7 @@ def play(key: str, pitch, dur: float, vel, slur: bool = False, cents: float = 0.
 	li = min(int(vm * len(k.layers) * 0.999), len(k.layers) - 1)
 	z = k.pick(note, li, other)
 	a = _read(z.path)
-	ratio = 2.0 ** ((note - z.note + cents / 100.0) / 12.0) if sp["kind"] != "perc" else 2.0 ** (cents / 1200.0)
+	ratio = TUNE * 2.0 ** ((note - z.note + cents / 100.0) / 12.0) if sp["kind"] != "perc" else 2.0 ** (cents / 1200.0)
 	if sp["kind"] == "sus":
 		n = int((dur + sp["rel"]) * SR)
 	else:
@@ -589,7 +621,7 @@ class Score:
 def musicbox(m: float, vel: float, rng: np.random.Generator) -> np.ndarray:
 	"""A music box's tine (synthesized): a steel reed's partials (a clamped bar's 1, 6.27, 17.55), the pin's click, a
 	short ring that is shorter up high; a touch of the comb's wobble."""
-	f = 440.0 * 2.0 ** ((m - 69.0) / 12.0)
+	f = A4 * 2.0 ** ((m - 69.0) / 12.0)
 	dur = float(np.clip(3.2 * (523.0 / f) ** 0.6, 0.9, 4.0))
 	n = int(dur * SR)
 	t = np.arange(n) / SR
@@ -606,8 +638,27 @@ def musicbox(m: float, vel: float, rng: np.random.Generator) -> np.ndarray:
 	return np.stack([y, y], axis=1).astype(np.float32)
 
 
+def sub(m: float, dur: float, vel, rng: np.random.Generator) -> np.ndarray:
+	"""The sub bass (synthesized): a sine with a little of its octave and fifth above (heard on small speakers too),
+	gently rounded; a soft start, a release. Dry and centred."""
+	f = A4 * 2.0 ** ((m - 69.0) / 12.0)
+	rel = 0.35
+	n = int((dur + rel) * SR)
+	t = np.arange(n) / SR
+	ph = 2 * math.pi * f * t
+	y = np.sin(ph) + 0.28 * np.sin(2 * ph) + 0.08 * np.sin(3 * ph)
+	y = np.tanh(1.4 * y) / math.tanh(1.4)
+	env = np.clip(t / 0.03, 0.0, 1.0) * np.where(t > dur, np.clip(1.0 - (t - dur) / rel, 0.0, 1.0) ** 2, 1.0)
+	cv = _curve(vel, n)
+	db = -17.0 - 20.0 * (1.0 - np.clip(cv, 0.0, 1.0)) ** 1.15
+	y = y * env * 10.0 ** (db / 20.0) / 0.62
+	return np.stack([y, y], axis=1).astype(np.float32)
+
+
 def _voice(e: dict, rng: np.random.Generator) -> tuple:
 	"""An event's signal (n, 2), its pan, width and send."""
+	if e["inst"] == "sub":
+		return sub(midi(e["pitch"]), e["dur"], e["vel"], rng), 0.0, 0.0, e.get("send", 0.04)
 	if e["inst"] == "musicbox":
 		return musicbox(midi(e["pitch"]), _vmax(e["vel"]), rng), e.get("pan", 0.1), 0.0, e.get("send", 0.35)
 	if e["kind"] == "choir":

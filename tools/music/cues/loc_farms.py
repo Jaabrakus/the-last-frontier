@@ -79,4 +79,16 @@ def build() -> Score:
 	for k, p in (("cb_pizz", "A2"), ("cb_pizz", "E3"), ("vla_pizz", "C#4"), ("vla_pizz", "A4")):
 		s.note(k, 34, 3, p, 1, 0.55)
 	s.note("bsn_stac", 34, 3, "A2", 0.6, 0.5)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): the frame drum on one and the tambourine on
+	two and three, the plucked bass and bassoon up."""
+	for b in range(2, 34):
+		s.hit("frame", b, 0, 0.3)
+		s.hit("tamb", b, 1, 0.22)
+		s.hit("tamb", b, 2, 0.2)
+	s.mix["cb_pizz"] = s.mix.get("cb_pizz", 0.0) + 3.0
+	s.mix["bsn_stac"] = s.mix.get("bsn_stac", 0.0) + 2.0

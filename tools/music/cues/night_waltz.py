@@ -47,4 +47,17 @@ def build() -> Score:
 	for p, v in (("E2", 0.32), ("B2", 0.26), ("G3", 0.24), ("B3", 0.22), ("F#4", 0.2), ("E5", 0.26)):
 		s.note("piano", 39, 0, p, 6, v)
 	s.rit(37, 40, 58)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): a plucked bass on each downbeat, a frame
+	drum's soft stroke and the sub under the cellos' half."""
+	from _lib import bass_pulse, chord_spans, sub_bass
+	B = chord_spans(FAMILY_CHORDS, 20, 3)
+	bass_pulse(s, chord_spans(FAMILY_CHORDS, 4, 3) + B, "cb_pizz", 0.38, "E2", "D#3", beats=(0,))
+	for x in B:
+		if x[1] == 0:
+			s.hit("frame", x[0], 0, 0.18)
+	sub_bass(s, B, 0.28)

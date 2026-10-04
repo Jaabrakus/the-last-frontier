@@ -10,6 +10,7 @@ import math
 import numpy as np
 
 import dsp
+from orch import A4
 
 SR = 44100
 # formants per part and vowel: (Hz, dB, bandwidth Hz) x 5 (the classic tables of sung vowels)
@@ -74,7 +75,7 @@ def sing(m: float, dur: float, vel, vowel: str, rng, attack: float | None = None
 	rel = 0.55
 	n = int((dur + rel) * SR)
 	t = np.arange(n) / SR
-	f0 = 440.0 * 2.0 ** ((m - 69.0) / 12.0)
+	f0 = A4 * 2.0 ** ((m - 69.0) / 12.0)
 	slope = 1.35 - 0.55 * vm           # louder singing is brighter
 	K = max(1, int(FMAX / f0))
 	kk = np.arange(1, K + 1)

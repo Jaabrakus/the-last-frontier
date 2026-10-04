@@ -143,6 +143,7 @@ def build() -> Score:
 	s.chord("vln_trem", 32, 0, ["D5", "Eb5"], 8, [(0, 0.15), (1, 0.55)])
 	s.choir(32, 0, ["D3", "A3"], 8, [(0, 0.15), (1, 0.5)], vowel="o")
 	s.swell(34, 0, 0.8, 1)          # peaks on the loop's first beat (wrapped round)
+	drums_and_bass(s)
 	return s
 
 
@@ -189,3 +190,27 @@ def theme_section(s: Score, bar: int, full: bool) -> None:
 	s.hit("cym", bar + 4, 0, 0.65)
 	if full:
 		s.hit("cym", bar + 2, 0, 0.55)
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): the big drums under every section, harder as
+	it climbs; the sub under the roots; the basses and tuba up."""
+	from _lib import sub_bass, war_drums
+	s.hit("giant_drum", 0, 0, 0.85)
+	s.hit("giant_drum", 0, 2, 0.6)
+	war_drums(s, 2, 8, lambda b: 0.5 + 0.02 * (b - 2))
+	war_drums(s, 10, 8, 0.7)
+	war_drums(s, 18, 8, lambda b: 0.72 + 0.02 * (b - 18))
+	war_drums(s, 26, 6, 0.88)
+	for b in (32, 33):
+		s.hit("giant_drum", b, 0, 0.55 + 0.2 * (b - 32))
+		s.hit("giant_drum", b, 2, 0.45 + 0.2 * (b - 32))
+	for k in range(8):
+		s.hit("tenor_lo" if k % 2 else "tenor_hi", 33, 2 + k * 0.25, 0.4 + 0.06 * k)
+	climb = ["Dm", "Dm", "Eb", "Eb", "Fm", "Fm", "Gm", "A"]
+	spans = ([(b, 0, "Dm", 4) for b in range(2, 10)] + [(10 + i, 0, c, 4) for i, c in enumerate(THEME_CHORDS)]
+			+ [(18 + i, 0, c, 4) for i, c in enumerate(climb)]
+			+ [(26 + i, 0, c, 4) for i, c in enumerate(THEME_CHORDS[:4] + THEME_CHORDS[6:])] + [(32, 0, "Dm", 8)])
+	sub_bass(s, spans, lambda b: 0.52 if b < 10 else 0.62)
+	s.mix["cb_spic"] = s.mix.get("cb_spic", 0.0) + 2.5
+	s.mix["tuba"] = s.mix.get("tuba", 0.0) + 1.5

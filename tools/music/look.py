@@ -6,7 +6,6 @@ spectrogram up to 6 kHz.
 """
 from __future__ import annotations
 
-import importlib
 import os
 import sys
 
@@ -36,7 +35,8 @@ def main() -> None:
 	dr = ImageDraw.Draw(im)
 	dur = len(m) / sr
 	try:
-		s = importlib.import_module(name).build()
+		from render import build
+		s = build(name)
 		b = 0
 		while s.t(b) < dur:
 			xpx = 40 + int(s.t(b) / dur * 1400)
@@ -44,7 +44,7 @@ def main() -> None:
 			if b % 4 == 0:
 				dr.text((xpx + 2, 2), str(b), fill=(160, 160, 180))
 			b += 1
-	except ModuleNotFoundError:
+	except (ModuleNotFoundError, KeyError):
 		pass
 	for lv in (-10, -20, -30, -40, -50):
 		y = int((-lv) / 60 * H)

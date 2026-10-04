@@ -5,7 +5,6 @@
 """
 from __future__ import annotations
 
-import importlib
 import os
 import sys
 
@@ -20,7 +19,8 @@ import orch  # noqa: E402
 def main() -> None:
 	name = sys.argv[1]
 	step = int(sys.argv[2]) if len(sys.argv) > 2 else 4
-	s = importlib.import_module(name).build()
+	from render import build
+	s = build(name)
 	insts = sorted({e["inst"] for e in s.events})
 	nb = 0
 	while s.t(nb) < s.length():

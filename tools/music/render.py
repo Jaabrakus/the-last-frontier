@@ -35,15 +35,31 @@ ORDER = ["main_theme", "explore_day", "explore_dusk", "explore_night", "giant_ba
 		"giant_lament"]
 
 
+def registry() -> dict:
+	"""Every cue: name -> (module, CUE). A module has CUE and build(), or CUES (a list) and build(name)."""
+	reg = {}
+	for f in sorted(os.listdir(os.path.join(HERE, "cues"))):
+		if not f.endswith(".py") or f.startswith("_"):
+			continue
+		mod = importlib.import_module(f[:-3])
+		for c in getattr(mod, "CUES", None) or [mod.CUE]:
+			reg[c["name"]] = (mod, c)
+	return reg
+
+
+def build(name: str) -> orch.Score:
+	mod, _ = registry()[name]
+	return mod.build(name) if hasattr(mod, "CUES") else mod.build()
+
+
 def cue_names() -> list:
-	have = {f[:-3] for f in os.listdir(os.path.join(HERE, "cues")) if f.endswith(".py") and not f.startswith("_")}
+	have = set(registry())
 	return [n for n in ORDER if n in have] + sorted(have - set(ORDER))
 
 
 def render_cue(name: str, out_dir: str, bar_range: tuple | None = None) -> str:
-	mod = importlib.import_module(name)
-	cue = mod.CUE
-	s = mod.build()
+	_, cue = registry()[name]
+	s = build(name)
 	t0 = time.time()
 	loop = cue.get("loop")
 	if bar_range:
@@ -116,11 +132,11 @@ def write_manifest() -> None:
 		path = os.path.join(OUT, f"{name}.wav")
 		if not os.path.exists(path):
 			continue
-		mod = importlib.import_module(name)
-		s = mod.build()
+		_, cue = registry()[name]
+		s = build(name)
 		with wave.open(path) as w:
 			length = w.getnframes() / w.getframerate()
-		loop = mod.CUE.get("loop")
+		loop = cue.get("loop")
 		ls = s.t(loop[0]) if loop else -1.0
 		lines.append(f'\t"{name}": {{"path": "res://audio/music/{name}.wav", "bpm": {s.bpm_at(loop[0] if loop else 0):.1f}, '
 				f'"beats": {s.beats}, "length": {length:.3f}, "loop_start": {ls:.4f}}},')

@@ -13,6 +13,9 @@ extends SceneTree
 ##             coming home from away plays its piece after SETTLE_S
 ##   story     MusicDirector.story(): the cue once; a giant's fight over it; StoryEffects' "music" effect; the missions'
 ##             three cues (story_wonder, story_sorrow, story_home) are cues in the manifest
+##   creator   the character creator open (a stand-in with its script path): the chosen people's theme, crossed to the
+##             next people's as the choice changes, every people of peoples.json with a theme in the manifest (looped);
+##             closed: the theme fades
 ##   settings  the Settings' Music slider is on the Music bus (GameSettings)
 ##   provenance  tools/music/SOURCE.md and audio/music/SOURCE.md credit VSCO 2 CE (Versilian Studios, CC0)
 ##   Godot --headless --path . -s tests/audio/test_music_director.gd
@@ -56,6 +59,7 @@ func _initialize() -> void:
 	await _fight()
 	await _places()
 	await _story()
+	await _creator()
 	_settings()
 	_provenance()
 	print("%d checks, %d failed" % [checks, failures.size()])
@@ -288,6 +292,45 @@ func _story() -> void:
 	var txt := FileAccess.get_file_as_string("res://data/story/missions/two_fires.json")
 	for id in ["story_wonder", "story_sorrow", "story_home"]:
 		_check(txt.contains("\"cue\": \"%s\"" % id), "the missions call %s" % id)
+	level.queue_free()
+	await _wait(0.1)
+
+
+func _creator() -> void:
+	var peoples: Array = (JSON.parse_string(FileAccess.get_file_as_string("res://assets/character/body/peoples.json"))
+			as Dictionary).get("peoples", [])
+	var missing := []
+	for e in peoples:
+		var pid := String((e as Dictionary).get("id", ""))
+		var c: Dictionary = MusicDirector.M.CUES.get("people_" + pid, {})
+		if c.is_empty() or float(c.loop_start) < 0.0:
+			missing.append(pid)
+	_check(peoples.size() >= 35 and missing.is_empty(), "every people has a looped theme (%d peoples; missing %s)" % [peoples.size(), str(missing)])
+	var level := Node3D.new()
+	root.add_child(level)
+	var player := Node3D.new()
+	level.add_child(player)
+	var d := MusicDirector.new()
+	d.player = player
+	var fake := GDScript.new()
+	fake.source_code = "extends CanvasLayer\nvar look := {}\n"
+	fake.reload()
+	fake.resource_path = "res://tests/audio/_stand_in_creator.gd"
+	d.creator_script = fake.resource_path
+	level.add_child(d)
+	await _wait(0.1)
+	var cc := CanvasLayer.new()
+	cc.set_script(fake)
+	cc.set("look", {"people": "japanese"})
+	root.add_child(cc)
+	await _wait(0.4)
+	_check(d.mode == MusicDirector.Mode.CREATOR and d.cue == "people_japanese", "the creator open: the Japanese theme (%s)" % d.cue)
+	cc.set("look", {"people": "persian"})
+	await _wait(0.4)
+	_check(d.cue == "people_persian", "another people chosen: its theme (%s)" % d.cue)
+	cc.queue_free()
+	await _wait(0.5)
+	_check(d.mode == MusicDirector.Mode.QUIET and d.cue == "", "the creator closed: the theme fades (%s)" % d.cue)
 	level.queue_free()
 	await _wait(0.1)
 

@@ -51,4 +51,14 @@ def build() -> Score:
 	s.note("piano", 15, 0.5, "D5", 6, 0.22)
 	s.note("piano", 15, 1, "F5", 6, 0.18)
 	s.note("piano", 15, 1.5, "A5", 6, 0.16)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): a soft heartbeat under the cellos, the sub
+	under the roots."""
+	from _lib import THEME_A_CHORDS, chord_spans, heartbeat, sub_bass
+	heartbeat(s, 10, 4, 0.26)
+	sub_bass(s, chord_spans(THEME_A_CHORDS, 2), 0.22)
+	sub_bass(s, chord_spans(THEME_A_CHORDS[4:], 10), 0.3)

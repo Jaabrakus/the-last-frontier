@@ -57,4 +57,19 @@ def build() -> Score:
 	s.chord("vc", 12, 0, ["A2", "E3"], 16, [(0, 0.28), (1, 0.03)])
 	call(s, 12, 0.42)
 	s.rit(13, 16, 50)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): the giant drum and its echo off the rock, the
+	low tenor drum under the tune, the sub under it all."""
+	from _lib import chord_spans, sub_bass
+	for b, v in ((0, 0.6), (2, 0.55), (4, 0.65), (8, 0.75), (12, 0.55)):
+		s.hit("giant_drum", b, 0, v)
+		s.hit("giant_drum", b, 0.75, v * 0.45)
+	for b in range(4, 12):
+		s.hit("tenor_lo", b, 2, 0.35)
+	s.note("sub", 0, 0, "A1", 16, [(0, 0.05), (0.5, 0.4), (1, 0.35)])
+	sub_bass(s, chord_spans(CH, 4), 0.45)
+	s.note("sub", 12, 0, "A1", 16, [(0, 0.35), (1, 0.03)])

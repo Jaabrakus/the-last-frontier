@@ -53,4 +53,14 @@ def build() -> Score:
 	s.line("cl", 10, arc(CLAR2, 0.38, 0.48))
 	s.choir(9, 0, ["E3", "B3"], 20, [(0, 0.05), (0.5, 0.32), (1, 0.05)], vowel="u")
 	s.note("glock", 13, 3, "B6", 1, 0.2)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): the giant drum struck by hand every other bar,
+	a sub drone."""
+	for b in range(2, 14, 2):
+		s.hit("giant_hand", b, 0, 0.3)
+		s.hit("giant_hand", b, 0.5, 0.2)
+	s.note("sub", 0, 0, "E1", 64, [(0, 0.05), (0.15, 0.35), (0.9, 0.3), (1, 0.03)])

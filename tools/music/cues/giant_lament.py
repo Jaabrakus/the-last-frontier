@@ -98,4 +98,16 @@ def build() -> Score:
 	s.note("harp", 21, 0, "D3", 1, 0.25)
 	s.note("harp", 21, 0.5, "A3", 1, 0.22)
 	s.note("harp", 21, 1, "D4", 1, 0.2)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): a slow bass drum on each bar of the second
+	half, the sub with the falling bass, the basses up."""
+	from _lib import sub_bass
+	for b in range(9, 17):
+		s.hit("bd_big", b, 0, 0.32 + 0.14 * max(0.0, 1.0 - abs(b - 13) / 4.0))
+	sub_bass(s, spans(CH2, 9), 0.42, "A1", "G#2")
+	s.note("sub", 17, 0, "D2", 24, [(0, 0.35), (1, 0.02)])
+	s.mix["cb_nv"] = s.mix.get("cb_nv", 0.0) + 2.0

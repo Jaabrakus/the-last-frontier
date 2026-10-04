@@ -45,4 +45,13 @@ def build() -> Score:
 			s.note("glock", bar, 3.5, near(pcs[1], "E6", "D#7"), 1, 0.2)
 	s.line("solo_vln", 2, arc(MOTIF, 0.42, 0.56), overlap=0.1)
 	s.rit(11, 14, 46)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): a soft boom of the giant drum every four bars,
+	a sub pedal."""
+	for b in (2, 6, 10):
+		s.hit("giant_drum", b, 0, 0.35)
+	s.note("sub", 0, 0, "C2", 56, [(0, 0.05), (0.2, 0.3), (0.9, 0.28), (1, 0.02)])

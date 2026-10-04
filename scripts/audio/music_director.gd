@@ -17,6 +17,9 @@ extends Node
 ##               else the hour's: explore_day; at dusk explore_dusk or explore_night
 ##             Coming into a place (or home at dusk or night) after AWAY_S away plays its piece SETTLE_S in, if it has
 ##             not played for PLACE_GAP_S, and not within HUSH_S of a fight or the lament ending
+##   creator   the character creator open (user 2026-10-03: "make music for each race when on char creation"): the chosen
+##             people's theme (people_<id>, tools/music/cues/peoples.py), looped, crossed to the next as the choice changes;
+##             the creator closing fades it (found by its script among the root's children: no hook in its code)
 ##   story     a mission's "music" effect (StoryEffects; MusicDirector.story(tree, cue)): story_wonder, story_sorrow,
 ##             story_home; once, over anything but a giant's fight
 ##   fight     a giant (group "giants": StandInGiant) within ENGAGE_R turns on the player (its MammothTemper threatening,
@@ -61,9 +64,11 @@ const BABY_R := 20.0
 const SETTLE_S := 8.0
 const AWAY_S := 180.0
 const PLACE_GAP_S := 600.0
+const CREATOR_SCRIPT := "res://scripts/customizer/character_creator.gd"
+const PEOPLE_XFADE_S := 1.2
 const HUSH_S := 30.0                ## after a fight or the lament: no place's piece this long (the quiet after a battle)
 
-enum Mode { QUIET, EXPLORE, FIGHT, UPPER, LAMENT, MENU, STORY }
+enum Mode { QUIET, EXPLORE, FIGHT, UPPER, LAMENT, MENU, STORY, CREATOR }
 
 var player: Node3D
 ## The level's AmbienceBed (its band() picks the explore piece); found by name when not set.
@@ -74,6 +79,9 @@ var cue := ""                       ## the cue playing ("" none)
 var calm_s := 6.0
 ## The sun's band to use instead of the ambience's ("" theirs; tests).
 var band_override := ""
+## The character creator's script (tests point it at a stand-in's).
+var creator_script := CREATOR_SCRIPT
+var _creator_scan := 0.0
 ## Where the player is: "home", a place's cue, a square's cue, or "".
 var where := ""
 var _where_t := 0.0
@@ -147,6 +155,12 @@ func _process(dt: float) -> void:
 	if mode == Mode.MENU:
 		_menu(dt)
 		return
+	_creator_scan -= dt
+	if _creator_scan <= 0.0:
+		_creator_scan = SCAN_S
+		_creator_music()
+	if mode == Mode.CREATOR:
+		return
 	_scan -= dt
 	if _scan <= 0.0:
 		_scan = SCAN_S
@@ -218,6 +232,33 @@ func _start_piece(piece: String) -> void:
 	mode = Mode.EXPLORE
 	_last_piece = piece
 	play(StringName(piece), 0.0, 3.0)
+
+
+## The character creator: its people's theme while it is open (see the header).
+func _creator_music() -> void:
+	var c := _creator()
+	if c == null:
+		if mode == Mode.CREATOR:
+			fade_out(2.0)
+			mode = Mode.QUIET
+			_hush_until = _clock + HUSH_S
+			_explore_in = maxf(_explore_in, 20.0)
+		return
+	var look: Variant = c.get("look")
+	var want := "people_" + (String((look as Dictionary).get("people", "")) if look is Dictionary else "")
+	if mode != Mode.CREATOR:
+		_pending = ""
+		mode = Mode.CREATOR
+	if M.CUES.has(want) and cue != want:
+		play(StringName(want), 0.0, PEOPLE_XFADE_S, PEOPLE_XFADE_S)
+
+
+func _creator() -> Node:
+	for n in get_tree().root.get_children():
+		var sc := n.get_script() as Script
+		if sc != null and sc.resource_path == creator_script:
+			return n
+	return null
 
 
 ## The piece for now: by where the player is and the sun (see the header).

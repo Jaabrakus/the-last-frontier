@@ -91,6 +91,7 @@ def build() -> Score:
 	# --- 16-23: the hymn as the church sings it --------------------------------------------------------------------
 	hymn(s, 16, {"s": ["vln", "fl", "ob"], "a": ["cl", "vla"], "t": ["hn", "vc"], "b": ["bsn", "cb_nv"]}, 0.48)
 	s.rit(22, 24, 62)
+	drums_and_bass(s)
 	return s
 
 
@@ -103,3 +104,16 @@ def _third_below(p) -> int:
 	lower = scale[(i - 2) % 7]
 	d = (pc - lower) % 12
 	return m - d
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): the bass drum under the fife's tune and the
+	church's hymn, a plucked bass with the fife, the basses up."""
+	from _lib import bass_pulse
+	for b in range(8, 16):
+		s.hit("bd_big", b, 2, 0.3)
+	for b in range(16, 24):
+		s.hit("bd_big", b, 0, 0.36)
+	spans = [(8 + rep * 4 + i, 0, sym.split()[0], 4) for rep in (0, 1) for i, sym in enumerate(FIFE_CH)]
+	bass_pulse(s, spans, "cb_pizz", 0.45, "G1", "F#2", beats=(0, 2))
+	s.mix["cb_nv"] = s.mix.get("cb_nv", 0.0) + 3.0

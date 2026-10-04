@@ -83,4 +83,18 @@ def build() -> Score:
 		s.hit("cym", b0 + 8, 0, 0.6)
 	s.swell(32, 0, 0.8, 1)          # into the loop's first beat (wrapped round)
 	s.swell(16, 0, 0.7, 1)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): a march in the big drums, the sub under the
+	roots, the basses and tuba up."""
+	from _lib import march_drums, sub_bass
+	march_drums(s, 0, 32, lambda b: 0.55 if b < 8 else 0.68 if b < 16 else 0.76)
+	for b in (15, 31):
+		for k in range(8):
+			s.hit("tenor_hi" if k % 2 == 0 else "tenor_lo", b, 2 + k * 0.25, 0.45 + 0.05 * k)
+	sub_bass(s, [(i, 0, c, 4) for i, c in enumerate(CHORDS + CHORDS)], 0.58)
+	s.mix["cb_spic"] = s.mix.get("cb_spic", 0.0) + 2.5
+	s.mix["tuba"] = s.mix.get("tuba", 0.0) + 1.5

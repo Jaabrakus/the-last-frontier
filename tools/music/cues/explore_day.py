@@ -62,4 +62,15 @@ def build() -> Score:
 	for bar, beat in ((3, 2.5), (7, 3), (15, 2.5), (23, 1)):
 		s.note("glock", bar, beat, "A6" if bar != 23 else "D7", 1, 0.42)
 	s.rit(21, 24, 62)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): a light hand groove (frame drum, tambourine,
+	shaker), a plucked bass, a soft sub."""
+	from _lib import bass_pulse, chord_spans, frame_groove, sub_bass
+	frame_groove(s, 4, 16, 0.52)
+	sp = chord_spans(CH)
+	bass_pulse(s, [x for x in sp if 4 <= x[0] < 20], "cb_pizz", 0.45, "D2", "C#3", beats=(0, 2))
+	sub_bass(s, [x for x in sp if 4 <= x[0] < 22], 0.3, "D1", "C#2")

@@ -70,4 +70,15 @@ def build() -> Score:
 	for p, v in (("F2", 0.28), ("C3", 0.24), ("A3", 0.22), ("E4", 0.2), ("G4", 0.2), ("C5", 0.22)):
 		s.note("harp", 21, 0, p, 4, v)
 	s.rit(19, 22, 52)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): hand drums lightly, a plucked bass, a soft
+	sub."""
+	from _lib import bass_pulse, chord_spans, hand_groove, sub_bass
+	hand_groove(s, 2, 16, 0.22)
+	sp = chord_spans(CH, 2) + chord_spans(CH2, 10)
+	bass_pulse(s, sp, "cb_pizz", 0.4, "F1", "E2", beats=(0, 2.5))
+	sub_bass(s, sp, 0.28)

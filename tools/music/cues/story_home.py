@@ -46,4 +46,15 @@ def build() -> Score:
 	for p, d in (("E3", 0.0), ("B3", 0.12), ("E4", 0.24), ("G#4", 0.36), ("B4", 0.48), ("E5", 0.6)):
 		s.note("harp", 15, d, p, 3, 0.3)
 	s.rit(14, 17, 66)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): the bass drum on each downbeat, the sub under
+	the roots and the last E major."""
+	from _lib import chord_spans, sub_bass
+	for b in range(0, 15):
+		s.hit("bd_big", b, 0, 0.28 if b < 8 else 0.38)
+	sub_bass(s, chord_spans(FAMILY_CHORDS[:15], 0, 3), 0.35)
+	s.note("sub", 15, 0, "E1", 9, [(0, 0.45), (1, 0.1)])

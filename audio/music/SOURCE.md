@@ -3,7 +3,7 @@
 Rendered by `tools/music/render.py` from the cues in `tools/music/cues/` (composed for this game, 2026-10-03), played
 on **VSCO 2: Community Edition** samples by **Versilian Studios (Sam Gossner)**, CC0 1.0
 (<https://versilian-studios.com/vsco-community/>; the piano Simon Dalzell's, Ivy Audio), with a synthesized choir and
-music box. See `tools/music/SOURCE.md`.
+music box. Tuned to A = 432 Hz. See `tools/music/SOURCE.md`.
 
 | file | what | where it plays |
 |---|---|---|
@@ -27,6 +27,7 @@ music box. See `tools/music/SOURCE.md`.
 | `loc_cliffs.wav` | horn calls and echoes on open fifths, a broad tune (A mixolydian) | the cliffs |
 | `loc_marsh.wav` | a bassoon, odd plucks, trembling violas (F-sharp minor) | the marsh |
 | `loc_wreck.wav` | the wonder's motif hushed on a solo violin (C Lydian) | the wreck's pine grove (story) |
+| `people_<id>.wav` (35) | each people's theme (tools/music/cues/peoples.py): its mode or maqam, metre, lead and drums, a 16-bar loop | the character creator, while that people is chosen |
 
 `scripts/audio/music_director.gd` decides what plays; `scripts/audio/music_manifest.gd` (generated) holds each cue's
 tempo, length and loop.

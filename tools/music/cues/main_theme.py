@@ -140,4 +140,37 @@ def build() -> Score:
 	s.note("harp", 40, 1, "E4", 1, 0.24)
 	s.note("harp", 40, 1.5, "A4", 1, 0.22)
 	s.note("glock", 40, 2, "D6", 1, 0.3)
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): a low sub under the opening; the drums coming
+	in through the second strain and pounding under the tutti; the sub under both; the basses up."""
+	from _lib import THEME_A_CHORDS, THEME_B_CHORDS, chord_spans, sub_bass
+	s.note("sub", 0, 0, "D1", 16, [(0, 0.05), (0.5, 0.45), (1, 0.4)])
+	for b in range(20, 28):
+		v = 0.3 + 0.38 * (b - 20) / 7
+		s.hit("giant_drum", b, 0, v)
+		s.hit("tenor_lo", b, 2, v * 0.7)
+		if b >= 24:
+			s.hit("bd_big", b, 0, v * 0.8)
+			s.hit("tenor_lo", b, 3, v * 0.6)
+			s.hit("tenor_lo", b, 3.5, v * 0.55)
+	for k in range(8):
+		s.hit("tenor_hi" if k % 2 == 0 else "tenor_lo", 27, 2 + k * 0.25, 0.45 + 0.05 * k)
+	sub_bass(s, chord_spans(THEME_B_CHORDS, 20), lambda b: 0.35 + 0.3 * (b - 20) / 7)
+	chords3 = [list(c) for c in THEME_A_CHORDS]
+	chords3[7] = [(0, "D")]
+	A3 = chord_spans(chords3, 28)
+	A3[-1] = (35, 0, "D", 8)
+	for b in range(28, 35):
+		s.hit("giant_drum", b, 0, 0.8)
+		s.hit("bd_big", b, 0, 0.7)
+		s.hit("giant_drum", b, 2, 0.6)
+		s.hit("tenor_lo", b, 1, 0.45)
+		s.hit("tenor_lo", b, 3, 0.5)
+	s.hit("giant_drum", 35, 0, 0.9)
+	sub_bass(s, A3, 0.72)
+	s.mix["cb_nv"] = s.mix.get("cb_nv", 0.0) + 2.0
+	s.mix["cb"] = s.mix.get("cb", 0.0) + 2.0

@@ -50,4 +50,17 @@ def build() -> Score:
 	s.line("bsn", 2, arc(BASSOON, 0.42, 0.52))
 	s.line("cl", 10, arc(CLAR, 0.36, 0.44))
 	s.line("bsn", 10, [(0, "F#2", 8, 0.3), (8, "D3", 4, 0.3), (12, "C#3", 4, 0.3)])
+	drums_and_bass(s)
 	return s
+
+
+def drums_and_bass(s: Score) -> None:
+	"""More drums and bass (user 2026-10-03: "add more drums and bass"): a log drum now and then, a muted bass drum's
+	thump, a sub drone."""
+	rng = np.random.default_rng(9)
+	for b in range(0, 15):
+		if rng.random() < 0.5:
+			s.hit("logdrum", b, float(rng.choice([0.5, 1.75, 2.75])), 0.22)
+		if b % 2 == 0:
+			s.hit("bd_muted", b, 0, 0.28)
+	s.note("sub", 0, 0, "F#1", 64, [(0, 0.05), (0.1, 0.3), (0.9, 0.28), (1, 0.03)])
