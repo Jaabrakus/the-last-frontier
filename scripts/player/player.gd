@@ -1158,9 +1158,9 @@ func _physics_process(delta: float) -> void:
 			speed = lerpf(speed, minf(speed, aim_walk_speed), weapon.aim)
 		else:
 			speed = lerpf(speed, minf(speed, run_speed * JOG_AIM_PACE), weapon.aim)
-		# (reloading the musket on the move: the aim walk's pace, its legs, UpperBody.reload_walk)
-		if weapon is Firearm and (weapon as Firearm).state == Firearm.State.RELOADING and weapon_key == "musket":
-			speed = minf(speed, aim_walk_speed)
+		# (a firearm reloading on the move, standing: the jog's pace of the aim on the move, not the busy crawl; reload_jog())
+		if reload_jog():
+			speed = run_speed * JOG_AIM_PACE
 		if gather != null and gather.swinging():
 			speed = minf(speed, swing_walk_speed)
 	speed *= survival_speed_mult * _maim_speed()
@@ -1272,6 +1272,18 @@ func add_recoil(pitch_deg: float, yaw_deg: float) -> void:
 
 func horizontal_speed() -> float:
 	return Vector2(velocity.x, velocity.z).length()
+
+
+## A firearm reloading (any Firearm: the musket, the pistol, the over-under's reload chain) with the body standing, not
+## crouched: on the move the legs jog as the bow and the pistol aimed on the move do, and the player goes at their pace,
+## JOG_AIM_PACE of the jog's (user 2026-10-03: "the current reload legs for pistol and guns need to be replaced with the jog
+## ones"; before, the musket's reload walked on the aim walk's legs at its pace and the others crawled on the walk's at the
+## busy pace, Firearm.busy_speed_mult). The legs follow from the pace: PlayerAnim leaves them off the aim stance (only the
+## crouched musket's reload keeps it, UpperBody.reload_walk) and LocoBrain picks the jog bank by the speed, its stride played
+## at the speed (no slide). Crouched, the crouch walk at the busy pace as before; standing still, the idle's legs; a sprint
+## still interrupts the reload (Firearm._tick). The reload's own upper body (MusketReload, the pistol's clips) is unchanged.
+func reload_jog() -> bool:
+	return not is_crouching and weapon is Firearm and (weapon as Firearm).state == Firearm.State.RELOADING
 
 
 ## Damage from Hit.deliver() (or the debug overlay's F9-F11). `direction` is the travel direction

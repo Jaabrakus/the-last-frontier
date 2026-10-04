@@ -936,8 +936,11 @@ func manual_step(dt: float) -> void:
 	_time += dt
 	for e: Dictionary in events:
 		_apply_event(e)
-	# (the bow and the thrown weapons aim on the jog's legs while moving: FrontierPlayer.JOG_AIM_WEAPONS; standing, the aim stance)
-	var legs_aim := upper.aim_stance(inp) and not (loco.moving and String(_weapon) in FrontierPlayer.JOG_AIM_WEAPONS)
+	# (the bow and the thrown weapons aim on the jog's legs while moving: FrontierPlayer.JOG_AIM_WEAPONS; standing, the aim stance;
+	# a firearm's reload on the move standing jogs as they do, the aim still easing down from the shot no aim stance for the legs:
+	# FrontierPlayer.reload_jog, user 2026-10-03 "the current reload legs for pistol and guns need to be replaced with the jog ones")
+	var reload_jog := player != null and player.reload_jog()
+	var legs_aim := upper.aim_stance(inp) and not (loco.moving and (String(_weapon) in FrontierPlayer.JOG_AIM_WEAPONS or reload_jog))
 	loco.tick(inp, edges, dt, _weapon, legs_aim or (loco.moving and upper.reload_walk(inp)))
 	if fall_pose != null:
 		loco.own_landing = fall_pose.active and fall_pose.showing()

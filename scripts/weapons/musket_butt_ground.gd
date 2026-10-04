@@ -79,6 +79,12 @@ func _process_modification() -> void:
 	# the planted point: where it came down, dragged behind once the body is DRAG_M away, on the ground under it
 	var want := Vector3(butt.x, gy, butt.z)
 	if not _planted:
+		# (no ground under the clip's butt while the hold fades out, the gun coming up as a sprint ends the reload: nothing to
+		# plant it on. Planted there, the point was NaN and the solve below logged errors every frame until the hold was gone;
+		# found 2026-10-03 with the reload on the jog's legs, user: "the current reload legs for pistol and guns need to be
+		# replaced with the jog ones", and as it was at the aim walk's pace)
+		if is_nan(gy):
+			return
 		_at = want
 		_planted = true
 	var d := Vector2(_at.x - want.x, _at.z - want.z)

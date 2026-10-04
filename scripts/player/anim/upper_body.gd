@@ -413,12 +413,14 @@ func aim_stance(inp: AnimInputs) -> bool:
 			and (inp.wants_aim or inp.weapon_aim >= float(data.tuning("aim_stance_on", 0.5)))
 
 
-## The musket reloading while the body moves: the legs walk as the aim walks do (user 2026-10-01: "aim walk legs when moving,
-## and for the reload on crouch use the crouch walk as well": the aim walk bank, standing or crouched; standing still the legs
-## stay the idle's). The reload's own pose (MusketReload) is over the upper body; the player walks at the aim pace for it. PlayerAnim
-## adds it to the aim stance once the legs are moving (from rest it would pass through the aim idle: crouched, the raised pose).
+## The musket reloading crouched while the body moves: the legs on the crouch walk under the aim stance (user 2026-10-01: "for
+## the reload on crouch use the crouch walk as well"; standing still the legs stay the idle's). The reload's own pose
+## (MusketReload) is over the upper body. PlayerAnim adds it to the aim stance once the legs are moving (from rest it would pass
+## through the aim idle: crouched, the raised pose). Standing, no longer (user 2026-10-03: "the current reload legs for pistol and
+## guns need to be replaced with the jog ones"): every firearm's reload on the move jogs at the jog aim's pace with the legs off
+## the aim stance (FrontierPlayer.reload_jog), where the musket's had walked on the aim walk's legs.
 func reload_walk(inp: AnimInputs) -> bool:
-	return inp.busy and String(inp.weapon_key) == "musket" \
+	return inp.busy and inp.crouched and String(inp.weapon_key) == "musket" \
 			and (inp.speed > 0.3 or inp.wish_local.length() > 0.2)
 
 
