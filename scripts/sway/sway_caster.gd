@@ -40,9 +40,27 @@ extends Node
 ##                                sail's own sway_wind(on, caster) when it has one); a mote every sail.drain_s; the aim kept
 ##                                on it (the grace); let go, the motes out, a hit: slack
 ##   breaks     sprinting (not the pillar's self mode, practised and up: cast in stride), climbing (a grip, a perch, a vault), riding, knocked
-##              down, dead, a weapon drawn the tier does not allow, firing, building; any hit taken (FrontierPlayer.hurt)
+##              down, dead, a weapon drawn the tier does not allow, firing, building; any hit taken (FrontierPlayer.hurt); bound
+##              (a captive, Captivity.bound: nothing locks, a spell readied or not, "Your hands are bound"; the user,
+##              2026-10-03, free use put every spell in a captive's reach)
 ##   motes      a belt of `motes` (belt_max 3 under our sky); the free floor: below floor_max (2) the tinderbox coal breathes
 ##              one back every floor_s (90 s). Saved with the player (SaveParts' player part: save_of / load_of)
+##   free use   ONE switch, moves.json's free_use (free_use(); the user, 2026-10-03: "lets make the spells free use right
+##              now"), so the story's gating can come back by setting it false. True:
+##                known     every spell in every game from the start, story on or off, a new game or a load (has(): the
+##                          level installs the caster, install_free; the Tab screen's Spells list has them all). Nothing is
+##                          put on the hotbar or readied by it (the owner: "pickups shouldnt auto fill"; dragged on, readied
+##                          from the bar). A grant (the story's sway_grant, give=) still works: kept and saved for when the
+##                          switch is off again, without its line (the spell is known already; nor the story's own say
+##                          line: StoryEffects.say_line); the scripted lock unchanged. The aim held with nothing readied
+##                          says "No spell readied" only once a spell is on the bar (_hint_unreadied)
+##                no motes  cost_of() is 0: a cast, Gust's holds (a stone's, a sail's drain) and the Form spells spend
+##                          nothing, a cast is never refused for motes (no "motes" hint), an overstrain loses none (it
+##                          still drops the stone and staggers). The belt is hidden (SwayRing; the HUD's spell line and the
+##                          Tab card say nothing of motes): a belt that never changes would only be noise
+##              The lock, its times and ranges, the hands, mastery, modes and breaks are the same either way. False: a
+##              spell only once granted (grant), the caster only from the story or give=, the motes spent as the lock and
+##              the holds above say
 ##   on screen  SwayRing round the crosshair (the art's colour and ring shape; a hold's draw and strain), SwayThread from the
 ##              palms to the target from half the lock (Breath: in the world, seen by everyone), SwayPose (the body's clip by
 ##              mastery), SwayTone (a soft rising tone); the first lock: SwayArm (the arm pointed at the target)
@@ -53,13 +71,14 @@ extends Node
 ## Form       the fifth art (FormCast, the child `form`; FormEffects): the lock is a circle drawn on the ground at the target
 ##            instead of the thread; its reach flat from the feet (reach_to)
 ## The hotbar: spells() (static: every spell, {kind "spell", id, label, art, motes, lock_s, range_m, icon, modes}),
-## known_spells() (those granted: the Tab screen's Spells list, dragged onto the bar), ready_spell(id) (spell_readied),
-## readied_spell, spell_icon(id) (its SVG), spell_label(id) (with its mode). The launch arg give=form (give=sway, or
-## give=earth_wall,...) grants them (give_arg, from GatherTools' give=).
+## known_spells() (those granted, every one with free use: the Tab screen's Spells list, dragged onto the bar),
+## ready_spell(id) (spell_readied), readied_spell, spell_icon(id) (its SVG), spell_label(id) (with its mode). The launch
+## arg give=form (give=sway, or give=earth_wall,...) grants them (give_arg, from GatherTools' give=).
 ## The story: grant(move) / has(move) (the story's sway_grant: First Lesson's Gust, into the Spells list); the signals; casts
 ## counted by the target's tag (tag_of: meta sway_tag, an NpcFighter's tag, a WildAnimal's species, else its name) in the
 ## statics `casts` / `casts_by_move`, read by cast_count(tag, move) and by lock_cast_begin / lock_cast_check
-## (StoryObjectives' "lock_cast" kind). `enabled` false (bound hands, a cutscene) and nothing locks.
+## (StoryObjectives' "lock_cast" kind). `enabled` false (a cutscene) and nothing locks; bound hands (Captivity) the same
+## (blocked: "bound").
 
 signal lock_started(move: String, target: Node3D)
 ## Full lock (the click): let go within release_s to cast (a hold begins at once instead: hold_started).
@@ -116,6 +135,8 @@ const ROOT_CAP := 0.0
 ## step counts from its begin and keeps its own count across a load, as NpcFighter.kills).
 static var casts := {}
 static var casts_by_move := {}
+## Tests only: true or false stands for moves.json's free_use (null: the file's). The game never sets it.
+static var free_override: Variant = null
 
 var player: FrontierPlayer
 var enabled := true
@@ -209,6 +230,28 @@ static func of(p: Node) -> SwayCaster:
 	return p.get_node_or_null(NodePath(String(NODE_NAME))) as SwayCaster if p != null else null
 
 
+## The level's call (FrontierLevel, the player just added): with free use the caster installed from the start, every spell
+## known (the user, 2026-10-03: "lets make the spells free use right now"); without, nothing (the story's grant or give=
+## installs it, as before). The caster, or null when none was installed.
+static func install_free(p: FrontierPlayer) -> SwayCaster:
+	if p == null or not free_use():
+		return null
+	return install(p)
+
+
+## moves.json's free_use (see the header; free_override in tests): every spell known, no motes spent.
+static func free_use() -> bool:
+	if free_override != null:
+		return bool(free_override)
+	return bool(SwayMoves.data().get("free_use", false))
+
+
+## The motes a lock of `m` spends (at its cast, or as its hold begins): moves.json's motes, 0 with free use (a sail's drain
+## too is off then: _tick_hold).
+static func cost_of(m: String) -> int:
+	return 0 if free_use() else int(SwayMoves.move(m).get("motes", 0))
+
+
 ## The mode key: MODE_ACTION on the middle mouse button, made when missing (the player may rebind it). Safe to call again.
 static func ensure_input() -> void:
 	if InputMap.has_action(MODE_ACTION):
@@ -286,15 +329,17 @@ func _unhandled_input(event: InputEvent) -> void:
 ## it (Rook's lesson: drag Gust onto a slot, then its key). `m` may name several moves, comma-separated, or an art ("form":
 ## every spell of it), as give= does (grant_ids): the story's grant of the Form spells at the crash (two_fires.json, Two
 ## Fires' lock step). Several are granted together: one line names them (a story effect's own `say` line takes their names
-## too: StoryEffects.say).
+## too: StoryEffects.say). With free use the spell is known already: the grant is only kept (saved, for when the gating is
+## back), no line (the user, 2026-10-03: "lets make the spells free use right now").
 func grant(m: String, tell := true) -> void:
 	if "," in m or (SwayMoves.move(m).is_empty() and not SwayMoves.art(m).is_empty()):
 		_grant_several(grant_ids(m), tell)
 		return
 	if SwayMoves.move(m).is_empty() or granted.has(m):
 		return
+	var known := has(m)                      # (free use: every spell is)
 	granted.append(m)
-	if not tell or not is_spell(m):
+	if known or not tell or not is_spell(m):
 		return
 	if player != null and player.is_local and player.interactor != null:
 		player.interactor.notice("%s learned: Tab, drag it from the Spells list onto the hotbar (1-9); its key readies it" % spell_label(m), 4.5)
@@ -320,15 +365,18 @@ func _grant_several(ids: Array[String], tell: bool) -> void:
 	for id in ids:
 		if granted.has(id):
 			continue
+		var known := has(id)                 # (free use: kept, not told)
 		granted.append(id)
-		if is_spell(id):
+		if is_spell(id) and not known:
 			names.append(String(SwayMoves.move(id).get("label", id.capitalize())))
 	if tell and not names.is_empty() and player != null and player.is_local and player.interactor != null:
 		player.interactor.notice("%s learned: Tab, drag them from the Spells list onto the hotbar (1-9)" % ", ".join(names), 4.5)
 
 
+## Whether move `m` is known: granted, or any spell with free use (the user, 2026-10-03: "lets make the spells free use right
+## now"; a scripted lock is never "known": can_use).
 func has(m: String) -> bool:
-	return granted.has(m)
+	return granted.has(m) or (free_use() and is_spell(m))
 
 
 func revoke(m: String) -> void:
@@ -394,8 +442,12 @@ static func tier_uses(id: String) -> Array:
 	return u if u is Array and (u as Array).size() >= 3 else [0, 8, 30]
 
 
-## The mastery of spell `id`: 0 untrained, 1 practised, 2 expert.
+## The mastery of spell `id`: 0 untrained, 1 practised, 2 expert. With free use every spell is an expert's (the user,
+## 2026-10-03, who saw "untrained" on the free spells: free use is the spell at its best, one palm, no floor cast, not rooted,
+## the shortest lock); its casts are still counted (uses), so the mastery stands where it was when the switch goes off.
 func tier(id: String) -> int:
+	if free_use() and is_spell(id):
+		return 2
 	var u := tier_uses(id)
 	var n := uses_of(id)
 	return 2 if n >= int(u[2]) else (1 if n >= int(u[1]) else 0)
@@ -546,7 +598,7 @@ static func spells() -> Array:
 	return out
 
 
-## The spells this caster has been granted (spells()' entries).
+## The spells this caster knows (spells()' entries): those granted, every one with free use (has).
 func known_spells() -> Array:
 	return spells().filter(func(e: Dictionary) -> bool: return has(String(e.id)))
 
@@ -640,7 +692,7 @@ func _physics_process(dt: float) -> void:
 			_end_hold(why)
 		elif state != State.IDLE:
 			_break(why)
-		_hint_hands(why if held and readied_spell != "" and why in ["hands", "weapon"] else "")
+		_hint_hands(why if held and readied_spell != "" and why in ["hands", "weapon", "bound"] else "")
 		return
 	side = new_side
 	if not held:
@@ -735,11 +787,15 @@ func _about() -> String:
 	return move if state != State.IDLE else readied_spell
 
 
-## Why no lock can be held now ("" when one can): see the header's breaks.
+## Why no lock can be held now ("" when one can): see the header's breaks. "bound": a captive's hands are tied (Captivity
+## bound on this player; the user, 2026-10-03: "lets make the spells free use right now" put every spell in a captive's
+## reach, so the bonds hold them, the scripted lock too).
 func blocked() -> String:
 	var p := player
 	if p.is_dead:
 		return "dead"
+	if _bound():
+		return "bound"
 	if p.riding != null:
 		return "riding"
 	if p.kneeling != null:
@@ -760,6 +816,12 @@ func blocked() -> String:
 	if cast_side() == "" or not p.hands_free:
 		return "weapon" if not p.hands_free and p.weapon != null and (p.weapon.active or p.weapon.is_equipping()) else "hands"
 	return ""
+
+
+## Whether this caster's player is a bound captive (Captivity: its hands tied until end(), an escape or the bonds coming off).
+func _bound() -> bool:
+	var cap := Captivity.find(get_tree()) if is_inside_tree() else null
+	return cap != null and cap.bound and cap.player == player
 
 
 ## Whether a lock of `m` holds while sprinting: the pillar in its self mode (cast in stride), practised and up (untrained,
@@ -810,6 +872,8 @@ func cast_side() -> String:
 
 
 func _knows_spells() -> bool:
+	if free_use():
+		return true                            # (every spell known: free use)
 	for id in granted:
 		if is_spell(id):
 			return true
@@ -817,6 +881,10 @@ func _knows_spells() -> bool:
 
 
 ## The aim held with the hands free, spells known, none readied (a spell is readied only from the bar): said once a hold.
+## Not said (the user, 2026-10-03: "lets make the spells free use right now": with free use every player knows every spell,
+## so the aim with the hands free is not a sign of wanting one): with free use while no spell is on the bar (the player has
+## not taken one up: the Tab screen lists them), nor near a scripted lock (_scripted_near: the wreck's spar, where the hold
+## may be for the first lock, which wants no spell).
 func _hint_unreadied() -> void:
 	hint = "unreadied"
 	if _hinted == "unreadied" or player.interactor == null or not player.is_local or not player.hands_free:
@@ -829,17 +897,34 @@ func _hint_unreadied() -> void:
 			if String(hb.entry(i).get("kind", "")) == Hotbar.SPELL:
 				on = i
 				break
+	if (on < 0 and free_use()) or _scripted_near():
+		return
 	if on >= 0:
 		player.interactor.notice("No spell readied: press its key (%d)" % (on + 1), 2.0)
 	else:
 		player.interactor.notice("No spell readied: Tab, drag a spell from the Spells list onto 1-9, then its key", 2.5)
 
 
+## A scripted lock within its reach (a node in TARGET_GROUP whose meta sway_move needs no spell and that it would lock now,
+## move_for; out to the lock's own RANGE_SLACK): the wreck's spar.
+func _scripted_near() -> bool:
+	if not is_inside_tree():
+		return false
+	for n in get_tree().get_nodes_in_group(TARGET_GROUP):
+		var t := n as Node3D
+		if t == null or not t.has_meta(&"sway_move"):
+			continue
+		var m := String(t.get_meta(&"sway_move"))
+		if scripted(m) and move_for(t) == m and reach_to(t.global_position, m) <= range_of(m, t) * RANGE_SLACK:
+			return true
+	return false
+
+
 func _hint_hands(why: String) -> void:
 	if why == "":
-		if hint in ["hands", "weapon"]:
+		if hint in ["hands", "weapon", "bound"]:
 			hint = ""
-		if _hinted in ["hands", "weapon"]:
+		if _hinted in ["hands", "weapon", "bound"]:
 			_hinted = ""
 		return
 	hint = why
@@ -847,7 +932,9 @@ func _hint_hands(why: String) -> void:
 		return
 	_hinted = why
 	var id := readied_spell
-	if tier(id) >= 2:
+	if why == "bound":
+		player.interactor.notice("Your hands are bound", 2.0)          # (Captivity's own words)
+	elif tier(id) >= 2:
 		player.interactor.notice("%s: the left hand must be empty (the right may hold a pistol, a tomahawk or a saber)" % spell_label(id), 2.0)
 	else:
 		player.interactor.notice("%s (%s): both hands must be empty" % [spell_label(id), tier_name(id)], 2.0)
@@ -1094,7 +1181,7 @@ func _try_begin(q: Dictionary) -> void:
 	if dist > r and not _self_cast(m):
 		hint = "far"
 		return
-	if int(d.get("motes", 0)) > motes:
+	if cost_of(m) > motes:                     # (never with free use: it costs nothing)
 		hint = "motes"
 		if _hinted != "motes" and player.interactor != null:
 			player.interactor.notice("No keelstone left in the belt", 1.5)
@@ -1215,7 +1302,7 @@ func _begin_hold() -> void:
 	state = State.HOLDING
 	hold_t = 0.0
 	_drain_t = 0.0
-	set_motes(motes - int(SwayMoves.move(move).get("motes", 0)))        # (paid now: lost if it breaks)
+	set_motes(motes - cost_of(move))        # (paid now: lost if it breaks; none with free use)
 	_hold_stone = holds_stone(move, target)
 	if _hold_stone:
 		hold = GustLift.begin(self, target, SwayMoves.move(move).get("stone", {}))
@@ -1241,11 +1328,14 @@ func _tick_hold(dt: float, q: Dictionary) -> void:
 		if reach_to(hold.at(), move) > range_of(move, target) * RANGE_SLACK * 1.4:
 			_end_hold("far")
 		return
-	# a sail: the aim kept on it, a mote every drain_s
+	# a sail: the aim kept on it, a mote every drain_s (none with free use: the wind kept while the lock holds)
 	var on := _on_target(q)
 	off_t = 0.0 if on else off_t + dt
 	if off_t > grace_s:
 		_end_hold("off")
+		return
+	if free_use():
+		_drain_t = 0.0
 		return
 	_drain_t += dt
 	var drain := maxf(float((SwayMoves.move(move).get("sail", {}) as Dictionary).get("drain_s", 2.0)), 0.1)
@@ -1344,8 +1434,7 @@ func _cast() -> void:
 	var m := move
 	var t := target
 	var at := locked_point()
-	var d := SwayMoves.move(m)
-	set_motes(motes - int(d.get("motes", 0)))
+	set_motes(motes - cost_of(m))             # (none with free use)
 	_count_use(m)
 	var tag := tag_of(t)
 	casts[tag] = int(casts.get(tag, 0)) + 1

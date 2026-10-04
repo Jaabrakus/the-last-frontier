@@ -776,11 +776,18 @@ func _has_tool(kind: String) -> bool:
 	return g != null and g.data != null and g.data.is_tool(kind) and g.owns(kind)
 
 
-## A spell the player's caster has been granted (with no caster, or one that cannot say: any).
+## A spell the player's caster has been granted (with no caster, or one that cannot say: any). With no caster but a save's
+## Sway part waiting for one (SwayCaster.load_of's meta sway_save), the spells that save granted: a game saved under the
+## Sway's free use (every spell known; the user, 2026-10-03: "lets make the spells free use right now") and loaded with
+## the switch off has no caster in a plain game, and its spells on the bar would stay doing nothing.
 func _has_spell(id: String) -> bool:
 	if id == "":
 		return false
 	var c := player.get_node_or_null("SwayCaster") if player != null else null
+	if c == null and player != null and player.has_meta(&"sway_save"):
+		var sv: Variant = player.get_meta(&"sway_save")
+		if sv is Dictionary and (sv as Dictionary).get("moves") is Array:
+			return ((sv as Dictionary).moves as Array).has(id)
 	if c == null or not c.has_method(&"has"):
 		return true
 	return bool(c.call(&"has", id))

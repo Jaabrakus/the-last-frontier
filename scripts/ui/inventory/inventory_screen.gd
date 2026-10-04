@@ -435,8 +435,9 @@ func _show_detail(kind: String) -> void:
 	_d_rows.text = b + "[/table]"
 
 
-## A spell's card: its name and mode, its art, what it costs (moves.json), its mastery (casts landed, the next tier) and its
-## modes (SwayCaster: mode_of, the mode key), how it is used.
+## A spell's card: its name and mode, its art, what it costs (moves.json; "free" with free use, SwayCaster.cost_of: the user,
+## 2026-10-03, "lets make the spells free use right now"), its mastery (casts landed, the next tier) and its modes
+## (SwayCaster: mode_of, the mode key), how it is used.
 func _show_spell(id: String) -> void:
 	var d := SwayMoves.move(id)
 	var c := SwayCaster.of(player)
@@ -446,14 +447,14 @@ func _show_spell(id: String) -> void:
 	_d_text.text = "Drag it onto a hotbar slot; its number readies it, then hold the aim on the target until the ring fills and let go."
 	var tm := c.tier_mult(id) if c != null else 1.0
 	var reach := c.range_of(id) if c != null else float(d.get("range_m", 0.0))
-	var rows: Array = [["Motes", str(int(d.get("motes", 0))), ""],
+	var rows: Array = [["Motes", "free" if SwayCaster.free_use() else str(SwayCaster.cost_of(id)), "good" if SwayCaster.free_use() else ""],
 			["Lock", "%.1f s" % (float(d.get("lock_s", 1.0)) * tm), ""],
 			["Reach", "%d m" % roundi(reach), ""]]
 	var st: Dictionary = d.get("stone", {})
 	if not st.is_empty():
 		# Gust's other jobs: a stone held up and hurled (GustLift), the wind held in a sail
 		var hd: Dictionary = st.get("hold", {})
-		_d_text.text += "\n\nOn a stone (Stone Form's spike or cannonball, a ship's boulder, a loose rock) it is a hold: at the full lock the stone tears free and rises while you keep the aim, drawn like a bowstring; let go to hurl it along the aim (a spike flies like a lance, a ball rolls on). Held too long the hold breaks: it drops, you stagger, the mote is lost. On a sail it keeps the wind in it while held."
+		_d_text.text += "\n\nOn a stone (Stone Form's spike or cannonball, a ship's boulder, a loose rock) it is a hold: at the full lock the stone tears free and rises while you keep the aim, drawn like a bowstring; let go to hurl it along the aim (a spike flies like a lance, a ball rolls on). Held too long the hold breaks: it drops, you stagger%s. On a sail it keeps the wind in it while held." % ("" if SwayCaster.free_use() else ", the mote is lost")
 		rows.append(["On a stone", "lock %.1f s, reach %d m, breaks after %.0f s; over %d kg it needs two" % [float(st.get("lock_s", 0.8)) * tm,
 				roundi(float(st.get("range_m", 14.0))), float(hd.get("break_s", 5.0)), roundi(float(st.get("mass_kg", 90.0)))], "use"])
 	if id == "stone_form":

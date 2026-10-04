@@ -111,7 +111,9 @@ static func do_one(d: StoryDirector, e: Dictionary, key := "") -> void:
 
 ## An effect's `say` line as shown. A sway_grant's names the spells it gave (its own line, SwayCaster.grant's, is under it):
 ## at {spells} when the line has it, else after its first sentence ("Your hands know something new: Earth Wall, Stone Form,
-## Pillar, Mend. Tab: drag a spell to 1-9.").
+## Pillar, Mend. Tab: drag a spell to 1-9."). None with the Sway's free use (SwayCaster.free_use; the user, 2026-10-03:
+## "lets make the spells free use right now"): every spell is known from the start, so a grant of spells has nothing new to
+## tell (kept in the data for when the switch is off again).
 static func say_line(e: Dictionary) -> String:
 	var text := String(e.get("say", ""))
 	if text == "" or String(e.get("do", "")) != "sway_grant":
@@ -122,6 +124,8 @@ static func say_line(e: Dictionary) -> String:
 			names.append(String(SwayMoves.move(id).get("label", id.capitalize())))
 	if names.is_empty():
 		return text
+	if SwayCaster.free_use():
+		return ""                          # (known since the start: see above)
 	var list := ", ".join(names)
 	if "{spells}" in text:
 		return text.replace("{spells}", list)

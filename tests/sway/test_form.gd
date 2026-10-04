@@ -34,6 +34,9 @@ extends SceneTree
 ##             one is lifted
 ##   mend      a charred wall made whole, a burning one put out, a fire's ruin stood up again (charred), each taking wood from
 ##             the pack (the press on the wall's face for an upright)
+## The gated rules: free use off here (SwayCaster.free_override false: a spell only once granted, the motes spent), as the
+## story will want them back; free use itself (the user, 2026-10-03: "lets make the spells free use right now") is
+## tests/sway/test_free_use.gd.
 ## Ends with "FORM TEST PASSED (<n> checks)" or "FORM TEST FAILED (<f> of <n>)".
 
 const LANE_X := -1.25
@@ -52,6 +55,7 @@ func _expect(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	SwayCaster.free_override = false          # (the gated rules: see the header)
 	InputSetup.ensure()
 	for action in InputMap.get_actions():
 		if not String(action).begins_with("ui_"):

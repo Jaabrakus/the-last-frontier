@@ -28,7 +28,8 @@ extends SceneTree
 ##   save     a save and a load mid-mission (a new level): the mission and step, the wreck where it lay, the sky open, the
 ##            layer not placed twice, the player where he stood
 ##   lock     the first lock on the spar (the crosshair put on it once, the aim held still) lifts it, sets it down clear of
-##            the stranger, and frees him; the captain's Wayglass
+##            the stranger, and frees him; the Form spells granted (the caster's granted list: with the Sway's free use every
+##            spell is known anyway; its "Your hands know something new" line only without free use); the captain's Wayglass
 ##   rook     Rook (no shadow) walks the player to the ford by the dead stock; the stages gone in Ash (told), the cache's lead
 ##            given back and Vane's blanket
 ##   lesson   December at dusk: Rook on the ice, Gust granted; Gust put out the lantern, blew the hat off its post and caught
@@ -837,12 +838,17 @@ func _the_lock() -> void:
 	physics_frame.disconnect(watch)
 	physics_frame.disconnect(hear)
 	_expect(top[0] > y0 + 1.0 and freed[0] and bool(_f("tf.spar_lifted")), "the spar lifted (%.2f m up), the stranger crawls free" % (top[0] - y0))
+	# (the grant as recorded, granted: has() is every spell with the Sway's free use, the user's 2026-10-03 "lets make the
+	# spells free use right now", so it would pass with the story's sway_grant doing nothing; its line said only without it,
+	# StoryEffects.say_line)
 	var sc := SwayCaster.of(player)
 	var form_ok := sc != null
 	for id in ["earth_wall", "stone_form", "pillar", "mend"]:
-		form_ok = form_ok and sc.has(id)
-	_expect(form_ok and not sc.has("levitate") and said[0] and (sc.known_spells() as Array).size() >= 4,
-			"the lock done, the Form spells granted (Earth Wall, Stone Form, Pillar, Mend: into the Tab screen's Spells list), the line said")
+		form_ok = form_ok and sc.granted.has(id)
+	_expect(form_ok and not sc.has("levitate") and not sc.granted.has("gust") and said[0] != SwayCaster.free_use()
+			and (sc.known_spells() as Array).size() >= 4,
+			"the lock done, the Form spells granted (Earth Wall, Stone Form, Pillar, Mend: into the Tab screen's Spells list; granted %s), the line said %s (free use %s)"
+			% [str(sc.granted if sc else []), said[0], SwayCaster.free_use()])
 	await _ticks(Engine.physics_ticks_per_second * 2)
 	var ends := [spar.global_position - spar.global_basis.x * WreckFall.SPAR_LEN * 0.5, spar.global_position + spar.global_basis.x * WreckFall.SPAR_LEN * 0.5]
 	var off := Geometry3D.get_closest_point_to_segment(pelvis, ends[0], ends[1])
@@ -897,7 +903,7 @@ func _lesson() -> void:
 	_expect(rook != null and _flat(rook.global_position, ice) < 2.0, "Rook waits on the ice")
 	_put(ice + Vector3(4, 0, 0))
 	await _pump(func() -> bool: return _step() == "lock_cast", 15.0, ["Show me"])
-	_expect(caster.has("gust"), "his lesson: Gust is the player's")
+	_expect(caster.granted.has("gust"), "his lesson: Gust is the player's (granted: %s)" % str(caster.granted))     # (granted: has() is every spell with free use)
 	await _hands_free()
 	# (spells only from the bar: the player drags Gust from the Tab screen's Spells list onto a slot and presses its key)
 	var hb := Hotbar.find(player)

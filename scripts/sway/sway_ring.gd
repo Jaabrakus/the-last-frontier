@@ -10,6 +10,9 @@ extends Control
 ## the empty track shows faintly, and the
 ## belt's motes as dots under it (also for a moment after they change; red when a lock wants more than are left). The self
 ## pillar's lock while running: a small beat ring inside it on each foot plant (pulse: the boost's moment, FormEffects).
+## With free use (SwayCaster.free_use; the user, 2026-10-03: "lets make the spells free use right now") the belt is hidden
+## (nothing is spent: dots that never change would only be noise, and could never say the belt is out) and a sail's hold
+## shows its wind whole (no mote's time running down).
 ## No text.
 
 const RADIUS := 21.0
@@ -121,7 +124,7 @@ func _draw() -> void:
 				k = caster.hold.draw
 			else:
 				var drain := maxf(float((SwayMoves.move(caster.move).get("sail", {}) as Dictionary).get("drain_s", 2.0)), 0.1)
-				k = 1.0 - clampf(fmod(caster.hold_t, drain) / drain, 0.0, 1.0)
+				k = 1.0 if SwayCaster.free_use() else 1.0 - clampf(fmod(caster.hold_t, drain) / drain, 0.0, 1.0)
 			draw_arc(c, RADIUS - 5.0, -PI * 0.5, -PI * 0.5 + TAU * k, 40, Color(bright.r, bright.g, bright.b, 0.75 * a), 1.8, true)
 	elif caster.readied:
 		_ring(c, RADIUS, 1.0, Color(0, 0, 0, 0.2), shape, WIDTH + 1.0)
@@ -142,7 +145,7 @@ func _draw() -> void:
 			_:
 				var g := Color(0.62, 0.62, 0.62, 0.7 * (1.0 - k))
 				_ring(c, RADIUS, float(_end.f), g, es, WIDTH)
-	if caster.readied or on or _belt_t > 0.0:
+	if (caster.readied or on or _belt_t > 0.0) and not SwayCaster.free_use():     # (free use: no belt)
 		var ba := 1.0 if (caster.readied or on) else clampf(_belt_t / 0.5, 0.0, 1.0)
 		var short := caster.hint == "motes"
 		var n := caster.belt_max

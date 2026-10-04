@@ -27,6 +27,9 @@ extends SceneTree
 ##   first    the wreck's spar (group sway_targets, meta sway_move first_lock; not granted, costs nothing, no spell readied):
 ##            a 3 s lock, then cast, and it is lifted up and set aside (lifted)
 ##   save     the motes, the moves, the uses and the modes in the player's save part and back
+## The gated rules: free use off here (SwayCaster.free_override false: a spell only once granted, the motes spent), as the
+## story will want them back; free use itself (the user, 2026-10-03: "lets make the spells free use right now") is
+## tests/sway/test_free_use.gd.
 ## Ends with "SWAY TEST PASSED (<n> checks)" or "SWAY TEST FAILED (<f> of <n>)".
 
 const LANE_X := -1.25
@@ -45,6 +48,7 @@ func _expect(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	SwayCaster.free_override = false          # (the gated rules: see the header)
 	InputSetup.ensure()
 	for action in InputMap.get_actions():
 		if not String(action).begins_with("ui_"):

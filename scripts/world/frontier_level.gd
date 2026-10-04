@@ -115,6 +115,10 @@ func _ready() -> void:
 	NetSession.install(self, player)
 	_audio(player)
 	StartupProfile.mark("audio")
+	# the Sway (scripts/sway): with moves.json's free_use the caster from the start, every spell known, story on or off, a new
+	# game or a load (the user, 2026-10-03: "lets make the spells free use right now"; SwayCaster.install_free); without it
+	# the story's grant installs it
+	SwayCaster.install_free(player)
 	# survival (scripts/survival_game): the core (needs, the clock, the kit) through its one bridge; the core drives
 	# the sky's clock (off in -s tool / test runs unless they pass survival=on)
 	if SurvivalBridge.enabled():
