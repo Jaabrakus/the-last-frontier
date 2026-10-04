@@ -8,7 +8,9 @@ extends Node3D
 ## comes near and freed as they go (out of sight, among the crowns). PlayerGrip asks for the perch of the trunk it holds
 ## (perch_at), pulls the climber up onto it and leaves them crouched there (user: "no feet dangling more like a
 ## crouch"), weapons in hand. A felled tree's branches go with it (VegHarvest.remove_tree calls forget_tree; user
-## 2026-09-28: "when we fell a tree, the climbable branches are still there").
+## 2026-09-28: "when we fell a tree, the climbable branches are still there"). A tree is climbed from branch to branch with E
+## (user 2026-10-03; TreeClimb, PlayerGrip.climb_up / climb_down: perch_tier, has_branches, branch_mesh), and the floors are left
+## out of the camera's spring arm (a climber hanging under one had the view pulled in onto their back).
 
 const Assets := preload("res://scripts/world/vegetation/veg_assets.gd")
 const GROUP := &"perch_branches"
@@ -30,6 +32,7 @@ const TOP_ROOM := 1.5
 var player: FrontierPlayer
 var _veg: Node
 var _trees: Array = []               ## [{"i", "axis": Vector3 (ground), "r", "top", "dir": Vector3}] every sturdy tree
+var _by_tree := {}                   ## a tree's layout index -> its entries of _trees (every tier: E's climb asks every frame)
 var _live := {}                      ## tree index -> MeshInstance3D
 var _t := 0.0
 var _mat: Material
@@ -87,9 +90,10 @@ func _gather() -> bool:
 		var birch := str(info.get("name", "")).begins_with("birch")
 		# three branches round the trunk (a climber coming up anywhere is at most 60 degrees from one); (the collider's
 		# top: vegetation.gd sinks it 0.3 m, and lengthens it by what it sinks more on a slope)
+		var mine: Array = []
 		for k in 3:
 			var ak := a + TAU * float(k) / 3.0
-			_trees.append({"i": i * 16 + k, "tree": i, "tier": 0, "axis": pos, "r": r, "top": pos.y + h - 0.3 + 0.12 * float(k - 1),
+			mine.append({"i": i * 16 + k, "tree": i, "tier": 0, "axis": pos, "r": r, "top": pos.y + h - 0.3 + 0.12 * float(k - 1),
 					"dir": Vector3(sin(ak), 0.0, cos(ak)), "birch": birch})
 		# higher up, a branch every TIER_STEP m through the crown (user 2026-10-01: "add more branches to allow us to climb higher"),
 		# each round the trunk from the one under it, thinner as the trunk thins, to TOP_ROOM under the tree's top
@@ -100,8 +104,10 @@ func _gather() -> bool:
 			if y > pos.y + full - TOP_ROOM:
 				break
 			var at := a + TAU * 0.38 * float(t)
-			_trees.append({"i": i * 16 + 2 + t, "tree": i, "tier": t, "axis": pos, "r": maxf(r * (1.0 - 0.14 * float(t)), 0.1), "top": y,
+			mine.append({"i": i * 16 + 2 + t, "tree": i, "tier": t, "axis": pos, "r": maxf(r * (1.0 - 0.14 * float(t)), 0.1), "top": y,
 					"dir": Vector3(sin(at), 0.0, cos(at)), "birch": birch})
+		_trees.append_array(mine)
+		_by_tree[i] = mine
 	return true
 
 
@@ -112,10 +118,10 @@ func forget_tree(tree: int) -> void:
 		if int(tr.tree) != tree:
 			keep.append(tr)
 		elif _live.has(tr.i):
-			for n: Node in _live[tr.i]:
-				n.queue_free()
+			_drop(_live[tr.i])
 			_live.erase(tr.i)
 	_trees = keep
+	_by_tree.erase(tree)
 
 
 func _process(delta: float) -> void:
@@ -134,9 +140,17 @@ func _process(delta: float) -> void:
 		if d < RADIUS and not _live.has(i):
 			_live[i] = [_build(tr), _floor(tr)]
 		elif d > KEEP and _live.has(i):
-			for n: Node in _live[i]:
-				n.queue_free()
+			_drop(_live[i])
 			_live.erase(i)
+
+
+## A branch and its floor freed (the floor off the camera's list again).
+func _drop(nodes: Array) -> void:
+	var arm: SpringArm3D = player.spring_arm if player != null and is_instance_valid(player) else null
+	for n: Node in nodes:
+		if arm and n is CollisionObject3D:
+			arm.remove_excluded_object((n as CollisionObject3D).get_rid())
+		n.queue_free()
 
 
 func _build(tr: Dictionary) -> MeshInstance3D:
@@ -175,6 +189,10 @@ func _floor(tr: Dictionary) -> StaticBody3D:
 	add_child(b)
 	var d: Vector3 = tr.dir
 	b.global_transform = Transform3D(Basis(d, Vector3.UP, d.cross(Vector3.UP)), (pr.seat as Vector3) - Vector3.UP * 0.04)
+	# the camera's spring arm goes through it: a climber hanging under a branch (E's reach, the climb down) had the view pulled in
+	# onto their back by the floor over their head (2026-10-03)
+	if player != null and player.spring_arm != null:
+		player.spring_arm.add_excluded_object(b.get_rid())
 	return b
 
 
@@ -242,8 +260,8 @@ func perch_tier(tree_index: int, tier: int, step: int, toward := Vector3.ZERO) -
 		return {}
 	var best := {}
 	var bs := -INF
-	for tr: Dictionary in _trees:
-		if int(tr.tree) != tree_index or int(tr.get("tier", 0)) != want or not _live.has(tr.i):
+	for tr: Dictionary in _by_tree.get(tree_index, []):
+		if int(tr.get("tier", 0)) != want or not _live.has(tr.i):
 			continue
 		var dir: Vector3 = tr.dir
 		var s := dir.dot(toward)
@@ -255,3 +273,14 @@ func perch_tier(tree_index: int, tier: int, step: int, toward := Vector3.ZERO) -
 	var pr := _perch(best)
 	pr["floor"] = (_live[best.i] as Array)[1]
 	return pr
+
+
+## Whether tree `tree_index` (a layout index) has branches to climb (a sturdy tree's, built near the player or not).
+func has_branches(tree_index: int) -> bool:
+	return _by_tree.has(tree_index)
+
+
+## The bark branch of a perch (perch_at / perch_tier's dict), for E's highlight of the branch to climb to (null when it is not built).
+func branch_mesh(pr: Dictionary) -> MeshInstance3D:
+	var l: Array = _live.get(int(pr.get("tree", -1)), [])
+	return l[0] as MeshInstance3D if not l.is_empty() and is_instance_valid(l[0]) else null

@@ -17,7 +17,8 @@ extends Node3D
 ##   otherwise                    "Load the wheelbarrow": the chest screen, the pack beside the bed (what a chest
 ##                                takes: stone, firewood, meat, hides, ...)
 ##   with a deer or a log in it   "Tip out the deer" / "... the log": laid on the ground beside it
-## The arms reach the handles (a PalmReachIK on each palm); the legs walk the player's own locomotion.
+## The arms reach the handles (a PalmReachIK on each palm, held steady: the elbows down and a little out, not the jog's
+## swing; the grips where the arms hold them a little bent, ELBOW_BEND_DEG); the legs walk the player's own locomotion.
 
 const GROUP := &"wheelbarrows"
 ## The model (its frame: the wheel's axle at the origin, +Z forward to the wheel, +X to the pusher's left).
@@ -31,9 +32,31 @@ const LEG_Z := -0.8
 ## The bed: from BED_Z.x to BED_Z.y along it, its floor this high over the axle.
 const BED_Z := Vector2(-0.95, -0.1)
 const BED_FLOOR := 0.02
-## Pushing: the grips' middle this far in front of the pusher's feet and this high.
+## Pushing: the grips' middle this far in front of the pusher's feet and this high (the companion's push; the player's
+## starts there and goes where their arms hold it: grip_fwd, grip_side, grip_h).
 const GRIP_FWD := 0.24
 const GRIP_H := 0.8
+## The player's push (the user 2026-10-03: "also when we push the wheel barrow fix the elbows so they dont do a chicken
+## dance"): the grips' middle eases (at most GRIP_RATE m/s) to where both arms hold the handles bent ELBOW_BEND_DEG off
+## straight, from the shoulders where the player's clip carries them (_ease_grips): centred between the shoulders
+## (GRIP_SIDE_EASE_S; at most GRIP_SIDE_MAX off the feet), as high as GRIP_H and GRIP_BOB of the strides' bob of the
+## shoulders (at most GRIP_BOB_MAX; the slow part, BOB_AVG_S, is the lean's and stays out of it), and as far ahead as
+## the arms reach there (GRIP_EASE_S; coming back GRIP_BACK_EASE_S, as a body straightening at a stop leaves the hands
+## no slack; GRIP_FWD_MIN..MAX). Held at GRIP_FWD, GRIP_H (measured 2026-10-03): the jog's lean (its shoulders
+## 0.15-0.25 m before the feet, 0.1-0.15 m lower) folded the arms 85-100 deg with the hands under the shoulders and
+## threw the elbows out; standing (the free-hands idle carries the shoulders 9 cm to the left) the right arm was
+## straight and both palms 2-7 cm short of the grips.
+const ELBOW_BEND_DEG := 32.0
+const GRIP_FWD_MIN := 0.12
+const GRIP_FWD_MAX := 0.75
+const GRIP_SIDE_MAX := 0.12
+const GRIP_BOB := 0.75
+const GRIP_BOB_MAX := 0.05
+const BOB_AVG_S := 0.5
+const GRIP_EASE_S := 0.08
+const GRIP_BACK_EASE_S := 0.03
+const GRIP_SIDE_EASE_S := 0.25
+const GRIP_RATE := 2.0
 ## Seconds for the arms to take the handles or let them go.
 const ARM_FADE_S := 0.2
 ## A dead animal's rump end no further back than this (the grips are at -GRIP_BACK; the bed starts at BED_Z.x).
@@ -50,6 +73,12 @@ var load_node: Node3D = null
 var _carcass_seat := Transform3D.IDENTITY
 ## The pace the load gives (m/s) while pushed.
 var cap := INF
+## While the player pushes it, its grips' middle in their frame (m; see ELBOW_BEND_DEG): this far before their feet,
+## this far to their right and this high over them.
+var grip_fwd := GRIP_FWD
+var grip_side := 0.0
+var grip_h := GRIP_H
+var _sh_y_slow := NAN                      ## the shoulders' height over the feet, slowly averaged (the bob is the rest)
 ## Why it was last set down ("e", "jump", "weapon", "hit", "died", "mounted", "kneeling", "vault"); tests.
 var last_set_down := ""
 
@@ -203,7 +232,7 @@ static func _pitch_for(y: float, z: float, dy: float) -> float:
 func _push_pose() -> Transform3D:
 	var fwd := -player.global_basis.z
 	fwd = Vector3(fwd.x, 0.0, fwd.z).normalized()
-	var grips := player.global_position + fwd * GRIP_FWD + Vector3.UP * GRIP_H
+	var grips := player.global_position + fwd * grip_fwd + fwd.cross(Vector3.UP) * grip_side + Vector3.UP * grip_h
 	# the axle as far ahead as the handles reach at the pitch they take (two passes: the pitch shortens it)
 	var a := 0.0
 	var axle := grips
@@ -213,6 +242,44 @@ func _push_pose() -> Transform3D:
 		axle.y = _ground(axle) + WHEEL_R
 		a = _pitch_for(GRIP_UP, -GRIP_BACK, grips.y - axle.y)
 	return Transform3D(Basis(Vector3.UP, atan2(fwd.x, fwd.z)) * Basis(Vector3.RIGHT, a), axle)
+
+
+## The player's grips' middle (grip_fwd, grip_side, grip_h) eased toward where both arms hold the handles bent
+## ELBOW_BEND_DEG (see it), from the shoulders and the arms' lengths the grip IK last solved with (as they are until
+## it has).
+func _ease_grips(delta: float) -> void:
+	var sk := player.skeleton
+	if _ik == null or sk == null:
+		return
+	var to_p := player.global_transform.affine_inverse() * sk.global_transform
+	var size := to_p.basis.get_scale().y                     # (the body's stature scales the rig: its lengths to metres)
+	var sh := {}
+	var reach := {}
+	for s: String in ["l", "r"]:
+		var at: Vector3 = _ik.shoulder_at.get(s, Vector3.INF)
+		var la := float(_ik.upper_len.get(s, 0.0)) * size
+		var lp := float(_ik.lower_len.get(s, 0.0)) * size
+		if at == Vector3.INF or la <= 0.0 or lp <= 0.0:
+			return
+		sh[s] = to_p * at                                    # the player's frame: forward -Z, their right +X
+		reach[s] = sqrt(la * la + lp * lp + 2.0 * la * lp * cos(deg_to_rad(ELBOW_BEND_DEG)))
+	var mid: Vector3 = ((sh.l as Vector3) + (sh.r as Vector3)) * 0.5
+	_sh_y_slow = mid.y if is_nan(_sh_y_slow) else lerpf(_sh_y_slow, mid.y, 1.0 - exp(-delta / BOB_AVG_S))
+	grip_h = GRIP_H + clampf(mid.y - _sh_y_slow, -GRIP_BOB_MAX, GRIP_BOB_MAX) * GRIP_BOB
+	var side := clampf(mid.x, -GRIP_SIDE_MAX, GRIP_SIDE_MAX)
+	grip_side = move_toward(grip_side, lerpf(grip_side, side, 1.0 - exp(-delta / GRIP_SIDE_EASE_S)), GRIP_RATE * delta)
+	# (the nearer of the two arms' places: where they differ, one arm bends more rather than the other's hand leaving
+	# its grip)
+	var fwd := INF
+	for s: String in ["l", "r"]:
+		var p: Vector3 = sh[s]
+		var r: float = reach[s]
+		var dx := grip_side + (-GRIP_W if s == "l" else GRIP_W) - p.x
+		var dy := grip_h - p.y
+		fwd = minf(fwd, -p.z + sqrt(maxf(r * r - dx * dx - dy * dy, 0.0)))
+	fwd = clampf(fwd, GRIP_FWD_MIN, GRIP_FWD_MAX)
+	var ease_s := GRIP_BACK_EASE_S if fwd < grip_fwd else GRIP_EASE_S
+	grip_fwd = move_toward(grip_fwd, lerpf(grip_fwd, fwd, 1.0 - exp(-delta / ease_s)), GRIP_RATE * delta)
 
 
 ## The ground under `p`: a ray down (not people, the barrow, what is in it), else the terrain.
@@ -282,6 +349,10 @@ func start(p: FrontierPlayer) -> bool:
 		_notice(p, "Both hands on the handles: the torch goes back in the pack")
 	player = p
 	p.set("pushing", self)
+	grip_fwd = GRIP_FWD
+	grip_side = 0.0
+	grip_h = GRIP_H
+	_sh_y_slow = NAN
 	_body.process_mode = Node.PROCESS_MODE_DISABLED
 	_push_shape = CollisionShape3D.new()
 	_push_shape.name = "WheelbarrowShape"
@@ -355,6 +426,9 @@ func _physics_process(delta: float) -> void:
 			if why != "":
 				set_down(why)
 	if player != null:
+		_ease_grips(delta)
+		if _push_shape:
+			_push_shape.position = Vector3(grip_side, _push_shape.position.y, -(grip_fwd + GRIP_BACK * 0.5 + 0.55))
 		global_transform = _push_pose()
 		cap = pace_for(load_kg())
 		player.drag_speed_cap = cap
@@ -402,6 +476,8 @@ func _ensure_ik() -> void:
 			if c is CharacterBodyMesh or String(c.name) == "HandPropsFinal":
 				sk.move_child(_ik, i)
 				break
+	_ik.steady = true                            # the elbows held down and a little out, not the jog's swing (PalmReachIK)
+	_ik.shoulder_at = {"l": Vector3.INF, "r": Vector3.INF}     # (this push's, not the last one's: _ease_grips)
 	_ik.set_meta(&"player", player)
 	if not player.hurt.is_connected(_on_hurt):
 		player.hurt.connect(_on_hurt)

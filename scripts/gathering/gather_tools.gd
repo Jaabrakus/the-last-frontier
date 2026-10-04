@@ -1606,7 +1606,8 @@ func use_target() -> void:
 
 ## The bottom prompt for the target ("" none).
 func prompt() -> String:
-	if target.is_empty() or player.riding != null:
+	# (not up a tree or on its trunk: E climbs there, TreeClimb; user 2026-10-03)
+	if target.is_empty() or player.riding != null or player.climbing != null or player.perch != null:
 		return ""
 	var nm := String(target.get("name_disp", ""))
 	match String(target.type):

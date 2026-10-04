@@ -59,6 +59,10 @@ veg_clear_c={
 "type": "vec4",
 "value": Vector4(0, 0, 0, 0)
 }
+veg_clear_d={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
 skin_bounce={
 "type": "float",
 "value": 1.0

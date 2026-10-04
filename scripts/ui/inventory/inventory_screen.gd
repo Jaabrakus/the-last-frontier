@@ -644,7 +644,9 @@ func _build_doll() -> void:
 	_rig = SlingRig.new()
 	_rig.name = "SlingRig"
 	_doll.add_child(_rig)
-	_rig.setup(_sk, _body, figure_loadout())
+	# (the weapons' kit goes with them, as on the body in play: no quiver without the bow on the bar, no horn without a gun;
+	# the user, 2026-10-03: "when i unequip the weapons the musket sling is there and the arrow quiver is there still")
+	_rig.setup(_sk, _body, figure_loadout(), {"kit_follows": true})
 	_cam = Camera3D.new()
 	_cam.fov = 32.0
 	_doll.add_child(_cam)
@@ -659,7 +661,7 @@ func _redress() -> void:
 
 
 ## What the figure carries: the worn loadout less the weapons and tools kept off the hotbar (they are in the pack, and the
-## body in play does not show them either: SlingRig, Hotbar).
+## body in play does not show them either: SlingRig, Hotbar); the figure's rig leaves out their kit too (kit_follows).
 func figure_loadout() -> Loadout:
 	var hb := Hotbar.find(player)
 	if hb == null:

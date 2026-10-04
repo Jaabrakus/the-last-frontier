@@ -13,6 +13,9 @@ extends Node
 ##   G again           drop off (on a flat part: stand up)
 ##   stamina           drains while holding on, faster crawling, hanging on a steep face and when shaken; at zero the
 ##                     grip gives out (grip_fail1) and the player falls; refills on the ground (the ring by the crosshair)
+##   a tree            is climbed branch to branch with E, not crawled (user 2026-10-03; TreeClimb, climb_up / climb_down): E at
+##                     its trunk shinnies up to its first branches, E on a branch climbs to the next, C (or E's "Climb down")
+##                     comes down a branch or down the trunk to the ground; G at a tree says "E to climb"
 ##
 ## The clips turn the bones only, so this places the skeleton: the grip's
 ## anchor is a Node3D under the gripped collider (or the node it offers, GripSurface.parent_for) whose basis is the
@@ -97,9 +100,14 @@ var drain_mult := 1.0
 @export var perch_aim_shoulder := 0.55
 @export var aim_fade := 0.7                ## the body's transparency aiming from a branch
 @export var near_fade_m := Vector2(0.55, 1.1)   ## the body fades as the camera comes within these (m, fully .. none)
-## Up a tree the leaves and limbs of its crown this near the climber fade out (the ground shows through; user
-## 2026-09-28: "when we are on a tree the branchs should fade so we can see the ground"); 0: only the line of sight.
+## Up a tree the leaves and limbs of the crowns this near the climber fade out (user 2026-09-28: "when we are on a tree the
+## branchs should fade so we can see the ground"): the OTHER trees' crowns; the tree climbed keeps its own (user 2026-10-03:
+## "also when we keep climbing up trees fade the other ones not the tree we are climbing up") but for the line of sight and,
+## as the climber looks down, its crown under their feet within this much across (ground_view_down); 0: only the line of sight.
 @export var crown_clear_m := 4.5
+## Looking down from a tree (the sine of the camera's pitch below level): the climbed crown under the climber starts to clear
+## at x and is clear from y on, so the ground shows; level, the tree climbed stays whole.
+@export var ground_view_down := Vector2(0.35, 0.7)
 ## The swing (the climber hanging from the hands, 1 m to the body's centre; springs: the climber pulling back in).
 @export var swing_len := 1.0
 @export var swing_k_side := 18.0
@@ -196,17 +204,45 @@ var _perch_up := false           ## the pull-up playing goes onto a branch
 var _perch_dir := Vector3.FORWARD
 var _perch_face := Vector3.FORWARD
 var _jump_hold := 0.0
-## The branch sat on now (PerchBranches._perch: seat, dir, tree_index, tier), and a climb to the one above or below: {from, to,
-## t, pr} while it lasts (user 2026-10-01: "add more branches to allow us to climb higher"): W held climbs a tier, S held one down.
+## The branch sat on now (PerchBranches._perch: seat, dir, tree_index, tier; user 2026-10-01: "add more branches to allow us to climb
+## higher").
 var _perch_cur := {}
-var _hop := {}
-var _tier_hold := 0.0
-const TIER_HOLD_S := 0.35
-const TIER_HOP_S := 0.9
 const TIER_STAMINA := 6.0
+## A tree is climbed branch to branch with E, not crawled (user 2026-10-03: "its easy to go up and down the tree like that but they
+## should have to press e to climb up to the next branch or something"; TreeClimb offers "Climb up" / "Climb down", C is the way down
+## from a branch): a branch this high over the feet (m) is in reach to climb straight onto (the next one up from a branch is
+## PerchBranches.TIER_STEP); from the ground a tree's first branches are higher, and E shinnies up its trunk to them with the grip's
+## own crawl. The move keys do not crawl a tree's trunk (rock faces and giants still crawl).
+const BRANCH_REACH := Vector2(1.0, 2.4)
+## The reach up to a branch: the body eases over into hanging from the trunk under it (REACH_CATCH_S), the hands this far under its seat
+## (m: the hang's hands are HANDS_AHEAD over the anchor), and pulls up onto it (hang_up) once REACH_HANG_S in. Climbing down to a
+## branch it hangs from the trunk this far over that branch's seat and comes down onto it as long after.
+const REACH_CATCH_S := 0.4
+const REACH_HANG_S := 0.45
+const REACH_BELOW := 0.75
+const LOWER_ABOVE := 1.0
+## Shinnying down a trunk, the climber lets go and drops the rest once the feet are this near the ground (m).
+const DROP_FROM_M := 2.0
+## E's climb (TreeClimb): the shinny up a tree's trunk (1, to its first branches) or down it (-1, to the ground), 0 none; the branch to
+## pull up onto once the reach has caught hold, the branch to come down onto, and the look kept as it is on arriving (no turn).
+var _auto := 0
+var _climb_to := {}
+var _drop_to := {}
+var _keep_look := false
+var _ground_tree := {}           ## the tree at the player's feet on the ground ({at, t, tree}: looked up again 0.15 m or 0.25 s on)
+## The player's "Climb up" / "Climb down" for E (the local player's; TreeClimb, by its path: a new class's name reaches the class
+## cache only when the editor next scans).
+const TreeClimbScript := preload("res://scripts/climb/tree_climb.gd")
+var tree_climb: TreeClimbScript
 var _off_t := 0.0
 var _clear_w := 0.0              ## the line-of-sight fade's strength (veg_clear_*)
 var _crown_r := 0.0              ## the crown clear's radius now (kept while the fade goes out)
+## The tree being climbed: its base (its layout position, where its drawn instances stand: veg_clear_d), Vector3.INF none.
+var climbed_tree := Vector3.INF
+var _trunk_at := Vector3.INF     ## where the grip was when the trunk under it was looked up (again once 0.5 m off)
+var _trunk := Vector3.INF        ## that trunk's tree (its base), Vector3.INF none
+## The fade's shader globals as last set (veg_clear_a .. _d -> Vector4; for the tests, as the renderer keeps none headless).
+var clear_globals := {}
 ## Hanging one-handed with a weapon out (HANG_WEAPONS).
 var hang_aim := false
 var aim_arm: GripAimArm
@@ -272,6 +308,10 @@ func _setup() -> void:
 	_ring = GripRing.new()
 	_ring.grip = self
 	layer.add_child(_ring)
+	tree_climb = TreeClimbScript.new()
+	tree_climb.name = "TreeClimb"
+	tree_climb.grip = self
+	add_child(tree_climb)
 
 
 func _load_data() -> void:
@@ -535,7 +575,11 @@ func _feed_legs(dt: float) -> void:
 
 ## The leaves and limbs between the camera and the climber, and on along the aim, fade out while climbing or crouched
 ## on a branch (veg_clear_*, shaders/vegetation/near_fade.gdshaderinc): a clear view and a clear shot from a tree.
-## In a tree (its bark gripped, or perched) the crown round the climber fades too (crown_clear_m), for the ground.
+## In a tree (its bark gripped, pulling up onto a branch, or perched) the other trees' crowns round the climber fade too
+## (crown_clear_m), and their trunks between the camera and the climber; the tree climbed keeps its crown (veg_clear_d: its
+## base, climbed_tree; user 2026-10-03: "also when we keep climbing up trees fade the other ones not the tree we are climbing
+## up") but for the line of sight and, looking down, the crown under the climber (ground_view_down), for the ground.
+## One cheap step a frame: four shader globals, the climbed trunk looked up only when the grip leaves the one found.
 func _line_of_sight(delta: float) -> void:
 	var on := (state != OFF or perched) and player.camera != null
 	var w := move_toward(_clear_w, 1.0 if on else 0.0, delta / 0.35)
@@ -543,17 +587,54 @@ func _line_of_sight(delta: float) -> void:
 		return
 	_clear_w = w
 	var cam := player.camera.global_position
+	var look := -player.camera.global_basis.z
 	var head := player.global_position + Vector3.UP * 1.45
 	var aim := player.weapon != null and player.weapon.aim > 0.3 and (perched or hang_aim)
-	var far := head + (-player.camera.global_basis.z) * (9.0 if aim else 1.2)
-	if perched or (gripped != null and gripped.is_in_group(&"trees")):
+	var far := head + look * (9.0 if aim else 1.2)
+	if perched or (state != OFF and (_perch_up or not _climb_to.is_empty() or not _drop_to.is_empty()
+			or (gripped != null and gripped.is_in_group(&"trees")))):
 		_crown_r = crown_clear_m
+		climbed_tree = _climbed_tree_base()
 	elif on:
 		_crown_r = 0.0
+		climbed_tree = Vector3.INF
+	if w <= 0.0:
+		climbed_tree = Vector3.INF                # the fade is out: every tree whole again
 	var mid := player.global_position + Vector3.UP * 1.0
-	RenderingServer.global_shader_parameter_set(&"veg_clear_a", Vector4(cam.x, cam.y, cam.z, 1.1))
-	RenderingServer.global_shader_parameter_set(&"veg_clear_b", Vector4(far.x, far.y, far.z, _clear_w))
-	RenderingServer.global_shader_parameter_set(&"veg_clear_c", Vector4(mid.x, mid.y, mid.z, _crown_r))
+	var down := smoothstep(ground_view_down.x, ground_view_down.y, -look.y)
+	var t := climbed_tree
+	_clear_set(&"veg_clear_a", Vector4(cam.x, cam.y, cam.z, 1.1))
+	_clear_set(&"veg_clear_b", Vector4(far.x, far.y, far.z, _clear_w))
+	_clear_set(&"veg_clear_c", Vector4(mid.x, mid.y, mid.z, _crown_r))
+	_clear_set(&"veg_clear_d", Vector4(t.x, down, t.z, 1.0) if t.is_finite() else Vector4.ZERO)
+
+
+func _clear_set(global: StringName, v: Vector4) -> void:
+	RenderingServer.global_shader_parameter_set(global, v)
+	clear_globals[global] = v
+
+
+## The tree being climbed: the branch's tree (perched, pulling up onto it, reaching for it or coming down onto it: E's climb), else
+## the trunk under the grip, looked up in the vegetation (VegHarvest.near) only when the grip is 0.5 m off where it was last looked
+## up; Vector3.INF when the trunk is none of the forest's.
+func _climbed_tree_base() -> Vector3:
+	for pr: Dictionary in [_climb_to, _drop_to]:
+		if pr.has("axis"):
+			return pr.axis
+	if (perched or _perch_up) and _perch_cur.has("axis"):
+		return _perch_cur.axis
+	if not is_instance_valid(anchor):
+		return climbed_tree
+	var at := anchor.global_position
+	if not _trunk_at.is_finite() or Vector2(at.x - _trunk_at.x, at.z - _trunk_at.z).length() > 0.5:
+		_trunk_at = at
+		_trunk = Vector3.INF
+		var hv := VegHarvest.find(get_tree())
+		for d: Dictionary in (hv.near(at, 0.6) if hv else []):
+			if d.src == "tree":
+				_trunk = d.pos
+				break
+	return _trunk
 
 
 ## The branch's camera and the body's fade (see perch_cam_distance).
@@ -561,7 +642,9 @@ func _perch_camera(delta: float) -> void:
 	if player.spring_arm == null or player.riding != null:
 		return
 	var aiming := (perched or hang_aim) and player.weapon != null and player.weapon.aim > 0.3
-	_cam_w = move_toward(_cam_w, 1.0 if perched else 0.0, delta / 0.5)
+	# (kept through E's climbs from branch to branch and the pull-ups onto them: no zooming out and in again between them)
+	var branchy := perched or (state != OFF and (_perch_up or not _climb_to.is_empty() or not _drop_to.is_empty()))
+	_cam_w = move_toward(_cam_w, 1.0 if branchy else 0.0, delta / 0.5)
 	_aim_w = move_toward(_aim_w, 1.0 if aiming else 0.0, delta / 0.25)
 	if _cam_w > 0.0 or _aim_w > 0.0:
 		# (from the player's own view now: its aim camera's too, Player.cam_distance_now())
@@ -640,6 +723,10 @@ func _try_grab() -> bool:
 			if dd < best_d:
 				best_d = dd
 				best = hit
+	if not best.is_empty() and GripSurface.kind_of(best.collider) == "bark":
+		# a tree is climbed with E, branch to branch (TreeClimb; user 2026-10-03): G at its trunk says so
+		_say("E to climb")
+		return false
 	if not best.is_empty():
 		var n: Vector3 = best.normal
 		var pelvis := base + up * BODY_BELOW_PELVIS
@@ -655,12 +742,13 @@ func _try_grab() -> bool:
 	return false
 
 
-func _begin(col: Object, point: Vector3, n: Vector3, fwd: Vector3, clip: String) -> bool:
+func _begin(col: Object, point: Vector3, n: Vector3, fwd: Vector3, clip: String, catch_s := CATCH_S) -> bool:
 	var from := player.skeleton.global_transform
 	if player.begin_climb(self) == null:
 		return false
 	_latched = true
 	gripped = col as CollisionObject3D
+	_trunk_at = Vector3.INF          # (a tree's trunk under the grip is looked up afresh: _climbed_tree_base)
 	kind = GripSurface.kind_of(col)
 	anchor = Node3D.new()
 	anchor.name = "GripAnchor"
@@ -684,7 +772,7 @@ func _begin(col: Object, point: Vector3, n: Vector3, fwd: Vector3, clip: String)
 	_t = 0.0
 	_blend.show_clip(_full(clip), 0.0, 0.0)
 	_blend.update(0.0)
-	_start_catch(from)
+	_start_catch(from, catch_s)
 	state = GRAB
 	player.velocity = Vector3.ZERO
 	grabbed.emit(kind)
@@ -756,6 +844,9 @@ func _end_grip() -> void:
 	anchor = null
 	gripped = null
 	_up = {}
+	_auto = 0
+	_climb_to = {}
+	_drop_to = {}
 
 
 # --------------------------------------------------------------------------------------------------
@@ -797,10 +888,21 @@ func _hold(dt: float, held: bool) -> void:
 			_let_go(0.8, "let_go")
 		return
 	_advance(dt)
+	# E's climb (TreeClimb): caught hold under a branch, up onto it; hanging over the one below, down onto it
+	if (not _climb_to.is_empty() or not _drop_to.is_empty()) and _t >= REACH_HANG_S and _catch_t < 0.0:
+		if not _climb_to.is_empty():
+			_pull_onto(_climb_to, Vector3(-sin(player.yaw), 0.0, -cos(player.yaw)), true)
+		else:
+			_land_on(_drop_to)
+		return
 	if state == GRAB:
 		if _t >= _len(_clip) - 1e-3:
 			state = HOLD
 			_play(_idle_clip())
+		return
+	# shinnying down a tree to the ground: the last of it is a drop (hang and drop)
+	if _auto < 0 and _feet_over_ground() <= DROP_FROM_M:
+		_let_go(0.3, "let_go")
 		return
 	if hang_aim or (_moving == "" and _float == "" and player.controls.pressed(&"aim") and _hang_weapon() != ""):
 		_hang_aim_step(dt)
@@ -808,6 +910,10 @@ func _hold(dt: float, held: bool) -> void:
 	if _shaken(dt):
 		return
 	var want := player.controls.move_vector()
+	if kind == "bark":
+		# a tree's trunk is not crawled with the move keys (user 2026-10-03): E's shinny goes up it or down it on its own (_auto), and
+		# stops while the aim is held (one hand free on the trunk for a pistol, a tomahawk, a spear: HANG_WEAPONS)
+		want = Vector2(0.0, -float(_auto)) if not player.controls.pressed(&"aim") else Vector2.ZERO
 	var d := _input_dir(Vector2(want.x, -want.y))
 	if _moving != "":
 		_crawl(dt)
@@ -1251,29 +1357,53 @@ func _start_perch() -> bool:
 	var pr := perch.perch_at(anchor.global_position)
 	if pr.is_empty():
 		return false
+	_pull_onto(pr, -anchor.global_basis.y)
+	return true
+
+
+## From hanging under the branch `pr` up onto it (hang_up): crouched across it, facing the side of it nearer `face` (keep_look: the
+## camera stays where it looks, E's climbs; else the body and the view turn across the branch, as after the shinny).
+func _pull_onto(pr: Dictionary, face: Vector3, keep_look := false) -> void:
 	_perch_from = {"col": gripped, "point": anchor.global_position, "n": anchor.global_basis.y}
 	var side: Vector3 = pr.side
-	var face := -anchor.global_basis.y
 	face.y = 0.0
 	_perch_face = side if side.dot(face) >= 0.0 else -side
 	_perch_dir = pr.dir
 	_perch_cur = pr
 	_perch_up = true
+	_climb_to = {}
+	_auto = 0
+	_keep_look = keep_look
 	_up = {"col": pr.floor, "point": pr.seat, "n": Vector3.UP, "dir": Vector3.UP, "face": _perch_face}
 	_start_climb_up()
-	return true
+
+
+## From hanging over the branch `pr` down onto it: crouched on it (as after a pull-up), the camera where it looks.
+func _land_on(pr: Dictionary) -> void:
+	var side: Vector3 = pr.side
+	var look := Vector3(-sin(player.yaw), 0.0, -cos(player.yaw))
+	_perch_face = side if side.dot(look) >= 0.0 else -side
+	_perch_dir = pr.dir
+	_perch_cur = pr
+	_drop_to = {}
+	_keep_look = true
+	anchor.global_position = pr.seat
+	_perch_done()
 
 
 ## Up on the branch: the player's own body, crouched, standing on the branch's floor; the weapons are theirs again.
 func _perch_done() -> void:
 	var at := anchor.global_position
+	var keep := _keep_look
+	_keep_look = false
 	_end_grip()
 	player.global_position = at + Vector3.UP * 0.03
 	player.velocity = Vector3.ZERO
 	player.set_crouched(true)
 	player.perch = self
-	player.yaw = atan2(-_perch_face.x, -_perch_face.z)
-	player.rotation.y = player.yaw
+	if not keep:
+		player.yaw = atan2(-_perch_face.x, -_perch_face.z)
+		player.rotation.y = player.yaw
 	perched = true
 	_jump_hold = 0.0
 	_off_t = 0.0
@@ -1281,37 +1411,24 @@ func _perch_done() -> void:
 	climbed_up.emit()
 
 
-## Crouched on a branch (the player moves the body; the move keys do nothing there): the grip refills while not aiming;
-## the camera stays on the open side; G again takes hold of the trunk; Space held jumps off. True when the grip took
-## the body back.
+## Crouched on a branch (the player moves the body; the move keys do nothing there): the grip refills while not aiming; the look is
+## free; E climbs to the branch above (TreeClimb), C down to the one below or off the first ones down the trunk (climb_down), G says
+## so; Space held jumps off. True when the grip took the body back.
 func _perch_tick(dt: float) -> bool:
 	if player.perch != self or player.is_dead:
 		_unperch()
 		return false
-	if not _hop.is_empty():
-		return _hop_tick(dt)
 	var aiming := player.weapon != null and player.weapon.aim > 0.3
 	if not aiming:
 		stamina = move_toward(stamina, stamina_max, perch_regain * dt)
-	# W held: up to the branch above; S held: down to the one below (the first set's S does nothing: G takes the trunk there)
-	var want := 1 if player.controls.pressed(&"move_forward") else (-1 if player.controls.pressed(&"move_back") else 0)
-	_tier_hold = _tier_hold + dt if want != 0 and not aiming else 0.0
-	if _tier_hold >= TIER_HOLD_S and perch != null and not _perch_cur.is_empty() and stamina > TIER_STAMINA:
-		_tier_hold = 0.0
-		var look := Vector3(-sin(player.yaw), 0.0, -cos(player.yaw))
-		var nx := perch.perch_tier(int(_perch_cur.get("tree_index", -1)), int(_perch_cur.get("tier", 0)), want, look)
-		if not nx.is_empty():
-			stamina -= TIER_STAMINA
-			_hop = {"from": player.global_position, "to": (nx.seat as Vector3) + Vector3.UP * 0.03, "t": 0.0, "pr": nx}
-			return false
 	# (the look is free on a branch: all the way round to face the trunk, or back along the branch; user 2026-10-01 "allow them to
 	# turn towards the trunk or free the look". The camera's spring arm keeps out of the bark and a shot at it hits the bark)
+	# C: down (user 2026-10-03: "Climb down" is E's hold list and C)
+	if player.controls.just_pressed(&"crouch") and not aiming:
+		return climb_down()
 	if player.controls.just_pressed(&"grip"):
-		if int(_perch_cur.get("tier", 0)) > 0:
-			if player.interactor:
-				player.interactor.notice("Climb down to the lowest branches first (hold S)", 2.5)
-			return false
-		return _leave_perch()
+		_say("E to climb up, C to climb down")
+		return false
 	_jump_hold = _jump_hold + dt if player.controls.pressed(&"jump") else 0.0
 	if _jump_hold >= PERCH_JUMP_S:
 		# off the first set the drop is safe (user 2026-10-01: "the first set is okay to jump down"); higher up a fall hurts
@@ -1330,51 +1447,175 @@ func _perch_tick(dt: float) -> bool:
 	return false
 
 
-## A climb from branch to branch: the body carried up (or down) the trunk in an arc to the next seat, crouched, then sat there facing
-## across that branch as on the first.
-func _hop_tick(dt: float) -> bool:
-	_hop.t = float(_hop.t) + dt / TIER_HOP_S
-	var k := minf(float(_hop.t), 1.0)
-	var e := k * k * (3.0 - 2.0 * k)
-	var a: Vector3 = _hop.from
-	var b: Vector3 = _hop.to
-	var p := a.lerp(b, e)
-	# in toward the trunk through the middle of the climb (round it, not through the crown's air)
-	var pr: Dictionary = _hop.pr
-	var axis: Vector3 = pr.axis
-	var inward := Vector3(axis.x - p.x, 0.0, axis.z - p.z)
-	p += inward * 0.35 * sin(PI * e)
-	player.global_position = p
-	player.velocity = Vector3.ZERO
-	_off_t = 0.0
-	if k >= 1.0:
-		_perch_cur = pr
-		_perch_dir = pr.dir
-		var side: Vector3 = pr.side
-		var face := Vector3(-sin(player.yaw), 0.0, -cos(player.yaw))
-		_perch_face = side if side.dot(face) >= 0.0 else -side
-		_hop = {}
-	return false
-
-
 func _unperch() -> void:
-	_hop = {}
-	_tier_hold = 0.0
 	if player.perch == self:
 		player.perch = null
 	perched = false
 	_jump_hold = 0.0
 
 
-## Off the branch onto the trunk again, just under the crown where the climber came up.
-func _leave_perch() -> bool:
-	var col: Object = _perch_from.get("col")
-	if col == null or not is_instance_valid(col):
+# --------------------------------------------------------------------------------------------------
+# E on a tree: branch to branch (user 2026-10-03: "its easy to go up and down the tree like that but they should have to press e to
+# climb up to the next branch or something"; TreeClimb is E's side of it)
+# --------------------------------------------------------------------------------------------------
+
+## What E can do at a tree now ({} nothing), for TreeClimb: "up" and / or "down" ({kind, pr: the branch, PerchBranches' perch}),
+## where it is ("point"), how it ranks against the other things E does there ("bias"):
+##   perched     up {kind "branch"} the branch above; down {kind "branch"} the one below, or {kind "ground"} off the first ones
+##   on foot     up at a tree's trunk: {kind "branch"} its first branch in reach (BRANCH_REACH over the feet), {kind "shinny"} higher
+##               (up the trunk to it), {kind "none"} a trunk with no branches (E says so). Its felling (GatherTarget) goes first while
+##               the player looks level at the trunk, the climb once they look up the tree.
+func tree_offer() -> Dictionary:
+	if perch == null or state != OFF or player.is_dead or player.riding != null or player.camera == null:
+		return {}
+	var chest := player.global_position + Vector3.UP * 1.0
+	var look := Vector3(-sin(player.yaw), 0.0, -cos(player.yaw))
+	if perched:
+		var out := {"point": chest, "perched": true, "bias": -5.0}
+		var tree_i := int(_perch_cur.get("tree_index", -1))
+		var tier := int(_perch_cur.get("tier", 0))
+		var up := perch.perch_tier(tree_i, tier, 1, look)
+		if not up.is_empty() and (up.seat as Vector3).y - player.global_position.y <= BRANCH_REACH.y:
+			out["up"] = {"kind": "branch", "pr": up}
+		var down := perch.perch_tier(tree_i, tier, -1, look) if tier > 0 else {}
+		out["down"] = {"kind": "branch", "pr": down} if not down.is_empty() else {"kind": "ground"}
+		return out
+	if not player.is_on_floor() or player.climbing != null or player.kneeling != null:
+		return {}
+	var t := _tree_at_feet()
+	if t.is_empty():
+		return {}
+	var ax: Vector3 = t.axis
+	var to := Vector3(player.global_position.x - ax.x, 0.0, player.global_position.z - ax.z)
+	var toward := to.normalized() if to.length_squared() > 1e-4 else -look
+	var up_look := -player.camera.global_basis.z.y > 0.12
+	var out := {"point": Vector3(ax.x, player.global_position.y + 1.6, ax.z) + toward * float(t.r), "bias": -2.0 if up_look else 0.4}
+	var first := perch.perch_tier(int(t.i), -1, 1, toward)
+	if not first.is_empty():
+		var rise := (first.seat as Vector3).y - player.global_position.y
+		out["up"] = {"kind": "branch" if rise <= BRANCH_REACH.y else "shinny", "pr": first, "tree": t}
+	elif perch.has_branches(int(t.i)):
+		return {}                           # (its branches not built yet: a moment after coming near)
+	else:
+		out["up"] = {"kind": "none", "tree": t}
+	return out
+
+
+## E: up the tree. Perched, onto the branch above; on foot at a trunk, onto its first branch when it is in reach, else a shinny up the
+## trunk to it (the grip's own crawl, then the pull-up). False, and a word why, when it cannot.
+func climb_up() -> bool:
+	var up: Dictionary = tree_offer().get("up", {})
+	if up.is_empty():
+		return false
+	if String(up.kind) == "none":
+		_say("No branch in reach")
+		return false
+	if stamina <= TIER_STAMINA:
+		_say("Too tired to climb")
+		return false
+	if String(up.kind) == "shinny":
+		var hit := _trunk_hit(up.tree, player.global_position.y + BODY_BELOW_PELVIS)
+		if hit.is_empty():
+			return false
+		_auto = 1
+		if not _begin(hit.collider, hit.position, hit.normal, Vector3.UP, "hang"):
+			_auto = 0
+			return false
+		return true
+	stamina -= TIER_STAMINA
+	return _reach_for(up.pr)
+
+
+## C, or E's "Climb down": perched, down onto the branch below (hanging from the trunk over it first), or off the first branches down
+## the trunk to the ground (a shinny down, the last of it a drop). False when there is nowhere to go.
+func climb_down() -> bool:
+	var down: Dictionary = tree_offer().get("down", {})
+	if down.is_empty():
+		return false
+	if String(down.kind) == "branch":
+		return _lower_to(down.pr)
+	var hit := _trunk_hit(_perch_cur, (_perch_cur.seat as Vector3).y - 0.9)
+	if hit.is_empty():
 		return false
 	_unperch()
-	var n: Vector3 = _perch_from.get("n", Vector3.FORWARD)
-	var pt: Vector3 = (_perch_from.get("point", player.global_position) as Vector3) - Vector3.UP * 0.2
-	return _begin(col, pt, n, Vector3.UP, "hang")
+	_auto = -1
+	if not _begin(hit.collider, hit.position, hit.normal, Vector3.UP, "hang", REACH_CATCH_S):
+		_auto = 0
+		return false
+	return true
+
+
+## The reach up to the branch `pr`: hanging from the trunk under it on its side, its seat REACH_BELOW over the hands' hold, then the
+## pull-up (_hold: _pull_onto once REACH_HANG_S in).
+func _reach_for(pr: Dictionary) -> bool:
+	var ax: Vector3 = pr.axis
+	var d: Vector3 = pr.dir
+	var at := Vector3(ax.x, (pr.seat as Vector3).y - REACH_BELOW, ax.z) + d * float(pr.r)
+	if perched:
+		_unperch()
+	if not _begin(pr.floor, at, d, Vector3.UP, "hang", REACH_CATCH_S):
+		return false
+	_climb_to = pr
+	return true
+
+
+## Down to the branch `pr`: off this one, hanging from the trunk over it on its side (LOWER_ABOVE over its seat), then onto it (_hold:
+## _land_on once REACH_HANG_S in).
+func _lower_to(pr: Dictionary) -> bool:
+	var ax: Vector3 = pr.axis
+	var d: Vector3 = pr.dir
+	var at := Vector3(ax.x, (pr.seat as Vector3).y + LOWER_ABOVE, ax.z) + d * float(pr.r)
+	_unperch()
+	if not _begin(pr.floor, at, d, Vector3.UP, "hang", REACH_CATCH_S):
+		return false
+	_drop_to = pr
+	return true
+
+
+## The bark of the tree `t` ({axis, r}: a perch or a tree at the feet) at height `y` on the climber's side ({} where there is none:
+## the trunk's collider ends where the crown starts).
+func _trunk_hit(t: Dictionary, y: float) -> Dictionary:
+	var ax: Vector3 = t.axis
+	var out := Vector3(player.global_position.x - ax.x, 0.0, player.global_position.z - ax.z)
+	out = out.normalized() if out.length_squared() > 1e-4 else Vector3.FORWARD
+	var c := Vector3(ax.x, y, ax.z)
+	var hit := _ray(c + out * (float(t.r) + 0.9), c)
+	return hit if not hit.is_empty() and GripSurface.kind_of(hit.collider) == "bark" else {}
+
+
+## The standing tree whose trunk the player is at ({i, axis, r} with its collider's radius; {} none). Looked up again only once the
+## player has moved 0.15 m or 0.25 s has passed (the interactor asks every frame).
+func _tree_at_feet() -> Dictionary:
+	var at := player.global_position
+	var now := Time.get_ticks_msec()
+	if not _ground_tree.is_empty() and (_ground_tree.at as Vector3).distance_to(at) < 0.15 and now - int(_ground_tree.t) < 250:
+		return _ground_tree.tree
+	var tree := {}
+	var hv := VegHarvest.find(get_tree())
+	for d: Dictionary in (hv.near(at, 0.9) if hv else []):
+		if d.type == "tree" and d.src == "tree" and int(hv.lay.tree_collider[int(d.i)]) != 0:
+			tree = {"i": int(d.i), "axis": d.pos, "r": clampf(float(d.radius) * 0.92, 0.1, 0.75)}
+			break
+	_ground_tree = {"at": at, "t": now, "tree": tree}
+	return tree
+
+
+## How high the climber's feet are over what is under them (m; INF over nothing within 30 m).
+func _feet_over_ground() -> float:
+	var feet := player.global_position + anchor.global_basis.y * 0.25
+	var hit := _ray(feet + Vector3.UP * 0.3, feet + Vector3.DOWN * 30.0)
+	return feet.y - (hit.position as Vector3).y if not hit.is_empty() else INF
+
+
+## A word at the top of the screen (the interactor's notice).
+func _say(text: String) -> void:
+	if player.interactor:
+		player.interactor.notice(text, 2.0)
+
+
+## While perched or hanging to aim the camera is the branch's (_perch_camera): the player's own aim camera leaves it alone.
+func owns_camera() -> bool:
+	return _cam_w > 0.0 or _aim_w > 0.0
 
 
 # --------------------------------------------------------------------------------------------------
@@ -1557,7 +1798,14 @@ func _place() -> void:
 		T = Transform3D(R * T.basis, K + R * (T.origin - K))
 	if _catch_t >= 0.0:
 		var from := A * _catch_from
-		T = from.interpolate_with(T, smoothstep(0.0, 1.0, _catch_t / _catch_s))
+		var u := smoothstep(0.0, 1.0, _catch_t / _catch_s)
+		var to := T
+		T = from.interpolate_with(to, u)
+		# E's climb from branch to branch (the next one is round the trunk): round the trunk, not through it
+		for pr: Dictionary in [_climb_to, _drop_to]:
+			if pr.has("axis"):
+				T.origin = _round_axis(from.origin, to.origin, pr.axis, u)
+				break
 	var pel := T * PELVIS
 	player.global_position = pel - Vector3.UP * BODY_BELOW_PELVIS
 	_rig.global_transform = T * _sk_in_rig.affine_inverse()
@@ -1585,6 +1833,16 @@ func _placement_up(A: Transform3D, w: float) -> Transform3D:
 		b = Basis().slerp(upright, u2)
 		p = b.y * (so + SKIN)
 	return A * Transform3D(b, p - b * PELVIS)
+
+
+## Part `u` of the way from `a` to `b` round the upright axis through `ax`: its angle, its distance off the axis and the height each
+## eased, so a body going round a tree's trunk keeps out of it.
+static func _round_axis(a: Vector3, b: Vector3, ax: Vector3, u: float) -> Vector3:
+	var ra := Vector2(a.x - ax.x, a.z - ax.z)
+	var rb := Vector2(b.x - ax.x, b.z - ax.z)
+	var ang := lerp_angle(ra.angle(), rb.angle(), u)
+	var r := lerpf(ra.length(), rb.length(), u)
+	return Vector3(ax.x + cos(ang) * r, lerpf(a.y, b.y, u), ax.z + sin(ang) * r)
 
 
 ## World up, facing along the frame's forward (levelled).

@@ -447,12 +447,8 @@ func seg_perch() -> void:
 	player.pitch = deg_to_rad(8.0)
 	await _warm(30)
 	var g: PlayerGrip = player.grip
-	_press(&"grip")
-	await _until(func() -> bool: return g.state == PlayerGrip.HOLD, 3.0)
-	_press(&"move_forward")
+	g.climb_up()                     # E up the tree (TreeClimb; user 2026-10-03: branch to branch): the shinny up its trunk
 	await _until(func() -> bool: return g.perched, 18.0)
-	_release(&"move_forward")
-	_release(&"grip")
 	await _warm(90)
 	var pp := player.global_position
 	var side := to_open.cross(Vector3.UP).normalized()

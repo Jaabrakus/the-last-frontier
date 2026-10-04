@@ -1083,12 +1083,10 @@ func seg_climb_tree() -> void:
 	await _roll("", "", "", 40)
 	await _sec(0.5)
 	var g: PlayerGrip = player.grip
-	await _tap(&"grip", 0.15)
+	g.climb_up()                     # E up the tree (TreeClimb; user 2026-10-03: branch to branch): the shinny up its trunk
 	await _until(func() -> bool: return g.state == PlayerGrip.HOLD, 3.0)
 	mark("grip")
-	_press(&"move_forward")
 	await _until(func() -> bool: return g.perched, 16.0)
-	_release(&"move_forward")
 	mark("perched")
 	await _sec(2.0)
 	# from the branch, the game's own camera looking down: the crown round him fades, the ground shows

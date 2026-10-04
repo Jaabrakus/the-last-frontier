@@ -24,6 +24,8 @@ varying float v_leaf_s;
 uniform float cut_below = -1.0e9;
 uniform float cut_above = 1.0e9;
 varying float v_axis_h;
+/// 1 for the tree being climbed (frontier_climbed(), near_fade.gdshaderinc): it keeps its crown while the others clear.
+varying float v_climbed;
 
 void vertex() {
 	v_col = COLOR;
@@ -33,6 +35,7 @@ void vertex() {
 	VERTEX += tree_wind(VERTEX, MODEL_MATRIX, COLOR, UV2);
 	v_canopy = canopy_cover(MODEL_MATRIX[3].xz);
 	v_leaf_s = leaf_season_at(MODEL_MATRIX[3].xyz, leaf_early);
+	v_climbed = frontier_climbed(MODEL_MATRIX[3].xyz);
 	// the LOD's share of this tree (lod_fade.gdshaderinc); none: the instance collapses to a point, no pixels
 	v_lod = frontier_lod_cover(distance(CAMERA_POSITION_WORLD, MODEL_MATRIX[3].xyz));
 	if (v_lod.x <= 0.0 || v_lod.y <= 0.0) {
@@ -55,10 +58,12 @@ void fragment() {
 	if ((v_col.a > 0.5 || UV2.x > 0.0) && !IN_SHADOW_PASS && frontier_near_fade(VERTEX, FRAGCOORD.xy, near_fade_begin, near_fade_end)) {
 		discard;
 	}
-	// the line of sight from a tree perch: foliage and limbs on it, trunks only right by the camera
+	// the line of sight from a tree perch: foliage and limbs on it, trunks only right by the camera; up a tree the tree
+	// climbed keeps its crown and the other trees clear round the climber and between them and the camera
+	// (frontier_tree_clear, near_fade.gdshaderinc)
 	if (!IN_SHADOW_PASS && veg_clear_b.w > 0.0) {
 		vec3 wp = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
-		if ((v_col.a > 0.5 || UV2.x > 0.0) ? frontier_line_clear(wp, FRAGCOORD.xy) : frontier_line_clear_near(wp, FRAGCOORD.xy, 2.2)) {
+		if (frontier_tree_clear(wp, FRAGCOORD.xy, v_col.a > 0.5 || UV2.x > 0.0, v_climbed)) {
 			discard;
 		}
 	}

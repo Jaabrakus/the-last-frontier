@@ -16,7 +16,11 @@ extends Node3D
 ## skeleton update (with the helper bones driven), hanging items (two_anchor: belt pistols,
 ## tomahawks, atlatl; and the horn) follow the skin under them and yield to the limbs and the head;
 ## slung items yield a few degrees to a drawing arm. Counts: a spear pair shows its spears, the dart
-## bundle its darts, the quiver its arrows, the belt its tomahawks, minus what is in the hand.
+## bundle its darts, the quiver its arrows, the belt its tomahawks, minus what is in the hand. An item put
+## down or kept off the hotbar shows nothing, its sling, thong or strap included, and a weapon's own kit goes
+## with it (kit_follows: the quiver with the bow, the dart bundle with the atlatl, the powder horn with the
+## guns; the user, 2026-10-03: "when i unequip the weapons the musket sling is there and the arrow quiver is
+## there still").
 ##
 ## Handoffs (loadout_design.md 5.1). begin_draw(item_id) / begin_holster(item_id) / sling_all() /
 ## unsling(). A draw is the draw set's grab clip then its equip clip: the copy stays on the body until
@@ -131,6 +135,10 @@ class Entry:
 	var blend_q := Quaternion.IDENTITY  ## last hand-relative turn of the moving copy (coherent blend)
 	var blend_q_ok := false
 	var hidden_by_state := false
+	## Nothing of it on the body, its straps included (_mark_away): put down or kept off the hotbar, or (kit_follows) the
+	## kit of a weapon that is (the user, 2026-10-03: "when i unequip the weapons the musket sling is there and the arrow
+	## quiver is there still").
+	var away := false
 	var patch := false                ## the local body surface covers this hanging item (yield surface check)
 	var yield_axis := Vector3.ZERO    ## last yield solution (search starts there next frame)
 	var yield_ang := 0.0
@@ -162,6 +170,15 @@ var bulk := {"back": 0.0, "chest": 0.0, "waist_belt": 0.0}
 var state := "stand"
 var last_slung := ""
 var _stowed_for := ""
+## A weapon's own kit goes with it (the user, 2026-10-03: "when i unequip the weapons the musket sling is there and the
+## arrow quiver is there still"): the quiver and its arrows show only while the bow is with the player, the dart bundle
+## while the atlatl is, the powder horn (gear horn_strap) and its strap or ties while a gun is (kit_weapons()).
+## With the player: carried and on the hotbar (worn or in the hand); without one: the loadout's items. On for the
+## player's rig (install) and the Tab figure (InventoryScreen, setup opt "kit_follows"); off for the rest (a worker's horn
+## comes with her powder, WorkerGear).
+var kit_follows := false
+## The guns the powder horn primes and charges: one horn served the musket and the pistols alike.
+const HORN_GUNS: Array = ["musket", "over_under", "pistol"]
 ## Diagnostics of the last update (tests): {item_id: {...}}
 var debug := {}
 
@@ -194,6 +211,7 @@ static func install(p: FrontierPlayer, lo: Loadout = null, opts := {}) -> SlingR
 	var rig := SlingRig.new()
 	rig.name = "SlingRig"
 	rig.player = p
+	rig.kit_follows = bool(opts.get("kit_follows", true))     # (the weapons' kit goes with them: kit_follows)
 	p.add_child(rig)
 	var body: CharacterBodyMesh = null
 	for c in p.skeleton.get_children():
@@ -242,6 +260,8 @@ func setup(sk: Skeleton3D, b: CharacterBodyMesh, lo: Loadout, opts := {}) -> voi
 	legacy_body = _has_legacy_horn()
 	if opts.has("sling_styles"):
 		sling_styles = (opts.sling_styles as Dictionary).duplicate()
+	if opts.has("kit_follows"):
+		kit_follows = bool(opts.kit_follows)
 	if opts.has("outfit"):
 		loadout.outfit_bulk = String(opts.outfit)
 	set_outfit_bulk(loadout.outfit_bulk, false)
@@ -1352,8 +1372,10 @@ func set_count(item_id: String, n: int) -> void:
 
 
 ## The unit in the hand counts toward the item's total: the body shows count - in hand, spread over the
-## item's points in order (a second tomahawk at back_2 shows only while two are stowed).
+## item's points in order (a second tomahawk at back_2 shows only while two are stowed). An item away
+## (_mark_away) shows nothing: it leaves the back stack and the yields too (shown 0, _on_body).
 func _apply_counts() -> void:
+	_mark_away()
 	var by_item := {}
 	for e: Entry in entries:
 		if not by_item.has(e.item_id):
@@ -1362,6 +1384,11 @@ func _apply_counts() -> void:
 	for id: String in by_item:
 		var es: Array = by_item[id]
 		var it := loadout.item(id)
+		if (es[0] as Entry).away:
+			for e: Entry in es:
+				e.shown = 0
+				_show_units(e, 0)
+			continue
 		var in_hand := 0
 		for e: Entry in es:
 			if e.mode in [Mode.IN_HAND, Mode.HELD, Mode.HOLSTER]:
@@ -1373,6 +1400,7 @@ func _apply_counts() -> void:
 			_show_units(es[0], 1)
 			continue
 		if (es[0] as Entry).kind == "powder_horn":
+			(es[0] as Entry).shown = 1
 			_show_units(es[0], 1)
 			continue
 		var total := int(it.get("count", 1)) if not it.is_empty() else 1
@@ -1391,8 +1419,9 @@ const DISPLAY_ONLY := ["StrapPreview", "ThongPreview", "SlingTaut"]
 
 
 func _show_units(e: Entry, n: int) -> void:
+	var off := e.hidden_by_state or e.away
 	for i in e.units.size():
-		(e.units[i] as Node3D).visible = i < n and not e.hidden_by_state
+		(e.units[i] as Node3D).visible = i < n and not off
 	# ties and hooks stay with the bundle while anything is in it
 	for c in e.root.get_children():
 		if String(c.name) in DISPLAY_ONLY:
@@ -1400,7 +1429,62 @@ func _show_units(e: Entry, n: int) -> void:
 			# switched on here and hung from the horn into the right upper arm
 			(c as Node3D).visible = false
 		elif not String(c.name).begins_with("Unit"):
-			(c as Node3D).visible = not e.hidden_by_state and (n > 0 or e.kind in ["spear_pair", "dart_bundle"])
+			(c as Node3D).visible = not off and (n > 0 or e.kind in ["spear_pair", "dart_bundle"])
+
+
+## Which entries show nothing on the body (Entry.away), their copies hidden: an item put down or kept off the hotbar
+## (_set_present), and with kit_follows a weapon's kit when none of its weapons is with the player (the user, 2026-10-03:
+## "when i unequip the weapons the musket sling is there and the arrow quiver is there still"). An item's straps follow it
+## (_update_straps).
+func _mark_away() -> void:
+	var with_me := _kinds_with_me() if kit_follows else {}
+	_kit_sig = _kit_signature(with_me)
+	for e: Entry in entries:
+		e.away = _absent.has(e.item_id)
+		if not e.away and kit_follows:
+			var ws := kit_weapons(e.kind)
+			if not ws.is_empty():
+				e.away = not ws.any(func(k: Variant) -> bool: return with_me.has(String(k)))
+		if is_instance_valid(e.holder):
+			e.holder.visible = not e.away
+
+
+## The weapon kinds whose kit an item kind is ([] for the rest): the quiver the bow's (loadout_items.json quiver.of), the
+## dart bundle the atlatl's (dart_bundle.ammo_for), the powder horn the guns' (HORN_GUNS).
+func kit_weapons(kind: String) -> Array:
+	if kind == "powder_horn":
+		return HORN_GUNS
+	var d: Dictionary = data.kind(kind) if data else {}
+	if d.has("of"):
+		return [String(d["of"])]
+	if d.has("ammo_for"):
+		return [String(d["ammo_for"])]
+	return []
+
+
+## Item kinds with the player now: the loadout's items not put down or kept off the hotbar, and on a player the weapons
+## carried and on the hotbar (one drawn from the pack has no item on the body).
+func _kinds_with_me() -> Dictionary:
+	var out := {}
+	for it: Dictionary in loadout.items:
+		if not _absent.has(String(it.id)):
+			out[String(it.kind)] = true
+	var p := player
+	if p != null and is_instance_valid(p):
+		for key: String in p.weapons:
+			if p.is_carried(key) and Hotbar.allows(p, key):
+				out[String(InventoryState.KIND_OF_KEY.get(key, key))] = true
+	return out
+
+
+## A signature of _kinds_with_me() at the last _mark_away (_sync_player: the kit marked again when it changes).
+var _kit_sig := ""
+
+
+static func _kit_signature(with_me: Dictionary) -> String:
+	var ks := PackedStringArray(with_me.keys())
+	ks.sort()
+	return ",".join(ks)
 
 
 # --- queries ----------------------------------------------------------------------------------
@@ -2945,6 +3029,8 @@ func _make_straps() -> void:
 			continue
 		var paths: Array = spec.segments if spec.has("segments") else [spec.path]
 		var col: Array = spec.get("color", [0.3, 0.18, 0.09])
+		# the horn's own strap or ties are the horn's: they go with it (Entry.away; the user, 2026-10-03)
+		var keeper: Entry = _horn_entry() if String(spec.get("gear", "")) == "horn_strap" else owner
 		for pi in paths.size():
 			var anchors: Array = []
 			var ok := true
@@ -2958,7 +3044,15 @@ func _make_straps() -> void:
 				continue
 			var node := _strap_node("%s_%d" % [spec.id, pi], float(spec.get("width", 0.03)), float(lift_by.get(String(spec.get("order", "")), 0.006)),
 					Color(float(col[0]), float(col[1]), float(col[2])))
-			straps.append({"id": String(spec.id), "node": node, "anchors": anchors, "owner": owner, "source": "sling_runtime.json"})
+			straps.append({"id": String(spec.id), "node": node, "anchors": anchors, "owner": keeper, "source": "sling_runtime.json"})
+
+
+## The powder horn's entry (gear horn_strap), or null.
+func _horn_entry() -> Entry:
+	for e: Entry in entries:
+		if e.kind == "powder_horn":
+			return e
+	return null
 
 
 func _strap_node(id: String, width: float, lift: float, col: Color) -> SlingStrap:
@@ -3040,8 +3134,8 @@ func _update_straps() -> void:
 		var owner: Entry = s.owner
 		var node: SlingStrap = s.node
 		var show := owner == null or (owner.mode in [Mode.STOWED, Mode.REACH] and owner.shown > 0) or owner.kind == "quiver"
-		if owner and owner.hidden_by_state:
-			show = false
+		if owner and (owner.hidden_by_state or owner.away):
+			show = false     # (an item away takes its sling, thong or strap with it: Entry.away)
 		node.visible = show
 		if not show:
 			continue
@@ -3148,7 +3242,11 @@ func _sync_player(_dt_s: float, first := false) -> void:
 					elif p.anim and p.anim.data:
 						h = FrontierPlayer.holster_phase(p.anim.data, key, cur, stance, p.weapon.equip_time)
 					begin_holster(id, {"duration": h if h > 0.0 else 0.25, "park_phase": 1.0})
-				elif key != cur:
+				elif key != cur or first:
+					# (first: a rig installed while the hands are free put the loadout's in_hand item, which the game never
+					# updates, in the hand, and the weapon put away showed nowhere: the musket gone from the back after
+					# another weapon was put down or taken, or the Tab screen closed, hands free; 2026-10-03, the user's
+					# "when i unequip the weapons" pass)
 					snap_stowed(id)
 		# keep the hand model hidden while the copy does its job
 		if mode_of(id) in [Mode.IN_HAND, Mode.HOLSTER, Mode.REACH] and w.model:
@@ -3169,6 +3267,10 @@ func _sync_player(_dt_s: float, first := false) -> void:
 				var qit := loadout.item(qid)
 				if int(qit.state.get("arrows", -1)) != maxi(arrows, 0):
 					set_count(qid, maxi(arrows, 0))
+	# the weapons' kit follows them (kit_follows): marked again when what is with the player changes where no item on the
+	# body shows it (a weapon with no place on the body, drawn from the pack, put on or taken off the hotbar)
+	if kit_follows and _kit_signature(_kinds_with_me()) != _kit_sig:
+		_apply_counts()
 
 
 ## The slung spears and the draw's stand-in show their heads (ThrowableSpear.heads, the next one first: with one in
@@ -3205,7 +3307,8 @@ func _follow_model(item_id: String, held: bool) -> void:
 		_apply_counts()
 
 
-## Items whose weapon the player put down (not carried): their copies are hidden.
+## Items whose weapon the player put down (not carried) or kept off the hotbar, and items hide_stowed() hides: nothing of
+## them on the body, their slings and straps included (Entry.away).
 var _absent := {}
 
 
@@ -3222,9 +3325,9 @@ func _set_present(item_id: String, on: bool) -> void:
 		_absent.erase(item_id)
 	else:
 		_absent[item_id] = true
-	for e: Entry in entries_of(item_id):
-		if is_instance_valid(e.holder):
-			e.holder.visible = on
+	# the copy hidden or shown with its sling or strap and the kit that is its (Entry.away), and it leaves the back stack
+	# or rejoins it (shown 0: _on_body)
+	_apply_counts()
 
 
 # --- helpers ----------------------------------------------------------------------------------

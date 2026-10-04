@@ -274,12 +274,12 @@ func _seg_tree() -> void:
 	await _run(40)
 	recording = true
 	await _run(20)
-	_press("grip")
-	_note("grab the trunk")
+	# E climbs a tree, branch to branch (user 2026-10-03; TreeClimb): up its trunk to the first branches
+	p.grip.climb_up()
+	_note("climb up")
 	await _swing_cam(face + 0.45, 0.35, 1.2)
-	await _hold_until("move_forward", func() -> bool: return p.grip.perched, 14.0)
+	await _until(func() -> bool: return p.grip.perched, 14.0)
 	_note("up on the branch")
-	_release("grip")
 	await _run(30)
 	# round to the open side, then aim out from the branch and fire
 	var out: Vector3 = p.grip._perch_dir
@@ -296,12 +296,11 @@ func _seg_tree() -> void:
 	_release("aim")
 	await _run(40)
 	_note("resting")
-	_press("grip")
-	_note("back onto the trunk")
+	p.grip.climb_down()
+	_note("climb down")
 	await _swing_cam(face + 0.45, 0.1, 1.2)
-	await _hold_until("move_back", func() -> bool: return p.grip.state == PlayerGrip.OFF, 14.0)
+	await _until(func() -> bool: return p.grip.state == PlayerGrip.OFF and not p.grip.perched, 14.0)
 	_note("down")
-	_release("grip")
 	await _run(45)
 
 
@@ -398,11 +397,12 @@ func _seg_treeaim() -> void:
 	await _run(30)
 	recording = true
 	await _run(15)
-	_press("grip")
-	_note("grab the trunk")
+	# (E's shinny up the trunk; the aim below holds it there one-handed)
+	p.grip.climb_up()
+	_note("climb up the trunk")
 	await _run(30)
 	await _swing_cam(face + 0.35, 0.15, 0.8)
-	await _hold_until("move_forward", func() -> bool: return false, 2.2)
+	await _run(66)
 	await _run(15)
 	var torso := dummy.global_position + Vector3.UP * 1.25
 	_press("aim")
@@ -430,6 +430,8 @@ func _seg_treeaim() -> void:
 	await _run(50)
 	_release("aim")
 	await _run(40)
+	_press("grip")
+	await _run(3)
 	_release("grip")
 	await _run(40)
 

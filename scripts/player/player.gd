@@ -1241,7 +1241,8 @@ func _physics_process(delta: float) -> void:
 	var aiming_cam := weapon != null and weapon.active and not hands_free and riding == null \
 			and Input.is_action_pressed("aim") and weapon.aim > 0.3
 	_aim_cam_w = move_toward(_aim_cam_w, 1.0 if aiming_cam else 0.0, delta / maxf(aim_camera_s, 0.01))
-	if riding == null and spring_arm != null:
+	# (not while PlayerGrip's branch or hang-aim camera has it: it eases from these itself, 2026-10-03 the perch camera fix)
+	if riding == null and spring_arm != null and not (grip and grip.owns_camera()):
 		spring_arm.spring_length = cam_distance_now()
 		spring_arm.position.x = cam_shoulder_now()
 	# (no shake while sprinting: user 2026-10-01, "the screen shake on sprint is bad")
