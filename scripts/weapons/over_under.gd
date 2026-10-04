@@ -234,7 +234,7 @@ func launch_origin() -> Vector3:
 
 func _tick(delta: float) -> void:
 	_sway_t += delta
-	var enabled := _fire_input_enabled()
+	var enabled := _fire_input_steady()     # (as the Firearm's: the click that closed a card or a screen is no press)
 	if turning:
 		_tick_turn(delta, enabled)
 	else:

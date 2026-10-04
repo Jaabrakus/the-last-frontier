@@ -3,14 +3,11 @@ extends CanvasLayer
 ## The character inventory (Tab; user 2026-09-25: "a Char inventory system with drag and drop with gear"; first
 ## cut of graph_analysis/inventory/inventory_design.md). The Gear tab, as the owner set it (2026-10-02: "no more rigs on
 ## the char slots"; the minecraft approach, Hotbar):
-##   left      the Spells list (every spell the caster has, those on the bar marked with their slot), then the pack as
-##             its bags (the owner 2026-10-03, "WoW-style bags": PlayerBags, the same grids as the HUD's bag windows,
-##             BagGrid): every worn bag in one scrolling column, the haversack first, the Loose strip under them (what is
-##             not on the hotbar: a weapon or a tool kept off the bar is in a bag, worn on the body or not), then the
-##             clothes carried. Drag a stack onto a hotbar slot or onto the figure, between slots and bags (move, swap,
-##             merge; a specialty bag refuses with its reason), a bag's picture into a slot to take it off; right-click
-##             uses it (food eaten, a herb or remedy applied, a torch, a drink or a pipe fill taken in hand; a bag put on,
-##             a garment worn); a double-click does what dropping it on the figure does; shift-click splits a stack
+##   left      the pack: a list, a row an item (what is not on the hotbar: a weapon or a tool kept off the bar is here,
+##             worn on the body or not), then the Spells list (every spell the caster has, those on the bar marked with
+##             their slot) and the clothes carried. Drag a row onto a hotbar slot or onto the figure; right-click uses it
+##             (food eaten, a herb or remedy applied, a torch, a drink or a pipe fill taken in hand); a double-click does
+##             what dropping it on the figure does
 ##   middle    a live 3D copy of the character (SlingRig on Actor_B) wearing what is worn and carrying only what is on the
 ##             hotbar (as the body in play: SlingRig hides what is off the bar), and a DROP TARGET to use things ("drag
 ##             cloths ... food we can drag onto the body of the char screen"): a garment is worn in its slot (what was
@@ -23,9 +20,7 @@ extends CanvasLayer
 ##   bottom    the hotbar's nine slots (HotbarRow): drag between them, onto the pack to empty one; 1-9 over an item puts it
 ##             in that slot
 ## Tab or Done closes the screen and the player wears the result (FrontierPlayer.apply_loadout(): the pack eaten from,
-## rope gear put on). The pack (`inv`, this screen's copy) is written back to the player at every change too, so the bags
-## lay it out as it is (they follow the player's pack: PlayerBags.sync); what the bags change (a bag put on or taken off)
-## comes into `inv` the same way (_follow_bags). The game is paused while it is open. The doll's rig and clips are Actor_B; weapon and gear models
+## rope gear put on). The game is paused while it is open. The doll's rig and clips are Actor_B; weapon and gear models
 ## are the project's own.
 
 const IDLE_CLIP := "actor_b-p-stealth-idle"
@@ -184,13 +179,11 @@ const FIG_H := 444
 const DETAIL_W := 330
 const FIG_HINT := "Drag here to wear, eat or use"
 
-var _pack_grid: VBoxContainer     ## the pack's bags (BagGrid, its slots PackCell; the name is the grid's it replaced: tools read it)
+var _pack_grid: VBoxContainer     ## the pack's rows (PackCell; the name is the grid's it replaced: tools read it)
 var _list_box: VBoxContainer      ## the pack's rows, then the spells, then the clothes
 var _spells_head: Label
 var _spells_list: VBoxContainer
-var _items_head: Label            ## "Bags" over the pack's bags, shown when the spells are over them
-var _grids := {}                  ## bag b (BagSlot.LOOSE the loose) -> its BagGrid
-var split_box: BagUI.SplitBox
+var _items_head: Label            ## "Items" over the pack's rows, shown when the spells are over them
 var _cloth_head: Label
 var _cloth_list: VBoxContainer
 ## The figure's drop target (FigureDrop) and the line under it.
@@ -271,10 +264,10 @@ func _build_ui() -> void:
 	_spells_list.add_theme_constant_override("separation", 1)
 	_spells_list.mouse_filter = Control.MOUSE_FILTER_PASS
 	_list_box.add_child(_spells_list)
-	_items_head = _label("Bags", 20, Color(0.93, 0.8, 0.52))
+	_items_head = _label("Items", 20, Color(0.93, 0.8, 0.52))
 	_list_box.add_child(_items_head)
 	_pack_grid = VBoxContainer.new()
-	_pack_grid.add_theme_constant_override("separation", 6)
+	_pack_grid.add_theme_constant_override("separation", 1)
 	_pack_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_pack_grid.mouse_filter = Control.MOUSE_FILTER_PASS
 	_list_box.add_child(_pack_grid)
@@ -341,9 +334,6 @@ func _build_ui() -> void:
 	bottom.add_child(done)
 	_hotbar_row = HotbarRow.make(self)                 # the hotbar's nine slots (Hotbar, HotbarRow)
 	_gear.add_child(_hotbar_row)
-	split_box = BagUI.SplitBox.new()                   # shift-click on a stack (over everything)
-	split_box.theme = ClassicSkin.theme()
-	_root.add_child(split_box)
 
 
 # --- what an item is and does (ItemInfo) -------------------------------------------------------
@@ -431,19 +421,6 @@ func _show_detail(kind: String) -> void:
 		return
 	if kind.begins_with("spell:"):
 		_show_spell(kind.trim_prefix("spell:"))
-		return
-	if kind.begins_with(BagUI.CLOTH):
-		# a garment carried, in a bag (its rows: BagUI.tip)
-		var g := _bags()
-		var t := BagUI.tip(player, g, kind, 1) if g != null else {"name": kind, "tag": "", "rows": []}
-		_d_icon.texture = null
-		_d_name.text = String(t.name)
-		_d_tag.text = String(t.tag).to_upper()
-		_d_text.text = "Drag it onto the figure to wear it, or right-click it."
-		var bb := "[table=2]"
-		for r: Array in t.rows:
-			bb += "[cell][color=#a0968a]%s[/color][/cell][cell][color=%s]%s[/color][/cell]" % [r[0], TONES.get(r[2], TONES[""]), r[1]]
-		_d_rows.text = bb + "[/table]"
 		return
 	var info := ItemInfo.of(kind, player, inv.pack_count(kind))
 	_d_icon.texture = icons.get_icon(kind)
@@ -537,78 +514,17 @@ func _on_bar(hb: Hotbar, k: String) -> bool:
 var _rows: Array[Dictionary] = []
 
 
-## The pack's bags (PlayerBags): a grid a worn bag, the haversack first, the Loose strip under them while anything rides
-## loose (BagGrid; its slots PackCell). The screen's pack is written to the player first, so the bags lay out what this
-## screen holds (_push_pack).
+## The pack's rows, one a row of pack_rows() in its order (made as the pack grows, hidden when it shrinks).
 func _fill_pack() -> void:
 	_rows = pack_rows()
-	var g := _push_pack()
-	if g == null:
-		return
-	var icon_of := func(k: String) -> Texture2D: return slot_icon(k)
-	var order: Array[int] = [0, 1, 2, 3, 4, BagSlot.LOOSE]
-	var at := 0
-	for b in order:
-		var want := g.loose_slots() > 0 if b == BagSlot.LOOSE else g.bag_kind(b) != ""
-		var w: BagGrid = _grids.get(b)
-		if want and w == null:
-			w = BagGrid.new()
-			w.name = "Loose" if b == BagSlot.LOOSE else "Bag%d" % b
-			w.host = self
-			w.bag = b
-			w.slot_px = BagUI.SLOT_TAB
-			w.closable = false
-			w.make_slot = func() -> BagSlot: return PackCell.new()
-			w.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-			_pack_grid.add_child(w)
-			_grids[b] = w
-		if w == null:
-			continue
-		_pack_grid.move_child(w, at)
-		at += 1
-		w.visible = want
-		if want:
-			w.refresh(g, icon_of)
-			for c: BagSlot in w.slots:
-				c.set_picked(picked != "" and c.kind == picked)
-
-
-## The screen's pack written to the player (the bags follow the player's pack) and the bags laid out from it now (the game
-## is paused under the screen: PlayerBags.sync by hand). The player's bags; null none.
-func _push_pack() -> PlayerBags:
-	if player == null or not is_instance_valid(player):
-		return null
-	player.set("inventory_pack", inv.pack.duplicate(true))
-	var g := PlayerBags.find(player)
-	if g != null:
-		g.sync()
-	return g
-
-
-## The bags changed the player's pack under the screen (a bag put on or taken off): the same change into `inv` (each kind's
-## count as the player's now; the weapons' kinds and the torches are worked out, not kept: InventoryState.from_player).
-func _follow_bags() -> void:
-	var live := _counts(player.get("inventory_pack") if player.get("inventory_pack") != null else [])
-	var mine := _counts(inv.pack)
-	for k: String in live.keys() + mine.keys():
-		var d := int(live.get(k, 0)) - int(mine.get(k, 0))
-		if d > 0:
-			inv.add(k, d)
-		elif d < 0:
-			inv.take(k, -d)
-		mine[k] = int(live.get(k, 0))
-
-
-static func _counts(pack: Array) -> Dictionary:
-	var out := {}
-	for e: Variant in pack:
-		if not (e is Dictionary):
-			continue
-		var k := String((e as Dictionary).get("kind", ""))
-		if k == "" or k == InventoryState.TORCH or InventoryState._derived(k):
-			continue
-		out[k] = int(out.get(k, 0)) + int((e as Dictionary).get("count", 0))
-	return out
+	while _pack_grid.get_child_count() < _rows.size():
+		var c := PackCell.new()
+		c.screen = self
+		c.index = _pack_grid.get_child_count()
+		_pack_grid.add_child(c)
+	for c in _pack_grid.get_children():
+		var pc := c as PackCell
+		pc.set_entry(_rows[pc.index] if pc.index < _rows.size() else {})
 
 
 ## The spells the caster has (SwayCaster.known_spells), each a row to drag onto the bar: its name with its mode ("Stone
@@ -797,7 +713,12 @@ func _refresh_bar() -> void:
 
 ## In the pack or worn.
 func _owns(kind: String) -> bool:
-	return ItemUse.owns(inv, kind)
+	if inv.pack_count(kind) > 0:
+		return true
+	for it: Dictionary in inv.worn.items:
+		if String(it.kind) == kind:
+			return true
+	return false
 
 
 var _icons_dirty := false
@@ -845,13 +766,32 @@ func _vices() -> Vices:
 ## or a quid taken, a drink or a pipe fill taken in hand (U, Y), a torch into the left hand when the screen closes (push
 ## n01b: T in play does the same).
 func use_item(kind: String) -> void:
-	# food eaten from this screen's copy of the pack, a herb or a remedy applied, a vice taken, a drink or a pipe fill
-	# chosen (ItemUse.use)
-	var r := ItemUse.use(player, inv, kind)
-	if bool(r.done):
+	var br := _bridge()
+	if br and br.can_eat(kind):
+		# food: eaten from this screen's copy of the pack (SurvivalBridge.eat)
+		var r := br.eat(kind, inv)
 		say(String(r.text), not bool(r.ok))
-		if bool(r.refresh):
-			_refresh()
+		_refresh()
+		return
+	if ForageUse.can_use(kind):
+		# a herb (plantain: a poultice on a wound; scripts/forage/forage_use.gd)
+		say(ForageUse.use(player, kind, inv))
+		_refresh()
+		return
+	if Remedies.can_use(kind):
+		# a remedy from the alchemy table (salve, tea, tonic; scripts/survival_game/remedies.gd)
+		say(Remedies.use(player, kind, inv))
+		_refresh()
+		return
+	var vc: Vices = br.vices if br else null
+	if vc and Vices.can_use(kind):
+		# laudanum, snuff, a quid (Vices)
+		say(vc.use_item(kind, inv))
+		_refresh()
+		return
+	if vc and Vices.can_choose(kind):
+		# a drink or a pipe fill: the next gill (U) or pipeful (Y) is of it
+		say(vc.choose(kind))
 		return
 	if kind != InventoryState.TORCH:
 		return
@@ -920,8 +860,6 @@ func use_on_body(kind: String) -> bool:
 		say(String(v.reason), true)
 		return false
 	var br := _bridge()
-	if PlayerBags.is_bag(kind):
-		return equip_bag(kind)
 	if InventoryState.GEAR_KINDS.has(kind):
 		# rope gear (a belt, a sling): put on
 		var ok := inv.wear_gear(kind)
@@ -943,14 +881,52 @@ func use_on_body(kind: String) -> bool:
 	return false
 
 
-## What a pack item dropped on the figure would do (ItemUse.verdict: the rules the bags' right-click keeps too).
 func _pack_verdict(kind: String) -> Dictionary:
-	return ItemUse.verdict(player, inv, kind)
+	if kind == "":
+		return _no("")
+	var nm := InventoryState.name_of(kind)
+	var e := Hotbar.entry_for_kind(player, kind)
+	if inv.pack_count(kind) <= 0 and (e.is_empty() or not _owns(kind)):
+		return _no("No %s in the pack" % nm.to_lower())
+	if InventoryState.GEAR_KINDS.has(kind):
+		return _no("The %s is on already" % nm.to_lower()) if inv.gear_worn(kind) else _yes("Put the %s on" % nm.to_lower())
+	if kind == InventoryState.TORCH:
+		return _yes("A torch in your left hand, lit, when you close the pack")
+	var br := _bridge()
+	if br and br.can_eat(kind):
+		var why := br.why_not(kind)
+		return _no(why) if why != "" else _yes("Eat the %s" % nm.to_lower())
+	if ForageUse.can_use(kind) or Remedies.can_use(kind):
+		var why := _dressing_refusal(kind)
+		return _no(why) if why != "" else _yes("Use the %s" % nm.to_lower())
+	var vc := _vices()
+	if Vices.can_use(kind):
+		return _yes("Take the %s" % nm.to_lower()) if vc else _no("Not now")
+	if Vices.DRINKS.has(kind) or Vices.FILLS.has(kind) or kind == "clay_pipe":
+		var what := "drink" if Vices.DRINKS.has(kind) else "tobacco"
+		var why := vc.why_not(what, inv) if vc else "."
+		if why == ".":
+			why = "Not now"
+		return _no(why) if why != "" else _yes("Drink a gill of the %s" % nm.to_lower() if what == "drink" else "Smoke a pipeful")
+	if not e.is_empty():
+		return _bar_verdict(e, nm)
+	return _no("The %s cannot be worn or used" % nm.to_lower())
 
 
-## Why a herb or a remedy would do nothing now ("" when it would): ItemUse.dressing_refusal.
+## Why a herb or a remedy would do nothing now ("" when it would): the dressing's own rules (ForageUse.use, Remedies.use:
+## a wound to dress, not one under a poultice already; the tonic needs the survival rules).
 func _dressing_refusal(kind: String) -> String:
-	return ItemUse.dressing_refusal(player, kind)
+	if not (ForageUse.can_use(kind) or kind == "plantain_salve"):
+		var br := _bridge()
+		return "Nothing comes of it now" if kind == "ginseng_tonic" and (br == null or br.core == null) else ""
+	var hurt := float(player.get("health")) < float(player.get("max_health")) - 0.5
+	var w: Variant = player.get("wounds")
+	var bleeding: bool = w is PlayerWounds and (w as PlayerWounds).bleeding()
+	if not hurt and not bleeding:
+		return "You have no wound to dress"
+	if player.get_node_or_null("Poultice") != null and not bleeding:
+		return "A poultice is on the wound already"
+	return ""
 
 
 func _cloth_verdict(id: String) -> Dictionary:
@@ -969,7 +945,18 @@ func _cloth_verdict(id: String) -> Dictionary:
 
 
 func _bar_verdict(e: Dictionary, nm: String) -> Dictionary:
-	return ItemUse.bar_verdict(player, e, nm)
+	var hb := Hotbar.find(player)
+	if hb == null:
+		return _no("No hotbar")
+	var at := hb.slot_of(String(e.kind), String(e.id))
+	if at >= 0:
+		return _no("The %s is on the hotbar already: %d" % [nm.to_lower(), at + 1])
+	if not hb.has_thing(e):
+		return _no("You do not have the %s" % nm.to_lower())
+	var free := hb.first_free()
+	if free < 0:
+		return _no("No free slot on the hotbar: drag it onto a slot to swap")
+	return _yes("Onto the hotbar: %d" % (free + 1))
 
 
 ## A garment carried put on in its slot (what was there comes off into the pack); the figure redresses (ClothesSlots).
@@ -992,22 +979,31 @@ func wear_cloth(id: String) -> bool:
 
 ## A gill of `kind` drunk (Vices.take: the bottle open is finished first; it soaks in over the next hour).
 func _drink(kind: String) -> bool:
-	var r := ItemUse.drink(player, inv, kind)
-	if String(r.text) != "":
-		say(String(r.text), not bool(r.ok))
-	if bool(r.ok):
-		_refresh()
-	return bool(r.ok)
+	var vc := _vices()
+	if vc == null:
+		return false
+	vc.choose(kind)
+	if vc.take("drink", 1.0, inv) <= 0.0:
+		say(vc.why_not("drink", inv), true)
+		return false
+	say("You drink a gill of %s." % InventoryState.name_of(String(vc._st().get("flask_kind", kind))).to_lower())
+	_refresh()
+	return true
 
 
 ## A pipeful smoked (Vices.take): of `kind` when it is a fill, else of what the pipe is packed with next.
 func _smoke(kind: String) -> bool:
-	var r := ItemUse.smoke(player, inv, kind)
-	if String(r.text) != "":
-		say(String(r.text), not bool(r.ok))
-	if bool(r.ok):
-		_refresh()
-	return bool(r.ok)
+	var vc := _vices()
+	if vc == null:
+		return false
+	if Vices.FILLS.has(kind):
+		vc.choose(kind)
+	if vc.take("tobacco", 1.0, inv) <= 0.0:
+		say(vc.why_not("tobacco", inv), true)
+		return false
+	say("You smoke a pipeful of %s." % InventoryState.name_of(String(vc._st().get("bowl_kind", kind))).to_lower())
+	_refresh()
+	return true
 
 
 # --- the hotbar (Hotbar, HotbarRow) -------------------------------------------------------------
@@ -1109,132 +1105,6 @@ func drag_entry(d: Variant) -> Dictionary:
 	return Hotbar.entry_for_kind(player, k) if k != "" else {}
 
 
-# --- the bags (BagSlot's and BagGrid's host; PlayerBags) ----------------------------------------
-
-func _bags() -> PlayerBags:
-	return PlayerBags.find(player) if player != null and is_instance_valid(player) else null
-
-
-## A slot's or a bag's picture (a garment carried has none: its mark is drawn).
-func slot_icon(k: String) -> Texture2D:
-	return icons.get_icon(k) if icons != null and k != "" and not k.begins_with(BagUI.CLOTH) else null
-
-
-func slot_hover(c: BagSlot, on: bool) -> void:
-	hover(c.kind if on and c.kind != "" else "")
-
-
-func slot_click(c: BagSlot) -> void:
-	if c.kind != "":
-		pick("" if picked == c.kind else c.kind)
-
-
-func slot_double_click(c: BagSlot) -> void:
-	_use_stack(c, true)
-
-
-func slot_right_click(c: BagSlot) -> void:
-	_use_stack(c, false)
-
-
-## A right-click (`body` false) or a double-click on a stack: a bag put on, a garment worn, else use_item / use_on_body.
-func _use_stack(c: BagSlot, body: bool) -> void:
-	var k := c.kind
-	if k == "":
-		return
-	if PlayerBags.is_bag(k):
-		equip_bag(k, -1, c.bag if c.bag != BagSlot.LOOSE else -1, c.index if c.bag != BagSlot.LOOSE else -1)
-	elif k.begins_with(BagUI.CLOTH):
-		wear_cloth(k.trim_prefix(BagUI.CLOTH))
-	elif body:
-		use_on_body(k)
-	else:
-		use_item(k)
-
-
-func slot_shift_click(c: BagSlot) -> void:
-	var g := _bags()
-	if g == null or c.bag == BagSlot.LOOSE or c.count < 2:
-		return
-	var b := c.bag
-	var i := c.index
-	var k := c.kind
-	split_box.open_for(c.get_global_rect().position + Vector2(c.size.x + 8.0, 0.0), c.count, g.kind_name(k), func(n: int) -> void:
-		var gg := _bags()
-		if gg == null or String(gg.slot(b, i).get("kind", "")) != k:
-			return
-		var r := gg.split(b, i, n)
-		if not bool(r.ok):
-			say(String(r.reason), true)
-		_refresh())
-
-
-func slot_drag(c: BagSlot) -> Variant:
-	var g := _bags()
-	if g == null:
-		return null
-	return BagUI.loose_payload(g, c.index) if c.bag == BagSlot.LOOSE else BagUI.slot_payload(g, c.bag, c.index)
-
-
-func slot_drop_check(c: BagSlot, d: Variant) -> Dictionary:
-	var g := _bags()
-	if g == null:
-		return _no("")
-	if c.bag == BagSlot.LOOSE:
-		return _yes("") if c._is_self(d) else _no("Into a bag, not onto the loose things")
-	return BagUI.verdict_slot(player, g, c.bag, c.index, d)
-
-
-func slot_drop(c: BagSlot, d: Variant) -> void:
-	var g := _bags()
-	if g == null:
-		return
-	if c.bag == BagSlot.LOOSE:
-		if not c._is_self(d):
-			say("Into a bag, not onto the loose things", true)
-		return
-	_bag_done(BagUI.drop_slot(player, g, c.bag, c.index, d))
-
-
-func grid_close(_w: BagGrid) -> void:
-	pass
-
-
-func grid_drag(w: BagGrid) -> Variant:
-	var g := _bags()
-	return BagUI.socket_payload(g, w.bag - 1) if g != null and w.bag >= 1 else null
-
-
-func grid_drop_check(w: BagGrid, d: Variant) -> Dictionary:
-	var g := _bags()
-	return BagUI.verdict_into(player, g, w.bag, d) if g != null else _no("")
-
-
-func grid_drop(w: BagGrid, d: Variant) -> void:
-	var g := _bags()
-	if g != null:
-		_bag_done(BagUI.drop_into(player, g, w.bag, d))
-
-
-## A bag from the pack put on (PlayerBags.equip: `socket`, -1 the first empty one; from slot (from_b, from_i) when given).
-func equip_bag(kind: String, socket := -1, from_b := -1, from_i := -1) -> bool:
-	var g := _push_pack()
-	if g == null:
-		return false
-	var r := g.equip(kind, socket, from_b, from_i)
-	_bag_done({"ok": bool(r.ok), "reason": ("The %s is on: bag %d." % [InventoryState.name_of(kind).to_lower(), int(r.socket) + 1])
-			if bool(r.ok) else String(r.reason)})
-	return bool(r.ok)
-
-
-## After a change the bags made: the screen's pack follows the player's (_follow_bags), the result said (a refusal in red).
-func _bag_done(r: Dictionary) -> void:
-	_follow_bags()
-	if String(r.get("reason", "")) != "":
-		say(String(r.reason), not bool(r.get("ok", false)))
-	_refresh()
-
-
 # --- drag and drop widgets ----------------------------------------------------------------------
 
 ## The figure's drop target over the 3D view: what is dropped on it is worn, eaten or used (body_verdict, body_drop). Its
@@ -1285,13 +1155,112 @@ class FigureDrop extends Panel:
 			screen.figure_says("")
 
 
-## A slot of the pack's bags (the owner 2026-10-03, "WoW-style bags": BagSlot, in the bags' grids, BagGrid; before them
-## a row of a list): dragged onto a hotbar slot it goes on the bar, onto the figure it is worn or used, onto another slot
-## or bag it moves; a hotbar slot dropped on it comes off the bar into it; right-click uses it (food, a herb, a torch; a
-## bag put on, a garment worn), a double-click does what the figure would, a click picks it (its stats stay beside the
-## list), shift-click splits it. The screen is its host (slot_* below).
-class PackCell extends BagSlot:
-	pass
+## A row of the pack's list (user 2026-09-27: the wheelbarrow screen's rows "look better" than the grid of squares):
+## the item's icon, its name and how many, no box; the pointer over it a faint wash, the picked one a gold rule at its
+## left. Dragged onto a hotbar slot it goes on the bar, onto the figure it is worn or used; a hotbar slot dropped on it
+## comes off the bar; right-click uses it (food, a herb, a torch), a double-click does what the figure would, a click
+## picks it (its stats stay beside the list).
+class PackCell extends PanelContainer:
+	var screen: InventoryScreen
+	var index := 0
+	var kind := ""
+	var _sb: StyleBoxFlat
+	var _icon: TextureRect
+	var _name: Label
+	var _count: Label
+	var _hover := false
+
+	func _ready() -> void:
+		custom_minimum_size = Vector2(0, 44)
+		mouse_filter = Control.MOUSE_FILTER_STOP
+		_sb = StyleBoxFlat.new()
+		_sb.bg_color = Color(0, 0, 0, 0)
+		_sb.border_color = Color(0, 0, 0, 0)
+		_sb.border_width_left = 3
+		_sb.set_corner_radius_all(2)
+		_sb.content_margin_left = 8
+		_sb.content_margin_right = 10
+		_sb.content_margin_top = 2
+		_sb.content_margin_bottom = 2
+		add_theme_stylebox_override("panel", _sb)
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 12)
+		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(h)
+		_icon = TextureRect.new()
+		_icon.custom_minimum_size = Vector2(38, 38)
+		_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		h.add_child(_icon)
+		_name = InventoryScreen._label("", 18, Color(0.93, 0.88, 0.76))
+		_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_name.clip_text = true
+		_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		h.add_child(_name)
+		_count = InventoryScreen._label("", 16, Color(0.8, 0.72, 0.58))
+		_count.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		h.add_child(_count)
+
+	func set_entry(e: Dictionary) -> void:
+		kind = String(e.get("kind", ""))
+		visible = kind != ""
+		if kind == "":
+			return
+		var n := int(e.get("count", 1))
+		_icon.texture = screen.icons.get_icon(kind)
+		_name.text = InventoryState.name_of(kind)
+		_count.text = ("×%d" % n) if n > 1 else ""
+		_style()
+
+	func _style() -> void:
+		var on := kind != "" and kind == screen.picked
+		_sb.bg_color = Color(0.93, 0.74, 0.36, 0.12) if on else (Color(1, 0.95, 0.85, 0.05) if _hover else Color(0, 0, 0, 0))
+		_sb.border_color = Color(0.93, 0.74, 0.36) if on else Color(0, 0, 0, 0)
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_MOUSE_ENTER and screen and kind != "":
+			_hover = true
+			_style()
+			screen.hover(kind)
+		elif what == NOTIFICATION_MOUSE_EXIT and screen:
+			_hover = false
+			if _sb:
+				_style()
+			screen.hover("")
+
+	func drag_preview() -> Control:
+		var t := TextureRect.new()
+		t.texture = _icon.texture
+		t.size = Vector2(64, 64)
+		t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		if t.texture == null:
+			return InventoryScreen._label(InventoryState.name_of(kind), 16, Color(1, 0.9, 0.6))
+		return t
+
+	func _get_drag_data(_at: Vector2) -> Variant:
+		if kind == "":
+			return null
+		set_drag_preview(drag_preview())
+		return {"from": "pack", "kind": kind}
+
+	func _can_drop_data(_at: Vector2, d: Variant) -> bool:
+		return screen._list_can_drop(_at, d)
+
+	func _gui_input(e: InputEvent) -> void:
+		var mb := e as InputEventMouseButton
+		if mb == null or not mb.pressed or kind == "":
+			return
+		if mb.button_index == MOUSE_BUTTON_RIGHT:
+			screen.use_item(kind)
+		elif mb.button_index == MOUSE_BUTTON_LEFT and mb.double_click:
+			screen.use_on_body(kind)
+		elif mb.button_index == MOUSE_BUTTON_LEFT:
+			screen.pick("" if screen.picked == kind else kind)
+
+	func _drop_data(_at: Vector2, d: Variant) -> void:
+		screen._list_drop(_at, d)
 
 
 ## A row of the Spells list or the clothes carried: its picture (a spell with none: its circle, FrontierHUD

@@ -81,6 +81,7 @@ var _debug_mat: StandardMaterial3D
 var _player: Node3D
 var _query: NavigationPathQueryParameters3D
 var _result: NavigationPathQueryResult3D
+var _bake_tasks: Array[int] = []      ## the WorkerThreadPool tasks of the bakes in flight (_start; waited in _exit_tree)
 
 
 static func of(tree: SceneTree) -> NavWorld:
@@ -118,8 +119,16 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	# the bakes in flight finish first (a few tens of ms each, MAX_BAKING at most): none is left running into the server's
+	# shutdown at a quit; their results are let go (_baked on a node that is gone)
+	for task in _bake_tasks:
+		WorkerThreadPool.wait_for_task_completion(task)
+	_bake_tasks.clear()
 	for k: Vector2i in tiles:
-		NavigationServer3D.free_rid(tiles[k].region)
+		# (a tile queued or on its first bake has no region yet: freeing its empty RID was the "Attempted to free a
+		# NavigationServer RID that did not exist" at every quit with tiles on their way)
+		if (tiles[k].region as RID).is_valid():
+			NavigationServer3D.free_rid(tiles[k].region)
 	tiles.clear()
 	if map.is_valid():
 		NavigationServer3D.free_rid(map)
@@ -179,6 +188,8 @@ func synced_at(p: Vector3) -> bool:
 ## The tiles whose new region is not known to be in the map yet: in when the map's closest point to the probe (a spot on
 ## the new mesh) is owned by the new region.
 func _check_in() -> void:
+	if NavigationServer3D.map_get_iteration_id(map) == 0:
+		return       # (the map not synchronized once yet: a first bake in before it is asked nothing)
 	for k: Vector2i in tiles:
 		var t: Dictionary = tiles[k]
 		if t.state != "ready" or bool(t.get("in_map", true)):
@@ -388,6 +399,10 @@ func npc_opened(d: BuildDoor) -> bool:
 func _physics_process(dt: float) -> void:
 	var t0 := Time.get_ticks_usec()
 	_clock += dt
+	for i in range(_bake_tasks.size() - 1, -1, -1):
+		if WorkerThreadPool.is_task_completed(_bake_tasks[i]):
+			WorkerThreadPool.wait_for_task_completion(_bake_tasks[i])     # (a finished task is waited for, once)
+			_bake_tasks.remove_at(i)
 	# the server's step of the frame before (the map's sync after a region got a new mesh is the costly one)
 	stats.nav_max = maxf(float(stats.nav_max), Performance.get_monitor(Performance.TIME_NAVIGATION_PROCESS) * 1000.0)
 	_want_t -= dt
@@ -515,8 +530,12 @@ func _start(k: Vector2i) -> void:
 	var gen := int(t.gen)
 	_baking += 1
 	var started := Time.get_ticks_usec()
-	var done := func() -> void: _baked.call_deferred(k, gen, nm, gather_ms, started, st)
-	NavigationServer3D.bake_from_source_geometry_data_async(nm, src, done)
+	# (the bake on a worker task of our own, not the server's _async one: a task this node holds is waited for when it
+	# goes (_exit_tree); a server bake still running as the game quit crashed it, "recursive_mutex lock failed", exit 134)
+	var task := WorkerThreadPool.add_task(func() -> void:
+		NavigationServer3D.bake_from_source_geometry_data(nm, src)
+		_baked.call_deferred(k, gen, nm, gather_ms, started, st), false, "nav bake")
+	_bake_tasks.append(task)
 
 
 func _new_mesh() -> NavigationMesh:

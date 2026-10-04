@@ -66,6 +66,8 @@ var clubbed := false
 
 var _bloom := 0.0
 var _equip_left := 0.0
+var _input_on_since := -1              ## physics frame the fire input came on, unbroken since (-1 off): _fire_input_steady
+var _input_tick := -1                  ## physics frame of the last tick
 
 
 func equip() -> void:
@@ -98,6 +100,7 @@ func unequip() -> void:
 
 func tick(delta: float) -> void:
 	_equip_left = maxf(_equip_left - delta, 0.0)
+	_track_input()
 	_tick(delta)
 	var up := wants_aim() and not aim_hold
 	aim = move_toward(aim, 1.0 if up else 0.0, delta / maxf(aim_in_time if up else aim_out_time, 0.01))
@@ -300,6 +303,24 @@ static func apply_spread(dir: Vector3, cone: float) -> Vector3:
 	var r := tan(cone) * randf()
 	var phi := randf() * TAU
 	return (dir + side * cos(phi) * r + up * sin(phi) * r).normalized()
+
+
+## The fire input's unbroken run (_fire_input_steady), kept at each tick: a tick with the input off ends it, and so does a
+## tick missed (the tree paused under a story card or the pause menu, the weapon slung or put away).
+func _track_input() -> void:
+	var f := Engine.get_physics_frames()
+	if not _fire_input_enabled():
+		_input_on_since = -1
+	elif _input_on_since < 0 or _input_tick < f - 1:
+		_input_on_since = f
+	_input_tick = f
+
+
+## The fire input on, and on since the tick before this one (bug pass 2026-10-03, the musket that fired by itself): the
+## Input singleton sees every click, the GUI's too, so the click that closed a story card, a dialogue or the Tab screen,
+## or that took the mouse back, reads as a fire press on the first tick the input is back. That press is not the weapon's.
+func _fire_input_steady() -> bool:
+	return _input_on_since >= 0 and _input_on_since < Engine.get_physics_frames() and _fire_input_enabled()
 
 
 ## The aim button (RMB) is this weapon's: fire input enabled and no Sway spell readied (an expert's spell readied with a

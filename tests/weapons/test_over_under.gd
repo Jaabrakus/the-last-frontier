@@ -67,6 +67,8 @@ func _initialize() -> void:
 	await _test_routing()
 	print("== ballistics")
 	await _test_ballistics()
+	print("== 16 the input taken away or given back is no trigger (the musket that fired by itself)")
+	await _test_input_taken()
 	_finish()
 
 
@@ -875,3 +877,58 @@ func _test_ballistics() -> void:
 		ok = ok and absf(float(d) - 101.0) <= 1.0
 	_check(ok, "damage at 50 m = 110 x speed falloff = 101 (got %s)" % (str(dmg[0]) if not dmg.is_empty() else "none"))
 	disc.queue_free()
+
+
+## Bug pass 2026-10-03: the musket went off by itself in the story runs (its line read "Release to fire" first). The input
+## taken away while it was shouldered read as a release, and the click that gave the input back read as a press of its
+## own (Firearm._tick on Weapon._fire_input_steady). Through the Firearm's AIMING, as the plain musket's.
+func _test_input_taken() -> void:
+	await _load_state(5, 5)
+	var t0 := tick
+	Input.action_press("fire")
+	await _until(func() -> bool: return w.aim >= w.ready_aim, 120)
+	_check(w.state == Firearm.State.AIMING and w.status_text().begins_with("Release to fire"), "shouldered: '%s'" % w.status_text())
+	player.ignore_mouse_capture = false          # (headless never captures the mouse: the input off, as under a UI over the game)
+	await _frames(10)
+	_check(_events("fired", t0).is_empty() and w.state == Firearm.State.READY and w.barrels_loaded() == [true, true],
+			"LMB still held, the input taken away (a UI, the mouse freed): lowered, no shot (%s)" % Firearm.State.keys()[w.state])
+	Input.action_release("fire")
+	player.ignore_mouse_capture = true
+	await _frames(30)
+	_check(_events("fired", t0).is_empty(), "and no shot as the input comes back with LMB let go")
+	# shouldered, the tree paused (a story card, the pause menu), LMB let go under it
+	await _load_state(5, 5)
+	t0 = tick
+	Input.action_press("fire")
+	await _until(func() -> bool: return w.aim >= w.ready_aim, 120)
+	paused = true
+	await _frames(5)
+	Input.action_release("fire")
+	await _frames(5)
+	paused = false
+	await _frames(30)
+	_check(_events("fired", t0).is_empty() and w.state == Firearm.State.READY and w.barrels_loaded() == [true, true],
+			"shouldered, LMB let go under a pause (a story card): lowered, no shot (%s)" % Firearm.State.keys()[w.state])
+	# the click that takes the mouse back (the press and the capture in one frame, as the player's _unhandled_input does)
+	await _load_state(5, 5)
+	t0 = tick
+	player.ignore_mouse_capture = false
+	await _frames(10)
+	await process_frame
+	var lmb := InputEventMouseButton.new()
+	lmb.button_index = MOUSE_BUTTON_LEFT
+	lmb.position = Vector2(400, 300)
+	lmb.pressed = true
+	Input.parse_input_event(lmb)
+	player.ignore_mouse_capture = true
+	await _frames(60)
+	_check(w.state == Firearm.State.READY and w.aim < 0.05, "the click that takes the mouse back does not shoulder (%s, aim %.2f)"
+			% [Firearm.State.keys()[w.state], w.aim])
+	var up := lmb.duplicate() as InputEventMouseButton
+	up.pressed = false
+	Input.parse_input_event(up)
+	await _frames(30)
+	_check(_events("fired", t0).is_empty() and w.barrels_loaded() == [true, true], "nor fires when let go")
+	var d := await _shoot_settled()
+	_check(d > 0, "a press of its own after it still shoulders and fires")
+	_release_all()

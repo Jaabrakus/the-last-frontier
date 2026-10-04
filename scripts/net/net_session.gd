@@ -168,8 +168,13 @@ func _ready() -> void:
 
 
 func in_session() -> bool:
-	return multiplayer.multiplayer_peer != null and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer) \
-			and multiplayer.multiplayer_peer.get_connection_status() != MultiplayerPeer.CONNECTION_DISCONNECTED
+	# (out of the tree, before it is added or as the game quits and the root's children go, a node has no multiplayer:
+	# no session; it was "Invalid access to property or key 'multiplayer_peer' on a base object of type 'null instance'")
+	var mp: MultiplayerAPI = multiplayer if is_inside_tree() else null
+	if mp == null:
+		return false
+	var peer := mp.multiplayer_peer
+	return peer != null and not (peer is OfflineMultiplayerPeer) and peer.get_connection_status() != MultiplayerPeer.CONNECTION_DISCONNECTED
 
 
 func is_host() -> bool:

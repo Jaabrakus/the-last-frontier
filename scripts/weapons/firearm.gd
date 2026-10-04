@@ -116,7 +116,8 @@ func _on_unequip() -> void:
 
 
 func _tick(delta: float) -> void:
-	var enabled := _fire_input_enabled()
+	# (a press only once the input has been on a tick: the click that closed a card or a screen is not a shot)
+	var enabled := _fire_input_steady()
 	match state:
 		State.READY:
 			if enabled and Input.is_action_just_pressed("fire") and not is_equipping() \
@@ -127,6 +128,13 @@ func _tick(delta: float) -> void:
 			if player.is_sprinting or is_equipping():
 				state = State.READY
 				return
+			# The input taken away while shouldered (a card, a dialogue or the Tab screen over the game, the mouse freed, a
+			# vault, the tree paused): lowered without firing. It was read as a release and the shot went off by itself.
+			if not enabled:
+				_release_queued = false
+				state = State.READY
+				shot_cancelled.emit()
+				return
 			# Cancel: RMB or R while shouldering lowers the weapon without firing
 			# (a new LMB press is needed to raise it again).
 			if (_aim_input_enabled() and Input.is_action_just_pressed("aim")) or (enabled and Input.is_action_just_pressed("reload")):
@@ -134,7 +142,7 @@ func _tick(delta: float) -> void:
 				state = State.READY
 				shot_cancelled.emit()
 				return
-			if not (enabled and Input.is_action_pressed("fire")):
+			if not Input.is_action_pressed("fire"):
 				_release_queued = true
 			if _release_queued and aim >= ready_aim:
 				_release_queued = false

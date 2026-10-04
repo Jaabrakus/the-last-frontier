@@ -328,9 +328,6 @@ var equip_wheel: EquipWheel
 ## The hotbar (1-9 and the wheel; Hotbar, the local player's): the start's kit, then what the player drags on (Tab); a
 ## weapon off it is not drawn.
 var hotbar: Hotbar
-## The bags (the local player's; PlayerBags): the pack laid out in the haversack and the bag bar's bags; full, what rides
-## loose slows the player.
-var bags: PlayerBags
 ## Building (B): log cabins, palisades, chimneys from the pack's logs and stone (BuildMode, scripts/building/).
 var building: BuildMode
 ## E at a dead animal's neck: drag it on foot on a short rope, the right hand free for a torch (FootDrag).
@@ -423,7 +420,6 @@ func _ready() -> void:
 	_ensure_hands_free_input()
 	if is_local:
 		hotbar = Hotbar.of(self)           # 1-9 and the wheel: the start's kit, then what is dragged on (Hotbar)
-		bags = PlayerBags.of(self)         # the pack in bag slots: the haversack and a linen satchel (PlayerBags)
 		HowTo.install(self)                # the first time each thing is done, its keys (HowTo)
 		hud = FrontierHUD.new()
 		hud.player = self

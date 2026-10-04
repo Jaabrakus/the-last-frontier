@@ -649,6 +649,11 @@ func _sight_and_calls() -> void:
 func _end() -> void:
 	StoryDirector.dir = StoryDirector.STORY_DIR
 	StoryEffects.stand_ins = {}
+	# the stand-ins' marks off the Engine: story_test_talk holds the director's answer callback (a lambda), and kept there it
+	# was freed only with the Engine, after GDScript was gone: "recursive_mutex lock failed" at the quit, exit 134
+	for k: StringName in Engine.get_meta_list():
+		if String(k).begins_with("story_test_"):
+			Engine.remove_meta(k)
 	for n in made:
 		if is_instance_valid(n):
 			n.queue_free()

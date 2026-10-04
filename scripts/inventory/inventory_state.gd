@@ -77,10 +77,7 @@ const NAMES := {"musket": "Flintlock Musket", "over_under": "Over-and-Under", "b
 		# the forge's (bog iron from the hollows, clay from the banks, charcoal from the mound)
 		"bog_iron": "Bog Iron Ore", "clay": "Clay", "charcoal": "Charcoal", "bar_iron": "Bar Iron",
 		# a gun's parts (the forge's barrel and lock, the workbench's stock; assembled at the workbench)
-		"gun_barrel": "Musket Barrel", "pistol_barrel": "Pistol Barrel", "gunlock": "Gunlock", "gunstock": "Gunstock",
-		# the bags (PlayerBags, data/inventory/bags.json): the haversack always worn, the rest into the bag bar's sockets
-		"haversack": "Haversack", "linen_satchel": "Linen Satchel", "knapsack": "Knapsack", "blanket_roll": "Blanket Roll",
-		"portmanteau": "Portmanteau", "hunting_pouch": "Hunting Pouch", "game_bag": "Game Bag", "simples_bag": "Simples Bag"}
+		"gun_barrel": "Musket Barrel", "pistol_barrel": "Pistol Barrel", "gunlock": "Gunlock", "gunstock": "Gunstock"}
 const POINT_NAMES := {"long_A": "Back sling (outer)", "long_B": "Back sling (inner)", "quiver": "Quiver strap",
 		"R_hip": "Right hip", "L_hip": "Left hip", "back": "Tomahawk frog", "back_2": "Second tomahawk",
 		"back_right": "Back of the belt", "chest_R": "Chest (right)", "chest_L": "Chest (left)", "horn": "Horn strap",

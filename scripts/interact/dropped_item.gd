@@ -1,10 +1,8 @@
 class_name DroppedItem
 extends Node3D
 ## Something of the pack's lying on the ground (user 2026-09-27: "tools can be losable"): a tool knocked out of the hands
-## (PlayerRagdoll), say, or a stack dragged out of the bags onto the world (BagUI.drop_ground; the owner 2026-10-03,
-## "WoW-style bags": "Drop 12 Venison?"). Its model (GatherModels: the felling axe, the mattock...; the bags' drops the
-## model its icon is made from), and E (PlayerInteractor) puts it back in the pack: "Pick up the felling axe", with its
-## `state` (a made thing's standard). A lost tool is the player's again then (GatherTools.found).
+## (PlayerRagdoll), say. Its model (GatherModels: the felling axe, the mattock...), and E (PlayerInteractor) puts it
+## back in the pack: "Pick up the felling axe". A lost tool is the player's again then (GatherTools.found).
 ## Not kept in the save: a tool lost when the game is saved is the player's again on loading (GatherTools gives every
 ## tool it finds neither worn nor in the pack).
 
@@ -12,8 +10,6 @@ var kind := ""
 var count := 1
 var display_name := ""
 var model: Node3D
-## The pack stack's state it goes back with (StationPractice's standard; {} none).
-var state := {}
 var interact_reach := 2.3
 
 
@@ -56,10 +52,7 @@ func highlight_targets() -> Array:
 
 func interact(player: Node) -> bool:
 	var inv := InventoryState.from_player(player)
-	if state.is_empty():
-		inv.add(kind, count)
-	else:
-		inv._to_pack(kind, count, state)
+	inv.add(kind, count)
 	player.set("inventory_pack", inv.pack.duplicate(true))
 	var g = player.get("gather")
 	if g and g.has_method(&"found"):

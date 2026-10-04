@@ -34,7 +34,6 @@ static func say(speaker: Node3D, text: String, seconds := 3.0) -> StoryBark:
 	b.text = text.strip_edges()
 	b.position = Vector3(0.0, float(speaker.get_meta(&"bark_height", HEIGHT)), 0.0)
 	speaker.add_child(b)
-	speaker.get_tree().call_group(&"bark_listeners", &"on_bark", speaker, b.text)   # (the classic HUD's chat log: HudClassicMap)
 	return b
 
 

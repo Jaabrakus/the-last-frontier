@@ -73,15 +73,6 @@ const LOOK_BEYOND := 1.0      ## m past a thing the crosshair may land and still
 const MENU_MAX := 6           ## rows in the hold-E list
 const GAP := "      "         ## a prompt's extra (a fire's "F  Cook ..."): the list keeps the action before it
 
-## Each notice() as it is shown (the classic HUD's chat log: HudClassicMap).
-signal noticed(text: String, secs: float)
-## The prompt, its "Hold E: 2 more" line and the hold-E list raised this many px (the classic HUD's action bar and renown
-## bar under them: ClassicFrames sets PROMPT_LIFT; 0 the minimal HUD's places).
-var prompt_lift := 0.0:
-	set(v):
-		prompt_lift = v
-		_lay_prompt()
-
 var player: FrontierPlayer
 var target: Node = null            ## the targeted item (PlacedWeapon / ThrownPickup), or null
 var place := {}                    ## the placement {kind: "rack"|"lean"|"lay", xf, rack, slot, what}, or {}
@@ -200,23 +191,8 @@ func _build_menu() -> void:
 	_menu_box.add_child(_menu_rows)
 
 
-## The prompt's lines at their places, `prompt_lift` px up (the "Hold E" line a few px more: closer under the prompt).
-func _lay_prompt() -> void:
-	if _label == null or _more == null or _menu_box == null:
-		return
-	var up := prompt_lift
-	var more_up := up + 4.0 if up > 0.0 else 0.0
-	_label.offset_top = -120.0 - up
-	_label.offset_bottom = -80.0 - up
-	_more.offset_top = -86.0 - more_up
-	_more.offset_bottom = -62.0 - more_up
-	_menu_box.offset_top = -104.0 - up
-	_menu_box.offset_bottom = -104.0 - up
-
-
 ## A short message at the top of the screen for a couple of seconds ("Kit: Musket and spears").
 func notice(text: String, secs := 2.5) -> void:
-	noticed.emit(text, secs)                 # (the classic HUD's chat log writes it too: HudClassicMap)
 	_notice.text = text
 	_notice_t = secs
 	_notice.modulate.a = 1.0
@@ -233,6 +209,7 @@ func _process(delta: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if player == null or not is_instance_valid(player):
 		return
+	_prune_cands()
 	if typeof(target) == TYPE_OBJECT and not is_instance_valid(target):
 		# freed under us (taken by someone else, or directly by a script): forget it and its prompt
 		target = null
@@ -939,10 +916,14 @@ func _set_target(t: Node) -> void:
 		if is_instance_valid(pair[0]):
 			(pair[0] as GeometryInstance3D).material_overlay = pair[1]
 	_hl_nodes.clear()
+	if is_instance_valid(target) and target.tree_exiting.is_connected(_on_target_gone):
+		target.tree_exiting.disconnect(_on_target_gone)
 	target = t
 	if t == null:
 		_update_label()
 		return
+	if not t.tree_exiting.is_connected(_on_target_gone):
+		t.tree_exiting.connect(_on_target_gone)
 	var geoms: Array = []
 	if t.has_method("highlight_targets"):
 		geoms = t.highlight_targets()
@@ -953,6 +934,29 @@ func _set_target(t: Node) -> void:
 		_hl_nodes.append([gi, gi.material_overlay])
 		gi.material_overlay = _hl_mat
 	_update_label()
+
+
+## The target leaving the tree (freed, taken by someone else, a story's retry taking a fighter away): forgotten as it goes,
+## and out of this frame's list, before anything reads it freed (bug pass 2026-10-03: _update_label assigned a freed
+## candidate, "Trying to assign invalid previously freed instance").
+func _on_target_gone() -> void:
+	var gone := target
+	_cands = _cands.filter(func(c: Array) -> bool: return is_instance_valid(c[1]) and c[1] != gone)
+	if _press_target == gone:
+		_press_target = null
+	if is_inside_tree() and player != null and is_instance_valid(player):
+		_set_target(null)
+	else:
+		target = null
+		_hl_nodes.clear()
+
+
+## This frame's list without what has been freed or is on its way out since it was made.
+func _prune_cands() -> void:
+	for i in range(_cands.size() - 1, -1, -1):
+		var n: Variant = _cands[i][1]
+		if not is_instance_valid(n) or (n as Node).is_queued_for_deletion() or not (n as Node).is_inside_tree():
+			_cands.remove_at(i)
 
 
 func _set_place(pl: Dictionary) -> void:
@@ -998,8 +1002,9 @@ func _update_label() -> void:
 		else:
 			_label.text = ("Click  %s" % place.what) if not place.is_empty() else _place_hint()
 	elif target == null and not _cands.is_empty() and not _placing and place.is_empty():
-		# only things for the hold in reach (the river's drink): say so
-		var hn: Node = _cands[0][1]
+		# only things for the hold in reach (the river's drink): say so (one freed since the list was made: nothing)
+		var hv: Variant = _cands[0][1]
+		var hn: Node = hv as Node if is_instance_valid(hv) else null
 		_label.text = "Hold %s  %s" % [key_name, hn.interact_prompt(player)] if hn != null and hn.has_method("interact_prompt") else ""
 	elif not place.is_empty():
 		_label.text = "Release %s  %s" % [key_name, place.what]

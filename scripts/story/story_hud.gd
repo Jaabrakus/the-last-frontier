@@ -8,9 +8,6 @@ extends CanvasLayer
 ##   the world   a gold diamond on the step's place, its distance under it; held at the screen's edge when off screen
 ##   centre      the story cards: a title, the text, "Enter  continue". The game waits under them (paused), but not
 ##               in a shared world (co-op: the others play on; this player only stands while a card is up).
-## Under the classic HUD (HudClassicMap) its quest tracker shows the mission, its step, count and distance
-## (`tracker_shown`, read from mission_title / mission_text / mission_count): the panel here keeps only the key hints,
-## lower (TRACKED_AT, under the player frame); the cards, the banner and the marker in the world stay here.
 
 const INK := FrontierHUD.INK
 const TEXT := FrontierHUD.TEXT
@@ -21,18 +18,6 @@ const EDGE := 48.0
 
 var marker_at: Variant = null       ## Vector3 or null
 var marker_dist := -1.0
-## The mission at hand as set_mission() was last told (the classic HUD's quest tracker reads them: HudQuestTracker).
-var mission_title := ""
-var mission_text := ""
-var mission_count := ""
-## A quest tracker shows the mission (the classic HUD: HudQuestTracker): the panel here keeps only the key hints, lower,
-## clear of the player frame (TRACKED_AT).
-var tracker_shown := false:
-	set(v):
-		tracker_shown = v
-		_lay_out_panel()
-const TRACKED_AT := Vector2(28, 150)
-const PANEL_AT := Vector2(28, 22)
 
 var _root: Control
 var _panel: VBoxContainer
@@ -152,33 +137,15 @@ func _label(size: int, col: Color) -> Label:
 
 ## The mission at hand (title "" hides the panel).
 func set_mission(title: String, text: String, count: String, hints: Array) -> void:
-	mission_title = title
-	mission_text = text
-	mission_count = count
 	_panel.visible = title != "" or text != ""
 	_title.text = title.to_upper()
 	_text.text = text
 	_count.text = count
+	_count.visible = count != ""
 	var want := "\n".join(hints)
 	if String(_hints.get_meta(&"keys", "")) != want:
 		_hints.set_meta(&"keys", want)
 		_build_checklist(hints)
-	_lay_out_panel()
-
-
-## The panel's lines: the mission's own (title, step, count) unless a tracker shows them; then only the key hints, lower.
-func _lay_out_panel() -> void:
-	if _panel == null:
-		return
-	_title.visible = not tracker_shown
-	_text.visible = not tracker_shown
-	_count.visible = not tracker_shown and _count.text != ""
-	_panel.position = TRACKED_AT if tracker_shown else PANEL_AT
-	if tracker_shown:
-		_panel.visible = (mission_title != "" or mission_text != "") and not _rows.is_empty()
-	else:
-		_panel.visible = mission_title != "" or mission_text != ""
-	_panel.size = Vector2.ZERO                   # (back to what its shown lines need: the shade follows it)
 
 
 func banner(text: String) -> void:
@@ -495,5 +462,3 @@ func _tick_checklist(delta: float) -> void:
 	if gone and _rows.is_empty():
 		for c in _hints.get_children():
 			c.queue_free()
-		if tracker_shown:
-			_lay_out_panel()                     # (the hints all done: nothing left here under a tracker)
