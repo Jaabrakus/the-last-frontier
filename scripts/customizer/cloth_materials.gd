@@ -342,9 +342,20 @@ static func zone_patterns(zd: Dictionary) -> Array:
 	return out if out.size() > 1 else []
 
 
-## Whether a zone takes a woven or printed pattern (cloth; not leather, metal, fur, beads).
+## Whether a zone takes a woven or printed pattern (cloth; not leather, metal, fur, beads, nor tarred cloth: a rigging
+## harness's tarred canvas band, a tarred hem, whose tar covers any weave).
 static func patternable(zd: Dictionary) -> bool:
-	return not str(zd.get("role", "cloth")) in UNPATTERNED_ROLES and not str(zd.get("fabric", "WOOL")) in UNPATTERNED_FABRICS
+	return not str(zd.get("role", "cloth")) in UNPATTERNED_ROLES and not str(zd.get("fabric", "WOOL")) in UNPATTERNED_FABRICS \
+			and not str(zd.get("default", "")).begins_with("tar_") and not "tarred" in str(zd.get("name", ""))
+
+
+## The named sett a plaid on the zone shows (SETTS_JSON): the look's "sett", else the zone's catalog plaid's, else the
+## default; "" when it is a list of its own.
+static func sett_name(zd: Dictionary, colors := {}) -> String:
+	var v: Variant = colors.get("sett", _pattern_def(zd, "plaid").get("sett", PATTERN_DEFAULTS.plaid.sett))
+	if v is Dictionary:
+		v = (v as Dictionary).get("sett", PATTERN_DEFAULTS.plaid.sett)
+	return str(v) if v is String else ""
 
 
 ## The zone a garment's look-wide "pattern" goes on: the first zone whose catalog lists the look's pattern, else the

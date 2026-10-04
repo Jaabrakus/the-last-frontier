@@ -217,8 +217,29 @@ func _test_player() -> void:
 	_check(body.part_meshes("outfit:shirt").is_empty() and body.part_meshes("outfit:legs.lower").is_empty(), "\"-\" takes the garments off")
 	_check(PlayerOutfit.bulk_key(app.outfit_slots) == "bare", "bare: the gear rests on the skin")
 	_check(not body.part_meshes("body_hair").is_empty(), "bare: the pubic hair is drawn")
-	# a slot's choices: the basic piece first, none last, only garments for that body type
+	# a slot's choices: the basic piece first, none last, every garment for both body types (the owner, 2026-10-03: "give
+	# everyone the ability to wear anything on starting"); the basic piece stays the body type's
 	var sh_m := PlayerOutfit.offered("legs.lower", 1.0)
 	var sh_f := PlayerOutfit.offered("legs.lower", 0.0)
-	_check(sh_m[0] == "" and sh_m[sh_m.size() - 1] == "-" and "breeches" in sh_m and not "petticoat" in sh_m, "men are offered breeches, not the petticoat (%s)" % [sh_m])
-	_check("petticoat" in sh_f and not "breeches" in sh_f, "women are offered the petticoat, not breeches (%s)" % [sh_f])
+	_check(sh_m[0] == "" and sh_m[sh_m.size() - 1] == "-" and "breeches" in sh_m and "petticoat" in sh_m, "men are offered breeches and the petticoat (%s)" % [sh_m])
+	_check(sh_f == sh_m, "women the same (%s)" % [sh_f])
+	_check(PlayerOutfit.cut_for("breeches", 1.0) and not PlayerOutfit.cut_for("breeches", 0.0) and PlayerOutfit.cut_for("petticoat", 0.0)
+			and not PlayerOutfit.cut_for("petticoat", 1.0), "cut_for: breeches cut for men, the petticoat for women")
+	_check(PlayerOutfit.item_name("legs.lower", "", 1.0).contains(String(PlayerOutfit.entry("breeches").get("name", "?")))
+			and PlayerOutfit.item_name("legs.lower", "", 0.0).contains(String(PlayerOutfit.entry("petticoat").get("name", "?"))),
+			"the basic piece stays the body type's (%s / %s)" % [PlayerOutfit.item_name("legs.lower", "", 1.0), PlayerOutfit.item_name("legs.lower", "", 0.0)])
+	# a woman in breeches and a man in the petticoat dress (cloth2 builds every cut on both fits)
+	var wb := AppearanceStore.validate(CharacterPeoples.preset_look("english_f_a"))
+	wb["outfit"] = {"legs.lower": {"id": "breeches", "colors": {}}, "shirt": {"id": "shirt_tucked", "colors": {}}}
+	app.apply(wb)
+	await _frames(2)
+	var br: Array = body.part_meshes("outfit:legs.lower")
+	_check(not br.is_empty() and String((br[0] as Node).get_meta("garment", "")) == "breeches", "a woman wears breeches")
+	var mp := AppearanceStore.validate(CharacterPeoples.preset_look("english_m_a"))
+	mp["outfit"] = {"legs.lower": {"id": "petticoat", "colors": {}}}
+	app.apply(mp)
+	await _frames(2)
+	var pc: Array = body.part_meshes("outfit:legs.lower")
+	var psi := (pc[0] as MeshInstance3D).find_blend_shape_by_name("sex") if not pc.is_empty() else -1
+	_check(not pc.is_empty() and String((pc[0] as Node).get_meta("garment", "")) == "petticoat" and psi >= 0
+			and is_equal_approx((pc[0] as MeshInstance3D).get_blend_shape_value(psi), 1.0), "a man wears the petticoat, on the male fit")

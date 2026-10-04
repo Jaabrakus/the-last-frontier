@@ -375,8 +375,10 @@ void fragment() {
 	CLEARCOAT_ROUGHNESS = oil_roughness;
 	AO = mix(0.35, 1.0, cavity);
 	// (the bounce from the chest and the ground lands under the chin and on the throat, never on the nape: facing back,
-	// the neck had glowed at the back in the dark)
-	EMISSION = albedo * (neck_bounce * skin_bounce * nzf * (1.0 - smoothstep(-0.2, 0.6, v_ny)) * smoothstep(1.27, 1.33, v_h)
+	// the neck had glowed at the back in the dark; by height on the head and the neck alike, fading out up the jaw: by
+	// region it lit the neck's triangles and not the head's beside them, a zigzag light patch under the jaw, 2026-10-03)
+	float bounce_w = v_region <= 2u ? 1.0 - smoothstep(1.40, 1.45, v_h) : 0.0;
+	EMISSION = albedo * (neck_bounce * skin_bounce * bounce_w * (1.0 - smoothstep(-0.2, 0.6, v_ny)) * smoothstep(1.27, 1.33, v_h)
 			* smoothstep(-0.5, 0.0, v_nz));
 	AO_LIGHT_AFFECT = 0.35;
 	// (less under hair: the light the strips let through reddened the hairline into a glowing band)

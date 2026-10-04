@@ -31,10 +31,13 @@ extends SceneTree
 ##     (d-pad, Y, shoulders), row arrow and
 ##     people and body type buttons, the picker, the name field, Back (nothing saved) and
 ##     Accept (saved); the first-launch offer is off in tool runs
-##   - in game: O opens the creator (paused, 3D of the game world off), Accept dresses the
-##     player (beard shells, jewellery, marks) and saves; without a saved look the creator
-##     opens by itself ("New character") and Back saves the look (no second offer); O again
-##     shows the look; Esc closes without changes and unpauses
+##   - in game: O does nothing (the user, 2026-10-01); PlayerAppearance.open_customizer opens the
+##     creator (paused, 3D of the game world off); the new rows worked there (the four jewellery
+##     rows, the Tattoos row and its editor, the Clothing view's plaid shirt); Accept dresses the
+##     player (beard shells, jewellery, marks, the tattoos that show, the plaid) and saves them all,
+##     and the player re-dressed from the file is the same; without a saved look the creator
+##     opens by itself ("New character") and Back saves the look (no second offer); opened again it
+##     shows the look and the new rows; Esc closes without changes and unpauses
 
 var _fails: Array[String] = []
 var _checks := 0
@@ -187,6 +190,9 @@ func _test_cycle_all() -> void:
 		for bt in [1, 2]:
 			var lk := _look(String(p.id), bt)
 			for r: String in CreatorOptions.rows(lk):
+				if r == Tattoos.ROW:
+					_cycle_tattoos(lk, "%s %d" % [p.id, bt])
+					continue
 				var n := CreatorOptions.options(r, lk).size()
 				var i0 := CreatorOptions.current(r, lk)
 				var others := {}
@@ -211,6 +217,36 @@ func _test_cycle_all() -> void:
 				CreatorOptions.step(r, lk, -1)
 				_check(CreatorOptions.current(r, lk) == posmod(i0 - 1, n), "%s %d: %s steps back" % [p.id, bt, r])
 				CreatorOptions.step(r, lk, 1)
+
+
+## The Tattoos row cycled: from none its first step adds the first design; then it lists only the designs and its steps
+## change that tattoo's design round all of them and back, never taking it off (the review of 2026-10-03: a Left on the
+## first design deleted a placed tattoo); the other rows stay.
+func _cycle_tattoos(lk: Dictionary, who: String) -> void:
+	var others := {}
+	for o: String in CreatorOptions.rows(lk):
+		if o != Tattoos.ROW:
+			others[o] = CreatorOptions.current(o, lk)
+	var designs: Array = Tattoos.designs().map(func(e: Dictionary) -> String: return String(e.id))
+	var n0 := CreatorOptions.options(Tattoos.ROW, lk).size()
+	_check(CreatorOptions.current(Tattoos.ROW, lk) == 0 and n0 == designs.size() + 1, "%s: tattoos: None and %d designs" % [who, designs.size()])
+	CreatorOptions.step(Tattoos.ROW, lk, 1)
+	var ok := Tattoos.list(lk).size() == 1 and String(Tattoos.list(lk)[0].design) == String(designs[0])
+	for k in designs.size():
+		var i := CreatorOptions.step(Tattoos.ROW, lk, 1)
+		if Tattoos.list(lk).size() != 1 or i != (k + 1) % designs.size() or String(Tattoos.list(lk)[0].design) != String(designs[i]):
+			ok = false
+	_check(ok and String(Tattoos.list(lk)[0].design) == String(designs[0]), "%s: tattoos: the first step adds one, then the row cycles its design round all %d and back"
+			% [who, designs.size()])
+	CreatorOptions.step(Tattoos.ROW, lk, -1)
+	_check(Tattoos.list(lk).size() == 1 and String(Tattoos.list(lk)[0].design) == String(designs[-1]), "%s: tattoos: a step back from the first goes round to the last, the tattoo stays" % who)
+	var same := true
+	for o: String in others:
+		if CreatorOptions.current(o, lk) != others[o]:
+			same = false
+			print("    tattoos changed %s" % o)
+	_check(same, "%s: cycling tattoos leaves the other rows" % who)
+	lk["tattoos"] = []
 
 
 # --- the model ----------------------------------------------------------------------------------
@@ -498,8 +534,13 @@ func _test_ui() -> void:
 		c._set_focus(r)
 		var i0 := CreatorOptions.current(r, c.look)
 		var n := CreatorOptions.options(r, c.look).size()
+		var t0 := Tattoos.list(c.look).size()
 		await _key(KEY_RIGHT)
-		if n > 1 and CreatorOptions.current(r, c.look) == posmod(i0 + 1, n):
+		if r == Tattoos.ROW:
+			# (from none, Right adds the first design: the row then lists the designs only)
+			if Tattoos.list(c.look).size() == t0 + 1 or (t0 > 0 and CreatorOptions.current(r, c.look) == posmod(i0 + 1, n)):
+				changed.append(r)
+		elif n > 1 and CreatorOptions.current(r, c.look) == posmod(i0 + 1, n):
 			changed.append(r)
 		elif n == 1:
 			changed.append(r)
@@ -604,18 +645,64 @@ func _test_game() -> void:
 	if app == null:
 		return
 	_check(not is_instance_valid(app.overlay), "no creator at start in a tool run")
+	# O does not open the creator in a game (the user, 2026-10-01: "o should never open while the game starts"); the
+	# creator is the new game's (offer_creator) and opens by PlayerAppearance.open_customizer
 	await _key(KEY_O)
+	_check(not is_instance_valid(app.overlay) and not paused, "O does nothing in a game")
+	app.open_customizer()
+	await _frames(2)
 	var c := app.overlay as CharacterCreator
-	_check(is_instance_valid(c) and paused, "O opens the creator and pauses")
+	_check(is_instance_valid(c) and paused, "open_customizer opens the creator and pauses")
 	if not is_instance_valid(c):
 		return
 	await _frames(5)
 	c.look = _look("west_african", 1)
-	for r_id: Array in [["facial_hair", "beard_short"], ["jewel_ears", "gold_studs"], ["markings", "scar_cheek"]]:
+	for r_id: Array in [["facial_hair", "beard_short"], ["jewel_ears", "gold_studs"], ["markings", "scar_cheek"],
+			["jewel_nose", "nose_ring_gold"], ["jewel_neck", "chain_cross_silver"], ["jewel_hands", "ring_gold"]]:
 		var opts := CreatorOptions.options(r_id[0], c.look)
 		CreatorOptions.select(r_id[0], c.look, opts.map(func(o: Dictionary) -> String: return String(o.id)).find(r_id[1]), opts)
 	c.look["name"] = "Kofi"
 	c._refresh_all()
+	# the new rows as a player works them in the level: the Tattoos row (Right adds an anchor on the left forearm), its
+	# editor (Add a second, moved up; Done), the Clothing view (a check shirt, then the Plaid pattern on it)
+	c._set_focus(Tattoos.ROW)
+	await _key(KEY_RIGHT)
+	c._open_picker(Tattoos.ROW)
+	await _frames(3)
+	var tp: TattooPanel = c._tattoos
+	if is_instance_valid(tp):
+		for b: Button in tp.find_children("Add", "Button", true, false):
+			b.pressed.emit()
+		for b: Button in tp.find_children("Move_Up", "Button", true, false):
+			b.pressed.emit()
+		for b: Button in tp.find_children("Done", "Button", true, false):
+			b.pressed.emit()
+		await _frames(2)
+	_check(Tattoos.list(c.look).size() == 2 and String(Tattoos.list(c.look)[0].design) == "anchor"
+			and is_equal_approx(float(Tattoos.list(c.look)[1].y), Tattoos.MOVE_STEP) and not is_instance_valid(c._tattoos),
+			"in the level: the Tattoos row adds an anchor, its editor a second tattoo, moved (%s)" % [Tattoos.list(c.look).map(
+			func(t: Dictionary) -> String: return "%s@%s" % [t.design, t.place])])
+	var tattoos_want := Tattoos.validate(Tattoos.list(c.look))
+	c._show_clothing(true)
+	await _frames(3)
+	var tab := c._outfit_ui as OutfitTab
+	var shirt_ok := false
+	if tab and tab._rows.has("shirt"):
+		var opt: OptionButton = tab._rows.shirt.opt
+		for i in opt.item_count:
+			if opt.get_item_metadata(i) is String and String(opt.get_item_metadata(i)) == "shirt_check":
+				opt.select(i)
+				opt.item_selected.emit(i)
+				shirt_ok = true
+		await _frames(2)
+		for b: Button in (tab._rows.shirt.colors as Node).find_children("*", "Button", true, false):
+			if b.text == "Plaid" and not b.is_queued_for_deletion():
+				b.pressed.emit()
+				break
+		await _frames(2)
+	var shirt_cols: Dictionary = ((c.look.get("outfit", {}) as Dictionary).get("shirt", {}) as Dictionary).get("colors", {})
+	_check(shirt_ok and String(shirt_cols.get("pattern", "")) == "plaid", "in the level: the Clothing view puts a plaid check shirt on (%s)" % [shirt_cols])
+	c._show_clothing(false)
 	c._set_focus("facial_hair")
 	await _frames(30)
 	await _shot("3_game_creator")
@@ -630,6 +717,37 @@ func _test_game() -> void:
 	_check(skin != null and int(skin.get_shader_parameter("mark_scar")) == 2, "the player's skin has the cheek scar")
 	var saved := AppearanceStore.load_file(AppearanceStore.current_path())
 	_check(saved.get("facial_hair", "") == "beard_short" and saved.get("jewel_ears", "") == "gold_studs", "saved")
+	# the new rows, accepted: on the player (the jewellery's pieces, the tattoos the clothes leave showing, the plaid
+	# shirt) and in the saved file
+	var jw := ["gold_studs", "nose_ring_gold", "chain_cross_silver", "ring_gold"]
+	var worn: Array = CreatorOptions.JEWEL_ROWS.keys().map(func(r: String) -> String: return CreatorOptions.jewel_id(app.look, r))
+	_check(worn == jw and CreatorOptions.jewellery_items(app.look).size() >= 4, "the player wears the four pieces (%s)" % [worn])
+	_check(JSON.stringify(Tattoos.list(app.look)) == JSON.stringify(tattoos_want), "the player's look has both tattoos")
+	var vis := Tattoos.shader_rows({"tattoos": Tattoos.list(app.look), "hide_regions": app._fit.get("hide_regions", [])}).size()
+	_check(skin != null and int(skin.get_shader_parameter("tat_count")) == vis, "the player's skin draws the tattoos his clothes leave showing (%d of %d)"
+			% [int(skin.get_shader_parameter("tat_count")) if skin else -1, vis])
+	var sm: Array = app.body.part_meshes("outfit:shirt")
+	_check(not sm.is_empty() and String((sm[0] as Node).get_meta("garment", "")) == "shirt_check", "the player wears the check shirt")
+	var plaid := false
+	var pz := ClothMaterials.pattern_zone(PlayerOutfit.entry("shirt_check"), shirt_cols)
+	for mi: MeshInstance3D in sm:
+		for si in mi.mesh.get_surface_count():
+			var m := mi.get_surface_override_material(si) as ShaderMaterial
+			var k: Variant = m.get_shader_parameter("pat_kind") if m and m.shader == ClothMaterials.CLOTH_SHADER else null
+			if k is Vector4 and pz >= 0 and pz < 4 and int((k as Vector4)[pz]) == int(ClothMaterials.PATTERN_KIND.plaid):
+				plaid = true
+	_check(plaid, "drawn as a plaid")
+	var sv: Array = CreatorOptions.JEWEL_ROWS.keys().map(func(r: String) -> String: return String(saved.get(r, "")))
+	_check(sv == jw and JSON.stringify(Tattoos.list(saved)) == JSON.stringify(tattoos_want)
+			and String(((saved.get("outfit", {}) as Dictionary).get("shirt", {}) as Dictionary).get("colors", {}).get("pattern", "")) == "plaid",
+			"saved: the jewellery rows, the tattoos and the plaid shirt (%s)" % [sv])
+	# loaded again (a new session): the player re-dressed from the file is the same
+	app.apply(AppearanceStore.load_file(AppearanceStore.current_path()))
+	await _frames(2)
+	var skin2 := _skin_mat(app.body)
+	_check(skin2 != null and int(skin2.get_shader_parameter("tat_count")) == vis and not app.body.part_meshes(FaceExtras.PART_JEWELLERY).is_empty()
+			and String((app.body.part_meshes("outfit:shirt")[0] as Node).get_meta("garment", "")) == "shirt_check",
+			"re-dressed from the saved file: the tattoos, the jewellery and the shirt again")
 	await _frames(10)
 	await _shot("4_game_player")
 	# the first launch: no saved look -> the creator opens by itself ("New character"); Back
@@ -651,11 +769,16 @@ func _test_game() -> void:
 	var fw := FileAccess.open(AppearanceStore.current_path(), FileAccess.WRITE)
 	fw.store_string(saved_text)
 	fw.close()
-	# O again: the creator shows the look; Esc closes without changes
-	await _key(KEY_O)
+	# again: the creator shows the look; Esc closes without changes
+	app.open_customizer()
+	await _frames(2)
 	c = app.overlay as CharacterCreator
-	_check(is_instance_valid(c) and _row_text(c, "facial_hair").begins_with("Short beard"), "O again shows the look (%s)" %
+	_check(is_instance_valid(c) and _row_text(c, "facial_hair").begins_with("Short beard"), "opened again it shows the look (%s)" %
 			(_row_text(c, "facial_hair") if is_instance_valid(c) else "-"))
+	_check(is_instance_valid(c) and _row_text(c, "jewel_neck").begins_with("Silver chain and cross")
+			and _row_text(c, Tattoos.ROW).begins_with(String(Tattoos.design(String(tattoos_want[-1].design)).label))
+			and (c._row_ui[Tattoos.ROW].count as Label).text == "2/%d" % Tattoos.max_count(),
+			"and the new rows (%s, %s)" % [_row_text(c, "jewel_neck") if is_instance_valid(c) else "-", _row_text(c, Tattoos.ROW) if is_instance_valid(c) else "-"])
 	if is_instance_valid(c):
 		c.look["facial_hair"] = "clean"
 		await _key(KEY_ESCAPE)

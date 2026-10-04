@@ -17,8 +17,8 @@ extends SceneTree
 ##              the nose, the bust for the neck and the tattoos, the hands for the rings (the ring's hand turned to the
 ##              camera, the figure facing it again off the row); Down walks from the markings through the new rows
 ##   everyone   every people and body type is offered every piece of each jewellery row and every tattoo design; the
-##              creator's Clothing view lists the same garments in every slot for every people of a body type (with the
-##              pattern row on a patternable garment), and every garment of the build is offered to some body type
+##              creator's Clothing view lists the same garments in every slot for every people and both body types (with
+##              the pattern row on a patternable garment), and every garment of the build is offered to both body types
 ##   clothing   the Clothing view has the Harness / bandolier row (the shoulder slot) for a man and a woman, in
 ##              PlayerOutfit.SLOTS order; choosing the harness there dresses the stage figure; the Arms row comes once the
 ##              catalog has an arm piece (a test entry over the glim's glb)
@@ -30,7 +30,8 @@ extends SceneTree
 ##              harness: saved and loaded unchanged; on the creator's stage the jewellery part, the check and the plaid in
 ##              their cloth materials, the harness part, and the skin's tattoos (the hand's showing in the clothes, both
 ##              on the Tattoos row, which shows the skin through the sleeve); the dice, a change of people and a
-##              Fine-tune preset keep the tattoos, the clothes (and the name)
+##              Fine-tune preset keep the tattoos, the clothes (and the name); a change of people or body type and a
+##              Fine-tune preset keep the jewellery too (the dice choose it again)
 
 const ARM_ID := "test_integration_arm_band"
 const OLD_MAN := "user://appearance_test/integration_old_man.json"
@@ -229,9 +230,15 @@ func _test_everyone() -> void:
 		var slot := String(PlayerOutfit.entry(id).get("slot", ""))
 		if not slot in PlayerOutfit.SLOTS:
 			continue
-		if not id in PlayerOutfit.offered(slot, 1.0) and not id in PlayerOutfit.offered(slot, 0.0):
+		if not id in PlayerOutfit.offered(slot, 1.0) or not id in PlayerOutfit.offered(slot, 0.0):
 			unoffered.append(id)
-	_check(unoffered.is_empty(), "every garment of the build is offered in its slot (%s)" % [unoffered])
+	_check(unoffered.is_empty(), "every garment of the build is offered in its slot to both body types (%s)" % [unoffered])
+	var differ := PlayerOutfit.SLOTS.filter(func(slot: String) -> bool: return PlayerOutfit.offered(slot, 1.0) != PlayerOutfit.offered(slot, 0.0))
+	_check(differ.is_empty(), "a man and a woman are offered the same garments in every slot (%s)" % [differ])
+	for id: String in ["breeches", "frock_coat", "waistcoat_sb", "petticoat", "stays_laced", "cap_linen"]:
+		var slot := String(PlayerOutfit.entry(id).get("slot", ""))
+		if PlayerOutfit.usable(id):
+			_check(id in PlayerOutfit.offered(slot, 0.0) and id in PlayerOutfit.offered(slot, 1.0), "%s: offered to a woman and a man" % id)
 
 
 ## The Clothing view's garments of every slot for a look (OutfitTab: slot -> the items' ids), and whether the shirt row
@@ -249,8 +256,8 @@ func _tab_items(lk: Dictionary) -> Array:
 		out[slot] = ids
 	var pattern := false
 	if tab._rows.has("shirt"):
-		for b in (tab._rows.shirt.colors as Node).get_children():
-			if b is Button and (b as Button).text == "Plaid":
+		for b in (tab._rows.shirt.colors as Node).find_children("*", "Button", true, false):
+			if (b as Button).text == "Plaid":
 				pattern = true
 	tab.free()
 	return [out, pattern]
@@ -319,6 +326,13 @@ func _test_clothing_view() -> void:
 		var order := rows.keys()
 		var in_slots := PlayerOutfit.SLOTS.filter(func(s: String) -> bool: return s in order)
 		_check(order == in_slots, "body type %d: the slot rows in PlayerOutfit.SLOTS order (%s)" % [bt, order])
+	# and the same for both body types (anyone may wear anything: breeches for a woman, a petticoat for a man)
+	var man: Dictionary = _tab_items(_look("english", 1))[0]
+	var woman: Dictionary = _tab_items(_look("english", 2))[0]
+	var unlike := man.keys().filter(func(slot: String) -> bool: return man[slot] != woman.get(slot))
+	_check(unlike.is_empty() and man.size() == woman.size(), "the Clothing view lists the same garments for both body types (%s)" % [unlike])
+	_check("breeches" in (woman.get("legs.lower", []) as Array) and "petticoat" in (man.get("legs.lower", []) as Array),
+			"a woman may choose breeches, a man the petticoat")
 	# the creator's own Clothing view: the harness chosen in its row dresses the stage figure
 	var c := await _open()
 	if not is_instance_valid(c):
@@ -539,7 +553,8 @@ func _test_full_looks() -> void:
 		_check(n == 2, "%s: on the Tattoos row both show (the skin through the sleeve) (%d)" % [who, n])
 		var tui: Dictionary = c._row_ui.get("tattoos", {})
 		_check(not tui.is_empty() and (tui.count as Label).text == "2/%d" % Tattoos.max_count(), "%s: the Tattoos row counts two" % who)
-		# the dice and a change of people keep the tattoos and the clothes; the jewellery comes with the new individual
+		# the dice and a change of people keep the tattoos and the clothes; a change of people or body type keeps the
+		# jewellery as well (for everyone, like the clothes), the dice choose it again
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 7 + bt
 		var r := CreatorOptions.randomized(c.look, rng)
@@ -548,6 +563,26 @@ func _test_full_looks() -> void:
 		var q := CreatorOptions.with_people(c.look, "malay" if not CharacterPeoples.people("malay").is_empty() else "french")
 		_check((q.tattoos as Array).size() == 2 and String(q.outfit.get(plaid_slot, {}).get("colors", {}).get("sett", "")) != "",
 				"%s: so does a change of people" % who)
+		var jw := func(lk2: Dictionary) -> Array:
+			return CreatorOptions.JEWEL_ROWS.keys().map(func(row: String) -> String: return CreatorOptions.jewel_id(lk2, row))
+		var want_j: Array = jw.call(c.look)
+		_check(want_j == [lk.jewel_ears, lk.jewel_nose, lk.jewel_neck, lk.jewel_hands], "%s: wears the four pieces (%s)" % [who, want_j])
+		for other: String in ["scots_irish", "lenape", "japanese", "west_african"]:
+			var qp := CreatorOptions.with_people(c.look, other)
+			_check(jw.call(qp) == want_j, "%s: a change of people (%s) keeps the earrings, the nose ring, the necklace and the ring (%s)"
+					% [who, other, jw.call(qp)])
+		var qb := CreatorOptions.with_body_type(c.look, 2 if bt == 1 else 1)
+		_check(jw.call(qb) == want_j and (qb.tattoos as Array).size() == 2, "%s: so does a change of body type (%s)" % [who, jw.call(qb)])
+		var old := c.look.duplicate(true)
+		for row: String in CreatorOptions.JEWEL_ROWS:
+			old.erase(row)
+		old["jewellery"] = "studs_nose_stud"
+		_check(jw.call(CreatorOptions.with_people(old, "english")) == ["gold_studs", "nose_stud_gold", "none", "none"],
+				"%s: an old look's single jewellery id is kept, into the rows" % who)
+		# the creator's own people buttons, as a player clicks through the peoples
+		c._choose_people("haudenosaunee")
+		c._choose_people(String(lk.people))
+		_check(jw.call(c.look) == want_j, "%s: clicking through the peoples in the creator keeps the jewellery (%s)" % [who, jw.call(c.look)])
 		# Fine-tune: a people preset picked there keeps the name, the tattoos and the clothes too
 		c._open_fine_tune()
 		await _frames(4)
@@ -565,5 +600,6 @@ func _test_full_looks() -> void:
 				and String(c.look.outfit.get("accessories.shoulder", {}).get("id", "")) == "rigging_harness",
 				"%s: a Fine-tune preset keeps the name, the tattoos and the clothes (%s, %d tattoos)" % [who, c.look.get("name", ""),
 				(c.look.get("tattoos", []) as Array).size()])
+		_check(jw.call(c.look) == want_j, "%s: and the jewellery (%s)" % [who, jw.call(c.look)])
 	c.close(false)
 	await _frames(3)

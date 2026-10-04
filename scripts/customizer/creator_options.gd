@@ -47,7 +47,10 @@ extends RefCounted
 ##                 into the rows. options / select / current("jewellery") still pick a whole set.
 ##   tattoos       the Tattoos row: a list of {design, place, x, y, scale, rotation, ink, fade}
 ##                 (Tattoos, data/customizer/tattoos.json; for everyone, kept across people, body
-##                 type and the dice like the name)
+##                 type and the dice like the name; the row adds the first and changes the newest's
+##                 design, never takes one off)
+## The jewellery rows are kept across a change of people or body type too (KEEP); the dice choose
+## them again from the people's own pieces.
 ## Body type 1 is the male fit (sex 1), body type 2 the female fit (sex 0).
 
 const PATH := "res://data/customizer/creator.json"
@@ -489,8 +492,10 @@ static func step(row: String, look: Dictionary, d: int) -> int:
 	return i
 
 
-## Keys that survive a change of people or body type (the rest come from the new individual).
-const KEEP := ["name", "outfit", "weathering", "face_style", "complexion", "tattoos"]
+## Keys that survive a change of people or body type (the rest come from the new individual): the name, the clothes,
+## the tattoos and the jewellery rows (for everyone, like the clothes: browsing the peoples keeps what was chosen).
+const KEEP := ["name", "outfit", "weathering", "face_style", "complexion", "tattoos",
+		"jewel_ears", "jewel_nose", "jewel_neck", "jewel_hands"]
 
 
 static func _keep(from: Dictionary, to: Dictionary) -> Dictionary:
@@ -498,6 +503,11 @@ static func _keep(from: Dictionary, to: Dictionary) -> Dictionary:
 		if from.has(k):
 			# (deep copies: the outfit's dictionary, the tattoos' list)
 			to[k] = from[k].duplicate(true) if from[k] is Dictionary or from[k] is Array else from[k]
+	# the jewellery as the look wears it (a look saved before the rows, one "jewellery" id: its pieces), into the rows
+	if from.has(LEGACY_JEWELLERY) or JEWEL_ROWS.keys().any(func(r: String) -> bool: return from.has(r)):
+		for r: String in JEWEL_ROWS:
+			to[r] = jewel_id(from, r)
+		to.erase(LEGACY_JEWELLERY)
 	return to
 
 
@@ -525,6 +535,8 @@ static func with_body_type(look: Dictionary, bt: int) -> Dictionary:
 ## snap to the swatches the creator shows.
 static func _settle(look: Dictionary) -> void:
 	for r: String in rows(look):
+		if r == Tattoos.ROW:
+			continue        # (kept as they are: the row's choice is the newest tattoo's design)
 		var opts := options(r, look)
 		if opts.is_empty():
 			continue

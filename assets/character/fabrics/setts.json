@@ -1,7 +1,7 @@
 {
  "format": "frontier-setts",
  "version": 1,
- "note": "Plaid setts the cloth shader draws (ClothMaterials.pattern_spec, cloth.gdshader pat_kind 2): our own designs, not registered or clan tartans. A sett is a list of [palette token or #hex, width] stripes, the widths relative (thread counts); symmetric = the list runs from pivot to pivot and is mirrored (the full repeat is the list and then its inner stripes back); scale_m = the full repeat in metres. A catalog zone or a look names one ('sett': 'hill_green') or gives its own list.",
+ "note": "Plaid setts the cloth shader draws (ClothMaterials.pattern_spec, cloth.gdshader pat_kind 2): our own designs, drawn without copying a registered or clan tartan; they have not been checked against the Scottish Register of Tartans, so they are not claimed to be unregistered (hill_green's dark green ground with blue between black bars and a fine yellow line is close to the Black Watch and Gordon family; check it before saying more). A sett is a list of [palette token or #hex, width] stripes, the widths relative (thread counts); symmetric = the list runs from pivot to pivot and is mirrored (the full repeat is the list and then its inner stripes back); scale_m = the full repeat in metres. A catalog zone or a look names one ('sett': 'hill_green') or gives its own list.",
  "palette_hex": {
   "butternut": "#957549",
   "deep_green": "#213A2A",

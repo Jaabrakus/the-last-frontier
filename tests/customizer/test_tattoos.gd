@@ -13,8 +13,10 @@ extends SceneTree
 ##
 ## Checks:
 ##   - data: every design has its SVG and its own atlas cell with ink in it, a label and a period note; no deny-listed
-##     or tradition-specific word; every place has its frame measured on body.glb and known regions; the three inks;
-##     SOURCE.md logs every design
+##     or tradition-specific word (tests/customizer/deny_words.gd and DENY_EXTRA, as whole words); every place has its
+##     frame measured on body.glb and known regions; the three inks; SOURCE.md logs every design; the held designs (the
+##     crucifix) and places (the face: cheek, brow) are not offered, no place is on the face, and a saved tattoo of a held
+##     design is dropped, one at a held place moved to its design's own place
 ##   - the shader's twin (tattoo.gdshaderinc's arithmetic on the body's bind pose, triangle by triangle): at every place
 ##     the design lands on the place's skin at its centre, reads the right way round (not mirrored), its top up (the
 ##     world's up, toward the shoulder, toward the wrist); the palm and the inner mouth stay bare; a move is that many
@@ -27,8 +29,11 @@ extends SceneTree
 ##     collapsed, or under the sleeve's own cloth); a woman's elbow-length shift leaves the forearm's anchor showing;
 ##     bare, both are drawn
 ##   - kept: a change of people, of body type and the dice keep them
-##   - the creator: the Tattoos row (label, summary, count), stepping it adds, changes and removes; its editor (add,
-##     design, place, ink, fade, move, size, turn, remove, done) edits the creator's look and dresses the stage
+##   - the creator: the Tattoos row (label, summary, count; the summary fits the row), stepping it adds one and changes
+##     the newest one's design, never takes one off; its editor (add, design, place, ink, fade, move, size, turn, remove,
+##     done) edits the creator's look and dresses the stage (an edit at a place already shown sets only the skin's tattoo
+##     uniforms); while it is open the row keys do nothing, a change of the row through its arrows shows in the editor,
+##     and the note under the rows is the chosen tattoo's
 
 var _fails: Array[String] = []
 var _checks := 0
@@ -36,14 +41,18 @@ var _shots := ""
 var _inst: Node3D
 var _body: CharacterBodyMesh
 
-## Words no design may carry (the creator's deny-list, tests/customizer/test_jewellery.gd) and the traditions left for
-## consultation (docs/research/peoples_dress_1750s.md 1.3: no Polynesian or Maori, no Indigenous North American designs).
-const DENY := ["war", "clan", "feather", "wampum", "bonnet", "chief", "pipe", "tribal", "eagle", "negro", "mulatto", "coolie",
-		"oriental", "harem", "savage", "moko", "tatau", "tattow", "maori", "polynesia", "polynesian", "hawaiian", "samoan",
-		"tongan", "marquesan", "tahitian", "tapa", "kapa", "iroquois", "haudenosaunee", "lenape", "shawnee", "wabanaki",
-		"native", "indigenous", "sacred", "totem", "henna", "irezumi", "yantra"]
+## Words no design may carry: the creator's deny-list (tests/customizer/deny_words.gd, whole words) and the traditions left
+## for consultation (docs/research/peoples_dress_1750s.md 1.3: no Polynesian or Maori, no Indigenous North American
+## designs, no sacred images).
+const DenyWords := preload("res://tests/customizer/deny_words.gd")
+const DENY_EXTRA := ["moko", "tatau", "tattow", "maori", "polynesian?", "hawaiian", "samoan", "tongan", "marquesan", "tahitian",
+		"tapa", "kapa", "iroquois", "haudenosaunee", "lenape", "shawnee", "wabanaki", "native", "indigenous", "sacred",
+		"totem", "henna", "irezumi", "yantra", "crucifix\\w*", "saint", "papal", "pope", "holy"]
 const INKS := ["blue_black", "red", "green_faded"]
-const PLACES := ["forearm_l", "forearm_r", "upper_arm_l", "upper_arm_r", "chest", "back", "hand_l", "hand_r", "neck", "cheek", "brow"]
+## The places: the limbs, the torso, the hands and the neck. The face (cheek, brow) is held (tattoos.json held_places).
+const PLACES := ["forearm_l", "forearm_r", "upper_arm_l", "upper_arm_r", "chest", "back", "hand_l", "hand_r", "neck"]
+const HELD_PLACES := ["cheek", "brow"]
+const HELD_DESIGNS := ["crucifix"]
 const SOURCE_MD := "res://assets/character/tattoos/SOURCE.md"
 ## The man's basic shirt (PlayerOutfit.BASIC): long sleeves.
 const SHIRT := "shirt_tucked"
@@ -132,19 +141,11 @@ func _skin_of(body: CharacterBodyMesh) -> ShaderMaterial:
 
 # --- data -----------------------------------------------------------------------------------------
 
-func _words(text: String) -> PackedStringArray:
-	var out := PackedStringArray()
-	var re := RegEx.create_from_string("[a-z]+")
-	for m in re.search_all(text.to_lower()):
-		out.append(m.get_string())
-	return out
-
-
 func _test_data() -> void:
 	var d := Tattoos.data()
 	_check(d.get("format", "") == "frontier-tattoos", "tattoos.json loads")
 	var designs := Tattoos.designs()
-	var want := ["anchor", "compass_rose", "heart", "crossed_keys", "ship", "initials_date", "crucifix", "mermaid",
+	var want := ["anchor", "compass_rose", "heart", "ship", "initials_date", "mermaid",
 			"keelstone_star", "wind_spiral", "drift_waves", "band", "band_double", "dots"]
 	_check(str(_ids(designs)) == str(want), "the designs: the sailors' marks, the sky crews' marks, bands and dots (%s)" % [_ids(designs)])
 	var cells := {}
@@ -163,9 +164,8 @@ func _test_data() -> void:
 			bad.append("%s: no svg" % id)
 		if String(e.get("label", "")).is_empty() or String(e.get("note", "")).length() < 20:
 			bad.append("%s: label or note missing" % id)
-		for w in _words(id.replace("_", " ") + " " + String(e.get("label", "")) + " " + String(e.get("note", ""))):
-			if w in DENY:
-				bad.append("%s: the word %s" % [id, w])
+		for w in DenyWords.hits(id.replace("_", " ") + " " + String(e.get("label", "")) + " " + String(e.get("note", "")), DENY_EXTRA):
+			bad.append("%s: the word %s" % [id, w])
 		if not src.contains("`%s`" % id):
 			bad.append("%s: not in SOURCE.md" % id)
 		if atlas != null and _cell_ink(atlas, cell) < 0.01:
@@ -189,7 +189,8 @@ func _test_data() -> void:
 				edge = false
 				print("    ink at the edge of cell %d (%s): %.3f" % [c, cells[c], e])
 		_check(edge, "the designs keep their margins")
-	_check(str(_ids(Tattoos.places())) == str(PLACES), "the places: forearms, upper arms, chest, back, hands, neck, cheek, brow")
+	_check(str(_ids(Tattoos.places())) == str(PLACES), "the places: forearms, upper arms, chest, back, hands, neck")
+	_test_held(d)
 	var mp: Dictionary = Tattoos.map().get("places", {})
 	var ids := BodyMaterials.region_ids()
 	bad = []
@@ -208,6 +209,46 @@ func _test_data() -> void:
 	# everyone may wear every design (the owner, 2026-10-03): no people, sex or unlock fields
 	var gated := designs.filter(func(e: Dictionary) -> bool: return e.has("peoples") or e.has("sex") or e.has("unlock") or e.has("review"))
 	_check(gated.is_empty(), "no design is held back by people, sex or unlock %s" % [_ids(gated)])
+
+
+## The held designs and places (tattoos.json held_designs, held_places: a sacred image, the face) are not offered, and a
+## saved look cannot bring them back; the dropped crossed keys are gone.
+func _test_held(d: Dictionary) -> void:
+	var held_d: Array = (d.get("held_designs", []) as Array).map(func(e: Dictionary) -> String: return String(e.id))
+	var held_p: Array = (d.get("held_places", []) as Array).map(func(e: Dictionary) -> String: return String(e.id))
+	_check(str(held_d) == str(HELD_DESIGNS) and str(held_p) == str(HELD_PLACES), "held: the crucifix, the cheek and the brow (%s %s)" % [held_d, held_p])
+	_check((d.get("held_designs", []) as Array).all(func(e: Dictionary) -> bool: return String(e.get("held", "")).length() > 20)
+			and (d.get("held_places", []) as Array).all(func(e: Dictionary) -> bool: return String(e.get("held", "")).length() > 20),
+			"each held entry says why")
+	var offered := _ids(Tattoos.designs())
+	var places := _ids(Tattoos.places())
+	_check(not held_d.any(func(id: String) -> bool: return id in offered) and not "crossed_keys" in offered,
+			"no held or dropped design is offered (%s)" % [offered])
+	_check(not held_p.any(func(id: String) -> bool: return id in places), "no held place is offered (%s)" % [places])
+	var row := _ids(Tattoos.row_options({}))
+	_check(not held_d.any(func(id: String) -> bool: return id in row) and not "crossed_keys" in row, "nor in the creator's row (%s)" % [row])
+	# nothing on the face: no place in the face's own UVs, none on the head above the neck's band
+	var face := Tattoos.places().filter(func(p: Dictionary) -> bool: return String(p.get("space", "")) == "mh" or p.has("anchor_face"))
+	_check(face.is_empty(), "no place is on the face %s" % [_ids(face)])
+	var reach := []
+	for e: Dictionary in Tattoos.designs():
+		for p in Tattoos.design_places(String(e.id)):
+			if String(p) in held_p:
+				reach.append("%s at %s" % [e.id, p])
+	_check(reach.is_empty(), "no design may go to a held place %s" % [reach])
+	var lk := {"tattoos": []}
+	Tattoos.add(lk, "wind_spiral", "cheek")
+	Tattoos.add(lk, "dots", "brow")
+	var a := Tattoos.list(lk)
+	_check(a.size() == 2 and a[0].place == Tattoos.default_place("wind_spiral") and a[1].place in Tattoos.design_places("dots"),
+			"Add at a held place puts the design at its own place (%s)" % [a])
+	_check(Tattoos.add(lk, "crucifix") == -1 and Tattoos.add(lk, "crossed_keys") == -1 and a.size() == 2, "a held or dropped design is refused")
+	var v := Tattoos.validate([{"design": "crucifix", "place": "upper_arm_r"}, {"design": "crossed_keys", "place": "upper_arm_r"},
+			{"design": "wind_spiral", "place": "cheek", "x": 0.01}, {"design": "anchor", "place": "brow"}])
+	_check(v.size() == 2 and v[0].design == "wind_spiral" and v[0].place == "hand_l" and v[1].design == "anchor" and v[1].place == "forearm_l",
+			"a saved look: the held and dropped designs are dropped, a face tattoo moves to its design's own place (%s)" % [v])
+	_check(not FileAccess.file_exists("res://tools/character/tattoos/designs/crossed_keys.svg")
+			and FileAccess.file_exists("res://tools/character/tattoos/designs/crucifix.svg"), "the crossed keys' SVG is gone, the held crucifix's kept")
 
 
 func _cell_ink(img: Image, cell: int) -> float:
@@ -486,14 +527,11 @@ func _test_twin() -> void:
 			var out_n := Vector3(sn[0], sn[1], sn[2]).normalized()
 			var palm := (fp.normals as Array).filter(func(n: Vector3) -> bool: return n.dot(out_n) < 0.0).size()
 			_check(palm == 0, "%s: on the back of the hand, the palm bare (%d palm triangles)" % [pid, palm])
-		if pid in ["cheek", "brow"]:
-			var inner := (fp.normals as Array).filter(func(n: Vector3) -> bool: return n.z < 0.1).size()
-			_check(inner == 0, "%s: on the face's outer skin (%d triangles facing in or back)" % [pid, inner])
 	# moves, a turn and a size step, as seen
-	for pid: String in ["forearm_l", "chest", "back", "hand_r", "cheek"]:
+	for pid: String in ["forearm_l", "chest", "back", "hand_r", "upper_arm_l"]:
 		var lk := _one("anchor", pid)
 		var base := _fp_of(lk, 0)
-		var step := 0.006 if pid in ["hand_r", "cheek"] else 0.01
+		var step := 0.006 if pid in ["hand_r"] else 0.01
 		Tattoos.move(lk, 0, step, 0.0)
 		var fr := _fp_of(lk, 0)
 		var dr := ((fr.centre as Vector3) - (base.centre as Vector3)).dot(base.right)
@@ -767,6 +805,17 @@ func _find(n: Node, name_part: String) -> Node:
 	return null
 
 
+## A key pressed and released as a player would (the creator's _input).
+func _key(code: Key) -> void:
+	for pressed in [true, false]:
+		var e := InputEventKey.new()
+		e.physical_keycode = code
+		e.keycode = code
+		e.pressed = pressed
+		Input.parse_input_event(e)
+		await _frames(2)
+
+
 func _press(panel: Node, path: String) -> bool:
 	var b := panel.get_node_or_null(path)
 	if b == null:
@@ -810,8 +859,21 @@ func _test_ui() -> void:
 	c._step(Tattoos.ROW, 1)
 	_check(Tattoos.list(c.look).size() == 1 and Tattoos.list(c.look)[0].design == "compass_rose", "the next step changes its design")
 	c._step(Tattoos.ROW, -1)
+	_check(Tattoos.list(c.look).size() == 1 and Tattoos.list(c.look)[0].design == "anchor", "a step back: the anchor again")
 	c._step(Tattoos.ROW, -1)
-	_check(Tattoos.list(c.look).is_empty() and (ui.value as Label).text == "None", "stepping back to None takes it off")
+	var last := String(Tattoos.designs()[-1].id)
+	_check(Tattoos.list(c.look).size() == 1 and Tattoos.list(c.look)[0].design == last and (ui.value as Label).text != "None",
+			"a step back from the first design goes round to the last (%s), never to None: the row takes no tattoo off" % last)
+	_check(_ids(CreatorOptions.options(Tattoos.ROW, c.look)).size() == Tattoos.designs().size()
+			and not "none" in _ids(CreatorOptions.options(Tattoos.ROW, c.look)), "with a tattoo the row lists only the designs")
+	# the row's keys, as a player presses them: Left and Right change the design, the count stays
+	c._set_focus(Tattoos.ROW)
+	for k in Tattoos.designs().size() + 2:
+		await _key(KEY_LEFT)
+	_check(Tattoos.list(c.look).size() == 1, "Left pressed round all the designs keeps the tattoo (%d)" % Tattoos.list(c.look).size())
+	Tattoos.list(c.look).clear()
+	c._refresh_all()
+	await _frames(2)
 	# the editor: a click on the row's value
 	c._open_picker(Tattoos.ROW)
 	await _frames(3)
@@ -858,6 +920,44 @@ func _test_ui() -> void:
 			"the row follows the editor (%s)" % (ui.value as Label).text)
 	sm = _skin_of(c.stage.body)
 	_check(sm != null and int(sm.get_shader_parameter("tat_count")) == 2, "the stage draws both")
+	# an edit at a place already shown: the skin's tattoo uniforms only (the same material, not a new dress); a new
+	# place dresses the figure again
+	var b0 := str(sm.get_shader_parameter("tat_b")) if sm else ""
+	_press(p, "Move_Left")
+	var sm1 := _skin_of(c.stage.body)
+	_check(sm1 != null and sm1 == sm and str(sm1.get_shader_parameter("tat_b")) != b0 and int(sm1.get_shader_parameter("tat_count")) == 2,
+			"a move sets only the skin's tattoos (the same skin material, the tattoo moved)")
+	(_find(p, "Fade") as HSlider).value = 0.4
+	_check(_skin_of(c.stage.body) == sm, "so does the Fade slider")
+	_press(_find(p, "Row_Place"), "Prev")
+	_check(a[1].place == "chest" and _skin_of(c.stage.body) != sm and int(_skin_of(c.stage.body).get_shader_parameter("tat_count")) == 2,
+			"a new place dresses the figure again (%s)" % a[1].place)
+	_press(_find(p, "Row_Place"), "Next")
+	_press(p, "Move_Centre")
+	# while the editor is open the creator's row keys wait: the arrows and A / D stepped the newest tattoo under it, R the
+	# dice, Down the focus, the page keys the people
+	var keep := str(Tattoos.list(c.look))
+	var people := String(c.look.get("people", ""))
+	for k: Key in [KEY_LEFT, KEY_RIGHT, KEY_A, KEY_D, KEY_R, KEY_DOWN, KEY_UP, KEY_PAGEDOWN]:
+		await _key(k)
+	_check(str(Tattoos.list(c.look)) == keep and is_instance_valid(c._tattoos) and c.focus_row == Tattoos.ROW
+			and String(c.look.get("people", "")) == people, "with the editor open the row keys change nothing (%s)" % [Tattoos.list(c.look).map(
+			func(t: Dictionary) -> String: return String(t.design))])
+	await _key(KEY_ENTER)
+	_check(is_instance_valid(c) and is_instance_valid(c._tattoos), "nor does Enter (the creator stays open)")
+	if not is_instance_valid(c):
+		return
+	# a click on the row's own arrows (the newest tattoo's design) shows in the editor
+	p.select(1)
+	c._step(Tattoos.ROW, 1)
+	_check(a[1].design == "ship" and p._design_value.text == "Ship" and p.selected == 1, "the row's arrow changes the newest's design, the editor shows it (%s)" % p._design_value.text)
+	c._step(Tattoos.ROW, -1)
+	_check(a[1].design == "heart" and p._design_value.text == "Heart", "and back")
+	# the note under the rows: the chosen tattoo's, not the newest's
+	p.select(0)
+	_check(c._note.text == String(Tattoos.design("anchor").note), "the note under the rows is the chosen tattoo's (%s)" % c._note.text)
+	p.select(1)
+	_check(c._note.text == String(Tattoos.design("heart").note), "and follows the choice")
 	_press(p, "Tattoo_0")
 	_check(p.selected == 0 and p.selected_place() == "forearm_l", "a tattoo's button chooses it")
 	_press(p, "Remove")
@@ -866,6 +966,24 @@ func _test_ui() -> void:
 	_press(p, "Done")
 	await _frames(3)
 	_check(not is_instance_valid(c._tattoos) and c._left_panel.visible, "Done closes the editor")
+	# the row's value fits it (no "..."): the longest summary that fits, with eight long ones too
+	var lk8 := c.look
+	lk8["tattoos"] = []
+	for i in Tattoos.max_count():
+		Tattoos.add(lk8, "initials_date", "hand_r")
+	c._refresh_all()
+	await _frames(4)
+	var vl := ui.value as Label
+	var font := vl.get_theme_font("font")
+	var tw := font.get_string_size(vl.text, HORIZONTAL_ALIGNMENT_LEFT, -1, vl.get_theme_font_size("font_size")).x
+	_check(vl.text in Tattoos.summaries(lk8) and vl.text.begins_with("Initials and year") and tw <= vl.size.x + 0.5,
+			"eight tattoos: the row shows \"%s\" whole (%.0f of %.0f px)" % [vl.text, tw, vl.size.x])
+	lk8["tattoos"] = []
+	Tattoos.add(lk8, "wind_spiral", "hand_l")
+	c._refresh_all()
+	await _frames(2)
+	tw = font.get_string_size(vl.text, HORIZONTAL_ALIGNMENT_LEFT, -1, vl.get_theme_font_size("font_size")).x
+	_check(vl.text.begins_with("Wind spiral") and tw <= vl.size.x + 0.5, "one on the hand: \"%s\" whole" % vl.text)
 	c._set_focus("face")
 	await _frames(2)
 	_check(c.stage.reveal.is_empty() and not c.stage.bare_top, "off the row the stage is dressed as worn")
@@ -1147,16 +1265,15 @@ func _pictures() -> void:
 	await _sheet("designs", shots, 4, 400)
 	# 6. every place
 	shots = []
-	var at := {"forearm_l": "anchor", "forearm_r": "crossed_keys", "upper_arm_l": "heart", "upper_arm_r": "mermaid", "chest": "ship",
-			"back": "keelstone_star", "hand_l": "crucifix", "hand_r": "initials_date", "neck": "band", "cheek": "wind_spiral",
-			"brow": "dots"}
+	var at := {"forearm_l": "anchor", "forearm_r": "initials_date", "upper_arm_l": "heart", "upper_arm_r": "mermaid", "chest": "ship",
+			"back": "keelstone_star", "hand_l": "wind_spiral", "hand_r": "drift_waves", "neck": "band"}
 	for place: String in PLACES:
 		var id := String(at.get(place, "anchor"))
 		if not place in Tattoos.design_places(id):
 			id = "anchor"
 		lk = _sailor("english", 1, [[id, place]])
 		PlayerAppearance.dress(body, lk)
-		var dist: float = {"chest": 0.62, "back": 0.7, "neck": 0.38, "cheek": 0.32, "brow": 0.34, "hand_l": 0.36, "hand_r": 0.36}.get(place, 0.42)
+		var dist: float = {"chest": 0.62, "back": 0.7, "neck": 0.38, "hand_l": 0.36, "hand_r": 0.36}.get(place, 0.42)
 		await _aim_place(f, place, float(dist), 30.0, 0.1)
 		_label.text = "%s: %s" % [Tattoos.place(place).label, Tattoos.design(id).label]
 		shots.append(await _grab())

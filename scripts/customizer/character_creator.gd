@@ -19,7 +19,8 @@ extends CanvasLayer
 ##   Top     the character's name. Bottom: Back, Randomize (the dice), Accept.
 ## Keys and gamepad: up / down choose a row (the people and body type rows first), left /
 ## right change it, R or Y randomizes, Enter or Start accepts, Esc or B goes back, the
-## shoulders change the people, X the body type.
+## shoulders change the people, X the body type. While the tattoo editor (TattooPanel) is open
+## those keys wait (they reached the Tattoos row under it); Esc or B closes the editor.
 ## Every change dresses the stage figure at once (PlayerAppearance.dress, the game's path).
 ## Accept applies the look to the player and saves it (AppearanceStore); Back closes without
 ## changes (at the first launch it keeps the default look and saves it, so the creator is
@@ -91,6 +92,9 @@ const RIGHT_W_CLOTHING := 470
 ## left hand, the right), on the stage's "hands" framing; it turns back to face the camera off the row.
 const RING_YAW := {"l": -0.9, "r": 0.9}
 var _ring_turn := false
+## The Tattoos row's value width (px) before the first layout (RIGHT_W less the panel's, the row's and the arrows'
+## margins and the count): the summary is fitted to it (_fitting), then to the laid-out width.
+const TATTOO_VALUE_W := 200.0
 
 
 ## Opens the creator on the player's look (the tree pauses).
@@ -524,6 +528,9 @@ func _make_row(row: String) -> PanelContainer:
 	value.clip_text = true
 	value.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	texts.add_child(value)
+	if row == Tattoos.ROW:
+		# (the summary that fits, again once the layout has given the value its width)
+		value.resized.connect(func() -> void: value.text = _fitting(value, Tattoos.summaries(look)))
 	var count := _label("", 13, DIM)
 	count.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	count.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -570,6 +577,10 @@ func _refresh_all() -> void:
 		_body_buttons[i].add_theme_color_override("font_color", GOLD if sel else TEXT)
 	_name_edit.text = String(look.get("name", ""))
 	_title.text = "New character" if first_launch else "Character"
+	# the tattoo editor, when open, on the new look (the dice and Fine-tune replace it; the tattoos are kept)
+	if is_instance_valid(_tattoos):
+		_tattoos.refresh()
+		_tattoo_reveal(_tattoos.selected_place())
 	for r: String in rows:
 		_refresh_row(r)
 	if _clothing and _outfit_ui.has_method("refresh"):
@@ -587,8 +598,8 @@ func _refresh_row(row: String) -> void:
 	(ui.value as Label).text = CreatorOptions.label(row, look, i, opts)
 	(ui.count as Label).text = "%s/%d" % [str(i + 1) if i >= 0 else "-", opts.size()]
 	if row == Tattoos.ROW:
-		# the tattoos worn, not the newest one's design
-		(ui.value as Label).text = Tattoos.summary(look)
+		# the tattoos worn, not the newest one's design: the longest summary that fits the row (the count says how many)
+		(ui.value as Label).text = _fitting(ui.value as Label, Tattoos.summaries(look))
 		(ui.count as Label).text = "%d/%d" % [Tattoos.list(look).size(), Tattoos.max_count()]
 	var chip := ui.chip as ColorRect
 	var has_color := i >= 0 and (opts[i] as Dictionary).has("color")
@@ -601,6 +612,20 @@ func _refresh_row(row: String) -> void:
 		_refresh_note()
 
 
+## The first of `forms` (longest first) that fits `label`'s width in its font (the last when none does); before the
+## first layout, TATTOO_VALUE_W.
+static func _fitting(label: Label, forms: Array) -> String:
+	if forms.is_empty():
+		return ""
+	var font := label.get_theme_font("font")
+	var fs := label.get_theme_font_size("font_size")
+	var w := label.size.x if label.size.x > 1.0 else TATTOO_VALUE_W
+	for f: String in forms:
+		if font == null or font.get_string_size(f, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= w:
+			return f
+	return String(forms[-1])
+
+
 func _refresh_note() -> void:
 	var t := ""
 	if focus_row in _row_ui:
@@ -608,6 +633,10 @@ func _refresh_note() -> void:
 		var i := CreatorOptions.current(focus_row, look, opts)
 		if i >= 0:
 			t = String((opts[i] as Dictionary).get("note", ""))
+		# the Tattoos row while its editor is open: the note of the tattoo the editor has chosen (not the newest's)
+		if focus_row == Tattoos.ROW and is_instance_valid(_tattoos) and _tattoos.selected >= 0 \
+				and _tattoos.selected < Tattoos.list(look).size():
+			t = String(Tattoos.design(String(Tattoos.list(look)[_tattoos.selected].get("design", ""))).get("note", t))
 		# an earring or nose piece without a note of its own: the people's jewellery note
 		if focus_row in ["jewellery", "jewel_ears", "jewel_nose"] and t.is_empty():
 			t = String(((CreatorOptions.data().get("peoples", {}) as Dictionary).get(String(look.get("people", "")), {}) as Dictionary).get("note_jewellery", t))
@@ -703,7 +732,10 @@ func _step(row: String, d: int) -> void:
 ## Face row's faces, so every row is refreshed; any other row refreshes itself.
 func _after_change(row: String) -> void:
 	if row == Tattoos.ROW:
-		_tattoo_reveal()
+		# (the editor, when open, shows what the row changed: the newest tattoo's design, maybe its place)
+		if is_instance_valid(_tattoos):
+			_tattoos.refresh()
+		_tattoo_reveal(_tattoos.selected_place() if is_instance_valid(_tattoos) else "")
 	if row in CreatorOptions.HANDS_ROWS and row == focus_row:
 		_ring_view(row)
 	if row == "face_style":
@@ -837,8 +869,12 @@ func _close_tattoos() -> void:
 ## place's skin turned to the camera, CreatorStage.focus_skin; once per place, so a turn by hand stays while editing).
 func _on_tattoo_changed(place: String) -> void:
 	_refresh_row(Tattoos.ROW)
+	var before := [stage.reveal.duplicate(), stage.bare_top]
 	_tattoo_reveal(place)
-	stage.show_look(look, not _clothing)
+	# the same skin shown (a move, a size, a turn, the ink, the fade, another design at the place): only the skin's tattoo
+	# uniforms change (CreatorStage.update_tattoos); a new place, an added or removed tattoo dresses the figure again
+	if before != [stage.reveal, stage.bare_top] or not stage.update_tattoos(look):
+		stage.show_look(look, not _clothing)
 	if place == _tattoo_place:
 		return
 	_tattoo_place = place
@@ -904,13 +940,18 @@ func _input(event: InputEvent) -> void:
 			_picker.hide()
 			get_viewport().set_input_as_handled()
 		return
-	if is_instance_valid(_tattoos) and event.is_action_pressed("ui_cancel"):
-		_close_tattoos()
-		get_viewport().set_input_as_handled()
-		return
 	if _name_edit.has_focus():
 		if event is InputEventKey and event.pressed and (event as InputEventKey).keycode in [KEY_ESCAPE, KEY_ENTER, KEY_KP_ENTER, KEY_TAB]:
 			_name_edit.release_focus()
+			get_viewport().set_input_as_handled()
+		return
+	# the tattoo editor open: Esc (B) closes it; the creator's own keys wait (the arrows and A / D stepped the Tattoos row
+	# under the editor, R the dice, Enter accepted, the page keys changed the people), the editor is worked by its buttons
+	if is_instance_valid(_tattoos):
+		if event.is_action_pressed("ui_cancel"):
+			_close_tattoos()
+			get_viewport().set_input_as_handled()
+		elif (event is InputEventKey or event is InputEventJoypadButton) and event.is_pressed():
 			get_viewport().set_input_as_handled()
 		return
 	var handled := true

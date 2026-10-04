@@ -13,6 +13,7 @@ extends Node3D
 ##   stage.show_look(look)        # every row change
 ##   stage.frame("face")          # face / bust / body
 ##   stage.focus_skin("l_elbow", at, normal, 0.75)   # a close view of the skin (the Tattoos editor)
+##   stage.update_tattoos(look)   # a tattoo edited at a place already shown: the skin's tattoo uniforms only
 
 const IDLE := &"actor_b/actor_b-p-relax-idle"
 const IDLE_FALLBACK := &"actor_b/actor_b-p-stealth-idle"
@@ -59,6 +60,9 @@ const TOP_KEEP := ["legs.lower", "legs.over", "feet", "head", "accessories.waist
 ## A close view of a point of the skin (focus_skin: the tattoo being edited) instead of a named framing: {bone, at,
 ## dist, fov}. Empty: the named framings.
 var _focus := {}
+## The look the figure's skin was last dressed with (PlayerAppearance.dressed_look, the `reveal` regions shown):
+## update_tattoos sets the skin's tattoos from it.
+var _dressed := {}
 
 
 func _ready() -> void:
@@ -238,15 +242,38 @@ func show_look(look: Dictionary, hat_off := true) -> void:
 				ob[slot] = {"id": "-"}
 		lk["outfit"] = ob
 	var fit := PlayerAppearance.dress(body, lk)
+	_dressed = PlayerAppearance.dressed_look(lk, fit)
 	if not reveal.is_empty():
 		_reveal(lk, fit)
+
+
+## The look's tattoos on the figure's skin as it is dressed now (the creator's tattoo editor: a move, a size step, the
+## Fade slider at a place already shown): the skin material's tattoo uniforms (Tattoos.apply) and nothing else, about a
+## hundredth of a full show_look. False when the figure has not been dressed yet (then show_look).
+func update_tattoos(look: Dictionary) -> bool:
+	if body == null or _dressed.is_empty():
+		return false
+	_dressed["tattoos"] = (look.get("tattoos", []) as Array).duplicate(true) if look.get("tattoos") is Array else []
+	var done := {}
+	for mi: MeshInstance3D in body.part_meshes("head"):
+		if not is_instance_valid(mi) or mi.mesh == null:
+			continue
+		for si in mi.mesh.get_surface_count():
+			var src := mi.mesh.surface_get_material(si)
+			var m := mi.get_surface_override_material(si) as ShaderMaterial
+			if src == null or not src.resource_name in ["skin", "face_skin"] or m == null or done.has(m):
+				continue
+			Tattoos.apply(m, _dressed)
+			done[m] = true
+	return not done.is_empty()
 
 
 ## The `reveal` regions drawn through the clothes: the skin's hide mask without them, the garments' with them.
 func _reveal(lk: Dictionary, fit: Dictionary) -> void:
 	var f := fit.duplicate(true)
 	f["hide_regions"] = (fit.get("hide_regions", []) as Array).filter(func(r: String) -> bool: return not r in reveal)
-	BodyMaterials.apply_look(body, PlayerAppearance.dressed_look(lk, f), ["head", "body_hair"])
+	_dressed = PlayerAppearance.dressed_look(lk, f)
+	BodyMaterials.apply_look(body, _dressed, ["head", "body_hair"])
 	var cut := BodyMaterials.hide_mask(reveal)
 	for tag: String in body.parts:
 		if not tag.begins_with("outfit:"):

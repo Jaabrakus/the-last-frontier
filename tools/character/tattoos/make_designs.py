@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Writes the tattoo designs as SVG line art (tools/character/tattoos/designs/<id>.svg).
 
-Our own drawings (2026-10-03): period sailors' marks (an anchor, a compass rose, a heart, crossed keys, a ship,
-initials and a year, a crucifix, a mermaid), the sky crews' marks (a keelstone star, a wind spiral, the Drift's
-waves) and plain bands and dots. No traditional or sacred designs of any people (no Polynesian or Maori designs,
-no Indigenous North American designs: those wait on consultation, docs/research/peoples_dress_1750s.md 1.3).
+Our own drawings (2026-10-03): period sailors' marks (an anchor, a compass rose, a heart, a ship, initials and a
+year, a mermaid), the sky crews' marks (a keelstone star, a wind spiral, the Drift's waves) and plain bands and dots.
+No traditional or sacred designs of any people (no Polynesian or Maori designs, no Indigenous North American designs:
+those wait on consultation, docs/research/peoples_dress_1750s.md 1.3). The crucifix is drawn but held (a sacred image:
+tattoos.json "held_designs", out of the atlas until the owner decides); the crossed keys (Saint Peter's, the papal
+emblem, with no period basis as a seaman's mark) were dropped on 2026-10-03.
 
 Each design is white line art on transparency in a 512 x 512 box, inside a 34 px margin (the atlas's mip levels
 must not bleed into the next cell). The geometry is computed here (trigonometry for the roses and spirals,
@@ -152,27 +154,6 @@ def heart():
         x0 = 330 - k * 6
         out.append(stroke("M %d %d L %d %d" % (x0, y, x0 + 46 - k * 9, y + 12), 8))
     return svg("\n".join(out))
-
-
-def _key(mirror):
-    """One key, upright (bow at the bottom), around the box's centre; `mirror` turns its bit to the left."""
-    s = -1 if mirror else 1
-    out = []
-    out.append(circle(C, 396, 44, 16))
-    out.append(circle(C, 396, 16, 9))
-    out.append(stroke("M 226 342 L 286 342", 14))
-    out.append(stroke("M 256 350 L 256 86", 18))
-    bit = [(256, 84), (256 + s * 66, 84), (256 + s * 66, 106), (256 + s * 42, 106), (256 + s * 42, 124),
-           (256 + s * 66, 124), (256 + s * 66, 150), (256, 150)]
-    out.append(fill(poly(bit)))
-    out.append(stroke("M 238 70 L 274 70", 12))
-    return "\n".join(out)
-
-
-def crossed_keys():
-    """Two keys in saltire, their bits outward."""
-    return svg('<g transform="rotate(38 256 256)">%s</g>\n<g transform="rotate(-38 256 256)">%s</g>'
-               % (_key(False), _key(True)))
 
 
 def ship():
@@ -412,7 +393,7 @@ def dots():
 
 
 DESIGNS = {
-    "anchor": anchor, "compass_rose": compass_rose, "heart": heart, "crossed_keys": crossed_keys, "ship": ship,
+    "anchor": anchor, "compass_rose": compass_rose, "heart": heart, "ship": ship,
     "initials_date": initials_date, "crucifix": crucifix, "mermaid": mermaid, "keelstone_star": keelstone_star,
     "wind_spiral": wind_spiral, "drift_waves": drift_waves, "band": band, "band_double": band_double, "dots": dots,
 }

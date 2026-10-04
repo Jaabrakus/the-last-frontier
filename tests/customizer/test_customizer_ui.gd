@@ -14,12 +14,12 @@ extends SceneTree
 ## signals instead. The saved look (user://appearance/current.json) is backed
 ## up first and restored at the end. Run it under a hard time limit like every Godot run.
 ##
-## Steps: O opens the creator (tree paused), its Fine-tune button the overlay on the creator's
-## look; group and people picked (the option button and list signals), a preset button clicked
+## Steps: O does nothing in a game; PlayerAppearance.open_customizer opens the creator (tree paused), its Fine-tune
+## button the overlay on the creator's look; group and people picked (the option button and list signals), a preset button clicked
 ## with the mouse; Skin tab: the Tone 12 swatch clicked; Face tab: a slider moved; Hair tab: a
 ## style clicked in the list; Apply clicked: the overlay closes back to the creator (still
 ## paused) with the choice; Accept clicked: the creator closes and unpauses, the player's look,
-## head skin material, hair part and the saved file carry the choice; O again and Fine-tune:
+## head skin material, hair part and the saved file carry the choice; open again and Fine-tune:
 ## the overlay shows it; Esc closes the overlay, Esc again the creator, without changes; Tab
 ## opens the inventory, whose doll wears the look.
 
@@ -142,10 +142,14 @@ func _run() -> void:
 	_check(app != null, "player has a PlayerAppearance")
 	if app == null:
 		return
-	# --- O opens the creator, Fine-tune the overlay
+	# --- O does nothing in a game (the user, 2026-10-01); the creator opens by PlayerAppearance.open_customizer (the new
+	# game's), Fine-tune the overlay
 	await _key(KEY_O)
+	_check(not is_instance_valid(app.overlay) and not paused, "O does nothing in a game")
+	app.open_customizer()
+	await _frames(2)
 	var cr := app.overlay as CharacterCreator
-	_check(is_instance_valid(cr) and paused, "O opens the creator and pauses the game")
+	_check(is_instance_valid(cr) and paused, "open_customizer opens the creator and pauses the game")
 	if not is_instance_valid(cr):
 		return
 	await _frames(5)
@@ -260,10 +264,11 @@ func _run() -> void:
 			"saved to %s" % AppearanceStore.current_path())
 	await _frames(10)
 	await _shot("6_applied")
-	# --- O again shows the look; Esc closes without changes
-	await _key(KEY_O)
+	# --- opened again it shows the look; Esc closes without changes
+	app.open_customizer()
+	await _frames(2)
 	cr = app.overlay as CharacterCreator
-	_check(is_instance_valid(cr), "O opens it again")
+	_check(is_instance_valid(cr), "it opens again")
 	if is_instance_valid(cr):
 		await _frames(3)
 		ov = await _fine_tune(cr)

@@ -163,9 +163,12 @@ static func effective(outfit: Dictionary, sex: float) -> Dictionary:
 	return out
 
 
-## The items of `slot` this build has for a body type (sex < 0: every one): "" (the basic piece) first, "-" (none) last,
-## the garments between set by set in the catalog's order of sets (its "set": colonial, then drift ...), by id in each.
-static func offered(slot: String, sex := -1.0) -> Array:
+## The items of `slot` this build has: "" (the basic piece) first, "-" (none) last, the garments between set by set in
+## the catalog's order of sets (its "set": colonial, then drift ...), by id in each. Every garment is offered to both body
+## types (the owner, 2026-10-03: "give everyone the ability to wear anything on starting"; cloth2 builds every cut on
+## both fits, docs/research/peoples_dress_1750s.md 1.2), and to every people; `sex` only names the body type asking (the
+## basic piece stays the body type's). cut_for says whom a garment was cut for (the outfit presets keep to it).
+static func offered(slot: String, _sex := -1.0) -> Array:
 	var out := [""]
 	var ids := []
 	for id: String in catalog():
@@ -174,9 +177,6 @@ static func offered(slot: String, sex := -1.0) -> Array:
 			continue
 		var own := String(e.get("slot", ""))
 		if own != slot and (not slot in (e.get("alt_slots", []) as Array) or stand_in(id, slot)):
-			continue
-		var tags: Array = e.get("tags", [])
-		if sex >= 0.0 and ("men" in tags or "women" in tags) and not body_type(sex) in tags:
 			continue
 		ids.append(id)
 	var order: Array = _sets.keys()
@@ -190,6 +190,13 @@ static func offered(slot: String, sex := -1.0) -> Array:
 	out.append_array(ids)
 	out.append("-")
 	return out
+
+
+## Whether garment `id` was cut for a body of `sex` (its catalog tags name that body type, or neither: a petticoat is a
+## woman's, breeches a man's, a hat both). Anyone may wear it (offered); the creator's outfit presets keep to the cut.
+static func cut_for(id: String, sex: float) -> bool:
+	var tags: Array = entry(id).get("tags", [])
+	return not ("men" in tags or "women" in tags) or body_type(sex) in tags
 
 
 static func item_name(slot: String, id: String, sex := 0.0) -> String:

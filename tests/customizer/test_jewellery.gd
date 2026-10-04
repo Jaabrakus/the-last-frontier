@@ -37,8 +37,10 @@ const PEOPLES := ["english", "haudenosaunee", "west_african", "japanese", "south
 const KINDS := ["bob", "hoop", "stud", "drop", "septum", "septum_ring", "septum_pin", "nostril_hoop", "beads", "chain", "cord",
 		"ribbon", "ring", "signet"]
 const PENDANTS := ["cross", "locket", "disc", "tooth", "gorget"]
-const DENY := ["tattoo", "war", "clan", "feather", "wampum", "bonnet", "chief", "pipe", "tribal", "eagle", "negro", "mulatto",
-		"coolie", "oriental", "harem"]
+## The deny-list (tests/customizer/deny_words.gd: catalog.py's DENY_TERMS, the research's and the creator's words, as whole
+## words), and this test's own: jewellery copy names no tattoo.
+const DenyWords := preload("res://tests/customizer/deny_words.gd")
+const DENY_EXTRA := ["tattoo\\w*"]
 ## Bones a neck piece may follow (the dominant weight of each vertex: the skin under it; a ribbon at mid-neck follows the
 ## head as the skin there does).
 const NECK_BONES := ["neck", "spine", "clavicle", "breast", "head"]
@@ -165,10 +167,9 @@ func _test_data() -> void:
 				bad.append("%s: items differ from its parts' (%s / %s)" % [id, want, items])
 		elif not CreatorOptions.jewel_place(id) in places:
 			bad.append("%s: no single place" % id)
-		var words := (id + " " + String(e.get("label", "")) + " " + String(e.get("note", ""))).to_lower()
-		for w: String in DENY:
-			if words.contains(w):
-				bad.append("%s: the word %s" % [id, w])
+		var words := id.replace("_", " ") + " " + String(e.get("label", "")) + " " + String(e.get("note", ""))
+		for w: String in DenyWords.hits(words, DENY_EXTRA):
+			bad.append("%s: the word %s" % [id, w])
 		if String(e.get("label", "")).is_empty():
 			bad.append("%s: no label" % id)
 	_check(bad.is_empty(), "every jewellery id is a known piece or set %s" % [bad])

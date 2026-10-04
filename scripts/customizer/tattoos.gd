@@ -14,7 +14,9 @@ extends RefCounted
 ## a viewer facing that skin sees them (round the limb and along it, for an arm), within the place's `reach`; scale: of
 ## the design's size at the place (SCALE_RANGE); rotation: degrees, anticlockwise as seen; fade 0 (fresh) .. 1 (old,
 ## spread and greyed). Everyone may wear every design from the start (the owner, 2026-10-03); a few plain designs (bands,
-## dots) go only round a limb or the neck (their "places").
+## dots) go only round a limb or the neck (their "places"). tattoos.json's "held_designs" and "held_places" (a sacred
+## image, the face: until consultation) are not read: validate() drops a held design and moves a held place's tattoo to
+## its design's own place.
 ##
 ## The designs are our own line art (tools/character/tattoos, assets/character/tattoos/SOURCE.md); the places' frames are
 ## measured on body.glb (tools/character/tattoos/build_tattoos.gd -> tattoo_map.json). A tattoo is skin: under clothes
@@ -288,20 +290,40 @@ static func _num(v, fallback: float) -> float:
 	return float(v) if v is float or v is int else fallback
 
 
-## "Anchor, left forearm".
-static func label_of(t: Dictionary) -> String:
+## "Anchor, left forearm"; `short`: the place's short name where it has one ("Wind spiral, left hand").
+static func label_of(t: Dictionary, short := false) -> String:
 	var d := design(String(t.get("design", "")))
 	var p := place(String(t.get("place", "")))
-	return "%s, %s" % [String(d.get("label", t.get("design", "?"))), String(p.get("label", t.get("place", "?"))).to_lower()]
+	var pl := String(p.get("short", p.get("label", t.get("place", "?")))) if short else String(p.get("label", t.get("place", "?")))
+	return "%s, %s" % [String(d.get("label", t.get("design", "?"))), pl.to_lower()]
 
 
 ## The creator row's value: "None", "Anchor, left forearm", "Anchor, left forearm and 2 more".
 static func summary(look: Dictionary) -> String:
+	return summaries(look)[0]
+
+
+## The row's value from the longest to the shortest (the creator shows the first that fits its row): one tattoo
+## "Wind spiral, back of the left hand", "Wind spiral, left hand", "Wind spiral"; several "Anchor, left forearm and 2
+## more", "Anchor, left forearm +2", "Anchor and 2 more", "Anchor +2" (the newest first; the row's count says how many).
+static func summaries(look: Dictionary) -> Array:
 	var a := list(look)
 	if a.is_empty():
-		return "None"
-	var s := label_of(a[-1])
-	return s if a.size() == 1 else "%s and %d more" % [s, a.size() - 1]
+		return ["None"]
+	var t: Dictionary = a[-1]
+	var name := String(design(String(t.get("design", ""))).get("label", t.get("design", "?")))
+	var forms := [label_of(t), label_of(t, true)]
+	if a.size() == 1:
+		forms.append(name)
+	else:
+		var more := a.size() - 1
+		forms = ["%s and %d more" % [forms[0], more], "%s and %d more" % [forms[1], more], "%s +%d" % [forms[1], more],
+				"%s and %d more" % [name, more], "%s +%d" % [name, more]]
+	var out := []
+	for f: String in forms:
+		if not f in out:
+			out.append(f)
+	return out
 
 
 # ---------------------------------------------------------------------------------------------
@@ -461,13 +483,16 @@ static func apply(m: ShaderMaterial, look: Dictionary) -> void:
 # ---------------------------------------------------------------------------------------------
 # The creator's row (CreatorOptions): "<  Tattoos  value  >"
 # ---------------------------------------------------------------------------------------------
-# The row steps the design of the newest tattoo (the last in the list): from None, the first step adds one at the
-# design's first place; stepping back to None takes the newest off. A click on the value opens TattooPanel (every
-# tattoo, place, size, turn, ink, fade).
+# The row steps the design of the newest tattoo (the last in the list): from None (no tattoo yet) the first step adds one
+# at the design's own place; once the look has tattoos the row lists only the designs, so its steps change the newest
+# one's design and never take a tattoo off (Remove in the editor does). A click on the value opens TattooPanel (every
+# tattoo, place, size, turn, ink, fade); while it is open the creator's row keys wait (CharacterCreator._input).
 
-static func row_options(_look: Dictionary) -> Array:
-	var out := [{"id": "none", "label": "None", "note": String(data().get("row_note",
-			"Tattoos: our own period sailors' and sky crews' marks. Click to add, place, size and ink them."))}]
+static func row_options(look: Dictionary) -> Array:
+	var out := []
+	if list(look).is_empty():
+		out.append({"id": "none", "label": "None", "note": String(data().get("row_note",
+				"Tattoos: our own period sailors' and sky crews' marks. Click to add, place, size and ink them."))})
 	for d: Dictionary in designs():
 		out.append({"id": String(d.id), "label": String(d.label), "note": String(d.get("note", ""))})
 	return out
@@ -475,24 +500,22 @@ static func row_options(_look: Dictionary) -> Array:
 
 static func row_current(look: Dictionary, opts: Array) -> int:
 	var a := list(look)
-	if a.is_empty():
-		return 0
-	var id := String((a[-1] as Dictionary).get("design", ""))
+	var id := String((a[-1] as Dictionary).get("design", "")) if not a.is_empty() and a[-1] is Dictionary else "none"
 	for i in opts.size():
 		if String(opts[i].id) == id:
 			return i
 	return -1
 
 
+## Choice `i` of the row's options: a design adds the first tattoo (with none yet) or becomes the newest one's design;
+## "None" does nothing (the row never takes a tattoo off).
 static func row_select(look: Dictionary, i: int, opts: Array) -> bool:
 	if i < 0 or i >= opts.size():
 		return false
-	var a := _arr(look)
-	if i == 0:
-		if not a.is_empty():
-			a.remove_at(a.size() - 1)
-		return true
 	var id := String(opts[i].id)
+	if design(id).is_empty():
+		return id == "none"
+	var a := _arr(look)
 	if a.is_empty():
 		return add(look, id) >= 0
 	set_design(look, a.size() - 1, id)

@@ -1,18 +1,22 @@
 class_name OutfitTab
 extends ScrollContainer
 ## The customizer's Outfit tab (CustomizerOverlay, the character creator's Clothing button): what the character wears
-## (PlayerOutfit), one row per slot (shirt, breeches or skirt, coat, shoes, hat ...) with the garments this build has
-## for the body type and their colours (the costume bible's palette). A slot left on "Basic" wears the basic dress of
+## (PlayerOutfit), one row per slot (shirt, breeches or skirt, coat, shoes, hat ...) with every garment this build has
+## (for both body types: anyone may wear anything, the owner 2026-10-03; a garment cut for the other body type says so in
+## its tooltip) and their colours (the costume bible's palette). A slot left on "Basic" wears the basic dress of
 ## the body type (a shirt and breeches, a shift and a petticoat); "None" takes it off. Items of evidence grade C say so
 ## ("Artistic licence") and name the documented forms. A slot's garments are listed set by set under the catalog's set
 ## names (Colonial, Drift sky crews). A garment's cloth can take a pattern (2026-10-03: "add patterns"): a check, stripes,
 ## a plaid of a sett, ticking, a calico print or a herringbone, on any garment (its catalog's documented ones say so), in
-## the colours picked under it (the zone's own colour is the pattern's first; ClothMaterials.pattern_spec).
+## the colours picked under it (the zone's own colour is the pattern's first; ClothMaterials.pattern_spec). Each group
+## of choices (a zone's colours, the patterns, a plaid's setts, each of the pattern's colours) has its own line, its
+## label in a column on the left and its buttons beside it.
 ##
 ##   tabs.add_child(OutfitTab.create(look_getter, changed_callback))
 
-## Outfits one click away: [name, the look's "outfit" dictionary], shown for a body type when it offers each of their garments
-## (their catalog tags: a petticoat for women, breeches for men). Colours may name a garment's catalog colour preset
+## Outfits one click away: [name, the look's "outfit" dictionary], shown for a body type when each of their garments was
+## cut for it (PlayerOutfit.cut_for, their catalog tags: a petticoat for women, breeches for men; every garment is still
+## offered to both in the slot rows). Colours may name a garment's catalog colour preset
 ## ({"preset": ...}: PlayerOutfit.resolve_colors). The clothes agents' assembled outfits.
 const PRESETS := [
 	["Basic dress", {}],
@@ -64,6 +68,9 @@ const FACTION_PRESETS := [
 const DYES := ["linen_white", "linen_unbleached", "tow", "check_blue", "indigo_mid", "stroud_blue", "madder_red",
 		"stroud_red", "deep_green", "full_green", "yellow", "butternut", "walnut_brown", "drab", "slate_grey", "logwood_black"]
 
+## The label column of the colours' lines (px; a longer label wraps).
+const LINE_LABEL_W := 118
+
 var _get_look: Callable
 var _changed: Callable
 var _box: VBoxContainer
@@ -84,8 +91,8 @@ static func create(get_look: Callable, changed: Callable) -> OutfitTab:
 	return t
 
 
-## The outfits one click away for a body of `sex`: [name, outfit] (PRESETS, then FACTION_PRESETS), those whose garments the
-## body type is offered (PlayerOutfit.offered).
+## The outfits one click away for a body of `sex`: [name, outfit] (PRESETS, then FACTION_PRESETS), those whose garments
+## were cut for the body type (PlayerOutfit.cut_for) and are offered in their slots (PlayerOutfit.offered).
 static func presets(sex: float) -> Array:
 	var list := []
 	for p: Array in PRESETS:
@@ -102,7 +109,7 @@ static func presets(sex: float) -> Array:
 				continue
 			if not offer.has(slot):
 				offer[slot] = PlayerOutfit.offered(slot, sex)
-			if not id in (offer[slot] as Array):
+			if not id in (offer[slot] as Array) or not PlayerOutfit.cut_for(id, sex):
 				return false
 		return true)
 
@@ -172,6 +179,8 @@ func _build() -> void:
 			var tip := String(e.get("description", ""))
 			if e.get("licence_note") is String:
 				tip += "\n" + String(e.licence_note)
+			if id != "" and id != "-" and not PlayerOutfit.cut_for(id, sex):
+				tip += "\nCut for %s; anyone may wear it." % ("men" if sex < 0.5 else "women")
 			opt.set_item_tooltip(at, tip)
 		opt.item_selected.connect(func(i: int) -> void:
 			var id := String(opt.get_item_metadata(i))
@@ -183,7 +192,8 @@ func _build() -> void:
 			_refresh_colors(slot)
 			_changed.call())
 		head.add_child(opt)
-		var colors := HFlowContainer.new()
+		var colors := VBoxContainer.new()
+		colors.add_theme_constant_override("separation", 2)
 		_box.add_child(colors)
 		var note := Label.new()
 		note.add_theme_color_override("font_color", Color(0.95, 0.8, 0.5))
@@ -221,11 +231,31 @@ func _shown_id(slot: String) -> String:
 	return id
 
 
+## A line of the colours box (each group of choices on its own line): its label in a column of its own, the buttons
+## flowing beside it (a second row of swatches stays in their column, under the first); returns the buttons' flow.
+static func _line(box: VBoxContainer, title: String) -> HFlowContainer:
+	var line := HBoxContainer.new()
+	line.add_theme_constant_override("separation", 6)
+	box.add_child(line)
+	var lab := Label.new()
+	lab.text = title
+	lab.custom_minimum_size = Vector2(LINE_LABEL_W, 0)
+	lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lab.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	line.add_child(lab)
+	var flow := HFlowContainer.new()
+	flow.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	flow.add_theme_constant_override("h_separation", 3)
+	flow.add_theme_constant_override("v_separation", 3)
+	line.add_child(flow)
+	return flow
+
+
 func _refresh_colors(slot: String) -> void:
 	var row: Dictionary = _rows[slot]
-	var box: HFlowContainer = row.colors
+	var box: VBoxContainer = row.colors
 	for c in box.get_children():
-		c.queue_free()
+		c.queue_free()      # (not removed here: a swatch's own press rebuilds the box)
 	var id := _shown_id(slot)
 	var e := PlayerOutfit.entry(id) if id != "" and id != "-" else {}
 	var ln := String(e.licence_note) if e.get("licence_note") is String else ""
@@ -235,9 +265,7 @@ func _refresh_colors(slot: String) -> void:
 		return
 	for ch: Array in PlayerOutfit.color_choices(id):
 		var key := String(ch[0])
-		var lab := Label.new()
-		lab.text = String(ch[3]) + ":"
-		box.add_child(lab)
+		var line := _line(box, String(ch[3]) + ":")
 		var zd := {}
 		for z: Dictionary in e.get("zones", []):
 			if str(int(z.get("zone", -1))) == key or (key == "bands" and not ClothMaterials.hem_bands(z).is_empty()):
@@ -263,7 +291,7 @@ func _refresh_colors(slot: String) -> void:
 					d.colors["bands_rows"] = 2
 				_keep_pattern(before, d.colors, key, t)
 				_changed.call())
-			box.add_child(b)
+			line.add_child(b)
 	_add_pattern_rows(slot, box)
 
 
@@ -314,16 +342,14 @@ func _keep_pattern(before: Dictionary, colors: Dictionary, key: String, tok: Str
 
 ## The pattern row under a garment's colours: its patterns (any of ClothMaterials.PATTERNS; the catalog's documented
 ## ones say so), a plaid's setts, and the pattern's other colours.
-func _add_pattern_rows(slot: String, box: HFlowContainer) -> void:
+func _add_pattern_rows(slot: String, box: VBoxContainer) -> void:
 	var st := _pattern_state(slot)
 	if st.is_empty() or not ClothMaterials.patternable(st.zd):
 		return
 	var spec: Dictionary = st.spec
 	var cur := str(spec.get("name", "none"))
 	var documented := ClothMaterials.zone_patterns(st.zd)
-	var lab := Label.new()
-	lab.text = "Pattern:"
-	box.add_child(lab)
+	var line := _line(box, "Pattern:")
 	for pn: String in ClothMaterials.PATTERNS:
 		var b := Button.new()
 		b.text = String(ClothMaterials.PATTERN_LABELS.get(pn, pn))
@@ -334,13 +360,13 @@ func _add_pattern_rows(slot: String, box: HFlowContainer) -> void:
 			_slot_colors(slot)["pattern"] = pn
 			_refresh_colors(slot)
 			_changed.call())
-		box.add_child(b)
+		line.add_child(b)
 	if spec.is_empty():
 		return
 	if cur == "plaid":
-		var sl := Label.new()
-		sl.text = "Sett:"
-		box.add_child(sl)
+		line = _line(box, "Sett:")
+		# the sett the plaid shows: the look's, else the garment's own (the catalog's), else the default
+		var shown := ClothMaterials.sett_name(st.zd, st.colors)
 		var setts := ClothMaterials.setts()
 		for sn: String in setts:
 			if not setts[sn] is Dictionary or not (setts[sn] as Dictionary).has("sett"):
@@ -349,7 +375,7 @@ func _add_pattern_rows(slot: String, box: HFlowContainer) -> void:
 			b.text = String(setts[sn].get("label", sn))
 			b.tooltip_text = String(setts[sn].get("note", ""))
 			b.toggle_mode = true
-			b.button_pressed = str(st.colors.get("sett", "")) == sn
+			b.button_pressed = shown == sn
 			b.pressed.connect(func() -> void:
 				var c := _slot_colors(slot)
 				c["pattern"] = "plaid"
@@ -357,16 +383,14 @@ func _add_pattern_rows(slot: String, box: HFlowContainer) -> void:
 				c.erase("plaid")
 				_refresh_colors(slot)
 				_changed.call())
-			box.add_child(b)
+			line.add_child(b)
 	var cols: Array = spec.colors
 	var pal: Array = []
 	for t: Variant in (st.zd.get("palette", []) as Array) + cols + DYES:
 		if not str(t) in pal:
 			pal.append(str(t))
 	for i in range(0 if cur == "plaid" else 1, mini(cols.size(), 4)):
-		var cl := Label.new()
-		cl.text = "%s %d:" % [String(ClothMaterials.PATTERN_LABELS.get(cur, cur)), i + 1]
-		box.add_child(cl)
+		line = _line(box, "%s %d:" % [String(ClothMaterials.PATTERN_LABELS.get(cur, cur)), i + 1])
 		for tok: String in pal:
 			var b := Button.new()
 			b.custom_minimum_size = Vector2(26, 22)
@@ -388,4 +412,4 @@ func _add_pattern_rows(slot: String, box: HFlowContainer) -> void:
 				c[cur] = list
 				_refresh_colors(slot)
 				_changed.call())
-			box.add_child(b)
+			line.add_child(b)

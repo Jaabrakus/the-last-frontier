@@ -22,9 +22,13 @@ extends SceneTree
 ##              mirrored repeat, the widths summing to one, recoloured by the look) and from an inline sett, ticking,
 ##              calico and herringbone, a pattern on a zone of its own ("pattern.1"), the catalog's aliases ("stripes"),
 ##              check_blue alone as the blue-and-white check, and a zone's mean tint; the creator's Outfit tab shows the
-##              pattern row and its picks change the look
+##              pattern row and its picks change the look, each group of choices on its own line under its label, a
+##              plaid's sett lit when the garment wears its catalog sett, no pattern row on tarred cloth (the harness)
+##   copy       the slot names, the pattern labels and the sett library's labels and notes carry no deny-listed word
+##              (tests/customizer/deny_words.gd)
 
 const ARM_ID := "test_arm_band"
+const DenyWords := preload("res://tests/customizer/deny_words.gd")
 
 var _fails: Array[String] = []
 var _checks := 0
@@ -58,6 +62,7 @@ func _run() -> void:
 	await _test_dress()
 	_test_save()
 	_test_patterns()
+	_test_copy()
 	await _test_outfit_tab()
 	PlayerOutfit.catalog().erase(ARM_ID)
 	print("(%.1f s)" % ((Time.get_ticks_msec() - t0) / 1000.0))
@@ -344,12 +349,37 @@ func _test_patterns() -> void:
 	_check(ClothMaterials.zone_patterns(zc) == ["none", "check"], "the check shirt documents none and check")
 	_check(not ClothMaterials.patternable(_zone("rigging_harness", 2)) and ClothMaterials.patternable(zc),
 			"wood and metal take no pattern, linen does")
+	_check(not ClothMaterials.patternable(_zone("rigging_harness", 0)), "nor the harness's tarred canvas band (the tar covers any weave)")
+	_check(ClothMaterials.sett_name(_zone("scots_philabeg", 0)) == "madder_red"
+			and ClothMaterials.sett_name(_zone("scots_philabeg", 0), {"sett": "hill_green"}) == "hill_green"
+			and ClothMaterials.sett_name(_zone("petticoat", 0)) == String(ClothMaterials.PATTERN_DEFAULTS.plaid.sett)
+			and ClothMaterials.sett_name(zc, {"sett": [["madder_red", 2], ["linen_white", 1]]}) == "",
+			"sett_name: the look's sett, else the garment's own, else the default; none for a list of its own")
 	# the shader has the uniforms the materials set
 	var names := []
 	for u: Dictionary in ClothMaterials.CLOTH_SHADER.get_shader_uniform_list():
 		names.append(String(u.name))
 	for u: String in ["pat_kind", "pat_scale", "pat_angle", "pat_start", "pat_count", "pat_sett"]:
 		_check(u in names, "cloth.gdshader has %s" % u)
+
+
+# ---------------------------------------------------------------- the copy
+func _test_copy() -> void:
+	var bad := []
+	for slot: String in PlayerOutfit.SLOT_NAMES:
+		for w in DenyWords.hits(String(PlayerOutfit.SLOT_NAMES[slot])):
+			bad.append("slot %s: %s" % [slot, w])
+	for pn: String in ClothMaterials.PATTERN_LABELS:
+		for w in DenyWords.hits(String(ClothMaterials.PATTERN_LABELS[pn])):
+			bad.append("pattern %s: %s" % [pn, w])
+	var setts := ClothMaterials.setts()
+	for sn: String in setts:
+		if setts[sn] is Dictionary:
+			for w in DenyWords.hits(sn.replace("_", " ") + " " + String(setts[sn].get("label", "")) + " " + String(setts[sn].get("note", ""))):
+				bad.append("sett %s: %s" % [sn, w])
+	_check(bad.is_empty(), "the slot names, pattern labels and setts carry no deny-listed word %s" % [bad])
+	_check(not DenyWords.terms().is_empty() and DenyWords.hits("a brave in a war bonnet, a toward warm ware") == ["brave", "war bonnet"],
+			"the deny-list matches whole words (%s)" % [DenyWords.hits("a brave in a war bonnet, a toward warm ware")])
 
 
 # ---------------------------------------------------------------- the Outfit tab
@@ -402,5 +432,36 @@ func _test_outfit_tab() -> void:
 			_check(look.outfit.shirt.colors.get("plaid") is Array and "yellow" in (look.outfit.shirt.colors.plaid as Array),
 					"a colour picked goes into the look's plaid colours (%s)" % [look.outfit.shirt.colors.get("plaid")])
 	_check(changed[0] >= 2, "each pick changes the look (%d)" % changed[0])
+	# each group of choices on its own line, its label first (the plaid's four colour rows read one by one)
+	await _frames(1)
+	var lines: Array = (row.colors as Node).get_children().filter(func(n: Node) -> bool: return not n.is_queued_for_deletion())
+	var bad_lines := 0
+	for n: Node in lines:
+		# [the label, the buttons' flow]: no label among the buttons
+		if not n is HBoxContainer or n.get_child_count() != 2 or not n.get_child(0) is Label or not n.get_child(1) is HFlowContainer \
+				or n.get_child(1).get_children().any(func(k: Node) -> bool: return k is Label):
+			bad_lines += 1
+	_check(lines.size() >= 4 and bad_lines == 0, "the shirt's colours: a line per group, its label in its own column (%d lines, %d bad)"
+			% [lines.size(), bad_lines])
+	# the harness: its tarred band takes no pattern, so no pattern row
+	var hr: Dictionary = tab._rows.get("accessories.shoulder", {})
+	var hb := _buttons(hr.colors, []) if hr.get("colors") is Node else []
+	_check(not hr.is_empty() and not hb.is_empty() and not hb.any(func(b: Button) -> bool: return b.text == "Plaid"),
+			"the harness's colours have no pattern row (%d buttons)" % hb.size())
 	tab.queue_free()
 	await _frames(1)
+	# a philabeg in its catalog sett: the sett row lights Madder red (the garment's own), not nothing
+	var kl := AppearanceStore.validate(CharacterPeoples.preset_look("english_m_a"))
+	kl["outfit"] = {"legs.lower": {"id": "scots_philabeg", "colors": {}}}
+	if PlayerOutfit.usable("scots_philabeg"):
+		var kt := OutfitTab.create(func() -> Dictionary: return kl, func() -> void: pass)
+		root.add_child(kt)
+		await _frames(2)
+		var lit := []
+		var kc: Variant = (kt._rows.get("legs.lower", {}) as Dictionary).get("colors")
+		for b: Button in (_buttons(kc, []) if kc is Node else []):
+			if b.toggle_mode and b.button_pressed:
+				lit.append(b.text)
+		_check("Madder red" in lit and "Plaid" in lit, "a philabeg in its catalog sett: Plaid and Madder red lit (%s)" % [lit])
+		kt.queue_free()
+		await _frames(1)
