@@ -14,7 +14,11 @@
   {"id": "flaxen", "label": "Flaxen", "eumelanin": 0.45, "pheomelanin": 0.1, "grey": 0.0},
   {"id": "grizzled", "label": "Grizzled", "eumelanin": 3.5, "pheomelanin": 0.3, "grey": 0.45},
   {"id": "grey", "label": "Grey", "eumelanin": 2.0, "pheomelanin": 0.2, "grey": 0.8},
-  {"id": "white", "label": "White", "eumelanin": 0.3, "pheomelanin": 0.05, "grey": 1.0}
+  {"id": "white", "label": "White", "eumelanin": 0.3, "pheomelanin": 0.05, "grey": 1.0},
+  {"id": "silver", "label": "Silver", "eumelanin": 0.9, "pheomelanin": 0.0, "grey": 0.88, "world": "the Driftborn's young silver (data/customizer/world_peoples.json)"},
+  {"id": "ash", "label": "Ash", "eumelanin": 1.8, "pheomelanin": 0.02, "grey": 0.4, "world": "the Driftborn's ash (world_peoples.json)"},
+  {"id": "copper", "label": "Copper", "eumelanin": 1.1, "pheomelanin": 3.3, "grey": 0.0, "world": "the Keelfolk's copper (world_peoples.json)"},
+  {"id": "soot", "label": "Soot", "eumelanin": 7.2, "pheomelanin": 0.0, "grey": 0.22, "world": "the Keelfolk's soot-black, a grey cast of keelstone dust (world_peoples.json)"}
  ],
  "powder": {"label": "Powdered", "values": [0.0, 0.5, 0.9]}
 }

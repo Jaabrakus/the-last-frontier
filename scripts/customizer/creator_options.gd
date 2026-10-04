@@ -52,21 +52,23 @@ extends RefCounted
 ## The jewellery rows are kept across a change of people or body type too (KEEP); the dice choose
 ## them again from the people's own pieces.
 ## Body type 1 is the male fit (sex 1), body type 2 the female fit (sex 0).
+##   trait         a world people's mark in the skin, 0..1 (the Keelfolk's keelstone flecks, the Etched's Form veins:
+##                 CharacterPeoples.trait_of, people_trait.gdshaderinc); the Mark row, shown for those peoples only
 
 const PATH := "res://data/customizer/creator.json"
 const ROWS := ["face_style", "skin", "bust", "face", "complexion", "hair_style", "hair_color", "facial_hair", "eyebrows", "eyes",
-		"markings", "jewel_ears", "jewel_nose", "jewel_neck", "jewel_hands", "tattoos"]
+		"markings", "trait", "jewel_ears", "jewel_nose", "jewel_neck", "jewel_hands", "tattoos"]
 const ROW_LABELS := {
 	"face_style": "Face style", "skin": "Skin colour", "bust": "Bust", "face": "Face", "complexion": "Complexion", "hair_style": "Hair style", "hair_color": "Hair colour",
 	"facial_hair": "Facial hair", "eyebrows": "Eyebrows", "eyes": "Eye colour", "markings": "Markings",
 	"jewellery": "Jewellery", "jewel_ears": "Earrings", "jewel_nose": "Nose", "jewel_neck": "Neck", "jewel_hands": "Rings",
-	"tattoos": "Tattoos",
+	"tattoos": "Tattoos", "trait": "Mark",
 }
 ## Rows the creator's camera frames at the face (the rest: the upper body).
 const FACE_ROWS := ["face_style", "face", "complexion", "hair_style", "hair_color", "facial_hair", "eyebrows", "eyes",
 		"markings", "jewellery", "jewel_ears", "jewel_nose"]
 ## Rows the camera frames at the bust (the neck's jewellery shows with the shoulders).
-const BUST_ROWS := ["skin", "jewel_neck", "tattoos"]
+const BUST_ROWS := ["skin", "trait", "jewel_neck", "tattoos"]
 ## Rows the camera frames at the hands (the rings; CreatorStage's "hands" framing).
 const HANDS_ROWS := ["jewel_hands"]
 ## The jewellery rows (look keys) and the place of each: one piece at each place.
@@ -77,6 +79,8 @@ const JEWEL_AT := {"ears": "ears", "ear_l": "ears", "ear_r": "ears", "ear_rims":
 		"middle_l": "hands", "middle_r": "hands", "index_l": "hands", "index_r": "hands", "pinky_l": "hands", "pinky_r": "hands"}
 ## The dice: how often each jewellery row stays plain (then one of the people's own pieces).
 const JEWEL_PLAIN := {"jewel_ears": 0.5, "jewel_nose": 0.75, "jewel_neck": 0.6, "jewel_hands": 0.7}
+## The Mark row's levels (a world people's mark in the skin: look key `trait`).
+const TRAIT_LEVELS := [[0.0, "None"], [0.3, "Faint"], [0.6, "Marked"], [1.0, "Strong"]]
 ## The look key of a look saved before the jewellery rows (one jewellery id).
 const LEGACY_JEWELLERY := "jewellery"
 ## Faces per people and body type: (Stylized) its stylized faces, then its presets, then
@@ -123,13 +127,15 @@ static func rows(look: Dictionary) -> Array:
 			continue
 		if r == "face_style" and BodyMaterials.FACE_STYLES.size() < 2:
 			continue
+		if r == "trait" and CharacterPeoples.trait_of(look).is_empty():
+			continue
 		out.append(r)
 	return out
 
 
 static func _people(look: Dictionary) -> Dictionary:
 	var p := CharacterPeoples.people(String(look.get("people", "")))
-	return p if not p.is_empty() else CharacterPeoples.people("english")
+	return p if not p.is_empty() else CharacterPeoples.people(CharacterPeoples.default_people())
 
 
 ## A list of the people's (then its group's, then the default) creator.json key `key`.
@@ -185,7 +191,7 @@ static func options(row: String, look: Dictionary) -> Array:
 				out.append(o)
 			return out
 		"eyes":
-			var eyes: Dictionary = BodyMaterials.body_info().get("eyes", {})
+			var eyes := BodyMaterials.eye_colors()
 			var out := []
 			for k: String in _sorted_by_weight(_people(look).get("eyes", {"brown": 1.0})):
 				out.append({"id": k, "label": k.replace("_", " ").capitalize(), "color": Color(String(eyes.get(k, "#4a2e1a")))})
@@ -199,6 +205,14 @@ static func options(row: String, look: Dictionary) -> Array:
 			return _jewel_options(look, row)
 		"tattoos":
 			return Tattoos.row_options(look)
+		"trait":
+			var tr := CharacterPeoples.trait_of(look)
+			var out := []
+			if not tr.is_empty():
+				for lv: Array in TRAIT_LEVELS:
+					out.append({"id": "trait_%d" % out.size(), "label": "%s: %s" % [String(tr.get("label", "Mark")), String(lv[1]).to_lower()]
+							if float(lv[0]) > 0.0 else "None", "trait": float(lv[0]), "note": String(tr.get("note", ""))})
+			return out
 	return []
 
 
@@ -240,8 +254,10 @@ static func _face_options(look: Dictionary) -> Array:
 	var prs: Array = CharacterPeoples.presets(pid, sex)
 	if BodyMaterials.is_stylized(look):
 		prs = CharacterPeoples.stylized_presets(pid, sex) + prs
+	# (a world people: more faces, two from each region of the real peoples: CharacterPeoples.WORLD_FACES)
+	var cap := CharacterPeoples.WORLD_FACES if CharacterPeoples.is_world(pid) else FACE_VARIANTS
 	for pr: Dictionary in prs:
-		if out.size() >= FACE_VARIANTS:
+		if out.size() >= cap:
 			break
 		var o := {"id": String(pr.id), "label": "Face %d" % (out.size() + 1), "face": (pr.face as Dictionary).duplicate(),
 				"preset": String(pr.id)}
@@ -250,7 +266,7 @@ static func _face_options(look: Dictionary) -> Array:
 		out.append(o)
 	var rng := RandomNumberGenerator.new()
 	var k := 0
-	while out.size() < FACE_VARIANTS:
+	while out.size() < cap:
 		rng.seed = hash("%s:%d:%d" % [pid, int(sex), k])
 		var lk := CharacterPeoples.random_look(pid, sex, rng)
 		out.append({"id": "%s_%d_%d" % [pid, int(sex), k], "label": "Face %d" % (out.size() + 1),
@@ -386,6 +402,12 @@ static func current(row: String, look: Dictionary, opts := []) -> int:
 			return _index_of(opts, jewel_id(look, row))
 		"tattoos":
 			return Tattoos.row_current(look, opts)
+		"trait":
+			var tv := float(look.get("trait", -1.0))
+			for i in opts.size():
+				if absf(float(opts[i].trait) - tv) < 0.01:
+					return i
+			return -1
 	return -1
 
 
@@ -472,6 +494,8 @@ static func select(row: String, look: Dictionary, i: int, opts := []) -> bool:
 			look[row] = String(o.id)
 		"tattoos":
 			return Tattoos.row_select(look, i, opts)
+		"trait":
+			look["trait"] = float(o.trait)
 		_:
 			return false
 	return true
@@ -519,16 +543,47 @@ static func with_people(look: Dictionary, people_id: String) -> Dictionary:
 	if BodyMaterials.is_stylized(look):
 		pr = CharacterPeoples.stylized_presets(people_id, sex) + pr
 	var out := CharacterPeoples.preset_look(String(pr[0].id)) if not pr.is_empty() else {"people": people_id, "sex": sex}
+	out["people"] = people_id          # (a world people's faces are real peoples' presets: the look is still its)
 	out = _keep(look, out)
+	_world_people(out)
 	_settle(out)
 	return out
+
+
+## A world people's own on a look just made from one of its faces (a real people's preset): its first hair style, its
+## weathering, its mark at its own strength; the eyes and hair colour settle on its lists (its most common first).
+static func _world_people(look: Dictionary) -> void:
+	var p := CharacterPeoples.people(String(look.get("people", "")))
+	if not bool(p.get("world", false)):
+		return
+	var own: Array = (p.get("hair_styles", {}) as Dictionary).get("m" if is_male(look) else "f", [])
+	if not own.is_empty():
+		_hair(look)["style"] = String(own[0])
+	_hair(look).erase("color")
+	look.erase("iris")
+	if p.has("weathering"):
+		look["weathering"] = float(p.weathering)
+	var tr := CharacterPeoples.trait_of(look)
+	if not tr.is_empty():
+		look["trait"] = _nearest_trait(float(tr.get("default", 0.6)))
+	else:
+		look.erase("trait")
+
+
+## The Mark row's level nearest `v`.
+static func _nearest_trait(v: float) -> float:
+	var best := 0.0
+	for lv: Array in TRAIT_LEVELS:
+		if absf(float(lv[0]) - v) < absf(best - v):
+			best = float(lv[0])
+	return best
 
 
 ## The same people with body type 1 (male fit) or 2 (female fit).
 static func with_body_type(look: Dictionary, bt: int) -> Dictionary:
 	var lk := look.duplicate(true)
 	lk["sex"] = 1.0 if bt == 1 else 0.0
-	return with_people(lk, String(_people(look).get("id", "english")))
+	return with_people(lk, String(_people(look).get("id", CharacterPeoples.default_people())))
 
 
 ## Every row on a choice of its list (the nearest, or the first): a preset's continuous values
@@ -591,10 +646,15 @@ static func _pick_style(opts: Array, rng: RandomNumberGenerator, first_weight: f
 ## colour from the people's ranges and frequencies, the people's own hair styles, style rows
 ## weighted toward the plain choice). Name and clothes are kept.
 static func randomized(look: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
-	var pid := String(_people(look).get("id", "english"))
+	var pid := String(_people(look).get("id", CharacterPeoples.default_people()))
 	var sex := 1.0 if is_male(look) else 0.0
 	var lk := CharacterPeoples.random_look(pid, sex, rng)
+	var weathered: Variant = lk.get("weathering")
 	lk = _keep(look, lk)
+	if weathered != null:
+		lk["weathering"] = weathered       # (a world people's own: random_look drew it near the people's)
+	if lk.has("trait"):
+		lk["trait"] = _nearest_trait(float(lk.trait))
 	var faces := options("face", lk)
 	select("face", lk, rng.randi() % faces.size(), faces)
 	var skins := options("skin", lk)
@@ -770,3 +830,9 @@ static func clean_name(s: String) -> String:
 		if c.unicode_at(0) >= 32 and c != "\u007f":
 			out += c
 	return out.substr(0, NAME_MAX)
+
+
+## A people's emblem's name (creator.json "emblems" for the real peoples, its own "emblem" for the world's).
+static func emblem_name(pid: String) -> String:
+	var e := String((data().get("emblems", {}) as Dictionary).get(pid, ""))
+	return e if not e.is_empty() else String(CharacterPeoples.people(pid).get("emblem", ""))

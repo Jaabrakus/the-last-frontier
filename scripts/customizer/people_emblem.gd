@@ -598,3 +598,62 @@ func _e_euro_african() -> void:
 		var seg: Array = (a if k % 2 == 0 else b).slice(k * per + 2, (k + 1) * per - 1)
 		_line(seg, 10.0, true)
 		_line(seg, 6.0)
+
+
+# --- the world's own peoples (data/customizer/world_peoples.json "emblem"; the owner 2026-10-03, a test) ---------------
+
+## A pine over a hearth's three logs (the Downbelowers).
+func _e_downbelower() -> void:
+	# the pine: three tiers on a trunk
+	_line([[50, 60], [50, 66]], 3.0)
+	_poly([[50, 14], [62, 30], [56, 30], [66, 42], [58, 42], [70, 56], [30, 56], [42, 42], [34, 42], [44, 30], [38, 30]])
+	# the hearth: three logs, two crossed and one across, a small flame between
+	_line([[28, 86], [60, 70]], 5.0)
+	_line([[72, 86], [40, 70]], 5.0)
+	_line([[30, 82], [70, 82]], 4.0)
+	_poly([[50, 76], [46, 70], [49, 66], [50, 62], [53, 67], [54, 71]])
+
+
+## A sail filled by a spiral of wind (the Driftborn).
+func _e_driftborn() -> void:
+	# the mast and the yards
+	_line([[60, 14], [60, 88]], 3.0)
+	_line([[44, 20], [74, 20]], 2.5)
+	_line([[42, 74], [76, 74]], 2.5)
+	# the sail, bellied out to the right by the wind
+	var belly := _bezier(Vector2(74, 20), Vector2(90, 47), Vector2(76, 74), 12)
+	var luff := _bezier(Vector2(42, 74), Vector2(52, 47), Vector2(44, 20), 12)
+	_poly(belly + luff)
+	# the wind: a spiral blowing into the sail from the left
+	var pts := []
+	for i in 40:
+		var t := i / 39.0
+		var a := t * TAU * 1.6 + PI
+		var r := 3.0 + 13.0 * t
+		pts.append(Vector2(26 + r * cos(a), 47 + r * sin(a) * 0.8))
+	_line(pts, 2.5)
+
+
+## A keelstone crystal on a miner's pick (the Keelfolk).
+func _e_keelfolk() -> void:
+	# the pick: a haft and a curved head
+	_line([[26, 84], [70, 30]], 4.0)
+	_line(_bezier(Vector2(52, 16), Vector2(72, 22), Vector2(86, 44), 10), 5.0)
+	# the crystal: a long six-sided stone, its facets cut in the ground colour
+	_poly([[40, 34], [50, 22], [60, 34], [60, 62], [50, 74], [40, 62]])
+	_line([[50, 22], [50, 74]], 1.5, true)
+	_line([[40, 34], [50, 42], [60, 34]], 1.5, true)
+	_line([[40, 62], [50, 56], [60, 62]], 1.5, true)
+
+
+## A circle drawn round a stepped pyramid (the Etched).
+func _e_etched() -> void:
+	_arc(50, 52, 34.0, 0.0, 360.0, 2.5)
+	_arc(50, 52, 29.0, 0.0, 360.0, 1.2)
+	# the pyramid in four steps, standing on the circle's lower chord
+	var steps := [[20, 70, 80], [28, 60, 70], [36, 50, 60], [43, 40, 50]]
+	for s: Array in steps:
+		_poly([[s[0], s[2]], [100 - s[0], s[2]], [100 - s[0], s[1]], [s[0], s[1]]])
+	# its door, and the line of the drawn circle's start
+	_poly([[47, 80], [53, 80], [53, 72], [47, 72]], true)
+	_line([[50, 18], [50, 30]], 2.0)

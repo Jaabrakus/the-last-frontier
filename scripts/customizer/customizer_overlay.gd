@@ -254,7 +254,7 @@ func _people_tab() -> Control:
 	var t := _scroll("People")
 	var vb: VBoxContainer = t[1]
 	_group_opt = OptionButton.new()
-	for g in CharacterPeoples.groups():
+	for g in CharacterPeoples.listed_groups():
 		_group_opt.add_item(String(g))
 	_group_opt.item_selected.connect(func(_i: int) -> void: _refresh_people_list())
 	vb.add_child(_group_opt)
@@ -446,7 +446,7 @@ func _refresh_all() -> void:
 	var pid := String(look.get("people", ""))
 	var pp := CharacterPeoples.people(pid)
 	if not pp.is_empty():
-		var gi := CharacterPeoples.groups().find(pp.group)
+		var gi := CharacterPeoples.listed_groups().find(pp.group)
 		if gi >= 0:
 			_group_opt.select(gi)
 	_refresh_people_list()
@@ -461,7 +461,7 @@ func _refresh_all() -> void:
 func _refresh_people_list() -> void:
 	_people_list.clear()
 	var g := _group_opt.get_item_text(_group_opt.selected) if _group_opt.selected >= 0 else ""
-	for p: Dictionary in CharacterPeoples.peoples(g):
+	for p: Dictionary in CharacterPeoples.listed_peoples(g):
 		_people_list.add_item(String(p.label))
 		_people_list.set_item_metadata(_people_list.item_count - 1, String(p.id))
 		if p.id == look.get("people", ""):
@@ -478,12 +478,18 @@ func _refresh_presets() -> void:
 	for c in _presets_box.get_children():
 		c.queue_free()
 	var sex := 1.0 if float(look.get("sex", 0.0)) >= 0.5 else 0.0
-	for pr: Dictionary in CharacterPeoples.presets(String(look.get("people", "")), sex):
+	var people_id := String(look.get("people", ""))
+	var world := CharacterPeoples.is_world(people_id)
+	var n := 0
+	for pr: Dictionary in CharacterPeoples.presets(people_id, sex):
+		n += 1
 		var b := Button.new()
-		b.text = String(pr.label)
+		b.text = String(pr.label) if not world else "Face %d" % n
 		var pid := String(pr.id)
 		b.pressed.connect(func() -> void:
-			look = _keep_outfit(CharacterPeoples.preset_look(pid))
+			var lk := CharacterPeoples.preset_look(pid)
+			lk["people"] = people_id          # (a world people's faces are real peoples' presets: still its look)
+			look = _keep_outfit(lk)
 			_refresh_sliders()
 			_update_preview())
 		_presets_box.add_child(b)
@@ -530,7 +536,7 @@ func _keep_outfit(lk: Dictionary) -> Dictionary:
 func _new_individual() -> void:
 	var pid := String(look.get("people", ""))
 	if pid.is_empty():
-		pid = "english"
+		pid = CharacterPeoples.default_people()
 	var mix := String(_mix_opt.get_item_metadata(_mix_opt.selected))
 	var sex := 1.0 if float(look.get("sex", 0.0)) >= 0.5 else 0.0
 	var lk := CharacterPeoples.random_look(pid, sex, _rng, mix, _mix_slider.value)

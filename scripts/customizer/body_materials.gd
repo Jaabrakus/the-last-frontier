@@ -74,6 +74,14 @@ static func body_info() -> Dictionary:
 	return load_json(BODY_JSON)
 
 
+## Eye colours by name: the body's (body.json "eyes") and the world's own (the world peoples' silver, ice, keel gold ...:
+## CharacterPeoples.world_eye_colors).
+static func eye_colors() -> Dictionary:
+	var out: Dictionary = (body_info().get("eyes", {}) as Dictionary).duplicate()
+	out.merge(CharacterPeoples.world_eye_colors())
+	return out
+
+
 static func hair_info(style: String) -> Dictionary:
 	return load_json(HAIR_DIR + style + ".json")
 
@@ -272,6 +280,8 @@ static func skin_material(look: Dictionary) -> ShaderMaterial:
 	m.set_shader_parameter("mark_paint", float(mk.get("paint", 0.0)))
 	# the creator's Tattoos row: the look's tattoos where their skin shows (Tattoos, tattoo.gdshaderinc)
 	Tattoos.apply(m, look)
+	# a world people's mark in the skin (the Keelfolk's keelstone flecks, the Etched's Form veins: people_trait.gdshaderinc)
+	set_trait(m, look)
 	set_face_warp(m)
 	set_head_detail(m)
 	var style := String((look.get("hair", {}) as Dictionary).get("style", "")) if look.get("hair") is Dictionary else ""
@@ -295,6 +305,22 @@ static func skin_material(look: Dictionary) -> ShaderMaterial:
 	m.set_shader_parameter("body_hair_color", hair_color(hp.eumelanin, hp.pheomelanin, float(hp.grey) * 0.6, 0.0) * 0.85)
 	m.set_shader_parameter("body_hair_mask", _texture(BODY_HAIR_MASK) if bh else null)
 	return m
+
+
+## A world people's mark in the skin (CharacterPeoples.trait_of; the look's `trait` its strength 0..1, the people's
+## default when the look has none): people_trait.gdshaderinc's trait_kind (1 keelstone flecks, 2 Form veins), amount,
+## colour and glow.
+const TRAIT_KINDS := {"flecks": 1, "veins": 2}
+
+
+static func set_trait(m: ShaderMaterial, look: Dictionary) -> void:
+	var tr := CharacterPeoples.trait_of(look)
+	var kind := int(TRAIT_KINDS.get(String(tr.get("kind", "")), 0))
+	var amount := clampf(float(look.get("trait", tr.get("default", 0.0))), 0.0, 1.0) if kind > 0 else 0.0
+	m.set_shader_parameter("trait_kind", kind if amount > 0.001 else 0)
+	m.set_shader_parameter("trait_amount", amount)
+	m.set_shader_parameter("trait_color", _color(tr.get("color", "#8fd6ff"), Color("#8fd6ff")))
+	m.set_shader_parameter("trait_glow", float(tr.get("glow", 1.0)))
 
 
 ## The v3 head's photographed skin detail (body.json face.detail_rect; skin.gdshader head_detail).
@@ -353,7 +379,7 @@ static func eye_material(look: Dictionary) -> ShaderMaterial:
 	var m := ShaderMaterial.new()
 	m.shader = EYE_SHADER
 	var iris = look.get("iris", "brown")
-	var eyes: Dictionary = body_info().get("eyes", {})
+	var eyes := eye_colors()
 	if iris is String and eyes.has(iris):
 		iris = eyes[iris]
 	m.set_shader_parameter("iris_color", _color(iris, Color("#4a2e1a")))

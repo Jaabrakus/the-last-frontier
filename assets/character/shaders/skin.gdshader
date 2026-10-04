@@ -106,6 +106,7 @@ varying float v_h;      // model-space height (the neck's tone and detail blend 
 
 #include "res://assets/character/shaders/skin_common.gdshaderinc"
 #include "res://assets/character/shaders/tattoo.gdshaderinc"
+#include "res://assets/character/shaders/people_trait.gdshaderinc"
 
 void vertex() {
 	uint code = uint(UV2.x + 0.5);
@@ -347,6 +348,8 @@ void fragment() {
 		hair_cover = max(hair_cover, m);
 	}
 	float sss = sss_strength;
+	// a world people's mark in the skin (people_trait.gdshaderinc: keelstone flecks, Form veins), not on the lips
+	vec3 trait_emit = trait_shade(UV, v_region, 1.0 - mucosa, albedo, rough);
 	// mucosa: less melanin, more blood, glossier; darker skin keeps more pigment in the lips
 	if (mucosa > 0.001) {
 		vec3 lip = tone_at(melanin * 0.82 + 0.02) * albedo_scale * blood(0.5 + 0.55 + 0.25 * haemoglobin, melanin * 0.8);
@@ -379,7 +382,7 @@ void fragment() {
 	// region it lit the neck's triangles and not the head's beside them, a zigzag light patch under the jaw, 2026-10-03)
 	float bounce_w = v_region <= 2u ? 1.0 - smoothstep(1.40, 1.45, v_h) : 0.0;
 	EMISSION = albedo * (neck_bounce * skin_bounce * bounce_w * (1.0 - smoothstep(-0.2, 0.6, v_ny)) * smoothstep(1.27, 1.33, v_h)
-			* smoothstep(-0.5, 0.0, v_nz));
+			* smoothstep(-0.5, 0.0, v_nz)) + trait_emit;
 	AO_LIGHT_AFFECT = 0.35;
 	// (less under hair: the light the strips let through reddened the hairline into a glowing band)
 	SSS_STRENGTH = debug_view == 0 ? sss * (v_region <= 1u ? head_sss : 1.0) * (1.0 - 0.75 * hair_cover) * (1.0 - 0.9 * tat_ink_here) : 0.0;

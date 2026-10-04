@@ -59,6 +59,7 @@ varying flat uint v_zone;
 varying float v_body_value;
 
 #include "res://assets/character/shaders/skin_common.gdshaderinc"
+#include "res://assets/character/shaders/people_trait.gdshaderinc"
 
 void vertex() {
 	uint code = uint(UV2.x + 0.5);
@@ -164,6 +165,8 @@ void fragment() {
 		// the scalp in the groove takes no sheen (it read as a pale bar down the parting)
 		hair_cover = top * parting;
 	}
+	// a world people's mark in the skin (people_trait.gdshaderinc: keelstone flecks, Form veins), not on the lips
+	vec3 trait_emit = trait_shade(UV, v_region, 1.0 - mucosa, albedo, rough);
 	// lips: the realistic mucosa colour, painted with the same value and a soft highlight
 	if (mucosa > 0.001) {
 		vec3 lip = tone_at(melanin * 0.82 + 0.02) * albedo_scale * blood(0.5 + 0.55 + 0.25 * haemoglobin, melanin * 0.8);
@@ -199,5 +202,6 @@ void fragment() {
 	SPECULAR = 0.28 * mix(0.3, 1.0, cav) * spec_occ * (0.75 + 0.5 * P.a) * (1.0 - hair_cover);
 	AO = mix(0.45, 1.0, cav);
 	AO_LIGHT_AFFECT = 0.3;
+	EMISSION = trait_emit;
 	SSS_STRENGTH = debug_view == 0 ? sss_strength : 0.0;
 }

@@ -40,7 +40,7 @@ const ROW_FOCUS := Color(0.22, 0.17, 0.1, 0.9)
 ## note fit the panel at 1280 x 720.
 const ICON := 36
 ## Group names as shown (peoples.json groups).
-const GROUP_LABELS := {"Eastern Woodlands": "Eastern\nWoodlands",
+const GROUP_LABELS := {"Eastern Woodlands": "Eastern\nWoodlands", "The Downbelow": "The\nDownbelow",
 		"Southeast Asia": "Southeast\nAsia", "Mixed ancestry": "Mixed\nancestry"}
 
 var app: PlayerAppearance
@@ -123,6 +123,13 @@ func _ready() -> void:
 	get_tree().root.disable_3d = true
 	if look.is_empty():
 		look = AppearanceStore.default_look()
+	# the game's own peoples (a test, CharacterPeoples.world_listed): a look of a people not listed now shows as the listed
+	# default people (its face and colours kept); a first launch starts as that people's first individual
+	if not CharacterPeoples.is_listed(String(look.get("people", ""))):
+		if first_launch:
+			look = CreatorOptions.with_people(look, CharacterPeoples.default_people())
+		else:
+			look["people"] = CharacterPeoples.default_people()
 	_build_ui()
 	_refresh_all()
 	_set_focus("face" if not first_launch else "people")
@@ -253,7 +260,7 @@ func _build_left() -> void:
 	var groups := VBoxContainer.new()
 	groups.add_theme_constant_override("separation", 2)
 	_people_panel.add_child(groups)
-	for g: String in CharacterPeoples.groups():
+	for g: String in CharacterPeoples.listed_groups():
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 4)
 		groups.add_child(row)
@@ -261,13 +268,13 @@ func _build_left() -> void:
 		gl.custom_minimum_size = Vector2(92, 0)
 		gl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		row.add_child(gl)
-		for p: Dictionary in CharacterPeoples.peoples(g):
+		for p: Dictionary in CharacterPeoples.listed_peoples(g):
 			var pid := String(p.id)
 			var b := Button.new()
 			b.custom_minimum_size = Vector2(ICON, ICON)
 			b.flat = true
 			b.focus_mode = Control.FOCUS_NONE
-			b.tooltip_text = "%s\n%s" % [p.label, String((CreatorOptions.data().get("emblems", {}) as Dictionary).get(pid, ""))]
+			b.tooltip_text = "%s\n%s" % [p.label, CreatorOptions.emblem_name(pid)]
 			var em := PeopleEmblem.new(pid)
 			em.set_anchors_preset(Control.PRESET_FULL_RECT)
 			b.add_child(em)
@@ -566,7 +573,7 @@ func _refresh_all() -> void:
 		(_emblems[id] as PeopleEmblem).selected = id == pid
 	var p := CharacterPeoples.people(pid)
 	_people_name.text = String(p.get("label", "Custom"))
-	var em := String((CreatorOptions.data().get("emblems", {}) as Dictionary).get(pid, ""))
+	var em := CreatorOptions.emblem_name(pid)
 	_people_note.text = String(p.get("note", "")) + ("\nEmblem: %s." % em if not em.is_empty() else "") \
 			+ ("\nArtistic licence: %s" % p.licence_note if p.get("licence_note") is String else "")
 	var bt := CreatorOptions.body_type(look)
@@ -716,7 +723,7 @@ func _step(row: String, d: int) -> void:
 			return
 		"people":
 			var ids := []
-			for p: Dictionary in CharacterPeoples.peoples():
+			for p: Dictionary in CharacterPeoples.listed_peoples():
 				ids.append(String(p.id))
 			var i := ids.find(String(look.get("people", "")))
 			_choose_people(String(ids[posmod(i + d, ids.size())]))
