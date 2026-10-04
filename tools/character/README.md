@@ -20,6 +20,15 @@ tools/character/build_character.sh --all
 Godot --headless --path . --import                              # after any build
 ```
 
+Without `ACTOR_B_BLEND` (the rig library) the build runs on the rig rebuilt from
+`rig/actor_b_skeleton.json` (`rig/make_rig_blend.py`; the record is read from the body glb by
+`rig/extract_skeleton.py`, bones in the rig's order from body.json `deform_bones`). Checked
+2026-10-03 against the shipped body: the same 291 bones, order and joints, inverse binds within
+1e-5, the body and face vertices within 1 µm with identical weights (the exporter split 2 more
+vertices). The body hair cards come out a different random draw of the same pattern (the strands
+share one random stream). The driver reference is kept from body.json, and `--previews` still
+needs the clip libraries.
+
 `tools/character/cache/body_v1.npz` is the body cache (vertices, triangles, weights,
 regions, shape deltas) that hair and garment builds read for weights, regions and the
 `sex` wrap transfer. Rebuild the body first after a lib change.

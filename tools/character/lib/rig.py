@@ -23,6 +23,11 @@ PROJECT = os.path.expanduser(os.environ.get("ANIMATION_SOURCE_ROOT", ""))
 LIBS = os.path.join(PROJECT, "blender_libraries")
 SOURCE_RIG_FILE = os.path.join(LIBS, "Actor_B_001.blend")
 BIND_LIB = os.path.join(LIBS, "Actor_B_021.blend")
+# The rig rebuilt from tools/character/rig/actor_b_skeleton.json (make_rig_blend.py: the same bones, order and bind
+# pose, null-add in the same file); build_character.sh sets it when ACTOR_B_BLEND is not given.
+RIG_BLEND = os.environ.get("ACTOR_B_RIG_BLEND", "")
+if RIG_BLEND and not PROJECT:
+    BIND_LIB = RIG_BLEND
 BIND_ACTION = "null-add"
 PROVENANCE_RIG = "Skeleton, bone names and bind pose: Actor_B rig."
 
@@ -165,6 +170,8 @@ def export_glb(rig, objs, path, texcoords=False, morph=False, vertex_color=True)
 
 
 def guard_source():
+    if RIG_BLEND and not PROJECT:
+        return
     if not PROJECT:
         raise SystemExit("Set ANIMATION_SOURCE_ROOT to the external animation source before rebuilding")
     cur = os.path.realpath(bpy.data.filepath) if bpy.data.filepath else ""

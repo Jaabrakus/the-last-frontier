@@ -12,7 +12,7 @@ import os
 import bpy
 from mathutils import Matrix, Quaternion, Vector
 
-from .rig import LIBS, clear_action, g2b, godot_xf, load_actions, set_action, xf12
+from .rig import FRONTIER, LIBS, PROJECT, clear_action, g2b, godot_xf, load_actions, set_action, xf12
 from .sdf import log, smoothstep
 
 # Legacy coat hem (the hunting frock of actor_b_body.glb): the skirt panel hems below.
@@ -267,6 +267,12 @@ DRIVER_REFERENCE = [
 def driver_reference(rig, base, G):
     """[{clip, frame, inputs, helpers}]: the bone globals the driver reads and the helper
     globals drive_helpers() makes of them, Godot space (xf12)."""
+    if not PROJECT:
+        # (the rig rebuilt from the skeleton record has no clip libraries: the reference the last build with them made)
+        import json
+        prev = os.path.join(FRONTIER, "assets", "character", "body", "body.json")
+        log("driver reference: no clip libraries, kept from %s" % prev)
+        return json.load(open(prev)).get("driver_reference", []) if os.path.exists(prev) else []
     libs = {}
     for act, lib, _ in DRIVER_REFERENCE:
         libs.setdefault(lib, []).append(act)

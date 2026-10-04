@@ -1,6 +1,7 @@
 # Two Fires: the main story, GTA-style
 
-DRAFT v5 (2026-10-02). It replaces v4's arc with the owner's new spine (2026-10-02): "you are
+DRAFT v6 (2026-10-03): section 0, the parents' prologue, comes first and overrides v5 where they
+differ. v5 (2026-10-02) replaced v4's arc with the owner's new spine (2026-10-02): "you are
 primitive, then the user finds a whole new world of wonder with sky galleons, then the main
 character gets to a world with pyramids, a bustling world." It starts from the design the judges
 rated highest (the "systems" draft: four loops, the Sway, the city of Vessary). It grafts the best
@@ -14,6 +15,89 @@ in `docs/maps.md`.
 Basis keys: **S** a source, **H** history still to check before it becomes in-game text, **D** our
 own design. Every invented name needs a collision check before it ships: not a real people, place
 or sacred word, and not a name from Disney or Nickelodeon.
+
+## 0. v6: the parents' prologue (owner, 2026-10-03)
+
+The owner set a new opening on 2026-10-03. It overrides v5 wherever they differ: the logline (6.2),
+the lead (9.1), Act 1 (10.1) and the start of Act 2 (10.2, missions 11-13). Sections 6-18 below are
+still v5's text until they are rewritten to match this.
+
+### 0.1 The arc, as the owner gave it
+
+1. **The creator makes the parents.** You play one of them. ("the char creation is important so we
+   are creating the parents, we play as one of the parents")
+2. **You build the bond by teaching the child to survive.**
+3. **The point of view changes at the mammoth.** Once the child has learned enough, the parent lets
+   the child make the kill, and from then on you are the child.
+4. **The mammoth dies, and the village and the neighbours gather.**
+5. **A raid party hits.** Everyone stops when the sky cracks. The galleons fight, and one crashes.
+6. **The keelstone pirates come out of the wreck.** They use the Sway to kill the raiders and the
+   villagers. The parents die abruptly, and the child is kidnapped.
+7. **The setting is like the Edge** (The Edge Chronicles, inspiration only). The world we live in
+   is **the Downbelow**.
+
+This settles the two ideas of 2026-10-03:
+
+- From the first idea it keeps "the fallen galleon is the bad guys". The revived-monsters ending is
+  not in this arc.
+- From the second it keeps "you are the child", but you start as the parent and become the child.
+
+### 0.2 How each beat plays on what is built (D, proposals)
+
+| Beat | How it plays | Built | New |
+|---|---|---|---|
+| Make the family | The creator makes parent A and parent B (each can be randomised), and you pick who you play. The child's face, skin, eyes and hair come from the two parents (`ChildLook.from_parents`). You choose the child's name and sex. The child is about ten. | `ChildLook`, `ChildProportion`, growth stages, `StoryWalker` child size | a Family step in the creator; the child as a story person |
+| Teaching | The built Prologue missions become lessons. You do each one, the child watches, then does it with you: fire, felling, the lean-to, tracking, the hunt. Each lesson is a flag (`tf.taught.<skill>`). Small choices fill a hidden **bond** count: share food, answer a question, carry them over the ford, a story at bedtime. | the Prologue missions, `Household`, the first-time tutorial | the child copying a task; the bond count |
+| ★ The mammoth | The parent fights the woolly mammoth: climbs it and buckles a leg. When it is down, the parent holds out the spear: "Your turn." **Control passes to the child**, and the child makes the kill. That is the POV change, and it lasts the rest of the game. | `StandInGiant`, `MammothTemper`, `MammothButchery`, the giants' music | the hand-over beat; switching the player body to the child |
+| The feast | The neighbours come to the clearing: butchering, fires, food. It is the warmest scene in the game, and the last one with the parents. | `MammothButchery`, the people effect, `story_home` | the feast gathering |
+| The raid | `RaidStage` hits the feast at night (troupes de la marine and Canadian militia only, as now). The child hides and runs, and never fights people. | `RaidStage`, `Captivity` | the raid at the feast |
+| The sky cracks | Everyone stops: muskets go down and the fighting halts. The two galleons fight over the valley, and one falls (`SkyBattle`, `SkyTear`, `WreckFall`). | all three | the raid freezing on the crack |
+| The pirates | They walk out of the wreck and use the Sway on everyone, raiders and villagers alike. It is the first magic the player sees, and it comes as horror, not wonder. | `NpcFighter`, the Sway's moves | Sway casters as enemies (11.7) |
+| The parents die | Abruptly: no last words and no slow motion. No gore. The parent you played falls where the child can see. | ragdolls | the deaths in the scene |
+| Kidnapped | The child is caught and carried aboard (`Captivity`). Why them (proposal): the child is **Sighted**. Ships run on the Sway (11.9), and the pirates take Sighted children to call wind into their sails. | `Captivity`, the lock ring | the reason, then Act 2 aboard |
+
+A proposal for the wreck: the child reaches the wreck first and finds a man pinned under a spar. By
+instinct the child lifts it, which is the first lock (mission 11's, already built). The man gets up,
+and his crew comes out behind him. That man is the pirates' leader, and he takes the child *because*
+he saw that gift. The child's kindness lets the killing out. This gives the leader the 2026-10-03
+role (evil, with his own goal, using you) and plants the betrayal on the first night.
+
+### 0.3 The Downbelow
+
+- **The name.** The Downbelow is what the sky-folk call the ground world: our 1757 frontier, under
+  the Drift. It fits the lore already written (Ossel's chained pyramids, land that drifts loose, the
+  wreck fields).
+- **A collision note.** "Downbelow" is the planet's nickname in C. J. Cherryh's novel *Downbelow
+  Station* (1981). It is a plain word, so the risk is low, but the owner decides.
+- **The mammoth.** The Downbelow keeps beasts the colonists know only as bones. The big bones found
+  at Big Bone Lick in 1739 (H: verify), which colonists called the "incognitum", are the history
+  hook. In this valley one still walks.
+- **The rule change.** This drops 10.1's "no mammoths in the story layers" for the hunt's one beast.
+
+### 0.4 What it changes in v5
+
+| v5 | v6 |
+|---|---|
+| 6.2: a nobody loses their land in a raid | **New logline (D):** "Autumn 1757. Past the last farm you raise a child and teach them everything you know. On the day they make their first great kill, the sky breaks, and the people who fall out of it take everything. You grow up among them." |
+| 9.1: you make one lead with a background | You make the parents and their background. The child is the lead from the mammoth on. |
+| Jost Rauch, the neighbour's boy | Proposal: he stays as the child's friend at the feast, and his fate is the old `tf.jost_*` choice. |
+| 7.5 rule 1: the wonder never causes a real event | The massacre happens at your own clearing past the last farm, which history never recorded. The register lists the family as "killed or taken in the raid": history blames the raid, and only the child knows. The Flatts' real totals stay as they are. |
+| 7.5 rule 5: Act 1's only wonder is the card and three hints | Add the mammoth. |
+| Act 2: the burned valley on foot with Rook | Captive aboard the pirate ship, then a time skip to a young adult. This needs player ageing (growth stages exist for NPCs). Act 2 gets redesigned once the owner answers 0.5. |
+| Rook: the mentor you rescue, who sells you | Proposal: Rook becomes the pirates' leader, the man under the spar. He raises the child as crew and is the father figure who used them. |
+
+### 0.5 Open, for the owner
+
+1. **The creator.** Do you make both parents, or make one and generate the other? (Proposed: both,
+   each with a randomise button.)
+2. **The deaths.** Does the child see who killed the parents? (Proposed: the child sees only chaos
+   and light. The captain says the raiders did it, and the child learns the truth years later. That
+   is the betrayal.)
+3. **The time skip.** How old is the child when you play them grown up? (Proposed: about 17.)
+4. **Rook.** Is he the pirates' leader?
+5. **The other galleon.** Who was it? (Proposed: a Lamp Chain ship from Vessary, hunting the
+   pirates. The grown child meets its crew later.)
+6. **The name.** Keep "the Downbelow"?
 
 ## 1. What exists today
 
