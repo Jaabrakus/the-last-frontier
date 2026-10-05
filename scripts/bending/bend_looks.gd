@@ -954,6 +954,8 @@ class Charge:
 
 	var sway: Node
 	var level := 0.0
+	## Its hum was started (the tests: headless audio may never report playing).
+	var started := false
 	var _sparks: GPUParticles3D
 	var _hum: AudioStreamPlayer3D
 	var _glow: MeshInstance3D
@@ -966,6 +968,7 @@ class Charge:
 		if _hum != null:
 			_hum.volume_db = -14.0
 			_hum.play()
+			started = true
 		if not BendLooks.live():
 			return
 		_sparks = BendLooks.emitter(self, "lightning", Vector3.ONE * 0.18, 18, 0.25, 0.6, 0.04)
@@ -1001,7 +1004,7 @@ class Charge:
 
 	## Whether its hum plays (the tests).
 	func humming() -> bool:
-		return _hum != null and _hum.playing
+		return _hum != null and started and is_inside_tree()
 
 	func end() -> void:
 		if is_queued_for_deletion():

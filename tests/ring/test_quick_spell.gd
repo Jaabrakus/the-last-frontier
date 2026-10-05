@@ -4,8 +4,9 @@ extends SceneTree
 ## this action can be right after"), in Tidebreak's ring (scenes/ring.tscn, MatchSetup.incoming, element earth), the foe held:
 ##   defaults   each element's quick spell before any is set (earth rock_jab/pebbles, water water_jet/splash, fire
 ##              fire_jab/jab, air air_palm/palm); the strip's LMB chip says it, the help line says the set key
-##   bind       Q (the action bend_quick_bind) with Rock Jab readied at kick-up: the quick spell is rock_jab/kick_up, said on
-##              the screen; the wheel stepping the key on to stomp leaves it (frozen)
+##   bind       Q (the action bend_quick_bind) with Rock Jab readied at kick-up (key 1 tapped twice: round 2's keys have
+##              no memory): the quick spell is rock_jab/kick_up, said on the screen; the key's variation set on to stomp
+##              leaves it (frozen)
 ##   cast       LMB held ("fire"): a lock of the quick spell (lock_src quick, the same lock time as RMB's, the circle and the
 ##              pose), let go: cast at kick-up; the readied key and its variation (stomp) never changed, the strip's pip too
 ##   after      an RMB lock with LMB pressed meanwhile: the RMB lock goes on as it was (stomp); the moment it is cast, the held
@@ -190,11 +191,10 @@ func _defaults() -> void:
 # ---------------------------------------------------------------- Q binds the readied move as it is
 func _bind() -> void:
 	var bar := p.hotbar
-	bar.take(0)
+	bar.select(0)
 	await _ticks(2)
-	if c.readied_spell != "rock_jab":
-		bar.select(0)                            # (key 1 again: its other skill)
-		await _ticks(2)
+	bar.select(0)                                # (key 1 tapped twice: its other skill)
+	await _ticks(2)
 	c.set_mode("rock_jab", "kick_up")
 	await _ticks(2)
 	_expect(c.readied_spell == "rock_jab" and c.base_mode_of("rock_jab") == "kick_up", "Rock Jab readied at kick-up")
@@ -203,11 +203,11 @@ func _bind() -> void:
 			"Q: the quick spell is Rock Jab (kick-up), kept (%s, %s)" % [c.quick_spell(), MatchSetup.quick_of("earth")])
 	var note := p.interactor._notice.text if p.interactor != null else ""
 	_expect(note == "Left click: Rock Jab (kick-up)", "said on the screen: \"%s\"" % note)
-	await _action(&"weapon_next")
+	c.set_mode("rock_jab", "stomp")
 	await _ticks(3)
 	_expect(c.base_mode_of("rock_jab") == "stomp" and c.quick_spell() == _q("rock_jab", "kick_up")
 			and hud.bend_strip.quick_line() == "Rock Jab (kick-up)",
-			"the wheel steps the key on to stomp; the quick spell stays kick-up (%s; %s)" % [c.base_mode_of("rock_jab"),
+			"the key's variation set on to stomp; the quick spell stays kick-up (%s; %s)" % [c.base_mode_of("rock_jab"),
 			hud.bend_strip.quick_line()])
 
 

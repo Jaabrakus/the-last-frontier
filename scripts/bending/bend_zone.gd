@@ -747,12 +747,12 @@ static func return_stone(c: Variant, s: Node3D) -> FormEffects.Throw:
 	return th
 
 
-## A held stone's throw-back factor now: perfect_mult off a clean catch, times the rally (1 + its earlier returns' steps,
-## at most rally_max).
+## A held stone's throw-back factor now: perfect_mult off a clean catch, times the rally (1 + its earlier returns' steps),
+## the whole at most rally_max (spec §2.6: "up to x1.6").
 static func return_mult(s: Node) -> float:
 	var clean := bool(s.get_meta(&"bend_clean", false))
-	var rally := minf(1.0 + float(s.get_meta(&"bend_rally", 0.0)), Bending.rule("rally_max", 1.6))
-	return rally * (Bending.rule("perfect_mult", 1.2) if clean else 1.0)
+	var rally := 1.0 + float(s.get_meta(&"bend_rally", 0.0))
+	return minf(rally * (Bending.rule("perfect_mult", 1.2) if clean else 1.0), Bending.rule("rally_max", 1.6))
 
 
 ## What a guard of `body`'s does to a cone of `cone_kind` reaching him (BendEffects.cone): the share of its damage and knock
@@ -872,7 +872,7 @@ func _stones() -> void:
 			continue
 		if _body_of(lift.caster) == owner_node or BendCaster.same_team(_body_of(lift.caster), owner_node):
 			continue
-		if lift.stone.global_position.distance_to(me) > radius or lift.has_meta(&"bend_guarded_%d" % mine):
+		if lift.stone.global_position.distance_to(me) > radius or lift.has_meta("bend_guarded_%d" % mine):
 			continue
 		if r2 and kind in ["air_shield", "wind_guard"]:
 			# (the Wind Guard on a flying stone: on the beat cushioned and dropped at his feet, a loose stone; late, half)
@@ -920,7 +920,7 @@ func _stones() -> void:
 ## A flying stone met late by a guard that halves (the Wind Guard): late_mult of its damage and its knock go on (its hurl's
 ## numbers, this lift's own copy); this guard is done with it.
 func _late_lift(lift: GustLift) -> void:
-	lift.set_meta(&"bend_guarded_%d" % get_instance_id(), true)
+	lift.set_meta("bend_guarded_%d" % get_instance_id(), true)
 	var d := lift.d.duplicate(true)
 	var hurl: Dictionary = d.get("hurl", {})
 	var hd: Dictionary = (hurl.get(lift.kind, hurl.get("stone", {})) as Dictionary).duplicate()

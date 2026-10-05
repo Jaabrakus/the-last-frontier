@@ -22,8 +22,9 @@ const ELEMENTS := ["earth", "water", "fire", "air"]
 const NODE_NAME := &"Bending"
 ## Places that give a waterbender water (Node3D; the arena's pools).
 const POOLS := &"bend_pools"
-## The left button's jab by element ([move, mode]) when moves.json has no "jabs".
-const JABS := {"earth": ["rock_jab", "pebbles"], "water": ["water_jet", "splash"], "fire": ["fire_jab", "jab"],
+## The left button's jab by element ([move, mode]) when moves.json has no "jabs". Fire's is Embers (the owner's answer,
+## 2026-10-05: "keep them all"; a spray of small bolts from the fist in place of the 3 m fist flame).
+const JABS := {"earth": ["rock_jab", "pebbles"], "water": ["water_jet", "splash"], "fire": ["fire_jab", "embers"],
 		"air": ["air_palm", "palm"]}
 ## E's guard by element ([move, mode]) when moves.json has no "guards".
 const GUARDS := {"earth": ["stone_catch", "catch"], "water": ["water_redirect", "redirect"], "fire": ["fire_parry", "parry"],
@@ -44,7 +45,7 @@ const PASSIVES := {
 const RULES := {"perfect_s": 0.3, "late_mult": 0.5, "whiff_lock_s": 0.5, "whiff_s": 1.5, "return_lock_s": 0.35,
 		"perfect_return_lock_s": 0.1, "perfect_mult": 1.2, "rally_step": 0.1, "rally_clean_step": 0.2, "rally_max": 1.6,
 		"grow_after_s": 0.45, "sputter_s": 0.7, "click_s": 0.2, "double_tap_s": 0.3, "switch_hold_s": 0.2,
-		"hit_setback_min_s": 0.25, "hold_drop_s": 0.0, "quick_reset_s": 0.5}
+		"hit_setback_min_s": 0.25, "hold_drop_s": 0.0, "quick_reset_s": 0.5, "jab_max_m": 10.0}
 ## The loose stones' numbers (moves.json "stones" over these).
 const STONES := {"loose_max": 3, "shove_loose_m": 6.0}
 

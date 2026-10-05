@@ -82,8 +82,8 @@ const TABLE := {
 	&"guard_fire_late": {"vol": -1.0, "unit": 6.0, "maxd": 80.0, "bus": "World", "rp": 1.06, "rv": 1.5, "cap": 2},
 	&"guard_air_clean": {"vol": 0.0, "unit": 7.0, "maxd": 90.0, "bus": "World", "rp": 1.04, "rv": 1.0, "cap": 2},
 	&"guard_air_late": {"vol": -1.0, "unit": 6.0, "maxd": 80.0, "bus": "World", "rp": 1.06, "rv": 1.5, "cap": 2},
-	&"lock_grow": {"vol": -2.0, "unit": 4.0, "maxd": 40.0, "bus": "World", "rp": 1.03, "rv": 1.0, "cap": 2},
-	&"lock_sputter": {"vol": -4.0, "unit": 3.0, "maxd": 30.0, "bus": "World", "rp": 1.06, "rv": 1.5, "cap": 2},
+	&"lock_grow": {"vol": -2.0, "unit": 4.0, "maxd": 50.0, "bus": "World", "rp": 1.03, "rv": 1.0, "cap": 2},
+	&"lock_sputter": {"vol": -4.0, "unit": 4.0, "maxd": 50.0, "bus": "World", "rp": 1.06, "rv": 1.5, "cap": 2},
 	&"carried_whistle": {"vol": -3.0, "unit": 5.0, "maxd": 50.0, "bus": "World", "rp": 1.05, "rv": 1.5, "cap": 2},
 }
 

@@ -12,7 +12,8 @@ extends SceneTree
 ##               hurls it at the player within 2 s (it comes 3 m nearer him or strikes him)
 ##   mend        his own wall worn by a shot: packed again (no wood: a bot pays none); a wall the player raised, worn: not his,
 ##               left worn
-##   shove       Earth Shove push (a bend spec, BendEffects) of a stone kicked up before him: a Throw of his now (not a
+##   shove       Earth Shove push (a bend spec, BendEffects) with no stone on his line (round 2's order, spec §2.6: the held
+##               stone, else the crosshair's, else one kicked up and pushed at the kick-up's strike): a Throw of his (not a
 ##               stone bolt), that strikes or nears the player
 ##   the player  his earth wall and stone form through BendCast too (PlayerBendCaster), BendEffects.last his
 ##   water       a wall raised across the edge of a deck over water (a tank's floor 3.4 m down, a water node over it, as the
@@ -345,12 +346,14 @@ func _mend() -> void:
 # ---------------------------------------------------------------- shove
 func _shove() -> void:
 	await _stage()
-	var st := BendEffects.kick_up(bc, Vector3.LEFT, {})
-	await _secs(0.4)
 	var ths0 := get_nodes_in_group(FormEffects.Throw.GROUP)
 	var bolts0 := get_nodes_in_group(BendBolt.GROUP)
-	var d0 := st.global_position.distance_to(p.global_position) if st != null else 0.0
 	var ok := BendCast.cast(bc, "earth_shove", "push")
+	var rec := BendEffects.last_of(bc)
+	var st: FormStone = rec.get("stone") as FormStone
+	_expect(String(rec.get("how", "")) == "kick_up" and st != null, "Earth Shove with no stone on his line kicks one up (%s)" % rec.get("how"))
+	var d0 := st.global_position.distance_to(p.global_position) if st != null else 0.0
+	await _secs(0.45)                         # (pushed at the kick-up's strike: kick_s)
 	var ths := _new_in(FormEffects.Throw.GROUP, ths0)
 	var th: FormEffects.Throw = ths[0] if ths.size() == 1 else null
 	_expect(ok and th != null and th.caster == bc and th.stone == st and _new_in(BendBolt.GROUP, bolts0).is_empty(),

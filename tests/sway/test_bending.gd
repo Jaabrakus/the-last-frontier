@@ -1,12 +1,13 @@
 extends SceneTree
 ## Bending (docs/bending_design.md; BendEffects, BendBolt, BendZone, Bending; the user, 2026-10-04) on the real level, in the
 ## duel against the earthbender held still before the player:
-##   keys       each element's bar (Bending.bar: the first skill of 1-4, Mend on 5); the readied key again switches to its
-##              other skill; the wheel steps the skill's variations (SwayCaster.step_mode)
+##   keys       each element's bar (Bending.bar: the first skill of 1-4, Mend on 5); round 2's keys (no memory): a double
+##              tap readies the key's other skill, a tap later its first again; the wheel turns the key to its other move
 ##   every move every element's every skill's every variation cast (FormEffects.apply, as a release does): it does what its
 ##              spec says (a bolt flies, a cone or ring reaches him, a zone stands, the caster moves, ...) and nothing errs
 ##   meeting    water + fire bolts: steam, both gone; a stone goes on through fire; the water jet wears an earth wall more than
-##              fire does; fire melts an ice wall; a bubble stops fire and lets stone through; an air shield sends fire back;
+##              fire does; fire melts an ice wall; a bubble stops fire and lets stone through; the Wind Guard (round 2's air shield with an element)
+##              lets fire through and bounces air back on the beat;
 ##              a catch takes the bender's spike out of the air
 ##   only=<element> (earth, water, fire, air): every move of that element only (the keys and the meetings as ever); the count
 ##   cast and the time it took printed
@@ -135,17 +136,19 @@ func _keys() -> void:
 	_expect(c.readied_spell == "fire_blast", "key 1: Fire Blast readied (%s)" % c.readied_spell)
 	bar.select(0)
 	await physics_frame
-	_expect(c.readied_spell == "fire_jab" and String(bar.entry(0).id) == "fire_jab", "key 1 again: its other skill, Fire Jab (%s)" % c.readied_spell)
 	bar.select(0)
 	await physics_frame
-	_expect(c.readied_spell == "fire_blast", "and again: back to Fire Blast")
-	var m0 := c.mode_of("fire_blast")
+	_expect(c.readied_spell == "fire_jab" and String(bar.entry(0).id) == "fire_jab", "key 1 tapped twice: its other skill, Fire Jab (%s)" % c.readied_spell)
+	await _secs(0.4)
+	bar.select(0)
+	await physics_frame
+	_expect(c.readied_spell == "fire_blast", "a tap later: its first again, Fire Blast (no memory)")
 	var wheel := InputEventMouseButton.new()
 	wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
 	wheel.pressed = true
-	var used := bar.handle_input(wheel) if InputMap.has_action(&"weapon_next") and wheel.is_action_pressed(&"weapon_next") else bar._step_mode(1)
-	_expect(used and c.mode_of("fire_blast") != m0 and c.readied_spell == "fire_blast",
-			"the wheel: the next variation (%s to %s), the same skill" % [m0, c.mode_of("fire_blast")])
+	var used := bar.handle_input(wheel) if InputMap.has_action(&"weapon_next") and wheel.is_action_pressed(&"weapon_next") else bar.step_other()
+	await physics_frame
+	_expect(used and c.readied_spell == "fire_jab", "the wheel: the key's other move (%s)" % c.readied_spell)
 
 
 # ---------------------------------------------------------------- every move
@@ -331,9 +334,11 @@ func _meetings() -> void:
 	await physics_frame
 	_stage(20.0)
 	BendZone.make(p, "air_shield", p.global_position, {"radius_m": 2.2, "life_s": 3.0})
-	var back := BendBolt.launch(n, p.global_position + Vector3(6, 1.2, 0), Vector3.LEFT, {"kind": "fire", "mps": 20.0, "radius_m": 0.2, "range_m": 40.0})
+	var fire_by := BendBolt.launch(n, p.global_position + Vector3(6, 1.2, 1.5), Vector3.LEFT, {"kind": "fire", "mps": 20.0, "radius_m": 0.2, "range_m": 40.0})
+	var back := BendBolt.launch(n, p.global_position + Vector3(6, 1.2, 0), Vector3.LEFT, {"kind": "air", "mps": 20.0, "radius_m": 0.2, "range_m": 40.0})
 	await _secs(0.4)
-	_expect(is_instance_valid(back) and back.caster == p and back.velocity.x > 0.0, "an air shield sends fire back at its sender")
+	_expect(is_instance_valid(back) and back.caster == p and back.velocity.x > 0.0, "the Wind Guard bounces air back on the beat")
+	_expect(not is_instance_valid(fire_by) or fire_by.caster == n, "and lets fire through")
 	_clear()
 	await physics_frame
 	# a catch takes the bender's spike out of the air

@@ -156,9 +156,13 @@ static func rooted_mult(n: Node) -> float:
 
 
 ## How far a lock of the struck `n` is pushed back by its last blow (spec §2.3: what the blow cost its caster, at least
-## hit_setback_min_s).
+## hit_setback_min_s). Read once: the blow's cost is taken off `n` (a later blow that is not a bend's, a melee hit, costs
+## the least).
 static func setback_s(n: Node) -> float:
-	var cost := float(n.get_meta(HIT_LOCK_META, -1.0)) if n != null and is_instance_valid(n) else -1.0
+	var cost := -1.0
+	if n != null and is_instance_valid(n) and n.has_meta(HIT_LOCK_META):
+		cost = float(n.get_meta(HIT_LOCK_META))
+		n.remove_meta(HIT_LOCK_META)
 	return maxf(cost, Bending.rule("hit_setback_min_s", 0.25))
 
 

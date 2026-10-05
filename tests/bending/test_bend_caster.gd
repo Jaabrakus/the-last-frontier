@@ -222,7 +222,8 @@ func _bot_cast(id: String, mode: String, spec: Dictionary) -> String:
 	var rec := BendEffects.last_of(bc)
 	if String(rec.get("do", "")) != dn:
 		return "not cast (%s)" % rec.get("do", "-")
-	var shoved := rec.get("target") != null                  # (now: a shoved stone is gone after, a bolt)
+	# (now: a shoved stone is gone after, a bolt; round 2's empty case kicks one up and pushes it: its stone)
+	var shoved := rec.get("target") != null or rec.get("stone") != null
 	var whys: Array[String] = []
 	for b in get_nodes_in_group(BendBolt.GROUP):
 		if (b as BendBolt).caster == n:

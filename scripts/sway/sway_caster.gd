@@ -1232,8 +1232,8 @@ func _track_guard() -> void:
 
 ## Q held (with an element): past quick_reset_s the left button is the jab again (reset_quick), once a hold.
 func _track_q(dt: float) -> void:
-	var down := elem() and player.controls != null and player.controls.from_input and InputMap.has_action(QUICK_BIND) \
-			and Input.is_action_pressed(QUICK_BIND)
+	var down := elem() and player.controls != null and InputMap.has_action(QUICK_BIND) \
+			and player.controls.pressed(QUICK_BIND)
 	if not down:
 		_q_held_t = -1.0
 		return
@@ -1910,7 +1910,7 @@ func step_other() -> bool:
 	_switch_at = BendStatus.now()
 	_switch_hold_until = _switch_at + Bending.rule("switch_hold_s", 0.2)
 	if raised != null and is_instance_valid(raised):
-		FormEffects.reshape_raised(raised, String(nxt.mode))
+		raised = FormEffects.reshape_raised(raised, String(nxt.mode))
 	return true
 
 
@@ -2121,6 +2121,7 @@ func _drop_raised() -> void:
 	if raised != null and is_instance_valid(raised):
 		FormEffects.drop_raised(raised)
 	raised = null
+	FormEffects.drop_raised_of(player)        # (and any other this caster's body still holds up)
 
 
 ## Lightning's charge on the hands (BendLooks.Charge) while its lock runs: louder and brighter as it fills, fullest at the
@@ -2507,6 +2508,7 @@ func _end_lock() -> void:
 ## what the blow cost (BendStatus.setback_s), never wiped; a dash's or a guard's lock is not touched; lightning's charge
 ## breaks; a hold (Gust's stone) ends as ever.
 func _on_hurt() -> void:
+	var back := BendStatus.setback_s(player)      # (read once, whatever the lock: the blow's cost is not left for a later one)
 	if not elem() or state == State.HOLDING:
 		_end_on("hit")
 		return
@@ -2518,7 +2520,7 @@ func _on_hurt() -> void:
 		return
 	if lock_src == SRC_GUARD or String(sp.get("do", "")) == "dash" or Bending.is_guard(move):
 		return
-	hit_setback(BendStatus.setback_s(player))
+	hit_setback(back)
 
 
 ## The running lock pushed back by `back` s of its time (a hit: _on_hurt; the tests). Back to nothing: the lock runs on from

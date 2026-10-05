@@ -32,6 +32,23 @@ extends RefCounted
 ## last: what the local player's last cast did (the tests, the HUD); last_of(c): any caster's (by its body); record(c, d):
 ## BendCast's old modes (the earth wall, Stone Form's spike and boulder, the pillar, Gust's, Mend) written there as well.
 ## BendCast.cast is the one entry for any caster (a bot's, a test's, the player's); FormEffects.apply hands the player's here.
+## ROUND 2 (skills_r2 spec §2-§3, §8; each new key read with its safe default):
+##   floor_wave  the Kick: a BendBolt along the deck from the feet, along the caster's facing (the crosshair's yaw, never its
+##               pitch): width_m, height_m, miss_above_m, mps, range_m (BendBolt's floor wave)
+##   throw       shape "crescent": the High Kick (BendThrow, point first, its own body)
+##   wind_wave   Gust and Pull: a visible wave of wind width_m wide along the aim (no aim help), `pull` toward the caster
+##   wind_wall   a standing wall of wind (BendZone "wind_wall") 2-6 m where the crosshair is, one at a time
+##   spout       the Geyser: low at once, its throw at rise_s; over a grate or the caster's own puddle source_mult bigger
+##   column      rise_s (it starts low; the throw then), sink_s (it sinks after, never a wall)
+##   lightning   flash_s: the flash and crack on the hand at the release, the strike that long after along that line
+##   dash        dir "held" (none: back), by_pitch (Jets), under_s (Burrow), glide (Leap); an air dash's end charges
+##               Carried wind (BendMotion)
+##   shove       the held stone, else the crosshair's loose stone within shove_loose_m or a wall's chunk, else kick-and-push
+##   cone        a guard's share (BendZone.cone_mult); smoke_s (Breath) leaves smoke where it burned
+##   zones       `place` (2-6 m at the crosshair, facing the caster), one_at_a_time (fire and wind walls)
+##   any spec    grow (merged when the lock grew: BendCaster.grown), carry (Carried wind x knock_mult), weight (stone vs
+##               stone), steer (water's Flowing), `water` spent only when Bending.spends(); root_s and slow_s never land on
+##               one who casts as an element (BendStatus); the move's lock time on all it sends (`_lock_s`: a hit's cost)
 
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
 
@@ -77,7 +94,8 @@ static func _body(c: Variant) -> CharacterBody3D:
 ## lock's target and point, kept for the old callers; the aim is the caster's own at the release).
 ## Round 2 (see the header): the spec's grow merged when the caster's lock grew (BendCaster.grown); Carried wind on a carry
 ## spec; the water meter spent only when Bending.spends(); E's catch with a stone held throws it back (BendZone.return_stone);
-## its lock time written on what it sends (`_lock_s`: what a hit with it costs).
+## its lock time written on what it sends (`_lock_s`: what a hit with it costs); the element's jab (Bending.jab) reaches
+## jab_max_m at most.
 static func apply(c: Variant, m: String, mode: String, spec: Dictionary, _t: Node3D = null, _at := Vector3.INF) -> void:
 	var bc := BendCaster.wrap(c)
 	if bc == null or not bc.valid():
@@ -88,6 +106,10 @@ static func apply(c: Variant, m: String, mode: String, spec: Dictionary, _t: Nod
 	if grew:
 		spec.merge(spec.grow as Dictionary, true)
 	spec["_lock_s"] = lock_of(m, mode)
+	var jb := Bending.jab(BendPoses.element_of(p))
+	if String(jb.get("id", "")) == m and String(jb.get("mode", "")) == mode and spec.has("range_m"):
+		# (the element's jab: the close poke, jab_max_m at most whatever its spec says; spec §2.1)
+		spec["range_m"] = minf(float(spec.range_m), Bending.rule("jab_max_m", 10.0))
 	var carried := false
 	if bool(spec.get("carry", false)) and BendStatus.until(p, &"bend_carry_until") > 0.0:
 		# (Carried wind: a hit straight out of a dash knocks harder; spent on this cast)

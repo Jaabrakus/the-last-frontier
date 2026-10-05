@@ -106,12 +106,13 @@ func _can_open() -> bool:
 			and not (player.traversal != null and player.traversal.showing) and not _quick_key()
 
 
-## With an element (the duel, the ring) Q is the quick spell's key (SwayCaster.QUICK_BIND: a tap binds, held quick_reset_s the
-## jab comes back), never the wheel's, whatever either is bound to (round 2: the wheel would open on the hold that resets
-## the left button); the wheel is the open world's.
+## With an element (the duel, the ring) the quick spell's key (SwayCaster.QUICK_BIND: a tap binds, held quick_reset_s the
+## jab comes back; round 2) never opens the wheel, held as long as it is; with that key rebound elsewhere Q is the wheel's
+## again.
 func _quick_key() -> bool:
 	var c := SwayCaster.of(player)
-	return c != null and c.quick_element() != ""
+	return c != null and c.quick_element() != "" and InputMap.has_action(SwayCaster.QUICK_BIND) \
+			and Input.is_action_pressed(SwayCaster.QUICK_BIND)
 
 
 func _input(event: InputEvent) -> void:

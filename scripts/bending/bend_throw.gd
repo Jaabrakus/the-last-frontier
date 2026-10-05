@@ -16,8 +16,9 @@ extends RefCounted
 ## THE TIMING: it launches at once. The player's release already waits for his pose's strike (SwayCaster defers every
 ## STRIKE_DOS spec, "throw" among them, until SwayPose says struck: the one deferral); a bot's NpcBending times its clip's
 ## strike to its release (NpcBody.play_cast). Nothing here waits again (no double delay).
-## Keys of the spec (moves.json, a mode's bend): do "throw", kind, shape (spear, disc, ball), flight, mps, gravity, damage,
-## knock_mps, up_mps, radius_m, range_m, count, every_s, spread_deg, lift_deg, m_per_turn, tilt_deg, low, long.
+## Keys of the spec (moves.json, a mode's bend): do "throw", kind, shape (spear, disc, ball, crescent: round 2's High Kick,
+## width_m across, its body BendLooks' crescent), flight, mps, gravity, damage, knock_mps, up_mps, radius_m, range_m, count,
+## every_s, spread_deg, lift_deg, m_per_turn, tilt_deg, low, long.
 
 ## A spinning throw turns once per this many metres of its flight by default (m).
 const M_PER_TURN := 3.2
@@ -56,9 +57,15 @@ static func one(bc: BendCaster, a: Dictionary, spec: Dictionary, i := 0, n := 1)
 	var point: Vector3 = a.point
 	var low := bool(spec.get("low", false))
 	var dir: Vector3
+	var lob := String(spec.get("shape", "")) == "crescent" or spec.has("apex_m")
 	if low:
 		from = Vector3(from.x, p.global_position.y + BendBolt.LOW_M, from.z)
 		dir = Vector3((a.flat as Vector3).x, -0.02, (a.flat as Vector3).z).normalized()
+	elif lob and g > 0.0 and point.is_finite():
+		# (the High Kick: a lob over walls onto the aim; its speed the arc's, mps at most)
+		var v := lob_velocity(from, point, float(spec.get("apex_m", 1.4)), g, mps * 1.5)
+		mps = v.length()
+		dir = v.normalized()
 	else:
 		dir = aim_dir(from, bc.chest(), point, mps, g)
 	var flight := String(spec.get("flight", "point_first"))
@@ -76,6 +83,9 @@ static func one(bc: BendCaster, a: Dictionary, spec: Dictionary, i := 0, n := 1)
 			dir = dir.rotated(side2.normalized(), lift)
 	var s := spec.duplicate()
 	s["flight"] = flight
+	s["mps"] = mps
+	if String(spec.get("shape", "")) == "crescent" and not spec.has("radius_m"):
+		s["radius_m"] = float(spec.get("width_m", 1.6)) * 0.5      # (the High Kick's crescent: half its width round)
 	match flight:
 		"spinning":
 			s["spin_rate"] = spin_for(from, point, mps, float(spec.get("m_per_turn", M_PER_TURN)))
@@ -100,6 +110,27 @@ static func aim_dir(from: Vector3, chest: Vector3, point: Vector3, mps: float, g
 		return d
 	var dc := Weapon.ballistic_dir(chest, point, mps, g, 0.0)
 	return dc.slerp(d, t).normalized()
+
+
+## A lob from `from` that lands on `to` under gravity `g` with its top `apex_m` over the higher of the two (round 2's High
+## Kick: "over walls and into jumpers"; spec apex_m): the launch velocity (its speed capped at `cap` by lowering the top).
+static func lob_velocity(from: Vector3, to: Vector3, apex_m: float, g: float, cap: float) -> Vector3:
+	var flat := Vector3(to.x - from.x, 0.0, to.z - from.z)
+	var dist := flat.length()
+	if dist < 0.5:
+		return (to - from).normalized() * cap
+	var top := maxf(from.y, to.y) + maxf(apex_m, 0.1)
+	var v := Vector3.ZERO
+	for i in 6:
+		var vy := sqrt(2.0 * g * (top - from.y))
+		var t_up := vy / g
+		var t_down := sqrt(2.0 * maxf(top - to.y, 0.0) / g)
+		var t := t_up + t_down
+		v = flat / dist * (dist / t) + Vector3.UP * vy
+		if v.length() <= cap or top <= maxf(from.y, to.y) + 0.15:
+			break
+		top = lerpf(maxf(from.y, to.y) + 0.1, top, 0.7)
+	return v
 
 
 ## A spinning throw's turn (rad/s): the turn its speed gives (a whole turn per `m_per_turn` m), rounded to whole turns over
