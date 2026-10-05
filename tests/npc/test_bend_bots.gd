@@ -320,6 +320,14 @@ func _water(f: NpcFighter) -> void:
 ## first cut: its catch, deflect; the rates are printed, at least one answer begun is asked).
 func _answers(f: NpcFighter) -> void:
 	var b := f.brain.bending
+	# (the slab cleared of what the fight raised: a wall left standing between them hides him, and a hidden foe's stones
+	# are not answered; whether one stands there is down to the fight's rolls)
+	var walls := get_nodes_in_group(FormRaised.GROUP).size()
+	for w in get_nodes_in_group(FormRaised.GROUP):
+		w.queue_free()
+	await physics_frame
+	print("  earth answers: %d raised cleared first; hidden %s, casting '%s', held %s, busy %s, target %s" % [walls,
+			NpcBendCaster.hidden(f, p), b.casting, f.held, f.busy(), f.brain.target])
 	var r0 := int(b.reactions_by.get("stone", 0))
 	var a0 := b.answered
 	for i in THROWS:
