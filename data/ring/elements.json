@@ -1,0 +1,55 @@
+{
+  "format": "ring_elements",
+  "version": 1,
+  "summary": "Every word a player sees about the elements and the ring sport (MatchSetup.info, label, competitor, style, color; the main menu's Tidebreak panel, the HUD and the ring's screens read them here, so no screen hard-codes element text). The sport is Tidebreak (the owner, 2026-10-04). Each element has its on-screen name, the name its competitors go by (Stone, Tide, Ember, Gale: the arts of data/sway/moves.json) and a one-line style taken from the spell design (docs). No word from any show or its sport is used here or on screen (tests/ring/test_player_words.gd).",
+  "sport": {
+    "name": "Tidebreak",
+    "menu_line": "the ring sport: your element against another",
+    "line": "Two sides on a deck over the water. Knock the other side back through its three zones and off the open end into the water to take the round."
+  },
+  "elements": {
+    "earth": {
+      "label": "Earth",
+      "competitor": "Stone",
+      "art": "earth",
+      "color": [0.78, 0.64, 0.44],
+      "style": "slow and heavy: cover, knockback, your own stones thrown back"
+    },
+    "water": {
+      "label": "Water",
+      "competitor": "Tide",
+      "art": "tide",
+      "color": [0.35, 0.65, 1.0],
+      "style": "control and staying alive: water drawn from the grates"
+    },
+    "fire": {
+      "label": "Fire",
+      "competitor": "Ember",
+      "art": "ember",
+      "color": [1.0, 0.5, 0.22],
+      "style": "pure offence: the fastest damage, the weakest defence"
+    },
+    "air": {
+      "label": "Air",
+      "competitor": "Gale",
+      "art": "gale",
+      "color": [0.86, 0.95, 1.0],
+      "style": "movement and pushing: the most knockback, deflection, little damage"
+    }
+  },
+  "any": {
+    "label": "Any",
+    "competitor": "Any",
+    "art": "",
+    "color": [0.95, 0.77, 0.4],
+    "style": "an element drawn by lot when the match begins"
+  },
+  "difficulties": {
+    "easy": "slow to lock, wide of the mark, late to answer your moves",
+    "normal": "a fair match: steady locks, honest aim",
+    "hard": "quick locks, close aim, and your moves answered"
+  },
+  "formats": {
+    "1v1": {"label": "1 v 1", "line": "3 v 3 teams: coming"}
+  }
+}

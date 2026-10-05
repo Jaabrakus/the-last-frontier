@@ -6,10 +6,15 @@ extends SceneTree
 ##   start     the project starts at the menu; the boot splash is the game's own painting
 ##   pictures  every game picture there (the menu's and the loading screens'), each with a title and a caption; a
 ##             round shows each before a repeat; the museum's paintings, each with its artist and story; no portraits
-##   museum    the menu's Museum: the paintings one at a time, Next and the arrows go on (round to the first), Back
-##             and Esc leave
-##   menu      no save: New game first, Load greyed ("no saves yet"), Campaigns greyed ("coming"), Co-op open; a save:
-##             Continue first, its line "Quick save  ·  <date>, <hour>  ·  just now", Load open and listing it
+##   menu      the ring sport first (Tidebreak; the owner, 2026-10-04), Quick match (its line the last setup), Your look,
+##             Open world, Settings, Credits, Quit; the sport's row opens its panel (the setup itself:
+##             tests/ring/test_match_setup.gd); Your look opens the character creator over the menu
+##   open world  the open world's rows in their own panel. No save: New game first, Load greyed ("no saves yet"),
+##             Campaigns greyed ("coming"), Co-op open, the Museum and the duel test; a save: Continue first, its line
+##             "Quick save  ·  <date>, <hour>  ·  just now", Load open and listing it; Esc from a screen opened there
+##             comes back to the panel
+##   museum    from the Open world panel: the paintings one at a time, Next and the arrows go on (round to the first),
+##             Esc leaves (back to the panel)
 ##   co-op     its panel: the squad (a press steps it), Host a game, the host's address, Join (none pressed: no network)
 ##   new game  no background to pick (2026-10-01: the default newcomer); the story, start-with-nothing and spouse switches
 ##             (each press flips its line); Begin at once into the level through the loading screen, no save continued,
@@ -89,7 +94,7 @@ func _run() -> void:
 	check(is_equal_approx(float(GameSettings.get_value("audio", "master")), 1.0), "defaults read where unset")
 	GameSettings.path = GameSettings.PATH
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(own_cfg))
-	# the menu with no save, then with one
+	# the menu with no save, then with one: the ring sport first, the open world's rows in their own panel
 	for s: String in SaveGame.SLOTS:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SaveGame.dir() + s + ".json"))
 	change_scene_to_file("res://scenes/main_menu.tscn")
@@ -100,13 +105,23 @@ func _run() -> void:
 		_end()
 		return
 	var names := _names(m)
-	check(names.size() > 0 and names[0] == "New game", "no save: New game first (%s)" % [names])
-	check(_off(m, "Load game") and _sub(m, "Load game") == "no saves yet" and _off(m, "Campaigns") and _sub(m, "Campaigns") == "coming",
+	check(names == [MatchSetup.sport(), "Quick match", "Your look", "Open world", "Settings", "Credits", "Quit"],
+			"the menu: the sport first, Quick match, Your look, Open world, Settings, Credits, Quit (%s)" % [names])
+	check(_sub(m, "Quick match") == MatchSetup.summary() and _sub(m, MatchSetup.sport()) != "",
+			"Quick match's line is the last setup (%s)" % _sub(m, "Quick match"))
+	# the open world's rows, in its panel
+	(_item(m, "Open world") as Button).pressed.emit()
+	await frames(2)
+	var wn := _panel_names(m)
+	check(m._panel_scroll.visible and _panel_texts(m).has("Open world") and wn.size() > 0 and wn[0] == "New game",
+			"no save: the Open world panel, New game first (%s)" % [wn])
+	check(_poff(m, "Load game") and _psub(m, "Load game") == "no saves yet" and _poff(m, "Campaigns") and _psub(m, "Campaigns") == "coming",
 			"no save: Load greyed (no saves yet), Campaigns greyed (coming)")
-	check(_item(m, "Co-op") != null and not _off(m, "Co-op") and _sub(m, "Co-op") == "host a game or join a friend's",
-			"Co-op open: %s" % _sub(m, "Co-op"))
-	# co-op: its panel (nothing pressed in it: no host, no join)
-	(_item(m, "Co-op") as Button).pressed.emit()
+	check(_panel_button(m, "Co-op") != null and not _poff(m, "Co-op") and _psub(m, "Co-op") == "host a game or join a friend's",
+			"Co-op open: %s" % _psub(m, "Co-op"))
+	check(_panel_button(m, "Museum") != null and _panel_button(m, "Duel (test): 1 v 1") != null, "the Museum and the duel test there")
+	# co-op: its panel (nothing pressed in it: no host, no join); Esc back to the Open world panel
+	(_panel_button(m, "Co-op") as Button).pressed.emit()
 	await frames(2)
 	var co := _panel_texts(m)
 	var addr := m._panel.find_children("*", "LineEdit", true, false)
@@ -118,7 +133,15 @@ func _run() -> void:
 		await frames(1)
 	check(_panel_texts(m).has("Squad:  2") and m._squad == 2, "a press steps the squad (%d)" % m._squad)
 	m._squad = 1
-	m._close_panel()
+	var esc := InputEventAction.new()
+	esc.action = &"ui_cancel"
+	esc.pressed = true
+	m._unhandled_input(esc)
+	await frames(2)
+	check(m._panel_scroll.visible and _panel_texts(m).has("Open world"), "Esc: back to the Open world panel")
+	m._unhandled_input(esc)
+	await frames(2)
+	check(not m._panel_scroll.visible, "Esc again: the panel closed")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(SaveGame.dir()))
 	var doc := {"format": SaveParts.FORMAT, "version": SaveParts.VERSION, "parts": {},
 			"meta": {"saved_unix": Time.get_unix_time_from_system(), "slot": "quick", "date": "25 August 1765", "time": "20:24"}}
@@ -126,27 +149,27 @@ func _run() -> void:
 	f2.store_string(JSON.stringify(doc))
 	f2.close()
 	m._build_items()
+	m._open_world()
 	await frames(2)
-	names = _names(m)
-	check(names.size() > 0 and names[0] == "Continue", "a save: Continue first (%s)" % [names])
+	wn = _panel_names(m)
+	check(wn.size() > 0 and wn[0] == "Continue", "a save: Continue first (%s)" % [wn])
 	var line := MainMenu._save_line("quick")
 	check(line == "Quick save  ·  25 August 1765, 20:24  ·  just now", "its line: '%s'" % line)
-	check(not _off(m, "Load game") and _sub(m, "Load game") == "", "a save: Load open")
-	m._open_load()
+	check(_psub(m, "Continue") == line, "under Continue: '%s'" % _psub(m, "Continue"))
+	check(not _poff(m, "Load game") and _psub(m, "Load game") == "", "a save: Load open")
+	(_panel_button(m, "Load game") as Button).pressed.emit()
 	await frames(2)
 	var qb := _panel_button(m, "Quick save")
 	var qs := qb.find_child("Sub", true, false) as Label if qb else null
 	check(qb != null and qs != null and qs.text == "25 August 1765, 20:24  ·  just now", "Load lists the quick save, its date and when (%s)"
 			% [qs.text if qs else _panel_texts(m)])
-	m._close_panel()
+	m._unhandled_input(esc)
+	await frames(2)
+	check(m._panel_scroll.visible and _panel_texts(m).has("Open world"), "Esc from Load: back to the Open world panel")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SaveGame.dir() + "quick.json"))
-	# the museum, a menu item
-	check(names.has("Museum"), "the menu has the Museum (%s)" % [names])
-	var mb: Button = null
-	for b in m._items.get_children():
-		var tl := b.find_child("Text", true, false) as Label
-		if tl and tl.text == "Museum":
-			mb = b
+	# the museum, from the Open world panel
+	var mb := _panel_button(m, "Museum")
+	check(mb != null, "the Open world panel has the Museum")
 	if mb:
 		mb.pressed.emit()
 		await frames(2)
@@ -165,12 +188,28 @@ func _run() -> void:
 		m._unhandled_input(ev)
 		m._unhandled_input(ev)
 		check(m._museum_i == n_mus - 1, "the left arrow goes back, round to the last (%d)" % m._museum_i)
-		var esc := InputEventAction.new()
-		esc.action = &"ui_cancel"
-		esc.pressed = true
 		m._unhandled_input(esc)
 		await frames(1)
-		check(not m._museum.visible, "Esc leaves the museum")
+		check(not m._museum.visible and m._panel_scroll.visible and _panel_texts(m).has("Open world"),
+				"Esc leaves the museum, back to the Open world panel")
+	m._close_panel()
+	# the sport's panel opens (its setup: tests/ring/test_match_setup.gd)
+	(_item(m, MatchSetup.sport()) as Button).pressed.emit()
+	await frames(2)
+	var mt := _panel_texts(m)
+	check(m._panel_scroll.visible and mt.has(MatchSetup.sport()) and m._element_rows.size() == 4 and mt.has("Begin"),
+			"the sport's row: its panel, the four elements and Begin")
+	m._close_panel()
+	# your look: the character creator over the menu, on the kept look (a test run's own: AppearanceStore.TEST_CURRENT)
+	(_item(m, "Your look") as Button).pressed.emit()
+	await frames(3)
+	var cc := root.find_children("*", "CharacterCreator", true, false)
+	check(cc.size() == 1 and paused, "Your look: the character creator over the menu (%d)" % cc.size())
+	for c in cc:
+		c.queue_free()          # (not close(): nothing saved)
+	paused = false
+	await frames(2)
+	root.disable_3d = false
 	# new game: no background to pick; the switches; Begin at once
 	m._open_new_game()
 	await frames(2)
@@ -204,7 +243,9 @@ func _run() -> void:
 			"into a new game: no save continued, no background, the story Two Fires (%s)" % StoryDirector.incoming)
 	var ls := root.find_children("*", "LoadingScreen", true, false)
 	check(ls.size() == 1, "through the loading screen")
-	for i in 900:
+	# (by the clock, not a count of frames: under --fixed-fps the frames run faster than the level's threaded load)
+	var t_load := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t_load < 180000:
 		await process_frame
 		if root.find_children("*", "LoadingScreen", true, false).is_empty():
 			break
@@ -271,6 +312,31 @@ func _panel_texts(m: MainMenu) -> Array:
 		if not n.is_queued_for_deletion() and not (n as Label).text.is_empty():
 			out.append((n as Label).text)
 	return out
+
+
+## The open sub-screen's rows' main lines, in order.
+func _panel_names(m: MainMenu) -> Array:
+	var out: Array = []
+	for b in m._panel.find_children("*", "Button", true, false):
+		if b.is_queued_for_deletion():
+			continue
+		var t := b.find_child("Text", true, false) as Label
+		if t:
+			out.append(t.text)
+	return out
+
+
+## The sub-screen's row `text` greyed.
+func _poff(m: MainMenu, text: String) -> bool:
+	var b := _panel_button(m, text)
+	return b != null and b.disabled
+
+
+## The line under the sub-screen's row `text` ("" none).
+func _psub(m: MainMenu, text: String) -> String:
+	var b := _panel_button(m, text)
+	var l := b.find_child("Sub", true, false) as Label if b else null
+	return l.text if l else ""
 
 
 ## The sub-screen's row whose main line is `text`, or null.

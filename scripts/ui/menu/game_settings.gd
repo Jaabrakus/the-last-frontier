@@ -7,31 +7,53 @@ extends RefCounted
 ##   [controls]  mouse (the look's sensitivity, FrontierPlayer.cs_sensitivity), invert_y
 ##   [display]   fullscreen, vsync
 ##   [game]      iron_man (Iron Man: injuries stay; see iron_man())
+##   [match]     the last Tidebreak setup (MatchSetup.save / load: element, foe, difficulty, rounds), for the main menu's
+##               panel and its Quick match
 ## The level applies them to its player and buses (FrontierLevel: apply_to(player) after its audio is set up).
 
 const PATH := "user://settings.cfg"
 ## The file get_value / set_value read and write: PATH (a test points it at a file of its own, never the player's).
 static var path := PATH
+## Where a tool or test run (-s) reads and writes while `path` is still PATH: never the player's own file (as
+## AppearanceStore keeps a test's look apart; the main menu's match panel saves its setup on Begin).
+const TEST_PATH := "user://settings_test_runs.cfg"
 const DEFAULTS := {
 	"audio": {"master": 1.0, "effects": 1.0, "ambience": 1.0, "music": 1.0},
 	"controls": {"mouse": 2.0, "invert_y": false},
 	"display": {"fullscreen": false, "vsync": true, "cap_60": true},
 	"game": {"iron_man": false},
+	"match": {"element": "earth", "foe": "earth", "difficulty": "normal", "rounds": 2},
 }
 const BUSES := {"master": &"Master", "effects": &"SFX", "ambience": &"Ambience", "music": &"Music"}
 
 
+## The file read and written now: `path`, except PATH in a tool or test run (-s), which is TEST_PATH.
+static func file() -> String:
+	if path == PATH:
+		var args := OS.get_cmdline_args()
+		if "-s" in args or "--script" in args:
+			return TEST_PATH
+	return path
+
+
 static func get_value(section: String, key: String) -> Variant:
 	var cf := ConfigFile.new()
-	cf.load(path)
+	cf.load(file())
 	return cf.get_value(section, key, DEFAULTS[section][key])
 
 
 static func set_value(section: String, key: String, v: Variant) -> void:
+	set_section(section, {key: v})
+
+
+## Several keys of one section written at once (one read and one write of the file).
+static func set_section(section: String, values: Dictionary) -> void:
 	var cf := ConfigFile.new()
-	cf.load(path)
-	cf.set_value(section, key, v)
-	cf.save(path)
+	var f := file()
+	cf.load(f)
+	for k: String in values:
+		cf.set_value(section, k, values[k])
+	cf.save(f)
 
 
 ## Iron Man (user 2026-09-30: "this should be a iron man mode", "do it" to permadeath and to saving the injury): what a wound
