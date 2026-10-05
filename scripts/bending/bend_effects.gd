@@ -9,7 +9,8 @@ extends RefCounted
 ##               the ground
 ##   cone, ring  whoever is within range_m in deg before the caster (a ring: all round): damage, knock (up_mps), root_s,
 ##               slow_s; put_out (fire walls and burning ground in it go out), melt (ice walls in it crumble)
-##   dash        the caster thrown: fwd_mps along the aim (back: behind, side: to a side), up_mps; burn: the ground left
+##   dash        the caster thrown: fwd_mps along the aim (back: behind, side: to a side; side_default: the side held, else
+##               that one, 1 right: Earth Skate's slide and burrow-step), up_mps; burn: the ground left
 ##               alight; shove: whoever is near knocked aside
 ##   buff        on the caster for s: anchor (no knockback), hover / glide (a slow fall), run / scooter (a fast pace),
 ##               redirect_lightning (lightning that strikes is sent back)
@@ -258,7 +259,15 @@ static func dash(c: Variant, flat: Vector3, spec: Dictionary) -> void:
 		dir = -flat
 	elif bool(spec.get("side", false)):
 		var right := flat.cross(Vector3.UP).normalized()
-		dir = right * bc.side_sign()
+		var s := 0.0
+		if not spec.has("side_default"):
+			s = bc.side_sign()
+		else:
+			# (Earth Skate's slide and burrow-step: the side held, else this one; a bot's own pick as ever: held_side)
+			s = bc.held_side()
+			if absf(s) < 0.01:
+				s = signf(float(spec.side_default)) if absf(float(spec.side_default)) > 0.01 else 1.0
+		dir = right * s
 	var kind := String(spec.get("kind", "air"))
 	var v := dir * float(spec.get("fwd_mps", 10.0)) + Vector3.UP * float(spec.get("up_mps", 0.0))
 	p.velocity = Vector3(v.x, maxf(p.velocity.y, 0.0) + v.y, v.z)

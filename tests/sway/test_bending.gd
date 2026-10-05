@@ -108,6 +108,7 @@ func _go() -> void:
 	n = duel.npc
 	await _keys()
 	await _every_move()
+	await _earth_sides()
 	await _meetings()
 	print("BENDING " + ("PASSED" if fails == 0 else "FAILED"))
 	quit(0 if fails == 0 else 1)
@@ -210,6 +211,51 @@ func _cast(id: String, mode: String) -> String:
 			if get_nodes_in_group(FormRaised.GROUP).is_empty():
 				return "nothing raised"
 	return ""
+
+
+# ---------------------------------------------------------------- earth's side-steps
+## Earth Skate (the owner, 2026-10-05: "for earth bending we need the side steps, burrow steps to be on the side"): slide and
+## burrow-step go across the facing, to the side held (move_left / move_right), the right with neither; skate goes forward.
+## The player faces +x, so his right is +z. The key is held only over the cast (held_side is read as the dash starts), so
+## the walk adds nothing.
+func _earth_sides() -> void:
+	if only != "" and only != "earth":
+		return
+	DuelMode.element = "earth"
+	duel.lay_bar()
+	await physics_frame
+	var bad: Array[String] = []
+	for row in [["slide", &"move_right", 1.0], ["slide", &"move_left", -1.0], ["slide", &"", 1.0],
+			["burrow", &"move_right", 1.0], ["burrow", &"move_left", -1.0], ["burrow", &"", 1.0], ["skate", &"", 0.0]]:
+		var mode := String(row[0])
+		var key: StringName = row[1]
+		var want := float(row[2])
+		_clear()
+		await physics_frame
+		_stage()
+		await _secs(0.15)
+		c.set_mode("earth_skate", mode)
+		var pos0 := p.global_position
+		if key != &"":
+			Input.action_press(key)
+		FormEffects.apply(c, "earth_skate", c.form.mark if c.form != null else p, p.global_position + Vector3(3.0, 0.0, 0.0))
+		if key != &"":
+			Input.action_release(key)
+		await _secs(0.6)
+		var d := p.global_position - pos0
+		var across := d.z
+		var along := d.x
+		var ok := false
+		if want == 0.0:
+			ok = along > 0.8 and absf(along) > 2.0 * absf(across)
+		else:
+			ok = across * want > 0.8 and absf(across) > 2.0 * absf(along)
+		var what := "%s%s: across %.2f m, along %.2f m" % [mode, " (%s)" % key if key != &"" else " (no side held)", across, along]
+		print("  earth skate %s" % what)
+		if not ok:
+			bad.append(what)
+	_expect(bad.is_empty(), "Earth Skate: slide and burrow-step to the side held (the right with none), skate forward%s"
+			% ("" if bad.is_empty() else ": " + ", ".join(bad)))
 
 
 # ---------------------------------------------------------------- moves meeting

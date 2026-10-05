@@ -21,6 +21,7 @@ extends RefCounted
 ##   MatchSetup.active()          a ring match asked for or under way (PlayerAppearance: no creator over the countdown)
 ##   MatchSetup.leave()           the main menu again: no match
 ##   MatchSetup.save() / load()   the last setup in GameSettings' "match" section (the menu's panel and Quick match)
+##   MatchSetup.quick_of(el) / set_quick(el, id, mode)   each element's quick spell on LMB (GameSettings' "quick" section)
 ##   MatchSetup.parse(args)       the setup's user args, as take() reads them:
 ##       mode=ring element=fire foe=water[,earth,...] mates=air[,...] difficulty=hard to_win=2 round_s=90 spectate=on
 
@@ -162,6 +163,59 @@ static func load() -> void:
 	var r := int(GameSettings.get_value(SECTION, "rounds"))
 	if r >= 1:
 		rounds_to_win = r
+
+
+# --- The quick spell (LMB), per element --------------------------------------------------------------------------
+
+## Each element's quick spell on the left button (SwayCaster's quick spell: one move at one variation, frozen), kept in
+## GameSettings' QUICK_SECTION as "move/variation" (its DEFAULTS there are the element's first: earth rock_jab/pebbles,
+## water water_jet/splash, fire fire_jab/jab, air air_palm/palm). A test points GameSettings.path at a file of its own.
+const QUICK_SECTION := "quick"
+
+
+## Element `el`'s quick spell: {id, mode} (the one kept, else its default; {} for no element).
+static func quick_of(el: String) -> Dictionary:
+	if not el in Bending.ELEMENTS:
+		return {}
+	var kept := _quick_parse(el, String(GameSettings.get_value(QUICK_SECTION, el)))
+	if not kept.is_empty():
+		return kept
+	return quick_default(el)
+
+
+## Element `el`'s default quick spell ({id, mode}; {} for no element).
+static func quick_default(el: String) -> Dictionary:
+	var d: Dictionary = GameSettings.DEFAULTS.get(QUICK_SECTION, {})
+	return _quick_parse(el, String(d.get(el, "")))
+
+
+## Element `el`'s quick spell kept as `id` in `mode` (false, nothing kept, when it is not one of the element's moves).
+static func set_quick(el: String, id: String, mode: String) -> bool:
+	if not quick_ok(el, id, mode):
+		return false
+	GameSettings.set_value(QUICK_SECTION, el, "%s/%s" % [id, mode])
+	return true
+
+
+## Whether `id` in `mode` can be element `el`'s quick spell: one of its keys' moves (Bending.keys), `mode` one of its
+## variations ("" for a move with none).
+static func quick_ok(el: String, id: String, mode: String) -> bool:
+	if not el in Bending.ELEMENTS or id == "":
+		return false
+	var mine := false
+	for pair in Bending.keys(el):
+		if id in (pair as Array):
+			mine = true
+	if not mine:
+		return false
+	var ms := SwayCaster.modes_of(id)
+	return mode in ms if not ms.is_empty() else mode == ""
+
+
+static func _quick_parse(el: String, s: String) -> Dictionary:
+	var id := s.get_slice("/", 0).strip_edges()
+	var mode := s.get_slice("/", 1).strip_edges() if s.contains("/") else ""
+	return {"id": id, "mode": mode} if quick_ok(el, id, mode) else {}
 
 
 # --- The words -------------------------------------------------------------------------------------------------

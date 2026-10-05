@@ -9,6 +9,7 @@ extends RefCounted
 ##   [game]      iron_man (Iron Man: injuries stay; see iron_man())
 ##   [match]     the last Tidebreak setup (MatchSetup.save / load: element, foe, difficulty, rounds), for the main menu's
 ##               panel and its Quick match
+##   [quick]     each element's quick spell on the left button ("move/variation"; MatchSetup.quick_of / set_quick)
 ## The level applies them to its player and buses (FrontierLevel: apply_to(player) after its audio is set up).
 
 const PATH := "user://settings.cfg"
@@ -23,6 +24,8 @@ const DEFAULTS := {
 	"display": {"fullscreen": false, "vsync": true, "cap_60": true},
 	"game": {"iron_man": false},
 	"match": {"element": "earth", "foe": "earth", "difficulty": "normal", "rounds": 2},
+	# (each element's quick spell on the left button, "move/variation": MatchSetup.quick_of / set_quick)
+	"quick": {"earth": "rock_jab/pebbles", "water": "water_jet/splash", "fire": "fire_jab/jab", "air": "air_palm/palm"},
 }
 const BUSES := {"master": &"Master", "effects": &"SFX", "ambience": &"Ambience", "music": &"Music"}
 

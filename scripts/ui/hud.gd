@@ -66,6 +66,7 @@ const HELP := "WASD move · Shift sprint · Ctrl/C crouch (toggle) · Space jump
 const ARENA_HELP := "WASD move · Shift sprint · Space jump · Ctrl/C crouch\n" \
 		+ "1-4 a key's move, the same key again its other move · 5 Mend, again Patch · wheel: the move's three forms\n" \
 		+ "Hold RMB on the aim: the lock fills; let go to cast · F1 this help · Esc free mouse\n" \
+		+ "Q: the readied move onto LMB (as it is now) · hold LMB: lock and cast it, the keys left as they are\n" \
 		+ "Knock the other side back through its three zones: into the water behind them takes the round"
 ## The water bar's colour, and how long "winded" stays among the status words (s).
 const WATER := Color(0.42, 0.68, 0.95)

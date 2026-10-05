@@ -23,7 +23,7 @@ const POLL_S := 0.25
 const CAP_ACTIONS := {
 	"W": [&"move_forward"], "A": [&"move_left"], "S": [&"move_back"], "D": [&"move_right"],
 	"Space": [&"jump"], "Shift": [&"sprint"], "Alt": [&"walk"], "C": [&"crouch"], "R": [&"reload"],
-	"T": [&"torch"], "E": [&"interact"], "Q": [&"equip_wheel"], "B": [&"build_mode"], "Tab": [&"inventory"],
+	"T": [&"torch"], "E": [&"interact"], "Q": [&"equip_wheel", &"bend_quick_bind"], "B": [&"build_mode"], "Tab": [&"inventory"],
 	"Z": [&"sleep"], "F": [&"cook"], "G": [&"grip"], "V": [&"eat"], "X": [&"sling_all"],
 	"1": [&"weapon_1"], "2": [&"weapon_2"], "3": [&"weapon_3"], "4": [&"weapon_4"], "5": [&"weapon_5"],
 	"6": [&"weapon_6"], "7": [&"weapon_7", &"tool_cycle", &"tool_axe"], "8": [&"weapon_8", &"fish_gear", &"tool_mattock"],
@@ -76,7 +76,7 @@ const TOPICS := {
 			"Hold [Z]  Sleep: a fire makes it better"]},
 	"elements": {"title": "Your element's moves", "steps": ["[1-4]  A key: its move  ·  the same key again: its other move",
 			"[Wheel]  Step through the move's three forms", "Hold [RMB]  On the aim: the lock fills; let go to cast",
-			"[5]  Mend; again: Patch"]},
+			"[Q]  The readied move onto left click  ·  Hold [LMB]  Lock it; let go to cast", "[5]  Mend; again: Patch"]},
 	"ring": {"title": "The ring", "steps": ["Knock the other side back through its three zones",
 			"Into the water behind them takes the round", "The grates refill a water fighter's water"]},
 }

@@ -504,8 +504,8 @@
       "mode_labels": {"skate": "skate", "slide": "slide", "burrow": "burrow-step"},
       "bend": {
         "skate": {"do": "dash", "kind": "stone", "fwd_mps": 12.0, "up_mps": 1.0},
-        "slide": {"do": "dash", "kind": "stone", "fwd_mps": 9.0, "up_mps": 0.0},
-        "burrow": {"do": "dash", "kind": "stone", "fwd_mps": 14.0, "up_mps": 0.0, "dust": true}
+        "slide": {"do": "dash", "kind": "stone", "side": true, "side_default": 1, "fwd_mps": 9.0, "up_mps": 0.0},
+        "burrow": {"do": "dash", "kind": "stone", "side": true, "side_default": 1, "fwd_mps": 14.0, "up_mps": 0.0, "dust": true}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]

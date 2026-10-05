@@ -13,6 +13,14 @@ element; everyone of that element has the same moves. Status: **plan, not built*
   differ by what they do, not how they are cast. Lock time is the only limit (no meter, no cooldowns); a hit taken breaks
   a lock.
 - The HUD says what is ready: `2 · Earth Wall · column (2/3)`.
+- **The quick spell on LMB** (the owner, 2026-10-05: "the user needs to be able to put hot spells on left click ... this
+  action can be right after"): **Q** (rebindable: `bend_quick_bind`) puts the readied skill at its variation on the left
+  button, frozen there (the wheel stepping the key later leaves it): "Left click: Rock Jab (pebbles)". Hold LMB: the same
+  lock as RMB's (the same time, circle, pose and aim); let go to cast. Keys 1-5 and their variations are never touched by
+  it. One lock at a time: a lock on one button ignores the other, and the other can start the moment the cast is out.
+  Defaults: earth Rock Jab (pebbles), water Water Jet (splash), fire Fire Jab (jab), air Air Palm (palm); each element's
+  remembered (GameSettings' `quick`). The arena strip shows an `LMB` chip with it. The open world without an element keeps
+  its LMB.
 - Moves read and answer each other (the matrix below): blocking, eroding, melting, cancelling, catching and throwing back.
 
 So each element has 4 slots x 2 skills x 3 variations = 24 moves, plus Mend.
@@ -23,7 +31,7 @@ So each element has 4 slots x 2 skills x 3 variations = 24 moves, plus Mend.
 |---|---|---|
 | 1 | **Stone**: spike (fast, pierces) · boulder (slow, huge knockback, rolls) · disc (flat, fast, medium knockback) | **Rock Jab**: pebbles (3 small fast stones) · kick-up (a rock up out of the ground at your feet: cover, or ammo for Shove) · stomp (a knock-up all round you) |
 | 2 | **Earth Wall**: wall (cover) · column (rises under the enemy, throws them up) · shell (a dome round you, 2 s) | **Earth Grip**: anchor (you can't be knocked back, 1.5 s) · trap (the enemy's feet held 1 s, on earth) · sink (the ground under the enemy drops: slowed) |
-| 3 | **Pillar**: self (launched up and forward) · free (where you aim: a step, a block) · ramp (a slope to run up and leap from) | **Earth Skate**: skate (a dash along the ground) · slide (a low dodge) · burrow-step (a short dash under the ground) |
+| 3 | **Pillar**: self (launched up and forward) · free (where you aim: a step, a block) · ramp (a slope to run up and leap from) | **Earth Skate**: skate (a dash along the ground) · slide (a low dodge to the side held, the right when none) · burrow-step (a short dash under the ground, to the side as the slide) |
 | 4 | **Earth Shove**: push (a stone hurled along the aim; a wall or pillar has a chunk torn out and fired through it) · pull (a stone or chunk yanked to your feet) · split (a chunk broken into 3 that fly in a spread) | **Catch**: catch (a stone flying at you within 6 m caught and held, then Shove sends it back) · deflect (a stone flying at you knocked aside) · brace (your wall takes the next hit for free) |
 
 ## Water: control and staying alive; needs water from the pools

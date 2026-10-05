@@ -82,7 +82,7 @@ func matter_label(id: String) -> String:
 		return ""
 	if caster.state != SwayCaster.State.IDLE and caster.move == id and lock_matter != "":
 		return FormMatter.label(lock_matter)
-	if caster.readied and caster.readied_spell == id and matter != "":
+	if caster.readied and caster.lock_spell() == id and matter != "":
 		return FormMatter.label(matter)
 	return ""
 
