@@ -284,6 +284,8 @@ func _to(p: String) -> void:
 # ---------------------------------------------------------------- each frame
 func _physics_process(dt: float) -> void:
 	phase_t += dt
+	if phase == "COUNTDOWN" and LoadingScreen.covering():
+		phase_t = 0.0                        # (the countdown begins as the loading screen goes)
 	_note_t = maxf(_note_t - dt, 0.0)
 	match phase:
 		"COUNTDOWN":

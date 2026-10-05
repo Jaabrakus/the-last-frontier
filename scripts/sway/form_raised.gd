@@ -23,6 +23,12 @@ extends AnimatableBody3D
 ## into drop to the ground under where they fall, into the water and onto its bed where there is water (floor_under), not
 ## onto the terrain's height under a deck.
 
+## The ring's walls are capped per caster (data/ring/rules.json max_walls; the owner, 2026-10-05: walls are spammable, cap
+## them as data): count_wall(r) on each earth or ice wall a caster raises (FormEffects.earth_wall, BendEffects.ice_wall and
+## freeze_water) crumbles that caster's oldest standing ones past the cap ("capped"). Only where a RingArena stands; the
+## open world keeps its cover walls uncapped. The look (LOOK-B): BendLooks.rise as a wall comes up, BendLooks.shatter when
+## one is shot down.
+
 signal crumbled(raised: FormRaised, why: String)
 
 const GROUP := &"form_raised"
@@ -63,6 +69,9 @@ var _crumble_why := ""
 var drowned := false
 ## The width it was asked for before the water cut it (m).
 var asked_w := 0.0
+
+## The walls counted (count_wall), in the order raised.
+static var _wall_n := 0
 
 
 ## A raised wall or pillar at `xf` (its origin on the ground, +Y up, +Z through it) under `parent`; `d` the move's numbers
@@ -129,6 +138,8 @@ static func raise(parent: Node, p_kind: String, xf: Transform3D, d: Dictionary, 
 	r.add_child(r.mesh_instance)
 	parent.add_child(r)
 	r.global_transform = r._at(0.0)
+	if p_kind == "wall" and not r.drowned and r.matter != "wood" and r.is_inside_tree():
+		BendLooks.rise(r.base.origin, r.size, r.base.basis.z.normalized(), "ice" if r.matter == "snow" else "earth")
 	if r.drowned:
 		r.visible = false
 		cs.disabled = true
@@ -319,8 +330,42 @@ func crumble(why: String) -> void:
 				GatherFx.fall_dust(scn, at, wide)
 				for i in 3:
 					GatherFx.stone_chips(scn, global_transform * Vector3((float(i) - 1.0) * size.x * 0.3, size.y * 0.6, 0.0), Vector3.UP, 8)
+		if why == "shot" and kind == "wall" and matter != "wood":
+			BendLooks.shatter(at, size, global_basis.z.normalized(), "ice" if matter == "snow" else "earth")
 		FormEffects.sfx("splinter" if matter == "wood" else "crumble", at, -2.0, 0.8)
 	crumbled.emit(self, why)
+
+
+## Wall `r` (raised by the caster in its meta bend_by) counted against the ring's cap: past max_walls of that caster's
+## standing walls (earth and ice alike), the oldest crumble ("capped"). Returns how many went.
+static func count_wall(r: FormRaised) -> int:
+	if r == null or not is_instance_valid(r) or r.drowned or r.kind != "wall" or not r.has_meta(&"bend_by") \
+			or not r.is_inside_tree():
+		return 0
+	_wall_n += 1
+	r.set_meta(&"wall_n", _wall_n)
+	var cap := wall_cap(r.get_tree())
+	if cap <= 0:
+		return 0
+	var by := int(r.get_meta(&"bend_by"))
+	var mine: Array[FormRaised] = []
+	for n in r.get_tree().get_nodes_in_group(GROUP):
+		var w := n as FormRaised
+		if w != null and w.state != State.CRUMBLING and w.has_meta(&"wall_n") and int(w.get_meta(&"bend_by", 0)) == by:
+			mine.append(w)
+	mine.sort_custom(func(a: FormRaised, b: FormRaised) -> bool: return int(a.get_meta(&"wall_n")) < int(b.get_meta(&"wall_n")))
+	var gone := 0
+	while mine.size() > cap:
+		mine.pop_front().crumble("capped")
+		gone += 1
+	return gone
+
+
+## The walls a caster may have standing at once: rules.json max_walls where a ring stands (0: no cap).
+static func wall_cap(tree: SceneTree) -> int:
+	if tree == null or RingArena.find(tree) == null:
+		return 0
+	return int(RingRules.num("max_walls", 0.0))
 
 
 ## The stones a stone wall (or pillar) falls into (drawn only): fieldstone lumps tumbling out of it to its foot on both sides,

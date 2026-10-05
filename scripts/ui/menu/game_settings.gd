@@ -23,7 +23,7 @@ const DEFAULTS := {
 	"controls": {"mouse": 2.0, "invert_y": false},
 	"display": {"fullscreen": false, "vsync": true, "cap_60": true},
 	"game": {"iron_man": false},
-	"match": {"element": "earth", "foe": "earth", "difficulty": "normal", "rounds": 2},
+	"match": {"element": "earth", "foe": "earth", "difficulty": "normal", "rounds": 2, "light": "noon"},
 	# (each element's quick spell on the left button, "move/variation": MatchSetup.quick_of / set_quick)
 	"quick": {"earth": "rock_jab/pebbles", "water": "water_jet/splash", "fire": "fire_jab/jab", "air": "air_palm/palm"},
 }

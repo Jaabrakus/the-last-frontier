@@ -471,6 +471,7 @@ static func ice_wall(c: Variant, flat: Vector3) -> FormRaised:
 	var x := Vector3.UP.cross(flat).normalized()
 	var r := _wall(p, Transform3D(Basis(x, Vector3.UP, flat), foot), "snow")
 	r.set_meta(&"bend_ice", true)
+	FormRaised.count_wall(r)                 # (ice walls count with the earth walls: rules.json max_walls)
 	BendLooks.burst(foot + Vector3.UP, "ice", 24)
 	return r
 
@@ -486,6 +487,7 @@ static func freeze_water(c: Variant, at: Vector3, flat: Vector3) -> void:
 			bz.end()
 			var r := _wall(p, Transform3D(xf.basis.orthonormalized(), xf.origin), "snow")
 			r.set_meta(&"bend_ice", true)
+			FormRaised.count_wall(r)
 			BendLooks.burst(xf.origin + Vector3.UP, "ice", 30)
 			_cur["froze"] = r
 			return

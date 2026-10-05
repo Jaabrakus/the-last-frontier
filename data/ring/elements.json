@@ -51,5 +51,10 @@
   },
   "formats": {
     "1v1": {"label": "1 v 1", "line": "3 v 3 teams: coming"}
+  },
+  "lights": {
+    "noon": "a clear midday sun high over the deck",
+    "golden": "late afternoon: a low warm sun, long shadows",
+    "night": "under the moon, every lantern and brazier lit"
   }
 }

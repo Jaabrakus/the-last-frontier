@@ -122,6 +122,7 @@ static func earth_wall(c: Variant, at: Vector3, d: Dictionary, matter := "", tre
 	if tree_i >= 0:
 		var tw := tree_wall(bc, tree_i, d)
 		if tw != null:
+			FormRaised.count_wall(tw)                   # (the ring's cap: rules.json max_walls)
 			return tw
 		matter = ""                                     # (the tree gone meanwhile: the ground at its foot)
 	var tree := bc.body.get_tree()
@@ -135,6 +136,7 @@ static func earth_wall(c: Variant, at: Vector3, d: Dictionary, matter := "", tre
 	var scn := tree.current_scene
 	var r := FormRaised.raise(scn, "wall", xf, wn, absi(hash(foot)) % 97)
 	_mark(r, bc)
+	FormRaised.count_wall(r)                            # (the ring's cap: rules.json max_walls)
 	var h: Dictionary = d.get("hollow", {})
 	FormHollow.dig(scn, ground_at(bc, at - way * 0.15), way, float(h.get("width_m", 3.0)), float(h.get("depth_m", 1.5)), float(h.get("fade_s", 600.0)))
 	_raised_fx(bc, foot, float(wn.get("width_m", 3.0)), matter)

@@ -13,6 +13,11 @@ const SETTLE_S := 0.9       ## s after the scene change before the fade
 const SAVE_SETTLE_S := 1.6  ## the same when a save is being applied
 const FADE_S := 0.7
 const DRIFT := 0.06         ## how much nearer the painting drifts while it shows
+## The longest the painting waits on a level's meta loading_hold (s after the scene change; the ring warms its effects).
+const HOLD_MAX_S := 15.0
+
+## The loading screen covering the window now (until its fade begins), if any: covering().
+static var _cover: LoadingScreen
 
 var path := ""
 var with_save := false
@@ -34,7 +39,18 @@ static func go(tree: SceneTree, scene_path: String, applying_save := false) -> L
 	return ls
 
 
+## Whether a loading screen still covers the window (RingMode holds its countdown meanwhile).
+static func covering() -> bool:
+	return is_instance_valid(_cover)
+
+
+func _exit_tree() -> void:
+	if _cover == self:
+		_cover = null
+
+
 func _ready() -> void:
+	_cover = self
 	layer = 100
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
@@ -128,8 +144,11 @@ func _process(delta: float) -> void:
 			_settle += delta
 			var need := SAVE_SETTLE_S if with_save else SETTLE_S
 			_progress(0.75 + 0.25 * clampf(_settle / need, 0.0, 1.0))
-			if _settle >= need and _t >= MIN_S:
+			var scn := get_tree().current_scene
+			var hold := scn != null and bool(scn.get_meta(&"loading_hold", false)) and _settle < HOLD_MAX_S
+			if _settle >= need and _t >= MIN_S and not hold:
 				_state = "fade"
+				_cover = null
 		"fade":
 			_fade_t += delta
 			_root.modulate.a = 1.0 - clampf(_fade_t / FADE_S, 0.0, 1.0)

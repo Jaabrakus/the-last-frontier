@@ -524,6 +524,16 @@ func _open_match() -> void:
 		MatchSetup.rounds_to_win = int(rs[(i + 1) % rs.size()])
 		paint_rnd.call())
 	box.add_child(rnd)
+	var lit := MenuUI.item("", 22, "-")
+	lit.name = "Light"
+	var paint_lit := func() -> void:
+		_set_row(lit, "Light:  %s" % MatchSetup.light, MatchSetup.light_line(MatchSetup.light))
+	paint_lit.call()
+	lit.pressed.connect(func() -> void:
+		var ls := MatchSetup.LIGHTS
+		MatchSetup.light = String(ls[(ls.find(MatchSetup.light) + 1) % ls.size()])
+		paint_lit.call())
+	box.add_child(lit)
 	box.add_child(_gap(4))
 	var begin := MenuUI.item("Begin", 30)
 	begin.name = "Begin"

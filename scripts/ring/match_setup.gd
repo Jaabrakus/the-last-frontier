@@ -12,6 +12,7 @@ extends RefCounted
 ##   rounds_to_win  round wins that take the match (2: best of 3)
 ##   round_s        a round's length (s)
 ##   spectate       the player off the deck while two bots play (soak tests, stills)
+##   light          the ring's light (LIGHTS: "noon", "golden", "night"; RingLook and RingDressing at the ring's load)
 ## The words a player sees come from data/ring/elements.json (info, label, competitor, style, color, sport): each element's
 ## name, the name its competitors go by (Stone, Tide, Ember, Gale) and its one-line style; no word from any show
 ## (tests/ring/test_player_words.gd holds them to that).
@@ -24,6 +25,7 @@ extends RefCounted
 ##   MatchSetup.quick_of(el) / set_quick(el, id, mode)   each element's quick spell on LMB (GameSettings' "quick" section)
 ##   MatchSetup.parse(args)       the setup's user args, as take() reads them:
 ##       mode=ring element=fire foe=water[,earth,...] mates=air[,...] difficulty=hard to_win=2 round_s=90 spectate=on
+##       light=golden
 
 const DATA_PATH := "res://data/ring/elements.json"
 ## GameSettings' section the last setup is kept in.
@@ -33,6 +35,8 @@ const ANY := "any"
 const DIFFICULTIES := ["easy", "normal", "hard"]
 ## The round wins the menu offers (best of 1, 3 and 5).
 const ROUNDS := [1, 2, 3]
+## The ring's light moods the menu offers (RingLook.PRESETS), the first the default.
+const LIGHTS := ["noon", "golden", "night"]
 
 ## Set by the main menu's Begin for the scene it loads (taken once: take()).
 static var incoming := false
@@ -43,6 +47,7 @@ static var difficulty := "normal"
 static var rounds_to_win := 2
 static var round_s := 180.0
 static var spectate := false
+static var light := "noon"
 
 static var _on := false
 static var _data := {}
@@ -114,6 +119,9 @@ static func parse(args: PackedStringArray) -> bool:
 					round_s = float(v)
 			"spectate":
 				spectate = v in ["on", "true", "yes", "1"]
+			"light", "mood":
+				if v in LIGHTS:
+					light = v
 	return ring
 
 
@@ -146,7 +154,7 @@ static func resolved(list: Array, rng: RandomNumberGenerator) -> Array:
 ## GameSettings.path at a file of its own first (and GameSettings keeps -s runs off the player's own file in any case).
 static func save() -> void:
 	GameSettings.set_section(SECTION, {"element": element, "foe": ",".join(PackedStringArray(foes)),
-			"difficulty": difficulty, "rounds": rounds_to_win})
+			"difficulty": difficulty, "rounds": rounds_to_win, "light": light})
 
 
 ## The kept setup read back over the statics (each value only when it is a good one).
@@ -163,6 +171,9 @@ static func load() -> void:
 	var r := int(GameSettings.get_value(SECTION, "rounds"))
 	if r >= 1:
 		rounds_to_win = r
+	var l := String(GameSettings.get_value(SECTION, "light"))
+	if l in LIGHTS:
+		light = l
 
 
 # --- The quick spell (LMB), per element --------------------------------------------------------------------------
@@ -280,6 +291,11 @@ static func menu_line() -> String:
 ## What a difficulty means for the bot, in a line.
 static func difficulty_line(d: String) -> String:
 	return String((data().get("difficulties", {}) as Dictionary).get(d, ""))
+
+
+## What a light mood looks like, in a line (the menu's panel).
+static func light_line(l: String) -> String:
+	return String((data().get("lights", {}) as Dictionary).get(l, ""))
 
 
 ## "best of 3" for 2 round wins.
