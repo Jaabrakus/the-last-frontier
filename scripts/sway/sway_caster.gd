@@ -72,6 +72,12 @@ extends Node
 ##              with sway_lockable(move) -> bool may refuse a lock
 ## Form       the fifth art (FormCast, the child `form`; FormEffects): the lock is a circle drawn on the ground at the target
 ##            instead of the thread; its reach flat from the feet (reach_to)
+## The strike (the bending game: effects leave on the pose's strike frame): a cast whose pose has a strike time
+## (SwayPose.strike_wait: element mode's poses, data/bending/poses.json) and whose bend spec throws something (STRIKE_DOS:
+## bolt, throw, cone, ring, shove) lands as SwayPose says `struck`, or by a fallback timer (the wait + STRIKE_SLACK_S) when
+## it never does; the rest (guard and other zones, dashes, buffs, ...) land on the release as ever, the pose following, so a
+## Catch stands the very frame the lock lets go. One mechanism: whatever SwayEffects starts (a BendThrow) launches at once.
+## A spent cast always lands, a hit taken in between or not; a cast still waiting lands as the next one is cast.
 ## The hotbar: spells() (static: every spell, {kind "spell", id, label, art, motes, lock_s, range_m, icon, modes}),
 ## known_spells() (those granted, every one with free use: the Tab screen's Spells list, dragged onto the bar),
 ## ready_spell(id) (spell_readied), readied_spell, spell_icon(id) (its SVG), spell_label(id) (with its mode). The launch
@@ -132,6 +138,10 @@ const TIERS := ["untrained", "practised", "expert"]
 ## The untrained floor cast holds the caster where they knelt (the owner's rule, docs/main_story.md 11.10: "kneel and press
 ## the palms to the floor while the ring fills"): FrontierPlayer.drag_speed_cap at this while its clip plays (rooted).
 const ROOT_CAP := 0.0
+## The bend specs whose effect leaves on the pose's strike (the header's strike); every other lands on the release.
+const STRIKE_DOS := ["bolt", "throw", "cone", "ring", "shove"]
+## A cast waiting on its strike lands this long after the strike was due if SwayPose never says struck (s).
+const STRIKE_SLACK_S := 0.1
 
 ## Casts landed per target tag (all moves) and per move ({move: {tag: n}}), for lock_cast objectives (not saved: a story
 ## step counts from its begin and keeps its own count across a load, as NpcFighter.kills).
@@ -214,6 +224,8 @@ var _drain_t := 0.0
 var _tremble := Vector2.ZERO          ## the strain's tremble added to the view (yaw, pitch), taken out again after
 var _spell_free := false              ## the hands have been right for the readied spell since it was readied
 var _hold_stone := false              ## the hold running is a stone's (GustLift), not a sail's
+var _pending := {}                    ## a cast waiting on its strike: {m, t, at, n} ({} none)
+var _pending_n := 0
 
 
 ## The player's caster, made on first call (the level or the story calls it once; it is safe to call again).
@@ -302,6 +314,7 @@ func _ready() -> void:
 	pose.name = "SwayPose"
 	pose.caster = self
 	add_child(pose)
+	pose.struck.connect(_on_struck)
 	if player.is_local:
 		var layer := CanvasLayer.new()
 		layer.name = "SwayHUD"
@@ -847,8 +860,9 @@ func sprint_ok(m: String) -> bool:
 
 ## The untrained floor cast (SwayPose at tier 0: the clap, the squat, the palms on the ground, the stand) holds the caster
 ## still while it plays: no step, no sprint (drag_speed_cap at ROOT_CAP; a lower cap of another is left; ours let go after).
+## In element mode a pose that says root does the same (SwayPose.rooting: the floor cast's squat, the palms on a wall).
 func _root() -> void:
-	var on := pose != null and pose.posing() and pose.tier == 0 and not player.is_dead
+	var on := pose != null and is_instance_valid(pose) and pose.rooting() and not player.is_dead
 	if on:
 		if player.drag_speed_cap > ROOT_CAP:
 			player.drag_speed_cap = ROOT_CAP
@@ -1580,10 +1594,47 @@ func _cast() -> void:
 	if player.is_local:
 		player.add_recoil(0.7, 0.0)
 	_sfx("cast", -2.0, at)
-	SwayEffects.apply(self, m, t, at)
+	_land_pending()                           # (one still waiting on its strike lands first)
+	var wait := strike_wait(m)
+	if wait > 0.0:
+		# (the effect leaves on the pose's strike: SwayPose's struck, or the fallback; the release below starts the clip)
+		_pending_n += 1
+		_pending = {"m": m, "t": t, "at": at, "n": _pending_n}
+		get_tree().create_timer(wait + STRIKE_SLACK_S, false).timeout.connect(_land_pending.bind(_pending_n))
+	else:
+		SwayEffects.apply(self, m, t, at)
 	if is_instance_valid(t) and t.has_method(&"sway_cast"):
 		t.call(&"sway_cast", m, self)
 	cast.emit(m, t)
+
+
+## Seconds a cast of `m` let go now waits for its pose's strike before its effect lands (0: at once). Only a bend spec in
+## STRIKE_DOS (the mode's) whose pose has a strike time; never a guard, a zone, a dash or a buff.
+func strike_wait(m: String) -> float:
+	if pose == null or not is_instance_valid(pose) or not is_inside_tree():
+		return 0.0
+	var b: Variant = SwayMoves.move(m).get("bend", {})
+	var spec: Variant = (b as Dictionary).get(mode_of(m), {}) if b is Dictionary else {}
+	if not (spec is Dictionary) or not String((spec as Dictionary).get("do", "")) in STRIKE_DOS:
+		return 0.0
+	return maxf(pose.strike_wait(), 0.0)
+
+
+## A cast waiting on its strike lands now (`n` its number: the fallback timer's, or any with -1). Once.
+func _land_pending(n := -1) -> void:
+	if _pending.is_empty() or (n >= 0 and int(_pending.n) != n):
+		return
+	var d := _pending
+	_pending = {}
+	var t: Variant = d.t
+	if player == null or not is_instance_valid(player) or not is_inside_tree() or not is_instance_valid(t):
+		return                                  # (the caster gone, or what it was cast at: nothing to land on)
+	SwayEffects.apply(self, String(d.m), t as Node3D, d.at)
+
+
+func _on_struck(m: String) -> void:
+	if not _pending.is_empty() and String(_pending.m) == m:
+		_land_pending()
 
 
 func _break(why: String) -> void:
@@ -1670,6 +1721,7 @@ func _exit_tree() -> void:
 	if rooted and player != null and is_instance_valid(player) and player.drag_speed_cap == ROOT_CAP:
 		player.drag_speed_cap = INF
 	rooted = false
+	_pending = {}                             # (a strike still to come goes with the caster)
 
 
 # ---------------------------------------------------------------- saves

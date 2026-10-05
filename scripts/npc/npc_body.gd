@@ -4,7 +4,8 @@ extends Node3D
 ## PlayerAppearance.dress, as the player and the household), played by an AnimationPlayer of its own few clips, not the
 ## player's animation tree (about 2 ms a frame each: docs/multiplayer_readiness.md): walk, run, crouch, the rifle aim, the
 ## rifle reload (the source clips' upper-body parts over the stance held), the hit reactions, the deaths, our own axe and
-## club swings. A second player lays an arms pose over the walk (the musket carried as the player carries it: his relaxed
+## club swings, a bender's cast poses (play_cast: data/bending/poses.json's own clips, its strike timed to the launch). A
+## second player lays an arms pose over the walk (the musket carried as the player carries it: his relaxed
 ## overlay, actor_b-p-rifle-run-arms). The musket goes to the shoulder and on the target by HuntAim, as a household hunter's.
 ##
 ## LEVEL OF DETAIL, as the animals' (WildAnimal._step_anim): the clips advance every `anim_step` (0 every frame; NpcSenses sets
@@ -81,6 +82,12 @@ const FORM_PATH := "res://animations_extra/Frontier_Form.res"
 const FORM_CLIPS := {
 	"cast_push": ["own-sway-push-two", false],
 }
+## A bender's per-move casts (play_cast): every clip data/bending/poses.json names (BendPoses.all_clips: our own libraries
+## only), in the library under its own name, played whole from its start at the rate that brings its strike to the bot's
+## launch. The clip a cast plays now, its pick ({} the plain push) and its strike's moment in the clip (s; -1 none).
+var cast_clip := ""
+var cast_pick := {}
+var cast_strike_s := -1.0
 ## Arms poses over the stance (the player's relaxed long-gun overlay: Musket.relaxed).
 const ARMS := {
 	"carry": "actor_b-p-rifle-run-arms",
@@ -98,6 +105,7 @@ const PROPS_BACK_S := 0.45
 
 static var _lib: AnimationLibrary
 static var _arms_lib: AnimationLibrary
+static var _keys_props_cache := {}
 
 var sk: Skeleton3D
 var ap: AnimationPlayer
@@ -187,7 +195,22 @@ static func library() -> AnimationLibrary:
 		_add(_lib, own, key, OWN_CLIPS[key])
 	for key: String in FORM_CLIPS:
 		_add(_lib, form, key, FORM_CLIPS[key])
+	for nm: String in BendPoses.all_clips():
+		_add_pose(nm)
 	return _lib
+
+
+## Pose clip `nm` (BendPoses: ours, not excluded) into the shared library under its own name; false when it cannot be.
+static func _add_pose(nm: String) -> bool:
+	if _lib == null or nm == "" or not BendPoses.usable(nm):
+		return false
+	if _lib.has_animation(nm):
+		return true
+	var a := BendPoses.animation(nm)
+	if a.loop_mode != Animation.LOOP_NONE:
+		a = a.duplicate() as Animation
+		a.loop_mode = Animation.LOOP_NONE
+	return _lib.add_animation(nm, a) == OK
 
 
 static func arms_library() -> AnimationLibrary:
@@ -244,14 +267,81 @@ func play_once(key: String, blend := 0.1, speed := 1.0) -> float:
 	return clip_length(key) / maxf(speed, 0.01)
 
 
+## A bender's cast of `move` in `mode` (NpcBending; the user, 2026-10-04: an element bot casts the player's moves): the clip
+## its element's pose names (BendPoses.pick: the fighter's own element by default, `element` to say it), else "cast_push",
+## played from its start at the rate that brings its strike (BendPoses.body_strike_s: the pose's strike_s, a floor cast's
+## press_s, else the clip's push_s) to `wind_s` from now, so the hands strike as the bot launches. Returns that rate (0:
+## nothing played). Also takes the order (move, mode, element, wind_s).
+func play_cast(move: String, mode: String, wind_s: Variant = 0.8, element: Variant = "") -> float:
+	var wind: Variant = wind_s
+	var el: Variant = element
+	if wind_s is String or wind_s is StringName:
+		el = wind_s
+		wind = element if element is float or element is int else 0.8
+	var e := String(el) if el is String or el is StringName else ""
+	if e == "":
+		e = BendPoses.element_of(get_parent())
+	var pk := BendPoses.pick(move, mode, e) if e != "" else {}
+	var key := "cast_push"
+	var strike := -1.0
+	if not pk.is_empty() and (has_clip(String(pk.clip)) or (_add_pose(String(pk.clip)) and has_clip(String(pk.clip)))):
+		key = String(pk.clip)
+		strike = BendPoses.body_strike_s(pk)
+	else:
+		pk = {}
+	if not has_clip(key):
+		cast_clip = ""
+		cast_pick = {}
+		cast_strike_s = -1.0
+		return 0.0
+	var a := ap.get_animation(LIB + "/" + key)
+	if strike < 0.0:
+		strike = float(a.get_meta(&"strike_s", a.get_meta(&"push_s", a.length * 0.5)))
+	var rate := clampf(strike / maxf(float(wind), 0.01), 0.05, 20.0)
+	cast_clip = key
+	cast_pick = pk
+	cast_strike_s = strike
+	play_once(key, 0.1, rate)
+	return rate
+
+
+## Where a cast leaves the body (world): the pose's limb (its "hand": l_palm, r_palm, both, l_foot, r_foot), else the
+## right palm.
+func strike_point() -> Vector3:
+	var hand := String(cast_pick.get("hand", "r_palm"))
+	match hand:
+		"both":
+			return (bone_pos("l_palm") + bone_pos("r_palm")) * 0.5
+		"l_foot":
+			return bone_pos("l_ball")
+		"r_foot":
+			return bone_pos("r_ball")
+	return bone_pos(hand)
+
+
 ## A reload clip moves the hand props; the next clip that does not puts them back as built (PROP_BONES).
 func _props_after(key: String) -> void:
-	if key.begins_with("reload"):
+	if key.begins_with("reload") or (key.begins_with(BendPoses.OWN_PREFIX) and _keys_props(key)):
 		_props_moved = true
 		_props_t = 0.0
 	elif _props_moved:
 		_props_moved = false
 		_props_t = PROPS_BACK_S
+
+
+## Whether library clip `key` keys a hand prop bone (a cast's pose made from a swing: own-axe-stab moves the haft's socket).
+func _keys_props(key: String) -> bool:
+	if _keys_props_cache.has(key):
+		return _keys_props_cache[key]
+	var out := false
+	var a := ap.get_animation(LIB + "/" + key) if has_clip(key) else null
+	if a != null:
+		for i in a.get_track_count():
+			if String(a.track_get_path(i).get_concatenated_subnames()) in PROP_BONES:
+				out = true
+				break
+	_keys_props_cache[key] = out
+	return out
 
 
 func _props_back() -> void:

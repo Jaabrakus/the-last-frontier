@@ -17,6 +17,21 @@ extends Node
 ## an untrained caster is held still while the floor cast plays (SwayCaster roots them), so the squat is whole; the one-handed
 ## push "reach_l" only. A lock broken or fizzled: the body stands (the release from its up_s; a push eased out from back_s).
 ## The first lock (the wreck's scripted lock, no spell) plays none: SwayArm points the arm.
+##
+## ELEMENT MODE (the bending game; the user, 2026-10-04: "switch to a elemental avatar the last airbender type of game"):
+## when the player casts as an element (BendPoses.element_of: a duel's or a ring's chosen element; never in the open world,
+## whose tier clips above stay exactly as they are) each move plays its own pose (BendPoses.pick(move, mode, element):
+## data/bending/poses.json, our own clips only), its mask, its limb and whether it roots the caster (rooting(); SwayCaster
+## holds them still as for the floor cast) from the pick, then the clip's metas, then the rule above; a meta legs_always
+## keeps the "full" layer while moving. A move with no pose keeps its tier clip.
+## THE STRIKE: `struck(move)` once per cast, in the release, as the clip passes its strike_s (the pick's, else the clip's
+## meta; at once when it has none); strike_wait() says how far off it is as a cast lets go (SwayCaster lands a bolt, a
+## throw, a cone, a ring or a shove then: one mechanism, nothing else waits on it), strike_point() where it leaves from (the
+## pose's limb, "hand": l_palm, r_palm, both, l_foot, r_foot; INF when no clip plays or it names none). A lock let go
+## before its wind-up is drawn releases from where the clip is (not the hold's moment). current_clip() the clip on the body.
+
+## Once per cast: the release's clip passed its strike (or it has none: at once).
+signal struck(move: String)
 
 const CLIPS := "res://animations_extra/Frontier_Form.res"
 const CLAP_PRESS := &"own-form-clap-press"
@@ -44,6 +59,9 @@ var palms := Vector3.INF
 ## The palms pressed to the ground (or the wall), the clap heard: the floor cast's moments.
 var pressed := false
 var clapped := false
+## The move posing ("" none) and its pose in element mode (BendPoses.pick; {} the tier clip).
+var move := ""
+var pick := {}
 
 var _lib: AnimationLibrary
 var _pose: ToolPose
@@ -53,6 +71,13 @@ var _from_t := 0.0
 var _w0 := 0.0
 var _floor := false
 var _palm_ids := Vector2i(-2, -2)
+## The strike: its moment on the release's clip (-1 none known), whether it was told, the limb it leaves from ("" none),
+## that limb (world; INF none) and the limbs' bones.
+var _strike := -1.0
+var _struck := true
+var _hand := ""
+var _strike_at := Vector3.INF
+var _limb_ids := {}
 
 
 func _ready() -> void:
@@ -90,6 +115,51 @@ static func clip_for(t: int, on_wall := false) -> StringName:
 	return PRESS_WALL if on_wall else CLAP_PRESS
 
 
+## The clip on the body now (&"" none).
+func current_clip() -> StringName:
+	return StringName(anim_name)
+
+
+## The caster held still while this clip plays: the untrained floor cast, or a pose that says root.
+func rooting() -> bool:
+	if not posing():
+		return false
+	return bool(pick.get("root", false)) if not pick.is_empty() else tier == 0
+
+
+## Where the move leaves from (world): the pose's limb as the clip has it after every modifier. INF when no clip plays or
+## it names none (the tier clips: the caster's chest is used).
+func strike_point() -> Vector3:
+	return _strike_at if phase != "" else Vector3.INF
+
+
+## Seconds from now to the strike of the release a cast now would play (-1: no strike time known; the effect lands at once).
+func strike_wait() -> float:
+	if phase != "press" or _anim == null:
+		return -1.0
+	var s := _release_strike()
+	if s < 0.0:
+		return -1.0
+	var from := clip_time() if _release_clip() == StringName(anim_name) else 0.0
+	return maxf(s - from, 0.0)
+
+
+## The release's clip: the pose's "then", the floor cast's stand, else the clip itself (on from where it is).
+func _release_clip() -> StringName:
+	var nxt := String(pick.get("then", ""))
+	if nxt != "":
+		return StringName(nxt)
+	return RELEASE if anim_name == String(CLAP_PRESS) else StringName(anim_name)
+
+
+## The strike's moment on the release's clip: the pick's, else that clip's meta strike_s; -1 none.
+func _release_strike() -> float:
+	if not pick.is_empty() and pick.has("strike_s"):
+		return float(pick.strike_s)
+	var a := _animation(_release_clip())
+	return float(a.get_meta(&"strike_s", -1.0)) if a != null else -1.0
+
+
 func _on_skeleton_updated() -> void:
 	if phase == "":
 		return
@@ -99,60 +169,114 @@ func _on_skeleton_updated() -> void:
 	if _palm_ids.x < 0 or _palm_ids.y < 0:
 		return
 	var l := sk.get_bone_global_pose(_palm_ids.x).origin
-	var mid := l if anim_name == String(PUSH_ONE) else (l + sk.get_bone_global_pose(_palm_ids.y).origin) * 0.5
+	var r := sk.get_bone_global_pose(_palm_ids.y).origin
+	var mid := (l + r) * 0.5
+	if anim_name == String(PUSH_ONE) or _hand == "l_palm":
+		mid = l
+	elif _hand == "r_palm":
+		mid = r
 	palms = sk.global_transform * mid
+	_strike_at = _limb(sk, _hand) if _hand != "" else Vector3.INF
+
+
+## Limb `which` (l_palm, r_palm, both, l_foot, r_foot) in the world (INF unknown).
+func _limb(sk: Skeleton3D, which: String) -> Vector3:
+	if which == "both":
+		var a := _limb(sk, "l_palm")
+		var b := _limb(sk, "r_palm")
+		return (a + b) * 0.5 if a != Vector3.INF and b != Vector3.INF else Vector3.INF
+	if not _limb_ids.has(which):
+		var bone: String = {"l_foot": "l_ball", "r_foot": "r_ball"}.get(which, which)
+		_limb_ids[which] = sk.find_bone(bone)
+	var i := int(_limb_ids[which])
+	return sk.global_transform * sk.get_bone_global_pose(i).origin if i >= 0 else Vector3.INF
 
 
 # ---------------------------------------------------------------- the caster's lock
 func _on_started(m: String, _t: Node3D) -> void:
 	if not caster.is_spell(m):
 		return                              # (the first lock: the pointing arm)
+	_strike_now()                           # (the last cast's strike, not yet come: it leaves as the next lock begins)
+	move = m
 	tier = caster.tier(m)
-	var wall := caster.form != null and caster.form.on_wall and FormCast.is_form(m)
-	_floor = tier == 0
-	_begin(clip_for(tier, wall), "press")
+	var el := BendPoses.element_of(caster.player)
+	pick = BendPoses.pick(m, caster.mode_of(m), el) if el != "" else {}
+	var clip: StringName
+	if not pick.is_empty() and _animation(StringName(String(pick.clip))) != null:
+		clip = StringName(String(pick.clip))
+	else:
+		pick = {}
+		var wall := caster.form != null and caster.form.on_wall and FormCast.is_form(m)
+		clip = clip_for(tier, wall)
+	_floor = clip == CLAP_PRESS
+	_hand = String(pick.get("hand", ""))
+	_strike_at = Vector3.INF
+	_struck = true
+	_begin(clip, "press")
 
 
 func _on_cast(m: String, _t: Node3D) -> void:
 	if phase == "" or not caster.is_spell(m):
 		return
-	match anim_name:
-		String(CLAP_PRESS):
-			_begin(RELEASE, "release", 0.0)
-		_:
-			_begin(StringName(anim_name), "release", _hold)       # (the wall's shove, the push: on from the held moment)
+	_strike = _release_strike()
+	_struck = false
+	var nxt := _release_clip()
+	if nxt != StringName(anim_name):
+		_begin(nxt, "release", 0.0)                    # (the floor cast: the palms push down and the body stands)
+	else:
+		_begin(nxt, "release", clip_time())            # (the wall's shove, the push: on from the held moment, or from
+		                                               # where the wind-up is when the lock let go before it was drawn)
+	if phase != "release" or _strike < 0.0:
+		_strike_now()                                  # (no clip, or no strike time: the strike is now)
+
+
+## The strike told (once a cast).
+func _strike_now() -> void:
+	if _struck:
+		return
+	_struck = true
+	struck.emit(move)
 
 
 func _on_end() -> void:
 	if phase != "press":
 		return
-	var a := clips()
-	if a == null:
+	if clips() == null and pick.is_empty():
+		return
+	var nxt := _release_clip()
+	if nxt != StringName(anim_name):
+		var r := _animation(nxt)
+		_begin(nxt, "up", float(r.get_meta(&"up_s", 0.2)) if r else 0.2)
 		return
 	match anim_name:
-		String(CLAP_PRESS):
-			var r := a.get_animation(RELEASE)
-			_begin(RELEASE, "up", float(r.get_meta(&"up_s", 0.2)) if r else 0.2)
 		String(PRESS_WALL):
-			_begin(PRESS_WALL, "up", float(_anim.get_meta(&"push_s", _hold)))
+			_begin(PRESS_WALL, "up", float(pick.get("back_s", _anim.get_meta(&"push_s", _hold))))
 		_:
-			_begin(StringName(anim_name), "up", float(_anim.get_meta(&"back_s", _hold)))
+			_begin(StringName(anim_name), "up", float(pick.get("back_s", _anim.get_meta(&"back_s", _hold))))
 
 
 # ---------------------------------------------------------------- the clip
-func _begin(clip: StringName, p_phase: String, from_t := 0.0) -> void:
+## Clip `clip`: the Form library's, else BendPoses' (our own libraries; a test's injected clips). Null none.
+func _animation(clip: StringName) -> Animation:
 	var lib := clips()
-	if lib == null or not lib.has_animation(clip):
+	if lib != null and lib.has_animation(clip):
+		return lib.get_animation(clip)
+	return BendPoses.animation(String(clip))
+
+
+func _begin(clip: StringName, p_phase: String, from_t := 0.0) -> void:
+	var a := _animation(clip)
+	if a == null:
 		phase = ""
 		return
-	_anim = lib.get_animation(clip)
+	_anim = a
 	anim_name = String(clip)
 	phase = p_phase
 	clip_t = 0.0
 	_from_t = from_t
 	_w0 = weight
 	if p_phase == "press":
-		_hold = float(_anim.get_meta(&"hold_s", _anim.length))
+		_hold = float(pick.get("hold_s", _anim.get_meta(&"hold_s", _anim.length)))
 		clapped = false
 		pressed = false
 	var sk := caster.player.skeleton
@@ -219,24 +343,47 @@ func _tick(dt: float) -> void:
 				pressed = true                                          # (the wind-up drawn: the palms ready)
 		"release", "up":
 			w = minf(lerpf(_w0, 1.0, clampf(clip_t / 0.06, 0.0, 1.0)), clampf((_anim.length - t) / BLEND_OUT_S, 0.0, 1.0))
+			if phase == "release" and not _struck and (t >= _strike or t >= _anim.length):
+				_strike_now()                                       # (the strike's moment: the move leaves the hand)
 			if t >= _anim.length:
 				_stop()
 				return
 	weight = w
 	if _pose == null or not is_instance_valid(_pose):
 		return
-	if anim_name == String(PUSH_ONE):
-		_pose.layers = [{"anim": _anim, "time": t, "weight": w, "mask": "reach_l"}]
+	var mask := _mask()
+	if mask != "upper":
+		_pose.layers = [{"anim": _anim, "time": t, "weight": w, "mask": mask}]
 		return
-	var still := 1.0 - smoothstep(STILL_MPS.x, STILL_MPS.y, caster.player.horizontal_speed())
+	var still := 1.0 if _legs_always() else 1.0 - smoothstep(STILL_MPS.x, STILL_MPS.y, caster.player.horizontal_speed())
 	_pose.layers = [{"anim": _anim, "time": t, "weight": w, "mask": "upper"}, {"anim": _anim, "time": t, "weight": w * still, "mask": "full"}]
 
 
+## The clip's mask: the pose's, the clip's meta, else the rule (the one-handed push "reach_l"; else "upper", with "full" as
+## far as the caster stands still).
+func _mask() -> String:
+	if pick.has("mask"):
+		return String(pick.mask)
+	if _anim != null and _anim.has_meta(&"mask"):
+		return String(_anim.get_meta(&"mask"))
+	return "reach_l" if anim_name == String(PUSH_ONE) else "upper"
+
+
+## The legs' clip kept while moving (a kick, a stomp: the pose's or the clip's legs_always).
+func _legs_always() -> bool:
+	return bool(pick.get("legs_always", _anim.get_meta(&"legs_always", false) if _anim != null else false))
+
+
 func _stop() -> void:
+	_struck = true                  # (told already as the clip ran out; leaving the tree untold: SwayCaster's fallback lands it)
 	phase = ""
 	anim_name = ""
 	weight = 0.0
 	tier = -1
+	move = ""
+	pick = {}
+	_hand = ""
+	_strike_at = Vector3.INF
 	if _pose != null and is_instance_valid(_pose):
 		_pose.layers = []
 		_pose.active = false
