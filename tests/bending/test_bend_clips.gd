@@ -26,6 +26,15 @@ extends SceneTree
 ##   twins       a -l twin is its clip mirrored in the world: at the hold, the strike and the end, the palms and the ankles of
 ##               the twin are the original's mirrored across the body's middle (within 1 cm)
 ##   record      animations/SOURCE.md's Frontier_Bend.res table has a row naming every clip in the library
+##   third set   round 2 of the skills (2026-10-05): the Kick's low kick and its twin, the High Kick's twin (the second set's
+##               kick, its keys unchanged), the Fireball's deeper chamber, the four guards (the earth catch polished, the
+##               water Turn and its hold loop, the fire Parry, the air Wind Guard and its hold loop), Shove's kick-up,
+##               Column's uproot, the air Pull, Slip (its twin and the back step), Wind Wall and Slice, the water Surf (a
+##               loop) and Skate: each there with its metas (hand, mask, root, the moments; legs_always where the body moves)
+##               and its twin where it has one; the IK's worst miss (meta ik_miss_m, from the bake) at most 5 mm
+##   kept        the 39 clips before round 2 keep their lengths and their moments (hold_s, strike_s, back_s, up_s)
+##   low kick    the low kick's sole at the strike under 0.35 m above the deck and its hold's foot under 0.2 m, the High
+##               Kick's foot at its strike over 0.5 m (the two chambers read apart: the tell never lies)
 ## Ends with "BEND_CLIPS PASSED" or "BEND_CLIPS FAILED" (exit 0 only on a pass; a watchdog quits 2 at LIMIT s).
 
 const LIB := "res://animations_extra/Frontier_Bend.res"
@@ -41,6 +50,35 @@ const SECOND_SET := ["own-bend-stance-earth", "own-bend-stance-fire", "own-bend-
 		"own-bend-fire-sweep", "own-bend-fire-sweep-l", "own-bend-fire-breath", "own-bend-fire-lightning", "own-bend-water-whip",
 		"own-bend-water-whip-l", "own-bend-water-wave", "own-bend-water-draw", "own-bend-water-shield", "own-bend-air-palm",
 		"own-bend-air-palm-l", "own-bend-air-sweep", "own-bend-air-spin", "own-bend-air-leap", "own-bend-air-shield"]
+## The third set (round 2 of the skills): clip -> its twin ("" when it has none).
+const THIRD_SET := {"own-bend-fire-kick-low": "own-bend-fire-kick-low-l", "own-bend-fire-kick": "own-bend-fire-kick-l",
+		"own-bend-fire-fireball": "own-bend-fire-fireball-l", "own-bend-fire-parry": "", "own-bend-earth-kickup": "own-bend-earth-kickup-l",
+		"own-bend-earth-uproot": "", "own-bend-earth-catch": "", "own-bend-water-turn": "", "own-bend-water-turn-hold": "",
+		"own-bend-water-surf": "", "own-bend-water-skate": "", "own-bend-air-pull": "", "own-bend-air-slip": "own-bend-air-slip-l",
+		"own-bend-air-slip-back": "", "own-bend-air-wall": "", "own-bend-air-guard": "", "own-bend-air-shield-hold": "",
+		"own-bend-air-slice": "own-bend-air-slice-l"}
+## The third set's clips the body carries (the game moves it while they play): legs_always.
+const LEGS_ALWAYS := ["own-bend-fire-kick-low", "own-bend-fire-kick-low-l", "own-bend-air-slip", "own-bend-air-slip-l",
+		"own-bend-air-slip-back", "own-bend-water-surf", "own-bend-water-skate"]
+## The 39 clips before round 2: [length in frames, hold, strike, back, up] (frames at 30 fps; -1 none). Their moments kept.
+const BEFORE_R2 := {"own-bend-air-leap": [32, 6, 9, 20, -1], "own-bend-air-palm": [28, 5, 8, 16, -1],
+		"own-bend-air-palm-l": [28, 5, 8, 16, -1], "own-bend-air-shield": [38, 9, 13, 24, -1], "own-bend-air-spin": [36, 5, 8, 20, -1],
+		"own-bend-air-sweep": [36, 7, 11, 22, -1], "own-bend-earth-boulder": [50, 19, 23, 33, -1],
+		"own-bend-earth-burrow": [34, 6, 9, 20, -1], "own-bend-earth-catch": [38, 7, 10, 26, -1], "own-bend-earth-push": [40, 9, 13, 24, -1],
+		"own-bend-earth-raise": [40, 10, 14, 25, -1], "own-bend-earth-rise": [40, 10, 14, 25, -1], "own-bend-earth-shove": [34, 7, 11, 22, -1],
+		"own-bend-earth-shove-l": [34, 7, 11, 22, -1], "own-bend-earth-stomp": [42, 10, 14, 27, -1],
+		"own-bend-fire-breath": [40, 10, 13, 26, -1], "own-bend-fire-double": [30, 5, 8, 18, -1], "own-bend-fire-kick": [36, 6, 9, 22, -1],
+		"own-bend-fire-lightning": [64, 32, 36, 47, -1], "own-bend-fire-punch": [26, 5, 8, 15, -1],
+		"own-bend-fire-punch-l": [26, 5, 8, 15, -1], "own-bend-fire-sweep": [30, 6, 9, 18, -1], "own-bend-fire-sweep-l": [30, 6, 9, 18, -1],
+		"own-bend-knock-air": [44, 10, 1, 30, 26], "own-bend-knock-slide": [36, 9, 1, 21, -1], "own-bend-stance-air": [96, -1, -1, -1, -1],
+		"own-bend-stance-earth": [84, -1, -1, -1, -1], "own-bend-stance-fire": [40, -1, -1, -1, -1],
+		"own-bend-stance-water": [108, -1, -1, -1, -1], "own-bend-throw-overhand": [36, 6, 10, 21, -1],
+		"own-bend-throw-overhand-l": [36, 6, 10, 21, -1], "own-bend-throw-sidearm": [36, 6, 9, 21, -1],
+		"own-bend-throw-sidearm-l": [36, 6, 9, 21, -1], "own-bend-throw-underhand": [34, 6, 9, 19, -1],
+		"own-bend-water-draw": [44, 11, 15, 27, -1], "own-bend-water-shield": [36, 6, 10, 22, -1], "own-bend-water-wave": [42, 11, 15, 26, -1],
+		"own-bend-water-whip": [32, 6, 10, 20, -1], "own-bend-water-whip-l": [32, 6, 10, 20, -1]}
+## The IK's worst miss a third-set clip may have (m; wave 3's bar).
+const IK_MISS := 0.005
 ## The first set's timing contracts (s): kept through the polish.
 const CONTRACTS := {"own-bend-earth-stomp": [10, 14], "own-bend-earth-push": [9, 13], "own-bend-earth-rise": [10, 14],
 		"own-bend-throw-overhand": [6, 10], "own-bend-throw-sidearm": [6, 9], "own-bend-throw-underhand": [6, 9],
@@ -108,6 +146,37 @@ func _run() -> void:
 			_check(reach > 0.0, "%s f%d: the %s's arm short of straight (%.3f m to spare)" % [e[0], e[1], e[2], reach])
 	if "own-bend-earth-boulder" in names:
 		_boulder(lib.get_animation(&"own-bend-earth-boulder"))
+	# third set
+	for nm: String in THIRD_SET:
+		_check(nm in names, "third set: %s in the library" % nm)
+		var twin := String(THIRD_SET[nm])
+		if twin != "":
+			_check(twin in names, "third set: %s's twin %s in the library" % [nm, twin])
+	for nm in names:
+		var a := lib.get_animation(StringName(nm))
+		if THIRD_SET.has(nm) or (nm.ends_with("-l") and THIRD_SET.has(nm.trim_suffix("-l"))):
+			for key in ["hand", "mask", "root"]:
+				_check(a.has_meta(StringName(key)), "%s: has %s" % [nm, key])
+			# (the High Kick's own clip is the second set's, not re-baked: its twin carries the bake's number)
+			if nm == "own-bend-fire-kick":
+				continue
+			_check(a.has_meta(&"ik_miss_m") and float(a.get_meta(&"ik_miss_m")) <= IK_MISS + 1e-6,
+					"%s: the IK's worst miss %.4f m <= %.3f" % [nm, float(a.get_meta(&"ik_miss_m", 1.0)), IK_MISS])
+			if nm in LEGS_ALWAYS:
+				_check(bool(a.get_meta(&"legs_always", false)), "%s: legs_always (the body moves under it)" % nm)
+	# kept
+	for nm: String in BEFORE_R2:
+		_check(nm in names, "kept: %s still in the library" % nm)
+		if not nm in names:
+			continue
+		var a := lib.get_animation(StringName(nm))
+		var want: Array = BEFORE_R2[nm]
+		var got := [int(round(a.length * 30.0))]
+		for key in ["hold_s", "strike_s", "back_s", "up_s"]:
+			got.append(int(round(float(a.get_meta(key)) * 30.0)) if a.has_meta(key) else -1)
+		_check(got == want, "kept: %s's length and moments %s (were %s)" % [nm, str(got), str(want)])
+	if "own-bend-fire-kick-low" in names and "own-bend-fire-kick" in names:
+		_low_kick(lib.get_animation(&"own-bend-fire-kick-low"), lib.get_animation(&"own-bend-fire-kick"))
 	# own
 	for m: String in BANNED_METAS:
 		_check(not lib.has_meta(StringName(m)), "the library carries no %s" % m)
@@ -152,7 +221,8 @@ func _run() -> void:
 		_check(is_equal_approx(a.length, b.length), "%s: the original's length" % nm)
 		for key in ["hold_s", "strike_s", "back_s"]:
 			_check(is_equal_approx(float(a.get_meta(key, -1.0)), float(b.get_meta(key, -1.0))), "%s: the original's %s" % [nm, key])
-		_check(String(b.get_meta(&"hand", "")) == {"r": "l", "l": "r"}.get(String(a.get_meta(&"hand", "")), String(a.get_meta(&"hand", ""))),
+		_check(String(b.get_meta(&"hand", "")) == {"r": "l", "l": "r", "foot_r": "foot_l", "foot_l": "foot_r"}.get(
+				String(a.get_meta(&"hand", "")), String(a.get_meta(&"hand", ""))),
 				"%s: the other hand (%s)" % [nm, b.get_meta(&"hand", "")])
 		for t in [float(a.get_meta(&"hold_s", 0.0)), float(a.get_meta(&"strike_s", 0.0)), a.length * 0.6, a.length]:
 			var ja := _joints(a, t)
@@ -245,6 +315,28 @@ func _boulder(a: Animation) -> void:
 	var ahead := minf((at_strike.l_palm as Vector3).z - (start.l_palm as Vector3).z, (at_strike.r_palm as Vector3).z - (start.r_palm as Vector3).z)
 	_check(ahead > 0.4, "boulder: both palms pushed out ahead at the strike (%.2f m)" % ahead)
 	_check(String(a.get_meta(&"hand", "")) == "both", "boulder: the strike from both hands")
+
+
+## The low kick against the High Kick: the low one's sole skims the deck at its strike (its ankle's lift over its stand, the
+## sole's height when the foot is flat) and its hold's foot is low (the chamber the opponent reads); the high one's foot is up
+## at the waist at its strike.
+func _low_kick(low: Animation, high: Animation) -> void:
+	var deck := _bone(low, 0.0, "r_ankle").y          # (the ankle's height on the stand: the sole on the deck)
+	var sole := _bone(low, float(low.get_meta(&"strike_s")), "r_ankle").y - deck
+	var hold := _bone(low, float(low.get_meta(&"hold_s")), "r_ankle").y - deck
+	var high_foot := _bone(high, float(high.get_meta(&"strike_s")), "r_ankle").y
+	print("BEND_CLIPS low kick: its sole %.3f m over the deck at the strike, %.3f m at the hold; the High Kick's ankle %.3f m up"
+			% [sole, hold, high_foot])
+	_check(sole < 0.35, "low kick: the sole at the strike %.3f m over the deck (< 0.35)" % sole)
+	_check(hold < 0.2, "low kick: the foot at the hold %.3f m over the deck (< 0.2: the low chamber)" % hold)
+	_check(high_foot > 0.5, "High Kick: the foot at the strike %.3f m up (> 0.5)" % high_foot)
+	_check(high_foot - deck - sole > 0.35, "the two kicks' strikes %.2f m apart in height" % (high_foot - deck - sole))
+
+
+## A bone's skeleton-space place with the clip's keyed bones set at t (the rest elsewhere).
+func _bone(a: Animation, t: float, bone: String) -> Vector3:
+	_joints(a, t)
+	return sk.get_bone_global_pose(sk.find_bone(bone)).origin
 
 
 ## How far the arm (or the leg) whose tip is `tip` (l_palm, r_palm) is short of straight at t: its reach (upper + lower) less
