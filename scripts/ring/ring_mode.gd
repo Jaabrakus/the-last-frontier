@@ -122,6 +122,8 @@ const RESET_GRACE_S := 0.12
 var _dummy_next := 0.0
 var _cover_next := 0.0
 var _caster_hooked: SwayCaster
+## Practice's lessons asked for (the main menu's Lessons row, RingLessons.ask; taken by RingLessons.install).
+static var lessons_asked := false
 
 
 ## The match under `lvl` (the ring's level), for `p`, on `arena`: installed by RingLevel.
@@ -168,6 +170,11 @@ func _ready() -> void:
 	var parent: Node = level if level != null else self
 	round_screen = RoundScreen.install(parent, self)
 	match_screen = MatchScreen.install(parent, self)
+	# (Practice's lessons and a first Quick match's key hints: each comes only when asked for, RingLessons / FirstHints)
+	if MatchSetup.practice() and (lessons_asked or "lessons=on" in OS.get_cmdline_user_args()):
+		RingLessons.install(self)
+	elif MatchSetup.quick:
+		FirstHints.install(self)
 	if player != null:
 		player.no_death = true
 		if player.hud != null and player.hud.has_method(&"set_arena"):

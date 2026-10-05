@@ -21,7 +21,9 @@ extends Control
 ##   Quick match   the last setup at once with the opponent's element drawn at random (MatchSetup.quick_match; its line
 ##                 under it: "Fire against a random opponent  ·  normal  ·  best of 3"; the kept opponent left as it was)
 ##   Practice      a dummy to practise on (_open_practice: your element, the dummy's element and way: stand, block or
-##                 throw; MatchSetup.set_practice), into the ring with no clock, rounds or score (RingMode practice)
+##                 throw; MatchSetup.set_practice), into the ring with no clock, rounds or score (RingMode practice); its
+##                 Lessons row the same practice with the lessons' cards (RingLessons.ask: your element's dummy, a card at
+##                 a time, each done by doing it; its line says where they resume)
 ##   Your look     the character creator on the saved look (CharacterCreator; Accept keeps it)
 ##   Open world    the valley of 1765 as it was, in a sub-panel (its rows and their handlers unchanged; Esc from a screen
 ##                 opened there comes back to it):
@@ -409,7 +411,8 @@ static func _practice_line() -> String:
 
 ## Practice (MatchSetup.set_practice; RingMode practice): your element, the dummy's element and its way (each press steps
 ## it; its line under it), and Begin into the ring with no clock, no rounds and no score. The keys there: R puts both back
-## at their ends, B steps the dummy's way.
+## at their ends, B steps the dummy's way. Lessons (RingLessons.ask): the practice with the lessons' cards, against your
+## element's lesson dummy (its line: how many, or where they resume, under the scheme and element chosen above).
 func _open_practice() -> void:
 	_open_panel()
 	var box := VBoxContainer.new()
@@ -426,9 +429,14 @@ func _open_practice() -> void:
 	var els: Array = Bending.ELEMENTS
 	var mine := MenuUI.item("", 22, "-")
 	mine.name = "Element"
+	var lessons := MenuUI.item(RingLessons.word("menu_row"), 30, "-")
+	lessons.name = "Lessons"
+	var paint_lessons := func() -> void:
+		_set_row(lessons, RingLessons.word("menu_row"), RingLessons.menu_line(MatchSetup.scheme(), MatchSetup.element))
 	var paint_mine := func() -> void:
 		var e := MatchSetup.element
 		_set_row(mine, "Your element:  %s" % MatchSetup.label(e), "%s  ·  %s" % [MatchSetup.competitor(e), MatchSetup.style(e)])
+		paint_lessons.call()
 	paint_mine.call()
 	mine.pressed.connect(func() -> void:
 		MatchSetup.element = String(els[(els.find(MatchSetup.element) + 1) % els.size()])
@@ -463,15 +471,25 @@ func _open_practice() -> void:
 	paint_sch.call()
 	sch.pressed.connect(func() -> void:
 		MatchSetup.set_scheme(MatchSetup.next_scheme())
-		paint_sch.call())
+		paint_sch.call()
+		paint_lessons.call())
 	box.add_child(sch)
 	box.add_child(_gap(4))
 	var begin := MenuUI.item("Begin practice", 30)
 	begin.name = "Begin"
 	begin.pressed.connect(func() -> void:
+		RingMode.lessons_asked = false
 		MatchSetup.set_practice()
 		_play_match())
 	box.add_child(begin)
+	# (the lessons: the same practice, its dummy the element's lesson dummy, the cards over it)
+	var rule2 := MenuUI.label(RingLessons.word("panel_line"), 15, MenuUI.DIM, true)
+	rule2.custom_minimum_size = Vector2(520, 0)
+	box.add_child(rule2)
+	lessons.pressed.connect(func() -> void:
+		RingLessons.ask(MatchSetup.element)
+		_play_match())
+	box.add_child(lessons)
 	begin.grab_focus.call_deferred()
 
 
