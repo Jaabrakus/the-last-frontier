@@ -17,6 +17,9 @@ extends Node
 ##                the side holding more ground, then the higher health, else a draw), OVER (pause_s, Space: at once),
 ##                then the next round, the deck cleared (clear_dropped, rebuild), both made whole at their spawns. First to
 ##                to_win round wins takes the match (DONE; max_rounds rounds at most: the higher score, else a drawn match)
+##   the bot      one bot the match long (improvement round 1, PERF: a new bot built each round froze the restart ~1 s): the
+##                last round's made whole at its new end with a new mind (_keep_foe, _ready_foe); a new one only when it
+##                cannot go on (hurt past whole, or the restart asks for another element or difficulty: _spawn_foe)
 ##   never dies   0 health in the ring is winded (RingRules): pushed back a zone, health to 40%; no fall hurts
 ##   the screen   plain text only on its own layer (the round, the countdown, the result, the score); the full strip is
 ##                the HUD's (FrontierHUD.set_arena). Nothing is drawn on or over the opponent
@@ -218,7 +221,9 @@ func next_round() -> void:
 	player_end = (round - 1) % 2
 	_skip = false
 	_count_said = -1
-	_drop_foe()
+	var keep := _keep_foe()
+	if not keep:
+		_drop_foe()
 	if ring != null:
 		ring.clear_dropped()
 		ring.rebuild()
@@ -234,7 +239,10 @@ func next_round() -> void:
 		bd.element = element
 		bd.water = bd.water_max
 		rules.add(player, 0)
-	_spawn_foe()
+	if keep:
+		_ready_foe()
+	else:
+		_spawn_foe()
 	if foe != null:
 		rules.add(foe, 1)
 	rules.reset_round()
@@ -261,7 +269,11 @@ func _spawn_foe() -> void:
 	if &"element" in foe:
 		foe.set(&"element", foe_element)
 	Bending.of(foe).element = foe_element
-	# (ring awareness, the bot's own reading: where it may stand, how far an open end lies along a way)
+	_ring_aware()
+
+
+## The bot's ring awareness, its bending's own reading: where it may stand, how far an open end lies along a way.
+func _ring_aware() -> void:
 	var bend: Variant = foe.brain.bending if foe.brain != null else null
 	if bend is Object and bend != null:
 		var o := bend as Object
@@ -269,6 +281,55 @@ func _spawn_foe() -> void:
 			o.set(&"bounds_fn", rules.bounds_fn_for(foe))
 		if &"edge_fn" in o:
 			o.set(&"edge_fn", rules.edge_along)
+
+
+## Whether last round's bot can stand for this one: there, alive and not down, no wound, broken bone or limp of its own (a
+## bend's slow is not its own: make_whole ends it), of the element and difficulty the match asks for now (a rematch may ask
+## for another), with its bending mind (tactics "bend").
+func _keep_foe() -> bool:
+	if foe == null or not is_instance_valid(foe) or not foe.is_inside_tree() or squad == null or not is_instance_valid(squad):
+		return false
+	if foe.is_dead() or foe.down or foe.left_field or foe.arm_broken != "" or foe.pool > 0.0 or foe.mortal_left > 0.0:
+		return false
+	var own_limp := float(foe.get_meta(&"bend_limp", foe.limp))
+	if own_limp < 1.0:
+		return false
+	return foe.element == foe_element and foe.skill_preset == difficulty and foe.brain != null \
+			and foe.brain.bending != null
+
+
+## Last round's bot at this round's end as a new one would stand there (_spawn_foe): made whole (make_whole: no knock, root,
+## slow or anchor), its health and water full, its feet and hands free, held through the countdown, its home the new spot,
+## its own dice seeded as a new bot's of this round would be; and a new mind (NpcBrain: the target, the lock, the bending's
+## books, its catches answered and its cools, all as at a spawn; the old one's lock let go and its held zones ended first).
+func _ready_foe() -> void:
+	var xf := ring.spawn(1 - player_end, int(RingRules.num("bot_slot", 0.0)))
+	make_whole(foe)
+	if foe.has_meta(&"bend_limp"):
+		foe.limp = float(foe.get_meta(&"bend_limp"))
+		foe.remove_meta(&"bend_limp")
+	foe.feet_held = false
+	foe.health = foe.health_max
+	foe.held = true
+	foe.action = ""
+	foe.face_lock = Vector3.INF
+	foe.hits_taken = 0
+	foe.killed_by = null
+	var dice := RandomNumberGenerator.new()
+	dice.seed = _seed + round * 17           # (_spawn_foe's squad seed: its first draw is a new fighter's own seed)
+	foe.rng_seed = dice.randi() | 1
+	foe.rng.seed = foe.rng_seed
+	foe.home = Vector3(xf.origin.x, ring.deck_y(), xf.origin.z)
+	squad.origin = xf.origin
+	RingLevel.place(foe, xf)
+	foe.halt()
+	if foe.brain.bending != null:
+		foe.brain.bending.on_exit()
+	foe.brain = NpcBrain.new(foe)
+	var bd := Bending.of(foe)
+	bd.element = foe_element
+	bd.water = bd.water_max
+	_ring_aware()
 
 
 func _drop_foe() -> void:
@@ -493,7 +554,7 @@ func _on_winded(who: Node3D, _by: Node, _to_zone: int) -> void:
 func _count_catches() -> void:
 	stats[0]["hits"] = rules.knocks.x + int(stats[0].get("hits", 0))
 	stats[1]["hits"] = rules.knocks.y + int(stats[1].get("hits", 0))
-	# (the bot's own count, NpcBending.catches; a new bot each round, so the match's is the sum of the rounds')
+	# (the bot's own count, NpcBending.catches; a new mind each round, its books with it: the match's is the sum of the rounds')
 	var bend: Variant = foe.brain.bending if foe != null and is_instance_valid(foe) and foe.brain != null else null
 	if bend is Object and bend != null:
 		var n: Variant = (bend as Object).get(&"catches")
