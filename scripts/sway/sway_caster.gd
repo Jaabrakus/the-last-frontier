@@ -29,6 +29,17 @@ extends Node
 ##              move only while the quick lock runs or lands: _pin_*; base_mode_of is the key's). One lock at a time
 ##              (lock_src: SRC_AIM or SRC_QUICK, picked while IDLE by _pick_src): the other button is ignored until the lock
 ##              ends; a lock can start on either the frame after the other's cast. Without an element LMB is not read here
+##   schemes    how the aim's lock picks its move with an element (MatchSetup.scheme(), data/bending/schemes.json; the
+##              owner, 2026-10-05: "still difficult for a human to switch spells" -> every scheme an option): "keys" the
+##              readied spell as ever; "direction" the direction held (held_dir: forward W, back S, side A/D) picks the
+##              element's attack, defence or dodge at its own variation (MatchSetup.direction_move), none the readied
+##              spell; "simple" the readied spell (one of four) at the form its distance band picks (foe_distance:
+##              the nearest opponent, near or far, MatchSetup.simple_mode); "radial" the readied spell (RadialWheel, Tab,
+##              readies it). The pick (scheme_pick: _sch_id at _sch_mode, which mode_of answers for its move while the aim
+##              is held) is made before the lock and followed while it runs (_scheme_follow): a change moves the lock to the
+##              new move, its time so far kept (_switch_lock: the new lock time, the circle and pose begun again,
+##              lock_switched), so the move cast is the one picked at the release. The quick spell, the keys and their
+##              variations are never touched; bots never have a scheme
 ##   the aim    the aim held (PlayerControls "aim") with a spell readied and its hands: the camera over the shoulder as a
 ##              weapon's aim does. What the crosshair is on (the camera's ray, as get_aim_point()): a node in group
 ##              sway_targets (or with meta sway_move), an NpcFighter, a WildAnimal, a RigidBody3D prop (a dropped torch too), a
@@ -123,6 +134,8 @@ signal sail_wind(sail: Node3D, on: bool)
 signal hurled(move: String, stone: Node3D)
 ## A stone held too long broke the hold (its strain): the stone dropped, the caster staggered, the motes lost.
 signal overstrained(move: String, target: Node3D)
+## A lock running moved to another move (the control scheme's pick changed while it ran: a direction, a distance band).
+signal lock_switched(move: String, target: Node3D)
 
 enum State { IDLE, LOCKING, FULL, HOLDING }
 
@@ -140,6 +153,8 @@ const QUICK_BIND_KEY := KEY_Q
 ## The button a lock is taken on (lock_src): the aim's (RMB, the readied spell) or the quick spell's (LMB).
 const SRC_AIM := "aim"
 const SRC_QUICK := "quick"
+## The control schemes' data (MatchSetup.schemes_data; see the header's schemes).
+const SCHEMES_DATA := "res://data/bending/schemes.json"
 ## The set key's line with nothing readied (the quick spell as it stays).
 const NOTHING_READIED := "Ready a move first (1-5); left click stays %s"
 ## The player's meta while a spell is readied with its hands right: the RMB is the spell's, not the weapon's aim (an expert's
@@ -260,6 +275,15 @@ var _pin_id := ""                     ## the quick spell's move while its lock r
 var _pin_mode := ""
 var _pin_on := false                  ## the quick spell's button is the one held or locking now
 var _pinning := false                 ## a quick cast landing (its effect, its strike wait)
+## Tests only: not null stands for the direction held ("forward", "back", "side", "" none) and the nearest opponent's
+## distance (m) for the control schemes.
+var dir_override: Variant = null
+var dist_override: Variant = null
+## The control scheme's pick for the aim's lock now (see the header's schemes; "" none: the readied spell as it is).
+var _sch_id := ""
+var _sch_mode := ""
+## The move wheel (RadialWheel: the radial scheme), the local player's.
+var radial: RadialWheel
 
 
 ## The player's caster, made on first call (the level or the story calls it once; it is safe to call again).
@@ -382,6 +406,7 @@ func _ready() -> void:
 		ring = SwayRing.new()
 		ring.caster = self
 		layer.add_child(ring)
+		radial = RadialWheel.install(self)
 		if DisplayServer.get_name() != "headless":
 			tone = SwayTone.new()
 			tone.name = "SwayTone"
@@ -622,6 +647,8 @@ static func modes_of(id: String) -> Array:
 func mode_of(id: String) -> String:
 	if id != "" and id == _pin_id and (_pin_on or _pinning) and _pin_mode in modes_of(id):
 		return _pin_mode
+	if id != "" and id == _sch_id and not _pin_on and _sch_mode in modes_of(id):
+		return _sch_mode                       # (the control scheme's pick while the aim is held: a direction's, a band's)
 	return base_mode_of(id)
 
 
@@ -762,7 +789,9 @@ func bind_quick() -> bool:
 
 ## The spell the button being held (or locking) casts: the quick spell on LMB, else the readied one.
 func lock_spell() -> String:
-	return quick_id() if lock_src == SRC_QUICK else readied_spell
+	if lock_src == SRC_QUICK:
+		return quick_id()
+	return _sch_id if _sch_id != "" else readied_spell
 
 
 # ---------------------------------------------------------------- the hotbar's spells
@@ -868,6 +897,9 @@ func _physics_process(dt: float) -> void:
 		_wait_release = false                 # (the button a fizzle waited on is let go)
 	if state == State.IDLE:
 		_pick_src()
+		if lock_src != SRC_AIM or not _src_held(SRC_AIM):
+			_sch_id = ""                          # (the scheme's pick lives while the aim is held)
+			_sch_mode = ""
 	var held := _src_held(lock_src)
 	var waiting := _wait_release and _wait_src == lock_src
 	_pin_on = lock_src == SRC_QUICK and (held or state != State.IDLE)
@@ -905,6 +937,8 @@ func _physics_process(dt: float) -> void:
 	if waiting:
 		return
 	_q = _query()
+	if lock_src == SRC_AIM:
+		_scheme_follow()
 	match state:
 		State.IDLE:
 			_try_begin(_q)
@@ -962,6 +996,8 @@ func _held() -> bool:
 ## Whether button `src` is held: the aim (RMB: _held) or the quick spell's (LMB; only while there is a quick spell to cast:
 ## the open world without an element keeps its LMB as it was; and only a press that began on the game: _track_quick).
 func _src_held(src: String) -> bool:
+	if radial != null and is_instance_valid(radial) and radial.is_open:
+		return false                              # (the move wheel open: the mouse is its; casting waits for it to close)
 	if src == SRC_QUICK:
 		if not quick_ready():
 			return false
@@ -981,6 +1017,8 @@ func _quick_input_ok() -> bool:
 		return false
 	if player.get("equip_wheel") != null and player.equip_wheel.blocks_fire():
 		return false
+	if radial != null and is_instance_valid(radial) and radial.blocks_fire():
+		return false                              # (the move wheel open, or its pick click still held)
 	if player.get("torch") != null and player.torch.blocks_fire():
 		return false
 	return true
@@ -1483,7 +1521,6 @@ func _try_begin(q: Dictionary) -> void:
 				player.interactor.notice("Too heavy for one: it needs two casters", 1.5)
 			_hinted = "heavy"
 			return
-	var d := SwayMoves.move(m)
 	var dist := reach_to(point, m)
 	var r := range_of(m, t)
 	if dist > r and not _self_cast(m):
@@ -1505,15 +1542,155 @@ func _try_begin(q: Dictionary) -> void:
 	full_t = 0.0
 	hold_t = 0.0
 	_local_at = t.global_transform.affine_inverse() * point
+	lock_s = _lock_time(m, t, dist, r)
+	if ring:
+		ring.begin()
+	lock_started.emit(m, t)
+
+
+## A lock's time (s) of `m` on `t` at `dist` of its reach `r`: the move's (a stone's, a variation's own), stretched toward the
+## end of its range, times the tier's and lock_mult.
+func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
+	var d := SwayMoves.move(m)
 	var stretch := lerpf(1.0, float(d.get("far_stretch", 1.0)), smoothstep(r * 0.5, r, dist)) if not _self_cast(m) else 1.0
 	var base := float((d.get("stone", {}) as Dictionary).get("lock_s", d.get("lock_s", 1.0))) if holds_stone(m, t) else float(d.get("lock_s", 1.0))
 	var mlk: Dictionary = d.get("mode_lock_s", {})
 	if mlk.has(mode_of(m)) and not holds_stone(m, t):
 		base = float(mlk[mode_of(m)])              # (a variation's own lock: the fireball's, lightning's)
-	lock_s = maxf(base * stretch * lock_mult * tier_mult(m), 0.05)
+	return maxf(base * stretch * lock_mult * tier_mult(m), 0.05)
+
+
+# ---------------------------------------------------------------- the control schemes (see the header)
+## The control scheme the aim's lock follows: MatchSetup's with an element (the ring, the duel), else "keys" (the open world).
+func scheme() -> String:
+	return MatchSetup.scheme() if quick_element() != "" else "keys"
+
+
+## The direction the move keys hold now: "forward" (W), "back" (S), "side" (A or D), "" none (under the dead zone).
+## Forward or back wins a diagonal.
+func held_dir() -> String:
+	if dir_override != null:
+		return String(dir_override)
+	if player == null or player.controls == null:
+		return ""
+	var v := player.controls.move_vector()
+	if v.length() < MatchSetup.direction_dead_zone():
+		return ""
+	if absf(v.y) >= absf(v.x):
+		return "forward" if v.y < 0.0 else "back"
+	return "side"
+
+
+## The nearest opponent's distance (m; INF none): a fighter or another player who can still fight.
+func foe_distance() -> float:
+	if dist_override != null:
+		return float(dist_override)
+	if player == null or not is_inside_tree():
+		return INF
+	var best := INF
+	var pool: Array = get_tree().get_nodes_in_group(NpcFighter.GROUP)
+	pool.append_array(get_tree().get_nodes_in_group(&"player"))
+	for n in pool:
+		if n == player or not n is Node3D or not NpcSenses.can_fight(n):
+			continue
+		best = minf(best, (n as Node3D).global_position.distance_to(player.global_position))
+	return best
+
+
+## What the aim's lock casts under the scheme now: {id, mode} ({} nothing readied and no direction). "direction": the
+## direction held's move at its own variation (one this caster has), else the readied spell; "simple": the readied spell at
+## its distance band's form (one of the element's four), else as it is; "keys", "radial": the readied spell as it is.
+func scheme_pick() -> Dictionary:
+	var el := quick_element()
+	var s := scheme()
+	if s == "direction":
+		var dir := held_dir()
+		if dir != "":
+			var dm := MatchSetup.direction_move(el, dir)
+			if not dm.is_empty() and has(String(dm.id)):
+				return dm
+	if readied_spell == "":
+		return {}
+	if s == "simple":
+		var sm := MatchSetup.simple_mode(el, readied_spell, foe_distance())
+		if sm != "" and sm in modes_of(readied_spell):
+			return {"id": readied_spell, "mode": sm}
+	return {"id": readied_spell, "mode": base_mode_of(readied_spell)}
+
+
+## The scheme's pick taken for the aim (IDLE: the move the lock begins with) and followed while the lock runs (a change:
+## _switch_lock). Nothing with the keys or the radial scheme (the readied spell as ever).
+func _scheme_follow() -> void:
+	if scheme() in ["keys", "radial"]:
+		_sch_id = ""
+		_sch_mode = ""
+		return
+	var want := scheme_pick()
+	if state == State.IDLE:
+		_sch_id = String(want.get("id", ""))
+		_sch_mode = String(want.get("mode", ""))
+		return
+	if state in [State.LOCKING, State.FULL] and not want.is_empty() \
+			and (String(want.id) != move or String(want.mode) != mode_of(move)):
+		_switch_lock(String(want.id), String(want.mode))
+
+
+## The lock running moved to `id` at `mode`, the time locked so far kept: its target picked again for it (left as it was
+## when the new move takes none here: out of reach, nothing it works on), its lock time, the fill from the time so far
+## (back to LOCKING when the new move wants longer, FULL at once when it is past it), the circle and pose begun again.
+func _switch_lock(id: String, mode: String) -> bool:
+	var keep := [_sch_id, _sch_mode]
+	var spent := fill * lock_s
+	_sch_id = id
+	_sch_mode = mode
+	var pk := _lock_target(id, _q)
+	if pk.is_empty():
+		_sch_id = String(keep[0])
+		_sch_mode = String(keep[1])
+		return false
+	var t: Node3D = pk.node
+	var point: Vector3 = pk.point
+	var dist := reach_to(point, id)
+	var r := range_of(id, t)
+	if dist > r and not _self_cast(id):
+		_sch_id = String(keep[0])
+		_sch_mode = String(keep[1])
+		return false
+	move = id
+	target = t
+	_local_at = t.global_transform.affine_inverse() * point
+	lock_s = _lock_time(id, t, dist, r)
+	off_t = 0.0
+	fill = clampf(spent / lock_s, 0.0, 1.0)
+	full_t = 0.0
+	var was_full := state == State.FULL
+	state = State.LOCKING
 	if ring:
 		ring.begin()
-	lock_started.emit(m, t)
+	lock_started.emit(id, t)                    # (the circle and the pose for the new move)
+	lock_switched.emit(id, t)
+	if fill >= 1.0:
+		if was_full:
+			state = State.FULL                   # (no second click: it was full already)
+			locked.emit(move, target)
+		else:
+			_full()
+	return true
+
+
+## Where a lock of `id` would be taken now ({node, point}; {} none), as _try_begin picks it, without its hints.
+func _lock_target(id: String, q: Dictionary) -> Dictionary:
+	if FormCast.is_form(id):
+		var pk := form.pick(id, q)
+		var n: Node3D = pk.get("node")
+		return {"node": n, "point": pk.point} if n != null else {}
+	var t: Node3D = q.get("node")
+	if t == null or move_for(t) != id:
+		var near := _cone_pick(q, id)
+		if near.is_empty():
+			return {}
+		return {"node": near.node, "point": near.point}
+	return {"node": t, "point": q.point}
 
 
 ## Move `m`'s reach on `t` (m): its range_m, or its mode's (mode_range_m: the pillar's free mode); Gust on a stone its

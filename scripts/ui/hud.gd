@@ -81,8 +81,12 @@ const ELEMENT_Q := "%s: the readied move onto LMB"
 func help_text() -> String:
 	var k := SwayCaster.quick_bind_key()
 	var shown_k := k if k != "" else "(no key)"
+	# (the control scheme's own line for how moves are chosen: MatchSetup.scheme(), data/bending/schemes.json "f1")
+	var keys_l := ARENA_HELP.get_slice("\n", 1)
+	var scheme_l := MatchSetup.scheme_text("f1") if MatchSetup.scheme() != "keys" else ""
 	if arena:
-		return ARENA_HELP.replace("Q: the readied move", "%s: the readied move" % shown_k)
+		var h := ARENA_HELP if scheme_l == "" else ARENA_HELP.replace(keys_l, scheme_l)
+		return h.replace("Q: the readied move", "%s: the readied move" % shown_k)
 	var c := SwayCaster.of(player) if player != null else null
 	if c == null or c.quick_element() == "":
 		return HELP
@@ -90,7 +94,8 @@ func help_text() -> String:
 	var wheel_k := SwayCaster.key_name(EquipWheel.ACTION)
 	if wheel_k != "" and wheel_k != k:
 		q_line = "hold %s: equip wheel · %s" % [wheel_k, q_line]     # (the wheel keeps a key of its own)
-	return HELP.replace(WORLD_Q, q_line).replace(WORLD_LMB, ELEMENT_LMB)
+	var out := HELP.replace(WORLD_Q, q_line).replace(WORLD_LMB, ELEMENT_LMB)
+	return out + "\n" + scheme_l if scheme_l != "" else out
 
 
 ## The water bar's colour, and how long "winded" stays among the status words (s).

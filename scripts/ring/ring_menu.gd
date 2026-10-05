@@ -8,8 +8,11 @@ extends CanvasLayer
 ##   Element: Earth     the player's, in turn (MatchSetup.element): from the next restart, not at once
 ##   Opponent: Water    the bot's, in turn, Any among them (MatchSetup.foes): from the next restart
 ##   Difficulty: normal easy, normal, hard in turn (MatchSetup.difficulty): from the next restart
+##   Control scheme: Keys  how moves are chosen, in turn (MatchSetup.set_scheme: keys, direction, wheel, simple): at once,
+##                      kept (data/bending/schemes.json)
 ##   Controls           the chosen element's keys 1-5, each key's two skills with their three variations (Bending.keys,
-##                      moves.json's labels), and how a cast is made
+##                      moves.json's labels), and how a cast is made; under another scheme its own lines
+##                      (MatchSetup.scheme_key_lines) and its line
 ##   Settings           the main menu's (GameSettings)
 ##   Main menu          back to the title (nothing is saved in a match)
 ##   Quit
@@ -26,6 +29,7 @@ var _note: Label
 var _elem: Button
 var _foe: Button
 var _diff: Button
+var _scheme: Button
 var _open := false
 
 
@@ -76,6 +80,8 @@ func _ready() -> void:
 	_elem = _row(_elem_text(), cycle_element, w("element_line"))
 	_foe = _row(_foe_text(), cycle_opponent, w("opponent_line"))
 	_diff = _row(_diff_text(), cycle_difficulty, MatchSetup.difficulty_line(MatchSetup.difficulty))
+	_scheme = _row(MatchSetup.scheme_row(), cycle_scheme, MatchSetup.scheme_row_line())
+	_scheme.name = "Scheme"
 	_row(w("controls"), _controls, w("controls_line"))
 	_row(w("settings"), _settings)
 	_row(w("main_menu"), to_menu)
@@ -189,6 +195,16 @@ func cycle_difficulty() -> void:
 	_note.text = w("applies") % _diff_text()
 
 
+## The next control scheme in turn: at once (the match goes on with it), kept for the next time.
+func cycle_scheme() -> void:
+	MatchSetup.set_scheme(MatchSetup.next_scheme())
+	_paint()
+	_note.text = String((MatchSetup.schemes_data().get("words", {}) as Dictionary).get("changed", "Control scheme: %s")) \
+			% MatchSetup.scheme_label()
+	if _panel.get_child_count() > 0:
+		_controls()                           # (the Controls panel open: it follows)
+
+
 func _elem_text() -> String:
 	return w("element") % MatchSetup.label(MatchSetup.element)
 
@@ -205,6 +221,7 @@ func _paint() -> void:
 	_set_row(_elem, _elem_text())
 	_set_row(_foe, _foe_text())
 	_set_row(_diff, _diff_text(), MatchSetup.difficulty_line(MatchSetup.difficulty))
+	_set_row(_scheme, MatchSetup.scheme_row(), MatchSetup.scheme_row_line())
 
 
 static func _set_row(b: Button, text: String, sub_line := "") -> void:
@@ -229,9 +246,18 @@ func _controls() -> void:
 	_clear_panel()
 	var el := match_mode.element if match_mode != null else MatchSetup.element
 	_panel.add_child(MenuUI.heading(w("controls_head") % MatchSetup.label(el)))
-	_panel.add_child(MenuUI.label(w("controls_how"), 17, MenuUI.DIM, true))
-	for line in control_lines(el):
+	if MatchSetup.scheme() == "keys":
+		_panel.add_child(MenuUI.label(w("controls_how"), 17, MenuUI.DIM, true))
+		for line in control_lines(el):
+			_panel.add_child(MenuUI.label(String(line), 18, MenuUI.INK, true))
+		return
+	# (another control scheme: its own line and its lines; the keys' skills and variations after them)
+	_panel.add_child(MenuUI.label("%s: %s" % [MatchSetup.scheme_label(), MatchSetup.scheme_row_line()], 17, MenuUI.DIM, true))
+	for line in MatchSetup.scheme_key_lines(el):
 		_panel.add_child(MenuUI.label(String(line), 18, MenuUI.INK, true))
+	if MatchSetup.scheme() != "simple":
+		for line in control_lines(el):
+			_panel.add_child(MenuUI.label(String(line), 16, MenuUI.DIM, true))
 
 
 ## "1   Stone Form: spike, boulder, disc  ·  Rock Jab: pebbles, kick-up, stomp" for each key of `el`, Mend's last.

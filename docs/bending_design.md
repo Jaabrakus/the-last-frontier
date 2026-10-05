@@ -24,6 +24,18 @@ element; everyone of that element has the same moves. Status: **plan, not built*
   move first. Only a click on the game counts: the click that takes the mouse back (Esc's free mouse) or that picks on the
   equip wheel starts no lock. The readied key's line (HUD, hotbar, Tab screen) keeps the key's variation while the quick
   lock runs. The open world without an element keeps its LMB.
+- **Control schemes** (the owner, 2026-10-05, after playing: "still difficult for a human to switch spells, there's a lot
+  of things going on" -> all three as options next to the keys; data/bending/schemes.json; chosen in the main menu's
+  Tidebreak panel and the ring's and the duel's Esc menus, kept in GameSettings' match section; the player only, bots never):
+  **Keys** (the above); **Direction** (the direction held as RMB is let go picks the move: W the element's attack, S its
+  defence, A/D its dodge, nothing the key's move; earth Stone spike / Catch / Earth Skate burrow-step, water Water Whip
+  whip / Water Shield bubble / Flow water skate, fire Fire Blast punch / Parry / Footwork hop, air Air Blast ball / Air
+  Shield / Evade sidestep; a direction taken mid-lock moves the lock to its move, the time locked kept; laid out for
+  swipes later); **Wheel** (hold Tab, free in the ring: the element's ten moves round the screen's centre, the mouse
+  toward one, scroll its form, let go to ready it; the game runs on at full speed as the equip wheel; RMB casts);
+  **Simple** (four moves, the first skill of 1-4, two forms each: the nearest opponent within the move's near_m as RMB is
+  let go casts the near form, else the far; the wheel steps the four; nothing on the strip follows the opponent). Each has
+  its own strip (BendStrip), F1 line and first-time panel (HowTo). LMB's quick spell is the same under all of them.
 - Moves read and answer each other (the matrix below): blocking, eroding, melting, cancelling, catching and throwing back.
 
 So each element has 4 slots x 2 skills x 3 variations = 24 moves, plus Mend.

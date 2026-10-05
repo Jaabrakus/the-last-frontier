@@ -8,6 +8,8 @@ extends CanvasLayer
 ##                       the marine's aim, NpcFighter.SKILLS), at once (DuelMode.set_difficulty)
 ##   Element: Earth      the player's element in turn: a new duel as it
 ##   Opponent: Earth     the opponent's element in turn (DuelMode.foe_element): a new duel against it
+##   Control scheme: Keys  how moves are chosen, in turn (MatchSetup.set_scheme: keys, direction, wheel, simple; the same
+##                       one as the ring's, data/bending/schemes.json): at once, kept
 ##   Settings            the main menu's (GameSettings)
 ##   Main menu           back to the title (nothing is saved in a duel)
 ##   Quit
@@ -24,6 +26,7 @@ var _note: Label
 var _diff: Button
 var _elem: Button
 var _foe: Button
+var _scheme: Button
 var _open := false
 
 
@@ -70,6 +73,8 @@ func _ready() -> void:
 	_diff = _row("Difficulty:  %s" % DuelMode.difficulty, cycle_difficulty, "the opponent's skill: how quick its locks, how close its aim")
 	_elem = _row("Element:  %s" % DuelMode.element.capitalize(), cycle_element, "earth, water, fire, air: a new duel as it")
 	_foe = _row("Opponent:  %s" % DuelMode.foe_element.capitalize(), cycle_foe, "the opponent's element: a new duel against it")
+	_scheme = _row(MatchSetup.scheme_row(), cycle_scheme, MatchSetup.scheme_row_line())
+	_scheme.name = "Scheme"
 	_row("Settings", _settings)
 	_row("Main menu", to_menu)
 	_row("Quit", _quit)
@@ -128,6 +133,7 @@ func open() -> void:
 	_note.text = duel.score_text() + "  ·  round %d" % duel.round if duel != null else ""
 	_clear_panel()
 	_paint_diff()
+	_paint_scheme()
 	_root.visible = true
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -171,6 +177,25 @@ func cycle_foe() -> void:
 		t.text = "Opponent:  %s" % el.capitalize()
 	if duel != null:
 		duel.set_foe(el)
+
+
+## The next control scheme in turn (MatchSetup): at once, kept for the next time.
+func cycle_scheme() -> void:
+	MatchSetup.set_scheme(MatchSetup.next_scheme())
+	_paint_scheme()
+	_note.text = String((MatchSetup.schemes_data().get("words", {}) as Dictionary).get("changed", "Control scheme: %s")) \
+			% MatchSetup.scheme_label()
+
+
+func _paint_scheme() -> void:
+	if _scheme == null:
+		return
+	var t := _scheme.find_child("Text", true, false) as Label
+	if t:
+		t.text = MatchSetup.scheme_row()
+	var s := _scheme.find_child("Sub", true, false) as Label
+	if s:
+		s.text = MatchSetup.scheme_row_line()
 
 
 func cycle_difficulty() -> void:

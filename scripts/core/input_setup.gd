@@ -28,6 +28,11 @@ const KEYS := {
 	"anatomy": [KEY_N],      # the skeleton map under every body, on or off (Anatomy)
 	"inspect": [KEY_M],      # a look inside the dead body in reach (InspectView; M closes it again)
 	"household": [KEY_J],    # the household screen: your wife or husband, their tasks and stats (Household)
+	# hold: the move wheel of an element's fighter under the radial control scheme (RadialWheel; MatchSetup.scheme()). Tab
+	# is free in the ring (the arena opens no character screen); in the duel the wheel takes Tab from the character
+	# screen (FrontierPlayer's "inventory") only while that scheme is on. Nothing else in the ring reads Tab, Q is the quick
+	# spell's set key, 1-5 the keys, the mouse wheel the forms, F1 the help, Esc the menu
+	"bend_wheel": [KEY_TAB],
 }
 const MOUSE := {
 	"fire": [MOUSE_BUTTON_LEFT],
