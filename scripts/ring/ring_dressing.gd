@@ -62,7 +62,7 @@ const MOODS := {
 			"caustic_tint": Color(0.72, 0.95, 1.0), "cheer": 0.25, "tunnel": Color(0.1, 0.08, 0.06)},
 	"golden": {"lights": false, "lamp": 0.6, "letters": 0.6, "coal": 2.2, "flame": 2.2, "halo": 0.25, "caustic": 0.5,
 			"caustic_tint": Color(1.0, 0.78, 0.48), "cheer": 0.35, "tunnel": Color(0.12, 0.08, 0.05)},
-	"night": {"lights": true, "lamp": 4.0, "letters": 2.2, "coal": 4.0, "flame": 3.6, "halo": 0.55, "caustic": 0.16,
+	"night": {"lights": true, "lamp": 4.0, "letters": 1.3, "coal": 4.0, "flame": 3.6, "halo": 0.55, "caustic": 0.16,
 			"caustic_tint": Color(1.0, 0.66, 0.36), "cheer": 0.45, "tunnel": Color(0.36, 0.17, 0.07)},
 }
 

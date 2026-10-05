@@ -38,7 +38,7 @@ const PRESETS := {
 		"fx_gain": 0.5, "night": true, "clouds": 0.06, "rays": 1.5, "sun_scale": 1.6, "exposure": 0.62, "sky_ambient": 0.3, "ambient": Color(0.05, 0.07, 0.13),
 		"fog_density": 0.003, "fog_tint": Color(0.3, 0.36, 0.55), "fog_mix": 0.6, "sun_scatter": 0.1,
 		"saturation": 1.1, "contrast": 1.05,
-		"glow_threshold": 0.75, "glow_intensity": 0.85, "glow_bloom": 0.04,
+		"glow_threshold": 1.05, "glow_intensity": 0.6, "glow_bloom": 0.02,
 		"ssao_intensity": 1.4, "ssao_radius": 1.0,
 	},
 }
