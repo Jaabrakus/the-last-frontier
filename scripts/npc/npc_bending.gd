@@ -20,10 +20,12 @@ extends RefCounted
 ##                 the element's personality, its range band, its 'when'; a little chance from its own seeded rng; an option
 ##                 not cast yet a little more, a combo's follow-up much more), else it keeps its range and circles the foe,
 ##                 facing him; tick (each physics frame, NpcFighter._physics_process): the lock filled, the threats looked
-##                 at (BendBolt, a bot's spike in flight, a hurled GustLift stone, the foe's lightning lock, and his wind-up
-##                 read: his lock on a throw or a bolt, its time to impact the lock's rest and the flight) and a guard of its
-##                 element begun in time (catch, deflect, parry, redirect, bubble, shield, spin...: the preset's reaction and
-##                 chance), its own speed braked short of an open end
+##                 at (BendBolt, a bot's spike in flight, a hurled GustLift stone, the foe's lightning lock, a tornado coming
+##                 at it, and his wind-up read: his lock on a throw or a bolt, its time to impact the lock's rest and the
+##                 flight; each with its knock) and a guard of its element begun in time (catch, deflect, parry, redirect,
+##                 bubble, shield, spin...: the preset's reaction and chance; any option whose hint 'answers' the threat's
+##                 kind is a guard too: Earth Grip's anchor against a hard knock, its hint's min_knock and guard_when met, a
+##                 dash only with room for it), its own speed braked short of an open end
 ##   its water     its own meter (Bending.of(it)): a water move it cannot pay for is not chosen; under water_low it goes to a
 ##                 pool (Bending.POOLS) and draws
 ##   the ring      bounds_fn(pos) -> pos clamped to where it may stand, edge_fn(pos, dir) -> metres to the open end along dir
@@ -70,6 +72,20 @@ const THREAT_MISS_M := 1.6
 const SWITCH_FILL := 0.35
 ## A man's wind-up read (his lock on a throw or a bolt, _threats): his strike comes this long after his lock is full (s).
 const READ_STRIKE_S := 0.1
+## A dash whose landing the ring's bounds pull back across the way to the foe by more than this (m) would leave the deck
+## over a long side (_dash_safe).
+const SIDE_SLACK_M := 0.5
+## After its cushion stops a stone, the lift that sends it back waits this long more (s): the stone dropped to the deck.
+const CUSHION_LIFT_S := 0.35
+## A held stone's flight read at this pace (m/s; Gust lift's hurl at full draw is 24 to 30) and, a man's hold, his letting go
+## this long from now (s): he lets go when he will.
+const HELD_MPS := 26.0
+const HELD_LEFT_S := 0.3
+## A volley: the light bolts one foe sends within this long of the first of them seen (a stream's three, a jet's six, a
+## spread of shards or embers) are one threat for the answer's roll (one roll a volley, not one a bolt: a jet's six rolls
+## made an air bot's guard near certain, and its shield sent the whole jet back; R1-BALANCE soak, 2026-10-05). Stones and
+## wind-ups keep a roll each (a stone's catch is earth's core: never rarer).
+const VOLLEY_S := 1.0
 
 static var _ai := {}
 static var _bend_cast: Script = null
@@ -124,6 +140,8 @@ var _guards: Array = []
 var _watched := {}
 var _watch_until := -1.0
 var _threat_seen := {}
+## Per foe (its instance id): the first sight of its volley and its roll ([time, answered]).
+var _volleys := {}
 var _alt := false
 ## The opening grace: no attack begun before this (BendStatus clock); whether it was held at its last tick.
 var _grace_until := 0.0
@@ -382,7 +400,7 @@ func tick(dt: float) -> void:
 		if me.action != "cast":
 			_lose("flinch")
 			return
-		if fill < SWITCH_FILL and String((_option(casting + "/" + mode).get("hint", {}) as Dictionary).get("role", "")) != "reaction":
+		if fill < SWITCH_FILL and not is_guard(_option(casting + "/" + mode).get("hint", {})):
 			# (a lock barely begun let go for a guard against what comes at it now)
 			var g := _reaction()
 			if not g.is_empty():
@@ -579,7 +597,8 @@ func _when(c: String, t: Node3D, d: float) -> bool:
 
 # ---------------------------------------------------------------- the threats and the guards
 ## The guard to begin now against what comes at it ({id, mode, kind} or {}): a threat seen for the preset's reaction (x2
-## dazzled), its time to impact long enough for the guard's lock, answered at the preset's chance (one roll a threat).
+## dazzled), its time to impact long enough for the guard's lock, answered at the preset's chance (one roll a volley:
+## VOLLEY_S).
 func _reaction() -> Dictionary:
 	if _now() < _guard_until:
 		return {}
@@ -596,15 +615,24 @@ func _reaction() -> Dictionary:
 	for th: Dictionary in threats:
 		var id := int(th.id)
 		if not _threat_seen.has(id):
-			var el_react := float(((ai().get("elements", {}) as Dictionary).get(element, {}) as Dictionary).get("react", 1.0))
-			_threat_seen[id] = [now, me.rng.randf() < float(pr.get("react_chance", 0.5)) * el_react]
+			var src := int(th.get("src", 0))
+			var vl: Array = _volleys.get(src, [])
+			if src != 0 and not vl.is_empty() and now - float(vl[0]) < VOLLEY_S:
+				_threat_seen[id] = vl.duplicate()
+			else:
+				var el_react := float(((ai().get("elements", {}) as Dictionary).get(element, {}) as Dictionary).get("react", 1.0))
+				_threat_seen[id] = [now, me.rng.randf() < float(pr.get("react_chance", 0.5)) * el_react]
+				if src != 0:
+					_volleys[src] = _threat_seen[id]
 		var seen: Array = _threat_seen[id]
 		if not bool(seen[1]) or now - float(seen[0]) < react:
 			continue
 		var tti := float(th.tti)
 		for o: Dictionary in options:
 			var h: Dictionary = o.hint
-			if String(h.get("role", "")) != "reaction" or not String(th.kind) in (h.get("answers", []) as Array) or not castable(o):
+			if not is_guard(h) or not String(th.kind) in (h.get("answers", []) as Array) or not castable(o):
+				continue
+			if float(th.get("knock", INF)) < float(h.get("min_knock", 0.0)) or not _guard_fits(o, t):
 				continue
 			var ls := lock_for(String(o.id), String(o.mode), _preset_name(), 0.0)
 			var window := float(o.spec.get("window_s", o.spec.get("life_s", o.spec.get("s", 1.0))))
@@ -614,11 +642,30 @@ func _reaction() -> Dictionary:
 				best = {"id": o.id, "mode": o.mode, "kind": th.kind, "ls": ls}
 	if _threat_seen.size() > 64:
 		_threat_seen.clear()
+		_volleys.clear()
 	return best
 
 
-## What comes at it now: [{id, kind, tti}] (BendBolt and a bot's spike by their flight; a hurled GustLift stone; the foe's
-## lightning by his lock's fill).
+## Whether hint `h` is a guard's: a reaction's, or any option's that answers something (Earth Grip's anchor; a dodge). Only a
+## reaction's starts the guard cool (guard_cool_s).
+static func is_guard(h: Variant) -> bool:
+	return h is Dictionary and (String((h as Dictionary).get("role", "")) == "reaction" or (h as Dictionary).has("answers"))
+
+
+## Whether guard `o` may be begun now: its hint's guard_when (bend_ai.json's when) held, a dash with room for it.
+func _guard_fits(o: Dictionary, t: Node3D) -> bool:
+	var h: Dictionary = o.hint
+	for c: String in h.get("guard_when", []):
+		if not _when(c, t, _flat_d(t)):
+			return false
+	if String(o.do) == "dash" and not _dash_safe(o, t):
+		return false
+	return true
+
+
+## What comes at it now: [{id, kind, tti, knock, src}] (BendBolt and a bot's spike by their flight; a hurled GustLift stone; a
+## tornado coming at it, kind "vortex"; a stone held up and aimed at it, kind "held"; the foe's lightning by his lock's fill;
+## his wind-up). knock: the move's knock_mps; src: a light bolt's sender (its instance id: its volley, VOLLEY_S), else none.
 func _threats() -> Array:
 	var out: Array = []
 	var tree := me.get_tree()
@@ -629,29 +676,48 @@ func _threats() -> Array:
 			continue
 		var tti := _closing(bb.global_position, bb.velocity, c)
 		if tti >= 0.0:
-			out.append({"id": bb.get_instance_id(), "kind": bb.kind, "tti": tti})
+			out.append({"id": bb.get_instance_id(), "kind": bb.kind, "tti": tti, "knock": bb.knock_mps,
+					"src": _src(bb.caster) if bb.kind != "stone" else 0})
 	for f in tree.get_nodes_in_group(FLIGHT_GROUP):
 		var fl := f as Flight
 		if fl == null or fl.shooter == me or fl.stone == null or not is_instance_valid(fl.stone):
 			continue
 		var tti2 := _closing(fl.stone.global_position, fl.velocity, c)
 		if tti2 >= 0.0:
-			out.append({"id": fl.get_instance_id(), "kind": "stone", "tti": tti2})
+			out.append({"id": fl.get_instance_id(), "kind": "stone", "tti": tti2, "knock": 4.0})
 	for g in tree.get_nodes_in_group(GustLift.GROUP):
 		var st: Variant = g.get(&"stone")
 		var v: Variant = g.get(&"velocity")
-		if not (st is Node3D) or not is_instance_valid(st) or not (v is Vector3) or (v as Vector3).length() < 3.0:
+		if not (st is Node3D) or not is_instance_valid(st) or not (v is Vector3) or _caster_body(g.get(&"caster")) == me:
 			continue
-		if _caster_body(g.get(&"caster")) == me:
+		if (g as GustLift).phase == GustLift.Phase.HELD:
+			# (a stone held up and aimed at it, kind "held": its hurl is the hold's rest away (a bot's Hurl), then the flight)
+			var ga := (g as GustLift).aim
+			if ga != Vector3.INF and ga.distance_to(c) < THREAT_MISS_M + 0.6:
+				out.append({"id": (g as Object).get_instance_id() + 1, "kind": "held",
+						"knock": 8.0 if g.get(&"kind") == "cannonball" else 5.0,
+						"tti": _hold_left(g as GustLift) + (st as Node3D).global_position.distance_to(c) / HELD_MPS})
+			continue
+		if (v as Vector3).length() < 3.0:
 			continue
 		var tti3 := _closing((st as Node3D).global_position, v as Vector3, c)
 		if tti3 >= 0.0:
-			out.append({"id": (g as Object).get_instance_id(), "kind": "stone", "tti": tti3})
+			var hk: Variant = g.get(&"kind")
+			out.append({"id": (g as Object).get_instance_id(), "kind": "stone", "tti": tti3, "knock": 8.0 if hk == "cannonball" else 5.0})
+	for z in tree.get_nodes_in_group(BendZone.GROUP):
+		var bz := z as BendZone
+		if bz == null or bz.kind != "tornado" or bz.owner_node == me or bz.speed < 0.5 or bz.is_queued_for_deletion():
+			continue
+		# (a tornado's knock is its pace's, each beat it holds a man: BendZone._every)
+		var tti4 := _closing(bz.global_position + Vector3.UP, bz.way * bz.speed, c)
+		if tti4 >= 0.0:
+			out.append({"id": bz.get_instance_id(), "kind": "vortex", "tti": tti4, "knock": bz.speed * 1.2})
 	var t := brain.target
 	if t != null and is_instance_valid(t):
 		var sc := SwayCaster.of(t) if t is FrontierPlayer else null
 		if sc != null and sc.state != SwayCaster.State.IDLE and sc.move == "fire_arc" and sc.mode_of("fire_arc") == "lightning":
-			out.append({"id": sc.get_instance_id(), "kind": "lightning", "tti": maxf((1.0 - sc.fill) * sc.lock_s, 0.0) + 0.05})
+			out.append({"id": sc.get_instance_id(), "kind": "lightning", "tti": maxf((1.0 - sc.fill) * sc.lock_s, 0.0) + 0.05,
+					"knock": 6.0})
 		elif sc != null and sc.state != SwayCaster.State.IDLE and sc.move != "":
 			# (his wind-up read: a throw or a bolt he is locking, its stone or its element on its way when he lets go)
 			var md := sc.mode_of(sc.move)
@@ -659,35 +725,40 @@ func _threats() -> Array:
 			if not shot.is_empty():
 				var left := maxf((1.0 - sc.fill) * sc.lock_s, 0.0)
 				var began := int((_now() - sc.fill * sc.lock_s) * 10.0)
-				out.append({"id": hash([sc.get_instance_id(), sc.move, md, began]), "kind": shot.kind,
+				out.append({"id": hash([sc.get_instance_id(), sc.move, md, began]), "kind": shot.kind, "knock": shot.knock,
 						"tti": left + READ_STRIKE_S + c.distance_to(NpcSenses.chest_of(t)) / float(shot.mps)})
 		elif t is NpcFighter and (t as NpcFighter).brain != null and (t as NpcFighter).brain.bending != null:
 			var ob := (t as NpcFighter).brain.bending
 			if ob.casting == "fire_arc" and ob.mode == "lightning":
-				out.append({"id": ob.get_instance_id(), "kind": "lightning", "tti": maxf(ob.lock_s - ob.lock_t, 0.0) + 0.05})
+				out.append({"id": ob.get_instance_id(), "kind": "lightning", "tti": maxf(ob.lock_s - ob.lock_t, 0.0) + 0.05,
+						"knock": 6.0})
 			elif ob.casting != "":
 				var shot2 := shot_of(ob.casting, ob.mode)
 				if not shot2.is_empty():
 					out.append({"id": hash([ob.get_instance_id(), ob.casting, ob.mode, int(ob._lock_at * 100.0)]), "kind": shot2.kind,
-							"tti": maxf(ob.lock_s - ob.lock_t, 0.0) + c.distance_to(NpcSenses.chest_of(t)) / float(shot2.mps)})
+							"knock": shot2.knock, "tti": maxf(ob.lock_s - ob.lock_t, 0.0) + c.distance_to(NpcSenses.chest_of(t)) / float(shot2.mps)})
 	return out
 
 
-## What (id, md) sends flying at whom it is cast at: {kind, mps} (a bolt's or a throw's spec; Stone Form's spike and boulder
-## and Earth Shove a stone; Gust lift a stone), {} for anything else (the wind-up a bot reads: _threats).
+## What (id, md) sends flying at whom it is cast at: {kind, mps, knock} (a bolt's or a throw's spec; Stone Form's spike and
+## boulder and Earth Shove a stone; Gust lift a stone), {} for anything else (the wind-up a bot reads: _threats).
 static func shot_of(id: String, md: String) -> Dictionary:
 	var spec := spec_of(id, md)
 	var dn := String(spec.get("do", ""))
 	if dn in ["bolt", "throw"]:
-		return {"kind": String(spec.get("kind", "stone")), "mps": maxf(float(spec.get("mps", 30.0)), 5.0)}
+		return {"kind": String(spec.get("kind", "stone")), "mps": maxf(float(spec.get("mps", 30.0)), 5.0),
+				"knock": float(spec.get("knock_mps", 0.0))}
 	if dn == "shove":
-		return {"kind": "stone", "mps": float((SwayMoves.move("gust").get("raised", {}) as Dictionary).get("mps", 26.0))}
+		var rd: Dictionary = SwayMoves.move("gust").get("raised", {})
+		return {"kind": "stone", "mps": float(rd.get("mps", 26.0)), "knock": float(rd.get("knock_mps", 5.0))}
 	if spec.is_empty() and id == "stone_form":
 		var hurl: Dictionary = ((SwayMoves.move("stone_form").get("throw", {}) as Dictionary).get("hurl", {}) as Dictionary).get(md if md != "" else "spike", {})
 		var mps: Variant = hurl.get("mps", [30.0])
-		return {"kind": "stone", "mps": maxf(float(mps[mps.size() - 1]) if mps is Array else float(mps), 5.0)}
+		var kn: Dictionary = (SwayMoves.move("stone_form").get("throw", {}) as Dictionary).get("knock_mps", {})
+		return {"kind": "stone", "mps": maxf(float(mps[mps.size() - 1]) if mps is Array else float(mps), 5.0),
+				"knock": float(kn.get(md if md != "" else "spike", 4.0))}
 	if spec.is_empty() and id == "gust" and md == "lift":
-		return {"kind": "stone", "mps": 24.0}
+		return {"kind": "stone", "mps": 24.0, "knock": 5.0}
 	return {}
 
 
@@ -701,6 +772,19 @@ static func _closing(p: Vector3, v: Vector3, c: Vector3) -> float:
 	if ts <= 0.0 or ts > 3.0:
 		return -1.0
 	return ts if (rel + v * ts).length() <= THREAT_MISS_M else -1.0
+
+
+## How long until held stone `g` is hurled (s): a bot's Hurl (BendCast's, group bend_hurls) its hold's rest, else HELD_LEFT_S.
+func _hold_left(g: GustLift) -> float:
+	for h in me.get_tree().get_nodes_in_group(&"bend_hurls"):
+		if h.get(&"lift") == g:
+			return maxf(float(h.get(&"hold_s")) - float(h.get(&"t")), 0.0)
+	return HELD_LEFT_S
+
+
+## `n`'s instance id (0: none, or gone).
+static func _src(n: Variant) -> int:
+	return (n as Object).get_instance_id() if is_instance_valid(n) and n is Object else 0
 
 
 static func _caster_body(c: Variant) -> Node:
@@ -726,6 +810,7 @@ func begin(id: String, md: String) -> void:
 	lock_s = lock_for(id, md, _preset_name(), _cast_dist(id, md, t))
 	_lock_at = _now()
 	if String((_option(id + "/" + md).get("hint", {}) as Dictionary).get("role", "")) == "reaction":
+		# (a reaction's only: a guard of another role (the anchor, a hop) never holds back the next catch)
 		_guard_until = _lock_at + lock_s + float(ai().get("guard_cool_s", 0.0))
 	_follow = 0.0
 	for k: String in _next.keys():
@@ -872,8 +957,16 @@ func _watch() -> void:
 
 
 ## A stone it caught and holds sent back: Earth Shove (push) forced as soon as its reaction allows, its rest cut short
-## (the shove's own cool waived: the catch is the moment).
+## (the shove's own cool waived: the catch is the moment). Air's the same way (the design's "air cushions or lifts stone"):
+## a stone its cushion stopped is lifted and hurled back (Gust lift forced, CUSHION_LIFT_S on, once it has dropped; the
+## lift's cool waived).
 func _answer_catch() -> void:
+	if element == "air" and not _option("gust/lift").is_empty():
+		var at_air := _now() + float(preset().get("reaction_s", 0.4)) * 0.5 + CUSHION_LIFT_S
+		_next["gust/lift"] = at_air
+		_cool.erase("gust/lift")
+		_rest_until = minf(_rest_until, at_air)
+		return
 	if element != "earth" or _option("earth_shove/push").is_empty():
 		return
 	var held := false
@@ -910,7 +1003,7 @@ func on_knocked(_v: Vector3, _by: Node = null) -> void:
 
 
 ## Its fighter leaving the world (freed between rounds, cleared): its lock let go, the zones it holds round itself (guards,
-## bubbles, shields: they follow it) ended, so none is left reading a body that is gone.
+## bubbles, shields: they follow it) and its bolts in flight ended, so none is left reading a body that is gone.
 func on_exit() -> void:
 	_cancel()
 	if not me.is_inside_tree():
@@ -920,6 +1013,11 @@ func on_exit() -> void:
 		if bz != null and bz.owner_node == me and bz.follow:
 			bz.set_physics_process(false)
 			bz.end()
+	for b in me.get_tree().get_nodes_in_group(BendBolt.GROUP):
+		# (its bolts in flight, a stone its guard turned aside among them: a strike would read a caster that is gone)
+		var bb := b as BendBolt
+		if bb != null and bb.caster == me and not bb.spent:
+			bb.end("gone")
 	_guards.clear()
 
 
@@ -980,13 +1078,25 @@ func _dash_dir(o: Dictionary, t: Node3D) -> Vector3:
 	return way
 
 
-## Whether a dash (or the pillar's launch) leaves it on the deck: the room along its way past what it carries (edge_margin_m).
+## Whether a dash (or the pillar's launch) leaves it on the deck: the room along its way past what it carries (edge_margin_m),
+## and its landing inside the ropes (bounds_fn's place for it no more than SIDE_SLACK_M across the way to the foe from where
+## it would land: edge_fn reads only the open ends, and side dashes went over a long side; R1-BALANCE soak, 2026-10-05).
 func _dash_safe(o: Dictionary, t: Node3D) -> bool:
 	if not edge_fn.is_valid():
 		return true
 	var spec: Dictionary = o.spec if not bool(o.old) else {"fwd_mps": 6.0, "up_mps": 8.0}
 	var margin := float(ai().get("edge_margin_m", 1.5))
-	return _room(_dash_dir(o, t)) > dash_carry(spec) + margin
+	var dir := _dash_dir(o, t)
+	var reach := dash_carry(spec) + margin
+	if _room(dir) <= reach:
+		return false
+	if bounds_fn.is_valid():
+		var land := me.global_position + Vector3(dir.x, 0.0, dir.z).normalized() * reach
+		var off := _clamp(land) - land
+		var across := _way(t).cross(Vector3.UP).normalized()
+		if absf(off.dot(across)) > SIDE_SLACK_M:
+			return false
+	return true
 
 
 ## A run (wind run, the scooter) only with room at the foe (the brake stops it short of an end).
