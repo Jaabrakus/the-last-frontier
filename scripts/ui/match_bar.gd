@@ -124,7 +124,8 @@ func lines() -> Dictionary:
 	if sc is Vector2i:
 		mine = (sc as Vector2i)[side]
 		theirs = (sc as Vector2i)[1 - side]
-	var to_win := int(_num(m.get(&"rounds_to_win"), MatchSetup.rounds_to_win))
+	# (RingMode names it to_win; the setup's is the next restart's, so only the fallback)
+	var to_win := int(_num(m.get(&"rounds_to_win"), _num(m.get(&"to_win"), MatchSetup.rounds_to_win)))
 	out.score = "You %s  ·  %s %s" % [_pips(mine, to_win), _pips(theirs, to_win, true), _their_name(m, side)]
 	out.zones = [_zone_of(m, player), _their_zone(m, side)]
 	return out
@@ -236,6 +237,9 @@ func _on_round_over(result: Variant, _why: Variant) -> void:
 
 func _on_match_over(winner: Variant) -> void:
 	var mine := false
+	if winner is int and int(winner) < 0:
+		say("The match is drawn")                # (RingMode: -1 a drawn match, max_rounds played level)
+		return
 	if winner is Node:
 		mine = winner == player
 	elif winner is int:

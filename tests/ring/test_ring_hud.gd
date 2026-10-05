@@ -458,10 +458,15 @@ func _body() -> void:
 	await _until(func() -> bool: return c.pose.knock == "", 4.0)
 	_expect(c.pose.knock == "" and not p.is_launched(), "landed, and the clip ends")
 	await _secs(0.5)
-	# 16 m/s: thrown down, and up again
+	# 16 m/s: thrown down, and up again. (With the match in, RingRules is BendKnock.rules: it scales every knock and caps
+	# its push at max_push_m, so no knock of a match reaches ragdoll_mps; the body's own way down and up is checked with
+	# the ring's rules stood aside for this one knock, the ring's ragdoll_mps kept.)
 	_face_centre()
 	var rag := PlayerRagdoll.of(p)
-	BendStatus.knock(p, Vector3(16.0, 1.0, 0.0) * Vector3(_centre_sign(), 1.0, 1.0), null)
+	var ring_rules: Object = BendKnock.rules
+	BendKnock.rules = null
+	BendStatus.knock(p, Vector3(maxf(16.0, BendKnock.ragdoll_mps + 1.0), 1.0, 0.0) * Vector3(_centre_sign(), 1.0, 1.0), null)
+	BendKnock.rules = ring_rules
 	var down := await _until(func() -> bool: return rag.is_down(), 1.0)
 	_expect(down < INF, "a 16 m/s knock throws him down (%.2f s)" % down)
 	var up := await _until(func() -> bool: return not rag.is_down() and p.kneeling == null, 15.0)

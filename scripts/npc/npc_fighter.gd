@@ -1133,7 +1133,8 @@ func _pose() -> void:
 func apply_hit(damage: float, point: Vector3, dir: Vector3, source: Node, part: String) -> void:
 	if _dead or damage <= 0.0 or source == self:
 		return
-	var bleeding := PlayerWounds.kind_of(source) == "bleed"
+	# (no_death, the ring's competitors: a sport's blunt blow, no anatomy: no instant winding from the head, no wound or maim)
+	var bleeding := PlayerWounds.kind_of(source) == "bleed" and not no_death
 	var fx := {}
 	if bleeding and body != null and body.sk != null and dir.length_squared() > 1e-8:
 		var an := Anatomy.attach_to(body.sk)
