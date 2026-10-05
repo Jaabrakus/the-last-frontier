@@ -6,9 +6,12 @@ extends SceneTree
 ## their tracks, nothing else is played) on a plain floor, each clip sampled
 ## at its moments (the start, the wind-up's hold_s, the strike's way in, strike_s, the follow-through, back_s, up_s, the end) and
 ## seen from the front three quarters and from the right side, a row each, labelled; one sheet a clip (clips_<name>.png) and a
-## lineup of every clip at its hold and its strike (clips_lineup.png). Rendered through tools/environment/offscreen_view.gd (a
-## covered macOS window is not drawn; the SubViewport is, when forced), so it needs a window (not --headless).
+## lineup of every clip at its hold and its strike (clips_lineup.png), and one an element (clips_lineup_<earth | water | fire |
+## air | knock>.png: its stance, then each of its casts at its hold and its strike; the throws with earth's). A stance (a loop:
+## meta loop) is sampled at eight even moments through its loop instead. Rendered through tools/environment/offscreen_view.gd
+## (a covered macOS window is not drawn; the SubViewport is, when forced), so it needs a window (not --headless).
 ##   Godot --path . -s tools/anim_author/bend_preview.gd -- out=<dir> [clips=own-bend-earth-stomp,...] [lib=res://...]
+##       [prefix=clips2_]   (the sheets' file names: <prefix><name>.png, <prefix>lineup.png, <prefix>lineup_<element>.png)
 
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
 const CELL := Vector2i(300, 400)
@@ -20,6 +23,7 @@ const VIEWS := {"front34": Vector3(-2.3, 0.35, 3.0), "side": Vector3(-3.7, 0.15,
 var out := ""
 var lib_path := "res://animations_extra/Frontier_Bend.res"
 var only: PackedStringArray = []
+var prefix := "clips_"
 var view
 var label: Label
 var sk: Skeleton3D
@@ -33,6 +37,8 @@ func _initialize() -> void:
 			only = a.get_slice("=", 1).split(",", false)
 		elif a.begins_with("lib="):
 			lib_path = a.get_slice("=", 1)
+		elif a.begins_with("prefix="):
+			prefix = a.get_slice("=", 1)
 	_run.call_deferred()
 
 
@@ -68,8 +74,13 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	var lineup: Array[Image] = []
+	var by_el := {}
 	var names := lib.get_animation_list()
-	names.sort()
+	# (each element's stance first in its lineup)
+	names.sort_custom(func(x: StringName, y: StringName) -> bool:
+		var sx := String(x).contains("-stance-")
+		var sy := String(y).contains("-stance-")
+		return sx and not sy if sx != sy else String(x) < String(y))
 	for nm: StringName in names:
 		if not only.is_empty() and not String(nm) in only:
 			continue
@@ -80,17 +91,40 @@ func _run() -> void:
 			for tm: Array in times:
 				cells.append(await _snap(a, float(tm[0]), vn, "%s\n%s %.2f s (f%d)" % [String(nm).trim_prefix("own-bend-"), tm[1],
 						float(tm[0]), int(round(float(tm[0]) * 30.0))]))
-		_sheet(cells, times.size(), out.path_join("clips_%s.png" % String(nm).trim_prefix("own-bend-")))
+		_sheet(cells, times.size(), out.path_join("%s%s.png" % [prefix, String(nm).trim_prefix("own-bend-")]))
+		var el := _element(String(nm))
+		if not by_el.has(el):
+			by_el[el] = [] as Array[Image]
+		if a.has_meta(&"loop"):
+			var im := await _snap(a, 0.0, "front34", "%s\nloop" % String(nm).trim_prefix("own-bend-"))
+			lineup.append(im)
+			(by_el[el] as Array[Image]).append(im)
 		for key in ["hold_s", "strike_s"]:
 			if a.has_meta(key):
-				lineup.append(await _snap(a, float(a.get_meta(key)), "front34", "%s\n%s" % [String(nm).trim_prefix("own-bend-"), key]))
-	_sheet(lineup, 6, out.path_join("clips_lineup.png"))
+				var im2 := await _snap(a, float(a.get_meta(key)), "front34", "%s\n%s" % [String(nm).trim_prefix("own-bend-"), key])
+				lineup.append(im2)
+				(by_el[el] as Array[Image]).append(im2)
+	_sheet(lineup, 8, out.path_join("%slineup.png" % prefix))
+	for el: String in by_el:
+		_sheet(by_el[el], 7, out.path_join("%slineup_%s.png" % [prefix, el]))
 	print("BEND PREVIEW -> ", out)
 	quit()
 
 
-## The clip's moments: [time, what], in order, without near repeats.
+## The element a clip's lineup is: own-bend-<earth | water | fire | air | knock>-..., a stance's own, the throws earth's.
+func _element(nm: String) -> String:
+	var rest := nm.trim_prefix("own-bend-").trim_prefix("stance-")
+	var head := rest.get_slice("-", 0)
+	return "earth" if head == "throw" else head
+
+
+## The clip's moments: [time, what], in order, without near repeats (a stance: eight even moments through its loop).
 func _moments(a: Animation) -> Array:
+	if a.has_meta(&"loop"):
+		var loop := []
+		for i in 8:
+			loop.append([a.length * i / 8.0, "loop %d/8" % i])
+		return loop
 	var m := {"start": 0.0, "end": a.length}
 	for k in ["hold_s", "strike_s", "back_s", "up_s"]:
 		if a.has_meta(k):
@@ -105,6 +139,11 @@ func _moments(a: Animation) -> Array:
 		m["follow"] = s + (nxt - s) * 0.4
 	if a.has_meta("back_s"):
 		m["recover"] = (float(a.get_meta("back_s")) + a.length) * 0.5
+	# a long wind-up (the boulder's kick and stomp, the lightning's circles) shown on its way to the hold
+	var h := float(a.get_meta("hold_s", 0.0))
+	if h >= 0.4 and float(a.get_meta("strike_s", 0.0)) > h:
+		for k: float in [0.47, 0.63, 0.79]:
+			m["wind %d%%" % int(k * 100.0)] = h * k
 	var arr := []
 	for k: String in m:
 		arr.append([float(m[k]), k])

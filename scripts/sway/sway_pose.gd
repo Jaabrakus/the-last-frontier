@@ -36,6 +36,16 @@ extends Node
 ## while the knock lasts, then on from its back_s to the stand. Launched (a knock-up), own-bend-knock-air: held at its
 ## hold_s in the air, the landing played from its up_s once he is down. Not while down (the ragdoll, kneeling) or dead:
 ## the body is not the pose's then. knock_clip() / knock_weight() say what plays.
+##
+## THE STANCE (element mode only; data/bending/poses.json "stance": the element's own idle loop, our own clips,
+## own-bend-stance-<element>): while he casts as an element and stands still on the ground with his hands free, the stance
+## loops on the full layer under the cast's and the knock's, eased in over STANCE_IN_S as he comes to rest and out as he
+## moves (STILL_MPS: the legs and the root are his locomotion's again), crouches, climbs, rides, kneels or dies. No gait:
+## a stance idle only (the owner rejected an authored gait library on 2026-10-01). stance_clip() / stance_weight() say
+## what plays. The open world (no element) never plays one.
+## THE COMBO: a pose with an "alt" (the next hand: a throw's or a punch's mirrored twin) takes its alt when the same move
+## in the same variation locks again within BendPoses.combo_window_s() of its last cast, and its first clip the time after
+## (left, right, left); combo_alt says which the pose now is.
 
 ## Once per cast: the release's clip passed its strike (or it has none: at once).
 signal struck(move: String)
@@ -99,6 +109,19 @@ var _k_stage := ""
 var _k_t := 0.0
 var _k_w := 0.0
 var _k_anim: Animation
+## The stance: its clip (null none), time in its loop and weight; the element it was taken for.
+const STANCE_IN_S := 0.35
+const STANCE_OUT_S := 0.18
+var _st_anim: Animation
+var _st_el := ""
+var _st_t := 0.0
+var _st_w := 0.0
+## The combo: this pose took its alt; the last cast's move/mode, whether it was the alt, and when (this node's clock, s).
+var combo_alt := false
+var _clock := 0.0
+var _last_key := ""
+var _last_alt := false
+var _last_at := -INF
 
 
 func _ready() -> void:
@@ -222,6 +245,16 @@ func _on_started(m: String, _t: Node3D) -> void:
 	tier = caster.tier(m)
 	var el := BendPoses.element_of(caster.player)
 	pick = BendPoses.pick(m, caster.mode_of(m), el) if el != "" else {}
+	combo_alt = false
+	if not pick.is_empty() and pick.has("alt"):
+		# (the same move again within the combo window: the other hand, then back)
+		var again := _last_key == m + "/" + caster.mode_of(m) and _clock - _last_at <= BendPoses.combo_window_s()
+		if again and not _last_alt:
+			var alt := BendPoses._as_pose(pick.alt)
+			if not alt.is_empty() and BendPoses.usable(String(alt.clip)) and _animation(StringName(String(alt.clip))) != null:
+				alt["from"] = pick.get("from", "mode")
+				pick = BendPoses._filled(alt, BendPoses.data())
+				combo_alt = true
 	var clip: StringName
 	if not pick.is_empty() and _animation(StringName(String(pick.clip))) != null:
 		clip = StringName(String(pick.clip))
@@ -240,6 +273,9 @@ func _on_cast(m: String, _t: Node3D) -> void:
 	if phase == "" or not caster.is_spell(m):
 		return
 	_strike = _release_strike()
+	_last_key = m + "/" + caster.mode_of(m)
+	_last_alt = combo_alt
+	_last_at = _clock
 	_struck = false
 	var nxt := _release_clip()
 	if nxt != StringName(anim_name):
@@ -346,18 +382,24 @@ func clip_time() -> float:
 func _process(dt: float) -> void:
 	if caster == null or caster.player == null or not is_instance_valid(caster.player):
 		return
+	_clock += dt
 	_cast_layers = []
 	_tick(dt)
 	_tick_knock(dt)
+	_tick_stance(dt)
 	_apply()
 
 
-## The cast's layers, then the knock's over them, onto the ToolPose (off when there are none).
+## The stance's layer, the cast's over it, then the knock's over them, onto the ToolPose (off when there are none).
 func _apply() -> void:
+	var stance := _st_anim != null and _st_w > 0.0
 	if _pose == null or not is_instance_valid(_pose):
-		if knock == "" or not _ensure_pose():
+		if (knock == "" and not stance) or not _ensure_pose():
 			return
-	var ls: Array = _cast_layers.duplicate()
+	var ls: Array = []
+	if stance:
+		ls.append({"anim": _st_anim, "time": _st_t, "weight": _st_w, "mask": "full"})
+	ls.append_array(_cast_layers)
 	if knock != "" and _k_anim != null and _k_w > 0.0:
 		ls.append({"anim": _k_anim, "time": _k_t, "weight": _k_w, "mask": "full"})
 	_pose.layers = ls
@@ -433,6 +475,56 @@ func _stop() -> void:
 	if _pose != null and is_instance_valid(_pose) and knock == "":
 		_pose.layers = []
 		_pose.active = false
+
+
+# ---------------------------------------------------------------- the stance
+## The element's stance clip playing (&"" none), and its weight now.
+func stance_clip() -> StringName:
+	return StringName(stance_name(_st_el)) if _st_anim != null and _st_w > 0.0 else &""
+
+
+func stance_weight() -> float:
+	return _st_w if _st_anim != null else 0.0
+
+
+## The stance clip poses.json names for `element` ("" none, or not one of our own usable clips).
+static func stance_name(element: String) -> String:
+	if element == "":
+		return ""
+	var v: Variant = (BendPoses.data().get("stance", {}) as Dictionary).get(element, "")
+	var nm := String(BendPoses._as_pose(v).get("clip", ""))
+	return nm if nm != "" and BendPoses.usable(nm) else ""
+
+
+## How much the stance should show now (0..1): casting as an element, on the ground, still, hands free, upright.
+func stance_wanted() -> float:
+	var p := caster.player
+	if p.is_dead or p.kneeling != null or p.riding != null or p.climbing != null or p.is_crouching:
+		return 0.0
+	if not p.is_on_floor() or not (p.hands_free or p.weapon == null):
+		return 0.0
+	return 1.0 - smoothstep(STILL_MPS.x * 0.5, STILL_MPS.x * 1.6, p.horizontal_speed())
+
+
+func _tick_stance(dt: float) -> void:
+	var el := BendPoses.element_of(caster.player)
+	if el != _st_el:
+		_st_el = el
+		var nm := stance_name(el)
+		var a := BendPoses.animation(nm) if nm != "" else null
+		if a != _st_anim:
+			_st_anim = a
+			_st_w = 0.0
+			_st_t = 0.0
+	if _st_anim == null:
+		_st_w = 0.0
+		return
+	var want := stance_wanted()
+	_st_w = move_toward(_st_w, want, dt / (STANCE_IN_S if want > _st_w else STANCE_OUT_S))
+	if _st_w > 0.0:
+		_st_t = fmod(_st_t + dt, maxf(_st_anim.length, 0.01))
+	else:
+		_st_t = 0.0
 
 
 func _exit_tree() -> void:

@@ -88,21 +88,13 @@ const FORM_CLIPS := {
 var cast_clip := ""
 var cast_pick := {}
 var cast_strike_s := -1.0
-## The own ring-sport clips a bot casts with before data/bending/poses.json maps them for everyone (animations_extra/
-## Frontier_Bend.res: tools/anim_author/blender/bend_clips.py; the first ten, still awaiting the owner's look; none authored
-## here): "move/mode" -> [clip, its left twin ("" none): the next cast of the same takes the other hand].
-const OWN_BEND_CASTS := {
-	"stone_form/spike": ["own-bend-throw-overhand", "own-bend-throw-overhand-l"],
-	"stone_form/disc": ["own-bend-throw-sidearm", "own-bend-throw-sidearm-l"],
-	"rock_jab/pebbles": ["own-bend-throw-underhand", ""],
-	"rock_jab/stomp": ["own-bend-earth-stomp", ""],
-	"earth_shove/push": ["own-bend-earth-push", ""],
-	"earth_shove/split": ["own-bend-earth-push", ""],
-	"earth_wall/column": ["own-bend-earth-rise", ""],
-	"ice/spear": ["own-bend-throw-overhand", "own-bend-throw-overhand-l"],
-	"ice/shards": ["own-bend-throw-sidearm", "own-bend-throw-sidearm-l"],
-	"air_blast/slice": ["own-bend-throw-sidearm", "own-bend-throw-sidearm-l"],
-}
+## A pose with an "alt" (data/bending/poses.json: the next hand, a throw's or a punch's mirrored twin) takes it every other
+## cast of the same move and variation: left, right, left (the player's SwayPose chains them within a combo window).
+## THE STANCE: an element bot's "idle" plays its element's own stance loop (poses.json "stance": own-bend-stance-<element>,
+## in the library looped as "stance_<element>"); clip still reads "idle". Only while he fights: held (the countdown, a round
+## over, a test's held target) he stands at the plain idle. The stance is his body as it is (the earth's horse sinks him
+## 0.12 m): the hit parts and the shot's path through him follow it.
+const STANCE_PREFIX := "stance_"
 ## The own knock reactions (play_knock): braced, sliding back on its feet; launched off them. Played while the knock lasts
 ## (BendKnock: its window, or until it lands), held on the clip's hold_s meanwhile.
 const KNOCK_PREFIX := "own-bend-knock"
@@ -111,6 +103,8 @@ const KNOCK_AIR := "own-bend-knock-air"
 ## The own clips' strike limb (their meta "hand") as strike_point reads it.
 const HANDS := {"r": "r_palm", "l": "l_palm", "both": "both", "foot_r": "r_foot", "foot_l": "l_foot"}
 var _alt := {}
+## The library clip "idle" plays now (its element's stance, else the idle).
+var _played := ""
 ## A knock clip's hold (s into it; -1 none): it stops there while the knock lasts, then plays out.
 var _knock_hold := -1.0
 ## Arms poses over the stance (the player's relaxed long-gun overlay: Musket.relaxed).
@@ -222,6 +216,16 @@ static func library() -> AnimationLibrary:
 		_add(_lib, form, key, FORM_CLIPS[key])
 	for nm: String in BendPoses.all_clips():
 		_add_pose(nm)
+	# each element's stance, looped, for an element bot's idle
+	var stances: Dictionary = BendPoses.data().get("stance", {})
+	for el: String in stances:
+		var snm := String(BendPoses._as_pose(stances[el]).get("clip", ""))
+		if snm != "" and BendPoses.usable(snm):
+			var sa := BendPoses.animation(snm)
+			if sa.loop_mode != Animation.LOOP_LINEAR:
+				sa = sa.duplicate() as Animation
+				sa.loop_mode = Animation.LOOP_LINEAR
+			_lib.add_animation(STANCE_PREFIX + el, sa)
 	return _lib
 
 
@@ -270,14 +274,28 @@ func clip_length(key: String) -> float:
 
 ## Plays clip `key` (blended in over `blend` s) at `speed`; the same clip again only takes the new speed.
 func play(key: String, blend := 0.2, speed := 1.0) -> void:
-	if not has_clip(key):
+	var real := _stance_key() if key == "idle" else key
+	if not has_clip(real):
+		real = key
+	if not has_clip(real):
 		return
 	ap.speed_scale = speed
-	if clip == key:
+	if clip == key and _played == real:
 		return
 	clip = key
-	_props_after(key)
-	ap.play(LIB + "/" + key, blend)
+	_played = real
+	_props_after(real)
+	ap.play(LIB + "/" + real, blend)
+
+
+## The stance an element bot idles in ("" none: not a bender, or no stance clip): its fighter's own element's.
+func _stance_key() -> String:
+	var f := get_parent()
+	var e: Variant = f.get(&"element") if f != null else null
+	if not (e is String or e is StringName) or String(e) == "" or f.get(&"held") == true:
+		return ""
+	var k := STANCE_PREFIX + String(e)
+	return k if has_clip(k) else ""
 
 
 ## Plays one-shot clip `key` from its start (a flinch, a swing, a death); returns its length (0: no such clip).
@@ -286,6 +304,7 @@ func play_once(key: String, blend := 0.1, speed := 1.0) -> float:
 		return 0.0
 	ap.speed_scale = speed
 	clip = key
+	_played = key
 	_props_after(key)
 	ap.play(LIB + "/" + key, blend)
 	ap.seek(0.0, false)
@@ -306,9 +325,7 @@ func play_cast(move: String, mode: String, wind_s: Variant = 0.8, element: Varia
 	var e := String(el) if el is String or el is StringName else ""
 	if e == "":
 		e = BendPoses.element_of(get_parent())
-	var pk := _own_pick(move, mode) if e != "" else {}
-	if pk.is_empty() and e != "":
-		pk = BendPoses.pick(move, mode, e)
+	var pk := _pick_turn(move, mode, e) if e != "" else {}
 	var key := "cast_push"
 	var strike := -1.0
 	if not pk.is_empty() and (has_clip(String(pk.clip)) or (_add_pose(String(pk.clip)) and has_clip(String(pk.clip)))):
@@ -332,21 +349,20 @@ func play_cast(move: String, mode: String, wind_s: Variant = 0.8, element: Varia
 	return rate
 
 
-## The own ring-sport clip for (move, mode) (OWN_BEND_CASTS: the right hand, then its left twin, in turn), as a pick filled
-## from the clip's metas (BendPoses._filled); {} none (or not in the libraries).
-func _own_pick(move: String, mode: String) -> Dictionary:
-	var row: Variant = OWN_BEND_CASTS.get(move + "/" + mode)
-	if not (row is Array):
-		return {}
-	var k := move + "/" + mode
-	var nm := String(row[0])
-	if String(row[1]) != "" and bool(_alt.get(k, false)):
-		nm = String(row[1])
-	_alt[k] = not bool(_alt.get(k, false))
-	if not BendPoses.usable(nm):
-		return {}
-	var pk := BendPoses._filled({"clip": nm, "from": "own"}, BendPoses.data())
-	pk["hand"] = HANDS.get(String(pk.get("hand", "r")), String(pk.get("hand", "r_palm")))
+## The pose for (move, mode) as an `element` caster (BendPoses.pick), its alt every other cast (the right hand, then the
+## left, in turn); {} none. A limb named the clips' way (r, l, both, foot_r) is put the game's way (HANDS).
+func _pick_turn(move: String, mode: String, element: String) -> Dictionary:
+	var pk := BendPoses.pick(move, mode, element)
+	if not pk.is_empty() and pk.has("alt"):
+		var k := move + "/" + mode
+		var turn := bool(_alt.get(k, false))
+		_alt[k] = not turn
+		var alt := BendPoses._as_pose(pk.alt)
+		if turn and not alt.is_empty() and BendPoses.usable(String(alt.clip)):
+			alt["from"] = pk.get("from", "mode")
+			pk = BendPoses._filled(alt, BendPoses.data())
+	if pk.has("hand"):
+		pk["hand"] = HANDS.get(String(pk.hand), String(pk.hand))
 	return pk
 
 
