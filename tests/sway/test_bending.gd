@@ -8,13 +8,20 @@ extends SceneTree
 ##   meeting    water + fire bolts: steam, both gone; a stone goes on through fire; the water jet wears an earth wall more than
 ##              fire does; fire melts an ice wall; a bubble stops fire and lets stone through; an air shield sends fire back;
 ##              a catch takes the bender's spike out of the air
-##   Godot --headless --fixed-fps 60 --path . -s tests/sway/test_bending.gd -- mode=duel
+##   only=<element> (earth, water, fire, air): every move of that element only (the keys and the meetings as ever); the count
+##   cast and the time it took printed
+##   Godot --headless --fixed-fps 60 --path . -s tests/sway/test_bending.gd -- mode=duel [only=fire]
+
+## The run's limit (s): it fails itself before the lock wrapper's GODOT_TIMEOUT kills it.
+const WATCHDOG_S := 280.0
 
 var fails := 0
 var p: FrontierPlayer
 var c: SwayCaster
 var duel: DuelMode
 var n: NpcFighter
+## Every move of this element only ("" all).
+var only := ""
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -24,6 +31,18 @@ func _expect(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	seed(1750)
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("only="):
+			only = a.substr(5)
+	if only != "" and not only in Bending.ELEMENTS:
+		print("  FAIL only=%s is no element (%s)" % [only, str(Bending.ELEMENTS)])
+		print("BENDING FAILED")
+		quit(1)
+		return
+	create_timer(WATCHDOG_S, true, false, true).timeout.connect(func() -> void:
+		print("BENDING FAILED (watchdog)")
+		quit(2))
 	DuelMode.incoming = true
 	change_scene_to_file("res://scenes/main.tscn")
 	_go.call_deferred()
@@ -117,8 +136,15 @@ func _keys() -> void:
 # ---------------------------------------------------------------- every move
 func _every_move() -> void:
 	var count := 0
+	var want := 0
 	var bad: Array[String] = []
+	var t0 := Time.get_ticks_msec()
 	for el: String in Bending.ELEMENTS:
+		if only != "" and el != only:
+			continue
+		for pair in Bending.keys(el):
+			for id: String in pair:
+				want += SwayCaster.modes_of(id).size()
 		for pair in Bending.keys(el):
 			for id: String in pair:
 				for mode: String in SwayCaster.modes_of(id):
@@ -132,6 +158,8 @@ func _every_move() -> void:
 					count += 1
 					if why != "":
 						bad.append("%s/%s: %s" % [id, mode, why])
+	print("  every move: %d cast of %s in %.1f s" % [count, only if only != "" else "every element", (Time.get_ticks_msec() - t0) / 1000.0])
+	_expect(count == want and count > 0, "%s: %d (move, mode) cast, %d wanted" % [only if only != "" else "every element", count, want])
 	_expect(bad.is_empty(), "every element's every move cast and did its work (%d moves)%s" % [count, "" if bad.is_empty() else ": " + ", ".join(bad)])
 
 
@@ -247,17 +275,20 @@ func _meetings() -> void:
 	await physics_frame
 	# a catch takes the bender's spike out of the air
 	_stage(12.0)
-	var g := BendZone.make(p, "catch", p.global_position, {"window_s": 3.0, "radius_m": 3.5})
+	# (the window as long as the wait: the wait counted 1/60 s a tick before, at 120 ticks a second, so it was 3 s)
+	var g := BendZone.make(p, "catch", p.global_position, {"window_s": 6.0, "radius_m": 3.5})
 	n.held = false
 	n.brain.bending._next["spike"] = 0.0
 	var t := 0.0
-	while t < 6.0 and g.took == 0:
+	var took := 0
+	while t < 6.0 and took == 0 and is_instance_valid(g):
 		await physics_frame
-		t += 1.0 / 60.0
+		t += 1.0 / Engine.physics_ticks_per_second     # (one physics tick: 1/120 s here, not a 60 fps frame)
 		p.health = p.max_health
+		took = g.took if is_instance_valid(g) else took
 	var held := false
 	for st in get_nodes_in_group(FormStone.GROUP):
 		if int((st as Node).get_meta(&"bend_held_by", -1)) == p.get_instance_id():
 			held = true
-	_expect(g.took >= 1 and held, "a catch takes the bender's spike out of the air and holds it (%.1f s)" % t)
+	_expect(took >= 1 and held, "a catch takes the bender's spike out of the air and holds it (%.1f s)" % t)
 	n.held = true

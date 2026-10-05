@@ -10,14 +10,22 @@ extends Node3D
 ##   moving      tornado (goes on along its way, lifting and carrying whoever it meets), vacuum (the air pulled out round a
 ##               place: whoever is in it slowed)
 ##   guards      on its owner for a moment (window_s): catch (a stone flying at him caught and held before him: Earth Shove
-##               sends it back), deflect (a stone knocked aside), cushion (a stone slowed to a stop and dropped), redirect
-##               (water and ice sent back), parry (fire knocked aside), spin (light bolts knocked aside), absorb (water drunk
-##               in: a little health)
+##               sends it back), deflect (a stone knocked aside), cushion (a stone slowed to a stop and dropped): a GustLift
+##               throw, a bot's spike (NpcBending.Flight) or a stone bolt (BendBolt kind "stone": the disc, the pebbles, a
+##               shoved chunk; caught or cushioned it is a FormStone again); redirect (water and ice sent back), return (Air
+##               Redirect: light bolts, fire, water, ice and air, sent back at who sent them), parry (fire knocked aside),
+##               spin (light bolts knocked aside), absorb (water drunk in: a little health)
+## put_out (spec.put_out: the spray): what burns in it goes out as it is made and while it stands (fire walls, burning ground,
+## campfires, torches not in its owner's hand).
+## The tornado keeps to the ground under it (FormEffects.ground_at: a deck, a raised floor; the terrain where there is none).
+## Whom it reaches: BendCaster.near (the player found through his group). Its owner any Node3D (the player, a bot).
 ## on_bolt(b): what it does to bolt `b` passing (true: it acted). Group GROUP.
 
 const GROUP := &"bend_zones"
 const LIGHT := ["fire", "water", "ice", "air"]
-const GUARDS := ["catch", "deflect", "cushion", "redirect", "parry", "spin", "absorb"]
+const GUARDS := ["catch", "deflect", "cushion", "redirect", "return", "parry", "spin", "absorb"]
+## The earth guards: they take stones.
+const STONE_GUARDS := ["catch", "deflect", "cushion"]
 
 var kind := "bubble"
 var owner_node: Node3D
@@ -32,6 +40,11 @@ var speed := 0.0
 var t := 0.0
 ## What a guard took (stones caught, bolts sent back), for the tests.
 var took := 0
+## What burns in it goes out (the spray); how many it has put out.
+var put_out := false
+var put_out_n := 0
+## The stones a guard caught or dropped from stone bolts (FormStone), for the tests.
+var stones: Array[FormStone] = []
 
 var _tick := 0.0
 var _fx: Array[Node] = []
@@ -48,6 +61,7 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	z.life_s = float(spec.get("life_s", spec.get("window_s", 3.0)))
 	z.damage_s = float(spec.get("damage_s", 0.0))
 	z.speed = float(spec.get("mps", 0.0))
+	z.put_out = bool(spec.get("put_out", false))
 	var w := Vector3(p_way.x, 0.0, p_way.z)
 	z.way = w.normalized() if w.length_squared() > 1e-6 else Vector3.FORWARD
 	z.add_to_group(GROUP)
@@ -119,7 +133,7 @@ func _physics_process(dt: float) -> void:
 		global_position = owner_node.global_position
 	if kind == "tornado":
 		global_position += way * speed * dt
-		global_position.y = FrontierTerrain.height_at(global_position.x, global_position.z)
+		global_position.y = FormEffects.ground_at(self, global_position).y      # (a deck's, not the terrain's under it)
 	_tick -= dt
 	if _tick <= 0.0:
 		_tick = 0.25
@@ -141,7 +155,9 @@ func inside(p: Vector3) -> bool:
 ## Its lasting effects on whom it holds, each `dt` s.
 func _every(dt: float) -> void:
 	var r := maxf(radius, size.x * 0.6)
-	for e in BendStatus.near(owner_node, global_position, r + 1.0):
+	if put_out:
+		put_out_fires()
+	for e in BendCaster.near(owner_node, global_position, r + 1.0):
 		var n: Node3D = e[0]
 		if not inside(n.global_position):
 			continue
@@ -205,6 +221,14 @@ func on_bolt(b: BendBolt) -> bool:
 			if b.kind in ["water", "ice"]:
 				_send_back(b)
 				return true
+		"return":
+			if b.kind in LIGHT:
+				_send_back(b)
+				return true
+		"catch", "deflect", "cushion":
+			if b.kind == "stone":
+				_take_bolt(b)
+				return true
 		"parry":
 			if b.kind == "fire":
 				_aside(b)
@@ -231,20 +255,81 @@ func _send_back(b: BendBolt) -> void:
 
 
 func _aside(b: BendBolt) -> void:
-	var side := b.velocity.cross(Vector3.UP).normalized() * (1.0 if randf() < 0.5 else -1.0)
+	var bc := BendCaster.of(owner_node)
+	var r := bc.rand_f() if bc != null else randf()
+	var side := b.velocity.cross(Vector3.UP).normalized() * (1.0 if r < 0.5 else -1.0)
 	b.redirect(side + b.velocity.normalized() * 0.3, owner_node)
 	took += 1
 
 
+## A stone bolt met by an earth guard: deflect knocks it aside; catch and cushion end it, a FormStone of its size left in its
+## place (caught: held before the owner for Earth Shove; cushioned: dropped where it was).
+func _take_bolt(b: BendBolt) -> void:
+	if kind == "deflect":
+		_aside(b)
+		BendLooks.burst(b.global_position, "stone", 10)
+		return
+	var at := b.global_position
+	var v := b.velocity
+	var rad := clampf(b.radius, 0.12, 0.45)
+	b.end("caught" if kind == "catch" else "cushioned")
+	var s := FormStone.ball(get_tree().current_scene, at - Vector3.UP * rad, {"radius_m": rad, "mass_kg": 20.0, "rise_s": 0.01,
+			"life_s": 30.0, "sink_s": 1.0}, absi(hash(Vector3i(at * 10.0))) % 97, "stone")
+	s.state = FormStone.State.RESTING
+	s.base = Transform3D(Basis.IDENTITY, at)
+	s.global_transform = s.base
+	s.set_meta(&"bend_shape", b.shape)
+	stones.append(s)
+	_take_stone(s, v)
+
+
+## What burns in it goes out: fire walls and burning ground (steam), campfires, torches not in its owner's hand. How many.
+func put_out_fires() -> int:
+	var n := 0
+	for z in get_tree().get_nodes_in_group(GROUP):
+		var o := z as BendZone
+		if o != null and o != self and o.kind in ["fire_wall", "burn"] and not o.is_queued_for_deletion() \
+				and (inside(o.global_position) or o.global_position.distance_to(global_position) <= radius + 1.0):
+			BendLooks.burst(o.global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
+			o.end()
+			n += 1
+	var r := maxf(radius, size.x * 0.5) + 0.5
+	for f in get_tree().get_nodes_in_group(Campfire.GROUP):
+		if f is Campfire and (f as Campfire).is_lit() and (f as Node3D).global_position.distance_to(global_position) <= r:
+			(f as Campfire).smother()
+			n += 1
+	for f in get_tree().get_nodes_in_group(TorchFire.GROUP):
+		var tf := f as TorchFire
+		if tf == null or tf.state == null or not tf.state.lit or tf.global_position.distance_to(global_position) > r:
+			continue
+		if owner_node != null and is_instance_valid(owner_node) and owner_node.is_ancestor_of(tf):
+			continue                              # (its owner's own torch)
+		SwayEffects.snuff(tf)
+		n += 1
+	put_out_n += n
+	return n
+
+
+## The body of a stone's caster (a GustLift's: a SwayCaster's player, a BendCaster's body).
+static func _body_of(c: Object) -> Node:
+	if c == null or not is_instance_valid(c):
+		return null
+	var b: Variant = c.get(&"body")
+	if b is Node:
+		return b as Node
+	b = c.get(&"player")
+	return b as Node if b is Node else null
+
+
 ## Stones flying at its owner (a guard: catch, deflect, cushion): a Stone Form or Gust throw (GustLift), a bender's spike
-## (NpcBending.Flight).
+## (NpcBending.Flight). (Stone bolts: on_bolt.)
 func _stones() -> void:
 	var me := owner_node.global_position + Vector3.UP * 1.0
 	for l in get_tree().get_nodes_in_group(GustLift.GROUP):
 		var lift := l as GustLift
 		if lift == null or lift.phase != GustLift.Phase.FLIGHT or lift.stone == null or not is_instance_valid(lift.stone):
 			continue
-		if lift.caster != null and lift.caster.player == owner_node:
+		if _body_of(lift.caster) == owner_node:
 			continue
 		if lift.stone.global_position.distance_to(me) <= radius:
 			var s := lift.stone as Node3D
