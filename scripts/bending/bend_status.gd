@@ -11,11 +11,28 @@ extends RefCounted
 ##           duel's countdown hold or a wheelbarrow's cap is never let go by a root ending); a fighter's feet_held (not
 ##           `held`: its brain still thinks and it still casts while rooted).
 ##   slow    the player's bend_speed_cap at SLOW_MPS; a fighter's limp.
+## ROUND 2 (skills_r2 spec §2.3, §2.4, §8.2 "Removed paths"; the owner: "getting hit never slows the player"):
+##   no roots or slows in element mode: root() and slow() leave alone anyone who casts as an element (BendPoses.element_of:
+##           the ring's competitors, the duel's two), counted in `held_off`; the open world keeps them
+##   the hit's cost: hurt(..., lock_s) writes on the struck body what the blow cost its caster (HIT_LOCK_META: the move's lock
+##           time, -1 unknown) before the body is told (its hurt signal), so SwayCaster pushes a lock back by it (setback_s)
+##   Rooted: an earth competitor standing still (Bending.passive("earth"): under still_mps) takes knock_mult of a knock
+##   clear_round(b): every timed bend meta on `b` gone (ROUND_METAS; RingMode.make_whole's list and round 2's)
 
 ## (old name) BendKnock.ragdoll_mps's first value: a knock this hard (m/s) or more throws the player off his feet.
 const KNOCK_DOWN_MPS := 9.0
 ## A slowed man's pace (m/s).
 const SLOW_MPS := 1.6
+## What the last blow on a body cost its caster (s; -1 unknown): hurt's lock_s, read by the struck one's SwayCaster.
+const HIT_LOCK_META := &"bend_hit_lock_s"
+## Every timed bend meta a round leaves on a body (clear_round): the old ones and round 2's (a guard's whiff, Carried wind,
+## the burrow under the stones, the guard's last result, the last blow's cost).
+const ROUND_METAS: Array[StringName] = [&"bend_root", &"bend_slow", &"bend_anchor", &"bend_redirect_lightning",
+		&"bend_brace", &"bend_dazzle_until", &"bend_whiff_until", &"bend_carry_until", &"bend_under_until",
+		&"bend_last_guard", &"bend_hit_lock_s", &"bend_dash_end", &"bend_slip_until"]
+
+## Roots and slows left alone because their body casts as an element (the tests).
+static var held_off := 0
 
 
 ## The bend's clock (s): the game's physics time, not the wall's, so a timed effect's end (its meta) and its timer agree
@@ -63,9 +80,13 @@ static func near(caster: Node, at: Vector3, r: float) -> Array:
 
 
 ## `dmg` to `n` from `by` at `at` going `dir`: a blunt blow (no anatomy wound; the striker's damage_kind meta for the hit).
-static func hurt(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node) -> void:
+## `lock_s`: what the blow cost its caster (its move's lock time; -1 unknown), written on `n` first (HIT_LOCK_META).
+static func hurt(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lock_s := -1.0) -> void:
+	if by != null and not is_instance_valid(by):
+		by = null                                # (its caster freed since: the blow is no one's)
 	if dmg <= 0.0 or not can_take(n, by):
 		return
+	n.set_meta(HIT_LOCK_META, lock_s)
 	var had: Variant = by.get_meta(&"damage_kind") if by != null and by.has_meta(&"damage_kind") else null
 	if by != null:
 		by.set_meta(&"damage_kind", "blunt")
@@ -81,8 +102,11 @@ static func hurt(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node) -> vo
 ## `n` knocked along `v` (m/s; its up part lifts, LAUNCH_UP_MPS or more launches) by `by`. An anchored one (anchor) is not
 ## moved. The player and the fighters through BendKnock (the same model for both).
 static func knock(n: Node, v: Vector3, by: Node) -> void:
+	if by != null and not is_instance_valid(by):
+		by = null
 	if v.length_squared() < 1e-4 or not can_take(n, by) or until(n, &"bend_anchor") > 0.0:
 		return
+	v *= rooted_mult(n)
 	if n is FrontierPlayer or n is NpcFighter:
 		BendKnock.of(n).knock(v, by)
 	elif n is WildAnimal:
@@ -99,13 +123,56 @@ static func until(n: Node, key: StringName) -> float:
 
 
 ## `n`'s feet held where it stands for `s` (the player's bend_speed_cap 0; a fighter's feet_held: it still thinks and casts).
+## Never on one who casts as an element (held_off).
 static func root(n: Node, s: float) -> void:
+	if element_mode(n):
+		held_off += 1
+		return
 	_timed(n, &"bend_root", s, 0.0)
 
 
-## `n` slowed to SLOW_MPS for `s`.
+## `n` slowed to SLOW_MPS for `s`. Never on one who casts as an element (held_off).
 static func slow(n: Node, s: float) -> void:
+	if element_mode(n):
+		held_off += 1
+		return
 	_timed(n, &"bend_slow", s, SLOW_MPS)
+
+
+## Whether `n` casts as an element now (the ring, the duel: BendPoses.element_of).
+static func element_mode(n: Node) -> bool:
+	return n != null and is_instance_valid(n) and BendPoses.element_of(n) != ""
+
+
+## The Rooted passive's share of a knock on `n` (1 unless an earth competitor stands still: Bending.passive("earth")).
+static func rooted_mult(n: Node) -> float:
+	if not (n is CharacterBody3D) or BendPoses.element_of(n) != "earth":
+		return 1.0
+	var pv := Bending.passive("earth")
+	var v := (n as CharacterBody3D).velocity
+	if Vector2(v.x, v.z).length() >= float(pv.get("still_mps", 0.3)) or not (n as CharacterBody3D).is_on_floor():
+		return 1.0
+	return float(pv.get("knock_mult", 0.85))
+
+
+## How far a lock of the struck `n` is pushed back by its last blow (spec §2.3: what the blow cost its caster, at least
+## hit_setback_min_s). Read once: the blow's cost is taken off `n` (a later blow that is not a bend's, a melee hit, costs
+## the least).
+static func setback_s(n: Node) -> float:
+	var cost := -1.0
+	if n != null and is_instance_valid(n) and n.has_meta(HIT_LOCK_META):
+		cost = float(n.get_meta(HIT_LOCK_META))
+		n.remove_meta(HIT_LOCK_META)
+	return maxf(cost, Bending.rule("hit_setback_min_s", 0.25))
+
+
+## Every timed bend meta on `b` gone (a new round: RingMode.make_whole).
+static func clear_round(b: Node) -> void:
+	if b == null or not is_instance_valid(b):
+		return
+	for k in ROUND_METAS:
+		if b.has_meta(k):
+			b.remove_meta(k)
 
 
 ## The caster can't be knocked back for `s`.

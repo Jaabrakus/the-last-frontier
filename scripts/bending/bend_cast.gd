@@ -49,6 +49,10 @@ static func cast(c: Variant, id: String, mode: String, t: Node3D = null, at := V
 			made = FormEffects.stone_form(bc, at if at != Vector3.INF else bc.aim_point(), d, mode if mode == "cannonball" else "spike")
 		"earth_wall":
 			var reach := float(d.get("range_m", 3.2))
+			if at == Vector3.INF and BendStatus.element_mode(bc.body):
+				# (round 2: where the aim is, 2-6 m off, facing the caster: FormEffects.place_point; its ahead_m taken back)
+				var pt := FormEffects.place_point(bc, d.get("place", (d.get("wall", {}) as Dictionary).get("place", {})))
+				at = pt - FormEffects.way_to(bc, pt) * float((d.get("wall", {}) as Dictionary).get("ahead_m", 0.75))
 			made = FormEffects.earth_wall(bc, at if at != Vector3.INF else toward(bc, reach * WALL_SHARE, 0.5), d)
 		"pillar":
 			if mode == "free":

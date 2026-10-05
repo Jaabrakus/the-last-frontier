@@ -38,6 +38,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import crowd  # noqa: E402
 import elements as el  # noqa: E402
+import guards as gd  # noqa: E402
 import kit  # noqa: E402
 from kit import dsp  # noqa: E402
 
@@ -86,6 +87,17 @@ SOUNDS = {
     "crowd_groan": (crowd.groan, 3, -21.0, "the other half of the stands groans"),
     "crowd_ooh": (crowd.ooh, 3, -21.0, "a near thing: a gasp and an ooh"),
     "crowd_murmur": (crowd.murmur, 2, -25.0, "the stands talking (a 12 s loop)"),
+    # round 2 (CORE): the guards on the beat and late, the lock's grow and sputter, Carried wind (guards.py)
+    "guard_earth_clean": (gd.guard_earth_clean, 4, -12.0, "a clean catch: a sharp crack over the thunk, a stony ring"),
+    "guard_water_clean": (gd.guard_water_clean, 4, -14.0, "a Turn on the beat: water swirled round and snapped away"),
+    "guard_water_late": (gd.guard_water_late, 3, -17.0, "a Turn late: a heavy slosh"),
+    "guard_fire_clean": (gd.guard_fire_clean, 4, -13.0, "a Parry on the beat: a crisp flame snap and a hot ring"),
+    "guard_fire_late": (gd.guard_fire_late, 3, -17.0, "a Parry late: a smothered whoomph"),
+    "guard_air_clean": (gd.guard_air_clean, 4, -14.0, "a Wind Guard on the beat: a taut whip of air, snapped back"),
+    "guard_air_late": (gd.guard_air_late, 3, -18.0, "a Wind Guard late: a soft buffet"),
+    "lock_grow": (gd.lock_grow, 3, -17.0, "grow's second click: a deeper, rounder knock"),
+    "lock_sputter": (gd.lock_sputter, 3, -21.0, "a held lock fizzing out on the hands"),
+    "carried_whistle": (gd.carried_whistle, 3, -20.0, "Carried wind: a rising whistle over a rush of air"),
 }
 LOOPS = {"crowd_murmur": 1.5}         # id -> the cross-fade (s) that closes the loop
 

@@ -33,6 +33,15 @@ extends RefCounted
 ## the player's own callers (SwayCaster, FormCast, the tests with a SwayCaster) are as they were. What only the player has stays
 ## his: the lock's matter (FormCast.lock_matter), the stride's boost (plant_times), the aim camera's view (Throw.cam_off), the
 ## pack's wood for mend. A bot mends only its own raised earth (meta bend_by: whoever raised it), and with no wood.
+## ROUND 2 (skills_r2 spec §2.7, §2.10, §3.1; an element's fighter, the player as the bots):
+##   the wall      rises where the crosshair is, place.min_m to place.max_m (2-6 m) from the caster, facing him (place_point;
+##                 its lock is the caster's own: SwayCaster.self_lock_of)
+##   the stone     Spike's and Boulder's stone rises during the lock (raise_stone: at the spec's raise_at_fill) and hangs
+##                 before the caster, its point on the aim (a Throw waiting: GustLift held); the cast throws it (stone_form
+##                 takes it); a switch turns a spike to a boulder (reshape_raised); called off it drops loose (drop_raised:
+##                 FormStone.make_loose). A raised stone is its raiser's (meta bend_raised_by)
+##   mend          with an element the player too mends only his own pieces, with no wood; a mended piece takes its next hit
+##                 free (meta bend_brace)
 
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
 const MOVES := ["earth_wall", "stone_form", "pillar", "mend"]
@@ -54,7 +63,13 @@ static func apply(c: SwayCaster, m: String, t: Node3D, at: Vector3) -> void:
 		return
 	match m:
 		"earth_wall":
-			earth_wall(c, at, d)
+			if BendPoses.element_of(c.player) != "":
+				# (where the crosshair is, 2-6 m off, facing the caster: its ahead_m taken back so its foot stands there)
+				var pt := place_point(c, d.get("place", (d.get("wall", {}) as Dictionary).get("place", {})))
+				at = pt - way_to(c, pt) * float((d.get("wall", {}) as Dictionary).get("ahead_m", 0.75))
+				earth_wall(c, at, d, FormMatter.of_ground(c.player.get_tree(), pt))
+			else:
+				earth_wall(c, at, d)
 		"stone_form":
 			stone_form(c, at, d, c.mode_of(m))
 		"pillar":
@@ -220,12 +235,22 @@ static func pillar(c: Variant, at: Vector3, d: Dictionary, mode := "self") -> Fo
 	var h: Dictionary = d.get("hollow", {})
 	FormHollow.dig(scn, foot, way, float(h.get("width_m", 2.1)), float(h.get("depth_m", 2.1)), float(h.get("fade_s", 600.0)))
 	_raised_fx(bc, foot, float(pd.get("radius_m", 0.55)) * 2.0, matter)
+	var elem := BendPoses.element_of(p) != ""
+	if elem:
+		# (round 2's Lift: it sinks back sink_s after it is up, never a wall)
+		var sk := float(d.get("sink_s", pd.get("sink_s", 0.0)))
+		if sk > 0.0:
+			r.life_s = sk
 	if how == "run":
-		# launched up and forward off the column coming up under the stride; on a foot plant, a boost
+		# launched up and forward off the column coming up under the stride; on a foot plant, a boost (with an element: no
+		# footfall window, the run itself carries it farther: run_mult above 3 m/s)
 		var gap := plant_gap(p)
 		var pt := plant_times(p)
 		var boost := pt.y <= float(ld.get("plant_window_s", 0.045)) or pt.x <= float(ld.get("plant_after_s", 0.02))
 		var k := float(ld.get("boost", 1.3)) if boost else 1.0
+		if elem:
+			boost = false
+			k = float(d.get("run_mult", ld.get("run_mult", 1.3))) if run.length() >= 3.0 else 1.0
 		p.velocity = run * float(ld.get("carry", 0.85)) + way * float(ld.get("fwd_mps", 3.0)) * k + Vector3.UP * float(ld.get("up_mps", 6.0)) * k
 		if sc != null:
 			sc.last_launch = {"boost": boost, "gap": gap, "velocity": p.velocity, "k": k}
@@ -295,6 +320,13 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 	var bc := BendCaster.wrap(c)
 	if bc == null or not bc.valid():
 		return null
+	var th0 := raised_of(bc.body)
+	if th0 != null:
+		# (the stone raised during the lock: thrown now, as its shape is: a switch reshaped it)
+		bc.body.remove_meta(RAISED_META)
+		th0.stone.remove_meta(&"bend_raised_by")
+		th0.waiting = false
+		return th0.stone
 	var td: Dictionary = d.get("throw", {})
 	var aim := aim_point(bc)
 	var way := way_to(bc, aim if aim != Vector3.INF else at)
@@ -313,6 +345,153 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 	sfx("rumble", foot, -4.0, 1.1)
 	Throw.start(bc, s, td)
 	return s
+
+
+# ---------------------------------------------------------------- round 2: the raised stone, the wall's place
+## The body's meta naming the Throw of a stone raised during its lock (its instance id).
+const RAISED_META := &"bend_raised"
+
+
+## Spike's or Boulder's stone (move `m`, `mode` "spike" or "cannonball") raised now before caster `c` (any) during its lock:
+## it bursts up a step before him toward the aim and rises to chest height, where it hangs, its point on the aim (a Throw,
+## waiting) until the cast throws it (stone_form) or it is let go loose (drop_raised). One at a time (an earlier one drops
+## loose). The Throw, or null.
+static func raise_stone(c: Variant, m: String, mode: String) -> Throw:
+	var bc := BendCaster.wrap(c)
+	if bc == null or not bc.valid():
+		return null
+	drop_raised_of(bc.body)
+	var d := SwayMoves.move(m if m != "" else "stone_form")
+	var s := _new_stone(bc, d, mode)
+	var th := Throw.start(bc, s, d.get("throw", {}))
+	if th == null:
+		s.queue_free()
+		return null
+	th.waiting = true
+	s.set_meta(&"bend_raised_by", bc.body.get_instance_id())
+	bc.body.set_meta(RAISED_META, th.get_instance_id())
+	return th
+
+
+## A new stone of `mode` ("cannonball" a ball, else a spike) of move data `d`, burst up before caster `bc` toward the aim
+## (its hollow, its sounds), as stone_form raises one.
+static func _new_stone(bc: BendCaster, d: Dictionary, mode: String) -> FormStone:
+	var td: Dictionary = d.get("throw", {})
+	var aim := aim_point(bc)
+	var way := way_to(bc, aim if aim != Vector3.INF else bc.body.global_position + bc.facing() * 10.0)
+	var foot := ground_at(bc, bc.body.global_position + way * float(td.get("ahead_m", 1.4)))
+	var scn := bc.body.get_tree().current_scene
+	var seed := absi(hash(Vector3i(roundi(foot.x * 10.0), roundi(foot.y * 10.0), roundi(foot.z * 10.0)))) % 97
+	var matter := FormMatter.of_ground(bc.body.get_tree(), foot)
+	var s: FormStone
+	if mode == "cannonball":
+		s = FormStone.ball(scn, foot, d.get("cannonball", {}), seed, matter)
+	else:
+		s = FormStone.spike(scn, foot, way, d.get("spike", {}), seed, matter)
+	var h: Dictionary = d.get("hollow", {})
+	FormHollow.dig(scn, foot, way, float(h.get("width_m", 1.3)), float(h.get("depth_m", 1.3)), float(h.get("fade_s", 600.0)))
+	sfx("rise", foot, -2.0, 0.9)
+	sfx("rumble", foot, -4.0, 1.1)
+	return s
+
+
+## The Throw of the stone `body` raised and still holds (null none).
+static func raised_of(body: Node) -> Throw:
+	if body == null or not is_instance_valid(body) or not body.has_meta(RAISED_META):
+		return null
+	var th := instance_from_id(int(body.get_meta(RAISED_META))) as Throw
+	if th == null or not is_instance_valid(th) or th.is_queued_for_deletion() or not th.waiting or th.stone == null \
+			or not is_instance_valid(th.stone):
+		body.remove_meta(RAISED_META)
+		return null
+	return th
+
+
+## A raised stone (its waiting Throw) let go: it falls where it hangs and lies as its raiser's loose stone
+## (FormStone.make_loose: the loose cap). Its raiser's meta gone.
+static func drop_raised(th: Node) -> void:
+	var t := th as Throw
+	if t == null or not is_instance_valid(t):
+		return
+	var by: Node = t.caster.body if t.caster != null and t.caster.valid() else null
+	if by != null and int(by.get_meta(RAISED_META, -1)) == t.get_instance_id():
+		by.remove_meta(RAISED_META)
+	var s := t.stone
+	if t.lift != null and is_instance_valid(t.lift):
+		t.lift.drop()
+	t.waiting = false
+	t.queue_free()
+	if s != null and is_instance_valid(s):
+		s.remove_meta(&"bend_raised_by")
+		FormStone.make_loose(s, by)
+
+
+## The stone `body` raised and still holds, let go loose (a cast that did not throw it; a lock called off).
+static func drop_raised_of(body: Node) -> void:
+	var th := raised_of(body)
+	if th != null:
+		drop_raised(th)
+
+
+## A raised stone turned to `mode`'s ("cannonball" a boulder, else a spike) where it hangs (a switch mid-lock: Spike to
+## Boulder), still waiting for the cast. The new Throw (the raiser's meta moved to it), or the old one when nothing changed.
+static func reshape_raised(th: Node, mode: String) -> Node:
+	var t := th as Throw
+	if t == null or not is_instance_valid(t) or t.stone == null or not is_instance_valid(t.stone):
+		return th
+	var want := "cannonball" if mode == "cannonball" else "spike"
+	if t.stone.kind == want:
+		return th
+	var bc := t.caster
+	var at := t.stone.global_position
+	var old_s := t.stone
+	var matter := old_s.matter
+	if t.lift != null and is_instance_valid(t.lift):
+		t.lift.drop(false)
+	t.waiting = false
+	t.queue_free()
+	old_s.queue_free()
+	if bc == null or not bc.valid():
+		return null
+	var d := SwayMoves.move("stone_form")
+	var scn := bc.body.get_tree().current_scene
+	var s: FormStone
+	if want == "cannonball":
+		s = FormStone.ball(scn, at, d.get("cannonball", {}), 7, matter)
+	else:
+		s = FormStone.spike(scn, at, bc.facing(), d.get("spike", {}), 7, matter)
+	s.base = Transform3D(s.base.basis, at)
+	s.global_transform = s.base
+	s.state = FormStone.State.RESTING
+	var td: Dictionary = (d.get("throw", {}) as Dictionary).duplicate()
+	td["chest_m"] = at.y - bc.body.global_position.y
+	var nt := Throw.start(bc, s, td)
+	if nt == null:
+		return null
+	nt.waiting = true
+	s.set_meta(&"bend_raised_by", bc.body.get_instance_id())
+	bc.body.set_meta(RAISED_META, nt.get_instance_id())
+	sfx("rumble", at, -4.0, 0.8)
+	return nt
+
+
+## Where a wall of caster `c` rises (spec §2.7): the ground under the crosshair (a bot's: its target), place.min_m to
+## place.max_m (2 to 6 m by default) from the caster on that line.
+static func place_point(c: Variant, place: Variant = {}) -> Vector3:
+	var bc := BendCaster.wrap(c)
+	if bc == null or not bc.valid():
+		return Vector3.INF
+	var pd: Dictionary = place if place is Dictionary else {}
+	var lo := float(pd.get("min_m", 2.0))
+	var hi := float(pd.get("max_m", 6.0))
+	var p := bc.body.global_position
+	var aim := aim_point(bc)
+	var flat := (aim - p) if aim != Vector3.INF else bc.facing() * hi
+	flat.y = 0.0
+	if flat.length_squared() < 1e-4:
+		flat = bc.facing()
+	var dist := clampf(flat.length(), lo, hi)
+	return ground_at(bc, p + flat.normalized() * dist)
 
 
 ## Gust on a raised wall or pillar (the user, 2026-10-04: "we should be able to use gust to push certain parts of the rock wall
@@ -398,6 +577,8 @@ class Throw:
 	var rise_s := 0.25
 	var t := 0.0
 	var is_thrown := false
+	## Raised during a lock (round 2: raise_stone): it hangs at chest height, its point on the aim, until this goes false.
+	var waiting := false
 	## Where it was hurled at (the crosshair then), whom it struck ([who, damage]) and what it knocked on.
 	var target := Vector3.INF
 	var struck: Array = []
@@ -450,7 +631,7 @@ class Throw:
 		var aim := _aim()
 		if aim != Vector3.INF:
 			lift.aim = aim
-		if t >= rise_s:
+		if t >= rise_s and not waiting:
 			is_thrown = true
 			var last := _aim(true) if cam_off == Vector3.INF and fixed == Vector3.INF else Vector3.INF
 			target = last if last != Vector3.INF else lift.aim
@@ -623,7 +804,7 @@ static func mend(c: Variant, t: Node3D, d: Dictionary) -> String:
 	var bc := BendCaster.wrap(c)
 	if bc == null or not bc.valid():
 		return ""
-	var pack := bc.body is FrontierPlayer
+	var pack := bc.body is FrontierPlayer and BendPoses.element_of(bc.body) == ""     # (an element's fighter: his own, no wood)
 	var stage := mend_stage(t)
 	if not pack and not (stage == "worn" and own(bc, t)):
 		stage = ""
@@ -641,6 +822,8 @@ static func mend(c: Variant, t: Node3D, d: Dictionary) -> String:
 	match stage:
 		"worn":
 			(t as FormRaised).mend()
+			if not pack:
+				t.set_meta(&"bend_brace", true)          # (round 2: a mended piece takes its next hit free)
 			_tell(bc, (t as FormRaised).mended_line)       # (by its matter: "The stones set again", "The logs set again")
 		"alight":
 			var fs := FireSpread.find(t.get_tree())

@@ -16,6 +16,9 @@ var scatter_deg := 0.0
 var modes := {}
 var side := 0.0
 var team_id := &""
+## A dash by the keys held (round 2's dir "held"): the way it means to go (x right, y forward; ZERO none: the spec's none,
+## back). The bots set it before such a dash (KITS: NpcBending).
+var dash_dir := Vector2.ZERO
 
 
 func _init(p_body: CharacterBody3D = null, p_target: Node3D = null, p_lead := 0.8, p_scatter_deg := 0.0) -> void:
@@ -74,6 +77,10 @@ func side_sign() -> float:
 	if absf(side) > 0.01:
 		return signf(side)
 	return super.side_sign()
+
+
+func held_move() -> Vector2:
+	return dash_dir
 
 
 func mode_of(id: String) -> String:

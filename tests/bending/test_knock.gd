@@ -5,7 +5,8 @@ extends SceneTree
 ##   Godot --headless --fixed-fps 60 --path . -s tests/bending/test_knock.gd -- mode=duel
 ##
 ##   flat       an 8 m/s knock carries the player and the bot about 5.3 m (v^2 / 2 GROUND_DECEL, within 20%), within 15% of
-##              each other; last_knocker is who knocked; a listener in bend_knock_listeners told once a knock
+##              each other; last_knocker is who knocked; a listener in bend_knock_listeners told once a knock (both earth and
+##              standing still: round 2's Rooted takes its share of the knock first, BendStatus.rooted_mult)
 ##   launch     (0, 11, 0) lifts both more than 1.5 m; is_launched() in the air, not after landing; `landed` once
 ##   anchor     an anchored one is not moved by a knock
 ##   ragdoll    a knock under BendKnock.ragdoll_mps never throws the player down (PlayerRagdoll.is_down() stays false)
@@ -13,6 +14,8 @@ extends SceneTree
 ##              is bend_speed_cap)
 ##   root       a rooted bot: held stays false, feet_held, no horizontal speed for the root's time, its brain still thinks
 ##              (NpcFighter.thinks), free after
+##   (round 2: no root or slow lands on one who casts as an element, BendStatus.held_off; the hold and the root are the open
+##   world's, tried with the two's elements taken off for them and put back after)
 ##   winded     no_death: 999 of a blow (Hit.deliver), a bleed past the last of the health, a bot's wound pool: alive at 1
 ##              health, `winded` once each
 ## Last line "KNOCK TEST PASSED" or "KNOCK TEST FAILED"; exit 0 only on a pass.
@@ -135,6 +138,8 @@ func _flat_knock(l: Listener) -> void:
 	var p0 := p.global_position
 	var n0 := n.global_position
 	var heard0 := l.got.size()
+	var mp := BendStatus.rooted_mult(p)
+	var mn := BendStatus.rooted_mult(n)
 	BendStatus.knock(p, Vector3(-8.0, 0.0, 0.0), n)
 	BendStatus.knock(n, Vector3(8.0, 0.0, 0.0), p)
 	var kp := BendKnock.peek(p)
@@ -145,8 +150,10 @@ func _flat_knock(l: Listener) -> void:
 	var dp := _flat(p.global_position, p0)
 	var dn := _flat(n.global_position, n0)
 	var want := 64.0 / (2.0 * BendKnock.GROUND_DECEL)
-	_expect(absf(dp - want) <= want * 0.2 and absf(dn - want) <= want * 0.2,
-			"8 m/s on flat stone: the player %.2f m, the bot %.2f m (about %.2f)" % [dp, dn, want])
+	var wp := want * mp * mp
+	var wn := want * mn * mn
+	_expect(absf(dp - wp) <= wp * 0.2 and absf(dn - wn) <= wn * 0.2,
+			"8 m/s on flat stone: the player %.2f m, the bot %.2f m (about %.2f, %.2f: Rooted x%.2f, x%.2f)" % [dp, dn, wp, wn, mp, mn])
 	_expect(absf(dp - dn) <= maxf(dp, dn) * 0.15, "the same knock for both: within 15%% (%.2f against %.2f m)" % [dp, dn])
 	_expect(p.global_position.y > SLAB_Y - 0.2 and n.global_position.y > SLAB_Y - 0.2, "both still on the slab")
 	_expect(kp.last_knocker == n and kn.last_knocker == p, "last_knocker: the bot knocked the player and the player the bot")
@@ -216,6 +223,12 @@ func _no_ragdoll() -> void:
 # ---------------------------------------------------------------- the countdown's hold
 func _hold() -> void:
 	await _stage()
+	var off0 := BendStatus.held_off
+	BendStatus.root(p, 0.3)
+	BendStatus.slow(n, 0.3)
+	_expect(BendStatus.held_off == off0 + 2 and p.bend_speed_cap == INF and not n.feet_held and not p.has_meta(&"bend_root"),
+			"round 2: no root or slow on one who casts as an element (held off %d)" % (BendStatus.held_off - off0))
+	_elements(false)
 	p.drag_speed_cap = 0.0                   # (as DuelMode holds him through a countdown)
 	BendStatus.root(p, 0.3)
 	_expect(p.bend_speed_cap == 0.0 and p.drag_speed_cap == 0.0, "rooted: the bend's own cap at 0")
@@ -227,6 +240,23 @@ func _hold() -> void:
 	_expect(is_equal_approx(p.bend_speed_cap, BendStatus.SLOW_MPS) and p.drag_speed_cap == INF, "slowed: the bend's cap at the slow pace")
 	await _secs(0.6)
 	_expect(p.bend_speed_cap == INF, "the slow over: free")
+	_elements(true)
+
+
+var _els := {}
+## The player's and the bot's elements taken off (`on` false: the open world's roots and slows apply to them) or put back.
+func _elements(on: bool) -> void:
+	if not on:
+		_els = {"duel": DuelMode.element, "p": Bending.of(p).element, "n": n.element, "nb": Bending.of(n).element}
+		DuelMode.element = ""
+		Bending.of(p).element = ""
+		n.element = ""
+		Bending.of(n).element = ""
+		return
+	DuelMode.element = String(_els.get("duel", "earth"))
+	Bending.of(p).element = String(_els.get("p", ""))
+	n.element = String(_els.get("n", "earth"))
+	Bending.of(n).element = String(_els.get("nb", ""))
 
 
 # ---------------------------------------------------------------- root on the bot
@@ -235,6 +265,7 @@ func _root() -> void:
 	await _secs(0.5)
 	var th0 := n.thinks
 	var s := 1.5
+	_elements(false)
 	BendStatus.root(n, s)
 	var fast := 0.0
 	var held_ever := false
@@ -250,6 +281,7 @@ func _root() -> void:
 	_expect(thought >= 4, "rooted: the brain still thinks (%d thoughts in %.1f s)" % [thought, s - 0.1])
 	await _secs(0.4)
 	_expect(not n.feet_held and not n.held, "the root over: the feet free")
+	_elements(true)
 
 
 # ---------------------------------------------------------------- no death

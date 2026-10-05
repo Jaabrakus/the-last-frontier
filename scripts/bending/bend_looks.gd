@@ -86,6 +86,9 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 	if shape == "disc" and kind in ["stone", "fire"]:
 		_disc_body(parent, kind, r)
 		return
+	if shape == "crescent":
+		_crescent_body(parent, kind, r)
+		return
 	if shape == "spear" and kind in ["stone", "ice"]:
 		_spear_body(parent, kind, r)
 		return
@@ -126,7 +129,9 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 		_:
 			var mi := MeshInstance3D.new()
 			mi.name = "Body"
-			mi.mesh = FormModels.ball_mesh(r, randi() % 50) if not long else FormModels.spike_mesh(r, r * 7.0, randi() % 50, 0.0)
+			# (the effects' own dice: a stone's body never moves the game's rolls)
+			var sd := ToonFx.vis_rng.randi() % 50
+			mi.mesh = FormModels.ball_mesh(r, sd) if not long else FormModels.spike_mesh(r, r * 7.0, sd, 0.0)
 			if long:
 				mi.rotation.x = -PI / 2.0
 			mi.material_override = ToonFx.mat("rock")
@@ -176,6 +181,28 @@ static func _disc_body(parent: Node3D, kind: String, r: float) -> void:
 		l2.omni_range = 3.0 + r * 2.0
 		l2.shadow_enabled = false
 		parent.add_child(l2)
+
+
+## The High Kick's crescent (round 2; BendThrow, shape "crescent", point first: -Z along its flight): a bold arc of flame
+## standing across its line, its horns swept back, a hot core at its middle and a warm light.
+static func _crescent_body(parent: Node3D, kind: String, r: float) -> void:
+	var w := maxf(r, 0.4)
+	var arc := _mesh(parent, ToonFx.arc_mesh(1.0, 0.36, 2.5), ToonFx.mat("flame_strip" if kind == "fire" else "wind_arc"))
+	arc.scale = Vector3.ONE * w * 1.25
+	arc.rotation = Vector3(0.35, 0.0, 0.0)                    # (flat across its flight, tipped up a little: the kick's sweep)
+	arc.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("orb"))
+	o.scale = Vector3.ONE * w * 0.9
+	o.set_instance_shader_parameter(&"tint", Color(0.95, 0.22, 0.04) if kind == "fire" else AIR)
+	o.set_instance_shader_parameter(&"tint2", Color(1.0, 0.7, 0.12) if kind == "fire" else Color(0.6, 0.8, 1.0))
+	o.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	if live() and kind == "fire":
+		var l := OmniLight3D.new()
+		l.light_color = Color(1.0, 0.58, 0.22)
+		l.light_energy = 1.3
+		l.omni_range = 3.5
+		l.shadow_enabled = false
+		parent.add_child(l)
 
 
 ## A thrown spear (its point -Z, along its flight). Ice: a long thin crystal shaft and a heavy faceted head on it, a glint at
@@ -716,6 +743,279 @@ static func lightning(a: Vector3, b: Vector3) -> void:
 		pool.play("ring", _flat(g), 0.25, 0.3, 1.4, ELEC, Color(0.85, 0.92, 1.0))
 
 
+# ---------------------------------------------------------------- round 2: the tells on the caster (or guarder) only
+## (skills_r2 spec §8.2 "BendLooks"; the owner's rule: no target cues, nothing is ever drawn on or about the opponent: each
+## of these plays on the one who casts or guards, his hands, his feet, his own body.)
+## Each guard's result's colours (a flash, a ring) by element.
+const GUARD_TINTS := {"earth": [Color(0.88, 0.76, 0.55), Color(1.0, 0.95, 0.8)], "water": [Color(0.25, 0.62, 1.0), FOAM],
+		"fire": [Color(1.0, 0.45, 0.08), FIRE_HOT], "air": [Color(0.8, 0.92, 1.0), Color(1.0, 1.0, 1.0)]}
+## Each guard's sounds by element ([perfect, late]; BendSounds' own, synthesized).
+const GUARD_SOUNDS := {"earth": [&"guard_earth_clean", &"stone_catch"], "water": [&"guard_water_clean", &"guard_water_late"],
+		"fire": [&"guard_fire_clean", &"guard_fire_late"], "air": [&"guard_air_clean", &"guard_air_late"]}
+
+
+## A guard's result on the guarder `body` (BendZone.report): perfect, a bright flash and a sharp crack ring round his chest
+## in his element's colours, stars and the element's own bits flung off, his element's clean sound; late, a smaller puff and
+## its late sound; whiff, a dull puff at his hands, no sound.
+static func guard_result(body: Node3D, el: String, result: String) -> void:
+	var at := body.global_position + Vector3.UP * 1.2
+	var snd: Array = GUARD_SOUNDS.get(el, [&"stone_catch", &"stone_catch"])
+	if result == "perfect":
+		BendSounds.play(StringName(snd[0]), at, 1.0)
+	elif result == "late":
+		BendSounds.play(StringName(snd[1]), at, -2.0)
+	if not live():
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	var tint: Array = GUARD_TINTS.get(el, [Color.WHITE, Color.WHITE])
+	var xf := Transform3D(Basis.IDENTITY, at)
+	match result:
+		"perfect":
+			pool.play("flash", xf, 0.22, 0.6, 2.4, tint[0], tint[1])
+			pool.play("ring", Transform3D(Basis(Vector3.RIGHT, PI / 2.0), at), 0.3, 0.4, 2.6, tint[1], tint[0])
+			pool.shoot("star", at, 14, Vector3.UP, 180.0, Vector2(2.0, 5.0), Vector2(0.2, 0.36), 0.5, Vector3.ZERO, 4.0)
+			burst(at, el if el in KINDS else "air", 14, Vector3.UP, 180.0, 4.0, 0.3)
+			pool.light(at, tint[0], 3.5, 0.2, 5.0)
+		"late":
+			pool.play("flash", xf, 0.14, 0.3, 1.0, tint[0], tint[1])
+			burst(at, el if el in KINDS else "air", 8, Vector3.UP, 120.0, 2.0, 0.2)
+		"whiff":
+			pool.shoot("puff_air", at, 6, Vector3.UP, 120.0, Vector2(0.3, 0.8), Vector2(0.15, 0.3), 0.4)
+
+
+## The Kick's floor wave's body (BendBolt floor_wave, under the bolt: its local X across, -Z its way): a row of low flame
+## tongues across `width` m, `height` tall at most, standing on the deck, embers and a warm light. The holder (its scale.x
+## the wave's width over `width`: the bolt widens it as it runs). Headless: the holder alone.
+static func floor_wave_body(parent: Node3D, width: float, height: float) -> Node3D:
+	var holder := Node3D.new()
+	holder.name = "Wave"
+	parent.add_child(holder)
+	if not live():
+		return holder
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = ToonFx.quad_base()
+	var n := 9
+	mm.instance_count = n
+	for i in n:
+		var x := ((float(i) + 0.5) / n - 0.5) * width
+		var edge := absf(x) / maxf(width * 0.5, 0.01)
+		var h := height * (1.0 - 0.45 * edge * edge) * ToonFx.vis_rng.randf_range(0.75, 1.05)
+		var z := (0.12 if i % 2 == 0 else -0.12) + edge * 0.25                 # (a shallow bow: the middle leads)
+		mm.set_instance_transform(i, Transform3D(Basis(Vector3.RIGHT * width / n * 1.5, Vector3.UP * h, Vector3.BACK), Vector3(x, 0.0, z)))
+	var mmi := MultiMeshInstance3D.new()
+	mmi.name = "Tongues"
+	mmi.multimesh = mm
+	mmi.material_override = ToonFx.mat("flame_low")
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mmi.extra_cull_margin = 3.0
+	mmi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	mmi.set_instance_shader_parameter(&"grow", 1.0)
+	holder.add_child(mmi)
+	var em := emitter(holder, "embers", Vector3(width * 0.5, 0.15, 0.2), 14, 0.6, 1.4, 0.05)
+	if em != null:
+		em.position = Vector3.UP * 0.3
+	var l := OmniLight3D.new()
+	l.light_color = Color(1.0, 0.55, 0.2)
+	l.light_energy = 2.0
+	l.omni_range = 4.0
+	l.position = Vector3.UP * 0.5
+	l.shadow_enabled = false
+	holder.add_child(l)
+	return holder
+
+
+## The Geyser's water at `at` (BendEffects.spout): low and weak at once, its column at its peak `rise_s` later, `r` round.
+## No mark on the deck: the rising water is the tell.
+static func spout(at: Vector3, r: float, rise_s: float) -> void:
+	if not live():
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	pool.shoot("drop", at, 14, Vector3.UP, 20.0, Vector2(1.5, 3.0), Vector2(0.08, 0.16), 0.5, Vector3(0, -9.0, 0), 0.0,
+			{"r": r * 0.6})
+	pool.shoot("foam", at, 8, Vector3.UP, 30.0, Vector2(0.5, 1.2), Vector2(0.3, 0.5), 0.5, Vector3.ZERO, 1.0, {"r": r * 0.5})
+	var tree := pool.get_tree()
+	if tree == null:
+		return
+	tree.create_timer(maxf(rise_s, 0.01), false).timeout.connect(func() -> void:
+		var p2 := _pool()
+		if p2 == null:
+			return
+		p2.shoot("drop", at, 48, Vector3.UP, 12.0, Vector2(7.0, 13.0), Vector2(0.12, 0.24), 1.1, Vector3(0, -12.0, 0), 0.0,
+				{"r": r * 0.7})
+		p2.shoot("foam", at + Vector3.UP * 0.5, 22, Vector3.UP, 20.0, Vector2(3.0, 7.0), Vector2(0.4, 0.8), 0.8, Vector3(0, -4.0, 0),
+				1.0, {"r": r * 0.6})
+		p2.play("crown", Transform3D(Basis.IDENTITY, at + Vector3.UP * 0.05), 0.6, r * 0.6, r * 1.4, WATER, FOAM,
+				ToonFx.band_mesh(1.0, 1.5, 1.0)))
+
+
+## Lightning's flash on the caster's hand at `at` (round 2's flash_s: its tell before the strike): a white-blue flash, a
+## spray of sparks off the hand, a flash of light; the charge on the hands (charge) ends with it.
+static func lightning_flash(body: Node3D, at: Vector3) -> void:
+	for c in body.get_children():
+		if c is Charge:
+			(c as Charge).end()
+	if not live():
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	pool.play("flash", Transform3D(Basis.IDENTITY, at), 0.25, 0.4, 1.8, ELEC, Color(0.92, 0.96, 1.0))
+	pool.play("ring", Transform3D(Basis.IDENTITY, at), 0.25, 0.2, 1.1, Color(0.9, 0.95, 1.0), ELEC)
+	pool.shoot("star", at, 6, Vector3.UP, 180.0, Vector2(0.5, 1.5), Vector2(0.25, 0.4), 0.25, Vector3.ZERO, 2.0)
+	pool.shoot("spark_elec", at, 28, Vector3.UP, 180.0, Vector2(2.0, 6.0), Vector2(0.025, 0.045), 0.3, Vector3(0, -6.0, 0), 2.0)
+	pool.light(at, Color(0.7, 0.82, 1.0), 4.5, 0.25, 6.0)
+
+
+## Lightning's charge on `body`'s hands while its lock runs (SwayCaster; a bot's mind may call it too): blue sparks crackling
+## round the hands and a rising hum (BendSounds lightning_charge, looped), both louder and brighter with `level` (0..1: the
+## lock's fill; 1 at the click). Its node (Charge: set level, end()). `sway`: the player's caster (its hands), else the
+## body's chest.
+static func charge(body: Node3D, sway: Node = null) -> Charge:
+	var ch := Charge.new()
+	ch.name = "BendCharge"
+	ch.sway = sway
+	body.add_child(ch)
+	return ch
+
+
+## Grow's second click (▲) at the caster's hands (`sway`: the player's SwayCaster): a bright ring snapping out and a deeper
+## click (BendSounds lock_grow).
+static func grow_click(sway: Node) -> void:
+	var at := _hands(sway)
+	BendSounds.play(&"lock_grow", at, 0.0)
+	if not live():
+		return
+	var pool := _pool()
+	if pool != null:
+		pool.play("ring", Transform3D(Basis.IDENTITY, at), 0.28, 0.25, 1.1, Color(1.0, 0.95, 0.7), Color(1.0, 1.0, 1.0))
+		pool.play("flash", Transform3D(Basis.IDENTITY, at), 0.12, 0.2, 0.6, Color(1.0, 0.95, 0.7), Color.WHITE)
+
+
+## A lock held past sputter_s that does not grow: a fizz on the caster's own hands (BendSounds lock_sputter), a few spent
+## bits of its element dropping off them.
+static func sputter(sway: Node, el: String) -> void:
+	var at := _hands(sway)
+	BendSounds.play(&"lock_sputter", at, -2.0)
+	if not live():
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	var key := {"fire": "spark_fire", "water": "drop", "earth": "puff_dust", "air": "puff_air"}.get(el, "puff_air") as String
+	pool.shoot(key, at, 10, Vector3.DOWN, 60.0, Vector2(0.5, 1.6), Vector2(0.04, 0.12) if key.begins_with("spark") or key == "drop" \
+			else Vector2(0.12, 0.25), 0.5, Vector3(0, -6.0, 0), 1.0)
+
+
+## Carried wind charged on `body` (air's passive): a spiral of wind round him rising from his feet and a whistle
+## (BendSounds carried_whistle).
+static func carried(body: Node3D) -> void:
+	BendSounds.play(&"carried_whistle", body.global_position + Vector3.UP, -3.0)
+	if not live():
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	var at := body.global_position + Vector3.UP * 0.9
+	pool.play("swirl", Transform3D(Basis.IDENTITY, at), 0.5, 0.5, 1.4, AIR, Color(0.55, 0.78, 1.0))
+	pool.shoot("spark_line", body.global_position + Vector3.UP * 0.2, 16, Vector3.UP, 25.0, Vector2(3.0, 6.0),
+			Vector2(0.035, 0.05), 0.35, Vector3.ZERO, 3.0, {"r": 0.5, "radial": 1.5})
+
+
+## Rooted (earth's passive) on `body`: a faint ring of dust at his feet.
+static func rooted_dust(body: Node3D) -> void:
+	if not live():
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	var foot := body.global_position + Vector3.UP * 0.05
+	pool.play("ring", Transform3D(Basis.IDENTITY, foot), 0.5, 0.3, 0.9, DUST, DUST_LIGHT)
+	pool.shoot("puff_dust", foot, 5, Vector3.UP, 80.0, Vector2(0.3, 0.7), Vector2(0.15, 0.3), 0.6, Vector3.ZERO, 2.0,
+			{"flat": 0.8, "r": 0.4})
+
+
+## The hands of `sway` (a SwayCaster: its hand_point) or the chest of a body.
+static func _hands(sway: Node) -> Vector3:
+	if sway != null and is_instance_valid(sway) and sway.has_method(&"hand_point"):
+		return sway.call(&"hand_point")
+	if sway is Node3D:
+		return (sway as Node3D).global_position + Vector3.UP * 1.3
+	return Vector3.ZERO
+
+
+## Lightning's charge on a body's hands (charge): sparks round the hands and a looped hum, both by `level`. end() lets it go.
+class Charge:
+	extends Node3D
+
+	var sway: Node
+	var level := 0.0
+	## Its hum was started (the tests: headless audio may never report playing).
+	var started := false
+	var _sparks: GPUParticles3D
+	var _hum: AudioStreamPlayer3D
+	var _glow: MeshInstance3D
+	var _t := 0.0
+
+	func _ready() -> void:
+		top_level = true
+		_place()
+		_hum = BendSounds.loop_player(&"lightning_charge", self)
+		if _hum != null:
+			_hum.volume_db = -14.0
+			_hum.play()
+			started = true
+		if not BendLooks.live():
+			return
+		_sparks = BendLooks.emitter(self, "lightning", Vector3.ONE * 0.18, 18, 0.25, 0.6, 0.04)
+		_glow = MeshInstance3D.new()
+		_glow.mesh = ToonFx.quad()
+		_glow.material_override = ToonFx.mat("orb")
+		_glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_glow.set_instance_shader_parameter(&"tint", ELEC)
+		_glow.set_instance_shader_parameter(&"tint2", Color(0.85, 0.92, 1.0))
+		_glow.scale = Vector3.ONE * 0.05
+		add_child(_glow)
+
+	func _place() -> void:
+		var at := Vector3.INF
+		if sway != null and is_instance_valid(sway) and sway.has_method(&"hand_point"):
+			at = sway.call(&"hand_point")
+		if not at.is_finite():
+			var b := get_parent() as Node3D
+			at = b.global_position + Vector3.UP * 1.3 if b != null else Vector3.ZERO
+		global_position = at
+
+	func _process(dt: float) -> void:
+		_t += dt
+		_place()
+		var k := clampf(level, 0.0, 1.0)
+		if _hum != null:
+			_hum.volume_db = lerpf(-14.0, 2.0, k)
+			_hum.pitch_scale = lerpf(0.85, 1.15, k)
+		if _sparks != null:
+			_sparks.amount_ratio = lerpf(0.2, 1.0, k)
+		if _glow != null:
+			_glow.scale = Vector3.ONE * lerpf(0.08, 0.4, k) * (1.0 + 0.15 * sin(_t * 40.0))
+
+	## Whether its hum plays (the tests).
+	func humming() -> bool:
+		return _hum != null and started and is_inside_tree()
+
+	func end() -> void:
+		if is_queued_for_deletion():
+			return
+		if _hum != null:
+			_hum.stop()
+		if _sparks != null:
+			_sparks.emitting = false
+		queue_free()
+
+
 ## Every effect played once 3 m before `cam`, a few mm big (each shader, particle program and pipeline compiled while the
 ## level loads: measured 2026-10-05, the first fire wall, tornado and bubble each froze a frame for 1 to 3.4 s on this Mac
 ## without it). Every burst, blast, body, trail, emitter, zone look, shape, mark and the lightning, a group a frame (WARM_GROUPS:
@@ -729,7 +1029,8 @@ const WARM_FRAMES := 6
 const WARM_EMITTERS := 4
 const WARM_EMITTER_KINDS := ["fire", "water", "smoke", "dust", "steam", "ice", "embers", "sparkle", "debris", "foam", "lightning",
 		"air"]
-const WARM_ZONES := ["bubble", "air_shield", "water_wall", "fire_wall", "burn", "ice_patch", "smoke", "tornado", "vacuum"]
+const WARM_ZONES := ["bubble", "air_shield", "water_wall", "fire_wall", "burn", "ice_patch", "smoke", "tornado", "vacuum",
+		"wind_wall", "puddle", "redirect", "parry"]
 
 static func warm_up(cam: Camera3D, progress := Callable()) -> void:
 	if cam == null or not cam.is_inside_tree() or not live():
@@ -758,10 +1059,12 @@ static func warm_up(cam: Camera3D, progress := Callable()) -> void:
 				var body := Node3D.new()
 				holder.add_child(body)
 				bolt_body(body, k, 0.2, long)
-			for shape in ["disc", "spear"]:
+			for shape in ["disc", "spear", "crescent"]:
 				var body2 := Node3D.new()
 				holder.add_child(body2)
-				bolt_body(body2, k, 0.2, false, shape))
+				bolt_body(body2, k, 0.2, false, shape)
+			if k == "fire":
+				floor_wave_body(holder, 0.05, 0.05))
 		groups.append(func() -> void:
 			var t := trail(holder, k, 0.01)
 			if t != null:
@@ -783,6 +1086,7 @@ static func warm_up(cam: Camera3D, progress := Callable()) -> void:
 			bz.life_s = 0.2
 			bz.size = Vector3(1.0, 1.0, 0.3)
 			bz.radius = 0.5
+			bz.r2 = z in ["redirect", "parry"]          # (round 2's guard looks: the Turn's ring, the Parry's)
 			holder.add_child(bz)
 			bz.set_physics_process(false)          # (a look only: it neither burns, lifts nor ends anyone)
 			bz._look())

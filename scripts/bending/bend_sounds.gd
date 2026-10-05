@@ -73,6 +73,18 @@ const TABLE := {
 	&"crowd_roar": {"vol": 0.0, "unit": 18.0, "maxd": 200.0, "bus": "Ambience", "rp": 1.03, "rv": 1.5, "cap": 2},
 	&"crowd_groan": {"vol": -1.0, "unit": 18.0, "maxd": 200.0, "bus": "Ambience", "rp": 1.04, "rv": 1.5, "cap": 2},
 	&"crowd_ooh": {"vol": -1.0, "unit": 18.0, "maxd": 200.0, "bus": "Ambience", "rp": 1.04, "rv": 1.5, "cap": 2},
+	# round 2 (CORE): each guard's perfect and late (earth's late is stone_catch's thock), the grow's second click, the
+	# sputter on the hands, Carried wind's whistle
+	&"guard_earth_clean": {"vol": 1.0, "unit": 7.0, "maxd": 100.0, "bus": "World", "rp": 1.04, "rv": 1.0, "cap": 2},
+	&"guard_water_clean": {"vol": 0.0, "unit": 7.0, "maxd": 90.0, "bus": "World", "rp": 1.04, "rv": 1.0, "cap": 2},
+	&"guard_water_late": {"vol": -1.0, "unit": 6.0, "maxd": 80.0, "bus": "World", "rp": 1.06, "rv": 1.5, "cap": 2},
+	&"guard_fire_clean": {"vol": 1.0, "unit": 7.0, "maxd": 100.0, "bus": "World", "rp": 1.04, "rv": 1.0, "cap": 2},
+	&"guard_fire_late": {"vol": -1.0, "unit": 6.0, "maxd": 80.0, "bus": "World", "rp": 1.06, "rv": 1.5, "cap": 2},
+	&"guard_air_clean": {"vol": 0.0, "unit": 7.0, "maxd": 90.0, "bus": "World", "rp": 1.04, "rv": 1.0, "cap": 2},
+	&"guard_air_late": {"vol": -1.0, "unit": 6.0, "maxd": 80.0, "bus": "World", "rp": 1.06, "rv": 1.5, "cap": 2},
+	&"lock_grow": {"vol": -2.0, "unit": 4.0, "maxd": 50.0, "bus": "World", "rp": 1.03, "rv": 1.0, "cap": 2},
+	&"lock_sputter": {"vol": -4.0, "unit": 4.0, "maxd": 50.0, "bus": "World", "rp": 1.06, "rv": 1.5, "cap": 2},
+	&"carried_whistle": {"vol": -3.0, "unit": 5.0, "maxd": 50.0, "bus": "World", "rp": 1.05, "rv": 1.5, "cap": 2},
 }
 
 ## Moments by name (event()).
@@ -82,6 +94,10 @@ const EVENTS := {
 	"charge": &"lightning_charge", "lightning": &"lightning_crack", "melt": &"fire_sizzle", "burn": &"fire_crackle",
 	"count": &"count_tick", "gong": &"round_gong", "bell": &"round_bell", "match": &"match_gong",
 	"murmur": &"crowd_murmur", "cheer": &"crowd_cheer", "roar": &"crowd_roar", "groan": &"crowd_groan", "ooh": &"crowd_ooh",
+	"grow": &"lock_grow", "sputter": &"lock_sputter", "carried": &"carried_whistle",
+	"guard_earth_clean": &"guard_earth_clean", "guard_water_clean": &"guard_water_clean", "guard_water_late": &"guard_water_late",
+	"guard_fire_clean": &"guard_fire_clean", "guard_fire_late": &"guard_fire_late", "guard_air_clean": &"guard_air_clean",
+	"guard_air_late": &"guard_air_late",
 }
 
 ## A hit's sound by kind (hit_id reads the place for a catch and the pool).
@@ -97,14 +113,15 @@ const ZONE_CASTS := {
 	"absorb": &"water_slosh", "ice_patch": &"ice_freeze",
 	"smoke": &"fire_whoomph", "fire_wall": &"fire_roar", "burn": &"fire_crackle", "parry": &"fire_whoomph",
 	"cushion": &"air_gust", "vacuum": &"air_gust", "dust": &"air_gust", "spin": &"air_swirl", "air_shield": &"air_swirl",
-	"tornado": &"air_swirl", "return": &"air_swirl",
+	"tornado": &"air_swirl", "return": &"air_swirl", "wind_wall": &"air_gust", "wind_guard": &"air_swirl",
 }
 
 ## Casts told apart by the move and mode where the rules by kind and do would miss ("move/mode").
 const CAST_BY_MOVE := {
 	"earth_shove/pull": &"earth_grind", "fire_blast/fireball": &"fire_roar", "fire_jets/hover": &"fire_roar",
 	"footwork/ignite_step": &"fire_crackle", "wind_run/air_scooter": &"air_swirl", "flow/geyser": &"water_cast_rush",
-	"wave/push": &"water_cast_rush",
+	"wave/push": &"water_cast_rush", "fire_kick/kick": &"fire_roar", "wave/spout": &"water_cast_rush", "air_gust/gust": &"air_gust",
+	"air_gust/pull": &"air_gust", "air_wall/wall": &"air_gust",
 }
 
 ## Each element's cast when nothing else tells (a zone not in ZONE_CASTS).

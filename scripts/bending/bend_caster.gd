@@ -31,11 +31,20 @@ extends RefCounted
 ## zones); ally_rids(caster) are left out of its bolts' flight (a bolt passes an ally); BendZone.on_bolt lets an ally's bolt
 ## through its guards (an ally's shield never sends a teammate's bolt back, and still takes the other side's).
 
+## ROUND 2: `grown` (a grow move held past its second click: BendEffects merges the spec's grow into the cast while it is
+## true; SwayCaster sets it for the player's cast, a bot's mind for its own) and `guarded` (each guard's result: BendZone).
+
+## A guard of this caster's took something on the beat ("perfect"), late ("late"), or nothing at all ("whiff"); `what`
+## the kind it met ("stone", "fire", "water", "ice", "air", "lightning"; "" for a whiff). The HUD's and the soak's.
+signal guarded(result: String, what: String)
+
 const META := &"bend_caster"
 ## A body's side in the ring (RingRules.add; StringName or String).
 const TEAM_META := &"bend_team"
 
 var body: CharacterBody3D
+## The cast being made grows (▲): see the header.
+var grown := false
 
 
 func _init(p_body: CharacterBody3D = null) -> void:
@@ -144,6 +153,17 @@ func side_sign() -> float:
 ## pick (side_sign); the player's only the side his keys hold (PlayerBendCaster).
 func held_side() -> float:
 	return side_sign()
+
+
+## The way a dash by the keys held goes (round 2's dir "held"): x right, y forward, each -1..1 (ZERO: nothing held, the
+## spec's none then). A body's: none (a bot sets its own: BodyBendCaster.dash_dir); the player's his move keys.
+func held_move() -> Vector2:
+	return Vector2.ZERO
+
+
+## Whether jump is held now (Leap's glide): a body's never; the player's his jump key.
+func jump_held() -> bool:
+	return false
 
 
 func mode_of(id: String) -> String:

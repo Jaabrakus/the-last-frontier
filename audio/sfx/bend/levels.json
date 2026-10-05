@@ -111,6 +111,27 @@
   "short_db": 0.0,
   "dur_s": 0.444
  },
+ "carried_whistle_01.wav": {
+  "loud_db": -20.0,
+  "peak_dbfs": -12.25,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.891
+ },
+ "carried_whistle_02.wav": {
+  "loud_db": -20.0,
+  "peak_dbfs": -12.36,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.73
+ },
+ "carried_whistle_03.wav": {
+  "loud_db": -20.0,
+  "peak_dbfs": -11.44,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.851
+ },
  "count_tick_01.wav": {
   "loud_db": -19.0,
   "peak_dbfs": -11.07,
@@ -552,6 +573,181 @@
   "short_db": 0.0,
   "dur_s": 0.597
  },
+ "guard_air_clean_01.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -4.72,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.54
+ },
+ "guard_air_clean_02.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -5.84,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.549
+ },
+ "guard_air_clean_03.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -5.02,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.501
+ },
+ "guard_air_clean_04.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -6.87,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.515
+ },
+ "guard_air_late_01.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -8.54,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.485
+ },
+ "guard_air_late_02.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -6.15,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.522
+ },
+ "guard_air_late_03.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -6.78,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.477
+ },
+ "guard_earth_clean_01.wav": {
+  "loud_db": -12.0,
+  "peak_dbfs": -2.53,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.363
+ },
+ "guard_earth_clean_02.wav": {
+  "loud_db": -12.0,
+  "peak_dbfs": -1.84,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.363
+ },
+ "guard_earth_clean_03.wav": {
+  "loud_db": -12.0,
+  "peak_dbfs": -2.82,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.361
+ },
+ "guard_earth_clean_04.wav": {
+  "loud_db": -12.0,
+  "peak_dbfs": -3.39,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.362
+ },
+ "guard_fire_clean_01.wav": {
+  "loud_db": -14.11,
+  "peak_dbfs": -1.0,
+  "limit_db": -3.42,
+  "short_db": 0.0,
+  "dur_s": 0.468
+ },
+ "guard_fire_clean_02.wav": {
+  "loud_db": -13.49,
+  "peak_dbfs": -1.0,
+  "limit_db": -2.74,
+  "short_db": 0.0,
+  "dur_s": 0.454
+ },
+ "guard_fire_clean_03.wav": {
+  "loud_db": -13.02,
+  "peak_dbfs": -1.0,
+  "limit_db": -0.14,
+  "short_db": 0.0,
+  "dur_s": 0.51
+ },
+ "guard_fire_clean_04.wav": {
+  "loud_db": -13.69,
+  "peak_dbfs": -1.0,
+  "limit_db": -3.05,
+  "short_db": 0.0,
+  "dur_s": 0.468
+ },
+ "guard_fire_late_01.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -5.19,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.474
+ },
+ "guard_fire_late_02.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -6.53,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.575
+ },
+ "guard_fire_late_03.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -2.92,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.499
+ },
+ "guard_water_clean_01.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -4.57,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.718
+ },
+ "guard_water_clean_02.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -4.05,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.698
+ },
+ "guard_water_clean_03.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -4.71,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.636
+ },
+ "guard_water_clean_04.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -5.13,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.664
+ },
+ "guard_water_late_01.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -7.49,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.596
+ },
+ "guard_water_late_02.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -8.11,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.522
+ },
+ "guard_water_late_03.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -7.84,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.579
+ },
  "heal_01.wav": {
   "loud_db": -21.0,
   "peak_dbfs": -13.85,
@@ -733,6 +929,48 @@
   "limit_db": -4.0,
   "short_db": 1.68,
   "dur_s": 1.8
+ },
+ "lock_grow_01.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -7.85,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.352
+ },
+ "lock_grow_02.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -6.91,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.36
+ },
+ "lock_grow_03.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -7.81,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.358
+ },
+ "lock_sputter_01.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -11.76,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.518
+ },
+ "lock_sputter_02.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -12.91,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.464
+ },
+ "lock_sputter_03.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -12.22,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.579
  },
  "match_gong_01.wav": {
   "loud_db": -14.0,

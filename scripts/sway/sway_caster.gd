@@ -33,13 +33,11 @@ extends Node
 ##              owner, 2026-10-05: "still difficult for a human to switch spells" -> every scheme an option): "keys" the
 ##              readied spell as ever; "direction" the direction held (held_dir: forward W, back S, side A/D) picks the
 ##              element's attack, defence or dodge at its own variation (MatchSetup.direction_move), none the readied
-##              spell; "simple" the readied spell (one of four) at the form its distance band picks (foe_distance:
-##              the nearest opponent, near or far, MatchSetup.simple_mode); "radial" the readied spell (RadialWheel, Tab,
-##              readies it). The pick (scheme_pick: _sch_id at _sch_mode, which mode_of answers for its move while the aim
-##              is held) is made before the lock and followed while it runs (_scheme_follow): a change moves the lock to the
-##              new move, its time so far kept (_switch_lock: the new lock time, the circle and pose begun again,
-##              lock_switched), so the move cast is the one picked at the release. The quick spell, the keys and their
-##              variations are never touched; bots never have a scheme
+##              spell; "first_moves" (once "simple": round 2 cut its distance band) and "radial" the readied spell
+##              (RadialWheel, Tab, readies it). The pick (scheme_pick: _sch_id at _sch_mode, which mode_of answers for its
+##              move while the aim is held) is taken at the press and kept for the lock (_scheme_follow; round 2: no
+##              switching mid-lock). The quick spell, the keys and their variations are never touched; bots never have a
+##              scheme
 ##   the aim    the aim held (PlayerControls "aim") with a spell readied and its hands: the camera over the shoulder as a
 ##              weapon's aim does. What the crosshair is on (the camera's ray, as get_aim_point()): a node in group
 ##              sway_targets (or with meta sway_move), an NpcFighter, a WildAnimal, a RigidBody3D prop (a dropped torch too), a
@@ -109,6 +107,33 @@ extends Node
 ## statics `casts` / `casts_by_move`, read by cast_count(tag, move) and by lock_cast_begin / lock_cast_check
 ## (StoryObjectives' "lock_cast" kind). `enabled` false (a cutscene) and nothing locks; bound hands (Captivity) the same
 ## (blocked: "bound").
+## ROUND 2 (Tidebreak's shared cast rules: skills_r2 spec §2.1-2.4, §8.2; the owner's answers, 2026-10-05). With an element
+## only (elem(): the ring, the duel); the open world's locks stay exactly as above:
+##   the guard   a third lock source, SRC_GUARD, on GUARD (E and mouse button 4, rebindable: bend_guard), no readying: the
+##               element's guard (Bending.guard), or with a caught stone held (BendZone.held_stone) the throw back. Its
+##               press takes over any lock running (dropped: free before the click, a raised stone left loose; the dropped
+##               button must be let go before it locks again). Its lock: BendZone.guard_lock_s (the whiff's, the return's)
+##   the click   a press let go within click_s before the lock is full is a click: the lock runs on and the move goes the
+##               moment it is full, aimed where the crosshair is then (_queued); pressed again meanwhile it is a hold again,
+##               the time kept. A hold let go before full is called off, nothing spent (a raised stone drops loose)
+##   the keys    Hotbar's taps (a tap the key's first move, a double tap its other: Hotbar.select) come here while a lock
+##               runs (key_tap): the same key moves the lock to its other move with the time kept (_switch_lock; the new
+##               pose shown switch_hold_s before it may go, taps within double_tap_s of a switch ignored, a raised spike
+##               turned to a boulder); another key ends the lock, readies its first move and, the button still held, locks it
+##               from nothing
+##   direction   the direction scheme's pick is taken at the press and kept for the lock (no switching mid-lock)
+##   a hit       pushes the lock back by what the blow cost (BendStatus.setback_s: the hitter's lock time, at least
+##               hit_setback_min_s; never wiped); a dash's or a guard's lock is never pushed; lightning's charge breaks
+##   grow (▲)    a mode whose spec has `grow`: held on past the click by grow_after_s, a second click, and it grows (the
+##               caster's BendCaster.grown at the cast: BendEffects merges the grow); at release_s it casts itself. Others
+##               sputter on the hands from sputter_s and fizzle at release_s as before
+##   the stone   a mode with raise_at_fill (Spike, Boulder): at that fill its stone rises before the caster and hangs, its
+##               point on the aim (FormEffects.raise_stone); the cast throws it; called off, emptied by a hit, or E: it
+##               drops as a loose stone (FormStone.make_loose)
+##   Q held      quick_reset_s: the left button back to the element's jab; a tap of Q with the readied move already there
+##               puts the jab back too (next_q says which)
+##   passives    Rooted (earth, still: the fill x fill_mult), Footwork (fire: moving_mult); the charge of lightning seen and
+##               heard on the hands while it locks (BendLooks.Charge)
 
 signal lock_started(move: String, target: Node3D)
 ## Full lock (the click): let go within release_s to cast (a hold begins at once instead: hold_started).
@@ -134,8 +159,12 @@ signal sail_wind(sail: Node3D, on: bool)
 signal hurled(move: String, stone: Node3D)
 ## A stone held too long broke the hold (its strain): the stone dropped, the caster staggered, the motes lost.
 signal overstrained(move: String, target: Node3D)
-## A lock running moved to another move (the control scheme's pick changed while it ran: a direction, a distance band).
+## A lock running moved to another move (the same key tapped while it ran, a wheel step: key_tap, step_other).
 signal lock_switched(move: String, target: Node3D)
+## A grow (▲) move's second click: held on past grow_after_s, it grows.
+signal grew(move: String)
+## A lock pushed back by a hit (by `back` s; `emptied` when it went back to nothing).
+signal set_back(move: String, back: float, emptied: bool)
 
 enum State { IDLE, LOCKING, FULL, HOLDING }
 
@@ -153,6 +182,9 @@ const QUICK_BIND_KEY := KEY_Q
 ## The button a lock is taken on (lock_src): the aim's (RMB, the readied spell) or the quick spell's (LMB).
 const SRC_AIM := "aim"
 const SRC_QUICK := "quick"
+## The guard's button (E and mouse button 4 by default, rebindable; InputSetup and ensure_input) and its lock source.
+const GUARD := &"bend_guard"
+const SRC_GUARD := "guard"
 ## The control schemes' data (MatchSetup.schemes_data; see the header's schemes).
 const SCHEMES_DATA := "res://data/bending/schemes.json"
 ## The set key's line with nothing readied (the quick spell as it stays).
@@ -284,6 +316,29 @@ var _sch_id := ""
 var _sch_mode := ""
 ## The move wheel (RadialWheel: the radial scheme), the local player's.
 var radial: RadialWheel
+## Round 2 (see the header). Tests only: not null stands for the guard's button held.
+var guard_override: Variant = null
+## A click let go before the lock was full: it goes the moment it is (or once a switch's hold has shown).
+var _queued := false
+## How long the button of the lock now has been held since its press (s; the click's test), and whether it was last frame.
+var _press_t := 0.0
+var _held_was := false
+var _guard_was := false
+## The last mid-lock switch (BendStatus.now()) and when its new pose may go.
+var _switch_at := -INF
+var _switch_hold_until := -INF
+## The lock grew (▲, the second click), the sputter began (its sound once), the lock's grow is known.
+var grown := false
+var _sputtered := false
+## The stone raised by this lock (FormEffects.raise_stone's Throw, waiting; null none).
+var raised: Node = null
+## Q held since (s; -1 not held): quick_reset_s puts the jab back.
+var _q_held_t := -1.0
+## Lightning's charge on the hands while it locks (BendLooks.Charge; null none).
+var charge: Node = null
+## The last lock's start (BendStatus.now()) and its source, for the tests.
+var lock_began_at := -INF
+var _rooted_t := 0.0
 
 
 ## The player's caster, made on first call (the level or the story calls it once; it is safe to call again).
@@ -331,6 +386,7 @@ static func ensure_input() -> void:
 		var k := InputEventKey.new()
 		k.physical_keycode = QUICK_BIND_KEY
 		InputMap.action_add_event(QUICK_BIND, k)
+	InputSetup.ensure_guard()
 	if InputMap.has_action(MODE_ACTION):
 		return
 	InputMap.add_action(MODE_ACTION)
@@ -376,7 +432,7 @@ func _ready() -> void:
 	if player.has_meta(&"sway_save"):
 		load_data(player.get_meta(&"sway_save"))
 		player.remove_meta(&"sway_save")
-	player.hurt.connect(func(_d: Vector2, _a: float, _h: bool) -> void: _end_on("hit"))
+	player.hurt.connect(func(_d: Vector2, _a: float, _h: bool) -> void: _on_hurt())
 	player.died.connect(func(_d: Vector2) -> void: _end_on("dead"))
 	for k in player.weapons:
 		var w: Weapon = player.weapons[k]
@@ -420,7 +476,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if InputMap.has_action(QUICK_BIND) and event.is_action_pressed(QUICK_BIND) and not event.is_echo() \
 			and quick_element() != "":
-		bind_quick()
+		tap_q()
 		get_viewport().set_input_as_handled()
 		return
 	if readied_spell == "":
@@ -667,7 +723,7 @@ func set_mode(id: String, m: String) -> bool:
 	if base_mode_of(id) == m:
 		return true
 	modes[id] = m
-	if state != State.IDLE and move == id and lock_src != SRC_QUICK:     # (the quick spell's lock keeps its own variation)
+	if state != State.IDLE and move == id and lock_src == SRC_AIM:     # (the quick spell's and the guard's keep their own)
 		if state == State.HOLDING:
 			_end_hold("mode")
 		else:
@@ -787,11 +843,74 @@ func bind_quick() -> bool:
 	return true
 
 
-## The spell the button being held (or locking) casts: the quick spell on LMB, else the readied one.
+## Q's tap (spec §2.1): the readied move at its variation onto the left button, or, when it is there already, the
+## element's jab back (next_q says which). True when the left button changed.
+func tap_q() -> bool:
+	if String(next_q().get("do", "")) == "back":
+		return reset_quick()
+	return bind_quick()
+
+
+## What the next tap of Q does: {do "bind" (the readied move onto the left button) | "back" (the jab back) | "" (nothing
+## readied), label (the move's name)}. The strip's chip says it.
+func next_q() -> Dictionary:
+	var id := readied_spell
+	var jb := Bending.jab(quick_element())
+	if id == "":
+		return {"do": "", "label": ""}
+	if id == quick_id() and base_mode_of(id) == quick_mode() and not jb.is_empty() \
+			and (String(jb.id) != id or String(jb.mode) != quick_mode()):
+		return {"do": "back", "label": label_with(String(jb.id), String(jb.mode))}
+	return {"do": "bind", "label": spell_label(id)}
+
+
+## The left button back to the element's jab (Bending.jab; Q held quick_reset_s, or tapped with the readied move on it). True
+## when it changed.
+func reset_quick() -> bool:
+	var el := quick_element()
+	var jb := Bending.jab(el)
+	if el == "" or jb.is_empty() or (quick_id() == String(jb.id) and quick_mode() == String(jb.mode)):
+		return false
+	_quick[el] = {"id": String(jb.id), "mode": String(jb.mode)}
+	MatchSetup.set_quick(el, String(jb.id), String(jb.mode))
+	if player.is_local and player.interactor != null:
+		player.interactor.notice("Left click: %s" % quick_label(), 1.8)
+	return true
+
+
+## Whether the lock's moves follow the element's rules (round 2: the header): the player has an element (the ring, the duel).
+func elem() -> bool:
+	return quick_element() != ""
+
+
+## The guard's move now: {id, mode} (Bending.guard of the element; {} none).
+func guard_spell() -> Dictionary:
+	var el := quick_element()
+	return Bending.guard(el) if el != "" else {}
+
+
+## Whether the guard can be held now: an element, its guard a spell this caster has.
+func guard_ready() -> bool:
+	var id := String(guard_spell().get("id", ""))
+	return id != "" and is_spell(id) and has(id)
+
+
+## The spell the button being held (or locking) casts: the quick spell on LMB, the guard on E, else the readied one.
 func lock_spell() -> String:
 	if lock_src == SRC_QUICK:
 		return quick_id()
+	if lock_src == SRC_GUARD:
+		return String(guard_spell().get("id", ""))
 	return _sch_id if _sch_id != "" else readied_spell
+
+
+## The move and variation of the lock's own button when it is not the aim's: the quick spell's (LMB), the guard's (E).
+func _src_spell(src: String) -> Dictionary:
+	if src == SRC_QUICK:
+		return {"id": quick_id(), "mode": quick_mode()}
+	if src == SRC_GUARD:
+		return guard_spell()
+	return {}
 
 
 # ---------------------------------------------------------------- the hotbar's spells
@@ -827,8 +946,8 @@ func ready_spell(id: String) -> bool:
 		return true
 	readied_spell = id
 	_spell_free = id != "" and hands_rule(id) == ""
-	if lock_src == SRC_QUICK:
-		pass                                  # (the quick spell's lock is its own: a key readied meanwhile leaves it)
+	if lock_src in [SRC_QUICK, SRC_GUARD]:
+		pass                                  # (the quick spell's and the guard's locks are their own: a key readied leaves them)
 	elif state == State.HOLDING and move != id:
 		_end_hold("switch")
 	elif state != State.IDLE and move != id:
@@ -893,6 +1012,8 @@ func _physics_process(dt: float) -> void:
 	_root()
 	_plant_cue()
 	_track_quick()
+	_track_q(dt)
+	_track_guard()
 	if _wait_release and not _src_held(_wait_src):
 		_wait_release = false                 # (the button a fizzle waited on is let go)
 	if state == State.IDLE:
@@ -902,10 +1023,15 @@ func _physics_process(dt: float) -> void:
 			_sch_mode = ""
 	var held := _src_held(lock_src)
 	var waiting := _wait_release and _wait_src == lock_src
-	_pin_on = lock_src == SRC_QUICK and (held or state != State.IDLE)
-	if _pin_on and quick_id() != "" and (state == State.IDLE or _pin_id == ""):
-		_pin_id = quick_id()
-		_pin_mode = quick_mode()
+	if _track_press(held, dt) and _queued and state != State.IDLE:
+		_queued = false                       # (a click waiting on its lock pressed again: a hold again, the time kept)
+	_pin_on = lock_src in [SRC_QUICK, SRC_GUARD] and (held or state != State.IDLE)
+	var own := _src_spell(lock_src)
+	if _pin_on and String(own.get("id", "")) != "" and (state == State.IDLE or _pin_id == ""):
+		_pin_id = String(own.id)
+		_pin_mode = String(own.mode)
+	if not held and _queued and state in [State.LOCKING, State.FULL]:
+		held = true                           # (the click's lock runs on as if held: it goes the moment it may)
 	var why := blocked()
 	if not enabled:
 		why = "off"
@@ -925,15 +1051,22 @@ func _physics_process(dt: float) -> void:
 	if not held:
 		match state:
 			State.FULL:
-				_cast()
+				if elem() and BendStatus.now() < _switch_hold_until:
+					_queued = true                # (a switch's new pose shows its hold first: it goes then)
+				else:
+					_cast()
 			State.LOCKING:
-				_break("let go")
+				if elem() and _press_t < Bending.rule("click_s", 0.2):
+					_queued = true                # (a click: it goes the moment the lock is full)
+				else:
+					_break("let go")
 			State.HOLDING:
 				_release_hold()
-		hint = ""
-		_hinted = ""
-		_why_key = ""
-		return
+		if not _queued or state == State.IDLE:
+			hint = ""
+			_hinted = ""
+			_why_key = ""
+			return
 	if waiting:
 		return
 	_q = _query()
@@ -1004,6 +1137,12 @@ func _src_held(src: String) -> bool:
 		if quick_override != null:
 			return bool(quick_override)
 		return player.controls.pressed(QUICK) and not _quick_spoiled
+	if src == SRC_GUARD:
+		if not guard_ready():
+			return false
+		if guard_override != null:
+			return bool(guard_override)
+		return player.controls != null and player.controls.pressed(GUARD)
 	return _held()
 
 
@@ -1040,15 +1179,71 @@ func _track_quick() -> void:
 	_quick_ok_was = ok
 
 
-## The button a new lock is tried on (IDLE only): the one already held keeps it (one lock at a time: a button pressed while
-## the other is held waits until that one is let go), else the aim, else the quick spell's; a button whose fizzle is still
-## waiting on its let go is passed over.
+## The button a new lock is tried on (IDLE only): the guard's when it is held (E always works), else the one already held
+## keeps it (one lock at a time: a button pressed while the other is held waits until that one is let go), else the aim,
+## else the quick spell's; a button whose fizzle is still waiting on its let go is passed over.
 func _pick_src() -> void:
+	var guard := _src_held(SRC_GUARD) and not (_wait_release and _wait_src == SRC_GUARD)
+	if guard:
+		lock_src = SRC_GUARD
+		return
 	var aim := _src_held(SRC_AIM) and not (_wait_release and _wait_src == SRC_AIM)
 	var quick := _src_held(SRC_QUICK) and not (_wait_release and _wait_src == SRC_QUICK)
 	if (lock_src == SRC_QUICK and quick) or (lock_src == SRC_AIM and aim):
 		return
 	lock_src = SRC_AIM if aim or not quick else SRC_QUICK
+
+
+## The lock's button pressed (true the frame it goes down) and how long it has been held (_press_t: the click's test). A
+## lock moved to another button counts from that one's press.
+var _press_src := ""
+func _track_press(held: bool, dt: float) -> bool:
+	if lock_src != _press_src:
+		_press_src = lock_src
+		_held_was = false
+	var edge := held and not _held_was
+	if edge:
+		_press_t = 0.0
+	elif held:
+		_press_t += dt
+	_held_was = held
+	return edge
+
+
+## E pressed (with an element): it takes over any lock running on another button (spec §2.3: dropped, free before the
+## click, a raised stone left loose; that button must be let go before it locks again); the guard's lock then begins as
+## the frame goes on (_pick_src).
+func _track_guard() -> void:
+	var g := _src_held(SRC_GUARD)
+	var edge := g and not _guard_was
+	_guard_was = g
+	if not edge or state == State.IDLE or lock_src == SRC_GUARD:
+		return
+	var was := lock_src
+	if state == State.HOLDING:
+		_end_hold("guard")
+	else:
+		_break("guard")
+	if _src_held(was):
+		_wait_release = true
+		_wait_src = was
+	lock_src = SRC_GUARD
+
+
+## Q held (with an element): past quick_reset_s the left button is the jab again (reset_quick), once a hold.
+func _track_q(dt: float) -> void:
+	var down := elem() and player.controls != null and InputMap.has_action(QUICK_BIND) \
+			and player.controls.pressed(QUICK_BIND)
+	if not down:
+		_q_held_t = -1.0
+		return
+	if _q_held_t < 0.0:
+		_q_held_t = 0.0
+		return
+	var was := _q_held_t
+	_q_held_t += dt
+	if was < Bending.rule("quick_reset_s", 0.5) and _q_held_t >= Bending.rule("quick_reset_s", 0.5):
+		reset_quick()
 
 
 ## A weapon or a tool taken into the hands after they were right for the readied spell, one its tier does not let it keep
@@ -1543,9 +1738,29 @@ func _try_begin(q: Dictionary) -> void:
 	hold_t = 0.0
 	_local_at = t.global_transform.affine_inverse() * point
 	lock_s = _lock_time(m, t, dist, r)
+	_began()
 	if ring:
 		ring.begin()
 	lock_started.emit(m, t)
+
+
+## A new lock's round-2 state (see the header): no click waiting, not grown, nothing raised yet; lightning's charge on the
+## hands.
+func _began() -> void:
+	_queued = false
+	grown = false
+	_sputtered = false
+	_switch_hold_until = -INF
+	lock_began_at = BendStatus.now()
+	_end_charge()
+	if elem() and String(spec_of(move).get("do", "")) == "lightning":
+		charge = BendLooks.charge(player, self)
+
+
+func _end_charge() -> void:
+	if charge != null and is_instance_valid(charge):
+		charge.call(&"end")
+	charge = null
 
 
 ## A lock's time (s) of `m` on `t` at `dist` of its reach `r`: the move's (a stone's, a variation's own), stretched toward the
@@ -1557,7 +1772,30 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 	var mlk: Dictionary = d.get("mode_lock_s", {})
 	if mlk.has(mode_of(m)) and not holds_stone(m, t):
 		base = float(mlk[mode_of(m)])              # (a variation's own lock: the fireball's, lightning's)
+	if elem() and lock_src == SRC_GUARD:
+		# (the guard's own: the throw back of a stone held, or a whiffed guard's slower one: BendZone.guard_lock_s)
+		return maxf(BendZone.guard_lock_s(player, base * lock_mult * tier_mult(m)), 0.05)
 	return maxf(base * stretch * lock_mult * tier_mult(m), 0.05)
+
+
+## Move `m`'s bend spec at its mode now ({} none: an old mode, a scripted lock).
+func spec_of(m: String) -> Dictionary:
+	var b: Variant = SwayMoves.move(m).get("bend", {})
+	var s: Variant = (b as Dictionary).get(mode_of(m), {}) if b is Dictionary else {}
+	return s if s is Dictionary else {}
+
+
+## Whether move `m` at its mode now grows (▲: its spec's grow).
+func grows(m: String) -> bool:
+	return elem() and spec_of(m).get("grow") is Dictionary
+
+
+## A key of `m`'s spec at its mode, else of the move (raise_at_fill, self_lock, place ...): `def` when neither has it.
+func spec_key(m: String, key: String, def: Variant = null) -> Variant:
+	var s := spec_of(m)
+	if s.has(key):
+		return s[key]
+	return SwayMoves.move(m).get(key, def)
 
 
 # ---------------------------------------------------------------- the control schemes (see the header)
@@ -1598,8 +1836,8 @@ func foe_distance() -> float:
 
 
 ## What the aim's lock casts under the scheme now: {id, mode} ({} nothing readied and no direction). "direction": the
-## direction held's move at its own variation (one this caster has), else the readied spell; "simple": the readied spell at
-## its distance band's form (one of the element's four), else as it is; "keys", "radial": the readied spell as it is.
+## direction held's move at its own variation (one this caster has), else the readied spell; every other scheme ("keys",
+## "radial", "first_moves", a saved "simple"): the readied spell as it is.
 func scheme_pick() -> Dictionary:
 	var el := quick_element()
 	var s := scheme()
@@ -1611,28 +1849,80 @@ func scheme_pick() -> Dictionary:
 				return dm
 	if readied_spell == "":
 		return {}
-	if s == "simple":
-		var sm := MatchSetup.simple_mode(el, readied_spell, foe_distance())
-		if sm != "" and sm in modes_of(readied_spell):
-			return {"id": readied_spell, "mode": sm}
+	# (round 2: "first moves" (once "simple") has no distance band, spec §6: the readied spell as it is)
 	return {"id": readied_spell, "mode": base_mode_of(readied_spell)}
 
 
-## The scheme's pick taken for the aim (IDLE: the move the lock begins with) and followed while the lock runs (a change:
-## _switch_lock). Nothing with the keys or the radial scheme (the readied spell as ever).
+## The scheme's pick taken for the aim while no lock runs (the move the lock begins with: the direction held at the press)
+## and kept for the whole lock (round 2, spec §6: moving afterwards changes nothing, so strafing never switches a lock).
+## Nothing with the keys, the radial or the first-moves scheme (the readied spell as ever).
 func _scheme_follow() -> void:
-	if scheme() in ["keys", "radial"]:
+	if not scheme() in ["direction"]:
 		_sch_id = ""
 		_sch_mode = ""
 		return
-	var want := scheme_pick()
-	if state == State.IDLE:
-		_sch_id = String(want.get("id", ""))
-		_sch_mode = String(want.get("mode", ""))
+	if state != State.IDLE:
 		return
-	if state in [State.LOCKING, State.FULL] and not want.is_empty() \
-			and (String(want.id) != move or String(want.mode) != mode_of(move)):
-		_switch_lock(String(want.id), String(want.mode))
+	var want := scheme_pick()
+	_sch_id = String(want.get("id", ""))
+	_sch_mode = String(want.get("mode", ""))
+
+
+## A tap of the hotbar's key `key` (Bending.keys' place) while a lock runs on the aim (Hotbar.select; spec §2.3): the same
+## key moves the lock to its other move with the time kept (switch_other), its taps within double_tap_s of a switch
+## ignored; another key ends the lock (its first move is the Hotbar's to ready, and with the aim still held it locks
+## from nothing). Returns "switch", "ignored", "ended" or "" (no lock of the aim's running: the Hotbar's tap as ever).
+func key_tap(key: int) -> String:
+	if not elem() or state == State.IDLE or lock_src != SRC_AIM or state == State.HOLDING:
+		return ""
+	var el := quick_element()
+	if Bending.key_of(el, move) == key:
+		if BendStatus.now() - _switch_at < Bending.rule("double_tap_s", 0.3):
+			return "ignored"
+		return "switch" if step_other() else "ignored"
+	_break("switch")
+	return "ended"
+
+
+## The running lock (the aim's) moved to its key's other move (Bending.other_move: the mode flipped, or the partner), the
+## time kept; a wheel step and the same key mid-lock (key_tap). The new pose's hold shows switch_hold_s before it may go;
+## a raised spike turns into a boulder (FormEffects.reshape_raised). False when the key has no other move.
+func step_other() -> bool:
+	if not elem() or not state in [State.LOCKING, State.FULL] or lock_src != SRC_AIM:
+		return false
+	var el := quick_element()
+	var k := Bending.key_of(el, move)
+	if k < 0:
+		return false
+	var nxt := Bending.other_move(Bending.keys(el)[k] as Array, move, mode_of(move))
+	if nxt.is_empty():
+		return false
+	var keep := [readied_spell, String(modes.get(String(nxt.id), ""))]
+	modes[String(nxt.id)] = String(nxt.mode)  # (the key's own variation follows: the strip, the next lock)
+	if String(nxt.id) != readied_spell:
+		_hotbar_turn(k, String(nxt.id))
+	if not _switch_lock(String(nxt.id), String(nxt.mode)):
+		modes[String(nxt.id)] = String(keep[1])
+		if String(keep[0]) != readied_spell:
+			_hotbar_turn(k, String(keep[0]))
+		return false
+	mode_changed.emit(String(nxt.id), String(nxt.mode))
+	_switch_at = BendStatus.now()
+	_switch_hold_until = _switch_at + Bending.rule("switch_hold_s", 0.2)
+	if raised != null and is_instance_valid(raised):
+		raised = FormEffects.reshape_raised(raised, String(nxt.mode))
+	return true
+
+
+## The hotbar's key `k` turned to move `id` (its partner) without ending the lock: the readied spell is it now.
+func _hotbar_turn(k: int, id: String) -> void:
+	var hb := Hotbar.find(player)
+	readied_spell = id
+	if hb != null:
+		hb.spell = id                         # (first: the key's old move going off the bar is not the readied one)
+		hb.assign(k, Hotbar.make(Hotbar.SPELL, id))
+	_sync_meta()
+	spell_readied.emit(id)
 
 
 ## The lock running moved to `id` at `mode`, the time locked so far kept: its target picked again for it (left as it was
@@ -1663,6 +1953,11 @@ func _switch_lock(id: String, mode: String) -> bool:
 	off_t = 0.0
 	fill = clampf(spent / lock_s, 0.0, 1.0)
 	full_t = 0.0
+	grown = false
+	_sputtered = false
+	_end_charge()
+	if elem() and String(spec_of(id).get("do", "")) == "lightning":
+		charge = BendLooks.charge(player, self)
 	var was_full := state == State.FULL
 	state = State.LOCKING
 	if ring:
@@ -1709,13 +2004,37 @@ func range_of(m: String, t: Node = null) -> float:
 ## The pillar's self mode: the lock is under the caster (no range, the aim free); Stone Form's too (its circle where the stone
 ## rises, before the caster: aimed once, at the release; the user, 2026-10-04: "its hard to aim the stone spike").
 func _self_cast(m: String) -> bool:
-	return (m == "pillar" and mode_of(m) == "self") or m == "stone_form" or bool(SwayMoves.move(m).get("self_lock", false))
+	return self_lock_of(m)
+
+
+## Whether a lock of `m` is taken under the caster (its circle at the feet, the aim free: _self_cast): the self pillar,
+## Stone Form, a move or mode with self_lock; with an element the earth wall too (spec §2.7: moving the crosshair never
+## breaks its lock; its place is taken from the crosshair at the release, FormEffects.place_point).
+func self_lock_of(m: String) -> bool:
+	if (m == "pillar" and mode_of(m) == "self") or m == "stone_form" or bool(spec_key(m, "self_lock", false)):
+		return true
+	return elem() and m in SELF_LOCK_ELEMENT
+
+
+## Moves whose lock is the caster's own with an element (self_lock_of).
+const SELF_LOCK_ELEMENT := ["earth_wall"]
 
 
 func _moving_mult(m: String) -> float:
 	var d := SwayMoves.move(m)
 	var mm: Dictionary = d.get("mode_moving_mult", {})
-	return float(mm.get(mode_of(m), d.get("moving_mult", 0.6)))
+	var k := float(mm.get(mode_of(m), d.get("moving_mult", 0.6)))
+	if elem() and quick_element() == "fire":
+		k = maxf(k, float(Bending.passive("fire").get("moving_mult", 1.0)))     # (Footwork: full speed on the move)
+	return k
+
+
+## The fill's rate from the element's passive now: Rooted (earth, standing still on the ground: fill_mult), else 1.
+func passive_fill() -> float:
+	if not elem() or quick_element() != "earth" or not player.is_on_floor():
+		return 1.0
+	var pv := Bending.passive("earth")
+	return float(pv.get("fill_mult", 1.2)) if player.horizontal_speed() < float(pv.get("still_mps", 0.3)) else 1.0
 
 
 func _hold(dt: float, q: Dictionary) -> void:
@@ -1736,14 +2055,81 @@ func _hold(dt: float, q: Dictionary) -> void:
 		var rate := 1.0 / lock_s
 		if player.horizontal_speed() > moving_mps:
 			rate *= _moving_mult(move)
+		var pf := passive_fill()
+		rate *= pf
+		if pf > 1.0:
+			_rooted_t -= dt
+			if _rooted_t <= 0.0:
+				_rooted_t = 0.6
+				BendLooks.rooted_dust(player)      # (Rooted: a faint dust at his own feet while it helps)
 		fill = minf(fill + rate * dt, 1.0)
+		_raise_at_fill()
+		_charge_level()
 		if fill >= 1.0:
 			_full()
 	else:
 		full_t += dt
+		_charge_level()
+		if _queued:
+			if BendStatus.now() >= _switch_hold_until:
+				_cast()                       # (a click, or a let go while a switch's pose showed: it goes now)
+			return
 		var rw := release_window()
+		if elem() and grows(move):
+			if not grown and full_t >= Bending.rule("grow_after_s", 0.45):
+				_grow()
+			if rw > 0.0 and full_t >= rw:
+				_cast()                       # (a grown move goes by itself: it never fizzles)
+				_wait_release = true          # (the button still held: let go before the next lock)
+				_wait_src = lock_src
+			return
+		if elem() and not _sputtered and full_t >= Bending.rule("sputter_s", 0.7):
+			_sputter()
 		if rw > 0.0 and full_t > rw:
 			_fizzle()
+
+
+## The second click of a grow (▲) move held on (spec §2.3): it grows; the cast takes its spec's grow.
+func _grow() -> void:
+	grown = true
+	if ring:
+		ring.click()
+	_sfx("click", -1.0)
+	BendLooks.grow_click(self)
+	grew.emit(move)
+
+
+## Held on past sputter_s (a move that does not grow): a fizz on the caster's own hands, the fizzle coming.
+func _sputter() -> void:
+	_sputtered = true
+	BendLooks.sputter(self, Bending.element_of(move))
+
+
+## Spike's and Boulder's stone (raise_at_fill): at that share of the lock it rises before the caster and hangs, its point on
+## the aim (FormEffects.raise_stone); the cast throws it.
+func _raise_at_fill() -> void:
+	if not elem() or raised != null:
+		return
+	var at: Variant = spec_key(move, "raise_at_fill", null)
+	if at == null or fill < float(at):
+		return
+	raised = FormEffects.raise_stone(self, move, mode_of(move))
+
+
+## The stone raised by this lock let go loose (a lock called off, emptied by a hit, or E): FormEffects.drop_raised.
+func _drop_raised() -> void:
+	if raised != null and is_instance_valid(raised):
+		FormEffects.drop_raised(raised)
+	raised = null
+	FormEffects.drop_raised_of(player)        # (and any other this caster's body still holds up)
+
+
+## Lightning's charge on the hands (BendLooks.Charge) while its lock runs: louder and brighter as it fills, fullest at the
+## click.
+func _charge_level() -> void:
+	if charge == null or not is_instance_valid(charge):
+		return
+	charge.set(&"level", 1.0 if state == State.FULL else fill)
 
 
 ## The crosshair still on the locked target: its ray on it, or within the grace cone of the locked point with nothing
@@ -1840,6 +2226,8 @@ func _full() -> void:
 	locked.emit(move, target)
 	if holds(move, target):
 		_begin_hold()
+	elif _queued and BendStatus.now() >= _switch_hold_until:
+		_cast()                                   # (a click: the move goes the moment its lock is full)
 
 
 # ---------------------------------------------------------------- holds
@@ -1983,9 +2371,11 @@ func _cast() -> void:
 	# whatever lock runs by then: a quick lock of the same move must not land an RMB cast at its own variation)
 	var pin := [m, mode_of(m)]
 	var keep := [_pin_id, _pin_mode]
+	var grew_now := grown
 	_pin_id = m
 	_pin_mode = String(pin[1])
 	_pinning = true
+	grown = false
 	set_motes(motes - cost_of(m))             # (none with free use)
 	_count_use(m)
 	var tag := tag_of(t)
@@ -2005,10 +2395,10 @@ func _cast() -> void:
 	if wait > 0.0:
 		# (the effect leaves on the pose's strike: SwayPose's struck, or the fallback; the release below starts the clip)
 		_pending_n += 1
-		_pending = {"m": m, "t": t, "at": at, "n": _pending_n, "pin": pin}
+		_pending = {"m": m, "t": t, "at": at, "n": _pending_n, "pin": pin, "grown": grew_now}
 		get_tree().create_timer(wait + STRIKE_SLACK_S, false).timeout.connect(_land_pending.bind(_pending_n))
 	else:
-		SwayEffects.apply(self, m, t, at)
+		_apply_grown(m, t, at, grew_now)
 	if is_instance_valid(t) and t.has_method(&"sway_cast"):
 		t.call(&"sway_cast", m, self)
 	cast.emit(m, t)
@@ -2040,17 +2430,29 @@ func _land_pending(n := -1) -> void:
 		return                                  # (the caster gone, or what it was cast at: nothing to land on)
 	var pin: Array = d.get("pin", [])
 	if pin.is_empty():
-		SwayEffects.apply(self, String(d.m), t as Node3D, d.at)
+		_apply_grown(String(d.m), t as Node3D, d.at, bool(d.get("grown", false)))
 		return
 	# (a quick cast: its own variation while it lands, whatever lock runs now)
 	var keep := [_pin_id, _pin_mode, _pinning]
 	_pin_id = String(pin[0])
 	_pin_mode = String(pin[1])
 	_pinning = true
-	SwayEffects.apply(self, String(d.m), t as Node3D, d.at)
+	_apply_grown(String(d.m), t as Node3D, d.at, bool(d.get("grown", false)))
 	_pin_id = String(keep[0])
 	_pin_mode = String(keep[1])
 	_pinning = bool(keep[2])
+
+
+## The cast's effect (SwayEffects.apply), grown (▲: the caster's BendCaster.grown while it lands, BendEffects merging the
+## spec's grow) when its lock grew. A stone this lock raised and the cast did not throw lies loose after.
+func _apply_grown(m: String, t: Node3D, at: Vector3, grew_now: bool) -> void:
+	var bc := BendCaster.of(player)
+	if bc != null:
+		bc.grown = grew_now
+	SwayEffects.apply(self, m, t, at)
+	if bc != null:
+		bc.grown = false
+	FormEffects.drop_raised_of(player)
 
 
 func _on_struck(m: String) -> void:
@@ -2062,6 +2464,7 @@ func _break(why: String) -> void:
 	var m := move
 	var t := target
 	last_break = why
+	_drop_raised()                            # (called off: the stone it raised lies loose)
 	if ring:
 		ring.end("break")
 	_end_lock()
@@ -2073,6 +2476,7 @@ func _fizzle() -> void:
 	var m := move
 	var t := target
 	last_break = "fizzled"
+	_drop_raised()
 	if ring:
 		ring.end("fizzle")
 	_end_lock()
@@ -2089,10 +2493,54 @@ func _end_lock() -> void:
 	off_t = 0.0
 	full_t = 0.0
 	hold_t = 0.0
+	_queued = false
+	_sputtered = false
+	_switch_hold_until = -INF
+	raised = null                             # (thrown by the cast, or dropped loose by _break / _fizzle first)
+	_end_charge()
 	if thread != null:
 		thread.to = locked_point()
 	target = null
 	move = ""
+
+
+## A hit taken (the player's hurt). The open world: the lock breaks ("hit"). With an element (spec §2.3): pushed back by
+## what the blow cost (BendStatus.setback_s), never wiped; a dash's or a guard's lock is not touched; lightning's charge
+## breaks; a hold (Gust's stone) ends as ever.
+func _on_hurt() -> void:
+	var back := BendStatus.setback_s(player)      # (read once, whatever the lock: the blow's cost is not left for a later one)
+	if not elem() or state == State.HOLDING:
+		_end_on("hit")
+		return
+	if state == State.IDLE:
+		return
+	var sp := spec_of(move)
+	if String(sp.get("do", "")) == "lightning":
+		_break("hit")
+		return
+	if lock_src == SRC_GUARD or String(sp.get("do", "")) == "dash" or Bending.is_guard(move):
+		return
+	hit_setback(back)
+
+
+## The running lock pushed back by `back` s of its time (a hit: _on_hurt; the tests). Back to nothing: the lock runs on from
+## nothing while held (its raised stone dropped loose). A full lock is locking again; a grow is undone.
+func hit_setback(back: float) -> void:
+	if not state in [State.LOCKING, State.FULL]:
+		return
+	var spent := fill * lock_s - back
+	var emptied := spent <= 0.0
+	fill = clampf(spent / maxf(lock_s, 0.001), 0.0, 1.0)
+	if state == State.FULL and fill < 1.0:
+		state = State.LOCKING
+		full_t = 0.0
+		grown = false
+		_sputtered = false
+		if ring:
+			ring.begin()
+	if emptied:
+		_drop_raised()
+	set_back.emit(move, back, emptied)
 
 
 func _end_on(why: String) -> void:
