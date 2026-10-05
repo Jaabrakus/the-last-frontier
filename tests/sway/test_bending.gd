@@ -57,7 +57,10 @@ func _ground(v: Vector3) -> Vector3:
 	return Vector3(v.x, FrontierTerrain.height_at(v.x, v.z), v.z)
 
 
-## The player at the arena's middle-ish facing +x, the bender `d` m before him, held still and whole.
+## The player at the arena's middle-ish facing +x, the bender `d` m before him, held still and whole: his bones too (a
+## cannonball in "every move" can break his clavicle, and an arm's bone broken makes him run on his first thought once let
+## go, ending the duel's round, which holds him again: the catch's spike never thrown) and no knock left on either of them
+## (BendKnock's own velocity outlives velocity = 0).
 func _stage(d := 9.0) -> void:
 	var at := duel.arena.center() + Vector3(-6.0, 0.0, 6.0)
 	p.global_position = _ground(at) + Vector3.UP * 0.05
@@ -66,12 +69,22 @@ func _stage(d := 9.0) -> void:
 	p.rotation.y = p.yaw
 	p.pitch = 0.0
 	p.health = p.max_health
+	var pk := BendKnock.peek(p)
+	if pk != null:
+		pk.reset()
 	if n != null and is_instance_valid(n):
 		n.held = true
 		n.global_position = _ground(at + Vector3(d, 0.0, 0.0)) + Vector3.UP * 0.05
 		n.velocity = Vector3.ZERO
 		n.health = n.health_max
 		n.action = ""
+		n.arm_broken = ""
+		n.limp = 1.0
+		n.pool = 0.0
+		n.mortal_left = 0.0
+		var nk := BendKnock.peek(n)
+		if nk != null:
+			nk.reset()
 
 
 func _clear() -> void:
