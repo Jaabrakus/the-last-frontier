@@ -29,8 +29,23 @@ extends Node3D
 ## loading_hold, LoadingScreen waits on it), logged as "RING warm_ms=<ms> longest_frame_ms=<ms>".
 ## install_mode(node): the match (RingMode) put under the level. first_frame_ms: the time of the first frame (logged
 ## as "RING first_frame_ms=<ms>").
+## THE LOAD (improvement round 1, PERF: "the first ring load takes 20-35 s with a window that looks frozen"): behind the
+## loading screen in a window (LoadingScreen.covering() at _ready: the menu's Begin, the pause menu's restart) it is built a
+## part a frame (_build: the sky, the deck, the dressing, its light, the player, his sound and bending, the match), drawn
+## meanwhile through a camera where his will stand (_build_cam: each part's shaders compiled on its own frame, not all on
+## his first), each part's files read beforehand on worker threads (PREFETCH) and his animation graph parsed on one
+## (_graph_task); the loading screen's bar follows (metas loading_progress, loading_step: LOAD_STEPS). Measured windowed on
+## the M4 at the game's medium quality (tests/perf/test_ring_hitches.gd): the longest frame after the loading screen shows
+## 2.1-2.2 s -> 0.55-0.6 s with the shader cache warm (7.5 s -> 2.9 s on a first launch), its rest the player's own build
+## (FrontierPlayer._ready, in one piece); the first fight 7.5 s -> 6.3-6.6 s after Begin (14.7 s -> 13.4 s first launch).
+## Without a loading screen (a script's own change of scene, the editor's F6) or headless it is built at once in _ready, as
+## before.
 
 const DATA_PATH := RingArena.DATA_PATH
+## The files each part of the build loads (data/ring/prefetch.json "phases", recorded by tools/perf/ring_prefetch_list.py):
+## the stepped build asks for them all on worker threads at its start (_prefetch) and waits for a part's own before it
+## builds it (_fetched), so its frame does not read them (the player's body, garments and clips were most of his).
+const PREFETCH := "res://data/ring/prefetch.json"
 
 var settings: WorldSettings
 var environment_rig: EnvironmentRig
@@ -40,21 +55,57 @@ var music: Node
 var mode: Node
 var dressing: RingDressing
 var look: RingLook
+## The loading screen's line under its bar for each part of the build (_step; meta loading_step).
+const LOAD_STEPS := {
+	"sky": "Clearing the sky",
+	"deck": "Raising the deck",
+	"stands": "Filling the stands",
+	"light": "Lighting the braziers",
+	"competitors": "Calling the competitors",
+	"crowd": "Hushing the crowd",
+	"match": "Chalking the score",
+	"elements": "Waking the elements",
+}
 ## ms since the engine started when the first frame came (-1 until then).
 var first_frame_ms := -1.0
 ## The element effects' warm-up: its length and its longest frame (ms; -1 until done).
 var warm_ms := -1.0
 var warm_frame_ms := -1.0
+## The camera the stepped build is drawn through until the player's own stands (_build: without one nothing of the ring is
+## drawn before the player, and every shader of the ring was compiled on his first frame, seconds long).
+var _build_cam: Camera3D
+## The prefetch's paths by the part that loads them, and those asked for on the worker threads (held until the build is up).
+var _phases := {}
+var _fetching: PackedStringArray = []
+## The player's animation graph read on a worker thread meanwhile (AnimGraphData keeps the tables it parsed: its 7 MB graph
+## was ~0.1 s of his frame); -1 none.
+var _graph_task := -1
 
 
 func _ready() -> void:
 	StartupProfile.mark("boot")
 	set_meta(&"loading_hold", true)           # (LoadingScreen waits for the effects' warm-up: _warm_looks)
+	_step(0.0, "sky")
+	_build(LoadingScreen.covering() and DisplayServer.get_name() != "headless")
+
+
+## The level built in the order the header gives: when `steps` (a loading screen covers the window), a part a frame (the
+## sky, the deck, the dressing, the player once his rig has loaded on its worker thread, his sound and bending, the match),
+## each part's shaders compiled on the frame it is first drawn, so the loading screen's painting keeps moving between them;
+## else all at once in this call (a script's own change of scene, the editor's F6: the tests read the level a frame later;
+## and headless, where nothing is drawn and a test's fixed-step frames would race the rig's load on its worker thread).
+func _build(steps: bool) -> void:
 	var asked := MatchSetup.take()            # (the user args first: the light is the dressing's)
 	process_physics_priority = -10            # (before the player: its fall is judged with the safe drop already raised)
 	WorldRiver.off = true
 	FrontierTerrain.open_ground = false
 	BackgroundLoad.request(FrontierPlayer.CHARACTER_SCENE)
+	if steps:
+		_prefetch()
+		_graph_task = WorkerThreadPool.add_task(func() -> void: AnimGraphData.load_files(), false, "ring: animation graph")
+		await _fetched("environment")
+		if not is_inside_tree():
+			return                            # (the scene changed while it loaded)
 	settings = WorldSettings.from_args()
 	environment_rig = EnvironmentRig.new()
 	environment_rig.name = "EnvironmentRig"
@@ -62,10 +113,43 @@ func _ready() -> void:
 	environment_rig.build(settings)
 	_hold_the_sky()
 	StartupProfile.mark("environment")
+	if steps:
+		_build_cam = Camera3D.new()
+		_build_cam.name = "BuildCamera"
+		add_child(_build_cam)
+		_build_cam.look_at_from_position(Vector3(0.0, 6.0, 24.0), Vector3.ZERO)
+		_build_cam.make_current()
+		await _step(0.15, "deck")
+		await _fetched("structures")
+		if not is_inside_tree():
+			return
 	ring = RingArena.make(self)
 	StartupProfile.mark("structures")
-	_dress()
+	if _build_cam != null:
+		# (where the player's camera will stand: behind him at his spawn, over his shoulder, toward the middle)
+		var xf := ring.spawn(0)
+		var fwd := -xf.basis.z
+		_build_cam.look_at_from_position(xf.origin - fwd * 3.5 + Vector3.UP * 1.9, xf.origin + fwd * 10.0 + Vector3.UP * 1.2)
+	if steps:
+		await _step(0.3, "stands")
+		await _fetched("dressing")
+		if not is_inside_tree():
+			return
+	await _dress(steps)
+	if not is_inside_tree():
+		return
 	StartupProfile.mark("dressing")
+	if steps:
+		await _step(0.45, "competitors")
+		await _loaded(FrontierPlayer.CHARACTER_SCENE)
+		await _fetched("player")
+		while _graph_task >= 0 and not WorkerThreadPool.is_task_completed(_graph_task) and is_inside_tree():
+			await get_tree().process_frame
+		if _graph_task >= 0:                  # (_exit_tree waits on it itself when the level left meanwhile)
+			WorkerThreadPool.wait_for_task_completion(_graph_task)
+			_graph_task = -1
+		if not is_inside_tree():
+			return
 	player = FrontierPlayer.new()
 	player.name = "Player"
 	player.demo_horse = false
@@ -74,7 +158,16 @@ func _ready() -> void:
 	add_child(player)
 	place(player, ring.spawn(0))
 	_no_demo_props.call_deferred()
+	if _build_cam != null:
+		_build_cam.free()                     # (his camera the window's again)
+		if player.camera != null and player.camera.is_inside_tree():
+			player.camera.make_current()
 	StartupProfile.mark("player")
+	if steps:
+		await _step(0.6, "crowd")
+		await _fetched("audio")
+		if not is_inside_tree():
+			return
 	environment_rig.track(player)
 	_audio(player)
 	StartupProfile.mark("audio")
@@ -82,15 +175,70 @@ func _ready() -> void:
 	Bending.of(player)
 	if not SaveGame._is_script_run():
 		GameSettings.apply_to(player)
+	if steps:
+		await _step(0.7, "match")
+		await _fetched("first_frame")
+		if not is_inside_tree():
+			return
 	if asked or not SaveGame._is_script_run():
 		_follow(RingMode.install(self, player, ring))
+	_release_fetched.call_deferred()
 	StartupProfile.watch(self)
 	_first_frame.call_deferred()
 	_warm_looks.call_deferred()
 
 
+## The build's progress for the loading screen (meta loading_progress 0..1, loading_step a LOAD_STEPS key), then (a coroutine
+## the build awaits) one frame drawn.
+func _step(progress: float, what: String) -> void:
+	set_meta(&"loading_progress", progress)
+	set_meta(&"loading_step", String(LOAD_STEPS.get(what, "")))
+	if is_inside_tree() and progress > 0.0:
+		await get_tree().process_frame
+
+
+## The prefetch list's paths asked for on the worker threads (not in a headless run, nor with the user arg ring_prefetch=0;
+## a path gone or in the cache already is skipped).
+func _prefetch() -> void:
+	if DisplayServer.get_name() == "headless" or "ring_prefetch=0" in OS.get_cmdline_user_args() \
+			or not FileAccess.file_exists(PREFETCH):
+		return
+	var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(PREFETCH))
+	_phases = (d as Dictionary).get("phases", {}) if d is Dictionary else {}
+	for ph: String in _phases:
+		for p: String in _phases[ph]:
+			if not ResourceLoader.has_cached(p) and ResourceLoader.exists(p) and ResourceLoader.load_threaded_request(p) == OK:
+				_fetching.append(p)
+
+
+## Frames drawn until the part `phase`'s prefetched files are loaded (at once when there are none).
+func _fetched(phase: String) -> void:
+	for p: String in _phases.get(phase, []):
+		if p in _fetching:
+			await _loaded(p)
+
+
+## The prefetch's own hold on what it loaded let go (the level holds its own by now; called once the build is up).
+func _release_fetched() -> void:
+	for p in _fetching:
+		if ResourceLoader.load_threaded_get_status(p) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			ResourceLoader.load_threaded_get(p)
+	_fetching.clear()
+
+
+## Frames drawn until `path`'s load on its worker thread (BackgroundLoad.request) is through (at once when it was never asked
+## for or is in the cache already: BackgroundLoad.take then gets it without a wait).
+func _loaded(path: String) -> void:
+	while ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS and is_inside_tree():
+		await get_tree().process_frame
+
+
 func _exit_tree() -> void:
 	WorldRiver.off = false
+	if _graph_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_graph_task)
+		_graph_task = -1
+	_release_fetched()                       # (a build left half way: the prefetch's hold let go)
 
 
 func _physics_process(_dt: float) -> void:
@@ -136,13 +284,17 @@ func _hold_the_sky() -> void:
 		environment_rig.clock_driver.force_weather("clear")
 
 
-## The arena dressed (RingDressing) in the setup's light (RingLook), the two sides' elements on it until a match says which
-## end is whose.
-func _dress() -> void:
+## The arena dressed (RingDressing) in the setup's light (RingLook, after a frame when `steps`), the two sides' elements on it
+## until a match says which end is whose.
+func _dress(steps := false) -> void:
 	dressing = RingDressing.build(self, MatchSetup.light)
 	if dressing != null:
 		var f := MatchSetup.foe()
 		dressing.set_sides(MatchSetup.element, f if f in Bending.ELEMENTS else "fire")
+	if steps:
+		await _step(0.38, "light")
+		if not is_inside_tree():
+			return
 	look = RingLook.apply(self, MatchSetup.light)
 
 
@@ -181,6 +333,7 @@ func cheer(v: float, hold_s: float) -> void:
 ## first fire wall or tornado froze a frame for seconds), timed; then the loading screen may go.
 func _warm_looks() -> void:
 	await get_tree().process_frame
+	_step(0.8, "elements")
 	var cam := get_viewport().get_camera_3d() if get_viewport() != null else null
 	if cam != null and BendLooks.live():
 		var t0 := Time.get_ticks_usec()
@@ -188,7 +341,7 @@ func _warm_looks() -> void:
 		var longest := 0
 		var done := [false]
 		var run := func() -> void:
-			await BendLooks.warm_up(cam)
+			await BendLooks.warm_up(cam, func(f: float) -> void: set_meta(&"loading_progress", 0.8 + 0.2 * f))
 			done[0] = true
 		run.call()
 		while not done[0]:
@@ -199,6 +352,7 @@ func _warm_looks() -> void:
 		warm_ms = (Time.get_ticks_usec() - t0) / 1000.0
 		warm_frame_ms = longest / 1000.0
 		print("RING warm_ms=%.0f longest_frame_ms=%.0f" % [warm_ms, warm_frame_ms])
+	set_meta(&"loading_progress", 1.0)
 	set_meta(&"loading_hold", false)
 
 

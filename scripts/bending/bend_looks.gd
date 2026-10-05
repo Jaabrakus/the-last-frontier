@@ -728,13 +728,22 @@ static func lightning(a: Vector3, b: Vector3) -> void:
 		pool.play("ring", _flat(g), 0.25, 0.3, 1.4, ELEC, Color(0.85, 0.92, 1.0))
 
 
-## Every effect played once 3 m before `cam`, a few mm big, for WARM_FRAMES frames (each shader, particle program and
-## pipeline compiled while the level loads: measured 2026-10-05, the first fire wall, tornado and bubble each froze a frame
-## for 1 to 3.4 s on this Mac without it). Every burst, blast, body, trail, emitter, zone look, shape, mark and the lightning;
-## then they are taken away (the pool keeps its emitters for the match). Call once the level stands; it runs on by itself.
+## Every effect played once 3 m before `cam`, a few mm big (each shader, particle program and pipeline compiled while the
+## level loads: measured 2026-10-05, the first fire wall, tornado and bubble each froze a frame for 1 to 3.4 s on this Mac
+## without it). Every burst, blast, body, trail, emitter, zone look, shape, mark and the lightning, a group a frame (WARM_GROUPS:
+## a kind's bursts and blasts, its bodies, its trail; the emitters a few at a time; each zone look alone), so what is compiled
+## is spread over the frames the loading screen covers and none of them holds the window for long (all in one frame it was
+## one frame of 0.2-0.8 s warm and seconds cold); then WARM_FRAMES more frames and they are taken away (the pool keeps its
+## emitters for the match). `progress` (optional) is called with 0..1 as the groups go. Call once the level stands; it runs
+## on by itself (await it to know when it is through).
 const WARM_FRAMES := 6
+## The emitters warmed in one frame.
+const WARM_EMITTERS := 4
+const WARM_EMITTER_KINDS := ["fire", "water", "smoke", "dust", "steam", "ice", "embers", "sparkle", "debris", "foam", "lightning",
+		"air"]
+const WARM_ZONES := ["bubble", "air_shield", "water_wall", "fire_wall", "burn", "ice_patch", "smoke", "tornado", "vacuum"]
 
-static func warm_up(cam: Camera3D) -> void:
+static func warm_up(cam: Camera3D, progress := Callable()) -> void:
 	if cam == null or not cam.is_inside_tree() or not live():
 		return
 	var pool := _pool()
@@ -749,47 +758,67 @@ static func warm_up(cam: Camera3D) -> void:
 	pool.add_child(holder)
 	holder.global_transform = xf.scaled_local(Vector3.ONE * 0.01)
 	made.append(holder)
-	for k in KINDS:
-		burst(at, k, 2, Vector3.UP, 30.0, 0.1, 0.01)
-		blast(at, Vector3.FORWARD, 60.0, 0.05, k)
-		blast(at, Vector3.FORWARD, 360.0, 0.05, k)
-		for long in [false, true]:
-			var body := Node3D.new()
-			holder.add_child(body)
-			bolt_body(body, k, 0.2, long)
-		for shape in ["disc", "spear"]:
-			var body2 := Node3D.new()
-			holder.add_child(body2)
-			bolt_body(body2, k, 0.2, false, shape)
-		var t := trail(holder, k, 0.01)
-		if t != null:
-			made.append(t)
-			for c in t.get_children():
-				if c is ToonRibbon:
-					(c as ToonRibbon).prime(at, at + Vector3.LEFT * 0.05)
-	burst(at, "steam", 2, Vector3.UP, 30.0, 0.1, 0.01)
-	for e in ["fire", "water", "smoke", "dust", "steam", "ice", "embers", "sparkle", "debris", "foam", "lightning", "air"]:
-		emitter(holder, e, Vector3.ONE * 0.1, 2, 0.2, 0.1, 0.01)
-	for z in ["bubble", "air_shield", "water_wall", "fire_wall", "burn", "ice_patch", "smoke", "tornado", "vacuum"]:
-		var bz := BendZone.new()
-		bz.kind = z
-		bz.owner_node = holder
-		bz.life_s = 0.2
-		bz.size = Vector3(1.0, 1.0, 0.3)
-		bz.radius = 0.5
-		holder.add_child(bz)
-		bz.set_physics_process(false)          # (a look only: it neither burns, lifts nor ends anyone)
-		bz._look()
-	for m in ["scorch", "cracks", "frost", "wet"]:
-		pool.mark(m, at, Vector3.UP, 0.01, 0.2)
-	for sh in ["flash", "ring", "swirl"]:
-		pool.play(sh, xf, 0.2, 0.01, 0.01)
-	pool.play("crown", xf, 0.2, 0.01, 0.01, Color.WHITE, Color.WHITE, ToonFx.band_mesh(1.0, 1.5, 1.0))
-	pool.lightning(at, at + Vector3.UP * 0.05, 0.15, 1)
+	# (the groups, each a callable run on its own frame)
+	var groups: Array[Callable] = []
+	for k: String in KINDS:
+		groups.append(func() -> void:
+			burst(at, k, 2, Vector3.UP, 30.0, 0.1, 0.01)
+			blast(at, Vector3.FORWARD, 60.0, 0.05, k)
+			blast(at, Vector3.FORWARD, 360.0, 0.05, k))
+		groups.append(func() -> void:
+			for long in [false, true]:
+				var body := Node3D.new()
+				holder.add_child(body)
+				bolt_body(body, k, 0.2, long)
+			for shape in ["disc", "spear"]:
+				var body2 := Node3D.new()
+				holder.add_child(body2)
+				bolt_body(body2, k, 0.2, false, shape))
+		groups.append(func() -> void:
+			var t := trail(holder, k, 0.01)
+			if t != null:
+				made.append(t)
+				for c in t.get_children():
+					if c is ToonRibbon:
+						(c as ToonRibbon).prime(at, at + Vector3.LEFT * 0.05))
+	groups.append(func() -> void: burst(at, "steam", 2, Vector3.UP, 30.0, 0.1, 0.01))
+	for i in range(0, WARM_EMITTER_KINDS.size(), WARM_EMITTERS):
+		var some := WARM_EMITTER_KINDS.slice(i, i + WARM_EMITTERS)
+		groups.append(func() -> void:
+			for e: String in some:
+				emitter(holder, e, Vector3.ONE * 0.1, 2, 0.2, 0.1, 0.01))
+	for z: String in WARM_ZONES:
+		groups.append(func() -> void:
+			var bz := BendZone.new()
+			bz.kind = z
+			bz.owner_node = holder
+			bz.life_s = 0.2
+			bz.size = Vector3(1.0, 1.0, 0.3)
+			bz.radius = 0.5
+			holder.add_child(bz)
+			bz.set_physics_process(false)          # (a look only: it neither burns, lifts nor ends anyone)
+			bz._look())
+	groups.append(func() -> void:
+		for m in ["scorch", "cracks", "frost", "wet"]:
+			pool.mark(m, at, Vector3.UP, 0.01, 0.2)
+		for sh in ["flash", "ring", "swirl"]:
+			pool.play(sh, xf, 0.2, 0.01, 0.01)
+		pool.play("crown", xf, 0.2, 0.01, 0.01, Color.WHITE, Color.WHITE, ToonFx.band_mesh(1.0, 1.5, 1.0))
+		pool.lightning(at, at + Vector3.UP * 0.05, 0.15, 1))
+	for i in groups.size():
+		if not is_instance_valid(holder) or not holder.is_inside_tree():
+			return                               # (the level left meanwhile)
+		groups[i].call()
+		if progress.is_valid():
+			progress.call(float(i + 1) / float(groups.size() + 1))
+		await tree.process_frame
 	for i in WARM_FRAMES:
 		await tree.process_frame
+	if progress.is_valid():
+		progress.call(1.0)
 	for t in made.slice(1):
-		stop_trail(t as GPUParticles3D)
+		if is_instance_valid(t):
+			stop_trail(t as GPUParticles3D)
 	if is_instance_valid(holder):
 		holder.queue_free()
 

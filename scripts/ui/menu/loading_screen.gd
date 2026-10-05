@@ -7,6 +7,12 @@ extends CanvasLayer
 ## Added to the root, so it outlives the scene change.
 ## On the way into Tidebreak's ring (scenes/ring.tscn, a match or a practice) a tip of the sport's under the caption: one rule
 ## or one answer in a line (data/ring/screens.json "tips", MatchSetup.screens; tip_for), drawn by lot.
+## Alive while the level builds (improvement round 1, PERF: "a window that looks frozen while shaders compile"): the ring
+## builds a part a frame behind it (RingLevel._build) and tells how far it is (the level's metas loading_progress 0..1 and
+## loading_step, the caption's last line); the bar glides to it (BAR_RATE, never back), a glint runs along the bar's gold
+## (GLINT_S a sweep), the line's dots step on (DOTS_PER_S) and the painting keeps drifting, so a frame that does come late
+## reads as a moment's catch, not a hang. A level without the metas (the open world) fills the bar on the settle's time, as
+## before.
 ##
 ##   LoadingScreen.go(get_tree(), "res://scenes/main.tscn")
 
@@ -19,6 +25,12 @@ const DRIFT := 0.06         ## how much nearer the painting drifts while it show
 const HOLD_MAX_S := 15.0
 ## The ring's scene: its loading screen tells a tip of the sport.
 const RING_SCENE := "res://scenes/ring.tscn"
+## How fast the bar glides to where the load is (of the whole width per s); a glint's sweep along it (s) and its width (px).
+const BAR_RATE := 0.9
+const GLINT_S := 1.6
+const GLINT_W := 140.0
+## The line's dots after what is being built step on this many times a second.
+const DOTS_PER_S := 2.5
 
 ## The loading screen covering the window now (until its fade begins), if any: covering().
 static var _cover: LoadingScreen
@@ -32,7 +44,11 @@ var _state := "load"
 var _shown := 0.0
 var _pic: TextureRect
 var _bar: ColorRect
+var _glint: TextureRect
+var _step_label: Label
 var _root: Control
+## Where the bar is going (0..1): _progress; the bar itself glides there (_shown).
+var _target := 0.0
 ## The tip shown ("" none: not the ring).
 var tip := ""
 
@@ -125,7 +141,30 @@ func _ready() -> void:
 	_bar.anchor_top = 1.0
 	_bar.anchor_bottom = 1.0
 	_bar.offset_top = -3
+	_bar.clip_contents = true
 	_root.add_child(_bar)
+	# (a soft light running along the gold: the bar is alive even while it waits on one part)
+	var grad := Gradient.new()
+	grad.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
+	grad.colors = PackedColorArray([Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0)])
+	var gt := GradientTexture2D.new()
+	gt.gradient = grad
+	gt.width = 64
+	gt.height = 1
+	_glint = TextureRect.new()
+	_glint.texture = gt
+	_glint.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_glint.stretch_mode = TextureRect.STRETCH_SCALE
+	_glint.anchor_bottom = 1.0
+	_glint.offset_right = GLINT_W
+	_glint.modulate = Color(1.0, 0.97, 0.85, 0.9)
+	_glint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bar.add_child(_glint)
+	# (what the level is building, the caption's last line, on its shade)
+	_step_label = MenuUI.label("", 15, MenuUI.GOLD)
+	_step_label.name = "Step"
+	_step_label.modulate.a = 0.8
+	box.add_child(_step_label)
 	_pic.pivot_offset = get_viewport().get_visible_rect().size * 0.5
 	ResourceLoader.load_threaded_request(path)
 
@@ -145,14 +184,29 @@ static func tip_for(scene_path: String, rng: RandomNumberGenerator = null) -> St
 
 
 func _progress(p: float) -> void:
-	_shown = maxf(_shown, clampf(p, 0.0, 1.0))
+	_target = maxf(_target, clampf(p, 0.0, 1.0))
+
+
+## The bar a step nearer where the load is (never back), the glint along it, the level's line.
+func _draw_bar(delta: float) -> void:
+	_shown = move_toward(_shown, _target, BAR_RATE * minf(delta, 0.1))
 	_bar.anchor_right = _shown
+	var w := _bar.size.x
+	_glint.position.x = lerpf(-GLINT_W, w, fmod(_t, GLINT_S) / GLINT_S)
+	_glint.visible = w > 8.0
+	var scn := get_tree().current_scene if _state == "settle" else null
+	var line := String(scn.get_meta(&"loading_step", "")) if scn != null else ""
+	if line != "":
+		line += ".".repeat(1 + int(_t * DOTS_PER_S) % 3)      # (a beat while it works)
+	if _step_label.text != line:
+		_step_label.text = line
 
 
 func _process(delta: float) -> void:
 	_t += delta
 	var s := 1.0 + DRIFT * clampf(_t / 20.0, 0.0, 1.0)
 	_pic.scale = Vector2(s, s)
+	_draw_bar(delta)
 	match _state:
 		"load":
 			var prog := []
@@ -174,10 +228,14 @@ func _process(delta: float) -> void:
 		"settle":
 			_settle += delta
 			var need := SAVE_SETTLE_S if with_save else SETTLE_S
-			_progress(0.75 + 0.25 * clampf(_settle / need, 0.0, 1.0))
 			var scn := get_tree().current_scene
+			if scn != null and scn.has_meta(&"loading_progress"):
+				_progress(0.72 + 0.28 * clampf(float(scn.get_meta(&"loading_progress")), 0.0, 1.0))
+			else:
+				_progress(0.75 + 0.25 * clampf(_settle / need, 0.0, 1.0))
 			var hold := scn != null and bool(scn.get_meta(&"loading_hold", false)) and _settle < HOLD_MAX_S
 			if _settle >= need and _t >= MIN_S and not hold:
+				_progress(1.0)
 				_state = "fade"
 				_cover = null
 		"fade":
