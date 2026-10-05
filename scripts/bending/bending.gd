@@ -78,7 +78,8 @@ func _physics_process(dt: float) -> void:
 	water = minf(water + rate * dt, water_max)
 
 
-## Water within reach of the body it is on: the river, a wall of water or a bubble, a pool.
+## Water within reach of the body it is on: the river, a wall of water or a bubble, a pool (within its meta reach_m when it
+## has one, else near_m + 2).
 func near_water() -> bool:
 	if player == null or not is_instance_valid(player):
 		return false
@@ -89,7 +90,9 @@ func near_water() -> bool:
 			if WorldRiver.depth_at(p + o) > 0.0:
 				return true
 	for n in get_tree().get_nodes_in_group(POOLS):
-		if (n as Node3D).global_position.distance_to(p) <= r + 2.0:
+		# (a pool with its own reach, meta reach_m: the ring's grates, Tidebreak's rules.json grate_reach_m)
+		var reach := float(n.get_meta(&"reach_m")) if n.has_meta(&"reach_m") else r + 2.0
+		if (n as Node3D).global_position.distance_to(p) <= reach:
 			return true
 	for z in get_tree().get_nodes_in_group(BendZone.GROUP):
 		if (z as BendZone).kind in ["water_wall", "bubble"] and (z as BendZone).global_position.distance_to(p) <= r + 2.0:
