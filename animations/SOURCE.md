@@ -88,7 +88,46 @@ visual references, no animation files imported) is his statement; the rows below
 | `own-bend-throw-underhand` | 2026-10-04 (first set) | `bend_clips.py` (`throw_underhand`) | the rig's rest pose; keys in `CLIPS` | (for the owner to fill) |
 | `own-bend-knock-slide` | 2026-10-04 (first set) | `bend_clips.py` (`knock_slide`) | the rig's rest pose; keys in `CLIPS` | (for the owner to fill) |
 | `own-bend-knock-air` | 2026-10-04 (first set) | `bend_clips.py` (`knock_air`) | the rig's rest pose; keys in `CLIPS` | (for the owner to fill) |
+| `own-bend-stance-earth` | 2026-10-05 (second set) | `bend_clips.py` (`stance_earth`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-stance-fire` | 2026-10-05 (second set) | `bend_clips.py` (`stance_fire`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-stance-water` | 2026-10-05 (second set) | `bend_clips.py` (`stance_water`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-stance-air` | 2026-10-05 (second set) | `bend_clips.py` (`stance_air`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-earth-boulder` | 2026-10-05 (second set) | `bend_clips.py` (`earth_boulder`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-earth-raise` | 2026-10-05 (second set) | `bend_clips.py` (`earth_raise`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-earth-burrow` | 2026-10-05 (second set) | `bend_clips.py` (`earth_burrow`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-earth-catch` | 2026-10-05 (second set) | `bend_clips.py` (`earth_catch`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-earth-shove` | 2026-10-05 (second set) | `bend_clips.py` (`earth_shove`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-earth-shove-l` | 2026-10-05 (second set) | `bend_clips.py` (`earth_shove`, `mirror_clip`) | `earth_shove`'s keys mirrored left for right | (as its original) |
+| `own-bend-fire-punch` | 2026-10-05 (second set) | `bend_clips.py` (`fire_punch`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-fire-punch-l` | 2026-10-05 (second set) | `bend_clips.py` (`fire_punch`, `mirror_clip`) | `fire_punch`'s keys mirrored left for right | (as its original) |
+| `own-bend-fire-double` | 2026-10-05 (second set) | `bend_clips.py` (`fire_double`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-fire-kick` | 2026-10-05 (second set) | `bend_clips.py` (`fire_kick`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-fire-sweep` | 2026-10-05 (second set) | `bend_clips.py` (`fire_sweep`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-fire-sweep-l` | 2026-10-05 (second set) | `bend_clips.py` (`fire_sweep`, `mirror_clip`) | `fire_sweep`'s keys mirrored left for right | (as its original) |
+| `own-bend-fire-breath` | 2026-10-05 (second set) | `bend_clips.py` (`fire_breath`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-fire-lightning` | 2026-10-05 (second set) | `bend_clips.py` (`fire_lightning`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-water-whip` | 2026-10-05 (second set) | `bend_clips.py` (`water_whip`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-water-whip-l` | 2026-10-05 (second set) | `bend_clips.py` (`water_whip`, `mirror_clip`) | `water_whip`'s keys mirrored left for right | (as its original) |
+| `own-bend-water-wave` | 2026-10-05 (second set) | `bend_clips.py` (`water_wave`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-water-draw` | 2026-10-05 (second set) | `bend_clips.py` (`water_draw`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-water-shield` | 2026-10-05 (second set) | `bend_clips.py` (`water_shield`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-air-palm` | 2026-10-05 (second set) | `bend_clips.py` (`air_palm`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-air-palm-l` | 2026-10-05 (second set) | `bend_clips.py` (`air_palm`, `mirror_clip`) | `air_palm`'s keys mirrored left for right | (as its original) |
+| `own-bend-air-sweep` | 2026-10-05 (second set) | `bend_clips.py` (`air_sweep`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-air-spin` | 2026-10-05 (second set) | `bend_clips.py` (`air_spin`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-air-leap` | 2026-10-05 (second set) | `bend_clips.py` (`air_leap`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-air-shield` | 2026-10-05 (second set) | `bend_clips.py` (`air_shield`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
 
+- Second set and polish (2026-10-05, after the owner approved the first ten: "looks good but you can always perfect them"):
+  the same generator and the same inputs (the rig's rest pose and keys typed into the table, now its `SET2` part); no clip,
+  dump or reference motion read. The first ten were re-baked with the keys that had been out of the arm's or the leg's reach
+  pulled in (the IK clamped them straight: the underhand's back-swing 0.125 m, the slide's guard 0.093 m, the air knock's
+  flail 0.068 m, the rise 0.054 m, the stomp 0.044 m) and a few settle keys added; their `hold_s` and `strike_s` are unchanged.
+  `--fit` lists the frames where a limb is within 1.5 cm of straight and the striking limb's slack at `strike_s`. The
+  stances are loops (meta `loop`, installed `LOOP_LINEAR`, interpolated across the seam); `spin` turns the whole figure on
+  the spot (the air spin). The martial-art styles named in the table's comments (Hung Gar, Northern Shaolin, tai chi,
+  Baguazhang: `docs/bending_design.md`'s Animations table) are style labels for the typed key poses; no recording or
+  animation file of them was read by the generator.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.
