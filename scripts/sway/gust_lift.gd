@@ -18,6 +18,13 @@ extends Node
 ## with meta sway_stone, or a small rock (a RigidBody3D whose meta surface is "stone" or "rock"); a crate or any other prop is
 ## no stone (Gust pushes it). Up to the stone's mass_kg one caster lifts it; heavier needs two (casters_needed: the hint
 ## "heavy"; the second caster's assist is a hook, not built). Group GROUP while it lives.
+## Any caster (the owner, 2026-10-04: the ring's bots throw the same stones as the player): `caster` is a BendCaster (begin
+## takes a SwayCaster, a BendCaster or a body: BendCaster.wrap), its own bodies (a fighter's hit parts too: exclude()) left out
+## of the flight, never struck by its own stone. Whoever a stone strikes is knocked through BendStatus.knock (the one knock: the
+## player as the bots, credited to the caster for the ring), flat along the flight at hurl.<kind>.knock_mps (KNOCK_MPS when
+## the data gives none) and a little up (knock_up_mps). While it is held and flies it does not touch its caster nor whom it
+## has struck (collision exceptions, taken off as it comes to rest): a held stone never shoves its caster, and a lance through
+## a man goes through him, not carrying him along on its point.
 
 signal struck(who: Node, damage: float)
 signal landed(at: Vector3)
@@ -30,10 +37,13 @@ const FLIGHT_MAX_S := 6.0
 ## A spike's sweep moves out from its foot to its point over the first this many seconds of a flight (a stone hurled the
 ## moment it tore free still lies in the ground it came out of: its point does not meet that ground at once).
 const LEAD_IN_S := 0.1
+## A struck man's knock (m/s) along the flight, and up, when the hurl's data gives none (knock_mps, knock_up_mps).
+const KNOCK_MPS := 6.0
+const KNOCK_UP_MPS := 1.0
 
 enum Phase { HELD, FLIGHT, DONE }
 
-var caster: SwayCaster
+var caster: BendCaster
 var stone: Node3D
 ## "spike", "cannonball" or "stone" (anything else).
 var kind := "stone"
@@ -62,6 +72,7 @@ var _ex: Array[RID] = []
 var _rng := RandomNumberGenerator.new()
 var _q: PhysicsShapeQueryParameters3D       ## the flight's sweep (made once)
 var _lead_was := Vector3.ZERO               ## the sweep's lead last frame (the sweep runs on from where it ended)
+var _excepted: Array[PhysicsBody3D] = []    ## bodies the stone does not touch while held and flying (its caster, whom it struck)
 
 
 ## Gust's stone data (moves.json gust.stone).
@@ -125,18 +136,35 @@ static func kind_of(s: Node) -> String:
 	return "stone"
 
 
-## The hold begun on stone `s` by caster `c` (gust.stone's data `md`): torn free now.
-static func begin(c: SwayCaster, s: Node3D, md: Dictionary = {}) -> GustLift:
+## The hold begun on stone `s` by caster `c` (a SwayCaster, a BendCaster, a body; gust.stone's data `md`): torn free now.
+## Null when there is no caster or no stone.
+static func begin(c: Variant, s: Node3D, md: Dictionary = {}) -> GustLift:
+	var bc := BendCaster.wrap(c)
+	if bc == null or not bc.valid() or s == null or not is_instance_valid(s):
+		return null
 	var l := GustLift.new()
 	l.name = "GustLift"
-	l.caster = c
+	l.caster = bc
 	l.stone = s
 	l.d = md if not md.is_empty() else data()
 	l.kind = kind_of(s)
 	l.add_to_group(GROUP)
-	c.get_tree().current_scene.add_child(l)
+	bc.body.get_tree().current_scene.add_child(l)
 	l._take()
 	return l
+
+
+## The caster's body (null: gone), the striker of its blows.
+func by() -> Node:
+	return caster.body if caster != null and caster.body != null and is_instance_valid(caster.body) else null
+
+
+## The way the caster faces (the player's body's, as ever; any other's: its facing), when there is no aim.
+func _fwd() -> Vector3:
+	var b := by() as Node3D
+	if caster is PlayerBendCaster or b == null:
+		return -b.global_basis.z if b != null else Vector3.FORWARD
+	return caster.facing()
 
 
 func _hold_d() -> Dictionary:
@@ -165,13 +193,14 @@ func _take() -> void:
 		_rb.freeze = true
 		_rb.linear_velocity = Vector3.ZERO
 		_rb.angular_velocity = Vector3.ZERO
-	var scn := caster.get_tree().current_scene
-	var foot := FormEffects.ground_at(caster, stone.global_position)
+	var scn := get_tree().current_scene
+	var foot := FormEffects.ground_at(stone, stone.global_position)
 	GatherFx.stone_chips(scn, foot + Vector3.UP * 0.1, Vector3.UP, 14)
 	GatherFx.soil(scn, foot, Vector3.UP, 10)
 	GatherFx.fall_dust(scn, foot, radius * 2.0)
 	FormEffects.sfx("tear", foot, -2.0, 1.1)
-	_ex = [caster.player.get_rid()]
+	_ex = caster.exclude()                         # (the caster's capsule, and a fighter's hit parts)
+	_except(by())
 	if stone is CollisionObject3D:
 		_ex.append((stone as CollisionObject3D).get_rid())
 
@@ -229,7 +258,7 @@ func _held(dt: float) -> void:
 	var b := _start.basis
 	if kind == "spike":
 		# (the lance drawn: as it comes up it turns its point toward the aim)
-		var to := (aim - p) if aim != Vector3.INF else -caster.player.global_basis.z
+		var to := (aim - p) if aim != Vector3.INF else _fwd()
 		if to.length_squared() > 1e-4:
 			var want := _point_along(to.normalized())
 			b = b.slerp(want, smoothstep(0.0, 1.0, draw)).orthonormalized()
@@ -256,8 +285,8 @@ func hurl(toward := Vector3.INF) -> void:
 	var mps: Array = hd.get("mps", [12.0, 30.0])
 	power = draw
 	var from := stone.global_position
-	var dir := ((toward if toward != Vector3.INF else from - caster.player.global_basis.z * 30.0) - from)
-	dir = dir.normalized() if dir.length_squared() > 1e-6 else -caster.player.global_basis.z
+	var dir := ((toward if toward != Vector3.INF else from + _fwd() * 30.0) - from)
+	dir = dir.normalized() if dir.length_squared() > 1e-6 else _fwd()
 	var trem := deg_to_rad(float(_hold_d().get("tremble_deg", 1.2)) * (0.3 + 3.0 * strain))
 	dir = dir.rotated(Vector3.UP, _rng.randf_range(-trem, trem))
 	var side := dir.cross(Vector3.UP)
@@ -267,7 +296,7 @@ func hurl(toward := Vector3.INF) -> void:
 	phase = Phase.FLIGHT
 	_fly_t = 0.0
 	FormEffects.sfx("hurl", from, 0.0, 0.7 if kind == "cannonball" else 1.0)
-	GatherFx.fall_dust(caster.get_tree().current_scene, from, radius * 1.5)
+	GatherFx.fall_dust(get_tree().current_scene, from, radius * 1.5)
 
 
 ## The point that leads the flight, from the stone's origin (world offset): a spike's (its origin is its foot) most of the
@@ -309,11 +338,17 @@ func _fly(dt: float) -> void:
 		var info := space.get_rest_info(q)
 		var col := instance_from_id(int(info.get("collider_id", 0))) as Node if not info.is_empty() else null
 		if col == null:
-			_place(from + (to - from) * frac[0])
+			# (met nothing it can name: flown on, never left hanging where it stopped; FLIGHT_MAX_S ends it)
+			if info.has("rid"):
+				_ex.append(info.rid)
+			_place(to)
+			if _fly_t > FLIGHT_MAX_S or to.y < -200.0:
+				_land(to, Vector3.UP, to)
 			return
 		var who := FormSpikes.taker(col, caster)
 		var body := who is CharacterBody3D or who is NpcFighter or who is WildAnimal
 		if body:
+			_except(who)                        # (through him or past him: never carrying him on)
 			_strike(col, who, c_at)
 			if info.has("rid"):
 				_ex.append(info.rid)
@@ -358,23 +393,30 @@ func _strike(col: Node, who: Node, p: Vector3) -> void:
 	hit[who.get_instance_id()] = true
 	var dmg := damage_now()
 	var dir := velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.FORWARD
-	Hit.deliver(col, dmg, p, dir, caster.player if caster != null else null)
+	var src := by()
+	Hit.deliver(col, dmg, p, dir, src)
 	struck.emit(who, dmg)
 	FormEffects.sfx("strike", p, 0.0, 0.8 if kind == "cannonball" else 1.1)
 	var flat := Vector3(dir.x, 0.0, dir.z)
 	flat = flat.normalized() if flat.length_squared() > 1e-6 else Vector3.FORWARD
-	var shove := 5.0 if kind == "cannonball" else 2.5
+	var hd := _hurl_d()
+	var kv := flat * float(hd.get("knock_mps", KNOCK_MPS)) + Vector3.UP * float(hd.get("knock_up_mps", KNOCK_UP_MPS))
 	if who is NpcFighter and not (who as NpcFighter).is_dead():
-		SwayEffects.shove_fighter(who as NpcFighter, flat * shove, caster.player if caster != null else null)
+		# (knocked as the player is, credited to the caster; staggered as ever)
+		var f := who as NpcFighter
+		if f.launch(kv, src) and f.action != "flinch":
+			f._flinch(flat)
+	elif who is FrontierPlayer:
+		BendStatus.knock(who, kv, src)
 	elif who is WildAnimal and not (who as WildAnimal).is_dead():
-		SwayEffects.shove_animal(who as WildAnimal, flat * shove, p - flat)
+		SwayEffects.shove_animal(who as WildAnimal, flat * (5.0 if kind == "cannonball" else 2.5), p - flat)
 
 
 ## It meets the world at `p` (its middle; `contact` the touch): a spike sticks there along its flight; a ball or a stone is in
 ## the physics again with what is left of its speed (it rolls).
 func _land(p: Vector3, n: Vector3, contact: Vector3) -> void:
 	phase = Phase.DONE
-	var scn := caster.get_tree().current_scene if caster != null and is_instance_valid(caster) else get_tree().current_scene
+	var scn := get_tree().current_scene
 	GatherFx.stone_chips(scn, contact, n, 12)
 	GatherFx.fall_dust(scn, contact, radius * 1.6)
 	FormEffects.sfx("strike", contact, -2.0, 0.7)
@@ -405,9 +447,10 @@ func _land(p: Vector3, n: Vector3, contact: Vector3) -> void:
 	queue_free()
 
 
-## The hold broken: it falls where it hangs.
+## The hold broken: it falls where it hangs. In flight too (a Catch, a deflect, a cushion took it: BendZone): it stops there
+## and falls, its flight over.
 func drop(fx := true) -> void:
-	if phase != Phase.HELD:
+	if phase == Phase.DONE:
 		return
 	phase = Phase.DONE
 	if stone != null and is_instance_valid(stone):
@@ -429,7 +472,19 @@ func drop(fx := true) -> void:
 		queue_free()
 
 
+## The stone does not touch `b` until it comes to rest (a PhysicsBody3D: the caster, whom it struck).
+func _except(b: Node) -> void:
+	if stone is PhysicsBody3D and b is PhysicsBody3D and b != stone and is_instance_valid(b) and not _excepted.has(b):
+		(stone as PhysicsBody3D).add_collision_exception_with(b)
+		_excepted.append(b as PhysicsBody3D)
+
+
 func _release_stone() -> void:
+	if stone is PhysicsBody3D and is_instance_valid(stone):
+		for b in _excepted:
+			if is_instance_valid(b):
+				(stone as PhysicsBody3D).remove_collision_exception_with(b)
+	_excepted.clear()
 	if stone != null and is_instance_valid(stone):
 		stone.remove_meta(BUSY_META)
 		if _rb != null and _was_frozen and stone.has_meta(&"sway_keep_frozen"):

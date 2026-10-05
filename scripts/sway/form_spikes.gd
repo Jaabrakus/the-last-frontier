@@ -5,7 +5,8 @@ extends Node3D
 ## FormStone that stays) and sink again after a few seconds (no colliders). Whoever stands within hit_r of it as it comes up is
 ## struck once (Hit.deliver with `damage`, from the ground up) and knocked off their feet: a fighter thrown aside people_mps and
 ## up_mps and kept staggering down_s (NpcFighter's hit reaction held), an animal shoved animal_mps and put to flight. The caster
-## is never struck. Group GROUP.
+## is never struck (any caster: a SwayCaster, a BendCaster, a body, BendCaster.wrap; its own bodies, a fighter's hit parts
+## too, left out). Group GROUP.
 
 signal struck(target: Node, damage: float)
 
@@ -13,7 +14,7 @@ const GROUP := &"form_spikes"
 const SHARDS_LIFE_S := 5.0
 const SHARD_SINK_S := 0.8
 
-var caster: SwayCaster
+var caster: BendCaster
 var d := {}
 var at := Vector3.ZERO
 var dir := Vector3.FORWARD
@@ -31,10 +32,10 @@ var _rng := RandomNumberGenerator.new()
 
 
 ## The burst at `p_at` (on the ground) round the great spike `s`, the caster's flat way `way`, under `parent`: the strike now.
-static func burst(parent: Node, c: SwayCaster, p_at: Vector3, way: Vector3, p_d: Dictionary, s: FormStone = null) -> FormSpikes:
+static func burst(parent: Node, c: Variant, p_at: Vector3, way: Vector3, p_d: Dictionary, s: FormStone = null) -> FormSpikes:
 	var b := FormSpikes.new()
 	b.name = "FormSpikes"
-	b.caster = c
+	b.caster = BendCaster.wrap(c)
 	b.d = p_d
 	b.at = p_at
 	b.stone = s
@@ -102,8 +103,8 @@ func _erupt() -> void:
 	q.collision_mask = 0xFFFFFFFF
 	q.collide_with_areas = false
 	var ex: Array[RID] = []
-	if caster != null and caster.player != null:
-		ex.append(caster.player.get_rid())
+	if caster != null and caster.valid():
+		ex.append_array(caster.exclude())
 	if stone != null:
 		ex.append(stone.get_rid())
 	q.exclude = ex
@@ -116,11 +117,13 @@ func _erupt() -> void:
 		_strike(who, col)
 
 
-## The one that takes a blow through `col` (the first up its parents with apply_hit), never the caster.
-static func taker(col: Node, c: SwayCaster) -> Node:
+## The one that takes a blow through `col` (the first up its parents with apply_hit), never the caster (`c`: a BendCaster, a
+## SwayCaster, a body, null none; its body and anything under it, a fighter's hit parts, are never taken).
+static func taker(col: Node, c: Variant) -> Node:
+	var me := _body_of(c)
 	var n := col
 	while n != null:
-		if c != null and n == c.player:
+		if me != null and n == me:
 			return null
 		if n.has_method(&"apply_hit"):
 			return n
@@ -136,7 +139,7 @@ func _strike(who: Node, col: Node) -> void:
 	if away.length_squared() < 1e-4:
 		away = Vector3.UP.cross(dir)
 	away = away.normalized()
-	var by: Node = caster.player if caster != null else null
+	var by := _body_of(caster)
 	Hit.deliver(col, dmg, w + Vector3.UP * 0.6, (Vector3.UP * 0.8 + away).normalized(), by)
 	struck.emit(who, dmg)
 	if who is NpcFighter:
@@ -151,3 +154,15 @@ func _strike(who: Node, col: Node) -> void:
 		var a := who as WildAnimal
 		if not a.is_dead():
 			SwayEffects.shove_animal(a, away * float(d.get("animal_mps", 4.0)), at)
+
+
+## The body of caster `c` (a BendCaster's, a SwayCaster's player, a body itself; null none).
+static func _body_of(c: Variant) -> Node:
+	if c == null or not is_instance_valid(c):
+		return null
+	if c is BendCaster:
+		var b := (c as BendCaster).body
+		return b if b != null and is_instance_valid(b) else null
+	if c is SwayCaster:
+		return (c as SwayCaster).player
+	return c as Node
