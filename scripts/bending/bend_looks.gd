@@ -15,21 +15,11 @@ extends RefCounted
 ##   lightning  forks with a white core in a blue sheath that flicker, sparks and a flash where it strikes
 ## Cheap: ToonFxPool reuses every emitter, shape and trail (caps per kind), materials and meshes are shared; no node is
 ## made per hit once warm (a bolt's body is made with the bolt). Nothing is drawn headless.
-## The sounds are the nearest the game has (no water, fire or wind recordings yet): SOUNDS.
+## The sounds are the ring's own (BendSounds: synthesized for each element, tools/sfx/bend/): sound() hands them on.
 ## rise(at, size, way): the dust and cracks along the foot of an earth wall coming up (for FormRaised's raise to call).
 ## warm_up(cam): every effect played once out of sight at the level's load (their shaders compiled then, not at a first hit).
 
 const KINDS := ["stone", "ice", "water", "fire", "air", "lightning"]
-## [sound id, pitch] by kind and what happens (the nearest recordings the game has).
-const SOUNDS := {
-	"stone": {"cast": [&"gather_rec_rock_split", 1.0], "hit": [&"gather_rec_pick_rock_hard", 0.9]},
-	"ice": {"cast": [&"arrow_whoosh", 1.3], "hit": [&"gather_rec_pick_rock_hard", 1.5]},
-	"water": {"cast": [&"arrow_whoosh", 0.8], "hit": [&"land_dirt", 1.3]},
-	"fire": {"cast": [&"torch_ignite", 1.0], "hit": [&"torch_toss", 0.8]},
-	"air": {"cast": [&"arrow_whoosh", 0.6], "hit": [&"arrow_whoosh", 0.45]},
-	"lightning": {"cast": [&"musket_shot", 1.6], "hit": [&"pan_flash", 0.7]},
-	"steam": {"hit": [&"torch_snuff", 1.0]},
-}
 const FIRE := Color(1.0, 0.45, 0.06)
 const FIRE_HOT := Color(1.0, 0.82, 0.25)
 const WATER := Color(0.2, 0.6, 1.0)
@@ -45,11 +35,9 @@ static func live() -> bool:
 	return DisplayServer.get_name() != "headless"
 
 
+## A cast or a hit of `kind` heard at `at` (BendSounds.bend: the move's own sound, its jitter on BendSounds' dice).
 static func sound(kind: String, what: String, at: Vector3, db := 0.0) -> void:
-	var e: Array = (SOUNDS.get(kind, {}) as Dictionary).get(what, [])
-	if e.is_empty() or not Sfx.has(e[0]):
-		return
-	Sfx.play_3d(e[0], at, db, float(e[1]) * randf_range(0.93, 1.07))
+	BendSounds.bend(kind, what, at, db)
 
 
 static func color(kind: String) -> Color:

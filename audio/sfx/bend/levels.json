@@ -1,0 +1,996 @@
+{
+ "air_gust_01.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -7.43,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.19
+ },
+ "air_gust_02.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -7.57,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.077
+ },
+ "air_gust_03.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -8.91,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.97
+ },
+ "air_gust_04.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -7.84,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.206
+ },
+ "air_hit_01.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -1.13,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.496
+ },
+ "air_hit_02.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -3.52,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.551
+ },
+ "air_hit_03.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -2.71,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.473
+ },
+ "air_hit_04.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -2.38,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.504
+ },
+ "air_swirl_01.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -6.89,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.218
+ },
+ "air_swirl_02.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -7.36,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.201
+ },
+ "air_swirl_03.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -6.78,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.196
+ },
+ "air_swirl_04.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -6.14,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.343
+ },
+ "air_whoosh_01.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -7.92,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.469
+ },
+ "air_whoosh_02.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -5.52,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.408
+ },
+ "air_whoosh_03.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -6.6,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.561
+ },
+ "air_whoosh_04.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -4.91,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.444
+ },
+ "count_tick_01.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -11.07,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.25
+ },
+ "count_tick_02.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -10.91,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.25
+ },
+ "count_tick_03.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -10.94,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.25
+ },
+ "count_tick_04.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -11.08,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.25
+ },
+ "crowd_cheer_01.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -8.93,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.638
+ },
+ "crowd_cheer_02.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -9.78,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.688
+ },
+ "crowd_cheer_03.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -8.17,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.829
+ },
+ "crowd_cheer_04.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -8.6,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.94
+ },
+ "crowd_groan_01.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -11.1,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.269
+ },
+ "crowd_groan_02.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -10.89,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.205
+ },
+ "crowd_groan_03.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -10.77,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.126
+ },
+ "crowd_murmur_01.wav": {
+  "loud_db": -25.0,
+  "peak_dbfs": -13.86,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 12.0
+ },
+ "crowd_murmur_02.wav": {
+  "loud_db": -25.0,
+  "peak_dbfs": -13.2,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 12.0
+ },
+ "crowd_ooh_01.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -11.98,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.997
+ },
+ "crowd_ooh_02.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -11.48,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.916
+ },
+ "crowd_ooh_03.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -12.46,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.997
+ },
+ "crowd_roar_01.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -7.87,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 3.96
+ },
+ "crowd_roar_02.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -7.32,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 3.588
+ },
+ "crowd_roar_03.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -6.23,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 3.466
+ },
+ "earth_cast_crack_01.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -2.79,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.526
+ },
+ "earth_cast_crack_02.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -2.89,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.5
+ },
+ "earth_cast_crack_03.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -3.6,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.495
+ },
+ "earth_cast_crack_04.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -3.14,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.477
+ },
+ "earth_cast_rumble_01.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -5.95,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.375
+ },
+ "earth_cast_rumble_02.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -7.05,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.396
+ },
+ "earth_cast_rumble_03.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -6.07,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.324
+ },
+ "earth_cast_rumble_04.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -7.63,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.29
+ },
+ "earth_crumble_01.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -6.03,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.511
+ },
+ "earth_crumble_02.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -5.69,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.552
+ },
+ "earth_crumble_03.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -7.27,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.571
+ },
+ "earth_crumble_04.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -3.25,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.647
+ },
+ "earth_grind_01.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -9.08,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.844
+ },
+ "earth_grind_02.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -6.89,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.851
+ },
+ "earth_grind_03.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -7.79,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.147
+ },
+ "earth_grind_04.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -7.63,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.802
+ },
+ "earth_hit_01.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -4.34,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.505
+ },
+ "earth_hit_02.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -3.35,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.645
+ },
+ "earth_hit_03.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -4.91,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.74
+ },
+ "earth_hit_04.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -4.04,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.779
+ },
+ "earth_rise_01.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -5.64,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.414
+ },
+ "earth_rise_02.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -8.33,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.6
+ },
+ "earth_rise_03.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -3.98,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.518
+ },
+ "earth_rise_04.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -5.63,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.423
+ },
+ "fire_crackle_01.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -8.45,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.049
+ },
+ "fire_crackle_02.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -9.81,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.954
+ },
+ "fire_crackle_03.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -8.89,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.962
+ },
+ "fire_crackle_04.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -8.02,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.859
+ },
+ "fire_hit_01.wav": {
+  "loud_db": -14.57,
+  "peak_dbfs": -1.0,
+  "limit_db": -1.61,
+  "short_db": 0.0,
+  "dur_s": 0.746
+ },
+ "fire_hit_02.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -1.49,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.677
+ },
+ "fire_hit_03.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -1.12,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.686
+ },
+ "fire_hit_04.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -2.3,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.682
+ },
+ "fire_roar_01.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -6.62,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.069
+ },
+ "fire_roar_02.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -4.96,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.224
+ },
+ "fire_roar_03.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -5.09,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.153
+ },
+ "fire_roar_04.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -5.01,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.096
+ },
+ "fire_sizzle_01.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -7.8,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.978
+ },
+ "fire_sizzle_02.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -8.05,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.928
+ },
+ "fire_sizzle_03.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -5.64,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.723
+ },
+ "fire_sizzle_04.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -5.61,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.994
+ },
+ "fire_whoomph_01.wav": {
+  "loud_db": -15.02,
+  "peak_dbfs": -1.0,
+  "limit_db": -0.11,
+  "short_db": 0.0,
+  "dur_s": 0.64
+ },
+ "fire_whoomph_02.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -1.0,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.662
+ },
+ "fire_whoomph_03.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -3.19,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.573
+ },
+ "fire_whoomph_04.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -1.15,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.597
+ },
+ "heal_01.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -13.85,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.28
+ },
+ "heal_02.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -13.39,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.223
+ },
+ "heal_03.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -13.92,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.107
+ },
+ "ice_cast_01.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -7.84,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.683
+ },
+ "ice_cast_02.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -6.07,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.524
+ },
+ "ice_cast_03.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -6.37,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.688
+ },
+ "ice_cast_04.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -7.04,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.637
+ },
+ "ice_freeze_01.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -1.86,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.03
+ },
+ "ice_freeze_02.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -1.0,
+  "limit_db": -0.73,
+  "short_db": 0.0,
+  "dur_s": 1.052
+ },
+ "ice_freeze_03.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -8.07,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.164
+ },
+ "ice_freeze_04.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -1.66,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.034
+ },
+ "ice_hit_01.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -3.77,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.677
+ },
+ "ice_hit_02.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -2.66,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.533
+ },
+ "ice_hit_03.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -2.46,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.488
+ },
+ "ice_hit_04.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -2.15,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.636
+ },
+ "knock_thud_01.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -7.53,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.414
+ },
+ "knock_thud_02.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -6.04,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.406
+ },
+ "knock_thud_03.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -6.92,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.406
+ },
+ "knock_thud_04.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -7.06,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.413
+ },
+ "lightning_charge_01.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -8.28,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.016
+ },
+ "lightning_charge_02.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -8.32,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.979
+ },
+ "lightning_charge_03.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -8.35,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.116
+ },
+ "lightning_crack_01.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -2.02,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.663
+ },
+ "lightning_crack_02.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -1.0,
+  "limit_db": -0.29,
+  "short_db": 0.0,
+  "dur_s": 1.792
+ },
+ "lightning_crack_03.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -2.76,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.621
+ },
+ "lightning_crack_04.wav": {
+  "loud_db": -15.68,
+  "peak_dbfs": -1.0,
+  "limit_db": -4.0,
+  "short_db": 1.68,
+  "dur_s": 1.8
+ },
+ "match_gong_01.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -3.07,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 5.109
+ },
+ "match_gong_02.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -4.31,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 5.207
+ },
+ "match_gong_03.wav": {
+  "loud_db": -14.0,
+  "peak_dbfs": -5.72,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 5.484
+ },
+ "mend_01.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -8.93,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.893
+ },
+ "mend_02.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -7.56,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.87
+ },
+ "mend_03.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -9.67,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.003
+ },
+ "mend_04.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -10.3,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.914
+ },
+ "ringout_splash_01.wav": {
+  "loud_db": -13.0,
+  "peak_dbfs": -3.19,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.051
+ },
+ "ringout_splash_02.wav": {
+  "loud_db": -13.0,
+  "peak_dbfs": -3.94,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.348
+ },
+ "ringout_splash_03.wav": {
+  "loud_db": -13.0,
+  "peak_dbfs": -1.63,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.178
+ },
+ "ringout_splash_04.wav": {
+  "loud_db": -13.0,
+  "peak_dbfs": -3.79,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.112
+ },
+ "round_bell_01.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -10.44,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 3.731
+ },
+ "round_bell_02.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -9.16,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 3.712
+ },
+ "round_bell_03.wav": {
+  "loud_db": -16.0,
+  "peak_dbfs": -10.66,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 3.824
+ },
+ "round_gong_01.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -5.53,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 4.256
+ },
+ "round_gong_02.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -5.68,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 4.386
+ },
+ "round_gong_03.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -5.49,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 4.449
+ },
+ "steam_hiss_01.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -5.4,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.119
+ },
+ "steam_hiss_02.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -6.71,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.037
+ },
+ "steam_hiss_03.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -4.15,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.29
+ },
+ "steam_hiss_04.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -4.67,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.359
+ },
+ "stone_catch_01.wav": {
+  "loud_db": -13.0,
+  "peak_dbfs": -5.7,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.365
+ },
+ "stone_catch_02.wav": {
+  "loud_db": -13.0,
+  "peak_dbfs": -5.64,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.355
+ },
+ "stone_catch_03.wav": {
+  "loud_db": -13.0,
+  "peak_dbfs": -4.39,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.354
+ },
+ "stone_catch_04.wav": {
+  "loud_db": -13.0,
+  "peak_dbfs": -6.46,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.361
+ },
+ "water_cast_rush_01.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -8.25,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.845
+ },
+ "water_cast_rush_02.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -8.85,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.857
+ },
+ "water_cast_rush_03.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -8.56,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.629
+ },
+ "water_cast_rush_04.wav": {
+  "loud_db": -17.0,
+  "peak_dbfs": -7.45,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.601
+ },
+ "water_hit_01.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -3.12,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.676
+ },
+ "water_hit_02.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -2.47,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.729
+ },
+ "water_hit_03.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -3.46,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.808
+ },
+ "water_hit_04.wav": {
+  "loud_db": -15.0,
+  "peak_dbfs": -3.61,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.791
+ },
+ "water_slosh_01.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -7.55,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.877
+ },
+ "water_slosh_02.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -8.06,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.857
+ },
+ "water_slosh_03.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -5.89,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.912
+ },
+ "water_slosh_04.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -7.56,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.784
+ }
+}
