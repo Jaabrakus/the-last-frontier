@@ -136,15 +136,18 @@ func _build(steps: bool) -> void:
 		if not is_inside_tree():
 			return
 	await _dress(steps)
+	if not is_inside_tree():
+		return
 	StartupProfile.mark("dressing")
 	if steps:
 		await _step(0.45, "competitors")
 		await _loaded(FrontierPlayer.CHARACTER_SCENE)
 		await _fetched("player")
-		while not WorkerThreadPool.is_task_completed(_graph_task) and is_inside_tree():
+		while _graph_task >= 0 and not WorkerThreadPool.is_task_completed(_graph_task) and is_inside_tree():
 			await get_tree().process_frame
-		WorkerThreadPool.wait_for_task_completion(_graph_task)
-		_graph_task = -1
+		if _graph_task >= 0:                  # (_exit_tree waits on it itself when the level left meanwhile)
+			WorkerThreadPool.wait_for_task_completion(_graph_task)
+			_graph_task = -1
 		if not is_inside_tree():
 			return
 	player = FrontierPlayer.new()

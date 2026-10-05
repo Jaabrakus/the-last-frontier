@@ -343,7 +343,8 @@ func _drop_foe() -> void:
 
 ## `b` whole for a round: alive and full, back on its feet, no knock, no root, slow or anchor, no lock held.
 func make_whole(b: Node3D) -> void:
-	for key: StringName in [&"bend_root", &"bend_slow", &"bend_anchor", &"bend_redirect_lightning", &"bend_brace"]:
+	for key: StringName in [&"bend_root", &"bend_slow", &"bend_anchor", &"bend_redirect_lightning", &"bend_brace",
+			&"bend_dazzle_until"]:                # (a flare's dazzle: the bot kept from last round is not still dazzled)
 		if b.has_meta(key):
 			b.remove_meta(key)
 	var kn := BendKnock.peek(b)
