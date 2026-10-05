@@ -3,7 +3,7 @@ extends RefCounted
 ## What a bending move does when cast (docs/bending_design.md; data/sway/moves.json, a move's "bend": a spec for each of its
 ## modes, by "do"). FormEffects.apply hands a move's mode here when the move has a spec for it; the lock is SwayCaster's as
 ## for every spell (the circle at the caster's feet: "self_lock"), the aim taken at the release (aim: the crosshair, or a
-## fighter near it: FormEffects.assist_target).
+## fighter near it: BendCaster.assist_target).
 ##   bolt        BendBolt(s) from the chest along the aim: count, every_s apart, spread_deg; mps, gravity, damage, knock_mps,
 ##               up_mps, radius_m, range_m, long, erode (on earth walls), root_s / slow_s on whom it strikes; low: along
 ##               the ground
@@ -13,7 +13,8 @@ extends RefCounted
 ##               alight; shove: whoever is near knocked aside
 ##   buff        on the caster for s: anchor (no knockback), hover / glide (a slow fall), run / scooter (a fast pace),
 ##               redirect_lightning (lightning that strikes is sent back)
-##   zone        a BendZone (kind `zone`) at "self", "front" (ahead_m) or "aim" (range_m): barriers, the ground, guards
+##   zone        a BendZone (kind `zone`) at "self", "front" (ahead_m) or "aim" (range_m): barriers, the ground, guards;
+##               put_out (the spray): what burns in it goes out
 ##   status_at   at the aim's place (radius_m): root_s, slow_s, damage, up_mps (a knock-up); hollow: a hollow left
 ##   lightning   from the caster's hand along the aim at once; a fighter or player guarding with redirect_lightning sends
 ##               it back
@@ -22,44 +23,77 @@ extends RefCounted
 ##   (a wall of water turned to ice), thaw / melt (ice gone), brace (one's wall takes the next hit free), shove (earth:
 ##   push, pull, split a stone or a raised wall)
 ## `water` in a spec: what it spends of a waterbender's meter (Bending.spend; not enough: nothing, a notice).
+## Any caster (BendCaster: the player's PlayerBendCaster, a bot's or a test's BodyBendCaster; the owner, 2026-10-04: the ring's
+## bots cast the same moves as the player): every helper takes a caster or its body (untyped: BendCaster.wrap) and asks it for
+## the aim, its rays, its side, its water, its chances; nothing here reads the player's own camera or keys.
+## last: what the local player's last cast did (the tests, the HUD); last_of(c): any caster's (by its body).
 
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
 
-## What the last cast did (the tests): {do, mode, ...}.
+## What the local player's last cast did (the tests): {do, mode, ...}. Only his (is_local): a bot's casts never write it.
 static var last := {}
+## Every caster's last cast, by its body's instance id (last_of).
+static var _lasts := {}
+## The cast being done now (its helpers add to it: hit, zone, stone, ...): the same dictionary as last_of(its caster).
+static var _cur := {}
 
 
-static func apply(c: SwayCaster, m: String, mode: String, spec: Dictionary, t: Node3D, at: Vector3) -> void:
-	if c == null or c.player == null:
+## What caster `c`'s last cast did (a BendCaster, a SwayCaster or a body; {} none).
+static func last_of(c: Variant) -> Dictionary:
+	var bc := BendCaster.wrap(c)
+	if bc == null or bc.body == null:
+		return {}
+	return _lasts.get(bc.body.get_instance_id(), {})
+
+
+static func _record(bc: BendCaster, d: Dictionary) -> void:
+	_cur = d
+	if bc.body != null:
+		_lasts[bc.body.get_instance_id()] = d
+	if bc.is_local():
+		last = d
+
+
+## The body of caster `c` (a BendCaster, a SwayCaster, a body); null none.
+static func _body(c: Variant) -> CharacterBody3D:
+	var bc := BendCaster.wrap(c)
+	return bc.body if bc != null and bc.valid() else null
+
+
+## Caster `c` (a BendCaster, a SwayCaster: FormEffects.apply's, or a body) casts move `m`'s `mode` of `spec` (_t, _at: the
+## lock's target and point, kept for the old callers; the aim is the caster's own at the release).
+static func apply(c: Variant, m: String, mode: String, spec: Dictionary, _t: Node3D = null, _at := Vector3.INF) -> void:
+	var bc := BendCaster.wrap(c)
+	if bc == null or not bc.valid():
 		return
-	var p := c.player
+	var p := bc.body
 	var cost := float(spec.get("water", 0.0))
-	if cost > 0.0 and not Bending.of(p).spend(cost):
-		if p.interactor != null and p.is_local:
-			p.interactor.notice("Not enough water: stand by water, or Flow (draw)", 1.6)
-		last = {"do": "dry", "mode": mode}
+	var wb := bc.water()
+	if cost > 0.0 and (wb == null or not wb.spend(cost)):
+		bc.notice("Not enough water: stand by water, or Flow (draw)", 1.6)
+		_record(bc, {"do": "dry", "mode": mode, "move": m})
 		return
-	var a := aim(c)
-	last = {"do": String(spec.get("do", "")), "mode": mode, "move": m, "aim": a.point}
+	var a := aim(bc, spec)
+	_record(bc, {"do": String(spec.get("do", "")), "mode": mode, "move": m, "aim": a.point})
 	var kind := String(spec.get("kind", "stone"))
 	BendLooks.sound(kind, "cast", p.global_position + Vector3.UP, -4.0)
 	match String(spec.get("do", "")):
 		"bolt":
-			bolts(p, a, spec)
+			bolts(bc, a, spec)
 		"cone":
 			cone(p, a.from, a.flat, spec)
 		"ring":
 			cone(p, p.global_position + Vector3.UP, a.flat, spec, true)
 		"dash":
-			dash(p, a.flat, spec)
+			dash(bc, a.flat, spec)
 		"buff":
-			buff(p, spec)
+			buff(bc, spec)
 		"zone":
-			zone(p, a, spec)
+			zone(bc, a, spec)
 		"status_at":
 			status_at(p, _ground_at(p, a, spec), spec)
 		"lightning":
-			lightning(p, a, spec)
+			lightning(bc, a, spec)
 		"heal":
 			BendStatus.heal(p, float(spec.get("amount", 15.0)))
 			BendLooks.burst(p.global_position + Vector3.UP, "water" if kind == "water" else "air", 20, Vector3.UP, 60.0, 1.5)
@@ -70,52 +104,52 @@ static func apply(c: SwayCaster, m: String, mode: String, spec: Dictionary, t: N
 					BendStatus._end_timed(p, k, 0.0 if k == &"bend_root" else BendStatus.SLOW_MPS)
 			BendLooks.burst(p.global_position + Vector3.UP, "water", 18)
 		"draw":
-			var b := Bending.of(p)
-			var dr: Array = (SwayMoves.data().get("water_meter", {}) as Dictionary).get("draw", [10.0, 60.0])
-			b.water = minf(b.water + float(dr[1] if b.near_water() else dr[0]), b.water_max)
+			var b := bc.water()
+			if b != null:
+				var dr: Array = (SwayMoves.data().get("water_meter", {}) as Dictionary).get("draw", [10.0, 60.0])
+				b.water = minf(b.water + float(dr[1] if b.near_water() else dr[0]), b.water_max)
 			BendLooks.burst(p.global_position + Vector3.UP * 0.5, "water", 24, Vector3.UP, 40.0, 3.0)
 		"grab":
-			grab(p, a, spec)
+			grab(bc, a, spec)
 		"kick_up":
-			kick_up(p, a.flat, spec)
+			kick_up(bc, a.flat, spec)
 		"column":
-			column(p, _ground_at(p, a, spec), spec)
+			column(bc, _ground_at(p, a, spec), spec)
 		"shell":
-			shell(p, spec)
+			shell(bc, spec)
 		"ramp":
-			ramp(p, a.flat)
+			ramp(bc, a.flat)
 		"ice_wall":
-			ice_wall(p, a.flat)
+			ice_wall(bc, a.flat)
 		"freeze_water":
-			freeze_water(p, _ground_at(p, a, spec), a.flat)
+			freeze_water(bc, _ground_at(p, a, spec), a.flat)
 		"thaw":
 			melt(p, _ground_at(p, a, spec), 6.0)
 		"melt":
 			melt(p, p.global_position, float(spec.get("radius_m", 6.0)))
 		"brace":
-			brace(p, float(spec.get("range_m", 12.0)))
+			brace(bc, float(spec.get("range_m", 12.0)))
 		"shove":
-			shove(c, a, String(spec.get("how", "push")), spec)
+			shove(bc, a, String(spec.get("how", "push")), spec)
 
 
 # ---------------------------------------------------------------- the aim
-## {from (the chest), dir (to the point), flat (level), point (the crosshair's, or a fighter's chest near it), target}.
-static func aim(c: SwayCaster) -> Dictionary:
-	var p := c.player
-	var chest := p.global_position + Vector3.UP * 1.35
-	var cam := p.camera
-	var point := FormEffects.aim_point(c)
-	var target: Node3D = null
-	if cam != null and cam.is_inside_tree():
-		target = FormEffects.assist_target(c, cam.global_position, -cam.global_basis.z)
-		if target != null:
-			point = NpcSenses.chest_of(target)
+## Caster `c`'s aim now: {from (where a bolt leaves: BendCaster.launch_point), dir (to the point), flat (level), point (the
+## caster's aim_point, or its target's: target_point, led for a bolt of spec.mps), target (aim_target)}.
+static func aim(c: Variant, spec := {}) -> Dictionary:
+	var bc := BendCaster.wrap(c)
+	var p := bc.body
+	var chest := bc.chest()
+	var point := bc.aim_point()
+	var target := bc.aim_target()
+	if target != null:
+		point = bc.target_point(target, float(spec.get("mps", 0.0)))
 	if point == Vector3.INF:
 		point = chest - p.global_basis.z * 20.0
 	var flat := point - p.global_position
 	flat.y = 0.0
 	flat = flat.normalized() if flat.length_squared() > 1e-4 else -p.global_basis.z
-	var from := chest + flat * 0.6
+	var from := bc.launch_point(flat)
 	return {"from": from, "dir": (point - from).normalized(), "flat": flat, "point": point, "target": target}
 
 
@@ -131,25 +165,30 @@ static func _ground_at(p: Node3D, a: Dictionary, spec: Dictionary) -> Vector3:
 
 
 # ---------------------------------------------------------------- the kinds
-static func bolts(p: FrontierPlayer, a: Dictionary, spec: Dictionary) -> void:
+## Bolts from the caster along aim `a` (a stream's later ones along its aim again then: they follow the target).
+static func bolts(c: Variant, a: Dictionary, spec: Dictionary) -> void:
+	var bc := BendCaster.wrap(c)
+	if bc == null:
+		return
+	var p := bc.body
 	var n := int(spec.get("count", 1))
 	var every := float(spec.get("every_s", 0.0))
 	var spread := deg_to_rad(float(spec.get("spread_deg", 0.0)))
 	var low := bool(spec.get("low", false))
 	for i in n:
 		var fire := func() -> void:
-			if not is_instance_valid(p):
+			if not bc.valid():
 				return
 			var a2 := a
 			if every > 0.0 and i > 0:
-				a2 = aim(SwayCaster.of(p)) if SwayCaster.of(p) != null else a
+				a2 = aim(bc, spec)
 			var dir: Vector3 = a2.dir
 			if low:
 				dir = Vector3(a2.flat.x, -0.02, a2.flat.z).normalized()
 			if spread > 0.0 and n > 1:
 				var off := (float(i) - float(n - 1) * 0.5) / maxf(float(n - 1) * 0.5, 1.0)
-				dir = dir.rotated(Vector3.UP, off * spread + randf_range(-0.2, 0.2) * spread)
-				dir = dir.rotated(dir.cross(Vector3.UP).normalized(), randf_range(-0.5, 0.5) * spread)
+				dir = dir.rotated(Vector3.UP, off * spread + bc.rand_range(-0.2, 0.2) * spread)
+				dir = dir.rotated(dir.cross(Vector3.UP).normalized(), bc.rand_range(-0.5, 0.5) * spread)
 			var from: Vector3 = a2.from
 			if low:
 				from = Vector3(from.x, p.global_position.y + 0.45, from.z)
@@ -166,7 +205,7 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 	var deg := 360.0 if ring else float(spec.get("deg", 60.0))
 	var kind := String(spec.get("kind", "air"))
 	var hit := 0
-	for e in BendStatus.near(p, p.global_position, r):
+	for e in BendCaster.near(p, p.global_position, r):
 		var n: Node3D = e[0]
 		var to := n.global_position - p.global_position
 		to.y = 0.0
@@ -180,7 +219,7 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 		if float(spec.get("slow_s", 0.0)) > 0.0:
 			BendStatus.slow(n, float(spec.slow_s))
 		hit += 1
-	last["hit"] = hit
+	_cur["hit"] = hit
 	if bool(spec.get("put_out", false)) or bool(spec.get("melt", false)):
 		for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
 			var bz := z as BendZone
@@ -197,30 +236,39 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 	BendLooks.blast(p.global_position + Vector3.UP * 1.1, flat, deg, r, kind)
 
 
-static func dash(p: FrontierPlayer, flat: Vector3, spec: Dictionary) -> void:
+## The caster thrown along `flat` (back: behind; side: to its side_sign's side, the player's keys or a bot's own: no keys read
+## for a bot).
+static func dash(c: Variant, flat: Vector3, spec: Dictionary) -> void:
+	var bc := BendCaster.wrap(c)
+	if bc == null:
+		return
+	var p := bc.body
 	var dir := flat
 	if bool(spec.get("back", false)):
 		dir = -flat
 	elif bool(spec.get("side", false)):
 		var right := flat.cross(Vector3.UP).normalized()
-		var lr := Input.get_axis(&"move_left", &"move_right") if InputMap.has_action(&"move_left") else 0.0
-		dir = right * (signf(lr) if absf(lr) > 0.1 else (1.0 if randf() < 0.5 else -1.0))
+		dir = right * bc.side_sign()
 	var kind := String(spec.get("kind", "air"))
 	var v := dir * float(spec.get("fwd_mps", 10.0)) + Vector3.UP * float(spec.get("up_mps", 0.0))
 	p.velocity = Vector3(v.x, maxf(p.velocity.y, 0.0) + v.y, v.z)
+	_cur["v"] = v
 	BendMotion.of(p).carry(dir * float(spec.get("fwd_mps", 10.0)), 0.25)
 	BendLooks.burst(p.global_position + Vector3.UP * 0.3, "stone" if bool(spec.get("dust", false)) else kind, 22, -dir + Vector3.UP * 0.3, 50.0, 4.0, 0.4)
 	if bool(spec.get("burn", false)):
 		var start := p.global_position
 		BendZone.make(p, "burn", start + dir * 3.0, {"width_m": 1.4, "height_m": 0.4, "thick_m": 6.0, "life_s": 3.0, "damage_s": 10.0}, dir)
 	if bool(spec.get("shove", false)):
-		for e in BendStatus.near(p, p.global_position + dir * 2.0, 3.0):
+		for e in BendCaster.near(p, p.global_position + dir * 2.0, 3.0):
 			var n: Node3D = e[0]
 			var side := (n.global_position - p.global_position).cross(Vector3.UP).normalized()
 			BendStatus.knock(n, side * 6.0 + Vector3.UP * 1.0, p)
 
 
-static func buff(p: FrontierPlayer, spec: Dictionary) -> void:
+static func buff(c: Variant, spec: Dictionary) -> void:
+	var p := _body(c)
+	if p == null:
+		return
 	var s := float(spec.get("s", 2.0))
 	var kind := String(spec.get("kind", "air"))
 	match String(spec.get("buff", "")):
@@ -236,7 +284,12 @@ static func buff(p: FrontierPlayer, spec: Dictionary) -> void:
 			BendLooks.burst(p.global_position + Vector3.UP * 1.2, "lightning", 10, Vector3.UP, 180.0, 1.0, 0.2)
 
 
-static func zone(p: FrontierPlayer, a: Dictionary, spec: Dictionary) -> BendZone:
+## A BendZone of spec.zone at the caster ("self"), before it ("front", ahead_m) or at the aim ("aim"). put_out (the spray): the
+## fire walls, burning ground, campfires and torches in it go out, and fire that comes into it while it stands.
+static func zone(c: Variant, a: Dictionary, spec: Dictionary) -> BendZone:
+	var p := _body(c)
+	if p == null:
+		return null
 	var where := String(spec.get("at", "self"))
 	var at := p.global_position
 	match where:
@@ -245,8 +298,10 @@ static func zone(p: FrontierPlayer, a: Dictionary, spec: Dictionary) -> BendZone
 		"aim":
 			at = _ground_at(p, a, spec)
 	var z := BendZone.make(p, String(spec.get("zone", "bubble")), at, spec, a.flat)
-	last["zone"] = z
-	last["zone_kind"] = z.kind
+	_cur["zone"] = z
+	_cur["zone_kind"] = z.kind
+	if z.put_out:
+		_cur["put_out"] = z.put_out_fires()
 	return z
 
 
@@ -254,7 +309,7 @@ static func status_at(p: Node3D, at: Vector3, spec: Dictionary) -> void:
 	var r := float(spec.get("radius_m", 1.5))
 	var kind := String(spec.get("kind", "stone"))
 	var n_hit := 0
-	for e in BendStatus.near(p, at, r):
+	for e in BendCaster.near(p, at, r):
 		var n: Node3D = e[0]
 		BendStatus.hurt(n, float(spec.get("damage", 0.0)), n.global_position + Vector3.UP * 0.3, Vector3.UP, p)
 		if float(spec.get("up_mps", 0.0)) > 0.0:
@@ -264,24 +319,29 @@ static func status_at(p: Node3D, at: Vector3, spec: Dictionary) -> void:
 		if float(spec.get("slow_s", 0.0)) > 0.0:
 			BendStatus.slow(n, float(spec.slow_s))
 		n_hit += 1
-	last["hit"] = n_hit
+	_cur["hit"] = n_hit
 	BendLooks.burst(at + Vector3.UP * 0.1, kind, 26, Vector3.UP, 50.0, 4.0 if float(spec.get("up_mps", 0.0)) > 0.0 else 2.0, 0.4)
 	if bool(spec.get("hollow", false)):
 		FormHollow.dig(p.get_tree().current_scene, at, Vector3.FORWARD, r * 2.0, r * 2.0, 20.0)
 	BendLooks.sound(kind, "hit", at, -3.0)
 
 
-static func lightning(p: FrontierPlayer, a: Dictionary, spec: Dictionary) -> void:
+## From the caster's hand along the aim at once (its own bodies left out of the ray: BendCaster.exclude).
+static func lightning(c: Variant, a: Dictionary, spec: Dictionary) -> void:
+	var bc := BendCaster.wrap(c)
+	if bc == null:
+		return
+	var p := bc.body
 	var from: Vector3 = a.from
 	var r := float(spec.get("range_m", 45.0))
 	var space := p.get_world_3d().direct_space_state
-	var q := PhysicsRayQueryParameters3D.create(from, from + (a.dir as Vector3) * r, 0xFFFFFFFF, [p.get_rid()])
+	var q := PhysicsRayQueryParameters3D.create(from, from + (a.dir as Vector3) * r, 0xFFFFFFFF, bc.exclude())
 	var h := space.intersect_ray(q)
 	var end: Vector3 = h.position if not h.is_empty() else from + (a.dir as Vector3) * r
 	BendLooks.lightning(from, end)
 	BendLooks.sound("lightning", "cast", from)
 	var who := BendBolt._taker(h.collider as Node) if not h.is_empty() else null
-	last["hit"] = 0
+	_cur["hit"] = 0
 	if who == null or not BendStatus.can_take(who, p):
 		return
 	if BendStatus.until(who, &"bend_redirect_lightning") > 0.0:
@@ -289,19 +349,21 @@ static func lightning(p: FrontierPlayer, a: Dictionary, spec: Dictionary) -> voi
 		var back := (who as Node3D).global_position + Vector3.UP * 1.3
 		BendLooks.lightning(back, p.global_position + Vector3.UP * 1.3)
 		BendStatus.hurt(p, float(spec.get("damage", 50.0)), p.global_position + Vector3.UP, -(a.dir as Vector3), who)
-		last["redirected"] = true
+		_cur["redirected"] = true
 		return
 	BendStatus.hurt(who, float(spec.get("damage", 50.0)), end, a.dir, p)
 	BendStatus.knock(who, (a.flat as Vector3) * float(spec.get("knock_mps", 6.0)) + Vector3.UP * 2.0, p)
-	last["hit"] = 1
+	_cur["hit"] = 1
 
 
-static func grab(p: FrontierPlayer, a: Dictionary, spec: Dictionary) -> void:
+static func grab(c: Variant, a: Dictionary, spec: Dictionary) -> void:
+	var p := _body(c)
+	if p == null:
+		return
 	var t: Node3D = a.target
 	if t == null:
-		var near := BendStatus.near(p, _ground_at(p, a, spec), 2.0)
+		var near := BendCaster.near(p, _ground_at(p, a, spec), 2.0)
 		t = near[0][0] if not near.is_empty() else null
-	var tip: Vector3 = (a.point as Vector3)
 	BendBolt.launch(p, a.from, a.dir, {"kind": "water", "mps": 40.0, "damage": 0.0, "knock_mps": 0.0, "radius_m": 0.12, "range_m": 3.0})
 	if t == null or t.global_position.distance_to(p.global_position) > float(spec.get("range_m", 14.0)):
 		return
@@ -310,20 +372,27 @@ static func grab(p: FrontierPlayer, a: Dictionary, spec: Dictionary) -> void:
 	BendStatus.hurt(t, float(spec.get("damage", 4.0)), t.global_position + Vector3.UP, to.normalized(), p)
 	BendStatus.knock(t, to.normalized() * float(spec.get("pull_mps", 10.0)) + Vector3.UP * 2.0, p)
 	BendLooks.burst(t.global_position + Vector3.UP, "water", 20)
-	last["hit"] = 1
-	tip = tip
+	_cur["hit"] = 1
 
 
-static func kick_up(p: FrontierPlayer, flat: Vector3, spec: Dictionary) -> FormStone:
+static func kick_up(c: Variant, flat: Vector3, spec: Dictionary) -> FormStone:
+	var bc := BendCaster.wrap(c)
+	if bc == null or not bc.valid():
+		return null
+	var p := bc.body
 	var foot := FormEffects.ground_at(p, p.global_position + flat * 1.2)
 	var s := FormStone.ball(p.get_tree().current_scene, foot, {"radius_m": float(spec.get("radius_m", 0.32)), "mass_kg": 30.0,
-			"rise_s": 0.25, "life_s": 30.0, "sink_s": 1.0}, randi() % 97, FormMatter.of_ground(p.get_tree(), foot))
+			"rise_s": 0.25, "life_s": 30.0, "sink_s": 1.0}, bc.rand_i() % 97, FormMatter.of_ground(p.get_tree(), foot))
+	s.set_meta(&"bend_by", p.get_instance_id())
 	BendLooks.burst(foot + Vector3.UP * 0.2, "stone", 16)
-	last["stone"] = s
+	_cur["stone"] = s
 	return s
 
 
-static func column(p: FrontierPlayer, at: Vector3, spec: Dictionary) -> FormRaised:
+static func column(c: Variant, at: Vector3, spec: Dictionary) -> FormRaised:
+	var p := _body(c)
+	if p == null:
+		return null
 	var pd: Dictionary = (SwayMoves.move("pillar").get("pillar", {}) as Dictionary)
 	var matter := FormMatter.of_ground(p.get_tree(), at)
 	if matter == "wood":
@@ -348,7 +417,10 @@ static func _wall(p: Node3D, xf: Transform3D, matter: String, life := -1.0, w :=
 	return r
 
 
-static func shell(p: FrontierPlayer, spec: Dictionary) -> void:
+static func shell(c: Variant, spec: Dictionary) -> void:
+	var p := _body(c)
+	if p == null:
+		return
 	var matter := FormMatter.of_ground(p.get_tree(), p.global_position)
 	if matter == "wood":
 		matter = "earth"
@@ -360,7 +432,10 @@ static func shell(p: FrontierPlayer, spec: Dictionary) -> void:
 	BendLooks.burst(p.global_position, "stone", 30, Vector3.UP, 80.0, 3.0)
 
 
-static func ramp(p: FrontierPlayer, flat: Vector3) -> void:
+static func ramp(c: Variant, flat: Vector3) -> void:
+	var p := _body(c)
+	if p == null:
+		return
 	var foot := FormEffects.ground_at(p, p.global_position + flat * 2.5)
 	var x := Vector3.UP.cross(flat).normalized()
 	var tilt := Basis(x, deg_to_rad(-62.0))
@@ -369,7 +444,10 @@ static func ramp(p: FrontierPlayer, flat: Vector3) -> void:
 	_wall(p, Transform3D(b, foot), "earth" if matter == "wood" else matter, 20.0, 2.0)
 
 
-static func ice_wall(p: FrontierPlayer, flat: Vector3) -> FormRaised:
+static func ice_wall(c: Variant, flat: Vector3) -> FormRaised:
+	var p := _body(c)
+	if p == null:
+		return null
 	var foot := FormEffects.ground_at(p, p.global_position + flat * 1.8)
 	var x := Vector3.UP.cross(flat).normalized()
 	var r := _wall(p, Transform3D(Basis(x, Vector3.UP, flat), foot), "snow")
@@ -378,7 +456,10 @@ static func ice_wall(p: FrontierPlayer, flat: Vector3) -> FormRaised:
 	return r
 
 
-static func freeze_water(p: FrontierPlayer, at: Vector3, flat: Vector3) -> void:
+static func freeze_water(c: Variant, at: Vector3, flat: Vector3) -> void:
+	var p := _body(c)
+	if p == null:
+		return
 	for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
 		var bz := z as BendZone
 		if bz.kind == "water_wall" and bz.global_position.distance_to(at) < 8.0:
@@ -387,7 +468,7 @@ static func freeze_water(p: FrontierPlayer, at: Vector3, flat: Vector3) -> void:
 			var r := _wall(p, Transform3D(xf.basis.orthonormalized(), xf.origin), "snow")
 			r.set_meta(&"bend_ice", true)
 			BendLooks.burst(xf.origin + Vector3.UP, "ice", 30)
-			last["froze"] = r
+			_cur["froze"] = r
 			return
 	BendZone.make(p, "ice_patch", at, {"radius_m": 3.0, "life_s": 8.0}, flat)
 
@@ -406,11 +487,14 @@ static func melt(p: Node3D, at: Vector3, r: float) -> int:
 		if bz.kind == "ice_patch" and bz.global_position.distance_to(at) <= r + bz.radius:
 			bz.end()
 			n += 1
-	last["melted"] = n
+	_cur["melted"] = n
 	return n
 
 
-static func brace(p: FrontierPlayer, r: float) -> void:
+static func brace(c: Variant, r: float) -> void:
+	var p := _body(c)
+	if p == null:
+		return
 	var best: FormRaised = null
 	var bd := r
 	for w in p.get_tree().get_nodes_in_group(FormRaised.GROUP):
@@ -424,48 +508,60 @@ static func brace(p: FrontierPlayer, r: float) -> void:
 	if best != null:
 		best.set_meta(&"bend_brace", true)
 		BendLooks.burst(best.global_position + Vector3.UP, "stone", 14)
-	last["braced"] = best
+	_cur["braced"] = best
 
 
 ## Earth Shove: a stone (held by the caster first: a Catch's; else the one the aim is on, or the nearest) or a raised wall
 ## or pillar on the aim: push (hurled along the aim; a wall's chunk torn out and fired through it), pull (to the caster's
-## feet), split (a chunk broken into three flying in a spread).
-static func shove(c: SwayCaster, a: Dictionary, how: String, spec: Dictionary) -> void:
-	var p := c.player
+## feet), split (a chunk broken into three flying in a spread). The player's through his SwayCaster (FormEffects.gust_chunk,
+## FormEffects.Throw: GustLift flies it); any other caster's as stone bolts (shove_bolt) until the Throw takes any caster.
+static func shove(c: Variant, a: Dictionary, how: String, spec: Dictionary) -> void:
+	var bc := BendCaster.wrap(c)
+	if bc == null or not bc.valid():
+		return
+	var p := bc.body
 	var r := float(spec.get("range_m", 20.0))
-	var thing := _shove_target(p, a, r)
-	last["target"] = thing
+	var thing := _shove_target(bc, a, r)
+	_cur["target"] = thing
 	if thing == null:
-		if p.interactor != null and p.is_local:
-			p.interactor.notice("Nothing of stone there to shove", 1.4)
+		bc.notice("Nothing of stone there to shove", 1.4)
 		return
 	var feet := FormEffects.ground_at(p, p.global_position + (a.flat as Vector3) * 1.5) + Vector3.UP * 0.4
+	var sc: SwayCaster = (bc as PlayerBendCaster).sway if bc is PlayerBendCaster else null
+	if sc != null and not is_instance_valid(sc):
+		sc = null
 	if thing is FormRaised:
 		var w := thing as FormRaised
 		var hit_at := _face_point(w, p)
 		var dir := ((a.point as Vector3) - hit_at).normalized()
+		if sc == null:
+			_shove_wall_bolts(bc, w, hit_at, a, how, feet)
+			return
 		match how:
 			"push":
-				FormEffects.gust_chunk(c, w, hit_at, dir)
+				FormEffects.gust_chunk(sc, w, hit_at, dir)
 			"pull":
-				var s := FormEffects.gust_chunk(c, w, hit_at, dir)
+				var s := FormEffects.gust_chunk(sc, w, hit_at, dir)
 				_fix_throw(s, feet)
 			"split":
 				for i in 3:
-					var s := FormEffects.gust_chunk(c, w, hit_at + Vector3.UP * (i - 1) * 0.3, dir)
+					var s := FormEffects.gust_chunk(sc, w, hit_at + Vector3.UP * (i - 1) * 0.3, dir)
 					if s != null:
 						_fix_throw(s, (a.point as Vector3) + dir.cross(Vector3.UP).normalized() * (float(i) - 1.0) * 2.5)
 		return
 	var st := thing as Node3D
 	if st.has_meta(&"bend_held_by"):
 		st.remove_meta(&"bend_held_by")
+	if sc == null:
+		_shove_stone_bolt(bc, st, a, how, feet)
+		return
 	var td: Dictionary = (SwayMoves.move("stone_form").get("throw", {}) as Dictionary).duplicate(true)
 	var gs: Dictionary = (SwayMoves.move("gust").get("stone", {}) as Dictionary).get("hurl", {})
 	td["hurl"] = gs
 	td["rise_s"] = 0.2
 	if st is FormStone and (st as FormStone).state == FormStone.State.RISING:
 		(st as FormStone).state = FormStone.State.RESTING
-	var th := FormEffects.Throw.start(c, st as FormStone, td) if st is FormStone else null
+	var th := FormEffects.Throw.start(sc, st as FormStone, td) if st is FormStone else null
 	if th == null:
 		if st is RigidBody3D:
 			(st as RigidBody3D).freeze = false
@@ -475,6 +571,59 @@ static func shove(c: SwayCaster, a: Dictionary, how: String, spec: Dictionary) -
 		th.fixed = feet
 	elif how == "split":
 		th.fixed = Vector3.INF
+
+
+## The stone bolt a shoved stone becomes for a caster with no SwayCaster (a bot, a test): gust.raised's chunk numbers (mps,
+## gravity, damage, knock_mps), from `from` at `to`.
+static func shove_bolt(bc: BendCaster, from: Vector3, to: Vector3, radius := 0.3) -> BendBolt:
+	var gd: Dictionary = SwayMoves.move("gust").get("raised", {})
+	var mps := float(gd.get("mps", 26.0))
+	var spec := {"kind": "stone", "mps": mps, "gravity": float(gd.get("gravity", 4.0)), "damage": float(gd.get("damage", 45.0)) * 0.5,
+			"knock_mps": float(gd.get("knock_mps", 5.0)) + 3.0, "up_mps": 1.5, "radius_m": clampf(radius, 0.12, 0.45), "range_m": 40.0}
+	var tf := from.distance_to(to) / maxf(mps, 0.1)
+	var aim_at := to + Vector3.UP * 0.5 * float(spec.gravity) * tf * tf
+	var b := BendBolt.launch(bc.body, from, (aim_at - from).normalized(), spec)
+	FormEffects.sfx("hurl", from, 0.0, 1.0)
+	return b
+
+
+static func _shove_stone_bolt(bc: BendCaster, st: Node3D, a: Dictionary, how: String, feet: Vector3) -> void:
+	var from := st.global_position
+	var rad := float(st.get(&"radius")) if st is FormStone else 0.3
+	var to: Vector3 = feet if how == "pull" else (a.point as Vector3)
+	if how == "pull":
+		# (to the caster's feet: it lies there again)
+		st.global_position = feet + Vector3.UP * 0.2
+		if st is FormStone:
+			(st as FormStone).freeze = false
+			(st as FormStone).rest_again()
+		return
+	st.queue_free()
+	if how == "split":
+		var dir := (to - from).normalized()
+		for i in 3:
+			shove_bolt(bc, from + Vector3.UP * (i - 1) * 0.2, to + dir.cross(Vector3.UP).normalized() * (float(i) - 1.0) * 2.5, rad * 0.6)
+		return
+	shove_bolt(bc, from, to, rad)
+
+
+static func _shove_wall_bolts(bc: BendCaster, w: FormRaised, hit_at: Vector3, a: Dictionary, how: String, feet: Vector3) -> void:
+	var to: Vector3 = (a.point as Vector3)
+	var dir := (to - hit_at).normalized()
+	var from := hit_at + dir * 0.5
+	w.apply_hit(maxf(w.hit_min, 1.0), hit_at, dir)
+	GatherFx.stone_chips(bc.body.get_tree().current_scene, hit_at, -dir, 12)
+	match how:
+		"pull":
+			var gd: Dictionary = SwayMoves.move("gust").get("raised", {})
+			var s := FormStone.ball(bc.body.get_tree().current_scene, feet, {"radius_m": float(gd.get("chunk_r", 0.3)), "mass_kg": 25.0,
+					"rise_s": 0.05, "life_s": 20.0, "sink_s": 1.0}, bc.rand_i() % 97, w.matter if w.matter != "wood" else "earth")
+			_cur["stone"] = s
+		"split":
+			for i in 3:
+				shove_bolt(bc, from + Vector3.UP * (i - 1) * 0.3, to + dir.cross(Vector3.UP).normalized() * (float(i) - 1.0) * 2.5, 0.2)
+		_:
+			shove_bolt(bc, from, to, 0.3)
 
 
 static func _fix_throw(s: FormStone, toward: Vector3) -> void:
@@ -487,15 +636,21 @@ static func _fix_throw(s: FormStone, toward: Vector3) -> void:
 
 
 ## The thing to shove: a stone the caster holds; else what the aim's ray meets (a stone, a raised wall or pillar) within
-## `r`; else the nearest stone to the aim's line within 3 m.
-static func _shove_target(p: FrontierPlayer, a: Dictionary, r: float) -> Node3D:
+## `r` (the caster's aim_ray: the player's camera, a bot's line to its target); else the nearest stone to the aim's line within
+## 3 m.
+static func _shove_target(c: Variant, a: Dictionary, r: float) -> Node3D:
+	var bc := BendCaster.wrap(c)
+	if bc == null:
+		return null
+	var p := bc.body
 	for s in p.get_tree().get_nodes_in_group(FormStone.GROUP):
 		if int((s as Node).get_meta(&"bend_held_by", -1)) == p.get_instance_id():
 			return s
-	var cam := p.camera
-	if cam != null and cam.is_inside_tree():
-		var from := cam.global_position
-		var h := p.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(from, from - cam.global_basis.z * (r + 6.0), 0xFFFFFFFF, [p.get_rid()]))
+	var ray := bc.aim_ray()
+	var from: Vector3 = ray[0]
+	var rdir: Vector3 = ray[1]
+	if rdir.length_squared() > 1e-6:
+		var h := p.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(from, from + rdir.normalized() * (r + 6.0), 0xFFFFFFFF, bc.exclude()))
 		if not h.is_empty():
 			var n := h.collider as Node
 			for i in 4:

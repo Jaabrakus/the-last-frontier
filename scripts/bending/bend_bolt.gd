@@ -9,7 +9,9 @@ extends Node3D
 ##   a raised wall         worn by its kind against the wall's matter (WEAR: water erodes earth, fire melts ice, stone
 ##                         breaks both, air does nothing); the bolt is spent
 ##   a zone                BendZone.on_bolt: a bubble, a water wall, an air shield, a fire wall decide (stop, send back,
-##                         take the flame)
+##                         take the flame); an earth guard takes a stone (catch: held as a FormStone for Earth Shove to send
+##                         back; deflect: knocked aside; cushion: dropped)
+## Its caster is any Node3D (the player, a bot): its own bodies are left out of its flight (_exclude: ray_exclude).
 ## redirect(dir, by) turns it (a shield's, a parry's, a redirect's): it is then `by`'s, and can strike who first sent it.
 
 signal struck(who: Node, dmg: float)
@@ -30,11 +32,17 @@ var up_mps := 1.0
 var radius := 0.2
 var range_m := 30.0
 var long := false
+## Along the ground (spec.low: Fire Arc's kick, a wave along the ground): it keeps LOW_M over the ground under it (a slope, a
+## deck), its blow felt by the legs; the ground itself does not stop it (its feel for the world a little narrower than it).
+var low := false
+const LOW_M := 0.45
 ## Extra wear on an earth wall (the water jet's erosion), a root or a slow on whom it strikes (s), fire it carries (air).
 var erode := 1.0
 var root_s := 0.0
 var slow_s := 0.0
 var burning := false
+## A stone's shape (spec.shape: "ball", "disc", "shard"; a guard's catch holds a stone of it: BendZone.on_bolt).
+var shape := "ball"
 var travelled := 0.0
 var spent := false
 
@@ -57,9 +65,11 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 	b.radius = float(spec.get("radius_m", 0.2))
 	b.range_m = float(spec.get("range_m", 30.0))
 	b.long = bool(spec.get("long", false))
+	b.low = bool(spec.get("low", false))
 	b.erode = float(spec.get("erode", 1.0))
 	b.root_s = float(spec.get("root_s", 0.0))
 	b.slow_s = float(spec.get("slow_s", 0.0))
+	b.shape = String(spec.get("shape", "ball"))
 	b.add_to_group(GROUP)
 	by.get_tree().current_scene.add_child(b)
 	b.global_position = from
@@ -80,6 +90,9 @@ func _physics_process(dt: float) -> void:
 	velocity.y -= gravity * dt
 	var from := global_position
 	var step := velocity * dt
+	if low:
+		var nxt := from + step
+		step.y = FormEffects.ground_at(self, nxt).y + LOW_M - from.y
 	# the others met on the way (bolts, zones)
 	_meet_bolts()
 	if spent:
@@ -92,7 +105,7 @@ func _physics_process(dt: float) -> void:
 	if _q == null:
 		_q = PhysicsShapeQueryParameters3D.new()
 		var sph := SphereShape3D.new()
-		sph.radius = radius
+		sph.radius = minf(radius, LOW_M - 0.12) if low else radius
 		_q.shape = sph
 	_q.exclude = _exclude()
 	_q.transform = Transform3D(Basis.IDENTITY, from)
@@ -115,9 +128,15 @@ func _physics_process(dt: float) -> void:
 		end("range")
 
 
+## Its caster's own bodies, left out of its flight: a fighter's hit parts too (NpcFighter.ray_exclude), so a bolt from a bot's
+## chest does not strike the bot that sent it.
 func _exclude() -> Array[RID]:
 	var ex: Array[RID] = []
-	if caster is CollisionObject3D and is_instance_valid(caster):
+	if caster == null or not is_instance_valid(caster):
+		return ex
+	if caster.has_method(&"ray_exclude"):
+		ex.append_array(caster.call(&"ray_exclude"))
+	elif caster is CollisionObject3D:
 		ex.append((caster as CollisionObject3D).get_rid())
 	return ex
 

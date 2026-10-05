@@ -8,16 +8,19 @@ extends Node
 ##   the water    a waterbender's meter (this node on the player: Bending.of): water moves spend their "water"; it comes
 ##                back over time, fast near water (the river, a wall of water, a pool: the group POOLS)
 ## Bending.ELEMENTS, keys(element) -> [[a, b], ...], bar(element) -> the first skill of each key, partner_of(id),
-## element_of(id).
+## element_of(id). On any body that bends (Bending.of: the player, a bot: its own water, its element).
 
 const ELEMENTS := ["earth", "water", "fire", "air"]
 const NODE_NAME := &"Bending"
 ## Places that give a waterbender water (Node3D; the arena's pools).
 const POOLS := &"bend_pools"
 
-var player: FrontierPlayer
+## The body it is on (the player, a bot; the name kept from when only the player bent).
+var player: Node3D
 var water := 100.0
 var water_max := 100.0
+## Its element ("earth", "water", "fire", "air"; "" not chosen): set by the mode that gives it one (the duel, the ring).
+var element := ""
 
 
 static func data() -> Dictionary:
@@ -52,8 +55,8 @@ static func element_of(id: String) -> String:
 	return String(SwayMoves.move(id).get("element", ""))
 
 
-static func of(p: FrontierPlayer) -> Bending:
-	if p == null:
+static func of(p: Node3D) -> Bending:
+	if p == null or not is_instance_valid(p):
 		return null
 	var b := p.get_node_or_null(NodePath(NODE_NAME)) as Bending
 	if b == null:
@@ -75,9 +78,9 @@ func _physics_process(dt: float) -> void:
 	water = minf(water + rate * dt, water_max)
 
 
-## Water within reach of the player: the river, a wall of water or a bubble, a pool.
+## Water within reach of the body it is on: the river, a wall of water or a bubble, a pool.
 func near_water() -> bool:
-	if player == null:
+	if player == null or not is_instance_valid(player):
 		return false
 	var r := float((SwayMoves.data().get("water_meter", {}) as Dictionary).get("near_m", 4.0))
 	var p := player.global_position
