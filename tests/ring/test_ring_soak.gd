@@ -3,8 +3,9 @@ extends SceneTree
 ## bot's sight; a bot of his element fights in his place on his side, ring_team_a, each round a new one as the mode's foe is),
 ## one pairing per run, played fast to the end of the match:
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_ring_soak.gd -- mode=ring element=earth foe=water
-##         [round_s=60] [to_win=2] [ts=4] [difficulty=normal]
+##         [round_s=60] [to_win=2 | rounds=2] [ts=4] [difficulty=normal] [seed=7300]
 ## The ring scene with the match asked for (MatchSetup: round_s 60, to_win 2 unless the args say), Engine.time_scale ts (4).
+## seed= (RingMode's: the foe's rolls) seeds the player's-side bot too (seed + 1800), so a pairing's seeds are distinct runs.
 ##   the match   reaches DONE (match_over once) within the watchdog; no SCRIPT ERROR (the runner counts them)
 ##   the rules   no self ring-out (every ring-out credited to a knocker of the other side, never none or one's own)
 ##   both sides  each side's bot casts (only its own element's moves, Mend and Patch)
@@ -12,7 +13,14 @@ extends SceneTree
 ##               "METRIC pair=<a>-<b> ring_out_ratio=<ring-outs / rounds>" (the target is about 0.6: more ring-outs than
 ##               time-outs), the rounds' whys, the casts by move per side (and each move's share of all its side's casts:
 ##               no move should dominate), catches and answers per side, knocks landed per side, the walls raised and those
-##               capped (rules.json max_walls) per side
+##               capped (rules.json max_walls) per side; the knocks landed per side by the knocker's last release (its move: a
+##               bolt in flight is its last release's, near enough) with their summed m/s as applied, and the move behind each
+##               ring-out (its last knock's); the health it took off the other side by its last release (dmg_by: a drop polled
+##               each frame, the winding blow itself missed), the zone lines each side was pushed over (pushed) and its
+##               windings (winded), its strikes (hits), its bolts' damage by kind (bolt_dmg, sent_back: bolts a guard of its
+##               turned on their caster) and its held-and-hurled stones' (lift_dmg: Gust lift's, Earth Shove's, by the stone's
+##               kind). R1-BALANCE (2026-10-05) read with these that air won on the deck's socket cannonballs (lifted, about 110
+##               a strike) more than on knocks
 ## The clock: BendStatus.now() counts physics frames, so under ts 4 its timers (the bots' rests, cools, reactions and
 ## opening grace; roots, slows) last 4 times as long in game time as the locks and flights do. ts=1 is the game's own pace
 ## (headless with a fixed fps it runs unthrottled anyway: a match in a few seconds); read the balance there.
@@ -35,9 +43,33 @@ var outs: Array = []
 var matches: Array = []
 ## Per side (0 the player's, the mate bot; 1 the foe): casts by "move/mode", catches, answered, reactions, lost, walls, capped.
 var by_side: Array = [{}, {}]
-var tallies: Array = [{"casts": 0, "catches": 0, "answered": 0, "lost": 0, "walls": 0, "capped": 0, "reactions": {}}, {"casts": 0, "catches": 0, "answered": 0, "lost": 0, "walls": 0, "capped": 0, "reactions": {}}]
+var tallies: Array = [{"casts": 0, "hits": 0, "catches": 0, "answered": 0, "lost": 0, "walls": 0, "capped": 0, "reactions": {}}, {"casts": 0, "hits": 0, "catches": 0, "answered": 0, "lost": 0, "walls": 0, "capped": 0, "reactions": {}}]
 var knocks := Vector2i.ZERO
 var _seed := 9100
+## Per side: "move/mode" -> [knocks landed, their summed m/s as applied]; the ring-outs by the move of the last knock; the
+## health it took off the other side by its last release (polled each frame: a drop in the other's health).
+var knock_by: Array = [{}, {}]
+var dmg_by: Array = [{}, {}]
+## Per side: zone lines it was pushed back over by a knock, and by being winded (RingRules.knocked_back, winded).
+var pushed := [0, 0]
+## Per side: bolt damage dealt by its kind, and the part of it from bolts sent back (a guard's: the bolt was the other's).
+var bolt_dmg: Array = [{}, {}]
+var back_dmg := [0.0, 0.0]
+## Per side: damage dealt by held-and-hurled stones (GustLift: Gust lift's, Earth Shove's, a stone form's), by its kind.
+var lift_dmg: Array = [{}, {}]
+var winds := [0, 0]
+var _hp := [-1.0, -1.0]
+var out_by: Array = [{}, {}]
+var _last_knock := {}
+
+
+## A BendKnock listener (its group): every knock in the ring told to the soak's tally.
+class KnockTap:
+	extends Node
+	var cb: Callable
+
+	func on_knocked(n: Node, v: Vector3, by: Node) -> void:
+		cb.call(n, v, by)
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -59,6 +91,8 @@ func _initialize() -> void:
 		var kv := a.trim_prefix("--")
 		if kv.begins_with("ts=") and kv.get_slice("=", 1).is_valid_float():
 			ts = float(kv.get_slice("=", 1))
+		elif kv.begins_with("seed=") and kv.get_slice("=", 1).is_valid_int():
+			_seed = int(kv.get_slice("=", 1)) + 1800
 	SwayCaster.free_override = true
 	InputSetup.ensure()
 	MatchSetup.round_s = 60.0
@@ -83,6 +117,29 @@ func _end() -> void:
 
 ## Walls raised (FormRaised kind "wall", earth and ice: the cap's) counted per side as they rise, and those capped.
 func _on_node_added(nd: Node) -> void:
+	if nd is BendBolt:
+		var bb := nd as BendBolt
+		(func() -> void:
+			if not is_instance_valid(bb):
+				return
+			var first := bb.caster.get_instance_id() if bb.caster != null and is_instance_valid(bb.caster) else 0
+			bb.struck.connect(func(_who: Node, dmg: float) -> void:
+				var cid := bb.caster.get_instance_id() if bb.caster != null and is_instance_valid(bb.caster) else 0
+				var sd := _side_of_id(cid)
+				if sd < 0:
+					return
+				bolt_dmg[sd][bb.kind] = float(bolt_dmg[sd].get(bb.kind, 0.0)) + dmg
+				if cid != first:
+					back_dmg[sd] += dmg)).call_deferred()
+		return
+	if nd is GustLift:
+		var gl := nd as GustLift
+		gl.struck.connect(func(_who: Node, dmg: float) -> void:
+			var by := gl.by()
+			var sd := _side_of_id(by.get_instance_id()) if by != null else -1
+			if sd >= 0:
+				lift_dmg[sd][gl.kind] = float(lift_dmg[sd].get(gl.kind, 0.0)) + dmg)
+		return
 	if not (nd is FormRaised):
 		return
 	(func() -> void:
@@ -118,9 +175,16 @@ func _run() -> void:
 	if mode == null or player == null:
 		return _end()
 	mode.phase_changed.connect(_on_phase)
+	var tap := KnockTap.new()
+	tap.cb = _on_knocked
+	tap.add_to_group(BendKnock.LISTENERS)
+	root.add_child(tap)
 	mode.round_over.connect(_on_round_over)
 	mode.rang_out.connect(func(who: Node3D, by: Node) -> void:
 		var by_side := mode.side_of(by) if by != null and is_instance_valid(by) else -1
+		if by_side >= 0:
+			var lk := String(_last_knock.get(who.get_instance_id(), "?"))
+			out_by[by_side][lk] = int(out_by[by_side].get(lk, 0)) + 1
 		outs.append([mode.side_of(who), by_side, who == by])
 		if by_side < 0 or who == by or by_side == mode.side_of(who):
 			# (what it was doing: its last cast and how long since it was last knocked)
@@ -130,6 +194,14 @@ func _run() -> void:
 					b.last_cast if b else {}, b.casting if b else "", BendStatus.now() - kn.last_knock_at if kn else INF,
 					who.global_position, (who as CharacterBody3D).velocity if who is CharacterBody3D else Vector3.ZERO]))
 	mode.match_over.connect(func(w: int) -> void: matches.append(w))
+	mode.rules.knocked_back.connect(func(who: Node3D, from_z: int, to_z: int) -> void:
+		var sd := mode.side_of(who)
+		if sd >= 0:
+			pushed[sd] += maxi(to_z - from_z, 0))
+	mode.rules.winded.connect(func(who: Node3D, _by: Node, _to: int) -> void:
+		var sd := mode.side_of(who)
+		if sd >= 0:
+			winds[sd] += 1)
 	if mode.phase == "COUNTDOWN":
 		_spectate()                          # (the first round's countdown began before the hooks)
 	print("  pair %s vs %s, %s, round_s %.0f, to_win %d, ts %.1f" % [mode.element, mode.foe_element, mode.difficulty, mode.round_s, mode.to_win, ts])
@@ -145,6 +217,7 @@ func _run() -> void:
 		game_t += 1.0 / Engine.physics_ticks_per_second * Engine.time_scale
 		if player != null and is_instance_valid(player) and player.global_position.distance_to(PARK) > 1.0 and mode.phase != "DONE":
 			_park()
+		_poll_hurt()
 	Engine.time_scale = 1.0
 	print("  (%.0f s of the game in %.0f s)" % [game_t, (Time.get_ticks_msec() - t0) / 1000.0])
 	_expect(mode.phase == "DONE", "the match reaches DONE (%s, round %d, score %s)" % [mode.phase, mode.round, mode.score])
@@ -240,6 +313,38 @@ func _drop_mate() -> void:
 
 
 # ---------------------------------------------------------------- the counts
+## Each frame in a fight: a drop in either bot's health counted for the other side by that side's last release.
+func _poll_hurt() -> void:
+	var bots: Array = [mate, mode.foe]
+	for side in 2:
+		var f: Variant = bots[side]
+		if f == null or not is_instance_valid(f) or mode.phase != "FIGHT":
+			_hp[side] = -1.0
+			continue
+		var hp := (f as NpcFighter).health
+		var other: Variant = bots[1 - side]
+		if _hp[side] >= 0.0 and hp < _hp[side] - 0.01 and other != null and is_instance_valid(other) and (other as NpcFighter).brain != null:
+			var lc: Dictionary = (other as NpcFighter).brain.bending.last_cast
+			var k := "%s/%s" % [lc.get("move", "?"), lc.get("mode", "")]
+			dmg_by[1 - side][k] = float(dmg_by[1 - side].get(k, 0.0)) + _hp[side] - hp
+		_hp[side] = hp
+
+
+## A knock landed (BendKnock's listeners): counted for the knocker's side by its last release's move.
+func _on_knocked(n: Node, v: Vector3, by: Node) -> void:
+	if mode == null or by == null or not is_instance_valid(by) or not (by is NpcFighter):
+		return
+	var side := _side_of_id(by.get_instance_id())
+	var f := by as NpcFighter
+	if side < 0 or f.brain == null or f.brain.bending == null:
+		return
+	var lc: Dictionary = f.brain.bending.last_cast
+	var k := "%s/%s" % [lc.get("move", "?"), lc.get("mode", "")]
+	var e: Array = knock_by[side].get(k, [0, 0.0])
+	knock_by[side][k] = [int(e[0]) + 1, float(e[1]) + v.length()]
+	_last_knock[n.get_instance_id()] = k
+
+
 func _on_round_over(r: String, why: String) -> void:
 	rounds.append([mode.round, r, why, mode.round_left_s()])
 	knocks += mode.rules.knocks
@@ -250,6 +355,7 @@ func _on_round_over(r: String, why: String) -> void:
 			continue
 		var b := (f as NpcFighter).brain.bending
 		tallies[side]["casts"] = int(tallies[side]["casts"]) + b.casts
+		tallies[side]["hits"] = int(tallies[side]["hits"]) + b.hits
 		tallies[side]["catches"] = int(tallies[side]["catches"]) + b.catches
 		tallies[side]["answered"] = int(tallies[side]["answered"]) + b.answered
 		tallies[side]["lost"] = int(tallies[side]["lost"]) + b.lost
@@ -287,3 +393,18 @@ func _metrics() -> void:
 				% [pair, side, [mode.element, mode.foe_element][side], int(tl.casts), int(tl.catches), int(tl.answered), int(tl.lost),
 				int(tl.walls), int(tl.capped), top, share, tl.reactions])
 		print("METRIC pair=%s side=%d by_move=%s" % [pair, side, by_side[side]])
+		var kb := {}
+		for k: String in knock_by[side]:
+			kb[k] = "%d:%.0f" % [int(knock_by[side][k][0]), float(knock_by[side][k][1])]
+		print("METRIC pair=%s side=%d knock_by=%s out_by=%s" % [pair, side, kb, out_by[side]])
+		var db := {}
+		for k: String in dmg_by[side]:
+			db[k] = int(round(float(dmg_by[side][k])))
+		print("METRIC pair=%s side=%d dmg_by=%s pushed=%d winded=%d hits=%d" % [pair, side, db, pushed[side], winds[side], int(tl.hits)])
+		var bd := {}
+		for k: String in bolt_dmg[side]:
+			bd[k] = int(round(float(bolt_dmg[side][k])))
+		var ld := {}
+		for k: String in lift_dmg[side]:
+			ld[k] = int(round(float(lift_dmg[side][k])))
+		print("METRIC pair=%s side=%d bolt_dmg=%s sent_back=%d lift_dmg=%s" % [pair, side, bd, int(round(float(back_dmg[side]))), ld])

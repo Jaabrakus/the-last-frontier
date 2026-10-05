@@ -5,7 +5,10 @@ extends SceneTree
 ##   catch-back  the bot throws a stone at the player, a spike (Stone Form: a GustLift) and then a disc (a stone BendBolt);
 ##               the player casts Catch (catch), it takes the stone and holds it, and within 1.5 s of the Catch he casts Earth
 ##               Shove (push): the stone flies back, strikes the bot, and BendKnock moves him at least 1.5 m, its last_knocker
-##               the player
+##               the player. The player's camera is on the bot's chest as he shoves (_aim_cam: as a player keeps his aim on
+##               his man; the aim help's cone is measured to the chest, which the bot's own throw pose carries down and
+##               forward: from a level camera it was 4.4 deg off at rest and up to 10 deg mid-pose, past the 6 deg cone, so
+##               the stone went along the crosshair over his head, the old flake)
 ##   kick-shove  the player kicks a rock up (Rock Jab kick_up) and shoves it (Earth Shove push) at the held bot: it strikes
 ##               him, knocked by the player
 ##   trap-drop   the player traps the bot's feet (Earth Grip trap: feet_held) and casts a boulder (Stone Form cannonball): it
@@ -201,7 +204,9 @@ func _catch_back(mode: String) -> void:
 	if held == null:
 		return
 	await _secs(0.1)
+	await _aim_cam()
 	var n0 := n.global_position
+	var help_deg := _help_deg()
 	c.set_mode("earth_shove", "push")
 	var shoved := BendCast.cast(c, "earth_shove", "push")
 	var dt := _now() - t0
@@ -212,6 +217,10 @@ func _catch_back(mode: String) -> void:
 	if th0 != null:
 		th0.lift.struck.connect(func(who: Node, _d: float) -> void: hits.append(who))
 	var st0 := held.global_position
+	while th0 != null and is_instance_valid(th0) and not th0.is_thrown:
+		_track()                                 # (his aim kept on the bot through the stone's short rise)
+		help_deg = maxf(help_deg, _help_deg())
+		await physics_frame
 	var r := await _knocked_back(n0, 2.0)
 	# (on a miss, where it went: the throw, its aim and the stone, for the flaky earth-vs-earth catch-back)
 	var why := ""
@@ -221,7 +230,30 @@ func _catch_back(mode: String) -> void:
 				th0.is_thrown if live else false, th0.target if live else Vector3.INF, st0,
 				held.global_position if is_instance_valid(held) else Vector3.INF, n0,
 				(th0.lift.velocity if live and is_instance_valid(th0.lift) else Vector3.INF)]
+		why += ", the camera at most %.1f deg off his chest (the help's cone %.1f)" % [help_deg, MatchSetup.aim_cone_deg()]
 	_expect(float(r[0]) >= 1.5 and r[1] == p, "%s: the stone flies back and knocks the bot %.2f m, by the player (%s; struck %s%s)" % [mode, r[0], str(r[1]), str(hits), why])
+
+
+## The player's camera turned onto the bot's chest (his pitch; his yaw already faces him), as a player keeps his aim on his
+## man: a few frames, the camera's place moving with its pitch.
+func _aim_cam() -> void:
+	for i in 4:
+		_track()
+		await physics_frame
+
+
+## One step of the camera's pitch onto the bot's chest as it is now.
+func _track() -> void:
+	var cam := p.camera
+	var to := NpcSenses.chest_of(n) - cam.global_position
+	var fwd := -cam.global_basis.z
+	p.pitch += atan2(to.y, Vector2(to.x, to.z).length()) - atan2(fwd.y, Vector2(fwd.x, fwd.z).length())
+
+
+## How far the camera's ray is off the bot's chest now (deg).
+func _help_deg() -> float:
+	var cam := p.camera
+	return rad_to_deg((NpcSenses.chest_of(n) - cam.global_position).angle_to(-cam.global_basis.z))
 
 
 # ---------------------------------------------------------------- kick-up, then shove
