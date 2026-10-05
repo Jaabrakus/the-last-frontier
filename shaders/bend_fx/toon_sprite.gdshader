@@ -79,5 +79,5 @@ void fragment() {
 		discard;
 	}
 	col = mix(col, c_ink, ink * (1.0 - aastep(0.15, v)));
-	ALBEDO = col;
+	ALBEDO = (col) * fx_gain;
 }

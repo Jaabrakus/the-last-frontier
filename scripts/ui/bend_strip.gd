@@ -92,7 +92,7 @@ func _ready() -> void:
 	q.alignment = BoxContainer.ALIGNMENT_CENTER
 	q.add_theme_constant_override("separation", 6)
 	var chip := make_chip()
-	_chip = chip.get_child(0) as Label
+	_chip = chip
 	q.add_child(chip)
 	_quick = FrontierHUD.hud_label(16, FrontierHUD.INK)
 	_quick.name = "QuickName"
@@ -196,10 +196,12 @@ static func help_text() -> String:
 	return "%s%shold %s: cast it" % [set_l, SEP, CHIP]
 
 
-## The "LMB" chip (gold, framed; its Label the first child): the strip's and the world HUD's quick spell row.
-static func make_chip() -> PanelContainer:
-	var chip := PanelContainer.new()
+## The "LMB" chip: a gold Label in a thin gold frame (the Label's own stylebox: no box container on the HUD, the user:
+## "those big cards are terrible"; tests/ui/test_hud_skills.gd): the strip's and the world HUD's quick spell row.
+static func make_chip() -> Label:
+	var chip := FrontierHUD.hud_label(14, FrontierHUD.GOLD)
 	chip.name = "Chip"
+	chip.text = CHIP
 	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.0, 0.0, 0.0, 0.35)
@@ -208,10 +210,7 @@ static func make_chip() -> PanelContainer:
 	sb.set_corner_radius_all(3)
 	sb.content_margin_left = 5
 	sb.content_margin_right = 5
-	chip.add_theme_stylebox_override("panel", sb)
-	var l := FrontierHUD.hud_label(14, FrontierHUD.GOLD)
-	l.text = CHIP
-	chip.add_child(l)
+	chip.add_theme_stylebox_override("normal", sb)
 	return chip
 
 

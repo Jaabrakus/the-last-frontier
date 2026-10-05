@@ -30,5 +30,5 @@ void fragment() {
 	}
 	vec3 col = mix(c_sheath * sheath_glow, c_core * glow, aastep(0.56 + (1.0 - UV2.y) * 0.1, v));
 	col = mix(col, c_ink, ink * (1.0 - aastep(0.12, v)));
-	ALBEDO = col;
+	ALBEDO = (col) * fx_gain;
 }

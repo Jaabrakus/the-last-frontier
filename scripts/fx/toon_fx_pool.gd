@@ -136,7 +136,7 @@ func play(key: String, xf: Transform3D, life: float, s0: float, s1: float, tint 
 	mi.set_instance_shader_parameter(&"t", 0.0)
 	mi.set_instance_shader_parameter(&"tint", tint)
 	mi.set_instance_shader_parameter(&"tint2", tint2)
-	mi.set_instance_shader_parameter(&"seed", randf() * 10.0)
+	mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
 	mi.visible = true
 	for i in _playing.size():
 		if _playing[i][0] == mi:
@@ -178,7 +178,7 @@ func _shape(key: String, mesh: Mesh) -> MeshInstance3D:
 func mark(mode: String, at: Vector3, normal: Vector3, size: float, life: float) -> void:
 	var n := normal.normalized() if normal.length_squared() > 1e-6 else Vector3.UP
 	var x := n.cross(Vector3.FORWARD if absf(n.z) < 0.9 else Vector3.RIGHT).normalized()
-	var b := Basis(x, n, x.cross(n)).rotated(n, randf() * TAU)
+	var b := Basis(x, n, x.cross(n)).rotated(n, ToonFx.vis_rng.randf() * TAU)
 	play("mark_" + mode, Transform3D(b, at + n * 0.02), life, size * 0.5, size * 0.5)
 
 

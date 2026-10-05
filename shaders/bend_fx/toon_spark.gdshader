@@ -52,5 +52,5 @@ void fragment() {
 	if (aastep(0.0, v) < 0.5 || fill <= 0.02) {
 		discard;
 	}
-	ALBEDO = mix(COLOR.rgb * rim_glow, c_core * glow, aastep(0.62, v));
+	ALBEDO = (mix(COLOR.rgb * rim_glow, c_core * glow, aastep(0.62, v))) * fx_gain;
 }

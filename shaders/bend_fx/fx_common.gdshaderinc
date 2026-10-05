@@ -1,3 +1,7 @@
+// The effects' brightness under the scene's exposure (ToonFx.set_gain: RingLook's night opens the eye ~2x and these are
+// unshaded, so they would blow out to white; the ring's light sets it per mood).
+uniform float fx_gain = 1.0;
+
 // Shared by the bent elements' cel effects (ToonFx, scripts/fx/toon_fx.gd): hard-edged steps that stay smooth over a
 // pixel, the camera-facing ways a flat thing can stand (a particle billboard, a quad turned only round its own axis, a
 // strip along a line), and a cel light from a fixed sun.

@@ -61,6 +61,6 @@ void fragment() {
 	float core = aastep(0.28, v);
 	vec4 col = mix(c_edge, c_main, core);
 	col.rgb = mix(col.rgb, c_ink, ink * (1.0 - aastep(0.07, v)));
-	ALBEDO = col.rgb * glow;
+	ALBEDO = (col.rgb * glow) * fx_gain;
 	ALPHA = col.a * a;
 }

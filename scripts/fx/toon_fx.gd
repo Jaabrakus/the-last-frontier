@@ -21,6 +21,11 @@ const SHADERS := {
 }
 
 static var style := "cel"
+## The effects' own dice (their seeds, jitters, forks): never the global RNG, so drawing them (or not, headless) leaves the
+## game's own rolls (a caster's spread, a bot's pick) as they were under a test's seed.
+static var vis_rng := RandomNumberGenerator.new()
+## Every effect's brightness (the shaders' fx_gain): set_gain; 1 by default (RingLook lowers it at night).
+static var gain := 1.0
 
 static var _noise: Texture2D
 static var _mats := {}
@@ -189,8 +194,16 @@ static func mat(key: String) -> ShaderMaterial:
 	if m.shader in [SHADERS.flame, SHADERS.puff, SHADERS.water, SHADERS.wind, SHADERS.sprite, SHADERS.mark]:
 		m.set_shader_parameter(&"noise", noise())
 	m.set_shader_parameter(&"ink", 1.0 if s == "ink" else 0.0)
+	m.set_shader_parameter(&"fx_gain", gain)
 	_mats[key] = m
 	return m
+
+
+## Every effect's brightness `g` (the shaders' fx_gain; the shared materials now and those made later).
+static func set_gain(g: float) -> void:
+	gain = g
+	for m: ShaderMaterial in _mats.values():
+		m.set_shader_parameter(&"fx_gain", g)
 
 
 # ---------------------------------------------------------------- meshes
@@ -437,17 +450,17 @@ static func lightning_strips(im: ImmediateMesh, a: Vector3, b: Vector3) -> void:
 	_strip(im, m, main, 0.13, 1.0, 0.75)
 	var len := a.distance_to(b)
 	var d := (b - a).normalized()
-	for k in 2 + randi() % 3:
-		var i := randi_range(2, main.size() - 4)
+	for k in 2 + ToonFx.vis_rng.randi() % 3:
+		var i := ToonFx.vis_rng.randi_range(2, main.size() - 4)
 		var p := main[i]
-		var off := Vector3(randf_range(-1.0, 1.0), randf_range(-1.0, 0.2), randf_range(-1.0, 1.0)).normalized()
+		var off := Vector3(ToonFx.vis_rng.randf_range(-1.0, 1.0), ToonFx.vis_rng.randf_range(-1.0, 0.2), ToonFx.vis_rng.randf_range(-1.0, 1.0)).normalized()
 		var dir := (d + off * 1.1).normalized()
-		var br := _jag(p, p + dir * len * randf_range(0.1, 0.28), 3, 0.25)
+		var br := _jag(p, p + dir * len * ToonFx.vis_rng.randf_range(0.1, 0.28), 3, 0.25)
 		_strip(im, m, br, 0.065, 0.45, 0.15)
-		if randf() < 0.55 and br.size() > 4:
+		if ToonFx.vis_rng.randf() < 0.55 and br.size() > 4:
 			var q := br[br.size() / 2]
-			var dir2 := (dir + Vector3(randf_range(-1, 1), randf_range(-0.8, 0.2), randf_range(-1, 1)) * 0.9).normalized()
-			_strip(im, m, _jag(q, q + dir2 * len * randf_range(0.06, 0.14), 2, 0.3), 0.04, 0.2, 0.1)
+			var dir2 := (dir + Vector3(ToonFx.vis_rng.randf_range(-1, 1), ToonFx.vis_rng.randf_range(-0.8, 0.2), ToonFx.vis_rng.randf_range(-1, 1)) * 0.9).normalized()
+			_strip(im, m, _jag(q, q + dir2 * len * ToonFx.vis_rng.randf_range(0.06, 0.14), 2, 0.3), 0.04, 0.2, 0.1)
 
 
 ## A jagged line from `a` to `b`: its middles pushed aside `levels` times by up to `rough` of each piece's length.
@@ -461,7 +474,7 @@ static func _jag(a: Vector3, b: Vector3, levels: int, rough: float) -> PackedVec
 			var q := pts[i + 1]
 			var seg := q - p
 			var sl := seg.length()
-			var rnd := Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1))
+			var rnd := Vector3(ToonFx.vis_rng.randf_range(-1, 1), ToonFx.vis_rng.randf_range(-1, 1), ToonFx.vis_rng.randf_range(-1, 1))
 			var perp := rnd - seg.normalized() * rnd.dot(seg.normalized()) if sl > 1e-5 else Vector3.ZERO
 			nxt.append(p)
 			nxt.append((p + q) * 0.5 + perp * sl * r)
@@ -479,7 +492,7 @@ static func _strip(im: ImmediateMesh, m: Material, pts: PackedVector3Array, hw: 
 	for i in n:
 		var along := pts[mini(i + 1, n - 1)] - pts[maxi(i - 1, 0)]
 		var u := float(i) / (n - 1)
-		var w := hw * lerpf(1.0, end_w, u) * randf_range(0.8, 1.2)
+		var w := hw * lerpf(1.0, end_w, u) * ToonFx.vis_rng.randf_range(0.8, 1.2)
 		for a in 2:
 			im.surface_set_normal(along.normalized())
 			im.surface_set_uv(Vector2(u, float(a)))

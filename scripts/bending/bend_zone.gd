@@ -93,7 +93,7 @@ func _look() -> void:
 			var mi := _part(look, ToonFx.sphere(24), ToonFx.mat("bubble"))
 			mi.scale = Vector3.ONE * radius
 			mi.position = Vector3.UP * 1.0
-			mi.set_instance_shader_parameter(&"seed", randf() * 5.0)
+			mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
 			_fx.append(BendLooks.emitter(self, "water", Vector3(radius * 0.7, 0.05, radius * 0.7), 14, 0.6, 1.6, 0.12))
 			_grow(look, Vector3.ONE * 0.05)
 		"air_shield":
@@ -112,7 +112,7 @@ func _look() -> void:
 			bm.subdivide_height = 10
 			var mi := _part(look, bm, ToonFx.mat("water_wall"))
 			mi.position = Vector3.UP * size.y * 0.5
-			mi.set_instance_shader_parameter(&"seed", randf() * 5.0)
+			mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
 			var crest := BendLooks.emitter(self, "water", Vector3(size.x * 0.48, 0.05, size.z * 0.3), 40, 0.6, 2.4, 0.12)
 			var foam := BendLooks.emitter(self, "foam", Vector3(size.x * 0.48, 0.05, size.z * 0.35), 22, 0.45, 0.8, 0.32)
 			var foot := BendLooks.emitter(self, "foam", Vector3(size.x * 0.5, 0.05, size.z * 0.5), 18, 0.6, 0.4, 0.4)
@@ -131,7 +131,7 @@ func _look() -> void:
 			sc.scale = Vector3(size.x * 0.62, 1.0, size.z * 0.5 + 0.5)
 			sc.position = Vector3.UP * 0.02
 			sc.set_instance_shader_parameter(&"t", 0.25)
-			sc.set_instance_shader_parameter(&"seed", randf() * 5.0)
+			sc.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
 			var l := OmniLight3D.new()
 			l.light_color = Color(1.0, 0.55, 0.2)
 			l.light_energy = 2.0
@@ -144,7 +144,7 @@ func _look() -> void:
 			fr.scale = Vector3(radius, 1.0, radius)
 			fr.position = Vector3.UP * 0.03
 			fr.set_instance_shader_parameter(&"t", 0.2)
-			fr.set_instance_shader_parameter(&"seed", randf() * 5.0)
+			fr.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
 			_fx.append(BendLooks.emitter(self, "sparkle", Vector3(radius * 0.7, 0.05, radius * 0.7), 10, 0.8, 0.3, 0.12))
 			_grow(look, Vector3(0.1, 1.0, 0.1))
 		"smoke", "dust", "spray":

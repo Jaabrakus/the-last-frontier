@@ -83,6 +83,6 @@ void fragment() {
 	if (a <= 0.01) {
 		discard;
 	}
-	ALBEDO = col.rgb;
+	ALBEDO = (col.rgb) * fx_gain;
 	ALPHA = col.a * alpha_mul * a;
 }

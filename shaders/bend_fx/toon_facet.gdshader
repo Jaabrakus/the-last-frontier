@@ -39,5 +39,5 @@ void fragment() {
 		col = mix(col, vec3(2.2), glint * (1.0 - aastep(0.05, s)) * aastep(0.0, d + 0.2));
 	}
 	col = mix(col, c_ink, ink * aastep(0.8, fres));
-	ALBEDO = col * glow;
+	ALBEDO = (col * glow) * fx_gain;
 }

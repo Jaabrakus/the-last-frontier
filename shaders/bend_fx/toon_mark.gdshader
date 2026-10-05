@@ -59,6 +59,6 @@ void fragment() {
 	if (col.a * life <= 0.01) {
 		discard;
 	}
-	ALBEDO = col.rgb;
+	ALBEDO = (col.rgb) * fx_gain;
 	ALPHA = clamp(col.a, 0.0, 1.0) * life;
 }

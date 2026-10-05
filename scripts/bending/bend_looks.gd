@@ -99,9 +99,9 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false) -> 
 			var mi := _mesh(parent, ToonFx.sphere(16), ToonFx.mat("water"))
 			mi.scale = Vector3(r * 1.3, r * 1.3, r * (2.6 if long else 1.8))
 			mi.position = Vector3(0.0, 0.0, r * 0.35)
-			mi.set_instance_shader_parameter(&"seed", randf() * 5.0)
+			mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
 		"ice":
-			var mi := _mesh(parent, ToonFx.shard_mesh(1.0, 0.2, randi() % 4), ToonFx.mat("ice"))
+			var mi := _mesh(parent, ToonFx.shard_mesh(1.0, 0.2, ToonFx.vis_rng.randi() % 4), ToonFx.mat("ice"))
 			var l := r * (11.0 if long else 5.5)
 			mi.scale = Vector3(r * 7.0, r * 7.0, l)
 			if live():
@@ -152,7 +152,7 @@ static func _fire_body(parent: Node3D, r: float, long: bool) -> void:
 	o.scale = Vector3.ONE * r * 2.5
 	o.set_instance_shader_parameter(&"tint", Color(0.95, 0.22, 0.04))
 	o.set_instance_shader_parameter(&"tint2", Color(1.0, 0.62, 0.08))
-	o.set_instance_shader_parameter(&"seed", randf() * 10.0)
+	o.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.mesh = ToonFx.quad_base()
@@ -168,7 +168,7 @@ static func _fire_body(parent: Node3D, r: float, long: bool) -> void:
 	mmi.multimesh = mm
 	mmi.material_override = ToonFx.mat("flame")
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mmi.set_instance_shader_parameter(&"seed", randf() * 10.0)
+	mmi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
 	mmi.extra_cull_margin = r * 6.0
 	parent.add_child(mmi)
 	if live() and r >= 0.15:

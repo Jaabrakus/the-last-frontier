@@ -21,21 +21,21 @@ const NAME := "RingLook"
 ## The moods. hour < 0: found from sun_el (the default day's afternoon sun at that height); night: the clock's moon.
 const PRESETS := {
 	"noon": {
-		"hour": 12.25, "clouds": 0.16, "rays": 0.9, "sun_scale": 1.12, "exposure": 0.98, "sky_ambient": 0.42, "ambient": Color(0.0, 0.0, 0.0),
+		"fx_gain": 1.0, "hour": 12.25, "clouds": 0.16, "rays": 0.9, "sun_scale": 1.12, "exposure": 0.98, "sky_ambient": 0.42, "ambient": Color(0.0, 0.0, 0.0),
 		"fog_density": 0.0007, "fog_tint": Color(0.8, 0.88, 0.98), "fog_mix": 0.3, "sun_scatter": 0.08,
 		"saturation": 1.12, "contrast": 1.04,
 		"glow_threshold": 1.4, "glow_intensity": 0.35, "glow_bloom": 0.0,
 		"ssao_intensity": 1.5, "ssao_radius": 1.1,
 	},
 	"golden": {
-		"sun_el": 13.0, "clouds": 0.08, "rays": 0.6, "sun_scale": 1.35, "exposure": 0.9, "sky_ambient": 0.34, "ambient": Color(0.0, 0.0, 0.0),
+		"fx_gain": 0.92, "sun_el": 13.0, "clouds": 0.08, "rays": 0.6, "sun_scale": 1.35, "exposure": 0.9, "sky_ambient": 0.34, "ambient": Color(0.0, 0.0, 0.0),
 		"fog_density": 0.0011, "fog_tint": Color(1.0, 0.66, 0.4), "fog_mix": 0.45, "sun_scatter": 0.18,
 		"saturation": 1.22, "contrast": 1.08,
 		"glow_threshold": 1.25, "glow_intensity": 0.4, "glow_bloom": 0.0,
 		"ssao_intensity": 1.7, "ssao_radius": 1.2,
 	},
 	"night": {
-		"night": true, "clouds": 0.06, "rays": 1.5, "sun_scale": 1.6, "exposure": 0.62, "sky_ambient": 0.3, "ambient": Color(0.05, 0.07, 0.13),
+		"fx_gain": 0.5, "night": true, "clouds": 0.06, "rays": 1.5, "sun_scale": 1.6, "exposure": 0.62, "sky_ambient": 0.3, "ambient": Color(0.05, 0.07, 0.13),
 		"fog_density": 0.003, "fog_tint": Color(0.3, 0.36, 0.55), "fog_mix": 0.6, "sun_scatter": 0.1,
 		"saturation": 1.1, "contrast": 1.05,
 		"glow_threshold": 0.75, "glow_intensity": 0.85, "glow_bloom": 0.04,
@@ -71,6 +71,8 @@ func set_preset(name: String) -> void:
 	rig = level.get(&"environment_rig") as EnvironmentRig if level != null else null
 	_clock()
 	_once()
+	# (the element effects are unshaded: under the night's opened eye they would blow out to white; wave 3's stills)
+	ToonFx.set_gain(float(cfg.get("fx_gain", 1.0)))
 	var dressing := RingDressing.find_in(level)
 	if dressing != null:
 		dressing.set_mood(preset)
@@ -173,6 +175,10 @@ func _once() -> void:
 		rays.set(&"strength", float(cfg.get("rays", 1.5)))
 	if rig.clock_driver != null:
 		rig.clock_driver.env.ambient_light_sky_contribution = float(cfg.sky_ambient)
+
+
+func _exit_tree() -> void:
+	ToonFx.set_gain(1.0)                     # (the open world's effects as they were)
 
 
 func _process(_dt: float) -> void:
