@@ -34,6 +34,12 @@ extends Node
 ##   arena        Tidebreak's ring (FrontierPlayer.arena): lay_spells(ids) lays the element's keys at once, the start kit closed
 ##                (kit_placed) so it never comes over them; then only those keys (the same key again: its other skill) and the
 ##                wheel (the readied skill's variations) act; keys past them do nothing
+##   schemes      with an element (the ring, the duel) the control scheme (MatchSetup.scheme(), data/bending/schemes.json)
+##                shapes the keys: "keys" and "direction" as above; "radial" too, and its wheel readies any of the
+##                element's skills (ready_skill: the key holding its pair turned to it); "simple" four moves only (the
+##                first skill of keys 1-4, MatchSetup.simple_skills): the same key again and 5 do nothing, the wheel steps
+##                the four (step_skill), and a key left on its other skill is turned back as the scheme comes in
+##                (_follow_scheme)
 
 ## Something on the bar changed (a slot filled, emptied, moved).
 signal changed
@@ -82,6 +88,7 @@ var _fresh := true                  ## _known is to be taken as it is next sync,
 var _tick := 0
 var _was_sel := -2
 var _spell_free := false            ## the hands have been free since the spell was readied
+var _scheme_was := ""               ## the control scheme the keys were last shaped for (_follow_scheme)
 
 
 ## The player's hotbar, made on first call.
@@ -208,6 +215,7 @@ func _ready() -> void:
 
 func _physics_process(dt: float) -> void:
 	_follow_caster()
+	_follow_scheme()
 	if not kit_placed:
 		_kit_t += dt
 		if _kit_t >= KIT_S:
@@ -595,6 +603,12 @@ func select(i: int) -> void:
 	_follow_caster()
 	sync()
 	var e := slots[i]
+	if scheme() == "simple":
+		# (the simple scheme: four moves; a key that is not one of them, or the key again, does nothing)
+		if not e.is_empty() and String(e.get("kind", "")) == SPELL and _simple_has(String(e.id)) and i != selected():
+			cursor = i
+			_take(e)
+		return
 	# (a bending key pressed again: its other skill; the user, 2026-10-04, "toggle between the 1s"; only as an element's
 	# fighter, a duel's or the ring's: in the open world a spell's key again puts it down, as the bar always did)
 	if not e.is_empty() and i == selected() and String(e.get("kind", "")) == SPELL and Bending.partner_of(String(e.id)) != "" \
@@ -658,14 +672,104 @@ func handle_input(event: InputEvent) -> bool:
 			select(i)
 			return true
 	if InputMap.has_action(&"weapon_next") and event.is_action_pressed(&"weapon_next"):
-		if not _step_mode(1) and not spells_only:
+		if scheme() == "simple":
+			step_skill(1)
+		elif not _step_mode(1) and not spells_only:
 			step(1)
 		return true
 	if InputMap.has_action(&"weapon_prev") and event.is_action_pressed(&"weapon_prev"):
-		if not _step_mode(-1) and not spells_only:
+		if scheme() == "simple":
+			step_skill(-1)
+		elif not _step_mode(-1) and not spells_only:
 			step(-1)
 		return true
 	return false
+
+
+# --- the control schemes (an element's fighter) -----------------------------------------------------------------
+
+## The control scheme the keys follow: MatchSetup's for an element's fighter (the ring, the duel), else "keys".
+func scheme() -> String:
+	if player == null or not is_instance_valid(player) or (not spells_only and BendPoses.element_of(player) == ""):
+		return "keys"
+	return MatchSetup.scheme()
+
+
+func _element() -> String:
+	var el := BendPoses.element_of(player) if player != null else ""
+	if el == "":
+		var b := player.get_node_or_null(NodePath(String(Bending.NODE_NAME))) as Bending if player != null else null
+		el = b.element if b != null else ""
+	return el
+
+
+## Whether `id` is one of the simple scheme's four moves for the player's element.
+func _simple_has(id: String) -> bool:
+	return not MatchSetup.simple_entry(_element(), id).is_empty()
+
+
+## Readies the element's skill `id` from its key (the move wheel's pick, RadialWheel): the key whose pair holds it turned to
+## it (assign) and taken. True when it is the readied move now.
+func ready_skill(id: String) -> bool:
+	if player == null or id == "":
+		return false
+	sync()
+	var at := slot_of(SPELL, id)
+	if at < 0:
+		var other := Bending.partner_of(id)
+		at = slot_of(SPELL, other) if other != "" else -1
+		if at < 0 or not assign(at, make(SPELL, id)):
+			return false
+	if selected() != at or spell != id:
+		cursor = at
+		_take(slots[at])
+	return spell == id
+
+
+## The simple scheme's wheel: the next (`dir` 1) or the one before (-1) of the four moves on the bar.
+func step_skill(dir: int) -> void:
+	var cur := selected()
+	var from := cur if cur >= 0 else cursor
+	for n in range(1, SLOTS + 1):
+		var j := posmod(from + dir * n, SLOTS)
+		var e := slots[j]
+		if e.is_empty() or String(e.get("kind", "")) != SPELL or not _simple_has(String(e.id)):
+			continue
+		if j != cur:
+			cursor = j
+			_take(e)
+		return
+
+
+## As the simple scheme comes in: each key left on its other skill turned back to its first (the four), and a readied move
+## that is not one of them put on the first of them. Looked at each physics frame (a scheme changed in a menu mid-match).
+func _follow_scheme() -> void:
+	var s := scheme()
+	if s == _scheme_was:
+		return
+	_scheme_was = s
+	if s != "simple":
+		return
+	var el := _element()
+	if el == "":
+		return
+	for i in slots.size():
+		var e := slots[i]
+		if e.is_empty() or String(e.get("kind", "")) != SPELL or _simple_has(String(e.id)):
+			continue
+		var first := Bending.partner_of(String(e.id))
+		if first != "" and _simple_has(first):
+			var was := spell == String(e.id)
+			assign(i, make(SPELL, first))
+			if was:
+				cursor = i
+				_take(slots[i])
+	if spell != "" and not _simple_has(spell):
+		for i in slots.size():
+			if _simple_has(String(slots[i].get("id", ""))) and String(slots[i].get("kind", "")) == SPELL:
+				cursor = i
+				_take(slots[i])
+				break
 
 
 ## The wheel with a readied spell of several modes: its next mode (the user, 2026-10-04: "roll the wheel to change that

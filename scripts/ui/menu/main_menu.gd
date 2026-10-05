@@ -12,7 +12,8 @@ extends Control
 ## screen: every element and sport word comes from data/ring/elements.json through MatchSetup):
 ##   Tidebreak     the match's panel (_open_match): your element (the four side by side; below them the focused or
 ##                 chosen one's style in a line and its five keys with both skills), the opponent's (or Any: drawn by
-##                 lot), the format (1 v 1; 3 v 3 teams coming), the difficulty and the rounds; Begin into the ring
+##                 lot), the format (1 v 1; 3 v 3 teams coming), the difficulty, the rounds and the light, the control
+##                 scheme (MatchSetup.set_scheme: keys, direction, wheel, simple; the keys block follows it); Begin into the ring
 ##                 (RING_SCENE; the open land's duel stands in until the ring's scene exists) through the
 ##                 LoadingScreen with MatchSetup filled and kept (MatchSetup.save: GameSettings' "match"). The first press
 ##                 with no look saved yet offers the character creator first (never over the ring's countdown:
@@ -512,8 +513,14 @@ func _open_match() -> void:
 		MatchSetup.difficulty = String(ds[(ds.find(MatchSetup.difficulty) + 1) % ds.size()])
 		paint_dif.call())
 	box.add_child(dif)
+	# (Rounds and Light side by side, so the control scheme's row fits with Begin still in view at 1600 x 900)
+	var pair := HBoxContainer.new()
+	pair.name = "RoundsLight"
+	pair.add_theme_constant_override("separation", 10)
+	box.add_child(pair)
 	var rnd := MenuUI.item("", 22, "-")
 	rnd.name = "Rounds"
+	rnd.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var paint_rnd := func() -> void:
 		var n := MatchSetup.rounds_to_win
 		_set_row(rnd, "Rounds:  %s" % MatchSetup.rounds_label(n), "the first to %d round win%s takes the match" % [n, "" if n == 1 else "s"])
@@ -523,9 +530,10 @@ func _open_match() -> void:
 		var i := rs.find(MatchSetup.rounds_to_win)
 		MatchSetup.rounds_to_win = int(rs[(i + 1) % rs.size()])
 		paint_rnd.call())
-	box.add_child(rnd)
+	pair.add_child(rnd)
 	var lit := MenuUI.item("", 22, "-")
 	lit.name = "Light"
+	lit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var paint_lit := func() -> void:
 		_set_row(lit, "Light:  %s" % MatchSetup.light, MatchSetup.light_line(MatchSetup.light))
 	paint_lit.call()
@@ -533,7 +541,19 @@ func _open_match() -> void:
 		var ls := MatchSetup.LIGHTS
 		MatchSetup.light = String(ls[(ls.find(MatchSetup.light) + 1) % ls.size()])
 		paint_lit.call())
-	box.add_child(lit)
+	pair.add_child(lit)
+	# the control scheme (how moves are chosen: keys, direction, wheel, simple): kept at once (MatchSetup.set_scheme), the
+	# keys block above follows it
+	var sch := MenuUI.item("", 22, "-")
+	sch.name = "Scheme"
+	var paint_sch := func() -> void:
+		_set_row(sch, MatchSetup.scheme_row(), MatchSetup.scheme_row_line())
+	paint_sch.call()
+	sch.pressed.connect(func() -> void:
+		MatchSetup.set_scheme(MatchSetup.next_scheme())
+		paint_sch.call()
+		_show_keys(""))
+	box.add_child(sch)
 	box.add_child(_gap(4))
 	var begin := MenuUI.item("Begin", 30)
 	begin.name = "Begin"
@@ -574,9 +594,10 @@ func _show_keys(el: String) -> void:
 	_keys_box.add_child(_gap(6))
 	_keys_box.add_child(style)
 	_keys_box.add_child(_gap(4))
-	_keys_box.add_child(MenuUI.label("%s KEYS  ·  the same key again: its other skill" % MatchSetup.label(e).to_upper(), 13, MenuUI.FAINT))
-	for line: String in key_lines(e):
-		_keys_box.add_child(MenuUI.label(line, 16, MenuUI.DIM))
+	# (as the control scheme has them: the keys, the directions, the wheel's, the simple four; MatchSetup)
+	_keys_box.add_child(MenuUI.label(MatchSetup.scheme_keys_head(e), 13, MenuUI.FAINT))
+	for line in MatchSetup.scheme_key_lines(e):
+		_keys_box.add_child(MenuUI.label(String(line), 16, MenuUI.DIM))
 
 
 ## An element's five keys as lines: "1   Stone Form  ·  Rock Jab" (Bending.keys, the moves' labels).

@@ -23,7 +23,7 @@ const POLL_S := 0.25
 const CAP_ACTIONS := {
 	"W": [&"move_forward"], "A": [&"move_left"], "S": [&"move_back"], "D": [&"move_right"],
 	"Space": [&"jump"], "Shift": [&"sprint"], "Alt": [&"walk"], "C": [&"crouch"], "R": [&"reload"],
-	"T": [&"torch"], "E": [&"interact"], "Q": [&"equip_wheel", &"bend_quick_bind"], "B": [&"build_mode"], "Tab": [&"inventory"],
+	"T": [&"torch"], "E": [&"interact"], "Q": [&"equip_wheel", &"bend_quick_bind"], "B": [&"build_mode"], "Tab": [&"inventory", &"bend_wheel"],
 	"Z": [&"sleep"], "F": [&"cook"], "G": [&"grip"], "V": [&"eat"], "X": [&"sling_all"],
 	"1": [&"weapon_1"], "2": [&"weapon_2"], "3": [&"weapon_3"], "4": [&"weapon_4"], "5": [&"weapon_5"],
 	"6": [&"weapon_6"], "7": [&"weapon_7", &"tool_cycle", &"tool_axe"], "8": [&"weapon_8", &"fish_gear", &"tool_mattock"],
@@ -77,12 +77,25 @@ const TOPICS := {
 	"elements": {"title": "Your element's moves", "steps": ["[1-4]  A key: its move  ·  the same key again: its other move",
 			"[Wheel]  Step through the move's three forms", "Hold [RMB]  On the aim: the lock fills; let go to cast",
 			"[Q]  The readied move onto left click  ·  Hold [LMB]  Lock it; let go to cast", "[5]  Mend; again: Patch"]},
+	# (each control scheme's own first-time panel: MatchSetup.scheme(), data/bending/schemes.json; the one in play comes up)
+	"elements_direction": {"title": "Your moves by direction", "steps": ["Hold [RMB]  The lock fills",
+			"Let go holding [W]  Your attack", "Let go holding [S]  Your defence", "Let go holding [A] [D]  Your dodge",
+			"[1-4]  Nothing held: the key's move  ·  [Q]  onto left click"]},
+	"elements_radial": {"title": "The wheel of your moves", "steps": ["Hold [Tab]  Every move round a wheel",
+			"Move the mouse toward one  Pick it", "[Wheel]  Its form", "Let go of [Tab]  Ready it",
+			"Hold [RMB]  The lock fills; let go to cast"]},
+	"elements_simple": {"title": "Four moves", "steps": ["[1-4]  A move  ·  [Wheel]  the next one",
+			"Hold [RMB]  The lock fills; let go to cast", "Near or far: the form picks itself as you let go",
+			"[Q]  The readied move onto left click  ·  Hold [LMB]  Cast it"]},
 	"ring": {"title": "The ring", "steps": ["Knock the other side back through its three zones",
 			"Into the water behind them takes the round", "The grates refill a water fighter's water"]},
 }
 ## The arena's topics (Tidebreak's ring, FrontierPlayer.arena): only these come up there, the first of them at once (the
 ## world's Getting around and the rest are not the ring's).
-const ARENA_TOPICS := ["elements", "ring"]
+const ARENA_TOPICS := ["elements", "elements_direction", "elements_radial", "elements_simple", "ring"]
+## Each control scheme's moves topic (MatchSetup.scheme()).
+const SCHEME_TOPICS := {"keys": "elements", "direction": "elements_direction", "radial": "elements_radial",
+		"simple": "elements_simple"}
 
 var player: FrontierPlayer
 var enabled := true
@@ -189,10 +202,12 @@ func _doing(id: String) -> bool:
 			return p.pushing != null
 		"hurt":
 			return p.health < 70.0 and not p.is_dead
-		"elements":
-			return p.arena and p.hotbar != null and p.hotbar.spell != "" and _age > 1.0
+		"elements", "elements_direction", "elements_radial", "elements_simple":
+			return p.arena and p.hotbar != null and p.hotbar.spell != "" and _age > 1.0 \
+					and String(SCHEME_TOPICS.get(MatchSetup.scheme(), "elements")) == id
 		"ring":
-			return p.arena and seen.has("elements") and current != "elements"
+			var moves := String(SCHEME_TOPICS.get(MatchSetup.scheme(), "elements"))
+			return p.arena and seen.has(moves) and current != moves
 	return false
 
 

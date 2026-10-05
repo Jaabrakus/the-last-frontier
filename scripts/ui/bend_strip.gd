@@ -12,8 +12,16 @@ extends VBoxContainer
 ## and its move at its frozen variation ("LMB  Rock Jab (pebbles)"), and the help line "Q: set left click · hold LMB: cast
 ## it" (the set key as bound). What it shows comes from the player's own hotbar (slots 1-5), its caster (the variation, the
 ## quick spell) and its Bending node (the element, the water): nothing about anyone else.
-##   column(i) -> {key, id, label, other, other_label, modes, mode_i, readied}; ready_line(); quick_line(); help_line();
-##   refresh()
+## Each control scheme (MatchSetup.scheme(), the player's caster's: SwayCaster.scheme) has its own strip:
+##   keys       as above
+##   direction  four columns: W the attack, S the defence, A D the dodge (each at its own variation, under it), then the
+##              key's move (the readied, its number and its other skill under it); the column of the direction held lit
+##   radial     no key columns: the ready line, and the wheel's line under it ("hold Tab: the wheel ...")
+##   simple     four columns (keys 1-4, the four moves), under each its two forms ("boulder / spike", near / far); no pips: the
+##              form is picked as the right button is let go (nothing on the strip follows the opponent: no target cue)
+## and the scheme's help line (schemes.json "strip") after the quick spell's help line (help_text: the duel's world HUD too).
+##   column(i) -> {key, head, sub, hidden, id, label, other, other_label, modes, mode_i, readied}; ready_line(); quick_line();
+##   help_line(); refresh()
 
 const KEYS := 5
 const COL_W := 112.0
@@ -131,10 +139,32 @@ func _process(_dt: float) -> void:
 
 
 # ---------------------------------------------------------------- what it shows
-## Key i (0-based): {key (1-5), id ("" empty), label, other (the key's other skill, "" none), other_label, modes (the
-## variations), mode_i (the one the wheel is on, -1 none), readied (its move is the readied one)}.
+## The control scheme the strip shows (the player's caster's; "keys" without one).
+func scheme() -> String:
+	var c := SwayCaster.of(player) if player != null else null
+	return c.scheme() if c != null else "keys"
+
+
+## The strip's column i (0-based) under the scheme now: {key (1-5), head (the line over it: "1", "W"), sub (the dim line
+## under the name), hidden (no column there in this scheme), id ("" empty), label, other (the key's other skill, "" none),
+## other_label, modes (the variations), mode_i (the one shown filled, -1 none), readied (lit)}.
 func column(i: int) -> Dictionary:
-	var out := {"key": i + 1, "id": "", "label": "", "other": "", "other_label": "", "modes": [], "mode_i": -1, "readied": false}
+	match scheme():
+		"direction":
+			return _dir_column(i)
+		"radial":
+			var r := key_column(i)
+			r.hidden = true
+			return r
+		"simple":
+			return _simple_column(i)
+	return key_column(i)
+
+
+## Key i as the keys scheme shows it: its skill, "again: <its other skill>" under it, the wheel's variation filled.
+func key_column(i: int) -> Dictionary:
+	var out := {"key": i + 1, "head": str(i + 1), "sub": "", "hidden": false, "id": "", "label": "", "other": "", "other_label": "",
+			"modes": [], "mode_i": -1, "readied": false}
 	var hb: Hotbar = player.hotbar if player != null else null
 	if hb == null:
 		return out
@@ -147,6 +177,7 @@ func column(i: int) -> Dictionary:
 	var other := Bending.partner_of(id)
 	out.other = other
 	out.other_label = Hotbar.spell_label(other) if other != "" else ""
+	out.sub = ("again: " + String(out.other_label)) if String(out.other_label) != "" else ""
 	var ms: Array = SwayCaster.modes_of(id)
 	out.modes = ms
 	if not ms.is_empty():
@@ -157,17 +188,74 @@ func column(i: int) -> Dictionary:
 	return out
 
 
+## The direction scheme's columns: 0 W the attack, 1 S the defence, 2 A D the dodge (each its move at its own variation,
+## lit while its direction is held), 3 the key's move (the readied: its number, lit with no direction held); 4 none.
+const DIR_HEADS := ["W", "S", "A D"]
+func _dir_column(i: int) -> Dictionary:
+	var c := SwayCaster.of(player)
+	var held := c.held_dir() if c != null else ""
+	if i == 3:
+		var hb: Hotbar = player.hotbar if player != null else null
+		var at := hb.selected() if hb != null else -1
+		var k := key_column(at) if at >= 0 else key_column(0)
+		k.head = "%d · none" % int(k.key) if at >= 0 else "1-5"
+		k.readied = at >= 0 and held == ""
+		return k
+	var out := {"key": i + 1, "head": "", "sub": "", "hidden": i > 3, "id": "", "label": "", "other": "", "other_label": "",
+			"modes": [], "mode_i": -1, "readied": false}
+	if i > 2:
+		return out
+	var dir := String(MatchSetup.DIRS[i])
+	out.head = String(DIR_HEADS[i])
+	var dm := MatchSetup.direction_move(_element(), dir)
+	if dm.is_empty():
+		return out
+	var id := String(dm.id)
+	out.id = id
+	out.label = Hotbar.spell_label(id)
+	out.sub = SwayCaster.mode_label(id, String(dm.mode))
+	var ms: Array = SwayCaster.modes_of(id)
+	out.modes = ms
+	out.mode_i = ms.find(String(dm.mode))
+	out.readied = held == dir
+	return out
+
+
+## The simple scheme's columns: keys 1-4 (the four moves), each with its two forms under it ("boulder / spike": near / far);
+## no pips (the form is picked at the release); 5 none.
+func _simple_column(i: int) -> Dictionary:
+	var k := key_column(i)
+	k.other = ""
+	k.other_label = ""
+	k.modes = []
+	k.mode_i = -1
+	var e := MatchSetup.simple_entry(_element(), String(k.id))
+	if i > 3 or e.is_empty():
+		k.hidden = true
+		k.readied = false
+		k.sub = ""
+		return k
+	# (near / far, short enough for the column; the ready line spells it out)
+	k.sub = "%s / %s" % [SwayCaster.mode_label(String(k.id), String(e.near)), SwayCaster.mode_label(String(k.id), String(e.far))]
+	return k
+
+
 ## The readied move as the HUD says it: "2 · Earth Wall · column (2/3)" (" · water 64" for a water fighter); "" none.
 func ready_line() -> String:
 	if player == null or player.hotbar == null:
 		return ""
+	var simple := scheme() == "simple"
 	for i in KEYS:
-		var col := column(i)
+		var col := key_column(i)              # (the readied key, whatever the scheme shows round it)
 		if not bool(col.readied):
 			continue
 		var line := "%d%s%s" % [i + 1, SEP, String(col.label)]
 		var ms: Array = col.modes
-		if not ms.is_empty():
+		var e := MatchSetup.simple_entry(_element(), String(col.id)) if simple else {}
+		if not e.is_empty():
+			line += "%snear %s · far %s" % [SEP, SwayCaster.mode_label(String(col.id), String(e.near)),
+					SwayCaster.mode_label(String(col.id), String(e.far))]
+		elif not ms.is_empty():
 			line += "%s%s (%d/%d)" % [SEP, SwayCaster.mode_label(String(col.id), String(ms[int(col.mode_i)])), int(col.mode_i) + 1,
 					ms.size()]
 		var b := _bending()
@@ -189,11 +277,14 @@ func help_line() -> String:
 
 
 ## The quick spell's help line (the strip's, the world HUD's in a duel): "Q: set left click · hold LMB: cast it", the set
-## key as bound ("set left click: no key bound" when the player unbound it).
+## key as bound ("set left click: no key bound" when the player unbound it); under it, with a control scheme other than the
+## keys, the scheme's own line (schemes.json "strip": "let go of RMB holding  W attack · S defence ...").
 static func help_text() -> String:
 	var k := SwayCaster.quick_bind_key()
 	var set_l := ("%s: set left click" % k) if k != "" else "set left click: no key bound"
-	return "%s%shold %s: cast it" % [set_l, SEP, CHIP]
+	var line := "%s%shold %s: cast it" % [set_l, SEP, CHIP]
+	var sl := MatchSetup.scheme_text("strip")
+	return line + "\n" + sl if sl != "" else line
 
 
 ## The "LMB" chip: a gold Label in a thin gold frame (the Label's own stylebox: no box container on the HUD, the user:
@@ -228,7 +319,7 @@ func _signature() -> String:
 	var parts := PackedStringArray()
 	for i in KEYS:
 		var col := column(i)
-		parts.append("%s/%d/%s" % [col.id, int(col.mode_i), col.readied])
+		parts.append("%s/%d/%s/%s/%s/%s" % [col.id, int(col.mode_i), col.readied, col.head, col.sub, col.hidden])
 	parts.append(ready_line())
 	parts.append(_element())
 	parts.append(quick_line())
@@ -243,9 +334,11 @@ func refresh() -> void:
 		var ui: Dictionary = _cols[i]
 		var on := bool(col.readied)
 		(ui.key as Label).add_theme_color_override("font_color", FrontierHUD.GOLD if on else FrontierHUD.TEXT)
+		(ui.key as Label).text = String(col.head)
 		(ui.name as Label).text = String(col.label) if String(col.id) != "" else "-"
-		(ui.other as Label).text = ("again: " + String(col.other_label)) if String(col.other_label) != "" else ""
+		(ui.other as Label).text = String(col.sub)
 		(ui.box as Control).modulate.a = 1.0 if on else DIM_A
+		(ui.box as Control).visible = not bool(col.hidden)
 		var id := String(col.id)
 		if String(ui.tex_id) != id:
 			ui["tex_id"] = id
