@@ -181,6 +181,7 @@ func next_round() -> void:
 		make_whole(player)
 		RingLevel.place(player, ring.spawn(player_end))
 		player.drag_speed_cap = 0.0          # (held at the spawn through the countdown: a root ending never frees it)
+		_hold_casts(true)                    # (and no lock through it: the arena player's contract, SwayCaster.enabled)
 		var bd := Bending.of(player)
 		bd.element = element
 		bd.water = bd.water_max
@@ -310,6 +311,7 @@ func _physics_process(dt: float) -> void:
 func _fight() -> void:
 	if player != null and is_instance_valid(player):
 		player.drag_speed_cap = INF
+	_hold_casts(false)
 	if foe != null and is_instance_valid(foe):
 		foe.held = false
 		if foe.brain != null and player != null:
@@ -400,11 +402,25 @@ func _on_side_out(side: int) -> void:
 func _count_catches() -> void:
 	stats[0]["hits"] = rules.knocks.x + int(stats[0].get("hits", 0))
 	stats[1]["hits"] = rules.knocks.y + int(stats[1].get("hits", 0))
+	# (the bot's own count, NpcBending.catches; a new bot each round, so the match's is the sum of the rounds')
 	var bend: Variant = foe.brain.bending if foe != null and is_instance_valid(foe) and foe.brain != null else null
 	if bend is Object and bend != null:
+		var n: Variant = (bend as Object).get(&"catches")
 		var c: Variant = (bend as Object).get(&"counters")
-		if c is Dictionary:
-			stats[1]["catches"] = int((c as Dictionary).get("catches", 0))
+		if not (n is int) and c is Dictionary:
+			n = (c as Dictionary).get("catches", 0)
+		if n is int:
+			stats[1]["catches"] = int(stats[1].get("catches", 0)) + int(n)
+
+
+## The player's casting held (the countdown) or let go: SwayCaster.enabled, the arena player's contract (his bar stays laid,
+## a lock under way ends "off").
+func _hold_casts(on: bool) -> void:
+	if player == null or not is_instance_valid(player):
+		return
+	var sc := SwayCaster.of(player)
+	if sc != null:
+		sc.enabled = not on
 
 
 # ---------------------------------------------------------------- the contract
