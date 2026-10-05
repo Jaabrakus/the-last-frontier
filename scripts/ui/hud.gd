@@ -66,7 +66,33 @@ const HELP := "WASD move · Shift sprint · Ctrl/C crouch (toggle) · Space jump
 const ARENA_HELP := "WASD move · Shift sprint · Space jump · Ctrl/C crouch\n" \
 		+ "1-4 a key's move, the same key again its other move · 5 Mend, again Patch · wheel: the move's three forms\n" \
 		+ "Hold RMB on the aim: the lock fills; let go to cast · F1 this help · Esc free mouse\n" \
+		+ "Q: the readied move onto LMB (as it is now) · hold LMB: lock and cast it, the keys left as they are\n" \
 		+ "Knock the other side back through its three zones: into the water behind them takes the round"
+## HELP's lines that change outside the arena while the player has an element (the duel): Q and LMB are the quick
+## spell's then (SwayCaster's; ELEMENT_LMB, ELEMENT_Q with the set key as bound).
+const WORLD_LMB := "LMB hold to aim, release to fire"
+const WORLD_Q := "hold Q: equip wheel"
+const ELEMENT_LMB := "Hold RMB on the aim: lock the readied move, let go to cast · hold LMB: the same with the left-click move"
+const ELEMENT_Q := "%s: the readied move onto LMB"
+
+
+## F1's text now: ARENA_HELP in the arena; with an element outside it (the duel) HELP with its Q and LMB as the quick
+## spell has them; else HELP. The quick spell's set key as bound (SwayCaster.quick_bind_key; "no key" when unbound).
+func help_text() -> String:
+	var k := SwayCaster.quick_bind_key()
+	var shown_k := k if k != "" else "(no key)"
+	if arena:
+		return ARENA_HELP.replace("Q: the readied move", "%s: the readied move" % shown_k)
+	var c := SwayCaster.of(player) if player != null else null
+	if c == null or c.quick_element() == "":
+		return HELP
+	var q_line := ELEMENT_Q % shown_k
+	var wheel_k := SwayCaster.key_name(EquipWheel.ACTION)
+	if wheel_k != "" and wheel_k != k:
+		q_line = "hold %s: equip wheel · %s" % [wheel_k, q_line]     # (the wheel keeps a key of its own)
+	return HELP.replace(WORLD_Q, q_line).replace(WORLD_LMB, ELEMENT_LMB)
+
+
 ## The water bar's colour, and how long "winded" stays among the status words (s).
 const WATER := Color(0.42, 0.68, 0.95)
 const WINDED_S := 2.5
@@ -113,6 +139,11 @@ var _ammo: Label                  ## the weapon's ammo and state under the slot 
 var _slots_row: HBoxContainer
 var _slots_box: Control           ## the strip and its line with their shade (hidden when neither shows anything)
 var _slot_boxes: Array = []      ## [Control (meta active, meta spell), TextureRect (meta kind), Label]
+## The quick spell under the slot strip outside the arena (a duel: the player has an element; SwayCaster's quick spell):
+## the "LMB" chip and its move at its frozen variation, then the help line (BendStrip.help_text). Hidden without one.
+var quick_row: HBoxContainer
+var quick_name: Label
+var quick_help: Label
 var _compass: Control
 var _clock: Label
 var _clock_icon: TextureRect
@@ -324,6 +355,24 @@ func _build_slots() -> void:
 	_ammo.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_ammo.size_flags_horizontal = Control.SIZE_SHRINK_END
 	col.add_child(_ammo)
+	quick_row = HBoxContainer.new()
+	quick_row.name = "Quick"
+	quick_row.alignment = BoxContainer.ALIGNMENT_END
+	quick_row.size_flags_horizontal = Control.SIZE_SHRINK_END
+	quick_row.add_theme_constant_override("separation", 6)
+	quick_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	quick_row.add_child(BendStrip.make_chip())
+	quick_name = hud_label(16, INK)
+	quick_name.name = "QuickName"
+	quick_row.add_child(quick_name)
+	quick_row.visible = false
+	col.add_child(quick_row)
+	quick_help = hud_label(13, DIM)
+	quick_help.name = "QuickHelp"
+	quick_help.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	quick_help.size_flags_horizontal = Control.SIZE_SHRINK_END
+	quick_help.visible = false
+	col.add_child(quick_help)
 	var sh := _shaded(col, Vector2(34, 10))
 	_root.add_child(sh)
 	_place(sh, Vector2(1, 1), Vector2(-6, -8), Vector2(1, 1))
@@ -365,7 +414,7 @@ func set_arena(on: bool) -> void:
 		match_bar.visible = on
 		(_status.get_parent() as Control).visible = on
 	if _help_label != null:
-		_help_label.text = ARENA_HELP if on else HELP
+		_help_label.text = help_text()
 	if on:
 		_rest_row.visible = false
 		_torch_row.visible = false
@@ -627,6 +676,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.physical_keycode == KEY_F3:
 			show_debug = not show_debug
 		elif event.physical_keycode == KEY_F1:
+			_help_label.text = help_text()       # (the element and the keys as they are now)
 			_help_box.visible = not _help_box.visible
 			_help_t = 0.0
 
@@ -745,7 +795,19 @@ func _update_card() -> void:
 	_ammo.text = line
 	_ammo.visible = line != ""
 	_update_slots(tool)
-	_slots_box.visible = _ammo.visible or _slots_shown > 0
+	_update_quick()
+	_slots_box.visible = _ammo.visible or _slots_shown > 0 or quick_row.visible
+
+
+## The world HUD's quick spell row (outside the arena, the player with an element: the duel): "LMB  Rock Jab (pebbles)"
+## and the help line; hidden in the open world without an element (LMB is the weapon's there).
+func _update_quick() -> void:
+	var c := SwayCaster.of(player)
+	var ql := c.quick_label() if c != null and c.quick_ready() else ""
+	quick_name.text = ql
+	quick_row.visible = ql != ""
+	quick_help.text = BendStrip.help_text() if ql != "" else ""
+	quick_help.visible = ql != ""
 
 
 ## A readied spell's line: its name and mode, the caster's motes and its mastery when there is one ("Stone Form (cannonball)
@@ -763,8 +825,8 @@ func _spell_line(id: String) -> String:
 			line += ": " + ml
 	# (a bending skill: its variation's place, the key's other skill, a waterbender's water; docs/bending_design.md)
 	var ms: Array = SwayMoves.move(id).get("modes", [])
-	if ms.size() > 1 and c != null and c.has_method(&"mode_of"):
-		line += "  %d/%d" % [ms.find(String(c.call(&"mode_of", id))) + 1, ms.size()]
+	if ms.size() > 1 and c != null and c.has_method(&"base_mode_of"):
+		line += "  %d/%d" % [ms.find(String(c.call(&"base_mode_of", id))) + 1, ms.size()]     # (the key's: never the quick lock's)
 	var other := Bending.partner_of(id)
 	if other != "":
 		line += "  ·  again: " + String(SwayMoves.move(other).get("label", other))
@@ -778,10 +840,10 @@ func _spell_line(id: String) -> String:
 	return line
 
 
-## Spell `id`'s mode on the player's caster ("" none).
+## Spell `id`'s mode on the player's caster as its key has it ("" none; never the quick lock's frozen one).
 func _spell_mode(id: String) -> String:
 	var c := player.get_node_or_null("SwayCaster")
-	return String(c.call(&"mode_of", id)) if c != null and c.has_method(&"mode_of") else ""
+	return String(c.call(&"base_mode_of", id)) if c != null and c.has_method(&"base_mode_of") else ""
 
 
 var _slots_shown := 0

@@ -73,10 +73,16 @@ func exclude() -> Array[RID]:
 
 
 func side_sign() -> float:
-	var lr := Input.get_axis(&"move_left", &"move_right") if InputMap.has_action(&"move_left") and InputMap.has_action(&"move_right") else 0.0
+	var lr := held_side()
 	if absf(lr) > 0.1:
-		return signf(lr)
+		return lr
 	return 1.0 if rand_f() < 0.5 else -1.0
+
+
+## The side his keys hold (move_left -1, move_right 1; 0 neither, or both).
+func held_side() -> float:
+	var lr := Input.get_axis(&"move_left", &"move_right") if InputMap.has_action(&"move_left") and InputMap.has_action(&"move_right") else 0.0
+	return signf(lr) if absf(lr) > 0.1 else 0.0
 
 
 func mode_of(id: String) -> String:

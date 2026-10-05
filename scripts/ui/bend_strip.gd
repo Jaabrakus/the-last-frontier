@@ -8,9 +8,12 @@ extends VBoxContainer
 ##   the move's name       the skill on the key now (16 px), and under it the key's other skill: "again: Rock Jab" (13 px, dim)
 ##   the variation pips    one per variation in the element's colour (MatchSetup.color), the one the wheel is on filled
 ## the readied column at full strength, the others at 0.62, and under them the ready line: "2 · Earth Wall · column (2/3)"
-## (" · water 64" after it for a water fighter). What it shows comes from the player's own hotbar (slots 1-5), its caster
-## (the variation) and its Bending node (the element, the water): nothing about anyone else.
-##   column(i) -> {key, id, label, other, other_label, modes, mode_i, readied}; ready_line(); refresh()
+## (" · water 64" after it for a water fighter). Under it the quick spell (SwayCaster's, the owner 2026-10-05): an "LMB" chip
+## and its move at its frozen variation ("LMB  Rock Jab (pebbles)"), and the help line "Q: set left click · hold LMB: cast
+## it" (the set key as bound). What it shows comes from the player's own hotbar (slots 1-5), its caster (the variation, the
+## quick spell) and its Bending node (the element, the water): nothing about anyone else.
+##   column(i) -> {key, id, label, other, other_label, modes, mode_i, readied}; ready_line(); quick_line(); help_line();
+##   refresh()
 
 const KEYS := 5
 const COL_W := 112.0
@@ -19,11 +22,17 @@ const DIM_A := 0.62
 const PIP_R := 3.5
 ## The middle dot between the ready line's parts (as docs/bending_design.md writes it).
 const SEP := " · "
+## The quick spell's chip.
+const CHIP := "LMB"
 
 var player: FrontierPlayer
 
 var _cols: Array = []          ## per key: {box, key, icon, name, other, pips}
 var _line: Label
+var _quick_box: Control
+var _chip: Label
+var _quick: Label
+var _help: Label
 var _sig := ""
 var _dirty := true
 
@@ -76,6 +85,24 @@ func _ready() -> void:
 	_line.name = "ReadyLine"
 	_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_line)
+	# the quick spell: an "LMB" chip and its move (variation), then the help line
+	var q := HBoxContainer.new()
+	q.name = "Quick"
+	q.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	q.alignment = BoxContainer.ALIGNMENT_CENTER
+	q.add_theme_constant_override("separation", 6)
+	var chip := make_chip()
+	_chip = chip.get_child(0) as Label
+	q.add_child(chip)
+	_quick = FrontierHUD.hud_label(16, FrontierHUD.INK)
+	_quick.name = "QuickName"
+	q.add_child(_quick)
+	_quick_box = q
+	add_child(q)
+	_help = FrontierHUD.hud_label(13, FrontierHUD.DIM)
+	_help.name = "HelpLine"
+	_help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_help)
 	_hook.call_deferred()
 
 
@@ -124,7 +151,7 @@ func column(i: int) -> Dictionary:
 	out.modes = ms
 	if not ms.is_empty():
 		var c := SwayCaster.of(player)
-		var m := c.mode_of(id) if c != null else String(ms[0])
+		var m := c.base_mode_of(id) if c != null else String(ms[0])     # (the key's own: never the quick spell's frozen one)
 		out.mode_i = maxi(ms.find(m), 0)
 	out.readied = hb.spell == id and hb.selected() == i
 	return out
@@ -150,6 +177,44 @@ func ready_line() -> String:
 	return ""
 
 
+## The quick spell on LMB as the chip's line says it: "Rock Jab (pebbles)" ("" none).
+func quick_line() -> String:
+	var c := SwayCaster.of(player) if player != null else null
+	return c.quick_label() if c != null else ""
+
+
+## The strip's help line: how the quick spell is set and cast ("Q: set left click · hold LMB: cast it"; the set key as bound).
+func help_line() -> String:
+	return help_text()
+
+
+## The quick spell's help line (the strip's, the world HUD's in a duel): "Q: set left click · hold LMB: cast it", the set
+## key as bound ("set left click: no key bound" when the player unbound it).
+static func help_text() -> String:
+	var k := SwayCaster.quick_bind_key()
+	var set_l := ("%s: set left click" % k) if k != "" else "set left click: no key bound"
+	return "%s%shold %s: cast it" % [set_l, SEP, CHIP]
+
+
+## The "LMB" chip (gold, framed; its Label the first child): the strip's and the world HUD's quick spell row.
+static func make_chip() -> PanelContainer:
+	var chip := PanelContainer.new()
+	chip.name = "Chip"
+	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.0, 0.0, 0.0, 0.35)
+	sb.border_color = FrontierHUD.GOLD
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(3)
+	sb.content_margin_left = 5
+	sb.content_margin_right = 5
+	chip.add_theme_stylebox_override("panel", sb)
+	var l := FrontierHUD.hud_label(14, FrontierHUD.GOLD)
+	l.text = CHIP
+	chip.add_child(l)
+	return chip
+
+
 func _bending() -> Bending:
 	return player.get_node_or_null(NodePath(String(Bending.NODE_NAME))) as Bending if player != null else null
 
@@ -167,6 +232,8 @@ func _signature() -> String:
 		parts.append("%s/%d/%s" % [col.id, int(col.mode_i), col.readied])
 	parts.append(ready_line())
 	parts.append(_element())
+	parts.append(quick_line())
+	parts.append(help_line())                # (the set key rebound or unbound: the help line follows at once)
 	return "|".join(parts)
 
 
@@ -189,6 +256,11 @@ func refresh() -> void:
 		(ui.pips as Control).queue_redraw()
 	_line.text = ready_line()
 	_line.visible = _line.text != ""
+	var ql := quick_line()
+	_quick.text = ql
+	_quick_box.visible = ql != ""
+	_help.text = help_line()
+	_help.visible = ql != ""
 
 
 # ---------------------------------------------------------------- drawing

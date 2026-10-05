@@ -50,6 +50,11 @@ func active() -> bool:
 	return _carry_t > 0.0 or _fall_t > 0.0 or _run_t > 0.0
 
 
+## A dash's speed being carried now (the player's legs' clip speed does not cap it meanwhile: FrontierPlayer).
+func carrying() -> bool:
+	return _carry_t > 0.0
+
+
 func _trail(kind: String) -> void:
 	if _fx == null or not is_instance_valid(_fx):
 		_fx = BendLooks.trail(body, kind, 0.35)

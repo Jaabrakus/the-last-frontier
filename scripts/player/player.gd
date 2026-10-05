@@ -222,7 +222,8 @@ var controls := PlayerControls.new()
 ## element's bar at once (Hotbar.lay_spells: the start kit never comes), its first key readied, and laid again when the
 ## element changes (MatchSetup.element, or Bending's element as the match sets it); the dress is the element's
 ## (PlayerAppearance.arena_dress). Keys that open the world's screens (H, Tab, K) do nothing; the hotbar takes 1-5 and the
-## wheel only. LMB does nothing in the arena (no weapon to fire; the casts are RMB's, the hold-and-release lock).
+## wheel only. LMB fires no weapon in the arena (there is none): it is the quick spell's, its own hold-and-release lock as
+## RMB's (SwayCaster's quick spell; Q sets it), the readied key left as it is.
 var arena := false
 ## The element the arena's bar and dress were last laid for ("" not yet).
 var arena_element := ""
@@ -1257,7 +1258,11 @@ func _physics_process(delta: float) -> void:
 			velocity = kn.base_of(velocity)
 		if reeling:
 			target = Vector3.ZERO
-		var cap := anim.body_speed_cap() if anim and not launched and not reeling else INF
+		# (a dash's carry, BendMotion's, is no walk either: a clip's speed would stop a dash from standing on the ground dead,
+		# Earth Skate's slide and burrow-step, which leave the ground not at all)
+		var bm := get_node_or_null(^"BendMotion") as BendMotion
+		var dashing := bm != null and bm.carrying()
+		var cap := anim.body_speed_cap() if anim and not launched and not reeling and not dashing else INF
 		var horiz := Vector3(velocity.x, 0.0, velocity.z)
 		var stopping := false
 		if cap < INF and wish.length_squared() > 1e-8:

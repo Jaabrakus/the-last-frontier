@@ -468,7 +468,7 @@ func _show_spell(id: String) -> void:
 		rows.append(["Hands", "both empty" if t < 2 else "the left; the right may hold a pistol, tomahawk or saber", ""])
 		var ms := SwayCaster.modes_of(id)
 		if not ms.is_empty():
-			var now := c.mode_of(id)
+			var now := c.base_mode_of(id)
 			var names := PackedStringArray()
 			for m: Variant in ms:
 				var lb := SwayCaster.mode_label(id, String(m))
@@ -548,7 +548,7 @@ func _fill_spells() -> void:
 		r.payload = {"from": "spell", "id": id}
 		r.text = c.spell_label(id)
 		r.side = ("%s\non %d" % [c.tier_name(id), at + 1]) if at >= 0 else c.tier_name(id)
-		r.mode = c.mode_of(id)
+		r.mode = c.base_mode_of(id)
 		r.texture = FrontierHUD.spell_texture(id, get_tree())
 		r.circle = r.texture == null
 		_spells_list.add_child(r)

@@ -15,6 +15,7 @@ extends RefCounted
 ##                   one: the animation hooks' contract)
 ##   exclude()       its own RIDs, left out of its rays and its bolts' (a fighter's hit parts too)
 ##   side_sign()     a sidestep's side (-1 left, 1 right): the player's keys, a body's own (or by chance)
+##   held_side()     the same, but 0 for the player with neither side held (Earth Skate's side_default then)
 ##   mode_of(id), tier(id)   the move's variation and the caster's mastery of it
 ##   water()         its water (Bending.of(body)); notice(text, s) a word on the screen (the local player's only);
 ##   is_local()      the player at this screen; team() its side (&"" none)
@@ -128,6 +129,12 @@ func exclude() -> Array[RID]:
 
 func side_sign() -> float:
 	return 1.0 if rand_f() < 0.5 else -1.0
+
+
+## The side it means to step to now (-1 left, 1 right; 0: none in mind, the move's own default then): a body's or a bot's own
+## pick (side_sign); the player's only the side his keys hold (PlayerBendCaster).
+func held_side() -> float:
+	return side_sign()
 
 
 func mode_of(id: String) -> String:

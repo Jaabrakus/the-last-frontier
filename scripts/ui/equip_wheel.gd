@@ -103,7 +103,14 @@ func _process(_delta: float) -> void:
 
 func _can_open() -> bool:
 	return not player.is_dead and player.riding == null and not get_tree().paused \
-			and not (player.traversal != null and player.traversal.showing)
+			and not (player.traversal != null and player.traversal.showing) and not _quick_key()
+
+
+## With an element (the duel) Q is the quick spell's set key (SwayCaster.QUICK_BIND), not the wheel's.
+func _quick_key() -> bool:
+	var c := SwayCaster.of(player)
+	return c != null and c.quick_element() != "" and InputMap.has_action(SwayCaster.QUICK_BIND) \
+			and Input.is_action_pressed(SwayCaster.QUICK_BIND)
 
 
 func _input(event: InputEvent) -> void:

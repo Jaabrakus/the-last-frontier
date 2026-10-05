@@ -267,12 +267,13 @@ func _water() -> void:
 				shirt])
 	else:
 		_expect(true, "no appearance on this body (use_appearance off): no dress to check")
-	# LMB: nothing (no weapon to fire; the casts are RMB's)
+	# LMB: no weapon to fire; it is the quick spell's (its own lock: tests/ring/test_quick_spell.gd), the readied key left
 	var sp := p.hotbar.spell
-	var st := c.state
+	var sm := c.base_mode_of(sp)
 	await _action(&"fire")
 	await _ticks(5)
-	_expect(p.hotbar.spell == sp and c.state == st and p.weapon == null, "LMB does nothing in the arena")
+	_expect(p.hotbar.spell == sp and c.readied_spell == sp and c.base_mode_of(sp) == sm and c.state == SwayCaster.State.IDLE
+			and p.weapon == null, "LMB fires nothing in the arena; a tap leaves the readied move and its variation as they were")
 	# the arena's first-time help: its own topics, the moves' first
 	var how := p.get_node_or_null(^"HowTo") as HowTo
 	if how != null:
@@ -280,7 +281,8 @@ func _water() -> void:
 		how.reset()
 		how.enabled = true
 		var up := await _until(func() -> bool: return how.current != "", 4.0)
-		_expect(up < INF and how.current == "elements" and how._steps.size() == 4,
+		_expect(up < INF and how.current == "elements" and how._steps.size() == (HowTo.TOPICS.elements.steps as Array).size()
+				and (HowTo.TOPICS.elements.steps as Array).size() == 5,
 				"the arena's first-time help: the moves' panel first (%s)" % how.current)
 		how.enabled = false
 		how._panel.visible = false

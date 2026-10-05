@@ -79,8 +79,8 @@ func _process(dt: float) -> void:
 	var on := caster.state != SwayCaster.State.IDLE
 	if on:
 		_art = caster.art()
-	elif caster.readied and caster.readied_spell != "":
-		_art = String(SwayMoves.move(caster.readied_spell).get("art", _art))     # (the hotbar's spell readied: its art's track)
+	elif caster.readied and caster.lock_spell() != "":
+		_art = String(SwayMoves.move(caster.lock_spell()).get("art", _art))     # (the hotbar's spell readied: its art's track)
 	_alpha = move_toward(_alpha, 1.0 if on else 0.0, dt * (8.0 if on else 3.0))
 	_flash = maxf(_flash - dt / FLASH_S, 0.0)
 	_pulse = maxf(_pulse - dt / PULSE_S, 0.0)
