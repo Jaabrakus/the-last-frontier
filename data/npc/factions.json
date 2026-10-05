@@ -268,6 +268,60 @@
         "talk": ["Mind the lines.", "Keep your feet, she's rolling.", "Don't look down, and don't look up too long."]
       },
       "loot": {"flint": 1, "jerky": 1}
+    },
+    "ring_team_a": {
+      "label": "Competitor",
+      "_doc": "Tidebreak, the ring sport (the owner, 2026-10-04): the player's side of the ring (side 'player': his teammates, the 3 v 3 to come). Element bots (NpcSquad opts element, tactics bend): no weapon, no barks (nothing said, no words over a head in the ring), a plain athletic dress (the basic shirt and breeches, soft moccasins, knit stockings, a sash and a kerchief) in the element's colours (element_dress: NpcSquad.element_look; the shirt and the sash in the element's own: earth ochre and green, water blue, fire red, air pale yellow and orange); garment_colors and colors are the plain undyed dress of a fighter of the side with no element.",
+      "side": "player",
+      "hostile": [],
+      "looks": ["english_m_a", "english_m_b", "scots_irish_m_a", "scots_irish_m_b", "dutch_m_a", "dutch_m_b", "french_m_a", "french_m_b", "palatine_m_a", "palatine_m_b", "african_american_m_a", "euro_african_m_b", "spanish_m_a"],
+      "outfit": {"feet": ["moccasins"], "legs.over": ["stockings"], "accessories.waist": ["sash_worsted"], "accessories.neck": ["neckerchief"]},
+      "garment_colors": {
+        "moccasins": {"0": "buckskin_smoked", "1": "buckskin_smoked", "2": "leather_brown"},
+        "stockings": {"0": "grey_white", "1": "logwood_black"},
+        "sash_worsted": {"0": "linen_white", "1": "linen_white", "2": "linen_white", "3": "linen_white"},
+        "neckerchief": {"0": "linen_white"}
+      },
+      "colors": {"shirt": {"0": "linen_white", "1": "linen_white"}, "legs.lower": {"0": "drab", "1": "drab", "2": "pewter"}},
+      "element_dress": {
+        "earth": {"shirt": {"0": "#B8893C", "1": "#5E7A3A"}, "legs.lower": {"0": "#4A5A2E", "1": "#3E4A27", "2": "pewter"}, "accessories.waist": {"0": "#5E7A3A", "1": "#B8893C", "2": "#5E7A3A", "3": "#B8893C"}, "accessories.neck": {"0": "#5E7A3A"}, "legs.over": {"0": "#4A5A2E", "1": "#3E4A27"}},
+        "water": {"shirt": {"0": "#2F6DB3", "1": "#A8CDEB"}, "legs.lower": {"0": "#1E3F6B", "1": "#18345A", "2": "pewter"}, "accessories.waist": {"0": "#A8CDEB", "1": "#2F6DB3", "2": "#A8CDEB", "3": "#2F6DB3"}, "accessories.neck": {"0": "#A8CDEB"}, "legs.over": {"0": "#1E3F6B", "1": "#18345A"}},
+        "fire": {"shirt": {"0": "#B5302A", "1": "#E07B2E"}, "legs.lower": {"0": "#5A1E1A", "1": "#4A1815", "2": "pewter"}, "accessories.waist": {"0": "#E07B2E", "1": "#B5302A", "2": "#E07B2E", "3": "#B5302A"}, "accessories.neck": {"0": "#E07B2E"}, "legs.over": {"0": "#5A1E1A", "1": "#4A1815"}},
+        "air": {"shirt": {"0": "#EFE3A4", "1": "#E39A3B"}, "legs.lower": {"0": "#C9A35A", "1": "#B08A44", "2": "pewter"}, "accessories.waist": {"0": "#E39A3B", "1": "#EFE3A4", "2": "#E39A3B", "3": "#EFE3A4"}, "accessories.neck": {"0": "#E39A3B"}, "legs.over": {"0": "#C9A35A", "1": "#B08A44"}}
+      },
+      "weapon": "",
+      "sidearm": "",
+      "skill": 0.6,
+      "courage": 1.0,
+      "barks": {},
+      "loot": {}
+    },
+    "ring_team_b": {
+      "label": "Competitor",
+      "_doc": "Tidebreak, the ring sport (the owner, 2026-10-04): the other side of the ring, hostile to the player and to ring_team_a. Element bots (NpcSquad opts element, tactics bend): no weapon, no barks (nothing said, no words over a head in the ring), a plain athletic dress (the basic shirt and breeches, soft moccasins, knit stockings, a sash and a kerchief) in the element's colours (element_dress: NpcSquad.element_look; the shirt and the sash in the element's own: earth ochre and green, water blue, fire red, air pale yellow and orange); garment_colors and colors are the plain undyed dress of a fighter of the side with no element.",
+      "side": "ring_b",
+      "hostile": ["player"],
+      "looks": ["english_m_a", "english_m_b", "scots_irish_m_a", "scots_irish_m_b", "dutch_m_a", "dutch_m_b", "french_m_a", "french_m_b", "palatine_m_a", "palatine_m_b", "african_american_m_a", "euro_african_m_b", "spanish_m_a"],
+      "outfit": {"feet": ["moccasins"], "legs.over": ["stockings"], "accessories.waist": ["sash_worsted"], "accessories.neck": ["neckerchief"]},
+      "garment_colors": {
+        "moccasins": {"0": "buckskin_smoked", "1": "buckskin_smoked", "2": "leather_brown"},
+        "stockings": {"0": "grey_white", "1": "logwood_black"},
+        "sash_worsted": {"0": "linen_white", "1": "linen_white", "2": "linen_white", "3": "linen_white"},
+        "neckerchief": {"0": "linen_white"}
+      },
+      "colors": {"shirt": {"0": "linen_white", "1": "linen_white"}, "legs.lower": {"0": "drab", "1": "drab", "2": "pewter"}},
+      "element_dress": {
+        "earth": {"shirt": {"0": "#B8893C", "1": "#5E7A3A"}, "legs.lower": {"0": "#4A5A2E", "1": "#3E4A27", "2": "pewter"}, "accessories.waist": {"0": "#5E7A3A", "1": "#B8893C", "2": "#5E7A3A", "3": "#B8893C"}, "accessories.neck": {"0": "#5E7A3A"}, "legs.over": {"0": "#4A5A2E", "1": "#3E4A27"}},
+        "water": {"shirt": {"0": "#2F6DB3", "1": "#A8CDEB"}, "legs.lower": {"0": "#1E3F6B", "1": "#18345A", "2": "pewter"}, "accessories.waist": {"0": "#A8CDEB", "1": "#2F6DB3", "2": "#A8CDEB", "3": "#2F6DB3"}, "accessories.neck": {"0": "#A8CDEB"}, "legs.over": {"0": "#1E3F6B", "1": "#18345A"}},
+        "fire": {"shirt": {"0": "#B5302A", "1": "#E07B2E"}, "legs.lower": {"0": "#5A1E1A", "1": "#4A1815", "2": "pewter"}, "accessories.waist": {"0": "#E07B2E", "1": "#B5302A", "2": "#E07B2E", "3": "#B5302A"}, "accessories.neck": {"0": "#E07B2E"}, "legs.over": {"0": "#5A1E1A", "1": "#4A1815"}},
+        "air": {"shirt": {"0": "#EFE3A4", "1": "#E39A3B"}, "legs.lower": {"0": "#C9A35A", "1": "#B08A44", "2": "pewter"}, "accessories.waist": {"0": "#E39A3B", "1": "#EFE3A4", "2": "#E39A3B", "3": "#EFE3A4"}, "accessories.neck": {"0": "#E39A3B"}, "legs.over": {"0": "#C9A35A", "1": "#B08A44"}}
+      },
+      "weapon": "",
+      "sidearm": "",
+      "skill": 0.6,
+      "courage": 1.0,
+      "barks": {},
+      "loot": {}
     }
   }
 }

@@ -7,12 +7,14 @@ extends Node
 ## animals: FrontierLevel), the clock held by day (HOUR, clear weather), and the arena staged on the open land (DuelArena).
 ##   the kit      the player's own (the musket, the pistol, the bow, the thrown weapons; the Sway's spells free to use as
 ##                they are now), loaded and full again each round (WeaponState as it was at the duel's start)
-##   the foe      a French marine of the troupes de la marine (FACTION: hostile to the player) with his musket and its butt
-##                (the fighters carry no pistol yet), fighting from cover (NpcFighter.tactics "cover": NpcSkirmish), aiming by
-##                the difficulty (NpcFighter.SKILLS: easy, normal, hard), never running from his wounds (he falls back and
-##                fights on: flees off) nor giving up the fight (calm_s never), his covers kept to the arena (bounds); told
-##                at the start where the player stands (a duel: each knows where the other begins), then only what he sees
-##                and hears
+##   the foe      an element bot (foe_tactics "bend": NpcBending, of foe_element: earth by default, the user arg foe=, the
+##                Esc menu's Opponent row), of the ring's other side (RING_FACTION: no weapon, no words, dressed in its
+##                element's colours), called by its element's competitor name (MatchSetup.competitor: Stone, Tide, Ember,
+##                Gale), its lock and aim by the difficulty (data/npc/bend_ai.json presets: easy, normal, hard); or, for its
+##                own test (foe_tactics "cover"), a French marine (FACTION) with his musket fighting from cover (NpcSkirmish),
+##                his covers kept to the arena (bounds). Either never runs from his wounds nor gives up the fight (flees off,
+##                calm_s never); told at the start where the player stands (a duel: each knows where the other begins), then
+##                only what he sees and hears
 ##   a round      COUNTDOWN (COUNTDOWN_S: both held at their spawns, "Round 2", 3, 2, 1, "Fight"), FIGHT until one falls
 ##                (dead; for the marine also out of the fight: down, yielding, running with his arm broken) or ROUND_S runs
 ##                out (a draw), OVER: the banner with the result and the score, PAUSE_S to look (M, or E at him: InspectView on
@@ -38,11 +40,16 @@ const PAUSE_S := 7.0
 const FIGHT_SHOW_S := 1.2
 const TO_WIN := 3
 const FACTION := "french_marine"
-## What the foe is called on the screen (a bender: no gun).
-const FOE_LABEL := "Earthbender"
+## The element bot's side (data/npc/factions.json: Tidebreak's other side, hostile to the player; no barks, the element's dress).
+const RING_FACTION := "ring_team_b"
+## What the foe is called on the screen when its element names none (MatchSetup.competitor names it: Stone, Tide, ...).
+const FOE_LABEL := "Opponent"
 ## How the foe fights: "bend" (NpcBending, the duel as it is played) or "cover" (the marine with his musket, fighting from
 ## cover: NpcSkirmish; kept for its own test, tests/npc/test_duel.gd).
 static var foe_tactics := "bend"
+## The element bot's element (Bending.ELEMENTS; the user arg foe=, the Esc menu's Opponent row); kept from one duel to the next
+## in a run.
+static var foe_element := "earth"
 const DIFFICULTIES := ["easy", "normal", "hard"]
 ## The hour the sky is held at (local solar time: the sun high, the light full).
 const HOUR := 10.5
@@ -138,6 +145,8 @@ func _ready() -> void:
 		if a.trim_prefix("--").begins_with("element=") and a.get_slice("=", 1) in Bending.ELEMENTS:
 			element = a.get_slice("=", 1)
 			choosing = false
+		if a.trim_prefix("--").begins_with("foe=") and a.get_slice("=", 1) in Bending.ELEMENTS:
+			foe_element = a.get_slice("=", 1)
 	# (the player's kit as he starts: each round gives it back)
 	for k: String in player.weapons:
 		_kit[k] = WeaponState.capture(player.weapons[k])
@@ -166,6 +175,20 @@ func _ready_first() -> void:
 	var bar := Hotbar.of(player) if player != null and is_instance_valid(player) else null
 	if bar != null and _bar_laid and bar.filled(0) and bar.selected() != 0:
 		bar.take(0)
+
+
+## The player's element on his Bending node too (his water, BendPoses.element_of: as the ring's player), once chosen.
+func _sync_element() -> void:
+	if player != null and is_instance_valid(player) and not choosing and element in Bending.ELEMENTS:
+		Bending.of(player).element = element
+
+
+## The foe's element from now (Bending.ELEMENTS): a new duel against it.
+func set_foe(el: String) -> void:
+	if not el in Bending.ELEMENTS:
+		return
+	foe_element = el
+	restart()
 
 
 ## The sky held by day: HOUR, the clock stopped, clear weather (no rig clock headless: NpcSenses reads full daylight).
@@ -222,14 +245,17 @@ func next_round() -> void:
 	if bend:
 		opts["weapon"] = ""
 		opts["sidearm"] = ""
-	squad = NpcSquad.spawn(level, FACTION, 1, xf.origin, opts)
+		opts["element"] = foe_element if foe_element in Bending.ELEMENTS else "earth"
+	_sync_element()
+	squad = NpcSquad.spawn(level, RING_FACTION if bend and not NpcFactions.get_faction(RING_FACTION).is_empty() else FACTION, 1, xf.origin, opts)
 	npc = squad.members[0] if not squad.members.is_empty() else null
 	if npc != null:
 		npc.flees = false
 		npc.calm_s = INF
 		npc.held = true
 		if bend:
-			npc.label = FOE_LABEL
+			var nm := MatchSetup.competitor(String(opts.element))
+			npc.label = nm if nm != "" else FOE_LABEL
 		if npc.brain != null and npc.brain.skirmish != null:
 			npc.brain.skirmish.bounds = arena.bounds()
 	_to(Phase.COUNTDOWN)
@@ -349,6 +375,7 @@ func choose(el: String) -> void:
 		return
 	element = el
 	choosing = false
+	_sync_element()
 	if _bar_laid:
 		lay_bar()
 	phase_t = 0.0

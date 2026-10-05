@@ -102,7 +102,8 @@ var heard_at := Vector3.INF
 var heard_t := -100.0
 ## The cover fighter (NpcFighter.tactics "cover"), null for a line fighter.
 var skirmish: NpcSkirmish = null
-## The bender (NpcFighter.tactics "bend": the duel's opponent; NpcBending), null for the others.
+## The element bot (NpcFighter.tactics "bend": the duel's and the ring's opponent; NpcBending, of the fighter's element), null
+## for the others. Its think runs in COMBAT (step); its tick each frame (NpcFighter._physics_process).
 var bending: NpcBending = null
 
 
@@ -578,8 +579,8 @@ func _close_in(tp: Vector3, d: float) -> void:
 func _should_flee(_d: float) -> bool:
 	if _routed:
 		return false
-	if me.arm_broken != "":
-		return true
+	if me.arm_broken != "" and bending == null:
+		return true                         # (a bender holds no weapon: a broken arm's bone does not send it off)
 	if not me.flees:
 		return false
 	var hurt := me.health < me.health_max * (0.2 + 0.3 * (1.0 - me.courage))

@@ -13,7 +13,11 @@ extends Node
 ## opts: tag, attack ("player", a [x, z] / Vector3 place, or a Node3D), patrol (points), hold (a place), face (a point
 ## to face), weapon / sidearm (over the faction's), tactics ("line", "cover": NpcFighter.tactics), skill (an aim preset: "easy",
 ## "normal", "hard", NpcFighter.SKILLS), waves, wave_s, spacing, seed; faction (or squad, its older name) when
-## the `faction` given is none of data/npc/factions.json's (an unknown one is warned of: its men would have no foes).
+## the `faction` given is none of data/npc/factions.json's (an unknown one is warned of: its men would have no foes);
+## element ("earth", "water", "fire", "air": with tactics "bend", element bots: NpcBending of that element, their water
+## Bending.of(it), no weapon unless named, never running from the fight; a faction with element_dress (Tidebreak's ring sides,
+## ring_team_a / ring_team_b) dresses them in the element's colours); y (a height: each man stood at it as given, not on the
+## ground found under him: a raised deck the walk grid knows nothing of).
 ## A WAVE COMES IN OVER FRAMES (a man is ~10 ms to build: seven at once was a hitch in the middle of a fight): its first man at
 ## once (spawn() hands back a squad with someone in it), then one each frame (spawning()); each takes the squad's order as he
 ## comes. alive_count() and fighting_count() count the men still to come.
@@ -45,6 +49,9 @@ var sidearm := "default"
 ## How its men fight and the skill they aim with (NpcFighter.tactics, skill_preset; "" the fighter's own).
 var tactics := ""
 var skill_preset := ""
+## Its men's element ("" none: NpcFighter.element) and the height they are stood at (INF: the ground under each).
+var element := ""
+var place_y := INF
 var _order_kind := ""
 var _order: Variant = null
 var _rng := RandomNumberGenerator.new()
@@ -75,6 +82,18 @@ static func spawn(parent: Node, faction := "militia", count := 4, at := Vector3.
 	s.sidearm = String(opts.get("sidearm", "default"))
 	s.tactics = String(opts.get("tactics", ""))
 	s.skill_preset = String(opts.get("skill", ""))
+	s.element = String(opts.get("element", ""))
+	if not s.element in Bending.ELEMENTS:
+		s.element = ""
+	if s.element != "":
+		if s.tactics == "":
+			s.tactics = "bend"
+		if not opts.has("weapon"):
+			s.weapon = ""
+		if not opts.has("sidearm"):
+			s.sidearm = ""
+	if opts.get("y") is float or opts.get("y") is int:
+		s.place_y = float(opts.y)
 	var sd := int(opts.get("seed", 0))
 	if sd != 0:
 		s._rng.seed = sd
@@ -182,7 +201,18 @@ func _spawn_next() -> void:
 	f.skill_preset = skill_preset
 	f.squad = self
 	f.rng_seed = _rng.randi() | 1
-	f.home = _ground(origin + off)
+	if element != "":
+		# (an element bot: its element, its own water, the player's whole hurt, in the fight to its end; its side's dress in
+		# the element's colours: element_look)
+		f.element = element
+		f.flees = false
+		f.calm_s = INF
+		f.hurt_mult = 1.0
+		var lk := element_look(faction, element, _rng)
+		if not lk.is_empty():
+			f.look = lk
+	var at := origin + off
+	f.home = Vector3(at.x, place_y, at.z) if place_y != INF else _ground(at)
 	# (placed before it enters the tree: the squad is a plain Node, so its position is its place in the world)
 	f.position = f.home + Vector3.UP * 0.1
 	f.rotation.y = atan2(-_fwd.x, -_fwd.z)
@@ -192,6 +222,23 @@ func _spawn_next() -> void:
 	members.append(f)
 	spawned += 1
 	_order_one(f)
+
+
+## A look for a fighter of `faction` in `element`'s colours: one of the faction's presets in its dress (NpcFactions.look_for),
+## the dress coloured by the faction's element_dress[element] (slot -> its colours: a plain athletic dress of the basic garments,
+## the shirt in the element's colour; Tidebreak's sides). {} when the faction has none for it (its own look stands).
+static func element_look(faction: String, element: String, rng: RandomNumberGenerator) -> Dictionary:
+	var dress: Variant = (NpcFactions.get_faction(faction).get("element_dress", {}) as Dictionary).get(element)
+	if not (dress is Dictionary) or (dress as Dictionary).is_empty():
+		return {}
+	var look := NpcFactions.look_for(faction, rng)
+	var outfit: Dictionary = look.get("outfit", {})
+	for slot: String in dress:
+		var e: Variant = outfit.get(slot)
+		if e is Dictionary:
+			(e as Dictionary)["colors"] = ((dress as Dictionary)[slot] as Dictionary).duplicate()
+	look["outfit"] = outfit
+	return look
 
 
 ## The ground at `p` (the first solid thing under it, else the terrain).

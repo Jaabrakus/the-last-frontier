@@ -1,0 +1,125 @@
+{
+  "format": "frontier-bend-ai",
+  "version": 1,
+  "summary": "How an element bot picks its next move (NpcBending; Tidebreak, the ring sport: the owner, 2026-10-04, the bots cast the same moves as the player). Every (move, mode) of its element's keys (Bending.keys) plus Mend and Patch is an option; each is scored every think by its role (offence, control, defence, mobility, reaction, sustain, setup), the element's personality, its range band and its 'when' (the need it answers), then a little chance (the bot's own seeded rng). Lock times are the player's own (SwayCaster's rule: the move's lock_s or mode_lock_s x the expert tier's mastery.lock_mult x the preset's lock_mult; a move's ai_factor only on easy and normal). Every number here is tuned by eye.",
+  "_doc": {
+    "defaults": "By the spec's do (the move's mode in data/sway/moves.json): role, range_m [near, far] (a number past 1 is metres; 'spec' takes the spec's own range_m or radius_m), cool_s (how long before it picks the same option again). An unknown do (a new one, 'throw') is treated as 'bolt'.",
+    "zones": "A zone's role by its kind (spec.zone): the guards answer what flies at it (answers: attack kinds), the barriers are defence, the ground and the moving ones control.",
+    "moves": "Per move, then per mode: what overrides the defaults (role, range_m, when, answers, cool_s, weight, combo {after: 'move/mode', bonus}). when: hurt (struck within hurt_s, or under half health), close (the foe within close_m), far (past far_m), stone_near (a stone on the line to the foe, or one it holds), own_wall (one of its walls up), own_damaged_wall, water_low, near_pool, rooted, slowed, foe_rooted, foe_airborne, room_back (room behind it), ice_near, foe_far.",
+    "old": "The Sway's old spells (no bend spec: stone_form spike and cannonball, earth_wall wall, pillar self and free, gust push, pull and lift, mend): BendCast.cast casts them when it is there; without it only spike, wall and gust push are cast (NpcBending's own fallbacks).",
+    "elements": "Each element's personality: a multiplier per role (and 'knock' for options whose knock_mps is 8 or more), and the range band it keeps between casts (keep_m).",
+    "presets": "The difficulty: reaction_s (from a threat seen to its answer begun), scatter_deg (one sigma of the aim's line), lead (the share of a moving foe's lead taken), lock_mult (x the player's lock), ai_factor (the move's ai_factor applied: easy and normal only), react_chance (a threat answered at all), rest_s (between one release and the next lock), think_s."
+  },
+  "roles": {"offence": 1.0, "control": 0.85, "defence": 0.55, "mobility": 0.45, "reaction": 3.0, "sustain": 0.8, "setup": 0.6},
+  "hurt_s": 2.5,
+  "close_m": 5.0,
+  "far_m": 14.0,
+  "water_low": 40.0,
+  "edge_margin_m": 1.5,
+  "novel_bonus": 1.35,
+  "repeat_k": 0.3,
+  "defaults": {
+    "bolt": {"role": "offence", "range_m": [3.0, "spec"], "cool_s": 2.5},
+    "throw": {"role": "offence", "range_m": [3.0, "spec"], "cool_s": 2.5},
+    "cone": {"role": "offence", "range_m": [0.0, "spec"], "cool_s": 2.5},
+    "ring": {"role": "offence", "range_m": [0.0, "spec"], "cool_s": 3.0, "when": ["close"]},
+    "lightning": {"role": "offence", "range_m": [5.0, 30.0], "cool_s": 9.0, "weight": 0.8},
+    "status_at": {"role": "control", "range_m": [3.0, "spec"], "cool_s": 4.0},
+    "grab": {"role": "control", "range_m": [4.0, "spec"], "cool_s": 5.0},
+    "column": {"role": "control", "range_m": [3.0, "spec"], "cool_s": 5.0},
+    "dash": {"role": "mobility", "cool_s": 3.5},
+    "buff": {"role": "mobility", "cool_s": 6.0},
+    "zone": {"role": "defence", "cool_s": 5.0},
+    "heal": {"role": "sustain", "cool_s": 6.0, "when": ["hurt"]},
+    "cleanse": {"role": "sustain", "cool_s": 5.0, "when": ["rooted"]},
+    "draw": {"role": "sustain", "cool_s": 3.0, "when": ["water_low", "near_pool"]},
+    "kick_up": {"role": "setup", "cool_s": 4.0},
+    "shell": {"role": "defence", "cool_s": 8.0, "when": ["hurt"]},
+    "ramp": {"role": "defence", "cool_s": 10.0, "weight": 0.4},
+    "ice_wall": {"role": "defence", "cool_s": 7.0, "when": ["hurt"]},
+    "freeze_water": {"role": "control", "range_m": [3.0, "spec"], "cool_s": 6.0, "weight": 0.6},
+    "thaw": {"role": "control", "cool_s": 6.0, "when": ["ice_near"]},
+    "melt": {"role": "control", "cool_s": 6.0, "when": ["ice_near"]},
+    "brace": {"role": "defence", "cool_s": 6.0, "when": ["own_wall"]},
+    "shove": {"role": "offence", "range_m": [3.0, 20.0], "cool_s": 2.0, "when": ["stone_near"]}
+  },
+  "zones": {
+    "catch": {"role": "reaction", "answers": ["stone"], "cool_s": 1.5},
+    "deflect": {"role": "reaction", "answers": ["stone"], "cool_s": 1.5},
+    "cushion": {"role": "reaction", "answers": ["stone"], "cool_s": 1.5},
+    "redirect": {"role": "reaction", "answers": ["water", "ice"], "cool_s": 1.5},
+    "return": {"role": "reaction", "answers": ["fire", "water", "ice", "air"], "cool_s": 1.5},
+    "parry": {"role": "reaction", "answers": ["fire"], "cool_s": 1.5},
+    "spin": {"role": "reaction", "answers": ["fire", "water", "ice", "air"], "cool_s": 1.5},
+    "absorb": {"role": "reaction", "answers": ["water"], "cool_s": 1.5},
+    "bubble": {"role": "reaction", "answers": ["fire", "air", "water"], "cool_s": 4.0},
+    "air_shield": {"role": "reaction", "answers": ["fire", "water", "ice", "air"], "cool_s": 4.0},
+    "water_wall": {"role": "defence", "cool_s": 7.0, "when": ["hurt"]},
+    "fire_wall": {"role": "control", "range_m": [0.0, 6.0], "cool_s": 6.0},
+    "burn": {"role": "control", "range_m": [0.0, 7.0], "cool_s": 5.0},
+    "ice_patch": {"role": "control", "range_m": [3.0, "spec"], "cool_s": 6.0},
+    "vacuum": {"role": "control", "range_m": [3.0, "spec"], "cool_s": 6.0},
+    "tornado": {"role": "control", "range_m": [2.0, 10.0], "cool_s": 8.0},
+    "smoke": {"role": "defence", "cool_s": 10.0, "when": ["hurt"], "weight": 0.6},
+    "dust": {"role": "defence", "cool_s": 10.0, "when": ["hurt"], "weight": 0.6},
+    "spray": {"role": "defence", "cool_s": 8.0, "weight": 0.5}
+  },
+  "old": {
+    "stone_form": {
+      "spike": {"role": "offence", "range_m": [3.0, 22.0], "cool_s": 2.5},
+      "cannonball": {"role": "offence", "range_m": [3.0, 18.0], "cool_s": 4.0}
+    },
+    "earth_wall": {"wall": {"role": "defence", "cool_s": 7.0, "when": ["hurt"]}},
+    "pillar": {
+      "self": {"role": "mobility", "cool_s": 7.0, "when": ["close"]},
+      "free": {"role": "defence", "cool_s": 8.0, "weight": 0.4}
+    },
+    "gust": {
+      "push": {"role": "offence", "range_m": [0.0, 7.0], "cool_s": 3.0, "when": ["close"]},
+      "pull": {"role": "control", "range_m": [4.0, 14.0], "cool_s": 5.0, "weight": 0.6},
+      "lift": {"role": "offence", "range_m": [3.0, 20.0], "cool_s": 3.0, "when": ["stone_near"]}
+    },
+    "mend": {"": {"role": "sustain", "cool_s": 8.0, "when": ["own_damaged_wall"]}}
+  },
+  "moves": {
+    "rock_jab": {"kick_up": {"when": ["foe_far"], "weight": 1.0}},
+    "earth_shove": {
+      "push": {"combo": {"after": "rock_jab/kick_up", "bonus": 2.5}},
+      "pull": {"role": "setup", "weight": 0.3},
+      "split": {"range_m": [3.0, 14.0]}
+    },
+    "earth_grip": {
+      "anchor": {"role": "defence", "when": ["edge_behind"], "weight": 1.5},
+      "trap": {"weight": 0.9}
+    },
+    "earth_skate": {
+      "slide": {"when": ["close"]},
+      "burrow": {"when": ["foe_far"]}
+    },
+    "stone_catch": {"brace": {"weight": 0.6}},
+    "water_shield": {"heal": {"role": "sustain", "when": ["hurt"]}},
+    "water_redirect": {"cleanse": {"when": ["rooted"]}},
+    "wave": {"surf": {"when": ["foe_far"]}, "tide": {"role": "defence", "when": ["hurt"]}},
+    "flow": {"water_skate": {"when": ["close"]}, "geyser": {"role": "control", "range_m": [3.0, "spec"]}},
+    "fire_jets": {"jump": {"when": ["close"], "weight": 0.5}, "hover": {"when": ["airborne"], "weight": 0.3}},
+    "footwork": {"hop": {"when": ["close"]}, "back_flip": {"when": ["close", "room_back"]}, "ignite_step": {"when": ["foe_far"]}},
+    "fire_parry": {"redirect_lightning": {"role": "reaction", "answers": ["lightning"], "weight": 1.0}, "flare": {"when": ["close"]}},
+    "evade": {"sidestep": {"when": ["close"]}, "backstep": {"when": ["close", "room_back"]}},
+    "air_jump": {"leap": {"weight": 0.4}, "dash": {"when": ["foe_far"]}, "glide": {"when": ["airborne"], "weight": 0.3}},
+    "wind_run": {"wind_run": {"when": ["foe_far"]}, "air_scooter": {"when": ["foe_far"]}, "updraft": {"weight": 0.3}},
+    "air_shield": {"cyclone": {"when": ["close"]}},
+    "air_redirect": {"gust_step": {"when": ["foe_far"]}},
+    "patch": {"patch": {"role": "sustain", "when": ["hurt"]}}
+  },
+  "elements": {
+    "earth": {"roles": {"defence": 1.2, "setup": 1.3, "offence": 1.0}, "knock": 1.1, "keep_m": [7.0, 14.0]},
+    "water": {"roles": {"control": 1.3, "sustain": 1.2}, "knock": 1.0, "keep_m": [6.0, 12.0]},
+    "fire": {"roles": {"offence": 1.5}, "knock": 1.0, "keep_m": [5.0, 11.0]},
+    "air": {"roles": {"mobility": 1.4}, "knock": 1.5, "keep_m": [4.0, 11.0]}
+  },
+  "presets": {
+    "easy": {"reaction_s": 0.75, "scatter_deg": 4.5, "lead": 0.4, "lock_mult": 1.3, "ai_factor": true, "react_chance": 0.25, "rest_s": [1.0, 1.8], "think_s": 0.25},
+    "normal": {"reaction_s": 0.45, "scatter_deg": 2.2, "lead": 0.75, "lock_mult": 1.1, "ai_factor": true, "react_chance": 0.55, "rest_s": [0.5, 1.1], "think_s": 0.25},
+    "hard": {"reaction_s": 0.22, "scatter_deg": 0.9, "lead": 0.95, "lock_mult": 1.0, "ai_factor": false, "react_chance": 0.85, "rest_s": [0.25, 0.6], "think_s": 0.25}
+  }
+}
