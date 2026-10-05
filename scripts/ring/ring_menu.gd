@@ -8,13 +8,13 @@ extends CanvasLayer
 ##   Element: Earth     the player's, in turn (MatchSetup.element): from the next restart, not at once
 ##   Opponent: Water    the bot's, in turn, Any among them (MatchSetup.foes): from the next restart
 ##   Difficulty: normal easy, normal, hard in turn (MatchSetup.difficulty): from the next restart
-##   Control scheme: Keys  how moves are chosen, in turn (MatchSetup.set_scheme: keys, direction, wheel, simple): at once,
-##                      kept (data/bending/schemes.json)
+##   Aim help: light    how much the casts are helped onto a fighter near the crosshair, in turn: at once, kept
 ##   Key hints: on      the control scheme's keys at the top left until each is used (FirstHints; GameSettings' hints
 ##                      section): at once, kept; on, they show in the match under way
-##   Controls           the chosen element's keys 1-5, each key's two skills with their three variations (Bending.keys,
-##                      moves.json's labels), and how a cast is made; under another scheme its own lines
-##                      (MatchSetup.scheme_key_lines) and its line
+##   Controls           the element in play's buttons (round 2 of the skills, KitWords: its passive and guard, LMB jab,
+##                      E guard, 1-5 with their plain names), the four rules, and the row "Other ways to pick moves:
+##                      Keys" (MatchSetup.set_scheme in turn: keys, first moves only, direction, the wheel; at once, kept;
+##                      cycle_scheme)
 ##   Settings           the main menu's (GameSettings)
 ##   Main menu          back to the title (nothing is saved in a match)
 ##   Quit
@@ -84,13 +84,16 @@ func _ready() -> void:
 	_elem = _row(_elem_text(), cycle_element, w("element_line"))
 	_foe = _row(_foe_text(), cycle_opponent, w("opponent_line"))
 	_diff = _row(_diff_text(), cycle_difficulty, MatchSetup.difficulty_line(MatchSetup.difficulty))
-	_scheme = _row(MatchSetup.scheme_row(), cycle_scheme, MatchSetup.scheme_row_line())
-	_scheme.name = "Scheme"
 	_aim = _row(MatchSetup.aim_row(), cycle_aim, MatchSetup.aim_row_line())
 	_aim.name = "AimHelp"
 	_hints = _row(FirstHints.row_text(), toggle_hints, FirstHints.row_line())
 	_hints.name = "KeyHints"
-	_row(w("controls"), _controls, w("controls_line"))
+	var ctl := _row(KitWords.w("controls", "Controls"), _controls, KitWords.w("controls_line"))
+	ctl.name = "Controls"
+	# (the other ways to pick moves: a row of the Controls panel, round 2; kept here, laid into the panel as it opens)
+	_scheme = MenuUI.item(KitWords.other_ways_row(), 24, KitWords.other_ways_line())
+	_scheme.name = "Scheme"
+	_scheme.pressed.connect(cycle_scheme)
 	_row(w("settings"), _settings)
 	_row(w("main_menu"), to_menu)
 	_row(w("quit"), _quit)
@@ -108,6 +111,11 @@ func _ready() -> void:
 	_panel.add_theme_constant_override("separation", 14)
 	_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_panel)
+
+
+func _exit_tree() -> void:
+	if is_instance_valid(_scheme) and _scheme.get_parent() == null:
+		_scheme.queue_free()                  # (the scheme's row out of the Controls panel: freed with the menu)
 
 
 func _row(text: String, what: Callable, sub_line := "") -> Button:
@@ -246,10 +254,10 @@ func _diff_text() -> String:
 
 
 func _paint() -> void:
-	_set_row(_elem, _elem_text())
+	_set_row(_elem, _elem_text(), KitWords.passive_line(MatchSetup.element))      # (the element's one passive, round 2)
 	_set_row(_foe, _foe_text())
 	_set_row(_diff, _diff_text(), MatchSetup.difficulty_line(MatchSetup.difficulty))
-	_set_row(_scheme, MatchSetup.scheme_row(), MatchSetup.scheme_row_line())
+	_set_row(_scheme, KitWords.other_ways_row(), KitWords.other_ways_line())
 	_set_row(_aim, MatchSetup.aim_row(), MatchSetup.aim_row_line())
 	_set_row(_hints, FirstHints.row_text(), FirstHints.row_line())
 
@@ -268,43 +276,28 @@ static func _set_row(b: Button, text: String, sub_line := "") -> void:
 func _clear_panel() -> void:
 	for c in _panel.get_children():
 		_panel.remove_child(c)
-		c.queue_free()
+		if c != _scheme:
+			c.queue_free()                    # (the scheme's row is kept: it is laid in again)
 
 
-## The element in play's keys: each key's two skills, each with its variations; how a cast is made.
+## The element in play's buttons (round 2 of the skills, KitWords): its passive and its guard, each button with its plain
+## names under the scheme now, the four rules, and "Other ways to pick moves" (the scheme in turn, at once, kept).
 func _controls() -> void:
 	_clear_panel()
 	var el := match_mode.element if match_mode != null else MatchSetup.element
-	_panel.add_child(MenuUI.heading(w("controls_head") % MatchSetup.label(el)))
-	if MatchSetup.scheme() == "keys":
-		_panel.add_child(MenuUI.label(w("controls_how"), 17, MenuUI.DIM, true))
-		for line in control_lines(el):
-			_panel.add_child(MenuUI.label(String(line), 18, MenuUI.INK, true))
-		return
-	# (another control scheme: its own line and its lines; the keys' skills and variations after them)
-	_panel.add_child(MenuUI.label("%s: %s" % [MatchSetup.scheme_label(), MatchSetup.scheme_row_line()], 17, MenuUI.DIM, true))
-	for line in MatchSetup.scheme_key_lines(el):
+	_panel.add_child(MenuUI.heading(KitWords.w("controls_head", "%s: your buttons") % MatchSetup.label(el)))
+	for line in KitWords.pick_lines(el):
+		_panel.add_child(MenuUI.label(String(line), 17, MenuUI.DIM, true))
+	for line in control_lines(el):
 		_panel.add_child(MenuUI.label(String(line), 18, MenuUI.INK, true))
-	if MatchSetup.scheme() != "simple":
-		for line in control_lines(el):
-			_panel.add_child(MenuUI.label(String(line), 16, MenuUI.DIM, true))
+	for line in KitWords.rule_lines():
+		_panel.add_child(MenuUI.label(String(line), 16, MenuUI.DIM, true))
+	_panel.add_child(_scheme)
 
 
-## "1   Stone Form: spike, boulder, disc  ·  Rock Jab: pebbles, kick-up, stomp" for each key of `el`, Mend's last.
+## "1   STRIKE   Spike  ·  tap twice: Boulder" for each button of `el` under the scheme now (KitWords.kit_lines).
 static func control_lines(el: String) -> Array:
-	var out: Array = []
-	var keys := Bending.keys(el)
-	for i in keys.size():
-		var parts: Array = []
-		for id in keys[i] as Array:
-			var m := SwayMoves.move(String(id))
-			var nm := String(m.get("label", String(id).capitalize()))
-			var modes: Array = []
-			for md in SwayCaster.modes_of(String(id)):
-				modes.append(SwayCaster.mode_label(String(id), String(md)))
-			parts.append(nm + (": " + ", ".join(PackedStringArray(modes)) if not modes.is_empty() else ""))
-		out.append("%d   %s" % [i + 1, "  ·  ".join(PackedStringArray(parts))])
-	return out
+	return KitWords.kit_lines(el)
 
 
 func _settings() -> void:

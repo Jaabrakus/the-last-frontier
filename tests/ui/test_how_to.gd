@@ -123,3 +123,27 @@ func _run() -> void:
 	var c := ConfigFile.new()
 	_check(c.load(TEST_CFG) == OK and c.has_section_key("seen", "basics") and c.has_section_key("seen", "build"),
 			"the seen topics are kept in the file")
+	_ring_topics()
+
+
+## The ring's first-time panels, one per control scheme (round 2 of the skills, skills_r2 spec §2, §6): each holds the
+## guard on E ("on the beat it's yours"), the hold-and-let-go and the floor and air rule; every [key] in them a cap the
+## panel knows (CAP_ACTIONS); the moves topic of each scheme ("simple" read as first moves).
+func _ring_topics() -> void:
+	var missing: Array = []
+	var bad_caps: Array = []
+	for s: String in ["keys", "first_moves", "direction", "radial"]:
+		var id := String(HowTo.SCHEME_TOPICS.get(s, ""))
+		if id == "" or not HowTo.TOPICS.has(id) or not id in HowTo.ARENA_TOPICS:
+			missing.append(s)
+			continue
+		var all := "\n".join(PackedStringArray(HowTo.TOPICS[id].steps))
+		if not (all.contains("[E]  Guard: on the beat it's yours") and all.contains("let go") and all.contains("Fire along the floor? [Space]  Jump")):
+			missing.append(id)
+		for mt in RegEx.create_from_string("\\[([^\\]]+)\\]").search_all(all):
+			if not HowTo.CAP_ACTIONS.has(mt.get_string(1)):
+				bad_caps.append(mt.get_string(1))
+	_check(missing.is_empty() and bad_caps.is_empty(), "a first-time panel per scheme with the guard, the hold and the floor rule (%s; caps %s)"
+			% [missing, bad_caps])
+	_check(String(HowTo.SCHEME_TOPICS.get(KitWords.scheme_id("simple"), "")) == "elements_first_moves"
+			and (HowTo.CAP_ACTIONS["E"] as Array).has(&"bend_guard"), "the old simple scheme reads as first moves; [E] lights for the guard")

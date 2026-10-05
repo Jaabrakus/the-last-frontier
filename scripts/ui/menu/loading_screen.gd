@@ -5,8 +5,10 @@ extends CanvasLayer
 ## shade, a thin gold line along the bottom for the progress. It loads the scene on a thread, changes to it, gives it
 ## a moment to settle (a save's parts are applied a few frames after the level is built: SaveGame), then fades out.
 ## Added to the root, so it outlives the scene change.
-## On the way into Tidebreak's ring (scenes/ring.tscn, a match or a practice) a tip of the sport's under the caption: one rule
-## or one answer in a line (data/ring/screens.json "tips", MatchSetup.screens; tip_for), drawn by lot.
+## On the way into Tidebreak's ring (scenes/ring.tscn, a match or a practice) the ring's own still (the dressed ring, rendered
+## by tools/ring/ring_still.gd) with Tidebreak's title and a caption of its own (screens.json "loading"; ring_entry), and a tip
+## of the sport's under the caption: one rule or one answer in a line (screens.json "tips", MatchSetup.screens; tip_for),
+## each drawn by lot.
 ## Alive while the level builds (improvement round 1, PERF: "a window that looks frozen while shaders compile"): the ring
 ## builds a part a frame behind it (RingLevel._build) and tells how far it is (the level's metas loading_progress 0..1 and
 ## loading_step, the caption's last line); the bar glides to it (BAR_RATE, never back), a glint runs along the bar's gold
@@ -51,6 +53,9 @@ var _root: Control
 var _target := 0.0
 ## The tip shown ("" none: not the ring).
 var tip := ""
+## The picture's file and its caption as shown (the tests read them).
+var picture := ""
+var caption := ""
 
 
 static func go(tree: SceneTree, scene_path: String, applying_save := false) -> LoadingScreen:
@@ -84,11 +89,16 @@ func _ready() -> void:
 	bg.color = Color(0.03, 0.022, 0.014)
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(bg)
-	var e := MenuPaintings.next()
+	# (the ring has its own: a still of the dressed ring and Tidebreak's captions, not the open world's paintings and lore)
+	var e := ring_entry(path)
+	var tex: Texture2D = e.get("texture") if e.has("texture") else null
+	if e.is_empty():
+		e = MenuPaintings.next()
+		tex = MenuPaintings.texture(e)
 	_pic = TextureRect.new()
-	_pic.texture = MenuPaintings.texture(e)
+	_pic.texture = tex
 	_pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_pic.stretch_mode = MenuPaintings.stretch(e)
+	_pic.stretch_mode = MenuPaintings.stretch(e) if not e.has("texture") else TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	_pic.set_anchors_preset(Control.PRESET_FULL_RECT)
 	if bool(e.get("whole", false)):
 		_pic.anchor_left = 0.38        # a portrait to the right, its caption on the dark ground beside it
@@ -116,8 +126,15 @@ func _ready() -> void:
 		box.grow_vertical = Control.GROW_DIRECTION_END
 	_root.add_child(box)
 	if not e.is_empty():
-		box.add_child(MenuUI.label(MenuPaintings.title_line(e), 26, MenuUI.GOLD))
-		box.add_child(MenuUI.label(String(e.caption), 19, MenuUI.INK, true))
+		var title := String(e.title) if e.has("texture") else MenuPaintings.title_line(e)
+		var head := MenuUI.label(title, 26, MenuUI.GOLD)
+		head.name = "Title"
+		box.add_child(head)
+		var cap := MenuUI.label(String(e.caption), 19, MenuUI.INK, true)
+		cap.name = "Caption"
+		box.add_child(cap)
+		caption = String(e.caption)
+		picture = tex.resource_path if tex != null else ""
 	tip = tip_for(path)
 	if tip != "":
 		var gap := Control.new()
@@ -167,6 +184,26 @@ func _ready() -> void:
 	box.add_child(_step_label)
 	_pic.pivot_offset = get_viewport().get_visible_rect().size * 0.5
 	ResourceLoader.load_threaded_request(path)
+
+
+## The ring's own picture and words for the way into `scene_path` ({} for any scene but the ring, or no still on disk):
+## {texture, title, caption} from screens.json "loading" (the still tools/ring/ring_still.gd renders of the dressed ring;
+## the caption drawn by lot, `rng`: a test's). The owner, 2026-10-05: the ring's loading showed the open world's painting
+## and its lore ("The shallows").
+static func ring_entry(scene_path: String, rng: RandomNumberGenerator = null) -> Dictionary:
+	if scene_path != RING_SCENE:
+		return {}
+	var ld: Dictionary = MatchSetup.screens().get("loading", {})
+	var pic := String(ld.get("picture", ""))
+	if pic == "" or not ResourceLoader.exists(pic):
+		return {}
+	var caps: Array = ld.get("captions", [])
+	var r := rng
+	if r == null:
+		r = RandomNumberGenerator.new()
+		r.randomize()
+	var cap := String(caps[r.randi_range(0, caps.size() - 1)]) if not caps.is_empty() else ""
+	return {"texture": load(pic) as Texture2D, "title": String(ld.get("title", MatchSetup.sport())), "caption": cap}
 
 
 ## A tip of Tidebreak's for the way into `scene_path` ("" for any scene but the ring), drawn by lot (`rng`: a test's).

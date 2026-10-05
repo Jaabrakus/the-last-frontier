@@ -166,6 +166,25 @@ func _words() -> void:
 		if t.length() > 120 or t.contains("\n"):
 			long.append(t)
 	_expect(long.is_empty(), "every tip one line (%s)" % [long])
+	# (round 2's tips: the skills redesign's rules each told once)
+	var want := ["The Kick runs along the floor: jump it.", "Catch just before it hits: your throw back is faster.",
+			"A hit on the beat is yours.", "A click goes when ready; let go of a hold early and nothing is spent.", "Two walls each."]
+	var missing := want.filter(func(t: String) -> bool: return not t in (d.get("tips", []) as Array))
+	var stale: Array = []
+	for t: String in d.get("tips", []):
+		for old: String in ["breaks your lock", "water bubble", "air shield", "refill your water"]:
+			if t.contains(old):
+				stale.append(t)
+	_expect(missing.is_empty() and stale.is_empty(), "round 2's tips there (%s missing), none of the old rules (%s)" % [missing, stale])
+	# (the ring's stings are its own sounds now, not the frontier's axe and bow)
+	var st: Dictionary = RingRules.data().get("stings", {})
+	var own: Array = []
+	for k: String in ["count", "go", "ringout", "over", "match"]:
+		var s: Variant = st.get(k)
+		if s is Array and BendSounds.has(StringName(String(s[0]))):
+			own.append(k)
+	_expect(own.size() == 5 and String(st.go[0]) == "round_gong" and String(st.count[0]) == "count_tick" and String(st.match[0]) == "match_gong",
+			"the stings in the ring's own sounds: the tick, the gong at the go, the bell, the match's gong (%s)" % [own])
 
 
 func _quick() -> void:
@@ -214,6 +233,13 @@ func _loading() -> void:
 	var tl := ls.find_child("Tip", true, false) as Label
 	_expect(ls.tip in MatchSetup.screens().tips and tl != null and tl.text == ls.tip and tl.is_visible_in_tree(),
 			"the loading screen into the ring tells a tip: \"%s\"" % ls.tip)
+	# (the ring's own still and words, not the open world's painting and lore)
+	var ld: Dictionary = MatchSetup.screens().get("loading", {})
+	var title := ls.find_child("Title", true, false) as Label
+	_expect(ls.picture == String(ld.get("picture", "-")) and ResourceLoader.exists(ls.picture) and ls.caption in (ld.get("captions", []) as Array)
+			and title != null and title.text == String(ld.get("title", "")) and not ls.caption.contains("shallows"),
+			"the ring's loading screen: its own still (%s), \"%s\", \"%s\"" % [ls.picture, title.text if title else "-", ls.caption])
+	_expect(LoadingScreen.ring_entry("res://scenes/main.tscn").is_empty(), "the open world keeps its paintings")
 	var t := await _until(func() -> bool: return current_scene is RingLevel and RingMode.find(self) != null, 30.0)
 	lvl = current_scene as RingLevel
 	_expect(lvl != null and t < 30.0, "the ring reached through the loading screen (%.1f s)" % t)

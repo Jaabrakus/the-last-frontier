@@ -23,7 +23,8 @@ extends Node
 ##   never dies   0 health in the ring is winded (RingRules): pushed back a zone, health to 40%; no fall hurts
 ##   the screen   plain text only on its own layer (the round, the countdown, the result, the score); the full strip is
 ##                the HUD's (FrontierHUD.set_arena). Nothing is drawn on or over the opponent
-##   sound        a fight cue if MusicDirector has one (rules.json fight_cues), stings from the existing sounds
+##   sound        a fight cue if MusicDirector has one (rules.json fight_cues), stings in the ring's own sounds (BendSounds:
+##                the countdown's tick, the gong at the go, the bell at a round's end, the match's gong; rules.json stings)
 ## THE CONTRACT (group &"ring_match"; the HUD and the bots read it, through get() / has_method()):
 ##   round (int, from 1), score (Vector2i: x the player's side, y the other), phase ("COUNTDOWN" | "FIGHT" | "OVER" |
 ##   "DONE"), round_left_s(), side_of(body) -> 0 the player's side, 1 the other, -1 none; confined_of(body) -> 1..3 (0
@@ -111,6 +112,11 @@ var round_tally: Array = [{}, {}]
 ## A practice (no rounds, no timer) against a dummy, and its way ("stand" | "block" | "throw").
 var practice := false
 var dummy := "stand"
+## The dummy's throws slowed (the lessons' guard drill and jump, RingLessons; the owner, 2026-10-05: a beginner beating a fast
+## throw): a throw every slow_every_s, its shots flying at slow_speed of their own speed on the same path (data/ring/lessons.json).
+var slow_throws := false
+## The dummy's throw instead of its element's strike ("id/mode"; "": screens.json practice.throw; the lessons' jump: fire's Kick).
+var throw_override := ""
 var round_screen: Node
 var match_screen: Node
 var hint: Label
@@ -630,11 +636,18 @@ func _unhandled_input(e: InputEvent) -> void:
 
 
 # ---------------------------------------------------------------- sound
+## The round's moment `key` (count, go, ringout, over, match): rules.json stings [id, gain dB, pitch], the ring's own sound
+## (BendSounds: the countdown's tick, the gong at the go, the bell at a round's end, the match's gong; improvement round 2,
+## the owner: no borrowed frontier sounds in the ring), else an existing Sfx id.
 func _sting(key: String) -> void:
 	var s: Variant = (RingRules.data().get("stings", {}) as Dictionary).get(key)
-	if not (s is Array) or (s as Array).size() < 3 or not Sfx.has(StringName(String(s[0]))):
+	if not (s is Array) or (s as Array).size() < 3:
 		return
-	Sfx.play_2d(StringName(String(s[0])), float(s[1]), float(s[2]))
+	var id := StringName(String(s[0]))
+	if BendSounds.has(id):
+		BendSounds.play(id, Vector3.INF, float(s[1]), float(s[2]))
+	elif Sfx.has(id):
+		Sfx.play_2d(id, float(s[1]), float(s[2]))
 
 
 func _music(on: bool) -> void:
@@ -946,6 +959,8 @@ func reset_positions() -> void:
 ## The dummy each frame of a practice: held at its end facing the player; its lock let run while it casts; its way's cast
 ## begun (block: a guard against what comes, its cover when he locks; throw: its throw every throw_every_s).
 func _practice_step(dt: float) -> void:
+	if slow_throws and foe != null and is_instance_valid(foe):
+		_slow_shots()                         # (each shot the frame it leaves, whatever the dummy is doing)
 	if _live_in > 0.0:
 		_live_in -= dt
 		if _live_in <= 0.0:
@@ -975,8 +990,8 @@ func _practice_step(dt: float) -> void:
 	match dummy:
 		"throw":
 			if now >= _dummy_next:
-				_dummy_next = now + _pnum("throw_every_s", 3.0)
-				_dummy_cast(bend, _pmove("throw"))
+				_dummy_next = now + throw_every_s()
+				_dummy_cast(bend, throw_override if throw_override != "" else _pmove("throw"))
 		"block":
 			var g := dummy_guard(bend)
 			if not g.is_empty():
@@ -986,6 +1001,40 @@ func _practice_step(dt: float) -> void:
 			if sc != null and sc.is_locking() and now >= _cover_next:
 				_cover_next = now + _pnum("block_every_s", 2.5)
 				_dummy_cast(bend, _pmove("cover"))
+
+
+## The seconds between the dummy's throws: screens.json practice throw_every_s, slow_every_s while they are slowed.
+func throw_every_s() -> float:
+	return RingLessons.num("slow_every_s", 5.0) if slow_throws else _pnum("throw_every_s", 3.0)
+
+
+## The dummy's shots slowed once each, as they leave (slow_throws): a bolt's speed by slow_speed and its gravity by its square
+## (the same path, later); a thrown stone (GustLift) by slow_speed with its rise made good for its own gravity's longer fall.
+func _slow_shots() -> void:
+	var k := clampf(RingLessons.num("slow_speed", 0.6), 0.2, 1.0)
+	for b in get_tree().get_nodes_in_group(BendBolt.GROUP):
+		var bb := b as BendBolt
+		if bb == null or bb.caster != foe or bb.has_meta(&"ring_slowed"):
+			continue
+		bb.set_meta(&"ring_slowed", true)
+		bb.velocity *= k
+		bb.gravity *= k * k
+	for n in get_tree().get_nodes_in_group(GustLift.GROUP):
+		var gl := n as GustLift
+		if gl == null or gl.phase != GustLift.Phase.FLIGHT or gl.has_meta(&"ring_slowed") or gl.caster == null \
+				or gl.caster.body != foe:
+			continue
+		gl.set_meta(&"ring_slowed", true)
+		var v := gl.velocity
+		var flat := Vector2(v.x, v.z).length()
+		var g := float((gl.call(&"_hurl_d") as Dictionary).get("gravity", 6.0)) if gl.has_method(&"_hurl_d") else 6.0
+		var d := Vector2(player.global_position.x - gl.stone.global_position.x, player.global_position.z
+				- gl.stone.global_position.z).length() if player != null and is_instance_valid(gl.stone) else 0.0
+		var t0 := d / maxf(flat, 0.1)
+		var t1 := t0 / k
+		# (the same drop at his distance: v1y * t1 - g t1² / 2 = v0y * t0 - g t0² / 2)
+		var vy := (v.y * t0 - 0.5 * g * t0 * t0 + 0.5 * g * t1 * t1) / maxf(t1, 0.01) if t1 > 0.0 else v.y * k
+		gl.velocity = Vector3(v.x * k, vy, v.z * k)
 
 
 ## The dummy's element's move for `what` ("throw" | "cover": screens.json practice), "id/mode".

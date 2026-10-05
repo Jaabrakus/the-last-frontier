@@ -9,7 +9,10 @@ extends SceneTree
 ##     data/ring/*.json       every string value (not the "_..." doc keys, not the files' "summary" doc line)
 ##     the menu's code        the string literals of scripts/ui/menu/main_menu.gd and scripts/ring/match_setup.gd
 ##     the menu on screen     every line of the main menu: its rows, the Tidebreak panel with each element's keys shown in
-##                            turn, the Open world panel
+##                            turn, the Practice and Controls panels, the Open world panel
+##     round 2's words        every new label, tip, lesson card, key hint, wheel name, F1 and first-time line and the kit's
+##                            lines (KitWords.every_line), held to ROUND2_WORDS too (Water Whip, Air Ball, Air Shield,
+##                            Spout, redirect lightning, "bend" in any form); KitWords, BendStrip and RingLessons' strings
 ##   reported (NOTE lines, not failures: files other tasks of the build own, to clean in their own work)
 ##     data/sway/moves.json   each move's label and its variations' labels (the HUD's ready line shows them)
 ##     the HUD and the ring   the string literals of the HUD, the duel's and the ring's scripts, the first-time help, the
@@ -22,7 +25,11 @@ const LIMIT_S := 100.0
 const WORDS := ["avatar", "benders?", "bending", "pro-?bend\\w*", "korra", "aang", "airbend\\w*", "firebend\\w*",
 		"earthbend\\w*", "waterbend\\w*", "air scooters?", "fire nation", "water tribes?", "earth kingdom", "air nomads?",
 		"republic city", "ba sing se", "omashu"]
-const HELD_CODE := ["res://scripts/ui/menu/main_menu.gd", "res://scripts/ring/match_setup.gd"]
+## Round 2's too, held on every new label, tip and lesson card (skills_r2 spec §11 q16: the names the kits left behind).
+const ROUND2_WORDS := ["water whip", "air balls?", "air shields?", "spouts?", "redirect lightning", "bend\\w*"]
+const R2Layout := preload("res://tests/ring/r2_layout.gd")
+const HELD_CODE := ["res://scripts/ui/menu/main_menu.gd", "res://scripts/ring/match_setup.gd", "res://scripts/ui/kit_words.gd",
+		"res://scripts/ui/bend_strip.gd", "res://scripts/ring/ring_lessons.gd"]
 ## Reported only: owned by the build's other tasks (the HUD, the ring's rules and screens, the bots, the moves' data).
 const NOTED_CODE := ["res://scripts/ui/hud.gd", "res://scripts/ui/how_to.gd", "res://scripts/duel/duel_mode.gd",
 		"res://scripts/duel/duel_menu.gd", "res://scripts/ui/menu/menu_paintings.gd", "res://scripts/ui/menu/loading_screen.gd",
@@ -78,12 +85,56 @@ func _run() -> void:
 			"the patterns catch the words (%s)" % [hits("Bending the pro-bending rules, a Bender's airbending and Earthbenders")])
 	check(hits("a bend in the river; bend_pools; docs/bending_design.md; bendy; Tidebreak; the air scooters") == ["air scooters"],
 			"and not words that only hold them (%s)" % [hits("a bend in the river; bend_pools; docs/bending_design.md; bendy; Tidebreak; the air scooters")])
+	var laid := R2Layout.apply()
+	print("  info round 2's key layout %s" % ("put in for this run (the kits' data not merged here)" if laid else "from the data"))
 	_ring_data()
 	_held_code()
 	await _menu()
+	_round2()
 	_moves()
 	_noted_code()
 	_end()
+
+
+## Round 2's words (skills_r2: every new label, tip and lesson card): none of WORDS nor ROUND2_WORDS (the show's names the
+## kit's moves left: Water Whip, Air Ball, Air Shield, Spout, redirect lightning, air scooter, and "bend" in any form; an
+## [action] token of a lesson line is its key, not a word, and is left out).
+func _round2() -> void:
+	var re2 := RegEx.create_from_string("(?i)\\b(?:%s)\\b" % "|".join(PackedStringArray(WORDS + ROUND2_WORDS)))
+	var tok := RegEx.create_from_string("\\[[a-z_0-9]+\\]")
+	var texts: Array = KitWords.every_line()
+	texts.append_array(MatchSetup.screens().get("tips", []))
+	texts.append(FrontierHUD.ARENA_HELP)
+	for k: String in FrontierHUD.ARENA_KEYS:
+		texts.append(String(FrontierHUD.ARENA_KEYS[k]))
+	for id: String in HowTo.ARENA_TOPICS:
+		texts.append(String(HowTo.TOPICS[id].title))
+		texts.append_array(HowTo.TOPICS[id].steps)
+	var ld: Dictionary = MatchSetup.screens().get("loading", {})
+	texts.append(String(ld.get("title", "")))
+	texts.append_array(ld.get("captions", []))
+	var cards := 0
+	for l: Dictionary in RingLessons.data().get("lessons", []):
+		texts.append(String(l.get("title", "")))
+		for s: String in (l.get("by", {}) as Dictionary):
+			texts.append(String((l.by[s] as Dictionary).get("line", "")))
+			cards += 1
+	for s: String in (RingLessons.data().get("hints", {}) as Dictionary):
+		if s.begins_with("_") or not RingLessons.data().hints[s] is Array:
+			continue
+		for h: Dictionary in RingLessons.data().hints[s]:
+			texts.append(String(h.get("line", "")))
+	for el: String in Bending.ELEMENTS:
+		for it: Dictionary in RadialWheel.items_for(el):
+			texts.append(String(it.label))
+	var found: Array = []
+	for t in texts:
+		var plain := tok.sub(String(t), "", true)
+		for mt in re2.search_all(plain):
+			found.append("'%s': %s" % [String(t).left(60), mt.get_string()])
+	check(found.is_empty() and texts.size() > 200 and cards >= 20,
+			"round 2's labels, tips, lesson cards (%d), hints, wheel names and help: no show words, no old names (%d lines%s)"
+			% [cards, texts.size(), "" if found.is_empty() else ": %s" % [found]])
 
 
 ## data/ring/*.json: every string value but the doc keys.
@@ -190,6 +241,12 @@ func _menu() -> void:
 		m._show_keys(el)
 		await frames(1)
 		seen.append_array(_labels(m._panel))
+	m._open_practice()
+	await frames(2)
+	seen.append_array(_labels(m._panel))
+	m._open_controls()
+	await frames(2)
+	seen.append_array(_labels(m._panel))
 	m._open_world()
 	await frames(2)
 	seen.append_array(_labels(m._panel))

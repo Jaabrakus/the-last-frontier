@@ -2,9 +2,10 @@ class_name FirstHints
 extends CanvasLayer
 ## A first Quick match's key hints (the owner, 2026-10-05: switching moves was hard, nothing taught the keys): small rows at
 ## the top left with the keys of the player's control scheme as he has them bound (data/ring/lessons.json "hints": keys,
-## direction, radial, simple; each [action] its binding now, LessonCard.resolve), each fading once one of its actions is
-## pressed; when all have gone (or the match is over) they are turned off for good. Under the first-time panel (HowTo) while
-## it stands, so the two never overlap. Nothing is drawn on or near the opponent.
+## first_moves, direction, radial; each [action] its binding now, LessonCard.resolve), each fading once one of its actions is
+## pressed; when all have gone (or the match is over) they are turned off for good. They REPLACE the ring's first-time panel
+## (HowTo; the owner, 2026-10-05: not stacked under it): as they come up the ring's topics count as seen and one up goes
+## (HowTo.yield_to_hints), and none comes up while they stand. Nothing is drawn on or near the opponent.
 ##   on() / set_on(v)     GameSettings' "hints" section, key key_hints (on until a first Quick match has shown them); the
 ##                        ring's Esc menu's row (RingMenu) turns them on or off: on, they show at once in the match under way
 ##   install(mode, now)   RingMode's (a Quick match with them on; null otherwise), the menu's (now: whatever the match)
@@ -90,8 +91,12 @@ static func find(tree: SceneTree) -> FirstHints:
 func _ready() -> void:
 	add_to_group(GROUP)
 	layer = 12
+	KitWords.ensure_guard_action()          # (the guard's row names its key)
 	_build()
 	_lay()
+	var ht := _how_to()
+	if ht != null:
+		ht.yield_to_hints()
 	if mode != null:
 		mode.match_over.connect(func(_w: int) -> void: close())
 
@@ -122,7 +127,7 @@ func _lay() -> void:
 			c.queue_free()
 	rows.clear()
 	_acts.clear()
-	for h: Dictionary in _hints_data().get(scheme, []):
+	for h: Dictionary in _hints_data().get(KitWords.scheme_id(scheme), []):
 		var r := LessonCard.resolve(String(h.get("line", "")))
 		_acts.merge(r.acts)
 		var box := HBoxContainer.new()
@@ -178,13 +183,14 @@ func _process(dt: float) -> void:
 	if _closing and _a <= 0.0:
 		queue_free()
 		return
-	# (under the first-time panel while it stands: never over it)
-	var y := 36.0 * _s
-	var ht := mode.player.get_node_or_null(^"HowTo") if mode != null and is_instance_valid(mode.player) else null
-	if ht != null and ht.get_child_count() > 0 and ht.get_child(0) is Control and (ht.get_child(0) as Control).visible:
-		var hp := ht.get_child(0) as Control
-		y = hp.position.y + hp.size.y + 14.0 * _s
-	_panel.position = Vector2(36.0 * _s, y)
+	# (the first-time panel's place, top left: it gave way as these came up)
+	_panel.position = Vector2(36.0 * _s, 36.0 * _s)
+
+
+## The player's first-time panel (HowTo), if he has one.
+func _how_to() -> HowTo:
+	var p: Node = mode.player if mode != null else null
+	return p.get_node_or_null(^"HowTo") as HowTo if p != null and is_instance_valid(p) else null
 
 
 func _build() -> void:
