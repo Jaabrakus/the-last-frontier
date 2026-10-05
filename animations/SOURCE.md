@@ -117,6 +117,28 @@ visual references, no animation files imported) is his statement; the rows below
 | `own-bend-air-spin` | 2026-10-05 (second set) | `bend_clips.py` (`air_spin`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
 | `own-bend-air-leap` | 2026-10-05 (second set) | `bend_clips.py` (`air_leap`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
 | `own-bend-air-shield` | 2026-10-05 (second set) | `bend_clips.py` (`air_shield`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-fire-kick-low` | 2026-10-05 (third set) | `bend_clips.py` (`fire_kick_low`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-fire-kick-low-l` | 2026-10-05 (third set) | `bend_clips.py` (`fire_kick_low`, `mirror_clip`) | `fire_kick_low`'s keys mirrored left for right | (as its original) |
+| `own-bend-fire-kick-l` | 2026-10-05 (third set) | `bend_clips.py` (`fire_kick`, `mirror_clip`) | `fire_kick`'s keys (`SET2`, unchanged) mirrored left for right | (as its original) |
+| `own-bend-fire-fireball` | 2026-10-05 (third set) | `bend_clips.py` (`fire_fireball`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-fire-fireball-l` | 2026-10-05 (third set) | `bend_clips.py` (`fire_fireball`, `mirror_clip`) | `fire_fireball`'s keys mirrored left for right | (as its original) |
+| `own-bend-fire-parry` | 2026-10-05 (third set) | `bend_clips.py` (`fire_parry`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-earth-kickup` | 2026-10-05 (third set) | `bend_clips.py` (`earth_kickup`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-earth-kickup-l` | 2026-10-05 (third set) | `bend_clips.py` (`earth_kickup`, `mirror_clip`) | `earth_kickup`'s keys mirrored left for right | (as its original) |
+| `own-bend-earth-uproot` | 2026-10-05 (third set) | `bend_clips.py` (`earth_uproot`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-water-turn` | 2026-10-05 (third set) | `bend_clips.py` (`water_turn`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-water-turn-hold` | 2026-10-05 (third set) | `bend_clips.py` (`water_turn_hold`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-water-surf` | 2026-10-05 (third set) | `bend_clips.py` (`water_surf`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-water-skate` | 2026-10-05 (third set) | `bend_clips.py` (`water_skate`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-air-pull` | 2026-10-05 (third set) | `bend_clips.py` (`air_pull`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-air-slip` | 2026-10-05 (third set) | `bend_clips.py` (`air_slip`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-air-slip-l` | 2026-10-05 (third set) | `bend_clips.py` (`air_slip`, `mirror_clip`) | `air_slip`'s keys mirrored left for right | (as its original) |
+| `own-bend-air-slip-back` | 2026-10-05 (third set) | `bend_clips.py` (`air_slip_back`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-air-wall` | 2026-10-05 (third set) | `bend_clips.py` (`air_wall`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-air-guard` | 2026-10-05 (third set) | `bend_clips.py` (`air_guard`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-air-shield-hold` | 2026-10-05 (third set) | `bend_clips.py` (`air_shield_hold`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-air-slice` | 2026-10-05 (third set) | `bend_clips.py` (`air_slice`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
+| `own-bend-air-slice-l` | 2026-10-05 (third set) | `bend_clips.py` (`air_slice`, `mirror_clip`) | `air_slice`'s keys mirrored left for right | (as its original) |
 
 - Second set and polish (2026-10-05, after the owner approved the first ten: "looks good but you can always perfect them"):
   the same generator and the same inputs (the rig's rest pose and keys typed into the table, now its `SET2` part); no clip,
@@ -128,6 +150,15 @@ visual references, no animation files imported) is his statement; the rows below
   the spot (the air spin). The martial-art styles named in the table's comments (Hung Gar, Northern Shaolin, tai chi,
   Baguazhang: `docs/bending_design.md`'s Animations table) are style labels for the typed key poses; no recording or
   animation file of them was read by the generator.
+- Third set (2026-10-05, round 2 of the ring sport's skills): the same generator and the same inputs (the rig's rest pose and
+  keys typed into the table, now its `SET3` part, two loops' circles written as `_ring` over typed centres and radii); no
+  clip, dump or reference motion read. `fire_kick` (the second set's kick, now the High Kick) gained `"mirror": True` so its
+  twin `own-bend-fire-kick-l` is baked; its own keys are unchanged. `own-bend-earth-catch` was re-keyed in place at the owner's
+  request that every guard read at a glance (the hold wider and higher, the rock held between the palms, the right on top and
+  the left under, instead of two fists); its length and moments (`hold_s`, `strike_s`, `back_s`) are unchanged. The other 38
+  clips were not re-baked (their tracks are as before). The bake now also writes `ik_miss_m`, the two-bone IK's worst miss
+  over the clip's frames, onto each clip it bakes. The style labels named in the table's comments (Northern Shaolin, Hung Gar,
+  tai chi, Baguazhang) are labels for the typed key poses, as above.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.
