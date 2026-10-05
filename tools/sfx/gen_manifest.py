@@ -34,7 +34,15 @@ import re
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 SFX_DIR = os.path.join(ROOT, "audio", "sfx")
 OUT = os.path.join(ROOT, "scripts", "audio", "sfx_manifest.gd")
-FAMILIES = ["flintlock", "bow", "impacts", "targets", "footsteps", "ambience", "fire", "gathering_rec", "wildlife_rec", "birds_rec"]
+FAMILIES = ["flintlock", "bow", "impacts", "targets", "footsteps", "ambience", "fire", "gathering_rec", "wildlife_rec", "birds_rec",
+            "bend"]
+## The ring's own sounds (audio/sfx/bend: BendSounds plays them all) that Sfx plays too: the ones moves.json form_sfx names
+## for the stone casts of before the elements (Stone Form, the earth wall, the pillar, Mend, a stone's hurl and strike),
+## so those play our own sounds in the ring (KITS, round 2). Only these: the rest (18 MB) stay BendSounds' alone, read
+## behind the ring's loading screen. Their levels are BendSounds.TABLE's (bend_table).
+BEND_IDS = {"earth_rise", "earth_cast_rumble", "earth_crumble", "earth_cast_crack", "earth_grind", "earth_hit",
+            "air_whoosh", "mend"}
+BEND_SOUNDS = os.path.join(ROOT, "scripts", "bending", "bend_sounds.gd")
 NAME_RE = re.compile(r"^(?P<id>.+)_(?P<n>\d\d)\.wav$")
 KEEP_COMPRESSED = {"forest_wind_loop"}
 
@@ -147,7 +155,7 @@ def scan() -> dict:
         ids: dict = {}
         for f in sorted(os.listdir(d)):
             m = NAME_RE.match(f)
-            if m:
+            if m and (fam != "bend" or m.group("id") in BEND_IDS):
                 ids.setdefault(m.group("id"), []).append(f)
         out[fam] = ids
     return out
@@ -161,10 +169,36 @@ def load_json(path: str) -> dict:
         return {}
 
 
+def bend_table() -> dict:
+    """BendSounds.TABLE (scripts/bending/bend_sounds.gd): id -> {vol, unit, maxd, bus, rp, rv}."""
+    out = {}
+    try:
+        with open(BEND_SOUNDS) as fh:
+            text = fh.read()
+    except OSError:
+        return out
+    for m in re.finditer(r'&"(\w+)":\s*\{([^}]*)\}', text):
+        e = {}
+        for k, v in re.findall(r'"(\w+)":\s*("[^"]*"|-?[\d.]+)', m.group(2)):
+            e[k] = v.strip('"') if v.startswith('"') else float(v)
+        if "vol" in e:
+            out[m.group(1)] = e
+    return out
+
+
 def defaults_for(fam: str, sid: str, flint: dict, impacts: dict, levels: dict, gathering: dict | None = None) -> dict:
     c = dict(BASE)
     c.update(FAMILY_BASE.get(fam, {}))
-    if fam == "flintlock":
+    if fam == "bend":
+        # (BendSounds' own levels and ranges; its distance dulling is BendSounds.DIST_CUT_HZ / DIST_CUT_DB)
+        bt = bend_table().get(sid, {})
+        for k in ("vol", "unit", "maxd", "rp", "rv"):
+            if k in bt:
+                c[k] = float(bt[k])
+        c["bus"] = str(bt.get("bus", "World"))
+        c["cut"] = 6500.0
+        c["fdb"] = -10.0
+    elif fam == "flintlock":
         pb = flint.get("sounds", {}).get(sid, {}).get("playback", {})
         if pb:
             c["bus"] = pb.get("bus", c["bus"])

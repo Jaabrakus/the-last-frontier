@@ -50,7 +50,9 @@
 		"refill_s": 8.0,
 		"away_m": 0.9,
 		"loose_life_s": 25.0,
-		"stone": {"radius_m": 0.26, "rise_s": 0.6, "mass_kg": 45.0, "life_s": 0.0, "sink_s": 1.2}
+		"stone": {"radius_m": 0.26, "rise_s": 0.6, "mass_kg": 45.0, "life_s": 0.0, "sink_s": 1.2},
+		"_hurl": "A socket's stone hurled (Gust lift, Earth Shove: any GustLift flight of it, RingArena._socket_hurls) flies with these in place of moves.json gust.stone.hurl.cannonball (45-110 a strike, more than a whole health bar: one hurl decided a round; KITS round 2): its knock, not its blow, does the work. A Stone Form boulder keeps its own.",
+		"hurl": {"mps": [12.0, 30.0], "gravity": 6.0, "damage": [12.0, 30.0], "roll": true, "mass_kg": 45.0, "knock_mps": 7.0, "knock_up_mps": 1.5}
 	},
 	"water": {
 		"_about": "The tank's water (RiverWater's shader, river.gdshader, its own material): the colour of 2 m of clear water over a stone floor, a slow drift, no ice.",

@@ -14,7 +14,8 @@ extends SceneTree
 ##               direction SwayCaster.dir_override forward / back / side / none in turn, RMB
 ##               radial    the wheel held (RadialWheel.held_override), the mouse toward a move (pick_toward), let go: the
 ##                         move readied on its key, then RMB
-##               simple    the mouse wheel steps the four moves (weapon_next), RMB (the form by the distance)
+##               first_moves  1-4 in turn (each key's first move only; it replaced simple, and pc_scheme=simple asks
+##                         for it), RMB
 ##               the match reaches DONE (match_over once), the round screen shows in a round's pause, the match screen at
 ##               the end; its Main menu row goes back to the menu (MatchSetup.leave)
 ##   practice    the menu's Practice row: its panel's Dummy and It rows stepped to pc_foe / pc_practice, Begin practice:
@@ -70,7 +71,7 @@ func _initialize() -> void:
 			"pc_foe":
 				foe_el = v
 			"pc_scheme":
-				scheme = v
+				scheme = String(MatchSetup.SCHEME_ALIASES.get(v, v))
 			"pc_practice":
 				practice_way = v
 			"pc_round_s":
@@ -280,15 +281,8 @@ func _scheme_cast() -> void:
 				w.held_override = false
 				await _ticks(2)
 				w.held_override = null
-		"simple":
-			var e := InputEventAction.new()
-			e.action = &"weapon_next"
-			e.pressed = true
-			Input.parse_input_event(e)
-			await _ticks(2)
-			var u := e.duplicate() as InputEventAction
-			u.pressed = false
-			Input.parse_input_event(u)
+		"first_moves", "simple":
+			player.hotbar.select((_turn - 1) % 4)  # (1-4, each key's first move only)
 			await _ticks(2)
 	if mode.phase != "FIGHT" or mode.foe == null or not is_instance_valid(mode.foe):
 		return

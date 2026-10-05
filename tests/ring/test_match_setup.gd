@@ -13,6 +13,9 @@ extends SceneTree
 ##              from a seed (the same seed, the same draw)
 ##   kept       save() then load() round-trips through GameSettings' "match" section, in a file of the test's own; a
 ##              tool or test run never reads or writes the player's own settings file (GameSettings.file)
+##   quick      round 2's skills: each element's quick spell defaults to its jab (moves.json jabs), a quick spell though on
+##              none of 1-4; cut moves are none; the scheme ids (first_moves; a kept or asked 'simple' reads as it); each
+##              element's four first moves and its direction moves
 ##   compile    the checker's check(): a broken script of the test's own is bad, a good one and the setup's own are whole
 ##   menu       the sport's row first; its panel: the four element rows (each with its style), the keys block, Opponent,
 ##              Format, Difficulty, Rounds, Begin; Fire pressed, Opponent pressed round to Water, Begin: the setup is
@@ -34,6 +37,7 @@ var _show_re := RegEx.create_from_string(SHOW_WORDS)
 
 func _initialize() -> void:
 	seed(1750)
+	MatchSetup._aim_help = "light"              # (nothing here aims; the setting pinned, as the other MatchSetup tests do)
 	create_timer(LIMIT_S, true, false, true).timeout.connect(func() -> void:
 		print("%s FAILED (watchdog)" % NAME)
 		quit(2))
@@ -62,6 +66,7 @@ func _run() -> void:
 	_take()
 	_parse()
 	_kept()
+	_quick()
 	_compile()
 	await _menu()
 	var now_t := FileAccess.get_modified_time(real_cfg) if FileAccess.file_exists(real_cfg) else 0
@@ -154,6 +159,64 @@ func _kept() -> void:
 	var cf := ConfigFile.new()
 	check(cf.load(OWN_CFG) == OK and String(cf.get_value("match", "foe", "")) == "fire", "kept in the test's own file's [match]")
 	check(MatchSetup.summary() == "Water vs Fire  ·  easy  ·  best of 5", "its line: '%s'" % MatchSetup.summary())
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+
+
+## Round 2's skills: the quick spell's default and its check from moves.json "jabs" (the jab is a quick spell though it is on
+## none of 1-4; fire's old fire_jab/jab kept gives the default, Embers); the scheme ids (first_moves, a kept or asked
+## "simple" read as it), each element's four first moves and its direction moves (W key 1's first, S its wall, A/D key 3's).
+func _quick() -> void:
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+	GameSettings.path = OWN_CFG
+	var jabs := {"earth": ["rock_jab", "pebbles"], "water": ["water_jet", "splash"], "fire": ["fire_jab", "embers"],
+			"air": ["air_palm", "palm"]}
+	for el: String in jabs:
+		var j: Array = jabs[el]
+		var d := MatchSetup.quick_default(el)
+		check(String(d.get("id", "")) == j[0] and String(d.get("mode", "")) == j[1] and MatchSetup.quick_ok(el, j[0], j[1])
+				and MatchSetup.jab_of(el) == {"id": j[0], "mode": j[1]},
+				"%s: the quick spell's default is its jab %s/%s, a quick spell though on none of 1-4 (%s)" % [el, j[0], j[1], d])
+	check(MatchSetup.set_quick("earth", "stone_form", "cannonball") and MatchSetup.quick_of("earth") == {"id": "stone_form", "mode": "cannonball"},
+			"a key's move set as earth's quick spell: kept (%s)" % [MatchSetup.quick_of("earth")])
+	check(not MatchSetup.quick_ok("earth", "stone_form", "disc") and not MatchSetup.quick_ok("earth", "earth_grip", "trap")
+			and not MatchSetup.quick_ok("fire", "fire_jab", "jab") and not MatchSetup.quick_ok("air", "fire_jab", "embers"),
+			"a cut move or variation, or another element's jab, is no quick spell")
+	GameSettings.set_value(MatchSetup.QUICK_SECTION, "fire", "fire_jab/jab")
+	check(MatchSetup.quick_of("fire") == {"id": "fire_jab", "mode": "embers"}, "fire's old fire_jab/jab kept: its default, Embers (%s)" % [MatchSetup.quick_of("fire")])
+	check(MatchSetup.SCHEMES == ["keys", "direction", "radial", "first_moves"] and not "simple" in MatchSetup.SCHEMES,
+			"the schemes: %s" % [MatchSetup.SCHEMES])
+	GameSettings.set_value(MatchSetup.SECTION, MatchSetup.SCHEME_KEY, "simple")
+	MatchSetup.reload_scheme()
+	check(MatchSetup.scheme() == "first_moves", "a kept 'simple' reads as first_moves (%s)" % MatchSetup.scheme())
+	check(MatchSetup.set_scheme("simple") and MatchSetup.scheme() == "first_moves" and MatchSetup.scheme_label() == "First moves only",
+			"set_scheme('simple') sets first_moves ('%s')" % MatchSetup.scheme_label())
+	MatchSetup.parse(PackedStringArray(["scheme=simple"]))
+	check(MatchSetup.scheme() == "first_moves", "scheme=simple asks for first_moves")
+	var fm := {"earth": ["stone_form/spike", "earth_shove/push", "earth_skate/burrow", "earth_wall/wall"],
+			"water": ["water_whip/whip", "wave/push", "flow/skate", "water_shield/ice_wall"],
+			"fire": ["fire_blast/punch", "fire_kick/kick", "footwork/step", "fire_wall/wall"],
+			"air": ["air_blast/slice", "air_gust/gust", "evade/slip", "air_wall/wall"]}
+	var dirs := {"earth": ["stone_form/spike", "earth_wall/wall", "earth_skate/burrow"], "water": ["water_whip/whip",
+			"water_shield/ice_wall", "flow/skate"], "fire": ["fire_blast/punch", "fire_wall/wall", "footwork/step"],
+			"air": ["air_blast/slice", "air_wall/wall", "evade/slip"]}
+	for el: String in Bending.ELEMENTS:
+		var four: Array = []
+		for e: Dictionary in MatchSetup.first_moves(el):
+			four.append("%s/%s" % [e.id, e.mode])
+		var ks := Bending.keys(el)
+		var firsts: Array = []
+		for i in 4:
+			var id := String((ks[i] as Array)[0])
+			firsts.append("%s/%s" % [id, SwayCaster.modes_of(id)[0]])
+		check(four == fm[el] and four == firsts, "%s: the four first moves %s (the first of keys 1-4)" % [el, four])
+		var dm: Array = []
+		for d: String in MatchSetup.DIRS:
+			var m := MatchSetup.direction_move(el, d)
+			dm.append("%s/%s" % [m.get("id", "-"), m.get("mode", "-")])
+		check(dm == dirs[el] and dm[0] == firsts[0] and dm[1] == firsts[3] and dm[2] == firsts[2],
+				"%s: the direction moves W %s, S %s, A/D %s (key 1's first, its wall, key 3's first)" % [el, dm[0], dm[1], dm[2]])
+		check(MatchSetup.scheme_key_lines(el, "first_moves").size() == 4, "%s: the first-moves lines, four" % el)
+	MatchSetup.set_scheme("keys")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 
 

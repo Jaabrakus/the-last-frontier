@@ -14,14 +14,17 @@ extends RefCounted
 ##   spectate       the player off the deck while two bots play (soak tests, stills)
 ##   light          the ring's light (LIGHTS: "noon", "golden", "night"; RingLook and RingDressing at the ring's load)
 ##   scheme         how the player chooses his moves (SCHEMES, data/bending/schemes.json; the owner, 2026-10-05: "still
-##                  difficult for a human to switch spells" -> all three as options): "keys" (1-5, again its other skill,
-##                  the wheel its forms), "direction" (the direction held at the release picks attack / defence / dodge),
-##                  "radial" (hold Tab: a wheel of every move), "simple" (four moves, the form picked by the distance).
+##                  difficult for a human to switch spells" -> all three as options; round 2's skills: Keys the default,
+##                  the others under Controls' other ways): "keys" (1-4 a key's first move, tapped twice its other; 5
+##                  Patch, twice Mend), "direction" (the direction held as the right button is pressed picks key 1's
+##                  first move, the wall or key 3's dash), "radial" (hold Tab: the moves round a wheel), "first_moves"
+##                  (1-4 their first move only; it replaces "simple" and its distance band: a kept "simple" reads as it).
 ##                  Kept at once in GameSettings' "match" section (set_scheme; read lazily, scheme()); the user arg
 ##                  scheme= for a run. The ring and the duel alike; only the player's input (SwayCaster, Hotbar) reads it.
 ##   kind           "match" (rounds, a score) or "practice" (KINDS: a dummy of foes[0]'s element, no timer, no rounds; RingMode)
-##   dummy          the practice dummy's way (DUMMIES: "stand" still, "block" its guards and cover, "throw" a stone every
-##                  few seconds; data/ring/screens.json "practice")
+##   dummy          the practice dummy's way (DUMMIES: "stand" still, "block" its guards and cover, "throw" its element's
+##                  strike every few seconds, so every guard can be practised: practice_move; data/ring/screens.json
+##                  "practice")
 ##   format         "1v1" (FORMATS; "3v3" is the structure only, shown as coming: format_ready)
 ## The words a player sees come from data/ring/elements.json (info, label, competitor, style, color, sport): each element's
 ## name, the name its competitors go by (Stone, Tide, Ember, Gale) and its one-line style; no word from any show
@@ -32,10 +35,13 @@ extends RefCounted
 ##   MatchSetup.active()          a ring match asked for or under way (PlayerAppearance: no creator over the countdown)
 ##   MatchSetup.leave()           the main menu again: no match
 ##   MatchSetup.save() / load()   the last setup in GameSettings' "match" section (the menu's panel and Quick match)
-##   MatchSetup.quick_of(el) / set_quick(el, id, mode)   each element's quick spell on LMB (GameSettings' "quick" section)
+##   MatchSetup.quick_of(el) / set_quick(el, id, mode)   each element's quick spell on LMB (GameSettings' "quick" section;
+##       its default the element's jab, moves.json "jabs": jab_of)
 ##   MatchSetup.scheme() / set_scheme(s) / next_scheme()   the control scheme (GameSettings' "match" section, key scheme);
-##       scheme_label, scheme_text(field), scheme_row(_line), direction_move(el, dir), simple_skills / simple_entry /
-##       simple_mode(el, id, dist), scheme_keys_head / scheme_key_lines(el): data/bending/schemes.json's
+##       scheme_label, scheme_text(field), scheme_row(_line), direction_move(el, dir), first_moves(el), scheme_keys_head /
+##       scheme_key_lines(el): data/bending/schemes.json's (simple_skills / simple_entry / simple_mode: the old scheme's
+##       names, answered from first_moves)
+##   MatchSetup.practice_move(el, what)   the practice dummy's move for "throw" (key 1's first) or "cover" (its wall)
 ##   MatchSetup.quick_match(rng)  Quick match from the main menu: your last element and the rest of the last setup, the
 ##                                opponent's element drawn at random (the kept setup's opponent is not overwritten by it)
 ##   MatchSetup.set_practice(foe, dummy) / set_match()   what the next Begin plays (the menu's Practice and Begin)
@@ -174,6 +180,7 @@ static func parse(args: PackedStringArray) -> bool:
 				if v in AIMS:
 					_aim_help = v                # (for the run: not kept)
 			"scheme", "controls":
+				v = String(SCHEME_ALIASES.get(v, v))
 				if v in SCHEMES:
 					_scheme = v                  # (for the run: not kept)
 	return ring
@@ -297,6 +304,19 @@ static func practice() -> bool:
 	return kind == "practice"
 
 
+## The practice dummy's move for `what` as "id/variation" ("" none): "throw" its element's key 1 first move (earth Spike,
+## water Lash, fire Punch, air Slice: every guard has something to take on the beat), "cover" its wall (key 4's first).
+## From the element's keys (Bending.keys), so it follows the kit; screens.json practice's own table is the fallback.
+static func practice_move(el: String, what: String) -> String:
+	var ks := Bending.keys(el)
+	var k := 0 if what == "throw" else 3 if what == "cover" else -1
+	if k >= 0 and k < ks.size() and not (ks[k] as Array).is_empty():
+		var id := String((ks[k] as Array)[0])
+		var ms := SwayCaster.modes_of(id)
+		return "%s/%s" % [id, String(ms[0]) if not ms.is_empty() else ""]
+	return String((((screens().get("practice", {}) as Dictionary).get(what, {})) as Dictionary).get(el, ""))
+
+
 ## Whether format `f` can be played now ("1v1"); the others are shown as coming.
 static func format_ready(f: String) -> bool:
 	return f in FORMATS_READY
@@ -319,8 +339,10 @@ static func screens() -> Dictionary:
 # --- The quick spell (LMB), per element --------------------------------------------------------------------------
 
 ## Each element's quick spell on the left button (SwayCaster's quick spell: one move at one variation, frozen), kept in
-## GameSettings' QUICK_SECTION as "move/variation" (its DEFAULTS there are the element's first: earth rock_jab/pebbles,
-## water water_jet/splash, fire fire_jab/jab, air air_palm/palm). A test points GameSettings.path at a file of its own.
+## GameSettings' QUICK_SECTION as "move/variation". Its default is the element's jab (data/sway/moves.json "jabs", round
+## 2's skills: earth rock_jab/pebbles, water water_jet/splash, fire fire_jab/embers, air air_palm/palm), else GameSettings'
+## DEFAULTS; the jab is a quick spell of its element though it is on none of 1-4. A kept one the kit no longer has (fire's
+## old fire_jab/jab) gives the default. A test points GameSettings.path at a file of its own.
 const QUICK_SECTION := "quick"
 
 
@@ -334,10 +356,24 @@ static func quick_of(el: String) -> Dictionary:
 	return quick_default(el)
 
 
-## Element `el`'s default quick spell ({id, mode}; {} for no element).
+## Element `el`'s default quick spell ({id, mode}; {} for no element): its jab (jab_of), else GameSettings' default.
 static func quick_default(el: String) -> Dictionary:
+	var j := jab_of(el)
+	if not j.is_empty():
+		return j
 	var d: Dictionary = GameSettings.DEFAULTS.get(QUICK_SECTION, {})
 	return _quick_parse(el, String(d.get(el, "")))
+
+
+## Element `el`'s jab on the left button (moves.json "jabs": {id, mode}; {} none or not a move of the data).
+static func jab_of(el: String) -> Dictionary:
+	var j: Variant = (SwayMoves.data().get("jabs", {}) as Dictionary).get(el, [])
+	if not (j is Array) or (j as Array).size() < 2 or not el in Bending.ELEMENTS:
+		return {}
+	var id := String(j[0])
+	var mode := String(j[1])
+	var ms := SwayCaster.modes_of(id)
+	return {"id": id, "mode": mode} if mode in ms or (ms.is_empty() and mode == "") else {}
 
 
 ## Element `el`'s quick spell kept as `id` in `mode` (false, nothing kept, when it is not one of the element's moves).
@@ -348,11 +384,14 @@ static func set_quick(el: String, id: String, mode: String) -> bool:
 	return true
 
 
-## Whether `id` in `mode` can be element `el`'s quick spell: one of its keys' moves (Bending.keys), `mode` one of its
-## variations ("" for a move with none).
+## Whether `id` in `mode` can be element `el`'s quick spell: its jab, or one of its keys' moves (Bending.keys), `mode` one
+## of its variations ("" for a move with none).
 static func quick_ok(el: String, id: String, mode: String) -> bool:
 	if not el in Bending.ELEMENTS or id == "":
 		return false
+	var j := jab_of(el)
+	if not j.is_empty() and String(j.id) == id and String(j.mode) == mode:
+		return true
 	var mine := false
 	for pair in Bending.keys(el):
 		if id in (pair as Array):
@@ -374,7 +413,10 @@ static func _quick_parse(el: String, s: String) -> Dictionary:
 ## (the file: SwayCaster.SCHEMES_DATA, data/.../schemes.json; its path is kept out of this file's words)
 const SCHEMES_PATH := SwayCaster.SCHEMES_DATA
 ## The schemes, in the menus' order (data/bending/schemes.json "order"; the first is the default).
-const SCHEMES := ["keys", "direction", "radial", "simple"]
+const SCHEMES := ["keys", "direction", "radial", "first_moves"]
+## Old scheme ids a settings file or a user arg may still hold -> the scheme now ("simple" became "first_moves" in round 2:
+## the same four first moves, no distance band).
+const SCHEME_ALIASES := {"simple": "first_moves"}
 ## The key in GameSettings' SECTION the scheme is kept under.
 const SCHEME_KEY := "scheme"
 ## The directions the direction scheme reads (SwayCaster.held_dir).
@@ -402,12 +444,14 @@ static func scheme() -> String:
 		var cf := ConfigFile.new()
 		cf.load(GameSettings.file())
 		var s := String(cf.get_value(SECTION, SCHEME_KEY, schemes_data().get("default", "keys")))
+		s = String(SCHEME_ALIASES.get(s, s))
 		_scheme = s if s in SCHEMES else "keys"
 	return _scheme
 
 
 ## The scheme set to `s` and kept at once (GameSettings' match section); false (nothing changed) when it is no scheme.
 static func set_scheme(s: String) -> bool:
+	s = String(SCHEME_ALIASES.get(s, s))
 	if not s in SCHEMES:
 		return false
 	_scheme = s
@@ -526,13 +570,34 @@ static func direction_dead_zone() -> float:
 	return float((schemes_data().get("direction", {}) as Dictionary).get("dead_zone", 0.3))
 
 
-## The simple scheme's moves for `el`: [{id, near, far, near_m}], the first skill of keys 1-4.
+## The first-moves scheme's four for `el`: [{id, mode}] in key order (schemes.json first_moves; else the first move of
+## keys 1-4, Bending.keys, at its first variation), each one of the element's own (quick_ok).
+static func first_moves(el: String) -> Array:
+	var out: Array = []
+	var l: Variant = (schemes_data().get("first_moves", {}) as Dictionary).get(el, [])
+	if l is Array and not (l as Array).is_empty():
+		for e: Variant in l:
+			if e is Array and (e as Array).size() >= 2 and quick_ok(el, String(e[0]), String(e[1])):
+				out.append({"id": String(e[0]), "mode": String(e[1])})
+		return out
+	var ks := Bending.keys(el)
+	for i in mini(4, ks.size()):
+		var id := String((ks[i] as Array)[0])
+		var ms := SwayCaster.modes_of(id)
+		out.append({"id": id, "mode": String(ms[0]) if not ms.is_empty() else ""})
+	return out
+
+
+## The old Simple scheme's names, answered from first_moves (a caller of before round 2): [{id, near, far, near_m}] with
+## near and far both the move's first variation (no distance band any more).
 static func simple_skills(el: String) -> Array:
-	var l: Variant = (schemes_data().get("simple", {}) as Dictionary).get(el, [])
-	return l if l is Array else []
+	var out: Array = []
+	for e: Dictionary in first_moves(el):
+		out.append({"id": e.id, "near": e.mode, "far": e.mode, "near_m": 0.0})
+	return out
 
 
-## The simple scheme's entry for move `id` of `el` ({} when it is not one of the four).
+## The first-moves entry for move `id` of `el` (simple_skills' shape; {} when it is not one of the four).
 static func simple_entry(el: String, id: String) -> Dictionary:
 	for e in simple_skills(el):
 		if e is Dictionary and String((e as Dictionary).get("id", "")) == id:
@@ -540,32 +605,29 @@ static func simple_entry(el: String, id: String) -> Dictionary:
 	return {}
 
 
-## The form the simple scheme picks for `id` with the nearest opponent `dist` m away (INF: none: far); "" when `id` is
-## not one of `el`'s four.
-static func simple_mode(el: String, id: String, dist: float) -> String:
-	var e := simple_entry(el, id)
-	if e.is_empty():
-		return ""
-	return String(e.get("near", "")) if dist <= float(e.get("near_m", 6.0)) else String(e.get("far", ""))
+## The variation the first-moves scheme casts `id` at (its first; the distance no longer picks); "" when `id` is not one
+## of `el`'s four.
+static func simple_mode(el: String, id: String, _dist: float) -> String:
+	return String(simple_entry(el, id).get("near", ""))
 
 
 ## The head over an element's moves as the scheme `s` has them (the main menu's keys block, the ring's Controls panel):
-## "EARTH KEYS  ·  the same key again: its other skill".
+## "EARTH KEYS  ·  tap a key twice: its other move".
 static func scheme_keys_head(el: String, s := "") -> String:
-	var k := s if s != "" else scheme()
+	var k := String(SCHEME_ALIASES.get(s, s)) if s != "" else scheme()
 	RadialWheel.ensure_input()
-	var heads := {"keys": "%s KEYS  ·  the same key again: its other skill",
-			"direction": "%s MOVES  ·  the direction held as you let go of the right button",
+	var heads := {"keys": "%s KEYS  ·  tap a key twice: its other move",
+			"direction": "%s MOVES  ·  the direction held as you press the right button",
 			"radial": "%s MOVES  ·  hold " + SwayCaster.key_name(RadialWheel.ACTION) + ": all of them round a wheel",
-			"simple": "%s MOVES  ·  four, near or far picks the form"}
+			"first_moves": "%s MOVES  ·  each key's first move"}
 	return String(heads.get(k, heads["keys"])) % label(el).to_upper()
 
 
-## An element's moves as lines under the scheme `s` ("" the scheme now): the keys ("1   Stone Form  ·  Rock Jab", the
-## radial wheel's too: it holds them all), the direction scheme's ("W   Stone Form: spike", ..., "1-5   nothing held: the
-## key's move"), the simple scheme's four ("1   Stone Form: near boulder, far spike").
+## An element's moves as lines under the scheme `s` ("" the scheme now): the keys ("1   Spike  ·  Boulder", the radial
+## wheel's too: it holds them all), the direction scheme's ("W   Stone Form: Spike", ..., "1-5   nothing held: the key's
+## move"), the first-moves scheme's four ("1   Spike").
 static func scheme_key_lines(el: String, s := "") -> Array:
-	var k := s if s != "" else scheme()
+	var k := String(SCHEME_ALIASES.get(s, s)) if s != "" else scheme()
 	var out: Array = []
 	match k:
 		"direction":
@@ -575,20 +637,34 @@ static func scheme_key_lines(el: String, s := "") -> Array:
 				if not dm.is_empty():
 					out.append("%s   %s: %s" % [heads[d], _move_label(String(dm.id)), SwayCaster.mode_label(String(dm.id), String(dm.mode))])
 			out.append("1-5   nothing held: the key's move")
-		"simple":
-			var skills := simple_skills(el)
-			for i in skills.size():
-				var e: Dictionary = skills[i]
-				out.append("%d   %s: near %s, far %s" % [i + 1, _move_label(String(e.id)), SwayCaster.mode_label(String(e.id), String(e.near)),
-						SwayCaster.mode_label(String(e.id), String(e.far))])
+		"first_moves":
+			var four := first_moves(el)
+			for i in four.size():
+				var e: Dictionary = four[i]
+				out.append("%d   %s" % [i + 1, SwayCaster.mode_label(String(e.id), String(e.mode))])
 		_:
 			var keys := Bending.keys(el)
 			for i in keys.size():
-				var names: Array = []
-				for id in keys[i] as Array:
-					names.append(_move_label(String(id)))
-				out.append("%d   %s" % [i + 1, "  ·  ".join(PackedStringArray(names))])
+				out.append("%d   %s" % [i + 1, "  ·  ".join(PackedStringArray(key_names(keys[i] as Array)))])
 	return out
+
+
+## A key's moves by name, its first first ([id] with two variations: each variation's; [id, id]: each move's first): the
+## plain names of the kits (Spike, Boulder; Patch, Mend).
+static func key_names(key: Array) -> Array:
+	var names: Array = []
+	if key.size() == 1:
+		var id := String(key[0])
+		var ms := SwayCaster.modes_of(id)
+		if ms.size() >= 2:
+			for md: String in ms:
+				names.append(SwayCaster.mode_label(id, md))
+			return names
+	for idv: Variant in key:
+		var id2 := String(idv)
+		var ms2 := SwayCaster.modes_of(id2)
+		names.append(SwayCaster.mode_label(id2, String(ms2[0])) if not ms2.is_empty() else _move_label(id2))
+	return names
 
 
 static func _move_label(id: String) -> String:

@@ -8,7 +8,7 @@ extends SceneTree
 ## seed= (RingMode's: the foe's rolls) seeds the player's-side bot too (seed + 1800), so a pairing's seeds are distinct runs.
 ##   the match   reaches DONE (match_over once) within the watchdog; no SCRIPT ERROR (the runner counts them)
 ##   the rules   no self ring-out (every ring-out credited to a knocker of the other side, never none or one's own)
-##   both sides  each side's bot casts (only its own element's moves, Mend and Patch)
+##   both sides  each side's bot casts (only its own element's kit: its keys' moves, its guard and its jab; round 2)
 ##   metrics     printed, not gated (balance by data: data/sway/moves.json, data/ring/rules.json, data/npc/bend_ai.json):
 ##               "METRIC pair=<a>-<b> ring_out_ratio=<ring-outs / rounds>" (the target is about 0.6: more ring-outs than
 ##               time-outs), the rounds' whys, the casts by move per side (and each move's share of all its side's casts:
@@ -20,7 +20,10 @@ extends SceneTree
 ##               windings (winded), its strikes (hits), its bolts' damage by kind (bolt_dmg, sent_back: bolts a guard of its
 ##               turned on their caster) and its held-and-hurled stones' (lift_dmg: Gust lift's, Earth Shove's, by the stone's
 ##               kind). R1-BALANCE (2026-10-05) read with these that air won on the deck's socket cannonballs (lifted, about 110
-##               a strike) more than on knocks
+##               a strike) more than on knocks. Round 2 (KITS): per side its guards (clean catches, perfect, late, whiffs), its
+##               returns (a caught stone sent back by its guard again) and the longest rally (one stone's returns), its locks
+##               pushed back by hits (setbacks), the waves along the deck it saw and jumped, the casts held to grow (grows_by)
+##               and the kit's moves it never cast (uncast; tools: scratchpad kits/soak_report.py reads them over every run)
 ## The clock: BendStatus.now() counts physics frames, so under ts 4 its timers (the bots' rests, cools, reactions and
 ## opening grace; roots, slows) last 4 times as long in game time as the locks and flights do. ts=1 is the game's own pace
 ## (headless with a fixed fps it runs unthrottled anyway: a match in a few seconds); read the balance there.
@@ -43,7 +46,11 @@ var outs: Array = []
 var matches: Array = []
 ## Per side (0 the player's, the mate bot; 1 the foe): casts by "move/mode", catches, answered, reactions, lost, walls, capped.
 var by_side: Array = [{}, {}]
-var tallies: Array = [{"casts": 0, "hits": 0, "catches": 0, "answered": 0, "lost": 0, "walls": 0, "capped": 0, "reactions": {}}, {"casts": 0, "hits": 0, "catches": 0, "answered": 0, "lost": 0, "walls": 0, "capped": 0, "reactions": {}}]
+var tallies: Array = [_tally(), _tally()]
+## Per side: casts held to grow by "move/mode" (round 2's ▲).
+var grows_by: Array = [{}, {}]
+## The most times one stone was sent back (NpcBending.RALLY_META on it: every return of it, by either side).
+var longest_rally := 0
 var knocks := Vector2i.ZERO
 var _seed := 9100
 ## Per side: "move/mode" -> [knocks landed, their summed m/s as applied]; the ring-outs by the move of the last knock; the
@@ -61,6 +68,11 @@ var winds := [0, 0]
 var _hp := [-1.0, -1.0]
 var out_by: Array = [{}, {}]
 var _last_knock := {}
+
+
+static func _tally() -> Dictionary:
+	return {"casts": 0, "hits": 0, "catches": 0, "clean": 0, "answered": 0, "perfect": 0, "late": 0, "whiff": 0, "returns": 0,
+			"lost": 0, "setbacks": 0, "walls": 0, "capped": 0, "floor_seen": 0, "floor_jumped": 0, "reactions": {}}
 
 
 ## A BendKnock listener (its group): every knock in the ring told to the soak's tally.
@@ -230,15 +242,13 @@ func _run() -> void:
 	var els := [mode.element, mode.foe_element]
 	for side in 2:
 		var own := {}
-		for pair in Bending.keys(String(els[side])):
-			for id: String in pair:
-				own[id] = true
+		for pr: Array in NpcBending.pairs_of(String(els[side])):
+			own["%s/%s" % pr] = true
 		var foreign: Array = []
 		for k: String in by_side[side]:
-			var id := k.get_slice("/", 0)
-			if not own.has(id) and not id in ["mend", "patch"]:
+			if not own.has(k):
 				foreign.append(k)
-		_expect(int(tallies[side]["casts"]) > 0 and foreign.is_empty(), "side %d (%s) casts its own element's moves (%d casts; not its own: %s)"
+		_expect(int(tallies[side]["casts"]) > 0 and foreign.is_empty(), "side %d (%s) casts its own kit's moves (%d casts; not its own: %s)"
 				% [side, els[side], int(tallies[side]["casts"]), foreign])
 	_metrics()
 	_end()
@@ -354,15 +364,27 @@ func _on_round_over(r: String, why: String) -> void:
 		if f == null or not is_instance_valid(f) or (f as NpcFighter).brain == null or (f as NpcFighter).brain.bending == null:
 			continue
 		var b := (f as NpcFighter).brain.bending
-		tallies[side]["casts"] = int(tallies[side]["casts"]) + b.casts
-		tallies[side]["hits"] = int(tallies[side]["hits"]) + b.hits
-		tallies[side]["catches"] = int(tallies[side]["catches"]) + b.catches
-		tallies[side]["answered"] = int(tallies[side]["answered"]) + b.answered
-		tallies[side]["lost"] = int(tallies[side]["lost"]) + b.lost
+		# (the same bot is kept across rounds (RingMode._keep_foe): its counts run on, so each round adds what is new)
+		var was: Dictionary = b.get_meta(&"soak_counted", {})
+		var now := {"casts": b.casts, "hits": b.hits, "catches": b.catches, "clean": b.clean_catches, "answered": b.answered,
+				"perfect": b.perfects, "late": b.lates, "whiff": b.whiffs, "returns": b.returns, "lost": b.lost,
+				"setbacks": b.setbacks, "floor_seen": b.floor_seen, "floor_jumped": b.floor_jumped}
+		for k: String in now:
+			tallies[side][k] = int(tallies[side][k]) + int(now[k]) - int(was.get(k, 0))
+		var was_r: Dictionary = was.get("reactions", {})
 		for k: String in b.reactions_by:
-			tallies[side]["reactions"][k] = int(tallies[side]["reactions"].get(k, 0)) + int(b.reactions_by[k])
+			tallies[side]["reactions"][k] = int(tallies[side]["reactions"].get(k, 0)) + int(b.reactions_by[k]) - int(was_r.get(k, 0))
+		var was_c: Dictionary = was.get("casts_by", {})
 		for k: String in b.casts_by:
-			by_side[side][k] = int(by_side[side].get(k, 0)) + int(b.casts_by[k])
+			by_side[side][k] = int(by_side[side].get(k, 0)) + int(b.casts_by[k]) - int(was_c.get(k, 0))
+		var was_g: Dictionary = was.get("grows_by", {})
+		for k: String in b.grows_by:
+			grows_by[side][k] = int(grows_by[side].get(k, 0)) + int(b.grows_by[k]) - int(was_g.get(k, 0))
+		now["reactions"] = b.reactions_by.duplicate()
+		now["casts_by"] = b.casts_by.duplicate()
+		now["grows_by"] = b.grows_by.duplicate()
+		b.set_meta(&"soak_counted", now)
+		longest_rally = maxi(longest_rally, b.longest_rally)
 	print("  round %d: %s by %s (%.0f s left, score %s, knocks %s)" % [mode.round, r, why, mode.round_left_s(), mode.score, mode.rules.knocks])
 
 
@@ -379,7 +401,7 @@ func _metrics() -> void:
 			timeouts += 1
 	print("METRIC pair=%s ring_out_ratio=%.2f (%d of %d rounds; time-outs %d) score=%s winner=%d" % [pair, ratio, mode.ringouts,
 			mode.rounds_played, timeouts, mode.score, mode.winner])
-	print("METRIC pair=%s whys=%s knocks=%s" % [pair, whys, knocks])
+	print("METRIC pair=%s whys=%s knocks=%s longest_rally=%d" % [pair, whys, knocks, longest_rally])
 	for side in 2:
 		var tl: Dictionary = tallies[side]
 		var top := ""
@@ -392,7 +414,15 @@ func _metrics() -> void:
 		print("METRIC pair=%s side=%d el=%s casts=%d catches=%d answered=%d lost=%d walls=%d capped=%d top=%s share=%.2f reactions=%s"
 				% [pair, side, [mode.element, mode.foe_element][side], int(tl.casts), int(tl.catches), int(tl.answered), int(tl.lost),
 				int(tl.walls), int(tl.capped), top, share, tl.reactions])
+		print("METRIC pair=%s side=%d guards clean=%d perfect=%d late=%d whiff=%d returns=%d setbacks=%d floor_seen=%d floor_jumped=%d"
+				% [pair, side, int(tl.clean), int(tl.perfect), int(tl.late), int(tl.whiff), int(tl.returns), int(tl.setbacks),
+				int(tl.floor_seen), int(tl.floor_jumped)])
+		var uncast: Array = []
+		for pr: Array in NpcBending.pairs_of(String([mode.element, mode.foe_element][side])):
+			if not by_side[side].has("%s/%s" % pr):
+				uncast.append("%s/%s" % pr)
 		print("METRIC pair=%s side=%d by_move=%s" % [pair, side, by_side[side]])
+		print("METRIC pair=%s side=%d grows_by=%s uncast=%s" % [pair, side, grows_by[side], uncast])
 		var kb := {}
 		for k: String in knock_by[side]:
 			kb[k] = "%d:%.0f" % [int(knock_by[side][k][0]), float(knock_by[side][k][1])]

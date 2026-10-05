@@ -16,7 +16,20 @@
   "res://animations_extra/Frontier_Forage.res",
   "res://animations_extra/Frontier_Bend.res"
  ],
- "exclude": ["own-axe-d", "own-axe-d-intro", "own-axe-w", "own-axe-w-intro", "own-axe-a", "own-axe-a-intro", "own-axe-parry", "own-axe-parry-intro", "own-axe-block-high", "own-axe-block-high-intro", "own-club-stab", "own-club-stab-intro"],
+ "exclude": [
+  "own-axe-d",
+  "own-axe-d-intro",
+  "own-axe-w",
+  "own-axe-w-intro",
+  "own-axe-a",
+  "own-axe-a-intro",
+  "own-axe-parry",
+  "own-axe-parry-intro",
+  "own-axe-block-high",
+  "own-axe-block-high-intro",
+  "own-club-stab",
+  "own-club-stab-intro"
+ ],
  "exclude_why": {
   "own-axe-d": "data/anim_author/axe_swings.json axe_d has a 'fit' record: its key poses were measured off atk-pipe-1-side-swing-intro/-miss (tools/anim_author/fit_ref.gd); the clip's own 'source' meta says so",
   "own-axe-w": "axe_w has a 'fit' record: measured off atk-pipe-3-to-knee-hit-intro/-hit (fit_ref.gd)",
@@ -28,9 +41,23 @@
  "clips": {
   "own-sway-push-two": {"hold_s": 0.2333, "strike_s": 0.3, "back_s": 0.4333, "hand": "both", "mask": "upper"},
   "own-sway-push-one": {"hold_s": 0.2333, "strike_s": 0.3, "back_s": 0.4333, "hand": "l_palm", "mask": "reach_l"},
-  "own-form-clap-press": {"strike_s": 0.1, "press_s": 0.6667, "then": "own-form-release", "hand": "both", "mask": "upper", "root": true},
+  "own-form-clap-press": {
+   "strike_s": 0.1,
+   "press_s": 0.6667,
+   "then": "own-form-release",
+   "hand": "both",
+   "mask": "upper",
+   "root": true
+  },
   "own-form-release": {"hold_s": 0.0, "strike_s": 0.1, "back_s": 0.2, "hand": "both", "mask": "upper"},
-  "own-form-press-wall": {"hold_s": 0.5667, "strike_s": 0.6667, "back_s": 0.6667, "hand": "both", "mask": "upper", "root": true},
+  "own-form-press-wall": {
+   "hold_s": 0.5667,
+   "strike_s": 0.6667,
+   "back_s": 0.6667,
+   "hand": "both",
+   "mask": "upper",
+   "root": true
+  },
   "own-axe-stab": {"hold_s": 0.0, "strike_s": 0.1, "back_s": 0.3, "hand": "r_palm", "mask": "upper"},
   "own-forage-grab-r": {"hold_s": 0.3, "strike_s": 0.4, "back_s": 0.6, "hand": "r_palm", "mask": "reach_r"},
   "own-forage-grab-l": {"hold_s": 0.3, "strike_s": 0.4, "back_s": 0.6, "hand": "l_palm", "mask": "reach_l"},
@@ -52,6 +79,9 @@
   "own-bend-fire-punch-l": {"hand": "l_palm", "mask": "upper", "root": false},
   "own-bend-fire-double": {"hand": "l_palm", "mask": "upper", "root": false},
   "own-bend-fire-kick": {"hand": "r_foot", "mask": "full", "root": true},
+  "own-bend-fire-kick-l": {"hand": "l_foot", "mask": "full", "root": true},
+  "own-bend-fire-kick-low": {"hand": "r_foot", "mask": "full", "root": true},
+  "own-bend-fire-kick-low-l": {"hand": "l_foot", "mask": "full", "root": true},
   "own-bend-fire-sweep": {"hand": "r_palm", "mask": "upper", "root": false},
   "own-bend-fire-sweep-l": {"hand": "l_palm", "mask": "upper", "root": false},
   "own-bend-fire-breath": {"hand": "both", "mask": "upper", "root": false},
@@ -68,7 +98,19 @@
   "own-bend-air-leap": {"hand": "both", "mask": "upper", "root": false},
   "own-bend-air-shield": {"hand": "both", "mask": "upper", "root": false},
   "own-bend-knock-slide": {"hand": "both", "mask": "full", "root": false},
-  "own-bend-knock-air": {"hand": "both", "mask": "full", "root": false}
+  "own-bend-knock-air": {"hand": "both", "mask": "full", "root": false},
+  "own-bend-earth-kickup": {"hand": "r_foot", "mask": "full", "root": true},
+  "own-bend-earth-uproot": {"hand": "both", "mask": "full", "root": true},
+  "own-bend-water-turn": {"hand": "both", "mask": "upper", "root": false},
+  "own-bend-air-pull": {"hand": "both", "mask": "upper", "root": false},
+  "own-bend-air-slip": {"hand": "both", "mask": "full", "root": false, "legs_always": true},
+  "own-bend-air-slip-l": {"hand": "both", "mask": "full", "root": false, "legs_always": true},
+  "own-bend-air-wall": {"hand": "both", "mask": "upper", "root": false},
+  "own-bend-air-slice": {"hand": "r_palm", "mask": "upper", "root": false},
+  "own-bend-air-slice-l": {"hand": "l_palm", "mask": "upper", "root": false},
+  "own-bend-water-surf": {"hand": "both", "mask": "full", "root": false, "legs_always": true},
+  "own-bend-water-skate": {"hand": "both", "mask": "full", "root": false, "legs_always": true},
+  "own-bend-air-shield-hold": {"hand": "both", "mask": "upper", "root": false}
  },
  "_own_bend": "Our own ring-sport clips (animations_extra/Frontier_Bend.res, tools/anim_author/blender/bend_clips.py; the first ten approved by the owner 2026-10-05, the second set authored the same way after it): their timing (hold_s, strike_s, back_s, up_s) is the clips' own metas; the rows above name the limb the game knows, the mask (the casts on the upper body with the legs as far as the caster stands still; the stomps, the boulder, the raise and the kick whole and rooted; the burrow and the spin whole while moving, legs_always) and whether the caster is rooted. Earth: the stomp (Rock Jab stomp, Earth Wall shell, Earth Grip), the boulder (Stone boulder: the owner's 'left kick to stomp and then push'), the raise (Earth Wall wall and column), the rise (Rock Jab kick-up, Pillar), the burrow (Earth Skate), the shove (Earth Shove push, Catch deflect), the push (Shove split), the catch (Catch catch, Shove pull). Fire: the punch (Fire Blast punch and fireball, Fire Jab jab), the double jab (stream, double jab), the kick (Fire Arc kick), the sweep (Fire Arc sweep, embers, Fire Wall wall, Parry), the breath (Breath, inferno, flare), the lightning (its long charge). Water: the whip (Water Whip, Water Jet, Redirect), the wave (Wave), the draw (Flow, Frost, Ice freeze), the shield (Water Shield, freeze water); Ice spear and shards the throws. Air: the palm (Air Palm, Redirect), the sweep (Air Blast ball and vacuum, trip, dust), the spin (Evade spin, cyclone, tornado, Fire Wall ring), the leap (Air Jump, the dashes and hops of every element), the shield circle (Air Shield, cushion); Air Blast slice the sidearm throw. A pose with an alt (its mirrored twin) chains to the other hand. The knocks are SwayPose's knock layer, not casts.",
  "stance": {
@@ -84,38 +126,187 @@
   "air": "own-bend-air-palm"
  },
  "moves": {
-  "stone_form": {"modes": {"spike": {"clip": "own-bend-throw-overhand", "alt": "own-bend-throw-overhand-l"}, "disc": {"clip": "own-bend-throw-sidearm", "alt": "own-bend-throw-sidearm-l"}, "cannonball": "own-bend-earth-boulder"}},
-  "rock_jab": {"modes": {"pebbles": "own-bend-throw-underhand", "kick_up": "own-bend-earth-rise", "stomp": "own-bend-earth-stomp"}},
-  "earth_wall": {"pose": "own-bend-earth-raise", "modes": {"wall": "own-bend-earth-raise", "column": "own-bend-earth-raise", "shell": "own-bend-earth-stomp"}},
+  "stone_form": {
+   "modes": {
+    "spike": {"clip": "own-bend-throw-overhand", "alt": "own-bend-throw-overhand-l"},
+    "cannonball": "own-bend-earth-boulder"
+   }
+  },
+  "rock_jab": {
+   "modes": {"pebbles": "own-bend-throw-underhand", "kick_up": "own-bend-earth-rise", "stomp": "own-bend-earth-stomp"}
+  },
+  "earth_wall": {
+   "pose": "own-bend-earth-raise",
+   "modes": {"wall": "own-bend-earth-raise", "column": "own-bend-earth-raise", "shell": "own-bend-earth-stomp"}
+  },
   "earth_grip": {"pose": "own-bend-earth-stomp"},
   "pillar": {"modes": {"self": "own-bend-earth-rise", "free": "own-bend-earth-rise", "ramp": "own-bend-earth-rise"}},
-  "earth_skate": {"modes": {"skate": "own-bend-earth-burrow", "slide": "own-bend-earth-burrow", "burrow": "own-bend-earth-burrow"}},
-  "earth_shove": {"modes": {"push": {"clip": "own-bend-earth-shove", "alt": "own-bend-earth-shove-l"}, "pull": "own-bend-earth-catch", "split": "own-bend-earth-push"}},
-  "stone_catch": {"modes": {"catch": "own-bend-earth-catch", "deflect": {"clip": "own-bend-earth-shove", "alt": "own-bend-earth-shove-l"}, "brace": "own-form-press-wall"}},
+  "earth_skate": {
+   "modes": {"burrow": "own-bend-earth-burrow", "skate": "own-bend-earth-burrow", "slide": "own-bend-earth-burrow"}
+  },
+  "earth_shove": {
+   "pose": "own-bend-earth-raise",
+   "modes": {
+    "push": {"clip": "own-bend-earth-shove", "alt": "own-bend-earth-shove-l", "kick_up": "own-bend-earth-kickup"},
+    "column": "own-bend-earth-uproot",
+    "pull": "own-bend-earth-catch",
+    "split": "own-bend-earth-push"
+   }
+  },
+  "stone_catch": {
+   "modes": {
+    "catch": "own-bend-earth-catch",
+    "deflect": {"clip": "own-bend-earth-shove", "alt": "own-bend-earth-shove-l"},
+    "brace": "own-form-press-wall"
+   }
+  },
   "mend": {"pose": "own-form-press-wall"},
-  "water_whip": {"modes": {"whip": {"clip": "own-bend-water-whip", "alt": "own-bend-water-whip-l"}, "lash": {"clip": "own-bend-water-whip", "alt": "own-bend-water-whip-l"}, "grab": "own-forage-grab-r"}},
-  "water_jet": {"modes": {"splash": {"clip": "own-bend-water-whip", "alt": "own-bend-water-whip-l"}, "jet": {"clip": "own-bend-water-whip", "alt": "own-bend-water-whip-l"}, "spray": "own-bend-water-wave"}},
-  "ice": {"modes": {"spear": {"clip": "own-bend-throw-overhand", "alt": "own-bend-throw-overhand-l"}, "shards": {"clip": "own-bend-throw-sidearm", "alt": "own-bend-throw-sidearm-l"}, "freeze": "own-bend-water-draw"}},
-  "frost": {"pose": "own-bend-water-draw", "modes": {"ice_patch": "own-bend-water-draw", "freeze_water": "own-bend-water-shield", "thaw": "own-bend-water-draw"}},
-  "wave": {"modes": {"push": "own-bend-water-wave", "surf": "own-bend-water-wave", "tide": "own-bend-water-wave"}},
-  "flow": {"modes": {"water_skate": "own-bend-air-leap", "geyser": "own-bend-water-draw", "draw": "own-bend-water-draw"}},
-  "water_shield": {"modes": {"ice_wall": "own-bend-water-shield", "bubble": "own-bend-water-shield", "heal": "own-bend-water-draw"}},
-  "water_redirect": {"modes": {"redirect": {"clip": "own-bend-water-whip", "alt": "own-bend-water-whip-l"}, "absorb": "own-bend-water-draw", "cleanse": "own-bend-water-draw"}},
-  "fire_blast": {"modes": {"punch": {"clip": "own-bend-fire-punch", "alt": "own-bend-fire-punch-l"}, "stream": "own-bend-fire-double", "fireball": {"clip": "own-bend-fire-punch", "alt": "own-bend-fire-punch-l"}}},
-  "fire_jab": {"modes": {"jab": {"clip": "own-bend-fire-punch", "alt": "own-bend-fire-punch-l"}, "double_jab": "own-bend-fire-double", "embers": {"clip": "own-bend-fire-sweep", "alt": "own-bend-fire-sweep-l"}}},
-  "fire_arc": {"modes": {"sweep": {"clip": "own-bend-fire-sweep", "alt": "own-bend-fire-sweep-l"}, "kick": "own-bend-fire-kick", "lightning": "own-bend-fire-lightning"}},
-  "fire_breath": {"modes": {"breath": "own-bend-fire-breath", "smoke": "own-bend-fire-breath", "heat": "own-bend-fire-breath"}},
-  "fire_jets": {"modes": {"jump": "own-bend-air-leap", "dash": "own-bend-air-leap"}},
-  "footwork": {"modes": {"hop": "own-bend-air-leap", "back_flip": "own-bend-air-leap", "ignite_step": "own-bend-air-leap"}},
-  "fire_wall": {"modes": {"wall": {"clip": "own-bend-fire-sweep", "alt": "own-bend-fire-sweep-l"}, "ring": "own-bend-air-spin", "inferno": "own-bend-fire-breath"}},
-  "fire_parry": {"modes": {"parry": {"clip": "own-bend-fire-sweep", "alt": "own-bend-fire-sweep-l"}, "redirect_lightning": {"clip": "own-bend-fire-sweep", "alt": "own-bend-fire-sweep-l"}, "flare": "own-bend-fire-breath"}},
+  "water_whip": {
+   "modes": {
+    "whip": {"clip": "own-bend-water-whip", "alt": "own-bend-water-whip-l"},
+    "lash": {"clip": "own-bend-water-whip", "alt": "own-bend-water-whip-l"},
+    "grab": "own-forage-grab-r"
+   }
+  },
+  "water_jet": {
+   "modes": {
+    "splash": {"clip": "own-bend-water-whip", "alt": "own-bend-water-whip-l"},
+    "jet": {"clip": "own-bend-water-whip", "alt": "own-bend-water-whip-l"},
+    "spray": "own-bend-water-wave"
+   }
+  },
+  "ice": {
+   "modes": {
+    "spear": {"clip": "own-bend-throw-overhand", "alt": "own-bend-throw-overhand-l"},
+    "shards": {"clip": "own-bend-throw-sidearm", "alt": "own-bend-throw-sidearm-l"},
+    "freeze": "own-bend-water-draw"
+   }
+  },
+  "frost": {
+   "pose": "own-bend-water-draw",
+   "modes": {
+    "ice_patch": "own-bend-water-draw",
+    "freeze_water": "own-bend-water-shield",
+    "thaw": "own-bend-water-draw"
+   }
+  },
+  "wave": {
+   "modes": {
+    "push": "own-bend-water-wave",
+    "spout": "own-bend-water-draw",
+    "surf": "own-bend-water-wave",
+    "tide": "own-bend-water-wave"
+   }
+  },
+  "flow": {
+   "pose": "own-bend-earth-burrow",
+   "modes": {
+    "skate": "own-bend-water-skate",
+    "surf": "own-bend-air-leap",
+    "water_skate": "own-bend-air-leap",
+    "geyser": "own-bend-water-draw",
+    "draw": "own-bend-water-draw"
+   }
+  },
+  "water_shield": {
+   "modes": {"ice_wall": "own-bend-water-shield", "bubble": "own-bend-water-shield", "heal": "own-bend-water-draw"}
+  },
+  "water_redirect": {
+   "pose": {"clip": "own-bend-water-whip", "alt": "own-bend-water-whip-l"},
+   "modes": {"redirect": "own-bend-water-turn", "absorb": "own-bend-water-draw", "cleanse": "own-bend-water-draw"}
+  },
+  "fire_blast": {
+   "modes": {
+    "punch": {"clip": "own-bend-fire-punch", "alt": "own-bend-fire-punch-l"},
+    "stream": "own-bend-fire-double",
+    "fireball": {"clip": "own-bend-fire-punch", "alt": "own-bend-fire-punch-l"}
+   }
+  },
+  "fire_jab": {
+   "modes": {
+    "jab": {"clip": "own-bend-fire-punch", "alt": "own-bend-fire-punch-l"},
+    "double_jab": "own-bend-fire-double",
+    "embers": {"clip": "own-bend-fire-sweep", "alt": "own-bend-fire-sweep-l"}
+   }
+  },
+  "fire_arc": {
+   "modes": {
+    "sweep": {"clip": "own-bend-fire-sweep", "alt": "own-bend-fire-sweep-l"},
+    "kick": "own-bend-fire-kick",
+    "lightning": "own-bend-fire-lightning"
+   }
+  },
+  "fire_kick": {
+   "modes": {
+    "kick": {"clip": "own-bend-fire-kick-low", "alt": "own-bend-fire-kick-low-l"},
+    "high_kick": {"clip": "own-bend-fire-kick", "alt": "own-bend-fire-kick-l"}
+   }
+  },
+  "fire_breath": {
+   "modes": {"breath": "own-bend-fire-breath", "smoke": "own-bend-fire-breath", "heat": "own-bend-fire-breath"}
+  },
+  "fire_jets": {"modes": {"jets": "own-bend-air-leap", "jump": "own-bend-air-leap", "dash": "own-bend-air-leap"}},
+  "footwork": {
+   "modes": {
+    "step": "own-bend-air-leap",
+    "hop": "own-bend-air-leap",
+    "back_flip": "own-bend-air-leap",
+    "ignite_step": "own-bend-air-leap"
+   }
+  },
+  "fire_wall": {
+   "modes": {
+    "wall": {"clip": "own-bend-fire-sweep", "alt": "own-bend-fire-sweep-l"},
+    "ring": "own-bend-air-spin",
+    "inferno": "own-bend-fire-breath"
+   }
+  },
+  "fire_parry": {
+   "modes": {
+    "parry": {"clip": "own-bend-fire-sweep", "alt": "own-bend-fire-sweep-l"},
+    "redirect_lightning": {"clip": "own-bend-fire-sweep", "alt": "own-bend-fire-sweep-l"},
+    "flare": "own-bend-fire-breath"
+   }
+  },
   "gust": {"modes": {"pull": "own-forage-grab-r"}},
-  "air_palm": {"modes": {"palm": {"clip": "own-bend-air-palm", "alt": "own-bend-air-palm-l"}, "trip": "own-bend-air-sweep", "cushion": "own-bend-air-shield"}},
-  "air_blast": {"modes": {"ball": "own-bend-air-sweep", "slice": {"clip": "own-bend-throw-sidearm", "alt": "own-bend-throw-sidearm-l"}, "vacuum": "own-bend-air-sweep"}},
-  "evade": {"modes": {"sidestep": "own-bend-earth-burrow", "backstep": "own-bend-air-leap", "spin": "own-bend-air-spin"}},
+  "air_palm": {
+   "modes": {
+    "palm": {"clip": "own-bend-air-palm", "alt": "own-bend-air-palm-l"},
+    "trip": "own-bend-air-sweep",
+    "cushion": "own-bend-air-shield"
+   }
+  },
+  "air_gust": {"pose": "own-bend-air-sweep", "modes": {"gust": "own-bend-air-sweep", "pull": "own-bend-air-pull"}},
+  "air_blast": {
+   "pose": {"clip": "own-bend-throw-sidearm", "alt": "own-bend-throw-sidearm-l"},
+   "modes": {
+    "slice": {"clip": "own-bend-air-slice", "alt": "own-bend-air-slice-l"},
+    "ball": "own-bend-air-sweep",
+    "vacuum": "own-bend-air-sweep"
+   }
+  },
+  "evade": {
+   "pose": "own-bend-air-leap",
+   "modes": {
+    "slip": {"clip": "own-bend-air-slip", "alt": "own-bend-air-slip-l"},
+    "sidestep": "own-bend-earth-burrow",
+    "backstep": "own-bend-air-leap",
+    "spin": "own-bend-air-spin"
+   }
+  },
   "wind_run": {"modes": {"updraft": "own-bend-air-leap"}},
   "air_jump": {"modes": {"leap": "own-bend-air-leap", "dash": "own-bend-air-leap"}},
-  "air_shield": {"modes": {"shield": "own-bend-air-shield", "cyclone": "own-bend-air-spin", "tornado": "own-bend-air-spin"}},
-  "air_redirect": {"modes": {"redirect": {"clip": "own-bend-air-palm", "alt": "own-bend-air-palm-l"}, "gust_step": "own-bend-air-leap", "dust": "own-bend-air-sweep"}}
- }
+  "air_shield": {
+   "modes": {"shield": "own-bend-air-shield", "cyclone": "own-bend-air-spin", "tornado": "own-bend-air-spin"}
+  },
+  "air_wall": {"pose": "own-bend-air-shield", "modes": {"wall": "own-bend-air-wall"}},
+  "air_redirect": {
+   "modes": {
+    "redirect": {"clip": "own-bend-air-palm", "alt": "own-bend-air-palm-l"},
+    "gust_step": "own-bend-air-leap",
+    "dust": "own-bend-air-sweep"
+   }
+  }
+ },
+ "_r2": "KITS round 2 (skills_r2/spec.md 7): the Kick (fire_kick kick) is the low kick only, own-bend-fire-kick-low with its mirror, and no stand-in of its own (the tell never lies: CLIPS' first clips are in before it ships; tests/bending/test_bend_poses.gd holds it); the High Kick is the waist-high kick and its mirror. A move's 'pose' is the stand-in while a variation's new clip is not in the libraries: Column the raise, Turn the whip, Pull the sweep, Slip the leap, Wind Wall the shield circle, Slice the side-arm throw, Skate the burrow; Shove's kick_up names the clip CORE plays when Shove kicks a stone up first."
 }

@@ -4,13 +4,14 @@ extends SceneTree
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_practice.gd -- practice=throw element=earth foe=earth
 ##   asked       MatchSetup.take: a practice, the dummy throwing; RingMode practice, a short countdown, then the fight
 ##   no clock    no timer (the clock counts up, never a time-out), never decided, no round screen, round 1 throughout
-##   throw       the dummy, held at its end (never walks), casts its throw (earth: stone_form spike) every throw_every_s:
-##               three or more in 9 s, each by its own lock (NpcBending.casts, last_cast)
+##   throw       the dummy, held at its end (never walks), casts its throw (its element's key 1 first move: earth stone_form
+##               spike; MatchSetup.practice_move for all four, the cover its wall) every throw_every_s: three or more in 9 s,
+##               each by its own lock (NpcBending.casts, last_cast)
 ##   a catch     a catch guard of the player's takes one of its stones (BendZone.took): the practice tally's catches
 ##   R           (the key ring_reset, as a key press) both back at their ends whole, the deck cleared ("Positions reset")
 ##   B           (ring_dummy) steps the dummy's way: throw -> stand; standing it never casts in 5 s
-##   block       block: a stone bolt of the player's at it is answered by a guard of its element at once (no dice: catch or
-##               deflect), and the block's cover is earth_wall/wall
+##   block       block: a stone bolt of the player's at it is answered by its element's guard at once (no dice: its catch),
+##               and the block's cover is earth_wall/wall
 ##   the water   the player knocked off his end: "Into the water", no round_over, no score; both back at their ends after
 ##               reset_after_out_s, still FIGHT, nobody out
 ##   spent       999 on the dummy: whole again at once (no death, no round's end)
@@ -185,6 +186,13 @@ func _block() -> void:
 	await _key(KEY_B)
 	_expect(mode.dummy == "block", "B again: %s" % mode.dummy)
 	_expect(mode._pmove("cover") == "earth_wall/wall" and mode._pmove("throw") == "stone_form/spike", "its cover %s, its throw %s" % [mode._pmove("cover"), mode._pmove("throw")])
+	# (every element's dummy throws its own key 1 first move and covers with its wall: every guard has its strike to take)
+	var want := {"earth": ["stone_form/spike", "earth_wall/wall"], "water": ["water_whip/whip", "water_shield/ice_wall"],
+			"fire": ["fire_blast/punch", "fire_wall/wall"], "air": ["air_blast/slice", "air_wall/wall"]}
+	var got := {}
+	for el: String in want:
+		got[el] = [MatchSetup.practice_move(el, "throw"), MatchSetup.practice_move(el, "cover")]
+	_expect(got == want, "each element's dummy throws its key 1 first move and covers with its wall (%s)" % [got])
 	await _secs(0.5)
 	var b := bend()
 	var from := player.global_position + Vector3.UP * 1.3
@@ -196,7 +204,7 @@ func _block() -> void:
 		return seen[0] != ""
 	BendBolt.launch(player, from, to - from, {"kind": "stone", "mps": 18.0, "damage": 2.0, "knock_mps": 0.0, "range_m": 30.0})
 	var t := await _until(watch, 1.5)
-	_expect(seen[0] in ["stone_catch/catch", "stone_catch/deflect"], "a stone at it: answered by %s in %.2f s" % [seen[0], t])
+	_expect(seen[0] == "stone_catch/catch", "a stone at it: answered by its guard, %s, in %.2f s" % [seen[0], t])
 	await _secs(1.5)
 
 
