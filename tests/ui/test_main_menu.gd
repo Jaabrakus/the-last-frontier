@@ -6,7 +6,8 @@ extends SceneTree
 ##   start     the project starts at the menu; the boot splash is the game's own painting
 ##   pictures  every game picture there (the menu's and the loading screens'), each with a title and a caption; a
 ##             round shows each before a repeat; the museum's paintings, each with its artist and story; no portraits
-##   menu      the ring sport first (Tidebreak; the owner, 2026-10-04), Quick match (its line the last setup), Your look,
+##   menu      the ring sport first (Tidebreak; the owner, 2026-10-04), Quick match (its line the last setup against a random
+##             opponent), Practice, Your look,
 ##             Open world, Settings, Credits, Quit; the sport's row opens its panel (the setup itself:
 ##             tests/ring/test_match_setup.gd); Your look opens the character creator over the menu
 ##   open world  the open world's rows in their own panel. No save: New game first, Load greyed ("no saves yet"),
@@ -105,10 +106,11 @@ func _run() -> void:
 		_end()
 		return
 	var names := _names(m)
-	check(names == [MatchSetup.sport(), "Quick match", "Your look", "Open world", "Settings", "Credits", "Quit"],
-			"the menu: the sport first, Quick match, Your look, Open world, Settings, Credits, Quit (%s)" % [names])
-	check(_sub(m, "Quick match") == MatchSetup.summary() and _sub(m, MatchSetup.sport()) != "",
-			"Quick match's line is the last setup (%s)" % _sub(m, "Quick match"))
+	check(names == [MatchSetup.sport(), "Quick match", "Practice", "Your look", "Open world", "Settings", "Credits", "Quit"],
+			"the menu: the sport first, Quick match, Practice, Your look, Open world, Settings, Credits, Quit (%s)" % [names])
+	check(_sub(m, "Quick match") == MatchSetup.quick_line() and _sub(m, MatchSetup.sport()) != "",
+			"Quick match's line is the last setup against a random opponent (%s)" % _sub(m, "Quick match"))
+	check(_sub(m, "Practice").contains("dummy"), "Practice's line names the dummy (%s)" % _sub(m, "Practice"))
 	# the open world's rows, in its panel
 	(_item(m, "Open world") as Button).pressed.emit()
 	await frames(2)

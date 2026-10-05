@@ -274,7 +274,7 @@ func _menu() -> void:
 		if not c.is_queued_for_deletion() and _row_text(c) == "Quick match":
 			qm = c as Button
 	var qs := qm.find_child("Sub", true, false) as Label if qm else null
-	check(qs != null and qs.text == "Fire vs Water  ·  normal  ·  best of 3", "Quick match's line: '%s'" % (qs.text if qs else "none"))
+	check(qs != null and qs.text == "Fire against a random opponent  ·  normal  ·  best of 3", "Quick match's line: '%s'" % (qs.text if qs else "none"))
 	# Esc closes the panel
 	m._open_match()
 	await frames(1)

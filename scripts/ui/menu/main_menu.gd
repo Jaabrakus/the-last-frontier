@@ -18,7 +18,10 @@ extends Control
 ##                 LoadingScreen with MatchSetup filled and kept (MatchSetup.save: GameSettings' "match"). The first press
 ##                 with no look saved yet offers the character creator first (never over the ring's countdown:
 ##                 PlayerAppearance asks MatchSetup.active())
-##   Quick match   the last setup at once (its line under it: "Fire vs Water  ·  normal  ·  best of 3")
+##   Quick match   the last setup at once with the opponent's element drawn at random (MatchSetup.quick_match; its line
+##                 under it: "Fire against a random opponent  ·  normal  ·  best of 3"; the kept opponent left as it was)
+##   Practice      a dummy to practise on (_open_practice: your element, the dummy's element and way: stand, block or
+##                 throw; MatchSetup.set_practice), into the ring with no clock, rounds or score (RingMode practice)
 ##   Your look     the character creator on the saved look (CharacterCreator; Accept keeps it)
 ##   Open world    the valley of 1765 as it was, in a sub-panel (its rows and their handlers unchanged; Esc from a screen
 ##                 opened there comes back to it):
@@ -258,9 +261,12 @@ func _build_items() -> void:
 	var tb := MenuUI.item(MatchSetup.sport(), 32, MatchSetup.menu_line())
 	tb.pressed.connect(_open_match)
 	_items.add_child(tb)
-	var qm := MenuUI.item("Quick match", 32, MatchSetup.summary())
+	var qm := MenuUI.item("Quick match", 32, MatchSetup.quick_line())
 	qm.pressed.connect(_quick_match)
 	_items.add_child(qm)
+	var pr := MenuUI.item("Practice", 32, _practice_line())
+	pr.pressed.connect(_open_practice)
+	_items.add_child(pr)
 	var lk := MenuUI.item("Your look", 32, "the character creator: face, build and dress")
 	lk.pressed.connect(_open_look)
 	_items.add_child(lk)
@@ -388,10 +394,85 @@ func _play_match() -> void:
 	LoadingScreen.go(get_tree(), path)
 
 
-## Quick match: the last setup (GameSettings' "match"), at once.
+## Quick match: the last setup (GameSettings' "match"), the opponent's element drawn at random (MatchSetup.quick_match), at once.
 func _quick_match() -> void:
-	MatchSetup.load()
+	MatchSetup.quick_match()
 	_play_match()
+
+
+## The Practice row's line: "a Stone dummy that throws at you every few seconds" (the kept dummy).
+static func _practice_line() -> String:
+	var f := MatchSetup.foe()
+	var who := "random" if f == MatchSetup.ANY else MatchSetup.competitor(f)
+	return "a %s dummy that %s" % [who, MatchSetup.dummy_line(MatchSetup.dummy)]
+
+
+## Practice (MatchSetup.set_practice; RingMode practice): your element, the dummy's element and its way (each press steps
+## it; its line under it), and Begin into the ring with no clock, no rounds and no score. The keys there: R puts both back
+## at their ends, B steps the dummy's way.
+func _open_practice() -> void:
+	_open_panel()
+	var box := VBoxContainer.new()
+	box.name = "Practice"
+	box.add_theme_constant_override("separation", 6)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_panel.add_child(box)
+	box.add_child(MenuUI.heading("Practice"))
+	var rule := MenuUI.label("A dummy at the far end: it stands, it blocks, or it throws at you. No clock, no rounds, no score.  "
+			+ "In the ring R puts you both back at your ends and B changes what the dummy does.", 17, MenuUI.DIM, true)
+	rule.custom_minimum_size = Vector2(520, 0)
+	box.add_child(rule)
+	box.add_child(_gap(6))
+	var els: Array = Bending.ELEMENTS
+	var mine := MenuUI.item("", 22, "-")
+	mine.name = "Element"
+	var paint_mine := func() -> void:
+		var e := MatchSetup.element
+		_set_row(mine, "Your element:  %s" % MatchSetup.label(e), "%s  ·  %s" % [MatchSetup.competitor(e), MatchSetup.style(e)])
+	paint_mine.call()
+	mine.pressed.connect(func() -> void:
+		MatchSetup.element = String(els[(els.find(MatchSetup.element) + 1) % els.size()])
+		paint_mine.call())
+	box.add_child(mine)
+	var foes: Array = Bending.ELEMENTS + [MatchSetup.ANY]
+	var dum := MenuUI.item("", 22, "-")
+	dum.name = "Dummy"
+	var paint_dum := func() -> void:
+		var f := MatchSetup.foe()
+		_set_row(dum, "Dummy:  %s" % MatchSetup.label(f),
+				MatchSetup.style(f) if f == MatchSetup.ANY else "%s  ·  %s" % [MatchSetup.competitor(f), MatchSetup.style(f)])
+	paint_dum.call()
+	dum.pressed.connect(func() -> void:
+		MatchSetup.foes = [String(foes[(foes.find(MatchSetup.foe()) + 1) % foes.size()])]
+		paint_dum.call())
+	box.add_child(dum)
+	var way := MenuUI.item("", 22, "-")
+	way.name = "Way"
+	var paint_way := func() -> void:
+		_set_row(way, "It:  %s" % MatchSetup.dummy, "the dummy %s" % MatchSetup.dummy_line(MatchSetup.dummy))
+	paint_way.call()
+	way.pressed.connect(func() -> void:
+		var ws := MatchSetup.DUMMIES
+		MatchSetup.dummy = String(ws[(ws.find(MatchSetup.dummy) + 1) % ws.size()])
+		paint_way.call())
+	box.add_child(way)
+	var sch := MenuUI.item("", 22, "-")
+	sch.name = "Scheme"
+	var paint_sch := func() -> void:
+		_set_row(sch, MatchSetup.scheme_row(), MatchSetup.scheme_row_line())
+	paint_sch.call()
+	sch.pressed.connect(func() -> void:
+		MatchSetup.set_scheme(MatchSetup.next_scheme())
+		paint_sch.call())
+	box.add_child(sch)
+	box.add_child(_gap(4))
+	var begin := MenuUI.item("Begin practice", 30)
+	begin.name = "Begin"
+	begin.pressed.connect(func() -> void:
+		MatchSetup.set_practice()
+		_play_match())
+	box.add_child(begin)
+	begin.grab_focus.call_deferred()
 
 
 # --- The sub-screens ---------------------------------------------------------------------------------------
@@ -557,7 +638,9 @@ func _open_match() -> void:
 	box.add_child(_gap(4))
 	var begin := MenuUI.item("Begin", 30)
 	begin.name = "Begin"
-	begin.pressed.connect(_play_match)
+	begin.pressed.connect(func() -> void:
+		MatchSetup.set_match()                # (a match, after a practice or a Quick match)
+		_play_match())
 	box.add_child(begin)
 	_mark_elements()
 	_show_keys("")
