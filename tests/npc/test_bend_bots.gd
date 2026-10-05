@@ -269,7 +269,15 @@ func _coverage(el: String) -> void:
 	_expect(not b.locks.is_empty() and bad_locks.is_empty(), "%s: each of its %d locks took its lock_s%s" % [el, b.locks.size(), "" if bad_locks.is_empty() else ": " + ", ".join(bad_locks)])
 	_expect(low[0] > SLAB_Y - 0.6, "%s: never off the slab of itself (lowest %.2f m over the deck)" % [el, low[0] - SLAB_Y])
 	_expect(labels.is_empty() and f.last_bark == "", "%s: no words over its head (%d Label3D, bark '%s')" % [el, labels.size(), f.last_bark])
-	_expect(String(shirt.get("0", "")).begins_with("#"), "%s: dressed in its element's colours (shirt %s)" % [el, str(shirt)])
+	# (its element's dress: the ring dress of the faction's element_dress, 2026-10-05, each garment in its element's preset)
+	var want: Dictionary = (NpcFactions.get_faction(FACTION).get("element_dress", {}) as Dictionary).get(el, {})
+	var worn := not want.is_empty()
+	for s: String in want:
+		var w: Dictionary = want[s]
+		var got: Dictionary = (f.look.get("outfit", {}) as Dictionary).get(s, {})
+		worn = worn and String(got.get("id", "-")) == String(w.get("id", "-")) and \
+				(got.get("colors", {}) as Dictionary) == (w.get("colors", {}) as Dictionary)
+	_expect(worn, "%s: dressed in its element's ring dress (shirt %s)" % [el, str(shirt)])
 	var clips := {}
 	for lk: Dictionary in b.locks:
 		clips[String(lk.get("clip", ""))] = true

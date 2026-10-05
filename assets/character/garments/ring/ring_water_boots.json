@@ -1,0 +1,272 @@
+{
+ "id": "ring_water_boots",
+ "name": "Water side boots",
+ "description": "Soft hide boots to mid-calf over the trousers with a deep fur cuff, a band down the front and a thick sole.",
+ "kind": "garment",
+ "set": "ring",
+ "slot": "feet",
+ "alt_slots": [],
+ "layer": {
+  "default": 40
+ },
+ "glb": "res://assets/character/garments/ring/ring_water_boots.glb",
+ "mesh": "ring_water_boots",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "ring_water_boots"
+  }
+ ],
+ "occupies_regions": [
+  "ankle_l",
+  "ankle_r",
+  "foot_l",
+  "foot_r",
+  "shin_lower_l",
+  "shin_lower_r",
+  "shin_upper_l",
+  "shin_upper_r"
+ ],
+ "hides_regions": [
+  "ankle_l",
+  "ankle_r",
+  "foot_l",
+  "foot_r",
+  "shin_lower_l",
+  "shin_lower_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "hide",
+   "role": "leather",
+   "fabric": "SUEDE",
+   "palette": [
+    "ring_seal",
+    "ring_navy",
+    "ring_deep",
+    "leather_brown"
+   ],
+   "default": "ring_seal",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_seal": "#6B6157",
+    "ring_navy": "#18345A",
+    "ring_deep": "#1E3F6B",
+    "leather_brown": "#5B3D26"
+   },
+   "fabrics": [
+    "SUEDE"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "fur cuff",
+   "role": "fur",
+   "fabric": "FUR",
+   "palette": [
+    "ring_snow_fur",
+    "ring_seal",
+    "drift_frost",
+    "fur_wolf"
+   ],
+   "default": "ring_snow_fur",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_snow_fur": "#E6E1D6",
+    "ring_seal": "#6B6157",
+    "drift_frost": "#DDE6EE",
+    "fur_wolf": "#7F776B"
+   },
+   "fabrics": [
+    "FUR"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "sole and front band",
+   "role": "leather",
+   "fabric": "LEA",
+   "palette": [
+    "ring_sole",
+    "ring_navy",
+    "ring_ice",
+    "leather_black"
+   ],
+   "default": "ring_sole",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_sole": "#3A2A1E",
+    "ring_navy": "#18345A",
+    "ring_ice": "#A8CDEB",
+    "leather_black": "#1D1B19"
+   },
+   "fabrics": [
+    "LEA"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 4208,
+    "verts": 2760,
+    "zones": [
+     0,
+     1,
+     2
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "foot_l",
+     "foot_r",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "l_ball",
+     "r_knee",
+     "r_ankle",
+     "r_heel",
+     "r_ball"
+    ]
+   }
+  },
+  "tris": 4208,
+  "verts": 2760,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0251,
+   "breast_large": 0.0003,
+   "breast_small": 0.0005
+  },
+  "coverage": {
+   "shin_upper_l": {
+    "normal": 0.49,
+    "cone": 0.396
+   },
+   "shin_lower_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_l": {
+    "normal": 1.0,
+    "cone": 0.99
+   },
+   "foot_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_upper_r": {
+    "normal": 0.438,
+    "cone": 0.365
+   },
+   "shin_lower_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_r": {
+    "normal": 0.99,
+    "cone": 0.99
+   },
+   "foot_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   }
+  },
+  "glb_kb": 446.1
+ },
+ "budget": {
+  "tris_max": 3600
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Invented sport dress (Tidebreak, 2026-10-05): the owner asked for assets in the spirit of an elemental martial-arts cartoon, made our own. Cut from the cloth2 recipes; no outfit, emblem or insignia copied.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "ring",
+  "tidebreak",
+  "water",
+  "winter"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 1.55,
+    "p05_mm": 4.44,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 1.57,
+    "p05_mm": 4.17,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 1.55,
+    "p05_mm": 4.44,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 1.55,
+    "p05_mm": 4.44,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/asset_author/ring_garments/ring_water_boots.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/asset_author/ring_garments/ring_water_boots.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "ring_trousers_fitted"
+ ],
+ "extra": {
+  "presets": {
+   "water": {
+    "0": "ring_seal",
+    "1": "ring_snow_fur",
+    "2": "ring_navy"
+   }
+  },
+  "recipe_note": "feet.SockTube 7 mm off the skin to 0.34 over the fitted trousers, a raised fur cuff from 0.285, the sole below 1.6 cm."
+ }
+}

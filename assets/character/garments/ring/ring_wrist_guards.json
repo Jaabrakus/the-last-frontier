@@ -1,0 +1,246 @@
+{
+ "id": "ring_wrist_guards",
+ "name": "Fire side wrist guards",
+ "description": "Stiff leather guards on the lower forearms with gold rims and two ribs along the back of the arm.",
+ "kind": "garment",
+ "set": "ring",
+ "slot": "accessories.arms",
+ "alt_slots": [],
+ "layer": {
+  "default": 32
+ },
+ "glb": "res://assets/character/garments/ring/ring_wrist_guards.glb",
+ "mesh": "ring_wrist_guards",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "ring_wrist_guards"
+  }
+ ],
+ "occupies_regions": [
+  "forearm_a_r",
+  "forearm_b_l",
+  "forearm_b_r",
+  "forearm_c_l",
+  "forearm_c_r",
+  "wrist_l",
+  "wrist_r"
+ ],
+ "hides_regions": [
+  "forearm_b_l",
+  "forearm_b_r",
+  "forearm_c_l",
+  "forearm_c_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "leather",
+   "role": "leather",
+   "fabric": "LEA",
+   "palette": [
+    "ring_char",
+    "ring_ember",
+    "ring_flame",
+    "leather_black"
+   ],
+   "default": "ring_char",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_char": "#2A1C1A",
+    "ring_ember": "#6E1A16",
+    "ring_flame": "#B5302A",
+    "leather_black": "#1D1B19"
+   },
+   "fabrics": [
+    "LEA"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "rims and ribs",
+   "role": "trim",
+   "fabric": "FLAT",
+   "palette": [
+    "ring_gold",
+    "brass",
+    "ring_flame"
+   ],
+   "default": "ring_gold",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_gold": "#D9A441",
+    "brass": "#B58F4A",
+    "ring_flame": "#B5302A"
+   },
+   "fabrics": [
+    "FLAT"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1654,
+    "verts": 1605,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "forearm_a_l",
+     "forearm_a_r",
+     "forearm_b_l",
+     "forearm_b_r",
+     "forearm_c_l",
+     "forearm_c_r",
+     "wrist_l",
+     "wrist_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "spined",
+     "l_shoulder",
+     "l_elbow",
+     "l_wrist",
+     "l_thumba",
+     "r_shoulder",
+     "r_elbow",
+     "r_wrist",
+     "r_thumba",
+     "l_forarm_twist_a",
+     "l_forarm_twist_c",
+     "l_forarm_twist_b",
+     "r_forarm_twist_a",
+     "r_forarm_twist_c",
+     "r_forarm_twist_b"
+    ]
+   }
+  },
+  "tris": 1654,
+  "verts": 1605,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.018,
+   "breast_large": 0.0,
+   "breast_small": 0.0
+  },
+  "coverage": {
+   "pelvis_side": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.24,
+    "cone": 0.229
+   },
+   "forearm_b_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_c_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "wrist_l": {
+    "normal": 0.552,
+    "cone": 0.385
+   },
+   "forearm_a_r": {
+    "normal": 0.271,
+    "cone": 0.26
+   },
+   "forearm_b_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_c_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "wrist_r": {
+    "normal": 0.573,
+    "cone": 0.427
+   }
+  },
+  "glb_kb": 310.8
+ },
+ "budget": {
+  "tris_max": 2600
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Invented sport dress (Tidebreak, 2026-10-05): the owner asked for assets in the spirit of an elemental martial-arts cartoon, made our own. Cut from the cloth2 recipes; no outfit, emblem or insignia copied.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "ring",
+  "tidebreak",
+  "fire"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 3.69,
+    "p05_mm": 4.6,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 3.09,
+    "p05_mm": 4.69,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 3.69,
+    "p05_mm": 4.6,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 3.69,
+    "p05_mm": 4.6,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/asset_author/ring_garments/ring_wrist_guards.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/asset_author/ring_garments/ring_wrist_guards.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "presets": {
+   "fire": {
+    "0": "ring_char",
+    "1": "ring_gold"
+   }
+  },
+  "recipe_note": "the forearm regions off the skin (6.5 mm) from arm 0.70 to 0.985; gold rims and ribs."
+ }
+}

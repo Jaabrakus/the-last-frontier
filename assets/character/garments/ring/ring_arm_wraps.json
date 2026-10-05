@@ -1,0 +1,279 @@
+{
+ "id": "ring_arm_wraps",
+ "name": "Earth side arm wraps",
+ "description": "Cloth strips bound round the forearms from below the elbow to the wrist.",
+ "kind": "garment",
+ "set": "ring",
+ "slot": "accessories.arms",
+ "alt_slots": [],
+ "layer": {
+  "default": 32
+ },
+ "glb": "res://assets/character/garments/ring/ring_arm_wraps.glb",
+ "mesh": "ring_arm_wraps",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "ring_arm_wraps"
+  }
+ ],
+ "occupies_regions": [
+  "forearm_a_l",
+  "forearm_a_r",
+  "forearm_b_l",
+  "forearm_b_r",
+  "forearm_c_l",
+  "forearm_c_r",
+  "wrist_l",
+  "wrist_r"
+ ],
+ "hides_regions": [
+  "forearm_b_l",
+  "forearm_b_r",
+  "forearm_c_l",
+  "forearm_c_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "wraps",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "ring_khaki",
+    "ring_umber",
+    "ring_moss",
+    "ring_ochre",
+    "ring_olive"
+   ],
+   "default": "ring_khaki",
+   "pattern": {
+    "options": [
+     "none",
+     "stripe"
+    ],
+    "default": "stripe",
+    "stripe": {
+     "colors": [
+      "ring_khaki",
+      "ring_umber"
+     ],
+     "scale_m": 0.032,
+     "angle": 30.0,
+     "duty": 0.8
+    },
+    "note": "the wound strips: a dark line between the turns, on the bias"
+   },
+   "bands": null,
+   "palette_hex": {
+    "ring_khaki": "#A89B72",
+    "ring_umber": "#5A4127",
+    "ring_moss": "#5E7A3A",
+    "ring_ochre": "#B8893C",
+    "ring_olive": "#4A5A2E"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "end bands",
+   "role": "trim",
+   "fabric": "LIN",
+   "palette": [
+    "ring_khaki",
+    "ring_umber",
+    "ring_moss",
+    "ring_ochre",
+    "ring_olive"
+   ],
+   "default": "ring_umber",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_khaki": "#A89B72",
+    "ring_umber": "#5A4127",
+    "ring_moss": "#5E7A3A",
+    "ring_ochre": "#B8893C",
+    "ring_olive": "#4A5A2E"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1245,
+    "verts": 1037,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "forearm_a_l",
+     "forearm_a_r",
+     "forearm_b_l",
+     "forearm_b_r",
+     "forearm_c_l",
+     "forearm_c_r",
+     "wrist_l",
+     "wrist_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "spined",
+     "l_shoulder",
+     "l_elbow",
+     "l_wrist",
+     "l_pinkya",
+     "l_thumba",
+     "r_shoulder",
+     "r_elbow",
+     "r_wrist",
+     "r_pinkya",
+     "r_thumba",
+     "l_forarm_twist_a",
+     "l_forarm_twist_c",
+     "l_forarm_twist_b",
+     "r_forarm_twist_a",
+     "r_forarm_twist_c",
+     "r_forarm_twist_b"
+    ]
+   }
+  },
+  "tris": 1245,
+  "verts": 1037,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0253,
+   "breast_large": 0.0,
+   "breast_small": 0.0
+  },
+  "coverage": {
+   "chest_side": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "abdomen_side": {
+    "normal": 0.094,
+    "cone": 0.0
+   },
+   "pelvis_side": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.594,
+    "cone": 0.583
+   },
+   "forearm_b_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_c_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "wrist_l": {
+    "normal": 0.979,
+    "cone": 0.875
+   },
+   "forearm_a_r": {
+    "normal": 0.719,
+    "cone": 0.677
+   },
+   "forearm_b_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_c_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "wrist_r": {
+    "normal": 0.99,
+    "cone": 0.885
+   }
+  },
+  "glb_kb": 228.6
+ },
+ "budget": {
+  "tris_max": 2600
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Invented sport dress (Tidebreak, 2026-10-05): the owner asked for assets in the spirit of an elemental martial-arts cartoon, made our own. Cut from the cloth2 recipes; no outfit, emblem or insignia copied.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "ring",
+  "tidebreak",
+  "earth"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 1.75,
+    "p05_mm": 2.47,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 1.42,
+    "p05_mm": 2.52,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 1.75,
+    "p05_mm": 2.47,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 1.75,
+    "p05_mm": 2.47,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/asset_author/ring_garments/ring_arm_wraps.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/asset_author/ring_garments/ring_arm_wraps.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "presets": {
+   "earth": {
+    "0": "ring_khaki",
+    "1": "ring_umber"
+   }
+  },
+  "recipe_note": "the forearm regions off the skin (4 mm) from arm 0.56 to the wrist; rims 1.2 cm."
+ }
+}

@@ -1,0 +1,427 @@
+{
+ "id": "ring_water_parka",
+ "name": "Water side parka",
+ "description": "A heavy pull-over coat to mid-thigh with a hood lying on the back, a standing fur collar, deep fur cuffs and a fur band round the hem.",
+ "kind": "garment",
+ "set": "ring",
+ "slot": "outer",
+ "alt_slots": [],
+ "layer": {
+  "default": 40
+ },
+ "glb": "res://assets/character/garments/ring/ring_water_parka.glb",
+ "mesh": "ring_water_parka",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "ring_water_parka"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "chest_upper_back",
+  "chest_upper_front",
+  "chest_upper_side",
+  "forearm_a_l",
+  "forearm_a_r",
+  "forearm_b_l",
+  "forearm_b_r",
+  "forearm_c_l",
+  "forearm_c_r",
+  "neck_lower",
+  "pelvis_center",
+  "pelvis_side",
+  "thigh_upper_l",
+  "thigh_upper_r",
+  "upper_arm_l",
+  "upper_arm_r"
+ ],
+ "hides_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "chest_upper_front",
+  "forearm_a_l",
+  "forearm_a_r",
+  "pelvis_side",
+  "upper_arm_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "coat",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "ring_sea",
+    "ring_deep",
+    "ring_navy",
+    "ring_ice",
+    "ring_seal"
+   ],
+   "default": "ring_sea",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_sea": "#2F6DB3",
+    "ring_deep": "#1E3F6B",
+    "ring_navy": "#18345A",
+    "ring_ice": "#A8CDEB",
+    "ring_seal": "#6B6157"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "fur trim",
+   "role": "fur",
+   "fabric": "FUR",
+   "palette": [
+    "ring_snow_fur",
+    "ring_seal",
+    "drift_frost",
+    "fur_wolf"
+   ],
+   "default": "ring_snow_fur",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_snow_fur": "#E6E1D6",
+    "ring_seal": "#6B6157",
+    "drift_frost": "#DDE6EE",
+    "fur_wolf": "#7F776B"
+   },
+   "fabrics": [
+    "FUR"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "hood lining and seams",
+   "role": "trim",
+   "fabric": "WOOL",
+   "palette": [
+    "ring_sea",
+    "ring_deep",
+    "ring_navy",
+    "ring_ice",
+    "ring_seal"
+   ],
+   "default": "ring_ice",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_sea": "#2F6DB3",
+    "ring_deep": "#1E3F6B",
+    "ring_navy": "#18345A",
+    "ring_ice": "#A8CDEB",
+    "ring_seal": "#6B6157"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 8650,
+    "verts": 5731,
+    "zones": [
+     0,
+     1,
+     2
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "forearm_a_r",
+     "forearm_b_l",
+     "forearm_b_r",
+     "forearm_c_l",
+     "forearm_c_r",
+     "neck_lower",
+     "pelvis_center",
+     "pelvis_side",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r",
+     "upper_arm_l",
+     "upper_arm_r",
+     "wrist_l",
+     "wrist_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "r_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "l_shoulder",
+     "l_elbow",
+     "l_wrist",
+     "r_clavicle",
+     "r_shoulder",
+     "r_elbow",
+     "r_wrist",
+     "neck",
+     "l_breast",
+     "r_breast",
+     "l_forarm_twist_a",
+     "l_forarm_twist_c",
+     "l_forarm_twist_b",
+     "r_forarm_twist_a",
+     "r_forarm_twist_c",
+     "r_forarm_twist_b",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_shoulder_twist_a",
+     "l_shoulder_twist_c",
+     "l_shoulder_twist_b",
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 8650,
+  "verts": 5731,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0628,
+   "breast_large": 0.0849,
+   "breast_small": 0.0214
+  },
+  "coverage": {
+   "neck_upper": {
+    "normal": 0.177,
+    "cone": 0.094
+   },
+   "neck_lower": {
+    "normal": 1.0,
+    "cone": 0.812
+   },
+   "chest_upper_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_upper_side": {
+    "normal": 1.0,
+    "cone": 0.906
+   },
+   "chest_upper_back": {
+    "normal": 1.0,
+    "cone": 0.958
+   },
+   "chest_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "chest_side": {
+    "normal": 1.0,
+    "cone": 0.99
+   },
+   "chest_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_front": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "pelvis_center": {
+    "normal": 0.5,
+    "cone": 0.24
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "upper_arm_l": {
+    "normal": 0.979,
+    "cone": 0.969
+   },
+   "forearm_a_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_l": {
+    "normal": 1.0,
+    "cone": 0.865
+   },
+   "forearm_c_l": {
+    "normal": 0.771,
+    "cone": 0.323
+   },
+   "wrist_l": {
+    "normal": 0.229,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.979,
+    "cone": 0.979
+   },
+   "forearm_a_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "forearm_b_r": {
+    "normal": 1.0,
+    "cone": 0.906
+   },
+   "forearm_c_r": {
+    "normal": 0.75,
+    "cone": 0.333
+   },
+   "wrist_r": {
+    "normal": 0.219,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.885,
+    "cone": 0.438
+   },
+   "thigh_lower_l": {
+    "normal": 0.167,
+    "cone": 0.021
+   },
+   "thigh_upper_r": {
+    "normal": 0.896,
+    "cone": 0.458
+   },
+   "thigh_lower_r": {
+    "normal": 0.188,
+    "cone": 0.031
+   }
+  },
+  "glb_kb": 1216.1
+ },
+ "budget": {
+  "tris_max": 9500
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Invented sport dress (Tidebreak, 2026-10-05): the owner asked for assets in the spirit of an elemental martial-arts cartoon, made our own. Cut from the cloth2 recipes; no outfit, emblem or insignia copied.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "ring",
+  "tidebreak",
+  "water",
+  "winter"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 2.58,
+    "p05_mm": 8.66,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 1.92,
+    "p05_mm": 9.48,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 2.41,
+    "p05_mm": 7.1,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 2.58,
+    "p05_mm": 9.33,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/asset_author/ring_garments/ring_water_parka.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/asset_author/ring_garments/ring_water_parka.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "ring_trousers_fitted"
+ ],
+ "extra": {
+  "presets": {
+   "water": {
+    "0": "ring_sea",
+    "1": "ring_snow_fur",
+    "2": "ring_ice"
+   }
+  },
+  "fur_note": "Zone 1 is a fur zone (role fur: the cloth shader's fur base); no fur shell surface.",
+  "recipe_note": "dress.tunic: hem 0.66, sleeves to 0.95, the hood (hood.hood_on_back), a fur stand collar, raised fur cuffs and hem band."
+ }
+}

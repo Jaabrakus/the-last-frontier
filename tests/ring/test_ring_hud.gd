@@ -253,18 +253,21 @@ func _water() -> void:
 	_expect(hud._water_row.visible and hud._water_bar.value > 0.0, "the water bar shows (%.2f)" % hud._water_bar.value)
 	_expect(strip.ready_line().begins_with("1 · Water Whip · ") and strip.ready_line().contains(" · water "),
 			"the ready line says the water (%s)" % strip.ready_line())
-	# the dress: the element's colour on the basic shirt, no coat, no hat, nothing at the neck or on the shoulders
+	# the dress: the water side's ring dress (PlayerAppearance.ring_dress, 2026-10-05: the parka, trousers, belt and
+	# boots, the same as the water bots'), every garment of it worn, no hat, nothing at the neck or on the shoulders
 	var app := p.appearance
 	if app != null:
 		var outfit: Dictionary = app.look.get("outfit", {})
-		var shirt: Dictionary = outfit.get("shirt", {})
-		var want_col := "#" + MatchSetup.color("water").to_html(false)
-		var bare := ["outer", "head", "vest", "accessories.neck", "accessories.shoulder", "accessories.wrap"].all(
+		var want := PlayerAppearance.ring_dress("water")
+		var worn := not want.is_empty()
+		for s: String in want:
+			var id := String((want[s] as Dictionary).get("id", "-"))
+			var got := String((outfit.get(s, {}) as Dictionary).get("id", "-"))
+			worn = worn and got == id and (id == "-") == app.body.part_meshes("outfit:" + s).is_empty()
+		var bare := ["head", "vest", "accessories.neck", "accessories.shoulder", "accessories.wrap"].all(
 				func(s: String) -> bool: return app.body.part_meshes("outfit:" + s).is_empty())
-		_expect(String((shirt.get("colors", {}) as Dictionary).get("0", "")) == want_col and bare
-				and not app.body.part_meshes("outfit:shirt").is_empty() and not app.body.part_meshes("outfit:legs.lower").is_empty(),
-				"dressed for the ring in the element's colour: the basic shirt %s, trousers, no coat, hat or gear (%s)" % [want_col,
-				shirt])
+		_expect(worn and bare and not app.body.part_meshes("outfit:legs.lower").is_empty(),
+				"dressed for the ring in the water side's ring dress, trousers, no hat or gear (%s)" % [outfit.get("outer", {})])
 	else:
 		_expect(true, "no appearance on this body (use_appearance off): no dress to check")
 	# LMB: no weapon to fire; it is the quick spell's (its own lock: tests/ring/test_quick_spell.gd), the readied key left

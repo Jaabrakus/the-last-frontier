@@ -30,10 +30,27 @@ extends Node3D
 ## Cost (tools/ring/look_c_shots.gd, LOOK_C_COST; 1600x900 high, TAA, 2026-10-05, the deck view): +35 draws (64 -> 99),
 ## shadow draws 136 -> 212 (326 at night: two shadowed deck lamps), ~130k more triangles (the crowd most of it), frame
 ## 9.8 ms bare -> 10.9 noon / 11.1 golden / 12.5 night; 26 lights at night (2 shadowed), none by day; 8 GPU emitters.
+## THE ARENA KIT (2026-10-05, the owner: "assets designed in Blender to match" the inspiration; our own designs): the
+## pieces of assets/ring_kit (tools/asset_author/blender/ring_kit.py) stand where the primitives stood, merged into the
+## same DressingMesh by material key (KIT_KEYS: no new draws): a gateway over each end's tunnel (lacquered pillars, curved
+## roofs with upturned eaves, bracket sets, a name board with the side's plaque, lanterns) instead of the stone
+## gatehouse; lacquered round shafts with bracket capitals on the stands' piers; a curved tile canopy over each bay
+## (the striped valance kept at its front); ribbed paper lanterns; curved roofs for every hip_roof (the scoreboard
+## tower's). The banners, flags and plaques carry our own element glyphs (the kit's glyph atlas, KIT_SHADER). Without
+## the kit (a build without assets/ring_kit) the primitives are drawn as before.
 
 const NAME := "RingDressing"
 const GOLD := Color(1.0, 0.74, 0.32)
 const CLOTH_SHADER := "res://shaders/ring/ring_cloth.gdshader"
+const KIT_DIR := "res://assets/ring_kit/"
+const KIT_SHADER := "res://assets/ring_kit/ring_banner.gdshader"
+const KIT_GLYPHS := "res://assets/ring_kit/glyphs.png"
+## The kit's Blender materials -> this dressing's material keys (their colours are the pieces' tints).
+const KIT_KEYS := {"lacquer": &"paint", "wood": &"paint", "board": &"paint", "paint_green": &"paint",
+		"paint_teal": &"paint", "gold": &"gold", "tile": &"tile", "stone": &"ring_walk", "lamp_red": &"lamp_red",
+		"iron": &"metal"}
+## The canopies' glazed tiles, bay by bay.
+const CANOPY_TILES := [Color(0.08, 0.27, 0.29), Color(0.44, 0.11, 0.06)]
 const FLAME_SHADER := "res://shaders/ring/ring_flame.gdshader"
 const HALO_SHADER := "res://shaders/ring/ring_halo.gdshader"
 const FOAM_SHADER := "res://shaders/ring/ring_foam.gdshader"
@@ -95,6 +112,9 @@ var _flame_mat: ShaderMaterial
 var _halo_mat: ShaderMaterial
 var _foam_mat: ShaderMaterial
 var _caustic_mat: ShaderMaterial
+
+## The kit's pieces as loaded (name -> [{mat, key, col, v, n, i}]; [] when the piece is not in this build).
+static var _kit := {}
 
 
 ## The ring of `level` dressed (built once; a second call only sets the mood). Null when there is no ring.
@@ -224,7 +244,7 @@ func _materials() -> void:
 	for k: StringName in ring.mats:
 		mats[k] = ring.mats[k]
 	mats[&"paint"] = _std(Color.WHITE, 0.7)
-	mats[&"tile"] = _std(Color.WHITE, 0.35)
+	mats[&"tile"] = _std(Color.WHITE, 0.55)
 	var gold := _std(Color.WHITE, 0.3)
 	gold.metallic = 0.85
 	mats[&"gold"] = gold
@@ -273,8 +293,7 @@ func _materials() -> void:
 	fx.set_shader_parameter(&"trim", GOLD)
 	fx.set_shader_parameter(&"mark", Color(0.72, 0.92, 1.0))
 	fx.set_shader_parameter(&"glyph", 1)
-	var pen := ShaderMaterial.new()
-	pen.shader = load(CLOTH_SHADER)
+	var pen := cloth_material()
 	pen.set_shader_parameter(&"mode", 2)
 	pen.set_shader_parameter(&"trim", Color(0.95, 0.92, 0.84))
 	pen.set_shader_parameter(&"wave_amp", 0.06)
@@ -299,9 +318,19 @@ static func _glow(e: Color) -> StandardMaterial3D:
 	return m
 
 
-func _cloth_group(nm: String, mode: int, amp: float, aspect: float, shadow := true) -> void:
+## The cloth's shader: the kit's (our own glyphs, its atlas set on the material) when this build has it, else the ring's.
+static func cloth_material() -> ShaderMaterial:
 	var m := ShaderMaterial.new()
-	m.shader = load(CLOTH_SHADER)
+	if ResourceLoader.exists(KIT_SHADER) and ResourceLoader.exists(KIT_GLYPHS):
+		m.shader = load(KIT_SHADER)
+		m.set_shader_parameter(&"glyphs", load(KIT_GLYPHS))
+	else:
+		m.shader = load(CLOTH_SHADER)
+	return m
+
+
+func _cloth_group(nm: String, mode: int, amp: float, aspect: float, shadow := true) -> void:
+	var m := cloth_material()
 	m.set_shader_parameter(&"mode", mode)
 	m.set_shader_parameter(&"wave_amp", amp)
 	m.set_shader_parameter(&"aspect", aspect)
@@ -373,6 +402,95 @@ func pennant_staff(top: Vector3, fly: float, hoist: float, nm := "flag_x") -> vo
 	cloth(nm, top, Vector3.DOWN * hoist, dir * fly, 2, 8, dir.cross(Vector3.DOWN).normalized(), randf())
 
 
+# ---------------------------------------------------------------- the arena kit (assets/ring_kit)
+## Piece `name` of the kit (assets/ring_kit/<name>.glb) as surfaces {mat, key, col, v, n, i} in the piece's frame,
+## loaded once; [] when it is not in this build.
+static func kit_piece(name: String) -> Array:
+	if _kit.has(name):
+		return _kit[name]
+	var out: Array = []
+	var path := KIT_DIR + name + ".glb"
+	var sc := load(path) as PackedScene if ResourceLoader.exists(path) else null
+	if sc != null:
+		var inst := sc.instantiate()
+		for mi: MeshInstance3D in inst.find_children("*", "MeshInstance3D", true, false):
+			if mi.mesh == null:
+				continue
+			var t := Transform3D.IDENTITY
+			var nd: Node = mi
+			while nd != null and nd != inst:
+				if nd is Node3D:
+					t = (nd as Node3D).transform * t
+				nd = nd.get_parent()
+			var nb := t.basis.inverse().transposed()
+			for s in mi.mesh.get_surface_count():
+				var arr := mi.mesh.surface_get_arrays(s)
+				var mat := mi.mesh.surface_get_material(s)
+				var mname := String(mat.resource_name) if mat != null else ""
+				var col := (mat as BaseMaterial3D).albedo_color if mat is BaseMaterial3D else Color.WHITE
+				var v: PackedVector3Array = t * (arr[Mesh.ARRAY_VERTEX] as PackedVector3Array)
+				var n0: PackedVector3Array = arr[Mesh.ARRAY_NORMAL]
+				var n := PackedVector3Array()
+				n.resize(v.size())
+				for k in v.size():
+					n[k] = (nb * n0[k]).normalized() if k < n0.size() else Vector3.UP
+				var idx: PackedInt32Array = arr[Mesh.ARRAY_INDEX] if arr[Mesh.ARRAY_INDEX] != null else PackedInt32Array(range(v.size()))
+				out.append({"mat": mname, "key": KIT_KEYS.get(mname, &"paint"), "col": Color(col.r, col.g, col.b, 1.0),
+						"v": v, "n": n, "i": idx})
+		inst.free()
+	_kit[name] = out
+	return out
+
+
+## Piece `name` into the kit's surfaces (its material keys, KIT_KEYS) through `xf` (scaling allowed: a canopy stretched
+## to its bay); its "tile" surfaces in `tile` when given (alpha > 0). The stone takes the ring's world-projected UVs (1.6 m
+## a tile). False when the piece is not in this build (the caller draws its primitives).
+static func place(kit: StructureMeshKit, name: String, xf: Transform3D, tile := Color(0, 0, 0, 0)) -> bool:
+	var parts := kit_piece(name)
+	if parts.is_empty():
+		return false
+	var nb := xf.basis.inverse().transposed()
+	var flip := xf.basis.determinant() < 0.0
+	for p: Dictionary in parts:
+		var key: StringName = p.key
+		var col: Color = tile if (String(p.mat) == "tile" and tile.a > 0.0) else p.col as Color
+		if key != &"ring_walk":
+			# (the dressing's own materials take the vertex colour as linear; the kit's colours are sRGB, as designed)
+			col = col.srgb_to_linear()
+		var v: PackedVector3Array = xf * (p.v as PackedVector3Array)
+		var n0: PackedVector3Array = p.n
+		var cnt := v.size()
+		var n := PackedVector3Array()
+		n.resize(cnt)
+		var uv := PackedVector2Array()
+		uv.resize(cnt)
+		var uv2 := PackedVector2Array()
+		uv2.resize(cnt)
+		var c := PackedColorArray()
+		c.resize(cnt)
+		c.fill(col)
+		var stone := key == &"ring_walk"
+		for k in cnt:
+			var nn := (nb * n0[k]).normalized()
+			n[k] = nn
+			if stone:
+				var q := v[k] / 1.6
+				uv[k] = Vector2(q.x, q.z) if absf(nn.y) > 0.6 else (Vector2(q.z, -q.y) if absf(nn.x) > absf(nn.z) else Vector2(q.x, -q.y))
+		var idx: PackedInt32Array = (p.i as PackedInt32Array).duplicate()
+		if flip:
+			for t in range(0, idx.size() - 2, 3):
+				var sw := idx[t + 1]
+				idx[t + 1] = idx[t + 2]
+				idx[t + 2] = sw
+		kit._s(key).push(v, n, uv, uv2, c, idx)
+	return true
+
+
+## Whether this build has the kit (its gateway, the piece every end needs).
+static func has_kit() -> bool:
+	return not kit_piece("gate_pavilion").is_empty()
+
+
 # ---------------------------------------------------------------- shapes
 ## A box (centre, size) under `key` turned by `b`; textured keys get the fort's world-projected UVs when not turned.
 static func pbox(kit: StructureMeshKit, key: StringName, ctr: Vector3, size: Vector3, col: Color, b := Basis(), textured := false) -> void:
@@ -407,6 +525,17 @@ static func prism(kit: StructureMeshKit, key: StringName, base: Vector3, r0: flo
 
 ## A hipped roof over a rect (centre `c` of its eaves, size x z) rising `h` to a short ridge; in frame xf.
 static func hip_roof(kit: StructureMeshKit, key: StringName, xf: Transform3D, c: Vector3, size: Vector2, h: float, col: Color) -> void:
+	# the kit's curved roof (a hip 4 x 2 m along its ridge, or the square pyramid), stretched to the eaves, its tiles `col`
+	var long_x := size.x >= size.y
+	var sq := minf(size.x, size.y) / maxf(size.x, size.y) > 0.8
+	var piece := "roof_pyramid" if sq else "roof_hip"
+	var unit := Vector2(2.0, 2.0) if sq else Vector2(4.0, 2.0)
+	var sz := size if long_x else Vector2(size.y, size.x)
+	var b := Basis.from_scale(Vector3(sz.x / unit.x, h, sz.y / unit.y))
+	if not long_x:
+		b = Basis(Vector3.UP, PI * 0.5) * b
+	if place(kit, piece, Transform3D(xf.basis * b, xf * c), col):
+		return
 	var hx := size.x * 0.5
 	var hz := size.y * 0.5
 	var r := maxf(hx - hz, 0.0)
@@ -522,9 +651,18 @@ func _stand(kit: StructureMeshKit, sz: float) -> void:
 		RingArena.wbox(kit, &"ring_walk", Vector3(cx, y0 + top_back * 0.5, bz), Vector3(0.8, top_back, 0.8), 1.6, stone, 8)
 		RingArena.wbox(kit, &"ring_walk", Vector3(cx, y0 + top_back + 0.15, bz), Vector3(1.05, 0.3, 1.05), 1.2, stone * 0.92, 8)
 		var shaft := COLUMN_H - 0.4 - top_back - 0.3
-		pbox(kit, &"paint", Vector3(cx, y0 + top_back + 0.3 + shaft * 0.5, bz), Vector3(0.72, shaft, 0.72), Color(0.9, 0.85, 0.76))
-		RingArena.wbox(kit, &"ring_walk", Vector3(cx, y0 + COLUMN_H - 0.2, bz), Vector3(1.15, 0.4, 1.15), 1.2, stone * 0.95, 8)
-		pbox(kit, &"gold", Vector3(cx, y0 + COLUMN_H - 0.48, bz), Vector3(0.88, 0.1, 0.88), GOLD)
+		var foot := y0 + top_back + 0.3
+		if has_kit():
+			# a lacquered round shaft on a stone drum, a painted bracket capital under the beam (the kit)
+			var cap_h := 0.68
+			place(kit, "pillar_base", Transform3D(Basis.from_scale(Vector3(0.85, 0.8, 0.85)), Vector3(cx, foot, bz)))
+			var sh := COLUMN_H - 0.01 - cap_h - top_back - 0.3 - 0.42
+			place(kit, "pillar_shaft", Transform3D(Basis.from_scale(Vector3(0.8, sh, 0.8)), Vector3(cx, foot + 0.42, bz)))
+			place(kit, "pillar_cap", Transform3D(Basis.from_scale(Vector3(0.8, 1.0, 0.8)), Vector3(cx, y0 + COLUMN_H - 0.01 - cap_h, bz)))
+		else:
+			pbox(kit, &"paint", Vector3(cx, foot + shaft * 0.5, bz), Vector3(0.72, shaft, 0.72), Color(0.9, 0.85, 0.76))
+			RingArena.wbox(kit, &"ring_walk", Vector3(cx, y0 + COLUMN_H - 0.2, bz), Vector3(1.15, 0.4, 1.15), 1.2, stone * 0.95, 8)
+			pbox(kit, &"gold", Vector3(cx, y0 + COLUMN_H - 0.48, bz), Vector3(0.88, 0.1, 0.88), GOLD)
 		# the front pole and its gold cap
 		var py := _tier_y(FRONT_Z - oz)
 		prism(kit, &"paint", Vector3(cx, py, sz * FRONT_Z), 0.1, 0.08, FRONT_Y - py, 8, timber)
@@ -550,7 +688,11 @@ func _stand(kit: StructureMeshKit, sz: float) -> void:
 		var nrm := Vector3(x1 - x0, 0, 0).cross(slope).normalized()
 		if nrm.y < 0.0:
 			nrm = -nrm
-		cloth(nm, a, Vector3(x1 - x0, 0, 0), slope, 9, 6, nrm, float(k) * 0.17, 0.0, 0.86)
+		# the kit's canopy (x 0..1 across the bay, y the fall from the back, z 0 back .. 1 front), else the striped cloth
+		var canopy := Transform3D(Basis(Vector3(x1 - x0, 0, 0), Vector3(0, a.y - f.y, 0), Vector3(0, 0, f.z - a.z)),
+				Vector3(x0, f.y, a.z))
+		if not place(kit, "awning_canopy", canopy, CANOPY_TILES[k % 2]):
+			cloth(nm, a, Vector3(x1 - x0, 0, 0), slope, 9, 6, nrm, float(k) * 0.17, 0.0, 0.86)
 		cloth(nm, f, Vector3(x1 - x0, 0, 0), Vector3(0, -0.6, 0), 18, 1, Vector3(0, 0, -sz), float(k) * 0.17, 0.86, 1.0)
 		# a paper lantern under the bay
 		var lx := (x0 + x1) * 0.5
@@ -575,6 +717,8 @@ func _stand(kit: StructureMeshKit, sz: float) -> void:
 
 ## A red paper lantern: a round-shouldered drum (lit by night), gold caps.
 func _paper_lantern(kit: StructureMeshKit, c: Vector3, r: float, h: float) -> void:
+	if place(kit, "lantern_paper", Transform3D(Basis.from_scale(Vector3(r / 0.26, h / 0.62, r / 0.26)), c)):
+		return
 	var red := Color(0.8, 0.14, 0.07)
 	prism(kit, &"lamp_red", c + Vector3(0, -h * 0.5, 0), r * 0.7, r, h * 0.22, 10, red)
 	prism(kit, &"lamp_red", c + Vector3(0, -h * 0.28, 0), r, r, h * 0.56, 10, red)
@@ -594,6 +738,81 @@ func _gate(kit: StructureMeshKit, sg: float) -> void:
 	var into := Basis(Vector3.UP, -sg * PI * 0.5)    # +Z of this frame faces the ring (-sg X)
 	var aw := 2.6
 	var ys := y0 + 2.8
+	# the gateway over the tunnel (the kit's), else the stone gatehouse; the bunting's ends over it
+	var anchors: Array[Vector3] = []
+	if has_kit():
+		anchors = _gateway(kit, sg, s, into)
+	else:
+		_gatehouse(kit, sg, s, xc, face, into, aw, ys, stone, tile)
+		_portcullis(kit, sg, aw, ys)
+		anchors = [Vector3(xc, y0 + 9.7, -aw - 1.3), Vector3(xc, y0 + 9.7, aw + 1.3)]
+	# the tunnel's dark: a fan over the opening on the wall's face, warm at its foot (under the gateway a square opening
+	# below the end wall's top: the arch rose over it into the gatehouse's own wall)
+	var wall_x := sg * (ox - 0.02)
+	var foot := Color(1.0, 0.75, 0.55)
+	var head := Color(0.25, 0.22, 0.2)
+	var arch := not has_kit()
+	var top_y := ys if arch else y0 + 4.0
+	kit.quad(&"void", Vector3(wall_x, y0, -aw), Vector3(wall_x, y0, aw), Vector3(wall_x, top_y, aw), Vector3(wall_x, top_y, -aw),
+			Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Color.WHITE, StructureMeshKit.KIND_TEX, 0.0,
+			PackedColorArray([foot, foot, head * 1.6, head * 1.6]), Vector3(-sg, 0, 0))
+	for i in (12 if arch else 0):
+		var a0 := PI * float(i) / 12.0
+		var a1 := PI * float(i + 1) / 12.0
+		kit.tri(&"void", Vector3(wall_x, ys, 0.0), Vector3(wall_x, ys + sin(a0) * aw, cos(a0) * aw), Vector3(wall_x, ys + sin(a1) * aw,
+				cos(a1) * aw), Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, head, StructureMeshKit.KIND_TEX, 0.0, Vector3(-sg, 0, 0))
+	# the end wall: a painted frieze at its head, four tall banners on staffs, bunting between them
+	var wf := sg * (ox - 0.012)
+	for zr: Array in [[-ox + 0.5, -aw - 2.6], [aw + 2.6, ox - 0.5]]:
+		var za: float = zr[0]
+		var zb: float = zr[1]
+		var lz := absf(zb - za)
+		var o := Vector3(wf, y0 + 4.35, za if sg > 0.0 else zb)
+		var u := Vector3(0, 0, lz) * (1.0 if sg > 0.0 else -1.0)
+		cloth("frieze_%d" % s, o, u, Vector3(0, -0.55, 0), int(lz), 1, Vector3(-sg, 0, 0), 0.0, 0.0, 1.0, lz)
+	var poles: Array[Vector3] = []
+	for bz: float in [-12.8, -7.4, 7.4, 12.8]:
+		var bx := sg * (ox - 0.12)
+		prism(kit, &"paint", Vector3(sg * (ox - 0.08), y0 + 3.6, bz), 0.07, 0.06, 6.8, 8, Color(0.4, 0.11, 0.06))
+		prism(kit, &"gold", Vector3(sg * (ox - 0.08), y0 + 10.4, bz), 0.12, 0.0, 0.4, 8, GOLD)
+		pbox(kit, &"paint", Vector3(bx - sg * 0.05, y0 + 9.55, bz), Vector3(0.1, 0.1, 2.6), Color(0.4, 0.11, 0.06))
+		for e: float in [-1.3, 1.3]:
+			prism(kit, &"gold", Vector3(bx - sg * 0.05, y0 + 9.48, bz + e), 0.07, 0.07, 0.14, 8, GOLD)
+		var side_u := Vector3(0, 0, 2.2) * (-1.0 if sg > 0.0 else 1.0)
+		cloth("banner_%d" % s, Vector3(bx - sg * 0.12, y0 + 9.45, bz) - side_u * 0.5, side_u, Vector3(0, -6.2, 0), 3, 14,
+				Vector3(-sg, 0, 0), absf(bz) * 0.11 + sg)
+		poles.append(Vector3(sg * (ox - 0.08), y0 + 10.3, bz))
+	_string(kit, poles[0], poles[1], 0.7)
+	_string(kit, poles[2], poles[3], 0.7)
+	_string(kit, anchors[0], anchors[1], 1.0)
+	_string(kit, poles[1], anchors[0], 0.5)
+	_string(kit, poles[2], anchors[1], 0.5)
+
+
+## The kit's gateway on the end `sg` (assets/ring_kit/gate_pavilion.glb: four lacquered pillars in a row before the tunnel,
+## curved roofs, lanterns), the side's plaque on its name board, a staff with the side's flag on each outer roof. Returns
+## the bunting's two anchors (the main roof's ridge ends).
+func _gateway(kit: StructureMeshKit, sg: float, s: int, into: Basis) -> Array[Vector3]:
+	var at := Vector3(sg * (ox - 1.3), y0, 0.0)
+	var xf := Transform3D(into, at)
+	place(kit, "gate_pavilion", xf)
+	plaque(s, Transform3D(into, xf * Vector3(0.0, 5.62, 0.16)), 0.8)
+	for tz: float in [-1.0, 1.0]:
+		var top := xf * Vector3(tz * 3.875, 6.62, 0.0)
+		prism(kit, &"metal", top, 0.035, 0.035, 2.4, 6, Color(0.2, 0.2, 0.2))
+		prism(kit, &"gold", top + Vector3(0, 2.4, 0), 0.09, 0.0, 0.25, 6, GOLD)
+		var dir := (Vector3(0.0, 0.0, tz * sg) * 0.6 + Vector3(-sg, 0, 0) * 0.8).normalized()
+		cloth("flag_%d" % s, top + Vector3(0, 2.3, 0), Vector3.DOWN * 1.0, dir * 1.7, 2, 6, dir.cross(Vector3.DOWN).normalized(),
+				0.3 + tz * 0.2)
+	var a: Array[Vector3] = [xf * Vector3(-2.9, 8.55, 0.0), xf * Vector3(2.9, 8.55, 0.0)]
+	if a[0].z > a[1].z:
+		a.reverse()
+	return a
+
+
+## The stone gatehouse (without the kit): two towers with tile roofs, plaques and flags, a voussoired arch, the wall over it.
+func _gatehouse(kit: StructureMeshKit, sg: float, s: int, xc: float, face: float, into: Basis, aw: float, ys: float,
+		stone: Color, tile: Color) -> void:
 	for tz: float in [-1.0, 1.0]:
 		var zc := tz * (aw + 1.3)
 		RingArena.wbox(kit, &"ring_walk", Vector3(xc, y0 + 4.0, zc), Vector3(1.6, 8.0, 2.6), 1.6, stone, 8)
@@ -638,18 +857,10 @@ func _gate(kit: StructureMeshKit, sg: float) -> void:
 		var zm := -aw + 0.5 + float(k) * (2.0 * aw - 1.0) / 4.0
 		RingArena.wbox(kit, &"ring_walk", Vector3(xc, top_y + 0.54, zm), Vector3(1.4, 0.6, 0.55), 1.2, stone * 0.95, 8)
 	plaque(s, Transform3D(into, Vector3(face - sg * 0.03, ys + aw + 1.05, 0.0)), 0.95)
-	# the tunnel's dark: a fan over the opening on the wall's face, warm at its foot
-	var wall_x := sg * (ox - 0.02)
-	var foot := Color(1.0, 0.75, 0.55)
-	var head := Color(0.25, 0.22, 0.2)
-	kit.quad(&"void", Vector3(wall_x, y0, -aw), Vector3(wall_x, y0, aw), Vector3(wall_x, ys, aw), Vector3(wall_x, ys, -aw),
-			Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Color.WHITE, StructureMeshKit.KIND_TEX, 0.0,
-			PackedColorArray([foot, foot, head * 1.6, head * 1.6]), Vector3(-sg, 0, 0))
-	for i in 12:
-		var a0 := PI * float(i) / 12.0
-		var a1 := PI * float(i + 1) / 12.0
-		kit.tri(&"void", Vector3(wall_x, ys, 0.0), Vector3(wall_x, ys + sin(a0) * aw, cos(a0) * aw), Vector3(wall_x, ys + sin(a1) * aw,
-				cos(a1) * aw), Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, head, StructureMeshKit.KIND_TEX, 0.0, Vector3(-sg, 0, 0))
+
+
+## The tunnel's portcullis raised into the arch (the stone gatehouse's).
+func _portcullis(kit: StructureMeshKit, sg: float, aw: float, ys: float) -> void:
 	# the tunnel's floor going in, its walls (the towers' inner faces are there), the portcullis raised into the arch
 	var bars := 13
 	var px := sg * (ox - 0.55)
@@ -665,32 +876,6 @@ func _gate(kit: StructureMeshKit, sg: float) -> void:
 		var half := sqrt(maxf(aw * aw - (yy - ys) * (yy - ys), 0.0))
 		if half > 0.1:
 			pbox(kit, &"metal", Vector3(px, yy, 0.0), Vector3(0.06, 0.07, half * 2.0 - 0.05), Color(0.12, 0.12, 0.13))
-	# the end wall: a painted frieze at its head, four tall banners on staffs, bunting between them
-	var wf := sg * (ox - 0.012)
-	for zr: Array in [[-ox + 0.5, -aw - 2.6], [aw + 2.6, ox - 0.5]]:
-		var za: float = zr[0]
-		var zb: float = zr[1]
-		var lz := absf(zb - za)
-		var o := Vector3(wf, y0 + 4.35, za if sg > 0.0 else zb)
-		var u := Vector3(0, 0, lz) * (1.0 if sg > 0.0 else -1.0)
-		cloth("frieze_%d" % s, o, u, Vector3(0, -0.55, 0), int(lz), 1, Vector3(-sg, 0, 0), 0.0, 0.0, 1.0, lz)
-	var poles: Array[Vector3] = []
-	for bz: float in [-12.8, -7.4, 7.4, 12.8]:
-		var bx := sg * (ox - 0.12)
-		prism(kit, &"paint", Vector3(sg * (ox - 0.08), y0 + 3.6, bz), 0.07, 0.06, 6.8, 8, Color(0.4, 0.11, 0.06))
-		prism(kit, &"gold", Vector3(sg * (ox - 0.08), y0 + 10.4, bz), 0.12, 0.0, 0.4, 8, GOLD)
-		pbox(kit, &"paint", Vector3(bx - sg * 0.05, y0 + 9.55, bz), Vector3(0.1, 0.1, 2.6), Color(0.4, 0.11, 0.06))
-		for e: float in [-1.3, 1.3]:
-			prism(kit, &"gold", Vector3(bx - sg * 0.05, y0 + 9.48, bz + e), 0.07, 0.07, 0.14, 8, GOLD)
-		var side_u := Vector3(0, 0, 2.2) * (-1.0 if sg > 0.0 else 1.0)
-		cloth("banner_%d" % s, Vector3(bx - sg * 0.12, y0 + 9.45, bz) - side_u * 0.5, side_u, Vector3(0, -6.2, 0), 3, 14,
-				Vector3(-sg, 0, 0), absf(bz) * 0.11 + sg)
-		poles.append(Vector3(sg * (ox - 0.08), y0 + 10.3, bz))
-	_string(kit, poles[0], poles[1], 0.7)
-	_string(kit, poles[2], poles[3], 0.7)
-	_string(kit, Vector3(xc, y0 + 9.7, -aw - 1.3), Vector3(xc, y0 + 9.7, aw + 1.3), 1.0)
-	_string(kit, poles[1], Vector3(xc, y0 + 9.7, -aw - 1.3), 0.5)
-	_string(kit, poles[2], Vector3(xc, y0 + 9.7, aw + 1.3), 0.5)
 
 
 # ---------------------------------------------------------------- the deck's trim

@@ -1,0 +1,363 @@
+{
+ "id": "ring_trousers_wrapped",
+ "name": "Ring trousers (wrapped)",
+ "description": "Roomy trousers with the shins bound from the calf to the ankle in a long wrap.",
+ "kind": "garment",
+ "set": "ring",
+ "slot": "legs.lower",
+ "alt_slots": [],
+ "layer": {
+  "default": 30
+ },
+ "glb": "res://assets/character/garments/ring/ring_trousers_wrapped.glb",
+ "mesh": "ring_trousers_wrapped",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "ring_trousers_wrapped"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "pelvis_center",
+  "pelvis_side",
+  "shin_lower_l",
+  "shin_lower_r",
+  "shin_upper_l",
+  "shin_upper_r",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_regions": [
+  "pelvis_side",
+  "shin_upper_l",
+  "shin_upper_r",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "cloth",
+   "role": "cloth",
+   "fabric": "TWILL",
+   "palette": [
+    "ring_olive",
+    "ring_olive_dark",
+    "ring_moss",
+    "ring_khaki",
+    "ring_umber",
+    "ring_ochre"
+   ],
+   "default": "ring_olive",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_olive": "#4A5A2E",
+    "ring_olive_dark": "#3E4A27",
+    "ring_moss": "#5E7A3A",
+    "ring_khaki": "#A89B72",
+    "ring_umber": "#5A4127",
+    "ring_ochre": "#B8893C"
+   },
+   "fabrics": [
+    "TWILL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "waistband and shin wraps",
+   "role": "trim",
+   "fabric": "LIN",
+   "palette": [
+    "ring_olive",
+    "ring_olive_dark",
+    "ring_moss",
+    "ring_khaki",
+    "ring_umber",
+    "ring_ochre"
+   ],
+   "default": "ring_khaki",
+   "pattern": {
+    "options": [
+     "none",
+     "stripe"
+    ],
+    "default": "stripe",
+    "stripe": {
+     "colors": [
+      "ring_khaki",
+      "ring_umber"
+     ],
+     "scale_m": 0.05,
+     "angle": 32.0,
+     "duty": 0.78
+    },
+    "note": "the wound wrap: a dark line between the turns, on the bias"
+   },
+   "bands": null,
+   "palette_hex": {
+    "ring_olive": "#4A5A2E",
+    "ring_olive_dark": "#3E4A27",
+    "ring_moss": "#5E7A3A",
+    "ring_khaki": "#A89B72",
+    "ring_umber": "#5A4127",
+    "ring_ochre": "#B8893C"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 3902,
+    "verts": 2345,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "ankle_l",
+     "ankle_r",
+     "pelvis_center",
+     "pelvis_side",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "r_upper_leg",
+     "r_knee",
+     "r_ankle",
+     "r_heel",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined"
+    ]
+   }
+  },
+  "tris": 3902,
+  "verts": 2345,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0483,
+   "breast_large": 0.009,
+   "breast_small": 0.009
+  },
+  "coverage": {
+   "chest_back": {
+    "normal": 0.062,
+    "cone": 0.0
+   },
+   "abdomen_front": {
+    "normal": 0.99,
+    "cone": 0.854
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 0.823
+   },
+   "abdomen_back": {
+    "normal": 0.99,
+    "cone": 0.865
+   },
+   "pelvis_center": {
+    "normal": 0.833,
+    "cone": 0.635
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "upper_arm_l": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.115,
+    "cone": 0.0
+   },
+   "forearm_b_l": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "forearm_c_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.083,
+    "cone": 0.0
+   },
+   "forearm_b_r": {
+    "normal": 0.062,
+    "cone": 0.0
+   },
+   "forearm_c_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "thigh_lower_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_l": {
+    "normal": 0.979,
+    "cone": 0.875
+   },
+   "ankle_l": {
+    "normal": 0.198,
+    "cone": 0.0
+   },
+   "thigh_upper_r": {
+    "normal": 1.0,
+    "cone": 0.99
+   },
+   "thigh_lower_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_upper_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_r": {
+    "normal": 0.99,
+    "cone": 0.812
+   },
+   "ankle_r": {
+    "normal": 0.188,
+    "cone": 0.0
+   }
+  },
+  "glb_kb": 463.2
+ },
+ "budget": {
+  "tris_max": 7500
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Invented sport dress (Tidebreak, 2026-10-05): the owner asked for assets in the spirit of an elemental martial-arts cartoon, made our own. Cut from the cloth2 recipes; no outfit, emblem or insignia copied.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "ring",
+  "tidebreak",
+  "pants",
+  "earth"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 2.99,
+    "p05_mm": 6.07,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": -17.91,
+    "p05_mm": 5.37,
+    "inside_skin": 23
+   },
+   "bl": {
+    "min_mm": 3.0,
+    "p05_mm": 6.09,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 3.0,
+    "p05_mm": 6.09,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": false,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/asset_author/ring_garments/ring_trousers_wrapped.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/asset_author/ring_garments/ring_trousers_wrapped.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "presets": {
+   "earth": {
+    "0": "ring_olive",
+    "1": "ring_khaki"
+   }
+  },
+  "recipe_note": "dress.trousers: flare to 3.6 cm at the thigh, the band cuff 19 cm (the wrap) on the bias."
+ }
+}

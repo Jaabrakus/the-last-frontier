@@ -1,0 +1,237 @@
+{
+ "id": "ring_water_belt",
+ "name": "Water side belt",
+ "description": "A broad leather belt over the parka with a pale buckle and a small pouch at the right front.",
+ "kind": "garment",
+ "set": "ring",
+ "slot": "accessories.waist",
+ "alt_slots": [],
+ "layer": {
+  "default": 60
+ },
+ "glb": "res://assets/character/garments/ring/ring_water_belt.glb",
+ "mesh": "ring_water_belt",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "ring_water_belt"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "belt",
+   "role": "leather",
+   "fabric": "LEA",
+   "palette": [
+    "ring_navy",
+    "ring_seal",
+    "leather_brown",
+    "leather_black"
+   ],
+   "default": "ring_navy",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_navy": "#18345A",
+    "ring_seal": "#6B6157",
+    "leather_brown": "#5B3D26",
+    "leather_black": "#1D1B19"
+   },
+   "fabrics": [
+    "LEA"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "pouch",
+   "role": "leather",
+   "fabric": "SUEDE",
+   "palette": [
+    "ring_seal",
+    "ring_ice",
+    "leather_brown"
+   ],
+   "default": "ring_seal",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_seal": "#6B6157",
+    "ring_ice": "#A8CDEB",
+    "leather_brown": "#5B3D26"
+   },
+   "fabrics": [
+    "SUEDE"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "buckle",
+   "role": "metal",
+   "fabric": "MET",
+   "palette": [
+    "silver",
+    "pewter",
+    "brass"
+   ],
+   "default": "silver",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "silver": "#C8CACC",
+    "pewter": "#9A9C9A",
+    "brass": "#B58F4A"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": true
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 392,
+    "verts": 275,
+    "zones": [
+     0,
+     2
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "pelvis_center"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "spinea",
+     "spineb",
+     "spinec"
+    ]
+   }
+  },
+  "tris": 392,
+  "verts": 275,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0536,
+   "breast_large": 0.0017,
+   "breast_small": 0.0013
+  },
+  "coverage": {
+   "abdomen_front": {
+    "normal": 0.573,
+    "cone": 0.333
+   },
+   "abdomen_side": {
+    "normal": 0.396,
+    "cone": 0.208
+   },
+   "abdomen_back": {
+    "normal": 0.385,
+    "cone": 0.073
+   },
+   "upper_arm_l": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.021,
+    "cone": 0.0
+   }
+  },
+  "glb_kb": 131.7
+ },
+ "budget": {
+  "tris_max": 2500
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Invented sport dress (Tidebreak, 2026-10-05): the owner asked for assets in the spirit of an elemental martial-arts cartoon, made our own. Cut from the cloth2 recipes; no outfit, emblem or insignia copied.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "ring",
+  "tidebreak",
+  "water"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 19.88,
+    "p05_mm": 22.76,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 20.23,
+    "p05_mm": 24.37,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 19.87,
+    "p05_mm": 22.75,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 19.85,
+    "p05_mm": 22.75,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/asset_author/ring_garments/ring_water_belt.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/asset_author/ring_garments/ring_water_belt.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "ring_water_parka"
+ ],
+ "extra": {
+  "presets": {
+   "water": {
+    "0": "ring_navy",
+    "1": "ring_seal",
+    "2": "silver"
+   }
+  },
+  "recipe_note": "recipes.belt 5.5 cm wide over the parka, a pouch box at the right front."
+ }
+}
