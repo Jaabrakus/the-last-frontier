@@ -369,6 +369,8 @@ func _audio(p: FrontierPlayer) -> void:
 	steps.name = "Footsteps"
 	steps.player = p
 	p.add_child(steps)
+	if BendLooks.live():
+		BendSounds.warm()                    # (the ring's own sounds held from here: none read from disk mid-fight; prefetched)
 
 
 ## No guns in the arena game (the owner, 2026-10-04): the demo's musket rack and spear barrel the player's interactor sets

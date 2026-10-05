@@ -225,6 +225,34 @@ tools/asset_author/blender/ring_kit.py): gateways over the tunnels, lacquered pi
 paper lanterns, tile canopies, and four simple glyphs of our own (a mountain, a drop over ripples, three embers, three wind
 strokes); merged into the dressing's mesh (no new draw calls).
 
+## Improvement round 1 (2026-10-05: PERF, BALANCE, SOUND, LEARN)
+
+- **The load and the restarts** (PERF): behind the loading screen the ring is built a part a frame (RingLevel._build: the
+  sky, the deck, the stands, the light, the competitors, the crowd, the match, the elements), each part's files read on
+  worker threads first (data/ring/prefetch.json, tools/perf/ring_prefetch_list.py; the ring's own sounds among them) and
+  drawn through a camera where the player's will stand, so each part's shaders compile on its own frame; the loading
+  screen's bar glides to the build's progress with a line saying what is being built. Longest frame after the loading
+  screen shows 2.1 s -> 0.55-0.6 s (warm shader cache; 7.5 s -> 2.9 s on a first launch), the rest the player's own build
+  (FrontierPlayer._ready). One bot the match long: RingMode._keep_foe / _ready_foe make last round's whole at its new end
+  with a new mind (a new one only when hurt past whole or a rematch asks for another element or difficulty); a restart
+  14-34 ms at medium (was 36-46 ms plus the new bot's first draw). tests/perf/test_ring_hitches.gd measures both.
+- **The balance** (BALANCE; scratchpad review r1_balance_before/after): air had won on the deck's socket cannonballs it
+  lifted (about 110 a strike) and on its guard rolling once a bolt. Now one roll a volley (NpcBending.VOLLEY_S); any option
+  whose hint `answers` is a guard (Earth Grip anchor, Footwork hop, Water Shield's ice wall; min_knock, guard_when, a dash
+  only inside the ropes); held stones and tornadoes read as threats; air lifts back a stone its cushion stopped. Numbers:
+  Stone Form lock 1.1 s (bot ai_factor 1.15), bubble lock 0.45 s, heal 35, whip knock 8, wave push lock 0.6 s, slice 10,
+  tornado 2.2 s, element_factor air 0.6 / water 1.5, hard aim 1.3 deg and 0.9 lead. tests/ring/test_balance.gd (12
+  cross-element pairings): every element 0.46-0.54 of its rounds (air was 0.84). Earth's catch per stone unchanged.
+- **The sounds** (SOUND): the ring's own, synthesized (tools/sfx/bend/, audio/sfx/bend/: 38 ids, 142 variants; nothing
+  recorded or downloaded) and played by BendSounds (a voice pool, per-id caps, its own dice; warm() loads them behind the
+  loading screen); a cast's sound from the move being cast, a catch and a fall into the pool told by where they land; the
+  crowd's murmur at the stands, its level the mood, cheers, gasps, a roar and a groan on a ring-out. The ring's stings
+  (count, go, bell) still borrow frontier sounds: the gong, bell and tick are ready (BendSounds.event).
+- **Learning** (LEARN): Practice's Lessons row (RingLessons, LessonCard, data/ring/lessons.json): 11 cards (9 under
+  simple), each done by doing it, keys from the bindings now, per scheme and element; Enter skips; the place kept in
+  GameSettings' lessons section. A first Quick match's key hints top left (FirstHints; the ring's Esc row turns them on
+  and off). Screen overlays only: nothing on the dummy, nothing on the deck.
+
 ## Build order (proposed)
 
 1. Controls: the keys and their two skills (the same key again switches), the wheel through a skill's variations; the
