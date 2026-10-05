@@ -20,7 +20,8 @@ extends RefCounted
 ##                 the element's personality, its range band, its 'when'; a little chance from its own seeded rng; an option
 ##                 not cast yet a little more, a combo's follow-up much more), else it keeps its range and circles the foe,
 ##                 facing him; tick (each physics frame, NpcFighter._physics_process): the lock filled, the threats looked
-##                 at (BendBolt, a bot's spike in flight, a hurled GustLift stone, the foe's lightning lock) and a guard of its
+##                 at (BendBolt, a bot's spike in flight, a hurled GustLift stone, the foe's lightning lock, and his wind-up
+##                 read: his lock on a throw or a bolt, its time to impact the lock's rest and the flight) and a guard of its
 ##                 element begun in time (catch, deflect, parry, redirect, bubble, shield, spin...: the preset's reaction and
 ##                 chance), its own speed braked short of an open end
 ##   its water     its own meter (Bending.of(it)): a water move it cannot pay for is not chosen; under water_low it goes to a
@@ -31,6 +32,11 @@ extends RefCounted
 ##   what hides    the foe behind a cloud (NpcBendCaster.hidden: smoke, dust, spray, steam on the line): no aimed move begun,
 ##                 no guard (it cannot see him), the scatter tripled; a flare's dazzle (bend_dazzle_until) doubles its scatter
 ##                 and its reaction
+##   the opening   its preset's grace_s from the moment it is let go (the round's "Break!", its first tick unheld; the duel:
+##                 from its making): no attack and no control begun (guards, walls and footwork only), so no bot knocks a man
+##                 over his line in the first second of a round (the owner's integrator saw a hard air ball land at 0.6 s)
+##   catch, return a stone caught and held (its Catch) is shoved back (Earth Shove push) as soon as its reaction allows:
+##                 forced, its rest cut short (the earth-vs-earth core: catch it just before it hits and fire it back)
 ## Counted for the tests and the ring's HUD: casts, casts_by ("move/mode" -> n), hits, catches, answered, lost, reactions_by,
 ## locks (each lock's planned and measured time); the old spikes, walls, gusts. Contract: element, casting ("" or the move),
 ## mode, fill (0..1), lock_s, bounds_fn, edge_fn.
@@ -62,6 +68,8 @@ const CARRY_S := 0.25
 const THREAT_MISS_M := 1.6
 ## A lock filled less than this is let go for a guard (a reaction) against what comes at it.
 const SWITCH_FILL := 0.35
+## A man's wind-up read (his lock on a throw or a bolt, _threats): his strike comes this long after his lock is full (s).
+const READ_STRIKE_S := 0.1
 
 static var _ai := {}
 static var _bend_cast: Script = null
@@ -117,6 +125,14 @@ var _watched := {}
 var _watch_until := -1.0
 var _threat_seen := {}
 var _alt := false
+## The opening grace: no attack begun before this (BendStatus clock); whether it was held at its last tick.
+var _grace_until := 0.0
+var _was_held := false
+## Its catches seen so far (a new one answered with a shove).
+var _catches_seen := 0
+## No new guard begun before this (bend_ai.json guard_cool_s after any guard: one guard after another, of whatever kind,
+## would turtle; the moves' own cools are per option).
+var _guard_until := 0.0
 
 
 func _init(b: NpcBrain) -> void:
@@ -132,6 +148,7 @@ func _init(b: NpcBrain) -> void:
 	_build_options()
 	if me.is_inside_tree():
 		Bending.of(me).element = element
+	_grace_until = _now() + float(pr.get("grace_s", 0.0))
 
 
 # ---------------------------------------------------------------- data
@@ -318,6 +335,12 @@ func step(dt: float) -> void:
 func reset() -> void:
 	_cancel()
 	_rest_until = 0.0
+	_grace_until = _now() + float(preset().get("grace_s", 0.0))
+
+
+## Whether its opening grace still runs (no attack, no control begun).
+func in_grace() -> bool:
+	return _now() < _grace_until
 
 
 func think(dt: float) -> void:
@@ -343,9 +366,14 @@ func tick(dt: float) -> void:
 	if me.is_dead():
 		return
 	if me.held:
+		_was_held = true
 		if casting != "":
 			_cancel()
 		return
+	if _was_held:
+		# (let go: the round's start; its opening grace from now)
+		_was_held = false
+		_grace_until = _now() + float(preset().get("grace_s", 0.0))
 	if edge_fn.is_valid() and not me.on_deck:
 		me.on_deck = true
 	_watch()
@@ -439,6 +467,7 @@ func _choose(t: Node3D, d: float) -> Dictionary:
 	var el_roles: Dictionary = el.get("roles", {})
 	var hidden := NpcBendCaster.hidden(me, t)
 	var seen := brain.seen_now and not hidden
+	var grace := in_grace()
 	var best: Dictionary = {}
 	var best_w := 0.05
 	for o: Dictionary in options:
@@ -448,7 +477,9 @@ func _choose(t: Node3D, d: float) -> Dictionary:
 		var role := String(h.get("role", "offence"))
 		if role == "reaction":
 			continue
-		if role in ["offence", "control"] and not seen:
+		if role in ["offence", "control"] and (not seen or grace):
+			continue
+		if grace and float(o.knock) > 0.0:
 			continue
 		var band := _band(h, o.spec)
 		if band.y > 0.0 and (d < band.x or d > band.y):
@@ -464,6 +495,8 @@ func _choose(t: Node3D, d: float) -> Dictionary:
 			if not _dash_safe(o, t):
 				continue
 		if String(o.do) == "buff" and String(o.spec.get("buff", "")) in ["run", "scooter"] and not _run_safe(o, t):
+			continue
+		if String(o.key) == "gust/lift" and _lift_stone(t) == null:
 			continue
 		var w := float(roles.get(role, 0.5)) * float(el_roles.get(role, 1.0)) * float(h.get("weight", 1.0))
 		if float(o.knock) >= 8.0:
@@ -548,6 +581,8 @@ func _when(c: String, t: Node3D, d: float) -> bool:
 ## The guard to begin now against what comes at it ({id, mode, kind} or {}): a threat seen for the preset's reaction (x2
 ## dazzled), its time to impact long enough for the guard's lock, answered at the preset's chance (one roll a threat).
 func _reaction() -> Dictionary:
+	if _now() < _guard_until:
+		return {}
 	var t := brain.target
 	if t != null and NpcBendCaster.hidden(me, t):
 		return {}
@@ -561,7 +596,8 @@ func _reaction() -> Dictionary:
 	for th: Dictionary in threats:
 		var id := int(th.id)
 		if not _threat_seen.has(id):
-			_threat_seen[id] = [now, me.rng.randf() < float(pr.get("react_chance", 0.5))]
+			var el_react := float(((ai().get("elements", {}) as Dictionary).get(element, {}) as Dictionary).get("react", 1.0))
+			_threat_seen[id] = [now, me.rng.randf() < float(pr.get("react_chance", 0.5)) * el_react]
 		var seen: Array = _threat_seen[id]
 		if not bool(seen[1]) or now - float(seen[0]) < react:
 			continue
@@ -616,11 +652,43 @@ func _threats() -> Array:
 		var sc := SwayCaster.of(t) if t is FrontierPlayer else null
 		if sc != null and sc.state != SwayCaster.State.IDLE and sc.move == "fire_arc" and sc.mode_of("fire_arc") == "lightning":
 			out.append({"id": sc.get_instance_id(), "kind": "lightning", "tti": maxf((1.0 - sc.fill) * sc.lock_s, 0.0) + 0.05})
+		elif sc != null and sc.state != SwayCaster.State.IDLE and sc.move != "":
+			# (his wind-up read: a throw or a bolt he is locking, its stone or its element on its way when he lets go)
+			var md := sc.mode_of(sc.move)
+			var shot := shot_of(sc.move, md)
+			if not shot.is_empty():
+				var left := maxf((1.0 - sc.fill) * sc.lock_s, 0.0)
+				var began := int((_now() - sc.fill * sc.lock_s) * 10.0)
+				out.append({"id": hash([sc.get_instance_id(), sc.move, md, began]), "kind": shot.kind,
+						"tti": left + READ_STRIKE_S + c.distance_to(NpcSenses.chest_of(t)) / float(shot.mps)})
 		elif t is NpcFighter and (t as NpcFighter).brain != null and (t as NpcFighter).brain.bending != null:
 			var ob := (t as NpcFighter).brain.bending
 			if ob.casting == "fire_arc" and ob.mode == "lightning":
 				out.append({"id": ob.get_instance_id(), "kind": "lightning", "tti": maxf(ob.lock_s - ob.lock_t, 0.0) + 0.05})
+			elif ob.casting != "":
+				var shot2 := shot_of(ob.casting, ob.mode)
+				if not shot2.is_empty():
+					out.append({"id": hash([ob.get_instance_id(), ob.casting, ob.mode, int(ob._lock_at * 100.0)]), "kind": shot2.kind,
+							"tti": maxf(ob.lock_s - ob.lock_t, 0.0) + c.distance_to(NpcSenses.chest_of(t)) / float(shot2.mps)})
 	return out
+
+
+## What (id, md) sends flying at whom it is cast at: {kind, mps} (a bolt's or a throw's spec; Stone Form's spike and boulder
+## and Earth Shove a stone; Gust lift a stone), {} for anything else (the wind-up a bot reads: _threats).
+static func shot_of(id: String, md: String) -> Dictionary:
+	var spec := spec_of(id, md)
+	var dn := String(spec.get("do", ""))
+	if dn in ["bolt", "throw"]:
+		return {"kind": String(spec.get("kind", "stone")), "mps": maxf(float(spec.get("mps", 30.0)), 5.0)}
+	if dn == "shove":
+		return {"kind": "stone", "mps": float((SwayMoves.move("gust").get("raised", {}) as Dictionary).get("mps", 26.0))}
+	if spec.is_empty() and id == "stone_form":
+		var hurl: Dictionary = ((SwayMoves.move("stone_form").get("throw", {}) as Dictionary).get("hurl", {}) as Dictionary).get(md if md != "" else "spike", {})
+		var mps: Variant = hurl.get("mps", [30.0])
+		return {"kind": "stone", "mps": maxf(float(mps[mps.size() - 1]) if mps is Array else float(mps), 5.0)}
+	if spec.is_empty() and id == "gust" and md == "lift":
+		return {"kind": "stone", "mps": 24.0}
+	return {}
 
 
 ## Seconds until something at `p` going `v` passes nearest `c`, when that is nearer than THREAT_MISS_M (else -1).
@@ -657,6 +725,8 @@ func begin(id: String, md: String) -> void:
 	fill = 0.0
 	lock_s = lock_for(id, md, _preset_name(), _cast_dist(id, md, t))
 	_lock_at = _now()
+	if String((_option(id + "/" + md).get("hint", {}) as Dictionary).get("role", "")) == "reaction":
+		_guard_until = _lock_at + lock_s + float(ai().get("guard_cool_s", 0.0))
 	_follow = 0.0
 	for k: String in _next.keys():
 		var keys: Array = LEGACY.get(k, [k])
@@ -725,6 +795,13 @@ func _release() -> void:
 func _cast(id: String, md: String, t: Node3D) -> bool:
 	var spec := spec_of(id, md)
 	var at := _cast_point(id, md, t)
+	if id == "gust" and md == "lift":
+		# (Gust lift is a stone held and hurled at him: cast on the stone, never on the man himself)
+		var st := _lift_stone(t)
+		if st == null:
+			return false
+		t = st
+		at = st.global_position
 	var bc := bend_cast()
 	if bc != null:
 		var r: Variant = bc.call(&"cast", caster, id, md, t, at)
@@ -789,6 +866,27 @@ func _watch() -> void:
 			if bz.kind in ["catch", "cushion"]:
 				catches += n
 			e[1] = bz.took
+	if catches > _catches_seen:
+		_catches_seen = catches
+		_answer_catch()
+
+
+## A stone it caught and holds sent back: Earth Shove (push) forced as soon as its reaction allows, its rest cut short
+## (the shove's own cool waived: the catch is the moment).
+func _answer_catch() -> void:
+	if element != "earth" or _option("earth_shove/push").is_empty():
+		return
+	var held := false
+	for st in me.get_tree().get_nodes_in_group(FormStone.GROUP):
+		if int((st as Node).get_meta(&"bend_held_by", -1)) == me.get_instance_id():
+			held = true
+			break
+	if not held:
+		return
+	var at := _now() + float(preset().get("reaction_s", 0.4)) * 0.5
+	_next["earth_shove/push"] = at
+	_cool.erase("earth_shove/push")
+	_rest_until = minf(_rest_until, at)
 
 
 func _on_struck(who: Node, _dmg: float) -> void:
@@ -1025,6 +1123,29 @@ func _stone_near(t: Node3D) -> bool:
 		if q.distance_to(Geometry3D.get_closest_point_to_segment(q, a, b)) < 3.0:
 			return true
 	return false
+
+
+## A stone Gust lift can take for a throw at `t`: one it can lift alone (GustLift.liftable, one caster's weight) within the
+## lift's reach (gust.stone.range_m) of it, the nearest to its line to him first; null none.
+func _lift_stone(t: Node3D) -> Node3D:
+	var sd: Dictionary = SwayMoves.move("gust").get("stone", {})
+	var reach := float(sd.get("range_m", 14.0))
+	var a := NpcSenses.chest_of(me)
+	var b := NpcSenses.chest_of(t) if t != null and is_instance_valid(t) else a + me.forward() * 10.0
+	var best: Node3D = null
+	var bd := INF
+	for s in me.get_tree().get_nodes_in_group(FormStone.GROUP):
+		var st := s as Node3D
+		if st == null or not GustLift.is_stone(st) or not GustLift.liftable(st) or GustLift.casters_needed(st, sd) > 1:
+			continue
+		var d := st.global_position.distance_to(a)
+		if d > reach:
+			continue
+		var off := st.global_position.distance_to(Geometry3D.get_closest_point_to_segment(st.global_position, a, b)) + d * 0.2
+		if off < bd:
+			bd = off
+			best = st
+	return best
 
 
 ## One of its raised walls up within `r` (damaged: one that has taken hits).

@@ -1,9 +1,9 @@
 {
 	"_about": "Tidebreak's rules (RingRules, RingMode, RingMenu; the plan's sport_rules; the owner, 2026-10-04: the sport is Tidebreak, 1v1 first, the team lists kept for 3v3). Every number here, tunable by eye. Zones are counted from the centre: 1 nearest it, 3 at the open end. A competitor is 'confined' to the zone a knock carried him into (only deeper within a round); his forward line is then a soft wall. The round ends at once on a ring-out; at the time-out the side holding more ground takes it, then the higher health, else a draw.",
 	"rules": "open",
-	"knock_scale": 0.6,
+	"knock_scale": 0.7,
 	"_element_factor": "each knock in the ring scaled by knock_scale times the KNOCKER's element's factor (air knocks hardest by design, so it is held back most)",
-	"element_factor": {"air": 0.75, "earth": 1.1, "water": 1.0, "fire": 0.9},
+	"element_factor": {"air": 0.65, "earth": 1.1, "water": 1.25, "fire": 0.9},
 	"_max_push_m": "one hit moves a body at most this far (m): the flat part of a knock is capped so its slide (v^2 / 2 BendKnock.GROUND_DECEL), and its flight first when it launches (AIR_DECEL over the airtime), stay within it",
 	"max_push_m": 3.5,
 	"ragdoll_mps": 16.0,

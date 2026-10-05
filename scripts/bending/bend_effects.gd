@@ -7,8 +7,10 @@ extends RefCounted
 ##   bolt        BendBolt(s) from the chest along the aim: count, every_s apart, spread_deg; mps, gravity, damage, knock_mps,
 ##               up_mps, radius_m, range_m, long, erode (on earth walls), root_s / slow_s on whom it strikes; low: along
 ##               the ground
+##   throw       BendThrow: a bolt thrown like the throwables (flight point_first: a spear; spinning: a disc; flick:
+##               pebbles), on the arc that lands it on the aim, launched at once (the player's strike already waited for)
 ##   cone, ring  whoever is within range_m in deg before the caster (a ring: all round): damage, knock (up_mps), root_s,
-##               slow_s; put_out (fire walls and burning ground in it go out), melt (ice walls in it crumble)
+##               slow_s, dazzle_s (a flare: a bot dazzled, bend_dazzle_until); put_out (fire walls and burning ground in it go out), melt (ice walls in it crumble)
 ##   dash        the caster thrown: fwd_mps along the aim (back: behind, side: to a side; side_default: the side held, else
 ##               that one, 1 right: Earth Skate's slide and burrow-step), up_mps; burn: the ground left
 ##               alight; shove: whoever is near knocked aside
@@ -91,6 +93,8 @@ static func apply(c: Variant, m: String, mode: String, spec: Dictionary, _t: Nod
 	match String(spec.get("do", "")):
 		"bolt":
 			bolts(bc, a, spec)
+		"throw":
+			_cur["bolt"] = BendThrow.throw(bc, a, spec)
 		"cone":
 			cone(p, a.from, a.flat, spec)
 		"ring":
@@ -229,6 +233,9 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 			BendStatus.root(n, float(spec.root_s))
 		if float(spec.get("slow_s", 0.0)) > 0.0:
 			BendStatus.slow(n, float(spec.slow_s))
+		if float(spec.get("dazzle_s", 0.0)) > 0.0:
+			# (a flare's flash: a bot so dazzled aims wider and answers later, NpcBendCaster.dazzled)
+			n.set_meta(&"bend_dazzle_until", BendStatus.now() + float(spec.dazzle_s))
 		hit += 1
 	_cur["hit"] = hit
 	if bool(spec.get("put_out", false)) or bool(spec.get("melt", false)):

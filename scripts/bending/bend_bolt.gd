@@ -13,6 +13,10 @@ extends Node3D
 ##                         back; deflect: knocked aside; cushion: dropped)
 ## Its caster is any Node3D (the player, a bot): its own bodies are left out of its flight (_exclude: ray_exclude).
 ## redirect(dir, by) turns it (a shield's, a parry's, a redirect's): it is then `by`'s, and can strike who first sent it.
+## A thrown one (BendThrow, spec do "throw"): its flight "point_first" (a spear: its point -Z along its flight, as every bolt
+## faces), "spinning" (a disc: its body turned about its own right axis at spin_rate rad/s, a wheel or a tomahawk end over
+## end, tilted tilt_deg about its flight for a side-arm throw), "flick" (pebbles: each tumbling on its own axis). The
+## water and fire that meet leave a short steam cloud (BendZone "steam": it hides whoever stands behind it from a bot).
 
 signal struck(who: Node, dmg: float)
 signal ended(why: String)
@@ -45,6 +49,18 @@ var burning := false
 var shape := "ball"
 var travelled := 0.0
 var spent := false
+## How it flies (BendThrow): "" or "point_first" (its point along its flight), "spinning", "flick"; its turn (rad/s), the
+## axis its body turns about (local), its tilt about its flight (rad). The body turns under `spin` (a child of the bolt,
+## which keeps facing its flight); a bolt with no turn has none.
+var flight := ""
+var spin_rate := 0.0
+var spin_axis := Vector3.RIGHT
+var tilt := 0.0
+var spin: Node3D
+var spin_a := 0.0
+## The steam left where water and fire meet (BendZone "steam"): its radius and how long it hangs (s).
+const STEAM_R := 2.2
+const STEAM_S := 1.5
 
 var _trail: GPUParticles3D
 var _fire_trail: GPUParticles3D
@@ -70,11 +86,23 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 	b.root_s = float(spec.get("root_s", 0.0))
 	b.slow_s = float(spec.get("slow_s", 0.0))
 	b.shape = String(spec.get("shape", "ball"))
+	b.flight = String(spec.get("flight", ""))
+	b.spin_rate = float(spec.get("spin_rate", 0.0))
+	b.tilt = deg_to_rad(float(spec.get("tilt_deg", 0.0)))
+	if spec.get("spin_axis") is Vector3:
+		b.spin_axis = (spec.spin_axis as Vector3).normalized()
 	b.add_to_group(GROUP)
 	by.get_tree().current_scene.add_child(b)
 	b.global_position = from
 	b._face()
-	BendLooks.bolt_body(b, b.kind, b.radius, b.long)
+	var holder: Node3D = b
+	if b.flight in ["spinning", "flick"] or absf(b.tilt) > 1e-4:
+		b.spin = Node3D.new()
+		b.spin.name = "Spin"
+		b.add_child(b.spin)
+		b._turn(0.0)
+		holder = b.spin
+	BendLooks.bolt_body(holder, b.kind, b.radius, b.long, b.shape)
 	b._trail = BendLooks.trail(b, b.kind, b.radius)
 	return b
 
@@ -82,6 +110,14 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 func _face() -> void:
 	if velocity.length_squared() > 1e-6:
 		look_at(global_position + velocity, Vector3.UP if absf(velocity.normalized().y) < 0.98 else Vector3.RIGHT)
+
+
+## Its body turned on by `dt` (spinning, flick: spin_rate about spin_axis; tilted about its flight by tilt).
+func _turn(dt: float) -> void:
+	if spin == null:
+		return
+	spin_a = fposmod(spin_a + spin_rate * dt, TAU)
+	spin.basis = Basis(Vector3.BACK, tilt) * Basis(spin_axis, -spin_a)
 
 
 func _physics_process(dt: float) -> void:
@@ -124,6 +160,7 @@ func _physics_process(dt: float) -> void:
 	global_position = from + step
 	travelled += step.length()
 	_face()
+	_turn(dt)
 	if travelled > range_m:
 		end("range")
 
@@ -217,6 +254,7 @@ static func meet(a: BendBolt, b: BendBolt) -> void:
 	if "water" in ks and "fire" in ks:
 		BendLooks.burst(at, "steam", 34, Vector3.UP, 120.0, 3.0, 0.9)
 		BendLooks.sound("steam", "hit", at)
+		steam(a.caster if a.caster != null and is_instance_valid(a.caster) else b.caster, at)
 		a.end("steam")
 		b.end("steam")
 		return
@@ -249,6 +287,17 @@ static func meet(a: BendBolt, b: BendBolt) -> void:
 		var water := a if a.kind == "water" else b
 		BendLooks.burst(at, "water", 18, Vector3.UP, 180.0, 2.5)
 		water.end("scattered")
+
+
+## A short steam cloud where water met fire at `at` (BendZone "steam", STEAM_R round, STEAM_S long; on the ground under it
+## when that is near, so it stands between whoever is about): it hides a man behind it from a bot (NpcBendCaster.hidden).
+## `by` any node in the scene (whose fire or water it was).
+static func steam(by: Node3D, at: Vector3) -> BendZone:
+	if by == null or not is_instance_valid(by) or not by.is_inside_tree():
+		return null
+	var g := FormEffects.ground_at(by, at)
+	var foot := g if at.y - g.y < 2.5 and at.y >= g.y - 0.5 else at - Vector3.UP * 1.0
+	return BendZone.make(by, "steam", foot, {"radius_m": STEAM_R, "life_s": STEAM_S})
 
 
 ## Turned along `dir` (its speed kept), now `by`'s.

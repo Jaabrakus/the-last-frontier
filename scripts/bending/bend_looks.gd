@@ -90,8 +90,17 @@ static func _pool() -> ToonFxPool:
 
 
 # ---------------------------------------------------------------- bolts
-## A bolt's body: under `parent`, its forward -Z (a long one, a shard or a slice, drawn along it).
-static func bolt_body(parent: Node3D, kind: String, r: float, long := false) -> void:
+## A bolt's body: under `parent`, its forward -Z (a long one, a shard or a slice, drawn along it). `shape` (a thrown one's,
+## BendThrow): "disc" (stone: a flat faceted rock standing in the flight's plane, its rim chipped so a turn reads; fire: a
+## wheel of flame tongues round a hot core), "spear" (ice: a long crystal shaft behind a heavy faceted head and a glint at
+## its point; stone: a long rock spike), else the kind's own body.
+static func bolt_body(parent: Node3D, kind: String, r: float, long := false, shape := "ball") -> void:
+	if shape == "disc" and kind in ["stone", "fire"]:
+		_disc_body(parent, kind, r)
+		return
+	if shape == "spear" and kind in ["stone", "ice"]:
+		_spear_body(parent, kind, r)
+		return
 	match kind:
 		"fire":
 			_fire_body(parent, r, long)
@@ -134,6 +143,115 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false) -> 
 				mi.rotation.x = -PI / 2.0
 			mi.material_override = ToonFx.mat("rock")
 			parent.add_child(mi)
+
+
+## A thrown disc (BendThrow's spinning flight turns its parent about local X: the disc stands in the YZ plane, so it turns
+## like a wheel, a tomahawk end over end). Stone: a lens of faceted rock, its rim chipped (one deep notch), a pale band of
+## grit round its edge. Fire: a white-hot core and eight flame tongues fanned round it in the same plane, swept back a
+## little as they turn (one MultiMesh), a warm light.
+static func _disc_body(parent: Node3D, kind: String, r: float) -> void:
+	if kind == "stone":
+		var mi := _mesh(parent, disc_mesh(ToonFx.vis_rng.randi() % 6), ToonFx.mat("rock"))
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		mi.scale = Vector3.ONE * r * 1.45
+		return
+	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("orb"))
+	o.scale = Vector3.ONE * r * 1.9
+	o.set_instance_shader_parameter(&"tint", Color(0.95, 0.22, 0.04))
+	o.set_instance_shader_parameter(&"tint2", Color(1.0, 0.7, 0.12))
+	o.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = ToonFx.quad_base()
+	var n := 8
+	mm.instance_count = n
+	for i in n:
+		var a := TAU * i / n
+		var out := Vector3(0.0, cos(a), sin(a))                         # (round in the disc's plane, YZ)
+		var swept := out.rotated(Vector3.RIGHT, 0.45).normalized()      # (swept back against the turn)
+		var side := Vector3.RIGHT.cross(swept).normalized()
+		var l := r * (2.3 if i % 2 == 0 else 1.6)
+		var basis := Basis(side * r * 1.15, swept * l, Vector3.RIGHT)
+		mm.set_instance_transform(i, Transform3D(basis, out * r * 0.45))
+	var mmi := MultiMeshInstance3D.new()
+	mmi.name = "Wheel"
+	mmi.multimesh = mm
+	mmi.material_override = ToonFx.mat("flame")
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mmi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	mmi.extra_cull_margin = r * 4.0
+	parent.add_child(mmi)
+	if live():
+		var l2 := OmniLight3D.new()
+		l2.light_color = Color(1.0, 0.58, 0.22)
+		l2.light_energy = 1.3
+		l2.omni_range = 3.0 + r * 2.0
+		l2.shadow_enabled = false
+		parent.add_child(l2)
+
+
+## A thrown spear (its point -Z, along its flight). Ice: a long thin crystal shaft and a heavy faceted head on it, a glint at
+## the point. Stone: a long rock spike.
+static func _spear_body(parent: Node3D, kind: String, r: float) -> void:
+	if kind == "stone":
+		var mi := MeshInstance3D.new()
+		mi.name = "Body"
+		mi.mesh = FormModels.spike_mesh(r, r * 9.0, ToonFx.vis_rng.randi() % 50, 0.0)
+		mi.rotation.x = -PI / 2.0
+		mi.position = Vector3(0.0, 0.0, r * 4.0)
+		mi.material_override = ToonFx.mat("rock")
+		parent.add_child(mi)
+		return
+	var sd := ToonFx.vis_rng.randi() % 4
+	var shaft := _mesh(parent, ToonFx.shard_mesh(1.0, 0.2, sd, 5), ToonFx.mat("ice"))
+	shaft.scale = Vector3(r * 2.6, r * 2.6, r * 15.0)
+	shaft.position = Vector3(0.0, 0.0, r * 3.5)
+	var head := _mesh(parent, ToonFx.shard_mesh(1.0, 0.3, (sd + 1) % 4, 6), ToonFx.mat("ice"))
+	head.scale = Vector3(r * 5.5, r * 5.5, r * 6.5)
+	head.position = Vector3(0.0, 0.0, -r * 4.2)
+	if live():
+		var g := _mesh(parent, ToonFx.quad(), ToonFx.mat("star_still"))
+		g.position = Vector3(0.0, 0.0, -r * 8.6)
+		g.scale = Vector3.ONE * maxf(r * 4.0, 0.4)
+
+
+static var _discs := {}
+
+## A stone disc 2 m across in local YZ (its axis X), a lens of rock facets: nine uneven rim points, the faces between its
+## rim and its two hubs flat-shaded, one notch cut in its rim (a turn reads). Its own dice (`seed`), cached.
+static func disc_mesh(seed := 0) -> Mesh:
+	if _discs.has(seed):
+		return _discs[seed]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed * 6151 + 29
+	var n := 9
+	var notch := rng.randi() % n
+	var rim: Array[Vector3] = []
+	for i in n:
+		var a := TAU * i / n + rng.randf_range(-0.12, 0.12)
+		var rr := rng.randf_range(0.86, 1.06) * (0.68 if i == notch else 1.0)
+		rim.append(Vector3(rng.randf_range(-0.05, 0.05), cos(a) * rr, sin(a) * rr))
+	var hub_a := Vector3(0.3, rng.randf_range(-0.08, 0.08), rng.randf_range(-0.08, 0.08))
+	var hub_b := Vector3(-0.3, rng.randf_range(-0.08, 0.08), rng.randf_range(-0.08, 0.08))
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in n:
+		var p := rim[i]
+		var q := rim[(i + 1) % n]
+		# (each rim edge a little thick: an inner ring 0.55 out on each face)
+		var pa := p * 0.62 + Vector3(0.17, 0.0, 0.0)
+		var qa := q * 0.62 + Vector3(0.17, 0.0, 0.0)
+		var pb := p * 0.62 - Vector3(0.17, 0.0, 0.0)
+		var qb := q * 0.62 - Vector3(0.17, 0.0, 0.0)
+		var tris: Array[Vector3] = [hub_a, pa, qa, pa, p, q, pa, q, qa, hub_b, qb, pb, pb, q, p, pb, qb, q]
+		for k in range(0, tris.size(), 3):
+			# (both windings: whichever way the engine fronts a face, the outward one shows)
+			for v: Vector3 in [tris[k], tris[k + 1], tris[k + 2], tris[k], tris[k + 2], tris[k + 1]]:
+				st.add_vertex(v)
+	st.generate_normals()
+	var m := st.commit()
+	_discs[seed] = m
+	return m
 
 
 static func _mesh(parent: Node3D, m: Mesh, mat: Material) -> MeshInstance3D:
@@ -639,6 +757,10 @@ static func warm_up(cam: Camera3D) -> void:
 			var body := Node3D.new()
 			holder.add_child(body)
 			bolt_body(body, k, 0.2, long)
+		for shape in ["disc", "spear"]:
+			var body2 := Node3D.new()
+			holder.add_child(body2)
+			bolt_body(body2, k, 0.2, false, shape)
 		var t := trail(holder, k, 0.01)
 		if t != null:
 			made.append(t)
