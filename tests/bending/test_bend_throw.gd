@@ -58,6 +58,7 @@ func _expect(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	MatchSetup._aim_help = "strong"             # (this test's player does not aim his camera: the full help, as before the 2026-10-05 setting)
 	seed(1750)
 	create_timer(LIMIT_S, true, false, true).timeout.connect(func() -> void:
 		print(NAME + " FAILED (watchdog)")

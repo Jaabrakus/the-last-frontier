@@ -15,6 +15,7 @@ func _expect(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	MatchSetup._aim_help = "strong"             # (this test's player does not aim his camera: the full help, as before the 2026-10-05 setting)
 	DuelMode.incoming = true
 	change_scene_to_file("res://scenes/main.tscn")
 	_go.call_deferred()
@@ -66,6 +67,15 @@ func _go() -> void:
 	var seen := (p.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(eye, eye + to, 1, [p.get_rid(), n.get_rid()]))).is_empty()
 	if seen:
 		_expect(a_near == n and a_far == null, "the aim's help: 4 deg off takes him, 15 deg off does not (%s, %s)" % [a_near, a_far])
+		# (the setting: light takes him only right by the crosshair, off never; the owner, 2026-10-05: "the auto aim is to strong")
+		MatchSetup._aim_help = "light"
+		var pbc := BendCaster.wrap(c)
+		var l_4 := pbc.assist_target(eye, near)
+		var l_1 := pbc.assist_target(eye, to.rotated(Vector3.UP, deg_to_rad(1.0)).normalized())
+		MatchSetup._aim_help = "off"
+		var o_1 := pbc.assist_target(eye, to.rotated(Vector3.UP, deg_to_rad(1.0)).normalized())
+		MatchSetup._aim_help = "strong"
+		_expect(l_4 == null and l_1 == n and o_1 == null, "aim help light: 4 deg off not taken, 1 deg off taken; off: never (%s, %s, %s)" % [l_4, l_1, o_1])
 	else:
 		_expect(a_near == null, "the aim's help: he is behind cover from here, not taken")
 	# --- Gust on an Earth Wall: a piece torn out and hurled through it

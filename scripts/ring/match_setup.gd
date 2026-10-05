@@ -170,6 +170,9 @@ static func parse(args: PackedStringArray) -> bool:
 			"light", "mood":
 				if v in LIGHTS:
 					light = v
+			"aim", "aim_help":
+				if v in AIMS:
+					_aim_help = v                # (for the run: not kept)
 			"scheme", "controls":
 				if v in SCHEMES:
 					_scheme = v                  # (for the run: not kept)
@@ -421,6 +424,61 @@ static func next_scheme(s := "") -> String:
 ## Forgets the scheme read (the next scheme() reads the settings file again: a test's own file).
 static func reload_scheme() -> void:
 	_scheme = ""
+	_aim_help = ""
+
+
+# --- The aim's help (the owner, 2026-10-05: "the auto aim is to strong yo") -----------------------------------------
+## How much the player's casts are helped onto a fighter near the crosshair (PlayerBendCaster.assist_target and
+## target_point): "light" (the default: a 2 deg cone, the shot pulled under half way from the crosshair toward his chest,
+## no lead), "off" (the crosshair only), "strong" (the old help: a 6 deg cone, his chest, led for the flight). Kept at once
+## in GameSettings' match section (AIM_KEY); the user arg aim= for a run. Bots are not helped by it.
+const AIMS := ["light", "off", "strong"]
+const AIM_KEY := "aim_help"
+const AIM_CONE_DEG := {"off": 0.0, "light": 2.0, "strong": 6.0}
+const AIM_PULL := {"off": 0.0, "light": 0.45, "strong": 1.0}
+static var _aim_help := ""
+
+
+static func aim_help() -> String:
+	if _aim_help == "":
+		var cf := ConfigFile.new()
+		cf.load(GameSettings.file())
+		var a := String(cf.get_value(SECTION, AIM_KEY, AIMS[0]))
+		_aim_help = a if a in AIMS else String(AIMS[0])
+	return _aim_help
+
+
+static func set_aim_help(a: String) -> bool:
+	if not a in AIMS:
+		return false
+	_aim_help = a
+	GameSettings.set_value(SECTION, AIM_KEY, a)
+	return true
+
+
+static func next_aim_help() -> String:
+	return String(AIMS[(AIMS.find(aim_help()) + 1) % AIMS.size()])
+
+
+static func aim_cone_deg() -> float:
+	return float(AIM_CONE_DEG.get(aim_help(), 2.0))
+
+
+static func aim_pull() -> float:
+	return float(AIM_PULL.get(aim_help(), 0.45))
+
+
+static func aim_row() -> String:
+	return "Aim help:  %s" % aim_help()
+
+
+static func aim_row_line() -> String:
+	match aim_help():
+		"off":
+			return "your casts go where the crosshair is"
+		"strong":
+			return "casts snap onto a foe near the crosshair and lead him"
+	return "a light nudge toward a foe right by the crosshair"
 
 
 static func _scheme_info(s: String) -> Dictionary:

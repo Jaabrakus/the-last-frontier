@@ -58,6 +58,32 @@ func aim_target() -> Node3D:
 	return assist_target(cam.global_position, -cam.global_basis.z)
 
 
+## The aim's help by the player's setting (MatchSetup.aim_help; the owner, 2026-10-05: "the auto aim is to strong"): its
+## cone (none when off), then BendCaster's rule.
+func assist_target(from: Vector3, dir: Vector3, ex: Array = []) -> Node3D:
+	var deg := MatchSetup.aim_cone_deg()
+	if deg <= 0.0:
+		return null
+	assist_deg = deg
+	return super.assist_target(from, dir, ex)
+
+
+## Where a cast helped onto `t` goes: "strong" his chest led by his pace over the flight (the old help); "light" the
+## crosshair's point pulled part of the way toward his chest (MatchSetup.aim_pull), no lead.
+func target_point(t: Node3D, mps := 0.0) -> Vector3:
+	var at := NpcSenses.chest_of(t)
+	var pull := MatchSetup.aim_pull()
+	if pull >= 0.999:
+		if mps > 0.0:
+			var v := NpcSenses.velocity_of(t)
+			return at + Vector3(v.x, 0.0, v.z) * at.distance_to(chest()) / mps
+		return at
+	var cross := aim_point()
+	if cross == Vector3.INF:
+		return at
+	return cross.lerp(at, pull)
+
+
 func launch_point(flat := Vector3.ZERO) -> Vector3:
 	var pose: Variant = sway.get(&"pose") if sway != null and is_instance_valid(sway) else null
 	if pose is Object and is_instance_valid(pose) and (pose as Object).has_method(&"strike_point"):

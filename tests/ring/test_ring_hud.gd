@@ -62,6 +62,7 @@ func _expect(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	MatchSetup._aim_help = "strong"             # (this test's player does not aim his camera: the full help, as before the 2026-10-05 setting)
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("seed="):
 			opts_seed = int(a.get_slice("=", 1))

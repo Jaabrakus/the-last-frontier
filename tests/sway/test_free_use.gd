@@ -52,6 +52,7 @@ func _expect(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	MatchSetup._aim_help = "strong"             # (this test's player does not aim his camera: the full help, as before the 2026-10-05 setting)
 	SwayCaster.free_override = null            # (moves.json's own switch)
 	InputSetup.ensure()
 	for action in InputMap.get_actions():

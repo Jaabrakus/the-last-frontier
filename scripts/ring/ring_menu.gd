@@ -30,6 +30,7 @@ var _elem: Button
 var _foe: Button
 var _diff: Button
 var _scheme: Button
+var _aim: Button
 var _open := false
 
 
@@ -82,6 +83,8 @@ func _ready() -> void:
 	_diff = _row(_diff_text(), cycle_difficulty, MatchSetup.difficulty_line(MatchSetup.difficulty))
 	_scheme = _row(MatchSetup.scheme_row(), cycle_scheme, MatchSetup.scheme_row_line())
 	_scheme.name = "Scheme"
+	_aim = _row(MatchSetup.aim_row(), cycle_aim, MatchSetup.aim_row_line())
+	_aim.name = "AimHelp"
 	_row(w("controls"), _controls, w("controls_line"))
 	_row(w("settings"), _settings)
 	_row(w("main_menu"), to_menu)
@@ -196,6 +199,13 @@ func cycle_difficulty() -> void:
 
 
 ## The next control scheme in turn: at once (the match goes on with it), kept for the next time.
+## The aim's help in turn (MatchSetup.AIMS: light, off, strong): at once, kept.
+func cycle_aim() -> void:
+	MatchSetup.set_aim_help(MatchSetup.next_aim_help())
+	_paint()
+	_note.text = "Aim help: %s" % MatchSetup.aim_help()
+
+
 func cycle_scheme() -> void:
 	MatchSetup.set_scheme(MatchSetup.next_scheme())
 	_paint()
@@ -222,6 +232,7 @@ func _paint() -> void:
 	_set_row(_foe, _foe_text())
 	_set_row(_diff, _diff_text(), MatchSetup.difficulty_line(MatchSetup.difficulty))
 	_set_row(_scheme, MatchSetup.scheme_row(), MatchSetup.scheme_row_line())
+	_set_row(_aim, MatchSetup.aim_row(), MatchSetup.aim_row_line())
 
 
 static func _set_row(b: Button, text: String, sub_line := "") -> void:

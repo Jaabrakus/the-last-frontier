@@ -470,9 +470,7 @@ class Throw:
 			var from := caster.body.global_position + cam_off if cam_off != Vector3.INF else Vector3.INF
 			var f := FormEffects.assist_target(caster, from if from != Vector3.INF else cam.global_position, -cam.global_basis.z, [stone.get_rid()])
 			if f != null:
-				var chest := NpcSenses.chest_of(f)
-				var v := NpcSenses.velocity_of(f)
-				return chest + Vector3(v.x, 0.0, v.z) * stone.global_position.distance_to(chest) / _mps()
+				return caster.target_point(f, _mps())     # (the player's: his aim-help setting; PlayerBendCaster)
 			return FormEffects.aim_point(caster, [stone.get_rid()], from)
 		if caster is PlayerBendCaster:
 			return FormEffects.aim_point(caster, [stone.get_rid()])       # (no camera: INF, as ever)

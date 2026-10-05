@@ -14,6 +14,7 @@ func _expect(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	MatchSetup._aim_help = "strong"             # (this test's player does not aim his camera: the full help, as before the 2026-10-05 setting)
 	DuelMode.incoming = true
 	change_scene_to_file("res://scenes/main.tscn")
 	_go.call_deferred()

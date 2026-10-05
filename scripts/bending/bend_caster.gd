@@ -213,11 +213,15 @@ func ray_point(from: Vector3, dir: Vector3, ex: Array = []) -> Vector3:
 ## FormEffects.ASSIST_DEG of the ray from `from` along `dir` and FormEffects.ASSIST_M, in plain sight of it (nothing solid
 ## between), the nearest the ray's line; null none. Never the caster. Nothing is drawn for it (no target cues: the owner's
 ## rule).
+## The help's cone (deg) for this caster; <= 0: FormEffects.ASSIST_DEG (the player's caster sets it from his setting).
+var assist_deg := -1.0
+
+
 func assist_target(from: Vector3, dir: Vector3, ex: Array = []) -> Node3D:
 	if not valid() or dir.length_squared() < 1e-6:
 		return null
 	var best: Node3D = null
-	var best_a := deg_to_rad(FormEffects.ASSIST_DEG)
+	var best_a := deg_to_rad(assist_deg if assist_deg > 0.0 else FormEffects.ASSIST_DEG)
 	var space := body.get_world_3d().direct_space_state
 	var pool: Array = []
 	pool.append_array(body.get_tree().get_nodes_in_group(NpcFighter.GROUP))
