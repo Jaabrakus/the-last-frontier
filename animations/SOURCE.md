@@ -43,3 +43,56 @@ Recorded 2026-10-03 from the generator code (observations, not an independent au
 - `tools/anim_author/install_form.gd` writes the baked rotations and root positions into new animations. It reads
   `actor_b-p-relax-idle` from `animations/Actor_B.res` only for the track path prefix. It copies no `native_asset_id`,
   `source_attribution` or `original_name`, and it sets an `authored` meta naming `form_clips.py`.
+
+## Ring-sport clips (`animations_extra/Frontier_Bend.res`)
+
+Recorded 2026-10-04 from the generator code at the time of the first build (observations, not an independent audit of the
+binary library). The owner's account above (motion made with AI assistance and Blender, videos watched as tutorials and
+visual references, no animation files imported) is his statement; the rows below are what the generator does.
+
+| Clip | Added | Generator | Inputs | Visual references the owner watched |
+| --- | --- | --- | --- | --- |
+| `own-bend-earth-stomp` | 2026-10-04 (first set) | `tools/anim_author/blender/bend_clips.py` (`earth_stomp`) | the rig's rest pose; keys in `CLIPS` | (for the owner to fill) |
+| `own-bend-earth-push` | 2026-10-04 (first set) | `bend_clips.py` (`earth_push`) | the rig's rest pose; keys in `CLIPS` | (for the owner to fill) |
+| `own-bend-earth-rise` | 2026-10-04 (first set) | `bend_clips.py` (`earth_rise`) | the rig's rest pose; keys in `CLIPS` | (for the owner to fill) |
+| `own-bend-throw-overhand` | 2026-10-04 (first set) | `bend_clips.py` (`throw_overhand`) | the rig's rest pose; keys in `CLIPS` | (for the owner to fill) |
+| `own-bend-throw-overhand-l` | 2026-10-04 (first set) | `bend_clips.py` (`throw_overhand`, `mirror_clip`) | `throw_overhand`'s keys mirrored left for right | (as its original) |
+| `own-bend-throw-sidearm` | 2026-10-04 (first set) | `bend_clips.py` (`throw_sidearm`) | the rig's rest pose; keys in `CLIPS` | (for the owner to fill) |
+| `own-bend-throw-sidearm-l` | 2026-10-04 (first set) | `bend_clips.py` (`throw_sidearm`, `mirror_clip`) | `throw_sidearm`'s keys mirrored left for right | (as its original) |
+| `own-bend-throw-underhand` | 2026-10-04 (first set) | `bend_clips.py` (`throw_underhand`) | the rig's rest pose; keys in `CLIPS` | (for the owner to fill) |
+| `own-bend-knock-slide` | 2026-10-04 (first set) | `bend_clips.py` (`knock_slide`) | the rig's rest pose; keys in `CLIPS` | (for the owner to fill) |
+| `own-bend-knock-air` | 2026-10-04 (first set) | `bend_clips.py` (`knock_air`) | the rig's rest pose; keys in `CLIPS` | (for the owner to fill) |
+
+- `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
+  root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
+  palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.
+  It solves the arms and legs with two-bone IK (`rigkit.ik2`) on the skeleton of `assets/character/actor_b_body.glb`
+  (read from the checkout it runs in) in Blender, interpolating the keys with a monotone cubic.
+- Input motion: none. Unlike `form_clips.py`, it does not start from `actor_b-p-relax-idle` or
+  `data/anim_author/forage_idle_pose.json`: every clip starts from the rig's rest (bind) pose in the glb, keyed into the
+  table's own stand. It does not import `rigkit.Native`/`MirrorNative`, read `dump_move.gd`/`dump_pose.gd` output or any
+  animation library, and `tools/anim_author/fit_ref.gd` was not run. The glb's rest finger rotations are the relaxed hand
+  the finger closing starts from.
+- The `-l` twins are the same keys mirrored across the body's middle (`mirror_clip`), not a mirror of baked rotations.
+- `tools/anim_author/install_bend.gd` writes the baked rotations and root positions into new animations named
+  `own-bend-*`. It reads `own-form-release` from `animations_extra/Frontier_Form.res` only for the track path prefix. It
+  writes no `native_asset_id`, `source_attribution` or `original_name`, and it sets an `authored` meta naming
+  `bend_clips.py` plus the clip's moments (`strike_s`, `hold_s`, `back_s`, `up_s`) and words (`hand`, `mask`, `root`).
+- `--blend` keeps the baked clips as Blender actions on the rig for hand refinement;
+  `tools/anim_author/blender/bake_blend.py` reads the actions of that .blend back into the same json for `install_bend.gd`
+  (a hand-refined clip keeps this record's generator plus the owner's edits in that file). `tests/bending/test_bend_clips.gd`
+  checks this table against the library.
+- The throw clips replace, for the ring sport, the throwables' throw clips (`actor_b-p-1h-aim-throw-*` in
+  `animations/Actor_B.res`, used by `ThrowChain`); the owner chose new own throw clips for it on 2026-10-04.
+
+### Interim clips the ring sport may wire before its own exist (observed 2026-10-04)
+
+| Clip | Library | Generator | Inputs observed |
+| --- | --- | --- | --- |
+| `own-axe-stab`, `own-club-stab` | `animations_extra/Frontier_Own.res` | `tools/anim_author/author_thrust.gd` keys, baked by `author_swings.gd -- bake` with `pose_solver.gd` | Key poses typed in `author_thrust.gd` (no `fit` record in `data/anim_author/axe_swings.json`). `own-axe-stab`'s grip reads the prop bone's place in the right hand from the gathering `carry` clip in `animations_extra/Actor_B_from_A.res` (`_carry_grip`). `own-club-stab` takes its tool hold from the first key of `axe_d`. |
+| `own-axe-parry`, `own-axe-block-high` | `animations_extra/Frontier_Own.res` | `author_parry.gd`, `author_high_block.gd`, baked by `author_swings.gd -- bake` | Start and end on the first key of `axe_d` ("from the D swing's guard"). `axe_d` carries a `fit` record naming `atk-pipe-1-side-swing-intro` / `-miss` (`author_swings.gd`'s header: `fit_ref.gd` writes the keys of a clip measured off a reference). |
+| `own-forage-grab-r`, `own-forage-grab-l` | `animations_extra/Frontier_Forage.res` | `tools/anim_author/blender/forage_grab.py`, `install_forage.gd` | Blender IK on keyed paths and finger curls, starting from frame 0 of `actor_b-p-relax-idle` (`data/anim_author/forage_idle_pose.json`), as for `form_clips.py`. |
+
+- These rows record inputs that bear on wiring the clips into the ring sport. They do not establish any clip's origin.
+  The `axe_d` fit and the `Actor_B_from_A.res` carry read are the specific inputs to trace for the parry, high-block and stab
+  clips before they are counted as fully own.
