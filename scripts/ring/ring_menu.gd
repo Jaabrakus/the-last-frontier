@@ -10,6 +10,8 @@ extends CanvasLayer
 ##   Difficulty: normal easy, normal, hard in turn (MatchSetup.difficulty): from the next restart
 ##   Control scheme: Keys  how moves are chosen, in turn (MatchSetup.set_scheme: keys, direction, wheel, simple): at once,
 ##                      kept (data/bending/schemes.json)
+##   Key hints: on      the control scheme's keys at the top left until each is used (FirstHints; GameSettings' hints
+##                      section): at once, kept; on, they show in the match under way
 ##   Controls           the chosen element's keys 1-5, each key's two skills with their three variations (Bending.keys,
 ##                      moves.json's labels), and how a cast is made; under another scheme its own lines
 ##                      (MatchSetup.scheme_key_lines) and its line
@@ -31,6 +33,7 @@ var _foe: Button
 var _diff: Button
 var _scheme: Button
 var _aim: Button
+var _hints: Button
 var _open := false
 
 
@@ -85,6 +88,8 @@ func _ready() -> void:
 	_scheme.name = "Scheme"
 	_aim = _row(MatchSetup.aim_row(), cycle_aim, MatchSetup.aim_row_line())
 	_aim.name = "AimHelp"
+	_hints = _row(FirstHints.row_text(), toggle_hints, FirstHints.row_line())
+	_hints.name = "KeyHints"
 	_row(w("controls"), _controls, w("controls_line"))
 	_row(w("settings"), _settings)
 	_row(w("main_menu"), to_menu)
@@ -206,6 +211,19 @@ func cycle_aim() -> void:
 	_note.text = "Aim help: %s" % MatchSetup.aim_help()
 
 
+## The key hints on or off: at once (on: shown over the match under way; off: the ones up go), kept.
+func toggle_hints() -> void:
+	var now := not FirstHints.on()
+	FirstHints.set_on(now)
+	var h := FirstHints.find(get_tree())
+	if now and match_mode != null:
+		FirstHints.install(match_mode, true)
+	elif h != null:
+		h.close()
+	_paint()
+	_note.text = FirstHints.row_text()
+
+
 func cycle_scheme() -> void:
 	MatchSetup.set_scheme(MatchSetup.next_scheme())
 	_paint()
@@ -233,6 +251,7 @@ func _paint() -> void:
 	_set_row(_diff, _diff_text(), MatchSetup.difficulty_line(MatchSetup.difficulty))
 	_set_row(_scheme, MatchSetup.scheme_row(), MatchSetup.scheme_row_line())
 	_set_row(_aim, MatchSetup.aim_row(), MatchSetup.aim_row_line())
+	_set_row(_hints, FirstHints.row_text(), FirstHints.row_line())
 
 
 static func _set_row(b: Button, text: String, sub_line := "") -> void:
