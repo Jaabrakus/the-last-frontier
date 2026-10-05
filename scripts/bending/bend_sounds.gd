@@ -13,6 +13,7 @@ extends RefCounted
 ##                              match, cheer, roar, groan, ooh, ...); at Vector3.INF it is not placed (the ring's calls)
 ##   play(id, at, db, pitch)    one id at a point (Vector3.INF: not placed)
 ##   loop_player(id, parent)    a looping 3D player of an id, not started (the crowd's murmur: RingDressing)
+##   warm()                     every id's files loaded (RingLevel's build, behind the loading screen)
 ## Each play picks a variant at random (never the one before), with the id's pitch and level jitter (TABLE rp, rv) from
 ## this class's own dice (rng: the game's dice never move for a sound). 3D: inverse-distance falloff from `unit` m
 ## (the ring's deck is 34 m long: across it a cast falls about 14 dB), heard to `maxd` m, dulled a little with distance.
@@ -119,6 +120,7 @@ static var recent: Array[StringName] = []
 static var voices_headless := false
 
 static var _streams := {}          ## id -> Array[AudioStream] ([] = none on disk)
+static var _on_disk := {}          ## id -> its first variant's file exists (has())
 static var _last := {}             ## id -> the variant played last
 static var _warned := {}
 static var _runner: _Voices
@@ -238,9 +240,18 @@ static func _at_pool(at: Vector3) -> bool:
 
 
 # ---------------------------------------------------------------- the files
-## Whether `id` has at least one file (checked on disk: nothing is loaded).
+## Whether `id` has at least one file (checked on disk once an id: nothing is loaded; every play asks).
 static func has(id: StringName) -> bool:
-	return ResourceLoader.exists(path_of(id, 1))
+	if not _on_disk.has(id):
+		_on_disk[id] = ResourceLoader.exists(path_of(id, 1))
+	return bool(_on_disk[id])
+
+
+## Every id's files loaded now (the ring's build calls it behind the loading screen: a sound's first play in a fight
+## would read its files from disk on that frame).
+static func warm() -> void:
+	for id: StringName in TABLE:
+		streams(id)
 
 
 ## The file of variant `n` (1-based) of `id`.
