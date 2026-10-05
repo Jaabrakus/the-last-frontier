@@ -79,6 +79,8 @@ func _initialize() -> void:
 
 func _watchdog() -> void:
 	Engine.time_scale = 1.0
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))   # (its own settings file gone on this way out too)
+	GameSettings.path = GameSettings.PATH
 	_report()
 	print("%s FAILED (watchdog)" % NAME)
 	quit(2)
