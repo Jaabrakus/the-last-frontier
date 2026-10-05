@@ -165,7 +165,10 @@ func _every_move() -> void:
 				for mode: String in SwayCaster.modes_of(id):
 					_clear()
 					await physics_frame
-					_stage()
+					# (a scattered volley, embers' seven sparks at 9 deg, staged nearer: at 9 m its scatter, the player's own dice,
+					# could put every spark past him on one roll of the dice; R1 gate, once the sounds stopped rolling those dice)
+					var sp: Dictionary = (SwayMoves.move(id).get("bend", {}) as Dictionary).get(mode, {})
+					_stage(5.0 if float(sp.get("spread_deg", 0.0)) > 0.0 and int(sp.get("count", 1)) > 1 else 9.0)
 					await _secs(0.1)
 					c.set_mode(id, mode)
 					Bending.of(p).water = 100.0

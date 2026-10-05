@@ -460,7 +460,19 @@ func _guard(sch: String, el: String) -> void:
 					c.base_mode_of(want)])
 		if sch == "simple":
 			c.dist_override = 3.0                 # (close in: the near form, the cover round you)
+			# (the shell's 1.6 s lock begun just after one of its stones has come, as a player keeps the rhythm: begun at
+			# random, a stone could land mid-lock each attempt and break it; R1 gate, once BALANCE's quicker Stone Form
+			# moved the dummy's throws: its lock 1.4 s, a throw each 3 s)
+			var fb: Variant = foe().brain.bending if foe() != null and foe().brain != null else null
+			if fb != null:
+				await _until(func() -> bool: return String(fb.casting) != "", 4.0)
+				await _until(func() -> bool: return String(fb.casting) == "", 3.0)
+				await _secs(0.5)
+			await _home_player()                  # (back where he stands if the stone moved him)
+			p.pitch = -0.35                       # (the shell's lock on the deck before him, not past the pillars an
+			                                      # earlier near cast left by the dummy: a level aim met them, "off")
 		var got := await _rmb_cast()
+		p.pitch = -0.15
 		c.dir_override = null
 		c.dist_override = null
 		if sch != "simple" and foe() != null:

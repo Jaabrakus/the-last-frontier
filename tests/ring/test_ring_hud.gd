@@ -413,6 +413,11 @@ func _words() -> void:
 
 # ---------------------------------------------------------------- the body
 func _body() -> void:
+	# (the match's bot held through the body's checks: they measure his own carry and walk, and a bolt of its landing on him
+	# mid-measure read as a short slide and a blocked walk; R1 gate, seed 7, once BALANCE moved the bots' timing)
+	var rm := RingMode.find(self)
+	if rm != null and rm.foe != null and is_instance_valid(rm.foe):
+		rm.foe.held = true
 	p.pitch = -0.15
 	await _secs(0.5)
 	var casts: Array = []
@@ -475,6 +480,8 @@ func _body() -> void:
 	_expect(down < INF, "a 16 m/s knock throws him down (%.2f s)" % down)
 	var up := await _until(func() -> bool: return not rag.is_down() and p.kneeling == null, 15.0)
 	_expect(up < INF, "he gets up (%.1f s)" % up)
+	if rm != null and rm.rules != null:
+		rm.rules.reset_round()               # (the knocks pushed him back a zone: its soft wall, the rules', not his legs, would stop the walk)
 	await _secs(1.0)
 	p0 = p.global_position
 	Input.action_press(&"move_forward")

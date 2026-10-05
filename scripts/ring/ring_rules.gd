@@ -139,8 +139,8 @@ func add(body: Node3D, team: int) -> void:
 	body.set_meta(BendCaster.TEAM_META, team_id(team))
 	if &"no_death" in body:
 		body.set(&"no_death", true)
-	if body.has_signal(&"winded"):
-		body.connect(&"winded", _on_winded.bind(body))
+	if body.has_signal(&"winded") and not body.is_connected(&"winded", _on_winded.bind(body)):
+		body.connect(&"winded", _on_winded.bind(body))     # (once: a body kept from last round, RingMode's bot, may hold it)
 
 
 ## Team 0 holds deck end `e0` this round, team 1 the other.
