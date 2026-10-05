@@ -12,11 +12,18 @@ extends RefCounted
 ##   depth_at(pos)     how deep the water is over the ground at pos (0 where there is none)
 ##   z_range()         where it has ground under it (the squares with ground along it); has_water()
 ## Water lies where the ground is under its level within `bank` m of its centre.
+## `off` (the Tidebreak ring, scenes/ring.tscn: a light scene with no open land under it): no river at all, and nothing here
+## touches FrontierTerrain's baked data (its 19 MB never loads for it): has_water false, data {}, z_range ZERO, surface_at
+## NO_WATER, depth_at and level_at 0. RingLevel sets it and puts it back as it leaves.
 
 const NO_WATER := -INF
 
+static var off := false
+
 
 static func data() -> Dictionary:
+	if off:
+		return {}
 	return WorldSquares.data().get("river", {})
 
 
@@ -29,6 +36,8 @@ static func x_at(z: float) -> float:
 
 
 static func level_at(z: float) -> float:
+	if off:
+		return 0.0
 	var d := data()
 	var lv := float(d.get("level0", -4.0)) - float(d.get("fall", 0.004)) * (z + float(FrontierTerrain.GRID_HALF))
 	for r: Array in d.get("rapids", []):
@@ -68,6 +77,8 @@ static func bank() -> float:
 
 ## Where it has ground under it along z: the squares with ground in its column (Vector2.ZERO: none).
 static func z_range() -> Vector2:
+	if off:
+		return Vector2.ZERO
 	var col := roundi(float(data().get("x0", 832.0)) / FrontierTerrain.SQUARE_M)
 	var lo := INF
 	var hi := -INF
@@ -81,11 +92,15 @@ static func z_range() -> Vector2:
 
 
 static func has_water() -> bool:
+	if off:
+		return false
 	return not data().is_empty() and z_range() != Vector2.ZERO
 
 
 ## The water's surface at (x, z): its level where the ground lies under it within its banks; NO_WATER elsewhere.
 static func surface_at(x: float, z: float) -> float:
+	if off:
+		return NO_WATER
 	var zr := z_range()
 	if z < zr.x or z > zr.y or absf(x - x_at(z)) > bank():
 		return NO_WATER
@@ -95,5 +110,7 @@ static func surface_at(x: float, z: float) -> float:
 
 ## How deep the water is over the ground at pos (0 where there is none).
 static func depth_at(pos: Vector3) -> float:
+	if off:
+		return 0.0
 	var s := surface_at(pos.x, pos.z)
 	return maxf(s - FrontierTerrain.height_at(pos.x, pos.z), 0.0) if s != NO_WATER else 0.0

@@ -6,6 +6,7 @@ extends RefCounted
 ## pillar's strengths, stone_form.looks the stones' looks):
 ##
 ##   of_ground(tree, point, col)   the ground's matter where the circle is, in this order:
+##                                 (its own)  the collider's meta form_matter, when it is one of KINDS (the ring's deck)
 ##                                 "stone"  the collider is rock (its meta surface in form_ground.surfaces: the terrain's
 ##                                          GroundStone outcrops and steep rock, a boulder; or a group in form_ground.groups:
 ##                                          the vegetation's "rocks")
@@ -113,6 +114,10 @@ static func of_ground(tree: SceneTree, point: Vector3, col: Object = null) -> St
 			col = c
 			break
 	var n := col as Node
+	# (a collider that says its own matter: meta form_matter, one of KINDS; the Tidebreak ring's deck is "earth", so an
+	# earth wall raised from it has its deliberate strength, whatever its footsteps' surface)
+	if n != null and n.has_meta(&"form_matter") and String(n.get_meta(&"form_matter")) in KINDS:
+		return String(n.get_meta(&"form_matter"))
 	if n != null:
 		var surf := String(n.get_meta(&"surface", ""))
 		var by_surface: Dictionary = r.get("surfaces", {"stone": "stone", "rock": "stone"})
