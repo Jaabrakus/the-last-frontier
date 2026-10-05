@@ -347,10 +347,14 @@
       "element": "earth",
       "bend": {
         "disc": {
-          "do": "bolt",
+          "do": "throw",
           "kind": "stone",
+          "shape": "disc",
+          "flight": "spinning",
+          "m_per_turn": 3.2,
+          "tilt_deg": 70.0,
           "mps": 30.0,
-          "gravity": 1.0,
+          "gravity": 3.0,
           "damage": 22.0,
           "knock_mps": 8.0,
           "up_mps": 1.0,
@@ -442,11 +446,13 @@
       "mode_labels": {"pebbles": "pebbles", "kick_up": "kick-up", "stomp": "stomp"},
       "bend": {
         "pebbles": {
-          "do": "bolt",
+          "do": "throw",
           "kind": "stone",
+          "flight": "flick",
           "count": 3,
           "every_s": 0.08,
           "spread_deg": 3.0,
+          "lift_deg": 1.5,
           "mps": 34.0,
           "gravity": 2.0,
           "damage": 7.0,
@@ -599,7 +605,7 @@
       "modes": ["whip", "lash", "grab"],
       "mode_labels": {"whip": "whip", "lash": "lash", "grab": "grab"},
       "bend": {
-        "whip": {"do": "bolt", "kind": "water", "water": 8, "mps": 34.0, "gravity": 1.0, "damage": 16.0, "knock_mps": 6.0, "radius_m": 0.22, "range_m": 16.0},
+        "whip": {"do": "bolt", "kind": "water", "water": 8, "mps": 34.0, "gravity": 1.0, "damage": 20.0, "knock_mps": 7.0, "radius_m": 0.22, "range_m": 16.0},
         "lash": {"do": "cone", "kind": "water", "water": 10, "range_m": 5.5, "deg": 75.0, "damage": 12.0, "knock_mps": 9.0, "up_mps": 2.0, "put_out": true},
         "grab": {"do": "grab", "kind": "water", "water": 12, "range_m": 14.0, "pull_mps": 10.0, "damage": 4.0}
       },
@@ -624,7 +630,7 @@
       "modes": ["splash", "jet", "spray"],
       "mode_labels": {"splash": "splash", "jet": "jet", "spray": "spray"},
       "bend": {
-        "splash": {"do": "bolt", "kind": "water", "water": 5, "mps": 28.0, "gravity": 2.0, "damage": 8.0, "knock_mps": 3.0, "radius_m": 0.18, "range_m": 12.0},
+        "splash": {"do": "bolt", "kind": "water", "water": 5, "mps": 28.0, "gravity": 2.0, "damage": 10.0, "knock_mps": 3.0, "radius_m": 0.18, "range_m": 12.0},
         "jet": {
           "do": "bolt",
           "kind": "water",
@@ -649,7 +655,7 @@
       "label": "Ice",
       "art": "tide",
       "element": "water",
-      "lock_s": 0.7,
+      "lock_s": 0.6,
       "motes": 0,
       "range_m": 40.0,
       "targets": ["ground"],
@@ -677,8 +683,10 @@
           "range_m": 35.0
         },
         "spear": {
-          "do": "bolt",
+          "do": "throw",
           "kind": "ice",
+          "shape": "spear",
+          "flight": "point_first",
           "water": 12,
           "mps": 42.0,
           "gravity": 2.0,
@@ -722,7 +730,7 @@
       "label": "Wave",
       "art": "tide",
       "element": "water",
-      "lock_s": 0.9,
+      "lock_s": 0.75,
       "motes": 0,
       "range_m": 40.0,
       "targets": ["ground"],
@@ -782,7 +790,7 @@
       "label": "Water Shield",
       "art": "tide",
       "element": "water",
-      "lock_s": 1.0,
+      "lock_s": 0.85,
       "motes": 0,
       "range_m": 40.0,
       "targets": ["ground"],
@@ -909,7 +917,7 @@
       "mode_labels": {"sweep": "sweep", "kick": "kick", "lightning": "lightning"},
       "bend": {
         "sweep": {"do": "cone", "kind": "fire", "range_m": 6.0, "deg": 110.0, "damage": 15.0, "knock_mps": 6.0, "up_mps": 1.5},
-        "kick": {"do": "bolt", "kind": "fire", "mps": 24.0, "damage": 28.0, "knock_mps": 9.0, "radius_m": 0.45, "range_m": 25.0, "low": true},
+        "kick": {"do": "throw", "kind": "fire", "shape": "disc", "flight": "spinning", "m_per_turn": 2.8, "mps": 24.0, "damage": 28.0, "knock_mps": 9.0, "radius_m": 0.45, "range_m": 25.0, "low": true},
         "lightning": {"do": "lightning", "kind": "lightning", "damage": 55.0, "range_m": 45.0, "knock_mps": 6.0}
       },
       "ai_factor": 1.0,
@@ -1056,7 +1064,7 @@
       "bend": {
         "parry": {"do": "zone", "zone": "parry", "window_s": 0.8, "radius_m": 2.5},
         "redirect_lightning": {"do": "buff", "buff": "redirect_lightning", "kind": "lightning", "s": 1.0},
-        "flare": {"do": "cone", "kind": "fire", "range_m": 4.0, "deg": 120.0, "damage": 2.0, "knock_mps": 1.0, "slow_s": 1.2}
+        "flare": {"do": "cone", "kind": "fire", "range_m": 4.0, "deg": 120.0, "damage": 2.0, "knock_mps": 1.0, "slow_s": 1.2, "dazzle_s": 2.0}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
@@ -1081,7 +1089,7 @@
       "bend": {
         "palm": {"do": "cone", "kind": "air", "range_m": 3.5, "deg": 40.0, "damage": 2.0, "knock_mps": 8.0, "up_mps": 1.0},
         "trip": {"do": "cone", "kind": "air", "range_m": 4.0, "deg": 50.0, "damage": 4.0, "knock_mps": 10.0, "up_mps": 0.0, "root_s": 0.6},
-        "cushion": {"do": "zone", "zone": "cushion", "window_s": 1.0, "radius_m": 4.0}
+        "cushion": {"do": "zone", "zone": "cushion", "window_s": 0.7, "radius_m": 4.0}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
@@ -1090,7 +1098,7 @@
       "label": "Air Blast",
       "art": "gale",
       "element": "air",
-      "lock_s": 0.4,
+      "lock_s": 0.5,
       "motes": 0,
       "range_m": 40.0,
       "targets": ["ground"],
@@ -1104,8 +1112,8 @@
       "modes": ["ball", "slice", "vacuum"],
       "mode_labels": {"ball": "ball", "slice": "slice", "vacuum": "vacuum"},
       "bend": {
-        "ball": {"do": "bolt", "kind": "air", "mps": 28.0, "damage": 10.0, "knock_mps": 13.0, "up_mps": 2.0, "radius_m": 0.35, "range_m": 30.0},
-        "slice": {"do": "bolt", "kind": "air", "mps": 45.0, "damage": 22.0, "knock_mps": 3.0, "radius_m": 0.12, "range_m": 35.0, "long": true},
+        "ball": {"do": "bolt", "kind": "air", "mps": 28.0, "damage": 6.0, "knock_mps": 11.0, "up_mps": 2.0, "radius_m": 0.35, "range_m": 30.0},
+        "slice": {"do": "bolt", "kind": "air", "mps": 45.0, "damage": 12.0, "knock_mps": 3.0, "radius_m": 0.12, "range_m": 35.0, "long": true},
         "vacuum": {"do": "zone", "zone": "vacuum", "at": "aim", "radius_m": 2.5, "life_s": 2.5, "range_m": 20.0}
       },
       "ai_factor": 1.0,
@@ -1181,7 +1189,7 @@
       "bend": {
         "shield": {"do": "zone", "zone": "air_shield", "at": "self", "radius_m": 2.2, "life_s": 2.5},
         "cyclone": {"do": "ring", "kind": "air", "radius_m": 5.0, "damage": 6.0, "knock_mps": 11.0, "up_mps": 3.5},
-        "tornado": {"do": "zone", "zone": "tornado", "at": "front", "ahead_m": 2.0, "radius_m": 1.8, "life_s": 4.0, "mps": 6.0, "damage_s": 6.0}
+        "tornado": {"do": "zone", "zone": "tornado", "at": "front", "ahead_m": 2.0, "radius_m": 1.8, "life_s": 3.0, "mps": 5.0, "damage_s": 6.0}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]

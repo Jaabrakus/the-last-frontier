@@ -5,8 +5,9 @@ extends Node3D
 ##               ice pass), air_shield (round its owner: fire, water, ice and air sent back at who sent them; stone passes),
 ##               water_wall (a wall of water: fire dies in it, water is drunk in; fire walls it stands in go out),
 ##               fire_wall (burns whoever stands in it; ice melts going through, air takes its flame, water puts it out)
-##   the ground  burn (the ground alight: as a fire wall, low), ice_patch (slows whoever is on it), smoke / dust / spray
-##               (a cloud that hides: drawn only)
+##   the ground  burn (the ground alight: as a fire wall, low), ice_patch (slows whoever is on it), smoke / dust / spray /
+##               steam (a cloud that hides: a man behind it, from a bot, NpcBendCaster.hidden; steam: where water and fire
+##               met, BendBolt.steam, a moment only)
 ##   moving      tornado (goes on along its way, lifting and carrying whoever it meets), vacuum (the air pulled out round a
 ##               place: whoever is in it slowed)
 ##   guards      on its owner for a moment (window_s): catch (a stone flying at him caught and held before him: Earth Shove
@@ -81,7 +82,7 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 ##   ice_patch    a frost sheet on the ground, sparkles
 ##   tornado      stacked wind rings widening upward, each turning, rock debris and dust whirled up round it
 ##   vacuum       wind bands drawing in, air
-##   smoke/dust/spray  cel puffs
+##   smoke/dust/spray/steam  cel puffs
 func _look() -> void:
 	if not BendLooks.live():
 		return
@@ -150,6 +151,10 @@ func _look() -> void:
 		"smoke", "dust", "spray":
 			_fx.append(BendLooks.emitter(self, "smoke" if kind == "smoke" else ("dust" if kind == "dust" else "foam"),
 					Vector3(radius, 0.8, radius), 40, 2.2, 0.6, 1.6))
+		"steam":
+			var st := BendLooks.emitter(self, "steam", Vector3(radius * 0.7, 0.6, radius * 0.7), 30, minf(life_s, 1.4), 1.2, 1.3)
+			st.position = Vector3.UP * 0.6
+			_fx.append(st)
 		"tornado":
 			var rings := 6
 			for i in rings:
@@ -244,6 +249,9 @@ func _flames(look: Node3D) -> void:
 
 func _physics_process(dt: float) -> void:
 	t += dt
+	if owner_node == null or not is_instance_valid(owner_node):
+		end()                                  # (its caster gone: a bot freed between rounds takes its tornado, its fire wall with it)
+		return
 	if follow and owner_node != null and is_instance_valid(owner_node):
 		global_position = owner_node.global_position
 	if kind == "tornado":
@@ -262,7 +270,7 @@ func _physics_process(dt: float) -> void:
 ## Who it holds now: everyone within it (round) or in its box.
 func inside(p: Vector3) -> bool:
 	var l := global_transform.affine_inverse() * p
-	if kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "tornado", "vacuum"] or kind in GUARDS:
+	if kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "steam", "tornado", "vacuum"] or kind in GUARDS:
 		return Vector2(l.x, l.z).length() <= radius and l.y > -1.0 and l.y < 3.5
 	return absf(l.x) <= size.x * 0.5 and absf(l.z) <= size.z * 0.5 + 0.3 and l.y > -0.5 and l.y < size.y + 0.3
 
@@ -301,6 +309,7 @@ func on_bolt(b: BendBolt) -> bool:
 		"bubble":
 			if b.kind == "fire":
 				BendLooks.burst(b.global_position, "steam", 22, Vector3.UP, 120.0, 2.0, 0.7)
+				BendBolt.steam(owner_node, b.global_position)
 				b.end("steam")
 				return true
 			if b.kind in ["air", "water"]:
@@ -310,6 +319,7 @@ func on_bolt(b: BendBolt) -> bool:
 		"water_wall":
 			if b.kind == "fire":
 				BendLooks.burst(b.global_position, "steam", 22, Vector3.UP, 120.0, 2.0, 0.7)
+				BendBolt.steam(owner_node, b.global_position)
 				b.end("steam")
 				return true
 			if b.kind == "water":
