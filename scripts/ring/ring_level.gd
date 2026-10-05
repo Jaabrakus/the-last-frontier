@@ -9,7 +9,8 @@ extends Node3D
 ##   the player       a FrontierPlayer with no demo horse or wheelbarrow, `arena` set BEFORE it enters the tree (the
 ##                    contract: player.gd's own arena switch, no guns or throwables, when it has one; a no-op until then),
 ##                    on spawn(0) (the demo's musket rack and spear barrel taken away: no guns in the arena game); no
-##                    fall hurts here (fall_safe_m held high every physics frame: the tank is the fall)
+##                    fall hurts here (fall_safe_m held high every physics frame, rules.json fall_safe_m: the tank is
+##                    the fall, and a launch's landing never hurts)
 ##   the bending      SwayCaster.install_free, Bending.of(player) (its water meter: the grates are its pools)
 ##   sound            Sfx, the player's Footsteps (the deck's stone and wood); MusicDirector outside script runs (the
 ##                    match's own fight cue is RingMode's)
@@ -17,7 +18,11 @@ extends Node3D
 ## WorldRiver.off is set while it stands (no river, and nothing that would read FrontierTerrain's baked data: its 19 MB
 ## never loads here) and put back as it leaves; FrontierTerrain.open_ground is false (the fort's flat zone is 0 under the
 ## ring at the origin, so any height_at asked here is 0 without the data).
-## install_mode(node): the match (RingMode, T8) put under the level. first_frame_ms: the time of the first frame (logged
+## The match: MatchSetup.take() at the start (the menu's Begin, or the user arg mode=ring); when a match is asked for (or
+## the scene is opened outside a script run) RingMode is installed (its RingRules and RingMenu with it) and the HUD set for
+## the arena (FrontierHUD.set_arena, when it has it). A script run without mode=ring (tests/ring/test_ring.gd, the stills)
+## gets the bare ring.
+## install_mode(node): the match (RingMode) put under the level. first_frame_ms: the time of the first frame (logged
 ## as "RING first_frame_ms=<ms>").
 
 const DATA_PATH := RingArena.DATA_PATH
@@ -63,6 +68,8 @@ func _ready() -> void:
 	Bending.of(player)
 	if not SaveGame._is_script_run():
 		GameSettings.apply_to(player)
+	if MatchSetup.take() or not SaveGame._is_script_run():
+		RingMode.install(self, player, ring)
 	StartupProfile.watch(self)
 	_first_frame.call_deferred()
 
@@ -73,7 +80,7 @@ func _exit_tree() -> void:
 
 func _physics_process(_dt: float) -> void:
 	if player != null and is_instance_valid(player):
-		player.fall_safe_m = 100.0
+		player.fall_safe_m = RingRules.num("fall_safe_m", 100.0)
 
 
 ## `body` (the player, or anyone with a yaw) stood at `xf`: on the deck, facing as it faces, still.
