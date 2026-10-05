@@ -17,6 +17,8 @@ extends RefCounted
 ##               caster's `lifted` signal at the end. Costs nothing.
 ##   form moves  FormEffects (earth_wall, stone_form, pillar, mend). Gust on a stone or a sail is a hold, not a push here
 ##               (SwayCaster's HOLDING: GustLift lifts and hurls the stone).
+## gust takes any caster (untyped: a SwayCaster, a BendCaster, a body; BendCaster.wrap; BendCast.cast is a bot's way in), and
+## a gust at the player (a bot's) knocks him as it throws a fighter back (BendStatus.knock, by the caster).
 
 
 static func apply(c: SwayCaster, m: String, t: Node3D, at: Vector3) -> void:
@@ -33,29 +35,38 @@ static func apply(c: SwayCaster, m: String, t: Node3D, at: Vector3) -> void:
 
 
 # ---------------------------------------------------------------- gust
-static func gust(c: SwayCaster, t: Node3D, at: Vector3) -> void:
+## Gust of caster `c` (any: see the header) on `t` at `at` (INF: its middle), in `mode` ("": the caster's mode of gust).
+static func gust(c: Variant, t: Node3D, at: Vector3, mode := "") -> void:
+	var bc := BendCaster.wrap(c)
+	if bc == null or not bc.valid() or t == null or not is_instance_valid(t):
+		return
+	var by := bc.body
+	if at == Vector3.INF:
+		at = NpcSenses.chest_of(t) if t is CharacterBody3D else t.global_position
 	var d := SwayMoves.move("gust")
 	var push: Dictionary = d.get("push", {})
-	var from := c.chest()
+	var from := bc.chest()
 	var to := at - from
 	var dist := to.length()
 	var flat := Vector3(to.x, 0.0, to.z)
-	flat = flat.normalized() if flat.length_squared() > 1e-4 else -c.player.global_basis.z
+	flat = flat.normalized() if flat.length_squared() > 1e-4 else -by.global_basis.z
 	var dir := to.normalized() if dist > 0.01 else flat
-	var gm := c.mode_of("gust")
+	var gm := mode if mode != "" else bc.mode_of("gust")
 	if gm == "pull":
 		flat = -flat                             # (the user, 2026-10-04: gust "can be push or pull")
 	elif gm == "lift" and (t is NpcFighter or t is FrontierPlayer or t is WildAnimal):
-		BendStatus.knock(t, Vector3.UP * float(push.get("lift_mps", 9.0)) + flat * 1.5, c.player)
+		BendStatus.knock(t, Vector3.UP * float(push.get("lift_mps", 9.0)) + flat * 1.5, by)
 		return
 	if t is FormRaised:
-		FormEffects.gust_chunk(c, t as FormRaised, at, dir)
+		FormEffects.gust_chunk(bc, t as FormRaised, at, dir)
 		return
 	var near := float(push.get("near_full_m", 8.0))
 	var reach := float(d.get("range_m", 25.0))
 	var k := lerpf(1.0, float(push.get("far_share", 0.45)), clampf((dist - near) / maxf(reach - near, 0.1), 0.0, 1.0))
 	if t is NpcFighter:
-		shove_fighter(t as NpcFighter, flat * float(push.get("people_mps", 5.0)) * k, c.player)
+		shove_fighter(t as NpcFighter, flat * float(push.get("people_mps", 5.0)) * k, by)
+	elif t is FrontierPlayer:
+		BendStatus.knock(t, flat * float(push.get("people_mps", 5.0)) * k, by)       # (a bot's gust at the player)
 	elif t is WildAnimal:
 		shove_animal(t as WildAnimal, flat * float(push.get("animal_mps", 4.5)) * k, from)
 	elif t is Campfire:
@@ -71,7 +82,7 @@ static func gust(c: SwayCaster, t: Node3D, at: Vector3) -> void:
 				at, float(push.get("heavy_kg", 120.0)))
 		if t is DroppedTorch and (t as DroppedTorch).state != null:
 			(t as DroppedTorch).state.snuff("gust")
-	blow_out_near(c, at, float(push.get("snuff_m", 1.4)))
+	blow_out_near(bc, at, float(push.get("snuff_m", 1.4)))
 
 
 ## Thrown back by `push` (m/s, flat) and staggered; the brain told who did it.
@@ -125,17 +136,22 @@ static func snuff(tf: TorchFire) -> void:
 			Sfx.play_3d(&"torch_snuff", tf.global_position, -4.0)
 
 
-## Every lit campfire and flame within `r` of `at`, not the caster's own torch.
-static func blow_out_near(c: SwayCaster, at: Vector3, r: float) -> void:
-	if r <= 0.0:
+## Every lit campfire and flame within `r` of `at`, not the caster's own torch (`c` any caster).
+static func blow_out_near(c: Variant, at: Vector3, r: float) -> void:
+	var bc := BendCaster.wrap(c)
+	if r <= 0.0 or bc == null or not bc.valid():
 		return
-	var tree := c.get_tree()
+	var tree := bc.body.get_tree()
+	var sc: SwayCaster = (bc as PlayerBendCaster).sway if bc is PlayerBendCaster else null
 	for f in tree.get_nodes_in_group(Campfire.GROUP):
 		if f is Campfire and (f as Campfire).is_lit() and (f as Node3D).global_position.distance_to(at) <= r:
 			(f as Campfire).smother()
 	for f in tree.get_nodes_in_group(TorchFire.GROUP):
 		var tf := f as TorchFire
-		if tf != null and not c.own_torch(tf) and tf.global_position.distance_to(at) <= r:
+		if tf == null or tf.global_position.distance_to(at) > r:
+			continue
+		var own := sc.own_torch(tf) if sc != null and is_instance_valid(sc) else bc.body.is_ancestor_of(tf)
+		if not own:
 			snuff(tf)
 
 

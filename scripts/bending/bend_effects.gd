@@ -26,7 +26,9 @@ extends RefCounted
 ## Any caster (BendCaster: the player's PlayerBendCaster, a bot's or a test's BodyBendCaster; the owner, 2026-10-04: the ring's
 ## bots cast the same moves as the player): every helper takes a caster or its body (untyped: BendCaster.wrap) and asks it for
 ## the aim, its rays, its side, its water, its chances; nothing here reads the player's own camera or keys.
-## last: what the local player's last cast did (the tests, the HUD); last_of(c): any caster's (by its body).
+## last: what the local player's last cast did (the tests, the HUD); last_of(c): any caster's (by its body); record(c, d):
+## BendCast's old modes (the earth wall, Stone Form's spike and boulder, the pillar, Gust's, Mend) written there as well.
+## BendCast.cast is the one entry for any caster (a bot's, a test's, the player's); FormEffects.apply hands the player's here.
 
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
 
@@ -44,6 +46,14 @@ static func last_of(c: Variant) -> Dictionary:
 	if bc == null or bc.body == null:
 		return {}
 	return _lasts.get(bc.body.get_instance_id(), {})
+
+
+## What caster `c` (any: BendCaster.wrap) just cast, kept as its last (last_of) and, the local player's, as `last`: BendCast's
+## old modes.
+static func record(c: Variant, d: Dictionary) -> void:
+	var bc := BendCaster.wrap(c)
+	if bc != null:
+		_record(bc, d)
 
 
 static func _record(bc: BendCaster, d: Dictionary) -> void:
@@ -513,8 +523,9 @@ static func brace(c: Variant, r: float) -> void:
 
 ## Earth Shove: a stone (held by the caster first: a Catch's; else the one the aim is on, or the nearest) or a raised wall
 ## or pillar on the aim: push (hurled along the aim; a wall's chunk torn out and fired through it), pull (to the caster's
-## feet), split (a chunk broken into three flying in a spread). The player's through his SwayCaster (FormEffects.gust_chunk,
-## FormEffects.Throw: GustLift flies it); any other caster's as stone bolts (shove_bolt) until the Throw takes any caster.
+## feet), split (a chunk broken into three flying in a spread). Any caster's the same way (the player's, a bot's: the ring's
+## bots shove as he does): FormEffects.gust_chunk, FormEffects.Throw (GustLift flies it; whom it strikes knocked through
+## BendStatus.knock, by the caster), aimed by the caster (the player's crosshair, a bot's target).
 static func shove(c: Variant, a: Dictionary, how: String, spec: Dictionary) -> void:
 	var bc := BendCaster.wrap(c)
 	if bc == null or not bc.valid():
@@ -527,54 +538,39 @@ static func shove(c: Variant, a: Dictionary, how: String, spec: Dictionary) -> v
 		bc.notice("Nothing of stone there to shove", 1.4)
 		return
 	var feet := FormEffects.ground_at(p, p.global_position + (a.flat as Vector3) * 1.5) + Vector3.UP * 0.4
-	var sc: SwayCaster = (bc as PlayerBendCaster).sway if bc is PlayerBendCaster else null
-	if sc != null and not is_instance_valid(sc):
-		sc = null
 	if thing is FormRaised:
 		var w := thing as FormRaised
 		var hit_at := _face_point(w, p)
 		var dir := ((a.point as Vector3) - hit_at).normalized()
-		if sc == null:
-			_shove_wall_bolts(bc, w, hit_at, a, how, feet)
-			return
 		match how:
 			"push":
-				FormEffects.gust_chunk(sc, w, hit_at, dir)
+				_cur["stone"] = FormEffects.gust_chunk(bc, w, hit_at, dir)
 			"pull":
-				var s := FormEffects.gust_chunk(sc, w, hit_at, dir)
-				_fix_throw(s, feet)
+				_cur["stone"] = FormEffects.gust_chunk(bc, w, hit_at, dir, feet)
 			"split":
 				for i in 3:
-					var s := FormEffects.gust_chunk(sc, w, hit_at + Vector3.UP * (i - 1) * 0.3, dir)
-					if s != null:
-						_fix_throw(s, (a.point as Vector3) + dir.cross(Vector3.UP).normalized() * (float(i) - 1.0) * 2.5)
+					_cur["stone"] = FormEffects.gust_chunk(bc, w, hit_at + Vector3.UP * (i - 1) * 0.3, dir,
+							(a.point as Vector3) + dir.cross(Vector3.UP).normalized() * (float(i) - 1.0) * 2.5)
 		return
 	var st := thing as Node3D
 	if st.has_meta(&"bend_held_by"):
 		st.remove_meta(&"bend_held_by")
-	if sc == null:
-		_shove_stone_bolt(bc, st, a, how, feet)
-		return
 	var td: Dictionary = (SwayMoves.move("stone_form").get("throw", {}) as Dictionary).duplicate(true)
 	var gs: Dictionary = (SwayMoves.move("gust").get("stone", {}) as Dictionary).get("hurl", {})
 	td["hurl"] = gs
 	td["rise_s"] = 0.2
 	if st is FormStone and (st as FormStone).state == FormStone.State.RISING:
 		(st as FormStone).state = FormStone.State.RESTING
-	var th := FormEffects.Throw.start(sc, st as FormStone, td) if st is FormStone else null
+	var th := FormEffects.Throw.start(bc, st as FormStone, td, feet if how == "pull" else Vector3.INF) if st is FormStone else null
+	_cur["throw"] = th
 	if th == null:
 		if st is RigidBody3D:
 			(st as RigidBody3D).freeze = false
 			SwayEffects.push_prop(st as RigidBody3D, (a.dir as Vector3) * 14.0, st.global_position, 400.0)
-		return
-	if how == "pull":
-		th.fixed = feet
-	elif how == "split":
-		th.fixed = Vector3.INF
 
 
-## The stone bolt a shoved stone becomes for a caster with no SwayCaster (a bot, a test): gust.raised's chunk numbers (mps,
-## gravity, damage, knock_mps), from `from` at `to`.
+## A stone bolt from `from` at `to` with gust.raised's chunk numbers (mps, gravity, damage, knock_mps): what a shoved stone
+## was for a bot before the Throw took any caster; kept for whoever flings a loose chunk.
 static func shove_bolt(bc: BendCaster, from: Vector3, to: Vector3, radius := 0.3) -> BendBolt:
 	var gd: Dictionary = SwayMoves.move("gust").get("raised", {})
 	var mps := float(gd.get("mps", 26.0))
@@ -585,54 +581,6 @@ static func shove_bolt(bc: BendCaster, from: Vector3, to: Vector3, radius := 0.3
 	var b := BendBolt.launch(bc.body, from, (aim_at - from).normalized(), spec)
 	FormEffects.sfx("hurl", from, 0.0, 1.0)
 	return b
-
-
-static func _shove_stone_bolt(bc: BendCaster, st: Node3D, a: Dictionary, how: String, feet: Vector3) -> void:
-	var from := st.global_position
-	var rad := float(st.get(&"radius")) if st is FormStone else 0.3
-	var to: Vector3 = feet if how == "pull" else (a.point as Vector3)
-	if how == "pull":
-		# (to the caster's feet: it lies there again)
-		st.global_position = feet + Vector3.UP * 0.2
-		if st is FormStone:
-			(st as FormStone).freeze = false
-			(st as FormStone).rest_again()
-		return
-	st.queue_free()
-	if how == "split":
-		var dir := (to - from).normalized()
-		for i in 3:
-			shove_bolt(bc, from + Vector3.UP * (i - 1) * 0.2, to + dir.cross(Vector3.UP).normalized() * (float(i) - 1.0) * 2.5, rad * 0.6)
-		return
-	shove_bolt(bc, from, to, rad)
-
-
-static func _shove_wall_bolts(bc: BendCaster, w: FormRaised, hit_at: Vector3, a: Dictionary, how: String, feet: Vector3) -> void:
-	var to: Vector3 = (a.point as Vector3)
-	var dir := (to - hit_at).normalized()
-	var from := hit_at + dir * 0.5
-	w.apply_hit(maxf(w.hit_min, 1.0), hit_at, dir)
-	GatherFx.stone_chips(bc.body.get_tree().current_scene, hit_at, -dir, 12)
-	match how:
-		"pull":
-			var gd: Dictionary = SwayMoves.move("gust").get("raised", {})
-			var s := FormStone.ball(bc.body.get_tree().current_scene, feet, {"radius_m": float(gd.get("chunk_r", 0.3)), "mass_kg": 25.0,
-					"rise_s": 0.05, "life_s": 20.0, "sink_s": 1.0}, bc.rand_i() % 97, w.matter if w.matter != "wood" else "earth")
-			_cur["stone"] = s
-		"split":
-			for i in 3:
-				shove_bolt(bc, from + Vector3.UP * (i - 1) * 0.3, to + dir.cross(Vector3.UP).normalized() * (float(i) - 1.0) * 2.5, 0.2)
-		_:
-			shove_bolt(bc, from, to, 0.3)
-
-
-static func _fix_throw(s: FormStone, toward: Vector3) -> void:
-	if s == null:
-		return
-	for t in s.get_tree().get_nodes_in_group(FormEffects.Throw.GROUP):
-		var th := t as FormEffects.Throw
-		if th != null and th.stone == s:
-			th.fixed = toward
 
 
 ## The thing to shove: a stone the caster holds; else what the aim's ray meets (a stone, a raised wall or pillar) within

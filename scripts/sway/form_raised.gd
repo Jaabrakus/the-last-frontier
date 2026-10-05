@@ -16,10 +16,19 @@ extends AnimatableBody3D
 ##   wood   a palisade section of split logs from a tree, a medium strength ("splinters": it leans back as it sinks, the
 ##          wood splintering off)
 ## A shot that counts throws off its own matter (stone chips, clods, splinters, snow).
+## Never over water (the ring: a deck over a tank, "into the water wins the round"): a wall raised across an edge with water
+## under part of it is cut to the part that stands on dry ground (dry_span: its line sampled every SAMPLE_M, the ground under
+## each and whether that ground is under water, TorchState.under_water), set across that part's middle; less than MIN_W_M of
+## it dry and it is not raised at all (drowned: gone the next step, never seen, in no group). The stones a stone wall falls
+## into drop to the ground under where they fall, into the water and onto its bed where there is water (floor_under), not
+## onto the terrain's height under a deck.
 
 signal crumbled(raised: FormRaised, why: String)
 
 const GROUP := &"form_raised"
+## A wall's line is sampled this often (m) for the ground under it; less than MIN_W_M of it on dry ground: not raised.
+const SAMPLE_M := 0.25
+const MIN_W_M := 0.6
 
 enum State { RISING, UP, CRUMBLING }
 
@@ -50,6 +59,10 @@ var mended_line := "The earth packed again"
 var _t := 0.0
 var _shape: CollisionShape3D
 var _crumble_why := ""
+## Raised over water entirely (dry_span: none of it dry): never seen, gone the next step.
+var drowned := false
+## The width it was asked for before the water cut it (m).
+var asked_w := 0.0
 
 
 ## A raised wall or pillar at `xf` (its origin on the ground, +Y up, +Z through it) under `parent`; `d` the move's numbers
@@ -73,9 +86,21 @@ static func raise(parent: Node, p_kind: String, xf: Transform3D, d: Dictionary, 
 	r.hit_min = float(d.get("hit_min", 10.0))
 	r.crumble_s = float(d.get("crumble_s", 1.4))
 	r.ease_smooth = p_kind == "pillar"
+	r.asked_w = r.size.x
+	if p_kind == "wall" and xf.basis.y.normalized().dot(Vector3.UP) > 0.9:
+		# (never over water: cut to the dry part of its line, or none)
+		var span := dry_span(parent, xf, r.size.x)
+		if span.y - span.x < MIN_W_M:
+			r.drowned = true
+		elif span.y - span.x < r.size.x - 0.01:
+			var across := xf.basis.x.normalized()
+			xf.origin += across * (span.x + span.y) * 0.5
+			r.size.x = span.y - span.x
+			r.base = xf
 	r.sync_to_physics = true
 	r.set_meta(&"surface", String(d.get("surface", "stone")))
-	r.add_to_group(GROUP)
+	if not r.drowned:
+		r.add_to_group(GROUP)
 	var cs := CollisionShape3D.new()
 	cs.name = "Shape"
 	var bury := FormModels.BURY_M
@@ -104,7 +129,59 @@ static func raise(parent: Node, p_kind: String, xf: Transform3D, d: Dictionary, 
 	r.add_child(r.mesh_instance)
 	parent.add_child(r)
 	r.global_transform = r._at(0.0)
+	if r.drowned:
+		r.visible = false
+		cs.disabled = true
+		r.state = State.CRUMBLING
+		r.crumble_s = 0.0
+		r._crumble_why = "water"
 	return r
+
+
+## The dry part of a wall's line at `xf` (its origin the middle of its foot, +X across) `width` m across, as [from, to] along
+## its +X (m from its middle; to < from: none): sampled about every SAMPLE_M, a sample dry when the ground under it
+## (FormEffects.ground_at, 8 m down) is not under water (TorchState.under_water just over it); a dry run ends half a step short
+## of the first wet sample; the longest run, the one nearest the middle on a tie. The whole line when nothing is water.
+static func dry_span(parent: Node, xf: Transform3D, width: float) -> Vector2:
+	var half := width * 0.5
+	var tree := parent.get_tree() if parent != null and parent.is_inside_tree() else null
+	if tree == null or tree.get_nodes_in_group(TorchState.WATER_GROUP).is_empty():
+		return Vector2(-half, half)
+	var world := (parent as Node3D).get_world_3d() if parent is Node3D else parent.get_viewport().find_world_3d()
+	var n := maxi(3, ceili(width / SAMPLE_M) + 1)
+	var step := width / float(n - 1)
+	var across := xf.basis.x.normalized()
+	var dry: Array[bool] = []
+	var any_wet := false
+	for i in n:
+		var p := xf.origin + across * (-half + step * i)
+		var g := FormEffects.ground_at(parent, p, 8.0)
+		var wet := TorchState.under_water(world, tree, g + Vector3.UP * 0.1)
+		dry.append(not wet)
+		any_wet = any_wet or wet
+	if not any_wet:
+		return Vector2(-half, half)
+	var best := Vector2(1.0, -1.0)
+	var i := 0
+	while i < n:
+		if not dry[i]:
+			i += 1
+			continue
+		var j := i
+		while j + 1 < n and dry[j + 1]:
+			j += 1
+		var run := Vector2(-half + step * i - (step * 0.5 if i > 0 else 0.0), -half + step * j + (step * 0.5 if j < n - 1 else 0.0))
+		var bw := best.y - best.x
+		if run.y - run.x > bw + 1e-4 or (absf(run.y - run.x - bw) <= 1e-4 and absf(run.x + run.y) < absf(best.x + best.y)):
+			best = run
+		i = j + 1
+	return best
+
+
+## The height a thing falling at `at` comes to rest on (world y): the ground under it (FormEffects.ground_at, 12 m down: a
+## deck, a raised floor, the bed of the water round it), never the terrain's height under a deck; `n` any node in the world.
+static func floor_under(n: Node, at: Vector3) -> float:
+	return FormEffects.ground_at(n, at, 12.0).y
 
 
 ## Its place `u` (0..1) of the way up.
@@ -286,7 +363,7 @@ class Rubble:
 			ru._vel.append(out + Vector3.UP * rng.randf_range(0.5, 1.8))
 			ru._spin.append(Vector3(rng.randf_range(-6.0, 6.0), rng.randf_range(-3.0, 3.0), rng.randf_range(-6.0, 6.0)))
 			var at := mi.global_position + out * 0.6
-			ru._floor.append(FrontierTerrain.height_at(at.x, at.z))
+			ru._floor.append(FormRaised.floor_under(parent, at))           # (into the water round a deck, onto its bed)
 
 	func _process(dt: float) -> void:
 		_t += dt
