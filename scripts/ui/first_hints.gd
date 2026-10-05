@@ -22,7 +22,7 @@ static var force := false
 
 var mode: RingMode
 var scheme := ""
-## Per row: {box, uses: [StringName], used, a}.
+## Per row: {box, caps (its HowToKeys, redrawn each frame), uses: [StringName], used, a}.
 var rows: Array = []
 var _panel: PanelContainer
 var _vb: VBoxContainer
@@ -128,12 +128,12 @@ func _lay() -> void:
 		var box := HBoxContainer.new()
 		box.add_theme_constant_override("separation", int(6 * _s))
 		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		LessonCard.fill(box, String(r.text), _s * 0.85, _sans, _sans_b, LessonCard.INK, 24, _lit)
+		var caps := LessonCard.fill(box, String(r.text), _s * 0.85, _sans, _sans_b, LessonCard.INK, 24, _lit)
 		_vb.add_child(box)
 		var uses: Array = []
 		for u in h.get("uses", []):
 			uses.append(StringName(String(u)))
-		rows.append({"box": box, "uses": uses, "used": false, "a": 1.0})
+		rows.append({"box": box, "caps": caps, "uses": uses, "used": false, "a": 1.0})
 
 
 func _lit(label: String) -> bool:
@@ -167,8 +167,8 @@ func _process(dt: float) -> void:
 			box.visible = float(r.a) > 0.001
 		else:
 			left += 1
-		for c in box.find_children("*", "Control", true, false):
-			if c is HowToKey:
+		for c in r.caps:
+			if is_instance_valid(c) and box.visible:
 				(c as HowToKey).queue_redraw()
 	if left == 0 and not rows.is_empty():
 		close()                                  # (every key used: the first match's hints are done)

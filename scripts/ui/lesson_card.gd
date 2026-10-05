@@ -31,6 +31,8 @@ var _sans: SystemFont
 var _sans_b: SystemFont
 ## glyph -> the actions it stands for in the line now (the caps light while one is held).
 var _acts := {}
+## The caps in the line and the skip line now (fill's), redrawn each frame to light while held.
+var _caps: Array[HowToKey] = []
 var _shown := ""
 var _a := 0.0
 var _want := 0.0
@@ -95,17 +97,20 @@ static func resolve(spec: String) -> Dictionary:
 
 
 ## The resolved `text` laid into `flow` as words (Labels) and caps (HowToKey for each [glyph]), at scale `s`; a word
-## that follows a cap with no space ("[Q]:", "[LMB].") kept with it, so the line never breaks or gaps between them.
-static func fill(flow: Container, text: String, s: float, font: Font, bold: Font, color: Color, size: int, lit: Callable) -> void:
+## that follows a cap with no space ("[Q]:", "[LMB].") kept with it, so the line never breaks or gaps between them. The caps
+## made, returned (their owner redraws just those each frame, as HowTo keeps its own: no walk of the tree a frame).
+static func fill(flow: Container, text: String, s: float, font: Font, bold: Font, color: Color, size: int, lit: Callable) -> Array[HowToKey]:
 	for c in flow.get_children():
 		flow.remove_child(c)
 		c.queue_free()
+	var caps: Array[HowToKey] = []
 	var re := RegEx.create_from_string("\\[([^\\]]+)\\]")
 	var at := 0
 	for m in re.search_all(text):
 		var before := text.substr(at, m.get_start() - at)
 		_words(flow, before, s, font, color, size)
 		var cap := HowToKey.new(m.get_string(1), lit, s, bold)
+		caps.append(cap)
 		at = m.get_end()
 		var tail := ""
 		while at < text.length() and text[at] != " " and text[at] != "[":
@@ -122,6 +127,7 @@ static func fill(flow: Container, text: String, s: float, font: Font, bold: Font
 		_words(glue, tail, s, font, color, size)
 		flow.add_child(glue)
 	_words(flow, text.substr(at), s, font, color, size)
+	return caps
 
 
 static func _words(flow: Container, t: String, s: float, font: Font, color: Color, size: int) -> void:
@@ -201,13 +207,13 @@ func _set_line(spec: String, skip_spec: String) -> void:
 	var r := resolve(spec)
 	_acts = r.acts
 	_shown = String(r.text)
-	fill(_line, _shown, _s, _sans, _sans_b, INK, 26, _lit)
+	_caps = fill(_line, _shown, _s, _sans, _sans_b, INK, 26, _lit)
 	_line.modulate.a = 1.0
 	_foot.visible = skip_spec != ""
 	if skip_spec != "":
 		var f := resolve(skip_spec)
 		(_acts as Dictionary).merge(f.acts)
-		fill(_foot, String(f.text), _s * 0.62, _sans, _sans_b, DIM, 26, _lit)
+		_caps.append_array(fill(_foot, String(f.text), _s * 0.62, _sans, _sans_b, DIM, 26, _lit))
 
 
 func _lit(label: String) -> bool:
@@ -226,9 +232,9 @@ func _process(dt: float) -> void:
 	var vp := get_viewport().get_visible_rect().size
 	_panel.reset_size()
 	_panel.position = Vector2(vp.x - _panel.size.x - 36.0 * _s, vp.y * 0.24)
-	for c in _line.find_children("*", "Control", true, false) + _foot.find_children("*", "Control", true, false):
-		if c is HowToKey:
-			(c as HowToKey).queue_redraw()
+	for c in _caps:
+		if is_instance_valid(c):
+			c.queue_redraw()
 
 
 func _build() -> void:

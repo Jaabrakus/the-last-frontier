@@ -444,7 +444,8 @@ func _scan_guards() -> void:
 		if bb == null or bb.caster != mode.foe or _bolts.has(bb.get_instance_id()):
 			continue
 		_bolts[bb.get_instance_id()] = true
-		bb.ended.connect(_on_bolt_end)
+		if not bb.ended.is_connected(_on_bolt_end):   # (a bolt still flying when the book was cleared is hooked already)
+			bb.ended.connect(_on_bolt_end)
 	if _bolts.size() > 64:
 		_bolts.clear()
 
