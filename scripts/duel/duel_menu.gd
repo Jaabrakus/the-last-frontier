@@ -4,7 +4,10 @@ extends CanvasLayer
 ## etc"), in the pause menu's look (MenuUI, PauseMenu): the game stops under a dark veil, the rows at the left.
 ##   Resume              (Esc again)
 ##   Restart the duel    the score nil, round 1 (DuelMode.restart)
-##   Difficulty: normal  easy, normal, hard in turn: the marine's aim (NpcFighter.SKILLS), at once (DuelMode.set_difficulty)
+##   Difficulty: normal  easy, normal, hard in turn: the opponent's lock, aim and answers (data/npc/bend_ai.json presets;
+##                       the marine's aim, NpcFighter.SKILLS), at once (DuelMode.set_difficulty)
+##   Element: Earth      the player's element in turn: a new duel as it
+##   Opponent: Earth     the opponent's element in turn (DuelMode.foe_element): a new duel against it
 ##   Settings            the main menu's (GameSettings)
 ##   Main menu           back to the title (nothing is saved in a duel)
 ##   Quit
@@ -20,6 +23,7 @@ var _panel: VBoxContainer
 var _note: Label
 var _diff: Button
 var _elem: Button
+var _foe: Button
 var _open := false
 
 
@@ -63,8 +67,9 @@ func _ready() -> void:
 	left.add_child(_items)
 	_row("Resume", close)
 	_row("Restart the duel", restart)
-	_diff = _row("Difficulty:  %s" % DuelMode.difficulty, cycle_difficulty, "the bender's aim: how close his stones go")
+	_diff = _row("Difficulty:  %s" % DuelMode.difficulty, cycle_difficulty, "the opponent's skill: how quick its locks, how close its aim")
 	_elem = _row("Element:  %s" % DuelMode.element.capitalize(), cycle_element, "earth, water, fire, air: a new duel as it")
+	_foe = _row("Opponent:  %s" % DuelMode.foe_element.capitalize(), cycle_foe, "the opponent's element: a new duel against it")
 	_row("Settings", _settings)
 	_row("Main menu", to_menu)
 	_row("Quit", _quit)
@@ -156,6 +161,18 @@ func cycle_element() -> void:
 		duel.restart()
 
 
+## The opponent's next element (Bending.ELEMENTS): the duel begun again against it.
+func cycle_foe() -> void:
+	var list := Bending.ELEMENTS
+	var el := String(list[(list.find(DuelMode.foe_element) + 1) % list.size()])
+	DuelMode.foe_element = el
+	var t := _foe.find_child("Text", true, false) as Label if _foe != null else null
+	if t:
+		t.text = "Opponent:  %s" % el.capitalize()
+	if duel != null:
+		duel.set_foe(el)
+
+
 func cycle_difficulty() -> void:
 	var list := DuelMode.DIFFICULTIES
 	var i := list.find(DuelMode.difficulty)
@@ -165,7 +182,7 @@ func cycle_difficulty() -> void:
 	else:
 		DuelMode.difficulty = d
 	_paint_diff()
-	_note.text = "The marine's aim from now: %s" % d
+	_note.text = "The opponent's skill from now: %s" % d
 
 
 func _paint_diff() -> void:

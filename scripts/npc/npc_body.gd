@@ -88,6 +88,31 @@ const FORM_CLIPS := {
 var cast_clip := ""
 var cast_pick := {}
 var cast_strike_s := -1.0
+## The own ring-sport clips a bot casts with before data/bending/poses.json maps them for everyone (animations_extra/
+## Frontier_Bend.res: tools/anim_author/blender/bend_clips.py; the first ten, still awaiting the owner's look; none authored
+## here): "move/mode" -> [clip, its left twin ("" none): the next cast of the same takes the other hand].
+const OWN_BEND_CASTS := {
+	"stone_form/spike": ["own-bend-throw-overhand", "own-bend-throw-overhand-l"],
+	"stone_form/disc": ["own-bend-throw-sidearm", "own-bend-throw-sidearm-l"],
+	"rock_jab/pebbles": ["own-bend-throw-underhand", ""],
+	"rock_jab/stomp": ["own-bend-earth-stomp", ""],
+	"earth_shove/push": ["own-bend-earth-push", ""],
+	"earth_shove/split": ["own-bend-earth-push", ""],
+	"earth_wall/column": ["own-bend-earth-rise", ""],
+	"ice/spear": ["own-bend-throw-overhand", "own-bend-throw-overhand-l"],
+	"ice/shards": ["own-bend-throw-sidearm", "own-bend-throw-sidearm-l"],
+	"air_blast/slice": ["own-bend-throw-sidearm", "own-bend-throw-sidearm-l"],
+}
+## The own knock reactions (play_knock): braced, sliding back on its feet; launched off them. Played while the knock lasts
+## (BendKnock: its window, or until it lands), held on the clip's hold_s meanwhile.
+const KNOCK_PREFIX := "own-bend-knock"
+const KNOCK_SLIDE := "own-bend-knock-slide"
+const KNOCK_AIR := "own-bend-knock-air"
+## The own clips' strike limb (their meta "hand") as strike_point reads it.
+const HANDS := {"r": "r_palm", "l": "l_palm", "both": "both", "foot_r": "r_foot", "foot_l": "l_foot"}
+var _alt := {}
+## A knock clip's hold (s into it; -1 none): it stops there while the knock lasts, then plays out.
+var _knock_hold := -1.0
 ## Arms poses over the stance (the player's relaxed long-gun overlay: Musket.relaxed).
 const ARMS := {
 	"carry": "actor_b-p-rifle-run-arms",
@@ -281,7 +306,9 @@ func play_cast(move: String, mode: String, wind_s: Variant = 0.8, element: Varia
 	var e := String(el) if el is String or el is StringName else ""
 	if e == "":
 		e = BendPoses.element_of(get_parent())
-	var pk := BendPoses.pick(move, mode, e) if e != "" else {}
+	var pk := _own_pick(move, mode) if e != "" else {}
+	if pk.is_empty() and e != "":
+		pk = BendPoses.pick(move, mode, e)
 	var key := "cast_push"
 	var strike := -1.0
 	if not pk.is_empty() and (has_clip(String(pk.clip)) or (_add_pose(String(pk.clip)) and has_clip(String(pk.clip)))):
@@ -303,6 +330,36 @@ func play_cast(move: String, mode: String, wind_s: Variant = 0.8, element: Varia
 	cast_strike_s = strike
 	play_once(key, 0.1, rate)
 	return rate
+
+
+## The own ring-sport clip for (move, mode) (OWN_BEND_CASTS: the right hand, then its left twin, in turn), as a pick filled
+## from the clip's metas (BendPoses._filled); {} none (or not in the libraries).
+func _own_pick(move: String, mode: String) -> Dictionary:
+	var row: Variant = OWN_BEND_CASTS.get(move + "/" + mode)
+	if not (row is Array):
+		return {}
+	var k := move + "/" + mode
+	var nm := String(row[0])
+	if String(row[1]) != "" and bool(_alt.get(k, false)):
+		nm = String(row[1])
+	_alt[k] = not bool(_alt.get(k, false))
+	if not BendPoses.usable(nm):
+		return {}
+	var pk := BendPoses._filled({"clip": nm, "from": "own"}, BendPoses.data())
+	pk["hand"] = HANDS.get(String(pk.get("hand", "r")), String(pk.get("hand", "r_palm")))
+	return pk
+
+
+## Its own knock reaction (NpcFighter.on_bend_knock): launched (`v` lifts it at BendKnock.LAUNCH_UP_MPS or more) the airborne
+## clip, else the braced slide; from its start, held at its hold_s while the knock lasts (_step). The length played (0: none).
+func play_knock(v: Vector3) -> float:
+	var nm := KNOCK_AIR if v.y >= BendKnock.LAUNCH_UP_MPS else KNOCK_SLIDE
+	if not has_clip(nm) and not (_add_pose(nm) and has_clip(nm)):
+		return 0.0
+	var a := ap.get_animation(LIB + "/" + nm)
+	_knock_hold = float(a.get_meta(&"hold_s", -1.0))
+	set_arms("")
+	return play_once(nm, 0.08, 1.0)
 
 
 ## Where a cast leaves the body (world): the pose's limb (its "hand": l_palm, r_palm, both, l_foot, r_foot), else the
@@ -509,6 +566,13 @@ func _process(delta: float) -> void:
 
 
 func _step(dt: float) -> void:
+	if _knock_hold >= 0.0:
+		if not clip.begins_with(KNOCK_PREFIX):
+			_knock_hold = -1.0
+		elif ap.current_animation_position >= _knock_hold and _knocked():
+			dt = 0.0                                # (held on the knock's pose while it lasts)
+		elif not _knocked():
+			_knock_hold = -1.0
 	ap.advance(dt)
 	if _props_t > 0.0 and sk != null:
 		_props_back()
@@ -519,6 +583,14 @@ func _step(dt: float) -> void:
 		sk.advance(dt)
 	steps += 1
 	_place_parts()
+
+
+## Its fighter still taking a knock (BendKnock's window, or in the air from it).
+func _knocked() -> bool:
+	var f := get_parent()
+	if f == null or not f.has_method(&"knock_t"):
+		return false
+	return float(f.call(&"knock_t")) > 0.0 or bool(f.call(&"is_launched"))
 
 
 func _set_manual(on: bool) -> void:

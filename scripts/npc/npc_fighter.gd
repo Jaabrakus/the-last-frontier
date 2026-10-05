@@ -120,6 +120,8 @@ const SWINGS := {
 ## it has moved more than GOAL_SNAP_M or GOAL_SNAP_FRAC of the way off the last plan's, at most once each REPLAN_S.
 const STRAIGHT_M := 12.0
 const GOAL_SNAP_M := 3.0
+## On a deck (on_deck): how far ahead it looks for the floor before it steps.
+const DECK_LOOK_M := 0.8
 const GOAL_SNAP_FRAC := 0.3
 const REPLAN_S := 1.0
 const RECOIL_S := 0.6
@@ -170,6 +172,15 @@ var feet_held := false
 var no_death := false
 ## Its brain's thoughts so far (NpcBrain.think: tests, a rooted fighter still thinking).
 var thinks := 0
+## Its element ("" none; "earth", "water", "fire", "air": an element bot, NpcBending; set before it enters the tree: NpcSquad's
+## opts "element"). BendPoses.element_of reads it for its cast poses.
+var element := ""
+## On a raised deck (Tidebreak's ring; an element bot with the ring's edge_fn sets it): it walks straight (the walk grid does not
+## see a deck), and stops short of where the floor ends ahead (_straight_to's look down).
+var on_deck := false
+## What a hit does to it against the hunt's numbers (HURT_MULT; an element bot takes the player's whole: the same blow, the same
+## hurt, either way).
+var hurt_mult := HURT_MULT
 ## Moving, it keeps facing this point (a side-step out past cover to peek and back: the aimed side-steps), INF: the way it goes.
 var face_lock := Vector3.INF
 ## Its shots (tests, the debug view): the last {at, mark, err_deg, d, spread_deg, part, react} and the last few errors (deg).
@@ -271,6 +282,8 @@ var _steer_t := 0.0
 ## The turn off the straight line its probe last chose (rad: 0 the line itself), kept between probes while the line itself
 ## follows the goal each frame.
 var _steer_k := 0.0
+## On a deck: the floor found ahead at the last probe (_floor_at).
+var _floor_ahead := true
 var _stuck_t := 0.0
 var _last := Vector3.ZERO
 var _dt := 0.0
@@ -290,6 +303,8 @@ func _enter_tree() -> void:
 
 
 func _exit_tree() -> void:
+	if brain != null and brain.bending != null:
+		brain.bending.on_exit()                    # (its lock's circle and the zones it holds round itself go with it)
 	NpcSenses.fighters.erase(self)
 	NpcSenses.corpses.erase(self)
 	NpcSenses.forget(self)
@@ -500,6 +515,8 @@ func on_bend_knock(v: Vector3, by: Node) -> void:
 	var flat := Vector3(v.x, 0.0, v.z)
 	if brain != null:
 		brain.hurt(by, flat.normalized() if flat.length_squared() > 1e-6 else Vector3.ZERO)
+	if brain != null and brain.bending != null:
+		brain.bending.on_knocked(v, by)             # (a knock loses a lock under way)
 	if flat.length() >= FLINCH_KNOCK_MPS:
 		_flinch(flat.normalized())
 	elif action == "":
@@ -662,6 +679,8 @@ func _physics_process(dt: float) -> void:
 		thinks += 1
 		brain.think(st)
 		target = brain.target
+	if brain != null and brain.bending != null:
+		brain.bending.tick(dt)                      # (an element bot's lock filled each frame; held, a lock is let go)
 	_act(dt)
 	_move(dt)
 	_pose()
@@ -980,7 +999,7 @@ func _move(dt: float) -> void:
 func _walk_to(to: Vector3, speed: float, arrive: float) -> Array:
 	_replan_t += _dt
 	var flat_d := _flat(global_position, to)
-	if _straight and _stuck_t < 0.8 and flat_d < STRAIGHT_M:
+	if on_deck or (_straight and _stuck_t < 0.8 and flat_d < STRAIGHT_M):
 		return _straight_to(to, speed, arrive)
 	var moved := _flat(_nav_goal, to) if _nav_goal != Vector3.INF else INF
 	var need := maxf(GOAL_SNAP_M, flat_d * GOAL_SNAP_FRAC)
@@ -1009,7 +1028,17 @@ func _straight_to(to: Vector3, speed: float, arrive: float) -> Array:
 	if _steer_t <= 0.0:
 		_steer_t = 0.2
 		_steer_k = _probe(line)
+		_floor_ahead = not on_deck or _floor_at(line.rotated(Vector3.UP, _steer_k))
+	if not _floor_ahead:
+		return [Vector3.ZERO, 0.0]                 # (the deck ends ahead: it stops there)
 	return [line.rotated(Vector3.UP, _steer_k), speed]
+
+
+## Whether there is floor DECK_LOOK_M ahead along `dir` (a ray down from a little above it, at most 1.2 m below its feet).
+func _floor_at(dir: Vector3) -> bool:
+	var ahead := global_position + dir.normalized() * DECK_LOOK_M
+	var q := PhysicsRayQueryParameters3D.create(ahead + Vector3.UP * 0.5, ahead + Vector3.DOWN * 1.2, 1, [get_rid()])
+	return not get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 
 ## How far to turn off `dir` (rad) for what is solid close ahead (five rays, a few times a second; the foe it is after is no
@@ -1031,6 +1060,8 @@ func _probe(dir: Vector3) -> float:
 func _pose() -> void:
 	if body == null or action in ["swing", "flinch", "dead", "down", "cast"]:
 		return
+	if (knock_t() > 0.0 or is_launched()) and body.clip.begins_with(NpcBody.KNOCK_PREFIX):
+		return                                      # (a knock's own clip plays while the knock lasts: NpcBody.play_knock)
 	var has_gun := gun != null and gun.visible
 	if action == "aim" or action == "recoil":
 		body.set_arms("")
@@ -1112,10 +1143,12 @@ func apply_hit(damage: float, point: Vector3, dir: Vector3, source: Node, part: 
 				fx = an.last_shot.fx
 				if bool(fx.missed):
 					return                      # (the coarse part caught it; his body was not there: it went by)
-	var dmg := damage * HURT_MULT * float(fx.get("dmg_mult", 1.0))
+	var dmg := damage * hurt_mult * float(fx.get("dmg_mult", 1.0))
 	hits_taken += 1
 	if source != null and is_instance_valid(source):
 		_hurt_by = source
+	if brain != null and brain.bending != null:
+		brain.bending.on_hurt(dmg, source)         # (any hurt loses a bender's lock, as a hit breaks the player's)
 	if DisplayServer.get_name() != "headless":
 		BloodFx.hit(get_tree().current_scene, point, dir, -dir, clampf(dmg / 40.0, 0.4, 2.0), self)
 	if brain != null:
