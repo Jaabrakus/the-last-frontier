@@ -134,6 +134,13 @@ For the integrator: `BendLooks.warm_up(camera)` once the ring stands (it compile
 first fire wall or tornado can freeze a frame for seconds on a Mac); `BendLooks.rise(foot, size, way, matter)` when an earth
 or ice wall comes up and `BendLooks.shatter(foot, size, way, matter)` when one breaks (FormRaised raise / crumble).
 Stills: tools/bending/vfx_lineup.gd; load: tools/bending/vfx_stress.gd.
+Wired (wave 3, 2026-10-05): RingLevel runs warm_up behind the loading screen (the level's meta loading_hold; LoadingScreen
+waits on it, RingMode holds its countdown while the painting covers the window): about 0.3 s with Godot's shader cache warm,
+35 s in one frame with it cold (behind the painting); after it no effect cast in a fight froze a frame over 60 ms (the round
+restarts' bot spawn still costs about 1 s at a countdown). FormRaised plays rise as an earth or ice wall comes up and
+shatter when one is shot down. The effects roll their own dice (ToonFx.vis_rng: drawing them never shifts the game's rolls)
+and take a brightness per light (ToonFx.set_gain, the shaders' fx_gain; RingLook: night 0.5). Walls are capped in the ring
+(rules.json max_walls 2 per caster, earth and ice walls alike: a third crumbles the oldest; FormRaised.count_wall).
 
 ## Build order (proposed)
 
