@@ -72,59 +72,174 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	return z
 
 
+## Its look (BendLooks' cel style, ToonFx): the meshes under a "Look" node that grows in, the lasting emitters in _fx.
+##   bubble       a wobbling sphere of water, a pale rim and foam streaks flowing round it, drops at its foot
+##   air_shield   three translucent wind bands turning round its owner at different tilts and speeds, dust at his feet
+##   water_wall   a standing sheet of water flowing up, foam and spray along its crest and its foot
+##   fire_wall    standing flame sheets (one MultiMesh of tongues facing the camera) on a scorch, embers, a warm light;
+##   burn         the same low over its strip of ground
+##   ice_patch    a frost sheet on the ground, sparkles
+##   tornado      stacked wind rings widening upward, each turning, rock debris and dust whirled up round it
+##   vacuum       wind bands drawing in, air
+##   smoke/dust/spray  cel puffs
 func _look() -> void:
 	if not BendLooks.live():
 		return
+	var look := Node3D.new()
+	look.name = "Look"
+	add_child(look)
 	match kind:
-		"bubble", "air_shield":
-			var mi := MeshInstance3D.new()
-			var s := SphereMesh.new()
-			s.radius = radius
-			s.height = radius * 2.0
-			mi.mesh = s
-			mi.material_override = BendLooks.material("water" if kind == "bubble" else "air")
+		"bubble":
+			var mi := _part(look, ToonFx.sphere(24), ToonFx.mat("bubble"))
+			mi.scale = Vector3.ONE * radius
 			mi.position = Vector3.UP * 1.0
-			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			add_child(mi)
-			if kind == "air_shield":
-				_fx.append(BendLooks.emitter(self, "air", Vector3(radius, 1.0, radius) * 0.8, 50, 0.6, 2.0, 0.35))
+			mi.set_instance_shader_parameter(&"seed", randf() * 5.0)
+			_fx.append(BendLooks.emitter(self, "water", Vector3(radius * 0.7, 0.05, radius * 0.7), 14, 0.6, 1.6, 0.12))
+			_grow(look, Vector3.ONE * 0.05)
+		"air_shield":
+			for i in 3:
+				var b := _part(look, ToonFx.band_mesh(1.0, 0.9, 0.45), ToonFx.mat(["wind_band", "wind_band_slow", "wind_band_fast"][i]))
+				b.scale = Vector3.ONE * radius * (1.0 - i * 0.07)
+				b.position = Vector3.UP * (0.3 + i * 0.62)
+				b.rotation = Vector3(0.24 * (1.0 if i % 2 == 0 else -1.0), i * 1.1, 0.12 * i)
+				b.set_instance_shader_parameter(&"seed", i * 0.37)
+			_fx.append(BendLooks.emitter(self, "dust", Vector3(radius * 0.9, 0.05, radius * 0.9), 14, 0.7, 0.6, 0.35))
+			_grow(look, Vector3.ONE * 0.2)
 		"water_wall":
-			var mi := MeshInstance3D.new()
-			var b := BoxMesh.new()
-			b.size = size
-			mi.mesh = b
-			mi.material_override = BendLooks.material("water")
+			var bm := BoxMesh.new()
+			bm.size = Vector3(size.x, size.y, size.z * 0.7)
+			bm.subdivide_width = 16
+			bm.subdivide_height = 10
+			var mi := _part(look, bm, ToonFx.mat("water_wall"))
 			mi.position = Vector3.UP * size.y * 0.5
-			add_child(mi)
-			_fx.append(BendLooks.emitter(self, "water", Vector3(size.x * 0.5, 0.1, size.z * 0.5) + Vector3.UP * 0.0, 60, 0.7, 3.0, 0.3))
+			mi.set_instance_shader_parameter(&"seed", randf() * 5.0)
+			var crest := BendLooks.emitter(self, "water", Vector3(size.x * 0.48, 0.05, size.z * 0.3), 40, 0.6, 2.4, 0.12)
+			var foam := BendLooks.emitter(self, "foam", Vector3(size.x * 0.48, 0.05, size.z * 0.35), 22, 0.45, 0.8, 0.32)
+			var foot := BendLooks.emitter(self, "foam", Vector3(size.x * 0.5, 0.05, size.z * 0.5), 18, 0.6, 0.4, 0.4)
+			for e: GPUParticles3D in [crest, foam]:
+				e.position = Vector3.UP * size.y
+			_fx.append_array([crest, foam, foot])
+			_grow(look, Vector3(1.0, 0.02, 1.0))
 		"fire_wall", "burn":
-			var h := size.y if kind == "fire_wall" else 0.4
-			var e := BendLooks.emitter(self, "fire", Vector3(size.x * 0.5, 0.15, size.z * 0.5), int(40 * size.x), 0.8, h * 1.6, 0.55)
-			if e != null:
-				e.position = Vector3.UP * 0.15
-			_fx.append(e)
+			_flames(look)
+			var h := size.y if kind == "fire_wall" else 0.5
+			var em := BendLooks.emitter(self, "embers", Vector3(size.x * 0.5, 0.1, size.z * 0.5), int(10 * maxf(size.x, size.z)),
+					1.0, h * 1.6, 0.05)
+			em.position = Vector3.UP * h * 0.4
+			_fx.append(em)
+			var sc := _part(look, ToonFx.plane(), ToonFx.mat("mark_scorch"))
+			sc.scale = Vector3(size.x * 0.62, 1.0, size.z * 0.5 + 0.5)
+			sc.position = Vector3.UP * 0.02
+			sc.set_instance_shader_parameter(&"t", 0.25)
+			sc.set_instance_shader_parameter(&"seed", randf() * 5.0)
 			var l := OmniLight3D.new()
 			l.light_color = Color(1.0, 0.55, 0.2)
 			l.light_energy = 2.0
-			l.omni_range = size.x
+			l.omni_range = maxf(size.x, size.z)
 			l.position = Vector3.UP * 1.0
+			l.shadow_enabled = false
 			add_child(l)
 		"ice_patch":
-			var mi := MeshInstance3D.new()
-			var b := BoxMesh.new()
-			b.size = Vector3(radius * 2.0, 0.04, radius * 2.0)
-			mi.mesh = b
-			mi.material_override = BendLooks.material("ice")
-			mi.position = Vector3.UP * 0.03
-			add_child(mi)
+			var fr := _part(look, ToonFx.plane(), ToonFx.mat("mark_frost"))
+			fr.scale = Vector3(radius, 1.0, radius)
+			fr.position = Vector3.UP * 0.03
+			fr.set_instance_shader_parameter(&"t", 0.2)
+			fr.set_instance_shader_parameter(&"seed", randf() * 5.0)
+			_fx.append(BendLooks.emitter(self, "sparkle", Vector3(radius * 0.7, 0.05, radius * 0.7), 10, 0.8, 0.3, 0.12))
+			_grow(look, Vector3(0.1, 1.0, 0.1))
 		"smoke", "dust", "spray":
-			_fx.append(BendLooks.emitter(self, "smoke" if kind == "smoke" else ("dust" if kind == "dust" else "water"),
-					Vector3(radius, 0.8, radius), 70, 2.2, 0.6, 2.2))
+			_fx.append(BendLooks.emitter(self, "smoke" if kind == "smoke" else ("dust" if kind == "dust" else "foam"),
+					Vector3(radius, 0.8, radius), 40, 2.2, 0.6, 1.6))
 		"tornado":
-			_fx.append(BendLooks.emitter(self, "dust", Vector3(radius * 0.5, 0.3, radius * 0.5), 90, 1.4, 6.0, 0.8))
-			_fx.append(BendLooks.emitter(self, "air", Vector3(radius * 0.6, 1.5, radius * 0.6), 60, 0.8, 4.0, 0.6))
+			var rings := 6
+			for i in rings:
+				var f := float(i) / (rings - 1)
+				var b := _part(look, ToonFx.band_mesh(1.0, 1.12, 0.55), ToonFx.mat("wind_funnel" if i % 2 == 0 else "wind_band_fast"))
+				b.scale = Vector3.ONE * radius * (0.32 + 0.55 * f)
+				b.position = Vector3(sin(i * 1.7) * 0.1 * f, 0.05 + i * 0.38, cos(i * 1.3) * 0.1 * f)
+				b.rotation = Vector3(0.08 * sin(i * 2.1), i * 0.9, 0.08 * cos(i * 1.4))
+				b.set_instance_shader_parameter(&"seed", i * 0.29)
+			var pivot := Node3D.new()
+			pivot.name = "Whirl"
+			add_child(pivot)
+			var tw := pivot.create_tween().set_loops()
+			tw.tween_property(pivot, "rotation:y", TAU, 0.75).from(0.0)
+			var debris := BendLooks.emitter(pivot, "debris", Vector3.ONE * 0.1, 18, 1.5, 3.5, 0.18)
+			var dust := BendLooks.emitter(pivot, "dust", Vector3.ONE * 0.1, 22, 1.1, 1.2, 0.6)
+			for e: GPUParticles3D in [debris, dust]:
+				var pm := e.process_material as ParticleProcessMaterial
+				pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+				pm.emission_ring_axis = Vector3.UP
+				pm.emission_ring_height = 0.3
+				pm.emission_ring_radius = radius * (0.85 if e == debris else 0.7)
+				pm.emission_ring_inner_radius = radius * 0.4
+				pm.gravity = Vector3(0, -1.5, 0) if e == debris else Vector3.ZERO
+			_fx.append_array([debris, dust])
+			_grow(look, Vector3(0.3, 0.05, 0.3))
 		"vacuum":
-			_fx.append(BendLooks.emitter(self, "air", Vector3(radius, 0.6, radius), 40, 0.6, -1.0, 0.4))
+			for i in 2:
+				var b := _part(look, ToonFx.band_mesh(1.0, 0.7, 0.4), ToonFx.mat("wind_band_fast"))
+				b.scale = Vector3.ONE * radius * (1.0 - i * 0.35)
+				b.position = Vector3.UP * (0.3 + i * 0.5)
+				b.set_instance_shader_parameter(&"seed", i * 0.5)
+			_fx.append(BendLooks.emitter(self, "air", Vector3(radius, 0.6, radius), 24, 0.6, -1.0, 0.35))
+
+
+func _part(under: Node3D, m: Mesh, mat: Material) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	mi.mesh = m
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	under.add_child(mi)
+	return mi
+
+
+## The look grows from `from` (its scale) to whole in a quarter second.
+func _grow(look: Node3D, from: Vector3) -> void:
+	look.scale = from
+	var tw := look.create_tween()
+	tw.tween_property(look, "scale", Vector3.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## The flames of a fire wall (tall sheets in two staggered rows along it) or burning ground (low, scattered over its strip):
+## one MultiMesh of flame quads facing the camera, raised from nothing.
+func _flames(look: Node3D) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = absi(hash(Vector3i(global_position * 10.0)))
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = ToonFx.quad_base()
+	var xs: Array[Transform3D] = []
+	if kind == "fire_wall":
+		var n := maxi(int(size.x / 0.42), 3)
+		for row in 2:
+			for i in n:
+				var x := (float(i) + 0.5 + (0.5 if row == 1 else 0.0) * 0.9) / n - 0.5
+				var h := size.y * rng.randf_range(0.7, 1.15) * (1.0 if row == 0 else 0.8)
+				var w := rng.randf_range(0.75, 1.05)
+				var z := (row - 0.5) * size.z * 0.5
+				xs.append(Transform3D(Basis(Vector3.RIGHT * w, Vector3.UP * h, Vector3.BACK), Vector3(x * size.x, 0.0, z)))
+	else:
+		var n := maxi(int(size.x * size.z * 2.2), 4)
+		for i in n:
+			var p := Vector3(rng.randf_range(-0.5, 0.5) * size.x, 0.0, rng.randf_range(-0.5, 0.5) * size.z)
+			var h := rng.randf_range(0.35, 0.75)
+			xs.append(Transform3D(Basis(Vector3.RIGHT * rng.randf_range(0.45, 0.7), Vector3.UP * h, Vector3.BACK), p))
+	mm.instance_count = xs.size()
+	for i in xs.size():
+		mm.set_instance_transform(i, xs[i])
+	var mmi := MultiMeshInstance3D.new()
+	mmi.name = "Flames"
+	mmi.multimesh = mm
+	mmi.material_override = ToonFx.mat("flame" if kind == "fire_wall" else "flame_low")
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mmi.extra_cull_margin = 1.0
+	mmi.set_instance_shader_parameter(&"seed", rng.randf() * 10.0)
+	mmi.set_instance_shader_parameter(&"grow", 0.0)
+	look.add_child(mmi)
+	var tw := mmi.create_tween()
+	tw.tween_method(func(v: float) -> void: mmi.set_instance_shader_parameter(&"grow", v), 0.0, 1.0, 0.3) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _physics_process(dt: float) -> void:
