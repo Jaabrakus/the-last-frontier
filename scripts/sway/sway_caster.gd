@@ -140,6 +140,8 @@ const QUICK_BIND_KEY := KEY_Q
 ## The button a lock is taken on (lock_src): the aim's (RMB, the readied spell) or the quick spell's (LMB).
 const SRC_AIM := "aim"
 const SRC_QUICK := "quick"
+## The set key's line with nothing readied (the quick spell as it stays).
+const NOTHING_READIED := "Ready a move first (1-5); left click stays %s"
 ## The player's meta while a spell is readied with its hands right: the RMB is the spell's, not the weapon's aim (an expert's
 ## pistol or tomahawk still fires, the saber still swings: Weapon._aim_input_enabled).
 const SPELL_META := &"sway_spell"
@@ -251,6 +253,9 @@ var lock_src := SRC_AIM
 var quick_override: Variant = null
 var _quick := {}                      ## element -> {id, mode}: the quick spells read (MatchSetup.quick_of) or set this run
 var _wait_src := SRC_AIM              ## the button _wait_release waits on
+var _quick_spoiled := false           ## the LMB press now began (or ran) while LMB was not the game's: _track_quick
+var _quick_down_was := false
+var _quick_ok_was := false
 var _pin_id := ""                     ## the quick spell's move while its lock runs: mode_of(_pin_id) is _pin_mode
 var _pin_mode := ""
 var _pin_on := false                  ## the quick spell's button is the one held or locking now
@@ -310,17 +315,24 @@ static func ensure_input() -> void:
 	InputMap.action_add_event(MODE_ACTION, mb)
 
 
-## The quick spell's set key as the player sees it ("Q"; its first binding, whatever it was rebound to).
+## The quick spell's set key as the player sees it ("Q"; its first binding, whatever it was rebound to; "" when it has
+## none: the player unbound it).
 static func quick_bind_key() -> String:
-	if InputMap.has_action(QUICK_BIND):
-		for e in InputMap.action_get_events(QUICK_BIND):
-			var k := e as InputEventKey
-			if k != null:
-				var code := k.physical_keycode if k.physical_keycode != KEY_NONE else k.keycode
-				return OS.get_keycode_string(code)
-			if e != null:
-				return e.as_text()
-	return OS.get_keycode_string(QUICK_BIND_KEY)
+	return key_name(QUICK_BIND)
+
+
+## Action `a`'s first binding as the player sees it ("Q", "F", "Middle Mouse Button"; "" when it has none).
+static func key_name(a: StringName) -> String:
+	if not InputMap.has_action(a):
+		return ""
+	for e in InputMap.action_get_events(a):
+		var k := e as InputEventKey
+		if k != null:
+			var code := k.physical_keycode if k.physical_keycode != KEY_NONE else k.keycode
+			return OS.get_keycode_string(code)
+		if e != null:
+			return e.as_text()
+	return ""
 
 
 func _ready() -> void:
@@ -376,13 +388,17 @@ func _ready() -> void:
 			add_child(tone)
 
 
-## The mode key flips the readied spell's mode (a spell with modes readied; the key is the player's).
+## The mode key flips the readied spell's mode (a spell with modes readied; the key is the player's). The quick spell's
+## set key (an element: the ring, the duel) puts the readied move on LMB; with nothing readied it says how.
 func _unhandled_input(event: InputEvent) -> void:
-	if player == null or not player.is_local or readied_spell == "":
+	if player == null or not player.is_local:
 		return
-	if InputMap.has_action(QUICK_BIND) and event.is_action_pressed(QUICK_BIND) and quick_element() != "":
+	if InputMap.has_action(QUICK_BIND) and event.is_action_pressed(QUICK_BIND) and not event.is_echo() \
+			and quick_element() != "":
 		bind_quick()
 		get_viewport().set_input_as_handled()
+		return
+	if readied_spell == "":
 		return
 	if modes_of(readied_spell).is_empty():
 		return
@@ -663,9 +679,11 @@ static func mode_label(id: String, m: String) -> String:
 	return String((SwayMoves.move(id).get("mode_labels", {}) as Dictionary).get(m, m))
 
 
-## The spell's name, with its mode when it has one ("Stone Form (cannonball)").
+## The spell's name, with its mode as its key has it ("Stone Form (cannonball)"; base_mode_of: the HUD's readied line, the
+## hotbar's and the Tab screen's never take the quick spell's frozen variation while its lock runs; a lock's own is
+## label_with(id, mode_of(id))).
 func spell_label(id: String) -> String:
-	return label_with(id, mode_of(id) if state != State.IDLE and id == move else base_mode_of(id))
+	return label_with(id, base_mode_of(id))
 
 
 ## Move `id`'s name with mode `m` ("Rock Jab (pebbles)"; the name alone when `m` is "").
@@ -727,10 +745,15 @@ func set_quick(id: String, mode: String) -> bool:
 
 
 ## The bind key: the readied skill at its variation now becomes the quick spell (frozen: the wheel stepping the key later
-## leaves it), said on the screen "Left click: Rock Jab (pebbles)". False when nothing could be bound.
+## leaves it), said on the screen "Left click: Rock Jab (pebbles)". False when nothing could be bound (nothing readied:
+## the screen says to ready a move first, NOTHING_READIED).
 func bind_quick() -> bool:
 	var id := readied_spell
-	if id == "" or not set_quick(id, base_mode_of(id)):
+	if id == "":
+		if player.is_local and player.interactor != null and quick_element() != "":
+			player.interactor.notice(NOTHING_READIED % quick_label(), 2.4)
+		return false
+	if not set_quick(id, base_mode_of(id)):
 		return false
 	if player.is_local and player.interactor != null:
 		player.interactor.notice("Left click: %s" % quick_label(), 1.8)
@@ -840,6 +863,7 @@ func _physics_process(dt: float) -> void:
 	_sync_meta()
 	_root()
 	_plant_cue()
+	_track_quick()
 	if _wait_release and not _src_held(_wait_src):
 		_wait_release = false                 # (the button a fizzle waited on is let go)
 	if state == State.IDLE:
@@ -936,15 +960,46 @@ func _held() -> bool:
 
 
 ## Whether button `src` is held: the aim (RMB: _held) or the quick spell's (LMB; only while there is a quick spell to cast:
-## the open world without an element keeps its LMB as it was).
+## the open world without an element keeps its LMB as it was; and only a press that began on the game: _track_quick).
 func _src_held(src: String) -> bool:
 	if src == SRC_QUICK:
 		if not quick_ready():
 			return false
 		if quick_override != null:
 			return bool(quick_override)
-		return player.controls.pressed(QUICK)
+		return player.controls.pressed(QUICK) and not _quick_spoiled
 	return _held()
+
+
+## Whether LMB is the game's now (the player's own mouse): the mouse captured (or a test's ignore_mouse_capture), no
+## equip wheel open nor its pick click held, no torch mode (Weapon._fire_input_enabled's checks). Another's controls
+## (an AI's, the network's) have no mouse: always.
+func _quick_input_ok() -> bool:
+	if player.controls == null or not player.controls.from_input:
+		return true
+	if not (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or player.ignore_mouse_capture):
+		return false
+	if player.get("equip_wheel") != null and player.equip_wheel.blocks_fire():
+		return false
+	if player.get("torch") != null and player.torch.blocks_fire():
+		return false
+	return true
+
+
+## Once a tick (_physics_process), before the lock reads LMB: a press that began while LMB was not the game's (the click
+## that takes the mouse back, Esc's free mouse; the click that picks on the equip wheel) or that ran into such a moment
+## is spoiled, ignored until it is let go (Weapon._fire_input_steady: the input on since the tick before the press).
+func _track_quick() -> void:
+	var ok := _quick_input_ok()
+	var down := player.controls != null and player.controls.pressed(QUICK)
+	if not down:
+		_quick_spoiled = false
+	elif not _quick_down_was:
+		_quick_spoiled = not (ok and _quick_ok_was)
+	elif not ok:
+		_quick_spoiled = true
+	_quick_down_was = down
+	_quick_ok_was = ok
 
 
 ## The button a new lock is tried on (IDLE only): the one already held keeps it (one lock at a time: a button pressed while

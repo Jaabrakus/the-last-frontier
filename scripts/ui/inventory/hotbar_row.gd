@@ -122,7 +122,7 @@ class HotbarCell extends PanelContainer:
 		if was != _spell or _spell:
 			queue_redraw()
 		var c := SwayCaster.of(row.screen.player) if _spell else null
-		var md := c.mode_of(String(e.id)) if c != null else ""
+		var md := c.base_mode_of(String(e.id)) if c != null else ""
 		if md != _mode:
 			_mode = md
 			_mark.queue_redraw()

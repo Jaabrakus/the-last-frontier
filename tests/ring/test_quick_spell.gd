@@ -12,12 +12,24 @@ extends SceneTree
 ##              LMB starts its own lock; RMB pressed during it is ignored; let go: kick-up cast
 ##   kept       per element: fire's own (its default, then set to Fire Blast punch), earth's still kick-up; read back from
 ##              the settings file (a new caster's cache); the test keeps its own settings file (GameSettings.path)
-##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_quick_spell.gd
+##   guards     (the QA pass on tb/QUICK) the readied key's line (HUD, spell_label) keeps the key's variation while a quick
+##              lock of the same move runs; a click while the mouse is free, or one that ran into a free mouse, starts no
+##              lock until it is let go; nor the equip wheel's pick click; Q with nothing readied says to ready a move; the
+##              set key unbound or rebound: the strip's help line says so at once; no show words in any move's label or
+##              variation (the LMB chip can show them all: Wind Run's whirl ride)
+##   mode=duel  the same in the duel (scenes/main.tscn, DuelMode.incoming): LMB casts the default; the world HUD's LMB row
+##              under the hotbar and F1's Q and LMB lines; Q binds, the wheel stays shut; the readied line during a quick
+##              lock; Q with hands free; the set key on F: Q opens the wheel again and its pick click starts no lock;
+##              the element changed: its own quick spell
+##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_quick_spell.gd [-- mode=duel]
 ## The last line "QUICK SPELL TEST PASSED" or "QUICK SPELL TEST FAILED"; exit 0 only on a pass; a watchdog quits with 2.
 
 const NAME := "QUICK SPELL TEST"
 const LIMIT_S := 240.0
 const OWN_CFG := "user://quick_spell_test.cfg"
+## The show's words (as tests/ring/test_player_words.gd holds them).
+const WORDS := ["avatar", "benders?", "bending", "pro-?bend\\w*", "korra", "aang", "airbend\\w*", "firebend\\w*",
+		"earthbend\\w*", "waterbend\\w*", "air scooters?", "fire nation", "water tribes?", "earth kingdom", "air nomads?"]
 
 var checks := 0
 var fails: Array[String] = []
@@ -27,6 +39,8 @@ var c: SwayCaster
 var hud: FrontierHUD
 var casts: Array = []
 var _foe_at := Vector3.INF
+var duel_mode := false
+var duel: DuelMode
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -45,6 +59,15 @@ func _initialize() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	SwayCaster.free_override = true
 	InputSetup.ensure()
+	for a in OS.get_cmdline_user_args():
+		if a == "mode=duel":
+			duel_mode = true
+	if duel_mode:
+		DuelMode.incoming = true
+		DuelMode.element = "earth"
+		change_scene_to_file("res://scenes/main.tscn")
+		_run_duel.call_deferred()
+		return
 	MatchSetup.incoming = true
 	MatchSetup.element = "earth"
 	change_scene_to_file("res://scenes/ring.tscn")
@@ -117,6 +140,7 @@ func _run() -> void:
 	await _bind()
 	await _cast()
 	await _after()
+	await _guards()
 	await _kept()
 	_end()
 
@@ -124,6 +148,7 @@ func _run() -> void:
 func _end() -> void:
 	Input.action_release(&"fire")
 	Input.action_release(&"aim")
+	_restore_bind()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	GameSettings.path = GameSettings.PATH
 	if fails.is_empty() and checks > 0:
@@ -201,6 +226,10 @@ func _cast() -> void:
 	_expect(c.form.circle != null and is_instance_valid(c.form.circle) and c.pose.posing(), "the circle drawn, the pose on")
 	_expect(c.readied_spell == "rock_jab" and c.base_mode_of("rock_jab") == "stomp" and int(hud.bend_strip.column(0).mode_i) == pip0
 			and p.hotbar.spell == "rock_jab", "meanwhile the key is as it was: Rock Jab at stomp, the strip's pip unmoved")
+	var line := hud._spell_line("rock_jab")
+	_expect(c.spell_label("rock_jab") == "Rock Jab (stomp)" and line.begins_with("Rock Jab (stomp)") and "3/3" in line
+			and hud._spell_mode("rock_jab") == "stomp",
+			"meanwhile the readied key's line keeps stomp (\"%s\"; %s)" % [line, c.spell_label("rock_jab")])
 	var full := await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 3.0)
 	Input.action_release(&"fire")
 	var cast_t := await _until(func() -> bool: return not casts.is_empty(), 1.0)
@@ -273,3 +302,277 @@ func _kept() -> void:
 	_expect(GameSettings.file() == OWN_CFG, "kept in the test's own file (%s), never the player's" % GameSettings.file())
 	_expect(not MatchSetup.set_quick("earth", "fire_blast", "punch") and not MatchSetup.set_quick("earth", "rock_jab", "nope"),
 			"another element's move, or a variation it has not, cannot be earth's quick spell")
+
+
+# ---------------------------------------------------------------- guards (the QA pass)
+## Whether a lock starts within `n` ticks (the state off IDLE).
+func _locks_within(n: int) -> bool:
+	for i in n:
+		await physics_frame
+		if c.state != SwayCaster.State.IDLE:
+			return true
+	return false
+
+
+## Lets go of LMB and waits the lock out (a lock let go before it fills breaks; one full casts).
+func _let_go() -> void:
+	Input.action_release(&"fire")
+	await _until(func() -> bool: return c.state == SwayCaster.State.IDLE, 2.0)
+	await _secs(0.5)
+
+
+func _guards() -> void:
+	await _secs(0.4)
+	await _mouse_free()
+	await _wheel_click()
+	await _nothing_readied()
+	await _rebind()
+	_words()
+
+
+## Esc's free mouse: a click then is the one that takes the mouse back, never a lock (Weapon._fire_input_enabled's rule).
+func _mouse_free() -> void:
+	p.ignore_mouse_capture = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	await _ticks(3)
+	Input.action_press(&"fire")
+	var locked := await _locks_within(20)
+	_expect(not locked, "the mouse free: an LMB press starts no lock (%s)" % c.state)
+	p.ignore_mouse_capture = true              # (the click took the mouse back; LMB still held)
+	locked = await _locks_within(20)
+	_expect(not locked, "the mouse taken back by that click, LMB still held: still no lock (%s)" % c.state)
+	Input.action_release(&"fire")
+	await _ticks(3)
+	Input.action_press(&"fire")
+	locked = await _locks_within(10)
+	_expect(locked and c.lock_src == SwayCaster.SRC_QUICK, "let go and pressed again on the game: the quick lock (%s)" % c.lock_src)
+	await _let_go()
+
+
+## The equip wheel's pick click (EquipWheel: the click that takes a slot, held after it closes: blocks_fire).
+func _wheel_click() -> void:
+	var w := p.equip_wheel
+	if w == null:
+		print("  (the arena has no equip wheel: mode=duel holds its pick click)")
+		return
+	w.is_open = true                           # (open: the click comes on it)
+	await _ticks(2)
+	Input.action_press(&"fire")
+	await _ticks(1)
+	w._hold_fire = true                        # (it took a slot and closed: the click still held)
+	w.is_open = false
+	var locked := await _locks_within(20)
+	_expect(not locked, "the click that picks on the equip wheel starts no quick lock (%s)" % c.state)
+	Input.action_release(&"fire")
+	await _ticks(3)
+	_expect(not w.blocks_fire(), "the wheel's click let go: LMB the game's again")
+	Input.action_press(&"fire")
+	locked = await _locks_within(10)
+	_expect(locked and c.lock_src == SwayCaster.SRC_QUICK, "the next click: the quick lock")
+	await _let_go()
+
+
+## Q with nothing readied: a line saying to ready a move; the quick spell left as it was.
+func _nothing_readied() -> void:
+	var was := c.quick_spell().duplicate()
+	var r := c.readied_spell                   # (the arena keeps a move readied: put down here for the one call)
+	c.readied_spell = ""
+	var bound := c.bind_quick()
+	c.readied_spell = r
+	var note := p.interactor._notice.text if p.interactor != null else ""
+	_expect(not bound and note.begins_with("Ready a move first") and c.quick_spell() == was,
+			"Q with nothing readied: \"%s\" (%s)" % [note, c.quick_spell()])
+	await _ticks(4)
+
+
+## The set key unbound, then rebound to F: the strip's help line (and F1) follow at once.
+func _rebind() -> void:
+	var strip := hud.bend_strip
+	InputMap.action_erase_events(SwayCaster.QUICK_BIND)
+	await _secs(0.4)
+	_expect(SwayCaster.quick_bind_key() == "" and strip.help_line().begins_with("set left click: no key bound")
+			and (strip._help as Label).text == strip.help_line() and not hud.help_text().contains("Q: the readied move"),
+			"the set key unbound: \"%s\"" % (strip._help as Label).text)
+	var k := InputEventKey.new()
+	k.physical_keycode = KEY_F
+	InputMap.action_add_event(SwayCaster.QUICK_BIND, k)
+	await _secs(0.4)
+	_expect(SwayCaster.quick_bind_key() == "F" and (strip._help as Label).text.begins_with("F: set left click")
+			and hud.help_text().contains("F: the readied move onto LMB"),
+			"rebound to F: \"%s\"" % (strip._help as Label).text)
+	_restore_bind()
+	await _secs(0.4)
+	_expect((strip._help as Label).text.begins_with("Q: set left click"), "back on Q: \"%s\"" % (strip._help as Label).text)
+
+
+func _restore_bind() -> void:
+	if not InputMap.has_action(SwayCaster.QUICK_BIND):
+		return
+	InputMap.action_erase_events(SwayCaster.QUICK_BIND)
+	var k := InputEventKey.new()
+	k.physical_keycode = SwayCaster.QUICK_BIND_KEY
+	InputMap.action_add_event(SwayCaster.QUICK_BIND, k)
+
+
+## No show words in what the LMB chip can show: every spell's name at each of its variations.
+func _words() -> void:
+	var re := RegEx.create_from_string("(?i)\\b(?:%s)\\b" % "|".join(PackedStringArray(WORDS)))
+	var bad: Array[String] = []
+	for sp: Dictionary in SwayCaster.spells():
+		var id := String(sp.id)
+		var ms: Array = SwayCaster.modes_of(id)
+		for m: Variant in (ms if not ms.is_empty() else [""]):
+			var lb := SwayCaster.label_with(id, String(m))
+			if re.search(lb) != null:
+				bad.append(lb)
+	_expect(bad.is_empty() and SwayCaster.label_with("wind_run", "air_scooter") == "Wind Run (whirl ride)",
+			"no show words in any move at any variation (%s; %s)" % [bad, SwayCaster.label_with("wind_run", "air_scooter")])
+
+
+# ---------------------------------------------------------------- mode=duel
+func _note() -> String:
+	return p.interactor._notice.text if p.interactor != null and p.interactor._notice != null else ""
+
+
+func _hold_npc() -> void:
+	if duel == null or duel.npc == null or not is_instance_valid(duel.npc):
+		return
+	duel.npc.held = true
+	if _foe_at == Vector3.INF:
+		_foe_at = duel.npc.global_position
+	duel.npc.global_position = _foe_at
+	duel.npc.velocity = Vector3.ZERO
+
+
+func _key_down(code: Key, down: bool) -> void:
+	var e := InputEventKey.new()
+	e.physical_keycode = code
+	e.keycode = code
+	e.pressed = down
+	Input.parse_input_event(e)
+
+
+func _key(code: Key) -> void:
+	_key_down(code, true)
+	await _ticks(3)
+	_key_down(code, false)
+	await _ticks(3)
+
+
+func _run_duel() -> void:
+	for i in 20:
+		await process_frame
+	p = current_scene.get_node_or_null("Player") as FrontierPlayer
+	duel = DuelMode.find(self)
+	_expect(p != null and duel != null, "the duel and its player")
+	if p == null or duel == null:
+		return _end()
+	p.ignore_mouse_capture = true
+	p.pitch = -0.15
+	physics_frame.connect(_hold_npc)
+	hud = p.hud
+	await _secs(Hotbar.KIT_S + 1.0)
+	await _until(func() -> bool: return duel.phase == DuelMode.Phase.FIGHT, 8.0)
+	await _secs(0.3)
+	c = SwayCaster.of(p)
+	c.cast.connect(func(m: String, _t: Node3D) -> void: casts.append(m))
+	_expect(c.quick_element() == "earth" and c.quick_spell() == _q("rock_jab", "pebbles") and c.quick_ready(),
+			"the duel: earth's quick spell ready (%s)" % [c.quick_spell()])
+	# LMB: the default
+	casts.clear()
+	Input.action_press(&"fire")
+	await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 3.0)
+	Input.action_release(&"fire")
+	await _until(func() -> bool: return not casts.is_empty(), 1.0)
+	await _secs(0.5)
+	_expect(casts == ["rock_jab"] and String(BendEffects.last_of(c).get("mode", "")) == "pebbles",
+			"the duel: LMB casts Rock Jab (pebbles) (%s)" % [casts])
+	# the screen: the world HUD's LMB row, F1's lines
+	await _ticks(3)
+	_expect(not hud.arena and hud.quick_row.is_visible_in_tree() and hud.quick_name.text == "Rock Jab (pebbles)"
+			and hud.quick_help.visible and hud.quick_help.text.begins_with("Q: set left click"),
+			"the duel shows the LMB row: \"%s\" / \"%s\"" % [hud.quick_name.text, hud.quick_help.text])
+	var help := hud.help_text()
+	_expect(not help.contains("hold Q: equip wheel") and not help.contains(FrontierHUD.WORLD_LMB)
+			and help.contains("Q: the readied move onto LMB") and help.contains("hold LMB"),
+			"the duel's F1: Q and LMB as the quick spell has them")
+	await _key(KEY_F1)
+	_expect(hud._help_label.text == help and hud._help_box.visible, "F1 shows it")
+	await _key(KEY_F1)
+	# Q binds; the wheel stays shut
+	var w := p.equip_wheel
+	var id := c.readied_spell
+	var ms := SwayCaster.modes_of(id)
+	if ms.size() > 1:
+		c.set_mode(id, String(ms[1]))
+	await _ticks(2)
+	var want := _q(id, c.base_mode_of(id))
+	_key_down(KEY_Q, true)
+	await _ticks(4)
+	var wheel_open := w != null and w.is_open
+	_key_down(KEY_Q, false)
+	await _ticks(4)
+	_expect(c.quick_spell() == want and not wheel_open and _note().begins_with("Left click: "),
+			"the duel: Q binds %s, the wheel stays shut (%s, \"%s\")" % [want, c.quick_spell(), _note()])
+	await _ticks(3)
+	_expect(hud.quick_name.text == c.quick_label(), "the LMB row follows: \"%s\"" % hud.quick_name.text)
+	# the readied line while a quick lock of the same move at another variation runs
+	if ms.size() > 1:
+		c.set_mode(id, String(ms[0]))
+		await _ticks(3)
+		var before := hud._spell_line(id)
+		Input.action_press(&"fire")
+		await _until(func() -> bool: return c.state != SwayCaster.State.IDLE, 1.0)
+		await _ticks(3)
+		var during := hud._spell_line(id)
+		var src := c.lock_src
+		await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 3.0)
+		Input.action_release(&"fire")
+		await _secs(0.6)
+		_expect(src == SwayCaster.SRC_QUICK and before == during,
+				"the readied key's line holds during the quick lock (\"%s\" -> \"%s\")" % [before, during])
+	# hands free: Q says to ready a move
+	await _secs(0.4)
+	p.hotbar.hands_free()
+	await _ticks(5)
+	await _key(KEY_Q)
+	_expect(c.readied_spell == "" and _note().begins_with("Ready a move first"),
+			"Q with nothing readied in the duel: \"%s\"" % _note())
+	p.hotbar.take(0)
+	await _secs(0.5)
+	# the set key on F: Q opens the wheel again; its pick click starts no lock
+	InputMap.action_erase_events(SwayCaster.QUICK_BIND)
+	var k := InputEventKey.new()
+	k.physical_keycode = KEY_F
+	InputMap.action_add_event(SwayCaster.QUICK_BIND, k)
+	_expect(hud.help_text().contains("hold Q: equip wheel · F: the readied move onto LMB"),
+			"F1 with the set key on F: the wheel keeps Q")
+	_key_down(KEY_Q, true)
+	await _ticks(4)
+	var open3 := w != null and w.is_open
+	_expect(open3, "the set key on F: Q opens the wheel again")
+	if open3:
+		w.pick_toward(Vector2(0, -200))
+		var mb := InputEventMouseButton.new()
+		mb.button_index = MOUSE_BUTTON_LEFT
+		mb.pressed = true
+		Input.parse_input_event(mb)
+		var locked := await _locks_within(10)
+		mb = mb.duplicate()
+		mb.pressed = false
+		Input.parse_input_event(mb)
+		_key_down(KEY_Q, false)
+		await _ticks(4)
+		_expect(not locked, "the click that picks on the wheel starts no quick lock (%s)" % c.state)
+	else:
+		_key_down(KEY_Q, false)
+	_restore_bind()
+	await _secs(0.5)
+	# another element in the duel: its own quick spell
+	duel.choose("fire")
+	await _secs(Hotbar.KIT_S + 0.5)
+	await _until(func() -> bool: return duel.phase == DuelMode.Phase.FIGHT, 8.0)
+	await _ticks(3)
+	_expect(c.quick_element() == "fire" and c.quick_spell() == _q("fire_jab", "jab") and hud.quick_name.text == "Fire Jab (jab)",
+			"the duel's element fire: Fire Jab (jab) (%s; \"%s\")" % [c.quick_spell(), hud.quick_name.text])
+	_end()

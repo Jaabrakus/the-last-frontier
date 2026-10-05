@@ -91,20 +91,8 @@ func _ready() -> void:
 	q.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	q.alignment = BoxContainer.ALIGNMENT_CENTER
 	q.add_theme_constant_override("separation", 6)
-	var chip := PanelContainer.new()
-	chip.name = "Chip"
-	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.0, 0.0, 0.0, 0.35)
-	sb.border_color = FrontierHUD.GOLD
-	sb.set_border_width_all(1)
-	sb.set_corner_radius_all(3)
-	sb.content_margin_left = 5
-	sb.content_margin_right = 5
-	chip.add_theme_stylebox_override("panel", sb)
-	_chip = FrontierHUD.hud_label(14, FrontierHUD.GOLD)
-	_chip.text = CHIP
-	chip.add_child(_chip)
+	var chip := make_chip()
+	_chip = chip.get_child(0) as Label
 	q.add_child(chip)
 	_quick = FrontierHUD.hud_label(16, FrontierHUD.INK)
 	_quick.name = "QuickName"
@@ -197,7 +185,34 @@ func quick_line() -> String:
 
 ## The strip's help line: how the quick spell is set and cast ("Q: set left click · hold LMB: cast it"; the set key as bound).
 func help_line() -> String:
-	return "%s: set left click%shold %s: cast it" % [SwayCaster.quick_bind_key(), SEP, CHIP]
+	return help_text()
+
+
+## The quick spell's help line (the strip's, the world HUD's in a duel): "Q: set left click · hold LMB: cast it", the set
+## key as bound ("set left click: no key bound" when the player unbound it).
+static func help_text() -> String:
+	var k := SwayCaster.quick_bind_key()
+	var set_l := ("%s: set left click" % k) if k != "" else "set left click: no key bound"
+	return "%s%shold %s: cast it" % [set_l, SEP, CHIP]
+
+
+## The "LMB" chip (gold, framed; its Label the first child): the strip's and the world HUD's quick spell row.
+static func make_chip() -> PanelContainer:
+	var chip := PanelContainer.new()
+	chip.name = "Chip"
+	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.0, 0.0, 0.0, 0.35)
+	sb.border_color = FrontierHUD.GOLD
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(3)
+	sb.content_margin_left = 5
+	sb.content_margin_right = 5
+	chip.add_theme_stylebox_override("panel", sb)
+	var l := FrontierHUD.hud_label(14, FrontierHUD.GOLD)
+	l.text = CHIP
+	chip.add_child(l)
+	return chip
 
 
 func _bending() -> Bending:
@@ -218,6 +233,7 @@ func _signature() -> String:
 	parts.append(ready_line())
 	parts.append(_element())
 	parts.append(quick_line())
+	parts.append(help_line())                # (the set key rebound or unbound: the help line follows at once)
 	return "|".join(parts)
 
 

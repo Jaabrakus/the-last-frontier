@@ -19,8 +19,11 @@ element; everyone of that element has the same moves. Status: **plan, not built*
   lock as RMB's (the same time, circle, pose and aim); let go to cast. Keys 1-5 and their variations are never touched by
   it. One lock at a time: a lock on one button ignores the other, and the other can start the moment the cast is out.
   Defaults: earth Rock Jab (pebbles), water Water Jet (splash), fire Fire Jab (jab), air Air Palm (palm); each element's
-  remembered (GameSettings' `quick`). The arena strip shows an `LMB` chip with it. The open world without an element keeps
-  its LMB.
+  remembered (GameSettings' `quick`). The arena strip shows an `LMB` chip with it; outside the arena (the duel) the same
+  chip and help line sit under the hotbar, and F1 tells Q and LMB as they are then. Q with nothing readied says to ready a
+  move first. Only a click on the game counts: the click that takes the mouse back (Esc's free mouse) or that picks on the
+  equip wheel starts no lock. The readied key's line (HUD, hotbar, Tab screen) keeps the key's variation while the quick
+  lock runs. The open world without an element keeps its LMB.
 - Moves read and answer each other (the matrix below): blocking, eroding, melting, cancelling, catching and throwing back.
 
 So each element has 4 slots x 2 skills x 3 variations = 24 moves, plus Mend.
@@ -60,7 +63,7 @@ The pools refill your water; water moves spend it; standing at a pool fills it f
 |---|---|---|
 | 1 | **Gust**: push (people, stones and props away) · pull (yanked toward you) · lift (a stone held and hurled: Gust as it is now) | **Air Palm**: palm (a small knockback) · trip (a sweep at the feet: knockdown) · **cushion** (a stone flying at you slowed to a stop and dropped) |
 | 2 | **Air Blast**: ball (huge knockback, little damage) · slice (fast, more damage, little knockback) · vacuum (the air pulled out round the enemy: slowed) | **Evade**: sidestep (a quick dodge left or right) · backstep · spin (light bolts deflected for a moment) |
-| 3 | **Air Jump**: leap (high) · dash (long) · glide (a slow fall, steerable) | **Wind Run**: wind run (a speed burst) · air scooter (ride a ball of air, fast) · updraft (a hop in the air) |
+| 3 | **Air Jump**: leap (high) · dash (long) · glide (a slow fall, steerable) | **Wind Run**: wind run (a speed burst) · whirl ride (ride a ball of air, fast; id air_scooter) · updraft (a hop in the air) |
 | 4 | **Air Shield**: shield (projectiles sent back, 2.5 s) · cyclone (knocks back everyone round you) · tornado (a moving vortex that carries the enemy) | **Redirect**: redirect (a light bolt sent back) · gust-step (a dash that knocks aside what you pass) · dust (a cloud that hides you) |
 
 ## Mend (5, every element)

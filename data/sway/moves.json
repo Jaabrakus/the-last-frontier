@@ -1152,7 +1152,7 @@
       "circle_m": 0.7,
       "self_lock": true,
       "modes": ["wind_run", "air_scooter", "updraft"],
-      "mode_labels": {"wind_run": "wind run", "air_scooter": "air scooter", "updraft": "updraft"},
+      "mode_labels": {"wind_run": "wind run", "air_scooter": "whirl ride", "updraft": "updraft"},
       "bend": {
         "wind_run": {"do": "buff", "buff": "run", "kind": "air", "s": 3.0, "mps": 10.0},
         "air_scooter": {"do": "buff", "buff": "scooter", "kind": "air", "s": 4.0, "mps": 13.0},
