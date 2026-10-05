@@ -1459,7 +1459,9 @@ func apply_hit(damage: float, point: Vector3, direction: Vector3, source: Node =
 	# its channel through the body, on the skeleton map (a bite from an animal has none), and what it went through decides
 	# the damage (Anatomy.effect: the heart, the brain, the lungs, the gut, the cord, a bone)
 	var fx := {}
-	if not (source is WildAnimal) and skeleton != null and direction.length_squared() > 1e-8 and PlayerWounds.kind_of(source) == "bleed":
+	# (no_death, the ring's competitors: every blow a sport's blunt one, no anatomy: a thrown stone to the head is damage, not
+	# the brain's instant winding at full health, and no wound bleeds or maims; Tidebreak: health is the backup)
+	if not no_death and not (source is WildAnimal) and skeleton != null and direction.length_squared() > 1e-8 and PlayerWounds.kind_of(source) == "bleed":
 		var an := Anatomy.attach_to(skeleton)
 		if an:
 			an.add_wound(point, direction, damage)
@@ -1478,7 +1480,7 @@ func apply_hit(damage: float, point: Vector3, direction: Vector3, source: Node =
 	_death_push = direction.normalized() * clampf(damage * 0.1, 1.5, 7.0) + Vector3.UP * 1.0 if direction.length_squared() > 1e-8 \
 			else Vector3.ZERO
 	# a bleeding wound takes part of it now and keeps the rest as blood still to lose (PlayerWounds); blunt force all now
-	var now := wounds.take(damage, source, point, direction, float(fx.get("bleed_mult", 1.0)), float(fx.get("drain_mult", 1.0))) if wounds else damage
+	var now := wounds.take(damage, source, point, direction, float(fx.get("bleed_mult", 1.0)), float(fx.get("drain_mult", 1.0))) if wounds and not no_death else damage
 	health = maxf(health - now, 0.0)
 	if health <= 0.0 and no_death:
 		hurt.emit(local, damage, true)
