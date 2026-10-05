@@ -6,28 +6,50 @@ extends Control
 ## Behind it pictures of the game itself (MenuPaintings.all(); user 2026-09-28: "have our game pictures instead of
 ## the paintings"), one after another, each drifting slowly nearer and crossfading to the next; the title and the menu
 ## at the left over a soft shade; the picture's title and caption at the lower left.
-##   Continue      the latest save (its date and hour under it); only when there is one
-##   New game      the start's switches (the story, a start with nothing, a spouse) and Begin: the level fresh, the
-##                 character creator first (PlayerAppearance); no background to pick (everyone the default newcomer)
-##   Load game     the saves (quick, auto), each with its date and when it was saved
-##   Museum        the history of the time and the place (user 2026-09-28: "those paintings we put in a museum about
-##                 the history around that day and age"): the period's paintings (MenuPaintings.museum()),
-##                 one at a time over the whole screen with their stories; the arrows or Previous / Next go through
-##                 them, Esc or Back leaves
-##   Duel (test)   1 v 1 against a French marine who fights from cover (DuelMode; the user, 2026-10-04: "lets build a test
-##                 game where it is 1v1 npc can find cover aim and etc"): the level as a duel, no story, no needs, no save
-##   Co-op, Campaigns   not yet (greyed, "coming")
+##
+## The ring sport first (the owner, 2026-10-04: an elemental ring sport as the playable core now, the open world converted
+## later; the sport is called Tidebreak; "1v1 first", the teams kept for a 3 v 3 later; no words from the show on the
+## screen: every element and sport word comes from data/ring/elements.json through MatchSetup):
+##   Tidebreak     the match's panel (_open_match): your element (the four side by side; below them the focused or
+##                 chosen one's style in a line and its five keys with both skills), the opponent's (or Any: drawn by
+##                 lot), the format (1 v 1; 3 v 3 teams coming), the difficulty and the rounds; Begin into the ring
+##                 (RING_SCENE; the open land's duel stands in until the ring's scene exists) through the
+##                 LoadingScreen with MatchSetup filled and kept (MatchSetup.save: GameSettings' "match"). The first press
+##                 with no look saved yet offers the character creator first (never over the ring's countdown:
+##                 PlayerAppearance asks MatchSetup.active())
+##   Quick match   the last setup at once (its line under it: "Fire vs Water  ·  normal  ·  best of 3")
+##   Your look     the character creator on the saved look (CharacterCreator; Accept keeps it)
+##   Open world    the valley of 1765 as it was, in a sub-panel (its rows and their handlers unchanged; Esc from a screen
+##                 opened there comes back to it):
+##       Continue      the latest save (its date and hour under it); only when there is one
+##       New game      the start's switches (the story, a start with nothing, a spouse) and Begin: the level fresh, the
+##                     character creator first (PlayerAppearance); no background to pick (everyone the default newcomer)
+##       Load game     the saves (quick, auto), each with its date and when it was saved
+##       Museum        the history of the time and the place (user 2026-09-28: "those paintings we put in a museum about
+##                     the history around that day and age"): the period's paintings (MenuPaintings.museum()),
+##                     one at a time over the whole screen with their stories; the arrows or Previous / Next go through
+##                     them, Esc or Back leaves
+##       Co-op         host a game or join one (NetSession)
+##       Duel (test)   the earlier 1 v 1 on the open land (DuelMode; the user, 2026-10-04: "lets build a test game where it
+##                     is 1v1 npc can find cover aim and etc"): the level as a duel, no story, no needs, no save
+##       Campaigns     not yet (greyed, "coming")
 ##   Settings      volume, the mouse, invert, full screen, vsync (GameSettings)
 ##   Credits       the copyright and no-AI-training notice (NOTICE.txt), CREDITS.md as the project keeps it, and the
 ##                 licence in full (EULA.txt)
 ##   Quit
 ## The sub-screens open at the right; Esc (or the mouse's back) closes them. Keys and a gamepad move through the rows.
 ## Into the game through the LoadingScreen. Continue and Load hand the save to the level through SaveGame.pending (the
-## level applies it when it is built); a new game sets SaveGame's launch as done, so no save is continued.
+## level applies it when it is built); a new game sets SaveGame's launch as done, so no save is continued. A test sets
+## launch_hook to see where Begin would go without loading the ring (match_path()).
 ## `background_id` and `new_game` are read by the level (the background: the survival rules' start,
 ## SurvivalBridge.start_background(); the new game: the creator offered).
 
 const GAME_SCENE := "res://scenes/main.tscn"
+## The ring sport's light scene (RingLevel): the deck over the water, no open world loaded.
+const RING_SCENE := "res://scenes/ring.tscn"
+## The title over the menu and the line under it (constants for the name the owner gives the game).
+const TITLE := "FRONTIER"
+const SUBTITLE := "Cosby's Manor, on the Mohawk  ·  1765"
 const SHOW_S := 16.0         ## s a painting shows before the next
 const XFADE_S := 2.5
 const DRIFT := 0.07
@@ -39,6 +61,11 @@ static var new_game := false
 static var bare_start := false
 ## Whether this new game has a spouse (the New game screen's switch; taken once by the household).
 static var spouse_start := true
+## A test's stand-in for the load into the ring: called with the scene's path instead of LoadingScreen.go (so a test sees
+## where Begin goes, the setup filled, without loading the ring).
+static var launch_hook := Callable()
+## The creator offered once a run at the sport's first press (no look saved yet).
+static var _look_offered := false
 
 var _a: TextureRect
 var _b: TextureRect
@@ -60,6 +87,11 @@ var _museum_room: Label
 var _museum_title: Label
 var _museum_text: Label
 var _museum_i := 0
+## The screen Esc goes back to (the Open world panel for the screens opened from it), else none: the panel closes.
+var _return_to := Callable()
+## The match panel's element rows (element -> Button) and its keys block.
+var _element_rows := {}
+var _keys_box: VBoxContainer
 
 
 ## The level asks at its start: offer the creator for this new game (once).
@@ -72,6 +104,7 @@ static func take_new_game() -> bool:
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	MatchSetup.leave()                      # (back at the menu: no match under way)
 	if not SaveGame._is_script_run():
 		MusicDirector.play_menu(self)       # the main theme (its bus made before the volumes are set)
 	GameSettings.apply_global()
@@ -100,13 +133,13 @@ func _ready() -> void:
 	left.offset_top = 90
 	left.offset_right = 88 + 560
 	add_child(left)
-	var title := MenuUI.label("FRONTIER", 76, MenuUI.INK)
+	var title := MenuUI.label(TITLE, 76, MenuUI.INK)
 	var fv := FontVariation.new()
 	fv.base_font = FrontierHUD.serif()
 	fv.spacing_glyph = 10
 	title.add_theme_font_override("font", fv)
 	left.add_child(title)
-	left.add_child(MenuUI.label("Cosby's Manor, on the Mohawk  ·  1765", 22, MenuUI.GOLD))
+	left.add_child(MenuUI.label(SUBTITLE, 22, MenuUI.GOLD))
 	var gap := Control.new()
 	gap.custom_minimum_size = Vector2(0, 34)
 	left.add_child(gap)
@@ -211,7 +244,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed(&"ui_cancel") and _panel_scroll.visible:
-		_close_panel()
+		_back()
 		get_viewport().set_input_as_handled()
 
 
@@ -220,27 +253,19 @@ func _unhandled_input(event: InputEvent) -> void:
 func _build_items() -> void:
 	for c in _items.get_children():
 		c.queue_free()
-	var latest := SaveGame.latest_slot()
-	if latest != "":
-		var b := MenuUI.item("Continue", 32, _save_line(latest))
-		b.pressed.connect(_play_save.bind(latest))
-		_items.add_child(b)
-	var ng := MenuUI.item("New game", 32)
-	ng.pressed.connect(_open_new_game)
-	_items.add_child(ng)
-	var ld := MenuUI.item("Load game", 32, "", "" if latest != "" else "no saves yet")
-	ld.pressed.connect(_open_load)
-	_items.add_child(ld)
-	var mu := MenuUI.item("Museum", 32)
-	mu.pressed.connect(_open_museum)
-	_items.add_child(mu)
-	var co := MenuUI.item("Co-op", 32, "host a game or join a friend's")
-	co.pressed.connect(_open_coop)
-	_items.add_child(co)
-	var du := MenuUI.item("Duel (test): 1 v 1", 32, "you against a French marine who fights from cover; first to %d" % DuelMode.TO_WIN)
-	du.pressed.connect(_play_duel)
-	_items.add_child(du)
-	_items.add_child(MenuUI.item("Campaigns", 32, "", "coming"))
+	MatchSetup.load()                     # (the last setup: the panel starts from it, Quick match plays it)
+	var tb := MenuUI.item(MatchSetup.sport(), 32, MatchSetup.menu_line())
+	tb.pressed.connect(_open_match)
+	_items.add_child(tb)
+	var qm := MenuUI.item("Quick match", 32, MatchSetup.summary())
+	qm.pressed.connect(_quick_match)
+	_items.add_child(qm)
+	var lk := MenuUI.item("Your look", 32, "the character creator: face, build and dress")
+	lk.pressed.connect(_open_look)
+	_items.add_child(lk)
+	var ow := MenuUI.item("Open world", 32, "the valley, 1765: your saves, a new life, the museum, co-op")
+	ow.pressed.connect(_open_world)
+	_items.add_child(ow)
 	var st := MenuUI.item("Settings", 32)
 	st.pressed.connect(_open_settings)
 	_items.add_child(st)
@@ -289,6 +314,8 @@ func _play_save(slot: String) -> void:
 	var doc := SaveGame.read_slot(slot)
 	if doc.is_empty():
 		_build_items()
+		if _panel_scroll.visible:
+			_open_world()           # (the save gone: the Open world panel without it)
 		return
 	SaveGame.pending = doc
 	SaveGame.pending_slot = slot
@@ -322,8 +349,48 @@ func _play_duel() -> void:
 	spouse_start = false
 	StoryDirector.incoming = ""
 	background_id = ""
+	MatchSetup.incoming = false
 	DuelMode.incoming = true
 	LoadingScreen.go(get_tree(), GAME_SCENE)
+
+
+## Where the match panel's Begin goes: the ring's light scene.
+static func match_path() -> String:
+	return RING_SCENE
+
+
+## A Tidebreak match with the setup as MatchSetup holds it (the panel's choices, or the last one for Quick match): kept for
+## next time, then into the ring through the loading screen (launch_hook instead when a test set it). Nothing of the open
+## world is continued or saved. Until the ring's scene exists (it is being built), the open land's duel with the chosen
+## element and difficulty stands in.
+func _play_match() -> void:
+	SaveGame.pending = {}
+	SaveGame._launched = true
+	new_game = false
+	bare_start = false
+	spouse_start = false
+	StoryDirector.incoming = ""
+	background_id = ""
+	DuelMode.incoming = false
+	MatchSetup.incoming = true
+	MatchSetup.save()
+	var path := match_path()
+	if launch_hook.is_valid():
+		launch_hook.call(path)
+		return
+	if not ResourceLoader.exists(path):
+		MatchSetup.incoming = false
+		DuelMode.element = MatchSetup.element
+		DuelMode.difficulty = MatchSetup.difficulty
+		DuelMode.incoming = true
+		path = GAME_SCENE
+	LoadingScreen.go(get_tree(), path)
+
+
+## Quick match: the last setup (GameSettings' "match"), at once.
+func _quick_match() -> void:
+	MatchSetup.load()
+	_play_match()
 
 
 # --- The sub-screens ---------------------------------------------------------------------------------------
@@ -332,6 +399,9 @@ func _open_panel() -> void:
 	for c in _panel.get_children():
 		_panel.remove_child(c)
 		c.queue_free()
+	_return_to = Callable()
+	_element_rows = {}
+	_keys_box = null
 	_panel_scroll.visible = true
 	_panel_scroll.scroll_vertical = 0
 	(get_node("RightShade") as CanvasItem).visible = true
@@ -340,11 +410,242 @@ func _open_panel() -> void:
 
 
 func _close_panel() -> void:
+	_return_to = Callable()
 	_panel_scroll.visible = false
 	(get_node("RightShade") as CanvasItem).visible = false
 	for r: TextureRect in [_a, _b]:
 		r.self_modulate = Color.WHITE
 	_first_focus()
+
+
+## Esc: back to the screen this one was opened from (the Open world panel), else the panel closed.
+func _back() -> void:
+	if _return_to.is_valid():
+		var r := _return_to
+		_return_to = Callable()
+		r.call()
+	else:
+		_close_panel()
+
+
+## A screen opened from the Open world panel: Esc (and the museum's Back) come back to that panel.
+func _from_world(open: Callable) -> void:
+	open.call()
+	_return_to = _open_world
+
+
+# --- Tidebreak: the match's panel --------------------------------------------------------------------------
+
+## The match's setup (MatchSetup; its words from data/ring/elements.json): the four elements side by side (under each the
+## name its competitors go by, in its colour; the chosen one says so), below them the focused element's style in a line
+## and its five keys (else the chosen one's), then Opponent, Format, Difficulty and Rounds (each press steps it; its line
+## under it), and Begin, all in view without a scroll at 1600 x 900. The first press in a run with no look saved yet opens
+## the character creator first, then this panel.
+func _open_match() -> void:
+	if not _look_offered and PlayerAppearance.offer_creator():
+		_look_offered = true
+		_close_panel()
+		var c := _creator(true)
+		c.closed.connect(func(_ok: bool) -> void: _open_match.call_deferred())
+		return
+	_open_panel()
+	var box := VBoxContainer.new()
+	box.name = "Match"
+	box.add_theme_constant_override("separation", 6)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_panel.add_child(box)
+	box.add_child(MenuUI.heading(MatchSetup.sport()))
+	var rule := MenuUI.label(MatchSetup.sport_line(), 17, MenuUI.DIM, true)
+	rule.custom_minimum_size = Vector2(520, 0)
+	box.add_child(rule)
+	box.add_child(_gap(4))
+	box.add_child(MenuUI.label("YOUR ELEMENT", 14, MenuUI.FAINT))
+	# the four side by side (each with the name its competitors go by under it, in its colour), then the focused or
+	# chosen one's style and keys
+	var four := HBoxContainer.new()
+	four.name = "Elements"
+	four.add_theme_constant_override("separation", 10)
+	box.add_child(four)
+	for el: String in Bending.ELEMENTS:
+		var r := MenuUI.item(MatchSetup.label(el), 28, MatchSetup.competitor(el))
+		r.name = "Element_" + el
+		r.set_meta(&"element", el)
+		r.custom_minimum_size.x = 130
+		r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var sub := r.find_child("Sub", true, false) as Label
+		if sub:
+			sub.add_theme_color_override("font_color", MatchSetup.color(el).lerp(MenuUI.DIM, 0.35))
+		r.pressed.connect(_choose_element.bind(el))
+		r.focus_entered.connect(_show_keys.bind(el))
+		r.focus_exited.connect(_show_keys.bind(""))
+		_element_rows[el] = r
+		four.add_child(r)
+	_keys_box = VBoxContainer.new()
+	_keys_box.name = "Keys"
+	_keys_box.add_theme_constant_override("separation", 0)
+	box.add_child(_keys_box)
+	box.add_child(_gap(6))
+	# the opponent's element (or Any: by lot), the format, the difficulty and the rounds: a press steps each
+	var foes: Array = Bending.ELEMENTS + [MatchSetup.ANY]
+	var opp := MenuUI.item("", 22, "-")
+	opp.name = "Opponent"
+	var paint_opp := func() -> void:
+		var f := MatchSetup.foe()
+		_set_row(opp, "Opponent:  %s" % MatchSetup.label(f),
+				MatchSetup.style(f) if f == MatchSetup.ANY else "%s  ·  %s" % [MatchSetup.competitor(f), MatchSetup.style(f)])
+	paint_opp.call()
+	opp.pressed.connect(func() -> void:
+		MatchSetup.foes = [String(foes[(foes.find(MatchSetup.foe()) + 1) % foes.size()])]
+		paint_opp.call())
+	box.add_child(opp)
+	var fm: Dictionary = (MatchSetup.data().get("formats", {}) as Dictionary).get("1v1", {})
+	var fmt := MenuUI.item("Format:  %s" % String(fm.get("label", "1 v 1")), 22, String(fm.get("line", "")))
+	fmt.name = "Format"
+	box.add_child(fmt)
+	var dif := MenuUI.item("", 22, "-")
+	dif.name = "Difficulty"
+	var paint_dif := func() -> void:
+		_set_row(dif, "Difficulty:  %s" % MatchSetup.difficulty, MatchSetup.difficulty_line(MatchSetup.difficulty))
+	paint_dif.call()
+	dif.pressed.connect(func() -> void:
+		var ds := MatchSetup.DIFFICULTIES
+		MatchSetup.difficulty = String(ds[(ds.find(MatchSetup.difficulty) + 1) % ds.size()])
+		paint_dif.call())
+	box.add_child(dif)
+	var rnd := MenuUI.item("", 22, "-")
+	rnd.name = "Rounds"
+	var paint_rnd := func() -> void:
+		var n := MatchSetup.rounds_to_win
+		_set_row(rnd, "Rounds:  %s" % MatchSetup.rounds_label(n), "the first to %d round win%s takes the match" % [n, "" if n == 1 else "s"])
+	paint_rnd.call()
+	rnd.pressed.connect(func() -> void:
+		var rs := MatchSetup.ROUNDS
+		var i := rs.find(MatchSetup.rounds_to_win)
+		MatchSetup.rounds_to_win = int(rs[(i + 1) % rs.size()])
+		paint_rnd.call())
+	box.add_child(rnd)
+	box.add_child(_gap(4))
+	var begin := MenuUI.item("Begin", 30)
+	begin.name = "Begin"
+	begin.pressed.connect(_play_match)
+	box.add_child(begin)
+	_mark_elements()
+	_show_keys("")
+	begin.grab_focus.call_deferred()
+
+
+## The element chosen (its row marked, its keys shown).
+func _choose_element(el: String) -> void:
+	MatchSetup.element = el
+	_mark_elements()
+	_show_keys(el)
+
+
+## The chosen element's row says so under it ("Ember  ·  chosen").
+func _mark_elements() -> void:
+	for el: String in _element_rows:
+		var b := _element_rows[el] as Button
+		if is_instance_valid(b):
+			_set_row(b, MatchSetup.label(el), MatchSetup.competitor(el) + ("  ·  chosen" if el == MatchSetup.element else ""))
+
+
+## The block under the element rows: an element's style in a line (in its colour), then its five keys with both skills
+## ("1   Fire Blast  ·  Fire Jab"; the same key again switches to the second); `el` "" the chosen element's.
+func _show_keys(el: String) -> void:
+	if not is_instance_valid(_keys_box):
+		return
+	var e := el if el != "" else MatchSetup.element
+	for c in _keys_box.get_children():
+		_keys_box.remove_child(c)
+		c.queue_free()
+	var style := MenuUI.label("%s  ·  %s" % [MatchSetup.competitor(e), MatchSetup.style(e)], 17,
+			MatchSetup.color(e).lerp(MenuUI.INK, 0.35), true)
+	style.custom_minimum_size = Vector2(520, 0)
+	_keys_box.add_child(_gap(6))
+	_keys_box.add_child(style)
+	_keys_box.add_child(_gap(4))
+	_keys_box.add_child(MenuUI.label("%s KEYS  ·  the same key again: its other skill" % MatchSetup.label(e).to_upper(), 13, MenuUI.FAINT))
+	for line: String in key_lines(e):
+		_keys_box.add_child(MenuUI.label(line, 16, MenuUI.DIM))
+
+
+## An element's five keys as lines: "1   Stone Form  ·  Rock Jab" (Bending.keys, the moves' labels).
+static func key_lines(el: String) -> Array:
+	var out: Array = []
+	var keys := Bending.keys(el)
+	for i in keys.size():
+		var names: Array = []
+		for id in keys[i] as Array:
+			names.append(String(SwayMoves.move(String(id)).get("label", String(id).capitalize())))
+		out.append("%d   %s" % [i + 1, "  ·  ".join(PackedStringArray(names))])
+	return out
+
+
+## A row's main line and (when given) the line under it rewritten.
+static func _set_row(b: Button, text: String, sub := "") -> void:
+	var t := b.find_child("Text", true, false) as Label
+	if t:
+		t.text = text
+	var s := b.find_child("Sub", true, false) as Label
+	if s and sub != "":
+		s.text = sub
+
+
+static func _gap(h: float) -> Control:
+	var g := Control.new()
+	g.custom_minimum_size = Vector2(0, h)
+	g.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return g
+
+
+# --- Your look, and the open world -----------------------------------------------------------------------
+
+## The character creator over the menu, on the saved look (else the default): Accept keeps it (AppearanceStore). Made as
+## CharacterCreator.open does, but from the saved look rather than the default one (there is no player here).
+static func _creator(first := false) -> CharacterCreator:
+	var c := CharacterCreator.new()
+	c.first_launch = first
+	c.look = AppearanceStore.load_current()
+	(Engine.get_main_loop() as SceneTree).root.add_child(c)
+	return c
+
+
+func _open_look() -> void:
+	_close_panel()
+	var c := _creator()
+	c.closed.connect(func(_ok: bool) -> void: _first_focus())
+
+
+## The open world's rows (the valley of 1765), as the menu had them: Continue (a save), New game, Load game, Museum, Co-op,
+## the duel test and Campaigns (coming).
+func _open_world() -> void:
+	_open_panel()
+	_panel.add_child(MenuUI.heading("Open world"))
+	var latest := SaveGame.latest_slot()
+	if latest != "":
+		var b := MenuUI.item("Continue", 28, _save_line(latest))
+		b.pressed.connect(_play_save.bind(latest))
+		_panel.add_child(b)
+	var ng := MenuUI.item("New game", 28)
+	ng.pressed.connect(_from_world.bind(_open_new_game))
+	_panel.add_child(ng)
+	var ld := MenuUI.item("Load game", 28, "", "" if latest != "" else "no saves yet")
+	ld.pressed.connect(_from_world.bind(_open_load))
+	_panel.add_child(ld)
+	var mu := MenuUI.item("Museum", 28)
+	mu.pressed.connect(_from_world.bind(_open_museum))
+	_panel.add_child(mu)
+	var co := MenuUI.item("Co-op", 28, "host a game or join a friend's")
+	co.pressed.connect(_from_world.bind(_open_coop))
+	_panel.add_child(co)
+	var du := MenuUI.item("Duel (test): 1 v 1", 28, "the earlier test duel on the open land; first to %d" % DuelMode.TO_WIN)
+	du.pressed.connect(_play_duel)
+	_panel.add_child(du)
+	_panel.add_child(MenuUI.item("Campaigns", 28, "", "coming"))
+	for c in _panel.get_children():
+		if c is Button and not (c as Button).disabled:
+			(c as Button).grab_focus.call_deferred()
+			break
 
 
 # --- The museum ----------------------------------------------------------------------------------------------
@@ -363,7 +664,10 @@ func _open_museum() -> void:
 func _close_museum() -> void:
 	if _museum:
 		_museum.visible = false
-	_first_focus()
+	if _return_to.is_valid():
+		_back()                 # (opened from the Open world panel: back to it)
+	else:
+		_first_focus()
 
 
 func _build_museum() -> void:

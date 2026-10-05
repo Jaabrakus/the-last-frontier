@@ -114,7 +114,7 @@ func _species_camera(lay: Variant, kinds: Array, centre: Vector2) -> Array:
 		return []
 	var p: Vector3 = lay.tree_pos[best]
 	var t := Assets.tree(lay.tree_kind[best], lay.tree_variant[best])
-	var h := float(t.get("height", 18.0)) * lay.tree_scale[best]
+	var h := float(t.get("height", 18.0)) * float(lay.tree_scale[best])
 	var dir := _view_dir(p)
 	var dist := clampf(h * 0.95, 12.0, 22.0)
 	var cam := p + dir * dist

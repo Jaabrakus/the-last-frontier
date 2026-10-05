@@ -48,7 +48,9 @@ static func install(player: Node, skeleton: Skeleton3D) -> PlayerAppearance:
 	var saved := AppearanceStore.load_current()
 	pa.apply(saved if SurvivalBridge.bare_ahead() else ClothesSlots.restored(saved))     # (a normal start in its own clothes)
 	ensure_input()
-	if offer_creator() or MainMenu.take_new_game():     # (the first launch, or the main menu's New game)
+	# (the first launch, or the main menu's New game; never over a Tidebreak match's countdown: the menu offers the creator
+	# on the first press of the sport instead, MainMenu._open_match)
+	if (offer_creator() and not MatchSetup.active()) or MainMenu.take_new_game():
 		pa._offer_creator.call_deferred()
 	return pa
 
