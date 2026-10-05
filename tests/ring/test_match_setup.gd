@@ -267,7 +267,9 @@ func _menu() -> void:
 	check(_sub_text(rows["earth"]) == "Stone  ·  chosen", "the chosen element says so (%s)" % _sub_text(rows["earth"]))
 	var texts := _panel_texts(m)
 	check(texts.has("Stone  ·  " + MatchSetup.style("earth")), "the chosen element's style under the rows")
-	check(texts.has("1   Stone Form  ·  Rock Jab") and texts.has("5   Mend  ·  Patch"), "the keys block: earth's five keys (%s)" % [texts])
+	var ek := MatchSetup.scheme_key_lines("earth")
+	check(ek.size() == 5 and ek[0] == "1   Spike  ·  Boulder" and ek[4] == "5   Patch  ·  Mend" and texts.has(ek[0]) and texts.has(ek[4]),
+			"the keys block: earth's five keys (%s)" % [texts])
 	for want: String in ["Opponent:  Earth", "Format:  1 v 1", "Difficulty:  normal", "Rounds:  best of 3", "Begin"]:
 		check(texts.has(want), "the row '%s'" % want)
 	var need := m._panel.get_combined_minimum_size().y
@@ -277,14 +279,14 @@ func _menu() -> void:
 	await frames(1)
 	check(MatchSetup.element == "fire" and _sub_text(rows["fire"]) == "Ember  ·  chosen" and _sub_text(rows["earth"]) == "Stone",
 			"Fire pressed: chosen (%s)" % _sub_text(rows["fire"]))
-	check(_panel_texts(m).has("1   Fire Blast  ·  Fire Jab") and _panel_texts(m).has("Ember  ·  " + MatchSetup.style("fire")),
+	check(_panel_texts(m).has("1   Punch  ·  Lightning") and _panel_texts(m).has("Ember  ·  " + MatchSetup.style("fire")),
 			"the block: fire's style and keys")
 	(rows["water"] as Button).grab_focus()
 	await frames(1)
-	check(_panel_texts(m).has("1   Water Whip  ·  Water Jet") and MatchSetup.element == "fire", "Water focused: its keys shown, fire still chosen")
+	check(_panel_texts(m).has("1   Lash  ·  Spear") and MatchSetup.element == "fire", "Water focused: its keys shown, fire still chosen")
 	(m._panel.find_child("Begin", true, false) as Button).grab_focus()
 	await frames(1)
-	check(_panel_texts(m).has("1   Fire Blast  ·  Fire Jab"), "focus gone from the elements: the chosen one's keys again")
+	check(_panel_texts(m).has("1   Punch  ·  Lightning"), "focus gone from the elements: the chosen one's keys again")
 	var opp := m._panel.find_child("Opponent", true, false) as Button
 	var presses := 0
 	while opp and _row_text(opp) != "Opponent:  Water" and presses < 6:

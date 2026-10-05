@@ -205,6 +205,10 @@ var _whiff_at := -100.0
 ## Floor threats seen (id -> [first seen, jump rolled]); the last setback's time.
 var _floor := {}
 var _setback_t := -100.0
+## The way each dash whose way is the keys held goes ("move/mode" -> "side", "back", "forward": _pick_way).
+var _ways := {}
+## A guard waits for its beat until then: no other lock begun meanwhile (it would hold the guard off).
+var _beat_wait_until := -1.0
 ## What came at it this physics frame (_threats, looked at once a frame).
 var _threats_frame := -1
 var _threats_last: Array = []
@@ -466,6 +470,11 @@ func think(dt: float) -> void:
 	if casting != "" or _follow > 0.0 or me.busy():
 		return
 	var d := _flat_d(t)
+	if _now() < _beat_wait_until and not _forced_any():
+		# (a guard waits for its beat: it stands its ground, facing him, and begins nothing else)
+		me.halt()
+		me.face_point(t.global_position)
+		return
 	if _now() >= _rest_until or _forced_any():
 		var pick := _choose(t, d)
 		if not pick.is_empty():
@@ -740,6 +749,8 @@ func _reaction() -> Dictionary:
 				ok = true                            # (a hard bot dashes on the flash: spec 2.3, lightning's flash_s)
 			if not ok or not castable(o) or (kind == "lightning" and bool(o.guard) and not bool(seen[2])):
 				continue                             # (lightning goes back only off a parry on the beat: else it hits)
+			if bool(th.get("floor", false)) and not bool(o.guard) and not "floor" in answers:
+				continue                             # (along the deck: jumped (_jump_floor), or a guard; a side step is no answer)
 			if float(th.get("knock", INF)) < float(h.get("min_knock", 0.0)) or not _guard_fits(o, t):
 				continue
 			var ls := lock_for(String(o.id), String(o.mode), _preset_name(), 0.0)
@@ -752,7 +763,9 @@ func _reaction() -> Dictionary:
 				# (a guard: begun so the hit lands at its beat: early in the window on a perfect roll, later on a late one)
 				var at := on_beat(window, bool(seen[2]))
 				if tti - ls > at + 0.05 or tti - ls > window * 0.9:
-					continue                         # (too soon: it waits for the beat)
+					# (too soon: it waits for the beat, and begins nothing else meanwhile: _choose holds off)
+					_beat_wait_until = maxf(_beat_wait_until, now + minf(tti - ls - at, 1.0))
+					continue
 			elif ls + window * 0.8 < tti:
 				continue
 			if best.is_empty() or ls < float(best.ls):
@@ -1016,7 +1029,7 @@ static func shot_of(id: String, md: String) -> Dictionary:
 
 ## Whether bolt `bb` runs along the deck (a floor wave, the Kick's: its own floor or floor_wave flag, a low bolt).
 static func is_floor_bolt(bb: BendBolt) -> bool:
-	return bb.low or bool(bb.get(&"floor")) or bool(bb.get(&"floor_wave"))
+	return bb.low or bb.get(&"floor") == true or bb.get(&"floor_wave") == true
 
 
 ## Seconds until something at `p` going `v` (flat) passes over `at` (flat) within `r`, within 3 s (else -1).
@@ -1232,15 +1245,31 @@ func _spec_now(o: Dictionary, t: Node3D) -> Dictionary:
 	return out
 
 
-## The way a dash of option `o` goes for a bot: its hint's way, else its spec's (back, side), else at the foe.
-static func _dash_way(o: Dictionary) -> String:
-	var w := String((o.get("hint", {}) as Dictionary).get("way", ""))
-	if w != "":
-		return w
+## The way a dash of option `o` goes for a bot: one whose way is the keys held (dir "held": a bot has none) its pick of this
+## think (_ways: its hint's way first, else another with room), else its spec's (back, side), else at the foe.
+func _dash_way(o: Dictionary) -> String:
 	var spec: Dictionary = o.get("spec", {})
 	if String(spec.get("dir", "")) == "held":
-		return "side"
+		var w := String(_ways.get(String(o.get("key", "")), ""))
+		if w != "":
+			return w
+		w = String((o.get("hint", {}) as Dictionary).get("way", ""))
+		return w if w != "" else "side"
 	return "back" if bool(spec.get("back", false)) else "side" if bool(spec.get("side", false)) else "forward"
+
+
+## Whether a dash of `o` whose way is the keys held may go a way with room (_dash_safe): its hint's way first, then side, back
+## (at the foe only when its hint says so: a dodge never runs into what comes); the one found kept as its pick (_ways), false
+## none.
+func _pick_way(o: Dictionary, t: Node3D) -> bool:
+	var key := String(o.get("key", ""))
+	var first := String((o.get("hint", {}) as Dictionary).get("way", "side"))
+	for w: String in [first, "side", "back"]:
+		_ways[key] = w
+		if _way_safe(o, t):
+			return true
+	_ways.erase(key)
+	return false
 
 
 ## The stone it holds sent back along its aim (its guard cast again: E again, as the player's). Through the shove of a held
@@ -1472,9 +1501,20 @@ func _dash_dir(o: Dictionary, t: Node3D) -> Vector3:
 ## and its landing inside the ropes (bounds_fn's place for it no more than SIDE_SLACK_M across the way to the foe from where
 ## it would land: edge_fn reads only the open ends, and side dashes went over a long side; R1-BALANCE soak, 2026-10-05).
 func _dash_safe(o: Dictionary, t: Node3D) -> bool:
+	if not bool(o.get("old", false)) and String((o.spec as Dictionary).get("dir", "")) == "held":
+		return _pick_way(o, t)
+	return _way_safe(o, t)
+
+
+## _dash_safe for the way the dash of `o` goes now (_dash_way; its by_dir numbers for that way).
+func _way_safe(o: Dictionary, t: Node3D) -> bool:
 	if not edge_fn.is_valid():
 		return true
 	var spec: Dictionary = o.spec if not bool(o.old) else {"fwd_mps": 6.0, "up_mps": 8.0}
+	var bd: Variant = spec.get("by_dir")
+	if bd is Dictionary and (bd as Dictionary).has(_dash_way(o)):
+		spec = spec.duplicate()
+		spec.merge(bd[_dash_way(o)], true)
 	var margin := float(ai().get("edge_margin_m", 1.5))
 	var dir := _dash_dir(o, t)
 	var reach := dash_carry(spec) + margin

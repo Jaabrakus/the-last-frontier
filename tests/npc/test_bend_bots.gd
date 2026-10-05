@@ -27,7 +27,8 @@ const SLAB_Y := 200.0
 const SLAB := Vector2(40.0, 16.0)
 const COVER_S := 40.0
 const EDGE_S := 25.0
-const MIN_DISTINCT := 6
+## (round 2's kits are smaller: 10-12 options an element, the guard and the heals on need; every move is the soak's check)
+const MIN_DISTINCT := 5
 ## Stones thrown at the earth bot for its answers.
 const THROWS := 8
 ## Waves along the deck sent at a normal bot, and the share it must jump (the KITS task: at least 30%).
@@ -349,6 +350,9 @@ func _answers(f: NpcFighter) -> void:
 			NpcBendCaster.hidden(f, p), b.casting, f.held, f.busy(), f.brain.target])
 	var r0 := int(b.reactions_by.get("stone", 0))
 	var a0 := b.answered
+	# (its opening grace held on: no attack of its own begun over the throws, so its guard is what is tried, not its lock's
+	# luck; the guard's own rolls stay: react_chance, perfect_chance)
+	b._grace_until = INF
 	for i in THROWS:
 		await _secs(1.2)
 		if not is_instance_valid(f):
@@ -362,6 +366,13 @@ func _answers(f: NpcFighter) -> void:
 		var dir := (to - from).normalized()
 		BendBolt.launch(p, from + dir * 0.8, dir, {"kind": "stone", "mps": 18.0, "gravity": 0.0, "damage": 4.0, "knock_mps": 2.0,
 				"radius_m": 0.2, "range_m": 40.0})
+		for k in 12:  # DBG
+			await physics_frame
+			await physics_frame
+			await physics_frame
+			var ths: Array = b._threats()
+			print("DBG t%d casting '%s' action %s follow %.2f state %s threats %s guard_until %.2f now %.2f beat %.2f seen %s" % [k, b.casting, f.action, b._follow, f.brain.state,
+					ths.map(func(x: Dictionary) -> String: return "%s %.2f" % [x.kind, x.tti]), b._guard_until, b._now(), b._beat_wait_until, b._threat_seen.values()])
 	await _secs(1.5)
 	var begun := int(b.reactions_by.get("stone", 0)) - r0
 	var ret_locks: Array[String] = []
@@ -393,6 +404,7 @@ func _floor() -> void:
 	var b := f.brain.bending
 	var air := [0.0]
 	await _secs(2.5)
+	b._grace_until = INF                         # (no attack of its own: the waves' jumps are what is counted)
 	for i in FLOOR_WAVES:
 		f.global_position = Vector3(p.global_position.x + 12.0, f.global_position.y, p.global_position.z)
 		f.velocity = Vector3.ZERO
