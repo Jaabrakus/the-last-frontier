@@ -573,6 +573,18 @@ func flip_mode(id := "") -> String:
 	return nxt
 
 
+## The wheel (the user, 2026-10-04: "roll the wheel to change that spell"): the readied spell's next (`dir` 1) or earlier
+## (-1) mode. "" when it has fewer than two.
+func step_mode(dir: int) -> String:
+	var id := readied_spell
+	var ms := modes_of(id)
+	if ms.size() < 2:
+		return ""
+	var nxt := String(ms[posmod(ms.find(mode_of(id)) + dir, ms.size())])
+	set_mode(id, nxt)
+	return nxt
+
+
 static func mode_label(id: String, m: String) -> String:
 	return String((SwayMoves.move(id).get("mode_labels", {}) as Dictionary).get(m, m))
 
@@ -1028,6 +1040,8 @@ func resolve(c: Object, point: Vector3) -> Node3D:
 				or x.is_in_group(GustLift.BOULDERS) or x.has_meta(&"sway_stone")):
 			return x
 	for x in chain:
+		if x is FormRaised:
+			return x if (x as FormRaised).is_up() else null
 		if x is NpcFighter:
 			return null if (x as NpcFighter).is_dead() else x
 		if x is WildAnimal:
@@ -1068,7 +1082,8 @@ func own_torch(tf: TorchFire) -> bool:
 	return player.torch != null and player.torch.fire == tf
 
 
-## The kind of target `t` is for a move's `targets`: "scripted", "sail", "stone", "fighter", "animal", "fire", "prop" ("" none).
+## The kind of target `t` is for a move's `targets`: "scripted", "sail", "stone", "raised", "fighter", "animal", "fire", "prop" (""
+## none).
 static func kind_of(t: Node) -> String:
 	if t == null:
 		return ""
@@ -1078,6 +1093,8 @@ static func kind_of(t: Node) -> String:
 		return "sail"
 	if GustLift.is_stone(t):
 		return "stone"
+	if t is FormRaised:
+		return "raised"                          # (a raised wall or pillar: Gust tears a piece out of it, FormEffects.gust_chunk)
 	if t is NpcFighter:
 		return "fighter"
 	if t is WildAnimal:
@@ -1254,6 +1271,9 @@ func _try_begin(q: Dictionary) -> void:
 	_local_at = t.global_transform.affine_inverse() * point
 	var stretch := lerpf(1.0, float(d.get("far_stretch", 1.0)), smoothstep(r * 0.5, r, dist)) if not _self_cast(m) else 1.0
 	var base := float((d.get("stone", {}) as Dictionary).get("lock_s", d.get("lock_s", 1.0))) if holds_stone(m, t) else float(d.get("lock_s", 1.0))
+	var mlk: Dictionary = d.get("mode_lock_s", {})
+	if mlk.has(mode_of(m)) and not holds_stone(m, t):
+		base = float(mlk[mode_of(m)])              # (a variation's own lock: the fireball's, lightning's)
 	lock_s = maxf(base * stretch * lock_mult * tier_mult(m), 0.05)
 	if ring:
 		ring.begin()
@@ -1273,9 +1293,10 @@ func range_of(m: String, t: Node = null) -> float:
 	return float(d.get("range_m", 20.0))
 
 
-## The pillar's self mode: the lock is under the caster (no range, the aim free).
+## The pillar's self mode: the lock is under the caster (no range, the aim free); Stone Form's too (its circle where the stone
+## rises, before the caster: aimed once, at the release; the user, 2026-10-04: "its hard to aim the stone spike").
 func _self_cast(m: String) -> bool:
-	return m == "pillar" and mode_of(m) == "self"
+	return (m == "pillar" and mode_of(m) == "self") or m == "stone_form" or bool(SwayMoves.move(m).get("self_lock", false))
 
 
 func _moving_mult(m: String) -> float:
@@ -1629,10 +1650,14 @@ func _tick_floor(dt: float) -> void:
 		set_motes(motes + 1)
 
 
-## With a spell readied the aim held takes the camera over the shoulder as a weapon's aim does (FrontierPlayer's own
-## aim camera is the weapon's: it eases back each frame, and is set again here after it).
+## With a spell readied the aim held took the camera over the shoulder as a weapon's aim does (FrontierPlayer's own
+## aim camera is the weapon's: it eases back each frame, and is set again here after it). Off now (AIM_CAMERA; the user,
+## 2026-10-04: "remove the right click zoom"): the view stays where it is while a spell locks.
+const AIM_CAMERA := false
+
+
 func _camera(dt: float, on: bool) -> void:
-	_cam_w = move_toward(_cam_w, 1.0 if on else 0.0, dt / AIM_CAM_S)
+	_cam_w = move_toward(_cam_w, 1.0 if on and AIM_CAMERA else 0.0, dt / AIM_CAM_S)
 	if _cam_w <= 0.0 or player.riding != null or player.spring_arm == null or not (&"_aim_cam_w" in player):
 		return
 	if float(player.get(&"_aim_cam_w")) < _cam_w:

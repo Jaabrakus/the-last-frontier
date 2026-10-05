@@ -571,6 +571,13 @@ func select(i: int) -> void:
 	_follow_caster()
 	sync()
 	var e := slots[i]
+	# (a bending key pressed again: its other skill; the user, 2026-10-04, "toggle between the 1s")
+	if not e.is_empty() and i == selected() and String(e.get("kind", "")) == SPELL and Bending.partner_of(String(e.id)) != "":
+		var other := make(SPELL, Bending.partner_of(String(e.id)))
+		if has_thing(other) and assign(i, other):
+			cursor = i
+			_take(slots[i])
+			return
 	if e.is_empty() or i == selected():
 		if spell != "" and i == selected() and _keeps_weapon(spell):
 			_drop_spell()                   # (an expert's spell put down: the weapon it kept stays in the hand)
@@ -623,12 +630,23 @@ func handle_input(event: InputEvent) -> bool:
 			select(i)
 			return true
 	if InputMap.has_action(&"weapon_next") and event.is_action_pressed(&"weapon_next"):
-		step(1)
+		if not _step_mode(1):
+			step(1)
 		return true
 	if InputMap.has_action(&"weapon_prev") and event.is_action_pressed(&"weapon_prev"):
-		step(-1)
+		if not _step_mode(-1):
+			step(-1)
 		return true
 	return false
+
+
+## The wheel with a readied spell of several modes: its next mode (the user, 2026-10-04: "roll the wheel to change that
+## spell"); false when there is none to step (the wheel steps the slots).
+func _step_mode(dir: int) -> bool:
+	var c := player.get_node_or_null("SwayCaster") if player != null else null
+	if c == null or spell == "" or not c.has_method(&"step_mode"):
+		return false
+	return String(c.call(&"step_mode", dir)) != ""
 
 
 func _take(e: Dictionary) -> void:

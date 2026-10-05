@@ -278,8 +278,8 @@ func _lock(crate: RigidBody3D) -> void:
 	await _hold_on(at, 0.3)
 	_expect(c.state == SwayCaster.State.LOCKING and c.move == "gust" and c.target == crate and ev.started.size() == 1,
 			"lock: the aim held on the crate locks Gust on it (%s, %s)" % [SwayCaster.State.keys()[c.state], c.move])
-	_expect(float(player.get(&"_aim_cam_w")) > 0.9 and absf(player.spring_arm.position.x - player.aim_shoulder_offset) < 0.03,
-			"lock: the camera over the shoulder (%.2f)" % float(player.get(&"_aim_cam_w")))
+	_expect(float(player.get(&"_aim_cam_w")) < 0.05,
+			"lock: the camera stays where it is, no zoom over the shoulder (the user, 2026-10-04) (%.2f)" % float(player.get(&"_aim_cam_w")))
 	_expect(c.tier("gust") == 0 and is_equal_approx(c.lock_s, 0.6 * 1.4) and c.pose.anim_name == "own-form-clap-press" and c.arm.weight < 0.01,
 			"lock: untrained, the floor cast (%s), the lock x1.4 (%.2f s), no pointing arm" % [c.pose.anim_name, c.lock_s])
 	_expect(c.fill > 0.25 and c.fill < 0.6, "lock: the ring fills over 0.84 s (%.2f after 0.3 s)" % c.fill)

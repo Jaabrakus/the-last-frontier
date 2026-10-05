@@ -230,13 +230,17 @@ func _api() -> void:
 	var icons_ok := true
 	for e: Dictionary in sp:
 		icons_ok = icons_ok and String(e.icon) == "spell_" + String(e.id) and SwayCaster.spell_icon(String(e.id)) != null and String(e.kind) == "spell"
-	_expect(sp_ids == ["gust", "earth_wall", "stone_form", "pillar", "mend"] and icons_ok,
-			"spells(): gust and the four, each a {kind spell, id} with its icon (%s)" % str(sp_ids))
+	icons_ok = true
+	for e: Dictionary in sp.slice(0, 5):
+		icons_ok = icons_ok and String(e.icon) == "spell_" + String(e.id) and SwayCaster.spell_icon(String(e.id)) != null and String(e.kind) == "spell"
+	_expect(sp_ids.slice(0, 5) == ["gust", "earth_wall", "stone_form", "pillar", "mend"] and icons_ok and sp_ids.has("fire_blast"),
+			"spells(): gust and the four first, each a {kind spell, id} with its icon, then the bending skills (%d in all)" % sp_ids.size())
 	var modes := {}
 	for e: Dictionary in sp:
 		modes[String(e.id)] = e.modes
-	_expect(str(modes.stone_form) == str(["spike", "cannonball"]) and str(modes.pillar) == str(["self", "free"]) and (modes.gust as Array).is_empty(),
-			"their modes: stone form spike / cannonball, pillar self / free (%s)" % str(modes))
+	_expect(str(modes.stone_form) == str(["spike", "cannonball", "disc"]) and str(modes.pillar) == str(["self", "free", "ramp"])
+			and str(modes.gust) == str(["push", "pull", "lift"]),
+			"their modes: stone form spike / cannonball / disc, pillar self / free / ramp, gust push / pull / lift")
 	_expect(c.known_spells().size() == 4, "known_spells(): the four granted (%d)" % c.known_spells().size())
 	c.spell_readied.connect(func(id: String) -> void: ev.readied.append(id))
 	var off_bar := c.ready_spell("pillar")
@@ -383,10 +387,10 @@ func _mastery() -> void:
 	for w in get_nodes_in_group(FormRaised.GROUP):
 		w.queue_free()
 	if hb != null:
-		hb.select(slot)                       # (the key again: the spell put down, the pistol kept)
-		await _ticks(4)
+		hb.select(slot)                       # (the key again: the spell put down, the pistol kept; its other skill, Earth
+		await _ticks(4)                       # Grip, is not had here: free use off, the four granted)
 		_expect(c.readied_spell == "" and player.weapon_key == "pistol" and not player.hands_free and pistol._fire_input_enabled(),
-				"its key again puts the spell down; the pistol stays drawn, its own again")
+				"its key again puts the spell down (its other skill not had); the pistol stays drawn, its own again")
 		hb.clear(slot)
 	c.ready_spell("")
 	c.set_uses("earth_wall", 0)
@@ -429,11 +433,11 @@ func _mode_key() -> void:
 			var tr := box[1] as TextureRect
 			if String(tr.get_meta(&"kind", "")) == "spell:stone_form":
 				mark = String((box[0] as Control).get_meta(&"mode", ""))
-	_expect(c.mode_of("stone_form") == "cannonball" and str(changed) == str([["stone_form", "cannonball"]]) and (hud == null or line1.begins_with("Stone Form (cannonball)"))
+	_expect(c.mode_of("stone_form") == "cannonball" and str(changed) == str([["stone_form", "cannonball"]]) and (hud == null or line1.begins_with("Stone Form (boulder)"))
 			and (hud == null or mark == "cannonball"), "the key flips it to cannonball (mode_changed), the HUD's line (%s) and the slot's corner mark (%s)" % [line1, mark])
-	_expect(c.flip_mode() == "spike" and c.mode_of("stone_form") == "spike", "and back to spike")
+	_expect(c.flip_mode() == "disc" and c.flip_mode() == "spike" and c.mode_of("stone_form") == "spike", "on to disc, and back to spike")
 	c.mode_changed.disconnect(cb)
-	_expect(c.mode_of("pillar") == "self" and c.flip_mode("pillar") == "free" and c.mode_of("pillar") == "free" and c.flip_mode("pillar") == "self",
+	_expect(c.mode_of("pillar") == "self" and c.flip_mode("pillar") == "free" and c.mode_of("pillar") == "free" and c.flip_mode("pillar") == "ramp" and c.flip_mode("pillar") == "self",
 			"pillar: self by default, flips to free and back")
 	c.set_mode("stone_form", "cannonball")
 	var sv := c.save_data()

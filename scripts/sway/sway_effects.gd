@@ -42,6 +42,15 @@ static func gust(c: SwayCaster, t: Node3D, at: Vector3) -> void:
 	var flat := Vector3(to.x, 0.0, to.z)
 	flat = flat.normalized() if flat.length_squared() > 1e-4 else -c.player.global_basis.z
 	var dir := to.normalized() if dist > 0.01 else flat
+	var gm := c.mode_of("gust")
+	if gm == "pull":
+		flat = -flat                             # (the user, 2026-10-04: gust "can be push or pull")
+	elif gm == "lift" and (t is NpcFighter or t is FrontierPlayer or t is WildAnimal):
+		BendStatus.knock(t, Vector3.UP * float(push.get("lift_mps", 9.0)) + flat * 1.5, c.player)
+		return
+	if t is FormRaised:
+		FormEffects.gust_chunk(c, t as FormRaised, at, dir)
+		return
 	var near := float(push.get("near_full_m", 8.0))
 	var reach := float(d.get("range_m", 25.0))
 	var k := lerpf(1.0, float(push.get("far_share", 0.45)), clampf((dist - near) / maxf(reach - near, 0.1), 0.0, 1.0))

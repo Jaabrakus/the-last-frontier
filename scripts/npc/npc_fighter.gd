@@ -447,7 +447,7 @@ func face_point(p: Vector3) -> void:
 
 ## Busy with its hands (it holds still meanwhile).
 func busy() -> bool:
-	return action in ["aim", "recoil", "reload", "swing", "flinch", "down"]
+	return action in ["aim", "recoil", "reload", "swing", "flinch", "down", "cast"]
 
 
 ## The aim's numbers for `preset` (SKILLS; "" or none of them: its faction's, FACTION_AIM with the spread from its skill and
@@ -946,7 +946,7 @@ func _probe(dir: Vector3) -> float:
 
 ## The clip for what it is doing now (the actions that play their own keep theirs).
 func _pose() -> void:
-	if body == null or action in ["swing", "flinch", "dead", "down"]:
+	if body == null or action in ["swing", "flinch", "dead", "down", "cast"]:
 		return
 	var has_gun := gun != null and gun.visible
 	if action == "aim" or action == "recoil":

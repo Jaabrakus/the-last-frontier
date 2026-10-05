@@ -256,7 +256,7 @@ func _wall_on(want: String, stand: Vector3, spot: Vector3) -> void:
 			"%s: the lock's circle drawn in the matter's colour %s" % [want, str(col)])
 	var hud := String(seen.get("hud_line", ""))
 	var line := String(seen.get("lock_line", ""))
-	_expect(hud.begins_with("Earth Wall: " + label) and (want == "earth" or line.begins_with("Earth Wall: " + label)),
+	_expect(hud.begins_with("Earth Wall (wall): " + label) and (want == "earth" or line.begins_with("Earth Wall (wall): " + label)),
 			"%s: the HUD's spell line '%s', the lock's line '%s'" % [want, hud, line])
 	_expect(wall.hits_max == hits_want and is_equal_approx(wall.hit_min, float(e.get("hit_min", w0.get("hit_min", 10.0))))
 			and wall.crumble_style == String(e.get("crumble", "dust")) and String(wall.get_meta(&"surface", "")) == String(e.get("surface", "stone"))
@@ -395,7 +395,7 @@ func _tree_wall() -> int:
 	_expect(int(seen.get("tree", -1)) == best and String(seen.get("matter", "")) == "wood" and ca != Vector3.INF
 			and Vector2(ca.x - tp.x, ca.z - tp.z).length() < 0.15,
 			"tree: the crosshair on its trunk locks the tree (%d), its circle round the trunk's foot" % int(seen.get("tree", -1)))
-	_expect(String(seen.get("hud_line", "")).begins_with("Earth Wall: wood") and String(seen.get("lock_line", "")).begins_with("Earth Wall: wood"),
+	_expect(String(seen.get("hud_line", "")).begins_with("Earth Wall (wall): wood") and String(seen.get("lock_line", "")).begins_with("Earth Wall (wall): wood"),
 			"tree: the lines say wood ('%s', '%s')" % [String(seen.get("hud_line", "")), String(seen.get("lock_line", ""))])
 	await _secs(0.9)
 	var wall := _newest(FormRaised.GROUP, before) as FormRaised

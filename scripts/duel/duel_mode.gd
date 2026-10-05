@@ -38,9 +38,29 @@ const PAUSE_S := 7.0
 const FIGHT_SHOW_S := 1.2
 const TO_WIN := 3
 const FACTION := "french_marine"
+## What the foe is called on the screen (a bender: no gun).
+const FOE_LABEL := "Earthbender"
+## How the foe fights: "bend" (NpcBending, the duel as it is played) or "cover" (the marine with his musket, fighting from
+## cover: NpcSkirmish; kept for its own test, tests/npc/test_duel.gd).
+static var foe_tactics := "bend"
 const DIFFICULTIES := ["easy", "normal", "hard"]
 ## The hour the sky is held at (local solar time: the sun high, the light full).
 const HOUR := 10.5
+## The duel's hotbar (the user, 2026-10-04: "we need to make the spells in the hotbar for the 1v1"; "remove the guns in 1v1
+## its just spells"; "users ... are one of the four elements"): the chosen element's keys (Bending.bar: the first skill of
+## 1-4, Mend on 5; the same key again switches a key to its other skill), the first readied (the hands free) at each
+## round's start; the weapons and tools in the pack (off the bar: not drawn, not shown on the body). Laid once the bar has
+## placed the start's kit (Hotbar.KIT_S) and the element is chosen.
+static func bar_now() -> Array:
+	var out: Array = []
+	for id in Bending.bar(element):
+		out.append(["spell", String(id)])
+	return out
+
+
+## The player's element (Bending.ELEMENTS): chosen at the duel's start (choosing: keys 1-4), or the user arg element=...;
+## kept from one duel to the next in a run; the Esc menu changes it (a new duel).
+static var element := "earth"
 
 ## Set by the main menu's row for the level it loads (taken once: take_request).
 static var incoming := false
@@ -69,6 +89,10 @@ var top: Label
 var _kit := {}
 var _fight_shown := 0.0
 var _seed := 7000
+var _bar_laid := false
+## The element still to be chosen (the duel's start; the countdown waits). Not in -s tool and test runs (they pass
+## element=, or keep the run's).
+var choosing := not SaveGame._is_script_run()
 
 
 ## Whether this level is a duel (the main menu's row, or the user arg mode=duel).
@@ -109,10 +133,39 @@ func _ready() -> void:
 	_build_ui()
 	menu = DuelMenu.install(level, self)
 	InspectView.ensure_hotkey(get_tree())
+	get_tree().create_timer(Hotbar.KIT_S + 0.3, false).timeout.connect(lay_bar)
+	for a in OS.get_cmdline_user_args():
+		if a.trim_prefix("--").begins_with("element=") and a.get_slice("=", 1) in Bending.ELEMENTS:
+			element = a.get_slice("=", 1)
+			choosing = false
 	# (the player's kit as he starts: each round gives it back)
 	for k: String in player.weapons:
 		_kit[k] = WeaponState.capture(player.weapons[k])
 	restart.call_deferred()
+
+
+## The duel's bar laid out (bar_now): each slot what it names (when the player has it), the rest emptied, the first spell
+## readied.
+func lay_bar() -> void:
+	var bar := Hotbar.of(player) if player != null and is_instance_valid(player) else null
+	if bar == null:
+		return
+	var bar_l := bar_now()
+	for i in Hotbar.SLOTS:
+		var e := Hotbar.make(String(bar_l[i][0]), String(bar_l[i][1])) if i < bar_l.size() else {}
+		if not e.is_empty() and bar.has_thing(e):
+			bar.assign(i, e)
+		else:
+			bar.clear(i)
+	_bar_laid = true
+	_ready_first()
+
+
+## The bar's first spell readied, the hands free (each round's start: the respawn may have put a weapon back in them).
+func _ready_first() -> void:
+	var bar := Hotbar.of(player) if player != null and is_instance_valid(player) else null
+	if bar != null and _bar_laid and bar.filled(0) and bar.selected() != 0:
+		bar.take(0)
 
 
 ## The sky held by day: HOUR, the clock stopped, clear weather (no rig clock headless: NpcSenses reads full daylight).
@@ -161,14 +214,22 @@ func next_round() -> void:
 	arena.clear_dropped()
 	arena.rebuild()
 	_place_player(arena.spawn(player_side))
+	_ready_first.call_deferred()
 	var xf := arena.spawn(1 - player_side)
-	squad = NpcSquad.spawn(level, FACTION, 1, xf.origin, {"face": xf.origin - xf.basis.z * 10.0, "tag": "duel", "tactics": "cover",
-			"skill": difficulty, "seed": _seed})
+	# (a bender, no gun: the user, 2026-10-04, "remove the guns in 1v1 its just spells"; NpcBending)
+	var bend := foe_tactics == "bend"
+	var opts := {"face": xf.origin - xf.basis.z * 10.0, "tag": "duel", "tactics": foe_tactics, "skill": difficulty, "seed": _seed}
+	if bend:
+		opts["weapon"] = ""
+		opts["sidearm"] = ""
+	squad = NpcSquad.spawn(level, FACTION, 1, xf.origin, opts)
 	npc = squad.members[0] if not squad.members.is_empty() else null
 	if npc != null:
 		npc.flees = false
 		npc.calm_s = INF
 		npc.held = true
+		if bend:
+			npc.label = FOE_LABEL
 		if npc.brain != null and npc.brain.skirmish != null:
 			npc.brain.skirmish.bounds = arena.bounds()
 	_to(Phase.COUNTDOWN)
@@ -215,7 +276,9 @@ func _physics_process(dt: float) -> void:
 	phase_t += dt
 	match phase:
 		Phase.COUNTDOWN:
-			if phase_t >= COUNTDOWN_S:
+			if choosing:
+				phase_t = 0.0                      # (the countdown waits for the element)
+			elif phase_t >= COUNTDOWN_S:
 				_fight()
 		Phase.FIGHT:
 			_fight_shown = maxf(_fight_shown - dt, 0.0)
@@ -268,6 +331,28 @@ func _end_round(result: String, why: String) -> void:
 	player.drag_speed_cap = INF
 	_to(Phase.OVER)
 	round_over.emit(result, score)
+
+
+## The element chosen at the duel's start (keys 1-4), before the hotbar takes the keys.
+func _input(e: InputEvent) -> void:
+	if not choosing or not (e is InputEventKey) or not e.is_pressed() or e.is_echo():
+		return
+	var k := (e as InputEventKey).physical_keycode
+	if k >= KEY_1 and k <= KEY_4:
+		choose(Bending.ELEMENTS[k - KEY_1])
+		get_viewport().set_input_as_handled()
+
+
+## The player's element `el`: his bar laid for it, the countdown begins.
+func choose(el: String) -> void:
+	if not el in Bending.ELEMENTS:
+		return
+	element = el
+	choosing = false
+	if _bar_laid:
+		lay_bar()
+	phase_t = 0.0
+	_paint()
 
 
 ## M in the pause after the round: the fallen marine's body opened (InspectView), wherever the player stands.
@@ -323,7 +408,7 @@ func _label(size: int, color: Color) -> Label:
 
 ## The marine's name on the screen ("French marine").
 func foe_name() -> String:
-	return npc.label if npc != null and is_instance_valid(npc) else String(NpcFactions.get_faction(FACTION).get("label", "marine"))
+	return npc.label if npc != null and is_instance_valid(npc) else FOE_LABEL
 
 
 func score_text() -> String:
@@ -337,6 +422,13 @@ func _paint() -> void:
 	var s := ""
 	match phase:
 		Phase.COUNTDOWN:
+			if choosing:
+				b = "Choose your element"
+				s = "1  Earth     2  Water     3  Fire     4  Air"
+				banner.text = b
+				sub.text = s
+				top.text = ""
+				return
 			b = "Round %d" % round if phase_t < 0.8 else str(ceili(COUNTDOWN_S - phase_t))
 			s = "%s  ·  first to %d  ·  %s" % [score_text(), TO_WIN, difficulty]
 		Phase.FIGHT:

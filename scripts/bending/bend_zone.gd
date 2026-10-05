@@ -1,0 +1,303 @@
+class_name BendZone
+extends Node3D
+## A bent thing that lasts a while in the world (BendEffects; docs/bending_design.md), by `kind`:
+##   barriers    bubble (a sphere of water round its owner: fire dies in it as steam, air and water are stopped, stone and
+##               ice pass), air_shield (round its owner: fire, water, ice and air sent back at who sent them; stone passes),
+##               water_wall (a wall of water: fire dies in it, water is drunk in; fire walls it stands in go out),
+##               fire_wall (burns whoever stands in it; ice melts going through, air takes its flame, water puts it out)
+##   the ground  burn (the ground alight: as a fire wall, low), ice_patch (slows whoever is on it), smoke / dust / spray
+##               (a cloud that hides: drawn only)
+##   moving      tornado (goes on along its way, lifting and carrying whoever it meets), vacuum (the air pulled out round a
+##               place: whoever is in it slowed)
+##   guards      on its owner for a moment (window_s): catch (a stone flying at him caught and held before him: Earth Shove
+##               sends it back), deflect (a stone knocked aside), cushion (a stone slowed to a stop and dropped), redirect
+##               (water and ice sent back), parry (fire knocked aside), spin (light bolts knocked aside), absorb (water drunk
+##               in: a little health)
+## on_bolt(b): what it does to bolt `b` passing (true: it acted). Group GROUP.
+
+const GROUP := &"bend_zones"
+const LIGHT := ["fire", "water", "ice", "air"]
+const GUARDS := ["catch", "deflect", "cushion", "redirect", "parry", "spin", "absorb"]
+
+var kind := "bubble"
+var owner_node: Node3D
+var follow := false
+## Round: radius; a wall or a patch: size (x across, y up, z through), standing on its origin.
+var radius := 2.0
+var size := Vector3(4.0, 2.0, 0.5)
+var life_s := 3.0
+var damage_s := 0.0
+var way := Vector3.FORWARD
+var speed := 0.0
+var t := 0.0
+## What a guard took (stones caught, bolts sent back), for the tests.
+var took := 0
+
+var _tick := 0.0
+var _fx: Array[Node] = []
+
+
+static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_way := Vector3.FORWARD) -> BendZone:
+	var z := BendZone.new()
+	z.name = "BendZone_" + p_kind
+	z.kind = p_kind
+	z.owner_node = by
+	z.follow = p_kind in ["bubble", "air_shield"] or p_kind in GUARDS
+	z.radius = float(spec.get("radius_m", 2.0))
+	z.size = Vector3(float(spec.get("width_m", 4.0)), float(spec.get("height_m", 2.0)), float(spec.get("thick_m", 0.6)))
+	z.life_s = float(spec.get("life_s", spec.get("window_s", 3.0)))
+	z.damage_s = float(spec.get("damage_s", 0.0))
+	z.speed = float(spec.get("mps", 0.0))
+	var w := Vector3(p_way.x, 0.0, p_way.z)
+	z.way = w.normalized() if w.length_squared() > 1e-6 else Vector3.FORWARD
+	z.add_to_group(GROUP)
+	by.get_tree().current_scene.add_child(z)
+	var x := Vector3.UP.cross(z.way).normalized()
+	z.global_transform = Transform3D(Basis(x, Vector3.UP, z.way), at)
+	z._look()
+	return z
+
+
+func _look() -> void:
+	if not BendLooks.live():
+		return
+	match kind:
+		"bubble", "air_shield":
+			var mi := MeshInstance3D.new()
+			var s := SphereMesh.new()
+			s.radius = radius
+			s.height = radius * 2.0
+			mi.mesh = s
+			mi.material_override = BendLooks.material("water" if kind == "bubble" else "air")
+			mi.position = Vector3.UP * 1.0
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			add_child(mi)
+			if kind == "air_shield":
+				_fx.append(BendLooks.emitter(self, "air", Vector3(radius, 1.0, radius) * 0.8, 50, 0.6, 2.0, 0.35))
+		"water_wall":
+			var mi := MeshInstance3D.new()
+			var b := BoxMesh.new()
+			b.size = size
+			mi.mesh = b
+			mi.material_override = BendLooks.material("water")
+			mi.position = Vector3.UP * size.y * 0.5
+			add_child(mi)
+			_fx.append(BendLooks.emitter(self, "water", Vector3(size.x * 0.5, 0.1, size.z * 0.5) + Vector3.UP * 0.0, 60, 0.7, 3.0, 0.3))
+		"fire_wall", "burn":
+			var h := size.y if kind == "fire_wall" else 0.4
+			var e := BendLooks.emitter(self, "fire", Vector3(size.x * 0.5, 0.15, size.z * 0.5), int(40 * size.x), 0.8, h * 1.6, 0.55)
+			if e != null:
+				e.position = Vector3.UP * 0.15
+			_fx.append(e)
+			var l := OmniLight3D.new()
+			l.light_color = Color(1.0, 0.55, 0.2)
+			l.light_energy = 2.0
+			l.omni_range = size.x
+			l.position = Vector3.UP * 1.0
+			add_child(l)
+		"ice_patch":
+			var mi := MeshInstance3D.new()
+			var b := BoxMesh.new()
+			b.size = Vector3(radius * 2.0, 0.04, radius * 2.0)
+			mi.mesh = b
+			mi.material_override = BendLooks.material("ice")
+			mi.position = Vector3.UP * 0.03
+			add_child(mi)
+		"smoke", "dust", "spray":
+			_fx.append(BendLooks.emitter(self, "smoke" if kind == "smoke" else ("dust" if kind == "dust" else "water"),
+					Vector3(radius, 0.8, radius), 70, 2.2, 0.6, 2.2))
+		"tornado":
+			_fx.append(BendLooks.emitter(self, "dust", Vector3(radius * 0.5, 0.3, radius * 0.5), 90, 1.4, 6.0, 0.8))
+			_fx.append(BendLooks.emitter(self, "air", Vector3(radius * 0.6, 1.5, radius * 0.6), 60, 0.8, 4.0, 0.6))
+		"vacuum":
+			_fx.append(BendLooks.emitter(self, "air", Vector3(radius, 0.6, radius), 40, 0.6, -1.0, 0.4))
+
+
+func _physics_process(dt: float) -> void:
+	t += dt
+	if follow and owner_node != null and is_instance_valid(owner_node):
+		global_position = owner_node.global_position
+	if kind == "tornado":
+		global_position += way * speed * dt
+		global_position.y = FrontierTerrain.height_at(global_position.x, global_position.z)
+	_tick -= dt
+	if _tick <= 0.0:
+		_tick = 0.25
+		_every(0.25)
+	if kind in ["catch", "deflect", "cushion"]:
+		_stones()
+	if t >= life_s:
+		end()
+
+
+## Who it holds now: everyone within it (round) or in its box.
+func inside(p: Vector3) -> bool:
+	var l := global_transform.affine_inverse() * p
+	if kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "tornado", "vacuum"] or kind in GUARDS:
+		return Vector2(l.x, l.z).length() <= radius and l.y > -1.0 and l.y < 3.5
+	return absf(l.x) <= size.x * 0.5 and absf(l.z) <= size.z * 0.5 + 0.3 and l.y > -0.5 and l.y < size.y + 0.3
+
+
+## Its lasting effects on whom it holds, each `dt` s.
+func _every(dt: float) -> void:
+	var r := maxf(radius, size.x * 0.6)
+	for e in BendStatus.near(owner_node, global_position, r + 1.0):
+		var n: Node3D = e[0]
+		if not inside(n.global_position):
+			continue
+		match kind:
+			"fire_wall", "burn":
+				BendStatus.hurt(n, damage_s * dt, n.global_position + Vector3.UP, way, owner_node)
+			"ice_patch", "vacuum":
+				BendStatus.slow(n, 0.6)
+			"tornado":
+				BendStatus.hurt(n, damage_s * dt, n.global_position + Vector3.UP, way, owner_node)
+				BendStatus.knock(n, way * speed * 1.2 + Vector3.UP * 3.0, owner_node)
+	if kind == "water_wall":
+		# (a fire wall it stands in goes out)
+		for z in get_tree().get_nodes_in_group(GROUP):
+			var o := z as BendZone
+			if o != self and o.kind in ["fire_wall", "burn"] and inside(o.global_position):
+				BendLooks.burst(o.global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
+				o.end()
+
+
+## Bolt `b` passing it (see the header); true when it acted on it.
+func on_bolt(b: BendBolt) -> bool:
+	if b.spent or b.caster == owner_node or not inside(b.global_position):
+		return false
+	match kind:
+		"bubble":
+			if b.kind == "fire":
+				BendLooks.burst(b.global_position, "steam", 22, Vector3.UP, 120.0, 2.0, 0.7)
+				b.end("steam")
+				return true
+			if b.kind in ["air", "water"]:
+				BendLooks.burst(b.global_position, "water", 12)
+				b.end("bubble")
+				return true
+		"water_wall":
+			if b.kind == "fire":
+				BendLooks.burst(b.global_position, "steam", 22, Vector3.UP, 120.0, 2.0, 0.7)
+				b.end("steam")
+				return true
+			if b.kind == "water":
+				b.end("drunk")
+				return true
+		"air_shield":
+			if b.kind in LIGHT:
+				_send_back(b)
+				return true
+		"fire_wall", "burn":
+			if b.kind == "ice":
+				BendLooks.burst(b.global_position, "water", 12)
+				b.end("melted")
+				return true
+			if b.kind == "water":
+				BendLooks.burst(global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
+				b.end("steam")
+				end()
+				return true
+			if b.kind == "air" and not b.burning:
+				b.burning = true
+				return true
+		"redirect":
+			if b.kind in ["water", "ice"]:
+				_send_back(b)
+				return true
+		"parry":
+			if b.kind == "fire":
+				_aside(b)
+				return true
+		"spin":
+			if b.kind in LIGHT:
+				_aside(b)
+				return true
+		"absorb":
+			if b.kind == "water":
+				BendStatus.heal(owner_node, 6.0)
+				b.end("absorbed")
+				took += 1
+				return true
+	return false
+
+
+func _send_back(b: BendBolt) -> void:
+	var to := (b.caster as Node3D).global_position + Vector3.UP * 1.2 if b.caster != null and is_instance_valid(b.caster) \
+			else b.global_position - b.velocity
+	b.redirect(to - b.global_position, owner_node)
+	BendLooks.burst(b.global_position, b.kind, 10)
+	took += 1
+
+
+func _aside(b: BendBolt) -> void:
+	var side := b.velocity.cross(Vector3.UP).normalized() * (1.0 if randf() < 0.5 else -1.0)
+	b.redirect(side + b.velocity.normalized() * 0.3, owner_node)
+	took += 1
+
+
+## Stones flying at its owner (a guard: catch, deflect, cushion): a Stone Form or Gust throw (GustLift), a bender's spike
+## (NpcBending.Flight).
+func _stones() -> void:
+	var me := owner_node.global_position + Vector3.UP * 1.0
+	for l in get_tree().get_nodes_in_group(GustLift.GROUP):
+		var lift := l as GustLift
+		if lift == null or lift.phase != GustLift.Phase.FLIGHT or lift.stone == null or not is_instance_valid(lift.stone):
+			continue
+		if lift.caster != null and lift.caster.player == owner_node:
+			continue
+		if lift.stone.global_position.distance_to(me) <= radius:
+			var s := lift.stone as Node3D
+			var v := lift.velocity
+			lift.drop(false)
+			_take_stone(s, v)
+	for f in get_tree().get_nodes_in_group(NpcBending.FLIGHT_GROUP):
+		var fl := f as NpcBending.Flight
+		if fl == null or fl.stone == null or not is_instance_valid(fl.stone) or fl.shooter == owner_node:
+			continue
+		if fl.stone.global_position.distance_to(me) <= radius:
+			var s := fl.stone as Node3D
+			var v := fl.velocity
+			fl.queue_free()
+			_take_stone(s, v)
+
+
+func _take_stone(s: Node3D, v: Vector3) -> void:
+	took += 1
+	var rb := s as RigidBody3D
+	match kind:
+		"catch":
+			# held before its owner: Earth Shove (push) sends it back
+			var front := owner_node.global_position + Vector3(-v.x, 0.0, -v.z).normalized() * 1.3 + Vector3.UP * 1.1
+			if rb != null:
+				rb.freeze = true
+			s.global_position = front
+			s.set_meta(&"bend_held_by", owner_node.get_instance_id())
+			if s is FormStone:
+				(s as FormStone).rest_again()
+			BendLooks.burst(front, "stone", 14)
+			BendLooks.sound("stone", "hit", front, -2.0)
+		"deflect":
+			if rb != null:
+				rb.freeze = false
+				rb.linear_velocity = v.cross(Vector3.UP).normalized() * v.length() * 0.5 + Vector3.UP * 2.0
+			if s is FormStone:
+				(s as FormStone).rest_again()
+			BendLooks.burst(s.global_position, "stone", 10)
+		"cushion":
+			if rb != null:
+				rb.freeze = false
+				rb.linear_velocity = v * 0.05
+			if s is FormStone:
+				(s as FormStone).rest_again()
+			BendLooks.burst(s.global_position, "air", 18)
+
+
+func end() -> void:
+	if is_queued_for_deletion():
+		return
+	remove_from_group(GROUP)
+	for e in _fx:
+		if e is GPUParticles3D and is_instance_valid(e):
+			BendLooks.stop_trail(e as GPUParticles3D)
+	queue_free()

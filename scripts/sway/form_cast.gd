@@ -68,7 +68,11 @@ var _hinted := ""
 
 
 static func is_form(m: String) -> bool:
-	return m != "" and String(SwayMoves.move(m).get("art", "")) == "form"
+	if m == "":
+		return false
+	var d := SwayMoves.move(m)
+	# (the Form art's spells; and every bending move, whose circle and lock are the Form art's: docs/bending_design.md)
+	return String(d.get("art", "")) == "form" or d.has("bend") and bool(d.get("self_lock", false))
 
 
 ## What spell `id` would raise now, for the HUD's spell line ("mud"; "" none): the lock's matter while it locks, else the
@@ -127,9 +131,14 @@ var _land_frame := -1
 
 
 ## The pillar's self mode: its circle under the caster (in the air, where the pillar would catch them: FormEffects.air_catch,
-## once a physics frame).
-func self_point() -> Vector3:
+## once a physics frame). Stone Form (`m`): where its stone will rise, throw.ahead_m before the caster along the aim.
+func self_point(m := "pillar") -> Vector3:
 	var p := caster.player
+	if m != "pillar":
+		var td: Dictionary = SwayMoves.move("stone_form").get("throw", {})
+		var aim := FormEffects.aim_point(caster)
+		var way := FormEffects.way_to(caster, aim if aim != Vector3.INF else p.global_position - p.global_basis.z * 10.0)
+		return FormEffects.ground_at(caster, p.global_position + way * float(td.get("ahead_m", 1.4)))
 	if not p.is_on_floor():
 		var f := Engine.get_physics_frames()
 		if f != _land_frame:
@@ -143,8 +152,8 @@ func self_point() -> Vector3:
 func _pick(m: String, q: Dictionary) -> Dictionary:
 	var d := SwayMoves.move(m)
 	var targets: Array = d.get("targets", [])
-	if m == "pillar" and caster.mode_of(m) == "self":
-		var sp := self_point()
+	if (m == "pillar" and caster.mode_of(m) == "self") or m == "stone_form" or bool(d.get("self_lock", false)):
+		var sp := self_point(m)
 		mark.global_transform = Transform3D(Basis.IDENTITY, sp)
 		return {"node": mark, "point": sp, "normal": Vector3.UP, "ground": true, "self": true, "matter": FormMatter.of_ground(get_tree(), sp)}
 	if not q.has("from"):
@@ -378,6 +387,9 @@ func _on_started(m: String, t: Node3D) -> void:
 	_clear_fx()
 	var scn := get_tree().current_scene
 	var col := FormMatter.circle_color(lock_matter) if m in MATTER_MOVES else SwayMoves.art_color("form")
+	var el := Bending.element_of(m)
+	if el in ["water", "fire", "air"]:
+		col = BendLooks.color(el)                # (the bending circles by their element)
 	circle = FormCircle.make(scn, at, up, radius, col)
 	crackle = FormCrackle.new()
 	crackle.name = "FormCrackle"
@@ -457,8 +469,8 @@ func _process(_dt: float) -> void:
 		return
 	var locking := caster.state in [SwayCaster.State.LOCKING, SwayCaster.State.FULL] and is_form(caster.move)
 	if locking and self_cast:
-		# (the self pillar's circle under the caster as they move: where they will land, in the air)
-		var sp := self_point()
+		# (the self pillar's circle under the caster as they move: where they will land, in the air; Stone Form's before them)
+		var sp := self_point(caster.move)
 		mark.global_position = sp
 		at = sp
 		if circle != null and is_instance_valid(circle):

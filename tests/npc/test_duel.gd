@@ -48,6 +48,7 @@ func _initialize() -> void:
 		if not String(action).begins_with("ui_"):
 			InputMap.action_erase_events(action)
 	DuelMode.incoming = true                    # (as the main menu's row; the user arg mode=duel does the same)
+	DuelMode.foe_tactics = "cover"              # (the marine fighting from cover: the duel's foe is a bender now)
 	change_scene_to_file("res://scenes/main.tscn")
 	_run.call_deferred()
 

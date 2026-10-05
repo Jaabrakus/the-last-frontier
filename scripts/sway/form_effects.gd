@@ -34,13 +34,19 @@ const MOVES := ["earth_wall", "stone_form", "pillar", "mend"]
 
 
 static func handles(m: String) -> bool:
-	return m in MOVES
+	return m in MOVES or SwayMoves.move(m).has("bend")
 
 
 static func apply(c: SwayCaster, m: String, t: Node3D, at: Vector3) -> void:
 	if c == null or c.player == null:
 		return
 	var d := SwayMoves.move(m)
+	# (a bending move's mode: BendEffects; docs/bending_design.md)
+	var mode := c.mode_of(m)
+	var bd: Dictionary = d.get("bend", {})
+	if bd.has(mode):
+		BendEffects.apply(c, m, mode, bd[mode], t, at)
+		return
 	match m:
 		"earth_wall":
 			earth_wall(c, at, d)
@@ -244,6 +250,71 @@ static func stone_form(c: SwayCaster, at: Vector3, d: Dictionary, mode := "spike
 	return s
 
 
+## Gust on a raised wall or pillar (the user, 2026-10-04: "we should be able to use gust to push certain parts of the rock wall
+## and pillar"): the piece the aim is on torn out of it, a ball of its matter (gust.raised.chunk_r) at the face the caster
+## sees, and hurled along the aim (Throw: the crosshair, the aim's help) through the wall it came from; the wall takes a hit
+## for it (FormRaised.apply_hit: wearing, and at its hits_max it crumbles). The thrown chunk; null when none.
+static func gust_chunk(c: SwayCaster, r: FormRaised, at: Vector3, dir: Vector3) -> FormStone:
+	if c == null or r == null or not is_instance_valid(r) or not r.is_up():
+		return null
+	var gd: Dictionary = SwayMoves.move("gust").get("raised", {})
+	var rad := float(gd.get("chunk_r", 0.3))
+	var scn := c.get_tree().current_scene
+	var p := at - dir * (rad + 0.05)
+	var seed := absi(hash(Vector3i(roundi(p.x * 10.0), roundi(p.y * 10.0), roundi(p.z * 10.0)))) % 97
+	var matter := r.matter if r.matter != "wood" else "earth"
+	var s := FormStone.ball(scn, p, {"radius_m": rad, "mass_kg": float(gd.get("mass_kg", 25.0)), "life_s": float(gd.get("life_s", 20.0)),
+			"sink_s": 1.0, "rise_s": 0.05}, seed, matter)
+	s.base = Transform3D(Basis.IDENTITY, p)
+	s.global_transform = s.base
+	s.state = FormStone.State.RESTING
+	r.apply_hit(maxf(r.hit_min, 1.0), at, dir)
+	sfx("hurl", at, 0.0, 0.8)
+	GatherFx.stone_chips(scn, at, -dir, 12)
+	var td := {"rise_s": float(gd.get("rise_s", 0.06)), "chest_m": p.y - c.player.global_position.y, "tremble_deg": 0.2,
+			"knock_mps": {"cannonball": float(gd.get("knock_mps", 5.0))},
+			"hurl": {"cannonball": {"mps": [float(gd.get("mps", 26.0)), float(gd.get("mps", 26.0))], "gravity": float(gd.get("gravity", 4.0)),
+					"damage": [float(gd.get("damage", 45.0)), float(gd.get("damage", 45.0))], "roll": true}}}
+	var th := Throw.start(c, s, td)
+	if th != null and th.lift != null:
+		th.lift._ex.append(r.get_rid())        # (out through the wall it was torn from)
+	return s
+
+
+## The aim's help for a thrown stone (the user, 2026-10-04: "its hard to aim the stone spike"): a fighter who can still fight
+## within ASSIST_DEG of the camera's ray (from `from`) and ASSIST_M, in plain sight of it (nothing solid between), the nearest
+## the ray's line; null none. Nothing is drawn for it (no target cues: the owner's rule).
+const ASSIST_DEG := 6.0
+const ASSIST_M := 45.0
+
+
+static func assist_target(c: SwayCaster, from: Vector3, dir: Vector3, ex: Array = []) -> Node3D:
+	if c == null or c.player == null or dir.length_squared() < 1e-6:
+		return null
+	var best: Node3D = null
+	var best_a := deg_to_rad(ASSIST_DEG)
+	var space := c.player.get_world_3d().direct_space_state
+	for n in c.get_tree().get_nodes_in_group(NpcFighter.GROUP):
+		var f := n as NpcFighter
+		if f == null or not NpcSenses.can_fight(f):
+			continue
+		var to := NpcSenses.chest_of(f) - from
+		var dist := to.length()
+		if dist < 1.0 or dist > ASSIST_M:
+			continue
+		var a := to.angle_to(dir)
+		if a >= best_a:
+			continue
+		var exl: Array[RID] = [c.player.get_rid(), f.get_rid()]
+		for r in ex:
+			exl.append(r)
+		if not space.intersect_ray(PhysicsRayQueryParameters3D.create(from, from + to, 1, exl)).is_empty():
+			continue
+		best = f
+		best_a = a
+	return best
+
+
 ## The crosshair's point now (world): the camera's ray (from `from`, else the camera) past the player and `ex` (RIDs: the
 ## stone thrown), its hit, else 80 m along it; INF with no camera.
 static func aim_point(c: SwayCaster, ex: Array = [], from := Vector3.INF) -> Vector3:
@@ -287,6 +358,8 @@ class Throw:
 	var knocked: Array = []
 	## The aim camera's place from the player's as the spell was let go (INF: no camera).
 	var cam_off := Vector3.INF
+	## A place it goes to instead of the crosshair (INF: the crosshair): Earth Shove's pull (the caster's feet), split.
+	var fixed := Vector3.INF
 
 	static func start(c: SwayCaster, s: FormStone, p_td: Dictionary) -> Throw:
 		var th := Throw.new()
@@ -326,9 +399,22 @@ class Throw:
 			lift.hurl(_arced(target))
 			thrown.emit(stone, target)
 
-	## The crosshair's point now, from the aim's view (cam_off).
+	## The crosshair's point now, from the aim's view (cam_off); a fighter near the crosshair (FormEffects.assist_target): his
+	## chest, ahead of him by his pace over the flight.
 	func _aim() -> Vector3:
+		if fixed != Vector3.INF:
+			return fixed
 		var from := caster.player.global_position + cam_off if cam_off != Vector3.INF else Vector3.INF
+		var cam := caster.player.camera
+		if cam != null and cam.is_inside_tree():
+			var f := FormEffects.assist_target(caster, from if from != Vector3.INF else cam.global_position, -cam.global_basis.z, [stone.get_rid()])
+			if f != null:
+				var chest := NpcSenses.chest_of(f)
+				var hd: Dictionary = lift._hurl_d() if lift != null else {}
+				var mps: Array = hd.get("mps", [30.0, 30.0])
+				var tf := stone.global_position.distance_to(chest) / maxf(float(mps[mps.size() - 1]), 0.1)
+				var v := NpcSenses.velocity_of(f)
+				return chest + Vector3(v.x, 0.0, v.z) * tf
 		return FormEffects.aim_point(caster, [stone.get_rid()], from)
 
 	## `p` raised by the drop the flight's gravity gives it on the way there (so it arrives at `p`).

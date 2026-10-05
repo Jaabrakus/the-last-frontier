@@ -460,7 +460,7 @@ func _far_and_why() -> void:
 	_place_player()
 	await _secs(0.3)
 	var hb := player.hotbar
-	# Stone Form aimed 40 m down the lane: raised at the edge of its reach on the line of the aim
+	# Stone Form aimed 40 m down the lane: raised before the caster and thrown on along the aim
 	_expect(_ready_spell("stone_form") and c.readied_spell == "stone_form", "Stone Form readied")
 	var far := _ground(LANE_X, -64.0)
 	var at := func() -> Vector3: return far
@@ -474,8 +474,10 @@ func _far_and_why() -> void:
 	var d := Vector2(cp.x - player.global_position.x, cp.z - player.global_position.z).length() if cp != Vector3.INF else INF
 	await _secs(0.4)
 	var fresh := get_nodes_in_group(FormStone.GROUP).filter(func(n: Node) -> bool: return not before.has(n))
-	_expect(ok and fresh.size() == 1 and bool(pk.get("edge", false)) and d > reach * 0.75 and d <= reach,
-			"Stone Form aimed 40 m off (its reach %d m): locked at the edge, %.1f m away, and thrown" % [roundi(reach), d])
+	# (its circle is at the caster now, where the stone rises, aimed once at the release: the user, 2026-10-04, "its hard to
+	# aim the stone spike"; it was at the reach's edge on the line of the aim)
+	_expect(ok and fresh.size() == 1 and bool(pk.get("self", false)) and d < 2.5,
+			"Stone Form aimed 40 m off: locked at the caster's feet (%.1f m away, its old reach %d m no matter), and thrown" % [d, roundi(reach)])
 	for n in fresh:
 		n.queue_free()
 	c.ready_spell("")

@@ -19,6 +19,7 @@ var _items: VBoxContainer
 var _panel: VBoxContainer
 var _note: Label
 var _diff: Button
+var _elem: Button
 var _open := false
 
 
@@ -62,7 +63,8 @@ func _ready() -> void:
 	left.add_child(_items)
 	_row("Resume", close)
 	_row("Restart the duel", restart)
-	_diff = _row("Difficulty:  %s" % DuelMode.difficulty, cycle_difficulty, "the marine's aim: his reaction, how fast it settles, how close it goes")
+	_diff = _row("Difficulty:  %s" % DuelMode.difficulty, cycle_difficulty, "the bender's aim: how close his stones go")
+	_elem = _row("Element:  %s" % DuelMode.element.capitalize(), cycle_element, "earth, water, fire, air: a new duel as it")
 	_row("Settings", _settings)
 	_row("Main menu", to_menu)
 	_row("Quit", _quit)
@@ -142,6 +144,18 @@ func restart() -> void:
 
 
 ## The next difficulty in turn (easy, normal, hard), the marine's aim at once.
+## The next element (Bending.ELEMENTS): the duel begun again with it.
+func cycle_element() -> void:
+	var list := Bending.ELEMENTS
+	DuelMode.element = String(list[(list.find(DuelMode.element) + 1) % list.size()])
+	if _elem != null:
+		_elem.text = "Element:  %s" % DuelMode.element.capitalize()
+	if duel != null:
+		duel.choosing = false
+		duel.lay_bar()
+		duel.restart()
+
+
 func cycle_difficulty() -> void:
 	var list := DuelMode.DIFFICULTIES
 	var i := list.find(DuelMode.difficulty)

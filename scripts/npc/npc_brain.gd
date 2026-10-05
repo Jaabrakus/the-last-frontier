@@ -102,12 +102,16 @@ var heard_at := Vector3.INF
 var heard_t := -100.0
 ## The cover fighter (NpcFighter.tactics "cover"), null for a line fighter.
 var skirmish: NpcSkirmish = null
+## The bender (NpcFighter.tactics "bend": the duel's opponent; NpcBending), null for the others.
+var bending: NpcBending = null
 
 
 func _init(f: NpcFighter) -> void:
 	me = f
 	if f.tactics == "cover":
 		skirmish = NpcSkirmish.new(self)
+	elif f.tactics == "bend":
+		bending = NpcBending.new(self)
 
 
 func state_name() -> String:
@@ -487,6 +491,9 @@ func _combat(dt: float) -> void:
 		return
 	if skirmish != null:
 		skirmish.step(dt)
+		return
+	if bending != null:
+		bending.step(dt)
 		return
 	if me.busy():
 		# a reload put by for a foe that is on it: the butt for him instead

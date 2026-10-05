@@ -252,16 +252,34 @@ static func spike_mesh(r: float, h: float, seed := 3, bury := BURY_M, matter := 
 			var mid := (a + (pts[j + 1][i2] as Vector3)) * 0.5
 			var fresh := 0.9 if rng.randf() < lerpf(0.2, 0.75, float(j) / rings) else 0.08
 			var k := 0.78 + 0.22 * rng.randf()
-			_quad_col(st, a, pts[j][i2], pts[j + 1][i2], pts[j + 1][i], Vector3(mid.x, 0.0, mid.z).normalized(), Color(k, k, k, fresh))
+			# (outward from the leaning middle at that height, not from the foot's: near the point the lean is wider than the
+			# spike, and a face wound from the foot's middle faced in, culled: "the spike form doesnt have a texture its see thru")
+			_quad_col(st, a, pts[j][i2], pts[j + 1][i2], pts[j + 1][i], _spike_out(mid, tip, h), Color(k, k, k, fresh))
 	var cap: Array = pts[rings]
 	for i in sides:
 		var a: Vector3 = cap[i]
 		var b: Vector3 = cap[(i + 1) % sides]
-		_tri(st, tip, a, b, Vector3(a.x + b.x, 0.0, a.z + b.z), Color(0.95, 0.95, 0.95, 0.9))
+		_tri(st, tip, a, b, _spike_out((a + b) * 0.5, tip, h), Color(0.95, 0.95, 0.95, 0.9))
+	# its foot closed, facing down: it stood in the ground once, but Stone Form throws it now (FormEffects.Throw) and a spike
+	# lying in a crate showed its open foot, the inside culled ("the spike is still see thru")
+	var foot: Array = pts[0]
+	var fc := Vector3.ZERO
+	for p: Vector3 in foot:
+		fc += p
+	fc /= float(sides)
+	for i in sides:
+		_tri(st, fc, foot[(i + 1) % sides], foot[i], Vector3.DOWN, Color(0.8, 0.8, 0.8, 0.9))
 	st.generate_normals()
 	var m := st.commit()
 	m.surface_set_material(0, FormMatter.rock_material(matter))
 	return m
+
+
+## Outward at `p` on a spike of height `h` leaning to `tip`: flat, away from its middle at p's height.
+static func _spike_out(p: Vector3, tip: Vector3, h: float) -> Vector3:
+	var k := clampf(p.y / h, 0.0, 1.0)
+	var o := Vector3(p.x - tip.x * k, 0.0, p.z - tip.z * k)
+	return o.normalized() if o.length_squared() > 1e-10 else Vector3(p.x, 0.0, p.z).normalized()
 
 
 ## A round stone ball of radius r (its middle at 0), a little lumpy, in the look of a stone raised from `matter`'s ground;

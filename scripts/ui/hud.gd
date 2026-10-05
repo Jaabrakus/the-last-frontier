@@ -612,6 +612,16 @@ func _spell_line(id: String) -> String:
 		var ml := (fm as FormCast).matter_label(id)
 		if ml != "":
 			line += ": " + ml
+	# (a bending skill: its variation's place, the key's other skill, a waterbender's water; docs/bending_design.md)
+	var ms: Array = SwayMoves.move(id).get("modes", [])
+	if ms.size() > 1 and c != null and c.has_method(&"mode_of"):
+		line += "  %d/%d" % [ms.find(String(c.call(&"mode_of", id))) + 1, ms.size()]
+	var other := Bending.partner_of(id)
+	if other != "":
+		line += "  ·  again: " + String(SwayMoves.move(other).get("label", other))
+	if Bending.element_of(id) == "water":
+		var b := Bending.of(player)
+		line += "  ·  water %d" % roundi(b.water)
 	if c != null and c.get("motes") != null and c.get("belt_max") != null and not SwayCaster.free_use():
 		line += "  ·  motes %d/%d" % [int(c.get("motes")), int(c.get("belt_max"))]
 	if c != null and c.has_method(&"tier_name"):

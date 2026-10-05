@@ -76,6 +76,11 @@ const OWN_CLIPS := {
 	"club_intro": ["own-club-stab-intro", false],
 	"club": ["own-club-stab", false],
 }
+## A bender's casts (NpcBending: the player's own Sway push, animations_extra/Frontier_Form.res, SwayPose).
+const FORM_PATH := "res://animations_extra/Frontier_Form.res"
+const FORM_CLIPS := {
+	"cast_push": ["own-sway-push-two", false],
+}
 ## Arms poses over the stance (the player's relaxed long-gun overlay: Musket.relaxed).
 const ARMS := {
 	"carry": "actor_b-p-rifle-run-arms",
@@ -175,10 +180,13 @@ static func library() -> AnimationLibrary:
 	_lib = AnimationLibrary.new()
 	var src := load(ACTOR_LIB) as AnimationLibrary
 	var own := load(OWN_PATH) as AnimationLibrary
+	var form := load(FORM_PATH) as AnimationLibrary
 	for key: String in CLIPS:
 		_add(_lib, src, key, CLIPS[key])
 	for key: String in OWN_CLIPS:
 		_add(_lib, own, key, OWN_CLIPS[key])
+	for key: String in FORM_CLIPS:
+		_add(_lib, form, key, FORM_CLIPS[key])
 	return _lib
 
 
