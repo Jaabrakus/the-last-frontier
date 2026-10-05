@@ -20,6 +20,8 @@ const ROLE_JAB := "JAB"
 const ROLE_GUARD := "GUARD"
 ## The grow mark (▲: held past the second click the move grows; key 2 for every element, fire's 1 too).
 const GROW := "▲"
+## The jab's button as the lines name it (the left button: the quick spell's, never rebound).
+const JAB_KEY := "LMB"
 const GUARD_ACTION := &"bend_guard"
 ## The guard's keys when the bindings have none yet (round 2's E and the fourth mouse button; CORE makes the action).
 const GUARD_KEY := KEY_E
@@ -233,13 +235,19 @@ static func rule_lines() -> Array:
 ## An element's buttons as lines for the element pick and the Controls panels, under scheme `s`:
 ##   "LMB  JAB  Pebbles", "E  GUARD  Catch", "1  STRIKE  Spike  ·  tap twice: Boulder", ... "5  HEAL  Patch  ·  tap twice: Mend"
 ## (first_moves: no "tap twice"; direction: W, S and A D before the keys they stand for).
-static func kit_lines(el: String, s := "") -> Array:
+static func kit_lines(el: String, s := "", compact := false) -> Array:
 	var k := scheme_id(s)
 	var out: Array = []
 	var j := jab(el)
-	out.append("%s   %s   %s" % [key(&"fire"), w("role_jab", ROLE_JAB), move_name(String(j.get("id", "")), String(j.get("mode", "")))])
 	var g := guard(el)
-	out.append("%s   %s   %s" % [key(GUARD_ACTION), w("role_guard", ROLE_GUARD), move_name(String(g.get("id", "")), String(g.get("mode", "")))])
+	# (the jab is the left button's whatever the bindings: LMB; the guard's key as bound)
+	var jl := "%s   %s   %s" % [JAB_KEY, w("role_jab", ROLE_JAB), move_name(String(j.get("id", "")), String(j.get("mode", "")))]
+	var gl := "%s   %s   %s" % [key(GUARD_ACTION), w("role_guard", ROLE_GUARD), move_name(String(g.get("id", "")), String(g.get("mode", "")))]
+	if compact:
+		out.append(jl + "      " + gl)              # (the element pick: one line for both, the panel kept in view)
+	else:
+		out.append(jl)
+		out.append(gl)
 	var dir_heads := {0: "W / 1", 2: "A D / 3", 3: "S / 4"}
 	for i in Bending.keys(el).size():
 		var ms := key_moves(el, i)

@@ -31,10 +31,37 @@ func _shot(name: String) -> void:
 	print("  shot ", name)
 
 
+## r2=1: round 2 of the skills only (the key layout of tests/ring/r2_layout.gd where the kits' data has not merged):
+## r2_menu_tidebreak.png (the element pick: the passive and the buttons by their plain names), r2_menu_practice.png,
+## r2_menu_controls.png (the buttons, the rules, "Other ways to pick moves") and r2_menu_loading.png (the ring's own still).
+func _r2(m: MainMenu) -> void:
+	preload("res://tests/ring/r2_layout.gd").apply()
+	MatchSetup.element = "fire"
+	m._open_match()
+	await _frames(10)
+	await _shot("r2_menu_tidebreak")
+	m._open_practice()
+	await _frames(10)
+	await _shot("r2_menu_practice")
+	m._open_controls()
+	await _frames(10)
+	await _shot("r2_menu_controls")
+	m._close_panel()
+	MatchSetup.incoming = true
+	LoadingScreen.go(self, LoadingScreen.RING_SCENE)
+	await _frames(40)
+	await _shot("r2_menu_loading")
+	print("MENU SHOTS DONE")
+	quit(0)
+
+
 func _run() -> void:
 	DirAccess.make_dir_recursive_absolute(out)
 	await _frames(30)
 	var m := current_scene as MainMenu
+	if "r2=1" in OS.get_cmdline_user_args():
+		await _r2(m)
+		return
 	await _shot("menu")
 	m._open_new_game()
 	await _frames(10)

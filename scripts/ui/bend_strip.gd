@@ -22,10 +22,10 @@ extends VBoxContainer
 ##   help_line(); refresh()
 
 const KEYS := 5
-const COL_W := 112.0
-const CHIP_W := 156.0
+const COL_W := 114.0
+const CHIP_W := 140.0
 const ICON_PX := 40.0
-const DIM_A := 0.62
+const DIM_A := 0.78
 ## The middle dot between a head's parts.
 const SEP := " · "
 ## The jab chip's key (the left button).
@@ -60,14 +60,14 @@ func _ready() -> void:
 	var row := HBoxContainer.new()
 	row.name = "Keys"
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_theme_constant_override("separation", 4)
+	row.add_theme_constant_override("separation", 3)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(row)
 	for kind: String in ["jab", "guard"]:
 		var ui := _make_box(row, "Chip_" + kind, CHIP_W)
 		_chips[kind] = ui
 	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(10, 0)
+	gap.custom_minimum_size = Vector2(8, 0)
 	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(gap)
 	for i in KEYS:
@@ -83,6 +83,7 @@ func _ready() -> void:
 	_help = FrontierHUD.hud_label(13, FrontierHUD.DIM)
 	_help.name = "HelpLine"
 	_help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_inked(_help)
 	add_child(_help)
 	_hook.call_deferred()
 
@@ -122,10 +123,19 @@ func _make_box(row: HBoxContainer, nm: String, w: float) -> Dictionary:
 	gr.custom_minimum_size = Vector2(w, 0)
 	gr.visible = false
 	box.add_child(gr)
+	for l: Label in [k, n, ot, gr]:
+		_inked(l)
 	row.add_child(box)
 	var ui := {"box": box, "key": k, "icon": icon, "name": n, "other": ot, "grow": gr, "tex": null, "tex_id": ""}
 	icon.draw.connect(_draw_icon.bind(ui))
 	return ui
+
+
+## A dark outline round a label's letters: the strip reads over a bright deck with no card behind it (the owner: "those big
+## cards are terrible").
+static func _inked(l: Label) -> void:
+	l.add_theme_color_override("font_outline_color", Color(0.02, 0.015, 0.01, 0.85))
+	l.add_theme_constant_override("outline_size", 5)
 
 
 ## The signals that change what it shows (it also looks each frame, so nothing is missed: a key, the wheel, a new bar).

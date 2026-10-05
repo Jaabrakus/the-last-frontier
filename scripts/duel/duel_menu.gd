@@ -215,6 +215,7 @@ func _controls() -> void:
 	_clear_panel()
 	var el := DuelMode.element
 	_panel.add_child(MenuUI.heading(KitWords.w("controls_head", "%s: your buttons") % MatchSetup.label(el)))
+	_panel.add_child(_scheme)                   # (the other ways first: in view without a scroll)
 	for line in KitWords.pick_lines(el):
 		_panel.add_child(MenuUI.label(String(line), 17, MenuUI.DIM, true))
 	for line in KitWords.kit_lines(el):
@@ -222,7 +223,6 @@ func _controls() -> void:
 	for line in KitWords.rule_lines():
 		_panel.add_child(MenuUI.label(String(line), 16, MenuUI.DIM, true))
 	_paint_scheme()
-	_panel.add_child(_scheme)
 
 
 func _exit_tree() -> void:

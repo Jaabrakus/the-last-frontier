@@ -286,13 +286,13 @@ func _controls() -> void:
 	_clear_panel()
 	var el := match_mode.element if match_mode != null else MatchSetup.element
 	_panel.add_child(MenuUI.heading(KitWords.w("controls_head", "%s: your buttons") % MatchSetup.label(el)))
+	_panel.add_child(_scheme)                   # (the other ways first: in view without a scroll)
 	for line in KitWords.pick_lines(el):
 		_panel.add_child(MenuUI.label(String(line), 17, MenuUI.DIM, true))
 	for line in control_lines(el):
 		_panel.add_child(MenuUI.label(String(line), 18, MenuUI.INK, true))
 	for line in KitWords.rule_lines():
 		_panel.add_child(MenuUI.label(String(line), 16, MenuUI.DIM, true))
-	_panel.add_child(_scheme)
 
 
 ## "1   STRIKE   Spike  ·  tap twice: Boulder" for each button of `el` under the scheme now (KitWords.kit_lines).

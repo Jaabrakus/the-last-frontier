@@ -670,9 +670,10 @@ func _mark_elements() -> void:
 			_set_row(b, MatchSetup.label(el), MatchSetup.competitor(el) + ("  ·  chosen" if el == MatchSetup.element else ""))
 
 
-## The block under the element rows: an element's style in a line (in its colour), its passive and what its guard does
-## (KitWords.pick_lines: "Rooted: stand still and your locks fill faster ..."), then its buttons with their plain names
-## ("1   STRIKE   Spike  ·  tap twice: Boulder"; KitWords.kit_lines under the scheme); `el` "" the chosen element's.
+## The block under the element rows: an element's style in a line (in its colour), its passive (KitWords.passive_line:
+## "Rooted: stand still and your locks fill faster ..."), then its buttons with their plain names ("LMB   JAB   Pebbles
+## E   GUARD   Catch", "1   STRIKE   Spike  ·  tap twice: Boulder"; KitWords.kit_lines under the scheme); `el` "" the chosen
+## element's. What its guard does is told in Controls.
 func _show_keys(el: String) -> void:
 	if not is_instance_valid(_keys_box):
 		return
@@ -690,13 +691,12 @@ static func _fill_kit(box: Control, e: String, with_style := true) -> void:
 				MatchSetup.color(e).lerp(MenuUI.INK, 0.35), true)
 		style.custom_minimum_size = Vector2(520, 0)
 		box.add_child(style)
-	for line in KitWords.pick_lines(e):
-		var l := MenuUI.label(String(line), 15, MenuUI.INK, true)
-		l.custom_minimum_size = Vector2(520, 0)
-		box.add_child(l)
-	box.add_child(_gap(4))
-	for line in KitWords.kit_lines(e):
-		box.add_child(MenuUI.label(String(line), 15, MenuUI.DIM))
+	# (the passive in its line; the guard's own line is the Controls panel's: the Tidebreak panel stays in view at 1600 x 900)
+	var pl := MenuUI.label(KitWords.passive_line(e), 15, MenuUI.INK, true)
+	pl.custom_minimum_size = Vector2(520, 0)
+	box.add_child(pl)
+	for line in KitWords.kit_lines(e, "", true):
+		box.add_child(MenuUI.label(String(line), 14, MenuUI.DIM))
 
 
 ## An element's buttons as lines: "1   STRIKE   Spike  ·  tap twice: Boulder" (KitWords.kit_lines, the keys scheme).
@@ -738,7 +738,7 @@ func _open_controls() -> void:
 			rules.remove_child(c)
 			c.queue_free()
 		rules.add_child(_gap(6))
-		for line in KitWords.rule_lines():
+		for line in [KitWords.guard_line(MatchSetup.element)] + KitWords.rule_lines():
 			var l := MenuUI.label(String(line), 16, MenuUI.INK, true)
 			l.custom_minimum_size = Vector2(520, 0)
 			rules.add_child(l)
