@@ -28,9 +28,16 @@ signal hurt(local_dir: Vector2, amount: float, heavy: bool)
 signal died(local_dir: Vector2)
 ## respawn(): alive again, back to idle, the weapon drawn again.
 signal respawned
+## no_death (the ring: a fighter is winded, never killed): what would have killed left him at 1 health instead; `by` what did
+## it (the blow's source, the knocker of a fall; null for a bleed-out).
+signal winded(by: Node)
 
 ## Shortest draw after a holster phase (s); see switch_weapon().
 const MIN_DRAW_S := 0.05
+## Air control while launched by a knock (BendKnock): air_accel's 2.5 would steer a launch away; this lets it carry.
+const KNOCK_AIR_CONTROL := 1.0
+## A fall within this long (s) of a knock is the knocker's (fell_by).
+const FALL_CREDIT_S := 4.0
 ## The default rig (character_scene); the level requests it early (BackgroundLoad).
 const CHARACTER_SCENE := "res://characters/Actor_B.tscn"
 
@@ -243,6 +250,9 @@ var _sway_off := Vector2.ZERO
 ## Dragging a carcass on foot (FootDrag) or pushing a wheelbarrow (Wheelbarrow) sets it from the load: the move speed at
 ## most this (m/s); no sprint.
 var drag_speed_cap := INF
+## The bend's own cap on the pace (BendStatus: a root 0, a slow SLOW_MPS; INF none), apart from drag_speed_cap so a root ending
+## never lets go of a duel's countdown hold or a load's cap; the lower of the two holds.
+var bend_speed_cap := INF
 ## Velocity in local space: x = right, y = forward (m/s).
 var local_move := Vector2.ZERO
 ## Movement wish in local space (m/s; x = right, y = forward): the input direction x the speed the
@@ -253,6 +263,11 @@ var wish_local := Vector2.ZERO
 var target_speed := 0.0
 var health := 100.0
 var is_dead := false
+## Never killed (Tidebreak's ring, RingRules: "health is the backup"; set on its competitors): every death (a blow, the brain
+## or the heart, a fall, a bleed-out) leaves him at 1 health and emits winded(by) instead; the ring decides what follows.
+var no_death := false
+## Who threw him into the fall he last landed from (BendKnock.last_knocker, knocked within FALL_CREDIT_S of it), or null.
+var fell_by: Node = null
 ## What a ranged hit does to a person against a beast (the hunt's numbers): multiplayer fights last a few shots (user 2026-10-01).
 const HUMAN_RANGED_MULT := 0.45
 ## The command mode (F1: the camera over the land, the household commanded like an army: RtsMode).
@@ -1106,10 +1121,12 @@ func _physics_process(delta: float) -> void:
 		quick.tick(delta)
 	if riding != null:
 		_fall_top = -INF
+		_knock_off()
 		_ride(delta)
 		return
 	if kneeling != null:
 		_fall_top = -INF
+		_knock_off()
 		velocity = Vector3.ZERO
 		target_speed = 0.0
 		wish_local = Vector2.ZERO
@@ -1119,6 +1136,7 @@ func _physics_process(delta: float) -> void:
 		return
 	# Gripping (PlayerGrip): G held at a grippable surface; while it holds on it moves the body itself.
 	if grip and grip.tick(delta):
+		_knock_off()
 		target_speed = 0.0
 		wish_local = Vector2.ZERO
 		_fall_top = -INF        # (held on: a fall is measured from where the grip lets go)
@@ -1143,7 +1161,7 @@ func _physics_process(delta: float) -> void:
 	is_walking = false
 	is_sprinting = controls.pressed(&"sprint") and input.y < -0.1 \
 			and not is_crouching and weapon.can_sprint() and is_on_floor() and not is_dead and sprint_allowed \
-			and drag_speed_cap >= sprint_speed
+			and minf(drag_speed_cap, bend_speed_cap) >= sprint_speed
 
 	var speed := run_speed
 	if is_crouching:
@@ -1164,7 +1182,7 @@ func _physics_process(delta: float) -> void:
 		if gather != null and gather.swinging():
 			speed = minf(speed, swing_walk_speed)
 	speed *= survival_speed_mult * _maim_speed()
-	speed = minf(speed, drag_speed_cap)
+	speed = minf(speed, minf(drag_speed_cap, bend_speed_cap))
 	# For the lower body (plan 8.1): the band speed whenever there is input; the analog magnitude
 	# scales the wish only, as `target` below.
 	var has_input := input.length_squared() > 0.0
@@ -1190,8 +1208,20 @@ func _physics_process(delta: float) -> void:
 	# (user playtest 2026-09-25: stopping in 0.2 s at ground_decel under a stop clip that still travels
 	# slid the pelvis back, "a whole like backwards step"): along the way the body is going, never faster
 	# than it goes now; override_crisp_stops keeps ground_decel.
+	# A knock (BendKnock: the same model as the bots'): the knock's own velocity taken out first, the steering below eased on
+	# what is left, the knock's decayed velocity added back before the move; while launched no clip speed cap and only a
+	# little air control (the launch carries), and through its reaction window no steering (as a bot's).
+	var kn := BendKnock.peek(self)
+	if owned:
+		_knock_off()
 	if not owned:
-		var cap := anim.body_speed_cap() if anim else INF
+		var launched := kn != null and kn.is_launched()
+		var reeling := kn != null and kn.knock_t > 0.0
+		if kn != null:
+			velocity = kn.base_of(velocity)
+		if reeling:
+			target = Vector3.ZERO
+		var cap := anim.body_speed_cap() if anim and not launched and not reeling else INF
 		var horiz := Vector3(velocity.x, 0.0, velocity.z)
 		var stopping := false
 		if cap < INF and wish.length_squared() > 1e-8:
@@ -1206,11 +1236,14 @@ func _physics_process(delta: float) -> void:
 			var va: float = traversal.approach_speed(horiz.length(), delta)
 			if va < target.length():
 				target = target.normalized() * va
+		# (the bend's root or slow holds through a start clip's speed too)
+		if bend_speed_cap < INF and target.length() > bend_speed_cap:
+			target = target.normalized() * bend_speed_cap if bend_speed_cap > 0.0 else Vector3.ZERO
 		var accel := ground_accel if target.length() > horiz.length() else ground_decel
 		if cap < INF and (target.length() >= horiz.length() or stopping):
 			accel = INF
 		if not is_on_floor():
-			accel = air_accel
+			accel = KNOCK_AIR_CONTROL if launched else air_accel
 		# INF (follow the start clip at once) x a zero delta (Engine.time_scale 0) would be NaN.
 		horiz = target if is_inf(accel) else horiz.move_toward(target, accel * delta)
 		velocity.x = horiz.x
@@ -1223,9 +1256,15 @@ func _physics_process(delta: float) -> void:
 		else:
 			velocity.y -= _gravity * delta
 
+		if kn != null:
+			var ex := kn.extra_velocity(delta)
+			velocity.x += ex.x
+			velocity.z += ex.z
 		if traversal and perch == null and aboard == null:
 			traversal.step_assist(wish, delta)
 		move_and_slide()
+		if kn != null:
+			kn.after_slide()
 		local_move = Vector2(velocity.dot(global_basis.x), velocity.dot(-global_basis.z))
 	if traversal:
 		traversal.post(owned, delta)
@@ -1275,6 +1314,38 @@ func horizontal_speed() -> float:
 	return Vector2(velocity.x, velocity.z).length()
 
 
+## The knock he is taking (BendKnock; for the pose layer: a knocked slide, an airborne clip): seconds left of its reaction
+## window (0: none).
+func knock_t() -> float:
+	var kn := BendKnock.peek(self)
+	return kn.knock_t if kn != null else 0.0
+
+
+## In the air from a knock-up (BendKnock), until back on the floor.
+func is_launched() -> bool:
+	var kn := BendKnock.peek(self)
+	return kn != null and kn.is_launched()
+
+
+## Moved by something else now (a ride, the ragdoll, a grip, a vault): the knock he carried is gone.
+func _knock_off() -> void:
+	var kn := BendKnock.peek(self)
+	if kn != null and (kn.kv != Vector3.ZERO or kn.applied != Vector3.ZERO or kn.is_launched()):
+		kn.reset()
+
+
+## no_death: what would have killed leaves him at 1 health, winded by `by` (true); false when he can die.
+func _wind(by: Node) -> bool:
+	if not no_death:
+		return false
+	health = maxf(health, 1.0)
+	_death_push = Vector3.ZERO
+	if wounds:
+		wounds.clear()                     # (no wound bleeds him out after: winded once)
+	winded.emit(by if by != null and is_instance_valid(by) else null)
+	return true
+
+
 ## A firearm reloading (any Firearm: the musket, the pistol, the over-under's reload chain) with the body standing, not
 ## crouched: on the move the legs jog as the bow and the pistol aimed on the move do, and the player goes at their pace,
 ## JOG_AIM_PACE of the jog's (user 2026-10-03: "the current reload legs for pistol and guns need to be replaced with the jog
@@ -1315,7 +1386,9 @@ func apply_hit(damage: float, point: Vector3, direction: Vector3, source: Node =
 			# a plain body shot is two or three hits and the rest bleeds out; the brain is still instant, the heart still mortal
 			damage *= float(fx.dmg_mult) * HUMAN_RANGED_MULT
 			if bool(fx.lethal):
-				# (the brain: it is over)
+				# (the brain: it is over; in the ring winded)
+				if _wind(source):
+					return
 				health = 0.0
 				_die(local)
 				return
@@ -1325,7 +1398,10 @@ func apply_hit(damage: float, point: Vector3, direction: Vector3, source: Node =
 	# a bleeding wound takes part of it now and keeps the rest as blood still to lose (PlayerWounds); blunt force all now
 	var now := wounds.take(damage, source, point, direction, float(fx.get("bleed_mult", 1.0)), float(fx.get("drain_mult", 1.0))) if wounds else damage
 	health = maxf(health - now, 0.0)
-	if health <= 0.0:
+	if health <= 0.0 and no_death:
+		hurt.emit(local, damage, true)
+		_wind(source)
+	elif health <= 0.0:
 		_die(local)
 	else:
 		hurt.emit(local, damage, damage >= heavy_hit_damage)
@@ -1459,6 +1535,9 @@ func _track_fall(delta: float) -> void:
 ## Landed `over` m past the safe drop: hurt, and from FALL_BREAK_M a leg broken (the survival rules keep it as a leg wound that
 ## knits; without them it mends in FALL_BREAK_S); a long fall kills.
 func _fall_hurt(over: float) -> void:
+	# (thrown into it by a knock: the knocker's fall, BendKnock.last_knocker)
+	var kn := BendKnock.peek(self)
+	fell_by = kn.last_knocker if kn != null and kn.knocked_within(FALL_CREDIT_S) else null
 	var dmg := FALL_DMG_PER_M * over + 4.0
 	health = maxf(health - dmg, 0.0)
 	hurt.emit(Vector2.ZERO, dmg, true)
@@ -1474,6 +1553,8 @@ func _fall_hurt(over: float) -> void:
 	elif interactor:
 		interactor.notice("You land hard", 2.0)
 	if health <= 0.0:
+		if _wind(fell_by):
+			return
 		if b:
 			b.death_cause = "a fall"
 		_death_push = Vector3.ZERO
@@ -1486,6 +1567,8 @@ func lose_blood(amount: float) -> void:
 		return
 	health = maxf(health - amount, 0.0)
 	if health <= 0.0:
+		if _wind(null):
+			return
 		var b := SurvivalBridge.find(get_tree())
 		if b:
 			b.death_cause = "bleeding"
@@ -1505,6 +1588,7 @@ func lose_blood(amount: float) -> void:
 func respawn() -> void:
 	health = max_health
 	broken_leg = false
+	_knock_off()
 	if wounds:
 		wounds.clear()
 	if not is_dead:
@@ -1535,6 +1619,10 @@ func respawn() -> void:
 ## takes the new one), and during the finish or grab nothing (the old model is put away and the
 ## new weapon is only reached by its draw). The switch ends there; respawn() draws the new weapon.
 func _die(local_dir: Vector2) -> void:
+	# (no_death: winded instead, whoever asked for the death; NetSession's word of one too)
+	if _wind(null):
+		return
+	_knock_off()
 	# a ragdoll, carried on by the way it was going and the blow that killed (when it cannot be: the death clip)
 	var ragdolled := PlayerRagdoll.of(self).knock(_death_push + Vector3(velocity.x, 0.0, velocity.z) * 0.6, true)
 	_death_push = Vector3.ZERO

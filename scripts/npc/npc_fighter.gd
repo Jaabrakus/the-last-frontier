@@ -55,6 +55,8 @@ extends CharacterBody3D
 
 signal died(fighter: NpcFighter, killer: Node)
 signal state_changed(fighter: NpcFighter, state: String)
+## no_death (the ring: winded, never killed): what would have killed left him at 1 health instead; `by` who did it.
+signal winded(by: Node)
 
 const GROUP := &"npc_fighters"
 const WALK_SPEED := 1.3
@@ -76,6 +78,8 @@ const HEALTH := 100.0
 const HURT_MULT := 0.7
 ## A blow or a ball of less than this does not make him flinch.
 const FLINCH_MIN := 8.0
+## A knock (BendKnock) this hard (m/s, flat) or more makes him flinch (and loses a cast's lock); under it he only reels.
+const FLINCH_KNOCK_MPS := 7.0
 ## A bleeding wound: this much of the hit comes off at once, the rest is the pool, bled at DRAIN of it a second (x the wound's
 ## drain) while CLOT of it closes (as the player's PlayerWounds, without the rest and the dressings).
 const BLEED_NOW := 0.5
@@ -159,6 +163,13 @@ var flees := true
 var calm_s := NpcBrain.CALM_S
 ## Held where it stands (the duel's countdown): its brain does not think, it does nothing.
 var held := false
+## Its feet held (a bend's root, BendStatus.root): it does not walk, its brain still thinks and it still casts.
+var feet_held := false
+## Never killed (Tidebreak's ring, RingRules; set on its competitors): every death (a blow, a mortal wound, a bleed-out, a
+## script's die()) leaves him at 1 health, his wounds stopped, and emits winded(by) instead.
+var no_death := false
+## Its brain's thoughts so far (NpcBrain.think: tests, a rooted fighter still thinking).
+var thinks := 0
 ## Moving, it keeps facing this point (a side-step out past cover to peek and back: the aimed side-steps), INF: the way it goes.
 var face_lock := Vector3.INF
 ## Its shots (tests, the debug view): the last {at, mark, err_deg, d, spread_deg, part, react} and the last few errors (deg).
@@ -445,9 +456,56 @@ func face_point(p: Vector3) -> void:
 		_face = atan2(-d.x, -d.z)
 
 
-## Busy with its hands (it holds still meanwhile).
+## Busy with its hands (it holds still meanwhile; "knocked": reeling from a knock, BendKnock's window).
 func busy() -> bool:
-	return action in ["aim", "recoil", "reload", "swing", "flinch", "down", "cast"]
+	return action in ["aim", "recoil", "reload", "swing", "flinch", "down", "cast", "knocked"]
+
+
+## The knock it is taking (BendKnock; for the pose layer: a knocked slide, an airborne clip): seconds left of its reaction
+## window (0: none).
+func knock_t() -> float:
+	var kn := BendKnock.peek(self)
+	return kn.knock_t if kn != null else 0.0
+
+
+## In the air from a knock-up (BendKnock), until back on the floor.
+func is_launched() -> bool:
+	var kn := BendKnock.peek(self)
+	return kn != null and kn.is_launched()
+
+
+## Knocked along `v` (m/s; its up part lifts it) by `by`, through BendStatus.knock (an anchor holds it; the same knock as the
+## player's: BendKnock). True when it was knocked.
+func launch(v: Vector3, by: Node) -> bool:
+	if _dead or v.length_squared() < 1e-4:
+		return false
+	var kn := BendKnock.of(self)
+	var n0 := kn.knocks
+	BendStatus.knock(self, v, by)
+	return kn.knocks > n0
+
+
+## Thrown back by `push` and staggered (SwayEffects.shove_fighter: Gust's push, a spike's shove): the knock (launch), and
+## the stagger always, as before BendKnock.
+func shove(push: Vector3, by: Node) -> void:
+	if launch(Vector3(push.x, 0.0, push.z), by) and push.length_squared() > 1e-6 and action != "flinch":
+		_flinch(push.normalized())
+
+
+## BendKnock's word of a knock taken: its brain told who did it; FLINCH_KNOCK_MPS or more a flinch, under it it reels
+## ("knocked", busy until the knock's window is over); a body that has a knock clip plays it.
+func on_bend_knock(v: Vector3, by: Node) -> void:
+	if _dead:
+		return
+	var flat := Vector3(v.x, 0.0, v.z)
+	if brain != null:
+		brain.hurt(by, flat.normalized() if flat.length_squared() > 1e-6 else Vector3.ZERO)
+	if flat.length() >= FLINCH_KNOCK_MPS:
+		_flinch(flat.normalized())
+	elif action == "":
+		action = "knocked"
+	if body != null and body.has_method(&"play_knock"):
+		body.call(&"play_knock", v)
 
 
 ## The aim's numbers for `preset` (SKILLS; "" or none of them: its faction's, FACTION_AIM with the spread from its skill and
@@ -601,6 +659,7 @@ func _physics_process(dt: float) -> void:
 	elif _think_t <= 0.0:
 		var st := THINK_S * (2.0 if frozen else 1.0)
 		_think_t = st
+		thinks += 1
 		brain.think(st)
 		target = brain.target
 	_act(dt)
@@ -669,6 +728,9 @@ func _act(dt: float) -> void:
 		"flinch":
 			_act_t -= dt
 			if _act_t <= 0.0:
+				action = ""
+		"knocked":
+			if knock_t() <= 0.0 and not is_launched():
 				action = ""
 
 
@@ -849,9 +911,18 @@ func _strike() -> void:
 
 # ---------------------------------------------------------------- moving
 func _move(dt: float) -> void:
+	# A knock (BendKnock, the same model as the player's): its own velocity taken out of the body's first, the steering eased
+	# on what is left (none through the knock's reaction window), the knock's decayed velocity added back before the move;
+	# launched, the floor clamp skipped and the player's gravity (so a knock-up lifts it as high and as long as him). A bend's
+	# carry (BendMotion: a dash) is left to it, no steering. Its feet held (a root): no steering, no speed.
+	var kn := BendKnock.peek(self)
+	var launched := kn != null and kn.is_launched()
+	var reeling := kn != null and kn.knock_t > 0.0
+	var bm := get_node_or_null(^"BendMotion")
+	var carried := bm != null and bm.has_method(&"active") and bool(bm.call(&"active"))
 	var dir := Vector3.ZERO
 	var speed := 0.0
-	if _goal != Vector3.INF and not busy() and not _surrendered:
+	if _goal != Vector3.INF and not busy() and not _surrendered and not reeling and not feet_held and not carried:
 		var w := _walk_to(_goal, _speed, _arrive)
 		dir = w[0]
 		speed = w[1]
@@ -860,14 +931,20 @@ func _move(dt: float) -> void:
 	if limp < 0.999:
 		# (a broken leg's bone: a limp at a part of the walk; short of breath: no running)
 		speed = minf(speed, WALK_SPEED * limp if limp < 0.95 else WALK_SPEED)
-	var v := velocity
-	if not is_on_floor():
+	var v := velocity if kn == null else kn.base_of(velocity)
+	if launched:
+		v.y -= BendKnock.launch_gravity() * dt
+	elif not is_on_floor():
 		v.y -= GRAVITY * dt
 	else:
 		v.y = -0.5
 	var hv := Vector2(v.x, v.z)
 	var moving := dir != Vector3.ZERO and speed > 0.0
-	if moving:
+	if feet_held:
+		hv = Vector2.ZERO
+	elif carried:
+		pass
+	elif moving:
 		hv = hv.move_toward(Vector2(dir.x, dir.z) * speed, ACCEL * dt * (1.6 if speed > WALK_SPEED + 0.5 else 1.0))
 		if face_lock != Vector3.INF:
 			# (a side-step out to peek, or back: facing the foe, the aimed side-step clips)
@@ -878,12 +955,18 @@ func _move(dt: float) -> void:
 		hv = hv.move_toward(Vector2.ZERO, DECEL * dt)
 	v.x = hv.x
 	v.z = hv.y
+	if kn != null:
+		var ex := kn.extra_velocity(dt)
+		v.x += ex.x
+		v.z += ex.z
 	velocity = v
 	rotation.y = lerp_angle(rotation.y, _face, clampf(dt * 9.0, 0.0, 1.0))
 	# STEP: up on to a log in its way (its probes only once something holds it up, and while it steps: not every tick)
 	if moving and not frozen and (_stuck_t > 0.0 or _step.stepping()):
 		_step.step(Vector3(v.x, 0.0, v.z), speed, dt)
 	move_and_slide()
+	if kn != null:
+		kn.after_slide()
 	if moving and global_position.distance_to(_last) < speed * dt * 0.25:
 		_stuck_t += dt
 	else:
@@ -1139,6 +1222,16 @@ func _flinch(dir: Vector3) -> void:
 func die(killer: Node = null, dir := Vector3.ZERO, _part := "body") -> void:
 	if _dead:
 		return
+	if no_death:
+		# (the ring: winded, not killed; the wounds stop bleeding so it is once)
+		health = maxf(health, 1.0)
+		pool = 0.0
+		mortal_left = 0.0
+		winded.emit(killer if killer != null and is_instance_valid(killer) else null)
+		return
+	var kn := BendKnock.peek(self)
+	if kn != null:
+		kn.reset()
 	_dead = true
 	health = 0.0
 	killed_by = killer if killer != null and is_instance_valid(killer) else null

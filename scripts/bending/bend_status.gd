@@ -1,18 +1,27 @@
 class_name BendStatus
 extends RefCounted
 ## What a bent element does to whom it reaches (BendEffects, BendBolt, BendZone): hurts (Hit.deliver as a blunt blow: all of
-## it now, no wound to bleed), knocks back (the player off his feet when it is hard, a fighter shoved), roots, slows, and the
-## caster's own guards (anchor: no knockback). Timed effects are kept as metas with their end (ends_at) and undone when they
-## run out, only when still the bend's own (a duel's countdown hold or a wheelbarrow's cap is left alone).
+## it now, no wound to bleed), knocks back, roots, slows, and the caster's own guards (anchor: no knockback). Timed effects
+## are kept as metas with their end (ends_at) and undone when they run out.
+##
+##   knock   the one entry for every knockback (the ring's "knockback wins": the same for the player and the bots): the anchor
+##           checked here, then BendKnock (its own decaying knock velocity on the body, the launch of an up-knock, the player
+##           off his feet at BendKnock.ragdoll_mps, the ring's rules and the listeners). The wild and props as before.
+##   root    the feet held, nothing else: the player's bend_speed_cap at 0 (his own cap, apart from drag_speed_cap, so a
+##           duel's countdown hold or a wheelbarrow's cap is never let go by a root ending); a fighter's feet_held (not
+##           `held`: its brain still thinks and it still casts while rooted).
+##   slow    the player's bend_speed_cap at SLOW_MPS; a fighter's limp.
 
-## A knock this hard (m/s) or more throws the player off his feet; under it he is pushed.
+## (old name) BendKnock.ragdoll_mps's first value: a knock this hard (m/s) or more throws the player off his feet.
 const KNOCK_DOWN_MPS := 9.0
 ## A slowed man's pace (m/s).
 const SLOW_MPS := 1.6
 
 
+## The bend's clock (s): the game's physics time, not the wall's, so a timed effect's end (its meta) and its timer agree
+## however fast the frames run (a slow frame, a headless test at a fixed fps).
 static func now() -> float:
-	return Time.get_ticks_msec() / 1000.0
+	return float(Engine.get_physics_frames()) / float(Engine.physics_ticks_per_second)
 
 
 ## Whom the bend can reach: the player and fighters (not dead), the wild, props; not `caster`.
@@ -36,10 +45,9 @@ static func near(caster: Node, at: Vector3, r: float) -> Array:
 		return out
 	var pool: Array = []
 	pool.append_array(tree.get_nodes_in_group(NpcFighter.GROUP))
-	pool.append_array(tree.get_nodes_in_group(&"players"))
-	var p := tree.current_scene.get_node_or_null("Player") if tree.current_scene else null
-	if p != null and not pool.has(p):
-		pool.append(p)
+	for q in tree.get_nodes_in_group(&"player"):             # (FrontierPlayer's group: every player, not only "Player")
+		if not pool.has(q):
+			pool.append(q)
 	for n in pool:
 		if not can_take(n, caster):
 			continue
@@ -66,19 +74,13 @@ static func hurt(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node) -> vo
 			by.set_meta(&"damage_kind", had)
 
 
-## `n` knocked along `v` (m/s; its up part lifts the player) by `by`. An anchored one (anchor) is not moved.
+## `n` knocked along `v` (m/s; its up part lifts, LAUNCH_UP_MPS or more launches) by `by`. An anchored one (anchor) is not
+## moved. The player and the fighters through BendKnock (the same model for both).
 static func knock(n: Node, v: Vector3, by: Node) -> void:
 	if v.length_squared() < 1e-4 or not can_take(n, by) or until(n, &"bend_anchor") > 0.0:
 		return
-	if n is FrontierPlayer:
-		var p := n as FrontierPlayer
-		if v.length() >= KNOCK_DOWN_MPS and p.knock_down(v):
-			return
-		p.velocity += v
-	elif n is NpcFighter:
-		SwayEffects.shove_fighter(n as NpcFighter, Vector3(v.x, 0.0, v.z), by)
-		if v.y > 4.0 and (n as NpcFighter).is_on_floor():
-			(n as NpcFighter).velocity.y = v.y * 0.6
+	if n is FrontierPlayer or n is NpcFighter:
+		BendKnock.of(n).knock(v, by)
 	elif n is WildAnimal:
 		SwayEffects.shove_animal(n as WildAnimal, Vector3(v.x, 0.0, v.z), (by as Node3D).global_position if by is Node3D else Vector3.ZERO)
 	elif n is RigidBody3D:
@@ -92,7 +94,7 @@ static func until(n: Node, key: StringName) -> float:
 	return maxf(float(n.get_meta(key)) - now(), 0.0)
 
 
-## `n` held where it stands for `s` (the player can't move; a fighter's mind still, NpcFighter.held).
+## `n`'s feet held where it stands for `s` (the player's bend_speed_cap 0; a fighter's feet_held: it still thinks and casts).
 static func root(n: Node, s: float) -> void:
 	_timed(n, &"bend_root", s, 0.0)
 
@@ -125,34 +127,37 @@ static func _timed(n: Node, key: StringName, s: float, cap: float) -> void:
 	n.set_meta(key, maxf(end, float(n.get_meta(key, 0.0))))
 	if n is FrontierPlayer:
 		var p := n as FrontierPlayer
-		if p.drag_speed_cap > cap:
-			p.drag_speed_cap = cap
+		p.bend_speed_cap = minf(p.bend_speed_cap, cap)
 	elif n is NpcFighter:
 		var f := n as NpcFighter
 		if key == &"bend_root":
-			if not f.held:
-				f.held = true
-				f.set_meta(&"bend_held", true)
+			f.feet_held = true
 		else:
 			if not f.has_meta(&"bend_limp"):
 				f.set_meta(&"bend_limp", f.limp)        # (his own limp, a broken leg's, back after)
 			f.limp = minf(f.limp, 0.6)
-	n.get_tree().create_timer(s + 0.02, false).timeout.connect(_end_timed.bind(n, key, cap))
+	n.get_tree().create_timer(s + 0.02, false, true).timeout.connect(_end_timed.bind(n, key, cap))
 
 
 static func _end_timed(n: Node, key: StringName, cap: float) -> void:
-	if n == null or not is_instance_valid(n) or until(n, key) > 0.0:
+	if n == null or not is_instance_valid(n):
 		return
-	n.remove_meta(key)
+	var left := until(n, key)
+	if left > 0.0:
+		# (not over yet: made longer since, or the timer ran ahead of the physics clock; looked at again when it is)
+		if n.is_inside_tree():
+			n.get_tree().create_timer(left + 0.02, false, true).timeout.connect(_end_timed.bind(n, key, cap))
+		return
+	if n.has_meta(key):
+		n.remove_meta(key)
 	if n is FrontierPlayer:
+		# (only the bend's own cap: whatever else holds drag_speed_cap, a countdown, a load, is never touched)
 		var p := n as FrontierPlayer
-		if is_equal_approx(p.drag_speed_cap, cap):
-			p.drag_speed_cap = INF if until(n, &"bend_root") <= 0.0 and until(n, &"bend_slow") <= 0.0 else p.drag_speed_cap
+		p.bend_speed_cap = 0.0 if until(n, &"bend_root") > 0.0 else (SLOW_MPS if until(n, &"bend_slow") > 0.0 else INF)
 	elif n is NpcFighter:
 		var f := n as NpcFighter
-		if key == &"bend_root" and f.has_meta(&"bend_held"):
-			f.remove_meta(&"bend_held")
-			f.held = false
+		if key == &"bend_root":
+			f.feet_held = false
 		elif key == &"bend_slow" and f.has_meta(&"bend_limp"):
 			f.limp = float(f.get_meta(&"bend_limp"))
 			f.remove_meta(&"bend_limp")
