@@ -133,6 +133,20 @@ games are imported.
 
 A stance per element and about one clip per move (about 100 in all, built a little at a time).
 
+Round 2 (wave 3, 2026-10-05; animations_extra/Frontier_Bend.res, 39 clips, every one keyed by hand in
+tools/anim_author/blender/bend_clips.py on the rig's rest pose, rows in animations/SOURCE.md):
+- The first ten (approved) polished: the keys the IK clamped straight pulled back into reach (worst miss now 5 mm), their
+  hold_s / strike_s unchanged.
+- **The boulder** (stone_form cannonball, `own-bend-earth-boulder`; the owner: "a left kick to stomp and then push"): the
+  left foot kicks the rock up, the knee high, the foot stamps ahead, the palms drawn to the ribs (the hold, 0.63 s), a
+  two-hand push (the strike, 0.77 s); whole body, the caster rooted.
+- **Stances** (poses.json `stance`; idle only): earth a low wide horse stance, fire on the balls of the feet with a bounce,
+  water weight flowing forward and back, air light and turning at the waist. The player's plays under the casts while he
+  stands in element mode (fades in over 0.35 s, gives way to walking, crouching, climbing, riding); a bot's while it fights
+  (not while held: countdown, round over).
+- **Cast sets** for every element's moves (poses.json maps each bending move to an own clip); five have left-hand twins: a
+  move cast again within 0.6 s plays the twin (right, left, right), bots alternate.
+
 ## The look of the elements (cel VFX)
 
 2D animated effects stood up in 3D: hard colour bands, bold shapes, no soft dots (BendLooks, BendZone._look; the materials,
@@ -169,14 +183,47 @@ and take a brightness per light (ToonFx.set_gain, the shaders' fx_gain; RingLook
   every time its lock fits what comes, and its cover when you begin a lock) or throws (its throw every 3 s: earth a stone
   spike, to practise catching and sending it back). No timer, no rounds, the soft walls off; R puts both back at their
   ends, B steps the dummy's way, a fall into the water resets both after 1.6 s. Every word and number in
-  data/ring/screens.json. The main menu's rows for these (and 3 v 3 shown as coming) are the menu's own: it calls these
-  entry points (`MatchSetup.quick_line()`, `set_match()` before Begin, `DUMMIES`, `dummy_line()`, `FORMATS`,
-  `format_ready()`).
+  data/ring/screens.json. The main menu: **Quick match** (its line `MatchSetup.quick_line()`) plays `quick_match()` at
+  once; **Practice** opens a small panel (your element, the dummy's element, what it does, the control scheme; Begin
+  practice: `set_practice()`); the Tidebreak panel's Begin calls `set_match()` first.
 - **Teams (3 v 3 groundwork)**: RingRules marks each competitor's side (BendCaster.TEAM_META); BendStatus never lets a bend
   reach the caster's allies, an ally's bolt flies through them, and an ally's guard lets it through (a teammate's shield
   never sends a teammate's bolt back, and still takes the other side's). With more than one a side: advance only once every
   opponent still in is pushed back, a competitor rung out sits the round out, the whole side out in one round is a
   knockout that ends the match at once. Not yet: spawning three a side, team bots' coordination, team HUD.
+
+## Throws, the bots' answers and the balance (wave 3, PLAY)
+
+- **Throw-style moves** (BendThrow, spec `do: "throw"`): a BendBolt launched on the arc that lands it on the aim
+  (Weapon.ballistic_dir), the strike deferral the only wait. Flights: `point_first` (the ice spear), `spinning` (the stone
+  disc flat like a side-arm throw; Fire Arc kick a flame wheel rolled along the deck), `flick` (pebbles, each tumbling).
+  The stone spike stays on the GustLift throw, so earth's catch-and-send-back is untouched.
+- **The bots' reaction layer** (NpcBending; data/npc/bend_ai.json): an opening grace from the round's start
+  (`grace_s`: easy 3, normal 2, hard 1.2) with no attack and nothing that knocks; a caught stone shoved straight back; the
+  opponent's wind-up read as a threat (his lock on a throw or a bolt raises the guard before it lands); one guard cooldown
+  (`guard_cool_s` 1.2) and a per-element `react` share; Gust lift cast on stones only.
+- **Clouds and dazzle**: water meeting fire leaves steam (BendZone `steam`, 2.2 m, 1.5 s) that hides a man from a bot; the
+  flare's `dazzle_s` 2 doubles a bot's scatter and reaction time; smoke hides the player from a bot. A zone ends when its
+  caster is freed.
+- **Balance, by data** (rules.json knock_scale 0.7, element_factor air 0.65 / water 1.25, and the moves' damage, knock and
+  lock numbers): bot against bot at time scale 1 (16 pairings x 3 seeds, 122 rounds) ends 0.58 of the rounds by ring-out;
+  no move above 0.17 of its element's casts; earth caught 85 stones. Cross-element wins are still uneven (air 15/18, fire
+  10/18, water 6/18, earth 5/18). Walls capped at 2 per caster: bots reached the cap once in 48 matches.
+- **The soak** (tests/ring/test_ring_soak.gd): one pairing a run, a bot of the player's element fighting in his place,
+  METRIC lines for the ring-outs, casts, catches, answers and walls. Known: BendStatus.now() counts physics frames, so at
+  Engine.time_scale 4 its timers last 4x longer in game time.
+
+## The ring's dress and the arena kit (wave 3, ASSETS)
+
+Our own, in the spirit of the inspiration and copying none of its characters, outfits, emblems or symbols: 15 cloth2
+garments (catalog set `ring`, tools/asset_author/build_ring_garments.py and ring_garments/), one dress per element for
+both bodies (earth an ochre wrap tunic with moss bands and wrapped shins; water a hooded blue pull-over parka with fur
+trim and fur-topped boots; fire a red sleeveless top with a high gold collar, shoulder caps and wrist guards; air a
+marigold knee-length tunic with wide sleeves and tangerine wide trousers), put on the bots (NpcSquad.element_look) and the
+player (PlayerAppearance.ring_dress) from data/npc/factions.json. The arena kit (assets/ring_kit,
+tools/asset_author/blender/ring_kit.py): gateways over the tunnels, lacquered pillars, curved roofs with upturned eaves,
+paper lanterns, tile canopies, and four simple glyphs of our own (a mountain, a drop over ripples, three embers, three wind
+strokes); merged into the dressing's mesh (no new draw calls).
 
 ## Build order (proposed)
 

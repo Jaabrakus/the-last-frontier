@@ -210,8 +210,17 @@ func _catch_back(mode: String) -> void:
 	var hits: Array = []
 	if th0 != null:
 		th0.lift.struck.connect(func(who: Node, _d: float) -> void: hits.append(who))
+	var st0 := held.global_position
 	var r := await _knocked_back(n0, 2.0)
-	_expect(float(r[0]) >= 1.5 and r[1] == p, "%s: the stone flies back and knocks the bot %.2f m, by the player (%s; struck %s)" % [mode, r[0], str(r[1]), str(hits)])
+	# (on a miss, where it went: the throw, its aim and the stone, for the flaky earth-vs-earth catch-back)
+	var why := ""
+	if float(r[0]) < 1.5:
+		var live := is_instance_valid(th0)
+		why = "; throw %s (live %s) thrown %s target %s, stone %s -> %s, bot at %s, lift %s" % [th0 != null, live,
+				th0.is_thrown if live else false, th0.target if live else Vector3.INF, st0,
+				held.global_position if is_instance_valid(held) else Vector3.INF, n0,
+				(th0.lift.velocity if live and is_instance_valid(th0.lift) else Vector3.INF)]
+	_expect(float(r[0]) >= 1.5 and r[1] == p, "%s: the stone flies back and knocks the bot %.2f m, by the player (%s; struck %s%s)" % [mode, r[0], str(r[1]), str(hits), why])
 
 
 # ---------------------------------------------------------------- kick-up, then shove

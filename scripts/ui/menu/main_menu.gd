@@ -449,7 +449,7 @@ func _open_practice() -> void:
 	var way := MenuUI.item("", 22, "-")
 	way.name = "Way"
 	var paint_way := func() -> void:
-		_set_row(way, "It:  %s" % MatchSetup.dummy, "the dummy %s" % MatchSetup.dummy_line(MatchSetup.dummy))
+		_set_row(way, "What it does:  %s" % MatchSetup.dummy, "the dummy %s" % MatchSetup.dummy_line(MatchSetup.dummy))
 	paint_way.call()
 	way.pressed.connect(func() -> void:
 		var ws := MatchSetup.DUMMIES

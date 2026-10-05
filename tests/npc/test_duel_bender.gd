@@ -72,7 +72,15 @@ func _go() -> void:
 	_expect(b.element == el and n.element == el and Bending.of(n).element == el and n.faction == DuelMode.RING_FACTION,
 			"of %s, its own water meter, the ring's other side (%s, %s)" % [el, b.element, n.faction])
 	var shirt: Dictionary = ((n.look.get("outfit", {}) as Dictionary).get("shirt", {}) as Dictionary).get("colors", {})
-	_expect(String(shirt.get("0", "")).begins_with("#"), "dressed in its element's colours (%s)" % str(shirt))
+	# (its element's dress: the ring dress of the faction's element_dress, 2026-10-05, each garment in its element's preset)
+	var want: Dictionary = (NpcFactions.get_faction(DuelMode.RING_FACTION).get("element_dress", {}) as Dictionary).get(el, {})
+	var worn := not want.is_empty()
+	for s: String in want:
+		var w: Dictionary = want[s]
+		var got: Dictionary = (n.look.get("outfit", {}) as Dictionary).get(s, {})
+		worn = worn and String(got.get("id", "-")) == String(w.get("id", "-")) and \
+				(got.get("colors", {}) as Dictionary) == (w.get("colors", {}) as Dictionary)
+	_expect(worn, "dressed in its element's ring dress (shirt %s)" % str(shirt))
 	# the player in the open 11 m off, in its sight
 	var way := (p.global_position - n.global_position)
 	way.y = 0.0
