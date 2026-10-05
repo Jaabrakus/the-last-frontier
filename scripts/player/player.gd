@@ -215,6 +215,17 @@ var ignore_mouse_capture := false
 var is_local := true
 ## Where its keys come from (PlayerControls): the keyboard for this machine's player, else what drives it.
 var controls := PlayerControls.new()
+## THE ARENA PLAYER (Tidebreak, the ring sport; the owner, 2026-10-04: "remove the guns in 1v1 its just spells", "guns gone
+## from the arena game"): set BEFORE _ready (RingLevel does; a ring scene asked for by MatchSetup.active() or requested()
+## counts too). Then the roster is empty: no musket, pistol or bow, no thrown weapons (no ThrowableKit), no gun or gear on the
+## body, no demo horse or wheelbarrow, no torches; `weapon` stays null and the hands stay free. The hotbar is laid from the
+## element's bar at once (Hotbar.lay_spells: the start kit never comes), its first key readied, and laid again when the
+## element changes (MatchSetup.element, or Bending's element as the match sets it); the dress is the element's
+## (PlayerAppearance.arena_dress). Keys that open the world's screens (H, Tab, K) do nothing; the hotbar takes 1-5 and the
+## wheel only. LMB does nothing in the arena (no weapon to fire; the casts are RMB's, the hold-and-release lock).
+var arena := false
+## The element the arena's bar and dress were last laid for ("" not yet).
+var arena_element := ""
 
 var yaw := 0.0
 var pitch := 0.0
@@ -396,6 +407,15 @@ func _ready() -> void:
 	add_to_group(WildlifeSpawner.PEOPLE)   # PEOPLE: one of the humans the wild keeps off (with the household's)
 	yaw = rotation.y
 	health = max_health
+	# (a ring scene's player is the arena's even when its level has not said so: a match asked for or under way)
+	if not arena and get_parent() is RingLevel and (MatchSetup.active() or MatchSetup.requested()):
+		arena = true
+	if arena:
+		demo_horse = false
+		demo_wheelbarrow = false
+		show_gear = false
+		torch_count = 0
+		weapon_order = []
 	_build_body()
 	_build_camera()
 	_build_character()
@@ -419,7 +439,7 @@ func _ready() -> void:
 	gather = GatherTools.install(self)
 	foot_drag = FootDrag.install(self)
 	log_pull = LogPull.install(self)
-	if is_local:
+	if is_local and not arena:              # (the arena: no equip wheel, no building, no command mode)
 		equip_wheel = EquipWheel.install(self)
 		building = BuildMode.install(self)
 		rts = RtsMode.install(self)
@@ -447,7 +467,15 @@ func _ready() -> void:
 		# AnimDebugOverlay). The overlay owns Shift+F9, F10-F12 (hit / heavy hit / death / respawn, via apply_hit() /
 		# respawn()): do not bind them again here (plan 8.1), or every press lands twice.
 		AnimDebugOverlay.attach(self)
-	switch_weapon("musket")
+	if arena:
+		# nothing to draw: the hands free from the start (the casts want them so), the bar laid once the caster is in
+		hands_free = true
+		anim.hands_free = true
+		if hud:
+			hud.set_arena(true)
+		_lay_arena.call_deferred()
+	else:
+		switch_weapon("musket")
 	# the shots' smoke and flash and the gathering chips compile their particle shaders now, not on first use
 	Fx.warm_up.call_deferred(camera)
 	if is_local and not "--no-capture" in OS.get_cmdline_user_args():
@@ -510,12 +538,12 @@ func _build_weapons() -> void:
 	var holder := Node.new()
 	holder.name = "Weapons"
 	add_child(holder)
-	var defs := {
+	var defs := {} if arena else {
 		"bow": [Bow.new(), "bow", bow_offset],
 		"musket": [Musket.new(), "musket", musket_offset],
 		"pistol": [FlintlockPistol.new(), "pistol", pistol_offset],
 	}
-	for key in weapon_order:
+	for key in weapon_order:          # (empty in the arena: no gun is made at all)
 		var w: Weapon = defs[key][0]
 		w.name = key.capitalize()
 		w.player = self
@@ -534,8 +562,10 @@ func _build_weapons() -> void:
 		weapons[key] = w
 	# Thrown weapons on keys 4-6 (spear, tomahawk, atlatl): weapons, sockets and models, balanced
 	# (hook H2) and registered in `weapons` / weapon_order before PlayerAnim sees the roster, so the
-	# graph's pick-up profiles animate them (throw chain, draw / holster; THROW work package).
-	ThrowableKit.install(self, ThrowableKit.KEYS, true)
+	# graph's pick-up profiles animate them (throw chain, draw / holster; THROW work package). Not in the arena (no thrown
+	# weapons there: its throws are the element's own moves).
+	if not arena:
+		ThrowableKit.install(self, ThrowableKit.KEYS, true)
 
 	var ap := skeleton.get_parent().find_children("*", "AnimationPlayer", true, false)[0] as AnimationPlayer
 	anim = PlayerAnim.new()
@@ -807,6 +837,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		get_viewport().set_input_as_handled()
+	elif arena:
+		# (the arena: the hotbar's keys 1-5 and the wheel, nothing else of the world's: no hands free, no character screen)
+		if hotbar != null:
+			hotbar.handle_input(event)
 	else:
 		if hotbar == null or not hotbar.handle_input(event):     # (the hotbar takes 1-9 and the wheel: its slots)
 			for i in weapon_order.size():
@@ -1160,7 +1194,7 @@ func _physics_process(delta: float) -> void:
 	# (no slow walk on foot: user 2026-10-01, "remove the walk for alt"; Alt is still the horse's walking gait, Horse)
 	is_walking = false
 	is_sprinting = controls.pressed(&"sprint") and input.y < -0.1 \
-			and not is_crouching and weapon.can_sprint() and is_on_floor() and not is_dead and sprint_allowed \
+			and not is_crouching and (weapon == null or weapon.can_sprint()) and is_on_floor() and not is_dead and sprint_allowed \
 			and minf(drag_speed_cap, bend_speed_cap) >= sprint_speed
 
 	var speed := run_speed
@@ -1171,11 +1205,13 @@ func _physics_process(delta: float) -> void:
 	elif is_walking:
 		speed = walk_speed
 	if not is_sprinting:
-		speed *= weapon.speed_mult()
+		# (no weapon at all: the arena's empty roster; the run's own pace)
+		var w_aim := weapon.aim if weapon != null else 0.0
+		speed *= weapon.speed_mult() if weapon != null else 1.0
 		if not weapon_key in JOG_AIM_WEAPONS:
-			speed = lerpf(speed, minf(speed, aim_walk_speed), weapon.aim)
+			speed = lerpf(speed, minf(speed, aim_walk_speed), w_aim)
 		else:
-			speed = lerpf(speed, minf(speed, run_speed * JOG_AIM_PACE), weapon.aim)
+			speed = lerpf(speed, minf(speed, run_speed * JOG_AIM_PACE), w_aim)
 		# (a firearm reloading on the move, standing: the jog's pace of the aim on the move, not the busy crawl; reload_jog())
 		if reload_jog():
 			speed = run_speed * JOG_AIM_PACE
@@ -1265,7 +1301,10 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		if kn != null:
 			kn.after_slide()
-		local_move = Vector2(velocity.dot(global_basis.x), velocity.dot(-global_basis.z))
+		# (the legs' pace is the steering's own: a knock's carry is not a run, so the lower body picks no run cycle from it; the
+		# knocked slide or the airborne clip is SwayPose's knock layer meanwhile)
+		var own := kn.base_of(velocity) if kn != null else velocity
+		local_move = Vector2(own.dot(global_basis.x), own.dot(-global_basis.z))
 	if traversal:
 		traversal.post(owned, delta)
 
@@ -1285,7 +1324,7 @@ func _physics_process(delta: float) -> void:
 		spring_arm.spring_length = cam_distance_now()
 		spring_arm.position.x = cam_shoulder_now()
 	# (no shake while sprinting: user 2026-10-01, "the screen shake on sprint is bad")
-	var fov_target := fov * (1.0 - (1.0 - weapon.fov_mult()) * aim_zoom_share)
+	var fov_target := fov * (1.0 - (1.0 - (weapon.fov_mult() if weapon != null else 1.0)) * aim_zoom_share)
 	camera.fov = lerpf(camera.fov, fov_target, 1.0 - exp(-10.0 * delta))
 
 	# A switch runs its stages; the new weapon is drawn when they end (see switch_weapon()) and
@@ -1295,12 +1334,14 @@ func _physics_process(delta: float) -> void:
 	if _sw.is_empty() and not is_dead:
 		# (a slung weapon takes no input: with the hands free, H or everything on the back, the fire and aim buttons
 		# still fired the musket, drew the bow and threw the tomahawk; user 2026-09-26)
-		if weapon.active and not hands_free:
+		if weapon != null and weapon.active and not hands_free:
 			weapon.tick(delta)
 		_switch_when_empty(delta)
 	# Aim calibration: turn the body so the weapon (not the chest) faces the crosshair. The
 	# graph-driven PlayerAnim's AimStabilizer trim does this on the upper body instead.
-	visual.rotation.y = 0.0 if anim.trims_aim() else deg_to_rad(weapon.aim_yaw_offset()) * weapon.aim
+	visual.rotation.y = 0.0 if anim.trims_aim() or weapon == null else deg_to_rad(weapon.aim_yaw_offset()) * weapon.aim
+	if arena:
+		_tick_arena()
 
 
 func add_recoil(pitch_deg: float, yaw_deg: float) -> void:
@@ -1325,6 +1366,47 @@ func knock_t() -> float:
 func is_launched() -> bool:
 	var kn := BendKnock.peek(self)
 	return kn != null and kn.is_launched()
+
+
+## The arena's element now: Bending's when the match set one other than the one last laid, else MatchSetup's when it changed
+## since (the menu's choice, or the run's element= once the ring took the setup), else the one laid.
+func arena_element_now() -> String:
+	var b := get_node_or_null(NodePath(String(Bending.NODE_NAME))) as Bending
+	if b != null and b.element in Bending.ELEMENTS and b.element != arena_element:
+		return b.element
+	var ms := MatchSetup.element if MatchSetup.element in Bending.ELEMENTS else "earth"
+	if arena_element == "" or ms != _arena_setup_el:
+		return ms
+	return arena_element
+
+
+var _arena_setup_el := ""
+
+
+## The arena's element laid (once the caster is in; again whenever the element changes): the hotbar from its bar (1-5, the
+## first readied), the element on Bending, the element's dress.
+func _lay_arena() -> void:
+	if not arena or not is_inside_tree():
+		return
+	var el := arena_element_now()
+	var c := SwayCaster.of(self)
+	if c == null or hotbar == null:
+		return                                 # (the caster is not in yet: laid by _tick_arena as it comes)
+	arena_element = el
+	_arena_setup_el = MatchSetup.element
+	Bending.of(self).element = el
+	hotbar.lay_spells(Bending.bar(el))
+	if hotbar.filled(0) and hotbar.selected() != 0:
+		hotbar.take(0)
+	if appearance != null:
+		appearance.arena_dress(el)
+
+
+func _tick_arena() -> void:
+	if arena_element == "" or arena_element_now() != arena_element:
+		_lay_arena()
+	elif hotbar != null and hotbar.spell == "" and hotbar.filled(0) and not is_dead:
+		hotbar.take(hotbar.cursor if hotbar.filled(hotbar.cursor) else 0)     # (always a move readied: nothing else to hold)
 
 
 ## Moved by something else now (a ride, the ragdoll, a grip, a vault): the knock he carried is gone.

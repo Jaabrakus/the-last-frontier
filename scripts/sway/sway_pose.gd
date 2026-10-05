@@ -29,9 +29,22 @@ extends Node
 ## throw, a cone, a ring or a shove then: one mechanism, nothing else waits on it), strike_point() where it leaves from (the
 ## pose's limb, "hand": l_palm, r_palm, both, l_foot, r_foot; INF when no clip plays or it names none). A lock let go
 ## before its wind-up is drawn releases from where the clip is (not the hold's moment). current_clip() the clip on the body.
+##
+## THE KNOCK (Tidebreak's knock reactions, the player's; the owner's own clips, animations_extra/Frontier_Bend.res): while
+## his BendKnock says he is knocked (its reaction window with a carry of KNOCK_MIN_MPS or more) own-bend-knock-slide plays
+## on the full layer, over the cast's (a hit breaks the lock anyway): braced, the feet sliding apart, held at its hold_s
+## while the knock lasts, then on from its back_s to the stand. Launched (a knock-up), own-bend-knock-air: held at its
+## hold_s in the air, the landing played from its up_s once he is down. Not while down (the ragdoll, kneeling) or dead:
+## the body is not the pose's then. knock_clip() / knock_weight() say what plays.
 
 ## Once per cast: the release's clip passed its strike (or it has none: at once).
 signal struck(move: String)
+
+const KNOCK_SLIDE := &"own-bend-knock-slide"
+const KNOCK_AIR := &"own-bend-knock-air"
+## A knock carrying the body slower than this (m/s) plays no slide (a nudge).
+const KNOCK_MIN_MPS := 1.5
+const KNOCK_IN_S := 0.08
 
 const CLIPS := "res://animations_extra/Frontier_Form.res"
 const CLAP_PRESS := &"own-form-clap-press"
@@ -78,6 +91,14 @@ var _struck := true
 var _hand := ""
 var _strike_at := Vector3.INF
 var _limb_ids := {}
+## The cast's layers this frame (the knock's go over them).
+var _cast_layers: Array = []
+## The knock playing: "" none, "slide" or "air"; its stage ("hold": in and held, "out": the recovery), clip time, weight.
+var knock := ""
+var _k_stage := ""
+var _k_t := 0.0
+var _k_w := 0.0
+var _k_anim: Animation
 
 
 func _ready() -> void:
@@ -279,9 +300,14 @@ func _begin(clip: StringName, p_phase: String, from_t := 0.0) -> void:
 		_hold = float(pick.get("hold_s", _anim.get_meta(&"hold_s", _anim.length)))
 		clapped = false
 		pressed = false
+	_ensure_pose()
+
+
+## The ToolPose on the skeleton, last but the body, on (false: no skeleton).
+func _ensure_pose() -> bool:
 	var sk := caster.player.skeleton
 	if sk == null:
-		return
+		return false
 	if _pose == null or not is_instance_valid(_pose):
 		_pose = ToolPose.new()
 		_pose.name = "SwayCastPose"
@@ -291,6 +317,7 @@ func _begin(clip: StringName, p_phase: String, from_t := 0.0) -> void:
 		sk.add_child(_pose)
 	put_last(sk, _pose)
 	_pose.active = true
+	return true
 
 
 ## `pose` moved over the tree and every other modifier, but the body (CharacterBodyMesh) put back behind it: its helpers (the
@@ -319,7 +346,25 @@ func clip_time() -> float:
 func _process(dt: float) -> void:
 	if caster == null or caster.player == null or not is_instance_valid(caster.player):
 		return
+	_cast_layers = []
 	_tick(dt)
+	_tick_knock(dt)
+	_apply()
+
+
+## The cast's layers, then the knock's over them, onto the ToolPose (off when there are none).
+func _apply() -> void:
+	if _pose == null or not is_instance_valid(_pose):
+		if knock == "" or not _ensure_pose():
+			return
+	var ls: Array = _cast_layers.duplicate()
+	if knock != "" and _k_anim != null and _k_w > 0.0:
+		ls.append({"anim": _k_anim, "time": _k_t, "weight": _k_w, "mask": "full"})
+	_pose.layers = ls
+	if ls.is_empty() and phase == "":
+		_pose.active = false
+	elif not _pose.active:
+		_ensure_pose()
 
 
 func _tick(dt: float) -> void:
@@ -353,10 +398,10 @@ func _tick(dt: float) -> void:
 		return
 	var mask := _mask()
 	if mask != "upper":
-		_pose.layers = [{"anim": _anim, "time": t, "weight": w, "mask": mask}]
+		_cast_layers = [{"anim": _anim, "time": t, "weight": w, "mask": mask}]
 		return
 	var still := 1.0 if _legs_always() else 1.0 - smoothstep(STILL_MPS.x, STILL_MPS.y, caster.player.horizontal_speed())
-	_pose.layers = [{"anim": _anim, "time": t, "weight": w, "mask": "upper"}, {"anim": _anim, "time": t, "weight": w * still, "mask": "full"}]
+	_cast_layers = [{"anim": _anim, "time": t, "weight": w, "mask": "upper"}, {"anim": _anim, "time": t, "weight": w * still, "mask": "full"}]
 
 
 ## The clip's mask: the pose's, the clip's meta, else the rule (the one-handed push "reach_l"; else "upper", with "full" as
@@ -384,10 +429,77 @@ func _stop() -> void:
 	pick = {}
 	_hand = ""
 	_strike_at = Vector3.INF
-	if _pose != null and is_instance_valid(_pose):
+	_cast_layers = []
+	if _pose != null and is_instance_valid(_pose) and knock == "":
 		_pose.layers = []
 		_pose.active = false
 
 
 func _exit_tree() -> void:
+	knock = ""
 	_stop()
+
+
+# ---------------------------------------------------------------- the knock
+## The knock clip playing (&"" none), and its weight now.
+func knock_clip() -> StringName:
+	match knock:
+		"air":
+			return KNOCK_AIR
+		"slide":
+			return KNOCK_SLIDE
+	return &""
+
+
+func knock_weight() -> float:
+	return _k_w if knock != "" else 0.0
+
+
+## What the player's knock asks for now: "air" launched, "slide" reeling with a carry, "" none (or down, or dead).
+func knock_wanted() -> String:
+	var p := caster.player
+	if p.is_dead or p.kneeling != null or p.riding != null or p.climbing != null:
+		return ""
+	var kn := BendKnock.peek(p)
+	if kn == null:
+		return ""
+	if kn.is_launched():
+		return "air"
+	if kn.knock_t > 0.0 and kn.kv.length() >= KNOCK_MIN_MPS:
+		return "slide"
+	return ""
+
+
+func _tick_knock(dt: float) -> void:
+	var want := knock_wanted()
+	var p := caster.player
+	if p.is_dead or p.kneeling != null or p.riding != null or p.climbing != null:
+		knock = ""                              # (down or dead: the body is not the pose's; nothing eased)
+		_k_w = 0.0
+		return
+	if want != "" and (want != knock or _k_stage == "out"):
+		var a := BendPoses.animation(String(KNOCK_AIR if want == "air" else KNOCK_SLIDE))
+		if a != null:
+			if knock == "":
+				_k_w = 0.0
+			knock = want
+			_k_anim = a
+			_k_stage = "hold"
+			_k_t = 0.0
+	if knock == "" or _k_anim == null:
+		return
+	var hold := float(_k_anim.get_meta(&"hold_s", 0.3))
+	if _k_stage == "hold":
+		_k_t = minf(_k_t + dt, hold)
+		_k_w = minf(_k_w + dt / KNOCK_IN_S, 1.0)
+		if want != knock:
+			# (over: the slide from its back_s, the air's landing from its up_s, on to the stand)
+			_k_stage = "out"
+			_k_t = maxf(_k_t, float(_k_anim.get_meta(&"up_s" if knock == "air" else &"back_s", hold)))
+		return
+	_k_t += dt
+	_k_w = minf(_k_w, clampf((_k_anim.length - _k_t) / BLEND_OUT_S, 0.0, 1.0))
+	if _k_t >= _k_anim.length:
+		knock = ""
+		_k_stage = ""
+		_k_w = 0.0

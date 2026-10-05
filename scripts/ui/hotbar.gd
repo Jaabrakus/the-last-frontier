@@ -31,6 +31,9 @@ extends Node
 ##                1-9 puts it in that slot; dropped on the figure, a weapon, tool or spell goes in the first free slot
 ##   HUD          FrontierHUD's bottom-right strip shows only the filled slots with their numbers; nothing when empty
 ##   save         SaveParts' player part ("hotbar": save_of / load_of)
+##   arena        Tidebreak's ring (FrontierPlayer.arena): lay_spells(ids) lays the element's keys at once, the start kit closed
+##                (kit_placed) so it never comes over them; then only those keys (the same key again: its other skill) and the
+##                wheel (the readied skill's variations) act; keys past them do nothing
 
 ## Something on the bar changed (a slot filled, emptied, moved).
 signal changed
@@ -68,6 +71,8 @@ var spell := ""
 var cursor := 0
 ## The start's kit is placed (or a save's bar loaded): nothing comes onto the bar by itself any more.
 var kit_placed := false
+## The arena's bar (lay_spells): only its spells' keys and the wheel act; nothing frees the hands.
+var spells_only := false
 ## "kind:id" -> slot: a thing lost from the bar, its slot kept for it while it stays empty.
 var away := {}
 var _kit_t := 0.0
@@ -420,6 +425,25 @@ func _off_bar(e: Dictionary) -> void:
 		_enforce()
 
 
+## The arena's bar (Tidebreak; FrontierPlayer.arena): slots 1.. hold the spells `ids` (an element's keys, Bending.bar), the
+## rest empty; the start kit is closed at once (kit_placed: it never comes over it), nothing kept for anything lost, and from
+## then on (`spells_only`) only the laid keys and the wheel do anything: a key past them, or the key in the hands again with
+## no other skill, leaves the readied spell as it is (no hands free, no weapon to draw).
+func lay_spells(ids: Array, only := true) -> void:
+	kit_placed = true
+	spells_only = only
+	_kit_t = KIT_S
+	away.clear()
+	for i in slots.size():
+		var id := String(ids[i]) if i < ids.size() else ""
+		slots[i] = make(SPELL, id) if id != "" else {}
+	_known.clear()
+	_fresh = true
+	if spell != "" and slot_of(SPELL, spell) < 0:
+		_drop_spell()
+	changed.emit()
+
+
 ## A start with nothing (BareStart): an empty bar, no slot kept for anything, the kit placed (there is none).
 func start_over() -> void:
 	_drop_spell()
@@ -571,13 +595,17 @@ func select(i: int) -> void:
 	_follow_caster()
 	sync()
 	var e := slots[i]
-	# (a bending key pressed again: its other skill; the user, 2026-10-04, "toggle between the 1s")
-	if not e.is_empty() and i == selected() and String(e.get("kind", "")) == SPELL and Bending.partner_of(String(e.id)) != "":
+	# (a bending key pressed again: its other skill; the user, 2026-10-04, "toggle between the 1s"; only as an element's
+	# fighter, a duel's or the ring's: in the open world a spell's key again puts it down, as the bar always did)
+	if not e.is_empty() and i == selected() and String(e.get("kind", "")) == SPELL and Bending.partner_of(String(e.id)) != "" \
+			and (spells_only or BendPoses.element_of(player) != ""):
 		var other := make(SPELL, Bending.partner_of(String(e.id)))
 		if has_thing(other) and assign(i, other):
 			cursor = i
 			_take(slots[i])
 			return
+	if spells_only and (e.is_empty() or i == selected() or String(e.get("kind", "")) != SPELL):
+		return                              # (the arena's bar: an empty key, or the key in the hands with no other skill)
 	if e.is_empty() or i == selected():
 		if spell != "" and i == selected() and _keeps_weapon(spell):
 			_drop_spell()                   # (an expert's spell put down: the weapon it kept stays in the hand)
@@ -630,11 +658,11 @@ func handle_input(event: InputEvent) -> bool:
 			select(i)
 			return true
 	if InputMap.has_action(&"weapon_next") and event.is_action_pressed(&"weapon_next"):
-		if not _step_mode(1):
+		if not _step_mode(1) and not spells_only:
 			step(1)
 		return true
 	if InputMap.has_action(&"weapon_prev") and event.is_action_pressed(&"weapon_prev"):
-		if not _step_mode(-1):
+		if not _step_mode(-1) and not spells_only:
 			step(-1)
 		return true
 	return false

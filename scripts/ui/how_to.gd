@@ -28,7 +28,7 @@ const CAP_ACTIONS := {
 	"1": [&"weapon_1"], "2": [&"weapon_2"], "3": [&"weapon_3"], "4": [&"weapon_4"], "5": [&"weapon_5"],
 	"6": [&"weapon_6"], "7": [&"weapon_7", &"tool_cycle", &"tool_axe"], "8": [&"weapon_8", &"fish_gear", &"tool_mattock"],
 	"9": [&"weapon_9"], "1-9": [&"weapon_1", &"weapon_2", &"weapon_3", &"weapon_4", &"weapon_5", &"weapon_6", &"weapon_7",
-			&"weapon_8", &"weapon_9"], "H": [&"hands_free"],
+			&"weapon_8", &"weapon_9"], "1-4": [&"weapon_1", &"weapon_2", &"weapon_3", &"weapon_4"], "H": [&"hands_free"],
 	"LMB": [&"fire"], "RMB": [&"aim"], "MMB": [&"club_grip"], "Wheel": [&"weapon_next", &"weapon_prev"],
 }
 
@@ -74,7 +74,15 @@ const TOPICS := {
 			"[W]  Push: a doe, logs, or what the pack holds", "[E]  Set it down"]},
 	"hurt": {"title": "Your health", "steps": ["[Z]  Rest: sit down, the health refills",
 			"Hold [Z]  Sleep: a fire makes it better"]},
+	"elements": {"title": "Your element's moves", "steps": ["[1-4]  A key: its move  ·  the same key again: its other move",
+			"[Wheel]  Step through the move's three forms", "Hold [RMB]  On the aim: the lock fills; let go to cast",
+			"[5]  Mend; again: Patch"]},
+	"ring": {"title": "The ring", "steps": ["Knock the other side back through its three zones",
+			"Into the water behind them takes the round", "The grates refill a water fighter's water"]},
 }
+## The arena's topics (Tidebreak's ring, FrontierPlayer.arena): only these come up there, the first of them at once (the
+## world's Getting around and the rest are not the ring's).
+const ARENA_TOPICS := ["elements", "ring"]
 
 var player: FrontierPlayer
 var enabled := true
@@ -181,6 +189,10 @@ func _doing(id: String) -> bool:
 			return p.pushing != null
 		"hurt":
 			return p.health < 70.0 and not p.is_dead
+		"elements":
+			return p.arena and p.hotbar != null and p.hotbar.spell != "" and _age > 1.0
+		"ring":
+			return p.arena and seen.has("elements") and current != "elements"
 	return false
 
 
@@ -194,7 +206,9 @@ func _process(delta: float) -> void:
 	if _poll <= 0.0:
 		_poll = POLL_S
 		for id: String in TOPICS:
-			if id != "basics" and not seen.has("basics"):
+			if player.arena != (id in ARENA_TOPICS):
+				continue                           # (the ring's topics in the ring, the world's in the world)
+			if id != "basics" and not seen.has("basics") and not player.arena:
 				break                              # getting around first; the rest after it
 			if not seen.has(id) and id != current and not queue.has(id) and _doing(id):
 				queue.append(id)
