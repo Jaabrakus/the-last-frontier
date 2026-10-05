@@ -19,6 +19,13 @@ extends CanvasLayer
 ##   right          toasts sliding in: what gathering gives ("+2 Firewood", the item's picture) and skill levels
 ##   edges          a red heartbeat at the edges of the screen when health is low; a flash when hurt
 ##   F1             the controls (hidden; a hint at the start), F3 the debug lines
+## ARENA MODE (set_arena(true): Tidebreak's ring, FrontierPlayer.arena): the compass and the clock, the rested row, the
+## torch and the needs are gone; the hotbar's strip gives way to the BendStrip (bottom centre: keys 1-5, both skills each,
+## the readied one bright, its variation pips, the ready line "2 · Earth Wall · column (2/3)"), the MatchBar sits top centre
+## (the round, the time, the score, your own zone and the ground each side holds: read off the match node, never a mark of
+## the other side's body), a thin water bar under the health for a water fighter, the status words (rooted, slowed,
+## anchored, winded) under it, and F1 shows ARENA_HELP. Nothing is ever drawn on or over the opponent (the owner: no target
+## cues of any kind); the aim dot shows while a move is readied.
 ## Hooks kept: player, show_debug, on_projectile_hit(), on_target_killed() (group hit_listeners), toast().
 
 @export var color := Color(0.95, 0.92, 0.8)
@@ -55,6 +62,14 @@ const HELP := "WASD move · Shift sprint · Ctrl/C crouch (toggle) · Space jump
 		+ "Z rest, hold Z sleep (a lean-to and a fire make it better) · V eat · F cook at a lit campfire\n" \
 		+ "T: tap light / raise, hold put away, double-tap set or throw it (click)  ·  hold U drink · hold Y smoke a pipe\n" \
 		+ "Tab gear · K skills · O character · F1 this help · F3 debug · Esc free mouse"
+## F1 in the arena (no show words: tests/ring/test_ring_hud.gd holds the HUD's arena lines to that).
+const ARENA_HELP := "WASD move · Shift sprint · Space jump · Ctrl/C crouch\n" \
+		+ "1-4 a key's move, the same key again its other move · 5 Mend, again Patch · wheel: the move's three forms\n" \
+		+ "Hold RMB on the aim: the lock fills; let go to cast · F1 this help · Esc free mouse\n" \
+		+ "Knock the other side back through its three zones: into the water behind them takes the round"
+## The water bar's colour, and how long "winded" stays among the status words (s).
+const WATER := Color(0.42, 0.68, 0.95)
+const WINDED_S := 2.5
 const EDGE_SHADER := "shader_type canvas_item;
 uniform float amount = 0.0;
 uniform vec4 tint : source_color = vec4(0.4, 0.02, 0.01, 1.0);
@@ -108,6 +123,16 @@ var _help_t := 0.0
 var _icons: ItemIcons
 var _tex := {}
 var _heading := 0.0
+## Arena mode (set_arena) and its pieces (null until it is first on).
+var arena := false
+var bend_strip: BendStrip
+var match_bar: MatchBar
+var _help_label: Label
+var _water_row: HBoxContainer
+var _water_bar: ProgressBar
+var _water_text: Label
+var _status: Label
+var _winded_t := 0.0
 
 
 ## The HUD's lettering: a serif of the machine's (Baskerville on a Mac), the engine's own font where there is none.
@@ -182,6 +207,7 @@ func _ready() -> void:
 	_place(_pickup, Vector2(0.5, 0.5), Vector2(0, 58), Vector2(0.5, 0))
 	var help := _label(17, TEXT)
 	help.text = HELP
+	_help_label = help
 	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_help_box = _shaded(help, Vector2(60, 26))
 	_help_box.name = "Help"
@@ -323,6 +349,125 @@ func _build_compass() -> void:
 	cr.add_child(_clock)
 	_root.add_child(v)
 	_place(v, Vector2(0.5, 0), Vector2(0, 8), Vector2(0.5, 0))
+
+
+## Arena mode on or off (see the header): the world's readouts hidden, the BendStrip, the MatchBar, the water bar and the
+## status words shown (built the first time).
+func set_arena(on: bool) -> void:
+	arena = on
+	if on and bend_strip == null:
+		_build_arena()
+	var compass := _root.get_node_or_null(^"Compass") as Control
+	if compass != null:
+		compass.visible = not on
+	if bend_strip != null:
+		(bend_strip.get_parent() as Control).visible = on
+		match_bar.visible = on
+		(_status.get_parent() as Control).visible = on
+	if _help_label != null:
+		_help_label.text = ARENA_HELP if on else HELP
+	if on:
+		_rest_row.visible = false
+		_torch_row.visible = false
+		_needs_row.visible = false
+		_slots_box.visible = false
+
+
+func _build_arena() -> void:
+	bend_strip = BendStrip.new()
+	bend_strip.name = "BendStrip"
+	bend_strip.player = player
+	var sh := _shaded(bend_strip, Vector2(40, 10))
+	sh.name = "BendStripShade"
+	_root.add_child(sh)
+	_place(sh, Vector2(0.5, 1), Vector2(0, -6), Vector2(0.5, 1))
+	match_bar = MatchBar.new()
+	match_bar.name = "MatchBar"
+	match_bar.player = player
+	_root.add_child(match_bar)
+	_place(match_bar, Vector2(0.5, 0), Vector2(0, 10), Vector2(0.5, 0))
+	# a water fighter's water and the status words: over the health (the vitals' own rows are the world's)
+	var box := VBoxContainer.new()
+	box.name = "ArenaVitals"
+	box.add_theme_constant_override("separation", 2)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_status = _label(16, GOLD)
+	_status.name = "Status"
+	_status.visible = false
+	box.add_child(_status)
+	_water_row = HBoxContainer.new()
+	_water_row.name = "Water"
+	_water_row.add_theme_constant_override("separation", 8)
+	_water_row.visible = false
+	box.add_child(_water_row)
+	var wspace := Control.new()
+	wspace.custom_minimum_size = Vector2(22, 4)
+	wspace.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_water_row.add_child(wspace)
+	_water_bar = _bar(190, 4, WATER)
+	_water_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_water_row.add_child(_water_bar)
+	_water_text = _label(15, TEXT)
+	_water_row.add_child(_water_text)
+	_root.add_child(box)
+	_place(box, Vector2(0, 1), Vector2(24, -50), Vector2(0, 1))
+	if player != null and player.has_signal(&"winded"):
+		player.winded.connect(func(_by: Node) -> void: _winded_t = WINDED_S)
+	# (a knock the player dealt: the hit mark at the centre, the bending's hit confirmation; BendKnock tells its listeners)
+	add_to_group(BendKnock.LISTENERS)
+
+
+## BendKnock's listeners: a body knocked by the player (not himself) flashes the hit mark at the centre (never at the body).
+func on_knocked(n: Node, _v: Vector3, by: Node) -> void:
+	if arena and player != null and by == player and n != player:
+		_hit_flash = 1.0
+		_hits += 1
+
+
+## The arena's readouts each frame: the water (a water fighter's), the status words.
+func _update_arena(delta: float) -> void:
+	_rest_row.visible = false
+	_torch_row.visible = false
+	_needs_row.visible = false
+	var b := player.get_node_or_null(NodePath(String(Bending.NODE_NAME))) as Bending
+	var wet := b != null and b.element == "water"
+	_water_row.visible = wet
+	if wet:
+		_water_bar.value = clampf(b.water / maxf(b.water_max, 1.0), 0.0, 1.0)
+		_water_text.text = "water %d" % roundi(b.water)
+	_winded_t = maxf(_winded_t - delta, 0.0)
+	_status.text = "  ·  ".join(status_words())
+	_status.visible = _status.text != ""
+
+
+## The words for what holds the player now: "rooted", "slowed", "anchored", "winded" (a few seconds after it).
+func status_words() -> PackedStringArray:
+	var out := PackedStringArray()
+	if player == null:
+		return out
+	if BendStatus.until(player, &"bend_root") > 0.0:
+		out.append("rooted")
+	if BendStatus.until(player, &"bend_slow") > 0.0:
+		out.append("slowed")
+	if player.has_meta(&"bend_anchor") and float(player.get_meta(&"bend_anchor")) > BendStatus.now():
+		out.append("anchored")
+	if _winded_t > 0.0:
+		out.append("winded")
+	return out
+
+
+## A label in the HUD's lettering (its serif from the theme it is under, the soft shadow): for the HUD's own pieces
+## (BendStrip, MatchBar).
+static func hud_label(size: int, col: Color) -> Label:
+	var l := Label.new()
+	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_color_override("font_color", col)
+	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.42))
+	l.add_theme_constant_override("shadow_offset_x", 1)
+	l.add_theme_constant_override("shadow_offset_y", 1)
+	l.add_theme_constant_override("shadow_outline_size", 3)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
 
 
 ## `content` with the soft shade drawn behind it, `pad` px round it (the shade reaches past the content's edges
@@ -497,8 +642,12 @@ func _process(delta: float) -> void:
 		return
 	_update_vitals()
 	_update_edges(delta)
-	_update_card()
-	_update_clock()
+	if arena:
+		_update_arena(delta)              # (no world readouts: no clock, no slot strip; the BendStrip and MatchBar run themselves)
+		_slots_box.visible = false
+	else:
+		_update_card()
+		_update_clock()
 	var cam := get_viewport().get_camera_3d()
 	if cam:
 		var f := -cam.global_transform.basis.z
@@ -927,7 +1076,10 @@ static func _is_target(n: Node) -> bool:
 
 
 func _draw_overlay() -> void:
-	if player == null or player.weapon == null:
+	if player == null:
+		return
+	if player.weapon == null:
+		_draw_spell_dot()
 		return
 	var w := player.weapon
 	var vp := _cross.get_viewport_rect().size
@@ -954,8 +1106,34 @@ func _draw_overlay() -> void:
 		_cross.draw_rect(r.grow(1), Color(0, 0, 0, 0.5))
 		_cross.draw_rect(Rect2(r.position, Vector2(bw * clampf(prog[1], 0.0, 1.0), 3)), col)
 
+	_draw_hit_mark(c)
+
+
+## The hit mark at the centre (a hit or a kill a moment ago).
+func _draw_hit_mark(c: Vector2) -> void:
 	var mark := maxf(_hit_flash, _kill_flash)
 	if mark > 0.0:
 		var mc := Color(1, 0.25, 0.2, _kill_flash) if _kill_flash > 0.0 else Color(1, 1, 1, _hit_flash)
 		for d: Vector2 in [Vector2(1, 1), Vector2(-1, 1), Vector2(1, -1), Vector2(-1, -1)]:
 			_cross.draw_line(c + d * 8.0, c + d * 17.0, mc, 2.5)
+
+
+## No weapon (the arena's empty roster): the aim dot at the centre while a move is readied (the crosshair the casts aim by),
+## the hit mark; nothing anywhere else.
+func _draw_spell_dot() -> void:
+	var c := _cross.get_viewport_rect().size * 0.5
+	var hb: Hotbar = player.hotbar
+	var readied := hb != null and hb.spell != ""
+	if readied and not player.is_sprinting and not player.is_dead:
+		_cross.draw_circle(c, dot_radius + 1.2, Color(0, 0, 0, 0.55))
+		_cross.draw_circle(c, dot_radius, color)
+	_draw_hit_mark(c)
+
+
+## Whether the aim dot is drawn now (tests: the dot with a move readied and no weapon).
+func aim_dot_shown() -> bool:
+	if player == null or player.is_sprinting or player.is_dead:
+		return false
+	if player.weapon == null:
+		return player.hotbar != null and player.hotbar.spell != ""
+	return player.gather == null or player.gather.in_hand() == ""

@@ -195,6 +195,43 @@ static func _set_hide(mi: MeshInstance3D, mask: Vector2i) -> void:
 			m.set_shader_parameter("hide_mask", mask)
 
 
+## THE ARENA'S DRESS (Tidebreak's ring; FrontierPlayer.arena): athletic, from the basic garments, in the element's colour
+## (MatchSetup.color: the colour its side wears): the basic shirt (a man's tucked shirt, a woman's shift) dyed the element's
+## colour, plain trousers (a man's breeches, a woman's loose salvar: closed between the legs, for the deck), a sash in the
+## colour at the waist, bare feet; every other slot empty (no coat, no hat, no musket gear). The face, the skin, the hair
+## stay the saved look's; nothing is saved (the look on file is the player's own, worn again out of the ring).
+const ARENA_LEGS := {"men": "breeches", "women": "salvar_mens"}
+const ARENA_SASH := "sash_worsted"
+
+
+static func arena_outfit(element: String, sex: float) -> Dictionary:
+	var col := MatchSetup.color(element)
+	var dark := col.darkened(0.55)
+	var out := {}
+	for slot: String in PlayerOutfit.SLOTS:
+		out[slot] = {"id": "-", "colors": {}}
+	var bt := PlayerOutfit.body_type(sex)
+	out["shirt"] = {"id": String(PlayerOutfit.BASIC[bt].get("shirt", "")), "colors": {"0": "#" + col.to_html(false),
+			"1": "#" + col.lightened(0.35).to_html(false)}}
+	var legs := String(ARENA_LEGS.get(bt, ""))
+	if not PlayerOutfit.usable(legs):
+		legs = String(PlayerOutfit.BASIC[bt].get("legs.lower", ""))
+	out["legs.lower"] = {"id": legs, "colors": {"0": "#" + dark.to_html(false), "1": "#" + col.to_html(false)}}
+	if PlayerOutfit.usable(ARENA_SASH):
+		out["accessories.waist"] = {"id": ARENA_SASH, "colors": {"0": "#" + col.to_html(false),
+				"1": "#" + col.lightened(0.4).to_html(false), "3": "#" + col.lightened(0.2).to_html(false)}}
+	return out
+
+
+## The arena's dress for `element` on the body (see arena_outfit); the rest of the look as it is.
+func arena_dress(element: String) -> void:
+	if body == null or not element in Bending.ELEMENTS:
+		return
+	var lk := look.duplicate(true)
+	lk["outfit"] = arena_outfit(element, float(lk.get("sex", 0.0)))
+	apply(lk)
+
+
 ## The slung weapons, quiver and belt items sit on the outfit's bulk (SlingRig, body_fit.json): the
 ## player's loadout keeps the outfit key, so a SlingRig installed later (inventory) keeps it too.
 func _sync_gear() -> void:
