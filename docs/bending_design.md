@@ -229,7 +229,8 @@ strokes); merged into the dressing's mesh (no new draw calls).
 
 - **The load and the restarts** (PERF): behind the loading screen the ring is built a part a frame (RingLevel._build: the
   sky, the deck, the stands, the light, the competitors, the crowd, the match, the elements), each part's files read on
-  worker threads first (data/ring/prefetch.json, tools/perf/ring_prefetch_list.py; the ring's own sounds among them) and
+  worker threads first (data/ring/prefetch.json, tools/perf/ring_prefetch_list.py; not the ring's own sounds: their 18 MB
+  read alongside slowed the player's frame 0.65 -> 1.2-1.3 s, so BendSounds.warm() reads them in the crowd's frame) and
   drawn through a camera where the player's will stand, so each part's shaders compile on its own frame; the loading
   screen's bar glides to the build's progress with a line saying what is being built. Longest frame after the loading
   screen shows 2.1 s -> 0.55-0.6 s (warm shader cache; 7.5 s -> 2.9 s on a first launch), the rest the player's own build
