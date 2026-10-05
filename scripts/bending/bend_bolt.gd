@@ -166,7 +166,7 @@ func _physics_process(dt: float) -> void:
 
 
 ## Its caster's own bodies, left out of its flight: a fighter's hit parts too (NpcFighter.ray_exclude), so a bolt from a bot's
-## chest does not strike the bot that sent it.
+## chest does not strike the bot that sent it. Its caster's allies too (BendCaster.ally_rids: the ring's sides): it passes them.
 func _exclude() -> Array[RID]:
 	var ex: Array[RID] = []
 	if caster == null or not is_instance_valid(caster):
@@ -175,6 +175,7 @@ func _exclude() -> Array[RID]:
 		ex.append_array(caster.call(&"ray_exclude"))
 	elif caster is CollisionObject3D:
 		ex.append((caster as CollisionObject3D).get_rid())
+	ex.append_array(BendCaster.ally_rids(caster))
 	return ex
 
 
@@ -246,7 +247,7 @@ static func meet(a: BendBolt, b: BendBolt) -> void:
 	var at := (a.global_position + b.global_position) * 0.5
 	var ks := [a.kind, b.kind]
 	if a.kind == b.kind and a.kind != "stone":
-		if a.kind in ["water", "fire", "ice", "air"] and a.caster != b.caster:
+		if a.kind in ["water", "fire", "ice", "air"] and a.caster != b.caster and not BendCaster.same_team(a.caster, b.caster):
 			BendLooks.burst(at, a.kind, 20)
 			a.end("cancel")
 			b.end("cancel")

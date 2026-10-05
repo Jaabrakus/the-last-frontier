@@ -23,8 +23,17 @@ extends RefCounted
 ## BendCaster.of(n) the caster of node n, made once and kept in its meta (META); BendCaster.wrap(c) takes a BendCaster, a
 ## SwayCaster or a CharacterBody3D, so a helper can take any of them (untyped) and ask its caster.
 ## near(caster, at, r): whom a bend can reach about `at` (BendStatus.near, and the player found through his group "player").
+## TEAMS (Tidebreak's 3 v 3 groundwork; the plan's T14): team_of(n) is a body's side in the ring, &"" when it has none:
+## its meta TEAM_META (RingRules.add sets it for every competitor: "ring_0" the player's side, "ring_1" the other), else a
+## fighter of a ring faction (ring_team_*: NpcFactions.side_of) its side; the player only by the meta. same_team(a, b): both
+## on one side (never with no side: the open world and the duel keep every bend hitting everyone but its caster, as before).
+## BendStatus.can_take leaves the caster's own side out (no hurt, knock, root or slow on an ally: bolts, cones, rings,
+## zones); ally_rids(caster) are left out of its bolts' flight (a bolt passes an ally); BendZone.on_bolt lets an ally's bolt
+## through its guards (an ally's shield never sends a teammate's bolt back, and still takes the other side's).
 
 const META := &"bend_caster"
+## A body's side in the ring (RingRules.add; StringName or String).
+const TEAM_META := &"bend_team"
 
 var body: CharacterBody3D
 
@@ -235,6 +244,48 @@ func assist_target(from: Vector3, dir: Vector3, ex: Array = []) -> Node3D:
 		best = f
 		best_a = a
 	return best
+
+
+## `n`'s side for the team filter (&"" none): its TEAM_META, else a ring faction's side (and then the player is "player").
+static func team_of(n: Variant) -> StringName:
+	if n is BendCaster:
+		n = (n as BendCaster).body
+	if n == null or not (n is Node) or not is_instance_valid(n):
+		return &""
+	var nd := n as Node
+	if nd.has_meta(TEAM_META):
+		return StringName(str(nd.get_meta(TEAM_META)))
+	if nd is NpcFighter:
+		var fac := String((nd as NpcFighter).faction)
+		if fac.begins_with("ring_team"):
+			return StringName(NpcFactions.side_of(fac))
+	return &""
+
+
+## Whether `a` and `b` are on one side (both with one; a body with itself too).
+static func same_team(a: Variant, b: Variant) -> bool:
+	var ta := team_of(a)
+	return ta != &"" and ta == team_of(b)
+
+
+## The bodies of `caster`'s side (not itself) its bolts pass through: their RIDs (none when it has no side).
+static func ally_rids(caster: Variant) -> Array[RID]:
+	var out: Array[RID] = []
+	var c: Variant = (caster as BendCaster).body if caster is BendCaster else caster
+	if not (c is Node) or not is_instance_valid(c) or not (c as Node).is_inside_tree() or team_of(c) == &"":
+		return out
+	var tree := (c as Node).get_tree()
+	var pool: Array = tree.get_nodes_in_group(NpcFighter.GROUP)
+	pool.append_array(tree.get_nodes_in_group(&"player"))
+	for n in pool:
+		if n == c or not (n is CollisionObject3D) or not same_team(n, c):
+			continue
+		if (n as Node).has_method(&"ray_exclude"):
+			for r: RID in (n as Node).call(&"ray_exclude"):
+				out.append(r)
+		else:
+			out.append((n as CollisionObject3D).get_rid())
+	return out
 
 
 ## Whom a bend of `caster` (a Node; a BendCaster: its body) can reach within `r` of `at`: BendStatus.near (fighters and the
