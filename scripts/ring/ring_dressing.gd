@@ -27,6 +27,9 @@ extends Node3D
 ##                             friezes and parapet panels follow (the fans keep the colours they were built in)
 ##   set_score(a, b)           the scoreboard's numbers
 ##   set_cheer(v)              the stands' mood 0..1 (a roar on a ring-out)
+## The crowd's sound (improvement round 1; BendSounds, tools/sfx/bend/): a murmur looping at each half of each stand, its
+## level the stands' mood; the mood rising is heard: to a ring-out's (0.95 and over) one stand roars and the other groans,
+## to a knock-back's a stand cheers or gasps (a little of it from the other stand too).
 ## Cost (tools/ring/look_c_shots.gd, LOOK_C_COST; 1600x900 high, TAA, 2026-10-05, the deck view): +35 draws (64 -> 99),
 ## shadow draws 136 -> 212 (326 at night: two shadowed deck lamps), ~130k more triangles (the crowd most of it), frame
 ## 9.8 ms bare -> 10.9 noon / 11.1 golden / 12.5 night; 26 lights at night (2 shadowed), none by day; 8 GPU emitters.
@@ -108,6 +111,8 @@ var _pennants: Array = []          ## [Transform3D, Color]
 var _flames: Array = []            ## [Vector3 base, Vector2 size]
 var _halos: Array = []             ## [Vector3, Color, size]
 var _lamps: Array = []             ## [Vector3, Color, energy, range]
+var _murmur: Array[AudioStreamPlayer3D] = []
+var _crowd_v := 0.25               ## the stands' mood as last set (their sound reacts to it rising)
 var _flame_mat: ShaderMaterial
 var _halo_mat: ShaderMaterial
 var _foam_mat: ShaderMaterial
@@ -164,6 +169,8 @@ func set_mood(name: String) -> void:
 	_caustic_mat.set_shader_parameter(&"tint", m.caustic_tint)
 	if crowd != null:
 		crowd.set_cheer(float(m.cheer), true)
+	_crowd_v = float(m.cheer)
+	_crowd_level(_crowd_v, true)
 
 
 func set_sides(e0: String, e1: String) -> void:
@@ -193,6 +200,59 @@ func set_score(a: int, b: int) -> void:
 func set_cheer(v: float) -> void:
 	if crowd != null:
 		crowd.set_cheer(v)
+	_crowd_react(v)
+
+
+# ---------------------------------------------------------------- the crowd's sound
+## The stands' murmur (BendSounds crowd_murmur, its two takes started apart): a loop at each half of each stand.
+func _crowd_sound() -> void:
+	var k := 0
+	for sz: float in [-1.0, 1.0]:
+		for sx: float in [-0.5, 0.5]:
+			var p := BendSounds.loop_player(&"crowd_murmur", self, k)
+			if p == null:
+				return
+			p.name = "CrowdMurmur%d" % k
+			p.position = Vector3(sx * ox, y0 + th * float(tiers) * 0.5, sz * (oz + back) * 0.5)
+			p.play(fmod(4.7 * float(k), 11.0))
+			_murmur.append(p)
+			k += 1
+	_crowd_level(_crowd_v, true)
+
+
+## The murmur's level by the stands' mood `v` (0.25, the noon mood's, its own level; 1 a full 8 dB up), eased.
+func _crowd_level(v: float, instant: bool) -> void:
+	var db := float((BendSounds.TABLE[&"crowd_murmur"] as Dictionary).vol) + lerpf(-8.0, 0.0, clampf((v - 0.25) / 0.75, 0.0, 1.0))
+	for p in _murmur:
+		if instant or not p.is_inside_tree():
+			p.volume_db = db
+		else:
+			p.create_tween().tween_property(p, "volume_db", db, 0.8)
+
+
+## The stands' mood set to `v`: rising to a ring-out's, one stand roars and the other groans; to a knock-back's, a stand
+## cheers or gasps and a little of it comes from the other.
+func _crowd_react(v: float) -> void:
+	var was := _crowd_v
+	_crowd_v = v
+	if mats.is_empty():
+		return
+	_crowd_level(v, false)
+	if v < was + 0.2:
+		return
+	var s := 1.0 if BendSounds.rng.randf() < 0.5 else -1.0
+	if v >= 0.95:
+		BendSounds.event("roar", _stand_point(s))
+		BendSounds.event("groan", _stand_point(-s))
+	else:
+		BendSounds.event("cheer" if BendSounds.rng.randf() < 0.65 else "ooh", _stand_point(s))
+		BendSounds.event("cheer", _stand_point(-s), -7.0)
+
+
+## A place in the middle of stand `sz` (-1 the far, 1 the near), along it at random.
+func _stand_point(sz: float) -> Vector3:
+	var x := BendSounds.rng.randf_range(-0.6, 0.6) * ox
+	return to_global(Vector3(x, y0 + th * float(tiers) * 0.5, sz * (oz + back) * 0.5))
 
 
 # ---------------------------------------------------------------- the build
@@ -237,6 +297,7 @@ func _build() -> void:
 		skip.append(x)
 	crowd = RingCrowd.make(self, sd, ox, oz, y0, [(ELEMENTS[side_elements[0]] as Dictionary).team,
 			(ELEMENTS[side_elements[1]] as Dictionary).team], skip)
+	_crowd_sound()
 	set_sides(side_elements[0], side_elements[1])
 
 
