@@ -25,6 +25,8 @@ extends Node
 ## the data gives none) and a little up (knock_up_mps). While it is held and flies it does not touch its caster nor whom it
 ## has struck (collision exceptions, taken off as it comes to rest): a held stone never shoves its caster, and a lance through
 ## a man goes through him, not carrying him along on its point.
+## Round 2: a burrower under the deck (meta bend_under_until) is flown over; two casters' stones meeting in the air, the
+## heavier goes on and the lighter drops (_meet_lifts; equal ones both).
 
 signal struck(who: Node, damage: float)
 signal landed(at: Vector3)
@@ -310,6 +312,8 @@ func _lead() -> Vector3:
 
 func _fly(dt: float) -> void:
 	_fly_t += dt
+	if _meet_lifts():
+		return
 	var hd := _hurl_d()
 	velocity.y -= float(hd.get("gravity", 6.0)) * dt
 	var lead := _lead() * smoothstep(0.0, LEAD_IN_S, _fly_t)
@@ -347,6 +351,13 @@ func _fly(dt: float) -> void:
 			return
 		var who := FormSpikes.taker(col, caster)
 		var body := who is CharacterBody3D or who is NpcFighter or who is WildAnimal
+		if body and BendStatus.until(who, &"bend_under_until") > 0.0:
+			# (a burrower under the deck: the stone passes over him; round 2's Burrow)
+			_except(who)
+			if info.has("rid"):
+				_ex.append(info.rid)
+			_place(to)
+			return
 		if body:
 			_except(who)                        # (through him or past him: never carrying him on)
 			_strike(col, who, c_at)
@@ -366,6 +377,27 @@ func _fly(dt: float) -> void:
 	_place(to)
 	if _fly_t > FLIGHT_MAX_S or to.y < -200.0:
 		_land(to, Vector3.UP, to)
+
+
+## Another caster's flying stone met in the air (round 2: the bigger stone wins, light < medium < heavy, equal ones both
+## break; BendBolt.weight_of): the lighter one drops where it is. True when this one dropped.
+func _meet_lifts() -> bool:
+	for o in get_tree().get_nodes_in_group(GROUP):
+		var l := o as GustLift
+		if l == null or l == self or l.phase != Phase.FLIGHT or l.get_instance_id() < get_instance_id() or l.stone == null \
+				or not is_instance_valid(l.stone) or l.by() == by():
+			continue
+		if l.stone.global_position.distance_to(stone.global_position) > radius + l.radius + 0.25:
+			continue
+		var wa := int(BendBolt.WEIGHTS.get(BendBolt.weight_of(self), 1))
+		var wb := int(BendBolt.WEIGHTS.get(BendBolt.weight_of(l), 1))
+		BendLooks.burst((stone.global_position + l.stone.global_position) * 0.5, "stone", 22)
+		if wb <= wa:
+			l.drop()
+		if wa <= wb:
+			drop()
+			return true
+	return false
 
 
 func _place(p: Vector3) -> void:

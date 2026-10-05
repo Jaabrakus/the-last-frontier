@@ -111,6 +111,24 @@ func held_side() -> float:
 	return signf(lr) if absf(lr) > 0.1 else 0.0
 
 
+## The way his move keys hold (x right, y forward; his controls' move vector: a test's own too).
+func held_move() -> Vector2:
+	if held_override != null:
+		return held_override as Vector2
+	if player == null or player.controls == null:
+		return Vector2.ZERO
+	var v := player.controls.move_vector()
+	return Vector2(v.x, -v.y)
+
+
+## Tests only: not null stands for the move keys held (held_move).
+var held_override: Variant = null
+
+
+func jump_held() -> bool:
+	return player != null and player.controls != null and player.controls.pressed(&"jump")
+
+
 func mode_of(id: String) -> String:
 	return sway.mode_of(id) if sway != null and is_instance_valid(sway) else super.mode_of(id)
 

@@ -152,7 +152,7 @@ func self_point(m := "pillar") -> Vector3:
 func _pick(m: String, q: Dictionary) -> Dictionary:
 	var d := SwayMoves.move(m)
 	var targets: Array = d.get("targets", [])
-	if (m == "pillar" and caster.mode_of(m) == "self") or m == "stone_form" or bool(d.get("self_lock", false)):
+	if caster.self_lock_of(m):
 		var sp := self_point(m)
 		mark.global_transform = Transform3D(Basis.IDENTITY, sp)
 		return {"node": mark, "point": sp, "normal": Vector3.UP, "ground": true, "self": true, "matter": FormMatter.of_ground(get_tree(), sp)}
