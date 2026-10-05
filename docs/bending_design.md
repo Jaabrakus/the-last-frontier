@@ -110,6 +110,20 @@ games are imported.
 
 A stance per element and about one clip per move (about 100 in all, built a little at a time).
 
+## The look of the elements (cel VFX)
+
+2D animated effects stood up in 3D: hard colour bands, bold shapes, no soft dots (BendLooks, BendZone._look; the materials,
+meshes and particle recipes in ToonFx, scripts/fx/toon_fx.gd; the shaders in shaders/bend_fx/; all our own, made in code).
+Fire is a boiling orb with banded flame tongues and a flame ribbon; water a wobbling head with a stream and two coiling
+strands; ice a faceted crystal with a glint; air swirl bands and corkscrew speed lines; stone cel-faceted rock with a dust
+streak; lightning forks with a white core in a blue sheath. Hits flash, fling cel puffs, sparks, shards or chunks and leave a
+mark on the deck (scorch, wet, frost, cracks). `ToonFx.style` "cel" (default) or "ink" (a dark outline round every shape).
+Cheap by construction: ToonFxPool (one per scene) reuses every emitter, shape, mark, light and trail with a cap per kind.
+For the integrator: `BendLooks.warm_up(camera)` once the ring stands (it compiles every effect up front: without it the
+first fire wall or tornado can freeze a frame for seconds on a Mac); `BendLooks.rise(foot, size, way, matter)` when an earth
+or ice wall comes up and `BendLooks.shatter(foot, size, way, matter)` when one breaks (FormRaised raise / crumble).
+Stills: tools/bending/vfx_lineup.gd; load: tools/bending/vfx_stress.gd.
+
 ## Build order (proposed)
 
 1. Controls: the keys and their two skills (the same key again switches), the wheel through a skill's variations; the

@@ -1,0 +1,488 @@
+class_name ToonFx
+extends RefCounted
+## The cel look of the bent elements' effects (BendLooks, BendZone; 2D animated effects stood up in 3D): hard-edged colour
+## bands, bold shapes, no soft dots. Everything here is made once and shared: the shaders (shaders/bend_fx/), their
+## materials by key (mat), the meshes (a flame's quad, bands, shards, rock chunks, a crescent), the particle recipes the
+## pool plays (recipe: draw mesh, material, process template), and one tiling noise every shader reads.
+## style: "cel" (hard bands) or "ink" (the same with a dark outline round every shape, a drawn look). A tool can set it with
+## Engine meta "bend_fx_style" before the first effect is made.
+## The per-scene pool that plays them, caps them and reuses their nodes: ToonFxPool. The trail along a line: ToonRibbon.
+
+const SHADERS := {
+	"flame": preload("res://shaders/bend_fx/toon_flame.gdshader"),
+	"puff": preload("res://shaders/bend_fx/toon_puff.gdshader"),
+	"spark": preload("res://shaders/bend_fx/toon_spark.gdshader"),
+	"water": preload("res://shaders/bend_fx/toon_water.gdshader"),
+	"wind": preload("res://shaders/bend_fx/toon_wind.gdshader"),
+	"facet": preload("res://shaders/bend_fx/toon_facet.gdshader"),
+	"bolt": preload("res://shaders/bend_fx/toon_bolt.gdshader"),
+	"sprite": preload("res://shaders/bend_fx/toon_sprite.gdshader"),
+	"mark": preload("res://shaders/bend_fx/toon_mark.gdshader"),
+}
+
+static var style := "cel"
+
+static var _noise: Texture2D
+static var _mats := {}
+static var _meshes := {}
+static var _recipes := {}
+static var _style_used := ""
+
+
+## The style in force: the Engine meta a tool set, else `style`.
+static func style_now() -> String:
+	return String(Engine.get_meta(&"bend_fx_style", style)) if Engine.has_meta(&"bend_fx_style") else style
+
+
+## A tiling noise (128 px, made once, synchronously: no frame waits for it).
+static func noise() -> Texture2D:
+	if _noise == null:
+		var n := FastNoiseLite.new()
+		n.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+		n.fractal_type = FastNoiseLite.FRACTAL_FBM
+		n.fractal_octaves = 3
+		n.frequency = 0.035
+		n.seed = 4127
+		var img := n.get_seamless_image(128, 128, false, false, 0.1, true)
+		img.convert(Image.FORMAT_L8)
+		img.generate_mipmaps()
+		_noise = ImageTexture.create_from_image(img)
+	return _noise
+
+
+## The shared material of `key` (see the match below for the keys).
+static func mat(key: String) -> ShaderMaterial:
+	var s := style_now()
+	if s != _style_used:
+		_mats.clear()
+		_recipes.clear()
+		_style_used = s
+	if _mats.has(key):
+		return _mats[key]
+	var m := ShaderMaterial.new()
+	var p := {}
+	match key:
+		"flame":
+			m.shader = SHADERS.flame
+		"flame_strip":
+			m.shader = SHADERS.flame
+			p = {"mode": 1, "speed": 3.2, "nscale": Vector2(1.0, 2.6), "turb": 1.0, "taper": 0.1}
+		"flame_low":
+			m.shader = SHADERS.flame
+			p = {"speed": 1.8, "turb": 1.1, "nscale": Vector2(1.4, 1.1)}
+		"puff_fire":
+			m.shader = SHADERS.puff
+			p = {"mode": 0, "glow": 1.8}
+		"puff_steam":
+			m.shader = SHADERS.puff
+			p = {"mode": 1, "c_a": Color(1.0, 1.0, 1.0), "c_b": Color(0.84, 0.88, 0.93), "c_c": Color(0.6, 0.67, 0.77),
+					"c_ink": Color(0.25, 0.3, 0.38)}
+		"puff_smoke":
+			m.shader = SHADERS.puff
+			p = {"mode": 1, "c_a": Color(0.6, 0.58, 0.55), "c_b": Color(0.4, 0.38, 0.36), "c_c": Color(0.24, 0.23, 0.22)}
+		"puff_dust":
+			m.shader = SHADERS.puff
+			p = {"mode": 1, "c_a": Color(0.9, 0.8, 0.62), "c_b": Color(0.7, 0.58, 0.43), "c_c": Color(0.46, 0.37, 0.27),
+					"c_ink": Color(0.2, 0.14, 0.09)}
+		"puff_frost":
+			m.shader = SHADERS.puff
+			p = {"mode": 1, "c_a": Color(1.0, 1.0, 1.0), "c_b": Color(0.76, 0.92, 1.0), "c_c": Color(0.45, 0.7, 0.95),
+					"c_ink": Color(0.1, 0.25, 0.45)}
+		"puff_air":
+			m.shader = SHADERS.puff
+			p = {"mode": 1, "c_a": Color(1.0, 1.0, 1.0), "c_b": Color(0.88, 0.95, 1.0), "c_c": Color(0.7, 0.83, 0.95),
+					"c_ink": Color(0.3, 0.45, 0.6), "wobble": 0.6}
+		"foam":
+			m.shader = SHADERS.puff
+			p = {"mode": 1, "c_a": Color(1.0, 1.0, 1.0), "c_b": Color(0.82, 0.94, 1.0), "c_c": Color(0.5, 0.76, 0.98),
+					"c_ink": Color(0.05, 0.2, 0.45)}
+		"drop":
+			m.shader = SHADERS.puff
+			p = {"mode": 2, "c_a": Color(0.62, 0.9, 1.0), "c_b": Color(0.22, 0.6, 1.0), "c_c": Color(0.08, 0.33, 0.8),
+					"c_d": Color(1.0, 1.0, 1.0), "c_ink": Color(0.02, 0.1, 0.3), "wobble": 0.12}
+		"spark_fire":
+			m.shader = SHADERS.spark
+			p = {"mode": 0, "c_core": Color(1.0, 0.95, 0.65), "glow": 2.6, "stretch": 4.5}
+		"spark_elec":
+			m.shader = SHADERS.spark
+			p = {"mode": 0, "c_core": Color(1.0, 1.0, 1.0), "glow": 4.5, "rim_glow": 1.8, "stretch": 6.0}
+		"spark_line":
+			m.shader = SHADERS.spark
+			p = {"mode": 0, "c_core": Color(1.0, 1.0, 1.0), "glow": 1.3, "rim_glow": 1.0, "stretch": 12.0}
+		"star":
+			m.shader = SHADERS.spark
+			p = {"mode": 1, "c_core": Color(1.0, 1.0, 1.0), "glow": 3.0, "rim_glow": 1.6}
+		"star_still":
+			m.shader = SHADERS.spark
+			p = {"mode": 1, "c_core": Color(1.0, 1.0, 1.0), "glow": 3.0, "rim_glow": 1.6, "twinkle": 1.0}
+		"water":
+			m.shader = SHADERS.water
+			p = {"wobble": 0.03, "flow": Vector2(0.0, -1.6), "nscale": Vector2(2.0, 1.0)}
+		"water_wall":
+			m.shader = SHADERS.water
+			p = {"wobble": 0.06, "flow": Vector2(0.0, 0.45), "nscale": Vector2(5.0, 0.7), "foam": 0.8, "rim": 0.6}
+		"bubble":
+			m.shader = SHADERS.water
+			p = {"wobble": 0.05, "flow": Vector2(0.12, 0.0), "nscale": Vector2(1.2, 4.0), "foam": 0.84, "rim": 0.42,
+					"alpha_mul": 0.5, "c_shade": Color(0.16, 0.5, 0.95, 0.55), "c_body": Color(0.3, 0.66, 1.0, 0.5)}
+		"water_strip":
+			m.shader = SHADERS.water
+			p = {"mode": 1, "flow": Vector2(-2.0, 0.0), "nscale": Vector2(3.0, 1.0), "foam": 0.8, "rim": 0.55}
+		"wind_band":
+			m.shader = SHADERS.wind
+			p = {"mode": 0, "spin": 5.0, "nscale": Vector2(2.0, 0.7), "streak": 0.62}
+		"wind_band_slow":
+			m.shader = SHADERS.wind
+			p = {"mode": 0, "spin": 2.6, "nscale": Vector2(3.0, 0.7), "streak": 0.58}
+		"wind_band_fast":
+			m.shader = SHADERS.wind
+			p = {"mode": 0, "spin": 9.0, "nscale": Vector2(2.0, 0.8), "streak": 0.55}
+		"wind_funnel":
+			m.shader = SHADERS.wind
+			p = {"mode": 0, "spin": 7.0, "nscale": Vector2(2.5, 0.9), "streak": 0.74}
+		"wind_strip":
+			m.shader = SHADERS.wind
+			p = {"mode": 1, "speed": 2.0, "nscale": Vector2(1.5, 0.4), "streak": 0.25}
+		"ice_strip":
+			m.shader = SHADERS.wind
+			p = {"mode": 1, "speed": 2.0, "nscale": Vector2(1.5, 0.4), "streak": 0.25,
+					"c_main": Color(0.92, 0.99, 1.0, 0.95), "c_edge": Color(0.45, 0.78, 1.0, 0.8)}
+		"dust_strip":
+			m.shader = SHADERS.wind
+			p = {"mode": 1, "speed": 2.0, "nscale": Vector2(1.5, 0.4), "streak": 0.3,
+					"c_main": Color(0.86, 0.76, 0.6, 0.9), "c_edge": Color(0.62, 0.5, 0.38, 0.7), "c_ink": Color(0.25, 0.18, 0.1)}
+		"wind_arc":
+			m.shader = SHADERS.wind
+			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.18, "glow": 1.1}
+		"ice":
+			m.shader = SHADERS.facet
+			p = {"c_light": Color(0.96, 1.0, 1.0), "c_mid": Color(0.66, 0.9, 1.0), "c_dark": Color(0.3, 0.62, 0.95)}
+		"rock":
+			m.shader = SHADERS.facet
+			p = {"c_light": Color(0.78, 0.69, 0.56), "c_mid": Color(0.55, 0.47, 0.37), "c_dark": Color(0.32, 0.26, 0.21),
+					"rim_on": 0.0, "glint": 0.0, "c_ink": Color(0.1, 0.07, 0.05)}
+		"bolt":
+			m.shader = SHADERS.bolt
+		"flash":
+			m.shader = SHADERS.sprite
+			p = {"mode": 0}
+		"orb":
+			m.shader = SHADERS.sprite
+			p = {"mode": 4}
+		"ring":
+			m.shader = SHADERS.sprite
+			p = {"mode": 1}
+		"crown":
+			m.shader = SHADERS.sprite
+			p = {"mode": 2}
+		"swirl":
+			m.shader = SHADERS.sprite
+			p = {"mode": 3}
+		"mark_scorch", "mark_cracks", "mark_frost", "mark_wet":
+			m.shader = SHADERS.mark
+			p = {"mode": ["mark_scorch", "mark_cracks", "mark_frost", "mark_wet"].find(key)}
+		_:
+			push_warning("ToonFx: no material %s" % key)
+			m.shader = SHADERS.puff
+	for k in p:
+		m.set_shader_parameter(k, p[k])
+	if m.shader in [SHADERS.flame, SHADERS.puff, SHADERS.water, SHADERS.wind, SHADERS.sprite, SHADERS.mark]:
+		m.set_shader_parameter(&"noise", noise())
+	m.set_shader_parameter(&"ink", 1.0 if s == "ink" else 0.0)
+	_mats[key] = m
+	return m
+
+
+# ---------------------------------------------------------------- meshes
+static func _cached(key: String, make: Callable) -> Mesh:
+	if not _meshes.has(key):
+		_meshes[key] = make.call()
+	return _meshes[key]
+
+
+## A 1 m quad standing on its base (local Y 0..1): a flame.
+static func quad_base() -> Mesh:
+	return _cached("quad_base", func() -> Mesh:
+		var q := QuadMesh.new()
+		q.size = Vector2.ONE
+		q.center_offset = Vector3(0.0, 0.5, 0.0)
+		return q)
+
+
+## A 1 m quad about its middle: particles, flashes.
+static func quad() -> Mesh:
+	return _cached("quad", func() -> Mesh:
+		var q := QuadMesh.new()
+		q.size = Vector2.ONE
+		return q)
+
+
+## A 2 m square lying flat (local XZ, facing +Y): rings, marks.
+static func plane() -> Mesh:
+	return _cached("plane", func() -> Mesh:
+		var q := PlaneMesh.new()
+		q.size = Vector2(2.0, 2.0)
+		return q)
+
+
+static func sphere(segs := 18) -> Mesh:
+	return _cached("sphere%d" % segs, func() -> Mesh:
+		var s := SphereMesh.new()
+		s.radius = 1.0
+		s.height = 2.0
+		s.radial_segments = segs
+		s.rings = segs / 2
+		return s)
+
+
+## An open band round local Y: radius `r0` at the bottom, `r1` at the top, `h` high (UV.x round, UV.y up).
+static func band_mesh(r0: float, r1: float, h: float, segs := 28) -> Mesh:
+	return _cached("band_%.2f_%.2f_%.2f_%d" % [r0, r1, h, segs], func() -> Mesh:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for i in segs:
+			var a0 := TAU * i / segs
+			var a1 := TAU * (i + 1) / segs
+			var u0 := float(i) / segs
+			var u1 := float(i + 1) / segs
+			var p00 := Vector3(cos(a0) * r0, 0.0, sin(a0) * r0)
+			var p10 := Vector3(cos(a1) * r0, 0.0, sin(a1) * r0)
+			var p01 := Vector3(cos(a0) * r1, h, sin(a0) * r1)
+			var p11 := Vector3(cos(a1) * r1, h, sin(a1) * r1)
+			for v: Array in [[p00, Vector2(u0, 0)], [p01, Vector2(u0, 1)], [p11, Vector2(u1, 1)],
+					[p00, Vector2(u0, 0)], [p11, Vector2(u1, 1)], [p10, Vector2(u1, 0)]]:
+				st.set_uv(v[1])
+				st.set_normal(Vector3((v[0] as Vector3).x, 0.0, (v[0] as Vector3).z).normalized())
+				st.add_vertex(v[0])
+		return st.commit())
+
+
+## A flat crescent in local XZ, bulging toward -Z (forward), `span` rad wide, radius `r`, `w` across at its middle (UV.x
+## along the arc, UV.y across).
+static func arc_mesh(r: float, w: float, span := 2.2, segs := 20) -> Mesh:
+	return _cached("arc_%.2f_%.2f_%.2f" % [r, w, span], func() -> Mesh:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var ctr := Vector3(0.0, 0.0, r * 0.8)
+		var prev_in := Vector3.ZERO
+		var prev_out := Vector3.ZERO
+		for i in segs + 1:
+			var u := float(i) / segs
+			var a := -PI * 0.5 + (u - 0.5) * span
+			var dir := Vector3(cos(a), 0.0, sin(a))
+			var hw := w * 0.5 * sin(u * PI)
+			var pin := ctr + dir * (r - hw)
+			var pout := ctr + dir * (r + hw)
+			if i > 0:
+				var pu := float(i - 1) / segs
+				for v: Array in [[prev_in, Vector2(pu, 0)], [prev_out, Vector2(pu, 1)], [pout, Vector2(u, 1)],
+						[prev_in, Vector2(pu, 0)], [pout, Vector2(u, 1)], [pin, Vector2(u, 0)]]:
+					st.set_uv(v[1])
+					st.set_normal(Vector3.UP)
+					st.add_vertex(v[0])
+			prev_in = pin
+			prev_out = pout
+		return st.commit())
+
+
+## An ice crystal along -Z: a six-sided bipyramid `len` long, `r` round, its tip forward (its back short), uneven by `seed`.
+static func shard_mesh(len: float, r: float, seed := 0, sides := 6) -> Mesh:
+	return _cached("shard_%.2f_%.3f_%d_%d" % [len, r, seed, sides], func() -> Mesh:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed * 7919 + 13
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var tip := Vector3(0.0, 0.0, -len * 0.72)
+		var back := Vector3(rng.randf_range(-0.2, 0.2) * r, rng.randf_range(-0.2, 0.2) * r, len * 0.28)
+		var ring: Array[Vector3] = []
+		for i in sides:
+			var a := TAU * i / sides + rng.randf_range(-0.2, 0.2)
+			var rr := r * rng.randf_range(0.75, 1.15)
+			ring.append(Vector3(cos(a) * rr, sin(a) * rr, rng.randf_range(-0.06, 0.06) * len))
+		for i in sides:
+			var a := ring[i]
+			var b := ring[(i + 1) % sides]
+			for v in [tip, b, a, back, a, b]:
+				st.add_vertex(v)
+		st.generate_normals()
+		return st.commit())
+
+
+## A rough rock chunk about 1 m across (a jittered octahedron, split once): debris.
+static func chunk_mesh(seed := 0) -> Mesh:
+	return _cached("chunk_%d" % seed, func() -> Mesh:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed * 104729 + 7
+		var base := [Vector3.UP, Vector3.DOWN, Vector3.LEFT, Vector3.RIGHT, Vector3.FORWARD, Vector3.BACK]
+		var faces := [[0, 2, 4], [0, 4, 3], [0, 3, 5], [0, 5, 2], [1, 4, 2], [1, 3, 4], [1, 5, 3], [1, 2, 5]]
+		var pts: Array[Vector3] = []
+		for b: Vector3 in base:
+			pts.append(b * rng.randf_range(0.7, 1.1))
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for f: Array in faces:
+			var a: Vector3 = pts[f[0]]
+			var b: Vector3 = pts[f[1]]
+			var c: Vector3 = pts[f[2]]
+			var m := ((a + b + c) / 3.0).normalized() * rng.randf_range(0.75, 1.0)
+			for tri in [[a, b, m], [b, c, m], [c, a, m]]:
+				for v: Vector3 in tri:
+					st.add_vertex(v * 0.5 * Vector3(1.0, 0.75, 1.0))
+		st.generate_normals()
+		return st.commit())
+
+
+# ---------------------------------------------------------------- particles
+## A colour ramp whose alpha is the shape's fill (1 whole .. 0 gone; ToonFx shaders): [[offset, colour], ...].
+static func ramp(stops: Array) -> GradientTexture1D:
+	var g := Gradient.new()
+	var offs := PackedFloat32Array()
+	var cols := PackedColorArray()
+	for s: Array in stops:
+		offs.append(float(s[0]))
+		cols.append(s[1])
+	g.offsets = offs
+	g.colors = cols
+	var t := GradientTexture1D.new()
+	t.gradient = g
+	t.width = 64
+	return t
+
+
+static func curve(pts: Array, top := 1.0) -> CurveTexture:
+	var c := Curve.new()
+	c.max_value = top
+	for q: Vector2 in pts:
+		c.add_point(q)
+	var t := CurveTexture.new()
+	t.curve = c
+	t.width = 64
+	return t
+
+
+## How the pool plays particles of `key`: {mesh, mat, amount (per node), slots (nodes at most), proc (the template the
+## pool copies per node; the shot sets its direction, speeds, sizes, gravity)}.
+static func recipe(key: String) -> Dictionary:
+	mat("flame")                                   # (the style check)
+	if _recipes.has(key):
+		return _recipes[key]
+	var pm := ParticleProcessMaterial.new()
+	pm.direction = Vector3.UP
+	pm.spread = 180.0
+	pm.angle_min = -180.0
+	pm.angle_max = 180.0
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	pm.emission_sphere_radius = 0.05
+	var r := {"mesh": quad(), "mat": null, "amount": 32, "slots": 8, "proc": pm, "life": 0.6}
+	var fade := ramp([[0.0, Color(1, 1, 1, 1)], [0.45, Color(1, 1, 1, 0.9)], [1.0, Color(1, 1, 1, 0.0)]])
+	match key:
+		"puff_fire":
+			r.mat = mat("puff_fire")
+			pm.color_ramp = ramp([[0.0, Color(1, 1, 1, 1)], [0.3, Color(1, 0.95, 0.9, 0.9)], [1.0, Color(1.0, 0.7, 0.6, 0.0)]])
+			pm.scale_curve = curve([Vector2(0, 0.55), Vector2(0.2, 1.0), Vector2(1, 0.7)])
+			r.amount = 40
+		"puff_steam", "puff_smoke", "puff_dust", "puff_frost", "puff_air", "foam":
+			r.mat = mat(key)
+			pm.color_ramp = fade
+			pm.scale_curve = curve([Vector2(0, 0.5), Vector2(0.25, 1.0), Vector2(1, 1.1)], 1.2)
+			r.amount = 32
+		"drop":
+			r.mat = mat("drop")
+			pm.color_ramp = ramp([[0.0, Color(1, 1, 1, 1)], [0.7, Color(1, 1, 1, 0.85)], [1.0, Color(1, 1, 1, 0.0)]])
+			r.amount = 48
+		"spark_fire", "spark_elec", "spark_line":
+			r.mat = mat(key)
+			pm.particle_flag_align_y = true
+			pm.angle_min = 0.0
+			pm.angle_max = 0.0
+			pm.color_ramp = ramp([[0.0, Color(1.0, 0.75, 0.2, 1.0)], [0.6, Color(1.0, 0.45, 0.08, 0.8)], [1.0, Color(0.9, 0.2, 0.05, 0.0)]]) \
+					if key == "spark_fire" else (ramp([[0.0, Color(0.55, 0.75, 1.0, 1.0)], [1.0, Color(0.4, 0.55, 1.0, 0.0)]])
+					if key == "spark_elec" else ramp([[0.0, Color(0.8, 0.92, 1.0, 1.0)], [1.0, Color(0.7, 0.85, 1.0, 0.0)]]))
+			r.amount = 48
+		"star":
+			r.mat = mat("star")
+			pm.color_ramp = ramp([[0.0, Color(0.6, 0.85, 1.0, 1.0)], [0.7, Color(0.6, 0.85, 1.0, 0.8)], [1.0, Color(0.6, 0.85, 1.0, 0.0)]])
+			r.amount = 24
+		"shard":
+			r.mesh = shard_mesh(1.0, 0.22, 3, 5)
+			r.mat = mat("ice")
+			pm.color_ramp = null
+			pm.particle_flag_rotate_y = false
+			pm.angular_velocity_min = -540.0
+			pm.angular_velocity_max = 540.0
+			pm.scale_curve = curve([Vector2(0, 1.0), Vector2(0.75, 1.0), Vector2(1, 0.0)])
+			r.amount = 32
+		"chunk":
+			r.mesh = chunk_mesh(1)
+			r.mat = mat("rock")
+			pm.color_ramp = null
+			pm.angular_velocity_min = -360.0
+			pm.angular_velocity_max = 360.0
+			pm.scale_curve = curve([Vector2(0, 1.0), Vector2(0.8, 1.0), Vector2(1, 0.0)])
+			r.amount = 32
+		_:
+			push_warning("ToonFx: no recipe %s" % key)
+			r.mat = mat("puff_dust")
+	_recipes[key] = r
+	return r
+
+
+# ---------------------------------------------------------------- lightning
+## The forks of a lightning stroke from `a` to `b` into `im` (cleared first): a jagged main stroke, thick, and two to four
+## thinner branches off it (some forked again), each a strip for the bolt material (UV2.y: how thick a fork is).
+static func lightning_strips(im: ImmediateMesh, a: Vector3, b: Vector3) -> void:
+	im.clear_surfaces()
+	var m := mat("bolt")
+	var main := _jag(a, b, 5, 0.17)
+	_strip(im, m, main, 0.13, 1.0, 0.75)
+	var len := a.distance_to(b)
+	var d := (b - a).normalized()
+	for k in 2 + randi() % 3:
+		var i := randi_range(2, main.size() - 4)
+		var p := main[i]
+		var off := Vector3(randf_range(-1.0, 1.0), randf_range(-1.0, 0.2), randf_range(-1.0, 1.0)).normalized()
+		var dir := (d + off * 1.1).normalized()
+		var br := _jag(p, p + dir * len * randf_range(0.1, 0.28), 3, 0.25)
+		_strip(im, m, br, 0.065, 0.45, 0.15)
+		if randf() < 0.55 and br.size() > 4:
+			var q := br[br.size() / 2]
+			var dir2 := (dir + Vector3(randf_range(-1, 1), randf_range(-0.8, 0.2), randf_range(-1, 1)) * 0.9).normalized()
+			_strip(im, m, _jag(q, q + dir2 * len * randf_range(0.06, 0.14), 2, 0.3), 0.04, 0.2, 0.1)
+
+
+## A jagged line from `a` to `b`: its middles pushed aside `levels` times by up to `rough` of each piece's length.
+static func _jag(a: Vector3, b: Vector3, levels: int, rough: float) -> PackedVector3Array:
+	var pts := PackedVector3Array([a, b])
+	var r := rough
+	for l in levels:
+		var nxt := PackedVector3Array()
+		for i in pts.size() - 1:
+			var p := pts[i]
+			var q := pts[i + 1]
+			var seg := q - p
+			var sl := seg.length()
+			var rnd := Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1))
+			var perp := rnd - seg.normalized() * rnd.dot(seg.normalized()) if sl > 1e-5 else Vector3.ZERO
+			nxt.append(p)
+			nxt.append((p + q) * 0.5 + perp * sl * r)
+		nxt.append(pts[pts.size() - 1])
+		pts = nxt
+		r *= 0.62
+	return pts
+
+
+static func _strip(im: ImmediateMesh, m: Material, pts: PackedVector3Array, hw: float, thick: float, end_w := 0.3) -> void:
+	var n := pts.size()
+	if n < 2:
+		return
+	im.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP, m)
+	for i in n:
+		var along := pts[mini(i + 1, n - 1)] - pts[maxi(i - 1, 0)]
+		var u := float(i) / (n - 1)
+		var w := hw * lerpf(1.0, end_w, u) * randf_range(0.8, 1.2)
+		for a in 2:
+			im.surface_set_normal(along.normalized())
+			im.surface_set_uv(Vector2(u, float(a)))
+			im.surface_set_uv2(Vector2(w, thick))
+			im.surface_add_vertex(pts[i])
+	im.surface_end()
