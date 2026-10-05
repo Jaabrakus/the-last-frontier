@@ -226,7 +226,8 @@ func _spawn_next() -> void:
 
 ## A look for a fighter of `faction` in `element`'s colours: one of the faction's presets in its dress (NpcFactions.look_for),
 ## the dress coloured by the faction's element_dress[element] (slot -> its colours: a plain athletic dress of the basic garments,
-## the shirt in the element's colour; Tidebreak's sides). {} when the faction has none for it (its own look stands).
+## the shirt in the element's colour; Tidebreak's sides), or slot -> {id, colors}: that garment worn there instead ("-": the
+## slot taken off; the ring dress, set "ring" of the catalog). {} when the faction has none for it (its own look stands).
 static func element_look(faction: String, element: String, rng: RandomNumberGenerator) -> Dictionary:
 	var dress: Variant = (NpcFactions.get_faction(faction).get("element_dress", {}) as Dictionary).get(element)
 	if not (dress is Dictionary) or (dress as Dictionary).is_empty():
@@ -234,6 +235,11 @@ static func element_look(faction: String, element: String, rng: RandomNumberGene
 	var look := NpcFactions.look_for(faction, rng)
 	var outfit: Dictionary = look.get("outfit", {})
 	for slot: String in dress:
+		var d: Variant = (dress as Dictionary)[slot]
+		if d is Dictionary and (d as Dictionary).has("id"):
+			# (a garment of its own: the ring dress, {id, colors}; "-" takes the slot off)
+			outfit[slot] = {"id": String((d as Dictionary).id), "colors": ((d as Dictionary).get("colors", {}) as Dictionary).duplicate()}
+			continue
 		var e: Variant = outfit.get(slot)
 		if e is Dictionary:
 			(e as Dictionary)["colors"] = ((dress as Dictionary)[slot] as Dictionary).duplicate()

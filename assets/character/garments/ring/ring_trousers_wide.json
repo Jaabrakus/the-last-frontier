@@ -1,0 +1,343 @@
+{
+ "id": "ring_trousers_wide",
+ "name": "Ring trousers (wide)",
+ "description": "Wide light trousers gathered on a drawstring at the waist and into bands at the ankles.",
+ "kind": "garment",
+ "set": "ring",
+ "slot": "legs.lower",
+ "alt_slots": [],
+ "layer": {
+  "default": 30
+ },
+ "glb": "res://assets/character/garments/ring/ring_trousers_wide.glb",
+ "mesh": "ring_trousers_wide",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "ring_trousers_wide"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "pelvis_center",
+  "pelvis_side",
+  "shin_lower_l",
+  "shin_lower_r",
+  "shin_upper_l",
+  "shin_upper_r",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_regions": [
+  "pelvis_side",
+  "shin_upper_l",
+  "shin_upper_r",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "cloth",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "ring_tangerine",
+    "ring_saffron",
+    "ring_marigold",
+    "ring_cream",
+    "ring_rust"
+   ],
+   "default": "ring_tangerine",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_tangerine": "#D9762B",
+    "ring_saffron": "#E39A3B",
+    "ring_marigold": "#EFC44A",
+    "ring_cream": "#EFE3A4",
+    "ring_rust": "#B0602A"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "waist and ankle bands",
+   "role": "trim",
+   "fabric": "LIN",
+   "palette": [
+    "ring_tangerine",
+    "ring_saffron",
+    "ring_marigold",
+    "ring_cream",
+    "ring_rust"
+   ],
+   "default": "ring_marigold",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_tangerine": "#D9762B",
+    "ring_saffron": "#E39A3B",
+    "ring_marigold": "#EFC44A",
+    "ring_cream": "#EFE3A4",
+    "ring_rust": "#B0602A"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 3954,
+    "verts": 2395,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "ankle_l",
+     "ankle_r",
+     "pelvis_center",
+     "pelvis_side",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "r_upper_leg",
+     "r_knee",
+     "r_ankle",
+     "r_heel",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined"
+    ]
+   }
+  },
+  "tris": 3954,
+  "verts": 2395,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0524,
+   "breast_large": 0.0016,
+   "breast_small": 0.018
+  },
+  "coverage": {
+   "chest_back": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "abdomen_front": {
+    "normal": 0.99,
+    "cone": 0.854
+   },
+   "abdomen_side": {
+    "normal": 0.969,
+    "cone": 0.823
+   },
+   "abdomen_back": {
+    "normal": 0.99,
+    "cone": 0.76
+   },
+   "pelvis_center": {
+    "normal": 0.844,
+    "cone": 0.646
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "upper_arm_l": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.115,
+    "cone": 0.0
+   },
+   "forearm_b_l": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "forearm_c_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.083,
+    "cone": 0.0
+   },
+   "forearm_b_r": {
+    "normal": 0.062,
+    "cone": 0.0
+   },
+   "forearm_c_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "thigh_lower_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_l": {
+    "normal": 0.99,
+    "cone": 0.875
+   },
+   "ankle_l": {
+    "normal": 0.219,
+    "cone": 0.0
+   },
+   "thigh_upper_r": {
+    "normal": 1.0,
+    "cone": 0.99
+   },
+   "thigh_lower_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_upper_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_r": {
+    "normal": 0.99,
+    "cone": 0.812
+   },
+   "ankle_r": {
+    "normal": 0.208,
+    "cone": 0.0
+   }
+  },
+  "glb_kb": 465.8
+ },
+ "budget": {
+  "tris_max": 7500
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Invented sport dress (Tidebreak, 2026-10-05): the owner asked for assets in the spirit of an elemental martial-arts cartoon, made our own. Cut from the cloth2 recipes; no outfit, emblem or insignia copied.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "ring",
+  "tidebreak",
+  "pants",
+  "air"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 2.97,
+    "p05_mm": 6.17,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": -18.17,
+    "p05_mm": 5.41,
+    "inside_skin": 25
+   },
+   "bl": {
+    "min_mm": 2.97,
+    "p05_mm": 6.17,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 2.99,
+    "p05_mm": 6.21,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": false,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/asset_author/ring_garments/ring_trousers_wide.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/asset_author/ring_garments/ring_trousers_wide.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "presets": {
+   "air": {
+    "0": "ring_tangerine",
+    "1": "ring_marigold"
+   }
+  },
+  "recipe_note": "dress.trousers wide: flare to 5.2 cm at the knee, gathered ankle bands 4 cm."
+ }
+}

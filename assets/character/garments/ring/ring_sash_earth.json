@@ -1,0 +1,250 @@
+{
+ "id": "ring_sash_earth",
+ "name": "Earth side sash",
+ "description": "A long sash wound twice round the waist over the tunic, the end hanging at the left front.",
+ "kind": "garment",
+ "set": "ring",
+ "slot": "accessories.waist",
+ "alt_slots": [],
+ "layer": {
+  "default": 38
+ },
+ "glb": "res://assets/character/garments/ring/ring_sash_earth.glb",
+ "mesh": "ring_sash_earth",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "ring_sash_earth"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "sash",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "ring_umber",
+    "ring_moss",
+    "ring_olive",
+    "ring_ochre",
+    "ring_khaki"
+   ],
+   "default": "ring_umber",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_umber": "#5A4127",
+    "ring_moss": "#5E7A3A",
+    "ring_olive": "#4A5A2E",
+    "ring_ochre": "#B8893C",
+    "ring_khaki": "#A89B72"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 3,
+   "name": "fringe",
+   "role": "fringe",
+   "fabric": "WOOL",
+   "palette": [
+    "ring_umber",
+    "ring_moss",
+    "ring_olive",
+    "ring_ochre",
+    "ring_khaki"
+   ],
+   "default": "ring_ochre",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_umber": "#5A4127",
+    "ring_moss": "#5E7A3A",
+    "ring_olive": "#4A5A2E",
+    "ring_ochre": "#B8893C",
+    "ring_khaki": "#A89B72"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 842,
+    "verts": 608,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "pelvis_side",
+     "thigh_upper_l"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined"
+    ]
+   }
+  },
+  "tris": 842,
+  "verts": 608,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0527,
+   "breast_large": 0.0303,
+   "breast_small": 0.0076
+  },
+  "coverage": {
+   "chest_front": {
+    "normal": 0.146,
+    "cone": 0.104
+   },
+   "chest_side": {
+    "normal": 0.125,
+    "cone": 0.094
+   },
+   "chest_back": {
+    "normal": 0.25,
+    "cone": 0.135
+   },
+   "abdomen_front": {
+    "normal": 0.656,
+    "cone": 0.396
+   },
+   "abdomen_side": {
+    "normal": 0.729,
+    "cone": 0.646
+   },
+   "abdomen_back": {
+    "normal": 0.688,
+    "cone": 0.427
+   },
+   "pelvis_side": {
+    "normal": 0.073,
+    "cone": 0.042
+   },
+   "upper_arm_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.052,
+    "cone": 0.021
+   }
+  },
+  "glb_kb": 202.6
+ },
+ "budget": {
+  "tris_max": 4500
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Invented sport dress (Tidebreak, 2026-10-05): the owner asked for assets in the spirit of an elemental martial-arts cartoon, made our own. Cut from the cloth2 recipes; no outfit, emblem or insignia copied.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "ring",
+  "tidebreak",
+  "earth"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 20.14,
+    "p05_mm": 23.7,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 19.25,
+    "p05_mm": 23.99,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 5.26,
+    "p05_mm": 19.47,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 20.14,
+    "p05_mm": 23.82,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/asset_author/ring_garments/ring_sash_earth.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/asset_author/ring_garments/ring_sash_earth.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "ring_earth_tunic",
+  "ring_trousers_wrapped"
+ ],
+ "extra": {
+  "presets": {
+   "earth": {
+    "0": "ring_umber",
+    "3": "ring_ochre"
+   }
+  },
+  "recipe_note": "recipes.sash turns 2 (dress.wound_sash) over ring_earth_tunic, ring_trousers_wrapped."
+ }
+}

@@ -195,16 +195,46 @@ static func _set_hide(mi: MeshInstance3D, mask: Vector2i) -> void:
 			m.set_shader_parameter("hide_mask", mask)
 
 
-## THE ARENA'S DRESS (Tidebreak's ring; FrontierPlayer.arena): athletic, from the basic garments, in the element's colour
-## (MatchSetup.color: the colour its side wears): the basic shirt (a man's tucked shirt, a woman's shift) dyed the element's
-## colour, plain trousers (a man's breeches, a woman's loose salvar: closed between the legs, for the deck), a sash in the
-## colour at the waist, bare feet; every other slot empty (no coat, no hat, no musket gear). The face, the skin, the hair
-## stay the saved look's; nothing is saved (the look on file is the player's own, worn again out of the ring).
+## THE ARENA'S DRESS (Tidebreak's ring; FrontierPlayer.arena): the element side's ring dress (the catalog's set "ring",
+## built by tools/asset_author/build_ring_garments.py; the owner 2026-10-05: assets in the spirit of the inspiration, our
+## own cuts), the same garments the ring's bots of that element wear: data/npc/factions.json ARENA_FACTION's
+## element_dress[element], slot -> {id, colors} (earth: the wrap tunic, wrapped trousers, sash, arm wraps, shoes; water:
+## the fur-trimmed parka, fitted trousers, belt, boots; fire: the sleeveless top, fitted trousers, sash, wrist guards,
+## shoes; air: the long tunic, wide trousers, sash, shoes); every other slot empty (no hat, no musket gear). Without
+## those garments (a catalog without the ring set) the old athletic dress: the basic shirt dyed the element's colour
+## (MatchSetup.color), plain trousers, a sash. The face, the skin, the hair stay the saved look's; nothing is saved (the
+## look on file is the player's own, worn again out of the ring).
+const ARENA_FACTION := "ring_team_a"
 const ARENA_LEGS := {"men": "breeches", "women": "salvar_mens"}
 const ARENA_SASH := "sash_worsted"
 
 
+## The ring dress of `element` (ARENA_FACTION's element_dress entries with a garment id), every other slot "-"; {} when
+## the faction has none for it or one of its garments is not in this build.
+static func ring_dress(element: String) -> Dictionary:
+	var dress: Variant = (NpcFactions.get_faction(ARENA_FACTION).get("element_dress", {}) as Dictionary).get(element)
+	if not dress is Dictionary:
+		return {}
+	var out := {}
+	for slot: String in PlayerOutfit.SLOTS:
+		out[slot] = {"id": "-", "colors": {}}
+	var any := false
+	for slot: String in dress:
+		var v: Variant = (dress as Dictionary)[slot]
+		if not (v is Dictionary and (v as Dictionary).has("id")) or not slot in PlayerOutfit.SLOTS:
+			continue
+		var id := String((v as Dictionary).id)
+		if id != "-" and not PlayerOutfit.usable(id):
+			return {}
+		out[slot] = {"id": id, "colors": ((v as Dictionary).get("colors", {}) as Dictionary).duplicate()}
+		any = any or id != "-"
+	return out if any else {}
+
+
 static func arena_outfit(element: String, sex: float) -> Dictionary:
+	var ring := ring_dress(element)
+	if not ring.is_empty():
+		return ring
 	var col := MatchSetup.color(element)
 	var dark := col.darkened(0.55)
 	var out := {}

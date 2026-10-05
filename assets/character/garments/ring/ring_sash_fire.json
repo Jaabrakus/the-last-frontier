@@ -1,0 +1,245 @@
+{
+ "id": "ring_sash_fire",
+ "name": "Fire side sash",
+ "description": "A long sash wound twice round the waist over the tunic, the end hanging at the left front.",
+ "kind": "garment",
+ "set": "ring",
+ "slot": "accessories.waist",
+ "alt_slots": [],
+ "layer": {
+  "default": 38
+ },
+ "glb": "res://assets/character/garments/ring/ring_sash_fire.glb",
+ "mesh": "ring_sash_fire",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "ring_sash_fire"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "sash",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "ring_gold",
+    "ring_char",
+    "ring_ember",
+    "ring_flame"
+   ],
+   "default": "ring_char",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_gold": "#D9A441",
+    "ring_char": "#2A1C1A",
+    "ring_ember": "#6E1A16",
+    "ring_flame": "#B5302A"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 3,
+   "name": "fringe",
+   "role": "fringe",
+   "fabric": "WOOL",
+   "palette": [
+    "ring_gold",
+    "ring_char",
+    "ring_ember",
+    "ring_flame"
+   ],
+   "default": "ring_gold",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "ring_gold": "#D9A441",
+    "ring_char": "#2A1C1A",
+    "ring_ember": "#6E1A16",
+    "ring_flame": "#B5302A"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 763,
+    "verts": 565,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "pelvis_side",
+     "thigh_upper_l"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined"
+    ]
+   }
+  },
+  "tris": 763,
+  "verts": 565,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0542,
+   "breast_large": 0.0191,
+   "breast_small": 0.0141
+  },
+  "coverage": {
+   "chest_front": {
+    "normal": 0.104,
+    "cone": 0.083
+   },
+   "chest_side": {
+    "normal": 0.115,
+    "cone": 0.031
+   },
+   "chest_back": {
+    "normal": 0.198,
+    "cone": 0.104
+   },
+   "abdomen_front": {
+    "normal": 0.573,
+    "cone": 0.333
+   },
+   "abdomen_side": {
+    "normal": 0.729,
+    "cone": 0.531
+   },
+   "abdomen_back": {
+    "normal": 0.615,
+    "cone": 0.344
+   },
+   "pelvis_side": {
+    "normal": 0.073,
+    "cone": 0.042
+   },
+   "upper_arm_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.031,
+    "cone": 0.01
+   }
+  },
+  "glb_kb": 193.8
+ },
+ "budget": {
+  "tris_max": 4500
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Invented sport dress (Tidebreak, 2026-10-05): the owner asked for assets in the spirit of an elemental martial-arts cartoon, made our own. Cut from the cloth2 recipes; no outfit, emblem or insignia copied.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "ring",
+  "tidebreak",
+  "fire"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 19.49,
+    "p05_mm": 24.88,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 19.45,
+    "p05_mm": 24.01,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 6.64,
+    "p05_mm": 20.72,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 19.49,
+    "p05_mm": 24.8,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/asset_author/ring_garments/ring_sash_fire.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/asset_author/ring_garments/ring_sash_fire.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "ring_fire_top",
+  "ring_trousers_fitted"
+ ],
+ "extra": {
+  "presets": {
+   "fire": {
+    "0": "ring_char",
+    "3": "ring_gold"
+   }
+  },
+  "recipe_note": "recipes.sash turns 2 (dress.wound_sash) over ring_fire_top, ring_trousers_fitted."
+ }
+}
