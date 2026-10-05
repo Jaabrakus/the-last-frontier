@@ -24,9 +24,12 @@ static func now() -> float:
 	return float(Engine.get_physics_frames()) / float(Engine.physics_ticks_per_second)
 
 
-## Whom the bend can reach: the player and fighters (not dead), the wild, props; not `caster`.
+## Whom the bend can reach: the player and fighters (not dead), the wild, props; not `caster`, nor anyone on its side
+## (BendCaster.same_team: the ring's teams; a body with no side, the open world's and the duel's, is everyone's to reach).
 static func can_take(n: Node, caster: Node) -> bool:
 	if n == null or not is_instance_valid(n) or n == caster:
+		return false
+	if caster != null and is_instance_valid(caster) and BendCaster.same_team(n, caster):
 		return false
 	if n is FrontierPlayer:
 		return not (n as FrontierPlayer).is_dead
@@ -37,7 +40,8 @@ static func can_take(n: Node, caster: Node) -> bool:
 	return n is RigidBody3D and not (n is FormStone)
 
 
-## Everyone within `r` of `at` (flat, and within 3 m up or down) the bend can reach: [node, flat distance].
+## Everyone within `r` of `at` (flat, and within 3 m up or down) the bend can reach: [node, flat distance]. Never the
+## caster's own side (can_take).
 static func near(caster: Node, at: Vector3, r: float) -> Array:
 	var out: Array = []
 	var tree := caster.get_tree() if caster != null and caster.is_inside_tree() else null

@@ -142,6 +142,30 @@ shatter when one is shot down. The effects roll their own dice (ToonFx.vis_rng: 
 and take a brightness per light (ToonFx.set_gain, the shaders' fx_gain; RingLook: night 0.5). Walls are capped in the ring
 (rules.json max_walls 2 per caster, earth and ice walls alike: a third crumbles the oldest; FormRaised.count_wall).
 
+## The match's screens, practice and the teams groundwork (wave 4, SCREENS)
+
+- **Round screen** (RoundScreen, over the ring in the pause after a round): who took it and why (into the water, winded in
+  the last zone, ground held at the bell, stronger at the bell, level at the bell, a knockout), the score, and the round's
+  tally with no replay: your casts, catches (what your guards took) and knock-backs, the other side's under it.
+- **Match screen** (MatchScreen, at the match's end): Victory / Defeat / a drawn match, the score, a line per round ("Round 1
+  · yours · into the water at 1:12"), the match's tally; Rematch, your element and the opponent (both for the rematch, nothing
+  restarts until then), Main menu. The game is not paused under it; the player is held and the mouse is free.
+- **Loading tips**: on the way into the ring the loading screen tells one of the sport's rules or answers in a line.
+- **Quick match** (`MatchSetup.quick_match()`): your last element and setup, the opponent's element drawn at random; the
+  kept setup's opponent is not overwritten. **Practice** (`MatchSetup.set_practice(element, way)`, or the user arg
+  `practice=stand|block|throw`): a dummy of the chosen element held at its end that stands, blocks (its element's guards
+  every time its lock fits what comes, and its cover when you begin a lock) or throws (its throw every 3 s: earth a stone
+  spike, to practise catching and sending it back). No timer, no rounds, the soft walls off; R puts both back at their
+  ends, B steps the dummy's way, a fall into the water resets both after 1.6 s. Every word and number in
+  data/ring/screens.json. The main menu's rows for these (and 3 v 3 shown as coming) are the menu's own: it calls these
+  entry points (`MatchSetup.quick_line()`, `set_match()` before Begin, `DUMMIES`, `dummy_line()`, `FORMATS`,
+  `format_ready()`).
+- **Teams (3 v 3 groundwork)**: RingRules marks each competitor's side (BendCaster.TEAM_META); BendStatus never lets a bend
+  reach the caster's allies, an ally's bolt flies through them, and an ally's guard lets it through (a teammate's shield
+  never sends a teammate's bolt back, and still takes the other side's). With more than one a side: advance only once every
+  opponent still in is pushed back, a competitor rung out sits the round out, the whole side out in one round is a
+  knockout that ends the match at once. Not yet: spawning three a side, team bots' coordination, team HUD.
+
 ## Build order (proposed)
 
 1. Controls: the keys and their two skills (the same key again switches), the wheel through a skill's variations; the

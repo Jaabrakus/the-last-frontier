@@ -26,6 +26,13 @@ extends Node
 ##               winded while confined to the last zone is a ring-out, the winder's
 ##   bones       a bot's broken arm is let go in the ring (no running from the deck: NpcBrain flees on one), a bot down for
 ##               good counts as winded in the last zone
+## TEAMS (the 3 v 3 groundwork; the plan's T14): each competitor added is marked with its side (BendCaster.TEAM_META "ring_0"
+## or "ring_1": BendCaster.same_team, so BendStatus never lets a bend reach its caster's allies, an ally's bolt passes, an
+## ally's guard lets it through); team_mode() once a side has more than one competitor: then a side advances only when
+## every opponent still in is pushed back (min_confined; may_enter(team, zone)), a competitor rung out sits the round out
+## (judged no more; RingMode holds a bot), and every one of a side out in one round is a knockout (side_out, which RingMode
+## takes as the match's end in team mode: knockout()). 1 v 1 is unchanged: one out is the side out, the round's end.
+## Practice (RingMode's): soft_walls off lets anyone walk anywhere on the deck (the edge guard and the ring-outs stay).
 ## Ring awareness for a bot (NpcBending's bounds_fn / edge_fn, the contract): bounds_fn_for(body) clamps a place to where
 ## that body may stand now; edge_along(pos, dir) the metres along dir to an open end. allowed_rect(body), edge_m(pos, side).
 ## Read by RingMode and the HUD: team_of, end_of, confined_of, s_of, forward_limit, territory(), health_frac(team), knocks.
@@ -53,6 +60,10 @@ var state := {}
 var knocks := Vector2i.ZERO
 ## The last ring-out: {who, by, why ("ringout" | "winded")}.
 var last_out := {}
+## The soft wall at each competitor's forward limit (off in practice: walk anywhere).
+var soft_walls := true
+## The last side to go out whole in team mode (-1 none this round): a knockout.
+var knocked_out := -1
 
 var _prev_rules: Object = null
 var _prev_ragdoll := 9.0
@@ -110,10 +121,13 @@ func clear() -> void:
 			for c: Dictionary in (b as Node).get_signal_connection_list(&"winded"):
 				if (c.callable as Callable).get_object() == self:
 					(b as Node).disconnect(&"winded", c.callable)
+		if b is Node and is_instance_valid(b) and (b as Node).has_meta(BendCaster.TEAM_META):
+			(b as Node).remove_meta(BendCaster.TEAM_META)
 	state.clear()
 	sides = [[], []]
 	knocks = Vector2i.ZERO
 	last_out = {}
+	knocked_out = -1
 
 
 ## `body` a competitor of `team` (0 the player's side, 1 the other): never killed in the ring (no_death; winded instead).
@@ -122,6 +136,7 @@ func add(body: Node3D, team: int) -> void:
 		return
 	state[body.get_instance_id()] = {"body": body, "team": team, "confined": 1, "out": false, "by": null, "why": ""}
 	(sides[team] as Array).append(body)
+	body.set_meta(BendCaster.TEAM_META, team_id(team))
 	if &"no_death" in body:
 		body.set(&"no_death", true)
 	if body.has_signal(&"winded"):
@@ -143,6 +158,32 @@ func reset_round() -> void:
 		st["why"] = ""
 	knocks = Vector2i.ZERO
 	last_out = {}
+	knocked_out = -1
+
+
+## Team `team`'s side for the team filter (BendCaster.TEAM_META): "ring_0", "ring_1".
+static func team_id(team: int) -> StringName:
+	return StringName("ring_%d" % team)
+
+
+## More than one competitor on a side: the team rules (advance on all, sit out when out, the knockout).
+func team_mode() -> bool:
+	return (sides[0] as Array).size() > 1 or (sides[1] as Array).size() > 1
+
+
+## The competitors of `team` still in this round.
+func still_in(team: int) -> Array:
+	var out: Array = []
+	for b in sides[team]:
+		if is_instance_valid(b) and not is_out(b):
+			out.append(b)
+	return out
+
+
+## Whether team `team` may stand in the other side's zone `zone` (1..zones) now: only once every opponent still in is
+## confined deeper than it (advancing: all of them behind the line).
+func may_enter(team: int, zone: int) -> bool:
+	return zone >= 1 and zone <= min_confined(1 - team) - 1
 
 
 func _st(body: Node) -> Dictionary:
@@ -357,7 +398,7 @@ func _walls(b: Node3D, e: int, dt: float) -> void:
 	back.y = 0.0
 	back = back.normalized()
 	var s := ring.s_of(b.global_position, e)
-	var lim := forward_limit(b)
+	var lim := forward_limit(b) if soft_walls else -INF
 	var moved := 0.0
 	if s < lim:
 		var depth := lim - s
@@ -418,6 +459,8 @@ func _out(b: Node3D, by: Node, why: String) -> void:
 	for o in sides[t]:
 		if is_instance_valid(o) and not is_out(o):
 			return
+	if team_mode():
+		knocked_out = t
 	side_out.emit(t)
 
 

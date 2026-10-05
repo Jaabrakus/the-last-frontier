@@ -5,6 +5,8 @@ extends CanvasLayer
 ## shade, a thin gold line along the bottom for the progress. It loads the scene on a thread, changes to it, gives it
 ## a moment to settle (a save's parts are applied a few frames after the level is built: SaveGame), then fades out.
 ## Added to the root, so it outlives the scene change.
+## On the way into Tidebreak's ring (scenes/ring.tscn, a match or a practice) a tip of the sport's under the caption: one rule
+## or one answer in a line (data/ring/screens.json "tips", MatchSetup.screens; tip_for), drawn by lot.
 ##
 ##   LoadingScreen.go(get_tree(), "res://scenes/main.tscn")
 
@@ -15,6 +17,8 @@ const FADE_S := 0.7
 const DRIFT := 0.06         ## how much nearer the painting drifts while it shows
 ## The longest the painting waits on a level's meta loading_hold (s after the scene change; the ring warms its effects).
 const HOLD_MAX_S := 15.0
+## The ring's scene: its loading screen tells a tip of the sport.
+const RING_SCENE := "res://scenes/ring.tscn"
 
 ## The loading screen covering the window now (until its fade begins), if any: covering().
 static var _cover: LoadingScreen
@@ -29,6 +33,8 @@ var _shown := 0.0
 var _pic: TextureRect
 var _bar: ColorRect
 var _root: Control
+## The tip shown ("" none: not the ring).
+var tip := ""
 
 
 static func go(tree: SceneTree, scene_path: String, applying_save := false) -> LoadingScreen:
@@ -96,6 +102,17 @@ func _ready() -> void:
 	if not e.is_empty():
 		box.add_child(MenuUI.label(MenuPaintings.title_line(e), 26, MenuUI.GOLD))
 		box.add_child(MenuUI.label(String(e.caption), 19, MenuUI.INK, true))
+	tip = tip_for(path)
+	if tip != "":
+		var gap := Control.new()
+		gap.custom_minimum_size = Vector2(0, 10)
+		box.add_child(gap)
+		var head := MenuUI.label("%s  ·  A TIP" % MatchSetup.sport().to_upper(), 14, MenuUI.GOLD)
+		head.name = "TipHead"
+		box.add_child(head)
+		var tl := MenuUI.label(tip, 20, MenuUI.INK, true)
+		tl.name = "Tip"
+		box.add_child(tl)
 	var track := ColorRect.new()
 	track.color = Color(MenuUI.DIM, 0.25)
 	track.anchor_top = 1.0
@@ -111,6 +128,20 @@ func _ready() -> void:
 	_root.add_child(_bar)
 	_pic.pivot_offset = get_viewport().get_visible_rect().size * 0.5
 	ResourceLoader.load_threaded_request(path)
+
+
+## A tip of Tidebreak's for the way into `scene_path` ("" for any scene but the ring), drawn by lot (`rng`: a test's).
+static func tip_for(scene_path: String, rng: RandomNumberGenerator = null) -> String:
+	if scene_path != RING_SCENE:
+		return ""
+	var tips: Variant = MatchSetup.screens().get("tips", [])
+	if not (tips is Array) or (tips as Array).is_empty():
+		return ""
+	var r := rng
+	if r == null:
+		r = RandomNumberGenerator.new()
+		r.randomize()
+	return String((tips as Array)[r.randi_range(0, (tips as Array).size() - 1)])
 
 
 func _progress(p: float) -> void:

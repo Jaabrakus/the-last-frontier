@@ -13,6 +13,10 @@ extends RefCounted
 ##   round_s        a round's length (s)
 ##   spectate       the player off the deck while two bots play (soak tests, stills)
 ##   light          the ring's light (LIGHTS: "noon", "golden", "night"; RingLook and RingDressing at the ring's load)
+##   kind           "match" (rounds, a score) or "practice" (KINDS: a dummy of foes[0]'s element, no timer, no rounds; RingMode)
+##   dummy          the practice dummy's way (DUMMIES: "stand" still, "block" its guards and cover, "throw" a stone every
+##                  few seconds; data/ring/screens.json "practice")
+##   format         "1v1" (FORMATS; "3v3" is the structure only, shown as coming: format_ready)
 ## The words a player sees come from data/ring/elements.json (info, label, competitor, style, color, sport): each element's
 ## name, the name its competitors go by (Stone, Tide, Ember, Gale) and its one-line style; no word from any show
 ## (tests/ring/test_player_words.gd holds them to that).
@@ -23,11 +27,17 @@ extends RefCounted
 ##   MatchSetup.leave()           the main menu again: no match
 ##   MatchSetup.save() / load()   the last setup in GameSettings' "match" section (the menu's panel and Quick match)
 ##   MatchSetup.quick_of(el) / set_quick(el, id, mode)   each element's quick spell on LMB (GameSettings' "quick" section)
+##   MatchSetup.quick_match(rng)  Quick match from the main menu: your last element and the rest of the last setup, the
+##                                opponent's element drawn at random (the kept setup's opponent is not overwritten by it)
+##   MatchSetup.set_practice(foe, dummy) / set_match()   what the next Begin plays (the menu's Practice and Begin)
+##   MatchSetup.practice()        a practice asked for (kind)
 ##   MatchSetup.parse(args)       the setup's user args, as take() reads them:
 ##       mode=ring element=fire foe=water[,earth,...] mates=air[,...] difficulty=hard to_win=2 round_s=90 spectate=on
-##       light=golden
+##       light=golden practice=throw (or mode=practice: a practice with the kept dummy)
 
 const DATA_PATH := "res://data/ring/elements.json"
+## The match's screens' words, the loading tips and the practice dummy's numbers.
+const SCREENS_PATH := "res://data/ring/screens.json"
 ## GameSettings' section the last setup is kept in.
 const SECTION := "match"
 ## The opponent drawn by lot (the menu's "Any").
@@ -37,6 +47,13 @@ const DIFFICULTIES := ["easy", "normal", "hard"]
 const ROUNDS := [1, 2, 3]
 ## The ring's light moods the menu offers (RingLook.PRESETS), the first the default.
 const LIGHTS := ["noon", "golden", "night"]
+## What the ring plays: a match, or a practice against a dummy.
+const KINDS := ["match", "practice"]
+## The practice dummy's ways, the first the default.
+const DUMMIES := ["stand", "block", "throw"]
+## The match formats; only those in FORMATS_READY can be played (the rest are shown as coming).
+const FORMATS := ["1v1", "3v3"]
+const FORMATS_READY := ["1v1"]
 
 ## Set by the main menu's Begin for the scene it loads (taken once: take()).
 static var incoming := false
@@ -48,9 +65,15 @@ static var rounds_to_win := 2
 static var round_s := 180.0
 static var spectate := false
 static var light := "noon"
+static var kind := "match"
+static var dummy := "stand"
+static var format := "1v1"
+## Quick match's draw: the opponent is this match's own, the kept setup's left as it was (save()).
+static var quick := false
 
 static var _on := false
 static var _data := {}
+static var _screens := {}
 
 
 # --- The request ----------------------------------------------------------------------------------------------
@@ -60,7 +83,8 @@ static func requested() -> bool:
 	if incoming:
 		return true
 	for a in OS.get_cmdline_user_args():
-		if a.trim_prefix("--") == "mode=ring":
+		var kv := a.trim_prefix("--")
+		if kv in ["mode=ring", "mode=practice"] or kv.begins_with("practice="):
 			return true
 	return false
 
@@ -84,6 +108,8 @@ static func active() -> bool:
 static func leave() -> void:
 	_on = false
 	incoming = false
+	quick = false
+	kind = "match"
 
 
 ## The setup's user args in `args` applied; an unknown key or a bad value leaves the setup as it was. True when mode=ring
@@ -98,7 +124,20 @@ static func parse(args: PackedStringArray) -> bool:
 		var v := a.get_slice("=", 1).strip_edges()
 		match k:
 			"mode":
-				ring = ring or v == "ring"
+				ring = ring or v in ["ring", "practice"]
+				if v == "practice":
+					kind = "practice"
+			"practice":
+				ring = true
+				kind = "practice"
+				if v in DUMMIES:
+					dummy = v
+			"dummy":
+				if v in DUMMIES:
+					dummy = v
+			"format":
+				if v in FORMATS:
+					format = v
 			"element":
 				if v in Bending.ELEMENTS:
 					element = v
@@ -153,8 +192,14 @@ static func resolved(list: Array, rng: RandomNumberGenerator) -> Array:
 ## The setup kept in GameSettings' "match" section (the element, the foes, the difficulty, the round wins). A test points
 ## GameSettings.path at a file of its own first (and GameSettings keeps -s runs off the player's own file in any case).
 static func save() -> void:
-	GameSettings.set_section(SECTION, {"element": element, "foe": ",".join(PackedStringArray(foes)),
-			"difficulty": difficulty, "rounds": rounds_to_win, "light": light})
+	var f := ",".join(PackedStringArray(foes))
+	if quick or kind == "practice":
+		# (Quick match's drawn opponent and a practice's dummy are not the panel's choice: the kept opponent stays)
+		var kept := String(GameSettings.get_value(SECTION, "foe"))
+		if not elements_in(kept, true).is_empty():
+			f = kept
+	GameSettings.set_section(SECTION, {"element": element, "foe": f, "difficulty": difficulty, "rounds": rounds_to_win,
+			"light": light, "dummy": dummy})
 
 
 ## The kept setup read back over the statics (each value only when it is a good one).
@@ -174,6 +219,85 @@ static func load() -> void:
 	var l := String(GameSettings.get_value(SECTION, "light"))
 	if l in LIGHTS:
 		light = l
+	var dm := str(_kept("dummy", DUMMIES[0]))
+	if dm in DUMMIES:
+		dummy = dm
+
+
+## A kept value of the "match" section that GameSettings.DEFAULTS may not list (the practice dummy): read from its file as
+## get_value reads, `def` when it is not there.
+static func _kept(key: String, def: Variant) -> Variant:
+	if ((GameSettings.DEFAULTS.get(SECTION, {})) as Dictionary).has(key):
+		return GameSettings.get_value(SECTION, key)
+	var cf := ConfigFile.new()
+	cf.load(GameSettings.file())
+	return cf.get_value(SECTION, key, def)
+
+
+# --- Quick match and practice: the menu's entry points ------------------------------------------------------------
+
+## Quick match (the main menu's): the last setup (load()), your last element, the opponent's element drawn at random (from
+## `rng`, a test's; else a fresh one), a match (not a practice). The menu then plays it as Begin does; the kept setup's own
+## opponent is left as it was (save() while quick). Returns the drawn element.
+static func quick_match(rng: RandomNumberGenerator = null) -> String:
+	MatchSetup.load()
+	var r := rng
+	if r == null:
+		r = RandomNumberGenerator.new()
+		r.randomize()
+	var el := String(Bending.ELEMENTS[r.randi_range(0, Bending.ELEMENTS.size() - 1)])
+	foes = [el]
+	kind = "match"
+	format = "1v1"
+	quick = true
+	return el
+
+
+## Quick match's line under its row: "Earth against a random opponent  ·  normal  ·  best of 3" (the kept setup's).
+static func quick_line() -> String:
+	return String(screens().get("quick_line", "%s against a random opponent  ·  %s  ·  %s")) % [label(element), difficulty,
+			rounds_label(rounds_to_win)]
+
+
+## The next Begin plays a practice against a dummy of element `foe_el` (ANY drawn by lot) standing, blocking or throwing
+## (`way`: DUMMIES; "" keeps the last).
+static func set_practice(foe_el := "", way := "") -> void:
+	kind = "practice"
+	quick = false
+	if foe_el in Bending.ELEMENTS or foe_el == ANY:
+		foes = [foe_el]
+	if way in DUMMIES:
+		dummy = way
+
+
+## The next Begin plays a match (the panel's Begin after a practice).
+static func set_match() -> void:
+	kind = "match"
+	quick = false
+
+
+## A practice asked for.
+static func practice() -> bool:
+	return kind == "practice"
+
+
+## Whether format `f` can be played now ("1v1"); the others are shown as coming.
+static func format_ready(f: String) -> bool:
+	return f in FORMATS_READY
+
+
+## The practice dummy's way in words ("throws a stone every few seconds"; data/ring/screens.json practice.ways).
+static func dummy_line(way: String) -> String:
+	var p: Dictionary = screens().get("practice", {})
+	return String((p.get("ways", {}) as Dictionary).get(way, way))
+
+
+## data/ring/screens.json (the round and match screens' words, the loading tips, the practice dummy), read once.
+static func screens() -> Dictionary:
+	if _screens.is_empty():
+		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(SCREENS_PATH)) if FileAccess.file_exists(SCREENS_PATH) else null
+		_screens = d if d is Dictionary else {"_": true}
+	return _screens
 
 
 # --- The quick spell (LMB), per element --------------------------------------------------------------------------
