@@ -182,6 +182,13 @@ visual references, no animation files imported) is his statement; the rows below
   loops' typed functions are sampled at every frame instead of their eighths (`_loop`); `own-bend-flinch` is 9 frames (was 8)
   and `own-bend-land-heavy` 14 (was 12), their `strike_s` and `hold_s` unchanged (`own-bend-flinch`'s `back_s` 5 frames, was
   4); `own-bend-jump-double`'s `strike_s` is 2 frames (was 3) and its `back_s` 8 (was 7). The other clips' tracks are as before.
+  Revised again the same day after a second review (pass 3): the same generator, the same inputs and the same ten clips,
+  re-keyed and re-baked (`--clips`); no clip, dump or reference motion read. New in the generator: a `tilt` channel (the head's
+  side tilt, keyed only by `helpless`), `"hands_from": "shoulder"` (`helpless`'s hands keyed as the arm's reach from its
+  shoulder, still typed numbers) and `--angles` (a printout of the elbow and knee bends); clips that key none of them pose as
+  before. `own-bend-land-heavy` is 16 frames (was 14), its `strike_s`, `hold_s` and `back_s` unchanged;
+  `own-bend-jump-double`'s `hold_s` is 2 frames (was 1) and its `strike_s` 3 (was 2), `back_s` unchanged. The other clips'
+  tracks are as before.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.

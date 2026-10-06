@@ -41,7 +41,7 @@ extends SceneTree
 ##               A loop is seamless (its first frame's palms, ankles, head and root its last's within 5 mm). The airborne
 ##               one-shots (the double jump, the air dodge) start and end on the fall's first pose (they hand over to it);
 ##               the landings end on the stand with the feet planted from the touchdown on (no slide: 1 cm). Each reads as
-##               its state: the helpless fall's hands HELPLESS_OVER (0.25 m) or more above the shoulders at every frame and
+##               its state: the helpless fall's hands HELPLESS_OVER (0.1 m) or more above the shoulders at every frame and
 ##               0.15 m or more over the plain fall's on average (it reads apart); the tumble turns the whole body over (the
 ##               head under the hips) where the knocked slide never does; the fast fall's legs together and long (the ankles
 ##               within 0.2 m, under the hips by FALL_FAST_LONG or more); the double jump's and the dodge's knees drawn up
@@ -51,8 +51,16 @@ extends SceneTree
 ##   pass 2      the critic's notes: the tumble tucked (0.12 m more compact) while its turn is fastest, the turn 2.5 times
 ##               the slowest there, and upright only as a ball (the ankles within 0.5 m of the hips); the fall's palms 0.45 m
 ##               out at the least, its bicycle 0.18 m and its arms 0.08 m; the fast fall's palms 0.2 m behind the hips; the
-##               double jump's heels under the seat and its hands on the knees in the tuck; the flinch's hands up before the
-##               face at the cringe; the air legs' ankles moving 5 cm or more
+##               double jump's heels under the seat and its hands on the knees in the tuck; the flinch's hands up at the chin
+##               in a guard at the cringe; the air legs' ankles moving 5 cm or more
+##   pass 3      the critic's second notes: the helpless fall's trunk 20 degrees or more off the vertical at every frame (never
+##               the upright "hooray"), its hands never level (6 cm apart in height on average) and its elbows bent; the
+##               tumble's hands 0.25 m or more from the head at the seam (no hand at the ear); the double jump's push long (the
+##               ankles 0.65 m under the hips) with the palms 0.25 m behind the hips, after a gather it can be seen in; the
+##               fall's two arms not mirror-perfect; the fast fall's trunk pitched into the dive, its palms 0.3 m out (an
+##               arrowhead from behind) and both knees bent alike under 35 degrees; the flinch's fists before the chin, clear of
+##               the face; the air legs' left heel 0.15 m behind the right (two shapes); the heavy landing's push up eased (no
+##               frame rising more than 6 cm) and its length 16 frames with back_s unchanged (the punish window starts as before)
 ##   kept r3     the third set (round 2) keeps its lengths and moments (hold_s, strike_s, back_s)
 ## Ends with "BEND_CLIPS PASSED" or "BEND_CLIPS FAILED" (exit 0 only on a pass; a watchdog quits 2 at LIMIT s).
 
@@ -113,14 +121,14 @@ const BEFORE_R3 := {"own-bend-fire-kick-low": [32, 6, 9, 20, -1], "own-bend-fire
 const FOURTH_SET := {"own-bend-tumble": ["full", 24, true], "own-bend-flinch": ["upper", 9, false],
 		"own-bend-jump-double": ["full", 12, false], "own-bend-fall": ["full", 20, true], "own-bend-fall-fast": ["full", 16, true],
 		"own-bend-helpless": ["full", 24, true], "own-bend-air-dodge": ["full", 15, false], "own-bend-air-legs": ["lower", 24, true],
-		"own-bend-land-light": ["full", 10, false], "own-bend-land-heavy": ["full", 14, false]}
+		"own-bend-land-light": ["full", 10, false], "own-bend-land-heavy": ["full", 16, false]}
 ## Its airborne one-shots: they start and end on the fall's first pose (they hand over to the fall loop and to each other).
 const FROM_AIR := ["own-bend-jump-double", "own-bend-air-dodge"]
 ## Its reactions: the hit or the touchdown (strike_s) comes before the hold.
 const REACTIONS := ["own-bend-flinch", "own-bend-land-light", "own-bend-land-heavy"]
 const LANDINGS := ["own-bend-land-light", "own-bend-land-heavy"]
 ## The helpless fall's hands over the shoulders at every frame (m): a tall V, not hands up at the head's height.
-const HELPLESS_OVER := 0.25
+const HELPLESS_OVER := 0.1
 ## The fast fall's ankles under the hips (m): long, with the knees drawn up a little (the tucked arrow).
 const FALL_FAST_LONG := 0.5
 ## The first set's timing contracts (s): kept through the polish.
@@ -577,7 +585,8 @@ func _fourth_pass2(lib: AnimationLibrary, names: Array[String]) -> void:
 		var j := _at(fl, float(fl.get_meta(&"hold_s", 0.0)), bones)
 		var up := minf((j.l_palm as Vector3).y, (j.r_palm as Vector3).y) - (j.heada as Vector3).y
 		print("METRIC flinch_hands_to_head_m %.3f" % up)
-		_check(up > -0.08, "flinch: the hands up before the face at the cringe (%.2f m from the head)" % up)
+		# (pass 3: the cringe is a forearm guard, the fists at the chin, so the bar is the chin's height, not the face's)
+		_check(up > -0.16, "flinch: the hands up at the chin at the cringe (%.2f m from the head)" % up)
 	if "own-bend-air-legs" in names:
 		var al := lib.get_animation(&"own-bend-air-legs")
 		var lo := Vector2(INF, INF)
@@ -589,6 +598,111 @@ func _fourth_pass2(lib: AnimationLibrary, names: Array[String]) -> void:
 			hi = Vector2(maxf(hi.x, y.x), maxf(hi.y, y.y))
 		print("METRIC air_legs_ankle_swing_m l %.3f r %.3f" % [hi.x - lo.x, hi.y - lo.y])
 		_check(minf(hi.x - lo.x, hi.y - lo.y) > 0.05, "air legs: both legs move (%.2f m)" % minf(hi.x - lo.x, hi.y - lo.y))
+	_fourth_pass3(lib, names)
+
+
+## The fourth set's third pass (the critic's second notes, 2026-10-06; the numbers printed as METRIC lines for the review).
+func _fourth_pass3(lib: AnimationLibrary, names: Array[String]) -> void:
+	var bones := ["l_palm", "r_palm", "l_shoulder", "r_shoulder", "l_upper_leg", "r_upper_leg", "l_knee", "r_knee", "l_ankle",
+			"r_ankle", "l_elbow", "r_elbow", "l_wrist", "r_wrist", "pelvis", "neck", "heada"]
+	if "own-bend-helpless" in names:
+		# never the upright "hooray": the trunk (the pelvis to the neck) 20 degrees or more off the vertical at every frame;
+		# the hands never level; the elbows bent (a limp arm, not a reach)
+		var h := lib.get_animation(&"own-bend-helpless")
+		var lean := INF
+		var uneven := 0.0
+		var elbow := Vector2(INF, -INF)
+		for i in 24:
+			var j := _at(h, h.length * i / 24.0, bones)
+			var trunk := (j.neck as Vector3) - (j.pelvis as Vector3)
+			lean = minf(lean, rad_to_deg(trunk.angle_to(Vector3.UP)))
+			uneven += absf((j.l_palm as Vector3).y - (j.r_palm as Vector3).y) / 24.0
+			for s in ["l_", "r_"]:
+				var e := _bend(j, s + "shoulder", s + "elbow", s + "wrist")
+				elbow = Vector2(minf(elbow.x, e), maxf(elbow.y, e))
+		print("METRIC helpless_lean_min_deg %.1f hands_uneven_m %.3f elbow_deg %.0f-%.0f" % [lean, uneven, elbow.x, elbow.y])
+		_check(lean >= 20.0, "helpless: lying back 20 degrees or more at every frame (%.1f)" % lean)
+		_check(uneven > 0.06, "helpless: the hands never level (%.3f m apart on average)" % uneven)
+		_check(elbow.x > 15.0, "helpless: the elbows bent at every frame (%.0f degrees at the least)" % elbow.x)
+	if "own-bend-tumble" in names:
+		var tu := lib.get_animation(&"own-bend-tumble")
+		var near := INF
+		for t in [0.0, tu.length]:
+			var j := _at(tu, t, bones)
+			for s in ["l_", "r_"]:
+				near = minf(near, (j[s + "palm"] as Vector3).distance_to(j.heada))
+		print("METRIC tumble_seam_hand_to_head_m %.3f" % near)
+		_check(near > 0.25, "tumble: the arms flung clear at the seam (a hand %.2f m from the head)" % near)
+	if "own-bend-jump-double" in names:
+		var jd := lib.get_animation(&"own-bend-jump-double")
+		var j := _at(jd, float(jd.get_meta(&"strike_s", 0.0)), bones)
+		var long := (j.pelvis as Vector3).y - maxf((j.l_ankle as Vector3).y, (j.r_ankle as Vector3).y)
+		var back := (j.pelvis as Vector3).z - maxf((j.l_palm as Vector3).z, (j.r_palm as Vector3).z)
+		print("METRIC jump_double_push_long_m %.3f palms_behind_m %.3f strike_f %d" % [long, back,
+				int(round(float(jd.get_meta(&"strike_s", 0.0)) * 30.0))])
+		_check(long > 0.65, "double jump: the push long (the ankles %.2f m under the hips)" % long)
+		_check(back > 0.25, "double jump: the arms swept back in the push (the palms %.2f m behind the hips)" % back)
+		_check(float(jd.get_meta(&"hold_s", 0.0)) >= 2.0 / 30.0 - 1e-4, "double jump: a gather of two frames or more")
+	if "own-bend-fall" in names:
+		var f := lib.get_animation(&"own-bend-fall")
+		var apart := 0.0
+		for i in 20:
+			var j := _at(f, f.length * i / 20.0, bones)
+			apart = maxf(apart, absf((j.l_palm as Vector3).y - (j.r_palm as Vector3).y))
+		print("METRIC fall_hands_unmirrored_m %.3f" % apart)
+		_check(apart > 0.03, "fall: the arms not mirror-perfect (the palms up to %.3f m apart in height)" % apart)
+	if "own-bend-fall-fast" in names:
+		var ff := lib.get_animation(&"own-bend-fall-fast")
+		var pitch := INF
+		var out := INF
+		var knees := Vector2(-INF, 0.0)
+		for i in 16:
+			var j := _at(ff, ff.length * i / 16.0, bones)
+			pitch = minf(pitch, (j.heada as Vector3).z - (j.pelvis as Vector3).z)
+			out = minf(out, minf(absf((j.l_palm as Vector3).x), absf((j.r_palm as Vector3).x)))
+			var kl := _bend(j, "l_upper_leg", "l_knee", "l_ankle")
+			var kr := _bend(j, "r_upper_leg", "r_knee", "r_ankle")
+			knees = Vector2(maxf(knees.x, maxf(kl, kr)), maxf(knees.y, absf(kl - kr)))
+		print("METRIC fall_fast_head_ahead_m %.3f palms_out_m %.3f knee_max_deg %.0f knee_diff_deg %.0f" % [pitch, out,
+				knees.x, knees.y])
+		_check(pitch > 0.05, "fast fall: pitched into the dive (the head %.2f m ahead of the hips)" % pitch)
+		_check(out > 0.3, "fast fall: the arms swept back and out (the palms %.2f m out)" % out)
+		_check(knees.x < 35.0 and knees.y < 15.0, "fast fall: the legs long and alike (the knees %.0f degrees at most, %.0f apart)"
+				% [knees.x, knees.y])
+	if "own-bend-flinch" in names:
+		var fl := lib.get_animation(&"own-bend-flinch")
+		var j := _at(fl, float(fl.get_meta(&"hold_s", 0.0)), bones)
+		var ahead := minf((j.l_palm as Vector3).z, (j.r_palm as Vector3).z) - (j.heada as Vector3).z
+		var mid := maxf(absf((j.l_palm as Vector3).x), absf((j.r_palm as Vector3).x))
+		print("METRIC flinch_guard_ahead_m %.3f guard_half_width_m %.3f" % [ahead, mid])
+		_check(ahead > 0.15, "flinch: the guard clear before the face (%.2f m ahead of the head)" % ahead)
+		_check(mid < 0.15, "flinch: the fists together before the chin (%.2f m from the middle)" % mid)
+	if "own-bend-air-legs" in names:
+		var al := lib.get_animation(&"own-bend-air-legs")
+		var gap := INF
+		for i in 24:
+			var j := _at(al, al.length * i / 24.0, bones)
+			gap = minf(gap, (j.r_ankle as Vector3).z - (j.l_ankle as Vector3).z)
+		print("METRIC air_legs_heel_behind_m %.3f" % gap)
+		_check(gap > 0.15, "air legs: two shapes, the left heel drawn back (%.2f m behind the right)" % gap)
+	if "own-bend-land-heavy" in names:
+		var lh := lib.get_animation(&"own-bend-land-heavy")
+		var n := int(round(lh.length * 30.0))
+		var step := 0.0
+		var prev := INF
+		for fr in range(int(round(float(lh.get_meta(&"back_s", 0.0)) * 30.0)), n + 1):
+			var y := (_at(lh, fr / 30.0, bones).pelvis as Vector3).y
+			if prev < INF:
+				step = maxf(step, y - prev)
+			prev = y
+		print("METRIC land_heavy_rise_step_max_m %.3f" % step)
+		_check(step < 0.06, "heavy landing: the push up eased (%.3f m in one frame at most)" % step)
+		_check(absf(float(lh.get_meta(&"back_s", 0.0)) - 8.0 / 30.0) < 1e-4, "heavy landing: the punish window's end kept (back_s 8 f)")
+
+
+## A joint's bend in degrees (0 straight) from three bones' places.
+func _bend(j: Dictionary, a: String, b: String, c: String) -> float:
+	return rad_to_deg(((j[b] as Vector3) - (j[a] as Vector3)).angle_to((j[c] as Vector3) - (j[b] as Vector3)))
 
 
 ## Bones' skeleton-space places with the clip's keyed bones set at t (the rest elsewhere).

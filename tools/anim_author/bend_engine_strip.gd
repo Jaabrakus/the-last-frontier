@@ -121,8 +121,8 @@ func _run() -> void:
 		var cells: Array[Image] = []
 		for vn: String in VIEWS:
 			for tm: Array in times:
-				cells.append(await _snap(a, nm in airborne, float(tm[0]), vn, "%s (%s)  %s %.2f s\n%s" % [nm.trim_prefix("own-bend-"),
-						el, tm[1], float(tm[0]), vn]))
+				cells.append(await _snap(a, nm in airborne, float(tm[0]), vn, "%s (%s)  %s %.2f s (f%d)\n%s" % [nm.trim_prefix(
+						"own-bend-"), el, tm[1], float(tm[0]), int(round(float(tm[0]) * 30.0)), vn]))
 		_sheet(cells, times.size(), out.path_join("%s%s.png" % [nm.trim_prefix("own-bend-"), suffix]))
 	print("BEND ENGINE STRIP DONE")
 	quit(0)
@@ -174,7 +174,14 @@ func _moments(a: Animation) -> Array:
 		out.append_array([[key, "strike"], [hold, "hold"]])
 	else:
 		out.append_array([[hold, "hold"], [key, "strike"]])
-	out.append_array([[float(a.get_meta(&"back_s", a.length * 0.7)), "back"], [a.length, "end"]])
+	# (the peak between the key moment and the recovery when it is three frames or more from both: the air dodge's twist,
+	# the double jump's tuck, the heavy landing's sag)
+	var back := float(a.get_meta(&"back_s", a.length * 0.7))
+	var from := maxf(key, hold)
+	var mid: float = floorf((from + back) * 0.5 * 30.0 + 1e-3) / 30.0
+	if mid - from >= 2.5 / 30.0 and back - mid >= 2.5 / 30.0:
+		out.append([mid, "peak"])
+	out.append_array([[back, "back"], [a.length, "end"]])
 	return out
 
 

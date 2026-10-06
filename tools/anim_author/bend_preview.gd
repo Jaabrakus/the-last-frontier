@@ -160,26 +160,44 @@ func _moments(a: Animation) -> Array:
 		for i in 8:
 			loop.append([a.length * i / 8.0, "loop %d/8" % i])
 		return loop
-	var named := _named_moments(a)
+	var named := _on_frames(_named_moments(a))
 	if n_frames <= 0:
 		return named
-	# exactly n_frames: the least telling named moments dropped first, then even fills between the rest
+	# exactly n_frames: the least telling named moments dropped first, then fills on whole frames, each the frame farthest
+	# from every moment already shown (so no two columns show the same frame and every label is its real frame)
 	var drop := ["wind 47%", "wind 63%", "wind 79%", "hit+", "way in", "recover", "follow"]
 	while named.size() > n_frames and not drop.is_empty():
 		var k: String = drop.pop_front()
 		named = named.filter(func(e: Array) -> bool: return String(e[1]) != k)
-	var i := 1
-	while named.size() < n_frames and i < 64:
-		var t := a.length * float(i) / 16.0 if i < 16 else a.length * (float(i - 16) + 0.5) / 48.0
-		i += 1
-		var near := false
-		for e: Array in named:
-			if absf(float(e[0]) - t) < a.length / 24.0:
-				near = true
-		if not near:
-			named.append([t, "f%d" % int(round(t * 30.0))])
+	var last := int(round(a.length * 30.0))
+	while named.size() < n_frames:
+		var best := -1
+		var gap := 0
+		for fr in last + 1:
+			var g := 1 << 20
+			for e: Array in named:
+				g = mini(g, absi(fr - int(round(float(e[0]) * 30.0))))
+			if g > gap:
+				gap = g
+				best = fr
+		if best < 0:
+			break
+		named.append([best / 30.0, "f%d" % best])
 	named.sort_custom(func(x: Array, y: Array) -> bool: return float(x[0]) < float(y[0]))
 	return named
+
+
+## Moments put on whole frames (a sheet shows the frames the game plays), the later of two on one frame dropped.
+func _on_frames(arr: Array) -> Array:
+	var res := []
+	var seen := {}
+	for e: Array in arr:
+		var fr := int(round(float(e[0]) * 30.0))
+		if seen.has(fr):
+			continue
+		seen[fr] = true
+		res.append([fr / 30.0, e[1]])
+	return res
 
 
 ## The clip's own named moments (start, hold, strike, ...).
