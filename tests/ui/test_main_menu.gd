@@ -219,10 +219,9 @@ func _run() -> void:
 	check(rows.filter(func(b: Node) -> bool: return b.has_meta(&"name")).is_empty() and m._chosen_bg == "",
 			"no background to pick (the default newcomer)")
 	var texts := _panel_texts(m)
-	check(texts.has("A new life") and texts.has("Story:  Two Fires") and texts.has("Start with nothing:  off") and texts.has("Spouse:  on"),
-			"the story, start-with-nothing and spouse switches (%s)" % [texts])
-	for pair: Array in [["Story:  Two Fires", "Story:  off (free play)"], ["Start with nothing:  off", "Start with nothing:  on"],
-			["Spouse:  on", "Spouse:  off"]]:
+	check(texts.has("A new life") and not texts.has("Story:  Two Fires") and texts.has("Start with nothing:  off") and texts.has("Spouse:  on"),
+			"the start-with-nothing and spouse switches, no story switch (Two Fires retired) (%s)" % [texts])
+	for pair: Array in [["Start with nothing:  off", "Start with nothing:  on"], ["Spouse:  on", "Spouse:  off"]]:
 		var sw := _panel_button(m, String(pair[0]))
 		if sw:
 			sw.pressed.emit()
@@ -233,16 +232,16 @@ func _run() -> void:
 			check(flipped and _panel_texts(m).has(String(pair[0])), "a press flips '%s' and back" % pair[0])
 		else:
 			check(false, "the switch '%s'" % pair[0])
-	check(m._story and not m._bare and m._spouse, "the switches as they began (story on, nothing off, spouse on)")
+	check(not m._bare and m._spouse, "the switches as they began (nothing off, spouse on)")
 	var begin := _panel_button(m, "Begin")
 	check(begin != null and not begin.disabled, "Begin at once (no background to wait for)")
 	SaveGame._launched = false
 	if begin:
 		begin.pressed.emit()
 	await frames(2)
-	check(SaveGame._launched and SaveGame.pending.is_empty() and MainMenu.background_id == "" and StoryDirector.incoming == "two_fires"
+	check(SaveGame._launched and SaveGame.pending.is_empty() and MainMenu.background_id == "" and StoryDirector.incoming == ""
 			and not MainMenu.bare_start and MainMenu.spouse_start,
-			"into a new game: no save continued, no background, the story Two Fires (%s)" % StoryDirector.incoming)
+			"into a new game: no save continued, no background, no storyline (free play) (%s)" % StoryDirector.incoming)
 	var ls := root.find_children("*", "LoadingScreen", true, false)
 	check(ls.size() == 1, "through the loading screen")
 	# (by the clock, not a count of frames: under --fixed-fps the frames run faster than the level's threaded load)

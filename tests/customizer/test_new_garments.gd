@@ -430,7 +430,6 @@ func _test_story() -> void:
 			"a settler man with no costume wears the round hat and the waistcoat (%s)" % [man.outfit.keys()])
 	var rook := StoryWalker.person_look("palatine_m_b", "rook")
 	_check(not rook.outfit.has("head") and not rook.outfit.has("legs.over"), "Rook wears no settler's hat or stockings (%s)" % [rook.outfit.keys()])
-	_check(WreckFall.ROOK_LOOK[1] == "rook" and WreckFall.ITHEL_LOOK[1] == "ithel", "the wreck's two men wear their costumes")
 	# Leclerc: a StoryActor of the Canadians in his own clothes; a marine of the party in the faction's
 	var lec := StoryActor.make(_holder, "canadian_militia", Vector3(3, 0, 0), {"name": "Toussaint Leclerc", "tag": "leclerc", "seed": 1757})
 	lec.process_mode = Node.PROCESS_MODE_DISABLED

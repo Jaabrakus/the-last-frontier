@@ -232,7 +232,7 @@ func _run() -> void:
 # ---------------------------------------------------------------- a new game
 func _new_game() -> void:
 	c = SwayCaster.of(player)
-	_expect(c != null and StorySlice.find(self) == null, "a new game, story off: the level installed the caster (install_free)")
+	_expect(c != null, "a new game, story off: the level installed the caster (install_free)")
 	if c == null:
 		return
 	var all := _ids(SwayCaster.spells())
