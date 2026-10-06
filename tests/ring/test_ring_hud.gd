@@ -570,6 +570,16 @@ func _body() -> void:
 	var rm := RingMode.find(self)
 	if rm != null and rm.foe != null and is_instance_valid(rm.foe):
 		rm.foe.held = true
+	# (and what it already sent: gate R2, a bot that goes on toward him out of sight reached him before the body's checks,
+	# and what it had sent landed on him: the walk carried 21.8 m, the 16 m/s knock kept from throwing him down)
+	for g: StringName in [BendBolt.GROUP, GustLift.GROUP, FormStone.GROUP, BendZone.GROUP, NpcBending.FLIGHT_GROUP,
+			FormEffects.Throw.GROUP]:
+		for x in get_nodes_in_group(g):
+			if is_instance_valid(x):
+				x.queue_free()
+	var kn := BendKnock.peek(p)
+	if kn != null:
+		kn.reset()
 	if rm != null and rm.rules != null:
 		rm.rules.reset_round()               # (the round-2 strip checks take a while: a knock the bot landed meanwhile held him to a zone)
 	p.pitch = -0.15

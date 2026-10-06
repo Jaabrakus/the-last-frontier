@@ -195,8 +195,11 @@ func _menu() -> void:
 	m.close()
 	_expect(paused_ok and not paused and note.begins_with("Round 1") and note.contains("left") and note.contains("You 0  :  0 Stone"),
 			"Esc pauses; the note '%s'" % note)
-	_expect(waits and lines.size() == Bending.keys(mode.element).size() and String(lines[0]).begins_with("1"),
-			"the element choice waits for the restart; the controls list each key (%d lines: '%s')" % [lines.size(), lines[0] if not lines.is_empty() else ""])
+	# (round 2: KitWords' lines, the jab's and the guard's first, then each key)
+	_expect(waits and lines.size() == Bending.keys(mode.element).size() + 2 and String(lines[0]).begins_with("LMB")
+			and String(lines[2]).begins_with("1"),
+			"the element choice waits for the restart; the controls list the jab, the guard and each key (%d lines: '%s')"
+			% [lines.size(), lines[0] if not lines.is_empty() else ""])
 
 
 func _confined() -> void:

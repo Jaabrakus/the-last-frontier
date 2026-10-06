@@ -318,6 +318,35 @@ strokes); merged into the dressing's mesh (no new draw calls).
   player's dummy kicks the floor wave), the quick spell, heal, the zones and the water. Through the drill and the jump the
   dummy throws slowly (a throw each 5 s, its shots at 0.6 of their speed on the same path; the owner's answer to round 1).
 
+## Improvement round 2: the merge and its gate (2026-10-05)
+
+CLIPS, CORE, KITS and HUD_LESSONS merged in that order on worktree-spellcraft, then made to fit:
+
+- **The open world keeps its Form spells.** moves.json's `modes` are the ring's kits; where the open world shares a spell and
+  offers more (Stone Form's disc, the earth wall's column and shell, the pillar's free and ramp) it keeps them in
+  `world_modes` / `world_mode_labels` (SwayCaster.world_modes_of: a caster without an element reads those), with their
+  reaches and the pillar's footfall boost (the ring's Lift reads its own sink_s and run_mult).
+- **One source for the kit.** The HUD's words (KitWords) and the bots (NpcBending) read the jab, the guard and the shared rules
+  from Bending, as the player's caster does; the guard's action is InputSetup's (E and mouse button 4).
+- **Bots as the player.** A hit sets a bot's lock back by what the blow cost (BendStatus' HIT_LOCK_META), as the player's; a
+  blind bot (out of sight, or a smoke or a steam on the line) steps out to the side instead of standing behind its own wall.
+- **The guard drill is the guard.** The lessons' water, fire and air drills are done only on the beat (a perfect guard, CORE's
+  guarded signal), earth's by a stone caught and thrown back; the player's own walls come down as a drill against the
+  dummy's throws begins; the earth dummy's spike is slowed with the rest. tests/ring/test_practice_guards.gd drives each
+  element's guard on E against its practice dummy (perfect, late, whiff, earth's throw back).
+- **A blind bot goes on.** Out of sight, a bot goes on toward where it saw the player last, out to its strafe side (the
+  first gate capped that at 2 m on, and the earth bot never came back into its jab's reach: tests/npc/test_bend_bots.gd's
+  earth cast 4 kinds of move in 40 s, 6 now).
+- The gate (after a reboot emptied the scratchpad, gate R2 was run again whole: 80 rows): every round-2, round-1 and wave
+  row green but the known reds (test_hud_skills 1/33, test_hud_vitals 2/16) and tests/npc/test_duel.gd, the open world's
+  musket duel, red at the round-1 head too: one check of its marine's cover search fails or passes as unrelated code
+  moves (the flank check at 0582fa5, green at 8e359b7, the hidden-player check since: the marine's seek finds no cover to
+  flank or advance to and waits on, NpcSkirmish's "nowhere better to go"). A farther seek made that check pass and broke
+  the flank check, so it is left for the open world's duel work. test_ring_hud clears what the held bot had sent before
+  its body checks (the bot that goes on reached the player first in 3 of 5 runs).
+- Open for the owner: Breath's smoke (5 s from a 0.5 s lock) can keep a bot from ever attacking; the bots' timers run on
+  BendStatus' frame clock (slow under a time scale); the KITS soak's mirrors went to side 0 every time.
+
 ## Build order (proposed)
 
 1. Controls: the keys and their two skills (the same key again switches), the wheel through a skill's variations; the

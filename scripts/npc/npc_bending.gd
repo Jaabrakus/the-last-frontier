@@ -1567,10 +1567,11 @@ func _move(dt: float, t: Node3D, d: float) -> void:
 		if to.length() > band.x:
 			goal = me.global_position + to.normalized() * (to.length() - band.x * 0.8)
 		if blind and to.length_squared() > 1e-6:
-			# (sight cut off, by its own wall, a smoke or a steam: it steps out to its strafe side, a little on at most, so the
-			# line clears it; never stands behind it. The merge gate's earth bot stood 70 s behind the wall it raised 3.5 m
-			# before itself, an air bot 60 s confined behind a fire player's smoke)
-			var on := minf(maxf(to.length() - band.x * 0.8, 0.0), 2.0)
+			# (sight cut off, by its own wall, a smoke or a steam: it goes on toward where it saw him last, out to its strafe
+			# side, so the line clears it; never stands behind it. The merge gate's earth bot stood 70 s behind the wall it
+			# raised 3.5 m before itself, an air bot 60 s confined behind a fire player's smoke; capped at 2 m on, the earth
+			# bot never came into its jab's reach again: gate R2's bend_bots)
+			var on := maxf(to.length() - band.x * 0.8, 0.0)
 			goal = me.global_position + to.normalized() * on + to.normalized().cross(Vector3.UP) * _strafe * 4.0
 			if _room(to.normalized().cross(Vector3.UP) * _strafe) < 3.0:
 				_strafe = -_strafe
