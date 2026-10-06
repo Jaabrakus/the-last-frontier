@@ -1,0 +1,68 @@
+{
+  "_doc": [
+    "Cửu Giang's calendar and how it maps onto the game's clock (ThuyVanCanon.calendar, travel_hours). Rows as in the other files: id, src, status.",
+    "day_scale: one bible day is 2.4 game hours, so a 30-day month is 3 survival days (WorldClock's 12 months of 3 days). The five rite days are 12 game hours more, which the 36-day survival year has no month for; the clock work decides where they sit.",
+    "months, flood_rite_days: the bible's civil year (twelve thirty-day accounting months and five unnumbered flood-rite days). Their place at the year's turn, the seasons and the sport calendar are proposals. Rain varies by region; the numbered months are administrative labels.",
+    "book_one: when the player's Book I happens (Year 0, months 1-5)."
+  ],
+  "calendar": [
+    {
+      "id": "day_scale",
+      "src": ["§03"],
+      "status": "proposal",
+      "game_hours_per_day": 2.4,
+      "game_days_per_month": 3
+    },
+    {
+      "id": "months",
+      "src": ["§03"],
+      "status": "canon",
+      "count": 12,
+      "days": 30,
+      "name": {"text": "month", "voice": "ui"}
+    },
+    {
+      "id": "flood_rite_days",
+      "src": ["§03"],
+      "status": "canon",
+      "count": 5,
+      "numbered": false,
+      "name": {"text": "the Flood-Rite Days", "voice": "ui"}
+    },
+    {
+      "id": "flood_rite_place",
+      "src": ["§03"],
+      "status": "proposal",
+      "after_month": 12,
+      "game_hours": 12,
+      "line": {"text": "The Flood-Rite Days fall between the last month of one year and the first month of the next.", "voice": "narration"}
+    },
+    {
+      "id": "seasons",
+      "src": ["§03", "H23"],
+      "status": "proposal",
+      "seasons": [
+        {"id": "wet", "months": [1, 2, 3, 4, 5, 6], "name": {"text": "the rains", "voice": "ui"}},
+        {"id": "dry", "months": [7, 8, 9, 10, 11, 12], "name": {"text": "the dry season", "voice": "ui"}}
+      ],
+      "line": {"text": "The early rains come with the first month; how much falls depends on where you stand.", "voice": "narration"}
+    },
+    {
+      "id": "book_one",
+      "src": ["§08"],
+      "status": "canon",
+      "year": 0,
+      "months": [1, 5]
+    },
+    {
+      "id": "sport",
+      "src": [],
+      "status": "proposal",
+      "match_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "final": "flood_rite_days",
+      "suspended": {"year": 0, "from_month": 5},
+      "name": {"text": "Tidebreak", "voice": "ui"},
+      "line": {"text": "Tidebreak basin matches are played in the neighbourhood locks all year, and the final at the Flood-Rite Days.", "voice": "narration"}
+    }
+  ]
+}

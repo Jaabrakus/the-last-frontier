@@ -1,0 +1,182 @@
+{
+  "_doc": [
+    "Thủy Vân's places (ThuyVanCanon.place), the bible's atlas L01-L14 and L16. Public fields only. Every row: id, src (bible ids), status, and the same {text, voice} display strings as peoples.json; proposal_fields names the fields still waiting on the owner.",
+    "name: the bible's name. vi_name: the Vietnamese name where one exists (null where none is given yet). title: the English title shown with it. peoples: people ids at home there. reveal_book: the first book a place may be shown or named in the game.",
+    "name_book: where a place's name itself belongs to a later book; book1_label is what Book I calls it instead.",
+    "The atlas is topology, not a map: distances live in routes.json as the bible's travel windows. No river list until the owner names the nine."
+  ],
+  "places": [
+    {
+      "id": "cuu_giang",
+      "src": ["L01"],
+      "status": "canon",
+      "name": {"text": "Cửu Giang Delta", "voice": "ui"},
+      "vi_name": "Cửu Giang",
+      "title": {"text": "Cửu Giang Delta, the Nine Rivers", "voice": "ui"},
+      "peoples": ["dragon_sea"],
+      "reveal_book": 1,
+      "line": {"text": "Lowland rice country of levees, locks and barges, where every boat waits its turn at the gates.", "voice": "npc"}
+    },
+    {
+      "id": "van_thuy",
+      "src": ["L02"],
+      "status": "canon",
+      "name": {"text": "Vạn Thủy", "voice": "ui"},
+      "vi_name": "Vạn Thủy",
+      "title": {"text": "Vạn Thủy, Capital of the Waters", "voice": "ui"},
+      "peoples": ["dragon_sea", "ancestor_bound"],
+      "reveal_book": 1,
+      "line": {"text": "The capital on its islands, all bells and canal steps, where nothing moves without a pass.", "voice": "npc"}
+    },
+    {
+      "id": "da_trang",
+      "src": ["L03"],
+      "status": "canon",
+      "proposal_fields": ["title"],
+      "name": {"text": "Đá Trắng", "voice": "ui"},
+      "vi_name": "Đá Trắng",
+      "title": {"text": "Đá Trắng, the White Stone Reach", "voice": "ui"},
+      "peoples": ["mountain_folk", "dragon_sea"],
+      "reveal_book": 1,
+      "line": {"text": "A white-stoned river in the foothill gorges; the clans fish it, cross it, and keep its upper reach for their dead.", "voice": "npc"}
+    },
+    {
+      "id": "truong_son",
+      "src": ["L04"],
+      "status": "canon",
+      "name": {"text": "Trường Sơn Range", "voice": "ui"},
+      "vi_name": "Trường Sơn",
+      "title": {"text": "Trường Sơn, the Endless Range", "voice": "ui"},
+      "peoples": ["mountain_folk"],
+      "reveal_book": 1,
+      "line": {"text": "The high range of hanging bridges and terraces, where a pass can close for a season.", "voice": "npc"}
+    },
+    {
+      "id": "thach_uyen",
+      "src": ["L05"],
+      "status": "canon",
+      "name": {"text": "Thạch Uyên", "voice": "ui"},
+      "vi_name": "Thạch Uyên",
+      "title": {"text": "Thạch Uyên, the Stone Valleys", "voice": "ui"},
+      "peoples": ["stone_children"],
+      "reveal_book": 1,
+      "line": {"text": "Quarry valleys under the western ridges, loud with chisels and kiln smoke.", "voice": "npc"}
+    },
+    {
+      "id": "reed_marches",
+      "src": ["L06"],
+      "status": "canon",
+      "name": {"text": "Reed Marches", "voice": "ui"},
+      "vi_name": "Đồng Lau",
+      "title": {"text": "Đồng Lau, the Reed Marches", "voice": "ui"},
+      "peoples": ["floodborn"],
+      "reveal_book": 1,
+      "line": {"text": "Southern wetlands of stilt platforms and reed screens, which the toll maps still draw as open water.", "voice": "npc"}
+    },
+    {
+      "id": "khar_ul",
+      "src": ["L07"],
+      "status": "canon",
+      "name": {"text": "Khar-Ul", "voice": "ui"},
+      "vi_name": null,
+      "title": {"text": "Khar-Ul, the Old River Hold", "voice": "ui"},
+      "peoples": ["floodborn"],
+      "reveal_book": 1,
+      "line": {"text": "A Floodborn hold deep in the freshwater marshes, which few outsiders have ever seen.", "voice": "npc"}
+    },
+    {
+      "id": "deep_lotus",
+      "src": ["L08"],
+      "status": "canon",
+      "name": {"text": "Deep Lotus Reaches", "voice": "ui"},
+      "vi_name": "Vực Sen Sâu",
+      "title": {"text": "Vực Sen Sâu, the Deep Lotus Reaches", "voice": "ui"},
+      "peoples": ["riverborn"],
+      "reveal_book": 1,
+      "line": {"text": "Lotus basins and flooded caves, where the Riverborn keep their channels closed to strangers.", "voice": "npc"}
+    },
+    {
+      "id": "ao_thanh",
+      "src": ["L09"],
+      "status": "canon",
+      "name": {"text": "Ảo Thành", "voice": "ui"},
+      "vi_name": "Ảo Thành",
+      "title": {"text": "Ảo Thành, the City of Illusions", "voice": "ui"},
+      "peoples": ["ho_tinh"],
+      "reveal_book": 1,
+      "line": {"text": "A Hồ Tinh city in the western market corridor, open only to those who are expected.", "voice": "npc"}
+    },
+    {
+      "id": "lam_uyen",
+      "src": ["L10"],
+      "status": "canon",
+      "name": {"text": "Lâm Uyên", "voice": "ui"},
+      "vi_name": "Lâm Uyên",
+      "title": {"text": "Lâm Uyên, the Verdant Deep", "voice": "ui"},
+      "peoples": ["moc_tinh"],
+      "reveal_book": 1,
+      "line": {"text": "The great western forest, wet and old, where the groves give leave or do not.", "voice": "npc"}
+    },
+    {
+      "id": "ancestor_roads",
+      "src": ["L11"],
+      "status": "canon",
+      "proposal_fields": ["title"],
+      "name": {"text": "Ancestor Roads", "voice": "ui"},
+      "vi_name": null,
+      "title": {"text": "the Ancestor Roads, the Shrine Circuit", "voice": "ui"},
+      "peoples": ["ancestor_bound"],
+      "reveal_book": 1,
+      "line": {"text": "A circuit of shrine houses and pilgrim roads, each house a stop of its own.", "voice": "npc"}
+    },
+    {
+      "id": "southern_delta",
+      "src": ["L12"],
+      "status": "canon",
+      "proposal_fields": ["title"],
+      "name": {"text": "Southern Delta Provinces", "voice": "ui"},
+      "vi_name": null,
+      "title": {"text": "the Southern Delta Provinces, the Salt Ports", "voice": "ui"},
+      "peoples": ["dragon_sea"],
+      "reveal_book": 1,
+      "line": {"text": "Estuary ports of salt, ships and warehouses, richer than they let the court see.", "voice": "npc"}
+    },
+    {
+      "id": "fishing_coast",
+      "src": ["L13"],
+      "status": "canon",
+      "proposal_fields": ["book1_label"],
+      "name": {"text": "Ash Coast", "voice": "ui"},
+      "vi_name": null,
+      "title": {"text": "the Ash Coast", "voice": "ui"},
+      "name_book": 2,
+      "book1_label": {"text": "the Fishing Coast", "voice": "ui"},
+      "peoples": ["dragon_sea"],
+      "reveal_book": 1,
+      "line": {"text": "A chain of fishing villages along the eastern shore, east of the marshes.", "voice": "npc"}
+    },
+    {
+      "id": "buried_kingdom",
+      "src": ["L14"],
+      "status": "canon",
+      "name": {"text": "The Buried Kingdom", "voice": "ui"},
+      "vi_name": null,
+      "title": {"text": "the Buried Kingdom", "voice": "ui"},
+      "peoples": [],
+      "reveal_book": 2,
+      "line": {"text": "Old galleries under the river works, spoken of by diggers and by few others.", "voice": "npc"}
+    },
+    {
+      "id": "two_heights",
+      "src": ["L16"],
+      "status": "canon",
+      "proposal_fields": ["title"],
+      "name": {"text": "Two Heights Bridge", "voice": "ui"},
+      "vi_name": null,
+      "title": {"text": "Two Heights Bridge, the Northern Crossing", "voice": "ui"},
+      "peoples": ["mountain_folk", "stone_children"],
+      "reveal_book": 1,
+      "line": {"text": "The great bridge between the high passes and the Stone Valleys, where clans and Stone Houses both collect their tolls and their grudges.", "voice": "npc"}
+    }
+  ]
+}

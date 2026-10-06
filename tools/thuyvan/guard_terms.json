@@ -1,0 +1,64 @@
+{
+  "_doc": [
+    "The text guard's term lists (text_guard.py). Author side only: tools/thuyvan has a .gdignore, so Godot never imports or exports it, and the export preset leaves tools/* out.",
+    "Patterns are Python regexes, matched on NFC text, case-insensitive unless case_sensitive is set. They are phrases, not bare words: 'bend' alone (a stern bend, a river bend) is fine.",
+    "book_gated: a term first allowed in earliest_book; a string may hold it only inside a row whose reveal_book is that book or later (everything else counts as Book I).",
+    "show_words: words from the show the arts must never echo; never allowed.",
+    "claim_only: allowed only in a display string whose voice is listed (a claim made by the empire or a posted notice, never the game's own word).",
+    "allowlist: spans masked before the other lists are matched. voices / tags limit an entry to display strings with that voice and tag; requires names text that must also be in the same string.",
+    "forbidden_keys: JSON keys that would hold author-side matter. forbidden_id_words: words no key or id under data/ may contain."
+  ],
+  "book_gated": [
+    {"id": "hollow_tide", "pattern": "\\bHollow Tide\\b", "earliest_book": 3},
+    {"id": "hollow_proper", "pattern": "\\bHollow(ing|ed)?\\b", "case_sensitive": true, "earliest_book": 3},
+    {"id": "ninth_river", "pattern": "\\bNinth River\\b", "earliest_book": 5},
+    {"id": "river_of_memory", "pattern": "\\briver of memory\\b", "earliest_book": 5},
+    {"id": "memory_a_river", "pattern": "\\bMemory (is|as) a river\\b", "earliest_book": 5},
+    {"id": "song_ky", "pattern": "\\bSông K[ýỳ]\\b", "earliest_book": 5},
+    {"id": "convergence", "pattern": "\\bConvergence\\b", "earliest_book": 4},
+    {"id": "lien_khoi", "pattern": "\\bLiên Khởi\\b", "earliest_book": 3},
+    {"id": "quiet_woman", "pattern": "\\bQuiet Woman\\b", "earliest_book": 3},
+    {"id": "thousand_mouth", "pattern": "\\bThousand[- ]Mouth\\b", "earliest_book": 4},
+    {"id": "seal_of_the_rivers", "pattern": "\\bthe seal of the rivers\\b", "earliest_book": 4},
+    {"id": "seal", "pattern": "\\bseal(s|ed|ing)?\\b", "earliest_book": 4},
+    {"id": "containment", "pattern": "\\bcontainment\\b", "earliest_book": 4},
+    {"id": "binding", "pattern": "\\bBinding\\b", "case_sensitive": true, "earliest_book": 3},
+    {"id": "custodial", "pattern": "\\bcustodial\\b", "earliest_book": 3},
+    {"id": "communion", "pattern": "\\bcommunion\\b", "earliest_book": 4},
+    {"id": "lantern_child", "pattern": "\\bLantern Child\\b", "earliest_book": 2}
+  ],
+  "show_words": [
+    {"id": "bender", "pattern": "\\bbend(er|ers|ing)\\b"},
+    {"id": "waterbend", "pattern": "\\bwaterbend\\w*"},
+    {"id": "earthbend", "pattern": "\\bearthbend\\w*"},
+    {"id": "firebend", "pattern": "\\bfirebend\\w*"},
+    {"id": "airbend", "pattern": "\\bairbend\\w*"},
+    {"id": "pro_bending", "pattern": "\\bpro-bending\\b"},
+    {"id": "avatar", "pattern": "\\bavatar\\b"},
+    {"id": "water_tribe", "pattern": "\\bWater Tribes?\\b"},
+    {"id": "earth_kingdom", "pattern": "\\bEarth Kingdom\\b"},
+    {"id": "fire_nation", "pattern": "\\bFire Nation\\b"},
+    {"id": "fire_lord", "pattern": "\\bFire Lord\\b"},
+    {"id": "air_nomads", "pattern": "\\bAir Nomads?\\b"},
+    {"id": "air_temple", "pattern": "\\bAir Temples?\\b"},
+    {"id": "water_whip", "pattern": "\\bwater whip\\b"},
+    {"id": "air_scooter", "pattern": "\\bair scooter\\b"},
+    {"id": "redirect_lightning", "pattern": "\\bredirect(ed|ing)? lightning\\b"},
+    {"id": "seismic_sense", "pattern": "\\bseismic sense\\b"}
+  ],
+  "claim_only": [
+    {"id": "pirates", "pattern": "\\bpirates?\\b", "voices": ["imperial", "notice"]}
+  ],
+  "allowlist": [
+    {"id": "tax_seal", "pattern": "\\btax seals?\\b"},
+    {"id": "sealed_report", "pattern": "\\bsealed reports?\\b"},
+    {"id": "sealed_packet", "pattern": "\\bsealed packets?\\b"},
+    {"id": "salt_under_the_seal", "pattern": "\\bSalt Under the Seal\\b", "case_sensitive": true},
+    {"id": "cuu_giang_seal", "pattern": "\\bCửu Giang(['’]s)? seal\\b"},
+    {"id": "seal_of_cuu_giang", "pattern": "\\bseal of Cửu Giang\\b"},
+    {"id": "court_box_seal", "pattern": "\\bseal on the court box\\b", "requires": "Cửu Giang"},
+    {"id": "lantern_child_tale", "pattern": "\\bLantern Child\\b", "voices": ["npc"], "tags": ["tale"]}
+  ],
+  "forbidden_keys": ["author_truth", "hidden", "evidence", "truth", "reveal_guard"],
+  "forbidden_id_words": ["hollow", "seal", "containment", "convergence"]
+}
