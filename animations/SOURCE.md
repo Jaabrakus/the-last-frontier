@@ -139,6 +139,16 @@ visual references, no animation files imported) is his statement; the rows below
 | `own-bend-air-shield-hold` | 2026-10-05 (third set) | `bend_clips.py` (`air_shield_hold`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
 | `own-bend-air-slice` | 2026-10-05 (third set) | `bend_clips.py` (`air_slice`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
 | `own-bend-air-slice-l` | 2026-10-05 (third set) | `bend_clips.py` (`air_slice`, `mirror_clip`) | `air_slice`'s keys mirrored left for right | (as its original) |
+| `own-bend-tumble` | 2026-10-06 (fourth set) | `bend_clips.py` (`tumble`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-flinch` | 2026-10-06 (fourth set) | `bend_clips.py` (`flinch`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-jump-double` | 2026-10-06 (fourth set) | `bend_clips.py` (`jump_double`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-fall` | 2026-10-06 (fourth set) | `bend_clips.py` (`fall`, `fall_at`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-fall-fast` | 2026-10-06 (fourth set) | `bend_clips.py` (`fall_fast`, `fall_fast_at`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-helpless` | 2026-10-06 (fourth set) | `bend_clips.py` (`helpless`, `helpless_at`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-air-dodge` | 2026-10-06 (fourth set) | `bend_clips.py` (`air_dodge`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-air-legs` | 2026-10-06 (fourth set) | `bend_clips.py` (`air_legs`, `air_legs_at`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-land-light` | 2026-10-06 (fourth set) | `bend_clips.py` (`land_light`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-land-heavy` | 2026-10-06 (fourth set) | `bend_clips.py` (`land_heavy`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
 
 - Second set and polish (2026-10-05, after the owner approved the first ten: "looks good but you can always perfect them"):
   the same generator and the same inputs (the rig's rest pose and keys typed into the table, now its `SET2` part); no clip,
@@ -159,6 +169,13 @@ visual references, no animation files imported) is his statement; the rows below
   clips were not re-baked (their tracks are as before). The bake now also writes `ik_miss_m`, the two-bone IK's worst miss
   over the clip's frames, onto each clip it bakes. The style labels named in the table's comments (Northern Shaolin, Hung Gar,
   tai chi, Baguazhang) are labels for the typed key poses, as above.
+- Fourth set (2026-10-06, round 3's first playable: the air and hit states of the % ring): the same generator and the same
+  inputs (the rig's rest pose and keys typed into the table, now its `SET4` part); no clip, dump or reference motion read.
+  The loops (`fall`, `fall_fast`, `helpless`, `air_legs`) have their channels written as typed functions of the loop's phase
+  (`fall_at`, `fall_fast_at`, `helpless_at`, `air_legs_at`) sampled at its eighths (`_loop`); the tumble and the helpless
+  fall turn the whole keyed figure about the hips' height (the new `flip`, `cart` and `flip_turns` channels: the keys stay
+  the body's own pose, turned whole); `air_legs` bakes only the legs' bones (`"bones": "legs"`, no root track). None has a
+  side, so none is mirrored. Only these ten were baked (`--clips`); the other clips' tracks are as before.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.

@@ -213,8 +213,8 @@ func _apply(a: Animation, t: float) -> void:
 	# is shown over `under` at its strike when that is given)
 	sk.reset_bone_poses()
 	if _under_anim != null and a != _under_anim and not _keys_root(a):
-		_set(_under_anim, float(_under_anim.get_meta(&"strike_s", 0.0)))
-	_set(a, t)
+		_set_clip(_under_anim, float(_under_anim.get_meta(&"strike_s", 0.0)))
+	_set_clip(a, t)
 	sk.force_update_all_bone_transforms()
 
 
@@ -225,7 +225,7 @@ func _keys_root(a: Animation) -> bool:
 	return false
 
 
-func _set(a: Animation, t: float) -> void:
+func _set_clip(a: Animation, t: float) -> void:
 	for i in a.get_track_count():
 		var b := sk.find_bone(String(a.track_get_path(i).get_concatenated_subnames()))
 		if b < 0:
