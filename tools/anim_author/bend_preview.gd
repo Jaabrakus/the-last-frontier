@@ -12,6 +12,10 @@ extends SceneTree
 ## (a covered macOS window is not drawn; the SubViewport is, when forced), so it needs a window (not --headless).
 ##   Godot --path . -s tools/anim_author/bend_preview.gd -- out=<dir> [clips=own-bend-earth-stomp,...] [lib=res://...]
 ##       [prefix=clips2_]   (the sheets' file names: <prefix><name>.png, <prefix>lineup.png, <prefix>lineup_<element>.png)
+##       [frames=8]   exactly that many moments a sheet (the named moments first, the rest filled evenly)
+##       [seam=1]     and for a loop <prefix><name>_seam.png: its first and its last frame side by side, front and side
+##       [under=own-bend-air-palm]   a clip that keys only some bones (the air legs) shown over that clip at its strike
+##       [suffix=_sheet]   appended to each clip sheet's name; [lineup=name] the lineup's file (<prefix><name>.png)
 
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
 const CELL := Vector2i(300, 400)
@@ -24,6 +28,12 @@ var out := ""
 var lib_path := "res://animations_extra/Frontier_Bend.res"
 var only: PackedStringArray = []
 var prefix := "clips_"
+var n_frames := 0
+var seam := false
+var under := ""
+var suffix := ""
+var lineup_name := "lineup"
+var _under_anim: Animation
 var view
 var label: Label
 var sk: Skeleton3D
@@ -39,6 +49,16 @@ func _initialize() -> void:
 			lib_path = a.get_slice("=", 1)
 		elif a.begins_with("prefix="):
 			prefix = a.get_slice("=", 1)
+		elif a.begins_with("frames="):
+			n_frames = int(a.get_slice("=", 1))
+		elif a.begins_with("seam="):
+			seam = a.get_slice("=", 1) == "1"
+		elif a.begins_with("under="):
+			under = a.get_slice("=", 1)
+		elif a.begins_with("suffix="):
+			suffix = a.get_slice("=", 1)
+		elif a.begins_with("lineup="):
+			lineup_name = a.get_slice("=", 1)
 	_run.call_deferred()
 
 
@@ -49,6 +69,8 @@ func _run() -> void:
 		return
 	DirAccess.make_dir_recursive_absolute(out)
 	var lib := load(lib_path) as AnimationLibrary
+	if under != "" and lib.has_animation(StringName(under)):
+		_under_anim = lib.get_animation(StringName(under))
 	_stage()
 	var body := (load(GLB) as PackedScene).instantiate() as Node3D
 	root.add_child(body)
@@ -91,7 +113,14 @@ func _run() -> void:
 			for tm: Array in times:
 				cells.append(await _snap(a, float(tm[0]), vn, "%s\n%s %.2f s (f%d)" % [String(nm).trim_prefix("own-bend-"), tm[1],
 						float(tm[0]), int(round(float(tm[0]) * 30.0))]))
-		_sheet(cells, times.size(), out.path_join("%s%s.png" % [prefix, String(nm).trim_prefix("own-bend-")]))
+		_sheet(cells, times.size(), out.path_join("%s%s%s.png" % [prefix, String(nm).trim_prefix("own-bend-"), suffix]))
+		if seam and a.has_meta(&"loop"):
+			var sc: Array[Image] = []
+			for vn: String in VIEWS:
+				for tm: Array in [[0.0, "first"], [a.length, "last"]]:
+					sc.append(await _snap(a, float(tm[0]), vn, "%s seam\n%s frame %.2f s (f%d)" % [String(nm).trim_prefix(
+							"own-bend-"), tm[1], float(tm[0]), int(round(float(tm[0]) * 30.0))]))
+			_sheet(sc, 2, out.path_join("%s%s_seam.png" % [prefix, String(nm).trim_prefix("own-bend-")]))
 		var el := _element(String(nm))
 		if not by_el.has(el):
 			by_el[el] = [] as Array[Image]
@@ -104,7 +133,7 @@ func _run() -> void:
 				var im2 := await _snap(a, float(a.get_meta(key)), "front34", "%s\n%s" % [String(nm).trim_prefix("own-bend-"), key])
 				lineup.append(im2)
 				(by_el[el] as Array[Image]).append(im2)
-	_sheet(lineup, 8, out.path_join("%slineup.png" % prefix))
+	_sheet(lineup, 8, out.path_join("%s%s.png" % [prefix, lineup_name]))
 	for el: String in by_el:
 		_sheet(by_el[el], 7, out.path_join("%slineup_%s.png" % [prefix, el]))
 	print("BEND PREVIEW -> ", out)
@@ -125,6 +154,30 @@ func _moments(a: Animation) -> Array:
 		for i in 8:
 			loop.append([a.length * i / 8.0, "loop %d/8" % i])
 		return loop
+	var named := _named_moments(a)
+	if n_frames <= 0:
+		return named
+	# exactly n_frames: the least telling named moments dropped first, then even fills between the rest
+	var drop := ["wind 47%", "wind 63%", "wind 79%", "hit+", "way in", "recover", "follow"]
+	while named.size() > n_frames and not drop.is_empty():
+		var k: String = drop.pop_front()
+		named = named.filter(func(e: Array) -> bool: return String(e[1]) != k)
+	var i := 1
+	while named.size() < n_frames and i < 64:
+		var t := a.length * float(i) / 16.0 if i < 16 else a.length * (float(i - 16) + 0.5) / 48.0
+		i += 1
+		var near := false
+		for e: Array in named:
+			if absf(float(e[0]) - t) < a.length / 24.0:
+				near = true
+		if not near:
+			named.append([t, "f%d" % int(round(t * 30.0))])
+	named.sort_custom(func(x: Array, y: Array) -> bool: return float(x[0]) < float(y[0]))
+	return named
+
+
+## The clip's own named moments (start, hold, strike, ...).
+func _named_moments(a: Animation) -> Array:
 	var m := {"start": 0.0, "end": a.length}
 	for k in ["hold_s", "strike_s", "back_s", "up_s"]:
 		if a.has_meta(k):
@@ -156,6 +209,23 @@ func _moments(a: Animation) -> Array:
 
 
 func _apply(a: Animation, t: float) -> void:
+	# (every bone back to the rest first, so a clip that keys only some bones never shows the last clip's pose; such a clip
+	# is shown over `under` at its strike when that is given)
+	sk.reset_bone_poses()
+	if _under_anim != null and a != _under_anim and not _keys_root(a):
+		_set(_under_anim, float(_under_anim.get_meta(&"strike_s", 0.0)))
+	_set(a, t)
+	sk.force_update_all_bone_transforms()
+
+
+func _keys_root(a: Animation) -> bool:
+	for i in a.get_track_count():
+		if String(a.track_get_path(i).get_concatenated_subnames()) == "root":
+			return true
+	return false
+
+
+func _set(a: Animation, t: float) -> void:
 	for i in a.get_track_count():
 		var b := sk.find_bone(String(a.track_get_path(i).get_concatenated_subnames()))
 		if b < 0:
@@ -165,7 +235,6 @@ func _apply(a: Animation, t: float) -> void:
 				sk.set_bone_pose_rotation(b, a.rotation_track_interpolate(i, t))
 			Animation.TYPE_POSITION_3D:
 				sk.set_bone_pose_position(b, a.position_track_interpolate(i, t))
-	sk.force_update_all_bone_transforms()
 
 
 func _snap(a: Animation, t: float, vn: String, text: String) -> Image:
