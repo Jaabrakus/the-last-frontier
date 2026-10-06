@@ -690,7 +690,7 @@ func _test_game() -> void:
 	if tab and tab._rows.has("shirt"):
 		var opt: OptionButton = tab._rows.shirt.opt
 		for i in opt.item_count:
-			if opt.get_item_metadata(i) is String and String(opt.get_item_metadata(i)) == "shirt_check":
+			if opt.get_item_metadata(i) is String and String(opt.get_item_metadata(i)) == "shirt_linen":
 				opt.select(i)
 				opt.item_selected.emit(i)
 				shirt_ok = true
@@ -701,7 +701,7 @@ func _test_game() -> void:
 				break
 		await _frames(2)
 	var shirt_cols: Dictionary = ((c.look.get("outfit", {}) as Dictionary).get("shirt", {}) as Dictionary).get("colors", {})
-	_check(shirt_ok and String(shirt_cols.get("pattern", "")) == "plaid", "in the level: the Clothing view puts a plaid check shirt on (%s)" % [shirt_cols])
+	_check(shirt_ok and String(shirt_cols.get("pattern", "")) == "plaid", "in the level: the Clothing view puts a plaid linen shirt on (%s)" % [shirt_cols])
 	c._show_clothing(false)
 	c._set_focus("facial_hair")
 	await _frames(30)
@@ -727,9 +727,9 @@ func _test_game() -> void:
 	_check(skin != null and int(skin.get_shader_parameter("tat_count")) == vis, "the player's skin draws the tattoos his clothes leave showing (%d of %d)"
 			% [int(skin.get_shader_parameter("tat_count")) if skin else -1, vis])
 	var sm: Array = app.body.part_meshes("outfit:shirt")
-	_check(not sm.is_empty() and String((sm[0] as Node).get_meta("garment", "")) == "shirt_check", "the player wears the check shirt")
+	_check(not sm.is_empty() and String((sm[0] as Node).get_meta("garment", "")) == "shirt_linen", "the player wears the linen shirt")
 	var plaid := false
-	var pz := ClothMaterials.pattern_zone(PlayerOutfit.entry("shirt_check"), shirt_cols)
+	var pz := ClothMaterials.pattern_zone(PlayerOutfit.entry("shirt_linen"), shirt_cols)
 	for mi: MeshInstance3D in sm:
 		for si in mi.mesh.get_surface_count():
 			var m := mi.get_surface_override_material(si) as ShaderMaterial
@@ -746,7 +746,7 @@ func _test_game() -> void:
 	await _frames(2)
 	var skin2 := _skin_mat(app.body)
 	_check(skin2 != null and int(skin2.get_shader_parameter("tat_count")) == vis and not app.body.part_meshes(FaceExtras.PART_JEWELLERY).is_empty()
-			and String((app.body.part_meshes("outfit:shirt")[0] as Node).get_meta("garment", "")) == "shirt_check",
+			and String((app.body.part_meshes("outfit:shirt")[0] as Node).get_meta("garment", "")) == "shirt_linen",
 			"re-dressed from the saved file: the tattoos, the jewellery and the shirt again")
 	await _frames(10)
 	await _shot("4_game_player")

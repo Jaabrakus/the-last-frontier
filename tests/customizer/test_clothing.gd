@@ -1,7 +1,7 @@
 extends SceneTree
 ## Clothing: the fabric kits, the cloth attributes baked into the legacy outfit and every garment
-## glb, the cloth materials on the player, and the winter garments worn over the legacy outfit
-## (PlayerOutfit), with the customizer's Outfit tab. Headless, about 20 s.
+## glb, the cloth materials on the player, and the kept garments of the catalog (PlayerOutfit; the period sets and the
+## winter furs were retired in the 2026-10-06 cleanup), with the customizer's Outfit tab. Headless, about 20 s.
 ##
 ##   Godot --headless --path . -s tests/customizer/test_clothing.gd
 ##
@@ -22,15 +22,6 @@ extends SceneTree
 ##     gear on the skin
 
 const FABRICS := "res://assets/character/fabrics/fabrics.json"
-const WINTER := {
-	"outer": {"id": "capot_fur_trim", "colors": {"0": "#E3DED0", "2": "fur_beaver", "bands": "stroud_blue"}},
-	"accessories.wrap": {"id": "fur_mantle", "colors": {"0": "fur_black_bear"}},
-	"head": {"id": "fur_cap", "colors": {"0": "fur_raccoon"}},
-	"accessories.hands": {"id": "mittens_fur", "colors": {"1": "fur_wolf"}},
-	"feet": {"id": "moccasins_winter", "colors": {"2": "fur_beaver"}},
-	"accessories.waist": {"id": "ew_sash"},
-}
-
 var _fails: Array[String] = []
 var _checks := 0
 
@@ -134,13 +125,13 @@ func _test_garment_glbs() -> void:
 					if a[c] == null:
 						ok = false
 			_check(ok, "%s%s has the cloth masks (CUSTOM0..2)" % [dir + "/", f])
-	_check(n >= 70, "garment glbs found (%d)" % n)
-	for id in ["capot_fur_trim", "fur_mantle", "mittens_fur", "moccasins_winter", "fur_coat_tailored", "capot_blanket", "fur_cap"]:
+	_check(n >= 20, "garment glbs found (%d)" % n)
+	# the kept garments: the basic dress and the arena's (2026-10-06: the period sets retired, these six and salvar_mens
+	# kept as the defaults, owner answer O5), and the ring dress
+	for id in ["shirt_tucked", "breeches", "sash_worsted", "shift_linen", "petticoat", "shirt_linen", "salvar_mens",
+			"ring_earth_tunic", "ring_trousers_wrapped", "ring_arm_wraps"]:
 		var e := PlayerOutfit.entry(id)
 		_check(not e.is_empty() and ResourceLoader.exists(String(e.get("glb", ""))), "catalog has %s with its glb" % id)
-		if not e.is_empty():
-			var fur: Dictionary = e.get("fur", {})
-			_check(id in ["capot_blanket"] or not fur.get("presets", {}).is_empty(), "%s has fur presets" % id)
 
 
 func _cloth_mats(body: CharacterBodyMesh, names: Array) -> Array:

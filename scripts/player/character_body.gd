@@ -13,7 +13,7 @@ extends SkeletonModifier3D
 ##
 ##   var body := CharacterBodyMesh.attach_parts(skeleton, anim_player,
 ##           {"body": "res://assets/character/body/body.glb", "hair": "res://assets/character/hair/hair_queue_ribbon.glb"})
-##   body.add_part("hat", "res://.../tricorn.glb")      # replaces a part with the same tag
+##   body.add_part("hat", "res://.../hat.glb")          # replaces a part with the same tag
 ##   body.remove_part("hat")
 ##   body.set_blend_shape("sex", 1.0)                   # on every mesh that has the shape
 ##   body.part_meshes("hair")                           # its MeshInstance3Ds

@@ -1,46 +1,32 @@
 extends SceneTree
-## The new cloth2 garments wired into the game (the French-Canadian, settlers' and regulars', and Drift sky-crew sets of
-## 2026-10-02/03): the catalog, the dress on a man and a woman, the factions' uniforms, the story people's costumes and the
-## customizer's Outfit tab. Headless, about a minute; no scene, nothing saved.
+## The cloth2 garments wired into the game, re-staged in the 2026-10-06 cleanup: the period sets (French-Canadian, settlers'
+## and regulars', Drift sky crews) were retired, and what stays is the basic dress and the arena's (shirt_tucked,
+## breeches, sash_worsted, shift_linen, petticoat, shirt_linen; salvar_mens), owner answer O5. The catalog, the dress on a
+## man and a woman, the factions (now in the basic dress, ASK T6 on the factions themselves), the story people's costumes
+## (what is left of them) and the customizer's Outfit tab. Headless, about a minute; no scene, nothing saved.
 ##
 ##   Godot --headless --path . -s tests/customizer/test_new_garments.gd
 ##
 ## Ends with "NEW GARMENTS TEST OK (<n> checks)" (exit 0) or "NEW GARMENTS TEST FAILED (<f> of <n>)" (exit 1).
 ##
-##   catalog    every new id is PlayerOutfit.usable (catalog lib_version 2, a garment) with its glb, in a set the catalog names
+##   catalog    every kept id is PlayerOutfit.usable (catalog lib_version 2, a garment) with its glb, in a set the catalog names
 ##   dress      each, worn alone over the basic dress on a man and on a woman (an NpcBody: Actor_B and body v4): its part is
-##              there in its slot with every surface dressed (cloth or fur), it follows the fit (sex 1 / 0), the skin under
-##              it is hidden (each of its catalog hides_regions; nothing no worn garment lists; the genitals by the rule:
-##              a man's always under the breeches, a woman's only under a garment closed between the legs), the hair zones
-##              it covers are hidden and a hat says so (has_hat); each material zone takes its own zone's colour (an
-##              entry whose zones skip one, the mote belt's 0, 2, 3, included)
+##              there in its slot with every surface dressed, it follows the fit (sex 1 / 0), the skin under it is hidden
+##              (each of its catalog hides_regions; nothing no worn garment lists; the genitals by the rule: a man's always
+##              under the breeches, a woman's only under a garment closed between the legs), the hair zones it covers are
+##              hidden and a hat says so (has_hat); each material zone takes its own zone's colour
 ##   presets    a colour "preset" resolves to the catalog's extra.presets with the look's own keys over it, and an unknown
 ##              one leaves the zone defaults
-##   factions   an NpcFighter of each faction (NpcFactions: the marines, Canadians, militia, toughs, watch and sky crew)
-##              dresses in its faction's dress: each slot one of its wanted garments (outfit_mix weighs them, "-" none,
-##              drop_under takes off what a closed coat hides), in one of its colour choices (the zone tints of its
-##              materials), not the basic shirt and breeches alone; without an rng outfit_of is the first of each; over
-##              many fighters a militia varies (coats of several colours, cocked and round hats), a sky crewman wears at
-##              most one glowing piece of the jacket, belt and harness; the sky crew is hostile to no one
-##   story      every costume (data/story/costumes.json) names usable garments in their slots (its by_mission ones too);
-##              Margaretha, Anna, Jost (a child), Vane, Ithel and Rook dress in theirs (StoryWalker.person_look), Margaretha
-##              in her jacket for the late-October warning and her cloak over it for the raid, Rook's and Ithel's wreck
-##              looks too, and Leclerc (StoryActor.make of canadian_militia, tag leclerc) wears his blue capot
+##   factions   an NpcFighter of each faction dresses in its faction's wants (each slot one of its wanted garments), in one of
+##              its colour choices; without an rng outfit_of is the first of each; the sides' hostility is as before
+##   story      every costume (data/story/costumes.json) names usable garments in their slots; Margaretha, Anna, Jost (a child),
+##              Vane and Ithel dress in theirs (StoryWalker.person_look); the settlers without a costume wear the basic dress;
+##              Leclerc (StoryActor.make of canadian_militia, tag leclerc) wears his red-striped sash
 ##   customizer the Outfit tab lists each slot's garments under their set's name (the catalog's sets), its presets offer the
-##              new outfits to the body types whose garments they are, and each preset validates whole
-const NEW_IDS := [
-	# French-Canadian (the marine's garrison and campaign dress, the Canadian militiaman)
-	"veste_sleeved", "capot", "tuque_knit", "leggings_wool", "moccasins", "belt_cartridge", "neckerchief", "stockings",
-	"shoes_buckled", "sash_worsted", "coat_skirted", "cocked_hat", "waistcoat_sb", "waistcoat_short",
-	# settlers, militia, Vane, the regular
-	"shirt_tucked", "frock_coat", "round_hat", "stock_linen", "waistcoat_skirted", "coat_regimental_1751", "hunting_cap",
-	"stays_laced", "kerchief_womens", "jacket_womens", "apron", "cap_linen", "cloak_hooded",
-	# Drift sky crews
-	"shirt_check", "slops", "waistcoat_long", "sea_jacket", "sea_coat_officer", "sea_boots", "drift_cap", "tar_hat",
-	"neckerchief_sea", "glim", "rigging_harness", "mote_belt", "weather_cape", "sail_cloak",
-]
+##              working dress to the body types whose garments they are, and each preset validates whole
+const NEW_IDS := ["shirt_tucked", "breeches", "sash_worsted", "shift_linen", "petticoat", "shirt_linen", "salvar_mens"]
 const STORY_PEOPLE := [["margaretha", "palatine_f_a", false], ["anna", "palatine_f_b", false], ["jost", "palatine_m_b", true],
-		["vane", "english_m_a", false], ["ithel", "english_m_a", false], ["rook", "palatine_m_b", false]]
+		["vane", "english_m_a", false], ["ithel", "english_m_a", false]]
 
 var _fails: Array[String] = []
 var _checks := 0
@@ -188,12 +174,12 @@ func _test_dress() -> void:
 
 # ---------------------------------------------------------------- presets
 func _test_presets() -> void:
-	var r := PlayerOutfit.resolve_colors("capot", {"preset": "canadian_blue", "2": "brass"})
-	_check(String(r.get("0", "")) == "stroud_blue" and String(r.get("1", "")) == "stroud_red" and String(r.get("2", "")) == "brass"
-			and not r.has("preset"), "a capot's canadian_blue preset resolves, the look's button colour over it (%s)" % [r])
+	var r := PlayerOutfit.resolve_colors("sash_worsted", {"preset": "red_striped", "2": "brass"})
+	_check(String(r.get("0", "")) == "ribbon_red" and String(r.get("1", "")) == "ribbon_yellow" and String(r.get("2", "")) == "brass"
+			and not r.has("preset"), "a sash's red_striped preset resolves, the look's own zone colour over it (%s)" % [r])
 	var plain := {"0": "drab"}
-	_check(PlayerOutfit.resolve_colors("capot", plain) == plain, "colours without a preset are kept as they are")
-	var bad := PlayerOutfit.resolve_colors("capot", {"preset": "no_such", "0": "drab"})
+	_check(PlayerOutfit.resolve_colors("sash_worsted", plain) == plain, "colours without a preset are kept as they are")
+	var bad := PlayerOutfit.resolve_colors("sash_worsted", {"preset": "no_such", "0": "drab"})
 	_check(bad == {"0": "drab"}, "an unknown preset leaves the zone defaults (%s)" % [bad])
 
 
@@ -297,7 +283,6 @@ func _test_factions() -> void:
 		var outer_parts: Array = f.body.mesh.part_meshes("outfit:outer") if f.body and f.body.mesh else []
 		var outer := String((outer_parts[0] as Node).get_meta("garment", "")) if not outer_parts.is_empty() else ""
 		var dropped: Array = drop.get(outer, [])
-		var non_basic := 0
 		for slot: String in fd.get("outfit", {}):
 			var choices := _slot_choices(fd, slot)
 			_check(not choices.is_empty() or (fd.outfit[slot] as Array).is_empty(), "%s: a garment this build has for %s (%s)" % [fid, slot, fd.outfit[slot]])
@@ -310,13 +295,10 @@ func _test_factions() -> void:
 			_check(ok_worn, "a %s fighter wears one of %s in %s (%s)" % [fid, choices, slot, worn])
 			if worn == "" or not worn in choices:
 				continue
-			if not worn in basic_ids:
-				non_basic += 1
 			if gcol.has(worn):
 				var bad := _tints_one_of(parts, worn, gcol[worn])
 				_check(bad == "", "a %s fighter's %s is in one of the faction's colours (%s)" % [fid, worn, bad])
-		_check(non_basic >= 3, "a %s fighter is in his faction's dress, not the basic dress (%d of its garments)" % [fid, non_basic])
-		_check(want.size() >= 4, "%s's outfit has its slots (%s)" % [fid, want.keys()])
+		_check(want.has("shirt") and want.has("legs.lower"), "%s's outfit has the shirt and the legs (%s)" % [fid, want.keys()])
 		# without an rng: the first usable garment of each slot (a mix: its heaviest), the first colour choice
 		for slot: String in fd.get("outfit", {}):
 			var mix: Variant = (fd.get("outfit_mix", {}) as Dictionary).get(slot)
@@ -330,36 +312,6 @@ func _test_factions() -> void:
 			var got := String((want.get(slot, {}) as Dictionary).get("id", ""))
 			if first != "" and not slot in (drop.get(String((want.get("outer", {}) as Dictionary).get("id", "")), []) as Array):
 				_check(got == first, "%s's deterministic uniform wears %s in %s (%s)" % [fid, first, slot, got])
-	# each fighter his own: over many, a militia varies; a sky crewman wears one glowing piece at most
-	var coats := {}
-	var hats := {}
-	var glow_ok := true
-	var crew_layers := 0
-	for i in 40:
-		var rng := RandomNumberGenerator.new()
-		rng.seed = 1000 + i
-		var mo := NpcFactions.outfit_of("militia", 1.0, rng)
-		if mo.has("outer"):
-			coats[str(mo.outer.get("colors", {}))] = true
-		hats[String((mo.get("head", {}) as Dictionary).get("id", "-"))] = true
-		var so := NpcFactions.outfit_of("sky_crew", 1.0, rng)
-		var glows := 0
-		for slot: String in ["outer", "accessories.waist", "accessories.wrap"]:
-			if so.has(slot) and String(so[slot].id) in ["sea_jacket", "mote_belt", "rigging_harness"]:
-				glows += 1 if String(so[slot].id) != "rigging_harness" else 0
-		if so.has("outer") and (so.has("accessories.waist") or so.has("accessories.wrap")):
-			glow_ok = false
-		if glows > 1:
-			glow_ok = false
-		if so.has("vest") or so.has("outer"):
-			crew_layers += 1
-		var cm := NpcFactions.outfit_of("french_marine", 1.0, rng)
-		if String((cm.get("outer", {}) as Dictionary).get("id", "")) == "capot":
-			_check(not cm.has("vest"), "a marine in his closed capot wears no veste under it (%s)" % [cm.keys()])
-	_check(coats.size() >= 3, "militiamen's coats vary (%d colourings of 40)" % coats.size())
-	_check(hats.has("cocked_hat") and hats.has("round_hat"), "militiamen wear cocked and round hats (%s)" % [hats.keys()])
-	_check(glow_ok, "a sky crewman in a sea jacket wears no mote belt or harness (one glow each)")
-	_check(crew_layers >= 8 and crew_layers <= 36, "a share of the sky crew wears a waistcoat or a sea jacket (%d of 40)" % crew_layers)
 	_check(NpcFactions.side_of("sky_crew") == "sky" and not NpcFactions.hostile("sky_crew", "player")
 			and not NpcFactions.hostile("sky_crew", "french_marine") and not NpcFactions.hostile("militia", "sky_crew"),
 			"the sky crew is on its own side, hostile to no one")
@@ -412,22 +364,17 @@ func _test_story() -> void:
 		if String((costumes.get(tag, {}) as Dictionary).get("hair_style", "")) != "":
 			_check(String(lk.get("hair", {}).get("style", "")) == String(costumes[tag].hair_style), "%s's hair style is the costume's" % tag)
 		b.queue_free()
-	# Margaretha by the mission: her jacket out of doors in the late-October warning, her cloak over it on the raid's night
+	# Margaretha by the mission: her by_mission jacket and cloak went with the period dress: the same dress every mission
 	var m0 := StoryWalker.person_look("palatine_f_a", "margaretha")
-	var m1 := StoryWalker.person_look("palatine_f_a", "margaretha", false, "m.tf.third_warning")
 	var m2 := StoryWalker.person_look("palatine_f_a", "margaretha", false, "m.tf.raid")
-	_check(not m0.outfit.has("outer") and String(m1.outfit.get("outer", {}).get("id", "")) == "jacket_womens"
-			and String(m2.outfit.get("outer", {}).get("id", "")) == "jacket_womens"
-			and String(m2.outfit.get("accessories.wrap", {}).get("id", "")) == "cloak_hooded"
-			and not m1.outfit.has("accessories.wrap"),
-			"Margaretha's dress follows the mission (%s / %s / %s)" % [m0.outfit.keys(), m1.outfit.keys(), m2.outfit.keys()])
-	# the settlers without a costume: the basic dress and the settler's working dress (no costume garments leak in)
+	_check(JSON.stringify(m0.outfit) == JSON.stringify(m2.outfit), "Margaretha wears the same on the raid's night (%s)" % [m2.outfit.keys()])
+	# the settlers without a costume: the basic dress (no costume garments leak in)
 	var plain := StoryWalker.person_look("dutch_f_a", "wendel")
-	_check(String(plain.outfit.get("head", {}).get("id", "")) == "cap_linen" and String(plain.outfit.get("shirt", {}).get("id", "")) == "shift_linen",
-			"a settler woman with no costume wears a cap over the shift (%s)" % [plain.outfit.keys()])
+	_check(not plain.outfit.has("head") and String(plain.outfit.get("shirt", {}).get("id", "shift_linen")) == "shift_linen",
+			"a settler woman with no costume wears the basic shift (%s)" % [plain.outfit.keys()])
 	var man := StoryWalker.person_look("palatine_m_a", "brenner")
-	_check(String(man.outfit.get("head", {}).get("id", "")) == "round_hat" and String(man.outfit.get("vest", {}).get("id", "")) == "waistcoat_sb",
-			"a settler man with no costume wears the round hat and the waistcoat (%s)" % [man.outfit.keys()])
+	_check(not man.outfit.has("head") and not man.outfit.has("vest") and String(man.outfit.get("shirt", {}).get("id", "")) == "shirt_tucked",
+			"a settler man with no costume wears the tucked shirt (%s)" % [man.outfit.keys()])
 	var rook := StoryWalker.person_look("palatine_m_b", "rook")
 	_check(not rook.outfit.has("head") and not rook.outfit.has("legs.over"), "Rook wears no settler's hat or stockings (%s)" % [rook.outfit.keys()])
 	# Leclerc: a StoryActor of the Canadians in his own clothes; a marine of the party in the faction's
@@ -436,12 +383,12 @@ func _test_story() -> void:
 	var mar := StoryActor.make(_holder, "french_marine", Vector3(5, 0, 0), {"tag": "raid_marine", "seed": 1758})
 	mar.process_mode = Node.PROCESS_MODE_DISABLED
 	await _frames(2)
-	var cap: Array = lec.body.mesh.part_meshes("outfit:outer") if lec.body and lec.body.mesh else []
-	_check(not cap.is_empty() and String((cap[0] as Node).get_meta("garment", "")) == "capot"
-			and _tints_ok(cap, "capot", {"preset": "canadian_blue"}) == "", "Leclerc wears his blue capot")
-	var mcap: Array = mar.body.mesh.part_meshes("outfit:outer") if mar.body and mar.body.mesh else []
-	_check(not mcap.is_empty() and _tints_ok(mcap, "capot", {"preset": "marine_campaign"}) == "",
-			"a marine of the party wears the faction's campaign capot")
+	var sash: Array = lec.body.mesh.part_meshes("outfit:accessories.waist") if lec.body and lec.body.mesh else []
+	_check(not sash.is_empty() and String((sash[0] as Node).get_meta("garment", "")) == "sash_worsted"
+			and _tints_ok(sash, "sash_worsted", {"preset": "red_striped"}) == "", "Leclerc wears his red-striped sash")
+	var mshirt: Array = mar.body.mesh.part_meshes("outfit:shirt") if mar.body and mar.body.mesh else []
+	_check(not mshirt.is_empty() and String((mshirt[0] as Node).get_meta("garment", "")) == "shirt_tucked",
+			"a marine of the party wears the faction's shirt")
 	lec.queue_free()
 	mar.queue_free()
 	await _frames(1)
@@ -476,14 +423,7 @@ func _test_customizer() -> void:
 			names[String(p[0])] = true
 			var o: Dictionary = p[1]
 			_check(PlayerOutfit.validate(o.duplicate(true)).size() == o.size(), "the %s preset validates whole for %s" % [p[0], who])
-		var want := ["Basic dress", "Settler", "Sky crew deckhand", "Sky crew gunner"]
-		if sex >= 0.5:
-			want.append_array(["French marine, campaign", "French marine, garrison", "Canadian militiaman", "Valley militiaman",
-					"Watchman", "British regular"])
-		else:
-			want.append("Settler, winter")
+		var want := ["Basic dress", "Working dress"]
 		var missing := want.filter(func(n: String) -> bool: return not names.has(n))
-		_check(missing.is_empty(), "%s is offered the new outfits (missing %s)" % [who, missing])
-		if sex < 0.5:
-			_check(not names.has("British regular"), "a woman is not offered a man's regimentals")
+		_check(missing.is_empty(), "%s is offered the basic and the working dress (missing %s)" % [who, missing])
 		tab.free()

@@ -130,7 +130,7 @@ static func loadout_for(held: Dictionary, slots: Dictionary, rope := [], plain_b
 			lo.gear.append(gid)
 	var waist := false
 	for id: String in lo.gear:
-		if id != "back_slings" and id != "ew_sash" and id != "horn_strap" and id != "shot_pouch_strap" and id != "pistol_sling":
+		if id != "back_slings" and id != "horn_strap" and id != "shot_pouch_strap" and id != "pistol_sling":
 			waist = true
 	if not waist and plain_belt:
 		lo.gear.append("belt_tied_behind")      # (a plain belt tied behind: something for the hooks)

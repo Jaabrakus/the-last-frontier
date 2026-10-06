@@ -289,16 +289,12 @@
    "hair_coily_rounded",
    "hair_natural_short"
   ],
-  "chinese_m": [
-   "hair_qing_queue"
-  ],
+  "chinese_m": [],
   "chinese_f": [
    "hair_bun_low",
    "hair_braid_f"
   ],
-  "japanese_m": [
-   "hair_chonmage"
-  ],
+  "japanese_m": [],
   "japanese_f": [
    "hair_shimada_f",
    "hair_bun_low"
@@ -1927,7 +1923,7 @@
      "hair_bun_low"
     ],
     "m": [
-     "hair_chonmage"
+     "hair_cropped_1758"
     ]
    },
    "hair_texture": "straight",
@@ -2025,7 +2021,7 @@
      "hair_braid_f"
     ],
     "m": [
-     "hair_qing_queue"
+     "hair_cropped_1758"
     ]
    },
    "hair_texture": "straight",
@@ -6437,7 +6433,7 @@
    "freckles": 0.0,
    "iris": "dark_brown",
    "hair": {
-    "style": "hair_chonmage",
+    "style": "hair_cropped_1758",
     "color": "blue_black"
    },
    "brows": {
@@ -6486,7 +6482,7 @@
    "freckles": 0.0,
    "iris": "dark_brown",
    "hair": {
-    "style": "hair_chonmage",
+    "style": "hair_cropped_1758",
     "color": "blue_black"
    },
    "brows": {
@@ -6626,7 +6622,7 @@
    "freckles": 0.0,
    "iris": "dark_brown",
    "hair": {
-    "style": "hair_qing_queue",
+    "style": "hair_cropped_1758",
     "color": "black"
    },
    "brows": {
@@ -6675,7 +6671,7 @@
    "freckles": 0.0,
    "iris": "dark_brown",
    "hair": {
-    "style": "hair_qing_queue",
+    "style": "hair_cropped_1758",
     "color": "blue_black"
    },
    "brows": {
@@ -17327,7 +17323,7 @@
    "freckles": 0.0,
    "iris": "dark_brown",
    "hair": {
-    "style": "hair_chonmage",
+    "style": "hair_cropped_1758",
     "color": "black"
    },
    "brows": {
@@ -17378,7 +17374,7 @@
    "freckles": 0.0,
    "iris": "brown",
    "hair": {
-    "style": "hair_chonmage",
+    "style": "hair_cropped_1758",
     "color": "black"
    },
    "brows": {
@@ -17429,7 +17425,7 @@
    "freckles": 0.0,
    "iris": "brown",
    "hair": {
-    "style": "hair_chonmage",
+    "style": "hair_cropped_1758",
     "color": "black"
    },
    "brows": {
@@ -17479,7 +17475,7 @@
    "freckles": 0.0,
    "iris": "brown",
    "hair": {
-    "style": "hair_chonmage",
+    "style": "hair_cropped_1758",
     "color": "black"
    },
    "brows": {
@@ -17928,7 +17924,7 @@
    "freckles": 0.0,
    "iris": "brown",
    "hair": {
-    "style": "hair_qing_queue",
+    "style": "hair_cropped_1758",
     "color": "black"
    },
    "brows": {
@@ -17979,7 +17975,7 @@
    "freckles": 0.0,
    "iris": "brown",
    "hair": {
-    "style": "hair_qing_queue",
+    "style": "hair_cropped_1758",
     "color": "black"
    },
    "brows": {
@@ -18030,7 +18026,7 @@
    "freckles": 0.0,
    "iris": "dark_brown",
    "hair": {
-    "style": "hair_qing_queue",
+    "style": "hair_cropped_1758",
     "color": "blue_black"
    },
    "brows": {
@@ -18079,7 +18075,7 @@
    "freckles": 0.0,
    "iris": "brown",
    "hair": {
-    "style": "hair_qing_queue",
+    "style": "hair_cropped_1758",
     "color": "black"
    },
    "brows": {

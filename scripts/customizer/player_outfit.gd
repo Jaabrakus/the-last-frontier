@@ -32,8 +32,8 @@ const SLOT_NAMES := {"shirt": "Shirt", "vest": "Waistcoat", "outer": "Coat", "le
 		"legs.over": "Leggings", "feet": "Shoes", "head": "Hat", "accessories.neck": "Neckwear",
 		"accessories.waist": "Belt / sash", "accessories.shoulder": "Harness / bandolier",
 		"accessories.wrap": "Cloak / blanket", "accessories.arms": "Bracers / arm bands", "accessories.hands": "Gloves"}
-## Alternative slots a garment was given only while its own slot was not one of SLOTS (cloth2's rigging_harness: offered
-## as a wrap until the shoulder slot came): own slot -> the stand-in. It is not offered there any more, and a look that
+## Alternative slots a garment was given only while its own slot was not one of SLOTS (the retired rigging_harness was
+## offered as a wrap until the shoulder slot came): own slot -> the stand-in. It is not offered there any more, and a look that
 ## has it there moves it to its own slot (validate).
 const STAND_IN_SLOTS := {"accessories.shoulder": "accessories.wrap"}
 ## The basic dress: what a body wears when the look chooses nothing (the user, 2026-09-28: "the most basic clothes
@@ -50,7 +50,7 @@ const BASIC := {
 ## under any garment over the pelvis (its catalog occupies_regions has pelvis_center, or it is worn on the legs).
 ## "pelvis_center" in hide_regions is what hides them (the body's region, the pubic hair, BodyMaterials.apply_look's
 ## genital_swing), so the rule decides whether a garment's pelvis_center counts.
-const CLOSED_IDS := ["breeches", "slops"]
+const CLOSED_IDS := ["breeches"]
 const CLOSED_TAGS := ["underwear", "pants"]
 const GENITALS := "pelvis_center"
 ## Colours used when the look does not choose them (over the catalog's zone defaults).

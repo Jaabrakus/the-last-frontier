@@ -218,8 +218,8 @@ func _build_figure() -> void:
 
 
 ## Dresses the figure. With `hat_off` (the face and hair rows) the hat is taken off first, as
-## a creator shows the hair (dress() then leaves the hair unpressed): the legacy tricorn is
-## hidden and a garment outfit's head slot is set to bare ("-", PlayerOutfit); the clothing
+## a creator shows the hair (dress() then leaves the hair unpressed): a hat part is hidden and
+## a garment outfit's head slot is set to bare ("-", PlayerOutfit); the clothing
 ## view shows the outfit as worn.
 func show_look(look: Dictionary, hat_off := true) -> void:
 	if body == null:

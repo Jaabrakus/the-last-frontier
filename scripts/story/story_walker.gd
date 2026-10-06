@@ -45,12 +45,11 @@ const STRAIGHT_M := 10.0
 ## The level of detail looked at this often (s); a resting one's physics looked at this often (s).
 const LOD_S := 0.5
 const REST_S := 0.5
-## The look's garments wanted (the first this build dresses in, by slot), as NpcFactions' looks: a settler man's working dress
-## (the tucked shirt under the waistcoat), a settler woman's (cap, kerchief, stays and apron over the shift and petticoat).
-const SETTLER_WANTS := {"shirt": ["shirt_tucked"], "head": ["round_hat"], "vest": ["waistcoat_sb"], "legs.over": ["stockings"],
-		"feet": ["shoes_buckled"]}
-const SETTLER_WANTS_WOMEN := {"head": ["cap_linen"], "vest": ["stays_laced"], "accessories.neck": ["kerchief_womens"],
-		"accessories.waist": ["apron"], "legs.over": ["stockings"], "feet": ["shoes_buckled"]}
+## The look's garments wanted (the first this build dresses in, by slot), as NpcFactions' looks: a man's tucked shirt; a
+## woman's the basic shift and petticoat (the period hats, waistcoats, stays, aprons and shoes were retired in the
+## 2026-10-06 cleanup; the basic dress fills every other slot).
+const SETTLER_WANTS := {"shirt": ["shirt_tucked"]}
+const SETTLER_WANTS_WOMEN := {}
 ## The story people's own clothes by tag (costume, person_look): Margaretha, Anna, Jost, Vane, Leclerc, Ithel, Rook.
 const COSTUMES := "res://data/story/costumes.json"
 static var _costumes := {}

@@ -58,7 +58,7 @@ const ROLE_MODE := {"leather": 1, "metal": 2, "button": 4, "fur": 3, "quill": 4,
 const ROLE_SHEEN := {"cloth": 0.28, "lining": 0.1, "fur": 0.3, "trim": 0.15, "band": 0.15, "ribbon": 0.05,
 		"leather": 0.0, "metal": 0.0, "button": 0.0, "fringe": 0.05, "wrap": 0.1}
 ## Fabric code of a felt hat: WOOL with a soft nap (costume bible 7).
-const FELT_WORDS := ["hat", "tricorn", "tricorne", "cap"]
+const FELT_WORDS := ["hat", "cap"]
 
 static var _fabrics := {}
 static var _detail: TextureLayered
