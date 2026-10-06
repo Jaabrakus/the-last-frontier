@@ -366,6 +366,11 @@ var pushing: Node = null
 ## Vaulting and climbing (Space at an obstacle; hold Shift to run through them): PlayerTraversal.
 @export var enable_traversal := true
 var traversal: PlayerTraversal
+## Tidebreak's % ring (round 3, smash_r3 spec §4.9): the body's RingMoves while a stock-rules ring has installed one (it sets
+## this itself), else null. Every branch on it is `if ring_moves != null`: with none the controller is exactly as before.
+var ring_moves: RingMoves = null
+## The ring's camera framing this frame (RingMoves.cam_bias; {} none).
+var _ring_bias := {}
 ## The horse the player rides (HorseMount: E mounts, E again dismounts), or null.
 var riding: Horse = null
 ## Kneeling over work on the ground (FieldDressing: skinning, butchering): the node that owns the body. Movement input
@@ -444,9 +449,10 @@ func _ready() -> void:
 		equip_wheel = EquipWheel.install(self)
 		building = BuildMode.install(self)
 		rts = RtsMode.install(self)
-	if enable_traversal:
+	# (no vault, hang or grip in any arena: the ring's deck edge is RingMoves' in the % ring, spec §4.9)
+	if enable_traversal and not arena:
 		traversal = PlayerTraversal.install(self)
-	if enable_grip:
+	if enable_grip and not arena:
 		grip = PlayerGrip.install(self)
 	var owns_nothing := SurvivalBridge.bare_ahead()      # (a start with nothing: no demo horse, cart or barrow stands by)
 	if demo_horse and not owns_nothing:
@@ -833,6 +839,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		yaw -= event.relative.x * k
 		pitch -= event.relative.y * k * (-1.0 if invert_y else 1.0)
 		pitch = clampf(pitch, -deg_to_rad(pitch_limit_deg), deg_to_rad(pitch_limit_deg))
+		if ring_moves != null:
+			ring_moves.note_mouse()               # (the ring's recovery turn stops for his own mouse)
 	elif event.is_action_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
@@ -1142,8 +1150,16 @@ func _physics_process(delta: float) -> void:
 	yaw -= back.y * 0.75
 
 	# Dead: the body keeps its facing and the camera orbits it; input is ignored until respawn().
+	# (the % ring: the recovery turn eases the view toward the deck; hanging, the body faces the deck and the camera orbits)
+	var ring_yaw := INF
+	if ring_moves != null:
+		yaw += ring_moves.cam_yaw_step(yaw, delta)
+		ring_yaw = ring_moves.body_yaw()
 	var orbit := 0.0
 	if is_dead or kneeling != null:
+		orbit = wrapf(yaw - rotation.y, -PI, PI)
+	elif ring_yaw != INF:
+		rotation.y = ring_yaw
 		orbit = wrapf(yaw - rotation.y, -PI, PI)
 	else:
 		rotation.y = yaw
@@ -1177,6 +1193,10 @@ func _physics_process(delta: float) -> void:
 		_fall_top = -INF        # (held on: a fall is measured from where the grip lets go)
 		return
 	_track_fall(delta)
+	# (the % ring: RingMoves moves the body, the same mover as the bots'; spec §4.9)
+	if ring_moves != null and _ring_move(delta):
+		_after_move(delta)
+		return
 
 	var input := Vector2.ZERO if is_dead or perch != null or (aboard != null and not bool(aboard.get(&"free"))) else controls.move_vector()
 	# Crouch is a toggle. Sprinting or jumping stands you back up.
@@ -1312,11 +1332,46 @@ func _physics_process(delta: float) -> void:
 		local_move = Vector2(own.dot(global_basis.x), own.dot(-global_basis.z))
 	if traversal:
 		traversal.post(owned, delta)
+	_after_move(delta)
 
+
+## The % ring's frame (RingMoves owns the body: his keys as its intent, the legs' pace from what it did). False: not this
+## frame (dead, riding, kneeling: the controller's own).
+func _ring_move(delta: float) -> bool:
+	if is_dead or riding != null or kneeling != null:
+		return false
+	var it := ring_moves.intent_from_keys()
+	if not ring_moves.pre(it, delta):
+		return false
+	var input := controls.move_vector()
+	var kn := BendKnock.peek(self)
+	var own := kn.base_of(velocity) if kn != null else velocity
+	var flat := Vector2(own.x, own.z).length()
+	var has_input := input.length_squared() > 0.0 and ring_moves.mode == ""
+	is_walking = false
+	is_sprinting = bool(it.get("sprint", false)) and input.y < -0.1 and is_on_floor() and not is_crouching
+	target_speed = flat if has_input else 0.0
+	wish_local = Vector2(input.x, -input.y).limit_length(1.0) * flat if has_input else Vector2.ZERO
+	local_move = Vector2(own.dot(global_basis.x), own.dot(-global_basis.z))
+	return true
+
+
+## After the move: the eye's height, the camera's arm and field of view, the weapon's frame, the arena's bar (the % ring's
+## framing on top: RingMoves.cam_bias).
+func _after_move(delta: float) -> void:
+	_ring_bias = ring_moves.cam_bias() if ring_moves != null else {}
 	var eye_target := eye_height - (crouch_eye_drop if is_crouching else 0.0) \
 			- aim_eye_drop * smoothstep(0.0, 1.0, _aim_cam_w)
+	if ring_moves != null:
+		eye_target += float(_ring_bias.get("pivot_up", 0.0))
 	_eye_y = lerpf(_eye_y, eye_target, 1.0 - exp(-12.0 * delta))
 	camera_pivot.position.y = _eye_y
+	if ring_moves != null:
+		# (off the deck: the pivot between his chest and the nearest lip; hanging: over the lip)
+		camera_pivot.position = Vector3(0.0, _eye_y, 0.0)
+		var pw := float(_ring_bias.get("pivot_w", 0.0))
+		if pw > 0.0:
+			camera_pivot.global_position = camera_pivot.global_position.lerp(Vector3(_ring_bias.pivot), clampf(pw, 0.0, 1.0))
 
 	# the aim's camera: over the right shoulder and closer in while the weapon aims (not riding: the ride has its own)
 	# (the aim button only: firing from the hip raises the gun's aim too, and the view stays centered for it, user 2026-10-01
@@ -1330,6 +1385,8 @@ func _physics_process(delta: float) -> void:
 		spring_arm.position.x = cam_shoulder_now()
 	# (no shake while sprinting: user 2026-10-01, "the screen shake on sprint is bad")
 	var fov_target := fov * (1.0 - (1.0 - (weapon.fov_mult() if weapon != null else 1.0)) * aim_zoom_share)
+	if ring_moves != null and float(_ring_bias.get("fov_w", 0.0)) > 0.0:
+		fov_target = lerpf(fov_target, float(_ring_bias.fov), float(_ring_bias.fov_w))
 	camera.fov = lerpf(camera.fov, fov_target, 1.0 - exp(-10.0 * delta))
 
 	# A switch runs its stages; the new weapon is drawn when they end (see switch_weapon()) and
@@ -1753,6 +1810,8 @@ func aim_pitch() -> float:
 ## The camera's distance behind and its offset to the right now: the default view's, eased toward the aim's (PlayerGrip's
 ## branch camera starts from these).
 func cam_distance_now() -> float:
+	if ring_moves != null and _ring_bias.has("arm"):
+		return lerpf(float(_ring_bias.arm), aim_camera_distance, smoothstep(0.0, 1.0, _aim_cam_w))
 	return lerpf(camera_distance, aim_camera_distance, smoothstep(0.0, 1.0, _aim_cam_w))
 
 
