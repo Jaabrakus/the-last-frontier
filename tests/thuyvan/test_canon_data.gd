@@ -83,7 +83,7 @@ func _json_files() -> Array[String]:
 
 func _files() -> void:
 	var names := _json_files()
-	_expect(names == ["arts.json", "atlas.json", "calendar.json", "peoples.json", "routes.json"],
+	_expect(", ".join(names) == "arts.json, atlas.json, calendar.json, peoples.json, routes.json",
 			"files: the five canon files and no others (%s)" % str(names))
 	for c: String in ThuyVanCanon.FILES:
 		var rows := ThuyVanCanon.rows(c)
@@ -178,7 +178,7 @@ func _no_l15() -> void:
 	for i in range(1, 17):
 		if i != 15:
 			want.append("L%02d" % i)
-	_expect(srcs == want, "no L15: the atlas is L01-L14 and L16 (%s)" % ", ".join(srcs))
+	_expect(", ".join(srcs) == ", ".join(want), "no L15: the atlas is L01-L14 and L16 (%s)" % ", ".join(srcs))
 	var l14 := ThuyVanCanon.place("L14")
 	_expect(int(l14.get("reveal_book", 0)) == 2, "no L15: L14 is first shown in Book II")
 	_expect(ThuyVanCanon.place_label("L13", 1) != ThuyVanCanon.place_label("L13", 2)
@@ -207,7 +207,7 @@ func _peoples() -> void:
 		if ThuyVanCanon.text(p.get("name")) == "" or ThuyVanCanon.text(p.get("title")) == "":
 			bad.append("%s: name or title" % id)
 	srcs.sort()
-	_expect(srcs == ["P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08"] and bad.is_empty(),
+	_expect(", ".join(srcs) == "P01, P02, P03, P04, P05, P06, P07, P08" and bad.is_empty(),
 			"peoples: P01-P08, homelands in the atlas, body kits, names pending the owner's pick %s" % str(bad))
 	var mf := ThuyVanCanon.people("P02")
 	_expect(String(mf.get("id", "")) == "mountain_folk" and int(mf.get("playable_wave", 0)) == 1,
