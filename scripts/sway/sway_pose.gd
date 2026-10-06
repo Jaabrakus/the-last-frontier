@@ -43,6 +43,13 @@ extends Node
 ## moves (STILL_MPS: the legs and the root are his locomotion's again), crouches, climbs, rides, kneels or dies. No gait:
 ## a stance idle only (the owner rejected an authored gait library on 2026-10-01). stance_clip() / stance_weight() say
 ## what plays. The open world (no element) never plays one.
+## THE % RING (round 3, smash_r3 spec §13; only while the player has a RingMoves, a stock-rules ring): his body-state clip
+## (RingMoves.clip_state: the tumble, the flinch, the double jump, the falls, helpless, the air dodge, the edge's grab, hang,
+## climb, roll, jump, attack and scramble, the rolls and the duck, the landings, the four Rises, breaking the fall and the
+## getups, the teeter, the spout) plays over the cast's layers on its own layer (movement.json clips: its clip, else its
+## stand-in while CLIPS has not landed it; loops looped, one-shots held at their end), in place of the knock layer above; under
+## a cast released in the air (SwayCaster.air_cast) the air legs (own-bend-air-legs) play under the cast's upper body; the
+## steer's lean is RingMoves.LeanMod's (a bone tilt, not a clip). ring_clip() / ring_weight() say what plays.
 ## THE COMBO: a pose with an "alt" (the next hand: a throw's or a punch's mirrored twin) takes its alt when the same move
 ## in the same variation locks again within BendPoses.combo_window_s() of its last cast, and its first clip the time after
 ## (left, right, left); combo_alt says which the pose now is.
@@ -116,6 +123,21 @@ var _st_anim: Animation
 var _st_el := ""
 var _st_t := 0.0
 var _st_w := 0.0
+## The % ring's state layer: its state key, clip, time, weight, mask, loop; the air legs' clip, time, weight.
+const RING_IN_S := 0.08
+const RING_OUT_S := 0.15
+const AIR_LEGS_S := 0.6
+var ring_state := ""
+var _r_anim: Animation
+var _r_name := ""
+var _r_t := 0.0
+var _r_w := 0.0
+var _r_mask := "full"
+var _r_loop := false
+var _al_anim: Animation
+var _al_t := 0.0
+var _al_w := 0.0
+var _ring_lean := false
 ## The combo: this pose took its alt; the last cast's move/mode, whether it was the alt, and when (this node's clock, s).
 var combo_alt := false
 var _clock := 0.0
@@ -385,7 +407,11 @@ func _process(dt: float) -> void:
 	_clock += dt
 	_cast_layers = []
 	_tick(dt)
-	_tick_knock(dt)
+	var rm := caster.player.ring_moves
+	if rm != null:
+		_tick_ring(dt, rm)
+	else:
+		_tick_knock(dt)
 	_tick_stance(dt)
 	_apply()
 	_aim_follow(dt)
@@ -412,15 +438,22 @@ func _aim_follow(dt: float) -> void:
 ## The stance's layer, the cast's over it, then the knock's over them, onto the ToolPose (off when there are none).
 func _apply() -> void:
 	var stance := _st_anim != null and _st_w > 0.0
+	var ring := _r_anim != null and _r_w > 0.0
+	var legs := _al_anim != null and _al_w > 0.0
 	if _pose == null or not is_instance_valid(_pose):
-		if (knock == "" and not stance) or not _ensure_pose():
+		if (knock == "" and not stance and not ring and not legs) or not _ensure_pose():
 			return
 	var ls: Array = []
 	if stance:
 		ls.append({"anim": _st_anim, "time": _st_t, "weight": _st_w, "mask": "full"})
+	if legs:
+		# (the air legs under the cast: its upper layer after this one keeps the arms the cast's)
+		ls.append({"anim": _al_anim, "time": _al_t, "weight": _al_w, "mask": "full"})
 	ls.append_array(_cast_layers)
 	if knock != "" and _k_anim != null and _k_w > 0.0:
 		ls.append({"anim": _k_anim, "time": _k_t, "weight": _k_w, "mask": "full"})
+	if ring:
+		ls.append({"anim": _r_anim, "time": _r_t, "weight": _r_w, "mask": _r_mask})
 	_pose.layers = ls
 	if ls.is_empty() and phase == "":
 		_pose.active = false
@@ -549,6 +582,76 @@ func _tick_stance(dt: float) -> void:
 func _exit_tree() -> void:
 	knock = ""
 	_stop()
+
+
+# ---------------------------------------------------------------- the % ring's body state (round 3)
+## The ring's state clip playing (&"" none), and its weight now.
+func ring_clip() -> StringName:
+	return StringName(_r_name) if _r_anim != null and _r_w > 0.0 else &""
+
+
+func ring_weight() -> float:
+	return _r_w if _r_anim != null else 0.0
+
+
+## The ring's state layer from RingMoves.clip_state (its clip or stand-in, eased in and out; a loop looped, a one-shot held at
+## its end), the air legs under an airborne cast, the steer's lean put on the skeleton once.
+func _tick_ring(dt: float, rm: RingMoves) -> void:
+	knock = ""
+	var p := caster.player
+	if not _ring_lean and p.skeleton != null:
+		_ring_lean = true
+		RingMoves.lean_on(p.skeleton, rm)
+	if p.is_dead:
+		_r_w = 0.0
+		_al_w = 0.0
+		return
+	var st := rm.clip_state()
+	var nm := ""
+	if st != "":
+		nm = String(RingMoves.clip_for(st)[0])
+	if nm != "" and (nm != _r_name or st != ring_state):
+		var a := BendPoses.animation(nm)
+		if a != null:
+			if _r_anim == null or _r_w <= 0.0 or nm != _r_name:
+				_r_t = 0.0
+			_r_anim = a
+			_r_name = nm
+			var spec := RingMoves.clip_spec(st)
+			_r_mask = String(spec.get("mask", "full"))
+			_r_loop = bool(spec.get("loop", false))
+	ring_state = st if nm != "" else ""
+	if ring_state != "" and _r_anim != null:
+		_r_t += dt
+		if _r_loop and _r_anim.length > 0.0:
+			_r_t = fposmod(_r_t, _r_anim.length)
+		else:
+			_r_t = minf(_r_t, _r_anim.length)
+		_r_w = minf(_r_w + dt / RING_IN_S, 1.0)
+	else:
+		_r_w = maxf(_r_w - dt / RING_OUT_S, 0.0)
+		if _r_w <= 0.0:
+			_r_anim = null
+			_r_name = ""
+	# the air legs: under a cast let go in the air, while he is still in the air
+	var legs_on := rm.looks != null and rm.airborne() and rm.looks.air_legs_at > -INF \
+			and rm.mode_t >= 0.0 and _clock_ok(rm)
+	if legs_on and _al_anim == null:
+		var ln := String(RingMoves.clip_for("air_legs")[0])
+		_al_anim = BendPoses.animation(ln) if ln != "" else null
+		_al_t = 0.0
+	if legs_on and _al_anim != null:
+		_al_t = minf(_al_t + dt, _al_anim.length)
+		_al_w = minf(_al_w + dt / RING_IN_S, 1.0)
+	else:
+		_al_w = maxf(_al_w - dt / RING_OUT_S, 0.0)
+		if _al_w <= 0.0:
+			_al_anim = null
+
+
+## The airborne cast was let go within AIR_LEGS_S (on RingMoves' clock).
+func _clock_ok(rm: RingMoves) -> bool:
+	return rm._t - rm.looks.air_legs_at <= AIR_LEGS_S
 
 
 # ---------------------------------------------------------------- the knock
