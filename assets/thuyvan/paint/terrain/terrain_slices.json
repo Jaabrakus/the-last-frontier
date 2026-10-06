@@ -1,0 +1,160 @@
+{
+ "size": 2048,
+ "layout": "3 x 3 grid, slice i at column i % 3, row i // 3 (import: slices/horizontal=3, vertical=3)",
+ "alpha": "blend height: 0.6 x normalised stroke height + 0.4 x big-stroke mask",
+ "slices": [
+  {
+   "slice": 0,
+   "key": "grass",
+   "ramp": "grass",
+   "tile_m": 8.0,
+   "value_budget": 0.45,
+   "mean": 0.45,
+   "p2": 0.285,
+   "p98": 0.733,
+   "blob_dev": 0.258,
+   "seconds": 15.2,
+   "mean_srgb": [
+    0.4091,
+    0.6668,
+    0.2817
+   ]
+  },
+  {
+   "slice": 1,
+   "key": "terrace_rice",
+   "ramp": "terrace_rice",
+   "tile_m": 8.0,
+   "value_budget": 0.55,
+   "mean": 0.55,
+   "p2": 0.366,
+   "p98": 0.775,
+   "blob_dev": 0.132,
+   "seconds": 10.1,
+   "mean_srgb": [
+    0.5958,
+    0.7593,
+    0.2857
+   ]
+  },
+  {
+   "slice": 2,
+   "key": "forest_floor",
+   "ramp": "forest_floor",
+   "tile_m": 8.0,
+   "value_budget": 0.3,
+   "mean": 0.3,
+   "p2": 0.183,
+   "p98": 0.46,
+   "blob_dev": 0.125,
+   "seconds": 5.7,
+   "mean_srgb": [
+    0.3219,
+    0.3814,
+    0.1957
+   ]
+  },
+  {
+   "slice": 3,
+   "key": "dirt_path",
+   "ramp": "dirt_path",
+   "tile_m": 8.0,
+   "value_budget": 0.52,
+   "mean": 0.52,
+   "p2": 0.324,
+   "p98": 0.791,
+   "blob_dev": 0.248,
+   "seconds": 5.4,
+   "mean_srgb": [
+    0.6728,
+    0.5272,
+    0.3635
+   ]
+  },
+  {
+   "slice": 4,
+   "key": "laterite",
+   "ramp": "laterite",
+   "tile_m": 8.0,
+   "value_budget": 0.45,
+   "mean": 0.45,
+   "p2": 0.323,
+   "p98": 0.626,
+   "blob_dev": 0.186,
+   "seconds": 6.8,
+   "mean_srgb": [
+    0.7277,
+    0.3882,
+    0.245
+   ]
+  },
+  {
+   "slice": 5,
+   "key": "paddy_mud",
+   "ramp": "paddy_mud",
+   "tile_m": 8.0,
+   "value_budget": 0.38,
+   "mean": 0.38,
+   "p2": 0.302,
+   "p98": 0.523,
+   "blob_dev": 0.137,
+   "seconds": 4.7,
+   "mean_srgb": [
+    0.4324,
+    0.3985,
+    0.2987
+   ]
+  },
+  {
+   "slice": 6,
+   "key": "karst_limestone",
+   "ramp": "karst_limestone",
+   "tile_m": 16.0,
+   "value_budget": 0.62,
+   "mean": 0.62,
+   "p2": 0.342,
+   "p98": 0.803,
+   "blob_dev": 0.188,
+   "seconds": 11.1,
+   "mean_srgb": [
+    0.6425,
+    0.6274,
+    0.5932
+   ]
+  },
+  {
+   "slice": 7,
+   "key": "white_stone",
+   "ramp": "white_stone",
+   "tile_m": 8.0,
+   "value_budget": 0.82,
+   "mean": 0.82,
+   "p2": 0.553,
+   "p98": 0.992,
+   "blob_dev": 0.165,
+   "seconds": 6.8,
+   "mean_srgb": [
+    0.821,
+    0.8285,
+    0.8111
+   ]
+  },
+  {
+   "slice": 8,
+   "key": "moss_fern",
+   "ramp": "moss",
+   "tile_m": 8.0,
+   "value_budget": 0.4,
+   "mean": 0.4,
+   "p2": 0.248,
+   "p98": 0.661,
+   "blob_dev": 0.259,
+   "seconds": 5.0,
+   "mean_srgb": [
+    0.3872,
+    0.5601,
+    0.2534
+   ]
+  }
+ ]
+}
