@@ -710,17 +710,8 @@ func _effect(id: String) -> void:
 		"raid_night":
 			_raid_night()
 		"wonder_reveal":
-			# the turn of the story: the wonder breaks into the frontier and the sky opens (the giant, its moons, the
-			# etherium: WonderLook), for good
+			# the turn of the story, kept as a flag only (the wonder sky was retired in the 2026-10-06 cleanup)
 			flags["wonder"] = true
-			var rig := _rig()
-			if rig:
-				rig.reveal_wonder(20.0)
-
-
-func _rig() -> EnvironmentRig:
-	var scene := get_tree().current_scene if get_tree() else null
-	return scene.get_node_or_null("EnvironmentRig") as EnvironmentRig if scene else null
 
 
 ## The raid on German Flatts heard from the homestead: shots far off toward the fort, then many (the cards tell the
@@ -870,8 +861,6 @@ func load_data(d: Dictionary) -> void:
 	outcomes = (d.get("outcomes", {}) as Dictionary).duplicate()
 	checkpoint = (d.get("checkpoint", {}) as Dictionary).duplicate(true)
 	_place_contacts()
-	if bool(flags.get("wonder", false)) and _rig():
-		_rig().set_wonder(1.0)
 	var mi := int(d.get("mission", 0))
 	if String(d.get("phase", "")) == "steps" and mi < missions.size():
 		mission_i = mi

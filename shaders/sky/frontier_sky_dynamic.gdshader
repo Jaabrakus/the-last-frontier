@@ -278,7 +278,6 @@ vec4 moon_disc(vec3 d, float px) {
 }
 
 #include "res://shaders/sky/cloud_engine.gdshaderinc"
-#include "res://shaders/sky/wonder_sky.gdshaderinc"
 
 void sky() {
 	vec3 d = normalize(EYEDIR);
@@ -287,10 +286,6 @@ void sky() {
 		vec3 col = sky_color(d, 10, ground_radiance, tr);
 		vec4 cl = ce_clouds_cheap(d, POSITION, col);
 		COLOR = col * (1.0 - cl.a) + cl.rgb + vec3(0.8, 0.85, 1.0) * lightning * 0.08;
-		if (tear_amount > 0.0 || impact_flash > 0.0) {
-			// the tear's light and a hit's flash on the land (the radiance map: ambient, reflections)
-			COLOR += (tear_lobe(d) + tear_flash(d) * 0.5) * (0.3 + 0.7 * max(d.y, 0.0));
-		}
 	} else if (AT_QUARTER_RES_PASS) {
 		vec3 tr;
 		COLOR = sky_color(d, 12, ground_view_radiance, tr);
@@ -323,37 +318,6 @@ void sky() {
 			float m_ang = 2.0 * asin(clamp(0.5 * length(d - moon_dir), 0.0, 1.0));
 			float m_out = degrees(max(m_ang - radians(moon_size_deg) * 0.5, 0.0));
 			vec3 extra = star_field(d) * tr * (1.0 - moon.a) * (1.0 - moon_glare * exp(-degrees(m_ang) / 12.0));
-			// the wonder here: `wonder` everywhere, at full through the tear (wonder_sky.gdshaderinc: sky_tear)
-			float wl = wonder;
-			vec3 tear = vec3(0.0);
-			float t_dark = 0.0;
-			float t_in = 0.0;
-			if (tear_amount > 0.0) {
-				float t_open;
-				tear = sky_tear(d, px, t_open, t_dark, t_in);
-				wl = max(wl, t_open);
-			}
-			if (wl > 0.0) {
-				// the wonder sky (wonder_sky.gdshaderinc): the giant, its moons and the etherium behind the air, the
-				// stars hidden behind their discs; by day the etherium tints the sky's own light
-				float day = smoothstep(-0.1, 0.25, sun_dir.y);
-				float bright = mix(0.1, 1.0, day);             // the eye's night: the giant does not glare in the dark
-				vec4 pl = wonder_planet(d, px);
-				vec4 m1 = wonder_moon(d, wonder_moon1_eq, 5.0, vec3(0.75, 0.85, 0.95) * wonder_planet_bright, px);
-				vec4 m2 = wonder_moon(d, wonder_moon2_eq, 3.4, vec3(0.85, 0.5, 0.35) * wonder_planet_bright, px);
-				float cov = max(pl.a, max(m1.a, m2.a));
-				vec3 neb = wonder_nebula(d);
-				extra *= 1.0 - cov * wl;
-				col *= 1.0 - pl.a * wonder_day_solid * day * above * wl;   // the giant over the day sky's blue
-				extra += (neb * wonder_nebula_night * (1.0 - cov) + (pl.rgb + m1.rgb + m2.rgb) * bright) * tr * above * wl;
-				col += col * neb * wonder_nebula_day * day * (1.0 - cov) * above * wl;
-				// the etherium's own light pouring through a fresh crack (brighter than the open sky's nebula)
-				extra += (neb * 0.45 + tear_glow_color * 0.5) * tear_inner_bright * t_in * (1.0 - cov) * tr * above;
-			}
-			// the cracks: a dark rim on the sky outside their lips, the lips lit (in the heavens, a little dimmed by the air)
-			extra *= 1.0 - t_dark;
-			col *= 1.0 - 0.6 * t_dark;
-			extra += tear * above * mix(1.0, tr, 0.5);
 			extra += (moon.rgb + moon_halo * (0.7 * exp(-m_out / 1.2) + 0.3 * exp(-m_out / 6.0))) * above;   // the halo is in the air in front of the disc too
 			// the sun: a limb-darkened disc (the limb redder) and a narrow glow beyond its limb (the aureole
 			// further out is the atmosphere's Mie term)
@@ -367,20 +331,8 @@ void sky() {
 			col += extra;
 		}
 		col += vec3(0.8, 0.85, 1.0) * lightning * 0.25 * (0.4 + 0.6 * max(d.y, 0.0));
-		vec3 hit = vec3(0.0);
-		if (impact_flash > 0.0) {
-			hit = tear_flash(d);                               // a hit in the sky battle lights the sky round it
-			col += hit * (0.4 + 0.6 * max(d.y, 0.0));
-		}
 		vec4 cl = HALF_RES_COLOR;
 		COLOR = col * (1.0 - cl.a) + cl.rgb;
-		if (tear_amount > 0.0 || impact_flash > 0.0) {
-			COLOR += cl.a * (tear_lobe(d) + hit * 0.8);            // ... and the clouds
-		}
-		if (wonder > 0.0) {
-			// the etherium lights the clouds at night (black holes in the nebula otherwise)
-			COLOR += cl.a * wonder_cloud_glow * (1.0 - smoothstep(-0.1, 0.1, sun_dir.y)) * wonder;
-		}
 		COLOR += ce_bolt(d, POSITION);
 		if (cloud_debug == 1) {
 			COLOR = HALF_RES_COLOR.rgb;

@@ -14,7 +14,7 @@ extends RefCounted
 ##   give / take      `count` (1) of `item` into / out of the player's keeping: an "item." id the survival kit's
 ##                    (SurvivalInventory), else the pack (as StoryDialogue.give / take)
 ##   standing         `amount` of standing with `faction` (SurvivalEconomy.add_standing; `source` optional)
-##   wonder_reveal    the sky opens, for good;  raid_night  the raid heard from far off (StoryDirector._effect)
+##   wonder_reveal    the flag `wonder` (the wonder sky itself was retired, 2026-10-06);  raid_night  the raid heard from far off (StoryDirector._effect)
 ##   burn_at          FireSpread.ignite_area(pos, radius): fire at the place over `r` m (on the level's FireSpread)
 ##   music            MusicDirector.story(tree, cue): `cue` (story_wonder, story_sorrow, story_home, any of
 ##                    audio/music/) once, over anything but a giant's fight; "" fades what plays
