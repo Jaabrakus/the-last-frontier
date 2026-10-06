@@ -1,0 +1,5 @@
+tu_quarry | image-gen-5(1).png | 20 180 520 800 1.5
+tu_bridges | image-gen-5(1).png | 380 100 1010 760 1.4
+tu_mark | image-gen-5(1).png | 350 815 630 1080 2.0
+tu_kilns | image-gen-5(1).png | 640 815 1010 1080 2.0
+tu_strip | image-gen-5(1).png | 15 1305 1010 1440 1.4

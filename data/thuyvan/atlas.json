@@ -145,12 +145,10 @@
       "id": "fishing_coast",
       "src": ["L13"],
       "status": "canon",
-      "proposal_fields": ["book1_label"],
-      "name": {"text": "Ash Coast", "voice": "ui"},
+      "proposal_fields": ["name", "title"],
+      "name": {"text": "Fishing Coast", "voice": "ui"},
       "vi_name": null,
-      "title": {"text": "the Ash Coast", "voice": "ui"},
-      "name_book": 2,
-      "book1_label": {"text": "the Fishing Coast", "voice": "ui"},
+      "title": {"text": "the Fishing Coast", "voice": "ui"},
       "peoples": ["dragon_sea"],
       "reveal_book": 1,
       "line": {"text": "A chain of fishing villages along the eastern shore, east of the marshes.", "voice": "npc"}
@@ -164,7 +162,7 @@
       "title": {"text": "the Buried Kingdom", "voice": "ui"},
       "peoples": [],
       "reveal_book": 2,
-      "line": {"text": "Old galleries under the river works, spoken of by diggers and by few others.", "voice": "npc"}
+      "line": {"text": "Old galleries beneath the river works; few have seen them.", "voice": "npc"}
     },
     {
       "id": "two_heights",
