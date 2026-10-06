@@ -1,5 +1,6 @@
 """The peoples' themes (user 2026-10-03: "make music for each race when on char creation"): one short theme for each of
-the character creator's 35 peoples (assets/character/body/peoples.json), heard while that people is chosen and crossed to
+the Vietnamese, Thai and Malay peoples of the character creator (assets/character/body/peoples.json; the other 32 were
+retired in the 2026-10-06 cleanup, owner answer O1: kept for Thủy Vân), heard while that people is chosen and crossed to
 the next as the choice changes (MusicDirector). Each is a 16-bar loop: its eight-bar tune on one lead, then again on
 another with everything fuller.
 
@@ -24,80 +25,7 @@ from orch import Score
 #     acc (accompaniments), perc, bass, and extras (bend: a scoop on the leads' longer notes; hall; callresp: the second
 #     lead answers every other two bars)
 P = {
-	# --- Europe -----------------------------------------------------------------------------------------------------
-	"english": dict(bpm=88, beats=3, lead=("fl", "vln"),
-			mel="D4:1 G4:1 A4:1 B4:2 A4:1 G4:1 B4:1 D5:1 A4:3 B4:1 C5:1 B4:1 E5:1.5 D5:.5 C5:1 B4:1 A4:1 F#4:1 G4:3",
-			chords=["G", "Em", "G", "D", "Em", "C", "D", "G"], acc=["harp", "pad"], perc="frame_soft", bass="pizz"),
-	"scots_irish": dict(bpm=264, beats=6, lead=("solo_vln", "fl"),
-			mel="A4:1 D5:1 D5:1 F#5:1 D5:1 D5:1 A4:1 D5:1 D5:1 E5:1 F#5:1 G5:1 E5:1 C5:1 C5:1 G5:1 C5:1 C5:1 "
-				"E5:1 F#5:1 G5:1 F#5:1 E5:1 D5:1 A4:1 D5:1 D5:1 F#5:1 D5:1 D5:1 A5:1 F#5:1 D5:1 E5:1 F#5:1 G5:1 "
-				"E5:1 C5:1 E5:1 G5:1 F#5:1 E5:1 D5:3 D5:2 r:1",
-			chords=["D", "D", "C", "D", "D", "D", "C", "D"], drone="D3", acc=["drone"], perc="jig", bass="pizz"),
-	"french": dict(bpm=104, beats=3, lead=("ob", "vln"),
-			mel="E5:1 A5:1 C6:1 B5:1.5 A5:.5 G#5:1 A5:2 E5:1 D5:1 G5:1 F5:1 E5:1 G5:1 C6:1 A5:1.5 G5:.5 F5:1 "
-				"E5:1 D5:.5 C5:.5 B4:1 A4:3",
-			chords=["Am", "E", "Am", "G", "C", "Dm", "E", "Am"], acc=["pad", "harp_beats"], perc="none", bass="pizz"),
-	"palatine": dict(bpm=80, beats=3, lead=("cl", "vln"),
-			mel="C5:1 A4:1 F4:1 G4:2 A4:1 Bb4:1 A4:1 G4:1 A4:3 C5:1 D5:1 C5:1 Bb4:2 G4:1 A4:1 G4:1 E4:1 F4:3",
-			chords=["F", "C", "Gm", "F", "F", "Gm", "C", "F"], acc=["pad", "harp"], perc="frame_soft", bass="pizz"),
-	"dutch": dict(bpm=96, beats=4, lead=("fl", "ob"),
-			mel="D5:1 E5:.5 F5:.5 G5:1 A5:1 G5:1 F5:.5 E5:.5 C5:2 D5:1 F5:1 E5:1 D5:1 C#5:2 A4:2 "
-				"D5:1 A5:1 G5:.5 F5:.5 E5:1 F5:1 A5:1 C6:2 B5:.5 A5:.5 G5:1 E5:1 C5:1 D5:4",
-			chords=["Dm", "C", "Dm", "A", "Dm", "F", "C", "Dm"], acc=["pizz", "harp"], perc="frame44", bass="pizz"),
-	"spanish": dict(bpm=132, beats=3, lead=("solo_vln", "fl"),
-			mel="E5:1 F5:1 G5:1 A5:2 G5:1 F5:1.5 E5:.5 D5:1 E5:3 C5:.5 D5:.5 E5:1 F5:1 G5:1 F5:1 E5:1 "
-				"D5:1 C5:1 A4:1 G#4:1 F4:1 E4:1",
-			chords=["Am", "G", "F", "E", "Am", "G", "F", "E"], acc=["strum", "pizz"], perc="castanet", bass="pizz"),
-	# --- Eastern Woodlands (landscapes, the orchestra's own voice) --------------------------------------------------
-	"haudenosaunee": dict(bpm=72, beats=4, lead=("fl", "hn"), octave2=-1,
-			mel="E4:2 G4:1 A4:1 B4:3 A4:1 G4:1 E4:1 D4:2 E4:4 B4:2 D5:1 B4:1 A4:2 G4:2 A4:1 G4:1 E4:1 D4:1 E4:4",
-			chords=["Em", "Em", "G", "Em", "G", "D", "C", "Em"], acc=["pad"], perc="pulse", bass="sub"),
-	"lenape": dict(bpm=66, beats=4, lead=("cl", "fl"),
-			mel="D4:1 G4:1 A4:2 B4:2 A4:1 G4:1 E4:2 D4:2 G4:4 B4:1 D5:1 E5:2 D5:2 B4:1 A4:1 G4:1 E4:1 D4:1 E4:1 G4:4",
-			chords=["G", "Em", "C", "G", "G", "Bm", "C", "G"], acc=["ripple", "pad"], perc="shaker", bass="sub"),
-	"shawnee": dict(bpm=70, beats=4, lead=("ob", "vln"),
-			mel="A4:2 C5:1 A4:1 G4:2 F4:2 D4:1 F4:1 G4:1 A4:1 D4:4 D5:2 C5:1 A4:1 G4:1 A4:1 C5:2 A4:1 G4:1 F4:1 D4:1 D4:4",
-			chords=["Dm", "Gm", "Dm", "Dm", "F", "C", "Gm", "Dm"], acc=["pad", "harp_slow"], perc="pulse", bass="pizz"),
-	"wabanaki": dict(bpm=64, beats=4, lead=("fl", "solo_vln"),
-			mel="E4:1 A4:1 B4:2 C#5:3 B4:1 A4:2 F#4:2 E4:4 A4:1 C#5:1 E5:2 F#5:2 E5:1 C#5:1 B4:1 A4:1 F#4:1 B4:1 A4:4",
-			chords=["A", "A", "F#m", "E", "A", "F#m", "D", "A"], acc=["swell", "harp_slow"], perc="sea", bass="sub"),
-	# --- Africa -----------------------------------------------------------------------------------------------------
-	"west_african": dict(bpm=104, beats=4, lead=("marimba", "fl"),
-			mel="F4:.5 G4:.5 A4:1 C5:1 A4:1 D5:1.5 C5:.5 A4:2 C5:1 A4:.5 G4:.5 F4:1 G4:1 A4:4 "
-				"C5:.5 D5:.5 C5:1 A4:1 C5:1 F5:1.5 D5:.5 C5:2 D5:.5 C5:.5 A4:1 G4:1 A4:1 F4:4",
-			chords=["F", "Bb", "F", "F", "F", "Bb", "C", "F"], acc=["kora"], perc="bell12", bass="ost"),
-	"central_african": dict(bpm=112, beats=4, lead=("fl", "xylo"),
-			mel="G4:.5 C5:.5 E5:.5 D5:.5 C5:1 A4:1 G4:.5 A4:.5 C5:1 D5:2 E5:.5 D5:.5 C5:.5 A4:.5 G4:1 E4:1 G4:4 "
-				"C5:.5 E5:.5 G5:1 E5:1 D5:1 C5:.5 D5:.5 E5:1 C5:2 A4:.5 C5:.5 D5:1 C5:1 A4:1 C5:4",
-			chords=["C", "Am", "C", "G", "C", "C", "Am", "C"], acc=["hocket", "marimba"], perc="hand", bass="pizz"),
-	"african_american": dict(bpm=70, beats=4, lead=("vc", "choir"), callresp=True,
-			mel="Bb3:1 Eb4:1 F4:1 G4:1 Bb4:3 G4:1 G4:1 F4:1 Eb4:1 C4:1 Eb4:4 G4:1 Bb4:1 C5:1 Bb4:1 G4:2 F4:2 "
-				"Eb4:1 F4:1 Gb4:.5 F4:.5 Eb4:1 Eb4:4",
-			chords=["Eb", "Eb", "Ab", "Eb", "Eb", "Cm", "Ab", "Eb"], acc=["banjo"], perc="juba", bass="pizz"),
-	"ethiopian": dict(bpm=200, beats=6, lead=("fl", "solo_vln"),
-			mel="E5:2 D5:1 C5:2 A4:1 G4:3 A4:3 C5:2 D5:1 E5:2 G5:1 E5:6 A5:2 G5:1 E5:2 D5:1 C5:3 D5:3 "
-				"E5:2 D5:1 C5:1 A4:1 G4:1 C5:6",
-			chords=["C", "Am", "C", "C", "Am", "F", "G", "C"], acc=["krar"], perc="kebero", bass="pizz"),
-	# --- East Asia --------------------------------------------------------------------------------------------------
-	"japanese": dict(bpm=60, beats=4, lead=("fl", "solo_vln"), bend=(-70, 0.18),
-			mel="E5:2 F5:1 E5:1 A4:3 r:1 B4:1 C5:1 B4:1 A4:1 E4:4 A4:2 B4:1 C5:1 F5:2 E5:2 C5:1 B4:1 A4:1 F4:1 E4:4",
-			drone="E3", acc=["drone", "koto"], perc="taiko", bass="sub", scale=["E", "F", "A", "B", "C"]),
-	"chinese": dict(bpm=72, beats=4, lead=("solo_vln", "fl"), bend=(-60, 0.12),
-			mel="E5:1 G5:1 A5:2 G5:1 E5:1 D5:2 C5:1 D5:1 E5:1 G5:1 E5:4 A5:1 C6:1 A5:1 G5:1 E5:2 D5:2 "
-				"E5:1 D5:1 C5:1 A4:1 C5:4",
-			chords=["C", "Am", "C", "Em", "Am", "G", "Am", "C"], acc=["pipa", "pad"], perc="gong", bass="sub"),
-	"korean": dict(bpm=66, beats=3, lead=("ob", "solo_vln"), bend=(-80, 0.15),
-			mel="E5:2 D5:1 C5:1.5 D5:.5 E5:1 A4:3 G4:1 A4:1 C5:1 D5:2 E5:1 G5:1.5 E5:.5 D5:1 C5:1 A4:1 G4:1 A4:3",
-			drone="A2", acc=["drone", "gayageum"], perc="janggu", bass="sub", scale=["A", "C", "D", "E", "G"]),
-	# --- South Asia -------------------------------------------------------------------------------------------------
-	"south_asian": dict(bpm=76, beats=4, lead=("solo_vln", "fl"), bend=(-90, 0.14),
-			mel="C#5:.5 E5:.5 F#5:1 G#5:1 A5:1 G#5:.5 F#5:.5 E5:1 F#5:2 B5:1 A5:1 G#5:1 F#5:1 E5:2 D5:2 "
-				"F#5:1 G#5:.5 A5:.5 B5:1 C#6:1 D6:2 C#6:1 B5:1 A5:1 G#5:1 F#5:.5 E5:.5 C#5:1 D5:4",
-			drone="D3", acc=["tanpura"], perc="tabla", bass="sub_drone"),
 	# --- Southeast Asia ---------------------------------------------------------------------------------------------
-	"filipino": dict(bpm=76, beats=3, lead=("solo_vln", "fl"),
-			mel="A4:1 D5:1 E5:1 F5:2 E5:1 D5:1 C#5:1 D5:1 A4:3 Bb4:1 D5:1 F5:1 A5:2 G5:1 F5:1 E5:1 C#5:1 D5:3",
-			chords=["Dm", "Dm", "A", "Dm", "Bb", "F", "A", "Dm"], acc=["rondalla", "pad"], perc="none", bass="pizz"),
 	"vietnamese": dict(bpm=66, beats=4, lead=("solo_vln", "fl"), bend=(-90, 0.2),
 			mel="G4:1 A4:1 C5:2 D5:1.5 C5:.5 A4:2 G4:1 F4:1 G4:2 D4:4 F4:1 G4:1 A4:1 C5:1 D5:2 F5:2 "
 				"D5:1 C5:1 A4:1 G4:1 G4:4",
@@ -110,64 +38,6 @@ P = {
 			mel="A4:.5 B4:.5 D5:1 F#5:1 E5:1 D5:.5 E5:.5 F#5:.5 A5:.5 G5:1 F#5:1 E5:1 D5:1 B4:1 D5:1 A4:4 "
 				"B4:.5 D5:.5 E5:1 G5:1 F#5:1 E5:.5 F#5:.5 G5:.5 B5:.5 A5:2 G5:1 F#5:1 E5:1 C#5:1 D5:4",
 			chords=["D", "D", "G", "A", "G", "A", "A", "D"], acc=["harp", "pizz"], perc="rebana", bass="pizz"),
-	"pacific_islander": dict(bpm=92, beats=4, lead=("choir", "fl"),
-			mel="C5:1 C5:.5 D5:.5 F5:1 E5:1 D5:1 C5:1 A4:2 Bb4:1 A4:1 G4:1 A4:1 C5:4 F5:1 F5:.5 G5:.5 A5:1 G5:1 "
-				"F5:1 D5:1 C5:2 D5:1 C5:1 A4:1 G4:1 F4:4",
-			chords=["F", "Dm", "Gm", "C", "F", "Bb", "C", "F"], acc=["choir_pad"], perc="logdrums", bass="pizz"),
-	# --- Middle East (quarter tones: "-") ---------------------------------------------------------------------------
-	"levantine": dict(bpm=96, beats=4, lead=("solo_vln", "fl"),
-			mel="D5:1 E5-:.5 F5:.5 G5:1 F5:1 E5-:1 D5:1 C5:2 D5:.5 E5-:.5 F5:.5 G5:.5 A5:1 Bb5:1 A5:4 "
-				"G5:1 F5:1 E5-:1 F5:1 G5:.5 A5:.5 G5:.5 F5:.5 E5-:2 F5:1 E5-:1 D5:1 C5:1 D5:4",
-			drone="D3", acc=["drone", "oud"], perc="maqsum", bass="ost"),
-	"ottoman_turkish": dict(bpm=92, beats=4, lead=("ob", "tpt"), lead2_with_first=True,
-			mel="A4:1 Bb4:1 C#5:1 D5:1 E5:2 D5:1 C#5:1 D5:1 E5:1 F5:1 E5:1 D5:.5 C#5:.5 Bb4:1 A4:2 "
-				"A4:1 C#5:1 E5:1 G5:1 F5:1 E5:1 D5:2 C#5:1 D5:.5 C#5:.5 Bb4:1 C#5:1 A4:4",
-			drone="A2", acc=["drone"], perc="mehter", bass="sub_drone"),
-	"persian": dict(bpm=210, beats=6, lead=("solo_vln", "fl"), bend=(-60, 0.1),
-			mel="D5:2 C5:1 Bb4:2 A4-:1 G4:3 A4-:3 Bb4:2 C5:1 D5:2 Eb5:1 D5:6 F5:2 Eb5:1 D5:2 C5:1 Bb4:2 C5:1 A4-:3 "
-				"Bb4:1 A4-:1 G4:1 A4-:1 Bb4:1 C5:1 G4:6",
-			drone="G2", acc=["drone", "santur"], perc="tombak", bass="sub_drone"),
-	"arab": dict(bpm=84, beats=4, lead=("fl", "solo_vln"), bend=(-50, 0.12),
-			mel="D5:1 Eb5:1 F#5:2 G5:1 F#5:.5 Eb5:.5 D5:2 A5:1 Bb5:.5 A5:.5 G5:1 F#5:1 G5:4 "
-				"F#5:1 G5:1 A5:1 Bb5:1 C6:1 Bb5:1 A5:2 G5:1 F#5:1 Eb5:1 F#5:1 D5:4",
-			drone="D3", acc=["drone", "qanun"], perc="wahda", bass="ost"),
-	"armenian": dict(bpm=56, beats=4, lead=("cl", "vc"), bend=(-60, 0.2), octave2=-1,
-			mel="E4:1 A4:1 B4:1 C5:1 B4:2 A4:2 G4:1 A4:1 B4:1 G4:1 A4:4 C5:1 D5:1 E5:1.5 D5:.5 C5:2 B4:2 "
-				"B4:1 A4:1 G#4:1 B4:1 A4:4",
-			drone="A2", acc=["dam"], perc="frame_soft", bass="sub_drone"),
-	"kurdish": dict(bpm=116, beats=4, lead=("fl", "ob"),
-			mel="D5:.5 Eb5:.5 F5:1 G5:1 F5:1 Eb5:.5 F5:.5 Eb5:.5 D5:.5 C5:2 D5:1 F5:1 A5:1 G5:1 F5:.5 Eb5:.5 D5:3 "
-				"A5:.5 Bb5:.5 A5:1 G5:1 F5:1 G5:.5 A5:.5 G5:.5 F5:.5 Eb5:2 F5:1 Eb5:1 D5:1 C5:1 D5:4",
-			drone="D3", acc=["drone", "tembur"], perc="daf", bass="ost"),
-	# --- North Africa -----------------------------------------------------------------------------------------------
-	"north_african": dict(bpm=240, beats=6, lead=("fl", "choir"), callresp=True,
-			mel="A4:2 C5:1 D5:2 E5:1 D5:2 C5:1 A4:3 G4:2 A4:1 C5:2 D5:1 A4:6 E5:2 G5:1 E5:2 D5:1 C5:2 D5:1 E5:3 "
-				"D5:2 C5:1 A4:1 G4:1 E4:1 A4:6",
-			drone="A2", acc=["gimbri"], perc="bendir", bass="none"),
-	"moorish": dict(bpm=180, beats=6, lead=("vln", "fl"),
-			mel="D5:2 Eb5:1 D5:2 C5:1 B4:2 C5:1 D5:3 G5:2 F5:1 Eb5:2 D5:1 D5:6 C5:2 D5:1 Eb5:2 F5:1 Eb5:2 D5:1 C5:3 "
-				"B4:2 C5:1 Ab4:2 B4:1 G4:6",
-			drone="G2", acc=["drone", "oud"], perc="tar68", bass="sub_drone"),
-	"egyptian": dict(bpm=104, beats=4, lead=("ob", "solo_vln"),
-			mel="C5:1 D5:.5 E5-:.5 F5:1 G5:1 A5:1 G5:.5 F5:.5 E5-:2 F5:1 G5:1 A5:.5 B5-:.5 C6:1 G5:4 "
-				"A5:1 G5:1 F5:1 E5-:1 F5:.5 G5:.5 F5:.5 E5-:.5 D5:2 E5-:1 D5:1 B4-:1 D5:1 C5:4",
-			drone="C3", acc=["drone", "qanun"], perc="saidi", bass="ost"),
-	# --- Mixed ancestry ---------------------------------------------------------------------------------------------
-	"metis": dict(bpm=116, beats=4, lead=("solo_vln", "solo_vln"),
-			mel="A4:.5 D5:.5 F#5:.5 D5:.5 A5:.5 F#5:.5 D5:.5 F#5:.5 G5:.5 E5:.5 C#5:.5 E5:.5 A5:1 G5:.5 E5:.5 "
-				"F#5:.5 D5:.5 A4:.5 D5:.5 F#5:.5 A5:.5 B5:.5 A5:.5 G5:.5 F#5:.5 E5:.5 D5:.5 C#5:.5 A4:.5 B4:.5 C#5:.5 "
-				"D5:.5 F#5:.5 A5:.5 F#5:.5 D6:1 B5:.5 A5:.5 G5:.5 B5:.5 A5:.5 G5:.5 F#5:1 E5:.5 D5:.5 "
-				"E5:.5 F#5:.5 G5:.5 E5:.5 C#5:.5 A4:.5 B4:.5 C#5:.5 D5:2 D5:1 r:1",
-			chords=["D", "A", "D", "A", "D", "G", "A", "D"], acc=["pizz"], perc="jigsteps", bass="pizz"),
-	"afro_native": dict(bpm=88, beats=4, lead=("fl", "vc"), octave2=-1,
-			mel="B4:1 D5:.5 E5:.5 G5:1 E5:1 D5:1 B4:1 A4:2 G4:.5 A4:.5 B4:1 D5:1 B4:1 E5:4 G5:1 A5:.5 G5:.5 E5:1 D5:1 "
-				"E5:1 D5:1 B4:2 A4:1 B4:.5 A4:.5 G4:1 A4:1 E4:4",
-			chords=["Em", "G", "Em", "Em", "C", "Em", "D", "Em"], acc=["kora", "pad"], perc="hand_pulse", bass="pizz"),
-	"euro_african": dict(bpm=100, beats=4, lead=("solo_vln", "cl"),
-			mel="D5:.75 B4:.25 D5:.5 G5:.5 F#5:1 E5:1 D5:.75 C5:.25 B4:.5 A4:.5 B4:2 C5:.75 E5:.25 G5:.5 E5:.5 D5:1 C5:1 "
-				"B4:.5 A4:.5 G4:1 A4:2 D5:.75 B4:.25 D5:.5 G5:.5 B5:1 A5:1 G5:.75 F#5:.25 E5:.5 D5:.5 E5:2 "
-				"C5:.5 E5:.5 D5:.5 B4:.5 A4:1 F#4:1 G4:4",
-			chords=["G", "G", "C", "D", "G", "Em", "D", "G"], acc=["harp", "pizz"], perc="habanera", bass="tresillo"),
 }
 NAMES = {"english": "English", "scots_irish": "Scots-Irish", "french": "French", "palatine": "Palatine German",
 		"dutch": "Dutch (Albany)", "spanish": "Spanish", "haudenosaunee": "Haudenosaunee", "lenape": "Lenape",

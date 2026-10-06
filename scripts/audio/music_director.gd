@@ -20,6 +20,10 @@ extends Node
 ##   creator   the character creator open (user 2026-10-03: "make music for each race when on char creation"): the chosen
 ##             people's theme (people_<id>, tools/music/cues/peoples.py), looped, crossed to the next as the choice changes;
 ##             the creator closing fades it (found by its script among the root's children: no hook in its code)
+## (Since the 2026-10-06 cleanup, owner answers O1/O2, loc_fort, loc_wreck, story_wonder, giant_upper_hand and giant_lament
+## are not rendered (their cue sources stay in tools/music/cues): a place, a knee down or a death that would play one
+## falls through: the place's square, the battle going on, the fight fading out. Of the peoples' themes only the
+## Vietnamese, Thai and Malay ones are rendered.)
 ##   story     a mission's "music" effect (StoryEffects; MusicDirector.story(tree, cue)): story_wonder, story_sorrow,
 ##             story_home; once, over anything but a giant's fight
 ##   fight     a giant (group "giants": StandInGiant) within ENGAGE_R turns on the player (its MammothTemper threatening,
@@ -218,7 +222,7 @@ func _think(dt: float) -> void:
 					_explore_in = randf_range(GAP_S.x, GAP_S.y)
 				return
 			_calm = 0.0
-			if want == "upper" and mode == Mode.FIGHT:
+			if want == "upper" and mode == Mode.FIGHT and M.CUES.has("giant_upper_hand"):
 				mode = Mode.UPPER
 				_cross(&"giant_upper_hand")
 			elif want == "fight" and mode == Mode.UPPER:
@@ -311,6 +315,8 @@ func locate(pos: Vector3) -> String:
 	for e: Array in PLACES:
 		if bool(e[3]) and not layered:
 			continue
+		if not M.CUES.has(String(e[2])):
+			continue               # (a place whose piece is not rendered: loc_fort, loc_wreck since 2026-10-06)
 		for nm: String in e[0]:
 			var p := StoryLayer.place(nm)
 			if p != Vector3.INF and _flat(pos, p) < float(e[1]):
@@ -366,7 +372,7 @@ func _giants() -> String:
 func _go_fight(upper: bool) -> void:
 	_calm = 0.0
 	_pending = ""
-	if upper:
+	if upper and M.CUES.has("giant_upper_hand"):
 		mode = Mode.UPPER
 		play(&"giant_upper_hand", 0.0, 1.0)
 	else:
@@ -380,6 +386,13 @@ func _on_giant_died(g: Node) -> void:
 	var near := _flat(player.global_position, g.call("where")) < LAMENT_R
 	if mode in [Mode.FIGHT, Mode.UPPER] or near:
 		_pending = ""
+		if not M.CUES.has("giant_lament"):
+			# (the lament not rendered since 2026-10-06: the fight fades out instead)
+			fade_out(FADE_OUT_S)
+			mode = Mode.QUIET
+			_hush_until = _clock + HUSH_S
+			_explore_in = randf_range(GAP_S.x, GAP_S.y)
+			return
 		mode = Mode.LAMENT
 		play(&"giant_lament", 0.0, 2.0, 2.5)
 
