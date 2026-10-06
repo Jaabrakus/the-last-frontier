@@ -1,0 +1,6 @@
+ts_bridge | image-gen-4(1).png | 0 280 560 780 1.8
+ts_karst | image-gen-4(1).png | 380 100 1024 520 1.6
+ts_terraces | image-gen-4(1).png | 520 420 1024 780 1.8
+ts_village | image-gen-4(1).png | 30 180 420 420 2.2
+ts_waystone | image-gen-4(1).png | 300 790 540 1090 2.2
+ts_passes | image-gen-4(1).png | 20 1105 510 1425 1.8

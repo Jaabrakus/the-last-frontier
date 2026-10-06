@@ -181,10 +181,13 @@ func _no_l15() -> void:
 	_expect(", ".join(srcs) == ", ".join(want), "no L15: the atlas is L01-L14 and L16 (%s)" % ", ".join(srcs))
 	var l14 := ThuyVanCanon.place("L14")
 	_expect(int(l14.get("reveal_book", 0)) == 2, "no L15: L14 is first shown in Book II")
-	_expect(ThuyVanCanon.place_label("L13", 1) != ThuyVanCanon.place_label("L13", 2)
-			and "book1_label" in (ThuyVanCanon.place("L13").get("proposal_fields", []) as Array),
-			"no L15: L13's later-book name gives way to its Book I label (a proposal) in Book I ('%s' / '%s')"
-			% [ThuyVanCanon.place_label("L13", 1), ThuyVanCanon.place_label("L13", 2)])
+	# (L13's later name is a Book II event, so it does not ship at all before Book II content exists: Book I's own name,
+	# a proposal, is the only one in the data)
+	var l13 := ThuyVanCanon.place("L13")
+	_expect(ThuyVanCanon.place_label("L13", 1) == "Fishing Coast" and not l13.has("name_book")
+			and "name" in (l13.get("proposal_fields", []) as Array)
+			and not FileAccess.get_file_as_string("res://data/thuyvan/atlas.json").contains("Ash"),
+			"no L15: L13 ships only its Book I name, a proposal ('%s')" % ThuyVanCanon.place_label("L13", 1))
 
 
 func _peoples() -> void:
