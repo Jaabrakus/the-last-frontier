@@ -3,8 +3,8 @@
 Everything in this folder was made by us for the game, procedurally, from scripts in `tools/thuyvan_art/village/`
 (rebuild steps: `docs/thuyvan/village_kit.md`). No downloaded art, no photographs, no pixels from the concept sheets,
 nothing from any other game or show. The owner's concept sheets (Trường Sơn, Mountain Folk) were the visual target for
-shape, colour and mood only; colours come from the art director's `docs/thuyvan/plan/look/palettes.json` (copied byte
-for byte to `tools/thuyvan_art/village/palettes.json`).
+shape, colour and mood only; colours come from the art director's `docs/thuyvan/plan/look/palettes.json`, read
+in place by the generators.
 
 ## Textures (`textures/`)
 

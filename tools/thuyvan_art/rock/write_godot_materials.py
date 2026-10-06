@@ -65,7 +65,7 @@ def standard_material(key, info):
     r, g, b = hexrgb(info["tint"])          # albedo_color is sRGB in a .tres, as the palette
     cloth = key.startswith("cloth_")
     lines = ['[gd_resource type="StandardMaterial3D" format=3]', "", "[resource]", 'resource_name = "%s"' % key,
-             "diffuse_mode = 1", "vertex_color_use_as_albedo = true",
+             "diffuse_mode = 2", "vertex_color_use_as_albedo = true",  # DIFFUSE_LAMBERT_WRAP (1 is plain Lambert)
              # the kit's vertex colour is linear occlusion; Godot multiplies it in as is (vertex_color_is_srgb false)
              "albedo_color = Color(%.4f, %.4f, %.4f, 1)" % (r, g, b),
              "roughness = %s" % ("0.95" if cloth else "0.9"), "metallic_specular = 0.15"]

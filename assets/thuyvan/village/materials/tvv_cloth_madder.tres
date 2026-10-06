@@ -1,0 +1,12 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3]
+
+[ext_resource type="Shader" path="res://shaders/thuyvan/tv_cloth.gdshader" id="1_sh"]
+[ext_resource type="Texture2D" path="res://assets/thuyvan/village/textures/cloth_madder.png" id="2_tex"]
+
+[resource]
+resource_name = "tvv_cloth_madder"
+shader = ExtResource("1_sh")
+shader_parameter/albedo_tex = ExtResource("2_tex")
+shader_parameter/rough = 1.0
+shader_parameter/spec = 0.1
+shader_parameter/wave_amp = 0.12

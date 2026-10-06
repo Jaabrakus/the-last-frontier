@@ -2,7 +2,7 @@
 
 [resource]
 resource_name = "cloth_ochre"
-diffuse_mode = 1
+diffuse_mode = 2
 vertex_color_use_as_albedo = true
 albedo_color = Color(0.6902, 0.4980, 0.1804, 1)
 roughness = 0.95

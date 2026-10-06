@@ -5,7 +5,7 @@ look builder's brush engine (`tools/thuyvan_art/paint/tvp.py`), or modelled proc
 (`tools/thuyvan_art/blender/`). No photographs, no downloaded art, no pixels from the owner's concept sheets (the
 sheets are the target for shape, colour and mood only), nothing from World of Warcraft (principles only) or from
 Avatar: The Last Airbender. Every generator is deterministic (fixed seeds) and re-runnable; colours come only from
-`tools/thuyvan_art/paint/palettes.json` (a verbatim copy of `docs/thuyvan/plan/look/palettes.json`). Rebuild steps:
+the art director's `docs/thuyvan/plan/look/palettes.json`. Rebuild steps:
 `docs/thuyvan/look_paint.md`.
 
 | Asset | What | Made by (how) |

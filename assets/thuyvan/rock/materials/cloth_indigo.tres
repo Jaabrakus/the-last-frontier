@@ -2,7 +2,7 @@
 
 [resource]
 resource_name = "cloth_indigo"
-diffuse_mode = 1
+diffuse_mode = 2
 vertex_color_use_as_albedo = true
 albedo_color = Color(0.1765, 0.2392, 0.4314, 1)
 roughness = 0.95
