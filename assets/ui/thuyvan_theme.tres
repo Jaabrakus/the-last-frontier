@@ -1,0 +1,26 @@
+[gd_resource type="Theme" load_steps=4 format=3]
+
+[sub_resource type="SystemFont" id="SystemFont_sans"]
+font_names = PackedStringArray("Avenir Next", "Helvetica Neue", "Arial", "Segoe UI", "Noto Sans", "DejaVu Sans", "Liberation Sans", "sans-serif")
+font_weight = 500
+
+[sub_resource type="SystemFont" id="SystemFont_serif"]
+font_names = PackedStringArray("Baskerville", "Georgia", "Times New Roman", "Noto Serif", "DejaVu Serif", "Liberation Serif", "serif")
+font_weight = 500
+
+[sub_resource type="SystemFont" id="SystemFont_mono"]
+font_names = PackedStringArray("Monaco", "Courier New", "Consolas", "DejaVu Sans Mono", "Liberation Mono", "monospace")
+
+[resource]
+default_font = SubResource("SystemFont_sans")
+default_font_size = 18
+Label/constants/line_spacing = 3
+RichTextLabel/constants/line_separation = 3
+TitleLabel/base_type = &"Label"
+TitleLabel/constants/line_spacing = 5
+TitleLabel/font_sizes/font_size = 28
+TitleLabel/fonts/font = SubResource("SystemFont_serif")
+MonoLabel/base_type = &"Label"
+MonoLabel/constants/line_spacing = 4
+MonoLabel/font_sizes/font_size = 14
+MonoLabel/fonts/font = SubResource("SystemFont_mono")
