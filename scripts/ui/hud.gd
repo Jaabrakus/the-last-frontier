@@ -62,12 +62,20 @@ const HELP := "WASD move · Shift sprint · Ctrl/C crouch (toggle) · Space jump
 		+ "Z rest, hold Z sleep (a lean-to and a fire make it better) · V eat · F cook at a lit campfire\n" \
 		+ "T: tap light / raise, hold put away, double-tap set or throw it (click)  ·  hold U drink · hold Y smoke a pipe\n" \
 		+ "Tab gear · K skills · O character · F1 this help · F3 debug · Esc free mouse"
-## F1 in the arena (no show words: tests/ring/test_ring_hud.gd holds the HUD's arena lines to that).
-const ARENA_HELP := "WASD move · Shift sprint · Space jump · Ctrl/C crouch\n" \
-		+ "1-4 a key's move, the same key again its other move · 5 Mend, again Patch · wheel: the move's three forms\n" \
-		+ "Hold RMB on the aim: the lock fills; let go to cast · F1 this help · Esc free mouse\n" \
-		+ "Q: the readied move onto LMB (as it is now) · hold LMB: lock and cast it, the keys left as they are\n" \
+## F1 in the arena (round 2 of the skills: the same buttons for every element, KitWords; no show words:
+## tests/ring/test_ring_hud.gd holds the HUD's arena lines to that): the moving keys, the buttons (ARENA_KEYS, the scheme's),
+## the four rules (KitWords.rule_lines: the lock, the guard, the counters, the floor and the air), Q, the ring's rule.
+const ARENA_HELP := "WASD move · Shift sprint · Space jump, even while you hold a cast · Ctrl/C crouch\n" \
+		+ "%KEYS%\n%RULES%\n" \
+		+ "{quick}: the readied move onto LMB · hold {quick}: your jab back · F1 this help · Esc free mouse\n" \
 		+ "Knock the other side back through its three zones: into the water behind them takes the round"
+## The buttons' line of F1 per control scheme (KitWords.scheme_id; {guard}, {wheel}, {aim} as bound).
+const ARENA_KEYS := {
+	"keys": "LMB jab · {guard} guard · 1 strike · 2 push ▲ · 3 dash · 4 wall · 5 heal · tap a key twice: its other move",
+	"first_moves": "LMB jab · {guard} guard · 1 strike · 2 push ▲ · 3 dash · 4 wall · 5 heal · one move a key",
+	"direction": "LMB jab · {guard} guard · hold W, S or A/D as you press {aim}: strike, wall or dash · 1-5 the keys' moves",
+	"radial": "LMB jab · {guard} guard · hold {wheel}: your moves round a wheel, point and let go · 1-5 the keys' moves",
+}
 ## HELP's lines that change outside the arena while the player has an element (the duel): Q and LMB are the quick
 ## spell's then (SwayCaster's; ELEMENT_LMB, ELEMENT_Q with the set key as bound).
 const WORLD_LMB := "LMB hold to aim, release to fire"
@@ -76,23 +84,22 @@ const ELEMENT_LMB := "Hold RMB on the aim: lock the readied move, let go to cast
 const ELEMENT_Q := "%s: the readied move onto LMB"
 
 
-## F1's text now: ARENA_HELP in the arena; with an element outside it (the duel) HELP with its Q and LMB as the quick
-## spell has them; else HELP. The quick spell's set key as bound (SwayCaster.quick_bind_key; "no key" when unbound).
+## F1's text now: ARENA_HELP in the arena (the scheme's buttons, the four rules); with an element outside it (the duel) HELP
+## with its Q and LMB as the quick spell has them; else HELP. The keys as bound (KitWords.key: "(no key)" when unbound).
 func help_text() -> String:
-	var k := SwayCaster.quick_bind_key()
-	var shown_k := k if k != "" else "(no key)"
-	# (the control scheme's own line for how moves are chosen: MatchSetup.scheme(), data/bending/schemes.json "f1")
-	var keys_l := ARENA_HELP.get_slice("\n", 1)
-	var scheme_l := MatchSetup.scheme_text("f1") if MatchSetup.scheme() != "keys" else ""
+	var shown_k := KitWords.key(SwayCaster.QUICK_BIND)
 	if arena:
-		var h := ARENA_HELP if scheme_l == "" else ARENA_HELP.replace(keys_l, scheme_l)
-		return h.replace("Q: the readied move", "%s: the readied move" % shown_k)
+		var keys_l := String(ARENA_KEYS.get(KitWords.scheme_id(), ARENA_KEYS.keys))
+		var h := ARENA_HELP.replace("%KEYS%", keys_l).replace("%RULES%", "\n".join(PackedStringArray(KitWords.rule_lines())))
+		return KitWords.keyed(h)
+	# (the control scheme's own line for how moves are chosen, outside the keys scheme)
+	var scheme_l := KitWords.help_line() if KitWords.scheme_id() != "keys" else ""
 	var c := SwayCaster.of(player) if player != null else null
 	if c == null or c.quick_element() == "":
 		return HELP
 	var q_line := ELEMENT_Q % shown_k
 	var wheel_k := SwayCaster.key_name(EquipWheel.ACTION)
-	if wheel_k != "" and wheel_k != k:
+	if wheel_k != "" and wheel_k != shown_k:
 		q_line = "hold %s: equip wheel · %s" % [wheel_k, q_line]     # (the wheel keeps a key of its own)
 	var out := HELP.replace(WORLD_Q, q_line).replace(WORLD_LMB, ELEMENT_LMB)
 	return out + "\n" + scheme_l if scheme_l != "" else out
@@ -484,7 +491,9 @@ func _update_arena(delta: float) -> void:
 	_torch_row.visible = false
 	_needs_row.visible = false
 	var b := player.get_node_or_null(NodePath(String(Bending.NODE_NAME))) as Bending
-	var wet := b != null and b.element == "water"
+	# (round 2: with the water's spending off, moves.json water_meter.spend false, the meter is dormant and not shown)
+	var spends := bool((SwayMoves.data().get("water_meter", {}) as Dictionary).get("spend", true))
+	var wet := b != null and b.element == "water" and spends
 	_water_row.visible = wet
 	if wet:
 		_water_bar.value = clampf(b.water / maxf(b.water_max, 1.0), 0.0, 1.0)
@@ -808,11 +817,11 @@ func _update_card() -> void:
 ## and the help line; hidden in the open world without an element (LMB is the weapon's there).
 func _update_quick() -> void:
 	var c := SwayCaster.of(player)
-	var ql := c.quick_label() if c != null and c.quick_ready() else ""
+	var ql := KitWords.move_name(c.quick_id(), c.quick_mode()) if c != null and c.quick_ready() else ""
 	quick_name.text = ql
 	quick_row.visible = ql != ""
-	quick_help.text = BendStrip.help_text() if ql != "" else ""
-	quick_help.visible = ql != ""
+	quick_help.text = BendStrip.q_text(c) if ql != "" else ""
+	quick_help.visible = quick_help.text != ""
 
 
 ## A readied spell's line: its name and mode, the caster's motes and its mastery when there is one ("Stone Form (cannonball)

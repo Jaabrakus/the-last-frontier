@@ -11,17 +11,19 @@ extends Control
 ## later; the sport is called Tidebreak; "1v1 first", the teams kept for a 3 v 3 later; no words from the show on the
 ## screen: every element and sport word comes from data/ring/elements.json through MatchSetup):
 ##   Tidebreak     the match's panel (_open_match): your element (the four side by side; below them the focused or
-##                 chosen one's style in a line and its five keys with both skills), the opponent's (or Any: drawn by
-##                 lot), the format (1 v 1; 3 v 3 teams coming), the difficulty, the rounds and the light, the control
-##                 scheme (MatchSetup.set_scheme: keys, direction, wheel, simple; the keys block follows it); Begin into the ring
+##                 chosen one's style in a line, its passive, what its guard does and its buttons with their plain names:
+##                 KitWords), the opponent's (or Any: drawn by lot), the format (1 v 1; 3 v 3 teams coming), the
+##                 difficulty, the rounds and the light, Controls (_open_controls: the buttons, the four rules and "Other
+##                 ways to pick moves", MatchSetup.set_scheme; round 2: no four-way choice before a match); Begin into the ring
 ##                 (RING_SCENE; the open land's duel stands in until the ring's scene exists) through the
 ##                 LoadingScreen with MatchSetup filled and kept (MatchSetup.save: GameSettings' "match"). The first press
 ##                 with no look saved yet offers the character creator first (never over the ring's countdown:
 ##                 PlayerAppearance asks MatchSetup.active())
 ##   Quick match   the last setup at once with the opponent's element drawn at random (MatchSetup.quick_match; its line
 ##                 under it: "Fire against a random opponent  ·  normal  ·  best of 3"; the kept opponent left as it was)
-##   Practice      a dummy to practise on (_open_practice: your element, the dummy's element and way: stand, block or
-##                 throw; MatchSetup.set_practice), into the ring with no clock, rounds or score (RingMode practice); its
+##   Practice      a dummy to practise on (_open_practice: your element with its passive, guard and buttons, the dummy's
+##                 element and way: stand, block or throw, Controls; MatchSetup.set_practice), into the ring with no clock,
+##                 rounds or score (RingMode practice); its
 ##                 Lessons row the same practice with the lessons' cards (RingLessons.ask: your element's dummy, a card at
 ##                 a time, each done by doing it; its line says where they resume)
 ##   Your look     the character creator on the saved look (CharacterCreator; Accept keeps it)
@@ -433,15 +435,21 @@ func _open_practice() -> void:
 	lessons.name = "Lessons"
 	var paint_lessons := func() -> void:
 		_set_row(lessons, RingLessons.word("menu_row"), RingLessons.menu_line(MatchSetup.scheme(), MatchSetup.element))
+	# (under your element: its passive, what its guard does and its buttons, as the Tidebreak panel shows them)
+	var kit := VBoxContainer.new()
+	kit.name = "Kit"
+	kit.add_theme_constant_override("separation", 0)
 	var paint_mine := func() -> void:
 		var e := MatchSetup.element
 		_set_row(mine, "Your element:  %s" % MatchSetup.label(e), "%s  ·  %s" % [MatchSetup.competitor(e), MatchSetup.style(e)])
+		_fill_kit(kit, e, false)
 		paint_lessons.call()
 	paint_mine.call()
 	mine.pressed.connect(func() -> void:
 		MatchSetup.element = String(els[(els.find(MatchSetup.element) + 1) % els.size()])
 		paint_mine.call())
 	box.add_child(mine)
+	box.add_child(kit)
 	var foes: Array = Bending.ELEMENTS + [MatchSetup.ANY]
 	var dum := MenuUI.item("", 22, "-")
 	dum.name = "Dummy"
@@ -464,16 +472,8 @@ func _open_practice() -> void:
 		MatchSetup.dummy = String(ws[(ws.find(MatchSetup.dummy) + 1) % ws.size()])
 		paint_way.call())
 	box.add_child(way)
-	var sch := MenuUI.item("", 22, "-")
-	sch.name = "Scheme"
-	var paint_sch := func() -> void:
-		_set_row(sch, MatchSetup.scheme_row(), MatchSetup.scheme_row_line())
-	paint_sch.call()
-	sch.pressed.connect(func() -> void:
-		MatchSetup.set_scheme(MatchSetup.next_scheme())
-		paint_sch.call()
-		paint_lessons.call())
-	box.add_child(sch)
+	# (round 2: the other ways to pick moves under Controls, not here)
+	box.add_child(_controls_row(_open_practice))
 	box.add_child(_gap(4))
 	var begin := MenuUI.item("Begin practice", 30)
 	begin.name = "Begin"
@@ -641,18 +641,8 @@ func _open_match() -> void:
 		MatchSetup.light = String(ls[(ls.find(MatchSetup.light) + 1) % ls.size()])
 		paint_lit.call())
 	pair.add_child(lit)
-	# the control scheme (how moves are chosen: keys, direction, wheel, simple): kept at once (MatchSetup.set_scheme), the
-	# keys block above follows it
-	var sch := MenuUI.item("", 22, "-")
-	sch.name = "Scheme"
-	var paint_sch := func() -> void:
-		_set_row(sch, MatchSetup.scheme_row(), MatchSetup.scheme_row_line())
-	paint_sch.call()
-	sch.pressed.connect(func() -> void:
-		MatchSetup.set_scheme(MatchSetup.next_scheme())
-		paint_sch.call()
-		_show_keys(""))
-	box.add_child(sch)
+	# (round 2 of the skills: the keys by default; the other ways to pick moves under Controls, no four-way choice here)
+	box.add_child(_controls_row(_open_match))
 	box.add_child(_gap(4))
 	var begin := MenuUI.item("Begin", 30)
 	begin.name = "Begin"
@@ -680,37 +670,91 @@ func _mark_elements() -> void:
 			_set_row(b, MatchSetup.label(el), MatchSetup.competitor(el) + ("  ·  chosen" if el == MatchSetup.element else ""))
 
 
-## The block under the element rows: an element's style in a line (in its colour), then its five keys with both skills
-## ("1   Fire Blast  ·  Fire Jab"; the same key again switches to the second); `el` "" the chosen element's.
+## The block under the element rows: an element's style in a line (in its colour), its passive (KitWords.passive_line:
+## "Rooted: stand still and your locks fill faster ..."), then its buttons with their plain names ("LMB   JAB   Pebbles
+## E   GUARD   Catch", "1   STRIKE   Spike  ·  tap twice: Boulder"; KitWords.kit_lines under the scheme); `el` "" the chosen
+## element's. What its guard does is told in Controls.
 func _show_keys(el: String) -> void:
 	if not is_instance_valid(_keys_box):
 		return
-	var e := el if el != "" else MatchSetup.element
-	for c in _keys_box.get_children():
-		_keys_box.remove_child(c)
+	_fill_kit(_keys_box, el if el != "" else MatchSetup.element)
+
+
+## Element `e`'s style, passive, guard and buttons laid into `box` (the Tidebreak panel's keys block, the Practice panel's).
+static func _fill_kit(box: Control, e: String, with_style := true) -> void:
+	for c in box.get_children():
+		box.remove_child(c)
 		c.queue_free()
-	var style := MenuUI.label("%s  ·  %s" % [MatchSetup.competitor(e), MatchSetup.style(e)], 17,
-			MatchSetup.color(e).lerp(MenuUI.INK, 0.35), true)
-	style.custom_minimum_size = Vector2(520, 0)
-	_keys_box.add_child(_gap(6))
-	_keys_box.add_child(style)
-	_keys_box.add_child(_gap(4))
-	# (as the control scheme has them: the keys, the directions, the wheel's, the simple four; MatchSetup)
-	_keys_box.add_child(MenuUI.label(MatchSetup.scheme_keys_head(e), 13, MenuUI.FAINT))
-	for line in MatchSetup.scheme_key_lines(e):
-		_keys_box.add_child(MenuUI.label(String(line), 16, MenuUI.DIM))
+	box.add_child(_gap(6))
+	if with_style:
+		var style := MenuUI.label("%s  ·  %s" % [MatchSetup.competitor(e), MatchSetup.style(e)], 17,
+				MatchSetup.color(e).lerp(MenuUI.INK, 0.35), true)
+		style.custom_minimum_size = Vector2(520, 0)
+		box.add_child(style)
+	# (the passive in its line; the guard's own line is the Controls panel's: the Tidebreak panel stays in view at 1600 x 900)
+	var pl := MenuUI.label(KitWords.passive_line(e), 15, MenuUI.INK, true)
+	pl.custom_minimum_size = Vector2(520, 0)
+	box.add_child(pl)
+	for line in KitWords.kit_lines(e, "", true):
+		box.add_child(MenuUI.label(String(line), 14, MenuUI.DIM))
 
 
-## An element's five keys as lines: "1   Stone Form  ·  Rock Jab" (Bending.keys, the moves' labels).
+## An element's buttons as lines: "1   STRIKE   Spike  ·  tap twice: Boulder" (KitWords.kit_lines, the keys scheme).
 static func key_lines(el: String) -> Array:
-	var out: Array = []
-	var keys := Bending.keys(el)
-	for i in keys.size():
-		var names: Array = []
-		for id in keys[i] as Array:
-			names.append(String(SwayMoves.move(String(id)).get("label", String(id).capitalize())))
-		out.append("%d   %s" % [i + 1, "  ·  ".join(PackedStringArray(names))])
-	return out
+	return KitWords.kit_lines(el, "keys")
+
+
+## The Controls row of the Tidebreak and Practice panels: its panel (_open_controls), Esc back to `back`.
+func _controls_row(back: Callable) -> Button:
+	var b := MenuUI.item(KitWords.w("controls", "Controls"), 22, KitWords.w("controls_line"))
+	b.name = "Controls"
+	b.pressed.connect(func() -> void:
+		_open_controls()
+		_return_to = back)
+	return b
+
+
+## Controls (round 2 of the skills, skills_r2 spec §6): the chosen element's buttons, the four rules, and "Other ways to pick
+## moves" (MatchSetup.set_scheme in turn: the keys by default, then first moves only, direction and the wheel; kept at
+## once). The only place before a match where the scheme is chosen: no four-way choice in the Tidebreak panel.
+func _open_controls() -> void:
+	_open_panel()
+	var box := VBoxContainer.new()
+	box.name = "ControlsPanel"
+	box.add_theme_constant_override("separation", 6)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_panel.add_child(box)
+	box.add_child(MenuUI.heading(KitWords.w("controls", "Controls")))
+	var kit := VBoxContainer.new()
+	kit.name = "Kit"
+	kit.add_theme_constant_override("separation", 0)
+	box.add_child(kit)
+	var rules := VBoxContainer.new()
+	rules.name = "Rules"
+	box.add_child(rules)
+	var paint := func() -> void:
+		_fill_kit(kit, MatchSetup.element)
+		for c in rules.get_children():
+			rules.remove_child(c)
+			c.queue_free()
+		rules.add_child(_gap(6))
+		for line in [KitWords.guard_line(MatchSetup.element)] + KitWords.rule_lines():
+			var l := MenuUI.label(String(line), 16, MenuUI.INK, true)
+			l.custom_minimum_size = Vector2(520, 0)
+			rules.add_child(l)
+	paint.call()
+	box.add_child(_gap(6))
+	var sch := MenuUI.item("", 22, "-")
+	sch.name = "Scheme"
+	var paint_sch := func() -> void:
+		_set_row(sch, KitWords.other_ways_row(), KitWords.other_ways_line())
+	paint_sch.call()
+	sch.pressed.connect(func() -> void:
+		MatchSetup.set_scheme(MatchSetup.next_scheme())
+		paint_sch.call()
+		paint.call())
+	box.add_child(sch)
+	sch.grab_focus.call_deferred()
 
 
 ## A row's main line and (when given) the line under it rewritten.

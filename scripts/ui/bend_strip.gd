@@ -1,48 +1,57 @@
 class_name BendStrip
 extends VBoxContainer
-## The arena's key strip (Tidebreak; FrontierHUD.set_arena; docs/bending_design.md "Controls": the owner, 2026-10-04, "have 1
-## and the user can toggle between the 1s and then roll the wheel to change that spell to make it easy"; "The HUD says what
-## is ready: `2 · Earth Wall · column (2/3)`"): five columns for the keys 1-5, each
-##   the key's number      gold when its move is the one readied
-##   the move's picture    its own icon (FrontierHUD.spell_texture), else the HUD's drawn circle
-##   the move's name       the skill on the key now (16 px), and under it the key's other skill: "again: Rock Jab" (13 px, dim)
-##   the variation pips    one per variation in the element's colour (MatchSetup.color), the one the wheel is on filled
-## the readied column at full strength, the others at 0.62, and under them the ready line: "2 · Earth Wall · column (2/3)"
-## (" · water 64" after it for a water fighter). Under it the quick spell (SwayCaster's, the owner 2026-10-05): an "LMB" chip
-## and its move at its frozen variation ("LMB  Rock Jab (pebbles)"), and the help line "Q: set left click · hold LMB: cast
-## it" (the set key as bound). What it shows comes from the player's own hotbar (slots 1-5), its caster (the variation, the
-## quick spell) and its Bending node (the element, the water): nothing about anyone else.
-## Each control scheme (MatchSetup.scheme(), the player's caster's: SwayCaster.scheme) has its own strip:
-##   keys       as above
-##   direction  four columns: W the attack, S the defence, A D the dodge (each at its own variation, under it), then the
-##              key's move (the readied, its number and its other skill under it); the column of the direction held lit
-##   radial     no key columns: the ready line, and the wheel's line under it ("hold Tab: the wheel ...")
-##   simple     four columns (keys 1-4, the four moves), under each its two forms ("boulder / spike", near / far); no pips: the
-##              form is picked as the right button is let go (nothing on the strip follows the opponent: no target cue)
-## and the scheme's help line (schemes.json "strip") after the quick spell's help line (help_text: the duel's world HUD too).
-##   column(i) -> {key, head, sub, hidden, id, label, other, other_label, modes, mode_i, readied}; ready_line(); quick_line();
+## The arena's key strip (Tidebreak; FrontierHUD.set_arena; round 2 of the skills, the owner 2026-10-05: "make the skills easy
+## hard to master ... think human made think avg IQ"; skills_r2 spec §2.1, §6, §9): the same seven chips for every element,
+## each button one job (KitWords):
+##   LMB · JAB      the element's jab (Pebbles, Splash, Embers, Palm) or the move Q put on left click; under it what the
+##                  next Q does ("Q: put Spike on left click", "hold Q: Pebbles back")
+##   E · GUARD      the element's guard (Catch, Turn, Parry, Wind Guard); holding a stone it caught: "E again: throw it back"
+##                  in gold (his own strip only)
+##   1 · STRIKE  2 · PUSH ▲  3 · DASH  4 · WALL  5 · HEAL
+##                  under each the readied move's plain name (a tap: the key's first move), under it "tap twice: Boulder"
+##                  (the key's other move; under first_moves none); fire's 1 "hold to grow it: Fireball". In the player's
+##                  first match (FirstHints up) each "tap twice" line fades in only once he has cast that key twice
+##                  (display only: every move is usable from the start)
+## the readied chip lit (its head gold, the rest at 0.62), and ONE help line under the row (the scheme's: KitWords.help_line).
+## Each control scheme (MatchSetup.scheme(): keys, first_moves, direction, radial) keeps the seven chips: direction heads the
+## columns W / 1, A D / 3, S / 4 (the direction held as RMB is pressed picks key 1's, 3's first move or the wall) and lights
+## the held one; the wheel's scheme says so in its help line. What it shows comes from the player's own hotbar, caster and
+## Bending node: nothing about anyone else (no target cues of any kind).
+##   column(i) (keys 0-4) -> {key, head, sub, grow, hidden, id, mode, label, other, other_label, modes, mode_i, readied, tap};
+##   chip("jab" | "guard") -> {head, id, mode, label, sub, lit}; tap_alpha(i); ready_line(); quick_line(); q_line();
 ##   help_line(); refresh()
 
 const KEYS := 5
-const COL_W := 112.0
+const COL_W := 114.0
+const CHIP_W := 140.0
 const ICON_PX := 40.0
-const DIM_A := 0.62
-const PIP_R := 3.5
-## The middle dot between the ready line's parts (as docs/bending_design.md writes it).
+const DIM_A := 0.78
+## The middle dot between a head's parts.
 const SEP := " · "
-## The quick spell's chip.
+## The jab chip's key (the left button).
 const CHIP := "LMB"
+## A revealed "tap twice" line's fade in (s).
+const TAP_FADE_S := 0.6
+## Casts of a key before its "tap twice" line shows in the first match.
+const TAP_AFTER := 2
 
 var player: FrontierPlayer
+## Tests and stills: true / false stand for the first match (FirstHints up) or not; null reads it.
+var first_match_override: Variant = null
 
-var _cols: Array = []          ## per key: {box, key, icon, name, other, pips}
-var _line: Label
+var _cols: Array = []          ## per key: {box, key, icon, name, other, grow, tex, tex_id}
+var _chips := {}               ## "jab" / "guard" -> {box, key, icon, name, other, tex, tex_id}
+var _line: Label               ## (kept for the readied line's callers; not shown: one help line)
 var _quick_box: Control
 var _chip: Label
 var _quick: Label
 var _help: Label
 var _sig := ""
 var _dirty := true
+## Casts per key this match (the first match's "tap twice" lines), and each line's fade (0..1).
+var _casts := [0, 0, 0, 0, 0]
+var _tap_a := [0.0, 0.0, 0.0, 0.0, 0.0]
+var _hooked: SwayCaster
 
 
 func _ready() -> void:
@@ -51,67 +60,82 @@ func _ready() -> void:
 	var row := HBoxContainer.new()
 	row.name = "Keys"
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_theme_constant_override("separation", 4)
+	row.add_theme_constant_override("separation", 3)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(row)
+	for kind: String in ["jab", "guard"]:
+		var ui := _make_box(row, "Chip_" + kind, CHIP_W)
+		_chips[kind] = ui
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(8, 0)
+	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(gap)
 	for i in KEYS:
-		var box := VBoxContainer.new()
-		box.name = "Key%d" % (i + 1)
-		box.custom_minimum_size = Vector2(COL_W, 0)
-		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		box.add_theme_constant_override("separation", 0)
-		var k := FrontierHUD.hud_label(18, FrontierHUD.TEXT)
-		k.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		k.text = str(i + 1)
-		box.add_child(k)
-		var icon := Control.new()
-		icon.name = "Icon"
-		icon.custom_minimum_size = Vector2(ICON_PX, ICON_PX)
-		icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon.draw.connect(_draw_icon.bind(i))
-		box.add_child(icon)
-		var nm := FrontierHUD.hud_label(16, FrontierHUD.INK)
-		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		nm.clip_text = true
-		nm.custom_minimum_size = Vector2(COL_W, 0)
-		box.add_child(nm)
-		var ot := FrontierHUD.hud_label(13, FrontierHUD.DIM)
-		ot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		ot.clip_text = true
-		ot.custom_minimum_size = Vector2(COL_W, 0)
-		box.add_child(ot)
-		var pips := Control.new()
-		pips.name = "Pips"
-		pips.custom_minimum_size = Vector2(COL_W, 12)
-		pips.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pips.draw.connect(_draw_pips.bind(i))
-		box.add_child(pips)
-		row.add_child(box)
-		_cols.append({"box": box, "key": k, "icon": icon, "name": nm, "other": ot, "pips": pips, "tex": null, "tex_id": ""})
+		_cols.append(_make_box(row, "Key%d" % (i + 1), COL_W))
+	# (the old quick row's pieces kept for their callers: the jab chip's head and name are them now)
+	_chip = (_chips.jab as Dictionary).key
+	_quick = (_chips.jab as Dictionary).name
+	_quick_box = (_chips.jab as Dictionary).box
 	_line = FrontierHUD.hud_label(17, FrontierHUD.INK)
 	_line.name = "ReadyLine"
-	_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_line.visible = false
 	add_child(_line)
-	# the quick spell: an "LMB" chip and its move (variation), then the help line
-	var q := HBoxContainer.new()
-	q.name = "Quick"
-	q.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	q.alignment = BoxContainer.ALIGNMENT_CENTER
-	q.add_theme_constant_override("separation", 6)
-	var chip := make_chip()
-	_chip = chip
-	q.add_child(chip)
-	_quick = FrontierHUD.hud_label(16, FrontierHUD.INK)
-	_quick.name = "QuickName"
-	q.add_child(_quick)
-	_quick_box = q
-	add_child(q)
 	_help = FrontierHUD.hud_label(13, FrontierHUD.DIM)
 	_help.name = "HelpLine"
 	_help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_inked(_help)
 	add_child(_help)
 	_hook.call_deferred()
+
+
+## A chip's box: its head (the key and the role), the move's picture, its name, the dim line under it, the grow line.
+func _make_box(row: HBoxContainer, nm: String, w: float) -> Dictionary:
+	var box := VBoxContainer.new()
+	box.name = nm
+	box.custom_minimum_size = Vector2(w, 0)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_theme_constant_override("separation", 0)
+	var k := FrontierHUD.hud_label(15, FrontierHUD.TEXT)
+	k.name = "Head"
+	k.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(k)
+	var icon := Control.new()
+	icon.name = "Icon"
+	icon.custom_minimum_size = Vector2(ICON_PX, ICON_PX)
+	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(icon)
+	var n := FrontierHUD.hud_label(16, FrontierHUD.INK)
+	n.name = "Name"
+	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	n.clip_text = true
+	n.custom_minimum_size = Vector2(w, 0)
+	box.add_child(n)
+	var ot := FrontierHUD.hud_label(13, FrontierHUD.DIM)
+	ot.name = "Sub"
+	ot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ot.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ot.custom_minimum_size = Vector2(w, 0)
+	box.add_child(ot)
+	var gr := FrontierHUD.hud_label(12, FrontierHUD.GOLD.lerp(FrontierHUD.DIM, 0.4))
+	gr.name = "Grow"
+	gr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	gr.custom_minimum_size = Vector2(w, 0)
+	gr.visible = false
+	box.add_child(gr)
+	for l: Label in [k, n, ot, gr]:
+		_inked(l)
+	row.add_child(box)
+	var ui := {"box": box, "key": k, "icon": icon, "name": n, "other": ot, "grow": gr, "tex": null, "tex_id": ""}
+	icon.draw.connect(_draw_icon.bind(ui))
+	return ui
+
+
+## A dark outline round a label's letters: the strip reads over a bright deck with no card behind it (the owner: "those big
+## cards are terrible").
+static func _inked(l: Label) -> void:
+	l.add_theme_color_override("font_outline_color", Color(0.02, 0.015, 0.01, 0.85))
+	l.add_theme_constant_override("outline_size", 5)
 
 
 ## The signals that change what it shows (it also looks each frame, so nothing is missed: a key, the wheel, a new bar).
@@ -122,15 +146,55 @@ func _hook() -> void:
 	if hb != null:
 		hb.changed.connect(func() -> void: _dirty = true)
 		hb.spell_selected.connect(func(_id: String) -> void: _dirty = true)
-	var c := SwayCaster.of(player)
-	if c != null:
-		c.mode_changed.connect(func(_id: String, _m: String) -> void: _dirty = true)
-		c.spell_readied.connect(func(_id: String) -> void: _dirty = true)
+	_hook_caster()
 
 
-func _process(_dt: float) -> void:
+func _hook_caster() -> void:
+	var c := SwayCaster.of(player) if player != null else null
+	if c == null or c == _hooked:
+		return
+	_hooked = c
+	c.mode_changed.connect(func(_id: String, _m: String) -> void: _dirty = true)
+	c.spell_readied.connect(func(_id: String) -> void: _dirty = true)
+	c.cast.connect(_on_cast)
+
+
+## A cast of the player's: its key's count (the first match's "tap twice" lines; the jab and the guard are no key's).
+func _on_cast(m: String, _t: Node3D) -> void:
+	var c := SwayCaster.of(player) if player != null else null
+	var md := c.mode_of(m) if c != null else ""
+	if c != null and c.get(&"lock_src") == SwayCaster.SRC_QUICK:
+		return
+	var k := KitWords.key_of(_element(), m, md)
+	if int(k.key) >= 0 and int(k.key) < KEYS:
+		_casts[int(k.key)] = int(_casts[int(k.key)]) + 1
+		_dirty = true
+
+
+## Counts a cast of key `i` (0-based) as the player's (tests and stills: the same as one of his casts).
+func count_cast(i: int) -> void:
+	if i >= 0 and i < KEYS:
+		_casts[i] = int(_casts[i]) + 1
+		_dirty = true
+
+
+## The casts counted for key `i` this match.
+func casts_of(i: int) -> int:
+	return int(_casts[i]) if i >= 0 and i < KEYS else 0
+
+
+func _process(dt: float) -> void:
 	if player == null or not is_instance_valid(player) or not is_visible_in_tree():
 		return
+	_hook_caster()
+	var fm := first_match()
+	for i in KEYS:
+		var want := 1.0 if (not fm or int(_casts[i]) >= TAP_AFTER) else 0.0
+		var a := move_toward(float(_tap_a[i]), want, dt / TAP_FADE_S) if fm else want
+		if a != float(_tap_a[i]):
+			_tap_a[i] = a
+			var ui: Dictionary = _cols[i]
+			(ui.other as Label).modulate.a = a
 	var sig := _signature()
 	if _dirty or sig != _sig:
 		_sig = sig
@@ -139,161 +203,151 @@ func _process(_dt: float) -> void:
 
 
 # ---------------------------------------------------------------- what it shows
-## The control scheme the strip shows (the player's caster's; "keys" without one).
+## The control scheme the strip shows (the player's caster's; "keys" without one), "simple" read as "first_moves".
 func scheme() -> String:
 	var c := SwayCaster.of(player) if player != null else null
-	return c.scheme() if c != null else "keys"
+	return KitWords.scheme_id(c.scheme()) if c != null else "keys"
 
 
-## The strip's column i (0-based) under the scheme now: {key (1-5), head (the line over it: "1", "W"), sub (the dim line
-## under the name), hidden (no column there in this scheme), id ("" empty), label, other (the key's other skill, "" none),
-## other_label, modes (the variations), mode_i (the one shown filled, -1 none), readied (lit)}.
+## Whether this is the player's first match (FirstHints up: a first Quick match), or what a test set.
+func first_match() -> bool:
+	if first_match_override != null:
+		return bool(first_match_override)
+	return is_inside_tree() and FirstHints.find(get_tree()) != null
+
+
+## How much of key `i`'s "tap twice" line shows (0 hidden .. 1; always 1 after the first match).
+func tap_alpha(i: int) -> float:
+	return float(_tap_a[i]) if i >= 0 and i < KEYS else 0.0
+
+
+## The readied move: {id, mode} ({} none).
+func readied() -> Dictionary:
+	var c := SwayCaster.of(player) if player != null else null
+	if c == null or c.readied_spell == "":
+		return {}
+	return {"id": c.readied_spell, "mode": c.base_mode_of(c.readied_spell)}
+
+
+## Key i (0-based) as the strip shows it under the scheme now: {key (1-5), head ("1 · STRIKE", "W / 1 · STRIKE"), id, mode,
+## label (the move shown: the readied one when it is this key's, else its first), sub ("tap twice: Boulder", "tap: Spike"
+## when the second is the readied one; "" none), tap (the tap twice line, shown or not), grow ("hold to grow it: Fireball"),
+## other, other_label (the key's other move), hidden, readied (lit), modes, mode_i (none: no forms in round 2)}.
 func column(i: int) -> Dictionary:
-	match scheme():
-		"direction":
-			return _dir_column(i)
-		"radial":
-			var r := key_column(i)
-			r.hidden = true
-			return r
-		"simple":
-			return _simple_column(i)
-	return key_column(i)
-
-
-## Key i as the keys scheme shows it: its skill, "again: <its other skill>" under it, the wheel's variation filled.
-func key_column(i: int) -> Dictionary:
-	var out := {"key": i + 1, "head": str(i + 1), "sub": "", "hidden": false, "id": "", "label": "", "other": "", "other_label": "",
-			"modes": [], "mode_i": -1, "readied": false}
-	var hb: Hotbar = player.hotbar if player != null else null
-	if hb == null:
+	var el := _element()
+	var s := scheme()
+	var out := {"key": i + 1, "head": "", "sub": "", "tap": "", "grow": "", "hidden": i >= KEYS, "id": "", "mode": "", "label": "",
+			"other": "", "other_label": "", "modes": [], "mode_i": -1, "readied": false}
+	var ms := KitWords.key_moves(el, i)
+	var heads := {0: "W / 1", 2: "A D / 3", 3: "S / 4"}
+	var k := String(heads.get(i, str(i + 1))) if s == "direction" else str(i + 1)
+	out.head = "%s%s%s" % [k, SEP, KitWords.role(el, i)] if i < KEYS else ""
+	if ms.is_empty():
 		return out
-	var e := hb.entry(i)
-	if e.is_empty() or String(e.get("kind", "")) != Hotbar.SPELL:
-		return out
-	var id := String(e.id)
-	out.id = id
-	out.label = Hotbar.spell_label(id)
-	var other := Bending.partner_of(id)
-	out.other = other
-	out.other_label = Hotbar.spell_label(other) if other != "" else ""
-	out.sub = ("again: " + String(out.other_label)) if String(out.other_label) != "" else ""
-	var ms: Array = SwayCaster.modes_of(id)
-	out.modes = ms
-	if not ms.is_empty():
+	var r := readied()
+	var at := -1
+	for j in ms.size():
+		if not r.is_empty() and String(ms[j].id) == String(r.id) and (String(ms[0].id) != String(ms[ms.size() - 1].id)
+				or ms.size() == 1 or String(ms[j].mode) == String(r.mode)):
+			at = j
+	var shown: Dictionary = ms[maxi(at, 0)]
+	out.id = String(shown.id)
+	out.mode = String(shown.mode)
+	out.label = KitWords.move_name(out.id, out.mode)
+	if ms.size() > 1 and s != "first_moves":
+		var oth: Dictionary = ms[1] if at <= 0 else ms[0]
+		out.other = String(oth.id)
+		out.other_label = KitWords.move_name(String(oth.id), String(oth.mode))
+		out.tap = (KitWords.w("tap_twice", "tap twice: %s") if at <= 0 else KitWords.w("tap_once", "tap: %s")) % out.other_label
+		out.sub = out.tap
+	var gn := KitWords.grown_name(el, i)
+	if gn != "" and at <= 0:
+		out.grow = KitWords.w("grow_into", "hold to grow it: %s") % gn
+	var held := ""
+	if s == "direction":
 		var c := SwayCaster.of(player)
-		var m := c.base_mode_of(id) if c != null else String(ms[0])     # (the key's own: never the quick spell's frozen one)
-		out.mode_i = maxi(ms.find(m), 0)
-	out.readied = hb.spell == id and hb.selected() == i
+		held = c.held_dir() if c != null else ""
+	var dir_of := {"forward": 0, "side": 2, "back": 3}
+	out.readied = at >= 0 if held == "" else int(dir_of.get(held, -1)) == i
 	return out
 
 
-## The direction scheme's columns: 0 W the attack, 1 S the defence, 2 A D the dodge (each its move at its own variation,
-## lit while its direction is held), 3 the key's move (the readied: its number, lit with no direction held); 4 none.
-const DIR_HEADS := ["W", "S", "A D"]
-func _dir_column(i: int) -> Dictionary:
-	var c := SwayCaster.of(player)
-	var held := c.held_dir() if c != null else ""
-	if i == 3:
-		var hb: Hotbar = player.hotbar if player != null else null
-		var at := hb.selected() if hb != null else -1
-		var k := key_column(at) if at >= 0 else key_column(0)
-		k.head = "%d · none" % int(k.key) if at >= 0 else "1-5"
-		k.readied = at >= 0 and held == ""
-		return k
-	var out := {"key": i + 1, "head": "", "sub": "", "hidden": i > 3, "id": "", "label": "", "other": "", "other_label": "",
-			"modes": [], "mode_i": -1, "readied": false}
-	if i > 2:
-		return out
-	var dir := String(MatchSetup.DIRS[i])
-	out.head = String(DIR_HEADS[i])
-	var dm := MatchSetup.direction_move(_element(), dir)
-	if dm.is_empty():
-		return out
-	var id := String(dm.id)
-	out.id = id
-	out.label = Hotbar.spell_label(id)
-	out.sub = SwayCaster.mode_label(id, String(dm.mode))
-	var ms: Array = SwayCaster.modes_of(id)
-	out.modes = ms
-	out.mode_i = ms.find(String(dm.mode))
-	out.readied = held == dir
-	return out
+## The JAB or the GUARD chip: {head ("LMB · JAB"), id, mode, label, sub (the next Q; "E again: throw it back"), lit}.
+func chip(kind: String) -> Dictionary:
+	var el := _element()
+	var c := SwayCaster.of(player) if player != null else null
+	if kind == "guard":
+		var g := KitWords.guard(el)
+		var holding := KitWords.holds_stone(player)
+		var lit := InputMap.has_action(KitWords.GUARD_ACTION) and Input.is_action_pressed(KitWords.GUARD_ACTION)
+		return {"head": "%s%s%s" % [KitWords.key(KitWords.GUARD_ACTION), SEP, KitWords.w("role_guard", KitWords.ROLE_GUARD)],
+				"id": String(g.get("id", "")), "mode": String(g.get("mode", "")),
+				"label": KitWords.move_name(String(g.get("id", "")), String(g.get("mode", ""))),
+				"sub": KitWords.keyed(KitWords.w("throw_back", "{guard} again: throw it back")) if holding else "",
+				"holding": holding, "lit": lit or holding}
+	var q := c.quick_spell() if c != null else {}
+	if q.is_empty():
+		q = KitWords.jab(el)
+	var on := c != null and c.lock_src == SwayCaster.SRC_QUICK and c.state != SwayCaster.State.IDLE
+	return {"head": "%s%s%s" % [CHIP, SEP, KitWords.w("role_jab", KitWords.ROLE_JAB)], "id": String(q.get("id", "")),
+			"mode": String(q.get("mode", "")), "label": KitWords.move_name(String(q.get("id", "")), String(q.get("mode", ""))),
+			"sub": q_line(), "lit": on}
 
 
-## The simple scheme's columns: keys 1-4 (the four moves), each with its two forms under it ("boulder / spike": near / far);
-## no pips (the form is picked at the release); 5 none.
-func _simple_column(i: int) -> Dictionary:
-	var k := key_column(i)
-	k.other = ""
-	k.other_label = ""
-	k.modes = []
-	k.mode_i = -1
-	var e := MatchSetup.simple_entry(_element(), String(k.id))
-	if i > 3 or e.is_empty():
-		k.hidden = true
-		k.readied = false
-		k.sub = ""
-		return k
-	# (near / far, short enough for the column; the ready line spells it out)
-	k.sub = "%s / %s" % [SwayCaster.mode_label(String(k.id), String(e.near)), SwayCaster.mode_label(String(k.id), String(e.far))]
-	return k
+## What the next Q does, as the jab chip says it: "Q: put Spike on left click" (the readied move is not on it), "hold Q: Pebbles
+## back" (another move is on it), both when both hold; "" with nothing to say. The Q as bound (KitWords.key).
+func q_line() -> String:
+	return q_text(SwayCaster.of(player) if player != null else null)
 
 
-## The readied move as the HUD says it: "2 · Earth Wall · column (2/3)" (" · water 64" for a water fighter); "" none.
-func ready_line() -> String:
-	if player == null or player.hotbar == null:
+## q_line for caster `c` (the strip's; the duel's world HUD under its quick row).
+static func q_text(c: SwayCaster) -> String:
+	var el := c.quick_element() if c != null else ""
+	if el == "":
 		return ""
-	var simple := scheme() == "simple"
+	var jb := KitWords.jab(el)
+	var q := c.quick_spell()
+	var r := {"id": c.readied_spell, "mode": c.base_mode_of(c.readied_spell)} if c.readied_spell != "" else {}
+	var lines := PackedStringArray()
+	if not r.is_empty() and (String(r.id) != String(q.get("id", "")) or String(r.mode) != String(q.get("mode", ""))):
+		lines.append(KitWords.keyed(KitWords.w("q_put", "{quick}: put %s on left click")) % KitWords.move_name(String(r.id), String(r.mode)))
+	if not q.is_empty() and (String(q.get("id", "")) != String(jb.get("id", "")) or String(q.get("mode", "")) != String(jb.get("mode", ""))):
+		lines.append(KitWords.keyed(KitWords.w("q_hold_back", "hold {quick}: %s back"))
+				% KitWords.move_name(String(jb.get("id", "")), String(jb.get("mode", ""))))
+	return "\n".join(lines)
+
+
+## The readied move as a line: "1 · Spike" ("" none; kept for its callers: the strip itself shows the lit chip).
+func ready_line() -> String:
 	for i in KEYS:
-		var col := key_column(i)              # (the readied key, whatever the scheme shows round it)
-		if not bool(col.readied):
-			continue
-		var line := "%d%s%s" % [i + 1, SEP, String(col.label)]
-		var ms: Array = col.modes
-		var e := MatchSetup.simple_entry(_element(), String(col.id)) if simple else {}
-		if not e.is_empty():
-			line += "%snear %s · far %s" % [SEP, SwayCaster.mode_label(String(col.id), String(e.near)),
-					SwayCaster.mode_label(String(col.id), String(e.far))]
-		elif not ms.is_empty():
-			line += "%s%s (%d/%d)" % [SEP, SwayCaster.mode_label(String(col.id), String(ms[int(col.mode_i)])), int(col.mode_i) + 1,
-					ms.size()]
-		var b := _bending()
-		if b != null and b.element == "water":
-			line += "%swater %d" % [SEP, roundi(b.water)]
-		return line
+		var col := column(i)
+		if bool(col.readied) and String(col.id) != "":
+			return "%d%s%s" % [i + 1, SEP, String(col.label)]
 	return ""
 
 
-## The quick spell on LMB as the chip's line says it: "Rock Jab (pebbles)" ("" none).
+## The move on left click as the jab chip names it ("Pebbles"; "" none).
 func quick_line() -> String:
-	var c := SwayCaster.of(player) if player != null else null
-	return c.quick_label() if c != null else ""
+	return String(chip("jab").label)
 
 
-## The strip's help line: how the quick spell is set and cast ("Q: set left click · hold LMB: cast it"; the set key as bound).
+## The strip's one help line (the scheme's, the keys as bound).
 func help_line() -> String:
-	return help_text()
+	return KitWords.help_line(scheme())
 
 
-## The quick spell's help line (the strip's, the world HUD's in a duel): "Q: set left click · hold LMB: cast it", the set
-## key as bound ("set left click: no key bound" when the player unbound it); under it, with a control scheme other than the
-## keys, the scheme's own line (schemes.json "strip": "let go of RMB holding  W attack · S defence ...").
+## The help line of the scheme now (the strip's; the duel's world HUD under its quick row).
 static func help_text() -> String:
-	var k := SwayCaster.quick_bind_key()
-	var set_l := ("%s: set left click" % k) if k != "" else "set left click: no key bound"
-	var line := "%s%shold %s: cast it" % [set_l, SEP, CHIP]
-	var sl := MatchSetup.scheme_text("strip")
-	return line + "\n" + sl if sl != "" else line
+	return KitWords.help_line()
 
 
 ## The "LMB" chip: a gold Label in a thin gold frame (the Label's own stylebox: no box container on the HUD, the user:
-## "those big cards are terrible"; tests/ui/test_hud_skills.gd): the strip's and the world HUD's quick spell row.
+## "those big cards are terrible"; tests/ui/test_hud_skills.gd): the world HUD's quick spell row (the duel).
 static func make_chip() -> Label:
-	var chip := FrontierHUD.hud_label(14, FrontierHUD.GOLD)
-	chip.name = "Chip"
-	chip.text = CHIP
-	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var chip_l := FrontierHUD.hud_label(14, FrontierHUD.GOLD)
+	chip_l.name = "Chip"
+	chip_l.text = CHIP
+	chip_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.0, 0.0, 0.0, 0.35)
 	sb.border_color = FrontierHUD.GOLD
@@ -301,8 +355,8 @@ static func make_chip() -> Label:
 	sb.set_corner_radius_all(3)
 	sb.content_margin_left = 5
 	sb.content_margin_right = 5
-	chip.add_theme_stylebox_override("normal", sb)
-	return chip
+	chip_l.add_theme_stylebox_override("normal", sb)
+	return chip_l
 
 
 func _bending() -> Bending:
@@ -319,45 +373,47 @@ func _signature() -> String:
 	var parts := PackedStringArray()
 	for i in KEYS:
 		var col := column(i)
-		parts.append("%s/%d/%s/%s/%s/%s" % [col.id, int(col.mode_i), col.readied, col.head, col.sub, col.hidden])
-	parts.append(ready_line())
+		parts.append("%s/%s/%s/%s/%s/%s" % [col.id, col.mode, col.readied, col.head, col.sub, col.grow])
+	for kind: String in ["jab", "guard"]:
+		var ch := chip(kind)
+		parts.append("%s/%s/%s/%s" % [ch.label, ch.sub, ch.lit, ch.head])
 	parts.append(_element())
-	parts.append(quick_line())
-	parts.append(help_line())                # (the set key rebound or unbound: the help line follows at once)
+	parts.append(help_line())                # (a key rebound or unbound: the help line follows at once)
 	return "|".join(parts)
 
 
 func refresh() -> void:
-	var tint := MatchSetup.color(_element()) if _element() != "" else FrontierHUD.GOLD
 	for i in _cols.size():
 		var col := column(i)
-		var ui: Dictionary = _cols[i]
-		var on := bool(col.readied)
-		(ui.key as Label).add_theme_color_override("font_color", FrontierHUD.GOLD if on else FrontierHUD.TEXT)
-		(ui.key as Label).text = String(col.head)
-		(ui.name as Label).text = String(col.label) if String(col.id) != "" else "-"
-		(ui.other as Label).text = String(col.sub)
-		(ui.box as Control).modulate.a = 1.0 if on else DIM_A
-		(ui.box as Control).visible = not bool(col.hidden)
-		var id := String(col.id)
-		if String(ui.tex_id) != id:
-			ui["tex_id"] = id
-			ui["tex"] = FrontierHUD.spell_texture(id, get_tree()) if id != "" else null
-		ui["tint"] = tint
-		(ui.icon as Control).queue_redraw()
-		(ui.pips as Control).queue_redraw()
+		_paint(_cols[i], String(col.head), String(col.id), String(col.label), String(col.sub), String(col.grow), bool(col.readied),
+				not bool(col.hidden))
+	for kind: String in ["jab", "guard"]:
+		var ch := chip(kind)
+		var ui: Dictionary = _chips[kind]
+		_paint(ui, String(ch.head), String(ch.id), String(ch.label), String(ch.sub), "", bool(ch.lit), true)
+		(ui.other as Label).add_theme_color_override("font_color", FrontierHUD.GOLD if bool(ch.get("holding", false)) else FrontierHUD.DIM)
 	_line.text = ready_line()
-	_line.visible = _line.text != ""
-	var ql := quick_line()
-	_quick.text = ql
-	_quick_box.visible = ql != ""
 	_help.text = help_line()
-	_help.visible = ql != ""
+	_help.visible = _help.text != ""
+
+
+func _paint(ui: Dictionary, head: String, id: String, label: String, sub: String, grow: String, on: bool, shown: bool) -> void:
+	(ui.key as Label).add_theme_color_override("font_color", FrontierHUD.GOLD if on else FrontierHUD.TEXT)
+	(ui.key as Label).text = head
+	(ui.name as Label).text = label if id != "" else "-"
+	(ui.other as Label).text = sub
+	(ui.grow as Label).text = grow
+	(ui.grow as Label).visible = grow != ""
+	(ui.box as Control).modulate.a = 1.0 if on else DIM_A
+	(ui.box as Control).visible = shown
+	if String(ui.tex_id) != id:
+		ui["tex_id"] = id
+		ui["tex"] = FrontierHUD.spell_texture(id, get_tree()) if id != "" else null
+	(ui.icon as Control).queue_redraw()
 
 
 # ---------------------------------------------------------------- drawing
-func _draw_icon(i: int) -> void:
-	var ui: Dictionary = _cols[i]
+func _draw_icon(ui: Dictionary) -> void:
 	var icon := ui.icon as Control
 	var r := Rect2(Vector2.ZERO, icon.size)
 	if String(ui.tex_id) == "":
@@ -371,23 +427,3 @@ func _draw_icon(i: int) -> void:
 	var fit := Rect2(r.position + (r.size - ts * k) * 0.5, ts * k)
 	icon.draw_texture_rect(tex, Rect2(fit.position + Vector2(1.5, 1.5), fit.size), false, Color(0, 0, 0, 0.45))
 	icon.draw_texture_rect(tex, fit, false, FrontierHUD.GOLD if tex.resource_path.ends_with(".svg") else Color.WHITE)
-
-
-func _draw_pips(i: int) -> void:
-	var ui: Dictionary = _cols[i]
-	var pips := ui.pips as Control
-	var col := column(i)
-	var ms: Array = col.modes
-	if ms.size() < 2:
-		return
-	var tint: Color = ui.get("tint", FrontierHUD.GOLD)
-	var gap := 12.0
-	var x0 := pips.size.x * 0.5 - gap * float(ms.size() - 1) * 0.5
-	var y := pips.size.y * 0.5
-	for j in ms.size():
-		var at := Vector2(x0 + gap * j, y)
-		pips.draw_circle(at + Vector2(1, 1), PIP_R + 0.8, Color(0, 0, 0, 0.45))
-		if j == int(col.mode_i):
-			pips.draw_circle(at, PIP_R, tint)
-		else:
-			pips.draw_arc(at, PIP_R - 0.4, 0.0, TAU, 16, Color(tint.r, tint.g, tint.b, 0.8), 1.2, true)

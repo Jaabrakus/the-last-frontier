@@ -39,12 +39,12 @@
 	"seed": 7300,
 	"fight_cues": ["ring_fight", "giant_battle"],
 	"stings": {
-		"_about": "Existing sounds (Sfx ids) for the round's moments: [id, gain dB, pitch].",
-		"count": ["nock_click", -6.0, 1.0],
-		"go": ["axe_clash", -4.0, 0.72],
-		"ringout": ["axe_clash", -2.0, 0.55],
-		"over": ["dummy_reset", -4.0, 0.8],
-		"match": ["axe_clash", -2.0, 0.45]
+		"_about": "The round's moments, the ring's own sounds (BendSounds ids, audio/sfx/bend: synthesized, none borrowed; an Sfx id also plays): [id, gain dB, pitch]. The countdown's tick, the gong at the go, the bell at a round's end (a ring-out or the time), the match's gong.",
+		"count": ["count_tick", 0.0, 1.0],
+		"go": ["round_gong", 0.0, 1.0],
+		"ringout": ["round_bell", 0.0, 1.0],
+		"over": ["round_bell", -1.0, 0.94],
+		"match": ["match_gong", 0.0, 1.0]
 	},
 	"words": {
 		"_about": "Every word the ring's own screens show (RingMode's round text, RingMenu). Plain text only; the full strip is the HUD's.",

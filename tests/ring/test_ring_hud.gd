@@ -7,9 +7,12 @@ extends SceneTree
 ##   arena     the player is the arena's: no musket, pistol, bow, spear, tomahawk or atlatl, no ThrowableKit, nothing on the
 ##             body, no equip wheel or building; `weapon` null every frame of the run (10 s and more)
 ##   the bar   the hotbar laid from the element's bar at once (the kit closed), its first key readied
-##   strip     the HUD in arena mode (no compass), the BendStrip's five columns name the element's keys and their other
-##             skills; key 2 twice: column 2's skill is its partner; the wheel moves the filled pip; the ready line as
-##             docs/bending_design.md writes it ("2 · Earth Grip · trap (2/3)"); the aim dot shown
+##   strip     the HUD in arena mode (no compass); round 2 (the key layout of skills_r2 spec §8.1, put in by
+##             tests/ring/r2_layout.gd while the kits' data is not merged): under every scheme x element the JAB and GUARD
+##             chips, the four role columns plus 5 with their plain names and "tap twice" lines (none under first moves),
+##             ▲ on 2 (and fire's 1, "hold to grow it: Fireball"), exactly one help line; the JAB chip shows the jab and what
+##             the next Q does; the first match hides a key's "tap twice" until it has been cast twice; a stone he caught:
+##             "E again: throw it back" (not another's); the move wheel 9 / 9 / 8 / 8 (+ Breath); the aim dot shown
 ##   keys      6, 7, 8, 9, H, Tab, K, Q, T, B and Z leave the readied move, the hands and the open screens as they were
 ##   water     the element water: the strip's keys are water's, the water bar shows, the ready line says the water
 ##   match     the MatchBar reads the match node (a stub when there is none): its round and its time
@@ -23,6 +26,10 @@ extends SceneTree
 
 const NAME := "RING HUD TEST"
 const LIMIT_S := 300.0
+const OWN_CFG := "user://ring_hud_test.cfg"
+const R2Layout := preload("res://tests/ring/r2_layout.gd")
+## Round 2's names that must not come back (the show's: skills_r2 spec §11 q16).
+const OLD_NAMES := ["water whip", "air ball", "air shield", "spout", "redirect lightning", "air scooter", "bend", "bends"]
 ## The show's words (as tests/ring/test_player_words.gd holds them).
 const WORDS := ["avatar", "benders?", "bending", "pro-?bend\\w*", "korra", "aang", "airbend\\w*", "firebend\\w*",
 		"earthbend\\w*", "waterbend\\w*", "air scooters?", "fire nation", "water tribes?", "earth kingdom", "air nomads?"]
@@ -72,6 +79,12 @@ func _initialize() -> void:
 		quit(2))
 	SwayCaster.free_override = true
 	InputSetup.ensure()
+	GameSettings.path = OWN_CFG                 # (the schemes and the left click's move set here are this test's own)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+	MatchSetup.reload_scheme()
+	MatchSetup._aim_help = "strong"
+	var laid := R2Layout.apply()
+	print("  info round 2's key layout %s" % ("put in for this run (the kits' data not merged here)" if laid else "from the data"))
 	MatchSetup.incoming = true
 	MatchSetup.element = "earth"
 	change_scene_to_file("res://scenes/ring.tscn")
@@ -139,6 +152,9 @@ func _run() -> void:
 
 
 func _end() -> void:
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+	GameSettings.path = GameSettings.PATH
+	MatchSetup.reload_scheme()
 	if fails.is_empty() and checks > 0:
 		print("%s PASSED (%d checks)" % [NAME, checks])
 		quit(0)
@@ -174,6 +190,35 @@ func _arena() -> void:
 
 
 # ---------------------------------------------------------------- the strip
+## Round 2's plain names per element (skills_r2 spec §3, §8.1; the owner's answers: fire's Jab Embers): [jab, guard, keys 1-5].
+const NAMES := {
+	"earth": ["Pebbles", "Catch", "Spike", "Shove", "Burrow", "Wall", "Patch"],
+	"water": ["Splash", "Turn", "Lash", "Wave", "Skate", "Ice Wall", "Patch"],
+	"fire": ["Embers", "Parry", "Punch", "Kick", "Step", "Fire Wall", "Patch"],
+	"air": ["Palm", "Wind Guard", "Slice", "Gust", "Slip", "Wind Wall", "Patch"],
+}
+## The second moves (a tap twice) on keys 1-3 and earth and water's 5.
+const SECONDS := {
+	"earth": ["Boulder", "Column", "Lift", "", "Mend"],
+	"water": ["Spear", "Geyser", "Surf", "", "Mend"],
+	"fire": ["Lightning", "High Kick", "Jets", "Breath", ""],
+	"air": ["Wind Ball", "Pull", "Leap", "", ""],
+}
+
+
+## The strip's lines under the chips that show (exactly one: the help line).
+func _lines_shown(strip: BendStrip) -> Array:
+	var out: Array = []
+	for n in strip.get_children():
+		if n is Label and (n as Label).visible and (n as Label).text != "":
+			out.append((n as Label).text)
+	return out
+
+
+func _first_moves() -> String:
+	return "first_moves" if "first_moves" in MatchSetup.SCHEMES else "simple"
+
+
 func _strip() -> void:
 	var strip := hud.bend_strip
 	_expect(hud.arena and strip != null and strip.is_visible_in_tree() and hud.match_bar != null,
@@ -184,33 +229,115 @@ func _strip() -> void:
 	if strip == null:
 		return
 	await _ticks(3)
-	var ok := true
-	var names: Array = []
-	for i in 5:
-		var pair: Array = Bending.keys("earth")[i]
-		var col := strip.column(i)
-		var ui: Dictionary = strip._cols[i]
-		names.append((ui.name as Label).text)
-		ok = ok and String(col.id) == String(pair[0]) and (ui.name as Label).text == Hotbar.spell_label(String(pair[0])) \
-				and (ui.other as Label).text == "again: " + Hotbar.spell_label(String(pair[1]))
-	_expect(ok, "five columns: the element's keys and their other skills (%s)" % [names])
+	# every scheme x element: the JAB and GUARD chips, the four role columns plus 5, exactly one help line
+	for el: String in Bending.ELEMENTS:
+		MatchSetup.element = el
+		await _until(func() -> bool: return p.arena_element == el and p.hotbar.spell != "", 3.0)
+		for s: String in ["keys", _first_moves(), "direction", "radial"]:
+			MatchSetup.set_scheme(s)
+			await _ticks(3)
+			var names: Array = []
+			var ok := true
+			var jab := strip.chip("jab")
+			var g := strip.chip("guard")
+			names.append(String(jab.label))
+			names.append(String(g.label))
+			ok = ok and String(jab.head).ends_with("JAB") and String(g.head).ends_with("GUARD") \
+					and ((strip._chips.jab as Dictionary).box as Control).visible and ((strip._chips.guard as Dictionary).box as Control).visible
+			var taps: Array = []
+			for i in 5:
+				var col := strip.column(i)
+				var ui: Dictionary = strip._cols[i]
+				names.append((ui.name as Label).text)
+				taps.append(String(col.tap))
+				ok = ok and not bool(col.hidden) and (ui.box as Control).visible and String(col.head).contains(String(KitWords.ROLES[i]))
+				var want_tap := String(SECONDS[el][i])
+				ok = ok and (String(col.tap) == ("" if want_tap == "" or KitWords.scheme_id(s) == "first_moves" else "tap twice: " + want_tap))
+			ok = ok and names == NAMES[el]
+			ok = ok and String(strip.column(1).head).ends_with("▲") and (String(strip.column(0).head).ends_with("▲") == (el == "fire"))
+			var lines := _lines_shown(strip)
+			ok = ok and lines.size() == 1 and not String(lines[0]).contains("\n") and String(lines[0]) == KitWords.help_line(s)
+			_expect(ok, "%s %s: JAB %s · GUARD %s · 1-5 %s, the taps %s, one help line (%s)" % [el, s, names[0], names[1],
+					names.slice(2), taps, lines])
+		if el == "fire":
+			_expect(String(strip.column(0).grow) == "hold to grow it: Fireball", "fire's 1 says it grows: \"%s\"" % strip.column(0).grow)
+	MatchSetup.set_scheme("keys")
+	MatchSetup.element = "earth"
+	await _until(func() -> bool: return p.arena_element == "earth" and p.hotbar.spell != "", 3.0)
+	await _ticks(3)
 	_expect(bool(strip.column(0).readied) and not bool(strip.column(1).readied), "the first column readied")
 	await _action(&"weapon_2")
-	_expect(String(strip.column(1).id) == "earth_wall" and bool(strip.column(1).readied), "2: Earth Wall readied")
-	await _action(&"weapon_2")
+	_expect(String(strip.column(1).id) == "earth_shove" and bool(strip.column(1).readied) and strip.ready_line() == "2 · Shove",
+			"2: Shove readied, its chip lit (%s)" % strip.ready_line())
+	# the JAB chip: the jab by default, and what the next Q does
+	var jab0 := strip.chip("jab")
+	var qk := KitWords.key(SwayCaster.QUICK_BIND)
+	_expect(String(jab0.label) == "Pebbles" and String(jab0.sub) == "%s: put Shove on left click" % qk
+			and (strip._chips.jab.other as Label).text == String(jab0.sub),
+			"the JAB chip: Pebbles, \"%s\"" % jab0.sub)
+	var keep: Dictionary = c.quick_spell().duplicate()
+	c._quick["earth"] = {"id": "earth_shove", "mode": "push"}
+	await _ticks(3)
+	var jab1 := strip.chip("jab")
+	_expect(String(jab1.label) == "Shove" and String(jab1.sub) == "hold %s: Pebbles back" % qk,
+			"Shove on left click: the chip says \"%s\"" % String(jab1.sub).replace("\n", " / "))
+	await _action(&"weapon_1")
+	await _ticks(3)
+	_expect(String(strip.chip("jab").sub) == "%s: put Spike on left click\nhold %s: Pebbles back" % [qk, qk],
+			"Spike readied with Shove on it: \"%s\"" % String(strip.chip("jab").sub).replace("\n", " / "))
+	c._quick["earth"] = keep if not keep.is_empty() else KitWords.jab("earth")
+	_expect(not strip.q_line().contains("no key bound") and not hud.help_text().contains("no key bound"),
+			"no \"set left click: no key bound\" anywhere")
+	# the first match: "tap twice" fades in only once the key has been cast twice (display only)
+	strip.first_match_override = true
+	strip._casts = [0, 0, 0, 0, 0]
+	await _secs(0.8)
+	var a0 := strip.tap_alpha(0)
+	c.cast.emit("stone_form", null)
+	await _secs(0.8)
+	var a1 := strip.tap_alpha(0)
+	c.cast.emit("stone_form", null)
+	await _secs(0.8)
+	var a2 := strip.tap_alpha(0)
+	_expect(a0 < 0.01 and a1 < 0.01 and a2 > 0.99 and strip.tap_alpha(1) < 0.01 and strip.casts_of(0) == 2
+			and is_equal_approx((strip._cols[0].other as Label).modulate.a, a2),
+			"the first match: key 1's \"tap twice\" hidden (%.2f), still after one cast (%.2f), in after two (%.2f); key 2's still hidden"
+			% [a0, a1, a2])
+	strip.first_match_override = false
+	await _secs(0.2)
+	_expect(strip.tap_alpha(1) > 0.99, "after the first match every \"tap twice\" shows")
+	# holding a stone it caught: "E again: throw it back" on the GUARD chip, his own only
+	var mine := Node3D.new()
+	mine.name = "HeldStoneStandIn"
+	mine.set_meta(&"bend_held_by", p.get_instance_id())
+	var theirs := Node3D.new()
+	theirs.set_meta(&"bend_held_by", 1)
 	await _ticks(2)
-	_expect(String(strip.column(1).id) == "earth_grip" and (strip._cols[1].name as Label).text == Hotbar.spell_label("earth_grip")
-			and (strip._cols[1].other as Label).text == "again: " + Hotbar.spell_label("earth_wall"),
-			"2 again: column 2 is its partner, Earth Grip (%s)" % (strip._cols[1].name as Label).text)
-	var m0 := int(strip.column(1).mode_i)
-	await _action(&"weapon_next")
+	lvl.add_child(theirs)
+	theirs.add_to_group(FormStone.GROUP)
+	await _ticks(3)
+	var g0 := strip.chip("guard")
+	lvl.add_child(mine)
+	mine.add_to_group(FormStone.GROUP)
+	await _ticks(3)
+	var g1 := strip.chip("guard")
+	var gk := KitWords.key(KitWords.GUARD_ACTION)
+	_expect(String(g0.sub) == "" and String(g1.sub) == "%s again: throw it back" % gk
+			and (strip._chips.guard.other as Label).text == String(g1.sub),
+			"a stone he caught: the GUARD chip says \"%s\" (another's held stone: \"%s\")" % [g1.sub, g0.sub])
+	mine.queue_free()
+	theirs.queue_free()
 	await _ticks(2)
-	var m1 := int(strip.column(1).mode_i)
-	_expect(m0 == 0 and m1 == 1, "the wheel moves the filled pip (%d -> %d)" % [m0, m1])
-	var ms: Array = SwayCaster.modes_of("earth_grip")
-	var want := "2 · %s · %s (2/%d)" % [Hotbar.spell_label("earth_grip"), SwayCaster.mode_label("earth_grip", String(ms[1])), ms.size()]
-	_expect(strip.ready_line() == want and (strip._line as Label).text == want,
-			"the ready line as the design writes it: \"%s\" (%s)" % [want, strip.ready_line()])
+	# the move wheel: the key moves plus Patch and Mend
+	var counts := {}
+	for el: String in Bending.ELEMENTS:
+		counts[el] = RadialWheel.items_for(el).size()
+	var fire_want := 8 + (1 if KitWords.key_moves("fire", 3).size() > 1 else 0)
+	_expect(counts.earth == 9 and counts.water == 9 and counts.air == 8 and counts.fire == fire_want,
+			"the wheel: earth 9, water 9, air 8, fire %d (Breath on its 4: the owner) (%s)" % [fire_want, counts])
+	var items := RadialWheel.items_for("earth")
+	_expect(items.map(func(it: Dictionary) -> String: return String(it.label)) == ["Spike", "Boulder", "Shove", "Column", "Burrow", "Lift",
+			"Wall", "Patch", "Mend"], "earth's wheel by plain names (%s)" % [items.map(func(it: Dictionary) -> String: return String(it.label))])
 	_expect(hud.aim_dot_shown(), "the aim dot shows with a move readied and no weapon")
 
 
@@ -251,9 +378,11 @@ func _water() -> void:
 	var strip := hud.bend_strip
 	_expect(t < INF and String(strip.column(0).id) == "water_whip" and String(strip.column(3).id) == "water_shield",
 			"water: the bar and the strip are water's (%.2f s)" % t)
-	_expect(hud._water_row.visible and hud._water_bar.value > 0.0, "the water bar shows (%.2f)" % hud._water_bar.value)
-	_expect(strip.ready_line().begins_with("1 · Water Whip · ") and strip.ready_line().contains(" · water "),
-			"the ready line says the water (%s)" % strip.ready_line())
+	var spends := bool((SwayMoves.data().get("water_meter", {}) as Dictionary).get("spend", true))
+	_expect(hud._water_row.visible == spends and (not spends or hud._water_bar.value > 0.0),
+			"the water bar shows while the water is spent, else not (spend %s, shown %s)" % [spends, hud._water_row.visible])
+	_expect(strip.ready_line() == "1 · Lash" and (strip._cols[0].name as Label).text == "Lash",
+			"the strip names water's strike plainly (%s)" % strip.ready_line())
 	# the dress: the water side's ring dress (PlayerAppearance.ring_dress, 2026-10-05: the parka, trousers, belt and
 	# boots, the same as the water bots'), every garment of it worn, no hat, nothing at the neck or on the shoulders
 	var app := p.appearance
@@ -286,8 +415,19 @@ func _water() -> void:
 		how.enabled = true
 		var up := await _until(func() -> bool: return how.current != "", 4.0)
 		_expect(up < INF and how.current == "elements" and how._steps.size() == (HowTo.TOPICS.elements.steps as Array).size()
-				and (HowTo.TOPICS.elements.steps as Array).size() == 5,
-				"the arena's first-time help: the moves' panel first (%s)" % how.current)
+				and (HowTo.TOPICS.elements.steps as Array).size() == 6,
+				"the arena's first-time help: the buttons' panel first (%s)" % how.current)
+		# (a first match's key hints take its place: the panel goes, and none comes up while they stand)
+		FirstHints.force = true
+		var mm := RingMode.find(self)
+		var fh := FirstHints.install(mm, true) if mm != null else null
+		await _ticks(3)
+		_expect(fh != null and how.current == "" and not how._panel.visible and how.seen.has("elements"),
+				"the key hints replace the first-time panel (%s; panel %s)" % [how.current, how._panel.visible])
+		if fh != null:
+			fh.queue_free()
+		FirstHints.force = false
+		await _ticks(2)
 		how.enabled = false
 		how._panel.visible = false
 		how.current = ""
@@ -389,7 +529,16 @@ func _no_cues() -> void:
 # ---------------------------------------------------------------- the words
 func _words() -> void:
 	var re := RegEx.create_from_string("(?i)\\b(?:%s)\\b" % "|".join(PackedStringArray(WORDS)))
-	var texts: Array[String] = [FrontierHUD.ARENA_HELP]
+	var texts: Array[String] = [FrontierHUD.ARENA_HELP, hud.help_text()]
+	for t in KitWords.every_line():
+		texts.append(String(t))
+	var old := RegEx.create_from_string("(?i)\\b(?:%s)\\b" % "|".join(PackedStringArray(OLD_NAMES)))
+	var olds: Array = []
+	for t in texts:
+		for mt in old.search_all(t):
+			olds.append(mt.get_string())
+	_expect(olds.is_empty() and KitWords.every_line().size() > 100, "round 2's lines hold no old name (%d lines%s)"
+			% [KitWords.every_line().size(), "" if olds.is_empty() else ": %s" % [olds]])
 	for id: String in HowTo.ARENA_TOPICS:
 		texts.append(String(HowTo.TOPICS[id].title))
 		for s in HowTo.TOPICS[id].steps:
@@ -418,6 +567,8 @@ func _body() -> void:
 	var rm := RingMode.find(self)
 	if rm != null and rm.foe != null and is_instance_valid(rm.foe):
 		rm.foe.held = true
+	if rm != null and rm.rules != null:
+		rm.rules.reset_round()               # (the round-2 strip checks take a while: a knock the bot landed meanwhile held him to a zone)
 	p.pitch = -0.15
 	await _secs(0.5)
 	var casts: Array = []
@@ -483,6 +634,7 @@ func _body() -> void:
 	if rm != null and rm.rules != null:
 		rm.rules.reset_round()               # (the knocks pushed him back a zone: its soft wall, the rules', not his legs, would stop the walk)
 	await _secs(1.0)
+	_face_centre()                           # (the 16 m/s throw can carry him past the middle: walk back toward it, never into their half)
 	p0 = p.global_position
 	Input.action_press(&"move_forward")
 	await _secs(1.0)
