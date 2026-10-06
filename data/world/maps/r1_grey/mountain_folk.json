@@ -1,0 +1,32 @@
+{
+  "_doc": [
+    "The greybox's Mountain Folk preset (ThuyVanPreset; plan phase 1, T5): a look made through the creator's own preset machinery (CharacterPeoples.preset_look: the first of `faces` this build has for the body type; failing those, the first preset of the first people whose id holds one of `people_like`), then weathered and dressed in today's garments nearest the Common Folk sheet's Mountain Folk (a crossed wrap tunic, wrapped trousers, a sash; bare feet). No new garment or texture. The player's saved look on disk is never written (PlayerAppearance.apply does not save).",
+    "Every garment is the first of its list this build dresses in (PlayerOutfit.usable); '-' leaves the slot bare. colors: zone index -> '#hex' (or a catalog preset name under 'preset', the zones given over it). The ring set's wrap tunic and wrapped trousers are re-dyed in undyed hemp, walnut brown and madder rust: no element colours.",
+    "people: English names only until the owner picks the Vietnamese (plan 9, Q4)."
+  ],
+  "people": "Mountain Folk",
+  "people_title": "People of the High Places",
+  "people_vietnamese": "pending",
+  "status": "proposal",
+  "faces": {
+    "m": ["vietnamese_m_a", "vietnamese_m_b", "thai_m_a", "malay_m_a"],
+    "f": ["vietnamese_f_a", "vietnamese_f_b", "thai_f_a", "malay_f_a"]
+  },
+  "people_like": ["vietnam", "thai", "malay"],
+  "look": {"weathering": 0.45, "freckles": 0.0},
+  "outfit": {
+    "shirt": {"ids": ["ring_earth_tunic", "shirt_tucked"], "colors": {"preset": "earth", "0": "#6B4A32", "1": "#B8A27A", "2": "#8A3E26"}},
+    "legs.lower": {"ids": ["ring_trousers_wrapped", "breeches"], "colors": {"preset": "earth", "0": "#3E2E22", "1": "#B8A27A", "2": "#3E2E22"}},
+    "accessories.waist": {"ids": ["sash_worsted"], "colors": {"0": "#8A3E26", "1": "#8A3E26", "2": "#B8A27A", "3": "#8A3E26"}},
+    "accessories.arms": {"ids": ["ring_arm_wraps"], "colors": {"preset": "earth", "0": "#B8A27A", "1": "#6B4A32"}},
+    "feet": {"ids": ["-"]},
+    "head": {"ids": ["-"]},
+    "vest": {"ids": ["-"]},
+    "outer": {"ids": ["-"]},
+    "legs.over": {"ids": ["-"]},
+    "accessories.neck": {"ids": ["-"]},
+    "accessories.shoulder": {"ids": ["-"]},
+    "accessories.wrap": {"ids": ["-"]},
+    "accessories.hands": {"ids": ["-"]}
+  }
+}

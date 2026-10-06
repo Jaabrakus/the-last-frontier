@@ -1,0 +1,14 @@
+{
+  "_doc": "The greybox's S0 (StoryLayer, WorldRegion r1_grey): the reach before it stops. The river runs everywhere; nobody keeps anyone from the water. No buildings yet (the greybox reuses today's valley; R1's village is Phase 3's). Its places are where the shots stand.",
+  "id": "S0",
+  "label": "The reach running",
+  "state": "S0",
+  "places": {
+    "reach_lower_end": {"river_z": -60.0, "river_d": 0.0},
+    "reach_middle": {"river_z": -118.0, "river_d": 0.0},
+    "reach_upper_end": {"river_z": -175.0, "river_d": 0.0},
+    "west_bank_below": {"river_z": -40.0, "river_d": -22.0}
+  },
+  "sites": [],
+  "animals": {}
+}

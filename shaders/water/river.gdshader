@@ -20,6 +20,9 @@
 //             out from the banks over the shallows first, dark and clear where it is new, grey-white where it has
 //             thickened; in deep winter the slow water freezes across; the rapids stay open; snow lies on it in wind-swept
 //             patches (snow.gdshaderinc)
+//   still     a still reach (still_band, RiverWater from WorldRiver.still_band; Thủy Vân's S1): the moving ripples give way
+//             to a faint frozen pattern, the foam goes, the water clears (still_absorb: the stones on its bed seen) and
+//             turns glassy; full from its ease inside its ends, nothing outside it (amount 0: the water as ever)
 shader_type spatial;
 // (seen from under it too; no shadows on it: the far terrain casts them from its coarse 8 m mesh, blocky on the water)
 render_mode blend_mix, depth_draw_always, cull_disabled, shadows_disabled, diffuse_burley, specular_schlick_ggx;
@@ -55,6 +58,11 @@ uniform float rapid_roughness = 0.09;     // its surface, broken up (less of a m
 uniform sampler2D wake_map : filter_linear, repeat_disable;   // the boulders' white water (0..1)
 uniform vec4 wake_box = vec4(0.0);        // its box: x0, z0, 1 / width, 1 / depth (z 0: none)
 
+uniform vec4 still_band = vec4(0.0);      // the still reach: z from, z to, ease (m), amount 0..1 (0: none)
+uniform float still_absorb = 0.3;         // x absorb in it: how much clearer
+uniform float still_ripple = 0.18;        // what is left of the ripples in it, frozen
+uniform float still_roughness = 0.012;
+
 varying vec2 v_flow;
 varying vec3 v_world;
 varying float v_rapid;
@@ -76,10 +84,24 @@ vec2 ripples(vec2 xz, vec2 dir, float t, float speed) {
 	return (mix(a0, a1, w) * 0.65 + b * 0.35) * 2.0 - 1.0;
 }
 
+// How still the water is at z: the band's amount from its ease inside its ends, eased to 0 at them, 0 past them.
+float still_at(float z) {
+	if (still_band.w <= 0.0) {
+		return 0.0;
+	}
+	float e = max(still_band.z, 0.001);
+	return still_band.w * smoothstep(still_band.x, still_band.x + e, z) * (1.0 - smoothstep(still_band.y - e, still_band.y, z));
+}
+
 void fragment() {
 	vec2 dir = normalize(v_flow + vec2(0.0, 1e-4));
 	float speed = flow_speed * (1.0 + (rapid_speed - 1.0) * v_rapid);
 	vec2 r = ripples(v_world.xz, dir, TIME, speed) * ripple_strength * (1.0 + (rapid_chop - 1.0) * v_rapid);
+	// a still reach: the moving ripples give way to a faint frozen pattern (nothing in it moves)
+	float still = still_at(v_world.z);
+	if (still > 0.0) {
+		r = mix(r, ripples(v_world.xz, dir, 0.0, 0.0) * ripple_strength * still_ripple, still);
+	}
 	vec2 along = vec2(dot(v_world.xz, dir), dot(v_world.xz, vec2(-dir.y, dir.x)));
 	vec3 nw = normalize(vec3(r.x, 1.0, r.y));
 	NORMAL = normalize((VIEW_MATRIX * vec4(nw, 0.0)).xyz);
@@ -100,14 +122,14 @@ void fragment() {
 	}
 	vec3 bed = textureLod(screen_tex, ruv, 0.0).rgb;
 
-	float seen = exp(-thick * absorb);                    // light from the bed that gets through
+	float seen = exp(-thick * absorb * mix(1.0, still_absorb, still));   // light from the bed that gets through
 	vec3 through = bed * mix(vec3(1.0), shallow_tint, clamp(thick * 0.8, 0.0, 1.0)) * seen;
 
 	// foam at the banks, drifting with the flow
 	float fn = texture(foam_noise, (v_world.xz - dir * speed * TIME) / 3.0).r;
 	float fdep = foam_depth * (1.0 + 0.6 * v_rapid);
 	// (soft all through: a gradient, no hard edge to follow the ground's facets)
-	float foam = smoothstep(fdep, 0.0, deep) * smoothstep(0.2, 0.8, fn) * 0.45;
+	float foam = smoothstep(fdep, 0.0, deep) * smoothstep(0.2, 0.8, fn) * 0.45 * (1.0 - still);
 	// white water. Its texture: churning, swept down (broad and soft: user 2026-09-28 "more smooth instead of blockly")
 	float churn = smoothstep(0.2, 0.8, texture(foam_noise, vec2(along.x - speed * 0.8 * TIME, along.y * 1.4) / 2.4).r);
 	// about the boulders: the upstream pillow, the ring, the fainter V behind
@@ -117,7 +139,7 @@ void fragment() {
 
 	ALBEDO = mix(deep_color * (1.0 - seen), vec3(0.72, 0.74, 0.7), foam);
 	EMISSION = through * (1.0 - foam);
-	ROUGHNESS = mix(mix(water_roughness, rapid_roughness, v_rapid), 0.6, foam);
+	ROUGHNESS = mix(mix(mix(water_roughness, rapid_roughness, v_rapid), still_roughness, still), 0.6, foam);
 	METALLIC = 0.0;
 	SPECULAR = 0.5;
 	ALPHA = smoothstep(0.0, edge_fade, deep);

@@ -20,6 +20,16 @@ const NO_WATER := -INF
 
 static var off := false
 
+## THE STILL REACHES (Thủy Vân; the river block's "reaches", data/world/maps/r1_grey/squares.json): a stretch whose flow is
+## scaled by the world's state, {id, z_from, z_to, ease_m, scale_by_state: {state: scale}}: its state's scale from ease_m
+## inside its ends, eased back to 1 at z_from and z_to, unchanged past them. `reach_state` "" (the frontier and its tests):
+## no reach applies and the river is as it always was. ThuyVanLevel sets it ("S0" running, "S1" still).
+##   flow_scale(z)     the flow there x this (flow_at, so WaterSurface.current_at: a boat drifts to a stop where it is 0)
+##   still_amount(z)   1 - flow_scale, 0..1: how still it lies (RiverWater's look and voice, FishLife's fish)
+##   still_band()      the first reach the state stills: {z_from, z_to, ease_m, amount} ({} none)
+##   dir_at(z)         downstream there, unit, whatever the state (the water's ribbon, a site facing the river)
+static var reach_state := ""
+
 
 static func data() -> Dictionary:
 	if off:
@@ -62,12 +72,62 @@ static func rapids() -> Array[Dictionary]:
 	return out
 
 
-## Downstream there (flat, unit): southward (+Z) along its bends.
+## Downstream there (flat, unit): southward (+Z) along its bends; x flow_scale(z) (in a still reach shorter, or nothing).
 static func flow_at(z: float) -> Vector3:
+	if reach_state == "":
+		return dir_at(z)
+	return dir_at(z) * flow_scale(z)
+
+
+## Downstream there (flat, unit), whatever the state.
+static func dir_at(z: float) -> Vector3:
 	var dxdz := 0.0
 	for m: Array in data().get("meanders", []):
 		dxdz += float(m[0]) / float(m[1]) * cos(z / float(m[1]) + float(m[2]))
 	return Vector3(dxdz, 0.0, 1.0).normalized()
+
+
+static func reaches() -> Array:
+	return data().get("reaches", [])
+
+
+## How far into reach `r` z lies, 0..1: 1 from ease_m inside its ends, eased to 0 at them, 0 past them.
+static func _in_reach(r: Dictionary, z: float) -> float:
+	var z0 := float(r.get("z_from", 0.0))
+	var z1 := float(r.get("z_to", 0.0))
+	if z <= z0 or z >= z1:
+		return 0.0
+	var e := maxf(float(r.get("ease_m", 0.0)), 0.001)
+	return smoothstep(z0, z0 + e, z) * smoothstep(z1, z1 - e, z)
+
+
+## The flow there x this: 1 outside every reach and with no state; inside one, its scale for the state.
+static func flow_scale(z: float) -> float:
+	if reach_state == "" or off:
+		return 1.0
+	var s := 1.0
+	for r: Dictionary in reaches():
+		var by: Dictionary = r.get("scale_by_state", {})
+		if by.has(reach_state):
+			s *= lerpf(1.0, float(by[reach_state]), _in_reach(r, z))
+	return s
+
+
+## How still it lies there, 0 (running) .. 1 (still).
+static func still_amount(z: float) -> float:
+	return clampf(1.0 - flow_scale(z), 0.0, 1.0)
+
+
+## The first reach the state slows: {z_from, z_to, ease_m, amount (1 - its scale)}; {} none.
+static func still_band() -> Dictionary:
+	if reach_state == "" or off:
+		return {}
+	for r: Dictionary in reaches():
+		var by: Dictionary = r.get("scale_by_state", {})
+		if by.has(reach_state) and float(by[reach_state]) < 1.0:
+			return {"z_from": float(r.get("z_from", 0.0)), "z_to": float(r.get("z_to", 0.0)),
+					"ease_m": float(r.get("ease_m", 0.0)), "amount": 1.0 - clampf(float(by[reach_state]), 0.0, 1.0)}
+	return {}
 
 
 ## How far from its centre its banks top out (past there, never water).

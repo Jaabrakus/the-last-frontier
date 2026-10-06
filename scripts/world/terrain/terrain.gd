@@ -80,6 +80,8 @@ const FIRING_LINE_Z := -20.0
 
 ## Baked data layout (keep in sync with tools/environment/terrain/bake_terrain.py).
 const DATA_DIR := "res://assets/environment/terrain/"
+## The region loader (Thủy Vân; WorldRegion): a region's baked ground when it names one (data_dir), DATA_DIR otherwise.
+const Region := preload("res://scripts/world/world_region.gd")
 const GRID_HALF := 416
 const GRID_N := 833
 const CHUNK_SIZE := 64
@@ -397,6 +399,11 @@ static func data_loaded() -> bool:
 	return _data_ok or _ensure_data()
 
 
+## The baked data's folder: the region's (WorldRegion.terrain_dir), DATA_DIR with none.
+static func data_dir() -> String:
+	return Region.terrain_dir()
+
+
 ## Baked Image resource (terrain_height.res etc.), loaded once.
 static func data_image(file: String) -> Image:
 	if not _images.has(file):
@@ -415,7 +422,7 @@ static func _ensure_data() -> bool:
 	var core := data_image("terrain_core.res")
 	if h == null or s0 == null or s1 == null or nm == null or core == null \
 			or h.get_width() != GRID_N or h.get_format() != Image.FORMAT_RF:
-		push_warning("FrontierTerrain: baked terrain data missing under %s; using the flat placeholder" % DATA_DIR)
+		push_warning("FrontierTerrain: baked terrain data missing under %s; using the flat placeholder" % data_dir())
 		return false
 	_heights = h.get_data().to_float32_array()
 	var n4 := GRID_N * GRID_N * 4
@@ -445,7 +452,7 @@ static func _ensure_data() -> bool:
 
 
 static func _load_image(file: String) -> Image:
-	var path := DATA_DIR + file
+	var path := data_dir() + file
 	if not ResourceLoader.exists(path):
 		return null
 	return load(path) as Image
@@ -553,7 +560,7 @@ func _build_collision() -> void:
 	for sq: Vector2i in squares():
 		var dir := "" if sq == Vector2i.ZERO else SQUARE_DIR % [sq.x, sq.y]
 		for kind in [["GroundDirt", "dirt"], ["GroundStone", "stone"]]:
-			var path := DATA_DIR + dir + "terrain_overlay_%s.res" % kind[1]
+			var path := data_dir() + dir + "terrain_overlay_%s.res" % kind[1]
 			var shape := load(path) as Shape3D if ResourceLoader.exists(path) else null
 			if shape == null:
 				continue

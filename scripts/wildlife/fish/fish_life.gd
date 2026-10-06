@@ -28,6 +28,8 @@ extends Node3D
 ##              it go (a broken line)
 ## The signs of the numbers (no bar: user 2026-09-27 "No bar, only signs") are these fish themselves: the rises, the
 ## leaping salmon, the fish seen holding in the clear shallows, the wakes of a water fished hard and put down.
+## In a still reach (WorldRiver.still_amount over a half; Thủy Vân's S1) a fish hangs where it is: no swimming, no
+## fright, its tail still; the rings on the water stay where they are (drift_at).
 ## Only the river has water today (WorldRiver); the lake and ponds want theirs.
 ## Drawn a MultiMesh a species (FishMesh; shaders/wildlife/fish.gdshader waves them), the rings another
 ## (shaders/water/rise_ring.gdshader). Its numbers are the spawner's (WildlifeSpawner.land) when there is one, else its
@@ -285,7 +287,7 @@ func _build_table() -> void:
 		a.resize(n)
 	for i in n:
 		var z := _zr.x + float(i) * TABLE_M
-		var fl := WorldRiver.flow_at(z)
+		var fl := WorldRiver.dir_at(z)
 		_tx[i] = WorldRiver.x_at(z)
 		_tl[i] = WorldRiver.level_at(z)
 		_tr[i] = WorldRiver.rapid_at(z)
@@ -314,13 +316,28 @@ func river_rapid(z: float) -> float:
 
 func river_flow(z: float) -> Vector3:
 	if _tfx.is_empty():
-		return WorldRiver.flow_at(z)
+		return WorldRiver.dir_at(z)
 	return Vector3(_look(_tfx, z), 0.0, _look(_tfz, z)).normalized()
 
 
-## The current on top of the water at p (what carries an insect, a ring): the river's, faster at the rapids.
+## The current on top of the water at p (what carries an insect, a ring): the river's, faster at the rapids (none in a
+## still reach).
 func drift_at(p: Vector3) -> Vector3:
-	return river_flow(p.z) * lerpf(POOL_FLOW, RAPID_FLOW, river_rapid(p.z))
+	return river_flow(p.z) * lerpf(POOL_FLOW, RAPID_FLOW, river_rapid(p.z)) * WorldRiver.flow_scale(p.z)
+
+
+## Whether `f` hangs in a still reach (more than half still where it is; not on a line, not in the air): then it does
+## not swim, take fright or beat its tail.
+func _suspended(f: Fish) -> bool:
+	if WorldRiver.reach_state == "" or f.air or f.state == State.HOOKED or f.state == State.BITTEN:
+		return false
+	if WorldRiver.still_amount(f.pos.z) <= 0.5:
+		return false
+	f.swim = Vector3.ZERO
+	f.burst = false
+	f.effort = 0.15
+	f.bend = 0.0
+	return true
 
 
 func surface(z: float) -> float:
@@ -673,6 +690,9 @@ func _process(delta: float) -> void:
 	var pp := player.global_position if player else Vector3.ZERO
 	var any_gone := false
 	for f in fish:
+		# (in a still reach it hangs where it is)
+		if _suspended(f):
+			continue
 		f.think_t += dt
 		if f.think_t >= THINK_S:
 			f.think_t -= THINK_S

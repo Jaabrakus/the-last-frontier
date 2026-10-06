@@ -22,6 +22,9 @@ extends Node3D
 ##   drinking  hold E at the water's edge, looking down at it (PlayerInteractor's "any other interactable": "Drink from the river"): kneels at
 ##             it (FrontierPlayer.begin_kneel, the search-low clips), DRINK_S s, a drink (SurvivalFood.drink_water when
 ##             thirst is on); moving gets up. Not offered with fishing gear out (FishingGear.gear_out)
+##   still     a still reach (WorldRiver.still_band, Thủy Vân's S1): the shader's still band (flow and ripples eased to
+##             nothing, the water clearer: the stones on its bed seen), faded in over STILL_FADE_S (still_snap: at once);
+##             the running water's voice fades out as its nearest point lies in it (near-silence is the effect)
 ## Headless (tests): no meshes; the water, the wading and the drinking all the same.
 
 const SHADER_PATH := "res://shaders/water/river.gdshader"
@@ -38,6 +41,7 @@ const CHUNK_M := 64.0
 const ACROSS := 7
 const DRAW_M := 900.0
 const SKY_REFRESH_S := 30.0
+const STILL_FADE_S := 2.5
 const RAPID_SLOW := 0.75
 const WADE_DEPTH := Vector2(0.15, 1.2)
 const WADE_SLOW := Vector2(0.85, 0.4)
@@ -59,6 +63,12 @@ var sky_probe: ReflectionProbe
 ## The running water's voice (kept at the river's nearest point) and each rapid's.
 var flow_voice: AudioStreamPlayer3D
 var rapid_voices: Array[AudioStreamPlayer3D] = []
+## The still reach shown (0..1: the shader band's amount), and at once next time (still_snap: the level's start, shots,
+## tests); the band shown, and the running water's own level (its voice fades in a still reach).
+var still_shown := 0.0
+var still_snap := false
+var _still_band := {}
+var _flow_db := 0.0
 var _sky_t := 0.0
 var _sky_frames := 0
 var player: FrontierPlayer
@@ -91,6 +101,7 @@ func _voices() -> void:
 		return
 	flow_voice = Sfx.make_player_3d(&"river_flow_loop", self)
 	if flow_voice:
+		_flow_db = flow_voice.volume_db
 		flow_voice.play(randf() * 7.0)
 	for r: Dictionary in WorldRiver.rapids():
 		var zr := WorldRiver.z_range()
@@ -194,7 +205,7 @@ static func ribbon(z0: float, z1: float) -> ArrayMesh:
 		var z := lerpf(z0, z1, float(r) / float(rows))
 		var cx := WorldRiver.x_at(z)
 		var lv := WorldRiver.level_at(z)
-		var f := WorldRiver.flow_at(z)
+		var f := WorldRiver.dir_at(z)
 		var side := Vector3(f.z, 0.0, -f.x)          # across, level with the ground
 		var rw := WorldRiver.rapid_at(z)
 		for a in ACROSS:
@@ -268,6 +279,7 @@ static func _noise_normals(seed_: int, freq: float, bump: float) -> NoiseTexture
 
 func _process(dt: float) -> void:
 	_place_flow_voice()
+	_still_tick(dt)
 	if sky_probe == null:
 		return
 	# the sky's reflection as the day goes: a few frames of updating every SKY_REFRESH_S
@@ -323,6 +335,28 @@ func _place_flow_voice() -> void:
 	var zr := WorldRiver.z_range()
 	var z := clampf(at.z, zr.x, zr.y)
 	flow_voice.global_position = Vector3(WorldRiver.x_at(z), WorldRiver.level_at(z) + 0.3, z)
+	# a still reach is silent: the voice fades out as its nearest point lies further into it (as the shader shows it)
+	if WorldRiver.reach_state != "":
+		var quiet := WorldRiver.still_amount(z) * (still_shown if not _still_band.is_empty() else 0.0)
+		flow_voice.volume_db = _flow_db + linear_to_db(maxf(1.0 - quiet, 0.001))
+
+
+## The still reach's band onto the shader, eased toward the state's amount over STILL_FADE_S (still_snap: at once).
+func _still_tick(dt: float) -> void:
+	if WorldRiver.reach_state == "" and _still_band.is_empty():
+		return
+	var band := WorldRiver.still_band()
+	if not band.is_empty():
+		_still_band = band
+	var want := float(band.get("amount", 0.0))
+	still_shown = want if still_snap else move_toward(still_shown, want, dt / STILL_FADE_S)
+	still_snap = false
+	var b := _still_band
+	if material:
+		material.set_shader_parameter("still_band", Vector4(float(b.get("z_from", 0.0)), float(b.get("z_to", 0.0)),
+				float(b.get("ease_m", 0.0)), still_shown))
+	if still_shown <= 0.0 and band.is_empty():
+		_still_band = {}
 
 
 ## Water thrown up about the legs.

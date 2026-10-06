@@ -8,13 +8,24 @@ extends RefCounted
 ## sets what it holds: the most of each animal (WildlifeLand), its trees, stone and water.
 
 const PATH := "res://data/world/squares.json"
+## The region loader (Thủy Vân; WorldRegion): a region's squares file when one is set, PATH otherwise.
+const Region := preload("res://scripts/world/world_region.gd")
 
 static var _data := {}
+static var _gen := 0
+
+
+## The squares file read: the region's (WorldRegion.squares_path), PATH with none.
+static func path() -> String:
+	return Region.squares_path()
 
 
 static func data() -> Dictionary:
+	if _gen != Region.generation:
+		_gen = Region.generation
+		_data = {}
 	if _data.is_empty():
-		var f := FileAccess.open(PATH, FileAccess.READ)
+		var f := FileAccess.open(path(), FileAccess.READ)
 		if f:
 			var d: Variant = JSON.parse_string(f.get_as_text())
 			if d is Dictionary:

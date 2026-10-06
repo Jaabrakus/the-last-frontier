@@ -1,0 +1,56 @@
+{
+  "_doc": [
+    "Thủy Vân's Still Water greybox (plan phase 1, T5): today's world squares (data/world/squares.json: the same grid, types and river block, so today's baked ground and the river bed it cut still match) with two additions, the river's `reaches` and the `region` block. WorldRegion.set_region('r1_grey') makes WorldSquares read this file instead of today's. The ground stays today's baked valley (no terrain_dir); R1's own ground is Phase 3's.",
+    "size_m: a square's side. grid: rows along world -Z to +Z, columns along -X to +X; the middle one (square 0,0) is the old fort's clearing, grown over in the greybox (FrontierTerrain.open_ground). The compass's north lies 44 deg off the axes (WorldClock.north_offset_deg).",
+    "types: as today's (the greybox has no wildlife spawner; the fish read their square's water)."
+  ],
+  "size_m": 832,
+  "region": {
+    "_doc": "The region (WorldRegion.info; ThuyVanLevel sets the clock from it). latitude_deg: about 21 N, the foothills below Đá Trắng. season and day_of_year: the early rains (mid-May, the survival calendar's may_mid: game day 13, day 135). start_hour: the morning the greybox opens on. title_status: the English title is a placeholder until the owner names the place (plan 9, Q3).",
+    "id": "r1_grey",
+    "name": "Đá Trắng",
+    "title": "the White Stone Reach",
+    "title_status": "proposal",
+    "latitude_deg": 21.0,
+    "season": "early_rains",
+    "start_day": "may_mid",
+    "day_of_year": 135.0,
+    "start_hour": 6.25,
+    "player_at": {"river_z": -14.0, "river_d": -24.0},
+    "player_face": {"river_z": -95.0, "river_d": 0.0}
+  },
+  "river": {"_doc": "The river (bake_terrain.py cuts its bed; WorldRiver and RiverWater put its water): today's numbers exactly (its bed is baked in today's ground). reaches: the still reach (WorldRiver.reaches): between z_from and z_to its flow is scaled by the world's state (scale_by_state; WorldRiver.reach_state, the level's S0 / S1 on F9), full inside ease_m of its ends and eased to nothing at them, so outside the reach nothing changes. Placed between the first two rapids (-250 and 60), clear of both.",
+    "x0": 832.0, "meanders": [[70.0, 140.0, 0.4], [25.0, 47.0, 1.3]], "level0": -4.0, "fall": 0.0015,
+    "depth": 1.2, "bank_top": 1.2, "bed": 5.0, "bank": 14.0, "valley_rise": 0.12, "reach": 150.0,
+    "_rapids": "White water: [z of its middle, length, drop]; the fords. As today's.",
+    "rapids": [[-250.0, 50.0, 0.9], [60.0, 40.0, 0.7], [300.0, 60.0, 1.0]], "rapid_depth": 0.45, "rapid_ramp": 12.0,
+    "boulders_per_m": 0.3, "boulder_seed": 1765,
+    "reaches": [
+      {"id": "still_reach", "z_from": -175.0, "z_to": -60.0, "ease_m": 18.0, "scale_by_state": {"S0": 1.0, "S1": 0.0}}
+    ]},
+  "grid": [
+    ["old_woods", "woods_ridge", "cliffs"],
+    ["deep_woods", "fort_woods", "open_land"],
+    ["marsh", "field_land", "lake"]
+  ],
+  "types": {
+    "fort_woods": {"name": "dense woods", "animals": {"deer": 40, "wolf": 10, "fox": 8, "mammoth": 1, "bison": 0, "horse": 6},
+      "trees": 1.0, "stone": 0.3, "water": "brook", "built": true},
+    "deep_woods": {"name": "deep woods", "animals": {"deer": 34, "wolf": 12, "fox": 7, "mammoth": 0, "bison": 0, "horse": 0},
+      "trees": 1.0, "stone": 0.2, "water": "brook"},
+    "old_woods": {"name": "old-growth woods", "animals": {"deer": 28, "wolf": 10, "fox": 6, "mammoth": 0, "bison": 0, "horse": 0},
+      "trees": 1.0, "stone": 0.3, "water": "brook"},
+    "woods_ridge": {"name": "wooded ridge", "animals": {"deer": 24, "wolf": 8, "fox": 6, "mammoth": 0, "bison": 0, "horse": 0},
+      "trees": 0.8, "stone": 0.6, "water": "spring"},
+    "cliffs": {"name": "cliffs", "animals": {"deer": 8, "wolf": 4, "fox": 4, "mammoth": 0, "bison": 0, "horse": 0},
+      "trees": 0.3, "stone": 1.0, "water": "spring"},
+    "open_land": {"name": "open land", "animals": {"deer": 16, "wolf": 8, "fox": 6, "mammoth": 4, "bison": 40, "horse": 24},
+      "trees": 0.15, "stone": 0.2, "water": "river", "built": true},
+    "field_land": {"name": "open fields", "animals": {"deer": 18, "wolf": 6, "fox": 6, "mammoth": 2, "bison": 24, "horse": 18},
+      "trees": 0.2, "stone": 0.2, "water": "river"},
+    "lake": {"name": "lake shore", "animals": {"deer": 14, "wolf": 4, "fox": 5, "mammoth": 1, "bison": 10, "horse": 8},
+      "trees": 0.4, "stone": 0.3, "water": "lake"},
+    "marsh": {"name": "marsh", "animals": {"deer": 12, "wolf": 4, "fox": 6, "mammoth": 0, "bison": 0, "horse": 4},
+      "trees": 0.3, "stone": 0.1, "water": "marsh"}
+  }
+}
