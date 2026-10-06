@@ -44,7 +44,7 @@ from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PALETTES = os.path.join(HERE, "..", "palettes.json")
+PALETTES = os.path.join(HERE, "..", "..", "..", "docs", "thuyvan", "plan", "look", "palettes.json")
 _PAL = json.load(open(PALETTES))
 
 
@@ -65,7 +65,7 @@ MATS = {
     "stone_white": ("white_stone.png", 4.0, ramp("white_stone")[2]),
     "ashlar": ("ashlar.png", 8.0, ramp("worked_block", "thach_uyen")[1]),
     "moss": ("moss_cap.png", 4.0, ramp("moss")[1]),
-    "carve": (None, 4.0, ramp("karst_limestone")[0]),
+    "carve": (None, 4.0, ramp("worked_block", "thach_uyen")[0]),
     "iron": (None, 4.0, ramp("iron")[2]),
     "cloth_madder": (None, 1.0, ramp("madder_cloth")[1]),
     "cloth_bone": (None, 1.0, ramp("bone_cloth")[1]),
@@ -104,6 +104,8 @@ class Builder:
         self.mats = []
         self.seats = []
         self.wl = self.bm.verts.layers.float.new("wet")   # wet factor: darkens the baked AO (the falls' chutes)
+        self.sl = self.bm.verts.layers.float.new("tshade")   # painted slab light: 1 at a slab's top, darker below
+        self.box_faces = []                                  # (face, box centre): re-aimed outward after recalc
 
     def mi(self, mat):
         if mat not in self.mats:
@@ -115,6 +117,13 @@ class Builder:
         f = self.bm.faces.new(vs)
         f.material_index = self.mi(mat)
         f.smooth = smooth
+        return f
+
+    def face_out(self, pts, mat, d):
+        """A face that must face direction d whatever recalc decides (a lone quad has no inside to tell it)."""
+        f = self.face(pts, mat)
+        c = Vector(np.mean(np.asarray(pts, float), axis=0)) - Vector(d)
+        self.box_faces.append((f, c))
         return f
 
     def grid(self, P, mat, smooth=True, flip=False, close_cols=False):
@@ -141,7 +150,7 @@ class Builder:
         P = corners @ R.T + c
         idx = [(0, 2, 3, 1), (4, 5, 7, 6), (0, 1, 5, 4), (2, 6, 7, 3), (0, 4, 6, 2), (1, 3, 7, 5)]
         for q in idx:
-            self.face([P[i] for i in q], mat)
+            self.box_faces.append((self.face([P[i] for i in q], mat), Vector(c)))
 
     def prism(self, poly, z0, z1, mat, cap_top=True, cap_bottom=True):
         """A vertical prism of a CCW polygon [(x, y)] from z0 to z1."""
@@ -171,11 +180,16 @@ def finish(b, ao_dist, ground=True, moss_faces=None, moss_rule=(0.45, 0.85), mos
     if recalc:
         bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.normal_update()
+    for f, c in b.box_faces:         # boxes inside a larger shell can be turned inward by recalc: aim them out
+        if f.is_valid and (f.calc_center_median() - c).dot(f.normal) < 0:
+            f.normal_flip()
+    bm.normal_update()
     if expect_front is not None:
         avg = sum((f.normal * f.calc_area() for f in bm.faces), Vector())
         if avg.dot(Vector(expect_front)) < 0:
             for f in bm.faces:
-                f.normal_flip()
+                if b.mats[f.material_index] != "moss":      # mounds are closed and already face out
+                    f.normal_flip()
             bm.normal_update()
     if moss_faces is not None:
         km = b.mi("moss")
@@ -210,6 +224,17 @@ def finish(b, ao_dist, ground=True, moss_faces=None, moss_rule=(0.45, 0.85), mos
         me.set_sharp_from_angle(angle=math.radians(sharp_deg))
     except Exception:
         pass
+    if "moss" in b.mats and "sharp_edge" in me.attributes:
+        # shrub mounds are soft balls: no hard edges inside them, whatever the angle
+        km = b.mats.index("moss")
+        soft = set()
+        for poly in me.polygons:
+            if poly.material_index == km:
+                soft.update(poly.edge_keys)
+        sh = me.attributes["sharp_edge"].data
+        for e in me.edges:
+            if e.key in soft:
+                sh[e.index].value = False
     ob = bpy.data.objects.new(b.name, me)
     bpy.context.scene.collection.objects.link(ob)
     bake_vertex_colour(ob, ao_dist, ground, moss_rule, moss_gain)
@@ -270,6 +295,11 @@ def bake_vertex_colour(ob, dist, ground, moss_rule, moss_gain):
         me.attributes["wet"].data.foreach_get("value", wet)
         val *= 1.0 - 0.4 * wet
         me.attributes.remove(me.attributes["wet"])
+    if "tshade" in me.attributes:
+        ts = np.zeros(nv)
+        me.attributes["tshade"].data.foreach_get("value", ts)
+        val *= np.where(ts > 0, ts, 1.0)          # 0 = not painted (mounds, boxes): unchanged
+        me.attributes.remove(me.attributes["tshade"])
     val = np.clip(val / max(val.mean(), 1e-6) * 0.85, 0.5, 1.0)
     moss = smoothstep(moss_rule[0], moss_rule[1], nz) * (0.45 + 0.55 * ao) * moss_gain
     col = np.stack([val, val, val, np.clip(moss, 0, 1)], -1).astype(np.float32)
@@ -287,146 +317,223 @@ def tris(ob):
 
 
 # ------------------------------------------------------------------------------------------------ karst towers
-def tower_rings(p, lod):
-    """The tower as a stack of rings: [(points (segs, 3), kind)], kinds 'wall', 'bevel', 'crown'."""
-    rng = np.random.default_rng(p["seed"])
-    H, R0, T = p["H"], p["R0"], p["tiers"]
-    segs = p["segs"][lod]
-    crown_h = p.get("crown", 0.07) * H
-    bodyH = H - crown_h
-    fr = rng.uniform(0.75, 1.25, T)
-    fr[0] *= p.get("base_tier", 1.3)
+# A tower is a CLUSTER of faceted slab columns (the sheets' karst: sheer vertical slabs bundled together, each
+# stepping in at ledges, a rounded green crown), not one turned solid. Columns share the tower's lean so the cluster
+# leans as one. Every ledge and crown carries shrub mounds (key "moss"): the green caps that read from a kilometre
+# before any tree is placed; their tops are pine seats.
+def _plan(rng, sides, pinch=0.72, lump=0.12):
+    """A column's faceted plan: per-vertex radius factors, every other vertex pinched in (the vertical clefts)."""
+    th = np.linspace(0, 2 * math.pi, sides, endpoint=False) + rng.uniform(0, 2 * math.pi)
+    rho = rng.uniform(1 - lump, 1 + lump, sides)
+    rho[1::2] *= pinch * rng.uniform(0.94, 1.06, len(rho[1::2]))
+    th = th + rng.uniform(-0.18, 0.18, sides) * (2 * math.pi / sides)
+    return th, rho
+
+
+def mound(b, c, r, rng, flat=0.55, sub=1):
+    """A shrub mound (key 'moss'): a lumpy, flattened icosphere half sunk at c (Blender coords)."""
+    s = bmesh.new()
+    bmesh.ops.create_icosphere(s, subdivisions=sub, radius=1.0)
+    ph = rng.uniform(0, 6.283, 3)
+    ry = rng.uniform(0.8, 1.0)
+    vm = {}
+    for v in s.verts:
+        p = np.array(v.co)
+        k = 1 + 0.16 * math.sin(3 * p[0] + ph[0]) * math.cos(2 * p[1] + ph[1]) + 0.08 * math.sin(4 * p[2] + ph[2])
+        q = p * k * np.array([r, r * ry, r * flat])
+        lo = -0.25 * r * flat
+        if q[2] < lo:
+            q[2] = lo + (q[2] - lo) * 0.3
+        vm[v] = b.bm.verts.new(Vector(np.asarray(c, float) + q))
+    k = b.mi("moss")
+    for f in s.faces:
+        nf = b.bm.faces.new([vm[v] for v in f.verts])
+        nf.material_index = k
+    s.free()
+
+
+def add_column(b, cx, cy, z_base, h, r, tiers, sides, lean_fn, rng, mat, lod, undercut=None, step=(0.8, 0.9),
+               crown=0.06, flat_top=0.0, mounds=True, seats=True, mound_scale=1.0, crown_ring=(0.0, 0.6),
+               crown_mounds=True, far=False, main=True):
+    """One faceted slab column from z_base to z_base + h (plus a 6 m buried foot), `tiers` tiers stepping in at
+    ledges. Returns (top centre, top radius)."""
+    crown_h = crown * h
+    body = h - crown_h
+    fr = rng.uniform(0.75, 1.25, tiers)
+    fr[0] *= 1.25
     fr /= fr.sum()
-    zt = np.concatenate([[0.0], np.cumsum(fr) * bodyH])
+    zt = z_base + np.concatenate([[0.0], np.cumsum(fr) * body])
     s = [1.0]
-    for _ in range(1, T):
-        s.append(s[-1] * rng.uniform(*p.get("step", (0.74, 0.86))))
-    lean = math.radians(p["lean"])
-    ld = math.radians(p["lean_dir"])
+    for _ in range(1, tiers):
+        s.append(s[-1] * rng.uniform(*step))
+    jit = [np.zeros(2)] + [rng.uniform(-0.10, 0.10, 2) * r for _ in range(1, tiers)]
+    plans = [_plan(rng, sides) for _ in range(tiers)]
+    bev = float(np.clip(0.05 * r, 0.3, 1.5))
 
-    def centre(z):
-        k = math.tan(lean) * H * (max(z, 0.0) / H) ** p.get("lean_curve", 1.3)
-        return np.array([math.cos(ld) * k, math.sin(ld) * k])
+    def ring(t, z, rad):
+        th, rho = plans[t]
+        c = lean_fn(z) + np.array([cx, cy]) + jit[t]
+        xy = c[None, :] + (rad * rho)[:, None] * np.stack([np.cos(th), np.sin(th)], -1)
+        return np.column_stack([xy, np.full(sides, z)]), c
 
-    jit = [np.zeros(2)] + [rng.uniform(-0.07, 0.07, 2) * R0 for _ in range(1, T)]
-    th = np.linspace(0, 2 * math.pi, segs, endpoint=False)
-    plans = []
-    for t in range(T):
-        lump = np.zeros(segs)
-        for k in (1, 2, 3):
-            lump += rng.normal() * p.get("lumps", 0.11) / k * np.cos(k * th + rng.uniform(0, 6.283))
-        m = p["flutes"] + int(rng.integers(-1, 2))
-        fd = p.get("flute_depth", 0.10) * (1.0 if lod == 0 else 0.5)
-        flute = fd * (0.5 + 0.5 * np.cos(m * th + rng.uniform(0, 6.283))) ** 6
-        plans.append(1.0 + lump - flute)
-    wob_ph = rng.uniform(0, 6.283)
-    bev = float(np.clip(0.035 * R0, 0.35, 1.3))
-    rings = []
-    prev_bevel = None
-    for t in range(T):
+    rows = []
+    shade = []          # per row: the painted slab light (top of a slab lit, its foot in shade)
+    ledges = []
+    nmid = 1 if lod else 2
+    for t in range(tiers):
         z0, z1 = zt[t], zt[t + 1]
-        nrow = max(2, int(round((z1 - z0) / p["row_m"][lod])))
-        first = True
-        for i in range(nrow + 1):
-            f = i / nrow
+        rb = r * s[t]
+        fz = [0.0] + [(i + 1) / (nmid + 1) for i in range(nmid)] + [1.0]
+        for i, f in enumerate(fz):
             z = z0 + f * (z1 - z0 - bev)
-            r = R0 * s[t] * (1 + 0.06 * math.sin(math.pi * f)) * (1 - 0.05 * f)
-            if t == 0 and p.get("undercut") == "foot":
-                r *= 0.74 + 0.26 * smoothstep(0.0, 0.35, f)
-            if t == 1 and p.get("undercut") == "waist":
-                r *= 1 - 0.18 * math.sin(math.pi * f)
-            rho = plans[t] + 0.035 * np.sin(2 * math.pi * z / 37.0 + 3 * th + wob_ph)
-            c = centre(z) + jit[t]
-            xy = c[None, :] + (r * rho)[:, None] * np.stack([np.cos(th), np.sin(th)], -1)
-            if first and prev_bevel is not None:
-                pc, pr = prev_bevel
-                d = xy - pc
+            k = 1 + 0.05 * math.sin(math.pi * f) - 0.05 * f
+            if t == 0 and undercut == "foot":
+                k *= 0.72 + 0.28 * smoothstep(0.0, 0.4, f)
+            if t == 1 and undercut == "waist":
+                k *= 1 - 0.2 * math.sin(math.pi * f)
+            P, c = ring(t, z, rb * k)
+            if i == 0 and rows:
+                # the tier's foot sits inside the bevel ring below it: the flat between them is the ledge
+                pb, pc = rows[-1]
+                d = P[:, :2] - pc
                 L = np.linalg.norm(d, axis=1)
-                Lp = np.linalg.norm(pr - pc, axis=1)
-                Lc = np.minimum(L, Lp - 0.8)
-                xy = pc + d * (Lc / np.maximum(L, 1e-6))[:, None]
-            first = False
-            rings.append((np.column_stack([xy, np.full(segs, z)]), "wall", t))
-        # the bevel at the tier's top
-        c = centre(z1) + jit[t]
-        rho = plans[t] + 0.035 * np.sin(2 * math.pi * z1 / 37.0 + 3 * th + wob_ph)
-        rt = R0 * s[t] * 0.95 - bev
-        xy = c[None, :] + (rt * rho)[:, None] * np.stack([np.cos(th), np.sin(th)], -1)
-        rings.append((np.column_stack([xy, np.full(segs, z1)]), "bevel", t))
-        prev_bevel = (c, xy)
+                Lp = np.linalg.norm(pb[:, :2] - pc, axis=1)
+                P[:, :2] = pc + d * (np.minimum(L, Lp - 1.0) / np.maximum(L, 1e-6))[:, None]
+                ledges.append((pb, P))
+            rows.append((P, c))
+            shade.append(0.62 + 0.38 * f ** 0.8)
+        # the bevel ring: the slab's rounded top edge
+        P, c = ring(t, z1, rb * 0.92 - bev)
+        rows.append((P, c))
+        shade.append(1.0)
     # crown: a rounded, flat-ish top
-    c, xy = prev_bevel
+    P_top, c_top = rows[-1]
     top = zt[-1]
-    nd = 4 if lod == 0 else 2
-    flat = p.get("flat_top", 0.0)
+    nd = 2 if lod else 3
     for i in range(1, nd + 1):
         f = i / nd
-        rr = (1 - f) ** 0.75 if i < nd else 0.0
-        rr = max(rr, flat) if i < nd else 0.0
-        zz = top + crown_h * (1 - (1 - f) ** 2) * (1 - 0.7 * flat)
-        pts = c + (xy - c) * max(rr, 0.02)
-        rings.append((np.column_stack([pts, np.full(segs, zz)]), "crown", T))
-    # the buried foot
-    p0 = rings[0][0].copy()
-    cc = p0[:, :2].mean(0)
-    p0[:, :2] = cc + (p0[:, :2] - cc) * 1.04
-    p0[:, 2] = -6.0
-    rings.insert(0, (p0, "wall", 0))
-    return rings, zt, s, bev
+        rr = max((1 - f) ** 0.7, flat_top) if i < nd else 0.15
+        zz = top + crown_h * (1 - (1 - f) ** 2)
+        Q = P_top.copy()
+        Q[:, :2] = c_top + (P_top[:, :2] - c_top) * rr
+        Q[:, 2] = zz
+        rows.append((Q, c_top))
+        shade.append(1.0)
+    # buried foot
+    P0, c0 = rows[0]
+    F = P0.copy()
+    F[:, :2] = c0 + (P0[:, :2] - c0) * 1.05
+    F[:, 2] = z_base - 6.0
+    rows.insert(0, (F, c0))
+    shade.insert(0, 0.55)
+    V = b.grid(np.array([q[0] for q in rows]), mat, close_cols=True)
+    for i, row in enumerate(V):
+        for v in row:
+            v[b.sl] = shade[i]
+    b.bm.faces.new([V[-1][j] for j in range(sides)]).material_index = b.mi(mat)
+    top_c = np.array([c_top[0], c_top[1], rows[-1][0][:, 2].mean()])
+    top_r = float(np.linalg.norm(P_top[:, :2] - c_top, axis=1).mean())
+    # mounds and seats on the ledges and the crown
+    for pb, P in ledges:
+        for j in range(0, sides, 3 if (lod or far) else 2):
+            a, q = pb[j], P[j]
+            w = float(np.linalg.norm(a[:2] - q[:2]))
+            if w < 1.5:
+                continue
+            m = (a + q) / 2
+            if mounds and rng.random() < 0.85:
+                mr = float(np.clip(max(w * 1.1, 0.16 * r), 2.5, 10.0)) * mound_scale
+                mound(b, m + np.array([0, 0, -0.15 * mr]), mr, rng, flat=0.85, sub=1)
+                if seats:
+                    b.seat("pine", m + np.array([0, 0, mr * 0.4]), r=mr * 0.6)
+            elif seats:
+                b.seat("house" if w > 7.0 else "pine", m, r=w / 2, ledge_w=round(w, 1))
+    if mounds and crown_mounds:
+        # the crown: a dome of shrub mounds over the whole top (the sheets' wooded caps)
+        nm = (int(rng.integers(5, 9)) if main else int(rng.integers(2, 4))) if (lod == 0 and not far) else 3
+        for k in range(nm):
+            a = rng.uniform(0, 2 * math.pi)
+            d = rng.uniform(*crown_ring) * top_r * 1.15
+            mr = float(np.clip(top_r * rng.uniform(0.4, 0.7), 2.5, 14.0)) * mound_scale
+            p = top_c + np.array([math.cos(a) * d, math.sin(a) * d, -crown_h * 0.3])
+            mound(b, p, mr, rng, flat=0.75, sub=2 if (lod == 0 and main and not far) else 1)
+            if seats:
+                b.seat("pine", p + np.array([0, 0, mr * 0.45]), r=mr * 0.5, crown=True)
+    if mounds:
+        # shrubs clinging to the faces: mounds sunk into the wall at random rows (more toward the foot and in the
+        # clefts, where soil gathers), so the green runs down the tower as in the sheets
+        nrows = len(rows) - nd - 2
+        nf = int(h / (16.0 if (lod == 0 and not far) else 45.0) * min(mound_scale, 1.2))
+        for k in range(nf):
+            i = 1 + int(rng.integers(0, max(nrows, 1)) * rng.uniform(0.3, 1.0))
+            P, c = rows[min(i, len(rows) - 1)]
+            j = int(rng.integers(0, sides // 2)) * 2 + 1          # the pinched (cleft) vertices
+            j = j % sides
+            q = P[j]
+            out = q[:2] - c
+            out = out / max(np.linalg.norm(out), 1e-6)
+            mr = float(np.clip(r * rng.uniform(0.18, 0.3), 2.5, 8.0)) * mound_scale
+            ctr = np.array([q[0] + out[0] * mr * 0.15, q[1] + out[1] * mr * 0.15, q[2]])
+            mound(b, ctr, mr, rng, flat=0.8, sub=1)
+    return top_c, top_r
 
 
 def add_tower(b, p, lod, offset=(0, 0, 0), mat="rock_karst", seats=True):
-    rings, zt, s, bev = tower_rings(p, lod)
+    """The cluster: the main column (H, all tiers) and p['cols']-1 lower columns bundled against it. Returns the
+    main column's (top centre, top radius) in the builder's frame."""
+    rng = np.random.default_rng(p["seed"])
+    H, R0 = p["H"], p["R0"]
+    lean = math.radians(p["lean"])
+    ld = math.radians(p["lean_dir"])
     off = np.asarray(offset, float)
-    P = np.array([r[0] for r in rings]) + off
-    segs = P.shape[1]
-    V = b.grid(P, mat, close_cols=True)
-    # cap the pole
-    b.bm.faces.new([V[-1][j] for j in range(segs)]).material_index = b.mi(mat)
-    if not seats:
-        return
-    rng = np.random.default_rng(p["seed"] + 99)
-    kinds = [r[1] for r in rings]
-    for i in range(len(rings) - 1):
-        if kinds[i] == "bevel" and kinds[i + 1] == "wall":
-            a, c = P[i], P[i + 1]
-            for j in range(0, segs, max(1, segs // 10)):
-                w = float(np.linalg.norm(a[j, :2] - c[j, :2]))
-                if w > 2.5:
-                    m = (a[j] + c[j]) / 2
-                    b.seat("house" if w > 7.0 else "pine", m, r=w / 2, ledge_w=round(w, 1))
-    crown = [i for i, k in enumerate(kinds) if k == "crown"]
-    top = P[crown[-1]].mean(0)
-    rr = float(np.linalg.norm(P[crown[0]][:, :2] - P[crown[0]][:, :2].mean(0), axis=1).mean())
-    b.seat("pine", top, r=rr * 0.5, crown=True)
-    for k in range(int(rng.integers(3, 7))):
-        a = rng.uniform(0, 2 * math.pi)
-        j = int(a / (2 * math.pi) * segs) % segs
-        q = P[crown[0]][j]
-        b.seat("pine", top + (q - top) * rng.uniform(0.35, 0.7), r=rr * 0.25, crown=True)
+
+    def lean_fn(z):
+        k = math.tan(lean) * H * (max(z, 0.0) / H) ** p.get("lean_curve", 1.3)
+        return np.array([math.cos(ld) * k, math.sin(ld) * k])
+
+    sides = p["sides"][lod]
+    sides_sub = max(5, sides - 2)
+    ncols = p.get("cols", 4)
+    main_r = R0 * (0.72 if ncols > 1 else 1.0)
+    top = add_column(b, off[0], off[1], off[2], H, main_r, p["tiers"], sides, lean_fn, rng, mat, lod,
+                     undercut=p.get("undercut"), step=p.get("step", (0.8, 0.9)), crown=p.get("crown", 0.06),
+                     flat_top=p.get("flat_top", 0.0), mounds=p.get("mounds", True), seats=seats,
+                     mound_scale=p.get("mound_scale", 1.0), crown_ring=p.get("crown_ring", (0.0, 0.6)),
+                     crown_mounds=p.get("crown_mounds", True), far=p.get("far", False))
+    base_ang = rng.uniform(0, 2 * math.pi)
+    for k in range(1, ncols):
+        a = base_ang + 2 * math.pi * k / (ncols - 1) + rng.uniform(-0.5, 0.5)
+        hk = H * rng.uniform(*p.get("sub_h", (0.35, 0.8)))
+        rk = R0 * rng.uniform(0.38, 0.55)
+        d = main_r * rng.uniform(0.55, 0.85)
+        tk = max(1, int(round(p["tiers"] * hk / H)))
+        add_column(b, off[0] + math.cos(a) * d, off[1] + math.sin(a) * d, off[2], hk, rk, tk, sides_sub, lean_fn,
+                   rng, mat, lod, step=p.get("step", (0.8, 0.9)), crown=0.08, mounds=p.get("mounds", True),
+                   seats=seats, mound_scale=p.get("mound_scale", 1.0), far=p.get("far", False), main=False)
+    return top
 
 
 HERO = {
-    # 110-240 m, 2.5-5 x as tall as wide, leaning 5-15 deg, 3-6 tiers, a third undercut
-    "karst_hero_a": dict(H=110, R0=17, tiers=3, lean=8, lean_dir=20, flutes=8, seed=11, undercut="foot"),
-    "karst_hero_b": dict(H=170, R0=24, tiers=4, lean=12, lean_dir=160, flutes=9, seed=12),
-    "karst_hero_c": dict(H=240, R0=31, tiers=6, lean=6, lean_dir=70, flutes=10, seed=13, step=(0.80, 0.90)),
-    "karst_hero_d": dict(H=140, R0=19, tiers=4, lean=14, lean_dir=-40, flutes=7, seed=14, undercut="waist"),
-    "karst_hero_e": dict(H=200, R0=24, tiers=5, lean=10, lean_dir=110, flutes=9, seed=15,
-                         twin=dict(H=135, R0=17, tiers=4, lean=15, lean_dir=290, flutes=7, seed=16, at=(-22, 14))),
+    # 110-240 m, 2.5-5 x as tall as wide, leaning 5-15 deg, 3-6 tiers, a third undercut; R0 = the cluster's radius
+    "karst_hero_a": dict(H=110, R0=22, tiers=3, cols=3, lean=8, lean_dir=20, seed=11, undercut="foot"),
+    "karst_hero_b": dict(H=170, R0=30, tiers=4, cols=4, lean=12, lean_dir=160, seed=12),
+    "karst_hero_c": dict(H=240, R0=38, tiers=6, cols=5, lean=6, lean_dir=70, seed=13, step=(0.84, 0.93)),
+    "karst_hero_d": dict(H=140, R0=24, tiers=4, cols=3, lean=14, lean_dir=-40, seed=14, undercut="waist"),
+    "karst_hero_e": dict(H=200, R0=30, tiers=5, cols=4, lean=10, lean_dir=110, seed=15,
+                         twin=dict(H=135, R0=21, tiers=4, cols=3, lean=15, lean_dir=290, seed=16, at=(-30, 20))),
 }
 FAR = {
-    # backdrop: 200 m modelled, low rings, ~1-1.6k tris; scale uniformly to the K height
-    "karst_far_a": dict(H=200, R0=22, tiers=4, lean=6, lean_dir=30, flutes=6, seed=31),
-    "karst_far_b": dict(H=200, R0=17, tiers=5, lean=12, lean_dir=200, flutes=6, seed=32, undercut="foot"),
-    "karst_far_c": dict(H=200, R0=34, tiers=3, lean=4, lean_dir=90, flutes=7, seed=33, step=(0.66, 0.78)),
-    "karst_far_d": dict(H=200, R0=20, tiers=4, lean=15, lean_dir=-60, flutes=6, seed=34, undercut="waist"),
-    "karst_far_e": dict(H=200, R0=26, tiers=3, lean=7, lean_dir=140, flutes=6, seed=35,
-                        twin=dict(H=150, R0=18, tiers=3, lean=12, lean_dir=320, flutes=6, seed=36, at=(-26, 10))),
-    "karst_far_f": dict(H=200, R0=28, tiers=6, lean=9, lean_dir=250, flutes=6, seed=37, step=(0.82, 0.9)),
+    # backdrop: modelled 200 m, ~1-2k tris; scale uniformly to the K height
+    "karst_far_a": dict(H=200, R0=24, tiers=4, cols=3, lean=6, lean_dir=30, seed=31),
+    "karst_far_b": dict(H=200, R0=18, tiers=5, cols=2, lean=12, lean_dir=200, seed=32, undercut="foot"),
+    "karst_far_c": dict(H=200, R0=34, tiers=3, cols=4, lean=4, lean_dir=90, seed=33, step=(0.66, 0.78)),
+    "karst_far_d": dict(H=200, R0=21, tiers=4, cols=3, lean=15, lean_dir=-60, seed=34, undercut="waist"),
+    "karst_far_e": dict(H=200, R0=26, tiers=3, cols=3, lean=7, lean_dir=140, seed=35,
+                        twin=dict(H=150, R0=18, tiers=3, cols=2, lean=12, lean_dir=320, seed=36, at=(-28, 12))),
+    "karst_far_f": dict(H=200, R0=28, tiers=5, cols=3, lean=9, lean_dir=250, seed=37, step=(0.82, 0.9)),
 }
-HERO_DEF = dict(segs=(48, 18), row_m=(4.5, 14.0))
-FAR_DEF = dict(segs=(20, 12), row_m=(14.0, 30.0))
+HERO_DEF = dict(sides=(11, 7))
+FAR_DEF = dict(sides=(7, 5), mound_scale=1.4, far=True)
 
 
 def karst(name, spec, lod, defaults, mat="rock_karst", moss=0.62, seats=True):
@@ -439,7 +546,7 @@ def karst(name, spec, lod, defaults, mat="rock_karst", moss=0.62, seats=True):
         q.update({k: v for k, v in spec["twin"].items() if k != "at"})
         ax, ay = spec["twin"]["at"]
         add_tower(b, q, lod, offset=(ax, ay, 0), mat=mat, seats=seats and lod == 0)
-    return finish(b, ao_dist=15.0 if lod == 0 else 25.0, moss_faces=moss)
+    return finish(b, ao_dist=15.0 if lod == 0 else 25.0, moss_faces=moss, sharp_deg=32.0)
 
 
 # ------------------------------------------------------------------------------------------------ cliff walls
@@ -481,6 +588,8 @@ def wall_profile(x, Hw, kind, rng_mod, shared, lod):
         v = v_mod * (1 - ew) + v_edge * ew
         fl = shared["flute_d"] * (0.5 + 0.5 * math.cos(2 * math.pi * shared["flute_m"] * x / W + shared["flute_ph"]
                                                       + 0.04 * z)) ** 6 * (1 - ew)
+        fl += 0.45 * shared["flute_d"] * (0.5 + 0.5 * math.cos(2 * math.pi * (2 * shared["flute_m"] + 1) * x / W
+                                                               + 2.1 * shared["flute_ph"] - 0.03 * z)) ** 4 * (1 - ew)
         d = D[b] + v + fl - 0.04 * z                     # a slight batter: deeper toward the top
         if kind == "notch":
             bump = float(smoothstep(6.0, 2.5, abs(x)))
@@ -533,8 +642,8 @@ def cliff_wall(name, Hw, kind="straight", lod=0, seed=0):
     shared["mod_amp"] = [1.4, 0.9, 0.6, 0.4, 0.3]
     shared["flute_m"] = int(rm.integers(5, 9))
     shared["flute_ph"] = rm.uniform(0, 6.283)
-    shared["flute_d"] = 1.6
-    ncol = 26 if lod == 0 else 11
+    shared["flute_d"] = 3.4
+    ncol = 30 if lod == 0 else 11
     xs = np.linspace(-W / 2, W / 2, ncol + 1)
     curv = {"convex": 70.0, "concave": -70.0}.get(kind, 0.0)
     cols = []
@@ -570,7 +679,31 @@ def cliff_wall(name, Hw, kind="straight", lod=0, seed=0):
         j = ncol // 2
         if abs(P[i, j, 2] - P[i + 1, j, 2]) < 0.05 and 2.5 < (P[i, j, 1] - P[i + 1, j, 1]) <= 6.0 and i > 2:
             b.seat("pine", (P[i, j] + P[i + 1, j]) / 2 + np.array([12.0, 0, 0]), r=1.5)
-    ob = finish(b, ao_dist=15.0, ground=False, moss_faces=0.6, recalc=False, expect_front=(0, -1, 0))
+    # shrub mounds (key 'moss') on the shelves and hanging over the top lip: the green bands of the sheets' gorge
+    # walls. Kept off the last 3 m of each edge so chained modules meet on bare rock.
+    rng = np.random.default_rng(seed * 31 + 7)
+    cand = []
+    for i in range(3, P.shape[0] - 1):
+        for j in range(1, ncol, 2):
+            w = float(P[i, j, 1] - P[i + 1, j, 1])
+            if abs(P[i, j, 2] - P[i + 1, j, 2]) < 0.05 and w > 1.4 and abs(P[i, j, 0]) < W / 2 - 3.0:
+                cand.append(((P[i, j] + P[i + 1, j]) / 2, float(np.clip(w * 0.8, 1.2, 4.0))))
+    lip = [(P[2, j] + np.array([0, -0.6, 0.3]), rng.uniform(1.6, 3.4)) for j in range(1, ncol, 2)
+           if abs(P[2, j, 0]) < W / 2 - 3.0]
+    maxm = 20 if lod == 0 else 6
+    pick = []
+    for c, r in lip:
+        if rng.random() < 0.45:
+            pick.append((c, r))
+    for c, r in cand:
+        if rng.random() < 0.55:
+            pick.append((c, r))
+    if len(pick) > maxm:
+        idx = rng.choice(len(pick), size=maxm, replace=False)
+        pick = [pick[k] for k in sorted(idx)]
+    for c, r in pick:
+        mound(b, c, r, rng, flat=0.55, sub=1 if (lod == 0 and r > 2.2) else 0)
+    ob = finish(b, ao_dist=15.0, ground=False, moss_faces=0.6, recalc=False, expect_front=(0, -1, 0), sharp_deg=34.0)
     return ob
 
 
@@ -621,7 +754,7 @@ def _deformed_sphere(b, bmsph, size, seed, cuts, flat_z, mat, pillow=True, noise
 def boulder(name, size, seed, lod=0, cuts=3):
     b = Builder(name + ("_lod1" if lod else ""))
     s = bmesh.new()
-    bmesh.ops.create_icosphere(s, subdivisions=2 if lod == 0 else 1, radius=1.0)
+    bmesh.ops.create_icosphere(s, subdivisions=3 if lod == 0 else 2, radius=1.0)
     _deformed_sphere(b, s, size, seed, cuts, 0.2, "rock_boulder")
     s.free()
     return finish(b, ao_dist=max(size) * 0.6, moss_faces=0.72, moss_rule=(0.35, 0.8), sharp_deg=38)
@@ -698,37 +831,30 @@ CAIRNS = [("cairn_a", 81, 1.2), ("cairn_b", 82, 1.6), ("cairn_c", 83, 2.2), ("ca
 
 
 # ------------------------------------------------------------------------------------------------ needle, heads
-NEEDLE = dict(H=62, R0=7.5, tiers=4, lean=3, lean_dir=200, flutes=7, seed=71, step=(0.86, 0.93), crown=0.02,
-              flat_top=0.85, lumps=0.08)
-HEAD_N = dict(H=89, R0=30, tiers=3, lean=4, lean_dir=100, flutes=9, seed=91, crown=0.05, flat_top=0.75,
-              step=(0.76, 0.84))
-HEAD_S = dict(H=77, R0=27, tiers=3, lean=5, lean_dir=-80, flutes=8, seed=92, crown=0.05, flat_top=0.75,
-              step=(0.76, 0.84))
+NEEDLE = dict(H=62, R0=7.5, tiers=4, cols=1, lean=3, lean_dir=200, seed=71, step=(0.86, 0.93), crown=0.02,
+              flat_top=0.9, crown_mounds=False, sides=(9, 6))
+HEAD_N = dict(H=89, R0=32, tiers=3, cols=4, lean=4, lean_dir=100, seed=91, crown=0.05, flat_top=0.8,
+              step=(0.76, 0.84), sub_h=(0.45, 0.85), crown_ring=(0.6, 0.9), sides=(11, 7))
+HEAD_S = dict(H=77, R0=29, tiers=3, cols=4, lean=5, lean_dir=-80, seed=92, crown=0.05, flat_top=0.8,
+              step=(0.76, 0.84), sub_h=(0.45, 0.85), crown_ring=(0.6, 0.9), sides=(11, 7))
 
 
 def needle(lod=0):
     """R07: the white-limestone pillar under the rope bridge: its foot (origin) on the riverbed (~135), the flat cap
     62 m above it (~197, the rope bridge's mid platform); 6 m of buried foot below the origin."""
-    p = dict(segs=(32, 14), row_m=(4.0, 12.0))
-    p.update(NEEDLE)
     b = Builder("bridge_needle" + ("_lod1" if lod else ""))
-    add_tower(b, p, lod, mat="rock_pale", seats=False)
-    rings, zt, s, bev = tower_rings(p, lod)
-    top = rings[-1][0].mean(0)
+    top, r = add_tower(b, dict(NEEDLE), lod, mat="rock_pale", seats=(lod == 0))
     if lod == 0:
         b.seat("platform", top, r=2.5)
-    return finish(b, ao_dist=8.0, moss_faces=0.6)
+    return finish(b, ao_dist=8.0, moss_faces=0.6, sharp_deg=32.0)
 
 
 def head(name, spec, lod=0):
-    p = dict(segs=(44, 16), row_m=(5.0, 14.0))
-    p.update(spec)
     b = Builder(name + ("_lod1" if lod else ""))
-    add_tower(b, p, lod, mat="rock_karst", seats=(lod == 0))
+    top, r = add_tower(b, dict(spec), lod, mat="rock_karst", seats=(lod == 0))
     if lod == 0:
-        rings, zt, s, bev = tower_rings(p, lod)
-        b.seat("gate_tower", rings[-1][0].mean(0), r=6.0)
-    return finish(b, ao_dist=15.0, moss_faces=0.62)
+        b.seat("gate_tower", top, r=6.0)
+    return finish(b, ao_dist=15.0, moss_faces=0.62, sharp_deg=32.0)
 
 
 # ------------------------------------------------------------------------------------------------ the Two Heights bridge
@@ -750,9 +876,24 @@ def pier_ring(z, top_z=-1.2, base_z=-100.0):
     return pts, hx, hy
 
 
+PIER_ZS = [-104, -100, -80, -60.6, -60, -59.0, -30.6, -30, -29.0, -14, -2.4, -1.2]
+PIER_GROW = {-60.0: 0.45, -59.0: 0.45, -30.0: 0.45, -29.0: 0.45}
+
+
+def pier_face_x(z):
+    """The pier's east (+X) face as built at height z: the rings' half X with their string-course growth, linearly
+    between rings (what a sign or plate must stand proud of, or it z-fights the face)."""
+    xs = []
+    for zr in PIER_ZS:
+        pts, hx, hy = pier_ring(zr)
+        g = PIER_GROW.get(float(zr), 0.0)
+        xs.append(hx + g * 1.4 * hx / math.hypot(hx, hy - 1.0))
+    return float(np.interp(z, PIER_ZS, xs))
+
+
 def add_pier(b, yc):
-    zs = [-104, -100, -80, -60.6, -60, -59.0, -30.6, -30, -29.0, -14, -2.4, -1.2]
-    grow = {-60.0: 0.45, -59.0: 0.45, -30.0: 0.45, -29.0: 0.45}
+    zs = PIER_ZS
+    grow = PIER_GROW
     rings = []
     for z in zs:
         pts, hx, hy = pier_ring(z)
@@ -817,10 +958,10 @@ def arch_wall(b, y0, y1, zs, ztop, hw, segs=20, band=True):
         b.face([(-hw, ya, za), (hw, ya, za), (hw, yb, zb), (-hw, yb, zb)], "ashlar")
 
 
-def tablet_sign_a(b, x, y, z):
+def tablet_sign_a(b, x, y, z, T=0.25):
     """Maker sign A (ours): 'the plumb and ring': a ring, a plumb line through it from a hanger bar, the bob below,
     on a round-topped tablet. Carved strokes are dark 'carve' faces just proud of the tablet (they read from afar)."""
-    W, H, T = 3.6, 4.4, 0.25
+    W, H = 3.6, 4.4
     # round-topped tablet: a box and a half disc on top, in the YZ plane, facing +X
     xs = x + T
     b.box((x + T / 2, y, z), (T, W, H - W / 2), "ashlar")
@@ -830,9 +971,10 @@ def tablet_sign_a(b, x, y, z):
         a0, a1 = math.pi * i / n, math.pi * (i + 1) / n
         p0 = (xs, y + W / 2 * math.cos(a0), zc + W / 2 * math.sin(a0))
         p1 = (xs, y + W / 2 * math.cos(a1), zc + W / 2 * math.sin(a1))
-        b.face([(xs, y, zc), p0, p1], "ashlar")
-        b.face([(x, y, zc), (x, p1[1], p1[2]), (x, p0[1], p0[2])], "ashlar")
-        b.face([(x, p0[1], p0[2]), (x, p1[1], p1[2]), p1, p0], "ashlar")
+        b.face_out([(xs, y, zc), p0, p1], "ashlar", (1, 0, 0))
+        b.face_out([(x, y, zc), (x, p1[1], p1[2]), (x, p0[1], p0[2])], "ashlar", (-1, 0, 0))
+        b.face_out([(x, p0[1], p0[2]), (x, p1[1], p1[2]), p1, p0], "ashlar",
+                   (0, math.cos((a0 + a1) / 2), math.sin((a0 + a1) / 2)))
     xc = xs + 0.03
     # ring
     rc, w = 0.85, 0.24
@@ -840,46 +982,35 @@ def tablet_sign_a(b, x, y, z):
     m = 20
     for i in range(m):
         a0, a1 = 2 * math.pi * i / m, 2 * math.pi * (i + 1) / m
-        b.face([(xc, y + rc * math.cos(a0), cz + rc * math.sin(a0)), (xc, y + rc * math.cos(a1), cz + rc * math.sin(a1)),
+        b.face_out([(xc, y + rc * math.cos(a0), cz + rc * math.sin(a0)), (xc, y + rc * math.cos(a1), cz + rc * math.sin(a1)),
                 (xc, y + (rc - w) * math.cos(a1), cz + (rc - w) * math.sin(a1)),
-                (xc, y + (rc - w) * math.cos(a0), cz + (rc - w) * math.sin(a0))][::-1], "carve")
+                (xc, y + (rc - w) * math.cos(a0), cz + (rc - w) * math.sin(a0))][::-1], "carve", (1, 0, 0))
     # hanger bar, line, bob
     zt = zc + W / 2 - 0.45
-    b.face([(xc, y - 0.7, zt), (xc, y + 0.7, zt), (xc, y + 0.7, zt - 0.2), (xc, y - 0.7, zt - 0.2)][::-1], "carve")
-    b.face([(xc, y - 0.09, zt - 0.2), (xc, y + 0.09, zt - 0.2), (xc, y + 0.09, z - 1.05), (xc, y - 0.09, z - 1.05)][::-1],
-           "carve")
-    b.face([(xc, y - 0.42, z - 1.05), (xc, y + 0.42, z - 1.05), (xc, y, z - 1.75)][::-1], "carve")
+    b.face_out([(xc, y - 0.7, zt), (xc, y + 0.7, zt), (xc, y + 0.7, zt - 0.2), (xc, y - 0.7, zt - 0.2)][::-1], "carve", (1, 0, 0))
+    b.face_out([(xc, y - 0.09, zt - 0.2), (xc, y + 0.09, zt - 0.2), (xc, y + 0.09, z - 1.05), (xc, y - 0.09, z - 1.05)][::-1],
+           "carve", (1, 0, 0))
+    b.face_out([(xc, y - 0.42, z - 1.05), (xc, y + 0.42, z - 1.05), (xc, y, z - 1.75)][::-1], "carve", (1, 0, 0))
 
 
-def tablet_sign_b(b, x, y, z):
+def tablet_sign_b(b, x, y, z, T=0.3):
     """Maker sign B (ours, a different hand): 'the square and three steps': a mason's square (an L), three stepped
-    tallies climbing beside it and a sunk dot, on a square tablet with notched corners."""
-    W, H, T = 3.6, 3.6, 0.2
-    xs = x + T
-    c = 0.45
-    poly = [(-W / 2 + c, -H / 2), (W / 2 - c, -H / 2), (W / 2, -H / 2 + c), (W / 2, H / 2 - c), (W / 2 - c, H / 2),
-            (-W / 2 + c, H / 2), (-W / 2, H / 2 - c), (-W / 2, -H / 2 + c)]
-    P = np.array([[[x0, y + u, z + v] for (u, v) in poly] for x0 in (x, xs)])
-    V = b.grid(P, "rock_karst", smooth=False, close_cols=True)
-    b.bm.faces.new([V[1][j] for j in range(len(poly))]).material_index = b.mi("rock_karst")
-    xc = xs + 0.03
-    # the square: a vertical bar and a foot bar
-    b.face([(xc, y - 1.2, z - 1.1), (xc, y - 0.85, z - 1.1), (xc, y - 0.85, z + 1.2), (xc, y - 1.2, z + 1.2)][::-1],
-           "carve")
-    b.face([(xc, y - 1.2, z - 1.25), (xc, y + 0.4, z - 1.25), (xc, y + 0.4, z - 0.9), (xc, y - 1.2, z - 0.9)][::-1],
-           "carve")
-    # three steps
-    for k in range(3):
-        y0 = y - 0.35 + 0.5 * k
-        z0 = z - 0.45 + 0.55 * k
-        b.face([(xc, y0, z0), (xc, y0 + 0.62, z0), (xc, y0 + 0.62, z0 + 0.22), (xc, y0, z0 + 0.22)][::-1], "carve")
-    # the sunk dot
-    m = 10
-    cy, cz, r = y + 1.05, z + 1.15, 0.22
-    for i in range(m):
-        a0, a1 = 2 * math.pi * i / m, 2 * math.pi * (i + 1) / m
-        b.face([(xc, cy, cz), (xc, cy + r * math.cos(a0), cz + r * math.sin(a0)),
-                (xc, cy + r * math.cos(a1), cz + r * math.sin(a1))], "carve")
+    tallies climbing beside it and a sunk dot, on a square tablet of darker stone set proud of the pier. The marks
+    are raised 'carve' slabs 8 cm proud so they catch the light from 300 m."""
+    W = 3.6
+    b.box((x + T / 2, y, z), (T, W, W), "stone_white")                     # a smooth white slab set in the ashlar
+    b.box((x + T / 2, y, z), (T + 0.12, W + 0.3, 0.25), "stone_white")     # a lintel band across it (sign B's frame)
+    xc = x + T + 0.04
+    d = 0.08
+
+    def mark(cy, cz, wy, wz):
+        b.box((xc, cy, cz), (d, wy, wz), "carve")
+
+    mark(y - 1.02, z + 0.05, 0.36, 2.3)          # the square's upright
+    mark(y - 0.4, z - 1.08, 1.6, 0.34)           # the square's foot
+    for k in range(3):                           # three steps climbing to the right
+        mark(y - 0.05 + 0.5 * k, z - 0.4 + 0.55 * k, 0.6, 0.24)
+    mark(y + 1.05, z + 1.15, 0.42, 0.42)          # the dot
 
 
 def bolt_plate(b, x, y, z, rng):
@@ -968,13 +1099,17 @@ def two_heights_bridge(lod=0):
     for sgn, yy in ((1, 48.0), (-1, -47.0)):
         b.box((0, yy, -16.0 + (0 if sgn > 0 else -3.5)), (2 * DECK_HW + 3.0, 28.0, 30.0), "ashlar")
     # maker signs: TWO DIFFERENT marks on the NORTH pier's EAST face (+X end), about 20 m under the deck
-    hx = pier_ring(-21.0)[1]
-    tablet_sign_a(b, hx + 0.02, PIER_Y - 2.1, -20.5)
-    tablet_sign_b(b, hx + 0.02, PIER_Y + 2.15, -21.1)
+    # the pier face leans back (batter): each tablet's back is sunk behind the face's lowest point and its front
+    # stands 0.3 m proud of the face's highest, so it never floats or z-fights
+    fx = [pier_face_x(z) for z in np.linspace(-23.5, -17.5, 7)]
+    hx = max(fx) + 0.02
+    xb, tt = min(fx) - 0.05, max(fx) - min(fx) + 0.35
+    tablet_sign_a(b, xb, PIER_Y - 2.1, -20.5, T=tt)
+    tablet_sign_b(b, xb, PIER_Y + 2.15, -21.1, T=tt)
     b.seat("maker_signs", (hx + 0.3, PIER_Y, -20.8), r=4.5, note="sign A plumb-and-ring, sign B square-and-steps")
     # bolt plates with frayed offerings, on both piers' east faces, under the signs and at the lower tier
     for yc, zz in ((PIER_Y - 2.2, -26.0), (PIER_Y + 2.2, -26.0), (-PIER_Y, -26.0), (PIER_Y, -40.0), (-PIER_Y, -40.0)):
-        hx2 = pier_ring(zz)[1]
+        hx2 = max(pier_face_x(zz - 0.8), pier_face_x(zz + 1.3)) + 0.02
         bolt_plate(b, hx2 + 0.01, yc, zz, rng)
     # banners on the pier faces (east and west), under the deck
     for yc in (PIER_Y, -PIER_Y):
@@ -997,7 +1132,7 @@ def build_all(lods=True):
     for name, size, seed, cuts in BOULDERS:
         kit[name] = (boulder(name, size, seed, 0, cuts), boulder(name, size, seed, 1, cuts) if lods else None, "R04")
     kit["white_stones"] = (white_stones(0), white_stones(1) if lods else None, "R05")
-    kit["two_heights_bridge"] = (two_heights_bridge(0), decimated(two_heights_bridge(0), 3000, "two_heights_bridge_lod1")
+    kit["two_heights_bridge"] = (two_heights_bridge(0), decimated(two_heights_bridge(0), 1500, "two_heights_bridge_lod1")
                                  if lods else None,
                                  "R06")
     kit["two_heights_head_n"] = (head("two_heights_head_n", HEAD_N), head("two_heights_head_n", HEAD_N, 1)
@@ -1053,7 +1188,8 @@ def export_all(kit, out):
     os.makedirs(out, exist_ok=True)
     meta = {"_about": "Thủy Vân ROCK kit (tools/thuyvan_art/rock/rock_kit.py). Godot frame: x east, y up, z south "
                       "(the piece's front faces +Z). Seats are in the piece's local Godot frame.",
-            "materials": {k: {"texture": v[0], "tile_m": v[1]} for k, v in MATS.items()},
+            "materials": {k: {"texture": v[0], "tile_m": v[1], "tint": "#%02x%02x%02x" % tuple(int(round(c * 255)) for c in v[2])}
+                          for k, v in MATS.items()},
             "pieces": {}}
     for name, (l0, l1, grp) in kit.items():
         export(l0, os.path.join(out, name + ".glb"))

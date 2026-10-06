@@ -34,7 +34,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
-PALETTES = os.path.join(HERE, "..", "palettes.json")
+PALETTES = os.path.join(REPO, "docs", "thuyvan", "plan", "look", "palettes.json")
 
 
 # ------------------------------------------------------------------------------------------------ colour
@@ -301,10 +301,10 @@ def paint_karst(pal, n=2048, seed=1601, R=None, stain=None, moss=None, budget=0.
         x = rng.uniform(0, n)
         while len(js) == 0 or (x - js[0]) < n - 1.5 * ppm:
             js.append(x)
-            x += rng.uniform(1.5, 6.0) * ppm
+            x += rng.uniform(3.0, 8.0) * ppm
         js = np.array(js) % n
         sl = np.tan(np.radians(rng.uniform(-20, 20, len(js))))
-        part = np.where(rng.random(len(js)) < 0.33, rng.uniform(0.3, 0.7, len(js)), 1.01)
+        part = np.where(rng.random(len(js)) < 0.5, rng.uniform(0.3, 0.7, len(js)), 1.01)
         X = xx[m].astype(float)
         T = dy_top[m]
         Hb = (dy_top[m] + dy_bot[m])
@@ -320,7 +320,7 @@ def paint_karst(pal, n=2048, seed=1601, R=None, stain=None, moss=None, budget=0.
         hts = rng.uniform(0.6, 1.0, k)
         blockcol[m] = cols[idx]
         blockh[m] = hts[idx]
-    edge = np.minimum(np.minimum(dy_top * 0.8, dy_bot * 1.6), dx * 1.4)
+    edge = np.minimum(np.minimum(dy_top * 0.8, dy_bot * 1.6), dx * 4.0)   # joints soft: strata and flutes lead
     pillow = smoothstep(0.0, 0.16 * ppm, edge)
     c.rgb = c.rgb * 0.62 + blockcol * 0.38
     c.h += blockh * pillow
@@ -330,44 +330,85 @@ def paint_karst(pal, n=2048, seed=1601, R=None, stain=None, moss=None, budget=0.
         asp = rng.uniform(2.0, 4.0)
         c.dab(rng.uniform(0, n), rng.uniform(0, n), L / 2, L / 2 / asp, math.radians(rng.uniform(-12, 12)),
               c.pick(R, (0.15, 0.40, 0.37, 0.08)), alpha=rng.uniform(0.3, 0.55), height=0.25, big=True)
-    # vertical fluting: broad soft dark/light pairs (the slab grooves), every 1.5-4 m
+    # vertical fluting (the sheets' signature): the face is split into rounded vertical flutes 1.2-3.5 m wide by
+    # fissures. Each flute is shaded as a soft column (lit on its -u/left-top side, shade toward the next fissure);
+    # the fissures are dark cores with a shade flank and a lit lip, running 3-9 m and fading out (never full height)
+    fx = []
     x = rng.uniform(0, n)
     x0 = x
-    while x < x0 + n - 1.2 * ppm:
-        L = rng.uniform(0.15, 0.45) * n
-        y0 = rng.uniform(0, n)
-        c.dab(x, y0, L / 2, rng.uniform(0.10, 0.18) * ppm, math.radians(90 + rng.uniform(-3, 3)), R[0], 0.26, -0.4,
-              taper=0.5)
-        c.dab(x + 0.22 * ppm, y0, L / 2 * 0.9, rng.uniform(0.08, 0.14) * ppm, math.radians(90 + rng.uniform(-3, 3)),
-              R[2], 0.26, 0.2, taper=0.5)
-        x += rng.uniform(2.5, 6.0) * ppm
+    while x < x0 + n - 1.0 * ppm:
+        fx.append(x % n)
+        x += rng.uniform(1.2, 3.5) * ppm
+    fx = np.sort(np.array(fx))
+    X1 = np.arange(n, dtype=float)
+    k = np.searchsorted(fx, X1) % len(fx)
+    left = fx[(k - 1) % len(fx)]
+    right = fx[k]
+    wdt = (right - left) % n
+    wdt = np.where(wdt <= 0, n, wdt)
+    t = ((X1 - left) % n) / wdt                                        # 0 at the left fissure, 1 at the right
+    col_shade = 0.5 + 0.5 * np.cos(math.pi * np.clip(t * 1.15 - 0.05, 0, 1))  # lit near the left, shade at the right
+    col_shade = blur(np.tile(col_shade[None, :], (8, 1)), 0.12 * ppm)[0]       # soften the turn at the fissure
+    fade = 0.55 + 0.45 * lf_noise(n, 1, 2.5, rng, aniso=(0.3, 1.0))   # flutes come and go down the face
+    sh = (col_shade[None, :] - 0.5) * np.clip(fade, 0, 1)
+    c.rgb = c.rgb * (1 + 0.34 * sh[..., None]) + (R[0] * 0.18) * np.clip(-sh, 0, 1)[..., None]
+    c.h += 0.35 * (1 - np.abs(2 * t - 1))[None, :] * np.clip(fade, 0, 1)
+    for fxi in fx:
+        for _ in range(rng.integers(1, 3)):
+            L = rng.uniform(3.0, 9.0) * ppm
+            y0 = rng.uniform(0, n)
+            w = rng.uniform(0.06, 0.12) * ppm
+            ang = math.radians(90 + rng.uniform(-2.5, 2.5))
+            c.dab(fxi + 0.22 * ppm, y0, L / 2, rng.uniform(0.35, 0.6) * ppm, ang, R[0], 0.38, -0.3, taper=0.4,
+                  wobble=0.08)
+            c.dab(fxi, y0, L / 2, w, ang, stain[0], rng.uniform(0.55, 0.75), -0.8, taper=0.6, wobble=0.06)
+            c.dab(fxi - 0.18 * ppm, y0 - 0.1 * L, L / 2 * 0.8, rng.uniform(0.10, 0.18) * ppm, ang, R[2],
+                  rng.uniform(0.30, 0.45), 0.3, taper=0.6, wobble=0.06)
     # medium strokes with painted light (150-400): long, along the strata, light from -V (up)
-    for _ in range(rng.integers(170, 230)):
-        L = rng.uniform(0.03, 0.07) * n
-        c.stroke3(rng.uniform(0, n), rng.uniform(0, n), L / 2, L / 2 / rng.uniform(3.0, 6.0),
+    for _ in range(rng.integers(150, 180)):
+        L = rng.uniform(0.04, 0.09) * n
+        c.stroke3(rng.uniform(0, n), rng.uniform(0, n), L / 2, L / 2 / rng.uniform(6.0, 10.0),
                   math.radians(rng.uniform(-8, 8)), R, c.pick(R, (0, 0.55, 0.45, 0)), up=(0, -1),
                   alpha=rng.uniform(0.3, 0.5), height=0.35, dark_a=0.45)
-    # water streaks: dark tapered streaks hanging under band edges (the seeps), 20-40
-    for _ in range(rng.integers(22, 38)):
-        L = rng.uniform(0.12, 0.45) * n
+    # water streaks: broad dark tapered stains hanging under band edges (the seeps), 0.2-0.5 m wide, 2-7 m long
+    for _ in range(rng.integers(18, 28)):
+        L = rng.uniform(2.0, 7.0) * ppm
         b = rng.integers(0, nb)
         x = rng.uniform(0, n)
         y = yb[b, int(x) % n] + L / 2
-        c.dab(x, y, L / 2, rng.uniform(0.008, 0.02) * n, math.radians(90 + rng.uniform(-4, 4)),
-              stain[rng.integers(0, 2)], alpha=rng.uniform(0.15, 0.32), height=0.0, taper=0.85, wobble=0.05)
+        c.dab(x, y, L / 2, rng.uniform(0.10, 0.25) * ppm, math.radians(90 + rng.uniform(-3, 3)),
+              stain[rng.integers(0, 2)], alpha=rng.uniform(0.18, 0.34), height=0.0, taper=0.8, wobble=0.10)
     # cavity AO toward the cool shade, then lit top edges
     c.cavity_ao(R[0] * 0.9, amount=0.45)
     e = c.edge_light(R[2] * 1.05, amount=0.22, width_px=3.0)
-    # accent: moss lines on a few top edges (sparse; where the edge light is strongest and a LF field allows)
+    # accent: moss clumps along a few strata tops (2-5% of the area), each a row of rounded dabs with a lit top and
+    # the odd short drip below; where a low-frequency field allows, so the moss gathers in patches
     mz = lf_noise(n, 1, 3, rng)
-    mm = (e > 0.12) & (mz > 0.35) & (rng.random((n, n)) < 0.006)
-    ys, xs_ = np.nonzero(mm)
-    for k in (rng.choice(len(ys), size=min(len(ys), 140), replace=False) if len(ys) else []):
-        L = rng.uniform(0.012, 0.03) * n
-        c.dab(xs_[k], ys[k] - L * 0.08, L, L * 0.16, rng.uniform(-0.1, 0.1), moss[rng.integers(0, 3)],
-              alpha=0.85, height=0.1)
+    placed = 0
+    tries = 0
+    while placed < 12 and tries < 400:
+        tries += 1
+        x = rng.uniform(0, n)
+        b = rng.integers(0, nb)
+        y = yb[b, int(x) % n]
+        if mz[int(y) % n, int(x) % n] < 0.30:
+            continue
+        placed += 1
+        run = rng.uniform(0.8, 3.0) * ppm
+        for _ in range(rng.integers(4, 9)):
+            xx_ = x + rng.uniform(0, run)
+            r_ = rng.uniform(0.12, 0.30) * ppm
+            yy_ = yb[b, int(xx_) % n] + r_ * 0.35
+            c.dab(xx_, yy_ + r_ * 0.25, r_ * 1.3, r_ * 0.75, rng.uniform(-0.2, 0.2), moss[0], 0.75, 0.2)
+            c.dab(xx_, yy_, r_ * 1.2, r_ * 0.7, rng.uniform(-0.2, 0.2), moss[1] * 0.85 + R[1] * 0.15, 0.9, 0.4)
+            c.dab(xx_ - r_ * 0.1, yy_ - r_ * 0.35, r_ * 0.8, r_ * 0.28, 0.0, moss[2], 0.5, 0.0)
+            if rng.random() < 0.08:
+                Ld = rng.uniform(0.4, 1.2) * ppm
+                c.dab(xx_, yy_ + Ld / 2, Ld / 2, r_ * 0.25, math.radians(90), moss[0], 0.55, 0.0, taper=0.8)
     c.lf_variation(seed + 7)
-    out = c.finish(R, budget)
+    lo = np.minimum(R[:3].min(0), np.minimum(moss[0], stain[0]))
+    hi = np.maximum(R[:3].max(0), moss[2])
+    out = c.finish(R, budget, lo=lo, hi=hi)  # moss keeps its green (the clamp spans it)
     return out, c.h
 
 

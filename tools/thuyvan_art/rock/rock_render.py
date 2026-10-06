@@ -363,8 +363,10 @@ def ramp_material(name, stops, by="normal", rough=0.95, emission=0.0):
     return m
 
 
-def ground_material(tile=8.0, mix_rock=False):
-    name = "R_ground_%g_%d" % (tile, mix_rock)
+def ground_material(tile=8.0, mix_rock=False, white_z=(3.5, 1.5), moss_z=(8.0, 14.0)):
+    """The lineup ground (painted grass); mix_rock adds rock on slopes, white stone below white_z (fade from .0 to
+    .1) and moss below moss_z, in the scene's own heights."""
+    name = "R_ground_%g_%d_%g_%g" % (tile, mix_rock, white_z[0], moss_z[0])
     m = bpy.data.materials.get(name)
     if m:
         return m
@@ -395,13 +397,13 @@ def ground_material(tile=8.0, mix_rock=False):
         nt.links.new(geo.outputs["Position"], sp.inputs[0])
         hz = nt.nodes.new("ShaderNodeMapRange")
         hz.interpolation_type = "SMOOTHSTEP"
-        hz.inputs["From Min"].default_value = 3.5
-        hz.inputs["From Max"].default_value = 1.5
+        hz.inputs["From Min"].default_value = white_z[0]
+        hz.inputs["From Max"].default_value = white_z[1]
         nt.links.new(sp.outputs["Z"], hz.inputs[0])
         hm = nt.nodes.new("ShaderNodeMapRange")
         hm.interpolation_type = "SMOOTHSTEP"
-        hm.inputs["From Min"].default_value = 8.0
-        hm.inputs["From Max"].default_value = 14.0
+        hm.inputs["From Min"].default_value = moss_z[0]
+        hm.inputs["From Max"].default_value = moss_z[1]
         nt.links.new(sp.outputs["Z"], hm.inputs[0])
         m0 = nt.nodes.new("ShaderNodeMix")
         m0.data_type = "RGBA"
@@ -677,6 +679,7 @@ def card(name, img, w, h, loc, yaw, tint=(1, 1, 1), strength=1.0, pitch=90.0):
 
 def pines_on_seats(ob, rng, scale=1.0, kinds=("pine",), max_n=40, crown_scale=1.0):
     seats = json.loads(ob["seats"])
+    bpy.context.view_layer.update()          # the object was just moved: refresh its matrix before using it
     mw = ob.matrix_world
     n = 0
     for s in seats:
@@ -707,6 +710,7 @@ def show(ob, loc=(0, 0, 0), yaw=0.0, scale=1.0):
 
 def label_at(cam, world_pt, lines):
     sc = bpy.context.scene
+    bpy.context.view_layer.update()          # a camera made this frame has no world matrix until the update
     co = world_to_camera_view(sc, cam, Vector(world_pt))
     return {"x": round(co.x * sc.render.resolution_x), "y": round((1 - co.y) * sc.render.resolution_y),
             "lines": lines}
@@ -748,7 +752,8 @@ def info(name, meta):
     t1 = e.get("tris_lod1")
     mats = ", ".join(e.get("materials", []))
     h = e.get("size", {}).get("y", [0, 0])
-    return [name, "%.0f m tall  ·  %s tris%s" % (h[1], t, (" / LOD1 %s" % t1) if t1 else ""), mats]
+    tall = float(name.split("_")[-1]) if name.startswith("cliff_") else h[1]     # walls hang from their top lip
+    return [name, "%.0f m tall  ·  %s tris%s" % (tall, t, (" / LOD1 %s" % t1) if t1 else ""), mats]
 
 
 # ------------------------------------------------------------------------------------------------ scenes
@@ -756,7 +761,7 @@ def scene_towers(kit, meta, look, names, tag, title, spacing=30.0, fov=30.0, pin
     hide_all()
     clear_temp()
     set_fog(0.00012)
-    world_sky(1.2)
+    world_sky(0.8)
     rng = np.random.default_rng(1)
     obs = [kit[n][0] for n in names]
     widths = [o.dimensions.x + 10 for o in obs]
@@ -777,7 +782,7 @@ def scene_towers(kit, meta, look, names, tag, title, spacing=30.0, fov=30.0, pin
     cam_loc = (0, -dist, hmax * 0.32 + dist * math.tan(math.radians(el)))
     look_at = (0, 0, hmax * 0.42)
     cam = camera(cam_loc, look_at, fov_v=fov)
-    sun(215, 40, energy=2.4)
+    sun(215, 40, energy=2.0)
     x = -total / 2
     for n, o, w in zip(names, obs, widths):
         x += w / 2
@@ -834,7 +839,7 @@ def scene_walls(kit, meta, look):
     hide_all()
     clear_temp()
     set_fog(0.0)
-    world_sky(1.2)
+    world_sky(0.8)
     rng = np.random.default_rng(2)
     names = [w[0] for w in K.WALLS]
     labels = []
@@ -855,8 +860,8 @@ def scene_walls(kit, meta, look):
     figure((x + 18, -14, 0))
     figure((-170 + 22, -14, 0))
     ground_plane(3000, 0.0, tile=16.0)
-    cam = camera((20, -330, 70), (20, 0, 32), fov_v=30)
-    sun(200, 40, energy=2.4)
+    cam = camera((25, -420, 75), (25, 0, 30), fov_v=32)
+    sun(200, 40, energy=2.0)
     for nm, cx, h in pos:
         labels.append(label_at(cam, (cx, -10, 0), info(nm, meta)))
     labels.append(label_at(cam, (x + 10, -12, 0), info("bridge_needle", meta)))
@@ -876,7 +881,7 @@ def scene_walls(kit, meta, look):
         pines_on_seats(ob, rng, scale=1.3)
     ground_plane(3000, 0.0, tile=16.0)
     cam = camera((-10, -170, 38), (-10, 20, 30), fov_v=42)
-    sun(200, 38, energy=2.4)
+    sun(200, 38, energy=2.0)
     render(os.path.join(look, "raw", "R03_chain.png"))
     json.dump({"title": "R03 five modules chained edge to edge (straight, convex, notch, concave, straight)",
                "labels": [], "sil": None},
@@ -887,7 +892,7 @@ def scene_stones(kit, meta, look):
     hide_all()
     clear_temp()
     set_fog(0.0)
-    world_sky(1.2)
+    world_sky(0.8)
     labels = []
     cam = None
     rows = []
@@ -916,7 +921,7 @@ def scene_stones(kit, meta, look):
     figure((-17.5, 3, 0))
     ground_plane(400, 0.0, tile=8.0)
     cam = camera((0, -32, 15), (0, 0, 0.8), fov_v=40)
-    sun(215, 40, energy=2.4)
+    sun(215, 40, energy=2.0)
     for nm, p in rows:
         labels.append(label_at(cam, p, info(nm, meta)))
     labels.append(label_at(cam, (0, -3.5 - 1.6, 0), ["white_stones (R05): 12 variants 0.3-3 m",
@@ -960,13 +965,14 @@ def gorge_for_bridge(kit, rng):
 
     def zz(kind, x):
         drop = max(0.0, x - 100.0)
-        return {"s": -8.0 - 0.08 * drop, "n": -4.0 - 0.08 * drop, "f": -86.0 - 0.09 * drop}[kind]
+        return {"s": -8.0 - 0.13 * drop, "n": -4.0 - 0.13 * drop, "f": -86.0 - 0.09 * drop}[kind]
 
     V = [(x, y, zz(k, x)) for x in xs for (y, k) in prof]
     n = len(prof)
     F = [(i * n + j, (i + 1) * n + j, (i + 1) * n + j + 1, i * n + j + 1) for i in range(len(xs) - 1)
          for j in range(n - 1)]
-    temp(bpy.data.objects.new("gorge_ground", _mesh_from("gorge_ground", V, F, ground_material(12.0, mix_rock=True))))
+    temp(bpy.data.objects.new("gorge_ground", _mesh_from("gorge_ground", V, F, ground_material(
+        12.0, mix_rock=True, white_z=(-112.0, -118.0), moss_z=(-100.0, -90.0)))))
     V = [(x, y, zz("f", x) + 0.8) for x in xs for y in (-10.0, 10.0)]
     F = [(2 * i, 2 * i + 2, 2 * i + 3, 2 * i + 1) for i in range(len(xs) - 1)]
     temp(bpy.data.objects.new("torrent", _mesh_from("torrent", V, F, water_material())))
@@ -1008,6 +1014,70 @@ def wall_chain_copy(kit, names, start, heading, top_z):
     return placed, (px, py, hd)
 
 
+BAKE = {"dir": os.path.join(HERE, "..", "..", "environment", "terrain", "build_regions", "r1")}
+TH_ORIGIN = (-832.0, 296.0, -462.5)        # the bridge's origin in Godot world (vista_spec D11)
+
+
+def bake_height():
+    """h(x, z) over the T4 R1 bake (Godot world), or None when the bake is not here."""
+    d = BAKE["dir"]
+    if not os.path.isdir(d):
+        return None
+    cells = []
+    for c in sorted(os.listdir(d)):
+        p = os.path.join(d, c, "height.bin")
+        if os.path.exists(p):
+            m = json.load(open(os.path.join(d, c, "meta.json")))
+            n = int(m.get("N", 833))
+            cells.append((np.fromfile(p, dtype=np.float32).reshape(n, n), m["origin"], n // 2))
+    if not cells:
+        return None
+
+    def h(x, z):
+        for arr, o, half in cells:
+            i, j = x - o[0] + half, z - o[1] + half
+            if 0 <= i <= arr.shape[1] - 1 and 0 <= j <= arr.shape[0] - 1:
+                return float(arr[int(round(j)), int(round(i))])
+        return None
+    return h
+
+
+def bake_ground_around_bridge(h, x0=-1250.0, x1=-250.0, z0=-950.0, z1=-120.0, step=3.0):
+    """The real T4 ground round the Two Heights as a stand-in mesh (Blender frame, relative to the bridge origin),
+    and the torrent as a ribbon on the layout's nodes."""
+    ox, oy, oz = TH_ORIGIN
+    xs = np.arange(x0, x1 + 0.1, step)
+    zs = np.arange(z0, z1 + 0.1, step)
+    V = []
+    for z in zs:
+        for x in xs:
+            g = h(x, z)
+            V.append((x - ox, -(z - oz), (g if g is not None else oy) - oy))
+    nx = len(xs)
+    F = [(j * nx + i, j * nx + i + 1, (j + 1) * nx + i + 1, (j + 1) * nx + i)[::-1]
+         for j in range(len(zs) - 1) for i in range(nx - 1)]
+    mat = ground_material(12.0, mix_rock=True, white_z=(-88.0, -95.0), moss_z=(-70.0, -60.0))
+    temp(bpy.data.objects.new("bake_ground", _mesh_from("bake_ground", V, F, mat)))
+    lay = json.load(open(os.path.join(HERE, "..", "..", "..", "docs", "thuyvan", "plan", "phase1",
+                                      "r1_layout.final.json")))
+    nodes = next(c for c in lay["channels"] if c["id"] == "torrent")["nodes"]
+    rv, rf = [], []
+    xs2 = np.arange(x0, x1 + 0.1, 6.0)
+    for k, x in enumerate(xs2):
+        i = int(np.clip(np.searchsorted([n[0] for n in nodes], x) - 1, 0, len(nodes) - 2))
+        a, b = nodes[i], nodes[i + 1]
+        t = (x - a[0]) / (b[0] - a[0])
+        zc = a[1] + t * (b[1] - a[1])
+        hw = (a[2] + t * (b[2] - a[2])) * 2.2
+        # the surface: just above the lowest ground across the channel here (the layout's level is a schematic)
+        lo = min((h(x, zc + dz) or oy) for dz in np.arange(-30, 31, 3.0))
+        lv = lo + 0.9
+        rv += [(x - ox, -(zc - hw - oz), lv - oy), (x - ox, -(zc + hw - oz), lv - oy)]
+        if k:
+            rf.append((2 * k - 2, 2 * k - 1, 2 * k + 1, 2 * k))
+    temp(bpy.data.objects.new("torrent", _mesh_from("torrent", rv, rf, water_material())))
+
+
 def scene_two_heights(kit, meta, look):
     hide_all()
     clear_temp()
@@ -1018,11 +1088,20 @@ def scene_two_heights(kit, meta, look):
     show(br, (0, 0, 0))
     hn, hs = kit["two_heights_head_n"][0], kit["two_heights_head_s"][0]
     # proposal: the heads stand BESIDE the deck's ends (D12 puts them on the deck's line)
-    show(hn, (-40, 84, -4.0))
-    show(hs, (42, -80, -8.0))
+    h = bake_height()
+    if h is not None:
+        ox, oy, oz = TH_ORIGIN
+        zn = (h(-872.0, -545.0) or 300.0) - oy - 2.0
+        zs_ = (h(-790.0, -380.0) or 288.0) - oy - 2.0
+        show(hn, (-40, 82.5, zn))
+        show(hs, (42, -82.5, zs_))
+        bake_ground_around_bridge(h)
+    else:
+        show(hn, (-40, 84, -4.0))
+        show(hs, (42, -80, -8.0))
+        gorge_for_bridge(kit, rng)
     pines_on_seats(hn, rng, scale=1.5, crown_scale=1.1)
     pines_on_seats(hs, rng, scale=1.5, crown_scale=1.1)
-    gorge_for_bridge(kit, rng)
     # stand-in banners on the bridge's banner seats
     for s in json.loads(br["seats"]):
         if s["kind"] == "banner":
@@ -1036,31 +1115,79 @@ def scene_two_heights(kit, meta, look):
     for k, (y, z, w) in enumerate(((0, -30, 260), (20, -55, 220), (-60, -20, 300))):
         card("mist%d" % k, mist, w, w * 0.22, (60 + 20 * k, y, z), math.radians(90 - 15 + 10 * k), strength=1.0)
     # V2's camera (vista_spec: (-380, 257, -600) looking yaw 107, pitch 0, vfov 34) relative to the bridge origin
-    cam = camera((452.0, 137.5, -39.0), rot_deg=(90.0, 0.0, 107.0), fov_v=34.0)
-    sun(200, 45, energy=2.4)
+    # V2 (vista_spec): (-380, 257, -600), yaw 107, pitch 0, vfov 34. In the T4 bake the plateau's rim (~296) hides
+    # the bridge from 257 m, so this render raises the camera 45 m and aims at the bridge (a finding for the vista)
+    cam = camera((452.0, 137.5, 6.0), (0.0, 0.0, -38.0), fov_v=34.0)
+    sun(200, 45, energy=2.0)
     labels = [label_at(cam, (12, 0, -100), ["two_heights_bridge", "%s tris / LOD1 %s" % (
         meta["pieces"]["two_heights_bridge"]["tris"], meta["pieces"]["two_heights_bridge"]["tris_lod1"]),
         ", ".join(meta["pieces"]["two_heights_bridge"]["materials"])])]
     render(os.path.join(look, "raw", "R06_two_heights_V2.png"))
     # the 3/4 overview from the south-east, higher
-    cam = camera((260, -300, 120), (0, 0, -30), fov_v=40)
+    cam = camera((95, -80, 8), (0, 4, -38), fov_v=50)
     render(os.path.join(look, "raw", "R06_two_heights_34.png"))
+    # the bridge itself, close, from below the deck on the east side (arches, piers, banners)
+    cam = camera((46, -52, 14), (0, 2, -30), fov_v=50)
+    render(os.path.join(look, "raw", "R06_bridge_close.png"))
     # close-up: the maker signs on the north pier's east face, and the bolt plates with their offerings
-    hx = K.pier_ring(-21.0)[1]
-    cam = camera((hx + 16, K.PIER_Y - 3.0, -19.0), (hx, K.PIER_Y, -22.0), fov_v=38)
-    sun(110, 30, energy=2.4)
+    hx = K.pier_face_x(-21.0)
+    for o in TEMP:                            # the close-up shows the pier face alone (the slot's walls crowd it)
+        if o.name.startswith(("bake_ground", "torrent", "gorge_ground", "mist")):
+            o.hide_render = True
+    cam = camera((hx + 15, K.PIER_Y - 9.0, -20.5), (hx, K.PIER_Y, -21.5), fov_v=34)
+    sun(110, 30, energy=2.0)
     render(os.path.join(look, "raw", "R06_maker_signs.png"))
     silhouette(os.path.join(look, "raw", "R06_two_heights_V2_sil.png"), [br, hn, hs],
-               (452.0, 137.5, -39.0), (0, 0, -20), fov=34)
-    json.dump({"title": "R06 the Two Heights from V2's camera (telephoto 34°): the arched bridge on two piers, the "
-                        "stone heads beside its ends, mist under the deck",
+               (452.0, 137.5, 6.0), (0, 0, -38), fov=34)
+    json.dump({"title": "R06 the Two Heights on the T4 ground, from V2's position raised 45 m (34°): the arched bridge "
+                        "on two piers, the stone heads beside its ends, mist under the deck",
                "labels": labels, "sil": "R06_two_heights_V2_sil.png", "sil_name": "bridge + heads"},
               open(os.path.join(look, "raw", "R06_two_heights_V2.json"), "w"), indent=1, ensure_ascii=False)
-    for t, ttl in (("R06_two_heights_34", "R06 the Two Heights from the south-east (stand-in gorge from R03 modules)"),
+    for t, ttl in (("R06_two_heights_34", "R06 the Two Heights from the south-east, on the T4 ground (stand-in banners and mist)"),
+                   ("R06_bridge_close", "R06 the Two Heights bridge close, from above the south-east rim: two-tier "
+                                        "arches, chamfered piers with cutwaters, the deck's parapets (stand-in banners)"),
                    ("R06_maker_signs", "R06 the north pier's east face: two different maker signs (ours: the plumb "
                                        "and ring; the square and three steps), bolt plates with frayed offerings")):
         json.dump({"title": ttl, "labels": [], "sil": None}, open(os.path.join(look, "raw", t + ".json"), "w"),
                   ensure_ascii=False)
+
+
+def scene_variants(kit, meta, look):
+    """A/B/C on the open choice of how green the karst is (the same tower, karst_hero_b's spec): A bare rock with
+    moss only on the ledge tops; B the kit's default shrub mounds on ledges and crown; C heavy cover (bigger mounds,
+    one more column). Stand-in pines on the seats in all three."""
+    hide_all()
+    clear_temp()
+    set_fog(0.00012)
+    world_sky(0.8)
+    rng = np.random.default_rng(4)
+    spec = dict(K.HERO["karst_hero_b"])
+    vs = [("A  bare: moss on ledge tops only", dict(spec, mounds=False)),
+          ("B  default: shrub mounds on ledges and crown", dict(spec)),
+          ("C  heavy green: bigger mounds, one more column", dict(spec, mound_scale=1.6, cols=spec["cols"] + 1))]
+    labels = []
+    obs = []
+    xs = (-120.0, 0.0, 120.0)
+    for (title, sp), x in zip(vs, xs):
+        ob = K.karst("variant_" + title[0], sp, 0, K.HERO_DEF)
+        to_render_materials(ob)
+        TEMP.append(ob)          # finish() already linked it to the scene
+        ob.location = (x, 0, 0)
+        if title[0] != "A":
+            pines_on_seats(ob, rng, scale=1.6, crown_scale=1.2)
+        else:
+            pines_on_seats(ob, rng, scale=1.6, crown_scale=1.2, max_n=6)
+        figure((x + 30, -30, 0))
+        obs.append((title, ob))
+    ground_plane(6000, 0.0, tile=24.0)
+    cam = camera((0, -560, 150), (0, 0, 80), fov_v=30)
+    sun(215, 40, energy=2.0)
+    for (title, ob), x in zip(obs, xs):
+        labels.append(label_at(cam, (x, -40, 0), [title, "%d tris" % K.tris(ob)]))
+    render(os.path.join(look, "raw", "R01_ABC_green.png"))
+    json.dump({"title": "R01 open choice, A/B/C: how green is the karst? (the same tower; B is the kit's default)",
+               "labels": labels, "sil": None},
+              open(os.path.join(look, "raw", "R01_ABC_green.json"), "w"), indent=1, ensure_ascii=False)
 
 
 def scene_diorama(kit, meta, look):
@@ -1069,7 +1196,7 @@ def scene_diorama(kit, meta, look):
     hide_all()
     clear_temp()
     set_fog(0.00055, NOON["fog"]["color"])
-    world_sky(1.2, clouds=True)
+    world_sky(0.9, clouds=True)
     rng = np.random.default_rng(11)
 
     def xc(y):
@@ -1153,39 +1280,64 @@ def scene_diorama(kit, meta, look):
         ob.hide_render = False
         ob.location = (xc(y) + side * (half + rng.uniform(6, 30)), y, 42.0)
         ob.rotation_euler = (0, 0, rng.uniform(0, 6.28))
-    # hero towers behind the gorge and on the hills; far ranks in fog
-    for nm, (x, y, s, yaw) in {"karst_hero_c": (-330, 760, 1.0, 0.4), "karst_hero_b": (260, 560, 1.0, 2.0),
-                               "karst_hero_a": (-210, 330, 1.0, 1.0), "karst_hero_d": (330, 980, 1.0, 3.0),
-                               "karst_hero_e": (60, 1250, 1.1, 0.2)}.items():
-        ob = kit[nm][0]
-        show(ob, (x, y, 40.0), yaw=yaw, scale=s)
-        pines_on_seats(ob, rng, scale=1.6, crown_scale=1.2)
+    # hero towers in two ranks along both sides of the valley (copies turned and scaled, so the five heroes read as
+    # a dozen); far ranks at 1.5-5 km fade in steps of fog
+    heroes = list(K.HERO.keys())
+    # (offset from the river's centre line, y, piece, scale, yaw): two ranks hugging the gorge, then the valley's end
+    near = [(-95, 80, "karst_hero_a", 1.0, 1.0), (110, 190, "karst_hero_d", 1.0, 2.0),
+            (-150, 380, "karst_hero_b", 1.0, 0.4), (170, 470, "karst_hero_c", 0.9, 3.0),
+            (-120, 700, "karst_hero_e", 1.0, 0.2), (140, 820, "karst_hero_b", 1.1, 2.6),
+            (-260, 980, "karst_hero_c", 1.1, 4.1), (60, 1150, "karst_hero_a", 1.6, 5.0),
+            (300, 1080, "karst_hero_e", 1.2, 1.1), (-330, 560, "karst_hero_d", 0.9, 0.8),
+            (330, 330, "karst_hero_a", 1.2, 3.7), (-40, 1500, "karst_hero_c", 1.3, 2.2),
+            (380, 1600, "karst_hero_b", 1.4, 0.6), (-420, 1400, "karst_hero_d", 1.5, 4.4)]
+    for (x, y, nm, sc, yaw) in near:
+        src = kit[nm][0]
+        ob = src.copy()
+        temp_link(ob)
+        ob.hide_render = False
+        X = xc(y) + x
+        dd = abs(X - xc(y))
+        hz = 42 + 18 * min(max((dd - half) / 300, 0), 1) ** 1.3 * (1 + 0.6 * math.sin(X / 140) * math.cos(y / 170))
+        ob.location = (X, y, hz - 2.0)
+        ob.rotation_euler = (0, 0, yaw)
+        ob.scale = (sc, sc, sc)
+        pines_on_seats(ob, rng, scale=1.7 * sc, crown_scale=1.2, max_n=30)
     far = list(K.FAR.keys())
-    for i in range(16):
+    for i in range(30):
         nm = far[i % 6]
         ob = kit[nm][0].copy()
         temp_link(ob)
         ob.hide_render = False
-        ang = rng.uniform(-1.0, 1.0)
-        dist = rng.uniform(1700, 4200)
-        ob.location = (dist * math.sin(ang), 300 + dist * math.cos(ang), 30.0)
+        ang = rng.uniform(-0.75, 0.75)
+        dist = rng.uniform(1900, 5200)
+        ob.location = (dist * math.sin(ang), -330 + dist * math.cos(ang), 20.0)
         ob.rotation_euler = (0, 0, rng.uniform(0, 6.28))
-        ob.scale = [rng.uniform(0.9, 1.7)] * 3
+        ob.scale = [rng.uniform(0.9, 1.8)] * 3
     # broadleaf puffs on the banks and hills
-    for i in range(140):
-        y = rng.uniform(-300, 1200)
-        side = rng.choice([-1, 1])
-        x = xc(y) + side * (half + rng.uniform(4, 260))
+    for i in range(1500):
+        if i < 800 and near:
+            # woods gathered round the towers' feet and along the rims (forest, not a lawn)
+            ox, y0, _, sc0, _ = near[i % len(near)]
+            y = y0 + rng.normal(0, 60 * sc0)
+            x = xc(y) + ox + rng.normal(0, 60 * sc0)
+            if abs(x - xc(y)) < half + 4:
+                continue
+        else:
+            y = rng.uniform(-200, 1800)
+            side = rng.choice([-1, 1])
+            x = xc(y) + side * (half + abs(rng.normal(0, 110)) + 3)
         z = 42 + 18 * np.clip((abs(x - xc(y)) - half) / 300, 0, 1) ** 1.3 * (
             1 + 0.6 * math.sin(x / 140) * math.cos(y / 170))
         place_proto(proto_broadleaf(), (x, y, z - 0.5), rng.uniform(0.9, 1.6), rng.uniform(0, 6.28))
     # mist: over the water and round the towers' waists
     mist = os.path.join(TEX, "mist_card.png")
-    for i, (x, y, z, w) in enumerate(((xc(150), 150, 12, 220), (xc(420), 420, 14, 260), (-280, 700, 120, 420),
-                                      (220, 600, 95, 380), (0, 1000, 140, 600), (-150, 1400, 170, 800))):
-        card("mist_d%d" % i, mist, w, w * 0.22, (x, y, z), rng.uniform(-0.2, 0.2), strength=1.05)
-    cam = camera((xc(-330) + 10, -330, 70), (xc(250), 250, 40), fov_v=46)
-    sun(200, 42, energy=2.4)
+    for i, (x, y, z, w) in enumerate(((xc(150), 150, 14, 220), (xc(420), 420, 16, 280), (-280, 700, 110, 460),
+                                      (220, 600, 95, 420), (0, 1000, 130, 640), (-150, 1400, 160, 820),
+                                      (250, 1300, 70, 600), (-60, 1900, 120, 1400), (300, 2600, 150, 1800))):
+        card("mist_d%d" % i, mist, w, w * 0.2, (x, y, z), rng.uniform(-0.15, 0.15), strength=1.05)
+    cam = camera((xc(-170) + 20, -170, 78), (xc(650), 650, 105), fov_v=50)
+    sun(200, 42, energy=2.0)
     render(os.path.join(look, "raw", "diorama.png"))
     json.dump({"title": "Internal diorama: the ROCK kit over a river bend (stand-in pines, mist and fall cards; "
                         "PAINT's and VILLAGE's pieces replace them)", "labels": [], "sil": None},
@@ -1201,7 +1353,10 @@ def main():
     ap.add_argument("--no-export", action="store_true")
     ap.add_argument("--samples", type=int, default=32)
     ap.add_argument("--pct", type=int, default=100)
+    ap.add_argument("--bake", default="", help="the T4 R1 bake (build_regions/r1) for the Two Heights' real ground")
     a = ap.parse_args(argv)
+    if a.bake:
+        BAKE["dir"] = a.bake
     os.makedirs(os.path.join(a.look, "raw"), exist_ok=True)
     bpy.ops.wm.read_factory_settings(use_empty=True)
     print("ROCK_RENDER gltf kwargs", K._gltf_kwargs())
@@ -1238,6 +1393,8 @@ def main():
         scene_stones(kit, meta, a.look)
     if want("R06"):
         scene_two_heights(kit, meta, a.look)
+    if want("ABC"):
+        scene_variants(kit, meta, a.look)
     if want("D"):
         scene_diorama(kit, meta, a.look)
     print("ROCK_RENDER DONE")
