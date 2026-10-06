@@ -1,0 +1,23 @@
+{
+ "jade_mist_morning": {
+  "file": "grade/tv_grade_jade_mist_morning_64.png",
+  "agx_contrast": 1.05,
+  "saturation": 1.1,
+  "shadow_tint": "#2a4a50",
+  "highlight_tint": "#fff0d8"
+ },
+ "bright_saturated_noon": {
+  "file": "grade/tv_grade_bright_saturated_noon_64.png",
+  "agx_contrast": 1.15,
+  "saturation": 1.25,
+  "shadow_tint": "#2a3e6a",
+  "highlight_tint": "#fff6e0"
+ },
+ "golden_lantern_dusk": {
+  "file": "grade/tv_grade_golden_lantern_dusk_64.png",
+  "agx_contrast": 1.1,
+  "saturation": 1.15,
+  "shadow_tint": "#3a3468",
+  "highlight_tint": "#ffd49a"
+ }
+}

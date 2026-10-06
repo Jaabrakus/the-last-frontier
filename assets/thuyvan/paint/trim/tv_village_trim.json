@@ -1,0 +1,111 @@
+{
+ "size": [
+  2048,
+  2048
+ ],
+ "px_per_m": 256,
+ "tile_u_m": 8.0,
+ "note": "strips tile in U (and each strip wraps in V within itself); v0/v1 from the top of the image",
+ "strips": {
+  "timber": {
+   "v0": 0.0,
+   "v1": 0.09375,
+   "px": [
+    0,
+    192
+   ],
+   "metres_tall": 0.75,
+   "mean_srgb": 0.38
+  },
+  "plank_weathered": {
+   "v0": 0.09375,
+   "v1": 0.25,
+   "px": [
+    192,
+    512
+   ],
+   "metres_tall": 1.25,
+   "mean_srgb": 0.55
+  },
+  "roof_tile": {
+   "v0": 0.25,
+   "v1": 0.4375,
+   "px": [
+    512,
+    896
+   ],
+   "metres_tall": 1.5,
+   "mean_srgb": 0.32
+  },
+  "thatch": {
+   "v0": 0.4375,
+   "v1": 0.5625,
+   "px": [
+    896,
+    1152
+   ],
+   "metres_tall": 1.0,
+   "mean_srgb": 0.55
+  },
+  "wood_shingle": {
+   "v0": 0.5625,
+   "v1": 0.6875,
+   "px": [
+    1152,
+    1408
+   ],
+   "metres_tall": 1.0,
+   "mean_srgb": 0.45
+  },
+  "bamboo_weave": {
+   "v0": 0.6875,
+   "v1": 0.78125,
+   "px": [
+    1408,
+    1600
+   ],
+   "metres_tall": 0.75,
+   "mean_srgb": 0.5
+  },
+  "plaster": {
+   "v0": 0.78125,
+   "v1": 0.90625,
+   "px": [
+    1600,
+    1856
+   ],
+   "metres_tall": 1.0,
+   "mean_srgb": 0.8
+  },
+  "rope": {
+   "v0": 0.90625,
+   "v1": 0.9375,
+   "px": [
+    1856,
+    1920
+   ],
+   "metres_tall": 0.25,
+   "mean_srgb": 0.5
+  },
+  "lacquer": {
+   "v0": 0.9375,
+   "v1": 0.96875,
+   "px": [
+    1920,
+    1984
+   ],
+   "metres_tall": 0.25,
+   "mean_srgb": 0.42
+  },
+  "iron": {
+   "v0": 0.96875,
+   "v1": 1.0,
+   "px": [
+    1984,
+    2048
+   ],
+   "metres_tall": 0.25,
+   "mean_srgb": 0.24
+  }
+ }
+}

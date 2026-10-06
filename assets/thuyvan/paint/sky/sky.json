@@ -1,0 +1,35 @@
+{
+ "convention": "u = fract(0.5 + atan(dir.x, -dir.z) / (2 pi)) (north at u 0.5, east at 0.75); v = acos(dir.y) / pi; azimuth degrees clockwise from north",
+ "size": [
+  4096,
+  2048
+ ],
+ "directions": {
+  "jade_mist_morning": {
+   "file": "sky/tv_sky_jade_mist_morning.png",
+   "sun_uv": [
+    0.7083333333333334,
+    0.4222222222222222
+   ]
+  },
+  "bright_saturated_noon": {
+   "file": "sky/tv_sky_bright_saturated_noon.png",
+   "sun_uv": [
+    0.05555555555555558,
+    0.17777777777777778
+   ]
+  },
+  "golden_lantern_dusk": {
+   "file": "sky/tv_sky_golden_lantern_dusk.png",
+   "sun_uv": [
+    0.2916666666666665,
+    0.4722222222222222
+   ]
+  }
+ },
+ "skyline_cards": [
+  "sky/tv_skyline_karst_0.png",
+  "sky/tv_skyline_karst_1.png",
+  "sky/tv_skyline_karst_2.png"
+ ]
+}

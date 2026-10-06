@@ -1,0 +1,215 @@
+{
+ "clan_marks": {
+  "cells": [
+   "twin_peaks",
+   "ladder",
+   "set_stone"
+  ],
+  "cell_px": 512
+ },
+ "banners": {
+  "tv_banner_indigo": {
+   "field": "indigo_cloth",
+   "mark": "twin_peaks",
+   "size": [
+    512,
+    1536
+   ],
+   "metres": [
+    1.0,
+    3.0
+   ]
+  },
+  "tv_banner_ochre": {
+   "field": "ochre_cloth",
+   "mark": "set_stone",
+   "size": [
+    512,
+    1536
+   ],
+   "metres": [
+    1.0,
+    3.0
+   ]
+  },
+  "tv_banner_jade": {
+   "field": "jade_cloth",
+   "mark": "ladder",
+   "size": [
+    512,
+    1536
+   ],
+   "metres": [
+    1.0,
+    3.0
+   ]
+  }
+ },
+ "prayer_flags": [
+  {
+   "colour": "indigo_cloth",
+   "row": 0,
+   "rect_px": [
+    24,
+    10,
+    156,
+    235
+   ],
+   "uv_rect": [
+    0.0234375,
+    0.01953125,
+    0.15234375,
+    0.458984375
+   ]
+  },
+  {
+   "colour": "madder_cloth",
+   "row": 0,
+   "rect_px": [
+    228,
+    10,
+    156,
+    235
+   ],
+   "uv_rect": [
+    0.22265625,
+    0.01953125,
+    0.15234375,
+    0.458984375
+   ]
+  },
+  {
+   "colour": "ochre_cloth",
+   "row": 0,
+   "rect_px": [
+    432,
+    10,
+    156,
+    235
+   ],
+   "uv_rect": [
+    0.421875,
+    0.01953125,
+    0.15234375,
+    0.458984375
+   ]
+  },
+  {
+   "colour": "bone_cloth",
+   "row": 0,
+   "rect_px": [
+    636,
+    10,
+    156,
+    235
+   ],
+   "uv_rect": [
+    0.62109375,
+    0.01953125,
+    0.15234375,
+    0.458984375
+   ]
+  },
+  {
+   "colour": "jade_cloth",
+   "row": 0,
+   "rect_px": [
+    840,
+    10,
+    156,
+    235
+   ],
+   "uv_rect": [
+    0.8203125,
+    0.01953125,
+    0.15234375,
+    0.458984375
+   ]
+  },
+  {
+   "colour": "indigo_cloth",
+   "row": 1,
+   "rect_px": [
+    24,
+    266,
+    156,
+    235
+   ],
+   "uv_rect": [
+    0.0234375,
+    0.51953125,
+    0.15234375,
+    0.458984375
+   ]
+  },
+  {
+   "colour": "madder_cloth",
+   "row": 1,
+   "rect_px": [
+    228,
+    266,
+    156,
+    235
+   ],
+   "uv_rect": [
+    0.22265625,
+    0.51953125,
+    0.15234375,
+    0.458984375
+   ]
+  },
+  {
+   "colour": "ochre_cloth",
+   "row": 1,
+   "rect_px": [
+    432,
+    266,
+    156,
+    235
+   ],
+   "uv_rect": [
+    0.421875,
+    0.51953125,
+    0.15234375,
+    0.458984375
+   ]
+  },
+  {
+   "colour": "bone_cloth",
+   "row": 1,
+   "rect_px": [
+    636,
+    266,
+    156,
+    235
+   ],
+   "uv_rect": [
+    0.62109375,
+    0.51953125,
+    0.15234375,
+    0.458984375
+   ]
+  },
+  {
+   "colour": "jade_cloth",
+   "row": 1,
+   "rect_px": [
+    840,
+    266,
+    156,
+    235
+   ],
+   "uv_rect": [
+    0.8203125,
+    0.51953125,
+    0.15234375,
+    0.458984375
+   ]
+  }
+ ],
+ "decals": {
+  "tv_waystone_mark": "mark twin_peaks + 7 tally notches",
+  "tv_maker_sign_a": "square and cut",
+  "tv_maker_sign_b": "stepped stones and ring (pecked)"
+ }
+}

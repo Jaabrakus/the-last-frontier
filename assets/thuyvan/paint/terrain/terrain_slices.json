@@ -1,0 +1,215 @@
+{
+ "size": 2048,
+ "grid": [
+  3,
+  4
+ ],
+ "layout": "3 x 4 grid, slice i at column i %% 3, row i // 3 (import: slices/horizontal=3, slices/vertical=4)",
+ "alpha": "blend height: 0.6 x normalised stroke height + 0.4 x big-stroke mask",
+ "slices": [
+  {
+   "slice": 0,
+   "key": "grass",
+   "ramp": "grass",
+   "tile_m": 8.0,
+   "value_budget": 0.45,
+   "mean": 0.45,
+   "p2": 0.329,
+   "p98": 0.569,
+   "blob_dev": 0.087,
+   "seconds": 13.3,
+   "mean_srgb": [
+    0.4292,
+    0.6553,
+    0.27
+   ]
+  },
+  {
+   "slice": 1,
+   "key": "terrace_rice",
+   "ramp": "terrace_rice",
+   "tile_m": 8.0,
+   "value_budget": 0.55,
+   "mean": 0.55,
+   "p2": 0.486,
+   "p98": 0.712,
+   "blob_dev": 0.058,
+   "seconds": 12.2,
+   "mean_srgb": [
+    0.5754,
+    0.7479,
+    0.3233
+   ]
+  },
+  {
+   "slice": 2,
+   "key": "forest_floor",
+   "ramp": "forest_floor",
+   "tile_m": 8.0,
+   "value_budget": 0.3,
+   "mean": 0.3,
+   "p2": 0.251,
+   "p98": 0.407,
+   "blob_dev": 0.063,
+   "seconds": 8.2,
+   "mean_srgb": [
+    0.3216,
+    0.3811,
+    0.196
+   ]
+  },
+  {
+   "slice": 3,
+   "key": "dirt_path",
+   "ramp": "dirt_path",
+   "tile_m": 8.0,
+   "value_budget": 0.52,
+   "mean": 0.52,
+   "p2": 0.418,
+   "p98": 0.688,
+   "blob_dev": 0.101,
+   "seconds": 10.4,
+   "mean_srgb": [
+    0.6724,
+    0.5261,
+    0.3673
+   ]
+  },
+  {
+   "slice": 4,
+   "key": "laterite",
+   "ramp": "laterite",
+   "tile_m": 8.0,
+   "value_budget": 0.45,
+   "mean": 0.45,
+   "p2": 0.366,
+   "p98": 0.599,
+   "blob_dev": 0.097,
+   "seconds": 11.7,
+   "mean_srgb": [
+    0.7212,
+    0.3861,
+    0.2473
+   ]
+  },
+  {
+   "slice": 5,
+   "key": "paddy_mud",
+   "ramp": "paddy_mud",
+   "tile_m": 8.0,
+   "value_budget": 0.38,
+   "mean": 0.38,
+   "p2": 0.302,
+   "p98": 0.707,
+   "blob_dev": 0.111,
+   "seconds": 9.6,
+   "mean_srgb": [
+    0.4188,
+    0.403,
+    0.3028
+   ]
+  },
+  {
+   "slice": 6,
+   "key": "karst_rock",
+   "ramp": "karst_limestone",
+   "tile_m": 8.0,
+   "value_budget": 0.56,
+   "mean": 0.56,
+   "p2": 0.285,
+   "p98": 0.783,
+   "blob_dev": 0.241,
+   "seconds": 14.3,
+   "mean_srgb": [
+    0.5752,
+    0.5635,
+    0.5322
+   ]
+  },
+  {
+   "slice": 7,
+   "key": "white_stone",
+   "ramp": "white_stone",
+   "tile_m": 8.0,
+   "value_budget": 0.8,
+   "mean": 0.8,
+   "p2": 0.542,
+   "p98": 0.992,
+   "blob_dev": 0.178,
+   "seconds": 8.0,
+   "mean_srgb": [
+    0.8068,
+    0.8084,
+    0.7836
+   ]
+  },
+  {
+   "slice": 8,
+   "key": "moss_fern",
+   "ramp": "moss",
+   "tile_m": 8.0,
+   "value_budget": 0.4,
+   "mean": 0.4,
+   "p2": 0.247,
+   "p98": 0.593,
+   "blob_dev": 0.129,
+   "seconds": 10.2,
+   "mean_srgb": [
+    0.3862,
+    0.5603,
+    0.2545
+   ]
+  },
+  {
+   "slice": 9,
+   "key": "river_bank",
+   "ramp": "paddy_mud",
+   "tile_m": 8.0,
+   "value_budget": 0.42,
+   "mean": 0.42,
+   "p2": 0.213,
+   "p98": 0.782,
+   "blob_dev": 0.322,
+   "seconds": 9.4,
+   "mean_srgb": [
+    0.471,
+    0.433,
+    0.3547
+   ]
+  },
+  {
+   "slice": 10,
+   "key": "cliff_face",
+   "ramp": "karst_limestone",
+   "tile_m": 16.0,
+   "value_budget": 0.52,
+   "mean": 0.52,
+   "p2": 0.292,
+   "p98": 0.754,
+   "blob_dev": 0.231,
+   "seconds": 18.6,
+   "mean_srgb": [
+    0.5251,
+    0.5175,
+    0.5149
+   ]
+  },
+  {
+   "slice": 11,
+   "key": "meadow",
+   "ramp": "grass",
+   "tile_m": 8.0,
+   "value_budget": 0.5,
+   "mean": 0.5,
+   "p2": 0.357,
+   "p98": 0.792,
+   "blob_dev": 0.119,
+   "seconds": 13.1,
+   "mean_srgb": [
+    0.5234,
+    0.6937,
+    0.2881
+   ]
+  }
+ ]
+}
