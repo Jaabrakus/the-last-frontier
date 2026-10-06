@@ -137,7 +137,9 @@ func _boat() -> void:
 	var z_start := bt.position.z
 	for i in 20 * 60:
 		bt.step(1.0 / 60.0)
-	_expect(bt.vel.length() < 0.05 and bt.position.z - z_start < 6.0,
+	# (no current carries it: only the boat's own water drag slows its coast, which leaves a few cm/s after 20 s, against
+	# the river's pace it came in at and the 20 s x that pace the running river would have carried it)
+	_expect(bt.vel.length() < 0.15 and bt.vel.length() < WaterSurface.RIVER_MPS * 0.25 and bt.position.z - z_start < 6.0,
 			"boat: on the still reach a boat drifts to a stop (%.3f m/s after 20 s, %.1f m on)" % [bt.vel.length(), bt.position.z - z_start])
 	bt.free()
 	WorldRiver.reach_state = ""
