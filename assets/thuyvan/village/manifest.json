@@ -1,0 +1,1500 @@
+{
+ "_about": "Thủy Vân village kit (VILLAGE). Units metres; Blender Z up exported glTF +Y up; a piece's front faces Blender -Y = Godot +Z. COLOR_0 = baked AO x top light (multiply into albedo); COLOR_0.a = cloth pin weight. Materials tvv_<key>: see materials.json.",
+ "materials": {
+  "tvv_timber": {
+   "texture": "res://assets/thuyvan/village/textures/timber.png",
+   "uv_tile_m": 2.0,
+   "roughness": 0.92,
+   "specular": 0.15,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_plank": {
+   "texture": "res://assets/thuyvan/village/textures/plank.png",
+   "uv_tile_m": 4.0,
+   "roughness": 0.95,
+   "specular": 0.12,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_thatch": {
+   "texture": "res://assets/thuyvan/village/textures/thatch.png",
+   "uv_tile_m": 4.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_shingle": {
+   "texture": "res://assets/thuyvan/village/textures/shingle.png",
+   "uv_tile_m": 4.0,
+   "roughness": 0.95,
+   "specular": 0.12,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_tile": {
+   "texture": "res://assets/thuyvan/village/textures/tile.png",
+   "uv_tile_m": 4.0,
+   "roughness": 0.85,
+   "specular": 0.2,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_weave": {
+   "texture": "res://assets/thuyvan/village/textures/weave.png",
+   "uv_tile_m": 2.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": false
+  },
+  "tvv_basket": {
+   "texture": "res://assets/thuyvan/village/textures/basket.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_plaster": {
+   "texture": "res://assets/thuyvan/village/textures/plaster.png",
+   "uv_tile_m": 4.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_lacquer": {
+   "texture": "res://assets/thuyvan/village/textures/lacquer.png",
+   "uv_tile_m": 2.0,
+   "roughness": 0.55,
+   "specular": 0.35,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_rope": {
+   "texture": "res://assets/thuyvan/village/textures/rope.png",
+   "uv_tile_m": 1.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_iron": {
+   "texture": "res://assets/thuyvan/village/textures/iron.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.8,
+   "specular": 0.2,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_bamboo": {
+   "texture": "res://assets/thuyvan/village/textures/bamboo.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.85,
+   "specular": 0.15,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_drystone": {
+   "texture": "res://assets/thuyvan/village/textures/drystone.png",
+   "uv_tile_m": 4.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_limestone": {
+   "texture": "res://assets/thuyvan/village/textures/limestone.png",
+   "uv_tile_m": 4.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_grass": {
+   "texture": "res://assets/thuyvan/village/textures/grass.png",
+   "uv_tile_m": 4.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_earth": {
+   "texture": "res://assets/thuyvan/village/textures/earth.png",
+   "uv_tile_m": 2.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_jar": {
+   "texture": "res://assets/thuyvan/village/textures/jar.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.8,
+   "specular": 0.2,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_paper": {
+   "texture": "res://assets/thuyvan/village/textures/paper.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.9,
+   "specular": 0.1,
+   "emission": "#ffb45a",
+   "double_sided": true,
+   "cloth": false
+  },
+  "tvv_cloth_indigo": {
+   "texture": "res://assets/thuyvan/village/textures/cloth_indigo.png",
+   "uv_tile_m": 2.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvv_cloth_madder": {
+   "texture": "res://assets/thuyvan/village/textures/cloth_madder.png",
+   "uv_tile_m": 2.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvv_cloth_ochre": {
+   "texture": "res://assets/thuyvan/village/textures/cloth_ochre.png",
+   "uv_tile_m": 2.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvv_cloth_bone": {
+   "texture": "res://assets/thuyvan/village/textures/cloth_bone.png",
+   "uv_tile_m": 2.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvv_cloth_jade": {
+   "texture": "res://assets/thuyvan/village/textures/cloth_jade.png",
+   "uv_tile_m": 2.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvv_skin": {
+   "texture": "res://assets/thuyvan/village/textures/skin.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.9,
+   "specular": 0.15,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvv_banner_indigo": {
+   "texture": "res://assets/thuyvan/village/textures/banner_indigo.png",
+   "uv_tile_m": null,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvv_banner_ochre": {
+   "texture": "res://assets/thuyvan/village/textures/banner_ochre.png",
+   "uv_tile_m": null,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvv_banner_jade": {
+   "texture": "res://assets/thuyvan/village/textures/banner_jade.png",
+   "uv_tile_m": null,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvv_flags": {
+   "texture": "res://assets/thuyvan/village/textures/flags.png",
+   "uv_tile_m": null,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvv_waystone_face": {
+   "texture": "res://assets/thuyvan/village/textures/waystone_face.png",
+   "uv_tile_m": null,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  }
+ },
+ "pieces": {
+  "banner_indigo": {
+   "id": "V07",
+   "height": 7.3,
+   "tris": 430,
+   "materials": [
+    "tvv_timber",
+    "tvv_iron",
+    "tvv_rope",
+    "tvv_banner_indigo",
+    "tvv_cloth_madder",
+    "tvv_limestone"
+   ],
+   "size_m_xyz_blender": [
+    1.84,
+    1.1,
+    7.43
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "banner_jade": {
+   "id": "V07",
+   "height": 7.3,
+   "tris": 430,
+   "materials": [
+    "tvv_timber",
+    "tvv_iron",
+    "tvv_rope",
+    "tvv_banner_jade",
+    "tvv_cloth_madder",
+    "tvv_limestone"
+   ],
+   "size_m_xyz_blender": [
+    1.84,
+    1.04,
+    7.43
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "banner_ochre": {
+   "id": "V07",
+   "height": 7.3,
+   "tris": 430,
+   "materials": [
+    "tvv_timber",
+    "tvv_iron",
+    "tvv_rope",
+    "tvv_banner_ochre",
+    "tvv_cloth_madder",
+    "tvv_limestone"
+   ],
+   "size_m_xyz_blender": [
+    1.84,
+    1.07,
+    7.43
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "basket_set": {
+   "id": "V13",
+   "height": 0.7,
+   "tris": 308,
+   "materials": [
+    "tvv_basket",
+    "tvv_jar",
+    "tvv_paper"
+   ],
+   "size_m_xyz_blender": [
+    2.31,
+    1.15,
+    0.68
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "bridge_lamp": {
+   "id": "V09",
+   "emission_key": "paper",
+   "height": 2.85,
+   "tris": 844,
+   "materials": [
+    "tvv_drystone",
+    "tvv_timber",
+    "tvv_paper",
+    "tvv_tile"
+   ],
+   "size_m_xyz_blender": [
+    1.35,
+    1.35,
+    2.86
+   ],
+   "anchors": {
+    "anchor_light.003": [
+     0.0,
+     0.0,
+     1.95
+    ]
+   },
+   "colliders": []
+  },
+  "clan_house": {
+   "id": "V03",
+   "footprint_m": [
+    13.0,
+    10.0
+   ],
+   "height": 12.37,
+   "tris": 7370,
+   "materials": [
+    "tvv_drystone",
+    "tvv_limestone",
+    "tvv_plank",
+    "tvv_lacquer",
+    "tvv_timber",
+    "tvv_iron",
+    "tvv_bamboo",
+    "tvv_tile",
+    "tvv_plaster",
+    "tvv_paper",
+    "tvv_cloth_madder",
+    "tvv_rope",
+    "tvv_banner_indigo"
+   ],
+   "size_m_xyz_blender": [
+    15.88,
+    12.58,
+    12.69
+   ],
+   "anchors": {
+    "anchor_door.002": [
+     0.0,
+     -3.4,
+     1.0
+    ],
+    "anchor_smoke.003": [
+     0.0,
+     1.5,
+     5.65
+    ]
+   },
+   "colliders": []
+  },
+  "clan_waystone": {
+   "id": "V06",
+   "height": 4.4,
+   "tris": 1342,
+   "materials": [
+    "tvv_waystone_face",
+    "tvv_limestone",
+    "tvv_rope",
+    "tvv_cloth_madder",
+    "tvv_cloth_bone",
+    "tvv_cloth_indigo",
+    "tvv_bamboo",
+    "tvv_flags"
+   ],
+   "size_m_xyz_blender": [
+    7.71,
+    3.13,
+    4.57
+   ],
+   "anchors": {
+    "anchor_offering": [
+     0.0,
+     -0.6,
+     0.6
+    ]
+   },
+   "colliders": []
+  },
+  "cliff_house": {
+   "id": "V02",
+   "note": "origin on the lip line; the drop is -Y (Godot +Z); braces end 4.6 m below",
+   "height": 8.95,
+   "tris": 6440,
+   "materials": [
+    "tvv_drystone",
+    "tvv_timber",
+    "tvv_limestone",
+    "tvv_plank",
+    "tvv_plaster",
+    "tvv_iron",
+    "tvv_bamboo",
+    "tvv_tile",
+    "tvv_paper",
+    "tvv_cloth_madder",
+    "tvv_rope",
+    "tvv_lacquer"
+   ],
+   "size_m_xyz_blender": [
+    10.05,
+    9.45,
+    15.21
+   ],
+   "anchors": {
+    "anchor_lantern_balcony_l": [
+     -4.0,
+     -4.9,
+     2.95
+    ],
+    "anchor_lantern_balcony_r": [
+     4.0,
+     -4.9,
+     2.95
+    ],
+    "anchor_smoke.002": [
+     0.0,
+     -0.15,
+     6.55
+    ]
+   },
+   "colliders": []
+  },
+  "drying_rack": {
+   "id": "V13",
+   "height": 2.2,
+   "tris": 412,
+   "materials": [
+    "tvv_bamboo",
+    "tvv_thatch",
+    "tvv_cloth_indigo"
+   ],
+   "size_m_xyz_blender": [
+    3.2,
+    1.2,
+    2.27
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "fence_bamboo_3m": {
+   "id": "V12",
+   "length_m": 3.0,
+   "height": 1.25,
+   "tris": 244,
+   "materials": [
+    "tvv_bamboo",
+    "tvv_rope"
+   ],
+   "size_m_xyz_blender": [
+    3.58,
+    0.26,
+    1.5
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "fence_wattle_2m": {
+   "id": "V12",
+   "length_m": 2.0,
+   "height": 1.15,
+   "tris": 246,
+   "materials": [
+    "tvv_timber",
+    "tvv_weave",
+    "tvv_basket"
+   ],
+   "size_m_xyz_blender": [
+    2.08,
+    0.18,
+    1.35
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "firewood_pile": {
+   "id": "V13",
+   "height": 0.95,
+   "tris": 424,
+   "materials": [
+    "tvv_timber"
+   ],
+   "size_m_xyz_blender": [
+    1.8,
+    1.59,
+    1.1
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "gate_pavilion": {
+   "id": "V04",
+   "note": "bridge-head gate; the path runs along Y (Godot Z)",
+   "height": 7.22,
+   "tris": 2318,
+   "materials": [
+    "tvv_drystone",
+    "tvv_timber",
+    "tvv_lacquer",
+    "tvv_banner_indigo",
+    "tvv_tile",
+    "tvv_paper",
+    "tvv_cloth_madder",
+    "tvv_rope"
+   ],
+   "size_m_xyz_blender": [
+    7.07,
+    4.57,
+    7.57
+   ],
+   "anchors": {
+    "anchor_lantern": [
+     0.0,
+     -0.45,
+     3.0
+    ]
+   },
+   "colliders": []
+  },
+  "gate_tower": {
+   "id": "V04",
+   "note": "Two Heights gate tower; the passage runs along Y (Godot Z)",
+   "height": 12.42,
+   "tris": 3116,
+   "materials": [
+    "tvv_limestone",
+    "tvv_drystone",
+    "tvv_plank",
+    "tvv_lacquer",
+    "tvv_timber",
+    "tvv_plaster",
+    "tvv_tile",
+    "tvv_paper",
+    "tvv_cloth_madder",
+    "tvv_rope"
+   ],
+   "size_m_xyz_blender": [
+    9.8,
+    8.6,
+    12.6
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "lantern_barrel": {
+   "id": "V09",
+   "emission_key": "paper",
+   "height": 0.85,
+   "tris": 168,
+   "materials": [
+    "tvv_paper",
+    "tvv_lacquer",
+    "tvv_cloth_madder"
+   ],
+   "size_m_xyz_blender": [
+    0.52,
+    0.5,
+    1.25
+   ],
+   "anchors": {
+    "anchor_light.001": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "colliders": []
+  },
+  "lantern_post": {
+   "id": "V09",
+   "emission_key": "paper",
+   "height": 2.9,
+   "tris": 336,
+   "materials": [
+    "tvv_timber",
+    "tvv_limestone",
+    "tvv_paper",
+    "tvv_cloth_madder",
+    "tvv_rope"
+   ],
+   "size_m_xyz_blender": [
+    0.54,
+    1.27,
+    3.01
+   ],
+   "anchors": {
+    "anchor_light.002": [
+     0.0,
+     -0.78,
+     2.1
+    ]
+   },
+   "colliders": []
+  },
+  "lantern_round": {
+   "id": "V09",
+   "emission_key": "paper",
+   "height": 0.7,
+   "tris": 248,
+   "materials": [
+    "tvv_paper",
+    "tvv_timber",
+    "tvv_cloth_madder"
+   ],
+   "size_m_xyz_blender": [
+    0.62,
+    0.61,
+    1.2
+   ],
+   "anchors": {
+    "anchor_light": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "colliders": []
+  },
+  "paddy_bund_4m": {
+   "id": "V10",
+   "length_m": 4.0,
+   "height": 0.38,
+   "tris": 96,
+   "materials": [
+    "tvv_earth",
+    "tvv_grass"
+   ],
+   "size_m_xyz_blender": [
+    4.0,
+    1.22,
+    0.52
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "porter_pole": {
+   "id": "V15",
+   "height": 1.86,
+   "tris": 666,
+   "materials": [
+    "tvv_cloth_bone",
+    "tvv_cloth_indigo",
+    "tvv_timber",
+    "tvv_cloth_madder",
+    "tvv_skin",
+    "tvv_weave",
+    "tvv_bamboo",
+    "tvv_rope",
+    "tvv_basket"
+   ],
+   "size_m_xyz_blender": [
+    0.72,
+    2.73,
+    1.9
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "porter_standing": {
+   "id": "V15",
+   "height": 1.86,
+   "tris": 640,
+   "materials": [
+    "tvv_cloth_bone",
+    "tvv_cloth_indigo",
+    "tvv_timber",
+    "tvv_cloth_madder",
+    "tvv_skin",
+    "tvv_weave",
+    "tvv_basket",
+    "tvv_rope",
+    "tvv_thatch"
+   ],
+   "size_m_xyz_blender": [
+    0.72,
+    0.87,
+    1.9
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "porter_walking": {
+   "id": "V15",
+   "height": 1.86,
+   "tris": 640,
+   "materials": [
+    "tvv_cloth_bone",
+    "tvv_cloth_indigo",
+    "tvv_timber",
+    "tvv_cloth_madder",
+    "tvv_skin",
+    "tvv_weave",
+    "tvv_basket",
+    "tvv_rope",
+    "tvv_thatch"
+   ],
+   "size_m_xyz_blender": [
+    0.72,
+    0.88,
+    1.9
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "prayer_flags_12m": {
+   "id": "V08",
+   "span_m": 12.0,
+   "note": "origin at the start; ends at (L,0,0); sag L/12",
+   "height": 0.0,
+   "tris": 412,
+   "materials": [
+    "tvv_rope",
+    "tvv_flags"
+   ],
+   "size_m_xyz_blender": [
+    12.01,
+    0.18,
+    1.46
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "prayer_flags_4m": {
+   "id": "V08",
+   "span_m": 4.0,
+   "note": "origin at the start; ends at (L,0,0); sag L/12",
+   "height": 0.0,
+   "tris": 120,
+   "materials": [
+    "tvv_rope",
+    "tvv_flags"
+   ],
+   "size_m_xyz_blender": [
+    4.01,
+    0.16,
+    0.78
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "prayer_flags_8m": {
+   "id": "V08",
+   "span_m": 8.0,
+   "note": "origin at the start; ends at (L,0,0); sag L/12",
+   "height": 0.0,
+   "tris": 260,
+   "materials": [
+    "tvv_rope",
+    "tvv_flags"
+   ],
+   "size_m_xyz_blender": [
+    8.01,
+    0.16,
+    1.13
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "rope_bridge_anchor": {
+   "id": "V05",
+   "note": "span leaves toward +X; turn 180° for the far end",
+   "height": 5.4,
+   "tris": 1284,
+   "materials": [
+    "tvv_drystone",
+    "tvv_timber",
+    "tvv_rope",
+    "tvv_banner_indigo",
+    "tvv_cloth_madder",
+    "tvv_flags",
+    "tvv_paper",
+    "tvv_plank"
+   ],
+   "size_m_xyz_blender": [
+    4.0,
+    4.92,
+    6.07
+   ],
+   "anchors": {
+    "anchor_lamp": [
+     -0.2,
+     -1.3,
+     3.3
+    ]
+   },
+   "colliders": [
+    "deck-colonly.003"
+   ]
+  },
+  "rope_bridge_needle_platform": {
+   "id": "V05",
+   "note": "sits on R07's cap; spans attach at x +-2.0",
+   "height": 5.6,
+   "tris": 962,
+   "materials": [
+    "tvv_timber",
+    "tvv_rope",
+    "tvv_plank",
+    "tvv_iron",
+    "tvv_banner_indigo",
+    "tvv_cloth_madder",
+    "tvv_paper"
+   ],
+   "size_m_xyz_blender": [
+    4.4,
+    4.1,
+    7.35
+   ],
+   "anchors": {},
+   "colliders": [
+    "deck-colonly.004"
+   ]
+  },
+  "rope_bridge_r1": {
+   "id": "V05",
+   "height": 5.4,
+   "note": "D1-D4 assembled; origin = Godot (757, 200, -1215), runs +X to (893, 200, -1215); needle platform centre at x 63 deck -3",
+   "tris": 17330,
+   "materials": [
+    "tvv_drystone",
+    "tvv_timber",
+    "tvv_rope",
+    "tvv_banner_indigo",
+    "tvv_cloth_madder",
+    "tvv_flags",
+    "tvv_paper",
+    "tvv_plank",
+    "tvv_iron"
+   ],
+   "size_m_xyz_blender": [
+    143.3,
+    4.92,
+    11.81
+   ],
+   "anchors": {
+    "anchor_lamp.001": [
+     -0.2,
+     -1.3,
+     3.3
+    ],
+    "anchor_lamp.002": [
+     136.2,
+     1.3,
+     3.3
+    ]
+   },
+   "colliders": [
+    "deck1-colonly",
+    "deck2-colonly",
+    "deck3-colonly",
+    "deck4-colonly",
+    "deck5-colonly"
+   ]
+  },
+  "rope_bridge_span_30m": {
+   "id": "V05",
+   "span_m": 30.0,
+   "end_dz_m": 0.0,
+   "sag_m": 2.14,
+   "deck_curve_xz": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     1.25,
+     -0.342
+    ],
+    [
+     2.5,
+     -0.655
+    ],
+    [
+     3.75,
+     -0.938
+    ],
+    [
+     5.0,
+     -1.19
+    ],
+    [
+     6.25,
+     -1.414
+    ],
+    [
+     7.5,
+     -1.607
+    ],
+    [
+     8.75,
+     -1.771
+    ],
+    [
+     10.0,
+     -1.905
+    ],
+    [
+     11.25,
+     -2.009
+    ],
+    [
+     12.5,
+     -2.083
+    ],
+    [
+     13.75,
+     -2.128
+    ],
+    [
+     15.0,
+     -2.143
+    ],
+    [
+     16.25,
+     -2.128
+    ],
+    [
+     17.5,
+     -2.083
+    ],
+    [
+     18.75,
+     -2.009
+    ],
+    [
+     20.0,
+     -1.905
+    ],
+    [
+     21.25,
+     -1.771
+    ],
+    [
+     22.5,
+     -1.607
+    ],
+    [
+     23.75,
+     -1.414
+    ],
+    [
+     25.0,
+     -1.19
+    ],
+    [
+     26.25,
+     -0.938
+    ],
+    [
+     27.5,
+     -0.655
+    ],
+    [
+     28.75,
+     -0.342
+    ],
+    [
+     30.0,
+     0.0
+    ]
+   ],
+   "height": 1.2,
+   "tris": 3092,
+   "materials": [
+    "tvv_plank",
+    "tvv_timber",
+    "tvv_rope",
+    "tvv_flags"
+   ],
+   "size_m_xyz_blender": [
+    30.05,
+    2.15,
+    3.55
+   ],
+   "anchors": {},
+   "colliders": [
+    "deck-colonly.002"
+   ]
+  },
+  "rope_bridge_span_63m": {
+   "id": "V05",
+   "span_m": 63.0,
+   "end_dz_m": -3.0,
+   "sag_m": 4.5,
+   "deck_curve_xz": [
+    [
+     0.0,
+     -0.0
+    ],
+    [
+     2.625,
+     -0.844
+    ],
+    [
+     5.25,
+     -1.625
+    ],
+    [
+     7.875,
+     -2.344
+    ],
+    [
+     10.5,
+     -3.0
+    ],
+    [
+     13.125,
+     -3.594
+    ],
+    [
+     15.75,
+     -4.125
+    ],
+    [
+     18.375,
+     -4.594
+    ],
+    [
+     21.0,
+     -5.0
+    ],
+    [
+     23.625,
+     -5.344
+    ],
+    [
+     26.25,
+     -5.625
+    ],
+    [
+     28.875,
+     -5.844
+    ],
+    [
+     31.5,
+     -6.0
+    ],
+    [
+     34.125,
+     -6.094
+    ],
+    [
+     36.75,
+     -6.125
+    ],
+    [
+     39.375,
+     -6.094
+    ],
+    [
+     42.0,
+     -6.0
+    ],
+    [
+     44.625,
+     -5.844
+    ],
+    [
+     47.25,
+     -5.625
+    ],
+    [
+     49.875,
+     -5.344
+    ],
+    [
+     52.5,
+     -5.0
+    ],
+    [
+     55.125,
+     -4.594
+    ],
+    [
+     57.75,
+     -4.125
+    ],
+    [
+     60.375,
+     -3.594
+    ],
+    [
+     63.0,
+     -3.0
+    ]
+   ],
+   "height": 1.2,
+   "tris": 6392,
+   "materials": [
+    "tvv_plank",
+    "tvv_timber",
+    "tvv_rope",
+    "tvv_flags"
+   ],
+   "size_m_xyz_blender": [
+    63.05,
+    2.17,
+    7.54
+   ],
+   "anchors": {},
+   "colliders": [
+    "deck-colonly"
+   ]
+  },
+  "rope_bridge_span_73m": {
+   "id": "V05",
+   "span_m": 73.0,
+   "end_dz_m": 3.0,
+   "sag_m": 4.5,
+   "deck_curve_xz": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     3.042,
+     -0.594
+    ],
+    [
+     6.083,
+     -1.125
+    ],
+    [
+     9.125,
+     -1.594
+    ],
+    [
+     12.167,
+     -2.0
+    ],
+    [
+     15.208,
+     -2.344
+    ],
+    [
+     18.25,
+     -2.625
+    ],
+    [
+     21.292,
+     -2.844
+    ],
+    [
+     24.333,
+     -3.0
+    ],
+    [
+     27.375,
+     -3.094
+    ],
+    [
+     30.417,
+     -3.125
+    ],
+    [
+     33.458,
+     -3.094
+    ],
+    [
+     36.5,
+     -3.0
+    ],
+    [
+     39.542,
+     -2.844
+    ],
+    [
+     42.583,
+     -2.625
+    ],
+    [
+     45.625,
+     -2.344
+    ],
+    [
+     48.667,
+     -2.0
+    ],
+    [
+     51.708,
+     -1.594
+    ],
+    [
+     54.75,
+     -1.125
+    ],
+    [
+     57.792,
+     -0.594
+    ],
+    [
+     60.833,
+     -0.0
+    ],
+    [
+     63.875,
+     0.656
+    ],
+    [
+     66.917,
+     1.375
+    ],
+    [
+     69.958,
+     2.156
+    ],
+    [
+     73.0,
+     3.0
+    ]
+   ],
+   "height": 1.2,
+   "tris": 7408,
+   "materials": [
+    "tvv_plank",
+    "tvv_timber",
+    "tvv_rope",
+    "tvv_flags"
+   ],
+   "size_m_xyz_blender": [
+    73.04,
+    2.17,
+    7.54
+   ],
+   "anchors": {},
+   "colliders": [
+    "deck-colonly.001"
+   ]
+  },
+  "sampan": {
+   "id": "V11",
+   "length_m": 7.6,
+   "height": 1.6,
+   "tris": 1770,
+   "materials": [
+    "tvv_plank",
+    "tvv_timber",
+    "tvv_weave",
+    "tvv_bamboo",
+    "tvv_basket"
+   ],
+   "size_m_xyz_blender": [
+    7.61,
+    2.72,
+    1.52
+   ],
+   "anchors": {
+    "anchor_mooring": [
+     3.65,
+     0.0,
+     1.4
+    ]
+   },
+   "colliders": []
+  },
+  "stilt_house_large": {
+   "id": "V01",
+   "roof": "wood shingle",
+   "footprint_m": [
+    8.4,
+    7.4
+   ],
+   "height": 10.04,
+   "tris": 4644,
+   "materials": [
+    "tvv_timber",
+    "tvv_limestone",
+    "tvv_plank",
+    "tvv_weave",
+    "tvv_iron",
+    "tvv_bamboo",
+    "tvv_shingle",
+    "tvv_paper",
+    "tvv_cloth_madder",
+    "tvv_rope"
+   ],
+   "size_m_xyz_blender": [
+    12.1,
+    10.56,
+    11.36
+   ],
+   "anchors": {
+    "anchor_door.001": [
+     0.0,
+     -2.8,
+     2.82
+    ],
+    "anchor_lantern_door.001": [
+     0.95,
+     -4.4,
+     4.69
+    ],
+    "anchor_smoke.001": [
+     0.0,
+     -0.9,
+     5.64
+    ]
+   },
+   "colliders": []
+  },
+  "stilt_house_small": {
+   "id": "V01",
+   "roof": "thatch",
+   "footprint_m": [
+    5.4,
+    5.5
+   ],
+   "height": 8.84,
+   "tris": 3452,
+   "materials": [
+    "tvv_timber",
+    "tvv_limestone",
+    "tvv_plank",
+    "tvv_weave",
+    "tvv_iron",
+    "tvv_bamboo",
+    "tvv_thatch",
+    "tvv_paper",
+    "tvv_cloth_madder",
+    "tvv_rope"
+   ],
+   "size_m_xyz_blender": [
+    8.76,
+    8.36,
+    10.15
+   ],
+   "anchors": {
+    "anchor_door": [
+     0.0,
+     -2.1,
+     2.22
+    ],
+    "anchor_lantern_door": [
+     0.95,
+     -3.2,
+     3.89
+    ],
+    "anchor_smoke": [
+     0.0,
+     -0.65,
+     4.84
+    ]
+   },
+   "colliders": []
+  },
+  "survey_camp": {
+   "id": "V14",
+   "height": 1.6,
+   "tris": 656,
+   "materials": [
+    "tvv_cloth_bone",
+    "tvv_timber",
+    "tvv_rope",
+    "tvv_iron",
+    "tvv_cloth_madder",
+    "tvv_plank",
+    "tvv_cloth_ochre"
+   ],
+   "size_m_xyz_blender": [
+    7.38,
+    5.33,
+    3.2
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "terrace_wall_curve_in_4m": {
+   "id": "V10",
+   "length_m": 4.0,
+   "height_m": 1.2,
+   "height": 1.2,
+   "tris": 210,
+   "materials": [
+    "tvv_drystone",
+    "tvv_grass",
+    "tvv_limestone"
+   ],
+   "size_m_xyz_blender": [
+    4.05,
+    1.56,
+    1.63
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "terrace_wall_curve_out_4m": {
+   "id": "V10",
+   "length_m": 4.0,
+   "height_m": 1.2,
+   "height": 1.2,
+   "tris": 210,
+   "materials": [
+    "tvv_drystone",
+    "tvv_grass",
+    "tvv_limestone"
+   ],
+   "size_m_xyz_blender": [
+    4.06,
+    1.66,
+    1.63
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "terrace_wall_straight_4m": {
+   "id": "V10",
+   "length_m": 4.0,
+   "height_m": 1.2,
+   "height": 1.2,
+   "tris": 210,
+   "materials": [
+    "tvv_drystone",
+    "tvv_grass",
+    "tvv_limestone"
+   ],
+   "size_m_xyz_blender": [
+    4.0,
+    1.51,
+    1.63
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "water_jars": {
+   "id": "V13",
+   "height": 0.95,
+   "tris": 414,
+   "materials": [
+    "tvv_jar",
+    "tvv_timber",
+    "tvv_bamboo"
+   ],
+   "size_m_xyz_blender": [
+    1.41,
+    1.04,
+    1.01
+   ],
+   "anchors": {},
+   "colliders": []
+  }
+ }
+}
