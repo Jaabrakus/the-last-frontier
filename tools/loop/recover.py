@@ -4,7 +4,10 @@ import json, glob, os, sys
 P = '/Users/kiwimango/.claude/projects/-Users-kiwimango-Downloads-Frontier--claude-worktrees-spellcraft/'
 SID = '84dd193e-59da-450f-a5ed-c6e1c2e9b538'
 SCR = '/private/tmp/claude-501/-Users-kiwimango-Downloads-Frontier/84dd193e-59da-450f-a5ed-c6e1c2e9b538/scratchpad/'
-files = [P + SID + '.jsonl'] + glob.glob(P + SID + '/subagents/**/*.jsonl', recursive=True)
+files = []
+for P in ['/Users/kiwimango/.claude/projects/-Users-kiwimango-Downloads-Frontier--claude-worktrees-spellcraft/',
+          '/Users/kiwimango/.claude/projects/-Users-kiwimango-Downloads-Frontier/']:   # (the session's project key moved after a restart)
+    files += glob.glob(P + SID + '.jsonl') + glob.glob(P + SID + '/subagents/**/*.jsonl', recursive=True)
 ops = []
 for f in files:
     if f.endswith('journal.jsonl'):
