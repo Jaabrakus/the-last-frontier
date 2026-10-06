@@ -1,6 +1,13 @@
 {
 	"_about": "Tidebreak's rules (RingRules, RingMode, RingMenu; the plan's sport_rules; the owner, 2026-10-04: the sport is Tidebreak, 1v1 first, the team lists kept for 3v3). Every number here, tunable by eye. Zones are counted from the centre: 1 nearest it, 3 at the open end. A competitor is 'confined' to the zone a knock carried him into (only deeper within a round); his forward line is then a soft wall. The round ends at once on a ring-out; at the time-out the side holding more ground takes it, then the higher health, else a draw.",
 	"rules": "open",
+	"_rule_set": "Round 3 (smash_r3 spec §14.1-14.2): \"classic\" is today's zones; \"stock\" the % layer (lives, the launch, the stage overlay). RingRules.stock_on() is true only while a ring with rule_set \"stock\" is installed: THE GATE every round-3 rule checks. SEAMS sets classic; PERCENT flips the default to stock and fills the stock block.",
+	"rule_set": "classic",
+	"stock": {
+		"_about": "The % layer's numbers (PERCENT's; spec §2.2). range: a launch's growth x 1.0 when the hit lands full_m or less from where it was cast, sliding to far_mult at far_m and beyond; exempt tags always 1.0 (PERCENT fills them: the returns, Lightning). air_growth: the growth x this for a launch class released airborne.",
+		"range": {"full_m": 10.0, "far_m": 22.0, "far_mult": 0.65, "exempt": []},
+		"air_growth": 0.85
+	},
 	"knock_scale": 1.1,
 	"_element_factor": "each knock in the ring scaled by knock_scale times the KNOCKER's element's factor (air knocks hardest by design, so it is held back most; R1-BALANCE 2026-10-05: air 0.65 to 0.6, water 1.25 to 1.5, water landing many light knocks and few that carried). KITS round 2 retuned them for the new kits by its soak: knock_scale 0.7 to 1.1 (more rounds into the water than out of time), air 0.6 to 1.5 (its tornado and its socket lifts are gone), earth 1.1 to 0.85, water 1.5 to 0.7, fire 0.9 to 1.35",
 	"element_factor": {"air": 1.5, "earth": 0.85, "water": 0.7, "fire": 1.35},

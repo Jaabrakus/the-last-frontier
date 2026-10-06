@@ -24,9 +24,19 @@ extends Node
 ##   listeners   every node in group LISTENERS gets on_knocked(n, v, by) after a knock is applied (v as applied).
 ##   the body    its on_bend_knock(v, by) when it has one (NpcFighter: its brain told who did it, a flinch at
 ##               NpcFighter.FLINCH_KNOCK_MPS or more).
+## ROUND 3 (the % layer, smash_r3 spec §2.2, §3, §14.3; SEAMS stubbed it, PERCENT fills it; all of it behind the gate,
+## RingRules.stock_on()): gravity_override (0: the world's, as today), stun_t / tumble / lying_t (the hitstun, the tumble
+## and lying down), apply_di(dir) (the steer), press_break(dir) (E while tumbling), getup(kind), scale_carry(k) (MOVE's
+## double jump halves the launch's carry), knock(v, by, info) (the hit info; under stock it SETS the motion, today it adds),
+## the signals launched(v, hitstun_s, refresh) and broke_fall(kind, dir).
 
 signal landed
 signal knocked(v: Vector3, by: Node)
+## Round 3 (stock only): launched at `v` with `hitstun_s` of hitstun; `refresh` a tumbling launch class (MOVE refreshes the
+## air moves only then).
+signal launched(v: Vector3, hitstun_s: float, refresh: bool)
+## Round 3 (stock only): the fall broken at contact: kind "stand", "roll" or "wall", `dir` the roll's.
+signal broke_fall(kind: String, dir: Vector3)
 
 const NAME := "BendKnock"
 const LISTENERS := &"bend_knock_listeners"
@@ -42,6 +52,8 @@ const LAUNCH_WAIT_S := 0.3
 static var rules: Object = null
 ## A knock this hard (m/s) or more throws the player off his feet (the ring raises it).
 static var ragdoll_mps := 9.0
+## Round 3: the gravity a launched body falls by (m/s^2; 0: the world's default, as today). MOVE's ring physics sets it.
+static var gravity_override := 0.0
 
 var body: CharacterBody3D
 ## The knock's horizontal velocity now (m/s), and the part of it in the body's velocity since the last extra_velocity.
@@ -54,6 +66,10 @@ var last_knocker: Node = null
 var last_knock_at := -INF
 ## Knocks taken (for tests and the HUD).
 var knocks := 0
+## Round 3 (stock only): seconds of hitstun left, thrown into the air tumbling, seconds left lying down.
+var stun_t := 0.0
+var tumble := false
+var lying_t := 0.0
 
 var _launched := false
 var _left := false
@@ -81,12 +97,15 @@ static func peek(b: Node) -> BendKnock:
 
 ## The gravity a launched body falls by (the player's own: the world's default), so a bot flies as long as the player.
 static func launch_gravity() -> float:
+	if gravity_override > 0.0:
+		return gravity_override
 	return float(ProjectSettings.get_setting("physics/3d/default_gravity", 9.8))
 
 
 ## `body` knocked along `v` (m/s) by `by`: the ring's rules first, then the player off his feet at ragdoll_mps or the push
-## (kv, the up part), the listeners told. Returns the knock as applied (ZERO: none).
-func knock(v: Vector3, by: Node) -> Vector3:
+## (kv, the up part), the listeners told. Returns the knock as applied (ZERO: none). `info`: round 3's hit info (spec §14.3;
+## unread until PERCENT: today's knock still adds).
+func knock(v: Vector3, by: Node, _info := {}) -> Vector3:
 	if body == null or not is_instance_valid(body):
 		return Vector3.ZERO
 	if rules != null and is_instance_valid(rules) and rules.has_method(&"knock_scale"):
@@ -178,6 +197,26 @@ func after_slide() -> void:
 ## The body's velocity was set by something else (a vault, a ride): none of the knock is in it now.
 func drop_applied() -> void:
 	applied = Vector3.ZERO
+
+
+## Round 3 (stock only): the steer read in hitstun (dir: the held direction, flat). A no-op until PERCENT.
+func apply_di(_dir: Vector3) -> void:
+	pass
+
+
+## Round 3 (stock only): E pressed while tumbling (judged at contact: broke_fall). A no-op until PERCENT.
+func press_break(_dir: Vector3) -> void:
+	pass
+
+
+## Round 3 (stock only): up from lying down (kind: "stand", "roll", "attack"). A no-op until PERCENT.
+func getup(_kind: String) -> void:
+	pass
+
+
+## The knock's carry scaled by `k` (MOVE's double jump keeps half of it: 0.5).
+func scale_carry(k: float) -> void:
+	kv *= k
 
 
 ## All of it gone (a respawn, a death, a new round).

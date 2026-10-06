@@ -36,16 +36,45 @@ extends Node
 ## Ring awareness for a bot (NpcBending's bounds_fn / edge_fn, the contract): bounds_fn_for(body) clamps a place to where
 ## that body may stand now; edge_along(pos, dir) the metres along dir to an open end. allowed_rect(body), edge_m(pos, side).
 ## Read by RingMode and the HUD: team_of, end_of, confined_of, s_of, forward_limit, territory(), health_frac(team), knocks.
+## ROUND 3 (the % layer, smash_r3 spec §2, §3, §7, §14.3; SEAMS stubbed it, PERCENT fills it). THE GATE: stock_on() is
+## true only while an installed RingRules has rule_set "stock" (rules.json rule_set; "classic" is today's zones, and with it
+## every round-3 rule below is off and the stubs answer as if there were no % at all):
+##   static      stock_on(), current() (the installed one or null), class_of(tag) {d, base, growth, angle, set, set_stun},
+##               range_mult(tag, range_m) (1.0 to range.full_m, sliding to range.far_mult at range.far_m and beyond; exempt
+##               tags 1.0), launch_v(cls, pct_after, d, w, range_m, air) (spec §2.2), weight_of(element)
+##   per body    pct_of, stocks_of, safe_until, hitstun_left, stunned, can_escape, string_hits, stale_count(attacker, tag),
+##               last_steer_deg, fresh_pct, heal_allowed; add_pct, reset_pct, patch (the fresh pool taken), on_hit(n, by,
+##               info) -> the launch to apply (BendStatus calls it), note_lock_started(b) (a lock ends spawn safety)
+##   signals     pct_changed, launched, ko, respawned, string_ended, hit_safe
 
 signal knocked_back(who: Node3D, from_zone: int, to_zone: int)
 signal rang_out(who: Node3D, by: Node)
 signal side_out(side: int)
 signal winded(who: Node3D, by: Node, to_zone: int)
+## Round 3 (stock rules only; see the header): b's % now and what this change added.
+signal pct_changed(b: Node3D, pct: float, delta: float)
+## b launched at `v` (m/s) with `hitstun_s` of hitstun by `by`'s move `tag`.
+signal launched(b: Node3D, v: Vector3, hitstun_s: float, by: Node, tag: String)
+## b lost a life (`stocks_left` left) at `pct`, credited to `by`'s `tag` (by null: his own fall).
+signal ko(b: Node3D, by: Node, pct: float, tag: String, stocks_left: int)
+## b back on the deck from the spout.
+signal respawned(b: Node3D)
+## `by`'s string on `victim` over: `hits` hits, `pct` % dealt.
+signal string_ended(by: Node, victim: Node3D, hits: int, pct: float)
+## `by`'s hit passed through b while b was safe (the hiss and splash at `point`; the attacker's strip says so).
+signal hit_safe(b: Node3D, by: Node, point: Vector3)
 
 const DATA_PATH := "res://data/ring/rules.json"
 const NODE_NAME := "RingRules"
+## The rule sets (rules.json rule_set): "classic" today's zones, "stock" the % layer (round 3).
+const RULE_SETS := ["classic", "stock"]
 
 static var _data := {}
+## The RingRules installed now (the one BendKnock.rules points at), or null: the gate's owner.
+static var _current: RingRules = null
+
+## This ring's rule set (rules.json rule_set, read as it is installed): "classic" or "stock".
+var rule_set := "classic"
 
 var ring: RingArena
 ## [team 0's competitors, team 1's] (Node3D: the player, NpcFighters).
@@ -97,6 +126,9 @@ func _ready() -> void:
 	BendKnock.rules = self
 	BendKnock.ragdoll_mps = num("ragdoll_mps", 16.0)
 	_installed = true
+	var rs := String(data().get("rule_set", "classic"))
+	rule_set = rs if rs in RULE_SETS else "classic"
+	_current = self
 	# (the grates' reach: a waterbender draws water within grate_reach_m of one: Bending.near_water reads reach_m)
 	if ring != null:
 		for g in ring.pools():
@@ -109,6 +141,8 @@ func _exit_tree() -> void:
 			BendKnock.rules = _prev_rules
 		BendKnock.ragdoll_mps = _prev_ragdoll
 		_installed = false
+	if _current == self:
+		_current = null
 	clear()
 
 
@@ -532,3 +566,142 @@ func health_frac(team: int) -> float:
 		elif b is NpcFighter:
 			sum += (b as NpcFighter).health / maxf((b as NpcFighter).health_max, 1.0)
 	return sum / float(n) if n > 0 else 0.0
+
+
+# ---------------------------------------------------------------- round 3: the % layer (SEAMS' stubs; PERCENT fills them)
+## THE GATE: a stock-rules RingRules is installed (a % ring match). False in the open world, the duel and the classic ring.
+static func stock_on() -> bool:
+	return _current != null and is_instance_valid(_current) and _current.rule_set == "stock"
+
+
+## The RingRules installed now (null: no ring).
+static func current() -> RingRules:
+	return _current if _current != null and is_instance_valid(_current) else null
+
+
+## rules.json stock's block `key` ({} none).
+static func stock_block(key: String) -> Dictionary:
+	var s: Variant = data().get("stock", {})
+	var b: Variant = (s as Dictionary).get(key, {}) if s is Dictionary else {}
+	return b if b is Dictionary else {}
+
+
+## rules.json stock's number `key`.
+static func stock_num(key: String, def := 0.0) -> float:
+	var s: Variant = data().get("stock", {})
+	return float((s as Dictionary).get(key, def)) if s is Dictionary else def
+
+
+## Move `tag`'s ("id/mode", "id/mode.grown") class: {d, base, growth, angle, set, set_stun, tag} ({}: none yet).
+static func class_of(_tag: String) -> Dictionary:
+	return {}
+
+
+## The range falloff R (spec §2.2): 1.0 when the hit lands range.full_m or less from where it was cast, sliding to
+## range.far_mult at range.far_m and beyond; an exempt tag (range.exempt: the returns, Lightning) is always 1.0.
+static func range_mult(tag: String, range_m: float) -> float:
+	var r := stock_block("range")
+	if tag in (r.get("exempt", []) as Array):
+		return 1.0
+	var full := float(r.get("full_m", 10.0))
+	var far := maxf(float(r.get("far_m", 22.0)), full + 0.01)
+	var mult := float(r.get("far_mult", 0.65))
+	return lerpf(1.0, mult, clampf((range_m - full) / (far - full), 0.0, 1.0))
+
+
+## The launch speed (m/s, spec §2.2): w x (base + growth x R x A x p/100 x (0.5 + d/20)), p the % after the hit, d the hit's
+## %, w the weight, R range_mult (by the class's tag, cls.tag), A stock.air_growth when released airborne; a set knock
+## (cls.set) its base.
+static func launch_v(cls: Dictionary, pct_after: float, d: float, w: float, range_m := 0.0, air := false) -> float:
+	var base := float(cls.get("base", 0.0))
+	if bool(cls.get("set", false)):
+		return base
+	var growth := float(cls.get("growth", 0.0))
+	var r := range_mult(String(cls.get("tag", "")), range_m)
+	var a := stock_num("air_growth", 0.85) if air else 1.0
+	return w * (base + growth * r * a * pct_after / 100.0 * (0.5 + d / 20.0))
+
+
+## Element `element`'s weight multiplier W (spec §2.4; 1.0 until PERCENT fills stock.weights).
+static func weight_of(_element: String) -> float:
+	return 1.0
+
+
+## b's % now.
+func pct_of(_b: Node) -> float:
+	return 0.0
+
+
+## b's lives left.
+func stocks_of(_b: Node) -> int:
+	return 0
+
+
+## When b's spawn safety ends (BendStatus.now() s; -INF: not safe).
+func safe_until(_b: Node) -> float:
+	return -INF
+
+
+## Seconds until b can act again (the escape counted).
+func hitstun_left(_b: Node) -> float:
+	return 0.0
+
+
+## b in hitstun now.
+func stunned(_b: Node) -> bool:
+	return false
+
+
+## b may escape his hitstun now (a fresh press at escape_s or later).
+func can_escape(_b: Node) -> bool:
+	return false
+
+
+## Hits in the string on b now.
+func string_hits(_b: Node) -> int:
+	return 0
+
+
+## How many of `attacker`'s last moves (the stale queue) were `tag`.
+func stale_count(_attacker: Node, _tag: String) -> int:
+	return 0
+
+
+## The yaw b steered his last launch by (degrees).
+func last_steer_deg(_b: Node) -> float:
+	return 0.0
+
+
+## b's fresh % (the pool Patch may take back).
+func fresh_pct(_b: Node) -> float:
+	return 0.0
+
+
+## Whether b may heal now.
+func heal_allowed(_b: Node) -> bool:
+	return true
+
+
+## `delta` % to b from `by`'s `tag`.
+func add_pct(_b: Node, _delta: float, _by: Node, _tag: String) -> void:
+	pass
+
+
+## b's % set to `to`.
+func reset_pct(_b: Node, _to := 0.0) -> void:
+	pass
+
+
+## Patch: b's fresh pool taken (at most patch.max_pct); returns the % removed.
+func patch(_b: Node) -> float:
+	return 0.0
+
+
+## A lock of b's started (SwayCaster.lock_started): his spawn safety ends.
+func note_lock_started(_b: Node) -> void:
+	pass
+
+
+## A hit on n by `by` (BendStatus): the launch to apply ({}: as today). Info keys: spec §14.3's hit info.
+func on_hit(_n: Node, _by: Node, _info: Dictionary) -> Dictionary:
+	return {}
