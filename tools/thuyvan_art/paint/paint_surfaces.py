@@ -39,8 +39,8 @@ def normal_from_height(ht, strength=6.0):
 def rock(size=2048):
     out = {}
     cv = tvp.Canvas(size, size, 16.0, 8200, ramp("karst_limestone"))
-    pt.m_karst(cv, fluting=1.4, streaks=1.6, moss_amt=1.0)
-    cv.finish(value_target=0.62)
+    pt.m_cliff_face(cv, fluting=1.4, streaks=1.6, moss_amt=1.0)
+    cv.finish(value_target=0.55)
     img = cv.rgba(alpha=None)
     tvp.save(img, "rock/tv_karst_face_16m.png")
     out["karst_face"] = tvp.squint_check(img, "rock_karst_face_16m")
@@ -52,42 +52,39 @@ def rock(size=2048):
     nimg = Image.fromarray(tvp.to_u8(nrm)).resize((size // 2, size // 2), Image.BOX)
     nimg.save(os.path.join(tvp.OUT, "rock", "tv_karst_face_16m_normal.png"))
 
-    # white river stone: smooth rounded planes, almost no strokes
-    cv = tvp.Canvas(1024, 1024, 4.0, 8300, ramp("white_stone"))
+    # white river stone: one smooth, pale, water-worn surface: soft mottling, a few faint veins, scrubbed brushwork,
+    # cool shade blotches; almost no detail (style guide 4: "smooth, pale cream-white, almost no strokes")
+    cv = tvp.Canvas(1024, 1024, 4.0, 8300, ramp("white_stone"), bristle=0.25)
     r4 = cv.ramp
     rng = cv.rng
-    cv.base(color=mix(r4[1], r4[2], 0.6), dv=0.06)
-    for _ in range(40):
-        x, y = rng.uniform(0, cv.w), rng.uniform(0, cv.h)
-        L = cv.w * rng.uniform(0.08, 0.2)
-        c = cv.vary(mix(r4[1], r4[3], rng.uniform(0.2, 0.9)), x, y)
-        cv.stroke3(x, y, L, L / rng.uniform(1.2, 2.2), rng.uniform(0, 3.14), c, mix(r4[0], c, 0.6),
-                   mix(c, r4[3], 0.7), up=(0, -1), h_add=0.6, wob=0.15, edge=0.55, dark_amt=0.35, light_amt=0.5,
-                   shade=0.15, poly=tvp.random_poly(rng, (5, 7), 0.3) if rng.random() < 0.4 else None)
-    for _ in range(50):  # faint warm film and cool pits
-        x, y = rng.uniform(0, cv.w), rng.uniform(0, cv.h)
-        L = cv.px(rng.uniform(0.04, 0.12))
-        cv.dab(x, y, L, L * 0.6, rng.uniform(0, 3), lin("#d8ccaa") if rng.random() < 0.6 else r4[0], opacity=0.25,
-               wob=0.2, edge=0.3)
-    cv.cavity(k=0.3, cool="#7f8c96", sigma_frac=1 / 32.0)
+    cv.base(color=tvp.ramp_at(r4, 0.72), dv=0.06)
+    pt.patches(cv, 46, size_m=(0.3, 0.9), tones=(0.45, 1.0), opacity=(0.3, 0.55), bristle=0.2, edge=0.35, h=0.4)
+    for _ in range(18):  # cool shade blotches (pits and hollows)
+        x, y = pt.rand_xy(cv)
+        L = cv.px(rng.uniform(0.08, 0.3))
+        cv.dab(x, y, L, L / rng.uniform(1.2, 2.2), rng.uniform(0, 3.1), cv.vary(mix(r4[0], r4[1], 0.6), x, y),
+               opacity=0.25, edge=0.2, wob=0.25, bristle=0.3, h_add=-0.3, hmode="add")
+    for _ in range(9):  # faint quartz veins
+        x, y = pt.rand_xy(cv)
+        a = rng.uniform(0, 3.1)
+        L = cv.px(rng.uniform(0.4, 1.2))
+        pts = [(x + math.cos(a) * L * t + rng.normal(0, 6), y + math.sin(a) * L * t + rng.normal(0, 6))
+               for t in np.linspace(0, 1, 6)]
+        cv.path(pts, cv.px(rng.uniform(0.008, 0.02)), r4[3], opacity=0.22, bristle=0.2)
+    pt.scrub(cv, 1600, len_m=(0.08, 0.25), width_m=(0.02, 0.05), amt=0.06, opacity=(0.25, 0.45))
+    for _ in range(40):  # warm film
+        x, y = pt.rand_xy(cv)
+        L = cv.px(rng.uniform(0.04, 0.14))
+        cv.dab(x, y, L, L * 0.6, rng.uniform(0, 3), lin("#d8ccaa"), opacity=0.18, wob=0.2, edge=0.3)
+    cv.cavity(k=0.25, cool="#7f8c96", sigma_frac=1 / 32.0)
     cv.finish(value_target=0.82)
     img = cv.rgba()
     tvp.save(img, "rock/tv_river_stone_4m.png")
     out["river_stone"] = tvp.squint_check(img, "rock_river_stone_4m")
 
-    # cliff moss
+    # cliff moss: the moss ground's cushions and stipple, without ferns (for the rock shader's moss blend)
     cv = tvp.Canvas(1024, 1024, 6.0, 8400, ramp("moss"))
-    r4 = cv.ramp
-    rng = cv.rng
-    cv.base()
-    pt.big_pass(cv, 70, aspect=(1.1, 1.8), weights=(0.25, 0.45, 0.25, 0.05), wob=0.18)
-    for _ in range(520):
-        x, y = rng.uniform(0, cv.w), rng.uniform(0, cv.h)
-        L = cv.px(rng.uniform(0.07, 0.2))
-        c = cv.vary(r4[1] if rng.random() < 0.5 else r4[2], x, y)
-        cv.stroke3(x, y, L, L * rng.uniform(0.75, 0.95), rng.uniform(0, 3), c, r4[0], mix(r4[2], r4[3], 0.6),
-                   up=(0, -1), h_add=0.7, wob=0.08, edge=0.7, dark_off=0.2, shade=0.3)
-    cv.cavity(k=0.42, cool=tvp.AO_GREEN)
+    pt.m_moss_fern(cv, ferns=False)
     cv.finish(value_target=0.42)
     img = cv.rgba()
     tvp.save(img, "rock/tv_cliff_moss_6m.png")
