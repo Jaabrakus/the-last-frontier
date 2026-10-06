@@ -16,6 +16,11 @@ extends SceneTree
 ##   the floor  waves along the deck (the Kick's floor wave) sent at a normal earth bot: it jumps at least FLOOR_JUMP_MIN of them
 ##              (floor_jumped of floor_seen; spec 2.8)
 ##   the edge   an air bot 3 m from an open end, the foe before it: in EDGE_S it never goes over the end of itself
+##   round 3   the gate (RingRules.stock_on()): off, no % ring mind is made and the bot is round 2's; on (a stand-in stock
+##              RingRules, tests/npc/r3_standins.gd), its jump over a floor wave is a press of its pad's Space (MOVE's mover
+##              lifts it at the ring's one gravity, the player's), never NpcFighter.jump's own lift, and its tick writes no
+##              velocity. Its double jump, air dodge, Rise and edge in the recover drill: tests/npc/test_bot_recovery.gd; its
+##              Pop's stone: tests/npc/test_bot_pct.gd
 ## Last line "BEND BOTS PASSED" or "BEND BOTS FAILED"; exit 0 only on a pass; the watchdog (LIMIT_S) fails it before the lock
 ## wrapper's GODOT_TIMEOUT.
 ##   Godot --headless --fixed-fps 60 --path . -s tests/npc/test_bend_bots.gd -- mode=duel [only=fire]
@@ -127,7 +132,34 @@ func _go() -> void:
 		await _coverage(el)
 	if only == "" or only == "air":
 		await _edge()
+	await _stock_gate()
 	_end()
+
+
+## Round 3's gate on an element bot: off, no % ring mind; on (a stand-in stock RingRules), its jump is its pad's Space.
+func _stock_gate() -> void:
+	const Standins := preload("res://tests/npc/r3_standins.gd")
+	var f := _bot("earth", mid + Vector3(4.0, 0.1, 2.0), "normal")
+	if f == null:
+		_expect(false, "a bot for the gate")
+		return
+	await _secs(0.8)
+	var b := f.brain.bending
+	_expect(not RingRules.stock_on() and b.ring_mind == null, "the gate off: no %% ring mind (round 2's bot)")
+	var rules := Standins.install_rules()
+	f.set_physics_process(false)
+	var on_floor := f.is_on_floor()
+	var v0 := f.velocity
+	var jumped := b._jump_now()
+	var it := b.pad().intent()
+	_expect(on_floor and jumped and bool(it.jump) and float(f.get(&"_jump_v")) == 0.0 and f.velocity == v0,
+			"the gate on: its jump a press of its pad's Space (%s), never NpcFighter.jump's own lift" % [it.jump])
+	for i in 30:
+		b.tick(1.0 / 60.0)
+	_expect(f.velocity == v0 and b.ring_mind != null, "the gate on: its mind made, its tick writing no velocity")
+	Standins.uninstall(rules)
+	f.set_physics_process(true)
+	_free_bot(f)
 
 
 # ---------------------------------------------------------------- the slab and the ring's callables

@@ -1,6 +1,6 @@
 {
   "format": "ring_lessons",
-  "version": 2,
+  "version": 3,
   "summary": "Tidebreak's lessons in Practice (RingLessons, LessonCard: the owner, 2026-10-05, found switching moves hard and nothing in the game taught the controls; round 2 of the skills: the same buttons for every element, LMB jab, E guard, 1 strike, 2 push, 3 dash, 4 wall, 5 heal) and a first Quick match's key hints (FirstHints). Every word here is shown to the player: no word from any show. In a line [action] is a key cap drawn from the action's binding now (InputMap: the text is right whatever the player rebound), {press} the key(s) that ready the lesson's move under the scheme, {name} its plain name, {jab} the element's jab, {grow} what fire's strike grows into, {what} and {thing} the element's words below.",
   "_doc": "lessons: in order; each {id, title, dummy (stand | throw: what the practice dummy does through it), slow (the dummy throws more slowly through it: slow_every_s between throws, its shots at slow_speed: a beginner's time to read and answer them), throws (per element: the dummy's throw through it instead of its strike, when the move exists), schemes (only under these; all when missing), elements (only for these; all when missing), per_element (its progress kept per element: its words differ), role (the move it teaches: jab, strike, push, dash, wall, heal, guard; RingLessons.role_move), by: {scheme or '*': {line, do}}}. do: walk (walk_m on foot), jab (a cast from the left button), cast (an aim cast of the role's move), quick (a cast from the left button after the bind key), guard (a guard of yours took one of its throws), return (earth: a stone caught, then thrown back), jump (a jump off the deck), knocked (the dummy pushed back a zone), out (the dummy into the water).",
   "walk_m": 3.0,
@@ -38,7 +38,8 @@
     "menu_line_new": "a card at a time, each done by doing it: %d lessons for %s with the %s controls",
     "menu_line_resume": "resume at %d of %d: %s",
     "menu_line_done": "all %d done with the %s controls: from the start again",
-    "panel_line": "Lessons: the dummy stands while you learn your buttons, then throws at you, slowly, so you can guard on the beat. Each card is done by doing it; Enter skips one; your place is kept."
+    "panel_line": "Lessons: the dummy stands while you learn your buttons, then throws at you, slowly, so you can guard on the beat. Each card is done by doing it; Enter skips one; your place is kept.",
+    "hint_kicker": "A HINT"
   },
   "elements": {
     "earth": {
@@ -203,6 +204,12 @@
           "line": "It throws {thing} now, slowly.  [bend_guard] just before one hits: {name}.  On the beat {what}",
           "do": "guard"
         }
+      },
+      "stock_by": {
+        "*": {
+          "line": "[bend_guard]: up as soon as it's ready, and it stays while you hold it.  Tap a direction to roll.  On the beat, nothing gets through",
+          "do": "guard"
+        }
       }
     },
     {
@@ -218,6 +225,12 @@
       "by": {
         "*": {
           "line": "It throws stones now, slowly.  [bend_guard] just before one hits: {name}.  [bend_guard] again: throw it back",
+          "do": "return"
+        }
+      },
+      "stock_by": {
+        "*": {
+          "line": "[bend_guard]: up as soon as it's ready, and it stays while you hold it.  Just before a stone hits: caught.  [bend_guard] again: throw it back",
           "do": "return"
         }
       }
@@ -279,7 +292,10 @@
           "line": "Knock the dummy back: a hard hit pushes it back a zone at a time",
           "do": "knocked"
         }
-      }
+      },
+      "rules": [
+        "classic"
+      ]
     },
     {
       "id": "water",
@@ -289,6 +305,156 @@
         "*": {
           "line": "Knock it off the open end into the water: that takes a round",
           "do": "out"
+        }
+      },
+      "rules": [
+        "classic"
+      ]
+    },
+    {
+      "id": "pct",
+      "title": "The number",
+      "dummy": "stand",
+      "rules": [
+        "stock"
+      ],
+      "dummy_pct": 0,
+      "do_pct": 40,
+      "by": {
+        "*": {
+          "line": "Every hit raises the number.  The higher it is, the farther you fly",
+          "do": "pct"
+        }
+      }
+    },
+    {
+      "id": "out",
+      "title": "Out",
+      "dummy": "stand",
+      "rules": [
+        "stock"
+      ],
+      "dummy_pct": 110,
+      "place": "dummy_near_end",
+      "place_m": 6.0,
+      "by": {
+        "*": {
+          "line": "Only the water puts you out",
+          "do": "out"
+        }
+      }
+    },
+    {
+      "id": "jumps",
+      "title": "Jumps",
+      "dummy": "stand",
+      "rules": [
+        "stock"
+      ],
+      "by": {
+        "*": {
+          "line": "[jump] jumps.  [jump] again in the air",
+          "do": "double_jump"
+        }
+      }
+    },
+    {
+      "id": "dodge",
+      "title": "Dodge",
+      "dummy": "stand",
+      "rules": [
+        "stock"
+      ],
+      "by": {
+        "*": {
+          "line": "[weapon_3] in the air dodges",
+          "do": "air_dodge"
+        }
+      }
+    },
+    {
+      "id": "back",
+      "title": "Back",
+      "dummy": "stand",
+      "rules": [
+        "stock"
+      ],
+      "place": "player_off",
+      "place_m": 4.0,
+      "place_below_m": 0.5,
+      "by": {
+        "*": {
+          "line": "Look at the deck, then [jump], [jump], [jump]",
+          "do": "back"
+        }
+      }
+    },
+    {
+      "id": "edge",
+      "title": "The edge",
+      "dummy": "stand",
+      "rules": [
+        "stock"
+      ],
+      "place": "player_off",
+      "place_m": 0.4,
+      "place_below_m": 0.0,
+      "by": {
+        "*": {
+          "line": "[move_forward] climbs, [jump] jumps, [bend_guard] rolls in, a click attacks",
+          "do": "edge"
+        }
+      }
+    },
+    {
+      "id": "string",
+      "title": "A string",
+      "dummy": "stand",
+      "rules": [
+        "stock"
+      ],
+      "more": true,
+      "per_element": true,
+      "dummy_pct": 0,
+      "element_lines": {
+        "earth": "Click on him three times: up he goes, and you keep a stone.  Then [bend_guard]: throw it"
+      },
+      "by": {
+        "*": {
+          "line": "Click on him three times: up he goes.  Then right-click your [weapon_1]",
+          "do": "string"
+        }
+      }
+    },
+    {
+      "id": "steer",
+      "title": "Steer",
+      "dummy": "throw",
+      "rules": [
+        "stock"
+      ],
+      "more": true,
+      "player_pct": 100,
+      "by": {
+        "*": {
+          "line": "Thrown?  Hold left or right: you curve",
+          "do": "steer"
+        }
+      }
+    },
+    {
+      "id": "keep_off",
+      "title": "Keep him off",
+      "dummy": "recover",
+      "rules": [
+        "stock"
+      ],
+      "more": true,
+      "dummy_pct": 90,
+      "by": {
+        "*": {
+          "line": "Hit him while he climbs back.  Not while he's safe",
+          "do": "keep_off"
         }
       }
     }
@@ -324,6 +490,16 @@
         "line": "[bend_guard]: guard, on the beat",
         "uses": [
           "bend_guard"
+        ]
+      },
+      {
+        "line": "[jump] twice  ·  [weapon_3] in the air",
+        "uses": [
+          "jump",
+          "weapon_3"
+        ],
+        "rules": [
+          "stock"
         ]
       },
       {
@@ -367,6 +543,16 @@
         ]
       },
       {
+        "line": "[jump] twice  ·  [weapon_3] in the air",
+        "uses": [
+          "jump",
+          "weapon_3"
+        ],
+        "rules": [
+          "stock"
+        ]
+      },
+      {
         "line": "Fire along the floor? [jump]",
         "uses": [
           "jump"
@@ -396,6 +582,16 @@
         "line": "[bend_guard]: guard, on the beat",
         "uses": [
           "bend_guard"
+        ]
+      },
+      {
+        "line": "[jump] twice  ·  [weapon_3] in the air",
+        "uses": [
+          "jump",
+          "weapon_3"
+        ],
+        "rules": [
+          "stock"
         ]
       },
       {
@@ -434,6 +630,16 @@
         ]
       },
       {
+        "line": "[jump] twice  ·  [weapon_3] in the air",
+        "uses": [
+          "jump",
+          "weapon_3"
+        ],
+        "rules": [
+          "stock"
+        ]
+      },
+      {
         "line": "Fire along the floor? [jump]",
         "uses": [
           "jump"
@@ -442,5 +648,30 @@
     ]
   },
   "slow_every_s": 5.0,
-  "slow_speed": 0.6
+  "slow_speed": 0.6,
+  "_doc_r3": "Round 3, the % ring (smash_r3 spec §11.2; only under its rules, RingRules.stock_on()): rules (a lesson only under these rule sets: 'stock' the % ring, 'classic' the zones; all when missing), stock_by (its line and do under the % ring's rules, over by), element_lines (per element, over the line: the String card), dummy_pct and player_pct (each side's % as the card begins, RingRules.reset_pct), place (player_off: you put place_m out from an end and place_below_m under the lip, facing the deck; dummy_near_end: the dummy place_m in from its end), more (the three 'more' cards, after the six), do_pct (pct's goal). New do's: pct (the dummy's % at do_pct or more), out (the dummy into the water), double_jump, air_dodge (RingMoves.moved: double_jump, dodge in the air), back (you on the deck or hanging again), edge (any edge option: climb, ledge_jump, ledge_roll, ledge_attack), string (string_n true hits on the dummy: RingRules.string_hits), steer (a launch of yours steered by steer_frac of the most or more: RingRules.last_steer_deg), keep_off (the dummy, coming back from off the deck, into the water). The hint queue (hint_queue): at most one hint every gap_s, those in pre_empt always shown at once (they replace one up), those in after_fall only after the first fall; each once a match; shown show_s on the card's place.",
+  "string_n": 3,
+  "steer_frac": 0.5,
+  "hint_queue": {
+    "_doc": "One hint queue in a % ring match (RingLessons.HintQueue): at most one every gap_s; pre_empt ones at once; after_fall ones only after the first fall; each once a match; thrown_mps: the throw that brings the steer hint.",
+    "gap_s": 20.0,
+    "show_s": 6.0,
+    "thrown_mps": 10.0,
+    "pre_empt": [
+      "edge",
+      "recover"
+    ],
+    "after_fall": [
+      "stale"
+    ],
+    "stale_n": 2,
+    "kicker": "A HINT",
+    "lines": {
+      "edge": "Fall off and you grab the edge.  [move_forward] climbs, [jump] jumps, [bend_guard] rolls in, a click attacks",
+      "recover": "Off the deck: [jump], [jump], [jump].  Up, up, and your element lifts you",
+      "steer": "Thrown?  Hold left or right: you curve",
+      "break_fall": "[bend_guard] just as you land: back on your feet",
+      "stale": "The same move again and again hits softer: mix them"
+    }
+  }
 }

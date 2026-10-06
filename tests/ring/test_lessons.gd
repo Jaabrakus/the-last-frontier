@@ -23,6 +23,14 @@ extends SceneTree
 ##               keys; each fades once its key is used, all gone turns them off (kept); wanted only for a Quick match with
 ##               them on
 ##   words       no show word in any line shown, the menu's lines, the hints; nothing put on the dummy (its children as before)
+##   ROUND 3     the % ring's cards (smash_r3 spec §11.2) with the gate on by a stand-in RingRules (tests/npc/r3_standins.gd;
+##               the signals PERCENT's RingRules and MOVE's RingMoves send, sent by the test): the zones' cards gone, the six
+##               core cards and the three more in order, each done by its own doing (the dummy's % at 40, it into the water,
+##               a double jump, an air dodge, back on the edge, an edge option, a 3-hit string, a launch steered, it kept off),
+##               each card's % and place set as it begins; one skipped by Enter and kept as skipped, the run resumed past it;
+##               the stock guard card's line; the String card's earth line (E throws the stone) and the others' (right-click
+##               your 1); the hint queue: one hint per gap_s, the edge hint pre-empts, the stale hint only after a fall
+##               (hint_queue_ok)
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_lessons.gd
 ## The last line "LESSONS TEST PASSED" or "LESSONS TEST FAILED"; exit 0 only on a pass; a watchdog quits with 2.
 
@@ -51,6 +59,15 @@ var seen_lines: Array = []
 var stood_in: Array = []
 var _home := Vector3.INF
 var _re := RegEx.create_from_string("(?i)\\b(?:%s)\\b" % "|".join(PackedStringArray(WORDS)))
+
+
+## FirstHints' rows for `sch` under the rule set now (a row with "rules" only under those: round 3).
+func _hint_rows(sch: String) -> Array:
+	var out: Array = []
+	for h: Dictionary in RingLessons.data()["hints"][sch]:
+		if not h.has("rules") or RingLessons.rules_now() in (h.rules as Array):
+			out.append(h)
+	return out
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -193,6 +210,7 @@ func _run() -> void:
 	await _schemes()
 	await _resume()
 	await _hints()
+	await _stock()
 	_words()
 	var bad: Array = []
 	for n in ls.find_children("*", "", true, false):
@@ -200,6 +218,127 @@ func _run() -> void:
 			bad.append(n.name)
 	_expect(bad.is_empty() and ls.card.get_parent() == ls, "the lessons draw on a screen layer only, nothing in the ring (%s)" % [bad])
 	_end()
+
+
+# ---------------------------------------------------------------- round 3: the % ring's cards and the hint queue
+func _stock() -> void:
+	const Standins := preload("res://tests/npc/r3_standins.gd")
+	# the hint queue, by itself
+	var q := RingLessons.HintQueue.new(RingLessons.data().get("hint_queue", {}))
+	q.push("steer")
+	var a := q.next(0.0)
+	q.push("break_fall")
+	var b := q.next(5.0)
+	var c2 := q.next(20.5)
+	q.push("stale")
+	q.push("edge")
+	var d := q.next(22.0)
+	var e := q.next(60.0)
+	q.falls = 1
+	var f := q.next(60.0)
+	var ok := a == "steer" and b == "" and c2 == "break_fall" and d == "edge" and e == "" and f == "stale"
+	print("METRIC hint_queue_ok=%s (%s)" % [ok, q.shown])
+	_expect(ok, "the hint queue: steer, nothing 5 s later, break_fall at 20.5 s, edge pre-empts at 22 s, stale only after a fall (%s)" % [q.shown])
+	# the cards, under the % ring's rules
+	var rules := Standins.install_rules()
+	_expect(RingLessons.rules_now() == "stock", "round 3: the % ring's rules (a stand-in RingRules)")
+	var sch := MatchSetup.scheme()
+	var el := ls.element
+	var ids: Array = []
+	for l: Dictionary in RingLessons.lessons_for(sch, el):
+		ids.append(String(l.id))
+	var core := ["pct", "out", "jumps", "dodge", "back", "edge", "string", "steer", "keep_off"]
+	var at_core := ids.find("pct")
+	_expect(not "zones" in ids and not "water" in ids and at_core >= 0 and ids.slice(at_core, at_core + 9) == core,
+			"the zones' cards gone, the nine in order (%s)" % [ids])
+	var guard_l := {}
+	var str_l := {}
+	for l: Dictionary in RingLessons.data().lessons:
+		if String(l.id) == "guard":
+			guard_l = l
+		if String(l.id) == "string":
+			str_l = l
+	_expect(String(RingLessons.by_of(guard_l, sch).line).begins_with("[bend_guard]: up as soon as it's ready, and it stays while you hold it"),
+			"the stock guard card: \"%s\"" % RingLessons.by_of(guard_l, sch).line)
+	var keep_el := ls.element
+	ls.element = "earth"
+	var earth_line := ls.line_spec(str_l)
+	ls.element = "water"
+	var water_line := ls.line_spec(str_l)
+	ls.element = keep_el
+	_expect(earth_line.contains("you keep a stone") and earth_line.contains("[bend_guard]: throw it")
+			and water_line.contains("right-click your [weapon_1]") and not water_line.contains("stone"),
+			"the String card: earth \"%s\", water \"%s\"" % [earth_line, water_line])
+	# the run under the % rules: a fake RingMoves on the player for its moved(kind)
+	var fm := Standins.FakeMoves.put(p, mode.ring, {"pos": p.global_position, "element": el})
+	fm.on_deck = true
+	# (round 2's cards done already under this scheme: the run resumes at the first of the nine)
+	for l: Dictionary in RingLessons.lessons_for(sch, el):
+		if not String(l.id) in core:
+			RingLessons.mark(sch, el, l, "done")
+	ls.start()
+	await _ticks(3)
+	_expect(ls.current_id() == "pct", "the run resumes at the first new card (%s)" % ls.current_id())
+	var fid := foe().get_instance_id()
+	var pid := p.get_instance_id()
+	var steps := {
+		"pct": func() -> void: rules.pct_changed.emit(foe(), 45.0, 5.0),
+		"out": func() -> void: rules.ko.emit(foe(), p, 118.0, "stone_form/spike", 2),
+		"jumps": func() -> void: fm.moved.emit("double_jump"),
+		"dodge": func() -> void: fm.moved.emit("dodge"),
+		"back": func() -> void: fm.moved.emit("grab"),
+		"edge": func() -> void: fm.moved.emit("climb"),
+		"steer": _steer_emit.bind(rules, pid),
+		"keep_off": func() -> void: rules.ko.emit(foe(), p, 95.0, "air_blast/slice", 2),
+	}
+	var done: Array = []
+	for id: String in core:
+		await _until(func() -> bool: return ls.current_id() == id, 3.0)
+		if ls.current_id() != id:
+			_expect(false, "the card %s up (%s)" % [id, ls.current_id()])
+			break
+		await _ticks(2)
+		match id:
+			"out":
+				_expect([fid, 110.0] in rules.resets, "Out: the dummy at 110%% as it begins (%s)" % [rules.resets])
+			"back":
+				var out_m := float(mode.ring.nearest_lip(p.global_position).out_m)
+				_expect(out_m > 3.0 and out_m < 5.0, "Back: you put 4 m out (%.1f)" % out_m)
+				fm.s.p = NpcRingMind.standin_state({"pos": p.global_position}, fm.geo).p
+			"string":
+				# (skipped by Enter, kept as skipped; the run goes on past it)
+				await _key(KEY_ENTER)
+				await _ticks(3)
+				_expect(ls.skipped.has("string") and RingLessons.state_of(ls.scheme, ls.element, str_l) == "skipped",
+						"the String card skipped by Enter, kept as skipped")
+				continue
+		(steps[id] as Callable).call()
+		var t := await _until(func() -> bool: return ls.completed.has(id), 2.0)
+		if t < INF:
+			done.append(id)
+		_expect(t < INF, "%s: done by its own doing" % id)
+	_expect(done.size() == 8, "eight cards done, one skipped (%s)" % [done])
+	# the String card again, done by a 3-hit true string
+	ls.start()
+	await _ticks(3)
+	var at_str := ls.list.find(str_l)
+	ls.at = at_str
+	ls._begin()
+	await _ticks(2)
+	rules.f_string[fid] = 3
+	rules.launched.emit(foe(), Vector3(3.0, 2.0, 0.0), 0.5, p, "rock_jab/pebbles")
+	var ts := await _until(func() -> bool: return ls.completed.has("string"), 2.0)
+	_expect(ts < INF, "the String card: done by 3 true hits")
+	p.remove_child(fm)
+	fm.free()
+	Standins.uninstall(rules)
+	await _ticks(2)
+
+
+## Steer's doing: a launch of the player's, steered 9° (more than half of the most, 15°).
+func _steer_emit(rules: Object, pid: int) -> void:
+	(rules.get(&"f_steer") as Dictionary)[pid] = 9.0
+	(rules as RingRules).launched.emit(p, Vector3(12.0, 5.0, 0.0), 0.6, foe(), "water_whip/whip")
 
 
 func _menu() -> void:
@@ -609,7 +748,7 @@ func _hints() -> void:
 	MatchSetup.quick = true
 	var h := FirstHints.install(mode)
 	await _ticks(3)
-	var want: Array = RingLessons.data()["hints"]["keys"]
+	var want: Array = _hint_rows("keys")
 	_expect(h != null and h.rows.size() == want.size() and h.rows_left() == want.size() and h.get_parent() == mode,
 			"a Quick match: the hints up, %d rows for the keys scheme" % (h.rows.size() if h != null else -1))
 	if h == null:
@@ -633,7 +772,7 @@ func _hints() -> void:
 	_expect(h.rows_left() == n0 - 1 and not ((h.rows[3].box as Control).visible), "the guard used: its row faded (%d left)" % h.rows_left())
 	MatchSetup.set_scheme("direction")
 	await _ticks(3)
-	_expect(h.rows.size() == (RingLessons.data()["hints"]["direction"] as Array).size() and h.rows_left() == h.rows.size(),
+	_expect(h.rows.size() == _hint_rows("direction").size() and h.rows_left() == h.rows.size(),
 			"the scheme changed: the direction scheme's rows")
 	MatchSetup.set_scheme("keys")
 	await _ticks(3)

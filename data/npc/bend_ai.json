@@ -185,6 +185,131 @@
       "guard_reaction_s": 0.18
     }
   },
+  "pct": {
+    "_doc": "Round 3, the % ring (smash_r3 spec §9; NpcRingMind, only while RingRules.stock_on()): the bot moves only by its pad (NpcPad, the player's own intent), picks a state each tick from what both bodies show (NEUTRAL, PRESSURE, EDGEGUARD, LEDGETRAP, REELING, RECOVER, LEDGE, RESPAWN; held state_hold_s unless a hit lands), and runs round 2's chooser only in NEUTRAL and PRESSURE. Every number by preset below; the shared ones here. It reads only %, lives, positions, poses and visible wind-ups, never inputs; reaction_s stays the preset's.",
+    "state_hold_s": 0.2,
+    "recover_replan_s": 0.1,
+    "recover_dt": 0.0333,
+    "recover_horizon_s": 2.5,
+    "_ko": "the KO read (RingPredict through the rules' own launch): a killing option x ko_bonus; normal needs ko_margin_m more (the foe read that much further in), hard the foe's best steering (di_deg each way); x far_finisher_mult when cast from past far_finisher_m (it walks in to finish); below build_pct x build_mult on the options with the best % per lock second (the top build_top of them); hard keeps a finisher fresh (x fresh_mult on a KO move staled fresh_stale_n or more times while the foe is under fresh_below_pct); the up-launchers (uplaunch) never get the KO bonus",
+    "far_finisher_m": 15.0,
+    "far_finisher_mult": 0.6,
+    "build_pct": 60.0,
+    "build_mult": 1.3,
+    "build_top": 2,
+    "fresh_stale_n": 2,
+    "fresh_below_pct": 80.0,
+    "fresh_mult": 0.5,
+    "di_deg": 15.0,
+    "uplaunch": ["earth_shove/column", "wave/spout", "fire_kick/high_kick"],
+    "_strings": "true strings (spec §6.6, §6.9; lead_combos.out v2): after `lead` lands, `next` begins only while RingRules.hitstun_left(foe) >= its lock + its flight - 1/60 (hitstun_left counts the 0.6 s escape). lead 'jab' is the element's jab; 'pop' the jab string's third hit (the Pop); next 'guard' is E (earth: the Pop's stone, or a caught stone, thrown). holding: only with a stone in hand. read: a read, not a string (it ends one at read_end's chance). Never the same move twice in a row, jabs aside (the step and the Pop are the jab string). jab_step_s mirrors AIR's jab step (spec §6.4: the next jab ready that long after the last left the hand once it hit); AIR's moves.json jab_step_s rules when present.",
+    "jab_step_s": 0.15,
+    "strings": {
+      "earth": [
+        {"lead": "pop", "next": "guard", "pct": [0, 999], "holding": true},
+        {"lead": "pop", "next": "earth_shove/push", "pct": [0, 999], "holding": true},
+        {"lead": "earth_shove/column", "next": "rock_jab/pebbles", "pct": [0, 30]},
+        {"lead": "earth_shove/column", "next": "earth_shove/push", "pct": [0, 30], "holding": true},
+        {"lead": "stone_form/spike", "next": "guard", "pct": [25, 999], "holding": true},
+        {"lead": "earth_shove/column", "next": "stone_form/spike", "pct": [0, 999], "read": true}
+      ],
+      "water": [
+        {"lead": "pop", "next": "water_whip/whip", "pct": [0, 999]},
+        {"lead": "wave/spout", "next": "water_whip/whip", "pct": [0, 40]},
+        {"lead": "wave/spout", "next": "ice/spear", "pct": [0, 40]},
+        {"lead": "water_whip/whip", "next": "ice/spear", "pct": [0, 999], "read": true},
+        {"lead": "water_whip/whip", "next": "wave/push", "pct": [0, 999], "read": true}
+      ],
+      "fire": [
+        {"lead": "pop", "next": "fire_blast/punch", "pct": [0, 999]},
+        {"lead": "fire_kick/kick", "next": "fire_blast/punch", "pct": [0, 40]},
+        {"lead": "fire_kick/high_kick", "next": "fire_blast/punch", "pct": [0, 40]},
+        {"lead": "jab", "next": "fire_blast/punch", "pct": [0, 30]}
+      ],
+      "air": [
+        {"lead": "pop", "next": "air_blast/slice", "pct": [0, 999]},
+        {"lead": "pop", "next": "air_gust/gust", "pct": [0, 999]},
+        {"lead": "air_gust/pull", "next": "air_palm/palm", "pct": [0, 40]},
+        {"lead": "air_gust/gust", "next": "air_blast/slice", "pct": [0, 40]},
+        {"lead": "air_blast/ball", "next": "air_gust/gust", "pct": [0, 999], "read": true}
+      ]
+    },
+    "_victim": "steering (di [chance, right way]) is set once at the launch through pad.di and read by the rules at 0.1 s; at its own % of survive_pct or more it keeps, of -di_deg, 0 and +di_deg, the one with the longest way to the water (RingPredict.flight), below that it steers across the hitter's line (away from the follow-up); the wrong way is the other side. break_out: the chance it presses jump (a fresh press, never a buffered one) the frame RingRules.can_escape says it may; tech: the chance it presses E tech_lead_s before it meets the deck while tumbling (a direction with it half the time). Above high_pct of its own: reaction_s + high_react_s and it keeps centre_pull x centre_pull_m further from its end.",
+    "survive_pct": 90.0,
+    "tech_lead_s": 0.12,
+    "high_pct": 120.0,
+    "high_react_s": 0.15,
+    "centre_pull_m": 6.0,
+    "_recover": "off the deck and free: RingMoves.simulate over the six plans (1 drift, 2 a late double jump, 3 double jump now, 4 double jump then the Rise at the edge, 5 the same aimed aim_high_m over the lip, 6 an air dodge toward the lip first) toward the nearest open lip, every recover_replan_s; the first in its order that reaches the grab box or the deck runs (none: the desperate line, everything toward the lip). order 45: 4 or 5 mixed by high_share. err_deg: the Rise's aim error; late_s: the margin taken off a late double jump's latest moment; dodge: never | near (a foe within dodge_near_m) | threat (to slip a seen threat). Never a 4th grab without the deck (grab_limit).",
+    "aim_high_m": 1.0,
+    "dodge_near_m": 4.0,
+    "grab_limit": 3,
+    "_edge": "on the edge (LEDGE): easy climbs after its after_s; normal picks climb, jump, roll, attack by weights after a wait in wait_s; hard reads the foe: within ledge_near_m a roll (when it lands behind him) or the attack, within ledge_mid_m a jump, farther a climb at once. Every bot acts before its first-grab safety ends (act_margin_s) and before hang_s. Hard counts the player's edge options and covers his favourite (LEDGETRAP).",
+    "ledge_near_m": 2.0,
+    "ledge_mid_m": 5.0,
+    "act_margin_s": 0.1,
+    "hang_s": 4.0,
+    "roll_in_m": 3.0,
+    "_keep_off": "keeping him off (EDGEGUARD, the foe off the deck): it shoots from inside_m or more inside the lip at the predicted landing point; hard waits wait_back_m from the lip with a lock filled, released as the foe's first-grab safety runs out (RingMoves.ledge_safe_left), listens for the Rise's tell, and chases off the deck only if its own plan from the intercept point succeeds with a jump fewer and the foe is at chase_min_pct or more. Never a hit into a safety (RingRules.safe_until, RingMoves.intangible). No wall within wall_lip_m of a lip while the foe is off the deck.",
+    "inside_m": 1.0,
+    "wait_back_m": [1.5, 2.5],
+    "chase_min_pct": 60.0,
+    "wall_lip_m": 3.5,
+    "_heal": "Patch (heal.move) only with RingRules.fresh_pct >= min_fresh, standing still (under still_mps), the foe min_dist_m or more away and not winding up at it, and only when RingRules.heal_allowed (never while the foe is out)",
+    "heal": {"move": "patch/patch", "min_fresh": 6.0, "min_dist_m": 12.0, "still_mps": 0.3},
+    "_casting": "the bot's casts under the player's round-3 rules (AIR's numbers mirrored until AIR's data has them): key 3 on the deck goes no sooner than key3_min_s after its press; in the air 3 is the air dodge (pad dodge), keys 4 and 5 wait for the deck, and a key-2 first move started in the air is the Slam (cast only once AIR's caster reads air_form). A lock held full waiting for a safety to end (never a hit into one) is let go after hold_max_s. The lock waits (frozen) while the bot is in hitstun; lightning's charge still breaks.",
+    "key3_min_s": 0.22,
+    "hold_max_s": 2.5,
+    "_standin": "THE STAND-IN MOVER (NpcRingMind.standin_step / standin_sim): the recovery planner's look-ahead and the tests' mover until MOVE's RingMoves.simulate and RingMoves.pre land (spec §4-§5's numbers mirrored: one gravity, the jump, the double jump keeping half the carry, the drift, the air dodge, each element's Rise, the grab box, three grabs then the deck, the water and the curtain). Never read once RingMoves.simulate answers.",
+    "standin": {
+      "gravity": 20.0, "max_fall": 11.0, "max_fall_air": 8.0, "carry_decay": 8.0, "jump_v": 8.94,
+      "double_v": {"earth": 7.48, "water": 8.0, "fire": 8.0, "air": 8.72},
+      "drift": {"earth": [3.5, 12.0], "water": [4.0, 16.0], "fire": [4.5, 20.0], "air": [4.5, 16.0]},
+      "helpless_drift": 0.6,
+      "dodge_m": 3.2, "dodge_s": 0.22,
+      "rise": {
+        "earth": {"startup_s": 0.2, "m": 5.5, "s": 0.45, "lean_deg": 20.0, "drift": 0.3, "end_vy": 3.0, "hover": true},
+        "water": {"startup_s": 0.12, "m": 4.5, "s": 0.55, "lean_deg": 0.0, "drift": 1.0, "end_vy": 0.0},
+        "fire": {"startup_s": 0.25, "m": 7.5, "s": 0.35, "aim": true, "pitch_min_deg": 20.0, "drift": 0.0, "end_vy": 0.0, "hover": true},
+        "air": {"startup_s": 0.05, "m": 3.5, "s": 0.45, "lean_deg": 0.0, "drift": 1.0, "end_vy": 0.0, "glide_mps": 3.0}
+      },
+      "rise_repress_s": 0.2,
+      "grab": {"head_m": 1.6, "in_m": 0.3, "out_m": 0.9, "lo_m": -0.5, "hi_m": 0.6, "vy_max": 1.0, "scramble_m": 2.0},
+      "water_y": -6.0, "curtain_m": 10.0
+    },
+    "presets": {
+      "easy": {
+        "ko_read": "never", "ko_bonus": 1.0, "ko_margin_m": 0.0, "fresh_finisher": false,
+        "string_chance": 0.25, "string_max": 2, "read_end": 0.0,
+        "di": [0.0, 0.0], "break_out": 0.0, "tech": 0.0,
+        "recover": {"order": [3, 4, 2], "err_deg": 15.0, "late_s": 0.0, "dodge": "never", "high_share": 0.0},
+        "ledge": {"how": "climb", "after_s": 0.6},
+        "edgeguard": 0.0, "guard_edge": false, "chase": false,
+        "air_scatter_mult": 2.0, "air_lead": 0.2, "air_lead_gravity": false,
+        "centre_pull": 0.0, "spout_leave_s": 0.5
+      },
+      "normal": {
+        "ko_read": "margin", "ko_bonus": 2.0, "ko_margin_m": 1.5, "fresh_finisher": false,
+        "string_chance": 0.55, "string_max": 3, "read_end": 0.3,
+        "di": [0.5, 0.7], "break_out": 0.5, "tech": 0.3,
+        "recover": {"order": [2, 4, 6], "err_deg": 4.0, "late_s": 0.25, "dodge": "near", "high_share": 0.0},
+        "ledge": {"how": "weighted", "wait_s": [0.2, 1.0], "weights": {"climb": 0.4, "jump": 0.3, "roll": 0.2, "attack": 0.1}},
+        "edgeguard": 0.5, "guard_edge": false, "chase": false,
+        "air_scatter_mult": 1.5, "air_lead": 0.5, "air_lead_gravity": false,
+        "centre_pull": 0.5, "spout_leave_s": 1.0
+      },
+      "hard": {
+        "ko_read": "worst", "ko_bonus": 3.5, "ko_margin_m": 0.5, "fresh_finisher": true,
+        "string_chance": 0.85, "string_max": 4, "read_end": 0.5,
+        "di": [0.9, 0.95], "break_out": 0.8, "tech": 0.7,
+        "recover": {"order": [2, 45, 6], "err_deg": 0.0, "late_s": 0.1, "dodge": "threat", "high_share": 0.4},
+        "ledge": {"how": "read"},
+        "edgeguard": 0.85, "guard_edge": true, "chase": true,
+        "air_scatter_mult": 1.2, "air_lead": 0.8, "air_lead_gravity": true,
+        "centre_pull": 1.0, "spout_leave_s": -1.0
+      }
+    }
+  },
   "jump_mps": 6.5,
   "jump_lead_s": 0.3
 }

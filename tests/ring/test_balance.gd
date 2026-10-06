@@ -15,6 +15,10 @@ extends SceneTree
 ## took 0.46 to 0.54 of its rounds (0.46 to 0.56 of its matches) over four seeds of 3 passes (the review's
 ## r1_balance_after.md).
 ## The full table is the soak's (tests/ring/test_ring_soak.gd, one pairing a run, several seeds): this is the quick check.
+## ROUND 3, the % ring (rules=stock; smash_r3 spec §12): lives instead of rounds: each fall (RingRules.ko) credited to the
+## knocker's element, both elements' decided; no element takes more than MAX_LIFE_SHARE (0.65) of the lives it decided
+## against the others; printed "BALANCE <el> lives <won>/<decided> matches <won>/<played>". When the ring plays another rule
+## set (PERCENT's RingMode not taking MatchSetup.rule_set() yet) the rounds' gate runs as before and the lives say n/a.
 ## In-test watchdog LIMIT_S real seconds, by the wall clock (under the runner's GODOT_TIMEOUT 420). Last line "BALANCE PASSED"
 ## or "BALANCE FAILED".
 
@@ -22,6 +26,7 @@ const NAME := "BALANCE"
 const LIMIT_S := 400.0
 const PARK := Vector3(0.0, 60.0, 400.0)
 const MAX_SHARE := 0.75
+const MAX_LIFE_SHARE := 0.65
 const ELS := ["earth", "water", "fire", "air"]
 ## Its own settings file (GameSettings.path), so a kept setup never leaks in or out.
 const OWN_CFG := "user://test_balance.cfg"
@@ -40,6 +45,8 @@ var _game_t := 0.0
 var _t0 := 0
 ## Per element: rounds won and decided (a drawn round decides nothing), matches won and played; cross-element only.
 var tally := {}
+## Round 3: the ring plays the stock rules (lives).
+var stock := false
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -62,7 +69,7 @@ func _initialize() -> void:
 		elif kv.begins_with("seed=") and kv.get_slice("=", 1).is_valid_int():
 			_seed = int(kv.get_slice("=", 1)) + 1800
 	for el: String in ELS:
-		tally[el] = {"won": 0, "decided": 0, "m_won": 0, "m_played": 0}
+		tally[el] = {"won": 0, "decided": 0, "m_won": 0, "m_played": 0, "l_won": 0, "l_decided": 0}
 	MatchSetup._aim_help = "light"              # (no player aims here; pinned so a kept setting never matters)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	GameSettings.path = OWN_CFG
@@ -111,6 +118,11 @@ func _run() -> void:
 		return _end()
 	mode.phase_changed.connect(_on_phase)
 	mode.match_over.connect(func(_w: int) -> void: _done = true)
+	stock = RingRules.stock_on()
+	if stock:
+		RingRules.current().ko.connect(_on_ko)
+	elif "rules=stock" in OS.get_cmdline_user_args():
+		print("  (rules=stock asked, the ring plays the %s rules: the lives are n/a, the rounds gated)" % RingRules.current().rule_set)
 	var pairs: Array = []
 	for p in passes:
 		for a: String in ELS:
@@ -143,9 +155,28 @@ func _run() -> void:
 		var t: Dictionary = tally[el]
 		var rs := float(t.won) / float(maxi(int(t.decided), 1))
 		var ms := float(t.m_won) / float(maxi(int(t.m_played), 1))
-		_expect(rs <= MAX_SHARE, "%s takes at most %.0f%% of its rounds against the others (rounds %.2f; matches %.2f)"
-				% [el, MAX_SHARE * 100.0, rs, ms])
+		if stock:
+			var ls := float(t.l_won) / float(maxi(int(t.l_decided), 1))
+			_expect(ls <= MAX_LIFE_SHARE, "%s takes at most %.0f%% of the lives it decided against the others (lives %.2f; matches %.2f)"
+					% [el, MAX_LIFE_SHARE * 100.0, ls, ms])
+		else:
+			_expect(rs <= MAX_SHARE, "%s takes at most %.0f%% of its rounds against the others (rounds %.2f; matches %.2f)"
+					% [el, MAX_SHARE * 100.0, rs, ms])
 	_end()
+
+
+## Round 3: a fall credited to the knocker's element (a fall with no knocker of the other side decides nothing).
+func _on_ko(b: Node3D, by: Node, _pct: float, _tag: String, _left: int) -> void:
+	var vs := mode.side_of(b)
+	var ks := mode.side_of(by) if by != null and is_instance_valid(by) else -1
+	if vs < 0 or ks < 0 or vs == ks:
+		return
+	var sides := [mode.element, mode.foe_element]
+	if sides[0] == sides[1]:
+		return
+	tally[sides[ks]]["l_won"] = int(tally[sides[ks]]["l_won"]) + 1
+	for el: String in sides:
+		tally[el]["l_decided"] = int(tally[el]["l_decided"]) + 1
 
 
 ## The match just ended (mode.history: a line per round) counted for both elements.
@@ -176,6 +207,8 @@ func _report() -> void:
 		if t.is_empty():
 			continue
 		print("BALANCE %s rounds %d/%d matches %d/%d" % [el, int(t.won), int(t.decided), int(t.m_won), int(t.m_played)])
+		if stock:
+			print("BALANCE %s lives %d/%d matches %d/%d" % [el, int(t.l_won), int(t.l_decided), int(t.m_won), int(t.m_played)])
 
 
 # ---------------------------------------------------------------- spectate (the soak's)

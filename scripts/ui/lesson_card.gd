@@ -186,6 +186,16 @@ func show_finished(kicker: String, spec: String) -> void:
 	_want = 1.0
 
 
+## Round 3: a hint of the % ring's hint queue on the card's place (RingLessons.HintQueue): its kicker in gold, the line.
+func show_hint(kicker: String, spec: String) -> void:
+	done = false
+	_kicker.text = kicker
+	_kicker.add_theme_color_override("font_color", GOLD)
+	_bar.color = GOLD
+	_set_line(spec, "")
+	_want = 1.0
+
+
 func hide_card() -> void:
 	_want = 0.0
 
