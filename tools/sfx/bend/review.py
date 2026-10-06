@@ -81,7 +81,6 @@ BEFORE = [
     ("fire cast (torch lit)", "fire/torch_ignite_01.wav", 1.0),
     ("fire hit (torch thrown)", "fire/torch_toss_01.wav", 0.8),
     ("air cast (an arrow, low)", "bow/arrow_whoosh_01.wav", 0.6),
-    ("lightning cast (a musket shot)", "flintlock/musket_shot_01.wav", 1.6),
     ("steam (torch snuffed)", "fire/torch_snuff_01.wav", 1.0),
 ]
 

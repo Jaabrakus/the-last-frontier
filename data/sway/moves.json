@@ -1754,7 +1754,7 @@
     "crumble": "gather_rec_rock_depleted",
     "spike": "gather_rec_pick_rock_hard",
     "mend": "gather_rec_axe_chop",
-    "crackle": "pan_flash",
+    "crackle": "lightning_crack",
     "tear": "gather_rec_rock_split",
     "hurl": "arrow_whoosh",
     "strike": "gather_rec_pick_rock_hard",

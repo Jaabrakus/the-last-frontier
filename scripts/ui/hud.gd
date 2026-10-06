@@ -20,12 +20,12 @@ extends CanvasLayer
 ##   edges          a red heartbeat at the edges of the screen when health is low; a flash when hurt
 ##   F1             the controls (hidden; a hint at the start), F3 the debug lines
 ## ARENA MODE (set_arena(true): Tidebreak's ring, FrontierPlayer.arena): the compass and the clock, the rested row, the
-## torch and the needs are gone; the hotbar's strip gives way to the BendStrip (bottom centre: keys 1-5, both skills each,
-## the readied one bright, its variation pips, the ready line "2 · Earth Wall · column (2/3)"), the MatchBar sits top centre
-## (the round, the time, the score, your own zone and the ground each side holds: read off the match node, never a mark of
-## the other side's body), a thin water bar under the health for a water fighter, the status words (rooted, slowed,
-## anchored, winded) under it, and F1 shows ARENA_HELP. Nothing is ever drawn on or over the opponent (the owner: no target
-## cues of any kind); the aim dot shows while a move is readied.
+## torch and the needs are gone; the hotbar's strip gives way to the BendStrip (bottom centre: the seven chips LMB JAB,
+## E GUARD and keys 1-5 STRIKE PUSH DASH WALL HEAL, the readied one lit, each with its move's plain name and its "tap twice"
+## move, one help line under the row), the MatchBar sits top centre (the round, the time, the score, your own zone and the
+## ground each side holds: read off the match node, never a mark of the other side's body), the status words (rooted,
+## slowed, anchored, winded) under the health, and F1 shows ARENA_HELP (KitWords). Nothing is ever drawn on or over the
+## opponent (the owner: no target cues of any kind); the aim dot shows while a move is readied.
 ## Hooks kept: player, show_debug, on_projectile_hit(), on_target_killed() (group hit_listeners), toast().
 
 @export var color := Color(0.95, 0.92, 0.8)
