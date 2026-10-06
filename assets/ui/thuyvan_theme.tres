@@ -1,4 +1,6 @@
-[gd_resource type="Theme" load_steps=4 format=3]
+[gd_resource type="Theme" load_steps=6 format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/bevietnampro/BeVietnamPro-Medium.ttf" id="1_bvp"]
 
 [sub_resource type="SystemFont" id="SystemFont_sans"]
 font_names = PackedStringArray("Avenir Next", "Helvetica Neue", "Arial", "Segoe UI", "Noto Sans", "DejaVu Sans", "Liberation Sans", "sans-serif")
@@ -11,11 +13,15 @@ font_weight = 500
 [sub_resource type="SystemFont" id="SystemFont_mono"]
 font_names = PackedStringArray("Monaco", "Courier New", "Consolas", "DejaVu Sans Mono", "Liberation Mono", "monospace")
 
+[sub_resource type="FontVariation" id="FontVariation_sans"]
+base_font = ExtResource("1_bvp")
+fallbacks = Array[Font]([SubResource("SystemFont_sans")])
+
 [resource]
-default_font = SubResource("SystemFont_sans")
+default_font = SubResource("FontVariation_sans")
 default_font_size = 18
-Label/constants/line_spacing = 3
-RichTextLabel/constants/line_separation = 3
+Label/constants/line_spacing = 6
+RichTextLabel/constants/line_separation = 6
 TitleLabel/base_type = &"Label"
 TitleLabel/constants/line_spacing = 5
 TitleLabel/font_sizes/font_size = 28

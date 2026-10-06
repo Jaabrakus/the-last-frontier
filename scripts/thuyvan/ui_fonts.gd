@@ -4,7 +4,7 @@ extends RefCounted
 ## here must write all 134 Vietnamese letters. Three roles: serif for titles and names, sans for the HUD and menus, mono
 ## for debug lines. Each is the computer's own fonts in order (SystemFont), every macOS name in the lists checked
 ## complete by tools/fonts/font_cmap_check.py; the tails are the usual Windows and Linux names, unverified. A family
-## shipped under assets/fonts/<folder>/ (none yet: free-licence fonts wait for the owner's go-ahead) goes first, with
+## shipped under assets/fonts/<folder>/ (Be Vietnam Pro for sans, the owner's one OFL family, 2026-10-05) goes first, with
 ## the system list behind it. Nothing uses these yet (wiring is Phase 2); tests/thuyvan/test_vietnamese_glyphs.gd
 ## checks them.
 
@@ -16,14 +16,15 @@ const SANS := ["Avenir Next", "Helvetica Neue", "Arial", "Segoe UI", "Noto Sans"
 const MONO := ["Monaco", "Courier New", "Consolas", "DejaVu Sans Mono", "Liberation Mono", "monospace"]
 ## Each role's shipped family folder under assets/fonts (used only when its files are there).
 const BUNDLED_DIR := "res://assets/fonts/"
-const BUNDLED := {"serif": "notoserif", "sans": "bevietnampro", "mono": ""}
+## No serif ships (the system Baskerville writes every letter at title sizes; docs/thuyvan/fonts.md).
+const BUNDLED := {"serif": "", "sans": "bevietnampro", "mono": ""}
 ## A static family's file per weight ("<Family>-<Style>.ttf"); a variable one ("[wght]" in its name) takes any weight.
 const STYLES := {100: "Thin", 200: "ExtraLight", 300: "Light", 400: "Regular", 500: "Medium", 600: "SemiBold",
 		700: "Bold", 800: "ExtraBold", 900: "Black"}
 ## Extra line spacing per role, in ems, so stacked tone marks (Ể Ỗ Ặ) never touch the line above: the most ink outside
-## the line box among the role's macOS fonts (tools/fonts/font_proof.py; Georgia 0.14, Helvetica Neue 0.125, Monaco
-## 0.21 at 14-40 px).
-const LINE_GAP_EM := {"serif": 0.15, "sans": 0.125, "mono": 0.225}
+## the line box among the role's fonts (tools/fonts/font_proof.py; Georgia 0.14, Monaco 0.21 at 14-40 px). The sans is
+## Be Vietnam Pro's: its stacked capitals reach 0.29 em above its 1.0 em ascent (tools/thuyvan_art/fonts/font_compare.py).
+const LINE_GAP_EM := {"serif": 0.15, "sans": 0.3, "mono": 0.225}
 
 static var _cache := {}
 
@@ -69,7 +70,8 @@ static func bundled(role: String, weight := 500, italic := false) -> Font:
 	if folder.is_empty() or not DirAccess.dir_exists_absolute(BUNDLED_DIR + folder):
 		return null
 	var dir := BUNDLED_DIR + folder + "/"
-	var want := String(STYLES.get(snappedi(clampi(weight, 100, 900), 100), "Regular"))
+	# only 400-700 ship: a 300 or 800 request takes the nearest shipped face, never the system list mid-screen
+	var want := String(STYLES.get(snappedi(clampi(weight, 400, 700), 100), "Regular"))
 	if italic:
 		want = "Italic" if want == "Regular" else want + "Italic"
 	var pick := ""

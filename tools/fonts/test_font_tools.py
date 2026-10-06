@@ -47,6 +47,9 @@ def theme_values():
     subs = {}
     for sid, body in re.findall(r'\[sub_resource type="SystemFont" id="(\w+)"\]\n(.*?)(?=\n\[|\Z)', src, re.S):
         subs[sid] = re.findall(r'"([^"]+)"', re.search(r"font_names = PackedStringArray\((.*?)\)", body).group(1))
+    # a shipped face (FontVariation) over a SystemFont list: the list is its first fallback
+    for sid, body in re.findall(r'\[sub_resource type="FontVariation" id="(\w+)"\]\n(.*?)(?=\n\[|\Z)', src, re.S):
+        subs[sid] = subs[re.search(r'fallbacks = Array\[Font\]\(\[SubResource\("(\w+)"\)', body).group(1)]
     res = dict(re.findall(r"^(\S+) = (.+)$", src.split("[resource]")[1], re.M))
 
     def font(key):

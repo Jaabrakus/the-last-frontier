@@ -8,7 +8,8 @@ extends SceneTree
 ##   fonts      Font.has_char for every letter, the game's punctuation and every character in data/thuyvan/*.json, on
 ##              serif, sans and mono at the weights the UI asks for, as UiFonts gives them (with fallbacks)
 ##   first face the same on each role's first installed font alone (no fallbacks): the list's own pick covers it all
-##   theme      assets/ui/thuyvan_theme.tres lists the same names as UiFonts, covers the same characters, and its line
+##   theme      assets/ui/thuyvan_theme.tres sets UiFonts' shipped face (a FontVariation) over the same names as UiFonts,
+##              covers the same characters, and its line
 ##              spacing is at least UiFonts.line_gap at its sizes
 ## The cmap check behind the lists is tools/fonts/font_cmap_check.py (it reads the font files; this asks the engine).
 ## Ends with "VIETNAMESE GLYPHS TEST PASSED (<n> checks)" or "VIETNAMESE GLYPHS TEST FAILED (<f> of <n>)".
@@ -143,7 +144,17 @@ func _theme(want: Dictionary) -> void:
 	var fonts := {"sans": th.default_font, "serif": th.get_font("font", "TitleLabel"),
 			"mono": th.get_font("font", "MonoLabel")}
 	for role: String in fonts:
-		var f := fonts[role] as SystemFont
+		# a shipped face (FontVariation, UiFonts.BUNDLED) over the role's SystemFont list: its face alone covers
+		# everything, and its first fallback is the list
+		var v := fonts[role] as FontVariation
+		if v:
+			var face := v.base_font as FontFile
+			var vmiss := _missing(face, want) if face else {"face": "(none)"}
+			_expect(face != null and String(UiFonts.BUNDLED.get(role, "")) != ""
+					and face.resource_path.begins_with(UiFonts.BUNDLED_DIR + String(UiFonts.BUNDLED[role]) + "/")
+					and vmiss.is_empty(), "theme: %s font's shipped face %s is UiFonts' %s family and covers everything %s"
+					% [role, face.resource_path.get_file() if face else "(none)", role, "" if vmiss.is_empty() else str(vmiss)])
+		var f := (v.fallbacks[0] if v and not v.fallbacks.is_empty() else fonts[role]) as SystemFont
 		_expect(f != null and Array(f.font_names) == UiFonts.names(role),
 				"theme: %s font lists UiFonts' %s names %s" % [role, role, str(f.font_names) if f else "(not a SystemFont)"])
 		if f:
