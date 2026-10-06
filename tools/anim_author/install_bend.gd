@@ -45,7 +45,9 @@ func _initialize() -> void:
 		var clip: Dictionary = baked.clips[key]
 		var frames: Array = clip.frames
 		var a := Animation.new()
-		a.length = (frames.size() - 1) / fps
+		# (a clip baked several times a frame carries its own rate: bend_clips.py's substeps)
+		var cfps := float(clip.get("fps", fps))
+		a.length = (frames.size() - 1) / cfps
 		a.loop_mode = Animation.LOOP_NONE
 		a.set_meta(&"authored", AUTHORED % key)
 		var meta: Dictionary = clip.get("meta", {})
@@ -72,14 +74,14 @@ func _initialize() -> void:
 				if prev.has(bone) and (prev[bone] as Quaternion).dot(qq) < 0.0:
 					qq = -qq
 				prev[bone] = qq
-				a.rotation_track_insert_key(tracks[bone], fi / fps, qq)
+				a.rotation_track_insert_key(tracks[bone], fi / cfps, qq)
 		var roots: Array = clip.get("root", [])
 		if not roots.is_empty():
 			var tp := a.add_track(Animation.TYPE_POSITION_3D)
 			a.track_set_path(tp, NodePath(prefix + ":root"))
 			for fi in roots.size():
 				var p: Array = roots[fi]
-				a.position_track_insert_key(tp, fi / fps, Vector3(p[0], p[1], p[2]))
+				a.position_track_insert_key(tp, fi / cfps, Vector3(p[0], p[1], p[2]))
 		var name := String(names.get(key, "own-bend-" + key.replace("_", "-")))
 		if lib.has_animation(StringName(name)):
 			lib.remove_animation(StringName(name))
