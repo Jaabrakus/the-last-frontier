@@ -367,6 +367,8 @@ static func practice() -> bool:
 ## Round 3: the rule set the next ring plays ("stock": the % layer; "classic": today's zones): the menu's or the user arg's
 ## choice, else rules.json rule_set.
 static func rule_set() -> String:
+	if RingRules.rule_set_override in RULE_SETS:
+		return RingRules.rule_set_override       # (a test's or a tool's pin: what the next ring plays, RingRules.pick_rule_set)
 	if rules_choice in RULE_SETS:
 		return rules_choice
 	var d := String(RingRules.data().get("rule_set", "classic"))

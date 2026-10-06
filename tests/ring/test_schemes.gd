@@ -89,6 +89,8 @@ func _initialize() -> void:
 	MatchSetup.incoming = true
 	MatchSetup.element = "earth"
 	MatchSetup.foes = ["earth"]
+	# (the merge: the % ring is the default, where key 3 acts at once; the schemes' readying is the classic ring's, pinned)
+	RingRules.rule_set_override = "classic"
 	change_scene_to_file("res://scenes/ring.tscn")
 	_run.call_deferred()
 
@@ -218,6 +220,7 @@ func _end() -> void:
 	Input.action_release(&"aim")
 	Input.action_release(RadialWheel.ACTION)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+	RingRules.rule_set_override = ""
 	GameSettings.path = GameSettings.PATH
 	MatchSetup.reload_scheme()
 	if fails.is_empty() and checks > 0:
