@@ -1,0 +1,3 @@
+{
+	"_about": "Tidebreak round 3: the movement set of the % ring (the MOVE task's file; smash_r3 spec §4, §5.3-5.4, §14.2): physics, jumps (the hop-cast window), the double jump (its carry kept), drift, fast fall, the guard's roll and duck, the air dodge, the teeter, the edge (deck-relative keys, the grab limit), the Rise per element, the camera (deck, off the deck, hang, recover_turn), sounds on yourself, clips. Read by RingMoves only while a stock-rules ring is on. Empty until MOVE fills it (SEAMS made it)."
+}

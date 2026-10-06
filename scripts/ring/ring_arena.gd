@@ -41,11 +41,21 @@ extends Node3D
 ##                                           over it: AABB
 ##   rebuild()                               the round's reset: the stones back in their sockets
 ##   clear_dropped()                         what the fight left in the ring and the tank taken away (the count)
+## ROUND 3 (smash_r3 spec §5, §7.2, §14.3; SEAMS, PERCENT's after):
+##   nearest_lip(pos) -> {point, normal, out_m, side, along}   the deck's top outer rectangle's nearest edge (LIP_* side)
+##   lip_y()                                 the lip's height (the deck top, world)
+##   spout_at(side, slot) -> Vector3         where a respawn spout rises: the grate on that end's last grate line (s 12 m)
+##   wall_place_ok(pos) -> Vector3           a wall's place kept off the lip (as given until PERCENT clamps it)
 
 const DATA_PATH := "res://data/ring/ring.json"
 const GROUP := &"ring_arena"
 ## Meta on each deck body (its part: "neutral", "s0_z1" ...).
 const DECK_META := &"ring_deck"
+## nearest_lip's sides: the open end at -X (side 0's), at +X (side 1's), the long side at -Z, at +Z.
+const LIP_END_0 := 0
+const LIP_END_1 := 1
+const LIP_LONG_NEG := 2
+const LIP_LONG_POS := 3
 ## What clear_dropped takes away reaches this far past the tank (m).
 const CLEAR_MARGIN := 4.0
 ## On a GustLift flight once _ring_hurls has looked at it.
@@ -203,6 +213,71 @@ func is_ring_out(body: Node3D) -> bool:
 
 func pools() -> Array[Node3D]:
 	return grates
+
+
+# ---------------------------------------------------------------- round 3: the lip and the spout (SEAMS; PERCENT's)
+## The deck's lip nearest `pos` (pure geometry, the deck's top outer rectangle; world): {point (on the lip, at lip_y),
+## normal (outward, flat, unit), out_m (metres out past the lip, flat; negative inside the deck), side (LIP_END_0,
+## LIP_END_1, LIP_LONG_NEG, LIP_LONG_POS), along (metres along that lip from its middle: local z on an end, local x on a long
+## side)}. Outside a corner the side is the one it is further out past.
+func nearest_lip(pos: Vector3) -> Dictionary:
+	var l := to_local(pos)
+	var hl := half_l()
+	var hw := half_w()
+	var ex := absf(l.x) - hl                    # (past the end's lip: +, inside: -)
+	var ez := absf(l.z) - hw
+	var side := LIP_END_0
+	var out_m := 0.0
+	var p := Vector3(l.x, top(), l.z)
+	if ex <= 0.0 and ez <= 0.0:
+		# (on the deck: the nearer lip)
+		if ex >= ez:
+			side = LIP_END_1 if l.x > 0.0 else LIP_END_0
+			p.x = hl if side == LIP_END_1 else -hl
+		else:
+			side = LIP_LONG_POS if l.z > 0.0 else LIP_LONG_NEG
+			p.z = hw if side == LIP_LONG_POS else -hw
+		out_m = maxf(ex, ez)
+	else:
+		# (off it: the nearest point of the rectangle and its distance)
+		p.x = clampf(l.x, -hl, hl)
+		p.z = clampf(l.z, -hw, hw)
+		out_m = Vector2(maxf(ex, 0.0), maxf(ez, 0.0)).length()
+		if ex >= ez:
+			side = LIP_END_1 if l.x > 0.0 else LIP_END_0
+		else:
+			side = LIP_LONG_POS if l.z > 0.0 else LIP_LONG_NEG
+	var n := Vector3(0.0, 0.0, 1.0)
+	match side:
+		LIP_END_0:
+			n = Vector3(-1.0, 0.0, 0.0)
+		LIP_END_1:
+			n = Vector3(1.0, 0.0, 0.0)
+		LIP_LONG_NEG:
+			n = Vector3(0.0, 0.0, -1.0)
+	var along := p.z if side <= LIP_END_1 else p.x
+	var wn := global_basis * n
+	wn.y = 0.0
+	return {"point": to_global(p), "normal": wn.normalized(), "out_m": out_m, "side": side, "along": along}
+
+
+## The lip's height (the deck top, world).
+func lip_y() -> float:
+	return deck_y()
+
+
+## Where a respawn spout rises for deck end `side`: the grate on its last grate line (the line behind zone zones - 1: s 12 m),
+## at grate_z[slot] (world, on the deck).
+func spout_at(side: int, slot := 0) -> Vector3:
+	var zs: Array = data().get("grate_z", [4.0, -4.0])
+	var z := float(zs[posmod(slot, zs.size())]) if not zs.is_empty() else 0.0
+	var s := line_s(side, int(num("zones", 3.0)) - 1)
+	return to_global(Vector3(side_sign(side) * s, top(), z))
+
+
+## A wall's place kept off the lip (spec §5.2: PERCENT clamps it wall_lip_clear_m inside); as given until then.
+func wall_place_ok(pos: Vector3) -> Vector3:
+	return pos
 
 
 func rect_for(side: int, min_zone: int, max_zone: int) -> AABB:

@@ -47,6 +47,10 @@ extends Node
 ## (the clock counts up), no rounds, no score; the soft walls off (walk anywhere); a fall into the water puts both back at
 ## their ends after reset_after_out_s, R (ring_reset) at once (reset_positions), B (ring_dummy) steps the dummy's way
 ## (cycle_dummy); 0 health is whole again. A line at the top says so, with the player's casts, catches and knock-backs.
+## Round 3's SEAMS moved the practice into RingPractice (scripts/ring/ring_practice.gd, `practice_ctl`): this keeps one-line
+## calls into it (reset, arm, step, set_way, paint, on_out, on_winded, key) and the old names as forwarders (dummy,
+## slow_throws, throw_override, hint, tally_label, practice_line(), cycle_dummy(), reset_positions(), throw_every_s(), pword,
+## _pnum, _pmove, dummy_guard), so RingLessons and the tests read it where they always did.
 ## TEAMS (the 3 v 3 groundwork): in RingRules' team_mode a competitor rung out sits the round out (a bot held), and a whole
 ## side out in one round is a knockout: the round its, and the match over at once (why "knockout").
 
@@ -110,27 +114,42 @@ var _bar_laid := false
 var history: Array = []
 ## This round's (in practice: since the last reset) tally per team: {casts, catches, knock_backs, hits}.
 var round_tally: Array = [{}, {}]
-## A practice (no rounds, no timer) against a dummy, and its way ("stand" | "block" | "throw").
+## A practice (no rounds, no timer) against a dummy (RingPractice runs it), and its way ("stand" | "block" | "throw").
 var practice := false
-var dummy := "stand"
+## The practice: the dummy, its way and its lines (RingPractice; made with the mode).
+var practice_ctl: RingPractice
+var dummy: String:
+	get:
+		return practice_ctl.dummy
+	set(v):
+		practice_ctl.dummy = v
 ## The dummy's throws slowed (the lessons' guard drill and jump, RingLessons; the owner, 2026-10-05: a beginner beating a fast
 ## throw): a throw every slow_every_s, its shots flying at slow_speed of their own speed on the same path (data/ring/lessons.json).
-var slow_throws := false
+var slow_throws: bool:
+	get:
+		return practice_ctl.slow_throws
+	set(v):
+		practice_ctl.slow_throws = v
 ## The dummy's throw instead of its element's strike ("id/mode"; "": screens.json practice.throw; the lessons' jump: fire's Kick).
-var throw_override := ""
+var throw_override: String:
+	get:
+		return practice_ctl.throw_override
+	set(v):
+		practice_ctl.throw_override = v
 var round_screen: Node
 var match_screen: Node
-var hint: Label
-var tally_label: Label
-var hint_back: ColorRect
+## The practice's lines (RingPractice's).
+var hint: Label:
+	get:
+		return practice_ctl.hint
+var tally_label: Label:
+	get:
+		return practice_ctl.tally_label
+var hint_back: ColorRect:
+	get:
+		return practice_ctl.hint_back
 var _knockout := false
 var _guard_took := {}
-var _reset_in := -1.0
-var _live_in := 0.0
-## After a practice's reset the deck is judged again this much later (s).
-const RESET_GRACE_S := 0.12
-var _dummy_next := 0.0
-var _cover_next := 0.0
 var _caster_hooked: SwayCaster
 ## Practice's lessons asked for (the main menu's Lessons row, RingLessons.ask; taken by RingLessons.install).
 static var lessons_asked := false
@@ -158,6 +177,10 @@ static func words(key: String) -> String:
 	return String((RingRules.data().get("words", {}) as Dictionary).get(key, key))
 
 
+func _init() -> void:
+	practice_ctl = RingPractice.new(self)
+
+
 func _ready() -> void:
 	add_to_group(GROUP)
 	process_physics_priority = 20            # (after the bodies and the rules: this frame's ring-out is this frame's)
@@ -174,7 +197,7 @@ func _ready() -> void:
 	rules.rang_out.connect(_on_rang_out)
 	rules.side_out.connect(_on_side_out)
 	_build_ui()
-	_ensure_keys()
+	RingPractice.ensure_keys()
 	rules.winded.connect(_on_winded)
 	menu = RingMenu.install(level if level != null else self, self)
 	var parent: Node = level if level != null else self
@@ -202,11 +225,9 @@ func restart() -> void:
 	foe_element = String(MatchSetup.resolved([MatchSetup.foe()], _rng)[0])
 	difficulty = MatchSetup.difficulty
 	practice = MatchSetup.practice()
-	dummy = MatchSetup.dummy if MatchSetup.dummy in MatchSetup.DUMMIES else "stand"
+	practice_ctl.reset()
 	history = []
 	_knockout = false
-	_reset_in = -1.0
-	_live_in = 0.0
 	to_win = maxi(MatchSetup.rounds_to_win, 1)
 	round_s = MatchSetup.round_s if MatchSetup.round_s > 0.0 else RingRules.num("round_s", 180.0)
 	score = Vector2i.ZERO
@@ -423,7 +444,7 @@ func _physics_process(dt: float) -> void:
 		"FIGHT":
 			_count_guards()
 			if practice:
-				_practice_step(dt)
+				practice_ctl.step(dt)
 			elif foe == null or not is_instance_valid(foe):
 				_end_round(0, "winded")
 			elif round_left_s() <= 0.0:
@@ -443,12 +464,11 @@ func _fight() -> void:
 		player.drag_speed_cap = INF
 	_hold_casts(false)
 	if foe != null and is_instance_valid(foe):
-		foe.held = practice                  # (the dummy is held at its end; its casts are begun here: _practice_step)
+		foe.held = practice                  # (the dummy is held at its end; its casts are begun by RingPractice.step)
 		if foe.brain != null and player != null:
 			foe.brain.told(player, player.global_position)
 	rules.live = true
-	_dummy_next = BendStatus.now() + _pnum("throw_every_s", 3.0) * 0.5
-	_cover_next = 0.0
+	practice_ctl.arm()
 	_sting("go")
 	if not practice:
 		_music(true)
@@ -540,9 +560,7 @@ func _on_rang_out(who: Node3D, by: Node) -> void:
 
 func _on_side_out(side: int) -> void:
 	if practice:
-		_note = pword("out")
-		_note_t = _pnum("reset_after_out_s", 1.6)
-		_reset_in = _pnum("reset_after_out_s", 1.6)
+		practice_ctl.on_out()
 		return
 	var why := String(rules.last_out.get("why", "ringout"))
 	if rules.team_mode():
@@ -558,10 +576,7 @@ func _on_side_out(side: int) -> void:
 func _on_winded(who: Node3D, _by: Node, _to_zone: int) -> void:
 	if not practice or who == null or not is_instance_valid(who):
 		return
-	if who is FrontierPlayer:
-		(who as FrontierPlayer).health = (who as FrontierPlayer).max_health
-	elif who is NpcFighter:
-		(who as NpcFighter).health = (who as NpcFighter).health_max
+	practice_ctl.on_winded(who)
 
 
 func _count_catches() -> void:
@@ -621,11 +636,7 @@ func _unhandled_input(e: InputEvent) -> void:
 	if not (e is InputEventKey) or not e.is_pressed() or e.is_echo():
 		return
 	if practice and phase == "FIGHT":
-		if e.is_action_pressed(RESET_ACTION):
-			reset_positions()
-			get_viewport().set_input_as_handled()
-		elif e.is_action_pressed(DUMMY_ACTION):
-			cycle_dummy()
+		if practice_ctl.key(e):
 			get_viewport().set_input_as_handled()
 		return
 	if phase != "OVER":
@@ -685,29 +696,7 @@ func _build_ui() -> void:
 	top.offset_top = 86.0
 	top.offset_bottom = 110.0
 	ui.add_child(top)
-	# (practice: what the dummy does and the keys, under the HUD's match bar; the player's tally under it)
-	hint_back = ColorRect.new()
-	hint_back.name = "PracticeBack"
-	hint_back.color = Color(0.02, 0.015, 0.01, 0.5)
-	hint_back.anchor_left = 0.18
-	hint_back.anchor_right = 0.82
-	hint_back.offset_top = 110.0
-	hint_back.offset_bottom = 158.0
-	hint_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hint_back.visible = false
-	ui.add_child(hint_back)
-	hint = _label(16, MenuUI.INK)
-	hint.name = "PracticeHint"
-	hint.offset_top = 112.0
-	hint.offset_bottom = 134.0
-	hint.visible = false
-	ui.add_child(hint)
-	tally_label = _label(16, MenuUI.GOLD)
-	tally_label.name = "PracticeTally"
-	tally_label.offset_top = 134.0
-	tally_label.offset_bottom = 156.0
-	tally_label.visible = false
-	ui.add_child(tally_label)
+	practice_ctl.build_ui(ui)             # (practice: what the dummy does and the keys, under the HUD's match bar; the tally)
 
 
 func _label(size: int, color: Color) -> Label:
@@ -765,14 +754,7 @@ func _paint() -> void:
 				s = score_text() + "  ·  " + words("done_hint")
 	banner.text = b
 	sub.text = s
-	if hint != null:
-		hint.visible = practice
-		tally_label.visible = practice
-		hint_back.visible = practice
-		if practice:
-			hint.text = practice_line()
-			var mine: Dictionary = round_tally[0]
-			tally_label.text = pword("tally") % [int(mine.get("casts", 0)), int(mine.get("catches", 0)), int(mine.get("knock_backs", 0))]
+	practice_ctl.paint()
 	# (the HUD's strip shows the round, the time and the score once it has one: set_arena)
 	var hud_has := player != null and is_instance_valid(player) and player.hud != null and player.hud.has_method(&"set_arena")
 	top.text = "" if hud_has or phase == "DONE" else words("top") % [MatchSetup.sport(), round, floori(round_left_s() / 60.0),
@@ -791,23 +773,6 @@ func result_line() -> String:
 
 
 # ---------------------------------------------------------------- the tally (the screens')
-const RESET_ACTION := &"ring_reset"
-const DUMMY_ACTION := &"ring_dummy"
-const RESET_KEY := KEY_R
-const DUMMY_KEY := KEY_B
-
-
-## The practice keys (R: reset positions, B: the dummy's way), made when missing (the player may rebind them).
-static func _ensure_keys() -> void:
-	for pair: Array in [[RESET_ACTION, RESET_KEY], [DUMMY_ACTION, DUMMY_KEY]]:
-		if InputMap.has_action(pair[0]):
-			continue
-		InputMap.add_action(pair[0])
-		var k := InputEventKey.new()
-		k.physical_keycode = pair[1]
-		InputMap.action_add_event(pair[0], k)
-
-
 func _new_tally() -> void:
 	round_tally = [{"casts": 0, "catches": 0, "knock_backs": 0, "hits": 0}, {"casts": 0, "catches": 0, "knock_backs": 0, "hits": 0}]
 	_guard_took.clear()
@@ -881,15 +846,15 @@ func _foe_bending() -> Object:
 	return b as Object if b is Object and b != null else null
 
 
-# ---------------------------------------------------------------- practice
+# ---------------------------------------------------------------- practice (RingPractice's; the old names forward)
 ## data/ring/screens.json practice's number `key`.
 static func _pnum(key: String, def: float) -> float:
-	return float((MatchSetup.screens().get("practice", {}) as Dictionary).get(key, def))
+	return RingPractice.pnum(key, def)
 
 
 ## A practice word (screens.json practice.words).
 static func pword(key: String) -> String:
-	return String((((MatchSetup.screens().get("practice", {}) as Dictionary).get("words", {})) as Dictionary).get(key, key))
+	return RingPractice.pword(key)
 
 
 ## The countdown's length: the rules' (3 s), a practice's short one.
@@ -897,184 +862,25 @@ func countdown_s() -> float:
 	return _pnum("countdown_s", 1.0) if practice else RingRules.num("countdown_s", 3.0)
 
 
-## "Practice  ·  a Stone dummy that throws at you every few seconds  ·  R: reset positions ..."
 func practice_line() -> String:
-	return pword("hint") % [MatchSetup.competitor(foe_element), MatchSetup.dummy_line(dummy)]
+	return practice_ctl.practice_line()
 
 
-## The dummy's next way in turn (stand, block, throw), at once.
 func cycle_dummy() -> void:
-	var ds := MatchSetup.DUMMIES
-	dummy = String(ds[(ds.find(dummy) + 1) % ds.size()])
-	MatchSetup.dummy = dummy
-	_dummy_next = BendStatus.now() + _pnum("throw_every_s", 3.0) * 0.5
-	_cover_next = 0.0
-	_note = pword("way") % MatchSetup.dummy_line(dummy)
-	_note_t = 1.8
+	practice_ctl.cycle_dummy()
 
 
-## Both back at their ends, whole, the deck cleared (practice's R; after a fall into the water).
 func reset_positions() -> void:
-	_reset_in = -1.0
-	if ring != null:
-		ring.clear_dropped()
-	if player != null and is_instance_valid(player):
-		make_whole(player)
-		RingLevel.place(player, ring.spawn(player_end))
-		player.drag_speed_cap = INF
-		_hold_casts(false)
-	if foe == null or not is_instance_valid(foe) or foe.down or foe.is_dead():
-		# (gone, or down for good: a new dummy, the books made again)
-		_drop_foe()
-		rules.clear()
-		if player != null and is_instance_valid(player):
-			rules.add(player, 0)
-		_spawn_foe()
-		if foe != null:
-			rules.add(foe, 1)
-	if foe != null and is_instance_valid(foe):
-		make_whole(foe)
-		foe.health = foe.health_max
-		var bend := _foe_bending()
-		if bend != null and bend.has_method(&"reset"):
-			bend.call(&"reset")
-		var xf := ring.spawn(1 - player_end, int(RingRules.num("bot_slot", 0.0)))
-		RingLevel.place(foe, xf)
-		foe.held = true
-		if player != null and foe.brain != null:
-			foe.brain.told(player, player.global_position)
-	rules.reset_round()
-	# (the deck judged again a moment later: the tank's Area3D still counts a body just lifted out of it until the physics
-	# has stepped, so judging at once would put him straight back out)
-	rules.live = false
-	_live_in = RESET_GRACE_S
-	_dummy_next = BendStatus.now() + _pnum("throw_every_s", 3.0) * 0.5
-	_cover_next = 0.0
-	if _note_t <= 0.0:
-		_note = pword("reset")
-		_note_t = 1.2
+	practice_ctl.reset_positions()
 
 
-## The dummy each frame of a practice: held at its end facing the player; its lock let run while it casts; its way's cast
-## begun (block: a guard against what comes, its cover when he locks; throw: its throw every throw_every_s).
-func _practice_step(dt: float) -> void:
-	if slow_throws and foe != null and is_instance_valid(foe):
-		_slow_shots()                         # (each shot the frame it leaves, whatever the dummy is doing)
-	if _live_in > 0.0:
-		_live_in -= dt
-		if _live_in <= 0.0:
-			rules.live = true
-	if _reset_in > 0.0:
-		_reset_in -= dt
-		if _reset_in <= 0.0:
-			reset_positions()
-		return
-	if foe == null or not is_instance_valid(foe):
-		reset_positions()
-		return
-	var bend := _foe_bending()
-	if bend == null:
-		return
-	if String(bend.get(&"casting")) != "" or float(bend.get(&"_follow")) > 0.0:
-		foe.held = false                     # (its lock fills and its cast clip plays: NpcBending.tick)
-		return
-	foe.held = true
-	if player == null or not is_instance_valid(player):
-		return
-	foe.face_point(player.global_position)
-	var now := BendStatus.now()
-	match dummy:
-		"throw":
-			if now >= _dummy_next:
-				_dummy_next = now + throw_every_s()
-				_dummy_cast(bend, throw_override if throw_override != "" else _pmove("throw"))
-		"block":
-			var g := dummy_guard(bend)
-			if not g.is_empty():
-				_dummy_cast(bend, "%s/%s" % [g.id, g.mode])
-				return
-			var sc := SwayCaster.of(player)
-			if sc != null and sc.is_locking() and now >= _cover_next:
-				_cover_next = now + _pnum("block_every_s", 2.5)
-				_dummy_cast(bend, _pmove("cover"))
-
-
-## The seconds between the dummy's throws: screens.json practice throw_every_s, slow_every_s while they are slowed.
 func throw_every_s() -> float:
-	return RingLessons.num("slow_every_s", 5.0) if slow_throws else _pnum("throw_every_s", 3.0)
+	return practice_ctl.throw_every_s()
 
 
-## The dummy's shots slowed once each, as they leave (slow_throws): a bolt's speed by slow_speed and its gravity by its square
-## (the same path, later); a thrown stone (GustLift) by slow_speed with its rise made good for its own gravity's longer fall.
-func _slow_shots() -> void:
-	var k := clampf(RingLessons.num("slow_speed", 0.6), 0.2, 1.0)
-	for b in get_tree().get_nodes_in_group(BendBolt.GROUP):
-		var bb := b as BendBolt
-		if bb == null or bb.caster != foe or bb.has_meta(&"ring_slowed"):
-			continue
-		bb.set_meta(&"ring_slowed", true)
-		bb.velocity *= k
-		bb.gravity *= k * k
-	for n in get_tree().get_nodes_in_group(NpcBending.FLIGHT_GROUP):
-		# (the earth dummy's spike flies as NpcBending's Flight: slowed the same way, the catch drill's stones too)
-		var fl := n as NpcBending.Flight
-		if fl == null or fl.shooter != foe or fl.has_meta(&"ring_slowed"):
-			continue
-		fl.set_meta(&"ring_slowed", true)
-		fl.velocity *= k
-		fl.gravity *= k * k
-	for n in get_tree().get_nodes_in_group(GustLift.GROUP):
-		var gl := n as GustLift
-		if gl == null or gl.phase != GustLift.Phase.FLIGHT or gl.has_meta(&"ring_slowed") or gl.caster == null \
-				or gl.caster.body != foe:
-			continue
-		gl.set_meta(&"ring_slowed", true)
-		var v := gl.velocity
-		var flat := Vector2(v.x, v.z).length()
-		var g := float((gl.call(&"_hurl_d") as Dictionary).get("gravity", 6.0)) if gl.has_method(&"_hurl_d") else 6.0
-		var d := Vector2(player.global_position.x - gl.stone.global_position.x, player.global_position.z
-				- gl.stone.global_position.z).length() if player != null and is_instance_valid(gl.stone) else 0.0
-		var t0 := d / maxf(flat, 0.1)
-		var t1 := t0 / k
-		# (the same drop at his distance: v1y * t1 - g t1² / 2 = v0y * t0 - g t0² / 2)
-		var vy := (v.y * t0 - 0.5 * g * t0 * t0 + 0.5 * g * t1 * t1) / maxf(t1, 0.01) if t1 > 0.0 else v.y * k
-		gl.velocity = Vector3(v.x * k, vy, v.z * k)
-
-
-## The dummy's element's move for `what` ("throw" | "cover": screens.json practice), "id/mode".
 func _pmove(what: String) -> String:
-	return MatchSetup.practice_move(foe_element, what)
+	return practice_ctl.pmove(what)
 
 
-## The dummy's lock of "id/mode" begun (let go: its tick fills it and casts it, NpcBending's own way).
-func _dummy_cast(bend: Object, key: String) -> bool:
-	if key == "" or not key.contains("/"):
-		return false
-	foe.held = false
-	bend.call(&"begin", key.get_slice("/", 0), key.get_slice("/", 1))
-	return true
-
-
-## A guard of the dummy's against what comes at it now ({id, mode, kind} or {}): its element's reaction whose lock fits the
-## threat's time (NpcBending's own rule, without its chance: a practice dummy answers every time it can).
 static func dummy_guard(bend: Object) -> Dictionary:
-	var threats: Array = bend.call(&"_threats")
-	if threats.is_empty():
-		return {}
-	var pn := String(bend.call(&"_preset_name"))
-	var best := {}
-	for th: Dictionary in threats:
-		var tti := float(th.tti)
-		for o: Dictionary in bend.get(&"options"):
-			var h: Dictionary = o.hint
-			if String(h.get("role", "")) != "reaction" or not String(th.kind) in (h.get("answers", []) as Array):
-				continue
-			if not bool(bend.call(&"castable", o)):
-				continue
-			var ls := NpcBending.lock_for(String(o.id), String(o.mode), pn, 0.0)
-			var window := float(o.spec.get("window_s", o.spec.get("life_s", o.spec.get("s", 1.0))))
-			if ls > tti or ls + window * 0.8 < tti:
-				continue
-			if best.is_empty() or ls < float(best.ls):
-				best = {"id": o.id, "mode": o.mode, "kind": th.kind, "ls": ls}
-	return best
+	return RingPractice.dummy_guard(bend)

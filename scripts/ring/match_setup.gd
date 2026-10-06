@@ -46,6 +46,9 @@ extends RefCounted
 ##                                opponent's element drawn at random (the kept setup's opponent is not overwritten by it)
 ##   MatchSetup.set_practice(foe, dummy) / set_match()   what the next Begin plays (the menu's Practice and Begin)
 ##   MatchSetup.practice()        a practice asked for (kind)
+##   MatchSetup.rule_set() / games() / practice_pct()   round 3 (smash_r3 spec §14.3; SEAMS' stubs, BOTS fills them): the
+##       rule set the next ring plays ("classic" today's zones, "stock" the % layer), the games in a match (1), a practice's
+##       starting % per side ({}: none)
 ##   MatchSetup.parse(args)       the setup's user args, as take() reads them:
 ##       mode=ring element=fire foe=water[,earth,...] mates=air[,...] difficulty=hard to_win=2 round_s=90 spectate=on
 ##       light=golden scheme=direction practice=throw (or mode=practice: a practice with the kept dummy)
@@ -302,6 +305,21 @@ static func set_match() -> void:
 ## A practice asked for.
 static func practice() -> bool:
 	return kind == "practice"
+
+
+## Round 3: the rule set the next ring plays ("classic": today's zones; "stock": the % layer). "classic" until BOTS' menu.
+static func rule_set() -> String:
+	return "classic"
+
+
+## Round 3: the games in a match (1 until BOTS' menu).
+static func games() -> int:
+	return 1
+
+
+## Round 3: a practice's starting % per side ({}: none until BOTS' Practice rows).
+static func practice_pct() -> Dictionary:
+	return {}
 
 
 ## The practice dummy's move for `what` as "id/variation" ("" none): "throw" its element's key 1 first move (earth Spike,

@@ -18,6 +18,9 @@ extends RefCounted
 ##           time, -1 unknown) before the body is told (its hurt signal), so SwayCaster pushes a lock back by it (setback_s)
 ##   Rooted: an earth competitor standing still (Bending.passive("earth"): under still_mps) takes knock_mult of a knock
 ##   clear_round(b): every timed bend meta on `b` gone (ROUND_METAS; RingMode.make_whole's list and round 2's)
+## ROUND 3 (smash_r3 spec §14.3; SEAMS, PERCENT's after): take_filters (static: can_take is false when any of them says
+## false; none registered outside the % ring: MOVE's intangible dodges and edge grabs register theirs), and the hit info
+## (`info`, spec §14.3's keys) through knock and hurt to BendKnock and the rules (unread until PERCENT).
 
 ## (old name) BendKnock.ragdoll_mps's first value: a knock this hard (m/s) or more throws the player off his feet.
 const KNOCK_DOWN_MPS := 9.0
@@ -33,6 +36,8 @@ const ROUND_METAS: Array[StringName] = [&"bend_root", &"bend_slow", &"bend_ancho
 
 ## Roots and slows left alone because their body casts as an element (the tests).
 static var held_off := 0
+## Round 3: Callables (n: Node, caster: Node) -> bool; can_take is false when any returns false (none registered: as today).
+static var take_filters: Array[Callable] = []
 
 
 ## The bend's clock (s): the game's physics time, not the wall's, so a timed effect's end (its meta) and its timer agree
@@ -48,6 +53,9 @@ static func can_take(n: Node, caster: Node) -> bool:
 		return false
 	if caster != null and is_instance_valid(caster) and BendCaster.same_team(n, caster):
 		return false
+	for f in take_filters:
+		if f.is_valid() and not bool(f.call(n, caster)):
+			return false
 	if n is FrontierPlayer:
 		return not (n as FrontierPlayer).is_dead
 	if n is NpcFighter:
@@ -81,7 +89,8 @@ static func near(caster: Node, at: Vector3, r: float) -> Array:
 
 ## `dmg` to `n` from `by` at `at` going `dir`: a blunt blow (no anatomy wound; the striker's damage_kind meta for the hit).
 ## `lock_s`: what the blow cost its caster (its move's lock time; -1 unknown), written on `n` first (HIT_LOCK_META).
-static func hurt(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lock_s := -1.0) -> void:
+## `info`: round 3's hit info (spec §14.3; unread until PERCENT).
+static func hurt(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lock_s := -1.0, _info := {}) -> void:
 	if by != null and not is_instance_valid(by):
 		by = null                                # (its caster freed since: the blow is no one's)
 	if dmg <= 0.0 or not can_take(n, by):
@@ -100,15 +109,16 @@ static func hurt(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lock_
 
 
 ## `n` knocked along `v` (m/s; its up part lifts, LAUNCH_UP_MPS or more launches) by `by`. An anchored one (anchor) is not
-## moved. The player and the fighters through BendKnock (the same model for both).
-static func knock(n: Node, v: Vector3, by: Node) -> void:
+## moved. The player and the fighters through BendKnock (the same model for both). `info`: round 3's hit info, passed on to
+## BendKnock.knock.
+static func knock(n: Node, v: Vector3, by: Node, info := {}) -> void:
 	if by != null and not is_instance_valid(by):
 		by = null
 	if v.length_squared() < 1e-4 or not can_take(n, by) or until(n, &"bend_anchor") > 0.0:
 		return
 	v *= rooted_mult(n)
 	if n is FrontierPlayer or n is NpcFighter:
-		BendKnock.of(n).knock(v, by)
+		BendKnock.of(n).knock(v, by, info)
 	elif n is WildAnimal:
 		SwayEffects.shove_animal(n as WildAnimal, Vector3(v.x, 0.0, v.z), (by as Node3D).global_position if by is Node3D else Vector3.ZERO)
 	elif n is RigidBody3D:

@@ -134,8 +134,19 @@ extends Node
 ##               puts the jab back too (next_q says which)
 ##   passives    Rooted (earth, still: the fill x fill_mult), Footwork (fire: moving_mult); the charge of lightning seen and
 ##               heard on the hands while it locks (BendLooks.Charge)
+## ROUND 3 (smash_r3 spec §6, §14.3; SEAMS added the seams, AIR fills them; all of it behind the gate RingRules.stock_on() /
+## RingMoves.of(player)): guard_up() (a round-2 guard of his stands), ready_default() (key 1's first move readied: RingMode
+## at the countdown and each respawn), drop_all() (every lock and held stone dropped: a fall), and the signals
+## lock_started (already round 1's: (move, target), at every lock's start, the guard's included, and at a same-key switch),
+## cast_released(move, mode) at every release, air_cast(move, mode) (an airborne cast; not emitted until AIR).
 
+## A lock began on `target` (every lock: the aim's, the quick spell's, the guard's; and the new move of a same-key switch).
+## Round 3's RingRules.note_lock_started takes it (its second argument is the target, not the mode: mode_of(move)).
 signal lock_started(move: String, target: Node3D)
+## Round 3: a cast let go (the effect on its way: _cast, a hold's let go), `mode` its variation then.
+signal cast_released(move: String, mode: String)
+## Round 3: a cast let go in the air (AIR emits it; MOVE plays the air legs on it). Never emitted before AIR.
+signal air_cast(move: String, mode: String)
 ## Full lock (the click): let go within release_s to cast (a hold begins at once instead: hold_started).
 signal locked(move: String, target: Node3D)
 ## Cast (after the move's effect was applied; a hold's let go: the hurl, the sail let slack).
@@ -587,6 +598,27 @@ static func scripted(m: String) -> bool:
 
 func is_locking() -> bool:
 	return state != State.IDLE
+
+
+## Round 3: a round-2 guard of his stands now (BendZone.R2_GUARDS, his own; MOVE's roll and duck read it).
+func guard_up() -> bool:
+	if not is_inside_tree():
+		return false
+	for z in get_tree().get_nodes_in_group(BendZone.GROUP):
+		var bz := z as BendZone
+		if bz != null and bz.r2 and bz.owner_node == player and BendZone.R2_GUARDS.has(bz.kind) and not bz.is_queued_for_deletion():
+			return true
+	return false
+
+
+## Round 3: key 1's first move readied (RingMode at the countdown and each respawn). A no-op until AIR.
+func ready_default() -> void:
+	pass
+
+
+## Round 3: every lock and held stone dropped (RingMode on a fall). A no-op until AIR.
+func drop_all() -> void:
+	pass
 
 
 # ---------------------------------------------------------------- mastery
@@ -2332,6 +2364,7 @@ func _release_hold() -> void:
 	_sfx("cast", -2.0, t.global_position if is_instance_valid(t) else chest())
 	if is_instance_valid(t) and t.has_method(&"sway_cast"):
 		t.call(&"sway_cast", m, self)
+	cast_released.emit(m, mode_of(m))
 	cast.emit(m, t)
 
 
@@ -2428,6 +2461,7 @@ func _cast() -> void:
 		_apply_grown(m, t, at, grew_now)
 	if is_instance_valid(t) and t.has_method(&"sway_cast"):
 		t.call(&"sway_cast", m, self)
+	cast_released.emit(m, String(pin[1]))
 	cast.emit(m, t)
 	_pinning = false
 	_pin_id = String(keep[0])
