@@ -261,8 +261,16 @@ visual references, no animation files imported) is his statement; the rows below
   wall breaker's wall ahead), `haul_m` (the part of the scramble's climb its own keys carry) and `lying` (a figure on its
   back the whole clip). `tech_roll` and `getup_roll` have `"mirror": True` (and meta `travel`). Only these sixteen clips
   were baked (`--clips`); the other clips' tracks are as before. The martial-art styles in the comments (Hung Gar's horse,
-  tai chi's golden rooster, Northern Shaolin's rising punch and carp skip-up, Baguazhang's turning) remain labels for the
+  tai chi's cloud hands, Northern Shaolin's rising punch and carp skip-up, Baguazhang's palm change) remain labels for the
   typed key poses.
+  Revised the same day (pass 2, the critic's notes): the same generator, the same inputs and the same sixteen clips,
+  re-keyed and re-baked (`--clips`); no clip, dump or reference motion read. The keys changed are typed numbers in `SET6`
+  and its typed functions (`lie_at`, `glide_at`, the water Rise's arm circles now `_cone_hand` on a typed cone about each
+  shoulder, `GROLL_BARREL` and `GROLL_TWIST` for two log rolls, `GA_ARC`); the water Rise's golden rooster gave way to both
+  hands raised over the head and the air Rise's crane to a palm change. Some of these clips' own moments changed
+  (`own-bend-getup` `strike_s` 9/30 s and `back_s` 11/30 s, `own-bend-getup-roll` and its twin `strike_s` 5/30 s and
+  `back_s` 15/30 s, `own-bend-knock-spiked` `hold_s` 5/30 s); no earlier set's clip was re-baked. `bend_preview.gd` and
+  `bend_engine_strip.gd` now draw the wall a clip names (meta `wall_z`) for review; they read no motion.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.

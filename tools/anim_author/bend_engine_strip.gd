@@ -44,6 +44,9 @@ const EDGE_VIEWS := {
 ## The stand-in lip at the deck's end for the edge clips (the stock ring's pale coping over a stone face, as spec 5.1 draws
 ## it; the classic ring's plinth foot under it is covered so the face is one plane): its depth past the deck's end (m).
 const LIP_OUT := 0.2
+## The wall a clip names (meta wall_z: the wall break) drawn there, a see-through stone pane from the deck up (m).
+const WALL_SIZE := Vector3(2.4, 3.2, 0.08)
+const WALL_COLOR := Color(0.5, 0.5, 0.54, 0.42)
 
 var out := ""
 var only: PackedStringArray = []
@@ -52,6 +55,7 @@ var edge_xf := Transform3D.IDENTITY
 var rise := {}
 var _cur_rise := Vector2.ZERO
 var _lip_block: Node3D
+var _wall: Node3D
 var airborne: PackedStringArray = []
 var light := "noon"
 var elements: PackedStringArray = ["earth", "water", "fire", "air"]
@@ -241,6 +245,8 @@ func _moments(a: Animation) -> Array:
 
 func _snap(a: Animation, air: bool, t: float, vn: String, text: String) -> Image:
 	sk.reset_bone_poses()
+	if _wall != null:
+		_wall.visible = false
 	# (a layer that keys only some bones, the air legs, shown under the cast it plays beneath: UNDER at its strike)
 	if not _keys_root(a) and lib.has_animation(UNDER):
 		var u := lib.get_animation(UNDER)
@@ -259,7 +265,30 @@ func _snap(a: Animation, air: bool, t: float, vn: String, text: String) -> Image
 		spec[1] = (spec[1] as Vector3) + Vector3.UP * ly
 		return await _shoot(spec, text, edge_xf.basis)
 	fig.global_transform = deck_xf.translated(Vector3.UP * (AIR_LIFT if air else 0.0))
+	_show_wall(a)
 	return await _shoot(VIEWS[vn], text)
+
+
+## The wall a clip names (meta wall_z) shown wall_z ahead of the figure, standing on the deck; hidden for every other clip.
+func _show_wall(a: Animation) -> void:
+	if _wall == null:
+		_wall = Node3D.new()
+		root.add_child(_wall)
+		var m := MeshInstance3D.new()
+		var b := BoxMesh.new()
+		b.size = WALL_SIZE
+		m.mesh = b
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = WALL_COLOR
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		mat.roughness = 0.9
+		m.material_override = mat
+		m.position = Vector3(0.0, WALL_SIZE.y * 0.5, WALL_SIZE.z * 0.5)
+		_wall.add_child(m)
+	_wall.visible = a.has_meta(&"wall_z")
+	if _wall.visible:
+		_wall.global_transform = deck_xf.translated_local(Vector3(0.0, 0.0, float(a.get_meta(&"wall_z"))))
 
 
 func _keys_root(a: Animation) -> bool:

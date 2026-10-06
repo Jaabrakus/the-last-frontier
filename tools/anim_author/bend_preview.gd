@@ -29,6 +29,11 @@ const GLB := "res://assets/character/actor_b_body.glb"
 const CENTER := Vector3(0.0, 0.95, 0.15)
 ## Where a clip lying on the deck is framed (meta lying): low over the lying body's middle.
 const LOW_CENTER := Vector3(0.0, 0.3, -0.15)
+## How far the side view of a lying clip is centred toward the head (m, -Z), so the head and the hat stay in the frame.
+const LYING_SIDE_SHIFT := -0.2
+## The wall a clip names (meta wall_z: the wall break) drawn there: its size (m) and its see-through stone.
+const WALL_SIZE := Vector3(1.6, 2.4, 0.06)
+const WALL_COLOR := Color(0.5, 0.52, 0.58, 0.38)
 ## (the character faces +Z, +X its left)
 const VIEWS := {"front34": Vector3(-2.3, 0.35, 3.0), "side": Vector3(-3.7, 0.15, 0.15)}
 ## An edge clip's views about the lip (the deck ahead of him, +Z): from the deck's front three quarters a little over it (what
@@ -59,6 +64,7 @@ var view
 var label: Label
 var sk: Skeleton3D
 var _ledge: Node3D
+var _wall: Node3D
 ## rise=<clip>:<vy>:<g>[;...]: the code's own lift added to that clip's root (the edge jump: the game's jump carries the
 ## body up while the clip plays), so the sheet shows what the game shows. Clip name -> (vy m/s, g m/s^2); by animation.
 var _rise_args := {}
@@ -319,9 +325,17 @@ func _snap(a: Animation, t: float, vn: String, text: String) -> Image:
 		c = Vector3(0.0, float(a.get_meta(&"lip_y")) + 0.1, float(a.get_meta(&"lip_out", 0.35)) + 0.3)
 		off = EDGE_VIEWS[vn]
 	elif a.has_meta(&"lying"):
-		# (a figure lying on the deck its whole length (meta lying: the lie, the bounce): framed low round its middle, nearer)
+		# (a figure lying on the deck its whole length (meta lying: the lie, the bounce): framed low round its middle, nearer;
+		# the side view a little further back and toward the head, so the head and the hat are not cut off)
 		c = LOW_CENTER
 		off = VIEWS[vn] * 0.8 + Vector3(0.0, 0.25, 0.0)
+		if vn == "side":
+			c = LOW_CENTER + Vector3(0.0, 0.0, LYING_SIDE_SHIFT)
+			off = VIEWS[vn] + Vector3(0.0, 0.25, 0.0)
+	# (a clip that names a wall ahead, meta wall_z: the wall drawn there, a see-through pane so the figure on it shows)
+	_wall.visible = a.has_meta(&"wall_z")
+	if _wall.visible:
+		_wall.position = Vector3(0.0, 0.0, float(a.get_meta(&"wall_z")))
 	if _rise.has(a):
 		# (the code's lift carries the body high: the frame follows it up once it is past the lip, the lip kept in view)
 		var rr: Vector2 = _rise[a]
@@ -384,6 +398,32 @@ func _stage() -> void:
 		bm.material_override = bmat
 		bm.position = part[1]
 		_ledge.add_child(bm)
+	# (the wall a clip names: its near face at the node's origin, its foot on the floor; an edge line drawn opaque)
+	_wall = Node3D.new()
+	_wall.visible = false
+	root.add_child(_wall)
+	var wm := MeshInstance3D.new()
+	var wb := BoxMesh.new()
+	wb.size = WALL_SIZE
+	wm.mesh = wb
+	var wmat := StandardMaterial3D.new()
+	wmat.albedo_color = WALL_COLOR
+	wmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	wmat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	wmat.roughness = 0.9
+	wm.material_override = wmat
+	wm.position = Vector3(0.0, WALL_SIZE.y * 0.5, WALL_SIZE.z * 0.5)
+	_wall.add_child(wm)
+	for edge: Vector3 in [Vector3(-WALL_SIZE.x * 0.5, WALL_SIZE.y * 0.5, 0.0), Vector3(WALL_SIZE.x * 0.5, WALL_SIZE.y * 0.5, 0.0)]:
+		var em := MeshInstance3D.new()
+		var eb := BoxMesh.new()
+		eb.size = Vector3(0.025, WALL_SIZE.y, 0.025)
+		em.mesh = eb
+		var emat := StandardMaterial3D.new()
+		emat.albedo_color = Color(0.25, 0.27, 0.32)
+		em.material_override = emat
+		em.position = edge
+		_wall.add_child(em)
 	for ix in range(-4, 4):
 		for iz in range(-4, 4):
 			var m := MeshInstance3D.new()
