@@ -53,6 +53,27 @@ extends Node
 ## _pnum, _pmove, dummy_guard), so RingLessons and the tests read it where they always did.
 ## TEAMS (the 3 v 3 groundwork): in RingRules' team_mode a competitor rung out sits the round out (a bot held), and a whole
 ## side out in one round is a knockout: the round its, and the match over at once (why "knockout").
+## ROUND 3, THE % MATCH (RingRules.stock_on(): rules.json rule_set "stock", the default; smash_r3 spec v2 §7; PERCENT's). A
+## "round" is a GAME: 3 lives each (team: 2), an 8:00 clock (stock.time_s; round_s= still sets it for a run), one game
+## (stock.games) or best of 3 (MatchSetup.games(): to_win 2, ends swapped, RoundScreen between games only):
+##   the set-up   every competitor gets MOVE's RingMoves (RingMoves.install), BendKnock.gravity_override is stock.gravity (20)
+##                while the stock ring stands (put back after), each caster's lock_started ends its spawn safety
+##                (RingRules.note_lock_started), key 1 readied at the countdown and after every respawn
+##                (SwayCaster.ready_default)
+##   a fall       RingRules.ko: a 1.4 s centre line ("Into the water: the Tide  ·  2 left", "Last one"), the body hidden and
+##                out of reach for respawn.out_wait_s (its collision layer off, kept at its spout so the camera stays
+##                valid), its locks and stones dropped (SwayCaster.drop_all); then the spout (RingSpout) on its end's s 12 m
+##                line at the grate farther from the nearest foe, respawn.spout_up_m up, MOVE's RingMoves.ride_spout holding
+##                him there (left_spout), safe until respawn.safe_after_s after he leaves it or a lock of his starts. No
+##                respawn after the last life: his side out -> the game to the other (why "falls"); the final fall's word
+##                "Over" over_s, then the screens
+##   the clock    at 0:00 more lives wins (why "time"); level: sudden death (everyone at sudden.pct with one life, "Next one
+##                in the water loses."), the next fall wins (why "sudden"), a draw after sudden.draw_s
+##   the look     on a launch of 18 m/s or more a bigger burst at the hit point (hud.json launch_wake, default false: a 0.5 s
+##                wake of the hitter's matter behind the body instead); hud.json respawn_drip (default false)
+##   the contract the HUD's PercentBar reads lives_of(b), pct_of(b), ko_line(), sudden_left_s(), event_line(), falls (a line
+##                per fall: {at_s, who, by, pct, tag, team, left})
+## Practice under stock: no lives and no clock: a fall puts both back (RingPractice.on_out), the % to 0.
 
 signal phase_changed(phase: String)
 signal knocked_back(who: Node3D, from_zone: int, to_zone: int)
@@ -151,6 +172,20 @@ var hint_back: ColorRect:
 var _knockout := false
 var _guard_took := {}
 var _caster_hooked: SwayCaster
+## Round 3 (stock): the falls of the match: {game, at_s (into the game), who, by, pct, tag, team, left}; the respawns
+## pending ([{body, t}]); the spouts standing; the KO line and its time left; sudden death's start (phase_t), the gravity put
+## back after; the bodies' collision layers while hidden.
+var falls: Array = []
+var _respawns: Array = []
+var _spouts := {}
+var _ko_line := ""
+var _ko_t := 0.0
+var _sudden_at := -1.0
+var _prev_gravity := 0.0
+var _gravity_set := false
+var _hidden := {}
+var _held_before := {}
+var _hooked_casters := {}
 ## Practice's lessons asked for (the main menu's Lessons row, RingLessons.ask; taken by RingLessons.install).
 static var lessons_asked := false
 
@@ -196,6 +231,13 @@ func _ready() -> void:
 	rules.knocked_back.connect(_on_knocked_back)
 	rules.rang_out.connect(_on_rang_out)
 	rules.side_out.connect(_on_side_out)
+	if stock():
+		_prev_gravity = BendKnock.gravity_override
+		BendKnock.gravity_override = RingRules.stock_num("gravity", 20.0)
+		_gravity_set = true
+		rules.ko.connect(_on_ko)
+		rules.launched.connect(_on_launched)
+		rules.hit_safe.connect(_on_hit_safe)
 	_build_ui()
 	RingPractice.ensure_keys()
 	rules.winded.connect(_on_winded)
@@ -218,6 +260,17 @@ func _ready() -> void:
 	restart.call_deferred()
 
 
+func _exit_tree() -> void:
+	if _gravity_set:
+		BendKnock.gravity_override = _prev_gravity
+		_gravity_set = false
+
+
+## The % match (the installed rules' rule set is "stock").
+func stock() -> bool:
+	return rules != null and rules.rule_set == "stock"
+
+
 # ---------------------------------------------------------------- the match
 ## The match from its start with MatchSetup's choices: the score nil, round 1, the player's side at end 0.
 func restart() -> void:
@@ -230,6 +283,11 @@ func restart() -> void:
 	_knockout = false
 	to_win = maxi(MatchSetup.rounds_to_win, 1)
 	round_s = MatchSetup.round_s if MatchSetup.round_s > 0.0 else RingRules.num("round_s", 180.0)
+	if stock():
+		# (a game: 3 lives on the 8:00 clock; one game, or best of 3 from the menu: to_win 2)
+		to_win = 2 if games() >= 3 else 1
+		round_s = _arg_num("round_s", RingRules.stock_num("time_s", 480.0))
+		falls = []
 	score = Vector2i.ZERO
 	round = 0
 	winner = -1
@@ -281,6 +339,8 @@ func next_round() -> void:
 		rules.add(foe, 1)
 	rules.reset_round()
 	rules.soft_walls = not practice
+	if stock():
+		_stock_game()
 	_new_tally()
 	_to("COUNTDOWN")
 
@@ -432,6 +492,9 @@ func _physics_process(dt: float) -> void:
 	if phase == "COUNTDOWN" and LoadingScreen.covering():
 		phase_t = 0.0                        # (the countdown begins as the loading screen goes)
 	_note_t = maxf(_note_t - dt, 0.0)
+	_ko_t = maxf(_ko_t - dt, 0.0)
+	if stock():
+		_stock_respawns(dt)
 	match phase:
 		"COUNTDOWN":
 			var cd := countdown_s()
@@ -445,12 +508,17 @@ func _physics_process(dt: float) -> void:
 			_count_guards()
 			if practice:
 				practice_ctl.step(dt)
+			elif stock():
+				_stock_clock()
 			elif foe == null or not is_instance_valid(foe):
 				_end_round(0, "winded")
 			elif round_left_s() <= 0.0:
 				_time_out()
 		"OVER":
-			if phase_t >= RingRules.num("pause_s", 6.0) or _skip:
+			var wait := RingRules.num("pause_s", 6.0)
+			if stock() and decided():
+				wait = RingRules.stock_num("over_s", 2.2)
+			if phase_t >= wait or _skip:
 				_skip = false
 				if decided():
 					_done()
@@ -469,6 +537,9 @@ func _fight() -> void:
 			foe.brain.told(player, player.global_position)
 	rules.live = true
 	practice_ctl.arm()
+	if stock():
+		for b in competitors():
+			_ready_key1(b)
 	_sting("go")
 	if not practice:
 		_music(true)
@@ -505,18 +576,21 @@ func _end_round(team: int, why: String) -> void:
 	if team >= 0:
 		stats[team]["rounds"] = int(stats[team].get("rounds", 0)) + 1
 	rounds_played += 1
-	if why in ["ringout", "winded", "knockout"]:
+	if why in ["ringout", "winded", "knockout", "falls", "sudden"]:
 		ringouts += 1
+	_respawns.clear()
 	_close_tally()
 	_count_catches()
 	history.append({"round": round, "winner": team, "result": last_result, "why": why,
-			"at_s": maxf(round_s - _left_at_end, 0.0), "tally": round_tally.duplicate(true)})
+			"at_s": maxf(round_s - _left_at_end, 0.0), "tally": round_tally.duplicate(true),
+			"pct_tally": rules.tally.duplicate(true) if stock() else [{}, {}],
+			"lives": [rules.team_stocks(0), rules.team_stocks(1)] if stock() else [0, 0]})
 	if foe != null and is_instance_valid(foe):
 		foe.held = true
 	if player != null and is_instance_valid(player):
 		player.drag_speed_cap = INF
 	_music(false)
-	_sting("ringout" if why == "ringout" else "over")
+	_sting("ringout" if why in ["ringout", "falls", "sudden"] else "over")
 	_to("OVER")
 	round_over.emit(last_result, why)
 
@@ -553,7 +627,7 @@ func _on_rang_out(who: Node3D, by: Node) -> void:
 	last_by = by
 	if by == null or not is_instance_valid(by) or by == who:
 		self_outs += 1
-	if rules.team_mode() and who is NpcFighter and is_instance_valid(who):
+	if not stock() and rules.team_mode() and who is NpcFighter and is_instance_valid(who):
 		(who as NpcFighter).held = true      # (out: he sits the round out)
 	rang_out.emit(who, by)
 
@@ -561,6 +635,9 @@ func _on_rang_out(who: Node3D, by: Node) -> void:
 func _on_side_out(side: int) -> void:
 	if practice:
 		practice_ctl.on_out()
+		return
+	if stock():
+		_end_round(1 - side, "sudden" if rules.sudden else "falls")
 		return
 	var why := String(rules.last_out.get("why", "ringout"))
 	if rules.team_mode():
@@ -734,16 +811,24 @@ func _paint() -> void:
 			var cd := countdown_s()
 			if practice:
 				b = pword("banner")
+			elif stock():
+				var head := words("game") % round if to_win > 1 else ""
+				b = head if phase_t < RingRules.num("round_show_s", 0.8) and head != "" else str(maxi(ceili(cd - phase_t), 1))
+				s = score_text() if to_win > 1 else ""
 			else:
 				b = words("round") % round if phase_t < RingRules.num("round_show_s", 0.8) else str(maxi(ceili(cd - phase_t), 1))
 				s = words("sub_countdown") % [score_text(), MatchSetup.rounds_label(to_win), difficulty]
 		"FIGHT":
 			if practice:
 				b = pword("banner") if phase_t < RingRules.num("go_show_s", 1.2) else (_note if _note_t > 0.0 else "")
+			elif stock() and ko_line() != "":
+				b = ko_line()
 			else:
 				b = words("go") if phase_t < RingRules.num("go_show_s", 1.2) else (_note if _note_t > 0.0 else "")
 		"OVER":
-			if round_screen == null or not is_instance_valid(round_screen):
+			if stock() and decided():
+				b = words("over")
+			elif round_screen == null or not is_instance_valid(round_screen):
 				b = result_line()
 				s = score_text()
 				if not decided():
@@ -764,6 +849,11 @@ func _paint() -> void:
 ## The round's result in words.
 func result_line() -> String:
 	var foe_n := foe_name()
+	if last_why in ["falls", "time", "sudden"] and last_result != "draw":
+		var key := ("win_" if last_result == "win" else "loss_") + last_why
+		return words(key) % foe_n if words(key).contains("%s") else words(key)
+	if last_why == "sudden_draw":
+		return words("sudden_draw")
 	match last_why:
 		"ringout", "winded", "territory", "health", "knockout":
 			if last_result == "win":
@@ -884,3 +974,306 @@ func _pmove(what: String) -> String:
 
 static func dummy_guard(bend: Object) -> Dictionary:
 	return RingPractice.dummy_guard(bend)
+
+
+# ---------------------------------------------------------------- round 3: the % match (stock)
+## The games in a match (1, or 3: best of 3): the user arg games=, else MatchSetup.games() (BOTS' Esc menu), else
+## rules.json stock.games.
+func games() -> int:
+	var g := int(_arg_num("games", 0.0))
+	if g <= 0:
+		g = maxi(MatchSetup.games(), int(RingRules.stock_num("games", 1.0)))
+	return 3 if g >= 3 else 1
+
+
+## A number user arg `key`= (def without one).
+static func _arg_num(key: String, def: float) -> float:
+	for a in OS.get_cmdline_user_args():
+		var kv := a.trim_prefix("--")
+		if kv.begins_with(key + "=") and kv.get_slice("=", 1).is_valid_float():
+			return float(kv.get_slice("=", 1))
+	return def
+
+
+## Every competitor the rules count (both sides).
+func competitors() -> Array:
+	var out: Array = []
+	if rules == null:
+		return out
+	for t in 2:
+		for b in rules.sides[t]:
+			if b is Node3D and is_instance_valid(b):
+				out.append(b)
+	return out
+
+
+## `b` a competitor of `team` mid-match (3v3's more bots, tests): on the rules' books, with its RingMoves and its caster's
+## hooks (stock).
+func join(b: Node3D, team: int) -> void:
+	rules.add(b, team)
+	if stock():
+		_equip(b)
+		if rules.falls.is_empty():
+			rules.reset_lives()              # (a side grown before the first fall: every one at team.stocks)
+
+
+## A game's start (stock): every competitor with its RingMoves and its hooks, shown and solid, lives full, % 0, key 1 readied.
+func _stock_game() -> void:
+	rules.lives_on = not practice
+	for b in competitors():
+		_equip(b)
+		_hide(b, false)
+	_held_before.clear()
+	_respawns.clear()
+	for s in _spouts.values():
+		if is_instance_valid(s):
+			(s as RingSpout).queue_free()
+	_spouts.clear()
+	_ko_line = ""
+	_ko_t = 0.0
+	_sudden_at = -1.0
+	rules.reset_game()
+	for b in competitors():
+		_ready_key1(b)
+
+
+## `b` made ready for the % ring: MOVE's RingMoves on it, its caster's lock starts ending its spawn safety.
+func _equip(b: Node3D) -> void:
+	RingMoves.install(b)
+	var sc := SwayCaster.of(b)
+	if sc != null and not _hooked_casters.has(sc.get_instance_id()):
+		_hooked_casters[sc.get_instance_id()] = true
+		sc.lock_started.connect(func(_m: String, _t: Node3D) -> void:
+			if rules != null and is_instance_valid(b):
+				rules.note_lock_started(b))
+
+
+## `b`'s key 1 readied (SwayCaster.ready_default: at the countdown, after a respawn).
+func _ready_key1(b: Node3D) -> void:
+	var sc := SwayCaster.of(b)
+	if sc != null:
+		sc.ready_default()
+
+
+## The clock (stock): at 0:00 more lives wins; level, sudden death; in sudden death a draw after sudden.draw_s.
+func _stock_clock() -> void:
+	if rules.sudden:
+		if phase_t - _sudden_at >= RingRules.sub_num("sudden", "draw_s", 60.0):
+			_end_round(-1, "sudden_draw")
+		return
+	if round_left_s() > 0.0:
+		return
+	var a := rules.team_stocks(0)
+	var b := rules.team_stocks(1)
+	if a != b:
+		_end_round(0 if a > b else 1, "time")
+		return
+	# (level at the bell: sudden death; everyone back on the deck first)
+	for p: Dictionary in _respawns:
+		_do_respawn(p.body as Node3D)
+	_respawns.clear()
+	rules.start_sudden()
+	_sudden_at = phase_t
+	_note = words("sudden")
+	_note_t = 2.5
+
+
+## Seconds of sudden death left (0 when not in it).
+func sudden_left_s() -> float:
+	if rules == null or not rules.sudden:
+		return 0.0
+	return maxf(RingRules.sub_num("sudden", "draw_s", 60.0) - (phase_t - _sudden_at), 0.0)
+
+
+## b's lives left (stock; 0 none).
+func lives_of(b: Node) -> int:
+	return rules.stocks_of(b) if rules != null and stock() else 0
+
+
+## b's % now (stock).
+func pct_of(b: Node) -> float:
+	return rules.pct_of(b) if rules != null and stock() else 0.0
+
+
+## The fall's centre line now ("" none).
+func ko_line() -> String:
+	return _ko_line if _ko_t > 0.0 else ""
+
+
+## The match's % tally for team `t` (stock; the match screen's, spec §10.6): the games' RingRules tallies summed (the longest
+## string and the highest % survived the best of them), the catches its guards took.
+func stock_tally(t: int) -> Dictionary:
+	var out := {}
+	for h: Dictionary in history:
+		var pt: Dictionary = (h.get("pct_tally", [{}, {}]) as Array)[t]
+		for k: String in pt:
+			if k in ["string_hits", "string_pct", "best_pct"]:
+				continue
+			out[k] = float(out.get(k, 0.0)) + float(pt[k])
+		if int(pt.get("string_hits", 0)) > int(out.get("string_hits", 0)) or (int(pt.get("string_hits", 0)) == int(out.get("string_hits", 0))
+				and float(pt.get("string_pct", 0.0)) > float(out.get("string_pct", 0.0))):
+			out["string_hits"] = int(pt.get("string_hits", 0))
+			out["string_pct"] = float(pt.get("string_pct", 0.0))
+		out["best_pct"] = maxf(float(out.get("best_pct", 0.0)), float(pt.get("best_pct", 0.0)))
+		out["catches"] = float(out.get("catches", 0.0)) + float(((h.tally as Array)[t] as Dictionary).get("catches", 0))
+	return out
+
+
+## RingRules.ko: a life gone (stock). The line, the fall's record, the body hidden and its respawn set (lives left), its
+## locks and stones dropped; Practice: both put back (RingPractice through side_out).
+func _on_ko(b: Node3D, by: Node, pct: float, tag: String, left: int) -> void:
+	var t := rules.team_of(b)
+	var at_s := maxf(round_s - round_left_s(), 0.0)
+	falls.append({"game": round, "at_s": at_s, "who": b, "by": by, "pct": pct, "tag": tag, "team": t, "left": left,
+			"self": by == null})
+	var sc := SwayCaster.of(b)
+	if sc != null:
+		sc.drop_all()
+	if ring != null and ring.water != null and ring.is_out(b.global_position) and not ring.water.holds(b):
+		ring.water.curtain_splash(b.global_position, (b as CharacterBody3D).velocity.length() if b is CharacterBody3D else 8.0)
+	if practice:
+		return
+	var who := words("ko_you") if b == player else words("ko_the") % MatchSetup.competitor(_element_of(b))
+	_ko_line = words("ko_line") % [who, words("ko_last") if left == 1 else (words("ko_left") % left)] if left > 0 else ""
+	_ko_t = RingRules.stock_num("ko_line_s", 1.4) if left > 0 else 0.0
+	if left <= 0:
+		_hide(b, true)
+		return
+	_hide(b, true)
+	_respawns.append({"body": b, "t": RingRules.sub_num("respawn", "out_wait_s", 1.6)})
+
+
+func _element_of(b: Node) -> String:
+	var el := BendPoses.element_of(b)
+	if el == "" and b is NpcFighter:
+		el = String((b as NpcFighter).get(&"element"))
+	return el if el in Bending.ELEMENTS else "earth"
+
+
+## The respawns pending: each at its time, in game time.
+func _stock_respawns(dt: float) -> void:
+	if _respawns.is_empty():
+		return
+	var due: Array = []
+	for p: Dictionary in _respawns:
+		p["t"] = float(p.t) - dt
+		if float(p.t) <= 0.0:
+			due.append(p)
+	for p: Dictionary in due:
+		_respawns.erase(p)
+		if phase == "FIGHT" and is_instance_valid(p.body):
+			_do_respawn(p.body as Node3D)
+
+
+## `b` hidden out of play (its collision layer off, still, held, kept at its end's spout so the camera stays valid) or
+## shown again.
+func _hide(b: Node3D, on: bool) -> void:
+	if b == null or not is_instance_valid(b):
+		return
+	var id := b.get_instance_id()
+	if on:
+		if not _hidden.has(id) and b is CollisionObject3D:
+			_hidden[id] = (b as CollisionObject3D).collision_layer
+			(b as CollisionObject3D).collision_layer = 0
+		b.visible = false
+		var e := rules.end_of(b)
+		if e >= 0 and ring != null:
+			var at := ring.spout_at(e, 0)
+			b.global_position = at + Vector3.UP * 0.1
+			if b is CharacterBody3D:
+				(b as CharacterBody3D).velocity = Vector3.ZERO
+		if b == player:
+			player.drag_speed_cap = 0.0
+			_hold_casts(true)
+		elif b is NpcFighter:
+			if not _held_before.has(id):
+				_held_before[id] = (b as NpcFighter).held       # (a held one, Practice's dummy, stays held after)
+			(b as NpcFighter).held = true
+		var kn := BendKnock.peek(b)
+		if kn != null:
+			kn.reset()
+		return
+	if _hidden.has(id) and b is CollisionObject3D:
+		(b as CollisionObject3D).collision_layer = int(_hidden[id])
+	_hidden.erase(id)
+	b.visible = true
+
+
+## `b` back on the spout (spec §7.2): the grate on his end's s 12 m line farther from the nearest foe, spout_up_m up, facing
+## the deck's middle; MOVE's ride_spout holds him there (left_spout ends it), else he stands on the grate; safe until
+## safe_after_s after he leaves it or any lock of his starts.
+func _do_respawn(b: Node3D) -> void:
+	if b == null or not is_instance_valid(b) or rules.is_gone(b):
+		return
+	var e := rules.end_of(b)
+	var slots := 3 if rules.team_mode() else 2
+	var best := ring.spout_at(e, 0)
+	var best_d := -INF
+	for k in slots:
+		var p := ring.spout_at(e, k)
+		var near := INF
+		for o in rules.sides[1 - rules.team_of(b)]:
+			if is_instance_valid(o) and not rules.is_away(o):
+				near = minf(near, (o as Node3D).global_position.distance_to(p))
+		if near > best_d + 0.01:
+			best_d = near
+			best = p
+	_hide(b, false)
+	var up := RingRules.sub_num("respawn", "spout_up_m", 3.0)
+	var face := ring.center() - best
+	face.y = 0.0
+	var xf := Transform3D(Basis.looking_at(face.normalized() if face.length() > 0.1 else -ring.axis(), Vector3.UP), best + Vector3.UP * up)
+	RingLevel.place(b, xf)
+	if b == player:
+		player.drag_speed_cap = INF
+		_hold_casts(false)
+	elif b is NpcFighter:
+		(b as NpcFighter).held = bool(_held_before.get(b.get_instance_id(), false))
+	_held_before.erase(b.get_instance_id())
+	var rm := RingMoves.of(b)
+	var hold := RingRules.sub_num("respawn", "spout_s", 3.0)
+	if rm != null:
+		rm.ride_spout(b.global_position, hold)
+	var held := rm != null and rm.on_spout()
+	if not held:
+		RingLevel.place(b, Transform3D(xf.basis, best))         # (nothing holds him up: he stands on the grate)
+	var sp := RingSpout.raise(level if level != null else self, best, b, hold if held else 0.6)
+	_spouts[b.get_instance_id()] = sp
+	if held:
+		rm.left_spout.connect(func() -> void:
+			if rules != null and is_instance_valid(b):
+				rules.left_spout(b)
+			if is_instance_valid(sp):
+				sp.sink(), CONNECT_ONE_SHOT)
+	rules.respawn(b, held)
+	_ready_key1(b)
+	if bool(PercentBar.hud_cfg().get("respawn_drip", false)):
+		RingSpout.drip(b, float(PercentBar.hud_cfg().get("drip_s", 1.5)))
+
+
+## RingRules.launched (stock): a bigger burst at the hit point at launch_wake.mps or more (hud.json launch_wake false), or
+## the wake of the hitter's matter behind the body for wake_s (launch_wake true).
+func _on_launched(b: Node3D, v: Vector3, _hs: float, by: Node, _tag: String) -> void:
+	var cfg := PercentBar.hud_cfg()
+	if v.length() < float(cfg.get("wake_mps", 18.0)) or b == null or not is_instance_valid(b):
+		return
+	var kind := _element_of(by) if by != null and is_instance_valid(by) else "air"
+	var mat := {"earth": "stone", "water": "water", "fire": "fire", "air": "air"}.get(kind, "air") as String
+	if bool(cfg.get("launch_wake", false)):
+		var g := BendLooks.trail(b, mat, 0.3)
+		if g != null:
+			g.position = Vector3(0.0, 1.0, 0.0)
+			get_tree().create_timer(float(cfg.get("wake_s", 0.5)), false).timeout.connect(func() -> void:
+				if is_instance_valid(g):
+					BendLooks.stop_trail(g))
+	else:
+		BendLooks.burst(b.global_position + Vector3.UP * 1.0, mat, int(cfg.get("burst_n", 40)), v.normalized(), 70.0,
+				float(cfg.get("burst_mps", 7.0)), 0.4)
+
+
+## RingRules.hit_safe: the hiss and the splash-through at the hit point (an effect of the hit, never a mark on him).
+func _on_hit_safe(b: Node3D, by: Node, point: Vector3) -> void:
+	var d := Vector3.FORWARD
+	if by is Node3D and is_instance_valid(by):
+		d = b.global_position - (by as Node3D).global_position
+	RingSpout.safe_hit(point, d)

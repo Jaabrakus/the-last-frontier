@@ -205,12 +205,63 @@ func lines() -> Dictionary:
 	out.line = w("line_win") if win == 0 else (w("line_loss") % them if win == 1 else w("line_draw"))
 	out.score = String(m.call(&"score_text"))
 	var rows: Array = []
+	if m.has_method(&"stock") and bool(m.call(&"stock")):
+		return _stock_lines(m, them, out)
 	for h: Dictionary in m.get(&"history"):
 		rows.append(round_line(h, them))
 	out.rounds = rows
 	var t: Dictionary = m.call(&"match_tally", 0)
 	out.totals = w("totals") % [int(t.get("casts", 0)), int(t.get("catches", 0)), int(t.get("knock_backs", 0))]
 	return out
+
+
+## The % match's screen (stock, spec §10.6): the lives left, a line per fall ("1:12  ·  the Tide into the water at 134%  ·
+## Boulder"), and the tally: falls dealt and taken (own falls apart), % dealt, the highest % survived, the % healed, the
+## longest string (hits and %), catches (clean), perfect guards, falls broken, edge saves.
+func _stock_lines(m: Node, them: String, out: Dictionary) -> Dictionary:
+	var rows: Array = []
+	var hist: Array = m.get(&"history")
+	if not hist.is_empty():
+		var lv: Array = (hist.back() as Dictionary).get("lives", [0, 0])
+		rows.append(w("lives_line") % [int(lv[0]), them, int(lv[1])])
+	var multi := int(m.get(&"to_win")) > 1
+	var player: Variant = m.get(&"player")
+	for f: Dictionary in m.get(&"falls"):
+		rows.append(fall_line(f, them, f.get("who") == player, multi))
+	out.rounds = rows
+	var t: Dictionary = m.call(&"stock_tally", 0)
+	var lines := PackedStringArray()
+	lines.append(w("tally_falls") % [int(t.get("falls_dealt", 0.0)), int(t.get("falls_taken", 0.0)), int(t.get("self_falls", 0.0))])
+	lines.append(w("tally_pct") % [roundi(float(t.get("pct_dealt", 0.0))), roundi(float(t.get("best_pct", 0.0))),
+			roundi(float(t.get("healed", 0.0)))])
+	lines.append(w("tally_string") % [int(t.get("string_hits", 0)), roundi(float(t.get("string_pct", 0.0)))])
+	lines.append(w("tally_guards") % [int(t.get("catches", 0.0)), int(t.get("clean_catches", 0.0)), int(t.get("perfect_guards", 0.0)),
+			int(t.get("breaks", 0.0)), int(t.get("edge_saves", 0.0))])
+	out.totals = "\n".join(lines)
+	return out
+
+
+## "1:12  ·  the Tide into the water at 134%  ·  Boulder" (a fall of the % match; `mine` the player's own; `multi` a best
+## of 3: "Game 2  ·  " first).
+static func fall_line(f: Dictionary, them: String, mine: bool, multi := false) -> String:
+	var s := float(f.get("at_s", 0.0))
+	var when := "%d:%02d" % [floori(s / 60.0), floori(fmod(s, 60.0))]
+	if multi:
+		when = (w("fall_game") % int(f.get("game", 1))) + "  ·  " + when
+	var who := w("fall_you") if mine else w("fall_them") % them
+	var how := w("fall_self") if bool(f.get("self", false)) or f.get("by") == null else move_of(String(f.get("tag", "")))
+	return w("fall_line") % [when, who, roundi(float(f.get("pct", 0.0))), how]
+
+
+## A move's plain name from its hit tag ("stone_form/cannonball" -> "Boulder"; ".grown" and ".return" read as the move's).
+static func move_of(tag: String) -> String:
+	if tag == "":
+		return "-"
+	var t := tag.trim_suffix(".return").trim_suffix(".grown")
+	var id := t.get_slice("/", 0)
+	var md := t.get_slice("/", 1) if t.contains("/") else ""
+	var n := KitWords.move_name(id, md)
+	return n if n != "" else t
 
 
 ## "Round 1  ·  yours  ·  into the water at 1:12" (a time-out's how needs no time: "ground held at the bell").

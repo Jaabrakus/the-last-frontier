@@ -18,9 +18,13 @@ extends RefCounted
 ##           time, -1 unknown) before the body is told (its hurt signal), so SwayCaster pushes a lock back by it (setback_s)
 ##   Rooted: an earth competitor standing still (Bending.passive("earth"): under still_mps) takes knock_mult of a knock
 ##   clear_round(b): every timed bend meta on `b` gone (ROUND_METAS; RingMode.make_whole's list and round 2's)
-## ROUND 3 (smash_r3 spec §14.3; SEAMS, PERCENT's after): take_filters (static: can_take is false when any of them says
-## false; none registered outside the % ring: MOVE's intangible dodges and edge grabs register theirs), and the hit info
-## (`info`, spec §14.3's keys) through knock and hurt to BendKnock and the rules (unread until PERCENT).
+## ROUND 3 (smash_r3 spec v2 §2, §14.3; PERCENT's): take_filters (static: can_take is false when any of them says false;
+## none registered outside the % ring: RingRules.take_ok while a stock ring stands, MOVE's intangible dodges and edge grabs
+## theirs), and the hit info (`info`, spec §14.3's keys). On a competitor of a stock-rules ring (stock_body) a hit is %:
+## hurt never touches health, it hands the hit to RingRules.on_hit (the %, the launch) and sets the launch through
+## BendKnock.knock (info._launch: SET, never added); the knock that follows a hurt in the same frame from the same attacker is
+## that hit's (STOCK_HIT_META), a knock alone (a wind wall, a gust, an untagged stone) is a hit of its own. Everyone else, and
+## everything with the gate off: as before.
 
 ## (old name) BendKnock.ragdoll_mps's first value: a knock this hard (m/s) or more throws the player off his feet.
 const KNOCK_DOWN_MPS := 9.0
@@ -28,6 +32,8 @@ const KNOCK_DOWN_MPS := 9.0
 const SLOW_MPS := 1.6
 ## What the last blow on a body cost its caster (s; -1 unknown): hurt's lock_s, read by the struck one's SwayCaster.
 const HIT_LOCK_META := &"bend_hit_lock_s"
+## Round 3: the last stock hit on a body: [physics frame, its attacker's instance id] (the knock after its hurt is the same hit).
+const STOCK_HIT_META := &"bend_stock_hit"
 ## Every timed bend meta a round leaves on a body (clear_round): the old ones and round 2's (a guard's whiff, Carried wind,
 ## the burrow under the stones, the guard's last result, the last blow's cost).
 const ROUND_METAS: Array[StringName] = [&"bend_root", &"bend_slow", &"bend_anchor", &"bend_redirect_lightning",
@@ -90,12 +96,28 @@ static func near(caster: Node, at: Vector3, r: float) -> Array:
 ## `dmg` to `n` from `by` at `at` going `dir`: a blunt blow (no anatomy wound; the striker's damage_kind meta for the hit).
 ## `lock_s`: what the blow cost its caster (its move's lock time; -1 unknown), written on `n` first (HIT_LOCK_META).
 ## `info`: round 3's hit info (spec §14.3; unread until PERCENT).
-static func hurt(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lock_s := -1.0, _info := {}) -> void:
+static func hurt(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lock_s := -1.0, info := {}) -> void:
 	if by != null and not is_instance_valid(by):
 		by = null                                # (its caster freed since: the blow is no one's)
 	if dmg <= 0.0 or not can_take(n, by):
 		return
 	n.set_meta(HIT_LOCK_META, lock_s)
+	if stock_body(n):
+		# (the % ring: the hit is %, never health; its launch set at once, the knock that follows it this frame taken as done)
+		var i := info.duplicate()
+		i["dmg"] = dmg
+		i["at"] = at
+		i["dir"] = dir
+		var res := _stock_hit(n, by, i)
+		var landed := float(res.get("d", 0.0)) > 0.0 or not bool(res.get("none", true))
+		if landed and n is FrontierPlayer and is_instance_valid(n):
+			# (his own reactions to a blow still hear of it, health untouched: SwayCaster's lock and Lightning's charge, the
+			# HUD's edge; AIR moves them onto the hitstun)
+			var p := n as FrontierPlayer
+			var from := -dir if dir.length_squared() > 1e-8 else at - p.global_position
+			var local := Vector2(from.dot(p.global_basis.x), from.dot(-p.global_basis.z))
+			p.hurt.emit(local.normalized() if local.length_squared() > 1e-8 else Vector2.ZERO, dmg, false)
+		return
 	var had: Variant = by.get_meta(&"damage_kind") if by != null and by.has_meta(&"damage_kind") else null
 	if by != null:
 		by.set_meta(&"damage_kind", "blunt")
@@ -116,6 +138,16 @@ static func knock(n: Node, v: Vector3, by: Node, info := {}) -> void:
 		by = null
 	if v.length_squared() < 1e-4 or not can_take(n, by) or until(n, &"bend_anchor") > 0.0:
 		return
+	if stock_body(n):
+		if _hit_this_frame(n, by):
+			return                               # (its hurt this frame already set the launch)
+		var i := info.duplicate()
+		i["v_given"] = v
+		i["at"] = (n as Node3D).global_position + Vector3.UP
+		if String(i.get("tag", "")) == "":
+			i["dmg"] = RingRules.current().take_deficit(n as Node3D)
+		_stock_hit(n, by, i)
+		return
 	v *= rooted_mult(n)
 	if n is FrontierPlayer or n is NpcFighter:
 		BendKnock.of(n).knock(v, by, info)
@@ -123,6 +155,33 @@ static func knock(n: Node, v: Vector3, by: Node, info := {}) -> void:
 		SwayEffects.shove_animal(n as WildAnimal, Vector3(v.x, 0.0, v.z), (by as Node3D).global_position if by is Node3D else Vector3.ZERO)
 	elif n is RigidBody3D:
 		SwayEffects.push_prop(n as RigidBody3D, v, (n as Node3D).global_position, 400.0)
+
+
+## Round 3: `n` is a competitor of a stock-rules ring (the % ring: its hits are %, its knocks set its motion).
+static func stock_body(n: Node) -> bool:
+	if not RingRules.stock_on() or not (n is FrontierPlayer or n is NpcFighter):
+		return false
+	return RingRules.current().team_of(n) >= 0
+
+
+## Round 3: a hit on a stock competitor (RingRules.on_hit: the %, the launch), the launch set through BendKnock (info._launch),
+## the frame and the attacker marked (STOCK_HIT_META: the knock that follows its hurt this frame is the same hit).
+static func _stock_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
+	n.set_meta(STOCK_HIT_META, [Engine.get_physics_frames(), by.get_instance_id() if by != null else 0])
+	var res := RingRules.current().on_hit(n, by, info)
+	if res.is_empty() or bool(res.get("none", true)) or until(n, &"bend_anchor") > 0.0:
+		return res
+	var i := info.duplicate()
+	i["_launch"] = res
+	BendKnock.of(n).knock(res.get("v", Vector3.ZERO), by, i)
+	return res
+
+
+static func _hit_this_frame(n: Node, by: Node) -> bool:
+	if not n.has_meta(STOCK_HIT_META):
+		return false
+	var m: Array = n.get_meta(STOCK_HIT_META)
+	return int(m[0]) == Engine.get_physics_frames() and int(m[1]) == (by.get_instance_id() if by != null else 0)
 
 
 ## Seconds left of timed effect `key` on `n` (0: none).

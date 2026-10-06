@@ -18,6 +18,10 @@ extends SceneTree
 ##               (SwayCaster.enabled) and the fight lets it go
 ##   metrics     printed: "METRIC ring_out_ratio=<ring-outs / rounds>", the rounds' whys, the knocks landed per side, the
 ##               bot's casts by move
+## Round 3 (smash_r3 spec v2 §7, §15): in the % ring (rule set stock, rules.json's default; rules=classic for the zones)
+## the match is one game of lives on its clock: it reaches DONE; every game's why falls, time, sudden or a sudden draw; each
+## fall credited to the other side or his own; health never touched; the plates shown in place of the match bar; METRIC
+## falls with each fall's %.
 ## In-test watchdog LIMIT_S real seconds (under the runner's GODOT_TIMEOUT 420). Last line: "RING MATCH TEST PASSED" or
 ## "... FAILED".
 
@@ -44,6 +48,8 @@ var bot_by := {}
 var knocks := Vector2i.ZERO
 ## Frames of the player's caster: [held in the countdown, open in the countdown, open in the fight, held in the fight].
 var cast_frames := [0, 0, 0, 0]
+## Round 3: the % match (RingRules.stock_on(): rules.json's default) or the classic zones (rules=classic).
+var stock := false
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -111,7 +117,14 @@ func _run() -> void:
 		outs.append([mode.side_of(who), mode.side_of(by) if by != null and is_instance_valid(by) else -1, who == by]))
 	mode.match_over.connect(func(w: int) -> void: matches.append(w))
 	await _until(func() -> bool: return mode.foe != null, 5.0)
-	_expect(is_equal_approx(mode.round_s, 60.0) and mode.to_win == 2, "round_s %.0f, to_win %d (the args through MatchSetup)" % [mode.round_s, mode.to_win])
+	stock = RingRules.stock_on()
+	if stock:
+		# (round 3's % match: an 8:00 game unless round_s= says, one game unless games=3)
+		var want_s := RingMode._arg_num("round_s", RingRules.stock_num("time_s", 480.0))
+		_expect(is_equal_approx(mode.round_s, want_s) and mode.to_win == (2 if mode.games() >= 3 else 1),
+				"the %% match: round_s %.0f, to_win %d (games %d)" % [mode.round_s, mode.to_win, mode.games()])
+	else:
+		_expect(is_equal_approx(mode.round_s, 60.0) and mode.to_win == 2, "round_s %.0f, to_win %d (the args through MatchSetup)" % [mode.round_s, mode.to_win])
 	await _seams()
 	Engine.time_scale = ts
 	var t0 := Time.get_ticks_msec()
@@ -130,7 +143,7 @@ func _run() -> void:
 		var sc := SwayCaster.of(player)
 		if sc != null and mode.phase == "COUNTDOWN" and mode.phase_t > 0.1:
 			cast_frames[1 if sc.enabled else 0] += 1
-		elif sc != null and mode.phase == "FIGHT":
+		elif sc != null and mode.phase == "FIGHT" and not (stock and mode.rules.is_away(player)):
 			cast_frames[2 if sc.enabled else 3] += 1
 		if mode.phase != "FIGHT" or mode.foe == null or not is_instance_valid(mode.foe):
 			next_cast = 0.6
@@ -156,18 +169,28 @@ func _run() -> void:
 	var max_r := int(RingRules.num("max_rounds", 7.0))
 	_expect(mode.score.x >= mode.to_win or mode.score.y >= mode.to_win or mode.round >= max_r,
 			"a side at to_win, or max_rounds played (score %s, rounds %d)" % [mode.score, mode.round])
-	_expect(rounds.size() == mode.rounds_played and rounds.size() >= 2, "the rounds counted (%d)" % rounds.size())
+	_expect(rounds.size() == mode.rounds_played and rounds.size() >= (1 if stock else 2), "the rounds counted (%d)" % rounds.size())
 	var whys_ok := true
 	var whys: Array = []
+	var rule_whys := ["falls", "time", "sudden", "sudden_draw"] if stock else ["ringout", "winded", "territory", "health", "time"]
 	for r in rounds:
 		whys.append(String(r[2]))
-		whys_ok = whys_ok and String(r[2]) in ["ringout", "winded", "territory", "health", "time"]
+		whys_ok = whys_ok and String(r[2]) in rule_whys
 	_expect(whys_ok, "every round's why is a rule's (%s)" % [whys])
 	var selfs := 0
 	for o in outs:
 		if int(o[1]) < 0 or bool(o[2]) or int(o[1]) == int(o[0]):
 			selfs += 1
-	_expect(selfs == 0 and mode.self_outs == 0, "no self ring-out (%d of %d ring-outs; the mode's count %d)" % [selfs, outs.size(), mode.self_outs])
+	if stock:
+		# (a fall with no knocker within 6 s is his own: allowed in the % ring, counted apart)
+		var falls_ok := true
+		for fl: Dictionary in mode.falls:
+			falls_ok = falls_ok and (fl.get("by") == null or mode.side_of(fl.get("by")) != int(fl.get("team", -1)))
+		_expect(falls_ok and not mode.falls.is_empty(), "every fall credited to the other side or his own (%d falls, %d own)" % [mode.falls.size(), mode.self_outs])
+		_expect(player.health == player.max_health and (mode.foe == null or not is_instance_valid(mode.foe) or mode.foe.health == mode.foe.health_max),
+				"health never touched in the %% ring (%.0f)" % player.health)
+	else:
+		_expect(selfs == 0 and mode.self_outs == 0, "no self ring-out (%d of %d ring-outs; the mode's count %d)" % [selfs, outs.size(), mode.self_outs])
 	_expect(not dead_seen, "neither side ever dead in the ring (winded instead)")
 	_expect(cast_frames[0] > 0 and cast_frames[1] == 0 and cast_frames[2] > 0 and cast_frames[3] == 0,
 			"the countdown holds the player's casting, the fight lets it go (frames held/open in the countdown, open/held in the fight: %s)" % [cast_frames])
@@ -190,6 +213,11 @@ func _run() -> void:
 	print("METRIC hits=%s" % [[mode.stats[0].get("hits", 0), mode.stats[1].get("hits", 0)]])
 	print("METRIC knock_backs=%s" % [[mode.stats[0].get("knock_backs", 0), mode.stats[1].get("knock_backs", 0)]])
 	print("METRIC knocks=%s bot_casts=%d bot_by=%s catches=%d" % [knocks, bot_casts, bot_by, int(mode.stats[1].get("catches", 0))])
+	if stock:
+		var pcts: Array = []
+		for fl: Dictionary in mode.falls:
+			pcts.append(roundi(float(fl.get("pct", 0.0))))
+		print("METRIC falls=%d fall_pcts=%s own_falls=%d" % [mode.falls.size(), pcts, mode.self_outs])
 	_end()
 
 
@@ -209,11 +237,18 @@ func _seams() -> void:
 		got.append(String(bar.entry(i).get("id", "")) if bar != null else "")
 	_expect(bar != null and got == want and bar.spells_only and bar.kit_placed, "the element's bar laid, the kit closed (%s)" % [got])
 	var hud := player.hud
-	_expect(hud != null and hud.arena and hud.bend_strip != null and hud.match_bar != null, "the arena HUD: the strip and the match bar")
+	_expect(hud != null and hud.arena and hud.bend_strip != null and hud.match_bar != null and hud.percent_bar != null,
+			"the arena HUD: the strip, the match bar and the % plates")
 	if hud != null and hud.bend_strip != null:
 		var c0: Dictionary = hud.bend_strip.column(0)
 		_expect(String(c0.get("id", "")) == String(want[0]) if not want.is_empty() else false, "the strip's key 1 is the bar's (%s)" % c0.get("id", ""))
-	if hud != null and hud.match_bar != null:
+	if stock and hud != null:
+		await process_frame
+		var pl: Dictionary = hud.percent_bar.lines()
+		_expect(hud.percent_bar.visible and not hud.match_bar.visible and (pl.plates[0] as Array).size() == 1
+				and (pl.plates[1] as Array).size() == 1 and int(((pl.plates[0] as Array)[0] as Dictionary).lives) == 3,
+				"the %% ring: the plates in place of the match bar, one a side, 3 lives (%s)" % str(pl.clock))
+	elif hud != null and hud.match_bar != null:
 		var l: Dictionary = hud.match_bar.lines()
 		_expect(String(l.round) == "ROUND 1" and String(l.score).contains(MatchSetup.competitor(mode.foe_element)) and String(l.score).count("○") == 2 * mode.to_win,
 				"the match bar reads the match (%s · %s · %s)" % [l.round, l.time, l.score])
@@ -223,7 +258,7 @@ func _seams() -> void:
 	var bend: NpcBending = foe.brain.bending if foe != null and foe.brain != null else null
 	_expect(bend != null and bend.element == mode.foe_element and bend.bounds_fn.is_valid() and bend.edge_fn.is_valid() and foe.weapon in ["", "none"],
 			"its bending of %s, the ring's bounds and edges set, no gun (weapon '%s')" % [bend.element if bend else "-", foe.weapon if foe else "-"])
-	_expect(mode.side_of(player) == 0 and mode.side_of(foe) == 1 and mode.confined_of(player) == 1 and mode.confined_of(foe) == 1,
+	_expect(mode.side_of(player) == 0 and mode.side_of(foe) == 1 and (stock or (mode.confined_of(player) == 1 and mode.confined_of(foe) == 1)),
 			"the sides and zones (player 0 / zone 1, foe 1 / zone 1)")
 
 

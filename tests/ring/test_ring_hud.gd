@@ -23,6 +23,8 @@ extends SceneTree
 ##             legs' pace leaves the carry out; a knock-up plays the airborne clip; a 16 m/s knock throws him down
 ##             (PlayerRagdoll) and he gets up and walks again
 ## The last line "RING HUD TEST PASSED" or "RING HUD TEST FAILED"; exit 0 only on a pass; a watchdog quits with 2.
+## Round 3: pinned to the classic rule set (RingRules.rule_set_override "classic": the zones' ring this test was written for);
+## the % ring's own checks are test_ring_stage, test_ring_pct, test_ring_hitstun and test_percent_hud.
 
 const NAME := "RING HUD TEST"
 const LIMIT_S := 300.0
@@ -77,6 +79,7 @@ func _initialize() -> void:
 	create_timer(LIMIT_S, true, false, true).timeout.connect(func() -> void:
 		print("%s FAILED (watchdog)" % NAME)
 		quit(2))
+	RingRules.rule_set_override = "classic"
 	SwayCaster.free_override = true
 	InputSetup.ensure()
 	GameSettings.path = OWN_CFG                 # (the schemes and the left click's move set here are this test's own)

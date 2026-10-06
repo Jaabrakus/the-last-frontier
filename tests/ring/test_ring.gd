@@ -19,6 +19,8 @@ extends SceneTree
 ##   time     the first frame's time logged (RING first_frame_ms); with baseline=<dir> written to
 ##            <dir>/ring_first_frame_ms.txt (informational: no limit is asserted on it)
 ## A watchdog ends it at LIMIT_S (under the runner's 300 s). The last line: "RING TEST PASSED" or "RING TEST FAILED".
+## Round 3: pinned to the classic rule set (RingRules.rule_set_override "classic": the zones' ring this test was written for);
+## the % ring's own checks are test_ring_stage, test_ring_pct, test_ring_hitstun and test_percent_hud.
 
 const LIMIT_S := 240.0
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
@@ -44,6 +46,7 @@ func _initialize() -> void:
 	create_timer(LIMIT_S, true, false, true).timeout.connect(func() -> void:
 		print("RING TEST FAILED (watchdog)")
 		quit(2))
+	RingRules.rule_set_override = "classic"
 	SwayCaster.free_override = true
 	InputSetup.ensure()
 	change_scene_to_file("res://scenes/ring.tscn")

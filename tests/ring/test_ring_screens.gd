@@ -20,6 +20,8 @@ extends SceneTree
 ##   for rematch Your element and Opponent step the setup without a restart (still DONE, the match's own element kept);
 ##               Rematch: the score nil, round 1, the new element in play, the screen gone
 ## Watchdog LIMIT_S. Last line "RING SCREENS TEST PASSED" or "RING SCREENS TEST FAILED" (exit 0 only on a pass).
+## Round 3: pinned to the classic rule set (RingRules.rule_set_override "classic": the zones' ring this test was written for);
+## the % ring's own checks are test_ring_stage, test_ring_pct, test_ring_hitstun and test_percent_hud.
 
 const NAME := "RING SCREENS TEST"
 const LIMIT_S := 300.0
@@ -50,6 +52,7 @@ func _initialize() -> void:
 	create_timer(LIMIT_S, true, false, true).timeout.connect(func() -> void:
 		print("%s FAILED (watchdog)" % NAME)
 		quit(2))
+	RingRules.rule_set_override = "classic"
 	SwayCaster.free_override = true
 	InputSetup.ensure()
 	GameSettings.path = OWN_CFG

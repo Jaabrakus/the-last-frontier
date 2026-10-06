@@ -26,6 +26,9 @@ extends CanvasLayer
 ## ground each side holds: read off the match node, never a mark of the other side's body), the status words (rooted,
 ## slowed, anchored, winded) under the health, and F1 shows ARENA_HELP (KitWords). Nothing is ever drawn on or over the
 ## opponent (the owner: no target cues of any kind); the aim dot shows while a move is readied.
+## Round 3 (smash_r3 spec v2 §10): in the % ring (RingRules.stock_on() as set_arena runs) the PercentBar (scripts/ui/
+## percent_bar.gd: each side's % and lives on fixed plates, your pips and fresh band on your own, the clock) stands in place of
+## the MatchBar, and the health row is hidden (there is no health in the % ring); the classic ring keeps the MatchBar.
 ## Hooks kept: player, show_debug, on_projectile_hit(), on_target_killed() (group hit_listeners), toast().
 
 @export var color := Color(0.95, 0.92, 0.8)
@@ -172,6 +175,8 @@ var _heading := 0.0
 var arena := false
 var bend_strip: BendStrip
 var match_bar: MatchBar
+## Round 3: the % ring's plates (PercentBar), shown in place of the MatchBar while a stock-rules ring is on.
+var percent_bar: PercentBar
 var _help_label: Label
 var _status: Label
 var _winded_t := 0.0
@@ -422,8 +427,15 @@ func set_arena(on: bool) -> void:
 		compass.visible = not on
 	if bend_strip != null:
 		(bend_strip.get_parent() as Control).visible = on
-		match_bar.visible = on
+		# (round 3: the % ring's plates in place of the zones' bar; the classic ring keeps the MatchBar)
+		var pct := RingRules.stock_on()
+		match_bar.visible = on and not pct
+		match_bar.set_process(not pct)
+		percent_bar.set_process(on)
+		percent_bar.visible = on and pct
 		(_status.get_parent() as Control).visible = on
+		if _health_bar != null:
+			(_health_bar.get_parent().get_parent() as Control).visible = not (on and pct)   # (no health in the % ring)
 	if _help_label != null:
 		_help_label.text = help_text()
 	if on:
@@ -446,6 +458,10 @@ func _build_arena() -> void:
 	match_bar.player = player
 	_root.add_child(match_bar)
 	_place(match_bar, Vector2(0.5, 0), Vector2(0, 10), Vector2(0.5, 0))
+	percent_bar = PercentBar.new()
+	percent_bar.name = "PercentBar"
+	percent_bar.player = player
+	_root.add_child(percent_bar)
 	# the status words: over the health (the vitals' own rows are the world's)
 	var box := VBoxContainer.new()
 	box.name = "ArenaVitals"

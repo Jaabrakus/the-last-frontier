@@ -15,6 +15,12 @@ extends SceneTree
 ##   sit out     one rival rung out: still the fight, the round on, he held (sits out); the third out: a knockout, the match
 ##               over at once (match_over(0), DONE, why "knockout")
 ##   cleared     a restart takes the side marks off the bots that left the books and puts them back on the new ones
+## (all of the above in the classic rule set, RingRules.rule_set_override "classic": the zones' team rules), then round 3's %
+## ring (rule set stock, the scene loaded again; smash_r3 spec v2 §7.3):
+##   lives       two more rivals joined (RingMode.join): 2 lives each, every competitor
+##   allies      a rival's tagged hit on his ally adds 0% and launches nothing; on the player it adds its d
+##   spouts      three spouts on each end (z 4, -4, 0); a rival into the water comes back on the one farthest from the nearest
+##               foe, safe
 ## Watchdog LIMIT_S. Last line "RING TEAMS TEST PASSED" or "RING TEAMS TEST FAILED" (exit 0 only on a pass).
 
 const NAME := "RING TEAMS TEST"
@@ -42,6 +48,7 @@ func _initialize() -> void:
 	create_timer(LIMIT_S, true, false, true).timeout.connect(func() -> void:
 		print("%s FAILED (watchdog)" % NAME)
 		quit(2))
+	RingRules.rule_set_override = "classic"
 	SwayCaster.free_override = true
 	InputSetup.ensure()
 	MatchSetup.incoming = true
@@ -69,6 +76,7 @@ func _until(cond: Callable, limit: float) -> float:
 
 
 func _end() -> void:
+	RingRules.rule_set_override = ""
 	if fails.is_empty() and checks > 0:
 		print("%s PASSED (%d checks)" % [NAME, checks])
 		quit(0)
@@ -160,6 +168,7 @@ func _run() -> void:
 	_advance()
 	await _sit_out()
 	await _cleared()
+	await _stock_teams()
 	_end()
 
 
@@ -289,6 +298,66 @@ func _cleared() -> void:
 	_expect(BendCaster.team_of(b) == &"ring_b" and not b.has_meta(BendCaster.TEAM_META) and not mode.rules.team_mode()
 			and BendCaster.team_of(player) == &"ring_0" and BendCaster.team_of(foe()) == &"ring_1",
 			"a restart: the side marks off the bots that left the books (their faction's side only), back on the new pair")
+	for f: NpcFighter in [b, c]:
+		if is_instance_valid(f) and f.squad != null and is_instance_valid(f.squad):
+			f.squad.get_parent().remove_child(f.squad)
+			f.squad.queue_free()
+
+
+# ---------------------------------------------------------------- round 3: the % ring's teams
+func _stock_teams() -> void:
+	RingRules.rule_set_override = "stock"
+	change_scene_to_file("res://scenes/ring.tscn")
+	for i in 12:
+		await process_frame
+	lvl = current_scene as RingLevel
+	mode = RingMode.find(self)
+	if lvl == null or mode == null or not RingRules.stock_on():
+		_expect(false, "the stock ring loaded for the teams")
+		return
+	ring = lvl.ring
+	player = lvl.player
+	await _until(func() -> bool: return mode.phase == "COUNTDOWN" and foe() != null, 6.0)
+	mode.phase_t = mode.countdown_s() - 0.02
+	await _until(func() -> bool: return mode.phase == "FIGHT", 2.0)
+	foe().held = true
+	var rules := mode.rules
+	var fe := mode.end_of(foe())
+	var a := foe()
+	_settle(a, at_s(fe, 6.0, -3.0))
+	var b := _bot("ring_team_b", "water", at_s(fe, 6.0, 3.0))
+	var c := _bot("ring_team_b", "air", at_s(fe, 10.0, 0.0))
+	mode.join(b, 1)
+	mode.join(c, 1)
+	await _ticks(3)
+	var lives_ok := rules.team_mode() and rules.stocks_of(player) == 2 and rules.stocks_of(a) == 2 and rules.stocks_of(b) == 2 \
+			and rules.stocks_of(c) == 2 and RingMoves.of(b) != null
+	_expect(lives_ok, "3 v 3 groundwork: 2 lives each (the player %d, the rivals %d %d %d), each with its RingMoves" % [rules.stocks_of(player),
+			rules.stocks_of(a), rules.stocks_of(b), rules.stocks_of(c)])
+	# an ally's hit: 0%, no launch; the same on the player: its d
+	var k0 := BendKnock.of(b).knocks
+	BendStatus.hurt(b, 12.0, chest(b), Vector3.FORWARD, a, -1.0, {"tag": "stone_form/spike", "from": a.global_position})
+	BendStatus.knock(b, Vector3.FORWARD * 6.0, a, {"tag": "stone_form/spike"})
+	_expect(rules.pct_of(b) == 0.0 and BendKnock.of(b).knocks == k0, "an ally's Spike adds 0%% and launches nothing (%.1f%%)" % rules.pct_of(b))
+	_settle(player, at_s(1 - fe, 3.0, 0.0))
+	BendStatus.hurt(player, 12.0, chest(player), Vector3.FORWARD, a, -1.0, {"tag": "stone_form/spike", "from": a.global_position})
+	_expect(absf(rules.pct_of(player) - 14.0) < 0.01, "the same Spike on the player adds its 14%% (%.1f%%)" % rules.pct_of(player))
+	await _ticks(30)
+	# three spouts on each end; a rival back on the one farthest from the nearest foe
+	var zs: Array = []
+	for k in 3:
+		zs.append(snappedf(ring.to_local(ring.spout_at(fe, k)).z, 0.01))
+	_expect(zs == [4.0, -4.0, 0.0] and absf(absf(ring.to_local(ring.spout_at(fe, 2)).x) - 12.0) < 1e-3,
+			"three spouts on each end's s 12 m line: z %s" % str(zs))
+	_settle(player, at_s(fe, 12.0, 3.5))
+	_settle(c, ring.to_global(Vector3(RingArena.side_sign(fe) * (ring.half_l() + 3.0), -6.5, 0.0)))
+	await _until(func() -> bool: return rules.is_away(c), 2.0)
+	_settle(player, at_s(fe, 12.0, 3.5))
+	await _until(func() -> bool: return not rules.is_away(c), 4.0)
+	await _ticks(2)
+	var back := ring.to_local(c.global_position)
+	_expect(rules.stocks_of(c) == 1 and back.z < -3.0 and rules.is_safe(c),
+			"a rival into the water: a life gone (%d left), back on the spout farthest from the player (z %.1f), safe" % [rules.stocks_of(c), back.z])
 	for f: NpcFighter in [b, c]:
 		if is_instance_valid(f) and f.squad != null and is_instance_valid(f.squad):
 			f.squad.get_parent().remove_child(f.squad)

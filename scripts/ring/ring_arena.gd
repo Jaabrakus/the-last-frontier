@@ -41,11 +41,18 @@ extends Node3D
 ##                                           over it: AABB
 ##   rebuild()                               the round's reset: the stones back in their sockets
 ##   clear_dropped()                         what the fight left in the ring and the tank taken away (the count)
-## ROUND 3 (smash_r3 spec §5, §7.2, §14.3; SEAMS, PERCENT's after):
+## ROUND 3 (smash_r3 spec v2 §5, §7.2, §14.3; PERCENT's):
+##   the overlay  the numbers are read through the rule set's overlay (set_mode(RingRules.pick_rule_set()) as the ring is
+##                made; ring.json modes.stock): the stock ring's water 6 m down (water_y -6, floor_y -9), a 10 m tank, no
+##                ropes, the deck a slab with a stone face face_depth_m deep on piers (no plinth foot), a pale coping on the
+##                four lips (drawn only: its collider is the deck's own, flush), lantern piers outside the lip (lantern_spots;
+##                RingDressing's posts and lights), the tank's edge a curtain of falling water (RingWater). classic: today's
+##   is_out(pos)                             stock: below the water, or past the curtain's plane at ANY height
 ##   nearest_lip(pos) -> {point, normal, out_m, side, along}   the deck's top outer rectangle's nearest edge (LIP_* side)
 ##   lip_y()                                 the lip's height (the deck top, world)
-##   spout_at(side, slot) -> Vector3         where a respawn spout rises: the grate on that end's last grate line (s 12 m)
-##   wall_place_ok(pos) -> Vector3           a wall's place kept off the lip (as given until PERCENT clamps it)
+##   spout_at(side, slot) -> Vector3         where a respawn spout rises: the grate on that end's last grate line (s 12 m),
+##                                           at spout_z[slot] (z 4, -4; 0 the third for 3v3)
+##   wall_place_ok(pos) -> Vector3           stock: a wall's place clamped wall_lip_clear_m (3.5) inside every lip
 
 const DATA_PATH := "res://data/ring/ring.json"
 const GROUP := &"ring_arena"
@@ -62,6 +69,10 @@ const CLEAR_MARGIN := 4.0
 const RING_HURL_META := &"ring_hurl"
 
 static var _data := {}
+## Round 3: the overlay the numbers are read through ("classic": the base; "stock": ring.json modes.stock over it), and the
+## merged numbers for it.
+static var mode := "classic"
+static var _merged := {}
 
 var visuals := true
 var water: RingWater
@@ -77,7 +88,35 @@ static func data() -> Dictionary:
 	if _data.is_empty():
 		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(DATA_PATH))
 		_data = d if d is Dictionary else {}
-	return _data
+	if mode == "classic":
+		return _data
+	if _merged.is_empty():
+		_merged = _data.duplicate(true)
+		var ov: Variant = ((_data.get("modes", {}) as Dictionary).get(mode, {}))
+		if ov is Dictionary:
+			for k: String in (ov as Dictionary):
+				if not k.begins_with("_"):
+					_merged[k] = (ov as Dictionary)[k]
+	return _merged
+
+
+## Round 3: the numbers read through rule set `m`'s overlay from now on ("stock": modes.stock; anything else the base).
+static func set_mode(m: String) -> void:
+	var want := m if m == "stock" else "classic"
+	if want != mode:
+		mode = want
+		_merged = {}
+
+
+## Round 3: the stock overlay is on (the % ring's stage).
+static func stock() -> bool:
+	return mode == "stock"
+
+
+## An overlay block of the numbers ({} none: classic has no coping, piers, lanterns or curtain).
+static func block(key: String) -> Dictionary:
+	var b: Variant = data().get(key, {})
+	return b if b is Dictionary else {}
 
 
 static func num(key: String, def := 0.0) -> float:
@@ -85,6 +124,7 @@ static func num(key: String, def := 0.0) -> float:
 
 
 static func make(parent: Node, xf := Transform3D.IDENTITY) -> RingArena:
+	set_mode(RingRules.pick_rule_set())
 	var a := RingArena.new()
 	a.name = "RingArena"
 	a.transform = xf
@@ -98,6 +138,7 @@ static func find(tree: SceneTree) -> RingArena:
 
 func _ready() -> void:
 	add_to_group(GROUP)
+	set_mode(RingRules.pick_rule_set())
 	visuals = DisplayServer.get_name() != "headless"
 	if visuals:
 		_materials()
@@ -138,6 +179,8 @@ func top() -> float:
 ## step is below the ring-out drop, so a body come to rest on it is out; an earth move raised at the deck's very edge rises
 ## inside it.
 func foot_half() -> Vector2:
+	if stock():
+		return Vector2(half_l(), half_w())   # (stock: the deck on piers, its face sheer to the water: no foot)
 	var po := num("plinth_out_m", 0.18)
 	return Vector2(half_l() + po, half_w() + po)
 
@@ -202,12 +245,19 @@ func is_out(pos: Vector3) -> bool:
 	if l.y < top() - num("out_drop_m", 0.6):
 		return true
 	var t := tank_half()
+	if stock():
+		# (stock: past the curtain's plane at any height: it is water)
+		return absf(l.x) > t.x or absf(l.z) > t.y
 	return (absf(l.x) > t.x or absf(l.z) > t.y) and l.y < top() + 2.0
 
 
 func is_ring_out(body: Node3D) -> bool:
 	if body == null or not is_instance_valid(body):
 		return false
+	if stock():
+		# (stock: by the place alone, the feet in the water or past the curtain: the tank's Area3D keeps a body lifted out
+		# of it for a physics step, and a hidden body's overlap goes stale)
+		return is_out(body.global_position)
 	return is_out(body.global_position) or (water != null and water.holds(body))
 
 
@@ -267,17 +317,24 @@ func lip_y() -> float:
 
 
 ## Where a respawn spout rises for deck end `side`: the grate on its last grate line (the line behind zone zones - 1: s 12 m),
-## at grate_z[slot] (world, on the deck).
+## at spout_z[slot] (stock: z 4, -4 and 0 for 3v3's third; else grate_z) (world, on the deck).
 func spout_at(side: int, slot := 0) -> Vector3:
-	var zs: Array = data().get("grate_z", [4.0, -4.0])
+	var zs: Array = data().get("spout_z", data().get("grate_z", [4.0, -4.0]))
 	var z := float(zs[posmod(slot, zs.size())]) if not zs.is_empty() else 0.0
 	var s := line_s(side, int(num("zones", 3.0)) - 1)
 	return to_global(Vector3(side_sign(side) * s, top(), z))
 
 
-## A wall's place kept off the lip (spec §5.2: PERCENT clamps it wall_lip_clear_m inside); as given until then.
+## A wall's place kept off the lip (spec §5.2): under the stock overlay clamped at least wall_lip_clear_m inside every lip (no
+## wall seals a grab spot or pushes a climber off); classic: as given.
 func wall_place_ok(pos: Vector3) -> Vector3:
-	return pos
+	if not stock():
+		return pos
+	var c := num("wall_lip_clear_m", 3.5)
+	var l := to_local(pos)
+	l.x = clampf(l.x, -maxf(half_l() - c, 0.0), maxf(half_l() - c, 0.0))
+	l.z = clampf(l.z, -maxf(half_w() - c, 0.0), maxf(half_w() - c, 0.0))
+	return to_global(l)
 
 
 func rect_for(side: int, min_zone: int, max_zone: int) -> AABB:
@@ -563,6 +620,8 @@ func grate_rects() -> Array[Rect2]:
 func _deck() -> void:
 	var y := top()
 	var floor_y := num("floor_y", -3.4)
+	if stock():
+		floor_y = y - num("face_depth_m", 3.0)     # (stock: a slab with a stone face, on piers over the deep tank)
 	var hw := half_w()
 	var looks: Dictionary = data().get("looks", {})
 	var matter := String(data().get("deck_matter", "earth"))
@@ -595,6 +654,9 @@ func _deck() -> void:
 		decks.append(b)
 		if kit != null:
 			_lay(kit, Rect2(x0, -hw, x1 - x0, hw * 2.0), look, holes, rng)
+	if stock():
+		_stock_deck(root, kit, floor_y)
+		return
 	# the plinth's foot: from the step (under the ring-out drop) down, plinth_out_m wider all round
 	var fh := foot_half()
 	var step := top() + num("plinth_step_y", -0.65)
@@ -625,6 +687,116 @@ func _deck() -> void:
 		for r in cut(Rect2(-hl, -hw, hl * 2.0, hw * 2.0), holes):
 			_flat(kit, r, y - 0.03, StructureMeshKit.KIND_VOID)
 		_commit(root, kit, "DeckMesh")
+
+
+## The stock overlay's deck under its laying (spec §5.1): a stone face (masonry, grabbable: the deck parts' own boxes reach
+## face_depth_m down), piers to the tank's floor (colliders: nothing passes under the slab), the pale coping along the four
+## lips (drawn only: 4 cm proud with a rounded nose, its collider the deck's own, flush) and the lanterns' piers just outside
+## the lip (drawn only; RingDressing stands the lantern posts on them).
+func _stock_deck(root: Node3D, kit: StructureMeshKit, face_bottom: float) -> void:
+	var y := top()
+	var hl := half_l()
+	var hw := half_w()
+	var floor_y := num("floor_y", -9.0)
+	var pd := block("piers")
+	var pw := float(pd.get("w", 1.1))
+	var inset := float(pd.get("inset_m", 1.2))
+	var every := maxf(float(pd.get("every_m", 4.25)), 1.0)
+	var piers := StaticBody3D.new()
+	piers.name = "Piers"
+	piers.collision_layer = 1
+	piers.collision_mask = 0
+	piers.set_meta(&"surface", "stone")
+	root.add_child(piers)
+	var boxes: Array[AABB] = []
+	var nx := int(floor((2.0 * (hl - inset)) / every)) + 1
+	for zs: float in [-(hw - inset), 0.0, hw - inset]:
+		for i in nx:
+			var x := -hl + inset + float(i) * (2.0 * (hl - inset)) / float(maxi(nx - 1, 1))
+			boxes.append(AABB(Vector3(x - pw * 0.5, floor_y, zs - pw * 0.5), Vector3(pw, face_bottom - floor_y, pw)))
+	for a in boxes:
+		_box_shape(piers, a)
+	if kit == null:
+		return
+	var looks: Dictionary = data().get("looks", {})
+	var pt := _tint(pd.get("tint"), _tint((looks.get("plinth", {}) as Dictionary).get("tint"), Color(0.72, 0.7, 0.66)))
+	var tt := num("tile_thick", 0.1)
+	# the face: coursed masonry from under the laying to the slab's foot; a band under the coping
+	wbox(kit, &"ring_wall", Vector3(0.0, (face_bottom + y - tt) * 0.5, 0.0), Vector3(hl * 2.0, y - tt - face_bottom, hw * 2.0), 1.6, pt, 4 | 8)
+	wbox(kit, &"ring_wall", Vector3(0.0, face_bottom + 0.15, 0.0), Vector3(hl * 2.0 + 0.16, 0.3, hw * 2.0 + 0.16), 1.2, pt * 0.88, 4)
+	for a in boxes:
+		wbox(kit, &"ring_wall", a.get_center(), a.size, 1.6, pt * 0.9, 4)
+	for r in cut(Rect2(-hl, -hw, hl * 2.0, hw * 2.0), grate_rects()):
+		_flat(kit, r, y - 0.03, StructureMeshKit.KIND_VOID)
+	# the lanterns' piers: just outside the lip at the corners and the middle of each side
+	for p in lantern_spots():
+		var lp := to_local(p)
+		var hb := Vector3(0.62, y - 0.06 - (floor_y - 0.2), 0.62)
+		wbox(kit, &"ring_wall", Vector3(lp.x, (y - 0.06 + floor_y - 0.2) * 0.5, lp.z), hb, 1.6, pt * 0.95, 8)
+		wbox(kit, &"ring_walk", Vector3(lp.x, y - 0.1, lp.z), Vector3(0.74, 0.08, 0.74), 1.2, pt * 1.08, 8)
+	# the coping: pale stone along the four lips, proud for the eye, its nose rounded
+	var cp := block("coping")
+	var cw := float(cp.get("w", 0.25))
+	var proud := float(cp.get("proud", 0.04))
+	var nr := float(cp.get("nose_r", 0.04))
+	var ct := _tint(cp.get("tint"), Color(0.93, 0.9, 0.82))
+	var prof := PackedVector2Array([Vector2(-cw, y), Vector2(-cw, y + proud)])
+	var cx := 0.02 - nr
+	var cy := y + proud - nr
+	for k in 5:
+		var a := PI * 0.5 * (1.0 - float(k) / 4.0)
+		prof.append(Vector2(cx + cos(a) * nr, cy + sin(a) * nr))
+	prof.append(Vector2(0.02, y - 0.18))
+	prof.append(Vector2(0.0, y - 0.18))
+	for side in 4:
+		var n := Vector3.LEFT if side == LIP_END_0 else (Vector3.RIGHT if side == LIP_END_1 else (Vector3.FORWARD if side == LIP_LONG_NEG else Vector3.BACK))
+		var along := Vector3(0.0, 0.0, 1.0) if side <= LIP_END_1 else Vector3(1.0, 0.0, 0.0)
+		var lip := (hl if side <= LIP_END_1 else hw)
+		var length := (hw if side <= LIP_END_1 else hl) * 2.0 + 0.04
+		_extrude(kit, &"ring_stone", prof, Vector3(n.x * lip, 0.0, n.z * lip), n, along, length, ct)
+	_commit(root, kit, "DeckMesh")
+
+
+## Where the lanterns stand (world, at deck height): just outside the lip (lanterns.out_m) at its corners and the middle
+## of each side (the stock overlay; none in classic).
+func lantern_spots() -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	if not stock():
+		return out
+	var o := float(block("lanterns").get("out_m", 0.45))
+	var hl := half_l()
+	var hw := half_w()
+	for p: Vector2 in [Vector2(-hl - o, -hw - o), Vector2(hl + o, -hw - o), Vector2(hl + o, hw + o), Vector2(-hl - o, hw + o),
+			Vector2(-hl - o, 0.0), Vector2(hl + o, 0.0), Vector2(0.0, -hw - o), Vector2(0.0, hw + o)]:
+		out.append(to_global(Vector3(p.x, top(), p.y)))
+	return out
+
+
+## A profile (x: metres out along `out`, y: height) drawn along `along` for `length` m about `at` (local): its quads
+## facing out of the solid (StructureMeshKit's winding), UVs world-projected.
+static func _extrude(kit: StructureMeshKit, key: StringName, prof: PackedVector2Array, at: Vector3, out: Vector3, along: Vector3,
+		length: float, tint: Color) -> void:
+	var h := along * length * 0.5
+	var run := 0.0
+	for i in prof.size() - 1:
+		var a2 := prof[i]
+		var b2 := prof[i + 1]
+		var a := at + out * a2.x + Vector3.UP * a2.y
+		var b := at + out * b2.x + Vector3.UP * b2.y
+		var d := b2 - a2
+		var n2 := Vector2(-d.y, d.x).normalized()
+		var n := (out * n2.x + Vector3.UP * n2.y).normalized()
+		var p := [a - h, a + h, b + h, b - h]
+		var seg := d.length()
+		var uv := [Vector2(-length * 0.5, run), Vector2(length * 0.5, run), Vector2(length * 0.5, run + seg), Vector2(-length * 0.5, run + seg)]
+		if ((p[1] as Vector3) - (p[0] as Vector3)).cross((p[2] as Vector3) - (p[0] as Vector3)).dot(n) < 0.0:
+			p = [p[0], p[3], p[2], p[1]]
+			uv = [uv[0], uv[3], uv[2], uv[1]]
+		for j in 4:
+			uv[j] = (uv[j] as Vector2) / 1.2
+		kit.quad(key, p[0], p[1], p[2], p[3], uv[0], uv[1], uv[2], uv[3], tint, StructureMeshKit.KIND_TEX, 0.0,
+				PackedColorArray([tint, tint, tint, tint]), n)
+		run += seg
 
 
 ## Part `r` of the deck laid as `look` says (ring.json looks), round the holes.
@@ -785,6 +957,8 @@ func _collars() -> void:
 
 # ---------------------------------------------------------------- the build: the ropes
 func _ropes() -> void:
+	if not bool(data().get("ropes", true)):
+		return                               # (stock: all four sides open)
 	var y := top()
 	var hl := half_l()
 	var hw := half_w()

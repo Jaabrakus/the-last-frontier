@@ -18,6 +18,10 @@ extends SceneTree
 ##   world's, tried with the two's elements taken off for them and put back after)
 ##   winded     no_death: 999 of a blow (Hit.deliver), a bleed past the last of the health, a bot's wound pool: alive at 1
 ##              health, `winded` once each
+##   the gate   (round 3, smash_r3 spec v2 §14.1, §15: the duel has no % ring) RingRules.stock_on() false, no RingRules, no take
+##              filters, no RingMoves, gravity_override 0; two knocks ADD (the carry is their sum), the carry decays 0.8 m/s2
+##              in the air (AIR_DECEL), ragdoll_mps 9, knock_t 0.25 + |kv| / 20, no hitstun (stun_t 0), a bend's hurt lowers
+##              health (RingRules.on_hit has nothing to say)
 ## Last line "KNOCK TEST PASSED" or "KNOCK TEST FAILED"; exit 0 only on a pass.
 
 const LIMIT_S := 240.0
@@ -123,6 +127,7 @@ func _go() -> void:
 	await _no_ragdoll()
 	await _hold()
 	await _root()
+	await _gate_off()
 	await _winded()
 	_end()
 
@@ -161,6 +166,40 @@ func _flat_knock(l: Listener) -> void:
 			"a listener in bend_knock_listeners told once a knock (%d)" % (l.got.size() - heard0))
 	_expect(kp.kv == Vector3.ZERO and kn.kv == Vector3.ZERO and kp.knock_t == 0.0 and n.knock_t() == 0.0 and n.action == "",
 			"spent: no knock left, the bot's hands its own again ('%s')" % n.action)
+
+
+# ---------------------------------------------------------------- round 3: the gate off
+func _gate_off() -> void:
+	await _stage()
+	_expect(not RingRules.stock_on() and RingRules.current() == null and BendStatus.take_filters.is_empty() and RingMoves.of(p) == null
+			and RingMoves.of(n) == null and BendKnock.gravity_override == 0.0 and BendKnock.ragdoll_mps == 9.0,
+			"the gate off in the duel: no RingRules, no take filters, no RingMoves, gravity_override 0, ragdoll_mps 9")
+	var kn := BendKnock.of(n)
+	kn.reset()
+	BendStatus.knock(n, Vector3(4.0, 0.0, 0.0), p)
+	BendStatus.knock(n, Vector3(4.0, 0.0, 0.0), p)
+	var kv := kn.kv.length()
+	var stun := kn.stun_t
+	var kt := kn.knock_t
+	var mn := BendStatus.rooted_mult(n)
+	_expect(absf(kv - 8.0 * mn) < 0.05 and stun == 0.0 and absf(kt - (0.25 + kv / 20.0)) < 0.02,
+			"two knocks of 4 m/s ADD (carry %.2f, x%.2f Rooted), no hitstun (%.2f), knock_t today's (%.3f)" % [kv, mn, stun, kt])
+	await _secs(2.0)
+	# the carry in the air: 0.8 m/s2 (a launch up and out)
+	kn.reset()
+	BendStatus.knock(n, Vector3(6.0, 9.0, 0.0), p)
+	await _secs(0.1)
+	var k0 := kn.kv.length()
+	await _secs(0.5)
+	var k1 := kn.kv.length()
+	_expect(kn.is_launched() and absf((k0 - k1) / 0.5 - BendKnock.AIR_DECEL) < 0.1,
+			"in the air the carry decays at %.2f m/s2 (AIR_DECEL 0.8)" % ((k0 - k1) / 0.5))
+	await _secs(2.5)
+	var h0 := n.health
+	BendStatus.hurt(n, 10.0, n.global_position + Vector3.UP, Vector3.FORWARD, p, -1.0, {"tag": "stone_form/spike"})
+	_expect(n.health < h0 and n.health_max - n.health > 1.0, "a bend's hurt lowers health (%.0f -> %.0f): no %% outside the ring" % [h0, n.health])
+	n.health = n.health_max
+	await _secs(0.5)
 
 
 # ---------------------------------------------------------------- launch
