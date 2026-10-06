@@ -38,8 +38,6 @@ extends RefCounted
 ##                 (NpcFighter.jump, mid-lock too, as the player's Space) by the preset's jump_chance, the takeoff timed so
 ##                 its feet are over miss_above_m as it passes; up from under it (a Column's or a Geyser's wind-up: kind
 ##                 "under") is stepped off by a dash; hard bots dash on a lightning's flash (lightning_dash)
-##   its water     its own meter (Bending.of(it)): a water move it cannot pay for is not chosen; under water_low it goes to a
-##                 pool (Bending.POOLS) and draws
 ##   the ring      bounds_fn(pos) -> pos clamped to where it may stand, edge_fn(pos, dir) -> metres to the open end along dir
 ##                 (INF none): set by the ring (no ring import here); its goals are clamped by the first, its dashes and runs
 ##                 never taken toward an end closer than they carry, its steering straight on the deck (NpcFighter.on_deck)
@@ -312,7 +310,7 @@ func _build_options() -> void:
 		var md := String(pr[1])
 		var spec := spec_of(id, md)
 		var o := {"id": id, "mode": md, "key": id + "/" + md, "spec": spec, "old": spec.is_empty(),
-				"do": String(spec.get("do", "old")), "water": float(spec.get("water", 0.0)),
+				"do": String(spec.get("do", "old")),
 				"knock": float(spec.get("knock_mps", 0.0)), "grow": spec.get("grow") is Dictionary,
 				"guard": pr == gd, "jab": pr == jb}
 		o["hint"] = hint_of(id, md, spec)
@@ -545,14 +543,10 @@ func _option(key: String) -> Dictionary:
 	return {}
 
 
-## Whether option `o` can be cast now: off its cool, its water paid for, an old spell only through BendCast (or its own way).
+## Whether option `o` can be cast now: off its cool, an old spell only through BendCast (or its own way).
 func castable(o: Dictionary) -> bool:
 	if _now() < float(_cool.get(String(o.key), 0.0)):
 		return false
-	if float(o.water) > 0.0:
-		var bw := Bending.of(me)
-		if bw == null or bw.water < float(o.water):
-			return false
 	if bool(o.old):
 		return bend_cast() != null or String(o.key) in FALLBACK
 	return true
@@ -666,9 +660,6 @@ func _when(c: String, t: Node3D, d: float) -> bool:
 			return _own_wall(false, 12.0) != null
 		"own_damaged_wall":
 			return _own_wall(true, 6.0) != null          # (within Mend's reach of its cast point, _cast_point)
-		"water_low":
-			var bw := Bending.of(me)
-			return bw != null and bw.water < float(d_ai.get("water_low", 40.0))
 		"near_pool":
 			var bw2 := Bending.of(me)
 			return bw2 != null and bw2.near_water()
@@ -1551,13 +1542,6 @@ func _move(dt: float, t: Node3D, d: float) -> void:
 	var straight := me.on_deck or edge_fn.is_valid()
 	var keep: Variant = ((ai().get("elements", {}) as Dictionary).get(element, {}) as Dictionary).get("keep_m", [8.0, 15.0])
 	var band := Vector2(float(keep[0]), float(keep[1])) if keep is Array else Vector2(8.0, 15.0)
-	var bw := Bending.of(me)
-	if element == "water" and bw != null and bw.water < float(ai().get("water_low", 40.0)) and not bw.near_water():
-		var pool := _pool_near(30.0)
-		if pool != Vector3.INF:
-			me.face_lock = Vector3.INF
-			me.go(_clamp(pool), NpcFighter.RUN_SPEED, 0.6, straight)
-			return
 	var blind := not brain.seen_now or NpcBendCaster.hidden(me, t)     # (a smoke or a steam on the line: blind as well)
 	if blind or d > band.y:
 		me.face_lock = Vector3.INF

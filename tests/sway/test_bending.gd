@@ -177,7 +177,7 @@ func _every_move() -> void:
 					_stage(5.0 if float(sp.get("spread_deg", 0.0)) > 0.0 and int(sp.get("count", 1)) > 1 else 9.0)
 					await _secs(0.1)
 					c.set_mode(id, mode)
-					Bending.of(p).water = 100.0
+					Bending.of(p)                         # (its Bending node made; the water meter retired 2026-10-06)
 					var why := await _cast(id, mode)
 					count += 1
 					if why != "":

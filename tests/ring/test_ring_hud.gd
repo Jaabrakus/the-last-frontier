@@ -378,9 +378,8 @@ func _water() -> void:
 	var strip := hud.bend_strip
 	_expect(t < INF and String(strip.column(0).id) == "water_whip" and String(strip.column(3).id) == "water_shield",
 			"water: the bar and the strip are water's (%.2f s)" % t)
-	var spends := bool((SwayMoves.data().get("water_meter", {}) as Dictionary).get("spend", true))
-	_expect(hud._water_row.visible == spends and (not spends or hud._water_bar.value > 0.0),
-			"the water bar shows while the water is spent, else not (spend %s, shown %s)" % [spends, hud._water_row.visible])
+	_expect(hud.get_node_or_null(^"Root/ArenaVitals/Water") == null and not ("_water_row" in hud),
+			"no water bar (the water meter retired 2026-10-06)")
 	_expect(strip.ready_line() == "1 · Lash" and (strip._cols[0].name as Label).text == "Lash",
 			"the strip names water's strike plainly (%s)" % strip.ready_line())
 	# the dress: the water side's ring dress (PlayerAppearance.ring_dress, 2026-10-05: the parka, trousers, belt and

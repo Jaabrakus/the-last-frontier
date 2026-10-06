@@ -479,16 +479,15 @@ func _refresh_presets() -> void:
 		c.queue_free()
 	var sex := 1.0 if float(look.get("sex", 0.0)) >= 0.5 else 0.0
 	var people_id := String(look.get("people", ""))
-	var world := CharacterPeoples.is_world(people_id)
 	var n := 0
 	for pr: Dictionary in CharacterPeoples.presets(people_id, sex):
 		n += 1
 		var b := Button.new()
-		b.text = String(pr.label) if not world else "Face %d" % n
+		b.text = String(pr.label)
 		var pid := String(pr.id)
 		b.pressed.connect(func() -> void:
 			var lk := CharacterPeoples.preset_look(pid)
-			lk["people"] = people_id          # (a world people's faces are real peoples' presets: still its look)
+			lk["people"] = people_id
 			look = _keep_outfit(lk)
 			_refresh_sliders()
 			_update_preview())

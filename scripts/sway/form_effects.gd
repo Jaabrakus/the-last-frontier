@@ -27,7 +27,7 @@ extends RefCounted
 ##                 it (its look the wall's, its strength pillar.materials)
 ##   mend          the piece back one stage (mend_stage): a ruin stands again (charred), a piece alight is put out, a charred
 ##                 one made whole, a raised wall worn by shot packed again; wood from the pack for each (not the earth wall)
-## Dust, stone chips and a grinding of stone with each (Sfx ids from moves.json form_sfx, when they exist).
+## Dust, stone chips and a grinding of stone with each (Sfx or BendSounds ids from moves.json form_sfx, when they exist).
 ## Any caster (the owner, 2026-10-04: the ring's bots cast the same moves as the player; BendCast.cast is their one entry):
 ## every helper but apply takes a caster untyped (a SwayCaster, a BendCaster, a body) and asks BendCaster.wrap(c) for it, so
 ## the player's own callers (SwayCaster, FormCast, the tests with a SwayCaster) are as they were. What only the player has stays
@@ -901,9 +901,12 @@ static func ground_at(n: Object, p: Vector3, down := 4.0) -> Vector3:
 
 static func sfx(key: String, at: Vector3, db := 0.0, pitch := 1.0) -> void:
 	var id := StringName(String((SwayMoves.data().get("form_sfx", {}) as Dictionary).get(key, "")))
-	if id == &"" or not Sfx.has(id):
+	if id == &"":
 		return
-	Sfx.play_3d(id, at, db, pitch)
+	if Sfx.has(id):
+		Sfx.play_3d(id, at, db, pitch)
+	elif BendSounds.TABLE.has(id) and BendSounds.has(id):     # a bend sound (crackle: lightning_crack)
+		BendSounds.play(id, at, db, pitch)
 
 
 static func _tell(c: Variant, text: String) -> void:

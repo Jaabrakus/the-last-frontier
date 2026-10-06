@@ -11,7 +11,6 @@ extends SceneTree
 ##   a hit      a 2-damage pebble (a stone BendBolt from the player, no knock) during a fire bot's lightning lock breaks it
 ##              (lost, why "hit"), and so does a knock; the same pebble during its Fire Wall's lock pushes the lock back by
 ##              at least guard_rules.hit_setback_min_s and keeps it (round 2, spec 2.3: a hit sets a lock back, never wipes it)
-##   water      a water bot's casts spend nothing (water_meter.spend false); by a pool (Bending.POOLS) its meter fills fast
 ##   catch      stones thrown at a hard earth bot are caught, and a caught one is sent back by its guard cast again (E again:
 ##              its return, returns, its lock guard_rules.return_lock_s or perfect_return_lock_s)
 ##   the floor  waves along the deck (the Kick's floor wave) sent at a normal earth bot: it jumps at least FLOOR_JUMP_MIN of them
@@ -259,14 +258,12 @@ func _coverage(el: String) -> void:
 		return
 	var b := f.brain.bending
 	var low := [INF]
-	var water_min := [INF]
 	var bw := Bending.of(f)
 	_expect(b != null and b.element == el and f.element == el and bw.element == el and f.gun == null and f.axe == null and f.weapon == "",
-			"%s: an element bot of %s, no gun, no axe, its own water meter (%s)" % [el, b.element if b else "-", bw.element])
+			"%s: an element bot of %s, no gun, no axe, its element on its Bending (%s)" % [el, b.element if b else "-", bw.element])
 	await _secs(COVER_S, func() -> void:
 		if is_instance_valid(f):
-			low[0] = minf(low[0], f.global_position.y)
-			water_min[0] = minf(water_min[0], bw.water))
+			low[0] = minf(low[0], f.global_position.y))
 	var labels := f.find_children("*", "Label3D", true, false)
 	var shirt: Dictionary = ((f.look.get("outfit", {}) as Dictionary).get("shirt", {}) as Dictionary).get("colors", {})
 	var bad_locks: Array[String] = []
@@ -300,9 +297,6 @@ func _coverage(el: String) -> void:
 		for k: String in clips:
 			bend_clip = bend_clip or k.begins_with("own-bend-")
 		_expect(bend_clip, "earth: the own ring-sport clips cast with (own-bend-*)")
-	if el == "water":
-		_expect(water_min[0] >= bw.water_max - 0.5, "water: its casts spend no water (spend false; lowest %.0f)" % water_min[0])
-		await _water(f)
 	if el == "fire":
 		await _breaks(f)
 	if el == "earth":
@@ -318,22 +312,6 @@ func _bot_ready(el: String, at: Vector3) -> NpcFighter:
 	for i in 3:
 		await physics_frame
 	return f
-
-
-## A water bot by a pool: its meter back fast.
-func _water(f: NpcFighter) -> void:
-	var bw := Bending.of(f)
-	var pool := Node3D.new()
-	pool.name = "TestPool"
-	pool.add_to_group(Bending.POOLS)
-	current_scene.add_child(pool)
-	f.held = true
-	pool.global_position = f.global_position + Vector3(0.5, 0.0, 0.0)
-	bw.water = 20.0
-	await _secs(2.0)
-	_expect(bw.water > 60.0, "water: by a pool its meter comes back fast (%.0f in 2 s from 20)" % bw.water)
-	pool.queue_free()
-	f.held = false
 
 
 ## Stones thrown at a hard earth bot (stone BendBolts from the player): it begins a guard against some (the reaction layer's

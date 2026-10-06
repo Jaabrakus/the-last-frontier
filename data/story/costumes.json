@@ -6,54 +6,26 @@
     "margaretha": {
       "outfit": {
         "shirt": {"id": "shift_linen", "colors": {}},
-        "vest": {"id": "stays_laced", "colors": {"0": "madder_red", "3": "linen_unbleached"}},
-        "legs.lower": {"id": "petticoat", "colors": {"0": "walnut_brown"}},
-        "accessories.waist": {"id": "apron", "colors": {"preset": "margaretha"}},
-        "accessories.neck": {"id": "kerchief_womens", "colors": {"preset": "margaretha"}},
-        "legs.over": {"id": "stockings", "colors": {"0": "stroud_blue"}},
-        "feet": {"id": "shoes_buckled", "colors": {}},
-        "head": {"id": "cap_linen", "colors": {"preset": "margaretha"}}
-      },
-      "by_mission": {
-        "m.tf.third_warning": {"outer": {"id": "jacket_womens", "colors": {"preset": "margaretha"}}},
-        "m.tf.raid": {"outer": {"id": "jacket_womens", "colors": {"preset": "margaretha"}},
-          "accessories.wrap": {"id": "cloak_hooded", "colors": {"preset": "margaretha"}}}
+        "legs.lower": {"id": "petticoat", "colors": {"0": "walnut_brown"}}
       },
       "_note": "In shift sleeves, stays and apron at work about the farm in early October; out of doors in the late October and November missions she wears her jacket, and on the night of the raid (3 a.m., 12 November) her hooded cloak over it."
     },
     "anna": {
       "outfit": {
         "shirt": {"id": "shift_linen", "colors": {}},
-        "vest": {"id": "stays_laced", "colors": {"preset": "anna"}},
-        "outer": {"id": "jacket_womens", "colors": {"preset": "anna"}},
-        "legs.lower": {"id": "petticoat", "colors": {"0": "drab"}},
-        "accessories.waist": {"id": "apron", "colors": {"preset": "anna"}},
-        "accessories.neck": {"id": "kerchief_womens", "colors": {"preset": "anna"}},
-        "legs.over": {"id": "stockings", "colors": {"0": "drab"}},
-        "feet": {"id": "shoes_buckled", "colors": {}},
-        "head": {"id": "cap_linen", "colors": {"preset": "anna"}}
+        "legs.lower": {"id": "petticoat", "colors": {"0": "drab"}}
       }
     },
     "jost": {
       "outfit": {
         "shirt": {"id": "shirt_tucked", "colors": {"0": "tow", "1": "tow"}},
-        "legs.lower": {"id": "breeches", "colors": {}},
-        "vest": {"id": "waistcoat_sb", "colors": {"0": "walnut_brown"}},
-        "legs.over": {"id": "stockings", "colors": {}},
-        "feet": {"id": "shoes_buckled", "colors": {}},
-        "head": {"id": "tuque_knit", "colors": {"0": "ribbon_red", "1": "ribbon_red"}}
+        "legs.lower": {"id": "breeches", "colors": {}}
       }
     },
     "vane": {
       "outfit": {
         "shirt": {"id": "shirt_tucked", "colors": {}},
-        "legs.lower": {"id": "breeches", "colors": {"0": "buff", "1": "buff"}},
-        "vest": {"id": "waistcoat_skirted", "colors": {"0": "madder_red", "1": "linen_unbleached", "2": "gold_lace"}},
-        "outer": {"id": "coat_skirted", "colors": {"preset": "gentleman"}},
-        "accessories.neck": {"id": "stock_linen", "colors": {}},
-        "legs.over": {"id": "stockings", "colors": {"0": "linen_white"}},
-        "feet": {"id": "shoes_buckled", "colors": {"2": "silver"}},
-        "head": {"id": "cocked_hat", "colors": {"preset": "civilian", "1": "gold_lace"}}
+        "legs.lower": {"id": "breeches", "colors": {"0": "buff", "1": "buff"}}
       },
       "_note": "2026-10-03: his signature is the long madder-red waistcoat with gilt buttons under the open skirts of his snuff coat and the gold-laced hat (at 20 m he was the farmers' brown ditto suit); silver buckles."
     },
@@ -61,39 +33,18 @@
       "outfit": {
         "shirt": {"id": "shirt_tucked", "colors": {"0": "linen_unbleached", "1": "linen_unbleached"}},
         "legs.lower": {"id": "breeches", "colors": {"0": "walnut_brown", "1": "walnut_brown", "2": "pewter"}},
-        "vest": {"id": "veste_sleeved", "colors": {"preset": "canadian_grey"}},
-        "outer": {"id": "capot", "colors": {"preset": "canadian_blue"}},
-        "head": {"id": "tuque_knit", "colors": {"preset": "canadian"}},
-        "legs.over": {"id": "leggings_wool", "colors": {"preset": "canadian"}},
-        "feet": {"id": "moccasins", "colors": {}},
-        "accessories.neck": {"id": "neckerchief", "colors": {}},
         "accessories.waist": {"id": "sash_worsted", "colors": {"preset": "red_striped"}}
       }
     },
     "ithel": {
       "hair_style": "hair_club_ribbon",
       "outfit": {
-        "shirt": {"id": "shirt_check", "colors": {"preset": "ithel_plain"}},
-        "legs.lower": {"id": "breeches", "colors": {}},
-        "feet": {"id": "sea_boots", "colors": {"preset": "black"}},
-        "vest": {"id": "waistcoat_long", "colors": {"preset": "ithel"}},
-        "outer": {"id": "sea_coat_officer", "colors": {"preset": "ithel", "glow_life": 0.2}},
-        "accessories.wrap": {"id": "sail_cloak", "colors": {"preset": "ithel"}},
-        "head": {"id": "cocked_hat", "colors": {"0": "logwood_black", "1": "gold_lace", "2": "ribbon_black", "3": "brass"}},
-        "accessories.neck": {"id": "stock_linen", "colors": {}}
+        "legs.lower": {"id": "breeches", "colors": {}}
       },
       "_note": "2026-10-03: a captain's gold-laced cocked hat and a white stock (bare-headed in an open collar he read as a deckhand); the sail cloak's fur collar lies down on the shoulders, its battens unlit: his one glow is his coat's cording, fading with him."
     },
     "rook": {
       "hair_style": "hair_queue_ribbon",
-      "outfit": {
-        "shirt": {"id": "shirt_check", "colors": {"preset": "rook_tow", "check": ["tow", "slate_grey"]}},
-        "legs.lower": {"id": "slops", "colors": {"preset": "rook_tarred"}},
-        "feet": {"id": "sea_boots", "colors": {"preset": "rook_brown"}},
-        "vest": {"id": "waistcoat_long", "colors": {"preset": "rook"}},
-        "accessories.waist": {"id": "mote_belt", "colors": {"preset": "rook_earth"}},
-        "accessories.wrap": {"id": "weather_cape", "colors": {"preset": "rook_act2"}}
-      },
       "_note": "2026-10-03: his tow shirt checked with slate grey (the tow-on-tow check read at 20 m as bare arms under the cape: its mean is close to his skin)."
     }
   }

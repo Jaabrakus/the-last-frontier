@@ -1121,16 +1121,11 @@ func _build_piece(mode: BuildMode, type: String, p: Vector3) -> BuiltPiece:
 
 func seg_fort() -> void:
 	_clock(13.2, "fair", 0.25)
-	var gate := FortGate.find(self)
-	if gate:
-		gate.set_open(false, true)
 	_place(1.2, -12.2, Vector3(0.0, 1.5, -16.0))
 	_cam_rel(Vector3(1.8, 1.9, 3.4), Vector3(-0.4, 1.8, -3.0), 55.0, 4.0)
 	await _roll(_kick(7, "The fort"), "Gate, walls and axe work",
 			"E opens the gate's leaves. The felling axe chops a piece out of the palisade where it aims: a loophole, a window, a way through.")
 	await _sec(0.6)
-	if gate:
-		gate.interact(player)
 	await _sec(2.4)
 	# chopping a window through the east wall
 	_place(14.7, 2.0, Vector3(16.0, 1.4, 2.0))

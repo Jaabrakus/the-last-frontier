@@ -21,11 +21,10 @@ extends RefCounted
 ##   status_at   at the aim's place (radius_m): root_s, slow_s, damage, up_mps (a knock-up); hollow: a hollow left
 ##   lightning   from the caster's hand along the aim at once; a fighter or player guarding with redirect_lightning sends
 ##               it back
-##   heal, cleanse, draw (water back), grab (pulled to the caster), kick_up (a rock up before the caster), column (a pillar
+##   heal, cleanse, draw (a splash of water drawn up), grab (pulled to the caster), kick_up (a rock up before the caster), column (a pillar
 ##   under the aim's place, throwing whoever stands there), shell (walls all round), ramp (a slope), ice_wall, freeze_water
 ##   (a wall of water turned to ice), thaw / melt (ice gone), brace (one's wall takes the next hit free), shove (earth:
 ##   push, pull, split a stone or a raised wall)
-## `water` in a spec: what it spends of a waterbender's meter (Bending.spend; not enough: nothing, a notice).
 ## Any caster (BendCaster: the player's PlayerBendCaster, a bot's or a test's BodyBendCaster; the owner, 2026-10-04: the ring's
 ## bots cast the same moves as the player): every helper takes a caster or its body (untyped: BendCaster.wrap) and asks it for
 ## the aim, its rays, its side, its water, its chances; nothing here reads the player's own camera or keys.
@@ -47,7 +46,7 @@ extends RefCounted
 ##   cone        a guard's share (BendZone.cone_mult); smoke_s (Breath) leaves smoke where it burned
 ##   zones       `place` (2-6 m at the crosshair, facing the caster), one_at_a_time (fire and wind walls)
 ##   any spec    grow (merged when the lock grew: BendCaster.grown), carry (Carried wind x knock_mult), weight (stone vs
-##               stone), steer (water's Flowing), `water` spent only when Bending.spends(); root_s and slow_s never land on
+##               stone), steer (water's Flowing); root_s and slow_s never land on
 ##               one who casts as an element (BendStatus); the move's lock time on all it sends (`_lock_s`: a hit's cost)
 
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
@@ -93,7 +92,7 @@ static func _body(c: Variant) -> CharacterBody3D:
 ## Caster `c` (a BendCaster, a SwayCaster: FormEffects.apply's, or a body) casts move `m`'s `mode` of `spec` (_t, _at: the
 ## lock's target and point, kept for the old callers; the aim is the caster's own at the release).
 ## Round 2 (see the header): the spec's grow merged when the caster's lock grew (BendCaster.grown); Carried wind on a carry
-## spec; the water meter spent only when Bending.spends(); E's catch with a stone held throws it back (BendZone.return_stone);
+## spec; E's catch with a stone held throws it back (BendZone.return_stone);
 ## its lock time written on what it sends (`_lock_s`: what a hit with it costs); the element's jab (Bending.jab) reaches
 ## jab_max_m at most.
 static func apply(c: Variant, m: String, mode: String, spec: Dictionary, _t: Node3D = null, _at := Vector3.INF) -> void:
@@ -117,12 +116,6 @@ static func apply(c: Variant, m: String, mode: String, spec: Dictionary, _t: Nod
 		spec["knock_mps"] = float(spec.get("knock_mps", 0.0)) * k
 		p.remove_meta(&"bend_carry_until")
 		carried = true
-	var cost := float(spec.get("water", 0.0)) if Bending.spends() else 0.0
-	var wb := bc.water()
-	if cost > 0.0 and (wb == null or not wb.spend(cost)):
-		bc.notice("Not enough water: stand by water, or Flow (draw)", 1.6)
-		_record(bc, {"do": "dry", "mode": mode, "move": m})
-		return
 	if String(spec.get("do", "")) == "zone" and String(spec.get("zone", "")) == "catch" and BendStatus.element_mode(p):
 		var held := BendZone.held_stone(p)
 		if held != null:
@@ -178,10 +171,6 @@ static func apply(c: Variant, m: String, mode: String, spec: Dictionary, _t: Nod
 					BendStatus._end_timed(p, k, 0.0 if k == &"bend_root" else BendStatus.SLOW_MPS)
 			BendLooks.burst(p.global_position + Vector3.UP, "water", 18)
 		"draw":
-			var b := bc.water()
-			if b != null:
-				var dr: Array = (SwayMoves.data().get("water_meter", {}) as Dictionary).get("draw", [10.0, 60.0])
-				b.water = minf(b.water + float(dr[1] if b.near_water() else dr[0]), b.water_max)
 			BendLooks.burst(p.global_position + Vector3.UP * 0.5, "water", 24, Vector3.UP, 40.0, 3.0)
 		"grab":
 			grab(bc, a, spec)

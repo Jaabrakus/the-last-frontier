@@ -25,7 +25,6 @@
   "guard_cool_s": 1.2,
   "close_m": 5.0,
   "far_m": 14.0,
-  "water_low": 40.0,
   "edge_margin_m": 1.5,
   "novel_bonus": 1.35,
   "repeat_k": 0.3,

@@ -526,10 +526,7 @@ func _empty_hands() -> void:
 	var p := player
 	var g := p.gather
 	if g != null and g.in_hand() != "":
-		if g.tool == GatherTools.CLUB:
-			g._club_end(false)
-		else:
-			g.drop_now()
+		g.drop_now()
 		g._refresh_models()
 	if p.is_switching() or p.weapon == null or not p.weapon.active:
 		return

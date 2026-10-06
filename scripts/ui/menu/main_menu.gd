@@ -86,7 +86,6 @@ var _t := 0.0
 var _fade := -1.0
 var _chosen_bg := ""
 var _bare := false
-var _story := true
 var _squad := 1
 var _spouse := true
 var _museum: Control
@@ -345,7 +344,7 @@ func _play_new() -> void:
 	background_id = _chosen_bg
 	bare_start = _bare
 	spouse_start = _spouse
-	StoryDirector.incoming = "two_fires" if _story else ""
+	StoryDirector.incoming = ""       # (no storyline: the Two Fires stages were retired, 2026-10-06; free play)
 	new_game = true
 	GameSettings.clear_run()          # (a new game takes the Iron Man toggle)
 	LoadingScreen.go(get_tree(), GAME_SCENE)
@@ -922,21 +921,12 @@ func _museum_show(i: int) -> void:
 func _open_new_game() -> void:
 	_bare = false
 	_spouse = true
-	_story = true
 	_open_panel()
 	_panel.add_child(MenuUI.heading("A new life"))
 	# (no background to choose: user 2026-10-01, "we shouldnt need to pick back country officers and etc"; you start as
 	# the default newcomer, SurvivalBridge.BACKGROUND, and make your name in the game)
 	_chosen_bg = ""
 	var begin := MenuUI.item("Begin", 30)
-	# the main story (scripts/story, docs/main_story.md), or free play
-	var story_row := MenuUI.item("Story:  Two Fires", 22, "begins in the autumn of 1757 on open land by German Flatts; off: free play in 1765")
-	story_row.pressed.connect(func() -> void:
-		_story = not _story
-		var t := story_row.find_child("Text", true, false) as Label
-		if t:
-			t.text = "Story:  %s" % ("Two Fires" if _story else "off (free play)"))
-	_panel.add_child(story_row)
 	# a start with nothing: no clothes, tools, weapons or food; everything made from what lies on the ground
 	var bare_row := MenuUI.item("Start with nothing:  off", 22, "no clothes, tools or weapons: sticks, stones and chert from the ground, then the knapping stone")
 	bare_row.pressed.connect(func() -> void:
@@ -1008,7 +998,6 @@ func _play_net(mode: Dictionary) -> void:
 	if latest != "":
 		_play_save(latest)
 	else:
-		_story = false
 		_play_new()
 
 

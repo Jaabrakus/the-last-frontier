@@ -49,7 +49,7 @@
   "cordage": {"item": "item.material.cordage", "qty": 1, "note": "a length of cord twisted from sinew (the workbench): one snare, or a rod's line"},
   "stake_set": {"item": "item.trap.stake_set", "qty": 1, "note": "deadfall stakes, trigger and bait stick (the workbench, rcp.stake_set): one deadfall"},
   "steel_trap": {"item": "item.trap.steel", "qty": 1, "note": "a steel trap (the kit's two; the trader later)"},
-  "bar_lead": {"item": "item.ammo.lead", "qty": 1, "note": "a pound of bar lead: 16 musket balls cast at a lit fire with the mould (rcp.cast_balls)"},
+  "bar_lead": {"item": "item.ammo.lead", "qty": 1, "note": "a pound of bar lead (casting balls at the fire was retired with the musket club and shot making, 2026-10-06)"},
   "bullet_mould": {"item": "item.tool.bullet_mould", "qty": 1, "note": "the bullet mould and ladle (the kit's)"},
   "hooks_line": {"item": "item.tool.hooks_line", "qty": 1, "note": "hooks and line (the kit's): the rod's line and hook (the workbench)"},
   "sinew": {"item": "item.material.sinew", "qty": 1, "note": "a bundle of back sinew (butchering a deer gives 2): the thread of moccasins and mitts (the workbench)"},

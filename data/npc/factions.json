@@ -15,23 +15,10 @@
       "hostile": ["british", "player"],
       "looks": ["french_m_a", "french_m_b"],
       "outfit": {
-        "shirt": ["shirt_tucked"],
-        "outer": ["capot", "coat_skirted"],
-        "vest": ["veste_sleeved"],
-        "head": ["tuque_knit", "cocked_hat"],
-        "legs.over": ["leggings_wool", "stockings"],
-        "feet": ["moccasins", "shoes_buckled"],
-        "accessories.neck": ["neckerchief"],
-        "accessories.waist": ["belt_cartridge"]
+        "shirt": ["shirt_tucked"]
       },
-      "drop_under": {"capot": ["vest"]},
       "garment_colors": {
-        "shirt_tucked": [{"0": "linen_white", "1": "linen_white"}, {"0": "linen_unbleached", "1": "linen_white"}],
-        "capot": {"preset": "marine_campaign"}, "coat_skirted": {"preset": "marine_justaucorps"},
-        "veste_sleeved": {"preset": "marine"}, "cocked_hat": {"preset": "marine"}, "leggings_wool": {"preset": "marine"},
-        "tuque_knit": [{"preset": "canadian"}, {"preset": "canadian"}, {"preset": "canadian"}, {"preset": "blue"}],
-        "neckerchief": [{"0": "logwood_black"}, {"0": "logwood_black"}, {"0": "linen_white"}],
-        "stockings": {"0": "royal_blue", "1": "logwood_black"}, "shoes_buckled": {"preset": "marine"}, "belt_cartridge": {"preset": "marine"}
+        "shirt_tucked": [{"0": "linen_white", "1": "linen_white"}, {"0": "linen_unbleached", "1": "linen_white"}]
       },
       "colors": {"shirt": {"0": "linen_white", "1": "linen_white"}, "legs.lower": {"0": "stroud_blue", "1": "stroud_blue", "2": "brass"}},
       "weapon": "musket",
@@ -56,25 +43,10 @@
       "looks": ["french_m_a", "french_m_b"],
       "outfit": {
         "shirt": ["shirt_tucked"],
-        "outer": ["capot"],
-        "vest": ["veste_sleeved"],
-        "head": ["tuque_knit"],
-        "legs.over": ["leggings_wool", "stockings"],
-        "feet": ["moccasins", "shoes_buckled"],
-        "accessories.neck": ["neckerchief"],
         "accessories.waist": ["sash_worsted"]
       },
-      "outfit_mix": {"outer": {"capot": 5, "-": 1}},
-      "drop_under": {"capot": ["vest"]},
       "garment_colors": {
         "shirt_tucked": [{"0": "linen_unbleached", "1": "linen_unbleached"}, {"0": "tow", "1": "linen_unbleached"}, {"0": "check_blue", "1": "linen_unbleached"}],
-        "capot": [{"preset": "canadian"}, {"preset": "canadian"}, {"preset": "canadian"}, {"preset": "settler_brown"},
-          {"0": "slate_grey", "1": "stroud_red", "2": "pewter", "3": "slate_grey"}, {"0": "#E3DED0", "1": "stroud_blue", "2": "pewter", "3": "#E3DED0"}],
-        "veste_sleeved": [{"preset": "canadian_red"}, {"preset": "canadian_grey"}, {"0": "walnut_brown", "2": "pewter"}, {"0": "butternut", "2": "pewter"}],
-        "tuque_knit": [{"preset": "canadian"}, {"preset": "canadian"}, {"preset": "canadian"}, {"preset": "blue"}, {"preset": "blue"}, {"preset": "settler"}],
-        "leggings_wool": [{"preset": "canadian"}, {"preset": "canadian"}, {"0": "stroud_blue", "1": "madder_red"}, {"0": "walnut_brown", "1": "madder_red"}],
-        "stockings": {"preset": "settler"},
-        "neckerchief": [{"0": "logwood_black"}, {"0": "check_blue"}, {"0": "madder_red"}, {"0": "linen_white"}],
         "sash_worsted": [{"preset": "plain_red"}, {"preset": "plain_red"}, {"preset": "red_striped"}, {"preset": "blue"}, {"preset": "green_striped"}]
       },
       "colors": {"shirt": {"0": "linen_unbleached", "1": "linen_unbleached"},
@@ -100,27 +72,10 @@
       "hostile": ["french", "toughs"],
       "looks": ["palatine_m_a", "palatine_m_b", "dutch_m_a", "english_m_a", "scots_irish_m_b"],
       "outfit": {
-        "shirt": ["shirt_tucked"],
-        "outer": ["frock_coat", "capot"],
-        "vest": ["waistcoat_sb"],
-        "head": ["cocked_hat", "round_hat"],
-        "legs.over": ["stockings"],
-        "feet": ["shoes_buckled"],
-        "accessories.neck": ["neckerchief", "stock_linen"]
+        "shirt": ["shirt_tucked"]
       },
-      "outfit_mix": {"outer": {"frock_coat": 6, "capot": 1, "-": 2}, "head": {"cocked_hat": 1, "round_hat": 1},
-        "accessories.neck": {"neckerchief": 3, "stock_linen": 1}},
       "garment_colors": {
-        "shirt_tucked": [{"0": "tow", "1": "linen_unbleached"}, {"0": "linen_unbleached", "1": "linen_unbleached"}, {"0": "check_blue", "1": "linen_unbleached"}],
-        "frock_coat": [{"preset": "palatine_brown"}, {"preset": "palatine_drab"}, {"0": "butternut", "1": "butternut", "2": "horn"},
-          {"0": "slate_grey", "1": "slate_grey", "2": "pewter"}, {"0": "snuff", "1": "snuff", "2": "pewter"}, {"0": "walnut_brown", "1": "drab", "2": "horn"},
-          {"preset": "militia_blue"}],
-        "capot": [{"preset": "settler_brown"}, {"0": "drab", "1": "walnut_brown", "2": "logwood_black", "3": "drab"}],
-        "waistcoat_sb": [{"0": "madder_red"}, {"0": "madder_red"}, {"0": "walnut_brown"}, {"0": "drab"}, {"0": "butternut"}, {"0": "buff"}],
-        "cocked_hat": {"preset": "civilian"}, "round_hat": [{"0": "logwood_black"}, {"0": "walnut_brown"}, {"0": "drab"}],
-        "neckerchief": [{"0": "logwood_black"}, {"0": "logwood_black"}, {"0": "check_blue"}, {"0": "madder_red"}],
-        "stockings": [{"0": "drab", "1": "logwood_black"}, {"0": "grey_white", "1": "logwood_black"}, {"0": "walnut_brown", "1": "leather_brown"},
-          {"0": "slate_grey", "1": "logwood_black"}]
+        "shirt_tucked": [{"0": "tow", "1": "linen_unbleached"}, {"0": "linen_unbleached", "1": "linen_unbleached"}, {"0": "check_blue", "1": "linen_unbleached"}]
       },
       "colors": {"shirt": {"0": "tow", "1": "linen_unbleached"},
         "legs.lower": [{"0": "drab", "1": "drab", "2": "pewter"}, {"0": "buckskin_pale", "1": "buckskin_pale", "2": "pewter"},
@@ -147,25 +102,10 @@
       "hostile": ["player"],
       "looks": ["english_m_b", "scots_irish_m_a", "dutch_m_b"],
       "outfit": {
-        "shirt": ["shirt_tucked"],
-        "outer": ["frock_coat"],
-        "vest": ["waistcoat_sb"],
-        "head": ["tuque_knit", "round_hat"],
-        "legs.over": ["stockings"],
-        "feet": ["shoes_buckled"],
-        "accessories.neck": ["neckerchief"]
+        "shirt": ["shirt_tucked"]
       },
-      "outfit_mix": {"outer": {"frock_coat": 1, "-": 2}, "head": {"tuque_knit": 1, "round_hat": 2, "-": 1}},
       "garment_colors": {
-        "shirt_tucked": [{"0": "tow", "1": "tow"}, {"0": "check_blue", "1": "tow"}, {"0": "linen_unbleached", "1": "linen_unbleached"}],
-        "frock_coat": [{"0": "walnut_brown", "1": "walnut_brown", "2": "horn"}, {"0": "snuff", "1": "snuff", "2": "pewter"}, {"0": "drab", "1": "walnut_brown", "2": "horn"}],
-        "waistcoat_sb": [{"0": "logwood_black", "1": "tow", "2": "pewter"}, {"0": "walnut_brown", "1": "tow", "2": "pewter"}, {"0": "madder_red", "1": "tow", "2": "brass"},
-          {"0": "drab", "1": "tow", "2": "pewter"}, {"0": "butternut", "1": "tow", "2": "pewter"}],
-        "tuque_knit": [{"preset": "settler"}, {"0": "madder_red", "1": "madder_red"}, {"0": "grey_white", "1": "grey_white"}],
-        "round_hat": [{"0": "logwood_black"}, {"0": "walnut_brown"}, {"0": "slate_grey"}],
-        "neckerchief": [{"0": "madder_red"}, {"0": "logwood_black"}, {"0": "check_blue"}, {"0": "indigo_mid"}],
-        "stockings": [{"0": "drab", "1": "leather_brown"}, {"0": "grey_white", "1": "logwood_black"}, {"0": "walnut_brown", "1": "leather_brown"}],
-        "shoes_buckled": {"0": "leather_brown", "1": "leather_brown", "2": "pewter"}
+        "shirt_tucked": [{"0": "tow", "1": "tow"}, {"0": "check_blue", "1": "tow"}, {"0": "linen_unbleached", "1": "linen_unbleached"}]
       },
       "colors": {"shirt": {"0": "tow", "1": "tow"},
         "legs.lower": [{"0": "walnut_brown", "1": "walnut_brown", "2": "pewter"}, {"0": "drab", "1": "drab", "2": "pewter"}, {"0": "buckskin_pale", "1": "buckskin_pale", "2": "pewter"}]},
@@ -190,22 +130,10 @@
       "hostile": ["toughs"],
       "looks": ["english_m_a", "english_m_b", "dutch_m_a"],
       "outfit": {
-        "shirt": ["shirt_tucked"],
-        "outer": ["frock_coat", "capot"],
-        "vest": ["waistcoat_sb"],
-        "head": ["round_hat"],
-        "legs.over": ["stockings"],
-        "feet": ["shoes_buckled"],
-        "accessories.neck": ["stock_linen"]
+        "shirt": ["shirt_tucked"]
       },
-      "outfit_mix": {"outer": {"frock_coat": 3, "capot": 1}},
       "garment_colors": {
-        "shirt_tucked": {"0": "linen_white", "1": "linen_white"},
-        "frock_coat": [{"preset": "palatine_drab"}, {"preset": "palatine_brown"}, {"0": "snuff", "1": "snuff", "2": "pewter"}],
-        "capot": {"preset": "settler_brown"},
-        "waistcoat_sb": [{"0": "buff", "2": "pewter"}, {"0": "drab", "2": "pewter"}, {"0": "walnut_brown", "2": "pewter"}],
-        "round_hat": [{"0": "logwood_black"}, {"0": "walnut_brown"}],
-        "stockings": [{"0": "grey_white", "1": "logwood_black"}, {"0": "drab", "1": "logwood_black"}]
+        "shirt_tucked": {"0": "linen_white", "1": "linen_white"}
       },
       "colors": {"shirt": {"0": "linen_white", "1": "linen_white"}, "legs.lower": [{"0": "buff", "1": "buff", "2": "pewter"}, {"0": "drab", "1": "drab", "2": "pewter"}]},
       "_source": "A colonial town's watch (2026-10-03; it was an invented black-coated soldier's uniform with no source): the watch of New York and Albany in the 1750s was kept by householders and hired watchmen in their own clothes, a drab or brown coat and a round hat, walking the streets at night with a staff, a lantern and a rattle (New York's Common Council watch ordinances; the Albany Minutes of the Common Council), doubled in wartime. No cartridge belt. The staff, lantern and rattle need models: until they exist the watch keeps a musket, as the armed watch of the war years. A garrison guard would be the regulars' (coat_regimental_1751, preset 22nd_foot), not this faction.",
@@ -229,29 +157,8 @@
       "side": "sky",
       "hostile": [],
       "looks": ["english_m_b", "scots_irish_m_b", "dutch_m_a", "african_american_m_a", "euro_african_m_b", "spanish_m_a"],
-      "outfit": {
-        "shirt": ["shirt_check"],
-        "legs.lower": ["slops"],
-        "vest": ["waistcoat_long"],
-        "outer": ["sea_jacket"],
-        "head": ["drift_cap", "tar_hat"],
-        "accessories.neck": ["neckerchief_sea"],
-        "accessories.waist": ["mote_belt"],
-        "accessories.wrap": ["rigging_harness"]
-      },
-      "outfit_mix": {"vest": {"waistcoat_long": 2, "-": 3}, "outer": {"sea_jacket": 2, "-": 3}, "head": {"drift_cap": 3, "tar_hat": 2},
-        "accessories.waist": {"mote_belt": 2, "-": 1}, "accessories.wrap": {"rigging_harness": 1, "-": 2}},
-      "drop_under": {"sea_jacket": ["accessories.waist", "accessories.wrap"]},
-      "garment_colors": {
-        "shirt_check": [{"preset": "deckhand"}, {"preset": "deckhand"}, {"0": "linen_white", "1": "linen_white", "pattern": "none"},
-          {"0": "slate_grey", "1": "linen_white"}, {"0": "tow", "1": "linen_unbleached"}],
-        "slops": [{"preset": "deckhand"}, {"preset": "deckhand"}, {"preset": "rook_tarred"}, {"0": "sailcloth", "1": "tar_black", "2": "tow"}],
-        "waistcoat_long": [{"preset": "deckhand"}, {"0": "slate_grey", "1": "tow", "2": "horn"}, {"0": "snuff", "1": "tow", "2": "horn"}],
-        "sea_jacket": [{"preset": "gunner"}, {"preset": "grey_watch"}],
-        "drift_cap": [{"preset": "deckhand"}, {"preset": "deckhand"}, {"preset": "indigo"}, {"preset": "tow"}, {"preset": "red"}],
-        "neckerchief_sea": [{"0": "logwood_black"}, {"0": "logwood_black"}, {"0": "check_blue"}, {"0": "madder_red"}],
-        "mote_belt": {"preset": "drift"}, "rigging_harness": {"preset": "aboard"}
-      },
+      "outfit": {},
+      "garment_colors": {},
       "colors": {},
       "_dress_note": "2026-10-03: the 18th-century sailor's dress leads (70/30): a waistcoat or a sea jacket on a share of the men, tar hats on some, the harness on the riggers only, the mote belt on the casters; one glow per man (a jacket's night-watch cord drops the belt and the harness: drop_under).",
       "weapon": "",
@@ -275,12 +182,9 @@
       "side": "player",
       "hostile": [],
       "looks": ["english_m_a", "english_m_b", "scots_irish_m_a", "scots_irish_m_b", "dutch_m_a", "dutch_m_b", "french_m_a", "french_m_b", "palatine_m_a", "palatine_m_b", "african_american_m_a", "euro_african_m_b", "spanish_m_a", "english_f_a", "scots_irish_f_a", "dutch_f_b", "french_f_a", "palatine_f_b", "african_american_f_a", "spanish_f_b"],
-      "outfit": {"feet": ["moccasins"], "legs.over": ["stockings"], "accessories.waist": ["sash_worsted"], "accessories.neck": ["neckerchief"]},
+      "outfit": {"accessories.waist": ["sash_worsted"]},
       "garment_colors": {
-        "moccasins": {"0": "buckskin_smoked", "1": "buckskin_smoked", "2": "leather_brown"},
-        "stockings": {"0": "grey_white", "1": "logwood_black"},
-        "sash_worsted": {"0": "linen_white", "1": "linen_white", "2": "linen_white", "3": "linen_white"},
-        "neckerchief": {"0": "linen_white"}
+        "sash_worsted": {"0": "linen_white", "1": "linen_white", "2": "linen_white", "3": "linen_white"}
       },
       "colors": {"shirt": {"0": "linen_white", "1": "linen_white"}, "legs.lower": {"0": "drab", "1": "drab", "2": "pewter"}},
       "element_dress": {
@@ -302,12 +206,9 @@
       "side": "ring_b",
       "hostile": ["player"],
       "looks": ["english_m_a", "english_m_b", "scots_irish_m_a", "scots_irish_m_b", "dutch_m_a", "dutch_m_b", "french_m_a", "french_m_b", "palatine_m_a", "palatine_m_b", "african_american_m_a", "euro_african_m_b", "spanish_m_a", "english_f_a", "scots_irish_f_a", "dutch_f_b", "french_f_a", "palatine_f_b", "african_american_f_a", "spanish_f_b"],
-      "outfit": {"feet": ["moccasins"], "legs.over": ["stockings"], "accessories.waist": ["sash_worsted"], "accessories.neck": ["neckerchief"]},
+      "outfit": {"accessories.waist": ["sash_worsted"]},
       "garment_colors": {
-        "moccasins": {"0": "buckskin_smoked", "1": "buckskin_smoked", "2": "leather_brown"},
-        "stockings": {"0": "grey_white", "1": "logwood_black"},
-        "sash_worsted": {"0": "linen_white", "1": "linen_white", "2": "linen_white", "3": "linen_white"},
-        "neckerchief": {"0": "linen_white"}
+        "sash_worsted": {"0": "linen_white", "1": "linen_white", "2": "linen_white", "3": "linen_white"}
       },
       "colors": {"shirt": {"0": "linen_white", "1": "linen_white"}, "legs.lower": {"0": "drab", "1": "drab", "2": "pewter"}},
       "element_dress": {

@@ -592,8 +592,6 @@ func selected() -> int:
 	var g := _gather()
 	if g != null and g.tool != "" and g.phase in [GatherTools.Phase.HOLSTER, GatherTools.Phase.DRAW_GRAB,
 			GatherTools.Phase.DRAW_OUT, GatherTools.Phase.READY, GatherTools.Phase.SWING]:
-		if g.tool == GatherTools.CLUB:
-			return slot_of(WEAPON, player.weapon_key)     # (the musket turned club is still the musket)
 		return slot_of(TOOL, g.tool)
 	var fg := FishingGear.find(player)
 	if fg != null and fg.gear != "":

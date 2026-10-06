@@ -40,8 +40,8 @@ const ROW_FOCUS := Color(0.22, 0.17, 0.1, 0.9)
 ## note fit the panel at 1280 x 720.
 const ICON := 36
 ## Group names as shown (peoples.json groups).
-const GROUP_LABELS := {"Eastern Woodlands": "Eastern\nWoodlands", "The Downbelow": "The\nDownbelow",
-		"Southeast Asia": "Southeast\nAsia", "Mixed ancestry": "Mixed\nancestry"}
+const GROUP_LABELS := {"Eastern Woodlands": "Eastern\nWoodlands", "Southeast Asia": "Southeast\nAsia",
+		"Mixed ancestry": "Mixed\nancestry"}
 
 var app: PlayerAppearance
 var look := {}
@@ -123,8 +123,8 @@ func _ready() -> void:
 	get_tree().root.disable_3d = true
 	if look.is_empty():
 		look = AppearanceStore.default_look()
-	# the game's own peoples (a test, CharacterPeoples.world_listed): a look of a people not listed now shows as the listed
-	# default people (its face and colours kept); a first launch starts as that people's first individual
+	# a look of a people not listed shows as the listed default people (its face and colours kept); a first launch starts
+	# as that people's first individual
 	if not CharacterPeoples.is_listed(String(look.get("people", ""))):
 		if first_launch:
 			look = CreatorOptions.with_people(look, CharacterPeoples.default_people())

@@ -116,7 +116,7 @@ func _stage() -> void:
 		for m: StringName in [&"bend_anchor", &"bend_root", &"bend_slow"]:
 			if b.has_meta(m):
 				b.remove_meta(m)
-	Bending.of(p).water = 100.0
+	Bending.of(p)                         # (its Bending node made; the water meter retired 2026-10-06)
 	await _secs(0.5)
 
 

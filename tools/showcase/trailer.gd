@@ -353,9 +353,6 @@ func seg_herd() -> void:
 ## The fort's gate swings open and he walks out, the afternoon sun behind the fort.
 func seg_gate() -> void:
 	_clock(9.6, "fair", 0.25)
-	var gate := FortGate.find(self)
-	if gate:
-		gate.set_open(false, true)
 	await _equip("musket")
 	_place(0.3, -9.0, Vector3(0.3, 0.0, -60.0))
 	player.traversal.controller.teleported()
@@ -363,8 +360,6 @@ func seg_gate() -> void:
 	_cam_at(_on(Vector3(3.6, 0.0, -24.5), 1.0), func() -> Vector3: return gc.lerp(player.global_position + Vector3.UP * 1.3, 0.75), 42.0, 3.0)
 	await _roll("", "", "", 60)
 	await _sec(0.8)
-	if gate:
-		gate.interact(player)
 	await _sec(1.8)
 	_press(&"walk")
 	_press(&"move_forward")

@@ -22,9 +22,10 @@ extends Node
 ## (a load puts only those back). The checkpoint is saved as the mission begins (an autosave). In a shared world (co-op)
 ## the cards do not stop the game (the player only stands while one is up).
 ##
-## Started by the main menu's New game (MainMenu.story_id) or the user arg story=<name> (tools, tests); a save keeps
-## its place (SaveParts.save_story / load_story). With no storyline the director sits idle. As a storyline begins or loads
-## StorySlice puts its world layer on and the player's Sway caster in, and puts the slice's stages back after a load.
+## Started by StoryDirector.incoming (no menu row since Two Fires was retired) or the user arg story=<name> (tools,
+## tests); a save keeps its place (SaveParts.save_story / load_story). With no storyline the director sits idle. As a
+## storyline begins or loads
+## its world layer goes on (StoryLayer.apply) and the player's Sway caster in (_world_began).
 
 const GROUP := &"story_director"
 const STORY_DIR := "res://data/story/"
@@ -71,7 +72,7 @@ var _fail_shown := false
 var _serial := 0               ## steps begun (a conversation that closes late, for a step gone by, is not heard)
 var _branch := ""              ## a step's `next` naming a mission: where the story goes after this one
 var _next_i := 0               ## the mission after the one whose outro is up
-## Cards shown before the next mission's intro (a start effect's title card: StorySlice), taken as it shows them.
+## Cards shown before the next mission's intro (a start effect's title card: StoryEffects), taken as it shows them.
 var lead_cards: Array = []
 var _t := 0.0
 
@@ -92,18 +93,6 @@ static func incoming_name() -> String:
 	return ""
 
 
-## A test jump (user 2026-10-03: "let me play it"): the user arg story_at=<mission id or its short name, e.g. two_fires> starts
-## a new game's storyline at that mission, on its date and hour, with the world set as it would be (StorySlice.JUMPS,
-## StorySlice.jump_setup). "" without it.
-static func jump_at() -> String:
-	for a in OS.get_cmdline_user_args():
-		var s := a.trim_prefix("--")
-		if s.begins_with("story_at="):
-			var v := s.get_slice("=", 1)
-			return v if v.begins_with("m.") else "m.tf." + v
-	return ""
-
-
 static func load_json(path: String) -> Dictionary:
 	var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	return d if d is Dictionary else {}
@@ -115,8 +104,6 @@ static func start_opts() -> Dictionary:
 	if name == "":
 		return {}
 	var st: Dictionary = load_json(dir + "storylines/%s.json" % name).get("start", {})
-	if jump_at() != "" and StorySlice.JUMPS.has(jump_at()):
-		st = (StorySlice.JUMPS[jump_at()] as Dictionary).merged(st)     # (a test jump: that mission's date and hour)
 	var o := {}
 	if st.has("year"):
 		o["start_year"] = int(st.year)
@@ -168,13 +155,22 @@ func begin_storyline(name: String, at_mission := 0) -> void:
 		push_error("Story: no storyline %s" % name)
 		return
 	storyline_id = name
-	StorySlice.storyline_began(self)               # (the storyline's world layer, the Sway caster)
+	_world_began()                                 # (the storyline's world layer, the Sway caster)
 	_place_contacts()
-	var jump := jump_at()
-	if jump != "" and _mission_index(jump) >= 0:
-		at_mission = _mission_index(jump)
-		StorySlice.jump_setup.call_deferred(self, jump)   # (the world as that mission finds it: the camp, the bonds)
 	_start_mission(at_mission)
+
+
+## A storyline has begun (or a save brought it back): its world layer (the storyline's world.layer: StoryLayer.apply; a
+## load finds the pieces already there) and the player's Sway caster.
+func _world_began() -> void:
+	var tree := get_tree()
+	var w: Variant = line.get("world")
+	var layer := String((w as Dictionary).get("layer", "")) if w is Dictionary else ""
+	if layer != "" and tree.current_scene != null:
+		StoryLayer.apply(tree.current_scene, layer)
+	var p := StoryObjectives.player(tree)
+	if p != null:
+		SwayCaster.install(p)
 
 
 func active() -> bool:
@@ -714,17 +710,8 @@ func _effect(id: String) -> void:
 		"raid_night":
 			_raid_night()
 		"wonder_reveal":
-			# the turn of the story: the wonder breaks into the frontier and the sky opens (the giant, its moons, the
-			# etherium: WonderLook), for good
+			# the turn of the story, kept as a flag only (the wonder sky was retired in the 2026-10-06 cleanup)
 			flags["wonder"] = true
-			var rig := _rig()
-			if rig:
-				rig.reveal_wonder(20.0)
-
-
-func _rig() -> EnvironmentRig:
-	var scene := get_tree().current_scene if get_tree() else null
-	return scene.get_node_or_null("EnvironmentRig") as EnvironmentRig if scene else null
 
 
 ## The raid on German Flatts heard from the homestead: shots far off toward the fort, then many (the cards tell the
@@ -868,14 +855,12 @@ func load_data(d: Dictionary) -> void:
 	line = load_json(dir + "storylines/%s.json" % String(d.storyline))
 	missions = load_json(dir + "missions/%s.json" % String(d.storyline)).get("missions", [])
 	storyline_id = String(d.storyline)
-	StorySlice.storyline_began(self)               # (the world layer: its pieces came back with the building)
+	_world_began()                                 # (the world layer: its pieces came back with the building)
 	flags = (d.get("flags", {}) as Dictionary).duplicate()
 	done_missions = (d.get("done", []) as Array).duplicate()
 	outcomes = (d.get("outcomes", {}) as Dictionary).duplicate()
 	checkpoint = (d.get("checkpoint", {}) as Dictionary).duplicate(true)
 	_place_contacts()
-	if bool(flags.get("wonder", false)) and _rig():
-		_rig().set_wonder(1.0)
 	var mi := int(d.get("mission", 0))
 	if String(d.get("phase", "")) == "steps" and mi < missions.size():
 		mission_i = mi
@@ -900,4 +885,3 @@ func load_data(d: Dictionary) -> void:
 			base["carried"] = int(d.have)
 	else:
 		_start_mission(mi)
-	(func() -> void: StorySlice.restore(self)).call_deferred()     # (once the whole save is in: the wreck, the camp)

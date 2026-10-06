@@ -14,17 +14,17 @@ extends RefCounted
 ##   give / take      `count` (1) of `item` into / out of the player's keeping: an "item." id the survival kit's
 ##                    (SurvivalInventory), else the pack (as StoryDialogue.give / take)
 ##   standing         `amount` of standing with `faction` (SurvivalEconomy.add_standing; `source` optional)
-##   wonder_reveal    the sky opens, for good;  raid_night  the raid heard from far off (StoryDirector._effect)
+##   wonder_reveal    the flag `wonder` (the wonder sky itself was retired, 2026-10-06);  raid_night  the raid heard from far off (StoryDirector._effect)
 ##   burn_at          FireSpread.ignite_area(pos, radius): fire at the place over `r` m (on the level's FireSpread)
 ##   music            MusicDirector.story(tree, cue): `cue` (story_wonder, story_sorrow, story_home, any of
 ##                    audio/music/) once, over anything but a giant's fight; "" fades what plays
 ##   begin_captivity  Captivity.begin(player, captor, opts): the player taken (`captor`: a tag, or `captor_group`; the
 ##                    effect itself is the opts)
 ##   end_captivity    Captivity.end (`return_gear`, `parts` when given); a child slipped away with the player keeps by him
-##   title_card, raid_staged, march, wreck_fall, rook_join, sway_grant, end_stages, people, cache_back, clear_sky
-##                    the vertical slice's stages (StorySlice: the title card, RaidStage, MarchStage, WreckFall, RookWalk,
-##                    SwayCaster.grant, the stages gone again, the people a talk is with, the cache given back, the
-##                    weather held clear through a step)
+##   title_card       {text, title?}: a card before the mission's intro cards (StoryDirector.lead_cards)
+##   sway_grant       {move}: SwayCaster.grant(move): the spell goes to the Tab screen's Spells list
+## (The old Two Fires slice's stages, raid_staged, march, wreck_fall, rook_join, end_stages, people, cache_back and
+## clear_sky, were retired with StorySlice in the 2026-10-06 cleanup: a mission that still names one only warns.)
 ## Any effect may carry `say`: a line shown at the top of the screen as it is done (say(): the player's notice).
 ## Arguments are matched to the callee's parameters by name (the effect's fields, then tree, level, player, at, r,
 ## count, id, d: the effect itself), else by type (a SceneTree, the player, a Vector3, a Dictionary), else its default.
@@ -99,11 +99,14 @@ static func do_one(d: StoryDirector, e: Dictionary, key := "") -> void:
 			call_by_name("Captivity", "begin", pool(d, e))
 		"end_captivity":
 			call_by_name("Captivity", "end", pool(d, e), false)
-			StorySlice.captives_loose(d)
-		"title_card", "raid_staged", "march", "wreck_fall", "rook_join", "sway_grant", "end_stages", "people":
-			StorySlice.effect(d, e, key)
-		"cache_back", "clear_sky":
-			StorySlice.effect(d, e, key)
+		"title_card":
+			d.lead_cards.append({"title": String(e.get("title", "")), "text": String(e.get("text", ""))})
+		"sway_grant":
+			var gp := StoryObjectives.player(tree)
+			if gp == null:
+				push_warning("Story: no player to grant %s" % String(e.get("move", "")))
+			else:
+				SwayCaster.install(gp).grant(String(e.get("move", "")))   # (into the Spells list: readied from the hotbar)
 		_:
 			push_warning("Story: no effect %s" % what)
 	say(tree, say_line(e))

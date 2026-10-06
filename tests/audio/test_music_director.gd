@@ -1,5 +1,7 @@
 extends SceneTree
-## Headless tests of the music (scripts/audio/music_director.gd, music_manifest.gd, audio/music/, tools/music/):
+## Headless tests of the music (scripts/audio/music_director.gd, music_manifest.gd, audio/music/, tools/music/). Re-staged in
+## the 2026-10-06 cleanup (owner answers O1/O2): loc_fort, loc_wreck, story_wonder, giant_upper_hand and giant_lament are not
+## rendered (their cue sources stay), and of the peoples' themes only the Vietnamese, Thai and Malay ones:
 ##   cues      every cue in the manifest loads (a 44.1 kHz stereo WAV as long as the manifest says); the fight's two
 ##             loop (giant_battle from its third bar, giant_upper_hand whole) at 144 BPM, their loops on bar lines
 ##   fight     a giant (a stand-in with StandInGiant's fields, in group "giants") pacing near: nothing; its temper
@@ -76,9 +78,13 @@ func _check(ok: bool, what: String) -> void:
 
 func _cues() -> void:
 	var cues: Dictionary = MusicDirector.M.CUES
-	for id in ["main_theme", "explore_day", "explore_dusk", "explore_night", "giant_battle", "giant_upper_hand",
-			"giant_lament", "night_waltz", "lullaby", "night_elegy", "story_wonder", "story_sorrow", "story_home",
-			"loc_fort", "loc_farms", "loc_river", "loc_woods", "loc_cliffs", "loc_marsh", "loc_wreck"]:
+	for id in ["loc_fort", "loc_wreck", "story_wonder", "giant_upper_hand", "giant_lament"]:
+		_check(not cues.has(id) and not ResourceLoader.exists("res://audio/music/%s.wav" % id)
+				and FileAccess.file_exists("res://tools/music/cues/%s.py" % id),
+				"%s: not rendered, its cue source kept (re-renderable)" % id)
+	for id in ["main_theme", "explore_day", "explore_dusk", "explore_night", "giant_battle",
+			"night_waltz", "lullaby", "night_elegy", "story_sorrow", "story_home",
+			"loc_farms", "loc_river", "loc_woods", "loc_cliffs", "loc_marsh"]:
 		_check(cues.has(id), "manifest has %s" % id)
 		if not cues.has(id):
 			continue
@@ -90,7 +96,7 @@ func _cues() -> void:
 		_check(w.mix_rate == 44100 and w.stereo, "%s: 44.1 kHz stereo (%d, %s)" % [id, w.mix_rate, w.stereo])
 		var secs := w.get_length()
 		_check(absf(secs - float(c.length)) < 0.05, "%s: %.2f s as the manifest's %.2f" % [id, secs, float(c.length)])
-	for id in ["giant_battle", "giant_upper_hand"]:
+	for id in ["giant_battle"]:
 		var c: Dictionary = cues[id]
 		var bar := 60.0 / float(c.bpm) * int(c.beats)
 		_check(float(c.bpm) == 144.0, "%s at 144 BPM" % id)
@@ -100,7 +106,7 @@ func _cues() -> void:
 		_check(absf(ls - round(ls)) < 0.01 and absf(le - round(le)) < 0.01,
 				"%s loops on bar lines (%.3f to %.3f bars)" % [id, ls, le])
 	_check(absf(float(cues.giant_battle.loop_start) - 2.0 * 60.0 / 144.0 * 4.0) < 0.01, "the battle loops from bar 2")
-	for id in ["main_theme", "explore_day", "giant_lament"]:
+	for id in ["main_theme", "explore_day"]:
 		_check(float(cues[id].loop_start) < 0.0, "%s plays once" % id)
 
 
@@ -136,31 +142,13 @@ func _fight() -> void:
 			"the battle's stream loops from its loop start")
 
 	g.down_leg = "FL"
-	await _wait(0.3)
-	_check(d.mode == MusicDirector.Mode.UPPER, "a knee down: the upper hand wanted")
-	var bar := 60.0 / 144.0 * 4.0
-	var waited := 0.0
-	while d.cue != "giant_upper_hand" and waited < bar + 1.0:
-		await _wait(0.05)
-		waited += 0.05
-	_check(d.cue == "giant_upper_hand", "the upper hand crossed in (%s after %.2f s)" % [d.cue, waited])
-	_check(waited <= bar + 0.3, "on the next bar line (%.2f s, a bar %.2f s)" % [waited, bar])
-	var up := d.get_node_or_null(^"Cue_giant_upper_hand") as AudioStreamPlayer
-	_check(up != null and d.position() < bar, "into the upper hand's loop near its start (%.2f s)" % d.position())
-
+	await _wait(0.3 + 60.0 / 144.0 * 4.0)
+	_check(d.mode == MusicDirector.Mode.FIGHT and d.cue == "giant_battle",
+			"a knee down: the battle goes on (the upper hand not rendered) (%s)" % d.cue)
 	g.down_leg = ""
-	await _wait(0.3)
-	waited = 0.0
-	while d.cue != "giant_battle" and waited < bar + 1.0:
-		await _wait(0.05)
-		waited += 0.05
-	_check(d.cue == "giant_battle" and d.mode == MusicDirector.Mode.FIGHT, "up again: back to the battle")
-	_check(d.position() >= float(MusicDirector.M.CUES.giant_battle.loop_start) - 0.05,
-			"into the battle's loop, not its rearing (%.2f s)" % d.position())
-
 	g.on = true
 	await _wait(0.3)
-	_check(d.mode == MusicDirector.Mode.UPPER, "the player on it: the upper hand")
+	_check(d.mode == MusicDirector.Mode.FIGHT, "the player on it: still the battle")
 	g.on = false
 	temper.set("mood", "calm")
 	g.position = Vector3(200.0, 0.0, 0.0)
@@ -176,9 +164,9 @@ func _fight() -> void:
 	g.dead_side = "L"
 	g.died.emit()
 	await _wait(0.1)
-	_check(d.mode == MusicDirector.Mode.LAMENT and d.cue == "giant_lament", "it dies: the lament (%s)" % d.cue)
-	await _wait(0.6)
-	_check(d.mode == MusicDirector.Mode.LAMENT, "the lament is not cut by the calm (%s)" % d.mode)
+	_check(d.mode == MusicDirector.Mode.QUIET, "it dies: the fight fades out (the lament not rendered) (%s)" % d.mode)
+	await _wait(1.2)
+	_check(d.cue == "" or d.cue == "giant_battle", "and nothing new starts (%s)" % d.cue)
 	level.queue_free()
 	await _wait(0.1)
 
@@ -192,7 +180,7 @@ func _places() -> void:
 	d.player = player
 	level.add_child(d)
 	await _wait(0.1)
-	_check(d.locate(Vector3(10.0, 0.0, 10.0)) == "loc_fort", "at the fort: loc_fort (%s)" % d.locate(Vector3(10.0, 0.0, 10.0)))
+	_check(d.locate(Vector3(10.0, 0.0, 10.0)) != "loc_fort", "at the fort: not loc_fort (not rendered): the square's (%s)" % d.locate(Vector3(10.0, 0.0, 10.0)))
 	var woods := Vector2i(99, 99)
 	for sq in WorldSquares.squares():
 		if WorldSquares.type_id(sq) == "deep_woods":
@@ -265,8 +253,8 @@ func _story() -> void:
 	d.player = player
 	level.add_child(d)
 	await _wait(0.1)
-	MusicDirector.story(level.get_tree(), "story_wonder")
-	_check(d.mode == MusicDirector.Mode.STORY and d.cue == "story_wonder", "a mission's cue plays (%s)" % d.cue)
+	MusicDirector.story(level.get_tree(), "story_sorrow")
+	_check(d.mode == MusicDirector.Mode.STORY and d.cue == "story_sorrow", "a mission's cue plays (%s)" % d.cue)
 	var g := FakeGiant.new()
 	g.add_to_group(&"giants")
 	level.add_child(g)
@@ -278,7 +266,7 @@ func _story() -> void:
 	t.set("mood", "charge")
 	await _wait(0.4)
 	_check(d.cue == "giant_battle", "a giant's fight over the story's cue (%s)" % d.cue)
-	MusicDirector.story(level.get_tree(), "story_sorrow")
+	MusicDirector.story(level.get_tree(), "story_home")
 	_check(d.cue == "giant_battle", "no story cue over the fight (%s)" % d.cue)
 	g.queue_free()
 	d.calm_s = 0.3
@@ -290,7 +278,7 @@ func _story() -> void:
 	StoryEffects.do_one(sd, {"do": "music", "cue": ""})
 	_check(d.cue == "" and d.mode == MusicDirector.Mode.QUIET, "an empty cue fades the story's music")
 	var txt := FileAccess.get_file_as_string("res://data/story/missions/two_fires.json")
-	for id in ["story_wonder", "story_sorrow", "story_home"]:
+	for id in ["story_sorrow", "story_home"]:
 		_check(txt.contains("\"cue\": \"%s\"" % id), "the missions call %s" % id)
 	level.queue_free()
 	await _wait(0.1)
@@ -299,13 +287,14 @@ func _story() -> void:
 func _creator() -> void:
 	var peoples: Array = (JSON.parse_string(FileAccess.get_file_as_string("res://assets/character/body/peoples.json"))
 			as Dictionary).get("peoples", [])
-	var missing := []
+	var themed := []
 	for e in peoples:
 		var pid := String((e as Dictionary).get("id", ""))
 		var c: Dictionary = MusicDirector.M.CUES.get("people_" + pid, {})
-		if c.is_empty() or float(c.loop_start) < 0.0:
-			missing.append(pid)
-	_check(peoples.size() >= 35 and missing.is_empty(), "every people has a looped theme (%d peoples; missing %s)" % [peoples.size(), str(missing)])
+		if not c.is_empty() and float(c.loop_start) >= 0.0:
+			themed.append(pid)
+	themed.sort()
+	_check(themed == ["malay", "thai", "vietnamese"], "the Vietnamese, Thai and Malay peoples have looped themes, the others none (%s)" % [themed])
 	var level := Node3D.new()
 	root.add_child(level)
 	var player := Node3D.new()
@@ -321,13 +310,16 @@ func _creator() -> void:
 	await _wait(0.1)
 	var cc := CanvasLayer.new()
 	cc.set_script(fake)
-	cc.set("look", {"people": "japanese"})
+	cc.set("look", {"people": "vietnamese"})
 	root.add_child(cc)
 	await _wait(0.4)
-	_check(d.mode == MusicDirector.Mode.CREATOR and d.cue == "people_japanese", "the creator open: the Japanese theme (%s)" % d.cue)
-	cc.set("look", {"people": "persian"})
+	_check(d.mode == MusicDirector.Mode.CREATOR and d.cue == "people_vietnamese", "the creator open: the Vietnamese theme (%s)" % d.cue)
+	cc.set("look", {"people": "thai"})
 	await _wait(0.4)
-	_check(d.cue == "people_persian", "another people chosen: its theme (%s)" % d.cue)
+	_check(d.cue == "people_thai", "another people chosen: its theme (%s)" % d.cue)
+	cc.set("look", {"people": "japanese"})
+	await _wait(0.4)
+	_check(d.mode == MusicDirector.Mode.CREATOR and d.cue == "people_thai", "a people with no theme: the last one plays on (%s)" % d.cue)
 	cc.queue_free()
 	await _wait(0.5)
 	_check(d.mode == MusicDirector.Mode.QUIET and d.cue == "", "the creator closed: the theme fades (%s)" % d.cue)

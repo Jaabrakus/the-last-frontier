@@ -246,7 +246,7 @@ class _Work extends RefCounted:
 
 ## Shapes `b` (dressed: its blend shapes set by apply_look) to `f` (a form: the groups above; "round" the head's rounding 0..1,
 ## "eyes" the eyes' size, "trunk" the barrel {k, depth, belly}), with `round_override` >= -1 replacing the form's rounding. Shaped
-## again from the same meshes when called again (HeadRound.apply). Returns the modifier (null without the bind pose). All on the
+## again from the same meshes when called again (a new round_override). Returns the modifier (null without the bind pose). All on the
 ## calling thread (a second or more for a new look and stage; at once from the caches): shape_async does the heavy part off it.
 static func shape(b: CharacterBodyMesh, f: Dictionary, round_override := -9.0) -> ChildProportion:
 	var job := _begin(b, f, round_override)

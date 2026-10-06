@@ -20,7 +20,7 @@ extends RefCounted
 ##                       0.35) with a convex dihedral; collinear edges merged (10 deg), < 0.4 m
 ##                       dropped. Kept when tagged (rocks need a visual proxy, design 8.4).
 ##   ConcavePolygon      the same edge rule on the triangle mesh (adjacent triangles).
-##   Markers             TravLedge (narrow sidle ledges), TravLadder, TravBeam, TravVolume
+##   Markers             TravLedge (narrow sidle ledges), TravLadder, TravVolume
 ##                       (crouch_under, squeeze) (marker_info()).
 ## Ledges are the level's climbable top edges (the jump-up / vault targets, debug view); no hang
 ## network is built from them (source-clip moves only).

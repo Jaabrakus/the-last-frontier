@@ -51,7 +51,9 @@ static func begin(step: Dictionary, tree: SceneTree) -> Dictionary:
 		"steal":
 			return {"had": pack_count(tree, String(step.get("item", ""))), "got": 0, "taken": 0}
 		"lock_cast":
-			return StorySlice.lock_cast_begin(step, tree)
+			var lb := step.duplicate()
+			lb["target"] = String(step.get("target", step.get("target_tag", "")))
+			return SwayCaster.lock_cast_begin(lb)
 		"survive_until":
 			var c := _core(tree)
 			if c == null:
@@ -142,15 +144,8 @@ static func check(step: Dictionary, base: Dictionary, tree: SceneTree, places: D
 		"steal":
 			return _steal(step, base, tree, at)
 		"stay_unseen":
-			if StorySlice.held(step, tree):
-				# (its `hold`: the seconds count from when it lets go, and it does not fail meanwhile; the marker on what
-				# holds it: the fight, then the broken sky)
-				base["held_s"] = el
-				var wp: Variant = StorySlice.watch_point(tree)
-				return {"done": false, "at": wp if wp != null else at}
 			if seen_by(tree) != null:
 				return {"done": false, "failed": true, "why": String(step.get("why", "You were seen.")), "at": at}
-			el -= float(base.get("held_s", 0.0))
 			var secs := float(step.get("seconds", 0.0 if at != null else 30.0))
 			var d := _dist_to(player(tree), at)
 			var done := (at != null and d <= float(step.get("r", 6.0))) or (secs > 0.0 and el >= secs)
@@ -161,7 +156,12 @@ static func check(step: Dictionary, base: Dictionary, tree: SceneTree, places: D
 		"follow":
 			return _follow(step, base, tree, at, el)
 		"lock_cast":
-			return StorySlice.lock_cast_check(step, base, tree, at)
+			var lc := step.duplicate()
+			lc["target"] = String(step.get("target", step.get("target_tag", "")))
+			var r := SwayCaster.lock_cast_check(lc, base, tree)
+			if r.get("at") == null:
+				r["at"] = at                           # (the marker on the target, else the step's place)
+			return r
 	return {"done": false, "at": at}
 
 

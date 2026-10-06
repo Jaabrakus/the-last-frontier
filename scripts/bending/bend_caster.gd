@@ -175,10 +175,6 @@ func tier(_id: String) -> int:
 	return 1
 
 
-func water() -> Bending:
-	return Bending.of(body)
-
-
 func notice(_text: String, _s := 1.6) -> void:
 	pass
 

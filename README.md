@@ -639,7 +639,7 @@ scripts/building/ build_mode.gd (B, the ghost, placing, take down), build_snap.g
                   fort_pieces.gd / fort_plan.gd (the fort's pieces and their stamping), palisade_cuts.gd (windows)
 scripts/ui/hud.gd, scripts/fx/fx.gd, scripts/core/ (input, hit routing)
 animations/, characters/   Actor_B library + rig from source/godot_export
-tests/            smoke_test.gd (headless gameplay test), screenshot.gd, compute_weapon_offsets.gd
+tests/            smoke_test.gd (headless gameplay test), screenshot.gd
 ```
 
 Headless test:

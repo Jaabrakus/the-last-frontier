@@ -404,7 +404,8 @@ func _test_body() -> void:
 	var ls := look.duplicate()
 	ls["child_round"] = -1.0
 	_expect(ChildLook.roundness(lr, "toddler") > r[1] and ChildLook.roundness(ls, "toddler") < r[1], "the look's child_round gauge moves it")
-	# HeadRound on a toddler: rounder is never bigger (the head keeps its volume), and it is the same body shaped again
+	# the rounding on a toddler (ChildProportion.shape with a round override): rounder is never bigger (the head keeps its
+	# volume), and it is the same body shaped again
 	var m2 := ps.instantiate() as Node3D
 	root.add_child(m2)
 	var sk2 := m2.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
@@ -413,13 +414,14 @@ func _test_body() -> void:
 	var tp := ChildProportion.of(tb)
 	var vols := []
 	for amt: float in [0.0, 1.0]:
-		HeadRound.apply(tb, amt)
+		ChildProportion.shape(tb, tp.form, amt)
 		var tm := _measure(tb, tp)
 		vols.append([float(tm.head), float(tm.width), float(tm.depth)])
 	var v0 := float(vols[0][0]) * float(vols[0][1]) * float(vols[0][2])
 	var v1 := float(vols[1][0]) * float(vols[1][1]) * float(vols[1][2])
 	_expect(float(vols[1][0]) < float(vols[0][0]) and v1 <= v0 * 1.06, "rounder is shorter and broader, never bigger (height %.3f -> %.3f, the box %.5f -> %.5f)" % [vols[0][0], vols[1][0], v0, v1])
-	_expect(HeadRound.amount_of(tb) == 1.0 and ChildSkin.materials(tb).size() > 0, "HeadRound keeps the rounding it was given")
+	_expect(ChildProportion.of(tb) != null and ChildProportion.of(tb).round_k == 1.0 and ChildSkin.materials(tb).size() > 0,
+			"the body keeps the rounding it was given")
 	m2.free()
 	# without the rig the old bundle stands in
 	BabyModel.no_rig = true
