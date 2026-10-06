@@ -18,24 +18,13 @@ extends RefCounted
 ##   var npc := CharacterPeoples.random_look("west_african", 1.0, rng)
 ##   var mixed := CharacterPeoples.random_look("english", 0.0, rng, "lenape", 0.5)
 ##
-## The game's own peoples (data/customizer/world_peoples.json; the owner 2026-10-03: "maybe we dont use those races and
-## we make custom ones for our full metal alchemist and edge chronicles sky pirates treasure planet game", then "yea lets
-## test it"; docs/peoples_world.md): the Downbelowers, the Driftborn, the Keelfolk and the Etched. A test: the creator
-## lists them (listed_groups, listed_peoples) unless the user arg peoples=real asks for the real ones; NPCs keep the real
-## ones (tool and test runs list the real ones unless asked with peoples=world). Every face of the real peoples is a face
-## of every world people (WORLD_FACES of them, two from each region, a
-## different pick per people): people(), presets(), stylized_presets() and random_look() take a world people's id like a
-## real one's; its skin, eye and hair colours, hair styles and its mark in the skin (`trait`) are its own.
+## (The invented test peoples of 2026-10-03, data/customizer/world_peoples.json, were retired in the 2026-10-06 cleanup:
+## the creator lists the peoples of peoples.json again. listed_groups / listed_peoples / is_listed / default_people stay
+## as the creator's names for them.)
 
 const PATH := "res://assets/character/body/peoples.json"
-const WORLD_PATH := "res://data/customizer/world_peoples.json"
-## Faces a world people offers per body type and list (the creator's Face row): two from each region of the real peoples.
-const WORLD_FACES := 18
-const WORLD_PER_GROUP := 2
 
 static var _data := {}
-static var _world := {}
-static var _group_of := {}       ## real people id -> its group (the world peoples' faces are picked by region)
 
 
 static func data() -> Dictionary:
@@ -68,156 +57,40 @@ static func peoples(group := "") -> Array:
 	return out
 
 
-## A people by id: a real one, else one of the world's.
+## A people by id ({} none).
 static func people(id: String) -> Dictionary:
 	for p: Dictionary in data().get("peoples", []):
-		if p.get("id", "") == id:
-			return p
-	for p: Dictionary in world().get("peoples", []):
 		if p.get("id", "") == id:
 			return p
 	return {}
 
 
-# --- the world's own peoples --------------------------------------------------------------------------------------
-
-## world_peoples.json: {groups, default, eye_colors, peoples}, each people filled out to read like a real one (_derive).
-static func world() -> Dictionary:
-	if _world.is_empty():
-		var d = JSON.parse_string(FileAccess.get_file_as_string(WORLD_PATH)) if FileAccess.file_exists(WORLD_PATH) else null
-		_world = (d as Dictionary).duplicate(true) if d is Dictionary else {}
-		var list := []
-		for p: Dictionary in _world.get("peoples", []):
-			list.append(_derive(p))
-		_world["peoples"] = list
-		if not _world.has("groups"):
-			_world["groups"] = []
-	return _world
-
-
-static func is_world(id: String) -> bool:
-	for p: Dictionary in world().get("peoples", []):
-		if p.get("id", "") == id:
-			return true
-	return false
-
-
-## The creator lists the world's peoples (the test) unless the user arg peoples=real asks for the real ones. Tool and
-## test runs (-s) list the real ones unless they ask with peoples=world (the creator's tests were written for those).
-static func world_listed() -> bool:
-	var args := OS.get_cmdline_user_args()
-	if "peoples=real" in args or (world().get("peoples", []) as Array).is_empty():
-		return false
-	var script_run := "-s" in OS.get_cmdline_args() or "--script" in OS.get_cmdline_args()
-	return not script_run or "peoples=world" in args
-
-
 ## The people a look takes when its own is not among the listed ones (the creator's first people).
 static func default_people() -> String:
-	return String(world().get("default", "english")) if world_listed() else "english"
+	return "english"
 
 
-## The groups and peoples the creator shows: the world's (the test), else the real ones.
+## The groups and peoples the creator shows.
 static func listed_groups() -> Array:
-	return world().get("groups", []) if world_listed() else groups()
+	return groups()
 
 
 static func listed_peoples(group := "") -> Array:
-	if not world_listed():
-		return peoples(group)
-	var out := []
-	for p: Dictionary in world().get("peoples", []):
-		if group.is_empty() or p.get("group", "") == group:
-			out.append(p)
-	return out
+	return peoples(group)
 
 
-## Whether people `id` is one the creator lists now.
+## Whether people `id` is one the creator lists.
 static func is_listed(id: String) -> bool:
-	return is_world(id) if world_listed() else not people(id).is_empty()
+	return not people(id).is_empty()
 
 
-## The eye colours the world adds to the body's (name -> "#rrggbb").
-static func world_eye_colors() -> Dictionary:
-	return world().get("eye_colors", {})
-
-
-## A world people's mark in the skin ({kind, label, color, glow, default, note}; {} none): the look's people's.
+## A people's mark in the skin ({kind, label, color, glow, default, note}; {} none): the look's people's.
 static func trait_of(look: Dictionary) -> Dictionary:
 	var t: Variant = people(String(look.get("people", ""))).get("trait")
 	return t if t is Dictionary else {}
 
 
-## A world people as the rest of the game reads a people: the face's mean and spread over every real people (so the
-## fine-tune sliders and a mix have something to stand on), the hair texture, the men's genital size (the mean).
-static func _derive(p: Dictionary) -> Dictionary:
-	var out := p.duplicate(true)
-	var real: Array = data().get("peoples", [])
-	var mean := {}
-	var sd := {}
-	var gen := 0.0
-	if not real.is_empty():
-		for k in feature_keys():
-			var s := 0.0
-			var s2 := 0.0
-			for r: Dictionary in real:
-				var m := float((r.get("face_mean", {}) as Dictionary).get(k, 0.0))
-				var d := float((r.get("face_sd", {}) as Dictionary).get(k, 0.3))
-				s += m
-				s2 += m * m + d * d
-			var n := float(real.size())
-			mean[k] = s / n
-			sd[k] = sqrt(maxf(s2 / n - (s / n) * (s / n), 0.0))
-		for r: Dictionary in real:
-			gen += float(r.get("genital", 0.0))
-		gen /= float(real.size())
-	out["face_mean"] = mean
-	out["face_sd"] = sd
-	out["world"] = true
-	if not out.has("genital"):
-		out["genital"] = snappedf(gen, 0.001)
-	if not out.has("hair_texture"):
-		out["hair_texture"] = "any"
-	if not out.get("hair_styles") is Dictionary:
-		out["hair_styles"] = {"m": [], "f": []}
-	return out
-
-
-## A world people's faces from list `list` ("presets" or "stylized_presets") for body type `sex`: WORLD_PER_GROUP from
-## each region of the real peoples, a different pick for each world people, so each shows faces of every ancestry.
-static func _world_faces(pid: String, sex: float, list: String) -> Array:
-	if _group_of.is_empty():
-		for p: Dictionary in data().get("peoples", []):
-			_group_of[String(p.get("id", ""))] = String(p.get("group", ""))
-	var all: Array = data().get(list, [])
-	var out := []
-	# each people's list starts in a different region (its first face, the creator's default, not always Europe's)
-	var gs := groups()
-	var start := absi(hash(pid)) % maxi(gs.size(), 1)
-	for gi in gs.size():
-		var g := String(gs[(start + gi) % gs.size()])
-		var pool := []
-		for pr: Dictionary in all:
-			if sex >= 0.0 and absf(float(pr.get("sex", 0.0)) - sex) > 0.5:
-				continue
-			if String(_group_of.get(String(pr.get("people", "")), "")) == g:
-				pool.append(pr)
-		if pool.is_empty():
-			continue
-		var h := absi(hash("%s:%s:%s" % [pid, g, list]))
-		var step := maxi(1, pool.size() / WORLD_PER_GROUP)
-		var taken := {}
-		for i in mini(WORLD_PER_GROUP, pool.size()):
-			var pr: Dictionary = pool[(h + i * step) % pool.size()]
-			if not taken.has(pr.id):
-				taken[pr.id] = true
-				out.append(pr)
-	return out
-
-
 static func presets(people_id := "", sex := -1.0) -> Array:
-	if not people_id.is_empty() and is_world(people_id):
-		return _world_faces(people_id, sex, "presets")
 	var out := []
 	for pr: Dictionary in data().get("presets", []):
 		if not people_id.is_empty() and pr.get("people", "") != people_id:
@@ -238,8 +111,6 @@ static func preset(id: String) -> Dictionary:
 
 ## The stylized example individuals of a people and body type (every one when empty / -1).
 static func stylized_presets(people_id := "", sex := -1.0) -> Array:
-	if not people_id.is_empty() and is_world(people_id):
-		return _world_faces(people_id, sex, "stylized_presets")
 	var out := []
 	for pr: Dictionary in data().get("stylized_presets", []):
 		if not people_id.is_empty() and pr.get("people", "") != people_id:

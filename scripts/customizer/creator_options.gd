@@ -254,8 +254,7 @@ static func _face_options(look: Dictionary) -> Array:
 	var prs: Array = CharacterPeoples.presets(pid, sex)
 	if BodyMaterials.is_stylized(look):
 		prs = CharacterPeoples.stylized_presets(pid, sex) + prs
-	# (a world people: more faces, two from each region of the real peoples: CharacterPeoples.WORLD_FACES)
-	var cap := CharacterPeoples.WORLD_FACES if CharacterPeoples.is_world(pid) else FACE_VARIANTS
+	var cap := FACE_VARIANTS
 	for pr: Dictionary in prs:
 		if out.size() >= cap:
 			break
@@ -543,31 +542,10 @@ static func with_people(look: Dictionary, people_id: String) -> Dictionary:
 	if BodyMaterials.is_stylized(look):
 		pr = CharacterPeoples.stylized_presets(people_id, sex) + pr
 	var out := CharacterPeoples.preset_look(String(pr[0].id)) if not pr.is_empty() else {"people": people_id, "sex": sex}
-	out["people"] = people_id          # (a world people's faces are real peoples' presets: the look is still its)
+	out["people"] = people_id
 	out = _keep(look, out)
-	_world_people(out)
 	_settle(out)
 	return out
-
-
-## A world people's own on a look just made from one of its faces (a real people's preset): its first hair style, its
-## weathering, its mark at its own strength; the eyes and hair colour settle on its lists (its most common first).
-static func _world_people(look: Dictionary) -> void:
-	var p := CharacterPeoples.people(String(look.get("people", "")))
-	if not bool(p.get("world", false)):
-		return
-	var own: Array = (p.get("hair_styles", {}) as Dictionary).get("m" if is_male(look) else "f", [])
-	if not own.is_empty():
-		_hair(look)["style"] = String(own[0])
-	_hair(look).erase("color")
-	look.erase("iris")
-	if p.has("weathering"):
-		look["weathering"] = float(p.weathering)
-	var tr := CharacterPeoples.trait_of(look)
-	if not tr.is_empty():
-		look["trait"] = _nearest_trait(float(tr.get("default", 0.6)))
-	else:
-		look.erase("trait")
 
 
 ## The Mark row's level nearest `v`.
