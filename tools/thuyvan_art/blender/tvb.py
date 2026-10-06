@@ -21,7 +21,7 @@ LOOK = os.environ.get(
     "TV_LOOK_DIR",
     "/private/tmp/claude-501/-Users-kiwimango-Downloads-Frontier/d8726f05-a14a-44ac-97c9-351a2e11c5c5/scratchpad/"
     "thuyvan_plan/look/PAINT")
-PAL = json.load(open(os.path.join(ROOT, "tools", "thuyvan_art", "paint", "palettes.json")))
+PAL = json.load(open(os.path.join(ROOT, "docs", "thuyvan", "plan", "look", "palettes.json")))
 UP = Vector((0, 0, 1))
 
 

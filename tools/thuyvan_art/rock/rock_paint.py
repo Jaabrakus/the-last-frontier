@@ -3,7 +3,7 @@
     python3 tools/thuyvan_art/rock/rock_paint.py [--out assets/thuyvan/rock/textures] [--check-dir DIR] [--only NAME]
 
 Follows the style guide's brush recipe (style_guide.md 3.2): every texture is painted on a torus (it tiles), from ONE
-4-stop ramp per material read from tools/thuyvan_art/palettes.json (dark, mid, light, accent; nobody retypes hex
+4-stop ramp per material read from docs/thuyvan/plan/look/palettes.json (dark, mid, light, accent; nobody retypes hex
 values), with low-frequency variation at 1 and 1/2 of the tile, big flat dabs with firm painter's edges, medium strokes
 painted three times (dark copy below, body, light sliver on top), a stroke height map whose cavities darken toward a
 cool dark (the painted AO), lit top edges on rock, a sparse accent pass, a 0.6 px blur + unsharp mask, a clamp to the

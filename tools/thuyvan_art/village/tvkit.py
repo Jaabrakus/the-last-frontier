@@ -25,7 +25,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 TEX_DIR = os.path.join(REPO, "assets", "thuyvan", "village", "textures")
 MATS = json.load(open(os.path.join(HERE, "materials.json")))["keys"]
-PAL = json.load(open(os.path.join(HERE, "palettes.json")))["albedo"]["r1"]
+PALETTES = os.path.join(REPO, "docs", "thuyvan", "plan", "look", "palettes.json")  # the art director's file
+PAL = json.load(open(PALETTES))["albedo"]["r1"]
 DOUBLE_SIDED = {"flags", "banner_indigo", "banner_ochre", "banner_jade", "cloth_madder", "cloth_bone", "cloth_indigo",
                 "cloth_ochre", "cloth_jade", "weave", "paper"}
 

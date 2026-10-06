@@ -10,7 +10,7 @@ eaves, thick ropes and planks. Own work only (`assets/thuyvan/village/SOURCE.md`
 | Textures (PNG, sRGB) | `assets/thuyvan/village/textures/<key>.png` |
 | Meshes (GLB, +Y up, metres) and `manifest.json` | `assets/thuyvan/village/` |
 | Material table (keys, tile sizes, roughness, specular, emission) | `tools/thuyvan_art/village/materials.json` |
-| Palette (copy of the art director's `palettes.json`) | `tools/thuyvan_art/village/palettes.json` |
+| Palette (the art director's file, read in place) | `docs/thuyvan/plan/look/palettes.json` |
 
 ## Rebuild, in order
 

@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tvkit  # noqa: E402
 import village_kit as vk  # noqa: E402
 
-PALJ = json.load(open(os.path.join(tvkit.HERE, "palettes.json")))
+PALJ = json.load(open(tvkit.PALETTES))
 PAL = PALJ["albedo"]["r1"]
 DIRS = {"noon": "bright_saturated_noon", "morning": "jade_mist_morning", "dusk": "golden_lantern_dusk"}
 lin = tvkit.hex_lin

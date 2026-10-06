@@ -2,8 +2,8 @@
 
     python3 tools/thuyvan_art/village/paint_village.py [--only key,key] [--check-dir DIR]
 
-Reads materials.json (one row per material key) and palettes.json (albedo.r1 ramps, a byte-for-byte copy of the art
-director's look/palettes.json). Writes assets/thuyvan/village/textures/<key>.png (sRGB, opaque) and, per texture, a
+Reads materials.json (one row per material key) and palettes.json (albedo.r1 ramps, the art
+director's docs/thuyvan/plan/look/palettes.json). Writes assets/thuyvan/village/textures/<key>.png (sRGB, opaque) and, per texture, a
 <key>_check.png (the 3 x 3 tiling at 1/8 and the 1/16 squint) into --check-dir.
 
 Every texture is painted on a torus (dabs wrap), in linear float, from its material's 4-stop ramp only (dark, mid,
@@ -795,7 +795,8 @@ def main():
     ap.add_argument("--out", default=OUT)
     a = ap.parse_args()
     mats = json.load(open(os.path.join(HERE, "materials.json")))
-    pal = json.load(open(os.path.join(HERE, "palettes.json")))["albedo"][mats["palette_zone"]]
+    pal = json.load(open(os.path.join(HERE, "..", "..", "..", "docs", "thuyvan", "plan", "look",
+                                   "palettes.json")))["albedo"][mats["palette_zone"]]
     os.makedirs(a.out, exist_ok=True)
     only = set(filter(None, a.only.split(",")))
     report = {}

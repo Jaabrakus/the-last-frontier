@@ -8,8 +8,8 @@ silhouettes, painted skies. Not cel shading, not the WoW interface.
 
 ## Rebuild
 
-All painters are deterministic (fixed seeds) and read colours only from `tools/thuyvan_art/paint/palettes.json`
-(copy of `docs/thuyvan/plan/look/palettes.json`). Review images go to `look/PAINT/` in the plan folder (env
+All painters are deterministic (fixed seeds) and read colours only from the art director's
+`docs/thuyvan/plan/look/palettes.json`. Review images go to `look/PAINT/` in the plan folder (env
 `TV_LOOK_DIR` overrides).
 
 ```sh

@@ -1,5 +1,5 @@
 {
-  "_about": "Thủy Vân village kit (VILLAGE, V01-V15): one row per material key. paint_village.py paints textures/<key>.png from it; village_kit.py names Blender/glTF materials tvv_<key> and lays UVs so that 1 UV unit = tile_m metres (256 px/m unless noted). Ramps are names in palettes.json albedo.r1 (copied byte for byte from the art director's look/palettes.json; never retype a hex value). rough/spec are the Godot StandardMaterial3D values (style guide 5.2).",
+  "_about": "Thủy Vân village kit (VILLAGE, V01-V15): one row per material key. paint_village.py paints textures/<key>.png from it; village_kit.py names Blender/glTF materials tvv_<key> and lays UVs so that 1 UV unit = tile_m metres (256 px/m unless noted). Ramps are names in the art director's docs/thuyvan/plan/look/palettes.json albedo.r1 (never retype a hex value). rough/spec are the Godot StandardMaterial3D values (style guide 5.2).",
   "palette_zone": "r1",
   "keys": {
     "timber":        {"painter": "planks", "ramp": "timber",          "px": 512,  "tile_m": 2.0, "boards_m": 0.5,  "gaps": false, "value": 0.38, "rough": 0.92, "spec": 0.15},
