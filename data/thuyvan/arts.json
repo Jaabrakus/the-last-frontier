@@ -1,0 +1,98 @@
+{
+  "_doc": [
+    "The four arts in the game now (ThuyVanCanon.art): Current, Stone, Hearth and Wind on screen; code_id is the id the code and Tidebreak's kits keep (water, earth, fire, air). Rows as in the other files: id, src, status.",
+    "material: what must be at hand (no material, no art). teachers: who teaches it first, each with its own status; peoples [] means any people. Anyone may learn any art from a teacher; no people is locked out and none gets a bonus.",
+    "obligation: the debt each use in the open world leaves in the Account. weakens: where the art draws less.",
+    "bands: strength by place. reach_scale and knock_scale scale an art's reach and knock; speed_scale and aim_scale are always 1 (the owner's rule: nothing touches speed or aim). The prepared place (Tidebreak's ring) is full strength."
+  ],
+  "arts": [
+    {
+      "id": "current",
+      "src": ["§07", "P05", "P01"],
+      "status": "proposal",
+      "code_id": "water",
+      "name": {"text": "Current", "voice": "ui"},
+      "material": {"text": "Moving water of a named channel, lock or reach.", "voice": "ui"},
+      "teachers": [
+        {"who": {"text": "the channel councils", "voice": "ui"}, "peoples": ["riverborn"], "status": "canon"},
+        {"who": {"text": "the lock guilds", "voice": "ui"}, "peoples": ["dragon_sea"], "status": "canon"},
+        {"who": {"text": "marsh pilots and mooring crews", "voice": "ui"}, "peoples": ["floodborn"], "status": "proposal"}
+      ],
+      "obligation": {"text": "What is drawn is returned.", "voice": "ui"},
+      "weakens": {"text": "Far from moving water, and in stagnant or fouled water.", "voice": "ui"}
+    },
+    {
+      "id": "stone",
+      "src": ["§07", "P03", "P02"],
+      "status": "proposal",
+      "code_id": "earth",
+      "name": {"text": "Stone", "voice": "ui"},
+      "material": {"text": "Worked or field stone, underfoot or in hand.", "voice": "ui"},
+      "teachers": [
+        {"who": {"text": "the Stone Houses", "voice": "ui"}, "peoples": ["stone_children"], "status": "canon"},
+        {"who": {"text": "the waystone-builders of the clans", "voice": "ui"}, "peoples": ["mountain_folk"], "status": "canon"}
+      ],
+      "obligation": {"text": "Every stone set back.", "voice": "ui"},
+      "weakens": {"text": "On boards, mud, reeds or water, far from any stone.", "voice": "ui"}
+    },
+    {
+      "id": "hearth",
+      "src": ["§07"],
+      "status": "proposal",
+      "code_id": "fire",
+      "name": {"text": "Hearth", "voice": "ui"},
+      "material": {"text": "A live coal carried in a covered ember-pot.", "voice": "ui"},
+      "teachers": [
+        {"who": {"text": "forge and kiln keepers, smiths and potters", "voice": "ui"}, "peoples": [], "status": "proposal"}
+      ],
+      "obligation": {"text": "Fuel taken is fuel owed.", "voice": "ui"},
+      "weakens": {"text": "In rain or wet without a covered pot, and far from any forge or kiln.", "voice": "ui"}
+    },
+    {
+      "id": "wind",
+      "src": ["§07", "P02", "P01"],
+      "status": "proposal",
+      "code_id": "air",
+      "name": {"text": "Wind", "voice": "ui"},
+      "material": {"text": "Open moving air over a pass, a reach or a sail.", "voice": "ui"},
+      "teachers": [
+        {"who": {"text": "the Cloud-Pass windwalkers", "voice": "ui"}, "peoples": ["mountain_folk"], "status": "proposal"},
+        {"who": {"text": "the sail-callers of the ports", "voice": "ui"}, "peoples": ["dragon_sea"], "status": "proposal"}
+      ],
+      "obligation": {"text": "A wind called is let go.", "voice": "ui"},
+      "weakens": {"text": "Underground, in closed streets, and in a dead calm.", "voice": "ui"}
+    }
+  ],
+  "bands": [
+    {
+      "id": "no_material",
+      "src": ["§07"],
+      "status": "proposal",
+      "reach_scale": 0.0,
+      "knock_scale": 0.0,
+      "speed_scale": 1.0,
+      "aim_scale": 1.0,
+      "name": {"text": "No material, no art.", "voice": "ui"}
+    },
+    {
+      "id": "away",
+      "src": ["§07"],
+      "status": "proposal",
+      "reach_scale": 0.6,
+      "knock_scale": 0.6,
+      "speed_scale": 1.0,
+      "aim_scale": 1.0,
+      "name": {"text": "Away from home: less reach, less knock.", "voice": "ui"}
+    },
+    {
+      "id": "home",
+      "src": ["§07"],
+      "status": "proposal",
+      "reach_scale": 1.0,
+      "knock_scale": 1.0,
+      "speed_scale": 1.0,
+      "aim_scale": 1.0,
+      "name": {"text": "At home, at a bond-site or in a prepared place: full strength.", "voice": "ui"}
+    }
+  ]
+}
