@@ -301,9 +301,12 @@ func _trap_drop() -> void:
 	await _stage()
 	c.set_mode("earth_grip", "trap")
 	var off0 := BendStatus.held_off
+	# (round 2's kits took root_s off every element spec: a trap that would still root is held off by BendStatus)
+	var roots := float((((SwayMoves.move("earth_grip").get("bend", {}) as Dictionary).get("trap", {})) as Dictionary).get("root_s", 0.0)) > 0.0
 	var trapped := BendCast.cast(c, "earth_grip", "trap")
-	_expect(trapped and not n.feet_held and BendStatus.held_off > off0 and int(BendEffects.last.get("hit", 0)) >= 1,
-			"trap: an element fighter's feet never held (round 2; held %s, held off %d)" % [str(n.feet_held), BendStatus.held_off - off0])
+	_expect(trapped and not n.feet_held and (BendStatus.held_off > off0 or not roots) and int(BendEffects.last.get("hit", 0)) >= 1,
+			"trap: an element fighter's feet never held (round 2; held %s, held off %d, the spec roots %s)" % [str(n.feet_held),
+			BendStatus.held_off - off0, roots])
 	var ths0 := get_nodes_in_group(FormEffects.Throw.GROUP)
 	c.set_mode("stone_form", "cannonball")
 	var boulder := BendCast.cast(c, "stone_form", "cannonball")

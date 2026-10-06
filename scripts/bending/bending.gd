@@ -52,6 +52,12 @@ const STONES := {"loose_max": 3, "shove_loose_m": 6.0}
 ## Tests only: blocks of moves.json stood in (set_test_data): "elements", "jabs", "guards", "passives", "guard_rules",
 ## "stones", "water_meter". {} none.
 static var _test := {}
+## A block the data does not have (one dictionary, never written to: rules() can tell nothing changed).
+static var _none := {}
+## rules() as made from the guard_rules block `_rules_of` (read every frame by the locks and guards: made again only when
+## that block is another one, a test's stand-in or a reload).
+static var _rules := {}
+static var _rules_of: Dictionary = {}
 
 ## The body it is on (the player, a bot; the name kept from when only the player bent).
 var player: Node3D
@@ -69,8 +75,8 @@ static func data() -> Dictionary:
 static func block(name: String) -> Dictionary:
 	if _test.has(name):
 		return _test[name]
-	var v: Variant = SwayMoves.data().get(name, {})
-	return v if v is Dictionary else {}
+	var v: Variant = SwayMoves.data().get(name)
+	return v if v is Dictionary else _none
 
 
 ## Tests only: `d`'s blocks stand in for moves.json's ("elements" the key layout, "guard_rules", "jabs", ...); {} lets
@@ -146,9 +152,12 @@ static func passive(element: String) -> Dictionary:
 
 ## The shared cast and guard numbers (RULES, moves.json "guard_rules" over them).
 static func rules() -> Dictionary:
-	var out := RULES.duplicate()
-	out.merge(block("guard_rules"), true)
-	return out
+	var have := block("guard_rules")
+	if _rules.is_empty() or not is_same(have, _rules_of):
+		_rules = RULES.duplicate()
+		_rules.merge(have, true)
+		_rules_of = have
+	return _rules
 
 
 ## One of rules() (`def` when neither has it).

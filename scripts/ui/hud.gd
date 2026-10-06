@@ -80,6 +80,9 @@ const ARENA_KEYS := {
 ## spell's then (SwayCaster's; ELEMENT_LMB, ELEMENT_Q with the set key as bound).
 const WORLD_LMB := "LMB hold to aim, release to fire"
 const WORLD_Q := "hold Q: equip wheel"
+## HELP's E in the duel (round 2: E is the element's guard while a round is fought; PlayerInteractor._e_guards).
+const WORLD_E := "E use (hold E: all there is to do)"
+const ELEMENT_E := "{guard} guard (between rounds: E use)"
 const ELEMENT_LMB := "Hold RMB on the aim: lock the readied move, let go to cast · hold LMB: the same with the left-click move"
 const ELEMENT_Q := "%s: the readied move onto LMB"
 
@@ -101,7 +104,7 @@ func help_text() -> String:
 	var wheel_k := SwayCaster.key_name(EquipWheel.ACTION)
 	if wheel_k != "" and wheel_k != shown_k:
 		q_line = "hold %s: equip wheel · %s" % [wheel_k, q_line]     # (the wheel keeps a key of its own)
-	var out := HELP.replace(WORLD_Q, q_line).replace(WORLD_LMB, ELEMENT_LMB)
+	var out := HELP.replace(WORLD_Q, q_line).replace(WORLD_LMB, ELEMENT_LMB).replace(WORLD_E, KitWords.keyed(ELEMENT_E))
 	return out + "\n" + scheme_l if scheme_l != "" else out
 
 

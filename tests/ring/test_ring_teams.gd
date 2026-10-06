@@ -227,7 +227,8 @@ func _shields(a: NpcFighter, b: NpcFighter) -> void:
 	if is_instance_valid(bub):
 		bub.queue_free()
 	await _ticks(2)
-	var sh := BendZone.make(b, "air_shield", b.global_position, {"radius_m": 2.2, "life_s": 4.0})
+	# (round 2: an element's air shield is the timed Wind Guard; its window and its beat held open here for the team rule)
+	var sh := BendZone.make(b, "air_shield", b.global_position, {"radius_m": 2.2, "life_s": 4.0, "window_s": 4.0, "perfect_s": 4.0})
 	var r3 := _bolt(a, chest(b) + (chest(b) - chest(a)).normalized() * 4.0, "air")
 	await _until(func() -> bool: return _gone(r3[0]) or (r3[0] as BendBolt).travelled > 10.0, 2.0)
 	var took_a := sh.took

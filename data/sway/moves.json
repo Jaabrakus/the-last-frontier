@@ -263,6 +263,9 @@
       "mastery_uses": [0, 8, 30],
       "modes": ["wall"],
       "mode_labels": {"wall": "Wall"},
+      "world_modes": ["wall", "column", "shell"],
+      "world_mode_labels": {"wall": "wall", "column": "column", "shell": "shell"},
+      "mode_range_m": {"column": 20.0, "shell": 40.0},
       "element": "earth",
       "ring": {"wall": {"self_lock": true, "place": {"min_m": 2.0, "max_m": 6.0}, "wall_key": true}},
       "bend": {
@@ -285,6 +288,8 @@
       "circle_m": 0.8,
       "modes": ["spike", "cannonball"],
       "mode_labels": {"spike": "Spike", "cannonball": "Boulder"},
+      "world_modes": ["spike", "cannonball", "disc"],
+      "world_mode_labels": {"spike": "spike", "cannonball": "boulder", "disc": "disc"},
       "mastery_uses": [0, 8, 30],
       "spike": {
         "height_m": 1.75,
@@ -407,7 +412,10 @@
       "circle_m": 0.8,
       "modes": ["self"],
       "mode_labels": {"self": "Lift"},
+      "world_modes": ["self", "free", "ramp"],
+      "world_mode_labels": {"self": "self", "free": "free", "ramp": "ramp"},
       "mode_moving_mult": {"self": 1.0},
+      "mode_range_m": {"free": 10.0, "ramp": 6.0},
       "pillar": {
         "radius_m": 0.55,
         "height_m": 3.0,
@@ -424,9 +432,9 @@
           "carry": 0.85,
           "rise_s": 0.3,
           "height_m": 1.3,
-          "plant_window_s": 0.0,
-          "plant_after_s": 0.0,
-          "boost": 1.0,
+          "plant_window_s": 0.045,
+          "plant_after_s": 0.02,
+          "boost": 1.3,
           "run_mult": 1.3,
           "run_over_mps": 3.0
         },
@@ -1755,7 +1763,7 @@
     "splinter": "gather_rec_axe_chop_big"
   },
   "elements": {
-    "_doc": "Each element's keys (skills_r2 spec 2.1-2.2, the owner's answers of 2026-10-05): 1 STRIKE, 2 PUSH (its first move grows if held: grow), 3 DASH, 4 WALL, 5 HEAL. A key is [id] (one move, or one move whose two variations are the key's two moves) or [id, id] (two moves of one variation each). A tap readies the key's first move, a second tap within guard_rules.double_tap_s the other; nothing is remembered. Fire's 4 holds Fire Wall and Breath (the owner kept Breath), fire's 1 grows too (Punch held: the Fireball). Bending.keys; the jab on the left button and the guard on E are their own blocks (jabs, guards). A move's 'modes' are only what the ring offers; specs of variations it no longer offers stay under 'bend' for whoever still casts them.",
+    "_doc": "Each element's keys (skills_r2 spec 2.1-2.2, the owner's answers of 2026-10-05): 1 STRIKE, 2 PUSH (its first move grows if held: grow), 3 DASH, 4 WALL, 5 HEAL. A key is [id] (one move, or one move whose two variations are the key's two moves) or [id, id] (two moves of one variation each). A tap readies the key's first move, a second tap within guard_rules.double_tap_s the other; nothing is remembered. Fire's 4 holds Fire Wall and Breath (the owner kept Breath), fire's 1 grows too (Punch held: the Fireball). Bending.keys; the jab on the left button and the guard on E are their own blocks (jabs, guards). A move's 'modes' are only what the ring offers; specs of variations it no longer offers stay under 'bend' for whoever still casts them. The open world's Form spells keep theirs in 'world_modes' and 'world_mode_labels' (Stone Form's disc, the earth wall's column and shell, the pillar's free and ramp: SwayCaster.world_modes_of), and the pillar's footfall boost stays the open world's (the ring's Lift reads sink_s and run_mult instead).",
     "earth": [["stone_form"], ["earth_shove"], ["earth_skate", "pillar"], ["earth_wall"], ["patch", "mend"]],
     "water": [["water_whip", "ice"], ["wave"], ["flow"], ["water_shield"], ["patch", "mend"]],
     "fire": [

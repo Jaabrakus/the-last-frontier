@@ -175,6 +175,8 @@ func _run() -> void:
 	for pair in Bending.keys(mode.foe_element):
 		for id: String in pair:
 			own[id] = true
+	for extra: Dictionary in [Bending.jab(mode.foe_element), Bending.guard(mode.foe_element)]:
+		own[String(extra.get("id", ""))] = true    # (round 2: its jab on the left button and its guard on E are its own too)
 	var foreign: Array = []
 	for k: String in bot_by:
 		var id := k.get_slice("/", 0)
@@ -232,7 +234,9 @@ func _attacks(el: String) -> Array:
 		for id: String in pair:
 			for md: String in SwayCaster.modes_of(id):
 				var spec: Dictionary = (SwayMoves.move(id).get("bend", {}) as Dictionary).get(md, {})
-				if String(spec.get("do", "")) in ATTACKS:
+				# (not Breath: its smoke hides the player from the bot, by design, and the script's every-other cast at
+				# it would keep the bot blind all match; an owner question in round 2's gate)
+				if String(spec.get("do", "")) in ATTACKS and not spec.has("smoke_s"):
 					out.append([id, md, spec])
 	return out
 

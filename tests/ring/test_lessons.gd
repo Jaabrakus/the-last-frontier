@@ -9,14 +9,13 @@ extends SceneTree
 ##   keys, earth every lesson of the run completed by its action as the player does it (a walk, a click of LMB, keys 1-5
 ##               pressed and RMB held and let go, E as the dummy's slowed stone comes and E again, a jump, Q then LMB, the
 ##               dummy knocked back and into the water), and only by it; the card's line holds each of its keys as bound
-##               now ([W] [A] [S] [D], [RMB], [LMB], [1]-[5], [E], [Space], [Q]); a rebound key shows in the line. Where
-##               this branch's caster has no guard on E yet (round 2's CORE not merged), E's guard and its throw back are
-##               stood in by the caster's own signals (said in an info line)
+##               now ([W] [A] [S] [D], [RMB], [LMB], [1]-[5], [E], [Space], [Q]); a rebound key shows in the line. E is
+##               clicked as the dummy's shot comes, timed to its beat (tests/ring/guard_timing.gd); nothing is stood in
 ##   the drill   through the guard drill the dummy throws slowly (RingMode.slow_throws: a throw each slow_every_s, its shots
 ##               at slow_speed of their speed), and back to its own pace after it; fire's jump card throws fire's Kick
 ##   elements    water, fire and air under the keys scheme (a restart brings each one's own dummy): the run resumes at its
 ##               own strike (the element's words: Lash, Punch, Slice), its guard card names its guard (Turn, Parry, Wind
-##               Guard) on E and is done by a guard
+##               Guard) on E and is done only by a guard on the beat (perfect; a late one leaves it open)
 ##   schemes     first moves (when the data has it), direction and radial: their runs and every card's line with its keys
 ##   skip/resume Enter skips (kept as skipped), a lesson done is kept as done; a new run begins at the first neither and goes
 ##               past the rest; the menu's line says where; all done: from the start again, and a skip then keeps done
@@ -31,6 +30,7 @@ const NAME := "LESSONS TEST"
 const LIMIT_S := 400.0
 const OWN_CFG := "user://lessons_test.cfg"
 const R2Layout := preload("res://tests/ring/r2_layout.gd")
+const GuardTiming := preload("res://tests/ring/guard_timing.gd")
 const WORDS := ["avatar", "benders?", "bending", "pro-?bend\\w*", "korra", "aang", "airbend\\w*", "firebend\\w*",
 		"earthbend\\w*", "waterbend\\w*", "air scooters?", "fire nation", "water tribes?", "earth kingdom", "air nomads?",
 		"water whip", "air balls?", "air shields?", "spouts?", "redirect lightning"]
@@ -108,8 +108,7 @@ func _end() -> void:
 	GameSettings.path = GameSettings.PATH
 	MatchSetup.reload_scheme()
 	FirstHints.force = false
-	if not stood_in.is_empty():
-		print("  info stood in by the caster's signals (round 2's CORE not merged here): %s" % [stood_in])
+	_expect(stood_in.is_empty(), "every lesson done by the player's own input, nothing stood in (%s)" % [stood_in])
 	if fails.is_empty() and checks > 0:
 		print("%s PASSED (%d checks)" % [NAME, checks])
 		quit(0)
@@ -391,19 +390,18 @@ func _catch() -> void:
 				return true
 		return false, 7.0)
 	_expect(slowed < INF, "a shot of the dummy's slowed as it leaves (%.1f s)" % slowed)
-	await _action(KitWords.GUARD_ACTION)
-	var guarded := await _until(func() -> bool: return c.state != SwayCaster.State.IDLE or bool(ls.get(&"_caught")), 0.4)
-	if guarded == INF or not bool(ls.get(&"_caught")):
-		await _secs(0.6)
-	if not bool(ls.get(&"_caught")):
-		stood_in.append("catch: E is not the guard on this branch; the take stood in")
-		ls._on_guarded()
-	_expect(bool(ls.get(&"_caught")) and not ls.completed.has("catch"), "caught, not yet done: the throw back is next")
+	var g := {}
+	for i in 3:
+		g = await GuardTiming.on_beat(self, c, foe(), 0.12, 12.0)
+		if bool(ls.get(&"_caught")):
+			break
+	_expect(bool(ls.get(&"_caught")) and BendZone.held_stone(p) != null and not ls.completed.has("catch"),
+			"E as it came: caught (%s) and held, not yet done: the throw back is next" % g.get("result", ""))
 	casts.clear()
-	await _action(KitWords.GUARD_ACTION)
-	await _secs(0.6)
-	if not ls.completed.has("catch"):
-		await _stand_in("stone_catch", "guard", "catch: E again took no lock here")
+	await _until(func() -> bool: return c.state == SwayCaster.State.IDLE, 2.0)
+	c.guard_override = true                      # (E again: a click)
+	await _ticks(2)
+	c.guard_override = null
 	if not await _done("catch", "keys catch: E as it came, E again: thrown back"):
 		await _skip_now()
 
@@ -508,12 +506,13 @@ func _elements() -> void:
 				"%s guard: \"%s\" (the dummy throws, slowly)" % [el, ls.lesson_line()])
 		_expect(ls.throw_of(RingLessons.lessons_for("keys", el).filter(func(l: Dictionary) -> bool: return l.id == "jump")[0])
 				== ("fire_kick/kick" if el == "fire" else ""), "%s: the jump card's throw (fire: its Kick)" % el)
-		await _action(KitWords.GUARD_ACTION)
-		await _secs(0.5)
-		if not ls.completed.has("guard"):
-			stood_in.append("%s guard: E is not the guard on this branch; the take stood in" % el)
-			ls._on_guarded()
-		if not await _done("guard", "%s guard: E as it came, taken" % el):
+		var res: Array = []
+		for i in 4:
+			var g := await GuardTiming.on_beat(self, c, foe(), 0.12, 12.0)
+			res.append(g.get("result", ""))
+			if ls.completed.has("guard"):
+				break
+		if not await _done("guard", "%s guard: E on the beat of the dummy's shot, done (%s)" % [el, res]):
 			await _skip_now()
 		await _until(func() -> bool: return ls.finished, 2.0)
 		_expect(ls.finished, "%s: the run finished after its own lessons" % el)

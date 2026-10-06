@@ -75,16 +75,8 @@ const CIRCLE_R := 0.9
 const FALLBACK := ["stone_form/spike", "earth_wall/wall", "gust/push"]
 ## The old names a test or a mode may force (_next[name] = a clock time: cast first once it is reached).
 const LEGACY := {"spike": ["stone_form/spike"], "wall": ["earth_wall/wall"], "gust": ["air_gust/gust", "air_palm/palm"]}
-## Each element's guard and jab when moves.json has no "guards" / "jabs" block (spec 8.1).
-const GUARDS := {"earth": ["stone_catch", "catch"], "water": ["water_redirect", "redirect"], "fire": ["fire_parry", "parry"],
-		"air": ["air_shield", "shield"]}
-const JABS := {"earth": ["rock_jab", "pebbles"], "water": ["water_jet", "splash"], "fire": ["fire_jab", "embers"],
-		"air": ["air_palm", "palm"]}
 ## The guards' zone kinds (BendZone): what each took is counted (perfect, late), a guard that took nothing a whiff.
 const GUARD_ZONES := ["catch", "redirect", "parry", "air_shield", "deflect", "cushion", "return", "spin", "absorb"]
-## guard_rules (moves.json) when it has none: spec 2.3, 2.5, 2.6.
-const RULES := {"perfect_s": 0.3, "whiff_lock_s": 0.5, "whiff_s": 1.5, "return_lock_s": 0.35, "perfect_return_lock_s": 0.1,
-		"grow_after_s": 0.45, "hit_setback_min_s": 0.25}
 ## A floor threat: something low on the deck (its middle under this over the deck under it) coming along it.
 const FLOOR_M := 0.9
 ## A rolling stone (a Boulder on the deck) is a floor threat at this pace (m/s) and up.
@@ -294,21 +286,21 @@ static func pairs_of(el: String) -> Array:
 	return out
 
 
-## Element `el`'s guard on E ([move, variation]: moves.json "guards", else GUARDS).
+## Element `el`'s guard on E ([move, variation]: Bending.guard, the player's own; [] none).
 static func guard_of(el: String) -> Array:
-	var g: Variant = (SwayMoves.data().get("guards", {}) as Dictionary).get(el, GUARDS.get(el, []))
-	return [String(g[0]), String(g[1])] if g is Array and (g as Array).size() >= 2 else []
+	var g := Bending.guard(el)
+	return [String(g.id), String(g.mode)] if not g.is_empty() else []
 
 
-## Element `el`'s jab on the left button ([move, variation]: moves.json "jabs", else JABS).
+## Element `el`'s jab on the left button ([move, variation]: Bending.jab, the player's own; [] none).
 static func jab_of(el: String) -> Array:
-	var j: Variant = (SwayMoves.data().get("jabs", {}) as Dictionary).get(el, JABS.get(el, []))
-	return [String(j[0]), String(j[1])] if j is Array and (j as Array).size() >= 2 else []
+	var j := Bending.jab(el)
+	return [String(j.id), String(j.mode)] if not j.is_empty() else []
 
 
-## A shared rule's number (moves.json guard_rules, else RULES).
+## A shared rule's number (Bending.rule: moves.json guard_rules over the caster's defaults, the player's own).
 static func rule(k: String) -> float:
-	return float((SwayMoves.data().get("guard_rules", {}) as Dictionary).get(k, RULES.get(k, 0.0)))
+	return Bending.rule(k)
 
 
 func _build_options() -> void:
@@ -823,12 +815,9 @@ func _jump_floor() -> void:
 		_floor.clear()
 
 
-## The stone it holds (caught: meta bend_held_by), null none.
+## The stone it holds (caught: BendZone.held_stone, the player's own reckoning), null none.
 func _held_stone() -> Node3D:
-	for st in me.get_tree().get_nodes_in_group(FormStone.GROUP):
-		if int((st as Node).get_meta(&"bend_held_by", -1)) == me.get_instance_id():
-			return st as Node3D
-	return null
+	return BendZone.held_stone(me)
 
 
 ## Whether a wall stands between it and `t` (anyone's raised earth or ice, or a fire or wind wall, within 1.2 m of the line
@@ -1359,6 +1348,8 @@ func on_hurt(dmg: float, source: Node = null) -> void:
 	_hurt_t = _now()
 	if casting != "":
 		_set_back(source, "hit")
+	elif me.has_meta(BendStatus.HIT_LOCK_META):
+		me.remove_meta(BendStatus.HIT_LOCK_META)   # (read once, lock or none: the blow's cost is not left for a later one)
 
 
 ## A knock taken (BendKnock, through NpcFighter.on_bend_knock): the lock pushed back (_set_back).
@@ -1372,6 +1363,9 @@ func on_knocked(_v: Vector3, by: Node = null) -> void:
 ## never wiped. A dash's or a guard's lock is never pushed back; lightning's charge breaks (lost). The hit's damage and its
 ## knock come apart: one setback for both (SETBACK_SAME_S).
 func _set_back(by: Node, why: String) -> void:
+	# (what the blow cost its sender, written on it by BendStatus.hurt: read once whatever comes of it, the player's own
+	# reckoning, BendStatus.setback_s)
+	var blow := BendStatus.setback_s(me) if me.has_meta(BendStatus.HIT_LOCK_META) else -1.0
 	var o := _option(casting + "/" + mode)
 	if casting == "fire_arc" and mode == "lightning":
 		_lose(why)
@@ -1383,7 +1377,9 @@ func _set_back(by: Node, why: String) -> void:
 		return
 	_setback_t = _now()
 	var cost := rule("hit_setback_min_s")
-	if by is NpcFighter and (by as NpcFighter).brain != null and (by as NpcFighter).brain.bending != null:
+	if blow >= 0.0:
+		cost = blow
+	elif by is NpcFighter and (by as NpcFighter).brain != null and (by as NpcFighter).brain.bending != null:
 		var lc: Dictionary = (by as NpcFighter).brain.bending.last_cast
 		cost = maxf(cost, float(lc.get("lock_s", 0.0)))
 	elif by != null:
@@ -1562,13 +1558,22 @@ func _move(dt: float, t: Node3D, d: float) -> void:
 			me.face_lock = Vector3.INF
 			me.go(_clamp(pool), NpcFighter.RUN_SPEED, 0.6, straight)
 			return
-	if not brain.seen_now or d > band.y:
+	var blind := not brain.seen_now or NpcBendCaster.hidden(me, t)     # (a smoke or a steam on the line: blind as well)
+	if blind or d > band.y:
 		me.face_lock = Vector3.INF
 		var goal := brain.last_seen if brain.last_seen != Vector3.INF else tp
 		var to := goal - me.global_position
 		to.y = 0.0
 		if to.length() > band.x:
 			goal = me.global_position + to.normalized() * (to.length() - band.x * 0.8)
+		if blind and to.length_squared() > 1e-6:
+			# (sight cut off, by its own wall, a smoke or a steam: it steps out to its strafe side, a little on at most, so the
+			# line clears it; never stands behind it. The merge gate's earth bot stood 70 s behind the wall it raised 3.5 m
+			# before itself, an air bot 60 s confined behind a fire player's smoke)
+			var on := minf(maxf(to.length() - band.x * 0.8, 0.0), 2.0)
+			goal = me.global_position + to.normalized() * on + to.normalized().cross(Vector3.UP) * _strafe * 4.0
+			if _room(to.normalized().cross(Vector3.UP) * _strafe) < 3.0:
+				_strafe = -_strafe
 		me.go(_clamp(goal), NpcFighter.RUN_SPEED, 1.0, straight)
 		return
 	var away := me.global_position - tp

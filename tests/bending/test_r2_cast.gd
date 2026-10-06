@@ -83,7 +83,6 @@ func _initialize() -> void:
 	(mv["stone_form"] as Dictionary)["raise_at_fill"] = 0.6
 	var shove: Dictionary = (mv["earth_shove"] as Dictionary).bend
 	(shove["push"] as Dictionary)["grow"] = {"knock_mult": 1.5, "grew_mark": true}
-	shove["split"] = {"do": "lightning", "kind": "lightning", "damage": 1.0, "range_m": 45.0, "knock_mps": 1.0}
 	((mv["fire_blast"] as Dictionary).bend.punch as Dictionary)["grow"] = FIREBALL.duplicate()
 	MatchSetup.incoming = true
 	MatchSetup.element = "earth"
@@ -451,20 +450,7 @@ func _setback() -> void:
 	var guard_ok := c.lock_src == SwayCaster.SRC_GUARD and (c.state == SwayCaster.State.FULL or c.fill * c.lock_s >= spent - 0.001)
 	_expect(dash_ok and guard_ok, "a dash's and a guard's lock are never pushed back (dash %s, guard %s)" % [dash_ok, guard_ok])
 	c.guard_override = false
-	# lightning's charge breaks; its charge on the hands while it locks
-	await _calm()
-	await _tap(1)
-	c.set_mode("earth_shove", "split")
-	c.held_override = true
-	await _secs(0.4)
-	var ch := c.charge
-	var humming := ch != null and is_instance_valid(ch) and bool(ch.call(&"humming"))
-	BendStatus.hurt(p, 2.0, p.global_position + Vector3.UP, Vector3.FORWARD, foe, 0.35)
-	await physics_frame
-	_expect(c.state == SwayCaster.State.IDLE and c.last_break == "hit", "lightning's charge breaks on any hit (%s)" % c.last_break)
-	_expect(humming, "lightning's charge hums on the hands while it locks (%s)" % ch)
-	c.held_override = false
-	c.set_mode("earth_shove", "push")
+	# (lightning's charge breaking on a hit: _fire_kit, on fire's own Lightning)
 
 
 # ---------------------------------------------------------------- Q and the wheel
@@ -799,12 +785,24 @@ func _fire_kit() -> void:
 	c.held_override = false
 	await _secs(0.6)
 	var b := BendEffects.last_of(p)
-	_expect(not bool(b.get("grown", true)) and float((b.get("spec", {}) as Dictionary).get("damage", 0.0)) == 20.0,
-			"and let go at its first click, the plain Punch (%s)" % b.get("grown"))
+	var punch_dmg := float((((SwayMoves.move("fire_blast").get("bend", {}) as Dictionary).get("punch", {})) as Dictionary).get("damage", -1.0))
+	_expect(not bool(b.get("grown", true)) and float((b.get("spec", {}) as Dictionary).get("damage", 0.0)) == punch_dmg,
+			"and let go at its first click, the plain Punch (grown %s, %.0f dmg, the data's %.0f)" % [b.get("grown"),
+			float((b.get("spec", {}) as Dictionary).get("damage", 0.0)), punch_dmg])
 	await _calm(false)
 	await _tap(0)
 	await _tap(0)
 	_expect(c.readied_spell == "fire_arc", "1 tapped twice: Lightning, Punch's partner (%s)" % _ready_now())
+	# lightning's charge on the hands while it locks, and broken by any hit (a light one: no setback, the charge is lost)
+	c.held_override = true
+	await _secs(0.4)
+	var ch := c.charge
+	var humming := ch != null and is_instance_valid(ch) and bool(ch.call(&"humming"))
+	BendStatus.hurt(p, 2.0, p.global_position + Vector3.UP, Vector3.FORWARD, foe, 0.35)
+	await physics_frame
+	_expect(c.state == SwayCaster.State.IDLE and c.last_break == "hit", "lightning's charge breaks on any hit (%s)" % c.last_break)
+	_expect(humming, "lightning's charge hums on the hands while it locks (%s)" % ch)
+	c.held_override = false
 	# Embers: fire's jab, the jab's reach
 	await _calm(false)
 	var jb := Bending.jab("fire")

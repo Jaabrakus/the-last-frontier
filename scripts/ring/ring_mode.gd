@@ -1020,6 +1020,14 @@ func _slow_shots() -> void:
 		bb.set_meta(&"ring_slowed", true)
 		bb.velocity *= k
 		bb.gravity *= k * k
+	for n in get_tree().get_nodes_in_group(NpcBending.FLIGHT_GROUP):
+		# (the earth dummy's spike flies as NpcBending's Flight: slowed the same way, the catch drill's stones too)
+		var fl := n as NpcBending.Flight
+		if fl == null or fl.shooter != foe or fl.has_meta(&"ring_slowed"):
+			continue
+		fl.set_meta(&"ring_slowed", true)
+		fl.velocity *= k
+		fl.gravity *= k * k
 	for n in get_tree().get_nodes_in_group(GustLift.GROUP):
 		var gl := n as GustLift
 		if gl == null or gl.phase != GustLift.Phase.FLIGHT or gl.has_meta(&"ring_slowed") or gl.caster == null \

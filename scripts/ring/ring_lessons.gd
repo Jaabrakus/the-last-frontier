@@ -14,8 +14,9 @@ extends Node
 ##                from LMB), heal (5), the zones (the dummy knocked back a zone) and the water (it knocked in). Done: the card
 ##                goes green, a click, the next after done_hold_s
 ##   listened     SwayCaster's cast (the move, its variation, the button: lock_src); RingMode's knocked_back and rang_out;
-##                the player's guards (BendZone.took on a zone he owns) and the dummy's bolts ended by one (BendBolt.ended:
-##                caught, steam ...); the bind key and the jump pressed
+##                the player's guards' results (BendCaster.guarded, round 2's CORE: perfect, late, whiff; the water, fire
+##                and air drills are done only on the beat, earth's by a stone caught, perfect or late, then thrown back);
+##                the bind key and the jump pressed
 ##   the dummy    the practice's (RingMode.dummy): it stands through the lessons and throws through the guard drill and the
 ##                jump (lessons.json dummy per lesson), SLOWLY there (slow: RingMode.slow_throws; the owner's answer to round
 ##                1: a beginner's time to read the throw and guard on the beat), its throw the card's own where it names one
@@ -35,8 +36,6 @@ const GROUP := &"ring_lessons"
 ## GameSettings' section the lessons' ends are kept in.
 const SECTION := "lessons"
 const SKIP_KEY := KEY_ENTER
-## A dummy's bolt ended for one of these was taken by a guard of the player's (doused to steam, a catch, a turn ...).
-const GUARD_ENDS := ["steam", "bubble", "caught", "cushioned", "drunk", "absorbed", "turned", "parried", "bounced", "returned"]
 
 static var _data := {}
 
@@ -57,12 +56,11 @@ var _spec := ""
 var _walked := 0.0
 var _last_pos := Vector3.INF
 var _quick_bound := false
-var _guarded := false
+var _guarded := false              ## a guard of the player's took something this lesson (perfect or late)
 var _caught := false                ## the earth drill: a stone of its caught (the throw back is next)
 var _jumped := false                ## the jump pressed during the card (a jump off the deck does it)
-var _took := {}
-var _bolts := {}
 var _caster: SwayCaster
+var _guard_caster: BendCaster
 var _el_seen := ""
 ## A run begun with every lesson done or skipped already: all of them again in order (else those left, in order).
 var _replay := false
@@ -258,7 +256,7 @@ func _begin() -> void:
 	_quick_bound = false
 	_jumped = false
 	_caught = false
-	_took.clear()
+	_guarded = false
 	_dummy_way(l)
 	_spec = line_spec(l)
 	card.show_lesson(at + 1, list.size(), String(l.get("title", "")), _spec, word("skip"))
@@ -273,6 +271,25 @@ func _dummy_way(l: Dictionary) -> void:
 	mode.dummy = way if way in MatchSetup.DUMMIES else "stand"
 	mode.slow_throws = bool(l.get("slow", false))
 	mode.throw_override = throw_of(l)
+	if mode.dummy == "throw":
+		_clear_own_walls()
+
+
+## The player's own walls taken down as a drill against the dummy's throws begins: the Wall card's walls stand 2-6 m before
+## him, in the throws' way (the merge gate: the earth catch drill's stones all struck his own wall and none came to be caught).
+func _clear_own_walls() -> void:
+	var p := mode.player
+	if p == null or not is_instance_valid(p) or not is_inside_tree():
+		return
+	var id := p.get_instance_id()
+	for n in get_tree().get_nodes_in_group(FormRaised.GROUP):
+		var w := n as FormRaised
+		if w != null and w.kind == "wall" and int(w.get_meta(&"bend_by", 0)) == id and w.state != FormRaised.State.CRUMBLING:
+			w.crumble("lesson")
+	for z in get_tree().get_nodes_in_group(BendZone.GROUP):
+		var bz := z as BendZone
+		if bz != null and bz.owner_node == p and bz.kind in ["fire_wall", "wind_wall"]:
+			bz.end()
 
 
 ## The lesson's line as a spec for the card: its scheme's line with {press}, {name}, {jab}, {grow}, {what} and {thing} put in.
@@ -372,7 +389,6 @@ func _physics_process(dt: float) -> void:
 				_jumped = true
 			if _jumped and p != null and is_instance_valid(p) and not p.is_on_floor() and p.velocity.y > 0.5:
 				complete()
-	_scan_guards()
 
 
 ## The player's caster hooked (again after a reset made it anew).
@@ -384,6 +400,10 @@ func _hook() -> void:
 	if c != null and c != _caster:
 		_caster = c
 		c.cast.connect(_on_cast)
+	var bc := BendCaster.of(p)
+	if bc != null and bc != _guard_caster:
+		_guard_caster = bc
+		bc.guarded.connect(_on_guard_result)
 
 
 ## The line again when what it says has changed (a key pressed: "Readied", a key rebound).
@@ -409,41 +429,20 @@ func _walk() -> void:
 		complete()
 
 
-## The player's guards (a zone of his that took something) and the dummy's bolts (ended by one of his guards).
-func _scan_guards() -> void:
-	var p := mode.player
-	for z in get_tree().get_nodes_in_group(BendZone.GROUP):
-		var bz := z as BendZone
-		if bz == null or bz.owner_node != p:
-			continue
-		var id := bz.get_instance_id()
-		if bz.took > int(_took.get(id, 0)):
-			_took[id] = bz.took
-			_on_guarded()
-	if mode.foe == null or not is_instance_valid(mode.foe):
+## A guard of the player's told its result (BendCaster.guarded; BendZone's: perfect, late, whiff). The guard drill (water
+## Turn, fire Parry, air Wind Guard) is done on the beat only; earth's (catch, then E again) by a stone caught, perfect or
+## late: earth always catches stone.
+func _on_guard_result(result: String, what: String) -> void:
+	if mode == null or mode.phase != "FIGHT" or finished or _hold > 0.0 or result == "whiff":
 		return
-	for b in get_tree().get_nodes_in_group(BendBolt.GROUP):
-		var bb := b as BendBolt
-		if bb == null or bb.caster != mode.foe or _bolts.has(bb.get_instance_id()):
-			continue
-		_bolts[bb.get_instance_id()] = true
-		if not bb.ended.is_connected(_on_bolt_end):   # (a bolt still flying when the book was cleared is hooked already)
-			bb.ended.connect(_on_bolt_end)
-	if _bolts.size() > 64:
-		_bolts.clear()
-
-
-func _on_bolt_end(why: String) -> void:
-	if why in GUARD_ENDS:
-		_on_guarded()
-
-
-func _on_guarded() -> void:
 	_guarded = true
-	if current_do() == "guard" and _hold < 0.0:
-		complete()
-	elif current_do() == "return":
-		_caught = true                       # (caught: now E again throws it back)
+	match current_do():
+		"guard":
+			if result == "perfect":
+				complete()
+		"return":
+			if what == "stone":
+				_caught = true                   # (caught: now E again throws it back)
 
 
 func _on_cast(m: String, _t: Node3D) -> void:

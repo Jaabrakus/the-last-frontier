@@ -140,7 +140,7 @@ func _keys() -> void:
 	await physics_frame
 	bar.select(0)
 	await physics_frame
-	_expect(c.readied_spell == "fire_jab" and String(bar.entry(0).id) == "fire_jab", "key 1 tapped twice: its other skill, Fire Jab (%s)" % c.readied_spell)
+	_expect(c.readied_spell == "fire_arc" and String(bar.entry(0).id) == "fire_arc", "key 1 tapped twice: its other move, Lightning (%s)" % c.readied_spell)
 	await _secs(0.4)
 	bar.select(0)
 	await physics_frame
@@ -150,7 +150,7 @@ func _keys() -> void:
 	wheel.pressed = true
 	var used := bar.handle_input(wheel) if InputMap.has_action(&"weapon_next") and wheel.is_action_pressed(&"weapon_next") else bar.step_other()
 	await physics_frame
-	_expect(used and c.readied_spell == "fire_jab", "the wheel: the key's other move (%s)" % c.readied_spell)
+	_expect(used and c.readied_spell == "fire_arc", "the wheel: the key's other move, Lightning (%s)" % c.readied_spell)
 	Bending.of(p).element = keep_el
 
 
@@ -224,10 +224,10 @@ func _cast(id: String, mode: String) -> String:
 
 
 # ---------------------------------------------------------------- earth's side-steps
-## Earth Skate (the owner, 2026-10-05: "for earth bending we need the side steps, burrow steps to be on the side"): slide and
-## burrow-step go across the facing, to the side held (move_left / move_right), the right with neither; skate goes forward.
-## The player faces +x, so his right is +z. The key is held only over the cast (held_side is read as the dash starts), so
-## the walk adds nothing.
+## Burrow (round 2's earth dash, once Earth Skate; the owner, 2026-10-05: "for earth bending we need the side steps, burrow
+## steps to be on the side"): it goes the way the keys held say at the release (dir "held"): to the side held (move_left /
+## move_right), forward with move_forward, and back with none (never a random side). The player faces +x, so his right is
+## +z. The key is held only over the cast, so the walk adds nothing.
 func _earth_sides() -> void:
 	if only != "" and only != "earth":
 		return
@@ -235,8 +235,8 @@ func _earth_sides() -> void:
 	duel.lay_bar()
 	await physics_frame
 	var bad: Array[String] = []
-	for row in [["slide", &"move_right", 1.0], ["slide", &"move_left", -1.0], ["slide", &"", 1.0],
-			["burrow", &"move_right", 1.0], ["burrow", &"move_left", -1.0], ["burrow", &"", 1.0], ["skate", &"", 0.0]]:
+	for row in [["burrow", &"move_right", 1.0], ["burrow", &"move_left", -1.0], ["burrow", &"move_forward", 0.0],
+			["burrow", &"", -2.0]]:
 		var mode := String(row[0])
 		var key: StringName = row[1]
 		var want := float(row[2])
@@ -258,13 +258,15 @@ func _earth_sides() -> void:
 		var ok := false
 		if want == 0.0:
 			ok = along > 0.8 and absf(along) > 2.0 * absf(across)
+		elif want == -2.0:
+			ok = along < -0.8 and absf(along) > 2.0 * absf(across)       # (nothing held: back)
 		else:
 			ok = across * want > 0.8 and absf(across) > 2.0 * absf(along)
 		var what := "%s%s: across %.2f m, along %.2f m" % [mode, " (%s)" % key if key != &"" else " (no side held)", across, along]
 		print("  earth skate %s" % what)
 		if not ok:
 			bad.append(what)
-	_expect(bad.is_empty(), "Earth Skate: slide and burrow-step to the side held (the right with none), skate forward%s"
+	_expect(bad.is_empty(), "Burrow: to the side held, forward with W, back with nothing held%s"
 			% ("" if bad.is_empty() else ": " + ", ".join(bad)))
 
 

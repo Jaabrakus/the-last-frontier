@@ -54,7 +54,7 @@
 		"main_menu_line": "back to the title"
 	},
 	"practice": {
-		"_doc": "RingMode's practice (MatchSetup.kind practice; the user arg practice=stand|block|throw). The dummy is a bot of the chosen element held at its end: 'stand' never casts; 'block' answers what comes at it with its element's guards (catch, deflect, redirect, parry, shield: no dice, every time its lock fits) and raises its cover when you begin a lock (cover, at most every block_every_s); 'throw' casts its throw at you every throw_every_s (its element's strike, round 2: earth a stone spike to catch and send back, water a lash, fire a punch, air a slice, each for its own guard). No timer, no rounds, the soft walls off (walk anywhere); a fall into the water puts both back at their ends after reset_after_out_s; R (ring_reset) puts them back at once, B (ring_dummy) steps the dummy's way. Spent at 0 health: whole again at once.",
+		"_doc": "RingMode's practice (MatchSetup.kind practice; the user arg practice=stand|block|throw). The dummy is a bot of the chosen element held at its end: 'stand' never casts; 'block' answers what comes at it with its element's guard (round 2: the Catch, the Turn, the Parry, the Wind Guard; no dice, every time its lock fits) and raises its cover when you begin a lock (its wall key's first move: MatchSetup.practice_move, this table only when the kit has none; at most every block_every_s); 'throw' casts its throw at you every throw_every_s (its element's strike, round 2: earth a stone spike to catch and send back, water a lash, fire a punch, air a slice, each for its own guard). No timer, no rounds, the soft walls off (walk anywhere); a fall into the water puts both back at their ends after reset_after_out_s; R (ring_reset) puts them back at once, B (ring_dummy) steps the dummy's way. Spent at 0 health: whole again at once.",
 		"countdown_s": 1.0,
 		"throw_every_s": 3.0,
 		"block_every_s": 2.5,
@@ -69,7 +69,7 @@
 			"earth": "earth_wall/wall",
 			"water": "water_shield/ice_wall",
 			"fire": "fire_wall/wall",
-			"air": "air_shield/shield"
+			"air": "air_wall/wall"
 		},
 		"ways": {
 			"stand": "stands still",

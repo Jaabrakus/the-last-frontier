@@ -267,9 +267,10 @@ func _menu() -> void:
 	check(_sub_text(rows["earth"]) == "Stone  ·  chosen", "the chosen element says so (%s)" % _sub_text(rows["earth"]))
 	var texts := _panel_texts(m)
 	check(texts.has("Stone  ·  " + MatchSetup.style("earth")), "the chosen element's style under the rows")
-	var ek := MatchSetup.scheme_key_lines("earth")
-	check(ek.size() == 5 and ek[0] == "1   Spike  ·  Boulder" and ek[4] == "5   Patch  ·  Mend" and texts.has(ek[0]) and texts.has(ek[4]),
-			"the keys block: earth's five keys (%s)" % [texts])
+	# (round 2: the block is KitWords' lines, the same buttons for every element: LMB JAB and E GUARD, then 1-5 by role)
+	var ek := _key_rows("earth")
+	check(ek.size() == 5 and ek[0] == "1   STRIKE   Spike  ·  tap twice: Boulder" and ek[4] == "5   HEAL   Patch  ·  tap twice: Mend"
+			and ek.all(func(l: String) -> bool: return texts.has(l)), "the keys block: earth's five keys (%s)" % [ek])
 	for want: String in ["Opponent:  Earth", "Format:  1 v 1", "Difficulty:  normal", "Rounds:  best of 3", "Begin"]:
 		check(texts.has(want), "the row '%s'" % want)
 	var need := m._panel.get_combined_minimum_size().y
@@ -279,14 +280,14 @@ func _menu() -> void:
 	await frames(1)
 	check(MatchSetup.element == "fire" and _sub_text(rows["fire"]) == "Ember  ·  chosen" and _sub_text(rows["earth"]) == "Stone",
 			"Fire pressed: chosen (%s)" % _sub_text(rows["fire"]))
-	check(_panel_texts(m).has("1   Punch  ·  Lightning") and _panel_texts(m).has("Ember  ·  " + MatchSetup.style("fire")),
-			"the block: fire's style and keys")
+	check(_panel_texts(m).has(_key_rows("fire")[0]) and _key_rows("fire")[0].begins_with("1   STRIKE ▲   Punch")
+			and _panel_texts(m).has("Ember  ·  " + MatchSetup.style("fire")), "the block: fire's style and keys (%s)" % _key_rows("fire")[0])
 	(rows["water"] as Button).grab_focus()
 	await frames(1)
-	check(_panel_texts(m).has("1   Lash  ·  Spear") and MatchSetup.element == "fire", "Water focused: its keys shown, fire still chosen")
+	check(_panel_texts(m).has("1   STRIKE   Lash  ·  tap twice: Spear") and MatchSetup.element == "fire", "Water focused: its keys shown, fire still chosen")
 	(m._panel.find_child("Begin", true, false) as Button).grab_focus()
 	await frames(1)
-	check(_panel_texts(m).has("1   Punch  ·  Lightning"), "focus gone from the elements: the chosen one's keys again")
+	check(_panel_texts(m).has(_key_rows("fire")[0]), "focus gone from the elements: the chosen one's keys again")
 	var opp := m._panel.find_child("Opponent", true, false) as Button
 	var presses := 0
 	while opp and _row_text(opp) != "Opponent:  Water" and presses < 6:
@@ -366,6 +367,11 @@ func _sub_text(b: Node) -> String:
 
 
 ## The texts of the open panel: its headings', labels' and rows' lines.
+## Element `el`'s key rows 1-5 as the menu shows them (KitWords.kit_lines under the keys scheme, past its JAB and GUARD).
+func _key_rows(el: String) -> Array:
+	return KitWords.kit_lines(el, "keys").filter(func(l: String) -> bool: return l.length() > 0 and l[0] in "12345")
+
+
 func _panel_texts(m: MainMenu) -> Array:
 	var out: Array = []
 	for n in m._panel.find_children("*", "Label", true, false):

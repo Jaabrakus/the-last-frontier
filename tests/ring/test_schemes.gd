@@ -3,17 +3,21 @@ extends SceneTree
 ## _switch_lock, Hotbar's ready_skill / step_skill, RadialWheel, BendStrip, the menus, F1 and HowTo; the owner, 2026-10-05:
 ## "still difficult for a human to switch spells, there's a lot of things going on" -> all three as options), in Tidebreak's
 ## ring (scenes/ring.tscn, earth against earth, the foe held), the test's own settings file (GameSettings.path):
-##   keys       the default with nothing kept: the strip's five key columns, each its key's first move; F1 as ever
+##   keys       the default with nothing kept: the strip's five key columns ("1 · STRIKE" ...), each its key's first move;
+##              F1 as ever (round 2: the strip's and F1's words are KitWords', screens.json "kit", one help line a scheme)
 ##   direction  (round 2: spec 6) forward / side (SwayCaster.dir_override, and the real keys once) cast key 1's first move
 ##              and key 3's (earth Spike, Burrow; water Lash, Skate; fire Punch, Step; air Slice, Slip), back picks the
 ##              wall (the pick; its cast is the walls' own); none held: the readied key's move at its own variation; the
 ##              key's variation never touched; the direction is sampled at the press: one taken while the lock runs changes
-##              nothing (no lock_switched); the strip's and F1's lines are schemes.json's
+##              nothing (no lock_switched); the strip's line and F1's buttons line are the scheme's (KitWords.help_line,
+##              FrontierHUD.ARENA_KEYS)
 ##   radial     Tab (the action bend_wheel) opens the wheel of the element's moves; no lock while it is open; pointing at
-##              Shove and letting go readies it on key 2; RMB casts it; a left click picks too
+##              Shove and letting go readies it on key 2; RMB casts it; a left click picks too; the strip keeps its columns
+##              (1-5 still ready their moves) and says how the wheel works
 ##   first_moves (replaces simple) the bar's first moves only: key 3 again does not ready its other move (Lift), key 1
 ##              again leaves Spike; no distance band: the cast is the first variation near or far
-##   switching  the ring's Esc menu steps the scheme mid-match (its row says so), the match goes on under it; the main
+##   switching  the ring's Esc menu steps the scheme mid-match (its "Other ways to pick moves" row says so), the match goes
+##              on under it; the main
 ##              menu's row is the one tests/ring/test_match_setup.gd and test_main_menu cover (here: its words)
 ##   kept       set_scheme writes GameSettings' match section of the test's own file; read back after reload_scheme
 ##   words      no show word in schemes.json, the how-to topics, the strip or the menus' lines
@@ -235,8 +239,9 @@ func _keys() -> void:
 	var ok := true
 	for i in 5:
 		var col := strip.column(i)
-		ok = ok and not bool(col.hidden) and String(col.head) == str(i + 1) and String(col.id) == String(Bending.keys("earth")[i][0])
-	_expect(ok and (strip._cols[0].key as Label).text == "1", "the strip's five key columns as ever")
+		ok = ok and not bool(col.hidden) and String(col.head).begins_with(str(i + 1) + BendStrip.SEP) and String(col.id) == String(Bending.keys("earth")[i][0])
+	_expect(ok and (strip._cols[0].key as Label).text.begins_with("1" + BendStrip.SEP), "the strip's five key columns as ever (%s)"
+			% (strip._cols[0].key as Label).text)
 	_expect(not hud.help_text().contains(MatchSetup.scheme_text("f1", "direction")), "F1 as ever")
 
 
@@ -253,9 +258,9 @@ func _direction() -> void:
 	await _ticks(4)
 	# the strip's and F1's lines: schemes.json's
 	var strip := hud.bend_strip
-	var line := MatchSetup.scheme_text("strip", "direction")
-	_expect(line != "" and strip.help_line().contains(line.get_slice(" · ", 0)), "the strip's line says how (%s)" % strip.help_line())
-	_expect(hud.help_text().contains(MatchSetup.scheme_text("f1", "direction")), "F1 says it")
+	var line := KitWords.help_line("direction")
+	_expect(line != "" and strip.help_line() == line and line.contains("W, S, A or D"), "the strip's line says how (%s)" % strip.help_line())
+	_expect(hud.help_text().contains(KitWords.keyed(String(FrontierHUD.ARENA_KEYS.direction))), "F1 says it")
 	# none: the key's move at its own variation
 	c.dir_override = ""
 	await _home_player()
@@ -327,8 +332,8 @@ func _radial() -> void:
 	_expect(w != null and w.can_open() and InputMap.has_action(RadialWheel.ACTION)
 			and SwayCaster.key_name(RadialWheel.ACTION) == "Tab", "the radial scheme: the wheel on Tab")
 	var strip := hud.bend_strip
-	_expect(bool(strip.column(0).hidden) and not (strip._cols[0].box as Control).visible and strip.ready_line() != ""
-			and strip.help_line().contains("hold Tab: the wheel"), "the strip: no key columns, the ready line and the wheel's line")
+	_expect(not bool(strip.column(0).hidden) and strip.ready_line() != "" and strip.help_line() == KitWords.help_line("radial")
+			and strip.help_line().contains("Hold Tab"), "the strip: its key columns, the ready line and the wheel's line (%s)" % strip.help_line())
 	Input.action_press(RadialWheel.ACTION)
 	var t := await _until(func() -> bool: return w.is_open, 0.5)
 	var ids: Array = w.items.map(func(it: Dictionary) -> String: return String(it.id))
@@ -398,7 +403,7 @@ func _simple() -> void:
 	await _ticks(2)
 	_expect(c.readied_spell == "stone_form" and c.base_mode_of("stone_form") == "spike",
 			"first moves: key 1, tapped once or twice, is Spike (%s)" % c.base_mode_of("stone_form"))
-	_expect(hud.help_text().contains(MatchSetup.scheme_text("f1", "first_moves")), "F1 says it")
+	_expect(hud.help_text().contains(KitWords.keyed(String(FrontierHUD.ARENA_KEYS.first_moves))), "F1 says it")
 	# no distance band: near or far, the first variation
 	for d: float in [3.0, 20.0]:
 		c.dist_override = d
@@ -422,7 +427,7 @@ func _switching(rm: RingMode) -> void:
 	var before := MatchSetup.scheme()
 	m.cycle_scheme()
 	var row := m._scheme.find_child("Text", true, false) as Label
-	_expect(MatchSetup.scheme() == MatchSetup.next_scheme(before) and MatchSetup.scheme() != before and row.text == MatchSetup.scheme_row() and m._note.text.contains(MatchSetup.scheme_label()),
+	_expect(MatchSetup.scheme() == MatchSetup.next_scheme(before) and MatchSetup.scheme() != before and row.text == KitWords.other_ways_row() and m._note.text.contains(MatchSetup.scheme_label()),
 			"the Esc menu steps the scheme: %s -> %s (\"%s\")" % [before, MatchSetup.scheme(), row.text])
 	m._controls()
 	var texts: Array = []
@@ -507,9 +512,8 @@ func _run_duel() -> void:
 	var got := await _rmb_cast()
 	_expect(got == ["stone_form", "spike"], "the duel, direction: forward casts Stone Form (spike) (%s)" % [got])
 	c.dir_override = null
-	_expect(hud.help_text().contains(MatchSetup.scheme_text("f1", "direction"))
-			and hud.quick_help.text.contains(MatchSetup.scheme_text("strip", "direction").get_slice(" · ", 0)),
-			"the duel's F1 and its LMB row's line say the scheme")
+	_expect(hud.help_text().contains(KitWords.help_line("direction")),
+			"the duel's F1 says the scheme (%s)" % KitWords.help_line("direction"))
 	# radial: Tab is the wheel's, not the character screen's
 	MatchSetup.set_scheme("radial")
 	await _ticks(2)
@@ -540,7 +544,7 @@ func _run_duel() -> void:
 		await process_frame
 		m.cycle_scheme()
 		var row := m._scheme.find_child("Text", true, false) as Label
-		_expect(MatchSetup.scheme() == "direction" and row.text == MatchSetup.scheme_row(),
+		_expect(MatchSetup.scheme() == "direction" and row.text == KitWords.other_ways_row(),
 				"the duel's Esc menu steps the scheme: keys -> direction (\"%s\")" % row.text)
 		m.close()
 	_end()

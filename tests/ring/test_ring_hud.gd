@@ -405,8 +405,11 @@ func _water() -> void:
 	var sm := c.base_mode_of(sp)
 	await _action(&"fire")
 	await _ticks(5)
-	_expect(p.hotbar.spell == sp and c.readied_spell == sp and c.base_mode_of(sp) == sm and c.state == SwayCaster.State.IDLE
-			and p.weapon == null, "LMB fires nothing in the arena; a tap leaves the readied move and its variation as they were")
+	# (round 2's click: a tap of LMB is the jab's click, its lock running on to cast when full; never a weapon's shot)
+	_expect(p.hotbar.spell == sp and c.readied_spell == sp and c.base_mode_of(sp) == sm
+			and (c.state == SwayCaster.State.IDLE or c.lock_src == SwayCaster.SRC_QUICK) and p.weapon == null,
+			"LMB fires nothing in the arena; a tap leaves the readied move and its variation as they were (a jab's click: %s)" % c.lock_src)
+	await _until(func() -> bool: return c.state == SwayCaster.State.IDLE, 3.0)
 	# the arena's first-time help: its own topics, the moves' first
 	var how := p.get_node_or_null(^"HowTo") as HowTo
 	if how != null:

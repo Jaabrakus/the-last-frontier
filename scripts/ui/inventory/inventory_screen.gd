@@ -130,7 +130,7 @@ func _input(event: InputEvent) -> void:
 ## follow. "" when it has none.
 func flip_mode(id: String) -> String:
 	var c := SwayCaster.of(player)
-	if c == null or SwayCaster.modes_of(id).is_empty():
+	if c == null or SwayCaster.world_modes_of(id).is_empty():
 		return ""
 	var m := c.flip_mode(id)
 	_refresh()
@@ -466,12 +466,12 @@ func _show_spell(id: String) -> void:
 		var nxt := "" if t >= 2 else ", %s at %d" % [String(SwayCaster.TIERS[t + 1]), int(u[t + 1])]
 		rows.append(["Mastery", "%s (%d cast%s%s)" % [c.tier_name(id), n, "" if n == 1 else "s", nxt], "good" if t >= 2 else ""])
 		rows.append(["Hands", "both empty" if t < 2 else "the left; the right may hold a pistol, tomahawk or saber", ""])
-		var ms := SwayCaster.modes_of(id)
+		var ms := SwayCaster.world_modes_of(id)
 		if not ms.is_empty():
 			var now := c.base_mode_of(id)
 			var names := PackedStringArray()
 			for m: Variant in ms:
-				var lb := SwayCaster.mode_label(id, String(m))
+				var lb := SwayCaster.world_mode_label(id, String(m))
 				names.append("[b]%s[/b]" % lb if String(m) == now else lb)
 			rows.append(["Mode", "%s  (middle mouse; here too, over it)" % " / ".join(names), "use"])
 	var b := "[table=2]"

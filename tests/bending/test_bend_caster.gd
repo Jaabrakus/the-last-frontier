@@ -182,6 +182,14 @@ func _every_move() -> void:
 			for id: String in pair:
 				if not ids.has(id):
 					ids.append(id)
+		for extra: Dictionary in [Bending.jab(el), Bending.guard(el)]:   # (round 2: the jab on LMB, the guard on E)
+			if not ids.has(String(extra.get("id", ""))):
+				ids.append(String(extra.get("id", "")))
+	var want := 0
+	for id in ids:
+		for mode: String in SwayCaster.modes_of(id):
+			if not ((SwayMoves.move(id).get("bend", {}) as Dictionary).get(mode, {}) as Dictionary).is_empty():
+				want += 1
 	for id in ids:
 		for mode: String in SwayCaster.modes_of(id):
 			var spec: Dictionary = (SwayMoves.move(id).get("bend", {}) as Dictionary).get(mode, {})
@@ -197,7 +205,7 @@ func _every_move() -> void:
 				await _secs(0.35)
 			bc.modes[id] = mode
 			var why := await _bot_cast(id, mode, spec)
-			if String(spec.do) == "dash" and id == "fire_jets" and mode == "dash":
+			if String(spec.do) == "dash" and id == "fire_jets" and mode == SwayCaster.modes_of("fire_jets")[0]:
 				dash_m = float(BendEffects.last_of(bc).get("moved", 0.0))
 			count += 1
 			if why != "":
@@ -208,7 +216,8 @@ func _every_move() -> void:
 	p.remove_meta(&"bend_anchor")
 	print("  (the old modes, with T1b: %s)" % ", ".join(skipped))
 	var patched := String(BendEffects.last_of(bc).get("move", "")) == "patch" or ids.has("patch")
-	_expect(count >= 85 and skipped.size() <= 8 and patched and bad.is_empty(), "the bot cast every bend (move, mode) of the four elements and Patch (%d)%s" % [count,
+	_expect(count == want and count >= 25 and skipped.size() <= 8 and patched and bad.is_empty(),
+			"the bot cast every bend (move, mode) of the four kits, their jabs and guards, and Patch (%d of %d)%s" % [count, want,
 			"" if bad.is_empty() else ": " + ", ".join(bad)])
 	_expect(dash_m >= 2.0, "a bot's Fire Jets dash carries it %.1f m (at least 2)" % dash_m)
 

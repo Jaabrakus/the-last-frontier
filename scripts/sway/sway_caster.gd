@@ -481,7 +481,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if readied_spell == "":
 		return
-	if modes_of(readied_spell).is_empty():
+	if my_modes(readied_spell).is_empty():
 		return
 	if InputMap.has_action(MODE_ACTION) and event.is_action_pressed(MODE_ACTION):
 		flip_mode()
@@ -694,23 +694,37 @@ func keeps_weapon(id: String) -> bool:
 
 
 # ---------------------------------------------------------------- modes
+## Move `id`'s modes as the ring's kits offer them (moves.json "modes": the element's keys, Bending, the HUD, the bots).
 static func modes_of(id: String) -> Array:
 	return SwayMoves.move(id).get("modes", [])
+
+
+## Move `id`'s modes in the open world: "world_modes" where round 2's kits offer fewer of a spell the open world shares
+## (Stone Form's disc, the earth wall's column and shell, the pillar's free and ramp), else modes_of.
+static func world_modes_of(id: String) -> Array:
+	var d := SwayMoves.move(id)
+	var w: Variant = d.get("world_modes")
+	return w if w is Array else d.get("modes", [])
+
+
+## This caster's modes of `id`: the ring's (modes_of) with an element, the open world's (world_modes_of) without.
+func my_modes(id: String) -> Array:
+	return modes_of(id) if elem() else world_modes_of(id)
 
 
 ## Spell `id`'s mode now ("" when it has none; its first by default). While the quick spell is held, locking or landing,
 ## its own frozen variation for its move (the lock's reach and time, the pose, the effect); else the key's (base_mode_of).
 func mode_of(id: String) -> String:
-	if id != "" and id == _pin_id and (_pin_on or _pinning) and _pin_mode in modes_of(id):
+	if id != "" and id == _pin_id and (_pin_on or _pinning) and _pin_mode in my_modes(id):
 		return _pin_mode
-	if id != "" and id == _sch_id and not _pin_on and _sch_mode in modes_of(id):
+	if id != "" and id == _sch_id and not _pin_on and _sch_mode in my_modes(id):
 		return _sch_mode                       # (the control scheme's pick while the aim is held: a direction's, a band's)
 	return base_mode_of(id)
 
 
 ## Spell `id`'s mode as its key has it (what the wheel steps and the strip shows; never the quick spell's frozen one).
 func base_mode_of(id: String) -> String:
-	var ms := modes_of(id)
+	var ms := my_modes(id)
 	if ms.is_empty():
 		return ""
 	var m := String(modes.get(id, ""))
@@ -718,7 +732,7 @@ func base_mode_of(id: String) -> String:
 
 
 func set_mode(id: String, m: String) -> bool:
-	if not m in modes_of(id):
+	if not m in my_modes(id):
 		return false
 	if base_mode_of(id) == m:
 		return true
@@ -736,7 +750,7 @@ func set_mode(id: String, m: String) -> bool:
 func flip_mode(id := "") -> String:
 	if id == "":
 		id = readied_spell
-	var ms := modes_of(id)
+	var ms := my_modes(id)
 	if ms.is_empty():
 		return ""
 	var nxt := String(ms[(ms.find(base_mode_of(id)) + 1) % ms.size()])
@@ -750,7 +764,7 @@ func flip_mode(id := "") -> String:
 ## (-1) mode. "" when it has fewer than two.
 func step_mode(dir: int) -> String:
 	var id := readied_spell
-	var ms := modes_of(id)
+	var ms := my_modes(id)
 	if ms.size() < 2:
 		return ""
 	var nxt := String(ms[posmod(ms.find(base_mode_of(id)) + dir, ms.size())])
@@ -762,17 +776,29 @@ static func mode_label(id: String, m: String) -> String:
 	return String((SwayMoves.move(id).get("mode_labels", {}) as Dictionary).get(m, m))
 
 
+## Mode `m`'s name in the open world ("world_mode_labels" where it has its own: "boulder", "free"), else mode_label.
+static func world_mode_label(id: String, m: String) -> String:
+	var w: Variant = SwayMoves.move(id).get("world_mode_labels")
+	if w is Dictionary and (w as Dictionary).has(m):
+		return String(w[m])
+	return mode_label(id, m)
+
+
 ## The spell's name, with its mode as its key has it ("Stone Form (cannonball)"; base_mode_of: the HUD's readied line, the
 ## hotbar's and the Tab screen's never take the quick spell's frozen variation while its lock runs; a lock's own is
 ## label_with(id, mode_of(id))).
 func spell_label(id: String) -> String:
-	return label_with(id, base_mode_of(id))
+	return label_with(id, base_mode_of(id), not elem())
 
 
-## Move `id`'s name with mode `m` ("Rock Jab (pebbles)"; the name alone when `m` is "").
-static func label_with(id: String, m: String) -> String:
+## Move `id`'s name with mode `m` ("Stone Form (Spike)"; the name alone when `m` is "" or is called as the move is: round
+## 2's one-mode moves, "Pebbles", never "Pebbles (Pebbles)"; `world`: the open world's words).
+static func label_with(id: String, m: String, world := false) -> String:
 	var lb := String(SwayMoves.move(id).get("label", id.capitalize()))
-	return lb if m == "" else "%s (%s)" % [lb, mode_label(id, m)]
+	if m == "":
+		return lb
+	var ml := world_mode_label(id, m) if world else mode_label(id, m)
+	return lb if ml.to_lower() == lb.to_lower() else "%s (%s)" % [lb, ml]
 
 
 # ---------------------------------------------------------------- the quick spell (LMB)
@@ -925,7 +951,7 @@ static func spells() -> Array:
 		var icon := "spell_" + id
 		out.append({"kind": "spell", "id": id, "label": String(d.get("label", id.capitalize())), "art": String(d.get("art", "")),
 				"motes": int(d.get("motes", 0)), "lock_s": float(d.get("lock_s", 1.0)), "range_m": float(d.get("range_m", 0.0)),
-				"icon": icon if ResourceLoader.exists(FrontierHUD.ICON_DIR + icon + ".svg") else "", "modes": modes_of(id)})
+				"icon": icon if ResourceLoader.exists(FrontierHUD.ICON_DIR + icon + ".svg") else "", "modes": world_modes_of(id)})
 	return out
 
 
@@ -2617,7 +2643,7 @@ func load_data(d: Dictionary) -> void:
 	var md: Variant = d.get("modes", {})
 	if md is Dictionary:
 		for k in md:
-			if String(md[k]) in modes_of(String(k)):
+			if String(md[k]) in world_modes_of(String(k)):       # (the open world's: every mode either way)
 				modes[String(k)] = String(md[k])
 	_floor_t = float(d.get("floor_t", 0.0))
 	set_motes(int(d.get("motes", motes)))

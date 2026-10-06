@@ -64,6 +64,11 @@ func _initialize() -> void:
 		print(NAME + " FAILED (watchdog)")
 		quit(2))
 	DuelMode.incoming = true
+	# (round 2's kits offer no Stone disc; its spec stays under stone_form's bend: the test readies it again to time a throw
+	# on a strike clip and to throw discs at the catch and the bots)
+	var sf_modes: Variant = SwayMoves.move("stone_form").get("modes")
+	if sf_modes is Array and not "disc" in (sf_modes as Array):
+		(sf_modes as Array).append("disc")
 	change_scene_to_file("res://scenes/main.tscn")
 	_go.call_deferred()
 

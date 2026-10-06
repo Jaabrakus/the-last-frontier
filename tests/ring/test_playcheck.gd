@@ -7,7 +7,8 @@ extends SceneTree
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_playcheck.gd -- pc_practice=throw [pc_el=earth] [pc_foe=earth]
 ## (pc_ args, not MatchSetup's own element= / foe= / scheme=, so the setup is what the menu's rows chose.)
 ##   the menu    scenes/main_menu.tscn; the sport's panel: the element's row, Opponent stepped to pc_foe, Rounds to best of
-##               3, the Scheme row stepped to pc_scheme (kept at once in the test's own settings file), Begin: through the
+##               3, its Controls row and there "Other ways to pick moves" stepped to pc_scheme (round 2: the scheme is
+##               chosen only there; kept at once in the test's own settings file), back to the panel, Begin: through the
 ##               LoadingScreen into scenes/ring.tscn (no launch hook)
 ##   the match   the player's casts made through the scheme's own input every CAST_S in the fight, aimed at the bot:
 ##               keys      a key pressed (Hotbar.select, 1-5 in turn), RMB held to the full lock and let go
@@ -185,8 +186,16 @@ func _menu_match() -> void:
 	_expect(MatchSetup.element == el, "the panel: %s chosen" % el)
 	_expect(await _step("Opponent", func() -> bool: return MatchSetup.foe() == foe_el), "the panel: the opponent %s" % foe_el)
 	_expect(await _step("Rounds", func() -> bool: return MatchSetup.rounds_to_win == 2), "the panel: best of 3")
-	_expect(await _step("Scheme", func() -> bool: return MatchSetup.scheme() == scheme), "the panel: the %s scheme (%s)" % [scheme,
-			MatchSetup.scheme_row()])
+	# (round 2: the scheme is picked under Controls, "Other ways to pick moves"; the keys by default)
+	var ctl := _row("Controls")
+	_expect(ctl != null, "the panel's Controls row")
+	if ctl != null:
+		ctl.pressed.emit()
+		await process_frame
+	_expect(_row("Scheme") != null and await _step("Scheme", func() -> bool: return MatchSetup.scheme() == scheme),
+			"Controls, other ways to pick moves: the %s scheme (%s)" % [scheme, MatchSetup.scheme_row()])
+	m._open_match()                              # (back to the sport's panel: its picks are MatchSetup's, kept)
+	await process_frame
 	MatchSetup.round_s = round_s                 # (the panel has no round length: a short one for the check)
 	var begin := _row("Begin")
 	_expect(begin != null, "the panel's Begin")

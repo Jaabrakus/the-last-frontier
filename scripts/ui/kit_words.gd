@@ -9,8 +9,8 @@ extends RefCounted
 ##   the buttons   LMB JAB · E GUARD · 1 STRIKE · 2 PUSH ▲ · 3 DASH · 4 WALL · 5 HEAL (role(i), ROLE_JAB, ROLE_GUARD)
 ##   a key         Bending.keys(el)[i]: [id] (one move, or one move with two modes) or [id, id] (two moves): key_moves(el, i)
 ##                 -> its first move and, tapped twice, its second ({id, mode} each; spec §10's other_move)
-##   the jab       moves.json "jabs" (else the element's first quick spell, MatchSetup.quick_default); the guard "guards"
-##                 (else the four of spec §8.1); the passive's words screens.json kit.passives
+##   the jab       Bending.jab (moves.json "jabs", else spec §8.1's; then the element's first quick spell,
+##                 MatchSetup.quick_default); the guard Bending.guard ("guards"); the passive's words screens.json kit.passives
 ##   lines         kit_lines(el, scheme): the element pick's and the Controls panel's; rule_lines(): F1's and the
 ##                 first-time panels' four rules; help_line(scheme): the strip's one help line
 ## The control schemes as the data names them: "first_moves" (round 2; "simple" before it) is read as one (scheme_id).
@@ -22,14 +22,7 @@ const ROLE_GUARD := "GUARD"
 const GROW := "▲"
 ## The jab's button as the lines name it (the left button: the quick spell's, never rebound).
 const JAB_KEY := "LMB"
-const GUARD_ACTION := &"bend_guard"
-## The guard's keys when the bindings have none yet (round 2's E and the fourth mouse button; CORE makes the action).
-const GUARD_KEY := KEY_E
-## Each element's guard and jab when moves.json has no "guards" / "jabs" block (spec §8.1).
-const GUARDS := {"earth": ["stone_catch", "catch"], "water": ["water_redirect", "redirect"], "fire": ["fire_parry", "parry"],
-		"air": ["air_shield", "shield"]}
-const JABS := {"earth": ["rock_jab", "pebbles"], "water": ["water_jet", "splash"], "fire": ["fire_jab", "embers"],
-		"air": ["air_palm", "palm"]}
+const GUARD_ACTION := InputSetup.GUARD_ACTION
 
 
 ## data/ring/screens.json "kit" (the words).
@@ -94,36 +87,20 @@ static func key_of(el: String, id: String, mode := "") -> Dictionary:
 	return {"key": -1, "at": -1}
 
 
-static func _pair(v: Variant) -> Dictionary:
-	if v is Array and (v as Array).size() >= 1:
-		return {"id": String(v[0]), "mode": String(v[1]) if (v as Array).size() > 1 else ""}
-	if v is String and String(v) != "":
-		return {"id": String(v).get_slice("/", 0), "mode": String(v).get_slice("/", 1) if String(v).contains("/") else ""}
-	return {}
-
-
-## Element `el`'s jab (LMB): {id, mode} (moves.json "jabs"; else its default quick spell; else JABS).
+## Element `el`'s jab (LMB): {id, mode} (Bending.jab, the caster's own; else its default quick spell).
 static func jab(el: String) -> Dictionary:
-	var d: Variant = (SwayMoves.data().get("jabs", {}) as Dictionary).get(el)
-	var p := _pair(d)
-	if p.is_empty():
-		p = MatchSetup.quick_default(el)
-	if p.is_empty():
-		p = _pair(JABS.get(el))
-	return p
+	var p := Bending.jab(el)
+	return p if not p.is_empty() else MatchSetup.quick_default(el)
 
 
-## Element `el`'s guard (E): {id, mode} (moves.json "guards"; else GUARDS).
+## Element `el`'s guard (E): {id, mode} (Bending.guard, the caster's own).
 static func guard(el: String) -> Dictionary:
-	var p := _pair((SwayMoves.data().get("guards", {}) as Dictionary).get(el))
-	return p if not p.is_empty() else _pair(GUARDS.get(el))
+	return Bending.guard(el)
 
 
-## Whether key `i` grows when held past the second click (▲: key 2 for every element; fire's 1 too, the owner 2026-10-05:
-## Punch held grows into the Fireball; or a first move whose spec carries "grow").
+## Whether key `i` grows when held past the second click (▲: its first move's spec carries "grow", as the caster reads it:
+## key 2 for every element, fire's 1 too, the owner 2026-10-05: Punch held grows into the Fireball).
 static func grows(el: String, i: int) -> bool:
-	if i == 1 or (el == "fire" and i == 0):
-		return true
 	var ms := key_moves(el, i)
 	if ms.is_empty():
 		return false
@@ -150,14 +127,9 @@ static func role(el: String, i: int) -> String:
 
 # --- the keys as bound ---------------------------------------------------------------------------------------------
 
-## The guard's action, made when missing (E; round 2's CORE makes it with the fourth mouse button too). Safe to call again.
+## The guard's action, made when missing (InputSetup.ensure_guard: E and the fourth mouse button). Safe to call again.
 static func ensure_guard_action() -> void:
-	if InputMap.has_action(GUARD_ACTION):
-		return
-	InputMap.add_action(GUARD_ACTION)
-	var k := InputEventKey.new()
-	k.physical_keycode = GUARD_KEY
-	InputMap.action_add_event(GUARD_ACTION, k)
+	InputSetup.ensure_guard()
 
 
 ## Action `a`'s first binding as the player sees it, "(no key)" when it has none; the mouse's buttons as words.
@@ -301,11 +273,4 @@ static func every_line() -> Array:
 static func holds_stone(p: Node) -> bool:
 	if p == null or not is_instance_valid(p) or not p.is_inside_tree():
 		return false
-	var c := SwayCaster.of(p)
-	if c != null and c.has_method(&"held_stone"):
-		return c.call(&"held_stone") != null
-	var me := p.get_instance_id()
-	for s in p.get_tree().get_nodes_in_group(FormStone.GROUP):
-		if int((s as Node).get_meta(&"bend_held_by", -1)) == me:
-			return true
-	return false
+	return BendZone.held_stone(p) != null

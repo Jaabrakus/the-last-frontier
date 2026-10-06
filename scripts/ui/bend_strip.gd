@@ -48,6 +48,11 @@ var _quick: Label
 var _help: Label
 var _sig := ""
 var _dirty := true
+## The full look (_signature: every column and chip in words, the keys as bound) is taken every SIG_EVERY_S; between, only
+## what changes in a frame (the guard's button, the lock, the readied move: _quick_sig) marks it dirty.
+const SIG_EVERY_S := 0.15
+var _sig_t := 0.0
+var _qsig := ""
 ## Casts per key this match (the first match's "tap twice" lines), and each line's fade (0..1).
 var _casts := [0, 0, 0, 0, 0]
 var _tap_a := [0.0, 0.0, 0.0, 0.0, 0.0]
@@ -195,6 +200,14 @@ func _process(dt: float) -> void:
 			_tap_a[i] = a
 			var ui: Dictionary = _cols[i]
 			(ui.other as Label).modulate.a = a
+	var q := _quick_sig()
+	if q != _qsig:
+		_qsig = q
+		_dirty = true
+	_sig_t -= dt
+	if not _dirty and _sig_t > 0.0:
+		return
+	_sig_t = SIG_EVERY_S
 	var sig := _signature()
 	if _dirty or sig != _sig:
 		_sig = sig
@@ -366,6 +379,17 @@ func _bending() -> Bending:
 func _element() -> String:
 	var b := _bending()
 	return b.element if b != null else ""
+
+
+## What changes it within a frame, cheaply (no words made): the guard's button, the lock and its button, the readied move
+## and its variation, the left button's, the scheme, the element, the first match, a caught stone held.
+func _quick_sig() -> String:
+	var c := SwayCaster.of(player) if player != null else null
+	if c == null:
+		return ""
+	var g := InputMap.has_action(KitWords.GUARD_ACTION) and Input.is_action_pressed(KitWords.GUARD_ACTION)
+	return "%s|%s|%d|%s|%s|%s|%s|%s|%s|%s|%s" % [g, c.lock_src, c.state, c.readied_spell, c.base_mode_of(c.readied_spell),
+			c.quick_id(), c.quick_mode(), c.scheme(), _element(), first_match(), BendZone.held_stone(player) != null]
 
 
 ## What it shows, as one string (a change redraws it).
