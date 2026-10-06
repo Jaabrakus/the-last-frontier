@@ -139,6 +139,43 @@ visual references, no animation files imported) is his statement; the rows below
 | `own-bend-air-shield-hold` | 2026-10-05 (third set) | `bend_clips.py` (`air_shield_hold`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
 | `own-bend-air-slice` | 2026-10-05 (third set) | `bend_clips.py` (`air_slice`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
 | `own-bend-air-slice-l` | 2026-10-05 (third set) | `bend_clips.py` (`air_slice`, `mirror_clip`) | `air_slice`'s keys mirrored left for right | (as its original) |
+| `own-bend-tumble` | 2026-10-06 (fourth set) | `bend_clips.py` (`tumble`, `tumble_at`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-flinch` | 2026-10-06 (fourth set) | `bend_clips.py` (`flinch`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-jump-double` | 2026-10-06 (fourth set) | `bend_clips.py` (`jump_double`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-fall` | 2026-10-06 (fourth set) | `bend_clips.py` (`fall`, `fall_at`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-fall-fast` | 2026-10-06 (fourth set) | `bend_clips.py` (`fall_fast`, `fall_fast_at`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-helpless` | 2026-10-06 (fourth set) | `bend_clips.py` (`helpless`, `helpless_at`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-air-dodge` | 2026-10-06 (fourth set) | `bend_clips.py` (`air_dodge`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-air-legs` | 2026-10-06 (fourth set) | `bend_clips.py` (`air_legs`, `air_legs_at`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-land-light` | 2026-10-06 (fourth set) | `bend_clips.py` (`land_light`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-land-heavy` | 2026-10-06 (fourth set) | `bend_clips.py` (`land_heavy`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-edge-grab` | 2026-10-06 (fifth set) | `bend_clips.py` (`edge_grab`) | the rig's rest pose; keys in `CLIPS` (`SET5`) | (for the owner to fill) |
+| `own-bend-edge-hang` | 2026-10-06 (fifth set) | `bend_clips.py` (`edge_hang`, `hang_at`) | the rig's rest pose; keys in `CLIPS` (`SET5`) | (for the owner to fill) |
+| `own-bend-edge-climb` | 2026-10-06 (fifth set) | `bend_clips.py` (`edge_climb`) | the rig's rest pose; keys in `CLIPS` (`SET5`) | (for the owner to fill) |
+| `own-bend-edge-roll` | 2026-10-06 (fifth set) | `bend_clips.py` (`edge_roll`) | the rig's rest pose; keys in `CLIPS` (`SET5`) | (for the owner to fill) |
+| `own-bend-edge-jump` | 2026-10-06 (fifth set) | `bend_clips.py` (`edge_jump`) | the rig's rest pose; keys in `CLIPS` (`SET5`) | (for the owner to fill) |
+| `own-bend-edge-attack` | 2026-10-06 (fifth set) | `bend_clips.py` (`edge_attack`) | the rig's rest pose; keys in `CLIPS` (`SET5`) | (for the owner to fill) |
+| `own-bend-roll-f` | 2026-10-06 (fifth set) | `bend_clips.py` (`roll_f`, `_roll`) | the rig's rest pose; keys in `CLIPS` (`SET5B`) | (for the owner to fill) |
+| `own-bend-roll-b` | 2026-10-06 (fifth set) | `bend_clips.py` (`roll_b`, `_roll`) | the rig's rest pose; keys in `CLIPS` (`SET5B`) | (for the owner to fill) |
+| `own-bend-roll-side` | 2026-10-06 (fifth set) | `bend_clips.py` (`roll_side`, `_roll`) | the rig's rest pose; keys in `CLIPS` (`SET5B`) | (for the owner to fill) |
+| `own-bend-roll-side-l` | 2026-10-06 (fifth set) | `bend_clips.py` (`roll_side`, `mirror_clip`) | `roll_side`'s keys mirrored left for right | (as its original) |
+| `own-bend-duck` | 2026-10-06 (fifth set) | `bend_clips.py` (`duck`) | the rig's rest pose; keys in `CLIPS` (`SET5B`) | (for the owner to fill) |
+| `own-bend-rise-earth` | 2026-10-06 (sixth set) | `bend_clips.py` (`rise_earth`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-rise-water` | 2026-10-06 (sixth set) | `bend_clips.py` (`rise_water`, `_rise_water`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-rise-fire` | 2026-10-06 (sixth set) | `bend_clips.py` (`rise_fire`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-rise-air` | 2026-10-06 (sixth set) | `bend_clips.py` (`rise_air`, `_rise_air`, `glide_at`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-edge-scramble` | 2026-10-06 (sixth set) | `bend_clips.py` (`edge_scramble`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-tech` | 2026-10-06 (sixth set) | `bend_clips.py` (`tech`, `_tech_slap`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-tech-roll` | 2026-10-06 (sixth set) | `bend_clips.py` (`tech_roll`, `_tech_roll`, `_roll`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-tech-roll-l` | 2026-10-06 (sixth set) | `bend_clips.py` (`tech_roll`, `mirror_clip`) | `tech_roll`'s keys mirrored left for right | (as its original) |
+| `own-bend-tech-wall` | 2026-10-06 (sixth set) | `bend_clips.py` (`tech_wall`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-lie` | 2026-10-06 (sixth set) | `bend_clips.py` (`lie`, `lie_at`, `_wclip`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-getup` | 2026-10-06 (sixth set) | `bend_clips.py` (`getup`, `_getup`, `_wclip`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-getup-roll` | 2026-10-06 (sixth set) | `bend_clips.py` (`getup_roll`, `_getup_roll`, `_wclip`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-getup-roll-l` | 2026-10-06 (sixth set) | `bend_clips.py` (`getup_roll`, `mirror_clip`) | `getup_roll`'s keys mirrored left for right | (as its original) |
+| `own-bend-getup-attack` | 2026-10-06 (sixth set) | `bend_clips.py` (`getup_attack`, `_getup_attack`, `_wclip`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-knock-spiked` | 2026-10-06 (sixth set) | `bend_clips.py` (`knock_spiked`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-knock-bounce` | 2026-10-06 (sixth set) | `bend_clips.py` (`knock_bounce`, `_wclip`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
 
 - Second set and polish (2026-10-05, after the owner approved the first ten: "looks good but you can always perfect them"):
   the same generator and the same inputs (the rig's rest pose and keys typed into the table, now its `SET2` part); no clip,
@@ -159,6 +196,73 @@ visual references, no animation files imported) is his statement; the rows below
   clips were not re-baked (their tracks are as before). The bake now also writes `ik_miss_m`, the two-bone IK's worst miss
   over the clip's frames, onto each clip it bakes. The style labels named in the table's comments (Northern Shaolin, Hung Gar,
   tai chi, Baguazhang) are labels for the typed key poses, as above.
+- Fourth set (2026-10-06, round 3's first playable: the air and hit states of the % ring): the same generator and the same
+  inputs (the rig's rest pose and keys typed into the table, now its `SET4` part); no clip, dump or reference motion read.
+  The loops (`fall`, `fall_fast`, `helpless`, `air_legs`) have their channels written as typed functions of the loop's phase
+  (`fall_at`, `fall_fast_at`, `helpless_at`, `air_legs_at`) sampled at its eighths (`_loop`); the tumble and the helpless
+  fall turn the whole keyed figure about the hips' height (the new `flip`, `cart` and `flip_turns` channels: the keys stay
+  the body's own pose, turned whole); `air_legs` bakes only the legs' bones (`"bones": "legs"`, no root track). None has a
+  side, so none is mirrored. Only these ten were baked (`--clips`); the other clips' tracks are as before.
+  Revised the same day after a review of the sheets (pass 2): the same generator, the same inputs and the same ten clips,
+  re-keyed and re-baked (`--clips`); no clip, dump or reference motion read. The tumble's somersault is now typed as a turn
+  rate (`tumble_at`: an average and a swing in degrees a frame, fastest in the tuck), its channels keyed at every frame; the
+  loops' typed functions are sampled at every frame instead of their eighths (`_loop`); `own-bend-flinch` is 9 frames (was 8)
+  and `own-bend-land-heavy` 14 (was 12), their `strike_s` and `hold_s` unchanged (`own-bend-flinch`'s `back_s` 5 frames, was
+  4); `own-bend-jump-double`'s `strike_s` is 2 frames (was 3) and its `back_s` 8 (was 7). The other clips' tracks are as before.
+  Revised again the same day after a second review (pass 3): the same generator, the same inputs and the same ten clips,
+  re-keyed and re-baked (`--clips`); no clip, dump or reference motion read. New in the generator: a `tilt` channel (the head's
+  side tilt, keyed only by `helpless`), `"hands_from": "shoulder"` (`helpless`'s hands keyed as the arm's reach from its
+  shoulder, still typed numbers) and `--angles` (a printout of the elbow and knee bends); clips that key none of them pose as
+  before. `own-bend-land-heavy` is 16 frames (was 14), its `strike_s`, `hold_s` and `back_s` unchanged;
+  `own-bend-jump-double`'s `hold_s` is 2 frames (was 1) and its `strike_s` 3 (was 2), `back_s` unchanged. The other clips'
+  tracks are as before.
+- Fifth set (2026-10-06, round 3's first playable: the deck's edge and the ground dodges of the % ring): the same generator
+  and the same inputs (the rig's rest pose and keys typed into the table, now its `SET5` and `SET5B` parts; the hang's loop
+  written as a typed function of its phase, `hang_at`, sampled at every frame by `_loop`; the three rolls from one typed
+  sequence, `_roll`); no clip, dump or reference motion read. The edge clips are keyed in the hang's frame (the origin where
+  the game snaps a hanger, the lip at `LIP_Y` over it and `LIP_Z` ahead; metas `lip_y`, `lip_out`, and `end_in` where a
+  get-up ends standing on the deck). New in the generator: a `pivot` channel (the point the flip and the cart turn the
+  figure about; a ground roll turns about its tucked ball's middle), a `ground` channel with the clip's `floor` (the whole
+  figure shifted by that share of the gap between the deck and its lowest surface, from the typed joint radii `SURF`: a
+  contact constraint like the IK's, a uniform shift that leaves every rotation as keyed) and `--points` (a printout of key
+  joints and the lowest surface). Clips that key none of them pose as before. `roll_side` has `"mirror": True`, so its twin
+  `own-bend-roll-side-l` is the same keys mirrored. Only these eleven were baked (`--clips`); the other clips' tracks are as
+  before.
+  Revised the same day after a review of the sheets (pass 2): the same generator, the same inputs and the same eleven clips,
+  re-keyed and re-baked (`--clips`); no clip, dump or reference motion read; their lengths and moments (`hold_s`, `strike_s`,
+  `back_s`) are unchanged. New in the generator: `lift` and `lift_w` (the edge jump's keys over the code's own carry, spec
+  5.3's vy 11.8 m/s: the share of that typed parabola the clip takes back, a uniform shift like `ground`), `substeps` (the
+  grab baked four times a frame, meta fps 120 in the json, so its planted palms hold between the keys; `install_bend.gd`
+  reads a clip's own rate), and typed helpers that turn a typed place back through a typed flip or cart (`_unturn`, so a
+  hand keyed on the deck lands there while the figure turns) or through a heel lift (`_heel_place`); `--points` also prints
+  `spinec`. The rolls key the head's `tilt`, `look` and the trunk's `twist` (a shoulder roll's diagonal). Clips that key none
+  of them pose as before. The martial-art styles in the comments remain labels for the typed key poses.
+  Revised again the same day after a third review (pass 3): the same generator, the same inputs and the same eleven clips,
+  re-keyed and re-baked (`--clips`); no clip, dump or reference motion read; their lengths and moments (`hold_s`,
+  `strike_s`, `back_s`) are unchanged. The keys changed are typed numbers in `SET5` and `SET5B` (the hang's feet and sway in
+  `hang_at`, the forward roll's closed ball in the new typed table `BALL`, two typed facings, `fling` and `guard_out`). New
+  in the generator: the side roll's meta `travel` ("right"; "left" on its mirrored twin, which `mirror_clip` swaps;
+  `install_bend.gd` keeps it as a word) and
+  `HAT_REST`/`hat_low`, five typed points on the rig's `headb` measured off the glb's own Hat mesh at rest (its bounds, not
+  any animation), printed by `--points` as the hat's lowest point; it is a report only and moves nothing. Clips that key
+  none of the new channels pose as before.
+- Sixth set (2026-10-06, round 3's P2: the four Rises, the scramble up the deck's face, breaking the fall, lying and getting
+  up, the spiked and bounce knocks): the same generator and the same inputs (the rig's rest pose and keys typed into the
+  table, now its `SET6` part; the lie's loop and the air Rise's glide written as typed functions of their phase, `lie_at`
+  and `glide_at`, sampled at every frame; the water Rise's arm circles as a typed function, `water_swirl`); no clip, dump or
+  reference motion read. `own-bend-tech-roll` is `_roll("side")`'s typed keys (the fifth set's side roll, unchanged) with
+  its first three frames replaced by the typed breakfall slap (`_tech_slap`). New in the generator: a `barrel` channel (the
+  figure turned about its own long axis after the flip and the cart: the getup roll's log roll), `"toes": "foot"` (the toes
+  kept with the foot, for a sole laid flat on the deck while the figure lies), `_heel_key` (the foot key that lands the
+  ankle exactly where it is typed through a heel lift and toe-out) and `_wclip` (a clip typed in the deck's frame: the
+  pelvis's place, the figure's turn and the palms' and ankles' places on the deck, turned back into the figure's own keys
+  at every frame by the same rotations `pose()` applies; typed numbers in, typed numbers out). Clips that key none of them
+  pose as before. Metas new to this set: `loop_from_s` (the air Rise loops from there to its end: its glide), `wall_z` (the
+  wall breaker's wall ahead), `haul_m` (the part of the scramble's climb its own keys carry) and `lying` (a figure on its
+  back the whole clip). `tech_roll` and `getup_roll` have `"mirror": True` (and meta `travel`). Only these sixteen clips
+  were baked (`--clips`); the other clips' tracks are as before. The martial-art styles in the comments (Hung Gar's horse,
+  tai chi's golden rooster, Northern Shaolin's rising punch and carp skip-up, Baguazhang's turning) remain labels for the
+  typed key poses.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.
