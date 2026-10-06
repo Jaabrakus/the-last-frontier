@@ -1,0 +1,74 @@
+{
+ "ashlar": {
+  "budget": 0.68,
+  "budget_ok": true,
+  "mean": 0.68,
+  "p02": 0.517,
+  "p98": 0.787,
+  "pass_stroke": true,
+  "size": 2048,
+  "squint_range": 0.171,
+  "tile_m": 8.0,
+  "worst_stroke_dev": 0.111
+ },
+ "karst_face": {
+  "budget": 0.62,
+  "budget_ok": true,
+  "mean": 0.619,
+  "p02": 0.426,
+  "p98": 0.762,
+  "pass_stroke": true,
+  "size": 2048,
+  "squint_range": 0.235,
+  "tile_m": 16.0,
+  "worst_stroke_dev": 0.16
+ },
+ "karst_pale": {
+  "budget": 0.74,
+  "budget_ok": true,
+  "mean": 0.7387,
+  "p02": 0.503,
+  "p98": 0.848,
+  "pass_stroke": true,
+  "size": 2048,
+  "squint_range": 0.24,
+  "tile_m": 16.0,
+  "worst_stroke_dev": 0.23
+ },
+ "lineup_grass": {
+  "budget": 0.45,
+  "budget_ok": true,
+  "mean": 0.4501,
+  "p02": 0.333,
+  "p98": 0.636,
+  "pass_stroke": true,
+  "size": 1024,
+  "squint_range": 0.215,
+  "tile_m": 8.0,
+  "worst_stroke_dev": 0.162
+ },
+ "moss_cap": {
+  "budget": 0.4,
+  "budget_ok": true,
+  "mean": 0.4003,
+  "p02": 0.258,
+  "p98": 0.619,
+  "pass_stroke": true,
+  "size": 1024,
+  "squint_range": 0.309,
+  "tile_m": 4.0,
+  "worst_stroke_dev": 0.228
+ },
+ "white_stone": {
+  "budget": 0.82,
+  "budget_ok": true,
+  "mean": 0.82,
+  "p02": 0.751,
+  "p98": 0.849,
+  "pass_stroke": true,
+  "size": 1024,
+  "squint_range": 0.09,
+  "tile_m": 4.0,
+  "worst_stroke_dev": 0.077
+ }
+}

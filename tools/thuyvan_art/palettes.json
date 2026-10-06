@@ -1,0 +1,719 @@
+{
+ "albedo": {
+  "r1": {
+   "_about": "R1, the Đá Trắng reach under the Two Heights (Trường Sơn foothills; Mountain Folk / Stone Children)",
+   "grass": [
+    "#2f5a2c",
+    "#4e8a36",
+    "#84b546",
+    "#c2d16a"
+   ],
+   "terrace_rice": [
+    "#4f7a2a",
+    "#86ae3c",
+    "#b9cf55",
+    "#e2d873"
+   ],
+   "forest_floor": [
+    "#2e3a22",
+    "#4c5a2e",
+    "#6f7b3c",
+    "#8a6a3a"
+   ],
+   "moss": [
+    "#2f4f2a",
+    "#4f7a33",
+    "#7fa544",
+    "#b4c766"
+   ],
+   "dirt_path": [
+    "#5e4330",
+    "#8c6a47",
+    "#b8925f",
+    "#d8b98a"
+   ],
+   "laterite": [
+    "#6b3424",
+    "#9a4e30",
+    "#c0703f",
+    "#d99a5e"
+   ],
+   "paddy_mud": [
+    "#3e3a2c",
+    "#5f5940",
+    "#827b58",
+    "#9fc6be"
+   ],
+   "karst_limestone": [
+    "#4a4e63",
+    "#8e8c88",
+    "#c9c2b2",
+    "#eae3d0"
+   ],
+   "white_stone": [
+    "#7f8c96",
+    "#c4c2b6",
+    "#e8e3d3",
+    "#fbf7ec"
+   ],
+   "cliff_stain": [
+    "#3a3d4a",
+    "#5a5c64",
+    "#7a7a78",
+    "#6d8c3e"
+   ],
+   "bark": [
+    "#3a2a22",
+    "#5e4636",
+    "#8a6e55",
+    "#a9927a"
+   ],
+   "broadleaf": [
+    "#24492c",
+    "#3b7036",
+    "#67a043",
+    "#a4c95a"
+   ],
+   "pine": [
+    "#1f4436",
+    "#2f634a",
+    "#4f8a5a",
+    "#86b172"
+   ],
+   "bamboo": [
+    "#3f6a2c",
+    "#6e9a3a",
+    "#a9c455",
+    "#d6d88a"
+   ],
+   "fern": [
+    "#244a2a",
+    "#3d7a36",
+    "#6aa645",
+    "#9cc45a"
+   ],
+   "flowers": [
+    "#c9583a",
+    "#e2c04a",
+    "#f2eedc",
+    "#d97aa0"
+   ],
+   "timber": [
+    "#3b2a1f",
+    "#64472f",
+    "#8e6a47",
+    "#b39069"
+   ],
+   "plank_weathered": [
+    "#4e4438",
+    "#7a6a55",
+    "#a39173",
+    "#c7b595"
+   ],
+   "roof_tile": [
+    "#23343c",
+    "#3a5460",
+    "#5e7b84",
+    "#8aa3a6"
+   ],
+   "thatch": [
+    "#5c4a2c",
+    "#8e7342",
+    "#bc9c5c",
+    "#dcc384"
+   ],
+   "plaster_lime": [
+    "#8e8778",
+    "#c1b9a4",
+    "#e3dac2",
+    "#f3ecd8"
+   ],
+   "lacquer_red": [
+    "#5e1c16",
+    "#8e2e22",
+    "#b8452f",
+    "#d9704a"
+   ],
+   "indigo_cloth": [
+    "#1c2546",
+    "#2d3d6e",
+    "#4a5e96",
+    "#7889b8"
+   ],
+   "madder_cloth": [
+    "#6a2219",
+    "#a33a28",
+    "#c9583a",
+    "#e28657"
+   ],
+   "ochre_cloth": [
+    "#7a5520",
+    "#b07f2e",
+    "#d7a548",
+    "#edc877"
+   ],
+   "bone_cloth": [
+    "#a69c84",
+    "#cfc4a6",
+    "#e9e0c6",
+    "#f8f2e0"
+   ],
+   "jade_cloth": [
+    "#2f5c55",
+    "#4e8577",
+    "#7daf9c",
+    "#b4d3c2"
+   ],
+   "rope": [
+    "#4a3a26",
+    "#776040",
+    "#a68a5e",
+    "#c9b183"
+   ],
+   "iron": [
+    "#1e1d1c",
+    "#2e2c2a",
+    "#4a4642",
+    "#6a645c"
+   ],
+   "lantern_paper": [
+    "#8e2e1e",
+    "#d0562c",
+    "#f08a44",
+    "#ffb45a"
+   ],
+   "water_depth": [
+    "#12404a",
+    "#1f6e6c",
+    "#3fa294",
+    "#8fd1c2"
+   ],
+   "foam_fall": [
+    "#9fb6bc",
+    "#d4e0e0",
+    "#eef3f0",
+    "#ffffff"
+   ],
+   "mist": [
+    "#b8c8cc",
+    "#d2dedf",
+    "#e6eeee",
+    "#f6f8f4"
+   ]
+  },
+  "thach_uyen": {
+   "_about": "Thạch Uyên, the Stone Valleys: quarries, arched bridges, kilns, cliff sanctuaries; warm white stone",
+   "quarry_stone": [
+    "#6f6a78",
+    "#b9aa95",
+    "#e6dccb",
+    "#f5eee0"
+   ],
+   "worked_block": [
+    "#7a7064",
+    "#c8bba5",
+    "#e2d6c0",
+    "#f2e9d6"
+   ],
+   "kiln_brick": [
+    "#5a2a1c",
+    "#9a4a2c",
+    "#c06a3c",
+    "#ff8a3a"
+   ],
+   "smoke": [
+    "#7c7874",
+    "#a29c96",
+    "#c9c3bb",
+    "#e6e0d8"
+   ],
+   "canal": [
+    "#14525a",
+    "#1f7a80",
+    "#3fb0a8",
+    "#9fe0d0"
+   ],
+   "crane_timber": [
+    "#33241a",
+    "#5a3e2a",
+    "#80603e",
+    "#a8875e"
+   ],
+   "banner_ochre": [
+    "#7a5520",
+    "#c7962f",
+    "#e2b553",
+    "#3a2a1e"
+   ],
+   "terrace": [
+    "#4f7a2a",
+    "#86ae3c",
+    "#b4ca55",
+    "#d9d27a"
+   ],
+   "dust": [
+    "#9a8c74",
+    "#cdbfa6",
+    "#e3d8c2",
+    "#f2ecdc"
+   ]
+  },
+  "dong_lau": {
+   "_about": "Đồng Lau, the Reed Marches (Khar-Ul): stilt forts, reeds, mangroves, silver marsh water, overcast",
+   "reed_gold": [
+    "#6e5e30",
+    "#9c8a4a",
+    "#c7b36a",
+    "#e2d48e"
+   ],
+   "reed_green": [
+    "#3e5a2a",
+    "#5f7a38",
+    "#7f9a48",
+    "#a8bf66"
+   ],
+   "marsh_water": [
+    "#22403f",
+    "#3e6463",
+    "#6e8e8a",
+    "#a9c2bc"
+   ],
+   "mudflat": [
+    "#3e3628",
+    "#6b5e46",
+    "#8e8064",
+    "#b0a283"
+   ],
+   "stilt_timber": [
+    "#3a3128",
+    "#5c4e3e",
+    "#8a8070",
+    "#b0a898"
+   ],
+   "thatch": [
+    "#5c4a2c",
+    "#8e7342",
+    "#a88c55",
+    "#cfb67c"
+   ],
+   "heron_banner": [
+    "#1f2c4c",
+    "#2f416a",
+    "#4a5e8e",
+    "#e6ddc6"
+   ],
+   "mangrove_root": [
+    "#2e261e",
+    "#4a3d30",
+    "#6e5c48",
+    "#8e7a62"
+   ],
+   "lantern": [
+    "#8e3a1e",
+    "#d06a2c",
+    "#ffb060",
+    "#ffe0a0"
+   ]
+  },
+  "vuc_sen_sau": {
+   "_about": "Vực Sen Sâu, the Deep Lotus Reaches: caves, lotus basins, lanterns over dark teal water",
+   "cave_rock": [
+    "#1c2626",
+    "#2b3a3a",
+    "#4e6460",
+    "#7c8f86"
+   ],
+   "cave_water": [
+    "#071f24",
+    "#0f3b40",
+    "#1f6464",
+    "#2d8c88"
+   ],
+   "lotus_flower": [
+    "#a8456a",
+    "#e67fa0",
+    "#f7b9c9",
+    "#fff0f2"
+   ],
+   "lotus_pad": [
+    "#21452a",
+    "#3f7a3c",
+    "#6ba048",
+    "#9cc46a"
+   ],
+   "lantern": [
+    "#8e4a1a",
+    "#e0862e",
+    "#ffb24e",
+    "#ffe2a0"
+   ],
+   "ceramic": [
+    "#1f4a58",
+    "#3f7a8c",
+    "#7fb3b0",
+    "#d8e8e0"
+   ],
+   "moss": [
+    "#20381e",
+    "#3e6a3a",
+    "#6a9a4a",
+    "#9cc46a"
+   ],
+   "light_shaft": [
+    "#7fb8b0",
+    "#a8d8cc",
+    "#d8f0e8",
+    "#ffffff"
+   ]
+  },
+  "van_thuy": {
+   "_about": "Vạn Thủy, the lock city of the Cửu Giang delta: floodgates, lacquer towers, quays, rice and sails",
+   "river": [
+    "#1e4658",
+    "#2e5e70",
+    "#5f8fa0",
+    "#a9c8d4"
+   ],
+   "quay_stone": [
+    "#5e5a52",
+    "#8f8778",
+    "#cfc6b4",
+    "#ebe4d4"
+   ],
+   "roof_tile": [
+    "#1e262e",
+    "#2e3a44",
+    "#4a5a66",
+    "#7a8a94"
+   ],
+   "lacquer_red": [
+    "#5e1c16",
+    "#a33a2c",
+    "#c8553a",
+    "#e0804e"
+   ],
+   "court_banner": [
+    "#16244a",
+    "#24386e",
+    "#3c5496",
+    "#d8a743"
+   ],
+   "dock_timber": [
+    "#3a2a1e",
+    "#6a4c34",
+    "#94704e",
+    "#b8966e"
+   ],
+   "sail": [
+    "#8e7e5e",
+    "#bfae88",
+    "#d8c9a6",
+    "#efe4c8"
+   ],
+   "rice": [
+    "#4f7a2a",
+    "#7fae3c",
+    "#9dc24e",
+    "#cfdc6a"
+   ]
+  },
+  "lam_uyen": {
+   "_about": "Lâm Uyên, the Verdant Deep: giant root bridges, mossy trunks, stepped falls, green mist",
+   "bark": [
+    "#262016",
+    "#3a3226",
+    "#6a5a42",
+    "#8e7c60"
+   ],
+   "moss": [
+    "#2a4a22",
+    "#4f7a33",
+    "#8db04a",
+    "#c2d66e"
+   ],
+   "canopy": [
+    "#123a24",
+    "#1f4a2e",
+    "#3e7a3c",
+    "#77a84a"
+   ],
+   "root_wood": [
+    "#3a2c1e",
+    "#5a4632",
+    "#7e6648",
+    "#a08a68"
+   ],
+   "falls": [
+    "#9fb8b0",
+    "#cfe0d8",
+    "#eef2ec",
+    "#ffffff"
+   ],
+   "mist": [
+    "#8ea898",
+    "#bfd0c4",
+    "#dce8dc",
+    "#f0f6ee"
+   ],
+   "flower": [
+    "#c9a84a",
+    "#e8dcb8",
+    "#f2eedc",
+    "#ffffff"
+   ]
+  },
+  "ao_thanh": {
+   "_about": "Ảo Thành, the City of Illusions: night, lanterns, lacquer and crimson over reflecting water",
+   "night_sky": [
+    "#0f1430",
+    "#1b2246",
+    "#2e3a6e",
+    "#4a5a96"
+   ],
+   "moon": [
+    "#c8bfa4",
+    "#e8dfc4",
+    "#f4ebd0",
+    "#fffaf0"
+   ],
+   "lantern": [
+    "#8e221a",
+    "#c23a2a",
+    "#ffb45a",
+    "#ffe6b0"
+   ],
+   "lacquer_black": [
+    "#140c0a",
+    "#2a1a16",
+    "#4a2e26",
+    "#6e463a"
+   ],
+   "crimson_banner": [
+    "#5e1418",
+    "#9e2a2a",
+    "#c84a3a",
+    "#e0a83e"
+   ],
+   "water_night": [
+    "#141a2c",
+    "#2c3550",
+    "#4a5478",
+    "#f2b65e"
+   ],
+   "plaster": [
+    "#8e826c",
+    "#b8aa90",
+    "#d8cbb0",
+    "#efe4cc"
+   ],
+   "pine": [
+    "#14281e",
+    "#23402e",
+    "#3a5e44",
+    "#5a7e5a"
+   ]
+  }
+ },
+ "directions": {
+  "jade_mist_morning": {
+   "title": "Jade Mist Morning",
+   "pitch": "Closest to the sheets: a cool, quiet morning where mist holds in the gorge and wraps the karst waists; the white stones and the falls are the brightest things in frame; colour is fresh jade and moss, warm cream only where the low sun touches.",
+   "sun": {
+    "azimuth_deg": 75,
+    "elevation_deg": 14,
+    "color": "#ffe2b8",
+    "energy": 1.6,
+    "angular_deg": 2.0
+   },
+   "sky": {
+    "zenith": "#8fb4cf",
+    "mid": "#bfd4de",
+    "horizon": "#e4ebe6",
+    "cloud_lit": "#fff6e8",
+    "cloud_shade": "#afc0cc",
+    "clouds": "low cloud banks round the peaks, a few high soft cumulus"
+   },
+   "ambient": {
+    "color": "#a9c4cc",
+    "energy": 1.0,
+    "sky_contribution": 0.6
+   },
+   "fog": {
+    "color": "#cfdcda",
+    "light_energy": 1.0,
+    "density": 0.0007,
+    "aerial_perspective": 0.6,
+    "sun_scatter": 0.15,
+    "height": 175.0,
+    "height_density": 0.012
+   },
+   "mist_bands_m": [
+    [
+     145,
+     165,
+     "dense, holds over the still reach"
+    ],
+    [
+     185,
+     200,
+     "drifting across the low terraces"
+    ],
+    [
+     265,
+     285,
+     "under the Two Heights deck and round the karst waists"
+    ]
+   ],
+   "grade": {
+    "tonemap": "AgX",
+    "contrast": 1.05,
+    "saturation": 1.1,
+    "shadow_tint": "#2a4a50",
+    "highlight_tint": "#fff0d8",
+    "notes": "greens stay jade; never pulled to olive"
+   },
+   "lanterns": "off (paper reads as colour)",
+   "targets": {
+    "sky_top": "#8fb4cf",
+    "far_karst": "#b9c9cc",
+    "mid_karst_lit": "#cfc8b4",
+    "karst_shade": "#7e8a98",
+    "terrace_lit": "#9cc25a",
+    "forest_shade": "#3f6650",
+    "white_stones": "#f2eee2",
+    "river": "#3f9a8e",
+    "mist": "#e2eaea",
+    "banner": "#34477a"
+   }
+  },
+  "bright_saturated_noon": {
+   "title": "Bright Saturated Noon",
+   "pitch": "Closest to the World of Warcraft Classic feel (Elwynn-green meets Stranglethorn-lush): a high sun, deep blue sky with big white cumulus, vivid greens and warm earth, crisp readable silhouettes, fog only far off; the red flags and indigo banners pop.",
+   "sun": {
+    "azimuth_deg": 200,
+    "elevation_deg": 58,
+    "color": "#fff3d9",
+    "energy": 2.4,
+    "angular_deg": 0.8
+   },
+   "sky": {
+    "zenith": "#2f7fd6",
+    "mid": "#6fb2ea",
+    "horizon": "#cde9f4",
+    "cloud_lit": "#ffffff",
+    "cloud_shade": "#b4c8e4",
+    "clouds": "big towering cumulus, flat grey-blue bases, two or three heaps"
+   },
+   "ambient": {
+    "color": "#9ec3e6",
+    "energy": 1.25,
+    "sky_contribution": 0.5
+   },
+   "fog": {
+    "color": "#b5d3ec",
+    "light_energy": 1.0,
+    "density": 0.00035,
+    "aerial_perspective": 0.4,
+    "sun_scatter": 0.05,
+    "height": 150.0,
+    "height_density": 0.006
+   },
+   "mist_bands_m": [
+    [
+     140,
+     152,
+     "thin, only in the gorge and at the falls' feet"
+    ]
+   ],
+   "grade": {
+    "tonemap": "AgX",
+    "contrast": 1.15,
+    "saturation": 1.25,
+    "shadow_tint": "#2a3e6a",
+    "highlight_tint": "#fff6e0",
+    "notes": "the most saturated; shadows blue-violet, never grey"
+   },
+   "lanterns": "off",
+   "targets": {
+    "sky_top": "#2f7fd6",
+    "far_karst": "#9cb8d4",
+    "mid_karst_lit": "#e2d8c0",
+    "karst_shade": "#6e7ea6",
+    "terrace_lit": "#b2d64e",
+    "forest_shade": "#2e5e3a",
+    "white_stones": "#fbf6e8",
+    "river": "#2fae9c",
+    "mist": "#eef4f6",
+    "banner": "#2f4690"
+   }
+  },
+  "golden_lantern_dusk": {
+   "title": "Golden Lantern Dusk",
+   "pitch": "The sun sets behind the Two Heights: backlit karst cut out against peach and violet, gold rims on every ridge, violet mist in the valleys, and the village lanterns, windows and bridge-head lamps glowing warm; smoke caught under the roofs.",
+   "sun": {
+    "azimuth_deg": 285,
+    "elevation_deg": 5,
+    "color": "#ff9a45",
+    "energy": 1.3,
+    "angular_deg": 1.5
+   },
+   "sky": {
+    "zenith": "#4b4a8c",
+    "mid": "#8e6fa6",
+    "horizon": "#ffd08a",
+    "low": "#f2a66b",
+    "cloud_lit": "#ffb070",
+    "cloud_shade": "#7b6a9a",
+    "clouds": "long low bars lit from beneath"
+   },
+   "ambient": {
+    "color": "#6e6a9e",
+    "energy": 0.7,
+    "sky_contribution": 0.5
+   },
+   "fog": {
+    "color": "#d99a7a",
+    "valley_color": "#7a6e9c",
+    "light_energy": 1.0,
+    "density": 0.0006,
+    "aerial_perspective": 0.7,
+    "sun_scatter": 0.35,
+    "height": 170.0,
+    "height_density": 0.01
+   },
+   "mist_bands_m": [
+    [
+     145,
+     165,
+     "violet, in the gorge"
+    ],
+    [
+     255,
+     280,
+     "gold where the sun is behind it"
+    ]
+   ],
+   "grade": {
+    "tonemap": "AgX",
+    "contrast": 1.1,
+    "saturation": 1.15,
+    "shadow_tint": "#3a3468",
+    "highlight_tint": "#ffd49a",
+    "notes": "warm/cool split: everything sunlit gold, everything else violet"
+   },
+   "lanterns": "on: paper emission 3.0 (#ffb45a), windows 1.5, bridge-head lamps 4.0, glow on",
+   "targets": {
+    "sky_top": "#4b4a8c",
+    "far_karst": "#9a7e9a",
+    "mid_karst_lit": "#f0b67a",
+    "karst_shade": "#4e4870",
+    "terrace_lit": "#c8b85a",
+    "forest_shade": "#2e3a46",
+    "white_stones": "#f4d6b8",
+    "river": "#d89a6a",
+    "mist": "#b8a0c0",
+    "banner": "#2a3058"
+   }
+  }
+ }
+}
