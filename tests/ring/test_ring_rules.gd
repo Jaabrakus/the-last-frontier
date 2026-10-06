@@ -32,6 +32,8 @@ var ring: RingArena
 var player: FrontierPlayer
 var mode: RingMode
 var events := {"phase": [], "knocked_back": [], "rang_out": [], "round_over": [], "match_over": []}
+var metrics := {}
+const OWN_CFG := "user://ring_rules_test.cfg"
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -41,11 +43,19 @@ func _expect(ok: bool, what: String) -> void:
 		fails.append(what)
 
 
+func _metric(key: String, ok: bool) -> void:
+	metrics[key] = bool(metrics.get(key, true)) and ok
+
+
 func _initialize() -> void:
 	seed(1750)
 	create_timer(LIMIT_S, true, false, true).timeout.connect(func() -> void:
 		print("%s FAILED (watchdog)" % NAME)
 		quit(2))
+	MatchSetup._aim_help = "strong"
+	GameSettings.path = OWN_CFG
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+	RingRules.rule_set_override = "stock"
 	SwayCaster.free_override = true
 	InputSetup.ensure()
 	MatchSetup.incoming = true
@@ -74,6 +84,9 @@ func _until(cond: Callable, limit: float) -> float:
 
 func _end() -> void:
 	Input.action_release(&"move_forward")
+	RingRules.rule_set_override = ""
+	for k: String in ["respawn_ok", "sudden_death_ok", "classic_pinned_ok"]:
+		print("METRIC %s=%s" % [k, str(bool(metrics.get(k, false))).to_lower()])
 	if fails.is_empty() and checks > 0:
 		print("%s PASSED (%d checks)" % [NAME, checks])
 		quit(0)
@@ -119,6 +132,16 @@ func _go_fight() -> void:
 
 
 func _run() -> void:
+	await _stock_part()
+	# (the classic rule set: the scene again with the zones' ring, today's judging pinned)
+	RingRules.rule_set_override = "classic"
+	change_scene_to_file("res://scenes/ring.tscn")
+	await process_frame
+	await _classic_run()
+
+
+func _classic_run() -> void:
+	events = {"phase": [], "knocked_back": [], "rang_out": [], "round_over": [], "match_over": []}
 	for i in 10:
 		await process_frame
 	lvl = current_scene as RingLevel
@@ -151,9 +174,12 @@ func _run() -> void:
 		return _end()
 	_expect(mode.side_of(player) == 0 and mode.side_of(foe()) == 1 and mode.confined_of(player) == 1 and mode.confined_of(foe()) == 1,
 			"side_of 0 / 1, both confined to zone 1")
+	_expect(mode.rules.rule_set == "classic" and not RingRules.stock_on() and RingMoves.of(player) == null,
+			"the classic ring: rule set classic, the gate off, no RingMoves")
 	_menu()
 	await _confined()
 	await _scale()
+	_pin_scale()
 	await _soft_wall()
 	await _advancing()
 	await _winded()
@@ -453,3 +479,183 @@ func _edges() -> void:
 	mode._skip = true
 	await _until(func() -> bool: return mode.phase == "DONE", 2.0)
 	_expect(mode.phase == "DONE" and events.match_over.back() == 1 and mode.winner == 1, "the match lost: match_over(1) (%s)" % [events.match_over])
+
+
+# ---------------------------------------------------------------- round 3: the classic pin
+## Ten sample knocks through the classic rules' knock_scale: today's numbers exactly (knock_scale 1.1, the knocker's element
+## factor, the flat part capped to max_push_m 3.5), worked out once outside the game and written here.
+func _pin_scale() -> void:
+	var samples := [[Vector3(6, 1, 0), "earth", Vector3(5.61, 0.935, 0)], [Vector3(12, 0, 0), "earth", Vector3(6.4807, 0, 0)],
+			[Vector3(4, 8, 3), "water", Vector3(2.4147, 6.16, 1.8111)], [Vector3(10, 2, 0), "water", Vector3(6.4807, 1.54, 0)],
+			[Vector3(3, 0, 4), "fire", Vector3(3.8884, 0, 5.1846)], [Vector3(13, 1, 0), "fire", Vector3(6.4807, 1.485, 0)],
+			[Vector3(5, 0, 0), "air", Vector3(6.4807, 0, 0)], [Vector3(14, 0, 0), "air", Vector3(6.4807, 0, 0)],
+			[Vector3(8, 6, 0), "earth", Vector3(3.1513, 5.61, 0)], [Vector3(2, 1, 2), "air", Vector3(3.3, 1.65, 3.3)]]
+	var f := foe()
+	var was := String(f.get(&"element"))
+	var ok := true
+	var worst := 0.0
+	for s: Array in samples:
+		f.set(&"element", String(s[1]))
+		var got: Vector3 = mode.rules.knock_scale(player, s[0] as Vector3, f)
+		worst = maxf(worst, (got - (s[2] as Vector3)).length())
+		ok = ok and (got - (s[2] as Vector3)).length() < 0.002
+	f.set(&"element", was)
+	_expect(ok and not RingRules.stock_on(), "classic pinned: 10 sample knocks through knock_scale give today's numbers (worst %.4f m/s)" % worst)
+	_metric("classic_pinned_ok", ok)
+
+
+# ---------------------------------------------------------------- round 3: lives, the respawn, the clock (the stock ring)
+func _stock_part() -> void:
+	for i in 10:
+		await process_frame
+	lvl = current_scene as RingLevel
+	mode = RingMode.find(self)
+	if lvl == null or mode == null or not RingRules.stock_on():
+		_expect(false, "the stock ring: a % match")
+		return
+	ring = lvl.ring
+	player = lvl.player
+	var rules := mode.rules
+	_expect(mode.round_s == 480.0 and mode.to_win == 1 and rules.rule_set == "stock" and RingMoves.of(player) != null,
+			"the % match: an 8:00 game (%.0f s), one game, the player with his RingMoves" % mode.round_s)
+	await _go_fight()
+	var f := foe()
+	_expect(rules.stocks_of(player) == 3 and rules.stocks_of(f) == 3 and RingMoves.of(f) != null and BendKnock.gravity_override == 20.0,
+			"three lives each, the foe with its RingMoves, the ring's gravity 20 for every launch")
+	var kos: Array = []
+	var safes: Array = []
+	rules.ko.connect(func(b: Node3D, by: Node, p: float, t: String, l: int) -> void: kos.append([b, by, p, t, l]))
+	rules.hit_safe.connect(func(b: Node3D, by: Node, _p: Vector3) -> void: safes.append([b, by]))
+	var fe := mode.end_of(f)
+	# a fall: credited to the knocker, the % to 0, a life gone, the line, hidden, then on the far spout, safe
+	_settle(player, at_s(fe, 12.0, 4.0))
+	_settle(f, at_s(fe, 15.5, 0.0))
+	await _ticks(3)
+	rules.add_pct(f, 60.0, null, "")
+	var way := back_of(fe)
+	BendStatus.hurt(f, 10.0, f.global_position + Vector3.UP, way, player, -1.0, {"tag": "stone_form/cannonball", "from": player.global_position})
+	BendStatus.knock(f, way * 6.0, player, {"tag": "stone_form/cannonball"})
+	await _until(func() -> bool: return not kos.is_empty(), 4.0)
+	var k0: Array = kos[0] if not kos.is_empty() else [null, null, 0.0, "", -1]
+	var line := mode.ko_line()
+	var credit_ok: bool = k0[0] == f and k0[1] == player and String(k0[3]) == "stone_form/cannonball" and int(k0[4]) == 2 and float(k0[2]) > 60.0
+	_expect(credit_ok and rules.pct_of(f) == 0.0 and rules.stocks_of(f) == 2,
+			"into the water: credited to the player's Boulder at %.0f%%, the %% back to 0, 2 lives left" % float(k0[2]))
+	_expect(line == "Into the water: the Stone  ·  2 left", "the centre line: \"%s\"" % line)
+	await _ticks(2)
+	var hidden: bool = not f.visible and rules.is_away(f) and not BendStatus.can_take(f, player)
+	_expect(hidden, "out: hidden and out of reach while he waits")
+	var t0 := BendStatus.now()
+	await _until(func() -> bool: return not rules.is_away(f), 3.0)
+	var waited := BendStatus.now() - t0
+	await _ticks(2)
+	var at := ring.to_local(f.global_position)
+	var spout_far: bool = absf(at.z + 4.0) < 0.6 and absf(absf(at.x) - 12.0) < 0.6
+	var safe_now := rules.is_safe(f)
+	_expect(absf(waited - 1.6) < 0.1 and f.visible and spout_far and safe_now,
+			"back after %.2f s (1.6), on the spout at the grate farther from the player (z %.1f), safe" % [waited, at.z])
+	# no % on a safe body, hit_safe fires
+	var p0 := rules.pct_of(f)
+	BendStatus.hurt(f, 10.0, f.global_position + Vector3.UP, way, player, -1.0, {"tag": "stone_form/spike", "from": player.global_position})
+	_expect(rules.pct_of(f) == p0 and not safes.is_empty() and safes[0][1] == player, "a hit on the safe body: no %%, hit_safe fired (%d)" % safes.size())
+	# the spout pushes a body within 2 m away
+	var sp: RingSpout = mode._spouts.get(f.get_instance_id())
+	_settle(player, f.global_position + Vector3(0.0, 0.0, 1.2))
+	var d0 := Vector2(player.global_position.x - f.global_position.x, player.global_position.z - f.global_position.z).length()
+	await _secs(0.4)
+	var d1 := Vector2(player.global_position.x - f.global_position.x, player.global_position.z - f.global_position.z).length()
+	_expect(sp != null and is_instance_valid(sp) and sp.pushes > 0 and d1 > d0 + 0.3 and rules.pct_of(player) == 0.0,
+			"the spout pushes the player 1.2 m off it away (%.2f -> %.2f m) with 0%%" % [d0, d1])
+	# safety ends 1.5 s after (he stands on the grate: no MOVE to hold him up), or at once on a lock's start
+	await _until(func() -> bool: return not rules.is_safe(f), 3.0)
+	var safe_len := BendStatus.now() - t0 - waited
+	_expect(absf(safe_len - 1.5) < 0.15, "safe for 1.5 s after leaving the spout (%.2f)" % safe_len)
+	# the player: a fall (his own: no knocker), his respawn, a lock's start ending his safety
+	_settle(player, ring.to_global(Vector3(RingArena.side_sign(1 - fe) * (ring.half_l() + 2.0), -6.4, 0.0)))
+	await _until(func() -> bool: return kos.size() >= 2, 3.0)
+	var k1: Array = kos[1] if kos.size() >= 2 else [null, null, 0.0, "", -1]
+	_expect(k1[0] == player and k1[1] == null and int(rules.tally[0].get("self_falls", 0.0)) == 1,
+			"a fall with no knocker within 6 s: his own (no credit, an own fall counted) (%s, by %s, own falls %s)"
+			% [str(k1[0]), str(k1[1]), str(rules.tally[0].get("self_falls", 0.0))])
+	await _until(func() -> bool: return not rules.is_away(player), 3.0)
+	await _ticks(2)
+	var sc := SwayCaster.of(player)
+	var safe_before := rules.is_safe(player)
+	var hooked := sc != null and sc.lock_started.get_connections().size() > 0
+	rules.note_lock_started(player)          # (what the hook calls on SwayCaster.lock_started)
+	_expect(safe_before and hooked and not rules.is_safe(player) and player.visible and player.drag_speed_cap == INF,
+			"the player back on his spout, safe until a lock of his starts (SwayCaster.lock_started hooked: %s), then not" % hooked)
+	# the last life ends the game: one game, the foe out of lives
+	for i in 2:
+		_settle(f, ring.to_global(Vector3(RingArena.side_sign(fe) * (ring.half_l() + 2.0), -6.4, 1.0)))
+		await _until(func() -> bool: return rules.stocks_of(f) == 1 - i, 3.0)
+		if i == 0:
+			await _until(func() -> bool: return not rules.is_away(f), 3.0)
+			await _ticks(2)
+	await _ticks(3)
+	_expect(rules.stocks_of(f) == 0 and rules.is_gone(f) and mode.phase == "OVER" and mode.last_why == "falls" and mode.last_winner == 0
+			and mode.banner.text == "Over", "the last life gone: the game over (OVER, why falls, \"%s\"), no respawn" % mode.banner.text)
+	await _until(func() -> bool: return mode.phase == "DONE", 4.0)
+	_expect(mode.phase == "DONE" and mode.winner == 0 and (mode.match_screen as MatchScreen).is_open()
+			and not (mode.round_screen as RoundScreen).is_open(), "then the match screen (one game: no game screen)")
+	_metric("respawn_ok", credit_ok and hidden and spout_far and safe_now and safes.size() > 0 and absf(safe_len - 1.5) < 0.15)
+	await _clock()
+
+
+## The clock: 8:00 -> more lives wins; level -> sudden death at 300% with one life, a draw after 60 s; the next fall wins;
+## best of 3 (stock.games 3): the game screen between games, the ends swapped.
+func _clock() -> void:
+	var rules := mode.rules
+	mode.restart()
+	await _go_fight()
+	var f := foe()
+	rules._sk(f)["stocks"] = 2
+	mode.phase_t = mode.round_s - 0.02
+	await _until(func() -> bool: return mode.phase != "FIGHT", 1.0)
+	_expect(mode.phase == "OVER" and mode.last_why == "time" and mode.last_winner == 0, "at 0:00 more lives wins (%s, %s)" % [mode.last_why, mode.last_winner])
+	mode.restart()
+	await _go_fight()
+	f = foe()
+	mode.phase_t = mode.round_s - 0.02
+	await _ticks(4)
+	var sd: bool = mode.phase == "FIGHT" and rules.sudden and rules.stocks_of(player) == 1 and rules.stocks_of(f) == 1 \
+			and rules.pct_of(player) == 300.0 and rules.pct_of(f) == 300.0 and mode.banner.text == "Next one in the water loses."
+	_expect(sd, "level at 0:00: sudden death, both at 300%% with one life (\"%s\")" % mode.banner.text)
+	_expect(not rules.heal_allowed(player), "no Patch in sudden death")
+	mode.phase_t = mode._sudden_at + 60.02
+	await _ticks(3)
+	var draw_ok: bool = mode.phase == "OVER" and mode.last_result == "draw" and mode.last_why == "sudden_draw"
+	_expect(draw_ok, "nobody in the water within 60 s: a draw (%s, %s)" % [mode.last_result, mode.last_why])
+	mode.restart()
+	await _go_fight()
+	f = foe()
+	mode.phase_t = mode.round_s - 0.02
+	await _ticks(4)
+	_settle(player, ring.to_global(Vector3(RingArena.side_sign(mode.player_end) * (ring.half_l() + 2.0), -6.4, 0.0)))
+	await _until(func() -> bool: return mode.phase != "FIGHT", 3.0)
+	_expect(mode.last_why == "sudden" and mode.last_winner == 1, "in sudden death the next fall wins (%s to side %d)" % [mode.last_why, mode.last_winner])
+	_metric("sudden_death_ok", sd and draw_ok and mode.last_why == "sudden")
+	# best of 3
+	var stk := RingRules.data()["stock"] as Dictionary
+	stk["games"] = 3
+	mode.restart()
+	await _go_fight()
+	_expect(mode.to_win == 2, "best of 3: to_win 2")
+	var e0 := mode.player_end
+	f = foe()
+	var fe := mode.end_of(f)
+	for i in 3:
+		_settle(f, ring.to_global(Vector3(RingArena.side_sign(fe) * (ring.half_l() + 2.0), -6.4, 1.0)))
+		await _until(func() -> bool: return rules.stocks_of(f) == 2 - i, 3.0)
+		if i < 2:
+			await _until(func() -> bool: return not rules.is_away(f), 3.0)
+			await _ticks(2)
+	await _until(func() -> bool: return mode.phase == "OVER", 2.0)
+	var gs := (mode.round_screen as RoundScreen)
+	_expect(mode.phase == "OVER" and gs.is_open() and String(gs.lines().head).begins_with("Game 1") and mode.score == Vector2i(1, 0),
+			"game 1 to you: the game screen (\"%s\"), the score 1 : 0" % String(gs.lines().head))
+	mode._skip = true
+	await _until(func() -> bool: return mode.phase == "COUNTDOWN", 2.0)
+	_expect(mode.round == 2 and mode.player_end != e0 and rules.stocks_of(player) == 3 and rules.stocks_of(foe()) == 3,
+			"game 2: the ends swapped, three lives each again")
+	stk["games"] = 1

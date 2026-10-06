@@ -14,6 +14,12 @@ extends Node3D
 ##             (RingMode) to call the round; holds(body) whether it is in now
 ##   water     in the group TorchState.WATER_GROUP with is_under_water(pos) (a torch put out, as the river's)
 ## Headless (tests): the colliders, the area and the group only.
+## ROUND 3, the stock overlay (smash_r3 spec v2 §5.1-5.2; PERCENT's; RingArena.stock()): the water 6 m down in a tank 10 m
+## round the deck, and the tank's edge a CURTAIN of falling water: a rim channel curtain_up_m over the deck spilling a sheet
+## down to the water all round (shaders/ring/ring_curtain.gdshader, our own; its sound a low rush). The tank's walls hold
+## the water only up to its surface (a collider no higher), so a body thrown at the curtain crosses its plane at any height
+## and is out there (RingArena.is_out; curtain_splash(at) where it went through). The lip's sound: within lip_sound.near_m of
+## any lip the lapping grows louder on that side, for the local player's ears only (a lapping loop at his nearest lip point).
 
 signal splashed(body: Node3D, at: Vector3)
 
@@ -30,6 +36,15 @@ var floor_y := -3.4
 ## The tank's inside and the deck's plinth (its foot: RingArena.foot_half), half sizes (local x, z).
 var tank_half := Vector2(23.0, 13.0)
 var deck_half := Vector2(17.0, 7.0)
+## Round 3 (stock): the curtain (null in classic), the curtain's rush and the lip's lapping (the local player's), the
+## curtain's splashes made (tests).
+var curtain: MeshInstance3D
+var curtain_splashes := 0
+var lap: AudioStreamPlayer3D
+var rush: Array[AudioStreamPlayer3D] = []
+## Round 3 (stock): how loud the lip's lapping is now (dB; -INF silent) and the side it plays on (RingArena LIP_*; -1 none).
+var lap_db := -INF
+var lap_side := -1
 
 
 func setup(a: RingArena) -> void:
@@ -45,6 +60,10 @@ func setup(a: RingArena) -> void:
 	if visuals:
 		_hold_globals()
 		_surface()
+		if RingArena.stock():
+			_curtain()
+	if RingArena.stock():
+		_sounds()
 
 
 ## Whether pos lies in the tank's water (round the deck, under its surface).
@@ -83,6 +102,9 @@ func _tank() -> void:
 	var t := tank_half
 	var wt := RingArena.num("tank_wall_m", 0.8)
 	var top := arena.top()
+	if RingArena.stock():
+		_stock_tank()
+		return
 	var body := StaticBody3D.new()
 	body.name = "Tank"
 	body.collision_layer = 1
@@ -115,6 +137,216 @@ func _tank() -> void:
 	mi.name = "TankMesh"
 	mi.mesh = kit.commit(arena.mats)
 	body.add_child(mi)
+
+
+## The stock tank: its floor, and walls whose colliders hold the water only up to its surface (the curtain over them is
+## water: a body crossing its plane is out, RingArena.is_out); drawn up to the rim channel curtain_up_m over the deck, the
+## channel's stone trough along their top.
+func _stock_tank() -> void:
+	var t := tank_half
+	var wt := RingArena.num("tank_wall_m", 0.8)
+	var top := arena.top()
+	var up := RingArena.num("curtain_up_m", 3.0)
+	var hold := level_y + 0.3
+	var body := StaticBody3D.new()
+	body.name = "Tank"
+	body.collision_layer = 1
+	body.collision_mask = 0
+	body.set_meta(&"surface", "stone")
+	add_child(body)
+	var floor_box := AABB(Vector3(-t.x - wt, floor_y - 0.5, -t.y - wt), Vector3((t.x + wt) * 2.0, 0.5, (t.y + wt) * 2.0))
+	var walls: Array[AABB] = []
+	for y1: float in [hold, top + up]:
+		walls.append_array([
+			AABB(Vector3(t.x, floor_y, -t.y - wt), Vector3(wt, y1 - floor_y, (t.y + wt) * 2.0)),
+			AABB(Vector3(-t.x - wt, floor_y, -t.y - wt), Vector3(wt, y1 - floor_y, (t.y + wt) * 2.0)),
+			AABB(Vector3(-t.x, floor_y, t.y), Vector3(t.x * 2.0, y1 - floor_y, wt)),
+			AABB(Vector3(-t.x, floor_y, -t.y - wt), Vector3(t.x * 2.0, y1 - floor_y, wt)),
+		])
+	for a: AABB in [floor_box] + walls.slice(0, 4):
+		var cs := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = a.size
+		cs.shape = box
+		cs.position = a.get_center()
+		body.add_child(cs)
+	if not visuals:
+		return
+	var looks: Dictionary = RingArena.data().get("looks", {})
+	var tint := RingArena._tint((looks.get("tank", {}) as Dictionary).get("tint"), Color(0.5, 0.52, 0.5))
+	var cd := RingArena.block("curtain")
+	var cw := float(cd.get("channel_w", 0.9))
+	var ch := float(cd.get("channel_h", 0.5))
+	var kit := StructureMeshKit.new()
+	RingArena.wbox(kit, &"ring_wall", floor_box.get_center(), floor_box.size, 1.6, tint * 0.8, 8)
+	for i in range(4, 8):
+		RingArena.wbox(kit, &"ring_wall", walls[i].get_center(), walls[i].size, 1.6, tint, 8)
+	# the rim channel: a stone trough over the walls' inner edge, its lip the curtain's
+	var ct := tint * 1.25
+	var y0 := top + up
+	for a: AABB in [AABB(Vector3(t.x - cw * 0.5, y0, -t.y - cw * 0.5), Vector3(cw + wt * 0.5, ch, (t.y + cw * 0.5) * 2.0)),
+			AABB(Vector3(-t.x - wt * 0.5 - cw * 0.5, y0, -t.y - cw * 0.5), Vector3(cw + wt * 0.5, ch, (t.y + cw * 0.5) * 2.0)),
+			AABB(Vector3(-t.x, y0, t.y - cw * 0.5), Vector3(t.x * 2.0, ch, cw + wt * 0.5)),
+			AABB(Vector3(-t.x, y0, -t.y - wt * 0.5 - cw * 0.5), Vector3(t.x * 2.0, ch, cw + wt * 0.5))]:
+		RingArena.wbox(kit, &"ring_walk", a.get_center(), a.size, 1.2, ct, 0)
+	var mi := MeshInstance3D.new()
+	mi.name = "TankMesh"
+	mi.mesh = kit.commit(arena.mats)
+	body.add_child(mi)
+
+
+## The curtain: a sheet of falling water from the rim channel's inner lip down to the tank's water, all round, facing in.
+func _curtain() -> void:
+	var cd := RingArena.block("curtain")
+	var t := tank_half - Vector2(0.06, 0.06)
+	var y_top := arena.top() + RingArena.num("curtain_up_m", 3.0) + 0.02
+	var y_bot := level_y - 0.05
+	var verts := PackedVector3Array()
+	var uvs := PackedVector2Array()
+	var normals := PackedVector3Array()
+	var idx := PackedInt32Array()
+	var corners := [Vector2(-t.x, -t.y), Vector2(t.x, -t.y), Vector2(t.x, t.y), Vector2(-t.x, t.y)]
+	var run := 0.0
+	for i in 4:
+		var a: Vector2 = corners[i]
+		var b: Vector2 = corners[(i + 1) % 4]
+		var l := a.distance_to(b)
+		var along := (b - a) / l
+		var inward := Vector3(-along.y, 0.0, along.x)
+		var segs := maxi(int(l / 4.0), 1)
+		for k in segs:
+			var p0 := a.lerp(b, float(k) / float(segs))
+			var p1 := a.lerp(b, float(k + 1) / float(segs))
+			var u0 := run + l * float(k) / float(segs)
+			var u1 := run + l * float(k + 1) / float(segs)
+			var base := verts.size()
+			verts.append_array([Vector3(p0.x, y_top, p0.y), Vector3(p1.x, y_top, p1.y), Vector3(p1.x, y_bot, p1.y), Vector3(p0.x, y_bot, p0.y)])
+			uvs.append_array([Vector2(u0, 0.0), Vector2(u1, 0.0), Vector2(u1, y_top - y_bot), Vector2(u0, y_top - y_bot)])
+			normals.append_array([inward, inward, inward, inward])
+			idx.append_array([base, base + 1, base + 2, base, base + 2, base + 3])
+		run += l
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_TEX_UV] = uvs
+	arrays[Mesh.ARRAY_INDEX] = idx
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/ring/ring_curtain.gdshader")
+	mat.set_shader_parameter(&"tint", RingArena._tint(cd.get("tint"), Color(0.62, 0.82, 0.86)))
+	mat.set_shader_parameter(&"foam", RingArena._tint(cd.get("foam"), Color(0.92, 0.97, 1.0)))
+	mat.set_shader_parameter(&"alpha", float(cd.get("alpha", 0.82)))
+	mat.set_shader_parameter(&"flow_mps", float(cd.get("flow_mps", 5.5)))
+	mat.set_shader_parameter(&"height", y_top - y_bot)
+	curtain = MeshInstance3D.new()
+	curtain.name = "Curtain"
+	curtain.mesh = mesh
+	curtain.material_override = mat
+	curtain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(curtain)
+
+
+## A body gone through the curtain at `at` (world): white water bursting out of the sheet there, and its sound.
+func curtain_splash(at: Vector3, speed := 8.0) -> void:
+	curtain_splashes += 1
+	var l := to_local(at)
+	var t := tank_half
+	var n := Vector3.ZERO
+	if absf(l.x) - t.x > absf(l.z) - t.y:
+		n = Vector3(signf(l.x), 0.0, 0.0)
+		l.x = signf(l.x) * t.x
+	else:
+		n = Vector3(0.0, 0.0, signf(l.z))
+		l.z = signf(l.z) * t.y
+	l.y = clampf(l.y, level_y, arena.top() + RingArena.num("curtain_up_m", 3.0))
+	var p := to_global(l)
+	var wn := global_basis * n
+	var wd: Dictionary = RingArena.data().get("water", {})
+	var k := int(wd.get("splash_n", 46))
+	var mps := float(wd.get("splash_mps", 6.5)) * clampf(0.6 + speed * 0.06, 0.6, 1.6)
+	BendLooks.burst(p, "water", k, -wn, 40.0, mps, 0.3)
+	BendLooks.burst(p, "water", int(k * 0.5), wn, 60.0, mps * 0.5, 0.22)
+	BendLooks.sound("water", "hit", p, 3.0)
+
+
+## The curtain's rush (a quiet loop at each long side's middle) and the lip's lapping (the local player's: _process moves
+## it to his nearest lip and sets its level).
+func _sounds() -> void:
+	var ls := RingArena.block("lip_sound")
+	var s: Variant = load(String(ls.get("stream", ""))) if ResourceLoader.exists(String(ls.get("stream", ""))) else null
+	if s is AudioStream:
+		lap = AudioStreamPlayer3D.new()
+		lap.name = "LipLap"
+		lap.stream = _looped(s as AudioStream)
+		lap.unit_size = 3.0
+		lap.max_distance = 12.0
+		lap.volume_db = -80.0
+		lap.bus = &"Ambience" if AudioServer.get_bus_index(&"Ambience") >= 0 else &"Master"
+		add_child(lap)
+	var cs := RingArena.block("curtain_sound")
+	var r: Variant = load(String(cs.get("stream", ""))) if ResourceLoader.exists(String(cs.get("stream", ""))) else null
+	if r is AudioStream:
+		for sz: float in [-1.0, 1.0]:
+			var p := AudioStreamPlayer3D.new()
+			p.name = "CurtainRush"
+			p.stream = _looped(r as AudioStream)
+			p.unit_size = 14.0
+			p.max_distance = 90.0
+			p.volume_db = float(cs.get("db", -16.0))
+			p.bus = &"Ambience" if AudioServer.get_bus_index(&"Ambience") >= 0 else &"Master"
+			p.position = Vector3(0.0, arena.top(), sz * tank_half.y)
+			p.autoplay = true
+			add_child(p)
+			rush.append(p)
+
+
+static func _looped(s: AudioStream) -> AudioStream:
+	if s is AudioStreamWAV:
+		var w := (s as AudioStreamWAV).duplicate() as AudioStreamWAV
+		if w.loop_mode == AudioStreamWAV.LOOP_DISABLED:
+			w.loop_mode = AudioStreamWAV.LOOP_FORWARD
+			w.loop_begin = 0
+			var bytes := 2 if w.format == AudioStreamWAV.FORMAT_16_BITS else 1
+			w.loop_end = int(w.data.size() / (bytes * (2 if w.stereo else 1)))
+		return w
+	return s
+
+
+## The lip's lapping for the local player: near a lip (lip_sound.near_m) it plays from his nearest lip point, louder the
+## nearer he is (quiet_db at near_m, loud_db at the lip); silent farther in and off the deck.
+func _process(_dt: float) -> void:
+	if lap == null or arena == null or not is_inside_tree():
+		return
+	var p := _local_player()
+	var ls := RingArena.block("lip_sound")
+	var near := float(ls.get("near_m", 4.0))
+	lap_db = -INF
+	lap_side = -1
+	if p != null:
+		var lip := arena.nearest_lip(p.global_position)
+		var inside := -float(lip.out_m)
+		if inside >= -0.5 and inside <= near:
+			var f := clampf(1.0 - inside / near, 0.0, 1.0)
+			lap_db = lerpf(float(ls.get("quiet_db", -34.0)), float(ls.get("loud_db", -4.0)), f)
+			lap_side = int(lip.side)
+			lap.global_position = (lip.point as Vector3) + Vector3.DOWN * 1.0
+	if lap_db == -INF:
+		if lap.playing:
+			lap.stop()
+		return
+	lap.volume_db = lap_db
+	if not lap.playing:
+		lap.play()
+
+
+## The player at this machine (the first in group "player" that is not another machine's).
+func _local_player() -> Node3D:
+	for n in get_tree().get_nodes_in_group(&"player"):
+		if n is Node3D and not n.has_meta(&"net_peer"):
+			return n as Node3D
+	return null
 
 
 ## The water round the deck as an Area3D (its four parts, clear of the deck and the walls).

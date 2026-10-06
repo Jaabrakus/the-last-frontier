@@ -20,6 +20,11 @@ extends VBoxContainer
 ##   column(i) (keys 0-4) -> {key, head, sub, grow, hidden, id, mode, label, other, other_label, modes, mode_i, readied, tap};
 ##   chip("jab" | "guard") -> {head, id, mode, label, sub, lit}; tap_alpha(i); ready_line(); quick_line(); q_line();
 ##   help_line(); refresh()
+## ROUND 3, the % ring (RingRules.stock_on(); smash_r3 spec v2 §10.4; PERCENT's; screens.json strip_stock): while your own
+## RingMoves says you are airborne key 2 shows your Slam's name (Hammer, Downpour, Axe Kick, Down Gust), key 3 "Dodge", keys
+## 4 and 5 grey with "lands"; key 3 never takes the readied highlight (it acts at once); your move names dim a shade at 2, 4
+## and 6 stale copies (RingRules.stale_count: your own queue); "safe" for safe_s after a hit of yours passed through a safe
+## body (RingRules.hit_safe by you). column(i) adds {grey, stale}; safe_shown().
 
 const KEYS := 5
 const COL_W := 114.0
@@ -57,6 +62,12 @@ var _qsig := ""
 var _casts := [0, 0, 0, 0, 0]
 var _tap_a := [0.0, 0.0, 0.0, 0.0, 0.0]
 var _hooked: SwayCaster
+## Round 3 (stock): tests and stills: true / false stand for airborne (null: the player's RingMoves says); "safe" shown for
+## this long still; the rules hooked for hit_safe.
+var air_override: Variant = null
+var _safe_t := 0.0
+var _safe: Label
+var _hooked_rules: RingRules
 
 
 func _ready() -> void:
@@ -90,6 +101,13 @@ func _ready() -> void:
 	_help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_inked(_help)
 	add_child(_help)
+	_safe = FrontierHUD.hud_label(18, Color(0.62, 0.86, 0.96))
+	_safe.name = "Safe"
+	_safe.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_inked(_safe)
+	_safe.visible = false
+	add_child(_safe)
+	move_child(_safe, 0)
 	_hook.call_deferred()
 
 
@@ -189,9 +207,15 @@ func casts_of(i: int) -> int:
 
 
 func _process(dt: float) -> void:
+	if _safe_t > 0.0:
+		# ("safe" runs out on time, shown or not)
+		_safe_t = maxf(_safe_t - dt, 0.0)
+		_safe.visible = _safe_t > 0.0
+		_safe.modulate.a = clampf(_safe_t / 0.15, 0.0, 1.0)
 	if player == null or not is_instance_valid(player) or not is_visible_in_tree():
 		return
 	_hook_caster()
+	_hook_rules()
 	var fm := first_match()
 	for i in KEYS:
 		var want := 1.0 if (not fm or int(_casts[i]) >= TAP_AFTER) else 0.0
@@ -282,7 +306,93 @@ func column(i: int) -> Dictionary:
 		held = c.held_dir() if c != null else ""
 	var dir_of := {"forward": 0, "side": 2, "back": 3}
 	out.readied = at >= 0 if held == "" else int(dir_of.get(held, -1)) == i
+	if stock_strip():
+		_stock_column(out, i, el)
 	return out
+
+
+# ---------------------------------------------------------------- round 3: the % ring's strip (stock only)
+## The % ring's strip is on (a stock-rules ring: RingRules.stock_on()).
+func stock_strip() -> bool:
+	return RingRules.stock_on() and player != null and is_instance_valid(player)
+
+
+## The player in the air now (his own RingMoves; air_override for tests and stills).
+func airborne() -> bool:
+	if air_override != null:
+		return bool(air_override)
+	var rm := RingMoves.of(player) if player != null else null
+	return rm != null and rm.airborne()
+
+
+static func sw(key: String, def: Variant = null) -> Variant:
+	return (MatchSetup.screens().get("strip_stock", {}) as Dictionary).get(key, def)
+
+
+## Key i's column in the % ring: key 3 never lit as readied; in the air key 2 the Slam, key 3 "Dodge", 4 and 5 grey with
+## "lands"; its stale copies (your own queue).
+func _stock_column(out: Dictionary, i: int, el: String) -> void:
+	out["grey"] = false
+	if i == 2:
+		out.readied = false
+	if airborne():
+		match i:
+			1:
+				out.label = String((sw("slam", {}) as Dictionary).get(el, out.label))
+				out.sub = ""
+				out.tap = ""
+				out.grow = ""
+			2:
+				out.label = String(sw("dodge", "Dodge"))
+				out.sub = ""
+				out.tap = ""
+			3, 4:
+				out.grey = true
+				out.sub = String(sw("lands", "lands"))
+				out.tap = ""
+				out.readied = false
+	out["stale"] = stale_copies(String(out.id), String(out.mode))
+
+
+## Copies of move id/mode (and its grown form) in the player's own stale queue (RingRules.stale_count).
+func stale_copies(id: String, mode: String) -> int:
+	var rr := RingRules.current()
+	if rr == null or id == "" or player == null:
+		return 0
+	var tag := "%s/%s" % [id, mode]
+	return rr.stale_count(player, tag) + rr.stale_count(player, tag + ".grown")
+
+
+## The name's shade for `copies` stale copies (screens.json strip_stock.stale_alpha: dimmer at 2, 4, 6).
+static func stale_alpha(copies: int) -> float:
+	var a := 1.0
+	for e: Variant in sw("stale_alpha", []):
+		if e is Array and copies >= int(e[0]):
+			a = float(e[1])
+	return a
+
+
+## "safe" is shown on the strip now (after a hit of the player's passed through a safe body).
+func safe_shown() -> bool:
+	return _safe_t > 0.0
+
+
+func _hook_rules() -> void:
+	var rr := RingRules.current()
+	if rr == null or rr == _hooked_rules:
+		return
+	_hooked_rules = rr
+	rr.hit_safe.connect(func(_b: Node3D, by: Node, _p: Vector3) -> void:
+		if by == player:
+			show_safe())
+
+
+## "safe" on the strip for safe_s.
+func show_safe() -> void:
+	_safe_t = float(sw("safe_s", 0.5))
+	_safe.text = String(sw("safe", "safe"))
+	_safe.visible = true
+	_safe.modulate.a = 1.0
 
 
 ## The JAB or the GUARD chip: {head ("LMB · JAB"), id, mode, label, sub (the next Q; "E again: throw it back"), lit}.
@@ -388,8 +498,9 @@ func _quick_sig() -> String:
 	if c == null:
 		return ""
 	var g := InputMap.has_action(KitWords.GUARD_ACTION) and Input.is_action_pressed(KitWords.GUARD_ACTION)
-	return "%s|%s|%d|%s|%s|%s|%s|%s|%s|%s|%s" % [g, c.lock_src, c.state, c.readied_spell, c.base_mode_of(c.readied_spell),
-			c.quick_id(), c.quick_mode(), c.scheme(), _element(), first_match(), BendZone.held_stone(player) != null]
+	return "%s|%s|%d|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [g, c.lock_src, c.state, c.readied_spell, c.base_mode_of(c.readied_spell),
+			c.quick_id(), c.quick_mode(), c.scheme(), _element(), first_match(), BendZone.held_stone(player) != null,
+			airborne() if stock_strip() else false]
 
 
 ## What it shows, as one string (a change redraws it).
@@ -397,7 +508,8 @@ func _signature() -> String:
 	var parts := PackedStringArray()
 	for i in KEYS:
 		var col := column(i)
-		parts.append("%s/%s/%s/%s/%s/%s" % [col.id, col.mode, col.readied, col.head, col.sub, col.grow])
+		parts.append("%s/%s/%s/%s/%s/%s/%s/%s/%s" % [col.id, col.mode, col.readied, col.head, col.sub, col.grow, col.label,
+				col.get("stale", 0), col.get("grey", false)])
 	for kind: String in ["jab", "guard"]:
 		var ch := chip(kind)
 		parts.append("%s/%s/%s/%s" % [ch.label, ch.sub, ch.lit, ch.head])
@@ -411,6 +523,14 @@ func refresh() -> void:
 		var col := column(i)
 		_paint(_cols[i], String(col.head), String(col.id), String(col.label), String(col.sub), String(col.grow), bool(col.readied),
 				not bool(col.hidden))
+		if col.has("stale"):
+			# (the % ring: the name a shade dimmer by its stale copies; a grey chip in the air for keys 4 and 5)
+			var ui: Dictionary = _cols[i]
+			(ui.name as Label).modulate.a = stale_alpha(int(col.stale))
+			if bool(col.get("grey", false)):
+				(ui.box as Control).modulate = Color(0.6, 0.6, 0.6, 0.55)
+			else:
+				(ui.box as Control).modulate = Color(1, 1, 1, (ui.box as Control).modulate.a)
 	for kind: String in ["jab", "guard"]:
 		var ch := chip(kind)
 		var ui: Dictionary = _chips[kind]

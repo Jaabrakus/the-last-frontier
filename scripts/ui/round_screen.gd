@@ -95,7 +95,7 @@ func is_open() -> bool:
 
 
 func _on_phase(ph: String) -> void:
-	_root.visible = ph == "OVER" and not bool(match_mode.get(&"practice"))
+	_root.visible = ph == "OVER" and not bool(match_mode.get(&"practice")) and not (_stock() and bool(match_mode.call(&"decided")))
 	if _root.visible:
 		_paint()
 
@@ -125,6 +125,8 @@ func lines() -> Dictionary:
 	var res := String(m.get(&"last_result"))
 	var why := String(m.get(&"last_why"))
 	var rnd := int(m.get(&"round"))
+	if _stock():
+		return _stock_lines(m, them, res, why, rnd)
 	match res:
 		"win":
 			out.head = w("head_win") % rnd
@@ -147,6 +149,41 @@ func lines() -> Dictionary:
 	else:
 		var left := ceili(maxf(RingRules.num("pause_s", 6.0) - float(m.get(&"phase_t")), 0.0))
 		out.next = w("next") % left
+	return out
+
+
+## The match is the % match (its rules' rule set "stock").
+func _stock() -> bool:
+	return match_mode != null and is_instance_valid(match_mode) and match_mode.has_method(&"stock") and bool(match_mode.call(&"stock"))
+
+
+## The game screen of a best of 3 (stock): who took the game and how, the score, each side's falls dealt, % dealt and catches.
+func _stock_lines(m: Node, them: String, res: String, why: String, rnd: int) -> Dictionary:
+	var out := {"head": "", "why": "", "score": "", "yours": "", "theirs": "", "next": ""}
+	match res:
+		"win":
+			out.head = w("head_game_win") % rnd
+		"loss":
+			out.head = w("head_game_loss") % [rnd, them]
+		_:
+			out.head = w("head_game_draw") % rnd
+	var key := "why_%s_%s" % [res, why]
+	var t := w(key)
+	out.why = (t % them if t.contains("%s") else t) if t != key else String(m.call(&"result_line"))
+	out.score = String(m.call(&"score_text"))
+	var rr: Variant = m.get(&"rules")
+	var tl: Array = (rr as RingRules).tally if rr is RingRules else [{}, {}]
+	for s in 2:
+		var d: Dictionary = tl[s]
+		var nums := [int(d.get("falls_dealt", 0.0)), roundi(float(d.get("pct_dealt", 0.0))), int(d.get("catches", 0.0))]
+		if s == 0:
+			out.yours = w("yours_stock") % nums
+		else:
+			out.theirs = w("theirs_stock") % ([them] + nums)
+	if bool(m.call(&"decided")):
+		out.next = w("decided")
+	else:
+		out.next = w("next_game") % ceili(maxf(RingRules.num("pause_s", 6.0) - float(m.get(&"phase_t")), 0.0))
 	return out
 
 

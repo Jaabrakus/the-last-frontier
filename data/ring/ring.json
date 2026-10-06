@@ -81,5 +81,34 @@
 		"back_h": 1.4,
 		"end_wall_h": 4.6,
 		"end_wall_t": 1.0
+	},
+	"modes": {
+		"_about": "Overlays on the numbers above for a rule set (RingArena.set_mode: the ring's rule set, RingRules.pick_rule_set). A key here replaces the base's; a block (coping, lanterns, piers, curtain) is the overlay's own. classic has none: today's numbers.",
+		"stock": {
+			"_about": "The % ring's stage (smash_r3 spec v2 §5.1-5.2): the deck where it is, the water 6 m under it in a deep tank 10 m wide on every side, the deck on piers with a stone face (grabbable), no ropes, the tank's edge a curtain of falling water from a rim channel curtain_up_m over the deck (touching it is touching water: out), a pale stone coping along the four lips (proud for the eye, its collider flush) and lanterns on pier heads just outside the lip. A wall (key 4) stands at least wall_lip_clear_m inside every lip. Respawn spouts on the s 12 m line at spout_z.",
+			"water_y": -6.0,
+			"floor_y": -9.0,
+			"out_drop_m": 6.0,
+			"tank_margin": 10.0,
+			"curtain_up_m": 3.0,
+			"ropes": false,
+			"deck_w": 14.0,
+			"face_depth_m": 3.0,
+			"wall_lip_clear_m": 3.5,
+			"spout_z": [4.0, -4.0, 0.0],
+			"coping": {"w": 0.25, "proud": 0.04, "nose_r": 0.04, "tint": [0.93, 0.9, 0.82]},
+			"piers": {"every_m": 4.25, "w": 1.1, "inset_m": 1.2, "tint": [0.66, 0.64, 0.6]},
+			"lanterns": {"post_h": 1.7, "out_m": 0.45, "light": [1.0, 0.7, 0.38], "energy": 1.6, "range_m": 9.0},
+			"curtain": {
+				"flow_mps": 5.5,
+				"tint": [0.62, 0.82, 0.86],
+				"foam": [0.92, 0.97, 1.0],
+				"alpha": 0.82,
+				"channel_w": 0.9,
+				"channel_h": 0.5
+			},
+			"lip_sound": {"near_m": 4.0, "loud_db": -4.0, "quiet_db": -34.0, "stream": "res://audio/sfx/ambience/river_flow_loop_01.wav"},
+			"curtain_sound": {"db": -16.0, "stream": "res://audio/sfx/ambience/river_rapids_loop_01.wav"}
+		}
 	}
 }

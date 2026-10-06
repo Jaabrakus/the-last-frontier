@@ -22,7 +22,21 @@
 		"yours": "You  ·  casts %d  ·  catches %d  ·  knock-backs %d",
 		"theirs": "The %s  ·  casts %d  ·  catches %d  ·  knock-backs %d",
 		"next": "next round in %d  ·  Space: now",
-		"decided": "the match is decided"
+		"decided": "the match is decided",
+		"_stock": "The % match (rule set stock): the screen stands only between games of a best of 3. %s the other side's name, %d the game.",
+		"head_game_win": "Game %d  ·  yours",
+		"head_game_loss": "Game %d  ·  the %s's",
+		"head_game_draw": "Game %d  ·  drawn",
+		"why_win_falls": "Into the water: the %s has no lives left",
+		"why_loss_falls": "Into the water: you have no lives left",
+		"why_win_time": "Time: you have more lives left",
+		"why_loss_time": "Time: the %s has more lives left",
+		"why_win_sudden": "Sudden: the %s went in first",
+		"why_loss_sudden": "Sudden: you went in first",
+		"why_draw_sudden_draw": "Sudden: nobody went in",
+		"yours_stock": "You  ·  falls dealt %d  ·  %d%% dealt  ·  catches %d",
+		"theirs_stock": "The %s  ·  falls dealt %d  ·  %d%% dealt  ·  catches %d",
+		"next_game": "next game in %d  ·  Space: now"
 	},
 	"match": {
 		"_doc": "MatchScreen (scripts/ui/match_screen.gd) at the match's end: the result, the score, a line for each round, the match's tally; Rematch, your element and the opponent for the rematch, the main menu.",
@@ -51,7 +65,18 @@
 		"opponent": "Opponent:  %s",
 		"opponent_line": "for the rematch",
 		"main_menu": "Main menu",
-		"main_menu_line": "back to the title"
+		"main_menu_line": "back to the title",
+		"_stock": "The % match: a line for each fall (when, who, into the water at what %, the move that took the life), then the tally (spec §10.6).",
+		"fall_line": "%s  ·  %s into the water at %d%%  ·  %s",
+		"fall_you": "you",
+		"fall_them": "the %s",
+		"fall_self": "own fall",
+		"fall_game": "Game %d",
+		"lives_line": "Lives left  ·  you %d  ·  the %s %d",
+		"tally_falls": "Falls  ·  dealt %d  ·  taken %d  (own falls %d)",
+		"tally_pct": "%% dealt %d  ·  highest %% survived %d  ·  %% healed %d",
+		"tally_string": "Longest string  ·  %d hits  ·  %d%%",
+		"tally_guards": "Catches %d  (clean %d)  ·  perfect guards %d  ·  falls broken %d  ·  edge saves %d"
 	},
 	"practice": {
 		"_doc": "RingMode's practice (MatchSetup.kind practice; the user arg practice=stand|block|throw). The dummy is a bot of the chosen element held at its end: 'stand' never casts; 'block' answers what comes at it with its element's guard (round 2: the Catch, the Turn, the Parry, the Wind Guard; no dice, every time its lock fits) and raises its cover when you begin a lock (its wall key's first move: MatchSetup.practice_move, this table only when the kit has none; at most every block_every_s); 'throw' casts its throw at you every throw_every_s (its element's strike, round 2: earth a stone spike to catch and send back, water a lash, fire a punch, air a slice, each for its own guard). No timer, no rounds, the soft walls off (walk anywhere); a fall into the water puts both back at their ends after reset_after_out_s; R (ring_reset) puts them back at once, B (ring_dummy) steps the dummy's way. Spent at 0 health: whole again at once.",
@@ -59,23 +84,9 @@
 		"throw_every_s": 3.0,
 		"block_every_s": 2.5,
 		"reset_after_out_s": 1.6,
-		"throw": {
-			"earth": "stone_form/spike",
-			"water": "water_whip/whip",
-			"fire": "fire_blast/punch",
-			"air": "air_blast/slice"
-		},
-		"cover": {
-			"earth": "earth_wall/wall",
-			"water": "water_shield/ice_wall",
-			"fire": "fire_wall/wall",
-			"air": "air_wall/wall"
-		},
-		"ways": {
-			"stand": "stands still",
-			"block": "blocks: its guards and its cover",
-			"throw": "throws at you every few seconds"
-		},
+		"throw": {"earth": "stone_form/spike", "water": "water_whip/whip", "fire": "fire_blast/punch", "air": "air_blast/slice"},
+		"cover": {"earth": "earth_wall/wall", "water": "water_shield/ice_wall", "fire": "fire_wall/wall", "air": "air_wall/wall"},
+		"ways": {"stand": "stands still", "block": "blocks: its guards and its cover", "throw": "throws at you every few seconds"},
 		"words": {
 			"banner": "Practice",
 			"hint": "Practice  ·  a %s dummy that %s  ·  R: reset positions  ·  B: stand, block or throw  ·  Esc: menu",
@@ -106,21 +117,13 @@
 	],
 	"kit": {
 		"_doc": "Round 2 of the skills (the owner, 2026-10-05: 'make the skills easy hard to master ... think human made think avg IQ'): what the player reads about his kit, the same for every element (KitWords: the strip, the wheel, F1, the first-time panels, the element pick, the Controls panels, the lessons). {guard}, {quick}, {aim}, {fire}, {wheel} and {jump} are the keys as bound now. No word from any show.",
-		"roles": [
-			"STRIKE",
-			"PUSH",
-			"DASH",
-			"WALL",
-			"HEAL"
-		],
+		"roles": ["STRIKE", "PUSH", "DASH", "WALL", "HEAL"],
 		"role_jab": "JAB",
 		"role_guard": "GUARD",
 		"tap_twice": "tap twice: %s",
 		"tap_once": "tap: %s",
 		"grow_into": "hold to grow it: %s",
-		"grown": {
-			"fire_blast/punch": "Fireball"
-		},
+		"grown": {"fire_blast/punch": "Fireball"},
 		"q_put": "{quick}: put %s on left click",
 		"q_back": "{quick}: %s back",
 		"q_hold_back": "hold {quick}: %s back",
@@ -138,22 +141,10 @@
 			"dodge": "Fire along the floor? Jump. Through the air: dash or guard. Rising under you: step off."
 		},
 		"passives": {
-			"earth": {
-				"name": "Rooted",
-				"line": "stand still and your locks fill faster, and you are pushed less."
-			},
-			"water": {
-				"name": "Flowing",
-				"line": "your water curves toward where you look for a moment after it leaves."
-			},
-			"fire": {
-				"name": "Footwork",
-				"line": "your locks fill at full speed while you move."
-			},
-			"air": {
-				"name": "Carried wind",
-				"line": "hit straight out of a dash and you knock harder."
-			}
+			"earth": {"name": "Rooted", "line": "stand still and your locks fill faster, and you are pushed less."},
+			"water": {"name": "Flowing", "line": "your water curves toward where you look for a moment after it leaves."},
+			"fire": {"name": "Footwork", "line": "your locks fill at full speed while you move."},
+			"air": {"name": "Carried wind", "line": "hit straight out of a dash and you knock harder."}
 		},
 		"guards": {
 			"earth": "{guard} catches stones; {guard} again throws them back.",
@@ -177,5 +168,14 @@
 			"The crowd fills the stands before the gong.",
 			"Stone, water, fire and wind: one ring, one rule. Stay on the deck."
 		]
+	},
+	"strip_stock": {
+		"_doc": "Your own strip in the % ring (BendStrip, rule set stock; spec v2 §10.4): while you are in the air key 2 shows your Slam's name, key 3 'Dodge', keys 4 and 5 grey with 'lands'; key 3 is never lit as readied (it acts at once); your move names dim a shade at 2, 4 and 6 stale copies (stale_alpha); after a hit on a safe body 'safe' for safe_s on your own strip.",
+		"slam": {"earth": "Hammer", "water": "Downpour", "fire": "Axe Kick", "air": "Down Gust"},
+		"dodge": "Dodge",
+		"lands": "lands",
+		"safe": "safe",
+		"safe_s": 0.5,
+		"stale_alpha": [[2, 0.78], [4, 0.6], [6, 0.45]]
 	}
 }

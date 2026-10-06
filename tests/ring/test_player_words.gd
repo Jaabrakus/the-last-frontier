@@ -13,6 +13,9 @@ extends SceneTree
 ##     round 2's words        every new label, tip, lesson card, key hint, wheel name, F1 and first-time line and the kit's
 ##                            lines (KitWords.every_line), held to ROUND2_WORDS too (Water Whip, Air Ball, Air Shield,
 ##                            Spout, redirect lightning, "bend" in any form); KitWords, BendStrip and RingLessons' strings
+##     round 3's values   screens.json, rules.json's words, hud.json, lessons.json, practice.json, movement.json's words and
+##                            moves.json's labels: no show words and no Smash names (stock, blast zone, DI, tech, edge-guard,
+##                            meteor, smash, Final Smash), values only (never keys or ids)
 ##   reported (NOTE lines, not failures: files other tasks of the build own, to clean in their own work)
 ##     data/sway/moves.json   each move's label and its variations' labels (the HUD's ready line shows them)
 ##     the HUD and the ring   the string literals of the HUD, the duel's and the ring's scripts, the first-time help, the
@@ -92,8 +95,75 @@ func _run() -> void:
 	await _menu()
 	_round2()
 	_moves()
+	_values_r3()
 	_noted_code()
 	_end()
+
+
+## Round 3 (smash_r3 spec v2 §15 PERCENT): every player-facing VALUE (words, labels, card and hint text; never keys or ids:
+## a value with no space that reads as an id, a path or a tag is left out) of screens.json, rules.json's words, hud.json,
+## lessons.json, practice.json, movement.json's words and moves.json's labels, free of the show's words AND Smash's own
+## names (stock, blast zone, DI, tech, edge-guard, meteor, smash, Final Smash).
+func _values_r3() -> void:
+	var smash := RegEx.create_from_string("(?i)\\b(?:stocks?|blast ?zones?|tech(?:s|ed|ing)?|edge-?guard\\w*|meteor\\w*|smash\\w*|final smash)\\b")
+	var di := RegEx.create_from_string("\\bDI\\b")
+	var idlike := RegEx.create_from_string("^[A-Za-z0-9_./:%-]*$")
+	var sources := {}
+	var screens: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/ring/screens.json"))
+	sources["screens.json"] = screens
+	var rules: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/ring/rules.json"))
+	sources["rules.json words"] = (rules as Dictionary).get("words", {}) if rules is Dictionary else {}
+	for f: String in ["hud.json", "lessons.json", "practice.json"]:
+		var p := "res://data/ring/" + f
+		sources[f] = JSON.parse_string(FileAccess.get_file_as_string(p)) if FileAccess.file_exists(p) else {}
+	var mv: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/ring/movement.json"))
+	sources["movement.json words"] = (mv as Dictionary).get("words", {}) if mv is Dictionary else {}
+	var labels: Array = []
+	var moves: Dictionary = SwayMoves.data().get("moves", {})
+	for id: String in moves:
+		if moves[id] is Dictionary:
+			labels.append(String((moves[id] as Dictionary).get("label", "")))
+			var ml: Variant = (moves[id] as Dictionary).get("mode_labels", {})
+			if ml is Dictionary:
+				for k in ml:
+					labels.append(String(ml[k]))
+	sources["moves.json labels"] = labels
+	var all_ok := true
+	var count := 0
+	for name: String in sources:
+		var vals: Array = []
+		_values(sources[name], vals)
+		var found: Array = []
+		for v: String in vals:
+			if v.strip_edges() == "" or (not v.contains(" ") and idlike.search(v) != null and not v.contains("%")):
+				continue                                   # (an id, a tag, a path: not words on the screen)
+			count += 1
+			for w in hits(v):
+				found.append("'%s': %s" % [v.left(50), w])
+			for mt in smash.search_all(v):
+				found.append("'%s': %s" % [v.left(50), mt.get_string()])
+			for mt in di.search_all(v):
+				found.append("'%s': %s" % [v.left(50), mt.get_string()])
+		check(found.is_empty(), "%s: no show words and no Smash names in its player-facing values (%s)" % [name, found])
+		all_ok = all_ok and found.is_empty()
+	check(count > 200, "round 3's player-facing values read (%d)" % count)
+	check(smash.search("Lives and the water's edge: steer, break your fall") == null and smash.search("three stocks") != null
+			and di.search("hold DI") != null and smash.search("a technique") == null, "the Smash names' patterns catch them, not their neighbours")
+
+
+## Every string value under `v` (the "_..." doc keys and "summary" skipped), into `out`.
+func _values(v: Variant, out: Array) -> void:
+	if v is Dictionary:
+		for k in v:
+			var ks := String(k)
+			if ks.begins_with("_") or ks == "summary":
+				continue
+			_values(v[k], out)
+	elif v is Array:
+		for x in v:
+			_values(x, out)
+	elif v is String:
+		out.append(v)
 
 
 ## Round 2's words (skills_r2: every new label, tip and lesson card): none of WORDS nor ROUND2_WORDS (the show's names the
