@@ -699,7 +699,6 @@
         "lash": {
           "do": "cone",
           "kind": "water",
-          "water": 10,
           "range_m": 5.5,
           "deg": 75.0,
           "damage": 12.0,
@@ -707,7 +706,7 @@
           "up_mps": 2.0,
           "put_out": true
         },
-        "grab": {"do": "grab", "kind": "water", "water": 12, "range_m": 14.0, "pull_mps": 10.0, "damage": 4.0}
+        "grab": {"do": "grab", "kind": "water", "range_m": 14.0, "pull_mps": 10.0, "damage": 4.0}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
@@ -744,7 +743,6 @@
         "jet": {
           "do": "bolt",
           "kind": "water",
-          "water": 10,
           "count": 6,
           "every_s": 0.06,
           "spread_deg": 1.0,
@@ -759,7 +757,6 @@
         "spray": {
           "do": "zone",
           "zone": "spray",
-          "water": 8,
           "at": "front",
           "radius_m": 2.5,
           "life_s": 4.0,
@@ -804,7 +801,6 @@
         "shards": {
           "do": "bolt",
           "kind": "ice",
-          "water": 10,
           "count": 5,
           "spread_deg": 5.0,
           "mps": 38.0,
@@ -814,7 +810,7 @@
           "radius_m": 0.1,
           "range_m": 35.0
         },
-        "freeze": {"do": "status_at", "kind": "ice", "water": 14, "root_s": 1.5, "radius_m": 1.6, "range_m": 20.0}
+        "freeze": {"do": "status_at", "kind": "ice", "root_s": 1.5, "radius_m": 1.6, "range_m": 20.0}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
@@ -885,11 +881,10 @@
           "source_mult": 2.0,
           "source_up_mult": 1.33
         },
-        "surf": {"do": "dash", "kind": "water", "water": 10, "fwd_mps": 13.0, "up_mps": 2.0},
+        "surf": {"do": "dash", "kind": "water", "fwd_mps": 13.0, "up_mps": 2.0},
         "tide": {
           "do": "zone",
           "zone": "water_wall",
-          "water": 20,
           "at": "front",
           "ahead_m": 2.0,
           "width_m": 4.5,
@@ -940,11 +935,10 @@
           "steer": "look",
           "knock_mps": 6.0
         },
-        "water_skate": {"do": "dash", "kind": "water", "water": 6, "fwd_mps": 12.0, "up_mps": 1.0},
+        "water_skate": {"do": "dash", "kind": "water", "fwd_mps": 12.0, "up_mps": 1.0},
         "geyser": {
           "do": "status_at",
           "kind": "water",
-          "water": 15,
           "radius_m": 1.8,
           "range_m": 18.0,
           "damage": 12.0,
@@ -974,8 +968,8 @@
       "mode_labels": {"ice_wall": "Ice Wall"},
       "bend": {
         "ice_wall": {"do": "ice_wall", "kind": "ice", "place": {"min_m": 2.0, "max_m": 6.0}, "wall_key": true},
-        "bubble": {"do": "zone", "zone": "bubble", "water": 12, "at": "self", "radius_m": 1.6, "life_s": 2.5},
-        "heal": {"do": "heal", "kind": "water", "water": 20, "amount": 35.0}
+        "bubble": {"do": "zone", "zone": "bubble", "at": "self", "radius_m": 1.6, "life_s": 2.5},
+        "heal": {"do": "heal", "kind": "water", "amount": 35.0}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
@@ -1774,15 +1768,6 @@
       ["patch"]
     ],
     "air": [["air_blast"], ["air_gust"], ["evade", "air_jump"], ["air_wall"], ["patch"]]
-  },
-  "water_meter": {
-    "_doc": "A waterbender's water (Bending.water): spent by water moves (their 'water'), back over time, fast by water (a pool, the river, a wall of water). spend false (owner question 9, the recommendation): nothing is spent, lock time is the only limiter; the pools live on in Geyser's source bonus and Skate's puddles.",
-    "max": 100.0,
-    "regen_s": 4.0,
-    "near_s": 30.0,
-    "near_m": 4.0,
-    "draw": [10.0, 60.0],
-    "spend": false
   },
   "guards": {
     "_doc": "Each element's guard on E (input bend_guard; no readying): [move, variation]. Bending.guard. A short lock, then it stands its window_s; a hit in its first guard_rules.perfect_s is perfect (yours), later half gets through (late_mult) except earth catching stone (always a full catch, held: E again throws it back). The spec's takes (what it guards), handles (one other kind, fully only on the beat), return (hold, swing, straight, bounce).",

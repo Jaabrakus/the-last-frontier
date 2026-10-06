@@ -108,8 +108,7 @@ func help_text() -> String:
 	return out + "\n" + scheme_l if scheme_l != "" else out
 
 
-## The water bar's colour, and how long "winded" stays among the status words (s).
-const WATER := Color(0.42, 0.68, 0.95)
+## How long "winded" stays among the status words (s).
 const WINDED_S := 2.5
 const EDGE_SHADER := "shader_type canvas_item;
 uniform float amount = 0.0;
@@ -174,9 +173,6 @@ var arena := false
 var bend_strip: BendStrip
 var match_bar: MatchBar
 var _help_label: Label
-var _water_row: HBoxContainer
-var _water_bar: ProgressBar
-var _water_text: Label
 var _status: Label
 var _winded_t := 0.0
 
@@ -415,8 +411,8 @@ func _build_compass() -> void:
 	_place(v, Vector2(0.5, 0), Vector2(0, 8), Vector2(0.5, 0))
 
 
-## Arena mode on or off (see the header): the world's readouts hidden, the BendStrip, the MatchBar, the water bar and the
-## status words shown (built the first time).
+## Arena mode on or off (see the header): the world's readouts hidden, the BendStrip, the MatchBar and the status words
+## shown (built the first time).
 func set_arena(on: bool) -> void:
 	arena = on
 	if on and bend_strip == null:
@@ -450,7 +446,7 @@ func _build_arena() -> void:
 	match_bar.player = player
 	_root.add_child(match_bar)
 	_place(match_bar, Vector2(0.5, 0), Vector2(0, 10), Vector2(0.5, 0))
-	# a water fighter's water and the status words: over the health (the vitals' own rows are the world's)
+	# the status words: over the health (the vitals' own rows are the world's)
 	var box := VBoxContainer.new()
 	box.name = "ArenaVitals"
 	box.add_theme_constant_override("separation", 2)
@@ -459,20 +455,6 @@ func _build_arena() -> void:
 	_status.name = "Status"
 	_status.visible = false
 	box.add_child(_status)
-	_water_row = HBoxContainer.new()
-	_water_row.name = "Water"
-	_water_row.add_theme_constant_override("separation", 8)
-	_water_row.visible = false
-	box.add_child(_water_row)
-	var wspace := Control.new()
-	wspace.custom_minimum_size = Vector2(22, 4)
-	wspace.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_water_row.add_child(wspace)
-	_water_bar = _bar(190, 4, WATER)
-	_water_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_water_row.add_child(_water_bar)
-	_water_text = _label(15, TEXT)
-	_water_row.add_child(_water_text)
 	_root.add_child(box)
 	_place(box, Vector2(0, 1), Vector2(24, -50), Vector2(0, 1))
 	if player != null and player.has_signal(&"winded"):
@@ -488,19 +470,11 @@ func on_knocked(n: Node, _v: Vector3, by: Node) -> void:
 		_hits += 1
 
 
-## The arena's readouts each frame: the water (a water fighter's), the status words.
+## The arena's readouts each frame: the status words.
 func _update_arena(delta: float) -> void:
 	_rest_row.visible = false
 	_torch_row.visible = false
 	_needs_row.visible = false
-	var b := player.get_node_or_null(NodePath(String(Bending.NODE_NAME))) as Bending
-	# (round 2: with the water's spending off, moves.json water_meter.spend false, the meter is dormant and not shown)
-	var spends := bool((SwayMoves.data().get("water_meter", {}) as Dictionary).get("spend", true))
-	var wet := b != null and b.element == "water" and spends
-	_water_row.visible = wet
-	if wet:
-		_water_bar.value = clampf(b.water / maxf(b.water_max, 1.0), 0.0, 1.0)
-		_water_text.text = "water %d" % roundi(b.water)
 	_winded_t = maxf(_winded_t - delta, 0.0)
 	_status.text = "  ·  ".join(status_words())
 	_status.visible = _status.text != ""
@@ -840,16 +814,13 @@ func _spell_line(id: String) -> String:
 		var ml := (fm as FormCast).matter_label(id)
 		if ml != "":
 			line += ": " + ml
-	# (a bending skill: its variation's place, the key's other skill, a waterbender's water; docs/bending_design.md)
+	# (a bending skill: its variation's place, the key's other skill; docs/bending_design.md)
 	var ms: Array = SwayMoves.move(id).get("modes", [])
 	if ms.size() > 1 and c != null and c.has_method(&"base_mode_of"):
 		line += "  %d/%d" % [ms.find(String(c.call(&"base_mode_of", id))) + 1, ms.size()]     # (the key's: never the quick lock's)
 	var other := Bending.partner_of(id)
 	if other != "":
 		line += "  ·  again: " + String(SwayMoves.move(other).get("label", other))
-	if Bending.element_of(id) == "water":
-		var b := Bending.of(player)
-		line += "  ·  water %d" % roundi(b.water)
 	if c != null and c.get("motes") != null and c.get("belt_max") != null and not SwayCaster.free_use():
 		line += "  ·  motes %d/%d" % [int(c.get("motes")), int(c.get("belt_max"))]
 	if c != null and c.has_method(&"tier_name"):

@@ -1,6 +1,6 @@
 extends SceneTree
 ## Round 2's kits as data (KITS: skills_r2/spec.md 2, 3, 8.1 and the owner's answers of 2026-10-05; data/sway/moves.json
-## elements, guards, jabs, passives, guard_rules, stones, water_meter; data/bending/schemes.json; data/npc/bend_ai.json;
+## elements, guards, jabs, passives, guard_rules, stones; data/bending/schemes.json; data/npc/bend_ai.json;
 ## data/ring/rules.json and ring.json's deck stones), headless, no level:
 ##   Godot --headless --path . -s tests/ring/test_kits.gd
 ##   keys       every element: keys 1-3 two moves each (one move of two variations, or two of one), key 4 one (fire's two:
@@ -14,7 +14,7 @@ extends SceneTree
 ##              wall key's wall is placed 2-6 m where aimed, the fire and wind walls one at a time, rules.json counting the
 ##              wall key's pieces only; the Kick a floor wave that grows, the High Kick a crescent throw; the grows on key 2's
 ##              first move of every element and on fire's Punch (the Fireball)
-##   blocks     passives, guard_rules (the spec's numbers), stones, water_meter.spend false; each guard with its window,
+##   blocks     passives, guard_rules (the spec's numbers), stones, no water meter (retired 2026-10-06); each guard with its window,
 ##              perfect_s and return (earth's catch: 1.0 s, 3.5 m, held, as before round 2)
 ##   schemes    first_moves and direction pairs exist, each one of the element's own
 ##   bots       bend_ai.json: the perfect-guard chance by preset (easy 0.1, normal 0.3, hard 0.6), a jump chance, no hint for
@@ -271,7 +271,7 @@ func _blocks() -> void:
 	check(off.is_empty(), "guard_rules: the spec's numbers (%s)" % ", ".join(off))
 	var st: Dictionary = d.get("stones", {})
 	check(int(st.get("loose_max", 0)) == 3 and is_equal_approx(float(st.get("shove_loose_m", 0.0)), 6.0), "stones: 3 loose a player, shoved within 6 m")
-	check((d.get("water_meter", {}) as Dictionary).get("spend", true) == false, "the water meter spends nothing (spend false)")
+	check(not d.has("water_meter"), "no water meter (retired 2026-10-06: lock time is the only limiter)")
 	var ps: Dictionary = d.get("passives", {})
 	check(is_equal_approx(float((ps.get("earth", {}) as Dictionary).get("fill_mult", 0.0)), 1.2)
 			and is_equal_approx(float((ps.get("earth", {}) as Dictionary).get("knock_mult", 0.0)), 0.85)

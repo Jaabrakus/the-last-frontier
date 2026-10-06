@@ -251,7 +251,6 @@ func next_round() -> void:
 		_hold_casts(true)                    # (and no lock through it: the arena player's contract, SwayCaster.enabled)
 		var bd := Bending.of(player)
 		bd.element = element
-		bd.water = bd.water_max
 		rules.add(player, 0)
 	if keep:
 		_ready_foe()
@@ -342,7 +341,6 @@ func _ready_foe() -> void:
 	foe.brain = NpcBrain.new(foe)
 	var bd := Bending.of(foe)
 	bd.element = foe_element
-	bd.water = bd.water_max
 	_ring_aware()
 
 
@@ -984,9 +982,6 @@ func _practice_step(dt: float) -> void:
 	if player == null or not is_instance_valid(player):
 		return
 	foe.face_point(player.global_position)
-	var bw := Bending.of(foe)
-	if bw != null:
-		bw.water = bw.water_max              # (a dummy never runs dry)
 	var now := BendStatus.now()
 	match dummy:
 		"throw":

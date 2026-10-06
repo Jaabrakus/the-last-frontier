@@ -70,8 +70,8 @@ func _stage(d := 9.0) -> void:
 	n.health = n.health_max
 	n.action = ""
 	n.rotation.y = PI / 2.0                     # (facing -x: the player)
-	Bending.of(n).water = 100.0
-	Bending.of(p).water = 100.0
+	Bending.of(n)                         # (its Bending node made; the water meter retired 2026-10-06)
+	Bending.of(p)                         # (its Bending node made; the water meter retired 2026-10-06)
 
 
 func _clear() -> void:

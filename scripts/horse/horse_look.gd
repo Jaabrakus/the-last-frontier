@@ -96,7 +96,7 @@ static func coats() -> Array:
 
 
 ## Replaces the glTF placeholder materials with the horse's materials and applies a coat. `paths`: another animal's
-## own materials by key (the bison's coat textures: {"horse_coat": "res://assets/bison/materials/bison_coat.tres"}).
+## own materials by key ({"horse_coat": "res://.../coat.tres"}).
 static func apply(visual: Node3D, coat: String = "bay", paths := {}) -> void:
 	for mi: MeshInstance3D in visual.find_children("*", "MeshInstance3D", true, false):
 		if mi.mesh == null:

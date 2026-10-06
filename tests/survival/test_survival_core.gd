@@ -5,7 +5,8 @@ extends SceneTree
 ## schedules, signals and the M3 backlog actions.
 ##
 ## v4 (the self-sufficiency, barter and learning redesign) rewrote these on purpose: test_data_loads (46 live actions),
-## test_clock_real_rate and test_runtime_node (the fixed-quantum update driver, multiplayer_readiness.md P0-1),
+## test_clock_real_rate (the fixed-quantum update driver, multiplayer_readiness.md P0-1; SurvivalRuntime and its
+## test_runtime_node were retired in the 2026-10-06 cleanup, owner answer O10),
 ## test_skill_growth_rules (growth v4: challenge, level curve, repeats, first success, caps, no background multiplier),
 ## test_backgrounds_differ (the Clear start owes no one; debts are start variants; habits replace perks),
 ## test_economy_credit_year (the unpaid book uses the "Outfitted on credit" variant) and the almanac's checklist (7
@@ -1286,29 +1287,3 @@ func test_optional_thirst() -> void:
 	SurvivalFood.drink_water(on, "source_sip")
 	ok(float(on.state.needs.hydration) > 60.0, "drinking at a spring")
 
-
-func test_runtime_node() -> void:
-	var rt := SurvivalRuntime.new()
-	rt.run_seed = 17
-	rt.save_slot = "survival_runtime_test"
-	var got := []
-	rt.core_ready.connect(func(c): got.append(c))
-	var c := rt.new_game("bg.provincial_ranger")
-	ok(c != null and got.size() == 1, "the runtime node makes a core and says so")
-	var m0 := c.state.minutes
-	rt._process(6.0)
-	ok(float(c.state.world.clock_acc) > 0.0, "a short frame is carried in the accumulator (P0-1)")
-	rt._process(30.0)
-	ok(c.state.minutes > m0, "real time drives the survival clock")
-	rt.set_paused(true)
-	var m1 := c.state.minutes
-	rt._process(6.0)
-	ok(c.state.minutes == m1, "paused in menus")
-	ok(rt.save_game("manual") == OK and rt.load_game("survival_runtime_test", "manual"), "saves and loads its slot")
-	var d := DirAccess.open("user://saves/survival_runtime_test")
-	if d != null:
-		for fn in d.get_files():
-			d.remove(fn)
-		DirAccess.remove_absolute("user://saves/survival_runtime_test")
-	DirAccess.remove_absolute("user://saves")  # only if empty
-	rt.free()

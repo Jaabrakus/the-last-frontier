@@ -181,8 +181,8 @@ func _stage(gap := 9.0) -> void:
 		if k != null:
 			k.reset()
 			k.last_knocker = null
-	Bending.of(p).water = 100.0
-	Bending.of(n).water = 100.0
+	Bending.of(p)                         # (its Bending node made; the water meter retired 2026-10-06)
+	Bending.of(n)                         # (its Bending node made; the water meter retired 2026-10-06)
 	await _secs(0.4)
 
 

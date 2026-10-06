@@ -111,8 +111,8 @@ crawling, and leaves you free to walk up and press **I**. The ordinary game rema
 
 ## Original prototype scenes
 
-`crawl_demo.tscn` and `demo.tscn` remain available with F6 for comparison, using
-mannequins and separate `tandem_` actions. Their controls are shown on screen.
+`crawl_demo.tscn` and `demo.tscn` (with `yoga_mannequin.gd`, `tandem_crawl_pair.gd`, `tandem_yoga_stack.gd` and
+`tools/check_eye_contact.gd`) were removed in the 2026-10-06 cleanup (owner answer O9; git history keeps them).
 `tools/author_crawl_backward.gd` reproduces the baked recoil resource.
 `source_manifest.json` records the original standalone source and packaged files.
 

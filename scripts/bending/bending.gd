@@ -1,27 +1,28 @@
 class_name Bending
 extends Node
-## The bender's loadout and water (docs/bending_design.md; data/sway/moves.json "elements", "water_meter"; the user,
+## The bender's loadout (docs/bending_design.md; data/sway/moves.json "elements"; the user,
 ## 2026-10-04: "users create a char or a loadout where they are one of the four elements ... everyone gets the same 4",
 ## "have 1 and the user can toggle between the 1s and then roll the wheel to change that spell"):
 ##   the keys     each element has five keys: 1-4 hold two skills (the same key again switches: partner_of), 5 Mend / Patch;
 ##                the wheel steps through the readied skill's variations (its modes: SwayCaster.step_mode)
-##   the water    a waterbender's meter (this node on the player: Bending.of): water moves spend their "water"; it comes
-##                back over time, fast near water (the river, a wall of water, a pool: the group POOLS)
+##   water near   near_water(): the river, a wall of water or a bubble, a pool (the group POOLS) within NEAR_WATER_M (the
+##                water meter was retired in the 2026-10-06 cleanup, owner answer O7: lock time is the only limiter)
 ## Bending.ELEMENTS, keys(element) -> [[a, b], ...], bar(element) -> the first skill of each key, partner_of(id),
-## element_of(id). On any body that bends (Bending.of: the player, a bot: its own water, its element).
+## element_of(id). On any body that bends (Bending.of: the player, a bot: its element).
 ## ROUND 2 (skills_r2 spec §2, §8, §10; the owner's answers 2026-10-05): a key is [id] (one move, or one move with two modes)
 ## or [id, id] (two moves, one mode each). first_of(key) is what a tap readies (the key's first move at its first mode),
 ## other_move(key, id, mode) what a double tap or a wheel step turns it to (the mode flipped on a one-id key, the partner
 ## on a two-id key; nothing on a single-mode one-id key: the wall's key, fire and air's 5). jab(el) the left button's move
 ## (moves.json "jabs"), guard(el) E's (moves.json "guards"), passive(el) the element's one passive ("passives"), rules() the
-## shared cast and guard numbers ("guard_rules"), stones() the loose stones' ("stones"), spends() whether the water meter is
-## spent (water_meter.spend). Every block has its safe default here (JABS, GUARDS, PASSIVES, RULES, STONES), so the code runs
+## shared cast and guard numbers ("guard_rules"), stones() the loose stones' ("stones"). Every block has its safe default here (JABS, GUARDS, PASSIVES, RULES, STONES), so the code runs
 ## on today's data and on KITS' alike; set_test_data(d) stands a block (or the key layout, "elements") in for the tests.
 
 const ELEMENTS := ["earth", "water", "fire", "air"]
 const NODE_NAME := &"Bending"
 ## Places that give a waterbender water (Node3D; the arena's pools).
 const POOLS := &"bend_pools"
+## How near water must be for near_water() (m; a pool with its own meta reach_m uses that).
+const NEAR_WATER_M := 4.0
 ## The left button's jab by element ([move, mode]) when moves.json has no "jabs". Fire's is Embers (the owner's answer,
 ## 2026-10-05: "keep them all"; a spray of small bolts from the fist in place of the 3 m fist flame).
 const JABS := {"earth": ["rock_jab", "pebbles"], "water": ["water_jet", "splash"], "fire": ["fire_jab", "embers"],
@@ -50,7 +51,7 @@ const RULES := {"perfect_s": 0.3, "late_mult": 0.5, "whiff_lock_s": 0.5, "whiff_
 const STONES := {"loose_max": 3, "shove_loose_m": 6.0}
 
 ## Tests only: blocks of moves.json stood in (set_test_data): "elements", "jabs", "guards", "passives", "guard_rules",
-## "stones", "water_meter". {} none.
+## "stones". {} none.
 static var _test := {}
 ## A block the data does not have (one dictionary, never written to: rules() can tell nothing changed).
 static var _none := {}
@@ -61,8 +62,6 @@ static var _rules_of: Dictionary = {}
 
 ## The body it is on (the player, a bot; the name kept from when only the player bent).
 var player: Node3D
-var water := 100.0
-var water_max := 100.0
 ## Its element ("earth", "water", "fire", "air"; "" not chosen): set by the mode that gives it one (the duel, the ring).
 var element := ""
 
@@ -172,11 +171,6 @@ static func stones() -> Dictionary:
 	return out
 
 
-## Whether water moves spend the water meter (water_meter.spend; true when the data does not say: as before round 2).
-static func spends() -> bool:
-	return bool(block("water_meter").get("spend", true))
-
-
 static func _pair(v: Variant) -> Dictionary:
 	if v is Array and (v as Array).size() >= 1:
 		var a := v as Array
@@ -221,27 +215,16 @@ static func of(p: Node3D) -> Bending:
 		b = Bending.new()
 		b.name = NODE_NAME
 		b.player = p
-		var wm: Dictionary = SwayMoves.data().get("water_meter", {})
-		b.water_max = float(wm.get("max", 100.0))
-		b.water = b.water_max
 		p.add_child(b)
 	return b
 
 
-func _physics_process(dt: float) -> void:
-	if player == null or water >= water_max:
-		return
-	var wm: Dictionary = SwayMoves.data().get("water_meter", {})
-	var rate := float(wm.get("near_s", 30.0)) if near_water() else float(wm.get("regen_s", 4.0))
-	water = minf(water + rate * dt, water_max)
-
-
 ## Water within reach of the body it is on: the river, a wall of water or a bubble, a pool (within its meta reach_m when it
-## has one, else near_m + 2).
+## has one, else NEAR_WATER_M + 2).
 func near_water() -> bool:
 	if player == null or not is_instance_valid(player):
 		return false
-	var r := float((SwayMoves.data().get("water_meter", {}) as Dictionary).get("near_m", 4.0))
+	var r := NEAR_WATER_M
 	var p := player.global_position
 	if WorldRiver.has_water():
 		for o: Vector3 in [Vector3.ZERO, Vector3(r, 0, 0), Vector3(-r, 0, 0), Vector3(0, 0, r), Vector3(0, 0, -r)]:
@@ -256,13 +239,3 @@ func near_water() -> bool:
 		if (z as BendZone).kind in ["water_wall", "bubble"] and (z as BendZone).global_position.distance_to(p) <= r + 2.0:
 			return true
 	return false
-
-
-## `amount` of water spent (false: not enough; nothing spent).
-func spend(amount: float) -> bool:
-	if amount <= 0.0:
-		return true
-	if water < amount:
-		return false
-	water -= amount
-	return true
