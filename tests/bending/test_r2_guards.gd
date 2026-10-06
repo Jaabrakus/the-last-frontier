@@ -20,6 +20,10 @@ extends SceneTree
 ##   lightning it strikes flash_s after the release; a man 1.5 m aside by then is missed
 ##   steer     Flowing: a water bolt bends 15 deg at most
 ##   weight    the heavier stone goes on, equal ones both break
+##   each      every element's guard alike (the owner: "dont forget the other elements"): a guard that took nothing is a
+##             whiff (its caster's guarded signal, its meta), the next guard's lock whiff_lock_s within whiff_s and its own
+##             again after; its perfect and late sounds its own and different; a Parry on the beat sends the Kick's floor wave
+##             back along the floor and the High Kick's crescent back along the aim
 ## METRIC lines (perfect_window_ok, late_half_ok, catch_return_inputs, late_catch_zero_slide_ok, kick_floor_jump_miss_ok,
 ## kick_form_pitch_free_ok, high_kick_clears_wall_ok, lightning_flash_dodge_ok). Last line "R2 GUARDS PASSED" or
 ## "R2 GUARDS FAILED"; exit 0 only on a pass; a watchdog quits with 2.
@@ -143,6 +147,8 @@ func _run() -> void:
 	await _lightning()
 	await _steer()
 	await _weights()
+	await _whiffs()
+	await _parry_kicks()
 	metrics["perfect_window_ok"] = _perfect_ok
 	metrics["late_half_ok"] = _late_ok
 	_end()
@@ -215,14 +221,15 @@ func _guard(kind: String, spec: Dictionary) -> BendZone:
 
 
 ## The player's health lost to a shot of `spec` met by guard `kind` (none: "") made `wait` s before it arrives: [lost, zone,
-## bolt].
+## bolt, the zone's results (its own array: read after the zone is gone)].
 func _met(kind: String, gspec: Dictionary, spec: Dictionary, wait: float) -> Array:
 	await _calm()
 	var z: BendZone = _guard(kind, gspec) if kind != "" else null
+	var res: Array[String] = z.results if z != null else ([] as Array[String])
 	await _secs(wait)
 	var b := _shoot(spec, (z.radius if z != null else 2.0) + 0.6)
 	await _secs(0.25)
-	return [p.max_health - p.health, z, b]
+	return [p.max_health - p.health, z, b, res]
 
 
 # ---------------------------------------------------------------- earth (spec §2.6)
@@ -239,30 +246,32 @@ func _earth() -> void:
 	await _calm()
 	var at0 := p.global_position
 	var r := await _met("catch", cspec, STONE, 0.2)
-	var zp: BendZone = r[1]
+	var zp: Array = r[3]
 	var hs := _held()
-	var perfect := zp.results == ["perfect"] and hs != null and bool(hs.get_meta(&"bend_clean", false))
-	_expect(perfect and float(r[0]) == 0.0, "Catch on the beat: held, clean, nothing through (%s, %.1f)" % [zp.results, r[0]])
+	var perfect := zp == ["perfect"] and hs != null and bool(hs.get_meta(&"bend_clean", false))
+	_expect(perfect and float(r[0]) == 0.0, "Catch on the beat: held, clean, nothing through (%s, %.1f)" % [zp, r[0]])
 	_perfect_ok = _perfect_ok and perfect
 	var r2 := await _met("catch", cspec, STONE, 0.6)
-	var zl: BendZone = r2[1]
+	var zl: Array = r2[3]
 	hs = _held()
-	var late := zl.results == ["late"] and hs != null and not bool(hs.get_meta(&"bend_clean", true)) and float(r2[0]) == 0.0
-	_expect(late, "Catch late: still a full catch, held, not clean (%s, %.1f through)" % [zl.results, r2[0]])
+	var late := zl == ["late"] and hs != null and not bool(hs.get_meta(&"bend_clean", true)) and float(r2[0]) == 0.0
+	_expect(late, "Catch late: still a full catch, held, not clean (%s, %.1f through)" % [zl, r2[0]])
 	# every stone kind, late: held, the catcher not moved
 	var kinds := {}
 	var slide := 0.0
+	var slides := {}
 	for k: String in ["pebble", "spike", "boulder", "chunk"]:
 		await _calm()
 		var before := p.global_position
 		await _stone_kind(k, cspec)
 		var got := _held() != null
 		kinds[k] = got
-		slide = maxf(slide, Vector2(p.global_position.x - before.x, p.global_position.z - before.z).length())
+		slides[k] = snappedf(Vector2(p.global_position.x - before.x, p.global_position.z - before.z).length(), 0.001)
+		slide = maxf(slide, float(slides[k]))
 	var all := not kinds.values().has(false)
 	for k: String in _late_kinds:
 		all = all and _late_kinds[k] == ["late"]
-	_expect(all and slide < 0.05, "a late catch of every stone kind holds it with no slide (%s %s; slid %.3f m)" % [kinds, _late_kinds, slide])
+	_expect(all and slide < 0.05, "a late catch of every stone kind holds it with no slide (%s %s; slid %s m)" % [kinds, _late_kinds, slides])
 	metrics["late_catch_zero_slide_ok"] = all and slide < 0.05
 	# fire, water, air pass
 	var base := await _met("", {}, {"kind": "fire", "mps": 40.0, "damage": 20.0, "knock_mps": 2.0, "radius_m": 0.2, "range_m": 30.0}, 0.0)
@@ -392,12 +401,12 @@ func _water() -> void:
 	_perfect_ok = _perfect_ok and swung < INF and along
 	var late := await _met("redirect", tspec, water, 0.6)
 	var half := absf(float(late[0]) - float(base[0]) * 0.5) < 1.0
-	_expect((late[1] as BendZone).results == ["late"] and half, "Turn late: half gets through (%.1f of %.1f)" % [late[0], base[0]])
+	_expect(late[3] == ["late"] and half, "Turn late: half gets through (%.1f of %.1f)" % [late[0], base[0]])
 	_late_ok = _late_ok and half
 	var fire := await _met("redirect", tspec, {"kind": "fire", "mps": 40.0, "damage": 20.0, "knock_mps": 2.0, "radius_m": 0.2, "range_m": 30.0}, 0.2)
-	_expect(float(fire[0]) == 0.0 and (fire[1] as BendZone).results == ["perfect"], "Turn on the beat douses fire (%.1f through)" % fire[0])
+	_expect(float(fire[0]) == 0.0 and fire[3] == ["perfect"], "Turn on the beat douses fire (%.1f through)" % fire[0])
 	var st := await _met("redirect", tspec, STONE, 0.2)
-	_expect(float(st[0]) > 0.0 and (st[1] as BendZone).results.is_empty(), "Turn lets stone pass (%.1f)" % st[0])
+	_expect(float(st[0]) > 0.0 and st[3].is_empty(), "Turn lets stone pass (%.1f)" % st[0])
 	# a Wave on the beat parts round him
 	await _calm()
 	_guard("redirect", tspec)
@@ -449,7 +458,7 @@ func _fire() -> void:
 	b.set_physics_process(true)
 	var late := await _met("parry", pspec, fire, 0.6)
 	var half := absf(float(late[0]) - float(base[0]) * 0.5) < 1.0
-	_expect((late[1] as BendZone).results == ["late"] and half, "Parry late: half gets through (%.1f of %.1f)" % [late[0], base[0]])
+	_expect(late[3] == ["late"] and half, "Parry late: half gets through (%.1f of %.1f)" % [late[0], base[0]])
 	_late_ok = _late_ok and half
 	var ice := await _met("parry", pspec, {"kind": "ice", "mps": 38.0, "damage": 20.0, "knock_mps": 2.0, "radius_m": 0.15, "range_m": 30.0}, 0.2)
 	var puddle := get_nodes_in_group(BendZone.GROUP).any(func(n: Node) -> bool: return (n as BendZone).kind == "puddle")
@@ -497,10 +506,10 @@ func _air() -> void:
 	var base := await _met("", {}, STONE, 0.0)
 	var late := await _met("air_shield", gspec, STONE, 0.6)
 	var half := absf(float(late[0]) - float(base[0]) * 0.5) < 1.0
-	_expect((late[1] as BendZone).results == ["late"] and half, "Wind Guard late on stone: half gets through (%.1f of %.1f)" % [late[0], base[0]])
+	_expect(late[3] == ["late"] and half, "Wind Guard late on stone: half gets through (%.1f of %.1f)" % [late[0], base[0]])
 	_late_ok = _late_ok and half
 	var fire := await _met("air_shield", gspec, {"kind": "fire", "mps": 40.0, "damage": 20.0, "knock_mps": 2.0, "radius_m": 0.2, "range_m": 30.0}, 0.2)
-	_expect(float(fire[0]) > 0.0 and (fire[1] as BendZone).results.is_empty(), "Wind Guard lets fire pass (%.1f)" % fire[0])
+	_expect(float(fire[0]) > 0.0 and fire[3].is_empty(), "Wind Guard lets fire pass (%.1f)" % fire[0])
 	await _calm("earth")
 
 
@@ -576,7 +585,7 @@ func _high_kick() -> void:
 	var why := [""]
 	b.ended.connect(func(w: String) -> void: why[0] = w)
 	await _secs(2.0)
-	var ok := tall and why[0] != "wall" and why[0] != ""
+	var ok: bool = tall and why[0] != "wall" and why[0] != ""
 	_expect(ok, "the High Kick's crescent clears a %.1f m wall (it ended: %s)" % [wall.size.y if wall != null else 0.0, why[0]])
 	metrics["high_kick_clears_wall_ok"] = ok
 
@@ -636,3 +645,63 @@ func _weights() -> void:
 	var b := BendBolt.launch(p, at + Vector3.RIGHT * 2.0 + Vector3.FORWARD * 3.0, Vector3.LEFT, STONE)
 	await _secs(0.2)
 	_expect((not is_instance_valid(a) or a.spent) and (not is_instance_valid(b) or b.spent), "equal ones both break")
+
+
+# ---------------------------------------------------------------- every element's whiff and sounds (the owner's answers)
+## Each element's guard zone and its spec as the player's E makes it.
+const GUARD_ZONES := {"earth": ["catch", {"do": "zone", "zone": "catch", "window_s": 1.0, "radius_m": 3.5}],
+		"water": ["redirect", {"do": "zone", "zone": "redirect", "window_s": 0.8, "radius_m": 2.2}],
+		"fire": ["parry", {"do": "zone", "zone": "parry", "window_s": 0.8, "radius_m": 2.5}],
+		"air": ["air_shield", {"do": "zone", "zone": "air_shield", "at": "self", "window_s": 0.8, "radius_m": 2.2}]}
+
+
+func _whiffs() -> void:
+	for el: String in Bending.ELEMENTS:
+		await _calm(el)
+		var told: Array = []
+		var bc := BendCaster.of(p)
+		var on := func(result: String, _what: String) -> void: told.append(result)
+		bc.guarded.connect(on)
+		var g: Array = GUARD_ZONES[el]
+		var z := _guard(String(g[0]), g[1] as Dictionary)
+		var life := z.life_s
+		await _secs(life + 0.1)
+		var last: Dictionary = p.get_meta(&"bend_last_guard", {})
+		var slow := BendZone.guard_lock_s(p, 0.2)
+		await _secs(Bending.rule("whiff_s", 1.5) + 0.1)
+		var again := BendZone.guard_lock_s(p, 0.2)
+		bc.guarded.disconnect(on)
+		_expect(told == ["whiff"] and String(last.get("result", "")) == "whiff" and String(last.get("element", "")) == el
+				and is_equal_approx(slow, Bending.rule("whiff_lock_s", 0.5)) and is_equal_approx(again, 0.2),
+				"%s's guard that took nothing: a whiff told (%s), its next guard's lock %.2f s, %.2f s after whiff_s" % [el, told, slow, again])
+		var snd: Array = BendLooks.GUARD_SOUNDS.get(el, [])
+		_expect(snd.size() == 2 and snd[0] != snd[1] and BendSounds.has(StringName(snd[0])) and BendSounds.has(StringName(snd[1])),
+				"%s's guard sounds its own: perfect %s, late %s" % [el, snd[0] if snd.size() > 0 else "-", snd[1] if snd.size() > 1 else "-"])
+	await _calm("earth")
+
+
+# ---------------------------------------------------------------- the Parry against the kicks
+## A bolt of the foe's `b` met by the player's Parry made as it comes within reach (on the beat): whether it went back his.
+func _parried(b: BendBolt) -> bool:
+	var near := await _until(func() -> bool: return not is_instance_valid(b) or b.spent \
+			or b.global_position.distance_to(_chest()) < 4.0, 2.0)
+	if near == INF or not is_instance_valid(b) or b.spent:
+		return false
+	var z := _guard("parry", {"do": "zone", "zone": "parry", "window_s": 0.8, "radius_m": 2.5})
+	var res: Array[String] = z.results
+	await _until(func() -> bool: return not is_instance_valid(b) or b.caster == p, 0.5)
+	return is_instance_valid(b) and b.caster == p and res == ["perfect"]
+
+
+func _parry_kicks() -> void:
+	await _calm("fire")
+	var w := _wave_at_player(KICK)
+	var back := await _parried(w)
+	var away := is_instance_valid(w) and Vector2(w.velocity.x, w.velocity.z).dot(Vector2(_foe_at.x - p.global_position.x, _foe_at.z - p.global_position.z)) > 0.0
+	var low := is_instance_valid(w) and w.floor_wave and absf(w.global_position.y - w.deck_y) < 0.05
+	_expect(back and away and low and p.health == p.max_health, "a Parry on the beat sends the Kick's floor wave back along the floor (%s %s %s)" % [back, away, low])
+	await _calm("fire")
+	var hk := BendThrow.throw(fbc, BendEffects.aim(fbc, HIGH_KICK), HIGH_KICK)
+	var back2 := await _parried(hk)
+	_expect(back2 and p.health == p.max_health, "and the High Kick's crescent back along his aim (%s)" % back2)
+	await _calm("earth")

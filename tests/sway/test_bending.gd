@@ -129,6 +129,8 @@ func _keys() -> void:
 			ok = ok and String(bar.entry(i).get("id", "")) == String(want[i])
 		_expect(ok, "%s: the bar %s" % [el, str(want)])
 	DuelMode.element = "fire"
+	var keep_el := Bending.of(p).element
+	Bending.of(p).element = "fire"            # (round 2's keys read the player's own element: his Bending's first)
 	duel.lay_bar()
 	await physics_frame
 	bar.take(0)
@@ -149,6 +151,7 @@ func _keys() -> void:
 	var used := bar.handle_input(wheel) if InputMap.has_action(&"weapon_next") and wheel.is_action_pressed(&"weapon_next") else bar.step_other()
 	await physics_frame
 	_expect(used and c.readied_spell == "fire_jab", "the wheel: the key's other move (%s)" % c.readied_spell)
+	Bending.of(p).element = keep_el
 
 
 # ---------------------------------------------------------------- every move

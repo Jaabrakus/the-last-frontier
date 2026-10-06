@@ -386,6 +386,7 @@ func _meetings() -> void:
 	var spear: BendBolt = null
 	for x in _bolts_of(n):
 		spear = x
+	var thrown := spear != null                  # (before it flies: through the guard it strikes and is gone)
 	var back := false
 	t = 0.0
 	while t < 1.2 and spear != null and is_instance_valid(spear) and not back:
@@ -394,8 +395,9 @@ func _meetings() -> void:
 		t += 1.0 / Engine.physics_ticks_per_second
 		back = is_instance_valid(spear) and spear.caster == p
 	# (round 2's guard matrix: the air shield is the Wind Guard, it takes air and stone only; ice passes it)
-	_expect(shielded and zone != null and zone.r2 and spear != null and not back and zone.took == 0,
-			"the player's Wind Guard lets an ice spear through (sent back: %s; took %d)" % [back, zone.took if zone else -1])
+	_expect(shielded and zone != null and zone.r2 and thrown and not back and zone.took == 0,
+			"the player's Wind Guard lets an ice spear through (sent back: %s; took %d; cast %s, its guard %s, the spear %s)"
+			% [back, zone.took if zone else -1, shielded, zone.r2 if zone else false, thrown])
 	DuelMode.element = "earth"
 	await _secs(0.8)
 

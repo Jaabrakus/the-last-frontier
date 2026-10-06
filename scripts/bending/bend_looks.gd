@@ -774,7 +774,7 @@ static func guard_result(body: Node3D, el: String, result: String) -> void:
 	match result:
 		"perfect":
 			pool.play("flash", xf, 0.22, 0.6, 2.4, tint[0], tint[1])
-			pool.play("ring", Transform3D(Basis(Vector3.RIGHT, PI / 2.0), at), 0.3, 0.4, 2.6, tint[1], tint[0])
+			pool.play("ring", Transform3D(Basis.IDENTITY, at), 0.3, 0.4, 2.6, tint[1], tint[0])     # (flat round his chest)
 			pool.shoot("star", at, 14, Vector3.UP, 180.0, Vector2(2.0, 5.0), Vector2(0.2, 0.36), 0.5, Vector3.ZERO, 4.0)
 			burst(at, el if el in KINDS else "air", 14, Vector3.UP, 180.0, 4.0, 0.3)
 			pool.light(at, tint[0], 3.5, 0.2, 5.0)

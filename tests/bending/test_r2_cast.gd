@@ -21,6 +21,9 @@ extends SceneTree
 ##             oldest; another's held stone is never taken
 ##   dashes    nothing held: back; a back dash from 1 m inside the open end and a side Step into the ropes end on the deck
 ##   carried   air's Carried wind: x knock_mult 0.5 s after a dash's end, nothing at 1.0 s
+##   fire      the owner's "keep them all": Punch held past its second click is the Fireball (fire's Strike grows); 1 tapped
+##             twice is Lightning; Embers is fire's jab, its reach the jab's (jab_max_m); 4 tapped twice is Breath, its smoke
+##             left where it burned hiding the player from the bot, no slow on anyone
 ##   no slows  no element-mode spec of moves.json roots or slows the player (BendStatus.held_off)
 ## METRIC lines: click_casts_ok, dash_edge_safe_ok, no_player_slow_ok. Last line "R2 CAST PASSED" or "R2 CAST FAILED"; exit 0
 ## only on a pass; a watchdog quits with 2.
@@ -33,6 +36,12 @@ const OWN_CFG := "user://r2_cast_test.cfg"
 ## on 5 so it is a valid left button under today's quick-spell rule).
 const EARTH_KEYS := [["stone_form"], ["earth_shove"], ["earth_skate", "pillar"], ["earth_wall"], ["patch", "rock_jab"]]
 const AIR_KEYS := [["air_blast"], ["air_palm"], ["evade", "air_jump"], ["air_shield"], ["patch"]]
+## Fire's (the owner's answers 2026-10-05: Punch with Lightning its partner on 1, the Fire Wall with Breath on 4).
+const FIRE_KEYS := [["fire_blast", "fire_arc"], ["fire_jets"], ["footwork", "fire_jets"], ["fire_wall", "fire_breath"], ["patch"]]
+## Fire's Strike grown (the Fireball: today's fireball numbers) and the Breath's smoke (KITS writes them in moves.json).
+const FIREBALL := {"mps": 22.0, "damage": 34.0, "knock_mps": 9.0, "up_mps": 2.0, "radius_m": 0.5, "range_m": 35.0}
+const BREATH := {"do": "cone", "kind": "fire", "range_m": 4.5, "deg": 45.0, "damage": 16.0, "knock_mps": 2.0, "melt": true,
+		"smoke_s": 4.0}
 
 var checks := 0
 var fails: Array[String] = []
@@ -67,6 +76,7 @@ func _initialize() -> void:
 	var els: Dictionary = (SwayMoves.data().get("elements", {}) as Dictionary).duplicate(true)
 	els["earth"] = EARTH_KEYS
 	els["air"] = AIR_KEYS
+	els["fire"] = FIRE_KEYS
 	Bending.set_test_data({"elements": els})
 	# (the specs round 2 reads, given here: KITS writes them in moves.json)
 	var mv: Dictionary = SwayMoves.data().moves
@@ -74,6 +84,7 @@ func _initialize() -> void:
 	var shove: Dictionary = (mv["earth_shove"] as Dictionary).bend
 	(shove["push"] as Dictionary)["grow"] = {"knock_mult": 1.5, "grew_mark": true}
 	shove["split"] = {"do": "lightning", "kind": "lightning", "damage": 1.0, "range_m": 45.0, "knock_mps": 1.0}
+	((mv["fire_blast"] as Dictionary).bend.punch as Dictionary)["grow"] = FIREBALL.duplicate()
 	MatchSetup.incoming = true
 	MatchSetup.element = "earth"
 	change_scene_to_file("res://scenes/ring.tscn")
@@ -146,6 +157,7 @@ func _run() -> void:
 	await _shove()
 	await _dashes()
 	await _carried()
+	await _fire_kit()
 	await _no_slows()
 	_end()
 
@@ -759,3 +771,65 @@ func _no_slows() -> void:
 	var ok := specs > 0 and reached.is_empty() and p.bend_speed_cap == INF
 	_expect(ok, "no element-mode spec roots or slows the player (%d specs; reached by %s; held off %d)" % [specs, reached, BendStatus.held_off - held0])
 	metrics["no_player_slow_ok"] = ok
+
+
+# ---------------------------------------------------------------- fire's kit (the owner's answers 2026-10-05)
+func _fire_kit() -> void:
+	await _calm()
+	Bending.of(p).element = "fire"
+	var relaid := await _until(func() -> bool: return p.arena_element == "fire", 3.0)
+	_expect(relaid < INF, "the player fire for his kit")
+	await _secs(0.4)
+	# the Fireball: Punch held past its second click
+	await _tap(0)
+	var one := _ready_now()
+	await _lock_full()
+	await _secs(Bending.rule("grow_after_s", 0.45) + 0.1)
+	var grew := c.grown
+	c.held_override = false
+	await _secs(0.6)
+	var g := BendEffects.last_of(p)
+	var gs: Dictionary = g.get("spec", {})
+	_expect(one == "fire_blast/punch" and grew and bool(g.get("grown", false)) and float(gs.get("damage", 0.0)) == FIREBALL.damage
+			and float(gs.get("radius_m", 0.0)) == FIREBALL.radius_m,
+			"Punch held past its second click goes as the Fireball (%s, grew %s, %.0f dmg)" % [one, grew, float(gs.get("damage", 0.0))])
+	await _calm(false)
+	await _tap(0)
+	await _lock_full()
+	c.held_override = false
+	await _secs(0.6)
+	var b := BendEffects.last_of(p)
+	_expect(not bool(b.get("grown", true)) and float((b.get("spec", {}) as Dictionary).get("damage", 0.0)) == 20.0,
+			"and let go at its first click, the plain Punch (%s)" % b.get("grown"))
+	await _calm(false)
+	await _tap(0)
+	await _tap(0)
+	_expect(c.readied_spell == "fire_arc", "1 tapped twice: Lightning, Punch's partner (%s)" % _ready_now())
+	# Embers: fire's jab, the jab's reach
+	await _calm(false)
+	var jb := Bending.jab("fire")
+	var bc := BendCaster.of(p)
+	var em: Dictionary = ((SwayMoves.move("fire_jab").get("bend", {}) as Dictionary).get("embers", {}) as Dictionary).duplicate()
+	em["range_m"] = 14.0
+	BendEffects.apply(bc, "fire_jab", "embers", em)
+	var mine := get_nodes_in_group(BendBolt.GROUP).filter(func(n: Node) -> bool: return (n as BendBolt).caster == p)
+	var reach := (mine[0] as BendBolt).range_m if not mine.is_empty() else -1.0
+	_expect(String(jb.get("id", "")) == "fire_jab" and String(jb.get("mode", "")) == "embers" and mine.size() == int(em.get("count", 7))
+			and is_equal_approx(reach, Bending.rule("jab_max_m", 10.0)),
+			"Embers is fire's jab: %d small bolts from the fist, reaching %.1f m (the jab's %.0f)" % [mine.size(), reach, Bending.rule("jab_max_m", 10.0)])
+	# Breath: 4 tapped twice, its smoke where it burned
+	await _calm()
+	await _tap(3)
+	var w := _ready_now()
+	await _tap(3)
+	var br := _ready_now()
+	_expect(w.begins_with("fire_wall/") and br.begins_with("fire_breath/"), "4: the Fire Wall, tapped twice Breath (%s, %s)" % [w, br])
+	BendEffects.apply(bc, "fire_breath", "breath", BREATH)
+	var smoke: BendZone = BendEffects.last_of(p).get("smoke")
+	await _ticks(3)
+	var hid := NpcBendCaster.hidden(foe, p) if smoke != null else false
+	var slowed := BendStatus.until(foe, &"bend_slow") > 0.0 or BendStatus.until(p, &"bend_slow") > 0.0 or p.bend_speed_cap != INF
+	_expect(smoke != null and is_instance_valid(smoke) and smoke.kind == "smoke" and hid and not slowed,
+			"Breath leaves smoke where it burned: the bot cannot see him through it, no one slowed (hidden %s, slowed %s)" % [hid, slowed])
+	Bending.of(p).element = "earth"
+	await _until(func() -> bool: return p.arena_element == "earth", 3.0)

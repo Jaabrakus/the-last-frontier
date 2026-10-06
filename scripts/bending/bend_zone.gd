@@ -53,6 +53,8 @@ const GUARDS := ["catch", "deflect", "cushion", "redirect", "return", "parry", "
 const STONE_GUARDS := ["catch", "deflect", "cushion"]
 ## Round 2's timed guards (with an element) and the element each is.
 const R2_GUARDS := {"catch": "earth", "redirect": "water", "parry": "fire", "air_shield": "air", "wind_guard": "air"}
+## The Wind Guard's window when its spec gives none (s; spec §2.5).
+const WIND_GUARD_S := 0.8
 ## A Turn's swing round the guard's waist (s) and its radius (m).
 const SWING_S := 0.3
 const SWING_R := 1.0
@@ -113,8 +115,9 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 		z.follow = true
 		z.perfect_s = float(spec.get("perfect_s", Bending.rule("perfect_s", 0.3)))
 		z.late_mult = float(spec.get("late_mult", Bending.rule("late_mult", 0.5)))
-		if p_kind in ["air_shield", "wind_guard"] and spec.has("window_s"):
-			z.life_s = float(spec.window_s)          # (the Wind Guard's window, not the old shield's life)
+		if p_kind in ["air_shield", "wind_guard"]:
+			# (the Wind Guard's window, never the old shield's 2.5 s life: today's data has none, spec §2.5's then)
+			z.life_s = float(spec.get("window_s", WIND_GUARD_S))
 	var w := Vector3(p_way.x, 0.0, p_way.z)
 	z.way = w.normalized() if w.length_squared() > 1e-6 else Vector3.FORWARD
 	z.add_to_group(GROUP)
@@ -938,10 +941,18 @@ func _take_stone(s: Node3D, v: Vector3, perfect := false) -> void:
 	match kind:
 		"catch":
 			# held before its owner: E again (or Earth Shove) sends it back (round 2: return_stone); always a full catch
-			var front := owner_node.global_position + Vector3(-v.x, 0.0, -v.z).normalized() * 1.3 + Vector3.UP * 1.1
+			var out := Vector3(-v.x, 0.0, -v.z)
+			out = out.normalized() if out.length_squared() > 1e-6 else -owner_node.global_basis.z
+			var front := owner_node.global_position + out * 1.3 + Vector3.UP * 1.1
 			if rb != null:
 				rb.freeze = true
-			s.global_position = front
+			if s is FormStone and (s as FormStone).kind == "spike":
+				# (a spike held point out, its foot at the front: its length never through its catcher, who is not moved an
+				# inch by a catch; round 2)
+				var x := Vector3.UP.cross(out).normalized()
+				s.global_transform = Transform3D(Basis(x, out, x.cross(out)), front)
+			else:
+				s.global_position = front
 			s.set_meta(&"bend_held_by", owner_node.get_instance_id())
 			if s.has_meta(FormStone.LOOSE_META):
 				s.remove_meta(FormStone.LOOSE_META)

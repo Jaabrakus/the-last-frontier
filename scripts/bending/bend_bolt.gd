@@ -168,7 +168,7 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 	if b.floor_wave:
 		b._wave_look = BendLooks.floor_wave_body(b, FLOOR_W0, b.height_m)
 	else:
-		BendLooks.bolt_body(holder, b.kind, b.radius, b.long, b.shape)
+		BendLooks.bolt_body(holder, b.kind, float(spec.get("look_r", b.radius)), b.long, b.shape)
 		b._trail = BendLooks.trail(b, b.kind, b.radius)
 	return b
 

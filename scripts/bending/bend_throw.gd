@@ -20,6 +20,10 @@ extends RefCounted
 ## width_m across, its body BendLooks' crescent), flight, mps, gravity, damage, knock_mps, up_mps, radius_m, range_m, count,
 ## every_s, spread_deg, lift_deg, m_per_turn, tilt_deg, low, long.
 
+## The High Kick's crescent (shape "crescent"): the top of its lob over the higher of hand and aim by default (m: a 2 m
+## wall between is cleared), and the share of its width it is met by (its ball's radius; its look is the whole width).
+const CRESCENT_APEX_M := 2.0
+const CRESCENT_HIT := 0.3
 ## A spinning throw turns once per this many metres of its flight by default (m).
 const M_PER_TURN := 3.2
 ## Close in (the aim within this many hand-to-chest lengths), the hand's line blended toward the chest's.
@@ -63,7 +67,7 @@ static func one(bc: BendCaster, a: Dictionary, spec: Dictionary, i := 0, n := 1)
 		dir = Vector3((a.flat as Vector3).x, -0.02, (a.flat as Vector3).z).normalized()
 	elif lob and g > 0.0 and point.is_finite():
 		# (the High Kick: a lob over walls onto the aim; its speed the arc's, mps at most)
-		var v := lob_velocity(from, point, float(spec.get("apex_m", 1.4)), g, mps * 1.5)
+		var v := lob_velocity(from, point, float(spec.get("apex_m", CRESCENT_APEX_M)), g, mps * 1.5)
 		mps = v.length()
 		dir = v.normalized()
 	else:
@@ -85,7 +89,9 @@ static func one(bc: BendCaster, a: Dictionary, spec: Dictionary, i := 0, n := 1)
 	s["flight"] = flight
 	s["mps"] = mps
 	if String(spec.get("shape", "")) == "crescent" and not spec.has("radius_m"):
-		s["radius_m"] = float(spec.get("width_m", 1.6)) * 0.5      # (the High Kick's crescent: half its width round)
+		# (the High Kick's crescent: drawn its width across, met as a thinner ball, a flat arc of flame passing a wall's top)
+		s["look_r"] = float(spec.get("width_m", 1.6)) * 0.5
+		s["radius_m"] = float(spec.get("width_m", 1.6)) * CRESCENT_HIT
 	match flight:
 		"spinning":
 			s["spin_rate"] = spin_for(from, point, mps, float(spec.get("m_per_turn", M_PER_TURN)))

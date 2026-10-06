@@ -265,6 +265,7 @@ func _kick_shove() -> void:
 	var st := BendEffects.last.get("stone") as FormStone
 	_expect(kicked and st != null, "kick-up: a rock up before the player")
 	await _secs(0.35)
+	var yaw0 := p.yaw
 	await _aim_on(st.global_position + Vector3.UP * 0.1)
 	var n0 := n.global_position
 	var h0 := n.health
@@ -275,7 +276,10 @@ func _kick_shove() -> void:
 	var struck: Array = []
 	if th != null:
 		th.lift.struck.connect(func(who: Node, _d: float) -> void: struck.append(who))
+	p.yaw = yaw0
 	await _aim_cam()                          # (back on his man as it flies: the throw's aim follows the crosshair)
+	if th != null and is_instance_valid(th) and not th.is_thrown:
+		th.cam_off = p.camera.global_position - p.global_position     # (the view it takes its aim from: his, back on the man)
 	var r := await _knocked_back(n0, 2.0)
 	_expect(struck.has(n) and r[1] == p and float(r[0]) >= 1.0, "kick-up: it strikes the held bot (%s; his health %.0f to %.0f), knocked %.2f m by the player"
 			% [str(struck.has(n)), h0, n.health, r[0]])

@@ -2008,12 +2008,13 @@ func _self_cast(m: String) -> bool:
 
 
 ## Whether a lock of `m` is taken under the caster (its circle at the feet, the aim free: _self_cast): the self pillar,
-## Stone Form, a move or mode with self_lock; with an element the earth wall too (spec §2.7: moving the crosshair never
-## breaks its lock; its place is taken from the crosshair at the release, FormEffects.place_point).
+## Stone Form, a move or mode with self_lock; with an element the earth wall and the Column too, wherever KITS keys it (spec
+## §2.7: moving the crosshair never breaks its lock; its place is taken from the crosshair at the release,
+## FormEffects.place_point, the column's from the aim then).
 func self_lock_of(m: String) -> bool:
 	if (m == "pillar" and mode_of(m) == "self") or m == "stone_form" or bool(spec_key(m, "self_lock", false)):
 		return true
-	return elem() and m in SELF_LOCK_ELEMENT
+	return elem() and (m in SELF_LOCK_ELEMENT or String(spec_of(m).get("do", "")) == "column")
 
 
 ## Moves whose lock is the caster's own with an element (self_lock_of).
@@ -2516,7 +2517,11 @@ func _on_hurt() -> void:
 		return
 	var sp := spec_of(move)
 	if String(sp.get("do", "")) == "lightning":
+		var src := lock_src
 		_break("hit")
+		if _src_held(src):
+			_wait_release = true                  # (the charge is lost: let go before it charges again)
+			_wait_src = src
 		return
 	if lock_src == SRC_GUARD or String(sp.get("do", "")) == "dash" or Bending.is_guard(move):
 		return
