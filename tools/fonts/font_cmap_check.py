@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Which of the computer's fonts can write Vietnamese: the cmap check behind UiFonts' lists (scripts/ui/ui_fonts.gd).
+"""Which of the computer's fonts can write Vietnamese: the cmap check behind UiFonts' lists (scripts/thuyvan/ui_fonts.gd).
 
     python3 tools/fonts/font_cmap_check.py [--json out.json] [--strict] [--font path ...]
 
@@ -29,7 +29,7 @@ import unicodedata
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 DATA = os.path.join(REPO, "data", "thuyvan")
-UI_FONTS = os.path.join(REPO, "scripts", "ui", "ui_fonts.gd")
+UI_FONTS = os.path.join(REPO, "scripts", "thuyvan", "ui_fonts.gd")
 FONT_DIRS = [
     "/System/Library/Fonts",
     "/System/Library/Fonts/Supplemental",
