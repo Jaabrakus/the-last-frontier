@@ -194,6 +194,8 @@ class Canvas:
         c = blur(self.rgb, 0.6)
         c = c + 0.4 * (c - blur(c, self.w / 32.0))
         lo = np.minimum.reduce(self.ramp[:3]) * 0.92
+        if getattr(self, "floor", None) is not None:      # a painter's own darker joint colour (drystone)
+            lo = np.minimum(lo, self.floor)
         hi = np.maximum.reduce(self.ramp) * 1.04
         c = np.clip(c, lo, hi)
         s = lin_srgb(c)
@@ -294,17 +296,17 @@ def p_thatch(cv, spec):
         for _ in range(int(W / 3.2)):
             x = rng.uniform(0, W)
             L = rng.uniform(0.6, 1.1) * course
-            cv.dab(x, y0 + course * 0.45, rng.uniform(3.0, 6.5), L / 2, math.pi / 2 + rng.normal(0, 0.12),
+            cv.dab(x, y0 + course * 0.45, L / 2, rng.uniform(3.0, 6.5), math.pi / 2 + rng.normal(0, 0.12),
                    cv.col(rng.choice([0.4, 0.9, 1.4, 1.9, 2.4, 2.8])), 0.8, hgt=0.6, wobble=0.03)
             if rng.random() < 0.3:
-                cv.dab(x + 2, y0 + course * 0.4, 1.4, L * 0.4, math.pi / 2, cv.col(0) * 0.8, 0.6, hgt=-0.3, wobble=0)
+                cv.dab(x + 2, y0 + course * 0.4, L * 0.4, 1.4, math.pi / 2, cv.col(0) * 0.8, 0.6, hgt=-0.3, wobble=0)
         # shadow cast on the course below, then the fringe hanging over it
         for x in np.arange(0, W, 10):
             cv.dab(x + rng.uniform(-3, 3), y0 + course + 6, 9, 7, 0, cv.col(0) * 0.8, 0.55, hgt=-0.6, wobble=0.1)
         for _ in range(int(W / 4)):
             x = rng.uniform(0, W)
             L = rng.uniform(0.15, 0.45) * course
-            cv.dab(x, y0 + course * 0.85 + L * 0.3, rng.uniform(2.0, 3.6), L / 2, math.pi / 2 + rng.normal(0, 0.1),
+            cv.dab(x, y0 + course * 0.85 + L * 0.3, L / 2, rng.uniform(2.0, 3.6), math.pi / 2 + rng.normal(0, 0.1),
                    cv.col(rng.choice([1.4, 2.0, 2.5, 2.9])), 0.9, hgt=0.8, big=0.5, wobble=0.02)
 
 
@@ -324,8 +326,8 @@ def p_shingle(cv, spec):
             cv.dab(x + sw / 2, y0 + course * 0.55, sw * 0.52, course * 0.62, 0, base, 1.0, hgt=1.0, big=1.0,
                    edge=0.9, wobble=0.03)
             for _ in range(4):
-                cv.dab(x + rng.uniform(0.1, 0.9) * sw, y0 + course * rng.uniform(0.3, 0.8), 1.3,
-                       course * rng.uniform(0.2, 0.45), math.pi / 2, cv.col(rng.choice([0.2, 2.4])), 0.5, wobble=0)
+                cv.dab(x + rng.uniform(0.1, 0.9) * sw, y0 + course * rng.uniform(0.3, 0.8),
+                       course * rng.uniform(0.2, 0.45), 1.3, math.pi / 2, cv.col(rng.choice([0.2, 2.4])), 0.5, wobble=0)
             cv.dab(x + sw / 2, y0 + course * 1.08, sw * 0.48, 2.2, 0, cv.col(2.7), 0.85, wobble=0.05)   # lit butt
             cv.dab(x + sw / 2, y0 + course * 1.08 + 7, sw * 0.5, 5.5, 0, cv.col(0) * 0.7, 0.6, hgt=-0.8)  # its shadow
             cv.dab(x + sw, y0 + course * 0.6, 1.6, course * 0.55, 0, cv.col(0) * 0.6, 0.95, hgt=-0.8, wobble=0)
@@ -425,16 +427,20 @@ def p_plaster(cv, spec):
 
 
 def p_lacquer(cv, spec):
+    """Red lacquer over wood: a deep even red (the ramp's mid) with soft darker pools, worn edges to the dark, and a few
+    long soft gloss streaks; no orange or pink (hue jitter is kept tiny on this saturated ramp)."""
     rng = cv.rng
     W, H = cv.w, cv.h
-    generic_ground(cv, 60, 160, math.pi / 2, 0.05, (3, 6), med_size=(0.04, 0.1), weights=(0.2, 0.5, 0.3, 0.0),
-                   sliver_free=False)
-    for _ in range(60):   # the gloss painted in: long light vertical streaks
-        cv.dab(rng.uniform(0, W), rng.uniform(0, H), rng.uniform(0.08, 0.2) * H, rng.uniform(1.5, 3.5), math.pi / 2,
-               cv.col(2.4), rng.uniform(0.2, 0.4), wobble=0.02)
-    for _ in range(25):   # worn to the dark wood
-        cv.dab(rng.uniform(0, W), rng.uniform(0, H), rng.uniform(4, 14), rng.uniform(3, 8), rng.uniform(0, 3), cv.col(0) * 0.8,
-               0.8, hgt=-0.5)
+    for _ in range(70):
+        L = rng.uniform(0.1, 0.3) * H
+        cv.dab(rng.uniform(0, W), rng.uniform(0, H), L, L * rng.uniform(0.25, 0.5), math.pi / 2 + rng.normal(0, 0.05),
+               cv.col(rng.uniform(0.55, 1.15), 0.02), 0.7, hgt=0.6, big=1.0, edge=0.6, wobble=0.05)
+    for _ in range(40):   # the gloss painted in: long soft vertical streaks of the light stop
+        cv.dab(rng.uniform(0, W), rng.uniform(0, H), rng.uniform(0.08, 0.2) * H, rng.uniform(2.0, 5.0), math.pi / 2,
+               cv.col(1.8), rng.uniform(0.25, 0.45), edge=0.3, wobble=0.02)
+    for _ in range(25):   # worn through to the dark wood
+        cv.dab(rng.uniform(0, W), rng.uniform(0, H), rng.uniform(4, 12), rng.uniform(2, 6), rng.uniform(0, 3),
+               cv.col(0) * 0.8, 0.8, hgt=-0.5)
 
 
 def p_rope(cv, spec):
@@ -483,7 +489,8 @@ def p_drystone(cv, spec):
     """Dry-stone coursing: rows of rounded stones, wider than tall, dark joints, lit tops, moss on the top edges."""
     rng = cv.rng
     W, H = cv.w, cv.h
-    cv.rgb[:] = cv.ramp[0] * 0.35 + cv.ramp[1] * 0.25 + hex_lin("#4a3a2e") * 0.2
+    cv.floor = hex_lin("#3e3833") * 0.8
+    cv.rgb[:] = cv.ramp[0] * 0.25 + cv.ramp[1] * 0.15 + hex_lin("#4a3a2e") * 0.35   # warm dark joints
     cv.hgt[:] = -1.0
     y = 0.0
     rows = []
@@ -503,8 +510,12 @@ def p_drystone(cv, spec):
             cx, cy = x + sw / 2, y0 + rh / 2 + rng.uniform(-3, 3)
             ang = rng.normal(0, 0.06)
             base = rng.uniform(0.9, 1.7)
-            cv.dab(cx, cy, sw * 0.5, rh * 0.5, ang, cv.col(base - 0.6), 1.0, hgt=1.2, big=1.0, edge=0.55, wobble=0.12)
-            cv.dab(cx, cy - rh * 0.06, sw * 0.44, rh * 0.4, ang, cv.col(base), 1.0, hgt=0.6, edge=0.6, wobble=0.12)
+            cv.dab(cx, cy, sw * 0.56, rh * 0.58, ang, cv.col(base - 0.6), 1.0, hgt=1.2, big=1.0, edge=0.55, wobble=0.1)
+            cv.dab(cx, cy - rh * 0.06, sw * 0.48, rh * 0.46, ang, cv.col(base), 1.0, hgt=0.6, edge=0.6, wobble=0.1)
+            for _ in range(2):    # a couple of broad strokes inside the stone: its planes
+                cv.dab(cx + rng.uniform(-0.2, 0.2) * sw, cy + rng.uniform(-0.15, 0.15) * rh, sw * rng.uniform(0.15, 0.3),
+                       rh * rng.uniform(0.1, 0.2), ang + rng.normal(0, 0.3), cv.col(base + rng.uniform(-0.4, 0.4)), 0.6,
+                       edge=0.6)
             cv.dab(cx - sw * 0.05, cy - rh * 0.25, sw * 0.32, rh * 0.13, ang, cv.col(base + 0.6), 0.6, edge=0.5)
             if rng.random() < 0.35:
                 cv.dab(cx + rng.uniform(-0.2, 0.2) * sw, cy - rh * 0.4, sw * rng.uniform(0.15, 0.35), rh * 0.12, ang,
@@ -718,8 +729,8 @@ PAINTERS = {"planks": p_planks, "thatch": p_thatch, "shingle": p_shingle, "tile"
             "cloth": p_cloth}
 CAVITY = {"planks": (0.45, COOL_WOOD), "thatch": (0.45, COOL_WOOD), "shingle": (0.45, COOL_WOOD),
           "tile": (0.4, COOL_ROCK), "weave": (0.25, COOL_WOOD), "plaster": (0.3, COOL_ROCK),
-          "lacquer": (0.3, COOL_WOOD), "rope": (0.35, COOL_WOOD), "iron": (0.35, COOL_ROCK),
-          "bamboo": (0.35, COOL_GREEN), "drystone": (0.5, COOL_ROCK), "limestone": (0.42, COOL_ROCK),
+          "lacquer": (0.25, "#3a1a18"), "rope": (0.35, COOL_WOOD), "iron": (0.35, COOL_ROCK),
+          "bamboo": (0.35, COOL_GREEN), "drystone": (0.4, "#3e3833"), "limestone": (0.42, COOL_ROCK),
           "grass": (0.4, COOL_GREEN), "earth": (0.38, COOL_WOOD), "paper": (0.2, COOL_WOOD),
           "cloth": (0.3, COOL_ROCK)}
 EDGE_LIGHT = {"planks", "shingle", "tile", "drystone", "limestone", "bamboo", "lacquer"}
@@ -748,7 +759,10 @@ def paint(key, spec, pal):
     if painter == "waystone":
         p_waystone(cv, spec, pal)
         return cv.finish(spec.get("value"))
-    cv.variation()
+    if painter == "lacquer":
+        cv.variation(0.06, 1.0, 0.04)
+    else:
+        cv.variation()
     PAINTERS[painter](cv, spec)
     st, cool = CAVITY[painter]
     cv.cavity(st, cool)

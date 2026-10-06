@@ -27,7 +27,7 @@ from tvkit import Builder, frame_from, rot_x, rot_y, rot_z  # noqa: E402
 
 # ================================================================================================ roofs
 def roof(b, c, A, B, H, top="tile", under="timber", p=1.5, upturn=0.5, flare=0.35, thick=0.3, ridge=True,
-         ridge_r=0.16, hips=True, horns=None, curls=False, finial=False, ns=18, nt=8, ridge_key=None):
+         ridge_r=0.16, hips=True, horns=None, curls=False, finial=False, ns=12, nt=6, ridge_key=None):
     """A hip roof centred c (eave level), half sizes A (along X, the ridge) >= B, H to the ridge: four panels with a
     slope profile t**p (p > 1 concave like tile, p < 1 full like thatch), eave corners turned up `upturn` and flared out
     `flare`, `thick` deep at the rim. horns: 'crossed' (Mountain Folk gable horns) ; curls: curled ridge ends."""
@@ -89,11 +89,10 @@ def roof(b, c, A, B, H, top="tile", under="timber", p=1.5, upturn=0.5, flare=0.3
     if curls and rl > 0.05:
         for sx in (-1, 1):
             pts, rad = [], []
-            for t in np.linspace(0.0, 1.0, 12):
-                a = t * math.pi * 1.2
-                pts.append(c + [sx * (rl + 0.1 + 0.55 * math.sin(a) * (1 - 0.3 * t)), 0.0,
-                                H + ridge_r + 0.75 * (1 - math.cos(a)) * 0.5])
-                rad.append(ridge_r * 1.25 * (1.0 - 0.7 * t))
+            for t in np.linspace(0.0, 1.0, 9):
+                a = t * math.pi * 0.62          # a flick up and out (an open curl, never a closed loop)
+                pts.append(c + [sx * (rl + 0.1 + 0.62 * math.sin(a)), 0.0, H + ridge_r + 0.7 * (1 - math.cos(a))])
+                rad.append(ridge_r * 1.3 * (1.0 - 0.6 * t))
             b.tube(pts, rad, 8, rk)
     if finial:
         b.lathe([(0.24, 0.0), (0.16, 0.2), (0.3, 0.45), (0.16, 0.7), (0.06, 1.2), (0.0, 1.3)], 8, rk,
@@ -102,12 +101,13 @@ def roof(b, c, A, B, H, top="tile", under="timber", p=1.5, upturn=0.5, flare=0.3
 
 
 # ================================================================================================ small parts
-def post(b, x, y, z0, h, r=0.13, key="timber", lean=(0.0, 0.0), segs=8, footing=True):
+def post(b, x, y, z0, h, r=0.13, key="timber", lean=(0.0, 0.0), segs=6, footing=True):
     p0 = np.array([x, y, z0])
     p1 = p0 + [lean[0] * h, lean[1] * h, h]
     b.tube([p0, (p0 + p1) / 2, p1], r, segs, key)
     if footing:
-        b.pebble((x, y, z0 + 0.05), (r * 2.6, r * 2.4, r * 1.6), "limestone", rot=rot_z(b.rng.uniform(0, 3)))
+        b.pebble((x, y, z0 + 0.05), (r * 2.6, r * 2.4, r * 1.6), "limestone", rot=rot_z(b.rng.uniform(0, 3)), segs=5,
+                 rings=3)
 
 
 def plank_deck(b, x0, x1, y0, y1, z, w=0.3, gap=0.035, thick=0.08, along="y", key="plank", jitter=0.012):
@@ -206,7 +206,7 @@ def lantern_round(b, c, r=0.32, h=0.7, cord=0.0):
     for k in range(9):
         t = k / 8.0
         prof.append((r * (0.55 + 0.45 * math.sin(math.pi * (0.06 + 0.88 * t))), -h / 2 + t * h))
-    b.lathe(prof, 12, "paper", base=c, cap_top=False, cap_bottom=False, ribs=0.06)
+    b.lathe(prof, 10, "paper", base=c, cap_top=False, cap_bottom=False, ribs=0.06)
     b.lathe([(r * 0.5, -h / 2 - 0.07), (r * 0.6, -h / 2 + 0.02)], 10, "timber", base=c)
     b.lathe([(r * 0.6, h / 2 - 0.02), (r * 0.48, h / 2 + 0.08)], 10, "timber", base=c)
     b.tube([c + [0, 0, -h / 2 - 0.07], c + [0, 0, -h / 2 - 0.42]], [0.05, 0.015], 5, "cloth_madder")
@@ -260,7 +260,7 @@ def banner(b, kind="indigo", h=6.6, cloth_w=1.2, cloth_l=3.6, base=True):
     b.beam((-cloth_w / 2 - 0.3, -0.12, zc), (cloth_w / 2 + 0.3, -0.12, zc), 0.08, 0.1, "timber")
     b.tube([(-cloth_w / 2 - 0.2, -0.12, zc + 0.05), (0, -0.05, h - 0.05), (cloth_w / 2 + 0.2, -0.12, zc + 0.05)],
            0.018, 4, "rope")
-    cloth_sheet(b, (0, -0.2, zc - 0.05), cloth_w, cloth_l, "banner_" + kind, notch=0.55, amp=0.07, rows=12, cols=6)
+    cloth_sheet(b, (0, -0.2, zc - 0.05), cloth_w, cloth_l, "banner_" + kind, notch=0.55, amp=0.07, rows=9, cols=4)
     for sx in (-1, 1):
         cloth_sheet(b, (sx * (cloth_w / 2 + 0.22), -0.17, zc - 0.05), 0.2, cloth_l * 0.78 + rng.uniform(-0.2, 0.2),
                     "cloth_madder", notch=0.12, amp=0.04, waves=1, rows=10, cols=2, unit=False,
@@ -328,7 +328,9 @@ def pebble_pile(b, c, radius, n, key="limestone", height=0.9, size=(0.25, 0.45))
 
 # ================================================================================================ V01 stilt houses
 def stilt_house(name, W, D, pile_h, wall_h, roof_key, roof_H, over, ver, seed, rail=False, side_window=True,
-                big=False):
+                big=False, upturn=None, flare=None, roof_p=None):
+    """V01: a Mountain Folk stilt house on piles (pile_h), walls wall_h, a fat hip roof roof_H tall overhanging `over`
+    with crossed gable horns; `upturn`/`flare` override the roof's corner curve (the A/B/C roof lineup)."""
     b = Builder(name, seed)
     rng = b.rng
     fz = pile_h + 0.22                      # floor top
@@ -381,10 +383,12 @@ def stilt_house(name, W, D, pile_h, wall_h, roof_key, roof_H, over, ver, seed, r
     A = W / 2 + over
     Bh = (D / 2 - yf) / 2 + over * 0.8
     if roof_key == "thatch":
-        roof(b, (0, cy, ez), A, Bh, roof_H, top="thatch", under="thatch", p=0.92, upturn=0.55, flare=0.3, thick=0.42,
+        roof(b, (0, cy, ez), A, Bh, roof_H, top="thatch", under="thatch", p=roof_p or 0.92, upturn=0.55 if upturn is None else upturn,
+             flare=0.3 if flare is None else flare, thick=0.42,
              ridge_r=0.26, hips=True, horns="crossed")
     else:
-        roof(b, (0, cy, ez), A, Bh, roof_H, top=roof_key, under="timber", p=1.35, upturn=0.75, flare=0.4,
+        roof(b, (0, cy, ez), A, Bh, roof_H, top=roof_key, under="timber", p=roof_p or 1.35, upturn=0.75 if upturn is None else upturn,
+             flare=0.4 if flare is None else flare,
              thick=0.32, ridge_r=0.2, horns="crossed")
     # the ladder up to the veranda
     lx = W / 2 - 0.9 if big else -W / 4
@@ -501,8 +505,9 @@ def clan_house(name="clan_house", seed=31):
     b.lathe([(0.3, 0.0), (0.2, 0.25), (0.42, 0.55), (0.2, 0.9), (0.08, 1.5), (0.0, 1.62)], 8, "tile",
             base=(0, -0.1, ez2 + 3.1 + 0.2))
     # carved ridge panel: a pierced board along the ridge (the "carved ridge")
-    for x in np.linspace(-1.5, 1.5, 7):
-        b.box((x, -0.1, ez2 + 3.1 + 0.45), (0.3, 0.1, 0.42), "timber")
+    b.box((0, -0.1, ez2 + 3.1 + 0.42), (3.6, 0.12, 0.34), "timber", grain=0)
+    for x in np.linspace(-1.35, 1.35, 4):          # the board pierced: lacquer roundels between the cuts
+        b.lathe([(0.16, -0.08), (0.16, 0.08)], 8, "lacquer", base=(x, -0.1, ez2 + 3.1 + 0.42), rot=rot_x(math.pi / 2))
     # the name board over the middle door (left blank: no writing in world art)
     b.box((0, -3.62, pz + 3.15), (2.4, 0.1, 0.62), "lacquer")
     b.box((0, -3.66, pz + 3.15), (2.1, 0.06, 0.44), "timber")
@@ -628,7 +633,7 @@ def rope_bridge_span(name, L, dz=0.0, sag=None, width=1.7, seed=51, flags=True):
     m = max(8, int(L / 2.0))
     ts = np.linspace(0, 1, m + 1)
     for sy in (-1, 1):
-        b.tube([(t * L, sy * (hw - 0.25), deck_z(t, L, dz, sag) - 0.17) for t in ts], 0.1, 6, "timber", caps=True)
+        b.tube([(t * L, sy * (hw - 0.25), deck_z(t, L, dz, sag) - 0.17) for t in ts], 0.1, 5, "timber", caps=True)
     # posts, rails, net
     npost = max(2, int(round(L / 3.5)))
     post_t = np.linspace(0, 1, npost + 1)[1:-1]
@@ -643,11 +648,11 @@ def rope_bridge_span(name, L, dz=0.0, sag=None, width=1.7, seed=51, flags=True):
             b.tube([(x, y, z + 1.0), (x, y, z + 1.16)], 0.095, 6, "rope", caps=False)   # lashing
         for (zoff, r, key) in ((1.1, 0.06, "rope"), (0.55, 0.04, "rope")):
             pts = []
-            for t in np.linspace(0, 1, m * 2 + 1):
+            for t in np.linspace(0, 1, npost * 2 + 1):     # post, mid-bay, post: the dip between posts
                 # the rail dips a little between posts
                 ph = (t * (npost)) % 1.0
                 pts.append((t * L, y, deck_z(t, L, dz, sag) + zoff - 0.07 * math.sin(math.pi * ph)))
-            b.tube(pts, r, 6, key, caps=True)
+            b.tube(pts, r, 5, key, caps=True)
             rail_pts[(sy, zoff)] = pts
         bays = [0.0] + list(post_t) + [1.0]
         for i in range(len(bays) - 1):
@@ -712,9 +717,10 @@ def bridge_anchor(name="rope_bridge_anchor", seed=55, width=1.7):
                         unit=False)
             cloth_sheet(b, (-0.5, 0.03, 4.45), 0.16, 1.9, "cloth_madder", notch=0.1, amp=0.03, waves=1, rows=8,
                         cols=2, unit=False)
-    b.beam((-0.42, -hw - 0.3, 4.3), (-0.42, hw + 0.3, 4.3), 0.2, 0.24, "timber")
+    b.beam((-0.42, -hw - 0.45, 4.3), (-0.42, hw + 0.3, 4.3), 0.2, 0.24, "timber")
+    b.beam((-0.42, -hw - 0.4, 4.22), (-0.2, -hw - 0.2, 4.22), 0.08, 0.08, "timber")      # the lantern's arm
     flag_rope(b, (-0.42, -hw, 4.25), (-0.42, hw, 4.25), sag=0.35, spacing=0.42, seed_offset=2)
-    lantern_round(b, (-0.2, -hw - 0.2, 3.3), r=0.27, h=0.6, cord=0.3)
+    lantern_round(b, (-0.2, -hw - 0.2, 3.3), r=0.27, h=0.6, cord=0.62)   # hung from the crossbar's end
     plank_deck(b, -2.4, 0.15, -width / 2 - 0.1, width / 2 + 0.1, 0.0, along="y")
     b.collider("deck", [[(-2.4, -width / 2, 0), (0.15, -width / 2, 0), (0.15, width / 2, 0), (-2.4, width / 2, 0)]])
     b.empty("anchor_lamp", (-0.2, -hw - 0.2, 3.3))
@@ -782,7 +788,7 @@ def waystone(name="clan_waystone", seed=61):
                 b.face(q, "limestone")
     top = sections[-1][0]
     b.face(top, "limestone")
-    pebble_pile(b, (0, 0, 0), 1.25, 16, height=0.55, size=(0.22, 0.42))
+    pebble_pile(b, (0, 0, 0), 1.25, 13, height=0.55, size=(0.22, 0.42))
     # rope band with rag offerings at 2.7 m
     zb = 2.65
     ring = []
@@ -848,7 +854,7 @@ def terrace_wall(name, length=4.0, h=1.2, curve=0.0, seed=81):
     foot's middle on the lower terrace."""
     b = Builder(name, seed)
     rng = b.rng
-    nx, nz = 16, 6
+    nx, nz = 8, 3          # the painted drystone carries the stones; the mesh only bows and batters
     batter = math.tan(math.radians(12))
 
     def base_pt(s):
@@ -869,17 +875,19 @@ def terrace_wall(name, length=4.0, h=1.2, curve=0.0, seed=81):
             P[i, j] = (x, y + dy, z)
             U[i, j] = x
             V[i, j] = z
-    b.grid(P, "drystone", U, V, smooth=False, flip=True)
+    b.grid(P, "drystone", U, V, smooth=False)
+    b.orient = {"drystone": (0.0, -1.0, 0.0)}       # the stone face looks down the hill (-Y), whatever the bow
     # grass lip: a fat roll along the top, and the strip behind
     top = [P[nz, j] + [0, 0.05, 0.02] for j in range(nx + 1)]
-    b.tube(top, 0.17, 6, "grass", caps=True)
+    b.tube(top, 0.17, 5, "grass", caps=True)
     back = np.array([[p + [0, 0.0, 0.05], p + [0, 0.7, 0.07]] for p in top]).transpose(1, 0, 2)
     b.grid(back, "grass", back[..., 0], back[..., 1], smooth=True)
     # ends: a few big capstones and stones at the foot
     for k in range(3):
         s = rng.uniform(-0.45, 0.45)
         x, y = base_pt(s)
-        b.pebble((x, y - 0.25, 0.05), (rng.uniform(0.2, 0.35), 0.22, 0.18), "drystone", rot=rot_z(rng.uniform(0, 3)))
+        b.pebble((x, y - 0.25, 0.05), (rng.uniform(0.2, 0.35), 0.22, 0.18), "limestone", rot=rot_z(rng.uniform(0, 3)),
+                 segs=5, rings=3)
     return b, h
 
 
@@ -1316,6 +1324,14 @@ def main():
     manifest = {"_about": "Thủy Vân village kit (VILLAGE). Units metres; Blender Z up exported glTF +Y up; a piece's "
                           "front faces Blender -Y = Godot +Z. COLOR_0 = baked AO x top light (multiply into albedo); "
                           "COLOR_0.a = cloth pin weight. Materials tvv_<key>: see materials.json.",
+                "materials": {
+                    "tvv_" + k: {"texture": "res://assets/thuyvan/village/textures/%s.png" % k,
+                                 "uv_tile_m": (None if v.get("unit_uv") else v["tile_m"]),
+                                 "roughness": v["rough"], "specular": v["spec"],
+                                 "emission": v.get("emission"),
+                                 "double_sided": k in tvkit.DOUBLE_SIDED,
+                                 "cloth": k.startswith(("banner_", "cloth_")) or k == "flags"}
+                    for k, v in tvkit.MATS.items()},
                 "pieces": {}}
     if not only or "rope_bridge_r1" in only:
         if all(k in pieces for k in ("rope_bridge_anchor", "rope_bridge_span_63m", "rope_bridge_needle_platform",

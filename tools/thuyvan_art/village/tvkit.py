@@ -353,6 +353,15 @@ class Builder:
         me = bpy.data.meshes.new(self.name)
         bmesh.ops.remove_doubles(self.bm, verts=self.bm.verts, dist=1e-5)
         bmesh.ops.recalc_face_normals(self.bm, faces=self.bm.faces)
+        # open sheets (a wall face, a bow) can come out of recalc facing in: `orient` pins a key's faces to a side
+        for key, d in getattr(self, "orient", {}).items():
+            if key not in self.mats:
+                continue
+            k = self.mats.index(key)
+            dv = Vector(tuple(self.T @ np.asarray(d, float)))
+            for f in self.bm.faces:
+                if f.material_index == k and f.normal.dot(dv) < 0:
+                    f.normal_flip()
         self.bm.to_mesh(me)
         self.bm.free()
         for m in self.mats:
@@ -480,8 +489,10 @@ def export_glb(ob, path):
         ch.select_set(True)
     bpy.context.view_layer.objects.active = ob
     kw = dict(filepath=path, export_format="GLB", use_selection=True, export_yup=True, export_apply=True,
-              export_animations=False, export_skins=False, export_morph=False, export_image_format="JPEG",
-              export_jpeg_quality=92, export_extras=True)
+              export_animations=False, export_skins=False, export_morph=False, export_image_format="NONE",
+              export_extras=True)
+    # No images inside the GLBs: every piece names its materials tvv_<key>, and the painted textures live once in
+    # assets/thuyvan/village/textures/<key>.png (the Godot side builds one material per key from materials.json)
     try:
         bpy.ops.export_scene.gltf(export_vertex_color="ACTIVE", **kw)
     except TypeError:
