@@ -17,6 +17,9 @@ extends SceneTree
 ##       [under=own-bend-air-palm]   a clip that keys only some bones (the air legs) shown over that clip at its strike
 ##       [suffix=_sheet]   appended to each clip sheet's name; [lineup=name] the lineup's file (<prefix><name>.png)
 ##       [loopcells=1]   how many even moments of a loop the lineups show (its start, then evenly through it)
+##       [rise=own-bend-edge-jump:11.8:19.9]   the code's jump (vy, gravity) added to that clip's root, as the game moves it
+## An edge clip (meta lip_y: keyed in the hang's frame) is shown at a block of the deck (its lip lip_y over the origin and
+## lip_out ahead, a pale coping on a stone face), framed round the lip (EDGE_VIEWS).
 
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
 const CELL := Vector2i(300, 400)
@@ -24,6 +27,15 @@ const GLB := "res://assets/character/actor_b_body.glb"
 const CENTER := Vector3(0.0, 0.95, 0.15)
 ## (the character faces +Z, +X its left)
 const VIEWS := {"front34": Vector3(-2.3, 0.35, 3.0), "side": Vector3(-3.7, 0.15, 0.15)}
+## An edge clip's views about the lip (the deck ahead of him, +Z): from the deck's front three quarters a little over it (what
+## a foe on the deck sees: the hands and the head over the lip), and square from the side a little over the deck (the profile:
+## the hands on the deck, the head over the lip, the feet on the face); a wider frame, the climbs ending a metre in.
+const EDGE_VIEWS := {"front34": Vector3(-3.3, 1.25, 4.1), "side": Vector3(-5.6, 0.45, 0.0)}
+## The deck's block an edge clip is shown at (its lip's nose at the node's origin: the deck ahead, +Z, its top at the origin's
+## height), a pale stone coping along the lip over a darker stone face.
+const LEDGE_W := 1.8
+const LEDGE_D := 3.0
+const LEDGE_H := 3.2
 
 var out := ""
 var lib_path := "res://animations_extra/Frontier_Bend.res"
@@ -39,6 +51,11 @@ var _under_anim: Animation
 var view
 var label: Label
 var sk: Skeleton3D
+var _ledge: Node3D
+## rise=<clip>:<vy>:<g>[;...]: the code's own lift added to that clip's root (the edge jump: the game's jump carries the
+## body up while the clip plays), so the sheet shows what the game shows. Clip name -> (vy m/s, g m/s^2); by animation.
+var _rise_args := {}
+var _rise := {}
 
 
 func _initialize() -> void:
@@ -63,6 +80,9 @@ func _initialize() -> void:
 			loop_cells = maxi(1, int(a.get_slice("=", 1)))
 		elif a.begins_with("lineup="):
 			lineup_name = a.get_slice("=", 1)
+		elif a.begins_with("rise="):
+			for r in a.get_slice("=", 1).split(";", false):
+				_rise_args[r.get_slice(":", 0)] = Vector2(float(r.get_slice(":", 1)), float(r.get_slice(":", 2)))
 	_run.call_deferred()
 
 
@@ -75,6 +95,9 @@ func _run() -> void:
 	var lib := load(lib_path) as AnimationLibrary
 	if under != "" and lib.has_animation(StringName(under)):
 		_under_anim = lib.get_animation(StringName(under))
+	for rn: String in _rise_args:
+		if lib.has_animation(StringName(rn)):
+			_rise[lib.get_animation(StringName(rn))] = _rise_args[rn]
 	_stage()
 	var body := (load(GLB) as PackedScene).instantiate() as Node3D
 	root.add_child(body)
@@ -239,6 +262,10 @@ func _apply(a: Animation, t: float) -> void:
 	if _under_anim != null and a != _under_anim and not _keys_root(a):
 		_set_clip(_under_anim, float(_under_anim.get_meta(&"strike_s", 0.0)))
 	_set_clip(a, t)
+	if _rise.has(a):
+		var r: Vector2 = _rise[a]
+		var rb := sk.find_bone("root")
+		sk.set_bone_pose_position(rb, sk.get_bone_pose_position(rb) + Vector3.UP * (r.x * t - 0.5 * r.y * t * t))
 	sk.force_update_all_bone_transforms()
 
 
@@ -264,8 +291,17 @@ func _set_clip(a: Animation, t: float) -> void:
 func _snap(a: Animation, t: float, vn: String, text: String) -> Image:
 	_apply(a, t)
 	label.text = text
-	view.camera.global_position = CENTER + VIEWS[vn]
-	view.camera.look_at(CENTER)
+	# (an edge clip, keyed in the hang's frame with its lip at meta lip_y over the origin and lip_out ahead: seen round the
+	# lip, the deck's block shown; every other clip on the floor as before)
+	var c := CENTER
+	var off: Vector3 = VIEWS[vn]
+	_ledge.visible = a.has_meta(&"lip_y")
+	if _ledge.visible:
+		_ledge.position = Vector3(0.0, float(a.get_meta(&"lip_y")), float(a.get_meta(&"lip_out", 0.35)))
+		c = Vector3(0.0, float(a.get_meta(&"lip_y")) + 0.1, float(a.get_meta(&"lip_out", 0.35)) + 0.3)
+		off = EDGE_VIEWS[vn]
+	view.camera.global_position = c + off
+	view.camera.look_at(c)
 	for f in 3:
 		await process_frame
 	RenderingServer.force_draw()
@@ -307,6 +343,21 @@ func _stage() -> void:
 	sun.light_energy = 1.25
 	sun.shadow_enabled = true
 	root.add_child(sun)
+	_ledge = Node3D.new()
+	_ledge.visible = false
+	root.add_child(_ledge)
+	for part: Array in [[Vector3(LEDGE_W, LEDGE_H, LEDGE_D), Vector3(0.0, -LEDGE_H * 0.5, LEDGE_D * 0.5), Color(0.42, 0.4, 0.38)],
+			[Vector3(LEDGE_W, 0.1, 0.29), Vector3(0.0, -0.05, 0.105), Color(0.8, 0.77, 0.7)]]:
+		var bm := MeshInstance3D.new()
+		var bx := BoxMesh.new()
+		bx.size = part[0]
+		bm.mesh = bx
+		var bmat := StandardMaterial3D.new()
+		bmat.albedo_color = part[2]
+		bmat.roughness = 0.9
+		bm.material_override = bmat
+		bm.position = part[1]
+		_ledge.add_child(bm)
 	for ix in range(-4, 4):
 		for iz in range(-4, 4):
 			var m := MeshInstance3D.new()

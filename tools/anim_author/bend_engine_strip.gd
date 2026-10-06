@@ -7,9 +7,12 @@ extends SceneTree
 ## square from the side (FOV 52.5), a row each, at the clip's key moments (a column each). The bones the clip keys are set
 ## from its tracks (nothing else is played); an airborne clip is shown lifted off the deck (air=...). The 15 m cells are cut
 ## from a 1920 x 1080 frame at its own pixels (the size he really is on a 1080p screen); the behind cell is the frame's middle
-## scaled to the cell. Windowed (it draws):
+## scaled to the cell. An edge clip (meta lip_y: keyed in the hang's frame) is posed hanging at the deck's end lip instead,
+## over a stand-in lip (the stock ring's pale coping over a flat stone face), and seen from the hang's own camera out over the
+## water, from a foe on the deck 15 m off and from 15 m along the lip (EDGE_VIEWS). Windowed (it draws):
 ##   Godot --path . -s tools/anim_author/bend_engine_strip.gd -- out=<dir> clips=own-bend-fall,... [air=own-bend-fall,...]
 ##       [light=noon] [elements=earth,water,fire,air] (cycled over the clips) [suffix=_engine]
+##       [rise=own-bend-edge-jump:11.8:19.9] (the code's jump, vy and gravity, added to that clip's root)
 ## Writes <dir>/<clip without own-bend->< suffix>.png. Ends with BEND ENGINE STRIP DONE.
 
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
@@ -29,8 +32,26 @@ const VIEWS := {
 	"15 m, side (over the rail)": [Vector3(-14.8, 3.2, 0.0), Vector3(0.0, 1.0, 0.0), 52.5, Vector2i(480, 360)],
 }
 
+## An edge clip's views (it is keyed in the hang's frame: the origin lip_y under the lip and lip_out out from the face, +Z the
+## deck), placed at the deck's end lip: the player's own camera out over the water behind him (the hang's arm, about 5 m,
+## its pivot a metre over the lip), a foe standing on the deck 15 m off in front three quarters, and 15 m off along the lip
+## (his profile against the face). Each [from, at] is over the lip's height (added at the shot).
+const EDGE_VIEWS := {
+	"behind 5 m (the hang camera)": [Vector3(0.0, 2.2, -4.5), Vector3(0.0, 0.7, 1.2), 52.5, Vector2i(960, 720)],
+	"foe on the deck 15 m, front 3/4": [Vector3(-7.5, 1.7, 13.0), Vector3(0.0, 0.0, 0.35), 52.5, Vector2i(480, 360)],
+	"15 m along the lip (profile)": [Vector3(-14.8, 1.0, -0.6), Vector3(0.0, -0.3, 0.35), 52.5, Vector2i(480, 360)],
+}
+## The stand-in lip at the deck's end for the edge clips (the stock ring's pale coping over a stone face, as spec 5.1 draws
+## it; the classic ring's plinth foot under it is covered so the face is one plane): its depth past the deck's end (m).
+const LIP_OUT := 0.2
+
 var out := ""
 var only: PackedStringArray = []
+var edge_xf := Transform3D.IDENTITY
+## rise=<clip>:<vy>:<g>[;...]: the code's own lift on that clip (the edge jump), added to the figure's place at the shot.
+var rise := {}
+var _cur_rise := Vector2.ZERO
+var _lip_block: Node3D
 var airborne: PackedStringArray = []
 var light := "noon"
 var elements: PackedStringArray = ["earth", "water", "fire", "air"]
@@ -58,6 +79,9 @@ func _initialize() -> void:
 			elements = a.get_slice("=", 1).split(",", false)
 		elif a.begins_with("suffix="):
 			suffix = a.get_slice("=", 1)
+		elif a.begins_with("rise="):
+			for r in a.get_slice("=", 1).split(";", false):
+				rise[r.get_slice(":", 0)] = Vector2(float(r.get_slice(":", 1)), float(r.get_slice(":", 2)))
 	DirAccess.make_dir_recursive_absolute(out)
 	InputSetup.ensure()
 	MatchSetup.incoming = true
@@ -93,6 +117,7 @@ func _run() -> void:
 	face.y = 0.0
 	# (the glb's figure faces its +Z: the basis' z the way he faces)
 	deck_xf = Transform3D(Basis.looking_at(-face.normalized(), Vector3.UP), at)
+	_edge_setup(ring)
 	lib = load(LIB) as AnimationLibrary
 	view = OffscreenView.new()
 	root.add_child(view)
@@ -117,15 +142,44 @@ func _run() -> void:
 		idx += 1
 		_dress(el)
 		var a := lib.get_animation(StringName(nm))
+		_cur_rise = rise.get(nm, Vector2.ZERO)
 		var times := _moments(a)
 		var cells: Array[Image] = []
-		for vn: String in VIEWS:
+		for vn: String in (EDGE_VIEWS if a.has_meta(&"lip_y") else VIEWS):
 			for tm: Array in times:
 				cells.append(await _snap(a, nm in airborne, float(tm[0]), vn, "%s (%s)  %s %.2f s (f%d)\n%s" % [nm.trim_prefix(
 						"own-bend-"), el, tm[1], float(tm[0]), int(round(float(tm[0]) * 30.0)), vn]))
 		_sheet(cells, times.size(), out.path_join("%s%s.png" % [nm.trim_prefix("own-bend-"), suffix]))
 	print("BEND ENGINE STRIP DONE")
 	quit(0)
+
+
+## The edge clips' place: at the deck's +X end (open, no ropes), on the middle of the lip, facing back along the deck, the
+## origin lip_y (read per clip) under the lip and lip_out out from the stand-in face; and the stand-in lip block there.
+func _edge_setup(ring: RingArena) -> void:
+	if ring == null:
+		return
+	var hl := ring.half_l()
+	var lip := ring.to_global(Vector3(hl + LIP_OUT, ring.top(), 0.0))
+	var into := -ring.global_basis.x
+	into.y = 0.0
+	edge_xf = Transform3D(Basis.looking_at(-into.normalized(), Vector3.UP), lip)
+	_lip_block = Node3D.new()
+	root.add_child(_lip_block)
+	_lip_block.global_transform = edge_xf
+	# (in the block's frame +Z is the deck: the face from the lip down to the water, then the pale coping on top)
+	for part: Array in [[Vector3(6.0, 2.6, LIP_OUT + 0.1), Vector3(0.0, -1.3, (LIP_OUT + 0.1) * 0.5), Color(0.44, 0.42, 0.4)],
+			[Vector3(6.0, 0.08, 0.29), Vector3(0.0, -0.035, 0.105), Color(0.83, 0.8, 0.73)]]:
+		var m := MeshInstance3D.new()
+		var b := BoxMesh.new()
+		b.size = part[0]
+		m.mesh = b
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = part[2]
+		mat.roughness = 0.92
+		m.material_override = mat
+		m.position = part[1]
+		_lip_block.add_child(m)
 
 
 ## Every body of the match out of sight (the practice dummy, a bot spawned late): the clip's figure alone on the deck.
@@ -192,6 +246,18 @@ func _snap(a: Animation, air: bool, t: float, vn: String, text: String) -> Image
 		var u := lib.get_animation(UNDER)
 		_set_clip(u, float(u.get_meta(&"strike_s", 0.0)))
 	_set_clip(a, t)
+	if _cur_rise != Vector2.ZERO:
+		# (the code's jump lifts the body while the clip plays: added to the root, the cameras kept on the lip)
+		var rb := sk.find_bone("root")
+		sk.set_bone_pose_position(rb, sk.get_bone_pose_position(rb) + Vector3.UP * (_cur_rise.x * t - 0.5 * _cur_rise.y * t * t))
+	if a.has_meta(&"lip_y"):
+		# (the hang's frame: the origin lip_y under the lip and lip_out out from the face; the views over the lip's height)
+		var ly := float(a.get_meta(&"lip_y"))
+		fig.global_transform = edge_xf.translated_local(Vector3(0.0, -ly, -float(a.get_meta(&"lip_out", 0.35))))
+		var spec: Array = (EDGE_VIEWS[vn] as Array).duplicate()
+		spec[0] = (spec[0] as Vector3) + Vector3.UP * ly
+		spec[1] = (spec[1] as Vector3) + Vector3.UP * ly
+		return await _shoot(spec, text, edge_xf.basis)
 	fig.global_transform = deck_xf.translated(Vector3.UP * (AIR_LIFT if air else 0.0))
 	return await _shoot(VIEWS[vn], text)
 
@@ -215,8 +281,8 @@ func _set_clip(a: Animation, t: float) -> void:
 				sk.set_bone_pose_position(b, a.position_track_interpolate(i, t))
 
 
-func _shoot(spec: Array, text: String) -> Image:
-	var b0 := deck_xf.basis
+func _shoot(spec: Array, text: String, basis := Basis()) -> Image:
+	var b0 := deck_xf.basis if basis == Basis() else basis
 	var o := fig.global_position
 	view.camera.fov = float(spec[2])
 	var from: Vector3 = o + b0 * (spec[0] as Vector3)
