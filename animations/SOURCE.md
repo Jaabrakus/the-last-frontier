@@ -221,6 +221,15 @@ visual references, no animation files imported) is his statement; the rows below
   hand keyed on the deck lands there while the figure turns) or through a heel lift (`_heel_place`); `--points` also prints
   `spinec`. The rolls key the head's `tilt`, `look` and the trunk's `twist` (a shoulder roll's diagonal). Clips that key none
   of them pose as before. The martial-art styles in the comments remain labels for the typed key poses.
+  Revised again the same day after a third review (pass 3): the same generator, the same inputs and the same eleven clips,
+  re-keyed and re-baked (`--clips`); no clip, dump or reference motion read; their lengths and moments (`hold_s`,
+  `strike_s`, `back_s`) are unchanged. The keys changed are typed numbers in `SET5` and `SET5B` (the hang's feet and sway in
+  `hang_at`, the forward roll's closed ball in the new typed table `BALL`, two typed facings, `fling` and `guard_out`). New
+  in the generator: the side roll's meta `travel` ("right"; "left" on its mirrored twin, which `mirror_clip` swaps;
+  `install_bend.gd` keeps it as a word) and
+  `HAT_REST`/`hat_low`, five typed points on the rig's `headb` measured off the glb's own Hat mesh at rest (its bounds, not
+  any animation), printed by `--points` as the hat's lowest point; it is a report only and moves nothing. Clips that key
+  none of the new channels pose as before.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.
