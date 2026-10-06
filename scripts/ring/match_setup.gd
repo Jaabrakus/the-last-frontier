@@ -46,12 +46,17 @@ extends RefCounted
 ##                                opponent's element drawn at random (the kept setup's opponent is not overwritten by it)
 ##   MatchSetup.set_practice(foe, dummy) / set_match()   what the next Begin plays (the menu's Practice and Begin)
 ##   MatchSetup.practice()        a practice asked for (kind)
-##   MatchSetup.rule_set() / games() / practice_pct()   round 3 (smash_r3 spec §14.3; SEAMS' stubs, BOTS fills them): the
-##       rule set the next ring plays ("classic" today's zones, "stock" the % layer), the games in a match (1), a practice's
-##       starting % per side ({}: none)
+##   MatchSetup.rule_set() / games() / practice_pct()   round 3 (smash_r3 spec §7.3-7.4, §11.1, §14.3; BOTS'): the rule set
+##       the next ring plays ("stock" the % layer, "classic" today's zones; the Esc menu's Rules row "Lives" / "Zones", the
+##       user arg rules=; rules.json rule_set until one is chosen), the games in a match (1 or 3: best of 3; games=), a
+##       practice's % per side ({foe, player}: the Practice rows' values, a side left out grows as in a match; foe_pct=,
+##       my_pct=). The Practice rows' other choices: steer (the dummy's steering), speed (Engine.time_scale), fresh (no stale
+##       moves), throw_me (R puts you off an end); rule_label, games_label, pct_label; all kept in GameSettings' "match" section
+##       (data/ring/practice.json: the rows' lists and words)
 ##   MatchSetup.parse(args)       the setup's user args, as take() reads them:
 ##       mode=ring element=fire foe=water[,earth,...] mates=air[,...] difficulty=hard to_win=2 round_s=90 spectate=on
-##       light=golden scheme=direction practice=throw (or mode=practice: a practice with the kept dummy)
+##       light=golden scheme=direction practice=throw (or mode=practice: a practice with the kept dummy) rules=stock|classic
+##       games=1|3 foe_pct=120|grows my_pct=60 steer=none|in|out|random speed=0.5 fresh=on throw_me=on
 
 const DATA_PATH := "res://data/ring/elements.json"
 ## The match's screens' words, the loading tips and the practice dummy's numbers.
@@ -67,8 +72,15 @@ const ROUNDS := [1, 2, 3]
 const LIGHTS := ["noon", "golden", "night"]
 ## What the ring plays: a match, or a practice against a dummy.
 const KINDS := ["match", "practice"]
-## The practice dummy's ways, the first the default.
+## The practice dummy's ways, the first the default (the classic ring's; the % ring's are STOCK_DUMMIES).
 const DUMMIES := ["stand", "block", "throw"]
+## Round 3: the % ring's Practice ways (data/ring/practice.json ways), B steps them.
+const STOCK_DUMMIES := ["stand", "walk", "jump", "block", "guard_held", "guard_after", "recover", "throw", "fight"]
+## Round 3: the rule sets the menu offers ("stock" the % layer, "classic" today's zones) and the games of a match.
+const RULE_SETS := ["stock", "classic"]
+const GAMES := [1, 3]
+## Practice's rows (data/ring/practice.json).
+const PRACTICE_PATH := "res://data/ring/practice.json"
 ## The match formats; only those in FORMATS_READY can be played (the rest are shown as coming).
 const FORMATS := ["1v1", "3v3"]
 const FORMATS_READY := ["1v1"]
@@ -88,6 +100,17 @@ static var dummy := "stand"
 static var format := "1v1"
 ## Quick match's draw: the opponent is this match's own, the kept setup's left as it was (save()).
 static var quick := false
+## Round 3: the rule set chosen ("" : rules.json rule_set), the games of a match (1, 3), Practice's rows: its % and yours (-1:
+## grows), its steering, the speed, every move fresh, R throws you off.
+static var rules_choice := ""
+static var games_n := 1
+static var foe_pct := -1.0
+static var my_pct := -1.0
+static var steer := "none"
+static var speed := 1.0
+static var fresh := false
+static var throw_me := false
+static var _practice := {}
 
 static var _on := false
 static var _data := {}
@@ -148,11 +171,32 @@ static func parse(args: PackedStringArray) -> bool:
 			"practice":
 				ring = true
 				kind = "practice"
-				if v in DUMMIES:
+				if v in DUMMIES or v in STOCK_DUMMIES:
 					dummy = v
 			"dummy":
-				if v in DUMMIES:
+				if v in DUMMIES or v in STOCK_DUMMIES:
 					dummy = v
+			"rules", "rule_set":
+				var rs := String({"lives": "stock", "zones": "classic"}.get(v, v))
+				if rs in RULE_SETS:
+					rules_choice = rs
+			"games":
+				if v.is_valid_int() and int(v) in GAMES:
+					games_n = int(v)
+			"foe_pct", "its_pct":
+				foe_pct = _pct_arg(v, foe_pct)
+			"my_pct", "your_pct":
+				my_pct = _pct_arg(v, my_pct)
+			"steer":
+				if v in ["none", "in", "out", "random"]:
+					steer = v
+			"speed":
+				if v.is_valid_float() and float(v) > 0.0:
+					speed = clampf(float(v), 0.1, 1.0)
+			"fresh":
+				fresh = v in ["on", "true", "yes", "1"]
+			"throw_me":
+				throw_me = v in ["on", "true", "yes", "1"]
 			"format":
 				if v in FORMATS:
 					format = v
@@ -224,7 +268,8 @@ static func save() -> void:
 		if not elements_in(kept, true).is_empty():
 			f = kept
 	GameSettings.set_section(SECTION, {"element": element, "foe": f, "difficulty": difficulty, "rounds": rounds_to_win,
-			"light": light, "dummy": dummy})
+			"light": light, "dummy": dummy, "rules": rules_choice, "games": games_n, "foe_pct": foe_pct, "my_pct": my_pct,
+			"steer": steer, "speed": speed, "fresh": fresh, "throw_me": throw_me})
 
 
 ## The kept setup read back over the statics (each value only when it is a good one).
@@ -246,8 +291,20 @@ static func load() -> void:
 		light = l
 	_scheme = ""                                 # (read again from the file on its next ask)
 	var dm := str(_kept("dummy", DUMMIES[0]))
-	if dm in DUMMIES:
+	if dm in DUMMIES or dm in STOCK_DUMMIES:
 		dummy = dm
+	# (round 3's rows)
+	var rs := str(_kept("rules", ""))
+	rules_choice = rs if rs in RULE_SETS else ""
+	var gm := int(_kept("games", 1))
+	games_n = gm if gm in GAMES else 1
+	foe_pct = _pct_arg(str(_kept("foe_pct", -1.0)), -1.0)
+	my_pct = _pct_arg(str(_kept("my_pct", -1.0)), -1.0)
+	var sr := str(_kept("steer", "none"))
+	steer = sr if sr in ["none", "in", "out", "random"] else "none"
+	speed = clampf(float(_kept("speed", 1.0)), 0.1, 1.0)
+	fresh = bool(_kept("fresh", false))
+	throw_me = bool(_kept("throw_me", false))
 
 
 ## A kept value of the "match" section that GameSettings.DEFAULTS may not list (the practice dummy): read from its file as
@@ -307,19 +364,82 @@ static func practice() -> bool:
 	return kind == "practice"
 
 
-## Round 3: the rule set the next ring plays ("classic": today's zones; "stock": the % layer). "classic" until BOTS' menu.
+## Round 3: the rule set the next ring plays ("stock": the % layer; "classic": today's zones): the menu's or the user arg's
+## choice, else rules.json rule_set.
 static func rule_set() -> String:
-	return "classic"
+	if rules_choice in RULE_SETS:
+		return rules_choice
+	var d := String(RingRules.data().get("rule_set", "classic"))
+	return d if d in RULE_SETS else "classic"
 
 
-## Round 3: the games in a match (1 until BOTS' menu).
+## Round 3: the games in a match (1, or 3: best of 3, the first to two).
 static func games() -> int:
-	return 1
+	return games_n if games_n in GAMES else 1
 
 
-## Round 3: a practice's starting % per side ({}: none until BOTS' Practice rows).
+## Round 3: a practice's % per side, from its rows: {foe, player} (a side left out grows as in a match). {} outside a
+## practice.
 static func practice_pct() -> Dictionary:
-	return {}
+	if not practice():
+		return {}
+	var out := {}
+	if foe_pct >= 0.0:
+		out["foe"] = foe_pct
+	if my_pct >= 0.0:
+		out["player"] = my_pct
+	return out
+
+
+## A % row's value from text ("120", "grows": -1); `def` when it is neither.
+static func _pct_arg(v: String, def: float) -> float:
+	if v == "grows" or v == "-1" or v == "-1.0":
+		return -1.0
+	return clampf(float(v), 0.0, 999.0) if v.is_valid_float() else def
+
+
+## data/ring/practice.json (round 3's Practice rows and words), read once.
+static func practice_data() -> Dictionary:
+	if _practice.is_empty():
+		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(PRACTICE_PATH)) if FileAccess.file_exists(PRACTICE_PATH) else null
+		_practice = d if d is Dictionary else {"_": true}
+	return _practice
+
+
+## A Practice word (practice.json words).
+static func pword(key: String) -> String:
+	return String((practice_data().get("words", {}) as Dictionary).get(key, key))
+
+
+## A round-3 menu word (practice.json menu).
+static func menu_word(key: String) -> String:
+	return String((practice_data().get("menu", {}) as Dictionary).get(key, key))
+
+
+## The Rules row's word for rule set `rs`: "Lives" or "Zones" (never the ids).
+static func rule_label(rs := "") -> String:
+	return menu_word(rs if rs != "" else rule_set())
+
+
+## The Games row's word: "1" or "best of 3".
+static func games_label(n := 0) -> String:
+	return menu_word("games_%d" % (n if n > 0 else games()))
+
+
+## A % row's value in words: "120%" or "grows".
+static func pct_label(v: float) -> String:
+	return pword("grows") if v < 0.0 else "%d%%" % roundi(v)
+
+
+## The next value of a list after `v` (the rows step through theirs).
+static func next_in(list: Array, v: Variant) -> Variant:
+	var i := list.find(v)
+	return list[(i + 1) % list.size()] if not list.is_empty() else v
+
+
+## The dummy's ways B steps under the rule set now (the % ring's or the classic's).
+static func dummy_ways() -> Array:
+	return STOCK_DUMMIES if rule_set() == "stock" else DUMMIES
 
 
 ## The practice dummy's move for `what` as "id/variation" ("" none): "throw" its element's key 1 first move (earth Spike,
@@ -340,10 +460,14 @@ static func format_ready(f: String) -> bool:
 	return f in FORMATS_READY
 
 
-## The practice dummy's way in words ("throws a stone every few seconds"; data/ring/screens.json practice.ways).
+## The practice dummy's way in words ("throws a stone every few seconds"; data/ring/screens.json practice.ways, the % ring's
+## own ways from practice.json way_lines).
 static func dummy_line(way: String) -> String:
 	var p: Dictionary = screens().get("practice", {})
-	return String((p.get("ways", {}) as Dictionary).get(way, way))
+	var ws: Dictionary = p.get("ways", {})
+	if ws.has(way) and not (rule_set() == "stock" and (practice_data().get("way_lines", {}) as Dictionary).has(way)):
+		return String(ws[way])
+	return String((practice_data().get("way_lines", {}) as Dictionary).get(way, ws.get(way, way)))
 
 
 ## data/ring/screens.json (the round and match screens' words, the loading tips, the practice dummy), read once.

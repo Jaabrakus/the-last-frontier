@@ -9,6 +9,9 @@ extends CanvasLayer
 ##
 ## Off when a script drives the game (the tests, the films) unless howto=on; howto=off turns it off, howto=reset
 ## forgets the seen topics.
+## Round 3 (smash_r3 spec §11.2): in the % ring (RingRules.stock_on()) the ring's topic is "ring_stock" (the jumps and the
+## Rise, the air dodge, the roll and duck, C down, breaking your fall, steering, the edge's keys) instead of the zones'
+## "ring"; no word of the show's or of another game's.
 
 const CFG := "user://how_to.cfg"
 const FLASH_S := 0.35          ## a tapped key stays lit at least this long
@@ -102,10 +105,19 @@ const TOPICS := {
 	"ring": {"title": "The ring", "steps": ["Knock the other side back through its three zones",
 			"Into the water behind them takes the round", "Water douses fire, fire melts ice, air drops stone",
 			"Rising under you: step off as it starts  ·  earth always catches stone"]},
+	# (round 3, the % ring: the movement and the edge, in the player's words)
+	"ring_stock": {"title": "Jumps, the edge, the water", "steps": [
+			"[Space]  Jumps; again in the air; off the deck once more: your Rise",
+			"[3]  In the air: dodge",
+			"Guard up + tap a direction: roll; + [C]: duck",
+			"[C]  Down",
+			"[E]  Just as you land: back on your feet",
+			"Thrown? Hold left or right: you curve",
+			"On the edge: [W] climbs, [Space] jumps, [E] rolls in, a click attacks, [C] lets go"]},
 }
 ## The arena's topics (Tidebreak's ring, FrontierPlayer.arena): only these come up there, the first of them at once (the
 ## world's Getting around and the rest are not the ring's).
-const ARENA_TOPICS := ["elements", "elements_first_moves", "elements_direction", "elements_radial", "ring"]
+const ARENA_TOPICS := ["elements", "elements_first_moves", "elements_direction", "elements_radial", "ring", "ring_stock"]
 ## Each control scheme's moves topic (KitWords.scheme_id(): "simple" is the first moves').
 const SCHEME_TOPICS := {"keys": "elements", "first_moves": "elements_first_moves", "direction": "elements_direction",
 		"radial": "elements_radial"}
@@ -218,9 +230,10 @@ func _doing(id: String) -> bool:
 		"elements", "elements_first_moves", "elements_direction", "elements_radial":
 			return p.arena and p.hotbar != null and p.hotbar.spell != "" and _age > 1.0 and not _hints_up() \
 					and scheme_topic() == id
-		"ring":
+		"ring", "ring_stock":
 			var moves := scheme_topic()
-			return p.arena and seen.has(moves) and current != moves and not _hints_up()
+			return p.arena and seen.has(moves) and current != moves and not _hints_up() \
+					and RingRules.stock_on() == (id == "ring_stock")
 	return false
 
 

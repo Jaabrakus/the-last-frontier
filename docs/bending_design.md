@@ -347,6 +347,136 @@ CLIPS, CORE, KITS and HUD_LESSONS merged in that order on worktree-spellcraft, t
 - Open for the owner: Breath's smoke (5 s from a 0.5 s lock) can keep a bot from ever attacking; the bots' timers run on
   BendStatus' frame clock (slow under a time scale); the KITS soak's mirrors went to side 0 every time.
 
+## The % ring (round 3, 2026-10-05/06: the Smash layer; smash_r3/spec.md v2)
+
+The owner, word for word: *"instead of a knock back we should implement a smash bros 100% plus like arena out system we should
+give everyone all movement options and in air options and combos"*. He then chose: **keep the number keys**, **3 lives** with
+the % back to 0 after each fall, and **full recovery** (double jump, air dodge, an up-recovery per element, grabbing the
+deck's edge; out only in the water). His answers on 2026-10-05 (smash_r3/owner_answers.md): hitstun **yes, as built**; the
+camera **turns toward the deck** when you are thrown off facing away with the mouse still; stale moves **yes**; **one air-only
+close hit per element: yes** (left click in the air); the arena change **as built**.
+
+Everything here runs only under the stock rules (`RingRules.stock_on()`, rules.json `rule_set` "stock"; the Esc menu's Rules
+row reads **Lives** / **Zones**). The open world, the duel and the classic zones ring are unchanged, and a test pins that.
+
+### The rules in one paragraph
+
+Every hit adds **%** instead of taking health. The higher your %, the farther and longer the next hit throws you: **v = W ×
+(base + growth × R × A × p/100 × (0.5 + d/20)) m/s** (p your % after the hit, d the hit's %, W your weight, R the range falloff
+1.0 to 10 m → 0.65 at 22 m, A 0.85 for a launch released in the air). You are out only when you touch the water (6 m below
+the deck; the tank's curtain 10 m out). Three lives; a game is 8:00; level lives at the bell: sudden death at 300%. Hitstun is
+clamp(0.045 × v, 0.12, 1.2) s, escapable from 0.6 s by a fresh Space or 3; your aim, camera and lock are never touched by a hit
+(the lock freezes and resumes). Steering: hold left or right 0.1 s after the hit, up to 15° of yaw. Breaking your fall: E within
+0.25 s before you meet the deck. Strings decay ×0.8 a hit (the Pop exempt), the 6th hit frees you, a 0.4 s breather after a
+4-hit string. Stale moves: −8% d a copy among your last 6 hits, at most −40%. Patch takes back only fresh damage (the last 6 s,
+at most 10%). The respawn is a water spout, safe until 1.5 s after you leave it or your first lock.
+
+### The keys (spec §0)
+
+**The numbers ready a move and right click casts it; left click, E, 3 and Space act at once.**
+
+| Idea | Input |
+|---|---|
+| Ready a move | 1, 2, 4, 5 (tap: the first, twice: the second); 1 is ready at the start and after every fall |
+| Cast | right click: hold to aim while it fills, let go to cast |
+| Jab | left click; in the air, your element's close air hit |
+| Guard (shield) | E: on the beat it's yours, late half gets through; held, up to 2.5 s |
+| Dash, dodge | 3: a dash on the deck, an instant dodge in the air (once per airtime) |
+| Jump | Space; again in the air (double jump); off the deck once more: your **Rise** |
+| Down | C: crouch, fast fall, no edge grab, let go of the edge |
+| Roll, duck | guard up + tap a direction: roll; guard up + C: duck |
+| Edge | fall near the lip and you grab it: any direction key climbs, Space jumps, E rolls in, a click attacks, C lets go |
+
+### Every move's class (spec §2.3, lead_table.py v2; the end figure is the KO % from the deck's middle toward an end)
+
+| Move | d % | base | growth | angle | KO end |
+|---|---|---|---|---|---|
+| Pebbles / Splash / Embers / Palm (jabs, set) | 5 / 4 / 4 / 3 | set 3.0 / 3.5 / 1.5 / 4.5 | | 10, 10, 5, 10 | never |
+| The Pop (the 3rd jab that hits) | 3 | set 9.0 | | 80 | never |
+| Spike | 14 | 5.8 | 12.2 | 30 | 159% |
+| Lash | 10 | 4.6 | 11.6 | 25 | 210% |
+| Punch | 11 | 4.0 | 10.3 | 25 | 231% |
+| Slice | 6 | 3.4 | 14.5 | 25 | 220% |
+| Boulder | 22 | 8.0 | 12.1 | 35 | 115% |
+| Spear | 16 | 5.2 | 12.2 | 25 | 150% |
+| Fireball (Punch grown) | 18 | 5.8 | 12.4 | 30 | 134% |
+| Lightning | 25 | 6.9 | 12.1 | 30 | 105% |
+| Wind Ball | 7 | 8.0 | 18.7 | 35 | 140% |
+| Shove / Shove ▲ | 12 / 16 | 6.9 / 8.0 | 12.6 / 13.6 | 30 | 160% / 120% |
+| Wave / Wave ▲ | 9 / 12 | 8.0 / 9.2 | 13.5 / 14.5 | 30 | 165% / 125% |
+| Kick / Kick ▲ | 12 / 16 | 5.8 / 6.9 | 12.7 / 14.0 | 40 | 190% / 140% |
+| Gust / Gust ▲ | 5 / 7 | 7.5 / 8.6 | 16.5 / 19.3 | 30 | 175% / 125% |
+| Column, Geyser, High Kick (launchers) | 11 / 11 / 10 | 10.3 / 10.9 / 6.9 | 5 / 5 / 8 | 85 / 85 / 65 | never |
+| A caught stone thrown back (×1.2; the rally to ×1.6) | 16.8 | 5.8 | 14.6 | 30 | 119% (74% at ×1.6) |
+| The Pop's stone (earth, E) | 14 | 5.8 | 12.2 | 30 | 159% |
+
+Weights: earth 1.25 (W 0.89), water 1.0, fire 0.95 (W 1.03), air 0.8 (W 1.11).
+
+### Movement and the edge (spec §4-§5; data/ring/movement.json, MOVE's)
+
+Gravity 20 for everyone; run 5.0 m/s; a jump 2.0 m (Space is always a full jump; a short hop is Space within 0.05 s of letting
+go of a cast); the double jump 1.6 m (earth 1.4, air 1.9), keeping half the launch's carry; the air dodge 3.2 m in 0.22 s;
+fast fall −17 m/s. The grab box: the head from 0.3 m inside to 0.9 m out, lip −0.5 to +0.6 m; three grabs, then the deck;
+0.6 s intangible on a first grab, 4 s at most. The Rise: earth's **Pillar** (5.5 m, leaning 20° to the lip), water's
+**Fountain** (4.5 m), fire's **Jet** (7.5 m along the aim, at least 20° up), air's **Updraft** (3.5 m, then a glide). Recovery
+reach: earth 11.3 m, water 11.8, fire 15.8, air 17.4.
+
+### True strings (spec §6.6, lead_combos.py v2; the bots' string table, bend_ai.json pct.strings)
+
+The accident string for everyone: **jab, jab, Pop, then the String card's follow-up**, true at every %: earth the Pop's stone
+thrown with E (or a Shove of a held stone), water Lash, fire Punch, air Slice or Gust. True from 0%: Column → Pebbles, Geyser
+→ Lash or Spear, Kick → Punch, High Kick → Punch, Embers → Punch, Pull → Palm, Gust → Slice. Reads, not strings: Column →
+Spike, Lash → Spear or Wave, Wind Ball → Gust, anything after the Pop but the card's follow-up.
+
+### The bots in the % ring (BOTS; scripts/npc/npc_ring_mind.gd, data/npc/bend_ai.json "pct")
+
+A bot moves only through the same intent as the player's keys (NpcPad, read by MOVE's RingMoves), so it has exactly his jumps,
+dodges, Rise, edge options and gravity, and it never writes its own velocity (a test pins it). Its mind picks a state each tick
+(NEUTRAL, PRESSURE, EDGEGUARD, LEDGETRAP, REELING, RECOVER, LEDGE, RESPAWN); round 2's chooser picks casts only in NEUTRAL and
+PRESSURE, its options weighed by the KO read (the rules' own launch flown by RingPredict). It reads only %, lives, positions,
+poses and visible wind-ups, never inputs.
+
+| | Easy | Normal | Hard |
+|---|---|---|---|
+| KO read / bonus / margin | never / ×1.0 | yes / ×2.0 / 1.5 m | his best steering / ×3.5 / 0.5 m |
+| Finisher from past 15 m | ×0.6 (it walks in) | ×0.6 | ×0.6; a fresh finisher kept (×0.5 on a KO move staled twice under 80%) |
+| Strings: chance / most hits / a read to end | 0.25 / 2 / 0 | 0.55 / 3 / 0.3 | 0.85 / 4 / 0.5 |
+| Steering: chance / the right way | 0 | 0.5 / 0.7 | 0.9 / 0.95 |
+| Break out at 0.6 s / break the fall | 0 / 0 | 0.5 / 0.3 | 0.8 / 0.7 |
+| Recovery: plans / Rise aim error / late margin / air dodge | 3, 4, 2 / 15° / 0 / never | 2, 4, 6 / 4° / 0.25 s / foe within 4 m | 2, 4 or 5, 6 / 0° / 0.1 s / a seen threat |
+| On the edge | climbs after 0.6 s | climb 0.4, jump 0.3, roll 0.2, attack 0.1 after 0.2-1.0 s | reads the foe; counts your favourite option |
+| Keeping him off | waits mid-deck | 0.5: shots from inside the lip | 0.85: shots, a pre-filled lock let go as his safety ends, a safe-only chase |
+| The spout | leaves after 0.5 s | after 1.0 s | the full time with you under it, else at once |
+| Air scatter / lead | ×2.0 / 0.2 | ×1.5 / 0.5 | ×1.2 / 0.8 |
+| Its own % above 120 | | reaction +0.15 s, 3 m further from its end | reaction +0.15 s, 6 m further |
+
+Every string follow-up begins only while `RingRules.hitstun_left(foe) ≥ lock + flight − 1/60` (true strings only); no bot ever
+lets a hit go into a safety (its full lock is held, then called off); Patch only with 6% or more of fresh damage, standing, the
+foe 12 m away and not winding up at it. Recovery runs six plans through the mover's look-ahead every 0.1 s toward the nearest
+open lip and never grabs a 4th time without the deck.
+
+### Practice and lessons in the % ring
+
+Practice's rows (Esc menu, and the main menu's Practice panel): its % and yours (0 to 200, or grows), the dummy's way on B
+(stand, walk, jump, guard on the beat / held / after a hit, recover, throw, fight), its steering (none, in, out, random), Throw
+me off (R puts you off an end), speed 1, ½, ¼, fresh moves on/off. No lives, no clock. The string counter (32 px, white while
+true, grey once he was free, the best kept) and the readout ("Launch 9.2 m · reeling 0.55 s · steered 12° · from here, out at
+124%") use the same functions the bots use. The lessons: round 2's guard card in the % ring's words ("E: up as soon as it's
+ready, and it stays while you hold it. Tap a direction to roll. On the beat, nothing gets through."), then six cards (%, Out,
+Jumps, Dodge, Back, Edge) and three more (String, per element; Steer; Keep him off), each done by doing it. One hint queue in a
+match: one hint every 20 s at most; the edge and recovery hints pre-empt; the stale-move hint waits for the first fall.
+
+### The soak (spec §12)
+
+tests/ring/test_ring_soak.gd with rules=stock (16 pairings × 3 seeds, normal bots, time scale 1:
+`zsh tools/ring/r3_soak_run.sh <worktree> <scratchpad> review/r3_bots_soak.md`) prints every METRIC line of §12 and the table
+checks each target. **Not yet run on the merged % layer**: in BOTS' own worktree (before PERCENT and MOVE merge) the ring plays
+its rules.json rule set and the stock lines read n/a; the bots' parts were measured with stand-ins (tests/npc/r3_standins.gd):
+recovery from 12 off-deck spots 100% for every element at normal and hard, 83-100% at easy (it never air dodges), the KO read
+at 150% 100% (0% at 0%), true strings only, the
+steering and break rates within 0.02-0.05 of bend_ai.json, no velocity written, a hard bot hitting a scripted recovering player
+0.38 of its casts.
+
 ## Build order (proposed)
 
 1. Controls: the keys and their two skills (the same key again switches), the wheel through a skill's variations; the

@@ -22,7 +22,8 @@ extends Control
 ##   Quick match   the last setup at once with the opponent's element drawn at random (MatchSetup.quick_match; its line
 ##                 under it: "Fire against a random opponent  ·  normal  ·  best of 3"; the kept opponent left as it was)
 ##   Practice      a dummy to practise on (_open_practice: your element with its passive, guard and buttons, the dummy's
-##                 element and way: stand, block or throw, Controls; MatchSetup.set_practice), into the ring with no clock,
+##                 element and way: stand, block or throw (the % ring's ways under its rules), round 3's % rows (its % and
+##                 yours: 0 to 200 or grows, MatchSetup.foe_pct / my_pct), Controls; MatchSetup.set_practice), into the ring with no clock,
 ##                 rounds or score (RingMode practice); its
 ##                 Lessons row the same practice with the lessons' cards (RingLessons.ask: your element's dummy, a card at
 ##                 a time, each done by doing it; its line says where they resume)
@@ -467,10 +468,30 @@ func _open_practice() -> void:
 		_set_row(way, "What it does:  %s" % MatchSetup.dummy, "the dummy %s" % MatchSetup.dummy_line(MatchSetup.dummy))
 	paint_way.call()
 	way.pressed.connect(func() -> void:
-		var ws := MatchSetup.DUMMIES
+		var ws := MatchSetup.dummy_ways()
 		MatchSetup.dummy = String(ws[(ws.find(MatchSetup.dummy) + 1) % ws.size()])
 		paint_way.call())
 	box.add_child(way)
+	# (round 3: the % rows, its % and yours; R and a fall in the ring put them back to these)
+	var pcts: Array = MatchSetup.practice_data().get("pct", [0, 30, 60, 90, 120, 150, 200, -1])
+	var fp := MenuUI.item("", 22, "-")
+	fp.name = "FoePct"
+	var paint_fp := func() -> void:
+		_set_row(fp, MatchSetup.pword("row_foe_pct") % MatchSetup.pct_label(MatchSetup.foe_pct), MatchSetup.pword("row_pct_line"))
+	paint_fp.call()
+	fp.pressed.connect(func() -> void:
+		MatchSetup.foe_pct = float(MatchSetup.next_in(pcts, MatchSetup.foe_pct))
+		paint_fp.call())
+	box.add_child(fp)
+	var mp := MenuUI.item("", 22, "-")
+	mp.name = "MyPct"
+	var paint_mp := func() -> void:
+		_set_row(mp, MatchSetup.pword("row_my_pct") % MatchSetup.pct_label(MatchSetup.my_pct), MatchSetup.pword("row_pct_line"))
+	paint_mp.call()
+	mp.pressed.connect(func() -> void:
+		MatchSetup.my_pct = float(MatchSetup.next_in(pcts, MatchSetup.my_pct))
+		paint_mp.call())
+	box.add_child(mp)
 	# (round 2: the other ways to pick moves under Controls, not here)
 	box.add_child(_controls_row(_open_practice))
 	box.add_child(_gap(4))

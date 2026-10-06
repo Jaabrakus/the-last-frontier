@@ -8,11 +8,17 @@ extends CanvasLayer
 ##   Element: Earth     the player's, in turn (MatchSetup.element): from the next restart, not at once
 ##   Opponent: Water    the bot's, in turn, Any among them (MatchSetup.foes): from the next restart
 ##   Difficulty: normal easy, normal, hard in turn (MatchSetup.difficulty): from the next restart
+##   Rules: Lives      round 3: the rule set in turn, "Lives" (the % ring) or "Zones" (never the ids; MatchSetup.rules_choice):
+##                      from the next restart, kept
+##   Games: 1           round 3: 1 or best of 3 (MatchSetup.games_n): from the next restart, kept
+##   Practice           round 3, in a % ring practice only: its rows (its %, your %, what it does, its steering, Throw me
+##                      off, speed, fresh moves), each at once and kept (RingPractice applies them; practice.json words)
 ##   Aim help: light    how much the casts are helped onto a fighter near the crosshair, in turn: at once, kept
 ##   Key hints: on      the control scheme's keys at the top left until each is used (FirstHints; GameSettings' hints
 ##                      section): at once, kept; on, they show in the match under way
 ##   Controls           the element in play's buttons (round 2 of the skills, KitWords: its passive and guard, LMB jab,
-##                      E guard, 1-5 with their plain names), the four rules, and the row "Other ways to pick moves:
+##                      E guard, 1-5 with their plain names; in the % ring first the one line of practice.json
+##                      menu.controls_line), the four rules, and the row "Other ways to pick moves:
 ##                      Keys" (MatchSetup.set_scheme in turn: keys, first moves only, direction, the wheel; at once, kept;
 ##                      cycle_scheme)
 ##   Settings           the main menu's (GameSettings)
@@ -34,6 +40,9 @@ var _diff: Button
 var _scheme: Button
 var _aim: Button
 var _hints: Button
+var _rules: Button
+var _games: Button
+var _practice: Button
 var _open := false
 
 
@@ -84,6 +93,13 @@ func _ready() -> void:
 	_elem = _row(_elem_text(), cycle_element, w("element_line"))
 	_foe = _row(_foe_text(), cycle_opponent, w("opponent_line"))
 	_diff = _row(_diff_text(), cycle_difficulty, MatchSetup.difficulty_line(MatchSetup.difficulty))
+	_rules = _row(_rules_text(), cycle_rules, MatchSetup.menu_word("rules_line"))
+	_rules.name = "Rules"
+	_games = _row(_games_text(), cycle_games, MatchSetup.menu_word("games_line"))
+	_games.name = "Games"
+	_practice = _row(MatchSetup.pword("practice"), practice_rows, MatchSetup.pword("practice_line"))
+	_practice.name = "Practice"
+	_practice.visible = false
 	_aim = _row(MatchSetup.aim_row(), cycle_aim, MatchSetup.aim_row_line())
 	_aim.name = "AimHelp"
 	_hints = _row(FirstHints.row_text(), toggle_hints, FirstHints.row_line())
@@ -164,6 +180,7 @@ func open() -> void:
 	_open = true
 	_note.text = note_text()
 	_clear_panel()
+	_practice.visible = match_mode != null and match_mode.practice and RingRules.stock_on()
 	_paint()
 	_root.visible = true
 	get_tree().paused = true
@@ -201,6 +218,87 @@ func cycle_opponent() -> void:
 	MatchSetup.foes = [String(list[(list.find(MatchSetup.foe()) + 1) % list.size()])]
 	_paint()
 	_note.text = w("applies") % _foe_text()
+
+
+## Round 3: the next rule set in turn, "Lives" or "Zones" (from the next restart), kept.
+func cycle_rules() -> void:
+	MatchSetup.rules_choice = String(MatchSetup.next_in(MatchSetup.RULE_SETS, MatchSetup.rule_set()))
+	MatchSetup.save()
+	_paint()
+	_note.text = w("applies") % _rules_text()
+
+
+## Round 3: the games of a match in turn, 1 or best of 3 (from the next restart), kept.
+func cycle_games() -> void:
+	MatchSetup.games_n = int(MatchSetup.next_in(MatchSetup.GAMES, MatchSetup.games()))
+	MatchSetup.save()
+	_paint()
+	_note.text = w("applies") % _games_text()
+
+
+func _rules_text() -> String:
+	return MatchSetup.menu_word("rules") % MatchSetup.rule_label()
+
+
+func _games_text() -> String:
+	return MatchSetup.menu_word("games") % MatchSetup.games_label()
+
+
+## Round 3: the Practice rows (a % ring practice): each press steps its value, at once, kept.
+func practice_rows() -> void:
+	_clear_panel()
+	_panel.add_child(MenuUI.heading(MatchSetup.pword("practice")))
+	var pd := MatchSetup.practice_data()
+	var pcts: Array = pd.get("pct", [0, 30, 60, 90, 120, 150, 200, -1])
+	var ctl: RingPractice = match_mode.practice_ctl if match_mode != null else null
+	_prow("ForePct", func() -> String: return MatchSetup.pword("row_foe_pct") % MatchSetup.pct_label(MatchSetup.foe_pct),
+			MatchSetup.pword("row_pct_line"), func() -> void:
+				MatchSetup.foe_pct = float(MatchSetup.next_in(pcts, MatchSetup.foe_pct))
+				if ctl != null:
+					ctl._apply_pct())
+	_prow("MyPct", func() -> String: return MatchSetup.pword("row_my_pct") % MatchSetup.pct_label(MatchSetup.my_pct),
+			MatchSetup.pword("row_pct_line"), func() -> void:
+				MatchSetup.my_pct = float(MatchSetup.next_in(pcts, MatchSetup.my_pct))
+				if ctl != null:
+					ctl._apply_pct())
+	_prow("Way", func() -> String: return MatchSetup.pword("row_way") % MatchSetup.dummy_line(ctl.dummy if ctl != null else MatchSetup.dummy),
+			MatchSetup.pword("row_way_line"), func() -> void:
+				if ctl != null:
+					ctl.cycle_dummy())
+	_prow("Steer", func() -> String: return MatchSetup.pword("row_steer") % String((pd.get("steer_lines", {}) as Dictionary).get(MatchSetup.steer, MatchSetup.steer)),
+			MatchSetup.pword("row_steer_line"), func() -> void:
+				MatchSetup.steer = String(MatchSetup.next_in(pd.get("steer", ["none", "in", "out", "random"]), MatchSetup.steer))
+				if ctl != null:
+					ctl._tell_way())
+	_prow("ThrowMe", func() -> String: return MatchSetup.pword("row_throw_me") % MatchSetup.pword("on" if MatchSetup.throw_me else "off"),
+			MatchSetup.pword("row_throw_me_line"), func() -> void:
+				MatchSetup.throw_me = not MatchSetup.throw_me)
+	_prow("Speed", func() -> String: return MatchSetup.pword("row_speed") % speed_label(MatchSetup.speed),
+			MatchSetup.pword("row_speed_line"), func() -> void:
+				MatchSetup.speed = float(MatchSetup.next_in(pd.get("speed", [1.0, 0.5, 0.25]), MatchSetup.speed)))
+	_prow("Fresh", func() -> String: return MatchSetup.pword("row_fresh") % MatchSetup.pword("on" if MatchSetup.fresh else "off"),
+			MatchSetup.pword("row_fresh_line"), func() -> void:
+				MatchSetup.fresh = not MatchSetup.fresh
+				var r := RingRules.current()
+				if r != null:
+					r.set(&"stale_off", MatchSetup.fresh))
+
+
+## "1", "1/2", "1/4".
+static func speed_label(s: float) -> String:
+	return "1" if s >= 0.99 else "1/%d" % roundi(1.0 / maxf(s, 0.01))
+
+
+## One Practice row: its text now, its line, what a press does (then the text again, the setup kept).
+func _prow(nm: String, text: Callable, sub: String, press: Callable) -> Button:
+	var b := MenuUI.item(String(text.call()), 22, sub)
+	b.name = nm
+	b.pressed.connect(func() -> void:
+		press.call()
+		MatchSetup.save()
+		_set_row(b, String(text.call()), sub))
+	_panel.add_child(b)
+	return b
 
 
 ## The next difficulty in turn (from the next restart).
@@ -257,6 +355,8 @@ func _paint() -> void:
 	_set_row(_elem, _elem_text(), KitWords.passive_line(MatchSetup.element))      # (the element's one passive, round 2)
 	_set_row(_foe, _foe_text())
 	_set_row(_diff, _diff_text(), MatchSetup.difficulty_line(MatchSetup.difficulty))
+	_set_row(_rules, _rules_text(), MatchSetup.menu_word("rules_line"))
+	_set_row(_games, _games_text(), MatchSetup.menu_word("games_line"))
 	_set_row(_scheme, KitWords.other_ways_row(), KitWords.other_ways_line())
 	_set_row(_aim, MatchSetup.aim_row(), MatchSetup.aim_row_line())
 	_set_row(_hints, FirstHints.row_text(), FirstHints.row_line())
@@ -286,6 +386,9 @@ func _controls() -> void:
 	_clear_panel()
 	var el := match_mode.element if match_mode != null else MatchSetup.element
 	_panel.add_child(MenuUI.heading(KitWords.w("controls_head", "%s: your buttons") % MatchSetup.label(el)))
+	if RingRules.stock_on():
+		# (round 3: the % ring's one line, in right-click terms)
+		_panel.add_child(MenuUI.label(MatchSetup.menu_word("controls_line"), 18, MenuUI.GOLD, true))
 	_panel.add_child(_scheme)                   # (the other ways first: in view without a scroll)
 	for line in KitWords.pick_lines(el):
 		_panel.add_child(MenuUI.label(String(line), 17, MenuUI.DIM, true))
@@ -308,10 +411,12 @@ func _settings() -> void:
 
 func to_menu() -> void:
 	get_tree().paused = false
+	Engine.time_scale = 1.0                      # (a slowed practice's speed left behind)
 	MatchSetup.leave()
 	get_tree().change_scene_to_file(MENU_SCENE)
 
 
 func _quit() -> void:
 	get_tree().paused = false
+	Engine.time_scale = 1.0
 	get_tree().quit()

@@ -20,6 +20,10 @@ extends SceneTree
 ##   menu       the sport's row first; its panel: the four element rows (each with its style), the keys block, Opponent,
 ##              Format, Difficulty, Rounds, Begin; Fire pressed, Opponent pressed round to Water, Begin: the setup is
 ##              fire against ["water"], incoming, kept, and the load asked for match_path() (the ring), no loading screen
+##   round 3    the rule set's Rules row reads "Lives" / "Zones" (never the ids), rules= lives|zones|stock|classic, its default
+##              rules.json rule_set; games 1 or 3 ("best of 3"); a practice's % rows (foe_pct, my_pct, grows); steer, speed,
+##              fresh, throw_me; all kept (save then load); the Practice words free of the show's words and of the other
+##              game's names
 ## Ends with "MATCH SETUP TEST PASSED" or "MATCH SETUP TEST FAILED" (exit 0 only on a pass; a watchdog quits with 2).
 
 const NAME := "MATCH SETUP TEST"
@@ -67,6 +71,7 @@ func _run() -> void:
 	_parse()
 	_kept()
 	_quick()
+	_round3()
 	_compile()
 	await _menu()
 	var now_t := FileAccess.get_modified_time(real_cfg) if FileAccess.file_exists(real_cfg) else 0
@@ -159,6 +164,74 @@ func _kept() -> void:
 	var cf := ConfigFile.new()
 	check(cf.load(OWN_CFG) == OK and String(cf.get_value("match", "foe", "")) == "fire", "kept in the test's own file's [match]")
 	check(MatchSetup.summary() == "Water vs Fire  ·  easy  ·  best of 5", "its line: '%s'" % MatchSetup.summary())
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+
+
+## Round 3 (smash_r3 spec §7.3-7.4, §11.1, §14.3): MatchSetup.rule_set(), games(), practice_pct() and their words.
+func _round3() -> void:
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+	GameSettings.path = OWN_CFG
+	var def := String(RingRules.data().get("rule_set", "classic"))
+	MatchSetup.rules_choice = ""
+	check(MatchSetup.rule_set() == def, "the rule set by default rules.json's (%s)" % MatchSetup.rule_set())
+	MatchSetup.parse(PackedStringArray(["rules=lives", "games=3", "foe_pct=120", "my_pct=grows", "steer=out", "speed=0.5",
+			"fresh=on", "throw_me=on"]))
+	check(MatchSetup.rule_set() == "stock" and MatchSetup.rule_label() == "Lives" and MatchSetup.games() == 3
+			and MatchSetup.games_label() == "best of 3", "rules=lives games=3: %s \"%s\", %d \"%s\"" % [MatchSetup.rule_set(),
+			MatchSetup.rule_label(), MatchSetup.games(), MatchSetup.games_label()])
+	MatchSetup.parse(PackedStringArray(["rules=zones", "games=2", "speed=x", "steer=sideways"]))
+	check(MatchSetup.rule_set() == "classic" and MatchSetup.rule_label() == "Zones" and MatchSetup.games() == 3
+			and MatchSetup.speed == 0.5 and MatchSetup.steer == "out", "rules=zones: \"Zones\"; a bad games, speed, steer left alone")
+	var was := MatchSetup.kind
+	MatchSetup.kind = "match"
+	check(MatchSetup.practice_pct().is_empty(), "a match: no practice %")
+	MatchSetup.kind = "practice"
+	check(MatchSetup.practice_pct() == {"foe": 120.0}, "a practice: its %% 120, yours grows (%s)" % [MatchSetup.practice_pct()])
+	MatchSetup.my_pct = 60.0
+	MatchSetup.save()
+	MatchSetup.rules_choice = "stock"
+	MatchSetup.games_n = 1
+	MatchSetup.foe_pct = -1.0
+	MatchSetup.my_pct = -1.0
+	MatchSetup.steer = "none"
+	MatchSetup.speed = 1.0
+	MatchSetup.fresh = false
+	MatchSetup.throw_me = false
+	MatchSetup.load()
+	check(MatchSetup.rule_set() == "classic" and MatchSetup.games() == 3 and MatchSetup.practice_pct() == {"foe": 120.0, "player": 60.0}
+			and MatchSetup.steer == "out" and MatchSetup.speed == 0.5 and MatchSetup.fresh and MatchSetup.throw_me,
+			"round 3's rows kept: save() then load() (%s %d %s %s %.2f %s %s)" % [MatchSetup.rule_set(), MatchSetup.games(),
+			MatchSetup.practice_pct(), MatchSetup.steer, MatchSetup.speed, MatchSetup.fresh, MatchSetup.throw_me])
+	check(MatchSetup.pct_label(-1.0) == "grows" and MatchSetup.pct_label(120.0) == "120%", "the % rows' words")
+	check(MatchSetup.dummy_ways() == MatchSetup.DUMMIES, "zones: B steps the classic ways")
+	MatchSetup.rules_choice = "stock"
+	check(MatchSetup.dummy_ways() == MatchSetup.STOCK_DUMMIES and MatchSetup.dummy_line("guard_after") == "guards after a hit",
+			"lives: B steps the %% ring's ways (%s)" % MatchSetup.dummy_line("guard_after"))
+	# (every Practice and menu word clean of the show's words and of the other game's names)
+	var other := RegEx.create_from_string("(?i)\\b(stock|blast zone|DI|tech|edge-?guard|meteor|smash|final smash)\\b")
+	var bad: Array = []
+	var walk := [MatchSetup.practice_data()]
+	while not walk.is_empty():
+		var v: Variant = walk.pop_back()
+		if v is Dictionary:
+			for k: Variant in v:
+				if not String(k).begins_with("_"):
+					walk.append((v as Dictionary)[k])
+		elif v is Array:
+			walk.append_array(v as Array)
+		elif v is String:
+			if _show_re.search(String(v)) != null or other.search(String(v)) != null:
+				bad.append(v)
+	check(bad.is_empty(), "practice.json's words: none of the show's, none of the other game's (%s)" % [bad])
+	MatchSetup.kind = was
+	MatchSetup.rules_choice = ""
+	MatchSetup.games_n = 1
+	MatchSetup.foe_pct = -1.0
+	MatchSetup.my_pct = -1.0
+	MatchSetup.steer = "none"
+	MatchSetup.speed = 1.0
+	MatchSetup.fresh = false
+	MatchSetup.throw_me = false
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 
 

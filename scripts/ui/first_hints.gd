@@ -10,6 +10,8 @@ extends CanvasLayer
 ##                        ring's Esc menu's row (RingMenu) turns them on or off: on, they show at once in the match under way
 ##   install(mode, now)   RingMode's (a Quick match with them on; null otherwise), the menu's (now: whatever the match)
 ##   rows_left()          the rows not yet used (the tests)
+## Round 3: a row with "rules" shows only under those rule sets (RingLessons.rules_now(): the % ring's "[jump] twice ·
+## [weapon_3] in the air").
 ## Off when a script drives the game (the tests, the films) unless FirstHints.force or the user arg hints=on.
 
 const SECTION := "hints"
@@ -127,7 +129,10 @@ func _lay() -> void:
 			c.queue_free()
 	rows.clear()
 	_acts.clear()
+	var rs := RingLessons.rules_now()
 	for h: Dictionary in _hints_data().get(KitWords.scheme_id(scheme), []):
+		if h.has("rules") and not rs in (h.rules as Array):
+			continue                             # (round 3: a row for one rule set only: the % ring's "[jump] twice")
 		var r := LessonCard.resolve(String(h.get("line", "")))
 		_acts.merge(r.acts)
 		var box := HBoxContainer.new()
