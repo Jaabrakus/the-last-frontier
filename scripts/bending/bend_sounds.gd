@@ -183,6 +183,9 @@ static func _current_cast(kind: String) -> StringName:
 
 ## The sound of casting `mode` of `move` (its bend spec `spec`; `kind` the spec's kind as BendEffects hands it).
 static func cast_id(kind: String, spec: Dictionary, move := "", mode := "") -> StringName:
+	if spec.has("as") and move != "":
+		spec = BendEffects.resolved(move, spec)    # (round 3: a hidden mode standing for another sounds as that one)
+		kind = String(spec.get("kind", kind))
 	var d := String(spec.get("do", ""))
 	var key := "%s/%s" % [move, mode]
 	if CAST_BY_MOVE.has(key):

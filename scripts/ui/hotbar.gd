@@ -45,6 +45,8 @@ extends Node
 ##                so does a wheel step from the readied one; first_moves ignores the second tap. While a lock of the aim
 ##                runs the key goes to the caster first (SwayCaster.key_tap: the same key switches the lock with its time
 ##                kept, another key ends it), the wheel too (SwayCaster.step_other)
+##   round 3      in a stock-rules ring (RingRules.stock_on) key 3 acts at once and readies nothing, in every scheme
+##                (SwayCaster.key3_press: the dash on the deck, the air dodge in the air)
 
 ## Something on the bar changed (a slot filled, emptied, moved).
 signal changed
@@ -607,6 +609,11 @@ func select(i: int) -> void:
 		return
 	_follow_caster()
 	sync()
+	if i == 2 and RingRules.stock_on():
+		# (round 3, spec §0: in the % ring 3 acts at once, a dash or the air dodge, and never readies a move: every scheme)
+		var c3 := SwayCaster.of(player)
+		if c3 != null and c3.key3_press():
+			return
 	var e := slots[i]
 	if _element_keys():
 		_key_tap(i)

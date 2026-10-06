@@ -426,6 +426,15 @@ func _strike(col: Node, who: Node, p: Vector3) -> void:
 	var dmg := damage_now()
 	var dir := velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.FORWARD
 	var src := by()
+	if RingRules.stock_on() and (who is FrontierPlayer or who is NpcFighter):
+		# (round 3, the % ring: the hit with its info, meta bend_info from its Throw: BendR3.deliver; AIR)
+		var fl := Vector3(dir.x, 0.0, dir.z).normalized() if Vector2(dir.x, dir.z).length_squared() > 1e-6 else Vector3.FORWARD
+		var hd0 := _hurl_d()
+		BendR3.deliver(who, dmg, p, dir, src, -1.0, fl * float(hd0.get("knock_mps", KNOCK_MPS)) + Vector3.UP * float(hd0.get("knock_up_mps", KNOCK_UP_MPS)),
+				get_meta(&"bend_info", {}))
+		struck.emit(who, dmg)
+		FormEffects.sfx("strike", p, 0.0, 0.8 if kind == "cannonball" else 1.1)
+		return
 	Hit.deliver(col, dmg, p, dir, src)
 	struck.emit(who, dmg)
 	FormEffects.sfx("strike", p, 0.0, 0.8 if kind == "cannonball" else 1.1)

@@ -47,6 +47,9 @@ const FormMatter := preload("res://scripts/sway/form_matter.gd")
 const MOVES := ["earth_wall", "stone_form", "pillar", "mend"]
 
 
+## ROUND 3 (AIR, the % ring): walls' places kept air_rules.wall_lip_clear_m inside every lip (place_point, BendR3.off_lip);
+## a stone raised in the air off the deck tears from the deck's face within air_stone_reach_m and follows the caster's hands
+## (air_face, Throw.follow); a Throw carries its cast's hit info to its flight (Throw.info, the lift's meta bend_info).
 static func handles(m: String) -> bool:
 	return m in MOVES or SwayMoves.move(m).has("bend")
 
@@ -61,12 +64,16 @@ static func apply(c: SwayCaster, m: String, t: Node3D, at: Vector3) -> void:
 	if bd.has(mode):
 		BendEffects.apply(c, m, mode, bd[mode], t, at)
 		return
+	var keep := BendR3.cur
+	BendR3.cur = BendR3.info_for(c, m, mode)        # (round 3: the hit info a stone thrown now carries)
 	match m:
 		"earth_wall":
 			if BendPoses.element_of(c.player) != "":
 				# (where the crosshair is, 2-6 m off, facing the caster: its ahead_m taken back so its foot stands there)
 				var pt := place_point(c, d.get("place", (d.get("wall", {}) as Dictionary).get("place", {})))
 				at = pt - way_to(c, pt) * float((d.get("wall", {}) as Dictionary).get("ahead_m", 0.75))
+				if BendR3.stock():
+					at = BendR3.off_lip(c.player.get_tree(), at, BendR3.num("wall_lip_clear_m", 3.5))
 				earth_wall(c, at, d, FormMatter.of_ground(c.player.get_tree(), pt))
 			else:
 				earth_wall(c, at, d)
@@ -76,6 +83,7 @@ static func apply(c: SwayCaster, m: String, t: Node3D, at: Vector3) -> void:
 			pillar(c, at, d, c.mode_of(m))
 		"mend":
 			mend(c, t, d)
+	BendR3.cur = keep
 
 
 ## The caster's flat way to `at` (their facing when it is under them).
@@ -326,11 +334,16 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 		bc.body.remove_meta(RAISED_META)
 		th0.stone.remove_meta(&"bend_raised_by")
 		th0.waiting = false
+		if not BendR3.cur.is_empty():
+			th0.info = BendR3.cur.duplicate()
 		return th0.stone
 	var td: Dictionary = d.get("throw", {})
 	var aim := aim_point(bc)
 	var way := way_to(bc, aim if aim != Vector3.INF else at)
 	var foot := ground_at(bc, bc.body.global_position + way * float(td.get("ahead_m", 1.4)))
+	var face := air_face(bc)
+	if face != Vector3.INF:
+		foot = face                                # (round 3: in the air it tears from the nearest deck face)
 	var scn := bc.body.get_tree().current_scene
 	var seed := absi(hash(Vector3i(roundi(foot.x * 10.0), roundi(foot.y * 10.0), roundi(foot.z * 10.0)))) % 97
 	var matter := FormMatter.of_ground(bc.body.get_tree(), foot)
@@ -340,11 +353,32 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 	else:
 		s = FormStone.spike(scn, foot, way, d.get("spike", {}), seed, matter)
 	var h: Dictionary = d.get("hollow", {})
-	FormHollow.dig(scn, foot, way, float(h.get("width_m", 1.3)), float(h.get("depth_m", 1.3)), float(h.get("fade_s", 600.0)))
+	if face == Vector3.INF:
+		FormHollow.dig(scn, foot, way, float(h.get("width_m", 1.3)), float(h.get("depth_m", 1.3)), float(h.get("fade_s", 600.0)))
 	sfx("rise", foot, -2.0, 0.9)
 	sfx("rumble", foot, -4.0, 1.1)
-	Throw.start(bc, s, td)
+	var th := Throw.start(bc, s, td)
+	if th != null and face != Vector3.INF:
+		th.follow = true
 	return s
+
+
+## Round 3: where an earth caster in the air off the deck tears his stone from (spec §6.1): the deck's face just under its
+## nearest lip, when that is within air_rules.air_stone_reach_m of him (INF: on the ground, over the deck, too far, or the
+## gate off: the ground before him, as ever).
+static func air_face(bc: BendCaster) -> Vector3:
+	if bc == null or not bc.valid() or not BendR3.on(bc.body) or not BendR3.airborne(bc.body):
+		return Vector3.INF
+	var ar := BendR3.arena(bc.body.get_tree())
+	if ar == null:
+		return Vector3.INF
+	var lip := ar.nearest_lip(bc.body.global_position)
+	if float(lip.get("out_m", 0.0)) <= 0.0:
+		return Vector3.INF                         # (over the deck: the deck under him)
+	var pt: Vector3 = lip.point
+	if pt.distance_to(bc.body.global_position) > BendR3.num("air_stone_reach_m", 12.0):
+		return Vector3.INF
+	return pt - (lip.normal as Vector3) * 0.2 + Vector3.DOWN * 0.6
 
 
 # ---------------------------------------------------------------- round 2: the raised stone, the wall's place
@@ -367,6 +401,8 @@ static func raise_stone(c: Variant, m: String, mode: String) -> Throw:
 	if th == null:
 		s.queue_free()
 		return null
+	if BendR3.on(bc.body) and BendR3.airborne(bc.body):
+		th.follow = true                            # (round 3: torn from the deck's face, it flies to the hand and keeps there)
 	th.waiting = true
 	s.set_meta(&"bend_raised_by", bc.body.get_instance_id())
 	bc.body.set_meta(RAISED_META, th.get_instance_id())
@@ -380,6 +416,9 @@ static func _new_stone(bc: BendCaster, d: Dictionary, mode: String) -> FormStone
 	var aim := aim_point(bc)
 	var way := way_to(bc, aim if aim != Vector3.INF else bc.body.global_position + bc.facing() * 10.0)
 	var foot := ground_at(bc, bc.body.global_position + way * float(td.get("ahead_m", 1.4)))
+	var face := air_face(bc)
+	if face != Vector3.INF:
+		foot = face                                # (round 3: in the air it tears from the nearest deck face)
 	var scn := bc.body.get_tree().current_scene
 	var seed := absi(hash(Vector3i(roundi(foot.x * 10.0), roundi(foot.y * 10.0), roundi(foot.z * 10.0)))) % 97
 	var matter := FormMatter.of_ground(bc.body.get_tree(), foot)
@@ -389,7 +428,8 @@ static func _new_stone(bc: BendCaster, d: Dictionary, mode: String) -> FormStone
 	else:
 		s = FormStone.spike(scn, foot, way, d.get("spike", {}), seed, matter)
 	var h: Dictionary = d.get("hollow", {})
-	FormHollow.dig(scn, foot, way, float(h.get("width_m", 1.3)), float(h.get("depth_m", 1.3)), float(h.get("fade_s", 600.0)))
+	if face == Vector3.INF:
+		FormHollow.dig(scn, foot, way, float(h.get("width_m", 1.3)), float(h.get("depth_m", 1.3)), float(h.get("fade_s", 600.0)))
 	sfx("rise", foot, -2.0, 0.9)
 	sfx("rumble", foot, -4.0, 1.1)
 	return s
@@ -491,7 +531,10 @@ static func place_point(c: Variant, place: Variant = {}) -> Vector3:
 	if flat.length_squared() < 1e-4:
 		flat = bc.facing()
 	var dist := clampf(flat.length(), lo, hi)
-	return ground_at(bc, p + flat.normalized() * dist)
+	var pt := p + flat.normalized() * dist
+	if BendR3.stock():
+		pt = BendR3.off_lip(bc.body.get_tree(), pt, BendR3.num("wall_lip_clear_m", 3.5))   # (round 3: off every lip)
+	return ground_at(bc, pt)
 
 
 ## Gust on a raised wall or pillar (the user, 2026-10-04: "we should be able to use gust to push certain parts of the rock wall
@@ -588,6 +631,12 @@ class Throw:
 	## A place it goes to instead of the crosshair (INF: the crosshair): Earth Shove's pull (the caster's feet), split. Set
 	## before its first aim (start's `p_fixed`).
 	var fixed := Vector3.INF
+	## Round 3: the hit info its stone carries (BendR3.cur at its start; the cast's, set again at the throw: stone_form,
+	## BendZone.return_stone), handed to its flight (GustLift meta bend_info); and `follow` (raised in the air: from where it
+	## tore loose to before the caster's hands over its rise, and kept there as he moves).
+	var info := {}
+	var follow := false
+	var _from := Vector3.INF
 
 	## Stone `s` thrown by caster `c` (a SwayCaster, a BendCaster, a body: BendCaster.wrap) with throw data `p_td`, at
 	## `p_fixed` (INF: the aim). Null when there is no caster or no stone.
@@ -601,6 +650,7 @@ class Throw:
 		th.stone = s
 		th.td = p_td
 		th.fixed = p_fixed
+		th.info = BendR3.cur.duplicate()
 		th.rise_s = maxf(float(p_td.get("rise_s", 0.25)), 0.05)
 		th.add_to_group(GROUP)
 		var cam := FormEffects.cam_of(bc)
@@ -631,12 +681,28 @@ class Throw:
 		var aim := _aim()
 		if aim != Vector3.INF:
 			lift.aim = aim
+		if follow and caster != null and caster.valid():
+			_follow()
 		if t >= rise_s and not waiting:
 			is_thrown = true
+			if not info.is_empty():
+				lift.set_meta(&"bend_info", info)
 			var last := _aim(true) if cam_off == Vector3.INF and fixed == Vector3.INF else Vector3.INF
 			target = last if last != Vector3.INF else lift.aim
 			lift.hurl(_arced(target))
 			thrown.emit(stone, target)
+
+	## Round 3: raised in the air, its lift's start moved from where it tore loose to before the caster's hands (its rise's
+	## height taken off) over rise_s, and kept there while it waits (he falls, it falls with him).
+	func _follow() -> void:
+		var p := caster.body
+		if _from == Vector3.INF:
+			_from = lift._start.origin
+		var way := caster.facing()
+		var h := float((lift.d.get("hold", {}) as Dictionary).get("rise_m", 1.3))
+		var want := p.global_position + way * float(td.get("ahead_m", 1.4)) + Vector3.UP * (float(td.get("chest_m", 1.3)) - h)
+		var k := smoothstep(0.0, rise_s, t)
+		lift._start.origin = _from.lerp(want, k)
 
 	## The crosshair's point now, from the aim's view (cam_off); a fighter near the crosshair (FormEffects.assist_target): his
 	## chest, ahead of him by his pace over the flight. Any other caster's: its target's chest (`final`: led and scattered,
@@ -712,7 +778,7 @@ class Throw:
 				if not (who is FrontierPlayer or who is NpcFighter) or knocked.has(who) or met.has(who.get_instance_id()):
 					continue
 				knocked.append(who)
-				BendStatus.knock(who, flat * k + Vector3.UP * 1.0, by)
+				BendR3.deliver(who, 0.0, at, flat, by, -1.0, flat * k + Vector3.UP * 1.0, info)
 			if kind == "spike" and things > 0:
 				stone.freeze = false              # (it met a thing that went on: nothing to stick in, it falls)
 				stone.sleeping = false

@@ -61,7 +61,8 @@ static func one(bc: BendCaster, a: Dictionary, spec: Dictionary, i := 0, n := 1)
 	var point: Vector3 = a.point
 	var low := bool(spec.get("low", false))
 	var dir: Vector3
-	var lob := String(spec.get("shape", "")) == "crescent" or spec.has("apex_m")
+	# (round 3: the air High Kick, spec "straight": along the aim, no lob)
+	var lob := (String(spec.get("shape", "")) == "crescent" or spec.has("apex_m")) and not bool(spec.get("straight", false))
 	if low:
 		from = Vector3(from.x, p.global_position.y + BendBolt.LOW_M, from.z)
 		dir = Vector3((a.flat as Vector3).x, -0.02, (a.flat as Vector3).z).normalized()

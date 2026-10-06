@@ -33,6 +33,10 @@ extends Node3D
 ##   the cost     lock_s: its move's lock time (BendEffects), what a hit costs the struck one's lock (BendStatus.hurt)
 ##   guarded_by   the guards that halved it already (a late guard; a wind wall's push), never twice
 ## A caster freed in flight (a bot gone between rounds): its strikes are no one's (_by), never an error.
+## ROUND 3 (smash_r3 spec §14.3; AIR): `info`, the hit info it carries (its spec's `_info`), its strike through
+## BendR3.deliver; a guard sending it back makes it a return (BendZone.return_info). In the % ring the floor wave runs on
+## floor_wave_lip_over_m past the deck's lip at the deck's height (a hanger's hands), and a caster's own held stone is not in
+## his bolts' way.
 
 signal struck(who: Node, dmg: float)
 signal ended(why: String)
@@ -95,6 +99,9 @@ var deck_y := 0.0
 var _wave_look: Node3D
 ## The pull (a Pull wave): whom it strikes is knocked toward its caster.
 var pull := false
+## Round 3: the hit info it carries (BendR3.info_for: tag, from, air, a volley's id and size; slide_only once a late guard
+## halved it; returned, ret_mult, origin_tag once a guard sent it back). Read only by the % rules.
+var info := {}
 ## Flowing's steer: per second, in all (deg), for how long (s); how far it has turned, how long it has flown.
 var steer_dps := 0.0
 var steer_max_deg := 0.0
@@ -141,6 +148,8 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 	b.weight = String(spec.get("weight", weight_by_size(b.kind, b.radius, String(spec.get("flight", "")))))
 	b.lock_s = float(spec.get("_lock_s", -1.0))
 	b.pull = bool(spec.get("pull", false))
+	var inf: Variant = spec.get("_info", {})
+	b.info = (inf as Dictionary).duplicate() if inf is Dictionary else {}
 	b.floor_wave = String(spec.get("do", "")) == "floor_wave"
 	if b.floor_wave:
 		b.width_m = float(spec.get("width_m", 2.2))
@@ -214,6 +223,7 @@ func begin_swing(by: Node3D, s: float, r: float, k: float) -> void:
 	_swing_t = 0.0
 	var off := global_position - by.global_position
 	_swing_a0 = atan2(off.x, off.z)
+	info = BendZone.return_info(info, by, global_position, k)
 	caster = by
 	BendLooks.burst(global_position, kind, 10)
 
@@ -279,9 +289,22 @@ func _physics_process(dt: float) -> void:
 	if low:
 		var nxt := from + step
 		step.y = FormEffects.ground_at(self, nxt).y + LOW_M - from.y
+	var lip_end := false
 	if floor_wave:
 		var nxt2 := from + Vector3(step.x, 0.0, step.z)
-		deck_y = FormEffects.ground_at(self, nxt2).y
+		var over := BendR3.past_lip(get_tree(), nxt2) if BendR3.stock() else -INF
+		if over > 0.0:
+			# (round 3: past the lip it runs on at the deck's height for floor_wave_lip_over_m, over the hands of a man hanging
+			# there, then it is spent)
+			deck_y = from.y
+			var lim := BendR3.num("floor_wave_lip_over_m", 0.3)
+			if over > lim:
+				var fl := Vector2(step.x, step.z).length()
+				var keep := clampf(1.0 - (over - lim) / maxf(fl, 1e-4), 0.0, 1.0)
+				step = Vector3(step.x * keep, 0.0, step.z * keep)
+				lip_end = true
+		else:
+			deck_y = FormEffects.ground_at(self, nxt2).y
 		step = Vector3(step.x, deck_y - from.y, step.z)
 	# the others met on the way (bolts, zones)
 	_meet_bolts()
@@ -296,6 +319,8 @@ func _physics_process(dt: float) -> void:
 	_near_miss()
 	if floor_wave:
 		_wave_step(from, step)
+		if lip_end and not spent:
+			end("lip")
 		return
 	# the world and whom it meets
 	if _q == null:
@@ -451,6 +476,10 @@ func _exclude() -> Array[RID]:
 	elif caster is CollisionObject3D:
 		ex.append((caster as CollisionObject3D).get_rid())
 	ex.append_array(BendCaster.ally_rids(caster))
+	if BendR3.stock():
+		var held := BendZone.held_stone(caster)
+		if held is CollisionObject3D:
+			ex.append((held as CollisionObject3D).get_rid())      # (round 3: past the stone in its own hand)
 	if kind == "stone" and is_inside_tree():
 		# (a burrower under the deck: stone passes over him; round 2's Burrow, under_s)
 		for n in BendCaster.near(caster, global_position, 6.0):
@@ -481,8 +510,7 @@ func _hit(col: Node, at: Vector3, n: Vector3) -> void:
 			var to := by.global_position - (who as Node3D).global_position
 			to.y = 0.0
 			flat = to.normalized() if to.length_squared() > 1e-4 else -flat
-		BendStatus.hurt(who, damage + (6.0 if burning else 0.0), at, dir, by, lock_s)
-		BendStatus.knock(who, flat * knock_mps + Vector3.UP * up_mps, by)
+		BendR3.deliver(who, damage + (6.0 if burning else 0.0), at, dir, by, lock_s, flat * knock_mps + Vector3.UP * up_mps, info)
 		if root_s > 0.0:
 			BendStatus.root(who, root_s)
 		if slow_s > 0.0:
@@ -642,6 +670,8 @@ func redirect(dir: Vector3, by: Node3D) -> void:
 		if dir.length_squared() < 1e-6:
 			dir = -velocity
 	velocity = dir.normalized() * velocity.length()
+	if by != caster:
+		info = BendZone.return_info(info, by, global_position, 1.0)      # (round 3: sent back, the sender's now: a return)
 	caster = by
 	travelled = 0.0
 	_face()
