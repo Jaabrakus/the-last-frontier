@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "cloth_bone"
+diffuse_mode = 1
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.8118, 0.7686, 0.6510, 1)
+roughness = 0.95
+metallic_specular = 0.15
+cull_mode = 2
