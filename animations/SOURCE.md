@@ -139,7 +139,7 @@ visual references, no animation files imported) is his statement; the rows below
 | `own-bend-air-shield-hold` | 2026-10-05 (third set) | `bend_clips.py` (`air_shield_hold`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
 | `own-bend-air-slice` | 2026-10-05 (third set) | `bend_clips.py` (`air_slice`) | the rig's rest pose; keys in `CLIPS` (`SET3`) | (for the owner to fill) |
 | `own-bend-air-slice-l` | 2026-10-05 (third set) | `bend_clips.py` (`air_slice`, `mirror_clip`) | `air_slice`'s keys mirrored left for right | (as its original) |
-| `own-bend-tumble` | 2026-10-06 (fourth set) | `bend_clips.py` (`tumble`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
+| `own-bend-tumble` | 2026-10-06 (fourth set) | `bend_clips.py` (`tumble`, `tumble_at`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
 | `own-bend-flinch` | 2026-10-06 (fourth set) | `bend_clips.py` (`flinch`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
 | `own-bend-jump-double` | 2026-10-06 (fourth set) | `bend_clips.py` (`jump_double`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
 | `own-bend-fall` | 2026-10-06 (fourth set) | `bend_clips.py` (`fall`, `fall_at`) | the rig's rest pose; keys in `CLIPS` (`SET4`) | (for the owner to fill) |
@@ -176,6 +176,12 @@ visual references, no animation files imported) is his statement; the rows below
   fall turn the whole keyed figure about the hips' height (the new `flip`, `cart` and `flip_turns` channels: the keys stay
   the body's own pose, turned whole); `air_legs` bakes only the legs' bones (`"bones": "legs"`, no root track). None has a
   side, so none is mirrored. Only these ten were baked (`--clips`); the other clips' tracks are as before.
+  Revised the same day after a review of the sheets (pass 2): the same generator, the same inputs and the same ten clips,
+  re-keyed and re-baked (`--clips`); no clip, dump or reference motion read. The tumble's somersault is now typed as a turn
+  rate (`tumble_at`: an average and a swing in degrees a frame, fastest in the tuck), its channels keyed at every frame; the
+  loops' typed functions are sampled at every frame instead of their eighths (`_loop`); `own-bend-flinch` is 9 frames (was 8)
+  and `own-bend-land-heavy` 14 (was 12), their `strike_s` and `hold_s` unchanged (`own-bend-flinch`'s `back_s` 5 frames, was
+  4); `own-bend-jump-double`'s `strike_s` is 2 frames (was 3) and its `back_s` 8 (was 7). The other clips' tracks are as before.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.

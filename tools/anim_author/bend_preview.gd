@@ -16,6 +16,7 @@ extends SceneTree
 ##       [seam=1]     and for a loop <prefix><name>_seam.png: its first and its last frame side by side, front and side
 ##       [under=own-bend-air-palm]   a clip that keys only some bones (the air legs) shown over that clip at its strike
 ##       [suffix=_sheet]   appended to each clip sheet's name; [lineup=name] the lineup's file (<prefix><name>.png)
+##       [loopcells=1]   how many even moments of a loop the lineups show (its start, then evenly through it)
 
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
 const CELL := Vector2i(300, 400)
@@ -33,6 +34,7 @@ var seam := false
 var under := ""
 var suffix := ""
 var lineup_name := "lineup"
+var loop_cells := 1
 var _under_anim: Animation
 var view
 var label: Label
@@ -57,6 +59,8 @@ func _initialize() -> void:
 			under = a.get_slice("=", 1)
 		elif a.begins_with("suffix="):
 			suffix = a.get_slice("=", 1)
+		elif a.begins_with("loopcells="):
+			loop_cells = maxi(1, int(a.get_slice("=", 1)))
 		elif a.begins_with("lineup="):
 			lineup_name = a.get_slice("=", 1)
 	_run.call_deferred()
@@ -125,9 +129,11 @@ func _run() -> void:
 		if not by_el.has(el):
 			by_el[el] = [] as Array[Image]
 		if a.has_meta(&"loop"):
-			var im := await _snap(a, 0.0, "front34", "%s\nloop" % String(nm).trim_prefix("own-bend-"))
-			lineup.append(im)
-			(by_el[el] as Array[Image]).append(im)
+			for li in loop_cells:
+				var im := await _snap(a, a.length * li / loop_cells, "front34", "%s\nloop %d/%d" % [String(nm).trim_prefix(
+						"own-bend-"), li, loop_cells])
+				lineup.append(im)
+				(by_el[el] as Array[Image]).append(im)
 		for key in ["hold_s", "strike_s"]:
 			if a.has_meta(key):
 				var im2 := await _snap(a, float(a.get_meta(key)), "front34", "%s\n%s" % [String(nm).trim_prefix("own-bend-"), key])

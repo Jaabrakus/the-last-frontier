@@ -160,15 +160,22 @@ func _dress(element: String) -> void:
 		PlayerAppearance.dress(mesh, AppearanceStore.validate(look))
 
 
-## Four key moments: a loop's quarters, else the start, the hold or the strike, the recovery's start and the end.
+## The key moments: a loop's quarters, else the start, the strike and the hold (both, in their order, when they differ: the
+## strike is a reaction's key moment and must be seen in game), the recovery's start and the end.
 func _moments(a: Animation) -> Array:
 	if a.loop_mode != Animation.LOOP_NONE:
 		return [[0.0, "loop 0/4"], [a.length * 0.25, "loop 1/4"], [a.length * 0.5, "loop 2/4"], [a.length * 0.75, "loop 3/4"]]
 	var key := float(a.get_meta(&"strike_s", 0.0))
 	var hold := float(a.get_meta(&"hold_s", key))
-	var mid := maxf(key, hold)
-	return [[0.0, "start"], [mid, "hold" if hold >= key else "strike"], [float(a.get_meta(&"back_s", a.length * 0.7)), "back"],
-			[a.length, "end"]]
+	var out := [[0.0, "start"]]
+	if absf(key - hold) < 0.5 / 30.0:
+		out.append([key, "strike"])
+	elif key < hold:
+		out.append_array([[key, "strike"], [hold, "hold"]])
+	else:
+		out.append_array([[hold, "hold"], [key, "strike"]])
+	out.append_array([[float(a.get_meta(&"back_s", a.length * 0.7)), "back"], [a.length, "end"]])
+	return out
 
 
 func _snap(a: Animation, air: bool, t: float, vn: String, text: String) -> Image:
