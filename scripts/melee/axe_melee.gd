@@ -49,8 +49,8 @@ extends RefCounted
 ## then LMB swings again from the start. Blows traded, the first to land wins.
 
 const DATA_PATH := "res://data/melee/felling_axe.json"
-## Each melee tool's own data (the same shape): the felling axe's, and the musket clubbed (GatherTools.CLUB).
-const DATA_PATHS := {"felling_axe": DATA_PATH, "musket_club": "res://data/melee/musket_club.json", "saber": "res://data/melee/saber.json"}
+## Each melee tool's own data (the same shape): the felling axe's and the saber's.
+const DATA_PATHS := {"felling_axe": DATA_PATH, "saber": "res://data/melee/saber.json"}
 ## This project's own clips (tools/anim_author/): a swing's clip is looked for here first, then in GatherTools's.
 const OWN_PATH := "res://animations_extra/Frontier_Own.res"
 ## A broken-off attack fades out this fast.

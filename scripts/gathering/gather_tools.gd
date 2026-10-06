@@ -39,14 +39,7 @@ extends Node
 ## two-handed overhead blow (atk-pipe-1-chop). Standing still the whole body plays the swing (its footwork too),
 ## moving only the upper body. The tool sits in the prop bone's own frame of each clip family (the blade frame
 ## of the machete clips, the two-handed frame of the pipe clips) and moves between them with the blend.
-##
-## The musket as a club (user 2026-09-27: "make it where we can turn muskets into clubs"; picked: a key flips it,
-## held by the barrel): middle mouse with a long gun out (loaded or not; not while aiming, firing or reloading)
-## turns it end for end in the hands, the barrel a hand's breadth behind the muzzle in both hands and the butt out
-## as the head (the tool CLUB here: a copy of the gun's model, the gun's own hidden); LMB then attacks with WASD as
-## with the felling axe (AxeMelee, data/melee/musket_club.json: blunt, nothing cut in to), from a two-handed guard;
-## middle mouse again turns it back to shoot. The gun stays the weapon out: Weapon.clubbed keeps its fire, aim and
-## reload keys off meanwhile; putting it away, another weapon or mounting ends the club at once.
+## (The musket clubbed on middle mouse was retired in the 2026-10-06 cleanup.)
 
 signal stroke_landed(kind: String, info: Dictionary)
 signal gathered(item: String, count: int)
@@ -69,13 +62,8 @@ const SKILL_OF := {"felling_axe": "woodcutting", "mattock": "mining", "hoe": "hu
 ## Target types each tool works on.
 const WORKS := {"felling_axe": ["tree", "sapling", "trunk", "crown", "wall", "carcass", "stump"], "mattock": ["rock", "stump"], "hoe": ["ground"]}
 ## The swing each target type takes.
-## The musket as a club (see the top).
-const CLUB := "musket_club"
-const CLUB_ACTION := &"club_grip"
-const CLUB_WEAPONS := ["musket", "over_under"]
-const FLIP_S := 0.35
 ## The tools that attack on LMB when there is nothing to work in front (AxeMelee; data/melee/<tool>.json).
-const MELEE_TOOLS := ["felling_axe", "musket_club", "saber"]
+const MELEE_TOOLS := ["felling_axe", "saber"]
 ## Fought one-handed on the axe's two-handed swings: their left arm left out (ToolPose mask "upper_one_hand").
 const ONE_HANDED := ["saber"]
 ## Where the axe's two-handed swings have the right fist on the haft (m up from the knob, measured with tools/perf/saber_grip_probe.gd).
@@ -151,10 +139,6 @@ var _one_hand_shift := 0.0       ## a one-handed grip's place along the hand, me
 var melee: AxeMelee
 var _melee_next := ""          ## an attack asked for during a swing, begun at its chain time
 var _melee_next_button := "L"   ## the button that asked for it
-var _club_key := ""            ## the weapon clubbed ("" none)
-var _club_flip := 0.0          ## 0 the shooting grip .. 1 held as a club
-var _club_to := 0.0            ## where the flip is going
-var _club_start := Transform3D()   ## the gun's own place on the prop bone, in the club's (two-handed) frame
 var _streams := {}             ## sound id -> [AudioStream]
 
 
@@ -181,11 +165,6 @@ static func ensure_input() -> void:
 		var c := InputEventKey.new()
 		c.physical_keycode = CYCLE_KEY
 		InputMap.action_add_event(CYCLE_ACTION, c)
-	if not InputMap.has_action(CLUB_ACTION):
-		InputMap.add_action(CLUB_ACTION)
-		var mb := InputEventMouseButton.new()
-		mb.button_index = MOUSE_BUTTON_MIDDLE
-		InputMap.action_add_event(CLUB_ACTION, mb)
 
 
 func _ready() -> void:
@@ -406,10 +385,6 @@ func _read_keys() -> void:
 	if cyc and not bool(_was_keys.get("_cycle", false)):
 		tools_cycle()
 	_was_keys["_cycle"] = cyc
-	var cl := ctl.pressed(CLUB_ACTION)
-	if cl and not bool(_was_keys.get("_club", false)):
-		club_toggle()
-	_was_keys["_club"] = cl
 	for kind: String in ACTIONS:
 		var down := ctl.pressed(ACTIONS[kind])
 		if down and not bool(_was_keys.get(kind, false)) and Hotbar.allows_tool_of(player, kind):
@@ -432,82 +407,6 @@ func tools_cycle() -> void:
 		put_away()
 	else:
 		take_out(owned[i + 1])
-
-
-## Middle mouse: the long gun out turned into a club, or back to shoot.
-func club_toggle() -> void:
-	if tool == CLUB:
-		if _club_to > 0.0:
-			unclub()
-		return
-	if can_club():
-		club()
-
-
-## Whether the weapon out can be turned into a club now: a long gun in the hands, not being aimed, fired, reloaded
-## or drawn, and no tool out.
-func can_club() -> bool:
-	var w := player.weapon
-	if tool != "" or w == null or not (player.weapon_key in CLUB_WEAPONS) or player.hands_free or not w.active \
-			or w.model == null or player.is_switching() or player.is_dead or player.riding != null \
-			or player.get("climbing") == true or not _need_clips():
-		return false
-	if w is Firearm:
-		return (w as Firearm).state in [Firearm.State.READY, Firearm.State.EMPTY]
-	return false
-
-
-## Turns the gun out into a club (the flip over FLIP_S: the copy starts where the gun is in the hand).
-func club() -> void:
-	_club_key = player.weapon_key
-	player.weapon.clubbed = true
-	tool = CLUB
-	phase = Phase.READY
-	_carry_w = 1.0
-	_club_to = 1.0
-	_club_flip = 0.0
-	_club_start = two_hand_offset(CLUB).affine_inverse() * player.weapon.model.transform
-	_refresh_models()
-	if _model_hand:
-		_model_hand.visible = true
-	# (a draw just done may still have the sling rig's stand-in copy in a hand, the gun handed across: it is held
-	# now, the copy gone; then the gun's own model hides for the club's)
-	var rig = player.get("gear")
-	if rig != null and rig.has_method(&"snap_held") and rig.has_method(&"item_for_key"):
-		var id: String = rig.item_for_key(_club_key)
-		if id != "":
-			rig.snap_held(id)
-			if rig.has_method(&"hold_elsewhere"):
-				rig.hold_elsewhere(id, true)     # (and kept so, whatever its hand-offs do while clubbed)
-	player.weapon.model.visible = false
-
-
-## Turns it back to shoot (an attack playing is broken off; the flip back, then the gun is itself again).
-func unclub() -> void:
-	if tool != CLUB:
-		return
-	if not _swing.is_empty() and bool(_swing.get("melee", false)) and not bool(_swing.get("cancel", false)):
-		_cancel_melee()
-	_melee_next = ""
-	_club_to = 0.0
-
-
-## The club over: the gun back in the hand as itself (`show_gun`: it is still the weapon out), the tool gone.
-func _club_end(show_gun: bool) -> void:
-	var rig = player.get("gear")
-	if rig != null and rig.has_method(&"hold_elsewhere") and rig.has_method(&"item_for_key") and _club_key != "":
-		var id: String = rig.item_for_key(_club_key)
-		if id != "":
-			rig.hold_elsewhere(id, false)
-	var w: Weapon = (player.weapons as Dictionary).get(_club_key) if player.get("weapons") != null else null
-	if w:
-		w.clubbed = false
-		if show_gun and w.active and not player.hands_free and w.model:
-			w.model.visible = true
-	_club_key = ""
-	_club_flip = 0.0
-	_club_to = 0.0
-	drop_now()
 
 
 ## A stroke or an attack is under way (the legs walk at Player.swing_walk_speed meanwhile).
@@ -564,9 +463,6 @@ func take_out(kind: String, stroke := false) -> void:
 
 
 func put_away() -> void:
-	if tool == CLUB:
-		unclub()           # (the gun is turned back, not stowed: it stays the weapon out)
-		return
 	if tool == "" or phase in [Phase.IDLE, Phase.STOW_BACK, Phase.STOW_PLACE, Phase.HOLSTER]:
 		if phase == Phase.HOLSTER:
 			phase = Phase.IDLE
@@ -602,11 +498,6 @@ func _begin_draw() -> void:
 func lose_in_hand() -> String:
 	var kind := in_hand()
 	if kind == "":
-		return ""
-	if kind == CLUB:
-		# the club is the gun: it is the gun again in the hand, and whether that flies is the weapon's own chance
-		# (PlayerRagdoll.knock)
-		_club_end(true)
 		return ""
 	drop_now()
 	if on_loop == kind and player.loadout:
@@ -648,12 +539,6 @@ func drop_now() -> void:
 func _guard() -> void:
 	if tool == "":
 		return
-	if tool == CLUB:
-		# the gun put away or switched, mounting, death: the club goes with it at once
-		if player.is_dead or player.riding != null or player.hands_free or player.weapon_key != _club_key \
-				or player.weapon == null or not player.weapon.active:
-			_club_end(false)
-		return
 	var gone := player.is_dead or player.riding != null
 	# a weapon drawn (a weapon key, H) while the tool is out: the tool goes back
 	if not gone and phase != Phase.HOLSTER and not player.hands_free:
@@ -674,11 +559,6 @@ func _torch_held() -> bool:
 func _step(delta: float) -> void:
 	var trav := player.traversal != null and player.traversal.showing
 	# LMB with the felling axe and nothing to fell or buck in front: an attack (AxeMelee), in the way the move keys say
-	if tool == CLUB:
-		_club_flip = move_toward(_club_flip, _club_to, delta / FLIP_S)
-		if _club_to <= 0.0 and _club_flip <= 0.0:
-			_club_end(true)
-			return
 	if melee != null:
 		melee.tick(delta)
 	# (struck a moment ago: the flinch, no attack; AxeMelee._on_hurt)
@@ -686,8 +566,7 @@ func _step(delta: float) -> void:
 	# every melee weapon: AxeMelee.REVERSE)
 	var lmb := melee != null and melee.pressed(_fire_held())
 	var rmb := melee != null and melee.alt_pressed()
-	var can_attack := melee != null and tool in MELEE_TOOLS and not _valid_for_tool() \
-			and (tool != CLUB or _club_to > 0.0 and _club_flip >= 0.8) and not melee.flinching()
+	var can_attack := melee != null and tool in MELEE_TOOLS and not _valid_for_tool() and not melee.flinching()
 	# no attack is a lock (user 2026-09-27: "make sure none of the attacks are on a animation lock", "be able to move
 	# ... right click to cancel", "juke move like in jedi academy"): the body moves as ever under the swing, and the
 	# other button (2026-10-03: RMB breaks off a LMB attack, LMB a RMB one), a jump or a sprint breaks it off at once (a
@@ -914,14 +793,7 @@ func _swing_clip(s: Dictionary) -> Array:
 func _apply_layers() -> void:
 	var layers: Array = []
 	var carry := _clip("carry")
-	var guard_w := 0.0
-	if tool == CLUB:
-		# the club's two-handed guard, in as the gun turns
-		var g := melee.guard() if melee else []
-		guard_w = smoothstep(0.0, 1.0, _club_flip)
-		if not g.is_empty() and guard_w > 0.0:
-			layers.append({"anim": g[0], "time": g[1], "weight": guard_w, "mask": "upper"})
-	elif carry and _carry_w > 0.0:
+	if carry and _carry_w > 0.0:
 		layers.append({"anim": carry, "time": carry.length, "weight": _carry_w, "mask": "arm_r"})
 	match phase:
 		Phase.DRAW_GRAB:
@@ -936,7 +808,7 @@ func _apply_layers() -> void:
 	var still := false
 	var mask := "upper"
 	var pw := 0.0
-	var bw := 0.0                  ## (the club: how much a one-handed attack holds it in the blade frame)
+	var bw := 0.0                  ## (how much a one-handed attack holds it in the blade frame)
 	# the saber is one-handed (user 2026-10-01): the axe's two-handed swings drive the right arm and the body, not the left arm
 	var one_hand := tool in ONE_HANDED
 	# the swing fading out under a chained one stays at full weight; the new one fades in over it
@@ -964,12 +836,10 @@ func _apply_layers() -> void:
 	# the right hand's fist on the tool, eased off its clip (HeldFist.CURL; user 2026-10-03, "how come the knuckles look
 	# crazy": closed all the way the knuckles' skin pinched): over the carry, and for a one-handed grip through the swings
 	# too (the hand holding the grip throughout the motion: the carry's fingers over whatever the swing's clips do)
-	if carry and tool != CLUB:
+	if carry:
 		var fw := _carry_w if not one_hand else maxf(_carry_w, maxf(pw, bw))
 		if fw > 0.0:
 			layers.append({"anim": carry, "time": carry.length, "weight": fw, "mask": "fingers_r", "curl": HeldFist.CURL})
-	if tool == CLUB:
-		pw = 1.0 - bw                # (the club is two-handed but in a one-handed attack)
 	if phase != Phase.STOW_BACK:
 		_pipe_w = pw
 	pose.layers = layers
@@ -1675,7 +1545,7 @@ func _refresh_models() -> void:
 	if _model_hand_kind != shown:
 		if _model_hand:
 			_model_hand.queue_free()
-		_model_hand = (_club_model() if tool == CLUB else GatherModels.build(shown)) if tool != "" else null
+		_model_hand = GatherModels.build(shown) if tool != "" else null
 		_model_hand_kind = shown
 		if _model_hand:
 			_model_hand.visible = false
@@ -1763,60 +1633,6 @@ func _place_hand_model() -> void:
 			var at := (_socket_hand.global_transform * a).affine_inverse() * _palm_att.global_position
 			_one_hand_shift = clampf(at.y - GatherModels.SABER_GRIP_M, -0.15, 0.15)
 		_model_hand.transform = a * Transform3D(Basis(), Vector3(0, _one_hand_shift, 0))
-	if tool == CLUB:
-		# the gun turning end for end in the hands, from where it was held to shoot
-		var gun := _model_hand.get_node_or_null("Gun") as Node3D
-		if gun:
-			var k := smoothstep(0.0, 1.0, _club_flip)
-			gun.transform = _club_start.interpolate_with(gun.get_meta(&"club_xf"), k)
-
-
-## The gun out as a club: a copy of its model held by the barrel a hand's breadth behind the muzzle, the butt out as
-## the head. The node is the tool's frame (the knob at the origin, the haft +Y, the edge -Z, as GatherModels makes the
-## tools); the gun ("Gun") hangs in it end for end: its muzzle end at the knob, its butt up the haft, the heel of the
-## butt toward the edge. Markers Butt (the knob), Grip, Head and Edge (the butt's heel) for the sweep
-## (AxeMelee._points, WeaponBody).
-func _club_model() -> Node3D:
-	var root := Node3D.new()
-	root.name = "MusketClub"
-	var gun := WeaponModels.build(_club_key if _club_key != "" else "musket")
-	gun.name = "Gun"
-	root.add_child(gun)
-	var mz := gun.get_node_or_null("Muzzle") as Node3D
-	var muzzle_z := mz.position.z if mz else -1.25
-	# (its +Z, toward the butt, up the haft; its +Y, the sights, the edge's back; across, its -X)
-	var b := Basis(Vector3(-1, 0, 0), Vector3(0, 0, 1), Vector3(0, 1, 0))
-	var xf := Transform3D(b, -(b * Vector3(0.0, 0.035, muzzle_z + 0.1)))
-	gun.transform = xf
-	gun.set_meta(&"club_xf", xf)
-	var box := _box_in(root, gun)
-	var top := box.end.y
-	var heel := box.position.z
-	for pair: Array in [["Butt", Vector3.ZERO], ["Grip", Vector3(0, 0.46, 0)],
-			["Head", Vector3(0, top - 0.12, heel * 0.5)], ["Edge", Vector3(0, top - 0.03, heel + 0.02)]]:
-		var m := Marker3D.new()
-		m.name = pair[0]
-		m.position = pair[1]
-		root.add_child(m)
-	return root
-
-
-## The meshes under `n` as one box in `root`'s frame (the nodes need not be in the tree).
-static func _box_in(root: Node3D, n: Node3D) -> AABB:
-	var out := AABB()
-	var first := true
-	for mi: MeshInstance3D in n.find_children("*", "MeshInstance3D", true, false):
-		if mi.mesh == null:
-			continue
-		var rel := Transform3D()
-		var c: Node = mi
-		while c != null and c != root:
-			rel = (c as Node3D).transform * rel
-			c = c.get_parent()
-		var bb := rel * mi.get_aabb()
-		out = bb if first else out.merge(bb)
-		first = false
-	return out
 
 
 # --- Notices, sounds ---------------------------------------------------------------------------------

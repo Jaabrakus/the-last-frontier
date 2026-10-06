@@ -29,7 +29,7 @@ const CAP_ACTIONS := {
 	"6": [&"weapon_6"], "7": [&"weapon_7", &"tool_cycle", &"tool_axe"], "8": [&"weapon_8", &"fish_gear", &"tool_mattock"],
 	"9": [&"weapon_9"], "1-9": [&"weapon_1", &"weapon_2", &"weapon_3", &"weapon_4", &"weapon_5", &"weapon_6", &"weapon_7",
 			&"weapon_8", &"weapon_9"], "1-4": [&"weapon_1", &"weapon_2", &"weapon_3", &"weapon_4"], "H": [&"hands_free"],
-	"LMB": [&"fire"], "RMB": [&"aim"], "MMB": [&"club_grip"], "Wheel": [&"weapon_next", &"weapon_prev"],
+	"LMB": [&"fire"], "RMB": [&"aim"], "MMB": [&"sway_mode"], "Wheel": [&"weapon_next", &"weapon_prev"],
 }
 
 ## The topics in the order they are looked for: {title, steps (text with keys in brackets), pre (the first steps
