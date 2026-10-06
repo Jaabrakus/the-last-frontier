@@ -3,7 +3,8 @@
 
     python3 tools/fonts/font_proof.py --out <folder> [--font path ...]
 
-Writes font_proof.png and font_proof.txt. Each font in UiFonts' macOS lists (and, for contrast, the two left out,
+Writes font_proof.png and font_proof.txt, and font_strip_preview.png: a PIL stand-in for the owner's Godot strip
+(tools/fonts/font_strip.gd) with the same names, light and dark, until the lead renders the real one. Each font in UiFonts' macOS lists (and, for contrast, the two left out,
 Hoefler Text and Menlo; and any --font file or shipped family under assets/fonts) is set at 14, 18, 24 and 40 px with
 the names, the stacked capitals (Ể Ỗ Ặ Ữ Ậ Ở) and dotted lower letters, drawn at their real size over their line box:
 
@@ -44,7 +45,7 @@ BOX = (120, 160, 225)
 BASE = (190, 185, 178)
 OVER = (215, 40, 30)
 OK = (40, 140, 70)
-W = 1800
+W = 1900
 PAD = 24
 
 
@@ -117,10 +118,61 @@ def draw_card(d, x, y, role, name, face, sets):
                 d.line([cx, base + b[3], cx + wpx, base + b[3]], fill=OVER)
             cx += wpx + 40
         note = "asc %d  desc %d  ink %d / %d  out %+d / %+d" % (asc, desc, top, bot, over, under)
-        d.text((x + W - 2 * PAD - 330, base - 12), note, font=ui_font(12),
+        d.text((x + W - 2 * PAD - 300, base - 12), note, font=ui_font(12),
                fill=OVER if over > 0 or under > 0 else SOFT)
         y = base + desc + int(size * 0.25) + 14 - int(size * 0.2)
     return worst, rows, n_miss
+
+
+STRIP_LINES = ["Vạn Thủy, Capital of the Waters", "Hồ Tinh, the Fox-Blooded", "Đồng Lau, the Reed Marches",
+               "Trường Sơn", "Ể Ỗ Ặ Ữ Ậ Ở"]
+STRIP_LOOKS = [("light", (237, 230, 214), (250, 245, 232), (158, 107, 51), (33, 28, 23), (107, 94, 79)),
+               ("dark", (18, 20, 23), (12, 13, 15), (217, 158, 77), (245, 237, 219), (184, 173, 153))]
+
+
+def strip_preview(fams, path):
+    """The owner's strip as PIL draws it: each role's first macOS font at 14-40 px, wrapped, light and dark."""
+    roles = [("serif", pick_face(fams["Baskerville"])), ("sans", pick_face(fams["Avenir Next"]))]
+    col = 1180
+    cols = []
+    for look, bg, panel, edge, ink, soft in STRIP_LOOKS:
+        img = Image.new("RGB", (col + 72, 3000), bg)
+        d = ImageDraw.Draw(img)
+        y = 36
+        d.text((36, y), "%s  ·  14, 18, 24, 40 px  ·  PIL preview (the Godot strip replaces it)" % look,
+               font=ui_font(16, True), fill=soft)
+        y += 40
+        for role, face in roles:
+            top = y
+            y += 14
+            d.text((62, y), "%s  ·  %s (system)" % (role, face.family), font=ui_font(14, True), fill=soft)
+            y += 30
+            for size in SIZES:
+                f = ImageFont.truetype(face.path, size, index=face.index)
+                asc, desc = f.getmetrics()
+                x = 62
+                d.text((x, y + asc - 10), str(size), font=ui_font(12), fill=soft)
+                x += 40
+                for t in STRIP_LINES:
+                    w = int(d.textlength(t, font=f))
+                    if x + w > col:
+                        x = 102
+                        y += asc + desc + math.ceil(0.15 * size)
+                    d.text((x, y + asc), t, font=f, fill=ink, anchor="ls")
+                    x += w + int(size * 1.1)
+                y += asc + desc + 14
+            y += 18
+            d.rounded_rectangle([36, top, col + 36, y], radius=8, outline=edge, width=1)
+            d.rectangle([36, top + 4, 39, y - 4], fill=edge)
+            y += 22
+        cols.append(img.crop((0, 0, img.width, y + 14)))
+    out = Image.new("RGB", (sum(c.width for c in cols), max(c.height for c in cols)))
+    x = 0
+    for c in cols:
+        out.paste(c, (x, 0))
+        x += c.width
+    out.save(path)
+    return out.size
 
 
 def main(argv=None):
@@ -168,6 +220,9 @@ def main(argv=None):
     img.save(os.path.join(args.out, "font_proof.png"))
     with open(os.path.join(args.out, "font_proof.txt"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
+    if fams.get("Baskerville") and fams.get("Avenir Next"):
+        size = strip_preview(fams, os.path.join(args.out, "font_strip_preview.png"))
+        print("STRIP PREVIEW WRITTEN %s" % (size,))
     print("\n".join(lines))
     print("PROOF WRITTEN %s (%dx%d)" % (os.path.join(args.out, "font_proof.png"), img.width, img.height))
     return 0

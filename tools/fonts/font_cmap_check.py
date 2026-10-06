@@ -287,7 +287,8 @@ def ui_font_lists(path=UI_FONTS):
     return out
 
 
-def report(fams, sets, out=sys.stdout):
+def report(fams, sets, out=None):
+    out = out or sys.stdout
     results = {}
 
     def row(name):
