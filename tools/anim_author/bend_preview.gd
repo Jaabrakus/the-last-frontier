@@ -14,9 +14,11 @@ extends SceneTree
 ##       [prefix=clips2_]   (the sheets' file names: <prefix><name>.png, <prefix>lineup.png, <prefix>lineup_<element>.png)
 ##       [frames=8]   exactly that many moments a sheet (the named moments first, the rest filled evenly)
 ##       [seam=1]     and for a loop <prefix><name>_seam.png: its first and its last frame side by side, front and side
+##                    (a clip whose tail loops, meta loop_from_s: that loop's first frame and the clip's last)
 ##       [under=own-bend-air-palm]   a clip that keys only some bones (the air legs) shown over that clip at its strike
 ##       [suffix=_sheet]   appended to each clip sheet's name; [lineup=name] the lineup's file (<prefix><name>.png)
 ##       [loopcells=1]   how many even moments of a loop the lineups show (its start, then evenly through it)
+##       [at=own-bend-rise-earth:13,22;...]   the lineup cells of a clip at those frames (instead of its hold and strike)
 ##       [rise=own-bend-edge-jump:11.8:19.9]   the code's jump (vy, gravity) added to that clip's root, as the game moves it
 ## An edge clip (meta lip_y: keyed in the hang's frame) is shown at a block of the deck (its lip lip_y over the origin and
 ## lip_out ahead, a pale coping on a stone face), framed round the lip (EDGE_VIEWS).
@@ -25,6 +27,8 @@ const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
 const CELL := Vector2i(300, 400)
 const GLB := "res://assets/character/actor_b_body.glb"
 const CENTER := Vector3(0.0, 0.95, 0.15)
+## Where a clip lying on the deck is framed (meta lying): low over the lying body's middle.
+const LOW_CENTER := Vector3(0.0, 0.3, -0.15)
 ## (the character faces +Z, +X its left)
 const VIEWS := {"front34": Vector3(-2.3, 0.35, 3.0), "side": Vector3(-3.7, 0.15, 0.15)}
 ## An edge clip's views about the lip (the deck ahead of him, +Z): from the deck's front three quarters a little over it (what
@@ -47,6 +51,9 @@ var under := ""
 var suffix := ""
 var lineup_name := "lineup"
 var loop_cells := 1
+## at=<clip>:<frame>,<frame>[;...]: the lineup cells of that clip at those frames (its signature moments) instead of its
+## hold_s and strike_s (and a loop's even moments).
+var lineup_at := {}
 var _under_anim: Animation
 var view
 var label: Label
@@ -80,6 +87,9 @@ func _initialize() -> void:
 			loop_cells = maxi(1, int(a.get_slice("=", 1)))
 		elif a.begins_with("lineup="):
 			lineup_name = a.get_slice("=", 1)
+		elif a.begins_with("at="):
+			for r in a.get_slice("=", 1).split(";", false):
+				lineup_at[r.get_slice(":", 0)] = r.get_slice(":", 1).split(",", false)
 		elif a.begins_with("rise="):
 			for r in a.get_slice("=", 1).split(";", false):
 				_rise_args[r.get_slice(":", 0)] = Vector2(float(r.get_slice(":", 1)), float(r.get_slice(":", 2)))
@@ -141,16 +151,24 @@ func _run() -> void:
 				cells.append(await _snap(a, float(tm[0]), vn, "%s\n%s %.2f s (f%d)" % [String(nm).trim_prefix("own-bend-"), tm[1],
 						float(tm[0]), int(round(float(tm[0]) * 30.0))]))
 		_sheet(cells, times.size(), out.path_join("%s%s%s.png" % [prefix, String(nm).trim_prefix("own-bend-"), suffix]))
-		if seam and a.has_meta(&"loop"):
+		# (a clip whose tail loops (meta loop_from_s: the air Rise's glide) shows that loop's first frame and its last)
+		if seam and (a.has_meta(&"loop") or a.has_meta(&"loop_from_s")):
 			var sc: Array[Image] = []
+			var t0 := float(a.get_meta(&"loop_from_s", 0.0))
 			for vn: String in VIEWS:
-				for tm: Array in [[0.0, "first"], [a.length, "last"]]:
+				for tm: Array in [[t0, "loop's first"], [a.length, "last"]]:
 					sc.append(await _snap(a, float(tm[0]), vn, "%s seam\n%s frame %.2f s (f%d)" % [String(nm).trim_prefix(
 							"own-bend-"), tm[1], float(tm[0]), int(round(float(tm[0]) * 30.0))]))
 			_sheet(sc, 2, out.path_join("%s%s_seam.png" % [prefix, String(nm).trim_prefix("own-bend-")]))
 		var el := _element(String(nm))
 		if not by_el.has(el):
 			by_el[el] = [] as Array[Image]
+		if lineup_at.has(String(nm)):
+			for fr: String in lineup_at[String(nm)]:
+				var im3 := await _snap(a, int(fr) / 30.0, "front34", "%s\nf%s" % [String(nm).trim_prefix("own-bend-"), fr])
+				lineup.append(im3)
+				(by_el[el] as Array[Image]).append(im3)
+			continue
 		if a.has_meta(&"loop"):
 			for li in loop_cells:
 				var im := await _snap(a, a.length * li / loop_cells, "front34", "%s\nloop %d/%d" % [String(nm).trim_prefix(
@@ -300,6 +318,10 @@ func _snap(a: Animation, t: float, vn: String, text: String) -> Image:
 		_ledge.position = Vector3(0.0, float(a.get_meta(&"lip_y")), float(a.get_meta(&"lip_out", 0.35)))
 		c = Vector3(0.0, float(a.get_meta(&"lip_y")) + 0.1, float(a.get_meta(&"lip_out", 0.35)) + 0.3)
 		off = EDGE_VIEWS[vn]
+	elif a.has_meta(&"lying"):
+		# (a figure lying on the deck its whole length (meta lying: the lie, the bounce): framed low round its middle, nearer)
+		c = LOW_CENTER
+		off = VIEWS[vn] * 0.8 + Vector3(0.0, 0.25, 0.0)
 	if _rise.has(a):
 		# (the code's lift carries the body high: the frame follows it up once it is past the lip, the lip kept in view)
 		var rr: Vector2 = _rise[a]
