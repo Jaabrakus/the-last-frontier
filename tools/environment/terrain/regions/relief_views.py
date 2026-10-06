@@ -256,7 +256,8 @@ def region_view(reg, bake, out, pad=800.0):
               "From the south-east: the river runs up through the lock and the ferry into the gorge; the torrent comes "
               "in from the left. Grey discs: where the karst towers will stand"),
              ("r1_relief_north.png", (1150, 560, -2350), (300, 160, -500), 56,
-              "From the north-east: the gorge in front, the village terraces beyond it, the torrent's valley behind")]
+              "From the north-east: the gorge in front, the village terraces on the right, the switchback trail above "
+              "the torrent in the middle, the river running on south past the ferry")]
     for name, cam, target, fov, sub in shots:
         img = render(H, surf, rgb, b[0], b[2], res, cam, target, size=(1600, 960), fov=fov, far=7000.0, haze=5200.0)
         caption(img, "R1, the Đá Trắng Reach and Two Heights (first terrain)", sub, size=(1600, 960)).save(
