@@ -300,6 +300,10 @@ func _snap(a: Animation, t: float, vn: String, text: String) -> Image:
 		_ledge.position = Vector3(0.0, float(a.get_meta(&"lip_y")), float(a.get_meta(&"lip_out", 0.35)))
 		c = Vector3(0.0, float(a.get_meta(&"lip_y")) + 0.1, float(a.get_meta(&"lip_out", 0.35)) + 0.3)
 		off = EDGE_VIEWS[vn]
+	if _rise.has(a):
+		# (the code's lift carries the body high: the frame follows it up once it is past the lip, the lip kept in view)
+		var rr: Vector2 = _rise[a]
+		c.y += maxf(0.0, (rr.x * t - 0.5 * rr.y * t * t) - 0.8) * 0.8
 	view.camera.global_position = c + off
 	view.camera.look_at(c)
 	for f in 3:

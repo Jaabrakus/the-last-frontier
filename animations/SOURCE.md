@@ -212,6 +212,15 @@ visual references, no animation files imported) is his statement; the rows below
   joints and the lowest surface). Clips that key none of them pose as before. `roll_side` has `"mirror": True`, so its twin
   `own-bend-roll-side-l` is the same keys mirrored. Only these eleven were baked (`--clips`); the other clips' tracks are as
   before.
+  Revised the same day after a review of the sheets (pass 2): the same generator, the same inputs and the same eleven clips,
+  re-keyed and re-baked (`--clips`); no clip, dump or reference motion read; their lengths and moments (`hold_s`, `strike_s`,
+  `back_s`) are unchanged. New in the generator: `lift` and `lift_w` (the edge jump's keys over the code's own carry, spec
+  5.3's vy 11.8 m/s: the share of that typed parabola the clip takes back, a uniform shift like `ground`), `substeps` (the
+  grab baked four times a frame, meta fps 120 in the json, so its planted palms hold between the keys; `install_bend.gd`
+  reads a clip's own rate), and typed helpers that turn a typed place back through a typed flip or cart (`_unturn`, so a
+  hand keyed on the deck lands there while the figure turns) or through a heel lift (`_heel_place`); `--points` also prints
+  `spinec`. The rolls key the head's `tilt`, `look` and the trunk's `twist` (a shoulder roll's diagonal). Clips that key none
+  of them pose as before. The martial-art styles in the comments remain labels for the typed key poses.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.

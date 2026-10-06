@@ -125,6 +125,20 @@ parts, authored the same way; the edge clips keyed in the hang's frame: the lip 
   ground, floor      the share (0-1) of the gap between the floor (the clip's `floor`, 0 by default) and the body's lowest
                      surface (SURF: typed radii round the joints) the whole figure is shifted by: a roll's ball on the deck
   --points prints each frame's key joints and the lowest surface.
+  Pass 2 (the same day, the critic's notes): the hang a climber's Z (the hips 0.35 m off the face, the knees folded to a
+  right angle, the feet high on the face, the shoulders shrugged under the load) with a sway that reads (5 cm, the head a
+  quarter loop behind, the heels re-pressing in turn, a grip flex, a look along the deck); the grab's catch sagging the chin
+  to the lip with a pendulum in and out (baked four times a frame: substeps); the climb a pool-edge mantle (the knee set on
+  the nose, the shin hanging, then laid back across the nose, a held load, the hips over the left foot, a rise carried
+  past); the jump's hands on the deck through a real coil and push (lift, lift_w: the code's carry taken back) and the legs
+  kicked straight off the face; the roll in's apex over the hands, the palms planted ahead and the right shoulder blade
+  (twist) taking the deck with the head turned and tipped away; the sweep carried across past the left foot, the right arm
+  whipping against it; the rolls' palms on the deck at the drop and the shoulder roll's diagonal, the back roll's palms
+  pushing the head clear, the side roll tipped onto the right shoulder with the knees across the body and the left leg
+  landing first; the duck 0.55 m down and 0.3 m back with the forearms by the head and a moving hold.
+  lift, lift_w       (the edge jump) the code's lift (vy, g) from the clip's start, and the share of it taken back off the
+                     whole figure at each frame (a uniform shift: the keys are the body over the code's carry)
+  substeps           bake the clip that many times a frame (meta fps in the json; the installer keys it at that rate)
   --fit lists the frames where a limb is within SLACK of straight (and its place pulled in) and the striking limb's slack
   at strike_s (and its place carried out to STRIKE_SLACK).
 Metas (seconds): strike_s the moment the cast lets go / the foot or the fist lands / the hit (SwayPose's `struck`), hold_s
@@ -2488,29 +2502,47 @@ FACING.update({
 })
 
 ## The hang (own-bend-edge-hang, a loop of 30 frames): the forearms laid across the lip's coping, the palms flat on the deck
-## ahead and the elbows on the nose of the stone, the shoulders and the head well over the lip (the head up, eyes on the
-## deck), the chest close to the face; the hips a little out, the knees bent and turned out, the balls of both feet pressed
-## on the face (the left a little higher); a slight sway: the hips swing side to side and the trunk rolls after them, a breath
-## in the chest, the head glancing along the deck a beat behind; the hands and the feet never move (they hold the stone).
+## ahead and the elbows on the nose of the stone, the shoulders shrugged up under the load and the head well over the lip
+## (the head up, eyes on the deck); the lower body a climber's Z pressed into the stone: the hips held out off the face, the
+## knees folded to about a right angle and turned out, the balls of both feet pressed high on the face (the left a little
+## higher), so the line from the feet through the hips to the shoulders is a bent bow; the sway: the hips swing side to side
+## (5 cm) and the trunk rolls and twists after them, a breath lifts the chest and the shoulders twice a loop, the head glances
+## a quarter loop behind the hips, the heels re-press in turn as the hips swing over each foot, the right hand flexes its
+## grip at f12-f18 (the palm unmoved) and the head lifts to check along the deck at f19-f28; the palms and the balls of the
+## feet never move (they hold the stone).
 HANG_PALM_R = (-0.22, DECK_PALM, 0.56)
-HANG_FOOT_R = (-0.16, 1.1, 0.19)
-HANG_FOOT_L = (0.16, 1.16, 0.18)
+HANG_FOOT_R = (-0.16, 1.3, 0.18)
+HANG_FOOT_L = (0.16, 1.38, 0.18)
+## The head's glance a quarter loop behind the hips' swing.
+HANG_LAG = math.pi / 2
+
+
+def _bump(a, f0, f1, n=30):
+    """A smooth hump (0 outside frames f0..f1 of an n-frame loop, 1 at their middle) at the loop's phase a."""
+    f = (a / (2 * math.pi) * n) % n
+    if f <= f0 or f >= f1:
+        return 0.0
+    return math.sin(math.pi * (f - f0) / (f1 - f0)) ** 2
 
 
 def hang_at(a):
+    regrip = _bump(a, 12, 18)
+    check = _bump(a, 19, 28)
+    breath = _s(2 * a, 0.5)
     return {
-        "root": (0.018 * _s(a), 0.92 + 0.006 * _s(2 * a, 0.5), 0.07 + 0.008 * _c(a)),
-        "hips": 14.0 + 1.0 * _s(a, -0.4), "roll": 2.5 * _s(a, -0.6), "chest": 5.0 + 1.5 * _s(2 * a, -0.8),
-        "side": -2.0 * _s(a, -0.9), "twist": 2.5 * _s(a, -1.0),
-        "head": -18.0 + 2.0 * _s(2 * a, -1.6), "look": 6.0 * _s(a, -1.3),
-        "clav_r": (6.0, -12.0 + 2.0 * _s(a, -0.6)), "clav_l": (6.0, -12.0 - 2.0 * _s(a, -0.6)),
+        "root": (0.05 * _s(a), 0.9 + 0.0075 * breath, -0.02 + 0.01 * _c(a)),
+        "hips": 24.0 + 1.5 * _s(a, -0.4), "roll": 5.0 * _s(a, -0.6), "chest": 7.0 + 1.5 * _s(2 * a, -0.8),
+        "side": -2.5 * _s(a, -0.9), "twist": 4.0 * _s(a, -1.0),
+        "head": -18.0 + 2.0 * _s(2 * a, -1.6) - 8.0 * check, "look": 12.0 * _s(a, -HANG_LAG) + 10.0 * check,
+        "clav_r": (6.0, -18.0 + 2.0 * _s(a, -0.6) - 1.5 * breath), "clav_l": (6.0, -18.0 - 2.0 * _s(a, -0.6) - 1.5 * breath),
         "hand_r": HANG_PALM_R, "hand_l": _mx(HANG_PALM_R),
         "face_r": "deck", "face_l": "deck",
         "pole_r": (-0.35, -1.0, -0.1), "pole_l": (0.35, -1.0, -0.1),
-        "grip_r": 0.3, "grip_l": 0.3,
+        # (the flex: the fingers lifted off the stone and laid back, the palm pressing)
+        "grip_r": 0.3 - 0.45 * regrip, "grip_l": 0.3,
         "foot_r": HANG_FOOT_R, "foot_l": HANG_FOOT_L,
-        "heel_r": -6.0, "heel_l": -3.0, "fyaw_r": 16.0, "fyaw_l": 20.0,
-        "knee_r": (-0.55, -0.05, 1.0), "knee_l": (0.55, -0.05, 1.0),
+        "heel_r": 10.0 - 4.0 * _s(a), "heel_l": 10.0 + 4.0 * _s(a), "fyaw_r": 16.0, "fyaw_l": 20.0,
+        "knee_r": (-0.6, 0.2, 1.0), "knee_l": (0.6, 0.2, 1.0),
     }
 
 
@@ -2525,204 +2557,314 @@ def _h(key, *more):
     return [(fr, HANG[key]) for fr in (0,) + more]
 
 
+def _turned(v, deg, piv, axis):
+    """A place turned by deg about the X (flip) or the Z (cart) axis through piv, as pose() turns a tumbling figure."""
+    r = math.radians(deg)
+    d = [v[i] - piv[i] for i in range(3)]
+    if axis == "x":
+        y, z = d[1] * math.cos(r) - d[2] * math.sin(r), d[1] * math.sin(r) + d[2] * math.cos(r)
+        d = [d[0], y, z]
+    else:
+        x, y = d[0] * math.cos(r) - d[1] * math.sin(r), d[0] * math.sin(r) + d[1] * math.cos(r)
+        d = [x, y, d[2]]
+    return tuple(round(piv[i] + d[i], 4) for i in range(3))
+
+
+def _unturn(w, deg, piv, axis="x"):
+    """The key that a flip (axis x) or a cart (axis z) of deg about piv turns onto the place w: a hand keyed to land where
+    the deck is while the figure turns."""
+    return _turned(w, -deg, piv, axis)
+
+
+def _unturn_way(face, deg, axis="x", side="r"):
+    """A named facing as the facing that the turn of deg carries onto it (the right hand's, or the left's mirrored: a typed
+    facing is not mirrored by the left hand as a name is)."""
+    f, n = FACING[face]
+    if side == "l":
+        f, n = _mx(f), _mx(n)
+    return (_turned(f, -deg, (0, 0, 0), axis), _turned(n, -deg, (0, 0, 0), axis))
+
+
+## The heel lift's carry of the ankle (pose(): a lifted heel turns the foot about its ball): the ankle's place to key so the
+## ankle lands at `ankle` with the heel lifted by `heel` degrees (no toe-out). A foot laid back on the deck (a knee down, the
+## shin along the deck, the toes over the nose) is a heel lift past 90.
+FOOT_BALL = (0.0, -0.058, 0.101)
+
+
+def _heel_place(ankle, heel):
+    r = math.radians(heel)
+    by, bz = FOOT_BALL[1], FOOT_BALL[2]
+    ry, rz = by * math.cos(r) - bz * math.sin(r), by * math.sin(r) + bz * math.cos(r)
+    return (ankle[0], round(ankle[1] - (by - ry), 4), round(ankle[2] - (bz - rz), 4))
+
+
+## The edge jump's lift (spec 5.3: vy 11.8 at once; the ring's gravity): the code carries the hanger up from the press of
+## Space. The clip's keys are the body over the code's carry (as every clip's are); `lift` is that carry and `lift_w` the
+## share of it the clip takes back off (a uniform shift of the whole figure, the rotations as keyed), so the hands stay on the
+## deck and the feet on the face through the coil and the push before the body goes with the code (intangible 0-0.12 s).
+EDGE_JUMP_VY = 11.8
+EDGE_JUMP_G = 19.9
+
+
+def _rise(f, vy=EDGE_JUMP_VY, g=EDGE_JUMP_G):
+    t = f / FPS
+    return vy * t - 0.5 * g * t * t
+
+
+## The climb's right ankle while the knee is on the deck by the lip: the shin laid back across the coping's nose (resting on it),
+## the foot past the face.
+CLIMB_DRAPE = (-0.2, LIP_Y - 0.08, LIP_Z - 0.2)
+
 SET5 = {
-    # the grab (6 f): caught high, the body still out from the face and the arms up over the lip; the hands slap down flat
-    # on the deck (the catch) and the arms take the weight, the body sagging under it, while the legs, trailing out behind,
-    # swing in under the lip and the balls of the feet meet the face; a settle up into the hang.  hold_s: the reach; strike_s:
-    # the hands on the deck; back_s: the feet on the face
+    # the grab (6 f): caught high off the face, both arms long and spread up over the lip; the hands slap down flat on the
+    # deck (the catch) and the arms take the weight with a jolt: the body sags until the chin dips to the lip, the elbows
+    # give deep and the shoulders shrug up under the load, while the legs, trailing out behind, swing in under the lip like a
+    # pendulum: the hips swing in past the hang toward the face, the balls of the feet strike the face (the heels dropping as
+    # they take it) and the hips bounce back out into the hang; the head a frame behind the hips.  hold_s: the reach;
+    # strike_s: the hands on the deck; back_s: the feet on the face
     "edge_grab": {
-        "length": 6, "base": HANG,
+        "length": 6, "base": HANG, "substeps": 4,
         "meta": dict(EDGE_META, hold_s=1 / FPS, strike_s=2 / FPS, back_s=4 / FPS),
-        "root": [(0, (0.0, 1.06, -0.02)), (1, (0.0, 1.0, 0.07)), (2, (0.0, 0.92, 0.1)), (3, (0.0, 0.86, 0.09)),
-                 (4, (0.0, 0.89, 0.075)), (5, (0.0, 0.925, 0.07)), (6, HANG["root"])],
-        "hips": [(0, -4), (1, 2), (2, 8), (3, 15), (4, 17), (5, 15), (6, HANG["hips"])],
-        "chest": [(0, -2), (1, 2), (2, 6), (3, 9), (4, 7), (6, HANG["chest"])],
-        "head": [(0, -28), (1, -26), (2, -16), (3, -10), (4, -14), (6, HANG["head"])],
-        "clav_r": [(0, (2, -20)), (1, (6, -18)), (2, (8, -16)), (3, (8, -8)), (4, (6, -11)), (6, HANG["clav_r"])],
-        "clav_l": [(0, (2, -20)), (1, (6, -18)), (2, (8, -16)), (3, (8, -8)), (4, (6, -11)), (6, HANG["clav_l"])],
-        "hand_r": [(0, (-0.25, 2.6, 0.3)), (1, (-0.23, 2.15, 0.5)), (2, GR), (6, GR)],
-        "hand_l": [(0, (0.24, 2.63, 0.28)), (1, (0.23, 2.16, 0.49)), (2, GL), (6, GL)],
+        "root": [(0, (0.0, 1.06, -0.08)), (1, (0.0, 0.97, 0.01)), (2, (0.0, 0.92, 0.05)), (3, (0.0, 0.8, 0.08)),
+                 (4, (0.0, 0.85, 0.05)), (5, (0.0, 0.91, 0.0)), (6, HANG["root"])],
+        "hips": [(0, -4), (1, 4), (2, 12), (3, 22), (4, 28), (5, 26), (6, HANG["hips"])],
+        "chest": [(0, -2), (1, 2), (2, 6), (3, 11), (4, 9), (6, HANG["chest"])],
+        "head": [(0, -28), (1, -26), (2, -18), (3, -10), (4, -20), (5, -21), (6, HANG["head"])],
+        "clav_r": [(0, (2, -24)), (1, (6, -20)), (2, (8, -16)), (3, (10, -26)), (4, (8, -21)), (6, HANG["clav_r"])],
+        "clav_l": [(0, (2, -24)), (1, (6, -20)), (2, (8, -16)), (3, (10, -26)), (4, (8, -21)), (6, HANG["clav_l"])],
+        "hand_r": [(0, (-0.4, 2.6, 0.2)), (1, (-0.255, 2.18, 0.46)), (2, GR), (6, GR)],
+        "hand_l": [(0, (0.4, 2.62, 0.18)), (1, (0.255, 2.19, 0.45)), (2, GL), (6, GL)],
         "face_r": [(0, "lip_reach"), (1, "lip_reach"), (2, "deck"), (6, "deck")],
         "face_l": [(0, "lip_reach"), (1, "lip_reach"), (2, "deck"), (6, "deck")],
-        "pole_r": [(0, (-0.6, -0.6, -0.3)), (2, (-0.5, -1.0, -0.1)), (6, HANG["pole_r"])],
-        "pole_l": [(0, (0.6, -0.6, -0.3)), (2, (0.5, -1.0, -0.1)), (6, HANG["pole_l"])],
-        "grip_r": [(0, -0.3), (1, -0.4), (2, 0.5), (4, 0.3), (6, HANG["grip_r"])],
-        "grip_l": [(0, -0.3), (1, -0.4), (2, 0.5), (4, 0.3), (6, HANG["grip_l"])],
-        "foot_r": [(0, (-0.14, 1.3, -0.26)), (2, (-0.15, 1.12, -0.21)), (3, (-0.16, 1.06, 0.04)), (4, GFR), (6, GFR)],
-        "foot_l": [(0, (0.15, 1.38, -0.34)), (2, (0.16, 1.17, -0.26)), (3, (0.16, 1.11, 0.0)), (4, GFL), (6, GFL)],
-        "heel_r": [(0, 28), (2, 20), (3, 4), (4, HANG["heel_r"]), (6, HANG["heel_r"])],
-        "heel_l": [(0, 32), (2, 24), (3, 6), (4, HANG["heel_l"]), (6, HANG["heel_l"])],
+        "pole_r": [(0, (-0.7, -0.5, -0.3)), (2, (-0.5, -1.0, -0.2)), (3, (-0.45, -1.0, -0.5)), (6, HANG["pole_r"])],
+        "pole_l": [(0, (0.7, -0.5, -0.3)), (2, (0.5, -1.0, -0.2)), (3, (0.45, -1.0, -0.5)), (6, HANG["pole_l"])],
+        "grip_r": [(0, -0.3), (1, -0.4), (2, 0.5), (4, 0.35), (6, HANG["grip_r"])],
+        "grip_l": [(0, -0.3), (1, -0.4), (2, 0.5), (4, 0.35), (6, HANG["grip_l"])],
+        "foot_r": [(0, (-0.14, 1.3, -0.32)), (2, (-0.15, 1.2, -0.24)), (3, (-0.16, 1.24, 0.07)), (4, GFR), (6, GFR)],
+        "foot_l": [(0, (0.15, 1.38, -0.38)), (2, (0.16, 1.26, -0.28)), (3, (0.16, 1.32, 0.06)), (4, GFL), (6, GFL)],
+        "heel_r": [(0, 28), (2, 22), (3, 12), (4, 0), (6, HANG["heel_r"])],
+        "heel_l": [(0, 32), (2, 24), (3, 14), (4, 2), (6, HANG["heel_l"])],
         "fyaw_r": [(0, 6), (4, HANG["fyaw_r"])], "fyaw_l": [(0, 8), (4, HANG["fyaw_l"])],
-        "knee_r": [(0, (-0.2, 0.0, 1.0)), (3, (-0.5, -0.05, 1.0)), (6, HANG["knee_r"])],
-        "knee_l": [(0, (0.2, 0.0, 1.0)), (3, (0.5, -0.05, 1.0)), (6, HANG["knee_l"])],
+        "knee_r": [(0, (-0.2, 0.0, 1.0)), (3, (-0.6, 0.3, 1.0)), (6, HANG["knee_r"])],
+        "knee_l": [(0, (0.2, 0.0, 1.0)), (3, (0.6, 0.3, 1.0)), (6, HANG["knee_l"])],
     },
     "edge_hang": dict({"length": 30, "loop": True, "base": HANG, "meta": dict(EDGE_META)},
                       **_loop(30, hang_at, [k for k in hang_at(0.0) if not k.startswith("face_")]),
                       face_r=[(0, "deck"), (30, "deck")], face_l=[(0, "deck"), (30, "deck")]),
-    # the climb (15 f, 0.5 s), a mantle: a dip (the elbows sink, loading), then the arms press the body up the face, the
-    # feet walking up it with the knees turned out to the sides (clear of the stone), the trunk bowed out over the hands;
-    # the right knee comes up beside the body over the lip and is laid on the deck ahead (the shin folded back over the
-    # edge); the left foot swings up and is planted flat ahead, the left hand onto the left thigh, the right hand off the
-    # deck, he drives up off the left leg pressing on the thigh and the right foot steps through to the stand CLIMB_IN in;
-    # the head up first, the arms settling last.  hold_s: the press; strike_s: the knee on the deck; back_s: driving up off
-    # the left leg
+    # the climb (15 f, 0.5 s), a mantle: a dip (the elbows sink, loading), then the arms press the body up the face, the feet
+    # walking up it with the knees turned out (clear of the stone), until the hips are up at the lip with the trunk leant
+    # well over the hands; the right knee comes up and is set on the nose of the coping, the shin hanging down the face; the
+    # weight rocks forward onto that knee (it rolls onto the deck, the shin draped back over the nose) as the left foot swings
+    # up onto the deck ahead, the right hand lifting and the left coming onto the left thigh, the hips shifted left over the
+    # left foot; a held load (the left hand pressing the thigh), then he drives up off the left leg (eased out) and the right
+    # foot steps through to the stand CLIMB_IN in, the rise carried a touch past (onto the toes) and settled, the chest a
+    # touch back; the head up first, the arms landing two frames after the hips.
+    # hold_s: the press; strike_s: the knee on the nose; back_s: the load before the drive
     "edge_climb": {
         "length": 15, "base": HANG,
         "meta": dict(EDGE_META, hold_s=3 / FPS, strike_s=6 / FPS, back_s=9 / FPS, end_in=CLIMB_IN),
-        "root": [(0, HANG["root"]), (1, (0.0, 0.88, 0.06)), (3, (0.0, 1.06, 0.12)), (5, (0.0, 1.2, 0.22)), (6, (0.0, 1.26, 0.32)),
-                 (7, (0.0, 1.27, 0.42)), (8, (0.0, 1.4, 0.54)), (9, (0.0, 1.58, 0.68)), (11, (0.0, 1.88, 0.86)),
-                 (13, (0.0, 2.0, 0.95)), (15, DROOT)],
-        "hips": [(0, HANG["hips"]), (1, 16), (3, 24), (5, 32), (6, 36), (7, 40), (8, 38), (9, 28), (11, 10), (13, 1), (15, 0)],
-        "chest": [(0, HANG["chest"]), (1, 6), (3, 14), (5, 16), (6, 16), (7, 18), (8, 16), (9, 10), (11, 3), (13, -2), (15, 0)],
-        "head": [(0, HANG["head"]), (1, -20), (3, -24), (5, -24), (6, -26), (8, -22), (9, -16), (11, -5), (13, 1), (15, 0)],
-        "roll": [(0, HANG["roll"]), (3, -2), (5, -6), (6, -6), (8, 3), (10, 2), (15, 0)],
-        "clav_r": [(0, HANG["clav_r"]), (1, (6, -14)), (3, (4, 4)), (6, (4, 10)), (8, (2, 6)), (11, (0, 0)), (15, (0, 0))],
-        "clav_l": [(0, HANG["clav_l"]), (1, (6, -14)), (3, (4, 4)), (6, (4, 10)), (8, (2, 6)), (11, (0, 0)), (15, (0, 0))],
-        "hand_r": [(0, GR), (7, GR), (9, (-0.32, 2.5, 0.78)), (11, (-0.26, 2.66, 0.9)), (13, _add(DHR, (0.0, 0.03, 0.02))),
-                   (15, DHR)],
-        "hand_l": [(0, GL), (6, GL), (8, (0.19, 2.53, 0.72)), (9, (0.2, 2.56, 0.76)), (11, (0.27, 2.7, 0.9)),
-                   (13, _add(DHL, (0.0, 0.03, 0.02))), (15, DHL)],
+        "root": [(0, HANG["root"]), (1, (0.0, 0.85, 0.0)), (2, (0.0, 0.95, 0.02)), (3, (0.0, 1.06, 0.04)), (4, (0.0, 1.16, 0.05)),
+                 (5, (0.0, 1.21, 0.05)), (6, (0.0, 1.24, 0.06)), (7, (0.02, 1.34, 0.24)), (8, (0.05, 1.5, 0.4)),
+                 (9, (0.05, 1.55, 0.5)), (10, (0.05, 1.555, 0.56)), (11, (0.04, 1.73, 0.76)), (12, (0.02, 1.87, 0.88)),
+                 (13, (0.01, 1.96, 0.93)), (14, (0.0, 1.997, 0.95)), (15, DROOT)],
+        "hips": [(0, HANG["hips"]), (1, 26), (3, 30), (5, 36), (6, 40), (7, 52), (8, 38), (9, 30), (10, 30), (11, 20), (12, 10),
+                 (13, 3), (14, -1), (15, 0)],
+        "chest": [(0, HANG["chest"]), (1, 8), (3, 16), (5, 12), (6, 10), (7, 14), (8, 10), (9, 12), (10, 12), (11, 7), (12, 2),
+                  (13, -1), (14, -3), (15, 0)],
+        "head": [(0, HANG["head"]), (1, -22), (3, -26), (5, -30), (6, -32), (7, -28), (8, -24), (9, -20), (10, -16), (11, -6),
+                 (12, -1), (14, 1), (15, 0)],
+        "roll": [(0, HANG["roll"]), (3, -2), (5, -4), (6, -6), (8, 3), (10, 2), (15, 0)],
+        "clav_r": [(0, HANG["clav_r"]), (1, (6, -22)), (3, (4, 4)), (5, (4, 10)), (7, (4, 10)), (9, (2, 6)), (11, (0, 0)),
+                   (15, (0, 0))],
+        "clav_l": [(0, HANG["clav_l"]), (1, (6, -22)), (3, (4, 4)), (5, (4, 10)), (7, (4, 10)), (9, (2, 6)), (11, (0, 0)),
+                   (15, (0, 0))],
+        "hand_r": [(0, GR), (7, GR), (8, (-0.3, 2.42, 0.64)), (10, (-0.32, 2.56, 0.8)), (12, (-0.28, 2.7, 0.95)),
+                   (14, _add(DHR, (-0.04, 0.035, 0.04))), (15, DHR)],
+        "hand_l": [(0, GL), (7, GL), (8, (0.19, 2.5, 0.66)), (9, (0.19, 2.52, 0.72)), (10, (0.19, 2.53, 0.76)),
+                   (12, (0.24, 2.72, 0.92)), (14, _add(DHL, (0.03, 0.035, 0.03))), (15, DHL)],
         "face_r": [(0, "deck"), (7, "deck"), (9, "stand"), (15, "stand")],
-        "face_l": [(0, "deck"), (6, "deck"), (8, "knee"), (9, "knee"), (11, "stand"), (15, "stand")],
-        "pole_r": [(0, HANG["pole_r"]), (3, (-0.4, -0.2, -1.0)), (7, (-0.4, -0.2, -1.0)), (11, (-0.4, -0.2, -1.0)),
-                   (15, STAND["pole_r"])],
-        "pole_l": [(0, HANG["pole_l"]), (3, (0.4, -0.2, -1.0)), (6, (0.4, -0.2, -1.0)), (8, (1.0, 0.2, -0.2)), (9, (1.0, 0.2, -0.2)),
-                   (11, (0.4, -0.2, -1.0)), (15, STAND["pole_l"])],
+        "face_l": [(0, "deck"), (7, "deck"), (8, "knee"), (10, "knee"), (12, "stand"), (15, "stand")],
+        "pole_r": [(0, HANG["pole_r"]), (3, (-0.4, -0.2, -1.0)), (7, (-0.4, -0.2, -1.0)), (9, (-0.6, -0.4, -0.4)),
+                   (12, (-0.4, -0.2, -1.0)), (15, STAND["pole_r"])],
+        "pole_l": [(0, HANG["pole_l"]), (3, (0.4, -0.2, -1.0)), (7, (0.4, -0.2, -1.0)), (8, (1.0, 0.2, -0.2)),
+                   (10, (1.0, 0.2, -0.2)), (12, (0.4, -0.2, -1.0)), (15, STAND["pole_l"])],
         "grip_r": [(0, HANG["grip_r"]), (7, 0.2), (9, 0.4), (15, 0.4)],
-        "grip_l": [(0, HANG["grip_l"]), (6, 0.2), (8, 0.3), (10, 0.4), (15, 0.4)],
-        # (the feet walk up the face, the knees turned out; the right knee comes up beside him over the lip and is laid on
-        # the deck, the foot hanging back over the edge, held while the left foot comes up and is planted where it will
-        # stand; then the right steps through)
-        "foot_r": [(0, GFR), (1, GFR), (3, (-0.22, 1.42, 0.17)), (5, (-0.3, 1.8, 0.16)), (6, (-0.2, 2.0, 0.2)),
-                   (9, (-0.2, 2.0, 0.2)), (11, (-0.13, 2.28, 0.6)), (13, DFR), (15, DFR)],
-        "foot_l": [(0, GFL), (2, GFL), (3, (0.18, 1.28, 0.17)), (4, (0.2, 1.44, 0.16)), (5, (0.22, 1.64, 0.15)),
-                   (6, (0.22, 1.92, 0.2)), (7, (0.17, 2.36, 0.48)), (8, DFL), (15, DFL)],
-        "heel_r": [(0, HANG["heel_r"]), (3, 10), (5, 30), (6, 50), (9, 50), (11, 30), (13, 0), (15, 0)],
-        "heel_l": [(0, HANG["heel_l"]), (3, HANG["heel_l"]), (5, 10), (7, 10), (8, 0), (15, 0)],
-        "fyaw_r": [(0, HANG["fyaw_r"]), (5, 20), (6, 4), (11, 4), (15, 7)], "fyaw_l": [(0, HANG["fyaw_l"]), (6, 20), (7, 7), (15, 7)],
-        "knee_r": [(0, HANG["knee_r"]), (3, (-1.0, 0.1, 0.3)), (5, (-1.0, 0.4, 0.2)), (6, (-0.4, -0.2, 1.0)), (9, (-0.4, -0.2, 1.0)),
-                   (11, (-0.2, 0.0, 1.0)), (14, "auto")],
-        "knee_l": [(0, HANG["knee_l"]), (3, (1.0, 0.1, 0.3)), (6, (1.0, 0.4, 0.3)), (7, (0.3, 1.0, 0.4)), (8, (0.3, 0.3, 1.0)),
-                   (9, (0.2, 0.0, 1.0)),
-                   (13, "auto")],
+        "grip_l": [(0, HANG["grip_l"]), (7, 0.2), (8, 0.3), (15, 0.4)],
+        # (the right foot walks up the face as the knee comes up (f3-f5), hangs from the knee on the nose (f6), is draped back
+        # over the nose as the knee rolls onto the deck (f7-f9), then comes up over the nose and steps through; the left foot
+        # walks up the face, swings up over the nose and is planted ahead where it will stand)
+        "foot_r": [(0, GFR), (1, GFR), (3, (-0.21, 1.46, 0.18)), (4, (-0.23, 1.62, 0.2)), (5, (-0.22, 1.74, 0.24)),
+                   (6, (-0.2, 1.72, 0.27)), (7, CLIMB_DRAPE), (9, CLIMB_DRAPE), (10, (-0.17, 2.14, 0.32)),
+                   (11, _heel_place((-0.14, 2.28, 0.7), 30)), (12, _heel_place((-0.13, 2.16, 0.88), 10)), (13, DFR), (15, DFR)],
+        "foot_l": [(0, GFL), (2, GFL), (3, (0.19, 1.48, 0.17)), (5, (0.21, 1.64, 0.17)), (6, (0.22, 1.8, 0.2)),
+                   (7, (0.19, 2.24, 0.52)), (8, DFL), (15, DFL)],
+        "heel_r": [(0, HANG["heel_r"]), (3, 20), (5, 30), (6, 30), (7, 20), (9, 20), (10, 40), (11, 30), (12, 10), (13, 0), (14, 5),
+                   (15, 0)],
+        "heel_l": [(0, HANG["heel_l"]), (3, HANG["heel_l"]), (5, 10), (7, 20), (8, 0), (13, 0), (14, 5), (15, 0)],
+        "fyaw_r": [(0, HANG["fyaw_r"]), (5, 10), (6, 4), (9, 4), (11, 4), (15, 7)],
+        "fyaw_l": [(0, HANG["fyaw_l"]), (6, 20), (7, 10), (8, 7), (15, 7)],
+        "knee_r": [(0, HANG["knee_r"]), (3, (-1.0, 0.1, 0.3)), (5, (-0.4, 0.6, 0.7)), (6, (-0.2, 0.3, 1.0)), (7, (-0.2, -0.3, 1.0)),
+                   (9, (-0.2, -0.3, 1.0)), (11, (-0.2, 0.0, 1.0)), (14, "auto")],
+        "knee_l": [(0, HANG["knee_l"]), (3, (1.0, 0.1, 0.3)), (6, (1.0, 0.4, 0.3)), (7, (0.4, 0.6, 0.8)), (8, (0.2, 0.3, 1.0)),
+                   (9, (0.2, 0.0, 1.0)), (13, "auto")],
     },
-    # the edge jump (9 f): a quick coil on the face (the knees and the elbows sink), then both hands drive the deck down and
-    # the legs kick off the face at once: the body springs up long and straight past the hands, the hands pushing down by
-    # the hips, then flung up overhead; opened out into the fall's balance at the top, the knees coming up last.  The code's
-    # jump carries him up while the root eases from the hang's place to the fall's.  hold_s: the coil; strike_s: the push
-    # (the jump); back_s: the arms overhead, opening
+    # the edge jump (9 f): a real coil on the face (the hips sink 8 cm, the elbows deep, the knees folded up the face), then
+    # the push: the hands drive the deck down and the legs kick off the face (straight, up on the toes), the arms locking
+    # straight down by the hips while the hands are still on the deck (f2-f3: the clip takes back the code's carry, `lift`),
+    # released at f3: the arms are flung up overhead, the body springs up long past the lip and the knees come up under it as
+    # a reaction (from f5), opened out into the fall's balance.  hold_s: the coil; strike_s: the push (the jump); back_s:
+    # the arms overhead, opening
     "edge_jump": {
-        "length": 9, "base": HANG,
+        "length": 9, "base": HANG, "lift": (EDGE_JUMP_VY, EDGE_JUMP_G),
         "meta": dict(EDGE_META, hold_s=1 / FPS, strike_s=2 / FPS, back_s=5 / FPS),
-        "root": [(0, HANG["root"]), (1, (0.0, 0.89, 0.09)), (2, (0.0, 0.98, 0.09)), (3, (0.0, 0.88, 0.07)), (5, (0.0, 0.52, 0.04)),
-                 (7, (0.0, 0.18, 0.01)), (9, AIR["root"])],
-        "hips": [(0, HANG["hips"]), (1, 19), (2, 8), (3, 0), (5, -4), (7, 3), (9, AIR["hips"])],
-        "chest": [(0, HANG["chest"]), (1, 7), (2, 2), (3, -4), (5, -8), (7, 1), (9, AIR["chest"])],
-        "head": [(0, HANG["head"]), (1, -24), (2, -20), (3, -12), (5, -2), (7, 5), (9, AIR["head"])],
-        "clav_r": [(0, HANG["clav_r"]), (1, (6, -8)), (2, (2, 8)), (3, (0, 10)), (5, (-4, -24)), (7, (0, -16)), (9, AIR["clav_r"])],
-        "clav_l": [(0, HANG["clav_l"]), (1, (6, -8)), (2, (2, 8)), (3, (0, 10)), (5, (-4, -24)), (7, (0, -16)), (9, AIR["clav_l"])],
-        "hand_r": [(0, GR), (2, GR), (3, (-0.27, 1.76, 0.17)), (5, (-0.24, 2.22, 0.08)), (7, (-0.48, 1.68, 0.1)), (9, AR)],
-        "hand_l": [(0, GL), (2, GL), (3, (0.27, 1.77, 0.16)), (5, (0.25, 2.21, 0.06)), (7, (0.49, 1.67, 0.08)), (9, AL)],
-        "face_r": [(0, "deck"), (2, "deck"), (3, "press"), (5, "sky"), (9, "balance")],
-        "face_l": [(0, "deck"), (2, "deck"), (3, "press"), (5, "sky"), (9, "balance")],
-        "pole_r": [(0, HANG["pole_r"]), (2, (-0.4, -0.2, -1.0)), (3, (-0.4, 0.0, -1.0)), (5, (-1.0, 0.0, 0.0)), (9, AIR["pole_r"])],
-        "pole_l": [(0, HANG["pole_l"]), (2, (0.4, -0.2, -1.0)), (3, (0.4, 0.0, -1.0)), (5, (1.0, 0.0, 0.0)), (9, AIR["pole_l"])],
-        "grip_r": [(0, HANG["grip_r"]), (2, 0.2), (3, -0.2), (5, -0.4), (9, AIR["grip_r"])],
-        "grip_l": [(0, HANG["grip_l"]), (2, 0.2), (3, -0.2), (5, -0.4), (9, AIR["grip_l"])],
-        "foot_r": [(0, GFR), (2, GFR), (3, (-0.12, 0.99, 0.08)), (5, (-0.12, 0.64, 0.02)), (7, (-0.14, 0.42, 0.1)), (9, AFR)],
-        "foot_l": [(0, GFL), (2, GFL), (3, (0.12, 1.01, 0.06)), (5, (0.12, 0.65, -0.02)), (7, (0.14, 0.5, -0.06)), (9, AFL)],
-        "heel_r": [(0, HANG["heel_r"]), (2, 10), (3, 50), (5, 62), (7, 40), (9, AIR["heel_r"])],
-        "heel_l": [(0, HANG["heel_l"]), (2, 12), (3, 52), (5, 64), (7, 42), (9, AIR["heel_l"])],
+        "lift_w": [(0, 1.0), (3, 1.0), (5, 0.0), (9, 0.0)],
+        # (the body over the deck: f0-f3 where the clip holds it, then over the code's carry; the world's path (hang frame) is
+        # 0.90, 0.82, 0.95, 1.13, 1.47, 1.78, 2.02, 2.24, 2.45, 2.64: the push the fastest, then gravity's even slowing)
+        "root": [(0, HANG["root"]), (1, (0.0, 0.82, 0.02)), (2, (0.0, 0.95, 0.08)), (3, (0.0, 1.13, 0.14)),
+                 (4, (0.0, round(1.47 - 0.5 * _rise(4), 3), 0.08)), (5, (0.0, round(1.78 - _rise(5), 3), 0.04)),
+                 (6, (0.0, round(2.02 - _rise(6), 3), 0.03)), (7, (0.0, round(2.24 - _rise(7), 3), 0.02)),
+                 (8, (0.0, round(2.45 - _rise(8), 3), 0.01)), (9, AIR["root"])],
+        "hips": [(0, HANG["hips"]), (1, 28), (2, 24), (3, 18), (4, -2), (5, -6), (7, 4), (9, AIR["hips"])],
+        "chest": [(0, HANG["chest"]), (1, 10), (2, 6), (3, 0), (4, -8), (5, -8), (7, 2), (9, AIR["chest"])],
+        "head": [(0, HANG["head"]), (1, -24), (2, -22), (3, -14), (4, -4), (5, 2), (7, 6), (9, AIR["head"])],
+        "clav_r": [(0, HANG["clav_r"]), (1, (8, -10)), (2, (2, 6)), (3, (0, 12)), (4, (-4, -14)), (5, (-4, -26)), (7, (0, -16)),
+                   (9, AIR["clav_r"])],
+        "clav_l": [(0, HANG["clav_l"]), (1, (8, -10)), (2, (2, 6)), (3, (0, 12)), (4, (-4, -14)), (5, (-4, -26)), (7, (0, -16)),
+                   (9, AIR["clav_l"])],
+        "hand_r": [(0, GR), (3, GR), (4, (-0.26, round(2.72 - 0.5 * _rise(4), 3), 0.3)), (5, (-0.24, 1.8, 0.06)),
+                   (7, (-0.48, 1.52, 0.1)), (9, AR)],
+        "hand_l": [(0, GL), (3, GL), (4, (0.26, round(2.73 - 0.5 * _rise(4), 3), 0.28)), (5, (0.25, 1.79, 0.04)),
+                   (7, (0.49, 1.51, 0.08)), (9, AL)],
+        "face_r": [(0, "deck"), (3, "deck"), (4, "sky"), (5, "sky"), (9, "balance")],
+        "face_l": [(0, "deck"), (3, "deck"), (4, "sky"), (5, "sky"), (9, "balance")],
+        "pole_r": [(0, HANG["pole_r"]), (1, (-0.45, -1.0, -0.4)), (2, (-0.4, -0.2, -1.0)), (3, (-0.4, 0.0, -1.0)), (5, (-1.0, 0.0, 0.0)),
+                   (9, AIR["pole_r"])],
+        "pole_l": [(0, HANG["pole_l"]), (1, (0.45, -1.0, -0.4)), (2, (0.4, -0.2, -1.0)), (3, (0.4, 0.0, -1.0)), (5, (1.0, 0.0, 0.0)),
+                   (9, AIR["pole_l"])],
+        "grip_r": [(0, HANG["grip_r"]), (3, 0.1), (4, -0.3), (5, -0.4), (9, AIR["grip_r"])],
+        "grip_l": [(0, HANG["grip_l"]), (3, 0.1), (4, -0.3), (5, -0.4), (9, AIR["grip_l"])],
+        "foot_r": [(0, GFR), (1, _up(GFR, 0.06)), (2, _up(GFR, 0.06)), (3, (-0.13, 1.2, 0.16)),
+                   (4, (-0.12, round(1.75 - 0.5 * _rise(4), 3), 0.1)), (5, (-0.13, 0.42, 0.12)), (7, (-0.14, 0.38, 0.16)),
+                   (9, AFR)],
+        "foot_l": [(0, GFL), (1, _up(GFL, 0.06)), (2, _up(GFL, 0.06)), (3, (0.13, 1.22, 0.15)),
+                   (4, (0.12, round(1.79 - 0.5 * _rise(4), 3), 0.08)), (5, (0.13, 0.46, 0.06)), (7, (0.14, 0.44, 0.0)),
+                   (9, AFL)],
+        "heel_r": [(0, HANG["heel_r"]), (1, 4), (2, 20), (3, 50), (4, 60), (5, 45), (7, 35), (9, AIR["heel_r"])],
+        "heel_l": [(0, HANG["heel_l"]), (1, 6), (2, 22), (3, 52), (4, 62), (5, 47), (7, 37), (9, AIR["heel_l"])],
         "fyaw_r": [(0, HANG["fyaw_r"]), (3, 4), (9, AIR["fyaw_r"])], "fyaw_l": [(0, HANG["fyaw_l"]), (3, 4), (9, AIR["fyaw_l"])],
-        "knee_r": [(0, HANG["knee_r"]), (2, HANG["knee_r"]), (3, (-0.1, 0.0, 1.0)), (9, AIR["knee_r"])],
-        "knee_l": [(0, HANG["knee_l"]), (2, HANG["knee_l"]), (3, (0.1, 0.0, 1.0)), (9, AIR["knee_l"])],
+        "knee_r": [(0, HANG["knee_r"]), (1, (-0.6, 0.3, 1.0)), (3, (-0.1, 0.0, 1.0)), (5, (-0.2, 0.3, 1.0)), (9, AIR["knee_r"])],
+        "knee_l": [(0, HANG["knee_l"]), (1, (0.6, 0.3, 1.0)), (3, (0.1, 0.0, 1.0)), (5, (0.2, 0.3, 1.0)), (9, AIR["knee_l"])],
     },
-    # the roll in (22 f, 0.75 s): a dip, then the arms spring the body up over the lip, the knees tucked under, and he
-    # dives forward over his hands, the chin tucked: the shoulders take the deck and he rolls forward over his rounded back
-    # in a tight ball (the code carries him in while he rolls), the feet come round under him into a crouch and he rises to
-    # the stand CLIMB_IN in.  hold_s: over the lip (the code's travel may start); strike_s: the shoulders on the deck;
-    # back_s: on his feet again (the travel done)
+    # the roll in (22 f, 0.75 s): a dip, then the arms spring the body up over the lip to an apex (f4-f5: the hips over the
+    # hands, the knees tucked, the head carried out ahead of the hands, a beat), the hands hop forward and are planted on the
+    # deck ahead (f5-f7, the elbows giving), the chin tucked onto the chest and the trunk rolled onto its right side so the
+    # right shoulder blade takes the deck (not the head): a forward roll along the diagonal from the right shoulder to the
+    # left hip in a tight ball, the hands round the shins from f8 (the code carries him in), the feet come round under him
+    # into a crouch and he rises to the stand CLIMB_IN in, a touch past (onto the toes) and settled, the arms two frames
+    # behind.  hold_s: the apex over the lip (the code's travel may start); strike_s: the shoulder on the deck; back_s: on his
+    # feet again (the travel done)
     "edge_roll": dict({
         "length": 22, "base": HANG, "floor": LIP_Y,
         "meta": dict(EDGE_META, hold_s=5 / FPS, strike_s=7 / FPS, back_s=15 / FPS, end_in=CLIMB_IN),
-        "flip": [(0, 0), (4, 0), (5, 12), (7, 95), (9, 175), (11, 250), (13, 325), (14, 352), (15, 360), (22, 360)],
+        "flip": [(0, 0), (5, 0), (6, 48), (7, 112), (9, 188), (11, 256), (13, 325), (14, 352), (15, 360), (22, 360)],
         "ground": [(0, 0), (5, 0), (6, 1), (13, 1), (15, 0), (22, 0)],
         "pivot": [(0, (0.0, LIP_Y + 0.5, 0.95)), (22, (0.0, LIP_Y + 0.5, 0.95))],
-        "root": [(0, HANG["root"]), (1, (0.0, 0.88, 0.06)), (3, (0.0, 1.2, 0.18)), (4, (0.0, 1.29, 0.38)), (5, (0.0, 1.44, 0.6)),
-                 (7, (0.0, 1.55, 0.8)), (13, (0.0, 1.55, 0.8)), (15, (0.0, 1.62, 0.92)), (18, (0.0, 1.9, 0.95)),
-                 (20, (0.0, 1.995, 0.95)), (22, DROOT)],
-        "hips": [(0, HANG["hips"]), (1, 16), (3, 32), (4, 50), (5, 60), (7, 52), (13, 52), (15, 34), (18, 12), (20, 2), (22, 0)],
-        "chest": [(0, HANG["chest"]), (1, 6), (3, 20), (4, 28), (5, 38), (7, 44), (13, 44), (15, 20), (18, 6), (20, -1), (22, 0)],
-        "head": [(0, HANG["head"]), (1, -20), (3, -10), (4, 14), (5, 48), (7, 72), (13, 72), (15, 18), (18, 4), (20, 1), (22, 0)],
-        "clav_r": [(0, HANG["clav_r"]), (3, (4, 6)), (7, (12, 6)), (13, (12, 6)), (16, (6, 2)), (22, (0, 0))],
-        "clav_l": [(0, HANG["clav_l"]), (3, (4, 6)), (7, (12, 6)), (13, (12, 6)), (16, (6, 2)), (22, (0, 0))],
-        "hand_r": [(0, GR), (4, GR), (6, (-0.16, 2.38, 1.15)), (13, (-0.16, 2.38, 1.15)), (15, (-0.26, 2.62, 1.3)),
-                   (18, (-0.24, 2.72, 1.12)), (22, DHR)],
-        "hand_l": [(0, GL), (4, GL), (6, (0.16, 2.38, 1.14)), (13, (0.16, 2.38, 1.14)), (15, (0.26, 2.62, 1.28)),
-                   (18, (0.24, 2.73, 1.1)), (22, DHL)],
-        "face_r": [(0, "deck"), (4, "deck"), (6, "hug"), (13, "hug"), (15, "balance"), (19, "stand"), (22, "stand")],
-        "face_l": [(0, "deck"), (4, "deck"), (6, "hug"), (13, "hug"), (15, "balance"), (19, "stand"), (22, "stand")],
-        "pole_r": [(0, HANG["pole_r"]), (3, (-0.4, -0.2, -1.0)), (6, (-1.0, 0.0, 0.0)), (13, (-1.0, 0.0, 0.0)), (16, (-0.8, -0.5, -0.3)),
-                   (22, STAND["pole_r"])],
-        "pole_l": [(0, HANG["pole_l"]), (3, (0.4, -0.2, -1.0)), (6, (1.0, 0.0, 0.0)), (13, (1.0, 0.0, 0.0)), (16, (0.8, -0.5, -0.3)),
-                   (22, STAND["pole_l"])],
-        "grip_r": [(0, HANG["grip_r"]), (4, 0.2), (6, 0.6), (13, 0.6), (15, 0.1), (22, 0.4)],
-        "grip_l": [(0, HANG["grip_l"]), (4, 0.2), (6, 0.6), (13, 0.6), (15, 0.1), (22, 0.4)],
-        "foot_r": [(0, GFR), (1, GFR), (3, (-0.2, 1.62, 0.12)), (4, (-0.18, 1.92, 0.24)), (5, (-0.12, 2.06, 0.6)), (7, (-0.12, 2.2, 0.82)),
-                   (13, (-0.12, 2.2, 0.82)), (15, DFR), (22, DFR)],
-        "foot_l": [(0, GFL), (1, GFL), (3, (0.2, 1.66, 0.12)), (4, (0.18, 1.94, 0.23)), (5, (0.12, 2.07, 0.58)), (7, (0.12, 2.2, 0.81)),
-                   (13, (0.12, 2.2, 0.81)), (15, DFL), (22, DFL)],
-        "heel_r": [(0, HANG["heel_r"]), (3, 30), (7, 40), (13, 40), (15, 0), (22, 0)],
-        "heel_l": [(0, HANG["heel_l"]), (3, 30), (7, 40), (13, 40), (15, 0), (22, 0)],
+        "root": [(0, HANG["root"]), (1, (0.0, 0.85, 0.0)), (3, (0.0, 1.22, 0.28)), (4, (0.0, 1.36, 0.45)), (5, (0.0, 1.43, 0.62)),
+                 (7, (0.0, 1.55, 0.8)), (13, (0.0, 1.55, 0.8)), (15, (0.0, 1.62, 0.92)), (17, (0.0, 1.84, 0.95)),
+                 (19, (0.0, 1.997, 0.95)), (21, (0.0, 1.982, 0.95)), (22, DROOT)],
+        "hips": [(0, HANG["hips"]), (1, 26), (3, 40), (4, 72), (5, 64), (7, 52), (13, 52), (15, 34), (17, 16), (19, 0), (21, -1),
+                 (22, 0)],
+        "chest": [(0, HANG["chest"]), (1, 8), (3, 20), (4, 24), (5, 34), (7, 44), (13, 44), (15, 20), (17, 8), (19, -2), (21, 0.5),
+                  (22, 0)],
+        "head": [(0, HANG["head"]), (1, -20), (3, -12), (4, 10), (5, 50), (6, 80), (7, 88), (12, 88), (13, 60), (15, 18), (17, 6),
+                 (19, -2), (21, 0.5), (22, 0)],
+        "roll": [(0, HANG["roll"]), (4, 0), (6, 8), (9, 8), (12, 0), (22, 0)],
+        "twist": [(0, HANG["twist"]), (4, 0), (5, 12), (6, 32), (9, 32), (12, 0), (22, 0)],
+        # (the head turned and tipped away from the right shoulder, off the roll's line, so the shoulder blade meets the deck)
+        "tilt": [(0, 0), (4, 0), (5, -25), (6, -50), (9, -50), (12, 0), (22, 0)],
+        "side": [(0, HANG["side"]), (4, 0), (6, -16), (9, -16), (12, 0), (22, 0)],
+        "look": [(0, HANG["look"]), (4, 0), (6, 40), (9, 40), (12, 0), (22, 0)],
+        "clav_r": [(0, HANG["clav_r"]), (3, (4, 6)), (5, (8, 10)), (7, (12, 6)), (13, (12, 6)), (16, (6, 2)), (22, (0, 0))],
+        "clav_l": [(0, HANG["clav_l"]), (3, (4, 6)), (5, (8, 10)), (7, (12, 6)), (13, (12, 6)), (16, (6, 2)), (22, (0, 0))],
+        "hand_r": [(0, GR), (4, GR), (5, (-0.2, DECK_PALM, 1.0)), (6, _unturn((-0.2, DECK_PALM, 1.0), 48, (0.0, LIP_Y + 0.5, 0.95))),
+                   (7, _unturn((-0.2, DECK_PALM + 0.07, 0.92), 112, (0.0, LIP_Y + 0.5, 0.95))), (9, (-0.16, 2.38, 1.15)),
+                   (13, (-0.16, 2.38, 1.15)), (15, (-0.26, 2.62, 1.3)), (18, (-0.25, 2.8, 1.12)), (20, _add(DHR, (-0.025, 0.045, 0.06))),
+                   (22, DHR)],
+        "hand_l": [(0, GL), (4, GL), (5, (0.2, DECK_PALM, 1.0)), (6, _unturn((0.2, DECK_PALM, 1.0), 48, (0.0, LIP_Y + 0.5, 0.95))),
+                   (7, _unturn((0.2, DECK_PALM + 0.07, 0.92), 112, (0.0, LIP_Y + 0.5, 0.95))), (9, (0.16, 2.38, 1.14)),
+                   (13, (0.16, 2.38, 1.14)), (15, (0.26, 2.62, 1.28)), (18, (0.25, 2.8, 1.12)), (20, _add(DHL, (0.025, 0.045, 0.06))),
+                   (22, DHL)],
+        "face_r": [(0, "deck"), (5, "deck"), (6, _unturn_way("deck", 48)), (7, _unturn_way("deck", 112)), (9, "hug"), (13, "hug"),
+                   (15, "balance"), (19, "balance"), (21, "stand"), (22, "stand")],
+        "face_l": [(0, "deck"), (5, "deck"), (6, _unturn_way("deck", 48, side="l")), (7, _unturn_way("deck", 112, side="l")),
+                   (9, "hug"), (13, "hug"),
+                   (15, "balance"), (19, "balance"), (21, "stand"), (22, "stand")],
+        "pole_r": [(0, HANG["pole_r"]), (3, (-0.4, -0.2, -1.0)), (5, (-0.6, -0.3, -0.5)), (7, (-1.0, 0.2, -0.3)), (9, (-1.0, 0.0, 0.0)),
+                   (13, (-1.0, 0.0, 0.0)), (16, (-0.8, -0.5, -0.3)), (22, STAND["pole_r"])],
+        "pole_l": [(0, HANG["pole_l"]), (3, (0.4, -0.2, -1.0)), (5, (0.6, -0.3, -0.5)), (7, (1.0, 0.2, -0.3)), (9, (1.0, 0.0, 0.0)),
+                   (13, (1.0, 0.0, 0.0)), (16, (0.8, -0.5, -0.3)), (22, STAND["pole_l"])],
+        "grip_r": [(0, HANG["grip_r"]), (4, 0.2), (5, 0.1), (7, 0.1), (9, 0.6), (13, 0.6), (15, 0.1), (22, 0.4)],
+        "grip_l": [(0, HANG["grip_l"]), (4, 0.2), (5, 0.1), (7, 0.1), (9, 0.6), (13, 0.6), (15, 0.1), (22, 0.4)],
+        "foot_r": [(0, GFR), (1, GFR), (3, (-0.2, 1.66, 0.12)), (4, (-0.14, 2.18, 0.3)), (5, (-0.12, 2.16, 0.48)),
+                   (7, (-0.12, 2.2, 0.82)), (8, (-0.12, 2.15, 0.88)), (10, (-0.12, 2.15, 0.88)), (13, (-0.12, 2.2, 0.82)),
+                   (15, DFR), (22, DFR)],
+        "foot_l": [(0, GFL), (1, GFL), (3, (0.2, 1.7, 0.12)), (4, (0.14, 2.19, 0.29)), (5, (0.12, 2.17, 0.47)),
+                   (7, (0.12, 2.2, 0.81)), (8, (0.12, 2.15, 0.87)), (10, (0.12, 2.15, 0.87)), (13, (0.12, 2.2, 0.81)),
+                   (15, DFL), (22, DFL)],
+        "heel_r": [(0, HANG["heel_r"]), (3, 30), (7, 40), (13, 40), (15, 0), (18, 0), (19, 5), (21, 0), (22, 0)],
+        "heel_l": [(0, HANG["heel_l"]), (3, 30), (7, 40), (13, 40), (15, 0), (18, 0), (19, 5), (21, 0), (22, 0)],
         "fyaw_r": [(0, HANG["fyaw_r"]), (5, 4), (14, 4), (22, 7)], "fyaw_l": [(0, HANG["fyaw_l"]), (5, 4), (14, 4), (22, 7)],
-        "knee_r": [(0, HANG["knee_r"]), (3, (-1.0, 0.3, 0.3)), (4, (-0.8, 0.5, 0.4)), (6, (-0.2, 0.2, 1.0)), (13, (-0.2, 0.2, 1.0)),
+        "knee_r": [(0, HANG["knee_r"]), (3, (-1.0, 0.3, 0.3)), (4, (-0.5, 0.5, 1.0)), (6, (-0.2, 0.2, 1.0)), (13, (-0.2, 0.2, 1.0)),
                    (16, (-0.25, 0.0, 1.0)), (21, "auto")],
-        "knee_l": [(0, HANG["knee_l"]), (3, (1.0, 0.3, 0.3)), (4, (0.8, 0.5, 0.4)), (6, (0.2, 0.2, 1.0)), (13, (0.2, 0.2, 1.0)),
+        "knee_l": [(0, HANG["knee_l"]), (3, (1.0, 0.3, 0.3)), (4, (0.5, 0.5, 1.0)), (6, (0.2, 0.2, 1.0)), (13, (0.2, 0.2, 1.0)),
                    (16, (0.25, 0.0, 1.0)), (21, "auto")],
     }),
     # the edge attack (18 f, 0.6 s): a dip and a hard press up, the left hand hopping forward onto the deck and the left foot
-    # planted by it in a deep crouch, the right leg stretched out low to the side, the right arm up and out for the balance
-    # (the wind-up); then the low sweep: the straight right leg swept round flat along the deck from the side across the
-    # front (the body turning with it over the bent left leg, propped on the left hand, the right arm swinging back against
-    # it), drawn in and stood up CLIMB_IN in.  hold_s: crouched, the leg out; strike_s: the sweep straight ahead; back_s:
-    # the leg drawn in
+    # planted by it in a deep crouch, the right leg stretched out low to the side and the right arm thrown back and up for the
+    # balance (the wind-up, the hips turned away); then the low sweep (Northern Shaolin / Hung Gar's ground sweep): the whole
+    # trunk turns over the bent left leg, the head low and the eyes along the sweep, the straight right leg swept round flat
+    # along the deck from the right side across the front to the left, slowing at its end, the right arm whipping across the
+    # other way as the counterweight (overshooting, settling); the leg drawn in under him and stood up CLIMB_IN in.
+    # hold_s: crouched, the leg out; strike_s: the sweep straight ahead; back_s: the leg at the end of the sweep
     "edge_attack": {
         "length": 18, "base": HANG,
         "meta": dict(EDGE_META, hold_s=6 / FPS, strike_s=9 / FPS, back_s=12 / FPS, end_in=CLIMB_IN, hand="foot_r"),
-        "root": [(0, HANG["root"]), (1, (0.0, 0.88, 0.06)), (3, (0.0, 1.12, 0.14)), (4, (0.0, 1.27, 0.34)), (5, (0.0, 1.38, 0.56)),
-                 (6, (0.02, 1.39, 0.66)),
-                 (9, (0.05, 1.38, 0.7)), (11, (0.06, 1.385, 0.7)), (12, (0.05, 1.52, 0.74)), (14, (0.0, 1.84, 0.9)),
-                 (16, (0.0, 2.0, 0.95)), (18, DROOT)],
-        "yaw": [(0, 0), (5, -6), (6, -14), (8, -4), (9, 6), (11, 20), (12, 18), (14, 6), (18, 0)],
-        "hips": [(0, HANG["hips"]), (1, 16), (3, 26), (5, 54), (6, 60), (9, 58), (11, 56), (12, 48), (14, 16), (16, 2), (18, 0)],
-        "chest": [(0, HANG["chest"]), (1, 6), (3, 16), (5, 22), (6, 22), (9, 20), (11, 18), (12, 16), (14, 6), (16, -1), (18, 0)],
-        "side": [(0, HANG["side"]), (5, 8), (6, 16), (9, 18), (11, 14), (12, 10), (14, 2), (18, 0)],
-        "head": [(0, HANG["head"]), (1, -20), (3, -20), (5, -28), (6, -32), (9, -30), (12, -22), (14, -6), (16, 1), (18, 0)],
-        "look": [(0, HANG["look"]), (6, -10), (9, 0), (11, 12), (14, 4), (18, 0)],
-        "clav_r": [(0, HANG["clav_r"]), (3, (4, 6)), (6, (0, -6)), (12, (0, -6)), (15, (2, 2)), (18, (0, 0))],
-        "clav_l": [(0, HANG["clav_l"]), (3, (4, 6)), (6, (8, 10)), (12, (8, 10)), (15, (2, 2)), (18, (0, 0))],
-        "hand_r": [(0, GR), (3, GR), (4, (-0.32, 2.34, 0.74)), (6, (-0.55, 2.6, 0.88)), (8, (-0.46, 2.6, 0.8)),
-                   (9, (-0.4, 2.6, 0.82)), (10, (-0.36, 2.6, 0.86)), (11, (-0.3, 2.62, 0.88)), (12, (-0.33, 2.68, 0.9)),
-                   (14, (-0.26, 2.7, 1.0)), (16, _add(DHR, (0.0, 0.03, 0.02))), (18, DHR)],
-        "hand_l": [(0, GL), (3, GL), (4, (0.22, 2.2, 0.82)), (5, (0.21, 2.05, 0.96)), (11, (0.21, 2.05, 0.96)),
+        "root": [(0, HANG["root"]), (1, (0.0, 0.85, 0.0)), (3, (0.0, 1.12, 0.14)), (4, (0.0, 1.27, 0.34)), (5, (0.0, 1.39, 0.56)),
+                 (6, (0.02, 1.405, 0.66)), (9, (0.05, 1.395, 0.7)), (11, (0.06, 1.4, 0.7)), (12, (0.05, 1.52, 0.74)),
+                 (14, (0.0, 1.84, 0.9)), (16, (0.0, 1.997, 0.95)), (17, (0.0, 1.983, 0.95)), (18, DROOT)],
+        "yaw": [(0, 0), (5, -8), (6, -20), (8, -6), (9, 8), (11, 33), (12, 31), (14, 10), (16, -2), (18, 0)],
+        "hips": [(0, HANG["hips"]), (1, 26), (3, 30), (5, 54), (6, 60), (9, 60), (11, 56), (12, 48), (14, 16), (16, 1), (18, 0)],
+        "chest": [(0, HANG["chest"]), (1, 8), (3, 16), (5, 22), (6, 22), (8, 26), (10, 26), (11, 22), (12, 16), (14, 6), (16, -2),
+                  (18, 0)],
+        "side": [(0, HANG["side"]), (5, 10), (6, 20), (9, 20), (11, 21), (12, 12), (14, 2), (18, 0)],
+        "head": [(0, HANG["head"]), (1, -20), (3, -20), (5, -28), (6, -30), (9, -26), (12, -22), (14, -6), (16, 1), (18, 0)],
+        "look": [(0, HANG["look"]), (6, -10), (8, 4), (9, 12), (11, 20), (13, 8), (16, 0), (18, 0)],
+        "clav_r": [(0, HANG["clav_r"]), (3, (4, 6)), (6, (-4, -10)), (10, (8, -4)), (12, (4, -2)), (15, (2, 2)), (18, (0, 0))],
+        "clav_l": [(0, HANG["clav_l"]), (3, (4, 6)), (6, (10, 24)), (11, (10, 28)), (12, (10, 22)), (15, (2, 2)), (18, (0, 0))],
+        "hand_r": [(0, GR), (3, GR), (4, (-0.34, 2.36, 0.72)), (6, (-0.55, 2.68, 0.64)), (8, (-0.38, 2.66, 0.8)), (10, (0.1, 2.5, 1.0)),
+                   (11, (0.14, 2.5, 1.0)), (12, (0.17, 2.53, 0.98)), (14, (-0.18, 2.7, 1.02)), (16, _add(DHR, (-0.02, 0.03, 0.03))),
+                   (18, DHR)],
+        "hand_l": [(0, GL), (3, GL), (4, (0.22, 2.2, 0.8)), (5, (0.145, 2.05, 0.97)), (11, (0.145, 2.05, 0.97)),
                    (13, (0.26, 2.5, 1.0)), (14, (0.28, 2.72, 1.06)), (16, _add(DHL, (0.0, 0.03, 0.02))), (18, DHL)],
         "face_r": [(0, "deck"), (3, "deck"), (5, "balance"), (12, "balance"), (15, "stand"), (18, "stand")],
         "face_l": [(0, "deck"), (3, "deck"), (5, "deck_out"), (12, "deck_out"), (15, "stand"), (18, "stand")],
-        "pole_r": [(0, HANG["pole_r"]), (3, (-0.4, -0.2, -1.0)), (5, (-0.6, -0.6, -0.4)), (12, (-0.6, -0.6, -0.4)),
-                   (18, STAND["pole_r"])],
+        "pole_r": [(0, HANG["pole_r"]), (3, (-0.4, -0.2, -1.0)), (5, (-0.6, -0.6, -0.4)), (10, (-0.2, -1.0, -0.2)),
+                   (12, (-0.4, -0.8, -0.3)), (18, STAND["pole_r"])],
         "pole_l": [(0, HANG["pole_l"]), (3, (0.4, -0.2, -1.0)), (5, (1.0, 0.0, -0.3)), (12, (1.0, 0.0, -0.3)),
                    (18, STAND["pole_l"])],
         "grip_r": [(0, HANG["grip_r"]), (4, -0.2), (6, 0.1), (12, 0.1), (15, 0.4), (18, 0.4)],
         "grip_l": [(0, HANG["grip_l"]), (4, -0.2), (5, 0.1), (12, 0.1), (15, 0.4), (18, 0.4)],
-        # (the right leg: up the face, stretched out low to the side, then swept round flat across the front at the shin's
-        # height over the deck on its own reach round the hip and drawn in; the left foot planted under him in the crouch)
-        "foot_r": [(0, GFR), (1, GFR), (3, (-0.24, 1.45, 0.16)), (4, (-0.42, 1.92, 0.22)), (5, (-0.5, 2.14, 0.44)), (6, (-0.66, 2.1, 0.62)),
-                   (7, (-0.6, 2.1, 0.95)), (8, (-0.46, 2.1, 1.16)), (9, (-0.12, 2.1, 1.32)), (10, (0.12, 2.1, 1.28)),
-                   (11, (0.22, 2.11, 1.18)), (12, (0.05, 2.15, 1.02)), (14, (-0.13, 2.12, 0.95)), (16, DFR), (18, DFR)],
-        "foot_l": [(0, GFL), (2, GFL), (3, (0.2, 1.34, 0.17)), (4, (0.2, 1.96, 0.26)), (5, (0.17, 2.077, 0.7)), (12, (0.17, 2.077, 0.7)),
+        # (the right leg: up the face, stretched out low to the side, swept round flat at the shin's height over the deck from
+        # the right across the front to the left of the planted left foot, slowing at its end, then lifted in over the left
+        # foot and drawn in under him; the left foot planted under him in the crouch)
+        "foot_r": [(0, GFR), (1, GFR), (3, (-0.24, 1.48, 0.16)), (4, (-0.42, 1.92, 0.22)), (5, (-0.5, 2.14, 0.44)), (6, (-0.66, 2.1, 0.62)),
+                   (7, (-0.6, 2.1, 0.95)), (8, (-0.46, 2.1, 1.16)), (9, (-0.12, 2.1, 1.32)), (10, (0.2, 2.1, 1.25)),
+                   (11, (0.45, 2.1, 1.0)), (12, (0.55, 2.1, 0.8)), (13, (0.3, 2.22, 0.98)), (14, (-0.1, 2.16, 0.95)), (16, DFR),
+                   (18, DFR)],
+        "foot_l": [(0, GFL), (2, GFL), (3, (0.2, 1.38, 0.17)), (4, (0.2, 1.96, 0.26)), (5, (0.17, 2.077, 0.7)), (12, (0.17, 2.077, 0.7)),
                    (14, (0.15, 2.077, 0.82)), (16, DFL), (18, DFL)],
-        "heel_r": [(0, HANG["heel_r"]), (3, 10), (5, 30), (6, 20), (11, 20), (14, 10), (16, 0), (18, 0)],
-        "heel_l": [(0, HANG["heel_l"]), (3, HANG["heel_l"]), (5, 0), (14, 0), (18, 0)],
+        "heel_r": [(0, HANG["heel_r"]), (3, 10), (5, 30), (6, 20), (11, 20), (12, 24), (14, 10), (16, 0), (18, 0)],
+        "heel_l": [(0, HANG["heel_l"]), (3, HANG["heel_l"]), (5, 0), (14, 0), (16, 4), (17, 0), (18, 0)],
         "fyaw_r": [(0, HANG["fyaw_r"]), (5, -10), (11, -10), (16, 7)], "fyaw_l": [(0, HANG["fyaw_l"]), (5, 30), (12, 30), (16, 7)],
         "knee_r": [(0, HANG["knee_r"]), (3, (-1.0, 0.2, 0.3)), (5, (-0.3, 1.0, 0.2)), (12, (-0.3, 1.0, 0.2)), (14, (-0.2, 0.0, 1.0)),
                    (17, "auto")],
@@ -2741,134 +2883,203 @@ CLIPS.update(SET5)
 
 
 ## The ground rolls' tucked ball (the figure upright as if squatting; the flip or the cart turns it about ROLL_PIVOT): the hips
-## sunk to the heels, the back rounded over the knees, the chin tucked, the hands round the shins.
+## sunk to the heels, the back rounded over the knees, the chin tucked onto the chest, the knees drawn in to it, the hands
+## round the shins.
 ROLL_PIVOT = (0.0, 0.5, 0.18)
-TUCK = {"root": (0.0, -0.45, 0.05), "hips": 48.0, "chest": 44.0, "head": 72.0, "clav": (10.0, 6.0),
-        "hand_r": (-0.15, 0.37, 0.38), "foot_r": (-0.12, 0.2, 0.0), "heel": 40.0}
+TUCK = {"root": (0.0, -0.45, 0.05), "hips": 48.0, "chest": 44.0, "head": 85.0, "clav": (10.0, 6.0),
+        "hand_r": (-0.15, 0.37, 0.38), "foot_r": (-0.12, 0.2, 0.1), "heel": 34.0}
 ## The rise out of a roll: a crouch on both feet, the arms out ahead for the balance.
 CROUCH = {"root": (0.0, -0.4, 0.05), "hips": 30.0, "chest": 14.0, "head": 8.0, "hand_r": (-0.24, 0.62, 0.42)}
+## The forward and the back roll's turn at every frame of the roll (deg; the side roll's cart its own, below).
+ROLL_TURN = [(0, 0), (2, 0), (3, 30), (4, 66), (5, 105), (6, 148), (7, 190), (8, 228), (9, 262), (10, 295), (11, 325), (12, 350),
+             (13, 360), (18, 360)]
+## The side roll's cart: tipped onto the right shoulder and hip (f3-f6), three quarters onto the back at the strike (f7),
+## quickening over the back and the left side, up.
+SIDE_TURN = [(0, 0), (2, 0), (3, 30), (4, 70), (5, 100), (6, 122), (7, 140), (8, 195), (9, 245), (10, 290), (11, 325), (12, 350),
+             (13, 360), (18, 360)]
+## The deck's palm (a palm laid flat on the floor of a ground roll).
+FLOOR_PALM = 0.03
 
 
-def _roll(turn, sign, side=False):
-    """A ground roll (18 f, facing kept): a crouch into the ball (f0-f2), turned whole through 360 degrees by `turn` (flip:
-    the head forward and down, + a forward roll, - a back one; cart: + rolled to the right) over f3-f13 on the deck (the
-    ground contact), the feet planted at f13 in a crouch, risen to the stand by f18."""
-    back = turn == "flip" and sign < 0
-    t = [(0, 0), (2, 0), (3, 30 * sign), (5, 105 * sign), (7, 190 * sign), (9, 262 * sign), (11, 325 * sign),
-         (12, 350 * sign), (13, 360 * sign), (18, 360 * sign)]
-    pre = (0.0, -0.36, -0.1 if back else 0.08)
-    if side:
-        pre = (-0.1, -0.38, 0.06)
+def _roll(kind):
+    """A ground roll (18 f, facing kept; kind "f", "b" or "side"): dropped into the ball (f0-f2), turned whole through 360
+    degrees over f3-f13 on the deck (the ground contact: its lowest surface kept on the deck), the feet planted at f13 (the
+    side roll's left at f12) in a crouch, risen to the stand by f17 a touch past it (onto the toes) and settled at f18, the
+    arms two frames behind the trunk."""
+    sign = -1 if kind == "b" else 1
+    turn = "cart" if kind == "side" else "flip"
+    table = SIDE_TURN if kind == "side" else ROLL_TURN
+    t = [(fr, v * sign) for fr, v in table]
     hr, hl = TUCK["hand_r"], _mx(TUCK["hand_r"])
-    h1r = (-0.22, 0.78, 0.16) if back else (-0.24, 0.7, 0.24)
     fr, fl = TUCK["foot_r"], _mx(TUCK["foot_r"])
-    # (the hands at the drop: reaching to the deck ahead for a forward roll, up by the ears for a back one, in to the knees
-    # for a side one)
-    if back:
-        h2r, h2l, f2 = (-0.22, 0.8, 0.05), (0.22, 0.81, 0.05), "ears"
-        hr, hl, fh = (-0.2, 1.0, 0.24), (0.2, 1.01, 0.24), "ears"
-    elif side:
-        h2r, h2l, f2 = (-0.3, 0.5, 0.3), (0.18, 0.52, 0.36), "hug"
-        fh = "hug"
-    else:
-        h2r, h2l, f2 = (-0.22, 0.36, 0.46), (0.22, 0.37, 0.46), "palm_down"
-        fh = "hug"
     c = {
         "length": 18, "pivot": [(0, ROLL_PIVOT), (18, ROLL_PIVOT)],
         "meta": {"hold_s": 2 / FPS, "strike_s": 7 / FPS, "back_s": 13 / FPS, "hand": "both", "mask": "full", "root": "place",
                  "legs_always": 1.0},
         turn: t,
         "ground": [(0, 0), (2, 0), (3, 1), (12, 1), (13, 0), (18, 0)],
-        "root": [(0, STAND["root"]), (1, (pre[0] * 0.4, -0.13, pre[2] * 0.4)), (2, pre), (3, TUCK["root"]), (12, TUCK["root"]),
-                 (13, CROUCH["root"]), (15, (0.0, -0.16, 0.02)), (17, (0.0, -0.01, 0.0)), (18, STAND["root"])],
-        "hips": [(0, 0), (1, 12), (2, 36), (3, TUCK["hips"]), (12, TUCK["hips"]), (13, CROUCH["hips"]), (15, 12), (17, -1), (18, 0)],
-        "chest": [(0, 0), (1, 8), (2, 24), (3, TUCK["chest"]), (12, TUCK["chest"]), (13, CROUCH["chest"]), (15, 5), (17, -1),
-                  (18, 0)],
-        "head": [(0, 0), (1, 10), (2, 28), (3, TUCK["head"]), (12, TUCK["head"]), (13, CROUCH["head"]), (15, 3), (18, 0)],
-        "clav_r": [(0, (0, 0)), (2, (8, 4)), (3, TUCK["clav"]), (12, TUCK["clav"]), (14, (4, 2)), (18, (0, 0))],
-        "clav_l": [(0, (0, 0)), (2, (8, 4)), (3, TUCK["clav"]), (12, TUCK["clav"]), (14, (4, 2)), (18, (0, 0))],
-        "hand_r": [(0, HR), (1, h1r), (2, h2r), (4, hr), (12, hr), (13, CROUCH["hand_r"]), (15, (-0.24, 0.72, 0.25)),
-                   (18, HR)],
-        "hand_l": [(0, HL), (1, _add(_mx(h1r), (0.0, 0.01, 0.0))), (2, h2l), (4, hl), (12, hl), (13, _mx(CROUCH["hand_r"])),
-                   (15, (0.24, 0.73, 0.25)),
-                   (18, HL)],
-        "face_r": [(0, "stand"), (2, f2), (4, fh), (12, fh), (13, "balance"), (16, "stand"), (18, "stand")],
-        "face_l": [(0, "stand"), (2, f2), (4, fh), (12, fh), (13, "balance"), (16, "stand"), (18, "stand")],
-        "pole_r": [(0, STAND["pole_r"]), (2, (-1.0, -0.2, 0.0)), (12, (-1.0, -0.2, 0.0)), (14, (-0.8, -0.5, -0.3)), (18, STAND["pole_r"])],
-        "pole_l": [(0, STAND["pole_l"]), (2, (1.0, -0.2, 0.0)), (12, (1.0, -0.2, 0.0)), (14, (0.8, -0.5, -0.3)), (18, STAND["pole_l"])],
-        "grip_r": [(0, 0.4), (2, 0.1), (4, 0.6), (12, 0.6), (13, 0.15), (18, 0.4)],
-        "grip_l": [(0, 0.4), (2, 0.1), (4, 0.6), (12, 0.6), (13, 0.15), (18, 0.4)],
-        "foot_r": [(0, FR), (2, FR), (4, fr), (11, fr), (13, FR), (18, FR)],
-        "foot_l": [(0, FL), (2, FL), (4, fl), (11, fl), (13, FL), (18, FL)],
-        "heel_r": [(0, 0), (2, 25), (4, TUCK["heel"]), (11, TUCK["heel"]), (13, 0), (18, 0)],
-        "heel_l": [(0, 0), (2, 25), (4, TUCK["heel"]), (11, TUCK["heel"]), (13, 0), (18, 0)],
+        "root": [(0, STAND["root"]), (1, (0.0, -0.15, 0.03)), (2, (0.0, -0.47, 0.12)), (3, TUCK["root"]), (12, TUCK["root"]),
+                 (13, CROUCH["root"]), (15, (0.0, -0.16, 0.02)), (16, (0.0, -0.035, 0.0)), (17, (0.0, -0.004, 0.0)),
+                 (18, STAND["root"])],
+        "hips": [(0, 0), (1, 14), (2, 54), (3, TUCK["hips"]), (12, TUCK["hips"]), (13, CROUCH["hips"]), (15, 12), (16, 2), (17, -1),
+                 (18, 0)],
+        "chest": [(0, 0), (1, 10), (2, 46), (3, TUCK["chest"]), (12, TUCK["chest"]), (13, CROUCH["chest"]), (15, 5), (16, 0),
+                  (17, -2), (18, 0)],
+        "head": [(0, 0), (1, 12), (2, 40), (3, TUCK["head"]), (11, TUCK["head"]), (12, 60), (13, 14), (15, 3), (18, 0)],
+        # (the shoulder roll's diagonal: the trunk rolled onto its right side, so the right shoulder blade meets the deck and
+        # the roll runs over the back to the left hip)
+        "roll": [(0, 0), (2, 0), (3, 4), (4, 8), (9, 8), (12, 0), (18, 0)],
+        "twist": [(0, 0), (2, 6), (3, 20), (4, 32), (9, 32), (12, 0), (18, 0)],
+        # (the head turned and tipped away from that shoulder, off the roll's line)
+        "tilt": [(0, 0), (2, 0), (3, -20), (4, -40), (9, -40), (12, 0), (18, 0)],
+        "look": [(0, 0), (2, 0), (4, 40), (9, 40), (12, 0), (18, 0)],
+        "clav_r": [(0, (0, 0)), (2, (18, 8)), (3, (22, 6)), (9, (22, 6)), (12, TUCK["clav"]), (14, (4, 2)), (18, (0, 0))],
+        "clav_l": [(0, (0, 0)), (2, (18, 8)), (3, TUCK["clav"]), (12, TUCK["clav"]), (14, (4, 2)), (18, (0, 0))],
+        # (the palms on the deck ahead of the feet at the drop, the elbows giving as he goes over them, then round the shins)
+        "hand_r": [(0, HR), (1, (-0.22, 0.69, 0.28)), (2, (-0.22, FLOOR_PALM + 0.04, 0.5)),
+                   (3, _unturn((-0.22, FLOOR_PALM, 0.42), 30, ROLL_PIVOT)),
+                   (4, _unturn((-0.22, -0.03, 0.36), 66, ROLL_PIVOT)), (5, _unturn((-0.24, -0.01, 0.28), 105, ROLL_PIVOT)), (7, hr),
+                   (12, hr), (13, CROUCH["hand_r"]),
+                   (15, (-0.26, 0.71, 0.32)), (16, (-0.24, 0.83, 0.19)), (17, (-0.21, 0.8, 0.11)), (18, HR)],
+        "hand_l": [(0, HL), (1, (0.22, 0.7, 0.28)), (2, (0.22, FLOOR_PALM + 0.04, 0.5)),
+                   (3, _unturn((0.22, FLOOR_PALM, 0.42), 30, ROLL_PIVOT)),
+                   (4, _unturn((0.22, -0.03, 0.36), 66, ROLL_PIVOT)), (5, _unturn((0.24, 0.0, 0.28), 105, ROLL_PIVOT)), (7, hl),
+                   (12, hl), (13, _mx(CROUCH["hand_r"])),
+                   (15, (0.26, 0.72, 0.32)), (16, (0.24, 0.83, 0.19)), (17, (0.21, 0.8, 0.11)), (18, HL)],
+        "face_r": [(0, "stand"), (1, "palm_down"), (2, "deck"), (3, _unturn_way("deck", 30)), (4, _unturn_way("deck", 66)),
+                   (5, _unturn_way("deck", 105)), (7, "hug"), (12, "hug"),
+                   (13, "balance"), (16, "balance"), (18, "stand")],
+        "face_l": [(0, "stand"), (1, "palm_down"), (2, "deck"), (3, _unturn_way("deck", 30, side="l")),
+                   (4, _unturn_way("deck", 66, side="l")), (5, _unturn_way("deck", 105, side="l")), (7, "hug"), (12, "hug"),
+                   (13, "balance"), (16, "balance"), (18, "stand")],
+        "pole_r": [(0, STAND["pole_r"]), (2, (-0.8, -0.2, -0.4)), (3, (-1.0, 0.0, -0.2)), (5, (-1.0, -0.2, 0.0)), (12, (-1.0, -0.2, 0.0)),
+                   (14, (-0.8, -0.5, -0.3)), (18, STAND["pole_r"])],
+        "pole_l": [(0, STAND["pole_l"]), (2, (0.8, -0.2, -0.4)), (3, (1.0, 0.0, -0.2)), (5, (1.0, -0.2, 0.0)), (12, (1.0, -0.2, 0.0)),
+                   (14, (0.8, -0.5, -0.3)), (18, STAND["pole_l"])],
+        "grip_r": [(0, 0.4), (2, 0.0), (5, 0.0), (7, 0.6), (12, 0.6), (13, 0.15), (18, 0.4)],
+        "grip_l": [(0, 0.4), (2, 0.0), (5, 0.0), (7, 0.6), (12, 0.6), (13, 0.15), (18, 0.4)],
+        # (the shins let out a little as he passes upside down, so the rounded back, not the knees, rolls on the deck)
+        "foot_r": [(0, FR), (2, FR), (4, fr), (6, _add(fr, (0.0, -0.04, 0.05))), (8, _add(fr, (0.0, -0.04, 0.05))), (11, fr),
+                   (13, FR), (18, FR)],
+        "foot_l": [(0, FL), (2, FL), (4, fl), (6, _add(fl, (0.0, -0.04, 0.05))), (8, _add(fl, (0.0, -0.04, 0.05))), (11, fl),
+                   (13, FL), (18, FL)],
+        "heel_r": [(0, 0), (2, 25), (4, TUCK["heel"]), (11, TUCK["heel"]), (13, 0), (16, 0), (17, 4), (18, 0)],
+        "heel_l": [(0, 0), (2, 25), (4, TUCK["heel"]), (11, TUCK["heel"]), (13, 0), (16, 0), (17, 4), (18, 0)],
         "knee_r": [(0, "auto"), (2, (-0.25, 0.0, 1.0)), (14, (-0.25, 0.0, 1.0)), (17, "auto")],
         "knee_l": [(0, "auto"), (2, (0.25, 0.0, 1.0)), (14, (0.25, 0.0, 1.0)), (17, "auto")],
     }
-    if back:
-        # (sat back: the trunk stays up over the seat, the back rounded and the chin in, the hands up by the ears, then
-        # overhead in the ball so the palms take the deck as he passes upside down and the head goes through clear)
-        c["hips"] = [(0, 0), (1, 4), (2, 12), (3, 30), (12, 30), (13, CROUCH["hips"]), (15, 12), (17, -1), (18, 0)]
-        c["chest"] = [(0, 0), (1, 10), (2, 26), (3, TUCK["chest"]), (12, TUCK["chest"]), (13, CROUCH["chest"]), (15, 5),
-                      (17, -1), (18, 0)]
-        c["pole_r"] = [(0, STAND["pole_r"]), (2, (-1.0, 0.0, 0.4)), (12, (-1.0, 0.0, 0.4)), (14, (-0.8, -0.5, -0.3)),
-                       (18, STAND["pole_r"])]
-        c["pole_l"] = [(0, STAND["pole_l"]), (2, (1.0, 0.0, 0.4)), (12, (1.0, 0.0, 0.4)), (14, (0.8, -0.5, -0.3)),
-                       (18, STAND["pole_l"])]
-        # (the chin in but the head kept back in the ball, and past upside down the legs piked over the head, so the feet
-        # come over first and take the deck behind him, not the head)
-        c["head"] = [(0, 0), (1, 10), (2, 24), (3, 34), (12, 34), (13, CROUCH["head"]), (15, 3), (18, 0)]
-        # (the palms reach past the head as he goes over, so they take the deck and push it off)
-        for s, hx in (("r", -0.22), ("l", 0.22)):
-            c["hand_" + s] = c["hand_" + s][:3] + [(4, (hx, 1.0, 0.24)), (6, (hx, 0.92, 0.5)), (11, (hx, 0.92, 0.5))] + \
-                c["hand_" + s][5:]
+    if kind == "b":
+        # (sat back: the trunk stays up over the seat, the back rounded and the chin in, the hands up by the ears from the drop
+        # and the knees pulled in to the chest by f5; upside down the palms are planted by the head (the elbows up) and the arms
+        # push (f9-f11), lifting the head clear while the legs pike over in an arc and the feet plant at f12)
+        c["roll"] = [(0, 0), (18, 0)]
+        for k in ("tilt", "look", "twist"):
+            c.pop(k)
+        c["root"] = [(0, STAND["root"]), (1, (0.0, -0.14, -0.04)), (2, (0.0, -0.36, -0.1)), (3, TUCK["root"]), (12, TUCK["root"]),
+                     (13, CROUCH["root"]), (15, (0.0, -0.16, 0.02)), (16, (0.0, -0.035, 0.0)), (17, (0.0, -0.004, 0.0)),
+                     (18, STAND["root"])]
+        c["hips"] = [(0, 0), (1, 4), (2, 12), (3, 30), (12, 30), (13, CROUCH["hips"]), (15, 12), (16, 2), (17, -1), (18, 0)]
+        c["chest"] = [(0, 0), (1, 10), (2, 26), (3, TUCK["chest"]), (12, TUCK["chest"]), (13, CROUCH["chest"]), (15, 5), (16, 0),
+                      (17, -2), (18, 0)]
+        c["head"] = [(0, 0), (1, 10), (2, 24), (3, 34), (6, 42), (7, 55), (11, 55), (12, 40), (13, 8), (15, 3), (18, 0)]
+        c["pole_r"] = [(0, STAND["pole_r"]), (2, (-1.0, 0.0, 0.4)), (5, (-0.6, 0.0, 1.0)), (11, (-0.6, 0.0, 1.0)),
+                       (14, (-0.8, -0.5, -0.3)), (18, STAND["pole_r"])]
+        c["pole_l"] = [(0, STAND["pole_l"]), (2, (1.0, 0.0, 0.4)), (5, (0.6, 0.0, 1.0)), (11, (0.6, 0.0, 1.0)),
+                       (14, (0.8, -0.5, -0.3)), (18, STAND["pole_l"])]
+        for s, hx in (("r", -0.2), ("l", 0.2)):
+            c["hand_" + s] = [(0, STAND["hand_" + s]), (1, (hx * 1.1, 0.98, 0.14)), (2, (hx, 0.95, 0.04)), (4, (hx, 1.0, 0.24)),
+                              (6, (hx, 0.94, 0.48)), (7, (hx, 0.97, 0.47)),
+                              (8, _unturn((hx, -0.02, 0.14), -228, ROLL_PIVOT)), (9, _unturn((hx, -0.05, 0.3), -262, ROLL_PIVOT)),
+                              (10, _unturn((hx, -0.03, 0.42), -295, ROLL_PIVOT)), (11, (hx, 1.02, 0.42)), (12, (hx * 1.2, 0.72, 0.42)), (13, (hx * 1.2, 0.62, 0.42)),
+                              (15, (hx * 1.3, 0.71, 0.32)), (16, (hx * 1.2, 0.83, 0.19)), (17, (hx * 1.05, 0.8, 0.11)),
+                              (18, STAND["hand_" + s])]
+            c["face_" + s] = [(0, "stand"), (1, "ears"), (11, "ears"), (13, "balance"), (16, "balance"), (18, "stand")]
+            c["grip_" + s] = [(0, 0.4), (2, 0.0), (11, 0.0), (13, 0.15), (18, 0.4)]
         for s, fx in (("r", -0.12), ("l", 0.12)):
-            c["foot_" + s] = [(0, STAND["foot_" + s]), (2, STAND["foot_" + s]), (4, (fx, 0.2, 0.0)), (7, (fx, 0.3, 0.12)),
-                              (9, (fx, 0.82, 0.52)), (11, (fx, 0.62, 0.5)), (13, STAND["foot_" + s]), (18, STAND["foot_" + s])]
-    if side:
-        c["roll"] = [(0, 0), (1, 5), (2, 10), (3, 0), (18, 0)]
-        c["hips"] = [(0, 0), (1, 14), (2, 40), (3, 56), (12, 56), (13, CROUCH["hips"]), (15, 12), (17, -1), (18, 0)]
+            c["foot_" + s] = [(0, STAND["foot_" + s]), (2, STAND["foot_" + s]), (4, (fx, 0.3, 0.12)), (5, (fx, 0.45, 0.24)),
+                              (7, (fx, 0.6, 0.42)), (9, (fx, 0.74, 0.5)), (10, (fx, 0.62, 0.44)), (11, (fx, 0.34, 0.22)),
+                              (12, STAND["foot_" + s]), (18, STAND["foot_" + s])]
+            c["heel_" + s] = [(0, 0), (2, 25), (4, 40), (11, 40), (12, 8), (13, 0), (16, 0), (17, 4), (18, 0)]
+    if kind == "side":
+        # (the weight shifted over the right foot first and the right hand reaching down beside it to take the deck; tipped
+        # onto the right shoulder and hip, the back curled to the left so the knees draw toward the left shoulder, kept low
+        # and across the body; three quarters onto the back at the strike, quickening over; the left leg lands first, then
+        # the right, the hips settling a touch past to the left)
+        c["root"] = [(0, STAND["root"]), (1, (-0.07, -0.13, 0.03)), (2, (-0.18, -0.38, 0.06)), (3, (-0.06, -0.45, 0.05)),
+                     (12, TUCK["root"]), (13, CROUCH["root"]), (14, (0.04, -0.25, 0.03)), (15, (0.01, -0.15, 0.02)),
+                     (16, (0.0, -0.035, 0.0)), (17, (0.0, -0.004, 0.0)), (18, STAND["root"])]
+        c["roll"] = [(0, 0), (1, 6), (2, 14), (4, 10), (8, 0), (18, 0)]
+        for k in ("tilt", "look", "twist"):
+            c.pop(k)
+        c["hips"] = [(0, 0), (1, 14), (2, 40), (3, 56), (12, 56), (13, CROUCH["hips"]), (15, 12), (16, 2), (17, -1), (18, 0)]
+        c["side"] = [(0, 0), (2, 4), (3, 10), (5, 16), (9, 16), (12, 0), (18, 0)]
+        c["head"] = [(0, 0), (1, 10), (2, 28), (3, 72), (11, 72), (12, 50), (13, 14), (15, 3), (18, 0)]
+        c["hand_r"] = [(0, HR), (1, (-0.28, 0.68, 0.16)), (2, (-0.37, 0.33, 0.19)),
+                       (3, _unturn((-0.34, FLOOR_PALM + 0.02, 0.14), 30, ROLL_PIVOT, "z")), (5, (-0.06, 0.37, 0.38)), (12, (-0.06, 0.37, 0.38)),
+                       (13, CROUCH["hand_r"]), (15, (-0.26, 0.71, 0.32)), (16, (-0.24, 0.83, 0.19)), (17, (-0.21, 0.8, 0.11)), (18, HR)]
+        c["hand_l"] = [(0, HL), (1, (0.22, 0.7, 0.2)), (2, (0.18, 0.52, 0.36)), (4, (0.24, 0.37, 0.38)), (12, (0.24, 0.37, 0.38)),
+                       (13, _mx(CROUCH["hand_r"])), (15, (0.26, 0.72, 0.32)), (16, (0.24, 0.83, 0.19)), (17, (0.21, 0.8, 0.11)), (18, HL)]
+        c["face_r"] = [(0, "stand"), (1, "palm_down"), (2, "deck"), (3, _unturn_way("deck", 30, "z")), (5, "hug"), (12, "hug"),
+                       (13, "balance"), (16, "balance"), (18, "stand")]
+        c["face_l"] = [(0, "stand"), (2, "hug"), (12, "hug"), (13, "balance"), (16, "balance"), (18, "stand")]
+        c["foot_r"] = [(0, FR), (2, FR), (4, (0.1, 0.3, 0.06)), (11, (0.1, 0.3, 0.06)), (13, FR), (18, FR)]
+        c["foot_l"] = [(0, FL), (2, FL), (4, (0.3, 0.32, 0.0)), (10, (0.3, 0.32, 0.0)), (12, FL), (18, FL)]
+        c["heel_r"] = [(0, 0), (2, 15), (4, TUCK["heel"]), (11, TUCK["heel"]), (13, 0), (16, 0), (17, 4), (18, 0)]
+        c["heel_l"] = [(0, 0), (2, 25), (4, TUCK["heel"]), (10, TUCK["heel"]), (12, 0), (16, 0), (17, 4), (18, 0)]
+        c["knee_r"] = [(0, "auto"), (2, (-0.1, 0.2, 1.0)), (4, (0.8, 0.6, 0.5)), (11, (0.8, 0.6, 0.5)), (14, (-0.25, 0.0, 1.0)),
+                       (17, "auto")]
+        c["knee_l"] = [(0, "auto"), (2, (0.25, 0.0, 1.0)), (4, (0.9, 0.6, 0.4)), (10, (0.9, 0.6, 0.4)), (13, (0.25, 0.0, 1.0)),
+                       (17, "auto")]
         c["mirror"] = True
     return c
 
 
+## The duck's forearms: in tight against the chest, the hands by the sides of the head, the fingers up, the palms in.
+FACING["cover"] = ((0.12, 0.92, -0.36), (1.0, 0.0, 0.12))
+
 SET5B = {
-    # the forward roll (18 f; 3.5 m in 0.45 s by the code, facing kept): sunk into a crouch with the hands reaching to the
-    # deck ahead, the chin tucked; over the shoulders and the rounded back in a tight ball; the feet come round under him and
-    # plant at the travel's end in a crouch; up to the stand.  hold_s: the drop; strike_s: upside down; back_s: on his feet
-    "roll_f": _roll("flip", 1),
-    # the back roll (18 f, facing kept): sat back into a crouch, the hands up by the ears; rolled back over the rounded back
-    # and the shoulders, the palms planted by the head pushing as the legs come over; the feet planted in a crouch, up
-    "roll_b": _roll("flip", -1),
-    # the side roll (18 f, to his right; its twin to the left; facing kept): dropped into a ball over the right hip, the back
-    # rounded flat over the knees so the spine runs along the way he faces, then rolled over sideways along it (the right
-    # side, the back, the left side) and back onto his feet in a crouch; up
-    "roll_side": _roll("cart", 1, side=True),
+    # the forward roll (18 f; 3.5 m in 0.45 s by the code, facing kept): sunk into a crouch with the palms laid on the deck
+    # ahead (the elbows giving), the chin tucked onto the chest; a shoulder roll: over the right shoulder blade and the
+    # rounded back to the left hip in a tight ball; the feet come round under him and plant at the travel's end in a crouch;
+    # up to the stand, a touch past and settled.  hold_s: the drop; strike_s: on the back; back_s: on his feet
+    "roll_f": _roll("f"),
+    # the back roll (18 f, facing kept): sat back into a crouch, the hands up by the ears and the knees in to the chest;
+    # rolled back over the rounded back and the shoulders, the palms planted by the head pushing (the head kept clear) as the
+    # legs pike over in an arc; the feet planted in a crouch, up
+    "roll_b": _roll("b"),
+    # the side roll (18 f, to his right; its twin to the left; facing kept): the weight over the right foot and the right hand
+    # down beside it, tipped onto the right shoulder and hip, rolled over the back with the knees across the body toward the
+    # left shoulder, kept low, and up off the left leg first, then the right
+    "roll_side": _roll("side"),
     # the duck (14 f; intangible 0.04-0.30 s by the code): a deep sway down and back: the knees bend deep and drive forward
-    # over the toes, the hips drop and the trunk sways back from them (the weight kept over the feet), the head drawn down
-    # and back behind the forearms, which come up crossed before the face; held a beat at the bottom, then a return, the
-    # chest coming up before the head, a small settle.  hold_s: going down; strike_s: the lowest; back_s: the return
+    # over the toes, the hips drop fast (most of the way by f2) and the trunk sways back from them (the root a little forward
+    # to keep the weight over the feet), the head drawn down and back, the forearms pulled in tight to the chest with the
+    # hands by the sides of the head; a moving hold at the bottom (the head still sinking, the chest drifting back), the head
+    # leading the return at f8; the chest coming up a touch past and settling, the hands a frame or two behind it, a last
+    # small dip in the knees.  hold_s: going down; strike_s: the lowest; back_s: the return
     "duck": {
         "length": 14,
         "meta": {"hold_s": 3 / FPS, "strike_s": 4 / FPS, "back_s": 9 / FPS, "hand": "both", "mask": "full", "root": "place",
                  "legs_always": 1.0},
-        "root": [(0, STAND["root"]), (1, (0.0, -0.09, 0.02)), (2, (0.0, -0.24, 0.04)), (3, (0.0, -0.34, 0.04)), (4, (0.0, -0.39, 0.035)),
-                 (6, (0.0, -0.4, 0.035)), (8, (0.0, -0.375, 0.03)), (9, (0.0, -0.34, 0.03)), (11, (0.0, -0.13, 0.01)),
-                 (12, (0.0, -0.04, 0.0)), (13, (0.0, 0.0, -0.005)), (14, STAND["root"])],
-        "hips": [(0, 0), (1, 2), (2, -6), (3, -12), (4, -15), (6, -16), (8, -14), (9, -12), (11, -3), (12, 1), (14, 0)],
-        "chest": [(0, 0), (1, -2), (2, -12), (3, -20), (4, -24), (6, -25), (8, -22), (9, -18), (11, -5), (12, 2), (13, 1), (14, 0)],
-        "head": [(0, 0), (1, 4), (2, 14), (3, 22), (4, 24), (6, 25), (8, 24), (9, 22), (11, 12), (13, 2), (14, 0)],
-        "clav_r": [(0, (0, 0)), (2, (8, -4)), (4, (12, -8)), (8, (12, -8)), (11, (4, 0)), (14, (0, 0))],
-        "clav_l": [(0, (0, 0)), (2, (8, -4)), (4, (12, -8)), (8, (12, -8)), (11, (4, 0)), (14, (0, 0))],
-        "hand_r": [(0, HR), (1, (-0.22, 0.88, 0.16)), (2, (-0.12, 1.02, 0.3)), (3, (-0.06, 0.96, 0.31)), (4, (-0.055, 0.925, 0.29)),
-                   (8, (-0.06, 0.94, 0.3)), (9, (-0.07, 0.96, 0.31)), (11, (-0.18, 0.92, 0.22)), (13, (-0.2, 0.81, 0.08)), (14, HR)],
-        "hand_l": [(0, HL), (1, (0.22, 0.9, 0.16)), (2, (0.12, 1.05, 0.31)), (3, (0.06, 0.99, 0.31)), (4, (0.055, 0.96, 0.29)),
-                   (8, (0.06, 0.97, 0.3)), (9, (0.07, 0.98, 0.31)), (11, (0.18, 0.94, 0.22)), (13, (0.2, 0.81, 0.08)), (14, HL)],
-        "face_r": [(0, "stand"), (2, "ward"), (9, "ward"), (13, "stand"), (14, "stand")],
-        "face_l": [(0, "stand"), (2, "ward"), (9, "ward"), (13, "stand"), (14, "stand")],
-        "pole_r": [(0, STAND["pole_r"]), (2, (-0.6, -0.6, 0.4)), (9, (-0.6, -0.6, 0.4)), (13, STAND["pole_r"]), (14, STAND["pole_r"])],
-        "pole_l": [(0, STAND["pole_l"]), (2, (0.6, -0.6, 0.4)), (9, (0.6, -0.6, 0.4)), (13, STAND["pole_l"]), (14, STAND["pole_l"])],
-        "grip_r": [(0, 0.4), (2, 0.6), (9, 0.6), (14, 0.4)], "grip_l": [(0, 0.4), (2, 0.6), (9, 0.6), (14, 0.4)],
+        "root": [(0, STAND["root"]), (1, (0.0, -0.13, 0.025)), (2, (0.0, -0.31, 0.045)), (3, (0.0, -0.41, 0.055)),
+                 (4, (0.0, -0.45, 0.06)), (6, (0.0, -0.46, 0.06)), (8, (0.0, -0.47, 0.06)), (9, (0.0, -0.43, 0.055)),
+                 (11, (0.0, -0.15, 0.02)), (12, (0.0, -0.012, 0.0)), (13, (0.0, -0.027, -0.004)), (14, STAND["root"])],
+        "hips": [(0, 0), (1, 2), (2, -7), (3, -14), (4, -18), (8, -19), (9, -16), (11, -3), (12, 1), (14, 0)],
+        "chest": [(0, 0), (1, -4), (2, -17), (3, -28), (4, -34), (6, -35.5), (8, -37), (9, -31), (11, -8), (12, 3), (13, 1.5), (14, 0)],
+        "head": [(0, 0), (1, 6), (2, 18), (3, 26), (4, 30), (7, 32), (8, 30), (9, 24), (11, 10), (13, 2), (14, 0)],
+        "clav_r": [(0, (0, 0)), (2, (10, -8)), (4, (14, -12)), (8, (14, -12)), (11, (4, 0)), (14, (0, 0))],
+        "clav_l": [(0, (0, 0)), (2, (10, -8)), (4, (14, -12)), (8, (14, -12)), (11, (4, 0)), (14, (0, 0))],
+        "hand_r": [(0, HR), (1, (-0.2, 0.86, 0.14)), (2, (-0.15, 0.95, 0.04)), (3, (-0.13, 0.9, -0.06)), (4, (-0.13, 0.87, -0.1)),
+                   (8, (-0.13, 0.85, -0.12)), (9, (-0.13, 0.88, -0.1)), (11, (-0.15, 1.02, -0.02)), (12, (-0.2, 1.0, 0.06)),
+                   (13, (-0.21, 0.88, 0.08)), (14, HR)],
+        "hand_l": [(0, HL), (1, (0.2, 0.87, 0.14)), (2, (0.15, 0.96, 0.04)), (3, (0.13, 0.91, -0.06)), (4, (0.13, 0.88, -0.1)),
+                   (8, (0.13, 0.86, -0.12)), (9, (0.13, 0.89, -0.1)), (11, (0.15, 1.03, -0.02)), (12, (0.2, 1.01, 0.06)),
+                   (13, (0.21, 0.89, 0.08)), (14, HL)],
+        "face_r": [(0, "stand"), (2, "cover"), (10, "cover"), (13, "stand"), (14, "stand")],
+        "face_l": [(0, "stand"), (2, "cover"), (10, "cover"), (13, "stand"), (14, "stand")],
+        "pole_r": [(0, STAND["pole_r"]), (2, (-0.3, -1.0, 0.6)), (10, (-0.3, -1.0, 0.6)), (13, STAND["pole_r"]), (14, STAND["pole_r"])],
+        "pole_l": [(0, STAND["pole_l"]), (2, (0.3, -1.0, 0.6)), (10, (0.3, -1.0, 0.6)), (13, STAND["pole_l"]), (14, STAND["pole_l"])],
+        "grip_r": [(0, 0.4), (2, 0.6), (10, 0.6), (14, 0.4)], "grip_l": [(0, 0.4), (2, 0.6), (10, 0.6), (14, 0.4)],
         "foot_r": [(0, FR), (14, FR)], "foot_l": [(0, FL), (14, FL)],
         "knee_r": [(0, "auto"), (2, (-0.75, 0.0, 0.7)), (11, (-0.75, 0.0, 0.7)), (13, "auto")],
         "knee_l": [(0, "auto"), (2, (0.75, 0.0, 0.7)), (11, (0.75, 0.0, 0.7)), (13, "auto")],
@@ -3257,6 +3468,14 @@ def pose(clip, f):
         if w > 0.0:
             P, _ = SK.fk(rots, root)
             root = root + Vector((0.0, (clip.get("floor", 0.0) - surface_low(P)[0]) * w, 0.0))
+    # the code's carry taken back (only the clips that key it: the edge jump): the whole figure lowered by the lift_w share of
+    # the code's own lift (lift: its vy and gravity, from the clip's start), so the hands stay on the deck through the push
+    # while the code is already carrying the body up; a uniform shift, the rotations as keyed
+    if "lift" in clip:
+        vy, g = clip["lift"]
+        t = f / FPS
+        w = num(clip, "lift_w", f) if "lift_w" in clip else 1.0
+        root = root - Vector((0.0, (vy * t - 0.5 * g * t * t) * w, 0.0))
     return rots, root
 
 
@@ -3300,7 +3519,7 @@ def mirror_clip(clip):
     for key, keys in clip.items():
         if key in ("length", "meta", "mirror", "loop", "base"):
             continue
-        if key in ("flip_turns", "bones", "hands_from", "floor"):
+        if key in ("flip_turns", "bones", "hands_from", "floor", "lift", "substeps"):
             out[key] = keys
             continue
         if key in ("yaw", "twist", "roll", "side", "look", "spin", "cart", "tilt"):
@@ -3338,7 +3557,7 @@ LEG_J = ("upper_leg", "knee", "ankle")
 ANGLES = []
 ## The joints --points prints each frame (the character's frame, m) with the body's lowest surface (SURF), for placing the
 ## edge clips' hands, elbows, knees and toes on the lip, the deck and the face.
-PT_J = ("heada", "neck", "r_shoulder", "l_shoulder", "r_elbow", "l_elbow", "r_palm", "l_palm", "pelvis", "r_knee", "l_knee",
+PT_J = ("heada", "neck", "spinec", "r_shoulder", "l_shoulder", "r_elbow", "l_elbow", "r_palm", "l_palm", "pelvis", "r_knee", "l_knee",
         "r_ankle", "l_ankle", "r_ball", "l_ball")
 POINTS = []
 
@@ -3355,7 +3574,11 @@ def bake(clip, fit=None):
         # a legs-only layer (the air-legs under a cast): only the legs' bones keyed, their rotations each in its parent's frame,
         # so the legs keep their tuck under whatever the hips and the upper body are doing; no root place
         names = [nm for nm in names if any(nm == s + "_" + b for s in "lr" for b in LEG)]
-    for f in range(clip["length"] + 1):
+    # (a clip with "substeps": n is baked n times a frame (meta fps FPS * n in the json): a planted hand whose arm moves fast
+    # holds its place between the keys too, the game interpolating the bones between them)
+    sub = int(clip.get("substeps", 1))
+    for fi in range(clip["length"] * sub + 1):
+        f = fi / sub if sub > 1 else fi
         rigkit.MISS.clear()
         rots, root = pose(clip, f)
         frames.append({nm: [rots[nm].x, rots[nm].y, rots[nm].z, rots[nm].w] for nm in names})
@@ -3463,6 +3686,8 @@ def main():
         if clip.get("loop"):
             meta["loop"] = "linear"
         out["clips"][name] = {"frames": frames, "root": roots, "meta": meta}
+        if int(clip.get("substeps", 1)) > 1:
+            out["clips"][name]["fps"] = FPS * int(clip["substeps"])
         out["names"][name] = game_name(name)
         baked[name] = (frames, roots)
         worst = max(r[-1] for r in report)

@@ -75,6 +75,13 @@ extends SceneTree
 ##               the duck from the stand to the stand; the rolls low (the head under 1 m), turned over, on the deck (the
 ##               lowest surface -3..+4 cm), the side roll to his right; the duck's head down 0.4 m and back behind the hips,
 ##               the feet planted. kept r3 p1: the fourth set's lengths and moments as they shipped
+##   edge pass 2 the fifth set's second pass (_fifth_pass2), the critic's notes: the
+##               hang's hips 0.3 m off the face, its knees folded 70-125 degrees and its hips swaying 8 cm; the grab's sag
+##               (8 cm under the hang) and its palms planted within 5 mm between the keys too; the climb's shin never at the
+##               deck's height over the void, its hips over the left foot, a held load and a rise carried past the stand; the
+##               jump's hands on the deck through the push in the world, a coil of 6 cm and its legs near straight at the release; every roll's
+##               head 4 cm clear of the deck while it rolls; the sweep across past the left foot, slowing; the side roll's
+##               leading leg landing first; the duck 0.5 m down, 0.3 m back, the head sinking through the hold
 ## Ends with "BEND_CLIPS PASSED" or "BEND_CLIPS FAILED" (exit 0 only on a pass; a watchdog quits 2 at LIMIT s).
 
 const LIB := "res://animations_extra/Frontier_Bend.res"
@@ -174,6 +181,12 @@ const SURF := {"heada": 0.11, "neck": 0.07, "spinea": 0.12, "spineb": 0.11, "spi
 		"l_shoulder": 0.07, "r_shoulder": 0.07, "l_elbow": 0.045, "r_elbow": 0.045, "l_wrist": 0.035, "r_wrist": 0.035,
 		"l_palm": 0.025, "r_palm": 0.025, "l_upper_leg": 0.09, "r_upper_leg": 0.09, "l_knee": 0.055, "r_knee": 0.055,
 		"l_ankle": 0.045, "r_ankle": 0.045, "l_heel": 0.0, "r_heel": 0.0, "l_ball": 0.02, "r_ball": 0.02}
+## Pass 2: the hang's hips held off the face (m); the rolls' heads clear of the deck while they roll (m); the edge jump's
+## lift by the code (spec 5.3: vy 11.8 m/s at once, the ring's gravity), which the clip takes back through its push.
+const HANG_HIPS_OUT := 0.3
+const ROLL_HEAD_CLEAR := 0.04
+const EDGE_JUMP_VY := 11.8
+const EDGE_JUMP_G := 19.9
 const BANNED_METAS := ["native_asset_id", "source_attribution", "original_name"]
 ## Clips whose stance moves for good (the root may end elsewhere).
 const MOVED_STANCE := ["own-bend-earth-stomp"]
@@ -276,6 +289,7 @@ func _run() -> void:
 				str(BEFORE_R3P1EDGE[nm])])
 	# fifth set
 	_fifth(lib, names)
+	_fifth_pass2(lib, names)
 	# kept
 	for nm: String in BEFORE_R2:
 		_check(nm in names, "kept: %s still in the library" % nm)
@@ -550,7 +564,8 @@ func _fifth(lib: AnimationLibrary, names: Array[String]) -> void:
 		var j := _at(hang, i / 30.0, all)
 		low_hand = minf(low_hand, minf((j.l_palm as Vector3).y, (j.r_palm as Vector3).y) - lip_y)
 		low_head = minf(low_head, (j.heada as Vector3).y - lip_y)
-		for k: String in ["l_palm", "r_palm", "l_ball", "r_ball", "l_ankle", "r_ankle"]:
+		# (the palms and the balls of the feet: the stone's contacts; the ankles turn about the balls as the heels re-press)
+		for k: String in ["l_palm", "r_palm", "l_ball", "r_ball"]:
 			slide = maxf(slide, (j[k] as Vector3).distance_to(h0[k]))
 		for s in ["l_", "r_"]:
 			face = maxf(face, absf((j[s + "ball"] as Vector3).z + 0.06 - lip_z))
@@ -559,7 +574,7 @@ func _fifth(lib: AnimationLibrary, names: Array[String]) -> void:
 			% [low_hand, low_head, slide, face])
 	_check(low_hand > 0.0, "edge hang: both hands over the lip at every frame (the lowest %.3f m over)" % low_hand)
 	_check(low_head > 0.15, "edge hang: the head clearly over the lip at every frame (the lowest %.3f m over)" % low_head)
-	_check(slide < 0.01, "edge hang: the hands and the feet hold the stone (they move %.4f m)" % slide)
+	_check(slide < 0.01, "edge hang: the palms and the balls of the feet hold the stone (they move %.4f m)" % slide)
 	_check(face < FACE_TOUCH and feet_under < -0.5, "edge hang: the balls of the feet on the face (%.3f m off it), under the lip"
 			% face)
 	_check((h0.l_palm as Vector3).z > lip_z + 0.1 and (h0.r_palm as Vector3).z > lip_z + 0.1, "edge hang: the palms on the deck past the lip")
@@ -575,14 +590,15 @@ func _fifth(lib: AnimationLibrary, names: Array[String]) -> void:
 		var out := lip_z - maxf((g0.l_ankle as Vector3).z, (g0.r_ankle as Vector3).z)
 		var planted := 0.0
 		var gs := float(g.get_meta(&"strike_s", 0.0))
-		for i in 7:
-			var j := _at(g, gs + (g.length - gs) * i / 6.0, all)
+		# (at the keys and between them: a quarter frame apart, as the game samples the bones it interpolates)
+		for i in 17:
+			var j := _at(g, gs + (g.length - gs) * i / 16.0, all)
 			for k: String in ["l_palm", "r_palm"]:
 				planted = maxf(planted, (j[k] as Vector3).distance_to(h0[k]))
 		print("METRIC edge_grab_feet_out_m %.3f hands_planted_m %.4f end_off_m %.4f" % [out, planted, worst])
 		_check(worst < 0.01, "edge grab: ends on the hang's first pose (off by %.4f m)" % worst)
 		_check(out > 0.45, "edge grab: the legs swing in from out off the face (the ankles %.2f m out at the start)" % out)
-		_check(planted < 0.01, "edge grab: the hands caught on the deck from the strike (%.4f m)" % planted)
+		_check(planted <= IK_MISS, "edge grab: the hands caught on the deck from the strike (%.4f m <= %.3f)" % [planted, IK_MISS])
 		_check((g0.heada as Vector3).y > (h0.heada as Vector3).y, "edge grab: caught high, the body sags into the hang")
 	# the get-ups: from the hang's first pose to a stand on the deck end_in m in, no joint ever under the deck's top
 	for nm: String in EDGE_GETUPS:
@@ -689,6 +705,157 @@ func _fifth(lib: AnimationLibrary, names: Array[String]) -> void:
 		_check(drop > 0.4, "duck: the head down %.2f m at the lowest" % drop)
 		_check(lean > 0.02, "duck: swayed back (the head %.2f m behind the hips)" % lean)
 		_check(feet < 0.01, "duck: the feet planted (%.4f m)" % feet)
+
+
+## The fifth set's pass 2 (the critic's notes, 2026-10-06): the hang a climber's Z pressed into the stone (the hips held out
+## off the face, the knees folded near a right angle) with a sway that reads (the hips 8 cm side to side); the grab's catch
+## sagging under the lip; the climb's shin never floating over the void at the deck's height while the knee is down, the hips
+## shifted over the left foot, a held load and a rise carried a touch past; the jump's hands on the deck through the push
+## (the clip taking back the code's carry) and the legs straight off the face at the release; the roll in's and the rolls'
+## heads clear of the deck while they roll (the shoulder and the back take it); the sweep carried across past the planted
+## foot and slowing at its end; the side roll's legs landing one after the other; the duck down 0.5 m and back 0.3 m with the
+## head still sinking through the hold (the numbers printed as METRIC lines for the review).
+func _fifth_pass2(lib: AnimationLibrary, names: Array[String]) -> void:
+	var all := ["l_palm", "r_palm", "l_ankle", "r_ankle", "l_ball", "r_ball", "l_knee", "r_knee", "l_upper_leg", "r_upper_leg",
+			"heada", "pelvis"]
+	if not "own-bend-edge-hang" in names:
+		return
+	var hang := lib.get_animation(&"own-bend-edge-hang")
+	var lip_y := float(hang.get_meta(&"lip_y", 0.0))
+	var lip_z := float(hang.get_meta(&"lip_out", 0.0))
+	var h0 := _at(hang, 0.0, all)
+	# the hang: the hips out off the face, the knees folded, the sway wide enough to read
+	var out_min := INF
+	var knee_lo := INF
+	var knee_hi := -INF
+	var sway_lo := INF
+	var sway_hi := -INF
+	for i in 31:
+		var j := _at(hang, i / 30.0, all)
+		out_min = minf(out_min, lip_z - (j.pelvis as Vector3).z)
+		for s in ["l_", "r_"]:
+			var kb := _bend(j, s + "upper_leg", s + "knee", s + "ankle")
+			knee_lo = minf(knee_lo, kb)
+			knee_hi = maxf(knee_hi, kb)
+		sway_lo = minf(sway_lo, (j.pelvis as Vector3).x)
+		sway_hi = maxf(sway_hi, (j.pelvis as Vector3).x)
+	print("METRIC edge_hang_hips_off_face_m %.3f knee_deg %.0f-%.0f hip_sway_m %.3f" % [out_min, knee_lo, knee_hi,
+			sway_hi - sway_lo])
+	_check(out_min >= HANG_HIPS_OUT, "edge hang: the hips held %.2f m or more off the face (%.3f)" % [HANG_HIPS_OUT, out_min])
+	_check(knee_lo >= 70.0 and knee_hi <= 125.0, "edge hang: the knees folded near a right angle (%.0f-%.0f deg)"
+			% [knee_lo, knee_hi])
+	_check(sway_hi - sway_lo >= 0.08, "edge hang: the hips sway side to side (%.3f m)" % (sway_hi - sway_lo))
+	# the grab: the catch sags the body under the hang's height
+	if "own-bend-edge-grab" in names:
+		var g := lib.get_animation(&"own-bend-edge-grab")
+		var low := INF
+		for i in 7:
+			low = minf(low, (_at(g, i / 30.0, all).pelvis as Vector3).y)
+		print("METRIC edge_grab_sag_m %.3f" % ((h0.pelvis as Vector3).y - low))
+		_check((h0.pelvis as Vector3).y - low >= 0.08, "edge grab: the catch sags the hips %.2f m under the hang's"
+				% ((h0.pelvis as Vector3).y - low))
+	# the climb: while the knee is down (strike to back) the right ankle past the face hangs under the deck's top, the hips
+	# over the left foot, a held load, the rise carried a touch past
+	if "own-bend-edge-climb" in names:
+		var c := lib.get_animation(&"own-bend-edge-climb")
+		var cs := int(round(float(c.get_meta(&"strike_s")) * 30.0))
+		var cb := int(round(float(c.get_meta(&"back_s")) * 30.0))
+		var float_worst := -INF
+		for fr in range(cs, cb + 1):
+			var j := _at(c, fr / 30.0, all)
+			if (j.r_ankle as Vector3).z < lip_z - 0.02:
+				float_worst = maxf(float_worst, (j.r_ankle as Vector3).y - lip_y)
+		var j9 := _at(c, cb / 30.0, all)
+		var j10 := _at(c, (cb + 1) / 30.0, all)
+		var load := (j10.pelvis as Vector3).y - (j9.pelvis as Vector3).y
+		var n := int(round(c.length * 30.0))
+		var over := (_at(c, (n - 1) / 30.0, all).pelvis as Vector3).y - (_at(c, c.length, all).pelvis as Vector3).y
+		print("METRIC edge_climb_shin_over_void_m %.3f hips_left_m %.3f load_rise_m %.3f rise_past_m %.3f"
+				% [float_worst, (j9.pelvis as Vector3).x, load, over])
+		_check(float_worst < -0.04, "edge climb: the shin never floats at the deck's height over the void (the ankle %.3f m)"
+				% float_worst)
+		_check((j9.pelvis as Vector3).x >= 0.03, "edge climb: the hips shifted over the left foot (%.3f m)" % (j9.pelvis as Vector3).x)
+		_check(load < 0.02, "edge climb: a held load before the drive (the hips rise %.3f m)" % load)
+		_check(over > 0.006, "edge climb: the rise carried a touch past the stand (%.3f m)" % over)
+	# the jump: the hands on the deck through the push in the world (the clip's root plus the code's carry), the legs
+	# straight off the face at the release
+	if "own-bend-edge-jump" in names:
+		var ej := lib.get_animation(&"own-bend-edge-jump")
+		var es := int(round(float(ej.get_meta(&"strike_s")) * 30.0))
+		var drift := 0.0
+		for fr in es + 2:
+			var t := fr / 30.0
+			var j := _at(ej, t, all)
+			var lift := Vector3.UP * (EDGE_JUMP_VY * t - 0.5 * EDGE_JUMP_G * t * t)
+			for k: String in ["l_palm", "r_palm"]:
+				drift = maxf(drift, ((j[k] as Vector3) + lift).distance_to(h0[k]))
+		var jr := _at(ej, (es + 1) / 30.0, all)
+		var knee := maxf(_bend(jr, "l_upper_leg", "l_knee", "l_ankle"), _bend(jr, "r_upper_leg", "r_knee", "r_ankle"))
+		var th := float(ej.get_meta(&"hold_s"))
+		var jc := _at(ej, th, all)
+		var coil := (h0.pelvis as Vector3).y - ((jc.pelvis as Vector3).y + EDGE_JUMP_VY * th - 0.5 * EDGE_JUMP_G * th * th)
+		print("METRIC edge_jump_hands_on_deck_m %.4f release_knee_deg %.0f coil_m %.3f" % [drift, knee, coil])
+		_check(drift < 0.01, "edge jump: the hands on the deck through the push (%.4f m in the world)" % drift)
+		_check(knee < 45.0, "edge jump: the legs driven near straight off the face at the release (%.0f deg)" % knee)
+		_check(coil >= 0.06, "edge jump: the coil sinks the hips %.2f m" % coil)
+	# the heads clear of the deck while the body rolls on it
+	for nm: String in ["own-bend-edge-roll", "own-bend-roll-f", "own-bend-roll-b", "own-bend-roll-side", "own-bend-roll-side-l"]:
+		if not nm in names:
+			continue
+		var r := lib.get_animation(StringName(nm))
+		var floor_y := lip_y if nm.contains("edge") else 0.0
+		var f0 := int(round(float(r.get_meta(&"hold_s")) * 30.0)) + 1
+		var f1 := int(round(float(r.get_meta(&"back_s")) * 30.0)) - (3 if nm.contains("edge") else 1)
+		var head := INF
+		for fr in range(f0, f1 + 1):
+			_at(r, fr / 30.0, all)
+			head = minf(head, _head_low() - floor_y)
+		print("METRIC %s_head_clear_m %.3f" % [nm.trim_prefix("own-bend-"), head])
+		_check(head >= ROLL_HEAD_CLEAR, "%s: the head clear of the deck while it rolls (%.3f m)" % [nm, head])
+	# the sweep: carried across past the planted left foot, slowing at its end
+	if "own-bend-edge-attack" in names:
+		var ea := lib.get_animation(&"own-bend-edge-attack")
+		var across := -INF
+		var p: Array[Vector3] = []
+		for fr in range(9, 13):
+			var j := _at(ea, fr / 30.0, all)
+			across = maxf(across, (j.r_ankle as Vector3).x - (j.l_ankle as Vector3).x)
+			p.append(j.r_ankle as Vector3)
+		var fast := p[0].distance_to(p[1])
+		var slow := p[2].distance_to(p[3])
+		print("METRIC edge_attack_across_m %.3f step_f9_m %.3f step_f11_m %.3f" % [across, fast, slow])
+		_check(across >= 0.2, "edge attack: the sweep carried across past the left foot (%.2f m)" % across)
+		_check(slow < fast, "edge attack: the sweep slows at its end (%.3f < %.3f m a frame)" % [slow, fast])
+	# the side roll: the leading leg lands first
+	for pair: Array in [["own-bend-roll-side", "l_ball", "r_ball"], ["own-bend-roll-side-l", "r_ball", "l_ball"]]:
+		if String(pair[0]) in names:
+			var j := _at(lib.get_animation(StringName(String(pair[0]))), 12.0 / 30.0, all)
+			print("METRIC %s_landing_m first %.3f second %.3f" % [String(pair[0]).trim_prefix("own-bend-"),
+					(j[pair[1]] as Vector3).y, (j[pair[2]] as Vector3).y])
+			_check((j[pair[1]] as Vector3).y < 0.03 and (j[pair[2]] as Vector3).y > 0.06,
+					"%s: the leading leg lands first (f12)" % pair[0])
+	# the duck: deep and back, the head still sinking through the hold
+	if "own-bend-duck" in names:
+		var d := lib.get_animation(&"own-bend-duck")
+		var hs := _at(d, float(d.get_meta(&"strike_s")), all)
+		var hb := _at(d, (float(d.get_meta(&"back_s")) - 1.0 / 30.0), all)
+		var d0 := _at(d, 0.0, all)
+		var drop := (d0.heada as Vector3).y - (hs.heada as Vector3).y
+		var lean := (hs.pelvis as Vector3).z - (hs.heada as Vector3).z
+		var sink := (hs.heada as Vector3).y - (hb.heada as Vector3).y
+		print("METRIC duck_pass2_drop_m %.3f lean_m %.3f hold_sink_m %.3f" % [drop, lean, sink])
+		_check(drop >= 0.5 and lean >= 0.3, "duck: down %.2f m and back %.2f m (0.5, 0.3)" % [drop, lean])
+		_check(sink >= 0.01, "duck: a moving hold, the head still sinking (%.3f m)" % sink)
+
+
+## The head's lowest point (m) now (the skeleton as last posed): its sphere (SURF) about the skull's middle.
+func _head_low() -> float:
+	var p := sk.get_bone_global_pose(sk.find_bone("heada")).origin
+	if sk.find_bone("headb") >= 0:
+		var hb := sk.get_bone_global_pose(sk.find_bone("headb")).origin
+		var nk := sk.get_bone_global_pose(sk.find_bone("neck")).origin
+		p = p + (hb - p) * 0.5 + (hb - nk).normalized() * 0.03
+	return p.y - float(SURF["heada"])
 
 
 ## The body's lowest surface (m) now (the skeleton as last posed): SURF round each joint, the head's about its middle.
