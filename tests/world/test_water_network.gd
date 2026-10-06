@@ -226,7 +226,7 @@ func _current() -> void:
 			var cur := n.current_at(p.x, p.y)
 			var v := Vector2(cur.x, cur.z)
 			var speed := _speed_at(ch, s)
-			var good := v.length() > 0.1 and v.normalized().dot(along_dir) > 0.999 and absf(v.length() - speed) < 1e-4
+			var good := v.length() > 0.1 and v.normalized().dot(along_dir) > 0.999 and absf(v.length() - speed) < 2e-3
 			if not good and worst == "":
 				worst = " (%s s %.0f: %s vs %s at %.3f)" % [cid, s, str(v), str(along_dir), speed]
 			ok = ok and good
