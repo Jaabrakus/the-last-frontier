@@ -114,7 +114,7 @@ func _reach() -> void:
 	var r: Dictionary = _channel("main").reaches[0]
 	var s0 := float(r.s_from)
 	var s1 := float(r.s_to)
-	var ease := float(r.ease_m)
+	var ease_m := float(r.ease_m)
 	var still := _net("S1")
 	var run := _net("S0")
 	var stopped := true
@@ -127,19 +127,19 @@ func _reach() -> void:
 	for end_sign in [[s0, -1.0], [s1, 1.0]]:
 		var prev := -1.0
 		for k in 141:
-			var d := (ease + 30.0) * k / 140.0
+			var d := (ease_m + 30.0) * k / 140.0
 			var p := _along(still, "main", float(end_sign[0]) + float(end_sign[1]) * d)
 			var f := still.flow_scale_at(p.x, p.y)
-			eased = eased and f >= prev - 1e-6 and (d < ease or f > 1.0 - 1e-6)
+			eased = eased and f >= prev - 1e-6 and (d < ease_m or f > 1.0 - 1e-6)
 			prev = f
-		var mid := _along(still, "main", float(end_sign[0]) + float(end_sign[1]) * ease * 0.5)
+		var mid := _along(still, "main", float(end_sign[0]) + float(end_sign[1]) * ease_m * 0.5)
 		eased = eased and absf(still.flow_scale_at(mid.x, mid.y) - 0.5) < 1e-4
 	var ends := absf(_along(still, "main", s0).y - float(r.z_from)) < 1e-3 and absf(_along(still, "main", s1).y - float(r.z_to)) < 1e-3
 	var c := _along(still, "main", (s0 + s1) * 0.5)
 	still.set_reach_flow("silent_reach", 0.5)
 	var by_hand := absf(still.flow_scale_at(c.x, c.y) - 0.5) < 1e-6
 	_expect(stopped and ran and eased and ends and by_hand,
-			"reach: S1 still from z %.0f to %.0f, eased over %.0f m past its ends; S0 running; by hand half" % [r.z_from, r.z_to, ease])
+			"reach: S1 still from z %.0f to %.0f, eased over %.0f m past its ends; S0 running; by hand half" % [r.z_from, r.z_to, ease_m])
 
 
 func _pounds() -> void:
@@ -222,13 +222,13 @@ func _current() -> void:
 				continue
 			var a := _along(n, cid, s - 1.0)
 			var b := _along(n, cid, s + 1.0)
-			var tan := (b - a).normalized()
+			var along_dir := (b - a).normalized()
 			var cur := n.current_at(p.x, p.y)
 			var v := Vector2(cur.x, cur.z)
 			var speed := _speed_at(ch, s)
-			var good := v.length() > 0.1 and v.normalized().dot(tan) > 0.999 and absf(v.length() - speed) < 1e-4
+			var good := v.length() > 0.1 and v.normalized().dot(along_dir) > 0.999 and absf(v.length() - speed) < 1e-4
 			if not good and worst == "":
-				worst = " (%s s %.0f: %s vs %s at %.3f)" % [cid, s, str(v), str(tan), speed]
+				worst = " (%s s %.0f: %s vs %s at %.3f)" % [cid, s, str(v), str(along_dir), speed]
 			ok = ok and good
 	var south := _along(n, "main", 1500.0)
 	var east := _along(n, "torrent", 500.0)
@@ -264,9 +264,9 @@ func _block() -> void:
 	var nodes: Array = blk.get("nodes", [])
 	var err := 0.0
 	var off := 0.0
+	var i := 0
 	for k in 2001:
 		var z := lerpf(-1663.5, 1663.5, k / 2000.0)
-		var i := 0
 		while i < nodes.size() - 2 and z > float(nodes[i + 1][0]):
 			i += 1
 		var t := (z - float(nodes[i][0])) / (float(nodes[i + 1][0]) - float(nodes[i][0]))
@@ -288,8 +288,12 @@ func _parity() -> void:
 	var bad := 0
 	var first := ""
 	var pts: Array = fx.points
+	var nets := {}
 	for p: Dictionary in pts:
-		var n := _net(p.state, p.milestone, float(p.day))
+		var key := "%s %s %s" % [p.state, p.milestone, p.day]
+		if not nets.has(key):
+			nets[key] = _net(p.state, p.milestone, float(p.day))
+		var n: WN = nets[key]
 		var x := float(p.x)
 		var z := float(p.z)
 		var got_s := n.surface_at(x, z)
