@@ -8,6 +8,9 @@ extends RefCounted
 ## the own bending clips are installed), never an excluded one (the file's "exclude", and NEVER whatever the file says).
 ##
 ##   pick(move, mode, element)   {clip, mask, hand, root, alt, hold_s, strike_s, back_s, legs_always, then, press_s, from};
+##                               (round 3: a pose may name a stand_in pose, played while its own clip is in no library yet; the
+##                               file's pending_clips are the names the CLIPS lane has still to author: all_clips leaves one
+##                               out until it lands)
 ##                               {} when none (the caller plays SwayPose.clip_for, the mastery tier's clip). In order:
 ##                                 moves[move].modes[mode]   the variation's own
 ##                                 moves[move].pose          the skill's
@@ -138,11 +141,14 @@ static func usable(name: String) -> bool:
 static func all_clips() -> Array[String]:
 	var out: Array[String] = []
 	var d := data()
+	var pending: Array = d.get("pending_clips", [])
 	var add := func(v: Variant) -> void:
 		var p := _as_pose(v)
-		for nm: String in [String(p.get("clip", "")), String(_as_pose(p.get("alt", "")).get("clip", ""))]:
-			if nm != "" and not nm in out:
-				out.append(nm)
+		while not p.is_empty():
+			for nm: String in [String(p.get("clip", "")), String(_as_pose(p.get("alt", "")).get("clip", ""))]:
+				if nm != "" and not nm in out and not (nm in pending and not clip_exists(nm)):
+					out.append(nm)
+			p = _as_pose(p.get("stand_in", ""))          # (round 3: a pose's stand-in is a clip the file names too)
 	for el: String in (d.get("cast", {}) as Dictionary):
 		add.call(d.cast[el])
 	for el: String in (d.get("stance", {}) as Dictionary):
@@ -154,6 +160,10 @@ static func all_clips() -> Array[String]:
 			add.call(e.pose)
 		for md: String in (e.get("modes", {}) as Dictionary):
 			add.call(e.modes[md])
+	var gh: Variant = d.get("guard_hold", {})
+	if gh is Dictionary:
+		for el: String in (gh as Dictionary):
+			add.call(gh[el])
 	var clips: Dictionary = d.get("clips", {})
 	for nm: String in clips:
 		add.call(nm)
@@ -194,7 +204,9 @@ static func pick(m: String, mode: String, element: String) -> Dictionary:
 		tries.append(["cast", (d.get("cast", {}) as Dictionary).get(element, "")])
 	for tr: Array in tries:
 		var p := _as_pose(tr[1])
-		if p.is_empty() or not usable(String(p.clip)):
+		while not p.is_empty() and not usable(String(p.clip)):
+			p = _as_pose(p.get("stand_in", ""))          # (round 3: a clip not yet authored: its stand-in plays)
+		if p.is_empty():
 			continue
 		p["from"] = tr[0]
 		return _filled(p, d)

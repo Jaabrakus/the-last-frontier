@@ -498,11 +498,15 @@
           "knock_mps": 2.0,
           "radius_m": 0.09,
           "range_m": 10.0,
-          "weight": "light"
+          "weight": "light",
+          "air": "air_hit"
         },
         "kick_up": {"do": "kick_up", "kind": "stone", "radius_m": 0.32},
-        "stomp": {"do": "ring", "kind": "stone", "radius_m": 3.5, "damage": 8.0, "knock_mps": 4.0, "up_mps": 6.0}
+        "stomp": {"do": "ring", "kind": "stone", "radius_m": 3.5, "damage": 8.0, "knock_mps": 4.0, "up_mps": 6.0},
+        "pop": {"as": "pebbles"},
+        "air_hit": {"do": "air_hit", "kind": "stone", "label": "Stone Knee", "reach_m": 1.5, "radius_m": 1.0, "active_s": 0.1, "damage": 10.0, "knock_mps": 7.0, "angle_deg": 45.0, "set_stun": 0.35, "class_hint": {"d": 5, "set": 7.0, "angle": 45, "set_stun": 0.35}}
       },
+      "mode_lock_s": {"air_hit": 0.3},
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
@@ -591,7 +595,8 @@
           "range_m": 20.0,
           "kick_up_when_empty": true,
           "kick_up": {"radius_m": 0.32},
-          "grow": {"radius_m": 0.45, "knock_mult": 1.5}
+          "grow": {"radius_m": 0.45, "knock_mult": 1.5},
+          "air": "slam"
         },
         "column": {
           "do": "column",
@@ -605,11 +610,12 @@
           "self_lock": true
         },
         "pull": {"do": "shove", "kind": "stone", "how": "pull", "range_m": 20.0},
-        "split": {"do": "shove", "kind": "stone", "how": "split", "range_m": 20.0}
+        "split": {"do": "shove", "kind": "stone", "how": "split", "range_m": 20.0},
+        "slam": {"do": "slam", "kind": "stone", "label": "Hammer", "width_m": 2.5, "depth_m": 3.0, "lean_m": 1.5, "active_s": 0.12, "damage": 24.0, "knock_mps": 9.0, "angle_deg": -70.0, "set_stun": 0.3, "bounce_k": 0.55, "bounce_add": 2.0, "held_stone": "throw"}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30],
-      "mode_lock_s": {"column": 1.6},
+      "mode_lock_s": {"column": 1.6, "slam": 0.35},
       "mode_range_m": {"column": 20.0}
     },
     "stone_catch": {
@@ -664,6 +670,8 @@
       "modes": ["patch"],
       "mode_labels": {"patch": "Patch"},
       "bend": {"patch": {"do": "heal", "kind": "stone", "amount": 15.0}},
+      "ring_lock_s": 1.5,
+      "ring_moving_mult": 0.0,
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
@@ -738,8 +746,11 @@
           "knock_mps": 3.0,
           "radius_m": 0.18,
           "range_m": 10.0,
-          "steer": true
+          "steer": true,
+          "air": "air_hit"
         },
+        "pop": {"as": "splash"},
+        "air_hit": {"do": "air_hit", "kind": "water", "label": "Spin Splash", "reach_m": 1.5, "radius_m": 1.1, "active_s": 0.1, "damage": 8.0, "knock_mps": 6.0, "angle_deg": 40.0, "set_stun": 0.35, "class_hint": {"d": 4, "set": 6.0, "angle": 40, "set_stun": 0.35}},
         "jet": {
           "do": "bolt",
           "kind": "water",
@@ -764,6 +775,7 @@
           "put_out": true
         }
       },
+      "mode_lock_s": {"air_hit": 0.3},
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
@@ -867,8 +879,10 @@
           "knock_mps": 10.0,
           "up_mps": 2.5,
           "put_out": true,
-          "grow": {"range_m": 12.0, "deg": 65.0, "knock_mps": 13.0}
+          "grow": {"range_m": 12.0, "deg": 65.0, "knock_mps": 13.0},
+          "air": "slam"
         },
+        "slam": {"do": "slam", "kind": "water", "label": "Downpour", "width_m": 3.2, "depth_m": 3.0, "lean_m": 1.5, "active_s": 0.12, "damage": 16.0, "knock_mps": 7.0, "angle_deg": -70.0, "set_stun": 0.3, "bounce_k": 0.45, "bounce_add": 2.0, "put_out": true, "puddle": {"radius_m": 1.6, "life_s": 6.0}},
         "spout": {
           "do": "spout",
           "kind": "water",
@@ -894,7 +908,7 @@
         }
       },
       "ai_factor": 1.0,
-      "mode_lock_s": {"push": 0.6},
+      "mode_lock_s": {"push": 0.6, "slam": 0.35},
       "mastery_uses": [0, 8, 30]
     },
     "flow": {
@@ -1092,8 +1106,11 @@
           "damage": 4.0,
           "knock_mps": 1.0,
           "radius_m": 0.08,
-          "range_m": 10.0
+          "range_m": 10.0,
+          "air": "air_hit"
         },
+        "pop": {"as": "embers"},
+        "air_hit": {"do": "air_hit", "kind": "fire", "label": "Flare Kick", "reach_m": 1.6, "radius_m": 1.0, "active_s": 0.1, "damage": 8.0, "knock_mps": 6.0, "angle_deg": 35.0, "set_stun": 0.3, "class_hint": {"d": 4, "set": 6.0, "angle": 35, "set_stun": 0.3}},
         "jab": {"do": "cone", "kind": "fire", "range_m": 3.0, "deg": 40.0, "damage": 12.0, "knock_mps": 4.0},
         "double_jab": {
           "do": "bolt",
@@ -1107,6 +1124,7 @@
           "range_m": 10.0
         }
       },
+      "mode_lock_s": {"air_hit": 0.3},
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
@@ -1180,7 +1198,7 @@
       "self_lock": true,
       "modes": ["kick", "high_kick"],
       "mode_labels": {"kick": "Kick", "high_kick": "High Kick"},
-      "mode_lock_s": {"high_kick": 0.85},
+      "mode_lock_s": {"high_kick": 0.85, "air_kick": 0.85, "slam": 0.3},
       "bend": {
         "kick": {
           "do": "floor_wave",
@@ -1195,7 +1213,8 @@
           "knock_mps": 9.5,
           "up_mps": 1.5,
           "wall_wear": 0.5,
-          "grow": {"width_m": 3.5, "range_m": 22.0, "damage": 24.0, "knock_mps": 11.5}
+          "grow": {"width_m": 3.5, "range_m": 22.0, "damage": 24.0, "knock_mps": 11.5},
+          "air": "slam"
         },
         "high_kick": {
           "do": "throw",
@@ -1209,8 +1228,11 @@
           "damage": 16.0,
           "knock_mps": 5.0,
           "up_mps": 4.0,
-          "range_m": 30.0
-        }
+          "range_m": 30.0,
+          "air": "air_kick"
+        },
+        "air_kick": {"as": "high_kick", "straight": true},
+        "slam": {"do": "slam", "kind": "fire", "label": "Axe Kick", "width_m": 2.5, "depth_m": 3.0, "lean_m": 1.5, "active_s": 0.12, "damage": 20.0, "knock_mps": 8.0, "angle_deg": -70.0, "set_stun": 0.3, "bounce_k": 0.45, "bounce_add": 2.0, "wave": {"do": "floor_wave", "kind": "fire", "width_m": 1.6, "height_m": 0.6, "miss_above_m": 0.6, "mps": 16.0, "range_m": 6.0, "damage": 8.0, "knock_mps": 5.0, "up_mps": 1.0}}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
@@ -1429,8 +1451,11 @@
           "deg": 40.0,
           "damage": 5.0,
           "knock_mps": 4.5,
-          "up_mps": 1.0
+          "up_mps": 1.0,
+          "air": "air_hit"
         },
+        "pop": {"as": "palm"},
+        "air_hit": {"do": "air_hit", "kind": "air", "label": "Whirl", "reach_m": 1.4, "radius_m": 1.2, "active_s": 0.1, "damage": 6.0, "knock_mps": 5.0, "angle_deg": 50.0, "set_stun": 0.3, "class_hint": {"d": 3, "set": 5.0, "angle": 50, "set_stun": 0.3}},
         "trip": {
           "do": "cone",
           "kind": "air",
@@ -1443,6 +1468,7 @@
         },
         "cushion": {"do": "zone", "zone": "cushion", "window_s": 0.7, "radius_m": 4.0}
       },
+      "mode_lock_s": {"air_hit": 0.3},
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
@@ -1475,7 +1501,8 @@
           "knock_mps": 11.0,
           "up_mps": 1.0,
           "carry": true,
-          "grow": {"width_m": 3.0, "range_m": 18.0, "knock_mps": 15.0}
+          "grow": {"width_m": 3.0, "range_m": 18.0, "knock_mps": 15.0},
+          "air": "slam"
         },
         "pull": {
           "do": "wind_wave",
@@ -1488,8 +1515,10 @@
           "damage": 0.0,
           "knock_mps": 8.0,
           "up_mps": 0.5
-        }
+        },
+        "slam": {"do": "slam", "kind": "air", "label": "Down Gust", "width_m": 2.5, "depth_m": 4.0, "lean_m": 1.5, "active_s": 0.12, "damage": 12.0, "knock_mps": 7.0, "angle_deg": -70.0, "set_stun": 0.3, "bounce_k": 0.45, "bounce_add": 2.0, "self_lift_mps": 2.5}
       },
+      "mode_lock_s": {"slam": 0.35},
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
@@ -1841,5 +1870,25 @@
     "_doc": "Loose stones on the deck (spec 2.10): at most loose_max a player (a new one sinks his oldest); Shove takes a loose one only within shove_loose_m of the caster.",
     "loose_max": 3,
     "shove_loose_m": 6.0
+  },
+  "air_rules": {
+    "_doc": "Round 3's cast layer in the % ring (smash_r3 spec §0, §4.4, §6, §8; AIR; BendR3 reads it, every key with its safe default there). Only while RingRules.stock_on() (or, per body, RingMoves.of(body) != null): the open world, the duel and the classic ring never read it. key3_min_s: 3 on the deck goes no sooner than this after its press (a second tap inside it is the travel move). guard: the held guard's longest stand and how soon a cast key drops it. A move is 'out' from its release to its strike + out_after_s (the Slam's slam_out_after_s), a Strike (key 1) at least strike_out_min_s; landing while out plants land_lag[class] (x land_lag_hit_mult after a hit; lag_class names the key-1 moves' classes, every jab and air hit 'jab', key 2's second moves and a deck key-2 lock let go in the air 'key2'). jab_step_s: after a jab that hits, the next jab is ready this long after the last one left the hand; jab_string_gap_s: a jab hit later than this after the last one starts a new string; jab_strike_max_s: a jab whose lock the step shortened leaves the hand no later than this after the release (its pose's strike not waited for longer: the step's 0.15 s is the string's beat). pop: the third jab that hits in a string (its set knock, its set stun, its tag; earth's stone kept in the hand and its throw with E). wall_lip_clear_m: walls stand at least this far inside every lip. floor_wave_lip_over_m: the Kick's wave runs this far past the lip. air_stone_reach_m: earth's stones in the air tear from a deck face this near. fire_wall: its entry pop (once a body each entry_every_s). deck_inset_m: Column and Geyser rise at least this far inside the lip (never from the tank's water).",
+    "key3_min_s": 0.22,
+    "guard": {"hold_max_s": 2.5, "drop_s": 0.1},
+    "out_after_s": 0.15,
+    "slam_out_after_s": 0.2,
+    "strike_out_min_s": 0.35,
+    "land_lag": {"jab": 0.1, "quick": 0.2, "big": 0.25, "lightning": 0.35, "slam": 0.3, "key2": 0.25, "guard": 0.0},
+    "land_lag_hit_mult": 0.5,
+    "lag_class": {"stone_form/spike": "quick", "stone_form/cannonball": "big", "water_whip/whip": "quick", "ice/spear": "big", "fire_blast/punch": "quick", "fire_blast/punch.grown": "big", "fire_arc/lightning": "lightning", "air_blast/slice": "quick", "air_blast/ball": "big"},
+    "jab_step_s": 0.15,
+    "jab_strike_max_s": 0.05,
+    "jab_string_gap_s": 0.6,
+    "pop": {"hits": 3, "set_mps": 9.0, "angle_deg": 80.0, "set_stun": 0.6, "tag": "jab/pop", "stone_tag": "rock_jab/pop_stone", "stone": {"radius_m": 0.22, "mps": 34.0, "damage": 30.0, "knock_mps": 6.0, "gravity": 3.0}},
+    "wall_lip_clear_m": 3.5,
+    "floor_wave_lip_over_m": 0.3,
+    "air_stone_reach_m": 12.0,
+    "fire_wall": {"entry_every_s": 1.0, "entry_mps": 5.0, "entry_deg": 50.0},
+    "deck_inset_m": 0.6
   }
 }

@@ -45,6 +45,14 @@ extends Node3D
 ## its look and sound on the guarder only (BendLooks.guard_result; no cue on whoever sent it).
 ## Round 2's zones too: wind_wall (a standing wall of wind: light shots blown up and aside, stone and lightning pass, a body
 ## walking into it pushed back; one at a time), puddle (water left on the deck: a Geyser's source, Bending.POOLS).
+## ROUND 3 (smash_r3 spec §2.5, §4.4; AIR), only with BendR3.stock(): every guard a shield. A cell the matrix lets pass is
+## stopped on the beat (no reward) and halved late as a slide (_shield_bolt; flying stones in _stones; guard_take for a cone,
+## a Column, the Slam, the air hit; lightning_guard: only a Parry on the beat sends it back). Earth's catch is whole within its
+## window_s of standing (its life may be held longer: SwayCaster's held guard) and late after, the stone dropped loose at his
+## feet (_late_drop). A spike is met by its point. What a late guard lets through carries slide_only; what a guard sends back
+## is a return (return_info: "<origin>.return", returned, ret_mult, origin_tag); a caught stone keeps its origin tag, and
+## earth's Pop stone is thrown as itself (rock_jab/pop_stone, not a return). A jab a guard takes ends its sender's string.
+## The fire wall's entry pop (once a body each entry_every_s) and its burn with no knock; walls' hits carry the cast's info.
 
 const GROUP := &"bend_zones"
 const LIGHT := ["fire", "water", "ice", "air"]
@@ -91,6 +99,13 @@ var element := ""
 var results: Array[String] = []
 ## Its maker's move id (one_at_a_time: a second of the same ends the first).
 var move_id := ""
+## Round 3 (the % ring; see the header's ROUND 3): a guard's own window as it was made (its life may be held longer: the
+## held guard), the cast's hit info (BendR3.cur as it was made: a wall's hits carry it), the bodies inside at its last
+## tick and when each last had a fire wall's entry pop.
+var window_s := 0.8
+var info := {}
+var _inside_was := {}
+var _popped := {}
 
 var _tick := 0.0
 var _fx: Array[Node] = []
@@ -109,6 +124,8 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	z.damage_s = float(spec.get("damage_s", 0.0))
 	z.speed = float(spec.get("mps", 0.0))
 	z.put_out = bool(spec.get("put_out", false))
+	if not BendR3.cur.is_empty():
+		z.info = BendR3.cur.duplicate()
 	if R2_GUARDS.has(p_kind) and BendStatus.element_mode(by):
 		z.r2 = true
 		z.element = String(R2_GUARDS[p_kind])
@@ -118,6 +135,7 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 		if p_kind in ["air_shield", "wind_guard"]:
 			# (the Wind Guard's window, never the old shield's 2.5 s life: today's data has none, spec §2.5's then)
 			z.life_s = float(spec.get("window_s", WIND_GUARD_S))
+		z.window_s = z.life_s
 	var w := Vector3(p_way.x, 0.0, p_way.z)
 	z.way = w.normalized() if w.length_squared() > 1e-6 else Vector3.FORWARD
 	z.add_to_group(GROUP)
@@ -362,7 +380,8 @@ func _physics_process(dt: float) -> void:
 	if _tick <= 0.0:
 		_tick = 0.25
 		_every(0.25)
-	if kind in ["catch", "deflect", "cushion"] or (r2 and kind in ["air_shield", "wind_guard"]):
+	if kind in ["catch", "deflect", "cushion"] or (r2 and kind in ["air_shield", "wind_guard"]) \
+			or (r2 and BendR3.stock() and kind in ["redirect", "parry"]):
 		_stones()
 	if kind == "wind_wall":
 		_wind_push()
@@ -383,7 +402,8 @@ func _wind_push() -> void:
 		_pushed[id] = BendStatus.now()
 		var side := signf((global_transform.affine_inverse() * n.global_position).z)
 		var out := global_basis.z.normalized() * (side if absf(side) > 0.0 else 1.0)
-		BendStatus.knock(n, Vector3(out.x, 0.0, out.z).normalized() * WIND_WALL_KNOCK + Vector3.UP * 0.5, owner_node)
+		BendR3.deliver(n, 0.0, n.global_position, out, owner_node, -1.0,
+				Vector3(out.x, 0.0, out.z).normalized() * WIND_WALL_KNOCK + Vector3.UP * 0.5, info)
 
 
 ## Who it holds now: everyone within it (round) or in its box.
@@ -400,18 +420,24 @@ func _every(dt: float) -> void:
 	var r := maxf(radius, size.x * 0.6)
 	if put_out:
 		put_out_fires()
+	var now_in := {}
 	for e in BendCaster.near(owner_node, global_position, r + 1.0):
 		var n: Node3D = e[0]
 		if not inside(n.global_position):
 			continue
+		now_in[n.get_instance_id()] = true
 		match kind:
 			"fire_wall", "burn":
-				BendStatus.hurt(n, damage_s * dt, n.global_position + Vector3.UP, way, owner_node)
+				if BendR3.stock() and kind == "fire_wall":
+					_fire_wall_hit(n, dt)
+				else:
+					BendR3.deliver(n, damage_s * dt, n.global_position + Vector3.UP, way, owner_node, -1.0, Vector3.ZERO, info)
 			"ice_patch", "vacuum":
 				BendStatus.slow(n, 0.6)
 			"tornado":
-				BendStatus.hurt(n, damage_s * dt, n.global_position + Vector3.UP, way, owner_node)
-				BendStatus.knock(n, way * speed * 1.2 + Vector3.UP * 3.0, owner_node)
+				BendR3.deliver(n, damage_s * dt, n.global_position + Vector3.UP, way, owner_node, -1.0,
+						way * speed * 1.2 + Vector3.UP * 3.0, info)
+	_inside_was = now_in
 	if kind == "water_wall":
 		# (a fire wall it stands in goes out)
 		for z in get_tree().get_nodes_in_group(GROUP):
@@ -528,16 +554,28 @@ func _aside(b: BendBolt) -> void:
 
 # ---------------------------------------------------------------- round 2: the timed guards (see the header)
 ## Bolt `b` met by this element's guard (r2): perfect or late by the guard's age (perfect_s), the guard matrix's answer.
-## True when it acted (a bolt it lets pass, or one it halved already: false).
+## True when it acted (a bolt it lets pass, or one it halved already: false). Round 3, the % ring (BendR3.stock): every
+## guard a shield (spec §2.5): a cell the matrix lets pass is stopped on the beat (nothing through, no reward) and halved
+## late as a slide (_shield_bolt); earth's catch is a full catch within its window_s of standing and late after it, the
+## stone dropped loose at his feet (_late_drop); a jab it took ends its sender's string (BendR3.jab_guarded).
 func _guard_bolt(b: BendBolt) -> bool:
 	if b.guarded_by.has(get_instance_id()):
 		return false
 	var what := b.kind
 	var perfect := t <= perfect_s
+	var stock := BendR3.stock()
+	if stock and bool(b.info.get("jab", false)):
+		BendR3.jab_guarded(b.caster)
 	match kind:
 		"catch":
 			if what != "stone":
-				return false
+				return _shield_bolt(b, perfect, what)
+			if stock and t > window_s:
+				_late_drop(b.damage, b.knock_mps, b.up_mps, b.velocity, b.global_position, b._by(), b.lock_s, b.info, b.weight)
+				b.end("dropped")
+				took += 1
+				_result("late", what)
+				return true
 			_take_bolt(b, perfect)
 			_result("perfect" if perfect else "late", what)
 			return true
@@ -555,7 +593,7 @@ func _guard_bolt(b: BendBolt) -> bool:
 				else:
 					_late(b)
 			else:
-				return false
+				return _shield_bolt(b, perfect, what)
 		"parry":
 			if what == "fire":
 				if perfect:
@@ -571,7 +609,7 @@ func _guard_bolt(b: BendBolt) -> bool:
 				else:
 					_late(b)
 			else:
-				return false
+				return _shield_bolt(b, perfect, what)
 		"air_shield", "wind_guard":
 			if what == "air":
 				if perfect:
@@ -585,7 +623,7 @@ func _guard_bolt(b: BendBolt) -> bool:
 				else:
 					_late(b)
 			else:
-				return false
+				return _shield_bolt(b, perfect, what)
 		_:
 			return false
 	took += 1
@@ -593,9 +631,46 @@ func _guard_bolt(b: BendBolt) -> bool:
 	return true
 
 
+## A bolt in a cell the matrix lets pass: nothing (false) outside the % ring; in it (round 3, every guard a shield) stopped
+## on the beat with no reward, halved late as a slide (true).
+func _shield_bolt(b: BendBolt, perfect: bool, what: String) -> bool:
+	if not BendR3.stock():
+		return false
+	if perfect:
+		BendLooks.burst(b.global_position, b.kind, 12)
+		b.end("blocked")
+	else:
+		_late(b)
+	took += 1
+	_result("perfect" if perfect else "late", what)
+	return true
+
+
+## Earth's guard held past its window_s (round 3, spec §2.5): a stone is late: late_mult of its blow gets through to him as a
+## slide (BendR3.deliver, slide_only), and it drops at his feet, a loose stone of whoever threw it.
+func _late_drop(dmg: float, knock: float, up: float, v: Vector3, at: Vector3, by: Node, lock: float, inf: Dictionary, weight := "medium") -> void:
+	var i2 := inf.duplicate()
+	i2["slide_only"] = true
+	var flat := Vector3(v.x, 0.0, v.z)
+	flat = flat.normalized() if flat.length_squared() > 1e-6 else -owner_node.global_basis.z
+	BendR3.deliver(owner_node, dmg * late_mult, at, flat, by, lock, (flat * knock + Vector3.UP * up) * late_mult, i2)
+	var foot := FormEffects.ground_at(owner_node, owner_node.global_position + flat.cross(Vector3.UP).normalized() * 0.7)
+	var s := FormStone.ball(get_tree().current_scene, foot, {"radius_m": 0.2, "mass_kg": 20.0, "rise_s": 0.01, "life_s": 30.0,
+			"sink_s": 1.0}, absi(hash(Vector3i(at * 10.0))) % 97, "stone")
+	s.state = FormStone.State.RESTING
+	s.base = Transform3D(Basis.IDENTITY, foot + Vector3.UP * 0.22)
+	s.global_transform = s.base
+	s.freeze = false
+	s.set_meta(&"bend_weight", weight)
+	stones.append(s)
+	FormStone.make_loose(s, by)
+	BendLooks.burst(at, "stone", 12)
+
+
 ## A late guard: late_mult of its damage and knock go on through (the bolt flies on, halved; this guard is done with it).
 func _late(b: BendBolt) -> void:
 	b.guarded_by.append(get_instance_id())
+	b.info["slide_only"] = true                  # (round 3: what a late guard lets through is a slide on the feet)
 	b.damage *= late_mult
 	b.knock_mps *= late_mult
 	b.up_mps *= late_mult
@@ -607,6 +682,7 @@ func _straight_back(b: BendBolt) -> void:
 	var to := guard_aim(owner_node, b.global_position)
 	var k := Bending.rule("perfect_mult", 1.2)
 	b.redirect(to - b.global_position, owner_node)
+	b.info["ret_mult"] = k
 	b.velocity *= k
 	b.damage *= k
 	b.knock_mps *= k
@@ -705,11 +781,13 @@ static func held_stone(body: Node) -> Node3D:
 ## damage and pierce (meta bend_stone_d) x perfect_mult off a clean catch x the rally (1 + the steps of its earlier returns,
 ## at most rally_max), never under today's Shove return (gust.stone.hurl); a Throw at once (FormEffects.Throw: the
 ## player's crosshair, a bot's target). The Throw, or null.
-static func return_stone(c: Variant, s: Node3D) -> FormEffects.Throw:
+static func return_stone(c: Variant, s: Node3D, toward := Vector3.INF) -> FormEffects.Throw:
 	var bc := BendCaster.wrap(c)
 	if bc == null or not bc.valid() or s == null or not is_instance_valid(s) or not (s is FormStone):
 		return null
 	var fs := s as FormStone
+	if fs.has_meta(BendR3.POP_STONE_META):
+		return _throw_pop_stone(bc, fs, toward)
 	var kind := GustLift.kind_of(fs)
 	var floor_d: Dictionary = ((SwayMoves.move("gust").get("stone", {}) as Dictionary).get("hurl", {}) as Dictionary).get(kind,
 			((SwayMoves.move("gust").get("stone", {}) as Dictionary).get("hurl", {}) as Dictionary).get("stone", {}))
@@ -744,9 +822,51 @@ static func return_stone(c: Variant, s: Node3D) -> FormEffects.Throw:
 	var kn: Dictionary = (td.get("knock_mps", {}) as Dictionary).duplicate()
 	kn[kind] = knock
 	td["knock_mps"] = kn
-	var th := FormEffects.Throw.start(bc, fs, td)
+	var origin := String(fs.get_meta(BendR3.ORIGIN_META, "stone_form/spike"))
+	var th := FormEffects.Throw.start(bc, fs, td, toward)
+	if th != null:
+		# (round 3: a return, its own class owned by the returner: never staled, no range falloff; spec §2.5)
+		var inf := BendR3.info_for(bc, "stone_catch", "catch")
+		inf["tag"] = origin + ".return"
+		inf["returned"] = true
+		inf["ret_mult"] = mult
+		inf["origin_tag"] = origin
+		inf.erase("jab")
+		th.info = inf
 	BendLooks.burst(fs.global_position, "stone", 12)
 	BendSounds.play(&"earth_cast_crack", fs.global_position, 1.0 if clean else -1.0)
+	return th
+
+
+## Earth's Pop stone held in the hand (BendR3.pop_stone) thrown along the aim (E, or Shove; `toward` INF: the aim): its own
+## numbers (air_rules.pop.stone), tag air_rules.pop.stone_tag (rock_jab/pop_stone: the Spike's class, staled), not a return.
+## The Throw.
+static func _throw_pop_stone(bc: BendCaster, fs: FormStone, toward := Vector3.INF) -> FormEffects.Throw:
+	var own: Dictionary = fs.get_meta(&"bend_stone_d", {})
+	var kind := GustLift.kind_of(fs)
+	var mps := float(own.get("mps", 34.0))
+	var hd := {"mps": [mps, mps], "damage": [float(own.get("damage", 30.0)), float(own.get("damage", 30.0))],
+			"knock_mps": float(own.get("knock_mps", 6.0)), "gravity": float(own.get("gravity", 3.0)), "pierce": false}
+	for k: StringName in [&"bend_held_by", &"bend_clean", FormStone.LOOSE_META, BendR3.POP_STONE_META]:
+		if fs.has_meta(k):
+			fs.remove_meta(k)
+	if fs.state == FormStone.State.RISING:
+		fs.state = FormStone.State.RESTING
+	var td: Dictionary = (SwayMoves.move("stone_form").get("throw", {}) as Dictionary).duplicate(true)
+	td["hurl"] = {kind: hd}
+	td["rise_s"] = 0.05
+	td["chest_m"] = fs.global_position.y - bc.body.global_position.y
+	var kn: Dictionary = (td.get("knock_mps", {}) as Dictionary).duplicate()
+	kn[kind] = float(hd.knock_mps)
+	td["knock_mps"] = kn
+	var th := FormEffects.Throw.start(bc, fs, td, toward)
+	if th != null:
+		var inf := BendR3.info_for(bc, "rock_jab", "pop")
+		inf["tag"] = String(BendR3.block("pop").get("stone_tag", "rock_jab/pop_stone"))
+		inf.erase("jab")
+		th.info = inf
+	BendLooks.burst(fs.global_position, "stone", 12)
+	BendSounds.play(&"earth_cast_crack", fs.global_position, 0.0)
 	return th
 
 
@@ -821,6 +941,7 @@ func _take_bolt(b: BendBolt, perfect := false) -> void:
 	if r2:
 		s.set_meta(&"bend_stone_d", own)
 		s.set_meta(&"bend_rally", b.rally)
+		s.set_meta(BendR3.ORIGIN_META, String(b.info.get("origin_tag", b.info.get("tag", "stone_form/spike"))))
 	stones.append(s)
 	_take_stone(s, v, perfect)
 
@@ -875,7 +996,22 @@ func _stones() -> void:
 			continue
 		if _body_of(lift.caster) == owner_node or BendCaster.same_team(_body_of(lift.caster), owner_node):
 			continue
-		if lift.stone.global_position.distance_to(me) > radius or lift.has_meta("bend_guarded_%d" % mine):
+		# (round 3: a spike met by its point, which leads it: GustLift._lead)
+		var lead := lift._lead() if BendR3.stock() else Vector3.ZERO
+		if (lift.stone.global_position + lead).distance_to(me) > radius or lift.has_meta("bend_guarded_%d" % mine):
+			continue
+		if r2 and BendR3.stock() and kind in ["redirect", "parry"]:
+			# (round 3, every guard a shield: a stone met on the beat drops where it is, nothing through, no reward; late,
+			# half as a slide)
+			if perfect:
+				var st0 := lift.stone as Node3D
+				var by0 := _body_of(lift.caster)
+				lift.drop(false)
+				FormStone.make_loose(st0, by0)
+			else:
+				_late_lift(lift)
+			took += 1
+			_result("perfect" if perfect else "late", "stone")
 			continue
 		if r2 and kind in ["air_shield", "wind_guard"]:
 			# (the Wind Guard on a flying stone: on the beat cushioned and dropped at his feet, a loose stone; late, half)
@@ -896,6 +1032,21 @@ func _stones() -> void:
 			continue
 		var s := lift.stone as Node3D
 		var v := lift.velocity
+		if r2 and kind == "catch" and BendR3.stock() and t > window_s:
+			# (round 3: held past its window a stone is late: half through as a slide, the stone dropped at his feet)
+			var hd0 := lift._hurl_d()
+			var li: Dictionary = lift.get_meta(&"bend_info", {})
+			var by1 := _body_of(lift.caster)
+			lift.drop(false)
+			if is_instance_valid(s):
+				s.queue_free()
+			_late_drop(lift.damage_now(), float(hd0.get("knock_mps", GustLift.KNOCK_MPS)), float(hd0.get("knock_up_mps", GustLift.KNOCK_UP_MPS)),
+					v, me, by1, -1.0, li)
+			took += 1
+			_result("late", "stone")
+			continue
+		if r2 and kind == "catch":
+			s.set_meta(BendR3.ORIGIN_META, String((lift.get_meta(&"bend_info", {}) as Dictionary).get("tag", "stone_form/spike")))
 		if r2 and kind == "catch" and not s.has_meta(&"bend_stone_d"):
 			var hd := lift._hurl_d()
 			s.set_meta(&"bend_stone_d", {"mps": v.length(), "damage": lift.damage_now(), "kind": lift.kind,
@@ -924,6 +1075,9 @@ func _stones() -> void:
 ## numbers, this lift's own copy); this guard is done with it.
 func _late_lift(lift: GustLift) -> void:
 	lift.set_meta("bend_guarded_%d" % get_instance_id(), true)
+	var li: Dictionary = (lift.get_meta(&"bend_info", {}) as Dictionary).duplicate()
+	li["slide_only"] = true                      # (round 3: a late guard's half is a slide on the feet)
+	lift.set_meta(&"bend_info", li)
 	var d := lift.d.duplicate(true)
 	var hurl: Dictionary = d.get("hurl", {})
 	var hd: Dictionary = (hurl.get(lift.kind, hurl.get("stone", {})) as Dictionary).duplicate()
@@ -992,3 +1146,80 @@ func end() -> void:
 		if e is GPUParticles3D and is_instance_valid(e):
 			BendLooks.stop_trail(e as GPUParticles3D)
 	queue_free()
+
+
+# ---------------------------------------------------------------- round 3: every guard a shield (the % ring; AIR)
+## What a round-2 guard of `body`'s does to a hit of kind `what` that is not a bolt or a flying stone (a cone, a Column or a
+## Geyser, the Slam, the air hit, lightning: BendEffects) in the % ring (spec §2.5): {result ("perfect", "late", "" none),
+## mult (0 perfect, late_mult late, 1 none), info (`info`, a copy with slide_only when late), zone}. Every guard stops it:
+## on the beat nothing through (the reward only in its own cell: a Wind Guard on air charges Carried wind), late half as a
+## slide; lightning only a Parry on the beat stops (lightning_guard). Told as every guard's result is; a jab it took ends
+## its sender's string. Read only with BendR3.stock() (the callers ask).
+static func guard_take(body: Node, what: String, by: Node, info: Dictionary) -> Dictionary:
+	var out := {"result": "", "mult": 1.0, "info": info, "zone": null}
+	if body == null or not is_instance_valid(body) or not body.is_inside_tree():
+		return out
+	for z in body.get_tree().get_nodes_in_group(GROUP):
+		var bz := z as BendZone
+		if bz == null or not bz.r2 or bz.owner_node != body or bz.is_queued_for_deletion():
+			continue
+		var perfect := bz.t <= bz.perfect_s and (what != "lightning" or bz.kind == "parry")
+		bz.took += 1
+		bz._result("perfect" if perfect else "late", what)
+		if bool(info.get("jab", false)):
+			BendR3.jab_guarded(by)
+		if perfect:
+			if what == "air" and bz.kind in ["air_shield", "wind_guard"]:
+				carry_wind(body)
+			return {"result": "perfect", "mult": 0.0, "info": info, "zone": bz}
+		var inf := info.duplicate()
+		inf["slide_only"] = true
+		return {"result": "late", "mult": bz.late_mult, "info": inf, "zone": bz}
+	return out
+
+
+## Lightning striking `body` in the % ring (spec §2.5: "the only answer to lightning" stays fire's): {result "back" (his
+## Parry within its perfect_s: sent back), "late" (any other guard of his, or a Parry past the beat: half through as a
+## slide), "" (no guard: it hits), mult, info, zone}.
+static func lightning_guard(body: Node, by: Node, info: Dictionary) -> Dictionary:
+	var g := guard_take(body, "lightning", by, info)
+	if String(g.result) == "perfect":
+		g["result"] = "back"
+	return g
+
+
+## The hit info of something sent back by `by` (a Parry's, a Wind Guard's bounce, a Turn's swing, lightning's): its own
+## class, owned by the returner (spec §2.5): tag "<origin>.return", returned, ret_mult `mult`, origin_tag, from `at`, air
+## (`by` airborne); a volley's id, a jab's mark and a set stun dropped.
+static func return_info(info: Dictionary, by: Node, at: Vector3, mult: float) -> Dictionary:
+	var origin := String(info.get("origin_tag", info.get("tag", "")))
+	var out := info.duplicate()
+	for k: String in ["volley_id", "volley_n", "jab", "pop", "set_stun", "slide_only", "hit_id"]:
+		out.erase(k)
+	out["tag"] = origin + ".return" if origin != "" else ".return"
+	out["returned"] = true
+	out["ret_mult"] = mult
+	out["origin_tag"] = origin
+	out["from"] = at
+	out["air"] = BendR3.airborne(by)
+	return out
+
+
+## A body inside a fire wall at a tick, in the % ring (spec §2.3): on its entry (not inside at the last tick, and its last
+## entry pop fire_wall.entry_every_s ago or more) a set pop of entry_mps at entry_deg out of the wall's face; inside after,
+## the burn with no flinch (no knock). The hit info: the wall's, wall_entry or wall_tick.
+func _fire_wall_hit(n: Node3D, dt: float) -> void:
+	var id := n.get_instance_id()
+	var fw := BendR3.block("fire_wall")
+	var inf := info.duplicate()
+	var entry := not _inside_was.has(id) and BendStatus.now() - float(_popped.get(id, -INF)) >= float(fw.get("entry_every_s", 1.0))
+	if entry:
+		_popped[id] = BendStatus.now()
+		var side := signf((global_transform.affine_inverse() * n.global_position).z)
+		var out := global_basis.z.normalized() * (side if absf(side) > 0.0 else 1.0)
+		inf["wall_entry"] = true
+		BendR3.deliver(n, damage_s * dt, n.global_position + Vector3.UP, out, owner_node, -1.0,
+				BendR3.set_v(out, float(fw.get("entry_mps", 5.0)), float(fw.get("entry_deg", 50.0))), inf)
+	else:
+		inf["wall_tick"] = true
+		BendR3.deliver(n, damage_s * dt, n.global_position + Vector3.UP, way, owner_node, -1.0, Vector3.ZERO, inf)

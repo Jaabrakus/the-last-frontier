@@ -45,6 +45,11 @@ const TEAM_META := &"bend_team"
 var body: CharacterBody3D
 ## The cast being made grows (▲): see the header.
 var grown := false
+## Round 3 (the % ring; BendR3): this caster's jab string ({hits, popped, victim, at, volley, casts, hit_last,
+## released_at}), when its next jab is ready by the step (-INF: no step owed) and its last hit landed (BendStatus.now()).
+var jab := {}
+var jab_step_until := -INF
+var last_hit_at := -INF
 
 
 func _init(p_body: CharacterBody3D = null) -> void:

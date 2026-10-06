@@ -112,6 +112,8 @@ func _default_facing() -> Vector3:
 func _physics_process(dt: float) -> void:
 	if body == null or _dead():
 		return
+	if body.has_meta(&"bend_slam_lift") and body.is_on_floor():
+		body.remove_meta(&"bend_slam_lift")       # (round 3: Down Gust's lift is once an airtime; landing gives it back)
 	if _carry_t > 0.0:
 		_carry_t -= dt
 		var flat := Vector3(body.velocity.x, 0.0, body.velocity.z)
