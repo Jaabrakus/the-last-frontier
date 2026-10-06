@@ -23,7 +23,7 @@ extends SceneTree
 ##               a strike) more than on knocks. Round 2 (KITS): per side its guards (clean catches, perfect, late, whiffs), its
 ##               returns (a caught stone sent back by its guard again) and the longest rally (one stone's returns), its locks
 ##               pushed back by hits (setbacks), the waves along the deck it saw and jumped, the casts held to grow (grows_by)
-##               and the kit's moves it never cast (uncast; tools: scratchpad kits/soak_report.py reads them over every run)
+##               and the kit's moves it never cast (uncast; the KITS review sums them over every run: no kit move left uncast)
 ## The clock: BendStatus.now() counts physics frames, so under ts 4 its timers (the bots' rests, cools, reactions and
 ## opening grace; roots, slows) last 4 times as long in game time as the locks and flights do. ts=1 is the game's own pace
 ## (headless with a fixed fps it runs unthrottled anyway: a match in a few seconds); read the balance there.
@@ -49,7 +49,7 @@ var by_side: Array = [{}, {}]
 var tallies: Array = [_tally(), _tally()]
 ## Per side: casts held to grow by "move/mode" (round 2's ▲).
 var grows_by: Array = [{}, {}]
-## The most times one stone was sent back (NpcBending.RALLY_META on it: every return of it, by either side).
+## The most times one stone was sent back (NpcBending.RETURNS_META on it: every return of it, by either side).
 var longest_rally := 0
 var knocks := Vector2i.ZERO
 var _seed := 9100

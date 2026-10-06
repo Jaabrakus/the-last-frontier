@@ -14,7 +14,7 @@ extends SceneTree
 ##   water      a water bot's casts spend nothing (water_meter.spend false); by a pool (Bending.POOLS) its meter fills fast
 ##   catch      stones thrown at a hard earth bot are caught, and a caught one is sent back by its guard cast again (E again:
 ##              its return, returns, its lock guard_rules.return_lock_s or perfect_return_lock_s)
-##   the floor  waves along the deck (low fire bolts) sent at a normal earth bot: it jumps at least FLOOR_JUMP_MIN of them
+##   the floor  waves along the deck (the Kick's floor wave) sent at a normal earth bot: it jumps at least FLOOR_JUMP_MIN of them
 ##              (floor_jumped of floor_seen; spec 2.8)
 ##   the edge   an air bot 3 m from an open end, the foe before it: in EDGE_S it never goes over the end of itself
 ## Last line "BEND BOTS PASSED" or "BEND BOTS FAILED"; exit 0 only on a pass; the watchdog (LIMIT_S) fails it before the lock
@@ -366,13 +366,6 @@ func _answers(f: NpcFighter) -> void:
 		var dir := (to - from).normalized()
 		BendBolt.launch(p, from + dir * 0.8, dir, {"kind": "stone", "mps": 18.0, "gravity": 0.0, "damage": 4.0, "knock_mps": 2.0,
 				"radius_m": 0.2, "range_m": 40.0})
-		for k in 12:  # DBG
-			await physics_frame
-			await physics_frame
-			await physics_frame
-			var ths: Array = b._threats()
-			print("DBG t%d casting '%s' action %s follow %.2f state %s threats %s guard_until %.2f now %.2f beat %.2f seen %s" % [k, b.casting, f.action, b._follow, f.brain.state,
-					ths.map(func(x: Dictionary) -> String: return "%s %.2f" % [x.kind, x.tti]), b._guard_until, b._now(), b._beat_wait_until, b._threat_seen.values()])
 	await _secs(1.5)
 	var begun := int(b.reactions_by.get("stone", 0)) - r0
 	var ret_locks: Array[String] = []
@@ -389,7 +382,7 @@ func _answers(f: NpcFighter) -> void:
 	_expect(b.returns >= 1 and ret_ok, "earth: a caught stone is sent back by its guard cast again (returns %d: %s)" % [b.returns, ", ".join(ret_locks)])
 
 
-## Waves along the deck (low fire bolts from the player, at its feet) at a normal earth bot fighting him: it jumps at least
+## Waves along the deck (the Kick's floor wave from the player's feet) at a normal earth bot fighting him: it jumps at least
 ## FLOOR_JUMP_MIN of those it sees come (NpcBending: floor_seen, floor_jumped; the preset's jump_chance).
 func _floor() -> void:
 	_clear()
@@ -409,11 +402,15 @@ func _floor() -> void:
 		f.global_position = Vector3(p.global_position.x + 12.0, f.global_position.y, p.global_position.z)
 		f.velocity = Vector3.ZERO
 		await _secs(0.3)
-		var from := p.global_position + Vector3.UP * 0.45
-		var to := f.global_position + Vector3.UP * 0.45
-		var dir := Vector3(to.x - from.x, 0.0, to.z - from.z).normalized()
-		BendBolt.launch(p, from + dir * 1.0, dir, {"kind": "fire", "mps": 18.0, "gravity": 0.0, "damage": 2.0, "knock_mps": 1.0,
-				"up_mps": 0.0, "radius_m": 0.45, "range_m": 20.0, "low": true})
+		var from := p.global_position
+		var dir := Vector3(f.global_position.x - from.x, 0.0, f.global_position.z - from.z).normalized()
+		# (the Kick's own wave: moves.json fire_kick kick, along the deck from his feet; a light one, so it is the jump that
+		# is counted, not the knock)
+		var ks := NpcBending.spec_of("fire_kick", "kick").duplicate()
+		ks["damage"] = 2.0
+		ks["knock_mps"] = 1.0
+		ks["up_mps"] = 0.0
+		BendBolt.launch(p, from + dir * 1.0, dir, ks)
 		await _secs(1.4, func() -> void:
 			if is_instance_valid(f) and not f.is_on_floor():
 				air[0] += 1.0 / Engine.physics_ticks_per_second)

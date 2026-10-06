@@ -44,7 +44,7 @@
     "pick_min_px": 36
   },
   "first_moves": {
-    "_doc": "'First moves only' (replaces Simple and its distance band; owner question 17): keys 1-4 ready only their first move (a second tap, a wheel step: nothing), the strip four names. Each element's four, [move, variation] in key order: the first move of Bending.keys 1-4, a complete kit with the guard on E.",
+    "_doc": "'First moves only' (replaces Simple and its distance band; owner question 17): keys 1-4 ready only their first move (a second tap, a wheel step: nothing), the strip four names. Each element's four, [move, variation] in key order: the first move of keys 1-4 (moves.json elements), a complete kit with the guard on E.",
     "earth": [["stone_form", "spike"], ["earth_shove", "push"], ["earth_skate", "burrow"], ["earth_wall", "wall"]],
     "water": [["water_whip", "whip"], ["wave", "push"], ["flow", "skate"], ["water_shield", "ice_wall"]],
     "fire": [["fire_blast", "punch"], ["fire_kick", "kick"], ["footwork", "step"], ["fire_wall", "wall"]],

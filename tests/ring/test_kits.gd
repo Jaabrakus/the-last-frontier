@@ -1,7 +1,7 @@
 extends SceneTree
 ## Round 2's kits as data (KITS: skills_r2/spec.md 2, 3, 8.1 and the owner's answers of 2026-10-05; data/sway/moves.json
 ## elements, guards, jabs, passives, guard_rules, stones, water_meter; data/bending/schemes.json; data/npc/bend_ai.json;
-## data/ring/rules.json and ring.json's socket stones), headless, no level:
+## data/ring/rules.json and ring.json's deck stones), headless, no level:
 ##   Godot --headless --path . -s tests/ring/test_kits.gd
 ##   keys       every element: keys 1-3 two moves each (one move of two variations, or two of one), key 4 one (fire's two:
 ##              Fire Wall and Breath, the owner kept Breath), key 5 Patch (and Mend for earth and water); a guard (E) and a
@@ -18,9 +18,10 @@ extends SceneTree
 ##              perfect_s and return (earth's catch: 1.0 s, 3.5 m, held, as before round 2)
 ##   schemes    first_moves and direction pairs exist, each one of the element's own
 ##   bots       bend_ai.json: the perfect-guard chance by preset (easy 0.1, normal 0.3, hard 0.6), a jump chance, no hint for
-##              a cut move, the combos (Kick then Punch, Column then Spike, Pull then Palm, Geyser then Wave)
-##   stones     a deck socket's stone hurled flies with ring.json sockets.hurl (at most 40 a strike), a Stone Form boulder
-##              keeps its own; the stone casts the ring keeps play the ring's own sounds (form_sfx: Sfx ids of audio/sfx/bend)
+##              a cut move, the combos (Kick then Punch, Column then Spike, Pull then Palm, Geyser then Wave), a guard reflex
+##              (guard_reaction_s) under each preset's reaction
+##   deck       a deck stone shoved or lifted flies with ring.json sockets.hurl (at most 40 a strike, each kind), not the open
+##              world's Gust numbers (RingArena._ring_hurls); a Stone Form boulder keeps its own (80)
 ## Last line "KITS TEST PASSED" or "KITS TEST FAILED"; exit 0 only on a pass; a watchdog quits with 2.
 
 const NAME := "KITS TEST"
@@ -83,7 +84,7 @@ func _run() -> void:
 	_blocks()
 	_schemes()
 	_bots()
-	_stones()
+	_deck()
 	_end()
 
 
@@ -273,7 +274,7 @@ func _blocks() -> void:
 	check((d.get("water_meter", {}) as Dictionary).get("spend", true) == false, "the water meter spends nothing (spend false)")
 	var ps: Dictionary = d.get("passives", {})
 	check(is_equal_approx(float((ps.get("earth", {}) as Dictionary).get("fill_mult", 0.0)), 1.2)
-			and is_equal_approx(float((ps.get("earth", {}) as Dictionary).get("knock_taken_mult", 0.0)), 0.85)
+			and is_equal_approx(float((ps.get("earth", {}) as Dictionary).get("knock_mult", 0.0)), 0.85)
 			and is_equal_approx(float((ps.get("water", {}) as Dictionary).get("steer_max_deg", 0.0)), 15.0)
 			and is_equal_approx(float((ps.get("fire", {}) as Dictionary).get("moving_mult", 0.0)), 1.0)
 			and is_equal_approx(float((ps.get("air", {}) as Dictionary).get("knock_mult", 0.0)), 1.15),
@@ -348,23 +349,23 @@ func _bots() -> void:
 			"a bot reads the Kick's wind-up as a wave along the deck, a Column's as rising under it")
 
 
-# ---------------------------------------------------------------- stones and sounds
-func _stones() -> void:
+# ---------------------------------------------------------------- the deck's stones
+func _deck() -> void:
 	var ring: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/ring/ring.json"))
-	var sh: Dictionary = (ring.get("sockets", {}) as Dictionary).get("hurl", {})
-	var dm: Array = sh.get("damage", [999.0])
-	check(not sh.is_empty() and float(dm[dm.size() - 1]) <= 40.0 and float(sh.get("knock_mps", 0.0)) >= 6.0,
-			"a socket's stone hurled: at most %.0f a strike (was 110), its knock %.0f" % [float(dm[dm.size() - 1]), float(sh.get("knock_mps", 0.0))])
+	var rh: Dictionary = (ring.get("sockets", {}) as Dictionary).get("hurl", {})
+	var over: Array = []
+	for k: String in ["stone", "spike", "cannonball"]:
+		var dm: Array = (rh.get(k, {}) as Dictionary).get("damage", [999.0])
+		if float(dm[dm.size() - 1]) > 40.0:
+			over.append("%s %s" % [k, dm])
+	check(rh.size() >= 3 and over.is_empty(), "a deck stone shoved or lifted: at most 40 a strike, each kind (%s)" % ", ".join(over))
 	var boulder: Dictionary = (((SwayMoves.move("stone_form").get("throw", {}) as Dictionary).get("hurl", {}) as Dictionary).get("cannonball", {}))
 	check((boulder.get("damage", []) as Array) == [80.0, 80.0], "a Stone Form boulder keeps its own (80)")
-	var arena_fns: Array = (RingArena as Script).get_script_method_list().map(func(m: Dictionary) -> String: return String(m.name))
-	check(RingArena.SOCKET_META == &"ring_socket" and "_socket_hurls" in arena_fns, "the arena gives its stones' flights their own numbers")
-	var fs: Dictionary = SwayMoves.data().get("form_sfx", {})
-	var M := preload("res://scripts/audio/sfx_manifest.gd")
-	var bad: Array = []
-	for k: String in ["rise", "rumble", "crumble", "spike", "tear", "hurl", "strike", "break", "mend"]:
-		var id := String(fs.get(k, ""))
-		var files: Array = M.FILES.get(id, [])
-		if not BendSounds.TABLE.has(StringName(id)) or files.is_empty() or not files.all(func(p: String) -> bool: return p.begins_with("res://audio/sfx/bend/")):
-			bad.append("%s %s" % [k, id])
-	check(bad.is_empty(), "the stone casts play the ring's own sounds, Sfx ids of audio/sfx/bend (%s)" % ", ".join(bad))
+	var fns: Array = (RingArena as Script).get_script_method_list().map(func(m: Dictionary) -> String: return String(m.name))
+	check("_ring_hurls" in fns, "the arena gives its deck stones' flights the ring's numbers (RingArena._ring_hurls)")
+	var ps: Dictionary = NpcBending.ai().get("presets", {})
+	var ok := true
+	for p: String in ["easy", "normal", "hard"]:
+		var pr: Dictionary = ps.get(p, {})
+		ok = ok and float(pr.get("guard_reaction_s", 9.0)) <= float(pr.get("reaction_s", 0.0))
+	check(ok, "each preset's guard reflex (guard_reaction_s) no slower than its reaction_s")

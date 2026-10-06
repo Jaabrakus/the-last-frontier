@@ -21,9 +21,8 @@ extends Node3D
 ##             open ends behind each side are the only way off
 ##   sockets   stones sitting in iron collars in the deck (ring.json sockets; open rules too), FormStone cannonballs in
 ##             FormStone.GROUP: Shove, Gust lift and the cushion have something to work on whatever the foe's element; one
-##             taken away, another rises refill_s later; rebuild() puts every one back. Each is marked SOCKET_META for
-##             good: whenever it is hurled (any GustLift flight of it), it flies with ring.json sockets.hurl, not a
-##             boulder's numbers (_socket_hurls)
+##             taken away, another rises refill_s later; rebuild() puts every one back. A deck stone shoved or lifted flies
+##             with ring.json sockets.hurl, not the open world's Gust numbers (_ring_hurls)
 ##   water     RingWater: the tank (its walls and floor, stone), its water, the splash of a fall into it, ring-out by water
 ##   round it  a flagged walk at the deck's height, timber stands of tiers along both long sides, a stone wall across each
 ##             end: our own fort kit (StructureMeshKit, StructureMaterials, the fort's own textures), so the eye stays in
@@ -49,8 +48,8 @@ const GROUP := &"ring_arena"
 const DECK_META := &"ring_deck"
 ## What clear_dropped takes away reaches this far past the tank (m).
 const CLEAR_MARGIN := 4.0
-## On a socket's stone (for good, loose or not): its flights take ring.json sockets.hurl; on a GustLift once they have.
-const SOCKET_META := &"ring_socket"
+## On a GustLift flight once _ring_hurls has looked at it.
+const RING_HURL_META := &"ring_hurl"
 
 static var _data := {}
 
@@ -313,7 +312,7 @@ func _physics_process(dt: float) -> void:
 		sk["wait"] = float(sk.get("wait", 0.0)) - dt
 		if float(sk.wait) <= 0.0:
 			_raise_stone(sk)
-	_socket_hurls()
+	_ring_hurls()
 
 
 func _raise_stone(sk: Dictionary) -> void:
@@ -321,27 +320,36 @@ func _raise_stone(sk: Dictionary) -> void:
 	var seed_ := int(sk.get("seed", 0))
 	sk["seed"] = seed_ + 1
 	sk["stone"] = FormStone.ball(_stones, sk.at as Vector3, sd, seed_, String(data().get("deck_matter", "earth")))
-	(sk.stone as FormStone).set_meta(SOCKET_META, true)
 	sk["wait"] = 0.0
 
 
-## Every GustLift flight of a socket's stone (lifted, shoved, a caught one sent back) given ring.json sockets.hurl for its
-## hurl's numbers, once, before it lets go (a lift draws for a while, a shove rises first): a deck stone is ammo for
-## knock-backs, not a 110 blow (the round-1 soak: air won its rounds on them). Its data copied, never the shared moves.json.
-func _socket_hurls() -> void:
-	var hd: Dictionary = (data().get("sockets", {}) as Dictionary).get("hurl", {})
-	if hd.is_empty():
+## Every stone flight on the deck thrown with the open world's Gust hurl numbers (moves.json gust.stone.hurl: a Shove of a
+## loose stone, a socket's cannonball, a dropped spike or a kicked-up stone; BendEffects._throw_stone) given ring.json
+## sockets.hurl's for its stone's kind instead, once, its Shove's grow (its knock's share over Gust's) kept: deck stones are
+## ammo for knock-backs, not 45-110 blows (KITS round 2's soak: earth won on shoved cannonballs, 395 a match). A Stone Form
+## cast keeps its own numbers (stone_form.throw.hurl) and a caught stone sent back its own (BendZone.return_stone: the
+## catch never weaker); the open world's Gust is untouched. Its data copied, never the shared moves.json.
+func _ring_hurls() -> void:
+	var rh: Dictionary = (data().get("sockets", {}) as Dictionary).get("hurl", {})
+	if rh.is_empty():
 		return
+	var gust: Dictionary = (SwayMoves.move("gust").get("stone", {}) as Dictionary).get("hurl", {})
 	for g in get_tree().get_nodes_in_group(GustLift.GROUP):
 		var l := g as GustLift
-		if l == null or l.has_meta(SOCKET_META) or l.stone == null or not is_instance_valid(l.stone) \
-				or not l.stone.has_meta(SOCKET_META):
+		if l == null or l.has_meta(RING_HURL_META) or l.phase == GustLift.Phase.DONE:
 			continue
-		l.set_meta(SOCKET_META, true)
+		l.set_meta(RING_HURL_META, true)
+		var hurls: Dictionary = l.d.get("hurl", {})
+		var hd: Dictionary = hurls.get(l.kind, {})
+		var base: Dictionary = gust.get(l.kind, {})
+		var mine: Dictionary = rh.get(l.kind, rh.get("stone", {}))
+		if base.is_empty() or mine.is_empty() or hd.get("damage") != base.get("damage") or hd.get("mps") != base.get("mps"):
+			continue                                 # (not Gust's numbers: a Stone Form cast's, a return's)
+		var km := float(hd.get("knock_mps", GustLift.KNOCK_MPS)) / float(base.get("knock_mps", GustLift.KNOCK_MPS))
 		var nd: Dictionary = l.d.duplicate(true)
-		var hurls: Dictionary = nd.get("hurl", {})
-		hurls[l.kind] = hd.duplicate(true)
-		nd["hurl"] = hurls
+		var nh: Dictionary = mine.duplicate(true)
+		nh["knock_mps"] = float(mine.get("knock_mps", GustLift.KNOCK_MPS)) * km
+		(nd["hurl"] as Dictionary)[l.kind] = nh
 		l.d = nd
 
 

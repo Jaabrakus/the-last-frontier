@@ -682,8 +682,8 @@
           "kind": "water",
           "mps": 34.0,
           "gravity": 1.0,
-          "damage": 20.0,
-          "knock_mps": 8.0,
+          "damage": 15.0,
+          "knock_mps": 6.0,
           "radius_m": 0.22,
           "range_m": 16.0,
           "steer": true
@@ -787,7 +787,7 @@
           "flight": "point_first",
           "mps": 42.0,
           "gravity": 2.0,
-          "damage": 30.0,
+          "damage": 20.0,
           "knock_mps": 4.0,
           "radius_m": 0.16,
           "range_m": 40.0,
@@ -860,7 +860,7 @@
           "range_m": 9.0,
           "deg": 50.0,
           "damage": 10.0,
-          "knock_mps": 11.0,
+          "knock_mps": 10.0,
           "up_mps": 2.5,
           "put_out": true,
           "grow": {"range_m": 12.0, "deg": 65.0, "knock_mps": 13.0}
@@ -870,8 +870,8 @@
           "kind": "water",
           "radius_m": 1.8,
           "range_m": 16.0,
-          "damage": 12.0,
-          "up_mps": 12.0,
+          "damage": 10.0,
+          "up_mps": 10.0,
           "rise_s": 0.35,
           "source_m": 2.0,
           "source_mult": 2.0,
@@ -1030,11 +1030,11 @@
           "do": "bolt",
           "kind": "fire",
           "mps": 32.0,
-          "damage": 20.0,
-          "knock_mps": 5.0,
+          "damage": 22.0,
+          "knock_mps": 6.0,
           "radius_m": 0.2,
           "range_m": 30.0,
-          "grow": {"mps": 22.0, "damage": 34.0, "knock_mps": 9.0, "up_mps": 2.0, "radius_m": 0.5, "range_m": 35.0},
+          "grow": {"mps": 22.0, "damage": 34.0, "knock_mps": 10.0, "up_mps": 2.0, "radius_m": 0.5, "range_m": 35.0},
           "grow_label": "Fireball"
         },
         "stream": {
@@ -1189,11 +1189,11 @@
           "miss_above_m": 0.6,
           "mps": 18.0,
           "range_m": 16.0,
-          "damage": 18.0,
-          "knock_mps": 7.0,
+          "damage": 20.0,
+          "knock_mps": 9.5,
           "up_mps": 1.5,
           "wall_wear": 0.5,
-          "grow": {"width_m": 3.5, "range_m": 22.0, "damage": 24.0, "knock_mps": 9.0}
+          "grow": {"width_m": 3.5, "range_m": 22.0, "damage": 24.0, "knock_mps": 11.5}
         },
         "high_kick": {
           "do": "throw",
@@ -1239,7 +1239,7 @@
           "damage": 16.0,
           "knock_mps": 2.0,
           "melt": true,
-          "smoke": {"ahead_m": 2.5, "radius_m": 3.0, "life_s": 5.0}
+          "smoke_s": 5.0
         },
         "smoke": {"do": "zone", "zone": "smoke", "at": "front", "ahead_m": 2.5, "radius_m": 3.0, "life_s": 5.0},
         "heat": {"do": "melt", "kind": "fire", "radius_m": 6.0}
@@ -1296,14 +1296,11 @@
           "kind": "fire",
           "dir": "held",
           "none": "back",
-          "back": true,
           "fwd_mps": 9.0,
           "up_mps": 5.0,
-          "by_dir": {
-            "side": {"fwd_mps": 7.0, "up_mps": 3.0},
-            "back": {"fwd_mps": 9.0, "up_mps": 5.0},
-            "forward": {"fwd_mps": 10.0, "up_mps": 1.0}
-          }
+          "fwd": {"fwd_mps": 10.0, "up_mps": 1.0},
+          "back": {"fwd_mps": 9.0, "up_mps": 5.0},
+          "side": {"fwd_mps": 7.0, "up_mps": 3.0}
         },
         "hop": {"do": "dash", "kind": "fire", "side": true, "fwd_mps": 7.0, "up_mps": 3.0},
         "back_flip": {"do": "dash", "kind": "fire", "back": true, "fwd_mps": 9.0, "up_mps": 5.0},
@@ -1428,7 +1425,7 @@
           "kind": "air",
           "range_m": 3.5,
           "deg": 40.0,
-          "damage": 2.0,
+          "damage": 5.0,
           "knock_mps": 4.5,
           "up_mps": 1.0
         },
@@ -1472,11 +1469,11 @@
           "height_m": 2.0,
           "mps": 18.0,
           "range_m": 14.0,
-          "damage": 2.0,
-          "knock_mps": 5.0,
+          "damage": 8.0,
+          "knock_mps": 11.0,
           "up_mps": 1.0,
           "carry": true,
-          "grow": {"width_m": 3.0, "range_m": 18.0, "knock_mps": 9.0}
+          "grow": {"width_m": 3.0, "range_m": 18.0, "knock_mps": 15.0}
         },
         "pull": {
           "do": "wind_wave",
@@ -1487,7 +1484,7 @@
           "mps": 18.0,
           "range_m": 14.0,
           "damage": 0.0,
-          "knock_mps": 6.0,
+          "knock_mps": 8.0,
           "up_mps": 0.5
         }
       },
@@ -1516,8 +1513,8 @@
           "do": "bolt",
           "kind": "air",
           "mps": 45.0,
-          "damage": 10.0,
-          "knock_mps": 3.0,
+          "damage": 18.0,
+          "knock_mps": 4.0,
           "radius_m": 0.12,
           "range_m": 35.0,
           "long": true,
@@ -1527,8 +1524,8 @@
           "do": "bolt",
           "kind": "air",
           "mps": 28.0,
-          "damage": 6.0,
-          "knock_mps": 11.0,
+          "damage": 15.0,
+          "knock_mps": 15.0,
           "up_mps": 2.0,
           "radius_m": 0.35,
           "range_m": 30.0,
@@ -1564,8 +1561,7 @@
           "none": "back",
           "back": true,
           "fwd_mps": 9.5,
-          "up_mps": 1.0,
-          "near_miss_m": 1.2
+          "up_mps": 1.0
         },
         "sidestep": {"do": "dash", "kind": "air", "side": true, "fwd_mps": 9.0, "up_mps": 1.0},
         "backstep": {"do": "dash", "kind": "air", "back": true, "fwd_mps": 10.0, "up_mps": 2.0},
@@ -1743,19 +1739,18 @@
     "squares": {"marsh": "mud"}
   },
   "form_sfx": {
-    "_doc": "Sfx ids by moment (FormEffects.sfx, GustLift). The stone casts the ring keeps (Stone Form's spike and boulder, the earth wall, Lift's pillar, Shove's hurl, Mend) play the ring's own sounds (audio/sfx/bend: BendSounds' ids, made Sfx ids by tools/sfx/gen_manifest.py BEND_IDS; KITS round 2): rise, rumble, crumble, spike, tear, hurl, strike, break, mend. clap, press, crackle, tree and splinter (the open world's Form only) as before.",
     "clap": "dummy_hit",
     "press": "land_dirt",
-    "rise": "earth_rise",
-    "rumble": "earth_cast_rumble",
-    "crumble": "earth_crumble",
-    "spike": "earth_cast_crack",
-    "mend": "mend",
+    "rise": "gather_rec_rock_split",
+    "rumble": "gather_rec_tree_land",
+    "crumble": "gather_rec_rock_depleted",
+    "spike": "gather_rec_pick_rock_hard",
+    "mend": "gather_rec_axe_chop",
     "crackle": "pan_flash",
-    "tear": "earth_grind",
-    "hurl": "air_whoosh",
-    "strike": "earth_hit",
-    "break": "earth_crumble",
+    "tear": "gather_rec_rock_split",
+    "hurl": "arrow_whoosh",
+    "strike": "gather_rec_pick_rock_hard",
+    "break": "gather_rec_rock_depleted",
     "tree": "gather_rec_tree_crack",
     "splinter": "gather_rec_axe_chop_big"
   },
@@ -1789,7 +1784,7 @@
     "air": ["air_shield", "shield"]
   },
   "jabs": {
-    "_doc": "Each element's jab on the left button (the quick spell's default; Q puts the readied move there instead, Q held guard_rules.q_reset_s brings the jab back): [move, variation], every one within 10 m. Fire's is Embers (the owner kept it). Bending.jab; MatchSetup.quick_of.",
+    "_doc": "Each element's jab on the left button (the quick spell's default; Q puts the readied move there instead, Q held guard_rules.quick_reset_s brings the jab back): [move, variation], every one within 10 m. Fire's is Embers (the owner kept it). Bending.jab; MatchSetup.quick_of.",
     "earth": ["rock_jab", "pebbles"],
     "water": ["water_jet", "splash"],
     "fire": ["fire_jab", "embers"],
@@ -1803,7 +1798,7 @@
       "line": "Stand still: your locks fill faster and you're pushed less.",
       "still_mps": 0.3,
       "fill_mult": 1.2,
-      "knock_taken_mult": 0.85
+      "knock_mult": 0.85
     },
     "water": {
       "id": "flowing",
@@ -1823,8 +1818,8 @@
       "id": "carried_wind",
       "label": "Carried wind",
       "line": "Hit straight out of a dash and you knock harder.",
-      "window_s": 0.8,
-      "near_miss_m": 1.2,
+      "after_s": 0.8,
+      "near_m": 1.2,
       "knock_mult": 1.15
     }
   },
@@ -1847,7 +1842,7 @@
     "switch_hold_s": 0.2,
     "hit_setback_min_s": 0.25,
     "hold_drop_s": 0.0,
-    "q_reset_s": 0.5
+    "quick_reset_s": 0.5
   },
   "stones": {
     "_doc": "Loose stones on the deck (spec 2.10): at most loose_max a player (a new one sinks his oldest); Shove takes a loose one only within shove_loose_m of the caster.",

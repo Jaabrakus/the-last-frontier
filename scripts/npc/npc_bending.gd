@@ -91,11 +91,13 @@ const FLOOR_M := 0.9
 const ROLL_MPS := 3.0
 ## Hits within this long of a setback are the same hit (its damage and its knock come apart).
 const SETBACK_SAME_S := 0.06
-## On a stone: how many times it has been sent back by a catcher (either side's): the rally.
-const RALLY_META := &"bend_rally"
+## On a stone: how many times it has been sent back by a catcher, either side's (BendZone.return_stone keeps it): the rally.
+const RETURNS_META := &"bend_returns"
 ## The fallback spike's numbers (a stone raised before it as the lock fills, then hurled: Flight).
 const SPIKE := {"ahead_m": 1.3, "mps": 30.0, "gravity": 3.0, "damage": 34.0}
-const WALL := {"ahead_m": 1.6}
+## Its own earth wall raised this far ahead (inside round 2's 2-6 m placing, clear of its own capsule: one raised at 1.6 m
+## once threw its caster through the deck, the KITS soak).
+const WALL := {"ahead_m": 3.5}
 const GUST := {"reach_m": 7.0, "push_mps": 9.0, "up_mps": 3.0}
 const STRAFE_S := Vector2(1.4, 3.0)
 ## After a release the cast clip plays on this long (busy: it does not walk off mid-swing).
@@ -165,7 +167,7 @@ var reactions_by := {}
 var floor_seen := 0
 var floor_jumped := 0
 var jumps := 0
-## The most times a stone it sent back had been sent back (RALLY_META).
+## The most times a stone it sent back had been sent back (RETURNS_META).
 var longest_rally := 0
 var spikes := 0
 var walls := 0
@@ -198,15 +200,14 @@ var _grace_until := 0.0
 var _was_held := false
 ## Its catches seen so far (a new one answered by its guard again: the return).
 var _catches_seen := 0
-## Its last catch was clean (in the guard's first perfect_s): the return's lock is perfect_return_lock_s.
-var _clean_held := false
-## A guard that took nothing ended then (its next guard's lock whiff_lock_s within whiff_s).
-var _whiff_at := -100.0
 ## Floor threats seen (id -> [first seen, jump rolled]); the last setback's time.
 var _floor := {}
 var _setback_t := -100.0
 ## The way each dash whose way is the keys held goes ("move/mode" -> "side", "back", "forward": _pick_way).
 var _ways := {}
+## The side each such dash checked for room goes to ("move/mode" -> -1 left, 1 right of the way to the foe: _pick_way), so
+## the dash goes the side that was found safe.
+var _sides := {}
 ## A guard waits for its beat until then: no other lock begun meanwhile (it would hold the guard off).
 var _beat_wait_until := -1.0
 ## What came at it this physics frame (_threats, looked at once a frame).
@@ -227,6 +228,7 @@ func _init(b: NpcBrain) -> void:
 	var pr := preset()
 	caster = NpcBendCaster.new(me, float(pr.get("lead", 0.8)), float(pr.get("scatter_deg", 1.8)))
 	caster.bind()
+	caster.guarded.connect(_on_guarded)
 	_build_options()
 	if me.is_inside_tree():
 		Bending.of(me).element = element
@@ -323,19 +325,6 @@ func _build_options() -> void:
 				"guard": pr == gd, "jab": pr == jb}
 		o["hint"] = hint_of(id, md, spec)
 		options.append(o)
-
-
-## `spec` grown: its grow's numbers merged over it (key 2's first move held past grow_after_s; fire's Punch: the Fireball).
-static func grown_spec(spec: Dictionary) -> Dictionary:
-	var g: Variant = spec.get("grow")
-	if not g is Dictionary:
-		return spec
-	var out := spec.duplicate(true)
-	out.erase("grow")
-	for k: String in g:
-		out[k] = g[k]
-	out["grown"] = true
-	return out
 
 
 ## What bend_ai.json says of (id, md): its do's defaults (a zone's by its kind; an unknown do or 'throw' as 'bolt'), the old
@@ -684,7 +673,7 @@ func _when(c: String, t: Node3D, d: float) -> bool:
 		"own_wall":
 			return _own_wall(false, 12.0) != null
 		"own_damaged_wall":
-			return _own_wall(true, 3.0) != null
+			return _own_wall(true, 6.0) != null          # (within Mend's reach of its cast point, _cast_point)
 		"water_low":
 			var bw := Bending.of(me)
 			return bw != null and bw.water < float(d_ai.get("water_low", 40.0))
@@ -717,8 +706,8 @@ func _when(c: String, t: Node3D, d: float) -> bool:
 
 
 # ---------------------------------------------------------------- the threats and the guards
-## The guard to begin now against what comes at it ({id, mode, kind} or {}): a threat seen for the preset's reaction (x2
-## dazzled), answered at the preset's chance (one roll a volley: VOLLEY_S), its guard begun when its lock leaves the hit
+## The guard to begin now against what comes at it ({id, mode, kind} or {}): a threat seen for the preset's reaction (its
+## own guard on E for its guard_reaction_s: a reflex; x2 dazzled), answered at the preset's chance (one roll a volley: VOLLEY_S), its guard begun when its lock leaves the hit
 ## where the roll put it in the guard's window (on_beat): in its first perfect_s at the preset's perfect_chance, else later
 ## in it; an answer that is no guard of its own (a dash out of the line) as soon as its lock fits. Kind "floor" is jumped
 ## instead (_jump_floor), kind "lightning" dashed from on the flash by a preset with lightning_dash.
@@ -732,12 +721,15 @@ func _reaction() -> Dictionary:
 	if threats.is_empty():
 		return {}
 	var pr := preset()
-	var react := float(pr.get("reaction_s", 0.45)) * (2.0 if NpcBendCaster.dazzled(me) else 1.0)
+	var dz := 2.0 if NpcBendCaster.dazzled(me) else 1.0
+	var react := float(pr.get("reaction_s", 0.45)) * dz
+	# (its own guard on E is a reflex on his wind-up: guard_reaction_s, quicker than a dash's reaction_s)
+	var react_g := float(pr.get("guard_reaction_s", pr.get("reaction_s", 0.45))) * dz
 	var now := _now()
 	var best: Dictionary = {}
 	for th: Dictionary in threats:
 		var seen := _seen(th, pr, now)
-		if not bool(seen[1]) or now - float(seen[0]) < react:
+		if not bool(seen[1]) or now - float(seen[0]) < minf(react, react_g):
 			continue
 		var tti := float(th.tti)
 		var kind := String(th.kind)
@@ -749,6 +741,8 @@ func _reaction() -> Dictionary:
 				ok = true                            # (a hard bot dashes on the flash: spec 2.3, lightning's flash_s)
 			if not ok or not castable(o) or (kind == "lightning" and bool(o.guard) and not bool(seen[2])):
 				continue                             # (lightning goes back only off a parry on the beat: else it hits)
+			if now - float(seen[0]) < (react_g if bool(o.guard) else react):
+				continue
 			if bool(th.get("floor", false)) and not bool(o.guard) and not "floor" in answers:
 				continue                             # (along the deck: jumped (_jump_floor), or a guard; a side step is no answer)
 			if float(th.get("knock", INF)) < float(h.get("min_knock", 0.0)) or not _guard_fits(o, t):
@@ -859,9 +853,10 @@ func _wall_on_line(t: Node3D) -> bool:
 	return false
 
 
-## A guard's lock `ls` with the whiff rule: within whiff_s of a guard that took nothing, whiff_lock_s at least.
+## A guard's lock `ls` with the whiff rule: within whiff_s of a guard that took nothing, whiff_lock_s at least (BendZone's
+## own reckoning, the player's: meta bend_whiff_until).
 func _guard_lock(ls: float) -> float:
-	if _now() - _whiff_at < rule("whiff_s"):
+	if BendStatus.until(me, &"bend_whiff_until") > 0.0:
 		return maxf(ls, rule("whiff_lock_s"))
 	return ls
 
@@ -1102,9 +1097,9 @@ func begin(id: String, md: String) -> void:
 		if grown:
 			lock_s += rule("grow_after_s")
 	if bool(o.get("guard", false)):
-		if element == "earth" and _held_stone() != null:
-			# (E again with a stone held: the return's lock, shorter after a clean catch)
-			lock_s = rule("perfect_return_lock_s" if _clean_held else "return_lock_s") * float(preset().get("lock_mult", 1.0))
+		if _held_stone() != null:
+			# (E again with a stone held: the return's lock, shorter after a clean catch: the player's, BendZone.guard_lock_s)
+			lock_s = BendZone.guard_lock_s(me, lock_s) * float(preset().get("lock_mult", 1.0))
 		else:
 			lock_s = _guard_lock(lock_s)
 	if String((o.get("hint", {}) as Dictionary).get("role", "")) == "reaction":
@@ -1150,12 +1145,20 @@ func _release() -> void:
 	caster.side = _pick_side(t)
 	var before := BendEffects.last_of(caster)
 	var o0 := _option(key)
-	var returning := bool(o0.get("guard", false)) and element == "earth" and _held_stone() != null
-	var ok := false
+	var held := _held_stone() if bool(o0.get("guard", false)) else null
+	var returning := held != null
+	# (the player's own hooks: a grow move held past its second click casts grown, a dash by the keys held goes the way
+	# its picked keys say; both cleared after)
+	caster.grown = grown and bool(o0.get("grow", false))
+	caster.dash_dir = _held_dir(o0, t)
+	var ok := _cast(id, md, t)
+	caster.grown = false
+	caster.dash_dir = Vector2.ZERO
 	if returning:
-		ok = _return_held(t)
-	else:
-		ok = _cast(id, md, t, _spec_now(o0, t))
+		# (E again with the stone held: BendZone.return_stone threw it back; the rally its returns, either side's)
+		ok = not is_instance_valid(held) or int(held.get_meta(&"bend_held_by", -1)) != me.get_instance_id()
+		if ok and is_instance_valid(held):
+			longest_rally = maxi(longest_rally, int(held.get_meta(RETURNS_META, 0)))
 	locks.append({"move": id, "mode": md, "lock_s": lock_s, "took_s": took, "clip": me.body.cast_clip if me.body != null else "",
 			"grown": grown, "return": returning})
 	if locks.size() > 64:
@@ -1169,7 +1172,6 @@ func _release() -> void:
 			grows_by[key] = int(grows_by.get(key, 0)) + 1
 		if returning:
 			returns += 1
-			_clean_held = false
 		match key:
 			"stone_form/spike":
 				spikes += 1
@@ -1187,14 +1189,12 @@ func _release() -> void:
 
 
 ## Casts (id, md) now through the one path: BendCast.cast when it is there; a bend spec through BendEffects with its caster;
-## else its own way for spike, wall and gust push (FALLBACK). `own`: the spec it casts instead of the move's (grown, a dash's
-## way picked: _spec_now), through BendEffects. False: nothing came of it (no water, nothing to work on).
-func _cast(id: String, md: String, t: Node3D, own := {}) -> bool:
+## else its own way for spike, wall and gust push (FALLBACK). False: nothing came of it (no water, nothing to work on).
+func _cast(id: String, md: String, t: Node3D) -> bool:
 	var spec := spec_of(id, md)
 	var at := _cast_point(id, md, t)
-	if not own.is_empty():
-		BendEffects.apply(caster, id, md, own, t, at)
-		return not String(BendEffects.last_of(caster).get("do", "")) in ["", "dry"]
+	if id == "mend":
+		t = _own_wall(true, 6.0)                    # (Mend works on its own worn piece, never on the man it fights)
 	if id == "gust" and md == "lift":
 		# (Gust lift is a stone held and hurled at him: cast on the stone, never on the man himself)
 		var st := _lift_stone(t)
@@ -1221,28 +1221,19 @@ func _cast(id: String, md: String, t: Node3D, own := {}) -> bool:
 	return false
 
 
-## The spec option `o` is cast with now when it is not the move's own ({} the move's): grown (grown_spec) when its lock
-## was held to grow; a dash whose way is the keys held (dir "held": a bot has no keys) on the way its hint picks (way: "side"
-## out of a line, "back", "forward"), as the spec's back / side.
-func _spec_now(o: Dictionary, t: Node3D) -> Dictionary:
-	if o.is_empty() or bool(o.old):
-		return {}
-	var spec: Dictionary = o.spec
-	var out := {}
-	if grown and bool(o.get("grow", false)):
-		out = grown_spec(spec)
-	if String(spec.get("dir", "")) == "held":
-		if out.is_empty():
-			out = spec.duplicate(true)
-		var way := _dash_way(o)
-		out["back"] = way == "back"
-		out["side"] = way == "side"
-		out["way"] = way
-		var bd: Variant = spec.get("by_dir")
-		if bd is Dictionary and (bd as Dictionary).has(way):
-			for k: String in bd[way]:
-				out[k] = bd[way][k]
-	return out
+## The keys a bot "holds" for a dash of option `o` whose way is the keys held (spec dir "held"; BodyBendCaster.dash_dir:
+## x right of the way to the foe, y toward him): the way it picked (_dash_way), a side the one found safe (_sides, else the
+## caster's side at the release); ZERO for any other cast (the spec's none: back).
+func _held_dir(o: Dictionary, _t: Node3D) -> Vector2:
+	if o.is_empty() or bool(o.get("old", false)) or String((o.spec as Dictionary).get("dir", "")) != "held":
+		return Vector2.ZERO
+	match _dash_way(o):
+		"side":
+			var sd := float(_sides.get(String(o.get("key", "")), caster.side))
+			return Vector2(signf(sd) if absf(sd) > 0.01 else 1.0, 0.0)
+		"forward":
+			return Vector2(0.0, 1.0)
+	return Vector2(0.0, -1.0)
 
 
 ## The way a dash of option `o` goes for a bot: one whose way is the keys held (dir "held": a bot has none) its pick of this
@@ -1264,28 +1255,16 @@ func _dash_way(o: Dictionary) -> String:
 func _pick_way(o: Dictionary, t: Node3D) -> bool:
 	var key := String(o.get("key", ""))
 	var first := String((o.get("hint", {}) as Dictionary).get("way", "side"))
+	var side := _pick_side(t)
 	for w: String in [first, "side", "back"]:
 		_ways[key] = w
-		if _way_safe(o, t):
-			return true
+		for sd: float in ([side, -side] if w == "side" else [side]):
+			_sides[key] = sd
+			if _way_safe(o, t):
+				return true
 	_ways.erase(key)
+	_sides.erase(key)
 	return false
-
-
-## The stone it holds sent back along its aim (its guard cast again: E again, as the player's). Through the shove of a held
-## stone (BendEffects' Earth Shove takes the held one first: its flight GustLift's, the return's numbers). True when it went.
-func _return_held(t: Node3D) -> bool:
-	var st := _held_stone()
-	if st == null:
-		return false
-	var spec := spec_of("earth_shove", "push")
-	if spec.is_empty():
-		spec = {"do": "shove", "kind": "stone", "how": "push", "range_m": 20.0}
-	var n := int(st.get_meta(RALLY_META, 0)) + 1
-	st.set_meta(RALLY_META, n)                      # (the rally: this stone's returns, either side's)
-	longest_rally = maxi(longest_rally, n)
-	BendEffects.apply(caster, "earth_shove", "push", spec, t, _cast_point("earth_shove", "push", t))
-	return not is_instance_valid(st) or int(st.get_meta(&"bend_held_by", -1)) != me.get_instance_id()
 
 
 ## What the cast left to watch: its bolts and hurled stones (hits), its guard (catches). `before`: last_of its caster before
@@ -1299,9 +1278,7 @@ func _after_cast(o: Dictionary, before: Dictionary) -> void:
 		hits += int(last.get("hit", 0))
 	var z: Variant = last.get("zone")
 	if z != null and is_instance_valid(z) and z is BendZone and (z as BendZone).kind in GUARD_ZONES:
-		# ([zone, what it took so far, its window (s)]: what it takes in its first perfect_s is on the beat)
-		var win := float(o.get("spec", {}).get("window_s", (z as BendZone).life_s)) if not o.is_empty() else (z as BendZone).life_s
-		_guards.append([z, (z as BendZone).took, win])
+		_guards.append([z, (z as BendZone).took])   # ([zone, what it took so far]: answered, catches)
 
 
 ## Each frame: new bolts and hurled stones of its own connected (their strikes counted), its guards' takings counted.
@@ -1322,34 +1299,19 @@ func _watch() -> void:
 				g.connect(&"struck", _on_struck)
 		if _watched.size() > 256:
 			_watched.clear()
-	var ps := rule("perfect_s")
 	for i in range(_guards.size() - 1, -1, -1):
 		var e: Array = _guards[i]
 		var z: Variant = e[0]
-		if not is_instance_valid(z) or (z as BendZone).is_queued_for_deletion() or (z as BendZone).t > float(e[2]) + 0.05:
-			if int(e[1]) == 0 and e.size() < 4:
-				# (its window over with nothing taken: a whiff; the next guard's lock is whiff_lock_s for a while)
-				whiffs += 1
-				_whiff_at = _now()
+		if not is_instance_valid(z) or (z as BendZone).is_queued_for_deletion():
 			_guards.remove_at(i)
 			continue
 		var bz := z as BendZone
 		if bz.took > int(e[1]):
 			var n := bz.took - int(e[1])
-			var beat := bz.t <= ps + 1.0 / 30.0
 			answered += n
-			if beat:
-				perfects += n
-			else:
-				lates += n
 			if bz.kind in ["catch", "cushion"]:
 				catches += n
-				if bz.kind == "catch" and beat:
-					clean_catches += n
-				_clean_held = beat
 			e[1] = bz.took
-			if e.size() < 4:
-				e.append(true)                       # (it took something: no whiff)
 	if catches > _catches_seen:
 		_catches_seen = catches
 		_answer_catch()
@@ -1368,6 +1330,21 @@ func _answer_catch() -> void:
 	_cool.erase(key)
 	_guard_until = minf(_guard_until, at)
 	_rest_until = minf(_rest_until, at)
+
+
+## A guard of its own told its result (BendCaster.guarded, from BendZone: the same as the player's): perfect (on the beat:
+## a clean catch for earth's stone), late (half through; earth's stone still caught), whiff (nothing taken: its next guard's
+## lock whiff_lock_s within whiff_s, BendZone.guard_lock_s).
+func _on_guarded(result: String, what: String) -> void:
+	match result:
+		"perfect":
+			perfects += 1
+			if element == "earth" and what == "stone":
+				clean_catches += 1
+		"late":
+			lates += 1
+		"whiff":
+			whiffs += 1
 
 
 func _on_struck(who: Node, _dmg: float) -> void:
@@ -1483,6 +1460,9 @@ static func dash_carry(spec: Dictionary) -> float:
 	var f := float(spec.get("fwd_mps", 10.0))
 	var up := float(spec.get("up_mps", 0.0))
 	var air := 2.0 * up / NpcFighter.GRAVITY
+	var gl: Variant = spec.get("glide")
+	if gl is Dictionary:
+		air += float((gl as Dictionary).get("s", 3.0))   # (Leap's glide: a bot holds it the whole while, drifting on)
 	return f * CARRY_S + f * f / (2.0 * NpcFighter.DECEL) + f * air * 0.5
 
 
@@ -1493,7 +1473,7 @@ func _dash_dir(o: Dictionary, t: Node3D) -> Vector3:
 		"back":
 			return -way
 		"side":
-			return way.cross(Vector3.UP).normalized() * _pick_side(t)
+			return way.cross(Vector3.UP).normalized() * float(_sides.get(String(o.get("key", "")), _pick_side(t)))
 	return way
 
 
@@ -1506,15 +1486,16 @@ func _dash_safe(o: Dictionary, t: Node3D) -> bool:
 	return _way_safe(o, t)
 
 
-## _dash_safe for the way the dash of `o` goes now (_dash_way; its by_dir numbers for that way).
+## _dash_safe for the way the dash of `o` goes now (_dash_way; a dir "held" spec's own numbers for that way: its fwd, back
+## or side, as BendEffects.dash reads them).
 func _way_safe(o: Dictionary, t: Node3D) -> bool:
 	if not edge_fn.is_valid():
 		return true
 	var spec: Dictionary = o.spec if not bool(o.old) else {"fwd_mps": 6.0, "up_mps": 8.0}
-	var bd: Variant = spec.get("by_dir")
-	if bd is Dictionary and (bd as Dictionary).has(_dash_way(o)):
+	var sub: Variant = spec.get({"forward": "fwd"}.get(_dash_way(o), _dash_way(o)))
+	if String(spec.get("dir", "")) == "held" and sub is Dictionary:
 		spec = spec.duplicate()
-		spec.merge(bd[_dash_way(o)], true)
+		spec.merge(sub as Dictionary, true)
 	var margin := float(ai().get("edge_margin_m", 1.5))
 	var dir := _dash_dir(o, t)
 	var reach := dash_carry(spec) + margin

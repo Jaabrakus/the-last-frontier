@@ -8,9 +8,8 @@ extends SceneTree
 ##   moves     every mode of every move with a bend spec (data/sway/moves.json) casts a sound with files, of its own
 ##             element's family (a zone's too: a zone's spec has no kind, BendEffects hands "stone"); every hit kind
 ##             (BendLooks.KINDS and steam) and every moment (EVENTS) resolves to a sound with files
-##   borrowed  nothing of the frontier game's sounds is left in the bending's table: no TABLE id is an Sfx manifest id of
-##             the frontier game's files (the few Sfx plays for form_sfx are these same files) or one of the ids BendLooks
-##             borrowed, every file is under audio/sfx/bend/, BendLooks has no SOUNDS table
+##   borrowed  nothing of the frontier game's sounds is left in the bending's table: no TABLE id is an Sfx manifest id or
+##             one of the ids BendLooks borrowed, every file is under audio/sfx/bend/, BendLooks has no SOUNDS table
 ##   route     BendLooks.sound hands on to BendSounds: a cast is told by BendEffects' current cast (a water bubble zone
 ##             handed in as "stone" sloshes), a stone hit where a caught stone is held is the catch, a water hit at a
 ##             ring pool's surface the ring-out splash, else the kind's hit
@@ -154,11 +153,7 @@ func _test_moves() -> void:
 # ---------------------------------------------------------------- borrowed
 func _test_borrowed() -> void:
 	for id: StringName in BendSounds.TABLE:
-		# (Sfx may play a few of the ring's own too, for moves.json form_sfx: tools/sfx/gen_manifest.py BEND_IDS; their
-		# files are these, never the frontier game's)
-		var sfx_files: Array = SfxManifest.FILES.get(String(id), [])
-		_expect(sfx_files.all(func(p: String) -> bool: return p.begins_with("res://audio/sfx/bend/")),
-				"%s is not one of Sfx's (the frontier game's) ids" % id)
+		_expect(not SfxManifest.FILES.has(String(id)), "%s is not one of Sfx's (the frontier game's) ids" % id)
 		_expect(not String(id) in OLD_IDS, "%s is not a borrowed id" % id)
 		for i in BendSounds.count(id):
 			_expect(BendSounds.path_of(id, i + 1).begins_with("res://audio/sfx/bend/"), "%s's files are the ring's own" % id)

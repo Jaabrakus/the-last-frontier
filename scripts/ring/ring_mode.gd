@@ -989,8 +989,7 @@ func _practice_step(dt: float) -> void:
 				_dummy_cast(bend, _pmove("cover"))
 
 
-## The dummy's element's move for `what` ("throw" | "cover"), "id/mode": its kit's (MatchSetup.practice_move: key 1's first
-## move, its wall), so every guard has its own element's strike to practise on.
+## The dummy's element's move for `what` ("throw" | "cover": screens.json practice), "id/mode".
 func _pmove(what: String) -> String:
 	return MatchSetup.practice_move(foe_element, what)
 

@@ -140,15 +140,6 @@ const FILES := {
 	"bird_rec_whip_poor_will": ["res://audio/sfx/birds_rec/bird_rec_whip_poor_will_01.wav", "res://audio/sfx/birds_rec/bird_rec_whip_poor_will_02.wav", "res://audio/sfx/birds_rec/bird_rec_whip_poor_will_03.wav", "res://audio/sfx/birds_rec/bird_rec_whip_poor_will_04.wav"],
 	"bird_rec_wild_turkey": ["res://audio/sfx/birds_rec/bird_rec_wild_turkey_01.wav", "res://audio/sfx/birds_rec/bird_rec_wild_turkey_02.wav"],
 	"bird_rec_wood_thrush": ["res://audio/sfx/birds_rec/bird_rec_wood_thrush_01.wav", "res://audio/sfx/birds_rec/bird_rec_wood_thrush_02.wav", "res://audio/sfx/birds_rec/bird_rec_wood_thrush_03.wav", "res://audio/sfx/birds_rec/bird_rec_wood_thrush_04.wav", "res://audio/sfx/birds_rec/bird_rec_wood_thrush_05.wav", "res://audio/sfx/birds_rec/bird_rec_wood_thrush_06.wav", "res://audio/sfx/birds_rec/bird_rec_wood_thrush_07.wav"],
-	# bend
-	"air_whoosh": ["res://audio/sfx/bend/air_whoosh_01.wav", "res://audio/sfx/bend/air_whoosh_02.wav", "res://audio/sfx/bend/air_whoosh_03.wav", "res://audio/sfx/bend/air_whoosh_04.wav"],
-	"earth_cast_crack": ["res://audio/sfx/bend/earth_cast_crack_01.wav", "res://audio/sfx/bend/earth_cast_crack_02.wav", "res://audio/sfx/bend/earth_cast_crack_03.wav", "res://audio/sfx/bend/earth_cast_crack_04.wav"],
-	"earth_cast_rumble": ["res://audio/sfx/bend/earth_cast_rumble_01.wav", "res://audio/sfx/bend/earth_cast_rumble_02.wav", "res://audio/sfx/bend/earth_cast_rumble_03.wav", "res://audio/sfx/bend/earth_cast_rumble_04.wav"],
-	"earth_crumble": ["res://audio/sfx/bend/earth_crumble_01.wav", "res://audio/sfx/bend/earth_crumble_02.wav", "res://audio/sfx/bend/earth_crumble_03.wav", "res://audio/sfx/bend/earth_crumble_04.wav"],
-	"earth_grind": ["res://audio/sfx/bend/earth_grind_01.wav", "res://audio/sfx/bend/earth_grind_02.wav", "res://audio/sfx/bend/earth_grind_03.wav", "res://audio/sfx/bend/earth_grind_04.wav"],
-	"earth_hit": ["res://audio/sfx/bend/earth_hit_01.wav", "res://audio/sfx/bend/earth_hit_02.wav", "res://audio/sfx/bend/earth_hit_03.wav", "res://audio/sfx/bend/earth_hit_04.wav"],
-	"earth_rise": ["res://audio/sfx/bend/earth_rise_01.wav", "res://audio/sfx/bend/earth_rise_02.wav", "res://audio/sfx/bend/earth_rise_03.wav", "res://audio/sfx/bend/earth_rise_04.wav"],
-	"mend": ["res://audio/sfx/bend/mend_01.wav", "res://audio/sfx/bend/mend_02.wav", "res://audio/sfx/bend/mend_03.wav", "res://audio/sfx/bend/mend_04.wav"],
 }
 
 ## Per-variant gain in dB (evens out variants; footsteps levels.json trims).
@@ -315,13 +306,4 @@ const DEFAULTS := {
 	"bird_rec_whip_poor_will": {"bus": "Ambience", "vol": -6.0, "rp": 1.03, "rv": 0.0, "unit": 18.0, "maxd": 300.0, "maxdb": 3.0, "cut": 6000.0, "fdb": -12.0, "loop": false, "travel": false},
 	"bird_rec_wild_turkey": {"bus": "Ambience", "vol": -6.0, "rp": 1.03, "rv": 0.0, "unit": 18.0, "maxd": 280.0, "maxdb": 3.0, "cut": 6000.0, "fdb": -12.0, "loop": false, "travel": false},
 	"bird_rec_wood_thrush": {"bus": "Ambience", "vol": -6.0, "rp": 1.03, "rv": 0.0, "unit": 14.0, "maxd": 180.0, "maxdb": 3.0, "cut": 6000.0, "fdb": -12.0, "loop": false, "travel": false},
-	# bend
-	"air_whoosh": {"bus": "World", "vol": 0.0, "rp": 1.1, "rv": 2.0, "unit": 6.0, "maxd": 80.0, "maxdb": 3.0, "cut": 6500.0, "fdb": -10.0, "loop": false, "travel": false},
-	"earth_cast_crack": {"bus": "World", "vol": 0.0, "rp": 1.07, "rv": 2.0, "unit": 6.0, "maxd": 90.0, "maxdb": 3.0, "cut": 6500.0, "fdb": -10.0, "loop": false, "travel": false},
-	"earth_cast_rumble": {"bus": "World", "vol": 0.0, "rp": 1.06, "rv": 2.0, "unit": 6.0, "maxd": 90.0, "maxdb": 3.0, "cut": 6500.0, "fdb": -10.0, "loop": false, "travel": false},
-	"earth_crumble": {"bus": "World", "vol": 0.0, "rp": 1.06, "rv": 2.0, "unit": 8.0, "maxd": 110.0, "maxdb": 3.0, "cut": 6500.0, "fdb": -10.0, "loop": false, "travel": false},
-	"earth_grind": {"bus": "World", "vol": -1.0, "rp": 1.06, "rv": 2.0, "unit": 5.0, "maxd": 70.0, "maxdb": 3.0, "cut": 6500.0, "fdb": -10.0, "loop": false, "travel": false},
-	"earth_hit": {"bus": "World", "vol": 0.0, "rp": 1.08, "rv": 2.5, "unit": 8.0, "maxd": 110.0, "maxdb": 3.0, "cut": 6500.0, "fdb": -10.0, "loop": false, "travel": false},
-	"earth_rise": {"bus": "World", "vol": 0.0, "rp": 1.05, "rv": 2.0, "unit": 8.0, "maxd": 110.0, "maxdb": 3.0, "cut": 6500.0, "fdb": -10.0, "loop": false, "travel": false},
-	"mend": {"bus": "World", "vol": 0.0, "rp": 1.05, "rv": 1.5, "unit": 6.0, "maxd": 70.0, "maxdb": 3.0, "cut": 6500.0, "fdb": -10.0, "loop": false, "travel": false},
 }

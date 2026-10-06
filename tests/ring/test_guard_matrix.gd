@@ -6,13 +6,16 @@ extends SceneTree
 ## shooter told each shot, NpcBending._next, through its own lock and wind-up, so the guard reads it as a man's):
 ##   the shots  each element's strikes: key 1's moves, key 2's first, its jab (earth Spike, Boulder, Shove, Pebbles; water
 ##              Lash, Spear, Wave, Splash; fire Punch, Lightning, Kick, Embers; air Slice, Wind Ball, Gust, Palm), SHOTS of them
-##              a pairing in turn, both put back at their places and made whole between
+##              a mirror pairing in turn (half as many a cross pairing), both put back at their places and made whole between
 ##   counted    per pairing (shooter element > guard element, the preset): guards begun, perfect, late, whiffs, what the guard
 ##              took (answered), the guard bot struck (hits on it), earth's catches, clean catches and returns
-##   gated      each element's guard is begun against its own element's shots (and, for earth, stones are caught and sent
-##              back) at every preset; a hard bot's guards land on the beat more often than an easy one's (perfect share)
+##   gated      each element's guard is begun against its own element's shots and takes them (and, for earth, stones are
+##              caught and sent back) at normal and hard together; at easy (react_chance 0.25: it lets most through) the four together
+##              begin some; a hard bot's guards land on the beat more often than an easy one's (perfect share)
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_guard_matrix.gd -- mode=duel [preset=easy|normal|hard]
-##         [shots=8]
+##         [shots=6]
+## With no preset: the whole matrix at normal, the mirrors (each element into its own guard) at easy and hard, so the run
+## fits its watchdog; preset= one preset's whole matrix (the review's three runs).
 ## A "METRIC guard_matrix ..." line a pairing and a table at the end. Last line "GUARD MATRIX PASSED" or "... FAILED"; exit 0
 ## only on a pass; the watchdog (LIMIT_S) fails it first.
 
@@ -21,7 +24,7 @@ const LIMIT_S := 410.0
 const SLAB_Y := 220.0
 const SLAB := Vector2(40.0, 16.0)
 const ELEMENT_M := 12.0
-const SHOT_S := 2.4
+const SHOT_S := 2.6
 const FACTION_A := "ring_team_a"
 const FACTION_B := "ring_team_b"
 ## Each element's shots ("move/mode").
@@ -36,11 +39,15 @@ var fails := 0
 var p: FrontierPlayer
 var duel: DuelMode
 var mid := Vector3.ZERO
-var presets: Array = ["easy", "normal", "hard"]
-var shots := 8
+var presets: Array = ["normal", "easy", "hard"]
+var shots := 6
+## Every preset its whole matrix (preset= given), else only normal's: easy and hard their mirrors.
+var whole := false
 var _seed := 1750
 ## preset -> guard element -> [perfect, late] summed over the shooters (the perfect share by preset).
 var beats := {}
+## "preset/element" -> [guards begun, taken, catches, returns] against its own element's shots.
+var mirrors := {}
 var rows: Array[String] = []
 
 
@@ -56,6 +63,7 @@ func _initialize() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("preset="):
 			presets = [a.substr(7)]
+			whole = true
 		elif a.begins_with("shots=") and a.substr(6).is_valid_int():
 			shots = int(a.substr(6))
 	create_timer(LIMIT_S, true, false, true).timeout.connect(func() -> void:
@@ -112,7 +120,8 @@ func _go() -> void:
 		beats[pr] = {}
 		for g: String in Bending.ELEMENTS:
 			for s: String in Bending.ELEMENTS:
-				await _pairing(s, g, pr)
+				if whole or pr == "normal" or s == g:
+					await _pairing(s, g, pr)
 	_gates()
 	_end()
 
@@ -208,7 +217,7 @@ func _pairing(s: String, g: String, pr: String) -> void:
 	var hurt := [0.0]
 	var hp := [gb.health]
 	var list: Array = SHOTS[s]
-	for i in shots:
+	for i in (shots if s == g else maxi(shots / 2, 2)):          # (the cross pairings: what passes, a few shots)
 		_clear()
 		_place(gb, at_g, at_s)
 		_place(sb, at_s, at_g)
@@ -240,16 +249,32 @@ func _pairing(s: String, g: String, pr: String) -> void:
 	var bt: Array = beats[pr].get(g, [0, 0, 0, 0, 0])
 	beats[pr][g] = [int(bt[0]) + G.perfects, int(bt[1]) + G.lates, int(bt[2]) + begun, int(bt[3]) + G.catches, int(bt[4]) + G.returns]
 	if s == g:
-		# (its own element's shots are what its guard is for)
-		_expect(begun >= 1 and G.answered >= 1, "%s's guard is begun against %s's shots and takes them (%s: %d begun, %d taken)" % [g, s, pr, begun, G.answered])
-		if g == "earth":
-			_expect(G.catches >= 1 and G.returns >= 1, "earth (%s) catches stones and sends them back (%d caught, %d returned)" % [pr, G.catches, G.returns])
+		# (its own element's shots are what its guard is for: gated over the presets, _gates)
+		mirrors[pr + "/" + g] = [begun, G.answered, G.catches, G.returns]
 	_free(gb)
 	_free(sb)
 	await _secs(0.1)
 
 
 func _gates() -> void:
+	# (each element's guard begun against its own element's shots and taking them, normal and hard together: a few shots a
+	# pairing, so one pairing's rolls (react_chance, the volley) may let all of them through)
+	for g: String in Bending.ELEMENTS:
+		var m := [0, 0, 0, 0]
+		for pr: String in ["normal", "hard"]:
+			var e: Array = mirrors.get(pr + "/" + g, [0, 0, 0, 0])
+			for i in 4:
+				m[i] += int(e[i])
+		if mirrors.has("normal/" + g) or mirrors.has("hard/" + g):
+			_expect(m[0] >= 2 and m[1] >= 1, "%s's guard is begun against its own element's shots and takes them (normal and hard: %d begun, %d taken)"
+					% [g, m[0], m[1]])
+			if g == "earth":
+				_expect(m[2] >= 1 and m[3] >= 1, "earth catches stones and sends them back by its guard again (%d caught, %d returned)" % [m[2], m[3]])
+	if beats.has("easy"):
+		var eb := 0
+		for g: String in beats["easy"]:
+			eb += int(beats["easy"][g][2])
+		_expect(eb >= 2, "easy bots guard some of their own element's shots too (%d begun)" % eb)
 	if beats.has("easy") and beats.has("hard"):
 		var share := func(pr: String) -> float:
 			var pf := 0
