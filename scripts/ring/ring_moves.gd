@@ -125,6 +125,10 @@ var _di_at := INF
 var _launch_dir := Vector3.ZERO
 var _lean := 0.0
 var _lean_until := -INF
+## The knock's look: thrown downward (a Slam's spike) until he lands; the knock's bounce off the deck seen (its time).
+var _spiked := false
+var _bounce_at := -INF
+var _kn_bounced := false
 ## The camera (the player's): the off-deck framing's weight, the hang's, the recovery turn's state.
 var _cam_w := 0.0
 var _hang_w := 0.0
@@ -137,6 +141,8 @@ var _last_pos := Vector3.INF
 var _caster_hooked := false
 var _kn_hooked: BendKnock
 var _arena: RingArena
+var _geo_cache := {}
+var _geo_frame := -1
 ## A simulation's body: place, own velocity, the carry, on the floor, its hitstun, its deck.
 var _vpos := Vector3.ZERO
 var _vkv := Vector3.ZERO
@@ -386,6 +392,7 @@ func pre(intent: Dictionary, dt: float) -> bool:
 	_teleport_check()
 	var stun := _stunned()
 	_track_stun(stun, dt)
+	_track_bounce()
 	if _b("guard_pressed"):
 		_guard_at = _t
 	_lag = maxf(_lag - dt, 0.0)
@@ -434,6 +441,9 @@ func _step(dt: float) -> void:
 
 
 func _set_mode(m: String, spec: Dictionary) -> void:
+	if mode == "rise" and m != "rise" and looks != null and _m.has("el"):
+		# (the Rise left any way (its end, the scramble, a grab, a landing, a knock): its trail stops, its column sinks)
+		looks.rise_end(String(_m.el), _pos())
 	mode = m
 	mode_t = 0.0
 	_m = spec
@@ -822,6 +832,7 @@ func _lip_guard(dt: float, stun: bool) -> void:
 # ---------------------------------------------------------------- landing, leaving the ground, refreshes
 func _land() -> void:
 	_air = false
+	_spiked = false
 	_ff = false
 	_glide = false
 	_jump_short = false
@@ -908,11 +919,12 @@ func _track_stun(stun: bool, dt: float) -> void:
 		return
 	var kn := BendKnock.peek(body)
 	if _rules() == null and kn != null:
-		if kn.stun_t > _last_stun_t + 1e-4:
+		# (PERCENT's BendKnock.stun_t counts itself down in physics time: only a new stun is seen here, never written)
+		var st := kn.stun_t
+		if st > _last_stun_t + 1e-4:
 			_stun_from = _t
-			_stun_total = kn.stun_t
-		kn.stun_t = maxf(kn.stun_t - dt, 0.0) if kn.stun_t > 0.0 else 0.0
-		_last_stun_t = kn.stun_t
+			_stun_total = st
+		_last_stun_t = st
 		if kn.lying_t > 0.0:
 			kn.lying_t = maxf(kn.lying_t - dt, 0.0)
 	if stun and not _tick_told and _can_escape():
@@ -1004,7 +1016,20 @@ func _lying() -> bool:
 	return kn != null and kn.lying_t > 0.0
 
 
+## The knock's bounce off the deck (BendKnock's, a missed fall falling fast) seen as it happens: its clip (knock_bounce).
+func _track_bounce() -> void:
+	if virtual or body == null:
+		return
+	var kn := BendKnock.peek(body)
+	var bb := kn != null and bool(kn.get(&"_bounced"))
+	if bb and not _kn_bounced:
+		_bounce_at = _t
+		_spiked = false
+	_kn_bounced = bb
+
+
 func _on_launched(v: Vector3, hitstun_s: float, refresh: bool) -> void:
+	_spiked = v.y < -num("hitstun", "spike_vy", 4.0)
 	if refresh:
 		_refresh()
 	_launch_dir = Vector3(v.x, 0.0, v.z)
@@ -1097,6 +1122,8 @@ func _step_wall(dt: float) -> void:
 ## Lying (PERCENT's lying_t): still; W or Space (any direction without E) stands, E + a direction rolls, a click attacks.
 func _step_lie(dt: float) -> void:
 	mode_t += dt
+	if _air and _grounded():
+		_land()                                      # (down on the deck: not in the air while he lies there)
 	_o = Vector3(0.0, minf(_o.y, 0.0) - gravity() * dt, 0.0)
 	_apply(dt)
 	if not _lying():
@@ -1836,7 +1863,13 @@ func clip_state() -> String:
 		"spout":
 			return "spout_ride"
 	if _stunned():
-		return "tumble" if (_tumbling() or (_air and not _grounded())) else "flinch"
+		if _tumbling() or (_air and not _grounded()):
+			if _spiked:
+				return "knock_spiked"
+			if _t - _bounce_at < num("hitstun", "bounce_clip_s", 0.45):
+				return "knock_bounce"
+			return "tumble"
+		return "flinch"
 	if _t - _tech_at < num("break_fall", "stand_s", 0.25):
 		return "tech"
 	if _t - _getup_at < num("getup", "stand_s", 0.3):
@@ -2097,13 +2130,16 @@ func _teleport_check() -> void:
 	if virtual:
 		return
 	var p := body.global_position
-	if _last_pos != Vector3.INF and p.distance_to(_last_pos) > num("physics", "teleport_m", 3.0) and mode != "spout":
+	if _last_pos != Vector3.INF and p.distance_to(_last_pos) > num("physics", "teleport_m", 3.0):
 		placed()
 	_last_pos = p
 
 
 ## The body was put somewhere else on purpose (a reset, a test): every move state cleared now, its place taken as its own.
+## Put off the spout so, it has left it (left_spout: its spawn safety counts down from now).
 func placed() -> void:
+	if mode == "spout":
+		leave_spout()
 	_reset_state()
 	_placed_n = 1
 	if not virtual and body != null:
@@ -2164,8 +2200,14 @@ func _geo() -> Dictionary:
 		_arena = RingArena.find(body.get_tree()) if body != null and body.is_inside_tree() else null
 	if _arena == null:
 		return {}
+	# (once a physics frame: the deck does not move within one, and the frame asks it several times)
+	var fr := Engine.get_physics_frames()
+	if fr == _geo_frame and not _geo_cache.is_empty():
+		return _geo_cache
 	var g := arena_geo(_arena)
 	g["arena"] = _arena
+	_geo_cache = g
+	_geo_frame = fr
 	return g
 
 

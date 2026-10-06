@@ -16,7 +16,10 @@ extends SceneTree
 ## METRIC lines (bnb_true_0pct_<element>, bnb_true_150pct_<element>, self_loop_max_run_<jab>, self_loop_min_gap_<jab>,
 ## jab_step_s, pop_once_ok, earth_pop_stone_ok, no_chain_ok). Last line "R3 COMBO PASSED" or "R3 COMBO FAILED"; exit 0 only
 ## on a pass; a watchdog quits with 2.
-##   Godot --headless --fixed-fps 60 --path . -s tests/bending/test_r3_combo.gd
+##   Godot --headless --fixed-fps 60 --path . -s tests/bending/test_r3_combo.gd [-- real=on]
+## real=on (the merge's re-run, BOTS' and AIR's ask): no stand-in; the ring's own stock RingRules (PERCENT's) and RingMoves
+## (MOVE's) judge the probes: a hit is true when PERCENT's string on the foe goes on through it (RingRules.string_hits at its
+## launch is the probe's count so far), from 0% and 150% (RingRules.reset_pct). METRIC bnb_real_<pct>_<row>.
 
 const NAME := "R3 COMBO"
 const WATCHDOG_S := 700.0
@@ -43,6 +46,9 @@ var was_rules: RingRules
 var metrics := {}
 var released: Array = []
 var _foe_at := Vector3.INF
+var real := false
+## real=on: each launch of the foe as PERCENT counted it ([t, string_hits, tag]).
+var real_hits: Array = []
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -64,6 +70,10 @@ func _initialize() -> void:
 	InputSetup.ensure()
 	MatchSetup.incoming = true
 	MatchSetup.element = "earth"
+	real = OS.get_cmdline_user_args().has("real=on")
+	# (the merge: rules.json plays stock by default; AIR's stand-ins (FakeRules) are this test's gate, the ring itself classic;
+	# real=on plays the stock ring itself)
+	RingRules.rule_set_override = "stock" if real else "classic"
 	change_scene_to_file("res://scenes/ring.tscn")
 	_run.call_deferred()
 
@@ -119,6 +129,9 @@ func _run() -> void:
 		return _end()
 	physics_frame.connect(_hold)
 	await _secs(0.4)
+	if real:
+		await _real_probes()
+		return _end()
 	was_rules = RingRules.current()
 	fr = FakeRules.new()
 	fr.rule_set = "stock"
@@ -141,6 +154,7 @@ func _end() -> void:
 		RingRules._current = was_rules
 		fr.free()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+	RingRules.rule_set_override = ""
 	GameSettings.path = GameSettings.PATH
 	for k: String in metrics:
 		print("METRIC %s=%s" % [k, str(metrics[k])])
@@ -467,6 +481,42 @@ func _probes() -> void:
 		drops[pct] = at
 	metrics["slice4_drops_by_hit"] = "%d at 0%%, %d at 150%%" % [int(drops[0.0]), int(drops[150.0])]
 	_expect(sl.size() == 4 and int(drops[0.0]) == 2, "Slice x4 drops by hit 2 at 0%% (%s; %d hits)" % [metrics.slice4_drops_by_hit, sl.size()])
+
+
+# ---------------------------------------------------------------- real=on: PERCENT's own string on the probes
+## The probes in the stock ring itself: jab, jab, Pop, then the follow-up, from 0% and 150%; each hit true when PERCENT's
+## string goes on through it (string_hits at its launch = its place in the probe).
+func _real_probes() -> void:
+	var rr := RingRules.current()
+	_expect(RingRules.stock_on() and rr != null and RingMoves.of(p) != null and RingMoves.of(foe) != null,
+			"real=on: the stock ring's own RingRules and RingMoves (PERCENT's, MOVE's)")
+	if rr == null:
+		return
+	rr.launched.connect(func(b: Node3D, _v: Vector3, _hs: float, _by: Node, tag: String) -> void:
+		if b == foe:
+			real_hits.append([BendStatus.now(), rr.string_hits(foe), tag]))
+	var rows := [["fire", "aim", 0, "fire"], ["earth", "guard", 0, "earth"], ["air", "aim", 0, "air_slice"], ["air", "aim", 1, "air_gust"]]
+	var air_any := {0.0: false, 150.0: false}
+	for row: Array in rows:
+		var el := String(row[0])
+		for pct: float in [0.0, 150.0]:
+			await _calm(el)
+			await _secs(0.6)                          # (past any breather of the last probe's string)
+			rr.reset_pct(foe, pct)
+			rr.reset_pct(p, 0.0)
+			real_hits.clear()
+			await _probe(el, String(row[1]), int(row[2]))
+			var hs := real_hits.duplicate()
+			var ok := hs.size() >= 4 and int(hs[1][1]) == 2 and int(hs[2][1]) == 3 and int(hs[3][1]) == 4
+			metrics["bnb_real_%dpct_%s" % [int(pct), String(row[3])]] = ok
+			print("    (real %s from %d%%: %s)" % [String(row[3]), int(pct), hs.map(func(e: Array) -> String: return "%s@%.2f#%d" % [e[2], float(e[0]), int(e[1])])])
+			if el == "air":
+				air_any[pct] = bool(air_any[pct]) or ok
+			else:
+				_expect(ok, "real: %s jab, jab, Pop, %s true from %d%% (PERCENT's string through every hit)" % [el, hs[3][2] if hs.size() > 3 else "-", int(pct)])
+	_expect(bool(air_any[0.0]) and bool(air_any[150.0]), "real: air jab, jab, Pop, then Slice or Gust true at 0%% and 150%% (Slice %s/%s, Gust %s/%s)" % [
+			metrics.get("bnb_real_0pct_air_slice"), metrics.get("bnb_real_150pct_air_slice"), metrics.get("bnb_real_0pct_air_gust"),
+			metrics.get("bnb_real_150pct_air_gust")])
 
 
 # ---------------------------------------------------------------- self-loops (spec §6.6)

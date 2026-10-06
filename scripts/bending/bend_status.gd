@@ -139,8 +139,8 @@ static func knock(n: Node, v: Vector3, by: Node, info := {}) -> void:
 	if v.length_squared() < 1e-4 or not can_take(n, by) or until(n, &"bend_anchor") > 0.0:
 		return
 	if stock_body(n):
-		if _hit_this_frame(n, by):
-			return                               # (its hurt this frame already set the launch)
+		if _hit_this_frame(n, by, info):
+			return                               # (its hurt already set the launch: the same hit)
 		var i := info.duplicate()
 		i["v_given"] = v
 		i["at"] = (n as Node3D).global_position + Vector3.UP
@@ -165,9 +165,9 @@ static func stock_body(n: Node) -> bool:
 
 
 ## Round 3: a hit on a stock competitor (RingRules.on_hit: the %, the launch), the launch set through BendKnock (info._launch),
-## the frame and the attacker marked (STOCK_HIT_META: the knock that follows its hurt this frame is the same hit).
+## the frame, the attacker and the hit's id marked (STOCK_HIT_META: the knock that follows its hurt is the same hit).
 static func _stock_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
-	n.set_meta(STOCK_HIT_META, [Engine.get_physics_frames(), by.get_instance_id() if by != null else 0])
+	n.set_meta(STOCK_HIT_META, [Engine.get_physics_frames(), by.get_instance_id() if by != null else 0, int(info.get("hit_id", 0))])
 	var res := RingRules.current().on_hit(n, by, info)
 	if res.is_empty() or bool(res.get("none", true)) or until(n, &"bend_anchor") > 0.0:
 		return res
@@ -177,10 +177,15 @@ static func _stock_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	return res
 
 
-static func _hit_this_frame(n: Node, by: Node) -> bool:
+## Whether a knock is the hit its hurt already took: the same hit_id (AIR's BendR3.deliver gives one hurt and knock the same id),
+## else (no id) the same physics frame and attacker.
+static func _hit_this_frame(n: Node, by: Node, info := {}) -> bool:
 	if not n.has_meta(STOCK_HIT_META):
 		return false
 	var m: Array = n.get_meta(STOCK_HIT_META)
+	var hid := int(info.get("hit_id", 0))
+	if hid != 0 and m.size() > 2 and int(m[2]) != 0:
+		return int(m[2]) == hid
 	return int(m[0]) == Engine.get_physics_frames() and int(m[1]) == (by.get_instance_id() if by != null else 0)
 
 

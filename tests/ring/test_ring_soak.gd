@@ -291,11 +291,10 @@ func _hook_stock() -> void:
 	r.launched.connect(func(b: Node3D, _v: Vector3, _s: float, by: Node, tag: String) -> void:
 		if by is Node3D and is_instance_valid(by):
 			sk.last_launch[b.get_instance_id()] = {"tag": tag, "d": NpcRingMind.flat_d((by as Node3D).global_position, b.global_position)})
+	# (healing is Patch's: RingRules' tally "healed", read at the end; a negative delta is also a fall's reset to 0)
 	r.pct_changed.connect(func(_b: Node3D, _pct: float, delta: float) -> void:
 		if delta > 0.0:
-			sk.dealt = float(sk.dealt) + delta
-		else:
-			sk.healed = float(sk.healed) - delta)
+			sk.dealt = float(sk.dealt) + delta)
 	r.string_ended.connect(func(_by: Node, _victim: Node3D, hits: int, _pct: float) -> void:
 		(sk.strings as Array).append(hits))
 	r.respawned.connect(func(b: Node3D) -> void:
@@ -322,7 +321,12 @@ func _on_ko(b: Node3D, by: Node, pct: float, tag: String, _left: int) -> void:
 		var ll: Dictionary = sk.last_launch.get(id, {})
 		if float(ll.get("d", 0.0)) > 15.0:
 			sk.ko_far = int(sk.ko_far) + 1
-	if mode.ring != null and (mode.ring.is_out(b.global_position) or b.global_position.y < mode.ring.lip_y() - 1.0):
+	# (where he fell, as the rules saw it: RingMode has already hidden him at his spout when this hears the ko)
+	var rr := RingRules.current()
+	var at: Vector3 = b.global_position
+	if rr != null and not rr.falls.is_empty() and (rr.falls.back() as Dictionary).get("who") == b:
+		at = (rr.falls.back() as Dictionary).get("pos", at)
+	if mode.ring != null and (mode.ring.is_out(at) or at.y < mode.ring.lip_y() - 1.0):
 		sk.water = int(sk.water) + 1
 	var m := RingMoves.of(b)
 	if m != null and m.helpless():
@@ -348,6 +352,9 @@ func _stock_metrics(game_t: float) -> void:
 		return
 	var kos := maxi(int(sk.kos), 1)
 	var lives := maxi(int(sk.kos), 1)
+	var rt := RingRules.current()
+	if rt != null:
+		sk.healed = float((rt.tally[0] as Dictionary).get("healed", 0.0)) + float((rt.tally[1] as Dictionary).get("healed", 0.0))
 	var timeout := mode.round_left_s() <= 0.5
 	var level := timeout and int(sk.lives_lost[0]) == int(sk.lives_lost[1])
 	var bots: Array = [mate, mode.foe]
@@ -402,11 +409,11 @@ func _stock_metrics(game_t: float) -> void:
 			top = maxi(top, int(kt[k]))
 		print("METRIC pair=%s side=%d stock el=%s ko_by_move=%s top_finisher_share=%.2f recover_success=%s states=%s"
 				% [pair, side, [mode.element, mode.foe_element][side], kt, float(top) / maxf(float(n), 1.0), rec[side], states[side]])
-	_expect(longest <= 6, "the % ring: the longest true string %d (<= 6)" % longest)
-	_expect(int(sk.kos) == 0 or int(sk.water) == int(sk.kos), "the % ring: every fall into the water (%d of %d)" % [int(sk.water), int(sk.kos)])
+	_expect(longest <= 6, "the %% ring: the longest true string %d (<= 6)" % longest)
+	_expect(int(sk.kos) == 0 or int(sk.water) == int(sk.kos), "the %% ring: every fall into the water (%d of %d)" % [int(sk.water), int(sk.kos)])
 	if mode.difficulty == "normal":
 		_expect(float(sk.self_falls) / lives <= 0.05 + 1e-6 or int(sk.kos) < 4,
-				"the % ring: self-falls per life %.3f (<= 0.05)" % (float(sk.self_falls) / lives))
+				"the %% ring: self-falls per life %.3f (<= 0.05)" % (float(sk.self_falls) / lives))
 
 
 # ---------------------------------------------------------------- spectate

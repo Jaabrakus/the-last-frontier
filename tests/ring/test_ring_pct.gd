@@ -451,6 +451,7 @@ func _patch_checks() -> void:
 	await _ticks(4)
 	var air_refused := not player.is_on_floor() and not rules.heal_allowed(player)
 	await _until(func() -> bool: return player.is_on_floor(), 2.0)
+	await _ticks(2)                               # (the merge: MOVE's RingMoves takes the landing on its next frame)
 	var allowed_back := rules.heal_allowed(player)
 	_expect(out_refused and sudden_refused and air_refused and allowed_back,
 			"Patch refused while a foe is out (%s), in sudden death (%s), in the air (%s); allowed again on the deck (%s)"

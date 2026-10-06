@@ -249,6 +249,9 @@ func _physics_process(_dt: float) -> void:
 ## `body` (the player, or anyone with a yaw) stood at `xf`: on the deck, facing as it faces, still.
 static func place(body: Node3D, xf: Transform3D) -> void:
 	body.global_position = xf.origin + Vector3.UP * 0.1
+	var rm := RingMoves.of(body)
+	if rm != null:
+		rm.placed()                               # (round 3, the % ring: a deliberate placing clears its moves at once)
 	var f := -xf.basis.z
 	var yaw := atan2(-f.x, -f.z)
 	if body is FrontierPlayer:

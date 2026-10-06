@@ -100,6 +100,11 @@ class FakeMoves:
 	func profile() -> Dictionary:
 		return {"self_up_mult": 1.43}
 
+	## (the merge: MOVE's real mover is this class's parent now; the stand-in leaves the body to its own controller, as the
+	## SEAMS stub did)
+	func pre(_intent: Dictionary, _dt: float) -> bool:
+		return false
+
 
 var checks := 0
 var fails: Array[String] = []
@@ -140,6 +145,8 @@ func _initialize() -> void:
 	InputSetup.ensure()
 	MatchSetup.incoming = true
 	MatchSetup.element = "earth"
+	# (the merge: rules.json plays stock by default; AIR's stand-ins (FakeRules) are this test's gate, the ring itself classic)
+	RingRules.rule_set_override = "classic"
 	change_scene_to_file("res://scenes/ring.tscn")
 	_run.call_deferred()
 
@@ -238,6 +245,7 @@ func _end() -> void:
 		c.tumble_override = null
 	_fakes(false)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+	RingRules.rule_set_override = ""
 	GameSettings.path = GameSettings.PATH
 	for k: String in metrics:
 		print("METRIC %s=%s" % [k, str(metrics[k])])

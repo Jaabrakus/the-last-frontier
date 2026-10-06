@@ -19,9 +19,10 @@ extends RefCounted
 ##   the victim   its steer set once in pad.di at the launch (survive_pct and up: the yaw with the longest way to the water;
 ##                below: across the hitter's line), the escape pressed fresh when RingRules.can_escape says so, E pressed
 ##                tech_lead_s before it meets the deck tumbling, up from lying down; each by its preset's chance
-##   recovery     off the deck and free: the six plans simulated (RingMoves.simulate; until MOVE's lands, the stand-in mover
-##                below) every recover_replan_s toward the nearest open lip, the first that comes back in its preset's order
-##                run through the pad; never a 4th grab without the deck
+##   recovery     off the deck and free: the six plans simulated on its own mover (move_sim: MOVE's RingMoves.simulate on its
+##                body's RingMoves; a test's stand-in mover on the stand-in below) every recover_replan_s toward the nearest
+##                open lip, the first that comes back in its preset's order run through the pad; never a 4th grab without the
+##                deck. The body's states own the pad: a walk order left from before is let go (halt)
 ##   the edge     LEDGE: its option by preset, always before its first-grab safety and the hang's end. LEDGETRAP and
 ##                EDGEGUARD: keeping him off (shots from inside the lip at where he will be, hard's pre-filled lock let go as
 ##                his safety ends or his Rise shows, hard's safe-only chase), never a hit into a safety (allow_release)
@@ -43,6 +44,8 @@ const BODY_STATES := [S.REELING, S.RECOVER, S.LEDGE, S.RESPAWN]
 const EDGE_KINDS := ["climb", "ledge_jump", "ledge_roll", "ledge_attack"]
 ## The plans' names (spec §9.6).
 const PLANS := {1: "drift", 2: "late_double", 3: "double_now", 4: "rise_edge", 5: "rise_high", 6: "dodge_first"}
+## MOVE's mover script (a body with exactly it is planned on RingMoves.simulate; a test's stand-in mover on the stand-in).
+const RING_MOVES := preload("res://scripts/ring/ring_moves.gd")
 
 ## Tests: a mover's look-ahead in place of RingMoves.simulate ((state, plan, dt, horizon) -> {ok, how, t, pos}).
 static var simulate_override := Callable()
@@ -327,6 +330,8 @@ func tick(dt: float) -> bool:
 			_enter(want)
 	state_t += dt
 	time_in[STATE_NAMES[state]] = float(time_in.get(STATE_NAMES[state], 0.0)) + dt
+	if state in BODY_STATES and me.get(&"_goal") != Vector3.INF:
+		me.halt()                                  # (the body's states own the pad: no walk order left from before writes it)
 	if not airborne(me) and not off_deck(me):
 		_own_jumps_used = 0
 		_own_dodged = false
@@ -649,7 +654,7 @@ func on_released(o: Dictionary, t: Node3D) -> void:
 
 ## The jab's lock under the step (spec §6.4): the next jab ready jab_step_s after the last left the hand, once it hit.
 func jab_lock(base: float) -> float:
-	var step := float(SwayMoves.data().get("jab_step_s", pnum("jab_step_s", 0.15)))
+	var step := BendR3.num("jab_step_s", pnum("jab_step_s", 0.15))          # (AIR's moves.json air_rules.jab_step_s)
 	if _last_jab_hit and now() - _last_jab_release < 1.5:
 		return maxf(step - (now() - _last_jab_release), 1.0 / 60.0)
 	return base
@@ -1051,10 +1056,50 @@ func simulate(st: Dictionary, pl: Dictionary) -> Dictionary:
 	var hz := pnum("recover_horizon_s", 2.5)
 	if simulate_override.is_valid():
 		return simulate_override.call(st, pl, dt, hz)
-	var r := RingMoves.simulate(st, pl, dt, hz)
-	if r.has("ok"):
-		return r
+	var rm := RingMoves.of(me)
+	if rm != null and rm.get_script() == RING_MOVES:
+		return move_sim(st, pl, dt, hz)            # (MOVE's own mover on its body: its own look-ahead)
 	return standin_sim(st, pl, dt, hz, geo_of(arena()))
+
+
+## The look-ahead on MOVE's own mover (RingMoves.simulate: the player's physics, the edge and the Rises exactly): this mind's
+## state and plan ({move, events: [{t, key: jump | dodge | rise, dir, at}]}, world) handed over as MOVE's (kv the carry,
+## grabs used; a Callable plan: the move held, each event pressed once at its time, the Rise aimed at its point from where
+## the body is then), its answer as this mind's {ok (the deck or the edge reached), how ("grab", "deck", "water", ""), t,
+## pos}.
+static func move_sim(st: Dictionary, pl: Dictionary, dt: float, hz: float) -> Dictionary:
+	var ms := {"pos": st.get("pos", Vector3.ZERO), "vel": st.get("vel", Vector3.ZERO), "kv": st.get("carry", Vector3.ZERO),
+			"element": String(st.get("element", "water")), "jumps_left": int(st.get("jumps_left", 0)),
+			"dodge_ready": bool(st.get("dodge_ready", false)), "rise_ready": bool(st.get("rise_ready", false)),
+			"helpless": bool(st.get("helpless", false)),
+			"grabs": maxi(int(RingMoves.num("edge", "grab_limit", 3.0)) - int(st.get("grabs_left", 3)), 0)}
+	if st.has("stun_s"):
+		ms["stun_s"] = float(st.stun_s)
+	var mv: Vector3 = pl.get("move", Vector3.ZERO)
+	var evs: Array = pl.get("events", [])
+	var fired := {}
+	var cb := func(s: Dictionary) -> Dictionary:
+		var it := {"move": mv}
+		for i in evs.size():
+			var ev: Dictionary = evs[i]
+			if fired.has(i) or float(ev.get("t", 0.0)) > float(s.t) + 1e-4:
+				continue
+			fired[i] = true
+			match String(ev.get("key", "")):
+				"jump":
+					it["jump"] = true
+				"dodge":
+					it["dodge"] = true
+					it["dodge_dir"] = Vector3(ev.get("dir", Vector3.ZERO))
+				"rise":
+					it["jump"] = true
+					var at: Vector3 = ev.get("at", Vector3(s.pos))
+					it["aim"] = (at - (Vector3(s.pos) + Vector3.UP * 1.2)).normalized()
+		return it
+	var r := RingMoves.simulate(ms, cb, dt, hz)
+	var res := String(r.get("result", ""))
+	return {"ok": res in ["deck", "edge"], "how": "grab" if res == "edge" else ("" if res == "air" else res),
+			"t": float(r.get("t", 0.0)), "pos": r.get("pos", Vector3.ZERO)}
 
 
 ## Its preset's order of plans: the first that comes back ({n, plan} or {}); 45: 4 or 5 by high_share; 6 only by its
@@ -1221,7 +1266,7 @@ func _hang(_dt: float) -> void:
 		"roll":
 			p.press("guard")
 		"attack":
-			p.press("ledge")
+			p.ledge_option("attack")              # (MOVE's pad: the edge option by name; a bare "ledge" press is the climb)
 		"drop":
 			p.press("fast_fall")
 
@@ -1429,7 +1474,7 @@ func allow_release(o: Dictionary, dt: float) -> int:
 	return 0
 
 
-# ---------------------------------------------------------------- the stand-in mover (until MOVE's RingMoves lands)
+# ---------------------------------------------------------------- the stand-in mover (the tests' FakeMoves; MOVE's is move_sim)
 ## The deck's geometry for the stand-in (arena-local, y from the lip): {xf (the arena's), hl, hw, water_y, curtain_m}.
 static func geo_of(a: RingArena) -> Dictionary:
 	var n := standin_nums()

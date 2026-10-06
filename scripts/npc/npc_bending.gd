@@ -1209,6 +1209,9 @@ func begin(id: String, md: String) -> void:
 			lock_s = _guard_lock(lock_s)
 	if stock():
 		lock_s = _stock_lock(o, lock_s)
+		var rr := RingRules.current()
+		if rr != null:
+			rr.note_lock_started(me)               # (round 3: a lock of its own ends its spawn safety, as the player's does)
 	if String((o.get("hint", {}) as Dictionary).get("role", "")) == "reaction":
 		# (a reaction's only: a guard of another role (the anchor, a hop) never holds back the next catch)
 		_guard_until = _lock_at + lock_s + float(ai().get("guard_cool_s", 0.0))

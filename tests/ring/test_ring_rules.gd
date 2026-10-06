@@ -552,6 +552,13 @@ func _stock_part() -> void:
 	var at := ring.to_local(f.global_position)
 	var spout_far: bool = absf(at.z + 4.0) < 0.6 and absf(absf(at.x) - 12.0) < 0.6
 	var safe_now := rules.is_safe(f)
+	# (the merge: MOVE's RingMoves holds him on the spout until a key or its time; safety counts from left_spout. With no
+	# RingMoves he stands on the grate and it counts from the respawn)
+	var left_at := [t0 + waited]
+	var rmf := RingMoves.of(f)
+	if rmf != null and rmf.on_spout():
+		left_at[0] = INF
+		rmf.left_spout.connect(func() -> void: left_at[0] = BendStatus.now(), CONNECT_ONE_SHOT)
 	_expect(absf(waited - 1.6) < 0.1 and f.visible and spout_far and safe_now,
 			"back after %.2f s (1.6), on the spout at the grate farther from the player (z %.1f), safe" % [waited, at.z])
 	# no % on a safe body, hit_safe fires
@@ -567,8 +574,8 @@ func _stock_part() -> void:
 	_expect(sp != null and is_instance_valid(sp) and sp.pushes > 0 and d1 > d0 + 0.3 and rules.pct_of(player) == 0.0,
 			"the spout pushes the player 1.2 m off it away (%.2f -> %.2f m) with 0%%" % [d0, d1])
 	# safety ends 1.5 s after (he stands on the grate: no MOVE to hold him up), or at once on a lock's start
-	await _until(func() -> bool: return not rules.is_safe(f), 3.0)
-	var safe_len := BendStatus.now() - t0 - waited
+	await _until(func() -> bool: return not rules.is_safe(f), 6.0)
+	var safe_len := BendStatus.now() - float(left_at[0])
 	_expect(absf(safe_len - 1.5) < 0.15, "safe for 1.5 s after leaving the spout (%.2f)" % safe_len)
 	# the player: a fall (his own: no knocker), his respawn, a lock's start ending his safety
 	_settle(player, ring.to_global(Vector3(RingArena.side_sign(1 - fe) * (ring.half_l() + 2.0), -6.4, 0.0)))

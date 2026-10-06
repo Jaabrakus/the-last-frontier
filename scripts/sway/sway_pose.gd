@@ -610,6 +610,10 @@ func _tick_ring(dt: float, rm: RingMoves) -> void:
 	var nm := ""
 	if st != "":
 		nm = String(RingMoves.clip_for(st)[0])
+	elif caster.guard_held():
+		# (AIR's held guard: its own loop per element while E keeps it up, SwayCaster.guard_hold_clip, else its stand-in)
+		st = "guard_hold"
+		nm = caster.guard_hold_clip()
 	if nm != "" and (nm != _r_name or st != ring_state):
 		var a := BendPoses.animation(nm)
 		if a != null:
@@ -617,7 +621,7 @@ func _tick_ring(dt: float, rm: RingMoves) -> void:
 				_r_t = 0.0
 			_r_anim = a
 			_r_name = nm
-			var spec := RingMoves.clip_spec(st)
+			var spec := RingMoves.clip_spec(st) if st != "guard_hold" else {"mask": "full", "loop": true}
 			_r_mask = String(spec.get("mask", "full"))
 			_r_loop = bool(spec.get("loop", false))
 	ring_state = st if nm != "" else ""

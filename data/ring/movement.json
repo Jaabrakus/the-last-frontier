@@ -126,7 +126,10 @@
 		"di_read_s": 0.1,
 		"lean_s": 0.3,
 		"lean_deg": 14.0,
-		"twist_deg": 12.0
+		"twist_deg": 12.0,
+		"_clips": "the knock's look: launched down faster than spike_vy (a Slam's spike) plays knock_spiked until he lands; a bounce off the deck plays knock_bounce for bounce_clip_s",
+		"spike_vy": 4.0,
+		"bounce_clip_s": 0.45
 	},
 	"break_fall": {
 		"_about": "spec §3.4 (the motion; PERCENT judges): stand intangible; the roll; the wall's stick and spring",
@@ -196,6 +199,8 @@
 	"clips": {
 		"_about": "spec §13: each body state's clip (CLIPS' exact names) and its stand-in while the clip is not in yet (BendPoses passes over a missing name); loop: held as a loop; mask: the layer (full, upper); lift_m: a stand-in's raise of the body (the hang's hands and head over the lip until its clip lands)",
 		"tumble": {"clip": "own-bend-tumble", "standin": "own-bend-knock-air", "loop": true},
+		"knock_spiked": {"clip": "own-bend-knock-spiked", "standin": "own-bend-tumble"},
+		"knock_bounce": {"clip": "own-bend-knock-bounce", "standin": "own-bend-tumble"},
 		"flinch": {"clip": "own-bend-flinch", "standin": "own-bend-knock-slide", "mask": "upper"},
 		"double_jump": {"clip": "own-bend-jump-double", "standin": "own-bend-air-leap"},
 		"fall": {"clip": "own-bend-fall", "standin": "", "loop": true},

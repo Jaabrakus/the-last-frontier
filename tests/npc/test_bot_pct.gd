@@ -195,7 +195,9 @@ func _ko_read() -> void:
 func _finishers() -> void:
 	var e := 1 - mode.player_end
 	player.global_position = at_s(e, ring.half_l() - 2.0)
-	rules.f_pct[player.get_instance_id()] = 150.0
+	# (the merge: PERCENT's real classes, with the range falloff: a Punch from 18 m kills only far up the %; 300% kills from
+	# both, so the far multiplier is what tells them apart)
+	rules.f_pct[player.get_instance_id()] = 300.0
 	var f := bot("fire", "hard", at_s(e, ring.half_l() - 12.0))
 	var b := f.brain.bending
 	var m := b.mind()
