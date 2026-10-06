@@ -18,7 +18,7 @@ extends RefCounted
 ##   paint()          the hint and tally lines (RingMode._paint)
 ##   on_out()         the player's side in the water: said, both back at their ends a moment later
 ##   on_winded(who)   0 health in practice: whole again at once
-##   key(e) -> bool   R and B (true: it took the key)
+##   key(e) -> bool   R and B (true: mark the key handled, R only, as RingMode always did)
 
 const RESET_ACTION := &"ring_reset"
 const DUMMY_ACTION := &"ring_dummy"
@@ -130,14 +130,14 @@ func practice_line() -> String:
 	return pword("hint") % [MatchSetup.competitor(mode.foe_element), MatchSetup.dummy_line(dummy)]
 
 
-## R and B in a practice's fight (true: taken).
+## R and B in a practice's fight (true: mark the key handled; R only, as RingMode always did: B steps the dummy's way and
+## lets the key go on).
 func key(e: InputEvent) -> bool:
 	if e.is_action_pressed(RESET_ACTION):
 		reset_positions()
 		return true
 	if e.is_action_pressed(DUMMY_ACTION):
 		cycle_dummy()
-		return true
 	return false
 
 
