@@ -167,6 +167,8 @@ var calm_s := NpcBrain.CALM_S
 var held := false
 ## Its feet held (a bend's root, BendStatus.root): it does not walk, its brain still thinks and it still casts.
 var feet_held := false
+## A jump asked for this frame (jump(): an element bot over a wave along the deck), m/s up; 0 none.
+var _jump_v := 0.0
 ## Never killed (Tidebreak's ring, RingRules; set on its competitors): every death (a blow, a mortal wound, a bleed-out, a
 ## script's die()) leaves him at 1 health, his wounds stopped, and emits winded(by) instead.
 var no_death := false
@@ -481,6 +483,15 @@ func busy() -> bool:
 func knock_t() -> float:
 	var kn := BendKnock.peek(self)
 	return kn.knock_t if kn != null else 0.0
+
+
+## A jump off the floor at `mps` up (an element bot jumping a wave along the deck: NpcBending; Tidebreak's floor rule, the
+## player's Space). Its lock goes on (a jump never gates one). False when it is not on the floor, dead, held, or its feet are.
+func jump(mps: float) -> bool:
+	if _dead or held or feet_held or not is_on_floor() or mps <= 0.0:
+		return false
+	_jump_v = mps
+	return true
 
 
 ## In the air from a knock-up (BendKnock), until back on the floor.
@@ -951,7 +962,10 @@ func _move(dt: float) -> void:
 		# (a broken leg's bone: a limp at a part of the walk; short of breath: no running)
 		speed = minf(speed, WALK_SPEED * limp if limp < 0.95 else WALK_SPEED)
 	var v := velocity if kn == null else kn.base_of(velocity)
-	if launched:
+	if _jump_v > 0.0:
+		v.y = _jump_v                               # (a jump begun this frame: off the floor, its own gravity from here)
+		_jump_v = 0.0
+	elif launched:
 		v.y -= BendKnock.launch_gravity() * dt
 	elif not is_on_floor():
 		v.y -= GRAVITY * dt

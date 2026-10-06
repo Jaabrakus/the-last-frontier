@@ -67,15 +67,41 @@
       "needs_grant": true,
       "far_stretch": 1.5,
       "moving_mult": 0.6,
-      "push": {"people_mps": 5.0, "animal_mps": 4.5, "prop_mps": 6.5, "up_mps": 1.6, "heavy_kg": 120.0, "near_full_m": 8.0, "far_share": 0.45, "snuff_m": 1.4},
+      "push": {
+        "people_mps": 5.0,
+        "animal_mps": 4.5,
+        "prop_mps": 6.5,
+        "up_mps": 1.6,
+        "heavy_kg": 120.0,
+        "near_full_m": 8.0,
+        "far_share": 0.45,
+        "snuff_m": 1.4
+      },
       "_raised": "Gust on a raised wall or pillar tears a ball of its matter out where the aim is on it and hurls it along the aim through the wall (FormEffects.gust_chunk; the user, 2026-10-04: 'use gust to push certain parts of the rock wall and pillar'); the wall takes a hit for it (its hits_max: it crumbles).",
-      "raised": {"chunk_r": 0.3, "mass_kg": 25.0, "life_s": 20.0, "rise_s": 0.06, "mps": 26.0, "gravity": 4.0, "damage": 45.0, "knock_mps": 5.0},
+      "raised": {
+        "chunk_r": 0.3,
+        "mass_kg": 25.0,
+        "life_s": 20.0,
+        "rise_s": 0.06,
+        "mps": 26.0,
+        "gravity": 4.0,
+        "damage": 45.0,
+        "knock_mps": 5.0
+      },
       "sail": {"drain_s": 2.0},
       "stone": {
         "range_m": 14.0,
         "lock_s": 0.45,
         "mass_kg": 90.0,
-        "hold": {"no_break": true, "tear_s": 0.35, "rise_m": 1.5, "draw_s": 0.9, "strain_start_s": 2.5, "break_s": 5.0, "tremble_deg": 1.2},
+        "hold": {
+          "no_break": true,
+          "tear_s": 0.35,
+          "rise_m": 1.5,
+          "draw_s": 0.9,
+          "strain_start_s": 2.5,
+          "break_s": 5.0,
+          "tremble_deg": 1.2
+        },
         "hurl": {
           "spike": {"mps": [14.0, 34.0], "gravity": 3.0, "damage": [30.0, 85.0], "pierce": true, "mass_kg": 30.0},
           "cannonball": {"mps": [12.0, 30.0], "gravity": 6.0, "damage": [45.0, 110.0], "roll": true, "mass_kg": 45.0},
@@ -235,14 +261,14 @@
       "hollow": {"width_m": 3.0, "depth_m": 1.5, "fade_s": 600.0},
       "ai_factor": 1.3,
       "mastery_uses": [0, 8, 30],
-      "modes": ["wall", "column", "shell"],
-      "mode_labels": {"wall": "wall", "column": "column", "shell": "shell"},
+      "modes": ["wall"],
+      "mode_labels": {"wall": "Wall"},
       "element": "earth",
+      "ring": {"wall": {"self_lock": true, "place": {"min_m": 2.0, "max_m": 6.0}, "wall_key": true}},
       "bend": {
         "column": {"do": "column", "kind": "stone", "range_m": 20.0, "radius_m": 1.3, "up_mps": 11.0, "damage": 10.0},
         "shell": {"do": "shell", "kind": "stone", "life_s": 3.0}
-      },
-      "mode_range_m": {"column": 20.0, "shell": 40.0}
+      }
     },
     "stone_form": {
       "label": "Stone Form",
@@ -257,8 +283,8 @@
       "far_stretch": 1.3,
       "moving_mult": 0.5,
       "circle_m": 0.8,
-      "modes": ["spike", "cannonball", "disc"],
-      "mode_labels": {"spike": "spike", "cannonball": "boulder", "disc": "disc"},
+      "modes": ["spike", "cannonball"],
+      "mode_labels": {"spike": "Spike", "cannonball": "Boulder"},
       "mastery_uses": [0, 8, 30],
       "spike": {
         "height_m": 1.75,
@@ -345,6 +371,9 @@
       "hollow": {"width_m": 1.3, "depth_m": 1.3, "fade_s": 600.0},
       "ai_factor": 1.15,
       "element": "earth",
+      "raise_at_fill": 0.6,
+      "drop_on_cancel": true,
+      "weight": {"spike": "medium", "cannonball": "heavy"},
       "bend": {
         "disc": {
           "do": "throw",
@@ -376,10 +405,9 @@
       "far_stretch": 1.0,
       "moving_mult": 0.5,
       "circle_m": 0.8,
-      "modes": ["self", "free", "ramp"],
-      "mode_labels": {"self": "self", "free": "free", "ramp": "ramp"},
+      "modes": ["self"],
+      "mode_labels": {"self": "Lift"},
       "mode_moving_mult": {"self": 1.0},
-      "mode_range_m": {"free": 10.0, "ramp": 6.0},
       "pillar": {
         "radius_m": 0.55,
         "height_m": 3.0,
@@ -396,12 +424,15 @@
           "carry": 0.85,
           "rise_s": 0.3,
           "height_m": 1.3,
-          "plant_window_s": 0.045,
-          "plant_after_s": 0.02,
-          "boost": 1.3
+          "plant_window_s": 0.0,
+          "plant_after_s": 0.0,
+          "boost": 1.0,
+          "run_mult": 1.3,
+          "run_over_mps": 3.0
         },
         "air": {"rise_s": 0.2, "min_m": 1.0, "max_m": 8.0, "gap_m": 0.03},
-        "materials": {"earth": {}, "mud": {"hits": 3}, "stone": {"hits": 9, "hit_min": 15.0}, "snow": {"hits": 4}}
+        "materials": {"earth": {}, "mud": {"hits": 3}, "stone": {"hits": 9, "hit_min": 15.0}, "snow": {"hits": 4}},
+        "sink_s": 1.5
       },
       "hollow": {"width_m": 2.1, "depth_m": 2.1, "fade_s": 600.0},
       "ai_factor": 1.3,
@@ -428,7 +459,7 @@
       "element": "any"
     },
     "rock_jab": {
-      "label": "Rock Jab",
+      "label": "Pebbles",
       "art": "earth",
       "element": "earth",
       "lock_s": 0.5,
@@ -442,8 +473,8 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["pebbles", "kick_up", "stomp"],
-      "mode_labels": {"pebbles": "pebbles", "kick_up": "kick-up", "stomp": "stomp"},
+      "modes": ["pebbles"],
+      "mode_labels": {"pebbles": "Pebbles"},
       "bend": {
         "pebbles": {
           "do": "throw",
@@ -458,7 +489,8 @@
           "damage": 7.0,
           "knock_mps": 2.0,
           "radius_m": 0.09,
-          "range_m": 30.0
+          "range_m": 10.0,
+          "weight": "light"
         },
         "kick_up": {"do": "kick_up", "kind": "stone", "radius_m": 0.32},
         "stomp": {"do": "ring", "kind": "stone", "radius_m": 3.5, "damage": 8.0, "knock_mps": 4.0, "up_mps": 6.0}
@@ -485,14 +517,14 @@
       "mode_labels": {"anchor": "anchor", "trap": "trap", "sink": "sink"},
       "bend": {
         "anchor": {"do": "buff", "buff": "anchor", "kind": "stone", "s": 1.5},
-        "trap": {"do": "status_at", "kind": "stone", "root_s": 1.0, "radius_m": 1.5, "range_m": 20.0},
-        "sink": {"do": "status_at", "kind": "stone", "slow_s": 2.5, "radius_m": 2.0, "range_m": 20.0, "hollow": true}
+        "trap": {"do": "status_at", "kind": "stone", "radius_m": 1.5, "range_m": 20.0},
+        "sink": {"do": "status_at", "kind": "stone", "radius_m": 2.0, "range_m": 20.0, "hollow": true}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
     "earth_skate": {
-      "label": "Earth Skate",
+      "label": "Burrow",
       "art": "earth",
       "element": "earth",
       "lock_s": 0.3,
@@ -506,18 +538,28 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["skate", "slide", "burrow"],
-      "mode_labels": {"skate": "skate", "slide": "slide", "burrow": "burrow-step"},
+      "modes": ["burrow"],
+      "mode_labels": {"burrow": "Burrow"},
       "bend": {
+        "burrow": {
+          "do": "dash",
+          "kind": "stone",
+          "dir": "held",
+          "none": "back",
+          "back": true,
+          "fwd_mps": 14.0,
+          "up_mps": 0.0,
+          "dust": true,
+          "under_s": 0.3
+        },
         "skate": {"do": "dash", "kind": "stone", "fwd_mps": 12.0, "up_mps": 1.0},
-        "slide": {"do": "dash", "kind": "stone", "side": true, "side_default": 1, "fwd_mps": 9.0, "up_mps": 0.0},
-        "burrow": {"do": "dash", "kind": "stone", "side": true, "side_default": 1, "fwd_mps": 14.0, "up_mps": 0.0, "dust": true}
+        "slide": {"do": "dash", "kind": "stone", "side": true, "side_default": 1, "fwd_mps": 9.0, "up_mps": 0.0}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
     "earth_shove": {
-      "label": "Earth Shove",
+      "label": "Shove",
       "art": "earth",
       "element": "earth",
       "lock_s": 0.5,
@@ -531,15 +573,36 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["push", "pull", "split"],
-      "mode_labels": {"push": "push", "pull": "pull", "split": "split"},
+      "modes": ["push", "column"],
+      "mode_labels": {"push": "Shove", "column": "Column"},
       "bend": {
-        "push": {"do": "shove", "kind": "stone", "how": "push", "range_m": 20.0},
+        "push": {
+          "do": "shove",
+          "kind": "stone",
+          "how": "push",
+          "range_m": 20.0,
+          "kick_up_when_empty": true,
+          "kick_up": {"radius_m": 0.32},
+          "grow": {"radius_m": 0.45, "knock_mult": 1.5}
+        },
+        "column": {
+          "do": "column",
+          "kind": "stone",
+          "range_m": 20.0,
+          "radius_m": 1.3,
+          "up_mps": 11.0,
+          "damage": 10.0,
+          "rise_s": 0.35,
+          "sink_s": 1.5,
+          "self_lock": true
+        },
         "pull": {"do": "shove", "kind": "stone", "how": "pull", "range_m": 20.0},
         "split": {"do": "shove", "kind": "stone", "how": "split", "range_m": 20.0}
       },
       "ai_factor": 1.0,
-      "mastery_uses": [0, 8, 30]
+      "mastery_uses": [0, 8, 30],
+      "mode_lock_s": {"column": 1.6},
+      "mode_range_m": {"column": 20.0}
     },
     "stone_catch": {
       "label": "Catch",
@@ -556,10 +619,19 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["catch", "deflect", "brace"],
-      "mode_labels": {"catch": "catch", "deflect": "deflect", "brace": "brace"},
+      "modes": ["catch"],
+      "mode_labels": {"catch": "Catch"},
       "bend": {
-        "catch": {"do": "zone", "zone": "catch", "window_s": 1.0, "radius_m": 3.5},
+        "catch": {
+          "do": "zone",
+          "zone": "catch",
+          "window_s": 1.0,
+          "radius_m": 3.5,
+          "perfect_s": 0.3,
+          "holds": true,
+          "takes": ["stone"],
+          "return": "hold"
+        },
         "deflect": {"do": "zone", "zone": "deflect", "window_s": 1.0, "radius_m": 3.5},
         "brace": {"do": "brace", "kind": "stone", "range_m": 12.0}
       },
@@ -582,13 +654,13 @@
       "circle_m": 0.7,
       "self_lock": true,
       "modes": ["patch"],
-      "mode_labels": {"patch": "patch"},
+      "mode_labels": {"patch": "Patch"},
       "bend": {"patch": {"do": "heal", "kind": "stone", "amount": 15.0}},
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
     "water_whip": {
-      "label": "Water Whip",
+      "label": "Lash",
       "art": "tide",
       "element": "water",
       "lock_s": 0.45,
@@ -602,18 +674,38 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["whip", "lash", "grab"],
-      "mode_labels": {"whip": "whip", "lash": "lash", "grab": "grab"},
+      "modes": ["whip"],
+      "mode_labels": {"whip": "Lash"},
       "bend": {
-        "whip": {"do": "bolt", "kind": "water", "water": 8, "mps": 34.0, "gravity": 1.0, "damage": 20.0, "knock_mps": 8.0, "radius_m": 0.22, "range_m": 16.0},
-        "lash": {"do": "cone", "kind": "water", "water": 10, "range_m": 5.5, "deg": 75.0, "damage": 12.0, "knock_mps": 9.0, "up_mps": 2.0, "put_out": true},
+        "whip": {
+          "do": "bolt",
+          "kind": "water",
+          "mps": 34.0,
+          "gravity": 1.0,
+          "damage": 15.0,
+          "knock_mps": 6.0,
+          "radius_m": 0.22,
+          "range_m": 16.0,
+          "steer": true
+        },
+        "lash": {
+          "do": "cone",
+          "kind": "water",
+          "water": 10,
+          "range_m": 5.5,
+          "deg": 75.0,
+          "damage": 12.0,
+          "knock_mps": 9.0,
+          "up_mps": 2.0,
+          "put_out": true
+        },
         "grab": {"do": "grab", "kind": "water", "water": 12, "range_m": 14.0, "pull_mps": 10.0, "damage": 4.0}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
     "water_jet": {
-      "label": "Water Jet",
+      "label": "Splash",
       "art": "tide",
       "element": "water",
       "lock_s": 0.35,
@@ -627,10 +719,20 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["splash", "jet", "spray"],
-      "mode_labels": {"splash": "splash", "jet": "jet", "spray": "spray"},
+      "modes": ["splash"],
+      "mode_labels": {"splash": "Splash"},
       "bend": {
-        "splash": {"do": "bolt", "kind": "water", "water": 5, "mps": 28.0, "gravity": 2.0, "damage": 10.0, "knock_mps": 3.0, "radius_m": 0.18, "range_m": 12.0},
+        "splash": {
+          "do": "bolt",
+          "kind": "water",
+          "mps": 28.0,
+          "gravity": 2.0,
+          "damage": 10.0,
+          "knock_mps": 3.0,
+          "radius_m": 0.18,
+          "range_m": 10.0,
+          "steer": true
+        },
         "jet": {
           "do": "bolt",
           "kind": "water",
@@ -646,13 +748,22 @@
           "range_m": 18.0,
           "erode": 3.0
         },
-        "spray": {"do": "zone", "zone": "spray", "water": 8, "at": "front", "radius_m": 2.5, "life_s": 4.0, "ahead_m": 2.5, "put_out": true}
+        "spray": {
+          "do": "zone",
+          "zone": "spray",
+          "water": 8,
+          "at": "front",
+          "radius_m": 2.5,
+          "life_s": 4.0,
+          "ahead_m": 2.5,
+          "put_out": true
+        }
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
     "ice": {
-      "label": "Ice",
+      "label": "Spear",
       "art": "tide",
       "element": "water",
       "lock_s": 0.6,
@@ -666,9 +777,22 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["shards", "spear", "freeze"],
-      "mode_labels": {"shards": "shards", "spear": "spear", "freeze": "freeze"},
+      "modes": ["spear"],
+      "mode_labels": {"spear": "Spear"},
       "bend": {
+        "spear": {
+          "do": "throw",
+          "kind": "ice",
+          "shape": "spear",
+          "flight": "point_first",
+          "mps": 42.0,
+          "gravity": 2.0,
+          "damage": 20.0,
+          "knock_mps": 4.0,
+          "radius_m": 0.16,
+          "range_m": 40.0,
+          "long": true
+        },
         "shards": {
           "do": "bolt",
           "kind": "ice",
@@ -681,20 +805,6 @@
           "knock_mps": 1.5,
           "radius_m": 0.1,
           "range_m": 35.0
-        },
-        "spear": {
-          "do": "throw",
-          "kind": "ice",
-          "shape": "spear",
-          "flight": "point_first",
-          "water": 12,
-          "mps": 42.0,
-          "gravity": 2.0,
-          "damage": 30.0,
-          "knock_mps": 4.0,
-          "radius_m": 0.16,
-          "range_m": 40.0,
-          "long": true
         },
         "freeze": {"do": "status_at", "kind": "ice", "water": 14, "root_s": 1.5, "radius_m": 1.6, "range_m": 20.0}
       },
@@ -719,7 +829,7 @@
       "modes": ["ice_patch", "freeze_water", "thaw"],
       "mode_labels": {"ice_patch": "ice patch", "freeze_water": "freeze water", "thaw": "thaw"},
       "bend": {
-        "ice_patch": {"do": "zone", "zone": "ice_patch", "water": 8, "at": "aim", "radius_m": 3.0, "life_s": 8.0, "range_m": 15.0},
+        "ice_patch": {"do": "zone", "zone": "ice_patch", "at": "aim", "radius_m": 3.0, "life_s": 8.0, "range_m": 15.0},
         "freeze_water": {"do": "freeze_water", "kind": "ice", "range_m": 15.0},
         "thaw": {"do": "thaw", "kind": "water", "range_m": 15.0}
       },
@@ -741,10 +851,32 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["push", "surf", "tide"],
-      "mode_labels": {"push": "push", "surf": "surf", "tide": "tide"},
+      "modes": ["push", "spout"],
+      "mode_labels": {"push": "Wave", "spout": "Geyser"},
       "bend": {
-        "push": {"do": "cone", "kind": "water", "water": 15, "range_m": 9.0, "deg": 50.0, "damage": 10.0, "knock_mps": 11.0, "up_mps": 2.5, "put_out": true},
+        "push": {
+          "do": "cone",
+          "kind": "water",
+          "range_m": 9.0,
+          "deg": 50.0,
+          "damage": 10.0,
+          "knock_mps": 10.0,
+          "up_mps": 2.5,
+          "put_out": true,
+          "grow": {"range_m": 12.0, "deg": 65.0, "knock_mps": 13.0}
+        },
+        "spout": {
+          "do": "spout",
+          "kind": "water",
+          "radius_m": 1.8,
+          "range_m": 16.0,
+          "damage": 10.0,
+          "up_mps": 10.0,
+          "rise_s": 0.35,
+          "source_m": 2.0,
+          "source_mult": 2.0,
+          "source_up_mult": 1.33
+        },
         "surf": {"do": "dash", "kind": "water", "water": 10, "fwd_mps": 13.0, "up_mps": 2.0},
         "tide": {
           "do": "zone",
@@ -763,7 +895,7 @@
       "mastery_uses": [0, 8, 30]
     },
     "flow": {
-      "label": "Flow",
+      "label": "Skate",
       "art": "tide",
       "element": "water",
       "lock_s": 0.4,
@@ -777,18 +909,46 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["water_skate", "geyser", "draw"],
-      "mode_labels": {"water_skate": "water skate", "geyser": "geyser", "draw": "draw"},
+      "modes": ["skate", "surf"],
+      "mode_labels": {"skate": "Skate", "surf": "Surf"},
       "bend": {
+        "skate": {
+          "do": "dash",
+          "kind": "water",
+          "dir": "held",
+          "none": "back",
+          "back": true,
+          "fwd_mps": 12.0,
+          "up_mps": 1.0,
+          "puddles": {"count": 3, "life_s": 6.0, "radius_m": 1.2}
+        },
+        "surf": {
+          "do": "buff",
+          "buff": "run",
+          "kind": "water",
+          "ride": "surf",
+          "s": 1.2,
+          "mps": 11.0,
+          "steer": "look",
+          "knock_mps": 6.0
+        },
         "water_skate": {"do": "dash", "kind": "water", "water": 6, "fwd_mps": 12.0, "up_mps": 1.0},
-        "geyser": {"do": "status_at", "kind": "water", "water": 15, "radius_m": 1.8, "range_m": 18.0, "damage": 12.0, "up_mps": 12.0},
+        "geyser": {
+          "do": "status_at",
+          "kind": "water",
+          "water": 15,
+          "radius_m": 1.8,
+          "range_m": 18.0,
+          "damage": 12.0,
+          "up_mps": 12.0
+        },
         "draw": {"do": "draw", "kind": "water"}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
     "water_shield": {
-      "label": "Water Shield",
+      "label": "Ice Wall",
       "art": "tide",
       "element": "water",
       "lock_s": 0.85,
@@ -802,19 +962,18 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["ice_wall", "bubble", "heal"],
-      "mode_labels": {"ice_wall": "ice wall", "bubble": "bubble", "heal": "heal"},
+      "modes": ["ice_wall"],
+      "mode_labels": {"ice_wall": "Ice Wall"},
       "bend": {
-        "ice_wall": {"do": "ice_wall", "kind": "ice", "water": 18},
+        "ice_wall": {"do": "ice_wall", "kind": "ice", "place": {"min_m": 2.0, "max_m": 6.0}, "wall_key": true},
         "bubble": {"do": "zone", "zone": "bubble", "water": 12, "at": "self", "radius_m": 1.6, "life_s": 2.5},
         "heal": {"do": "heal", "kind": "water", "water": 20, "amount": 35.0}
       },
       "ai_factor": 1.0,
-      "mode_lock_s": {"bubble": 0.45},
       "mastery_uses": [0, 8, 30]
     },
     "water_redirect": {
-      "label": "Redirect",
+      "label": "Turn",
       "art": "tide",
       "element": "water",
       "lock_s": 0.2,
@@ -828,10 +987,21 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["redirect", "absorb", "cleanse"],
-      "mode_labels": {"redirect": "redirect", "absorb": "absorb", "cleanse": "cleanse"},
+      "modes": ["redirect"],
+      "mode_labels": {"redirect": "Turn"},
       "bend": {
-        "redirect": {"do": "zone", "zone": "redirect", "window_s": 0.9, "radius_m": 3.0},
+        "redirect": {
+          "do": "zone",
+          "zone": "redirect",
+          "window_s": 0.8,
+          "radius_m": 2.2,
+          "perfect_s": 0.3,
+          "late_mult": 0.5,
+          "takes": ["water", "ice"],
+          "handles": ["fire", "wave"],
+          "return": "swing",
+          "swing_s": 0.3
+        },
         "absorb": {"do": "zone", "zone": "absorb", "window_s": 1.0, "radius_m": 2.5},
         "cleanse": {"do": "cleanse", "kind": "water"}
       },
@@ -839,7 +1009,7 @@
       "mastery_uses": [0, 8, 30]
     },
     "fire_blast": {
-      "label": "Fire Blast",
+      "label": "Punch",
       "art": "ember",
       "element": "fire",
       "lock_s": 0.35,
@@ -853,10 +1023,20 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["punch", "stream", "fireball"],
-      "mode_labels": {"punch": "punch", "stream": "stream", "fireball": "fireball"},
+      "modes": ["punch"],
+      "mode_labels": {"punch": "Punch"},
       "bend": {
-        "punch": {"do": "bolt", "kind": "fire", "mps": 32.0, "damage": 20.0, "knock_mps": 5.0, "radius_m": 0.2, "range_m": 30.0},
+        "punch": {
+          "do": "bolt",
+          "kind": "fire",
+          "mps": 32.0,
+          "damage": 22.0,
+          "knock_mps": 6.0,
+          "radius_m": 0.2,
+          "range_m": 30.0,
+          "grow": {"mps": 22.0, "damage": 34.0, "knock_mps": 10.0, "up_mps": 2.0, "radius_m": 0.5, "range_m": 35.0},
+          "grow_label": "Fireball"
+        },
         "stream": {
           "do": "bolt",
           "kind": "fire",
@@ -869,14 +1049,22 @@
           "radius_m": 0.14,
           "range_m": 25.0
         },
-        "fireball": {"do": "bolt", "kind": "fire", "mps": 22.0, "damage": 34.0, "knock_mps": 9.0, "up_mps": 2.0, "radius_m": 0.5, "range_m": 35.0}
+        "fireball": {
+          "do": "bolt",
+          "kind": "fire",
+          "mps": 22.0,
+          "damage": 34.0,
+          "knock_mps": 9.0,
+          "up_mps": 2.0,
+          "radius_m": 0.5,
+          "range_m": 35.0
+        }
       },
       "ai_factor": 1.0,
-      "mastery_uses": [0, 8, 30],
-      "mode_lock_s": {"fireball": 0.9}
+      "mastery_uses": [0, 8, 30]
     },
     "fire_jab": {
-      "label": "Fire Jab",
+      "label": "Embers",
       "art": "ember",
       "element": "fire",
       "lock_s": 0.25,
@@ -890,18 +1078,38 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["jab", "double_jab", "embers"],
-      "mode_labels": {"jab": "jab", "double_jab": "double jab", "embers": "embers"},
+      "modes": ["embers"],
+      "mode_labels": {"embers": "Embers"},
       "bend": {
+        "embers": {
+          "do": "bolt",
+          "kind": "fire",
+          "count": 7,
+          "spread_deg": 9.0,
+          "mps": 26.0,
+          "damage": 4.0,
+          "knock_mps": 1.0,
+          "radius_m": 0.08,
+          "range_m": 10.0
+        },
         "jab": {"do": "cone", "kind": "fire", "range_m": 3.0, "deg": 40.0, "damage": 12.0, "knock_mps": 4.0},
-        "double_jab": {"do": "bolt", "kind": "fire", "count": 2, "every_s": 0.15, "mps": 30.0, "damage": 10.0, "knock_mps": 2.0, "radius_m": 0.15, "range_m": 10.0},
-        "embers": {"do": "bolt", "kind": "fire", "count": 7, "spread_deg": 9.0, "mps": 26.0, "damage": 4.0, "knock_mps": 1.0, "radius_m": 0.08, "range_m": 14.0}
+        "double_jab": {
+          "do": "bolt",
+          "kind": "fire",
+          "count": 2,
+          "every_s": 0.15,
+          "mps": 30.0,
+          "damage": 10.0,
+          "knock_mps": 2.0,
+          "radius_m": 0.15,
+          "range_m": 10.0
+        }
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
     "fire_arc": {
-      "label": "Fire Arc",
+      "label": "Lightning",
       "art": "ember",
       "element": "fire",
       "lock_s": 0.6,
@@ -915,16 +1123,95 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["sweep", "kick", "lightning"],
-      "mode_labels": {"sweep": "sweep", "kick": "kick", "lightning": "lightning"},
+      "modes": ["lightning"],
+      "mode_labels": {"lightning": "Lightning"},
       "bend": {
-        "sweep": {"do": "cone", "kind": "fire", "range_m": 6.0, "deg": 110.0, "damage": 15.0, "knock_mps": 6.0, "up_mps": 1.5},
-        "kick": {"do": "throw", "kind": "fire", "shape": "disc", "flight": "spinning", "m_per_turn": 2.8, "mps": 24.0, "damage": 28.0, "knock_mps": 9.0, "radius_m": 0.45, "range_m": 25.0, "low": true},
-        "lightning": {"do": "lightning", "kind": "lightning", "damage": 55.0, "range_m": 45.0, "knock_mps": 6.0}
+        "lightning": {
+          "do": "lightning",
+          "kind": "lightning",
+          "damage": 55.0,
+          "range_m": 45.0,
+          "knock_mps": 6.0,
+          "flash_s": 0.25
+        },
+        "sweep": {
+          "do": "cone",
+          "kind": "fire",
+          "range_m": 6.0,
+          "deg": 110.0,
+          "damage": 15.0,
+          "knock_mps": 6.0,
+          "up_mps": 1.5
+        },
+        "kick": {
+          "do": "throw",
+          "kind": "fire",
+          "shape": "disc",
+          "flight": "spinning",
+          "m_per_turn": 2.8,
+          "mps": 24.0,
+          "damage": 28.0,
+          "knock_mps": 9.0,
+          "radius_m": 0.45,
+          "range_m": 25.0,
+          "low": true
+        }
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30],
       "mode_lock_s": {"lightning": 2.2}
+    },
+    "fire_kick": {
+      "label": "Kick",
+      "art": "ember",
+      "element": "fire",
+      "lock_s": 0.6,
+      "motes": 0,
+      "range_m": 40.0,
+      "targets": ["ground"],
+      "named_only": false,
+      "needs_grant": true,
+      "readied_only": true,
+      "far_stretch": 1.0,
+      "moving_mult": 0.75,
+      "circle_m": 0.7,
+      "self_lock": true,
+      "modes": ["kick", "high_kick"],
+      "mode_labels": {"kick": "Kick", "high_kick": "High Kick"},
+      "mode_lock_s": {"high_kick": 0.85},
+      "bend": {
+        "kick": {
+          "do": "floor_wave",
+          "kind": "fire",
+          "foot_width_m": 1.2,
+          "width_m": 2.2,
+          "height_m": 0.9,
+          "miss_above_m": 0.6,
+          "mps": 18.0,
+          "range_m": 16.0,
+          "damage": 20.0,
+          "knock_mps": 9.5,
+          "up_mps": 1.5,
+          "wall_wear": 0.5,
+          "grow": {"width_m": 3.5, "range_m": 22.0, "damage": 24.0, "knock_mps": 11.5}
+        },
+        "high_kick": {
+          "do": "throw",
+          "kind": "fire",
+          "shape": "crescent",
+          "flight": "point_first",
+          "width_m": 1.6,
+          "radius_m": 0.4,
+          "mps": 22.0,
+          "gravity": 9.0,
+          "damage": 16.0,
+          "knock_mps": 5.0,
+          "up_mps": 4.0,
+          "range_m": 30.0
+        }
+      },
+      "ai_factor": 1.0,
+      "mastery_uses": [0, 8, 30]
     },
     "fire_breath": {
       "label": "Breath",
@@ -941,10 +1228,19 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["breath", "smoke", "heat"],
-      "mode_labels": {"breath": "breath", "smoke": "smoke", "heat": "heat"},
+      "modes": ["breath"],
+      "mode_labels": {"breath": "Breath"},
       "bend": {
-        "breath": {"do": "cone", "kind": "fire", "range_m": 4.5, "deg": 45.0, "damage": 16.0, "knock_mps": 2.0, "melt": true},
+        "breath": {
+          "do": "cone",
+          "kind": "fire",
+          "range_m": 4.5,
+          "deg": 45.0,
+          "damage": 16.0,
+          "knock_mps": 2.0,
+          "melt": true,
+          "smoke_s": 5.0
+        },
         "smoke": {"do": "zone", "zone": "smoke", "at": "front", "ahead_m": 2.5, "radius_m": 3.0, "life_s": 5.0},
         "heat": {"do": "melt", "kind": "fire", "radius_m": 6.0}
       },
@@ -952,7 +1248,7 @@
       "mastery_uses": [0, 8, 30]
     },
     "fire_jets": {
-      "label": "Fire Jets",
+      "label": "Jets",
       "art": "ember",
       "element": "fire",
       "lock_s": 0.3,
@@ -966,9 +1262,10 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["jump", "dash", "hover"],
-      "mode_labels": {"jump": "jump", "dash": "dash", "hover": "hover"},
+      "modes": ["jets"],
+      "mode_labels": {"jets": "Jets"},
       "bend": {
+        "jets": {"do": "dash", "kind": "fire", "by_pitch": true, "fwd_mps": 15.0, "up_mps": 2.5, "up_max_mps": 10.0},
         "jump": {"do": "dash", "kind": "fire", "fwd_mps": 4.0, "up_mps": 10.0},
         "dash": {"do": "dash", "kind": "fire", "fwd_mps": 15.0, "up_mps": 2.5},
         "hover": {"do": "buff", "buff": "hover", "kind": "fire", "s": 2.0, "fall_mps": 1.0}
@@ -977,7 +1274,7 @@
       "mastery_uses": [0, 8, 30]
     },
     "footwork": {
-      "label": "Footwork",
+      "label": "Step",
       "art": "ember",
       "element": "fire",
       "lock_s": 0.2,
@@ -991,9 +1288,20 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["hop", "back_flip", "ignite_step"],
-      "mode_labels": {"hop": "hop", "back_flip": "back-flip", "ignite_step": "ignite-step"},
+      "modes": ["step"],
+      "mode_labels": {"step": "Step"},
       "bend": {
+        "step": {
+          "do": "dash",
+          "kind": "fire",
+          "dir": "held",
+          "none": "back",
+          "fwd_mps": 9.0,
+          "up_mps": 5.0,
+          "fwd": {"fwd_mps": 10.0, "up_mps": 1.0},
+          "back": {"fwd_mps": 9.0, "up_mps": 5.0},
+          "side": {"fwd_mps": 7.0, "up_mps": 3.0}
+        },
         "hop": {"do": "dash", "kind": "fire", "side": true, "fwd_mps": 7.0, "up_mps": 3.0},
         "back_flip": {"do": "dash", "kind": "fire", "back": true, "fwd_mps": 9.0, "up_mps": 5.0},
         "ignite_step": {"do": "dash", "kind": "fire", "fwd_mps": 10.0, "up_mps": 1.0, "burn": true}
@@ -1016,8 +1324,8 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["wall", "ring", "inferno"],
-      "mode_labels": {"wall": "wall", "ring": "ring", "inferno": "inferno"},
+      "modes": ["wall"],
+      "mode_labels": {"wall": "Fire Wall"},
       "bend": {
         "wall": {
           "do": "zone",
@@ -1028,7 +1336,10 @@
           "height_m": 2.0,
           "thick_m": 0.6,
           "life_s": 5.0,
-          "damage_s": 18.0
+          "damage_s": 18.0,
+          "place": {"min_m": 2.0, "max_m": 6.0},
+          "one_at_a_time": true,
+          "wall_key": true
         },
         "ring": {"do": "ring", "kind": "fire", "radius_m": 4.5, "damage": 12.0, "knock_mps": 8.0, "up_mps": 2.0},
         "inferno": {
@@ -1061,18 +1372,38 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["parry", "redirect_lightning", "flare"],
-      "mode_labels": {"parry": "parry", "redirect_lightning": "redirect lightning", "flare": "flare"},
+      "modes": ["parry"],
+      "mode_labels": {"parry": "Parry"},
       "bend": {
-        "parry": {"do": "zone", "zone": "parry", "window_s": 0.8, "radius_m": 2.5},
+        "parry": {
+          "do": "zone",
+          "zone": "parry",
+          "window_s": 0.8,
+          "radius_m": 2.5,
+          "perfect_s": 0.3,
+          "late_mult": 0.5,
+          "takes": ["fire"],
+          "handles": ["lightning", "ice"],
+          "lightning": "perfect",
+          "return": "straight"
+        },
         "redirect_lightning": {"do": "buff", "buff": "redirect_lightning", "kind": "lightning", "s": 1.0},
-        "flare": {"do": "cone", "kind": "fire", "range_m": 4.0, "deg": 120.0, "damage": 2.0, "knock_mps": 1.0, "slow_s": 1.2, "dazzle_s": 2.0}
+        "flare": {
+          "do": "cone",
+          "kind": "fire",
+          "range_m": 4.0,
+          "deg": 120.0,
+          "damage": 2.0,
+          "knock_mps": 1.0,
+          "slow_s": 1.2,
+          "dazzle_s": 2.0
+        }
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
     "air_palm": {
-      "label": "Air Palm",
+      "label": "Palm",
       "art": "gale",
       "element": "air",
       "lock_s": 0.25,
@@ -1086,18 +1417,82 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["palm", "trip", "cushion"],
-      "mode_labels": {"palm": "palm", "trip": "trip", "cushion": "cushion"},
+      "modes": ["palm"],
+      "mode_labels": {"palm": "Palm"},
       "bend": {
-        "palm": {"do": "cone", "kind": "air", "range_m": 3.5, "deg": 40.0, "damage": 2.0, "knock_mps": 8.0, "up_mps": 1.0},
-        "trip": {"do": "cone", "kind": "air", "range_m": 4.0, "deg": 50.0, "damage": 4.0, "knock_mps": 10.0, "up_mps": 0.0, "root_s": 0.6},
+        "palm": {
+          "do": "cone",
+          "kind": "air",
+          "range_m": 3.5,
+          "deg": 40.0,
+          "damage": 5.0,
+          "knock_mps": 4.5,
+          "up_mps": 1.0
+        },
+        "trip": {
+          "do": "cone",
+          "kind": "air",
+          "range_m": 4.0,
+          "deg": 50.0,
+          "damage": 4.0,
+          "knock_mps": 10.0,
+          "up_mps": 0.0,
+          "root_s": 0.6
+        },
         "cushion": {"do": "zone", "zone": "cushion", "window_s": 0.7, "radius_m": 4.0}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
+    "air_gust": {
+      "label": "Gust",
+      "art": "gale",
+      "element": "air",
+      "lock_s": 0.35,
+      "motes": 0,
+      "range_m": 40.0,
+      "targets": ["ground"],
+      "named_only": false,
+      "needs_grant": true,
+      "readied_only": true,
+      "far_stretch": 1.0,
+      "moving_mult": 0.75,
+      "circle_m": 0.7,
+      "self_lock": true,
+      "modes": ["gust", "pull"],
+      "mode_labels": {"gust": "Gust", "pull": "Pull"},
+      "bend": {
+        "gust": {
+          "do": "wind_wave",
+          "kind": "air",
+          "width_m": 2.0,
+          "height_m": 2.0,
+          "mps": 18.0,
+          "range_m": 14.0,
+          "damage": 8.0,
+          "knock_mps": 11.0,
+          "up_mps": 1.0,
+          "carry": true,
+          "grow": {"width_m": 3.0, "range_m": 18.0, "knock_mps": 15.0}
+        },
+        "pull": {
+          "do": "wind_wave",
+          "kind": "air",
+          "pull": true,
+          "width_m": 2.0,
+          "height_m": 2.0,
+          "mps": 18.0,
+          "range_m": 14.0,
+          "damage": 0.0,
+          "knock_mps": 8.0,
+          "up_mps": 0.5
+        }
+      },
+      "ai_factor": 1.0,
+      "mastery_uses": [0, 8, 30]
+    },
     "air_blast": {
-      "label": "Air Blast",
+      "label": "Slice",
       "art": "gale",
       "element": "air",
       "lock_s": 0.5,
@@ -1111,18 +1506,38 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["ball", "slice", "vacuum"],
-      "mode_labels": {"ball": "ball", "slice": "slice", "vacuum": "vacuum"},
+      "modes": ["slice", "ball"],
+      "mode_labels": {"slice": "Slice", "ball": "Wind Ball"},
       "bend": {
-        "ball": {"do": "bolt", "kind": "air", "mps": 28.0, "damage": 6.0, "knock_mps": 11.0, "up_mps": 2.0, "radius_m": 0.35, "range_m": 30.0},
-        "slice": {"do": "bolt", "kind": "air", "mps": 45.0, "damage": 10.0, "knock_mps": 3.0, "radius_m": 0.12, "range_m": 35.0, "long": true},
+        "slice": {
+          "do": "bolt",
+          "kind": "air",
+          "mps": 45.0,
+          "damage": 18.0,
+          "knock_mps": 4.0,
+          "radius_m": 0.12,
+          "range_m": 35.0,
+          "long": true,
+          "carry": true
+        },
+        "ball": {
+          "do": "bolt",
+          "kind": "air",
+          "mps": 28.0,
+          "damage": 15.0,
+          "knock_mps": 15.0,
+          "up_mps": 2.0,
+          "radius_m": 0.35,
+          "range_m": 30.0,
+          "carry": true
+        },
         "vacuum": {"do": "zone", "zone": "vacuum", "at": "aim", "radius_m": 2.5, "life_s": 2.5, "range_m": 20.0}
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
     "evade": {
-      "label": "Evade",
+      "label": "Slip",
       "art": "gale",
       "element": "air",
       "lock_s": 0.15,
@@ -1136,9 +1551,18 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["sidestep", "backstep", "spin"],
-      "mode_labels": {"sidestep": "sidestep", "backstep": "backstep", "spin": "spin"},
+      "modes": ["slip"],
+      "mode_labels": {"slip": "Slip"},
       "bend": {
+        "slip": {
+          "do": "dash",
+          "kind": "air",
+          "dir": "held",
+          "none": "back",
+          "back": true,
+          "fwd_mps": 9.5,
+          "up_mps": 1.0
+        },
         "sidestep": {"do": "dash", "kind": "air", "side": true, "fwd_mps": 9.0, "up_mps": 1.0},
         "backstep": {"do": "dash", "kind": "air", "back": true, "fwd_mps": 10.0, "up_mps": 2.0},
         "spin": {"do": "zone", "zone": "spin", "window_s": 0.7, "radius_m": 2.5}
@@ -1172,10 +1596,10 @@
       "mastery_uses": [0, 8, 30]
     },
     "air_shield": {
-      "label": "Air Shield",
+      "label": "Wind Guard",
       "art": "gale",
       "element": "air",
-      "lock_s": 0.5,
+      "lock_s": 0.2,
       "motes": 0,
       "range_m": 40.0,
       "targets": ["ground"],
@@ -1186,12 +1610,70 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["shield", "cyclone", "tornado"],
-      "mode_labels": {"shield": "shield", "cyclone": "cyclone", "tornado": "tornado"},
+      "modes": ["shield"],
+      "mode_labels": {"shield": "Wind Guard"},
       "bend": {
-        "shield": {"do": "zone", "zone": "air_shield", "at": "self", "radius_m": 2.2, "life_s": 2.5},
+        "shield": {
+          "do": "zone",
+          "zone": "air_shield",
+          "at": "self",
+          "radius_m": 2.2,
+          "window_s": 0.8,
+          "life_s": 0.8,
+          "perfect_s": 0.3,
+          "late_mult": 0.5,
+          "takes": ["air"],
+          "handles": ["stone"],
+          "stone": "drop_on_perfect",
+          "return": "bounce"
+        },
         "cyclone": {"do": "ring", "kind": "air", "radius_m": 5.0, "damage": 6.0, "knock_mps": 11.0, "up_mps": 3.5},
-        "tornado": {"do": "zone", "zone": "tornado", "at": "front", "ahead_m": 2.0, "radius_m": 1.8, "life_s": 2.2, "mps": 5.0, "damage_s": 6.0}
+        "tornado": {
+          "do": "zone",
+          "zone": "tornado",
+          "at": "front",
+          "ahead_m": 2.0,
+          "radius_m": 1.8,
+          "life_s": 2.2,
+          "mps": 5.0,
+          "damage_s": 6.0
+        }
+      },
+      "ai_factor": 1.0,
+      "mastery_uses": [0, 8, 30]
+    },
+    "air_wall": {
+      "label": "Wind Wall",
+      "art": "gale",
+      "element": "air",
+      "lock_s": 0.8,
+      "motes": 0,
+      "range_m": 40.0,
+      "targets": ["ground"],
+      "named_only": false,
+      "needs_grant": true,
+      "readied_only": true,
+      "far_stretch": 1.0,
+      "moving_mult": 0.75,
+      "circle_m": 0.7,
+      "self_lock": true,
+      "modes": ["wall"],
+      "mode_labels": {"wall": "Wind Wall"},
+      "bend": {
+        "wall": {
+          "do": "wind_wall",
+          "kind": "air",
+          "width_m": 3.0,
+          "height_m": 2.5,
+          "thick_m": 0.6,
+          "life_s": 4.0,
+          "place": {"min_m": 2.0, "max_m": 6.0},
+          "one_at_a_time": true,
+          "wall_key": true,
+          "push_mps": 4.0,
+          "blows": ["fire", "water", "ice", "air"],
+          "passes": ["stone", "lightning"]
+        }
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
@@ -1222,7 +1704,7 @@
       "mastery_uses": [0, 8, 30]
     },
     "air_jump": {
-      "label": "Air Jump",
+      "label": "Leap",
       "art": "gale",
       "element": "air",
       "lock_s": 0.25,
@@ -1236,10 +1718,10 @@
       "moving_mult": 0.75,
       "circle_m": 0.7,
       "self_lock": true,
-      "modes": ["leap", "dash", "glide"],
-      "mode_labels": {"leap": "leap", "dash": "dash", "glide": "glide"},
+      "modes": ["leap"],
+      "mode_labels": {"leap": "Leap"},
       "bend": {
-        "leap": {"do": "dash", "kind": "air", "fwd_mps": 3.0, "up_mps": 12.0},
+        "leap": {"do": "dash", "kind": "air", "fwd_mps": 3.0, "up_mps": 12.0, "glide": {"fall_mps": 2.5, "s": 4.0}},
         "dash": {"do": "dash", "kind": "air", "fwd_mps": 17.0, "up_mps": 1.5},
         "glide": {"do": "buff", "buff": "glide", "kind": "air", "s": 4.0, "fall_mps": 2.5}
       },
@@ -1273,18 +1755,98 @@
     "splinter": "gather_rec_axe_chop_big"
   },
   "elements": {
-    "_doc": "Each element's keys: 1-4 hold two skills (the same key again switches between them), 5 is Mend / Patch; the wheel steps through the readied skill's variations (its modes). docs/bending_design.md; Bending.",
-    "earth": [["stone_form", "rock_jab"], ["earth_wall", "earth_grip"], ["pillar", "earth_skate"], ["earth_shove", "stone_catch"], ["mend", "patch"]],
-    "water": [["water_whip", "water_jet"], ["ice", "frost"], ["wave", "flow"], ["water_shield", "water_redirect"], ["mend", "patch"]],
-    "fire": [["fire_blast", "fire_jab"], ["fire_arc", "fire_breath"], ["fire_jets", "footwork"], ["fire_wall", "fire_parry"], ["mend", "patch"]],
-    "air": [["gust", "air_palm"], ["air_blast", "evade"], ["air_jump", "wind_run"], ["air_shield", "air_redirect"], ["mend", "patch"]]
+    "_doc": "Each element's keys (skills_r2 spec 2.1-2.2, the owner's answers of 2026-10-05): 1 STRIKE, 2 PUSH (its first move grows if held: grow), 3 DASH, 4 WALL, 5 HEAL. A key is [id] (one move, or one move whose two variations are the key's two moves) or [id, id] (two moves of one variation each). A tap readies the key's first move, a second tap within guard_rules.double_tap_s the other; nothing is remembered. Fire's 4 holds Fire Wall and Breath (the owner kept Breath), fire's 1 grows too (Punch held: the Fireball). Bending.keys; the jab on the left button and the guard on E are their own blocks (jabs, guards). A move's 'modes' are only what the ring offers; specs of variations it no longer offers stay under 'bend' for whoever still casts them.",
+    "earth": [["stone_form"], ["earth_shove"], ["earth_skate", "pillar"], ["earth_wall"], ["patch", "mend"]],
+    "water": [["water_whip", "ice"], ["wave"], ["flow"], ["water_shield"], ["patch", "mend"]],
+    "fire": [
+      ["fire_blast", "fire_arc"],
+      ["fire_kick"],
+      ["footwork", "fire_jets"],
+      ["fire_wall", "fire_breath"],
+      ["patch"]
+    ],
+    "air": [["air_blast"], ["air_gust"], ["evade", "air_jump"], ["air_wall"], ["patch"]]
   },
   "water_meter": {
-    "_doc": "A waterbender's water (Bending.water): spent by water moves (their 'water'), back over time, fast by water (a pool, the river, a wall of water).",
+    "_doc": "A waterbender's water (Bending.water): spent by water moves (their 'water'), back over time, fast by water (a pool, the river, a wall of water). spend false (owner question 9, the recommendation): nothing is spent, lock time is the only limiter; the pools live on in Geyser's source bonus and Skate's puddles.",
     "max": 100.0,
     "regen_s": 4.0,
     "near_s": 30.0,
     "near_m": 4.0,
-    "draw": [10.0, 60.0]
+    "draw": [10.0, 60.0],
+    "spend": false
+  },
+  "guards": {
+    "_doc": "Each element's guard on E (input bend_guard; no readying): [move, variation]. Bending.guard. A short lock, then it stands its window_s; a hit in its first guard_rules.perfect_s is perfect (yours), later half gets through (late_mult) except earth catching stone (always a full catch, held: E again throws it back). The spec's takes (what it guards), handles (one other kind, fully only on the beat), return (hold, swing, straight, bounce).",
+    "earth": ["stone_catch", "catch"],
+    "water": ["water_redirect", "redirect"],
+    "fire": ["fire_parry", "parry"],
+    "air": ["air_shield", "shield"]
+  },
+  "jabs": {
+    "_doc": "Each element's jab on the left button (the quick spell's default; Q puts the readied move there instead, Q held guard_rules.quick_reset_s brings the jab back): [move, variation], every one within 10 m. Fire's is Embers (the owner kept it). Bending.jab; MatchSetup.quick_of.",
+    "earth": ["rock_jab", "pebbles"],
+    "water": ["water_jet", "splash"],
+    "fire": ["fire_jab", "embers"],
+    "air": ["air_palm", "palm"]
+  },
+  "passives": {
+    "_doc": "One passive per element (spec 2.4), its line shown at the element's pick. Bending.passive.",
+    "earth": {
+      "id": "rooted",
+      "label": "Rooted",
+      "line": "Stand still: your locks fill faster and you're pushed less.",
+      "still_mps": 0.3,
+      "fill_mult": 1.2,
+      "knock_mult": 0.85
+    },
+    "water": {
+      "id": "flowing",
+      "label": "Flowing",
+      "line": "Your water curves toward where you look for a moment after it leaves.",
+      "steer_dps": 45.0,
+      "steer_s": 0.25,
+      "steer_max_deg": 15.0
+    },
+    "fire": {
+      "id": "footwork",
+      "label": "Footwork",
+      "line": "Your locks fill at full speed while you move.",
+      "moving_mult": 1.0
+    },
+    "air": {
+      "id": "carried_wind",
+      "label": "Carried wind",
+      "line": "Hit straight out of a dash and you knock harder.",
+      "after_s": 0.8,
+      "near_m": 1.2,
+      "knock_mult": 1.15
+    }
+  },
+  "guard_rules": {
+    "_doc": "The guard's and the lock's shared numbers (spec 2.3, 2.5, 2.6, 8.1). hold_drop_s 0: a caught stone is held until thrown, as before (owner question 6b).",
+    "perfect_s": 0.3,
+    "late_mult": 0.5,
+    "whiff_lock_s": 0.5,
+    "whiff_s": 1.5,
+    "return_lock_s": 0.35,
+    "perfect_return_lock_s": 0.1,
+    "perfect_mult": 1.2,
+    "rally_step": 0.1,
+    "rally_clean_step": 0.2,
+    "rally_max": 1.6,
+    "grow_after_s": 0.45,
+    "sputter_s": 0.7,
+    "click_s": 0.2,
+    "double_tap_s": 0.3,
+    "switch_hold_s": 0.2,
+    "hit_setback_min_s": 0.25,
+    "hold_drop_s": 0.0,
+    "quick_reset_s": 0.5
+  },
+  "stones": {
+    "_doc": "Loose stones on the deck (spec 2.10): at most loose_max a player (a new one sinks his oldest); Shove takes a loose one only within shove_loose_m of the caster.",
+    "loose_max": 3,
+    "shove_loose_m": 6.0
   }
 }

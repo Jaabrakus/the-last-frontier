@@ -41,7 +41,8 @@ extends Node
 ## PRACTICE (MatchSetup.kind "practice"; the user arg practice=stand|block|throw): a dummy of foes[0]'s element at the other
 ## end, held there (it never walks): "stand" never casts; "block" answers what comes at it with its element's guards (no
 ## dice: every time the lock fits the threat's time) and raises its cover when the player begins a lock (no more often than
-## block_every_s); "throw" casts its throw at him every throw_every_s (earth a stone spike: catch it, send it back). No timer
+## block_every_s); "throw" casts its throw at him every throw_every_s: its element's key 1 first move (MatchSetup.
+## practice_move: earth a Spike to catch and send back, water a Lash to Turn, fire a Punch to Parry, air a Slice). No timer
 ## (the clock counts up), no rounds, no score; the soft walls off (walk anywhere); a fall into the water puts both back at
 ## their ends after reset_after_out_s, R (ring_reset) at once (reset_positions), B (ring_dummy) steps the dummy's way
 ## (cycle_dummy); 0 health is whole again. A line at the top says so, with the player's casts, catches and knock-backs.
@@ -990,7 +991,7 @@ func _practice_step(dt: float) -> void:
 
 ## The dummy's element's move for `what` ("throw" | "cover": screens.json practice), "id/mode".
 func _pmove(what: String) -> String:
-	return String((((MatchSetup.screens().get("practice", {}) as Dictionary).get(what, {})) as Dictionary).get(foe_element, ""))
+	return MatchSetup.practice_move(foe_element, what)
 
 
 ## The dummy's lock of "id/mode" begun (let go: its tick fills it and casts it, NpcBending's own way).

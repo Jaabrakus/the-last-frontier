@@ -5,27 +5,39 @@ extends RefCounted
 ## player, of any of the four elements). It has no gun and no axe; its moves are the player's own, cast through the same path
 ## (BendCast.cast when it is there, else BendEffects with its NpcBendCaster: the same specs, lock times, interactions, catches,
 ## redirects and knockback as his), timed by the same lock:
-##   its options   every (move, mode) of its element's keys (Bending.keys: four keys of two skills of three variations) plus
-##                 Mend and Patch; an old Sway spell without a bend spec (stone_form spike and cannonball, earth_wall wall, pillar
-##                 self and free, gust's, mend) only through BendCast, except spike, wall and gust push, which it has its own
-##                 way of casting until then (FALLBACK)
+##   its options   every (move, mode) of its element's kit (round 2's skills, skills_r2/spec.md 3: Bending.keys' 1-5, its
+##                 guard on E and its jab on the left button: moves.json "guards", "jabs"); an old Sway spell without a bend
+##                 spec (stone_form spike and cannonball, earth_wall wall, pillar self, mend) only through BendCast, except
+##                 spike and wall, which it has its own way of casting until then (FALLBACK). A spec that grows (grow: key 2's
+##                 first move, fire's Punch into the Fireball) is held past guard_rules.grow_after_s by its element's
+##                 grow_chance, and cast grown (the spec with its grow merged over it)
 ##   the lock      exactly the player's (SwayCaster._try_begin): the move's lock_s, or its mode's mode_lock_s, stretched by the
 ##                 range as his, x the expert tier's mastery.lock_mult (free use: every spell an expert's), x its difficulty's
 ##                 lock_mult; a move's ai_factor only on easy and normal (lock_for). It stands while the lock fills (the pose:
 ##                 NpcBody.play_cast, its strike timed to the release), and SHOW_LOCK_CIRCLE: its element's circle at its own
 ##                 feet as his is at his (the owner allowed it; nothing is ever drawn on the player or over anyone)
-##   a hit breaks  any damage above 0 (NpcFighter.apply_hit: on_hurt) or any knock (BendKnock: on_knocked) loses the lock (lost),
-##                 as a hit taken breaks the player's
+##   a hit         any damage above 0 (NpcFighter.apply_hit: on_hurt) or any knock (BendKnock: on_knocked) pushes the lock
+##                 back by what the hit cost its sender (his move's lock time, at least guard_rules.hit_setback_min_s; never
+##                 below empty, never wiped), as a hit taken pushes back the player's (spec 2.3); a dash's or a guard's lock
+##                 is never pushed back; lightning's charge breaks (lost)
 ##   the mind      think (every NpcBrain think, 0.25 s): the option with the best utility (data/npc/bend_ai.json: its role,
 ##                 the element's personality, its range band, its 'when'; a little chance from its own seeded rng; an option
 ##                 not cast yet a little more, a combo's follow-up much more), else it keeps its range and circles the foe,
 ##                 facing him; tick (each physics frame, NpcFighter._physics_process): the lock filled, the threats looked
 ##                 at (BendBolt, a bot's spike in flight, a hurled GustLift stone, the foe's lightning lock, a tornado coming
 ##                 at it, and his wind-up read: his lock on a throw or a bolt, its time to impact the lock's rest and the
-##                 flight; each with its knock) and a guard of its element begun in time (catch, deflect, parry, redirect,
-##                 bubble, shield, spin...: the preset's reaction and chance; any option whose hint 'answers' the threat's
-##                 kind is a guard too: Earth Grip's anchor against a hard knock, its hint's min_knock and guard_when met, a
-##                 dash only with room for it), its own speed braked short of an open end
+##                 flight; each with its knock) and a guard of its element begun in time (catch, turn, parry, wind guard: the
+##                 preset's reaction and chance; any option whose hint 'answers' the threat's kind is a guard too: a dash out
+##                 of the line, a wall before a held stone; its hint's min_knock and guard_when met, a dash only with room
+##                 for it), its own speed braked short of an open end
+##   on the beat   a guard is timed (spec 2.5): the preset's perfect_chance rolled once a threat, the guard then begun so the
+##                 hit lands in its first guard_rules.perfect_s (perfect: yours), else later in its window (late: half gets
+##                 through); a guard that took nothing (a whiff) makes its next guard's lock whiff_lock_s within whiff_s,
+##                 as the player's; counted per guard (perfects, lates, whiffs)
+##   the floor     a wave along the deck (the Kick's floor wave, a Boulder rolling at it: kind "floor") is jumped
+##                 (NpcFighter.jump, mid-lock too, as the player's Space) by the preset's jump_chance, the takeoff timed so
+##                 its feet are over miss_above_m as it passes; up from under it (a Column's or a Geyser's wind-up: kind
+##                 "under") is stepped off by a dash; hard bots dash on a lightning's flash (lightning_dash)
 ##   its water     its own meter (Bending.of(it)): a water move it cannot pay for is not chosen; under water_low it goes to a
 ##                 pool (Bending.POOLS) and draws
 ##   the ring      bounds_fn(pos) -> pos clamped to where it may stand, edge_fn(pos, dir) -> metres to the open end along dir
@@ -37,11 +49,17 @@ extends RefCounted
 ##   the opening   its preset's grace_s from the moment it is let go (the round's "Break!", its first tick unheld; the duel:
 ##                 from its making): no attack and no control begun (guards, walls and footwork only), so no bot knocks a man
 ##                 over his line in the first second of a round (the owner's integrator saw a hard air ball land at 0.6 s)
-##   catch, return a stone caught and held (its Catch) is shoved back (Earth Shove push) as soon as its reaction allows:
-##                 forced, its rest cut short (the earth-vs-earth core: catch it just before it hits and fire it back)
-## Counted for the tests and the ring's HUD: casts, casts_by ("move/mode" -> n), hits, catches, answered, lost, reactions_by,
-## locks (each lock's planned and measured time); the old spikes, walls, gusts. Contract: element, casting ("" or the move),
-## mode, fill (0..1), lock_s, bounds_fn, edge_fn.
+##   catch, return a stone caught and held (its Catch) is sent back by its guard cast again (E again, as the player's: the
+##                 return's lock guard_rules.return_lock_s, perfect_return_lock_s after a clean catch) as soon as its
+##                 reaction allows: forced, its rest cut short (the earth-vs-earth core: catch it just before it hits and
+##                 fire it back); water's, fire's and air's guards send a perfect back by themselves
+##   combos        a combo's follow-up much more likely just after its lead (bend_ai.json combo: Kick then Punch, Column
+##                 then Spike, Pull then Palm, Geyser then Wave); the Kick by default, the High Kick on a foe in the air or
+##                 behind a wall (when foe_up_or_walled)
+## Counted for the tests and the ring's HUD: casts, casts_by ("move/mode" -> n), grows_by, hits, catches, clean_catches,
+## answered, perfects, lates, whiffs, returns, lost, reactions_by, floor_seen, floor_jumped, jumps, locks (each lock's planned
+## and measured time); the old spikes, walls, gusts. Contract: element, casting ("" or the move), mode, grown, fill (0..1),
+## lock_s, bounds_fn, edge_fn.
 
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
 ## Its spikes in flight (Flight): a guard can catch, deflect or cushion them (BendZone).
@@ -56,10 +74,30 @@ const CIRCLE_R := 0.9
 ## The old spells it casts its own way while BendCast is not there.
 const FALLBACK := ["stone_form/spike", "earth_wall/wall", "gust/push"]
 ## The old names a test or a mode may force (_next[name] = a clock time: cast first once it is reached).
-const LEGACY := {"spike": ["stone_form/spike", "stone_form/disc"], "wall": ["earth_wall/wall", "earth_wall/shell"], "gust": ["gust/push", "air_palm/palm"]}
+const LEGACY := {"spike": ["stone_form/spike"], "wall": ["earth_wall/wall"], "gust": ["air_gust/gust", "air_palm/palm"]}
+## Each element's guard and jab when moves.json has no "guards" / "jabs" block (spec 8.1).
+const GUARDS := {"earth": ["stone_catch", "catch"], "water": ["water_redirect", "redirect"], "fire": ["fire_parry", "parry"],
+		"air": ["air_shield", "shield"]}
+const JABS := {"earth": ["rock_jab", "pebbles"], "water": ["water_jet", "splash"], "fire": ["fire_jab", "embers"],
+		"air": ["air_palm", "palm"]}
+## The guards' zone kinds (BendZone): what each took is counted (perfect, late), a guard that took nothing a whiff.
+const GUARD_ZONES := ["catch", "redirect", "parry", "air_shield", "deflect", "cushion", "return", "spin", "absorb"]
+## guard_rules (moves.json) when it has none: spec 2.3, 2.5, 2.6.
+const RULES := {"perfect_s": 0.3, "whiff_lock_s": 0.5, "whiff_s": 1.5, "return_lock_s": 0.35, "perfect_return_lock_s": 0.1,
+		"grow_after_s": 0.45, "hit_setback_min_s": 0.25}
+## A floor threat: something low on the deck (its middle under this over the deck under it) coming along it.
+const FLOOR_M := 0.9
+## A rolling stone (a Boulder on the deck) is a floor threat at this pace (m/s) and up.
+const ROLL_MPS := 3.0
+## Hits within this long of a setback are the same hit (its damage and its knock come apart).
+const SETBACK_SAME_S := 0.06
+## On a stone: how many times it has been sent back by a catcher, either side's (BendZone.return_stone keeps it): the rally.
+const RETURNS_META := &"bend_returns"
 ## The fallback spike's numbers (a stone raised before it as the lock fills, then hurled: Flight).
 const SPIKE := {"ahead_m": 1.3, "mps": 30.0, "gravity": 3.0, "damage": 34.0}
-const WALL := {"ahead_m": 1.6}
+## Its own earth wall raised this far ahead (inside round 2's 2-6 m placing, clear of its own capsule: one raised at 1.6 m
+## once threw its caster through the deck, the KITS soak).
+const WALL := {"ahead_m": 3.5}
 const GUST := {"reach_m": 7.0, "push_mps": 9.0, "up_mps": 3.0}
 const STRAFE_S := Vector2(1.4, 3.0)
 ## After a release the cast clip plays on this long (busy: it does not walk off mid-swing).
@@ -75,8 +113,6 @@ const READ_STRIKE_S := 0.1
 ## A dash whose landing the ring's bounds pull back across the way to the foe by more than this (m) would leave the deck
 ## over a long side (_dash_safe).
 const SIDE_SLACK_M := 0.5
-## After its cushion stops a stone, the lift that sends it back waits this long more (s): the stone dropped to the deck.
-const CUSHION_LIFT_S := 0.35
 ## A held stone's flight read at this pace (m/s; Gust lift's hurl at full draw is 24 to 30) and, a man's hold, his letting go
 ## this long from now (s): he lets go when he will.
 const HELD_MPS := 26.0
@@ -96,11 +132,14 @@ var me: NpcFighter
 var caster: NpcBendCaster
 ## Its element (Bending.ELEMENTS).
 var element := "earth"
-## Every option: {id, mode, key "id/mode", spec, do, hint, water, knock, old}.
+## Every option: {id, mode, key "id/mode", spec, do, hint, water, knock, old, grow (its spec grows), guard (its element's
+## guard), jab}.
 var options: Array[Dictionary] = []
-## The lock: the move locking ("" none), its mode, how full (0..1), its time and how long it has filled.
+## The lock: the move locking ("" none), its mode, whether it is held to grow, how full (0..1), its time and how long it has
+## filled.
 var casting := ""
 var mode := ""
+var grown := false
 var fill := 0.0
 var lock_s := 0.0
 var lock_t := 0.0
@@ -111,12 +150,25 @@ var edge_fn: Callable
 ## Counts.
 var casts := 0
 var casts_by := {}
+var grows_by := {}
 var hits := 0
 var catches := 0
+var clean_catches := 0
 var answered := 0
+var perfects := 0
+var lates := 0
+var whiffs := 0
+var returns := 0
 var lost := 0
 var lost_why := ""
+var setbacks := 0
 var reactions_by := {}
+## Floor threats seen coming at it (once each), those it jumped, and every jump.
+var floor_seen := 0
+var floor_jumped := 0
+var jumps := 0
+## The most times a stone it sent back had been sent back (RETURNS_META).
+var longest_rally := 0
 var spikes := 0
 var walls := 0
 var gusts := 0
@@ -146,8 +198,21 @@ var _alt := false
 ## The opening grace: no attack begun before this (BendStatus clock); whether it was held at its last tick.
 var _grace_until := 0.0
 var _was_held := false
-## Its catches seen so far (a new one answered with a shove).
+## Its catches seen so far (a new one answered by its guard again: the return).
 var _catches_seen := 0
+## Floor threats seen (id -> [first seen, jump rolled]); the last setback's time.
+var _floor := {}
+var _setback_t := -100.0
+## The way each dash whose way is the keys held goes ("move/mode" -> "side", "back", "forward": _pick_way).
+var _ways := {}
+## The side each such dash checked for room goes to ("move/mode" -> -1 left, 1 right of the way to the foe: _pick_way), so
+## the dash goes the side that was found safe.
+var _sides := {}
+## A guard waits for its beat until then: no other lock begun meanwhile (it would hold the guard off).
+var _beat_wait_until := -1.0
+## What came at it this physics frame (_threats, looked at once a frame).
+var _threats_frame := -1
+var _threats_last: Array = []
 ## No new guard begun before this (bend_ai.json guard_cool_s after any guard: one guard after another, of whatever kind,
 ## would turtle; the moves' own cools are per option).
 var _guard_until := 0.0
@@ -163,6 +228,7 @@ func _init(b: NpcBrain) -> void:
 	var pr := preset()
 	caster = NpcBendCaster.new(me, float(pr.get("lead", 0.8)), float(pr.get("scatter_deg", 1.8)))
 	caster.bind()
+	caster.guarded.connect(_on_guarded)
 	_build_options()
 	if me.is_inside_tree():
 		Bending.of(me).element = element
@@ -212,7 +278,7 @@ static func spec_of(id: String, md: String) -> Dictionary:
 	return ((b as Dictionary).get(md, {}) as Dictionary) if b is Dictionary else {}
 
 
-## Every (move, mode) of `el`'s keys (Bending.keys), Mend and Patch with them.
+## Every (move, mode) of `el`'s kit: its keys (Bending.keys: 1-5, Patch and Mend with them), its guard and its jab.
 static func pairs_of(el: String) -> Array:
 	var out: Array = []
 	for pair in Bending.keys(el):
@@ -222,18 +288,41 @@ static func pairs_of(el: String) -> Array:
 				out.append([id, ""])
 			for md: String in ms:
 				out.append([id, md])
+	for extra: Array in [guard_of(el), jab_of(el)]:
+		if extra.size() >= 2 and not extra in out:
+			out.append(extra)
 	return out
+
+
+## Element `el`'s guard on E ([move, variation]: moves.json "guards", else GUARDS).
+static func guard_of(el: String) -> Array:
+	var g: Variant = (SwayMoves.data().get("guards", {}) as Dictionary).get(el, GUARDS.get(el, []))
+	return [String(g[0]), String(g[1])] if g is Array and (g as Array).size() >= 2 else []
+
+
+## Element `el`'s jab on the left button ([move, variation]: moves.json "jabs", else JABS).
+static func jab_of(el: String) -> Array:
+	var j: Variant = (SwayMoves.data().get("jabs", {}) as Dictionary).get(el, JABS.get(el, []))
+	return [String(j[0]), String(j[1])] if j is Array and (j as Array).size() >= 2 else []
+
+
+## A shared rule's number (moves.json guard_rules, else RULES).
+static func rule(k: String) -> float:
+	return float((SwayMoves.data().get("guard_rules", {}) as Dictionary).get(k, RULES.get(k, 0.0)))
 
 
 func _build_options() -> void:
 	options.clear()
+	var gd := guard_of(element)
+	var jb := jab_of(element)
 	for pr: Array in pairs_of(element):
 		var id := String(pr[0])
 		var md := String(pr[1])
 		var spec := spec_of(id, md)
 		var o := {"id": id, "mode": md, "key": id + "/" + md, "spec": spec, "old": spec.is_empty(),
 				"do": String(spec.get("do", "old")), "water": float(spec.get("water", 0.0)),
-				"knock": float(spec.get("knock_mps", 0.0))}
+				"knock": float(spec.get("knock_mps", 0.0)), "grow": spec.get("grow") is Dictionary,
+				"guard": pr == gd, "jab": pr == jb}
 		o["hint"] = hint_of(id, md, spec)
 		options.append(o)
 
@@ -370,6 +459,11 @@ func think(dt: float) -> void:
 	if casting != "" or _follow > 0.0 or me.busy():
 		return
 	var d := _flat_d(t)
+	if _now() < _beat_wait_until and not _forced_any():
+		# (a guard waits for its beat: it stands its ground, facing him, and begins nothing else)
+		me.halt()
+		me.face_point(t.global_position)
+		return
 	if _now() >= _rest_until or _forced_any():
 		var pick := _choose(t, d)
 		if not pick.is_empty():
@@ -396,10 +490,20 @@ func tick(dt: float) -> void:
 		me.on_deck = true
 	_watch()
 	_edge_brake()
+	if brain.state == NpcBrain.State.COMBAT:
+		_jump_floor()                              # (mid-lock too: the jump never gates a lock, the player's Space)
 	if casting != "":
+		if me.action == "flinch":
+			return                                 # (staggered: the lock waits; a hit pushes it back, never wipes it)
 		if me.action != "cast":
-			_lose("flinch")
-			return
+			if me.action in ["", "knocked"]:
+				# (back from a stagger: the cast pose again for what is left of the lock)
+				me.action = "cast"
+				if me.body != null:
+					me.body.play_cast(casting, mode, maxf(lock_s - lock_t, 0.1), element)
+			else:
+				_lose("flinch")
+				return
 		if fill < SWITCH_FILL and not is_guard(_option(casting + "/" + mode).get("hint", {})):
 			# (a lock barely begun let go for a guard against what comes at it now)
 			var g := _reaction()
@@ -569,7 +673,7 @@ func _when(c: String, t: Node3D, d: float) -> bool:
 		"own_wall":
 			return _own_wall(false, 12.0) != null
 		"own_damaged_wall":
-			return _own_wall(true, 3.0) != null
+			return _own_wall(true, 6.0) != null          # (within Mend's reach of its cast point, _cast_point)
 		"water_low":
 			var bw := Bending.of(me)
 			return bw != null and bw.water < float(d_ai.get("water_low", 40.0))
@@ -584,6 +688,12 @@ func _when(c: String, t: Node3D, d: float) -> bool:
 			return BendStatus.until(t, &"bend_root") > 0.0
 		"foe_airborne":
 			return t is CharacterBody3D and not (t as CharacterBody3D).is_on_floor()
+		"foe_grounded":
+			return not (t is CharacterBody3D) or (t as CharacterBody3D).is_on_floor()
+		"foe_up_or_walled":
+			return (t is CharacterBody3D and not (t as CharacterBody3D).is_on_floor()) or _wall_on_line(t)
+		"holding":
+			return _held_stone() != null
 		"airborne":
 			return not me.is_on_floor()
 		"room_back":
@@ -596,9 +706,11 @@ func _when(c: String, t: Node3D, d: float) -> bool:
 
 
 # ---------------------------------------------------------------- the threats and the guards
-## The guard to begin now against what comes at it ({id, mode, kind} or {}): a threat seen for the preset's reaction (x2
-## dazzled), its time to impact long enough for the guard's lock, answered at the preset's chance (one roll a volley:
-## VOLLEY_S).
+## The guard to begin now against what comes at it ({id, mode, kind} or {}): a threat seen for the preset's reaction (its
+## own guard on E for its guard_reaction_s: a reflex; x2 dazzled), answered at the preset's chance (one roll a volley: VOLLEY_S), its guard begun when its lock leaves the hit
+## where the roll put it in the guard's window (on_beat): in its first perfect_s at the preset's perfect_chance, else later
+## in it; an answer that is no guard of its own (a dash out of the line) as soon as its lock fits. Kind "floor" is jumped
+## instead (_jump_floor), kind "lightning" dashed from on the flash by a preset with lightning_dash.
 func _reaction() -> Dictionary:
 	if _now() < _guard_until:
 		return {}
@@ -609,41 +721,144 @@ func _reaction() -> Dictionary:
 	if threats.is_empty():
 		return {}
 	var pr := preset()
-	var react := float(pr.get("reaction_s", 0.45)) * (2.0 if NpcBendCaster.dazzled(me) else 1.0)
+	var dz := 2.0 if NpcBendCaster.dazzled(me) else 1.0
+	var react := float(pr.get("reaction_s", 0.45)) * dz
+	# (its own guard on E is a reflex on his wind-up: guard_reaction_s, quicker than a dash's reaction_s)
+	var react_g := float(pr.get("guard_reaction_s", pr.get("reaction_s", 0.45))) * dz
 	var now := _now()
 	var best: Dictionary = {}
 	for th: Dictionary in threats:
-		var id := int(th.id)
-		if not _threat_seen.has(id):
-			var src := int(th.get("src", 0))
-			var vl: Array = _volleys.get(src, [])
-			if src != 0 and not vl.is_empty() and now - float(vl[0]) < VOLLEY_S:
-				_threat_seen[id] = vl.duplicate()
-			else:
-				var el_react := float(((ai().get("elements", {}) as Dictionary).get(element, {}) as Dictionary).get("react", 1.0))
-				_threat_seen[id] = [now, me.rng.randf() < float(pr.get("react_chance", 0.5)) * el_react]
-				if src != 0:
-					_volleys[src] = _threat_seen[id]
-		var seen: Array = _threat_seen[id]
-		if not bool(seen[1]) or now - float(seen[0]) < react:
+		var seen := _seen(th, pr, now)
+		if not bool(seen[1]) or now - float(seen[0]) < minf(react, react_g):
 			continue
 		var tti := float(th.tti)
+		var kind := String(th.kind)
 		for o: Dictionary in options:
 			var h: Dictionary = o.hint
-			if not is_guard(h) or not String(th.kind) in (h.get("answers", []) as Array) or not castable(o):
+			var answers: Array = h.get("answers", [])
+			var ok := is_guard(h) and kind in answers
+			if not ok and kind == "lightning" and String(o.do) == "dash" and bool(pr.get("lightning_dash", false)):
+				ok = true                            # (a hard bot dashes on the flash: spec 2.3, lightning's flash_s)
+			if not ok or not castable(o) or (kind == "lightning" and bool(o.guard) and not bool(seen[2])):
+				continue                             # (lightning goes back only off a parry on the beat: else it hits)
+			if now - float(seen[0]) < (react_g if bool(o.guard) else react):
 				continue
+			if bool(th.get("floor", false)) and not bool(o.guard) and not "floor" in answers:
+				continue                             # (along the deck: jumped (_jump_floor), or a guard; a side step is no answer)
 			if float(th.get("knock", INF)) < float(h.get("min_knock", 0.0)) or not _guard_fits(o, t):
 				continue
 			var ls := lock_for(String(o.id), String(o.mode), _preset_name(), 0.0)
+			if bool(o.guard):
+				ls = _guard_lock(ls)
+			if ls > tti:
+				continue
 			var window := float(o.spec.get("window_s", o.spec.get("life_s", o.spec.get("s", 1.0))))
-			if ls > tti or ls + window * 0.8 < tti:
+			if String(h.get("role", "")) == "reaction" or bool(o.guard):
+				# (a guard: begun so the hit lands at its beat: early in the window on a perfect roll, later on a late one)
+				var at := on_beat(window, bool(seen[2]))
+				if tti - ls > at + 0.05 or tti - ls > window * 0.9:
+					# (too soon: it waits for the beat, and begins nothing else meanwhile: _choose holds off)
+					_beat_wait_until = maxf(_beat_wait_until, now + minf(tti - ls - at, 1.0))
+					continue
+			elif ls + window * 0.8 < tti:
 				continue
 			if best.is_empty() or ls < float(best.ls):
-				best = {"id": o.id, "mode": o.mode, "kind": th.kind, "ls": ls}
+				best = {"id": o.id, "mode": o.mode, "kind": kind, "ls": ls}
 	if _threat_seen.size() > 64:
 		_threat_seen.clear()
 		_volleys.clear()
 	return best
+
+
+## Threat `th`'s roll ([first seen, answered at all, on the beat]): one a volley of light bolts (VOLLEY_S), else its own.
+func _seen(th: Dictionary, pr: Dictionary, now: float) -> Array:
+	var id := int(th.id)
+	if not _threat_seen.has(id):
+		var src := int(th.get("src", 0))
+		var vl: Array = _volleys.get(src, [])
+		if src != 0 and not vl.is_empty() and now - float(vl[0]) < VOLLEY_S:
+			_threat_seen[id] = vl.duplicate()
+		else:
+			var el_react := float(((ai().get("elements", {}) as Dictionary).get(element, {}) as Dictionary).get("react", 1.0))
+			_threat_seen[id] = [now, me.rng.randf() < float(pr.get("react_chance", 0.5)) * el_react,
+					me.rng.randf() < float(pr.get("perfect_chance", 0.3))]
+			if src != 0:
+				_volleys[src] = _threat_seen[id]
+	return _threat_seen[id]
+
+
+## Where in a guard's window (s from its standing) a bot aims the hit: a perfect one in the middle of the first
+## guard_rules.perfect_s, a late one past it (a third of the way through the rest).
+static func on_beat(window: float, perfect: bool) -> float:
+	var ps := rule("perfect_s")
+	if perfect:
+		return ps * 0.5
+	return ps + maxf(window - ps, 0.0) * 0.35
+
+
+## Each frame: a wave along the deck coming at it (a threat with "floor": the Kick's, a rolling Boulder) jumped, once seen
+## for the preset's reaction and rolled at its jump_chance once a wave: the takeoff when the wave is jump_lead_s from its
+## feet (bend_ai.json; at jump_mps its feet are over the wave's miss_above_m from about 0.1 s to 0.6 s after it).
+func _jump_floor() -> void:
+	var d_ai := ai()
+	var pr := preset()
+	var now := _now()
+	var lead := float(d_ai.get("jump_lead_s", 0.3))
+	for th: Dictionary in _threats():
+		if not bool(th.get("floor", false)):
+			continue
+		var id := int(th.id)
+		if not _floor.has(id):
+			floor_seen += 1
+			_floor[id] = [now, me.rng.randf() < float(pr.get("jump_chance", 0.5)), false]
+		var e: Array = _floor[id]
+		if not bool(e[1]) or bool(e[2]) or now - float(e[0]) < float(pr.get("reaction_s", 0.4)):
+			continue
+		var tti := float(th.tti)
+		if tti <= lead and tti > 0.08 and me.jump(float(d_ai.get("jump_mps", 6.5))):
+			e[2] = true
+			floor_jumped += 1
+			jumps += 1
+	if _floor.size() > 64:
+		_floor.clear()
+
+
+## The stone it holds (caught: meta bend_held_by), null none.
+func _held_stone() -> Node3D:
+	for st in me.get_tree().get_nodes_in_group(FormStone.GROUP):
+		if int((st as Node).get_meta(&"bend_held_by", -1)) == me.get_instance_id():
+			return st as Node3D
+	return null
+
+
+## Whether a wall stands between it and `t` (anyone's raised earth or ice, or a fire or wind wall, within 1.2 m of the line
+## between their chests): the High Kick's arc clears it.
+func _wall_on_line(t: Node3D) -> bool:
+	if t == null or not is_instance_valid(t):
+		return false
+	var a := me.global_position + Vector3.UP
+	var b := t.global_position + Vector3.UP
+	for w in me.get_tree().get_nodes_in_group(FormRaised.GROUP):
+		var fr := w as FormRaised
+		if fr != null and fr.is_up() and fr.kind == "wall":
+			var q := fr.global_position + Vector3.UP
+			if q.distance_to(Geometry3D.get_closest_point_to_segment(q, a, b)) < 1.2 + fr.size.x * 0.5:
+				return true
+	for z in me.get_tree().get_nodes_in_group(BendZone.GROUP):
+		var bz := z as BendZone
+		if bz != null and bz.kind in ["fire_wall", "wind_wall", "water_wall"]:
+			var q2 := bz.global_position + Vector3.UP
+			if q2.distance_to(Geometry3D.get_closest_point_to_segment(q2, a, b)) < 1.2 + bz.size.x * 0.5:
+				return true
+	return false
+
+
+## A guard's lock `ls` with the whiff rule: within whiff_s of a guard that took nothing, whiff_lock_s at least (BendZone's
+## own reckoning, the player's: meta bend_whiff_until).
+func _guard_lock(ls: float) -> float:
+	if BendStatus.until(me, &"bend_whiff_until") > 0.0:
+		return maxf(ls, rule("whiff_lock_s"))
+	return ls
 
 
 ## Whether hint `h` is a guard's: a reaction's, or any option's that answers something (Earth Grip's anchor; a dodge). Only a
@@ -667,17 +882,37 @@ func _guard_fits(o: Dictionary, t: Node3D) -> bool:
 ## tornado coming at it, kind "vortex"; a stone held up and aimed at it, kind "held"; the foe's lightning by his lock's fill;
 ## his wind-up). knock: the move's knock_mps; src: a light bolt's sender (its instance id: its volley, VOLLEY_S), else none.
 func _threats() -> Array:
+	var frame := Engine.get_physics_frames()
+	if frame == _threats_frame:
+		return _threats_last                       # (the guard's look and the jump's in one frame: one look)
 	var out: Array = []
+	_threats_frame = frame
+	_threats_last = out
 	var tree := me.get_tree()
 	var c := NpcSenses.chest_of(me)
 	for b in tree.get_nodes_in_group(BendBolt.GROUP):
 		var bb := b as BendBolt
 		if bb == null or bb.spent or bb.caster == me:
 			continue
+		if is_floor_bolt(bb):
+			# (a wave along the deck: wide, low; it comes at its feet, whatever its height to the chest)
+			var wide := maxf(float(bb.get(&"width_m")) if bb.get(&"width_m") != null else bb.radius * 2.0, 0.6)
+			var ttf := _closing_flat(bb.global_position, bb.velocity, me.global_position, wide * 0.5 + 0.45)
+			if ttf >= 0.0:
+				out.append({"id": bb.get_instance_id(), "kind": bb.kind, "tti": ttf, "knock": bb.knock_mps, "floor": true})
+			continue
 		var tti := _closing(bb.global_position, bb.velocity, c)
 		if tti >= 0.0:
 			out.append({"id": bb.get_instance_id(), "kind": bb.kind, "tti": tti, "knock": bb.knock_mps,
 					"src": _src(bb.caster) if bb.kind != "stone" else 0})
+	for s in tree.get_nodes_in_group(FormStone.GROUP):
+		# (a boulder rolling along the deck at it: kind "floor", jumped)
+		var rb := s as RigidBody3D
+		if rb == null or rb.freeze or rb.linear_velocity.length() < ROLL_MPS or rb.global_position.y - me.global_position.y > FLOOR_M:
+			continue
+		var ttr := _closing_flat(rb.global_position, rb.linear_velocity, me.global_position, 0.75)
+		if ttr >= 0.0:
+			out.append({"id": rb.get_instance_id(), "kind": "floor", "tti": ttr, "knock": 6.0, "floor": true})
 	for f in tree.get_nodes_in_group(FLIGHT_GROUP):
 		var fl := f as Flight
 		if fl == null or fl.shooter == me or fl.stone == null or not is_instance_valid(fl.stone):
@@ -716,7 +951,7 @@ func _threats() -> Array:
 	if t != null and is_instance_valid(t):
 		var sc := SwayCaster.of(t) if t is FrontierPlayer else null
 		if sc != null and sc.state != SwayCaster.State.IDLE and sc.move == "fire_arc" and sc.mode_of("fire_arc") == "lightning":
-			out.append({"id": sc.get_instance_id(), "kind": "lightning", "tti": maxf((1.0 - sc.fill) * sc.lock_s, 0.0) + 0.05,
+			out.append({"id": sc.get_instance_id(), "kind": "lightning", "tti": maxf((1.0 - sc.fill) * sc.lock_s, 0.0) + flash_s(),
 					"knock": 6.0})
 		elif sc != null and sc.state != SwayCaster.State.IDLE and sc.move != "":
 			# (his wind-up read: a throw or a bolt he is locking, its stone or its element on its way when he lets go)
@@ -725,19 +960,39 @@ func _threats() -> Array:
 			if not shot.is_empty():
 				var left := maxf((1.0 - sc.fill) * sc.lock_s, 0.0)
 				var began := int((_now() - sc.fill * sc.lock_s) * 10.0)
-				out.append({"id": hash([sc.get_instance_id(), sc.move, md, began]), "kind": shot.kind, "knock": shot.knock,
-						"tti": left + READ_STRIKE_S + c.distance_to(NpcSenses.chest_of(t)) / float(shot.mps)})
+				out.append(_read(shot, hash([sc.get_instance_id(), sc.move, md, began]), left + READ_STRIKE_S, c, t))
 		elif t is NpcFighter and (t as NpcFighter).brain != null and (t as NpcFighter).brain.bending != null:
 			var ob := (t as NpcFighter).brain.bending
 			if ob.casting == "fire_arc" and ob.mode == "lightning":
-				out.append({"id": ob.get_instance_id(), "kind": "lightning", "tti": maxf(ob.lock_s - ob.lock_t, 0.0) + 0.05,
+				out.append({"id": ob.get_instance_id(), "kind": "lightning", "tti": maxf(ob.lock_s - ob.lock_t, 0.0) + flash_s(),
 						"knock": 6.0})
 			elif ob.casting != "":
 				var shot2 := shot_of(ob.casting, ob.mode)
 				if not shot2.is_empty():
-					out.append({"id": hash([ob.get_instance_id(), ob.casting, ob.mode, int(ob._lock_at * 100.0)]), "kind": shot2.kind,
-							"knock": shot2.knock, "tti": maxf(ob.lock_s - ob.lock_t, 0.0) + c.distance_to(NpcSenses.chest_of(t)) / float(shot2.mps)})
+					out.append(_read(shot2, hash([ob.get_instance_id(), ob.casting, ob.mode, int(ob._lock_at * 100.0)]),
+							maxf(ob.lock_s - ob.lock_t, 0.0), c, t))
 	return out
+
+
+## Lightning's strike after its release (s): its flash (spec flash_s, round 2: a dash on the flash dodges it), a frame's
+## more.
+static func flash_s() -> float:
+	return float(spec_of("fire_arc", "lightning").get("flash_s", 0.0)) + 0.05
+
+
+## A wind-up read as a threat: shot `shot` (shot_of) leaving `left` s from now from `t` at chest `c`: {id, kind, knock, tti},
+## for a wave along the deck its time to its feet ("read": the jump waits for the wave), "under" (kind) for what rises under
+## it (its rise_s on).
+func _read(shot: Dictionary, id: int, left: float, c: Vector3, t: Node3D) -> Dictionary:
+	var th := {"id": id, "kind": shot.kind, "knock": shot.knock}
+	if String(shot.kind) == "under":
+		th["tti"] = left + float(shot.get("rise_s", 0.35))
+	elif bool(shot.get("floor", false)):
+		th["tti"] = left + me.global_position.distance_to(t.global_position) / float(shot.mps)
+		th["read"] = true                          # (a guard may answer it; the jump waits for the wave itself)
+	else:
+		th["tti"] = left + c.distance_to(NpcSenses.chest_of(t)) / float(shot.mps)
+	return th
 
 
 ## What (id, md) sends flying at whom it is cast at: {kind, mps, knock} (a bolt's or a throw's spec; Stone Form's spike and
@@ -745,9 +1000,14 @@ func _threats() -> Array:
 static func shot_of(id: String, md: String) -> Dictionary:
 	var spec := spec_of(id, md)
 	var dn := String(spec.get("do", ""))
-	if dn in ["bolt", "throw"]:
+	if dn in ["bolt", "throw", "wind_wave"]:
 		return {"kind": String(spec.get("kind", "stone")), "mps": maxf(float(spec.get("mps", 30.0)), 5.0),
 				"knock": float(spec.get("knock_mps", 0.0))}
+	if dn == "floor_wave":
+		return {"kind": String(spec.get("kind", "fire")), "mps": maxf(float(spec.get("mps", 18.0)), 5.0),
+				"knock": float(spec.get("knock_mps", 0.0)), "floor": true}
+	if dn in ["column", "spout"]:
+		return {"kind": "under", "mps": 1.0, "knock": float(spec.get("up_mps", 10.0)), "rise_s": float(spec.get("rise_s", 0.35))}
 	if dn == "shove":
 		var rd: Dictionary = SwayMoves.move("gust").get("raised", {})
 		return {"kind": "stone", "mps": float(rd.get("mps", 26.0)), "knock": float(rd.get("knock_mps", 5.0))}
@@ -760,6 +1020,24 @@ static func shot_of(id: String, md: String) -> Dictionary:
 	if spec.is_empty() and id == "gust" and md == "lift":
 		return {"kind": "stone", "mps": 24.0, "knock": 5.0}
 	return {}
+
+
+## Whether bolt `bb` runs along the deck (a floor wave, the Kick's: its own floor or floor_wave flag, a low bolt).
+static func is_floor_bolt(bb: BendBolt) -> bool:
+	return bb.low or bb.get(&"floor") == true or bb.get(&"floor_wave") == true
+
+
+## Seconds until something at `p` going `v` (flat) passes over `at` (flat) within `r`, within 3 s (else -1).
+static func _closing_flat(p: Vector3, v: Vector3, at: Vector3, r: float) -> float:
+	var vf := Vector3(v.x, 0.0, v.z)
+	var rel := Vector3(p.x - at.x, 0.0, p.z - at.z)
+	var vv := vf.length_squared()
+	if vv < 1.0:
+		return -1.0
+	var ts := -rel.dot(vf) / vv
+	if ts <= 0.0 or ts > 3.0:
+		return -1.0
+	return ts if (rel + vf * ts).length() <= r else -1.0
 
 
 ## Seconds until something at `p` going `v` passes nearest `c`, when that is nearer than THREAT_MISS_M (else -1).
@@ -809,7 +1087,22 @@ func begin(id: String, md: String) -> void:
 	fill = 0.0
 	lock_s = lock_for(id, md, _preset_name(), _cast_dist(id, md, t))
 	_lock_at = _now()
-	if String((_option(id + "/" + md).get("hint", {}) as Dictionary).get("role", "")) == "reaction":
+	var o := _option(id + "/" + md)
+	grown = false
+	if bool(o.get("grow", false)):
+		# (held past the second click: it grows; its element's grow_chance, a move's own "grow" over it)
+		var el_ai: Dictionary = (ai().get("elements", {}) as Dictionary).get(element, {})
+		var gc := float((o.hint as Dictionary).get("grow", el_ai.get("grow", 0.35)))
+		grown = me.rng.randf() < gc
+		if grown:
+			lock_s += rule("grow_after_s")
+	if bool(o.get("guard", false)):
+		if _held_stone() != null:
+			# (E again with a stone held: the return's lock, shorter after a clean catch: the player's, BendZone.guard_lock_s)
+			lock_s = BendZone.guard_lock_s(me, lock_s) * float(preset().get("lock_mult", 1.0))
+		else:
+			lock_s = _guard_lock(lock_s)
+	if String((o.get("hint", {}) as Dictionary).get("role", "")) == "reaction":
 		# (a reaction's only: a guard of another role (the anchor, a hop) never holds back the next catch)
 		_guard_until = _lock_at + lock_s + float(ai().get("guard_cool_s", 0.0))
 	_follow = 0.0
@@ -851,14 +1144,34 @@ func _release() -> void:
 	caster.modes[id] = md
 	caster.side = _pick_side(t)
 	var before := BendEffects.last_of(caster)
+	var o0 := _option(key)
+	var held := _held_stone() if bool(o0.get("guard", false)) else null
+	var returning := held != null
+	# (the player's own hooks: a grow move held past its second click casts grown, a dash by the keys held goes the way
+	# its picked keys say; both cleared after)
+	caster.grown = grown and bool(o0.get("grow", false))
+	caster.dash_dir = _held_dir(o0, t)
 	var ok := _cast(id, md, t)
-	locks.append({"move": id, "mode": md, "lock_s": lock_s, "took_s": took, "clip": me.body.cast_clip if me.body != null else ""})
+	caster.grown = false
+	caster.dash_dir = Vector2.ZERO
+	if returning:
+		# (E again with the stone held: BendZone.return_stone threw it back; the rally its returns, either side's)
+		ok = not is_instance_valid(held) or int(held.get_meta(&"bend_held_by", -1)) != me.get_instance_id()
+		if ok and is_instance_valid(held):
+			longest_rally = maxi(longest_rally, int(held.get_meta(RETURNS_META, 0)))
+	locks.append({"move": id, "mode": md, "lock_s": lock_s, "took_s": took, "clip": me.body.cast_clip if me.body != null else "",
+			"grown": grown, "return": returning})
 	if locks.size() > 64:
 		locks.pop_front()
-	last_cast = {"move": id, "mode": md, "lock_s": lock_s, "took_s": took, "ok": ok, "at": _now()}
+	last_cast = {"move": id, "mode": md, "lock_s": lock_s, "took_s": took, "ok": ok, "at": _now(), "grown": grown,
+			"return": returning}
 	if ok:
 		casts += 1
 		casts_by[key] = int(casts_by.get(key, 0)) + 1
+		if grown:
+			grows_by[key] = int(grows_by.get(key, 0)) + 1
+		if returning:
+			returns += 1
 		match key:
 			"stone_form/spike":
 				spikes += 1
@@ -880,6 +1193,8 @@ func _release() -> void:
 func _cast(id: String, md: String, t: Node3D) -> bool:
 	var spec := spec_of(id, md)
 	var at := _cast_point(id, md, t)
+	if id == "mend":
+		t = _own_wall(true, 6.0)                    # (Mend works on its own worn piece, never on the man it fights)
 	if id == "gust" and md == "lift":
 		# (Gust lift is a stone held and hurled at him: cast on the stone, never on the man himself)
 		var st := _lift_stone(t)
@@ -906,6 +1221,52 @@ func _cast(id: String, md: String, t: Node3D) -> bool:
 	return false
 
 
+## The keys a bot "holds" for a dash of option `o` whose way is the keys held (spec dir "held"; BodyBendCaster.dash_dir:
+## x right of the way to the foe, y toward him): the way it picked (_dash_way), a side the one found safe (_sides, else the
+## caster's side at the release); ZERO for any other cast (the spec's none: back).
+func _held_dir(o: Dictionary, _t: Node3D) -> Vector2:
+	if o.is_empty() or bool(o.get("old", false)) or String((o.spec as Dictionary).get("dir", "")) != "held":
+		return Vector2.ZERO
+	match _dash_way(o):
+		"side":
+			var sd := float(_sides.get(String(o.get("key", "")), caster.side))
+			return Vector2(signf(sd) if absf(sd) > 0.01 else 1.0, 0.0)
+		"forward":
+			return Vector2(0.0, 1.0)
+	return Vector2(0.0, -1.0)
+
+
+## The way a dash of option `o` goes for a bot: one whose way is the keys held (dir "held": a bot has none) its pick of this
+## think (_ways: its hint's way first, else another with room), else its spec's (back, side), else at the foe.
+func _dash_way(o: Dictionary) -> String:
+	var spec: Dictionary = o.get("spec", {})
+	if String(spec.get("dir", "")) == "held":
+		var w := String(_ways.get(String(o.get("key", "")), ""))
+		if w != "":
+			return w
+		w = String((o.get("hint", {}) as Dictionary).get("way", ""))
+		return w if w != "" else "side"
+	return "back" if bool(spec.get("back", false)) else "side" if bool(spec.get("side", false)) else "forward"
+
+
+## Whether a dash of `o` whose way is the keys held may go a way with room (_dash_safe): its hint's way first, then side, back
+## (at the foe only when its hint says so: a dodge never runs into what comes); the one found kept as its pick (_ways), false
+## none.
+func _pick_way(o: Dictionary, t: Node3D) -> bool:
+	var key := String(o.get("key", ""))
+	var first := String((o.get("hint", {}) as Dictionary).get("way", "side"))
+	var side := _pick_side(t)
+	for w: String in [first, "side", "back"]:
+		_ways[key] = w
+		for sd: float in ([side, -side] if w == "side" else [side]):
+			_sides[key] = sd
+			if _way_safe(o, t):
+				return true
+	_ways.erase(key)
+	_sides.erase(key)
+	return false
+
+
 ## What the cast left to watch: its bolts and hurled stones (hits), its guard (catches). `before`: last_of its caster before
 ## the cast (the same: the cast went another way, nothing of it there).
 func _after_cast(o: Dictionary, before: Dictionary) -> void:
@@ -916,8 +1277,8 @@ func _after_cast(o: Dictionary, before: Dictionary) -> void:
 	if not o.is_empty() and String(o.do) in ["cone", "ring", "status_at", "lightning", "grab", "column"]:
 		hits += int(last.get("hit", 0))
 	var z: Variant = last.get("zone")
-	if z != null and is_instance_valid(z) and z is BendZone and (z as BendZone).kind in BendZone.GUARDS:
-		_guards.append([z, (z as BendZone).took])
+	if z != null and is_instance_valid(z) and z is BendZone and (z as BendZone).kind in GUARD_ZONES:
+		_guards.append([z, (z as BendZone).took])   # ([zone, what it took so far]: answered, catches)
 
 
 ## Each frame: new bolts and hurled stones of its own connected (their strikes counted), its guards' takings counted.
@@ -941,7 +1302,7 @@ func _watch() -> void:
 	for i in range(_guards.size() - 1, -1, -1):
 		var e: Array = _guards[i]
 		var z: Variant = e[0]
-		if not is_instance_valid(z):
+		if not is_instance_valid(z) or (z as BendZone).is_queued_for_deletion():
 			_guards.remove_at(i)
 			continue
 		var bz := z as BendZone
@@ -956,30 +1317,34 @@ func _watch() -> void:
 		_answer_catch()
 
 
-## A stone it caught and holds sent back: Earth Shove (push) forced as soon as its reaction allows, its rest cut short
-## (the shove's own cool waived: the catch is the moment). Air's the same way (the design's "air cushions or lifts stone"):
-## a stone its cushion stopped is lifted and hurled back (Gust lift forced, CUSHION_LIFT_S on, once it has dropped; the
-## lift's cool waived).
+## A stone it caught and holds sent back: its guard cast again (E again, as the player's: the return; spec 2.6), forced as
+## soon as its reaction allows, its rest cut short (the guard's own cool and the guard cool waived: the catch is the moment).
+## Only earth holds: water's, fire's and air's guards send a perfect back by themselves.
 func _answer_catch() -> void:
-	if element == "air" and not _option("gust/lift").is_empty():
-		var at_air := _now() + float(preset().get("reaction_s", 0.4)) * 0.5 + CUSHION_LIFT_S
-		_next["gust/lift"] = at_air
-		_cool.erase("gust/lift")
-		_rest_until = minf(_rest_until, at_air)
+	var g := guard_of(element)
+	if element != "earth" or g.is_empty() or _held_stone() == null:
 		return
-	if element != "earth" or _option("earth_shove/push").is_empty():
-		return
-	var held := false
-	for st in me.get_tree().get_nodes_in_group(FormStone.GROUP):
-		if int((st as Node).get_meta(&"bend_held_by", -1)) == me.get_instance_id():
-			held = true
-			break
-	if not held:
-		return
+	var key := "%s/%s" % [g[0], g[1]]
 	var at := _now() + float(preset().get("reaction_s", 0.4)) * 0.5
-	_next["earth_shove/push"] = at
-	_cool.erase("earth_shove/push")
+	_next[key] = at
+	_cool.erase(key)
+	_guard_until = minf(_guard_until, at)
 	_rest_until = minf(_rest_until, at)
+
+
+## A guard of its own told its result (BendCaster.guarded, from BendZone: the same as the player's): perfect (on the beat:
+## a clean catch for earth's stone), late (half through; earth's stone still caught), whiff (nothing taken: its next guard's
+## lock whiff_lock_s within whiff_s, BendZone.guard_lock_s).
+func _on_guarded(result: String, what: String) -> void:
+	match result:
+		"perfect":
+			perfects += 1
+			if element == "earth" and what == "stone":
+				clean_catches += 1
+		"late":
+			lates += 1
+		"whiff":
+			whiffs += 1
 
 
 func _on_struck(who: Node, _dmg: float) -> void:
@@ -987,19 +1352,50 @@ func _on_struck(who: Node, _dmg: float) -> void:
 		hits += 1
 
 
-## A hit taken (NpcFighter.apply_hit, any damage above 0): the lock lost (as a hit breaks the player's); its "hurt" need.
-func on_hurt(dmg: float, _source: Node = null) -> void:
+## A hit taken (NpcFighter.apply_hit, any damage above 0): the lock pushed back (_set_back); its "hurt" need.
+func on_hurt(dmg: float, source: Node = null) -> void:
 	if dmg <= 0.0:
 		return
 	_hurt_t = _now()
 	if casting != "":
-		_lose("hit")
+		_set_back(source, "hit")
 
 
-## A knock taken (BendKnock, through NpcFighter.on_bend_knock): the lock lost.
-func on_knocked(_v: Vector3, _by: Node = null) -> void:
+## A knock taken (BendKnock, through NpcFighter.on_bend_knock): the lock pushed back (_set_back).
+func on_knocked(_v: Vector3, by: Node = null) -> void:
 	if casting != "":
-		_lose("knock")
+		_set_back(by, "knock")
+
+
+## The lock pushed back by a hit from `by` (spec 2.3, as the player's): by what the hit cost its sender (his last cast's
+## lock: NpcBending.lock_s for a bot, the move's lock_s for anyone else), at least hit_setback_min_s; never below empty and
+## never wiped. A dash's or a guard's lock is never pushed back; lightning's charge breaks (lost). The hit's damage and its
+## knock come apart: one setback for both (SETBACK_SAME_S).
+func _set_back(by: Node, why: String) -> void:
+	var o := _option(casting + "/" + mode)
+	if casting == "fire_arc" and mode == "lightning":
+		_lose(why)
+		return
+	var role := String((o.get("hint", {}) as Dictionary).get("role", ""))
+	if String(o.get("do", "")) == "dash" or bool(o.get("guard", false)) or role == "reaction":
+		return
+	if _now() - _setback_t < SETBACK_SAME_S:
+		return
+	_setback_t = _now()
+	var cost := rule("hit_setback_min_s")
+	if by is NpcFighter and (by as NpcFighter).brain != null and (by as NpcFighter).brain.bending != null:
+		var lc: Dictionary = (by as NpcFighter).brain.bending.last_cast
+		cost = maxf(cost, float(lc.get("lock_s", 0.0)))
+	elif by != null:
+		var last := BendEffects.last_of(by)
+		if not last.is_empty():
+			var mv := SwayMoves.move(String(last.get("move", "")))
+			var ml: Dictionary = mv.get("mode_lock_s", {})
+			cost = maxf(cost, float(ml.get(String(last.get("mode", "")), mv.get("lock_s", 0.0))))
+	lock_t = maxf(lock_t - cost, 0.0)
+	fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)
+	setbacks += 1
+	lost_why = why
 
 
 ## Its fighter leaving the world (freed between rounds, cleared): its lock let go, the zones it holds round itself (guards,
@@ -1064,17 +1460,20 @@ static func dash_carry(spec: Dictionary) -> float:
 	var f := float(spec.get("fwd_mps", 10.0))
 	var up := float(spec.get("up_mps", 0.0))
 	var air := 2.0 * up / NpcFighter.GRAVITY
+	var gl: Variant = spec.get("glide")
+	if gl is Dictionary:
+		air += float((gl as Dictionary).get("s", 3.0))   # (Leap's glide: a bot holds it the whole while, drifting on)
 	return f * CARRY_S + f * f / (2.0 * NpcFighter.DECEL) + f * air * 0.5
 
 
-## A dash's way: back (away from the foe), to a side (the side with room), else at the foe.
+## A dash's way (_dash_way): back (away from the foe), to a side (the side with room), else at the foe.
 func _dash_dir(o: Dictionary, t: Node3D) -> Vector3:
 	var way := _way(t)
-	var spec: Dictionary = o.spec
-	if bool(spec.get("back", false)):
-		return -way
-	if bool(spec.get("side", false)):
-		return way.cross(Vector3.UP).normalized() * _pick_side(t)
+	match _dash_way(o) if not bool(o.get("old", false)) else "forward":
+		"back":
+			return -way
+		"side":
+			return way.cross(Vector3.UP).normalized() * float(_sides.get(String(o.get("key", "")), _pick_side(t)))
 	return way
 
 
@@ -1082,9 +1481,21 @@ func _dash_dir(o: Dictionary, t: Node3D) -> Vector3:
 ## and its landing inside the ropes (bounds_fn's place for it no more than SIDE_SLACK_M across the way to the foe from where
 ## it would land: edge_fn reads only the open ends, and side dashes went over a long side; R1-BALANCE soak, 2026-10-05).
 func _dash_safe(o: Dictionary, t: Node3D) -> bool:
+	if not bool(o.get("old", false)) and String((o.spec as Dictionary).get("dir", "")) == "held":
+		return _pick_way(o, t)
+	return _way_safe(o, t)
+
+
+## _dash_safe for the way the dash of `o` goes now (_dash_way; a dir "held" spec's own numbers for that way: its fwd, back
+## or side, as BendEffects.dash reads them).
+func _way_safe(o: Dictionary, t: Node3D) -> bool:
 	if not edge_fn.is_valid():
 		return true
 	var spec: Dictionary = o.spec if not bool(o.old) else {"fwd_mps": 6.0, "up_mps": 8.0}
+	var sub: Variant = spec.get({"forward": "fwd"}.get(_dash_way(o), _dash_way(o)))
+	if String(spec.get("dir", "")) == "held" and sub is Dictionary:
+		spec = spec.duplicate()
+		spec.merge(sub as Dictionary, true)
 	var margin := float(ai().get("edge_margin_m", 1.5))
 	var dir := _dash_dir(o, t)
 	var reach := dash_carry(spec) + margin

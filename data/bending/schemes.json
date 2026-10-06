@@ -1,45 +1,41 @@
 {
-  "_doc": "The control schemes for choosing an element's moves (the owner, 2026-10-05, after playing: \"still difficult for a human to switch spells, there's a lot of things going on\" -> all three as options next to the keys; kept swipe-friendly for a later touch version). MatchSetup.scheme() / set_scheme() (GameSettings' match section, key scheme), SwayCaster (the routing), Hotbar, BendStrip, RadialWheel, the menus, HowTo and F1 read this file. Every word here is shown to the player: no word from any show. Bots are never affected.",
+  "_doc": "The control schemes for choosing an element's moves (the owner, 2026-10-05, after playing: \"still difficult for a human to switch spells, there's a lot of things going on\"; round 2's skills: one button one meaning, Keys the default and the others under Controls' other ways). LMB's jab, E's guard, Space, the lock, the grow, the passives are the same under every scheme; only how 1-4's moves are readied differs. MatchSetup.scheme() / set_scheme() (GameSettings' match section, key scheme; a kept 'simple' reads as 'first_moves'), SwayCaster (the routing), Hotbar, BendStrip, RadialWheel, the menus, HowTo and F1 read this file. Every word here is shown to the player: no word from any show. Bots are never affected.",
   "default": "keys",
-  "order": ["keys", "direction", "radial", "simple"],
-  "words": {
-    "row": "Control scheme:  %s",
-    "row_line": "how you choose your moves: %s",
-    "changed": "Control scheme: %s"
-  },
+  "order": ["keys", "direction", "radial", "first_moves"],
+  "words": {"row": "Control scheme:  %s", "row_line": "how you choose your moves: %s", "changed": "Control scheme: %s"},
   "schemes": {
     "keys": {
       "label": "Keys",
-      "line": "1-4 a move, the same key again its other move; the mouse wheel steps its forms",
+      "line": "1-4 a move, tap the key twice for its other move; E guards; 5 heals",
       "strip": "",
-      "f1": "1-4 a key's move, the same key again its other move · 5 Mend, again Patch · wheel: the move's three forms"
+      "f1": "1-4 a key's first move, tap twice: its other move · E your guard · 5 Patch (twice: Mend) · hold 2 longer: it grows"
     },
     "direction": {
       "label": "Direction",
-      "line": "let go of the right button holding W, S or A/D: attack, defence or dodge",
-      "strip": "let go of RMB holding  W attack · S defence · A/D dodge · nothing: the key's move",
-      "f1": "Let go of RMB holding W: attack · S: defence · A or D: dodge · nothing held: the move on 1-5 (again: its other move; wheel: its forms)"
+      "line": "the key held as you press the right button picks the move: W strike, S wall, A/D dash",
+      "strip": "press RMB holding  W strike · S wall · A/D dash · nothing: the readied move",
+      "f1": "Press RMB holding W: your strike · S: your wall · A or D: your dash · nothing held: the readied move (picked at the press; moving after changes nothing)"
     },
     "radial": {
       "label": "Wheel",
-      "line": "hold %s: every move round a wheel; point at one, scroll its form, let go to ready it",
-      "strip": "hold %s: the wheel · point, scroll its form, let go · RMB: cast",
-      "f1": "Hold %s: every move round a wheel · move the mouse to one, scroll its form, let go to ready it · 1-5 still pick a key"
+      "line": "hold %s: your moves round a wheel; point at one, let go to ready it",
+      "strip": "hold %s: the wheel · point, let go · RMB: cast",
+      "f1": "Hold %s: your moves round a wheel · point at one, let go to ready it · 1-5 still pick a key"
     },
-    "simple": {
-      "label": "Simple",
-      "line": "four moves on 1-4, two forms each: how near the opponent is picks the form as you let go",
-      "strip": "1-4 a move · near or far picks its form as you let go · wheel: the next move",
-      "f1": "1-4 a move, two forms each: how near the opponent is picks the form as you let go · wheel: the next move"
+    "first_moves": {
+      "label": "First moves only",
+      "line": "1-4 ready only each key's first move: the same game, fewer choices",
+      "strip": "1-4 a move · E your guard · 5 Patch",
+      "f1": "1-4 each key's first move only (a second tap does nothing) · E your guard · 5 Patch"
     }
   },
   "direction": {
-    "_doc": "The move cast when the right button is let go with a direction held (forward W, back S, side A or D; none: the key's own move). Each [move, variation]. A touch version maps the directions to swipes.",
+    "_doc": "The move cast when the right button is pressed with a direction held, sampled at the press and kept for that lock (forward W: key 1's first move, back S: key 4's, the wall; side A or D: key 3's first, the dash to that side; none: the readied move). Each [move, variation]. A touch version maps the directions to swipes.",
     "dead_zone": 0.3,
-    "earth": {"forward": ["stone_form", "spike"], "back": ["stone_catch", "catch"], "side": ["earth_skate", "burrow"]},
-    "water": {"forward": ["water_whip", "whip"], "back": ["water_shield", "bubble"], "side": ["flow", "water_skate"]},
-    "fire": {"forward": ["fire_blast", "punch"], "back": ["fire_parry", "parry"], "side": ["footwork", "hop"]},
-    "air": {"forward": ["air_blast", "ball"], "back": ["air_shield", "shield"], "side": ["evade", "sidestep"]}
+    "earth": {"forward": ["stone_form", "spike"], "back": ["earth_wall", "wall"], "side": ["earth_skate", "burrow"]},
+    "water": {"forward": ["water_whip", "whip"], "back": ["water_shield", "ice_wall"], "side": ["flow", "skate"]},
+    "fire": {"forward": ["fire_blast", "punch"], "back": ["fire_wall", "wall"], "side": ["footwork", "step"]},
+    "air": {"forward": ["air_blast", "slice"], "back": ["air_wall", "wall"], "side": ["evade", "slip"]}
   },
   "radial": {
     "_doc": "The wheel's key is the action bend_wheel (Tab by default: unused in the ring; in the duel it takes Tab from the character screen while this scheme is on). The game runs on at full speed while it is open, as the equip wheel (the owner: no slow motion on a wheel).",
@@ -47,31 +43,11 @@
     "inner_px": 80,
     "pick_min_px": 36
   },
-  "simple": {
-    "_doc": "Four moves per element (the first skill of keys 1-4), two forms each: near when the nearest opponent is within near_m (m) as the right button is let go, else far.",
-    "earth": [
-      {"id": "stone_form", "near": "cannonball", "far": "spike", "near_m": 7.0},
-      {"id": "earth_wall", "near": "shell", "far": "column", "near_m": 6.0},
-      {"id": "pillar", "near": "self", "far": "free", "near_m": 6.0},
-      {"id": "earth_shove", "near": "split", "far": "push", "near_m": 6.0}
-    ],
-    "water": [
-      {"id": "water_whip", "near": "lash", "far": "whip", "near_m": 5.0},
-      {"id": "ice", "near": "shards", "far": "spear", "near_m": 8.0},
-      {"id": "wave", "near": "push", "far": "surf", "near_m": 8.0},
-      {"id": "water_shield", "near": "bubble", "far": "ice_wall", "near_m": 8.0}
-    ],
-    "fire": [
-      {"id": "fire_blast", "near": "stream", "far": "punch", "near_m": 7.0},
-      {"id": "fire_arc", "near": "sweep", "far": "kick", "near_m": 6.0},
-      {"id": "fire_jets", "near": "jump", "far": "dash", "near_m": 8.0},
-      {"id": "fire_wall", "near": "ring", "far": "wall", "near_m": 6.0}
-    ],
-    "air": [
-      {"id": "gust", "near": "push", "far": "pull", "near_m": 8.0},
-      {"id": "air_blast", "near": "ball", "far": "slice", "near_m": 8.0},
-      {"id": "air_jump", "near": "leap", "far": "dash", "near_m": 8.0},
-      {"id": "air_shield", "near": "cyclone", "far": "shield", "near_m": 6.0}
-    ]
+  "first_moves": {
+    "_doc": "'First moves only' (replaces Simple and its distance band; owner question 17): keys 1-4 ready only their first move (a second tap, a wheel step: nothing), the strip four names. Each element's four, [move, variation] in key order: the first move of keys 1-4 (moves.json elements), a complete kit with the guard on E.",
+    "earth": [["stone_form", "spike"], ["earth_shove", "push"], ["earth_skate", "burrow"], ["earth_wall", "wall"]],
+    "water": [["water_whip", "whip"], ["wave", "push"], ["flow", "skate"], ["water_shield", "ice_wall"]],
+    "fire": [["fire_blast", "punch"], ["fire_kick", "kick"], ["footwork", "step"], ["fire_wall", "wall"]],
+    "air": [["air_blast", "slice"], ["air_gust", "gust"], ["evade", "slip"], ["air_wall", "wall"]]
   }
 }

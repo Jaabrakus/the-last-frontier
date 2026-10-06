@@ -6,11 +6,13 @@ extends SceneTree
 ##               excluded (nor own-axe-d, -w, -a: measured off reference swings), with a row in animations/SOURCE.md;
 ##               every pose's timing within its clip
 ##   the pick    a variation's own pose over the skill's over the element's default (a bend spec only); an excluded or a
-##               missing clip passed over; the Sway's old spells without a pose keep their tier clip
+##               missing clip passed over; the Sway's old spells without a pose keep their tier clip; the Kick (round 2) is
+##               own-bend-fire-kick-low from Frontier_Bend.res with its mirror, no stand-in, the High Kick own-bend-fire-kick
 ##   the poses   held_override in the duel: Earth Wall wall plays own-bend-earth-raise (the stomp-rise) and roots the
-##               caster, Stone boulder own-bend-earth-boulder (the owner's "left kick to stomp and then push") rooted, Fire Jab
-##               jab own-bend-fire-punch, Air Shield shield own-bend-air-shield (its first mapping, own-axe-block-high, is held back:
-##               poses.json exclude_why), Gust push (no bend spec, no pose) its mastery tier's clip
+##               caster, Stone boulder own-bend-earth-boulder (the owner's "left kick to stomp and then push") rooted, Punch
+##               own-bend-fire-punch, Wind Guard own-bend-air-guard (its own guard clip, round 2; its first mapping,
+##               own-axe-block-high, is held back: poses.json exclude_why), Gust push (no bend spec, no pose) its mastery
+##               tier's clip
 ##   the strike  a synthetic clip (hold_s 0.2, strike_s 0.3) on Fire Blast punch: the bolt leaves 0.08 s or more after the
 ##               release, as the pose says struck, from the pose's hand; a Catch on the same clip stands the very frame the
 ##               lock lets go; the pose taken away after a release, the fallback timer still lands the bolt within 0.25 s
@@ -142,6 +144,29 @@ func _picks() -> void:
 	_expect(String(j.get("clip", "")) == "own-bend-fire-punch" and is_equal_approx(float(j.get("strike_s", -1.0)), 8.0 / 30.0)
 			and String(j.get("hand", "")) == "r_palm" and j.has("hold_s") and String(j.get("alt", "")) == "own-bend-fire-punch-l",
 			"a pick filled from the clips table and the clip's metas, its alt the other hand (%s)" % str(j))
+	# the Kick's tell never lies (round 2, spec 7): the low kick, ours, in the own bending library; the High Kick the waist-high
+	var kk := BendPoses.pick("fire_kick", "kick", "fire")
+	var hk := BendPoses.pick("fire_kick", "high_kick", "fire")
+	_expect(String(kk.get("clip", "")) == "own-bend-fire-kick-low" and String(kk.get("from", "")) == "mode"
+			and BendPoses.library_of("own-bend-fire-kick-low") == "res://animations_extra/Frontier_Bend.res"
+			and String(kk.get("alt", "")) == "own-bend-fire-kick-low-l",
+			"the Kick: own-bend-fire-kick-low, in Frontier_Bend.res, no stand-in (%s from %s, %s)" % [kk.get("clip", "-"),
+			kk.get("from", "-"), BendPoses.library_of("own-bend-fire-kick-low")])
+	_expect(String(hk.get("clip", "")) == "own-bend-fire-kick" and String(hk.get("from", "")) == "mode",
+			"the High Kick: the waist-high kick (%s)" % hk.get("clip", "-"))
+	# every guard its own clip, a pose that reads at a glance (the owner's answers, 2026-10-05: the same care as earth's)
+	var gc := {"earth": ["stone_catch", "catch", "own-bend-earth-catch"],
+			"water": ["water_redirect", "redirect", "own-bend-water-turn"], "fire": ["fire_parry", "parry", "own-bend-fire-parry"],
+			"air": ["air_shield", "shield", "own-bend-air-guard"]}
+	for el: String in gc:
+		var ge: Array = gc[el]
+		var gk := BendPoses.pick(String(ge[0]), String(ge[1]), el)
+		_expect(String(gk.get("clip", "")) == String(ge[2]) and String(gk.get("from", "")) == "mode"
+				and BendPoses.library_of(String(ge[2])) == "res://animations_extra/Frontier_Bend.res",
+				"%s's guard plays its own clip, %s (%s)" % [el, ge[2], gk.get("clip", "-")])
+	var pg: Dictionary = BendPoses.pick("fire_blast", "punch", "fire").get("grow", {})
+	_expect(BendPoses.usable(String(pg.get("clip", ""))) and BendPoses.usable(String(pg.get("alt", ""))),
+			"the Punch held to grow names the Fireball's own clips (%s)" % [pg])
 	var ew := BendPoses.pick("earth_wall", "wall", "earth")
 	_expect(String(ew.get("clip", "")) == "own-bend-earth-raise" and bool(ew.get("root", false)) and String(ew.get("mask", "")) == "full",
 			"Earth Wall: the stomp-rise, whole and rooted (%s)" % str(ew))
@@ -258,8 +283,8 @@ func _poses() -> void:
 	var cases := [
 		["earth", "earth_wall", "wall", "own-bend-earth-raise", true],
 		["earth", "stone_form", "cannonball", "own-bend-earth-boulder", true],
-		["fire", "fire_jab", "jab", "own-bend-fire-punch", false],
-		["air", "air_shield", "shield", "own-bend-air-shield", false],
+		["fire", "fire_blast", "punch", "own-bend-fire-punch", false],
+		["air", "air_shield", "shield", "own-bend-air-guard", false],
 		["air", "gust", "push", String(SwayPose.clip_for(2)), false],
 	]
 	for cs: Array in cases:

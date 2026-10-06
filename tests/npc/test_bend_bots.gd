@@ -9,8 +9,13 @@ extends SceneTree
 ##   the lock   each lock it filled took its lock_s (within a tick and 1/60 s); a hard bot's lock_s for each of a sample of
 ##              moves equals the player's own SwayCaster lock for the same move (within 1/60 s)
 ##   a hit      a 2-damage pebble (a stone BendBolt from the player, no knock) during a fire bot's lightning lock breaks it
-##              (lost, why "hit"), and so does a knock
-##   water      a water bot's meter is spent by its casts and comes back fast by a pool (Bending.POOLS)
+##              (lost, why "hit"), and so does a knock; the same pebble during its Fire Wall's lock pushes the lock back by
+##              at least guard_rules.hit_setback_min_s and keeps it (round 2, spec 2.3: a hit sets a lock back, never wipes it)
+##   water      a water bot's casts spend nothing (water_meter.spend false); by a pool (Bending.POOLS) its meter fills fast
+##   catch      stones thrown at a hard earth bot are caught, and a caught one is sent back by its guard cast again (E again:
+##              its return, returns, its lock guard_rules.return_lock_s or perfect_return_lock_s)
+##   the floor  waves along the deck (the Kick's floor wave) sent at a normal earth bot: it jumps at least FLOOR_JUMP_MIN of them
+##              (floor_jumped of floor_seen; spec 2.8)
 ##   the edge   an air bot 3 m from an open end, the foe before it: in EDGE_S it never goes over the end of itself
 ## Last line "BEND BOTS PASSED" or "BEND BOTS FAILED"; exit 0 only on a pass; the watchdog (LIMIT_S) fails it before the lock
 ## wrapper's GODOT_TIMEOUT.
@@ -22,16 +27,20 @@ const SLAB_Y := 200.0
 const SLAB := Vector2(40.0, 16.0)
 const COVER_S := 40.0
 const EDGE_S := 25.0
-const MIN_DISTINCT := 6
+## (round 2's kits are smaller: 10-12 options an element, the guard and the heals on need; every move is the soak's check)
+const MIN_DISTINCT := 5
 ## Stones thrown at the earth bot for its answers.
 const THROWS := 8
+## Waves along the deck sent at a normal bot, and the share it must jump (the KITS task: at least 30%).
+const FLOOR_WAVES := 10
+const FLOOR_JUMP_MIN := 0.3
 const FACTION := "ring_team_b"
 ## The player's lock checked against the bot's: [element, move, mode] (self locks: no range stretch either side).
 const LOCKS := [
-	["earth", "stone_form", "disc"], ["earth", "rock_jab", "pebbles"], ["earth", "stone_catch", "catch"], ["earth", "earth_grip", "trap"],
+	["earth", "rock_jab", "pebbles"], ["earth", "stone_catch", "catch"], ["earth", "earth_shove", "column"],
 	["water", "ice", "spear"], ["water", "water_whip", "whip"], ["water", "wave", "push"],
-	["fire", "fire_arc", "lightning"], ["fire", "fire_blast", "fireball"], ["fire", "fire_jab", "jab"],
-	["air", "air_blast", "ball"], ["air", "evade", "spin"], ["air", "air_shield", "shield"],
+	["fire", "fire_arc", "lightning"], ["fire", "fire_kick", "high_kick"], ["fire", "fire_jab", "embers"],
+	["air", "air_blast", "ball"], ["air", "evade", "slip"], ["air", "air_shield", "shield"],
 ]
 
 var fails := 0
@@ -292,7 +301,7 @@ func _coverage(el: String) -> void:
 			bend_clip = bend_clip or k.begins_with("own-bend-")
 		_expect(bend_clip, "earth: the own ring-sport clips cast with (own-bend-*)")
 	if el == "water":
-		_expect(water_min[0] < bw.water_max - 5.0, "water: its meter spent by its casts (lowest %.0f)" % water_min[0])
+		_expect(water_min[0] >= bw.water_max - 0.5, "water: its casts spend no water (spend false; lowest %.0f)" % water_min[0])
 		await _water(f)
 	if el == "fire":
 		await _breaks(f)
@@ -300,6 +309,8 @@ func _coverage(el: String) -> void:
 		await _answers(f)
 	_free_bot(f)
 	await _secs(0.2)
+	if el == "earth":
+		await _floor()
 
 
 func _bot_ready(el: String, at: Vector3) -> NpcFighter:
@@ -339,6 +350,9 @@ func _answers(f: NpcFighter) -> void:
 			NpcBendCaster.hidden(f, p), b.casting, f.held, f.busy(), f.brain.target])
 	var r0 := int(b.reactions_by.get("stone", 0))
 	var a0 := b.answered
+	# (its opening grace held on: no attack of its own begun over the throws, so its guard is what is tried, not its lock's
+	# luck; the guard's own rolls stay: react_chance, perfect_chance)
+	b._grace_until = INF
 	for i in THROWS:
 		await _secs(1.2)
 		if not is_instance_valid(f):
@@ -354,8 +368,58 @@ func _answers(f: NpcFighter) -> void:
 				"radius_m": 0.2, "range_m": 40.0})
 	await _secs(1.5)
 	var begun := int(b.reactions_by.get("stone", 0)) - r0
-	print("  earth answers: %d guards begun, %d stones taken (catches %d) of %d thrown" % [begun, b.answered - a0, b.catches, THROWS])
+	var ret_locks: Array[String] = []
+	var ret_ok := true
+	for lk: Dictionary in b.locks:
+		if bool(lk.get("return", false)):
+			ret_locks.append("%s/%s %.2f s" % [lk.move, lk.mode, float(lk.lock_s)])
+			# (the return's lock: guard_rules' return_lock_s, or perfect_return_lock_s after a clean catch, x the preset's)
+			ret_ok = ret_ok and String(lk.move) == "stone_catch" and float(lk.lock_s) <= NpcBending.rule("return_lock_s") + 0.01
+	print("  earth answers: %d guards begun, %d stones taken (catches %d, clean %d; perfect %d, late %d, whiffs %d), %d returned: %s"
+			% [begun, b.answered - a0, b.catches, b.clean_catches, b.perfects, b.lates, b.whiffs, b.returns, ", ".join(ret_locks)])
 	_expect(begun >= 1, "earth: a stone thrown at it is answered with a guard (%d of %d)" % [begun, THROWS])
+	_expect(b.catches >= 1, "earth: it catches the stones thrown at it (%d of %d)" % [b.catches, THROWS])
+	_expect(b.returns >= 1 and ret_ok, "earth: a caught stone is sent back by its guard cast again (returns %d: %s)" % [b.returns, ", ".join(ret_locks)])
+
+
+## Waves along the deck (the Kick's floor wave from the player's feet) at a normal earth bot fighting him: it jumps at least
+## FLOOR_JUMP_MIN of those it sees come (NpcBending: floor_seen, floor_jumped; the preset's jump_chance).
+func _floor() -> void:
+	_clear()
+	await _secs(0.2)
+	_place_player(mid + Vector3(-7.0, 0.0, 0.0))
+	var f := _bot("earth", mid + Vector3(7.0, 0.0, 0.0), "normal")
+	for i in 3:
+		await physics_frame
+	if f == null:
+		_expect(false, "the floor: a bot spawned")
+		return
+	var b := f.brain.bending
+	var air := [0.0]
+	await _secs(2.5)
+	b._grace_until = INF                         # (no attack of its own: the waves' jumps are what is counted)
+	for i in FLOOR_WAVES:
+		f.global_position = Vector3(p.global_position.x + 12.0, f.global_position.y, p.global_position.z)
+		f.velocity = Vector3.ZERO
+		await _secs(0.3)
+		var from := p.global_position
+		var dir := Vector3(f.global_position.x - from.x, 0.0, f.global_position.z - from.z).normalized()
+		# (the Kick's own wave: moves.json fire_kick kick, along the deck from his feet; a light one, so it is the jump that
+		# is counted, not the knock)
+		var ks := NpcBending.spec_of("fire_kick", "kick").duplicate()
+		ks["damage"] = 2.0
+		ks["knock_mps"] = 1.0
+		ks["up_mps"] = 0.0
+		BendBolt.launch(p, from + dir * 1.0, dir, ks)
+		await _secs(1.4, func() -> void:
+			if is_instance_valid(f) and not f.is_on_floor():
+				air[0] += 1.0 / Engine.physics_ticks_per_second)
+	var share := float(b.floor_jumped) / maxf(float(b.floor_seen), 1.0)
+	print("  the floor: %d waves sent, %d seen, %d jumped (%.2f), %.1f s in the air" % [FLOOR_WAVES, b.floor_seen, b.floor_jumped, share, air[0]])
+	_expect(b.floor_seen >= FLOOR_WAVES / 2 and share >= FLOOR_JUMP_MIN and air[0] > 0.2,
+			"the floor: a normal bot jumps %d of %d waves along the deck (%.2f; %.2f wanted)" % [b.floor_jumped, b.floor_seen, share, FLOOR_JUMP_MIN])
+	_free_bot(f)
+	await _secs(0.2)
 
 
 ## A fire bot's lightning lock broken by a 2-damage pebble (no knock), then by a knock.
@@ -390,6 +454,28 @@ func _breaks(f: NpcFighter) -> void:
 	await _secs(0.1)
 	_expect(b.lost == l1 + 1 and b.lost_why == "knock", "fire: a knock breaks its lock too (why '%s')" % b.lost_why)
 	_expect(f.body != null and f.body.clip == NpcBody.KNOCK_SLIDE, "fire: knocked, it plays our own knock slide (%s)" % (f.body.clip if f.body else "-"))
+	# (any other lock: pushed back, kept)
+	await _secs(1.0)
+	var l2 := b.lost
+	var s2 := b.setbacks
+	b.begin("fire_wall", "wall")
+	await _secs(0.3)
+	var before := b.lock_t
+	var from2 := NpcSenses.chest_of(p)
+	var to2 := NpcSenses.chest_of(f)
+	BendBolt.launch(p, from2 + (to2 - from2).normalized() * 0.8, (to2 - from2).normalized(),
+			{"kind": "stone", "mps": 34.0, "gravity": 0.0, "damage": 2.0, "knock_mps": 0.0, "up_mps": 0.0, "radius_m": 0.09, "range_m": 30.0})
+	var t2 := 0.0
+	var at_hit := -1.0
+	while t2 < 1.0 and b.casting == "fire_wall" and at_hit < 0.0:
+		_keep()
+		await physics_frame
+		t2 += 1.0 / Engine.physics_ticks_per_second
+		if b.setbacks > s2:
+			at_hit = b.lock_t
+	var back := before + t2 - at_hit
+	_expect(b.lost == l2 and b.setbacks == s2 + 1 and at_hit >= 0.0 and back >= NpcBending.rule("hit_setback_min_s") - 0.02,
+			"fire: a pebble pushes its Fire Wall's lock back %.2f s and keeps it (lost %d to %d, setbacks %d to %d)" % [back, l2, b.lost, s2, b.setbacks])
 
 
 # ---------------------------------------------------------------- the edge
