@@ -57,6 +57,21 @@ few settle keys, their hold_s and strike_s kept):
   air_palm           the palm strike (and its twin); air_sweep both arms round flat in a circle; air_spin a whole turn on
                      the balls of the feet, the arms out (the spin channel); air_leap the crouch and spring; air_shield the
                      palms round a circle and pushed out
+The third set (2026-10-05, round 2 of the skills; the CLIPS table's SET3 part, authored the same way; fire_kick, now the High
+Kick, gains its twin with its keys unchanged; earth_catch re-keyed so the guard reads at a glance, its moments kept):
+  fire_kick_low      the Kick's floor wave: sunk low on the left leg, the right foot drawn back off the deck (the low chamber, the
+                     tell), swept round and in at the shin's height (and its twin); fire_fireball the Punch held to grow: a
+                     deeper chamber, the hand far back by the hip, the palm driven out (and its twin); fire_parry the guard:
+                     the knife hand stood up before the face, cut out ahead along the aim
+  earth_kickup       Shove's kick-and-push: the boulder's kick mirrored and short, the toes up under the stone early (and its
+                     twin); earth_uproot Column: the stamp ahead, the palms by the deck, swept up and out far ahead
+  water_turn         the guard: both hands low by the right hip, swung round the body and flung out ahead; water_turn_hold its
+                     loop (a ball of water rolled before the waist); water_surf the riding crouch (a loop, legs_always);
+                     water_skate the skater's push-off (legs_always)
+  air_pull           the palms out, dragged back to the hips with a step back; air_slip the circle walker's pivot step out to
+                     the side (and its twin), air_slip_back stepping back round; air_wall the palms out flat and swept apart;
+                     air_guard the guard: the arms round a circle (one palm high, one low), the palms bounced out together;
+                     air_shield_hold its loop (the palms circling before the chest); air_slice the flat chop (and its twin)
   --fit lists the frames where a limb is within SLACK of straight (and its place pulled in) and the striking limb's slack
   at strike_s (and its place carried out to STRIKE_SLACK).
 Metas (seconds): strike_s the moment the cast lets go / the foot or the fist lands / the hit (SwayPose's `struck`), hold_s
@@ -702,28 +717,33 @@ SET2 = {
         "fyaw_l": [(0, 7), (9, 12), (28, 7)],
         "knee_l": [(0, "auto"), (6, (0.2, 0.0, 1.0)), (26, (0.2, 0.0, 1.0)), (31, "auto")],
     },
-    # the catch (Catch: catch, Earth Shove: pull): the hands up and open before the face, the weight back a little to meet it
-    # (held); the rock taken: the palms close on it and draw it in to the chest, the body giving with it, held there
+    # the catch (Catch: catch, Earth Shove: pull): the hands thrown up and wide before the face, the fingers spread, the weight
+    # back to meet it (held); the rock taken: the hands clap round it, the right on top and the left under, and draw it in
+    # before the chest, the body giving with it, held there.  Round 2's polish (the owner: every guard a pose that reads at a
+    # glance; its moments kept): the hold wider and higher, and the rock held as a rock between the palms (it read as two fists
+    # in a guard)
     "earth_catch": {
         "length": 38, "meta": {"hold_s": 7 / FPS, "strike_s": 10 / FPS, "back_s": 26 / FPS, "hand": "both", "mask": "full",
                                "root": "place"},
-        "root": [(0, (0, -0.015, 0)), (5, (0.0, -0.06, 0.0)), (7, (0.0, -0.07, 0.01)), (10, (0.0, -0.11, -0.05)),
-                 (13, (0.0, -0.125, -0.07)), (26, (0.0, -0.115, -0.06)), (33, (0.0, -0.04, -0.01)), (38, (0, -0.015, 0))],
-        "hips": [(0, 0), (7, 4), (10, -2), (13, -3), (26, -2), (38, 0)],
-        "chest": [(0, 0), (7, 6), (10, -3), (13, -6), (26, -4), (38, 0)],
-        "head": [(0, 0), (7, -4), (10, 2), (13, 6), (26, 4), (38, 0)],
-        "clav_r": [(0, (0, 0)), (7, (12, -8)), (10, (6, -2)), (13, (2, 0)), (38, (0, 0))],
-        "clav_l": [(0, (0, 0)), (7, (12, -8)), (10, (6, -2)), (13, (2, 0)), (38, (0, 0))],
-        "hand_r": [(0, HR), (4, (-0.22, 1.18, 0.3)), (7, (-0.21, 1.36, 0.43)), (10, (-0.14, 1.26, 0.33)), (13, (-0.13, 1.18, 0.24)),
-                   (26, (-0.13, 1.17, 0.24)), (32, (-0.2, 0.98, 0.18)), (38, HR)],
-        "hand_l": [(0, HL), (4, (0.22, 1.18, 0.3)), (7, (0.21, 1.36, 0.43)), (10, (0.14, 1.26, 0.33)), (13, (0.13, 1.18, 0.24)),
-                   (26, (0.13, 1.17, 0.24)), (32, (0.2, 0.98, 0.18)), (38, HL)],
-        "face_r": [(0, "stand"), (5, "push"), (8, "push"), (11, "hold"), (28, "hold"), (38, "stand")],
-        "face_l": [(0, "stand"), (5, "push"), (8, "push"), (11, "hold"), (28, "hold"), (38, "stand")],
-        "pole_r": [(0, (-0.35, -0.1, -1.0)), (7, (-0.9, -0.5, 0.0)), (13, (-0.9, -0.6, -0.4)), (38, (-0.35, -0.1, -1.0))],
-        "pole_l": [(0, (0.35, -0.1, -1.0)), (7, (0.9, -0.5, 0.0)), (13, (0.9, -0.6, -0.4)), (38, (0.35, -0.1, -1.0))],
-        "grip_r": [(0, 0.4), (5, -0.55), (8, -0.55), (11, 0.45), (28, 0.45), (38, 0.4)],
-        "grip_l": [(0, 0.4), (5, -0.55), (8, -0.55), (11, 0.45), (28, 0.45), (38, 0.4)],
+        "root": [(0, (0, -0.015, 0)), (5, (0.0, -0.08, 0.01)), (7, (0.0, -0.09, 0.02)), (10, (0.0, -0.14, -0.05)),
+                 (13, (0.0, -0.165, -0.08)), (26, (0.0, -0.155, -0.075)), (33, (0.0, -0.045, -0.01)), (38, (0, -0.015, 0))],
+        "hips": [(0, 0), (7, 4), (10, -2), (13, -4), (26, -3), (38, 0)],
+        "chest": [(0, 0), (7, 4), (10, -4), (13, -9), (26, -7), (38, 0)],
+        "head": [(0, 0), (7, -6), (10, 1), (13, 4), (26, 3), (38, 0)],
+        "clav_r": [(0, (0, 0)), (7, (10, -16)), (10, (8, -6)), (13, (4, -2)), (26, (4, -2)), (38, (0, 0))],
+        "clav_l": [(0, (0, 0)), (7, (10, -16)), (10, (8, -6)), (13, (4, -2)), (26, (4, -2)), (38, (0, 0))],
+        "hand_r": [(0, HR), (4, (-0.27, 1.26, 0.3)), (7, (-0.33, 1.46, 0.4)), (10, (-0.1, 1.32, 0.35)), (13, (-0.08, 1.28, 0.27)),
+                   (26, (-0.08, 1.275, 0.27)), (32, (-0.2, 0.98, 0.18)), (38, HR)],
+        "hand_l": [(0, HL), (4, (0.27, 1.26, 0.3)), (7, (0.33, 1.46, 0.4)), (10, (0.08, 1.04, 0.38)), (13, (0.07, 1.0, 0.32)),
+                   (26, (0.07, 0.995, 0.315)), (32, (0.2, 0.96, 0.18)), (38, HL)],
+        "face_r": [(0, "stand"), (4, "push"), (8, "push"), (10, "palm_down"), (28, "palm_down"), (38, "stand")],
+        "face_l": [(0, "stand"), (4, "push"), (8, "push"), (10, "chamber"), (28, "chamber"), (38, "stand")],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (7, (-1.0, -0.5, 0.0)), (10, (-1.0, 0.1, -0.2)), (26, (-1.0, 0.1, -0.2)),
+                   (38, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (7, (1.0, -0.5, 0.0)), (10, (1.0, -0.6, -0.3)), (26, (1.0, -0.6, -0.3)),
+                   (38, (0.35, -0.1, -1.0))],
+        "grip_r": [(0, 0.4), (4, -0.6), (8, -0.6), (10, 0.05), (28, 0.05), (38, 0.4)],
+        "grip_l": [(0, 0.4), (4, -0.6), (8, -0.6), (10, 0.05), (28, 0.05), (38, 0.4)],
         "foot_r": [(0, FR), (3, (-0.15, 0.13, -0.04)), (5, (-0.18, 0.077, -0.14)), (30, (-0.18, 0.077, -0.14)),
                    (33, (-0.16, 0.13, -0.08)), (36, FR), (38, FR)],
         "heel_r": [(0, 0), (3, 12), (5, 0), (30, 0), (32, 10), (35, 0)],
@@ -835,11 +855,12 @@ SET2 = {
         "fyaw_r": [(0, 7), (5, 32), (13, 42), (22, 40), (28, 7)],
         "heel_r": [(0, 0), (4, 16), (10, 14), (13, 26), (20, 20), (26, 0)],
     },
-    # the kick (Fire Arc: kick, a fire wave along the ground): the fists up, the weight onto the left leg and the right knee
-    # chambered high (held); the leg snaps out, the foot driving forward at the waist's height, the toes pointed; recoiled and
-    # set down ahead in a bow stance with the right fist following out; back.  strike_s: the foot out
+    # the kick (round 2: the High Kick, the crescent over walls and into jumpers; its keys as the second set had them, now with
+    # its twin for the chain): the fists up, the weight onto the left leg and the right knee chambered high (held); the leg
+    # snaps out, the foot driving forward at the waist's height, the toes pointed; recoiled and set down ahead in a bow stance
+    # with the right fist following out; back.  strike_s: the foot out
     "fire_kick": {
-        "length": 36,
+        "length": 36, "mirror": True,
         "meta": {"hold_s": 6 / FPS, "strike_s": 9 / FPS, "back_s": 22 / FPS, "hand": "foot_r", "mask": "full", "root": "place"},
         "root": [(0, (0, -0.015, 0)), (4, (0.05, -0.03, -0.01)), (6, (0.06, -0.035, -0.02)), (9, (0.05, -0.02, -0.04)),
                  (12, (0.05, -0.04, -0.01)), (16, (0.0, -0.1, 0.12)), (22, (0.0, -0.095, 0.11)), (30, (0.0, -0.03, 0.03)),
@@ -1306,6 +1327,580 @@ SET2 = {
 }
 CLIPS.update(SET2)
 
+## ---------------------------------------------------------------- the third set (2026-10-05, round 2 of the skills: the moves
+## the new kits need; authored the same way, key poses typed here, nothing read). Northern Shaolin (fire), Hung Gar (earth), tai
+## chi (water) and Baguazhang (air) are style labels for the typed poses, as above.
+FACING.update({
+    "lift_out": ((-0.35, 0.45, 0.82), (-0.15, 0.85, -0.5)),    # the uproot's palms flung up and out, the palms up and back
+    "knife_up": ((0.0, 0.97, 0.22), (0.97, 0.0, -0.2)),        # the parry's knife hand stood up before the face, the palm in
+    "bagua": ((-0.2, 0.95, 0.2), (0.92, 0.1, 0.38)),           # a circle walker's lead palm out at the side, turned in to the centre
+    "slice_back": ((0.55, 0.25, -0.8), (0.0, -0.95, -0.3)),    # the slice's hand cocked back by the ear, the palm down
+    "slice": ((0.45, 0.0, 0.89), (0.0, -1.0, 0.0)),            # the slice out flat, the palm down, the fingers ahead and across
+})
+
+
+def _ring(frames, fn):
+    """A loop's keys round a circle: fn(angle in radians) at each of `frames` (the first's again at the last, the seam)."""
+    n = len(frames) - 1
+    return [(fr, fn(2 * math.pi * (i % n) / n)) for i, fr in enumerate(frames)]
+
+
+def EIGHTHS(length):
+    """A loop's nine key frames: its eighths, the seam's frame last."""
+    return [length * i // 8 for i in range(9)]
+
+
+def _r3(v):
+    return tuple(round(x, 4) for x in v)
+
+
+SET3 = {
+    # the low kick (the Kick: the floor wave; the tell the opponent reads, so the chamber is LOW): sunk deep onto the bent left
+    # leg, the body bowed forward and coiled to the right, the right foot drawn far back behind just off the deck, the fists
+    # up (held); the foot sweeps out wide round and in, forward and across, the leg long and the sole skimming the deck at the
+    # shin's height (a crescent along the floor), the body turning through low over the standing knee; set down ahead into a
+    # low bow stance.  strike_s: the foot across the front
+    "fire_kick_low": {
+        "length": 32, "mirror": True,
+        "meta": {"hold_s": 6 / FPS, "strike_s": 9 / FPS, "back_s": 20 / FPS, "hand": "foot_r", "mask": "full", "root": "place",
+                 "legs_always": 1.0},
+        "root": [(0, (0, -0.015, 0)), (3, (0.05, -0.12, -0.03)), (6, (0.08, -0.25, -0.06)), (9, (0.05, -0.26, 0.0)),
+                 (12, (0.02, -0.25, 0.08)), (15, (0.0, -0.22, 0.16)), (20, (0.0, -0.215, 0.155)), (27, (0.0, -0.07, 0.04)),
+                 (32, (0, -0.015, 0))],
+        "yaw": [(0, 0), (6, -18), (9, 12), (12, 20), (15, 10), (20, 8), (32, 0)],
+        "twist": [(0, 0), (6, -12), (9, 10), (12, 14), (20, 6), (32, 0)],
+        "hips": [(0, 0), (6, 20), (9, 2), (12, 6), (15, 12), (20, 11), (32, 0)],
+        "chest": [(0, 0), (6, 12), (9, 8), (15, 8), (20, 6), (32, 0)],
+        "roll": [(0, 0), (6, -5), (9, 4), (15, 0), (32, 0)],
+        "side": [(0, 0), (6, 8), (9, 4), (15, 0), (32, 0)],
+        "head": [(0, 0), (6, -14), (9, -10), (15, -8), (20, -7), (32, 0)],
+        "clav_r": [(0, (0, 0)), (6, (6, -2)), (9, (-10, 6)), (15, (10, -2)), (20, (8, -2)), (32, (0, 0))],
+        "clav_l": [(0, (0, 0)), (6, (10, -2)), (9, (14, -3)), (15, (8, -2)), (20, (6, -2)), (32, (0, 0))],
+        "hand_r": [(0, HR), (3, (-0.15, 1.04, 0.16)), (6, (-0.16, 0.98, 0.22)), (9, (-0.34, 0.8, -0.08)), (12, (-0.28, 0.84, 0.0)),
+                   (15, (-0.17, 0.94, 0.14)), (20, (-0.17, 0.94, 0.14)), (27, (-0.18, 0.9, 0.12)), (32, HR)],
+        "hand_l": [(0, HL), (3, (0.1, 1.1, 0.3)), (6, (0.05, 1.04, 0.4)), (9, (0.03, 1.02, 0.44)), (12, (0.05, 1.03, 0.44)),
+                   (15, (0.07, 1.05, 0.44)), (20, (0.07, 1.05, 0.43)), (27, (0.16, 0.94, 0.16)), (32, HL)],
+        "face_r": [(0, "stand"), (3, "fist_guard"), (7, "fist_guard"), (9, "fist_low"), (13, "chamber"), (22, "chamber"),
+                   (32, "stand")],
+        "face_l": [(0, "stand"), (3, "fist_guard"), (22, "fist_guard"), (32, "stand")],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (6, (-0.5, -1.0, -0.2)), (9, (-1.0, -0.2, 0.2)), (15, (-0.3, -0.5, -1.0)),
+                   (32, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (6, (0.4, -1.0, -0.2)), (32, (0.35, -0.1, -1.0))],
+        "grip_r": [(0, 0.4), (3, 1.0), (26, 1.0), (32, 0.4)],
+        "grip_l": [(0, 0.4), (3, 1.0), (26, 1.0), (32, 0.4)],
+        # the right foot: drawn far back off the deck behind, round out wide to the side, forward and in across the front at
+        # the shin's height, its sole just over the deck; set down ahead in the bow stance; back in at the end
+        "foot_r": [(0, FR), (3, (-0.16, 0.1, -0.16)), (6, (-0.2, 0.13, -0.36)), (7, (-0.4, 0.13, -0.12)),
+                   (8, (-0.38, 0.13, 0.26)), (9, (-0.105, 0.1, 0.57)), (10, (0.03, 0.12, 0.53)), (12, (0.01, 0.125, 0.44)),
+                   (14, (-0.09, 0.1, 0.42)), (15, (-0.12, 0.077, 0.41)), (24, (-0.12, 0.077, 0.41)), (27, (-0.13, 0.13, 0.19)),
+                   (30, FR), (32, FR)],
+        "heel_r": [(0, 0), (3, 18), (6, 34), (8, 4), (9, -12), (12, -6), (15, 0), (24, 0), (26, 12), (29, 0), (32, 0)],
+        "fyaw_r": [(0, 7), (6, 20), (8, 0), (9, -30), (12, -22), (15, 8), (24, 8), (30, 7)],
+        "knee_r": [(0, "auto"), (3, (-0.2, -0.3, 1.0)), (6, (-0.3, -0.8, 0.5)), (7, (-0.7, 0.2, 1.0)), (10, (-0.3, 0.4, 1.0)),
+                   (15, (-0.15, 0.1, 1.0)), (27, (-0.15, 0.1, 1.0)), (30, "auto")],
+        "foot_l": [(0, FL), (32, FL)],
+        "fyaw_l": [(0, 7), (6, 16), (9, 26), (15, 32), (24, 32), (30, 7)],
+        "heel_l": [(0, 0), (9, 4), (15, 16), (22, 14), (28, 0), (32, 0)],
+        "knee_l": [(0, "auto"), (3, (0.35, 0.0, 1.0)), (26, (0.35, 0.0, 1.0)), (30, "auto")],
+    },
+    # the Fireball (Punch held to grow it): a deeper chamber than the punch's: the body coiled hard to the right and sunk back on
+    # the rear leg, the right hand drawn far back by the hip cupping the fire, the left palm out ahead aiming (held while it
+    # grows); the hips snap through, a long step's bow stance and the palm driven out at the shoulder's height, the left
+    # pulled back to the ribs.  strike_s: the palm out
+    "fire_fireball": {
+        "length": 36, "mirror": True,
+        "meta": {"hold_s": 8 / FPS, "strike_s": 11 / FPS, "back_s": 22 / FPS, "hand": "r", "mask": "full", "root": "place"},
+        "root": [(0, (0, -0.015, 0)), (4, (0.0, -0.08, -0.02)), (8, (0.02, -0.15, -0.08)), (11, (0.0, -0.13, 0.15)),
+                 (14, (0.0, -0.14, 0.17)), (22, (0.0, -0.13, 0.15)), (29, (0.0, -0.05, 0.04)), (36, (0, -0.015, 0))],
+        "yaw": [(0, 0), (4, -16), (8, -34), (11, 18), (14, 22), (22, 18), (36, 0)],
+        "twist": [(0, 0), (4, -10), (8, -20), (11, 14), (14, 16), (22, 12), (36, 0)],
+        "hips": [(0, 0), (8, 2), (11, 9), (14, 10), (22, 8), (36, 0)],
+        "chest": [(0, 0), (8, 0), (11, 10), (14, 12), (22, 9), (36, 0)],
+        "side": [(0, 0), (8, 4), (11, -2), (22, -1), (36, 0)],
+        "head": [(0, 0), (8, 1), (11, -3), (36, 0)],
+        "clav_r": [(0, (0, 0)), (8, (-14, 4)), (11, (18, -4)), (14, (20, -4)), (22, (16, -3)), (36, (0, 0))],
+        "clav_l": [(0, (0, 0)), (8, (10, -2)), (11, (-6, 2)), (22, (-4, 2)), (36, (0, 0))],
+        "hand_r": [(0, HR), (4, (-0.2, 1.0, 0.0)), (8, (-0.26, 0.98, -0.24)), (10, (-0.12, 1.22, 0.33)), (11, (-0.025, 1.32, 0.74)),
+                   (14, (-0.025, 1.32, 0.745)), (22, (-0.035, 1.3, 0.71)), (29, (-0.18, 1.0, 0.2)), (36, HR)],
+        "hand_l": [(0, HL), (4, (0.12, 1.18, 0.3)), (8, (0.08, 1.3, 0.47)), (11, (0.19, 1.05, 0.04)), (14, (0.19, 1.03, 0.0)),
+                   (22, (0.19, 1.03, 0.01)), (29, (0.18, 0.92, 0.1)), (36, HL)],
+        "face_r": [(0, "stand"), (3, "chamber"), (9, "chamber"), (11, "push"), (24, "push"), (36, "stand")],
+        "face_l": [(0, "stand"), (4, "fist_guard"), (7, "push"), (9, "push"), (11, "chamber"), (24, "chamber"), (36, "stand")],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (8, (-0.6, -0.6, -0.6)), (11, (-0.8, -0.6, -0.1)), (36, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (8, (0.5, -0.8, -0.3)), (11, (0.3, -0.5, -1.0)), (36, (0.35, -0.1, -1.0))],
+        "grip_r": [(0, 0.4), (3, 0.3), (9, 0.3), (11, -0.3), (26, -0.3), (36, 0.4)],
+        "grip_l": [(0, 0.4), (4, 0.6), (7, -0.3), (10, 1.0), (26, 1.0), (36, 0.4)],
+        "foot_l": [(0, FL), (2, (0.13, 0.12, 0.04)), (5, (0.15, 0.077, 0.28)), (27, (0.15, 0.077, 0.28)), (30, (0.14, 0.12, 0.1)),
+                   (34, FL), (36, FL)],
+        "heel_l": [(0, 0), (2, 8), (4, -4), (5, 0), (27, 0), (29, 8), (33, 0)],
+        "knee_l": [(0, "auto"), (2, (0.25, 0.2, 1.0)), (31, (0.25, 0.2, 1.0)), (34, "auto")],
+        "foot_r": [(0, FR), (5, (-0.16, 0.077, -0.12)), (28, (-0.16, 0.077, -0.12)), (34, FR)],
+        "fyaw_r": [(0, 7), (5, 30), (8, 50), (11, 40), (28, 40), (34, 7)],
+        "heel_r": [(0, 0), (8, 0), (11, 26), (14, 30), (22, 24), (30, 0)],
+        "knee_r": [(0, "auto"), (5, (-0.5, 0.0, 1.0)), (28, (-0.5, 0.0, 1.0)), (32, "auto")],
+    },
+    # the Parry (fire's guard): side-on, the left fist chambered at the ribs, the right forearm stood up before the face with
+    # the knife hand's edge to the shot (held: the window); the knife hand cuts down and out straight ahead along the aim, the
+    # arm long, the body snapping round behind it (the shot sent back).  strike_s: the knife hand out ahead
+    "fire_parry": {
+        "length": 30,
+        "meta": {"hold_s": 4 / FPS, "strike_s": 8 / FPS, "back_s": 16 / FPS, "hand": "r", "mask": "full", "root": "place"},
+        "root": [(0, (0, -0.015, 0)), (2, (0.0, -0.06, 0.0)), (4, (0.0, -0.09, -0.04)), (8, (0.0, -0.12, 0.12)),
+                 (11, (0.0, -0.125, 0.13)), (16, (0.0, -0.12, 0.12)), (24, (0.0, -0.04, 0.02)), (30, (0, -0.015, 0))],
+        "yaw": [(0, 0), (4, -24), (8, 16), (11, 20), (16, 16), (30, 0)],
+        "twist": [(0, 0), (4, -14), (8, 12), (11, 14), (16, 11), (30, 0)],
+        "hips": [(0, 0), (4, -2), (8, 8), (16, 6), (30, 0)],
+        "chest": [(0, 0), (4, -4), (8, 10), (11, 11), (16, 8), (30, 0)],
+        "side": [(0, 0), (4, 4), (8, -3), (16, -2), (30, 0)],
+        "head": [(0, 0), (4, -2), (8, -3), (30, 0)],
+        "clav_r": [(0, (0, 0)), (4, (2, -8)), (8, (16, -4)), (11, (18, -4)), (16, (14, -3)), (30, (0, 0))],
+        "clav_l": [(0, (0, 0)), (4, (-6, 2)), (8, (-6, 2)), (16, (-4, 2)), (30, (0, 0))],
+        "hand_r": [(0, HR), (2, (-0.16, 1.28, 0.24)), (4, (-0.06, 1.45, 0.22)), (6, (-0.07, 1.38, 0.42)), (8, (-0.035, 1.31, 0.72)),
+                   (11, (-0.03, 1.31, 0.72)), (16, (-0.04, 1.29, 0.68)), (24, (-0.18, 1.0, 0.2)), (30, HR)],
+        "hand_l": [(0, HL), (2, (0.17, 1.06, 0.08)), (4, (0.19, 1.04, 0.03)), (8, (0.19, 1.04, 0.03)), (16, (0.19, 1.04, 0.04)),
+                   (24, (0.18, 0.92, 0.1)), (30, HL)],
+        "face_r": [(0, "stand"), (2, "knife_up"), (5, "knife_up"), (8, "knife"), (18, "knife"), (30, "stand")],
+        "face_l": [(0, "stand"), (2, "chamber"), (18, "chamber"), (30, "stand")],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (4, (-0.3, -1.0, 0.3)), (8, (-0.5, -1.0, 0.0)), (30, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (4, (0.3, -0.5, -1.0)), (30, (0.35, -0.1, -1.0))],
+        "grip_r": [(0, 0.4), (2, -0.5), (22, -0.5), (30, 0.4)],
+        "grip_l": [(0, 0.4), (2, 1.0), (24, 1.0), (30, 0.4)],
+        "foot_l": [(0, FL), (2, (0.13, 0.12, 0.05)), (4, (0.14, 0.077, 0.22)), (20, (0.14, 0.077, 0.22)), (23, (0.13, 0.12, 0.08)),
+                   (27, FL), (30, FL)],
+        "heel_l": [(0, 0), (2, 8), (3, -4), (4, 0), (20, 0), (22, 8), (26, 0)],
+        "knee_l": [(0, "auto"), (2, (0.2, 0.2, 1.0)), (24, (0.2, 0.2, 1.0)), (27, "auto")],
+        "foot_r": [(0, FR), (4, (-0.15, 0.077, -0.1)), (22, (-0.15, 0.077, -0.1)), (27, FR)],
+        "fyaw_r": [(0, 7), (4, 40), (8, 36), (22, 36), (27, 7)],
+        "heel_r": [(0, 0), (4, 4), (8, 24), (16, 18), (24, 0)],
+    },
+    # ---------------------------------------------------------------- earth
+    # the kick-up (Shove's kick-and-push: the stone kicked up off the deck, the push after it): the boulder's kick mirrored and
+    # short: the weight onto the left leg, the right foot lifts (held), and kicks up and forward, the toes up under the stone,
+    # the palms rising to the ribs ready to push; set down a little ahead.  strike_s: the toes at the top
+    "earth_kickup": {
+        "length": 18, "mirror": True,
+        "meta": {"hold_s": 3 / FPS, "strike_s": 6 / FPS, "back_s": 10 / FPS, "hand": "foot_r", "mask": "full", "root": "place"},
+        "root": [(0, (0, -0.015, 0)), (3, (0.05, -0.04, -0.01)), (6, (0.065, -0.03, -0.03)), (9, (0.05, -0.05, 0.0)),
+                 (11, (0.02, -0.09, 0.05)), (14, (0.01, -0.06, 0.02)), (18, (0, -0.015, 0))],
+        "yaw": [(0, 0), (3, -3), (6, -5), (11, 3), (18, 0)],
+        "roll": [(0, 0), (3, -4), (6, -5), (9, -3), (11, 0), (18, 0)],
+        "hips": [(0, 0), (3, -3), (6, -7), (9, -2), (11, 5), (14, 3), (18, 0)],
+        "chest": [(0, 0), (3, -4), (6, -6), (9, -2), (11, 5), (14, 3), (18, 0)],
+        "side": [(0, 0), (3, 3), (6, 4), (11, 0), (18, 0)],
+        "head": [(0, 0), (3, 6), (6, 8), (9, 4), (11, 0), (18, 0)],
+        "clav_r": [(0, (0, 0)), (6, (2, -6)), (10, (-6, 4)), (18, (0, 0))],
+        "clav_l": [(0, (0, 0)), (6, (2, -6)), (10, (-6, 4)), (18, (0, 0))],
+        "hand_r": [(0, HR), (3, (-0.2, 0.9, 0.16)), (6, (-0.17, 1.06, 0.28)), (10, (-0.18, 1.03, -0.02)), (14, (-0.19, 0.92, 0.04)),
+                   (18, HR)],
+        "hand_l": [(0, HL), (3, (0.2, 0.9, 0.16)), (6, (0.17, 1.06, 0.28)), (10, (0.18, 1.03, -0.02)), (14, (0.19, 0.92, 0.04)),
+                   (18, HL)],
+        "face_r": [(0, "stand"), (3, "chamber"), (14, "chamber"), (18, "stand")],
+        "face_l": [(0, "stand"), (3, "chamber"), (14, "chamber"), (18, "stand")],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (6, (-0.8, -0.6, -0.4)), (10, (-0.3, -0.4, -1.0)), (18, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (6, (0.8, -0.6, -0.4)), (10, (0.3, -0.4, -1.0)), (18, (0.35, -0.1, -1.0))],
+        "grip_r": [(0, 0.4), (3, -0.2), (12, -0.2), (18, 0.4)],
+        "grip_l": [(0, 0.4), (3, -0.2), (12, -0.2), (18, 0.4)],
+        "foot_r": [(0, FR), (2, (-0.14, 0.11, 0.0)), (3, (-0.14, 0.15, 0.07)), (5, (-0.155, 0.3, 0.42)), (6, (-0.16, 0.37, 0.53)),
+                   (8, (-0.15, 0.3, 0.38)), (10, (-0.145, 0.15, 0.2)), (11, (-0.14, 0.077, 0.12)), (13, (-0.14, 0.077, 0.12)),
+                   (15, (-0.135, 0.11, 0.03)), (17, FR), (18, FR)],
+        "heel_r": [(0, 0), (2, 14), (3, 4), (5, -18), (6, -26), (8, -14), (10, -4), (11, 0), (13, 0), (14, 10), (16, 0), (18, 0)],
+        "fyaw_r": [(0, 7), (6, 0), (11, 7), (18, 7)],
+        "knee_r": [(0, "auto"), (2, (-0.15, 0.3, 1.0)), (13, (-0.15, 0.3, 1.0)), (16, "auto")],
+        "foot_l": [(0, FL), (18, FL)],
+        "fyaw_l": [(0, 7), (6, 12), (12, 9), (18, 7)],
+        "knee_l": [(0, "auto"), (3, (0.3, 0.0, 1.0)), (12, (0.3, 0.0, 1.0)), (16, "auto")],
+    },
+    # the uproot (Column): the left knee up and the foot stamped down ahead into a deep bow stance, the body bowed down over it
+    # with both palms pressed flat by the deck (held: the stone gripped under it); then the palms sweep up and out, wide apart
+    # and far ahead, the fingers at the mark, the body rising behind them (the column torn up out at range); held up there.
+    # Unlike the raise (the wall: the right foot stamped out wide, the palms rising close before the chest), it reaches out.
+    # strike_s: the palms up and out
+    "earth_uproot": {
+        "length": 42, "meta": {"hold_s": 10 / FPS, "strike_s": 14 / FPS, "back_s": 26 / FPS, "hand": "both", "mask": "full",
+                               "root": "place"},
+        "root": [(0, (0, -0.015, 0)), (4, (-0.04, -0.03, -0.02)), (8, (0.0, -0.2, 0.12)), (10, (0.0, -0.235, 0.12)),
+                 (14, (0.0, -0.11, 0.19)), (17, (0.0, -0.09, 0.21)), (26, (0.0, -0.1, 0.19)), (34, (0.0, -0.04, 0.05)),
+                 (42, (0, -0.015, 0))],
+        "roll": [(0, 0), (4, -4), (8, 0), (42, 0)],
+        "hips": [(0, 0), (4, -4), (8, 20), (10, 24), (14, 6), (17, 4), (26, 4), (42, 0)],
+        "chest": [(0, 0), (4, -6), (8, 16), (10, 20), (14, -3), (17, -7), (26, -5), (42, 0)],
+        "head": [(0, 0), (4, 4), (8, -10), (10, -16), (14, -6), (17, -9), (26, -7), (42, 0)],
+        "clav_r": [(0, (0, 0)), (4, (-4, 4)), (8, (10, 10)), (10, (10, 12)), (14, (8, -12)), (17, (8, -18)), (26, (6, -14)),
+                   (42, (0, 0))],
+        "clav_l": [(0, (0, 0)), (4, (-4, 4)), (8, (10, 10)), (10, (10, 12)), (14, (8, -12)), (17, (8, -18)), (26, (6, -14)),
+                   (42, (0, 0))],
+        "hand_r": [(0, HR), (4, (-0.2, 1.04, 0.06)), (8, (-0.24, 0.6, 0.38)), (10, (-0.24, 0.56, 0.42)), (12, (-0.3, 0.88, 0.58)),
+                   (14, (-0.355, 1.31, 0.63)), (17, (-0.36, 1.42, 0.555)), (26, (-0.345, 1.39, 0.535)), (34, (-0.22, 1.0, 0.22)), (42, HR)],
+        "hand_l": [(0, HL), (4, (0.2, 1.04, 0.06)), (8, (0.24, 0.6, 0.38)), (10, (0.24, 0.56, 0.42)), (12, (0.3, 0.88, 0.58)),
+                   (14, (0.355, 1.31, 0.63)), (17, (0.36, 1.42, 0.555)), (26, (0.345, 1.39, 0.535)), (34, (0.22, 1.0, 0.22)), (42, HL)],
+        "face_r": [(0, "stand"), (4, "chamber"), (7, "press_down"), (11, "press_down"), (14, "lift_out"), (28, "lift_out"),
+                   (42, "stand")],
+        "face_l": [(0, "stand"), (4, "chamber"), (7, "press_down"), (11, "press_down"), (14, "lift_out"), (28, "lift_out"),
+                   (42, "stand")],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (8, (-1.0, 0.3, -0.2)), (14, (-0.8, -0.6, 0.0)), (42, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (8, (1.0, 0.3, -0.2)), (14, (0.8, -0.6, 0.0)), (42, (0.35, -0.1, -1.0))],
+        "grip_r": [(0, 0.4), (4, 0.0), (7, -0.4), (11, -0.2), (14, -0.5), (30, -0.5), (42, 0.4)],
+        "grip_l": [(0, 0.4), (4, 0.0), (7, -0.4), (11, -0.2), (14, -0.5), (30, -0.5), (42, 0.4)],
+        "foot_l": [(0, FL), (3, (0.14, 0.2, 0.06)), (5, (0.15, 0.3, 0.16)), (8, (0.17, 0.077, 0.38)), (30, (0.17, 0.077, 0.38)),
+                   (34, (0.15, 0.14, 0.16)), (38, FL), (42, FL)],
+        "heel_l": [(0, 0), (3, 12), (5, -8), (7, -3), (8, 0), (30, 0), (33, 10), (37, 0), (42, 0)],
+        "fyaw_l": [(0, 7), (8, 6), (30, 6), (38, 7)],
+        "knee_l": [(0, "auto"), (2, (0.15, 0.3, 1.0)), (34, (0.15, 0.3, 1.0)), (38, "auto")],
+        "foot_r": [(0, FR), (8, (-0.15, 0.077, -0.1)), (30, (-0.15, 0.077, -0.1)), (38, FR)],
+        "fyaw_r": [(0, 7), (8, 30), (30, 30), (38, 7)],
+        "heel_r": [(0, 0), (10, 0), (14, 10), (26, 8), (34, 0), (42, 0)],
+        "knee_r": [(0, "auto"), (8, (-0.4, 0.0, 1.0)), (30, (-0.4, 0.0, 1.0)), (36, "auto")],
+    },
+    # the Turn (water's guard): turned hard to the right, both hands low out by the right hip with the palms out to meet the
+    # shot (held: the window); the arms swing it round the body in a wide circle, across the front at the waist and up round to
+    # the left, the body winding with them; then both hands fling it out ahead from the chest (sent back along the aim).
+    # strike_s: the fling
+    "water_turn": {
+        "length": 36,
+        "meta": {"hold_s": 5 / FPS, "strike_s": 14 / FPS, "back_s": 24 / FPS, "hand": "both", "mask": "full", "root": "place"},
+        "root": [(0, (0, -0.015, 0)), (5, (-0.03, -0.13, 0.0)), (9, (0.02, -0.15, 0.02)), (12, (0.05, -0.14, 0.0)),
+                 (14, (0.0, -0.13, 0.14)), (18, (0.0, -0.135, 0.15)), (24, (0.0, -0.125, 0.13)), (30, (0.0, -0.04, 0.03)),
+                 (36, (0, -0.015, 0))],
+        "yaw": [(0, 0), (5, -34), (9, 0), (12, 40), (14, 2), (18, -4), (24, -3), (36, 0)],
+        "twist": [(0, 0), (5, -18), (9, 6), (12, 26), (14, -4), (18, -4), (36, 0)],
+        "hips": [(0, 0), (5, 10), (9, 8), (12, 4), (14, 8), (18, 9), (24, 7), (36, 0)],
+        "chest": [(0, 0), (5, 6), (9, 4), (12, 0), (14, 10), (18, 12), (24, 9), (36, 0)],
+        "side": [(0, 0), (5, -6), (9, 2), (12, 8), (14, 0), (36, 0)],
+        "head": [(0, 0), (5, 2), (14, -2), (36, 0)],
+        "clav_r": [(0, (0, 0)), (5, (8, 4)), (9, (10, 0)), (12, (8, -8)), (14, (14, -6)), (24, (12, -5)), (36, (0, 0))],
+        "clav_l": [(0, (0, 0)), (5, (8, 4)), (9, (6, 0)), (12, (-4, -8)), (14, (14, -6)), (24, (12, -5)), (36, (0, 0))],
+        "hand_r": [(0, HR), (3, (-0.26, 0.98, 0.18)), (5, (-0.36, 0.94, 0.12)), (9, (-0.12, 0.98, 0.48)), (12, (0.14, 1.18, 0.26)),
+                   (14, (-0.14, 1.24, 0.66)), (18, (-0.16, 1.22, 0.63)), (24, (-0.16, 1.18, 0.58)), (30, (-0.2, 0.98, 0.22)), (36, HR)],
+        "hand_l": [(0, HL), (3, (0.0, 0.98, 0.3)), (5, (-0.1, 0.94, 0.32)), (9, (0.24, 0.98, 0.4)), (12, (0.38, 1.24, 0.02)),
+                   (14, (0.14, 1.24, 0.66)), (18, (0.16, 1.22, 0.63)), (24, (0.16, 1.18, 0.58)), (30, (0.2, 0.98, 0.22)), (36, HL)],
+        "face_r": [(0, "stand"), (3, "push"), (6, "push"), (9, "float"), (12, "palm_down"), (14, "push"), (26, "push"),
+                   (36, "stand")],
+        "face_l": [(0, "stand"), (3, "push"), (6, "push"), (9, "float"), (12, "palm_down"), (14, "push"), (26, "push"),
+                   (36, "stand")],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (5, (-0.8, -0.7, -0.3)), (12, (-0.6, -0.8, 0.2)), (14, (-0.8, -0.6, -0.1)),
+                   (36, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (5, (0.8, -0.7, -0.3)), (12, (0.9, -0.6, -0.3)), (14, (0.8, -0.6, -0.1)),
+                   (36, (0.35, -0.1, -1.0))],
+        "grip_r": [(0, 0.4), (3, -0.3), (28, -0.3), (36, 0.4)],
+        "grip_l": [(0, 0.4), (3, -0.3), (28, -0.3), (36, 0.4)],
+        "foot_l": [(0, FL), (2, (0.14, 0.12, 0.04)), (4, (0.16, 0.077, 0.2)), (30, (0.16, 0.077, 0.2)), (33, (0.14, 0.12, 0.08)),
+                   (35, FL), (36, FL)],
+        "heel_l": [(0, 0), (2, 8), (3, -4), (4, 0), (9, 0), (12, 10), (14, 0), (30, 0), (32, 8), (35, 0)],
+        "fyaw_l": [(0, 7), (5, -12), (12, 26), (14, 6), (30, 6), (35, 7)],
+        "knee_l": [(0, "auto"), (2, (0.25, 0.0, 1.0)), (32, (0.25, 0.0, 1.0)), (35, "auto")],
+        "foot_r": [(0, FR), (4, (-0.17, 0.077, -0.11)), (30, (-0.17, 0.077, -0.11)), (35, FR)],
+        "fyaw_r": [(0, 7), (4, 30), (5, 34), (12, 50), (14, 30), (30, 30), (35, 7)],
+        "heel_r": [(0, 0), (5, 0), (9, 6), (12, 18), (14, 8), (26, 6), (32, 0)],
+        "knee_r": [(0, "auto"), (4, (-0.45, 0.0, 1.0)), (30, (-0.45, 0.0, 1.0)), (34, "auto")],
+    },
+    # the Turn's hold (a loop while the guard stands): the short tai chi bow stance, both hands rolling a ball of water round a
+    # level circle before the waist, the body turning a little with it
+    "water_turn_hold": {
+        "length": 48, "loop": True, "meta": {"hand": "both", "mask": "full", "root": "place"},
+        "root": _ring(EIGHTHS(48), lambda a: _r3((0.01 * math.sin(a), -0.1, 0.01 * math.cos(a)))),
+        "yaw": _ring(EIGHTHS(48), lambda a: round(-10 + 8 * math.sin(a), 3)),
+        "twist": _ring(EIGHTHS(48), lambda a: round(-4 + 6 * math.sin(a), 3)),
+        "hips": [(0, 3), (48, 3)], "chest": [(0, 2), (48, 2)], "head": [(0, 1), (48, 1)],
+        "clav_r": [(0, (4, 0)), (48, (4, 0))], "clav_l": [(0, (4, 0)), (48, (4, 0))],
+        "hand_r": _ring(EIGHTHS(48), lambda a: _r3((-0.13 + 0.12 * math.sin(a), 1.0 + 0.03 * math.cos(a), 0.34 + 0.1 * math.cos(a)))),
+        "hand_l": _ring(EIGHTHS(48), lambda a: _r3((0.13 + 0.12 * math.sin(a), 1.0 + 0.03 * math.cos(a), 0.34 + 0.1 * math.cos(a)))),
+        "face_r": [(0, "float"), (48, "float")], "face_l": [(0, "float"), (48, "float")],
+        "pole_r": [(0, (-0.8, -0.7, -0.3)), (48, (-0.8, -0.7, -0.3))], "pole_l": [(0, (0.8, -0.7, -0.3)), (48, (0.8, -0.7, -0.3))],
+        "grip_r": [(0, -0.15), (48, -0.15)], "grip_l": [(0, -0.15), (48, -0.15)],
+        "foot_l": [(0, (0.14, 0.077, 0.15)), (48, (0.14, 0.077, 0.15))],
+        "foot_r": [(0, (-0.15, 0.077, -0.12)), (48, (-0.15, 0.077, -0.12))],
+        "fyaw_l": [(0, 4), (48, 4)], "fyaw_r": [(0, 30), (48, 30)],
+        "knee_l": [(0, (0.25, 0.0, 1.0)), (48, (0.25, 0.0, 1.0))], "knee_r": [(0, (-0.45, 0.0, 1.0)), (48, (-0.45, 0.0, 1.0))],
+    },
+    # ---------------------------------------------------------------- air
+    # the Pull: a step in and both palms out ahead at the shoulders' height, open (held: the wind caught); the fingers close on
+    # it and the hands are dragged back to the hips as the right foot steps back and the body leans away.  strike_s: the hands
+    # at the hips
+    "air_pull": {
+        "length": 34,
+        "meta": {"hold_s": 6 / FPS, "strike_s": 11 / FPS, "back_s": 22 / FPS, "hand": "both", "mask": "full", "root": "place"},
+        "root": [(0, (0, -0.015, 0)), (6, (0.0, -0.06, 0.08)), (8, (0.0, -0.07, 0.04)), (11, (0.0, -0.12, -0.13)),
+                 (14, (0.0, -0.13, -0.15)), (22, (0.0, -0.12, -0.14)), (28, (0.0, -0.05, -0.03)), (34, (0, -0.015, 0))],
+        "hips": [(0, 0), (6, 8), (8, 6), (11, -4), (14, -6), (22, -5), (34, 0)],
+        "chest": [(0, 0), (6, 10), (8, 6), (11, -6), (14, -8), (22, -6), (34, 0)],
+        "head": [(0, 0), (6, -4), (11, 4), (14, 5), (22, 4), (34, 0)],
+        "clav_r": [(0, (0, 0)), (6, (16, -6)), (11, (-10, 2)), (14, (-12, 2)), (22, (-10, 2)), (34, (0, 0))],
+        "clav_l": [(0, (0, 0)), (6, (16, -6)), (11, (-10, 2)), (14, (-12, 2)), (22, (-10, 2)), (34, (0, 0))],
+        "hand_r": [(0, HR), (3, (-0.2, 1.15, 0.3)), (6, (-0.2, 1.3, 0.6)), (8, (-0.21, 1.24, 0.48)), (11, (-0.24, 0.98, -0.02)),
+                   (14, (-0.25, 0.96, -0.06)), (22, (-0.25, 0.96, -0.05)), (28, (-0.21, 0.88, 0.04)), (34, HR)],
+        "hand_l": [(0, HL), (3, (0.2, 1.15, 0.3)), (6, (0.2, 1.3, 0.6)), (8, (0.21, 1.24, 0.48)), (11, (0.24, 0.98, -0.02)),
+                   (14, (0.25, 0.96, -0.06)), (22, (0.25, 0.96, -0.05)), (28, (0.21, 0.88, 0.04)), (34, HL)],
+        "face_r": [(0, "stand"), (3, "push"), (7, "push"), (9, "claw"), (11, "chamber"), (24, "chamber"), (34, "stand")],
+        "face_l": [(0, "stand"), (3, "push"), (7, "push"), (9, "claw"), (11, "chamber"), (24, "chamber"), (34, "stand")],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (6, (-0.8, -0.6, -0.1)), (11, (-0.5, -0.2, -1.0)), (34, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (6, (0.8, -0.6, -0.1)), (11, (0.5, -0.2, -1.0)), (34, (0.35, -0.1, -1.0))],
+        "grip_r": [(0, 0.4), (3, -0.4), (7, -0.4), (9, 0.7), (11, 0.85), (24, 0.85), (34, 0.4)],
+        "grip_l": [(0, 0.4), (3, -0.4), (7, -0.4), (9, 0.7), (11, 0.85), (24, 0.85), (34, 0.4)],
+        "foot_l": [(0, FL), (3, (0.14, 0.12, 0.04)), (5, (0.15, 0.077, 0.16)), (26, (0.15, 0.077, 0.16)), (30, (0.14, 0.11, 0.06)),
+                   (33, FL), (34, FL)],
+        "heel_l": [(0, 0), (3, 8), (4, -4), (5, 0), (11, 0), (13, -8), (22, -6), (26, 0), (29, 8), (32, 0)],
+        "knee_l": [(0, "auto"), (3, (0.25, 0.2, 1.0)), (30, (0.25, 0.2, 1.0)), (33, "auto")],
+        "foot_r": [(0, FR), (7, FR), (9, (-0.15, 0.13, -0.14)), (11, (-0.16, 0.077, -0.32)), (26, (-0.16, 0.077, -0.32)),
+                   (30, (-0.14, 0.12, -0.15)), (33, FR), (34, FR)],
+        "heel_r": [(0, 0), (7, 0), (9, 15), (11, 0), (26, 0), (29, 10), (32, 0)],
+        "fyaw_r": [(0, 7), (11, 30), (26, 30), (33, 7)],
+        "knee_r": [(0, "auto"), (8, (-0.4, 0.0, 1.0)), (30, (-0.4, 0.0, 1.0)), (33, "auto")],
+    },
+    # the Slip (the dodge, a circle walker's pivot step; the game carries the body): sunk and gathered (held); a long step out
+    # to the right with the toes turned out, the body lunging low after it and leaning into the circle, the right palm thrown
+    # out wide at the shoulder's height turned in to the circle's centre and the left by the right elbow; the left foot hooks
+    # in after it, toes in.  strike_s: the step set down (its twin to the left)
+    "air_slip": {
+        "length": 26, "mirror": True,
+        "meta": {"hold_s": 3 / FPS, "strike_s": 8 / FPS, "back_s": 16 / FPS, "hand": "r", "mask": "full", "root": "place",
+                 "legs_always": 1.0},
+        "root": [(0, (0, -0.015, 0)), (3, (0.05, -0.1, 0.0)), (6, (-0.1, -0.17, 0.02)), (8, (-0.2, -0.2, 0.03)),
+                 (11, (-0.19, -0.19, 0.02)), (16, (-0.17, -0.17, 0.02)), (22, (-0.03, -0.04, 0.0)), (26, (0, -0.015, 0))],
+        "yaw": [(0, 0), (3, 8), (8, -26), (11, -30), (16, -26), (26, 0)],
+        "twist": [(0, 0), (3, 6), (8, -10), (16, -8), (26, 0)],
+        "side": [(0, 0), (3, 4), (8, -12), (11, -12), (16, -10), (26, 0)],
+        "roll": [(0, 0), (3, 3), (8, -4), (16, -3), (26, 0)],
+        "hips": [(0, 0), (3, 8), (8, 6), (16, 5), (26, 0)],
+        "chest": [(0, 0), (3, 4), (8, 2), (26, 0)],
+        "clav_r": [(0, (0, 0)), (8, (2, -12)), (16, (2, -10)), (26, (0, 0))],
+        "clav_l": [(0, (0, 0)), (8, (14, -4)), (16, (12, -3)), (26, (0, 0))],
+        "hand_r": [(0, HR), (3, (-0.12, 1.08, 0.26)), (6, (-0.42, 1.18, 0.24)), (8, (-0.64, 1.18, 0.18)), (16, (-0.63, 1.17, 0.17)),
+                   (22, (-0.3, 0.98, 0.14)), (26, HR)],
+        "hand_l": [(0, HL), (3, (0.1, 1.06, 0.28)), (8, (-0.26, 1.04, 0.22)), (16, (-0.25, 1.03, 0.21)), (22, (0.1, 0.94, 0.14)),
+                   (26, HL)],
+        "face_r": [(0, "stand"), (3, "push"), (6, "bagua"), (19, "bagua"), (26, "stand")],
+        "face_l": [(0, "stand"), (3, "push"), (19, "push"), (26, "stand")],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (6, (-0.4, -1.0, -0.2)), (19, (-0.4, -1.0, -0.2)), (26, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (6, (0.6, -1.0, -0.2)), (19, (0.6, -1.0, -0.2)), (26, (0.35, -0.1, -1.0))],
+        "grip_r": [(0, 0.4), (3, -0.3), (20, -0.3), (26, 0.4)],
+        "grip_l": [(0, 0.4), (3, -0.3), (20, -0.3), (26, 0.4)],
+        "foot_r": [(0, FR), (3, FR), (5, (-0.28, 0.13, 0.06)), (7, (-0.52, 0.077, 0.06)), (18, (-0.52, 0.077, 0.06)),
+                   (21, (-0.32, 0.12, 0.02)), (24, FR), (26, FR)],
+        "fyaw_r": [(0, 7), (5, 30), (7, 50), (18, 50), (24, 7)],
+        "heel_r": [(0, 0), (4, 12), (6, -6), (7, 0), (18, 0), (20, 10), (23, 0)],
+        "knee_r": [(0, "auto"), (4, (-0.6, 0.1, 1.0)), (20, (-0.6, 0.1, 1.0)), (24, "auto")],
+        "foot_l": [(0, FL), (8, FL), (10, (0.04, 0.11, 0.03)), (12, (-0.1, 0.077, 0.05)), (17, (-0.1, 0.077, 0.05)),
+                   (20, (0.03, 0.11, 0.0)), (23, FL), (26, FL)],
+        "fyaw_l": [(0, 7), (8, 4), (10, -10), (12, -30), (17, -30), (23, 7)],
+        "heel_l": [(0, 0), (6, 6), (8, 14), (11, -4), (12, 0), (17, 0), (19, 10), (22, 0)],
+        "knee_l": [(0, "auto"), (6, (0.1, 0.0, 1.0)), (20, (0.0, 0.1, 1.0)), (23, "auto")],
+    },
+    # the Slip back: sunk (held), the right foot steps back and out round behind with its toes turned out, the body turning
+    # side-on after it, the left palm leading out ahead and the right by the chest; the left foot turned in on its ball
+    "air_slip_back": {
+        "length": 26,
+        "meta": {"hold_s": 3 / FPS, "strike_s": 8 / FPS, "back_s": 16 / FPS, "hand": "l", "mask": "full", "root": "place",
+                 "legs_always": 1.0},
+        "root": [(0, (0, -0.015, 0)), (3, (0.0, -0.08, 0.02)), (6, (-0.02, -0.1, -0.06)), (8, (-0.03, -0.12, -0.14)),
+                 (11, (-0.03, -0.115, -0.13)), (16, (-0.03, -0.11, -0.12)), (22, (0.0, -0.04, -0.02)), (26, (0, -0.015, 0))],
+        "yaw": [(0, 0), (3, 4), (8, -30), (11, -32), (16, -28), (26, 0)],
+        "twist": [(0, 0), (8, -8), (16, -6), (26, 0)],
+        "hips": [(0, 0), (3, 6), (8, 2), (16, 2), (26, 0)],
+        "chest": [(0, 0), (3, 4), (8, -2), (16, -1), (26, 0)],
+        "clav_r": [(0, (0, 0)), (8, (6, -4)), (16, (5, -3)), (26, (0, 0))],
+        "clav_l": [(0, (0, 0)), (8, (14, -8)), (16, (12, -6)), (26, (0, 0))],
+        "hand_l": [(0, HL), (3, (0.12, 1.15, 0.3)), (8, (0.135, 1.3, 0.39)), (16, (0.135, 1.295, 0.385)), (22, (0.18, 1.0, 0.15)),
+                   (26, HL)],
+        "hand_r": [(0, HR), (3, (-0.12, 1.1, 0.25)), (8, (-0.06, 1.13, 0.21)), (16, (-0.06, 1.12, 0.21)), (22, (-0.18, 0.95, 0.15)),
+                   (26, HR)],
+        "face_r": [(0, "stand"), (3, "push"), (19, "push"), (26, "stand")],
+        "face_l": [(0, "stand"), (3, "push"), (19, "push"), (26, "stand")],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (6, (-0.6, -1.0, -0.2)), (19, (-0.6, -1.0, -0.2)), (26, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (6, (0.7, -0.8, 0.0)), (19, (0.7, -0.8, 0.0)), (26, (0.35, -0.1, -1.0))],
+        "grip_r": [(0, 0.4), (3, -0.3), (20, -0.3), (26, 0.4)],
+        "grip_l": [(0, 0.4), (3, -0.3), (20, -0.3), (26, 0.4)],
+        "foot_r": [(0, FR), (3, FR), (5, (-0.18, 0.13, -0.14)), (7, (-0.25, 0.077, -0.34)), (18, (-0.25, 0.077, -0.34)),
+                   (21, (-0.18, 0.12, -0.15)), (24, FR), (26, FR)],
+        "fyaw_r": [(0, 7), (5, 30), (7, 50), (18, 50), (24, 7)],
+        "heel_r": [(0, 0), (4, 12), (6, 8), (7, 0), (18, 0), (20, 10), (23, 0)],
+        "knee_r": [(0, "auto"), (4, (-0.5, 0.0, 1.0)), (20, (-0.5, 0.0, 1.0)), (24, "auto")],
+        "foot_l": [(0, FL), (26, FL)],
+        "fyaw_l": [(0, 7), (8, -12), (18, -12), (24, 7)],
+        "heel_l": [(0, 0), (6, 0), (8, 10), (18, 8), (23, 0)],
+    },
+    # the Wind Wall: a step in, both palms drawn in before the chest turned out (held); driven out flat together ahead, then
+    # swept apart wide to the sides (the wall spread across the line); held.  strike_s: the palms out
+    "air_wall": {
+        "length": 38,
+        "meta": {"hold_s": 7 / FPS, "strike_s": 11 / FPS, "back_s": 26 / FPS, "hand": "both", "mask": "full", "root": "place"},
+        "root": [(0, (0, -0.015, 0)), (5, (0.0, -0.07, -0.02)), (7, (0.0, -0.08, -0.03)), (11, (0.0, -0.13, 0.12)),
+                 (15, (0.0, -0.14, 0.13)), (18, (0.0, -0.145, 0.13)), (26, (0.0, -0.13, 0.12)), (32, (0.0, -0.04, 0.02)),
+                 (38, (0, -0.015, 0))],
+        "hips": [(0, 0), (7, -2), (11, 6), (18, 6), (26, 5), (38, 0)],
+        "chest": [(0, 0), (7, -4), (11, 8), (15, 6), (18, 5), (26, 4), (38, 0)],
+        "head": [(0, 0), (7, -2), (11, -2), (38, 0)],
+        "clav_r": [(0, (0, 0)), (7, (-6, -4)), (11, (16, -4)), (15, (6, -6)), (18, (0, -6)), (26, (0, -5)), (38, (0, 0))],
+        "clav_l": [(0, (0, 0)), (7, (-6, -4)), (11, (16, -4)), (15, (6, -6)), (18, (0, -6)), (26, (0, -5)), (38, (0, 0))],
+        "hand_r": [(0, HR), (4, (-0.15, 1.2, 0.12)), (7, (-0.1, 1.28, 0.12)), (11, (-0.07, 1.31, 0.62)), (15, (-0.36, 1.3, 0.46)),
+                   (18, (-0.48, 1.28, 0.32)), (26, (-0.47, 1.26, 0.3)), (32, (-0.25, 0.95, 0.15)), (38, HR)],
+        "hand_l": [(0, HL), (4, (0.15, 1.2, 0.12)), (7, (0.1, 1.28, 0.12)), (11, (0.07, 1.31, 0.62)), (15, (0.36, 1.3, 0.46)),
+                   (18, (0.48, 1.28, 0.32)), (26, (0.47, 1.26, 0.3)), (32, (0.25, 0.95, 0.15)), (38, HL)],
+        "face_r": [(0, "stand"), (4, "push"), (12, "push"), (16, "sweep_out"), (28, "sweep_out"), (38, "stand")],
+        "face_l": [(0, "stand"), (4, "push"), (12, "push"), (16, "sweep_out"), (28, "sweep_out"), (38, "stand")],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (7, (-0.8, -0.8, -0.3)), (11, (-0.8, -0.6, -0.1)), (18, (-0.3, -1.0, -0.2)),
+                   (38, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (7, (0.8, -0.8, -0.3)), (11, (0.8, -0.6, -0.1)), (18, (0.3, -1.0, -0.2)),
+                   (38, (0.35, -0.1, -1.0))],
+        "grip_r": [(0, 0.4), (4, -0.5), (30, -0.5), (38, 0.4)],
+        "grip_l": [(0, 0.4), (4, -0.5), (30, -0.5), (38, 0.4)],
+        "foot_l": [(0, FL), (3, (0.14, 0.12, 0.04)), (6, (0.15, 0.077, 0.22)), (28, (0.15, 0.077, 0.22)), (31, (0.14, 0.12, 0.08)),
+                   (35, FL), (38, FL)],
+        "heel_l": [(0, 0), (3, 8), (5, -4), (6, 0), (28, 0), (30, 8), (34, 0)],
+        "knee_l": [(0, "auto"), (3, (0.2, 0.2, 1.0)), (32, (0.2, 0.2, 1.0)), (35, "auto")],
+        "foot_r": [(0, FR), (6, (-0.15, 0.077, -0.08)), (28, (-0.15, 0.077, -0.08)), (35, FR)],
+        "fyaw_r": [(0, 7), (6, 30), (28, 30), (35, 7)],
+        "heel_r": [(0, 0), (8, 0), (11, 12), (26, 10), (34, 0)],
+    },
+    # the Wind Guard (air's guard): the arms drawn round into a circle before the body, the right palm high by the brow and
+    # the left low by the belly, both turned out (held: the window); the palms roll round the circle, the high one down and
+    # the low one up, meet before the chest and bounce out ahead together (the shot sent back), light on the feet
+    "air_guard": {
+        "length": 32,
+        "meta": {"hold_s": 5 / FPS, "strike_s": 10 / FPS, "back_s": 18 / FPS, "hand": "both", "mask": "full", "root": "place"},
+        "root": [(0, (0, -0.015, 0)), (3, (0.0, -0.05, 0.0)), (5, (0.0, -0.07, -0.03)), (8, (0.0, -0.09, 0.0)),
+                 (10, (0.0, -0.1, 0.1)), (14, (0.0, -0.1, 0.11)), (18, (0.0, -0.095, 0.1)), (25, (0.0, -0.04, 0.02)),
+                 (32, (0, -0.015, 0))],
+        "yaw": [(0, 0), (5, -12), (8, -4), (10, 4), (18, 3), (32, 0)],
+        "hips": [(0, 0), (5, -2), (8, 2), (10, 6), (18, 5), (32, 0)],
+        "chest": [(0, 0), (5, -4), (8, 2), (10, 8), (14, 9), (18, 7), (32, 0)],
+        "side": [(0, 0), (5, 3), (8, -2), (10, 0), (32, 0)],
+        "head": [(0, 0), (5, -2), (10, -2), (32, 0)],
+        "clav_r": [(0, (0, 0)), (5, (4, -16)), (8, (4, -2)), (10, (14, -2)), (18, (12, -2)), (32, (0, 0))],
+        "clav_l": [(0, (0, 0)), (5, (8, 4)), (8, (4, -6)), (10, (14, -2)), (18, (12, -2)), (32, (0, 0))],
+        "hand_r": [(0, HR), (2, (-0.15, 1.2, 0.28)), (5, (-0.17, 1.46, 0.29)), (7, (-0.33, 1.26, 0.34)), (8, (-0.15, 1.12, 0.3)),
+                   (10, (-0.1, 1.28, 0.6)), (14, (-0.1, 1.27, 0.6)), (18, (-0.11, 1.26, 0.57)), (25, (-0.2, 1.0, 0.2)), (32, HR)],
+        "hand_l": [(0, HL), (2, (0.15, 1.0, 0.26)), (5, (0.12, 0.96, 0.36)), (7, (0.32, 1.22, 0.34)), (8, (0.15, 1.2, 0.3)),
+                   (10, (0.1, 1.28, 0.6)), (14, (0.1, 1.27, 0.6)), (18, (0.11, 1.26, 0.57)), (25, (0.2, 1.0, 0.2)), (32, HL)],
+        "face_r": [(0, "stand"), (2, "push"), (22, "push"), (32, "stand")],
+        "face_l": [(0, "stand"), (2, "float"), (5, "float"), (7, "push"), (22, "push"), (32, "stand")],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (5, (-1.0, -0.2, -0.2)), (8, (-0.8, -0.8, -0.2)), (10, (-0.8, -0.6, -0.1)),
+                   (32, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (5, (1.0, -0.6, 0.0)), (8, (0.8, -0.8, -0.2)), (10, (0.8, -0.6, -0.1)),
+                   (32, (0.35, -0.1, -1.0))],
+        "grip_r": [(0, 0.4), (2, -0.4), (24, -0.4), (32, 0.4)],
+        "grip_l": [(0, 0.4), (2, -0.4), (24, -0.4), (32, 0.4)],
+        "foot_l": [(0, FL), (3, (0.13, 0.11, 0.05)), (5, (0.13, 0.077, 0.15)), (24, (0.13, 0.077, 0.15)), (27, (0.13, 0.11, 0.06)),
+                   (30, FL), (32, FL)],
+        "heel_l": [(0, 0), (3, 8), (4, -2), (5, 4), (24, 4), (26, 8), (29, 0)],
+        "foot_r": [(0, FR), (5, (-0.14, 0.077, -0.08)), (27, (-0.14, 0.077, -0.08)), (31, FR)],
+        "fyaw_r": [(0, 7), (5, 20), (27, 20), (31, 7)],
+        "heel_r": [(0, 0), (5, 8), (10, 14), (18, 12), (26, 0)],
+    },
+    # the Wind Guard's hold (a loop while the guard stands, the spec's air-shield hold): the circle walker standing light, both
+    # palms turning round a circle each before the chest (the right one way, the left the other)
+    "air_shield_hold": {
+        "length": 40, "loop": True, "meta": {"hand": "both", "mask": "full", "root": "place"},
+        "root": _ring(EIGHTHS(40), lambda a: _r3((0.0, -0.045 + 0.008 * math.sin(a), 0.0))),
+        "yaw": [(0, 0), (40, 0)], "hips": [(0, 2), (40, 2)], "chest": [(0, 1), (40, 1)],
+        "clav_r": [(0, (4, -4)), (40, (4, -4))], "clav_l": [(0, (4, -4)), (40, (4, -4))],
+        "hand_r": _ring(EIGHTHS(40), lambda a: _r3((-0.17 + 0.09 * math.cos(a), 1.24 + 0.09 * math.sin(a), 0.34 + 0.02 * math.sin(a)))),
+        "hand_l": _ring(EIGHTHS(40), lambda a: _r3((0.17 - 0.09 * math.cos(a), 1.24 + 0.09 * math.sin(a), 0.34 + 0.02 * math.sin(a)))),
+        "face_r": [(0, "push"), (40, "push")], "face_l": [(0, "push"), (40, "push")],
+        "pole_r": [(0, (-0.7, -0.8, 0.0)), (40, (-0.7, -0.8, 0.0))], "pole_l": [(0, (0.7, -0.8, 0.0)), (40, (0.7, -0.8, 0.0))],
+        "grip_r": [(0, -0.35), (40, -0.35)], "grip_l": [(0, -0.35), (40, -0.35)],
+        "foot_l": [(0, (0.12, 0.077, 0.08)), (40, (0.12, 0.077, 0.08))],
+        "foot_r": [(0, (-0.14, 0.077, -0.06)), (40, (-0.14, 0.077, -0.06))],
+        "fyaw_l": [(0, 2), (40, 2)], "fyaw_r": [(0, 14), (40, 14)],
+        "heel_l": [(0, 6), (40, 6)], "heel_r": [(0, 8), (40, 8)],
+    },
+    # the Slice: light on the feet, the right hand cocked back by the ear with the palm down (held); it slices out flat ahead
+    # and across at the chest's height, the edge of the hand leading, the left palm by the right elbow.  strike_s: the hand
+    # out ahead (its twin to the left)
+    "air_slice": {
+        "length": 28, "mirror": True,
+        "meta": {"hold_s": 5 / FPS, "strike_s": 8 / FPS, "back_s": 16 / FPS, "hand": "r", "mask": "full", "root": "place"},
+        "root": [(0, (0, -0.015, 0)), (3, (0.0, -0.05, -0.01)), (5, (0.0, -0.06, -0.03)), (8, (0.0, -0.08, 0.1)),
+                 (11, (0.0, -0.085, 0.12)), (16, (0.0, -0.08, 0.1)), (23, (0.0, -0.03, 0.02)), (28, (0, -0.015, 0))],
+        "yaw": [(0, 0), (5, -24), (8, 10), (11, 18), (16, 15), (28, 0)],
+        "twist": [(0, 0), (5, -16), (8, 8), (11, 14), (16, 12), (28, 0)],
+        "hips": [(0, 0), (5, 2), (8, 6), (16, 5), (28, 0)],
+        "chest": [(0, 0), (5, 2), (8, 7), (16, 6), (28, 0)],
+        "side": [(0, 0), (5, 5), (8, -3), (16, -2), (28, 0)],
+        "head": [(0, 0), (5, -2), (8, -3), (28, 0)],
+        "clav_r": [(0, (0, 0)), (5, (-6, -12)), (8, (14, -4)), (11, (16, -3)), (16, (12, -3)), (28, (0, 0))],
+        "clav_l": [(0, (0, 0)), (5, (8, -2)), (8, (10, -2)), (16, (8, -2)), (28, (0, 0))],
+        "hand_r": [(0, HR), (3, (-0.25, 1.25, 0.05)), (5, (-0.3, 1.44, -0.02)), (7, (-0.15, 1.36, 0.42)), (8, (0.04, 1.29, 0.66)),
+                   (11, (0.17, 1.25, 0.54)), (16, (0.16, 1.23, 0.48)), (23, (-0.15, 0.98, 0.18)), (28, HR)],
+        "hand_l": [(0, HL), (3, (0.12, 1.12, 0.3)), (5, (0.1, 1.2, 0.36)), (8, (0.04, 1.12, 0.3)), (16, (0.05, 1.12, 0.3)),
+                   (23, (0.18, 0.95, 0.12)), (28, HL)],
+        "face_r": [(0, "stand"), (3, "slice_back"), (6, "slice_back"), (8, "slice"), (18, "slice"), (28, "stand")],
+        "face_l": [(0, "stand"), (3, "push"), (18, "push"), (28, "stand")],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (5, (-1.0, 0.0, -0.4)), (8, (-0.6, -0.6, 0.0)), (28, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (5, (0.6, -1.0, -0.2)), (28, (0.35, -0.1, -1.0))],
+        "grip_r": [(0, 0.4), (3, -0.5), (22, -0.5), (28, 0.4)],
+        "grip_l": [(0, 0.4), (3, -0.3), (22, -0.3), (28, 0.4)],
+        "foot_l": [(0, FL), (2, (0.13, 0.12, 0.05)), (4, (0.14, 0.077, 0.18)), (19, (0.14, 0.077, 0.18)), (22, (0.13, 0.12, 0.07)),
+                   (25, FL), (28, FL)],
+        "heel_l": [(0, 0), (2, 8), (3, -4), (4, 4), (19, 4), (21, 8), (24, 0)],
+        "knee_l": [(0, "auto"), (2, (0.2, 0.2, 1.0)), (22, (0.2, 0.2, 1.0)), (25, "auto")],
+        "foot_r": [(0, FR), (4, (-0.14, 0.077, -0.08)), (20, (-0.14, 0.077, -0.08)), (25, FR)],
+        "fyaw_r": [(0, 7), (4, 30), (8, 36), (20, 36), (25, 7)],
+        "heel_r": [(0, 0), (4, 10), (8, 22), (16, 18), (24, 0)],
+    },
+    # ---------------------------------------------------------------- water (the ride and the glide; the game carries the body)
+    # the Surf (a loop while riding the wave, legs_always): side-on and crouched low on a wide staggered stance, the left arm
+    # out ahead and the right back for the balance, the body riding the wave's bob
+    "water_surf": {
+        "length": 48, "loop": True, "meta": {"hand": "both", "mask": "full", "root": "place", "legs_always": 1.0},
+        "root": [(0, (0.0, -0.24, 0.0)), (12, (0.01, -0.265, 0.01)), (24, (0.0, -0.245, 0.0)), (36, (-0.01, -0.265, -0.01)),
+                 (48, (0.0, -0.24, 0.0))],
+        "yaw": [(0, -32), (24, -28), (48, -32)],
+        "twist": [(0, 6), (24, 3), (48, 6)],
+        "hips": [(0, 14), (12, 17), (24, 14), (36, 17), (48, 14)],
+        "chest": [(0, 6), (12, 4), (24, 6), (36, 4), (48, 6)],
+        "roll": [(0, 0), (12, 2), (24, 0), (36, -2), (48, 0)],
+        "head": [(0, -10), (12, -12), (24, -10), (36, -12), (48, -10)],
+        "clav_r": [(0, (-4, -6)), (48, (-4, -6))], "clav_l": [(0, (8, -6)), (48, (8, -6))],
+        "hand_l": [(0, (0.24, 1.02, 0.42)), (12, (0.25, 0.97, 0.43)), (24, (0.24, 1.02, 0.42)), (36, (0.23, 1.05, 0.41)),
+                   (48, (0.24, 1.02, 0.42))],
+        "hand_r": [(0, (-0.38, 0.92, -0.08)), (12, (-0.38, 0.97, -0.08)), (24, (-0.38, 0.92, -0.08)), (36, (-0.37, 0.88, -0.08)),
+                   (48, (-0.38, 0.92, -0.08))],
+        "face_r": [(0, "arms_out"), (48, "arms_out")], "face_l": [(0, "palm_down"), (48, "palm_down")],
+        "pole_r": [(0, (-0.5, -1.0, -0.4)), (48, (-0.5, -1.0, -0.4))], "pole_l": [(0, (0.5, -1.0, -0.2)), (48, (0.5, -1.0, -0.2))],
+        "grip_r": [(0, -0.3), (48, -0.3)], "grip_l": [(0, -0.3), (48, -0.3)],
+        "foot_l": [(0, (0.16, 0.077, 0.22)), (48, (0.16, 0.077, 0.22))],
+        "foot_r": [(0, (-0.18, 0.077, -0.2)), (48, (-0.18, 0.077, -0.2))],
+        "fyaw_l": [(0, -6), (48, -6)], "fyaw_r": [(0, 50), (48, 50)],
+        "knee_l": [(0, (0.35, 0.0, 1.0)), (48, (0.35, 0.0, 1.0))], "knee_r": [(0, (-0.6, 0.0, 1.0)), (48, (-0.6, 0.0, 1.0))],
+    },
+    # the Skate (a skater's push-off on the water's ice; legs_always): crouched and gathered (held); the right leg drives out
+    # to the side and back off the deck, the body low and leaning ahead over the bent left leg, the left arm swinging out ahead
+    # and the right back (the glide, held); gathered in again.  strike_s: the push out
+    "water_skate": {
+        "length": 30,
+        "meta": {"hold_s": 5 / FPS, "strike_s": 9 / FPS, "back_s": 20 / FPS, "hand": "both", "mask": "full", "root": "place",
+                 "legs_always": 1.0},
+        "root": [(0, (0, -0.015, 0)), (5, (0.0, -0.16, 0.02)), (9, (0.06, -0.2, 0.06)), (16, (0.06, -0.2, 0.06)),
+                 (20, (0.05, -0.18, 0.05)), (25, (0.01, -0.05, 0.01)), (30, (0, -0.015, 0))],
+        "yaw": [(0, 0), (5, 4), (9, -10), (16, -10), (20, -8), (30, 0)],
+        "hips": [(0, 0), (5, 14), (9, 22), (16, 21), (20, 18), (30, 0)],
+        "chest": [(0, 0), (5, 8), (9, 10), (16, 10), (20, 8), (30, 0)],
+        "side": [(0, 0), (9, 4), (16, 4), (30, 0)],
+        "head": [(0, 0), (5, -10), (9, -14), (16, -13), (20, -11), (30, 0)],
+        "clav_r": [(0, (0, 0)), (5, (6, 4)), (9, (-10, 4)), (16, (-10, 4)), (30, (0, 0))],
+        "clav_l": [(0, (0, 0)), (5, (6, 4)), (9, (16, -4)), (16, (16, -4)), (30, (0, 0))],
+        "hand_r": [(0, HR), (5, (-0.2, 0.92, 0.26)), (9, (-0.28, 0.86, -0.12)), (16, (-0.28, 0.86, -0.11)), (20, (-0.24, 0.88, 0.0)),
+                   (25, (-0.2, 0.84, 0.08)), (30, HR)],
+        "hand_l": [(0, HL), (5, (0.15, 0.92, 0.26)), (9, (0.03, 1.11, 0.66)), (16, (0.03, 1.1, 0.65)), (20, (0.1, 1.0, 0.4)),
+                   (25, (0.19, 0.86, 0.12)), (30, HL)],
+        "face_r": [(0, "stand"), (5, "palm_down"), (9, "arms_out"), (20, "arms_out"), (30, "stand")],
+        "face_l": [(0, "stand"), (5, "palm_down"), (20, "palm_down"), (30, "stand")],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (5, (-0.8, -0.6, -0.2)), (9, (-0.6, -1.0, 0.0)), (30, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (5, (0.8, -0.6, -0.2)), (9, (0.6, -0.8, 0.0)), (30, (0.35, -0.1, -1.0))],
+        "grip_r": [(0, 0.4), (5, -0.3), (24, -0.3), (30, 0.4)],
+        "grip_l": [(0, 0.4), (5, -0.3), (24, -0.3), (30, 0.4)],
+        "foot_r": [(0, FR), (5, (-0.14, 0.077, -0.04)), (7, (-0.24, 0.095, -0.12)), (9, (-0.42, 0.1, -0.22)),
+                   (16, (-0.41, 0.1, -0.21)), (20, (-0.26, 0.13, -0.1)), (24, FR), (30, FR)],
+        "fyaw_r": [(0, 7), (5, 20), (9, 45), (16, 45), (24, 7)],
+        "heel_r": [(0, 0), (5, 6), (9, -4), (16, -4), (20, 6), (23, 0)],
+        "knee_r": [(0, "auto"), (5, (-0.6, 0.0, 1.0)), (20, (-0.6, 0.0, 1.0)), (24, "auto")],
+        "foot_l": [(0, FL), (30, FL)],
+        "fyaw_l": [(0, 7), (5, 10), (9, 16), (20, 16), (26, 7)],
+        "knee_l": [(0, "auto"), (4, (0.3, 0.0, 1.0)), (24, (0.3, 0.0, 1.0)), (27, "auto")],
+    },
+}
+CLIPS.update(SET3)
+
 
 ## The installed names (install_bend.gd reads them from the json): own-bend-<element | throw | knock>-<name>, the mirrored twin
 ## with -l.
@@ -1769,6 +2364,9 @@ def main():
         frames, roots, report = bake(clip, fit)
         meta = dict(clip["meta"])
         meta["length_frames"] = clip["length"]
+        # the worst miss of the two-bone IK over the frames (m: a target out of a limb's reach), kept with the clip so the
+        # library can be checked against it (tests/bending/test_bend_clips.gd: at most 5 mm)
+        meta["ik_miss_m"] = round(max(r[-1] for r in report), 4)
         if clip.get("loop"):
             meta["loop"] = "linear"
         out["clips"][name] = {"frames": frames, "root": roots, "meta": meta}
