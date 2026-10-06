@@ -266,6 +266,9 @@ func _crumbling(u: float) -> void:
 func apply_hit(damage: float, point: Vector3, dir: Vector3, _source: Node = null, _part := "body") -> void:
 	if state == State.CRUMBLING or damage < hit_min:
 		return
+	if has_meta(&"bend_brace"):
+		remove_meta(&"bend_brace")            # (mended or braced: this hit is taken free; round 2's Mend)
+		return
 	hits += 1
 	if is_inside_tree():
 		_chips(get_tree().current_scene, point, -dir.normalized() if dir.length_squared() > 1e-6 else Vector3.UP, 10)

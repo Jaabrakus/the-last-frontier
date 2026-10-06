@@ -9,10 +9,11 @@ extends SceneTree
 ##               his man; the aim help's cone is measured to the chest, which the bot's own throw pose carries down and
 ##               forward: from a level camera it was 4.4 deg off at rest and up to 10 deg mid-pose, past the 6 deg cone, so
 ##               the stone went along the crosshair over his head, the old flake)
-##   kick-shove  the player kicks a rock up (Rock Jab kick_up) and shoves it (Earth Shove push) at the held bot: it strikes
-##               him, knocked by the player
-##   trap-drop   the player traps the bot's feet (Earth Grip trap: feet_held) and casts a boulder (Stone Form cannonball): it
-##               lands on him while his feet are held
+##   kick-shove  the player kicks a rock up (Rock Jab kick_up), his crosshair on it, and shoves it (Earth Shove push: round
+##               2's order takes the loose stone the crosshair is on within shove_loose_m) at the held bot: it strikes him,
+##               knocked by the player
+##   trap-drop   the player's trap holds no element fighter's feet (round 2: no roots in element mode, BendStatus.held_off)
+##               and his boulder (Stone Form cannonball) lands on the bot all the same
 ## Last line "FLOW PASSED" or "FLOW FAILED"; exit 0 only on a pass. User args: seed=<n> (1750).
 ##   Godot --headless --fixed-fps 60 --path . -s tests/bending/test_flow.gd -- mode=duel
 
@@ -264,6 +265,8 @@ func _kick_shove() -> void:
 	var st := BendEffects.last.get("stone") as FormStone
 	_expect(kicked and st != null, "kick-up: a rock up before the player")
 	await _secs(0.35)
+	var yaw0 := p.yaw
+	await _aim_on(st.global_position + Vector3.UP * 0.1)
 	var n0 := n.global_position
 	var h0 := n.health
 	c.set_mode("earth_shove", "push")
@@ -273,17 +276,34 @@ func _kick_shove() -> void:
 	var struck: Array = []
 	if th != null:
 		th.lift.struck.connect(func(who: Node, _d: float) -> void: struck.append(who))
+	p.yaw = yaw0
+	await _aim_cam()                          # (back on his man as it flies: the throw's aim follows the crosshair)
+	if th != null and is_instance_valid(th) and not th.is_thrown:
+		th.cam_off = p.camera.global_position - p.global_position     # (the view it takes its aim from: his, back on the man)
 	var r := await _knocked_back(n0, 2.0)
 	_expect(struck.has(n) and r[1] == p and float(r[0]) >= 1.0, "kick-up: it strikes the held bot (%s; his health %.0f to %.0f), knocked %.2f m by the player"
 			% [str(struck.has(n)), h0, n.health, r[0]])
+
+
+## The player's camera turned until its ray meets `at` (a few steps of yaw and pitch).
+func _aim_on(at: Vector3) -> void:
+	for i in 5:
+		var cam := p.camera
+		var to := at - cam.global_position
+		p.yaw = atan2(-to.x, -to.z)
+		p.pitch = clampf(atan2(to.y, Vector2(to.x, to.z).length()), -1.3, 1.3)
+		await physics_frame
+		await physics_frame
 
 
 # ---------------------------------------------------------------- trap, then a boulder
 func _trap_drop() -> void:
 	await _stage()
 	c.set_mode("earth_grip", "trap")
+	var off0 := BendStatus.held_off
 	var trapped := BendCast.cast(c, "earth_grip", "trap")
-	_expect(trapped and n.feet_held and int(BendEffects.last.get("hit", 0)) >= 1, "trap: the bot's feet held (%s)" % str(n.feet_held))
+	_expect(trapped and not n.feet_held and BendStatus.held_off > off0 and int(BendEffects.last.get("hit", 0)) >= 1,
+			"trap: an element fighter's feet never held (round 2; held %s, held off %d)" % [str(n.feet_held), BendStatus.held_off - off0])
 	var ths0 := get_nodes_in_group(FormEffects.Throw.GROUP)
 	c.set_mode("stone_form", "cannonball")
 	var boulder := BendCast.cast(c, "stone_form", "cannonball")
@@ -297,7 +317,7 @@ func _trap_drop() -> void:
 	var on_held: Array = []
 	th.lift.struck.connect(func(who: Node, _d: float) -> void: on_held.append([who, n.feet_held]))
 	await _secs(1.5)
-	var hit_held := false
+	var hit := false
 	for e in on_held:
-		hit_held = hit_held or (e[0] == n and bool(e[1]))
-	_expect(hit_held, "trap: the boulder lands on the bot while his feet are held (%s)" % str(on_held))
+		hit = hit or e[0] == n
+	_expect(hit, "trap: the boulder lands on the bot all the same (%s)" % str(on_held))

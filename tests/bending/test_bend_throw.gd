@@ -7,8 +7,8 @@ extends SceneTree
 ##   the flights   a disc spins (its body's basis turns frame to frame); a disc thrown with gravity 6 at a point 20 m off lands
 ##                 within 1 m of it (the arc that lands it: Weapon.ballistic_dir); an ice spear's point (-Z) keeps within 5
 ##                 degrees of its flight; pebbles are three bolts; a body's cast (BodyBendCaster) launches the same frame
-##   the meeting   the player's Catch takes a thrown stone disc (a stone held); the player's air shield sends back an ice
-##                 spear (its caster now the player)
+##   the meeting   the player's Catch takes a thrown stone disc (a stone held); the player's Wind Guard lets an ice
+##                 spear through (round 2's guard matrix: it takes air and stone only)
 ##   the bots      a hard earth bot catches at least one of the discs thrown at it and shoves the caught stone back (Earth
 ##                 Shove push); a hard air bot let go begins no attack before its grace_s and knocks no one in the first
 ##                 second
@@ -372,7 +372,7 @@ func _meetings() -> void:
 		t += 1.0 / Engine.physics_ticks_per_second
 		got = _held_by(p)
 	_expect(caught and got != null, "the player's Catch takes a thrown stone disc (held %s, %.2f s)" % [got != null, t])
-	# --- the player's air shield sends back an ice spear
+	# --- the player's Wind Guard lets an ice spear
 	await _stage(12.0)
 	DuelMode.element = "air"
 	c.set_mode("air_shield", "shield")
@@ -386,6 +386,7 @@ func _meetings() -> void:
 	var spear: BendBolt = null
 	for x in _bolts_of(n):
 		spear = x
+	var thrown := spear != null                  # (before it flies: through the guard it strikes and is gone)
 	var back := false
 	t = 0.0
 	while t < 1.2 and spear != null and is_instance_valid(spear) and not back:
@@ -393,8 +394,10 @@ func _meetings() -> void:
 		await physics_frame
 		t += 1.0 / Engine.physics_ticks_per_second
 		back = is_instance_valid(spear) and spear.caster == p
-	_expect(shielded and zone != null and spear != null and back and zone.took >= 1,
-			"the player's air shield sends an ice spear back (its caster now the player: %s; took %d)" % [back, zone.took if zone else -1])
+	# (round 2's guard matrix: the air shield is the Wind Guard, it takes air and stone only; ice passes it)
+	_expect(shielded and zone != null and zone.r2 and thrown and not back and zone.took == 0,
+			"the player's Wind Guard lets an ice spear through (sent back: %s; took %d; cast %s, its guard %s, the spear %s)"
+			% [back, zone.took if zone else -1, shielded, zone.r2 if zone else false, thrown])
 	DuelMode.element = "earth"
 	await _secs(0.8)
 

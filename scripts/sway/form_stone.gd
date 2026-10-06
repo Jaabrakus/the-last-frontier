@@ -13,6 +13,14 @@ extends RigidBody3D
 ## our own weathered fieldstone, its freshly broken faces lighter, the ground's stain on its foot.
 
 const GROUP := &"form_stones"
+## ROUND 2 (skills_r2 spec §2.10, earth's ammo on the deck): a LOOSE stone is one let fall (a lock called off, a hit that
+## emptied it, a Wind Guard's drop, a stone off a wall hit): make_loose(s, by) marks it its maker's (meta LOOSE_META, the
+## body's instance id) and keeps at most Bending.stones().loose_max of one maker's lying: a fourth sinks the oldest. Any earth
+## fighter may shove a loose stone within shove_loose_m of himself (BendEffects.shove); a raised or held one is its raiser's.
+const LOOSE_META := &"bend_loose_by"
+
+## Loose stones in the order they were let fall: maker's instance id -> [FormStone].
+static var _loose := {}
 
 enum State { RISING, RESTING, HELD, SINKING }
 
@@ -161,6 +169,41 @@ func _physics_process(dt: float) -> void:
 			global_transform = Transform3D(_sink_from.basis, _sink_from.origin - Vector3.UP * (height + 0.15) * u * u)
 			if u >= 1.0:
 				queue_free()
+
+
+## Stone `s` lies loose, `by`'s (null: no one's, uncapped): past loose_max of `by`'s the oldest sinks. It is held by no one.
+static func make_loose(s: Node3D, by: Node) -> void:
+	if s == null or not is_instance_valid(s):
+		return
+	for k: StringName in [&"bend_held_by", &"bend_raised_by"]:
+		if s.has_meta(k):
+			s.remove_meta(k)
+	if by == null or not is_instance_valid(by):
+		s.set_meta(LOOSE_META, 0)
+		return
+	var id := by.get_instance_id()
+	s.set_meta(LOOSE_META, id)
+	var list: Array = (_loose.get(id, []) as Array).filter(func(x: Variant) -> bool:
+		return is_instance_valid(x) and int((x as Node).get_meta(LOOSE_META, -1)) == id and not (x is FormStone and (x as FormStone).state == State.SINKING))
+	list.erase(s)
+	list.append(s)
+	var cap := int(Bending.stones().get("loose_max", 3))
+	while cap > 0 and list.size() > cap:
+		var old: Node = list.pop_front()
+		if old is FormStone:
+			(old as FormStone).sink()
+		else:
+			old.queue_free()
+	_loose[id] = list
+
+
+## The loose stones `by` let fall that still lie (oldest first).
+static func loose_of(by: Node) -> Array:
+	if by == null or not is_instance_valid(by):
+		return []
+	var id := by.get_instance_id()
+	return (_loose.get(id, []) as Array).filter(func(x: Variant) -> bool:
+		return is_instance_valid(x) and int((x as Node).get_meta(LOOSE_META, -1)) == id and not (x is FormStone and (x as FormStone).state == State.SINKING))
 
 
 ## Back into the ground (its time over).

@@ -388,6 +388,25 @@ func _process(dt: float) -> void:
 	_tick_knock(dt)
 	_tick_stance(dt)
 	_apply()
+	_aim_follow(dt)
+
+
+## Round 2 (skills_r2 spec §2.3: "the upper body, hips and hands turn with the aim during the hold, so you and he both see it
+## steer"): with an element, while a lock is held its spine bends toward the crosshair's height (ToolPose.lean, AIM_LEAN of
+## the aim's pitch, at most AIM_LEAN_MAX), eased in and back out after (the body's yaw already follows the camera).
+const AIM_LEAN := 0.6
+const AIM_LEAN_MAX := 0.45
+var aim_lean := 0.0
+func _aim_follow(dt: float) -> void:
+	var want := 0.0
+	var cam: Camera3D = caster.player.camera if caster.player != null else null
+	if phase == "press" and caster.elem() and caster.state in [SwayCaster.State.LOCKING, SwayCaster.State.FULL] \
+			and cam != null and cam.is_inside_tree():
+		var pitch := asin(clampf(-cam.global_basis.z.y, -1.0, 1.0))
+		want = clampf(-pitch * AIM_LEAN, -AIM_LEAN_MAX, AIM_LEAN_MAX)
+	aim_lean = move_toward(aim_lean, want, dt * 2.5)
+	if _pose != null and is_instance_valid(_pose):
+		_pose.lean = aim_lean
 
 
 ## The stance's layer, the cast's over it, then the knock's over them, onto the ToolPose (off when there are none).
