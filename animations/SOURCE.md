@@ -176,6 +176,34 @@ visual references, no animation files imported) is his statement; the rows below
 | `own-bend-getup-attack` | 2026-10-06 (sixth set) | `bend_clips.py` (`getup_attack`, `_getup_attack`, `_wclip`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
 | `own-bend-knock-spiked` | 2026-10-06 (sixth set) | `bend_clips.py` (`knock_spiked`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
 | `own-bend-knock-bounce` | 2026-10-06 (sixth set) | `bend_clips.py` (`knock_bounce`, `_wclip`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-jab-rise` | 2026-10-07 (seventh set) | `bend_clips.py` (`jab_rise`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-jab-rise-l` | 2026-10-07 (seventh set) | `bend_clips.py` (`jab_rise`, `mirror_clip`, `twin_tail`, `twin_keys`) | `jab_rise`'s keys mirrored left for right to frame 12, then `jab_rise`'s own keys (its held-stone end); the hands' and the fingers' keys typed for the twin (`twin_keys`, pass 3) | (as its original) |
+| `own-bend-earth-hammer` | 2026-10-07 (seventh set) | `bend_clips.py` (`earth_hammer`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-water-downpour` | 2026-10-07 (seventh set) | `bend_clips.py` (`water_downpour`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-fire-axe-kick` | 2026-10-07 (seventh set) | `bend_clips.py` (`fire_axe_kick`, `_heel_key`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-fire-axe-kick-l` | 2026-10-07 (seventh set) | `bend_clips.py` (`fire_axe_kick`, `mirror_clip`) | `fire_axe_kick`'s keys mirrored left for right | (as its original) |
+| `own-bend-air-down-gust` | 2026-10-07 (seventh set) | `bend_clips.py` (`air_down_gust`, `_heel_key`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-guard-hold-earth` | 2026-10-07 (seventh set) | `bend_clips.py` (`guard_hold_earth`, `guard_earth_at`, `_loop`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-guard-hold-water` | 2026-10-07 (seventh set) | `bend_clips.py` (`guard_hold_water`, `guard_water_at`, `_loop`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-guard-hold-fire` | 2026-10-07 (seventh set) | `bend_clips.py` (`guard_hold_fire`, `guard_fire_at`, `_loop`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-guard-hold-air` | 2026-10-07 (seventh set) | `bend_clips.py` (`guard_hold_air`, `guard_air_at`, `_loop`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-teeter` | 2026-10-07 (seventh set) | `bend_clips.py` (`teeter`, `teeter_at`, `_each`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-spout-ride` | 2026-10-07 (eighth set) | `bend_clips.py` (`spout_ride`, `spout_at`, `_loop`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-spout-step-off` | 2026-10-07 (eighth set) | `bend_clips.py` (`spout_step_off`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-fire-flip-kick` | 2026-10-07 (eighth set) | `bend_clips.py` (`fire_flip_kick`, `_heel_key`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-fire-flip-kick-l` | 2026-10-07 (eighth set) | `bend_clips.py` (`fire_flip_kick`, `mirror_clip`) | `fire_flip_kick`'s keys mirrored left for right | (as its original) |
+| `own-bend-air-hit-earth` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_earth`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-air-hit-earth-l` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_earth`, `mirror_clip`) | `air_hit_earth`'s keys mirrored left for right | (as its original) |
+| `own-bend-air-hit-water` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_water`, `water_ring_at`, `_each`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-air-hit-water-l` | 2026-10-07 (eighth set, pass 2) | `bend_clips.py` (`air_hit_water`, `mirror_clip`) | `air_hit_water`'s keys mirrored left for right | (as its original) |
+| `own-bend-air-hit-fire` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_fire`, `_heel_key`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-air-hit-fire-l` | 2026-10-07 (eighth set, pass 3) | `bend_clips.py` (`air_hit_fire`, `mirror_clip`) | `air_hit_fire`'s keys mirrored left for right | (as its original) |
+| `own-bend-air-hit-air` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_air`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-air-hit-air-l` | 2026-10-07 (eighth set, pass 2) | `bend_clips.py` (`air_hit_air`, `mirror_clip`) | `air_hit_air`'s keys mirrored left for right | (as its original) |
+| `own-bend-hit-impact-front` | 2026-10-07 (ninth set) | `bend_clips.py` (`hit_impact_front`, `_struck`, `_arc`) | the rig's rest pose; keys in `CLIPS` (`SET9`) | (for the owner to fill) |
+| `own-bend-hit-impact-back` | 2026-10-07 (ninth set) | `bend_clips.py` (`hit_impact_back`, `_struck`, `_arc`) | the rig's rest pose; keys in `CLIPS` (`SET9`) | (for the owner to fill) |
+| `own-bend-hit-impact-left` | 2026-10-07 (ninth set) | `bend_clips.py` (`hit_impact_left`, `_struck`, `_arc`) | the rig's rest pose; keys in `CLIPS` (`SET9`) | (for the owner to fill) |
+| `own-bend-hit-impact-right` | 2026-10-07 (ninth set) | `bend_clips.py` (`hit_impact_left`, `mirror_clip`) | `hit_impact_left`'s keys mirrored left for right | (as its original) |
 
 - Second set and polish (2026-10-05, after the owner approved the first ten: "looks good but you can always perfect them"):
   the same generator and the same inputs (the rig's rest pose and keys typed into the table, now its `SET2` part); no clip,
@@ -216,6 +244,16 @@ visual references, no animation files imported) is his statement; the rows below
   before. `own-bend-land-heavy` is 16 frames (was 14), its `strike_s`, `hold_s` and `back_s` unchanged;
   `own-bend-jump-double`'s `hold_s` is 2 frames (was 1) and its `strike_s` 3 (was 2), `back_s` unchanged. The other clips'
   tracks are as before.
+  Revised on 2026-10-07 (the animation lane's second run, P1-air polish pass 1, the critic's notes): the same generator and
+  the same inputs (the rig's rest pose and keys typed into `SET4` and its typed loop functions); no clip, dump or reference
+  motion read. Five clips re-keyed by hand and re-baked (`--clips`): `own-bend-tumble` (`tumble_at`: the arms drawn only 45%
+  of the way in, to typed places beside the knees with the hands open, `TUMBLE_ARMS_IN`, `TUMBLE_HALF_R/L`; the legs 70%,
+  `TUMBLE_LEGS_IN`, opened from f18), `own-bend-flinch` (the head and chest keys cushioned over f2-f4; the hands' f1 key up
+  and out), `own-bend-jump-double` (a deeper gather, the push held over f3-f4 and bowed, the tuck at f7), `own-bend-fall-fast`
+  (`fall_fast_at`: the knees drawn up together, `FALL_FAST_FOOT`, the hands beside the hips, `FALL_FAST_HAND`, pitched 20
+  degrees, a larger buffet) and `own-bend-helpless` (`helpless_at`: the hips bowed forward, the knees bent, lying back
+  34-50 degrees, `HELPLESS_FOOT_R/L`). Their lengths and metas (`strike_s`, `hold_s`, `back_s`, `hand`, `mask`, `root`) are
+  unchanged; the other clips' tracks are as before.
 - Fifth set (2026-10-06, round 3's first playable: the deck's edge and the ground dodges of the % ring): the same generator
   and the same inputs (the rig's rest pose and keys typed into the table, now its `SET5` and `SET5B` parts; the hang's loop
   written as a typed function of its phase, `hang_at`, sampled at every frame by `_loop`; the three rolls from one typed
@@ -261,8 +299,118 @@ visual references, no animation files imported) is his statement; the rows below
   wall breaker's wall ahead), `haul_m` (the part of the scramble's climb its own keys carry) and `lying` (a figure on its
   back the whole clip). `tech_roll` and `getup_roll` have `"mirror": True` (and meta `travel`). Only these sixteen clips
   were baked (`--clips`); the other clips' tracks are as before. The martial-art styles in the comments (Hung Gar's horse,
-  tai chi's golden rooster, Northern Shaolin's rising punch and carp skip-up, Baguazhang's turning) remain labels for the
+  tai chi's cloud hands, Northern Shaolin's rising punch and carp skip-up, Baguazhang's palm change) remain labels for the
   typed key poses.
+  Revised the same day (pass 2, the critic's notes): the same generator, the same inputs and the same sixteen clips,
+  re-keyed and re-baked (`--clips`); no clip, dump or reference motion read. The keys changed are typed numbers in `SET6`
+  and its typed functions (`lie_at`, `glide_at`, the water Rise's arm circles now `_cone_hand` on a typed cone about each
+  shoulder, `GROLL_BARREL` and `GROLL_TWIST` for two log rolls, `GA_ARC`); the water Rise's golden rooster gave way to both
+  hands raised over the head and the air Rise's crane to a palm change; the lie's raised foot was set further out (typed in
+  `lie_at`) so its thigh lies at a slant, which also changes the first and last poses of the clips that start or end on
+  the lie (the getups and the bounce key from `LIE`). Some of these clips' own moments changed
+  (`own-bend-getup` `strike_s` 9/30 s and `back_s` 11/30 s, `own-bend-getup-roll` and its twin `strike_s` 5/30 s and
+  `back_s` 15/30 s, `own-bend-knock-spiked` `hold_s` 5/30 s); no earlier set's clip was re-baked. `bend_preview.gd` and
+  `bend_engine_strip.gd` now draw the wall a clip names (meta `wall_z`) for review; they read no motion.
+  Revised again on 2026-10-07 (pass 3, the critic's pass-2 notes): the same generator, the same inputs and the same sixteen
+  clips, re-keyed and re-baked (`--clips`); no clip, dump or reference motion read. The keys changed are typed numbers in
+  `SET6` and its typed functions: the earth Rise's throw made asymmetric (the right fist driven up, the left chambered at
+  the hip, the fists' path carried out in front clear of the hat); the water Rise's circles driven by the trunk (typed
+  `WATER_TWIST`, `WATER_SIDE`, `WATER_SWAY`, `WATER_REACH`, `WATER_BOB`, `WATER_TURNS`) into a white-crane peak
+  (`WATER_TOP`, `WATER_PRESS`); the glide's wings swept back with bent elbows (`glide_at`, `GLIDE_FLEX`, a typed facing
+  `wing`); the scramble's right hand over the lip at f2; the breakfall slap leant over its arm with the head up (`SLAP`)
+  and both breaks entered from one typed airborne frame (`TECH0`); the wall break's head kept back; the lie's beat moved
+  early (`LIE_STIR`, `LIE_LIFT`, `LIE_SAG`); the getup's in-between and settle; the log roll eased into a rock up to the
+  feet (`GROLL_BARREL`, the roll kept on the deck by the existing `ground` channel); the crab sweep's straight leg
+  (`GA_ARC`, `GA_SLACK`, `_hip_at`: the hip's place from the rig's own rest turned by the clip's typed turn, as `pose()`
+  turns it); the spiked and bounce knocks' limbs. `own-bend-tech-roll` and its twin are one frame longer (19 frames, the
+  airborne entry first; `hold_s` 2/30 s, `strike_s` 8/30 s, `back_s` 14/30 s); `own-bend-edge-scramble`'s `strike_s` is now
+  3/30 s (the right hand on the deck). New in the generator: `twin_keys` (channels typed for a twin alone: the tech roll's
+  twin's hips tilt), and `--points` also prints the hat's farthest point ahead and how near a palm comes to the hat (a
+  report only). No earlier set's clip was re-baked. `bend_preview.gd` gains `pairs=` (one clip's last frame beside
+  another's first: the scramble onto the hang) and `nosheets=`; `bend_engine_strip.gd` poses the edge clips 2 m along the
+  lip from its middle, clear of the stock ring's lantern pier; they read no motion.
+- Seventh set (2026-10-07, round 3's P2: the Pop's rising hand, the four Slams, the four held guards and the teeter): the
+  same generator and the same inputs (the rig's rest pose and keys typed into the table, now its `SET7` part; the guard
+  holds' loops and the teeter's windmill written as typed functions of the frame, `guard_<element>_at` and `teeter_at`);
+  no clip, dump or reference motion read. The guard holds take their held poses from round 2's own guard clips' typed keys
+  (`earth_catch`, `water_turn`, `fire_parry`, `air_guard` in this table) as numbers retyped, not from a library. The Pop's
+  hand ends at the place `scripts/bending/bend_r3.gd` (`pop_stone`) holds earth's Pop stone (typed as `POP_STONE`; a
+  place in the game's code, not motion). Only these twelve clips were baked (`--clips`); no earlier set's clip was
+  re-baked and their tracks and moments are unchanged. The martial-art styles in the comments (Hung Gar's double hammer
+  fist, tai chi's pressing palms and ward-off, Northern Shaolin's axe kick and knife hand, Baguazhang's coiled palms and
+  wheel) are labels for the typed key poses only. New in the generator: `twin_ends` (a twin that leaves and lands on its
+  original's own unmirrored first and last keys, the fall's first pose: the Axe Kick's twin; meta `twin_ends`).
+  Pass 2 (the same day, the critic's pass-1 notes; the same generator and inputs, keys retyped in `SET7`, only these twelve
+  clips re-baked): the Pop's coil deeper and its fist driven straight up in one C with the spine, the guard hand a frame
+  late with a dip; its twin rises on the left and from frame 12 takes the original's own keys, so both end with the right
+  hand on the stone where the code holds it (new in the generator: `twin_tail`; metas `twin_tail_s` and `stone_hand`, the
+  latter a word meta in `install_bend.gd`); the Hammer's hold one backward C with the fists behind the head and its fists
+  finishing ahead of and below the knees in a wider, sunk air horse; the Downpour's press with long arms ahead of the hips
+  on an upright, lifted column with the feet together and pointed, its V wider; the Axe Kick swung up outside on a
+  crescent, chopped down with the knee long, the rear leg split back and the fists thrown back; the Down Gust's palms
+  raised by the ears and driven 0.7 m down, a harder wring and unscrew with a side bend, a bigger lift; the earth guard's
+  horse wider and lower with a breath and squeeze that read; the fire guard's bounce deeper and sharp at the bottom with
+  the hands settling after it; the teeter 15 frames (`strike_s` 3/30 s, `hold_s` its end): tipped from the ankles, long
+  arms windmilling from the shoulders on a spin-up and settle (`_trap`) that never steps more than about 55 degrees a
+  frame, the arms splayed wide of the hat as they rise, caught with the right arm up and back and the left ahead. The
+  timing metas of every earlier set are unchanged. `bend_preview.gd` gains `sheet_at=` (a clip's sheet at chosen frames:
+  the Axe Kick twin's blend in-betweens); `bend_engine_strip.gd` gains `stone=` (the Pop stone drawn where the code holds
+  it) and `lip=` (a clip posed at the deck's end lip facing the water, its own views), orders a strip's moments in time and
+  labels the follow-through as the sheets do; they read no motion.
+- Eighth set (2026-10-07, round 3's P3: the spout ride and a step-off from it, the air High Kick's back-flip crescent and
+  the four air-only close hits the owner approved on 2026-10-05, one an element): the same generator and the same inputs (the
+  rig's rest pose and keys typed into the table, now its `SET8` part; the spout ride's loop written as a typed function of
+  its phase, `spout_at`, and the water hit's ring as a typed function of the frame over typed angles, `water_ring_at`); no
+  clip, dump or reference motion read. The air clips start and end on AIR, the fall's first pose (the seventh set's own
+  keys); the step-off starts on the spout ride's first pose. Only these nine clips were baked (`--clips`); no earlier set's
+  clip was re-baked and their tracks and moments are unchanged. The martial-art styles in the comments (Hung Gar's driving
+  elbow, tai chi's cloud hands, Northern Shaolin's double flying kick and back-flip kick, Baguazhang's turning palms) are
+  labels for the typed key poses only. `own-bend-spout-step-off` is not named in `data/ring/movement.json`; it is there for
+  the movement task to map when the spout is left. New in the generator: `mirror_clip`'s `twin_ends` keeps a whole turn on the
+  spot (`spin`) mirrored at the twin's end (-360, the same pose as +360) instead of the original's unmirrored end.
+  Pass 2 (the same day, the critic's pass-1 notes): the same generator and inputs; only the eighth set's clips re-keyed and
+  re-baked (`--clips`), plus two new twins, `own-bend-air-hit-water-l` and `own-bend-air-hit-air-l` (the water sweep and the
+  air whirl are sided). The spout ride a wide staggered riding stance with the knees out and round arms pressing the water,
+  its surge a typed quick lift and long ease (`_surge`) taken late through the knees, the hands and the head; the step-off
+  16 frames with a deep held dip and the arms in opposition; the flip kick's arms thrown back past the head and round one
+  arc onto the shins, its kicking knee nearly straight and its other leg folded; the earth hit a boulder (both legs tucked,
+  the knee raised, the elbow on it, the fists stacked, a hit-stop then a whip and an overshoot); the water hit's ball held at
+  the arms' length from an approximate typed shoulder line (`_ring_shoulders`), the waist leading it and the legs swung
+  against it; the fire hit's legs a frame apart with a recoil and its fists flung back on long arms; the air hit's palm
+  change, long dragging arms and the head's spot. `bend_engine_strip.gd` gains `spout=` (the clip stood on RingSpout's own
+  column and crown) and a forward drift on `rise=` (an air clip seen on a real jump's arc); it reads no motion.
+  Pass 3 (the same day, the critic's pass-2 notes): the same generator and inputs (the rig's rest pose and keys typed into
+  the table); no clip, dump or reference motion read; only the eighth set's clips re-baked (`--clips`), plus one new twin,
+  `own-bend-air-hit-fire-l` (the fire hit's right foot leads). The spout ride's palms lower and nearer with the elbows out
+  and dropped (round arms), the step-off's left hand reaching ahead of the chest with an open palm; the water hit re-keyed
+  as tai chi's "hold the ball" (the right palm stacked over the left, the chest's heading typed in `WATER_C` with the hips
+  leading it in `WATER_YAW` and the ball's offset off it in `RING_OFF`, a typed counter-lean in `WATER_ROLL` and
+  `WATER_SIDE`, the knees tucked high), its strike moved from f5 to f4 (`strike_s` 0.133, `back_s` 0.300); the fire hit's
+  trunk only a little back with the head down the legs and the fists chambered at the waist; the air hit's open slant on
+  its strike frame, the lead palm at the eyes' height on a round arm with the wrist bent back, the feet tucked higher. The
+  water hit's and the twins' other metas, and every earlier set's clip, are unchanged. `bend_engine_strip.gd` gains `at=`
+  (a clip shown at chosen frames: the spout's surge); it reads no motion.
+- Ninth set (2026-10-07, round 4's struck bodies: the contact poses round 4's hit-stop holds a struck body in, one a side
+  the hit comes from): the same generator and the same inputs (the rig's rest pose and keys typed into the table, now its
+  `SET9` part; each clip's contact pose typed as a channel's value at the hold and eased from the stand by a typed spacing
+  a part (`_struck`, `STRUCK_SPACING`), the head's pitch, turn and tilt typed a frame, the palms keyed as their reach from
+  the shoulders and carried round them on an arc (`_arc`)); no clip, dump or reference motion read. Each is 6 frames: the
+  hit at f0 (`strike_s` 0), the contact at f3 (`hold_s` 0.1, the frame the hit-stop holds), the overlap after it
+  (`back_s` 4/30 s) that `own-bend-tumble` or `own-bend-flinch` takes over from; a new word meta `from` (front, back,
+  left, right: the side the hit comes from; `install_bend.gd` writes it as a word). `own-bend-hit-impact-right` is
+  `hit_impact_left`'s keys mirrored. Only these four clips were baked (`--clips`); no earlier set's clip was re-baked and
+  their tracks and moments are unchanged. `bend_preview.gd` gains `before=` (a sheet opening with another clip's frame:
+  the stand the contact snaps out of) and a pair's `@frame` (a hand-over into the middle of the next clip); they read no
+  motion.
+  Revised the same day (pass 2, the critic's notes): the same generator, the same inputs and the same four clips, re-keyed
+  by hand in `SET9` and `STRUCK_SPACING`. The front hit's arms flung forward at the shoulders' height (no raised V), its
+  pelvis shoved behind the heels, the left leg the straighter with its toes up; the back hit re-keyed as an arch (the belly
+  driven forward, the chest thrust out, the arms flung back and down in a low V, up on the balls of the feet); the side
+  hit's struck arm out and back about 20 degrees above the shoulder, the weight further onto the far leg with the struck
+  heel peeled (the right one still its mirror); the head and the arms overshoot the hold at f4 and settle, the knees keep
+  giving a frame, and the trunk recoils first. The metas
+  (6 frames, `strike_s` 0, `hold_s` 0.1, `back_s` 4/30 s, mask full, `from`) are unchanged; only these four clips were
+  re-baked.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.

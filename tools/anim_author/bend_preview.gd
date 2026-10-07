@@ -20,6 +20,15 @@ extends SceneTree
 ##       [loopcells=1]   how many even moments of a loop the lineups show (its start, then evenly through it)
 ##       [at=own-bend-rise-earth:13,22;...]   the lineup cells of a clip at those frames (instead of its hold and strike)
 ##       [rise=own-bend-edge-jump:11.8:19.9]   the code's jump (vy, gravity) added to that clip's root, as the game moves it
+##       [pairs=own-bend-edge-scramble>own-bend-edge-hang]   a hand-over's seam: the first's last frame beside the second's
+##                    first, front and side (<prefix>edge-scramble-to-hang_seam.png)
+##       [nosheets=1]   the lineup (and the pairs) only, no clip sheets
+##       [before=own-bend-earth-stomp:0]   each sheet opens with that clip's frame (the pose the clip snaps out of: a struck
+##                    contact pose's stand before the hit), labelled "before"
+##       [pairs=own-bend-hit-impact-front>own-bend-flinch@2]   a pair's second clip shown at that frame instead of its first
+##                    (a hand-over the code makes at a moment of the next clip: <prefix><a>-to-<b>_seam.png)
+##       [sheet_at=own-bend-fire-axe-kick-l:1,2,14,17,20;...]   that clip's sheet at those frames instead of its moments
+##                    (the in-betweens a check needs to see: a twin's half-mirrored blend in and out)
 ## An edge clip (meta lip_y: keyed in the hang's frame) is shown at a block of the deck (its lip lip_y over the origin and
 ## lip_out ahead, a pale coping on a stone face), framed round the lip (EDGE_VIEWS).
 
@@ -29,6 +38,16 @@ const GLB := "res://assets/character/actor_b_body.glb"
 const CENTER := Vector3(0.0, 0.95, 0.15)
 ## Where a clip lying on the deck is framed (meta lying): low over the lying body's middle.
 const LOW_CENTER := Vector3(0.0, 0.3, -0.15)
+## How far the side view of a lying clip is centred toward the head (m, -Z), so the head and the hat stay in the frame.
+const LYING_SIDE_SHIFT := -0.2
+## A clip that starts on the deck and stands up (the getups: its first frame's head under this height, m) seen from the
+## side further back and centred toward the head, so the lying start and the standing end both stay in the frame.
+const LOW_START_Y := 0.5
+const RISING_SIDE := Vector3(0.0, -0.2, -0.3)
+const RISING_SIDE_BACK := 1.3
+## The wall a clip names (meta wall_z: the wall break) drawn there: its size (m) and its see-through stone.
+const WALL_SIZE := Vector3(1.6, 2.4, 0.06)
+const WALL_COLOR := Color(0.5, 0.52, 0.58, 0.38)
 ## (the character faces +Z, +X its left)
 const VIEWS := {"front34": Vector3(-2.3, 0.35, 3.0), "side": Vector3(-3.7, 0.15, 0.15)}
 ## An edge clip's views about the lip (the deck ahead of him, +Z): from the deck's front three quarters a little over it (what
@@ -59,10 +78,22 @@ var view
 var label: Label
 var sk: Skeleton3D
 var _ledge: Node3D
+var _wall: Node3D
 ## rise=<clip>:<vy>:<g>[;...]: the code's own lift added to that clip's root (the edge jump: the game's jump carries the
 ## body up while the clip plays), so the sheet shows what the game shows. Clip name -> (vy m/s, g m/s^2); by animation.
 var _rise_args := {}
 var _rise := {}
+var _low_start := {}
+## pairs=<clip>><clip>[;...]: a hand-over's seam, the first clip's last frame beside the second's first, front and side
+## (<prefix><first>-to-<second>_seam.png: the scramble ending on the hang's first pose).
+var pairs: Array = []
+## nosheets=1: no clip sheets, only the lineups and the pairs' seams (a lineup of clips already shown).
+var no_sheets := false
+## sheet_at=<clip>:<frame>,<frame>[;...]: that clip's sheet at those frames (front and side) instead of its named moments.
+var sheet_at := {}
+## before=<clip>:<frame>: the frame each sheet opens with (the pose before the clip: a contact pose's stand before the hit).
+var before := ""
+var before_frame := 0
 
 
 func _initialize() -> void:
@@ -93,6 +124,17 @@ func _initialize() -> void:
 		elif a.begins_with("rise="):
 			for r in a.get_slice("=", 1).split(";", false):
 				_rise_args[r.get_slice(":", 0)] = Vector2(float(r.get_slice(":", 1)), float(r.get_slice(":", 2)))
+		elif a.begins_with("pairs="):
+			for r in a.get_slice("=", 1).split(";", false):
+				pairs.append([r.get_slice(">", 0), r.get_slice(">", 1)])
+		elif a.begins_with("nosheets="):
+			no_sheets = a.get_slice("=", 1) == "1"
+		elif a.begins_with("before="):
+			before = a.get_slice("=", 1).get_slice(":", 0)
+			before_frame = int(a.get_slice("=", 1).get_slice(":", 1))
+		elif a.begins_with("sheet_at="):
+			for r in a.get_slice("=", 1).split(";", false):
+				sheet_at[r.get_slice(":", 0)] = r.get_slice(":", 1).split(",", false)
 	_run.call_deferred()
 
 
@@ -145,14 +187,25 @@ func _run() -> void:
 			continue
 		var a := lib.get_animation(nm)
 		var times := _moments(a)
+		if sheet_at.has(String(nm)):
+			times = []
+			for fr: String in sheet_at[String(nm)]:
+				times.append([int(fr) / 30.0, "f%s" % fr])
 		var cells: Array[Image] = []
-		for vn: String in VIEWS:
-			for tm: Array in times:
-				cells.append(await _snap(a, float(tm[0]), vn, "%s\n%s %.2f s (f%d)" % [String(nm).trim_prefix("own-bend-"), tm[1],
-						float(tm[0]), int(round(float(tm[0]) * 30.0))]))
-		_sheet(cells, times.size(), out.path_join("%s%s%s.png" % [prefix, String(nm).trim_prefix("own-bend-"), suffix]))
+		var ba: Animation = lib.get_animation(StringName(before)) if before != "" and lib.has_animation(StringName(before)) \
+				else null
+		if not no_sheets:
+			for vn: String in VIEWS:
+				# (the pose the clip snaps out of first, when before= names one)
+				if ba != null:
+					cells.append(await _snap(ba, before_frame / 30.0, vn, "%s\nbefore: %s f%d" % [String(nm).trim_prefix(
+							"own-bend-"), before.trim_prefix("own-bend-"), before_frame]))
+				for tm: Array in times:
+					cells.append(await _snap(a, float(tm[0]), vn, "%s\n%s %.2f s (f%d)" % [String(nm).trim_prefix("own-bend-"),
+							tm[1], float(tm[0]), int(round(float(tm[0]) * 30.0))]))
+			_sheet(cells, times.size() + (1 if ba != null else 0), out.path_join("%s%s%s.png" % [prefix, String(nm).trim_prefix("own-bend-"), suffix]))
 		# (a clip whose tail loops (meta loop_from_s: the air Rise's glide) shows that loop's first frame and its last)
-		if seam and (a.has_meta(&"loop") or a.has_meta(&"loop_from_s")):
+		if seam and not no_sheets and (a.has_meta(&"loop") or a.has_meta(&"loop_from_s")):
 			var sc: Array[Image] = []
 			var t0 := float(a.get_meta(&"loop_from_s", 0.0))
 			for vn: String in VIEWS:
@@ -181,8 +234,26 @@ func _run() -> void:
 				lineup.append(im2)
 				(by_el[el] as Array[Image]).append(im2)
 	_sheet(lineup, 8, out.path_join("%s%s.png" % [prefix, lineup_name]))
-	for el: String in by_el:
-		_sheet(by_el[el], 7, out.path_join("%slineup_%s.png" % [prefix, el]))
+	if not no_sheets:
+		for el: String in by_el:
+			_sheet(by_el[el], 7, out.path_join("%slineup_%s.png" % [prefix, el]))
+	# (a hand-over's seam: the first clip's last frame beside the second's first, front and side)
+	for pr: Array in pairs:
+		# (<b>@<frame>: the second clip at that frame, a hand-over the code makes into the middle of it)
+		var b_name := String(pr[1]).get_slice("@", 0)
+		var b_fr := int(String(pr[1]).get_slice("@", 1)) if String(pr[1]).contains("@") else 0
+		if not (lib.has_animation(StringName(pr[0])) and lib.has_animation(StringName(b_name))):
+			continue
+		var a0 := lib.get_animation(StringName(pr[0]))
+		var a1 := lib.get_animation(StringName(b_name))
+		var pc: Array[Image] = []
+		for vn: String in VIEWS:
+			pc.append(await _snap(a0, a0.length, vn, "%s\nlast frame %.2f s (f%d)" % [String(pr[0]).trim_prefix("own-bend-"),
+					a0.length, int(round(a0.length * 30.0))]))
+			pc.append(await _snap(a1, b_fr / 30.0, vn, ("%s\nfirst frame 0.00 s (f0)" % b_name.trim_prefix("own-bend-")) if b_fr == 0
+					else ("%s\nframe %.2f s (f%d)" % [b_name.trim_prefix("own-bend-"), b_fr / 30.0, b_fr])))
+		_sheet(pc, 2, out.path_join("%s%s-to-%s_seam.png" % [prefix, String(pr[0]).trim_prefix("own-bend-"),
+				b_name.trim_prefix("own-bend-edge-").trim_prefix("own-bend-")]))
 	print("BEND PREVIEW -> ", out)
 	quit()
 
@@ -306,7 +377,17 @@ func _set_clip(a: Animation, t: float) -> void:
 				sk.set_bone_pose_position(b, a.position_track_interpolate(i, t))
 
 
+## Whether a clip starts lying on the deck (its first frame's head under LOW_START_Y), cached per clip.
+func _starts_low(a: Animation) -> bool:
+	if not _low_start.has(a):
+		_apply(a, 0.0)
+		var hb := sk.find_bone("heada")
+		_low_start[a] = hb >= 0 and sk.get_bone_global_pose(hb).origin.y < LOW_START_Y
+	return bool(_low_start[a])
+
+
 func _snap(a: Animation, t: float, vn: String, text: String) -> Image:
+	var rising := vn == "side" and not a.has_meta(&"lip_y") and not a.has_meta(&"lying") and _starts_low(a)
 	_apply(a, t)
 	label.text = text
 	# (an edge clip, keyed in the hang's frame with its lip at meta lip_y over the origin and lip_out ahead: seen round the
@@ -319,9 +400,21 @@ func _snap(a: Animation, t: float, vn: String, text: String) -> Image:
 		c = Vector3(0.0, float(a.get_meta(&"lip_y")) + 0.1, float(a.get_meta(&"lip_out", 0.35)) + 0.3)
 		off = EDGE_VIEWS[vn]
 	elif a.has_meta(&"lying"):
-		# (a figure lying on the deck its whole length (meta lying: the lie, the bounce): framed low round its middle, nearer)
+		# (a figure lying on the deck its whole length (meta lying: the lie, the bounce): framed low round its middle, nearer;
+		# the side view a little further back and toward the head, so the head and the hat are not cut off)
 		c = LOW_CENTER
 		off = VIEWS[vn] * 0.8 + Vector3(0.0, 0.25, 0.0)
+		if vn == "side":
+			c = LOW_CENTER + Vector3(0.0, 0.0, LYING_SIDE_SHIFT)
+			off = VIEWS[vn] + Vector3(0.0, 0.25, 0.0)
+	elif rising:
+		# (a getup: from the side a little further back and toward the head, the lying start and the stand both in frame)
+		c = CENTER + RISING_SIDE
+		off = VIEWS[vn] * RISING_SIDE_BACK
+	# (a clip that names a wall ahead, meta wall_z: the wall drawn there, a see-through pane so the figure on it shows)
+	_wall.visible = a.has_meta(&"wall_z")
+	if _wall.visible:
+		_wall.position = Vector3(0.0, 0.0, float(a.get_meta(&"wall_z")))
 	if _rise.has(a):
 		# (the code's lift carries the body high: the frame follows it up once it is past the lip, the lip kept in view)
 		var rr: Vector2 = _rise[a]
@@ -384,6 +477,32 @@ func _stage() -> void:
 		bm.material_override = bmat
 		bm.position = part[1]
 		_ledge.add_child(bm)
+	# (the wall a clip names: its near face at the node's origin, its foot on the floor; an edge line drawn opaque)
+	_wall = Node3D.new()
+	_wall.visible = false
+	root.add_child(_wall)
+	var wm := MeshInstance3D.new()
+	var wb := BoxMesh.new()
+	wb.size = WALL_SIZE
+	wm.mesh = wb
+	var wmat := StandardMaterial3D.new()
+	wmat.albedo_color = WALL_COLOR
+	wmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	wmat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	wmat.roughness = 0.9
+	wm.material_override = wmat
+	wm.position = Vector3(0.0, WALL_SIZE.y * 0.5, WALL_SIZE.z * 0.5)
+	_wall.add_child(wm)
+	for edge: Vector3 in [Vector3(-WALL_SIZE.x * 0.5, WALL_SIZE.y * 0.5, 0.0), Vector3(WALL_SIZE.x * 0.5, WALL_SIZE.y * 0.5, 0.0)]:
+		var em := MeshInstance3D.new()
+		var eb := BoxMesh.new()
+		eb.size = Vector3(0.025, WALL_SIZE.y, 0.025)
+		em.mesh = eb
+		var emat := StandardMaterial3D.new()
+		emat.albedo_color = Color(0.25, 0.27, 0.32)
+		em.material_override = emat
+		em.position = edge
+		_wall.add_child(em)
 	for ix in range(-4, 4):
 		for iz in range(-4, 4):
 			var m := MeshInstance3D.new()

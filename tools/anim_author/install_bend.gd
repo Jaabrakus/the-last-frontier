@@ -19,8 +19,9 @@ const OUT_LIB := "res://animations_extra/Frontier_Bend.res"
 const PREFIX_LIB := "res://animations_extra/Frontier_Form.res"
 const PREFIX_CLIP := "own-form-release"
 const AUTHORED := "Frontier: our own ring-sport clip (%s), key poses keyed and IK-solved in Blender (tools/anim_author/blender/bend_clips.py) from the rig's rest pose"
-## Metas that are words, not seconds (travel: the way a side roll rolls, "right" or "left").
-const WORD_METAS := ["hand", "mask", "root", "loop", "travel"]
+## Metas that are words, not seconds (travel: the way a side roll rolls, "right" or "left"; stone_hand: the hand the Pop's
+## stone ends in, "r"; from: the side a struck contact pose's hit comes from, "front", "back", "left" or "right").
+const WORD_METAS := ["hand", "mask", "root", "loop", "travel", "stone_hand", "from"]
 
 
 func _initialize() -> void:
