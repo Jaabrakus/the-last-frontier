@@ -417,7 +417,8 @@
       "per_element": true,
       "dummy_pct": 0,
       "element_lines": {
-        "earth": "Click on him three times: up he goes, and you keep a stone.  Then [bend_guard]: throw it"
+        "earth": "Click on him three times: up he goes, and you keep a stone.  Then [bend_guard]: throw it",
+        "air": "Click on him three times: up he goes.  Then right-click your [weapon_2]"
       },
       "by": {
         "*": {
