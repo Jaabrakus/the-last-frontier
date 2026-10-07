@@ -83,8 +83,9 @@ const CLIFF_HOUSES := [-1245.0, -1288.0, -1180.0]
 const VILLAGE_AT := Vector2(0.0, -1248.0)
 const CLAN_HOUSE_AT := Vector2(60.0, -1330.0)
 const VILLAGE_HOUSES := 11
-## D5: the waystone, its flag pole.
-const WAYSTONE_AT := Vector2(905.0, -1228.0)
+## D5: the waystone, its flag pole. (The spec's (905, -1228) sits under the lip's 6 m step, hidden from V1: moved 9 m
+## up onto the crest, still on the path.)
+const WAYSTONE_AT := Vector2(914.0, -1224.0)
 const FLAG_POLE_AT := Vector2(915.0, -1240.0)
 ## D17-D19.
 const SAMPAN_AT := Vector3(818.0, 134.0, -1290.0)
@@ -95,6 +96,8 @@ const FALL_LIPS := [Vector2(752.0, -1150.0), Vector2(750.0, -1330.0)]
 
 ## The painted rock stretched along the walls (tv_rock's strata_stretch) on the gorge modules; the towers a little less.
 const STRATA_STRETCH := 2.2
+## The gorge modules' paint tint (sRGB: the shader's tint is a source colour): warm grey.
+const WALL_TINT := Color(1.0, 0.96, 0.86)
 ## Gorge walls: [channel id, along-axis ("z" or "x"), from, to] stretches where modules stand.
 const WALLS := [["main", "z", -1660.0, -960.0], ["torrent", "x", -1150.0, -620.0]]
 const WALL_STEP := 36.0
@@ -119,6 +122,7 @@ var rng := RandomNumberGenerator.new()
 var _plants := {}
 var _plant_meshes := {}
 var _far_mat: ShaderMaterial
+var _wall_mat: ShaderMaterial
 var _mist: Node3D
 var _mist_key := ""
 var _mist_mats: Array[ShaderMaterial] = []
@@ -362,9 +366,10 @@ func _tower(piece: String, at: Vector3, yaw: float, h: float, hero: bool) -> Nod
 		var r := float(s.get("r", 3.0))
 		var v := 2 if r > 4.0 else (1 if r > 2.0 else 0)
 		var crown := bool(s.get("crown", false))
-		if not hero and not crown and rng.randf() < 0.6:
+		if not hero and not crown and rng.randf() < 0.2:
 			continue
-		_add_plant("tv_karst_pine", v, wp, sc * rng.randf_range(1.1, 1.7) * (1.4 if crown else 1.0), not hero)
+		# (the sheets' towers wear dark pine crowns on every ledge: the pines a size up)
+		_add_plant("tv_karst_pine", v, wp, sc * rng.randf_range(1.4, 2.1) * (1.4 if crown else 1.0), not hero)
 	return n
 
 
@@ -482,10 +487,27 @@ func _module(w: Dictionary) -> void:
 	n.scale = Vector3(rng.randf_range(0.95, 1.1), rng.randf_range(0.95, 1.08), zscale)
 	add_child(n, true)
 	_stretch(n, STRATA_STRETCH)
+	_warm(n)
 	for s: Dictionary in meta.get("seats", []):
 		if String(s.kind) == "pine" and rng.randf() < 0.7:
 			var wp := n.transform * Vector3(s.pos[0], s.pos[1], s.pos[2])
 			_add_plant("tv_karst_pine" if rng.randf() < 0.6 else "tv_shrub", rng.randi_range(0, 2), wp, rng.randf_range(0.9, 1.4))
+
+
+## The gorge modules in a warmer copy of the karst paint (the sheets' warm grey limestone; under the sky's blue ambient
+## the shared karst reads cold on a wall that fills the frame). The towers keep the shared one.
+func _warm(n: Node3D) -> void:
+	if _wall_mat == null:
+		var base := load(ROCK_MAT) as ShaderMaterial
+		if base == null:
+			return
+		_wall_mat = base.duplicate() as ShaderMaterial
+		_wall_mat.set_shader_parameter("tint", WALL_TINT)
+	for mi in Kit._meshes(n):
+		for i in mi.mesh.get_surface_count():
+			var m := mi.mesh.surface_get_material(i)
+			if m and m.resource_name == "rock_karst":
+				mi.set_surface_override_material(i, _wall_mat)
 
 
 func _stretch(n: Node3D, k: float) -> void:
@@ -524,8 +546,20 @@ func _white_stones() -> void:
 
 # --- the bridges ---------------------------------------------------------------------------------------------------
 
+## The rope bridge's deck height at x (VILLAGE's assembled spans: 200 at the anchors, 197 at the needle, 4.5 m sag).
+static func deck_y(x: float) -> float:
+	if x < NEEDLE_AT.x:
+		var t := clampf((x - ROPE_BRIDGE_AT.x) / (NEEDLE_AT.x - 2.0 - ROPE_BRIDGE_AT.x), 0.0, 1.0)
+		return lerpf(200.0, 197.0, t) - 18.0 * t * (1.0 - t)
+	var u := clampf((x - NEEDLE_AT.x - 2.0) / (893.0 - NEEDLE_AT.x - 2.0), 0.0, 1.0)
+	return lerpf(197.0, 200.0, u) - 18.0 * u * (1.0 - u)
+
+
 func _bridges() -> void:
 	_place(Kit.village("rope_bridge_r1"), ROPE_BRIDGE_AT, 0.0)
+	# porters crossing (VILLAGE's scale figures; the sheet's bridge is never empty)
+	for f: Array in [[781.0, 90.0, "porter_walking"], [796.0, 90.0, "porter_pole"], [874.0, -90.0, "porter_walking"]]:
+		_place(Kit.village(String(f[2])), Vector3(float(f[0]), deck_y(float(f[0])), ROPE_BRIDGE_AT.z), float(f[1]))
 	var needle := _place(Kit.rock("bridge_needle", true), NEEDLE_AT, 0.0)
 	if needle:
 		for s: Dictionary in _seats_meta.get("bridge_needle", {}).get("seats", []):

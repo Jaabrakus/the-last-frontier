@@ -18,7 +18,7 @@ const TV_ARRAY := "res://assets/thuyvan/paint/terrain/tv_terrain_albedo_array.we
 ## Slices (terrain_slices.json) the shader falls back to past a square's splat (never met inside the region).
 const FALLBACK_SLICE := 0
 ## The gorge walls a little warmer than the painted cliff face (under the sky's blue ambient they read cold).
-const CLIFF_TINT := Vector3(1.12, 1.04, 0.88)
+const CLIFF_TINT := Vector3(1.14, 1.03, 0.82)
 ## The cliff face's plates stretched along the wall: they read as the sheets' level strata, not paving.
 const CLIFF_STRETCH := 2.2
 
