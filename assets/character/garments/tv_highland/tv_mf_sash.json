@@ -1,0 +1,339 @@
+{
+ "id": "tv_mf_sash",
+ "name": "Wound sash with bronze disc",
+ "description": "A madder sash wound twice round the waist, its fringed end hanging at the left front, a bronze disc on the right hip and strings of teeth, bone beads and tassels.",
+ "kind": "garment",
+ "set": "tv_highland",
+ "slot": "accessories.waist",
+ "alt_slots": [],
+ "layer": {
+  "default": 60
+ },
+ "glb": "res://assets/character/garments/tv_highland/tv_mf_sash.glb",
+ "mesh": "tv_mf_sash",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tv_mf_sash"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "sash",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_madder",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "bone and teeth",
+   "role": "trim",
+   "fabric": "FLAT",
+   "palette": [
+    "tv_bronze",
+    "tv_gold",
+    "tv_bone",
+    "tv_jade",
+    "tv_bone"
+   ],
+   "default": "tv_bone",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_bronze": "#976D40",
+    "tv_gold": "#D8A743",
+    "tv_bone": "#CFC4A6",
+    "tv_jade": "#6FA58E"
+   },
+   "fabrics": [
+    "FLAT"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "bronze",
+   "role": "metal",
+   "fabric": "MET",
+   "palette": [
+    "tv_bronze",
+    "tv_gold",
+    "tv_bone",
+    "tv_jade"
+   ],
+   "default": "tv_bronze",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_bronze": "#976D40",
+    "tv_gold": "#D8A743",
+    "tv_bone": "#CFC4A6",
+    "tv_jade": "#6FA58E"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": true
+  },
+  {
+   "zone": 3,
+   "name": "fringe and tassels",
+   "role": "fringe",
+   "fabric": "HES",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_madder",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "HES"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1087,
+    "verts": 744,
+    "zones": [
+     0,
+     2,
+     3
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "pelvis_center",
+     "thigh_upper_l"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined"
+    ]
+   }
+  },
+  "tris": 1087,
+  "verts": 744,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0569,
+   "breast_large": 0.0123,
+   "breast_small": 0.0116
+  },
+  "coverage": {
+   "chest_front": {
+    "normal": 0.083,
+    "cone": 0.0
+   },
+   "chest_side": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "chest_back": {
+    "normal": 0.177,
+    "cone": 0.0
+   },
+   "abdomen_front": {
+    "normal": 0.76,
+    "cone": 0.375
+   },
+   "abdomen_side": {
+    "normal": 0.76,
+    "cone": 0.438
+   },
+   "abdomen_back": {
+    "normal": 0.688,
+    "cone": 0.312
+   },
+   "pelvis_center": {
+    "normal": 0.021,
+    "cone": 0.01
+   },
+   "pelvis_side": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "upper_arm_l": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.062,
+    "cone": 0.0
+   }
+  },
+  "glb_kb": 222.8
+ },
+ "budget": {
+  "tris_max": 3000
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Design note: the narrow red waist of every Mountain Folk figure on the sheets, hung with the hunter's teeth and tassels. The disc carries our own mark (one ring and three straight cuts), never a copy of a sheet emblem.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "tv_highland",
+  "mountain_folk",
+  "everyday"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 27.81,
+    "p05_mm": 36.57,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 28.98,
+    "p05_mm": 36.83,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 11.53,
+    "p05_mm": 31.85,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 24.38,
+    "p05_mm": 36.74,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tv_mf_sash.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tv_mf_sash.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "tv_mf_trousers",
+  "tv_mf_wrap_vest",
+  "tv_mf_short_robe",
+  "tv_mf_hip_panels"
+ ],
+ "extra": {
+  "tv_paint": {
+   "0": "weave",
+   "1": "bone",
+   "2": "metal",
+   "3": "cord"
+  },
+  "design_source": "Design: Th\u1ee7y V\u00e2n peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours only, no sheet pixels; our own marks (straight cuts, at most one ring).",
+  "presets": {
+   "madder": {
+    "0": "tv_madder",
+    "3": "tv_madder"
+   },
+   "ochre": {
+    "0": "tv_ochre",
+    "3": "tv_madder"
+   },
+   "jade": {
+    "0": "tv_jade_cloth",
+    "3": "tv_bone"
+   }
+  },
+  "recipe_note": "cloth2.dress.wound_sash: 2 turns 6.5 cm tall on a helix from 0.95 to 1.05, the tuck at 30 deg (left front), a 0.25 m end with a 5 cm fringe (zone 3); a 9 cm cast disc (tv_dress.mark_disc) at -62 deg; tv_dress.dangles: two strings of teeth and bone beads, a tassel, below the waist on the skirt panels' weights."
+ }
+}

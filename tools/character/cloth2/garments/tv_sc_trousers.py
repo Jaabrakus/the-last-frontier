@@ -17,11 +17,11 @@ SPEC = Spec(
     hides_force=["pelvis_center", "pelvis_side", "thigh_upper_l", "thigh_upper_r"],
     sources=[], evidence="C", tags=["men", "women", "pants", "tv_stone", "stone_children", "everyday"], budget=6000,
     extra=TV.extra({0: "weave", 1: "leather"}, presets={"dust": {"0": "tv_dust_buff"}, "charcoal": {"0": "tv_charcoal"}},
-                   note="cloth2.dress.trousers wide: to 0.80, cuff open, flare to 7.5 cm at the thigh."))
+                   note="cloth2.dress.trousers wide: to 0.80, cuff open, flare to 4.5 cm at the thigh."))
 
 STYLE = dress._style(dress.TROUSERS, {"end": 0.80, "cuff": {"kind": "open"}, "crotch": {"drop": 0.030, "width": 0.075},
-                                      "flare": [(0.18, 0.0), (0.32, 0.045), (0.48, 0.075), (0.60, 0.045),
-                                                (0.70, 0.014), (0.80, 0.004)],
+                                      "flare": [(0.18, 0.0), (0.26, 0.038), (0.36, 0.045), (0.46, 0.018),
+                                                (0.56, 0.0), (0.80, 0.0)],
                                       "folds": {"amp": 0.009, "count": 7.0}, "leg_ease": (0.018, 0.015)})
 
 

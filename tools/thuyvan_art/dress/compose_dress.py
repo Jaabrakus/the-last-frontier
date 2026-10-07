@@ -68,6 +68,9 @@ def page(rdir, odir, pg):
     rpath = os.path.join(rdir, pg["render"] + ".png")
     meta = json.load(open(os.path.join(rdir, pg["render"] + ".json")))
     R = Image.open(rpath).convert("RGB")
+    # the sky above the heads and the grass under the feet trimmed (the camera frames the row by its width)
+    ct, cb = pg.get("crop", (0.20, 0.07))
+    R = R.crop((0, int(R.height * ct), R.width, int(R.height * (1.0 - cb))))
     W, H = 3000, 1820
     P = Image.new("RGB", (W, H), PAPER)
     d = ImageDraw.Draw(P)
@@ -97,15 +100,16 @@ def page(rdir, odir, pg):
     # the render
     rx = x0 + cw + 40
     rw = W - rx - 40
-    rr = fit(R, rw, 1200)
+    rr = fit(R, rw, 1150)
     P.paste(rr, (rx, y0))
     sil = os.path.join(rdir, pg["render"] + "_sil.png")
     if os.path.exists(sil):
         s = Image.open(sil).convert("RGB")
-        s = fit(s, 420, 240)
-        P.paste(s, (rx + rr.width - s.width - 12, y0 + 12))
-        d.rectangle((rx + rr.width - s.width - 12, y0 + 12, rx + rr.width - 12, y0 + 12 + s.height), outline=INK)
-        d.text((rx + rr.width - s.width - 10, y0 + 16 + s.height), "silhouette", font=font(16), fill=GREY)
+        s = fit(s, 440, 250)
+        sx, sy = rx + rr.width - s.width, y0 + rr.height + 50
+        P.paste(s, (sx, sy))
+        d.rectangle((sx, sy, sx + s.width, sy + s.height), outline=INK)
+        d.text((sx, sy + s.height + 4), "flat black silhouette (style guide 11)", font=font(16), fill=GREY)
     # labels under the figures (by their x across the render: the camera frames them evenly)
     figs = meta["figures"]
     labels = pg.get("labels") or [f.get("label", "") for f in figs]
@@ -122,6 +126,7 @@ def page(rdir, odir, pg):
     for f in figs:
         for wn in f["worn"]:
             seen.setdefault(wn["id"], wn)
+    rw = rw - 470
     colw = (rw - 20) // 2
     i = 0
     for gid, wn in seen.items():

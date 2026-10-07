@@ -24,8 +24,8 @@ VARIANTS = {
         "C": lambda st: _patch(st, tiers=2, tier2={"drop": 0.09, "len": (0.10, 0.18)}),
     },
     "tv_mf_hip_panels": {
-        "B": lambda st: _patch(st, rims=[(0.86, 0.006)], hem=0.62),
-        "C": lambda st: _patch(st, rims=[(0.94, 0.005), (0.85, 0.005), (0.76, 0.005)], hem=0.56),
+        "B": lambda st: _patch(st, rims=[(0.87, 0.006)], hem=0.72),
+        "C": lambda st: _patch(st, rims=[(0.95, 0.005), (0.87, 0.005), (0.79, 0.005)], hem=0.64),
     },
     "tv_conical_hat": {
         "B": lambda st: _patch(st, R=0.27, H=0.14),

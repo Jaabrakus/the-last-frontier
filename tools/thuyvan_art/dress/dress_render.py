@@ -67,16 +67,16 @@ def ramp_of(dye):
     dh = min(dh, 360.0 - dh)
     if dh > 40.0 or h3[1] < h2[1]:
         r[-1] = colorsys.hls_to_rgb(h2[0], min(h2[1] * 1.12 + 0.03, 1.0), h2[2])
-    pos = []
-    n = len(r)
-    for i in range(n):
-        if i < k:
-            pos.append(0.40 * i / max(k, 1))
-        elif i == k:
-            pos.append(0.40)
-        else:
-            pos.append(0.40 + 0.60 * (i - k) / max(n - 1 - k, 1) * (0.58 if i < n - 1 else 1.0))
-    return [(p, lin(c)) for p, c in zip(pos, r)]
+    # the dye's mid at the value maps' mid (0.40), the stops after it at 0.75 and 1.0 (the value maps' light and
+    # accent), those before it spread below: an indigo-black whose `mid` is its darkest stop stays near black
+    pos = [0.40 * i / max(k, 1) for i in range(k)] + [0.40] + [(0.75, 1.0)[min(j, 1)] for j in range(len(r) - k - 1)]
+    out, last = [], -1.0
+    for p, c in zip(pos, r):
+        if p <= last:
+            continue
+        out.append((p, lin(c)))
+        last = p
+    return out
 
 
 # ---- scene --------------------------------------------------------------------------------------------------------
@@ -137,7 +137,7 @@ def setup(res, samples):
     nt.links.new(mx.outputs[0], out.inputs[0])
     # the sun: elevation 40 deg from the front-left (the figures face -y, the camera looks +y)
     li = bpy.data.lights.new("tv_sun", "SUN")
-    li.energy = 4.2
+    li.energy = 3.6
     li.color = lin(hx("#fff3df"))
     li.angle = math.radians(2.0)
     ob = bpy.data.objects.new("tv_sun", li)
@@ -273,7 +273,7 @@ def cloth_material(name, kit, dye, motif=None, role="cloth"):
     b.inputs["Specular IOR Level"].default_value = 0.5 if metal else 0.18
     if kit in ("weave", "felt", "fur", "hemp"):
         try:
-            b.inputs["Sheen Weight"].default_value = 0.35
+            b.inputs["Sheen Weight"].default_value = 0.12
             b.inputs["Sheen Roughness"].default_value = 0.6
         except KeyError:
             pass
@@ -304,7 +304,7 @@ def skin_material(tone):
     ao.inputs["Distance"].default_value = 0.06
     ao.inputs["Color"].default_value = lin(c) + (1,)
     mr = nt.nodes.new("ShaderNodeMapRange")
-    mr.inputs["To Min"].default_value = 0.6
+    mr.inputs["To Min"].default_value = 0.82
     nt.links.new(ao.outputs["AO"], mr.inputs["Value"])
     mul = nt.nodes.new("ShaderNodeMix")
     mul.data_type = "RGBA"
@@ -331,6 +331,43 @@ def flat_material(name, color, rough=0.5, alpha=1.0, emit=False):
             m.surface_render_method = "BLENDED"
         except AttributeError:
             pass
+    return m
+
+
+def eye_material(iris):
+    """The eye's UV is metres in its front plane round its centre (eye.gdshader): a sclera, a painted iris (a little
+    larger than the game's: the lineup is seen from far), a pupil, a glossy cornea."""
+    name = "eye_" + iris
+    m = bpy.data.materials.get(name)
+    if m:
+        return m
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    nt = m.node_tree
+    b = nt.nodes["Principled BSDF"]
+    uvn = nt.nodes.new("ShaderNodeUVMap")
+    ln = nt.nodes.new("ShaderNodeVectorMath")
+    ln.operation = "LENGTH"
+    nt.links.new(uvn.outputs["UV"], ln.inputs[0])
+    r = nt.nodes.new("ShaderNodeValToRGB")
+    el = r.color_ramp.elements
+    el[0].position, el[0].color = 0.0, (0.01, 0.01, 0.01, 1)
+    el[1].position, el[1].color = 0.6, lin(hx("#e8e0d6")) + (1,)
+    for p_, c in ((0.18, lin(hx(iris)) + (1,)), (0.40, tuple(x * 0.5 for x in lin(hx(iris))) + (1,)),
+                  (0.43, lin(hx("#e8e0d6")) + (1,))):
+        e = el.new(p_)
+        e.color = c
+    el.new(0.16).color = (0.01, 0.01, 0.01, 1)
+    mr = nt.nodes.new("ShaderNodeMapRange")
+    mr.inputs["From Max"].default_value = 0.016
+    nt.links.new(ln.outputs["Value"], mr.inputs["Value"])
+    nt.links.new(mr.outputs[0], r.inputs[0])
+    nt.links.new(r.outputs[0], b.inputs["Base Color"])
+    b.inputs["Roughness"].default_value = 0.08
+    try:
+        b.inputs["Coat Weight"].default_value = 0.6
+    except KeyError:
+        pass
     return m
 
 
@@ -385,7 +422,8 @@ def import_glb(path):
     new = [o for o in bpy.data.objects if o not in before]
     meshes = []
     for o in new:
-        if o.type == "MESH":
+        # (only the skinned meshes: the importer's bone-shape icospheres are not part of the character)
+        if o.type == "MESH" and any(md.type == "ARMATURE" for md in o.modifiers):
             mw = o.matrix_world.copy()
             o.parent = None
             o.matrix_world = mw
@@ -393,7 +431,7 @@ def import_glb(path):
                 o.modifiers.remove(md)
             meshes.append(o)
     for o in new:
-        if o.type != "MESH":
+        if o not in meshes:
             bpy.data.objects.remove(o)
     for o in meshes:
         o.hide_render = True
@@ -426,7 +464,47 @@ def set_keys(o, values):
             kb.value = values[kb.name]
 
 
+REGION_IDS = BODY_JSON["regions"]["ids"]
+
+
+def hide_body(o, regions, genitals):
+    """The body faces the garments hide (the game's hide mask: their entries' hides_regions), and the genitals under
+    legwear (the cloth follows the body without them: cloth2.fit), deleted from this figure's copy."""
+    import bmesh
+    me = o.data
+    if len(me.uv_layers) < 2:
+        return
+    ids = {REGION_IDS[r] for r in regions if r in REGION_IDS}
+    lay = me.uv_layers[1].data
+    uv = np.zeros(len(me.loops) * 2, np.float32)
+    lay.foreach_get("uv", uv)
+    code = np.rint(uv[0::2]).astype(int) & 63
+    gi = o.vertex_groups.get("spinea_muscle")
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bm.faces.ensure_lookup_table()
+    dl = bm.verts.layers.deform.active
+    kill = []
+    for f in bm.faces:
+        r = code[f.loops[0].index]
+        if r in ids:
+            kill.append(f)
+        elif genitals and gi is not None and dl is not None and \
+                any(v[dl].get(gi.index, 0.0) > 0.02 for v in f.verts):
+            kill.append(f)
+    bmesh.ops.delete(bm, geom=kill, context="FACES")
+    bm.to_mesh(me)
+    bm.free()
+
+
 def figure(fd, cache, info):
+    hides, legwear = set(), False
+    for gid in fd.get("items", []):
+        p = os.path.join(cache, gid + ".npz")
+        if os.path.exists(p):
+            mt = json.loads(str(np.load(p, allow_pickle=False)["meta"]))
+            hides |= set(mt.get("hides_regions", []))
+            legwear |= mt.get("slot") in ("legs.lower", "legs.upper") or "pelvis_center" in mt.get("hides_regions", [])
     root = bpy.data.objects.new("fig", None)
     bpy.context.scene.collection.objects.link(root)
     root.location = (fd.get("x", 0.0), fd.get("y", 0.0), 0.0)
@@ -439,11 +517,13 @@ def figure(fd, cache, info):
     for t in template(os.path.join(ASSETS, "character", "body", "body.glb")):
         o = copy_obj(t, root)
         set_keys(o, keys)
+        if len(o.data.vertices) > 5000:
+            hide_body(o, hides, legwear)
         mats = list(o.data.materials)
         for i, mt in enumerate(mats):
             nm = (mt.name if mt else "").lower()
             if "eye" in nm:
-                o.data.materials[i] = flat_material("eye", "#2b1d14", 0.15)
+                o.data.materials[i] = eye_material(fd.get("eye_color", "#3a2414"))
             elif "hair" in nm or "brow" in nm or "lash" in nm:
                 o.data.materials[i] = flat_material("brows", fd.get("hair_color", "#1d1714"), 0.7, alpha=0.85)
             else:
@@ -591,6 +671,12 @@ def main():
             for fi, r in zip(info, roots):
                 v = world_to_camera_view(sc, cam, r.matrix_world.translation + Vector((0.0, 0.0, 0.02)))
                 fi["u"], fi["v"] = round(float(v.x), 4), round(float(v.y), 4)
+            for o in bpy.data.objects:
+                if o.type == "MESH" and not o.hide_render and o.name != "ground":
+                    bb = [o.matrix_world @ Vector(c) for c in o.bound_box]
+                    zs = [v.z for v in bb]
+                    if max(zs) - min(zs) > 1.95 or min(zs) < -0.1:
+                        print("DRESS_RENDER odd bounds", o.name, round(min(zs), 2), round(max(zs), 2))
             sc.render.filepath = os.path.join(plan["out"], shot["name"] + ".png")
             bpy.ops.render.render(write_still=True)
             if shot.get("silhouette", True):

@@ -1,0 +1,381 @@
+{
+ "id": "tv_sc_apron_sash",
+ "name": "Apron and sash",
+ "description": "A dust-buff sash wound twice round the waist, a heavy leather apron hanging from it to the knee, two chisels tied in red cord and a jade disc pendant.",
+ "kind": "garment",
+ "set": "tv_stone",
+ "slot": "accessories.waist",
+ "alt_slots": [],
+ "layer": {
+  "default": 60
+ },
+ "glb": "res://assets/character/garments/tv_stone/tv_sc_apron_sash.glb",
+ "mesh": "tv_sc_apron_sash",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tv_sc_apron_sash"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "pelvis_center",
+  "thigh_upper_r"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "sash",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "tv_charcoal",
+    "tv_dust_buff",
+    "tv_leather",
+    "tv_ochre_banner",
+    "tv_quarry_white",
+    "tv_kiln_brick",
+    "tv_jade",
+    "tv_slate_plate",
+    "tv_walnut",
+    "tv_hemp"
+   ],
+   "default": "tv_dust_buff",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_charcoal": "#3D3530",
+    "tv_dust_buff": "#BEAFA6",
+    "tv_leather": "#6C5E52",
+    "tv_ochre_banner": "#C7962F",
+    "tv_quarry_white": "#E6DCCB",
+    "tv_kiln_brick": "#9A4A2C",
+    "tv_jade": "#6FA58E",
+    "tv_slate_plate": "#6F7F8C",
+    "tv_walnut": "#64472F",
+    "tv_hemp": "#C9B48A"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "leather apron",
+   "role": "leather",
+   "fabric": "LEA",
+   "palette": [
+    "tv_charcoal",
+    "tv_dust_buff",
+    "tv_leather",
+    "tv_ochre_banner",
+    "tv_quarry_white",
+    "tv_kiln_brick",
+    "tv_jade",
+    "tv_slate_plate",
+    "tv_walnut",
+    "tv_hemp"
+   ],
+   "default": "tv_leather",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_charcoal": "#3D3530",
+    "tv_dust_buff": "#BEAFA6",
+    "tv_leather": "#6C5E52",
+    "tv_ochre_banner": "#C7962F",
+    "tv_quarry_white": "#E6DCCB",
+    "tv_kiln_brick": "#9A4A2C",
+    "tv_jade": "#6FA58E",
+    "tv_slate_plate": "#6F7F8C",
+    "tv_walnut": "#64472F",
+    "tv_hemp": "#C9B48A"
+   },
+   "fabrics": [
+    "LEA"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "jade and iron",
+   "role": "metal",
+   "fabric": "MET",
+   "palette": [
+    "tv_bronze",
+    "tv_gold",
+    "tv_bone",
+    "tv_jade",
+    "tv_slate_plate"
+   ],
+   "default": "tv_jade",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_bronze": "#976D40",
+    "tv_gold": "#D8A743",
+    "tv_bone": "#CFC4A6",
+    "tv_jade": "#6FA58E",
+    "tv_slate_plate": "#6F7F8C"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": true
+  },
+  {
+   "zone": 3,
+   "name": "cords and tassel",
+   "role": "fringe",
+   "fabric": "HES",
+   "palette": [
+    "tv_charcoal",
+    "tv_dust_buff",
+    "tv_leather",
+    "tv_ochre_banner",
+    "tv_quarry_white",
+    "tv_kiln_brick",
+    "tv_jade",
+    "tv_slate_plate",
+    "tv_walnut",
+    "tv_hemp"
+   ],
+   "default": "tv_kiln_brick",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_charcoal": "#3D3530",
+    "tv_dust_buff": "#BEAFA6",
+    "tv_leather": "#6C5E52",
+    "tv_ochre_banner": "#C7962F",
+    "tv_quarry_white": "#E6DCCB",
+    "tv_kiln_brick": "#9A4A2C",
+    "tv_jade": "#6FA58E",
+    "tv_slate_plate": "#6F7F8C",
+    "tv_walnut": "#64472F",
+    "tv_hemp": "#C9B48A"
+   },
+   "fabrics": [
+    "HES"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 2257,
+    "verts": 1425,
+    "zones": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "pelvis_center",
+     "pelvis_side",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "r_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_upper_leg_front_helper",
+     "r_upper_leg_front_helper"
+    ]
+   }
+  },
+  "tris": 2257,
+  "verts": 1425,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0558,
+   "breast_large": 0.0091,
+   "breast_small": 0.0067
+  },
+  "coverage": {
+   "chest_front": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "chest_side": {
+    "normal": 0.083,
+    "cone": 0.0
+   },
+   "chest_back": {
+    "normal": 0.156,
+    "cone": 0.0
+   },
+   "abdomen_front": {
+    "normal": 0.906,
+    "cone": 0.594
+   },
+   "abdomen_side": {
+    "normal": 0.885,
+    "cone": 0.646
+   },
+   "abdomen_back": {
+    "normal": 0.729,
+    "cone": 0.438
+   },
+   "pelvis_center": {
+    "normal": 0.323,
+    "cone": 0.208
+   },
+   "pelvis_side": {
+    "normal": 0.125,
+    "cone": 0.01
+   },
+   "upper_arm_l": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "forearm_b_l": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.062,
+    "cone": 0.0
+   },
+   "forearm_b_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.229,
+    "cone": 0.094
+   },
+   "thigh_lower_l": {
+    "normal": 0.042,
+    "cone": 0.01
+   },
+   "thigh_upper_r": {
+    "normal": 0.25,
+    "cone": 0.146
+   },
+   "thigh_lower_r": {
+    "normal": 0.094,
+    "cone": 0.01
+   }
+  },
+  "glb_kb": 361.2
+ },
+ "budget": {
+  "tris_max": 5500
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Design note: the mason's waist on the lineup: a broad band, a hanging leather panel, tools and a jade pendant at the sash (Th\u1ea1ch Uy\u00ean's carved jade). The tools are cosmetic, never a stat.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "tv_stone",
+  "stone_children",
+  "everyday"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 10.28,
+    "p05_mm": 25.32,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 17.66,
+    "p05_mm": 25.31,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 10.26,
+    "p05_mm": 24.14,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 10.28,
+    "p05_mm": 25.29,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tv_sc_apron_sash.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tv_sc_apron_sash.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "tv_sc_trousers",
+  "tv_sc_work_tunic"
+ ],
+ "extra": {
+  "tv_paint": {
+   "0": "weave",
+   "1": "leather",
+   "2": "metal",
+   "3": "cord"
+  },
+  "design_source": "Design: Th\u1ee7y V\u00e2n peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours only, no sheet pixels; our own marks (straight cuts, at most one ring).",
+  "presets": {
+   "dust": {
+    "0": "tv_dust_buff",
+    "1": "tv_leather"
+   },
+   "ochre": {
+    "0": "tv_ochre_banner",
+    "1": "tv_leather"
+   }
+  },
+  "recipe_note": "recipes.apron (band 0.955-0.985, hem 0.50, the front 50 deg each way) under cloth2.dress.wound_sash (2 turns 6 cm, 0.95-1.05, 1.5 cm proud of the apron's band); tv_dress.dangles: two chisels with red cord ties, a jade disc and a kiln-red tassel."
+ }
+}

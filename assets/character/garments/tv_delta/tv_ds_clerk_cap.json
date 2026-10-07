@@ -1,0 +1,234 @@
+{
+ "id": "tv_ds_clerk_cap",
+ "name": "Clerk's cap",
+ "description": "A small flat-topped black cap with a band.",
+ "kind": "garment",
+ "set": "tv_delta",
+ "slot": "head",
+ "alt_slots": [],
+ "layer": {
+  "default": 80
+ },
+ "glb": "res://assets/character/garments/tv_delta/tv_ds_clerk_cap.glb",
+ "mesh": "tv_ds_clerk_cap",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tv_ds_clerk_cap"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [
+  "crown"
+ ],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "cap",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "tv_dock_indigo",
+    "tv_salt_white",
+    "tv_estuary_teal",
+    "tv_deep_navy",
+    "tv_sea_glass",
+    "tv_pearl",
+    "tv_lacquer_red",
+    "tv_gold",
+    "tv_straw",
+    "tv_rope",
+    "tv_walnut",
+    "tv_lacquer_black"
+   ],
+   "default": "tv_lacquer_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_dock_indigo": "#646A81",
+    "tv_salt_white": "#E3DCCB",
+    "tv_estuary_teal": "#2F6F7A",
+    "tv_deep_navy": "#24386E",
+    "tv_sea_glass": "#A9C9C2",
+    "tv_pearl": "#ECE6D6",
+    "tv_lacquer_red": "#8E2E22",
+    "tv_gold": "#D8A743",
+    "tv_straw": "#BC9C5C",
+    "tv_rope": "#776040",
+    "tv_walnut": "#64472F",
+    "tv_lacquer_black": "#2A1A16"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "band",
+   "role": "trim",
+   "fabric": "WOOL",
+   "palette": [
+    "tv_dock_indigo",
+    "tv_salt_white",
+    "tv_estuary_teal",
+    "tv_deep_navy",
+    "tv_sea_glass",
+    "tv_pearl",
+    "tv_lacquer_red",
+    "tv_gold",
+    "tv_straw",
+    "tv_rope",
+    "tv_walnut",
+    "tv_lacquer_black"
+   ],
+   "default": "tv_lacquer_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_dock_indigo": "#646A81",
+    "tv_salt_white": "#E3DCCB",
+    "tv_estuary_teal": "#2F6F7A",
+    "tv_deep_navy": "#24386E",
+    "tv_sea_glass": "#A9C9C2",
+    "tv_pearl": "#ECE6D6",
+    "tv_lacquer_red": "#8E2E22",
+    "tv_gold": "#D8A743",
+    "tv_straw": "#BC9C5C",
+    "tv_rope": "#776040",
+    "tv_walnut": "#64472F",
+    "tv_lacquer_black": "#2A1A16"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 828,
+    "verts": 469,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "head"
+    ],
+    "max_influences": 1,
+    "bones": [
+     "headb"
+    ]
+   }
+  },
+  "tris": 828,
+  "verts": 469,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0054,
+   "breast_large": 0.0,
+   "breast_small": 0.0,
+   "sex_head": 0.0054
+  },
+  "coverage": {
+   "head": {
+    "normal": 0.115,
+    "cone": 0.052
+   }
+  },
+  "glb_kb": 155.2
+ },
+ "budget": {
+  "tris_max": 1500
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Design note: a low black cap that keeps the clerk's head small and neat beside the soldiers' cones.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "tv_delta",
+  "npc",
+  "floodgate_clerk"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 6.91,
+    "p05_mm": 11.76,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 6.85,
+    "p05_mm": 10.64,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 6.91,
+    "p05_mm": 11.76,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 6.91,
+    "p05_mm": 11.76,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  },
+  "scalp_clearance_mm": {
+   "f": [
+    11.6,
+    16.9
+   ],
+   "m": [
+    13.1,
+    15.9
+   ],
+   "bl": [
+    11.6,
+    16.9
+   ],
+   "bs": [
+    11.6,
+    16.9
+   ]
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tv_ds_clerk_cap.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tv_ds_clerk_cap.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "tv_paint": {
+   "0": "felt",
+   "1": "felt"
+  },
+  "design_source": "Design: Th\u1ee7y V\u00e2n peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours only, no sheet pixels; our own marks (straight cuts, at most one ring).",
+  "recipe_note": "cloth2.dress.lathe_hat TALL_CROWN h 0.075, taper 0.95, band 2.5 cm."
+ }
+}

@@ -86,11 +86,11 @@
   "quilting": {
    "png": "res://assets/thuyvan/dress/motifs/quilting.png",
    "tile_m": [
-    0.2,
-    0.2
+    0.12,
+    0.12
    ],
    "threads": [
-    "tv_deep_navy",
+    "tv_lacquer_black",
     "tv_bone",
     "tv_bone"
    ],
@@ -112,13 +112,13 @@
   "tide_scroll": {
    "png": "res://assets/thuyvan/dress/motifs/tide_scroll.png",
    "tile_m": [
-    0.16,
-    0.16
+    0.1,
+    0.1
    ],
    "threads": [
-    "tv_pearl",
     "tv_sea_glass",
-    "tv_sea_glass"
+    "tv_pearl",
+    "tv_pearl"
    ],
    "use": "Dragon-Sea stacked arcs (one ring form; no swirl)"
   }

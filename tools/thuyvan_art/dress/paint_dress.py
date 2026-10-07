@@ -399,11 +399,11 @@ def motif_tide(seed=34, n=512):
 MOTIFS = {
     "band_motif": (motif_band, (0.12, 0.12), ["tv_bone", "tv_indigo_black", "tv_ochre"],
                    "Mountain Folk woven band: ridge zigzags, stepped terraces, a ladder of journeys; on a madder ground"),
-    "quilting": (motif_quilting, (0.20, 0.20), ["tv_deep_navy", "tv_bone", "tv_bone"],
+    "quilting": (motif_quilting, (0.12, 0.12), ["tv_lacquer_black", "tv_bone", "tv_bone"],
                  "the imperial levy coat's quilting lattice and stitches"),
     "house_mark": (motif_house, (0.16, 0.06), ["tv_quarry_white", "tv_charcoal", "tv_charcoal"],
                    "Stone Children guild band: a straight-cut maker's mark in rows"),
-    "tide_scroll": (motif_tide, (0.16, 0.16), ["tv_pearl", "tv_sea_glass", "tv_sea_glass"],
+    "tide_scroll": (motif_tide, (0.10, 0.10), ["tv_sea_glass", "tv_pearl", "tv_pearl"],
                     "Dragon-Sea stacked arcs (one ring form; no swirl)"),
 }
 

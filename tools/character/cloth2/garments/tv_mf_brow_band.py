@@ -22,8 +22,8 @@ SPEC = Spec(
                    note="cloth2.dress.head_wrap band: one roll r 1.6 cm flattened to 0.42 at z 1.545 (tilt 2.6 cm), "
                         "rigid on headb; two ends (hats.tube, flattened) 0.16 m down the back of the head."))
 
-STYLE = dress._style(dress.HEAD_BAND, {"rolls": dict(dress.HEAD_BAND["rolls"], r=0.016, flat=0.42, z0=1.545,
-                                                     tilt=0.026, ease=0.006)})
+STYLE = dress._style(dress.HEAD_BAND, {"rolls": dict(dress.HEAD_BAND["rolls"], r=0.015, flat=0.5, z0=1.528,
+                                                     tilt=0.026, ease=0.013)})
 ENDS = [(-0.022, 0.16), (0.018, 0.13)]
 
 

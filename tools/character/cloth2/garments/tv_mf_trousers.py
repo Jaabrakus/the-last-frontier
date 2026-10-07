@@ -22,13 +22,13 @@ SPEC = Spec(
     extra=TV.extra({0: "weave", 1: "hemp"}, presets={"stone_ridge": {"0": "tv_indigo_black", "1": "tv_hemp"},
                                                        "high_pine": {"0": "tv_pine_black", "1": "tv_hemp"},
                                                        "undyed": {"0": "tv_hemp", "1": "tv_hemp"}},
-                   note="cloth2.dress.trousers wide: the legs to 0.80 (mid-calf), cuff open; flare to 6.5 cm at the "
+                   note="cloth2.dress.trousers wide: the legs to 0.80 (mid-calf), cuff open; flare to 3.6 cm at the "
                         "thigh, falling to nothing below the knee (the wraps go over it); crotch drop 3 cm."))
 
 STYLE = dress._style(dress.TROUSERS, {"end": 0.80, "cuff": {"kind": "open"}, "crotch": {"drop": 0.030, "width": 0.075},
-                                      "flare": [(0.18, 0.0), (0.32, 0.040), (0.48, 0.065), (0.60, 0.040),
-                                                (0.70, 0.012), (0.80, 0.004)],
-                                      "folds": {"amp": 0.008, "count": 7.0}, "leg_ease": (0.016, 0.014)})
+                                      "flare": [(0.18, 0.0), (0.26, 0.030), (0.34, 0.036), (0.44, 0.014),
+                                                (0.54, 0.0), (0.80, 0.0)],
+                                      "folds": {"amp": 0.006, "count": 7.0}, "leg_ease": (0.012, 0.007)})
 
 
 def build(g, st=STYLE):

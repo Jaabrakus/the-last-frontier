@@ -19,11 +19,11 @@ SPEC = Spec(
     extra=TV.extra({0: "weave", 1: "weave"},
                    presets={"salt": {"0": "tv_salt_white", "1": "tv_salt_white"},
                             "indigo": {"0": "tv_dock_indigo", "1": "tv_dock_indigo"}},
-                   note="cloth2.dress.trousers wide: to 0.72, cuff fall (a 5 cm roll raised 7 mm), flare to 6 cm."))
+                   note="cloth2.dress.trousers wide: to 0.72, cuff fall (a 5 cm roll raised 7 mm), flare to 4 cm."))
 
 STYLE = dress._style(dress.TROUSERS, {"end": 0.72, "cuff": {"kind": "band", "len": 0.05, "h": 0.007},
                                       "crotch": {"drop": 0.030, "width": 0.075},
-                                      "flare": [(0.18, 0.0), (0.32, 0.035), (0.50, 0.060), (0.66, 0.040), (0.72, 0.02)],
+                                      "flare": [(0.18, 0.0), (0.28, 0.035), (0.40, 0.040), (0.56, 0.030), (0.72, 0.02)],
                                       "folds": {"amp": 0.007, "count": 7.0}})
 
 

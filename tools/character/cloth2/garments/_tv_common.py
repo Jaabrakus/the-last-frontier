@@ -28,8 +28,8 @@ CLANS = {"stone_ridge": ("tv_indigo_black", "tv_madder"),
 
 BAND = {"motif": "band_motif", "threads": ["tv_bone", "tv_indigo_black", "tv_ochre"], "scale_m": [0.12, 0.12]}
 HOUSE = {"motif": "house_mark", "threads": ["tv_quarry_white", "tv_charcoal", "tv_charcoal"], "scale_m": [0.16, 0.06]}
-QUILT = {"motif": "quilting", "threads": ["tv_deep_navy", "tv_bone", "tv_bone"], "scale_m": [0.20, 0.20]}
-TIDE = {"motif": "tide_scroll", "threads": ["tv_pearl", "tv_sea_glass", "tv_sea_glass"], "scale_m": [0.16, 0.16]}
+QUILT = {"motif": "quilting", "threads": ["tv_lacquer_black", "tv_bone", "tv_bone"], "scale_m": [0.12, 0.12]}
+TIDE = {"motif": "tide_scroll", "threads": ["tv_sea_glass", "tv_pearl", "tv_pearl"], "scale_m": [0.10, 0.10]}
 
 DESIGN_SOURCE = ("Design: Thủy Vân peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours "
                  "only, no sheet pixels; our own marks (straight cuts, at most one ring).")

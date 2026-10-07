@@ -17,7 +17,7 @@ SPEC = Spec(
     description="A short indigo-black capelet over the shoulders, its edge cut into ragged strips, a grey fur ruff at "
                 "the neck and hawk feathers at the left shoulder.",
     history="Design note: the shaggy shoulders of the hunter's sheet and the lineup, made readable: strips 4-5 cm wide "
-            "and 8-15 cm long (each its own length, every other one standing proud), a fur roll at the neck, "
+            "and 10-19 cm long (each its own length, every other one standing proud), a fur roll at the neck, "
             "feathers breaking the outline on one side only. Feathers are a hunter's, not a rank; no feather crown.",
     zones=[Zone(0, "cloth", "cloth", "WOOL", TV.HIGHLAND, "tv_indigo_black"),
            Zone(1, "fringe strips", "fringe", "HES", TV.HIGHLAND, "tv_hemp"),
@@ -30,10 +30,10 @@ SPEC = Spec(
                             "cloud_pass": {"0": "tv_bone", "1": "tv_jade_cloth", "2": "tv_fur_grey"},
                             "high_pine": {"0": "tv_pine_black", "1": "tv_ochre", "2": "tv_walnut"}},
                    note="cloth2.tv_dress.fringe_mantle: the cloak envelope over the shoulders and the arms (150 "
-                        "columns), the strips from 1.12 (front) / 1.05 (back) down 8-15 cm, 4 columns wide with a "
-                        "1-column cut between, every other strip 3.5 mm proud; a 5.5 cm ruff raised 2.2 cm with "
-                        "lumps; three feathers at 62 deg, z 1.30.",
-                   fringe_variant={"A": "short strips 8-15 cm", "B": "long strips 14-24 cm", "C": "two tiers"}))
+                        "columns), the strips from 1.12 (front) / 1.05 (back) down 10-19 cm, 4 columns wide with a "
+                        "1-column cut between, every other strip 4.5 mm proud; a 5.5 cm ruff raised 2.2 cm with "
+                        "lumps; three 19 cm feathers at 66 deg, z 1.29, leaning out.",
+                   fringe_variant={"A": "strips 10-19 cm", "B": "long strips 14-24 cm", "C": "two tiers"}))
 
 STYLE = dict(TVD.FRINGE_MANTLE, over=tuple(UNDER))
 

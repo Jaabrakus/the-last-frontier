@@ -21,16 +21,16 @@ SPEC = Spec(
     extra=TV.extra({0: "weave", 1: "weave"},
                    presets={"navy": {"0": "tv_deep_navy", "1": "tv_sea_glass"},
                             "teal": {"0": "tv_estuary_teal", "1": "tv_pearl"}},
-                   note="cloth2.dress.wrap_skirt from 1.035 to the hem 0.10, a rim at 0.40 raised 6 mm, the band "
-                        "below 0.40 the under-layer (zone 1), the overlap at -30 deg open to the band."))
+                   note="cloth2.dress.wrap_skirt from 1.035 to the hem 0.10, a rim at 0.27 raised 6 mm, the band "
+                        "below 0.27 the under-layer (zone 1), the overlap at -30 deg open to the band."))
 
 STYLE = dress._style(dress.WRAP_SKIRT, {"hem": 0.10, "flare": 0.10, "folds": 0.012, "steps": 14, "tail_gap": 0.03,
-                                        "rims": [(0.40, 0.006)]})
+                                        "rims": [(0.27, 0.006)]})
 
 
 def build(g, st=STYLE):
     recipes.wrap_skirt(g, st)
-    g.zone(1, below=0.40)
+    g.zone(1, below=0.27)
 
 
 build_and_export = G.runner(SPEC, build)

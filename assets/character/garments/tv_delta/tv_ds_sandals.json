@@ -1,0 +1,235 @@
+{
+ "id": "tv_ds_sandals",
+ "name": "Toe sandals",
+ "description": "Thin-soled sandals with a strap over the instep and a loop round the big toe.",
+ "kind": "garment",
+ "set": "tv_delta",
+ "slot": "feet",
+ "alt_slots": [],
+ "layer": {
+  "default": 40
+ },
+ "glb": "res://assets/character/garments/tv_delta/tv_ds_sandals.glb",
+ "mesh": "tv_ds_sandals",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tv_ds_sandals"
+  }
+ ],
+ "occupies_regions": [
+  "foot_l"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "sole",
+   "role": "leather",
+   "fabric": "LEA",
+   "palette": [
+    "tv_dock_indigo",
+    "tv_salt_white",
+    "tv_estuary_teal",
+    "tv_deep_navy",
+    "tv_sea_glass",
+    "tv_pearl",
+    "tv_lacquer_red",
+    "tv_gold",
+    "tv_straw",
+    "tv_rope",
+    "tv_walnut"
+   ],
+   "default": "tv_walnut",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_dock_indigo": "#646A81",
+    "tv_salt_white": "#E3DCCB",
+    "tv_estuary_teal": "#2F6F7A",
+    "tv_deep_navy": "#24386E",
+    "tv_sea_glass": "#A9C9C2",
+    "tv_pearl": "#ECE6D6",
+    "tv_lacquer_red": "#8E2E22",
+    "tv_gold": "#D8A743",
+    "tv_straw": "#BC9C5C",
+    "tv_rope": "#776040",
+    "tv_walnut": "#64472F"
+   },
+   "fabrics": [
+    "LEA"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "straps",
+   "role": "leather",
+   "fabric": "LEA",
+   "palette": [
+    "tv_dock_indigo",
+    "tv_salt_white",
+    "tv_estuary_teal",
+    "tv_deep_navy",
+    "tv_sea_glass",
+    "tv_pearl",
+    "tv_lacquer_red",
+    "tv_gold",
+    "tv_straw",
+    "tv_rope",
+    "tv_walnut"
+   ],
+   "default": "tv_walnut",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_dock_indigo": "#646A81",
+    "tv_salt_white": "#E3DCCB",
+    "tv_estuary_teal": "#2F6F7A",
+    "tv_deep_navy": "#24386E",
+    "tv_sea_glass": "#A9C9C2",
+    "tv_pearl": "#ECE6D6",
+    "tv_lacquer_red": "#8E2E22",
+    "tv_gold": "#D8A743",
+    "tv_straw": "#BC9C5C",
+    "tv_rope": "#776040",
+    "tv_walnut": "#64472F"
+   },
+   "fabrics": [
+    "LEA"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1860,
+    "verts": 1088,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "foot_l",
+     "foot_r",
+     "shin_lower_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "l_ball",
+     "r_knee",
+     "r_ankle",
+     "r_heel",
+     "r_ball"
+    ]
+   }
+  },
+  "tris": 1860,
+  "verts": 1088,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0161,
+   "breast_large": 0.0,
+   "breast_small": 0.0
+  },
+  "coverage": {
+   "ankle_l": {
+    "normal": 0.156,
+    "cone": 0.125
+   },
+   "foot_l": {
+    "normal": 0.25,
+    "cone": 0.125
+   },
+   "ankle_r": {
+    "normal": 0.219,
+    "cone": 0.177
+   },
+   "foot_r": {
+    "normal": 0.198,
+    "cone": 0.115
+   }
+  },
+  "glb_kb": 236.2
+ },
+ "budget": {
+  "tris_max": 2000
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Design note: the dock woman's light sandals on the lineup: a thin sole, almost bare feet.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "women",
+  "men",
+  "tv_delta",
+  "tv_common",
+  "dragon_sea",
+  "everyday"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": -0.9,
+    "p05_mm": 2.26,
+    "inside_skin": 4
+   },
+   "m": {
+    "min_mm": 0.7,
+    "p05_mm": 2.65,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": -0.9,
+    "p05_mm": 2.26,
+    "inside_skin": 4
+   },
+   "bs": {
+    "min_mm": -0.9,
+    "p05_mm": 2.26,
+    "inside_skin": 4
+   }
+  },
+  "envelope": {
+   "ok": false,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tv_ds_sandals.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tv_ds_sandals.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "tv_paint": {
+   "0": "leather",
+   "1": "leather"
+  },
+  "design_source": "Design: Th\u1ee7y V\u00e2n peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours only, no sheet pixels; our own marks (straight cuts, at most one ring).",
+  "recipe_note": "cloth2.tv_dress.sandals toe: a 9 mm sole, an 18 mm strap, a 12 mm toe loop."
+ }
+}

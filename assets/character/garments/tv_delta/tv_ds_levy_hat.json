@@ -1,0 +1,324 @@
+{
+ "id": "tv_ds_levy_hat",
+ "name": "Levy hat",
+ "description": "A black-lacquered cone hat with a red finial and a red tuft spread over its apex, and a chin strap.",
+ "kind": "garment",
+ "set": "tv_delta",
+ "slot": "head",
+ "alt_slots": [],
+ "layer": {
+  "default": 80
+ },
+ "glb": "res://assets/character/garments/tv_delta/tv_ds_levy_hat.glb",
+ "mesh": "tv_ds_levy_hat",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tv_ds_levy_hat"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [
+  "crown"
+ ],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "lacquered cone",
+   "role": "cloth",
+   "fabric": "FLAT",
+   "palette": [
+    "tv_dock_indigo",
+    "tv_salt_white",
+    "tv_estuary_teal",
+    "tv_deep_navy",
+    "tv_sea_glass",
+    "tv_pearl",
+    "tv_lacquer_red",
+    "tv_gold",
+    "tv_straw",
+    "tv_rope",
+    "tv_walnut",
+    "tv_lacquer_black"
+   ],
+   "default": "tv_lacquer_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_dock_indigo": "#646A81",
+    "tv_salt_white": "#E3DCCB",
+    "tv_estuary_teal": "#2F6F7A",
+    "tv_deep_navy": "#24386E",
+    "tv_sea_glass": "#A9C9C2",
+    "tv_pearl": "#ECE6D6",
+    "tv_lacquer_red": "#8E2E22",
+    "tv_gold": "#D8A743",
+    "tv_straw": "#BC9C5C",
+    "tv_rope": "#776040",
+    "tv_walnut": "#64472F",
+    "tv_lacquer_black": "#2A1A16"
+   },
+   "fabrics": [
+    "FLAT"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "head band",
+   "role": "trim",
+   "fabric": "HES",
+   "palette": [
+    "tv_dock_indigo",
+    "tv_salt_white",
+    "tv_estuary_teal",
+    "tv_deep_navy",
+    "tv_sea_glass",
+    "tv_pearl",
+    "tv_lacquer_red",
+    "tv_gold",
+    "tv_straw",
+    "tv_rope",
+    "tv_walnut"
+   ],
+   "default": "tv_straw",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_dock_indigo": "#646A81",
+    "tv_salt_white": "#E3DCCB",
+    "tv_estuary_teal": "#2F6F7A",
+    "tv_deep_navy": "#24386E",
+    "tv_sea_glass": "#A9C9C2",
+    "tv_pearl": "#ECE6D6",
+    "tv_lacquer_red": "#8E2E22",
+    "tv_gold": "#D8A743",
+    "tv_straw": "#BC9C5C",
+    "tv_rope": "#776040",
+    "tv_walnut": "#64472F"
+   },
+   "fabrics": [
+    "HES"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "finial and tuft",
+   "role": "fringe",
+   "fabric": "FLAT",
+   "palette": [
+    "tv_dock_indigo",
+    "tv_salt_white",
+    "tv_estuary_teal",
+    "tv_deep_navy",
+    "tv_sea_glass",
+    "tv_pearl",
+    "tv_lacquer_red",
+    "tv_gold",
+    "tv_straw",
+    "tv_rope",
+    "tv_walnut"
+   ],
+   "default": "tv_lacquer_red",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_dock_indigo": "#646A81",
+    "tv_salt_white": "#E3DCCB",
+    "tv_estuary_teal": "#2F6F7A",
+    "tv_deep_navy": "#24386E",
+    "tv_sea_glass": "#A9C9C2",
+    "tv_pearl": "#ECE6D6",
+    "tv_lacquer_red": "#8E2E22",
+    "tv_gold": "#D8A743",
+    "tv_straw": "#BC9C5C",
+    "tv_rope": "#776040",
+    "tv_walnut": "#64472F"
+   },
+   "fabrics": [
+    "FLAT"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 3,
+   "name": "chin strap",
+   "role": "ribbon",
+   "fabric": "LEA",
+   "palette": [
+    "tv_dock_indigo",
+    "tv_salt_white",
+    "tv_estuary_teal",
+    "tv_deep_navy",
+    "tv_sea_glass",
+    "tv_pearl",
+    "tv_lacquer_red",
+    "tv_gold",
+    "tv_straw",
+    "tv_rope",
+    "tv_walnut",
+    "tv_lacquer_black"
+   ],
+   "default": "tv_lacquer_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_dock_indigo": "#646A81",
+    "tv_salt_white": "#E3DCCB",
+    "tv_estuary_teal": "#2F6F7A",
+    "tv_deep_navy": "#24386E",
+    "tv_sea_glass": "#A9C9C2",
+    "tv_pearl": "#ECE6D6",
+    "tv_lacquer_red": "#8E2E22",
+    "tv_gold": "#D8A743",
+    "tv_straw": "#BC9C5C",
+    "tv_rope": "#776040",
+    "tv_walnut": "#64472F",
+    "tv_lacquer_black": "#2A1A16"
+   },
+   "fabrics": [
+    "LEA"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1940,
+    "verts": 1056,
+    "zones": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "regions": [
+     "head"
+    ],
+    "max_influences": 1,
+    "bones": [
+     "headb"
+    ]
+   }
+  },
+  "tris": 1940,
+  "verts": 1056,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0117,
+   "breast_large": 0.0,
+   "breast_small": 0.0,
+   "sex_head": 0.0117
+  },
+  "coverage": {
+   "head": {
+    "normal": 0.198,
+    "cone": 0.073
+   },
+   "chest_upper_side": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "chest_upper_back": {
+    "normal": 0.042,
+    "cone": 0.0
+   }
+  },
+  "glb_kb": 233.3
+ },
+ "budget": {
+  "tris_max": 2600
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Design note: a soldier's cone, lacquered black so a squad's heads read dark and alike, the red tuft matching the coat's binding (owner question 6).",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "tv_delta",
+  "npc",
+  "levy_soldier"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 3.99,
+    "p05_mm": 13.72,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 1.54,
+    "p05_mm": 12.8,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": -144.61,
+    "p05_mm": 13.54,
+    "inside_skin": 2
+   },
+   "bs": {
+    "min_mm": 3.99,
+    "p05_mm": 13.72,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": false,
+   "layer": "cloth2",
+   "groups": {}
+  },
+  "scalp_clearance_mm": {
+   "f": [
+    10.1,
+    21.9
+   ],
+   "m": [
+    10.9,
+    19.9
+   ],
+   "bl": [
+    10.1,
+    21.9
+   ],
+   "bs": [
+    10.1,
+    21.9
+   ]
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tv_ds_levy_hat.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tv_ds_levy_hat.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "tv_paint": {
+   "0": "metal",
+   "1": "straw",
+   "2": "cord",
+   "3": "leather"
+  },
+  "design_source": "Design: Th\u1ee7y V\u00e2n peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours only, no sheet pixels; our own marks (straight cuts, at most one ring).",
+  "recipe_note": "cloth2.dress.lathe_hat CONE R 0.22 H 0.17 with a 3 cm finial (zone 2) and a red tuft: a lathe 0.06 m across spread over the apex, rigid on headb."
+ }
+}

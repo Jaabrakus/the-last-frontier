@@ -435,7 +435,7 @@ def sandals(g, st=None):
     pieces = []
     for s in ("l", "r"):
         sg = 1.0 if s == "l" else -1.0
-        tube = FT.SockTube(fits, s, top=0.19, segs=20, step_leg=0.010, step_foot=0.0085, cap=4)
+        tube = FT.SockTube(fits, s, top=0.17, segs=16, step_leg=0.011, step_foot=0.0095, cap=4)
         m = tube.mesh(st["ease"], foot_smooth=6)
         P = m.V[REF]
         down = FT.ray_down(m)
@@ -531,11 +531,12 @@ FRINGE_MANTLE = {
     "arms_inside": True,                      # the capelet lies on the upper arms (they come out under its hem)
     "front": [(1.45, 2.5), (1.25, 2.5), (1.15, 8.0), (0.0, 12.0)],   # the front edges' angle from the front by height
     "hem": (1.12, 1.05),                      # the strips' TOP (where the cut begins): front, back
-    "fringe": {"len": (0.08, 0.15), "cols": 4, "gap_cols": 1, "seed": 5, "proud": 0.0035},
+    "fringe": {"len": (0.10, 0.19), "cols": 4, "gap_cols": 1, "seed": 5, "proud": 0.0045},
     "ease": 0.016, "drape": 0.004, "folds": (0.010, 11.0, 1.0), "flare": (0.035, 1.0), "smooth": 3,
     "neck_cut": (1.36, 1.40),
     "ruff": {"w": 0.055, "h": 0.022, "lump": 0.006},          # a fur ruff rolled round the neck edge (None: none)
-    "feathers": {"theta": 62.0, "z": 1.30, "n": 3, "len": 0.15},   # tucked at the left shoulder (None: none)
+    "feathers": {"theta": 66.0, "z": 1.29, "n": 3, "len": 0.19, "w": 0.034, "tilt": 45.0},   # tucked at the left
+                                                                                            # shoulder (None: none)
     "tiers": 1, "tier2": {"drop": 0.10, "len": (0.10, 0.18)},  # a second, longer layer of strips under the first
     "clasp": None,
     "hang_from": 1.0,
@@ -660,20 +661,32 @@ def fringe_mantle(g, st=None):
             n = g.m.N[k][vs]
             g.m.V[k][vs] = g.m.V[k][vs] + n * lump[:, None]
         g.m.recompute_normals()
+        g.fits.clear(g.m, 0.004)
     if st["feathers"]:
         fe = st["feathers"]
         P = g.around_points(fe["z"], np.array([fe["theta"]]))
         if len(P):
             k0 = P[0]
             for i in range(fe["n"]):
-                prim = feather(fe["len"] * (1.0 - 0.15 * i), 0.026, 0.0035)
-                up = (math.sin(math.radians(-25 + 22 * i)) * 0.5, 0.0, 1.0)
+                prim = _tilt_out(feather(fe["len"] * (1.0 - 0.15 * i), fe.get("w", 0.03), 0.004), fe.get("tilt", 35.0))
+                up = (0.45 + 0.25 * i, 0.25, 1.0)          # leaning away from the head, a little back
                 g.hardware([k0 + np.array([0.012 * i, 0.01 * i, 0.0])], _flip_up(prim), Z["feather"], up=up,
                            lift=0.006 + 0.004 * i)
     g.hem_below(min(st["hem"]) - 0.02)
     from cloth2 import dress as DR3
     DR3._cloth_uv(g)
     return g
+
+
+def _tilt_out(prim, deg):
+    """A hanging prim (y < 0 down) leaned out of the surface by `deg` (its tip away from the cloth)."""
+    V, F = prim
+    a = math.radians(deg)
+    V = V.copy()
+    y, z = V[:, 1].copy(), V[:, 2].copy()
+    V[:, 1] = y * math.cos(a) + z * math.sin(a)
+    V[:, 2] = -y * math.sin(a) + z * math.cos(a)
+    return V, F
 
 
 def _flip_up(prim):

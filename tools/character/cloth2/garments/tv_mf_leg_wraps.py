@@ -27,11 +27,11 @@ SPEC = Spec(
                    presets={"hemp_madder": {"0": "tv_hemp", "1": "tv_madder"},
                             "hemp_indigo": {"0": "tv_hemp", "1": "tv_indigo_black"},
                             "indigo_hemp": {"0": "tv_indigo_black", "1": "tv_hemp"}},
-                   note="cloth2.tv_dress.leg_wraps: a 6.8 cm strip on a helix from 0.46 to 0.105 (30% overlap, ~7.6 "
+                   note="cloth2.tv_dress.leg_wraps: a 6.8 cm strip on a helix from 0.44 to 0.105 (30% overlap, ~7.2 "
                         "turns), each turn's lower edge 3.5 mm prouder, fitted over tv_mf_trousers; two 4.5 mm cords "
                         "on opposite helices crossing 4 times; a knot under the knee with two 8.5 cm ends."))
 
-STYLE = dict(TVD.LEG_WRAPS, over=tuple(UNDER))
+STYLE = dict(TVD.LEG_WRAPS, over=tuple(UNDER), top=0.44)
 
 
 def build(g, st=STYLE):

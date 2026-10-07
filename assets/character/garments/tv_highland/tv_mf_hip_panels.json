@@ -1,0 +1,382 @@
+{
+ "id": "tv_mf_hip_panels",
+ "name": "Layered hip panels",
+ "description": "An indigo-black cloth wound three times round the hips to above the knee, each layer stepping out, and two woven madder panels hanging over it at the front and the left with ragged hems.",
+ "kind": "garment",
+ "set": "tv_highland",
+ "slot": "accessories.wrap",
+ "alt_slots": [],
+ "layer": {
+  "default": 50
+ },
+ "glb": "res://assets/character/garments/tv_highland/tv_mf_hip_panels.glb",
+ "mesh": "tv_mf_hip_panels",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tv_mf_hip_panels"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "pelvis_center",
+  "pelvis_side",
+  "thigh_upper_l",
+  "thigh_upper_r",
+  "wrist_r"
+ ],
+ "hides_regions": [
+  "pelvis_side"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": {
+  "closed": true,
+  "hems_godot": [
+   [
+    0.144,
+    0.683,
+    0.194
+   ],
+   [
+    0.22,
+    0.683,
+    0.032
+   ],
+   [
+    0.144,
+    0.683,
+    -0.13
+   ]
+  ]
+ },
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "wound cloth",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_indigo_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "woven panels",
+   "role": "band",
+   "fabric": "LIN",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_madder",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 4078,
+    "verts": 3208,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "pelvis_center",
+     "pelvis_side",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 4078,
+  "verts": 3208,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0742,
+   "breast_large": 0.0297,
+   "breast_small": 0.0124
+  },
+  "coverage": {
+   "chest_front": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "chest_side": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "chest_back": {
+    "normal": 0.115,
+    "cone": 0.0
+   },
+   "abdomen_front": {
+    "normal": 1.0,
+    "cone": 0.812
+   },
+   "abdomen_side": {
+    "normal": 0.979,
+    "cone": 0.708
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 0.729
+   },
+   "pelvis_center": {
+    "normal": 0.469,
+    "cone": 0.271
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 0.979
+   },
+   "upper_arm_l": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.156,
+    "cone": 0.042
+   },
+   "forearm_b_l": {
+    "normal": 0.188,
+    "cone": 0.021
+   },
+   "forearm_c_l": {
+    "normal": 0.219,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.208,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.135,
+    "cone": 0.01
+   },
+   "forearm_b_r": {
+    "normal": 0.188,
+    "cone": 0.021
+   },
+   "forearm_c_r": {
+    "normal": 0.177,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.25,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.031,
+    "cone": 0.01
+   },
+   "thigh_upper_l": {
+    "normal": 0.885,
+    "cone": 0.531
+   },
+   "thigh_lower_l": {
+    "normal": 0.188,
+    "cone": 0.031
+   },
+   "thigh_upper_r": {
+    "normal": 0.896,
+    "cone": 0.531
+   },
+   "thigh_lower_r": {
+    "normal": 0.094,
+    "cone": 0.0
+   }
+  },
+  "glb_kb": 660.2
+ },
+ "budget": {
+  "tris_max": 7000
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Design note: the layered hip line of the hunter's sheet and the lineup (cloth over cloth, a woven panel in front). It gives the Mountain Folk silhouette its stepped hips under a narrow red waist; the panels carry the band weave in large (band_motif).",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "tv_highland",
+  "mountain_folk",
+  "everyday"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 25.58,
+    "p05_mm": 31.95,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 25.48,
+    "p05_mm": 32.11,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 19.5,
+    "p05_mm": 31.53,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 25.58,
+    "p05_mm": 31.61,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tv_mf_hip_panels.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tv_mf_hip_panels.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "tv_mf_trousers",
+  "tv_mf_wrap_vest",
+  "tv_mf_short_robe"
+ ],
+ "extra": {
+  "tv_paint": {
+   "0": "weave",
+   "1": "weave"
+  },
+  "design_source": "Design: Th\u1ee7y V\u00e2n peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours only, no sheet pixels; our own marks (straight cuts, at most one ring).",
+  "tv_motif": {
+   "1": {
+    "motif": "band_motif",
+    "threads": [
+     "tv_bone",
+     "tv_indigo_black",
+     "tv_ochre"
+    ],
+    "scale_m": [
+     0.12,
+     0.12
+    ]
+   }
+  },
+  "presets": {
+   "stone_ridge": {
+    "0": "tv_indigo_black",
+    "1": "tv_madder"
+   },
+   "cloud_pass": {
+    "0": "tv_bone",
+    "1": "tv_jade_cloth"
+   },
+   "high_pine": {
+    "0": "tv_pine_black",
+    "1": "tv_ochre"
+   }
+  },
+  "recipe_note": "cloth2.dress.wrap_skirt from 1.035, hem 0.68 (mid-thigh), rims at 0.93 and 0.82 (3 wound layers, each step 5 mm), the overlap's edge at -30 deg; tv_dress.hip_panels: a longer wrap (hem 0.46) clipped to -22..22 deg (hem 0.50) and 56..102 deg (hem 0.54), ragged 3.5 cm, 6 mm over it.",
+  "layers_variant": {
+   "A": "3 layers (rims 0.92, 0.80)",
+   "B": "2 layers (rim 0.86)",
+   "C": "4 layers"
+  }
+ }
+}
