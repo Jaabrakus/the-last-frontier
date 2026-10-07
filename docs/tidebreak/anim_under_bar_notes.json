@@ -1,0 +1,689 @@
+[
+ {
+  "batch": "P1-air",
+  "clips": [
+   {
+    "name": "own-bend-tumble",
+    "scores": {
+     "silhouette": 8,
+     "timing": 8,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 8,
+     "contacts": 8,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "Personality 7. The brief asks for limbs flung. From f12 to f21 the arms hug the shins (face tuck_shin at f15-f20, grip 0.7, ta window 10/16/20/24) and the knees are fully drawn up. At f15 and f18 this reads as a tight gymnast's ball, and at f21 it reads as a man sitting upright: a backflip he chose, not a body that was launched. Cap the arms' tuck at about 45%: replace `ta` in the hand/clav/pole lerps with 0.45*ta. Keep face_r/l on flung_up/flail through f15-f20 instead of tuck_shin, and keep grip between -0.3 and 0.1 (open hands, never gripping). The hands then stay out at about x \u00b10.45-0.55, y 1.0-1.1, lagging the turn by 2-3 frames.",
+     "Legs: cap the tuck at about 70% (tl*0.7, so feet y is about 0.50 instead of 0.60), and start the legs' open window earlier (_win(f, 8, 14, 18, 23)). At f21 the shins should then already be half extended and trailing, which removes the 'sitting on a chair' frame. Keep the root drift and the turn-rate swing; they read well. The seam matches cleanly (seam images)."
+    ]
+   },
+   {
+    "name": "own-bend-flinch",
+    "scores": {
+     "silhouette": 8,
+     "timing": 8,
+     "weight": 8,
+     "arcs": 7,
+     "follow_through": 8,
+     "contacts": 8,
+     "personality": 8,
+     "technical": 8
+    },
+    "fixes": [
+     "Arcs 7. f2\u2192f3 snaps the head from -16 to +4 (20 degrees in one 33 ms frame), and the chest goes from -11 to 0 on the same frame. The whip reverses with no cushion frame, so it pops. Re-key the head as (1,-6),(2,-14),(3,-6),(4,3),(5,6),(6,6),(8,2),(9,0) and the chest as (1,-16),(2,-12),(3,-4),(4,5),(5,6),(7,2),(9,0). The head then decelerates into the reversal and passes through it a frame behind the chest.",
+     "At f1 the hands drop to hip height (y 0.95-0.97) with the palms down and out ('jolt'). From the front this reads as a shrug, and the hands then travel straight up the body midline to the chin. Put the f1 hands up and out to about (\u00b10.30, 1.10, 0.08). They then arc out \u2192 in \u2192 to the chin (f1-f3) instead of rising up the centre line, and the hit reads as arms jolting up, not dropping."
+    ]
+   },
+   {
+    "name": "own-bend-jump-double",
+    "scores": {
+     "silhouette": 7,
+     "timing": 7,
+     "weight": 7,
+     "arcs": 7,
+     "follow_through": 8,
+     "contacts": 8,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "Timing/arcs 7. The push is a single-frame extreme. The feet travel about 0.40 m f2\u2192f3 and about 0.39 m back f3\u2192f4, and the hands move about 0.55 m f3\u2192f4 (from (-0.34,0.86,-0.44) to (-0.48,1.15,0.0)), so the extension pops and vibrates instead of reading. Hold the push for 2 frames: f3 is the key, and f4 a 10% settle of it (feet y 0.04, heels 65, hips -9, chest -11, hands 0.05 m further back). Move the 'out round the side' hand key from f4 to f5, reach the tuck at f7 (not f6) and hold it to f9. strike_s stays 3 f; back_s can move to 9 f (this clip's own meta).",
+     "Weight 7. The gather (hold_s f0-f2) is too small to load the spring: feet +0.12 m, hands up 0.1 m, hips +6. f0, f1 and f2 look almost identical on the sheet. Compress at f2: feet +0.22 m with the knees forward, hips AIR+14, chest AIR+12, head AIR+6 (the chin down), hands drawn in and down to the chest at about (\u00b10.25, 1.05, 0.25) rather than lifted. The push then releases something.",
+     "Silhouette/personality 7. From the front-3/4 the f3 push (lineup_jump 'strike_s', sheet f3) reads as a man standing straight with his arms hanging, because the legs are straight under the hips and the arms are down. Bow the whole line: feet back to z -0.28 and apart to x \u00b10.18, chest -13 \u2192 -20, head -9 \u2192 -14, and the hands out wider and higher behind (about \u00b10.52, 0.98, -0.40). From any camera the push should then read as a stretched C kicking off the air, not a stand."
+    ]
+   },
+   {
+    "name": "own-bend-fall-fast",
+    "scores": {
+     "silhouette": 6,
+     "timing": 8,
+     "weight": 7,
+     "arcs": 8,
+     "follow_through": 7,
+     "contacts": 8,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "Silhouette 6. In the foe's 15 m front-3/4 (engine row 2, all four frames) and in the sheet's front row, this reads as a man standing on tiptoe with one arm out. The straight legs with the feet together under the hips are the stand's legs, and the right arm hides behind the torso. It is also not the brief's 'tucked arrow'. Draw both knees up together: FALL_FAST_FOOT (0.05, 0.062, -0.1) \u2192 about (0.06, 0.30, 0.05), knee poles (0, 0.3, 1), knees about 70 degrees and matched, heels 72 kept. The lower body becomes a compact wedge, not two standing legs. Pitch more into the dive (flip 12 \u2192 20, head 14 \u2192 22) so the crown leads.",
+     "Sweep the arms tighter and further back so both read from the front-3/4 as two tails beside the hips. Hands (\u00b10.388, 1.055, -0.347) \u2192 about (\u00b10.30, 0.95, -0.46); clav (-26, 6) \u2192 (-30, 4). Check the foe front-3/4 strip: both hands must be visible past the torso's outline.",
+     "Weight/follow-through 7. The buffet is 0.05 m on the hands with 3 degrees of chest, and it reads frozen in-engine. It needs to read as speed: hands to 0.08 m at two beats a loop, clavicles \u00b14 degrees alternating, the head shake from 4 to 6 degrees, and a 0.02 m foot flutter two frames behind the hands."
+    ]
+   },
+   {
+    "name": "own-bend-helpless",
+    "scores": {
+     "silhouette": 6,
+     "timing": 8,
+     "weight": 7,
+     "arcs": 8,
+     "follow_through": 8,
+     "contacts": 8,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "Silhouette 6, and this fails the batch's focus. At f9-f15, from the foe's front-3/4 (engine row 2 at f6 and f12; lineup_helpless 'loop 1/2'; sheet front row f9-f15), the figure is upright: legs straight under the hips, both arms up. It reads as a man standing with his hands raised, the 'hooray' that the pass-3 notes ruled out, and half the loop no longer reads apart from a stand. The legs hanging straight below the hips are what sell 'standing'. Take them out from under him: hips -9 \u2192 +14 (\u00b12), so the thighs lift forward and the body is a shallow V lying back. Bend the knees to about 45/60 degrees: HELPLESS_FOOT_R \u2192 about (-0.15, 0.30, 0.15), HELPLESS_FOOT_L \u2192 about (0.16, 0.26, -0.02), still unequal with the left trailing.",
+     "Keep the lean off the camera axis. Use flip -42 + 8 sin(a) (min 34 degrees) instead of -34 \u00b1 12. Cut cart from 24 to 12 and raise yaw from 22 to 30, so at f12 the body turns broadside to the foe camera instead of rolling side-on and foreshortening. Re-render the foe front-3/4 strip at f9, f12 and f15: the soles must show forward of the hips and the trunk must read lying back in all three.",
+     "Weight 7. Because the f12 pose looks like it stands on its legs, the 'dead weight' read is lost. The leg fix above also fixes this. Keep the head's 3-frame loll and the uneven limp hands; those read well from behind and from the side."
+    ]
+   }
+  ]
+ },
+ {
+  "batch": "P1-edge",
+  "clips": [
+   {
+    "name": "own-bend-edge-grab",
+    "scores": {
+     "silhouette": 7,
+     "timing": 8,
+     "weight": 7,
+     "arcs": 8,
+     "follow_through": 7,
+     "contacts": 8,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "Silhouette f0: the body is a stiff vertical plank, with the legs folded straight back from the knees. Arch it into a reaching catch: hips -4 to -12, chest -2 to -10, head -28 to -36, and trail the feet further out (foot_r z -0.32 to -0.45, foot_l -0.39 to -0.50) so the f0 to f3 pendulum reads from the side.",
+     "Silhouette, front 3/4 f0-f1: the right arm hides behind the trunk and reads as a hand at the belly. Push hand_r f0 to x -0.50 and f1 to (-0.30, 2.12, 0.48) so both arms show as a V, as they do in the engine's behind view.",
+     "Weight f3: the catch sags only 10 cm under the hang (root y 0.80 against 0.90). Drop f3 to 0.74, clav_r/l to (10,-30) and head to -6 (chin to the lip), then bounce f4 to 0.86 and f5 to 0.93 (0.03 over the hang) before f6 settles. That makes the jolt land on the arms.",
+     "Follow-through f4-f6: the head, chest and hips arrive at the hang together. Delay the head by one frame (f5 -24, f6 HANG) and the chest by one frame (f5 11, f6 HANG) so the body settles in overlap."
+    ]
+   },
+   {
+    "name": "own-bend-edge-hang",
+    "scores": {
+     "silhouette": 8,
+     "timing": 7,
+     "weight": 7,
+     "arcs": 8,
+     "follow_through": 7,
+     "contacts": 9,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "The brief is met: hands and head are over the lip at every frame, the feet are on the face and the f0/f30 seam is clean.",
+     "Timing: in the side row f0-f26 are nearly identical, and the 8 cm hip sway reads only from behind. Raise roll from 5 to 8 deg and twist from 4 to 7. Make the f18-f28 check a real beat: look 25 to 40 deg, chest lift 3 to 6, head -8 to -14 at f22-f24, held 4 frames, then let it ease back.",
+     "Weight: it reads as a man standing on a step leaning on a counter, not hanging. Push the hips further off the face (root z -0.02 to -0.08) with the feet pressing (heel_r/l +6). Shrug harder (clav y -18 to -24). Double the settle on the arms (0.015 to 0.03 m at f3-9 and f18-24), keeping the head at or above lip +0.4 m so the test still passes.",
+     "Follow-through: the right-hand regrip (f12-f18) is invisible at 15 m. Lift that forearm 3-4 cm off the coping at f14-f15 (hand_r y +0.035, palm kept), with the right shoulder dropping 2 deg as it re-plants."
+    ]
+   },
+   {
+    "name": "own-bend-edge-roll",
+    "scores": {
+     "silhouette": 6,
+     "timing": 7,
+     "weight": 6,
+     "arcs": 6,
+     "follow_through": 6,
+     "contacts": 7,
+     "personality": 6,
+     "technical": 6
+    },
+    "fixes": [
+     "f7 (strike) reads as a headstand: the hips are stacked straight over a head sitting between the hands at deck level, one leg is flung up, the ball is open and the coat skirt stands up as a fin. Move the contact to the upper back. At f7 carry root z 0.80 to 0.95 and drop it so the right shoulder blade, not the head, is the lowest point. Keep head 88 and hips 46 to 56 so the back is round.",
+     "Close the ball at f6-f8: both shins together, heels at the seat, knees within 15 cm of each other (foot_r/l x \u00b10.12 to \u00b10.08, knee poles (\u00b10.15, 0.8, 0.6)). In the sheet one knee opens up at f7.",
+     "Re-time the flip so the fully inverted frames do not land on a sampled frame (f6 48, f7 150, f8 215, f9 250). The coat fin then shows for less than a frame, since the rig cannot soften the skirt.",
+     "f10: he lands sitting on the seat with the feet in the air, like a fall. Bring the feet under him by f12 (foot y to the deck +0.1 at f12, not f15) so the roll flows into the crouch without a sit.",
+     "Timing f13-f15: the crouch-to-rise is abrupt (root y 1.55 to 1.62 to 1.84 over f13-f17, with f15 already upright). Hold a 1-frame load at f14 (root y 1.52) before driving up."
+    ]
+   },
+   {
+    "name": "own-bend-edge-jump",
+    "scores": {
+     "silhouette": 7,
+     "timing": 8,
+     "weight": 7,
+     "arcs": 7,
+     "follow_through": 7,
+     "contacts": 8,
+     "personality": 7,
+     "technical": 7
+    },
+    "fixes": [
+     "Silhouette and arcs f4: the 'fling' reads as bent elbows tucked at the chest (a cower), and the hands pop from the deck (f3) to the chest (f4) to straight overhead (f5). Make f4 the middle of one arc: hand_r (-0.55, y +0.25 from the current key, 0.20) with the elbows about 30 deg bent and the poles down and back (-0.8, -0.6, -0.2). Mirror on the left.",
+     "Weight f2-f3: the push is 31 cm of root in one frame, then a dead hold at f3 (1.08 to 1.085). Give f3 a 2-3 cm continued extension (root y 1.11), with heel_r/l 56 to 62, so the legs are still driving off the face.",
+     "Follow-through f5-f9: the arms go straight up at f5 and straight down to the balance at f9 with no overshoot. Let the arms drift 10 deg past 'balance' at f8 and settle at f9. Bring the knees up a frame after the hips (knee poles key at f6, not f5).",
+     "Technical: the clip only plays correctly with the code lift (MOVE option (a)). Until that is in movement.json, its in-engine read is unverified."
+    ]
+   },
+   {
+    "name": "own-bend-edge-attack",
+    "scores": {
+     "silhouette": 7,
+     "timing": 7,
+     "weight": 7,
+     "arcs": 8,
+     "follow_through": 7,
+     "contacts": 8,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "Silhouette and personality f8-f10: the trunk is hunched over the left knee with the head down (head -26, chest 18), so at 15 m it reads as a crawl, not a ground sweep. Open the line: chest 18 to 8, head -26 to -10, look 12 to 25 at f9. The eyes and head then follow the swept leg, and the line runs from the head through the straight right leg.",
+     "Counterweight: the comment says the right arm whips across the other way, but hand_r travels from x -0.54 (f6) to +0.17 (f12), the same direction as the sweeping leg (right to left). Throw it the opposite way: from the left at f8 (0.15, 2.6, 0.85) out to the right and back at f10-f11 (-0.55, 2.65, 0.75), overshooting by about 8 cm, then settling at f12.",
+     "Timing f12-f16: he goes from the deep crouch (root y 1.44) to nearly standing (1.84) in 2 frames. Add a load frame at f13 (root y 1.40, hips 52) and spread the rise over f13-f16, so the recovery has anticipation and the strike at f9 stands apart.",
+     "Follow-through f10-f12: the coat skirt pools on the deck and hides the hips. Lift root y by 5 cm at f10-f12 (1.35 to 1.40) so the seat clears the deck and the skirt hangs."
+    ]
+   },
+   {
+    "name": "own-bend-roll-f",
+    "scores": {
+     "silhouette": 6,
+     "timing": 7,
+     "weight": 7,
+     "arcs": 6,
+     "follow_through": 7,
+     "contacts": 7,
+     "personality": 6,
+     "technical": 6
+    },
+    "fixes": [
+     "f5 (105 deg) reads as a headstand: the head is planted between the hands, the hips are straight over it and the coat skirt stands up as a fin. Contact must pass through the shoulder blades. Push the pivot forward during the turn (ROLL_PIVOT z 0.18 to 0.30 by f5), keep head at 85 or more from f3 rather than f4, and raise hips from 48 to 58 at f4-f6 so the back is a round wheel.",
+     "f7 (strike): he lies flat on his back with the knees apart and the feet kicking up, so it reads as a fall. Keep the BALL closed: knees within 15 cm, heels at the seat, hands on the shins. At f5-f8 the thighs come off the chest; key chest 54 to 60 and the knee poles to (\u00b10.15, 0.9, 0.5).",
+     "Arcs f7-f9: the body goes from flat on the back to sitting bolt upright on the seat in 2 frames. Spread it as one rocking wheel (the flip already eases). Put the feet down on the deck at f11, not f13, so the roll ends on the feet, not the bottom.",
+     "Rise f15: the knees bow slightly inward with the feet apart. Hold knee poles (\u00b10.35, 0, 1) through f16 and switch to 'auto' only at f17."
+    ]
+   },
+   {
+    "name": "own-bend-roll-b",
+    "scores": {
+     "silhouette": 6,
+     "timing": 7,
+     "weight": 7,
+     "arcs": 7,
+     "follow_through": 7,
+     "contacts": 7,
+     "personality": 6,
+     "technical": 6
+    },
+    "fixes": [
+     "f9-f10: the inverted pike is a bell of coat skirt from every camera (the engine behind view at f10 shows only a yellow cone). Get the legs over sooner (feet key f9 (fx, 0.62, 0.44), f10 (fx, 0.40, 0.30)) and keep the hips over the shoulders for less time, so the boots show past the skirt.",
+     "f7 (strike) reads as a tangle, with the arms behind the head and the body hidden. Make the push read: elbows up and wide at f7-f9 (poles (\u00b11, 0.4, 0)), with the palms visibly flat by the ears. Lift the head off the deck 3 frames before the feet land (head 65 to 40 at f10).",
+     "f5: one hand is already posting on the floor behind him while the other is by the ear, which is asymmetric and reads as a stumble. Keep both hands by the ears through f6, as the comment intends (check that the f5-f6 _unturn path is not pulling hand_r down to the deck)."
+    ]
+   },
+   {
+    "name": "own-bend-roll-side",
+    "scores": {
+     "silhouette": 6,
+     "timing": 7,
+     "weight": 7,
+     "arcs": 7,
+     "follow_through": 7,
+     "contacts": 8,
+     "personality": 6,
+     "technical": 7
+    },
+    "fixes": [
+     "Direction readability: from the front 3/4 and the player's behind camera, the right roll and its -l twin look nearly the same at f5-f9. The f2 hand that reaches lowest to the deck is the far (left) hand (hand_l y 0.56), not the right. Make the lead obvious: hand_r f2 (-0.50, 0.15, 0.15) flat on the deck beside the right foot, head turned 20 deg to the right (look -20 at f2-f3), and the left arm thrown up and over the body at f3-f5.",
+     "f7 (strike): flat on the back with both feet up reads as a fall. Keep the barrel tight and low: knees across the belly toward the left shoulder (foot_l y 0.28 to 0.22, knee poles (0.9, 0.1, 0.3)), with the left arm hugging the shins so the silhouette is a ball.",
+     "Follow-through f12-f14: the left leg is meant to land first, then the right, but the sheet shows them landing together. Put foot_l down at f11 and foot_r at f13, with a 2 cm hip settle toward the left at f14 (root x +0.04 is already keyed; make it 0.06)."
+    ]
+   },
+   {
+    "name": "own-bend-roll-side-l",
+    "scores": {
+     "silhouette": 6,
+     "timing": 7,
+     "weight": 7,
+     "arcs": 7,
+     "follow_through": 7,
+     "contacts": 8,
+     "personality": 6,
+     "technical": 7
+    },
+    "fixes": [
+     "The mirrored twin inherits every roll-side issue. Re-bake it after the roll-side fixes (the lead hand on the travel side, the tighter barrel at f7, the staggered landing).",
+     "Check that the 'travel' meta is 'left' on the twin and that the mirror flips the lead hand: after the roll-side fix, the f2 low hand must be the LEFT hand here."
+    ]
+   },
+   {
+    "name": "own-bend-duck",
+    "scores": {
+     "silhouette": 8,
+     "timing": 7,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 7,
+     "contacts": 8,
+     "personality": 6,
+     "technical": 8
+    },
+    "fixes": [
+     "Personality: the 'guard_out' palms-out hands beside the face read as surrender or fright ('don't shoot'), not a martial slip. Make it a tai chi or Baguazhang evasion: lead (left) hand forward at chin height with the palm angled out (hand_l (0.10, 0.95, 0.25)), right hand by the right cheek, elbows down and in (poles (\u00b10.4, -1, 0)).",
+     "Timing f9-f12: he rises 45 cm in 3 frames and is fully upright by f12, which is a pop. Spread the return over f9-f13: root y -0.46 / -0.33 / -0.17 / -0.05 / +0.01 (overshoot) and STAND at f14.",
+     "Follow-through: the head arrives with the chest on the return. Let the head trail 2 frames (head 28 at f10, 18 at f11, 8 at f12, 2 at f13) so the slip lands with overlap."
+    ]
+   }
+  ]
+ },
+ {
+  "batch": "P2-rise",
+  "clips": [
+   {
+    "name": "own-bend-rise-earth",
+    "scores": {
+     "silhouette": 6,
+     "timing": 8,
+     "weight": 8,
+     "arcs": 7,
+     "follow_through": 8,
+     "contacts": 8,
+     "personality": 6,
+     "technical": 8
+    },
+    "fixes": [
+     "SILHOUETTE/PERSONALITY (the blocker): the throw/back frames (f23-f26) are almost the same picture as rise-water's crane at f21. Zoomed side by side, both show the right arm straight up over the head, the other hand low by the hip, the head tipped back looking at the sky and the legs together under him. At 15 m nobody can tell earth from water. The f20-f24 strike and back also read as one arm raised, like fire's peak. Earth must stay LOW, WIDE and SQUARE all the way through. Replace the one-fist rising bridge with a two-handed Hung Gar throw. At f20 both fists drive down and out together (double tiger claws pressing the stone away): hand_r (-0.55, 0.95, 0.25), hand_l (0.55, 0.95, 0.25), clav_r/clav_l pressed down (10, 18), elbows wide (pole_r (-1.0, -0.2, -0.4), pole_l mirrored). Hold that box through f26, then open into the fall from f28.",
+     "Keep the legs WIDE in the throw so the horse carries into the air. foot_r stays at x -0.30 / foot_l at x +0.30 through f27 (they now narrow to +/-0.14-0.15 at f25-f28, which closes the silhouette into the generic air tuck). Draw the knees up in a wide frog shape (knee_r pole (-0.8, 0.1, 0.6)). Keep heel lift but not the toe-point.",
+     "HEAD: no throw-back to -40 at f19-f21 and -36 at f21. Keep the eyes on the foe and the lip: head -10 to -14 through f20-f26, chest arch -8 at most, not -20 at f23. Earth is grounded and heavy. The arched-back look-at-the-sky pose belongs to water's crane and should be kept for it.",
+     "ARCS: if any rising fist stays, carry it outside the head. The current path at f21 (-0.36, 1.42, 0.20) to f23 (-0.40, 1.62, -0.02) passes in front of the face and hat in the front 3/4 view at f22, as the animator also reports. Route it at f21 (-0.55, 1.30, 0.35) and f22 (-0.55, 1.50, 0.20), never inside |x| 0.48 while above y 1.35 and z > 0."
+    ]
+   },
+   {
+    "name": "own-bend-rise-water",
+    "scores": {
+     "silhouette": 6,
+     "timing": 7,
+     "weight": 7,
+     "arcs": 8,
+     "follow_through": 8,
+     "contacts": 8,
+     "personality": 6,
+     "technical": 8
+    },
+    "fixes": [
+     "SILHOUETTE: the crane at f19-f21 copies earth's throw: right arm straight up, left hand at the hip, both feet level on straight legs. Make it a real white crane. Lift the LEFT KNEE to hip height f17-f21: foot_l (0.10, 0.55, 0.20), heel_l 50, knee_l pole (0.2, 0.3, 1.0). Stand on the right foot only, with that knee soft (about 30 deg). Spread the arms on a long DIAGONAL across the body, not a vertical: right palm high and OUT at (-0.62, 1.72, 0.0), left palm low and OUT at (0.66, 0.92, 0.12), both flat (face sky_cup / press_down). The figure then reads as a one-legged diagonal wing, which no other Rise has.",
+     "SWIRL READ AT 15 m: in the engine strip (foe 15 m 3/4, f4/f12) the circles are invisible and he reads as a man standing still. Enlarge the cloud hands: WATER_ARM 0.395 -> 0.55, WATER_REACH 0.03 -> 0.12, WATER_TWIST 25 -> 40, WATER_SIDE 12 -> 18, so each hand clearly leaves the torso silhouette at its outer half. Make the sheet tool pick a mid-swirl frame (f8 or f14) besides f11, so the review shows it.",
+     "WEIGHT/TIMING: on the column the knees are only about 25 deg with the feet flat and level. The surge is not felt, and from the side he stands upright like a statue from f11 to f21. Deepen the ride: WATER_BOB f4 -0.14, f6 -0.11, f10 -0.04, f14 -0.10, f17 -0.05, with knees about 45 deg at the low points. Lean the trunk 6-8 deg forward at each dip, so the column visibly pushes up through the legs on 2 beats before the crane.",
+     "Keep the crane's head-back look for water only, and keep the arms on the diagonal, not straight up."
+    ]
+   },
+   {
+    "name": "own-bend-tech",
+    "scores": {
+     "silhouette": 8,
+     "timing": 7,
+     "weight": 8,
+     "arcs": 7,
+     "follow_through": 8,
+     "contacts": 8,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "ARCS/TIMING f0->f1: in one frame the right hand jumps from (-0.52, 1.25, -0.10) to the deck at (-0.43, 0.035, 0.21), about 1.25 m in 33 ms, and the root drops 0.32 m. That is a pop, not a slap. Keep strike_s at 1/30, but start the reach on f0. TECH0 for this clip (and tech-roll's f0, which shares it): hand_r (-0.62, 0.75, 0.10), arm already flung down and out toward the deck; root -0.30; hips 28; side 15. Then f0->f1 is about 0.75 m and reads as a whip.",
+     "PERSONALITY at the slap (f1-f2): in the front views the hat brim covers the whole face and the head is bowed toward the deck, so it reads as a collapse, not 'eyes on the foe'. Bring the head up: head -34 -> -50 at f1 and -44 at f2, with look -15 kept. The face must show under the brim in the front 3/4 view.",
+     "f9-f14 ends as five frames of the rest-pose mannequin (arms hanging). As the trunk passes the stand at f7-f10, flash a guard: hand_r (-0.22, 1.15, 0.30), hand_l (0.18, 1.22, 0.36), grip 0.6. Settle to HR/HL only on f13-f14, so the break ends as a fighter ready to go, not a reset."
+    ]
+   },
+   {
+    "name": "own-bend-tech-roll",
+    "scores": {
+     "silhouette": 8,
+     "timing": 7,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 7,
+     "contacts": 8,
+     "personality": 8,
+     "technical": 8
+    },
+    "fixes": [
+     "TIMING f14->f17: from the deep crouch (back_s) to a fully straight stand in 3 frames, the pelvis rises about 0.4 m in 0.1 s and pops up like a jack-in-the-box. Then f17-f19 is a dead rest pose. Spread the rise over f14-f18 with an ease-in/ease-out: pelvis +0.10 at f15, +0.26 at f16, +0.37 at f17, +0.01 overshoot onto the toes at f18 (heels 6), settle at f19.",
+     "FOLLOW-THROUGH: the arms hang dead in the rise. Swing them forward for balance f15-f16 (hands z +0.30, y 1.0) and let them settle a frame behind the pelvis (f18-f19). The twin inherits all of this through mirror_clip."
+    ]
+   },
+   {
+    "name": "own-bend-tech-roll-l",
+    "scores": {
+     "silhouette": 8,
+     "timing": 7,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 7,
+     "contacts": 8,
+     "personality": 8,
+     "technical": 8
+    },
+    "fixes": [
+     "Same as own-bend-tech-roll: ease the f14->f17 crouch-to-stand pop over f14-f18 with an overshoot at f18, and swing the arms forward f15-f16. It is mirrored automatically. Re-check that its twin_keys roll (+4 deg on f1-f2) still applies after the fix."
+    ]
+   },
+   {
+    "name": "own-bend-lie",
+    "scores": {
+     "silhouette": 8,
+     "timing": 8,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 8,
+     "contacts": 8,
+     "personality": 8,
+     "technical": 7
+    },
+    "fixes": [
+     "TECHNICAL: in every frame of the front sheet (f0-f35) the coat's front skirt panel stands up vertically between the raised knees like a board. In the engine strip's air dress the robe's skirt becomes a large yellow cup standing up off the deck (behind 5 m, all 4 frames). Gravity should lay it on the deck or the thighs. Fix it in the pose: lower the raised right knee (foot_r 8-10 cm further toward the feet, so the thigh is at most about 35 deg off the deck) and roll the hips 5-6 deg toward the straighter leg, so the skirt panels fall flat. If the skirt bones take keys, add a LIE key laying the front panels along the deck. Check that both the green coat and the air robe settle."
+    ]
+   },
+   {
+    "name": "own-bend-getup",
+    "scores": {
+     "silhouette": 8,
+     "timing": 7,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 7,
+     "contacts": 8,
+     "personality": 8,
+     "technical": 8
+    },
+    "fixes": [
+     "TIMING/FOLLOW-THROUGH f9-f11: the landing crouch is three visually identical frames (pelvis 0.48 -> 0.50, hands parked at (+/-0.32, 0.62, 0.30)), a dead hold right after the most violent move in the clip. Ride the landing: pelvis 0.48 at f9, 0.44 at f10 (the compression), 0.50 at f11. Let the hands keep travelling forward and up (z 0.30 -> 0.42, y 0.62 -> 0.70 at f10), and let the head settle a frame late (head -14 at f9, -18 at f10, -10 at f11).",
+     "As with tech: in f15-f20 the arms hang at HR/HL. Bring them up to a loose guard at f13-f15, then down to the stand on f19-f20."
+    ]
+   },
+   {
+    "name": "own-bend-getup-attack",
+    "scores": {
+     "silhouette": 7,
+     "timing": 8,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 7,
+     "contacts": 8,
+     "personality": 6,
+     "technical": 8
+    },
+    "fixes": [
+     "PERSONALITY (the blocker): from f4 to f10 the head is thrown back with the face to the sky (sheet front and side; engine 15 m side). The attacker never looks at what he is sweeping, so it reads as a dazed crab. Bring the head forward about 30 deg (chin to chest level) through f4-f10. Drive look with the sweeping foot: about -30 at f4 (wound up behind to his right), 0 at f7, +25 at f9, so the eyes lead the leg by 1 frame.",
+     "SILHOUETTE at 15 m: in the foe's front 3/4 view at f7 the straight leg hides under the coat mass, and only the crab hump reads. Raise the chest 12-15 deg more upright (chest forward and up) so the leg is clear below the coat. Counter-swing the free right arm OPPOSITE the leg: hand_r out wide and back at (-0.70, 0.90, -0.25) at f4, swinging to (0.0, 1.0, 0.45) at f9. The silhouette then opens into a big diagonal X at the strike.",
+     "FOLLOW-THROUGH f9-f12: after the sweep the leg stops dead, held out behind to his left for 2 frames, and the body does not turn after it. Let the sweep's momentum carry the trunk: yaw +20 over f9-f12. Plant the swept foot as the first step of the rise (foot_r onto the deck under him by f12) instead of drawing it straight back in."
+    ]
+   },
+   {
+    "name": "own-bend-knock-bounce",
+    "scores": {
+     "silhouette": 7,
+     "timing": 8,
+     "weight": 7,
+     "arcs": 8,
+     "follow_through": 8,
+     "contacts": 8,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "WEIGHT/PERSONALITY f3-f8: the bounce now reads as an ACTIVE back-bridge (sheet side f4/f6, lineup_knock f6). Pelvis and chest arch up while the head dangles back to the deck and the heels and hands stay pinned, as if he pushes himself up. A passive rebound lifts the trunk as one flat plank with the chin tucked. Head f2 -6 -> f3 +14 -> f5-f7 +12 (tucked, not dangling), and hips +8 to +12 at f5-f7 (a slight pike, not an arch).",
+     "Let the limbs leave the deck ONE frame after the trunk's peak (f7), 6-10 cm (hands y about 0.08, heels about 0.06), and slam down first at f9-f10 as keyed. Pinned limbs with a rising trunk is what makes it read as a bridge. The 'limbs trail' note was about lag, not glue.",
+     "Readability at 15 m: the 0.20 m lift is a twitch from the foe's 3/4 and the side view (engine f5). Raise the peak to about 0.28 m at f6 with the same ease, unless the code's root motion already adds a vertical bounce. Check that in play before you change it."
+    ]
+   }
+  ]
+ },
+ {
+  "batch": "P2-slam",
+  "clips": [
+   {
+    "name": "own-bend-water-downpour",
+    "scores": {
+     "silhouette": 7,
+     "timing": 8,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 8,
+     "personality": 7,
+     "contacts": 8,
+     "technical": 8
+    },
+    "fixes": [
+     "Silhouette, strike and follow (f6-f12): the palms sit at y 1.00, x \u00b10.14-0.18, z 0.41 with the forearms flat. Front sheet f6/f9 reads as someone holding a tray. From the player's camera (engine row 1, f6/f10/f14) it reads as a bare upright column with no arms showing. Fix: lower the palms to about y 0.88 and widen them to x \u00b10.24, z 0.38 at f6, and let them sink to y 0.85 by f8-f10 (the left a frame later, as now). To keep the reach inside the bake's FIT, fold the trunk more so the shoulders come over the palms: chest 16.5 -> 24 at f7, hips 12.5 -> 16 at f8, head 10.5 -> 14. Aim for an elbow angle of 155 deg or more, so each arm is one long line pressing down and forward, not a bent tray. The f5->f6 step stays the biggest (about 0.5 m).",
+     "Elbows: pole_r/pole_l (\u22130.9,-0.2,-0.4) -> (\u22131.0, 0.1, -0.2) over f6-f13, so the rounded elbows and forearms show outside the coat from behind and from 15 m front 3/4.",
+     "Personality (tai chi press): yaw each press_down palm about 25 deg inward so the fingertips point toward each other. Legs f6-f11: heel 55 -> 38 and a 10-15 deg knee bend (knee_r/l z stays 1.0, add y -0.1), so the column sinks into the push instead of reading as a gymnast's pointed-toe pencil. Keep the 0.17 m lift."
+    ]
+   },
+   {
+    "name": "own-bend-fire-axe-kick",
+    "scores": {
+     "silhouette": 8,
+     "timing": 8,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 7,
+     "personality": 8,
+     "contacts": 8,
+     "technical": 8
+    },
+    "fixes": [
+     "Arms are dead through the chop. hand_r moves 0.07 m from f3 (-0.46,1.177,-0.215) to f6 (-0.39,1.18,-0.2), then stays within 0.04 m to f10. hand_l stays at y 1.15-1.18 f6-f11. Sheet f6 and f9 show the same T at shoulder height. The clip's own comment promises 'both fists thrown back behind the hips against it'. Fix: f6 hand_r about (-0.30, 0.98, -0.32) and hand_l about (0.30, 1.00, -0.30), each about 0.2 m lower and 0.1 m further back. Move hand_l's key to f7 so the left trails a frame. Overshoot at f8 by another 0.04 m down and 0.04 m back, then rise back out to the balance keys at f13/f17. Run the bake's FIT on the new keys so the IK miss stays at 0."
+    ]
+   },
+   {
+    "name": "own-bend-fire-axe-kick-l",
+    "scores": {
+     "silhouette": 8,
+     "timing": 8,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 7,
+     "personality": 8,
+     "contacts": 8,
+     "technical": 8
+    },
+    "fixes": [
+     "Same as own-bend-fire-axe-kick: the fists must drive down and back against the chop at f6, the trailing arm a frame late, with an overshoot at f8. The twin inherits it through the mirror. Check fire-axe-kick-l_twin_blend again after the change."
+    ]
+   },
+   {
+    "name": "own-bend-teeter",
+    "scores": {
+     "silhouette": 7,
+     "timing": 7,
+     "weight": 8,
+     "arcs": 7,
+     "follow_through": 7,
+     "personality": 7,
+     "contacts": 8,
+     "technical": 8
+    },
+    "fixes": [
+     "End pose (f13-f15, which the code freezes). The right arm ends at -90+575 = 125 deg and the left at 110 deg, so the left hand finishes over and behind the hat crown (sheet front f15, lineup_teeter f15). From the player's camera (engine row 1, f15) both hands sit up by the head and read as 'hands up / surrender', not as fighting for balance. Make the hold an asymmetric flail. Right arm ends at about 145 deg (up, back and out): TEETER_TURN right about 595. Left arm ends at about 40 deg (forward and up, ahead of the chest, as a counterweight): left about 490. TEETER_FLARE 38 -> 55, so both hands sit 0.25 m or more outside the hat brim. Head 20 -> 12 with a 10 deg turn toward the low arm, so the face is not hidden under the brim.",
+     "Spin speed and arcs: 575 deg in 13 frames peaks at about 56 deg a frame, with palm steps of 0.419 m (about 12.6 m/s). At 30 fps it strobes, and the slerped bones cut the circle's chord by about 5 cm a step. Lengthen to TEETER_LEN 21 with TEETER_SPAN ((1,21),(2,21)) and RAMPS ((3,4),(3,3)), so the peak is 40 deg a frame or less and the palm step 0.30 m or less. CLIPS says 'about 12 f' as a guide. strike_s 3/FPS is unchanged, and hold_s follows LEN.",
+     "Readability at the sampled frames: in the engine strip f3 and f11, the arms pass beside the hips, so from behind the teeter reads as an idle stand. Starting the right arm at f1, as above, and slowing the spin keeps the arms outside the body silhouette for more of the clip.",
+     "Follow-through: the code freezes the last frame, so after f15 nothing moves. Ease the last 3 frames of root, hips and chest into a slight counter-sway (hips +1.5 deg at f13, -1 deg at f15) so the freeze lands on a settling pose and not mid-motion. For the code lane, not this lane's files: a frozen frame can never 'windmill' as CLIPS asks, so a short end-loop (the wobble and a half-circle arm flail, about 24 f, first frame = last frame) held instead of the frozen frame would be the premium solution."
+    ]
+   }
+  ]
+ },
+ {
+  "batch": "P3-air-hits",
+  "clips": [
+   {
+    "name": "own-bend-air-hit-earth",
+    "scores": {
+     "silhouette": 7,
+     "timing": 8,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 8,
+     "contacts": 9,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "Silhouette, f4-f8: the curl buries the face and both fists behind the hat brim. From the foe's front-3/4 camera the twin's strike (lineup, air-hit-earth-l f4) is only a hat-top blob, and the strike reads as a defensive cannonball rather than a knee-and-elbow smash. Ease chest 34 -> 26 and head 6 -> -6 at f4-f8 so the chin lifts over the knee. Raise foot_r at f4-f8 from y 0.86 to y 0.92 and z 0.30 -> 0.40 so the right knee clearly leads the silhouette out in front of the coat. Keep elbow_to_knee <= 0.10 m.",
+     "Personality, f2: the cocked right fist sits beside the face (hand_r (-0.24, 1.46, -0.08)), so the forearm crosses the face and reads as a flinch or guard. Move it to about (-0.38, 1.52, -0.20) with pole_r (-0.9, 0.6, -0.5) so the elbow is up and out behind the ear, a Hung Gar chamber the hand clearly winds back from. Keep the left fist measuring forward at chin height, but 0.05 m lower so it frames the face rather than covering it.",
+     "f4 stacked fists: lift both 0.04 m (y 1.34 -> 1.38) so two fists show above the knee as the rock at 15 m. Mirror all of this into -l (twin_ends unchanged)."
+    ]
+   },
+   {
+    "name": "own-bend-air-hit-earth-l",
+    "scores": {
+     "silhouette": 7,
+     "timing": 8,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 8,
+     "contacts": 9,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "Inherits the original's fixes: chest 34->26 and head 6->-6 at f4-f8, the knee pushed out to y 0.92 and z 0.40, the f2 fist cocked back to (-0.38, 1.52, -0.20) mirrored. Here f4 seen from front 3/4 is the worst frame of the batch: crown of the hat only, no fists or knee."
+    ]
+   },
+   {
+    "name": "own-bend-air-hit-water",
+    "scores": {
+     "silhouette": 7,
+     "timing": 8,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 8,
+     "contacts": 9,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "Silhouette and personality at the strike f4: the f2 'hold the ball' reads well (palm down over palm up). On f4, though, the trunk is bolt upright on tucked knees with both arms nearly locked straight ahead (arm_reach 0.502). From the side it reads as holding out a tray, and from the player's behind camera both arms are hidden by the back. Lean into the ball: WATER_CHEST f4 1 -> 10 and f5 -> 8; WATER_HIPS f4 +6. Soften both elbows (reach about 0.46, poles down and out) so the arms make a round ring, not two rods.",
+     "Ring plane: add a roll of about 10-12 deg toward the sweep at f4-f7, so the right shoulder is up as the ball passes ahead. The ring then tilts and the circle reads in profile and from behind. At present the sweep is flat at shoulder height and only shows in the top-down sense.",
+     "f6-f9 (follow/back): the stacked hands pull in against the chest at his left side; front-sheet f6/f9 show the arms bunched on the torso. Keep the ball out at about 0.45 m from the sternum through f8, with RING_OFF +35 held to f7, before the hands part at f9-f11. The sweep's end then reads as a whip, not a hug.",
+     "Legs: give the knees 0.10 m more spread (counter-swing) at f4-f6 so the lower body silhouette is not the same tucked block as the earth and air hits."
+    ]
+   },
+   {
+    "name": "own-bend-air-hit-water-l",
+    "scores": {
+     "silhouette": 7,
+     "timing": 8,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 8,
+     "contacts": 9,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "Inherits the original's fixes: chest +10 at f4, soft elbows to reach about 0.46, a 10-12 deg roll into the sweep at f4-f7, the ball held out to f8, more knee spread. The mirror itself checks out: wound to the left at f2, through ahead at f4, on to his right side at f6."
+    ]
+   },
+   {
+    "name": "own-bend-air-hit-fire",
+    "scores": {
+     "silhouette": 7,
+     "timing": 8,
+     "weight": 7,
+     "arcs": 8,
+     "follow_through": 8,
+     "contacts": 9,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "Silhouette, weight and strike frame: at f4 only the right leg is out (foot_l still z 0.42, knee bent). The seat is the lowest point and the coat skirt hangs under it, so the strike reads as someone sitting on an invisible chair, not a driving double kick. The 'both soles out' read only arrives at f6, two frames after strike_s. Bring foot_l at f4 to about (0.10, 0.76, 0.58) so the left lags by half a frame, not a whole one, and both legs show on the strike frame. Lift both soles to y 0.86-0.90 at f4-f6 (at or just above the hip, toes pulled up), so the legs make a rising pike rather than sloping down from the seat.",
+     "Keep the trunk caps (hips -19, chest -4) but add a crunch: chest f4-f6 -4 -> +4 and root z -0.05 -> -0.10 at f5-f6, so the hips are carried back behind the kick and the body shape is a V, not an L-chair.",
+     "Personality: the fists chambered at the waist sit behind the coat skirt and vanish at 15 m. The arms add nothing to the line of action; front-sheet f4/f6 read as hands bracing on a floor. Keep the left fist chambered (Northern Shaolin). Drive the right fist forward along the legs on the strike: hand_r f4 to about (-0.18, 1.22, 0.42), face fist_fwd, held to f7, then pulled back with the leg recoil at f8-f9. That gives a fist-and-soles diagonal line that reads as aggression from any side."
+    ]
+   },
+   {
+    "name": "own-bend-air-hit-fire-l",
+    "scores": {
+     "silhouette": 7,
+     "timing": 8,
+     "weight": 7,
+     "arcs": 8,
+     "follow_through": 8,
+     "contacts": 9,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "Inherits the original's fixes: both soles out on f4 (the trailing leg at z 0.58), soles at y 0.86-0.90, chest crunch +4, the leading-side fist punched forward along the legs. The mirror reads correctly: the far leg leads at f4 in the side row."
+    ]
+   },
+   {
+    "name": "own-bend-air-hit-air",
+    "scores": {
+     "silhouette": 7,
+     "timing": 8,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 8,
+     "contacts": 9,
+     "personality": 8,
+     "technical": 8
+    },
+    "fixes": [
+     "Silhouette from the side: the slant lies entirely in the frontal plane. The high right palm at f4 sits at (-0.50, 1.48, 0.10), at hat height and almost in the shoulder plane. In the side row (sheet f4/f12 and the engine's 15 m side row) it overlaps the head and reads as shielding the eyes, and the body is a thin vertical stick. Move hand_r f4-f12 to about (-0.60, 1.40, 0.28), forward of and below the brim, and hand_l to about (0.55, 0.95, 0.24), so the blade has depth and both palms clear the body in profile. Keep palms_span >= 1.05 m.",
+     "Line of action: add side bend toward the low hand, side f4 -6 -> about -12, held to f8 and eased out by f12, so the trunk sits on the slant's diagonal instead of standing vertical inside it. The front read is already good."
+    ]
+   },
+   {
+    "name": "own-bend-air-hit-air-l",
+    "scores": {
+     "silhouette": 7,
+     "timing": 8,
+     "weight": 8,
+     "arcs": 8,
+     "follow_through": 8,
+     "contacts": 9,
+     "personality": 8,
+     "technical": 8
+    },
+    "fixes": [
+     "Inherits the original's fixes mirrored: the high palm to (0.60, 1.40, 0.28), the low palm to (-0.55, 0.95, 0.24), side bend about +12 at f4-f8. The mirror reads correctly: the high palm is on his left at f4."
+    ]
+   }
+  ]
+ },
+ {
+  "batch": "P4-struck",
+  "clips": [
+   {
+    "name": "own-bend-hit-impact-back",
+    "scores": {
+     "silhouette": 7,
+     "timing": 8,
+     "weight": 7,
+     "arcs": 8,
+     "follow_through": 8,
+     "contacts": 8,
+     "personality": 7,
+     "technical": 8
+    },
+    "fixes": [
+     "Main fault: the body is not snapped away from the blow. In the side row at f3, the head and shoulders lean back toward the hit. The test's own metrics show it: pelvis_ahead_ankles 0.232 m and head_behind_pelvis 0.272 m, so the head sits about 4 cm BEHIND the ankles, on the side the blow came from. Only the pelvis moves (most_m 0.203). Against the front hit (head thrown 0.45 m), the back hit reads at 15 m as the same thing: a head-back arch. Fix at f3: hips from -10 to about +6 (pitch the trunk's base forward, away from the blow); chest from -26 to about -18, so the arch stays in the upper back but no longer tips the whole trunk back; root z from 0.20 to 0.22. Then line up the head's pitch keys (-6,-12,-24,-30,-34,-27,-22) to about (-4,-10,-18,-22,-26,-20,-16), so the head whips back relative to the chest but still lands forward of the toes. Target: head at least 0.12 m AHEAD of the ankles at f3, with the pelvis still the furthest-forward point. Seen from the side, the bow should lean forward, the opposite of the front hit, not the same lean as it. Add a test check: head_ahead_of_ankles >= 0.10 m at f3.",
+     "Silhouette from the player's camera behind (the engine strip, row 1, f3): both arms sit almost level, at 16.7 and 12.2 deg under the shoulder line. With the head lolled, that reads as an airplane or balancing pose, not a blow. Make it a diagonal like the side hits: hand_r further down and back at f3 (from (-0.415,-0.14,-0.215) toward about (-0.38,-0.24,-0.30), about 30-35 deg under the shoulder line), and keep hand_l high and wide (about 8-10 deg under). That gives 20+ deg of asymmetry instead of 4.5. Adjust STRUCK_BACK_DOWN to match.",
+     "Sell 'flung back' from the side: the palms are only about 0.11 m behind the ankles once the pelvis moves forward. When the trunk tips forward per the first fix, keep the hands' reach so they trail behind the shoulder plane by at least 0.25 m (the right one) at f3, still clearing the coat. If the left arm hides behind the trunk in the foe's front three-quarter view again, keep it wide (x 0.45) and take the depth only on the right arm.",
+     "Pull the shoulder blades back (the clav_r/clav_l retraction channel), a few degrees more at f3, so the chest 'thrust out' reads in the side silhouette with the trunk leaning forward.",
+     "Recheck the seam after the fixes. The tumble's f0 is chest-back with the legs leading, and a forward-leaning back hit will differ more from it, so a crossfade of at least 0.1 s into the tumble, or the tumble yawed to the launch, applies here too, not only to the side hits. Into flinch, the arms go from behind the trunk to the flinch's palms in front. Check that a 0.1 s crossfade does not sweep the hands through the thighs or the coat skirt."
+    ]
+   }
+  ]
+ }
+]
