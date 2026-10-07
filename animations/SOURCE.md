@@ -188,6 +188,15 @@ visual references, no animation files imported) is his statement; the rows below
 | `own-bend-guard-hold-fire` | 2026-10-07 (seventh set) | `bend_clips.py` (`guard_hold_fire`, `guard_fire_at`, `_loop`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
 | `own-bend-guard-hold-air` | 2026-10-07 (seventh set) | `bend_clips.py` (`guard_hold_air`, `guard_air_at`, `_loop`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
 | `own-bend-teeter` | 2026-10-07 (seventh set) | `bend_clips.py` (`teeter`, `teeter_at`, `_each`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-spout-ride` | 2026-10-07 (eighth set) | `bend_clips.py` (`spout_ride`, `spout_at`, `_loop`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-spout-step-off` | 2026-10-07 (eighth set) | `bend_clips.py` (`spout_step_off`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-fire-flip-kick` | 2026-10-07 (eighth set) | `bend_clips.py` (`fire_flip_kick`, `_heel_key`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-fire-flip-kick-l` | 2026-10-07 (eighth set) | `bend_clips.py` (`fire_flip_kick`, `mirror_clip`) | `fire_flip_kick`'s keys mirrored left for right | (as its original) |
+| `own-bend-air-hit-earth` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_earth`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-air-hit-earth-l` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_earth`, `mirror_clip`) | `air_hit_earth`'s keys mirrored left for right | (as its original) |
+| `own-bend-air-hit-water` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_water`, `water_ring_at`, `_each`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-air-hit-fire` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_fire`, `_heel_key`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-air-hit-air` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_air`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
 
 - Second set and polish (2026-10-05, after the owner approved the first ten: "looks good but you can always perfect them"):
   the same generator and the same inputs (the rig's rest pose and keys typed into the table, now its `SET2` part); no clip,
@@ -331,6 +340,17 @@ visual references, no animation files imported) is his statement; the rows below
   the Axe Kick twin's blend in-betweens); `bend_engine_strip.gd` gains `stone=` (the Pop stone drawn where the code holds
   it) and `lip=` (a clip posed at the deck's end lip facing the water, its own views), orders a strip's moments in time and
   labels the follow-through as the sheets do; they read no motion.
+- Eighth set (2026-10-07, round 3's P3: the spout ride and a step-off from it, the air High Kick's back-flip crescent and
+  the four air-only close hits the owner approved on 2026-10-05, one an element): the same generator and the same inputs (the
+  rig's rest pose and keys typed into the table, now its `SET8` part; the spout ride's loop written as a typed function of
+  its phase, `spout_at`, and the water hit's ring as a typed function of the frame over typed angles, `water_ring_at`); no
+  clip, dump or reference motion read. The air clips start and end on AIR, the fall's first pose (the seventh set's own
+  keys); the step-off starts on the spout ride's first pose. Only these nine clips were baked (`--clips`); no earlier set's
+  clip was re-baked and their tracks and moments are unchanged. The martial-art styles in the comments (Hung Gar's driving
+  elbow, tai chi's cloud hands, Northern Shaolin's double flying kick and back-flip kick, Baguazhang's turning palms) are
+  labels for the typed key poses only. `own-bend-spout-step-off` is not named in `data/ring/movement.json`; it is there for
+  the movement task to map when the spout is left. New in the generator: `mirror_clip`'s `twin_ends` keeps a whole turn on the
+  spot (`spin`) mirrored at the twin's end (-360, the same pose as +360) instead of the original's unmirrored end.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.
