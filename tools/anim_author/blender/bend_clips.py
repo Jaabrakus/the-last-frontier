@@ -289,13 +289,15 @@ authored the same way; 6 frames each, the hit at f0, the contact at f3 (hold_s 0
                      head whipped back a frame after the chest and past it, both arms flung forward at the shoulders' height
                      on soft elbows (a reversed C with the arms trailing toward the blow), the left leg straighter, its toes up
   hit_impact_back    struck from behind: the belly driven forward past the toes, the pelvis tucked, the shoulders pinned
-                     back and the chest thrust out (an arch), the head whipped back, both arms flung back and down behind the
-                     hips in a low V, up on the balls of the feet
+                     back and the chest thrust out (an arch, bent and turned off the blow so it reads from behind too), the
+                     head whipped back and knocked off its axis, both arms flung back and wide a little under the shoulders'
+                     line (they break the outline sideways from every side), up on the balls of the feet
   hit_impact_left    struck on his left: shoved onto the right leg (the left leg straight, its heel peeled), the spine bent
                      hard away, the head whipped past it, the left arm flung out and back about 30 degrees above the
                      shoulders and the right thrown out low (one diagonal); hit_impact_right its twin
   (pass 2: the head and the arms overshoot the hold at f4 and settle, the knees keep giving a frame and the trunk recoils
-  first, so nothing stops dead on the held frame)
+  first, so nothing stops dead on the held frame; pass 3: the back hit's arch deepened and its arms opened wide, the front
+  hit's left hand lowered so the hold reads flung, not "hands up", the side hit's head tilt capped at 24 at f4)
   _struck            a contact clip from its pose at the hold, each part eased from the stand by STRUCK_SPACING (the shove
                      first, the trunk whipped then recoiling, the arms a beat behind, the knees giving as the weight lands)
   _arc               a palm's reach from its shoulder carried round the shoulder (hands_from: shoulder), never through it
@@ -6303,24 +6305,26 @@ SET9 = {
     "hit_impact_front": _struck("front", {
         "root": (-0.04, -0.045, -0.165), "hips": -14.0, "chest": -30.0, "side": 4.0, "twist": -12.0, "roll": 9.0,
         "clav_r": (-4.0, -12.0), "clav_l": (-7.0, -15.0),
-        "hand_r": (-0.291, -0.051, 0.326), "hand_l": (0.25, 0.054, 0.358), "face_r": "jolt", "face_l": "flung_up",
+        "hand_r": (-0.291, -0.051, 0.326), "hand_l": (0.25, -0.02, 0.358), "face_r": "jolt", "face_l": "flung_up",
         "pole_r": (-0.8, -0.6, -0.1), "pole_l": (0.8, -0.5, -0.1), "grip_r": -0.45, "grip_l": -0.5,
         "heel_r": 0.0, "heel_l": -20.0, "knee_r": (-0.08, 0.0, 1.0), "knee_l": (0.12, 0.0, 1.0)},
         {"head": (6, -6, -20, -28, -33, -26, -20), "look": (0, 2, 5, 7, 9, 7, 5), "tilt": (0, 2, 5, 7, 9, 6, 4)}),
     # struck from behind (a blow between the shoulder blades): the belly driven forward past the toes and the pelvis tucked
     # under it, the knees given forward over the toes, the shoulders pinned back and the chest thrust out (an arch, the
-    # front hit's mirror read), the head whipped back off it a frame late, both arms flung back and DOWN behind the hips in a
-    # low V (they lag the shove and keep travelling after it), the palms up, the shoulder blades pulled together; up on the
-    # balls of both feet, the right heel higher: a bow from the heels through the belly to the head, the arms trailing off
+    # front hit's mirror read), bent off the blow and turned so the right shoulder blade is driven in (the arch reads from
+    # behind and from the front too), the head whipped back and knocked off its axis a frame late, both arms flung back and
+    # WIDE, out past the shoulders a little under their line and behind the trunk (they break the outline sideways from
+    # every side and keep travelling after the shove), the elbows down and back on the way, the palms up; up on the balls
+    # of both feet, the right heel higher: a bow from the heels through the belly to the head, the arms trailing wide off
     # its back
     "hit_impact_back": _struck("back", {
-        "root": (0.0, -0.05, 0.16), "hips": -6.0, "chest": -18.0, "side": -5.0, "twist": 8.0, "roll": 2.0,
+        "root": (0.0, -0.05, 0.2), "hips": -10.0, "chest": -26.0, "side": -20.0, "twist": 14.0, "roll": 2.0,
         "clav_r": (-14.0, -6.0), "clav_l": (-15.0, -7.0),
-        "hand_r": (-0.31, -0.29, -0.22), "hand_l": (0.33, -0.24, -0.24), "face_r": "flung_back", "face_l": "flung_back",
-        "pole_r": (-1.0, 0.1, -0.3), "pole_l": (1.0, 0.1, -0.3), "grip_r": -0.4, "grip_l": -0.45,
+        "hand_r": (-0.415, -0.14, -0.215), "hand_l": (0.45, -0.1, -0.1), "face_r": "flung_back", "face_l": "flung_back",
+        "pole_r": (-0.8, -0.4, -0.4), "pole_l": (0.8, -0.4, -0.4), "grip_r": -0.4, "grip_l": -0.45,
         "heel_r": 30.0, "heel_l": 18.0, "knee_r": (-0.12, 0.0, 1.0), "knee_l": (0.12, 0.0, 1.0)},
         {"head": (-6, -12, -24, -30, -34, -27, -22), "look": (0, -3, -6, -8, -10, -7, -5),
-         "tilt": (0, -2, -5, -6, -8, -5, -3)}),
+         "tilt": (0, -3, -8, -12, -14, -10, -7)}),
     # struck on his left side (a blow to the left shoulder or the head): the hips shoved to his right onto the right leg
     # (the left hip up, the left leg straight and unweighted, its heel peeled off the deck about its ball, the right knee
     # loaded over its toes), the spine bent hard away from the blow and turned off it (the left shoulder back), the head
@@ -6334,7 +6338,7 @@ SET9 = {
         "pole_r": (-0.4, -0.5, -0.8), "pole_l": (0.5, -0.6, -0.6), "grip_r": -0.4, "grip_l": -0.5,
         "heel_r": 0.0, "heel_l": 30.0, "knee_r": (-0.2, 0.0, 1.0), "knee_l": (0.05, 0.0, 1.0)},
         {"head": (0, -3, -6, -8, -9, -7, -5), "look": (3, -8, -18, -24, -27, -21, -17),
-         "tilt": (-4, 7, 18, 25, 29, 22, 17)}),
+         "tilt": (-4, 7, 17, 22, 24, 20, 16)}),
 }
 ## Struck on his right side: the left one's keys mirrored (a side has its twin).
 SET9["hit_impact_right"] = mirror_clip(SET9["hit_impact_left"])

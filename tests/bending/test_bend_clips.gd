@@ -181,8 +181,10 @@ extends SceneTree
 ##               stand). kept r4 struck: the eighth set's lengths and moments as they shipped. The struck reads (pass 2,
 ##               _ninth_reads): the back hit an arch (its pelvis, not its head, thrown away from the hit: the belly driven
 ##               ahead of the ankles, the head behind the pelvis); the front hit's palms at about the shoulders' height
-##               and ahead of them (flung forward, no raised V), its pelvis behind the heels; the back hit's palms below the
-##               shoulders and behind the pelvis (a low V); the side hits' struck palm out on its side between 0 and 45
+##               and ahead of them (flung forward, no raised V), its pelvis behind the heels; the back hit's arms flung
+##               back and wide (pass 3: each 8-35 degrees under its shoulder's line, the left the higher, both palms 0.15 m
+##               and more out past their shoulders and behind the pelvis) and its arch readable from behind (the head
+##               4 cm and more off the pelvis's line, the shoulders 4 cm and more off level); the side hits' struck palm out on its side between 0 and 45
 ##               degrees above its shoulder and behind it, the struck side's heel peeled 2 cm and more, its leg the
 ##               straighter; the arms still travelling after the hold (a palm farther off the stand at f4 than at f3)
 ## Ends with "BEND_CLIPS PASSED" or "BEND_CLIPS FAILED" (exit 0 only on a pass; a watchdog quits 2 at LIMIT s).
@@ -422,6 +424,13 @@ const STRUCK_FLUNG := 0.05
 const STRUCK_SHOVE := 0.04
 const STRUCK_ARM_UP := 45.0
 const STRUCK_PEEL := 0.02
+## The back hit's arms at the hold (pass 3): each this many degrees under its shoulder's line (min, max), both palms at least
+## this far out past their shoulders (m), so they break the outline sideways from behind and from the front.
+const STRUCK_BACK_DOWN := Vector2(8.0, 35.0)
+const STRUCK_BACK_WIDE := 0.15
+## The back hit seen from behind (pass 3): the head this far off the pelvis's line sideways, the shoulders this far off level
+## (m).
+const STRUCK_BACK_LEAN := 0.04
 ## The eighth set's lengths and moments as they shipped (frames; -1 none): kept by the ninth set's bake.
 const BEFORE_R4STRUCK := {"own-bend-spout-ride": [48, -1, -1, -1, -1], "own-bend-spout-step-off": [16, 3, 6, 9, -1],
 		"own-bend-fire-flip-kick": [24, 3, 6, 14, -1], "own-bend-fire-flip-kick-l": [24, 3, 6, 14, -1],
@@ -2949,13 +2958,32 @@ func _ninth_reads(lib: AnimationLibrary, names: Array[String], st: Dictionary) -
 				_check(ahead >= STRUCK_FLUNG, "%s: both palms flung ahead of the shoulders (%.3f m)" % [nm, ahead])
 				_check(heels.z - pel.z >= STRUCK_SHOVE, "%s: the pelvis shoved behind the heels (%.3f m)" % [nm, heels.z - pel.z])
 			"back":
-				var low := minf((h.r_shoulder as Vector3).y - (h.r_palm as Vector3).y,
-						(h.l_shoulder as Vector3).y - (h.l_palm as Vector3).y)
+				# (pass 3: the arms flung back and WIDE, a little under the shoulders' line, so they break the outline
+				# sideways from behind and from the front three-quarter view, not a low V hidden behind the trunk)
+				var arm_r := (h.r_palm as Vector3) - (h.r_shoulder as Vector3)
+				var arm_l := (h.l_palm as Vector3) - (h.l_shoulder as Vector3)
+				var down_r := rad_to_deg(atan2(-arm_r.y, Vector2(arm_r.x, arm_r.z).length()))
+				var down_l := rad_to_deg(atan2(-arm_l.y, Vector2(arm_l.x, arm_l.z).length()))
+				var wide := minf(-arm_r.x, arm_l.x)
 				var behind := minf(pel.z - (h.r_palm as Vector3).z, pel.z - (h.l_palm as Vector3).z)
-				print("METRIC %s palms_below_shoulders_m %.3f palms_behind_pelvis_m %.3f pelvis_ahead_ankles_m %.3f head_behind_pelvis_m %.3f"
-						% [nm, low, behind, pel.z - ank.z, pel.z - head.z])
-				_check(low >= STRUCK_FLUNG, "%s: both palms below the shoulders (a low V, %.3f m)" % [nm, low])
+				print("METRIC %s arm_down_deg r %.1f l %.1f palms_out_m %.3f palms_behind_pelvis_m %.3f pelvis_ahead_ankles_m %.3f head_behind_pelvis_m %.3f"
+						% [nm, down_r, down_l, wide, behind, pel.z - ank.z, pel.z - head.z])
+				_check(down_r >= STRUCK_BACK_DOWN.x and down_r <= STRUCK_BACK_DOWN.y and down_l >= STRUCK_BACK_DOWN.x
+						and down_l <= STRUCK_BACK_DOWN.y, "%s: both arms a little under the shoulders' line (%.1f and %.1f deg, %d-%d)"
+						% [nm, down_r, down_l, int(STRUCK_BACK_DOWN.x), int(STRUCK_BACK_DOWN.y)])
+				_check(down_l < down_r, "%s: the left palm the higher (%.1f vs %.1f deg down)" % [nm, down_l, down_r])
+				_check(wide >= STRUCK_BACK_WIDE, "%s: both palms out wide of their shoulders (%.3f m, >= %.2f)" % [nm, wide,
+						STRUCK_BACK_WIDE])
 				_check(behind >= STRUCK_FLUNG, "%s: both palms behind the pelvis (%.3f m)" % [nm, behind])
+				# (pass 3: the arch reads from behind too: the trunk bent off the blow, one shoulder blade driven in, so the
+				# head is off the pelvis's line and the shoulders are not level seen from behind)
+				var lean := absf(head.x - pel.x)
+				var tilt := absf((h.r_shoulder as Vector3).y - (h.l_shoulder as Vector3).y)
+				print("METRIC %s head_off_pelvis_x_m %.3f shoulders_unlevel_m %.3f" % [nm, lean, tilt])
+				_check(lean >= STRUCK_BACK_LEAN, "%s: the head off the pelvis's line seen from behind (%.3f m, >= %.2f)" % [nm,
+						lean, STRUCK_BACK_LEAN])
+				_check(tilt >= STRUCK_BACK_LEAN, "%s: the shoulders not level seen from behind (%.3f m, >= %.2f)" % [nm, tilt,
+						STRUCK_BACK_LEAN])
 				_check(pel.z - ank.z >= STRUCK_FLUNG, "%s: the belly driven ahead of the ankles (%.3f m)" % [nm, pel.z - ank.z])
 				_check(head.z < pel.z, "%s: an arch, the head behind the pelvis (%.3f m)" % [nm, pel.z - head.z])
 			_:
