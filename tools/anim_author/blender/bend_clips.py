@@ -3851,15 +3851,16 @@ def _wclip(length, keys, loop=False):
 
 # ---------------------------------------------------------------- the lie
 ## The lie (own-bend-lie, a loop of 40 frames): dazed on his back on the deck, the head toward his back (-Z) and the pelvis
-## LIE_PELVIS: the right knee drawn up with its sole flat on the deck, the left leg long and rolled out, the right arm flung
+## LIE_PELVIS: the right knee up with its sole flat on the deck, the left leg long and rolled out, the right arm flung
 ## out on the deck palm up, the left hand fallen on the belly, the head rolled toward the left; a slow breath lifts the chest
 ## and the hand on the belly, the raised knee sags out and back a beat behind it, the fingers stir, the head rolls a little.
 ## Pass 2 (the critic's notes): the back, the head and the flung arm on the deck within 5 mm (pass 1's 1.9 cm was the head
 ## pitched back INTO the deck: the head now lifts off it and lolls back only to it); the right foot
-## drawn 7 cm in toward the seat and the knee turned out further, so the coat's skirt drapes off the shin; the daze made
+## set out 0.44 m beyond the seat so the thigh lies back at a slant (drawn in, it stood straight up with the coat's skirt
+## standing beside it as a slab) and the knee fallen out; the daze made
 ## readable at the game camera: the head rolls +/-8 degrees and lifts to look down the body toward the foe and lolls back,
 ## the raised knee sways +/-8 cm, and the flung right hand stirs once (lifted 4 cm and fallen, LIE_STIR).
-LIE_PELVIS = (0.0, 0.124, -0.3)
+LIE_PELVIS = (0.0, 0.1225, -0.3)
 LIE_LEN = 40
 LIE_STIR = (20, 28)
 
@@ -3882,9 +3883,9 @@ def lie_at(f):
         "face_r": ("w", (-0.85, 0.0, -0.5), (0.0, 1.0, 0.0)), "face_l": ("w", (-0.9, -0.1, 0.35), (0.0, -1.0, 0.1)),
         "pole_r": (-1.0, 0.0, 0.5), "pole_l": (1.0, 0.0, -0.3),
         "grip_r": 0.25 + 0.1 * _s(a, 2.0) + 0.35 * st, "grip_l": 0.3 + 0.05 * _s(a, 0.5),
-        "foot_r": (-0.21, 0.078, -0.05), "foot_l": (0.2, 0.065, 0.4),
+        "foot_r": (-0.24, 0.078, 0.14), "foot_l": (0.2, 0.065, 0.4),
         "heel_r": 90.0, "heel_l": 25.0, "fyaw_r": 8.0, "fyaw_l": 28.0,
-        "knee_r": (-1.0 - 0.45 * _s(a, -1.2), -0.3, 0.8), "knee_l": (0.45, 0.0, 1.0),
+        "knee_r": (-0.8 - 0.55 * _s(a, -1.2), 0.4, 1.0), "knee_l": (0.45, 0.0, 1.0),
     }
 
 
@@ -3955,7 +3956,7 @@ def _rise_air():
         "twist": [(0, 0), (2, 14), (4, -22), (6, -30), (9, -30), (11, -6)],
         "clav_r": [(0, AIR["clav_r"]), (2, (10, 6)), (4, (4, -6)), (9, (4, -8)), (11, (-6, -12))],
         "clav_l": [(0, AIR["clav_l"]), (2, (10, 6)), (4, (12, 6)), (9, (12, 6)), (11, (-6, -10))],
-        "hand_r": [(0, AR), (2, (0.08, 1.12, 0.26)), (4, (-0.38, 1.36, 0.18)), (6, (-0.55, 1.41, 0.05)), (9, (-0.56, 1.42, 0.03)),
+        "hand_r": [(0, AR), (2, (0.08, 1.12, 0.26)), (4, (-0.39, 1.37, 0.18)), (6, (-0.57, 1.42, 0.07)), (9, (-0.575, 1.425, 0.06)),
                    (11, (-0.52, 1.34, -0.05))],
         "hand_l": [(0, AL), (2, (-0.06, 1.17, 0.24)), (4, (-0.12, 1.19, 0.27)), (6, (-0.22, 1.21, 0.22)), (9, (-0.22, 1.22, 0.21)),
                    (11, (0.48, 1.3, 0.0))],
@@ -3987,7 +3988,7 @@ def _rise_air():
 ## from the body at 15 m and its inward half bulges well forward of the chest): the right from the bottom out to his right,
 ## over the top, in before the face and round again, one and a half turns to end high over the head; the left the same on
 ## its own side, WATER_LAG of the swirl behind it. The peak (WATER_TOP): both hands floating over the head in a wide soft
-## oval, the palms up and in, standing tall on both feet on the column with the chest opened back (pass 2, the critic's
+## oval (the hands half a metre apart, clear of the hat), the palms up and in, standing tall on both feet on the column with the chest opened back (pass 2, the critic's
 ## notes: the golden rooster's raised knee read as the air Rise's crane, so the water Rise keeps both feet on the column).
 WATER_SWIRL = (4, 16)
 WATER_SHOULDER = (-0.14, 1.34, 0.0)
@@ -3995,7 +3996,7 @@ WATER_AXIS = (-0.5, 0.28, 0.82)
 WATER_ARM = 0.395
 WATER_CONE = 62.0
 WATER_LAG = 0.28
-WATER_TOP = (-0.2, 1.72, 0.1)
+WATER_TOP = (-0.26, 1.69, 0.1)
 FACING["sky_cup"] = ((0.8, 0.45, 0.25), (-0.35, 0.85, 0.1))   # a hand held up over the head, the fingers in, the palm up
 
 

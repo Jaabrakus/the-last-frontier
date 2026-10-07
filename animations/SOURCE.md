@@ -267,7 +267,9 @@ visual references, no animation files imported) is his statement; the rows below
   re-keyed and re-baked (`--clips`); no clip, dump or reference motion read. The keys changed are typed numbers in `SET6`
   and its typed functions (`lie_at`, `glide_at`, the water Rise's arm circles now `_cone_hand` on a typed cone about each
   shoulder, `GROLL_BARREL` and `GROLL_TWIST` for two log rolls, `GA_ARC`); the water Rise's golden rooster gave way to both
-  hands raised over the head and the air Rise's crane to a palm change. Some of these clips' own moments changed
+  hands raised over the head and the air Rise's crane to a palm change; the lie's raised foot was set further out (typed in
+  `lie_at`) so its thigh lies at a slant, which also changes the first and last poses of the clips that start or end on
+  the lie (the getups and the bounce key from `LIE`). Some of these clips' own moments changed
   (`own-bend-getup` `strike_s` 9/30 s and `back_s` 11/30 s, `own-bend-getup-roll` and its twin `strike_s` 5/30 s and
   `back_s` 15/30 s, `own-bend-knock-spiked` `hold_s` 5/30 s); no earlier set's clip was re-baked. `bend_preview.gd` and
   `bend_engine_strip.gd` now draw the wall a clip names (meta `wall_z`) for review; they read no motion.

@@ -1627,7 +1627,7 @@ func _sixth_rises(lib: AnimationLibrary, names: Array[String]) -> void:
 				% [path, over, oval, feet, bulge])
 		_check(path > 1.5, "rise-water: the hand swirls round (its path %.2f m)" % path)
 		_check(over > 0.15, "rise-water: both hands high over the head at the top (%.2f m)" % over)
-		_check(oval > 0.3, "rise-water: the hands apart in an oval over the head at the top (%.2f m)" % oval)
+		_check(oval > 0.45, "rise-water: the hands apart in an oval over the head at the top, clear of the hat (%.2f m)" % oval)
 		_check(feet < 0.06, "rise-water: standing on both feet on the column (the ankles %.3f m apart in height)" % feet)
 		_check(bulge > 0.3, "rise-water: the circles swept out in front of the body (%.2f m ahead of the hips)" % bulge)
 		key_pose["water"] = _at(a, (strike + back) * 0.5, bones)
@@ -1680,7 +1680,7 @@ func _sixth_rises(lib: AnimationLibrary, names: Array[String]) -> void:
 		_check(seam < 0.005, "rise-air: the glide loop's seam (every bone, %.4f m)" % seam)
 		_check(span > 1.1, "rise-air: the arms spread as wings in the glide (%.2f m palm to palm)" % span)
 		_check(wing > -0.15, "rise-air: the wings near the shoulders' height (%.2f m)" % wing)
-		_check(out > 0.45, "rise-air: the palm thrust out wide in the whirl (%.2f m from the hips)" % out)
+		_check(out > 0.52, "rise-air: the palm thrust out wide in the whirl (%.2f m from the hips)" % out)
 		_check(level < 0.15, "rise-air: the thrust palm at the shoulder's height (%.3f m off it)" % level)
 		_check(high < 0.1, "rise-air: no hand over the head in the whirl (apart from the water Rise: %.2f m)" % high)
 		_check(tuck < 0.08, "rise-air: the feet tucked up together in the whirl (%.3f m)" % tuck)
@@ -1787,9 +1787,18 @@ func _sixth_recoveries(lib: AnimationLibrary, names: Array[String], lie: Animati
 			contact = maxf(contact, absf(c))
 			crange = Vector2(minf(crange.x, c), maxf(crange.y, c))
 		var kx := Vector2(INF, -INF)
+		# (pass 2's last fix: the raised thigh lies back at a slant, the knee ahead of the seat and not stood straight up
+		# over it, where the period coat's skirt stood beside the shin as a slab)
+		var knee_high := 0.0
+		var knee_ahead := INF
 		for i in 41:
-			var j := _at(lie, lie.length * i / 40.0, ["r_knee"])
+			var j := _at(lie, lie.length * i / 40.0, ["r_knee", "pelvis"])
 			kx = Vector2(minf(kx.x, (j.r_knee as Vector3).x), maxf(kx.y, (j.r_knee as Vector3).x))
+			knee_high = maxf(knee_high, (j.r_knee as Vector3).y)
+			knee_ahead = minf(knee_ahead, (j.r_knee as Vector3).z - (j.pelvis as Vector3).z)
+		print("METRIC lie knee_high_m %.3f knee_ahead_of_seat_m %.3f" % [knee_high, knee_ahead])
+		_check(knee_high < 0.4 and knee_ahead > 0.12, "lie: the raised thigh lies back at a slant (the knee %.2f m up, %.2f m ahead of the seat)"
+				% [knee_high, knee_ahead])
 		print("METRIC lie surface_off_deck_m %.4f contact_off_deck_m %.4f (%.4f..%.4f) head_y_m %.3f knee_sway_m %.3f"
 				% [worst, contact, crange.x, crange.y, head, kx.y - kx.x])
 		_check(contact <= 0.005, "lie: the back, the head and the flung palm on the deck (within %.4f m of it)" % contact)

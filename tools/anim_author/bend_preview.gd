@@ -31,6 +31,11 @@ const CENTER := Vector3(0.0, 0.95, 0.15)
 const LOW_CENTER := Vector3(0.0, 0.3, -0.15)
 ## How far the side view of a lying clip is centred toward the head (m, -Z), so the head and the hat stay in the frame.
 const LYING_SIDE_SHIFT := -0.2
+## A clip that starts on the deck and stands up (the getups: its first frame's head under this height, m) seen from the
+## side further back and centred toward the head, so the lying start and the standing end both stay in the frame.
+const LOW_START_Y := 0.5
+const RISING_SIDE := Vector3(0.0, -0.2, -0.3)
+const RISING_SIDE_BACK := 1.3
 ## The wall a clip names (meta wall_z: the wall break) drawn there: its size (m) and its see-through stone.
 const WALL_SIZE := Vector3(1.6, 2.4, 0.06)
 const WALL_COLOR := Color(0.5, 0.52, 0.58, 0.38)
@@ -69,6 +74,7 @@ var _wall: Node3D
 ## body up while the clip plays), so the sheet shows what the game shows. Clip name -> (vy m/s, g m/s^2); by animation.
 var _rise_args := {}
 var _rise := {}
+var _low_start := {}
 
 
 func _initialize() -> void:
@@ -312,7 +318,17 @@ func _set_clip(a: Animation, t: float) -> void:
 				sk.set_bone_pose_position(b, a.position_track_interpolate(i, t))
 
 
+## Whether a clip starts lying on the deck (its first frame's head under LOW_START_Y), cached per clip.
+func _starts_low(a: Animation) -> bool:
+	if not _low_start.has(a):
+		_apply(a, 0.0)
+		var hb := sk.find_bone("heada")
+		_low_start[a] = hb >= 0 and sk.get_bone_global_pose(hb).origin.y < LOW_START_Y
+	return bool(_low_start[a])
+
+
 func _snap(a: Animation, t: float, vn: String, text: String) -> Image:
+	var rising := vn == "side" and not a.has_meta(&"lip_y") and not a.has_meta(&"lying") and _starts_low(a)
 	_apply(a, t)
 	label.text = text
 	# (an edge clip, keyed in the hang's frame with its lip at meta lip_y over the origin and lip_out ahead: seen round the
@@ -332,6 +348,10 @@ func _snap(a: Animation, t: float, vn: String, text: String) -> Image:
 		if vn == "side":
 			c = LOW_CENTER + Vector3(0.0, 0.0, LYING_SIDE_SHIFT)
 			off = VIEWS[vn] + Vector3(0.0, 0.25, 0.0)
+	elif rising:
+		# (a getup: from the side a little further back and toward the head, the lying start and the stand both in frame)
+		c = CENTER + RISING_SIDE
+		off = VIEWS[vn] * RISING_SIDE_BACK
 	# (a clip that names a wall ahead, meta wall_z: the wall drawn there, a see-through pane so the figure on it shows)
 	_wall.visible = a.has_meta(&"wall_z")
 	if _wall.visible:
