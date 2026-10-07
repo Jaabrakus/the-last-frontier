@@ -52,9 +52,9 @@ def h1(i, seed=0):
 # ----------------------------------------------------------------------------------------------------------- the ears
 EAR_SHAPES = {
     # height, base width, depth (cup), width profile exponent, tip roundness, tuft at the tip
-    "pointed": dict(h=0.105, w=0.062, d=0.024, k=0.95, round=0.0, tuft=0.0),
-    "rounded": dict(h=0.088, w=0.068, d=0.026, k=0.55, round=1.0, tuft=0.0),
-    "tufted": dict(h=0.110, w=0.058, d=0.023, k=1.05, round=0.0, tuft=0.028),
+    "pointed": dict(h=0.140, w=0.070, d=0.030, k=0.95, round=0.0, tuft=0.0),
+    "rounded": dict(h=0.115, w=0.078, d=0.032, k=0.55, round=1.0, tuft=0.0),
+    "tufted": dict(h=0.145, w=0.066, d=0.029, k=1.05, round=0.0, tuft=0.036),
 }
 
 
@@ -129,18 +129,19 @@ def ear_points(shape, frame):
 
 
 def head_anchor(body, sgn):
-    """Where an ear sits: the head's skin point facing up and out on this side (high on the head, behind the brow),
-    lifted 12 mm over the hair."""
+    """Where an ear sits: the head's skin in the direction 52 deg out from the crown on this side, a little behind
+    the ear line (from a centre inside the skull), lifted 12 mm over the hair."""
     me = body.data
+    c = Vector((0.0, 0.01, 1.50))
+    d = Vector((0.78 * sgn, 0.12, 0.62)).normalized()        # Blender: up = +Z, back = +Y
     best, bp, bn = -9, None, None
-    d = Vector((0.55 * sgn, 0.12, 0.83)).normalized()        # Blender: up = +Z, back = +Y
     for v in me.vertices:
-        co = v.co
-        if co.z < 1.50:
+        r = v.co - c
+        if r.length < 0.05 or v.co.z < 1.45:
             continue
-        sc = v.normal.dot(d) + 2.0 * (co.normalized().dot(d) * 0)
+        sc = r.normalized().dot(d)
         if sc > best:
-            best, bp, bn = sc, co.copy(), v.normal.copy()
+            best, bp, bn = sc, v.co.copy(), v.normal.copy()
     return bp + bn * 0.012, bn
 
 
@@ -149,8 +150,8 @@ def build_ears(arm, body, shape):
     keys = {"ear_back": [], "ear_flat": [], "ear_perk": []}
     for sgn in (1.0, -1.0):
         base, n = head_anchor(body, sgn)
-        U = (n + Vector((0, 0, 0.9))).normalized()
-        U = (U + Vector((0.0, 0.06, 0.0))).normalized()
+        U = Vector((0.20 * sgn, 0.07, 1.0)).normalized()      # upright, the tips a little out and back
+        print("FOX_EAR_FRAME", shape, sgn, tuple(round(x, 3) for x in base), tuple(round(x, 3) for x in n))
         F = Vector((0.30 * sgn, -1.0, 0.0))
         F = (F - U * F.dot(U)).normalized()
         Sx = U.cross(F).normalized() * (1 if sgn > 0 else -1)
@@ -159,11 +160,10 @@ def build_ears(arm, body, shape):
         allv += v
         allf += [tuple(i + off for i in ff) for ff in f]
         allc += c
-        hinge = Sx.normalized()
-        for key, ang, out in (("ear_back", -38.0, 0.0), ("ear_flat", -72.0, 0.15), ("ear_perk", 12.0, -0.05)):
-            R = Matrix.Rotation(math.radians(ang) * (1 if sgn > 0 else -1) * -1, 3, hinge)
-            if key == "ear_flat":
-                R = Matrix.Rotation(math.radians(18.0 * sgn), 3, Vector((0, 1, 0))) @ R
+        # the keys turn the ear about its base toward the back of the head (an axis U x back moves U toward back)
+        hinge = U.cross(Vector((0.0, 1.0, 0.0))).normalized()
+        for key, ang in (("ear_back", 36.0), ("ear_flat", 78.0), ("ear_perk", -12.0)):
+            R = Matrix.Rotation(math.radians(ang), 3, hinge)
             keys[key] += [base + R @ (p - base) for p in v]
     me = bpy.data.meshes.new("ho_tinh_ears_" + shape)
     me.from_pydata([tuple(p) for p in allv], [], allf)
@@ -180,6 +180,7 @@ def build_ears(arm, body, shape):
         sk = ob.shape_key_add(name=key)
         for i, p in enumerate(pts):
             sk.data[i].co = p
+        sk.value = 0.0          # (a new key comes at 1 in background mode; the glb's default weight must be 0)
     vg = ob.vertex_groups.new(name="headb")
     vg.add(list(range(len(allv))), 1.0, "REPLACE")
     ob.parent = arm
@@ -232,14 +233,15 @@ def centreline(root, spread_deg, droop_deg, length):
 
 
 def tail_radius(t, big):
-    r = big * (0.28 + 0.72 * smooth(0.0, 0.42, t)) * (1.0 - smooth(0.55, 1.0, t) ** 1.6)
+    # fat and soft: full by mid-length, a rounded brush of an end (not a spike)
+    r = big * (0.32 + 0.68 * smooth(0.0, 0.5, t)) * math.sqrt(max(0.0, 1.0 - smooth(0.66, 1.0, t) ** 1.6))
     return max(r, 0.0015 if t < 0.999 else 0.0)
 
 
 def build_tail(arm, line, k, sides, rings, big, seed):
     """A tube on the centre line with painted fur lobes: the radius swells into 7-8 flame-like ridges that sweep
     toward the tip and break the tip into tufts; COLOR_0 carries the painted value and the tip."""
-    verts, cols, faces, wts = [], [], [], []
+    verts, cols, faces, wts, vuv = [], [], [], [], []
     L = len(line) - 1
     # parallel-transport frames
     tang = [(line[min(i + 1, L)] - line[max(i - 1, 0)]).normalized() for i in range(L + 1)]
@@ -250,7 +252,7 @@ def build_tail(arm, line, k, sides, rings, big, seed):
     for i in range(L + 1):
         nrm = (nrm - tang[i] * nrm.dot(tang[i])).normalized()
         frames.append((nrm.copy(), tang[i].cross(nrm).normalized()))
-    lobes = 7 + (seed % 2)
+    lobes = max(4, sides // 4) + (seed % 2)
     for ir in range(rings + 1):
         t = ir / rings
         fi = t * L
@@ -263,14 +265,17 @@ def build_tail(arm, line, k, sides, rings, big, seed):
         for js in range(sides):
             th = 2 * math.pi * js / sides
             ph = lobes * th + 7.5 * t + 1.7 * h1(seed, 2) + 0.6 * math.sin(3.0 * t + h1(js, seed))
-            lobe = max(0.0, math.cos(ph)) ** 2.2
-            flick = smooth(0.62, 0.98, t) * (0.5 + 0.5 * math.cos(ph * 0.5 + 1.3)) * 0.35
-            r = r0 * (0.86 + 0.32 * lobe + flick)
+            lobe = max(0.0, math.cos(ph)) ** 2.0
+            flick = smooth(0.55, 0.98, t) * (0.5 + 0.5 * math.cos(ph * 0.5 + 1.3)) * 0.45
+            # tiers of clumps along the tail (a painter's fur: rows of soft locks), offset per lobe
+            tier = max(0.0, math.sin(t * math.pi * 9.0 + 2.1 * math.floor(ph / (2 * math.pi) * lobes)))
+            r = r0 * (0.74 + 0.58 * lobe + flick + 0.18 * tier * lobe)
             # a little flattened (wider than tall), the underside fuller near the root
             off = nn * (math.cos(th) * r * 0.9) + bb * (math.sin(th) * r * 1.08)
             verts.append(c + off)
+            vuv.append((js / sides, t))
             topness = math.cos(th)            # nn ~ up at the root
-            v = 0.5 + 0.20 * (lobe - 0.45) + 0.08 * topness - 0.10 * (1.0 - smooth(0.0, 0.18, t))
+            v = 0.5 + 0.36 * (lobe - 0.45) + 0.10 * topness - 0.16 * (1.0 - smooth(0.0, 0.18, t)) + 0.08 * (tier - 0.5) * lobe
             edge = 0.80 + 0.05 * math.cos(lobes * th + 2.0) + 0.04 * h1(js + 7, seed)
             tip = smooth(edge - 0.05, edge + 0.05, t)
             cols.append((min(max(v, 0.0), 1.0), tip, 0.0))
@@ -293,6 +298,7 @@ def build_tail(arm, line, k, sides, rings, big, seed):
     # root cap
     rc = len(verts)
     verts.append(line[0] - tang[0] * 0.01)
+    vuv.append((0.5, 0.0))
     cols.append((0.4, 0.0, 0.0))
     wts.append([1.0] + [0.0] * (TAIL_BONES - 1))
     for js in range(sides):
@@ -300,6 +306,14 @@ def build_tail(arm, line, k, sides, rings, big, seed):
     me = bpy.data.meshes.new("fox_tail_%d" % k)
     me.from_pydata([tuple(p) for p in verts], [], faces)
     me.update()
+    # UVs round and along the tail (u 0..1 round, v 0..1 root to tip): the fur strokes of the material run along v
+    uvl = me.uv_layers.new(name="UVMap")
+    for poly in me.polygons:
+        us = [vuv[me.loops[li].vertex_index][0] for li in poly.loop_indices]
+        wrap = max(us) > 0.5 and min(us) == 0.0 and len(poly.loop_indices) == 4
+        for li in poly.loop_indices:
+            u, v = vuv[me.loops[li].vertex_index]
+            uvl.data[li].uv = (1.0 if (wrap and u == 0.0) else u, v)
     ob = bpy.data.objects.new("fox_tail_%d" % k, me)
     bpy.context.scene.collection.objects.link(ob)
     ca = me.color_attributes.new("Color", "FLOAT_COLOR", "POINT")
@@ -376,7 +390,9 @@ def tri_count(o):
     return sum(len(p.vertices) - 2 for p in o.data.polygons)
 
 
-FUR = {"cream": ("#f2dcc8", "#fbf5ec"), "russet": ("#b94420", "#f6efe6"), "silver_white": ("#dfe2e4", "#ffffff"),
+# the fur's warm shadow tone (the sheet's tails shade cream into peach-rose, not grey)
+FUR_SHADE = {"cream": "#9e5644", "russet": "#6a2010", "silver_white": "#8a9aae", "ash": "#4a4440", "black_tipped": "#6a2010"}
+FUR = {"cream": ("#dcb394", "#fbf3ea"), "russet": ("#b94420", "#f6efe6"), "silver_white": ("#dfe2e4", "#ffffff"),
        "ash": ("#8f8a86", "#d9d6d2"), "black_tipped": ("#b94420", "#1e1a18")}
 
 
@@ -387,9 +403,9 @@ def main():
                     "keys, and 1, 3 or 9 tails on their own extension bones (BodyExtensions adds them before the Skin is built; "
                     "clips never key them). Tail count and fur colour are free cosmetics, never a stat. Visual only: no speed, "
                     "aim, capsule or camera change. Status: proposal.",
-            "ears": {}, "tails": {}, "fur_colors": {k: {"base": v[0], "tip": v[1]} for k, v in FUR.items()},
+            "ears": {}, "tails": {}, "fur_colors": {k: {"base": v[0], "tip": v[1], "shade": FUR_SHADE[k]} for k, v in FUR.items()},
             "inner_ear": "#f2dcc8", "inner_tuft": "#fbf3e8",
-            "color_model": "COLOR_0: R painted value (0.5 avg) -> ramp(base*0.55, base, mix(base, white, 0.35)); G tip -> the tip colour; B inner ear (1) / inner tuft (0.55)",
+            "color_model": "COLOR_0: R painted value (0.5 avg) plus fur strokes along the tail's UV v -> ramp(mix(base, shade)*0.7, base, mix(base, white, 0.22)); G tip -> the tip colour; B inner ear (1, #e8b4a8) / inner tuft (0.55, #fbf3e8)",
             "hat_rule": "a head garment that hides the hair crown (hides_hair_zones has 'crown') sets ear_flat 1.0; a hood sets ear_back 1.0",
             "garment_rule": "with tails shown, the lower garments open the tail_root hide region (tail_slit: a back slit at 180 deg up to 0.95 m); the tails root 2 cm off the skin at the sacrum, above the trouser band"}
     B.reset()
@@ -411,7 +427,7 @@ def main():
         print("FOX_EARS", shape, tris)
         bpy.data.objects.remove(ob, do_unlink=True)
     root = sacrum(body) + Vector((0, 0.02, 0))
-    for n, (sides, rings, big) in ((1, (28, 60, 0.105)), (3, (24, 52, 0.095)), (9, (20, 44, 0.082))):
+    for n, (sides, rings, big) in ((1, (28, 60, 0.14)), (3, (24, 52, 0.125)), (9, (20, 44, 0.115))):
         B.reset()
         objs = B.import_glb(os.path.join(B.CHAR, "body", "body.glb"))
         arm = [o for o in objs if o.type == "ARMATURE"][0]

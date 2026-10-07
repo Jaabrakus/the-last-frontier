@@ -1,0 +1,217 @@
+{
+ "id": "ho_tinh_tails_3",
+ "name": "Fox tails, 3",
+ "description": "3 fox tails on their own bones, cream by default with a pale tip; any count 1-9 is a free choice.",
+ "kind": "feature",
+ "set": "tv_features",
+ "slot": "features.tail",
+ "alt_slots": [],
+ "layer": {
+  "default": 12
+ },
+ "glb": "res://assets/thuyvan/character/fox/ho_tinh_tails_3.glb",
+ "mesh": "ho_tinh_tails_3",
+ "surfaces": [
+  {
+   "surface": "fur",
+   "name": "fox_tail_1"
+  },
+  {
+   "surface": "fur",
+   "name": "fox_tail_2"
+  },
+  {
+   "surface": "fur",
+   "name": "fox_tail_3"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "fur",
+   "role": "fur",
+   "fabric": "FUR",
+   "palette": [
+    "cream",
+    "russet",
+    "silver_white",
+    "ash",
+    "black_tipped"
+   ],
+   "default": "cream"
+  }
+ ],
+ "stats": {
+  "tris": 7560
+ },
+ "status": "proposal",
+ "extension_bones": [
+  {
+   "name": "fox_tail_1_01",
+   "parent": "pelvis",
+   "head": [
+    -0.022,
+    0.9134,
+    -0.0936
+   ],
+   "len": 0.1947
+  },
+  {
+   "name": "fox_tail_1_02",
+   "parent": "fox_tail_1_01",
+   "head": [
+    -0.0794,
+    0.7793,
+    -0.2225
+   ],
+   "len": 0.1946
+  },
+  {
+   "name": "fox_tail_1_03",
+   "parent": "fox_tail_1_02",
+   "head": [
+    -0.1391,
+    0.6514,
+    -0.3566
+   ],
+   "len": 0.1946
+  },
+  {
+   "name": "fox_tail_1_04",
+   "parent": "fox_tail_1_03",
+   "head": [
+    -0.203,
+    0.5367,
+    -0.5001
+   ],
+   "len": 0.1945
+  },
+  {
+   "name": "fox_tail_1_05",
+   "parent": "fox_tail_1_04",
+   "head": [
+    -0.2723,
+    0.4428,
+    -0.6557
+   ],
+   "len": 0.1944
+  },
+  {
+   "name": "fox_tail_2_01",
+   "parent": "pelvis",
+   "head": [
+    0.0,
+    0.92,
+    -0.0936
+   ],
+   "len": 0.204
+  },
+  {
+   "name": "fox_tail_2_02",
+   "parent": "fox_tail_2_01",
+   "head": [
+    0.0,
+    0.7957,
+    -0.2553
+   ],
+   "len": 0.204
+  },
+  {
+   "name": "fox_tail_2_03",
+   "parent": "fox_tail_2_02",
+   "head": [
+    0.0,
+    0.6785,
+    -0.4223
+   ],
+   "len": 0.2039
+  },
+  {
+   "name": "fox_tail_2_04",
+   "parent": "fox_tail_2_03",
+   "head": [
+    0.0,
+    0.5761,
+    -0.5986
+   ],
+   "len": 0.2038
+  },
+  {
+   "name": "fox_tail_2_05",
+   "parent": "fox_tail_2_04",
+   "head": [
+    0.0,
+    0.497,
+    -0.7864
+   ],
+   "len": 0.2037
+  },
+  {
+   "name": "fox_tail_3_01",
+   "parent": "pelvis",
+   "head": [
+    0.022,
+    0.9134,
+    -0.0936
+   ],
+   "len": 0.1947
+  },
+  {
+   "name": "fox_tail_3_02",
+   "parent": "fox_tail_3_01",
+   "head": [
+    0.0794,
+    0.7793,
+    -0.2225
+   ],
+   "len": 0.1946
+  },
+  {
+   "name": "fox_tail_3_03",
+   "parent": "fox_tail_3_02",
+   "head": [
+    0.1391,
+    0.6514,
+    -0.3566
+   ],
+   "len": 0.1946
+  },
+  {
+   "name": "fox_tail_3_04",
+   "parent": "fox_tail_3_03",
+   "head": [
+    0.203,
+    0.5367,
+    -0.5001
+   ],
+   "len": 0.1945
+  },
+  {
+   "name": "fox_tail_3_05",
+   "parent": "fox_tail_3_04",
+   "head": [
+    0.2723,
+    0.4428,
+    -0.6557
+   ],
+   "len": 0.1944
+  }
+ ],
+ "opens_regions": [
+  "tail_root"
+ ]
+}

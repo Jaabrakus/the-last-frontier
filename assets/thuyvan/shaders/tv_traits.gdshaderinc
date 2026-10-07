@@ -4,11 +4,12 @@
 //   3 scales (Dragon-Sea): small arched scales in offset rows (9 x 7.5 mm on the body, 6 x 5 mm on the face) in
 //     patches that grow with the amount (wrists -> temples and cheekbones -> shoulders and collarbones -> outer
 //     forearms -> along the spine -> outer thighs), each with a darker rim and a thin-film sheen that turns teal ->
-//     violet -> gold as the skin turns from the view; a patch's edge breaks up scale by scale
+//     violet -> gold as the skin turns from the view; a patch's edge (0.15 of the amount wide) breaks up scale by
+//     scale, so the patches read as scattered scales thickening inward, not painted shapes
 //   4 plates (Stone Children): mineral plates (about 18 per metre, 34 on the face) with fine cool cracks, a lighter
 //     rim inside each edge, a value jitter per plate and a pale quartz speck in one crack of twelve; 78 % of the tone
 //     over the person's own skin, so every skin shows through; never the lips, lids, palms or inner elbows
-//   5 river (Riverborn): broad wet patches (roughness to 0.3), small scale patches at the temples, collarbones and
+//   5 river (Riverborn): broad wet patches (roughness to 0.38), small scale patches at the temples, collarbones and
 //     outer forearms, and three painted gill slits a side behind the jaw (always, above amount 0.1); `tv_wet` widens
 //     the slits a little at 0.5 Hz in water
 // and, for anyone, the Ancestor-Bound rite's pale ash marks (a marking: `tv_ash` thumbprint, cheeks, hands).
@@ -74,13 +75,13 @@ vec3 tv_film(float ndv) {
 // One scale layer over `albedo` and `rough`: `order` its order map value, `amt` the amount, `share` of the tone.
 void tv_scales(vec2 uv, uint region, float order, float amt, float share, vec2 cell, float ndv, float sheen_v,
 		float mask, inout vec3 albedo, inout float rough) {
-	float feather = clamp((amt - order) / 0.07, 0.0, 1.0) * mask;
+	float feather = clamp((amt - order) / 0.15, 0.0, 1.0) * mask;
 	if (feather <= 0.0) {
 		return;
 	}
 	vec3 s = tv_scale_cell(vec2(uv.x, uv.y * tv_v_sign(region)), cell);
-	float show = s.x * step(s.z, feather * 1.15);
-	vec3 body = mix(albedo, trait_color, share);
+	float show = s.x * step(s.z, feather * 1.08);
+	vec3 body = mix(albedo, trait_color * 1.25, share);
 	vec3 sc = body * (1.0 + 0.18 * (1.0 - s.y));
 	sc *= 1.0 - 0.45 * smoothstep(0.55, 1.0, s.y);
 	sc += tv_film(ndv) * 0.22 * (1.0 - 0.6 * s.y) * (0.6 + 0.4 * sheen_v) * trait_color * 1.6;
@@ -100,18 +101,18 @@ vec3 tv_trait_shade(vec2 uv, vec2 mh, uint region, float mask, float ndv, inout 
 	float a = trait_amount;
 	bool face = region <= 1u;
 	if (trait_kind == 3 && a > 0.001) {
-		tv_scales(uv, region, ord.r, a, 0.70, face ? TV_SCALE_CELL_FACE : TV_SCALE_CELL, ndv, det.a, mask, albedo, rough);
+		tv_scales(uv, region, ord.r, a, face ? 0.50 : 0.62, face ? TV_SCALE_CELL_FACE : TV_SCALE_CELL, ndv, det.a, mask, albedo, rough);
 	} else if (trait_kind == 4 && a > 0.001) {
 		float on = step(ord.g, a) * step(ord.g, 0.995) * mask;
 		if (on > 0.0) {
 			float e = det.r * 0.0255;                        // metres from the crack
 			float fw = max(fwidth(e), 1e-5);
-			vec3 plate = mix(albedo, trait_color, 0.78) * (1.0 + (det.g - 0.5) * 0.16);
+			vec3 plate = mix(albedo, trait_color, 0.82) * (1.0 + (det.g - 0.5) * 0.16);
 			float rim = smoothstep(0.0045, 0.0015, e) * smoothstep(0.0007, 0.0016, e);
 			plate *= 1.0 + 0.16 * rim;
 			float crack = 1.0 - smoothstep(0.0006, max(0.0013, 0.0006 + 1.5 * fw), e);
 			plate = mix(plate, trait_color * 0.22 + vec3(0.004, 0.006, 0.012), crack);
-			float quartz = step(det.g, 0.083) * step(0.0013, e) * step(e, 0.0024) * step(0.62, det.a);
+			float quartz = step(det.g, 0.083) * step(0.0013, e) * step(e, 0.0020) * step(0.74, det.a);
 			plate = mix(plate, vec3(0.74, 0.79, 0.82), quartz);
 			plate *= 0.92 + 0.12 * smoothstep(0.0, 0.012, e);
 			albedo = mix(albedo, plate, on);
@@ -120,21 +121,24 @@ vec3 tv_trait_shade(vec2 uv, vec2 mh, uint region, float mask, float ndv, inout 
 	} else if (trait_kind == 5) {
 		float wet = clamp((a - ord.b) / 0.12, 0.0, 1.0) * mask;
 		albedo = mix(albedo, mix(albedo, vec3(0.69, 0.78, 0.78), 0.5), 0.18 * wet);
-		rough = mix(rough, 0.30, wet);
-		tv_scales(uv, region, ord.a, a, 0.50, TV_SCALE_CELL * 0.55, ndv, det.a, mask, albedo, rough);
+		rough = mix(rough, 0.38, wet);
+		tv_scales(uv, region, ord.a, a, 0.38, TV_SCALE_CELL * 0.55, ndv, det.a, mask, albedo, rough);
 		if (a > 0.1) {
 			float g = det.b * (1.0 + 0.25 * tv_wet * (0.5 + 0.5 * sin(TIME * 3.14159)));
 			float core = smoothstep(0.6, 0.95, g);
 			float lip = smoothstep(0.15, 0.4, g) * (1.0 - core);
-			albedo = mix(albedo, vec3(0.25, 0.066, 0.095) * 0.8 + albedo * 0.2, core);
-			albedo *= 1.0 + 0.18 * lip;
+			albedo = mix(albedo, vec3(0.25, 0.066, 0.095) * 0.7 + albedo * 0.1, core);
+			albedo *= 1.0 + 0.30 * lip;
 		}
 	}
 	// the rite's ash (a marking anyone may wear)
 	if (dot(tv_ash, vec3(1.0)) > 0.0) {
 		vec4 am = texture(tv_ash_marks, mh);
-		float ash = max(max(am.r * tv_ash.x, am.g * tv_ash.y), am.b * tv_ash.z) * 0.85;
-		albedo = mix(albedo, vec3(0.62, 0.59, 0.54) * (0.85 + 0.25 * am.a), ash);
+		float ash = max(max(am.r * tv_ash.x, am.g * tv_ash.y), am.b * tv_ash.z) * 0.78;
+		// pale ash on a deep skin, a grey ash on a light one (it reads on every tone)
+		float lum = dot(albedo, vec3(0.2126, 0.7152, 0.0722));
+		vec3 ash_col = mix(vec3(0.62, 0.59, 0.54), vec3(0.20, 0.19, 0.17), smoothstep(0.12, 0.45, lum));
+		albedo = mix(albedo, ash_col * (0.85 + 0.25 * am.a), ash);
 		rough = mix(rough, 0.92, ash);
 	}
 	return vec3(0.0);

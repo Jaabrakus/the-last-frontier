@@ -34,7 +34,7 @@ def reset():
     bpy.ops.wm.read_factory_settings(use_empty=True)
 
 
-def setup_scene(res=(1920, 1080), samples=48, ground_png=None, sky=("#7fb3e6", "#d9e8ef"), sun_energy=4.2,
+def setup_scene(res=(1920, 1080), samples=48, ground_png=None, sky=("#6fa8e0", "#dbe9ef"), sun_energy=3.4,
                 sun_az_deg=-50.0, night=False):
     """Eevee, AgX near contrast 1.05, a sun 40 deg up from the front-left, a sky light of 0.6, soft shadows, a painted
     ground and a painted gradient sky behind (style guide 11 and 5.4)."""
@@ -84,7 +84,7 @@ def setup_scene(res=(1920, 1080), samples=48, ground_png=None, sky=("#7fb3e6", "
     bg_cam.inputs[1].default_value = 1.0 if not night else 0.25
     bg_light = nt.nodes.new("ShaderNodeBackground")
     bg_light.inputs[0].default_value = hex_lin("#a9c7e6" if not night else "#2a3550")
-    bg_light.inputs[1].default_value = 0.6 if not night else 0.18
+    bg_light.inputs[1].default_value = 0.6 if not night else 0.32
     mix = nt.nodes.new("ShaderNodeMixShader")
     nt.links.new(lp.outputs["Is Camera Ray"], mix.inputs[0])
     nt.links.new(bg_light.outputs[0], mix.inputs[1])
@@ -92,7 +92,7 @@ def setup_scene(res=(1920, 1080), samples=48, ground_png=None, sky=("#7fb3e6", "
     nt.links.new(mix.outputs[0], out.inputs[0])
     # the sun: 40 deg up, from the front-left (the camera is on -Y; front-left of the figures = -X, -Y)
     sd = bpy.data.lights.new("Sun", "SUN")
-    sd.energy = sun_energy if not night else 0.25
+    sd.energy = sun_energy if not night else 0.45
     sd.color = hex_lin("#fff1dc")[:3] if not night else hex_lin("#9fb4e6")[:3]
     sd.angle = math.radians(2.5)
     so = bpy.data.objects.new("Sun", sd)
@@ -276,10 +276,19 @@ def skin_material(o, prefix, name="Skin"):
     if "Coat Weight" in bs.inputs:
         cw = nt.nodes.new("ShaderNodeMath")
         cw.operation = "MULTIPLY"
-        cw.inputs[1].default_value = 0.7
+        cw.inputs[1].default_value = 0.15
         nt.links.new(sep.outputs[1], cw.inputs[0])
         nt.links.new(cw.outputs[0], bs.inputs["Coat Weight"])
         bs.inputs["Coat Roughness"].default_value = 0.12
+    if "Sheen Weight" in bs.inputs:
+        # the river's luminous skin: a soft pale rim where it is wet
+        sw = nt.nodes.new("ShaderNodeMath")
+        sw.operation = "MULTIPLY"
+        sw.inputs[1].default_value = 0.9
+        nt.links.new(sep.outputs[1], sw.inputs[0])
+        nt.links.new(sw.outputs[0], bs.inputs["Sheen Weight"])
+        bs.inputs["Sheen Roughness"].default_value = 0.35
+        bs.inputs["Sheen Tint"].default_value = (0.75, 0.9, 1.0, 1.0)
     if "Subsurface Weight" in bs.inputs:
         bs.inputs["Subsurface Weight"].default_value = 0.12
         bs.inputs["Subsurface Radius"].default_value = (1.0, 0.45, 0.3)
@@ -457,7 +466,7 @@ def painted_noise(nt, scale=2.5, detail=3.0):
     return nz
 
 
-def cloth_material(o, zone_ramps, name="Cloth", rough=0.85):
+def cloth_material(o, zone_ramps, name="Cloth", rough=0.85, use_vcol=True):
     """A painted cloth: per zone (UV2.x // 64), the dye's 4-stop ramp [dark, mid, light, accent] laid by a soft
     painted noise and the garment's own vertex colour (its baked fold and hem shading)."""
     m = bpy.data.materials.new(name)
@@ -487,11 +496,11 @@ def cloth_material(o, zone_ramps, name="Cloth", rough=0.85):
         ramp = nt.nodes.new("ShaderNodeValToRGB")
         cr = ramp.color_ramp
         dark, mid, light = zone_ramps[z][:3]
-        cr.elements[0].position = 0.25
+        cr.elements[0].position = 0.30
         cr.elements[0].color = hex_lin(dark)
-        cr.elements[1].position = 0.85
+        cr.elements[1].position = 0.95
         cr.elements[1].color = hex_lin(light)
-        e = cr.elements.new(0.55)
+        e = cr.elements.new(0.62)
         e.color = hex_lin(mid)
         nt.links.new(mixn.outputs[0], ramp.inputs[0])
         if prev is None:
@@ -508,7 +517,7 @@ def cloth_material(o, zone_ramps, name="Cloth", rough=0.85):
         nt.links.new(prev, mx.inputs[6])
         nt.links.new(ramp.outputs[0], mx.inputs[7])
         prev = mx.outputs[2]
-    if len(getattr(o.data, "color_attributes", [])):
+    if use_vcol and len(getattr(o.data, "color_attributes", [])):
         vc = nt.nodes.new("ShaderNodeVertexColor")
         vc.layer_name = color_attr_name(o)
         mm = nt.nodes.new("ShaderNodeMix")
@@ -592,3 +601,76 @@ def pose_relaxed(arm, arm_down_deg=22.0, elbow_deg=14.0, spread=None, extra=None
     if extra:
         extra(arm)
     bpy.context.view_layer.update()
+
+
+# the regions of the neutral vest (lib/regions.py ids): the chest below the armpits, the waist, the hips' top; the
+# straps over the shoulders are the upper chest's skin between 7 and 11.5 cm off the mid line
+VEST_REGIONS = {6, 7, 8, 9, 10, 11, 13}
+UPPER_CHEST = {3, 4, 5}
+
+
+def body_vest(body, zones, push=0.009, thick=0.004):
+    """A plain sleeveless vest cut from the body's own skin (the same weights and shape keys, so it moves and fits
+    every body exactly): the torso from the armpits to the hips with two shoulder straps, pushed off the skin and
+    given a thickness, in a painted cloth. The skin under it is removed (as the game's hide_mask does)."""
+    v = body.copy()
+    v.data = body.data.copy()
+    v.name = body.name + "_vest"
+    bpy.context.scene.collection.objects.link(v)
+
+    def keep(vert, uv2):
+        if uv2 is None:
+            return False
+        r = int(round(uv2.x)) & 63
+        if r in VEST_REGIONS:
+            return True
+        if r in UPPER_CHEST and 0.07 < abs(vert.co.x) < 0.115:
+            return True
+        return False
+    delete_faces(v, lambda vert, uv2: not keep(vert, uv2))
+    # the glb's vertices are split along every UV seam: weld them, and drop the custom normals, so the pushed shell
+    # stays closed and smooth
+    bm = bmesh.new()
+    bm.from_mesh(v.data)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0002)
+    bm.to_mesh(v.data)
+    bm.free()
+    try:
+        bpy.context.view_layer.objects.active = v
+        with bpy.context.temp_override(object=v, active_object=v, selected_objects=[v]):
+            bpy.ops.mesh.customdata_custom_splitnormals_clear()
+    except Exception as e:
+        print("TRAITS_VEST_NORMALS", e)
+    delete_faces(body, lambda vert, uv2: keep(vert, uv2) and not ((int(round(uv2.x)) & 63) in UPPER_CHEST))
+    dm = v.modifiers.new("Push", "DISPLACE")
+    dm.strength = push
+    dm.mid_level = 0.0
+    sm = v.modifiers.new("Thick", "SOLIDIFY")
+    sm.thickness = thick
+    sm.offset = 1.0
+    # the push and the thickness before the skinning
+    for i, md in enumerate([m for m in v.modifiers if m.type == "ARMATURE"]):
+        v.modifiers.move(v.modifiers.find(md.name), len(v.modifiers) - 1)
+    cloth_material(v, zones, "Vest_" + body.name, use_vcol=False)
+    for p in v.data.polygons:
+        p.use_smooth = True
+    return v
+
+
+def smooth_body(o, weld=True):
+    """The glb's custom normals belong to the base shape: with the body-type and face keys on, they shade the new
+    shape wrongly (facets on body type 1). Weld the seam-split vertices (shape keys, weights and UVs carried) and let
+    Blender smooth the posed shape's own normals."""
+    if weld:
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.00005)
+        bm.to_mesh(o.data)
+        bm.free()
+    try:
+        with bpy.context.temp_override(object=o, active_object=o, selected_objects=[o]):
+            bpy.ops.mesh.customdata_custom_splitnormals_clear()
+    except Exception as e:
+        print("TRAITS_NORMALS", o.name, e)
+    for p in o.data.polygons:
+        p.use_smooth = True

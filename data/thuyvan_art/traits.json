@@ -4,9 +4,9 @@
  "status": "proposal",
  "note": "The Thủy Vân peoples' body marks on today's body (peoples_design 2.4 and 2.8): the `trait`, `tint` and `reflect_eye` blocks the six people rows of data/customizer/thuyvan_peoples.json take (CharacterPeoples.trait_of / people(); BodyMaterials.set_trait and eye_material read them), the rite's ash markings, and the Hồ Tinh features (fox_features.json). Visual only: no row is a stat, nothing is locked to a people (anyone may wear the ash marks; the fur colours and tail count are free), and every face, skin tone and hair of the creator stays a choice for every people. Maps: assets/thuyvan/character/traits (tools/thuyvan_art/traits/trait_maps.py); shader: assets/thuyvan/shaders/tv_traits.gdshaderinc.",
  "kinds": {
-  "scales": {"id": 3, "order": "trait_order_tv.png R", "spread": ["wrists", "temples and cheekbones", "shoulders and collarbones", "outer forearms", "along the spine", "outer thighs"], "cell_m": [0.009, 0.0075], "cell_face_m": [0.0062, 0.0052], "share": 0.70, "roughness": 0.30, "sheen": "thin film teal -> violet -> gold over 1 - N.V"},
-  "plates": {"id": 4, "order": "trait_order_tv.png G (one value per plate)", "spread": ["forearms and knuckles", "upper arms and shoulders", "brow ridge and cheekbones", "back", "chest", "shins and thighs", "most of the body"], "never": ["lips", "eyelids", "palms", "inner elbows"], "plates_per_m": 18, "plates_per_m_face": 34, "share": 0.78, "roughness": 0.80, "crack_mm": [0.6, 1.3], "rim_mm": [1.5, 4.5], "quartz_share": 0.083},
-  "river": {"id": 5, "order": "trait_order_tv.png B (wet sheen) and A (scale patches)", "gills": "trait_detail_tv.png B: 3 slits a side behind the jaw, 4.5 cm, 9 mm apart; inner #8a4a5a; drawn above amount 0.1", "wet_roughness": 0.30, "sheen_tone": "#d8e4e4", "scale_cell_share": 0.55}
+  "scales": {"id": 3, "order": "trait_order_tv.png R", "spread": ["wrists", "temples and cheekbones", "shoulders and collarbones", "outer forearms", "along the spine", "outer thighs"], "cell_m": [0.009, 0.0075], "cell_face_m": [0.0062, 0.0052], "share": 0.62, "share_face": 0.50, "roughness": 0.30, "sheen": "thin film teal -> violet -> gold over 1 - N.V"},
+  "plates": {"id": 4, "order": "trait_order_tv.png G (one value per plate)", "spread": ["forearms and knuckles", "upper arms and shoulders", "brow ridge and cheekbones", "back", "chest", "shins and thighs", "most of the body"], "never": ["lips", "eyelids", "palms", "inner elbows"], "plates_per_m": 18, "plates_per_m_face": 34, "share": 0.82, "roughness": 0.80, "crack_mm": [0.6, 1.3], "rim_mm": [1.5, 4.5], "quartz_share": 0.083},
+  "river": {"id": 5, "order": "trait_order_tv.png B (wet sheen) and A (scale patches)", "gills": "trait_detail_tv.png B: 3 slits a side behind the jaw, 5 cm, 9 mm apart; inner #8a4a5a; drawn above amount 0.1", "wet_roughness": 0.38, "sheen_tone": "#d8e4e4", "scale_cell_share": 0.55}
  },
  "peoples": {
   "dragon_sea": {
@@ -19,7 +19,7 @@
   "stone_children": {
    "trait": {"kind": "plates", "default": 0.9, "rows": {"Patches": 0.3, "Half": 0.6, "Most": 0.9},
              "tones": {"slate": "#6f7f8c", "sandstone": "#b49a72", "granite": "#8a8682", "jade_veined": "#6f8f80", "ochre": "#a8844e"}, "color": "#6f7f8c", "glow": 0.0,
-             "note": "the plates take 78 % of the tone over the person's own skin, so every skin shows through (owner question 4)"}
+             "note": "the plates take 82 % of the tone over the person's own skin, so every skin shows through (owner question 4)"}
   },
   "riverborn": {
    "trait": {"kind": "river", "default": 0.6, "rows": {"Gills only": 0.12, "Patches": 0.4, "Marked": 0.6, "Heavy": 0.9},

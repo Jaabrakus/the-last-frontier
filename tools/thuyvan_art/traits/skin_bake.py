@@ -193,6 +193,8 @@ def bake(F, look, prefix):
     amt = float(look.get("trait", 0.0))
     tone_hex = look.get("trait_tone", "#3f9a9a")
     M = len(F.index)
+    if look.get("scalp_png"):
+        look = dict(look, _mh=mh_of(F))
     skin = tone_at(mel, under, tint) * 0.9
     skin = skin * blood(0.5 + (hb - 0.5) * (1.0 - 0.7 * tint), mel)
     flush, mucosa, cavity = F.col[:, 0], F.col[:, 1], F.col[:, 2]
@@ -209,9 +211,10 @@ def bake(F, look, prefix):
     tone = hexlin(tone_hex)
     # ------------------------------------------------------------------ the people's trait
     if kind == 3 and amt > 0.001:
-        feather = np.clip((amt - F.o_scales) / 0.07, 0, 1)
-        show = F.sc_cover * (F.sc_hash < feather * 1.15)
-        body_c = alb * 0.30 + tone[None] * 0.70
+        feather = np.clip((amt - F.o_scales) / 0.15, 0, 1)
+        show = F.sc_cover * (F.sc_hash < feather * 1.08)
+        share = np.where(F.on_head, 0.50, 0.62)[:, None]
+        body_c = alb * (1 - share) + (tone * 1.25)[None] * share
         lit = 1.0 + 0.18 * (1.0 - F.sc_rim)
         sc = body_c * lit[:, None]
         sc = sc * (1.0 - 0.45 * smooth(0.55, 1.0, F.sc_rim))[:, None]
@@ -226,7 +229,7 @@ def bake(F, look, prefix):
     elif kind == 4 and amt > 0.001:
         on = (F.o_plates < amt).astype(np.float64)
         jit = 1.0 + (F.plate_hash - 0.5) * 0.16
-        plate = alb * 0.22 + tone[None] * 0.78
+        plate = alb * 0.18 + tone[None] * 0.82
         plate = plate * jit[:, None]
         e = F.plate_edge
         rim = smooth(0.0045, 0.0015, e) * smooth(0.0007, 0.0016, e)
@@ -234,7 +237,7 @@ def bake(F, look, prefix):
         crack = 1.0 - smooth(0.0006, 0.0013, e)
         crack_c = tone[None] * 0.22 + np.array([0.004, 0.006, 0.012])[None]
         plate = plate * (1 - crack[:, None]) + crack_c * crack[:, None]
-        quartz = (F.plate_hash < 0.083) & (e > 0.0013) & (e < 0.0024) & (F.sheen_v > 0.62)
+        quartz = (F.plate_hash < 0.083) & (e > 0.0013) & (e < 0.0020) & (F.sheen_v > 0.74)
         plate = np.where(quartz[:, None], hexlin("#dfe6ea")[None] * 0.9, plate)
         # a broad painted value inside each plate: lighter toward its upper middle, so the plates read as raised
         dome = smooth(0.0, 0.012, e)
@@ -247,12 +250,12 @@ def bake(F, look, prefix):
         wet = np.clip((amt - F.o_sheen) / 0.12, 0, 1)
         pearl = hexlin("#d8e4e4")
         alb = alb * (1 - 0.18 * wet[:, None]) + (alb * 0.5 + pearl[None] * 0.5) * (0.18 * wet[:, None])
-        rough = rough * (1 - wet) + 0.3 * wet
+        rough = rough * (1 - wet) + 0.38 * wet
         sheen[:, 1] = wet
         # scale patches (half size)
-        feather = np.clip((amt - F.o_rscale) / 0.07, 0, 1)
+        feather = np.clip((amt - F.o_rscale) / 0.15, 0, 1)
         show = F.rsc_cover * (F.rsc_hash < feather * 1.15)
-        sc = (alb * 0.5 + tone[None] * 0.5) * (1.0 + 0.2 * (1 - F.rsc_rim))[:, None]
+        sc = (alb * 0.62 + tone[None] * 0.38) * (1.0 + 0.2 * (1 - F.rsc_rim))[:, None]
         sc = sc * (1.0 - 0.4 * smooth(0.55, 1.0, F.rsc_rim))[:, None]
         k = show * (0.5 + 0.5 * feather)
         alb = alb * (1 - k[:, None]) + sc * k[:, None]
@@ -264,8 +267,8 @@ def bake(F, look, prefix):
         core = smooth(0.6, 0.95, g)
         lip = smooth(0.15, 0.4, g) * (1 - core)
         inner = hexlin("#8a4a5a")
-        alb = alb * (1 - core[:, None]) + (inner[None] * 0.8 + alb * 0.2) * core[:, None]
-        alb = alb * (1 + 0.18 * lip)[:, None]
+        alb = alb * (1 - core[:, None]) + (inner[None] * 0.7 + alb * 0.1) * core[:, None]
+        alb = alb * (1 + 0.30 * lip)[:, None]
         height = height - 0.35 * core + 0.15 * lip
     # ------------------------------------------------------------------ ash marks (markings anyone may wear)
     ash = look.get("ash", [])
@@ -277,9 +280,12 @@ def bake(F, look, prefix):
             a = np.maximum(a, F.ash[:, 1])
         if "hands" in ash:
             a = np.maximum(a, F.ash[:, 2])
-        ash_c = hexlin("#cfcac2")
-        L = np.clip(a * 0.85, 0, 1)
-        alb = alb * (1 - L[:, None]) + (ash_c[None] * (0.85 + 0.25 * F.ash[:, 3:4])) * L[:, None]
+        # pale ash on a deep skin, a grey ash on a light one (it must read on every tone)
+        lum = alb @ np.array([0.2126, 0.7152, 0.0722])
+        k = smooth(0.12, 0.45, lum)[:, None]
+        ash_c = hexlin("#cfcac2")[None] * (1 - k) + hexlin("#7e7a74")[None] * k
+        L = np.clip(a * 0.78, 0, 1)
+        alb = alb * (1 - L[:, None]) + (ash_c * (0.85 + 0.25 * F.ash[:, 3:4])) * L[:, None]
         rough = rough * (1 - L) + 0.92 * L
     # lips (painted mucosa) and the painted cavities, after the trait (lips are never marked)
     lipc = tone_at(mel * 0.82 + 0.02, under, tint) * 0.9 * blood(0.5 + 0.55 + 0.25 * hb, mel * 0.8)
@@ -287,6 +293,22 @@ def bake(F, look, prefix):
     lipc = paint_skin(np.repeat(lipc[None], M, 0), v, np.zeros(M), np.zeros(M), F.paint[:, 3])
     mu = np.where(F.on_head, mucosa, 0.0)
     alb = alb * (1 - mu[:, None]) + lipc * mu[:, None]
+    # the scalp under a hair style: its baked domain (the hair json's scalp_mask, in head_detail_rect) in the hair's
+    # root colour, so the skin between the strand strips reads as roots (skin.gdshader's scalp_tint)
+    if look.get("scalp_png"):
+        rect = (0.6372, 0.1784, 0.9975, 0.9921)
+        mh = look["_mh"]
+        su = (mh[:, 0] - rect[0]) / (rect[2] - rect[0])
+        sv = (mh[:, 1] - rect[1]) / (rect[3] - rect[1])
+        sm = np.asarray(Image.open(look["scalp_png"]).convert("L"), np.float32) / 255.0
+        H, W = sm.shape
+        ok = (su >= 0) & (su <= 1) & (sv >= 0) & (sv <= 1) & F.on_head
+        xi = np.clip((su * W).astype(int), 0, W - 1)
+        yi = np.clip((sv * H).astype(int), 0, H - 1)
+        nz = F.sheen_v
+        m = np.where(ok, np.clip(sm[yi, xi] * 1.5 - 0.5 * nz, 0, 1), 0.0)
+        hc = hexlin(look.get("hair_hex", "#1b1613"))
+        alb = alb * (1 - m[:, None]) + (hc[None] * (0.5 + 0.3 * nz[:, None])) * m[:, None]
     cav = smooth(0.10, 0.45, cavity)
     cav = np.where(F.on_head, cav, 1.0 - 0.5 * (1.0 - cav))
     alb = alb * (0.55 + 0.45 * cav)[:, None]
@@ -301,3 +323,10 @@ def bake(F, look, prefix):
     save(np.c_[sheen, np.zeros(M)], prefix + "_sheen.png", 3)
     save(np.clip(height, 0, 1), prefix + "_height.png", 1)
     return prefix
+
+
+def mh_of(F):
+    """The texels' MakeHuman UVs (their atlas position: row = v * n)."""
+    n = int(F.n)
+    i = F.index
+    return np.stack([(i % n + 0.5) / n, (i // n + 0.5) / n], 1)

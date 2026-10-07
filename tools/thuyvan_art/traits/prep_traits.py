@@ -29,18 +29,21 @@ HAIR_HEX = {"blue_black": "#101216", "black": "#1b1613", "dark_brown": "#33221a"
             "chestnut": "#6b3b20", "auburn": "#7a3018", "sea_black": "#0e1416", "slate_black": "#1d1f22",
             "ash_white": "#cfccc6", "fox_russet": "#9a4020"}
 
-# the neutral dress every figure wears (so only the people's body marks differ): an undyed sleeveless tunic (the
-# ring's fitted top with its collar and shoulder caps taken off), indigo-black wrapped trousers, a madder sash, plain
-# shoes. Dyes from peoples_dyes.json.
+# the neutral dress every figure wears (so only the people's body marks differ): a plain undyed sleeveless vest cut
+# from the body itself (bscene.body_vest: shoulders, collarbones, arms and neck stay bare), charcoal wrapped trousers,
+# a madder sash, plain shoes. Dyes from peoples_dyes.json.
 def neutral_dress(dyes):
     r = lambda k: dyes[k]["ramp"]  # noqa: E731
     G = os.path.join(CHAR, "garments", "ring")
     return [
-        {"glb": os.path.join(G, "ring_fire_top.glb"), "zones": {"0": r("tv_hemp")}, "drop_zones": [1, 2]},
-        {"glb": os.path.join(G, "ring_trousers_wrapped.glb"), "zones": {"0": r("tv_indigo_black"), "1": r("tv_walnut")}},
+        {"glb": os.path.join(G, "ring_trousers_wrapped.glb"), "zones": {"0": r("tv_charcoal"), "1": r("tv_hemp")}},
         {"glb": os.path.join(G, "ring_sash_earth.glb"), "zones": {"0": r("tv_madder"), "1": r("tv_madder")}},
         {"glb": os.path.join(G, "ring_shoes.glb"), "zones": {"0": r("tv_walnut"), "1": ["#2a1c14", "#3b2a1f", "#5a4331", "#000000"], "2": r("tv_walnut")}},
     ]
+
+
+def neutral_vest(dyes):
+    return {"zones": {"0": dyes["tv_hemp"]["ramp"]}}
 
 
 PEOPLE = [
@@ -59,12 +62,12 @@ PEOPLE = [
      "caption": "mineral plates (0.9, slate) over the person's own skin; never lips, lids, palms, inner elbows"},
     {"id": "ho_tinh", "label": "Hồ Tinh", "title": "the Fox-Blooded",
      "look": {"trait_kind": 0}, "iris": "fox_amber", "ears": {"shape": "pointed", "fur": "cream"},
-     "tails": {"n": 9, "fur": "cream", "lift": 34.0, "fan": 1.35},
+     "tails": {"n": 9, "fur": "cream", "theta0": 0.0, "spread": 128.0, "phis": [8, 26, 46, 62, 72], "curl": [0, 0, 0.12, 0.32, 0.55], "jitter": 9.0},
      "f": "korean_f_s2", "m": "japanese_m_s2", "hair": ("hair_bun_low", "hair_loose_tied"), "hair_color": "black",
      "caption": "features shown: pointed fox ears, nine cream tails on their own bones (any count 1-9, never a stat)"},
     {"id": "riverborn", "label": "Riverborn", "title": "Descendants of Water Spirits",
      "look": {"trait_kind": 5, "trait": 0.6, "trait_tone": "#3f9a9a", "tint": 0.75}, "iris": "river_gold", "reflect_tapetum": "#e8c060",
-     "f": "filipino_f_s1", "m": "ethiopian_m_s1", "hair": ("hair_long_loose", "hair_natural_short"), "hair_color": "sea_black",
+     "f": "filipino_f_s1", "m": "malay_m_s2", "hair": ("hair_long_loose", "hair_loose_tied"), "hair_color": "sea_black",
      "caption": "the water tint 0.75 over the person's own tone, wet sheen, scale patches, painted gills; reflective eyes"},
     {"id": "ancestor_bound", "label": "Ancestor-Bound", "title": "Bearers of Many Spirits",
      "look": {"trait_kind": 0, "ash": ["thumbprint", "cheeks"]}, "iris": "dark_brown",
@@ -73,12 +76,21 @@ PEOPLE = [
 ]
 
 
+def with_hair(lk, style, color):
+    """The scalp under the style in the hair's root colour (baked into the skin, as skin.gdshader's scalp_tint)."""
+    sp = os.path.join(CHAR, "hair", "tex", style + "_scalp.png")
+    out = dict(lk, hair_hex=HAIR_HEX.get(color, "#1b1613"))
+    if os.path.exists(sp):
+        out["scalp_png"] = sp
+    return out
+
+
 def person_look(p, sex):
     pre = PRESETS[p[sex]]
     lk = {"melanin": pre["melanin"], "undertone": pre.get("undertone", "neutral"), "haemoglobin": pre.get("haemoglobin", 0.5),
           "male": 1.0 if sex == "m" else 0.0}
     lk.update(p["look"])
-    return pre, lk
+    return pre, with_hair(lk, p["hair"][0 if sex == "f" else 1], p.get("hair_color", "black"))
 
 
 def bake_all(F, items, work):
@@ -156,7 +168,7 @@ def ground_png(path, n=2048, seed=7):
     Image.fromarray(np.clip(np.round(SB.lin_to_srgb(img) * 255), 0, 255).astype(np.uint8)).save(path)
 
 
-def cam_front(width, cx=0.0, cy=0.95, lens=70.0, h=1.15):
+def cam_front(width, cx=0.0, cy=0.86, lens=70.0, h=1.0):
     d = width / (36.0 / lens)
     return {"loc": [cx, -d, h], "look": [cx, 0.0, cy], "lens": lens}
 
@@ -177,7 +189,7 @@ def figure(name, p, sex, skin_prefix, x, dyes, rot=0.0, iris=None, reflect=0.0, 
          "iris": EYES.get(iris or p["iris"], "#4a2e1a"), "reflect": reflect, "tapetum": p.get("reflect_tapetum", "#9fd08a"),
          "hair": hair or p["hair"][0 if sex == "f" else 1], "hair_hex": HAIR_HEX.get(hc, "#1b1613"),
          "hair_sheen": "#2f6f78" if hc == "sea_black" else None,
-         "garments": neutral_dress(dyes), "loc": [x, 0.0], "rot_z": rot}
+         "garments": neutral_dress(dyes), "vest": neutral_vest(dyes), "loc": [x, 0.0], "rot_z": rot}
     e = ears if ears is not None else p.get("ears")
     t = tails if tails is not None else p.get("tails")
     if e:
@@ -212,13 +224,17 @@ def main():
     skins = bake_all(F, items, work)
     scenes = []
     if test:
-        p0, p3 = PEOPLE[0], PEOPLE[3]
-        figs = [figure("ds_f", p0, "f", skins["dragon_sea_f"], -0.5, dyes),
-                figure("ht_f", p3, "f", skins["ho_tinh_f"], 0.5, dyes)]
-        scenes.append({"name": "test", "res": [960, 540], "samples": 16, "figures": figs, "shots": [
-            {"name": "test_front", "out": os.path.join(review, "test_front.png"), "cam": cam_front(2.6, lens=50)},
-            {"name": "test_back", "out": os.path.join(review, "test_back.png"), "turn": 180.0, "cam": cam_front(2.6, lens=50)},
-            {"name": "test_bust", "out": os.path.join(review, "test_bust.png"), "res": [540, 540], "cam": bust_cam(-0.5, False)}]})
+        P = {q["id"]: q for q in PEOPLE}
+        spec = [("dragon_sea", "f"), ("stone_children", "m"), ("ho_tinh", "f"), ("riverborn", "m"), ("ancestor_bound", "f")]
+        figs, shots = [], []
+        for i, (pid, sex) in enumerate(spec):
+            x = (i - 2) * 0.95
+            figs.append(figure("%s_%s" % (pid, sex), P[pid], sex, skins["%s_%s" % (pid, sex)], x, dyes))
+            shots.append({"name": "tb_" + pid, "out": os.path.join(review, "bust_%s.png" % pid), "res": [480, 540], "cam": bust_cam(x, sex == "m")})
+        shots += [{"name": "test_front", "out": os.path.join(review, "test_front.png"), "cam": cam_front(5.4)},
+                  {"name": "test_34", "out": os.path.join(review, "test_34.png"), "turn": -35.0, "cam": cam_front(5.4)},
+                  {"name": "test_back", "out": os.path.join(review, "test_back.png"), "turn": 180.0, "cam": cam_front(5.4)}]
+        scenes.append({"name": "test", "res": [1280, 720], "samples": 24, "figures": figs, "shots": shots})
     else:
         for sex in ("f", "m"):
             figs, xs = [], []
@@ -226,14 +242,19 @@ def main():
                 x = (i - 2.5) * 0.95
                 xs.append(x)
                 figs.append(figure("%s_%s" % (p["id"], sex), p, sex, skins["%s_%s" % (p["id"], sex)], x, dyes))
-            shots = [{"name": "lineup_%s_front" % sex, "out": os.path.join(review, "lineup_%s_front.png" % sex), "cam": cam_front(6.6)},
-                     {"name": "lineup_%s_34" % sex, "out": os.path.join(review, "lineup_%s_34.png" % sex), "turn": -35.0, "cam": cam_front(6.6)},
-                     {"name": "lineup_%s_back" % sex, "out": os.path.join(review, "lineup_%s_back.png" % sex), "turn": 180.0, "cam": cam_front(6.6)}]
+            shots = [{"name": "lineup_%s_front" % sex, "out": os.path.join(review, "lineup_%s_front.png" % sex), "cam": cam_front(5.7)},
+                     {"name": "lineup_%s_34" % sex, "out": os.path.join(review, "lineup_%s_34.png" % sex), "turn": -35.0, "cam": cam_front(5.7)},
+                     {"name": "lineup_%s_back" % sex, "out": os.path.join(review, "lineup_%s_back.png" % sex), "turn": 180.0, "cam": cam_front(5.7)}]
             for i, p in enumerate(PEOPLE):
                 shots.append({"name": "bust_%s_%s" % (p["id"], sex), "out": os.path.join(review, "bust", "bust_%s_%s.png" % (p["id"], sex)),
                               "res": [960, 1080], "cam": bust_cam(xs[i], sex == "m")})
                 shots.append({"name": "bust34_%s_%s" % (p["id"], sex), "out": os.path.join(review, "bust", "bust34_%s_%s.png" % (p["id"], sex)),
                               "res": [960, 1080], "turn": -40.0, "cam": bust_cam(xs[i], sex == "m")})
+                if p["id"] == "riverborn":
+                    c = bust_cam(xs[i], sex == "m")
+                    c["lens"] = 135.0
+                    shots.append({"name": "gills_%s" % sex, "out": os.path.join(review, "bust", "gills_riverborn_%s.png" % sex),
+                                  "res": [960, 1080], "turn": -78.0, "cam": c})
             scenes.append({"name": "lineup_" + sex, "figures": figs, "shots": shots})
         scenes += V["scenes"](skins, dyes, review)
     job = {"ground_png": ground, "brow_png": brow, "scenes": scenes}
@@ -254,25 +275,26 @@ def variants():
     rb_tints = [0.3, 0.75, 1.0]
     ab_sets = [("none", []), ("thumbprint", ["thumbprint"]), ("rite", ["thumbprint", "cheeks", "hands"])]
     base_ds = PRESETS["vietnamese_f_s2"]
+    H = with_hair
     for k, a in ds_amounts:
-        looks.append(("var_ds_amount_%s" % k, dict(melanin=base_ds["melanin"], undertone=base_ds["undertone"], trait_kind=3, trait=a, trait_tone="#3f9a9a")))
+        looks.append(("var_ds_amount_%s" % k, H(dict(melanin=base_ds["melanin"], undertone=base_ds["undertone"], trait_kind=3, trait=a, trait_tone="#3f9a9a"), "hair_long_loose", "black")))
     for k, t in ds_tones:
-        looks.append(("var_ds_tone_%s" % k, dict(melanin=base_ds["melanin"], undertone=base_ds["undertone"], trait_kind=3, trait=0.85, trait_tone=t)))
+        looks.append(("var_ds_tone_%s" % k, H(dict(melanin=base_ds["melanin"], undertone=base_ds["undertone"], trait_kind=3, trait=0.85, trait_tone=t), "hair_long_loose", "black")))
     base_sc = PRESETS["chinese_m_s2"]
     for k, a in sc_amounts:
-        looks.append(("var_sc_amount_%s" % k, dict(melanin=base_sc["melanin"], undertone=base_sc["undertone"], male=1.0, trait_kind=4, trait=a, trait_tone="#6f7f8c")))
+        looks.append(("var_sc_amount_%s" % k, H(dict(melanin=base_sc["melanin"], undertone=base_sc["undertone"], male=1.0, trait_kind=4, trait=a, trait_tone="#6f7f8c"), "hair_topknot", "black")))
     for k, t in sc_tones:
-        looks.append(("var_sc_tone_%s" % k, dict(melanin=base_sc["melanin"], undertone=base_sc["undertone"], male=1.0, trait_kind=4, trait=0.9, trait_tone=t)))
+        looks.append(("var_sc_tone_%s" % k, H(dict(melanin=base_sc["melanin"], undertone=base_sc["undertone"], male=1.0, trait_kind=4, trait=0.9, trait_tone=t), "hair_topknot", "black")))
     for sk, pid in rb_skins:
         pr = PRESETS[pid]
         for t in rb_tints:
-            looks.append(("var_rb_%s_%02d" % (sk, int(t * 100)), dict(melanin=pr["melanin"], undertone=pr["undertone"], trait_kind=5, trait=0.6, trait_tone="#3f9a9a", tint=t)))
+            looks.append(("var_rb_%s_%02d" % (sk, int(t * 100)), H(dict(melanin=pr["melanin"], undertone=pr["undertone"], trait_kind=5, trait=0.6, trait_tone="#3f9a9a", tint=t), "hair_long_loose", "sea_black")))
     base_ab = PRESETS["english_m_s3"]
     for k, a in ab_sets:
-        looks.append(("var_ab_%s" % k, dict(melanin=base_ab["melanin"], undertone=base_ab["undertone"], male=1.0, ash=a)))
+        looks.append(("var_ab_%s" % k, H(dict(melanin=base_ab["melanin"], undertone=base_ab["undertone"], male=1.0, ash=a), "hair_loose_tied", "black")))
     base_ab2 = PRESETS["west_african_m_s1"]
     for k, a in ab_sets:
-        looks.append(("var_ab_deep_%s" % k, dict(melanin=base_ab2["melanin"], undertone=base_ab2["undertone"], male=1.0, ash=a)))
+        looks.append(("var_ab_deep_%s" % k, H(dict(melanin=base_ab2["melanin"], undertone=base_ab2["undertone"], male=1.0, ash=a), "hair_natural_short", "black")))
 
     def scenes(skins, dyes, review):
         out = []
@@ -314,24 +336,27 @@ def variants():
         out.append(row("ab_ash", abs_, "m", full=False))
         # the Hồ Tinh tails: 1, 3 and 9, in the fur colours, seen from behind at 3/4 and from the front
         ht = P["ho_tinh"]
-        tails = [("t1_cream", {"tails": {"n": 1, "fur": "cream", "lift": 30.0, "fan": 1.0}}),
-                 ("t3_russet", {"tails": {"n": 3, "fur": "russet", "lift": 32.0, "fan": 1.3}}),
-                 ("t9_cream", {"tails": {"n": 9, "fur": "cream", "lift": 34.0, "fan": 1.35}}),
-                 ("t9_silver", {"tails": {"n": 9, "fur": "silver_white", "lift": 40.0, "fan": 1.5}}),
-                 ("t9_black_tipped", {"tails": {"n": 9, "fur": "black_tipped", "lift": 26.0, "fan": 1.2}})]
+        T1 = {"theta0": 180.0, "spread": 0.0, "phis": [28, 50, 44, 14, -26]}
+        T3 = {"theta0": 180.0, "spread": 62.0, "phis": [22, 48, 60, 50, 30], "curl": [0, 0, 0.2, 0.5, 0.8], "jitter": 6.0}
+        T9 = {"theta0": 0.0, "spread": 128.0, "phis": [8, 26, 46, 62, 72], "curl": [0, 0, 0.12, 0.32, 0.55], "jitter": 9.0}
+        tails = [("t1_cream", {"tails": dict(T1, n=1, fur="cream")}),
+                 ("t3_russet", {"tails": dict(T3, n=3, fur="russet")}),
+                 ("t9_cream", {"tails": dict(T9, n=9, fur="cream")}),
+                 ("t9_silver", {"tails": dict(T9, n=9, fur="silver_white", spread=140.0)}),
+                 ("t9_black_tipped", {"tails": dict(T9, n=9, fur="black_tipped", spread=110.0)})]
         figs = []
         for i, (label, kw) in enumerate(tails):
             figs.append(figure(label, ht, "f", skins["ho_tinh_f"], (i - 2) * 1.45, dyes, **kw))
         out.append({"name": "ht_tails", "figures": figs, "shots": [
-            {"name": "ht_tails_back34", "out": os.path.join(V, "ht_tails", "back34.png"), "turn": 150.0, "cam": cam_front(8.2, cy=0.85)},
-            {"name": "ht_tails_front", "out": os.path.join(V, "ht_tails", "front.png"), "cam": cam_front(8.2, cy=0.85)},
-            {"name": "ht_tails_side", "out": os.path.join(V, "ht_tails", "side.png"), "turn": 90.0, "cam": cam_front(8.2, cy=0.85)}]})
+            {"name": "ht_tails_back34", "out": os.path.join(V, "ht_tails", "back34.png"), "turn": 150.0, "cam": cam_front(7.2, cy=0.8)},
+            {"name": "ht_tails_front", "out": os.path.join(V, "ht_tails", "front.png"), "cam": cam_front(7.2, cy=0.8)},
+            {"name": "ht_tails_side", "out": os.path.join(V, "ht_tails", "side.png"), "turn": 90.0, "cam": cam_front(7.2, cy=0.8)}]})
         ears = [("pointed", {"ears": {"shape": "pointed", "fur": "cream"}}),
                 ("rounded", {"ears": {"shape": "rounded", "fur": "russet"}}),
                 ("tufted", {"ears": {"shape": "tufted", "fur": "silver_white"}}),
                 ("pointed_back", {"ears": {"shape": "pointed", "fur": "cream", "keys": {"ear_back": 1.0}}}),
                 ("pointed_flat", {"ears": {"shape": "pointed", "fur": "cream", "keys": {"ear_flat": 1.0}}})]
-        out.append(row("ht_ears", [(k, ht, skins["ho_tinh_f"], dict(kw, tails={"n": 1, "fur": kw["ears"]["fur"], "lift": 30, "fan": 1.0})) for k, kw in ears],
+        out.append(row("ht_ears", [(k, ht, skins["ho_tinh_f"], dict(kw, tails=dict(T1, n=1, fur=kw["ears"]["fur"]))) for k, kw in ears],
                        "f", full=False, turn_bust=-38.0))
         # reflective eyes at night (the eye shader's tv_night): Dragon-Sea green-gold, Riverborn gold; off / strong
         eyes = [("ds_off", P["dragon_sea"], skins["dragon_sea_f"], {"reflect": 0.0}),

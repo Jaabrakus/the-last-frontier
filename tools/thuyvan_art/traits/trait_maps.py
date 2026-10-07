@@ -302,22 +302,23 @@ def order_scales(A):
     b = A.b
     P = A.P
     o = np.full(len(P), 2.0)
-    n = (fbm3(P, 9.0, 31) - 0.5) * 0.16 + (vnoise3(P, 40.0, 33) - 0.5) * 0.05
+    n = (fbm3(P, 9.0, 31) - 0.5) * 0.26 + (vnoise3(P, 40.0, 33) - 0.5) * 0.08
     arms = A.is_("forearm", "wrist", "hand", "upper_arm")
     # wrists: a ring round the wrist and the base of the back of the hand
     d, t = A.seg_side("wrist", "elbow")
     dw = np.linalg.norm(P - A.mirrored("wrist"), axis=1)
-    w = 0.03 + 0.20 * ramp(dw, 0.075)
+    w = 0.06 + 0.22 * ramp(dw, 0.06) + 0.10 * np.clip(-A.outward(), 0, 1)
     w = np.where(A.is_("hand") & A.palm(), 2.0, w)
-    o = np.where(arms & (dw < 0.075), np.minimum(o, w), o)
+    o = np.where(arms & (dw < 0.06), np.minimum(o, w), o)
     # temples and cheekbones (the face a little later and never near the eyes, lips or nostrils)
     head = A.is_("head")
-    cheek_l = b.front(0.050, 1.462)
+    cheek_l = b.front(0.056, 1.468)
     temple_l = b.front(0.064, 1.508)
     dc = A.point_side(cheek_l)
     dt = A.point_side(temple_l)
-    f = np.minimum(0.18 + 0.22 * ramp(dc, 0.034), 0.20 + 0.22 * ramp(dt, 0.034))
-    f = np.where((np.minimum(dc, dt) < 0.034) & head & ~A.eyes_near(0.019), f, 2.0)
+    # a thin crescent along the cheekbone's ridge and a small patch at the temple, never round the eye
+    f = np.minimum(0.20 + 0.40 * ramp(dc, 0.024), 0.24 + 0.36 * ramp(dt, 0.022))
+    f = np.where((np.minimum(dc, dt) < 0.024) & head & ~A.eyes_near(0.021), f, 2.0)
     o = np.minimum(o, f)
     # shoulders and collarbones
     sh = A.mirrored("shoulder") + np.array([0.0, 0.035, 0.0]) + np.c_[A.side * 0.035, np.zeros(len(P)), np.zeros(len(P))]
@@ -331,7 +332,7 @@ def order_scales(A):
     ab = cl_b - cl_a
     tt = np.clip(np.sum((P - cl_a) * ab, 1) / np.sum(ab * ab, 1), 0, 1)
     dcl = np.linalg.norm(P - (cl_a + tt[:, None] * ab), axis=1)
-    c = 0.32 + 0.22 * ramp(dcl, 0.035) + 0.06 * (1 - tt)
+    c = 0.32 + 0.22 * ramp(dcl, 0.035) + 0.06 * (1 - tt) + (fbm3(P, 30.0, 37) - 0.5) * 0.30
     o = np.where(A.is_("chest_upper", "neck_lower") & (dcl < 0.035) & (A.N[:, 2] > 0.0), np.minimum(o, c), o)
     # outer forearms: from the wrist up toward the elbow, on the outer side
     out = A.outward() + 0.35 * (-A.N[:, 2])
@@ -383,12 +384,12 @@ def order_plates(A):
     o = np.where(A.is_("foot"), 0.82, o)
     o = o + n
     # never: the lips, the eyelids (and round the eyes), the palms, the inner elbows; the nose and mouth last
-    never = (head & (A.R["col"][:, 1] > 0.15)) | (head & A.eyes_near(0.022))
+    never = (head & (A.R["col"][:, 1] > 0.15)) | (head & A.eyes_near(0.0165))
     never |= A.is_("hand") & A.palm()
     de = np.linalg.norm(P - A.mirrored("elbow"), axis=1)
     never |= A.is_("forearm_a", "upper_arm") & (de < 0.06) & (A.N[:, 2] > 0.35)
     mid = head & (np.abs(P[:, 0]) < 0.022) & (P[:, 2] > 0.10) & (P[:, 1] < 1.475)
-    o = np.where(mid, np.maximum(o, 0.97), o)
+    o = np.where(mid, np.maximum(o, 0.86), o)
     return np.where(never, 2.0, o)
 
 
@@ -401,7 +402,7 @@ def order_river(A):
     sc = order_scales(A)
     # keep the temples, the collarbones and the outer forearms of the Dragon-Sea order (a smaller share)
     keep = (A.is_("head") | A.is_("chest_upper", "neck_lower") | A.is_("forearm", "wrist")) & ~A.is_("hand")
-    rs = np.where(keep, sc + 0.08, 2.0)
+    rs = np.where(keep, sc + 0.18, 2.0)
     return sheen, rs
 
 
@@ -450,7 +451,7 @@ def per_cell_mean(values, cell_id):
 
 
 def gills(A):
-    """Three curved slits a side behind the jaw on the upper neck (4.5 cm long, 9 mm apart): 1 at the core, a lit lip
+    """Three curved slits a side behind the jaw on the upper neck (5 cm long, 9 mm apart): 1 at the core, a lit lip
     above it falling to about 0.4."""
     P = A.P
     out = np.zeros(len(P))
@@ -466,11 +467,11 @@ def gills(A):
         # a gentle arc: the slit leans back toward its top
         a_line = a0 + 1.6 * (h - hc) + 6.0 * (h - hc) ** 2
         arc = np.abs(ang - a_line) * np.maximum(rad, 0.03)    # metres across the slit
-        along = np.abs(h - hc) / 0.0225
+        along = np.abs(h - hc) / 0.026
         taper = np.clip(1.0 - along ** 2, 0.0, 1.0)
-        core = np.clip(1.0 - arc / (0.0011 + 0.0012 * taper), 0, 1) * (taper > 0)
-        lip_off = arc - 0.0024
-        lip = np.clip(1.0 - np.abs(lip_off) / 0.0016, 0, 1) * (ang > a_line) * (taper > 0) * 0.4
+        core = np.clip(1.0 - arc / (0.0016 + 0.0014 * taper), 0, 1) * (taper > 0)
+        lip_off = arc - 0.0032
+        lip = np.clip(1.0 - np.abs(lip_off) / 0.0018, 0, 1) * (ang > a_line) * (taper > 0) * 0.4
         out = np.maximum(out, np.maximum(core * np.sqrt(taper), lip * taper))
     return np.where(neck & (h > 1.33) & (h < 1.45), out, 0.0)
 

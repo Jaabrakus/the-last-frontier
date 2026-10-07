@@ -104,7 +104,7 @@ def lineup_pages(R, out):
             src = os.path.join(R, "lineup_%s_%s.png" % (sex, view))
             if not os.path.exists(src):
                 continue
-            W, H = 2400, 1640
+            W, H = 2400, 1380
             page = Image.new("RGB", (W, H), BG)
             d = ImageDraw.Draw(page)
             header(d, W, "THE SIX PEOPLES' TRAITS", "on today's body, in the same neutral dress - %s, %s view" % (word, vname))
@@ -156,8 +156,13 @@ def bust_pages(R, out):
                     im = fit(Image.open(src).convert("RGB"), cw - 12, 520)
                     page.paste(im, (x, y))
                     y += im.height + 6
+            gl = os.path.join(R, "bust", "gills_riverborn_%s.png" % sex)
+            if p["id"] == "riverborn" and os.path.exists(gl):
+                im = fit(Image.open(gl).convert("RGB"), cw - 12, 300)
+                page.paste(im, (x, y))
+                y = text(d, (x, y + im.height + 2), "The gills, from the side (painted slits, lit lip)", font(13), GREY, width=cw - 16)
             c = CROPS[p["id"]][1] if len(CROPS[p["id"]]) > 1 else CROPS[p["id"]][0]
-            im = fit(crop(c[0], c[1]), cw - 12, 250)
+            im = fit(crop(c[0], c[1]), cw - 12, 250 if p["id"] != "riverborn" else 160)
             page.paste(im, (x, y + 4))
             y += im.height + 10
             y = text(d, (x, y), "Sheet: " + c[2], font(13), GREY, width=cw - 16)
@@ -232,7 +237,7 @@ def tails_page(R, out):
     if not os.path.exists(os.path.join(V, "back34.png")):
         return
     st = stats(R, "ht_tails")
-    W, H = 2600, 2050
+    W, H = 2600, 1700
     page = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(page)
     header(d, W, "HỒ TINH TAILS", "1, 3 and 9 tails on their own bones, in the fur colours; a free cosmetic, never a stat")

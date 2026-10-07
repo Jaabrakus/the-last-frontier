@@ -25,7 +25,9 @@ import bscene as B  # noqa: E402
 BODY_GLB = os.path.join(B.CHAR, "body", "body.glb")
 REGION_IDS = json.load(open(os.path.join(B.CHAR, "body", "body.json")))["regions"]["ids"]
 FOX = os.path.join(B.ROOT, "assets", "thuyvan", "character", "fox")
-FUR = {"cream": ("#f2dcc8", "#fbf5ec"), "russet": ("#b94420", "#f6efe6"), "silver_white": ("#dfe2e4", "#ffffff"),
+# the fur's warm shadow tone (the sheet's tails shade cream into peach-rose, not grey)
+FUR_SHADE = {"cream": "#9e5644", "russet": "#6a2010", "silver_white": "#8a9aae", "ash": "#4a4440", "black_tipped": "#6a2010"}
+FUR = {"cream": ("#dcb394", "#fbf3ea"), "russet": ("#b94420", "#f6efe6"), "silver_white": ("#dfe2e4", "#ffffff"),
        "ash": ("#8f8a86", "#d9d6d2"), "black_tipped": ("#b94420", "#1e1a18")}
 
 
@@ -33,6 +35,7 @@ def fur_material(o, fur, name):
     """The fur colour model of fox_features.json: COLOR_0.R the painted value through the fur's ramp, G the tip, B the
     inner ear (1) and its tuft (0.55)."""
     base, tip = FUR.get(fur, FUR["cream"])
+    shade = FUR_SHADE.get(fur, "#b9705a")
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
@@ -43,13 +46,33 @@ def fur_material(o, fur, name):
     nt.links.new(vc.outputs[0], sep.inputs[0])
     ramp = nt.nodes.new("ShaderNodeValToRGB")
     bl = B.hex_lin(base)
-    ramp.color_ramp.elements[0].position = 0.2
-    ramp.color_ramp.elements[0].color = tuple(c * 0.42 for c in bl[:3]) + (1,)
-    ramp.color_ramp.elements[1].position = 0.8
-    ramp.color_ramp.elements[1].color = tuple(c * 0.65 + 0.35 for c in bl[:3]) + (1,)
+    ramp.color_ramp.elements[0].position = 0.25
+    sl = B.hex_lin(shade)
+    ramp.color_ramp.elements[0].color = tuple((c * 0.5 + s * 0.5) * 0.7 for c, s in zip(bl[:3], sl[:3])) + (1,)
+    ramp.color_ramp.elements[1].position = 0.78
+    ramp.color_ramp.elements[1].color = tuple(c * 0.78 + 0.22 for c in bl[:3]) + (1,)
     e = ramp.color_ramp.elements.new(0.5)
     e.color = bl
-    nt.links.new(sep.outputs[0], ramp.inputs[0])
+    # painted fur strokes along the tail (its UVs: u round, v along); the ears have none and take a constant
+    uv = nt.nodes.new("ShaderNodeUVMap")
+    sc = nt.nodes.new("ShaderNodeVectorMath")
+    sc.operation = "MULTIPLY"
+    sc.inputs[1].default_value = (46.0, 2.6, 1.0)
+    nt.links.new(uv.outputs[0], sc.inputs[0])
+    nz = nt.nodes.new("ShaderNodeTexNoise")
+    nz.inputs["Scale"].default_value = 1.0
+    nz.inputs["Detail"].default_value = 3.0
+    nt.links.new(sc.outputs[0], nz.inputs["Vector"])
+    st = nt.nodes.new("ShaderNodeMath")
+    st.operation = "SUBTRACT"
+    st.inputs[1].default_value = 0.5
+    nt.links.new(nz.outputs["Fac"], st.inputs[0])
+    st2 = nt.nodes.new("ShaderNodeMath")
+    st2.operation = "MULTIPLY_ADD"
+    st2.inputs[1].default_value = 0.45
+    nt.links.new(st.outputs[0], st2.inputs[0])
+    nt.links.new(sep.outputs[0], st2.inputs[2])
+    nt.links.new(st2.outputs[0], ramp.inputs[0])
     mt = nt.nodes.new("ShaderNodeMix")
     mt.data_type = "RGBA"
     nt.links.new(sep.outputs[1], mt.inputs[0])
@@ -87,40 +110,38 @@ def fur_material(o, fur, name):
         p.use_smooth = True
 
 
-def pose_tails(arm, lift_deg, fan, curl_deg=9.0):
-    """The pose layer's idle target, by hand: each tail lifted about its own horizontal axis, fanned out about the
-    vertical, and curled a little more per bone toward the tip (the lineup's fan)."""
+def pose_tails(arm, spec):
+    """The pose layer's target for a still shot (fox_features.json pose_layer, here by hand): tail k lies in the plane
+    of the back axis and its own fan direction (theta from straight up, spread across the tails), each bone turned from
+    the back axis toward that direction by phi_j, so the tails leave the sacrum backward and sweep up and out (the
+    lineup's fan); a single tail falls and curls its tip back up."""
     bpy.context.view_layer.update()
     pbs = arm.pose.bones
     k = 1
     while pbs.get("fox_tail_%d_01" % k):
         k += 1
     n = k - 1
+    back = Vector((0.0, 1.0, 0.0))
     for t in range(1, n + 1):
-        b0 = pbs["fox_tail_%d_01" % t]
-        d = (b0.tail - b0.head)
-        d.z = 0
-        yaw0 = math.atan2(d.x, d.y)
-        axis = Vector((math.cos(yaw0), -math.sin(yaw0), 0.0))
         u = 0.0 if n == 1 else (t - 1) / (n - 1) * 2 - 1
-        extra_yaw = yaw0 * (fan - 1.0)
-        lift = math.radians(lift_deg * (1.0 - 0.25 * abs(u)) if n > 1 else lift_deg)
-        R = Matrix.Rotation(-extra_yaw, 4, "Z") @ Matrix.Rotation(-lift, 4, axis)
-        h = b0.head.copy()
-        b0.matrix = Matrix.Translation(h) @ R @ Matrix.Translation(-h) @ b0.matrix
-        bpy.context.view_layer.update()
-        for j in range(2, 6):
-            bj = pbs.get("fox_tail_%d_%02d" % (t, j))
-            if not bj:
+        jit = spec.get("jitter", 0.0)
+        hj = math.sin(t * 12.9898 + n * 78.233) * 43758.5453
+        hj = (hj - math.floor(hj)) * 2.0 - 1.0
+        theta = math.radians(spec.get("theta0", 0.0) + u * spec.get("spread", 100.0) + jit * hj)
+        d = Vector((math.sin(theta), 0.0, math.cos(theta)))
+        phis = spec.get("phis", [15.0, 42.0, 70.0, 90.0, 102.0])
+        curl = spec.get("curl", [0.0, 0.0, 0.0, 0.0, 0.0])
+        lag = spec.get("lag", 0.0) * abs(u) + jit * 0.5 * hj
+        for j in range(1, 6):
+            pb = pbs.get("fox_tail_%d_%02d" % (t, j))
+            if not pb:
                 break
-            hj = bj.head.copy()
-            dd = (bj.tail - bj.head).normalized()
-            ax = dd.cross(Vector((0, 0, 1)))
-            if ax.length < 1e-4:
-                continue
-            ax.normalize()
-            Rj = Matrix.Rotation(math.radians(curl_deg) * (1 if j < 4 else 0.6), 4, ax)
-            bj.matrix = Matrix.Translation(hj) @ Rj @ Matrix.Translation(-hj) @ bj.matrix
+            cur = (pb.tail - pb.head).normalized()
+            ph = math.radians(phis[j - 1] - lag * j)
+            tgt = (back * math.cos(ph) + d * math.sin(ph) + Vector((0.0, 0.0, curl[j - 1]))).normalized()
+            q = cur.rotation_difference(tgt).to_matrix().to_4x4()
+            h = pb.head.copy()
+            pb.matrix = Matrix.Translation(h) @ q @ Matrix.Translation(-h) @ pb.matrix
             bpy.context.view_layer.update()
 
 
@@ -129,6 +150,7 @@ def build_figure(f, ctx):
     objs = B.import_glb(BODY_GLB)
     arm = [o for o in objs if o.type == "ARMATURE"][0]
     arm.name = "Arm_" + f["name"]
+    arm.rotation_mode = "XYZ"
     body = [o for o in objs if o.type == "MESH" and o.name.startswith("Body")][0]
     face = [o for o in objs if o.type == "MESH" and o.name.startswith("Face")]
     keys = {"sex": float(f["sex"])}
@@ -144,6 +166,11 @@ def build_figure(f, ctx):
     hide_ids = {REGION_IDS[r] for r in hide if r in REGION_IDS}
     if hide_ids:
         B.delete_faces(body, lambda v, uv2: uv2 is not None and (int(round(uv2.x)) & 63) in hide_ids)
+    if any("trousers" in g["glb"] for g in f.get("garments", [])):
+        # the trousers' seat and fork cover the pelvis below the waist band (the body type 1 fork showed through)
+        pc = REGION_IDS["pelvis_center"]
+        B.delete_faces(body, lambda v, uv2: uv2 is not None and (int(round(uv2.x)) & 63) == pc and v.co.z < 0.90)
+    B.smooth_body(body)
     B.skin_material(body, f["skin_prefix"], "Skin_" + f["name"])
     for fo in face:
         mats = [m.name for m in fo.data.materials]
@@ -188,10 +215,16 @@ def build_figure(f, ctx):
             parts.append(m)
         tail_root = min((Vector(v[0]) for v in tb.values()), key=lambda p: p.z)
         tail_root = sum((Vector(v[0]) for k, v in tb.items() if k.endswith("_01")), Vector()) / max(1, sum(1 for k in tb if k.endswith("_01")))
+    if f.get("vest"):
+        v = B.body_vest(body, f["vest"]["zones"])
+        parts.append(v)
+        if tail_root is not None:
+            r = tail_root
+            B.delete_faces(v, lambda vv, uv2: (vv.co - r).length < 0.075 and vv.co.y > r.y - 0.06)
     for g in f.get("garments", []):
         go = B.import_glb(g["glb"])
         for m in B.retarget(go, arm):
-            B.set_keys(m, {"sex": float(f["sex"]), "sex_head": float(f["sex"])})
+            B.set_keys(m, {"sex": float(f["sex"])})
             if g.get("drop_zones"):
                 dz = set(g["drop_zones"])
                 B.delete_faces(m, lambda v, uv2: uv2 is not None and (int(round(uv2.x)) >> 6) in dz)
@@ -204,12 +237,14 @@ def build_figure(f, ctx):
     if f.get("ears"):
         eo = B.import_glb(os.path.join(FOX, "ho_tinh_ears_%s.glb" % f["ears"]["shape"]))
         for m in B.retarget(eo, arm):
-            B.set_keys(m, f["ears"].get("keys", {}))
+            B.set_keys(m, dict({"ear_back": 0.0, "ear_flat": 0.0, "ear_perk": 0.0}, **f["ears"].get("keys", {})))
+            if m.data.shape_keys:
+                print("TRAITS_EAR_KEYS", [(k.name, round(k.value, 2)) for k in m.data.shape_keys.key_blocks])
             fur_material(m, f["ears"].get("fur", "cream"), "Ears_" + f["name"])
             parts.append(m)
     B.pose_relaxed(arm, f.get("arm_down", 22.0), f.get("elbow", 14.0))
     if f.get("tails"):
-        pose_tails(arm, f["tails"].get("lift", 38.0), f["tails"].get("fan", 1.35), f["tails"].get("curl", 9.0))
+        pose_tails(arm, f["tails"])
     s = 1.07 if f["sex"] >= 0.5 else 1.0
     arm.scale = (s, s, s)
     arm.location = Vector((f["loc"][0], f["loc"][1], 0.0))
@@ -235,7 +270,10 @@ def main():
         except Exception:
             traceback.print_exc()
             print("TRAITS_FOX_FAILED")
+    scenes = set(argv[argv.index("--scenes") + 1].split(",")) if "--scenes" in argv else None
     for sc in job["scenes"]:
+        if scenes is not None and sc["name"] not in scenes:
+            continue
         shots = [s for s in sc["shots"] if only is None or s["name"] in only]
         if not shots:
             continue
