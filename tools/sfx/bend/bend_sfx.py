@@ -9,11 +9,14 @@ Usage (project root):
   python3 tools/sfx/bend/bend_sfx.py --seed 3 --out /tmp/x    another take, somewhere else
   python3 tools/sfx/bend/bend_sfx.py --review <dir>           and the listen page, the spectrograms and the fight
                                                               montage there (review.py)
+  python3 tools/sfx/bend/bend_sfx.py --flight-review <dir>    only the flight voices' listen page (round 4, READ:
+                                                              r4_read_listen.html; review.write_flight)
 Afterwards a Godot import pass (`--import`) so new WAVs load (new files: run this once more after it, which sets their
 imports to PCM, and import again). scripts/bending/bend_sounds.gd plays them (its TABLE: each id's level, 3D range,
 pitch and level jitter, voice cap).
 
-Output: audio/sfx/bend/<id>_<NN>.wav, 44.1 kHz 16-bit mono (the crowd's murmur a 12 s loop with a RIFF smpl chunk), and
+Output: audio/sfx/bend/<id>_<NN>.wav, 44.1 kHz 16-bit mono (the crowd's murmur a 12 s loop and the shots' flight voices
+(flight.py, round 4) 1.85-2.45 s loops, each with a RIFF smpl chunk), and
 audio/sfx/bend/levels.json (each file's loudness, peak, limiting and length). Deterministic: a variant's dice come from
 its id, its number and --seed alone.
 
@@ -38,6 +41,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import crowd  # noqa: E402
 import elements as el  # noqa: E402
+import flight as fl  # noqa: E402
 import guards as gd  # noqa: E402
 import kit  # noqa: E402
 from kit import dsp  # noqa: E402
@@ -98,8 +102,17 @@ SOUNDS = {
     "lock_grow": (gd.lock_grow, 3, -17.0, "grow's second click: a deeper, rounder knock"),
     "lock_sputter": (gd.lock_sputter, 3, -21.0, "a held lock fizzing out on the hands"),
     "carried_whistle": (gd.carried_whistle, 3, -20.0, "Carried wind: a rising whistle over a rush of air"),
+    # round 4 (READ): each shot's voice in flight, a 1.85-2.45 s loop it carries (flight.py; BendSounds.flight)
+    "stone_whirr": (fl.stone_whirr, 3, -18.0, "a stone in flight: a low tumbling whirr, its turns rough (a loop)"),
+    "ice_whistle": (fl.ice_whistle, 3, -21.0, "ice in flight: a thin glassy whistle with a shimmer (a loop)"),
+    "water_rush": (fl.water_rush, 3, -19.0, "water in flight: a rushing hiss with a slosh (a loop)"),
+    "fire_flight": (fl.fire_flight, 3, -18.0, "fire in flight: a roaring hiss with crackle (a loop)"),
+    "air_flight": (fl.air_flight, 3, -19.0, "air in flight: a whoosh with a pressure flutter (a loop)"),
+    "floor_run": (fl.floor_run, 3, -19.0, "the Kick's floor wave crackling along the deck (a loop)"),
 }
-LOOPS = {"crowd_murmur": 1.5}         # id -> the cross-fade (s) that closes the loop
+# id -> the cross-fade (s) that closes the loop
+LOOPS = {"crowd_murmur": 1.5, "stone_whirr": fl.LOOP_XFADE, "ice_whistle": fl.LOOP_XFADE, "water_rush": fl.LOOP_XFADE,
+         "fire_flight": fl.LOOP_XFADE, "air_flight": fl.LOOP_XFADE, "floor_run": fl.LOOP_XFADE}
 
 
 def seed_of(sid: str, v: int, seed: int) -> int:
@@ -155,7 +168,12 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default=OUT)
     ap.add_argument("--review", default="", help="also write the listen page, spectrograms and montage here")
+    ap.add_argument("--flight-review", default="", help="only write the flight voices' listen page here (no render)")
     a = ap.parse_args()
+    if a.flight_review:
+        import review
+        review.write_flight(a.flight_review, a.out, SOUNDS)
+        return
     ids = a.ids or list(SOUNDS)
     for sid in ids:
         if sid not in SOUNDS:

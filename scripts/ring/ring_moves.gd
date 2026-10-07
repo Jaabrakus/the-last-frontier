@@ -1742,7 +1742,8 @@ func body_yaw() -> float:
 
 
 ## The camera's framing wish (the player's; {} none): arm (m), pivot_up (m over the eye), pivot (world) with pivot_w (its
-## share), fov with fov_w (its share).
+## share), fov with fov_w (its share); round 4 (READ) the camera variant on top (RingCamera.apply: its arm and pivot added,
+## shoulder m, tilt_deg).
 func cam_bias() -> Dictionary:
 	if body == null or virtual or not (body is FrontierPlayer):
 		return {}
@@ -1751,14 +1752,14 @@ func cam_bias() -> Dictionary:
 			"fov_w": 0.0}
 	var g := _geo()
 	if g.is_empty():
-		return out
+		return RingCamera.apply(out)
 	var p := _pos()
 	if _hang_w > 0.001 and mode in LEDGE_MODES:
 		var pt: Vector3 = _m.get("point", (_m.get("spot", {}) as Dictionary).get("point", p))
 		out.arm = lerpf(arm, num("cam", "hang_arm", 5.0), _hang_w)
 		out.pivot = pt + Vector3.UP * num("cam", "hang_pivot_up", 1.0)
 		out.pivot_w = _hang_w
-		return out
+		return RingCamera.apply(out)
 	if _cam_w > 0.001:
 		var chest := p + Vector3.UP * num("cam", "chest_m", 1.3)
 		var lp := Vector3(_lip(g, chest).point)
@@ -1770,7 +1771,7 @@ func cam_bias() -> Dictionary:
 		out.pivot_w = _cam_w
 		out.fov = num("cam", "fov_far", 65.0) if dist > num("cam", "far_m", 4.0) else num("cam", "fov", 60.0)
 		out.fov_w = _cam_w
-	return out
+	return RingCamera.apply(out)
 
 
 func _cam_tick(dt: float) -> void:

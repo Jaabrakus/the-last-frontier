@@ -1,4 +1,25 @@
 {
+ "air_flight_01.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -6.75,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.156
+ },
+ "air_flight_02.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -5.38,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.97
+ },
+ "air_flight_03.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -6.58,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.132
+ },
  "air_gust_01.wav": {
   "loud_db": -17.0,
   "peak_dbfs": -7.43,
@@ -461,6 +482,27 @@
   "short_db": 0.0,
   "dur_s": 0.859
  },
+ "fire_flight_01.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -6.3,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.006
+ },
+ "fire_flight_02.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -6.44,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.42
+ },
+ "fire_flight_03.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -4.64,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.116
+ },
  "fire_hit_01.wav": {
   "loud_db": -14.57,
   "peak_dbfs": -1.0,
@@ -572,6 +614,27 @@
   "limit_db": 0.0,
   "short_db": 0.0,
   "dur_s": 0.597
+ },
+ "floor_run_01.wav": {
+  "loud_db": -19.08,
+  "peak_dbfs": -1.0,
+  "limit_db": -2.23,
+  "short_db": 0.0,
+  "dur_s": 1.926
+ },
+ "floor_run_02.wav": {
+  "loud_db": -19.17,
+  "peak_dbfs": -1.0,
+  "limit_db": -1.23,
+  "short_db": 0.0,
+  "dur_s": 1.858
+ },
+ "floor_run_03.wav": {
+  "loud_db": -19.08,
+  "peak_dbfs": -1.0,
+  "limit_db": -4.0,
+  "short_db": 0.08,
+  "dur_s": 2.406
  },
  "guard_air_clean_01.wav": {
   "loud_db": -14.0,
@@ -852,6 +915,27 @@
   "limit_db": 0.0,
   "short_db": 0.0,
   "dur_s": 0.636
+ },
+ "ice_whistle_01.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -11.63,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.327
+ },
+ "ice_whistle_02.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -11.7,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.397
+ },
+ "ice_whistle_03.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -11.7,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.94
  },
  "knock_thud_01.wav": {
   "loud_db": -15.0,
@@ -1147,6 +1231,27 @@
   "short_db": 0.0,
   "dur_s": 0.361
  },
+ "stone_whirr_01.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -2.61,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.335
+ },
+ "stone_whirr_02.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -4.58,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.045
+ },
+ "stone_whirr_03.wav": {
+  "loud_db": -18.0,
+  "peak_dbfs": -3.34,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.166
+ },
  "water_cast_rush_01.wav": {
   "loud_db": -17.0,
   "peak_dbfs": -8.25,
@@ -1202,6 +1307,27 @@
   "limit_db": 0.0,
   "short_db": 0.0,
   "dur_s": 0.791
+ },
+ "water_rush_01.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -8.42,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.089
+ },
+ "water_rush_02.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -8.09,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 1.923
+ },
+ "water_rush_03.wav": {
+  "loud_db": -19.0,
+  "peak_dbfs": -9.12,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 2.009
  },
  "water_slosh_01.wav": {
   "loud_db": -18.0,
