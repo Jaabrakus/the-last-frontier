@@ -589,6 +589,7 @@ func _step(dt: float) -> void:
 			dt = 0.0                                # (held on the knock's pose while it lasts)
 		elif not _knocked():
 			_knock_hold = -1.0
+	dt *= BendImpact.pose_rate(get_parent(), dt)        # (round 4, IMPACT: the hit-stop holds the pose; the skeleton's step too)
 	ap.advance(dt)
 	if _props_t > 0.0 and sk != null:
 		_props_back()

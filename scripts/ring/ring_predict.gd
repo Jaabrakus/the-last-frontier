@@ -215,7 +215,9 @@ static func _exit(p: Vector2, d: Vector2, h: Vector2) -> float:
 
 
 ## Where a body launched at `v` from `from` with `hitstun_s` of hitstun comes down (`element`: its recovery):
-## {lands: "deck" | "edge" | "water", travel_m (flat, along the launch), t}.
+## {lands: "deck" | "edge" | "water", travel_m (flat, along the launch), t}. Round 4 (IMPACT): `t` counts from the hit, so
+## it holds the hit-stop's hold too (BendImpact.hold_for: the launch waits it out before it flies; where it lands does not
+## change), and the bots' and Practice's reads of when stay true.
 static func flight(v: Vector3, hitstun_s: float, from: Vector3, element: String) -> Dictionary:
 	var flat := Vector3(v.x, 0.0, v.z)
 	if flat.length() < 1e-3:
@@ -224,7 +226,11 @@ static func flight(v: Vector3, hitstun_s: float, from: Vector3, element: String)
 	if r.x == INF:
 		return {"lands": "deck", "travel_m": 0.0, "t": 0.0}
 	var el := element if element in RingMoves.ELEMENTS else "water"
-	return run1d(flat.length(), minf(v.y, _k("vy_cap", 16.0)), hitstun_s, r.x, el, r.y)
+	var out := run1d(flat.length(), minf(v.y, _k("vy_cap", 16.0)), hitstun_s, r.x, el, r.y)
+	var hold := BendImpact.hold_for(v.length(), hitstun_s) if RingRules.stock_on() else 0.0
+	if hold > 0.0:
+		out["t"] = float(out.get("t", 0.0)) + hold
+	return out
 
 
 ## The launch a hit of `tag` on `target` would give at `pct_after` (after the hit): its velocity, or ZERO with no class.

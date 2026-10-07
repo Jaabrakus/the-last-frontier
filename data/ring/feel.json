@@ -1,0 +1,67 @@
+{
+  "_about": "Round 4 IMPACT: hits with weight in the % ring (BendImpact, RingMoment, CameraShake.jolt, RingWater.ko_splash). The owner chose hit-stop, the camera kick (an offset jolt that never turns the camera or moves the aim) and the ring-out moment (the splash). Only how a hit FEELS: no launch, hitstun, lock or guard number lives here. enabled false turns every part off (no hold, no jolt, no moment; the KO splash stays the old one).",
+  "enabled": true,
+  "hitstop": {
+    "_about": "The hold on a launch: hold_s = lerp(hold_min_s, hold_max_s, clamp((|v| - lo_mps) / span_mps, 0, 1)), at most hold_share of the hit's hitstun, none under stop_min_mps. The struck one's pose and launch wait it out inside his hitstun (it still counts from the hit); the hitter's pose holds too within melee_m. After a hold a pose plays at catchup_k until it has made up the time it stood (so it is back in step with the body: a cast's strike point, a fighter's hit parts). knock_thud at the hold's start: thud_db_lo..hi and thud_pitch_lo..hi from soft to hard.",
+    "hold_min_s": 0.04,
+    "hold_max_s": 0.11,
+    "lo_mps": 4.0,
+    "span_mps": 14.0,
+    "hold_share": 0.4,
+    "stop_min_mps": 4.0,
+    "melee_m": 3.0,
+    "catchup_k": 2.0,
+    "thud_db_lo": -6.0,
+    "thud_db_hi": 2.0,
+    "thud_pitch_lo": 1.12,
+    "thud_pitch_hi": 0.82
+  },
+  "jolt": {
+    "_about": "The local player's view knocked aside (CameraShake.jolt: h_offset / v_offset, m; never a turn). Taking a launch of take_min_mps or more: take_amount over take_secs, from take_min_mps to take_full_mps. Landing one of deal_min_mps or more: deal_k of that. A fall into the water within ko_near_m: ko_amount over ko_secs. His perfect guard: perfect_amount over perfect_secs. on false: none (the Esc row is GameSettings [ring] jolt).",
+    "on": true,
+    "take_min_mps": 6.0,
+    "take_full_mps": 18.0,
+    "take_amount": [0.12, 0.35],
+    "take_secs": [0.18, 0.3],
+    "deal_min_mps": 9.0,
+    "deal_k": 0.5,
+    "ko_amount": 0.3,
+    "ko_secs": 0.35,
+    "ko_near_m": 30.0,
+    "perfect_amount": 0.12,
+    "perfect_secs": 0.18
+  },
+  "perfect": {
+    "_about": "A perfect guard's beat: the guarder's pose holds hold_s, and the sender's when he is within sender_m. Poses only: the catch, its return and the stone's flight never wait.",
+    "hold_s": 0.07,
+    "sender_m": 6.0
+  },
+  "moment": {
+    "_about": "The ring-out moment (RingMoment). Every fall: the KO splash, its sound, the jolt; play goes on. A game's last fall (its last life, or sudden death): Engine.time_scale eases to slow_scale over ease_in_s, holds hold_real_s of real time, comes back over ease_out_s (always put back: the end, the scene's exit, a restart, an Esc pause, a second fall), the splash at final_splash_k. Practice: practice_moment / practice_jolt (the hit-stop stays: the feel of a hit is the lesson).",
+    "slow_scale": 0.35,
+    "ease_in_s": 0.08,
+    "hold_real_s": 0.6,
+    "ease_out_s": 0.25,
+    "final_splash_k": 2.0,
+    "every_fall_slow": false,
+    "practice_moment": false,
+    "practice_jolt": false
+  },
+  "ko_splash": {
+    "_about": "RingWater.ko_splash: a column column_m tall (from the entry speed speed_mps lo..hi), drops falling at gravity, sheets of spray thrown out round it (sheet_mps, sheet_up its rise to its spread), ripple rings running out ripple_m over ripple_s, foam foam_m across lying foam_s. ringout_splash at sound_db, knock_thud at low_pitch (low_db) under it.",
+    "column_m": [5.0, 8.0],
+    "speed_mps": [6.0, 20.0],
+    "gravity": 14.0,
+    "drop_m": 0.42,
+    "sheets": 6,
+    "sheet_mps": 8.0,
+    "sheet_up": 1.3,
+    "ripple_m": [0.8, 7.0],
+    "ripple_s": 1.4,
+    "foam_m": 2.6,
+    "foam_s": 3.0,
+    "sound_db": 3.0,
+    "low_pitch": 0.6,
+    "low_db": 0.0
+  }
+}

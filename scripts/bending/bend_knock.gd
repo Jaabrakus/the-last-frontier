@@ -44,6 +44,12 @@ extends Node
 ##                  intangible its first lie_intangible_s; getup(kind) after lie_s); missed on a wall: off at wall_miss_k
 ##   intangible()   a fall broken, the first of lying down, standing up (RingRules.take_ok reads it through
 ##                  BendStatus.take_filters)
+## ROUND 4, IMPACT (the hit-stop; BendImpact, data/ring/feel.json; stock only): _stock_knock asks BendImpact.on_hit for the
+## hold. With one, the launch is PENDING for it: kv is the launch's flat part at once (the steer, the tests and the rules read
+## it as ever) but carries nothing until the hold ends (step adds none, no decay), the up part and the launch itself (the
+## floor snap off) wait too, and an airborne body hangs where it was hit (its vertical speed held at 0). The hitstun still
+## counts from the hit (stun_t, knock_t). BendImpact.tick lets it go at the start of the step that ends the hold
+## (release_due): the same flight, started hold_s later. pending() / hold_left() for the tests; reset() drops it.
 
 signal landed
 signal knocked(v: Vector3, by: Node)
@@ -112,6 +118,12 @@ var _intangible_until := -INF
 var _lie_age := 0.0
 var _bounced := false
 var _air_vy := 0.0
+## Round 4: the launch held by the hit-stop (BendImpact): until when (game s; -INF none), its up part, whether the up part is
+## set (a tumble, or hit in the air) and whether it launches.
+var _pend_until := -INF
+var _pend_vy := 0.0
+var _pend_set_vy := false
+var _pend_tum := false
 
 
 ## The body's BendKnock, made on first use.
@@ -152,7 +164,7 @@ func knock(v: Vector3, by: Node, info := {}) -> Vector3:
 		return Vector3.ZERO
 	var l: Variant = info.get("_launch", null)
 	if l is Dictionary and RingRules.stock_on():
-		return _stock_knock(l as Dictionary, by)
+		return _stock_knock(l as Dictionary, by, info)
 	if rules != null and is_instance_valid(rules) and rules.has_method(&"knock_scale"):
 		var r: Variant = rules.call(&"knock_scale", body, v, by)
 		if r is Vector3:
@@ -190,7 +202,7 @@ func _tell(v: Vector3, by: Node) -> void:
 
 
 ## The stock ring's knock (spec §2.2): the motion SET to the launch `l` ({v, hitstun_s, tumble, refresh}), never added.
-func _stock_knock(l: Dictionary, by: Node) -> Vector3:
+func _stock_knock(l: Dictionary, by: Node, info := {}) -> Vector3:
 	var v: Vector3 = l.get("v", Vector3.ZERO)
 	var hs := float(l.get("hitstun_s", 0.0))
 	last_knocker = by if by != null and is_instance_valid(by) else null
@@ -198,14 +210,29 @@ func _stock_knock(l: Dictionary, by: Node) -> Vector3:
 	knocks += 1
 	kv = Vector3(v.x, 0.0, v.z)
 	var tum := bool(l.get("tumble", false))
-	if tum or not body.is_on_floor():
-		body.velocity.y = v.y
+	# (round 4: the hit-stop's hold, the launch pending through it: see the header)
+	var hold := BendImpact.on_hit(body, v, by, info, hs)
+	if hold > 0.0:
+		_pend_until = BendStatus.now() + hold
+		_pend_vy = v.y
+		_pend_set_vy = tum or not body.is_on_floor()
+		_pend_tum = tum
+		if body.is_on_floor():
+			body.velocity.y = minf(body.velocity.y, 0.0)
+		else:
+			body.velocity.y = 0.0                         # (hung where he was hit)
+		BendImpact.track(self)
 	else:
-		body.velocity.y = minf(body.velocity.y, 0.0)     # (a flinch on the feet: a slide, no hop)
+		_pend_until = -INF
+		if tum or not body.is_on_floor():
+			body.velocity.y = v.y
+		else:
+			body.velocity.y = minf(body.velocity.y, 0.0)     # (a flinch on the feet: a slide, no hop)
 	tumble = tum
 	_bounced = false
 	if tum:
-		_launch()
+		if hold <= 0.0:
+			_launch()
 	elif _launched and body.is_on_floor():
 		_end_launch(false)
 	if not bool(l.get("lying", false)):
@@ -224,6 +251,45 @@ func _stock_knock(l: Dictionary, by: Node) -> Vector3:
 ## In the air from an up-knock until back on the floor after leaving it.
 func is_launched() -> bool:
 	return _launched
+
+
+## Round 4: a launch held by the hit-stop now (its motion not yet given).
+func pending() -> bool:
+	return _pend_until > -INF
+
+
+## Round 4: seconds left of the hit-stop's hold (0: none).
+func hold_left() -> float:
+	return maxf(_pend_until - BendStatus.now(), 0.0) if pending() else 0.0
+
+
+## Round 4 (BendImpact.tick, at the start of each step): the held launch let go when its hold is over (true: nothing held
+## any more); until then an airborne body hangs (its vertical speed 0).
+func release_due(now: float) -> bool:
+	if not pending():
+		return true
+	if body == null or not is_instance_valid(body):
+		_pend_until = -INF
+		return true
+	if now < _pend_until - 1e-6:
+		if not body.is_on_floor():
+			body.velocity.y = 0.0
+		return false
+	_release()
+	return true
+
+
+## The held launch given: its up part (as _stock_knock would have set it), the launch (the floor snap off).
+func _release() -> void:
+	_pend_until = -INF
+	if body == null or not is_instance_valid(body):
+		return
+	if _pend_set_vy:
+		body.velocity.y = _pend_vy
+	else:
+		body.velocity.y = minf(body.velocity.y, 0.0)
+	if _pend_tum:
+		_launch()
 
 
 ## Knocked within the last `s` seconds (a fall's credit: who threw it).
@@ -266,6 +332,12 @@ func step(dt: float, on_floor: bool) -> Vector3:
 ## steer held against it; decel_ground 6).
 func _stock_step(dt: float, on_floor: bool) -> Vector3:
 	var now := BendStatus.now()
+	if pending():
+		if now < _pend_until - 1e-6:
+			# (the hit-stop's hold: the carry kept whole and given none of this frame)
+			applied = Vector3.ZERO
+			return Vector3.ZERO
+		_release()                               # (BendImpact.tick lets it go first; this only if it did not)
 	if lying_t > 0.0:
 		_lie_age += dt
 		lying_t = maxf(lying_t - dt, 0.0)
@@ -468,7 +540,9 @@ func apply_di(dir: Vector3) -> void:
 	kv = kv.rotated(Vector3.UP, deg_to_rad(deg))
 	steer_deg = deg
 	if along < 0.0:
-		_against_until = BendStatus.now() + _sn("di_against_s", 0.3)
+		# (round 4: a launch still held by the hit-stop carries nothing yet: the window counts from its release, so the
+		# steer takes as much off the flight as it does without the hold)
+		_against_until = maxf(BendStatus.now(), _pend_until) + _sn("di_against_s", 0.3)
 		_against_k = clampf(-along, 0.0, 1.0)
 
 
@@ -508,6 +582,7 @@ func scale_carry(k: float) -> void:
 
 ## All of it gone (a respawn, a death, a new round).
 func reset() -> void:
+	_pend_until = -INF
 	kv = Vector3.ZERO
 	applied = Vector3.ZERO
 	knock_t = 0.0
