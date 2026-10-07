@@ -2,7 +2,8 @@ class_name WorldRegion
 extends RefCounted
 ## The region the world is built from (Thủy Vân's region loader; plan phase 1, T5): "" is today's world, the frontier's
 ## squares, baked ground and year layers, exactly as before; a region id reads its own from data/world/maps/<id>/:
-##   squares.json   the grid, the river (with its "reaches") and the region block ({name, latitude_deg, season, ...})
+##   squares.json   the grid, the river (with its "reaches") and the region block ({name, latitude_deg, season, ...});
+##                  region.json instead when the region has one (R1: its squares.json is the terrain baker's)
 ##   layers/        its year layers (StoryLayer: S0, S1 ...)
 ##   terrain        the region block's "terrain_dir" (a res:// folder) when it has one, else today's baked ground
 ## The world's readers ask for their path here (WorldSquares.PATH, FrontierTerrain.DATA_DIR and StoryLayer.DIR are today's
@@ -19,6 +20,8 @@ const MAPS_DIR := "res://data/world/maps/"
 const TODAY_SQUARES := "res://data/world/squares.json"
 const TODAY_TERRAIN := "res://assets/environment/terrain/"
 const TODAY_LAYERS := "res://data/world/layers/"
+## The game's squares file of a region whose squares.json is its baker's (squares_path).
+const GAME_SQUARES := "region.json"
 
 static var _id := ""
 static var _info := {}
@@ -44,8 +47,12 @@ static func dir() -> String:
 	return "" if _id == "" else MAPS_DIR + _id + "/"
 
 
+## A region whose squares.json is its terrain baker's (R1: tools/environment/terrain/regions/bake_region.py's recipes and
+## relief, a different schema) keeps the game's squares file as region.json beside it; that one is read when present.
 static func squares_path() -> String:
-	return TODAY_SQUARES if _id == "" else dir() + "squares.json"
+	if _id == "":
+		return TODAY_SQUARES
+	return dir() + GAME_SQUARES if FileAccess.file_exists(dir() + GAME_SQUARES) else dir() + "squares.json"
 
 
 static func layers_dir() -> String:

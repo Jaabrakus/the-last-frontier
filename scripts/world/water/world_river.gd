@@ -30,6 +30,16 @@ static var off := false
 ##   dir_at(z)         downstream there, unit, whatever the state (the water's ribbon, a site facing the river)
 static var reach_state := ""
 
+## A REGION'S CHANNEL (Thủy Vân's R1, data/world/maps/r1/region.json "river": WaterNetwork.as_world_river_block of its
+## z-monotonic main channel, written by tools/thuyvan_art/terrain/write_r1_region.py): "nodes" [[z, x, level,
+## half_width], ...] north to south replace x0/meanders/level0/fall: x_at, level_at and dir_at read the nodes (linear in
+## z), the banks are the block's "bank", and there are no rapids. Without "nodes" (the frontier, r1_grey) nothing here
+## changes.
+static var _nodes_src: Variant = null
+static var _nz := PackedFloat64Array()
+static var _nx := PackedFloat64Array()
+static var _nl := PackedFloat64Array()
+
 
 static func data() -> Dictionary:
 	if off:
@@ -37,8 +47,33 @@ static func data() -> Dictionary:
 	return WorldSquares.data().get("river", {})
 
 
+## The block's nodes as arrays (z ascending); false when it has none.
+static func _has_nodes(d: Dictionary) -> bool:
+	if not d.has("nodes"):
+		return false
+	if not is_same(d, _nodes_src):
+		_nodes_src = d
+		_nz = PackedFloat64Array()
+		_nx = PackedFloat64Array()
+		_nl = PackedFloat64Array()
+		for r: Array in d.nodes:
+			_nz.append(float(r[0]))
+			_nx.append(float(r[1]))
+			_nl.append(float(r[2]))
+	return _nz.size() > 1
+
+
+## Node array `v` at z (linear; held past the ends).
+static func _node_lerp(v: PackedFloat64Array, z: float) -> float:
+	var i := clampi(_nz.bsearch(z) - 1, 0, _nz.size() - 2)
+	var t := clampf((z - _nz[i]) / maxf(_nz[i + 1] - _nz[i], 1e-6), 0.0, 1.0)
+	return lerpf(v[i], v[i + 1], t)
+
+
 static func x_at(z: float) -> float:
 	var d := data()
+	if _has_nodes(d):
+		return _node_lerp(_nx, z)
 	var x := float(d.get("x0", 832.0))
 	for m: Array in d.get("meanders", []):
 		x += float(m[0]) * sin(z / float(m[1]) + float(m[2]))
@@ -49,6 +84,8 @@ static func level_at(z: float) -> float:
 	if off:
 		return 0.0
 	var d := data()
+	if _has_nodes(d):
+		return _node_lerp(_nl, z)
 	var lv := float(d.get("level0", -4.0)) - float(d.get("fall", 0.004)) * (z + float(FrontierTerrain.GRID_HALF))
 	for r: Array in d.get("rapids", []):
 		lv -= float(r[2]) * smoothstep(float(r[0]) - float(r[1]) * 0.5, float(r[0]) + float(r[1]) * 0.5, z)
@@ -81,6 +118,8 @@ static func flow_at(z: float) -> Vector3:
 
 ## Downstream there (flat, unit), whatever the state.
 static func dir_at(z: float) -> Vector3:
+	if _has_nodes(data()):
+		return Vector3(_node_lerp(_nx, z + 4.0) - _node_lerp(_nx, z - 4.0), 0.0, 8.0).normalized()
 	var dxdz := 0.0
 	for m: Array in data().get("meanders", []):
 		dxdz += float(m[0]) / float(m[1]) * cos(z / float(m[1]) + float(m[2]))
@@ -139,10 +178,15 @@ static func bank() -> float:
 static func z_range() -> Vector2:
 	if off:
 		return Vector2.ZERO
-	var col := roundi(float(data().get("x0", 832.0)) / FrontierTerrain.SQUARE_M)
+	var d := data()
+	var x0 := float(d.get("x0", 832.0))
+	if _has_nodes(d):
+		x0 = _node_lerp(_nx, (_nz[0] + _nz[_nz.size() - 1]) * 0.5)
+	var squares := FrontierTerrain.squares()          # (loads the ground first: its origin)
+	var col := roundi((x0 - FrontierTerrain.origin.x) / FrontierTerrain.SQUARE_M)
 	var lo := INF
 	var hi := -INF
-	for sq: Vector2i in FrontierTerrain.squares():
+	for sq: Vector2i in squares:
 		if sq.x != col:
 			continue
 		var o := FrontierTerrain.square_origin(sq)
