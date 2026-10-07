@@ -696,7 +696,9 @@ func quick_line() -> String:
 ## round 4 SIMPLE: under the Basic controls Basic's own).
 func help_line() -> String:
 	if basic_strip():
-		return KitWords.keyed(MatchSetup.scheme_text("strip", "basic"))
+		# (round 4's merge: Basic's line held to HUD's rule, one line of help_max_chars or fewer, its first letter a capital)
+		var t := KitWords.keyed(MatchSetup.scheme_text("strip", "basic"))
+		return t.substr(0, 1).to_upper() + t.substr(1)
 	return KitWords.strip_help(scheme())
 
 

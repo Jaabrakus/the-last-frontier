@@ -208,6 +208,8 @@ func _show(e: Dictionary) -> void:
 	_cur = e
 	_t = 0.0
 	shown.append(String(e.word))
+	if shown.size() > 64:
+		shown.remove_at(0)                     # (round 4's merge: the tests' record kept short; a static lives all session)
 	_word.text = String(e.word)
 	var col := color_of(String(e.el))
 	_word.add_theme_color_override("font_color", col)

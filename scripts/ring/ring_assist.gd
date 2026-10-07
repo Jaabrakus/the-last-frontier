@@ -121,9 +121,21 @@ static func blocks(key: String) -> bool:
 
 ## The player has won a match once (Basic's keys 4 and 5 from then on).
 static func won_once() -> bool:
-	var cf := ConfigFile.new()
-	cf.load(GameSettings.file())
-	return bool(cf.get_value(MatchSetup.SECTION, FIRST_WIN_KEY, false))
+	# (round 4's merge: cached until GameSettings writes again or its file changes; the strip asks it every frame under Basic,
+	# and a read of the file each time was disk I/O on every frame)
+	var f := GameSettings.file()
+	if f != _won_file or GameSettings.writes != _won_writes:
+		var cf := ConfigFile.new()
+		cf.load(f)
+		_won = bool(cf.get_value(MatchSetup.SECTION, FIRST_WIN_KEY, false))
+		_won_file = f
+		_won_writes = GameSettings.writes
+	return _won
+
+
+static var _won := false
+static var _won_file := ""
+static var _won_writes := -1
 
 
 static func note_win() -> void:
