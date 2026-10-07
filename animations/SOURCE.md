@@ -392,6 +392,15 @@ visual references, no animation files imported) is his statement; the rows below
   their tracks and moments are unchanged. `bend_preview.gd` gains `before=` (a sheet opening with another clip's frame:
   the stand the contact snaps out of) and a pair's `@frame` (a hand-over into the middle of the next clip); they read no
   motion.
+  Revised the same day (pass 2, the critic's notes): the same generator, the same inputs and the same four clips, re-keyed
+  by hand in `SET9` and `STRUCK_SPACING`. The front hit's arms flung forward at the shoulders' height (no raised V), its
+  pelvis shoved behind the heels, the left leg the straighter with its toes up; the back hit re-keyed as an arch (the belly
+  driven forward, the chest thrust out, the arms flung back and down in a low V, up on the balls of the feet); the side
+  hit's struck arm out and back about 20 degrees above the shoulder, the weight further onto the far leg with the struck
+  heel peeled (the right one still its mirror); the head and the arms overshoot the hold at f4 and settle, the knees keep
+  giving a frame, and the trunk recoils first. The metas
+  (6 frames, `strike_s` 0, `hold_s` 0.1, `back_s` 4/30 s, mask full, `from`) are unchanged; only these four clips were
+  re-baked.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.

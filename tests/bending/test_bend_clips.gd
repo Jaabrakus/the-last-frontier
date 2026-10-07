@@ -178,7 +178,13 @@ extends SceneTree
 ##               palms flung off the stand (0.25 m and more), the knees given (the pelvis 2 cm and more down), the head's
 ##               throw at least 90% of its most (the held frame is the strongest), the four holds' heads apart (0.2 m); at
 ##               the end the head still most of the way out (the tumble or the flinch takes over, never a return to the
-##               stand). kept r4 struck: the eighth set's lengths and moments as they shipped
+##               stand). kept r4 struck: the eighth set's lengths and moments as they shipped. The struck reads (pass 2,
+##               _ninth_reads): the back hit an arch (its pelvis, not its head, thrown away from the hit: the belly driven
+##               ahead of the ankles, the head behind the pelvis); the front hit's palms at about the shoulders' height
+##               and ahead of them (flung forward, no raised V), its pelvis behind the heels; the back hit's palms below the
+##               shoulders and behind the pelvis (a low V); the side hits' struck palm out on its side between 0 and 45
+##               degrees above its shoulder and behind it, the struck side's heel peeled 2 cm and more, its leg the
+##               straighter; the arms still travelling after the hold (a palm farther off the stand at f4 than at f3)
 ## Ends with "BEND_CLIPS PASSED" or "BEND_CLIPS FAILED" (exit 0 only on a pass; a watchdog quits 2 at LIMIT s).
 
 const LIB := "res://animations_extra/Frontier_Bend.res"
@@ -405,6 +411,17 @@ const STRUCK_APART := 0.2
 const STRUCK_END_SHARE := 0.6
 ## A planted foot's ball or heel within this of its stand place (m).
 const STRUCK_PLANT := 0.01
+## The part measured for the throw away from the hit (default the head): the back hit is an arch, the belly driven forward.
+const STRUCK_PROBE := {"own-bend-hit-impact-back": "pelvis"}
+## The struck holds' reads (pass 2): the front hit's palms at most this far over the shoulders, palms (and the pelvis) flung
+## this far (m); the side hit's struck arm at most this many degrees above its shoulder; the struck side's heel peeled this
+## far (m).
+const STRUCK_OVER_SHOULDER := 0.15
+const STRUCK_FLUNG := 0.05
+## The front hit's pelvis at least this far behind the heels at the hold (m).
+const STRUCK_SHOVE := 0.04
+const STRUCK_ARM_UP := 45.0
+const STRUCK_PEEL := 0.02
 ## The eighth set's lengths and moments as they shipped (frames; -1 none): kept by the ninth set's bake.
 const BEFORE_R4STRUCK := {"own-bend-spout-ride": [48, -1, -1, -1, -1], "own-bend-spout-step-off": [16, 3, 6, 9, -1],
 		"own-bend-fire-flip-kick": [24, 3, 6, 14, -1], "own-bend-fire-flip-kick-l": [24, 3, 6, 14, -1],
@@ -2846,22 +2863,23 @@ func _ninth(lib: AnimationLibrary, names: Array[String]) -> void:
 				slide = maxf(slide, minf((j[s + "ball"] as Vector3).distance_to(st[s + "ball"]),
 						(j[s + "heel"] as Vector3).distance_to(st[s + "heel"])))
 		_check(slide <= STRUCK_PLANT, "%s: the feet planted (a ball or a heel on its place, off by %.4f m)" % [nm, slide])
-		# the contact at the hold
+		# the contact at the hold (the part thrown away from the hit: the head, or the back hit's arched pelvis)
 		var way := want[1] as Vector3
+		var probe: String = STRUCK_PROBE.get(nm, "heada")
 		var h := _at(a, STRUCK_HOLD_S, parts)
-		var throw := ((h.heada as Vector3) - (st.heada as Vector3)).dot(way)
+		var throw := ((h[probe] as Vector3) - (st[probe] as Vector3)).dot(way)
 		var most := 0.0
 		for f in STRUCK_FRAMES + 1:
-			most = maxf(most, ((_at(a, f / 30.0, ["heada"]).heada as Vector3) - (st.heada as Vector3)).dot(way))
+			most = maxf(most, ((_at(a, f / 30.0, [probe])[probe] as Vector3) - (st[probe] as Vector3)).dot(way))
 		var palms := minf((h.r_palm as Vector3).distance_to(st.r_palm), (h.l_palm as Vector3).distance_to(st.l_palm))
 		var give := (st.pelvis as Vector3).y - (h.pelvis as Vector3).y
-		var end := ((_at(a, a.length, ["heada"]).heada as Vector3) - (st.heada as Vector3)).dot(way)
-		print("METRIC %s head_throw_m %.3f most_m %.3f palms_m %.3f give_m %.3f end_share %.2f slide_m %.4f" % [nm, throw,
-				most, palms, give, end / maxf(throw, 1e-4), slide])
-		_check(throw >= STRUCK_HEAD, "%s: the head thrown %.3f m away from the hit at the hold (>= %.2f)" % [nm, throw,
+		var end := ((_at(a, a.length, [probe])[probe] as Vector3) - (st[probe] as Vector3)).dot(way)
+		print("METRIC %s %s_throw_m %.3f most_m %.3f palms_m %.3f give_m %.3f end_share %.2f slide_m %.4f" % [nm, probe,
+				throw, most, palms, give, end / maxf(throw, 1e-4), slide])
+		_check(throw >= STRUCK_HEAD, "%s: the %s thrown %.3f m away from the hit at the hold (>= %.2f)" % [nm, probe, throw,
 				STRUCK_HEAD])
-		_check(throw >= 0.9 * most, "%s: the hold the strongest frame (the head's throw %.3f of its most %.3f)" % [nm, throw,
-				most])
+		_check(throw >= 0.9 * most, "%s: the hold the strongest frame (the %s's throw %.3f of its most %.3f)" % [nm, probe,
+				throw, most])
 		_check(palms >= STRUCK_PALMS, "%s: both palms flung %.3f m off the stand at the hold (>= %.2f)" % [nm, palms,
 				STRUCK_PALMS])
 		_check(give >= STRUCK_GIVE, "%s: the knees given (the pelvis %.3f m down at the hold, >= %.2f)" % [nm, give,
@@ -2894,6 +2912,70 @@ func _ninth(lib: AnimationLibrary, names: Array[String]) -> void:
 		for k in range(i + 1, ks.size()):
 			var d := (heads[ks[i]] as Vector3).distance_to(heads[ks[k]])
 			_check(d >= STRUCK_APART, "%s and %s: the holds' heads %.3f m apart (>= %.2f)" % [ks[i], ks[k], d, STRUCK_APART])
+	_ninth_reads(lib, names, st)
+
+
+## The struck holds' reads (pass 2, the critic's notes on the held frame): what each hold's silhouette must show at 15 m and
+## from the player's camera behind, and the arms' follow-through past it. `st` is the stand's joints (heels, balls, palms).
+func _ninth_reads(lib: AnimationLibrary, names: Array[String], st: Dictionary) -> void:
+	var bones := ["heada", "pelvis", "r_palm", "l_palm", "r_shoulder", "l_shoulder", "r_ankle", "l_ankle", "r_heel", "l_heel",
+			"r_upper_leg", "l_upper_leg", "r_knee", "l_knee"]
+	for nm: String in NINTH_SET:
+		if not nm in names:
+			continue
+		var a := lib.get_animation(StringName(nm))
+		var side := String(NINTH_SET[nm][0])
+		var h := _at(a, STRUCK_HOLD_S, bones)
+		var head := h.heada as Vector3
+		var pel := h.pelvis as Vector3
+		var ank := ((h.r_ankle as Vector3) + (h.l_ankle as Vector3)) * 0.5
+		var heels := ((h.r_heel as Vector3) + (h.l_heel as Vector3)) * 0.5
+		# the arms still travelling after the hold (nothing stops dead on the held frame)
+		var f4 := _at(a, 4 / 30.0, ["r_palm", "l_palm"])
+		var on := maxf((f4.r_palm as Vector3).distance_to(st.r_palm) - (h.r_palm as Vector3).distance_to(st.r_palm),
+				(f4.l_palm as Vector3).distance_to(st.l_palm) - (h.l_palm as Vector3).distance_to(st.l_palm))
+		print("METRIC %s palm_on_after_hold_m %.3f" % [nm, on])
+		_check(on > 0.0, "%s: a palm still travelling after the hold (%.3f m farther off the stand at f4)" % [nm, on])
+		match side:
+			"front":
+				var top := maxf((h.r_palm as Vector3).y, (h.l_palm as Vector3).y)
+				var ahead := minf((h.r_palm as Vector3).z - (h.r_shoulder as Vector3).z,
+						(h.l_palm as Vector3).z - (h.l_shoulder as Vector3).z)
+				var sh := maxf((h.r_shoulder as Vector3).y, (h.l_shoulder as Vector3).y)
+				print("METRIC %s palms_over_shoulders_m %.3f palms_ahead_m %.3f pelvis_behind_heels_m %.3f" % [nm, top - sh,
+						ahead, heels.z - pel.z])
+				_check(top - sh <= STRUCK_OVER_SHOULDER, "%s: both palms at about the shoulders' height (no raised V; %.3f m over)"
+						% [nm, top - sh])
+				_check(ahead >= STRUCK_FLUNG, "%s: both palms flung ahead of the shoulders (%.3f m)" % [nm, ahead])
+				_check(heels.z - pel.z >= STRUCK_SHOVE, "%s: the pelvis shoved behind the heels (%.3f m)" % [nm, heels.z - pel.z])
+			"back":
+				var low := minf((h.r_shoulder as Vector3).y - (h.r_palm as Vector3).y,
+						(h.l_shoulder as Vector3).y - (h.l_palm as Vector3).y)
+				var behind := minf(pel.z - (h.r_palm as Vector3).z, pel.z - (h.l_palm as Vector3).z)
+				print("METRIC %s palms_below_shoulders_m %.3f palms_behind_pelvis_m %.3f pelvis_ahead_ankles_m %.3f head_behind_pelvis_m %.3f"
+						% [nm, low, behind, pel.z - ank.z, pel.z - head.z])
+				_check(low >= STRUCK_FLUNG, "%s: both palms below the shoulders (a low V, %.3f m)" % [nm, low])
+				_check(behind >= STRUCK_FLUNG, "%s: both palms behind the pelvis (%.3f m)" % [nm, behind])
+				_check(pel.z - ank.z >= STRUCK_FLUNG, "%s: the belly driven ahead of the ankles (%.3f m)" % [nm, pel.z - ank.z])
+				_check(head.z < pel.z, "%s: an arch, the head behind the pelvis (%.3f m)" % [nm, pel.z - head.z])
+			_:
+				var s := "l_" if side == "left" else "r_"
+				var o := "r_" if side == "left" else "l_"
+				var sx := 1.0 if side == "left" else -1.0
+				var arm := (h[s + "palm"] as Vector3) - (h[s + "shoulder"] as Vector3)
+				var up := rad_to_deg(atan2(arm.y, Vector2(arm.x, arm.z).length()))
+				var peel := (h[s + "heel"] as Vector3).y - (st[s + "heel"] as Vector3).y
+				var reach_s := (h[s + "upper_leg"] as Vector3).distance_to(h[s + "ankle"])
+				var reach_o := (h[o + "upper_leg"] as Vector3).distance_to(h[o + "ankle"])
+				print("METRIC %s struck_arm_up_deg %.1f out_m %.3f back_m %.3f heel_peel_m %.3f leg_reach_struck_m %.3f other_m %.3f"
+						% [nm, up, arm.x * sx, -arm.z, peel, reach_s, reach_o])
+				_check(arm.x * sx >= STRUCK_FLUNG, "%s: the struck palm out on its side (%.3f m)" % [nm, arm.x * sx])
+				_check(up >= 0.0 and up <= STRUCK_ARM_UP, "%s: the struck arm %.1f deg above its shoulder (0-%d, never straight up)"
+						% [nm, up, int(STRUCK_ARM_UP)])
+				_check(arm.z < 0.0, "%s: the struck arm flung back of its shoulder (%.3f m)" % [nm, -arm.z])
+				_check(peel >= STRUCK_PEEL, "%s: the struck side's heel peeled %.3f m (>= %.2f)" % [nm, peel, STRUCK_PEEL])
+				_check(reach_s > reach_o, "%s: the struck side's leg the straighter (unweighted; %.3f vs %.3f m)" % [nm, reach_s,
+						reach_o])
 
 ## The heading (deg) of the shoulders' line seen from above (the way the chest faces), for counting a turn on the spot.
 func _heading(a: Animation, t: float) -> float:
