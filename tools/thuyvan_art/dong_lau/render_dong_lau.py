@@ -616,8 +616,8 @@ def build_diorama(rng):
         placed.append(c)
         return c
     # water, the mirror probe, mud banks (Har-Kel's yard east of the channel; a bank west)
-    plane("dl_water", 6000, 0.0, mat_water())
-    planar_probe()
+    plane("dl_water", 6000, 0.0, mat_water())     # reflections: Eevee's screen-space ray tracing (a planar
+    # probe this size blanked the reflections in the test renders)
     mud_bank("bank_yard", [(18, 72), (40, 68), (54, 80), (52, 100), (32, 108), (16, 96)], z=0.3)
     mud_bank("bank_w", [(-70, 120), (-52, 112), (-46, 130), (-60, 142), (-76, 134)], z=0.25)
     # the fort and the mooring round it

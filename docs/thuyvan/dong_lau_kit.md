@@ -14,7 +14,7 @@ cards, the burial reed boat, dugouts and the flat ferry, tally posts and the sub
 | Material table (keys, ramps, tile sizes, roughness, specular, emission, alpha) | `tools/thuyvan_art/dong_lau/materials.json` |
 | Heron marks (A standing, B in the ring, C between reeds) | `tools/thuyvan_art/dong_lau/dl_marks.py` |
 | Review light directions (two from places_se.md §9.4, one PROPOSAL) | `tools/thuyvan_art/dong_lau/directions.json` |
-| Palette (the art director's file, read in place, never copied) | `docs/thuyvan/plan/look/palettes.json` → `albedo.dong_lau` (+ r1's rope, iron, bamboo, laterite, dyes, limestone) |
+| Palette (the art director's file, read in place, never copied) | `docs/thuyvan/plan/look/palettes.json` → `albedo.dong_lau` (+ r1's rope, iron, laterite, dyes, limestone; the marsh's bamboo is dry, on the reed-gold ramp) |
 
 The kit reuses the village kit's code without editing it: `dlkit.py` imports `tools/thuyvan_art/village/tvkit.py`
 (Builder, vertex-AO bake, GLB export) and rebinds its texture folder, material table and material function to this kit
@@ -53,7 +53,7 @@ runs only through the shared-lock wrapper (`tools/thuyvan/bin/blender_run.sh`, `
 
    The diorama's water, reed sea (from the kit's own reed cards), mud banks, herons, smoke, mist bands, far hills (in
    the painted sky) and figures are render-only stand-ins; fog is folded into each material by camera distance
-   (the game's fog does it in the engine); a planar probe gives the water its mirror.
+   (the game's fog does it in the engine); Eevee's screen-space ray tracing gives the water its mirror.
 
 ## Conventions the pieces follow
 
@@ -84,3 +84,35 @@ runs only through the shared-lock wrapper (`tools/thuyvan/bin/blender_run.sh`, `
   clinic. The review-only lintel is Khar-Ul look-dev: its object name has no `kh_` id, it is never exported, and the
   diorama's caption says so.
 - No writing, no Hán, no Avatar: The Last Airbender form; ids contain none of the guarded words.
+
+## Triangles against the places_se.md budgets (LOD0 / LOD1)
+
+| Piece | LOD0 | LOD1 | Budget | Note |
+| --- | --- | --- | --- | --- |
+| `dl_causeway` | 276 | - | 200 per 5 m | over by ~80 |
+| `dl_dip_net` | 260 | - | not listed (PROPOSAL id) |  |
+| `dl_dugout` | 430 | 430 | 1-2k |  |
+| `dl_ferry_flat` | 548 | 500 | 1-2k |  |
+| `dl_fish_rack` | 172 | - | not listed (PROPOSAL id) |  |
+| `dl_heron_banner` | 218 | - | 300 / 80 |  |
+| `dl_mangrove_gallery` | 3422 | 1000 | 3-5k / 1k / impostor |  |
+| `dl_mooring_fort` | 13158 | 2071 | 8-12k / 2.5k / 400 | over by ~1.2k (225 piles, four masts, ten lanterns): trim next pass |
+| `dl_net_rack` | 176 | - | not listed (PROPOSAL id) |  |
+| `dl_pile_forest_4m` | 412 | - | 400-900 |  |
+| `dl_pile_forest_6m` | 644 | - | 400-900 |  |
+| `dl_platform_ramp` | 756 | - | 600-1.2k |  |
+| `dl_platform_steps` | 750 | - | 600-1.2k |  |
+| `dl_raft_house` | 2354 | 794 | 2-3k |  |
+| `dl_reed_boat_burial` | 1098 | 700 | 2-3k |  |
+| `dl_reed_clump_cattail` | 28 | - | 50-200 |  |
+| `dl_reed_clump_gold` | 28 | - | 50-200 |  |
+| `dl_reed_clump_green` | 28 | - | 50-200 |  |
+| `dl_reed_house_a` | 2700 | 762 | 2.5-4k / 800 / 150 |  |
+| `dl_reed_house_b` | 2394 | 796 | 2.5-4k / 800 / 150 |  |
+| `dl_reed_house_c` | 1878 | 799 | 2.5-4k / 800 / 150 |  |
+| `dl_screen_rack` | 144 | - | 300-600 |  |
+| `dl_soak_trough` | 72 | - | 150 |  |
+| `dl_tally_post` | 150 | - | 150-300 |  |
+| `dl_watch_tower` | 2234 | 263 | 1-1.5k / 300 | over by ~0.7k (bracing, ladder): trim next pass |
+
+Not built yet from the kit list: `dl_toll_fort` and `dl_toll_post` (they use the shared `vt_` materials, not landed yet), `dl_dig_platform` (intact and burned), `dl_dark_tablet`, `dl_clinic`. The Khar-Ul pieces (`kh_*`) are Book II.

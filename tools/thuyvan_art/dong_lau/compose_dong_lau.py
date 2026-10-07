@@ -198,14 +198,22 @@ def diorama(raw, out):
         im = grade(Image.open(f).convert("RGB"), dname)
         shots[(cam, dname)] = im
         W, H = im.size
-        sheet = Image.new("RGB", (W, H + 112), PAPER)
-        sheet.paste(im, (0, 112))
+        sheet = Image.new("RGB", (W, H + 132), PAPER)
+        sheet.paste(im, (0, 132))
         dr = ImageDraw.Draw(sheet)
         d = DIRS[dname]
         dr.text((22, 10), KIT + "  ·  diorama", fill=GREY, font=font(18))
         dr.text((22, 34), "%s  ·  %s" % (d["title"], CAMS.get(cam, cam)), fill=INK, font=font(25, True))
-        dr.text((22, 70), "Light: %s.  %s" % (d["status"], NOTE[:150] + "…" if W < 1600 else NOTE), fill=GREY,
-                font=font(14))
+        line, lines = "Light: %s." % d["status"], []
+        for w_ in NOTE.split(" "):
+            if dr.textlength(line + " " + w_, font=font(15)) > W - 44:
+                lines.append(line)
+                line = w_
+            else:
+                line += " " + w_
+        lines.append(line)
+        for k, ln in enumerate(lines[:2]):
+            dr.text((22, 72 + k * 22), ln, fill=GREY, font=font(15))
         sheet.save(os.path.join(out, nm + ".png"), optimize=True)
     if not shots:
         return
@@ -223,8 +231,8 @@ def diorama(raw, out):
                 font=font(20, True))
     for i, dn in enumerate(dirs):
         y = top + i * (th + 12)
-        dr.text((20, y + 10), DIRS[dn]["title"], fill=INK, font=font(24, True))
-        dr.text((20, y + 46), DIRS[dn]["status"].replace(" (", "\n("), fill=GREY, font=font(15))
+        dr.text((20, y + 10), DIRS[dn]["title"].replace(" and ", "\nand "), fill=INK, font=font(24, True))
+        dr.text((20, y + 80), DIRS[dn]["status"].replace(" (", "\n(").replace(": ", ":\n"), fill=GREY, font=font(15))
         for j, c in enumerate(cams):
             if (c, dn) in shots:
                 sheet.paste(shots[(c, dn)].resize((tw, th), Image.LANCZOS), (left + j * (tw + 12), y))
