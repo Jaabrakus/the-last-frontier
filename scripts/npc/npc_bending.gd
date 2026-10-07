@@ -125,6 +125,12 @@ const HELD_LEFT_S := 0.3
 ## made an air bot's guard near certain, and its shield sent the whole jet back; R1-BALANCE soak, 2026-10-05). Stones and
 ## wind-ups keep a roll each (a stone's catch is earth's core: never rarer).
 const VOLLEY_S := 1.0
+## Round 5: a cone's "pace" as a read threat (it strikes at once on the release: shot_of), and the slack past its reach
+## within which its wind-up still reads as a threat (m).
+const CONE_MPS := 400.0
+const CONE_SLACK_M := 1.0
+## Round 5: the move that throws a held stone besides the guard's E (earth's Shove).
+const HELD_SHOVE := "earth_shove/push"
 
 static var _ai := {}
 static var _bend_cast: Script = null
@@ -846,6 +852,10 @@ func _reaction() -> Dictionary:
 		if not sh.is_empty():
 			return sh                              # (round 4: its guard raised early, to be held as a shield)
 	var best: Dictionary = {}
+	# (round 5, the % ring: every guard stops every attack (spec v2 §2.5), so its own guard on E answers each kind of
+	# bend_ai.json pct.guard_kinds, not only its element's round-2 answers: a guard that took only its own kinds left earth
+	# open to every fire, water and air shot and fire to every Lash and Wave, as no player is)
+	var guard_kinds: Array = (ai().get("pct", {}) as Dictionary).get("guard_kinds", []) if stock() else []
 	for th: Dictionary in threats:
 		var seen := _seen(th, pr, now)
 		if not bool(seen[1]) or now - float(seen[0]) < minf(react, react_g):
@@ -856,6 +866,8 @@ func _reaction() -> Dictionary:
 			var h: Dictionary = o.hint
 			var answers: Array = h.get("answers", [])
 			var ok := is_guard(h) and kind in answers
+			if not ok and bool(o.guard) and stock() and kind in guard_kinds:
+				ok = true                            # (round 5: the % ring's guard stops every attack, its own kinds or not)
 			if not ok and kind == "lightning" and String(o.do) == "dash" and bool(pr.get("lightning_dash", false)):
 				ok = true                            # (a hard bot dashes on the flash: spec 2.3, lightning's flash_s)
 			if not ok or not castable(o) or (kind == "lightning" and bool(o.guard) and not bool(seen[2])):
@@ -878,6 +890,11 @@ func _reaction() -> Dictionary:
 				if tti - ls > at + 0.05 or tti - ls > window * 0.9:
 					# (too soon: it waits for the beat, and begins nothing else meanwhile: _choose holds off)
 					_beat_wait_until = maxf(_beat_wait_until, now + minf(tti - ls - at, 1.0))
+					continue
+			elif kind == "under" and th.has("rise") and stock():
+				# (round 5: what rises under it rises where he aims as he lets go, so a step off begun early is followed
+				# by his aim: it begins only as his lock ends, its step taken in the rise)
+				if tti - float(th.rise) > ls * 0.8:
 					continue
 			elif ls + window * 0.8 < tti:
 				continue
@@ -1122,7 +1139,7 @@ func _threats() -> Array:
 			# (his wind-up read: a throw or a bolt he is locking, its stone or its element on its way when he lets go)
 			var md := sc.mode_of(sc.move)
 			var shot := shot_of(sc.move, md)
-			if not shot.is_empty():
+			if not shot.is_empty() and _in_reach(shot, t):
 				var left := maxf((1.0 - sc.fill) * sc.lock_s, 0.0)
 				var began := int((_now() - sc.fill * sc.lock_s) * 10.0)
 				out.append(_read(shot, hash([sc.get_instance_id(), sc.move, md, began]), left + READ_STRIKE_S, c, t))
@@ -1134,10 +1151,17 @@ func _threats() -> Array:
 						"knock": 6.0})
 			elif ob.casting != "":
 				var shot2 := shot_of(ob.casting, ob.mode)
-				if not shot2.is_empty():
+				if not shot2.is_empty() and _in_reach(shot2, t):
 					out.append(_read(shot2, hash([ob.get_instance_id(), ob.casting, ob.mode, int(ob._lock_at * 100.0)]),
 							maxf(ob.lock_s - ob.lock_t, 0.0), c, t))
 	return out
+
+
+## Whether a read shot reaches it from `t` (a cone's reach + CONE_SLACK_M; any other shot always).
+func _in_reach(shot: Dictionary, t: Node3D) -> bool:
+	if not shot.has("reach") or t == null or not is_instance_valid(t):
+		return true
+	return _flat_d(t) <= float(shot.reach) + CONE_SLACK_M
 
 
 ## Lightning's strike after its release (s): its flash (spec flash_s, round 2: a dash on the flash dodges it), a frame's
@@ -1153,6 +1177,7 @@ func _read(shot: Dictionary, id: int, left: float, c: Vector3, t: Node3D) -> Dic
 	var th := {"id": id, "kind": shot.kind, "knock": shot.knock}
 	if String(shot.kind) == "under":
 		th["tti"] = left + float(shot.get("rise_s", 0.35))
+		th["rise"] = float(shot.get("rise_s", 0.35))
 	elif bool(shot.get("floor", false)):
 		th["tti"] = left + me.global_position.distance_to(t.global_position) / float(shot.mps)
 		th["read"] = true                          # (a guard may answer it; the jump waits for the wave itself)
@@ -1174,6 +1199,11 @@ static func shot_of(id: String, md: String) -> Dictionary:
 				"knock": float(spec.get("knock_mps", 0.0)), "floor": true}
 	if dn in ["column", "spout"]:
 		return {"kind": "under", "mps": 1.0, "knock": float(spec.get("up_mps", 10.0)), "rise_s": float(spec.get("rise_s", 0.35))}
+	if dn == "cone" and stock():
+		# (round 5: a cone (the Wave, Breath, Palm) strikes as he lets go, all of it within its reach: his wind-up is read as
+		# a threat only within reach, so it is guarded as the player guards it; round 4's bots never saw a Wave coming)
+		return {"kind": String(spec.get("kind", "air")), "mps": CONE_MPS, "knock": float(spec.get("knock_mps", 0.0)),
+				"reach": float(spec.get("range_m", 4.0))}
 	if dn == "shove":
 		var rd: Dictionary = SwayMoves.move("gust").get("raised", {})
 		return {"kind": "stone", "mps": float(rd.get("mps", 26.0)), "knock": float(rd.get("knock_mps", 5.0))}
@@ -1518,6 +1548,12 @@ func _answer_catch() -> void:
 	if element != "earth" or g.is_empty() or _held_stone() == null:
 		return
 	var key := "%s/%s" % [g[0], g[1]]
+	if stock():
+		# (round 5, the % ring: the player throws a held stone with E or with Shove (2, right-click: "Shove throws the stone
+		# you hold"); the bot too, by bend_ai.json pct.held_shove, so the mirror's play is not all E)
+		var sh := float((ai().get("pct", {}) as Dictionary).get("held_shove", 0.0))
+		if sh > 0.0 and not _option(HELD_SHOVE).is_empty() and me.rng.randf() < sh:
+			key = HELD_SHOVE
 	var at := _now() + float(preset().get("reaction_s", 0.4)) * 0.5
 	_next[key] = at
 	_cool.erase(key)
