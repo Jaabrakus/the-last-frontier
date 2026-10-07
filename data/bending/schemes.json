@@ -27,6 +27,35 @@
       "line": "1-4 ready only each key's first move: the same game, fewer choices",
       "strip": "1-4 a move · E your guard · 5 Patch",
       "f1": "1-4 each key's first move only (a second tap does nothing) · E your guard · 5 Patch"
+    },
+    "basic": {
+      "label": "Basic",
+      "line": "left click jabs · 1 or 2, then right-click casts · E guards · Space jumps · 3 dashes",
+      "strip": "1 or 2 readies · hold right-click: aim, let go to cast · thrown? hold Space: back you come",
+      "f1": "Left click: your jab · 1 your strike, tap twice: its partner · 2 your push, hold right-click longer: it grows · right-click casts the readied move · E: tap on the beat, hold to keep it up · Space jumps, again in the air · 3 dashes · thrown off? hold Space",
+      "keys": ["fire", "aim", "weapon_1", "weapon_2", "bend_guard", "jump", "weapon_3"],
+      "later_keys": ["weapon_4", "weapon_5"],
+      "later_line": "Wall (4) and Heal (5) come in after your first win"
+    }
+  },
+  "controls": {
+    "_doc": "Round 4 SIMPLE: the Controls preset (MatchSetup.controls(): 'basic' a new player's default, 'full' every key and option and the schemes above; GameSettings' match section, key controls). Basic plays the 'basic' scheme's keys with the keys scheme's routing (MatchSetup.scheme() is 'keys' under it; 'basic' is never in 'order') and RingAssist does the hard parts (data/ring/assist.json). Every word shown to the player.",
+    "default": "basic",
+    "order": ["basic", "full"],
+    "labels": {"basic": "Basic", "full": "Full"},
+    "row": "Controls:  %s",
+    "lines": {
+      "basic": "seven keys; thrown off, hold Space and you come back; the edge climbs for you",
+      "full": "every key and move: dodges, rolls, the edge's choices, and other ways to pick moves"
+    },
+    "changed": "Controls: %s",
+    "offer": {
+      "_doc": "The game's first launch offers the Basics once (the main menu: RingAssist.offer_basics).",
+      "title": "New here?",
+      "line": "Five short cards, each done by doing it: walk up and click, ready and cast, guard, push it off, get back.",
+      "go": "Learn the basics",
+      "go_line": "a practice against a dummy, about five minutes",
+      "later": "Not now"
     }
   },
   "direction": {

@@ -41,6 +41,10 @@ extends RefCounted
 ##       scheme_label, scheme_text(field), scheme_row(_line), direction_move(el, dir), first_moves(el), scheme_keys_head /
 ##       scheme_key_lines(el): data/bending/schemes.json's (simple_skills / simple_entry / simple_mode: the old scheme's
 ##       names, answered from first_moves)
+##   MatchSetup.controls() / basic() / set_controls(c) / next_controls()   round 4 SIMPLE: the Controls preset, "basic" (a
+##       new player's default: the seven Basic keys, the game doing the hard parts, RingAssist; scheme() is then "keys") or
+##       "full" (every key, every option, the schemes); controls_label, controls_row(_line); GameSettings' match section,
+##       key controls; the user arg controls=basic|full
 ##   MatchSetup.practice_move(el, what)   the practice dummy's move for "throw" (key 1's first) or "cover" (its wall)
 ##   MatchSetup.quick_match(rng)  Quick match from the main menu: your last element and the rest of the last setup, the
 ##                                opponent's element drawn at random (the kept setup's opponent is not overwritten by it)
@@ -227,9 +231,13 @@ static func parse(args: PackedStringArray) -> bool:
 				if v in AIMS:
 					_aim_help = v                # (for the run: not kept)
 			"scheme", "controls":
+				if k == "controls" and v in CONTROLS:
+					_controls = v                # (round 4: the Controls preset for the run: not kept)
+					continue
 				v = String(SCHEME_ALIASES.get(v, v))
 				if v in SCHEMES:
 					_scheme = v                  # (for the run: not kept)
+					_controls = "full"           # (a scheme is Full's)
 	return ring
 
 
@@ -583,7 +591,10 @@ static func reload_schemes() -> void:
 
 
 ## The scheme now ("keys" until one is chosen): the run's (scheme= or set_scheme), else the one kept in the settings file.
+## Under the Basic controls (round 4: controls()) always "keys": Basic's keys are the keys scheme's.
 static func scheme() -> String:
+	if basic():
+		return "keys"
 	if _scheme == "":
 		var cf := ConfigFile.new()
 		cf.load(GameSettings.file())
@@ -594,12 +605,14 @@ static func scheme() -> String:
 
 
 ## The scheme set to `s` and kept at once (GameSettings' match section); false (nothing changed) when it is no scheme.
+## A scheme chosen is Full's: the Controls preset goes to "full" with it (round 4).
 static func set_scheme(s: String) -> bool:
 	s = String(SCHEME_ALIASES.get(s, s))
 	if not s in SCHEMES:
 		return false
 	_scheme = s
-	GameSettings.set_value(SECTION, SCHEME_KEY, s)
+	_controls = "full"
+	GameSettings.set_section(SECTION, {SCHEME_KEY: s, CONTROLS_KEY: "full"})
 	return true
 
 
@@ -613,6 +626,76 @@ static func next_scheme(s := "") -> String:
 static func reload_scheme() -> void:
 	_scheme = ""
 	_aim_help = ""
+	_controls = ""
+
+
+# --- The Controls preset (round 4 SIMPLE: "simple like runescape but hard to master like runescape") ---------------
+## "basic" (a new player's: LMB jab, right-click casts, 1 Strike, 2 Push, E Guard, Space, 3 Dash; Wall and Heal after his
+## first win; the game does the hard parts: RingAssist, data/ring/assist.json) or "full" (every key and option, and the
+## control schemes: scheme()). Kept at once in GameSettings' match section (CONTROLS_KEY); the user arg controls=basic|full
+## for a run. No preset kept: a kept scheme (one chosen before there were presets) reads "full", else "basic"; a script run
+## (-s: the tests and tools) reads "full" unless it asks (controls=basic, set_controls), so every older test keeps its keys.
+## The words: data/bending/schemes.json "controls".
+const CONTROLS := ["basic", "full"]
+const CONTROLS_KEY := "controls"
+static var _controls := ""               ## "" until read (controls())
+
+
+static func controls() -> String:
+	if _controls == "":
+		var cf := ConfigFile.new()
+		cf.load(GameSettings.file())
+		var c := String(cf.get_value(SECTION, CONTROLS_KEY, ""))
+		if not c in CONTROLS:
+			var scripted := "-s" in OS.get_cmdline_args() or "--script" in OS.get_cmdline_args()
+			c = "full" if scripted or cf.has_section_key(SECTION, SCHEME_KEY) else _controls_default()
+		_controls = c
+	return _controls
+
+
+static func _controls_default() -> String:
+	var d := String((schemes_data().get("controls", {}) as Dictionary).get("default", "basic"))
+	return d if d in CONTROLS else "basic"
+
+
+## The Basic controls are on.
+static func basic() -> bool:
+	return controls() == "basic"
+
+
+## The preset set to `c` and kept at once; false (nothing changed) when it is none.
+static func set_controls(c: String) -> bool:
+	if not c in CONTROLS:
+		return false
+	_controls = c
+	GameSettings.set_value(SECTION, CONTROLS_KEY, c)
+	return true
+
+
+## The preset after `c` (a press on the menus' Controls row).
+static func next_controls(c := "") -> String:
+	var cur := c if c != "" else controls()
+	return String(CONTROLS[(CONTROLS.find(cur) + 1) % CONTROLS.size()])
+
+
+static func _controls_words() -> Dictionary:
+	return schemes_data().get("controls", {})
+
+
+## The preset's name ("Basic", "Full").
+static func controls_label(c := "") -> String:
+	var k := c if c != "" else controls()
+	return String(((_controls_words().get("labels", {})) as Dictionary).get(k, k.capitalize()))
+
+
+## The menus' row: "Controls:  Basic" and the line under it.
+static func controls_row() -> String:
+	return String(_controls_words().get("row", "Controls:  %s")) % controls_label()
+
+
+static func controls_row_line(c := "") -> String:
+	var k := c if c != "" else controls()
+	return String(((_controls_words().get("lines", {})) as Dictionary).get(k, ""))
 
 
 # --- The aim's help (the owner, 2026-10-05: "the auto aim is to strong yo") -----------------------------------------
