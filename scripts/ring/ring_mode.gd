@@ -245,6 +245,8 @@ func _ready() -> void:
 	var parent: Node = level if level != null else self
 	round_screen = RoundScreen.install(parent, self)
 	match_screen = MatchScreen.install(parent, self)
+	# (round 4 VIRAL: the Splash Cam, the highlights, the callouts, photo mode and the clashes; each runs only under stock rules)
+	RingReplay.install(self)
 	# (Practice's lessons and a first Quick match's key hints: each comes only when asked for, RingLessons / FirstHints)
 	if MatchSetup.practice() and (lessons_asked or "lessons=on" in OS.get_cmdline_user_args()):
 		RingLessons.install(self)
@@ -841,7 +843,7 @@ func _paint() -> void:
 				b = words("go") if phase_t < RingRules.num("go_show_s", 1.2) else (_note if _note_t > 0.0 else "")
 		"OVER":
 			if stock() and decided():
-				b = words("over")
+				b = "" if RingMoment.busy() or RingReplay.holding() else words("over")      # (round 4 IMPACT: the word waits for the last fall's slow beat)
 			elif round_screen == null or not is_instance_valid(round_screen):
 				b = result_line()
 				s = score_text()
@@ -1054,6 +1056,8 @@ func _stock_game() -> void:
 ## `b` made ready for the % ring: MOVE's RingMoves on it, its caster's lock starts ending its spawn safety.
 func _equip(b: Node3D) -> void:
 	RingMoves.install(b)
+	if b == player:
+		RingAssist.install(b)                # (round 4 SIMPLE: the Basic controls' helpers; idle under Full)
 	var sc := SwayCaster.of(b)
 	if sc != null and not _hooked_casters.has(sc.get_instance_id()):
 		_hooked_casters[sc.get_instance_id()] = true

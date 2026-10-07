@@ -756,6 +756,9 @@ class _Voices extends Node:
 		if v == null and fvoices.size() < FLIGHT_POOL:
 			v = AudioStreamPlayer3D.new()
 			v.name = "Flight%d" % fvoices.size()
+			# (round 4's merge: a shot's voice holds with the tree, even while the Splash Cam keeps this pool running for its own
+			# sounds: a stone frozen in flight under the replay does not whirr on)
+			v.process_mode = Node.PROCESS_MODE_PAUSABLE
 			add_child(v)
 			fvoices.append(v)
 		if v == null:

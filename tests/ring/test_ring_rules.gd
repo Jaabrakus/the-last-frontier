@@ -658,6 +658,7 @@ func _clock() -> void:
 			await _until(func() -> bool: return not rules.is_away(f), 3.0)
 			await _ticks(2)
 	await _until(func() -> bool: return mode.phase == "OVER", 2.0)
+	await _until(func() -> bool: return not RingMoment.busy(), 3.0)      # (round 4: the game's screen waits for its last fall's moment)
 	var gs := (mode.round_screen as RoundScreen)
 	_expect(mode.phase == "OVER" and gs.is_open() and String(gs.lines().head).begins_with("Game 1") and mode.score == Vector2i(1, 0),
 			"game 1 to you: the game screen (\"%s\"), the score 1 : 0" % String(gs.lines().head))

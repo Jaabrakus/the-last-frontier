@@ -31,6 +31,8 @@ var _items: VBoxContainer
 var _rematch: Button
 var _elem: Button
 var _foe: Button
+## Round 4 VIRAL: the match's best plays at the right, each with Watch (HighlightCards).
+var _cards: HighlightCards
 ## Round 4: DONE came while the ring-out moment ran: opened when it ends.
 var _waiting := false
 
@@ -97,6 +99,8 @@ func _ready() -> void:
 	_foe.name = "Opponent"
 	var mm := _row(w("main_menu"), to_menu, w("main_menu_line"))
 	mm.name = "MainMenu"
+	_cards = HighlightCards.make(match_mode)
+	_root.add_child(_cards)
 	if match_mode != null and match_mode.has_signal(&"phase_changed"):
 		match_mode.connect(&"phase_changed", _on_phase)
 
@@ -121,7 +125,7 @@ func is_open() -> bool:
 func _on_phase(ph: String) -> void:
 	_waiting = false
 	if ph == "DONE" and not bool(match_mode.get(&"practice")):
-		if RingMoment.busy():
+		if RingMoment.busy() or RingReplay.holding():
 			_waiting = true
 		else:
 			open()
@@ -142,7 +146,7 @@ func close() -> void:
 
 ## The mouse kept free while it stands (the ring's Esc menu takes it back as it closes).
 func _process(_dt: float) -> void:
-	if _waiting and not RingMoment.busy():
+	if _waiting and not RingMoment.busy() and not RingReplay.holding():
 		_waiting = false
 		if String(match_mode.get(&"phase")) == "DONE":
 			open()
@@ -198,6 +202,8 @@ func _paint() -> void:
 		_rounds.add_child(MenuUI.label(r, 18, MenuUI.INK))
 	_totals.text = String(l.totals)
 	_paint_rows()
+	if _cards != null:
+		_cards.refresh()
 
 
 func _paint_rows() -> void:

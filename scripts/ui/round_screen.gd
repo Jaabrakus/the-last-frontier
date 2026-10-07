@@ -100,14 +100,14 @@ func is_open() -> bool:
 
 func _on_phase(ph: String) -> void:
 	var show := ph == "OVER" and not bool(match_mode.get(&"practice")) and not (_stock() and bool(match_mode.call(&"decided")))
-	_waiting = show and RingMoment.busy()
+	_waiting = show and (RingMoment.busy() or RingReplay.holding())
 	_root.visible = show and not _waiting
 	if _root.visible:
 		_paint()
 
 
 func _process(_dt: float) -> void:
-	if _waiting and not RingMoment.busy():
+	if _waiting and not RingMoment.busy() and not RingReplay.holding():
 		_waiting = false
 		_root.visible = String(match_mode.get(&"phase")) == "OVER"
 		if _root.visible:

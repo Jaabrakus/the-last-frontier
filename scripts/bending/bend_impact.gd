@@ -185,6 +185,14 @@ static func pose_rate(b: Node, dt := 0.0) -> float:
 	return 1.0 + extra / dt
 
 
+## Round 4 (VIRAL's clash beat, BendClash): `body`'s pose held `secs` (game s), only in the % ring with the feel on. Poses
+## only: never the camera, the aim, the lock or the motion.
+static func hold(body: Node, secs: float) -> void:
+	if not on() or not RingRules.stock_on():
+		return
+	pose_hold(body, secs)
+
+
 ## Whether `b`'s pose is held now (tests, the review).
 static func held(b: Node) -> bool:
 	return b != null and is_instance_valid(b) and b.has_meta(HOLD_META) and BendStatus.now() < float(b.get_meta(HOLD_META)) - 1e-6

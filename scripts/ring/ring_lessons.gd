@@ -209,8 +209,12 @@ static func dummy_for(el: String) -> String:
 static func lessons_for(sch: String, el: String) -> Array:
 	var out: Array = []
 	var rs := rules_now()
+	# (round 4 SIMPLE: under the Basic controls the Basics track only (its cards' schemes: ["basic"]), else never it)
+	var basics := MatchSetup.basic()
 	for l: Dictionary in data().get("lessons", []):
-		if l.has("schemes") and not KitWords.scheme_id(sch) in (l.schemes as Array):
+		if (String(l.get("track", "")) == "basics") != basics:
+			continue
+		if l.has("schemes") and not KitWords.scheme_id(sch) in (l.schemes as Array) and not basics:
 			continue
 		if l.has("rules") and not rs in (l.rules as Array):
 			continue
@@ -635,7 +639,11 @@ func _hint_step() -> void:
 	var id := hints.next(now)
 	var hq: Dictionary = data().get("hint_queue", {})
 	if id != "":
-		card.show_hint(String(hq.get("kicker", word("hint_kicker"))), String((hq.get("lines", {}) as Dictionary).get(id, id)))
+		var hl := String((hq.get("lines", {}) as Dictionary).get(id, id))
+		if MatchSetup.basic():
+			# (round 4 SIMPLE: under the Basic controls the hints say Basic's keys: lessons.json basics_hints)
+			hl = String((data().get("basics_hints", {}) as Dictionary).get(id, hl))
+		card.show_hint(String(hq.get("kicker", word("hint_kicker"))), hl)
 		_hint_until = now + float(hq.get("show_s", 6.0))
 	elif _hint_until > 0.0 and now >= _hint_until:
 		_hint_until = -1.0
@@ -692,6 +700,8 @@ func _on_guard_result(result: String, what: String) -> void:
 		"guard":
 			if result == "perfect":
 				complete()
+		"guarded":
+			complete()                           # (round 4 SIMPLE's Basics: any guard that took one, on the beat or late)
 		"return":
 			if what == "stone":
 				_caught = true                   # (caught: now E again throws it back)

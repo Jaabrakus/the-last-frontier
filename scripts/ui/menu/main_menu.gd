@@ -188,6 +188,8 @@ func _ready() -> void:
 	_panel_scroll.add_child(_panel)
 	_show(MenuPaintings.next(), _a)
 	_first_focus()
+	if RingAssist.offer_basics():
+		_offer_basics.call_deferred()      # (round 4 SIMPLE: the game's first launch offers the Basics once)
 
 
 func _picture() -> TextureRect:
@@ -764,17 +766,55 @@ func _open_controls() -> void:
 			rules.add_child(l)
 	paint.call()
 	box.add_child(_gap(6))
+	# (round 4 SIMPLE: Basic / Full first, kept at once; the other ways to pick moves are Full's)
+	var preset := MenuUI.item("", 22, "-")
+	preset.name = "ControlsPreset"
 	var sch := MenuUI.item("", 22, "-")
 	sch.name = "Scheme"
 	var paint_sch := func() -> void:
+		_set_row(preset, MatchSetup.controls_row(), MatchSetup.controls_row_line())
 		_set_row(sch, KitWords.other_ways_row(), KitWords.other_ways_line())
+		sch.visible = not MatchSetup.basic()
 	paint_sch.call()
+	preset.pressed.connect(func() -> void:
+		MatchSetup.set_controls(MatchSetup.next_controls())
+		paint_sch.call()
+		paint.call())
 	sch.pressed.connect(func() -> void:
 		MatchSetup.set_scheme(MatchSetup.next_scheme())
 		paint_sch.call()
 		paint.call())
+	box.add_child(preset)
 	box.add_child(sch)
-	sch.grab_focus.call_deferred()
+	(sch if sch.visible else preset).grab_focus.call_deferred()
+
+
+## Round 4 SIMPLE: the Basics offered once, on the game's first launch (RingAssist.offer_basics; the words in
+## data/bending/schemes.json controls.offer): Learn the basics (the Basics track's practice, RingLessons.ask) or Not now.
+func _offer_basics() -> void:
+	_open_panel()
+	var wd: Dictionary = (MatchSetup.schemes_data().get("controls", {}) as Dictionary).get("offer", {})
+	var box := VBoxContainer.new()
+	box.name = "BasicsOffer"
+	box.add_theme_constant_override("separation", 8)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_panel.add_child(box)
+	box.add_child(MenuUI.heading(String(wd.get("title", "New here?"))))
+	var line := MenuUI.label(String(wd.get("line", "")), 18, MenuUI.INK, true)
+	line.custom_minimum_size = Vector2(520, 0)
+	box.add_child(line)
+	box.add_child(_gap(6))
+	var go := MenuUI.item(String(wd.get("go", "Learn the basics")), 30, String(wd.get("go_line", "")))
+	go.name = "Basics"
+	go.pressed.connect(func() -> void:
+		RingLessons.ask(MatchSetup.element)
+		_play_match())
+	box.add_child(go)
+	var later := MenuUI.item(String(wd.get("later", "Not now")), 22)
+	later.name = "NotNow"
+	later.pressed.connect(_close_panel)
+	box.add_child(later)
+	go.grab_focus.call_deferred()
 
 
 ## A row's main line and (when given) the line under it rewritten.

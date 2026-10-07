@@ -29,7 +29,6 @@ static var count := 0
 static var effects := 0
 static var sounds := 0
 static var last := {}
-static var _impact: Variant = null
 
 var _recent: Array = []
 ## Flying lifts last frame: id -> {pos, by, vel, r}.
@@ -246,17 +245,9 @@ static func _sound(at: Vector3) -> void:
 	BendSounds.play(StringName(String(s[0])), at, float(s[1]), float(s[2]))
 
 
-## IMPACT's BendImpact.hold(body, s) on a caster when that class is there (a shared beat; never the camera, aim or lock).
+## IMPACT's BendImpact.hold(body, s) on a caster (a shared beat; never the camera, aim or lock). Round 4's merge: called
+## directly now both classes are in the tree.
 static func _hold(by: Variant) -> void:
 	if not (by is Node) or not is_instance_valid(by):
 		return
-	if _impact == null:
-		_impact = false
-		for c: Dictionary in ProjectSettings.get_global_class_list():
-			if String(c.get("class", "")) == "BendImpact":
-				var s: Variant = load(String(c.get("path", "")))
-				if s is Script:
-					_impact = s
-				break
-	if _impact is Script and (_impact as Script).has_method(&"hold"):
-		(_impact as Script).call(&"hold", by, cnum("hold_s", 0.06))
+	BendImpact.hold(by as Node, cnum("hold_s", 0.06))

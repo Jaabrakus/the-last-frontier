@@ -481,7 +481,9 @@ func readied() -> Dictionary:
 func column(i: int) -> Dictionary:
 	var el := _element()
 	var s := scheme()
-	var out := {"key": i + 1, "head": "", "sub": "", "tap": "", "grow": "", "hidden": i >= KEYS, "id": "", "mode": "", "label": "",
+	# (round 4 SIMPLE: under the Basic controls 4 and 5 hidden until the first win, RingAssist.key_locked)
+	var out := {"key": i + 1, "head": "", "sub": "", "tap": "", "grow": "", "hidden": i >= KEYS or RingAssist.key_locked(player, i + 1),
+			"id": "", "mode": "", "label": "",
 			"other": "", "other_label": "", "modes": [], "mode_i": -1, "readied": false, "icon_id": "", "icon_mode": ""}
 	var ms := KitWords.key_moves(el, i)
 	var heads := {0: "W / 1", 2: "A D / 3", 3: "S / 4"}
@@ -565,9 +567,16 @@ func _stock_column(out: Dictionary, i: int, el: String) -> void:
 				out.icon_id = "slam"
 				out.icon_mode = el
 			2:
-				out.label = String(sw("dodge", "Dodge"))
-				out.sub = ""
-				out.tap = ""
+				if basic_strip():
+					# (round 4 SIMPLE: under Basic 3 in the air does nothing: grey until he lands, as 4 and 5)
+					out.grey = true
+					out.sub = String(sw("lands", "lands"))
+					out.tap = ""
+					out.readied = false
+				else:
+					out.label = String(sw("dodge", "Dodge"))
+					out.sub = ""
+					out.tap = ""
 				out.icon_id = "dodge"
 				out.icon_mode = el
 			3, 4:
@@ -647,6 +656,8 @@ func chip(kind: String) -> Dictionary:
 ## What the next Q does, as the jab chip says it: "Q: put Spike on left click" (the readied move is not on it), "hold Q: Pebbles
 ## back" (another move is on it), both when both hold; "" with nothing to say. The Q as bound (KitWords.key).
 func q_line() -> String:
+	if basic_strip():
+		return ""                            # (round 4 SIMPLE: Q is not a Basic key)
 	return q_text(SwayCaster.of(player) if player != null else null)
 
 
@@ -681,9 +692,18 @@ func quick_line() -> String:
 	return String(chip("jab").label)
 
 
-## The strip's one help line (the scheme's, the keys as bound: KitWords.strip_help, one line of 64 characters or fewer).
+## The strip's one help line (the scheme's, the keys as bound: KitWords.strip_help, one line of 64 characters or fewer;
+## round 4 SIMPLE: under the Basic controls Basic's own).
 func help_line() -> String:
+	if basic_strip():
+		return KitWords.keyed(MatchSetup.scheme_text("strip", "basic"))
 	return KitWords.strip_help(scheme())
+
+
+## Round 4 SIMPLE: the Basic controls' strip (the player's RingAssist active: Basic, the % ring).
+func basic_strip() -> bool:
+	var a: RingAssist = RingAssist.of(player) if player != null and is_instance_valid(player) else null
+	return a != null and a.active()
 
 
 ## The help line of the scheme now (the duel's world HUD under its quick row: round 2's longer line, as ever).

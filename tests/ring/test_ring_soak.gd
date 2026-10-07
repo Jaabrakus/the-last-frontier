@@ -24,9 +24,10 @@ extends SceneTree
 ##               returns (a caught stone sent back by its guard again) and the longest rally (one stone's returns), its locks
 ##               pushed back by hits (setbacks), the waves along the deck it saw and jumped, the casts held to grow (grows_by)
 ##               and the kit's moves it never cast (uncast; the KITS review sums them over every run: no kit move left uncast)
-## The clock: BendStatus.now() counts physics frames, so under ts 4 its timers (the bots' rests, cools, reactions and
-## opening grace; roots, slows) last 4 times as long in game time as the locks and flights do. ts=1 is the game's own pace
-## (headless with a fixed fps it runs unthrottled anyway: a match in a few seconds); read the balance there.
+## The clock: round 4 (IMPACT) made BendStatus.now() game time (BendClock: Engine.time_scale per physics step), so under
+## ts 4 its timers (the bots' rests, cools, reactions and opening grace; roots, slows) keep pace with the locks and
+## flights. ts=1 is the game's own pace (headless with a fixed fps it runs unthrottled anyway: a match in a few
+## seconds); read the balance there.
 ## ROUND 3, the % ring (rules=stock; smash_r3 spec §12): every METRIC line of §12 from RingRules' signals (ko, launched,
 ## pct_changed, string_ended) and the bots' minds (NpcRingMind.stats): game_s, timeout, timeouts_level, last_life_s, life_s,
 ## median_fall_pct, self_falls_per_life, water_ko_share, ko_by_move and the top finisher's share, ko_far_share (KOs whose
@@ -252,9 +253,9 @@ func _run() -> void:
 		print("  (rules=stock asked, the ring plays the %s rules: PERCENT's RingMode does not take MatchSetup.rule_set() in this tree; the stock lines are n/a)" % [RingRules.current().rule_set if RingRules.current() != null else "?"])
 	print("  pair %s vs %s, %s, round_s %.0f, to_win %d, ts %.1f" % [mode.element, mode.foe_element, mode.difficulty, mode.round_s, mode.to_win, ts])
 	if not is_equal_approx(ts, 1.0):
-		# (BendStatus.now() counts physics frames, not scaled time: at ts 4 every clock on it (the bots' rests, cools and
-		# reactions, roots and slows) runs 4 times long in game time; the balance metrics are the game's own at ts=1)
-		print("  (note: ts %.1f stretches the bend clock's timers %.0fx in game time; read the balance at ts=1)" % [ts, ts])
+		# (round 4: BendStatus.now() is game time, so the bend clock keeps pace at any ts; the balance metrics are read at
+		# ts=1, the game's own pace)
+		print("  (note: ts %.1f; the bend clock is game time; read the balance at ts=1)" % ts)
 	Engine.time_scale = ts
 	var t0 := Time.get_ticks_msec()
 	var game_t := 0.0

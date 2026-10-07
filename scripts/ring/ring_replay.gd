@@ -48,7 +48,6 @@ const ELS := ["earth", "water", "fire", "air", "stone", "ice", "lightning", "ste
 static var _data := {}
 ## Tests: "on" replays every fall even in a script run, "off" never; "" the setting and the run's kind decide.
 static var force := ""
-static var _moment_script: Variant = null
 static var _now_playing: RingReplay = null
 
 var mode: Node
@@ -135,6 +134,15 @@ static func install(m: Node) -> RingReplay:
 
 static func find(tree: SceneTree) -> RingReplay:
 	return tree.get_first_node_in_group(GROUP) as RingReplay if tree != null else null
+
+
+## Round 4's merge: a fall's replay is playing or waiting to (the game's and the match's screens and RingMode's "Over"
+## wait for it, as they wait for RingMoment's slow beat, so a screen never flashes up under the cut-away).
+static func holding() -> bool:
+	if playing_now() != null:
+		return true
+	var r := find(Engine.get_main_loop() as SceneTree)
+	return r != null and r.pending() > 0
 
 
 ## The replay playing now, if any.
@@ -698,7 +706,10 @@ func _process(delta: float) -> void:
 	p["waited"] = float(p.waited) + delta / maxf(Engine.time_scale, 0.01)
 	var waited := float(p.waited)
 	var busy := moment_busy()
-	if waited < num("wait_max_s", 3.0) and (busy or (_moment() == null and waited < num("wait_s", 0.6))):
+	# (round 4's merge: the live splash is always seen first (wait_s real), the slow beat runs out (RingMoment), and the
+	# clip's tail after the splash is in the buffer (tail_s of game ticks) before the cut-away)
+	var tail_due := _tick - int(p.ko) < int(round(num("tail_s", 0.6) * tps))
+	if waited < num("wait_max_s", 3.0) and (busy or waited < num("wait_s", 0.6) or tail_due):
 		return
 	_pending.pop_front()
 	var clip := ko_clip(int(p.ko), int(p.slot), int(p.by))
@@ -711,25 +722,9 @@ func pending() -> int:
 	return _pending.size()
 
 
-## IMPACT's RingMoment (when that class exists): its script, else null.
-static func _moment() -> Script:
-	if _moment_script == null:
-		_moment_script = false
-		for c: Dictionary in ProjectSettings.get_global_class_list():
-			if String(c.get("class", "")) == "RingMoment":
-				var s: Variant = load(String(c.get("path", "")))
-				if s is Script:
-					_moment_script = s
-				break
-	return _moment_script as Script if _moment_script is Script else null
-
-
-## IMPACT's ring-out moment still under way (false without it).
+## IMPACT's ring-out moment still under way (round 4's merge: RingMoment called directly).
 static func moment_busy() -> bool:
-	var s := _moment()
-	if s == null or not s.has_method(&"busy"):
-		return false
-	return bool(s.call(&"busy"))
+	return RingMoment.busy()
 
 
 # ---------------------------------------------------------------- clips
