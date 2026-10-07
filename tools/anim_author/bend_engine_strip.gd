@@ -21,6 +21,8 @@ extends SceneTree
 ##       0.45 m to his right, 1.25 m up, radius 0.22 m, from the clip's stone_s on (the hand reaching it), else its strike)
 ##       [lip=own-bend-teeter,...] (the clip posed at the deck's end lip facing out over the water, the balls of the feet on
 ##       the stand-in coping's nose, the views turned with him)
+##       [at=own-bend-spout-ride:0,2,4,12;...] (that clip shown at these frames instead of its key moments: a loop's quick
+##       beat, the spout's surge, that its quarters miss)
 ## Writes <dir>/<clip without own-bend->< suffix>.png. Ends with BEND ENGINE STRIP DONE.
 
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
@@ -82,6 +84,8 @@ var rise := {}
 var _cur_rise := Vector3.ZERO
 ## spout=<clip>,...: the clips shown standing on the respawn spout (RingSpout's look), and the spout drawn for them.
 var spout_clips: PackedStringArray = []
+## at=<clip>:<frame>,<frame>...[;...]: the frames a clip is shown at in place of its key moments.
+var at_frames := {}
 var _spout: Node3D
 var stone_clips: PackedStringArray = []
 var lip_clips: PackedStringArray = []
@@ -126,6 +130,9 @@ func _initialize() -> void:
 						float(r.get_slice(":", 3)) if r.get_slice_count(":") > 3 else 0.0)
 		elif a.begins_with("spout="):
 			spout_clips = a.get_slice("=", 1).split(",", false)
+		elif a.begins_with("at="):
+			for r in a.get_slice("=", 1).split(";", false):
+				at_frames[r.get_slice(":", 0)] = r.get_slice(":", 1).split(",", false)
 	DirAccess.make_dir_recursive_absolute(out)
 	InputSetup.ensure()
 	MatchSetup.incoming = true
@@ -262,6 +269,11 @@ func _dress(element: String) -> void:
 ## The key moments: a loop's quarters, else the start, the strike and the hold (both, in their order, when they differ: the
 ## strike is a reaction's key moment and must be seen in game), the recovery's start and the end.
 func _moments(a: Animation) -> Array:
+	if at_frames.has(_cur):
+		var picked := []
+		for fs: String in at_frames[_cur]:
+			picked.append([int(fs) / 30.0, ("loop f%d" if a.loop_mode != Animation.LOOP_NONE else "f%d") % int(fs)])
+		return picked
 	if a.loop_mode != Animation.LOOP_NONE:
 		return [[0.0, "loop 0/4"], [a.length * 0.25, "loop 1/4"], [a.length * 0.5, "loop 2/4"], [a.length * 0.75, "loop 3/4"]]
 	var key := float(a.get_meta(&"strike_s", 0.0))

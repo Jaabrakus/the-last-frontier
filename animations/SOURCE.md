@@ -197,6 +197,7 @@ visual references, no animation files imported) is his statement; the rows below
 | `own-bend-air-hit-water` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_water`, `water_ring_at`, `_each`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
 | `own-bend-air-hit-water-l` | 2026-10-07 (eighth set, pass 2) | `bend_clips.py` (`air_hit_water`, `mirror_clip`) | `air_hit_water`'s keys mirrored left for right | (as its original) |
 | `own-bend-air-hit-fire` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_fire`, `_heel_key`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-air-hit-fire-l` | 2026-10-07 (eighth set, pass 3) | `bend_clips.py` (`air_hit_fire`, `mirror_clip`) | `air_hit_fire`'s keys mirrored left for right | (as its original) |
 | `own-bend-air-hit-air` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_air`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
 | `own-bend-air-hit-air-l` | 2026-10-07 (eighth set, pass 2) | `bend_clips.py` (`air_hit_air`, `mirror_clip`) | `air_hit_air`'s keys mirrored left for right | (as its original) |
 
@@ -364,6 +365,17 @@ visual references, no animation files imported) is his statement; the rows below
   against it; the fire hit's legs a frame apart with a recoil and its fists flung back on long arms; the air hit's palm
   change, long dragging arms and the head's spot. `bend_engine_strip.gd` gains `spout=` (the clip stood on RingSpout's own
   column and crown) and a forward drift on `rise=` (an air clip seen on a real jump's arc); it reads no motion.
+  Pass 3 (the same day, the critic's pass-2 notes): the same generator and inputs (the rig's rest pose and keys typed into
+  the table); no clip, dump or reference motion read; only the eighth set's clips re-baked (`--clips`), plus one new twin,
+  `own-bend-air-hit-fire-l` (the fire hit's right foot leads). The spout ride's palms lower and nearer with the elbows out
+  and dropped (round arms), the step-off's left hand reaching ahead of the chest with an open palm; the water hit re-keyed
+  as tai chi's "hold the ball" (the right palm stacked over the left, the chest's heading typed in `WATER_C` with the hips
+  leading it in `WATER_YAW` and the ball's offset off it in `RING_OFF`, a typed counter-lean in `WATER_ROLL` and
+  `WATER_SIDE`, the knees tucked high), its strike moved from f5 to f4 (`strike_s` 0.133, `back_s` 0.300); the fire hit's
+  trunk only a little back with the head down the legs and the fists chambered at the waist; the air hit's open slant on
+  its strike frame, the lead palm at the eyes' height on a round arm with the wrist bent back, the feet tucked higher. The
+  water hit's and the twins' other metas, and every earlier set's clip, are unchanged. `bend_engine_strip.gd` gains `at=`
+  (a clip shown at chosen frames: the spout's surge); it reads no motion.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.
