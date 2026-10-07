@@ -1,0 +1,126 @@
+{
+ "format": "thuyvan-dress-paint",
+ "version": 1,
+ "note": "Value maps: grey = place on the zone dye's 4-stop ramp (0 dark, 0.40 mid, 0.75 light, 1.0 accent; peoples_dyes.json ramps, cloth2 palette tv_*). Motifs: RGB = coverage of three thread dyes over the zone's ground dye. Our own strokes and straight-cut marks; painted with numpy (no photographs, no sheet pixels).",
+ "stops": {
+  "dark": 0.0,
+  "mid": 0.4,
+  "light": 0.75,
+  "accent": 1.0
+ },
+ "kits": {
+  "weave": {
+   "png": "res://assets/thuyvan/dress/paint/weave.png",
+   "tile_m": 0.4,
+   "use": "homespun cotton and hemp cloth: vests, robes, trousers, skirts, panels",
+   "mean": 0.383
+  },
+  "hemp": {
+   "png": "res://assets/thuyvan/dress/paint/hemp.png",
+   "tile_m": 0.32,
+   "use": "coarse undyed hemp: leg wraps, fringe strips, ties",
+   "mean": 0.396
+  },
+  "felt": {
+   "png": "res://assets/thuyvan/dress/paint/felt.png",
+   "tile_m": 0.45,
+   "use": "felted wool and heavy cloth: mantles, oath robes",
+   "mean": 0.414
+  },
+  "leather": {
+   "png": "res://assets/thuyvan/dress/paint/leather.png",
+   "tile_m": 0.4,
+   "use": "tanned hide: straps, sandals, aprons",
+   "mean": 0.418
+  },
+  "fur": {
+   "png": "res://assets/thuyvan/dress/paint/fur.png",
+   "tile_m": 0.3,
+   "use": "goat fur: ruffs and shaggy edges",
+   "mean": 0.378
+  },
+  "straw": {
+   "png": "res://assets/thuyvan/dress/paint/straw.png",
+   "tile_m": 0.32,
+   "use": "woven split cane and straw: baskets, hats",
+   "mean": 0.358
+  },
+  "cord": {
+   "png": "res://assets/thuyvan/dress/paint/cord.png",
+   "tile_m": 0.1,
+   "use": "twisted cord and braid: cords, tassels",
+   "mean": 0.497
+  },
+  "metal": {
+   "png": "res://assets/thuyvan/dress/paint/metal.png",
+   "tile_m": 0.2,
+   "use": "cast bronze, gold and silver: discs, fittings, pins",
+   "mean": 0.446
+  },
+  "bone": {
+   "png": "res://assets/thuyvan/dress/paint/bone.png",
+   "tile_m": 0.1,
+   "use": "bone, tooth and horn: beads, teeth, pins",
+   "mean": 0.55
+  },
+  "feather": {
+   "png": "res://assets/thuyvan/dress/paint/feather.png",
+   "tile_m": 0.0,
+   "use": "hawk feather card (value in RGB, the vane in A)"
+  }
+ },
+ "motifs": {
+  "band_motif": {
+   "png": "res://assets/thuyvan/dress/motifs/band_motif.png",
+   "tile_m": [
+    0.12,
+    0.12
+   ],
+   "threads": [
+    "tv_bone",
+    "tv_indigo_black",
+    "tv_ochre"
+   ],
+   "use": "Mountain Folk woven band: ridge zigzags, stepped terraces, a ladder of journeys; on a madder ground"
+  },
+  "quilting": {
+   "png": "res://assets/thuyvan/dress/motifs/quilting.png",
+   "tile_m": [
+    0.2,
+    0.2
+   ],
+   "threads": [
+    "tv_deep_navy",
+    "tv_bone",
+    "tv_bone"
+   ],
+   "use": "the imperial levy coat's quilting lattice and stitches"
+  },
+  "house_mark": {
+   "png": "res://assets/thuyvan/dress/motifs/house_mark.png",
+   "tile_m": [
+    0.16,
+    0.06
+   ],
+   "threads": [
+    "tv_quarry_white",
+    "tv_charcoal",
+    "tv_charcoal"
+   ],
+   "use": "Stone Children guild band: a straight-cut maker's mark in rows"
+  },
+  "tide_scroll": {
+   "png": "res://assets/thuyvan/dress/motifs/tide_scroll.png",
+   "tile_m": [
+    0.16,
+    0.16
+   ],
+   "threads": [
+    "tv_pearl",
+    "tv_sea_glass",
+    "tv_sea_glass"
+   ],
+   "use": "Dragon-Sea stacked arcs (one ring form; no swirl)"
+  }
+ }
+}

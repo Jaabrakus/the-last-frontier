@@ -5,7 +5,8 @@
   robe(g, st)          T2: a long robe or kaftan on the coat's cut (recipes.coat): mode "crossed" (left over right),
                        "side_fastened" (neck to the right armpit, then down the side), "under_arm" (the jama crossover)
                        or "open" (edge to edge). The overlapping edge is an `overlap_line` [(z, theta deg)] round the
-                       body; side slits, sleeves past the wrist, side ties, a collar band along the edge
+                       body; side slits, sleeves past the wrist, side ties, a collar band along the edge; `sleeves`
+                       None: sleeveless with round armholes (2026-10-06, the Thủy Vân vests and work tunics)
   tunic(g, st)         T3: an unfitted pull-over (thawb, kamis, tob): a neck slit, wide open sleeves (or armholes),
                        side slits, a hood lying on the back, and a closed skirt to the hem (the runtime's closed-skirt
                        panels, as the petticoat)
@@ -255,6 +256,8 @@ ROBE = R.style(
                   "binding": {"w": 0.010, "zone": 1}},
     slits=[(86.0, 94.0, 0.85)],          # side slits [(from deg, to deg, up to z)] (both sides)
     sleeve_past=None,                    # {"len": 0.08}: sleeves past the wrist (trims.extrude along the forearm)
+    sleeves=True,                        # None: sleeveless, round armholes as TUNIC's (`armholes`: Garment.armholes keys)
+    armholes=None,
     ties=None,                           # [(theta, z)]: tapes or toggles at points on the garment (zone 3)
     collar_band=None,                    # {"w": 0.03, "h": 0.003}: a band along the neckline and the overlap's edge
     over_relax=0,                        # rounds of smoothing the skirts and fitting them over the layers again
@@ -274,6 +277,12 @@ def robe(g, st=None):
         st["overlap_line"] = ol
     if st["mode"] == "open":
         st["overlap_line"] = None
+    if st.get("sleeves", True) is None:
+        # (2026-10-06) sleeveless: the coat's cut with round armholes (recipes.coat "sleeveless")
+        st["sleeveless"] = dict(st.get("armholes") or TUNIC["armholes"])
+        st["cuffs"] = None
+        st["sleeve_past"] = None
+        st["cuff_buttons"] = 0
     R.coat(g, st)
     Z = st["zones"]
     if st.get("sleeve_past"):

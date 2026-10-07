@@ -1,0 +1,1051 @@
+{
+ "format": "thuyvan.peoples_dyes",
+ "version": 1,
+ "note": "Proposed cloth2 palette entries (tools/character/cloth2/palette.json: name -> mid hex) and their painter's ramps [dark, mid, light, accent], made by make_pages.py from the sheets and docs/thuyvan/plan/look/palettes.json. A proposal for the owner's eye.",
+ "dyes": {
+  "tv_indigo_black": {
+   "mid": "#1c2546",
+   "ramp": [
+    "#1c2546",
+    "#2d3d6e",
+    "#4a5e96",
+    "#7889b8"
+   ],
+   "by": "Mountain Folk",
+   "uses": [
+    "Mountain Folk: wrap vest, trousers, hip panels"
+   ],
+   "how": "world: r1.indigo_cloth[0]",
+   "sheet": "#363840",
+   "pushed": "#3e4457",
+   "sample": [
+    "image-gen-4(1).png",
+    [
+     88,
+     1185,
+     104,
+     1225
+    ]
+   ]
+  },
+  "tv_madder": {
+   "mid": "#a33a28",
+   "ramp": [
+    "#6a2219",
+    "#a33a28",
+    "#c9583a",
+    "#e28657"
+   ],
+   "by": "Mountain Folk",
+   "uses": [
+    "Mountain Folk: sash, woven bands, tassels",
+    "Riverborn: tassels"
+   ],
+   "how": "world: r1.madder_cloth[1]",
+   "sheet": "#785747",
+   "pushed": "#954617",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     396,
+     340,
+     412,
+     380
+    ]
+   ]
+  },
+  "tv_hemp": {
+   "mid": "#c9b48a",
+   "ramp": [
+    "#978262",
+    "#c9b48a",
+    "#efdfb7",
+    "#fdf5da"
+   ],
+   "by": "Mountain Folk",
+   "uses": [
+    "Mountain Folk: leg wraps, fringe, ties"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#73655c",
+   "pushed": "#c5ad9f",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     318,
+     556,
+     334,
+     576
+    ]
+   ]
+  },
+  "tv_bone": {
+   "mid": "#cfc4a6",
+   "ramp": [
+    "#a69c84",
+    "#cfc4a6",
+    "#e9e0c6",
+    "#f8f2e0"
+   ],
+   "by": "Mountain Folk",
+   "uses": [
+    "Mountain Folk: woven band ground, bone beads"
+   ],
+   "how": "world: r1.bone_cloth[1]",
+   "sheet": "#262425",
+   "pushed": "#282325",
+   "sample": [
+    "image-gen-2.png",
+    [
+     808,
+     470,
+     822,
+     500
+    ]
+   ]
+  },
+  "tv_walnut": {
+   "mid": "#64472f",
+   "ramp": [
+    "#3b2a1f",
+    "#64472f",
+    "#8e6a47",
+    "#b39069"
+   ],
+   "by": "Mountain Folk",
+   "uses": [
+    "Mountain Folk: leather straps, sandals, quiver"
+   ],
+   "how": "world: r1.timber[1]",
+   "sheet": "#4b4340",
+   "pushed": "#6b574f",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     300,
+     630,
+     316,
+     648
+    ]
+   ]
+  },
+  "tv_fur_grey": {
+   "mid": "#8a7d6c",
+   "ramp": [
+    "#5b4f43",
+    "#8a7d6c",
+    "#b0a594",
+    "#c8c2b6"
+   ],
+   "by": "Mountain Folk",
+   "uses": [
+    "Mountain Folk: mantle fur and ruff"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#d3d4d4",
+   "pushed": "#838585",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     288,
+     268,
+     304,
+     290
+    ]
+   ]
+  },
+  "tv_ochre": {
+   "mid": "#b07f2e",
+   "ramp": [
+    "#7a5520",
+    "#b07f2e",
+    "#d7a548",
+    "#edc877"
+   ],
+   "by": "Mountain Folk",
+   "uses": [
+    "Mountain Folk: band accents (High-Pine)"
+   ],
+   "how": "world: r1.ochre_cloth[1]",
+   "sheet": "#5a362d",
+   "pushed": "#751d04",
+   "sample": [
+    "image-gen-2.png",
+    [
+     900,
+     470,
+     940,
+     520
+    ]
+   ]
+  },
+  "tv_bronze": {
+   "mid": "#976d40",
+   "ramp": [
+    "#654020",
+    "#976d40",
+    "#bb966b",
+    "#ccb698"
+   ],
+   "by": "Mountain Folk",
+   "uses": [
+    "Mountain Folk: disc, rings, spear fittings"
+   ],
+   "how": "pushed x2.3",
+   "sheet": "#857361",
+   "pushed": "#976d40",
+   "sample": [
+    "image-gen-2.png",
+    [
+     918,
+     440,
+     960,
+     480
+    ]
+   ]
+  },
+  "tv_jade_cloth": {
+   "mid": "#4e8577",
+   "ramp": [
+    "#2f5c55",
+    "#4e8577",
+    "#7daf9c",
+    "#b4d3c2"
+   ],
+   "by": "Mountain Folk",
+   "uses": [
+    "Mountain Folk: band accents (Cloud-Pass)"
+   ],
+   "how": "world: r1.jade_cloth[1]",
+   "sheet": null,
+   "pushed": null,
+   "sample": null
+  },
+  "tv_pine_black": {
+   "mid": "#1f4436",
+   "ramp": [
+    "#1f4436",
+    "#2f634a",
+    "#4f8a5a",
+    "#86b172"
+   ],
+   "by": "Mountain Folk",
+   "uses": [
+    "Mountain Folk: ground (High-Pine)"
+   ],
+   "how": "world: r1.pine[0]",
+   "sheet": null,
+   "pushed": null,
+   "sample": null
+  },
+  "tv_slate_plate": {
+   "mid": "#6f7f8c",
+   "ramp": [
+    "#43515b",
+    "#6f7f8c",
+    "#98a6b3",
+    "#b9c1cb"
+   ],
+   "by": "Stone Children",
+   "uses": [
+    "Stone Children: mineral plates (default tone)"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#6a696f",
+   "pushed": "#807d8c",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     545,
+     250,
+     580,
+     300
+    ]
+   ]
+  },
+  "tv_charcoal": {
+   "mid": "#3d3530",
+   "ramp": [
+    "#150f0c",
+    "#3d3530",
+    "#5f5853",
+    "#77726e"
+   ],
+   "by": "Stone Children",
+   "uses": [
+    "Stone Children: work tunic, hip layers"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#695e56",
+   "pushed": "#523d2f",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     688,
+     320,
+     700,
+     345
+    ]
+   ]
+  },
+  "tv_dust_buff": {
+   "mid": "#beafa6",
+   "ramp": [
+    "#8b7f79",
+    "#beafa6",
+    "#e7dad0",
+    "#fcf4ec"
+   ],
+   "by": "Stone Children",
+   "uses": [
+    "Stone Children: trousers, shade cloth"
+   ],
+   "how": "pushed x1.3, value 0.70",
+   "sheet": "#968b84",
+   "pushed": "#beafa6",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     580,
+     505,
+     600,
+     530
+    ]
+   ]
+  },
+  "tv_leather": {
+   "mid": "#6c5e52",
+   "ramp": [
+    "#3f332b",
+    "#6c5e52",
+    "#918478",
+    "#a8a198"
+   ],
+   "by": "Stone Children",
+   "uses": [
+    "Stone Children: apron, straps, sandals"
+   ],
+   "how": "pushed x2.4, value 0.38",
+   "sheet": "#4b4541",
+   "pushed": "#6c5e52",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     585,
+     425,
+     600,
+     450
+    ]
+   ]
+  },
+  "tv_ochre_banner": {
+   "mid": "#c7962f",
+   "ramp": [
+    "#7a5520",
+    "#c7962f",
+    "#e2b553",
+    "#3a2a1e"
+   ],
+   "by": "Stone Children",
+   "uses": [
+    "Stone Children: sash, guild bands"
+   ],
+   "how": "world: thach_uyen.banner_ochre[1]",
+   "sheet": "#83705e",
+   "pushed": "#966939",
+   "sample": [
+    "image-gen-5(1).png",
+    [
+     960,
+     555,
+     990,
+     620
+    ]
+   ]
+  },
+  "tv_quarry_white": {
+   "mid": "#e6dccb",
+   "ramp": [
+    "#6f6a78",
+    "#b9aa95",
+    "#e6dccb",
+    "#f5eee0"
+   ],
+   "by": "Stone Children",
+   "uses": [
+    "Stone Children: guild robe"
+   ],
+   "how": "world: thach_uyen.quarry_stone[2]",
+   "sheet": "#8d847e",
+   "pushed": "#938278",
+   "sample": [
+    "image-gen-5(1).png",
+    [
+     150,
+     520,
+     220,
+     560
+    ]
+   ]
+  },
+  "tv_kiln_brick": {
+   "mid": "#9a4a2c",
+   "ramp": [
+    "#5a2a1c",
+    "#9a4a2c",
+    "#c06a3c",
+    "#ff8a3a"
+   ],
+   "by": "Stone Children",
+   "uses": [
+    "Stone Children: cord, chisel ties"
+   ],
+   "how": "world: thach_uyen.kiln_brick[1]",
+   "sheet": "#857065",
+   "pushed": "#98684e",
+   "sample": [
+    "image-gen-5(1).png",
+    [
+     760,
+     930,
+     790,
+     990
+    ]
+   ]
+  },
+  "tv_jade": {
+   "mid": "#6fa58e",
+   "ramp": [
+    "#4b725d",
+    "#6fa58e",
+    "#99cdbb",
+    "#c3e6dc"
+   ],
+   "by": "Stone Children",
+   "uses": [
+    "Stone Children: pendants, plaques",
+    "Ancestor-Bound: jade discs"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#858680",
+   "pushed": "#86867b",
+   "sample": [
+    "image-gen-5(1).png",
+    [
+     930,
+     935,
+     975,
+     1000
+    ]
+   ]
+  },
+  "tv_estuary_teal": {
+   "mid": "#2f6f7a",
+   "ramp": [
+    "#044247",
+    "#2f6f7a",
+    "#5f94a2",
+    "#8bacb8"
+   ],
+   "by": "Dragon-Sea People",
+   "uses": [
+    "Dragon-Sea People: short robe, skirt over-layer"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#787671",
+   "pushed": "#787266",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     70,
+     265,
+     95,
+     300
+    ]
+   ]
+  },
+  "tv_deep_navy": {
+   "mid": "#24386e",
+   "ramp": [
+    "#16244a",
+    "#24386e",
+    "#3c5496",
+    "#d8a743"
+   ],
+   "by": "Dragon-Sea People",
+   "uses": [
+    "Dragon-Sea People: long skirt, court robe"
+   ],
+   "how": "world: van_thuy.court_banner[1]",
+   "sheet": "#32363c",
+   "pushed": "#333e4e",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     140,
+     545,
+     165,
+     575
+    ]
+   ]
+  },
+  "tv_sea_glass": {
+   "mid": "#a9c9c2",
+   "ramp": [
+    "#7d968e",
+    "#a9c9c2",
+    "#d5f3ee",
+    "#e6faf8"
+   ],
+   "by": "Dragon-Sea People",
+   "uses": [
+    "Dragon-Sea People: under-shirt, sheer layers",
+    "Riverborn: sheer shawl, facings"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#989c9e",
+   "pushed": "#b5bec5",
+   "sample": [
+    "image-gen-1.png",
+    [
+     640,
+     690,
+     670,
+     720
+    ]
+   ]
+  },
+  "tv_pearl": {
+   "mid": "#ece6d6",
+   "ramp": [
+    "#b8b2a6",
+    "#ece6d6",
+    "#f2efe0",
+    "#f7f5eb"
+   ],
+   "by": "Dragon-Sea People",
+   "uses": [
+    "Dragon-Sea People: sash, pearls, shell",
+    "Riverborn: pearls, sash"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#6d5b51",
+   "pushed": "#fad9c7",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     112,
+     298,
+     130,
+     312
+    ]
+   ]
+  },
+  "tv_scale_teal": {
+   "mid": "#3f9a9a",
+   "ramp": [
+    "#1b6864",
+    "#3f9a9a",
+    "#73c1c5",
+    "#a8d9df"
+   ],
+   "by": "Dragon-Sea People",
+   "uses": [
+    "Dragon-Sea People: scale trait colour"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#a89a96",
+   "pushed": "#b5958c",
+   "sample": [
+    "image-gen-1.png",
+    [
+     860,
+     820,
+     930,
+     880
+    ]
+   ]
+  },
+  "tv_lacquer_red": {
+   "mid": "#8e2e22",
+   "ramp": [
+    "#5e1c16",
+    "#8e2e22",
+    "#b8452f",
+    "#d9704a"
+   ],
+   "by": "Dragon-Sea People",
+   "uses": [
+    "Dragon-Sea People: waist plate, tassels, binding",
+    "Ancestor-Bound: bands, sash, tassels"
+   ],
+   "how": "world: r1.lacquer_red[1]",
+   "sheet": "#6f473c",
+   "pushed": "#8b3219",
+   "sample": [
+    "image-gen-1.png",
+    [
+     950,
+     560,
+     1000,
+     640
+    ]
+   ]
+  },
+  "tv_gold": {
+   "mid": "#d8a743",
+   "ramp": [
+    "#a47526",
+    "#d8a743",
+    "#fad57c",
+    "#fff5d6"
+   ],
+   "by": "Dragon-Sea People",
+   "uses": [
+    "Dragon-Sea People: court trim, fittings",
+    "Riverborn: charm fittings",
+    "Hồ Tinh: embroidery, pins, charms",
+    "Ancestor-Bound: lineage embroidery, bells"
+   ],
+   "how": "world: van_thuy.court_banner[3]",
+   "sheet": "#837160",
+   "pushed": "#926c44",
+   "sample": [
+    "image-gen-1.png",
+    [
+     830,
+     480,
+     880,
+     520
+    ]
+   ]
+  },
+  "tv_dock_indigo": {
+   "mid": "#646a81",
+   "ramp": [
+    "#383f50",
+    "#646a81",
+    "#8c90a6",
+    "#abacbb"
+   ],
+   "by": "Dragon-Sea People",
+   "uses": [
+    "Dragon-Sea People: dock jackets (faded)"
+   ],
+   "how": "pushed x2.4, value 0.42",
+   "sheet": "#393b44",
+   "pushed": "#646a81",
+   "sample": [
+    "image-gen-3(1).png",
+    [
+     415,
+     980,
+     440,
+     1020
+    ]
+   ]
+  },
+  "tv_salt_white": {
+   "mid": "#e3dccb",
+   "ramp": [
+    "#b0a89b",
+    "#e3dccb",
+    "#f3efdf",
+    "#f7f5eb"
+   ],
+   "by": "Dragon-Sea People",
+   "uses": [
+    "Dragon-Sea People: dock trousers, sails"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#4e423b",
+   "pushed": "#e0c7b7",
+   "sample": [
+    "image-gen-3(1).png",
+    [
+     470,
+     960,
+     495,
+     990
+    ]
+   ]
+  },
+  "tv_river_skin": {
+   "mid": "#7296b2",
+   "ramp": [
+    "#47677b",
+    "#7296b2",
+    "#a0bed9",
+    "#c7d9ed"
+   ],
+   "by": "Riverborn",
+   "uses": [
+    "Riverborn: the water tint's target (skin)"
+   ],
+   "how": "pushed x2.3",
+   "sheet": "#8594a0",
+   "pushed": "#7296b2",
+   "sample": [
+    "image-gen-6.png",
+    [
+     420,
+     880,
+     450,
+     920
+    ]
+   ]
+  },
+  "tv_lotus_green": {
+   "mid": "#4f7a62",
+   "ramp": [
+    "#2c4b35",
+    "#4f7a62",
+    "#76a18c",
+    "#9bb9ad"
+   ],
+   "by": "Riverborn",
+   "uses": [
+    "Riverborn: light robe"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#3a3f42",
+   "pushed": "#586971",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     425,
+     1075,
+     442,
+     1100
+    ]
+   ]
+  },
+  "tv_deep_teal": {
+   "mid": "#1f6464",
+   "ramp": [
+    "#071f24",
+    "#0f3b40",
+    "#1f6464",
+    "#2d8c88"
+   ],
+   "by": "Riverborn",
+   "uses": [
+    "Riverborn: wading skirt, breast wrap"
+   ],
+   "how": "world: vuc_sen_sau.cave_water[2]",
+   "sheet": "#716e69",
+   "pushed": "#494233",
+   "sample": [
+    "image-gen-6.png",
+    [
+     440,
+     630,
+     470,
+     670
+    ]
+   ]
+  },
+  "tv_lotus_pink": {
+   "mid": "#e67fa0",
+   "ramp": [
+    "#a8456a",
+    "#e67fa0",
+    "#f7b9c9",
+    "#fff0f2"
+   ],
+   "by": "Riverborn",
+   "uses": [
+    "Riverborn: lotus charms, flowers"
+   ],
+   "how": "world: vuc_sen_sau.lotus_flower[1]",
+   "sheet": "#a18371",
+   "pushed": "#b67a56",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     262,
+     975,
+     285,
+     995
+    ]
+   ]
+  },
+  "tv_reed_straw": {
+   "mid": "#c7b36a",
+   "ramp": [
+    "#6e5e30",
+    "#9c8a4a",
+    "#c7b36a",
+    "#e2d48e"
+   ],
+   "by": "Riverborn",
+   "uses": [
+    "Riverborn: lotus hat"
+   ],
+   "how": "world: dong_lau.reed_gold[2]",
+   "sheet": "#959082",
+   "pushed": "#9a8f70",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     300,
+     772,
+     330,
+     790
+    ]
+   ]
+  },
+  "tv_crimson": {
+   "mid": "#9e2a2a",
+   "ramp": [
+    "#5e1418",
+    "#9e2a2a",
+    "#c84a3a",
+    "#e0a83e"
+   ],
+   "by": "Hồ Tinh",
+   "uses": [
+    "Hồ Tinh: hood shawl, under-robe"
+   ],
+   "how": "world: ao_thanh.crimson_banner[1]",
+   "sheet": "#6a413a",
+   "pushed": "#882519",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     885,
+     238,
+     905,
+     258
+    ]
+   ]
+  },
+  "tv_lacquer_black": {
+   "mid": "#2a1a16",
+   "ramp": [
+    "#140c0a",
+    "#2a1a16",
+    "#4a2e26",
+    "#6e463a"
+   ],
+   "by": "Hồ Tinh",
+   "uses": [
+    "Hồ Tinh: robe, sash",
+    "Ancestor-Bound: keeper robe"
+   ],
+   "how": "world: ao_thanh.lacquer_black[1]",
+   "sheet": "#907e79",
+   "pushed": "#41261f",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     788,
+     520,
+     806,
+     548
+    ]
+   ]
+  },
+  "tv_ivory": {
+   "mid": "#efe6d2",
+   "ramp": [
+    "#bbb2a2",
+    "#efe6d2",
+    "#f5eedc",
+    "#f8f5e9"
+   ],
+   "by": "Hồ Tinh",
+   "uses": [
+    "Hồ Tinh: inner sleeves, letters"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#4a3a38",
+   "pushed": "#f3d3ce",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     835,
+     340,
+     850,
+     380
+    ]
+   ]
+  },
+  "tv_fox_cream": {
+   "mid": "#f2dcc8",
+   "ramp": [
+    "#bda99a",
+    "#f2dcc8",
+    "#fdebd8",
+    "#fef3e5"
+   ],
+   "by": "Hồ Tinh",
+   "uses": [
+    "Hồ Tinh: tails, ear fur (default)"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#968580",
+   "pushed": "#f8cec3",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     740,
+     555,
+     770,
+     590
+    ]
+   ]
+  },
+  "tv_fox_russet": {
+   "mid": "#b94420",
+   "ramp": [
+    "#7c180c",
+    "#b94420",
+    "#de744a",
+    "#e59f7d"
+   ],
+   "by": "Hồ Tinh",
+   "uses": [
+    "Hồ Tinh: tails, ear fur (option)"
+   ],
+   "how": "pushed x2.6",
+   "sheet": "#8f6356",
+   "pushed": "#b94420",
+   "sample": [
+    "image-gen-8(1).png",
+    [
+     720,
+     890,
+     760,
+     930
+    ]
+   ]
+  },
+  "tv_plum": {
+   "mid": "#5a2a3a",
+   "ramp": [
+    "#290617",
+    "#5a2a3a",
+    "#7f4f5a",
+    "#916f73"
+   ],
+   "by": "Hồ Tinh",
+   "uses": [
+    "Hồ Tinh: brocade accent"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#201a19",
+   "pushed": "#554240",
+   "sample": [
+    "image-gen-8(1).png",
+    [
+     930,
+     1060,
+     970,
+     1110
+    ]
+   ]
+  },
+  "tv_mourning_white": {
+   "mid": "#ece8de",
+   "ramp": [
+    "#b8b4ac",
+    "#ece8de",
+    "#f1eee5",
+    "#f6f5ef"
+   ],
+   "by": "Ancestor-Bound",
+   "uses": [
+    "Ancestor-Bound: under-robe"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#867e7c",
+   "pushed": "#ecddd9",
+   "sample": [
+    "image-gen-1(1).png",
+    [
+     870,
+     1180,
+     890,
+     1200
+    ]
+   ]
+  },
+  "tv_paper": {
+   "mid": "#e3cfa6",
+   "ramp": [
+    "#b09c7c",
+    "#e3cfa6",
+    "#fceec7",
+    "#fcf5db"
+   ],
+   "by": "Ancestor-Bound",
+   "uses": [
+    "Ancestor-Bound: spirit tags"
+   ],
+   "how": "set by eye (the sheet's hue; patch = evidence)",
+   "sheet": "#a28e7c",
+   "pushed": "#e6b88e",
+   "sample": [
+    "image-gen-8.png",
+    [
+     790,
+     520,
+     812,
+     600
+    ]
+   ]
+  },
+  "tv_candle": {
+   "mid": "#ffb45a",
+   "ramp": [
+    "#c68240",
+    "#ffb45a",
+    "#feebd3",
+    "#fff4e3"
+   ],
+   "by": "Ancestor-Bound",
+   "uses": [
+    "Ancestor-Bound: lantern paper, candle light"
+   ],
+   "how": "world: r1.lantern_paper[3]",
+   "sheet": null,
+   "pushed": null,
+   "sample": null
+  },
+  "tv_straw": {
+   "mid": "#bc9c5c",
+   "ramp": [
+    "#5c4a2c",
+    "#8e7342",
+    "#bc9c5c",
+    "#dcc384"
+   ],
+   "by": "shared",
+   "uses": [
+    "hats and baskets"
+   ],
+   "how": "world: r1.thatch[2]",
+   "sheet": null,
+   "pushed": null,
+   "sample": null
+  },
+  "tv_rope": {
+   "mid": "#776040",
+   "ramp": [
+    "#4a3a26",
+    "#776040",
+    "#a68a5e",
+    "#c9b183"
+   ],
+   "by": "shared",
+   "uses": [
+    "rope, nets"
+   ],
+   "how": "world: r1.rope[1]",
+   "sheet": null,
+   "pushed": null,
+   "sample": null
+  }
+ }
+}
