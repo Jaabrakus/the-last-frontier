@@ -16,6 +16,9 @@ extends SceneTree
 ##   the strike  a synthetic clip (hold_s 0.2, strike_s 0.3) on Fire Blast punch: the bolt leaves 0.08 s or more after the
 ##               release, as the pose says struck, from the pose's hand; a Catch on the same clip stands the very frame the
 ##               lock lets go; the pose taken away after a release, the fallback timer still lands the bolt within 0.25 s
+##   round 5     the round-3 forms (the air hits, the Slams, the air High Kick, the Pop) pick the animation lane's landed clips,
+##               no stand-in, in the game's limb words, never rooted, the air ones whole; their twins; the held guards' loops;
+##               nothing pending; a clip without a row has its own limb word put the game's, its root "place" not rooting
 ##   bots        NpcBody.play_cast: its library holds every pose clip; strike / rate == wind_s within 1 ms, in either
 ##               argument order; the plain push ("cast_push") for a move without a pose; a floor cast's strike its press
 ##   Godot --headless --fixed-fps 60 --path . -s tests/bending/test_bend_poses.gd -- mode=duel
@@ -196,6 +199,58 @@ func _picks() -> void:
 			if pk.is_empty() or not String(pk.clip).begins_with("own-"):
 				tiers.append("%s/%s" % [m, md])
 	_expect(tiers.size() <= 8, "nearly every bending move has an own pose (%d without: %s)" % [tiers.size(), ", ".join(tiers)])
+	_r5_forms()
+
+
+## Round 5 (CLIPWIRE): the animation lane's cast clips landed, each round-3 form picks its own clip (no stand-in), in the
+## game's limb words, never rooted, the air ones whole with their legs; the air hits and the Pop with their mirrored twins;
+## nothing left pending; a clip's own limb word (r, foot_l) put the game's by the pick.
+func _r5_forms() -> void:
+	var want := {
+		"rock_jab/air_hit": ["own-bend-air-hit-earth", "r_palm", "full", "own-bend-air-hit-earth-l"],
+		"water_jet/air_hit": ["own-bend-air-hit-water", "both", "full", "own-bend-air-hit-water-l"],
+		"fire_jab/air_hit": ["own-bend-air-hit-fire", "r_foot", "full", "own-bend-air-hit-fire-l"],
+		"air_palm/air_hit": ["own-bend-air-hit-air", "both", "full", "own-bend-air-hit-air-l"],
+		"earth_shove/slam": ["own-bend-earth-hammer", "both", "full", ""],
+		"wave/slam": ["own-bend-water-downpour", "both", "full", ""],
+		"fire_kick/slam": ["own-bend-fire-axe-kick", "r_foot", "full", "own-bend-fire-axe-kick-l"],
+		"air_gust/slam": ["own-bend-air-down-gust", "both", "full", ""],
+		"fire_kick/air_kick": ["own-bend-fire-flip-kick", "r_foot", "full", "own-bend-fire-flip-kick-l"],
+		"rock_jab/pop": ["own-bend-jab-rise", "r_palm", "upper", "own-bend-jab-rise-l"],
+		"water_jet/pop": ["own-bend-jab-rise", "r_palm", "upper", "own-bend-jab-rise-l"],
+		"fire_jab/pop": ["own-bend-jab-rise", "r_palm", "upper", "own-bend-jab-rise-l"],
+		"air_palm/pop": ["own-bend-jab-rise", "r_palm", "upper", "own-bend-jab-rise-l"],
+	}
+	var bad: Array[String] = []
+	for k: String in want:
+		var w: Array = want[k]
+		var mv := k.get_slice("/", 0)
+		var pk := BendPoses.pick(mv, k.get_slice("/", 1), String(SwayMoves.move(mv).get("element", "")))
+		var alt := BendPoses._as_pose(pk.get("alt", ""))
+		var alt_pk := BendPoses._filled(alt, BendPoses.data()) if not alt.is_empty() else {}
+		var air := String(w[2]) == "full"
+		if String(pk.get("clip", "")) != String(w[0]) or String(pk.get("hand", "")) != String(w[1]) \
+				or String(pk.get("mask", "")) != String(w[2]) or bool(pk.get("root", true)) \
+				or (air and not bool(pk.get("legs_always", false))) \
+				or String(alt.get("clip", "")) != String(w[3]) \
+				or (not alt_pk.is_empty() and not String(alt_pk.get("hand", "")) in ["l_palm", "l_foot", "both"]) \
+				or BendPoses.library_of(String(w[0])) != "res://animations_extra/Frontier_Bend.res":
+			bad.append("%s: %s" % [k, pk])
+	_expect(bad.is_empty(), "round 5: every round-3 form plays its own landed clip, the game's limb, never rooted, the air ones whole%s"
+			% ("" if bad.is_empty() else " -- " + "; ".join(bad)))
+	var guards: Array[String] = []
+	for el: String in Bending.ELEMENTS:
+		var gp := BendPoses._as_pose((BendPoses.data().get("guard_hold", {}) as Dictionary).get(el, ""))
+		if String(gp.get("clip", "")) != "own-bend-guard-hold-" + el or not BendPoses.usable(String(gp.clip)):
+			guards.append(el)
+	_expect(guards.is_empty() and (BendPoses.data().get("pending_clips", []) as Array).is_empty(),
+			"round 5: each held guard's own loop is in (%s), nothing pending" % [guards])
+	BendPoses.override = {"moves": {"fire_blast": {"modes": {"punch": "own-bend-rise-fire"}}}}
+	var raw := BendPoses.pick("fire_blast", "punch", "fire")
+	BendPoses.override = {}
+	_expect(String(raw.get("hand", "")) == "r_palm" and not raw.has("root"),
+			"a clip with no row: its own limb word put the game's (r -> %s), its root \"place\" not taken for rooting (%s)"
+			% [raw.get("hand", "-"), raw.get("root", "none")])
 
 
 # ---------------------------------------------------------------- in the duel

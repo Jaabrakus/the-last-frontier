@@ -53,7 +53,7 @@ extends Node
 ## ROUND 5 (CLIPWIRE): the hit-stop holds this pose too (_process's dt by BendImpact.pose_rate, as PlayerAnim's graph: a
 ## held pose stands still, then catches up), and through the hold the struck contact pose shows over every layer
 ## (own-bend-hit-impact-<front|back|left|right> by where the hit came from; _tick_struck), its recoil then easing into the
-## tumble or the flinch under it. Off the spout onto the deck with no cast on the body the step-off plays once
+## tumble or the flinch under it. Off the spout with no cast on the body the step-off plays once
 ## (movement.json clips spout_step_off).
 ## THE COMBO: a pose with an "alt" (the next hand: a throw's or a punch's mirrored twin) takes its alt when the same move
 ## in the same variation locks again within BendPoses.combo_window_s() of its last cast, and its first clip the time after
@@ -411,7 +411,7 @@ func clip_time() -> float:
 func _process(dt: float) -> void:
 	if caster == null or caster.player == null or not is_instance_valid(caster.player):
 		return
-	pass #EXPERIMENT dt *= BendImpact.pose_rate(caster.player, dt)        # (round 4, IMPACT: the hit-stop holds his visible pose too)
+	dt *= BendImpact.pose_rate(caster.player, dt)        # (round 4, IMPACT: the hit-stop holds his visible pose too)
 	_clock += dt
 	_cast_layers = []
 	_tick(dt)
@@ -626,8 +626,8 @@ func _tick_ring(dt: float, rm: RingMoves) -> void:
 		# (AIR's held guard: its own loop per element while E keeps it up, SwayCaster.guard_hold_clip, else its stand-in)
 		st = "guard_hold"
 		nm = caster.guard_hold_clip()
-	elif phase == "" and not rm.airborne():
-		# (round 5: off the spout onto the deck, no cast on the body: the step off, once through)
+	elif phase == "":
+		# (round 5: off the spout, no cast on the body: the step off, once through, until another state takes over)
 		if ring_state == "spout_ride":
 			var so := BendPoses.animation(String(RingMoves.clip_for("spout_step_off")[0]))
 			_off_until = _clock + so.length if so != null else -INF

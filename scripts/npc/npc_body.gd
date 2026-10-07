@@ -113,7 +113,8 @@ const HANDS := {"r": "r_palm", "l": "l_palm", "both": "both", "foot_r": "r_foot"
 ##   the held guard    its guard held up past the beat as a shield (NpcRingMind.shield) loops own-bend-guard-hold-<element>
 ##                     (poses.json guard_hold, its stand-in until it lands; in the library looped as "guard_hold_<element>")
 ##                     in place of its idle and steps
-##   the spout         off the spout's ride onto the deck into its steps or idle: the step-off once, the steps after it
+##   the spout         off the spout's ride into its steps or idle: the step-off once, the steps after it (anything else
+##                     the ring plays cuts it short)
 ##   the Pop           a jab with the Pop armed (BendR3.pop_armed) casts with the Pop's rising hand (poses.json pop)
 ## `bridge` says which clip has the body to itself now ("" none: "struck", "step_off").
 const GUARD_HOLD_PREFIX := "guard_hold_"
@@ -321,7 +322,7 @@ func play(key: String, blend := 0.2, speed := 1.0) -> void:
 		var gh := _guard_hold_key()
 		if gh != "":
 			key = gh                                # (round 5: its guard held up as a shield: the hold's loop)
-		elif _played == SPOUT_RIDE and _on_floor() and _step_off(key, blend, speed):
+		elif _played == SPOUT_RIDE and _step_off(key, blend, speed):
 			return                                  # (round 5: off the spout onto the deck: the step-off first)
 	var real := _stance_key() if key == "idle" else key
 	if not has_clip(real):
@@ -506,11 +507,6 @@ func _step_off(key: String, blend: float, speed: float) -> bool:
 func _in_ring() -> bool:
 	var f := get_parent()
 	return f != null and f.get(&"ring_moves") != null
-
-
-func _on_floor() -> bool:
-	var f := get_parent() as CharacterBody3D
-	return f != null and f.is_on_floor()
 
 
 ## The ring's reaction clip to a hit now ("" none): its RingMoves state's when that is a reaction, else the tumble when it
