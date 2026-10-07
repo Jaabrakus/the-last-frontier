@@ -13,6 +13,10 @@ extends SceneTree
 ##   Godot --path . -s tools/anim_author/bend_engine_strip.gd -- out=<dir> clips=own-bend-fall,... [air=own-bend-fall,...]
 ##       [light=noon] [elements=earth,water,fire,air] (cycled over the clips) [suffix=_engine]
 ##       [rise=own-bend-edge-jump:11.8:19.9] (the code's jump, vy and gravity, added to that clip's root)
+##       [rise=own-bend-air-hit-air:4.0:20.0:3.0] (with a third number: an air clip carried on a real jump's arc, vy up,
+##       gravity and vz forward m/s, from AIR_LIFT over the deck; the cameras kept where the clip started)
+##       [spout=own-bend-spout-ride,...] (the clip stood on the respawn spout's crown, RingSpout's own column and crown at
+##       respawn.spout_up_m over the deck, as RingMode raises it)
 ##       [stone=own-bend-jab-rise,...] (earth's Pop stone drawn where the code holds it, BendR3.pop_stone: 0.55 m ahead,
 ##       0.45 m to his right, 1.25 m up, radius 0.22 m, from the clip's stone_s on (the hand reaching it), else its strike)
 ##       [lip=own-bend-teeter,...] (the clip posed at the deck's end lip facing out over the water, the balls of the feet on
@@ -72,9 +76,13 @@ const WALL_COLOR := Color(0.5, 0.5, 0.54, 0.42)
 var out := ""
 var only: PackedStringArray = []
 var edge_xf := Transform3D.IDENTITY
-## rise=<clip>:<vy>:<g>[;...]: the code's own lift on that clip (the edge jump), added to the figure's place at the shot.
+## rise=<clip>:<vy>:<g>[:<vz>][;...]: the code's own lift on that clip (the edge jump; vy, gravity and a forward drift vz),
+## added to the figure's place at the shot.
 var rise := {}
-var _cur_rise := Vector2.ZERO
+var _cur_rise := Vector3.ZERO
+## spout=<clip>,...: the clips shown standing on the respawn spout (RingSpout's look), and the spout drawn for them.
+var spout_clips: PackedStringArray = []
+var _spout: Node3D
 var stone_clips: PackedStringArray = []
 var lip_clips: PackedStringArray = []
 var _stone: MeshInstance3D
@@ -114,7 +122,10 @@ func _initialize() -> void:
 			lip_clips = a.get_slice("=", 1).split(",", false)
 		elif a.begins_with("rise="):
 			for r in a.get_slice("=", 1).split(";", false):
-				rise[r.get_slice(":", 0)] = Vector2(float(r.get_slice(":", 1)), float(r.get_slice(":", 2)))
+				rise[r.get_slice(":", 0)] = Vector3(float(r.get_slice(":", 1)), float(r.get_slice(":", 2)),
+						float(r.get_slice(":", 3)) if r.get_slice_count(":") > 3 else 0.0)
+		elif a.begins_with("spout="):
+			spout_clips = a.get_slice("=", 1).split(",", false)
 	DirAccess.make_dir_recursive_absolute(out)
 	InputSetup.ensure()
 	MatchSetup.incoming = true
@@ -175,7 +186,7 @@ func _run() -> void:
 		idx += 1
 		_dress(el)
 		var a := lib.get_animation(StringName(nm))
-		_cur_rise = rise.get(nm, Vector2.ZERO)
+		_cur_rise = rise.get(nm, Vector3.ZERO)
 		_cur = nm
 		var times := _moments(a)
 		var cells: Array[Image] = []
@@ -283,6 +294,8 @@ func _moments(a: Animation) -> Array:
 
 func _snap(a: Animation, air: bool, t: float, vn: String, text: String) -> Image:
 	sk.reset_bone_poses()
+	# (every shot: a body the match shows again later, the practice partner back after its respawn, kept out of sight)
+	_hide_bodies()
 	if _wall != null:
 		_wall.visible = false
 	# (a layer that keys only some bones, the air legs, shown under the cast it plays beneath: UNDER at its strike)
@@ -290,10 +303,14 @@ func _snap(a: Animation, air: bool, t: float, vn: String, text: String) -> Image
 		var u := lib.get_animation(UNDER)
 		_set_clip(u, float(u.get_meta(&"strike_s", 0.0)))
 	_set_clip(a, t)
-	if _cur_rise != Vector2.ZERO:
-		# (the code's jump lifts the body while the clip plays: added to the root, the cameras kept on the lip)
+	if _cur_rise != Vector3.ZERO:
+		# (the code's jump lifts the body while the clip plays: added to the root, the cameras kept on the lip; an air clip's
+		# arc also drifts it forward, vz, the cameras kept where it started)
 		var rb := sk.find_bone("root")
-		sk.set_bone_pose_position(rb, sk.get_bone_pose_position(rb) + Vector3.UP * (_cur_rise.x * t - 0.5 * _cur_rise.y * t * t))
+		sk.set_bone_pose_position(rb, sk.get_bone_pose_position(rb) + Vector3.UP * (_cur_rise.x * t - 0.5 * _cur_rise.y * t * t)
+				+ Vector3.BACK * (_cur_rise.z * t))
+	if _spout != null:
+		_spout.visible = false
 	if a.has_meta(&"lip_y"):
 		# (the hang's frame: the origin lip_y under the lip and lip_out out from the face; the views over the lip's height)
 		var ly := float(a.get_meta(&"lip_y"))
@@ -309,10 +326,34 @@ func _snap(a: Animation, air: bool, t: float, vn: String, text: String) -> Image
 		_show_wall(a)
 		_show_stone(a, t)
 		return await _shoot(LIP_VIEWS[vn], text, lxf.basis)
+	if _cur in spout_clips:
+		# (stood on the respawn spout's crown: the figure carried respawn.spout_up_m over the deck on RingSpout's own column)
+		var up := RingRules.sub_num("respawn", "spout_up_m", 3.0)
+		fig.global_transform = deck_xf.translated(Vector3.UP * up)
+		_show_spout(up)
+		_show_wall(a)
+		_show_stone(a, t)
+		return await _shoot(VIEWS[vn], text)
 	fig.global_transform = deck_xf.translated(Vector3.UP * (AIR_LIFT if air else 0.0))
 	_show_wall(a)
 	_show_stone(a, t)
 	return await _shoot(VIEWS[vn], text)
+
+
+## The respawn spout under a spout= clip: RingSpout's own column and crown (its look, built as the game raises it, held
+## risen: nothing pushes and it never sinks), standing on the deck under the figure.
+func _show_spout(up: float) -> void:
+	if _spout == null:
+		var s := RingSpout.new()
+		s.top_y = up
+		root.add_child(s)
+		s.global_position = deck_xf.origin
+		s._build()
+		s._set_h(1.0)
+		s.set_physics_process(false)
+		s.process_mode = Node.PROCESS_MODE_DISABLED
+		_spout = s
+	_spout.visible = true
 
 
 ## Earth's Pop stone drawn where the code holds it (POP_STONE in the figure's frame) for a stone= clip from the moment its

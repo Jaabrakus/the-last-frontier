@@ -195,8 +195,10 @@ visual references, no animation files imported) is his statement; the rows below
 | `own-bend-air-hit-earth` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_earth`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
 | `own-bend-air-hit-earth-l` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_earth`, `mirror_clip`) | `air_hit_earth`'s keys mirrored left for right | (as its original) |
 | `own-bend-air-hit-water` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_water`, `water_ring_at`, `_each`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-air-hit-water-l` | 2026-10-07 (eighth set, pass 2) | `bend_clips.py` (`air_hit_water`, `mirror_clip`) | `air_hit_water`'s keys mirrored left for right | (as its original) |
 | `own-bend-air-hit-fire` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_fire`, `_heel_key`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
 | `own-bend-air-hit-air` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_air`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
+| `own-bend-air-hit-air-l` | 2026-10-07 (eighth set, pass 2) | `bend_clips.py` (`air_hit_air`, `mirror_clip`) | `air_hit_air`'s keys mirrored left for right | (as its original) |
 
 - Second set and polish (2026-10-05, after the owner approved the first ten: "looks good but you can always perfect them"):
   the same generator and the same inputs (the rig's rest pose and keys typed into the table, now its `SET2` part); no clip,
@@ -351,6 +353,17 @@ visual references, no animation files imported) is his statement; the rows below
   labels for the typed key poses only. `own-bend-spout-step-off` is not named in `data/ring/movement.json`; it is there for
   the movement task to map when the spout is left. New in the generator: `mirror_clip`'s `twin_ends` keeps a whole turn on the
   spot (`spin`) mirrored at the twin's end (-360, the same pose as +360) instead of the original's unmirrored end.
+  Pass 2 (the same day, the critic's pass-1 notes): the same generator and inputs; only the eighth set's clips re-keyed and
+  re-baked (`--clips`), plus two new twins, `own-bend-air-hit-water-l` and `own-bend-air-hit-air-l` (the water sweep and the
+  air whirl are sided). The spout ride a wide staggered riding stance with the knees out and round arms pressing the water,
+  its surge a typed quick lift and long ease (`_surge`) taken late through the knees, the hands and the head; the step-off
+  16 frames with a deep held dip and the arms in opposition; the flip kick's arms thrown back past the head and round one
+  arc onto the shins, its kicking knee nearly straight and its other leg folded; the earth hit a boulder (both legs tucked,
+  the knee raised, the elbow on it, the fists stacked, a hit-stop then a whip and an overshoot); the water hit's ball held at
+  the arms' length from an approximate typed shoulder line (`_ring_shoulders`), the waist leading it and the legs swung
+  against it; the fire hit's legs a frame apart with a recoil and its fists flung back on long arms; the air hit's palm
+  change, long dragging arms and the head's spot. `bend_engine_strip.gd` gains `spout=` (the clip stood on RingSpout's own
+  column and crown) and a forward drift on `rise=` (an air clip seen on a real jump's arc); it reads no motion.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.

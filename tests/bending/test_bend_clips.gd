@@ -157,7 +157,13 @@ extends SceneTree
 ##               long, a whole turn, a fist; water's palms together on the disc swung ahead from one side to the other, the
 ##               legs against it; fire's soles shot out ahead together at the hips' height, the fists behind; air's long
 ##               slanted open arms and a whole turn) and the four strikes apart; the flip kick tucked at the hold, the foot
-##               high ahead with the knee long at the strike, then upside down. kept r3 p3: the seventh set's lengths and
+##               high ahead with the knee long at the strike, then upside down. Pass 2 (the critic's pass-1 notes): the
+##               water and air hits' twins; the spout ride's wide stance, round arms by the chest riding the surge; the
+##               step-off 16 frames, pinned feet, a deep dip, tipped out with the head leading and the arms opposed; earth's
+##               knee high over the hip with the elbow on it, both legs tucked, the fists stacked; water's palms a ball
+##               apart on long arms, the legs swung against the chest; fire's left sole a frame after the right, the fists
+##               flung back on long arms; air's arms long through the whirl; the flip kick's knee nearly straight, the
+##               other leg folded, the arms back past the head and round their arc. kept r3 p3: the seventh set's lengths and
 ##               moments as they shipped
 ## Ends with "BEND_CLIPS PASSED" or "BEND_CLIPS FAILED" (exit 0 only on a pass; a watchdog quits 2 at LIMIT s).
 
@@ -331,14 +337,26 @@ const BEFORE_R3SLAM := {"own-bend-rise-earth": [32, 6, 20, 24, -1], "own-bend-ri
 		"own-bend-knock-bounce": [18, 2, 1, 8, -1]}
 ## The eighth set (round 3's P3: the spout ride and its step-off, the air High Kick's back flip and the four air-only close
 ## hits, 2026-10-07): clip -> [length in frames, a loop, its twin ("" none), its mask].
-const EIGHTH_SET := {"own-bend-spout-ride": [48, true, "", "full"], "own-bend-spout-step-off": [14, false, "", "full"],
+## (Pass 2: the step-off 16 frames; the water and the air hits sided, so each has its twin; the fire hit's two legs together
+## have no side.)
+const EIGHTH_SET := {"own-bend-spout-ride": [48, true, "", "full"], "own-bend-spout-step-off": [16, false, "", "full"],
 		"own-bend-fire-flip-kick": [24, false, "own-bend-fire-flip-kick-l", "full"],
-		"own-bend-air-hit-earth": [18, false, "own-bend-air-hit-earth-l", "full"], "own-bend-air-hit-water": [18, false, "", "full"],
-		"own-bend-air-hit-fire": [18, false, "", "full"], "own-bend-air-hit-air": [20, false, "", "full"]}
+		"own-bend-air-hit-earth": [18, false, "own-bend-air-hit-earth-l", "full"],
+		"own-bend-air-hit-water": [18, false, "own-bend-air-hit-water-l", "full"],
+		"own-bend-air-hit-fire": [18, false, "", "full"], "own-bend-air-hit-air": [20, false, "own-bend-air-hit-air-l", "full"]}
 ## The air-only close hits (the owner's answer of 2026-10-05: one an element, its own clip): about 16-20 frames, the strike
 ## AIR_HIT_STRIKE s in (0.12-0.17: a close hit out at once), the legs tucked, from and back onto the fall's first pose.
-const AIR_HITS := ["own-bend-air-hit-earth", "own-bend-air-hit-earth-l", "own-bend-air-hit-water", "own-bend-air-hit-fire",
-		"own-bend-air-hit-air"]
+const AIR_HITS := ["own-bend-air-hit-earth", "own-bend-air-hit-earth-l", "own-bend-air-hit-water", "own-bend-air-hit-water-l",
+		"own-bend-air-hit-fire", "own-bend-air-hit-air", "own-bend-air-hit-air-l"]
+## Pass 2's bars (m, deg): a palm held out on a long arm (the palm this far from its shoulder or more: the elbow about 25
+## degrees or less), the earth elbow on the knee (the joints' middles this near: the two surfaces touching), the earth knee
+## raised over the hip, both earth legs tucked (the ankles this high), the water palms a ball apart, the flip kick's knee long.
+const LONG_ARM := 0.46
+const ELBOW_ON_KNEE := 0.13
+const KNEE_UP := 0.2
+const EARTH_TUCK := 0.45
+const BALL_APART := Vector2(0.22, 0.38)
+const FLIP_KNEE := 15.0
 const AIR_HIT_STRIKE := Vector2(0.12, 0.17)
 ## The seventh set's lengths and moments as they shipped (frames; -1 none): kept by the eighth set's bake.
 const BEFORE_R3P3 := {"own-bend-jab-rise": [24, 2, 5, 13, -1], "own-bend-jab-rise-l": [24, 2, 5, 13, -1],
@@ -2729,6 +2747,12 @@ func _heading(a: Animation, t: float) -> float:
 	return rad_to_deg(atan2(-d.z, d.x))
 
 
+## The way the knees point seen from above (deg, the same convention as _heading): the pelvis to the knees' middle.
+func _knees_heading(j: Dictionary) -> float:
+	var m := ((j.r_knee as Vector3) + (j.l_knee as Vector3)) * 0.5 - (j.pelvis as Vector3)
+	return rad_to_deg(atan2(m.x, m.z))
+
+
 ## The whole turn a clip makes on the spot (deg, unwrapped frame by frame; + to his left).
 func _turned(a: Animation) -> float:
 	var n := int(round(a.length * 30.0))
@@ -2753,19 +2777,31 @@ func _eighth_spout(lib: AnimationLibrary, names: Array[String]) -> void:
 	var slide := 0.0
 	var px := Vector2(INF, -INF)
 	var out_min := INF
-	var under := INF
+	var under := Vector2(INF, -INF)
+	var hy := Vector2(INF, -INF)
+	var wide := INF
 	for f in range(0, 49):
-		var j := _at(a, f / 30.0, ["r_ball", "l_ball", "pelvis", "r_palm", "l_palm", "r_shoulder", "l_shoulder"])
+		var j := _at(a, f / 30.0, ["r_ball", "l_ball", "pelvis", "r_palm", "l_palm", "r_shoulder", "l_shoulder", "r_ankle",
+				"l_ankle"])
 		slide = maxf(slide, maxf((j.r_ball as Vector3).distance_to(b0.r_ball), (j.l_ball as Vector3).distance_to(b0.l_ball)))
 		px = Vector2(minf(px.x, (j.pelvis as Vector3).x), maxf(px.y, (j.pelvis as Vector3).x))
 		out_min = minf(out_min, minf(-(j.r_palm as Vector3).x, (j.l_palm as Vector3).x))
-		under = minf(under, minf((j.r_shoulder as Vector3).y - (j.r_palm as Vector3).y, (j.l_shoulder as Vector3).y - (j.l_palm as Vector3).y))
-	print("METRIC own-bend-spout-ride ball_slide_m %.4f pelvis_sway_m %.3f palms_out_m %.3f palms_under_shoulders_m %.3f"
-			% [slide, px.y - px.x, out_min, under])
+		for s: String in ["r", "l"]:
+			var u := (j[s + "_shoulder"] as Vector3).y - (j[s + "_palm"] as Vector3).y
+			under = Vector2(minf(under.x, u), maxf(under.y, u))
+		hy = Vector2(minf(hy.x, (j.r_palm as Vector3).y), maxf(hy.y, (j.r_palm as Vector3).y))
+		wide = minf(wide, (j.l_ankle as Vector3).x - (j.r_ankle as Vector3).x)
+	print("METRIC own-bend-spout-ride ball_slide_m %.4f pelvis_sway_m %.3f palms_out_m %.3f palms_under_shoulders_m %.3f-%.3f right_palm_rides_m %.3f ankles_apart_m %.3f"
+			% [slide, px.y - px.x, out_min, under.x, under.y, hy.y - hy.x, wide])
 	_check(slide < 0.01, "spout ride: the feet planted on the crown (the balls move %.4f m)" % slide)
 	_check(px.y - px.x > 0.05, "spout ride: the weight wanders from foot to foot (the pelvis %.3f m side to side)" % (px.y - px.x))
-	_check(out_min > 0.3 and under > 0.15, "spout ride: the arms out a little (the palms %.3f m out, %.3f m under the shoulders)"
-			% [out_min, under])
+	# (pass 2: the round arms raised out at the sides pressing the water, the palms a little under the shoulders, riding up
+	# and down with the surge and the weight; the stance wide)
+	_check(out_min > 0.4 and under.x > -0.05 and under.y < 0.3,
+			"spout ride: the round arms out at the sides by the chest (the palms %.3f m out, %.3f-%.3f m under the shoulders)"
+			% [out_min, under.x, under.y])
+	_check(hy.y - hy.x > 0.08, "spout ride: the palms ride the water (the right %.3f m up and down)" % (hy.y - hy.x))
+	_check(wide > 0.34, "spout ride: a wide riding stance (the ankles %.3f m apart)" % wide)
 	if not "own-bend-spout-step-off" in names:
 		return
 	var s := lib.get_animation(&"own-bend-spout-step-off")
@@ -2787,6 +2823,25 @@ func _eighth_spout(lib: AnimationLibrary, names: Array[String]) -> void:
 	print("METRIC own-bend-spout-step-off planted_to_hold_m %.4f feet_off_at_back_m %.3f" % [planted, off])
 	_check(planted < 0.01, "spout step-off: the feet planted through the dip (%.4f m)" % planted)
 	_check(off > 0.08, "spout step-off: both feet off the crown by back_s (%.3f m up)" % off)
+	# (pass 2: the feet pinned exactly through the dip (f0-f3) and the pushing left foot's ball through its heel's rise
+	# (f4-f5); a deep dip; at the push the body tipped out over the step with the head leading and the arms in opposition)
+	var pin := 0.0
+	for f in range(0, 6):
+		var j := _at(s, f / 30.0, ["r_ball", "l_ball"])
+		pin = maxf(pin, (j.l_ball as Vector3).distance_to(b0.l_ball))
+		if f <= 3:
+			pin = maxf(pin, (j.r_ball as Vector3).distance_to(b0.r_ball))
+	var p0 := _at(s, 0.0, ["pelvis"])
+	var ph := _at(s, hold, ["pelvis"])
+	var dip := (p0.pelvis as Vector3).y - (ph.pelvis as Vector3).y
+	var js := _at(s, float(s.get_meta(&"strike_s", 0.0)), ["pelvis", "heada", "r_palm", "l_palm"])
+	var lead := (js.heada as Vector3).z - (js.pelvis as Vector3).z
+	var opp := (js.l_palm as Vector3).z - (js.r_palm as Vector3).z
+	print("METRIC own-bend-spout-step-off pinned_m %.4f dip_m %.3f head_leads_m %.3f arms_opposed_m %.3f" % [pin, dip, lead, opp])
+	_check(pin <= IK_MISS, "spout step-off: the feet pinned on the crown, the left on its ball (%.4f m <= %.3f)" % [pin, IK_MISS])
+	_check(dip > 0.15, "spout step-off: a deep dip before the push (the pelvis %.3f m down)" % dip)
+	_check(lead > 0.15, "spout step-off: tipped out over the step, the head leading (%.3f m ahead of the hips)" % lead)
+	_check(opp > 0.4, "spout step-off: the arms in opposition at the push (the left palm %.3f m ahead of the right)" % opp)
 	if "own-bend-fall" in names:
 		var d1 := _off(_joints(s, s.length), _joints(lib.get_animation(&"own-bend-fall"), 0.0))
 		_check(d1 < 0.02, "spout step-off: onto the fall's first pose at the end (%.3f m)" % d1)
@@ -2824,56 +2879,86 @@ func _eighth_air_hits(lib: AnimationLibrary, names: Array[String]) -> void:
 		var tuck := minf((k.r_ankle as Vector3).y, (k.l_ankle as Vector3).y)
 		match x:
 			"own-bend-air-hit-earth", "own-bend-air-hit-earth-l":
+				# (pass 2: a compact boulder: the knee raised high outside the coat with the elbow driven onto it, both legs
+				# tucked (no long leg), both fists stacked before the face)
 				var s := "r" if x == "own-bend-air-hit-earth" else "l"
 				var o := "l" if s == "r" else "r"
 				var knee := (k[s + "_knee"] as Vector3).y - (k[s + "_upper_leg"] as Vector3).y
-				var elbow := (k[s + "_elbow"] as Vector3).distance_to(k[s + "_knee"])
-				var long := (k.pelvis as Vector3).y - (k[o + "_ankle"] as Vector3).y
+				var elbow := INF
+				var low := INF
+				for f in range(4, 9):
+					var j := _at(a, f / 30.0, bones)
+					elbow = minf(elbow, (j[s + "_elbow"] as Vector3).distance_to(j[s + "_knee"]))
+					low = minf(low, minf((j.r_ankle as Vector3).y, (j.l_ankle as Vector3).y))
+				var elbow0 := (k[s + "_elbow"] as Vector3).distance_to(k[s + "_knee"])
+				var fists := (k.r_palm as Vector3).distance_to(k.l_palm)
 				var turn := _turned(a)
 				var grip := _grip(a, strike, s)
-				print("METRIC %s knee_over_hip_m %.3f elbow_to_knee_m %.3f other_leg_long_m %.3f turned_deg %.0f fist_deg %.0f"
-						% [x, knee, elbow, long, turn, grip])
-				_check(knee > -0.05, "%s: the %s knee driven up to the hip's height at the strike (%.3f m)" % [x, s, knee])
-				_check(elbow < 0.25, "%s: the %s elbow driven down near the knee (%.3f m)" % [x, s, elbow])
-				_check(long > 0.55, "%s: the other leg kicked down long under him (the ankle %.3f m under the hips)" % [x, long])
+				print("METRIC %s knee_over_hip_m %.3f elbow_to_knee_m %.3f (f4-f8 nearest %.3f) ankles_low_f4_f8_m %.3f fists_apart_m %.3f turned_deg %.0f fist_deg %.0f"
+						% [x, knee, elbow0, elbow, low, fists, turn, grip])
+				_check(knee > KNEE_UP, "%s: the %s knee driven up high over the hip at the strike (%.3f m)" % [x, s, knee])
+				_check(elbow0 < ELBOW_ON_KNEE, "%s: the %s elbow on the knee at the strike (the joints %.3f m apart)" % [x, s, elbow0])
+				_check(low > EARTH_TUCK, "%s: both legs tucked through the hit (the ankles %.3f m up and more)" % [x, low])
+				_check(fists < 0.25, "%s: the two fists stacked (%.3f m apart)" % [x, fists])
 				_check(absf(turn) > 300.0, "%s: a whole turn on the spot (%.0f deg)" % [x, turn])
 				_check(grip > 60.0, "%s: a stone fist (%.0f deg closed)" % [x, grip])
-			"own-bend-air-hit-water":
+			"own-bend-air-hit-water", "own-bend-air-hit-water-l":
+				# (pass 2: the ball held a ball apart at the arms' length from the shoulders, swept from one side to the
+				# other; the legs turned round less than the chest, a counterweight)
 				var together := (k.r_palm as Vector3).distance_to(k.l_palm)
 				var ahead := minf((k.r_palm as Vector3).z, (k.l_palm as Vector3).z)
 				var chest := minf((k.r_palm as Vector3).y, (k.l_palm as Vector3).y) - (k.pelvis as Vector3).y
+				var arm := minf((k.r_palm as Vector3).distance_to(k.r_shoulder), (k.l_palm as Vector3).distance_to(k.l_shoulder))
 				var j8 := _at(a, 8 / 30.0, bones)
-				var swept := ((j8.r_palm as Vector3).x + (j8.l_palm as Vector3).x - (h.r_palm as Vector3).x - (h.l_palm as Vector3).x) * 0.5
-				var legs := ((h.r_ankle as Vector3).x + (h.l_ankle as Vector3).x - (j8.r_ankle as Vector3).x - (j8.l_ankle as Vector3).x) * 0.5
-				print("METRIC %s palms_apart_m %.3f palms_ahead_m %.3f palms_over_hips_m %.3f swept_m %.3f legs_against_m %.3f tuck_m %.3f"
-						% [x, together, ahead, chest, swept, legs, tuck])
-				_check(together < 0.22, "%s: both palms together on the disc at the strike (%.3f m apart)" % [x, together])
-				_check(ahead > 0.3 and chest > 0.1, "%s: the disc swung through ahead at the chest's height (%.3f ahead, %.3f over the hips)"
+				var swept := absf((j8.r_palm as Vector3).x + (j8.l_palm as Vector3).x - (h.r_palm as Vector3).x - (h.l_palm as Vector3).x) * 0.5
+				var counter := absf(wrapf(_heading(a, 8 / 30.0) - _knees_heading(j8), -180.0, 180.0))
+				print("METRIC %s palms_apart_m %.3f palms_ahead_m %.3f palms_over_hips_m %.3f arm_reach_m %.3f swept_m %.3f legs_counter_deg %.0f tuck_m %.3f"
+						% [x, together, ahead, chest, arm, swept, counter, tuck])
+				_check(together > BALL_APART.x and together < BALL_APART.y,
+						"%s: both palms on the ball of water at the strike (%.3f m apart)" % [x, together])
+				_check(ahead > 0.3 and chest > 0.1, "%s: the ball swung through ahead at the chest's height (%.3f ahead, %.3f over the hips)"
 						% [x, ahead, chest])
-				_check(swept > 0.6, "%s: the disc swept from his one side to the other (%.3f m)" % [x, swept])
-				_check(legs > 0.1, "%s: the legs swung round against it (%.3f m)" % [x, legs])
+				_check(arm > LONG_ARM, "%s: the arms long at the strike (the palms %.3f m from the shoulders)" % [x, arm])
+				_check(swept > 0.6, "%s: the ball swept from his one side to the other (%.3f m)" % [x, swept])
+				_check(counter > 40.0, "%s: the legs swung round against the chest (%.0f deg apart at f8)" % [x, counter])
 				_check(tuck > 0.2, "%s: the legs tucked (the ankles %.3f m up)" % [x, tuck])
 			"own-bend-air-hit-fire":
-				var ahead := minf((k.r_ankle as Vector3).z, (k.l_ankle as Vector3).z)
-				var level := maxf(absf((k.r_ankle as Vector3).y - (k.pelvis as Vector3).y), absf((k.l_ankle as Vector3).y - (k.pelvis as Vector3).y))
-				var pair := (k.r_ankle as Vector3).distance_to(k.l_ankle)
-				var back := (k.pelvis as Vector3).z - maxf((k.r_palm as Vector3).z, (k.l_palm as Vector3).z)
+				# (pass 2: the right sole out at the strike, the left a frame behind it; the fists flung back on long arms)
+				var j1 := _at(a, strike + 1.0 / 30.0, bones)
+				var j2 := _at(a, strike + 2.0 / 30.0, bones)
+				var ahead := (k.r_ankle as Vector3).z
+				var ahead_l := (j1.l_ankle as Vector3).z
+				var level := absf((k.r_ankle as Vector3).y - (k.pelvis as Vector3).y)
+				var pair := (j2.r_ankle as Vector3).distance_to(j2.l_ankle)
+				var back := (j2.pelvis as Vector3).z - maxf((j2.r_palm as Vector3).z, (j2.l_palm as Vector3).z)
+				var arm := minf((j2.r_palm as Vector3).distance_to(j2.r_shoulder), (j2.l_palm as Vector3).distance_to(j2.l_shoulder))
 				var tuck0 := minf((h.r_ankle as Vector3).y, (h.l_ankle as Vector3).y)
-				print("METRIC %s soles_ahead_m %.3f soles_off_hips_height_m %.3f ankles_apart_m %.3f fists_behind_hips_m %.3f hold_tuck_m %.3f"
-						% [x, ahead, level, pair, back, tuck0])
-				_check(ahead > 0.5 and level < 0.25, "%s: both soles shot out ahead at the hips' height (%.3f ahead, %.3f off)"
+				print("METRIC %s sole_ahead_m %.3f left_sole_ahead_next_m %.3f sole_off_hips_height_m %.3f ankles_apart_m %.3f fists_behind_hips_m %.3f arm_reach_m %.3f hold_tuck_m %.3f"
+						% [x, ahead, ahead_l, level, pair, back, arm, tuck0])
+				_check(ahead > 0.5 and level < 0.25, "%s: the right sole shot out ahead at the hips' height (%.3f ahead, %.3f off)"
 						% [x, ahead, level])
-				_check(pair < 0.3, "%s: the two legs together (%.3f m apart)" % [x, pair])
-				_check(back > 0.1, "%s: the fists thrown back behind the hips (%.3f m)" % [x, back])
+				_check(ahead_l > 0.5, "%s: the left sole out a frame after it (%.3f ahead)" % [x, ahead_l])
+				_check(pair < 0.3, "%s: the two legs together two frames on (%.3f m apart)" % [x, pair])
+				_check(back > 0.3, "%s: the fists flung back behind the hips (%.3f m)" % [x, back])
+				_check(arm > LONG_ARM, "%s: on long arms (the palms %.3f m from the shoulders)" % [x, arm])
 				_check(tuck0 > 0.5, "%s: the knees snapped up to the chest at the hold (the ankles %.3f m up)" % [x, tuck0])
-			"own-bend-air-hit-air":
-				var span := (k.r_palm as Vector3).distance_to(k.l_palm)
-				var slant := absf((k.r_palm as Vector3).y - (k.l_palm as Vector3).y)
+			"own-bend-air-hit-air", "own-bend-air-hit-air-l":
+				# (pass 2: the arms long through the whirl (f6-f11), not only wide at the strike)
+				var span := 0.0
+				var slant := 0.0
+				var arm := INF
+				for f in range(6, 12):
+					var j := _at(a, f / 30.0, bones)
+					span = maxf(span, (j.r_palm as Vector3).distance_to(j.l_palm))
+					slant = maxf(slant, absf((j.r_palm as Vector3).y - (j.l_palm as Vector3).y))
+					arm = minf(arm, minf((j.r_palm as Vector3).distance_to(j.r_shoulder), (j.l_palm as Vector3).distance_to(j.l_shoulder)))
 				var turn := _turned(a)
-				var openr := _grip(a, strike, "r")
-				print("METRIC %s palms_span_m %.3f slant_m %.3f turned_deg %.0f grip_deg %.0f tuck_m %.3f" % [x, span, slant, turn, openr, tuck])
+				var openr := _grip(a, 8 / 30.0, "r")
+				print("METRIC %s palms_span_m %.3f slant_m %.3f arm_reach_f6_f11_m %.3f turned_deg %.0f grip_deg %.0f tuck_m %.3f"
+						% [x, span, slant, arm, turn, openr, tuck])
 				_check(span > 0.9, "%s: the arms flung long and wide (the palms %.3f m apart)" % [x, span])
 				_check(slant > 0.3, "%s: one palm high, one low (%.3f m)" % [x, slant])
+				_check(arm > LONG_ARM, "%s: the arms long through the whirl (the palms %.3f m from the shoulders)" % [x, arm])
 				_check(absf(turn) > 300.0, "%s: a whole turn on the spot (%.0f deg)" % [x, turn])
 				# (the rest's relaxed hand already bends its index about 60 degrees; earth's stone fist is about 230)
 				_check(openr < 100.0, "%s: the palms open, no fist (%.0f deg closed)" % [x, openr])
@@ -2922,6 +3007,26 @@ func _eighth_flip(lib: AnimationLibrary, names: Array[String]) -> void:
 		_check(up > 0.2 and ahead > 0.25, "%s: the foot high ahead at the strike (%.3f over the hips, %.3f ahead)" % [x, up, ahead])
 		_check(knee < 25.0, "%s: the kicking knee long at the strike (%.0f deg)" % [x, knee])
 		_check(inv < -0.2, "%s: turned over backward after the strike (the head %.3f m under the hips)" % [x, -inv])
+		# (pass 2: the kicking knee nearly straight (FLIP_KNEE), the other leg folded tight (the heel to the seat), both arms
+		# thrown back past the head along the spine's line; the hands kept on their arc about the shoulders (each palm's
+		# distance from its shoulder never jumping more than 0.15 m in a frame: no drop)
+		var o := "l" if s == "r" else "r"
+		var k2 := _at(a, float(a.get_meta(&"strike_s", 0.0)), ["heada", o + "_upper_leg", o + "_ankle", "r_palm", "l_palm"])
+		var fold := (k2[o + "_ankle"] as Vector3).distance_to(k2[o + "_upper_leg"])
+		var behind := (k2.heada as Vector3).z - maxf((k2.r_palm as Vector3).z, (k2.l_palm as Vector3).z)
+		var step := 0.0
+		var reach := Vector2(-1.0, -1.0)
+		for f in range(0, int(round(a.length * 30.0)) + 1):
+			var j := _at(a, f / 30.0, ["r_palm", "l_palm", "r_shoulder", "l_shoulder"])
+			var r := Vector2((j.r_palm as Vector3).distance_to(j.r_shoulder), (j.l_palm as Vector3).distance_to(j.l_shoulder))
+			if reach.x >= 0.0:
+				step = maxf(step, maxf(absf(r.x - reach.x), absf(r.y - reach.y)))
+			reach = r
+		print("METRIC %s support_ankle_to_hip_m %.3f palms_behind_head_m %.3f palm_reach_step_max_m %.3f" % [x, fold, behind, step])
+		_check(knee < FLIP_KNEE, "%s: the kicking knee nearly straight at the strike (%.0f deg < %.0f)" % [x, knee, FLIP_KNEE])
+		_check(fold < 0.36, "%s: the other leg folded tight at the strike (the ankle %.3f m from the hip)" % [x, fold])
+		_check(behind > 0.15, "%s: both arms thrown back past the head at the strike (%.3f m behind it)" % [x, behind])
+		_check(step < 0.15, "%s: the hands round their arc, no frame's jump in reach over 0.15 m (%.3f)" % [x, step])
 
 
 func _bend(j: Dictionary, a: String, b: String, c: String) -> float:
