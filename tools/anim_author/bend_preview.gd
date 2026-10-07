@@ -23,6 +23,8 @@ extends SceneTree
 ##       [pairs=own-bend-edge-scramble>own-bend-edge-hang]   a hand-over's seam: the first's last frame beside the second's
 ##                    first, front and side (<prefix>edge-scramble-to-hang_seam.png)
 ##       [nosheets=1]   the lineup (and the pairs) only, no clip sheets
+##       [sheet_at=own-bend-fire-axe-kick-l:1,2,14,17,20;...]   that clip's sheet at those frames instead of its moments
+##                    (the in-betweens a check needs to see: a twin's half-mirrored blend in and out)
 ## An edge clip (meta lip_y: keyed in the hang's frame) is shown at a block of the deck (its lip lip_y over the origin and
 ## lip_out ahead, a pale coping on a stone face), framed round the lip (EDGE_VIEWS).
 
@@ -83,6 +85,8 @@ var _low_start := {}
 var pairs: Array = []
 ## nosheets=1: no clip sheets, only the lineups and the pairs' seams (a lineup of clips already shown).
 var no_sheets := false
+## sheet_at=<clip>:<frame>,<frame>[;...]: that clip's sheet at those frames (front and side) instead of its named moments.
+var sheet_at := {}
 
 
 func _initialize() -> void:
@@ -118,6 +122,9 @@ func _initialize() -> void:
 				pairs.append([r.get_slice(">", 0), r.get_slice(">", 1)])
 		elif a.begins_with("nosheets="):
 			no_sheets = a.get_slice("=", 1) == "1"
+		elif a.begins_with("sheet_at="):
+			for r in a.get_slice("=", 1).split(";", false):
+				sheet_at[r.get_slice(":", 0)] = r.get_slice(":", 1).split(",", false)
 	_run.call_deferred()
 
 
@@ -170,6 +177,10 @@ func _run() -> void:
 			continue
 		var a := lib.get_animation(nm)
 		var times := _moments(a)
+		if sheet_at.has(String(nm)):
+			times = []
+			for fr: String in sheet_at[String(nm)]:
+				times.append([int(fr) / 30.0, "f%s" % fr])
 		var cells: Array[Image] = []
 		if not no_sheets:
 			for vn: String in VIEWS:

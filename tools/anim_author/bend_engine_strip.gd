@@ -13,6 +13,10 @@ extends SceneTree
 ##   Godot --path . -s tools/anim_author/bend_engine_strip.gd -- out=<dir> clips=own-bend-fall,... [air=own-bend-fall,...]
 ##       [light=noon] [elements=earth,water,fire,air] (cycled over the clips) [suffix=_engine]
 ##       [rise=own-bend-edge-jump:11.8:19.9] (the code's jump, vy and gravity, added to that clip's root)
+##       [stone=own-bend-jab-rise,...] (earth's Pop stone drawn where the code holds it, BendR3.pop_stone: 0.55 m ahead,
+##       0.45 m to his right, 1.25 m up, radius 0.22 m, from the clip's strike on)
+##       [lip=own-bend-teeter,...] (the clip posed at the deck's end lip facing out over the water, the balls of the feet on
+##       the stand-in coping's nose, the views turned with him)
 ## Writes <dir>/<clip without own-bend->< suffix>.png. Ends with BEND ENGINE STRIP DONE.
 
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
@@ -48,6 +52,19 @@ const LIP_OUT := 0.2
 ## middle of each lip (RingArena's lantern spots), which stood between the hang camera and the climber (pass 3 of P2's
 ## review), so the figure is shown on the open stretch of stone beside it.
 const EDGE_ALONG := 2.0
+## Earth's Pop stone where the code holds it (BendR3.pop_stone), in the figure's frame (+X his left), and its radius (m).
+const POP_STONE := Vector3(-0.45, 1.25, 0.55)
+const POP_STONE_R := 0.22
+## A lip clip (the teeter) stands this far in from the lip's nose, so the balls of his feet are on the coping's edge (m).
+const LIP_STAND_IN := 0.08
+## A lip clip's views (he faces out over the water, +Z): the player's camera behind him over the deck, a foe on the deck 15 m
+## off behind him three quarters, and 15 m along the lip on the open side (his profile against the water; the lantern pier
+## stands on the other side of him).
+const LIP_VIEWS := {
+	"behind 5 m (the player's camera)": [Vector3(0.0, 2.35, -5.1), Vector3(0.0, 1.25, 1.5), 52.5, Vector2i(960, 720)],
+	"foe on the deck 15 m, 3/4 behind": [Vector3(-7.5, 1.7, -13.0), Vector3(0.0, 1.0, 0.0), 52.5, Vector2i(480, 360)],
+	"15 m along the lip (profile)": [Vector3(14.8, 1.8, -0.4), Vector3(0.0, 1.0, 0.3), 52.5, Vector2i(480, 360)],
+}
 ## The wall a clip names (meta wall_z: the wall break) drawn there, a see-through stone pane from the deck up (m).
 const WALL_SIZE := Vector3(2.4, 3.2, 0.08)
 const WALL_COLOR := Color(0.5, 0.5, 0.54, 0.42)
@@ -58,6 +75,10 @@ var edge_xf := Transform3D.IDENTITY
 ## rise=<clip>:<vy>:<g>[;...]: the code's own lift on that clip (the edge jump), added to the figure's place at the shot.
 var rise := {}
 var _cur_rise := Vector2.ZERO
+var stone_clips: PackedStringArray = []
+var lip_clips: PackedStringArray = []
+var _stone: MeshInstance3D
+var _cur := ""
 var _lip_block: Node3D
 var _wall: Node3D
 var airborne: PackedStringArray = []
@@ -87,6 +108,10 @@ func _initialize() -> void:
 			elements = a.get_slice("=", 1).split(",", false)
 		elif a.begins_with("suffix="):
 			suffix = a.get_slice("=", 1)
+		elif a.begins_with("stone="):
+			stone_clips = a.get_slice("=", 1).split(",", false)
+		elif a.begins_with("lip="):
+			lip_clips = a.get_slice("=", 1).split(",", false)
 		elif a.begins_with("rise="):
 			for r in a.get_slice("=", 1).split(";", false):
 				rise[r.get_slice(":", 0)] = Vector2(float(r.get_slice(":", 1)), float(r.get_slice(":", 2)))
@@ -151,9 +176,10 @@ func _run() -> void:
 		_dress(el)
 		var a := lib.get_animation(StringName(nm))
 		_cur_rise = rise.get(nm, Vector2.ZERO)
+		_cur = nm
 		var times := _moments(a)
 		var cells: Array[Image] = []
-		for vn: String in (EDGE_VIEWS if a.has_meta(&"lip_y") else VIEWS):
+		for vn: String in (EDGE_VIEWS if a.has_meta(&"lip_y") else (LIP_VIEWS if nm in lip_clips else VIEWS)):
 			for tm: Array in times:
 				cells.append(await _snap(a, nm in airborne, float(tm[0]), vn, "%s (%s)  %s %.2f s (f%d)\n%s" % [nm.trim_prefix(
 						"own-bend-"), el, tm[1], float(tm[0]), int(round(float(tm[0]) * 30.0)), vn]))
@@ -236,15 +262,23 @@ func _moments(a: Animation) -> Array:
 		out.append_array([[key, "strike"], [hold, "hold"]])
 	else:
 		out.append_array([[hold, "hold"], [key, "strike"]])
-	# (the peak between the key moment and the recovery when it is three frames or more from both: the air dodge's twist,
-	# the double jump's tuck, the heavy landing's sag)
+	# (the follow-through between the key moment and the recovery when it is three frames or more from both: the air
+	# dodge's twist, the double jump's tuck, the heavy landing's sag; labelled as the contact sheets label it)
 	var back := float(a.get_meta(&"back_s", a.length * 0.7))
 	var from := maxf(key, hold)
 	var mid: float = floorf((from + back) * 0.5 * 30.0 + 1e-3) / 30.0
 	if mid - from >= 2.5 / 30.0 and back - mid >= 2.5 / 30.0:
-		out.append([mid, "peak"])
+		out.append([mid, "follow"])
 	out.append_array([[back, "back"], [a.length, "end"]])
-	return out
+	# (in time order, a moment within half a frame of an earlier one dropped: a clip held at its end, the teeter, has its
+	# hold on its last frame and no recovery of its own)
+	out.sort_custom(func(x: Array, y: Array) -> bool: return float(x[0]) < float(y[0]))
+	var kept := []
+	for m: Array in out:
+		if not kept.is_empty() and absf(float(m[0]) - float(kept[-1][0])) < 0.5 / 30.0:
+			continue
+		kept.append(m)
+	return kept
 
 
 func _snap(a: Animation, air: bool, t: float, vn: String, text: String) -> Image:
@@ -268,9 +302,35 @@ func _snap(a: Animation, air: bool, t: float, vn: String, text: String) -> Image
 		spec[0] = (spec[0] as Vector3) + Vector3.UP * ly
 		spec[1] = (spec[1] as Vector3) + Vector3.UP * ly
 		return await _shoot(spec, text, edge_xf.basis)
+	if _cur in lip_clips:
+		# (at the deck's end lip facing out over the water: the edge frame turned about, stood LIP_STAND_IN in from the nose)
+		var lxf := edge_xf * Transform3D(Basis(Vector3.UP, PI), Vector3(0.0, 0.0, LIP_STAND_IN))
+		fig.global_transform = lxf
+		_show_wall(a)
+		_show_stone(a, t)
+		return await _shoot(LIP_VIEWS[vn], text, lxf.basis)
 	fig.global_transform = deck_xf.translated(Vector3.UP * (AIR_LIFT if air else 0.0))
 	_show_wall(a)
+	_show_stone(a, t)
 	return await _shoot(VIEWS[vn], text)
+
+
+## Earth's Pop stone drawn where the code holds it (POP_STONE in the figure's frame) for a stone= clip from its strike on.
+func _show_stone(a: Animation, t: float) -> void:
+	if _stone == null:
+		_stone = MeshInstance3D.new()
+		var m := SphereMesh.new()
+		m.radius = POP_STONE_R
+		m.height = POP_STONE_R * 2.0
+		_stone.mesh = m
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.46, 0.42, 0.37)
+		mat.roughness = 0.95
+		_stone.material_override = mat
+		root.add_child(_stone)
+	_stone.visible = _cur in stone_clips and t >= float(a.get_meta(&"strike_s", 0.0)) - 1e-4
+	if _stone.visible and fig != null:
+		_stone.global_position = fig.global_transform * POP_STONE
 
 
 ## The wall a clip names (meta wall_z) shown wall_z ahead of the figure, standing on the deck; hidden for every other clip.

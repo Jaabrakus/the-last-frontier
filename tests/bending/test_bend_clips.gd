@@ -127,6 +127,16 @@ extends SceneTree
 ##               water's palms level ahead, fire's knife hand ahead with the fist at the ribs, air's palms one high and one
 ##               low changing over) and apart; the teeter from the stand, the balls of the feet planted, the arms
 ##               windmilling over the head, leaning out at its held end. kept r3 slam: the sixth set's lengths and moments
+##   seventh set pass 2 (2026-10-07, the critic's pass-1 notes; _seventh_pass2): the Pop's fist straight up (0.3 m over the
+##               head), its unwind from the coil 40 degrees and more, and its twin ending on the original's own held-stone
+##               pose (twin_tail_s: the right hand on the stone where the code holds it, meta stone_hand); the Hammer's arch
+##               at the hold (the fists behind the head) and its fists finishing ahead of and below the knees; the
+##               Downpour's palms ahead of the hips with the arms long and the body lifted 0.15 m; the Axe Kick's knee long
+##               at the strike (20 degrees or less), the heel chopped ahead, its twin's legs never crossing and its ankles
+##               never jumping more than 0.25 m a frame over its ends' blend; the Down Gust's palms driven 0.6 m down and
+##               the body lifted 0.15 m; the earth guard's horse wide (the ankles 0.55 m apart) with a breath that reads
+##               (the hips 3 cm and more); the fire guard's bounce 4 cm and more; the teeter's arms never stepping more
+##               than 0.45 m a frame (55 degrees of the windmill) and the hips over or ahead of the balls of the feet
 ## Ends with "BEND_CLIPS PASSED" or "BEND_CLIPS FAILED" (exit 0 only on a pass; a watchdog quits 2 at LIMIT s).
 
 const LIB := "res://animations_extra/Frontier_Bend.res"
@@ -276,7 +286,7 @@ const SEVENTH_SET := {"own-bend-jab-rise": [24, false, "own-bend-jab-rise-l", "u
 		"own-bend-fire-axe-kick": [22, false, "own-bend-fire-axe-kick-l", "full"], "own-bend-air-down-gust": [22, false, "", "full"],
 		"own-bend-guard-hold-earth": [40, true, "", "full"], "own-bend-guard-hold-water": [48, true, "", "full"],
 		"own-bend-guard-hold-fire": [24, true, "", "full"], "own-bend-guard-hold-air": [40, true, "", "full"],
-		"own-bend-teeter": [12, false, "", "full"]}
+		"own-bend-teeter": [15, false, "", "full"]}
 ## The Slams (spec 6.2: the strike early, lock 0.3-0.35 s, out about 0.1 s after the release): strike_s at most SLAM_STRIKE_S,
 ## at most SLAM_RELEASE_S after hold_s (the held wind-up).
 const SLAMS := ["own-bend-earth-hammer", "own-bend-water-downpour", "own-bend-fire-axe-kick", "own-bend-fire-axe-kick-l",
@@ -492,6 +502,14 @@ func _run() -> void:
 			# (twin_ends: the twin leaves and lands on the original's own unmirrored pose, the fall's first: its end is checked
 			# against that pose in _seventh_slams instead)
 			if a.has_meta(&"twin_ends") and t >= a.length - 1e-4:
+				continue
+			# (and past its back_s the twin_ends twin blends onto that unmirrored pose: its legs checked never to cross nor jump
+			# there in _seventh_pass2 instead)
+			if a.has_meta(&"twin_ends") and t > float(a.get_meta(&"back_s", a.length)) + 1e-4:
+				continue
+			# (twin_tail_s: from then on the twin is the original's own pose, unmirrored: the Pop's twin ends with the right
+			# hand on the stone; checked in _seventh_pass2 instead)
+			if a.has_meta(&"twin_tail_s") and t >= float(a.get_meta(&"twin_tail_s")) - 1e-4:
 				continue
 			var ja := _joints(a, t)
 			var jb := _joints(b, t)
@@ -1692,6 +1710,7 @@ func _seventh(lib: AnimationLibrary, names: Array[String]) -> void:
 	_seventh_pop(lib, names)
 	_seventh_guards(lib, names)
 	_seventh_teeter(lib, names)
+	_seventh_pass2(lib, names)
 
 
 ## The Slams: the strike early (strike_s <= 0.2 s, at most 0.1 s after the held wind-up), the recovery after it, from and back
@@ -1789,7 +1808,6 @@ func _seventh_pop(lib: AnimationLibrary, names: Array[String]) -> void:
 			continue
 		var a := lib.get_animation(StringName(x))
 		var s := "r" if x == "own-bend-jab-rise" else "l"
-		var mx := 1.0 if s == "r" else -1.0
 		_check(String(a.get_meta(&"hand", "")) == s, "%s: the %s hand strikes" % [x, s])
 		if not stand.is_empty():
 			var d0 := _off(_joints(a, 0.0), stand)
@@ -1798,16 +1816,21 @@ func _seventh_pop(lib: AnimationLibrary, names: Array[String]) -> void:
 		var top := _bone(a, strike, s + "_palm").y - _bone(a, strike, "heada").y
 		print("METRIC %s palm_over_head_m %.3f" % [x, top])
 		_check(top > 0.15, "%s: the rising hand over the head at the strike (%.3f m)" % [x, top])
-		var stone := Vector3(POP_STONE.x * mx, POP_STONE.y, POP_STONE.z)
+		# (the hand on the stone is the right for both: the code holds the stone on his right, BendR3.pop_stone)
+		var sh := String(a.get_meta(&"stone_hand", ""))
+		_check(sh == "r", "%s: the stone in the right hand (meta stone_hand %s)" % [x, sh])
+		if sh != "r":
+			sh = "r"
+		var stone := POP_STONE
 		var worst := 0.0
 		var t := float(a.get_meta(&"back_s", a.length))
 		while t <= a.length + 1e-4:
-			worst = maxf(worst, absf(_bone(a, t, s + "_palm").distance_to(stone) - POP_STONE_R))
+			worst = maxf(worst, absf(_bone(a, t, sh + "_palm").distance_to(stone) - POP_STONE_R))
 			t += 1.0 / 30.0
 		print("METRIC %s stone_touch_m %.3f" % [x, worst])
 		_check(worst < POP_TOUCH, "%s: the hand on the Pop stone from back_s to the end (off its surface by %.3f m)" % [x, worst])
-		var g0 := _grip(a, float(a.get_meta(&"back_s", 0.0)), s)
-		var g1 := _grip(a, a.length, s)
+		var g0 := _grip(a, float(a.get_meta(&"back_s", 0.0)), sh)
+		var g1 := _grip(a, a.length, sh)
 		print("METRIC %s grip_back_deg %.1f grip_end_deg %.1f" % [x, g0, g1])
 		_check(g1 > g0 + 10.0, "%s: the fingers close round the stone (%.0f -> %.0f deg)" % [x, g0, g1])
 
@@ -1874,7 +1897,8 @@ func _seventh_teeter(lib: AnimationLibrary, names: Array[String]) -> void:
 	var a := lib.get_animation(&"own-bend-teeter")
 	_check(bool(a.get_meta(&"legs_always", false)), "own-bend-teeter: legs_always")
 	_check(is_equal_approx(float(a.get_meta(&"hold_s", 0.0)), a.length), "own-bend-teeter: held at its end (hold_s the length)")
-	_check(float(a.get_meta(&"strike_s", 1.0)) < 0.1, "own-bend-teeter: the lurch at once (strike_s %.3f)" % float(a.get_meta(&"strike_s", 1.0)))
+	_check(float(a.get_meta(&"strike_s", 1.0)) <= 0.1 + 1e-4, "own-bend-teeter: the lurch at once, eased in (strike_s %.3f <= 0.1)"
+			% float(a.get_meta(&"strike_s", 1.0)))
 	var stand := _joints(lib.get_animation(StringName(FIRST_SET[0])), 0.0) if FIRST_SET[0] in names else {}
 	if not stand.is_empty():
 		var d0 := _off(_joints(a, 0.0), stand)
@@ -1899,6 +1923,130 @@ func _seventh_teeter(lib: AnimationLibrary, names: Array[String]) -> void:
 	_check(lean > 0.1, "own-bend-teeter: leaning out over the toes at the end (the head %.3f m past the balls)" % lean)
 
 ## The sixth set's pass-3 reads (the critic's pass-2 notes) not covered above.
+## The seventh set's pass 2 (the critic's pass-1 notes): each clip's fixed read as numbers (METRIC lines for the review).
+func _seventh_pass2(lib: AnimationLibrary, names: Array[String]) -> void:
+	# the Pop: the fist straight up over the head, the coil's unwind, the twin ending on the original's own held-stone pose
+	if "own-bend-jab-rise" in names:
+		var a := lib.get_animation(&"own-bend-jab-rise")
+		var k := _at(a, float(a.get_meta(&"strike_s")), ["r_palm", "heada", "r_shoulder", "l_shoulder"])
+		var h := _at(a, float(a.get_meta(&"hold_s")), ["r_shoulder", "l_shoulder"])
+		var over := (k.r_palm as Vector3).y - (k.heada as Vector3).y
+		var yaw0 := rad_to_deg(atan2((h.l_shoulder as Vector3).z - (h.r_shoulder as Vector3).z,
+				(h.l_shoulder as Vector3).x - (h.r_shoulder as Vector3).x))
+		var yaw1 := rad_to_deg(atan2((k.l_shoulder as Vector3).z - (k.r_shoulder as Vector3).z,
+				(k.l_shoulder as Vector3).x - (k.r_shoulder as Vector3).x))
+		print("METRIC own-bend-jab-rise fist_over_head_m %.3f unwind_deg %.1f" % [over, absf(yaw1 - yaw0)])
+		_check(over > 0.3, "own-bend-jab-rise: the fist driven straight up over the head (%.3f m)" % over)
+		_check(absf(yaw1 - yaw0) > 40.0, "own-bend-jab-rise: the shoulders unwind from the coil (%.1f deg)" % absf(yaw1 - yaw0))
+		if "own-bend-jab-rise-l" in names:
+			var b := lib.get_animation(&"own-bend-jab-rise-l")
+			_check(b.has_meta(&"twin_tail_s"), "own-bend-jab-rise-l: twin_tail_s (its tail the original's own)")
+			var e := 0.0
+			var ba := _all_bones(a, a.length)
+			var bb := _all_bones(b, b.length)
+			for i in ba.size():
+				e = maxf(e, ba[i].distance_to(bb[i]))
+			print("METRIC own-bend-jab-rise-l end_off_original_m %.4f" % e)
+			_check(e < 0.01, "own-bend-jab-rise-l: ends on the original's held-stone pose (every bone %.4f m)" % e)
+			var top := _bone(b, float(b.get_meta(&"strike_s")), "l_palm").y - _bone(b, float(b.get_meta(&"strike_s")), "heada").y
+			_check(top > 0.3, "own-bend-jab-rise-l: the left fist straight up over the head (%.3f m)" % top)
+	# the Hammer: arched at the hold (the fists behind the head), the fists ahead of and below the knees at the strike
+	if "own-bend-earth-hammer" in names:
+		var a := lib.get_animation(&"own-bend-earth-hammer")
+		var h := _at(a, float(a.get_meta(&"hold_s")), ["r_palm", "l_palm", "heada"])
+		var k := _at(a, float(a.get_meta(&"strike_s")), ["r_palm", "l_palm", "r_knee", "l_knee"])
+		var behind := (h.heada as Vector3).z - maxf((h.r_palm as Vector3).z, (h.l_palm as Vector3).z)
+		var below := minf((k.r_knee as Vector3).y, (k.l_knee as Vector3).y) - maxf((k.r_palm as Vector3).y, (k.l_palm as Vector3).y)
+		var ahead := minf((k.r_palm as Vector3).z, (k.l_palm as Vector3).z) - maxf((k.r_knee as Vector3).z, (k.l_knee as Vector3).z)
+		var wide := (k.l_knee as Vector3).x - (k.r_knee as Vector3).x
+		print("METRIC own-bend-earth-hammer fists_behind_head_m %.3f fists_under_knees_m %.3f fists_ahead_knees_m %.3f knees_apart_m %.3f"
+				% [behind, below, ahead, wide])
+		_check(behind > 0.1, "own-bend-earth-hammer: the fists cocked behind the head at the hold (%.3f m)" % behind)
+		_check(below > 0.0 and ahead > 0.2, "own-bend-earth-hammer: the fists ahead of and below the knees (%.3f under, %.3f ahead)"
+				% [below, ahead])
+		_check(wide > 0.6, "own-bend-earth-hammer: the knees spread wide in the air horse (%.3f m)" % wide)
+	# the Downpour: the palms ahead of the hips, the arms long, the body lifted
+	if "own-bend-water-downpour" in names:
+		var a := lib.get_animation(&"own-bend-water-downpour")
+		var st := float(a.get_meta(&"strike_s"))
+		var k := _at(a, st, ["r_palm", "l_palm", "pelvis"])
+		var lift := _bone(a, 8 / 30.0, "pelvis").y - _bone(a, float(a.get_meta(&"hold_s")), "pelvis").y
+		var slack := maxf(_reach(a, st, "r_palm"), _reach(a, st, "l_palm"))
+		var ahead := minf((k.r_palm as Vector3).z, (k.l_palm as Vector3).z) - (k.pelvis as Vector3).z
+		print("METRIC own-bend-water-downpour palms_ahead_of_hips_m %.3f arm_slack_m %.3f lift_m %.3f" % [ahead, slack, lift])
+		_check(ahead > 0.25, "own-bend-water-downpour: the palms pressed ahead of the hips (%.3f m)" % ahead)
+		_check(slack < 0.05, "own-bend-water-downpour: the arms long at the press (%.3f m short of straight)" % slack)
+		_check(lift > 0.15, "own-bend-water-downpour: the body lifted on the press (%.3f m)" % lift)
+	# the Axe Kick: the knee locked at the strike, the heel ahead; the twin's legs never crossing in its ends' blend
+	for x: String in ["own-bend-fire-axe-kick", "own-bend-fire-axe-kick-l"]:
+		if not x in names:
+			continue
+		var a := lib.get_animation(StringName(x))
+		var s := "r" if x == "own-bend-fire-axe-kick" else "l"
+		var j := _at(a, float(a.get_meta(&"strike_s")), [s + "_upper_leg", s + "_knee", s + "_ankle"])
+		var knee := _bend(j, s + "_upper_leg", s + "_knee", s + "_ankle")
+		print("METRIC %s strike_knee_deg %.1f" % [x, knee])
+		_check(knee <= 20.0, "%s: the knee long at the strike, not locked (%.1f deg <= 20)" % [x, knee])
+		var n := int(round(a.length * 30.0))
+		var hop := 0.0
+		var cross := INF
+		var prev := {}
+		for i in n + 1:
+			var p := _at(a, i / 30.0, ["r_ankle", "l_ankle", "r_knee", "l_knee"])
+			cross = minf(cross, minf((p.l_ankle as Vector3).x - (p.r_ankle as Vector3).x, (p.l_knee as Vector3).x - (p.r_knee as Vector3).x))
+			if i >= 14 and not prev.is_empty():
+				hop = maxf(hop, maxf((p.r_ankle as Vector3).distance_to(prev.r_ankle), (p.l_ankle as Vector3).distance_to(prev.l_ankle)))
+			prev = p
+		print("METRIC %s legs_apart_min_m %.3f tail_ankle_step_m %.3f" % [x, cross, hop])
+		_check(cross > 0.05, "%s: the legs never cross (the knees and ankles %.3f m apart at the closest)" % [x, cross])
+		_check(hop <= 0.25, "%s: no ankle jumps over f13-f22 (%.3f m a frame <= 0.25)" % [x, hop])
+	# the Down Gust: the palms driven down, the body lifted
+	if "own-bend-air-down-gust" in names:
+		var a := lib.get_animation(&"own-bend-air-down-gust")
+		var hy := _bone(a, float(a.get_meta(&"hold_s")), "r_palm").y
+		var ky := _bone(a, float(a.get_meta(&"strike_s")), "r_palm").y
+		var lift := _bone(a, 8 / 30.0, "pelvis").y - _bone(a, 0.0, "pelvis").y
+		print("METRIC own-bend-air-down-gust palm_drive_m %.3f lift_m %.3f" % [hy - ky, lift])
+		_check(hy - ky > 0.6, "own-bend-air-down-gust: the palms driven down (%.3f m)" % (hy - ky))
+		_check(lift > 0.15, "own-bend-air-down-gust: the body lifted on the gust (%.3f m)" % lift)
+	# the guards: earth's wide horse and its breath, fire's bounce
+	for x: String in ["own-bend-guard-hold-earth", "own-bend-guard-hold-fire"]:
+		if not x in names:
+			continue
+		var a := lib.get_animation(StringName(x))
+		var lo := INF
+		var hi := -INF
+		for i in int(round(a.length * 30.0)) + 1:
+			var y := _bone(a, i / 30.0, "pelvis").y
+			lo = minf(lo, y)
+			hi = maxf(hi, y)
+		var j := _at(a, 0.0, ["r_ankle", "l_ankle"])
+		var stance := (j.l_ankle as Vector3).x - (j.r_ankle as Vector3).x
+		print("METRIC %s hips_travel_m %.3f stance_m %.3f" % [x, hi - lo, stance])
+		if x == "own-bend-guard-hold-earth":
+			_check(stance > 0.55, "%s: the horse wide (the ankles %.3f m apart)" % [x, stance])
+			_check(hi - lo > 0.03, "%s: the breath reads (the hips %.3f m)" % [x, hi - lo])
+		else:
+			_check(hi - lo > 0.04, "%s: the bounce reads (the hips %.3f m)" % [x, hi - lo])
+	# the teeter: the arms never strobing, the hips over or ahead of the balls of the feet once tipped
+	if "own-bend-teeter" in names:
+		var a := lib.get_animation(&"own-bend-teeter")
+		var n := int(round(a.length * 30.0))
+		var step := 0.0
+		var back := INF
+		var prev := {}
+		for i in n + 1:
+			var p := _at(a, i / 30.0, ["r_palm", "l_palm", "pelvis", "r_ball", "l_ball"])
+			if not prev.is_empty():
+				step = maxf(step, maxf((p.r_palm as Vector3).distance_to(prev.r_palm), (p.l_palm as Vector3).distance_to(prev.l_palm)))
+			if i >= 3:
+				back = minf(back, (p.pelvis as Vector3).z - maxf((p.r_ball as Vector3).z, (p.l_ball as Vector3).z))
+			prev = p
+		print("METRIC own-bend-teeter palm_step_max_m %.3f hips_past_balls_min_m %.3f" % [step, back])
+		_check(step <= 0.45, "own-bend-teeter: the windmill never strobes (a palm %.3f m a frame <= 0.45)" % step)
+		_check(back >= -0.01, "own-bend-teeter: the hips over or ahead of the balls of the feet once tipped (%.3f m)" % back)
+
+
 func _sixth_pass3(lib: AnimationLibrary, names: Array[String], lie: Animation) -> void:
 	if "own-bend-tech-wall" in names:
 		# (the hat brim kept 8 cm and more off the wall while the palms and the balls of the feet are on it)

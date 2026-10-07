@@ -177,7 +177,7 @@ visual references, no animation files imported) is his statement; the rows below
 | `own-bend-knock-spiked` | 2026-10-06 (sixth set) | `bend_clips.py` (`knock_spiked`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
 | `own-bend-knock-bounce` | 2026-10-06 (sixth set) | `bend_clips.py` (`knock_bounce`, `_wclip`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
 | `own-bend-jab-rise` | 2026-10-07 (seventh set) | `bend_clips.py` (`jab_rise`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
-| `own-bend-jab-rise-l` | 2026-10-07 (seventh set) | `bend_clips.py` (`jab_rise`, `mirror_clip`) | `jab_rise`'s keys mirrored left for right | (as its original) |
+| `own-bend-jab-rise-l` | 2026-10-07 (seventh set) | `bend_clips.py` (`jab_rise`, `mirror_clip`, `twin_tail`) | `jab_rise`'s keys mirrored left for right to frame 12, then `jab_rise`'s own keys (its held-stone end) | (as its original) |
 | `own-bend-earth-hammer` | 2026-10-07 (seventh set) | `bend_clips.py` (`earth_hammer`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
 | `own-bend-water-downpour` | 2026-10-07 (seventh set) | `bend_clips.py` (`water_downpour`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
 | `own-bend-fire-axe-kick` | 2026-10-07 (seventh set) | `bend_clips.py` (`fire_axe_kick`, `_heel_key`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
@@ -314,6 +314,23 @@ visual references, no animation files imported) is his statement; the rows below
   fist, tai chi's pressing palms and ward-off, Northern Shaolin's axe kick and knife hand, Baguazhang's coiled palms and
   wheel) are labels for the typed key poses only. New in the generator: `twin_ends` (a twin that leaves and lands on its
   original's own unmirrored first and last keys, the fall's first pose: the Axe Kick's twin; meta `twin_ends`).
+  Pass 2 (the same day, the critic's pass-1 notes; the same generator and inputs, keys retyped in `SET7`, only these twelve
+  clips re-baked): the Pop's coil deeper and its fist driven straight up in one C with the spine, the guard hand a frame
+  late with a dip; its twin rises on the left and from frame 12 takes the original's own keys, so both end with the right
+  hand on the stone where the code holds it (new in the generator: `twin_tail`; metas `twin_tail_s` and `stone_hand`, the
+  latter a word meta in `install_bend.gd`); the Hammer's hold one backward C with the fists behind the head and its fists
+  finishing ahead of and below the knees in a wider, sunk air horse; the Downpour's press with long arms ahead of the hips
+  on an upright, lifted column with the feet together and pointed, its V wider; the Axe Kick swung up outside on a
+  crescent, chopped down with the knee long, the rear leg split back and the fists thrown back; the Down Gust's palms
+  raised by the ears and driven 0.7 m down, a harder wring and unscrew with a side bend, a bigger lift; the earth guard's
+  horse wider and lower with a breath and squeeze that read; the fire guard's bounce deeper and sharp at the bottom with
+  the hands settling after it; the teeter 15 frames (`strike_s` 3/30 s, `hold_s` its end): tipped from the ankles, long
+  arms windmilling from the shoulders on a spin-up and settle (`_trap`) that never steps more than about 55 degrees a
+  frame, the arms splayed wide of the hat as they rise, caught with the right arm up and back and the left ahead. The
+  timing metas of every earlier set are unchanged. `bend_preview.gd` gains `sheet_at=` (a clip's sheet at chosen frames:
+  the Axe Kick twin's blend in-betweens); `bend_engine_strip.gd` gains `stone=` (the Pop stone drawn where the code holds
+  it) and `lip=` (a clip posed at the deck's end lip facing the water, its own views), orders a strip's moments in time and
+  labels the follow-through as the sheets do; they read no motion.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.
