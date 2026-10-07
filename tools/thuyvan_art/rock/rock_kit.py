@@ -28,7 +28,7 @@ Writes into --out (glTF binary, +Y up; Blender -Y = Godot +Z = the piece's front
 Materials are named for their keys (see MATS); base colours are the ramp's mid tint. Vertex colour (COLOR_0): RGB =
 baked occlusion x a top-light gradient (mean 0.85, clamped 0.5-1.0); A = moss mask. UVs are a box projection in metres
 / the key's tile, so a plain StandardMaterial3D with the key's texture also works; the intended material is
-assets/thuyvan/rock/painted_rock.gdshader (world triplanar) via the .tres files in assets/thuyvan/rock/materials.
+shaders/thuyvan/tv_rock.gdshader (world triplanar) via the .tres files in assets/thuyvan/rock/materials.
 """
 
 import argparse

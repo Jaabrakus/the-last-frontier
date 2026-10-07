@@ -3,7 +3,7 @@
     python3 tools/thuyvan_art/rock/write_godot_materials.py [--kit assets/thuyvan/rock]
 
 Reads <kit>/rock_kit.json ("materials": key -> texture, tile_m, tint) and writes <kit>/materials/<key>.tres:
-    painted keys (a texture):  ShaderMaterial on assets/thuyvan/rock/painted_rock.gdshader (triplanar paint x vertex
+    painted keys (a texture):  ShaderMaterial on shaders/thuyvan/tv_rock.gdshader (triplanar paint x vertex
                                colour, moss by vertex colour A on up faces); ashlar and the white stones in object space
     plain keys (no texture):   StandardMaterial3D, albedo = the key's palette tint x vertex colour, Lambert wrap,
                                roughness 0.9, specular 0.15 (cloth: both sides, for the bolt plates' rags)
@@ -18,6 +18,7 @@ import os
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 RES = "res://assets/thuyvan/rock/"
+SHADER = "res://shaders/thuyvan/tv_rock.gdshader"   # the Thủy Vân painted-rock shader (was the kit's painted_rock.gdshader)
 
 # key -> shader overrides (keys not listed use the defaults: world space, moss on)
 PAINTED = {
@@ -47,7 +48,7 @@ def shader_material(key, info):
     ov = dict(PAINTED.get(key, {}))
     tex = info["texture"]
     lines = ['[gd_resource type="ShaderMaterial" load_steps=4 format=3]', "",
-             '[ext_resource type="Shader" path="%spainted_rock.gdshader" id="1_sh"]' % RES,
+             '[ext_resource type="Shader" path="%s" id="1_sh"]' % SHADER,
              '[ext_resource type="Texture2D" path="%stextures/%s" id="2_rock"]' % (RES, tex),
              '[ext_resource type="Texture2D" path="%stextures/moss_cap.png" id="3_moss"]' % RES, "",
              "[resource]", 'resource_name = "%s"' % key, 'shader = ExtResource("1_sh")',

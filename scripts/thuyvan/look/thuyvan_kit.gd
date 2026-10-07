@@ -4,7 +4,7 @@ extends RefCounted
 ## docs/thuyvan/look_paint.md, rock_kit.md, village_kit.md):
 ##   rock        assets/thuyvan/rock/<piece>.glb and its hand-made <piece>_lod1.glb (karst towers, gorge walls,
 ##               boulders, the white stones, the Two Heights, the needle, cairns): the surfaces already carry the kit's
-##               materials (rock/materials, painted_rock.gdshader), set at import
+##               materials (rock/materials, shaders/thuyvan/tv_rock.gdshader), set at import
 ##   village     assets/thuyvan/village/<piece>.glb (houses, the rope bridge, waystone, banners, lanterns, clutter,
 ##               porters): materials tvv_<key> set at import; the rope bridge's "-colonly" decks import as static bodies
 ##   vegetation  assets/thuyvan/vegetation/<species>.glb: every variant and LOD in one file (<species>_v<k>_lod<n>),

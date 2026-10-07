@@ -33,6 +33,8 @@ const WELCOME_S := 7.0
 var rng := RandomNumberGenerator.new()
 var settings: WorldSettings
 var environment_rig: EnvironmentRig
+## The Thủy Vân look (ThuyVanLook), when the region names one; null otherwise.
+var look: ThuyVanLook
 var terrain: FrontierTerrain
 var vegetation: FrontierVegetation
 var river: RiverWater
@@ -60,6 +62,9 @@ func _ready() -> void:
 	add_child(environment_rig)
 	environment_rig.build(settings)
 	set_clock(float(info.get("day_of_year", 135.0)), float(info.get("start_hour", 6.25)))
+	# the Thủy Vân look over the rig (sky, sun, fog, grade), only when the region's block names one ("look": a
+	# direction or "cycle"); without it the rig is the frontier's, as before
+	look = ThuyVanLook.attach(environment_rig)
 	StartupProfile.mark("environment")
 	terrain = FrontierTerrain.new()
 	terrain.name = "Terrain"

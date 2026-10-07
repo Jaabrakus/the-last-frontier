@@ -114,13 +114,16 @@ The Godot import and setup steps are listed below.
      `res://assets/thuyvan/rock/materials/<name>.tres`.
    - Or the RingDressing idiom: read `mesh.surface_get_material(i).resource_name` and set a surface override from the
      same folder.
-3. **Painted-rock shader:** `assets/thuyvan/rock/painted_rock.gdshader` takes these uniforms:
+3. **Painted-rock shader:** `shaders/thuyvan/tv_rock.gdshader` (moved there from this kit's folder in the Godot
+   step; the backdrop ranks use `tv_rock_far.gdshader`, the same paint with a fixed fog step per instance) takes these
+   uniforms:
    - `rock_tex`, `tile_m`
    - `moss_tex`, `moss_tile_m`, `moss_amount`
    - `object_space`, `macro_var`
+   - `normal_tex`, `normal_strength` (optional soft normal, at most 0.3; 0 = off)
 
    It multiplies the albedo by `COLOR.rgb` and blends moss by `COLOR.a` on up-facing faces. The kit's vertex colour
-   is linear, so set no sRGB flag. The shader is Lambert-wrap lit, never unshaded, with no normal map.
+   is linear, so set no sRGB flag. The shader is Lambert-wrap lit, never unshaded.
 4. **Placement:** use the frames and origins above, with the positions from `vista_spec.md` D7-D19.
    - Karst towers stand on the ground with their 6 m foot buried. Scale the backdrop towers uniformly to the K
      heights; they are modelled 200 m tall.

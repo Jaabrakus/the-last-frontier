@@ -34,5 +34,4 @@ How to rebuild: `docs/thuyvan/rock_kit.md`.
 | `bridge_needle.glb` (+ `_lod1`) | R07 the 62 m white-limestone needle under the rope bridge | `rock_kit.py` |
 | `cairn_a..e.glb` | R08 burial cairns | `rock_kit.py` |
 | `rock_kit.json` | Per piece: Godot-frame size, triangles per LOD, material keys, seats | `rock_kit.py` |
-| `painted_rock.gdshader` | The painted-rock shader: triplanar paint × vertex colour, moss by vertex alpha | Written by hand for this kit |
-| `materials/*.tres` | One Godot material per material key | `tools/thuyvan_art/rock/write_godot_materials.py` |
+| `materials/*.tres` | One Godot material per material key, on `shaders/thuyvan/tv_rock.gdshader` (the painted-rock shader, moved there from this folder: triplanar paint × vertex colour, moss by vertex alpha, an optional soft normal; written by hand) | `tools/thuyvan_art/rock/write_godot_materials.py` |
