@@ -6,7 +6,8 @@
 	"stock": {
 		"_about": "The % layer (smash_r3 spec v2 §2, §3, §7, §8; PERCENT's). Every hit adds d % to the struck competitor (never his health); the higher his %, the faster the next launch: v = W (base + growth R A p/100 (0.5 + d/20)). Out only in the water (or across the tank's curtain at any height). 3 lives, the % back to 0 after each fall, an 8:00 clock, sudden death at 300% when the lives are level at the bell.",
 		"stocks": 3,
-		"pct_scale": 1.0,
+		"pct_scale": 0.86,
+		"_pct_scale": "round 4 (BOTS2): 0.86, was 1.0: with the soak's own side fixed (its bot had no RingMoves in round 3) and the bots' air play, strings and shield, the 48-game soak's pace by it (median game, life, fall %).",
 		"_curve": "Untagged damage (form_spikes, GustLift, a hit with no tag) converts to d = curve_k (1 - e^(-dmg / curve_s)): 7 -> 2.4, 20 -> 5.6, 55 -> 10.2, 110 -> 12.4. An untagged knock launches at untagged.base_k of its own speed plus untagged.growth.",
 		"curve_k": 13.0,
 		"curve_s": 35.0,
