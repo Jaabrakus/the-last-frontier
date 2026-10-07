@@ -29,6 +29,9 @@ extends CanvasLayer
 ## Round 3 (smash_r3 spec v2 §10): in the % ring (RingRules.stock_on() as set_arena runs) the PercentBar (scripts/ui/
 ## percent_bar.gd: each side's % and lives on fixed plates, your pips and fresh band on your own, the clock) stands in place of
 ## the MatchBar, and the health row is hidden (there is no health in the % ring); the classic ring keeps the MatchBar.
+## Round 4 (HUD; the owner: "a cleaner HUD"): the BendStrip lays itself out off the player's body (hud.json strip_layout: L1
+## bottom-left under your plate by default, over the health row in the classic ring), its one help line above it; the status
+## words and the 12 px "F1 controls" (fading after arena_f1_s) sit in the bottom corner away from the strip.
 ## Hooks kept: player, show_debug, on_projectile_hit(), on_target_killed() (group hit_listeners), toast().
 
 @export var color := Color(0.95, 0.92, 0.8)
@@ -284,6 +287,16 @@ func _place(c: Control, at: Vector2, off: Vector2, pivot: Vector2) -> void:
 	_reflow(c)
 
 
+## A control _place put somewhere put elsewhere (its reflow kept).
+func _replace(c: Control, at: Vector2, off: Vector2, pivot: Vector2) -> void:
+	c.set_meta(&"hud_place", [at, off, pivot])
+	c.anchor_left = at.x
+	c.anchor_right = at.x
+	c.anchor_top = at.y
+	c.anchor_bottom = at.y
+	_reflow(c)
+
+
 func _reflow(c: Control) -> void:
 	var pl: Array = c.get_meta(&"hud_place")
 	var sz := c.get_combined_minimum_size()
@@ -426,7 +439,7 @@ func set_arena(on: bool) -> void:
 	if compass != null:
 		compass.visible = not on
 	if bend_strip != null:
-		(bend_strip.get_parent() as Control).visible = on
+		bend_strip.visible = on
 		# (round 3: the % ring's plates in place of the zones' bar; the classic ring keeps the MatchBar)
 		var pct := RingRules.stock_on()
 		match_bar.visible = on and not pct
@@ -436,6 +449,9 @@ func set_arena(on: bool) -> void:
 		(_status.get_parent() as Control).visible = on
 		if _health_bar != null:
 			(_health_bar.get_parent().get_parent() as Control).visible = not (on and pct)   # (no health in the % ring)
+		# (round 4: the strip stands over the health row where it shows: the classic ring)
+		bend_strip.lift_px = PercentBar.cnum("strip_lift_health", 30.0) if on and not pct else 0.0
+	_arena_hint(on)
 	if _help_label != null:
 		_help_label.text = help_text()
 	if on:
@@ -449,10 +465,8 @@ func _build_arena() -> void:
 	bend_strip = BendStrip.new()
 	bend_strip.name = "BendStrip"
 	bend_strip.player = player
-	var sh := _shaded(bend_strip, Vector2(40, 10))
-	sh.name = "BendStripShade"
-	_root.add_child(sh)
-	_place(sh, Vector2(0.5, 1), Vector2(0, -6), Vector2(0.5, 1))
+	_root.add_child(bend_strip)               # (it lays itself out: hud.json strip; no card behind it)
+	_root.move_child(bend_strip, 0)
 	match_bar = MatchBar.new()
 	match_bar.name = "MatchBar"
 	match_bar.player = player
@@ -467,16 +481,46 @@ func _build_arena() -> void:
 	box.name = "ArenaVitals"
 	box.add_theme_constant_override("separation", 2)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_status = _label(16, GOLD)
+	_status = _label(16, INK)
 	_status.name = "Status"
 	_status.visible = false
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_status.add_theme_color_override("font_outline_color", Color(0.02, 0.015, 0.01, 0.88))
+	_status.add_theme_constant_override("outline_size", int(BendStrip.snum("ink_px", 5.0)))
 	box.add_child(_status)
 	_root.add_child(box)
-	_place(box, Vector2(0, 1), Vector2(24, -50), Vector2(0, 1))
+	# (round 4: the bottom corner away from the strip, over the "F1 controls" hint)
+	var at := _away_corner()
+	_place(box, Vector2(at, 1), Vector2(-24.0 if at > 0.5 else 24.0, -PercentBar.cnum("status_up", 34.0)), Vector2(at, 1))
 	if player != null and player.has_signal(&"winded"):
 		player.winded.connect(func(_by: Node) -> void: _winded_t = WINDED_S)
 	# (a knock the player dealt: the hit mark at the centre, the bending's hit confirmation; BendKnock tells its listeners)
 	add_to_group(BendKnock.LISTENERS)
+
+
+## The bottom corner away from the strip (1 the right: the strip at the left or the centre; 0 the left).
+func _away_corner() -> float:
+	return 1.0
+
+
+## Arena mode's "F1 controls": 12 px in the bottom corner away from the strip, fading after hud.json arena_f1_s (20 s); out
+## of it the world's own hint where it always was.
+func _arena_hint(on: bool) -> void:
+	if _help_hint == null:
+		return
+	if on:
+		var at := _away_corner()
+		_help_hint.add_theme_font_size_override("font_size", int(PercentBar.cnum("f1_px", 12.0)))
+		_help_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if at > 0.5 else HORIZONTAL_ALIGNMENT_LEFT
+		_help_hint.add_theme_color_override("font_outline_color", Color(0.02, 0.015, 0.01, 0.88))
+		_help_hint.add_theme_constant_override("outline_size", int(BendStrip.snum("ink_px", 5.0)))
+		_replace(_help_hint, Vector2(at, 1), Vector2(-24.0 if at > 0.5 else 24.0, -12.0), Vector2(at, 1))
+		_help_t = PercentBar.cnum("arena_f1_s", 20.0)
+	elif _help_hint.has_meta(&"hud_place") and (_help_hint.get_meta(&"hud_place") as Array)[0] != Vector2(0, 1):
+		_help_hint.add_theme_font_size_override("font_size", 15)
+		_help_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_help_hint.remove_theme_constant_override("outline_size")
+		_replace(_help_hint, Vector2(0, 1), Vector2(24, -112), Vector2(0, 1))
 
 
 ## BendKnock's listeners: a body knocked by the player (not himself) flashes the hit mark at the centre (never at the body).

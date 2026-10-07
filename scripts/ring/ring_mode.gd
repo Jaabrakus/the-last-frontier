@@ -752,27 +752,41 @@ func _music(on: bool) -> void:
 
 
 # ---------------------------------------------------------------- the words on the screen
+## The centre words (round 4, HUD: hud.json centre): the banner (the countdown, the fall's line, "Over") centre_px at
+## banner_at of the height (44 px at 30%: clear of the plates, the clock and the event line at 1280x720, 1440x900 and
+## 1920x1080), the sub line under it, the top line under the plates. One ink outline, as the strip's.
 func _build_ui() -> void:
 	ui = CanvasLayer.new()
 	ui.name = "RingText"
 	ui.layer = 15
 	add_child(ui)
-	banner = _label(54, MenuUI.INK)
-	banner.anchor_top = 0.22
-	banner.anchor_bottom = 0.22
+	var cc: Variant = PercentBar.hud_cfg().get("centre", {})
+	var cfg: Dictionary = cc if cc is Dictionary else {}
+	var at := float(cfg.get("banner_at", 0.3))
+	var bh := float(cfg.get("banner_h", 56.0))
+	banner = _label(int(cfg.get("banner_px", 44)), MenuUI.INK)
+	banner.anchor_top = at
+	banner.anchor_bottom = at
+	banner.offset_top = -bh * 0.5
+	banner.offset_bottom = bh * 0.5
 	ui.add_child(banner)
-	sub = _label(22, MenuUI.DIM)
-	sub.anchor_top = 0.22
-	sub.anchor_bottom = 0.22
-	sub.offset_top = 70.0
-	sub.offset_bottom = 110.0
+	var sp := float(cfg.get("sub_px", 22.0))
+	sub = _label(int(sp), MenuUI.DIM)
+	sub.anchor_top = at
+	sub.anchor_bottom = at
+	sub.offset_top = bh * 0.5 + float(cfg.get("sub_gap", 2.0))
+	sub.offset_bottom = sub.offset_top + sp + 10.0
 	ui.add_child(sub)
-	top = _label(17, MenuUI.DIM)
+	var tp := float(cfg.get("top_px", 17.0))
+	top = _label(int(tp), MenuUI.DIM)
 	top.anchor_top = 0.0
 	top.anchor_bottom = 0.0
-	top.offset_top = 86.0
-	top.offset_bottom = 110.0
+	top.offset_top = float(cfg.get("top_y", 112.0))
+	top.offset_bottom = top.offset_top + tp + 8.0
 	ui.add_child(top)
+	for l: Label in [banner, sub, top]:
+		l.add_theme_color_override("font_outline_color", Color(0.02, 0.015, 0.01, 0.88))
+		l.add_theme_constant_override("outline_size", int(BendStrip.snum("ink_px", 5.0)))
 	practice_ctl.build_ui(ui)             # (practice: what the dummy does and the keys, under the HUD's match bar; the tally)
 
 
