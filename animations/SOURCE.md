@@ -177,7 +177,7 @@ visual references, no animation files imported) is his statement; the rows below
 | `own-bend-knock-spiked` | 2026-10-06 (sixth set) | `bend_clips.py` (`knock_spiked`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
 | `own-bend-knock-bounce` | 2026-10-06 (sixth set) | `bend_clips.py` (`knock_bounce`, `_wclip`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
 | `own-bend-jab-rise` | 2026-10-07 (seventh set) | `bend_clips.py` (`jab_rise`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
-| `own-bend-jab-rise-l` | 2026-10-07 (seventh set) | `bend_clips.py` (`jab_rise`, `mirror_clip`, `twin_tail`) | `jab_rise`'s keys mirrored left for right to frame 12, then `jab_rise`'s own keys (its held-stone end) | (as its original) |
+| `own-bend-jab-rise-l` | 2026-10-07 (seventh set) | `bend_clips.py` (`jab_rise`, `mirror_clip`, `twin_tail`, `twin_keys`) | `jab_rise`'s keys mirrored left for right to frame 12, then `jab_rise`'s own keys (its held-stone end); the hands' and the fingers' keys typed for the twin (`twin_keys`, pass 3) | (as its original) |
 | `own-bend-earth-hammer` | 2026-10-07 (seventh set) | `bend_clips.py` (`earth_hammer`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
 | `own-bend-water-downpour` | 2026-10-07 (seventh set) | `bend_clips.py` (`water_downpour`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
 | `own-bend-fire-axe-kick` | 2026-10-07 (seventh set) | `bend_clips.py` (`fire_axe_kick`, `_heel_key`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |

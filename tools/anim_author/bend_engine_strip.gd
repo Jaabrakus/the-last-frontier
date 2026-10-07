@@ -14,7 +14,7 @@ extends SceneTree
 ##       [light=noon] [elements=earth,water,fire,air] (cycled over the clips) [suffix=_engine]
 ##       [rise=own-bend-edge-jump:11.8:19.9] (the code's jump, vy and gravity, added to that clip's root)
 ##       [stone=own-bend-jab-rise,...] (earth's Pop stone drawn where the code holds it, BendR3.pop_stone: 0.55 m ahead,
-##       0.45 m to his right, 1.25 m up, radius 0.22 m, from the clip's strike on)
+##       0.45 m to his right, 1.25 m up, radius 0.22 m, from the clip's stone_s on (the hand reaching it), else its strike)
 ##       [lip=own-bend-teeter,...] (the clip posed at the deck's end lip facing out over the water, the balls of the feet on
 ##       the stand-in coping's nose, the views turned with him)
 ## Writes <dir>/<clip without own-bend->< suffix>.png. Ends with BEND ENGINE STRIP DONE.
@@ -315,7 +315,8 @@ func _snap(a: Animation, air: bool, t: float, vn: String, text: String) -> Image
 	return await _shoot(VIEWS[vn], text)
 
 
-## Earth's Pop stone drawn where the code holds it (POP_STONE in the figure's frame) for a stone= clip from its strike on.
+## Earth's Pop stone drawn where the code holds it (POP_STONE in the figure's frame) for a stone= clip from the moment its
+## hand reaches it (meta stone_s; strike_s for a clip without one).
 func _show_stone(a: Animation, t: float) -> void:
 	if _stone == null:
 		_stone = MeshInstance3D.new()
@@ -328,7 +329,8 @@ func _show_stone(a: Animation, t: float) -> void:
 		mat.roughness = 0.95
 		_stone.material_override = mat
 		root.add_child(_stone)
-	_stone.visible = _cur in stone_clips and t >= float(a.get_meta(&"strike_s", 0.0)) - 1e-4
+	var from := float(a.get_meta(&"stone_s", a.get_meta(&"strike_s", 0.0)))
+	_stone.visible = _cur in stone_clips and t >= from - 1e-4
 	if _stone.visible and fig != null:
 		_stone.global_position = fig.global_transform * POP_STONE
 
