@@ -4,9 +4,9 @@ extends SceneTree
 ##   symbols    every §14.3 symbol SEAMS stubbed exists with its argument count (RingRules, BendKnock, BendStatus, RingArena,
 ##              RingMoves, RingPredict, NpcPad, SwayCaster, MatchSetup, RingPractice): methods (static where the spec says),
 ##              static vars, vars and signals; the stubs answer today's behaviour (nothing, no %, casting allowed)
-##   the gate   stock_on() false with no ring, in the open world and in today's classic ring (rules.json rule_set
-##              "classic"); RingMoves.of(player) null in the open world (scenes/main.tscn) and in the classic ring;
-##              BendStatus.take_filters empty
+##   the gate   stock_on() false with no ring, in the open world and in the classic ring (pinned: RingRules.rule_set_override
+##              "classic", since the merge rules.json plays "stock" by default); RingMoves.of(player) null in the open world
+##              (scenes/main.tscn) and in the classic ring; BendStatus.take_filters empty
 ##   launch_v   the spec §2.2 formula for one class at range 0, 16 and 30 m and released in the air; a set class its base;
 ##              range_mult 1.0 to 10 m, 0.65 at 22 m and beyond
 ##   the lip    RingArena.nearest_lip right on each of the four sides, at two corners outside the deck and one inside;
@@ -85,6 +85,7 @@ func _end() -> void:
 		c.guard_override = null
 		c.quick_override = null
 	SwayCaster.free_override = false
+	RingRules.rule_set_override = ""
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	GameSettings.path = GameSettings.PATH
 	if fails.is_empty() and checks > 0:
@@ -203,10 +204,10 @@ func _symbols() -> void:
 	_methods(SwayCaster, "SwayCaster", {"guard_up": [0, false], "ready_default": [0, false], "drop_all": [0, false]})
 	_signals(SwayCaster, "SwayCaster", {"air_cast": 2, "lock_started": 2, "cast_released": 2})
 	_methods(MatchSetup, "MatchSetup", {"rule_set": [0, true], "games": [0, true], "practice_pct": [0, true]})
-	_expect(MatchSetup.rule_set() == "classic" and MatchSetup.games() == 1 and MatchSetup.practice_pct().is_empty(),
-			"MatchSetup: classic, 1 game, no practice %")
+	_expect(MatchSetup.rule_set() == String(RingRules.data().get("rule_set", "")) and MatchSetup.games() == 1
+			and MatchSetup.practice_pct().is_empty(), "MatchSetup: rules.json's rule set with none chosen, 1 game, no practice %")
 	_methods(RingPractice, "RingPractice", {"reset": [0, false], "step": [1, false], "set_way": [1, false], "paint": [0, false]})
-	_expect(String(RingRules.data().get("rule_set", "")) == "classic", "rules.json rule_set \"classic\"")
+	_expect(String(RingRules.data().get("rule_set", "")) == "stock", "rules.json rule_set \"stock\" (PERCENT's default since round 3)")
 	for f: String in ["movement", "hud", "practice"]:
 		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/ring/%s.json" % f))
 		_expect(d is Dictionary and String((d as Dictionary).get("_about", "")) != "", "data/ring/%s.json: its _about" % f)
@@ -222,9 +223,9 @@ func _stubs() -> void:
 	_expect(r.pct_of(b) == 0.0 and r.stocks_of(b) == 0 and r.safe_until(b) == -INF and r.hitstun_left(b) == 0.0
 			and not r.stunned(b) and not r.can_escape(b) and r.string_hits(b) == 0 and r.stale_count(b, "x/y") == 0
 			and r.last_steer_deg(b) == 0.0 and r.fresh_pct(b) == 0.0 and r.heal_allowed(b) and r.patch(b) == 0.0
-			and r.on_hit(b, null, {}).is_empty() and RingRules.class_of("stone_form/spike").is_empty()
-			and RingRules.weight_of("earth") == 1.0 and r.rule_set == "classic",
-			"RingRules' per-body stubs: today's (no %, no lives, no stun, heal allowed, no launch)")
+			and r.on_hit(b, null, {}).is_empty() and not RingRules.class_of("stone_form/spike").is_empty()
+			and absf(RingRules.weight_of("earth") - 2.0 / 2.25) < 1e-4 and r.rule_set == "classic",
+			"RingRules' per-body answers off the books and with the gate off: no %, no lives, no stun, heal allowed, no launch (the classes filled)")
 	b.free()
 	r.free()
 
@@ -281,6 +282,7 @@ func _hold_foe() -> void:
 func _ring() -> void:
 	MatchSetup.incoming = true
 	MatchSetup.element = "earth"
+	RingRules.rule_set_override = "classic"      # (the merge: rules.json plays stock by default; this checks the classic ring)
 	change_scene_to_file("res://scenes/ring.tscn")
 	for i in 10:
 		await process_frame

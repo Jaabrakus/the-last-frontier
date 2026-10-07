@@ -130,6 +130,8 @@ var falls: Array = []
 ## Round 3 (stock): this game's tally per team (the match screen's): pct_dealt, falls_dealt, falls_taken, self_falls, healed,
 ## string_hits / string_pct (the longest string), and what AIR and MOVE note (note_stat).
 var tally: Array = [{}, {}]
+## Round 3 (stock): every move fresh (no staling; Practice's "fresh moves" row: RingPractice and RingMenu set it).
+var stale_off := false
 
 var _prev_rules: Object = null
 var _prev_ragdoll := 9.0
@@ -640,11 +642,14 @@ func health_frac(team: int) -> float:
 
 
 # ---------------------------------------------------------------- round 3: the % layer (PERCENT; the gate: stock_on())
-## The rule set a ring starting now plays: rule_set_override (tests; BOTS' Esc Rules row), else the user arg
-## rules=classic|stock (or rule_set=), else rules.json rule_set.
+## The rule set a ring starting now plays: rule_set_override (tests), else the menu's choice (MatchSetup.rules_choice: the
+## Esc menu's Rules row, a kept setting, the user arg MatchSetup took), else the user arg rules=classic|stock (or rule_set=),
+## else rules.json rule_set.
 static func pick_rule_set() -> String:
 	if rule_set_override in RULE_SETS:
 		return rule_set_override
+	if MatchSetup.rules_choice in RULE_SETS:
+		return MatchSetup.rules_choice
 	for a in OS.get_cmdline_user_args():
 		var kv := a.trim_prefix("--")
 		if kv.begins_with("rules=") or kv.begins_with("rule_set="):
@@ -889,6 +894,13 @@ func can_escape(b: Node) -> bool:
 	return kn != null and kn.can_escape()
 
 
+## b's fresh press (made now) ends his hitstun when it may (BendKnock.escape: the hitstun and its reaction window over at
+## once); MOVE's RingMoves calls it for the escape. True when it ended it.
+func escape(b: Node) -> bool:
+	var kn := BendKnock.peek(b)
+	return kn != null and kn.escape()
+
+
 ## Hits in the string on b now.
 func string_hits(b: Node) -> int:
 	return int((_sk(b).get("string", {}) as Dictionary).get("hits", 0))
@@ -1112,6 +1124,8 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 		return none
 	var late := bool(info.get("slide_only", false)) or guard == "late"
 	var tag := String(info.get("tag", ""))
+	if bool(info.get("wall_tick", false)) and tag.begins_with("fire_wall/"):
+		tag = "fire_wall/tick"                   # (inside a Fire Wall after its entry pop: the burn, % only, no flinch)
 	var returned := bool(info.get("returned", false))
 	var cls: Dictionary
 	if returned:
@@ -1145,11 +1159,12 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	var d := float(cls.get("d", 0.0))
 	if untagged:
 		d = curve_d(float(info.get("dmg", 0.0)))
-	if first and not returned and not untagged and by != null:
+	if first and not returned and not untagged and by != null and not stale_off:
 		var copies := stale_count(by, String(cls.tag))
 		stale_k = 1.0 - minf(sub_num("stale", "step", 0.08) * float(copies), sub_num("stale", "max", 0.4))
 	d *= stale_k * stock_num("pct_scale", 1.0)
-	if late:
+	# (a late guard's half; an untagged hit's damage and knock came already halved by the guard that let it through)
+	if late and not untagged:
 		d *= stock_num("late_mult", 0.5)
 	if first and vkey != "":
 		_volleys[vkey] = {"stale_k": stale_k, "at": now}
@@ -1178,7 +1193,7 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 		var gap := Vector2((by as Node3D).global_position.x - (n as Node3D).global_position.x,
 				(by as Node3D).global_position.z - (n as Node3D).global_position.z).length()
 		v = minf(v, sqrt(2.0 * stock_num("pull_decel", 6.0) * maxf(gap - 0.6, 0.0)))
-	if late:
+	if late and not untagged:
 		v *= stock_num("late_mult", 0.5)
 	var ang := float(cls.get("angle", 30.0))
 	var flat := _flat_way(n, by, info, String(cls.get("dir", "travel")))

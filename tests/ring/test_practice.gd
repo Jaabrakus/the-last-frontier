@@ -61,6 +61,8 @@ func _initialize() -> void:
 		quit(2))
 	SwayCaster.free_override = true
 	InputSetup.ensure()
+	# (the merge: rules.json plays the % ring by default; this test is the classic ring's, pinned)
+	RingRules.rule_set_override = "classic"
 	change_scene_to_file("res://scenes/ring.tscn")
 	_run.call_deferred()
 
@@ -87,6 +89,7 @@ func _until(cond: Callable, limit: float) -> float:
 func _end() -> void:
 	Engine.time_scale = 1.0
 	NpcRingMind.predict_override = null
+	RingRules.rule_set_override = ""
 	GameSettings.path = GameSettings.PATH
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	if fails.is_empty() and checks > 0:

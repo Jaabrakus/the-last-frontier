@@ -20,6 +20,13 @@ extends Node3D
 ## the water only up to its surface (a collider no higher), so a body thrown at the curtain crosses its plane at any height
 ## and is out there (RingArena.is_out; curtain_splash(at) where it went through). The lip's sound: within lip_sound.near_m of
 ## any lip the lapping grows louder on that side, for the local player's ears only (a lapping loop at his nearest lip point).
+## ROUND 4 (IMPACT; the owner's ring-out moment, "the splash"): ko_splash(at, speed, k) for a fall (RingMoment calls it on
+## every KO, and on a classic rang_out): a column of water 5-8 m tall from the body's entry speed (k 2 on a game's last fall:
+## twice its size), a ring of spray sheets thrown out round it, a ripple ring running out over the tank and foam that lies on
+## the water for foam_s, with ringout_splash at +3 dB and a low layer (knock_thud at pitch 0.6). Our own: ToonFx's water
+## particles through ToonFxPool.shoot, and two flat meshes of our own (the ripple's ring, the foam's disc) in shaders written
+## here (soft white water, lit, no outline). Its numbers in data/ring/feel.json ko_splash. Headless: counted (ko_splashes,
+## last_ko) and nothing drawn.
 
 signal splashed(body: Node3D, at: Vector3)
 
@@ -45,6 +52,13 @@ var rush: Array[AudioStreamPlayer3D] = []
 ## Round 3 (stock): how loud the lip's lapping is now (dB; -INF silent) and the side it plays on (RingArena LIP_*; -1 none).
 var lap_db := -INF
 var lap_side := -1
+## Round 4: the KO splashes made and the last one ({at, speed, k, column_m}) (tests, the review), and the ripples and foam
+## lying on the water now: [mesh, t, life, kind, r0, r1].
+var ko_splashes := 0
+var last_ko := {}
+var _ko_fx: Array = []
+static var _ripple_shader: Shader
+static var _foam_shader: Shader
 
 
 func setup(a: RingArena) -> void:
@@ -95,6 +109,142 @@ func splash(at: Vector3, speed := 5.0) -> void:
 	BendLooks.burst(p, "water", n, Vector3.UP, 28.0, mps, 0.3)
 	BendLooks.burst(p, "water", int(n * 0.5), Vector3.UP, 85.0, mps * 0.5, 0.22)
 	BendLooks.sound("water", "hit", p, 3.0)
+
+
+# ---------------------------------------------------------------- round 4: the KO splash
+## A fall into the water at `at` (world; its x, z on the water) at `speed` m/s, `k` its size (2: a game's last fall). See the
+## header. The point is kept inside the tank (a body out past the curtain splashes just inside it).
+func ko_splash(at: Vector3, speed := 10.0, k := 1.0) -> void:
+	var d := BendImpact.block("ko_splash")
+	var l := to_local(at)
+	l.x = clampf(l.x, -tank_half.x + 0.8, tank_half.x - 0.8)
+	l.z = clampf(l.z, -tank_half.y + 0.8, tank_half.y - 0.8)
+	l.y = level_y
+	var p := to_global(l) + Vector3.UP * 0.05
+	var cm := BendImpact.pair("ko_splash", "column_m", Vector2(5.0, 8.0))
+	var sp := BendImpact.pair("ko_splash", "speed_mps", Vector2(6.0, 20.0))
+	var f := clampf((speed - sp.x) / maxf(sp.y - sp.x, 0.01), 0.0, 1.0)
+	var col_h := lerpf(cm.x, cm.y, f) * k
+	ko_splashes += 1
+	last_ko = {"at": p, "speed": speed, "k": k, "column_m": col_h}
+	BendSounds.play(&"ringout_splash", p, float(d.get("sound_db", 3.0)))
+	BendSounds.play(&"knock_thud", p, float(d.get("low_db", 0.0)), float(d.get("low_pitch", 0.6)))
+	if not visuals or DisplayServer.get_name() == "headless" or not is_inside_tree():
+		return
+	var pool := ToonFxPool.of(get_tree().current_scene if get_tree().current_scene != null else self)
+	if pool == null:
+		return
+	var g := float(d.get("gravity", 14.0))
+	var vc := sqrt(2.0 * g * col_h)
+	var life := 2.0 * vc / g
+	var grav := Vector3(0.0, -g, 0.0)
+	var drop := float(d.get("drop_m", 0.26)) * sqrt(k)
+	# the column: a tight core of drops, a wider sheath, white water climbing inside it, mist off its top
+	pool.shoot("drop", p, 48, Vector3.UP, 3.0, Vector2(vc * 0.82, vc), Vector2(drop * 0.8, drop * 1.4), life, grav, 0.0,
+			{"r": 0.35 * k})
+	pool.shoot("drop", p, 48, Vector3.UP, 9.0, Vector2(vc * 0.55, vc * 0.85), Vector2(drop * 0.6, drop * 1.1), life * 0.9, grav,
+			0.0, {"r": 0.6 * k})
+	pool.shoot("foam", p, 32, Vector3.UP, 6.0, Vector2(vc * 0.4, vc * 0.85), Vector2(1.1, 2.0) * k, life * 0.8, grav * 0.9,
+			0.5, {"r": 0.5 * k})
+	pool.shoot("foam", p, 32, Vector3.UP, 14.0, Vector2(vc * 0.2, vc * 0.5), Vector2(1.4, 2.4) * k, life * 0.7, grav * 0.8,
+			0.8, {"r": 0.8 * k})
+	pool.shoot("puff_steam", p + Vector3.UP * col_h * 0.6, 24, Vector3.UP, 50.0, Vector2(0.5, 2.0), Vector2(1.0, 2.0) * k,
+			1.6, Vector3(0.0, -0.6, 0.0), 1.0, {"r": 0.8 * k})
+	# the spray sheets: a ring thrown out and up round the column
+	var n := int(d.get("sheets", 6))
+	var rot := ToonFx.vis_rng.randf() * TAU
+	var sv := float(d.get("sheet_mps", 8.0)) * sqrt(k)
+	for i in n:
+		var a := rot + TAU * float(i) / float(n)
+		var out := Vector3(cos(a), 0.0, sin(a))
+		pool.shoot("drop", p + out * 0.5 * k, 40, (out + Vector3.UP * float(d.get("sheet_up", 1.3))).normalized(), 9.0,
+				Vector2(sv * 0.6, sv), Vector2(drop * 0.5, drop * 0.9), 1.1, grav, 0.0, {"box": Vector3(0.5, 0.1, 0.5) * k})
+	pool.shoot("foam", p, 32, Vector3.UP, 85.0, Vector2(2.0, 4.5) * sqrt(k), Vector2(0.6, 1.1) * k, 0.9, grav * 0.5, 2.0,
+			{"r": 1.0 * k, "flat": 0.8})
+	# the ripple's rings on the tank and the foam lying on it
+	var rr := BendImpact.pair("ko_splash", "ripple_m", Vector2(0.8, 7.0))
+	var rs := float(d.get("ripple_s", 1.4))
+	var fm := float(d.get("foam_m", 2.6))
+	_ko_mesh("ripple", p, rs, rr.x * k, rr.y * k)
+	_ko_mesh("ripple", p, rs * 1.25, rr.x * k, rr.y * k * 0.7, 0.18)
+	_ko_mesh("foam", p, float(d.get("foam_s", 3.0)), fm * k * 0.6, fm * k)
+
+
+## One of the splash's flat meshes on the water (kind "ripple": a ring running out; "foam": a disc spreading and thinning),
+## starting `delay` s from now.
+func _ko_mesh(kind: String, p: Vector3, life: float, r0: float, r1: float, delay := 0.0) -> void:
+	var mi := MeshInstance3D.new()
+	mi.name = "KoRipple" if kind == "ripple" else "KoFoam"
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(2.0, 2.0)
+	mi.mesh = pm
+	var mat := ShaderMaterial.new()
+	mat.shader = _ko_shader(kind)
+	mat.set_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	add_child(mi)
+	mi.global_position = p + Vector3.UP * (0.02 if kind == "ripple" else 0.03)
+	mi.scale = Vector3.ONE * maxf(r0, 0.01)
+	mi.visible = delay <= 0.0
+	_ko_fx.append([mi, -delay, life, kind, r0, r1])
+
+
+## The ripple's and the foam's shaders (ours, made once): soft white water lit by the ring's light (noon and night alike),
+## alpha only; `t` 0..1 its age.
+static func _ko_shader(kind: String) -> Shader:
+	if kind == "ripple" and _ripple_shader != null:
+		return _ripple_shader
+	if kind == "foam" and _foam_shader != null:
+		return _foam_shader
+	var sh := Shader.new()
+	var head := "shader_type spatial;\nrender_mode blend_mix, depth_draw_never, cull_disabled, shadows_disabled;\n" \
+			+ "uniform float t = 0.0;\nuniform float seed = 0.0;\n" \
+			+ "float h21(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7)) + seed) * 43758.5453); }\n" \
+			+ "float vn(vec2 p) { vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);\n" \
+			+ "  return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }\n"
+	if kind == "ripple":
+		sh.code = head + "void fragment() {\n  vec2 q = UV * 2.0 - 1.0; float r = length(q);\n" \
+				+ "  float band = smoothstep(0.78, 0.9, r) * (1.0 - smoothstep(0.9, 1.0, r));\n" \
+				+ "  float inner = smoothstep(0.55, 0.75, r) * (1.0 - smoothstep(0.75, 0.82, r)) * 0.45;\n" \
+				+ "  float n = vn(vec2(atan(q.y, q.x) * 6.0, r * 4.0) + seed) * 0.5 + 0.5;\n" \
+				+ "  ALBEDO = vec3(0.86, 0.95, 1.0); ROUGHNESS = 0.35;\n  ALPHA = (band + inner) * n * (1.0 - t) * (1.0 - t) * 0.9;\n}\n"
+		_ripple_shader = sh
+	else:
+		sh.code = head + "void fragment() {\n  vec2 q = UV * 2.0 - 1.0; float r = length(q);\n" \
+				+ "  float cells = vn(q * 7.0 + seed) * 0.6 + vn(q * 17.0 - seed) * 0.4;\n" \
+				+ "  float lace = smoothstep(0.42 + t * 0.3, 0.62 + t * 0.25, cells);\n" \
+				+ "  float edge = 1.0 - smoothstep(0.55, 1.0, r + (cells - 0.5) * 0.3);\n" \
+				+ "  ALBEDO = vec3(0.9, 0.97, 1.0); ROUGHNESS = 0.6;\n  ALPHA = lace * edge * (1.0 - smoothstep(0.55, 1.0, t)) * 0.85;\n}\n"
+		_foam_shader = sh
+	return sh
+
+
+## The splash's ripples and foam: grown, aged, gone at their end.
+func _step_ko_fx(dt: float) -> void:
+	var i := 0
+	while i < _ko_fx.size():
+		var e: Array = _ko_fx[i]
+		var mi := e[0] as MeshInstance3D
+		if not is_instance_valid(mi):
+			_ko_fx.remove_at(i)
+			continue
+		e[1] = float(e[1]) + dt
+		var age := float(e[1])
+		if age < 0.0:
+			i += 1
+			continue
+		mi.visible = true
+		var t := clampf(age / maxf(float(e[2]), 0.01), 0.0, 1.0)
+		var grow := 1.0 - pow(1.0 - t, 2.2) if String(e[3]) == "ripple" else 1.0 - pow(1.0 - t, 3.0)
+		mi.scale = Vector3.ONE * maxf(lerpf(float(e[4]), float(e[5]), grow), 0.01)
+		(mi.material_override as ShaderMaterial).set_shader_parameter(&"t", t)
+		if t >= 1.0:
+			mi.queue_free()
+			_ko_fx.remove_at(i)
+			continue
+		i += 1
 
 
 # ---------------------------------------------------------------- the tank
@@ -317,6 +467,8 @@ static func _looped(s: AudioStream) -> AudioStream:
 ## The lip's lapping for the local player: near a lip (lip_sound.near_m) it plays from his nearest lip point, louder the
 ## nearer he is (quiet_db at near_m, loud_db at the lip); silent farther in and off the deck.
 func _process(_dt: float) -> void:
+	if not _ko_fx.is_empty():
+		_step_ko_fx(_dt)
 	if lap == null or arena == null or not is_inside_tree():
 		return
 	var p := _local_player()

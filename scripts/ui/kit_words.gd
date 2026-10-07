@@ -12,7 +12,8 @@ extends RefCounted
 ##   the jab       Bending.jab (moves.json "jabs", else spec §8.1's; then the element's first quick spell,
 ##                 MatchSetup.quick_default); the guard Bending.guard ("guards"); the passive's words screens.json kit.passives
 ##   lines         kit_lines(el, scheme): the element pick's and the Controls panel's; rule_lines(): F1's and the
-##                 first-time panels' four rules; help_line(scheme): the strip's one help line
+##                 first-time panels' four rules; help_line(scheme): the duel's help line; strip_help(scheme): the
+##                 strip's one help line (round 4: one line of 64 characters or fewer)
 ## The control schemes as the data names them: "first_moves" (round 2; "simple" before it) is read as one (scheme_id).
 
 const ROLES := ["STRIKE", "PUSH", "DASH", "WALL", "HEAL"]
@@ -194,6 +195,15 @@ static func help_line(s := "") -> String:
 	return keyed(String(h.get(k, h.get("keys", ""))))
 
 
+## The strip's one help line under scheme `s` (round 4, HUD: screens.json kit.help_strip; one line, 64 characters or fewer,
+## its first letter a capital; round 2's longer help_line stays the duel's and F1's).
+static func strip_help(s := "") -> String:
+	var h: Dictionary = words().get("help_strip", {})
+	var k := scheme_id(s)
+	var t := keyed(String(h.get(k, h.get("keys", ""))))
+	return t.substr(0, 1).to_upper() + t.substr(1) if t != "" else help_line(s)
+
+
 ## F1's and the first-time panels' four rules: the lock, the guard, the counters, the floor and the air.
 static func rule_lines() -> Array:
 	var r: Dictionary = words().get("rules", {})
@@ -260,6 +270,7 @@ static func every_line() -> Array:
 	var out: Array = rule_lines()
 	for s in ["keys", "first_moves", "direction", "radial"]:
 		out.append(help_line(s))
+		out.append(strip_help(s))
 	for el: String in Bending.ELEMENTS:
 		out.append_array(pick_lines(el))
 		for s in ["keys", "first_moves", "direction", "radial"]:

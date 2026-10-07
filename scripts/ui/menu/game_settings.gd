@@ -57,6 +57,12 @@ static func set_section(section: String, values: Dictionary) -> void:
 	for k: String in values:
 		cf.set_value(section, k, values[k])
 	cf.save(f)
+	writes += 1
+
+
+## Writes made through set_value / set_section this run (round 4's merge: a reader that caches a value of the file, such as
+## RingAssist.won_once read by the HUD's strip each frame, reads it again only when this or file() changed).
+static var writes := 0
 
 
 ## Iron Man (user 2026-09-30: "this should be a iron man mode", "do it" to permadeath and to saving the injury): what a wound

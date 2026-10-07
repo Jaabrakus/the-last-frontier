@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M19 30 C 26 30, 26 41, 23 49 C 21 53, 14 52, 15 44 C 15 37, 13 30, 19 30 Z" stroke-width="2.8" fill="#fff" fill-opacity="0.92"/>
+  <path d="M41 8 C 48 8, 48 19, 45 27 C 43 31, 36 30, 37 22 C 37 15, 35 8, 41 8 Z" stroke-width="2.8" fill="#fff" fill-opacity="0.92"/>
+  <path d="M13.5 60 C 12.7 56.96, 15.5 56, 15 52 C 17.2 54.72, 19.3 56.64, 18.5 60 C 18.1 61.6, 13.9 61.6, 13.5 60 Z" stroke-width="1.6" fill="#fff" fill-opacity="0.92"/>
+  <path d="M21.5 60 C 20.7 57.34, 24.3 56.5, 25 53 C 25.6 55.38, 27.3 57.06, 26.5 60 C 26.1 61.4, 21.9 61.4, 21.5 60 Z" stroke-width="1.6" fill="#fff" fill-opacity="0.92"/>
+  <path d="M35.5 38 C 34.7 34.96, 37.5 34, 37 30 C 39.2 32.72, 41.3 34.64, 40.5 38 C 40.1 39.6, 35.9 39.6, 35.5 38 Z" stroke-width="1.6" fill="#fff" fill-opacity="0.92"/>
+  <path d="M43.5 38 C 42.7 35.34, 46.3 34.5, 47 31 C 47.6 33.38, 49.3 35.06, 48.5 38 C 48.1 39.4, 43.9 39.4, 43.5 38 Z" stroke-width="1.6" fill="#fff" fill-opacity="0.92"/>
+  <path d="M6 26 L13 26" stroke-width="1.6"/>
+  <path d="M28 50 L35 50" stroke-width="1.6"/>
+</svg>

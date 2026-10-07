@@ -1,0 +1,264 @@
+diff --git a/scripts/ring/ring_lessons.gd b/scripts/ring/ring_lessons.gd
+index 6fd416a..8453da3 100644
+--- a/scripts/ring/ring_lessons.gd
++++ b/scripts/ring/ring_lessons.gd
+@@ -209,8 +209,12 @@ static func dummy_for(el: String) -> String:
+ static func lessons_for(sch: String, el: String) -> Array:
+ 	var out: Array = []
+ 	var rs := rules_now()
++	# (round 4 SIMPLE: under the Basic controls the Basics track only (its cards' schemes: ["basic"]), else never it)
++	var basics := MatchSetup.basic()
+ 	for l: Dictionary in data().get("lessons", []):
+-		if l.has("schemes") and not KitWords.scheme_id(sch) in (l.schemes as Array):
++		if (String(l.get("track", "")) == "basics") != basics:
++			continue
++		if l.has("schemes") and not KitWords.scheme_id(sch) in (l.schemes as Array) and not basics:
+ 			continue
+ 		if l.has("rules") and not rs in (l.rules as Array):
+ 			continue
+@@ -635,7 +639,11 @@ func _hint_step() -> void:
+ 	var id := hints.next(now)
+ 	var hq: Dictionary = data().get("hint_queue", {})
+ 	if id != "":
+-		card.show_hint(String(hq.get("kicker", word("hint_kicker"))), String((hq.get("lines", {}) as Dictionary).get(id, id)))
++		var hl := String((hq.get("lines", {}) as Dictionary).get(id, id))
++		if MatchSetup.basic():
++			# (round 4 SIMPLE: under the Basic controls the hints say Basic's keys: lessons.json basics_hints)
++			hl = String((data().get("basics_hints", {}) as Dictionary).get(id, hl))
++		card.show_hint(String(hq.get("kicker", word("hint_kicker"))), hl)
+ 		_hint_until = now + float(hq.get("show_s", 6.0))
+ 	elif _hint_until > 0.0 and now >= _hint_until:
+ 		_hint_until = -1.0
+@@ -692,6 +700,8 @@ func _on_guard_result(result: String, what: String) -> void:
+ 		"guard":
+ 			if result == "perfect":
+ 				complete()
++		"guarded":
++			complete()                           # (round 4 SIMPLE's Basics: any guard that took one, on the beat or late)
+ 		"return":
+ 			if what == "stone":
+ 				_caught = true                   # (caught: now E again throws it back)
+diff --git a/scripts/ring/ring_menu.gd b/scripts/ring/ring_menu.gd
+index 0393aa6..5233542 100644
+--- a/scripts/ring/ring_menu.gd
++++ b/scripts/ring/ring_menu.gd
+@@ -38,6 +38,8 @@ var _elem: Button
+ var _foe: Button
+ var _diff: Button
+ var _scheme: Button
++## Round 4 SIMPLE: the Controls preset's row (Basic / Full), laid into the Controls panel with the scheme's.
++var _preset: Button
+ var _aim: Button
+ var _hints: Button
+ var _rules: Button
+@@ -110,6 +112,9 @@ func _ready() -> void:
+ 	_scheme = MenuUI.item(KitWords.other_ways_row(), 24, KitWords.other_ways_line())
+ 	_scheme.name = "Scheme"
+ 	_scheme.pressed.connect(cycle_scheme)
++	_preset = MenuUI.item(MatchSetup.controls_row(), 24, MatchSetup.controls_row_line())
++	_preset.name = "ControlsPreset"
++	_preset.pressed.connect(cycle_controls)
+ 	_row(w("settings"), _settings)
+ 	_row(w("main_menu"), to_menu)
+ 	_row(w("quit"), _quit)
+@@ -132,6 +137,8 @@ func _ready() -> void:
+ func _exit_tree() -> void:
+ 	if is_instance_valid(_scheme) and _scheme.get_parent() == null:
+ 		_scheme.queue_free()                  # (the scheme's row out of the Controls panel: freed with the menu)
++	if is_instance_valid(_preset) and _preset.get_parent() == null:
++		_preset.queue_free()
+ 
+ 
+ func _row(text: String, what: Callable, sub_line := "") -> Button:
+@@ -330,6 +337,16 @@ func toggle_hints() -> void:
+ 	_note.text = FirstHints.row_text()
+ 
+ 
++## Round 4 SIMPLE: Basic / Full in turn, at once (the match goes on with it), kept.
++func cycle_controls() -> void:
++	MatchSetup.set_controls(MatchSetup.next_controls())
++	_paint()
++	_note.text = String((MatchSetup.schemes_data().get("controls", {}) as Dictionary).get("changed", "Controls: %s")) \
++			% MatchSetup.controls_label()
++	if _panel.get_child_count() > 0:
++		_controls()
++
++
+ func cycle_scheme() -> void:
+ 	MatchSetup.set_scheme(MatchSetup.next_scheme())
+ 	_paint()
+@@ -358,6 +375,7 @@ func _paint() -> void:
+ 	_set_row(_rules, _rules_text(), MatchSetup.menu_word("rules_line"))
+ 	_set_row(_games, _games_text(), MatchSetup.menu_word("games_line"))
+ 	_set_row(_scheme, KitWords.other_ways_row(), KitWords.other_ways_line())
++	_set_row(_preset, MatchSetup.controls_row(), MatchSetup.controls_row_line())
+ 	_set_row(_aim, MatchSetup.aim_row(), MatchSetup.aim_row_line())
+ 	_set_row(_hints, FirstHints.row_text(), FirstHints.row_line())
+ 
+@@ -376,7 +394,7 @@ static func _set_row(b: Button, text: String, sub_line := "") -> void:
+ func _clear_panel() -> void:
+ 	for c in _panel.get_children():
+ 		_panel.remove_child(c)
+-		if c != _scheme:
++		if c != _scheme and c != _preset:
+ 			c.queue_free()                    # (the scheme's row is kept: it is laid in again)
+ 
+ 
+@@ -389,7 +407,9 @@ func _controls() -> void:
+ 	if RingRules.stock_on():
+ 		# (round 3: the % ring's one line, in right-click terms)
+ 		_panel.add_child(MenuUI.label(MatchSetup.menu_word("controls_line"), 18, MenuUI.GOLD, true))
++	_panel.add_child(_preset)                   # (round 4: Basic / Full first)
+ 	_panel.add_child(_scheme)                   # (the other ways first: in view without a scroll)
++	_scheme.visible = not MatchSetup.basic()    # (the schemes are Full's)
+ 	for line in KitWords.pick_lines(el):
+ 		_panel.add_child(MenuUI.label(String(line), 17, MenuUI.DIM, true))
+ 	for line in control_lines(el):
+diff --git a/scripts/ring/ring_mode.gd b/scripts/ring/ring_mode.gd
+index 1212c56..4c0ca65 100644
+--- a/scripts/ring/ring_mode.gd
++++ b/scripts/ring/ring_mode.gd
+@@ -1040,6 +1040,8 @@ func _stock_game() -> void:
+ ## `b` made ready for the % ring: MOVE's RingMoves on it, its caster's lock starts ending its spawn safety.
+ func _equip(b: Node3D) -> void:
+ 	RingMoves.install(b)
++	if b == player:
++		RingAssist.install(b)                # (round 4 SIMPLE: the Basic controls' helpers; idle under Full)
+ 	var sc := SwayCaster.of(b)
+ 	if sc != null and not _hooked_casters.has(sc.get_instance_id()):
+ 		_hooked_casters[sc.get_instance_id()] = true
+diff --git a/scripts/ui/bend_strip.gd b/scripts/ui/bend_strip.gd
+index ca908e4..8cf0190 100644
+--- a/scripts/ui/bend_strip.gd
++++ b/scripts/ui/bend_strip.gd
+@@ -273,7 +273,9 @@ func readied() -> Dictionary:
+ func column(i: int) -> Dictionary:
+ 	var el := _element()
+ 	var s := scheme()
+-	var out := {"key": i + 1, "head": "", "sub": "", "tap": "", "grow": "", "hidden": i >= KEYS, "id": "", "mode": "", "label": "",
++	# (round 4 SIMPLE: under the Basic controls 4 and 5 hidden until the first win, RingAssist.key_locked)
++	var out := {"key": i + 1, "head": "", "sub": "", "tap": "", "grow": "", "hidden": i >= KEYS or RingAssist.key_locked(player, i + 1),
++			"id": "", "mode": "", "label": "",
+ 			"other": "", "other_label": "", "modes": [], "mode_i": -1, "readied": false}
+ 	var ms := KitWords.key_moves(el, i)
+ 	var heads := {0: "W / 1", 2: "A D / 3", 3: "S / 4"}
+@@ -343,9 +345,16 @@ func _stock_column(out: Dictionary, i: int, el: String) -> void:
+ 				out.tap = ""
+ 				out.grow = ""
+ 			2:
+-				out.label = String(sw("dodge", "Dodge"))
+-				out.sub = ""
+-				out.tap = ""
++				if basic_strip():
++					# (round 4 SIMPLE: under Basic 3 in the air does nothing: grey until he lands, as 4 and 5)
++					out.grey = true
++					out.sub = String(sw("lands", "lands"))
++					out.tap = ""
++					out.readied = false
++				else:
++					out.label = String(sw("dodge", "Dodge"))
++					out.sub = ""
++					out.tap = ""
+ 			3, 4:
+ 				out.grey = true
+ 				out.sub = String(sw("lands", "lands"))
+@@ -420,6 +429,8 @@ func chip(kind: String) -> Dictionary:
+ ## What the next Q does, as the jab chip says it: "Q: put Spike on left click" (the readied move is not on it), "hold Q: Pebbles
+ ## back" (another move is on it), both when both hold; "" with nothing to say. The Q as bound (KitWords.key).
+ func q_line() -> String:
++	if basic_strip():
++		return ""                            # (round 4 SIMPLE: Q is not a Basic key)
+ 	return q_text(SwayCaster.of(player) if player != null else null)
+ 
+ 
+@@ -454,11 +465,19 @@ func quick_line() -> String:
+ 	return String(chip("jab").label)
+ 
+ 
+-## The strip's one help line (the scheme's, the keys as bound).
++## The strip's one help line (the scheme's, the keys as bound; under the Basic controls Basic's own).
+ func help_line() -> String:
++	if basic_strip():
++		return KitWords.keyed(MatchSetup.scheme_text("strip", "basic"))
+ 	return KitWords.help_line(scheme())
+ 
+ 
++## Round 4 SIMPLE: the Basic controls' strip (the player's RingAssist active: Basic, the % ring).
++func basic_strip() -> bool:
++	var a: RingAssist = RingAssist.of(player) if player != null and is_instance_valid(player) else null
++	return a != null and a.active()
++
++
+ ## The help line of the scheme now (the strip's; the duel's world HUD under its quick row).
+ static func help_text() -> String:
+ 	return KitWords.help_line()
+diff --git a/scripts/ui/menu/main_menu.gd b/scripts/ui/menu/main_menu.gd
+index 4953920..f42c2ee 100644
+--- a/scripts/ui/menu/main_menu.gd
++++ b/scripts/ui/menu/main_menu.gd
+@@ -188,6 +188,8 @@ func _ready() -> void:
+ 	_panel_scroll.add_child(_panel)
+ 	_show(MenuPaintings.next(), _a)
+ 	_first_focus()
++	if RingAssist.offer_basics():
++		_offer_basics.call_deferred()      # (round 4 SIMPLE: the game's first launch offers the Basics once)
+ 
+ 
+ func _picture() -> TextureRect:
+@@ -764,17 +766,55 @@ func _open_controls() -> void:
+ 			rules.add_child(l)
+ 	paint.call()
+ 	box.add_child(_gap(6))
++	# (round 4 SIMPLE: Basic / Full first, kept at once; the other ways to pick moves are Full's)
++	var preset := MenuUI.item("", 22, "-")
++	preset.name = "ControlsPreset"
+ 	var sch := MenuUI.item("", 22, "-")
+ 	sch.name = "Scheme"
+ 	var paint_sch := func() -> void:
++		_set_row(preset, MatchSetup.controls_row(), MatchSetup.controls_row_line())
+ 		_set_row(sch, KitWords.other_ways_row(), KitWords.other_ways_line())
++		sch.visible = not MatchSetup.basic()
+ 	paint_sch.call()
++	preset.pressed.connect(func() -> void:
++		MatchSetup.set_controls(MatchSetup.next_controls())
++		paint_sch.call()
++		paint.call())
+ 	sch.pressed.connect(func() -> void:
+ 		MatchSetup.set_scheme(MatchSetup.next_scheme())
+ 		paint_sch.call()
+ 		paint.call())
++	box.add_child(preset)
+ 	box.add_child(sch)
+-	sch.grab_focus.call_deferred()
++	(sch if sch.visible else preset).grab_focus.call_deferred()
++
++
++## Round 4 SIMPLE: the Basics offered once, on the game's first launch (RingAssist.offer_basics; the words in
++## data/bending/schemes.json controls.offer): Learn the basics (the Basics track's practice, RingLessons.ask) or Not now.
++func _offer_basics() -> void:
++	_open_panel()
++	var wd: Dictionary = (MatchSetup.schemes_data().get("controls", {}) as Dictionary).get("offer", {})
++	var box := VBoxContainer.new()
++	box.name = "BasicsOffer"
++	box.add_theme_constant_override("separation", 8)
++	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	_panel.add_child(box)
++	box.add_child(MenuUI.heading(String(wd.get("title", "New here?"))))
++	var line := MenuUI.label(String(wd.get("line", "")), 18, MenuUI.INK, true)
++	line.custom_minimum_size = Vector2(520, 0)
++	box.add_child(line)
++	box.add_child(_gap(6))
++	var go := MenuUI.item(String(wd.get("go", "Learn the basics")), 30, String(wd.get("go_line", "")))
++	go.name = "Basics"
++	go.pressed.connect(func() -> void:
++		RingLessons.ask(MatchSetup.element)
++		_play_match())
++	box.add_child(go)
++	var later := MenuUI.item(String(wd.get("later", "Not now")), 22)
++	later.name = "NotNow"
++	later.pressed.connect(_close_panel)
++	box.add_child(later)
++	go.grab_focus.call_deferred()
+ 
+ 
+ ## A row's main line and (when given) the line under it rewritten.

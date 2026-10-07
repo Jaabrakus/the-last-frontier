@@ -341,7 +341,8 @@ func _stock_teams() -> void:
 	_expect(rules.pct_of(b) == 0.0 and BendKnock.of(b).knocks == k0, "an ally's Spike adds 0%% and launches nothing (%.1f%%)" % rules.pct_of(b))
 	_settle(player, at_s(1 - fe, 3.0, 0.0))
 	BendStatus.hurt(player, 12.0, chest(player), Vector3.FORWARD, a, -1.0, {"tag": "stone_form/spike", "from": a.global_position})
-	_expect(absf(rules.pct_of(player) - 14.0) < 0.01, "the same Spike on the player adds its 14%% (%.1f%%)" % rules.pct_of(player))
+	# (round 4: the Spike's d 14 x rules.json stock.pct_scale, BOTS2's pace)
+	_expect(absf(rules.pct_of(player) - 14.0 * RingRules.stock_num("pct_scale", 1.0)) < 0.01, "the same Spike on the player adds its 14%% x the pace (%.1f%%)" % rules.pct_of(player))
 	await _ticks(30)
 	# three spouts on each end; a rival back on the one farthest from the nearest foe
 	var zs: Array = []

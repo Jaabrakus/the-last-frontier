@@ -245,6 +245,8 @@ func _ready() -> void:
 	var parent: Node = level if level != null else self
 	round_screen = RoundScreen.install(parent, self)
 	match_screen = MatchScreen.install(parent, self)
+	# (round 4 VIRAL: the Splash Cam, the highlights, the callouts, photo mode and the clashes; each runs only under stock rules)
+	RingReplay.install(self)
 	# (Practice's lessons and a first Quick match's key hints: each comes only when asked for, RingLessons / FirstHints)
 	if MatchSetup.practice() and (lessons_asked or "lessons=on" in OS.get_cmdline_user_args()):
 		RingLessons.install(self)
@@ -752,27 +754,41 @@ func _music(on: bool) -> void:
 
 
 # ---------------------------------------------------------------- the words on the screen
+## The centre words (round 4, HUD: hud.json centre): the banner (the countdown, the fall's line, "Over") centre_px at
+## banner_at of the height (44 px at 30%: clear of the plates, the clock and the event line at 1280x720, 1440x900 and
+## 1920x1080), the sub line under it, the top line under the plates. One ink outline, as the strip's.
 func _build_ui() -> void:
 	ui = CanvasLayer.new()
 	ui.name = "RingText"
 	ui.layer = 15
 	add_child(ui)
-	banner = _label(54, MenuUI.INK)
-	banner.anchor_top = 0.22
-	banner.anchor_bottom = 0.22
+	var cc: Variant = PercentBar.hud_cfg().get("centre", {})
+	var cfg: Dictionary = cc if cc is Dictionary else {}
+	var at := float(cfg.get("banner_at", 0.3))
+	var bh := float(cfg.get("banner_h", 56.0))
+	banner = _label(int(cfg.get("banner_px", 44)), MenuUI.INK)
+	banner.anchor_top = at
+	banner.anchor_bottom = at
+	banner.offset_top = -bh * 0.5
+	banner.offset_bottom = bh * 0.5
 	ui.add_child(banner)
-	sub = _label(22, MenuUI.DIM)
-	sub.anchor_top = 0.22
-	sub.anchor_bottom = 0.22
-	sub.offset_top = 70.0
-	sub.offset_bottom = 110.0
+	var sp := float(cfg.get("sub_px", 22.0))
+	sub = _label(int(sp), MenuUI.DIM)
+	sub.anchor_top = at
+	sub.anchor_bottom = at
+	sub.offset_top = bh * 0.5 + float(cfg.get("sub_gap", 2.0))
+	sub.offset_bottom = sub.offset_top + sp + 10.0
 	ui.add_child(sub)
-	top = _label(17, MenuUI.DIM)
+	var tp := float(cfg.get("top_px", 17.0))
+	top = _label(int(tp), MenuUI.DIM)
 	top.anchor_top = 0.0
 	top.anchor_bottom = 0.0
-	top.offset_top = 86.0
-	top.offset_bottom = 110.0
+	top.offset_top = float(cfg.get("top_y", 112.0))
+	top.offset_bottom = top.offset_top + tp + 8.0
 	ui.add_child(top)
+	for l: Label in [banner, sub, top]:
+		l.add_theme_color_override("font_outline_color", Color(0.02, 0.015, 0.01, 0.88))
+		l.add_theme_constant_override("outline_size", int(BendStrip.snum("ink_px", 5.0)))
 	practice_ctl.build_ui(ui)             # (practice: what the dummy does and the keys, under the HUD's match bar; the tally)
 
 
@@ -827,7 +843,7 @@ func _paint() -> void:
 				b = words("go") if phase_t < RingRules.num("go_show_s", 1.2) else (_note if _note_t > 0.0 else "")
 		"OVER":
 			if stock() and decided():
-				b = words("over")
+				b = "" if RingMoment.busy() or RingReplay.holding() else words("over")      # (round 4 IMPACT: the word waits for the last fall's slow beat)
 			elif round_screen == null or not is_instance_valid(round_screen):
 				b = result_line()
 				s = score_text()
@@ -1040,6 +1056,8 @@ func _stock_game() -> void:
 ## `b` made ready for the % ring: MOVE's RingMoves on it, its caster's lock starts ending its spawn safety.
 func _equip(b: Node3D) -> void:
 	RingMoves.install(b)
+	if b == player:
+		RingAssist.install(b)                # (round 4 SIMPLE: the Basic controls' helpers; idle under Full)
 	var sc := SwayCaster.of(b)
 	if sc != null and not _hooked_casters.has(sc.get_instance_id()):
 		_hooked_casters[sc.get_instance_id()] = true

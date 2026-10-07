@@ -25,7 +25,7 @@ extends SceneTree
 ##   break     broken falls: stand (intangible), roll 2.5 m (never off the lip), wall (spring off); lying: up, roll, attack
 ##   sounds    the whoosh while in hitstun, cut on the free frame; the tick at 0.6 s; his own only (a bot's hears none)
 ##   parity    the player and a bot given the same intents trace the same path within 1 cm over 2 s
-##   camera    deck arm 5.25 m (pivot +0.3); off the deck at lip -5 m, 4 m out facing the deck: body and lip in the viewport;
+##   camera    deck arm 5.25 m (pivot +0.3) with the ring camera's variant on top (round 4, RingCamera); off the deck at lip -5 m, 4 m out facing the deck: body and lip in the viewport;
 ##             facing away with the mouse still: both in it within 1.2 s; with the mouse moving the yaw untouched; a knock
 ##             never moves yaw or pitch; the spout faces the deck's middle
 ##   spout     held there; a jump, a cast key or its time lets go (left_spout)
@@ -828,8 +828,13 @@ func _camera() -> void:
 	var behind20 := _deck_behind()
 	p.pitch = 0.0
 	print("METRIC deck_behind_m pitch0 %.2f pitch-20 %.2f (today's 4.1 m arm at pitch 0: %.2f)" % [behind0, behind20, _deck_behind_for(4.1, 0.0, 0.0)])
-	var deck_ok := absf(arm - 5.25) < 0.02 and absf(lift - 0.3) < 0.02 and behind0 > _deck_behind_for(4.1, 0.0, 0.0)
-	_expect(deck_ok, "on the deck: the arm 5.25 m (%.2f), the pivot 0.3 m higher (%.2f), more deck behind the feet in frame than today's (%.2f m at pitch 0)" % [arm, lift, behind0])
+	# (round 4, READ: the camera variant in use on top, RingCamera; the default C: the arm +0.75, the pivot +0.8)
+	var cv := RingCamera.variant()
+	var want_arm := 5.25 + float(cv.get("arm_add", 0.0))
+	var want_lift := 0.3 + float(cv.get("pivot_add", 0.0))
+	var deck_ok := absf(arm - want_arm) < 0.02 and absf(lift - want_lift) < 0.02 and behind0 > _deck_behind_for(4.1, 0.0, 0.0)
+	_expect(deck_ok, "on the deck (camera %s): the arm %.2f m (%.2f), the pivot %.2f m higher (%.2f), more deck behind the feet in frame than today's (%.2f m at pitch 0)" % [
+			RingCamera.key(), want_arm, arm, want_lift, lift, behind0])
 	# off the deck: lip -5 m, 4 m out, facing the deck
 	var spot := rig.at(-4.0, 0.0, -5.0)
 	rig.place(p, spot, -PI * 0.5)

@@ -14,6 +14,8 @@ extends CanvasLayer
 ## Every word from data/ring/screens.json "match" (MatchSetup.screens). Esc still opens the ring's menu over it.
 ##   MatchScreen.install(parent, mode); lines() -> {head, line, score, rounds [..], totals}; rematch(), cycle_element(),
 ##   cycle_opponent(), to_menu(); is_open()
+## Round 4 (IMPACT): it waits for the ring-out moment (RingMoment.busy(): the slow beat on a game's last fall) before it
+## opens.
 
 const LAYER := 80
 const MENU_SCENE := "res://scenes/main_menu.tscn"
@@ -29,6 +31,10 @@ var _items: VBoxContainer
 var _rematch: Button
 var _elem: Button
 var _foe: Button
+## Round 4 VIRAL: the match's best plays at the right, each with Watch (HighlightCards).
+var _cards: HighlightCards
+## Round 4: DONE came while the ring-out moment ran: opened when it ends.
+var _waiting := false
 
 
 static func install(parent: Node, m: Node) -> MatchScreen:
@@ -93,6 +99,8 @@ func _ready() -> void:
 	_foe.name = "Opponent"
 	var mm := _row(w("main_menu"), to_menu, w("main_menu_line"))
 	mm.name = "MainMenu"
+	_cards = HighlightCards.make(match_mode)
+	_root.add_child(_cards)
 	if match_mode != null and match_mode.has_signal(&"phase_changed"):
 		match_mode.connect(&"phase_changed", _on_phase)
 
@@ -115,8 +123,12 @@ func is_open() -> bool:
 
 
 func _on_phase(ph: String) -> void:
+	_waiting = false
 	if ph == "DONE" and not bool(match_mode.get(&"practice")):
-		open()
+		if RingMoment.busy() or RingReplay.holding():
+			_waiting = true
+		else:
+			open()
 	elif _root.visible:
 		close()
 
@@ -134,6 +146,10 @@ func close() -> void:
 
 ## The mouse kept free while it stands (the ring's Esc menu takes it back as it closes).
 func _process(_dt: float) -> void:
+	if _waiting and not RingMoment.busy() and not RingReplay.holding():
+		_waiting = false
+		if String(match_mode.get(&"phase")) == "DONE":
+			open()
 	if not _root.visible or get_tree().paused:
 		return
 	if Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
@@ -186,6 +202,8 @@ func _paint() -> void:
 		_rounds.add_child(MenuUI.label(r, 18, MenuUI.INK))
 	_totals.text = String(l.totals)
 	_paint_rows()
+	if _cards != null:
+		_cards.refresh()
 
 
 func _paint_rows() -> void:

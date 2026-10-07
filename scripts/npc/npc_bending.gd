@@ -66,6 +66,11 @@ extends RefCounted
 ## hitstun instead of being pushed back (lightning's charge still breaks), the jab step, key 3 no sooner than key3_min_s and
 ## in the air the air dodge, keys 4 and 5 and key 2's first move not begun in the air, a full lock held (never let go into a
 ## safety). Round 2's combo bonus gives way to the string table (bend_ai.json pct.strings). Practice: set_practice_way(way).
+## ROUND 4 (BOTS2, the gate on only): a lock begun in the air takes the player's air form (the jab its air close hit, key 2's
+## first move the Slam: NpcRingMind.air_form); landing before the release calls a Slam off for free and turns an air hit back
+## into the jab, the time kept; its hops (NpcRingMind.hop_think) before the chooser; its own guard raised early and held as a
+## shield against a held Lightning or a big shot (_shield_pick, NpcRingMind.shield_tick), dropped by any other lock; a
+## Lightning's threat is one a lock (its roll fresh each time it charges).
 
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
 ## Its spikes in flight (Flight): a guard can catch, deflect or cushion them (BendZone).
@@ -220,6 +225,8 @@ var ring_mind: NpcRingMind = null
 var practice_way := ""
 var _pad: NpcPad = null
 var _held_seen := false
+## Round 4: the lock under way has been in the air (its landing: the Slam called off, the air hit back into the jab).
+var _air_seen := false
 
 
 func _init(b: NpcBrain) -> void:
@@ -533,6 +540,8 @@ func think(dt: float) -> void:
 		return                                     # (round 3: every state but NEUTRAL and PRESSURE is the mind's)
 	if casting != "" or _follow > 0.0 or me.busy():
 		return
+	if stock() and (not mind().hop.is_empty() or not mind().shield.is_empty()):
+		return                                     # (round 4: a hop under way is its mind's (air_tick); a shield held stands)
 	var d := _flat_d(t)
 	if _now() < _beat_wait_until and not _forced_any():
 		# (a guard waits for its beat: it stands its ground, facing him, and begins nothing else)
@@ -540,6 +549,8 @@ func think(dt: float) -> void:
 		me.face_point(t.global_position)
 		return
 	if _now() >= _rest_until or _forced_any():
+		if stock() and not _forced_any() and mind().hop_think(t, d):
+			return                                 # (round 4: a hop at him, its air form begun in the air)
 		var pick := _choose(t, d)
 		if not pick.is_empty():
 			begin(String(pick.id), String(pick.mode))
@@ -575,8 +586,14 @@ func tick(dt: float) -> void:
 		if mind().stunned() and casting == "fire_arc" and mode == "lightning":
 			_lose("hit")                           # (lightning's charge breaks in hitstun)
 			return
-		if owned or mind().stunned():
+		if (owned and not mind().lock_runs()) or mind().stunned():
 			return                                 # (the lock waits, frozen, and goes on from the same fill)
+		if not me.is_on_floor():
+			_air_seen = true
+		elif mode in ["slam", "air_hit"] and (_air_seen or lock_t > 0.15):
+			_landed_form()                         # (round 4: landed before the release, the player's rule)
+			if casting == "":
+				return
 	if casting != "":
 		if me.action == "flinch":
 			return                                 # (staggered: the lock waits; a hit pushes it back, never wipes it)
@@ -643,6 +660,8 @@ func _option(key: String) -> Dictionary:
 	for o: Dictionary in options:
 		if String(o.key) == key:
 			return o
+	if ring_mind != null and stock():
+		return ring_mind.form_option(key)          # (round 4: the air forms: the air close hit, the Slam)
 	return {}
 
 
@@ -820,6 +839,12 @@ func _reaction() -> Dictionary:
 		react += mind().reaction_add()
 		react_g += mind().reaction_add()
 	var now := _now()
+	if stock():
+		if not mind().shield.is_empty():
+			return {}                              # (the shield up: held, nothing else begun)
+		var sh := _shield_pick(threats, pr, now, react_g)
+		if not sh.is_empty():
+			return sh                              # (round 4: its guard raised early, to be held as a shield)
 	var best: Dictionary = {}
 	for th: Dictionary in threats:
 		var seen := _seen(th, pr, now)
@@ -862,6 +887,44 @@ func _reaction() -> Dictionary:
 		_threat_seen.clear()
 		_volleys.clear()
 	return best
+
+
+## Round 4 (the % ring): its own guard on E begun as a shield ({id, mode, kind "shield", ls} or {}) against a threat its mind
+## holds one against (NpcRingMind.shield_wanted: a held Lightning, a big shot), seen for its guard reaction and rolled once
+## (shield_roll), unless its guard meets it on the beat anyway (rolled perfect, an answer of its own; lightning only fire's):
+## begun so it stands shield_lead_s before the strike, standing its ground until then; no stone in hand (E would throw it).
+func _shield_pick(threats: Array, pr: Dictionary, now: float, react_g: float) -> Dictionary:
+	var m := mind()
+	var g := guard_of(element)
+	if not m.shield.is_empty() or g.is_empty() or _held_stone() != null or m.state in [NpcRingMind.S.RESPAWN, NpcRingMind.S.LEDGE]:
+		return {}
+	var o := _option("%s/%s" % g)
+	if o.is_empty() or not castable(o):
+		return {}
+	var answers: Array = (o.hint as Dictionary).get("answers", [])
+	for th: Dictionary in threats:
+		if not m.shield_wanted(th):
+			continue
+		var seen := _seen(th, pr, now)
+		if now - float(seen[0]) < react_g:
+			continue
+		var kind := String(th.kind)
+		if bool(seen[1]) and bool(seen[2]) and kind in answers and (kind != "lightning" or element == "fire"):
+			continue                               # (on the beat its own guard's round-2 timing is the better answer)
+		if not m.shield_roll(int(th.id)):
+			continue
+		var ls := _guard_lock(lock_for(String(g[0]), String(g[1]), _preset_name(), 0.0))
+		var tti := float(th.tti)
+		if ls > tti:
+			continue
+		var lead := m.shield_lead()
+		if tti - ls > lead:
+			if tti - ls - lead < 0.6:
+				_beat_wait_until = maxf(_beat_wait_until, now + tti - ls - lead)
+			continue
+		m.raise_shield(th)
+		return {"id": g[0], "mode": g[1], "kind": "shield", "ls": ls}
+	return {}
 
 
 ## Threat `th`'s roll ([first seen, answered at all, on the beat]): one a volley of light bolts (VOLLEY_S), else its own.
@@ -1051,7 +1114,9 @@ func _threats() -> Array:
 	if t != null and is_instance_valid(t):
 		var sc := SwayCaster.of(t) if t is FrontierPlayer else null
 		if sc != null and sc.state != SwayCaster.State.IDLE and sc.move == "fire_arc" and sc.mode_of("fire_arc") == "lightning":
-			out.append({"id": sc.get_instance_id(), "kind": "lightning", "tti": maxf((1.0 - sc.fill) * sc.lock_s, 0.0) + flash_s(),
+			# (round 4, the % ring: one threat a charge, so each Lightning is rolled afresh; else round 2's one id)
+			var lid := hash([sc.get_instance_id(), int(sc.lock_began_at * 10.0)]) if stock() else sc.get_instance_id()
+			out.append({"id": lid, "kind": "lightning", "tti": maxf((1.0 - sc.fill) * sc.lock_s, 0.0) + flash_s(),
 					"knock": 6.0})
 		elif sc != null and sc.state != SwayCaster.State.IDLE and sc.move != "":
 			# (his wind-up read: a throw or a bolt he is locking, its stone or its element on its way when he lets go)
@@ -1064,7 +1129,8 @@ func _threats() -> Array:
 		elif t is NpcFighter and (t as NpcFighter).brain != null and (t as NpcFighter).brain.bending != null:
 			var ob := (t as NpcFighter).brain.bending
 			if ob.casting == "fire_arc" and ob.mode == "lightning":
-				out.append({"id": ob.get_instance_id(), "kind": "lightning", "tti": maxf(ob.lock_s - ob.lock_t, 0.0) + flash_s(),
+				var lid2 := hash([ob.get_instance_id(), int(ob._lock_at * 100.0)]) if stock() else ob.get_instance_id()
+				out.append({"id": lid2, "kind": "lightning", "tti": maxf(ob.lock_s - ob.lock_t, 0.0) + flash_s(),
 						"knock": 6.0})
 			elif ob.casting != "":
 				var shot2 := shot_of(ob.casting, ob.mode)
@@ -1170,7 +1236,7 @@ static func _caster_body(c: Variant) -> Node:
 		return null
 	for k: StringName in [&"body", &"player"]:
 		var b: Variant = (c as Object).get(k)
-		if b is Node:
+		if is_instance_valid(b) and b is Node:     # (a body freed under its caster: none)
 			return b
 	return c as Node if c is Node else null
 
@@ -1186,6 +1252,14 @@ func begin(id: String, md: String) -> void:
 		pad().dodge_dir = -_way(t).cross(Vector3.UP) * _pick_side(t)
 		pad().press("dodge")
 		return
+	_air_seen = false
+	if stock():
+		if not me.is_on_floor():
+			md = mind().air_form(id, md)           # (round 4: the player's air forms, decided as the lock starts)
+			_air_seen = true
+		var gd := guard_of(element)
+		if ring_mind != null and not (gd.size() >= 2 and id == String(gd[0])):
+			ring_mind.drop_shield()                # (any other lock drops the held guard)
 	casting = id
 	mode = md
 	lock_t = 0.0
@@ -1209,6 +1283,9 @@ func begin(id: String, md: String) -> void:
 			lock_s = _guard_lock(lock_s)
 	if stock():
 		lock_s = _stock_lock(o, lock_s)
+		var rr := RingRules.current()
+		if rr != null:
+			rr.note_lock_started(me)               # (round 3: a lock of its own ends its spawn safety, as the player's does)
 	if String((o.get("hint", {}) as Dictionary).get("role", "")) == "reaction":
 		# (a reaction's only: a guard of another role (the anchor, a hop) never holds back the next catch)
 		_guard_until = _lock_at + lock_s + float(ai().get("guard_cool_s", 0.0))
@@ -1393,6 +1470,8 @@ func _after_cast(o: Dictionary, before: Dictionary) -> void:
 	var z: Variant = last.get("zone")
 	if z != null and is_instance_valid(z) and z is BendZone and (z as BendZone).kind in GUARD_ZONES:
 		_guards.append([z, (z as BendZone).took])   # ([zone, what it took so far]: answered, catches)
+		if ring_mind != null and stock() and bool(o.get("guard", false)):
+			ring_mind.shield_stood(z as BendZone)   # (round 4: the shield is up)
 
 
 ## Each frame: new bolts and hurled stones of its own connected (their strikes counted), its guards' takings counted.
@@ -1549,6 +1628,26 @@ func _lose(why: String) -> void:
 	lost_why = why
 	_cool[casting + "/" + mode] = _now() + 0.8
 	_drop_lock("break")
+
+
+## Round 4: landed with an air form's lock under way (the player's rule, SwayCaster._landed): a Slam called off for free
+## (no cool), an air close hit turned back into the jab with the time it has filled kept.
+func _landed_form() -> void:
+	_air_seen = false
+	if mode == "slam":
+		_cancel()
+		return
+	var jb := jab_of(element)
+	if jb.size() < 2 or casting != String(jb[0]):
+		return
+	var spent := lock_t
+	mode = String(jb[1])
+	var t := brain.target
+	lock_s = _stock_lock(_option(casting + "/" + mode), lock_for(casting, mode, _preset_name(), _cast_dist(casting, mode, t)))
+	lock_t = minf(spent, lock_s)
+	fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)
+	if me.body != null:
+		me.body.play_cast(casting, mode, maxf(lock_s - lock_t, 0.1), element)
 
 
 ## The lock dropped without a count (held by a mode, a reset).

@@ -47,6 +47,9 @@ func _initialize() -> void:
 		quit(2))
 	MatchSetup._aim_help = "strong"
 	GameSettings.path = OWN_CFG
+	# (round 4's merge: BOTS2 set rules.json stock.pct_scale 0.86 for the match pace; this test checks the spec's ledger
+	# and flights at scale 1, so it pins the scale at 1 for its run: RingRules.data() is read once and kept)
+	(RingRules.data()["stock"] as Dictionary)["pct_scale"] = 1.0
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	RingRules.rule_set_override = "stock"
 	SwayCaster.free_override = true
@@ -314,7 +317,7 @@ func _ko_calibration() -> void:
 		all_ok = all_ok and ok
 		parts.append("%s engine %d%% / no-recovery %d%% / table (recovery) %d%%" % [tag, roundi(eng), roundi(pred), roundi(float(LEAD[tag]))])
 		print("METRIC ko_calibration %s engine=%.1f predicted_no_recovery=%.1f lead_table_with_recovery=%.0f" % [tag, eng, pred, float(LEAD[tag])])
-	_expect(all_ok, "the in-engine KO % (recovery off: MOVE's) matches the same flight worked out within 10%%: %s" % "; ".join(parts))
+	_expect(all_ok, "the in-engine KO %% (recovery off: MOVE's) matches the same flight worked out within 10%%: %s" % "; ".join(parts))
 	await _reset_foe(4.0)
 
 

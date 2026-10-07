@@ -12,6 +12,8 @@ extends CanvasLayer
 ## Every word from data/ring/screens.json "round" (MatchSetup.screens). It takes no input (Space is RingMode's) and draws
 ## nothing on or over anyone (the owner's rule: no target cues).
 ##   RoundScreen.install(parent, mode); lines() -> {head, why, score, yours, theirs, next} (the tests)
+## Round 4 (IMPACT): it waits for the ring-out moment (RingMoment.busy(): the slow beat on a game's last fall) before it
+## shows; RingMode's OVER pause runs on meanwhile.
 
 const LAYER := 70
 
@@ -23,6 +25,8 @@ var _score: Label
 var _yours: Label
 var _theirs: Label
 var _next: Label
+## Round 4: the phase said OVER while the ring-out moment ran: shown when it ends.
+var _waiting := false
 
 
 static func install(parent: Node, m: Node) -> RoundScreen:
@@ -95,12 +99,19 @@ func is_open() -> bool:
 
 
 func _on_phase(ph: String) -> void:
-	_root.visible = ph == "OVER" and not bool(match_mode.get(&"practice")) and not (_stock() and bool(match_mode.call(&"decided")))
+	var show := ph == "OVER" and not bool(match_mode.get(&"practice")) and not (_stock() and bool(match_mode.call(&"decided")))
+	_waiting = show and (RingMoment.busy() or RingReplay.holding())
+	_root.visible = show and not _waiting
 	if _root.visible:
 		_paint()
 
 
 func _process(_dt: float) -> void:
+	if _waiting and not RingMoment.busy() and not RingReplay.holding():
+		_waiting = false
+		_root.visible = String(match_mode.get(&"phase")) == "OVER"
+		if _root.visible:
+			_paint()
 	if _root.visible:
 		_next.text = lines().next
 

@@ -173,7 +173,8 @@ func _hit() -> void:
 	var after := float(_info(1).pct)
 	await _secs(0.2)
 	var settled := float(s.pop_t) == 0.0 and float(s.shake_t) == 0.0
-	_expect(absf(d - 16.0) < 0.01 and mid > before and absf(after - rules.pct_of(f)) < 0.01 and popping and settled,
+	# (round 4: the pushed Shove's d 16 x rules.json stock.pct_scale, BOTS2's pace)
+	_expect(absf(d - 16.0 * RingRules.stock_num("pct_scale", 1.0)) < 0.01 and mid > before and absf(after - rules.pct_of(f)) < 0.01 and popping and settled,
 			"a %.0f%% hit: the digits move within a frame (%.1f), read %.0f by 0.16 s; the pop and the shake (%.1f px) over by 0.35 s"
 			% [d, mid, after, float(s.shake_a)])
 	rules.reset_pct(f, 0.0)
@@ -225,7 +226,7 @@ func _yours() -> void:
 			and float(theirs.fresh) < 0.0, "the pips (jump, dodge, Rise) and the fresh band on your plate only")
 	var p0 := float(mine.fresh)
 	BendStatus.hurt(player, 10.0, player.global_position + Vector3.UP, Vector3.FORWARD, foe(), -1.0, {"tag": "air_palm/palm", "from": foe().global_position})
-	_expect(float(_info(0).fresh) >= p0 + 2.99, "the fresh band grows with your %% just taken (%.1f -> %.1f)" % [p0, float(_info(0).fresh)])
+	_expect(float(_info(0).fresh) >= p0 + 2.99 * RingRules.stock_num("pct_scale", 1.0), "the fresh band grows with your %% just taken (%.1f -> %.1f)" % [p0, float(_info(0).fresh)])
 	var src := FileAccess.get_file_as_string("res://scripts/ui/percent_bar.gd")
 	var code := "\n".join(Array(src.split("\n")).filter(func(ln: String) -> bool: return not ln.strip_edges().begins_with("#")))
 	var reads := code.contains("global_position") or code.contains("unproject") or code.contains("global_transform") \

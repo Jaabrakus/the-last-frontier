@@ -206,7 +206,7 @@ func _stock_match() -> void:
 	await _secs(0.3)
 	await _press(&"jump")
 	await _secs(0.15)
-	await _press(&"weapon_3")
+	await _key(&"weapon_3")                          # (the number keys come as events: the Hotbar reads them so)
 	await _until(func() -> bool: return player.is_on_floor(), 3.0)
 	_expect("double_jump" in moved_kinds and "dodge" in moved_kinds, "Space, Space: a double jump; 3 in the air: a dodge (%s)" % [moved_kinds])
 	# thrown off an end, back with the Rise
@@ -215,7 +215,9 @@ func _stock_match() -> void:
 	var out := (a.axis() * RingArena.side_sign(e)).normalized()
 	player.global_position = a.to_global(Vector3(RingArena.side_sign(e) * (a.half_l() - 1.0), a.top() + 0.1, 0.0))
 	await _secs(0.2)
-	BendStatus.knock(player, out * 9.0 + Vector3.UP * 4.0, mode.foe)
+	# (a real hit of the foe's, its Shove at 45%: launched over the end, 5-7 m out past the lip)
+	RingRules.current().reset_pct(player, 45.0)
+	BendStatus.knock(player, out * 9.0 + Vector3.UP * 4.0, mode.foe, {"tag": "earth_shove/push", "from": player.global_position - out * 3.0})
 	await _until(func() -> bool: return moves.off_deck(), 2.0)
 	await _until(func() -> bool: return not RingRules.current().stunned(player), 2.0)
 	# (he looks at the deck, then holds W: camera-relative, toward it)
@@ -239,6 +241,20 @@ func _stock_match() -> void:
 		await _until(func() -> bool: return mode.phase == "DONE" or moves.on_spout(), 6.0)
 	await _until(func() -> bool: return mode.phase == "DONE", 20.0)
 	_expect(mode.phase == "DONE" and matches.size() == 1, "three falls: the match reaches DONE (%s, %s)" % [mode.phase, matches])
+
+
+## Action `a` pressed and let go as input events (what the Hotbar's number keys read: FrontierPlayer._unhandled_input).
+func _key(a: StringName) -> void:
+	var ev := InputEventAction.new()
+	ev.action = a
+	ev.pressed = true
+	Input.parse_input_event(ev)
+	await physics_frame
+	var up := InputEventAction.new()
+	up.action = a
+	up.pressed = false
+	Input.parse_input_event(up)
+	await physics_frame
 
 
 func _press(a: StringName) -> void:

@@ -5,6 +5,8 @@ shader_type spatial;
 //   mode 2  crown: a band (ToonFx.band_mesh) whose torn top rises and drops (a splash crown)
 //   mode 3  swirl: two crescents facing the camera that spin out (air)
 //   mode 4  orb: a lasting ball of fire facing the camera, banded from a white heart, its edge boiling (a fireball's core)
+// Round 4 (LOOKS): `range_on` (instance, a bolt's core orb) grows it with its distance from the camera (fx_common
+// range_scale); thinned near the camera (near_cut).
 render_mode unshaded, cull_disabled, shadows_disabled, fog_disabled, skip_vertex_transform;
 
 #include "res://shaders/bend_fx/fx_common.gdshaderinc"
@@ -20,11 +22,15 @@ instance uniform float t = 0.0;
 instance uniform vec4 tint : source_color = vec4(1.0, 0.6, 0.2, 1.0);
 instance uniform vec4 tint2 : source_color = vec4(1.0, 0.9, 0.6, 1.0);
 instance uniform float seed = 0.0;
+instance uniform float range_on = 0.0;
 
 void vertex() {
 	if (mode == 0 || mode == 3 || mode == 4) {
 		vec3 c = (VIEW_MATRIX * vec4(MODEL_MATRIX[3].xyz, 1.0)).xyz;
 		float s = length(MODEL_MATRIX[0].xyz);
+		if (range_on > 0.5) {
+			s *= range_scale(length(c));
+		}
 		VERTEX = c + vec3(VERTEX.xy * s, 0.0);
 	} else {
 		VERTEX = (MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
@@ -34,6 +40,9 @@ void vertex() {
 }
 
 void fragment() {
+	if (near_cut(VERTEX, FRAGCOORD.xy)) {
+		discard;
+	}
 	vec2 p = UV * 2.0 - 1.0;
 	float r = length(p);
 	float ang = atan(p.y, p.x);

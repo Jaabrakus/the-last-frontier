@@ -24,9 +24,10 @@ extends SceneTree
 ##               returns (a caught stone sent back by its guard again) and the longest rally (one stone's returns), its locks
 ##               pushed back by hits (setbacks), the waves along the deck it saw and jumped, the casts held to grow (grows_by)
 ##               and the kit's moves it never cast (uncast; the KITS review sums them over every run: no kit move left uncast)
-## The clock: BendStatus.now() counts physics frames, so under ts 4 its timers (the bots' rests, cools, reactions and
-## opening grace; roots, slows) last 4 times as long in game time as the locks and flights do. ts=1 is the game's own pace
-## (headless with a fixed fps it runs unthrottled anyway: a match in a few seconds); read the balance there.
+## The clock: round 4 (IMPACT) made BendStatus.now() game time (BendClock: Engine.time_scale per physics step), so under
+## ts 4 its timers (the bots' rests, cools, reactions and opening grace; roots, slows) keep pace with the locks and
+## flights. ts=1 is the game's own pace (headless with a fixed fps it runs unthrottled anyway: a match in a few
+## seconds); read the balance there.
 ## ROUND 3, the % ring (rules=stock; smash_r3 spec §12): every METRIC line of §12 from RingRules' signals (ko, launched,
 ## pct_changed, string_ended) and the bots' minds (NpcRingMind.stats): game_s, timeout, timeouts_level, last_life_s, life_s,
 ## median_fall_pct, self_falls_per_life, water_ko_share, ko_by_move and the top finisher's share, ko_far_share (KOs whose
@@ -36,10 +37,17 @@ extends SceneTree
 ## life <= 0.05); the 16 pairings x 3 seeds' table and its targets are tools/ring/r3_soak_table.py's (review/r3_bots_soak.md,
 ## from tools/ring/r3_soak_run.sh). When rules=stock is asked but the ring plays another rule set (PERCENT's RingMode not
 ## taking MatchSetup.rule_set() yet), the stock lines say n/a and nothing stock is gated.
-## In-test watchdog LIMIT_S real seconds (under the runner's GODOT_TIMEOUT 420). Last line "RING SOAK PASSED" or "... FAILED".
+## ROUND 4 (BOTS2): the player's-side bot joins through RingMode.join (its RingMoves on, as the foe's: round 3 added it to the
+## rules only, so it had no jumps, Rise or edge and lost 42 of 48); each side's air play and shield (METRIC ... stock air:
+## hops, double jumps, air hits, Slams, air follow-ups, shields raised, held, dropped, punishes, follow-ups and those that met
+## him in time) and the strings by their hits (strings_by_hits 1, 2, 3+); a kit's air forms (the jab's air close hit, key 2's
+## Slam) count as its own.
+## In-test watchdog LIMIT_S: the timer counts frames (1/60 s each under --fixed-fps 60, unthrottled headless), so it is game
+## seconds at ts 1; round 4 raised it from 400 past the stock clock (480 s, sudden death on): a long game is no hang. The
+## runner's GODOT_TIMEOUT 420 is the real-time guard. Last line "RING SOAK PASSED" or "... FAILED".
 
 const NAME := "RING SOAK"
-const LIMIT_S := 400.0
+const LIMIT_S := 900.0
 const PARK := Vector3(0.0, 60.0, 400.0)
 
 var checks := 0
@@ -245,9 +253,9 @@ func _run() -> void:
 		print("  (rules=stock asked, the ring plays the %s rules: PERCENT's RingMode does not take MatchSetup.rule_set() in this tree; the stock lines are n/a)" % [RingRules.current().rule_set if RingRules.current() != null else "?"])
 	print("  pair %s vs %s, %s, round_s %.0f, to_win %d, ts %.1f" % [mode.element, mode.foe_element, mode.difficulty, mode.round_s, mode.to_win, ts])
 	if not is_equal_approx(ts, 1.0):
-		# (BendStatus.now() counts physics frames, not scaled time: at ts 4 every clock on it (the bots' rests, cools and
-		# reactions, roots and slows) runs 4 times long in game time; the balance metrics are the game's own at ts=1)
-		print("  (note: ts %.1f stretches the bend clock's timers %.0fx in game time; read the balance at ts=1)" % [ts, ts])
+		# (round 4: BendStatus.now() is game time, so the bend clock keeps pace at any ts; the balance metrics are read at
+		# ts=1, the game's own pace)
+		print("  (note: ts %.1f; the bend clock is game time; read the balance at ts=1)" % ts)
 	Engine.time_scale = ts
 	var t0 := Time.get_ticks_msec()
 	var game_t := 0.0
@@ -273,6 +281,13 @@ func _run() -> void:
 		var own := {}
 		for pr: Array in NpcBending.pairs_of(String(els[side])):
 			own["%s/%s" % pr] = true
+		# (round 4: the kit's air forms are its own too: the jab's air close hit, key 2's first move's Slam)
+		var jb := NpcBending.jab_of(String(els[side]))
+		if jb.size() >= 2:
+			own["%s/air_hit" % jb[0]] = true
+		var ks := Bending.keys(String(els[side]))
+		if ks.size() >= 2:
+			own["%s/slam" % String(Bending.first_of(ks[1]).get("id", ""))] = true
 		var foreign: Array = []
 		for k: String in by_side[side]:
 			if not own.has(k):
@@ -291,11 +306,10 @@ func _hook_stock() -> void:
 	r.launched.connect(func(b: Node3D, _v: Vector3, _s: float, by: Node, tag: String) -> void:
 		if by is Node3D and is_instance_valid(by):
 			sk.last_launch[b.get_instance_id()] = {"tag": tag, "d": NpcRingMind.flat_d((by as Node3D).global_position, b.global_position)})
+	# (healing is Patch's: RingRules' tally "healed", read at the end; a negative delta is also a fall's reset to 0)
 	r.pct_changed.connect(func(_b: Node3D, _pct: float, delta: float) -> void:
 		if delta > 0.0:
-			sk.dealt = float(sk.dealt) + delta
-		else:
-			sk.healed = float(sk.healed) - delta)
+			sk.dealt = float(sk.dealt) + delta)
 	r.string_ended.connect(func(_by: Node, _victim: Node3D, hits: int, _pct: float) -> void:
 		(sk.strings as Array).append(hits))
 	r.respawned.connect(func(b: Node3D) -> void:
@@ -322,7 +336,12 @@ func _on_ko(b: Node3D, by: Node, pct: float, tag: String, _left: int) -> void:
 		var ll: Dictionary = sk.last_launch.get(id, {})
 		if float(ll.get("d", 0.0)) > 15.0:
 			sk.ko_far = int(sk.ko_far) + 1
-	if mode.ring != null and (mode.ring.is_out(b.global_position) or b.global_position.y < mode.ring.lip_y() - 1.0):
+	# (where he fell, as the rules saw it: RingMode has already hidden him at his spout when this hears the ko)
+	var rr := RingRules.current()
+	var at: Vector3 = b.global_position
+	if rr != null and not rr.falls.is_empty() and (rr.falls.back() as Dictionary).get("who") == b:
+		at = (rr.falls.back() as Dictionary).get("pos", at)
+	if mode.ring != null and (mode.ring.is_out(at) or at.y < mode.ring.lip_y() - 1.0):
 		sk.water = int(sk.water) + 1
 	var m := RingMoves.of(b)
 	if m != null and m.helpless():
@@ -348,6 +367,9 @@ func _stock_metrics(game_t: float) -> void:
 		return
 	var kos := maxi(int(sk.kos), 1)
 	var lives := maxi(int(sk.kos), 1)
+	var rt := RingRules.current()
+	if rt != null:
+		sk.healed = float((rt.tally[0] as Dictionary).get("healed", 0.0)) + float((rt.tally[1] as Dictionary).get("healed", 0.0))
 	var timeout := mode.round_left_s() <= 0.5
 	var level := timeout and int(sk.lives_lost[0]) == int(sk.lives_lost[1])
 	var bots: Array = [mate, mode.foe]
@@ -383,6 +405,10 @@ func _stock_metrics(game_t: float) -> void:
 	var longest := 0
 	for h in strs:
 		longest = maxi(longest, int(h))
+	var by_len := [0, 0, 0]
+	for h in strs:
+		by_len[clampi(int(h), 1, 3) - 1] += 1
+	print("METRIC pair=%s stock strings_by_hits 1=%d 2=%d 3+=%d" % [pair, by_len[0], by_len[1], by_len[2]])
 	var winner_el := "-"
 	if mode.winner >= 0 and mode.winner <= 1:
 		winner_el = [mode.element, mode.foe_element][mode.winner]
@@ -402,11 +428,22 @@ func _stock_metrics(game_t: float) -> void:
 			top = maxi(top, int(kt[k]))
 		print("METRIC pair=%s side=%d stock el=%s ko_by_move=%s top_finisher_share=%.2f recover_success=%s states=%s"
 				% [pair, side, [mode.element, mode.foe_element][side], kt, float(top) / maxf(float(n), 1.0), rec[side], states[side]])
-	_expect(longest <= 6, "the % ring: the longest true string %d (<= 6)" % longest)
-	_expect(int(sk.kos) == 0 or int(sk.water) == int(sk.kos), "the % ring: every fall into the water (%d of %d)" % [int(sk.water), int(sk.kos)])
+		# (round 4, BOTS2: the air play and the shield)
+		var f2: Variant = bots[side]
+		if f2 != null and is_instance_valid(f2) and (f2 as NpcFighter).brain != null and (f2 as NpcFighter).brain.bending != null \
+				and (f2 as NpcFighter).brain.bending.ring_mind != null:
+			var st2: Dictionary = (f2 as NpcFighter).brain.bending.ring_mind.stats
+			print("METRIC pair=%s side=%d stock air hops=%d double_jumps=%d air_hits=%d slams=%d slam_hops=%d air_follows=%d shield_raises=%d shield_holds=%d shield_held_long=%d shield_drops=%d punishes=%d follow_ups=%d follow_hits=%d follow_in_time=%d"
+					% [pair, side, int(st2.get("hops", 0)), int(st2.get("double_jumps", 0)), int(st2.get("air_hits", 0)),
+					int(st2.get("slams", 0)), int(st2.get("slam_hops", 0)), int(st2.get("air_follows", 0)),
+					int(st2.get("shield_raises", 0)), int(st2.get("shield_holds", 0)), int(st2.get("shield_held_long", 0)),
+					int(st2.get("shield_drops", 0)), int(st2.get("punishes", 0)), int(st2.get("follow_ups", 0)),
+					int(st2.get("follow_hits", 0)), int(st2.get("follow_in_time", 0))])
+	_expect(longest <= 6, "the %% ring: the longest true string %d (<= 6)" % longest)
+	_expect(int(sk.kos) == 0 or int(sk.water) == int(sk.kos), "the %% ring: every fall into the water (%d of %d)" % [int(sk.water), int(sk.kos)])
 	if mode.difficulty == "normal":
 		_expect(float(sk.self_falls) / lives <= 0.05 + 1e-6 or int(sk.kos) < 4,
-				"the % ring: self-falls per life %.3f (<= 0.05)" % (float(sk.self_falls) / lives))
+				"the %% ring: self-falls per life %.3f (<= 0.05)" % (float(sk.self_falls) / lives))
 
 
 # ---------------------------------------------------------------- spectate
@@ -453,7 +490,9 @@ func _spectate() -> void:
 	mate.no_death = true
 	mate.set(&"element", mode.element)
 	Bending.of(mate).element = mode.element
-	rules.add(mate, 0)
+	# (round 4: RingMode.join, not rules.add: its RingMoves on as the foe's; round 3's mate had none, so it could not jump
+	# back and the soak was one-sided: the foe won 42 of 48)
+	mode.join(mate, 0)
 	var bend := mate.brain.bending
 	if bend != null:
 		bend.bounds_fn = rules.bounds_fn_for(mate)

@@ -231,12 +231,12 @@ func _climb() -> void:
 	_expect(p.weapon.aim > 0.5, "perch: aiming from the branch (aim %.2f)" % p.weapon.aim)
 	var body := p.visual.find_children("*", "GeometryInstance3D", true, false)
 	var faded := body.filter(func(m: Node) -> bool: return (m as GeometryInstance3D).transparency > 0.4).size()
-	var cam_d := p.camera.global_position.distance_to(p.camera.get_parent().global_position)
+	var cam_d := p.camera.global_position.distance_to(p.spring_arm.global_position)      # (round 4: the camera sits under CameraTilt)
 	_expect(p.spring_arm.spring_length < 1.8 and faded > 0, "perch: aiming, the camera comes in (%.2f m, %.2f m drawn) and the body fades (%d of %d meshes)" %
 			[p.spring_arm.spring_length, cam_d, faded, body.size()])
 	Input.action_release("aim")
 	await _fr(60)
-	cam_d = p.camera.global_position.distance_to(p.camera.get_parent().global_position)
+	cam_d = p.camera.global_position.distance_to(p.spring_arm.global_position)
 	_expect(p.spring_arm.spring_length > 1.9 and p.spring_arm.spring_length < 2.6 and cam_d < 2.7,
 			"perch: not aiming, the branch's nearer camera (%.2f m, %.2f m drawn)" % [p.spring_arm.spring_length, cam_d])
 	# higher: E climbs to the branch above (the prompt there is Climb up), and again

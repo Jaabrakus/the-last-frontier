@@ -1,0 +1,27 @@
+{
+  "_about": "Round 4 VIRAL: the match's highlight cards (RingHighlights, scripts/ring/ring_highlights.gd; HighlightCards, scripts/ui/highlight_cards.gd). Plays are tracked from the match's events and scored by score = base + per x value (min: the least value that counts; max: the most). The best of each kind is kept, and the match screen shows the best `cards` of them (one per kind), each with its snapshot for Watch. mine_bonus: added to the player's side's plays. Words: plain, the player's (fall, lives, Rise, catch, perfect guard). {who} and {whom}: You / you, The Tide / the Tide.",
+  "cards": 3,
+  "mine_bonus": 6.0,
+  "ko_bonus": 18.0,
+  "ko_after_s": 3.0,
+  "_tracking": "rally_gap_s: a catch within this of the other side's last catch carries the rally on. recover_min_m: the least depth under the deck's top a recovery counts from. comeback_down: lives behind (the side's lives left against the other's) to count as a comeback.",
+  "rally_gap_s": 4.0,
+  "recover_min_m": 1.0,
+  "comeback_down": 2,
+  "plays": {
+    "launch":   {"base": 0.0,  "per": 2.0,    "min": 12.0, "title": "Biggest launch",      "line": "{who} sent {whom} flying",                     "num": "%d m/s"},
+    "catch":    {"base": 72.0, "per": -160.0, "max": 0.3,  "title": "Closest catch",       "line": "{who} caught it with no time to spare",         "num": "%.2f s"},
+    "rally":    {"base": 18.0, "per": 14.0,   "min": 2.0,  "title": "Longest catch rally", "line": "{who} and {whom}, the stone back and forth",    "num": "%d catches"},
+    "perfect":  {"base": 8.0,  "per": 13.0,   "min": 2.0,  "title": "Perfect guards",      "line": "{who} turned it all away",                      "num": "%d in a row"},
+    "recover":  {"base": 22.0, "per": 7.0,    "min": 1.0,  "title": "Back from the deep",  "line": "{who} climbed back to the edge",                "num": "%.1f m down"},
+    "comeback": {"base": 74.0, "per": 8.0,    "min": 2.0,  "title": "Comeback",            "line": "{who} won the game from two lives down",        "num": "%d lives down"},
+    "fast_ko":  {"base": 70.0, "per": -3.0,   "max": 20.0, "title": "Fastest fall",        "line": "{who} put {whom} in the water",                 "num": "%.1f s"},
+    "clash":    {"base": 34.0, "per": 6.0,    "min": 1.0,  "title": "Clash",               "line": "{who} met it in the air",                       "num": "%s"}
+  },
+  "kinds": {"stone": "Stone", "water": "Water", "fire": "Fire", "air": "Air", "ice": "Ice", "lightning": "Lightning", "steam": "Steam", "meets": "%s meets %s"},
+  "who": {"you": "You", "them": "The %s"},
+  "whom": {"you": "you", "them": "the %s"},
+  "watch": "Watch",
+  "head": "Highlights",
+  "none": "No highlights this time"
+}

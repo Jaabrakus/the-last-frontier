@@ -19,3 +19,12 @@ Added 2026-10-02: the spells' hotbar icons (the Sway, scripts/sway; the HUD's `s
 and rails) over our own circle laid on the ground (a double ring, an inner ring, a square on its points), and `spell_gust`
 (three strokes of wind with a curl). Hand-written SVG, no third-party art. (The Sway v2 dropped `spell_stone_spikes` and
 `spell_shape_planks` with their spells, and `spell_levitate` when Gust took over lifting and hurling stones.)
+
+Added 2026-10-06 (Tidebreak round 4, HUD): the ring's move icons, one per chip the key strip can show
+(`spell_<id>__<mode>.svg`: every element's jab, guard, each key's two moves, the caught stone's return
+`spell_stone_catch__return`, fire's grown `spell_fire_blast__fireball`, the Slams `spell_slam__<element>`, the air
+dodge `spell_dodge__<element>`, the heals `spell_patch__patch` and `spell_mend__mend`) and the plates' element marks
+(`spell_mark__<element>`). Drawn by hand as path data in `tools/ui/move_icons.py` (it writes them all), in the Form
+spells' family: white round-capped strokes of 3.4, 2.8 and 1.6 on a 64 grid, tinted at draw time. One motif per
+element: earth angular slabs and shards, water curls and crests, fire tongues, air spirals and arcs. No symbol of any
+show or game, no nation marks, nothing traced; no third-party art. The five open-world spell icons above are untouched.

@@ -197,6 +197,8 @@ func _run() -> void:
 
 ## One trial: the bot put off the deck at spot `sp`, thrown outward at 3 m/s; "back" (the deck or the edge) or "water".
 func _trial(f: NpcFighter, sp: Array, used: Dictionary) -> String:
+	if real:
+		return await _trial_real(f, sp, used)
 	var b := f.brain.bending
 	var m := b.mind()
 	var e := int(sp[0])
@@ -235,6 +237,66 @@ func _trial(f: NpcFighter, sp: Array, used: Dictionary) -> String:
 	if res != "back":
 		print("    (%s %s lost from %s: at %s, its last plan %s, the desperate line %d times)" % [b._preset_name(), b.element, sp,
 				fm.s.p, m.plan.get("name", "-"), int(m.stats.desperate)])
+	await process_frame
+	return res
+
+
+## The merged game's trial (mover=real; the merge's integration check): the same spot flown by MOVE's RingMoves on the bot
+## itself (its own physics frame: NpcFighter._move hands pad.intent() to RingMoves.pre), the mind planning on
+## RingMoves.simulate. "back" (on the deck, or hanging on the edge) or "water" (in it, or past the curtain's plane).
+func _trial_real(f: NpcFighter, sp: Array, used: Dictionary) -> String:
+	var b := f.brain.bending
+	var m := b.mind()
+	var e := int(sp[0])
+	var dir := (ring.axis() * RingArena.side_sign(e)).normalized()
+	var p := ring.global_position + dir * (ring.half_l() + float(sp[1]))
+	p.y = ring.lip_y() - float(sp[2])
+	var rm := RingMoves.install(f)
+	f.set_physics_process(true)
+	f.held = false
+	f.global_position = p
+	rm.placed()
+	rm.jumps_left = 0 if bool(sp[3]) else 1
+	rm.dodge_ready = true
+	rm.rise_ready = true
+	rm.set(&"_air", true)
+	var kn := BendKnock.of(f)
+	kn.reset()
+	kn.kv = dir * 3.0
+	kn.applied = kn.kv
+	f.velocity = dir * 1.0 + kn.kv
+	m.plan = {}
+	m._grabs = 0
+	m.state = NpcRingMind.S.NEUTRAL
+	b._cancel()
+	var had := [rm.jumps_left, rm.rise_ready, rm.dodge_ready]
+	var res := "water"
+	var t := 0.0
+	var geo := RingMoves.arena_geo(ring)
+	var water_y := float(geo.water_y)
+	var tank := float(geo.tank)
+	while t < TRIAL_S:
+		await physics_frame
+		t += 1.0 / Engine.physics_ticks_per_second
+		if rm.jumps_left < int(had[0]):
+			used.jump = int(used.jump) + 1
+		if bool(had[1]) and not rm.rise_ready:
+			used.rise = int(used.rise) + 1
+		if bool(had[2]) and not rm.dodge_ready:
+			used.dodge = int(used.dodge) + 1
+		had = [rm.jumps_left, rm.rise_ready, rm.dodge_ready]
+		if rm.on_ledge() or (f.is_on_floor() and not rm.off_deck() and not rm.airborne()):
+			res = "back"
+			break
+		var l := ring.to_local(f.global_position)
+		if f.global_position.y < water_y or absf(l.x) > ring.half_l() + tank or absf(l.z) > ring.half_w() + tank:
+			break
+	if res != "back":
+		print("    (real: %s %s lost from %s: at %s, its last plan %s, the desperate line %d times)" % [b._preset_name(), b.element,
+				sp, f.global_position, m.plan.get("name", "-"), int(m.stats.desperate)])
+	f.set_physics_process(false)
+	f.velocity = Vector3.ZERO
+	kn.reset()
 	await process_frame
 	return res
 

@@ -16,6 +16,10 @@ extends CanvasLayer
 ##   Aim help: light    how much the casts are helped onto a fighter near the crosshair, in turn: at once, kept
 ##   Key hints: on      the control scheme's keys at the top left until each is used (FirstHints; GameSettings' hints
 ##                      section): at once, kept; on, they show in the match under way
+##   Camera: High       round 4 (READ): where the camera sits behind you, in turn (RingCamera: High, Close, Shoulder, High
+##                      shoulder; camera.json's words): at once, kept (GameSettings ring.camera)
+##   Screen jolt: On    round 4: the view's jolt when a hit lands on or off (IMPACT's GameSettings ring.jolt; the aim never
+##                      moves either way): at once, kept
 ##   Controls           the element in play's buttons (round 2 of the skills, KitWords: its passive and guard, LMB jab,
 ##                      E guard, 1-5 with their plain names; in the % ring first the one line of practice.json
 ##                      menu.controls_line), the four rules, and the row "Other ways to pick moves:
@@ -38,8 +42,16 @@ var _elem: Button
 var _foe: Button
 var _diff: Button
 var _scheme: Button
+## Round 4 SIMPLE: the Controls preset's row (Basic / Full), laid into the Controls panel with the scheme's.
+var _preset: Button
 var _aim: Button
 var _hints: Button
+var _camera: Button
+var _jolt: Button
+## Round 4 VIRAL: the Splash Cam's replays, the callouts and photo mode (the % ring's only).
+var _replays: Button
+var _callouts: Button
+var _photo: Button
 var _rules: Button
 var _games: Button
 var _practice: Button
@@ -104,12 +116,25 @@ func _ready() -> void:
 	_aim.name = "AimHelp"
 	_hints = _row(FirstHints.row_text(), toggle_hints, FirstHints.row_line())
 	_hints.name = "KeyHints"
+	_camera = _row(RingCamera.row_text(), cycle_camera, RingCamera.row_line())
+	_camera.name = "Camera"
+	_jolt = _row(RingCamera.jolt_row_text(), toggle_jolt, RingCamera.word("jolt_line"))
+	_jolt.name = "ScreenJolt"
+	_replays = _row(RingReplay.row_text(), cycle_replays, RingReplay.row_line())
+	_replays.name = "Replays"
+	_callouts = _row(Callouts.row_text(), toggle_callouts, Callouts.row_line())
+	_callouts.name = "Callouts"
+	_photo = _row(PhotoMode.row_text(), photo_mode, PhotoMode.row_line())
+	_photo.name = "Photo"
 	var ctl := _row(KitWords.w("controls", "Controls"), _controls, KitWords.w("controls_line"))
 	ctl.name = "Controls"
 	# (the other ways to pick moves: a row of the Controls panel, round 2; kept here, laid into the panel as it opens)
 	_scheme = MenuUI.item(KitWords.other_ways_row(), 24, KitWords.other_ways_line())
 	_scheme.name = "Scheme"
 	_scheme.pressed.connect(cycle_scheme)
+	_preset = MenuUI.item(MatchSetup.controls_row(), 24, MatchSetup.controls_row_line())
+	_preset.name = "ControlsPreset"
+	_preset.pressed.connect(cycle_controls)
 	_row(w("settings"), _settings)
 	_row(w("main_menu"), to_menu)
 	_row(w("quit"), _quit)
@@ -132,6 +157,8 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if is_instance_valid(_scheme) and _scheme.get_parent() == null:
 		_scheme.queue_free()                  # (the scheme's row out of the Controls panel: freed with the menu)
+	if is_instance_valid(_preset) and _preset.get_parent() == null:
+		_preset.queue_free()
 
 
 func _row(text: String, what: Callable, sub_line := "") -> Button:
@@ -181,6 +208,13 @@ func open() -> void:
 	_note.text = note_text()
 	_clear_panel()
 	_practice.visible = match_mode != null and match_mode.practice and RingRules.stock_on()
+	# (round 4: the camera's variants and the jolt are the % ring's; the zone rules' ring is as it was)
+	_camera.visible = RingRules.stock_on()
+	_jolt.visible = RingRules.stock_on()
+	# (round 4 VIRAL: the replays, the callouts and photo mode run only under the % rules)
+	_replays.visible = RingRules.stock_on()
+	_callouts.visible = RingRules.stock_on()
+	_photo.visible = RingRules.stock_on() and PhotoMode.find(get_tree()) != null
 	_paint()
 	_root.visible = true
 	get_tree().paused = true
@@ -330,6 +364,53 @@ func toggle_hints() -> void:
 	_note.text = FirstHints.row_text()
 
 
+## The camera's variant in turn (RingCamera): at once (the next frame's framing), kept.
+func cycle_camera() -> void:
+	RingCamera.set_key(RingCamera.next_key())
+	_paint()
+	_note.text = RingCamera.word("changed") % RingCamera.label()
+
+
+## The screen's jolt on a hit on or off (GameSettings ring.jolt, IMPACT's): at once, kept.
+func toggle_jolt() -> void:
+	RingCamera.set_jolt(not RingCamera.jolt_on())
+	_paint()
+	_note.text = RingCamera.word("jolt_changed") % RingCamera.word("jolt_on" if RingCamera.jolt_on() else "jolt_off")
+
+
+## Round 4 SIMPLE: Basic / Full in turn, at once (the match goes on with it), kept.
+func cycle_controls() -> void:
+	MatchSetup.set_controls(MatchSetup.next_controls())
+	_paint()
+	_note.text = String((MatchSetup.schemes_data().get("controls", {}) as Dictionary).get("changed", "Controls: %s")) \
+			% MatchSetup.controls_label()
+	if _panel.get_child_count() > 0:
+		_controls()
+
+
+## Round 4 VIRAL: the Splash Cam's replays in turn (Every fall, Last life only, Off): at once, kept.
+func cycle_replays() -> void:
+	RingReplay.cycle_setting()
+	_paint()
+	_note.text = RingReplay.row_text()
+
+
+## Round 4 VIRAL: the callouts on or off: at once, kept.
+func toggle_callouts() -> void:
+	Callouts.toggle()
+	_paint()
+	_note.text = Callouts.row_text()
+
+
+## Round 4 VIRAL: photo mode (the menu closed first; Esc in it comes back to the match).
+func photo_mode() -> void:
+	var pm := PhotoMode.find(get_tree())
+	if pm == null:
+		return
+	close()
+	pm.enter()
+
+
 func cycle_scheme() -> void:
 	MatchSetup.set_scheme(MatchSetup.next_scheme())
 	_paint()
@@ -358,8 +439,13 @@ func _paint() -> void:
 	_set_row(_rules, _rules_text(), MatchSetup.menu_word("rules_line"))
 	_set_row(_games, _games_text(), MatchSetup.menu_word("games_line"))
 	_set_row(_scheme, KitWords.other_ways_row(), KitWords.other_ways_line())
+	_set_row(_preset, MatchSetup.controls_row(), MatchSetup.controls_row_line())
 	_set_row(_aim, MatchSetup.aim_row(), MatchSetup.aim_row_line())
 	_set_row(_hints, FirstHints.row_text(), FirstHints.row_line())
+	_set_row(_camera, RingCamera.row_text(), RingCamera.row_line())
+	_set_row(_jolt, RingCamera.jolt_row_text(), RingCamera.word("jolt_line"))
+	_set_row(_replays, RingReplay.row_text(), RingReplay.row_line())
+	_set_row(_callouts, Callouts.row_text(), Callouts.row_line())
 
 
 static func _set_row(b: Button, text: String, sub_line := "") -> void:
@@ -376,7 +462,7 @@ static func _set_row(b: Button, text: String, sub_line := "") -> void:
 func _clear_panel() -> void:
 	for c in _panel.get_children():
 		_panel.remove_child(c)
-		if c != _scheme:
+		if c != _scheme and c != _preset:
 			c.queue_free()                    # (the scheme's row is kept: it is laid in again)
 
 
@@ -389,7 +475,9 @@ func _controls() -> void:
 	if RingRules.stock_on():
 		# (round 3: the % ring's one line, in right-click terms)
 		_panel.add_child(MenuUI.label(MatchSetup.menu_word("controls_line"), 18, MenuUI.GOLD, true))
+	_panel.add_child(_preset)                   # (round 4: Basic / Full first)
 	_panel.add_child(_scheme)                   # (the other ways first: in view without a scroll)
+	_scheme.visible = not MatchSetup.basic()    # (the schemes are Full's)
 	for line in KitWords.pick_lines(el):
 		_panel.add_child(MenuUI.label(String(line), 17, MenuUI.DIM, true))
 	for line in control_lines(el):

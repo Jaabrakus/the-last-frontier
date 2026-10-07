@@ -958,7 +958,9 @@ func manual_step(dt: float) -> void:
 	upper.tick(_aim_carried(inp, dt), loco.state, dt, loco.carry_inputs())
 	L.update(dt)
 	L.write()
-	advance(dt)
+	# (round 4, IMPACT: the hit-stop holds the pose, the graph's and its arm layers', never the controllers: BendImpact)
+	var pose_dt := dt * BendImpact.pose_rate(player, dt)
+	advance(pose_dt)
 	if inertializer != null:
 		inertializer.tick(dt)
 	_last_dt = dt
@@ -1096,7 +1098,7 @@ func manual_step(dt: float) -> void:
 				left_arm.set_sources("grip", _arm_layer_sources())
 			if take_over and left_arm.enabled:
 				left_arm.take_over(take_over_s)
-		left_arm.advance(dt)
+		left_arm.advance(pose_dt)
 	if right_arm != null and not owned.r:
 		# The graph's in-place crouch change (CCHANGE; a stand-in clip, the source's own change is missing from the
 		# data) swings the gun 25-35 cm in its first 0.1 s: the right arm keeps the carry's two-hand arm of the
@@ -1126,7 +1128,7 @@ func manual_step(dt: float) -> void:
 						STANCE_ARM_XFADE_S if change_hold else LeftArmPose.SOURCE_XFADE_S)
 			if take_over and right_arm.enabled:
 				right_arm.take_over(take_over_s)
-		right_arm.advance(dt)
+		right_arm.advance(pose_dt)
 	if trigger_finger != null:
 		# (the musket held as the gun: carried, aimed and fired; off for the reload, the switch, the free hands, the
 		# middle carry and the torch)
@@ -1156,7 +1158,7 @@ func manual_step(dt: float) -> void:
 		# movement starts"), quickly and eased (LeftGripIK smoothsteps it), never a pop.
 		var walk_w := 1.0 if (moving_carry and not (player != null and player.is_crouching)) else 0.0
 		left_grip.moving = move_toward(left_grip.moving, walk_w, dt / 0.22)
-		left_grip.advance(dt)
+		left_grip.advance(pose_dt)
 	if gun_damper != null:
 		# (with the gun in the left hand, GunMiddleCarryIK's own spring smooths it in the character's frame; on the way
 		# back, from the moment the gun is in the right hand again (the handoff's travel done), this damper takes over:
@@ -1164,7 +1166,7 @@ func manual_step(dt: float) -> void:
 		# pop of the gun at a crouch-walk stop, test_weapon_holds one_crouch_stop)
 		var mid_back: bool = mid and not mid_ik.on and float(GunMiddleCarryIK.weights(mid_ik.progress)[2]) <= 0.0
 		gun_damper.enabled = gun_free and not torch and (not mid or mid_back)
-		gun_damper.advance(dt)
+		gun_damper.advance(pose_dt)
 	if _resume_snap:
 		# back from a traversal move or the saddle: the weights the modifiers were left with are stale
 		_resume_snap = false

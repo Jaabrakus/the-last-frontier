@@ -89,6 +89,8 @@ func _initialize() -> void:
 	MatchSetup.incoming = true
 	MatchSetup.element = "earth"
 	MatchSetup.foes = ["earth"]
+	# (the merge: the % ring is the default, where key 3 acts at once; the schemes' readying is the classic ring's, pinned)
+	RingRules.rule_set_override = "classic"
 	change_scene_to_file("res://scenes/ring.tscn")
 	_run.call_deferred()
 
@@ -218,6 +220,7 @@ func _end() -> void:
 	Input.action_release(&"aim")
 	Input.action_release(RadialWheel.ACTION)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+	RingRules.rule_set_override = ""
 	GameSettings.path = GameSettings.PATH
 	MatchSetup.reload_scheme()
 	if fails.is_empty() and checks > 0:
@@ -258,8 +261,8 @@ func _direction() -> void:
 	await _ticks(4)
 	# the strip's and F1's lines: schemes.json's
 	var strip := hud.bend_strip
-	var line := KitWords.help_line("direction")
-	_expect(line != "" and strip.help_line() == line and line.contains("W, S, A or D"), "the strip's line says how (%s)" % strip.help_line())
+	var line := KitWords.strip_help("direction")      # (round 4, HUD: the strip's own one-line help)
+	_expect(line != "" and strip.help_line() == line and line.contains("W, A, S or D"), "the strip's line says how (%s)" % strip.help_line())
 	_expect(hud.help_text().contains(KitWords.keyed(String(FrontierHUD.ARENA_KEYS.direction))), "F1 says it")
 	# none: the key's move at its own variation
 	c.dir_override = ""
@@ -332,7 +335,7 @@ func _radial() -> void:
 	_expect(w != null and w.can_open() and InputMap.has_action(RadialWheel.ACTION)
 			and SwayCaster.key_name(RadialWheel.ACTION) == "Tab", "the radial scheme: the wheel on Tab")
 	var strip := hud.bend_strip
-	_expect(not bool(strip.column(0).hidden) and strip.ready_line() != "" and strip.help_line() == KitWords.help_line("radial")
+	_expect(not bool(strip.column(0).hidden) and strip.ready_line() != "" and strip.help_line() == KitWords.strip_help("radial")
 			and strip.help_line().contains("Hold Tab"), "the strip: its key columns, the ready line and the wheel's line (%s)" % strip.help_line())
 	Input.action_press(RadialWheel.ACTION)
 	var t := await _until(func() -> bool: return w.is_open, 0.5)

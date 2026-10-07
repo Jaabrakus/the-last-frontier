@@ -74,6 +74,8 @@ func _initialize() -> void:
 	InputSetup.ensure()
 	MatchSetup.incoming = true
 	MatchSetup.element = "earth"
+	# (the merge: rules.json plays the % ring by default; this test is the classic ring's, pinned)
+	RingRules.rule_set_override = "classic"
 	change_scene_to_file("res://scenes/ring.tscn")
 	_run.call_deferred()
 
@@ -159,6 +161,7 @@ func _end() -> void:
 		c.held_override = null
 		c.guard_override = null
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+	RingRules.rule_set_override = ""
 	GameSettings.path = GameSettings.PATH
 	for k: String in metrics:
 		print("METRIC %s=%s" % [k, str(metrics[k])])

@@ -932,6 +932,11 @@ func took_hit() -> void:
 			_wait_src = src
 
 
+## Round 3: the % ring's guard standing and kept up by E held now (MOVE's SwayPose loops guard_hold_clip meanwhile).
+func guard_held() -> bool:
+	return _gzone != null and is_instance_valid(_gzone) and not _gzone.is_queued_for_deletion() and _guard_down()
+
+
 ## Round 3: the held guard's loop clip for his element (poses.json guard_hold: own-bend-guard-hold-<element>, else its stand-in;
 ## "" none), for MOVE's SwayPose to loop while guard_up() and E is held.
 func guard_hold_clip() -> String:

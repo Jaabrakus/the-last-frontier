@@ -46,10 +46,93 @@ static var held_off := 0
 static var take_filters: Array[Callable] = []
 
 
-## The bend's clock (s): the game's physics time, not the wall's, so a timed effect's end (its meta) and its timer agree
-## however fast the frames run (a slow frame, a headless test at a fixed fps).
+## The bend's clock (s): GAME time, not the wall's, so a timed effect's end (its meta) and its timer agree however fast the
+## frames run (a slow frame, a headless test at a fixed fps).
+## ROUND 4 (IMPACT; why it changed): it was the physics frame count over physics_ticks_per_second. Under Engine.time_scale
+## Godot scales each physics step but still ticks at the wall's rate, so every bend timer (hitstun, the guards' windows, the
+## catch, the bots' rests) drifted from the game it timed: the round-2 critic's earth-mirror soak caught 0 stones at ts 4
+## against 87 at ts 1, and the timers ran on through an Esc pause. A slow beat (RingMoment) needs game time. Now a static
+## total of game ticks advances by Engine.time_scale for each physics step (Godot's step is 1 / physics_ticks_per_second x
+## time_scale), counted by a tiny clock node (BendClock, PROCESS_MODE_PAUSABLE, made on first use under the tree's root):
+## a step of a paused tree adds nothing. It counts on SceneTree.physics_frame, which Godot emits at the start of each step
+## before any node's physics and before the coroutines awaiting that signal (a node's lowest process_physics_priority would
+## still run after those coroutines); a step's frame not yet counted (the physics server's area signals come before
+## physics_frame) is read ahead at the time scale now. So every reader of a step sees that step's time, and at time_scale 1
+## the value is the old frame clock's exactly (seeded with the frame count; tests/bending/test_bend_clock.gd pins it): no
+## round-3 timer moves. With no SceneTree (pure unit tests) it is the frame count, as before. BendImpact.tick runs right
+## after each count (its held launches let go at the start of the step that ends their hold).
 static func now() -> float:
-	return float(Engine.get_physics_frames()) / float(Engine.physics_ticks_per_second)
+	var tps := float(Engine.physics_ticks_per_second)
+	var t := Engine.get_main_loop() as SceneTree
+	if t == null or t.root == null or no_tree:
+		return float(Engine.get_physics_frames()) / tps
+	if _clock == null or not is_instance_valid(_clock):
+		_make_clock(t)
+	var f := Engine.get_physics_frames()
+	if f > _counted_f and not t.paused:
+		return (_ticks + float(f - _counted_f) * maxf(Engine.time_scale, 0.0)) / tps
+	return _ticks / tps
+
+
+## The game ticks counted (seeded with the physics frame count when the clock is made), the physics frame they count up to,
+## and the clock node.
+static var _ticks := 0.0
+static var _counted_f := 0
+static var _clock: Node = null
+static var _seeded := false
+## Tests: read the clock as with no SceneTree (the frame fallback).
+static var no_tree := false
+
+
+static func _make_clock(t: SceneTree) -> void:
+	var c := BendClock.new()
+	c.name = "BendClock"
+	c.process_mode = Node.PROCESS_MODE_PAUSABLE
+	c.process_physics_priority = -1000000000
+	c.tree = t
+	_clock = c
+	if not _seeded:
+		_ticks = float(Engine.get_physics_frames())
+		_counted_f = Engine.get_physics_frames()
+		_seeded = true
+	t.physics_frame.connect(c.tick)
+	t.root.add_child.call_deferred(c)
+
+
+## The game ticks counted so far (tests: at time_scale 1 equal to the physics frame count).
+static func clock_ticks() -> float:
+	return _ticks
+
+
+## The clock node, or null before the first now() under a tree (tests).
+static func clock() -> Node:
+	return _clock if _clock != null and is_instance_valid(_clock) else null
+
+
+## The clock node (see now()): one under the root; each physics step of a running tree adds Engine.time_scale ticks.
+class BendClock extends Node:
+	var tree: SceneTree
+	## Physics steps the tree was paused through (tests).
+	var paused_steps := 0
+
+	func tick() -> void:
+		if tree == null:
+			return
+		var f := Engine.get_physics_frames()
+		if tree.paused:
+			paused_steps += f - BendStatus._counted_f
+			BendStatus._counted_f = f
+			return
+		# (at time_scale 1 exactly one tick a step: the frame clock's value to the bit)
+		BendStatus._ticks += float(f - BendStatus._counted_f) * maxf(Engine.time_scale, 0.0)
+		BendStatus._counted_f = f
+		BendImpact.tick()
+
+	func _exit_tree() -> void:
+		if tree != null and tree.physics_frame.is_connected(tick):
+			tree.physics_frame.disconnect(tick)
+		if BendStatus._clock == self:
+			BendStatus._clock = null
 
 
 ## Whom the bend can reach: the player and fighters (not dead), the wild, props; not `caster`, nor anyone on its side
@@ -139,8 +222,8 @@ static func knock(n: Node, v: Vector3, by: Node, info := {}) -> void:
 	if v.length_squared() < 1e-4 or not can_take(n, by) or until(n, &"bend_anchor") > 0.0:
 		return
 	if stock_body(n):
-		if _hit_this_frame(n, by):
-			return                               # (its hurt this frame already set the launch)
+		if _hit_this_frame(n, by, info):
+			return                               # (its hurt already set the launch: the same hit)
 		var i := info.duplicate()
 		i["v_given"] = v
 		i["at"] = (n as Node3D).global_position + Vector3.UP
@@ -165,9 +248,9 @@ static func stock_body(n: Node) -> bool:
 
 
 ## Round 3: a hit on a stock competitor (RingRules.on_hit: the %, the launch), the launch set through BendKnock (info._launch),
-## the frame and the attacker marked (STOCK_HIT_META: the knock that follows its hurt this frame is the same hit).
+## the frame, the attacker and the hit's id marked (STOCK_HIT_META: the knock that follows its hurt is the same hit).
 static func _stock_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
-	n.set_meta(STOCK_HIT_META, [Engine.get_physics_frames(), by.get_instance_id() if by != null else 0])
+	n.set_meta(STOCK_HIT_META, [Engine.get_physics_frames(), by.get_instance_id() if by != null else 0, int(info.get("hit_id", 0))])
 	var res := RingRules.current().on_hit(n, by, info)
 	if res.is_empty() or bool(res.get("none", true)) or until(n, &"bend_anchor") > 0.0:
 		return res
@@ -177,10 +260,15 @@ static func _stock_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	return res
 
 
-static func _hit_this_frame(n: Node, by: Node) -> bool:
+## Whether a knock is the hit its hurt already took: the same hit_id (AIR's BendR3.deliver gives one hurt and knock the same id),
+## else (no id) the same physics frame and attacker.
+static func _hit_this_frame(n: Node, by: Node, info := {}) -> bool:
 	if not n.has_meta(STOCK_HIT_META):
 		return false
 	var m: Array = n.get_meta(STOCK_HIT_META)
+	var hid := int(info.get("hit_id", 0))
+	if hid != 0 and m.size() > 2 and int(m[2]) != 0:
+		return int(m[2]) == hid
 	return int(m[0]) == Engine.get_physics_frames() and int(m[1]) == (by.get_instance_id() if by != null else 0)
 
 

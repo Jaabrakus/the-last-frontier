@@ -168,6 +168,7 @@ func _initialize() -> void:
 	MatchSetup.element = "earth"
 	MatchSetup.foes = ["earth"]
 	MatchSetup.rounds_to_win = 2
+	MatchSetup.games_n = 3                       # (the merge: the % ring plays by default; its best of 3 is three games)
 	MatchSetup.round_s = 60.0
 	MatchSetup.kind = "match"
 	MatchSetup.incoming = true

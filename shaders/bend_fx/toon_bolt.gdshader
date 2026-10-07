@@ -23,6 +23,9 @@ void vertex() {
 }
 
 void fragment() {
+	if (near_cut(VERTEX, FRAGCOORD.xy)) {
+		discard;
+	}
 	float a = abs(UV.y * 2.0 - 1.0);
 	float v = 1.0 - a - (1.0 - fade) * 0.9;
 	if (aastep(0.0, v) < 0.5) {

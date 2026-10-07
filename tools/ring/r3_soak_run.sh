@@ -4,7 +4,8 @@
 # (tools/ring/r3_soak_table.py) into <out>.md.
 #   zsh tools/ring/r3_soak_run.sh <worktree> <scratchpad> <out.md> [seeds="7300 7301 7302"] [difficulty=normal]
 W="$1"; S="$2"; OUT="$3"
-SEEDS=(${=4:-"7300 7301 7302"})
+SEED_TEXT="${4:-7300 7301 7302}"
+SEEDS=(${=SEED_TEXT})
 DIFF="${5:-normal}"
 ELS=(earth water fire air)
 LOGS=()

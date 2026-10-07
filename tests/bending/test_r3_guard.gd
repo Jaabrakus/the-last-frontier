@@ -71,6 +71,8 @@ func _initialize() -> void:
 	InputSetup.ensure()
 	MatchSetup.incoming = true
 	MatchSetup.element = "earth"
+	# (the merge: rules.json plays stock by default; AIR's stand-ins (FakeRules) are this test's gate, the ring itself classic)
+	RingRules.rule_set_override = "classic"
 	change_scene_to_file("res://scenes/ring.tscn")
 	_run.call_deferred()
 
@@ -144,6 +146,7 @@ func _end() -> void:
 		c.guard_override = null
 	_stock(false)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+	RingRules.rule_set_override = ""
 	GameSettings.path = GameSettings.PATH
 	for k: String in metrics:
 		print("METRIC %s=%s" % [k, str(metrics[k])])

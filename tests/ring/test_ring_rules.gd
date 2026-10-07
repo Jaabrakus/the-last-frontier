@@ -552,6 +552,13 @@ func _stock_part() -> void:
 	var at := ring.to_local(f.global_position)
 	var spout_far: bool = absf(at.z + 4.0) < 0.6 and absf(absf(at.x) - 12.0) < 0.6
 	var safe_now := rules.is_safe(f)
+	# (the merge: MOVE's RingMoves holds him on the spout until a key or its time; safety counts from left_spout. With no
+	# RingMoves he stands on the grate and it counts from the respawn)
+	var left_at := [t0 + waited]
+	var rmf := RingMoves.of(f)
+	if rmf != null and rmf.on_spout():
+		left_at[0] = INF
+		rmf.left_spout.connect(func() -> void: left_at[0] = BendStatus.now(), CONNECT_ONE_SHOT)
 	_expect(absf(waited - 1.6) < 0.1 and f.visible and spout_far and safe_now,
 			"back after %.2f s (1.6), on the spout at the grate farther from the player (z %.1f), safe" % [waited, at.z])
 	# no % on a safe body, hit_safe fires
@@ -567,8 +574,8 @@ func _stock_part() -> void:
 	_expect(sp != null and is_instance_valid(sp) and sp.pushes > 0 and d1 > d0 + 0.3 and rules.pct_of(player) == 0.0,
 			"the spout pushes the player 1.2 m off it away (%.2f -> %.2f m) with 0%%" % [d0, d1])
 	# safety ends 1.5 s after (he stands on the grate: no MOVE to hold him up), or at once on a lock's start
-	await _until(func() -> bool: return not rules.is_safe(f), 3.0)
-	var safe_len := BendStatus.now() - t0 - waited
+	await _until(func() -> bool: return not rules.is_safe(f), 6.0)
+	var safe_len := BendStatus.now() - float(left_at[0])
 	_expect(absf(safe_len - 1.5) < 0.15, "safe for 1.5 s after leaving the spout (%.2f)" % safe_len)
 	# the player: a fall (his own: no knocker), his respawn, a lock's start ending his safety
 	_settle(player, ring.to_global(Vector3(RingArena.side_sign(1 - fe) * (ring.half_l() + 2.0), -6.4, 0.0)))
@@ -593,6 +600,9 @@ func _stock_part() -> void:
 			await _until(func() -> bool: return not rules.is_away(f), 3.0)
 			await _ticks(2)
 	await _ticks(3)
+	# (round 4: "Over" waits for the last fall's slow beat, RingMoment; read once it has run out)
+	await _until(func() -> bool: return not RingMoment.busy(), 3.0)
+	await _ticks(2)
 	_expect(rules.stocks_of(f) == 0 and rules.is_gone(f) and mode.phase == "OVER" and mode.last_why == "falls" and mode.last_winner == 0
 			and mode.banner.text == "Over", "the last life gone: the game over (OVER, why falls, \"%s\"), no respawn" % mode.banner.text)
 	await _until(func() -> bool: return mode.phase == "DONE", 4.0)
@@ -651,6 +661,7 @@ func _clock() -> void:
 			await _until(func() -> bool: return not rules.is_away(f), 3.0)
 			await _ticks(2)
 	await _until(func() -> bool: return mode.phase == "OVER", 2.0)
+	await _until(func() -> bool: return not RingMoment.busy(), 3.0)      # (round 4: the game's screen waits for its last fall's moment)
 	var gs := (mode.round_screen as RoundScreen)
 	_expect(mode.phase == "OVER" and gs.is_open() and String(gs.lines().head).begins_with("Game 1") and mode.score == Vector2i(1, 0),
 			"game 1 to you: the game screen (\"%s\"), the score 1 : 0" % String(gs.lines().head))

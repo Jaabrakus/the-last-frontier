@@ -1,0 +1,38 @@
+{
+  "_about": "Round 4 VIRAL: the callouts (Callouts, scripts/ui/callouts.gd) and the clash moment (BendClash, scripts/bending/bend_clash.gd). Big short words on the player's own screen, centred above the strip, never on or over anyone. One at a time: a higher priority one takes over, lower ones wait (at most queue_n, dropped after stale_s).",
+  "enabled": true,
+  "show_s": 0.9,
+  "queue_n": 3,
+  "stale_s": 1.2,
+  "_look": "The look: font size, outline, the screen height of its middle (anchor_y, 0 top .. 1 bottom), the scale punch (from punch to 1 over punch_s, overshoot), the tilt (deg), the fade over its last fade_s.",
+  "look": {"size": 76, "outline": 14, "shadow": 6, "anchor_y": 0.63, "punch": 1.7, "punch_s": 0.14, "overshoot": 1.12, "tilt_deg": -5.0, "fade_s": 0.22, "drift_px": 14.0},
+  "_colors": "The element colours (the one whose moment it is), and the colour of a moment of no one's (the last life).",
+  "colors": {"earth": "#f0b13c", "water": "#4cb8ff", "fire": "#ff6a1f", "air": "#eaf6ff", "none": "#ffffff"},
+  "_calls": "Each callout: its word, priority (higher first) and whose moments show it (mine: the player's side only; any: either side).",
+  "calls": {
+    "splash": {"word": "SPLASH!", "priority": 5, "who": "any"},
+    "caught": {"word": "CAUGHT!", "priority": 6, "who": "mine", "within_s": 0.15},
+    "perfect": {"word": "PERFECT!", "priority": 3, "who": "mine"},
+    "rise": {"word": "RISE!", "priority": 4, "who": "mine", "deep_third": 0.6667},
+    "clash": {"word": "CLASH!", "priority": 2, "who": "any"},
+    "comeback": {"word": "COMEBACK!", "priority": 8, "who": "mine"},
+    "last_life": {"word": "LAST LIFE", "priority": 7, "who": "any"}
+  },
+  "row": {"label": "Callouts: %s", "line": "Big words for big moments", "on": "On", "off": "Off"},
+  "_clash": "A clash (two attacks meeting): a two-colour burst of each element's bits (n each, size, speed m/s, spread deg), a flash and two shockwave rings standing in the air at the meeting point (life s, scale from .. to), a light, one sound ([id, gain dB, pitch]: the clash id when the sounds have one, else the loudest hit), and a shared hold of both casters' poses through BendImpact when it is there (hold_s).",
+  "clash": {
+    "burst_n": 34,
+    "burst_size": 0.65,
+    "burst_mps": 8.0,
+    "spread_deg": 110.0,
+    "flash": {"life": 0.22, "from": 0.9, "to": 3.6},
+    "ring": {"life": 0.42, "from": 0.4, "to": 5.2},
+    "ring2": {"life": 0.7, "from": 0.6, "to": 8.5},
+    "light": {"energy": 7.0, "time": 0.28, "reach": 9.0},
+    "sound": ["clash", 3.0, 1.0],
+    "sound_fallback": ["earth_hit", 4.0, 0.78],
+    "hold_s": 0.06,
+    "dedup_m": 1.5,
+    "pair_m": 0.9
+  }
+}

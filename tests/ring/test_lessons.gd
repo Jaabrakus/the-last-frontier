@@ -94,6 +94,9 @@ func _initialize() -> void:
 	RingMode.lessons_asked = false
 	FirstHints.force = false
 	MatchSetup.element = "earth"
+	# (the merge: rules.json plays the % ring by default; the classic run pinned (RingRules.rule_set_override), the % ring's
+	# lessons by the stand-in rules in _stock)
+	RingRules.rule_set_override = "classic"
 	change_scene_to_file("res://scenes/main_menu.tscn")
 	_run.call_deferred()
 
@@ -123,6 +126,7 @@ func _end() -> void:
 			Input.action_release(a)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	GameSettings.path = GameSettings.PATH
+	RingRules.rule_set_override = ""
 	MatchSetup.reload_scheme()
 	FirstHints.force = false
 	_expect(stood_in.is_empty(), "every lesson done by the player's own input, nothing stood in (%s)" % [stood_in])

@@ -19,9 +19,10 @@ extends RefCounted
 ##   the victim   its steer set once in pad.di at the launch (survive_pct and up: the yaw with the longest way to the water;
 ##                below: across the hitter's line), the escape pressed fresh when RingRules.can_escape says so, E pressed
 ##                tech_lead_s before it meets the deck tumbling, up from lying down; each by its preset's chance
-##   recovery     off the deck and free: the six plans simulated (RingMoves.simulate; until MOVE's lands, the stand-in mover
-##                below) every recover_replan_s toward the nearest open lip, the first that comes back in its preset's order
-##                run through the pad; never a 4th grab without the deck
+##   recovery     off the deck and free: the six plans simulated on its own mover (move_sim: MOVE's RingMoves.simulate on its
+##                body's RingMoves; a test's stand-in mover on the stand-in below) every recover_replan_s toward the nearest
+##                open lip, the first that comes back in its preset's order run through the pad; never a 4th grab without the
+##                deck. The body's states own the pad: a walk order left from before is let go (halt)
 ##   the edge     LEDGE: its option by preset, always before its first-grab safety and the hang's end. LEDGETRAP and
 ##                EDGEGUARD: keeping him off (shots from inside the lip at where he will be, hard's pre-filled lock let go as
 ##                his safety ends or his Rise shows, hard's safe-only chase), never a hit into a safety (allow_release)
@@ -31,6 +32,24 @@ extends RefCounted
 ##                not winding up at it, and RingRules.heal_allowed
 ##   fairness     reads %, lives, positions, poses and wind-ups only, never inputs; air_scatter_mult and air_lead at a body in
 ##                the air; above high_pct of its own: reaction + high_react_s and centre_pull
+## ROUND 4 (BOTS2: the bots finish the % game; bend_ai.json pct.air and each preset's "air": easy rarely, hard well):
+##   the hop      in NEUTRAL and PRESSURE, ready to attack and with room along the way, a jump at him (hop_think): the air
+##                close hit (the jab's air form, LMB in the air: Stone Knee, Spin Splash, Flare Kick, Whirl) from the
+##                air_hit_hop_m band, the Slam (key 2's first move begun in the air) on a man on the deck from slam_hop_m, else
+##                a short key-1 lock let go in the air (hop_cast); a double jump first at a man in the air (double); each
+##                begun in the air (air_tick) as the player's would be (NpcBending.begin: the air forms), the drift held toward
+##                him while it fills, landing first calls a Slam off and turns an air hit back into the jab (NpcBending)
+##   the Slam     EDGEGUARD: a man recovering under the lip within slam_out_m of it: it steps to the lip over him, hops and
+##                Slams him down (slam_edge, once a time he is off), only when its own way back from past the lip with a
+##                jump spent comes back (the planner's look-ahead); its lock runs on in RECOVER
+##   strings      the string table's "air_hit" (a jump at him, then the air close hit: after the Pop, a Slam's bounce, an
+##                up-launcher) and "slam" leads; of the follow-ups that are true it takes one by chance (a stone in hand
+##                first), not always the first
+##   the shield   its guard on E raised early and HELD (shield_tick: kept up past its window while the threat comes, 2.5 s at
+##                most) against a held Lightning (every element: only fire's Parry on the beat turns it, the rest take it
+##                late, half as a slide) or a big shot (knock shield_knock_mps and up) it did not roll to meet on the beat;
+##                never earth against a stone (the catch is the core); dropped once it has passed, then a punish window
+##                (punish_s: quick attacks x punish_mult)
 ## Counted for the tests and the soak: stats, time_in (seconds per state).
 ## Tests: simulate_override (a look-ahead in place of RingMoves.simulate) and predict_override (an object with flight() and
 ## would_ko() in place of RingPredict) stand in for MOVE's parts until they are merged.
@@ -43,6 +62,8 @@ const BODY_STATES := [S.REELING, S.RECOVER, S.LEDGE, S.RESPAWN]
 const EDGE_KINDS := ["climb", "ledge_jump", "ledge_roll", "ledge_attack"]
 ## The plans' names (spec §9.6).
 const PLANS := {1: "drift", 2: "late_double", 3: "double_now", 4: "rise_edge", 5: "rise_high", 6: "dodge_first"}
+## MOVE's mover script (a body with exactly it is planned on RingMoves.simulate; a test's stand-in mover on the stand-in).
+const RING_MOVES := preload("res://scripts/ring/ring_moves.gd")
 
 ## Tests: a mover's look-ahead in place of RingMoves.simulate ((state, plan, dt, horizon) -> {ok, how, t, pos}).
 static var simulate_override := Callable()
@@ -70,6 +91,13 @@ var string_margins: Array[float] = []
 var plan := {}
 ## The foe's edge options seen (EDGE_KINDS -> n): hard covers the favourite.
 var foe_edge := {}
+## Round 4: its hop ({} none): {kind ("air_hit", "slam", "cast"), option, t0, dir, share, double, doubled, begun, edge}.
+var hop := {}
+## Round 4: the shield it holds ({} none): {id, kind, raised_at, until, zone, held}; the punish window's end after it drops.
+var shield := {}
+var punish_until := -INF
+var _shield_rolls := {}
+var _follow_out := {}
 
 var _rules_seen: RingRules = null
 var _moves_seen := {}
@@ -109,7 +137,9 @@ static func _new_stats() -> Dictionary:
 			"string_false": 0, "reads": 0, "longest_string": 0, "launches": 0, "di_set": 0, "di_right": 0, "break_outs": 0,
 			"break_rolls": 0, "techs": 0, "tech_rolls": 0, "getups": 0, "recovers": 0, "recover_ok": 0, "recover_fail": 0,
 			"plans_by": {}, "desperate": 0, "edge_opts": {}, "grabs": 0, "grabs_refused": 0, "keep_off_casts": 0,
-			"safety_holds": 0, "held_out": 0, "chases": 0, "patches": 0, "spout_leaves": 0, "velocity_writes": 0, "self_falls": 0}
+			"safety_holds": 0, "held_out": 0, "chases": 0, "patches": 0, "spout_leaves": 0, "velocity_writes": 0, "self_falls": 0,
+			"hops": 0, "double_jumps": 0, "air_hits": 0, "slams": 0, "slam_hops": 0, "air_follows": 0, "shield_raises": 0,
+			"shield_holds": 0, "shield_held_long": 0, "shield_drops": 0, "punishes": 0}
 
 
 # ---------------------------------------------------------------- data
@@ -277,6 +307,8 @@ func _on_ko(b: Node3D, by: Node, _pct: float, _tag: String, _left: int) -> void:
 	if b == me:
 		_end_string()
 		plan = {}
+		hop = {}
+		shield = {}
 		_grabs = 0
 		_launch = {}
 		pad().di = Vector3.ZERO
@@ -295,6 +327,8 @@ func _on_respawned(b: Node3D) -> void:
 	bend._floor.clear()
 	_end_string()
 	plan = {}
+	hop = {}
+	shield = {}
 	_spout_t = 0.0
 	_grabs = 0
 
@@ -327,17 +361,23 @@ func tick(dt: float) -> bool:
 			_enter(want)
 	state_t += dt
 	time_in[STATE_NAMES[state]] = float(time_in.get(STATE_NAMES[state], 0.0)) + dt
+	if state in BODY_STATES and me.get(&"_goal") != Vector3.INF:
+		me.halt()                                  # (the body's states own the pad: no walk order left from before writes it)
 	if not airborne(me) and not off_deck(me):
 		_own_jumps_used = 0
 		_own_dodged = false
 		_own_rised = false
 		_grabs = 0
+	shield_tick(dt)
 	match state:
 		S.REELING:
+			hop = {}
 			_reel(dt)
 			return true
 		S.RECOVER:
 			_recover(dt)
+			if not hop.is_empty() and bool(hop.get("begun", false)):
+				air_tick(dt)                       # (its hop's Slam over the lip runs on while it comes back)
 			return true
 		S.LEDGE:
 			_hang(dt)
@@ -348,6 +388,7 @@ func tick(dt: float) -> bool:
 	if p.di != Vector3.ZERO and not stunned():
 		p.di = Vector3.ZERO
 	_lying_up()
+	air_tick(dt)
 	return false
 
 
@@ -517,8 +558,8 @@ func pct_rate(o: Dictionary) -> float:
 
 
 ## Whether option `o` may be begun now under the % ring's rules: in the air no key 3 (3 is the air dodge), no keys 4 or 5
-## (they wait for the deck) and no key-2 first move (the Slam: AIR's caster form, not wired for bots yet); Patch only by
-## heal_ok; no wall near a lip while the foe is off the deck.
+## (they wait for the deck) and no key-2 first move (the Slam: only its hop's, air_tick, round 4); Patch only by heal_ok;
+## no wall near a lip while the foe is off the deck.
 func allowed(o: Dictionary, t: Node3D) -> bool:
 	var key := String(o.key)
 	var k := Bending.key_of(bend.element, String(o.id))
@@ -546,6 +587,10 @@ func weight(o: Dictionary, t: Node3D, d: float) -> float:
 	if is_finisher(o):
 		if ko_read(o, t):
 			w *= float(pr.get("ko_bonus", 1.0))
+			var rr := rules()
+			if rr != null:
+				# (round 4: a finisher it has just used is less wanted to finish again: more ways to end a life)
+				w /= 1.0 + pnum("ko_fresh_k", 0.0) * rr.stale_count(me, key)
 			if d > pnum("far_finisher_m", 15.0):
 				w *= pnum("far_finisher_mult", 0.6)
 				_finisher_far = true
@@ -555,6 +600,9 @@ func weight(o: Dictionary, t: Node3D, d: float) -> float:
 				w *= pnum("fresh_mult", 0.5)
 	if tp < pnum("build_pct", 60.0) and _build_top(o):
 		w *= pnum("build_mult", 1.3)
+	if now() < punish_until and String((o.hint as Dictionary).get("role", "")) == "offence" \
+			and bend.lock_of(o, t) <= anum("punish_lock_max_s", 0.6):
+		w *= float(ap().get("punish_mult", 1.0))      # (round 4: the shield dropped, a quick attack at once)
 	return w
 
 
@@ -572,8 +620,12 @@ func _build_top(o: Dictionary) -> bool:
 
 
 ## The range band it keeps in NEUTRAL: closer than far_finisher_m while a finisher would kill from farther (it walks in), and
-## centre_pull above high_pct of its own (handled in centre_goal).
+## centre_pull above high_pct of its own (handled in centre_goal). Round 4: the % ring's own band for its element first
+## (pct.keep_m: nearer than round 2's elements.keep_m, which the duel and the open world keep: strings and air play are close).
 func keep_band(band: Vector2) -> Vector2:
+	var km: Variant = (pct_data().get("keep_m", {}) as Dictionary).get(bend.element)
+	if km is Array and (km as Array).size() >= 2:
+		band = Vector2(float(km[0]), float(km[1]))
 	if _finisher_far:
 		var far := pnum("far_finisher_m", 15.0) - 2.0
 		band = Vector2(minf(band.x, far * 0.5), minf(band.y, far))
@@ -645,11 +697,21 @@ func on_released(o: Dictionary, t: Node3D) -> void:
 	_finisher_far = false
 	if String(o.get("id", "")) == "patch":
 		stats.patches += 1
+	match String(o.get("mode", "")):
+		"air_hit":
+			stats.air_hits += 1
+		"slam":
+			stats.slams += 1
+	if now() < punish_until and String((o.get("hint", {}) as Dictionary).get("role", "")) == "offence":
+		stats.punishes += 1
+		punish_until = -INF
+	if not hop.is_empty() and bool(hop.get("begun", false)):
+		_end_hop()
 
 
 ## The jab's lock under the step (spec §6.4): the next jab ready jab_step_s after the last left the hand, once it hit.
 func jab_lock(base: float) -> float:
-	var step := float(SwayMoves.data().get("jab_step_s", pnum("jab_step_s", 0.15)))
+	var step := BendR3.num("jab_step_s", pnum("jab_step_s", 0.15))          # (AIR's moves.json air_rules.jab_step_s)
 	if _last_jab_hit and now() - _last_jab_release < 1.5:
 		return maxf(step - (now() - _last_jab_release), 1.0 / 60.0)
 	return base
@@ -657,10 +719,16 @@ func jab_lock(base: float) -> float:
 
 # ---------------------------------------------------------------- strings (PRESSURE)
 ## Its hit landed on the foe (RingRules.launched by it): the string counted, its follow-up begun when it is true.
-func _on_landed(tag: String, _hitstun_s: float) -> void:
+func _on_landed(tag: String, hitstun_s: float) -> void:
 	_hit_lands_t = now()
 	var lead := _lead_of(tag)
 	_last_jab_hit = lead in ["jab", "pop"]
+	if not _follow_out.is_empty() and now() - float(_follow_out.at) < 1.5:
+		# (round 4, counted: its follow-up met him, and whether inside the hitstun it was begun in)
+		stats.follow_hits = int(stats.get("follow_hits", 0)) + 1
+		if now() - float(_follow_out.at) <= float(_follow_out.hl) + 1.0 / 60.0:
+			stats.follow_in_time = int(stats.get("follow_in_time", 0)) + 1
+		_follow_out = {}
 	if string.is_empty() or now() - float(string.get("last_at", -INF)) > 2.5:
 		string = {"hits": 0, "keys": [], "began_at": now(), "read_done": false, "rolled": false, "go": false, "last_at": now()}
 	string.hits = int(string.hits) + 1
@@ -674,9 +742,18 @@ func _on_landed(tag: String, _hitstun_s: float) -> void:
 			stats.strings += 1
 	if state != S.PRESSURE and not practice_dummy:
 		_enter(S.PRESSURE)
-	var nx := string_next()
+	# (round 4: the rules tell "launched" before the hitstun is on him, so his hitstun_left is still the last one: the
+	# launch's own hitstun is read instead, the 0.6 s escape counted as hitstun_left counts it)
+	var nx := string_next(act_of(hitstun_s))
 	if not nx.is_empty():
 		_begin_follow(nx)
+
+
+## The time a launch's hitstun `s` leaves him unable to act (RingRules.hitstun_left's rule: a stun past escape_s ends for
+## him at escape_s).
+static func act_of(s: float) -> float:
+	var esc := RingRules.stock_num("escape_s", 0.6)
+	return minf(s, esc) if s > esc + 1e-4 else s
 
 
 func _end_string() -> void:
@@ -688,6 +765,10 @@ func _lead_of(tag: String) -> String:
 	var base := tag.get_slice(".", 0)
 	if base == "jab/pop" or base.ends_with("/pop"):
 		return "pop"
+	if base.ends_with("/air_hit"):
+		return "air_hit"                          # (round 4: the air close hit and the Slam as leads)
+	if base.ends_with("/slam"):
+		return "slam"
 	var jb := NpcBending.jab_of(bend.element)
 	if jb.size() >= 2 and base == "%s/%s" % [jb[0], jb[1]]:
 		return "jab"
@@ -696,7 +777,8 @@ func _lead_of(tag: String) -> String:
 
 ## The follow-up now ({option, key, lock, flight, read} or {}): the string table's for the lead, in its % band, castable,
 ## not the last move again (jabs aside), true (hitstun_left >= lock + flight - 1/60), or the one read that ends a string.
-func string_next() -> Dictionary:
+## `hl_now`: his time unable to act as the hit lands (the launch's own, act_of; -1: hitstun_left now).
+func string_next(hl_now := -1.0) -> Dictionary:
 	var t := target()
 	if t == null or string.is_empty() or not bool(string.go) or practice_dummy:
 		return {}
@@ -715,11 +797,12 @@ func string_next() -> Dictionary:
 	if lead == "jab" and jab_hits < 3:
 		cands.append({"next": "jab", "pct": [0, 999]})
 	for e: Dictionary in (pct_data().get("strings", {}) as Dictionary).get(bend.element, []):
-		if String(e.get("lead", "")) == lead:
+		if String(e.get("lead", "")) == lead or (String(e.get("lead", "")) == "*" and lead != "jab"):
 			cands.append(e)
-	var hl := hitstun_left(t)
+	var hl := hl_now if hl_now >= 0.0 else hitstun_left(t)
 	var d := flat_d(me.global_position, t.global_position)
 	var reads: Array = []
+	var trues: Array = []
 	for e: Dictionary in cands:
 		var band: Array = e.get("pct", [0, 999])
 		if tp < float(band[0]) or tp > float(band[1]):
@@ -727,8 +810,10 @@ func string_next() -> Dictionary:
 		if bool(e.get("holding", false)) and bend._held_stone() == null:
 			continue
 		var o := _option_of(String(e.next))
-		if o.is_empty() or not bend.castable(o) or not allowed(o, t):
+		if o.is_empty() or not follow_castable(o) or not allowed(o, t):
 			continue
+		if String(e.next) == "air_hit" and (d > anum("air_follow_m", 3.5) or float(ap().get("air_follow", 0.0)) <= 0.0):
+			continue                              # (round 4: a jump at him only from near, by the preset)
 		var key := String(o.key)
 		if key == _last_key_of(keys) and not bool(o.get("jab", false)):
 			continue
@@ -738,7 +823,22 @@ func string_next() -> Dictionary:
 			reads.append({"option": o, "key": key, "lock": lock, "flight": fl, "read": true})
 			continue
 		if hl >= lock + fl - 1.0 / 60.0:
-			return {"option": o, "key": key, "lock": lock, "flight": fl, "read": false, "margin": hl - lock - fl}
+			var nx := {"option": o, "key": key, "lock": lock, "flight": fl, "read": false, "margin": hl - lock - fl,
+					"w": float(e.get("w", 1.0)) * (float(ap().get("air_follow", 1.0)) if String(e.next) == "air_hit" else 1.0)}
+			if bool(e.get("holding", false)):
+				return nx                         # (a stone in hand thrown first: earth's catch-and-throw is the core)
+			trues.append(nx)
+	if not trues.is_empty():
+		# (round 4: one of the true follow-ups by its weight, not always the table's first: more ways into a string)
+		var tot := 0.0
+		for nx: Dictionary in trues:
+			tot += float(nx.w)
+		var roll := me.rng.randf() * tot
+		for nx: Dictionary in trues:
+			roll -= float(nx.w)
+			if roll <= 0.0:
+				return nx
+		return trues[trues.size() - 1]
 	if hits >= 2 and not reads.is_empty() and not bool(string.read_done) \
 			and me.rng.randf() < float(pp().get("read_end", 0.0)):
 		string.read_done = true
@@ -746,16 +846,30 @@ func string_next() -> Dictionary:
 	return {}
 
 
+## Whether option `o` may follow in a string now: castable, its own cool (the chooser's pacing) waived (round 4: lock time
+## is the only limiter of a cast, the owner's rule; a jab's 1.5 s cool had kept every jab string from its second jab).
+func follow_castable(o: Dictionary) -> bool:
+	if bend.castable(o):
+		return true
+	return not bool(o.get("old", false)) or NpcBending.bend_cast() != null or String(o.key) in NpcBending.FALLBACK
+
+
 func _last_key_of(keys: Array) -> String:
 	var last := String(keys[keys.size() - 1]) if not keys.is_empty() else ""
 	if last in ["jab", "pop"]:
 		var jb := NpcBending.jab_of(bend.element)
 		return "%s/%s" % [jb[0], jb[1]] if jb.size() >= 2 else last
+	if last == "air_hit":
+		return String(air_hit_option().get("key", last))
+	if last == "slam":
+		return String(slam_option().get("key", last))
 	return last
 
 
-## Option for a string table's `next` ("jab", "guard" or "id/mode").
+## Option for a string table's `next` ("jab", "guard", "air_hit" (a jump at him, then the air close hit) or "id/mode").
 func _option_of(next: String) -> Dictionary:
+	if next == "air_hit":
+		return air_hit_option()
 	if next == "jab":
 		for o: Dictionary in bend.options:
 			if bool(o.get("jab", false)):
@@ -788,10 +902,17 @@ func _begin_follow(nx: Dictionary) -> void:
 		stats.reads += 1
 	else:
 		stats.follow_ups += 1
+		_follow_out = {"at": now(), "hl": float(nx.get("margin", 0.0)) + float(nx.get("lock", 0.0)) + float(nx.get("flight", 0.0))}
 		var m := float(nx.get("margin", 0.0))
 		string_margins.append(m)
 		if m < -1.0 / 60.0:
 			stats.string_false += 1
+	if String(o.get("mode", "")) == "air_hit" and not airborne(me):
+		# (round 4: the air close hit as a follow-up: a jump at him first, the lock filling as it rises)
+		var t := target()
+		stats.air_follows += 1
+		_start_hop("air_hit", o, flat_dir(me.global_position, t.global_position) if t != null else Vector3.ZERO, 1.0, false)
+		hop.begun = true
 	bend.begin(String(o.id), String(o.mode))
 	bend._rest_until = 0.0
 
@@ -1051,10 +1172,50 @@ func simulate(st: Dictionary, pl: Dictionary) -> Dictionary:
 	var hz := pnum("recover_horizon_s", 2.5)
 	if simulate_override.is_valid():
 		return simulate_override.call(st, pl, dt, hz)
-	var r := RingMoves.simulate(st, pl, dt, hz)
-	if r.has("ok"):
-		return r
+	var rm := RingMoves.of(me)
+	if rm != null and rm.get_script() == RING_MOVES:
+		return move_sim(st, pl, dt, hz)            # (MOVE's own mover on its body: its own look-ahead)
 	return standin_sim(st, pl, dt, hz, geo_of(arena()))
+
+
+## The look-ahead on MOVE's own mover (RingMoves.simulate: the player's physics, the edge and the Rises exactly): this mind's
+## state and plan ({move, events: [{t, key: jump | dodge | rise, dir, at}]}, world) handed over as MOVE's (kv the carry,
+## grabs used; a Callable plan: the move held, each event pressed once at its time, the Rise aimed at its point from where
+## the body is then), its answer as this mind's {ok (the deck or the edge reached), how ("grab", "deck", "water", ""), t,
+## pos}.
+static func move_sim(st: Dictionary, pl: Dictionary, dt: float, hz: float) -> Dictionary:
+	var ms := {"pos": st.get("pos", Vector3.ZERO), "vel": st.get("vel", Vector3.ZERO), "kv": st.get("carry", Vector3.ZERO),
+			"element": String(st.get("element", "water")), "jumps_left": int(st.get("jumps_left", 0)),
+			"dodge_ready": bool(st.get("dodge_ready", false)), "rise_ready": bool(st.get("rise_ready", false)),
+			"helpless": bool(st.get("helpless", false)),
+			"grabs": maxi(int(RingMoves.num("edge", "grab_limit", 3.0)) - int(st.get("grabs_left", 3)), 0)}
+	if st.has("stun_s"):
+		ms["stun_s"] = float(st.stun_s)
+	var mv: Vector3 = pl.get("move", Vector3.ZERO)
+	var evs: Array = pl.get("events", [])
+	var fired := {}
+	var cb := func(s: Dictionary) -> Dictionary:
+		var it := {"move": mv}
+		for i in evs.size():
+			var ev: Dictionary = evs[i]
+			if fired.has(i) or float(ev.get("t", 0.0)) > float(s.t) + 1e-4:
+				continue
+			fired[i] = true
+			match String(ev.get("key", "")):
+				"jump":
+					it["jump"] = true
+				"dodge":
+					it["dodge"] = true
+					it["dodge_dir"] = Vector3(ev.get("dir", Vector3.ZERO))
+				"rise":
+					it["jump"] = true
+					var at: Vector3 = ev.get("at", Vector3(s.pos))
+					it["aim"] = (at - (Vector3(s.pos) + Vector3.UP * 1.2)).normalized()
+		return it
+	var r := RingMoves.simulate(ms, cb, dt, hz)
+	var res := String(r.get("result", ""))
+	return {"ok": res in ["deck", "edge"], "how": "grab" if res == "edge" else ("" if res == "air" else res),
+			"t": float(r.get("t", 0.0)), "pos": r.get("pos", Vector3.ZERO)}
 
 
 ## Its preset's order of plans: the first that comes back ({n, plan} or {}); 45: 4 or 5 by high_share; 6 only by its
@@ -1221,7 +1382,7 @@ func _hang(_dt: float) -> void:
 		"roll":
 			p.press("guard")
 		"attack":
-			p.press("ledge")
+			p.ledge_option("attack")              # (MOVE's pad: the edge option by name; a bare "ledge" press is the climb)
 		"drop":
 			p.press("fast_fall")
 
@@ -1292,6 +1453,8 @@ func _keep_off() -> void:
 	var a := arena()
 	if t == null or a == null:
 		return
+	if _slam_edge(t, a.nearest_lip(t.global_position)):
+		return                                    # (round 4: the Slam over the lip, or the step to the lip for it)
 	if not _keeping():
 		me.go(bend._clamp(a.global_position), NpcFighter.RUN_SPEED * 0.6, 1.5, true)
 		return
@@ -1326,6 +1489,8 @@ func _keep_off() -> void:
 		if band.y > 0.0 and (d < band.x or d > band.y):
 			continue
 		var w := maxf(float(o.knock), 1.0) * me.rng.randf_range(0.8, 1.2)
+		# (round 4: the chooser's repeat rule here too, so keeping him off is not one move again and again)
+		w /= 1.0 + float(NpcBending.ai().get("repeat_k", 0.3)) * int(bend.casts_by.get(String(o.key), 0)) * pnum("keep_off_repeat", 0.0)
 		if is_finisher(o) and ko_read(o, t):
 			w *= float(pp().get("ko_bonus", 1.0))
 		if w > best_w:
@@ -1429,7 +1594,380 @@ func allow_release(o: Dictionary, dt: float) -> int:
 	return 0
 
 
-# ---------------------------------------------------------------- the stand-in mover (until MOVE's RingMoves lands)
+# ---------------------------------------------------------------- round 4: the air play, the Slam, the shield (BOTS2)
+## The preset's air numbers (bend_ai.json presets.<p>.air: hop, air_hit, slam, hop_cast, double, air_follow, slam_edge,
+## shield, punish_s, punish_mult; easy rarely, hard well).
+func ap() -> Dictionary:
+	return pp().get("air", {})
+
+
+## The shared air numbers (bend_ai.json pct.air).
+static func air_data() -> Dictionary:
+	return pct_data().get("air", {})
+
+
+static func anum(key: String, def: float) -> float:
+	return float(air_data().get(key, def))
+
+
+static func anum_arr(key: String, def: Array) -> Array:
+	var v: Variant = air_data().get(key, def)
+	return v if v is Array and (v as Array).size() >= 2 else def
+
+
+## The jab's air form as an option (the element's air close hit, LMB in the air: Stone Knee, Spin Splash, Flare Kick,
+## Whirl): the jab's option with mode "air_hit", key "<jab>/air_hit" ({} none).
+func air_hit_option() -> Dictionary:
+	var jb := NpcBending.jab_of(bend.element)
+	if jb.size() < 2 or NpcBending.spec_of(String(jb[0]), "air_hit").is_empty():
+		return {}
+	var base := bend._option("%s/%s" % [jb[0], jb[1]])
+	if base.is_empty():
+		return {}
+	var o := base.duplicate()
+	o["mode"] = "air_hit"
+	o["key"] = "%s/air_hit" % jb[0]
+	o["spec"] = NpcBending.spec_of(String(jb[0]), "air_hit")
+	o["jab"] = false                               # (not the jab: no jab step, never twice in a row)
+	o["air_form"] = true
+	return o
+
+
+## Key 2's first move's air form as an option (the Slam: Hammer, Downpour, Axe Kick, Down Gust): "<move>/slam" ({} none).
+func slam_option() -> Dictionary:
+	var ks := Bending.keys(bend.element)
+	if ks.size() < 2:
+		return {}
+	var f := Bending.first_of(ks[1])
+	var id := String(f.get("id", ""))
+	if id == "" or String(NpcBending.spec_of(id, String(f.get("mode", ""))).get("air", "")) != "slam" \
+			or NpcBending.spec_of(id, "slam").is_empty():
+		return {}
+	var base := bend._option("%s/%s" % [id, f.get("mode", "")])
+	if base.is_empty():
+		return {}
+	var o := base.duplicate()
+	o["mode"] = "slam"
+	o["key"] = "%s/slam" % id
+	o["spec"] = NpcBending.spec_of(id, "slam")
+	o["grow"] = false
+	o["air_form"] = true
+	return o
+
+
+## An air form's option by its key (NpcBending._option's fallback: the air close hit, the Slam; {} none).
+func form_option(key: String) -> Dictionary:
+	if key.ends_with("/air_hit"):
+		var a := air_hit_option()
+		return a if String(a.get("key", "")) == key else {}
+	if key.ends_with("/slam"):
+		var s := slam_option()
+		return s if String(s.get("key", "")) == key else {}
+	return {}
+
+
+## The mode a lock of (id, md) begun in the air takes (the player's own rule, SwayCaster._r3_form): the jab its air close
+## hit, key 2's first move the Slam; else `md`.
+func air_form(id: String, md: String) -> String:
+	var jb := NpcBending.jab_of(bend.element)
+	if jb.size() >= 2 and id == String(jb[0]) and md == String(jb[1]) and not air_hit_option().is_empty():
+		return "air_hit"
+	var ks := Bending.keys(bend.element)
+	if ks.size() >= 2:
+		var f := Bending.first_of(ks[1])
+		if id == String(f.get("id", "")) and md == String(f.get("mode", "")) and not slam_option().is_empty():
+			return "slam"
+	return md
+
+
+## The air close hit's reach from its chest (m): its ball's way along the aim plus most of its radius.
+func air_reach() -> float:
+	var s := NpcBending.spec_of(String(NpcBending.jab_of(bend.element)[0]), "air_hit")
+	return float(s.get("reach_m", 1.5)) + float(s.get("radius_m", 1.0)) * anum("reach_radius_share", 0.8)
+
+
+## NEUTRAL and PRESSURE, ready to attack (NpcBending.think, before its chooser): a hop at him by the preset's chances and
+## the range (see the header). True: it hopped (this think is done).
+func hop_think(t: Node3D, d: float) -> bool:
+	if t == null or practice_dummy or not chooser_on() or not hop.is_empty() or not me.is_on_floor() or airborne(me) \
+			or off_deck(me) or stunned() or bend.in_grace() or not shield.is_empty():
+		return false
+	var a := ap()
+	var dir := flat_dir(me.global_position, t.global_position)
+	if dir == Vector3.ZERO or bend._room(dir) < anum("hop_room_m", 5.0):
+		return false                              # (never a hop that would carry it over an end)
+	var foe_air := airborne(t)
+	var b_hit := anum_arr("air_hit_hop_m", [1.2, 3.6])
+	var b_slam := anum_arr("slam_hop_m", [0.6, 2.6])
+	var kind := ""
+	var o := {}
+	var share := 1.0
+	if not foe_air and d >= float(b_slam[0]) and d <= float(b_slam[1]) and not safe(t, 0.5) \
+			and me.rng.randf() < float(a.get("slam", 0.0)):
+		o = slam_option()
+		kind = "slam"
+	elif d >= float(b_hit[0]) and d <= float(b_hit[1]) and me.rng.randf() < float(a.get("air_hit", 0.0)):
+		o = air_hit_option()
+		kind = "air_hit"
+	elif me.rng.randf() < float(a.get("hop_cast", 0.0)):
+		o = _hop_cast_option(t, d)
+		kind = "cast"
+		share = anum("hop_cast_share", 0.4)
+	if o.is_empty() or not bend.castable(o):
+		return false
+	var dbl := foe_air and me.rng.randf() < float(a.get("double", 0.0))
+	_start_hop(kind, o, dir, share, dbl)
+	return true
+
+
+## A key-1 move to let go in the air from a hop: an offence move of key 1 (or the jab) with a lock short enough to go
+## before it lands (hop_lock_max_s), castable, allowed, in its range band ({} none; one of them by chance).
+func _hop_cast_option(t: Node3D, d: float) -> Dictionary:
+	var cands: Array = []
+	for o: Dictionary in bend.options:
+		var h: Dictionary = o.hint
+		if String(h.get("role", "")) != "offence" or bool(o.get("guard", false)) or bool(o.get("old", false)):
+			continue
+		if Bending.key_of(bend.element, String(o.id)) != 0 and not bool(o.get("jab", false)):
+			continue
+		if not bend.castable(o) or not allowed(o, t) or bend.lock_of(o, t) > anum("hop_lock_max_s", 0.45):
+			continue
+		var band := bend._band(h, o.spec)
+		if band.y > 0.0 and (d < band.x or d > band.y):
+			continue
+		cands.append(o)
+	return cands[me.rng.randi_range(0, cands.size() - 1)] if not cands.is_empty() else {}
+
+
+## A hop begun: Space on its pad, the drift at him (share of the run), a double jump first when `dbl`.
+func _start_hop(kind: String, o: Dictionary, dir: Vector3, share: float, dbl: bool) -> void:
+	hop = {"kind": kind, "option": o, "t0": now(), "dir": dir, "share": share, "double": dbl, "doubled": false, "begun": false,
+			"edge": false}
+	var p := pad()
+	me.halt()
+	p.move = dir * share
+	if me.is_on_floor():
+		p.press("jump")
+	stats.hops += 1
+	var t := target()
+	if t != null:
+		me.face_point(t.global_position)
+
+
+## Each frame with a hop under way: the drift held at him, the double jump at the top when asked, and the lock begun in
+## the air once the strike would reach him (the air close hit), or at once (the Slam: its column follows it down; a key-1
+## move). Over at the release (on_released), a landing, hop_s, or a hit taken.
+func air_tick(_dt: float) -> void:
+	if hop.is_empty():
+		return
+	var t := target()
+	var el := now() - float(hop.t0)
+	if t == null or stunned() or el > anum("hop_s", 1.3):
+		_end_hop()
+		return
+	var air := airborne(me)
+	if not air:
+		if el > anum("hop_takeoff_s", 0.2) and bend.casting == "":
+			_end_hop()                            # (back on the deck, or it never left it)
+		return
+	var p := pad()
+	var o: Dictionary = hop.option
+	if state != S.RECOVER:
+		var dir := flat_dir(me.global_position, t.global_position)
+		if dir != Vector3.ZERO and not bool(hop.edge):
+			hop.dir = dir
+		p.move = Vector3(hop.dir) * float(hop.share)
+		if not bool(hop.edge) and bend._room(Vector3(hop.dir)) < anum("hop_room_min_m", 2.5):
+			# (its drift after him would carry it over a lip: back toward the middle instead, the rest of the hop)
+			p.move = _toward_deck() * float(hop.share)
+			hop.dir = _toward_deck()
+		me.face_point(t.global_position)
+	if bool(hop.begun):
+		return
+	if bool(hop.double) and not bool(hop.doubled):
+		if me.velocity.y <= anum("double_vy", 1.5):
+			hop.doubled = true
+			stats.double_jumps += 1
+			p.press("jump")                       # (out of a double jump: the second jump at the top, at him)
+		return
+	if bend.casting != "":
+		return
+	if String(hop.kind) == "air_hit":
+		var dd := NpcSenses.chest_of(me).distance_to(NpcSenses.chest_of(t))
+		var closing := anum("close_mps", 4.0) * bend.lock_of(o, t)
+		if dd - closing > air_reach() and el < anum("hop_s", 1.3) - 0.35:
+			return                                # (not near enough yet: it lets go as he comes into the strike's reach)
+	hop.begun = true
+	if String(hop.kind) == "slam":
+		stats.slam_hops += 1 if bool(hop.edge) else 0
+	bend.begin(String(o.id), String(o.mode))
+	if state != S.RECOVER:
+		p.move = Vector3(hop.dir) * float(hop.share)   # (begin halts its walk: the drift is the pad's, held on)
+
+
+## Whether its lock runs on in a body state (RECOVER): its hop's air form or move begun in the air (the Slam over the lip).
+func lock_runs() -> bool:
+	return state == S.RECOVER and not hop.is_empty() and bool(hop.get("begun", false)) and bend.casting != ""
+
+
+func _end_hop() -> void:
+	if hop.is_empty():
+		return
+	var was_edge := bool(hop.get("edge", false))
+	hop = {}
+	if state != S.RECOVER or was_edge:
+		pad().move = Vector3.ZERO
+
+
+## EDGEGUARD (before keeping him off): a man recovering under the lip, within slam_out_m out of it and slam_depth_m under
+## it, no safety on him: once a time he is off (slam_edge, the preset's) it steps to the lip over him and hops there; the
+## Slam is begun in the air (air_tick) and runs on in RECOVER. Only when its own way back from slam_back_m past the lip
+## with a jump spent comes back. True: this think is the Slam's.
+func _slam_edge(t: Node3D, lip: Dictionary) -> bool:
+	if not hop.is_empty():
+		return bool(hop.get("edge", false))
+	if lip.is_empty() or practice_dummy or not me.is_on_floor() or stunned() or on_ledge(t):
+		return false
+	if not _edge_roll.has("slam"):
+		_edge_roll.slam = me.rng.randf() < float(ap().get("slam_edge", 0.0))
+	if not bool(_edge_roll.slam):
+		return false
+	var a := arena()
+	var out := float(lip.out_m)
+	var under := a.lip_y() - t.global_position.y
+	if out < -0.2 or out > anum("slam_out_m", 2.0) or under < anum("slam_under_m", 0.3) or under > anum("slam_depth_m", 3.2) \
+			or safe(t, anum("slam_safe_s", 0.45)):
+		return false
+	var o := slam_option()
+	if o.is_empty() or not bend.castable(o):
+		return false
+	if bend.casting != "":
+		if bend.fill >= NpcBending.SWITCH_FILL or bend.casting == String(o.id):
+			return false
+		bend._cancel()                            # (a lock barely begun let go for the Slam: he is under the lip now)
+	var n: Vector3 = lip.normal
+	var spot := Vector3(lip.point) - n * anum("slam_spot_in_m", 0.45)
+	spot.y = me.global_position.y
+	if flat_d(me.global_position, spot) > anum("slam_spot_tol_m", 0.6):
+		me.go(bend._clamp(spot), NpcFighter.RUN_SPEED * 1.2, 0.2, true)
+		me.face_point(t.global_position)
+		return true
+	if not _slam_back_ok(lip):
+		_edge_roll.slam = false
+		return false
+	_start_hop("slam", o, n, anum("slam_out_share", 0.35), false)
+	hop.edge = true
+	return true
+
+
+## Whether its way back comes back from slam_back_m past the lip, slam_back_up_m over it, its double jump left (the
+## hop spent the jump): the planner's look-ahead, plans 2, 4, 3.
+func _slam_back_ok(lip: Dictionary) -> bool:
+	var st := body_state()
+	st.pos = Vector3(lip.point) + Vector3(lip.normal) * anum("slam_back_m", 1.2) + Vector3.UP * anum("slam_back_up_m", 0.6)
+	st.vel = Vector3.ZERO
+	st.carry = Vector3.ZERO
+	st.jumps_left = maxi(int(st.get("jumps_left", 1)) - (0 if airborne(me) else 1), 0)
+	for k: int in [2, 4, 3]:
+		var pl := plan_n(k, st, lip)
+		if not pl.is_empty() and bool(simulate(st, pl).get("ok", false)):
+			return true
+	return false
+
+
+## Whether threat `th` ({kind, knock, tti, id}) is one it holds its shield against: a held Lightning (any element), or a
+## big shot (knock shield_knock_mps and up); never earth against a stone or a held stone (the catch), never a wave along
+## the deck (jumped) or what rises under it (stepped off).
+func shield_wanted(th: Dictionary) -> bool:
+	var kind := String(th.get("kind", ""))
+	if bool(th.get("floor", false)) or kind in ["under", "floor", "vortex"]:
+		return false
+	if bend.element == "earth" and kind in ["stone", "held"]:
+		return false
+	return kind == "lightning" or float(th.get("knock", 0.0)) >= anum("shield_knock_mps", 9.0)
+
+
+## Its roll to shield threat `id`, once a threat (the preset's shield chance).
+func shield_roll(id: int) -> bool:
+	if not _shield_rolls.has(id):
+		if _shield_rolls.size() > 64:
+			_shield_rolls.clear()
+		_shield_rolls[id] = me.rng.randf() < float(ap().get("shield", 0.0))
+	return bool(_shield_rolls[id])
+
+
+## How long before the strike its shield stands (s).
+func shield_lead() -> float:
+	return anum("shield_lead_s", 0.45)
+
+
+## Its guard begun as a shield against threat `th` (NpcBending._reaction): held until `tti` + shield_linger_s at least.
+func raise_shield(th: Dictionary) -> void:
+	shield = {"id": int(th.get("id", 0)), "kind": String(th.get("kind", "")), "raised_at": now(),
+			"until": now() + float(th.get("tti", 0.0)) + anum("shield_linger_s", 0.25), "zone": null, "held": false}
+	stats.shield_raises += 1
+
+
+## Its guard's zone stood (NpcBending._after_cast): the shield is up.
+func shield_stood(z: BendZone) -> void:
+	if shield.is_empty() or shield.get("zone") != null or now() - float(shield.raised_at) > 1.0:
+		return
+	shield.zone = z
+	stats.shield_holds += 1
+
+
+## Each frame: the shield kept up (its zone's life pushed on, as E held keeps the player's: guard.hold_max_s at most) while
+## the threat still comes or until its strike has passed, no walking meanwhile; then dropped (in guard.drop_s) and the punish
+## window opened.
+func shield_tick(_dt: float) -> void:
+	if shield.is_empty():
+		return
+	var z: Variant = shield.get("zone")
+	if z == null:
+		if bend.casting == "" and now() - float(shield.raised_at) > 0.6:
+			shield = {}                           # (its guard never stood: called off)
+		return
+	if not is_instance_valid(z) or (z as BendZone).is_queued_for_deletion():
+		_shield_dropped()
+		return
+	var bz := z as BendZone
+	var hold_max := float(BendR3.block("guard").get("hold_max_s", 2.5))
+	var coming := false
+	for th: Dictionary in bend._threats():
+		if int(th.get("id", 0)) == int(shield.id):
+			coming = true
+			break
+	if (coming or now() < float(shield.until)) and bz.t < hold_max:
+		bz.life_s = maxf(bz.life_s, minf(bz.t + 0.1, hold_max))
+		if bz.t > bz.window_s and not bool(shield.held):
+			shield.held = true
+			stats.shield_held_long += 1
+		if me.get(&"_goal") != Vector3.INF:
+			me.halt()                             # (no walking while it is up)
+		return
+	drop_shield()
+
+
+## The shield let go (E let go: its zone gone within guard.drop_s); also when any other lock begins.
+func drop_shield() -> void:
+	if shield.is_empty():
+		return
+	var z: Variant = shield.get("zone")
+	if z != null and is_instance_valid(z):
+		var bz := z as BendZone
+		bz.life_s = minf(bz.life_s, bz.t + float(BendR3.block("guard").get("drop_s", 0.1)))
+	_shield_dropped()
+
+
+func _shield_dropped() -> void:
+	shield = {}
+	stats.shield_drops += 1
+	punish_until = now() + float(ap().get("punish_s", 0.0))
+	bend._rest_until = minf(bend._rest_until, now())
+	bend._beat_wait_until = -1.0
+
+
+# ---------------------------------------------------------------- the stand-in mover (the tests' FakeMoves; MOVE's is move_sim)
 ## The deck's geometry for the stand-in (arena-local, y from the lip): {xf (the arena's), hl, hw, water_y, curtain_m}.
 static func geo_of(a: RingArena) -> Dictionary:
 	var n := standin_nums()
