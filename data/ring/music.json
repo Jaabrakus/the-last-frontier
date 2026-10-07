@@ -1,0 +1,35 @@
+{
+	"_about": "Tidebreak's own score (round 4 SHOW; MusicDirector's ring mode, RingMusic). The stems and the go are rendered by tools/music/cues/ring_fight.py, the stingers by ring_stings.py (VSCO 2 CE, our own themes, A = 432, horns at D4 or under).",
+	"stems": ["ring_fight_base", "ring_fight_drive", "ring_fight_peak"],
+	"go": "ring_fight",
+	"go_db": -3.0,
+	"never": ["giant_battle"],
+	"down_every_bars": 8,
+	"layer_in_s": 0.06,
+	"layer_out_beats": 1.0,
+	"duck_db": -9.0,
+	"duck_in_s": 0.05,
+	"duck_back_beats": 1.0,
+	"sting_gap_s": 1.5,
+	"practice_level": 0,
+	"practice_base_db": -6.0,
+	"practice_stings": false,
+	"scan_s": 0.25,
+	"levels": {
+		"_about": "RingMusic's levels (0 the base, 1 + drive, 2 + peak). stock: 1 at any competitor's pct1 %, the clock at clock1_s or less, or falls1 falls this game; 2 on a last life at last_pct %, in sudden death, or the clock at clock2_s or less. classic: 1 with a side confined to zone1 or deeper or left1_s left; 2 with a side in its last zone or left2_s left.",
+		"stock": {"pct1": 60.0, "clock1_s": 120.0, "falls1": 2, "last_pct": 80.0, "clock2_s": 30.0},
+		"classic": {"zone1": 2, "left1_s": 60.0, "left2_s": 30.0}
+	},
+	"stings": {
+		"_about": "id -> the stinger's cue, its rank (a collision within sting_gap_s: the bigger wins), the s the loop stays ducked (its music's length), its gain (dB).",
+		"countdown": {"cue": "ring_sting_countdown", "rank": 0, "hold_s": 2.5, "db": -2.0},
+		"last_life": {"cue": "ring_sting_last_life", "rank": 1, "hold_s": 1.5, "db": 0.0},
+		"ko_dealt": {"cue": "ring_sting_ko_dealt", "rank": 2, "hold_s": 2.0, "db": 0.0},
+		"ko_taken": {"cue": "ring_sting_ko_taken", "rank": 2, "hold_s": 2.0, "db": 0.0},
+		"sudden_death": {"cue": "ring_sting_sudden_death", "rank": 3, "hold_s": 3.0, "db": 0.0},
+		"game_won": {"cue": "ring_sting_game_won", "rank": 4, "hold_s": 4.0, "db": 0.0},
+		"game_lost": {"cue": "ring_sting_game_lost", "rank": 4, "hold_s": 4.0, "db": 0.0},
+		"match_won": {"cue": "ring_sting_match_won", "rank": 5, "hold_s": 6.0, "db": 0.0},
+		"match_lost": {"cue": "ring_sting_match_lost", "rank": 5, "hold_s": 5.0, "db": 0.0}
+	}
+}

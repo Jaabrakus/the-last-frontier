@@ -38,3 +38,11 @@ tambourine and maracas (all in VSCO 2 CE's repository, CC0), and a synthesized s
 The peoples' themes (`cues/peoples.py`, user 2026-10-03: music for each people in the character creator) suggest each
 people's music with the orchestra's instruments; the Eastern Woodlands nations' themes are landscapes, not their songs,
 and like the Native dress they want those nations' word before they are final.
+
+Tidebreak's ring (round 4, the owner's FEEL list: "Tidebreak's own music"): `cues/ring_fight.py` is the ring's own score,
+a festival sport on the water in D major at 132 BPM with its own Tide motif (A D E F# A), split into three stems of one
+length and loop (base, drive, peak) that MusicDirector's ring mode lays over each other as a match rises, and the go (its
+first downbeat); `cues/ring_stings.py` the stingers (a fall dealt or taken, a last life, sudden death, a game and a match
+won or lost, the countdown's bed), each quoting the motif. Rendered like every cue from VSCO 2 CE and the synthesized
+choir, A = 432, horns at D4 or under (asserted in the cue code: `ring_fight.check_horns`). The stems' targets are measured
+so the three keep the full mix's balance (`python3 tools/music/cues/ring_fight.py --targets`). 37.5 MiB in all.

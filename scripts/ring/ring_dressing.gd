@@ -6,7 +6,8 @@ extends Node3D
 ##   stands     stone piers rising from the stands' back to a lacquered beam, striped awnings over the top tiers on
 ##              timber poles with a scalloped valance, red paper lanterns hung under each bay, a painted parapet along
 ##              the front in the two sides' colours (each side's colour on its own half), banners on the piers
-##   crowd      RingCrowd: about 900 low-poly fans on the tiers, swaying (the shader), three draws
+##   crowd      RingCrowd: about 860 built fans on the tiers in six poses, lit like the world, swaying and reacting in the
+##              shader, six draws in any view (round 4 SHOW)
 ##   gates      a gatehouse on each end wall: two towers with tile roofs and flags, a voussoired arch over a dark
 ##              tunnel with its portcullis raised, the side's plaque over it, braziers either side, four tall banners
 ##              in the side's colours along the wall and a painted frieze at its head
@@ -24,12 +25,20 @@ extends Node3D
 ##   RingDressing.build(level, preset := "noon") -> RingDressing    level: a RingLevel (or the RingArena itself)
 ##   set_mood(name)            "noon", "golden", "night" (RingLook.apply calls it)
 ##   set_sides(e0, e1)         the two sides' elements ("earth", "water", "fire", "air"): banners, flags, plaques,
-##                             friezes and parapet panels follow (the fans keep the colours they were built in)
+##                             friezes and parapet panels follow (the fans keep the clothes they were built in; their
+##                             flags wave their half's colour)
 ##   set_score(a, b)           the scoreboard's numbers
 ##   set_cheer(v)              the stands' mood 0..1 (a roar on a ring-out)
+##   react(kind, side, s)      a moment of the match for the stands, seen and heard (round 4 SHOW; RingLevel._follow
+##                             sends them): "launch" an ooh, "fall" the stands rising from that end (side: 0 the -X end,
+##                             1 the +X end) with a roar from its near stands and a groan from the far, "last_life" half
+##                             of them up with a cheer, "sudden" half up clapping on the score's beat and the murmur up,
+##                             "calm" all sat down again
 ## The crowd's sound (improvement round 1; BendSounds, tools/sfx/bend/): a murmur looping at each half of each stand, its
 ## level the stands' mood; the mood rising is heard: to a ring-out's (0.95 and over) one stand roars and the other groans,
 ## to a knock-back's a stand cheers or gasps (a little of it from the other stand too).
+## The stock ring's lanterns stand at the deck's four corners only (round 3's owner question, decided by default for round
+## 4: the mid-side and mid-end ones go).
 ## Cost (tools/ring/look_c_shots.gd, LOOK_C_COST; 1600x900 high, TAA, 2026-10-05, the deck view): +35 draws (64 -> 99),
 ## shadow draws 136 -> 212 (326 at night: two shadowed deck lamps), ~130k more triangles (the crowd most of it), frame
 ## 9.8 ms bare -> 10.9 noon / 11.1 golden / 12.5 night; 26 lights at night (2 shadowed), none by day; 8 GPU emitters.
@@ -113,6 +122,7 @@ var _halos: Array = []             ## [Vector3, Color, size]
 var _lamps: Array = []             ## [Vector3, Color, energy, range]
 var _murmur: Array[AudioStreamPlayer3D] = []
 var _crowd_v := 0.25               ## the stands' mood as last set (their sound reacts to it rising)
+var _held_up := false              ## sudden death: the murmur held up till "calm"
 ## Round 3, the stock overlay (RingArena.stock(); smash_r3 spec v2 §5.1): how far the walk, the stands and what stands on
 ## them moved out with the wider tank (tank_margin over the classic 6 m: 4 m), and the lanterns on the lip's piers.
 var out_m := 0.0
@@ -174,6 +184,7 @@ func set_mood(name: String) -> void:
 	_caustic_mat.set_shader_parameter(&"tint", m.caustic_tint)
 	if crowd != null:
 		crowd.set_cheer(float(m.cheer), true)
+		crowd.set_light(mood)
 	_crowd_v = float(m.cheer)
 	_crowd_level(_crowd_v, true)
 
@@ -195,6 +206,8 @@ func set_sides(e0: String, e1: String) -> void:
 		fr.set_shader_parameter(&"trim", GOLD)
 		fr.set_shader_parameter(&"mark", e.mark)
 		(mats[StringName("team_%d" % s)] as StandardMaterial3D).albedo_color = e.team
+	if crowd != null:
+		crowd.set_sides([(ELEMENTS[side_elements[0]] as Dictionary).team, (ELEMENTS[side_elements[1]] as Dictionary).team])
 
 
 func set_score(a: int, b: int) -> void:
@@ -252,6 +265,51 @@ func _crowd_react(v: float) -> void:
 	else:
 		BendSounds.event("cheer" if BendSounds.rng.randf() < 0.65 else "ooh", _stand_point(s))
 		BendSounds.event("cheer", _stand_point(-s), -7.0)
+
+
+## A moment of the match for the stands (see the header): the fans' motion (RingCrowd.react) and their sound. `side`: the
+## end a fall happened at (0 the -X end, 1 the +X end; -1 none) — the only thing about where it was they are told.
+func react(kind: String, side := -1, strength := 1.0) -> void:
+	if crowd != null:
+		crowd.react(kind, side, strength)
+	if mats.is_empty():
+		return
+	var mood_v := float((MOODS.get(mood, {}) as Dictionary).get("cheer", 0.25))
+	match kind:
+		"launch":
+			var s := 1.0 if BendSounds.rng.randf() < 0.5 else -1.0
+			BendSounds.event("ooh", _stand_point(s), -2.0 + 2.0 * clampf(strength, 0.0, 1.0))
+			BendSounds.event("ooh", _stand_point(-s), -8.0)
+		"fall":
+			var end := -1.0 if side == 0 else (1.0 if side == 1 else 0.0)
+			for sz: float in [-1.0, 1.0]:
+				BendSounds.event("roar", _end_point(sz, end))
+			BendSounds.event("groan", _end_point(1.0 if BendSounds.rng.randf() < 0.5 else -1.0, -end), -5.0)
+			_crowd_level(1.0, false)
+			if crowd != null:
+				crowd.set_cheer(1.0)
+			get_tree().create_timer(float(RingCrowd.react_num("sit_s", 3.0)), false).timeout.connect(func() -> void:
+				if is_instance_valid(self) and not _held_up:
+					_crowd_level(_crowd_v, false)
+					if crowd != null:
+						crowd.set_cheer(mood_v))
+		"last_life":
+			BendSounds.event("cheer", _stand_point(1.0))
+			BendSounds.event("cheer", _stand_point(-1.0), -4.0)
+		"sudden":
+			_held_up = true
+			BendSounds.event("roar", _stand_point(1.0))
+			BendSounds.event("roar", _stand_point(-1.0), -3.0)
+			_crowd_level(maxf(0.8, mood_v), false)
+		"calm":
+			_held_up = false
+			_crowd_level(_crowd_v, false)
+
+
+## A place on stand `sz` (-1 the far, 1 the near) toward end `end` (-1 the -X end, 1 the +X end, 0 anywhere along it).
+func _end_point(sz: float, end: float) -> Vector3:
+	var x := (end * 0.6 + BendSounds.rng.randf_range(-0.25, 0.25)) * ox if end != 0.0 else BendSounds.rng.randf_range(-0.6, 0.6) * ox
+	return to_global(Vector3(x, y0 + th * float(tiers) * 0.5, sz * (oz + back) * 0.5))
 
 
 ## A place in the middle of stand `sz` (-1 the far, 1 the near), along it at random.
@@ -1031,9 +1089,9 @@ func _posts(kit: StructureMeshKit) -> void:
 			_lamps.append([lp + Vector3(0, -0.1, 0), Color(1.0, 0.68, 0.36), 1.1, 7.0])
 
 
-## The stock overlay's lanterns (spec v2 §5.1): a post on each lip pier's head (RingArena.lantern_spots: the deck's corners
-## and the middle of each side, just outside the lip), a square lantern on it (our own), warm at night (its light in _lamps,
-## on only by night like every lamp here).
+## The stock overlay's lanterns (spec v2 §5.1): a post on each corner pier's head (RingArena.lantern_spots' corners, just
+## outside the lip; round 4: the mid-side and mid-end spots stand empty, the owner's round-3 question decided by default), a
+## square lantern on it (our own), warm at night (its light in _lamps, on only by night like every lamp here).
 func _lanterns(kit: StructureMeshKit) -> void:
 	var ld := RingArena.block("lanterns")
 	var h := float(ld.get("post_h", 1.7))
@@ -1041,6 +1099,10 @@ func _lanterns(kit: StructureMeshKit) -> void:
 	var timber := Color(0.32, 0.1, 0.06)
 	var iron := Color(0.16, 0.14, 0.12)
 	for wp in ring.lantern_spots():
+		# (round 4: the deck's corners only; the mid-side and mid-end ones go)
+		var rl := ring.to_local(wp)
+		if absf(rl.x) < ring.half_l() or absf(rl.z) < ring.half_w():
+			continue
 		var p := to_local(wp)
 		p.y = y0 - 0.06
 		prism(kit, &"paint", p, 0.075, 0.06, h, 8, timber)

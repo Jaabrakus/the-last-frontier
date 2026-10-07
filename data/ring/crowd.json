@@ -1,0 +1,44 @@
+{
+	"_about": "The Tidebreak crowd (RingCrowd, shaders/ring/ring_crowd.gdshader; round 4 SHOW: fuller, lit, reacting fans instead of flat cut-outs). Built in code, seeded (the same crowd on every load), one MultiMesh per pose and a lighter mesh of each pose for a far view (visibility ranges: never both drawn).",
+	"seed": 1776,
+	"base_tris": 111500,
+	"_base_tris": "round 3's crowd (3 poses, 862 fans; tools/ring/crowd_shots.gd at 0c19496): the budget is 2.5x it",
+	"pitch_m": 0.62,
+	"fill": 0.86,
+	"build_var": 0.08,
+	"poses": ["idle", "lean", "arms_up", "clap", "flag", "parasol"],
+	"pose_share": {"idle": 0.28, "lean": 0.16, "arms_up": 0.1, "clap": 0.18, "flag": 0.08, "parasol": 0.2},
+	"hat_share": 0.5,
+	"side_share": 0.34,
+	"other_side_share": 0.06,
+	"lod_m": 27.0,
+	"lod_margin_m": 1.5,
+	"shadows": true,
+	"palette": [[0.82, 0.78, 0.68], [0.62, 0.14, 0.1], [0.16, 0.36, 0.22], [0.72, 0.52, 0.16], [0.2, 0.22, 0.32],
+		[0.5, 0.3, 0.5], [0.88, 0.86, 0.8], [0.42, 0.26, 0.16], [0.1, 0.42, 0.5]],
+	"light": {
+		"_about": "Lit like the world, not cel: lambert with wrap, a sky and deck ambient by the mood, an occlusion term (laps, under the arms, the seat), the awnings' shadows and the lanterns at night through the engine's own lights; no outline.",
+		"wrap": 0.35,
+		"ao": 0.75,
+		"moods": {
+			"noon": {"sky": [0.2, 0.24, 0.3], "deck": [0.16, 0.13, 0.09]},
+			"golden": {"sky": [0.17, 0.15, 0.15], "deck": [0.16, 0.1, 0.06]},
+			"night": {"sky": [0.04, 0.05, 0.08], "deck": [0.08, 0.05, 0.03]}
+		}
+	},
+	"react": {
+		"_about": "set_cheer and react(kind, side, strength) (RingDressing.react: the stands' sound follows the same moments). launch: an ooh (heads up, a lean forward) at launch_mps or more, ooh_s long; fall: the stands rise in a ripple outward from the fall's end (ripple_mps), rising rise_s, standing hold_s, sitting back over sit_s, the far end reach_m off rising least; last_life and sudden: stand_share of the fans stand (stand_s to rise); in sudden death they clap on the score's beat.",
+		"launch_mps": 12.0,
+		"ooh_s": 1.6,
+		"ooh_lean": 0.32,
+		"ripple_mps": 14.0,
+		"rise_s": 0.35,
+		"hold_s": 1.2,
+		"sit_s": 3.0,
+		"reach_m": 60.0,
+		"stand_share": 0.5,
+		"stand_s": 0.8,
+		"last_life_s": 6.0,
+		"bpm": 132.0
+	}
+}
