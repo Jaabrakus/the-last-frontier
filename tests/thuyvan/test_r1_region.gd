@@ -28,6 +28,10 @@ var fails: Array[String] = []
 
 
 func _initialize() -> void:
+	# a script error stops the test where it is: never hold the shared lock past this
+	create_timer(600.0).timeout.connect(func() -> void:
+		print("R1 REGION TEST FAILED (watchdog: stopped after 600 s)")
+		quit(3))
 	Region.set_region("r1")
 	_region()
 	_ground()

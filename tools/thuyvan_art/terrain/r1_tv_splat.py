@@ -61,6 +61,9 @@ TRAIL_W = 2.0
 FALLS = [(812, -1150), (808, -1330), (-600, -440), (-200, -415)]
 MOSS_R = 25.0
 SLICES = 12
+# Open ground where the cameras and the bridge heads stand (x, z, radius): the dressing keeps trees off them, so the
+# bake's forest floor there turns to meadow and grass (a lip in the sun, not dark litter with no trees over it).
+OPEN_GROUND = [(930, -1245, 95), (900, -1210, 50), (745, -1215, 50), (-540, -400, 150), (857, -1180, 40)]
 
 
 def trail_distance(X, Z):
@@ -130,6 +133,11 @@ def square_splat(reg, cid):
     w[..., 0] = grass * (0.75 + 0.25 * n1)
     w[..., 11] = dry + grass * 0.35 * (1.0 - n1)
     w[..., 2] = forest
+    for ox, oz, r in OPEN_GROUND:
+        f = smoothstep(r, r * 0.55, np.hypot(X - ox, Z - oz) + 8.0 * (n1 - 0.5))
+        w[..., 11] += forest * f * (0.45 + 0.4 * n2)
+        w[..., 0] += forest * f * (0.75 - 0.4 * n2)
+        w[..., 2] *= 1.0 - f
     w[..., 6] = rock
     # terraces: rice on the steps, laterite on the risers
     terr = np.clip(a["terrace"], 0.0, 1.0)

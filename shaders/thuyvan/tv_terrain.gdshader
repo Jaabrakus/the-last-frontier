@@ -41,6 +41,10 @@ uniform float roughness_ground : hint_range(0.0, 1.0) = 0.95;
 uniform float specular_ground : hint_range(0.0, 1.0) = 0.1;
 /// linear multiplier on every slice (look tuning without repainting)
 uniform vec3 tint : source_color = vec3(1.0);
+/// linear multiplier on the cliff face alone (R1 warms its gorge walls toward the sheets' warm grey limestone)
+uniform vec3 cliff_tint = vec3(1.0);
+/// the cliff face's tile stretched this much along the wall (1: square): wide plates read as level strata
+uniform float cliff_stretch = 1.0;
 
 uniform bool use_height_map = false;
 uniform sampler2D height_map : filter_nearest, repeat_disable;
@@ -120,9 +124,10 @@ vec4 cliff_at(vec3 p, vec3 n) {
 	w /= max(w.x + w.y + w.z, 1e-5);
 	float s = float(cliff_slice);
 	vec4 c = vec4(0.0);
-	if (w.x > 0.01) c += w.x * texture(albedo_array, vec3(vec2(p.z * sign(n.x), -p.y) / cliff_tile_m, s));
+	vec2 st = vec2(cliff_tile_m * cliff_stretch, cliff_tile_m);
+	if (w.x > 0.01) c += w.x * texture(albedo_array, vec3(vec2(p.z * sign(n.x), -p.y) / st, s));
 	if (w.y > 0.01) c += w.y * texture(albedo_array, vec3(p.xz / cliff_tile_m, s));
-	if (w.z > 0.01) c += w.z * texture(albedo_array, vec3(vec2(-p.x * sign(n.z), -p.y) / cliff_tile_m, s));
+	if (w.z > 0.01) c += w.z * texture(albedo_array, vec3(vec2(-p.x * sign(n.z), -p.y) / st, s));
 	return c / max(w.x * step(0.01, w.x) + w.y * step(0.01, w.y) + w.z * step(0.01, w.z), 1e-4);
 }
 
@@ -170,6 +175,7 @@ void fragment() {
 	vec4 cr = vec4(0.0);
 	if (rock > TH) {
 		cr = cliff_at(wp, N);
+		cr.rgb *= cliff_tint;
 		hmax = max(hmax, rock + cr.a * 0.35);
 	}
 	// pass 2: height blend

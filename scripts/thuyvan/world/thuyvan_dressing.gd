@@ -40,6 +40,8 @@ const HERB_VARIANTS := "res://assets/thuyvan/paint/foliage/tv_herb_variants.json
 const REGION := Rect2(-1248.0, -1664.0, 2496.0, 3328.0)
 const BACKDROP_M := 7000.0
 const BACKDROP_STEP := 125.0
+## The skirt's height inside the region (under its lowest ground, 85 m).
+const SKIRT_UNDER := 20.0
 ## Where the far ranks are measured from (the vista's middle: between the gorge and the Two Heights).
 const RANK_FROM := Vector2(300.0, -900.0)
 
@@ -56,6 +58,13 @@ const KARST := [
 	# the rim's own towers west and north of the village (dressing, on the rim band outside the walkable ground)
 	["R1", -1190.0, -1050.0, 170.0, "hero"], ["R2", -1170.0, -150.0, 140.0, "hero"], ["R3", 1180.0, -1500.0, 150.0, "hero"],
 	["R4", -1000.0, -1640.0, 190.0, "hero"],
+	# the ring of towers round the village's hill (the sheet's hero: the village on its terraces among karst in mist), on
+	# the high pass, B1's north rim and the A2 plateau: off the trails and the terraces
+	["H1", -380.0, -1480.0, 230.0, "hero"], ["H2", -640.0, -1180.0, 260.0, "hero"], ["H3", -470.0, -870.0, 190.0, "hero"],
+	["H4", -900.0, -1250.0, 210.0, "hero"], ["H5", -1050.0, -700.0, 240.0, "hero"],
+	["H7", -700.0, -760.0, 170.0, "hero"],
+	# the gorge's north end (V3 looks up it): two towers past the region's edge
+	["N1", 900.0, -1760.0, 220.0, "hero"], ["N2", 700.0, -1730.0, 170.0, "hero"], ["N3", 1060.0, -1700.0, 160.0, "hero"],
 ]
 ## The far ranks' procedural towers: how many per rank, in the arc (degrees, 0 north, 90 west) round RANK_FROM.
 const RANK_COUNT := [10, 14, 18, 22]
@@ -84,6 +93,8 @@ const CAIRNS_AT := Vector2(700.0, -1580.0)
 ## Wall falls' lips (ThuyVanWater.WALL_FALLS): the notch module goes there.
 const FALL_LIPS := [Vector2(752.0, -1150.0), Vector2(750.0, -1330.0)]
 
+## The painted rock stretched along the walls (tv_rock's strata_stretch) on the gorge modules; the towers a little less.
+const STRATA_STRETCH := 2.2
 ## Gorge walls: [channel id, along-axis ("z" or "x"), from, to] stretches where modules stand.
 const WALLS := [["main", "z", -1660.0, -960.0], ["torrent", "x", -1150.0, -620.0]]
 const WALL_STEP := 36.0
@@ -92,13 +103,15 @@ const KEEP_CLEAR := [[757.0, -1215.0, 26.0], [893.0, -1215.0, 26.0], [820.0, -12
 
 ## Plants: the grid step (m) of the scatter, its tiles (m), the near LOD's reach and the far LOD's.
 const PLANT_STEP := 11.0
-const TILE := 160.0
+const TILE := 256.0
 const LOD0_END := 280.0
+## Ferns and shrubs: their own small tiles (seen to 90 m).
+const SMALL_TILE := 48.0
 const LOD1_END := 2200.0
-## Places people stand (grass cards round them): [x, z, radius].
-const GRASS_SPOTS := [[930.0, -1245.0, 110.0], [740.0, -1215.0, 90.0], [0.0, -1248.0, 170.0], [880.0, -1560.0, 90.0],
-		[-560.0, -560.0, 90.0], [-832.0, -560.0, 70.0]]
-const GRASS_STEP := 1.9
+## Places people stand (grass cards round them): [x, z, radius, grid step m, ferns and shrubs]. The V1 lip is the
+## owner's foreground: thickest there.
+const GRASS_SPOTS := [[930.0, -1245.0, 110.0, 1.1, 160], [740.0, -1215.0, 90.0, 1.6, 50], [0.0, -1248.0, 170.0, 1.9, 60],
+		[880.0, -1560.0, 90.0, 1.9, 40], [-560.0, -560.0, 90.0, 1.9, 40], [-600.0, -420.0, 110.0, 1.5, 120], [-832.0, -560.0, 70.0, 1.9, 30], [860.0, -1300.0, 60.0, 1.6, 30]]
 
 var settings: WorldSettings
 var rng := RandomNumberGenerator.new()
@@ -133,6 +146,7 @@ func build(world_settings: WorldSettings = null) -> void:
 	_village()
 	_waystone()
 	_camp_and_cairns()
+	_boulders()
 	_scatter_plants()
 	_flush_plants()
 	_grass()
@@ -204,7 +218,7 @@ func _backdrop() -> void:
 			var z := -BACKDROP_M + j * BACKDROP_STEP
 			# inside the region the skirt sinks well under the ground (the region's own mesh is there)
 			if inner.has_point(Vector2(x, z)):
-				hs[j * n + i] = ground(x, z) - 40.0
+				hs[j * n + i] = SKIRT_UNDER      # (far under every gorge: a 125 m triangle spans one)
 			elif REGION.has_point(Vector2(x, z)):
 				hs[j * n + i] = ground(x, z) - 3.0
 			else:
@@ -305,8 +319,9 @@ func _karst() -> void:
 			var p := RANK_FROM + Vector2(-sin(ang), -cos(ang)) * dist
 			if REGION.grow(300.0).has_point(p):
 				continue
-			var h := rng.randf_range(160.0, 300.0) * (1.0 + 0.18 * ri)
-			var piece := ["karst_far_a", "karst_far_b", "karst_far_c", "karst_far_d", "karst_far_e", "karst_far_f"][rng.randi() % 6]
+			# (WoW's exaggeration: the far ranks tower, so they still read as ranks through the fog)
+			var h := rng.randf_range(220.0, 380.0) * (1.0 + 0.35 * ri)
+			var piece: String = ["karst_far_a", "karst_far_b", "karst_far_c", "karst_far_d", "karst_far_e", "karst_far_f"][rng.randi() % 6]
 			_tower(piece, Vector3(p.x, _far_height(p.x, p.y) - 4.0, p.y), rng.randf() * 360.0, h, false)
 	# skyline cards past the last rank (painted silhouettes, already fogged)
 	for i in 9:
@@ -332,6 +347,7 @@ func _tower(piece: String, at: Vector3, yaw: float, h: float, hero: bool) -> Nod
 	var top := float(meta.get("size", {}).get("y", [0.0, 200.0])[1])
 	var sc := h / maxf(top, 1.0)
 	_place(n, at, yaw, sc)
+	_stretch(n, STRATA_STRETCH * 0.75)
 	if not hero:
 		var fog := rank_fog(Vector2(at.x, at.z).distance_to(RANK_FROM))
 		for mi in Kit._meshes(n):
@@ -465,10 +481,16 @@ func _module(w: Dictionary) -> void:
 	n.rotation.y = atan2(nrm.x, nrm.z) + deg_to_rad(rng.randf_range(-7.0, 7.0))
 	n.scale = Vector3(rng.randf_range(0.95, 1.1), rng.randf_range(0.95, 1.08), zscale)
 	add_child(n, true)
+	_stretch(n, STRATA_STRETCH)
 	for s: Dictionary in meta.get("seats", []):
 		if String(s.kind) == "pine" and rng.randf() < 0.7:
 			var wp := n.transform * Vector3(s.pos[0], s.pos[1], s.pos[2])
 			_add_plant("tv_karst_pine" if rng.randf() < 0.6 else "tv_shrub", rng.randi_range(0, 2), wp, rng.randf_range(0.9, 1.4))
+
+
+func _stretch(n: Node3D, k: float) -> void:
+	for mi in Kit._meshes(n):
+		mi.set_instance_shader_parameter("strata_stretch", k)
 
 
 # --- the reach -----------------------------------------------------------------------------------------------------
@@ -595,7 +617,7 @@ func _village() -> void:
 			var door := house.transform * Vector3(0.95, 3.4 if big else 2.6, 4.7 if big else 3.9)
 			_place(Kit.village("lantern_round"), door, face)
 			var side := house.transform * Vector3(rng.randf_range(5.0, 7.0) * (1 if rng.randf() < 0.5 else -1), 0.0, 1.0)
-			var clutter := ["drying_rack", "water_jars", "firewood_pile", "basket_set"][rng.randi() % 4]
+			var clutter: String = ["drying_rack", "water_jars", "firewood_pile", "basket_set"][rng.randi() % 4]
 			_place(Kit.village(clutter), Vector3(side.x, ground(side.x, side.z), side.z), face + rng.randf_range(-30.0, 30.0))
 			var back := house.transform * Vector3(rng.randf_range(-6.0, 6.0), 0.0, -9.0)
 			_add_plant("tv_bamboo" if rng.randf() < 0.6 else "tv_banana", rng.randi_range(0, 1),
@@ -672,6 +694,22 @@ func _camp_and_cairns() -> void:
 	_clear.append([c.x, c.y, 14.0])
 
 
+## Boulders on the lips the cameras stand on (vista_spec V1's foreground: "shrubs, ferns, boulders on the lip") and by
+## the bridge heads, sunk a fifth into the ground.
+func _boulders() -> void:
+	for spot: Array in [[925.0, -1262.0, 45.0, 9], [900.0, -1190.0, 30.0, 5], [745.0, -1240.0, 30.0, 5], [-560.0, -420.0, 40.0, 6],
+			[820.0, -1560.0, 40.0, 5]]:
+		for k in int(spot[3]):
+			var a := rng.randf() * TAU
+			var r := sqrt(rng.randf()) * float(spot[2])
+			var p := Vector2(float(spot[0]) + cos(a) * r, float(spot[1]) + sin(a) * r)
+			if _cleared(p.x, p.y) or _slope(p.x, p.y) > 0.7 or _near_camera(p.x, p.y, 28.0):
+				continue
+			var sc := rng.randf_range(1.0, 1.8)
+			var piece: String = ["boulder_c", "boulder_d", "boulder_e", "boulder_f"][rng.randi() % 4]
+			_place(Kit.rock(piece, true), Vector3(p.x, ground(p.x, p.y) - 0.3 * sc, p.y), rng.randf() * 360.0, sc)
+
+
 # --- mist ----------------------------------------------------------------------------------------------------------
 
 func _build_mist(bands: Array, col: Color) -> void:
@@ -730,8 +768,11 @@ func _build_mist(bands: Array, col: Color) -> void:
 
 ## A plant into the scatter (`far`: the far LOD only, everywhere: far towers' crowns and the backdrop's forest).
 func _add_plant(species: String, variant: int, at: Vector3, sc: float, far := false) -> void:
-	var tx := floori(at.x / TILE)
-	var tz := floori(at.z / TILE)
+	var tile := TILE * (4.0 if far else 1.0)
+	if species in ["tv_fern", "tv_shrub"]:
+		tile = SMALL_TILE                 # (their reach is short: a tile's middle must be near them)
+	var tx := floori(at.x / tile)
+	var tz := floori(at.z / tile)
 	var key := "%s|%d|%d|%d|%d" % [species, variant, tx, tz, 1 if far else 0]
 	if not _plants.has(key):
 		_plants[key] = []
@@ -771,6 +812,38 @@ func _splat_at(x: float, z: float) -> PackedFloat32Array:
 	return w
 
 
+## No tall plant in the cameras' sight lines (vista_spec 1: V1 over the gorge to the village and the Two Heights, V2 to
+## the bridge): wedges [from x, z, to x, z, half width at the far end]; shrubs and ferns are still allowed.
+const VIEW_WEDGES := [[938.0, -1250.0, 0.0, -1248.0, 140.0], [938.0, -1250.0, 60.0, -1330.0, 90.0],
+		[938.0, -1250.0, 760.0, -1120.0, 60.0],
+		[-540.0, -400.0, -832.0, -462.0, 110.0], [857.0, -1211.0, 830.0, -1640.0, 60.0]]
+## Around the cameras themselves, nothing tall: [x, z, radius].
+const VIEW_CLEAR := [[938.0, -1250.0, 70.0], [-540.0, -400.0, 95.0], [857.0, -1211.0, 30.0]]
+
+
+## Whether (x, z) is within `r` m of a camera (nothing bulky right in front of the lens).
+static func _near_camera(x: float, z: float, r: float) -> bool:
+	for c: Array in VIEW_CLEAR:
+		if Vector2(x - float(c[0]), z - float(c[1])).length() < r:
+			return true
+	return false
+
+
+## Whether (x, z) lies in a camera's sight line (no tall plant there).
+static func in_view(x: float, z: float) -> bool:
+	for c: Array in VIEW_CLEAR:
+		if Vector2(x - float(c[0]), z - float(c[1])).length() < float(c[2]):
+			return true
+	for w: Array in VIEW_WEDGES:
+		var a := Vector2(float(w[0]), float(w[1]))
+		var b := Vector2(float(w[2]), float(w[3]))
+		var ab := b - a
+		var t := clampf((Vector2(x, z) - a).dot(ab) / ab.length_squared(), 0.0, 1.0)
+		if t > 0.0 and t < 1.0 and Vector2(x, z).distance_to(a + ab * t) < float(w[4]) * t:
+			return true
+	return false
+
+
 func _cleared(x: float, z: float) -> bool:
 	for c: Array in _clear:
 		if absf(x - float(c[0])) < float(c[2]) and absf(z - float(c[1])) < float(c[2]) \
@@ -797,14 +870,16 @@ func _scatter_plants() -> void:
 			var fd := FrontierTerrain.forest_density(x, z)
 			var r := rng.randf()
 			if sl > 1.0:
-				if r < 0.06:
+				if r < 0.06 and not in_view(x, z):
 					_add_plant("tv_karst_pine", rng.randi_range(0, 2), Vector3(x, y - 0.3, z), rng.randf_range(0.9, 1.5))
 				continue
 			if w[1] > 0.4:
-				if r < 0.012:
+				if r < 0.012 and not in_view(x, z):
 					_add_plant("tv_broadleaf", rng.randi_range(0, 1), Vector3(x, y - 0.3, z), rng.randf_range(1.0, 1.3))
 				continue
 			var p := lerpf(0.035, 0.62, smoothstep(0.3, 0.75, fd))
+			if in_view(x, z):
+				p = 0.0
 			if r > p:
 				# under-storey in the open: shrubs and ferns now and then
 				if r < p + 0.03:
@@ -825,7 +900,7 @@ func _scatter_plants() -> void:
 			var p := fl + Vector2(rng.randf_range(-25.0, 25.0), rng.randf_range(-25.0, 25.0))
 			_add_plant("tv_fern", rng.randi_range(0, 2), Vector3(p.x, ground(p.x, p.y) - 0.1, p.y), rng.randf_range(1.2, 2.0))
 	for spot: Array in GRASS_SPOTS:
-		for k in 40:
+		for k in int(spot[4]):
 			var a := rng.randf() * TAU
 			var rr := sqrt(rng.randf()) * float(spot[2]) * 0.8
 			var p := Vector2(float(spot[0]) + cos(a) * rr, float(spot[1]) + sin(a) * rr)
@@ -937,20 +1012,23 @@ func _grass() -> void:
 		var k := String(v.kind)
 		if not kinds.has(k):
 			kinds[k] = []
+		if (kinds[k] as Array).size() >= 2:
+			continue          # (two cards of a kind: draw calls)
 		(kinds[k] as Array).append(card_mesh(v.uv_rect, float(v.aspect), 0.75 if k in ["grass", "meadow"] else 0.45))
 	var herbs: Array = []
 	if hv is Array:
 		for v: Dictionary in hv:
-			if String(v.kind) in ["flower", "flower_mix", "fern"] and v.has("uv_rect"):
+			if String(v.kind) in ["flower", "flower_mix"] and v.has("uv_rect") and herbs.size() < 2:
 				herbs.append(card_mesh(v.uv_rect, float(v.aspect), 0.6))
 	var buckets := {}
 	for spot: Array in GRASS_SPOTS:
 		var c := Vector2(float(spot[0]), float(spot[1]))
 		var rad := float(spot[2])
-		var n := int(rad * 2.0 / GRASS_STEP)
+		var step := float(spot[3])
+		var n := int(rad * 2.0 / step)
 		for j in n:
 			for i in n:
-				var p := c + Vector2(-rad + (i + rng.randf()) * GRASS_STEP, -rad + (j + rng.randf()) * GRASS_STEP)
+				var p := c + Vector2(-rad + (i + rng.randf()) * step, -rad + (j + rng.randf()) * step)
 				if p.distance_to(c) > rad or not _in_region(p.x, p.y, 2.0):
 					continue
 				var w := _splat_at(p.x, p.y)
@@ -963,6 +1041,8 @@ func _grass() -> void:
 					kind = "meadow" if w[11] > w[0] else ("grass" if rng.randf() < 0.7 else "grass_short")
 				elif w[8] > 0.4:
 					kind = "moss_tuft"
+				elif w[2] > 0.4 and rng.randf() < 0.55:
+					kind = "grass_short"
 				if kind == "" or not kinds.has(kind) or rng.randf() < 0.25:
 					continue
 				var list: Array = kinds[kind]
@@ -970,7 +1050,7 @@ func _grass() -> void:
 				var herb := not herbs.is_empty() and kind in ["meadow", "grass"] and rng.randf() < 0.08
 				if herb:
 					mesh = herbs[rng.randi() % herbs.size()]
-				var kstr := "%d|%d|%d" % [mesh.get_instance_id(), floori(p.x / 64.0), floori(p.y / 64.0)]
+				var kstr := "%d|%d|%d" % [mesh.get_instance_id(), floori(p.x / 96.0), floori(p.y / 96.0)]
 				if not buckets.has(kstr):
 					buckets[kstr] = [mesh, herb, []]
 				var b := Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * rng.randf_range(0.8, 1.35))

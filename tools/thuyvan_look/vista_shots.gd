@@ -31,6 +31,8 @@ const VIEWS := [
 ]
 ## The stand-in figure on the rope bridge's east span (V3's player).
 const FIGURE_AT := Vector2(857.0, -1215.0)
+## The run never takes longer than this (s).
+const WATCHDOG_S := 900
 
 var _out := ""
 var _dirs: Array = []
@@ -78,6 +80,10 @@ func _initialize() -> void:
 	root.size = Vector2i(_w, _h)
 	root.use_debanding = true
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	# a script error stops _run where it is: never hold the shared lock past this
+	create_timer(WATCHDOG_S).timeout.connect(func() -> void:
+		push_error("vista_shots: watchdog (%d s): quitting" % WATCHDOG_S)
+		quit(2))
 	_run.call_deferred()
 
 

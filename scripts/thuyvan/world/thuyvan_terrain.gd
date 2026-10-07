@@ -17,6 +17,10 @@ const TV_SHADER := "res://shaders/thuyvan/tv_terrain.gdshader"
 const TV_ARRAY := "res://assets/thuyvan/paint/terrain/tv_terrain_albedo_array.webp"
 ## Slices (terrain_slices.json) the shader falls back to past a square's splat (never met inside the region).
 const FALLBACK_SLICE := 0
+## The gorge walls a little warmer than the painted cliff face (under the sky's blue ambient they read cold).
+const CLIFF_TINT := Vector3(1.12, 1.04, 0.88)
+## The cliff face's plates stretched along the wall: they read as the sheets' level strata, not paving.
+const CLIFF_STRETCH := 2.2
 
 
 func build(world_settings: WorldSettings) -> void:
@@ -58,4 +62,6 @@ func make_material(_ws: WorldSettings, sq := Vector2i.ZERO) -> ShaderMaterial:
 	m.set_shader_parameter("skirt_depth", SKIRT_DEPTH)
 	m.set_shader_parameter("splat_rect", Vector4(o.x - GRID_HALF - 0.5, o.z - GRID_HALF - 0.5, GRID_N, GRID_N))
 	m.set_shader_parameter("fallback_slice", FALLBACK_SLICE)
+	m.set_shader_parameter("cliff_tint", CLIFF_TINT)
+	m.set_shader_parameter("cliff_stretch", CLIFF_STRETCH)
 	return m

@@ -29,8 +29,8 @@ const FALL_STEP := 1.5
 const FALL_WIDTH_X := 2.5
 ## Vista D9: wall falls {lip (x, y, z), width (m), the side the wall faces (+1 east)}.
 const WALL_FALLS := [
-	{"id": "F1", "lip": Vector3(752.0, 205.0, -1150.0), "width": 11.0, "face": 1.0},
-	{"id": "F2", "lip": Vector3(750.0, 203.0, -1330.0), "width": 15.0, "face": 1.0},
+	{"id": "F1", "lip": Vector3(752.0, 205.0, -1150.0), "width": 18.0, "face": 1.0},
+	{"id": "F2", "lip": Vector3(750.0, 203.0, -1330.0), "width": 24.0, "face": 1.0},
 ]
 
 var data := {}
