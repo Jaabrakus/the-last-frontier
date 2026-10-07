@@ -302,16 +302,51 @@ func _dress(steps := false) -> void:
 
 
 ## The dressing follows match `m`: each round the ends' elements and the score (side 0 the ring's end 0, the end the
-## player's side holds swapping each round), the crowd roaring on a knock-back and more on a ring-out.
+## player's side holds swapping each round), the crowd roaring on a knock-back and more on a ring-out (the classic rules).
+## Under the stock rules (round 4 SHOW) the stands follow the % match's moments instead (RingDressing.react: seen and
+## heard): a launch of crowd.json launch_mps or more an ooh, every fall the ripple from its end (RingRules' own record of the
+## fall says which end: the only thing about where anyone is the stands are told), a side's last life starting half of
+## them up, sudden death half up clapping on the score's beat, all sat down again at the next countdown.
 func _follow(m: RingMode) -> void:
 	if m == null or dressing == null:
 		return
+	var sudden_seen := [false]
 	m.phase_changed.connect(func(ph: String) -> void:
 		if ph == "COUNTDOWN" or ph == "DONE":
-			_show_match(m))
+			_show_match(m)
+		if ph == "COUNTDOWN" and is_instance_valid(dressing):
+			sudden_seen[0] = false
+			dressing.react("calm"))
 	m.round_over.connect(func(_r: String, _why: String) -> void: _show_match(m))
 	m.knocked_back.connect(func(_w: Node3D, _a: int, _b: int) -> void: cheer(0.75, 1.6))
-	m.rang_out.connect(func(_w: Node3D, _by: Node) -> void: cheer(1.0, 3.5))
+	m.rang_out.connect(func(_w: Node3D, _by: Node) -> void:
+		if not m.stock():
+			cheer(1.0, 3.5))
+	if not m.stock() or m.rules == null:
+		return
+	var rules := m.rules
+	rules.launched.connect(func(_b: Node3D, v: Vector3, _hs: float, _by: Node, _tag: String) -> void:
+		var mps := RingCrowd.react_num("launch_mps", 12.0)
+		if v.length() >= mps and is_instance_valid(dressing):
+			dressing.react("launch", -1, clampf(v.length() / (2.0 * mps), 0.5, 1.0)))
+	rules.ko.connect(func(_b: Node3D, _by: Node, _pct: float, _tag: String, _left: int) -> void:
+		if is_instance_valid(dressing):
+			dressing.react("fall", fall_end(rules), 1.0))
+	rules.respawned.connect(func(b: Node3D) -> void:
+		if rules.lives_on and rules.stocks_of(b) == 1 and not rules.sudden and is_instance_valid(dressing):
+			dressing.react("last_life", -1, 1.0))
+	rules.pct_changed.connect(func(_b: Node3D, _p: float, _d: float) -> void:
+		if rules.sudden and not sudden_seen[0] and is_instance_valid(dressing):
+			sudden_seen[0] = true
+			dressing.react("sudden", -1, 1.0))
+
+
+## The end of the deck the last fall happened at (0 the -X end, 1 the +X end): RingRules' record of it (falls[-1].pos).
+func fall_end(rules: RingRules) -> int:
+	if rules == null or rules.falls.is_empty() or ring == null:
+		return 0
+	var at: Variant = (rules.falls[-1] as Dictionary).get("pos")
+	return 0 if not (at is Vector3) or ring.to_local(at).x < 0.0 else 1
 
 
 func _show_match(m: RingMode) -> void:
