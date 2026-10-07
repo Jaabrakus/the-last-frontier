@@ -283,6 +283,18 @@ air clips start and end on AIR; the owner's answer of 2026-10-05: one air-only c
   the palm change a frame before it at the eyes' height on a round arm, the palms open with the wrists bent back
   (blade_up, blade_low), the feet tucked higher.
 
+The ninth set (2026-10-07, round 4's struck bodies: the contact poses the hit-stop holds; the CLIPS table's SET9 part,
+authored the same way; 6 frames each, the hit at f0, the contact at f3 (hold_s 0.1), the overlap after it, from the stand):
+  hit_impact_front   struck from ahead: the hips shoved back, the trunk arched back over given knees, the head whipped back
+                     a frame after the chest, both arms flung forward and up (a reversed C with the arms out of it)
+  hit_impact_back    struck from behind: the hips driven forward, the trunk pitched and folded forward, the chin thrown up,
+                     both arms flung back behind the hips, up on the balls of the feet (a forward wedge)
+  hit_impact_left    struck on his left: shoved onto the right leg, the spine bent hard away, the head whipped past it, the
+                     left arm flung up high and the right thrown out low (one diagonal); hit_impact_right its twin
+  _struck            a contact clip from its pose at the hold, each part eased from the stand by STRUCK_SPACING (the shove
+                     first, the trunk whipped then recoiling, the arms a beat behind, the knees giving as the weight lands)
+  _arc               a palm's reach from its shoulder carried round the shoulder (hands_from: shoulder), never through it
+
   twin_tail          the twin's keys from that frame on are the original's own, unmirrored (a twin that strikes with the other
                      hand and ends on the original's pose: the Pop's twin with the stone in the right hand)
 Metas (seconds): strike_s the moment the cast lets go / the foot or the fist lands / the hit (SwayPose's `struck`), hold_s
@@ -6198,6 +6210,126 @@ SET8["air_hit_air"]["hand_l"] = _dragged(sorted(SET8["air_hit_air"]["hand_l"] + 
                                                                                  (11, (0.47, 1.02, 0.0))],
                                                 key=lambda kv: kv[0]), late=1)
 CLIPS.update(SET8)
+
+
+## ---------------------------------------------------------------- the ninth set (round 4's struck bodies, 2026-10-07: the
+## contact poses round 4's hit-stop holds a struck body in for 0.04-0.11 s, one a direction the hit comes from; authored the
+## same way, key poses typed here, nothing read). Each is a 6-frame snap from the stand: the hit at f0 (strike_s 0), the
+## contact pose at f3 (hold_s 0.1: the frame the hit-stop holds, a silhouette that reads "that hit landed" at 15 m), then
+## the overlap f4-f6 (the trunk recoiling first, the head settling after it, the arms still flung) that the tumble or the
+## flinch takes over from (both open with the chest back and the arms out). The feet stay planted (a heel lifts about the
+## ball or the toes about the heel, never a slide). The arms are keyed as their reach from the shoulders ("hands_from":
+## "shoulder"), so the trunk's whip carries them and they swing round the shoulder on an arc (_arc) instead of being dragged
+## through it. The left one is the hit on his left side; the right one is its twin, the same keys mirrored.
+## STRUCK_SPACING: each part's share of the contact pose at f0..f6 (typed): the root's shove away from the hit first and
+## fastest, the knees giving as the weight arrives, the trunk whipped to the contact and recoiling a little after it, the arms
+## flung a beat behind the trunk and still out at the end, the fingers splayed by the jolt and loosening.
+STRUCK_LEN = 6
+STRUCK_SPACING = {
+    "shove": (0.6, 0.92, 1.0, 1.0, 0.95, 0.9, 0.88),
+    "give": (0.35, 0.7, 0.92, 1.0, 1.0, 0.97, 0.93),
+    "trunk": (0.45, 0.83, 1.0, 1.0, 0.86, 0.79, 0.76),
+    "arms": (0.18, 0.52, 0.84, 1.0, 1.0, 0.95, 0.9),
+    "hands": (0.3, 0.8, 1.0, 1.0, 0.9, 0.75, 0.6),
+}
+STRUCK_PART = {"hips": "trunk", "chest": "trunk", "side": "trunk", "twist": "trunk", "roll": "trunk", "yaw": "trunk",
+               "clav_r": "arms", "clav_l": "arms", "pole_r": "arms", "pole_l": "arms", "grip_r": "hands", "grip_l": "hands",
+               "heel_r": "give", "heel_l": "give"}
+## The stand's palms as their reach from the shoulders (m: STAND_PALM_R less the stand's right shoulder; the left mirrored).
+STRUCK_REACH_R = (-0.057, -0.47, 0.089)
+FACING.update({
+    "flung_back": ((-0.3, 0.0, -0.95), (0.0, 1.0, 0.0)),     # an arm flung back behind the hip, the fingers trailing, the palm up
+})
+
+
+def _arc(v0, v1, t):
+    """A palm's reach from its shoulder carried from v0 to v1 round the shoulder (its way turned evenly, its length eased),
+    so the hand travels on an arc about the shoulder and never cuts in through the body."""
+    n0 = math.sqrt(sum(x * x for x in v0))
+    n1 = math.sqrt(sum(x * x for x in v1))
+    a = [x / n0 for x in v0]
+    b = [x / n1 for x in v1]
+    om = math.acos(max(-1.0, min(1.0, sum(p * q for p, q in zip(a, b)))))
+    if om < 1e-4:
+        d = a
+    else:
+        s0, s1 = math.sin((1 - t) * om) / math.sin(om), math.sin(t * om) / math.sin(om)
+        d = [p * s0 + q * s1 for p, q in zip(a, b)]
+    n = n0 + (n1 - n0) * t
+    return _r3(tuple(x * n for x in d))
+
+
+def _struck(side, peak, head):
+    """A contact clip from its contact pose (`peak`: each channel's value at f3) and its head's own keys (`head`: pitch, look
+    and tilt, a value a frame f0-f6: the head lags the trunk, then whips past it): every other channel eased from the stand's
+    value to the contact's by its part's spacing (STRUCK_SPACING); the knees' ways and the hands' facings are typed."""
+    clip = {"length": STRUCK_LEN, "hands_from": "shoulder",
+            "meta": {"strike_s": 0.0, "hold_s": 3 / FPS, "back_s": 4 / FPS, "hand": "both", "mask": "full", "root": "place",
+                     "from": side}}
+    frames = range(STRUCK_LEN + 1)
+    for ch, v in peak.items():
+        if ch == "root":
+            r0 = STAND["root"]
+            clip[ch] = [(f, _r3((r0[0] + v[0] * STRUCK_SPACING["shove"][f], r0[1] + v[1] * STRUCK_SPACING["give"][f],
+                                 r0[2] + v[2] * STRUCK_SPACING["shove"][f]))) for f in frames]
+        elif ch in ("hand_r", "hand_l"):
+            v0 = STRUCK_REACH_R if ch == "hand_r" else (-STRUCK_REACH_R[0], STRUCK_REACH_R[1], STRUCK_REACH_R[2])
+            clip[ch] = [(f, _arc(v0, v, STRUCK_SPACING["arms"][f])) for f in frames]
+        elif ch in ("face_r", "face_l"):
+            clip[ch] = [(0, "stand"), (2, v), (STRUCK_LEN, v)]
+        elif ch in ("knee_r", "knee_l", "foot_r", "foot_l", "fyaw_r", "fyaw_l"):
+            clip[ch] = [(0, v), (STRUCK_LEN, v)]
+        else:
+            sp = STRUCK_SPACING[STRUCK_PART[ch]]
+            clip[ch] = [(f, _rv(_lerp(STAND[ch], v, sp[f]))) for f in frames]
+    for ch, vals in head.items():
+        clip[ch] = [(f, float(x)) for f, x in zip(frames, vals)]
+    return clip
+
+
+SET9 = {
+    # struck from the front (a blow to the chest or the face): the hips shoved back and the knees given forward, the trunk
+    # arched back over them and turned off the blow (the right shoulder driven back), the head whipped back a frame after
+    # the chest (it lags forward at the hit, the chin dropping, then snaps past it), both arms flung forward and up off the
+    # shoulders (they lag the trunk's whip), the left higher, the fingers splayed; rocked back onto the heels, the left toes
+    # lifting about its heel: a reversed C from the deck to the head, the arms reaching out of it
+    "hit_impact_front": _struck("front", {
+        "root": (0.0, -0.035, -0.075), "hips": -9.0, "chest": -24.0, "side": 4.0, "twist": -12.0, "roll": -2.0,
+        "clav_r": (-6.0, -16.0), "clav_l": (-8.0, -19.0),
+        "hand_r": (-0.4, 0.05, 0.28), "hand_l": (0.3, 0.27, 0.27), "face_r": "jolt", "face_l": "flung_up",
+        "pole_r": (-0.7, -0.6, -0.2), "pole_l": (0.7, -0.6, -0.2), "grip_r": -0.45, "grip_l": -0.5,
+        "heel_r": 0.0, "heel_l": -9.0, "knee_r": (-0.3, 0.0, 1.0), "knee_l": (0.3, 0.0, 1.0)},
+        {"head": (6, -6, -20, -28, -27, -22, -18), "look": (0, 2, 5, 7, 7, 6, 5), "tilt": (0, 2, 5, 7, 6, 5, 4)}),
+    # struck from behind (a blow between the shoulder blades): the hips driven forward and the knees given, the trunk
+    # pitched forward over them and folded, the head left behind (the chin thrown up, the eyes forward), both arms flung back
+    # behind the hips (they lag the shove), the palms up, the shoulders pulled back; up onto the balls of both feet, the
+    # right heel higher: a forward-pitched wedge from the heels to the head, the arms trailing off its back
+    "hit_impact_back": _struck("back", {
+        "root": (0.0, -0.04, 0.08), "hips": 16.0, "chest": 26.0, "side": -5.0, "twist": 8.0, "roll": 2.0,
+        "clav_r": (-10.0, -10.0), "clav_l": (-11.0, -12.0),
+        "hand_r": (-0.34, -0.02, -0.36), "hand_l": (0.36, 0.06, -0.33), "face_r": "flung_back", "face_l": "flung_back",
+        "pole_r": (-1.0, 0.2, 0.0), "pole_l": (1.0, 0.2, 0.0), "grip_r": -0.4, "grip_l": -0.45,
+        "heel_r": 24.0, "heel_l": 14.0, "knee_r": (-0.25, 0.0, 1.0), "knee_l": (0.25, 0.0, 1.0)},
+        {"head": (-6, -16, -26, -32, -30, -25, -21), "look": (0, -3, -6, -8, -7, -6, -5),
+         "tilt": (0, -2, -5, -6, -5, -4, -3)}),
+    # struck on his left side (a blow to the left shoulder or the head): the hips shoved to his right onto the right leg
+    # (the left hip up, the left heel off the deck about its ball, the right knee given out), the spine bent hard away from
+    # the blow and turned off it (the left shoulder back), the head lagging toward the blow at the hit, then whipped past
+    # the chest to the right, the face turned away; the struck side's arm flung up and out high on the left, the right arm
+    # thrown out low to the right: one diagonal line from the left hand to the right foot
+    "hit_impact_left": _struck("left", {
+        "root": (-0.1, -0.035, -0.015), "hips": -3.0, "chest": -6.0, "side": 23.0, "twist": 9.0, "roll": 8.0, "yaw": -6.0,
+        "clav_r": (2.0, 4.0), "clav_l": (-6.0, -20.0),
+        "hand_r": (-0.44, -0.198, 0.132), "hand_l": (0.38, 0.3, 0.1), "face_r": "balance", "face_l": "flung_up",
+        "pole_r": (-0.4, -0.5, -0.8), "pole_l": (0.6, -0.7, -0.3), "grip_r": -0.4, "grip_l": -0.5,
+        "heel_r": 0.0, "heel_l": 16.0, "knee_r": (-0.45, 0.0, 1.0), "knee_l": (0.15, 0.0, 1.0)},
+        {"head": (0, -3, -6, -8, -7, -6, -5), "look": (3, -8, -18, -24, -24, -20, -17),
+         "tilt": (-4, 6, 16, 22, 22, 18, 15)}),
+}
+## Struck on his right side: the left one's keys mirrored (a side has its twin).
+SET9["hit_impact_right"] = mirror_clip(SET9["hit_impact_left"])
+SET9["hit_impact_right"]["meta"]["from"] = "right"
+CLIPS.update(SET9)
 
 
 ## The slack an arm or a leg keeps short of straight at its keys (m): less is flagged by --fit (a limb locked straight by the IK

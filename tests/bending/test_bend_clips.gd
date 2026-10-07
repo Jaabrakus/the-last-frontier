@@ -170,6 +170,15 @@ extends SceneTree
 ##               air's open slant on the strike frame (the palms 1 m apart), the lead palm at the eyes' height on a round
 ##               arm, the feet tucked high. kept r3 p3: the seventh set's lengths and
 ##               moments as they shipped
+##   ninth set   round 4's struck bodies (2026-10-07, _ninth): the four contact poses the hit-stop holds, one a side the hit
+##               comes from (front, back, left and its mirrored twin right): each 6 frames, full mask, strike_s 0 (the hit at
+##               f0), hold_s 0.1 (the contact the hit-stop holds), back_s after it, its `from` meta, a one-shot, the IK's worst
+##               miss at most 5 mm; the right one the left one mirrored at every frame; the feet planted (each foot's ball
+##               or heel on its stand place, 1 cm); at the hold the head thrown away from the hit (0.12 m and more), both
+##               palms flung off the stand (0.25 m and more), the knees given (the pelvis 2 cm and more down), the head's
+##               throw at least 90% of its most (the held frame is the strongest), the four holds' heads apart (0.2 m); at
+##               the end the head still most of the way out (the tumble or the flinch takes over, never a return to the
+##               stand). kept r4 struck: the eighth set's lengths and moments as they shipped
 ## Ends with "BEND_CLIPS PASSED" or "BEND_CLIPS FAILED" (exit 0 only on a pass; a watchdog quits 2 at LIMIT s).
 
 const LIB := "res://animations_extra/Frontier_Bend.res"
@@ -381,6 +390,28 @@ const BEFORE_R3P3 := {"own-bend-jab-rise": [24, 2, 5, 13, -1], "own-bend-jab-ris
 		"own-bend-air-down-gust": [22, 3, 6, 13, -1], "own-bend-guard-hold-earth": [40, -1, -1, -1, -1],
 		"own-bend-guard-hold-water": [48, -1, -1, -1, -1], "own-bend-guard-hold-fire": [24, -1, -1, -1, -1],
 		"own-bend-guard-hold-air": [40, -1, -1, -1, -1], "own-bend-teeter": [15, 15, 3, -1, -1]}
+## The ninth set (round 4's struck bodies: the hit-stop's contact poses, 2026-10-07): clip -> [the side the hit comes from,
+## the head's throw at the hold in the figure's frame (its unit way: +X his left, +Z ahead)].
+const NINTH_SET := {"own-bend-hit-impact-front": ["front", Vector3(0, 0, -1)], "own-bend-hit-impact-back": ["back", Vector3(0, 0, 1)],
+		"own-bend-hit-impact-left": ["left", Vector3(-1, 0, 0)], "own-bend-hit-impact-right": ["right", Vector3(1, 0, 0)]}
+const STRUCK_FRAMES := 6
+const STRUCK_HOLD_S := 0.1
+## The contact's bars (m): the head thrown this far along its way, the palms flung this far off the stand, the pelvis given
+## this far down, the four holds' heads this far apart; the end keeps this share of the hold's head throw.
+const STRUCK_HEAD := 0.12
+const STRUCK_PALMS := 0.25
+const STRUCK_GIVE := 0.02
+const STRUCK_APART := 0.2
+const STRUCK_END_SHARE := 0.6
+## A planted foot's ball or heel within this of its stand place (m).
+const STRUCK_PLANT := 0.01
+## The eighth set's lengths and moments as they shipped (frames; -1 none): kept by the ninth set's bake.
+const BEFORE_R4STRUCK := {"own-bend-spout-ride": [48, -1, -1, -1, -1], "own-bend-spout-step-off": [16, 3, 6, 9, -1],
+		"own-bend-fire-flip-kick": [24, 3, 6, 14, -1], "own-bend-fire-flip-kick-l": [24, 3, 6, 14, -1],
+		"own-bend-air-hit-earth": [18, 2, 4, 10, -1], "own-bend-air-hit-earth-l": [18, 2, 4, 10, -1],
+		"own-bend-air-hit-water": [18, 2, 4, 9, -1], "own-bend-air-hit-water-l": [18, 2, 4, 9, -1],
+		"own-bend-air-hit-fire": [18, 2, 4, 10, -1], "own-bend-air-hit-fire-l": [18, 2, 4, 10, -1],
+		"own-bend-air-hit-air": [20, 2, 4, 12, -1], "own-bend-air-hit-air-l": [20, 2, 4, 12, -1]}
 const BANNED_METAS := ["native_asset_id", "source_attribution", "original_name"]
 ## Clips whose stance moves for good (the root may end elsewhere).
 const MOVED_STANCE := ["own-bend-earth-stomp"]
@@ -522,6 +553,19 @@ func _run() -> void:
 			got7.append(int(round(float(a7.get_meta(key)) * 30.0)) if a7.has_meta(key) else -1)
 		_check(got7 == BEFORE_R3P3[nm], "kept r3 p3: %s's length and moments %s (were %s)" % [nm, str(got7),
 				str(BEFORE_R3P3[nm])])
+	# ninth set
+	_ninth(lib, names)
+	# kept r4 struck: the eighth set's lengths and moments as they shipped
+	for nm: String in BEFORE_R4STRUCK:
+		_check(nm in names, "kept r4 struck: %s still in the library" % nm)
+		if not nm in names:
+			continue
+		var a8 := lib.get_animation(StringName(nm))
+		var got8 := [int(round(a8.length * 30.0))]
+		for key in ["hold_s", "strike_s", "back_s", "up_s"]:
+			got8.append(int(round(float(a8.get_meta(key)) * 30.0)) if a8.has_meta(key) else -1)
+		_check(got8 == BEFORE_R4STRUCK[nm], "kept r4 struck: %s's length and moments %s (were %s)" % [nm, str(got8),
+				str(BEFORE_R4STRUCK[nm])])
 	# kept
 	for nm: String in BEFORE_R2:
 		_check(nm in names, "kept: %s still in the library" % nm)
@@ -549,8 +593,8 @@ func _run() -> void:
 			if sk.find_bone(String(a.track_get_path(i).get_concatenated_subnames())) < 0:
 				unknown.append(String(a.track_get_path(i)))
 		_check(unknown.is_empty(), "%s: every track a bone of the rig %s" % [nm, str(unknown)])
-		if FOURTH_SET.has(nm) or _fifth_has(nm) or _sixth_has(nm) or _seventh_has(nm) or _eighth_has(nm):
-			continue                                # (its own checks: _fourth, _fifth, _sixth, _seventh, _eighth)
+		if FOURTH_SET.has(nm) or _fifth_has(nm) or _sixth_has(nm) or _seventh_has(nm) or _eighth_has(nm) or NINTH_SET.has(nm):
+			continue                                # (its own checks: _fourth, _fifth, _sixth, _seventh, _eighth, _ninth)
 		if a.has_meta(&"loop"):
 			_stance(nm, a)
 			continue
@@ -558,7 +602,7 @@ func _run() -> void:
 		_place(nm, a)
 	# a common stand at both ends (the casts and the knocks; a stance is its own)
 	var casts := names.filter(func(x: String) -> bool: return not (lib.get_animation(StringName(x)).has_meta(&"loop")
-			or FOURTH_SET.has(x) or _fifth_has(x) or _sixth_has(x) or _seventh_has(x) or _eighth_has(x)))
+			or FOURTH_SET.has(x) or _fifth_has(x) or _sixth_has(x) or _seventh_has(x) or _eighth_has(x) or NINTH_SET.has(x)))
 	if not casts.is_empty():
 		var ref := _joints(lib.get_animation(StringName(casts[0])), 0.0)
 		for nm: String in casts:
@@ -2755,6 +2799,101 @@ func _eighth(lib: AnimationLibrary, names: Array[String]) -> void:
 	_eighth_air_hits(lib, names)
 	_eighth_flip(lib, names)
 
+
+## The ninth set (round 4's struck bodies, 2026-10-07): each contact pose there with its metas (6 frames, full mask, the hit
+## at f0, the hold at 0.1 s, its side), a one-shot, the IK's worst miss at most 5 mm; the right one the left one mirrored at
+## every frame; the feet planted (each foot's ball or heel on the stand's place at every frame); at the hold the head thrown
+## away from the hit, the palms flung, the knees given, the hold the strongest frame; the four holds apart; the end still out
+## (the tumble or the flinch takes over). The numbers are printed as METRIC lines for the review.
+func _ninth(lib: AnimationLibrary, names: Array[String]) -> void:
+	var stand_ref := ""
+	for c: String in ["own-bend-earth-stomp", "own-bend-fire-punch"]:
+		if c in names:
+			stand_ref = c
+			break
+	if stand_ref == "":
+		_check(false, "ninth set: a cast on the stand to measure from")
+		return
+	var feet := ["r_ball", "l_ball", "r_heel", "l_heel"]
+	var parts := ["heada", "r_palm", "l_palm", "pelvis"]
+	var st := _at(lib.get_animation(StringName(stand_ref)), 0.0, feet + parts)
+	var heads := {}
+	for nm: String in NINTH_SET:
+		var want: Array = NINTH_SET[nm]
+		_check(nm in names, "ninth set: %s in the library" % nm)
+		if not nm in names:
+			continue
+		var a := lib.get_animation(StringName(nm))
+		_check(int(round(a.length * 30.0)) == STRUCK_FRAMES, "%s: %d frames (%d)" % [nm, STRUCK_FRAMES, int(round(a.length * 30.0))])
+		_check(a.loop_mode == Animation.LOOP_NONE and not a.has_meta(&"loop"), "%s: a one-shot" % nm)
+		_check(String(a.get_meta(&"mask", "")) == "full", "%s: mask full (the whole body struck)" % nm)
+		for key in ["hand", "root", "back_s"]:
+			_check(a.has_meta(StringName(key)), "%s: has %s" % [nm, key])
+		_check(a.has_meta(&"strike_s") and is_zero_approx(float(a.get_meta(&"strike_s"))), "%s: strike_s 0 (the hit at f0)" % nm)
+		_check(is_equal_approx(float(a.get_meta(&"hold_s", -1.0)), STRUCK_HOLD_S), "%s: hold_s %.2f (the contact)" % [nm,
+				STRUCK_HOLD_S])
+		_check(float(a.get_meta(&"back_s", -1.0)) > STRUCK_HOLD_S and float(a.get_meta(&"back_s", 9.0)) < a.length,
+				"%s: back_s after the hold, within the clip (%.3f)" % [nm, float(a.get_meta(&"back_s", -1.0))])
+		_check(String(a.get_meta(&"from", "")) == String(want[0]), "%s: from %s (%s)" % [nm, want[0], a.get_meta(&"from", "")])
+		_check(a.has_meta(&"ik_miss_m") and float(a.get_meta(&"ik_miss_m")) <= IK_MISS + 1e-6,
+				"%s: the IK's worst miss %.4f m <= %.3f" % [nm, float(a.get_meta(&"ik_miss_m", 1.0)), IK_MISS])
+		print("BEND_CLIPS %s ik_miss_m %.4f" % [nm, float(a.get_meta(&"ik_miss_m", 1.0))])
+		# the feet planted: each foot's ball (a heel lifted about it) or heel (the toes lifted about it) on its stand place
+		var slide := 0.0
+		for f in STRUCK_FRAMES + 1:
+			var j := _at(a, f / 30.0, feet)
+			for s: String in ["r_", "l_"]:
+				slide = maxf(slide, minf((j[s + "ball"] as Vector3).distance_to(st[s + "ball"]),
+						(j[s + "heel"] as Vector3).distance_to(st[s + "heel"])))
+		_check(slide <= STRUCK_PLANT, "%s: the feet planted (a ball or a heel on its place, off by %.4f m)" % [nm, slide])
+		# the contact at the hold
+		var way := want[1] as Vector3
+		var h := _at(a, STRUCK_HOLD_S, parts)
+		var throw := ((h.heada as Vector3) - (st.heada as Vector3)).dot(way)
+		var most := 0.0
+		for f in STRUCK_FRAMES + 1:
+			most = maxf(most, ((_at(a, f / 30.0, ["heada"]).heada as Vector3) - (st.heada as Vector3)).dot(way))
+		var palms := minf((h.r_palm as Vector3).distance_to(st.r_palm), (h.l_palm as Vector3).distance_to(st.l_palm))
+		var give := (st.pelvis as Vector3).y - (h.pelvis as Vector3).y
+		var end := ((_at(a, a.length, ["heada"]).heada as Vector3) - (st.heada as Vector3)).dot(way)
+		print("METRIC %s head_throw_m %.3f most_m %.3f palms_m %.3f give_m %.3f end_share %.2f slide_m %.4f" % [nm, throw,
+				most, palms, give, end / maxf(throw, 1e-4), slide])
+		_check(throw >= STRUCK_HEAD, "%s: the head thrown %.3f m away from the hit at the hold (>= %.2f)" % [nm, throw,
+				STRUCK_HEAD])
+		_check(throw >= 0.9 * most, "%s: the hold the strongest frame (the head's throw %.3f of its most %.3f)" % [nm, throw,
+				most])
+		_check(palms >= STRUCK_PALMS, "%s: both palms flung %.3f m off the stand at the hold (>= %.2f)" % [nm, palms,
+				STRUCK_PALMS])
+		_check(give >= STRUCK_GIVE, "%s: the knees given (the pelvis %.3f m down at the hold, >= %.2f)" % [nm, give,
+				STRUCK_GIVE])
+		_check(end >= STRUCK_END_SHARE * throw, "%s: still out at the end for the hand-over (%.2f of the hold's throw)" % [nm,
+				end / maxf(throw, 1e-4)])
+		heads[nm] = h.heada
+	# the right one the left one mirrored at every frame
+	if "own-bend-hit-impact-left" in names and "own-bend-hit-impact-right" in names:
+		var al := lib.get_animation(&"own-bend-hit-impact-left")
+		var ar := lib.get_animation(&"own-bend-hit-impact-right")
+		var worst := 0.0
+		for f in STRUCK_FRAMES + 1:
+			var jl := _at(al, f / 30.0, parts + ["l_ankle", "r_ankle"])
+			var jr := _at(ar, f / 30.0, parts + ["l_ankle", "r_ankle"])
+			for k: String in jr:
+				var other := k
+				if k.begins_with("l_"):
+					other = "r_" + k.substr(2)
+				elif k.begins_with("r_"):
+					other = "l_" + k.substr(2)
+				var m := jl[other] as Vector3
+				m.x = -m.x
+				worst = maxf(worst, m.distance_to(jr[k]))
+		print("METRIC own-bend-hit-impact-right mirror_m %.4f" % worst)
+		_check(worst < 0.01, "own-bend-hit-impact-right: the left one mirrored at every frame (off by %.4f m)" % worst)
+	# the four holds apart (each reads its own side at a glance)
+	var ks := heads.keys()
+	for i in ks.size():
+		for k in range(i + 1, ks.size()):
+			var d := (heads[ks[i]] as Vector3).distance_to(heads[ks[k]])
+			_check(d >= STRUCK_APART, "%s and %s: the holds' heads %.3f m apart (>= %.2f)" % [ks[i], ks[k], d, STRUCK_APART])
 
 ## The heading (deg) of the shoulders' line seen from above (the way the chest faces), for counting a turn on the spot.
 func _heading(a: Animation, t: float) -> float:

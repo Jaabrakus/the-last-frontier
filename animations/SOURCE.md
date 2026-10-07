@@ -200,6 +200,10 @@ visual references, no animation files imported) is his statement; the rows below
 | `own-bend-air-hit-fire-l` | 2026-10-07 (eighth set, pass 3) | `bend_clips.py` (`air_hit_fire`, `mirror_clip`) | `air_hit_fire`'s keys mirrored left for right | (as its original) |
 | `own-bend-air-hit-air` | 2026-10-07 (eighth set) | `bend_clips.py` (`air_hit_air`) | the rig's rest pose; keys in `CLIPS` (`SET8`) | (for the owner to fill) |
 | `own-bend-air-hit-air-l` | 2026-10-07 (eighth set, pass 2) | `bend_clips.py` (`air_hit_air`, `mirror_clip`) | `air_hit_air`'s keys mirrored left for right | (as its original) |
+| `own-bend-hit-impact-front` | 2026-10-07 (ninth set) | `bend_clips.py` (`hit_impact_front`, `_struck`, `_arc`) | the rig's rest pose; keys in `CLIPS` (`SET9`) | (for the owner to fill) |
+| `own-bend-hit-impact-back` | 2026-10-07 (ninth set) | `bend_clips.py` (`hit_impact_back`, `_struck`, `_arc`) | the rig's rest pose; keys in `CLIPS` (`SET9`) | (for the owner to fill) |
+| `own-bend-hit-impact-left` | 2026-10-07 (ninth set) | `bend_clips.py` (`hit_impact_left`, `_struck`, `_arc`) | the rig's rest pose; keys in `CLIPS` (`SET9`) | (for the owner to fill) |
+| `own-bend-hit-impact-right` | 2026-10-07 (ninth set) | `bend_clips.py` (`hit_impact_left`, `mirror_clip`) | `hit_impact_left`'s keys mirrored left for right | (as its original) |
 
 - Second set and polish (2026-10-05, after the owner approved the first ten: "looks good but you can always perfect them"):
   the same generator and the same inputs (the rig's rest pose and keys typed into the table, now its `SET2` part); no clip,
@@ -376,6 +380,18 @@ visual references, no animation files imported) is his statement; the rows below
   its strike frame, the lead palm at the eyes' height on a round arm with the wrist bent back, the feet tucked higher. The
   water hit's and the twins' other metas, and every earlier set's clip, are unchanged. `bend_engine_strip.gd` gains `at=`
   (a clip shown at chosen frames: the spout's surge); it reads no motion.
+- Ninth set (2026-10-07, round 4's struck bodies: the contact poses round 4's hit-stop holds a struck body in, one a side
+  the hit comes from): the same generator and the same inputs (the rig's rest pose and keys typed into the table, now its
+  `SET9` part; each clip's contact pose typed as a channel's value at the hold and eased from the stand by a typed spacing
+  a part (`_struck`, `STRUCK_SPACING`), the head's pitch, turn and tilt typed a frame, the palms keyed as their reach from
+  the shoulders and carried round them on an arc (`_arc`)); no clip, dump or reference motion read. Each is 6 frames: the
+  hit at f0 (`strike_s` 0), the contact at f3 (`hold_s` 0.1, the frame the hit-stop holds), the overlap after it
+  (`back_s` 4/30 s) that `own-bend-tumble` or `own-bend-flinch` takes over from; a new word meta `from` (front, back,
+  left, right: the side the hit comes from; `install_bend.gd` writes it as a word). `own-bend-hit-impact-right` is
+  `hit_impact_left`'s keys mirrored. Only these four clips were baked (`--clips`); no earlier set's clip was re-baked and
+  their tracks and moments are unchanged. `bend_preview.gd` gains `before=` (a sheet opening with another clip's frame:
+  the stand the contact snaps out of) and a pair's `@frame` (a hand-over into the middle of the next clip); they read no
+  motion.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.
