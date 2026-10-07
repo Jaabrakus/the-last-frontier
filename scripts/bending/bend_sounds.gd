@@ -807,7 +807,9 @@ class _Voices extends Node:
 					v.set_meta(&"gain", 0.0)
 					continue
 			v.set_meta(&"gain", g)
-			var n: Variant = v.get_meta(&"node", null)
+			# (round 4's merge: set_meta(null) removes a meta, and get_meta with a null default errors on a missing one: an
+			# engine ERROR with its backtrace every step of every let-go voice's fade)
+			var n: Variant = v.get_meta(&"node") if v.has_meta(&"node") else null
 			var own := false
 			if n is Node and is_instance_valid(n):
 				v.global_position = _pos(n)

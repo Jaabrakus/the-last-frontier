@@ -477,6 +477,55 @@ at 150% 100% (0% at 0%), true strings only, the
 steering and break rates within 0.02-0.05 of bend_ai.json, no velocity written, a hard bot hitting a scripted recovering player
 0.38 of its casts.
 
+## Round 4: feel, viral, simple (2026-10-06)
+
+The owner: "do what you think would make a viral round 4", "simple like runescape but hard to master like runescape". Eight
+parts, merged in this order and gated together (gate R4: no new red against gate R3). Everything runs only under the % rules
+(RingRules.stock_on()) unless said; the open world, the duel and the classic ring play as before (tests pin it).
+
+- **IMPACT: hits with weight** (data/ring/feel.json; BendImpact, RingMoment). A launch holds the struck body's pose and its
+  launch 0.04-0.11 s by its speed (never more than 0.4 of the hitstun, which still counts from the hit; the hitter's pose holds
+  within 3 m), then plays the pose at 2x until caught up, so strike points and a perfect Catch's return fly as before. The
+  "camera kick" is CameraShake.jolt: screen offsets only, never a turn, so the aim never moves (Esc: Screen jolt On/Off). Every
+  fall gets the KO splash (a water column, spray, ripples, foam); a game's last fall eases time to 0.35 for 0.6 s of real time
+  and back. BendStatus.now() is now game time (BendClock: Engine.time_scale per physics step, nothing while paused), so the
+  bend's timers keep pace under a slow beat, a soak at ts 4 and an Esc pause. The player's own visible ring pose does not hold
+  yet (sway_pose.gd: next round's one-line hunk).
+- **READ: what you can read without a cue**. Every shot carries its own looping voice in flight (tools/sfx/bend/flight.py:
+  stone whirr, ice whistle, water rush, fire, air, the Kick's floor run), nearest six heard, a steep level curve, doppler,
+  your own shots 6 dB under; arenas only. The ring's camera C (higher, centred, +4.5° field, no tilt: each degree of tilt hid
+  more of an incoming shot) is the default; A Close, B Shoulder, D High shoulder in Esc (data/ring/camera.json, RingCamera).
+- **LOOKS**: soft licking flames over a glow, the Kick as a three-row wave whose crest is the height a jump clears, Breath's
+  smoke as a lit volume, nothing of your own filling your view (a near fade; your Wind Guard thinner; your own walls dithered
+  when they hide you, still solid to shots), a shadow under every shot, cores drawn larger at range (hitboxes unchanged).
+  data/bending/fx_looks.json.
+- **HUD**: a picture for every chip (53 icons, tools/ui/move_icons.py), the strip off the body (L1 bottom-left; L2 and L3 in
+  hud.json), one help line of 64 characters or fewer, one type system, the centre words at 30% of the height, and side
+  colours in mirror matches only: team 1 wears its element's away dress (RingSides, data/ring/sides.json; cloth only).
+- **SHOW**: Tidebreak has its own score (tools/music/cues/ring_fight.py: D major, 132 BPM, its five-note motif A D E F# A),
+  three stems of one loop that MusicDirector lays over each other as a match rises (1 at 60 %, 2:00 left or two falls; 2 on a
+  last life at 80 %, 0:30 left or sudden death), always on a bar line, with stingers quoting the motif on every fall, last life,
+  sudden death and end (RingMusic, data/ring/music.json). The stands are built figures in six poses, lit like the world, that
+  ooh at big launches, rise in a ripple from a fall's end, and stand and clap on the beat in sudden death. Lanterns at the
+  deck's corners only.
+- **VIRAL**: the Splash Cam (RingReplay: an 8 s buffer, ghost puppets, a side dolly, 0.4x at the decisive hit) replays every
+  fall after its live splash and slow beat, the tree held and the match resumed exactly; highlight cards (the match's best
+  plays, each with Watch) on the match screen; clashes (two attacks meeting: a two-colour burst and rings at the meeting
+  point); callouts (SPLASH!, CAUGHT!, PERFECT!, RISE!, CLASH!, COMEBACK!, LAST LIFE) at a fixed spot above the strip; photo
+  mode. Esc: Replays (Every fall / Last life only / Off), Callouts, Photo.
+- **SIMPLE**: the Basic controls are a new player's default (LMB, right-click, 1, 2, E, Space, 3; Wall and Heal after the first
+  win); RingAssist drives the player's own keys only (held Space brings him back, a light steer, the edge climbs by itself,
+  Full-only keys held back), never the camera, aim or lock; Full keeps everything. A Basics track of five lessons and a
+  first-launch offer. Measured newcomer v easy bot on the merged build: 75% games won, 100% of survivable launches recovered
+  (Full, round 3's game: 35% and 31%).
+- **BOTS2**: the bots play the whole % game (the Slam, the air close hit, the held shield, true strings) and the soak's
+  player-side bot plays with RingMoves (round 3's soak measured a crippled bot). rules.json stock.pct_scale 0.86 sets the pace:
+  the merged 48-game soak reads game 264 s, life 99 s, falls at 150%.
+
+The merge's own fixes: the Splash Cam waits for the live splash, the slow beat and its tail; no screen opens under a replay;
+the flight voices hold with the tree; per-frame disk and engine-error spam removed (RingAssist.won_once, the flight pool's
+meta); round-3 tests that assumed pct_scale 1 pin it or read it. Review: scratchpad review/r4_index.html.
+
 ## Build order (proposed)
 
 1. Controls: the keys and their two skills (the same key again switches), the wheel through a skill's variations; the
