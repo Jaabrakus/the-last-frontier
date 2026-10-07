@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://bd818f31t6kb4"
+path.s3tc="res://.godot/imported/tv_maker_sign_b.png-dd07c7cf430f7536cbe143779e6e6532.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/cloth/tv_maker_sign_b.png"
+dest_files=["res://.godot/imported/tv_maker_sign_b.png-dd07c7cf430f7536cbe143779e6e6532.s3tc.ctex"]
 
 [params]
 

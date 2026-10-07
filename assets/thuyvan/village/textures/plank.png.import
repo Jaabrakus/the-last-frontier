@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://tu1h7tp6865v"
+path.s3tc="res://.godot/imported/plank.png-77c75cd18ffdc46948a3ff1f2ff0c8a4.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/plank.png"
+dest_files=["res://.godot/imported/plank.png-77c75cd18ffdc46948a3ff1f2ff0c8a4.s3tc.ctex"]
 
 [params]
 

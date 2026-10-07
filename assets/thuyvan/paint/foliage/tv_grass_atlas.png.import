@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://bjyvu86xwwxmv"
+path.bptc="res://.godot/imported/tv_grass_atlas.png-5f9cd6a0300510de858abe54dcc6d65e.bptc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/foliage/tv_grass_atlas.png"
+dest_files=["res://.godot/imported/tv_grass_atlas.png-5f9cd6a0300510de858abe54dcc6d65e.bptc.ctex"]
 
 [params]
 

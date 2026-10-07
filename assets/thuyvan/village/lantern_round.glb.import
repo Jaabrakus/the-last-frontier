@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://bkke80xjoakr0"
+path="res://.godot/imported/lantern_round.glb-98827eabbf732b68f7ce494564ad538f.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/lantern_round.glb"
+dest_files=["res://.godot/imported/lantern_round.glb-98827eabbf732b68f7ce494564ad538f.scn"]
 
 [params]
 
@@ -39,14 +43,17 @@ _subresources={
 "materials": {
 "tvv_cloth_madder": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres"
 },
 "tvv_paper": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_paper.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_paper.tres"
 },
 "tvv_timber": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_timber.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_timber.tres"
 }
 }

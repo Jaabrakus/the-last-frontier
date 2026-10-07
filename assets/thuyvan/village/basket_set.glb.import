@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://cm8gd1xunj6ei"
+path="res://.godot/imported/basket_set.glb-7b3ed17acee6b0e74d69f964e4bf8452.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/basket_set.glb"
+dest_files=["res://.godot/imported/basket_set.glb-7b3ed17acee6b0e74d69f964e4bf8452.scn"]
 
 [params]
 
@@ -39,14 +43,17 @@ _subresources={
 "materials": {
 "tvv_basket": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_basket.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_basket.tres"
 },
 "tvv_jar": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_jar.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_jar.tres"
 },
 "tvv_paper": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_paper.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_paper.tres"
 }
 }

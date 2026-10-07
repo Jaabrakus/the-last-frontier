@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://cwahq5l342mqe"
+path.s3tc="res://.godot/imported/cloth_bone.png-e99b7205f91b835a16ef0d5c97643abc.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/cloth_bone.png"
+dest_files=["res://.godot/imported/cloth_bone.png-e99b7205f91b835a16ef0d5c97643abc.s3tc.ctex"]
 
 [params]
 

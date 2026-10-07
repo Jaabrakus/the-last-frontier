@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://dl7h832u8r3rw"
+path.s3tc="res://.godot/imported/waystone_face.png-ad87dc7bb5e8de857cd94184b18b482d.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/waystone_face.png"
+dest_files=["res://.godot/imported/waystone_face.png-ad87dc7bb5e8de857cd94184b18b482d.s3tc.ctex"]
 
 [params]
 

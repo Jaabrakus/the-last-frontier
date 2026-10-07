@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://dwdt0agj5aut7"
+path="res://.godot/imported/cliff_concave_75_lod1.glb-9e7dbba82596e97e2a9f1f2e77e3f9f2.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/cliff_concave_75_lod1.glb"
+dest_files=["res://.godot/imported/cliff_concave_75_lod1.glb-9e7dbba82596e97e2a9f1f2e77e3f9f2.scn"]
 
 [params]
 
@@ -39,10 +43,12 @@ _subresources={
 "materials": {
 "moss": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/moss.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/moss.tres"
 },
 "rock_karst": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/rock_karst.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/rock_karst.tres"
 }
 }

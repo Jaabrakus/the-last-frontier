@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://bl7u6to1econg"
+path="res://.godot/imported/banner_jade.glb-9d2734beeb9c5c9a20684fbf9e860534.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/banner_jade.glb"
+dest_files=["res://.godot/imported/banner_jade.glb-9d2734beeb9c5c9a20684fbf9e860534.scn"]
 
 [params]
 
@@ -39,26 +43,32 @@ _subresources={
 "materials": {
 "tvv_banner_jade": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_banner_jade.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_banner_jade.tres"
 },
 "tvv_cloth_madder": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres"
 },
 "tvv_iron": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_iron.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_iron.tres"
 },
 "tvv_limestone": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_limestone.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_limestone.tres"
 },
 "tvv_rope": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_rope.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_rope.tres"
 },
 "tvv_timber": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_timber.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_timber.tres"
 }
 }

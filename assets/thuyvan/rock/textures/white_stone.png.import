@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://hhpn4g0h2dvo"
+path.s3tc="res://.godot/imported/white_stone.png-a0f99065fb3d5e581ceca370369ca8ef.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/textures/white_stone.png"
+dest_files=["res://.godot/imported/white_stone.png-a0f99065fb3d5e581ceca370369ca8ef.s3tc.ctex"]
 
 [params]
 

@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://dfcmrep2tq3vm"
+path.s3tc="res://.godot/imported/tv_bark_pine.png-ccb892131be9e8215c9398b1997c2ceb.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/foliage/tv_bark_pine.png"
+dest_files=["res://.godot/imported/tv_bark_pine.png-ccb892131be9e8215c9398b1997c2ceb.s3tc.ctex"]
 
 [params]
 

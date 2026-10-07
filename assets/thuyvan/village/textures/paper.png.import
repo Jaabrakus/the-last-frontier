@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://c6i6xsjeifeby"
+path.s3tc="res://.godot/imported/paper.png-a945bf8b9f3642cd6747b5e69c44d68d.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/paper.png"
+dest_files=["res://.godot/imported/paper.png-a945bf8b9f3642cd6747b5e69c44d68d.s3tc.ctex"]
 
 [params]
 

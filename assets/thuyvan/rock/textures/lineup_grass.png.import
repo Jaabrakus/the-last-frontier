@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://ckbwk4xp3uncq"
+path.s3tc="res://.godot/imported/lineup_grass.png-f4bd91988cf28691275ebbc51f5624d9.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/textures/lineup_grass.png"
+dest_files=["res://.godot/imported/lineup_grass.png-f4bd91988cf28691275ebbc51f5624d9.s3tc.ctex"]
 
 [params]
 

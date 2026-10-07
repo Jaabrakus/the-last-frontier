@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://dghxicpbriahd"
+path.s3tc="res://.godot/imported/grass.png-fe6ad8d4338489bba79bb5888904c3e7.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/grass.png"
+dest_files=["res://.godot/imported/grass.png-fe6ad8d4338489bba79bb5888904c3e7.s3tc.ctex"]
 
 [params]
 

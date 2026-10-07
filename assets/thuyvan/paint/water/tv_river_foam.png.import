@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://uakxnkctkqt8"
+path.s3tc="res://.godot/imported/tv_river_foam.png-666b58fedb2942461d2c69e09ee941af.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/water/tv_river_foam.png"
+dest_files=["res://.godot/imported/tv_river_foam.png-666b58fedb2942461d2c69e09ee941af.s3tc.ctex"]
 
 [params]
 

@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://byh38y3m7pwc3"
+path="res://.godot/imported/karst_far_d_lod1.glb-893d2ef82780ab023f5f00d2af0877bb.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/karst_far_d_lod1.glb"
+dest_files=["res://.godot/imported/karst_far_d_lod1.glb-893d2ef82780ab023f5f00d2af0877bb.scn"]
 
 [params]
 
@@ -39,10 +43,12 @@ _subresources={
 "materials": {
 "moss": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/moss.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/moss.tres"
 },
 "rock_karst": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/rock_karst.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/rock_karst.tres"
 }
 }

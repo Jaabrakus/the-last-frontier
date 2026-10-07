@@ -2,10 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://cklk8bjncp64"
+path="res://.godot/imported/tv_river_ramp.png-5afe6b1aab6fb0f7059bb0d87a57f0db.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/water/tv_river_ramp.png"
+dest_files=["res://.godot/imported/tv_river_ramp.png-5afe6b1aab6fb0f7059bb0d87a57f0db.ctex"]
 
 [params]
 

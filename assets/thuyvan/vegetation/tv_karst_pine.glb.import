@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://b8te481m1l0io"
+path="res://.godot/imported/tv_karst_pine.glb-26dc5632b612218a316371793b494801.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/vegetation/tv_karst_pine.glb"
+dest_files=["res://.godot/imported/tv_karst_pine.glb-26dc5632b612218a316371793b494801.scn"]
 
 [params]
 

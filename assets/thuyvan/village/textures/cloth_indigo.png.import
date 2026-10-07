@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://0hut08qf33m3"
+path.s3tc="res://.godot/imported/cloth_indigo.png-74ac8646b88210df9df754c2aeee00de.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/cloth_indigo.png"
+dest_files=["res://.godot/imported/cloth_indigo.png-74ac8646b88210df9df754c2aeee00de.s3tc.ctex"]
 
 [params]
 

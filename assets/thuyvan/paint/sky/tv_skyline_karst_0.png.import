@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://bitac20rncm4c"
+path.s3tc="res://.godot/imported/tv_skyline_karst_0.png-6a22fb57b9699bc3c628b9555326c3a7.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/sky/tv_skyline_karst_0.png"
+dest_files=["res://.godot/imported/tv_skyline_karst_0.png-6a22fb57b9699bc3c628b9555326c3a7.s3tc.ctex"]
 
 [params]
 

@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://61ma0l2srgj0"
+path.s3tc="res://.godot/imported/karst_pale.png-76b312b32cf90cc724c9b849ba2e7b0b.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/textures/karst_pale.png"
+dest_files=["res://.godot/imported/karst_pale.png-76b312b32cf90cc724c9b849ba2e7b0b.s3tc.ctex"]
 
 [params]
 

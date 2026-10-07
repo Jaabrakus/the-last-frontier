@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://d3a4c5m2h8cjc"
+path.s3tc="res://.godot/imported/tv_fall_body.png-25c6d4b7993079392fc4ef94fb772a0e.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/water/tv_fall_body.png"
+dest_files=["res://.godot/imported/tv_fall_body.png-25c6d4b7993079392fc4ef94fb772a0e.s3tc.ctex"]
 
 [params]
 

@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://d08cfayvlp5p"
+path="res://.godot/imported/cairn_d.glb-10f91aa4e8abca7185a429496a8e509d.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/cairn_d.glb"
+dest_files=["res://.godot/imported/cairn_d.glb-10f91aa4e8abca7185a429496a8e509d.scn"]
 
 [params]
 
@@ -39,10 +43,12 @@ _subresources={
 "materials": {
 "rock_boulder": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/rock_boulder.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/rock_boulder.tres"
 },
 "stone_white": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/stone_white.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/stone_white.tres"
 }
 }

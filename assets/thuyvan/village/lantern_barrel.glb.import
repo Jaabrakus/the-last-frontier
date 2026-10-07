@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://cfs782v4de0gi"
+path="res://.godot/imported/lantern_barrel.glb-64a3446d5f55a860b32b58319fff8df5.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/lantern_barrel.glb"
+dest_files=["res://.godot/imported/lantern_barrel.glb-64a3446d5f55a860b32b58319fff8df5.scn"]
 
 [params]
 
@@ -39,14 +43,17 @@ _subresources={
 "materials": {
 "tvv_cloth_madder": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres"
 },
 "tvv_lacquer": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_lacquer.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_lacquer.tres"
 },
 "tvv_paper": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_paper.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_paper.tres"
 }
 }

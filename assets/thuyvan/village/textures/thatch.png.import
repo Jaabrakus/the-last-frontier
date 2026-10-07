@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://brsedhismc3ru"
+path.s3tc="res://.godot/imported/thatch.png-905db8fecdff25df8734e8cad21c12f9.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/thatch.png"
+dest_files=["res://.godot/imported/thatch.png-905db8fecdff25df8734e8cad21c12f9.s3tc.ctex"]
 
 [params]
 

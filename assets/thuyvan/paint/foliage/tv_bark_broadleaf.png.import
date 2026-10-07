@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://dnoqaxntcp7ja"
+path.s3tc="res://.godot/imported/tv_bark_broadleaf.png-4201648f39dd2017388bcd6e1d9a964f.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/foliage/tv_bark_broadleaf.png"
+dest_files=["res://.godot/imported/tv_bark_broadleaf.png-4201648f39dd2017388bcd6e1d9a964f.s3tc.ctex"]
 
 [params]
 

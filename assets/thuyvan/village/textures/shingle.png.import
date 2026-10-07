@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://buvult1gj1123"
+path.s3tc="res://.godot/imported/shingle.png-a2266b24f59cb817e9e089d0b8583051.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/shingle.png"
+dest_files=["res://.godot/imported/shingle.png-a2266b24f59cb817e9e089d0b8583051.s3tc.ctex"]
 
 [params]
 

@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://q8mty4yh8xxe"
+path.s3tc="res://.godot/imported/tv_cliff_moss_6m.png-81a5e6242f72fa16fc8992ae275a8054.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/rock/tv_cliff_moss_6m.png"
+dest_files=["res://.godot/imported/tv_cliff_moss_6m.png-81a5e6242f72fa16fc8992ae275a8054.s3tc.ctex"]
 
 [params]
 

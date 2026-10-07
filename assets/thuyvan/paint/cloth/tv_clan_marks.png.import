@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://bob3yoo2y1vxv"
+path.s3tc="res://.godot/imported/tv_clan_marks.png-e01f870a5e82716ef6f1d5e9f8fdf9ac.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/cloth/tv_clan_marks.png"
+dest_files=["res://.godot/imported/tv_clan_marks.png-e01f870a5e82716ef6f1d5e9f8fdf9ac.s3tc.ctex"]
 
 [params]
 

@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://c6cyd1ygrwshy"
+path="res://.godot/imported/paddy_bund_4m.glb-f49123283d1a3445e6f4d3a4b7f24bc4.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/paddy_bund_4m.glb"
+dest_files=["res://.godot/imported/paddy_bund_4m.glb-f49123283d1a3445e6f4d3a4b7f24bc4.scn"]
 
 [params]
 
@@ -39,10 +43,12 @@ _subresources={
 "materials": {
 "tvv_earth": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_earth.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_earth.tres"
 },
 "tvv_grass": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_grass.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_grass.tres"
 }
 }

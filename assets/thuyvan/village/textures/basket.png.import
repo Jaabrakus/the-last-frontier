@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://bkvty5p8me0t2"
+path.s3tc="res://.godot/imported/basket.png-50edccfcbdf2a4c48961ea0f53866a0a.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/basket.png"
+dest_files=["res://.godot/imported/basket.png-50edccfcbdf2a4c48961ea0f53866a0a.s3tc.ctex"]
 
 [params]
 

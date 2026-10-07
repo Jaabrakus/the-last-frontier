@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://ch8dbr7thiqen"
+path.s3tc="res://.godot/imported/tile.png-21fd44ede4dca201a761fdc5b46bac70.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/tile.png"
+dest_files=["res://.godot/imported/tile.png-21fd44ede4dca201a761fdc5b46bac70.s3tc.ctex"]
 
 [params]
 

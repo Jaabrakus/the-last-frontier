@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://bccn1dd5deu3t"
+path.s3tc="res://.godot/imported/cloth_ochre.png-76fe2fca566b326186381fdcdaf6e0fc.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/cloth_ochre.png"
+dest_files=["res://.godot/imported/cloth_ochre.png-76fe2fca566b326186381fdcdaf6e0fc.s3tc.ctex"]
 
 [params]
 

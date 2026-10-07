@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://c5pywe8deiyd0"
+path.s3tc="res://.godot/imported/iron.png-b05a20ab8a4b39bf2364d7203a57210b.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/iron.png"
+dest_files=["res://.godot/imported/iron.png-b05a20ab8a4b39bf2364d7203a57210b.s3tc.ctex"]
 
 [params]
 

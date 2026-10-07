@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://b2qnvx4dretsi"
+path.s3tc="res://.godot/imported/tv_banana_trunk.png-e7d2b401b41f52cabd5edd5c516db1dc.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/foliage/tv_banana_trunk.png"
+dest_files=["res://.godot/imported/tv_banana_trunk.png-e7d2b401b41f52cabd5edd5c516db1dc.s3tc.ctex"]
 
 [params]
 

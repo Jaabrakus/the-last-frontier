@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://c01ngbm5v5i8"
+path="res://.godot/imported/prayer_flags_4m.glb-aebb7b37df14a2a0bc4957efced691ee.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/prayer_flags_4m.glb"
+dest_files=["res://.godot/imported/prayer_flags_4m.glb-aebb7b37df14a2a0bc4957efced691ee.scn"]
 
 [params]
 
@@ -39,10 +43,12 @@ _subresources={
 "materials": {
 "tvv_flags": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_flags.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_flags.tres"
 },
 "tvv_rope": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_rope.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_rope.tres"
 }
 }

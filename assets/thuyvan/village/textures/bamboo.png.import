@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://b0p5ea48eu68e"
+path.s3tc="res://.godot/imported/bamboo.png-365224ba5a281847878f8b95c148d1f7.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/bamboo.png"
+dest_files=["res://.godot/imported/bamboo.png-365224ba5a281847878f8b95c148d1f7.s3tc.ctex"]
 
 [params]
 

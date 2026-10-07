@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://w2j8tvmsydrj"
+path="res://.godot/imported/lantern_post.glb-3c769e5a2317b6f44e6d3db34b191f6a.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/lantern_post.glb"
+dest_files=["res://.godot/imported/lantern_post.glb-3c769e5a2317b6f44e6d3db34b191f6a.scn"]
 
 [params]
 
@@ -39,22 +43,27 @@ _subresources={
 "materials": {
 "tvv_cloth_madder": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres"
 },
 "tvv_limestone": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_limestone.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_limestone.tres"
 },
 "tvv_paper": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_paper.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_paper.tres"
 },
 "tvv_rope": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_rope.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_rope.tres"
 },
 "tvv_timber": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_timber.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_timber.tres"
 }
 }

@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://s150tyx2xn4u"
+path="res://.godot/imported/firewood_pile.glb-da8e5cd5fb06374dbae72aea56b12b34.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/firewood_pile.glb"
+dest_files=["res://.godot/imported/firewood_pile.glb-da8e5cd5fb06374dbae72aea56b12b34.scn"]
 
 [params]
 
@@ -39,6 +43,7 @@ _subresources={
 "materials": {
 "tvv_timber": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_timber.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_timber.tres"
 }
 }

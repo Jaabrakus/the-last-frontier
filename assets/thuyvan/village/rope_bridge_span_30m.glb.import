@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://tgf4g0f0x3ke"
+path="res://.godot/imported/rope_bridge_span_30m.glb-182a521d20489399a63023dbb676faa7.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/rope_bridge_span_30m.glb"
+dest_files=["res://.godot/imported/rope_bridge_span_30m.glb-182a521d20489399a63023dbb676faa7.scn"]
 
 [params]
 
@@ -39,18 +43,22 @@ _subresources={
 "materials": {
 "tvv_flags": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_flags.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_flags.tres"
 },
 "tvv_plank": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_plank.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_plank.tres"
 },
 "tvv_rope": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_rope.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_rope.tres"
 },
 "tvv_timber": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_timber.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_timber.tres"
 }
 }

@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://fc824ink1mdb"
+path="res://.godot/imported/cliff_house.glb-461b86b1761cfcd91aac1af6cbad896d.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/cliff_house.glb"
+dest_files=["res://.godot/imported/cliff_house.glb-461b86b1761cfcd91aac1af6cbad896d.scn"]
 
 [params]
 
@@ -39,50 +43,62 @@ _subresources={
 "materials": {
 "tvv_bamboo": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_bamboo.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_bamboo.tres"
 },
 "tvv_cloth_madder": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres"
 },
 "tvv_drystone": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_drystone.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_drystone.tres"
 },
 "tvv_iron": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_iron.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_iron.tres"
 },
 "tvv_lacquer": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_lacquer.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_lacquer.tres"
 },
 "tvv_limestone": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_limestone.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_limestone.tres"
 },
 "tvv_paper": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_paper.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_paper.tres"
 },
 "tvv_plank": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_plank.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_plank.tres"
 },
 "tvv_plaster": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_plaster.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_plaster.tres"
 },
 "tvv_rope": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_rope.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_rope.tres"
 },
 "tvv_tile": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_tile.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_tile.tres"
 },
 "tvv_timber": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_timber.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_timber.tres"
 }
 }

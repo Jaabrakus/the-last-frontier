@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://dgervvs4ayabd"
+path.s3tc="res://.godot/imported/tv_mist_band_a.png-8dcabe5dd6c2f5e5b0eaf1a8dba7a3e9.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/water/tv_mist_band_a.png"
+dest_files=["res://.godot/imported/tv_mist_band_a.png-8dcabe5dd6c2f5e5b0eaf1a8dba7a3e9.s3tc.ctex"]
 
 [params]
 

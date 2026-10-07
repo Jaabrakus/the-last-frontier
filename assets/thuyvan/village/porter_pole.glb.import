@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://cdofkregsr8cv"
+path="res://.godot/imported/porter_pole.glb-2cbf0666b6ede20691c55c63091c8c06.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/porter_pole.glb"
+dest_files=["res://.godot/imported/porter_pole.glb-2cbf0666b6ede20691c55c63091c8c06.scn"]
 
 [params]
 
@@ -39,38 +43,47 @@ _subresources={
 "materials": {
 "tvv_bamboo": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_bamboo.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_bamboo.tres"
 },
 "tvv_basket": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_basket.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_basket.tres"
 },
 "tvv_cloth_bone": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_bone.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_bone.tres"
 },
 "tvv_cloth_indigo": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_indigo.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_indigo.tres"
 },
 "tvv_cloth_madder": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres"
 },
 "tvv_rope": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_rope.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_rope.tres"
 },
 "tvv_skin": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_skin.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_skin.tres"
 },
 "tvv_timber": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_timber.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_timber.tres"
 },
 "tvv_weave": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_weave.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_weave.tres"
 }
 }

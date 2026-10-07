@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://dmsybxo5hd7c2"
+path.s3tc="res://.godot/imported/rope.png-8763a39a54c0504b75ee5cf1281a698a.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/rope.png"
+dest_files=["res://.godot/imported/rope.png-8763a39a54c0504b75ee5cf1281a698a.s3tc.ctex"]
 
 [params]
 

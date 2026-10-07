@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://3rlsfdn481wv"
+path.s3tc="res://.godot/imported/earth.png-0fafa0a096a70689763bd49d825a671f.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/earth.png"
+dest_files=["res://.godot/imported/earth.png-0fafa0a096a70689763bd49d825a671f.s3tc.ctex"]
 
 [params]
 

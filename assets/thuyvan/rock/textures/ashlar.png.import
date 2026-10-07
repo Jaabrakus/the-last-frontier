@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://df5qoyx4lbjuf"
+path.s3tc="res://.godot/imported/ashlar.png-8939372637aa9388f1388f1015ca2adf.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/textures/ashlar.png"
+dest_files=["res://.godot/imported/ashlar.png-8939372637aa9388f1388f1015ca2adf.s3tc.ctex"]
 
 [params]
 

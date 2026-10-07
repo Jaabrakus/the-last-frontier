@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://clujcv7ihcfd1"
+path.bptc="res://.godot/imported/tv_herb_atlas.png-950415cb2c06d5420132a22094526b52.bptc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/foliage/tv_herb_atlas.png"
+dest_files=["res://.godot/imported/tv_herb_atlas.png-950415cb2c06d5420132a22094526b52.bptc.ctex"]
 
 [params]
 

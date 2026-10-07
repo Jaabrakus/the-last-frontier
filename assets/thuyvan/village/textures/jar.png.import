@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://lal3woujfhov"
+path.s3tc="res://.godot/imported/jar.png-47f7e7a7c39e1ad75b6771faef634bbc.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/jar.png"
+dest_files=["res://.godot/imported/jar.png-47f7e7a7c39e1ad75b6771faef634bbc.s3tc.ctex"]
 
 [params]
 

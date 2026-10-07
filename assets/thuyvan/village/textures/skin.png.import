@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://dtd8glmqggcbj"
+path.s3tc="res://.godot/imported/skin.png-be9c011f690fc6fdbb8c0804d36caa98.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/skin.png"
+dest_files=["res://.godot/imported/skin.png-be9c011f690fc6fdbb8c0804d36caa98.s3tc.ctex"]
 
 [params]
 

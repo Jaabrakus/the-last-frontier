@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://dnswjc31r25c0"
+path="res://.godot/imported/cliff_straight_75_lod1.glb-69862982fe43b1c4b63fcdadd532a069.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/cliff_straight_75_lod1.glb"
+dest_files=["res://.godot/imported/cliff_straight_75_lod1.glb-69862982fe43b1c4b63fcdadd532a069.scn"]
 
 [params]
 
@@ -39,10 +43,12 @@ _subresources={
 "materials": {
 "moss": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/moss.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/moss.tres"
 },
 "rock_karst": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/rock_karst.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/rock_karst.tres"
 }
 }

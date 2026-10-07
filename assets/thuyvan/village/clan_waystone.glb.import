@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://dmaeh32v2btn1"
+path="res://.godot/imported/clan_waystone.glb-857238eef8c9b15b28d1e510d437fbb6.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/clan_waystone.glb"
+dest_files=["res://.godot/imported/clan_waystone.glb-857238eef8c9b15b28d1e510d437fbb6.scn"]
 
 [params]
 
@@ -39,34 +43,42 @@ _subresources={
 "materials": {
 "tvv_bamboo": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_bamboo.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_bamboo.tres"
 },
 "tvv_cloth_bone": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_bone.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_bone.tres"
 },
 "tvv_cloth_indigo": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_indigo.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_indigo.tres"
 },
 "tvv_cloth_madder": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres"
 },
 "tvv_flags": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_flags.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_flags.tres"
 },
 "tvv_limestone": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_limestone.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_limestone.tres"
 },
 "tvv_rope": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_rope.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_rope.tres"
 },
 "tvv_waystone_face": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_waystone_face.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_waystone_face.tres"
 }
 }

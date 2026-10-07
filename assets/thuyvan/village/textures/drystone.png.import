@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://nxjbg5b1i01y"
+path.s3tc="res://.godot/imported/drystone.png-a54e087c517a295b8d30b74003c7fab4.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/drystone.png"
+dest_files=["res://.godot/imported/drystone.png-a54e087c517a295b8d30b74003c7fab4.s3tc.ctex"]
 
 [params]
 

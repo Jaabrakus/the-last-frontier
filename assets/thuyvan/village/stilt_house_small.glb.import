@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://br04o5tmwxufv"
+path="res://.godot/imported/stilt_house_small.glb-9c095ec4c7bc90dc2a03ce5203eaa1f5.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/stilt_house_small.glb"
+dest_files=["res://.godot/imported/stilt_house_small.glb-9c095ec4c7bc90dc2a03ce5203eaa1f5.scn"]
 
 [params]
 
@@ -39,42 +43,52 @@ _subresources={
 "materials": {
 "tvv_bamboo": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_bamboo.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_bamboo.tres"
 },
 "tvv_cloth_madder": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres"
 },
 "tvv_iron": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_iron.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_iron.tres"
 },
 "tvv_limestone": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_limestone.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_limestone.tres"
 },
 "tvv_paper": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_paper.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_paper.tres"
 },
 "tvv_plank": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_plank.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_plank.tres"
 },
 "tvv_rope": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_rope.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_rope.tres"
 },
 "tvv_thatch": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_thatch.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_thatch.tres"
 },
 "tvv_timber": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_timber.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_timber.tres"
 },
 "tvv_weave": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_weave.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_weave.tres"
 }
 }

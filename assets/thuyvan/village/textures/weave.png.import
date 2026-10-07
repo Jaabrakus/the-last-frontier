@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://dimnj7idr55n4"
+path.s3tc="res://.godot/imported/weave.png-703a519e7b5caa0117544f9a46ce34fa.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/weave.png"
+dest_files=["res://.godot/imported/weave.png-703a519e7b5caa0117544f9a46ce34fa.s3tc.ctex"]
 
 [params]
 

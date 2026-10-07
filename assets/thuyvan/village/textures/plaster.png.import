@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://bmusfespa6q7k"
+path.s3tc="res://.godot/imported/plaster.png-adbdc31c7e4989eaa8c89a21070627a3.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/plaster.png"
+dest_files=["res://.godot/imported/plaster.png-adbdc31c7e4989eaa8c89a21070627a3.s3tc.ctex"]
 
 [params]
 

@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://cgj212j24ikj2"
+path.s3tc="res://.godot/imported/mist_card.png-7cc56546810638ab88028dbd87953167.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/textures/mist_card.png"
+dest_files=["res://.godot/imported/mist_card.png-7cc56546810638ab88028dbd87953167.s3tc.ctex"]
 
 [params]
 

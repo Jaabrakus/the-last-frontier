@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://cxhudymwfp4nl"
+path.s3tc="res://.godot/imported/lacquer.png-fab0d5404adb76aa77bf7b237317ee95.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/lacquer.png"
+dest_files=["res://.godot/imported/lacquer.png-fab0d5404adb76aa77bf7b237317ee95.s3tc.ctex"]
 
 [params]
 

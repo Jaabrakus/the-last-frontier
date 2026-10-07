@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://dkk7fu4ojyjsf"
+path.s3tc="res://.godot/imported/tv_fall_edge_foam.png-420ce4f8213085eb939be565c41cf7ea.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/water/tv_fall_edge_foam.png"
+dest_files=["res://.godot/imported/tv_fall_edge_foam.png-420ce4f8213085eb939be565c41cf7ea.s3tc.ctex"]
 
 [params]
 

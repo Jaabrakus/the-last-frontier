@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://befqma0nmhg8w"
+path.s3tc="res://.godot/imported/tv_pool_foam_ring.png-f133923b07ca6c5411667753f0be6eb5.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/water/tv_pool_foam_ring.png"
+dest_files=["res://.godot/imported/tv_pool_foam_ring.png-f133923b07ca6c5411667753f0be6eb5.s3tc.ctex"]
 
 [params]
 

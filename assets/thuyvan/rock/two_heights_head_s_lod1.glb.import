@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://bmciax87caurn"
+path="res://.godot/imported/two_heights_head_s_lod1.glb-29256a23403369e5348705646ab2a68a.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/two_heights_head_s_lod1.glb"
+dest_files=["res://.godot/imported/two_heights_head_s_lod1.glb-29256a23403369e5348705646ab2a68a.scn"]
 
 [params]
 
@@ -39,10 +43,12 @@ _subresources={
 "materials": {
 "moss": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/moss.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/moss.tres"
 },
 "rock_karst": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/rock_karst.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/rock_karst.tres"
 }
 }

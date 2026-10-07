@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://ti350v4nu1wx"
+path="res://.godot/imported/boulder_f_lod1.glb-b06af54b3fc002e9b3e6899b8d1134ac.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/boulder_f_lod1.glb"
+dest_files=["res://.godot/imported/boulder_f_lod1.glb-b06af54b3fc002e9b3e6899b8d1134ac.scn"]
 
 [params]
 
@@ -39,10 +43,12 @@ _subresources={
 "materials": {
 "moss": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/moss.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/moss.tres"
 },
 "rock_boulder": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/rock_boulder.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/rock_boulder.tres"
 }
 }

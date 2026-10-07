@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://bb8h0nvbdimnp"
+path.s3tc="res://.godot/imported/tv_sky_golden_lantern_dusk.png-eb30b51abdfd9cd119ef60877967bb00.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/sky/tv_sky_golden_lantern_dusk.png"
+dest_files=["res://.godot/imported/tv_sky_golden_lantern_dusk.png-eb30b51abdfd9cd119ef60877967bb00.s3tc.ctex"]
 
 [params]
 

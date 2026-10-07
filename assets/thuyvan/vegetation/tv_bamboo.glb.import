@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://dr7tsx2swvtrp"
+path="res://.godot/imported/tv_bamboo.glb-383b8752bffa9b2725bf9650b2822b59.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/vegetation/tv_bamboo.glb"
+dest_files=["res://.godot/imported/tv_bamboo.glb-383b8752bffa9b2725bf9650b2822b59.scn"]
 
 [params]
 

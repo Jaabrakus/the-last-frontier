@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://cvpj42skry6b0"
+path.s3tc="res://.godot/imported/karst_face_height.png-b1e08d84af073b2c31dafd1ee3085b41.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/textures/karst_face_height.png"
+dest_files=["res://.godot/imported/karst_face_height.png-b1e08d84af073b2c31dafd1ee3085b41.s3tc.ctex"]
 
 [params]
 

@@ -145,7 +145,8 @@ def scene_import(src, mat_dir, planned):
         tres = os.path.join(mat_dir, name + ".tres")
         if not (os.path.exists(tres) or tres in planned):
             raise SystemExit("no material %s for %s" % (name, src))
-        subs.append('"%s": {\n"use_external/enabled": true,\n"use_external/path": "%s"\n}' % (name, res(tres)))
+        subs.append('"%s": {\n"use_external/enabled": true,\n"use_external/fallback_path": "%s",\n'
+                    '"use_external/path": "%s"\n}' % (name, res(tres), res(tres)))
     body = "{}" if not subs else "{\n\"materials\": {\n" + ",\n".join(subs) + "\n}\n}"
     lod1 = os.path.basename(src).endswith("_lod1.glb")
     return import_file(src, "scene", "PackedScene", with_params(SCENE_PARAMS, meshes__generate_lods=not lod1), body)

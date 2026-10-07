@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://bssnj4mteja01"
+path.s3tc="res://.godot/imported/tv_waystone_mark.png-2d76a9e134fa9a017538725629afbfec.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/cloth/tv_waystone_mark.png"
+dest_files=["res://.godot/imported/tv_waystone_mark.png-2d76a9e134fa9a017538725629afbfec.s3tc.ctex"]
 
 [params]
 

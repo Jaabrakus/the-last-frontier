@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://bk14xxms3plsx"
+path.s3tc="res://.godot/imported/tv_mist_puffs.png-124030b3cc063df1fbc2fd73a2efa3ae.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/water/tv_mist_puffs.png"
+dest_files=["res://.godot/imported/tv_mist_puffs.png-124030b3cc063df1fbc2fd73a2efa3ae.s3tc.ctex"]
 
 [params]
 

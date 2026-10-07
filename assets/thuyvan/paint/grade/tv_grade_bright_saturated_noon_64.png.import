@@ -2,10 +2,16 @@
 
 importer="3d_texture"
 type="CompressedTexture3D"
+uid="uid://bqij8ww7h3qax"
+path="res://.godot/imported/tv_grade_bright_saturated_noon_64.png-48255c425d1b25ec83a007c8c21dc369.ctex3d"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/grade/tv_grade_bright_saturated_noon_64.png"
+dest_files=["res://.godot/imported/tv_grade_bright_saturated_noon_64.png-48255c425d1b25ec83a007c8c21dc369.ctex3d"]
 
 [params]
 

@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://bmffwvgjyag4t"
+path.s3tc="res://.godot/imported/banner_indigo.png-f3ac48636aa8f7bf6e864c1d9ba4c0ee.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/banner_indigo.png"
+dest_files=["res://.godot/imported/banner_indigo.png-f3ac48636aa8f7bf6e864c1d9ba4c0ee.s3tc.ctex"]
 
 [params]
 

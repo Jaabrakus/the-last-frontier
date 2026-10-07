@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://xutgqnn13fyc"
+path="res://.godot/imported/bridge_lamp.glb-467254a4b0da36fca0db89ebeb86a077.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/bridge_lamp.glb"
+dest_files=["res://.godot/imported/bridge_lamp.glb-467254a4b0da36fca0db89ebeb86a077.scn"]
 
 [params]
 
@@ -39,18 +43,22 @@ _subresources={
 "materials": {
 "tvv_drystone": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_drystone.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_drystone.tres"
 },
 "tvv_paper": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_paper.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_paper.tres"
 },
 "tvv_tile": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_tile.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_tile.tres"
 },
 "tvv_timber": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_timber.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_timber.tres"
 }
 }

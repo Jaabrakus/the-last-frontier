@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://b6x6wnyu2rf1x"
+path="res://.godot/imported/tv_banana.glb-517e10e1b209f6f6cced83ddef0e7064.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/vegetation/tv_banana.glb"
+dest_files=["res://.godot/imported/tv_banana.glb-517e10e1b209f6f6cced83ddef0e7064.scn"]
 
 [params]
 

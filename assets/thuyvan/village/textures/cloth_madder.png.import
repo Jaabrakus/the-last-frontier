@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://ckaocdb3bu34l"
+path.s3tc="res://.godot/imported/cloth_madder.png-afff8b9acd4bd6a5aa4db252e79419fe.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/cloth_madder.png"
+dest_files=["res://.godot/imported/cloth_madder.png-afff8b9acd4bd6a5aa4db252e79419fe.s3tc.ctex"]
 
 [params]
 

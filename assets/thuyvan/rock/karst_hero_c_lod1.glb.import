@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://davx4opnytmaj"
+path="res://.godot/imported/karst_hero_c_lod1.glb-563579d984a9a865b91462f27b1ae5f7.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/karst_hero_c_lod1.glb"
+dest_files=["res://.godot/imported/karst_hero_c_lod1.glb-563579d984a9a865b91462f27b1ae5f7.scn"]
 
 [params]
 
@@ -39,10 +43,12 @@ _subresources={
 "materials": {
 "moss": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/moss.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/moss.tres"
 },
 "rock_karst": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/rock_karst.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/rock_karst.tres"
 }
 }

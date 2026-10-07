@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://vwgdty28qxfr"
+path="res://.godot/imported/drying_rack.glb-3c935609d4f941f897e6df15dfd15225.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/drying_rack.glb"
+dest_files=["res://.godot/imported/drying_rack.glb-3c935609d4f941f897e6df15dfd15225.scn"]
 
 [params]
 
@@ -39,14 +43,17 @@ _subresources={
 "materials": {
 "tvv_bamboo": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_bamboo.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_bamboo.tres"
 },
 "tvv_cloth_indigo": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_indigo.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_indigo.tres"
 },
 "tvv_thatch": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_thatch.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_thatch.tres"
 }
 }

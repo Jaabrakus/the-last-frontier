@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://c3d8l1toellkr"
+path="res://.godot/imported/sampan.glb-9b635353902c9af085e6bf8ddba5b29e.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/sampan.glb"
+dest_files=["res://.godot/imported/sampan.glb-9b635353902c9af085e6bf8ddba5b29e.scn"]
 
 [params]
 
@@ -39,22 +43,27 @@ _subresources={
 "materials": {
 "tvv_bamboo": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_bamboo.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_bamboo.tres"
 },
 "tvv_basket": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_basket.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_basket.tres"
 },
 "tvv_plank": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_plank.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_plank.tres"
 },
 "tvv_timber": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_timber.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_timber.tres"
 },
 "tvv_weave": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_weave.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_weave.tres"
 }
 }

@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://cijuuxr8ok4li"
+path="res://.godot/imported/cliff_notch_75.glb-a67fe5e70ea669e81208d1496fa419a8.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/cliff_notch_75.glb"
+dest_files=["res://.godot/imported/cliff_notch_75.glb-a67fe5e70ea669e81208d1496fa419a8.scn"]
 
 [params]
 
@@ -39,10 +43,12 @@ _subresources={
 "materials": {
 "moss": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/moss.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/moss.tres"
 },
 "rock_karst": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/rock_karst.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/rock_karst.tres"
 }
 }

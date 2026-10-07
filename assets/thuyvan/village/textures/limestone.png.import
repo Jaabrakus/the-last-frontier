@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://d0dcj6tr6bu24"
+path.s3tc="res://.godot/imported/limestone.png-94c632d097bacba69afbf6a1bed287ef.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/limestone.png"
+dest_files=["res://.godot/imported/limestone.png-94c632d097bacba69afbf6a1bed287ef.s3tc.ctex"]
 
 [params]
 

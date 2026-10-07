@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://dw12fgp8ipykw"
+path.s3tc="res://.godot/imported/flags.png-4f928e8338d13c88a721fe76ad77cfa5.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/village/textures/flags.png"
+dest_files=["res://.godot/imported/flags.png-4f928e8338d13c88a721fe76ad77cfa5.s3tc.ctex"]
 
 [params]
 

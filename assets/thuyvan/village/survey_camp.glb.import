@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://bbkw6lre8y1cn"
+path="res://.godot/imported/survey_camp.glb-e2d07b8e5af2b0ff0c3722ace35c2855.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/survey_camp.glb"
+dest_files=["res://.godot/imported/survey_camp.glb-e2d07b8e5af2b0ff0c3722ace35c2855.scn"]
 
 [params]
 
@@ -39,30 +43,37 @@ _subresources={
 "materials": {
 "tvv_cloth_bone": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_bone.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_bone.tres"
 },
 "tvv_cloth_madder": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres"
 },
 "tvv_cloth_ochre": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_ochre.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_ochre.tres"
 },
 "tvv_iron": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_iron.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_iron.tres"
 },
 "tvv_plank": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_plank.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_plank.tres"
 },
 "tvv_rope": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_rope.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_rope.tres"
 },
 "tvv_timber": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_timber.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_timber.tres"
 }
 }

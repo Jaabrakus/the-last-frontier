@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://bib6g2mh0h2vw"
+path="res://.godot/imported/tv_broadleaf.glb-d9a52e700db6d8a440e02c47ba67db1b.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/vegetation/tv_broadleaf.glb"
+dest_files=["res://.godot/imported/tv_broadleaf.glb-d9a52e700db6d8a440e02c47ba67db1b.scn"]
 
 [params]
 

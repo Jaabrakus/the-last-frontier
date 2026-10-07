@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://puryjxyx7p8x"
+path="res://.godot/imported/fence_wattle_2m.glb-a3bb807d08f74ec9a1c398c9b05eb5e4.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/village/fence_wattle_2m.glb"
+dest_files=["res://.godot/imported/fence_wattle_2m.glb-a3bb807d08f74ec9a1c398c9b05eb5e4.scn"]
 
 [params]
 
@@ -39,14 +43,17 @@ _subresources={
 "materials": {
 "tvv_basket": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_basket.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_basket.tres"
 },
 "tvv_timber": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_timber.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_timber.tres"
 },
 "tvv_weave": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_weave.tres",
 "use_external/path": "res://assets/thuyvan/village/materials/tvv_weave.tres"
 }
 }

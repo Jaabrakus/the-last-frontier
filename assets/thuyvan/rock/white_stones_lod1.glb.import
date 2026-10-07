@@ -1,11 +1,15 @@
 [remap]
 
 importer="scene"
+importer_version=1
 type="PackedScene"
+uid="uid://byhqx1dtfpwsp"
+path="res://.godot/imported/white_stones_lod1.glb-a467fcf816f8f5ebe14cb9ef26bccb74.scn"
 
 [deps]
 
 source_file="res://assets/thuyvan/rock/white_stones_lod1.glb"
+dest_files=["res://.godot/imported/white_stones_lod1.glb-a467fcf816f8f5ebe14cb9ef26bccb74.scn"]
 
 [params]
 
@@ -39,6 +43,7 @@ _subresources={
 "materials": {
 "stone_white": {
 "use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/rock/materials/stone_white.tres",
 "use_external/path": "res://assets/thuyvan/rock/materials/stone_white.tres"
 }
 }

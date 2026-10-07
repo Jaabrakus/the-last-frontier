@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://c00okb677ar66"
+path.s3tc="res://.godot/imported/tv_river_stone_4m.png-96896b616cabdca6647dd37c6984ee6e.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/rock/tv_river_stone_4m.png"
+dest_files=["res://.godot/imported/tv_river_stone_4m.png-96896b616cabdca6647dd37c6984ee6e.s3tc.ctex"]
 
 [params]
 

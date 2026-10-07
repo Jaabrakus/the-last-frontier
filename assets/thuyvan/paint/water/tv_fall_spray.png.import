@@ -2,10 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://3c30i86ovjb3"
+path.s3tc="res://.godot/imported/tv_fall_spray.png-a610c2834235635eebcea12bbdb4b886.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
 
 [deps]
 
 source_file="res://assets/thuyvan/paint/water/tv_fall_spray.png"
+dest_files=["res://.godot/imported/tv_fall_spray.png-a610c2834235635eebcea12bbdb4b886.s3tc.ctex"]
 
 [params]
 
