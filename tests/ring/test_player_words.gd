@@ -102,7 +102,7 @@ func _run() -> void:
 
 ## Round 3 (smash_r3 spec v2 §15 PERCENT): every player-facing VALUE (words, labels, card and hint text; never keys or ids:
 ## a value with no space that reads as an id, a path or a tag is left out) of screens.json, rules.json's words, hud.json,
-## lessons.json, practice.json, movement.json's words and moves.json's labels, free of the show's words AND Smash's own
+## lessons.json, practice.json, sides.json (round 4), movement.json's words and moves.json's labels, free of the show's words AND Smash's own
 ## names (stock, blast zone, DI, tech, edge-guard, meteor, smash, Final Smash).
 func _values_r3() -> void:
 	var smash := RegEx.create_from_string("(?i)\\b(?:stocks?|blast ?zones?|tech(?:s|ed|ing)?|edge-?guard\\w*|meteor\\w*|smash\\w*|final smash)\\b")
@@ -113,7 +113,7 @@ func _values_r3() -> void:
 	sources["screens.json"] = screens
 	var rules: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/ring/rules.json"))
 	sources["rules.json words"] = (rules as Dictionary).get("words", {}) if rules is Dictionary else {}
-	for f: String in ["hud.json", "lessons.json", "practice.json"]:
+	for f: String in ["hud.json", "lessons.json", "practice.json", "sides.json"]:
 		var p := "res://data/ring/" + f
 		sources[f] = JSON.parse_string(FileAccess.get_file_as_string(p)) if FileAccess.file_exists(p) else {}
 	var mv: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/ring/movement.json"))

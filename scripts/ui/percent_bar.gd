@@ -8,7 +8,8 @@ extends Control
 ## any body's place in the world. Nothing is attached to, follows or points at a body; there are no numbers on bodies.
 ##   layout A    (the default) your plate top-left, theirs top-right mirrored; B (hud.json layout) the bottom corners. 3v3:
 ##               three smaller plates a side, stacked
-##   a plate     a dark plate (plate.alpha) with a side-colour rule, the element's glyph (our own shapes), the name, the %
+##   a plate     a dark plate (plate.alpha) with a side-colour rule (round 4: RingSides.colour, the element's home or away
+##               colour), the element's mark (round 4: the move icons' own set), the name, the %
 ##               in big bold digits with a smaller "%", the lives as small glyphs; YOUR plate only: the fresh-damage band
 ##               (the % Patch may take back) and three pips (jump, dodge, Rise: dim when spent, a soft tick as one refills)
 ##   the %       its colour ramps ink -> gold -> orange -> red -> deep red (an OKLab blend; an outline from outline_from),
@@ -318,7 +319,8 @@ func plate_info(t: int, k: int) -> Dictionary:
 	var fresh := -1.0
 	if mine and _rules != null:
 		fresh = _rules.fresh_pct(b)
-	return {"name": _name_of(b), "element": _element_of(b), "pct": p, "pct_text": "%d" % roundi(p), "color": ramp(p),
+	return {"name": _name_of(b), "element": _element_of(b), "side": side_colour(t, _element_of(b)), "pct": p,
+			"pct_text": "%d" % roundi(p), "color": ramp(p),
 			"lives": lives, "last": lives == 1, "pips": pips() if mine else [], "fresh": fresh, "safe": safe, "mine": mine,
 			"throb": p > cnum("throb_from", 200.0), "outline": p >= cnum("outline_from", 180.0)}
 
@@ -376,6 +378,39 @@ func plate_rect(screen: int, k: int) -> Rect2:
 	return Rect2(x, y, w, h)
 
 
+## The bottom of the top plates on a screen `vh` px high (layout A: the plates at the top; -1 when they stand at the bottom):
+## FirstHints' panel stands under it (round 4: nothing over the plates). A 1v1's plate (3v3's stacked plates go lower).
+static func top_plates_bottom(vh: float) -> float:
+	var lay := String(hud_cfg().get("layout", "A"))
+	var l := (_blk("layouts")).get(lay, {}) as Dictionary
+	if String(l.get("corner", "top")) != "top":
+		return -1.0
+	var sc := maxf(vh / cnum("ref_h", 720.0), 0.5)
+	var at: Array = l.get("at", [24, 16])
+	return (float(at[1]) + float(_blk("plate").get("h", 84.0))) * sc
+
+
+## The clock's box and the event line's (shown or not) on the screen now, and each plate's (the tests' overlap check).
+func text_rects() -> Dictionary:
+	var sc := _scale()
+	var vw := get_viewport_rect().size.x if is_inside_tree() else 1280.0
+	var cy := float(((_blk("layouts")).get(layout(), {}) as Dictionary).get("clock_y", 14)) * sc
+	var fs := int(26 * sc)
+	var ct := clock_text() if _m != null else "0:00"
+	var tw := _font.get_string_size(ct, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	var es := int(17 * sc)
+	var ev := _event if _event != "" else "-"
+	var ew := _font.get_string_size(ev, HORIZONTAL_ALIGNMENT_LEFT, -1, es).x
+	var ey := cy + fs + 34 * sc
+	var out := {"clock": Rect2(vw * 0.5 - tw * 0.5 - 12 * sc, cy, tw + 24 * sc, fs + 12 * sc),
+			"event": Rect2(vw * 0.5 - ew * 0.5, ey - es, ew, es * 1.3), "plates": []}
+	for screen in 2:
+		var t := my_side() if screen == 0 else 1 - my_side()
+		for k in team(t).size():
+			(out.plates as Array).append(plate_rect(screen, k))
+	return out
+
+
 # ---------------------------------------------------------------- the drawing
 func _draw() -> void:
 	if _rules == null or _m == null:
@@ -415,8 +450,7 @@ func _draw_plate(screen: int, k: int, info: Dictionary, t: int, sc: float) -> vo
 	var s := _st(team(t)[k])
 	# the plate and its side's rule
 	draw_rect(r, Color(0.02, 0.015, 0.01, float(_blk("plate").get("alpha", 0.45))))
-	var sides: Array = hud_cfg().get("side_colors", [[1, 0.8, 0.4], [0.55, 0.78, 1.0]])
-	var side_col := _col(sides[t] if t < sides.size() else sides[0])
+	var side_col: Color = info.get("side", side_colour(t, String(info.element)))
 	var rw := float(_blk("plate").get("rule_px", 2.0)) * sc
 	draw_rect(Rect2(r.end.x - rw if flip else r.position.x, r.position.y, rw, r.size.y), side_col)
 	var pad := 8.0 * sc
@@ -430,6 +464,8 @@ func _draw_plate(screen: int, k: int, info: Dictionary, t: int, sc: float) -> vo
 	var nw := _font.get_string_size(name_s, HORIZONTAL_ALIGNMENT_LEFT, -1, ns).x
 	var tx0 := glyph_r.end.x + pad if not flip else glyph_r.position.x - pad
 	var ny := r.position.y + ns + 4.0 * sc
+	draw_string_outline(_font, Vector2(tx0 - (nw if flip else 0.0), ny), name_s, HORIZONTAL_ALIGNMENT_LEFT, -1, ns, int(ink_px() * sc),
+			Color(0.02, 0.015, 0.01, 0.88))
 	draw_string(_font, Vector2(tx0 - (nw if flip else 0.0), ny), name_s, HORIZONTAL_ALIGNMENT_LEFT, -1, ns, FrontierHUD.TEXT)
 	# the lives (small glyphs after the name; the last one pulses; a cracked one drops during a fall)
 	var lp := float(pc.get("life_px", 14.0)) * sc
@@ -555,11 +591,29 @@ func _draw_pip(i: int, r: Rect2, c: Color) -> void:
 					maxf(r.size.x * 0.12, 1.2))
 
 
-## The element's glyph (our own shapes): earth a stone block on a base, water three waves, fire a flame, air a swirl.
+## A plate's 2 px side rule and life glyphs (round 4, HUD: RingSides.colour: the element's home colour, its away colour for a
+## side in the away dress of a mirror match; like team jerseys). A colour on a fixed plate: never on or near a body.
+static func side_colour(t: int, el: String) -> Color:
+	return RingSides.colour(t, el)
+
+
+## The ONE ink outline's width (hud.json strip.ink_px): the plate's name wears it as the strip's letters do.
+static func ink_px() -> float:
+	return BendStrip.snum("ink_px", 5.0) * 0.6
+
+
+## The element's mark (round 4: the new set's own, assets/ui/icons/spell_mark__<element>.svg: three stacked slabs, one curling
+## crest, three tongues, streaks with a curl), tinted the side's colour on a dark disc; without the file round 3's shapes.
 func _draw_glyph(el: String, r: Rect2, c: Color) -> void:
 	var o := r.get_center()
 	var s := r.size.x * 0.5
 	draw_circle(o, s, Color(0.0, 0.0, 0.0, 0.35))
+	var tex := BendStrip.icon_texture("mark", el)
+	if tex != null:
+		var inner := r.grow(-s * 0.22)
+		draw_texture_rect(tex, Rect2(inner.position + Vector2(1, 1), inner.size), false, Color(0, 0, 0, 0.5))
+		draw_texture_rect(tex, inner, false, c)
+		return
 	match el:
 		"earth":
 			draw_colored_polygon(PackedVector2Array([o + Vector2(-0.55, 0.45) * s, o + Vector2(0.55, 0.45) * s,

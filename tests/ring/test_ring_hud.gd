@@ -209,11 +209,11 @@ const SECONDS := {
 }
 
 
-## The strip's lines under the chips that show (exactly one: the help line).
+## The strip's help lines that show (exactly one: round 4's one line, in the first match and Practice).
 func _lines_shown(strip: BendStrip) -> Array:
 	var out: Array = []
 	for n in strip.get_children():
-		if n is Label and (n as Label).visible and (n as Label).text != "":
+		if n is Label and String(n.name) in ["HelpLine", "ReadyLine"] and (n as Label).visible and (n as Label).text != "":
 			out.append((n as Label).text)
 	return out
 
@@ -232,7 +232,10 @@ func _strip() -> void:
 	if strip == null:
 		return
 	await _ticks(3)
-	# every scheme x element: the JAB and GUARD chips, the four role columns plus 5, exactly one help line
+	# every scheme x element: the JAB and GUARD chips, the four role columns plus 5, exactly one help line (round 4: shown in
+	# the first match and Practice, one line of 64 characters or fewer)
+	strip.first_match_override = true
+	strip._all_casts = 0
 	for el: String in Bending.ELEMENTS:
 		MatchSetup.element = el
 		await _until(func() -> bool: return p.arena_element == el and p.hotbar.spell != "", 3.0)
@@ -259,13 +262,15 @@ func _strip() -> void:
 			ok = ok and names == NAMES[el]
 			ok = ok and String(strip.column(1).head).ends_with("▲") and (String(strip.column(0).head).ends_with("▲") == (el == "fire"))
 			var lines := _lines_shown(strip)
-			ok = ok and lines.size() == 1 and not String(lines[0]).contains("\n") and String(lines[0]) == KitWords.help_line(s)
+			ok = ok and lines.size() == 1 and not String(lines[0]).contains("\n") and String(lines[0]) == KitWords.strip_help(s) \
+					and String(lines[0]).length() <= 64
 			_expect(ok, "%s %s: JAB %s · GUARD %s · 1-5 %s, the taps %s, one help line (%s)" % [el, s, names[0], names[1],
 					names.slice(2), taps, lines])
 		if el == "fire":
 			_expect(String(strip.column(0).grow) == "hold to grow it: Fireball", "fire's 1 says it grows: \"%s\"" % strip.column(0).grow)
 	MatchSetup.set_scheme("keys")
 	MatchSetup.element = "earth"
+	strip.first_match_override = false
 	await _until(func() -> bool: return p.arena_element == "earth" and p.hotbar.spell != "", 3.0)
 	await _ticks(3)
 	_expect(bool(strip.column(0).readied) and not bool(strip.column(1).readied), "the first column readied")
@@ -307,8 +312,12 @@ func _strip() -> void:
 			"the first match: key 1's \"tap twice\" hidden (%.2f), still after one cast (%.2f), in after two (%.2f); key 2's still hidden"
 			% [a0, a1, a2])
 	strip.first_match_override = false
-	await _secs(0.2)
-	_expect(strip.tap_alpha(1) > 0.99, "after the first match every \"tap twice\" shows")
+	strip.held_override = {1: true}
+	await _secs(0.8)
+	var held_a := strip.tap_alpha(1)
+	strip.held_override = {}
+	await _secs(0.8)
+	_expect(held_a > 0.99 and strip.tap_alpha(1) < 0.01, "after the first match a \"tap twice\" shows while its key is held (round 4)")
 	# holding a stone it caught: "E again: throw it back" on the GUARD chip, his own only
 	var mine := Node3D.new()
 	mine.name = "HeldStoneStandIn"

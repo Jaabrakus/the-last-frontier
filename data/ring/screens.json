@@ -134,6 +134,13 @@
 			"direction": "Hold W, S, A or D as you press {aim}: strike, wall or dash  ·  nothing held: the readied move",
 			"radial": "Hold {wheel}: your moves round a wheel, point and let go  ·  hold {aim}: aim, let go to cast"
 		},
+		"_help_strip": "round 4 (HUD): the strip's one help line per scheme, ONE line of 64 characters or fewer with the keys as bound (KitWords.strip_help; the first letter made a capital); shown in the first match and in Practice until 20 casts",
+		"help_strip": {
+			"keys": "{aim}: hold to aim, let go to cast",
+			"first_moves": "1-4 your moves  ·  {aim}: hold to aim, let go to cast",
+			"direction": "Hold W, A, S or D with {aim}: strike, dash or wall",
+			"radial": "Hold {wheel} for the wheel  ·  {aim}: hold, let go to cast"
+		},
 		"rules": {
 			"lock": "Click: it goes when ready. Hold: aim while it fills, let go to cast; let go early to call it off. Hold 2 longer: ▲ it grows.",
 			"guard": "{guard}: on the beat it's yours. Late, half gets through. Earth always catches stone.",

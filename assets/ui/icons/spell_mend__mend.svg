@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M45 9.48 L47.83 11.37 L50.38 13.62 L52.63 16.17 L54.52 19 L56.02 22.05 L57.11 25.27 L57.78 28.61 L58 32 L57.78 35.39 L57.11 38.73 L56.02 41.95 L54.52 45 L52.63 47.83 L50.38 50.38 L47.83 52.63 L45 54.52 L41.95 56.02 L38.73 57.11 L35.39 57.78 L32 58 L28.61 57.78 L25.27 57.11 L22.05 56.02 L19 54.52 L16.17 52.63 L13.62 50.38 L11.37 47.83 L9.48 45 L7.98 41.95 L6.89 38.73 L6.22 35.39 L6 32 L6.22 28.61 L6.89 25.27 L7.98 22.05 L9.48 19 L11.37 16.17 L13.62 13.62 L16.17 11.37 L19 9.48" stroke-width="1.6"/>
+  <path d="M10 42 L22 28 L30 36 L40 20 L54 26" stroke-width="3.4"/>
+  <path d="M15 32 L19 39" stroke-width="1.6"/>
+  <path d="M24 25 L29 30" stroke-width="1.6"/>
+  <path d="M32 28 L37 33" stroke-width="1.6"/>
+  <path d="M41 16 L43 26" stroke-width="1.6"/>
+  <path d="M48 20 L47 30" stroke-width="1.6"/>
+</svg>
