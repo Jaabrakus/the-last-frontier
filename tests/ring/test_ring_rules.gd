@@ -600,6 +600,9 @@ func _stock_part() -> void:
 			await _until(func() -> bool: return not rules.is_away(f), 3.0)
 			await _ticks(2)
 	await _ticks(3)
+	# (round 4: "Over" waits for the last fall's slow beat, RingMoment; read once it has run out)
+	await _until(func() -> bool: return not RingMoment.busy(), 3.0)
+	await _ticks(2)
 	_expect(rules.stocks_of(f) == 0 and rules.is_gone(f) and mode.phase == "OVER" and mode.last_why == "falls" and mode.last_winner == 0
 			and mode.banner.text == "Over", "the last life gone: the game over (OVER, why falls, \"%s\"), no respawn" % mode.banner.text)
 	await _until(func() -> bool: return mode.phase == "DONE", 4.0)

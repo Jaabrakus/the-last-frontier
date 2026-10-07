@@ -50,6 +50,9 @@ func _initialize() -> void:
 		quit(2))
 	MatchSetup._aim_help = "strong"
 	GameSettings.path = OWN_CFG
+	# (round 4's merge: BOTS2 set rules.json stock.pct_scale 0.86 for the match pace; this test checks the spec's ledger
+	# and flights at scale 1, so it pins the scale at 1 for its run: RingRules.data() is read once and kept)
+	(RingRules.data()["stock"] as Dictionary)["pct_scale"] = 1.0
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	RingRules.rule_set_override = "stock"
 	SwayCaster.free_override = true

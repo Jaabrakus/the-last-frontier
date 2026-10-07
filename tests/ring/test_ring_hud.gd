@@ -502,6 +502,10 @@ func _no_cues() -> void:
 	if n == null:
 		return
 	n.held = true
+	# (round 4's merge: the player's own status words (rooted, slowed, anchored, winded: each on its own timer) run out first;
+	# round 4's HUD sets them right-aligned in the far corner, so one ending by itself in the moving second moves their box,
+	# which is no cue of the bot's)
+	await _until(func() -> bool: return hud.status_words().is_empty(), 8.0)
 	var still := n.global_position
 	var hold := func() -> void:
 		if is_instance_valid(n):
@@ -512,6 +516,12 @@ func _no_cues() -> void:
 	var a := _canvas_items()
 	await _secs(1.0)
 	var b := _canvas_items()
+	if not hud.status_words().is_empty():
+		# (a status word of the player's own begun in the still second (seed 7: "winded") runs out first, and the still
+		# picture is taken again: its ending in the moving second is no cue of the bot's)
+		await _until(func() -> bool: return hud.status_words().is_empty(), 8.0)
+		await _ticks(3)
+		b = _canvas_items()
 	physics_frame.disconnect(hold)
 	var steady := _moved(a, b)          # (what changes by itself in a second: not the bot's doing)
 	var t := 0.0
@@ -531,7 +541,8 @@ func _no_cues() -> void:
 		if not steady.has(k):
 			tracking.append(changed[k])
 	_expect(moved >= 9.5 and tracking.is_empty(),
-			"the bot moved %.1f m in 1 s: no CanvasItem moved, showed or hid with it (%d items; %s)" % [moved, c2.size(), tracking])
+			"the bot moved %.1f m in 1 s: no CanvasItem moved, showed or hid with it (%d items; %s; status '%s')" % [moved, c2.size(), tracking,
+			hud._status.text if hud._status != null else "-"])
 	for path: String in ["res://scripts/ui/bend_strip.gd", "res://scripts/ui/match_bar.gd"]:
 		var src := FileAccess.get_file_as_string(path)
 		var code := "\n".join(Array(src.split("\n")).filter(func(ln: String) -> bool: return not ln.strip_edges().begins_with("#")))
