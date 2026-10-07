@@ -176,6 +176,18 @@ visual references, no animation files imported) is his statement; the rows below
 | `own-bend-getup-attack` | 2026-10-06 (sixth set) | `bend_clips.py` (`getup_attack`, `_getup_attack`, `_wclip`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
 | `own-bend-knock-spiked` | 2026-10-06 (sixth set) | `bend_clips.py` (`knock_spiked`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
 | `own-bend-knock-bounce` | 2026-10-06 (sixth set) | `bend_clips.py` (`knock_bounce`, `_wclip`) | the rig's rest pose; keys in `CLIPS` (`SET6`) | (for the owner to fill) |
+| `own-bend-jab-rise` | 2026-10-07 (seventh set) | `bend_clips.py` (`jab_rise`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-jab-rise-l` | 2026-10-07 (seventh set) | `bend_clips.py` (`jab_rise`, `mirror_clip`) | `jab_rise`'s keys mirrored left for right | (as its original) |
+| `own-bend-earth-hammer` | 2026-10-07 (seventh set) | `bend_clips.py` (`earth_hammer`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-water-downpour` | 2026-10-07 (seventh set) | `bend_clips.py` (`water_downpour`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-fire-axe-kick` | 2026-10-07 (seventh set) | `bend_clips.py` (`fire_axe_kick`, `_heel_key`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-fire-axe-kick-l` | 2026-10-07 (seventh set) | `bend_clips.py` (`fire_axe_kick`, `mirror_clip`) | `fire_axe_kick`'s keys mirrored left for right | (as its original) |
+| `own-bend-air-down-gust` | 2026-10-07 (seventh set) | `bend_clips.py` (`air_down_gust`, `_heel_key`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-guard-hold-earth` | 2026-10-07 (seventh set) | `bend_clips.py` (`guard_hold_earth`, `guard_earth_at`, `_loop`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-guard-hold-water` | 2026-10-07 (seventh set) | `bend_clips.py` (`guard_hold_water`, `guard_water_at`, `_loop`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-guard-hold-fire` | 2026-10-07 (seventh set) | `bend_clips.py` (`guard_hold_fire`, `guard_fire_at`, `_loop`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-guard-hold-air` | 2026-10-07 (seventh set) | `bend_clips.py` (`guard_hold_air`, `guard_air_at`, `_loop`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
+| `own-bend-teeter` | 2026-10-07 (seventh set) | `bend_clips.py` (`teeter`, `teeter_at`, `_each`) | the rig's rest pose; keys in `CLIPS` (`SET7`) | (for the owner to fill) |
 
 - Second set and polish (2026-10-05, after the owner approved the first ten: "looks good but you can always perfect them"):
   the same generator and the same inputs (the rig's rest pose and keys typed into the table, now its `SET2` part); no clip,
@@ -291,6 +303,17 @@ visual references, no animation files imported) is his statement; the rows below
   report only). No earlier set's clip was re-baked. `bend_preview.gd` gains `pairs=` (one clip's last frame beside
   another's first: the scramble onto the hang) and `nosheets=`; `bend_engine_strip.gd` poses the edge clips 2 m along the
   lip from its middle, clear of the stock ring's lantern pier; they read no motion.
+- Seventh set (2026-10-07, round 3's P2: the Pop's rising hand, the four Slams, the four held guards and the teeter): the
+  same generator and the same inputs (the rig's rest pose and keys typed into the table, now its `SET7` part; the guard
+  holds' loops and the teeter's windmill written as typed functions of the frame, `guard_<element>_at` and `teeter_at`);
+  no clip, dump or reference motion read. The guard holds take their held poses from round 2's own guard clips' typed keys
+  (`earth_catch`, `water_turn`, `fire_parry`, `air_guard` in this table) as numbers retyped, not from a library. The Pop's
+  hand ends at the place `scripts/bending/bend_r3.gd` (`pop_stone`) holds earth's Pop stone (typed as `POP_STONE`; a
+  place in the game's code, not motion). Only these twelve clips were baked (`--clips`); no earlier set's clip was
+  re-baked and their tracks and moments are unchanged. The martial-art styles in the comments (Hung Gar's double hammer
+  fist, tai chi's pressing palms and ward-off, Northern Shaolin's axe kick and knife hand, Baguazhang's coiled palms and
+  wheel) are labels for the typed key poses only. New in the generator: `twin_ends` (a twin that leaves and lands on its
+  original's own unmirrored first and last keys, the fall's first pose: the Axe Kick's twin; meta `twin_ends`).
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.
