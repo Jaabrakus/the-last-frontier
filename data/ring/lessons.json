@@ -457,8 +457,95 @@
           "do": "keep_off"
         }
       }
+    },
+    {
+      "id": "basics_move_jab",
+      "track": "basics",
+      "schemes": ["basic"],
+      "title": "Move and jab",
+      "dummy": "stand",
+      "role": "jab",
+      "by": {
+        "*": {
+          "line": "Walk up to it: [move_forward] [move_left] [move_back] [move_right].  Click [fire]: {jab}",
+          "do": "jab"
+        }
+      }
+    },
+    {
+      "id": "basics_cast",
+      "track": "basics",
+      "schemes": ["basic"],
+      "title": "Ready and cast",
+      "dummy": "stand",
+      "role": "strike",
+      "per_element": true,
+      "by": {
+        "*": {
+          "line": "{press}: {name} is ready.  Right-click: it goes as soon as it can{grow}",
+          "do": "cast"
+        }
+      }
+    },
+    {
+      "id": "basics_guard",
+      "track": "basics",
+      "schemes": ["basic"],
+      "title": "Guard",
+      "dummy": "throw",
+      "slow": true,
+      "role": "guard",
+      "per_element": true,
+      "by": {
+        "*": {
+          "line": "It throws {thing} now, slowly.  [bend_guard] just before one hits: {name}.  Hold [bend_guard]: it stays up",
+          "do": "guarded"
+        }
+      }
+    },
+    {
+      "id": "basics_push_off",
+      "track": "basics",
+      "schemes": ["basic"],
+      "title": "Push it off",
+      "dummy": "stand",
+      "role": "push",
+      "per_element": true,
+      "rules": ["stock"],
+      "dummy_pct": 110,
+      "place": "dummy_near_end",
+      "place_m": 6.0,
+      "by": {
+        "*": {
+          "line": "{press}: {name}.  Hold right-click past the second click: it grows.  Push it off the end into the water",
+          "do": "out"
+        }
+      }
+    },
+    {
+      "id": "basics_back",
+      "track": "basics",
+      "schemes": ["basic"],
+      "title": "Get back",
+      "dummy": "stand",
+      "rules": ["stock"],
+      "place": "player_off",
+      "place_m": 4.0,
+      "place_below_m": 0.5,
+      "by": {
+        "*": {
+          "line": "Off the deck?  Hold [jump]: you come back by yourself",
+          "do": "back"
+        }
+      }
     }
   ],
+  "basics_hints": {
+    "_doc": "Round 4 SIMPLE: the hint queue's lines under the Basic controls (RingLessons, MatchSetup.basic()), over hint_queue.lines where one is here: the edge climbs by itself, Space held brings you back.",
+    "edge": "Fall off and you grab the edge.  It climbs by itself, or press [jump] or any direction",
+    "recover": "Off the deck?  Hold [jump]: you come back by yourself"
+  },
+  "_doc_basics": "Round 4 SIMPLE: the Basics track (track 'basics'), five cards for the Basic controls (MatchSetup.controls() 'basic'), each done by doing it: move and jab, ready and cast (1, right-click), guard a slow throw (do 'guarded': any guard of yours that took one of its throws, on the beat or late), push it off (2 held, the dummy at 110% near an end, do 'out'), get back (you put off an end: hold Space, RingAssist brings you back, do 'back'). Under Basic the run is this track only; under Full every card but these ('schemes': ['basic'] keeps them out until RingLessons reads the track). The first launch of the game offers them once (RingAssist.offer_basics).",
   "hints": {
     "_doc": "FirstHints: a first Quick match's key hints, top left, in the ring's first-time panel's place, by the control scheme; each row fades once one of its uses (actions) is pressed. On or off in the ring's Esc menu (GameSettings' hints section, key key_hints; the first Quick match that shows them turns them off as it ends).",
     "kicker": "YOUR KEYS",
