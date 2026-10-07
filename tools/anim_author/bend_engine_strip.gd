@@ -44,6 +44,10 @@ const EDGE_VIEWS := {
 ## The stand-in lip at the deck's end for the edge clips (the stock ring's pale coping over a stone face, as spec 5.1 draws
 ## it; the classic ring's plinth foot under it is covered so the face is one plane): its depth past the deck's end (m).
 const LIP_OUT := 0.2
+## How far along the lip from its middle the edge clips are posed (m): the stock ring stands a lantern pier just outside the
+## middle of each lip (RingArena's lantern spots), which stood between the hang camera and the climber (pass 3 of P2's
+## review), so the figure is shown on the open stretch of stone beside it.
+const EDGE_ALONG := 2.0
 ## The wall a clip names (meta wall_z: the wall break) drawn there, a see-through stone pane from the deck up (m).
 const WALL_SIZE := Vector3(2.4, 3.2, 0.08)
 const WALL_COLOR := Color(0.5, 0.5, 0.54, 0.42)
@@ -164,7 +168,7 @@ func _edge_setup(ring: RingArena) -> void:
 	if ring == null:
 		return
 	var hl := ring.half_l()
-	var lip := ring.to_global(Vector3(hl + LIP_OUT, ring.top(), 0.0))
+	var lip := ring.to_global(Vector3(hl + LIP_OUT, ring.top(), EDGE_ALONG))
 	var into := -ring.global_basis.x
 	into.y = 0.0
 	edge_xf = Transform3D(Basis.looking_at(-into.normalized(), Vector3.UP), lip)

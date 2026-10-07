@@ -107,6 +107,15 @@ extends SceneTree
 ##               the hips) and onto the lie's first pose; the getup attack's sweep low and wide; the spiked knock a
 ##               feet-first vertical plunge with the arms straight over the head after a fold; nothing on the deck
 ##               through it (3 cm). kept r3 p2: the fifth set's lengths and moments as they shipped
+##   sixth pass 3 the critic's pass-2 notes (_sixth_pass3 and the reads above): the earth throw asymmetric (the right fist
+##               driven up over the head as the left is chambered at the hip, both fists closed, the fists 10 cm and more
+##               clear of the hat); the water Rise's crane (the right palm high over the head, the left pressed by the hip,
+##               the hands 0.5 m apart in height), its knees soft on flat feet; the glide's elbows bent; the scramble's right
+##               hand over the lip at hold_s and on the deck at strike_s, the left slapped on the face, the head over the lip
+##               by f3; the slap's head over the hips and its palm out wide; the tech roll entered from the tech's own
+##               airborne frame; the wall break's hat brim 8 cm off the wall; the lie's beat early (by f12); the getup's
+##               pelvis never jumping 20 cm in a frame and settling after its overshoot; the crab sweep's leg near straight
+##               (12 degrees); the bounce's heels and hands left on the deck while the trunk lifts
 ## Ends with "BEND_CLIPS PASSED" or "BEND_CLIPS FAILED" (exit 0 only on a pass; a watchdog quits 2 at LIMIT s).
 
 const LIB := "res://animations_extra/Frontier_Bend.res"
@@ -225,7 +234,7 @@ const HAT_CLEAR := {"own-bend-edge-roll": 0.1, "own-bend-roll-f": 0.08, "own-ben
 ## The sixth set (round 3's P2 Rises and recoveries): clip -> [length in frames, a loop, its twin ("" none)]. All mask full.
 const SIXTH_SET := {"own-bend-rise-earth": [32, false, ""], "own-bend-rise-water": [28, false, ""],
 		"own-bend-rise-fire": [24, false, ""], "own-bend-rise-air": [44, false, ""], "own-bend-edge-scramble": [18, false, ""],
-		"own-bend-tech": [14, false, ""], "own-bend-tech-roll": [18, false, "own-bend-tech-roll-l"],
+		"own-bend-tech": [14, false, ""], "own-bend-tech-roll": [19, false, "own-bend-tech-roll-l"],
 		"own-bend-tech-wall": [15, false, ""], "own-bend-lie": [40, true, ""], "own-bend-getup": [20, false, ""],
 		"own-bend-getup-roll": [26, false, "own-bend-getup-roll-l"], "own-bend-getup-attack": [20, false, ""],
 		"own-bend-knock-spiked": [22, false, ""], "own-bend-knock-bounce": [18, false, ""]}
@@ -1115,6 +1124,27 @@ func _hat_low() -> float:
 	return low
 
 
+## How near either palm comes to the hat (m) now (the skeleton as last posed): HAT_REST carried by headb from its rest.
+func _palm_hat() -> float:
+	var b := sk.find_bone("headb")
+	if b < 0:
+		return INF
+	var rest := sk.get_bone_global_rest(b)
+	var pose := sk.get_bone_global_pose(b)
+	var near := INF
+	for v: Vector3 in HAT_REST:
+		var p := pose * (rest.affine_inverse() * v)
+		for s: String in ["r_palm", "l_palm"]:
+			near = minf(near, p.distance_to(sk.get_bone_global_pose(sk.find_bone(s)).origin))
+	return near
+
+
+## A hand's index finger's curl at t (deg: its knuckles' bends summed; a fist well over 60, an open hand under 30).
+func _grip(a: Animation, t: float, side: String) -> float:
+	var j := _at(a, t, [side + "_palm", side + "_indexa", side + "_indexb", side + "_indexc"])
+	return _bend(j, side + "_palm", side + "_indexa", side + "_indexb") + _bend(j, side + "_indexa", side + "_indexb", side + "_indexc")
+
+
 ## The head's lowest point (m) now (the skeleton as last posed): its sphere (SURF) about the skull's middle.
 func _head_low() -> float:
 	var p := sk.get_bone_global_pose(sk.find_bone("heada")).origin
@@ -1558,6 +1588,71 @@ func _sixth(lib: AnimationLibrary, names: Array[String]) -> void:
 				_check(low > -0.03, "%s: never through the deck (its lowest surface %.3f m)" % [x, low])
 	_sixth_rises(lib, names)
 	_sixth_recoveries(lib, names, lie)
+	_sixth_pass3(lib, names, lie)
+
+
+## The sixth set's pass-3 reads (the critic's pass-2 notes) not covered above.
+func _sixth_pass3(lib: AnimationLibrary, names: Array[String], lie: Animation) -> void:
+	if "own-bend-tech-wall" in names:
+		# (the hat brim kept 8 cm and more off the wall while the palms and the balls of the feet are on it)
+		var a := lib.get_animation(&"own-bend-tech-wall")
+		var wz := float(a.get_meta(&"wall_z", 0.0))
+		var b := sk.find_bone("headb")
+		var front := -INF
+		for i in range(1, 5):
+			_joints(a, i / 30.0)
+			var rest := sk.get_bone_global_rest(b)
+			var pose := sk.get_bone_global_pose(b)
+			for v: Vector3 in HAT_REST:
+				front = maxf(front, (pose * (rest.affine_inverse() * v)).z)
+		print("METRIC tech_wall hat_brim_off_wall_m %.3f" % (wz - front))
+		_check(wz - front >= 0.08, "tech-wall: the hat brim 8 cm and more off the wall (%.3f m)" % (wz - front))
+	if lie != null:
+		# (the daze's beat early, inside the 0.4 s a getup may wait: the flung hand up 8 cm and more and the head lifted by f12)
+		var j0 := _at(lie, 0.0, ["r_palm", "heada"])
+		var hand := 0.0
+		var peak := -1
+		for i in range(0, 13):
+			var j := _at(lie, i / 30.0, ["r_palm"])
+			var up := (j.r_palm as Vector3).y - (j0.r_palm as Vector3).y
+			if up > hand:
+				hand = up
+				peak = i
+		print("METRIC lie stir_hand_up_m %.3f at f%d" % [hand, peak])
+		_check(hand >= 0.08 and peak <= 12, "lie: the hand's stir by f12 (%.2f m at f%d)" % [hand, peak])
+	if "own-bend-getup" in names:
+		# (no pop: the pelvis never moves 0.2 m in a frame; the landing ridden: up onto the toes past the stand, then a settle)
+		var a := lib.get_animation(&"own-bend-getup")
+		var jump := 0.0
+		var prev := _at(a, 0.0, ["pelvis"])
+		for i in range(1, 21):
+			var j := _at(a, i / 30.0, ["pelvis"])
+			jump = maxf(jump, (j.pelvis as Vector3).distance_to(prev.pelvis))
+			prev = j
+		var p15 := (_at(a, 15.0 / 30.0, ["pelvis"]).pelvis as Vector3).y
+		var p17 := (_at(a, 17.0 / 30.0, ["pelvis"]).pelvis as Vector3).y
+		print("METRIC getup pelvis_step_max_m %.3f overshoot_settle_m %.3f" % [jump, p15 - p17])
+		_check(jump < 0.2, "getup: the pelvis never jumps 0.2 m in a frame (%.3f m)" % jump)
+		_check(p15 - p17 > 0.01, "getup: up past the stand, then settled (%.3f m)" % (p15 - p17))
+	if "own-bend-getup-attack" in names:
+		# (the sweeping leg straight from the wind-up through the held end of the arc)
+		var a := lib.get_animation(&"own-bend-getup-attack")
+		var worst := 0.0
+		for i in range(5, 10):
+			var j := _at(a, i / 30.0, ["r_upper_leg", "r_knee", "r_ankle"])
+			worst = maxf(worst, _bend(j, "r_upper_leg", "r_knee", "r_ankle"))
+		print("METRIC getup_attack sweep_knee_max_deg %.1f" % worst)
+		_check(worst < 12.0, "getup-attack: the sweeping leg straight (the knee %.1f deg off)" % worst)
+	if "own-bend-knock-bounce" in names:
+		# (the limbs trail: the heels and the hands left on the deck while the trunk lifts, f4-f6)
+		var a := lib.get_animation(&"own-bend-knock-bounce")
+		var high := 0.0
+		for i in range(4, 7):
+			var j := _at(a, i / 30.0, ["r_palm", "l_palm", "r_heel", "l_heel"])
+			for n: String in ["r_palm", "l_palm", "r_heel", "l_heel"]:
+				high = maxf(high, (j[n] as Vector3).y)
+		print("METRIC knock_bounce limbs_trailing_max_y_m %.3f" % high)
+		_check(high <= 0.1, "knock-bounce: the hands and heels left on the deck as the trunk lifts (%.3f m)" % high)
 
 
 ## The four Rises read as their elements' own recoveries, and apart from each other at a glance.
@@ -1581,14 +1676,15 @@ func _sixth_rises(lib: AnimationLibrary, names: Array[String]) -> void:
 		var lean := rad_to_deg(Vector3.UP.angle_to((m.pelvis as Vector3) - feet))
 		var fists := maxf((m.l_palm as Vector3).y, (m.r_palm as Vector3).y) - (m.pelvis as Vector3).y
 		var wide := absf((m.l_ankle as Vector3).x - (m.r_ankle as Vector3).x)
-		var up := _at(a, strike + 2.0 / 30.0, bones)
-		var over := minf((up.l_palm as Vector3).y, (up.r_palm as Vector3).y) - (up.heada as Vector3).y
+		# (pass 3: the throw asymmetric: the right fist driven up over the head as the bridge hand, the left at the hip)
+		var up := _at(a, strike + 3.0 / 30.0, bones)
+		var over := (up.r_palm as Vector3).y - (up.heada as Vector3).y
 		# (pass 2: the fists driven down outside the knees, the arms nearly straight; the throw's frame already sweeping up)
 		var outside := minf(absf((m.r_palm as Vector3).x) - absf((m.r_knee as Vector3).x),
 				absf((m.l_palm as Vector3).x) - absf((m.l_knee as Vector3).x))
 		var sh := _at(a, mid, ["r_shoulder", "r_palm", "l_shoulder", "l_palm"])
 		var reach := minf((sh.r_palm as Vector3).distance_to(sh.r_shoulder), (sh.l_palm as Vector3).distance_to(sh.l_shoulder))
-		var th := _at(a, strike, ["r_shoulder", "r_palm"])
+		var th := _at(a, strike + 2.0 / 30.0, ["r_shoulder", "r_palm"])
 		var sweep := (th.r_palm as Vector3).y - (th.r_shoulder as Vector3).y
 		print("METRIC rise_earth feet_slide_m %.4f lean_deg %.1f fists_under_hips_m %.3f stance_m %.2f palms_over_head_m %.2f"
 				% [slide, lean, -fists, wide, over])
@@ -1596,12 +1692,23 @@ func _sixth_rises(lib: AnimationLibrary, names: Array[String]) -> void:
 				% [outside, reach, sweep])
 		_check(outside > 0.02, "rise-earth: the fists driven down outside the knees (%.3f m)" % outside)
 		_check(reach > 0.42, "rise-earth: the arms nearly straight into the stone (palm %.2f m from the shoulder)" % reach)
-		_check(sweep > 0.12, "rise-earth: at the throw the arms already sweep up (the palm %.2f m over the shoulder)" % sweep)
+		_check(sweep > 0.12, "rise-earth: two frames into the throw the fist sweeps up past the shoulder (%.2f m over it)" % sweep)
+		var hip := (up.l_palm as Vector3).y - (up.pelvis as Vector3).y
+		var clear := INF
+		for i in range(18, 27):
+			_joints(a, i / 30.0)
+			clear = minf(clear, _palm_hat())
+		var grip_r := _grip(a, strike + 3.0 / 30.0, "r")
+		print("METRIC rise_earth bridge_fist_over_head_m %.3f left_fist_over_hips_m %.3f fist_hat_clear_m %.3f right_curl_deg %.0f"
+				% [over, hip, clear, grip_r])
+		_check(hip < 0.25, "rise-earth: the left fist chambered at the hip at the throw (%.2f m over the hips)" % hip)
+		_check(clear >= 0.1, "rise-earth: the fists 10 cm and more clear of the hat through the throw (%.3f m)" % clear)
+		_check(grip_r > 60.0, "rise-earth: the bridge hand a closed fist (the index curled %.0f deg)" % grip_r)
 		_check(slide < 0.01, "rise-earth: the feet planted on the column from the horse to the throw (%.4f m)" % slide)
 		_check(lean >= 12.0 and lean <= 40.0, "rise-earth: leant forward with the column (%.1f deg)" % lean)
 		_check(fists < -0.15, "rise-earth: both fists driven down under the hips (%.2f m)" % fists)
 		_check(wide > 0.5, "rise-earth: a wide horse (the ankles %.2f m apart)" % wide)
-		_check(over > 0.1, "rise-earth: thrown off with the arms up over the head (%.2f m)" % over)
+		_check(over > 0.1, "rise-earth: thrown off with the right fist up over the head (%.2f m)" % over)
 		key_pose["earth"] = m
 	if "own-bend-rise-water" in names:
 		var a := lib.get_animation(&"own-bend-rise-water")
@@ -1616,8 +1723,10 @@ func _sixth_rises(lib: AnimationLibrary, names: Array[String]) -> void:
 		var top := _at(a, back - 1.0 / 30.0, bones)
 		# (pass 2: the peak both hands floating over the head in a wide oval, standing tall on both feet; the circles
 		# bulging out in front of the body so they read from the camera)
-		var over := minf((top.r_palm as Vector3).y, (top.l_palm as Vector3).y) - (top.heada as Vector3).y
-		var oval := absf((top.l_palm as Vector3).x - (top.r_palm as Vector3).x)
+		# (pass 3: the crane: the right palm high over the head and out, the left pressed down by the hip: a spiral, not a V)
+		var over := (top.r_palm as Vector3).y - (top.heada as Vector3).y
+		var oval := (top.r_palm as Vector3).y - (top.l_palm as Vector3).y
+		var low_hand := (top.l_palm as Vector3).y - (top.pelvis as Vector3).y
 		var feet := absf((top.l_ankle as Vector3).y - (top.r_ankle as Vector3).y)
 		var bulge := 0.0
 		for i in 25:
@@ -1626,8 +1735,13 @@ func _sixth_rises(lib: AnimationLibrary, names: Array[String]) -> void:
 		print("METRIC rise_water swirl_path_m %.2f top_hands_over_head_m %.3f top_oval_m %.2f feet_level_m %.3f swirl_ahead_m %.2f"
 				% [path, over, oval, feet, bulge])
 		_check(path > 1.5, "rise-water: the hand swirls round (its path %.2f m)" % path)
-		_check(over > 0.15, "rise-water: both hands high over the head at the top (%.2f m)" % over)
-		_check(oval > 0.45, "rise-water: the hands apart in an oval over the head at the top, clear of the hat (%.2f m)" % oval)
+		var kn := _at(a, 10.0 / 30.0, ["r_upper_leg", "r_knee", "r_ankle", "l_upper_leg", "l_knee", "l_ankle"])
+		var soft := (_bend(kn, "r_upper_leg", "r_knee", "r_ankle") + _bend(kn, "l_upper_leg", "l_knee", "l_ankle")) * 0.5
+		print("METRIC rise_water crane_low_hand_over_hips_m %.3f swirl_knees_deg %.1f" % [low_hand, soft])
+		_check(over > 0.15, "rise-water: the crane's right palm high over the head (%.2f m)" % over)
+		_check(oval > 0.5, "rise-water: the crane's hands 0.5 m and more apart in height (%.2f m)" % oval)
+		_check(low_hand < 0.2, "rise-water: the crane's left palm pressed down by the hip (%.2f m over the hips)" % low_hand)
+		_check(soft > 15.0 and soft < 50.0, "rise-water: the knees soft riding the column (%.1f deg)" % soft)
 		_check(feet < 0.06, "rise-water: standing on both feet on the column (the ankles %.3f m apart in height)" % feet)
 		_check(bulge > 0.3, "rise-water: the circles swept out in front of the body (%.2f m ahead of the hips)" % bulge)
 		key_pose["water"] = _at(a, (strike + back) * 0.5, bones)
@@ -1684,6 +1798,14 @@ func _sixth_rises(lib: AnimationLibrary, names: Array[String]) -> void:
 		_check(level < 0.15, "rise-air: the thrust palm at the shoulder's height (%.3f m off it)" % level)
 		_check(high < 0.1, "rise-air: no hand over the head in the whirl (apart from the water Rise: %.2f m)" % high)
 		_check(tuck < 0.08, "rise-air: the feet tucked up together in the whirl (%.3f m)" % tuck)
+		# (pass 3: the wings' elbows bent and dropped through the glide, never locked straight (the T pose))
+		var el := Vector2(INF, -INF)
+		for i in range(int(round(lf * 30.0)), int(round(a.length * 30.0)) + 1):
+			var e := _at(a, i / 30.0, ["r_shoulder", "r_elbow", "r_wrist", "l_shoulder", "l_elbow", "l_wrist"])
+			var m := (_bend(e, "r_shoulder", "r_elbow", "r_wrist") + _bend(e, "l_shoulder", "l_elbow", "l_wrist")) * 0.5
+			el = Vector2(minf(el.x, m), maxf(el.y, m))
+		print("METRIC rise_air glide_elbows_deg %.0f..%.0f" % [el.x, el.y])
+		_check(el.x > 10.0 and el.y < 55.0, "rise-air: the wings' elbows bent through the glide (%.0f..%.0f deg)" % [el.x, el.y])
 		key_pose["air"] = s
 	# (apart at a glance: each pair of the four key poses differs somewhere by 0.4 m or more, the palms and the ankles
 	# measured from the pelvis)
@@ -1715,9 +1837,21 @@ func _sixth_recoveries(lib: AnimationLibrary, names: Array[String], lie: Animati
 		_check(is_equal_approx(float(a.get_meta(&"lip_y", -1.0)), lip_y), "scramble: keyed about the hang's lip (lip_y)")
 		var s := _at(a, 0.0, ["heada", "l_palm", "r_palm"])
 		_check((s.heada as Vector3).y < lip_y, "scramble: starts with the head under the lip (%.2f m)" % ((s.heada as Vector3).y - lip_y))
-		var slap := _at(a, float(a.get_meta(&"hold_s")), ["r_palm"])
-		var face := absf((slap.r_palm as Vector3).z - lip_z)
-		_check(face < 0.05 and (slap.r_palm as Vector3).y < lip_y, "scramble: the hand slapped on the face under the lip (%.3f m off it)" % face)
+		# (pass 3: the right hand thrown over the lip at hold_s and slapped on the deck at strike_s, so a foe on the deck sees
+		# it land in the first 0.1 s; the left palm slapped on the face under the lip as the brace)
+		var over := _at(a, float(a.get_meta(&"hold_s")), ["r_palm"])
+		var deck := _at(a, float(a.get_meta(&"strike_s")), ["r_palm", "heada"])
+		var slap := _at(a, 4.0 / 30.0, ["l_palm"])
+		var face := absf((slap.l_palm as Vector3).z - lip_z)
+		print("METRIC edge_scramble hold_r_over_lip_m %.3f strike_r_on_deck_m %.3f strike_s %.3f head_f3_over_lip_m %.3f" % [
+				(over.r_palm as Vector3).y - lip_y, (deck.r_palm as Vector3).y - lip_y, float(a.get_meta(&"strike_s")),
+				(deck.heada as Vector3).y - lip_y])
+		_check((over.r_palm as Vector3).y > lip_y + 0.15 and (over.r_palm as Vector3).z > lip_z, "scramble: the right hand over the lip at hold_s")
+		_check(absf((deck.r_palm as Vector3).y - lip_y - 0.03) < 0.02 and (deck.r_palm as Vector3).z > lip_z + 0.1,
+				"scramble: the right palm on the deck at strike_s (%.3f m)" % ((deck.r_palm as Vector3).y - lip_y))
+		_check(float(a.get_meta(&"strike_s")) <= 0.1 + 1e-4, "scramble: the hand on the deck in the first 0.1 s")
+		_check((deck.heada as Vector3).y > lip_y + 0.1, "scramble: the head up over the lip by the slap (f3)")
+		_check(face < 0.05 and (slap.l_palm as Vector3).y < lip_y, "scramble: the left hand slapped on the face under the lip (%.3f m off it)" % face)
 		var top := 0.0
 		for i in 19:
 			var j := _at(a, i / 30.0, ["r_ball", "l_ball"])
@@ -1725,25 +1859,38 @@ func _sixth_recoveries(lib: AnimationLibrary, names: Array[String], lie: Animati
 				top = maxf(top, (j[n] as Vector3).z - lip_z)
 		_check(top < 0.02, "scramble: the feet never through the face (%.3f m)" % top)
 		# (pass 2: each hand thrown high over the lip before it lands on the deck, and the head over the lip early)
-		var throw_r := _at(a, 6.0 / 30.0, ["r_palm"])
-		var throw_l := _at(a, 8.0 / 30.0, ["l_palm"])
-		var head5 := _at(a, 5.0 / 30.0, ["heada"])
-		print("METRIC edge_scramble throw_r_over_lip_m %.3f throw_l_over_lip_m %.3f head_f5_vs_lip_m %.3f"
-				% [(throw_r.r_palm as Vector3).y - lip_y, (throw_l.l_palm as Vector3).y - lip_y, (head5.heada as Vector3).y - lip_y])
-		_check((throw_r.r_palm as Vector3).y > lip_y + 0.15 and (throw_r.r_palm as Vector3).z > lip_z,
-				"scramble: the right hand thrown high over the lip (f6)")
+		var throw_l := _at(a, 7.0 / 30.0, ["l_palm"])
+		print("METRIC edge_scramble throw_l_over_lip_m %.3f" % ((throw_l.l_palm as Vector3).y - lip_y))
 		_check((throw_l.l_palm as Vector3).y > lip_y + 0.15 and (throw_l.l_palm as Vector3).z > lip_z,
-				"scramble: the left hand thrown high over the lip (f8)")
-		_check((head5.heada as Vector3).y > lip_y - 0.12, "scramble: the head up at the lip by f5 (%.2f m)" % ((head5.heada as Vector3).y - lip_y))
+				"scramble: the left hand thrown high over the lip (f7)")
+		# (pass 3: each hand's last frame before the deck its apex over the place it lands: an arc over the lip and down)
+		for sd: String in ["r", "l"]:
+			var f_on := 3 if sd == "r" else 8
+			var ap := _at(a, (f_on - 1) / 30.0, [sd + "_palm"])
+			var on := _at(a, f_on / 30.0, [sd + "_palm"])
+			var dz := (on[sd + "_palm"] as Vector3).z - (ap[sd + "_palm"] as Vector3).z
+			_check((ap[sd + "_palm"] as Vector3).y > (on[sd + "_palm"] as Vector3).y + 0.15 and dz > -0.02 and dz < 0.15,
+					"scramble: the %s hand's apex over its landing (dz %.2f m)" % [sd, dz])
 	if "own-bend-tech" in names:
 		var a := lib.get_animation(&"own-bend-tech")
 		var j := _at(a, float(a.get_meta(&"strike_s")), ["r_palm", "r_knee"])
 		print("METRIC tech slap_palm_y_m %.3f knee_y_m %.3f" % [(j.r_palm as Vector3).y, (j.r_knee as Vector3).y])
 		_check((j.r_palm as Vector3).y < 0.06, "tech: the palm slapped on the deck (%.3f m)" % (j.r_palm as Vector3).y)
 		_check((j.r_knee as Vector3).y < 0.1, "tech: the knee down on the deck (%.3f m)" % (j.r_knee as Vector3).y)
+		# (pass 3: a controlled skill, not a collapse: the head kept up over the hips, the slapping arm out wide)
+		var sk1 := _at(a, float(a.get_meta(&"strike_s")), ["heada", "pelvis", "r_palm", "r_shoulder"])
+		var sk2 := _at(a, float(a.get_meta(&"hold_s")), ["heada", "pelvis"])
+		var head_up := minf((sk1.heada as Vector3).y - (sk1.pelvis as Vector3).y, (sk2.heada as Vector3).y - (sk2.pelvis as Vector3).y)
+		var wide := (sk1.pelvis as Vector3).x - (sk1.r_palm as Vector3).x
+		print("METRIC tech head_over_hips_m %.3f slap_palm_out_m %.3f" % [head_up, wide])
+		_check(head_up > 0.2, "tech: the head kept up over the hips at the slap and its rebound (%.2f m)" % head_up)
+		_check(wide > 0.35, "tech: the slapping palm out wide to the side (%.2f m)" % wide)
 		if "own-bend-tech-roll" in names:
-			var d := _off(_joints(lib.get_animation(&"own-bend-tech-roll"), 0.0), _joints(a, float(a.get_meta(&"strike_s"))))
-			_check(d < 0.02, "tech-roll: starts on the tech's slap (off by %.3f m)" % d)
+			var tr := lib.get_animation(&"own-bend-tech-roll")
+			var d := _off(_joints(tr, 1.0 / 30.0), _joints(a, float(a.get_meta(&"strike_s"))))
+			_check(d < 0.02, "tech-roll: its second frame the tech's slap (off by %.3f m)" % d)
+			var d0 := _off(_joints(tr, 0.0), _joints(a, 0.0))
+			_check(d0 < 0.02, "tech-roll: enters from the tech's own airborne frame (off by %.3f m)" % d0)
 	for x: String in ["own-bend-tech-roll", "own-bend-getup-roll"]:
 		if x in names:
 			_check(String(lib.get_animation(StringName(x)).get_meta(&"travel", "")) == "right", "%s: rolls to his right (travel)" % x)

@@ -20,6 +20,9 @@ extends SceneTree
 ##       [loopcells=1]   how many even moments of a loop the lineups show (its start, then evenly through it)
 ##       [at=own-bend-rise-earth:13,22;...]   the lineup cells of a clip at those frames (instead of its hold and strike)
 ##       [rise=own-bend-edge-jump:11.8:19.9]   the code's jump (vy, gravity) added to that clip's root, as the game moves it
+##       [pairs=own-bend-edge-scramble>own-bend-edge-hang]   a hand-over's seam: the first's last frame beside the second's
+##                    first, front and side (<prefix>edge-scramble-to-hang_seam.png)
+##       [nosheets=1]   the lineup (and the pairs) only, no clip sheets
 ## An edge clip (meta lip_y: keyed in the hang's frame) is shown at a block of the deck (its lip lip_y over the origin and
 ## lip_out ahead, a pale coping on a stone face), framed round the lip (EDGE_VIEWS).
 
@@ -75,6 +78,11 @@ var _wall: Node3D
 var _rise_args := {}
 var _rise := {}
 var _low_start := {}
+## pairs=<clip>><clip>[;...]: a hand-over's seam, the first clip's last frame beside the second's first, front and side
+## (<prefix><first>-to-<second>_seam.png: the scramble ending on the hang's first pose).
+var pairs: Array = []
+## nosheets=1: no clip sheets, only the lineups and the pairs' seams (a lineup of clips already shown).
+var no_sheets := false
 
 
 func _initialize() -> void:
@@ -105,6 +113,11 @@ func _initialize() -> void:
 		elif a.begins_with("rise="):
 			for r in a.get_slice("=", 1).split(";", false):
 				_rise_args[r.get_slice(":", 0)] = Vector2(float(r.get_slice(":", 1)), float(r.get_slice(":", 2)))
+		elif a.begins_with("pairs="):
+			for r in a.get_slice("=", 1).split(";", false):
+				pairs.append([r.get_slice(">", 0), r.get_slice(">", 1)])
+		elif a.begins_with("nosheets="):
+			no_sheets = a.get_slice("=", 1) == "1"
 	_run.call_deferred()
 
 
@@ -158,13 +171,14 @@ func _run() -> void:
 		var a := lib.get_animation(nm)
 		var times := _moments(a)
 		var cells: Array[Image] = []
-		for vn: String in VIEWS:
-			for tm: Array in times:
-				cells.append(await _snap(a, float(tm[0]), vn, "%s\n%s %.2f s (f%d)" % [String(nm).trim_prefix("own-bend-"), tm[1],
-						float(tm[0]), int(round(float(tm[0]) * 30.0))]))
-		_sheet(cells, times.size(), out.path_join("%s%s%s.png" % [prefix, String(nm).trim_prefix("own-bend-"), suffix]))
+		if not no_sheets:
+			for vn: String in VIEWS:
+				for tm: Array in times:
+					cells.append(await _snap(a, float(tm[0]), vn, "%s\n%s %.2f s (f%d)" % [String(nm).trim_prefix("own-bend-"),
+							tm[1], float(tm[0]), int(round(float(tm[0]) * 30.0))]))
+			_sheet(cells, times.size(), out.path_join("%s%s%s.png" % [prefix, String(nm).trim_prefix("own-bend-"), suffix]))
 		# (a clip whose tail loops (meta loop_from_s: the air Rise's glide) shows that loop's first frame and its last)
-		if seam and (a.has_meta(&"loop") or a.has_meta(&"loop_from_s")):
+		if seam and not no_sheets and (a.has_meta(&"loop") or a.has_meta(&"loop_from_s")):
 			var sc: Array[Image] = []
 			var t0 := float(a.get_meta(&"loop_from_s", 0.0))
 			for vn: String in VIEWS:
@@ -193,8 +207,22 @@ func _run() -> void:
 				lineup.append(im2)
 				(by_el[el] as Array[Image]).append(im2)
 	_sheet(lineup, 8, out.path_join("%s%s.png" % [prefix, lineup_name]))
-	for el: String in by_el:
-		_sheet(by_el[el], 7, out.path_join("%slineup_%s.png" % [prefix, el]))
+	if not no_sheets:
+		for el: String in by_el:
+			_sheet(by_el[el], 7, out.path_join("%slineup_%s.png" % [prefix, el]))
+	# (a hand-over's seam: the first clip's last frame beside the second's first, front and side)
+	for pr: Array in pairs:
+		if not (lib.has_animation(StringName(pr[0])) and lib.has_animation(StringName(pr[1]))):
+			continue
+		var a0 := lib.get_animation(StringName(pr[0]))
+		var a1 := lib.get_animation(StringName(pr[1]))
+		var pc: Array[Image] = []
+		for vn: String in VIEWS:
+			pc.append(await _snap(a0, a0.length, vn, "%s\nlast frame %.2f s (f%d)" % [String(pr[0]).trim_prefix("own-bend-"),
+					a0.length, int(round(a0.length * 30.0))]))
+			pc.append(await _snap(a1, 0.0, vn, "%s\nfirst frame 0.00 s (f0)" % String(pr[1]).trim_prefix("own-bend-")))
+		_sheet(pc, 2, out.path_join("%s%s-to-%s_seam.png" % [prefix, String(pr[0]).trim_prefix("own-bend-"),
+				String(pr[1]).trim_prefix("own-bend-edge-").trim_prefix("own-bend-")]))
 	print("BEND PREVIEW -> ", out)
 	quit()
 

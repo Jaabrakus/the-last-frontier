@@ -273,6 +273,24 @@ visual references, no animation files imported) is his statement; the rows below
   (`own-bend-getup` `strike_s` 9/30 s and `back_s` 11/30 s, `own-bend-getup-roll` and its twin `strike_s` 5/30 s and
   `back_s` 15/30 s, `own-bend-knock-spiked` `hold_s` 5/30 s); no earlier set's clip was re-baked. `bend_preview.gd` and
   `bend_engine_strip.gd` now draw the wall a clip names (meta `wall_z`) for review; they read no motion.
+  Revised again on 2026-10-07 (pass 3, the critic's pass-2 notes): the same generator, the same inputs and the same sixteen
+  clips, re-keyed and re-baked (`--clips`); no clip, dump or reference motion read. The keys changed are typed numbers in
+  `SET6` and its typed functions: the earth Rise's throw made asymmetric (the right fist driven up, the left chambered at
+  the hip, the fists' path carried out in front clear of the hat); the water Rise's circles driven by the trunk (typed
+  `WATER_TWIST`, `WATER_SIDE`, `WATER_SWAY`, `WATER_REACH`, `WATER_BOB`, `WATER_TURNS`) into a white-crane peak
+  (`WATER_TOP`, `WATER_PRESS`); the glide's wings swept back with bent elbows (`glide_at`, `GLIDE_FLEX`, a typed facing
+  `wing`); the scramble's right hand over the lip at f2; the breakfall slap leant over its arm with the head up (`SLAP`)
+  and both breaks entered from one typed airborne frame (`TECH0`); the wall break's head kept back; the lie's beat moved
+  early (`LIE_STIR`, `LIE_LIFT`, `LIE_SAG`); the getup's in-between and settle; the log roll eased into a rock up to the
+  feet (`GROLL_BARREL`, the roll kept on the deck by the existing `ground` channel); the crab sweep's straight leg
+  (`GA_ARC`, `GA_SLACK`, `_hip_at`: the hip's place from the rig's own rest turned by the clip's typed turn, as `pose()`
+  turns it); the spiked and bounce knocks' limbs. `own-bend-tech-roll` and its twin are one frame longer (19 frames, the
+  airborne entry first; `hold_s` 2/30 s, `strike_s` 8/30 s, `back_s` 14/30 s); `own-bend-edge-scramble`'s `strike_s` is now
+  3/30 s (the right hand on the deck). New in the generator: `twin_keys` (channels typed for a twin alone: the tech roll's
+  twin's hips tilt), and `--points` also prints the hat's farthest point ahead and how near a palm comes to the hat (a
+  report only). No earlier set's clip was re-baked. `bend_preview.gd` gains `pairs=` (one clip's last frame beside
+  another's first: the scramble onto the hang) and `nosheets=`; `bend_engine_strip.gd` poses the edge clips 2 m along the
+  lip from its middle, clear of the stock ring's lantern pier; they read no motion.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.
