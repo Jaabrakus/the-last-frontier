@@ -31,6 +31,15 @@ PAINTED = {
 }
 
 
+# key -> PAINT's texture in place of the kit's own (chosen by eye in the Godot look test, tools/thuyvan_look/
+# look_test.gd karst=paint): PAINT's karst face (value 0.52, darkened so the walls never outshine the white stones and
+# falls; the terrain's cliff slice is the same paint) with its soft stroke normal at 0.25.
+PAINT_TEX = {
+    "rock_karst": ("res://assets/thuyvan/paint/rock/tv_karst_face_16m.png",
+                   "res://assets/thuyvan/paint/rock/tv_karst_face_16m_normal.png", 0.25),
+}
+
+
 def hexrgb(h):
     h = h.lstrip("#")
     return [int(h[i:i + 2], 16) / 255.0 for i in (0, 2, 4)]
@@ -46,16 +55,24 @@ def fmt(v):
 
 def shader_material(key, info):
     ov = dict(PAINTED.get(key, {}))
-    tex = info["texture"]
-    lines = ['[gd_resource type="ShaderMaterial" load_steps=4 format=3]', "",
+    tex = "%stextures/%s" % (RES, info["texture"])
+    paint = PAINT_TEX.get(key)
+    if paint:
+        tex = paint[0]
+    lines = ['[gd_resource type="ShaderMaterial" load_steps=%d format=3]' % (5 if paint else 4), "",
              '[ext_resource type="Shader" path="%s" id="1_sh"]' % SHADER,
-             '[ext_resource type="Texture2D" path="%stextures/%s" id="2_rock"]' % (RES, tex),
-             '[ext_resource type="Texture2D" path="%stextures/moss_cap.png" id="3_moss"]' % RES, "",
-             "[resource]", 'resource_name = "%s"' % key, 'shader = ExtResource("1_sh")',
-             'shader_parameter/rock_tex = ExtResource("2_rock")',
-             "shader_parameter/tile_m = %s" % fmt(float(info["tile_m"])),
-             'shader_parameter/moss_tex = ExtResource("3_moss")',
-             "shader_parameter/moss_tile_m = 4.0"]
+             '[ext_resource type="Texture2D" path="%s" id="2_rock"]' % tex,
+             '[ext_resource type="Texture2D" path="%stextures/moss_cap.png" id="3_moss"]' % RES]
+    if paint:
+        lines.append('[ext_resource type="Texture2D" path="%s" id="4_nrm"]' % paint[1])
+    lines += ["", "[resource]", 'resource_name = "%s"' % key, 'shader = ExtResource("1_sh")',
+              'shader_parameter/rock_tex = ExtResource("2_rock")',
+              "shader_parameter/tile_m = %s" % fmt(float(info["tile_m"])),
+              'shader_parameter/moss_tex = ExtResource("3_moss")',
+              "shader_parameter/moss_tile_m = 4.0"]
+    if paint:
+        lines += ['shader_parameter/normal_tex = ExtResource("4_nrm")',
+                  "shader_parameter/normal_strength = %s" % fmt(float(paint[2]))]
     for k in ("moss_amount", "object_space", "blend_sharp", "macro_var", "rough", "spec"):
         if k in ov:
             lines.append("shader_parameter/%s = %s" % (k, fmt(ov[k])))

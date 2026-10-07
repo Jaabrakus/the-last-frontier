@@ -7,7 +7,7 @@ extends SceneTree
 ## banner, broadleaf trees, ferns and shrubs, under the direction's painted sky (tv_sky.gdshader), fog and grade. A
 ## stand-in landform at R1's heights (the plateau at ~212 m, the river at 140), not the T4 layout. Needs a window:
 ##
-##   Godot --path . --resolution 1920x1080 -s tools/thuyvan_look/look_test.gd -- out=DIR [dirs=a,b] [karst=rock|paint]
+##   Godot --path . --resolution 1920x1080 -s tools/thuyvan_look/look_test.gd -- out=DIR [dirs=a,b] [karst=paint|rock]
 ##       [still=1] [w=1920] [h=1080] [hour=H]
 ##
 ## Writes DIR/shader_test_<direction>.png for each direction (default all three) and DIR/shader_test_triptych.png
@@ -21,8 +21,8 @@ const Look := preload("res://scripts/thuyvan/look/thuyvan_look.gd")
 const TERRAIN := "res://assets/thuyvan/paint/terrain/tv_terrain_albedo_array.webp"
 const WATER := "res://assets/thuyvan/paint/water/"
 const ROCK_MAT := "res://assets/thuyvan/rock/materials/rock_karst.tres"
-const PAINT_KARST := "res://assets/thuyvan/paint/rock/tv_karst_face_16m.png"
-const PAINT_KARST_N := "res://assets/thuyvan/paint/rock/tv_karst_face_16m_normal.png"
+## ROCK's own karst face (value 0.62), for the A/B against PAINT's that rock_karst.tres now wears (karst=rock)
+const ROCK_KARST := "res://assets/thuyvan/rock/textures/karst_face.png"
 
 const LEVEL := 140.0          ## the river's surface
 const W_RIVER := 16.0         ## half width of the channel at the surface
@@ -32,10 +32,12 @@ const FALL_Z := -380.0        ## the headwall's foot
 const CAM_POS := Vector3(22.0, 256.0, 175.0)
 const CAM_AT := Vector3(14.0, 168.0, -380.0)
 const GREY_AT := Vector3(-260.0, 0.0, 160.0)
+## The fall's cards hang 2-3 m off the rock: a short soft contact only, or the rock shows through them.
+const FALL_FADE := {"proximity_fade": 0.6}
 
 var _out := ""
 var _dirs: Array = []
-var _karst := "rock"
+var _karst := "paint"
 var _still := false
 var _msaa := true
 var _debug := 0
@@ -532,18 +534,18 @@ func _fall() -> void:
 	var right := Vector3(1.0, 0.0, 0.0)
 	var vrep := fall_h / (wid * 2.0)
 	var mpu := fall_h / vrep
-	_strip(body, wid, right, face, _card_mat(WATER + "tv_fall_body.png", Vector2(0.0, -0.8 / mpu), 1.7, 1.3), vrep)
+	_strip(body, wid, right, face, _card_mat(WATER + "tv_fall_body.png", Vector2(0.0, -0.8 / mpu), 1.7, 1.3, FALL_FADE), vrep)
 	_strip(_fall_path(fx, 2.8), wid * 0.85, right, face,
-			_card_mat(WATER + "tv_fall_streaks.png", Vector2(0.0, -1.4 / mpu), 1.4, 1.35), vrep * 1.3)
+			_card_mat(WATER + "tv_fall_streaks.png", Vector2(0.0, -1.4 / mpu), 1.4, 1.35, FALL_FADE), vrep * 1.3)
 	for s in [-1.0, 1.0]:
 		var edge := _fall_path(fx + s * wid * 0.48, 3.2)
 		var erep := fall_h / (wid * 0.9)
 		_strip(edge, wid * 0.22, right, face, _card_mat(WATER + "tv_fall_edge_foam.png", Vector2(0.0, -1.0 / (fall_h / erep)),
-				1.0, 1.1), erep)
+				1.0, 1.1, FALL_FADE), erep)
 	# the lip: a short foam band across the top
 	var lip := body[body.size() - 2]
 	_card(lip + Vector3(0, -2.5, 1.5), lip + Vector3(0, 1.2, 0.5), wid * 1.05, face,
-			_card_mat(WATER + "tv_fall_edge_foam.png", Vector2(0.4, 0.0), 0.9, 1.1), 1.0, 3.0)
+			_card_mat(WATER + "tv_fall_edge_foam.png", Vector2(0.4, 0.0), 0.9, 1.1, FALL_FADE), 1.0, 3.0)
 	# spray puffs at the foot (billboards), the pool's foam ring, mist rising
 	var spray := _card_mat(WATER + "tv_fall_spray.png", Vector2.ZERO, 0.9, 1.05,
 			{"atlas_grid": Vector2(2, 2), "billboard": true, "proximity_fade": 6.0})
@@ -624,12 +626,11 @@ func _mist_bands(look: Dictionary) -> void:
 # --- the rocks -----------------------------------------------------------------------------------------------------
 
 func _rocks() -> void:
-	if _karst == "paint":
+	if _karst == "rock":
 		var rm := load(ROCK_MAT) as ShaderMaterial
 		if rm:
-			rm.set_shader_parameter("rock_tex", load(PAINT_KARST))
-			rm.set_shader_parameter("normal_tex", load(PAINT_KARST_N))
-			rm.set_shader_parameter("normal_strength", 0.25)
+			rm.set_shader_parameter("rock_tex", load(ROCK_KARST))
+			rm.set_shader_parameter("normal_strength", 0.0)
 	# hero towers on the plateaus (mid distance), with pines on their seats
 	for t: Array in [["karst_hero_b", Vector3(-170.0, 0.0, -720.0), 20.0, 1.0], ["karst_hero_a", Vector3(330.0, 0.0, -640.0), -30.0, 1.1],
 			["karst_hero_c", Vector3(-330.0, 0.0, -420.0), 70.0, 0.9], ["karst_hero_e", Vector3(160.0, 0.0, -980.0), 10.0, 1.2],

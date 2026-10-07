@@ -82,6 +82,30 @@ zsh tools/thuyvan/bin/godot_run.sh --path <wt> --resolution 1920x1080 -s tools/t
 
 **Mid-grey check:** each run prints `GREY <direction> <value>` for a 0.5 sRGB card on the plateau.
 
+## Calibration and choices (from the look test)
+
+**Mid-grey check** (a 0.5 sRGB card on the plateau; the style guide's target at noon is 0.55-0.60):
+
+| Direction | Exposure | Fog | Reading |
+|---|---|---|---|
+| Noon | 0.95 | the palette's | 0.596 |
+| Morning | 1.08 | × 0.7 (Godot's exponential fog starts at the camera; Blender's mist pass started at 150 m) | 0.453 |
+| Dusk | 1.0 | × 0.85 | 0.221 |
+
+The sun and ambient energies are the palette's as they are.
+
+**Karst:** `rock_karst` wears PAINT's karst face (value 0.52) with its soft normal at 0.25, chosen by eye against
+ROCK's 0.62. It matches the terrain's cliff slice and keeps the falls and white stones the brightest things in frame.
+`look_test.gd karst=rock` shows ROCK's for an A/B.
+
+**Mist:** bands below the plateau lie in the gorge as flat layers of soft puffs. Seen from above, a standing band card is
+cut by both walls into a hard V. Bands above the plateau stand as long cards round the far towers' waists. Mist uses
+the direction's `targets.mist` colour (`light_tint_amount` 0), as the Blender diorama did. Falls and foam use
+`light_tint`.
+
+**Falls:** a fall's cards hang 2-3 m off the rock, so their proximity fade is 0.6 m. At the 4 m default the rock showed
+through the falls.
+
 ## Tests
 
 `tests/thuyvan/test_look_directions.gd` (headless) checks:
