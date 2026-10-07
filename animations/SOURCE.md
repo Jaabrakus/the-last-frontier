@@ -244,6 +244,16 @@ visual references, no animation files imported) is his statement; the rows below
   before. `own-bend-land-heavy` is 16 frames (was 14), its `strike_s`, `hold_s` and `back_s` unchanged;
   `own-bend-jump-double`'s `hold_s` is 2 frames (was 1) and its `strike_s` 3 (was 2), `back_s` unchanged. The other clips'
   tracks are as before.
+  Revised on 2026-10-07 (the animation lane's second run, P1-air polish pass 1, the critic's notes): the same generator and
+  the same inputs (the rig's rest pose and keys typed into `SET4` and its typed loop functions); no clip, dump or reference
+  motion read. Five clips re-keyed by hand and re-baked (`--clips`): `own-bend-tumble` (`tumble_at`: the arms drawn only 45%
+  of the way in, to typed places beside the knees with the hands open, `TUMBLE_ARMS_IN`, `TUMBLE_HALF_R/L`; the legs 70%,
+  `TUMBLE_LEGS_IN`, opened from f18), `own-bend-flinch` (the head and chest keys cushioned over f2-f4; the hands' f1 key up
+  and out), `own-bend-jump-double` (a deeper gather, the push held over f3-f4 and bowed, the tuck at f7), `own-bend-fall-fast`
+  (`fall_fast_at`: the knees drawn up together, `FALL_FAST_FOOT`, the hands beside the hips, `FALL_FAST_HAND`, pitched 20
+  degrees, a larger buffet) and `own-bend-helpless` (`helpless_at`: the hips bowed forward, the knees bent, lying back
+  34-50 degrees, `HELPLESS_FOOT_R/L`). Their lengths and metas (`strike_s`, `hold_s`, `back_s`, `hand`, `mask`, `root`) are
+  unchanged; the other clips' tracks are as before.
 - Fifth set (2026-10-06, round 3's first playable: the deck's edge and the ground dodges of the % ring): the same generator
   and the same inputs (the rig's rest pose and keys typed into the table, now its `SET5` and `SET5B` parts; the hang's loop
   written as a typed function of its phase, `hang_at`, sampled at every frame by `_loop`; the three rolls from one typed

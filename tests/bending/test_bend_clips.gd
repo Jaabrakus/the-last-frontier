@@ -61,6 +61,12 @@ extends SceneTree
 ##               arrowhead from behind) and both knees bent alike under 35 degrees; the flinch's fists before the chin, clear of
 ##               the face; the air legs' left heel 0.15 m behind the right (two shapes); the heavy landing's push up eased (no
 ##               frame rising more than 6 cm) and its length 16 frames with back_s unchanged (the punish window starts as before)
+##   lane 2      the critic's notes after the lane's first run (2026-10-07): the tumble's open hands 0.2 m or more off the shins
+##               through the tuck and its shins opening by f21 (12 degrees or more under the tuck's knees); the flinch's head
+##               turning under 16 degrees a frame after the hit (the reversal cushioned); the double jump's gather 0.18 m, its push held a
+##               second frame (the ankles within 7 cm) and bowed (the feet 0.25 m behind the hips); the fast fall's knees drawn
+##               up together into a wedge (55-85 degrees, within 15 of each other; this replaces pass 3's long legs); the
+##               helpless fall's ankles 0.1 m or more ahead of the hips at every frame (never standing on its legs)
 ##   kept r3     the third set (round 2) keeps its lengths and moments (hold_s, strike_s, back_s)
 ##   fifth set   round 3's P1 edge and ground dodges (2026-10-06): the edge grab, hang (a loop), climb, roll in, jump and
 ##               attack, the forward, back and side rolls (the side roll's twin) and the duck, each with its metas (hand,
@@ -256,6 +262,11 @@ const LANDINGS := ["own-bend-land-light", "own-bend-land-heavy"]
 const HELPLESS_OVER := 0.1
 ## The fast fall's ankles under the hips (m): long, with the knees drawn up a little (the tucked arrow).
 const FALL_FAST_LONG := 0.5
+## Lane pass 2 (2026-10-07): the tumble's palms this far (m) from the shins' middles through the tuck; the flinch's head
+## turning at most this much (deg) in one frame; the helpless fall's ankles this far (m) ahead of the hips at every frame.
+const TUMBLE_PALM_OFF_SHIN := 0.2
+const FLINCH_HEAD_SNAP := 16.0   # (the lane-2 keys measure 15.0)
+const HELPLESS_SOLES_AHEAD := 0.1
 ## The first set's timing contracts (s): kept through the polish.
 const CONTRACTS := {"own-bend-earth-stomp": [10, 14], "own-bend-earth-push": [9, 13], "own-bend-earth-rise": [10, 14],
 		"own-bend-throw-overhand": [6, 10], "own-bend-throw-sidearm": [6, 9], "own-bend-throw-underhand": [6, 9],
@@ -1688,8 +1699,9 @@ func _fourth_pass3(lib: AnimationLibrary, names: Array[String]) -> void:
 				knees.x, knees.y])
 		_check(pitch > 0.05, "fast fall: pitched into the dive (the head %.2f m ahead of the hips)" % pitch)
 		_check(out > 0.3, "fast fall: the arms swept back and out (the palms %.2f m out)" % out)
-		_check(knees.x < 35.0 and knees.y < 15.0, "fast fall: the legs long and alike (the knees %.0f degrees at most, %.0f apart)"
-				% [knees.x, knees.y])
+		# (lane pass 2 superseded the long legs: the critic's notes draw both knees up into a wedge, checked in
+		# _fourth_lane2; the two legs alike is kept here)
+		_check(knees.y < 15.0, "fast fall: the legs alike (the knees %.0f degrees at most, %.0f apart)" % [knees.x, knees.y])
 	if "own-bend-flinch" in names:
 		var fl := lib.get_animation(&"own-bend-flinch")
 		var j := _at(fl, float(fl.get_meta(&"hold_s", 0.0)), bones)
@@ -1719,6 +1731,81 @@ func _fourth_pass3(lib: AnimationLibrary, names: Array[String]) -> void:
 		print("METRIC land_heavy_rise_step_max_m %.3f" % step)
 		_check(step < 0.06, "heavy landing: the push up eased (%.3f m in one frame at most)" % step)
 		_check(absf(float(lh.get_meta(&"back_s", 0.0)) - 8.0 / 30.0) < 1e-4, "heavy landing: the punish window's end kept (back_s 8 f)")
+	_fourth_lane2(lib, names)
+
+
+## The fourth set's lane pass 2 (the critic's notes after the lane's first run, 2026-10-07; the numbers printed as METRIC
+## lines for the review): the tumble's hands open and out beside him through the tuck (never on the shins) and its shins
+## half out by f21; the flinch's head reversal cushioned (no frame-to-frame snap); the double jump's gather loading the spring,
+## its push held two frames and bowed (the feet behind the hips); the fast fall's knees drawn up together into a wedge; the
+## helpless fall's soles forward of the hips at every frame (never standing on its legs).
+func _fourth_lane2(lib: AnimationLibrary, names: Array[String]) -> void:
+	var bones := ["l_palm", "r_palm", "l_upper_leg", "r_upper_leg", "l_knee", "r_knee", "l_ankle", "r_ankle", "pelvis", "neck",
+			"heada"]
+	if "own-bend-tumble" in names:
+		var tu := lib.get_animation(&"own-bend-tumble")
+		var near := INF
+		var tuck_knee := 0.0
+		for fr in range(12, 21):
+			var j := _at(tu, fr / 30.0, bones)
+			for s in ["l_", "r_"]:
+				var shin := ((j[s + "knee"] as Vector3) + (j[s + "ankle"] as Vector3)) * 0.5
+				near = minf(near, (j[s + "palm"] as Vector3).distance_to(shin))
+				tuck_knee = maxf(tuck_knee, _bend(j, s + "upper_leg", s + "knee", s + "ankle"))
+		var j21 := _at(tu, 21.0 / 30.0, bones)
+		var knee21 := maxf(_bend(j21, "l_upper_leg", "l_knee", "l_ankle"), _bend(j21, "r_upper_leg", "r_knee", "r_ankle"))
+		print("METRIC tumble_tuck_palm_to_shin_min_m %.3f tuck_knee_max_deg %.0f f21_knee_deg %.0f" % [near, tuck_knee, knee21])
+		_check(near > TUMBLE_PALM_OFF_SHIN, "tumble: the hands flung, never on the shins (%.2f m at the nearest, f12-f20)" % near)
+		_check(knee21 < tuck_knee - 12.0, "tumble: the shins opening by f21 (%.0f against the tuck's %.0f degrees)" % [knee21, tuck_knee])
+	if "own-bend-flinch" in names:
+		var fl := lib.get_animation(&"own-bend-flinch")
+		# (from the hit's frame on: the snap into strike_s is the hit itself; the reversal after it must not pop)
+		var hit := int(round(float(fl.get_meta(&"strike_s", 0.0)) * 30.0))
+		var snap := 0.0
+		var prev := Vector3.ZERO
+		for fr in range(hit, 10):
+			var j := _at(fl, fr / 30.0, bones)
+			var h := ((j.heada as Vector3) - (j.neck as Vector3)).normalized()
+			if fr > hit:
+				snap = maxf(snap, rad_to_deg(prev.angle_to(h)))
+			prev = h
+		print("METRIC flinch_head_snap_max_deg %.1f" % snap)
+		_check(snap < FLINCH_HEAD_SNAP, "flinch: the head's reversal cushioned (%.1f degrees in one frame at most after the hit)" % snap)
+	if "own-bend-jump-double" in names:
+		var jd := lib.get_animation(&"own-bend-jump-double")
+		var j0 := _at(jd, 0.0, bones)
+		var j2 := _at(jd, 2.0 / 30.0, bones)
+		var j3 := _at(jd, 3.0 / 30.0, bones)
+		var j4 := _at(jd, 4.0 / 30.0, bones)
+		var gather := minf((j2.l_ankle as Vector3).y - (j0.l_ankle as Vector3).y, (j2.r_ankle as Vector3).y - (j0.r_ankle as Vector3).y)
+		var held := maxf((j3.l_ankle as Vector3).distance_to(j4.l_ankle), (j3.r_ankle as Vector3).distance_to(j4.r_ankle))
+		var bow := (j3.pelvis as Vector3).z - maxf((j3.l_ankle as Vector3).z, (j3.r_ankle as Vector3).z)
+		print("METRIC jump_double_gather_m %.3f push_held_m %.3f push_feet_behind_m %.3f" % [gather, held, bow])
+		_check(gather > 0.18, "double jump: the gather loads the spring (the ankles %.2f m up)" % gather)
+		_check(held < 0.07, "double jump: the push held a second frame (the ankles %.2f m on)" % held)
+		_check(bow > 0.25, "double jump: the push bowed, the feet behind the hips (%.2f m)" % bow)
+	if "own-bend-fall-fast" in names:
+		var ff := lib.get_animation(&"own-bend-fall-fast")
+		var knees := Vector3(INF, -INF, 0.0)
+		for i in 16:
+			var j := _at(ff, ff.length * i / 16.0, bones)
+			var kl := _bend(j, "l_upper_leg", "l_knee", "l_ankle")
+			var kr := _bend(j, "r_upper_leg", "r_knee", "r_ankle")
+			knees = Vector3(minf(knees.x, minf(kl, kr)), maxf(knees.y, maxf(kl, kr)), maxf(knees.z, absf(kl - kr)))
+		print("METRIC fall_fast_knee_deg %.0f-%.0f knee_diff_deg %.0f" % [knees.x, knees.y, knees.z])
+		_check(knees.x > 55.0 and knees.y < 85.0, "fast fall: the knees drawn up into a wedge (%.0f-%.0f degrees)" % [knees.x, knees.y])
+		_check(knees.z < 15.0, "fast fall: the knees drawn up together (%.0f degrees apart at most)" % knees.z)
+	if "own-bend-helpless" in names:
+		var h := lib.get_animation(&"own-bend-helpless")
+		var ahead := INF
+		for i in 24:
+			var j := _at(h, h.length * i / 24.0, bones)
+			var trunk := ((j.neck as Vector3) - (j.pelvis as Vector3)).normalized()
+			var fwd := Vector3(trunk.x, 0.0, trunk.z).normalized() * -1.0   # the way he lies back from, level
+			for s in ["l_", "r_"]:
+				ahead = minf(ahead, ((j[s + "ankle"] as Vector3) - (j.pelvis as Vector3)).dot(fwd))
+		print("METRIC helpless_soles_ahead_of_hips_min_m %.3f" % ahead)
+		_check(ahead > HELPLESS_SOLES_AHEAD, "helpless: the soles forward of the hips at every frame (%.2f m at the least)" % ahead)
 
 
 func _sixth_has(nm: String) -> bool:
