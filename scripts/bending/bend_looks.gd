@@ -18,6 +18,18 @@ extends RefCounted
 ## The sounds are the ring's own (BendSounds: synthesized for each element, tools/sfx/bend/): sound() hands them on.
 ## rise(at, size, way): the dust and cracks along the foot of an earth wall coming up (for FormRaised's raise to call).
 ## warm_up(cam): every effect played once out of sight at the level's load (their shaders compiled then, not at a first hit).
+## ROUND 4 (LOOKS; data/bending/fx_looks.json, ToonFx.looks; the same looks wherever they are cast, the open world's and the
+## duel's too; no hitbox, speed, damage or zone radius changes):
+##   flames      soft-edged and licking (toon_flame), 7-9 tongues on a fireball each its own phase, a soft additive glow under
+##               every flame cluster ("flame_glow")
+##   the Kick    three rows of tongues (a bright crest, a body, a low trail; 1.0-1.4 m deep) whose visible top is the height a
+##               jump clears (wave_top: the bolt's miss_above_m), a bright lip along the deck under the crest (a ToonRibbon
+##               laid across), sparks thrown ahead, scorches left along its path (2 s), embers spilling past the lip
+##   shadows     every bolt but air and lightning casts its own shadow from a shadow-only core (_shadow); under an air bolt
+##               within 1.5 m of the deck a thin line of dust rises (AirDust)
+##   at range    a bolt's drawn core grows with its distance from the camera past 14 m, up to x2.2 (instance range_on)
+##   puffs       a hit's burst on a body stays within 0.6 of the body's height in count and size (burst_cap), and the puffs
+##               between the camera and the struck body are drawn at half (the pool's occl)
 
 const KINDS := ["stone", "ice", "water", "fire", "air", "lightning"]
 const FIRE := Color(1.0, 0.45, 0.06)
@@ -31,8 +43,12 @@ const DUST_LIGHT := Color(0.88, 0.78, 0.6)
 const ELEC := Color(0.45, 0.68, 1.0)
 
 
+## Round 4: a test may build the looks headless too (tests/bending/test_r4_looks.gd: what is drawn, counted without drawing).
+static var build_headless := false
+
+
 static func live() -> bool:
-	return DisplayServer.get_name() != "headless"
+	return build_headless or DisplayServer.get_name() != "headless"
 
 
 ## A cast or a hit of `kind` heard at `at` (BendSounds.bend: the move's own sound, its jitter on BendSounds' dice).
@@ -100,10 +116,14 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 			mi.scale = Vector3(r * 1.3, r * 1.3, r * (2.6 if long else 1.8))
 			mi.position = Vector3(0.0, 0.0, r * 0.35)
 			mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+			_core(mi)
+			_shadow(parent, "water", r, Vector3(1.0, 1.0, 2.0 if long else 1.4), mi.position)
 		"ice":
 			var mi := _mesh(parent, ToonFx.shard_mesh(1.0, 0.2, ToonFx.vis_rng.randi() % 4), ToonFx.mat("ice"))
 			var l := r * (11.0 if long else 5.5)
 			mi.scale = Vector3(r * 7.0, r * 7.0, l)
+			_core(mi)
+			_shadow(parent, "ice", r, Vector3(1.0, 1.0, l / maxf(r, 1e-3) * 0.3), Vector3(0.0, 0.0, -l * 0.15))
 			if live():
 				var g := _mesh(parent, ToonFx.quad(), ToonFx.mat("star_still"))
 				g.position = Vector3(0.0, 0.0, -l * 0.72)
@@ -112,6 +132,7 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 			if long:
 				var mi := _mesh(parent, ToonFx.arc_mesh(1.0, 0.42, 2.3), ToonFx.mat("wind_arc"))
 				mi.scale = Vector3.ONE * r * 5.0
+				_core(mi)
 			else:
 				for i in 3:
 					var b := _mesh(parent, ToonFx.band_mesh(1.0, 0.85, 0.5), ToonFx.mat("wind_band_fast"))
@@ -119,13 +140,17 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 					b.rotation = Vector3(0.5 + i * 0.9, i * 1.3, 0.35 * i)
 					b.position = -b.basis.y.normalized() * 0.25 * b.scale.y
 					b.set_instance_shader_parameter(&"seed", i * 0.31)
+					_core(b)
 				var core := _mesh(parent, ToonFx.sphere(12), ToonFx.mat("bubble"))
 				core.scale = Vector3.ONE * r * 0.55
+				_core(core)
+			_air_dust(parent)
 		"lightning":
 			var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("orb"))
 			o.scale = Vector3.ONE * r * 3.0
 			o.set_instance_shader_parameter(&"tint", ELEC)
 			o.set_instance_shader_parameter(&"tint2", Color(0.8, 0.9, 1.0))
+			_core(o)
 		_:
 			var mi := MeshInstance3D.new()
 			mi.name = "Body"
@@ -136,6 +161,8 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 				mi.rotation.x = -PI / 2.0
 			mi.material_override = ToonFx.mat("rock")
 			parent.add_child(mi)
+			_core(mi)
+			_shadow(parent, "stone", r, Vector3(1.0, 1.0, 3.5) if long else Vector3.ONE, Vector3(0.0, 0.0, -r * 3.0) if long else Vector3.ZERO)
 
 
 ## A thrown disc (BendThrow's spinning flight turns its parent about local X: the disc stands in the YZ plane, so it turns
@@ -145,14 +172,18 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 static func _disc_body(parent: Node3D, kind: String, r: float) -> void:
 	if kind == "stone":
 		var mi := _mesh(parent, disc_mesh(ToonFx.vis_rng.randi() % 6), ToonFx.mat("rock"))
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		mi.scale = Vector3.ONE * r * 1.45
+		_core(mi)
+		_shadow(parent, "stone", r, Vector3(0.3, 1.45, 1.45), Vector3.ZERO)       # (round 4: its shadow from a core, not the scaled rock)
 		return
-	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("orb"))
+	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("flame_orb"))
 	o.scale = Vector3.ONE * r * 1.9
 	o.set_instance_shader_parameter(&"tint", Color(0.95, 0.22, 0.04))
 	o.set_instance_shader_parameter(&"tint2", Color(1.0, 0.7, 0.12))
 	o.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	_core(o)
+	_shadow(parent, "fire", r, Vector3(0.4, 1.2, 1.2), Vector3.ZERO)
+	_glow(parent, Vector3.ONE * r * 5.5, Vector3.ZERO)
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.mesh = ToonFx.quad_base()
@@ -189,10 +220,16 @@ static func _crescent_body(parent: Node3D, kind: String, r: float) -> void:
 	var w := maxf(r, 0.4)
 	var arc := _mesh(parent, ToonFx.arc_mesh(1.0, 0.36, 2.5), ToonFx.mat("flame_strip" if kind == "fire" else "wind_arc"))
 	arc.scale = Vector3.ONE * w * 1.25
+	if kind == "fire":
+		_shadow(parent, "fire", w, Vector3(1.6, 0.35, 0.6), Vector3.ZERO)
+		_glow(parent, Vector3(w * 3.2, w * 2.0, 1.0), Vector3.ZERO)
+	else:
+		_air_dust(parent)
 	arc.rotation = Vector3(0.35, 0.0, 0.0)                    # (flat across its flight, tipped up a little: the kick's sweep)
 	arc.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
-	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("orb"))
+	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("flame_orb" if kind == "fire" else "orb"))
 	o.scale = Vector3.ONE * w * 0.9
+	_core(o)
 	o.set_instance_shader_parameter(&"tint", Color(0.95, 0.22, 0.04) if kind == "fire" else AIR)
 	o.set_instance_shader_parameter(&"tint2", Color(1.0, 0.7, 0.12) if kind == "fire" else Color(0.6, 0.8, 1.0))
 	o.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
@@ -215,7 +252,10 @@ static func _spear_body(parent: Node3D, kind: String, r: float) -> void:
 		mi.rotation.x = -PI / 2.0
 		mi.position = Vector3(0.0, 0.0, r * 4.0)
 		mi.material_override = ToonFx.mat("rock")
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		parent.add_child(mi)
+		_core(mi)
+		_shadow(parent, "stone", r, Vector3(1.0, 1.0, 4.5), Vector3.ZERO)
 		return
 	var sd := ToonFx.vis_rng.randi() % 4
 	var shaft := _mesh(parent, ToonFx.shard_mesh(1.0, 0.2, sd, 5), ToonFx.mat("ice"))
@@ -224,6 +264,9 @@ static func _spear_body(parent: Node3D, kind: String, r: float) -> void:
 	var head := _mesh(parent, ToonFx.shard_mesh(1.0, 0.3, (sd + 1) % 4, 6), ToonFx.mat("ice"))
 	head.scale = Vector3(r * 5.5, r * 5.5, r * 6.5)
 	head.position = Vector3(0.0, 0.0, -r * 4.2)
+	_core(shaft)
+	_core(head)
+	_shadow(parent, "ice", r, Vector3(0.9, 0.9, 6.0), Vector3(0.0, 0.0, -r * 1.0))
 	if live():
 		var g := _mesh(parent, ToonFx.quad(), ToonFx.mat("star_still"))
 		g.position = Vector3(0.0, 0.0, -r * 8.6)
@@ -279,30 +322,94 @@ static func _mesh(parent: Node3D, m: Mesh, mat: Material) -> MeshInstance3D:
 	return mi
 
 
-## A fireball: the boiling orb and three flame tongues licking back from it (one MultiMesh), a warm light on a big one.
+## A bolt's drawn core (round 4): it grows at range in its shader (range_on; ToonFx.range_scale), and draws no shadow of
+## its own (a grown core's shadow would grow too: its shadow is _shadow's).
+static func _core(g: GeometryInstance3D) -> void:
+	g.set_instance_shader_parameter(&"range_on", 1.0)
+	g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+## A bolt's own shadow (round 4: every bolt but air and lightning; no decal, no marker): a shadow-only ellipsoid the size of
+## its core (`r` x the kind's share, ToonFx.looks shadow, stretched by `stretch`) at `at` under `parent`. Named "Shadow".
+static func _shadow(parent: Node3D, kind: String, r: float, stretch: Vector3, at: Vector3) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	mi.name = "Shadow"
+	mi.mesh = ToonFx.sphere(10)
+	mi.material_override = ToonFx.shadow_mat()
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+	mi.scale = stretch * r * float(ToonFx.looks("shadow").get(kind, 1.0))
+	mi.position = at
+	parent.add_child(mi)
+	return mi
+
+
+## The soft additive glow under a flame cluster (round 4, ToonFx "flame_glow"): `size` its width and height, at `at`.
+static func _glow(parent: Node3D, size: Vector3, at: Vector3) -> MeshInstance3D:
+	if not live():
+		return null
+	var g := _mesh(parent, ToonFx.quad(), ToonFx.mat("flame_glow"))
+	g.name = "Glow"
+	g.scale = Vector3(size.x, size.y, 1.0)
+	g.position = at
+	g.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	return g
+
+
+## The fireball's tongues (round 4): ToonFx.looks flame.tongues of them fanned round the orb, licking back (+Z), each its
+## own length and lean (its phase is its instance's own in the shader). Their transforms under the body.
+static func fire_tongues(r: float, long := false) -> Array[Transform3D]:
+	var n := clampi(int(ToonFx.looks("flame").get("tongues", 8)), 1, 16)
+	var k := 1.6 if long else 1.0
+	var out: Array[Transform3D] = []
+	for i in n:
+		var a := TAU * float(i) / float(n) + ToonFx.vis_rng.randf_range(-0.25, 0.25)
+		var ring := 0.0 if i == 0 else 0.36
+		var out_dir := Vector3(cos(a), sin(a), 0.0)
+		var l := r * (4.8 if i == 0 else ToonFx.vis_rng.randf_range(2.8, 4.1)) * k
+		var w := r * (2.3 if i == 0 else ToonFx.vis_rng.randf_range(1.45, 1.95))
+		var axis := (Vector3.BACK + out_dir * (0.0 if i == 0 else 0.32)).normalized()
+		var side := axis.cross(Vector3.UP)
+		side = side.normalized() if side.length_squared() > 1e-6 else Vector3.RIGHT
+		out.append(Transform3D(Basis(side * w, axis * l, side.cross(axis).normalized()), out_dir * r * ring + Vector3(0.0, 0.0, -r * 0.5)))
+	return out
+
+
+## Under an air bolt (round 4): a thin line of dust rising off the deck while it flies within ToonFx.looks air_dust.over_m of
+## it (AirDust; the pool's puff_dust). Live only.
+static func _air_dust(parent: Node3D) -> void:
+	if not live():
+		return
+	var d := AirDust.new()
+	d.name = "AirDust"
+	parent.add_child(d)
+
+
+## A fireball: the boiling orb and its flame tongues licking back from it (round 4: ToonFx.looks flame.tongues, 7-9, smaller,
+## fanned round the orb and each its own phase; one MultiMesh), a soft glow under them, a warm light on a big one, its
+## shadow from a shadow-only core.
 static func _fire_body(parent: Node3D, r: float, long: bool) -> void:
-	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("orb"))
+	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("flame_orb"))
 	o.scale = Vector3.ONE * r * 2.5
 	o.set_instance_shader_parameter(&"tint", Color(0.95, 0.22, 0.04))
 	o.set_instance_shader_parameter(&"tint2", Color(1.0, 0.62, 0.08))
 	o.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	_core(o)
+	_shadow(parent, "fire", r, Vector3.ONE, Vector3.ZERO)
+	_glow(parent, Vector3.ONE * r * (7.0 if long else 6.0), Vector3(0.0, 0.0, r * 1.2))
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.mesh = ToonFx.quad_base()
-	var tongues := [[4.6, 2.3, 0.0, 0.0], [3.6, 1.7, 0.35, 0.2], [3.2, 1.6, -0.35, -0.15]]
+	var tongues := fire_tongues(r, long)
 	mm.instance_count = tongues.size()
-	var k := 1.6 if long else 1.0
 	for i in tongues.size():
-		var tg: Array = tongues[i]
-		var basis := Basis(Vector3.RIGHT * r * float(tg[1]), Vector3.BACK * r * float(tg[0]) * k, Vector3.UP)
-		mm.set_instance_transform(i, Transform3D(basis, Vector3(r * float(tg[2]), r * float(tg[3]), -r * 0.55)))
+		mm.set_instance_transform(i, tongues[i])
 	var mmi := MultiMeshInstance3D.new()
 	mmi.name = "Tongues"
 	mmi.multimesh = mm
 	mmi.material_override = ToonFx.mat("flame")
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mmi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
-	mmi.extra_cull_margin = r * 6.0
+	mmi.extra_cull_margin = r * 7.0
 	parent.add_child(mmi)
 	if live() and r >= 0.15:
 		var l := OmniLight3D.new()
@@ -495,6 +602,8 @@ static func emitter(parent: Node3D, kind: String, extents: Vector3, amount := 60
 	_pm(pm, Vector2(absf(rise) * 0.5, absf(rise)), Vector2(size * 0.6, size * 1.3), gravity, 0.5)
 	g.local_coords = true
 	g.visibility_aabb = AABB(-extents - Vector3(2, 2, 2), extents * 2.0 + Vector3(4, 8, 4))
+	if key == "puff_smoke":
+		g.draw_order = GPUParticles3D.DRAW_ORDER_VIEW_DEPTH          # (round 4: the smoke blends; its puffs sorted)
 	parent.add_child(g)
 	g.emitting = true
 	return g
@@ -528,21 +637,33 @@ static func stop_trail(g: GPUParticles3D) -> void:
 
 # ---------------------------------------------------------------- bursts
 ## A burst of `kind` at `at` (a hit, a cast): `n` bits flung along `dir` within `spread` deg (180: all round).
-static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread := 180.0, speed := 4.0, size := 0.25) -> void:
+## `cap` (round 4): on a body, kept within its share of his height (false: a guard's own reward on the guarder, as it was).
+static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread := 180.0, speed := 4.0, size := 0.25, cap := true) -> void:
 	if not live():
 		return
 	var pool := _pool()
 	if pool == null:
 		return
 	var d := dir.normalized() if dir.length_squared() > 1e-6 else Vector3.UP
-	var k := clampf(size / 0.25, 0.5, 4.0)
+	# (round 4: on a body, the burst kept within body_share of its height, its count and size; the puffs between the camera
+	# and the body drawn at half)
+	var occl := {}
+	var body := struck_body(at) if cap else null
+	if body != null:
+		var f := burst_cap(kind, speed, size, body_h(body))
+		n = maxi(4, int(round(n * f)))
+		speed *= f
+		size *= f
+		var h := body_h(body)
+		occl = {"occl": Vector4(body.global_position.x, body.global_position.y + h * 0.5, body.global_position.z, h * 0.28)}
+	var k := clampf(size / 0.25, 0.5 if body == null else 0.05, 4.0)
 	var g := _ground(pool, at, d)
 	var up := Transform3D(Basis.IDENTITY, at)
 	match kind:
 		"fire":
 			pool.play("flash", up, 0.18, 0.7 * k, 2.2 * k, FIRE, FIRE_HOT)
 			pool.shoot("puff_fire", at, int(n * 0.9), d, spread, Vector2(speed * 0.3, speed * 0.9), Vector2(0.45, 1.0) * k,
-					0.5, Vector3(0, 3.0, 0), 3.0, {"r": 0.15 * k})
+					0.5, Vector3(0, 3.0, 0), 3.0, {"r": 0.15 * k}.merged(occl))
 			pool.shoot("spark_fire", at, n, d, spread, Vector2(speed * 0.8, speed * 2.2), Vector2(0.03, 0.06), 0.65,
 					Vector3(0, -5.0, 0), 1.5)
 			pool.light(at, Color(1.0, 0.6, 0.25), 3.0, 0.2, 4.0)
@@ -551,9 +672,9 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 				pool.mark("scorch", g.pos, g.normal, 1.3 * k, 6.0)
 		"water":
 			pool.shoot("drop", at, int(n * 1.3), d, spread, Vector2(speed * 0.6, speed * 1.8), Vector2(0.1, 0.2) * k,
-					0.75, Vector3(0, -14.0, 0), 0.5, {"r": 0.1 * k})
+					0.75, Vector3(0, -14.0, 0), 0.5, {"r": 0.1 * k}.merged(occl))
 			pool.shoot("foam", at, int(n * 0.45), d, spread * 1.2, Vector2(speed * 0.2, speed * 0.6), Vector2(0.35, 0.7) * k,
-					0.5, Vector3.ZERO, 2.0, {"r": 0.15 * k})
+					0.5, Vector3.ZERO, 2.0, {"r": 0.15 * k}.merged(occl))
 			if not g.is_empty():
 				pool.play("crown", _flat(g), 0.55, 0.6 * k, 1.3 * k, WATER, FOAM, ToonFx.band_mesh(1.0, 1.5, 1.0))
 				pool.play("ring", _flat(g), 0.7, 0.3 * k, 1.9 * k, FOAM, Color(0.55, 0.85, 1.0))
@@ -562,7 +683,7 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 				pool.play("flash", up, 0.14, 0.4 * k, 1.0 * k, WATER, FOAM)
 		"steam":
 			pool.shoot("puff_steam", at, n, d, spread, Vector2(speed * 0.3, speed), Vector2(0.4, 0.9) * k, 1.1,
-					Vector3(0, 1.8, 0), 2.0, {"r": 0.3 * k})
+					Vector3(0, 1.8, 0), 2.0, {"r": 0.3 * k}.merged(occl))
 			pool.play("ring", Transform3D(Basis.IDENTITY, at), 0.4, 0.3 * k, 1.6 * k, FOAM, Color(0.75, 0.82, 0.9))
 		"ice":
 			var big := n >= 24
@@ -571,7 +692,7 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 			pool.shoot("shard", at, int(n * 0.9), d, spread, Vector2(speed * 0.7, speed * (2.2 if big else 1.6)),
 					Vector2(0.16, 0.34) * sk * k, 0.95, Vector3(0, -12.0, 0), 0.5, {"r": (0.7 if big else 0.1) * k, "ang": 600.0})
 			pool.shoot("puff_frost", at, int(n * (0.45 if big else 0.25)), d, spread, Vector2(speed * 0.2, speed * 0.6), Vector2(0.3, 0.6) * sk * k,
-					0.55, Vector3.ZERO, 2.0, {"r": (0.5 if big else 0.1) * k})
+					0.55, Vector3.ZERO, 2.0, {"r": (0.5 if big else 0.1) * k}.merged(occl))
 			pool.shoot("star", at, int(n * 0.6), d, spread, Vector2(speed * 0.4, speed * 1.2), Vector2(0.18, 0.32), 0.7,
 					Vector3(0, -2.0, 0), 2.0, {"r": (0.6 if big else 0.15) * k})
 			if not g.is_empty():
@@ -582,14 +703,14 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 			pool.shoot("spark_line", at, n, d, spread, Vector2(speed * 1.5, speed * 3.0), Vector2(0.045, 0.07), 0.32,
 					Vector3.ZERO, speed * 3.0)
 			pool.shoot("puff_air", at, int(n * 0.4), d, spread, Vector2(speed * 0.3, speed * 0.8), Vector2(0.2, 0.45) * k,
-					0.4, Vector3.ZERO, 3.0)
+					0.4, Vector3.ZERO, 3.0, occl)
 			if not g.is_empty():
 				_dust(pool, g, n, k)
 		"stone":
 			pool.shoot("chunk", at, n, d, spread, Vector2(speed * 0.7, speed * 1.5), Vector2(0.12, 0.3) * k, 1.1,
 					Vector3(0, -16.0, 0), 0.3, {"r": 0.15 * k, "ang": 400.0})
 			pool.shoot("puff_dust", at, int(n * 0.7), d, spread, Vector2(speed * 0.2, speed * 0.6), Vector2(0.55, 1.1) * k,
-					1.0, Vector3(0, 0.3, 0), 3.0, {"r": 0.2 * k})
+					1.0, Vector3(0, 0.3, 0), 3.0, {"r": 0.2 * k}.merged(occl))
 			if not g.is_empty():
 				_dust(pool, g, n, k)
 				pool.mark("cracks", g.pos, g.normal, 1.8 * k, 7.0)
@@ -600,6 +721,82 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 			pool.light(at, Color(0.6, 0.75, 1.0), 2.5, 0.15, 4.0)
 		_:
 			pool.shoot("puff_air", at, n, d, spread, Vector2(speed * 0.5, speed), Vector2(0.2, 0.4) * k, 0.5)
+
+
+## The body a burst at `at` lands on (a fighter or a player standing within ToonFx.looks puffs.find_r_m of it, `at` within
+## his height), or null.
+static func struck_body(at: Vector3) -> Node3D:
+	var ml := Engine.get_main_loop() as SceneTree
+	if ml == null:
+		return null
+	var pu := ToonFx.looks("puffs")
+	var r := float(pu.get("find_r_m", 0.9))
+	var best: Node3D = null
+	var bd := INF
+	for grp: StringName in [NpcFighter.GROUP, &"player"]:
+		for n in ml.get_nodes_in_group(grp):
+			var b := n as Node3D
+			if b == null or not b.is_inside_tree():
+				continue
+			var q := b.global_position
+			var dd := Vector2(q.x - at.x, q.z - at.z).length()
+			if dd <= r and at.y >= q.y - 0.3 and at.y <= q.y + body_h(b) + 0.3 and dd < bd:
+				best = b
+				bd = dd
+	return best
+
+
+## A body's height for the puffs' cap (ToonFx.looks puffs.body_h_m; a crouched one lower).
+static func body_h(b: Node) -> float:
+	var h := float(ToonFx.looks("puffs").get("body_h_m", 1.8))
+	return h * (0.65 if NpcSenses.crouched(b) else 1.0)
+
+
+## The burst's occluding cloud (its puffs, flashes and swirls; the sparks and drops are thin) at `f` of its speed and size:
+## how tall it stands (m): twice its puffs' reach plus their size. The table: [speed share, size (x its size's k), life,
+## damping] of each of the kind's occluding shots, as burst plays them.
+const BURST_CLOUD := {
+	"fire": [[0.9, 1.0, 0.5, 3.0], [0.0, 2.2, 0.0, 0.0]],
+	"water": [[0.6, 0.7, 0.5, 2.0], [0.0, 1.0, 0.0, 0.0]],
+	"steam": [[1.0, 0.9, 1.1, 2.0]],
+	"ice": [[0.6, 0.6, 0.55, 2.0], [0.0, 1.2, 0.0, 0.0]],
+	"air": [[0.8, 0.45, 0.4, 3.0], [0.0, 1.9, 0.0, 0.0]],
+	"stone": [[0.6, 1.1, 1.0, 3.0]],
+	"lightning": [[0.0, 1.3, 0.0, 0.0]],
+}
+
+
+static func burst_span(kind: String, speed: float, size: float, f := 1.0) -> float:
+	var k := clampf(size * f / 0.25, 0.05, 4.0)
+	var span := 0.0
+	for e: Array in BURST_CLOUD.get(kind, [[1.0, 0.4, 0.5, 0.0]]):
+		var v := float(e[0]) * speed * f
+		var life := float(e[2])
+		var dmp := float(e[3])
+		var reach := v * life
+		if dmp > 0.0 and v / dmp < life:
+			reach = v * v / (2.0 * dmp)
+		elif dmp > 0.0:
+			reach = v * life - dmp * life * life * 0.5
+		span = maxf(span, 2.0 * reach + float(e[1]) * k)
+	return span
+
+
+## The share of its speed, size and count a burst on a body of height `h` keeps (1: as it is) so its cloud stands within
+## ToonFx.looks puffs.body_share of `h`.
+static func burst_cap(kind: String, speed: float, size: float, h: float) -> float:
+	var cap := h * float(ToonFx.looks("puffs").get("body_share", 0.6))
+	if burst_span(kind, speed, size, 1.0) <= cap:
+		return 1.0
+	var lo := 0.0
+	var hi := 1.0
+	for i in 20:
+		var m := (lo + hi) * 0.5
+		if burst_span(kind, speed, size, m) <= cap:
+			lo = m
+		else:
+			hi = m
+	return lo
 
 
 static func _dust(pool: ToonFxPool, g: Dictionary, n: int, k: float) -> void:
@@ -776,47 +973,73 @@ static func guard_result(body: Node3D, el: String, result: String) -> void:
 			pool.play("flash", xf, 0.22, 0.6, 2.4, tint[0], tint[1])
 			pool.play("ring", Transform3D(Basis.IDENTITY, at), 0.3, 0.4, 2.6, tint[1], tint[0])     # (flat round his chest)
 			pool.shoot("star", at, 14, Vector3.UP, 180.0, Vector2(2.0, 5.0), Vector2(0.2, 0.36), 0.5, Vector3.ZERO, 4.0)
-			burst(at, el if el in KINDS else "air", 14, Vector3.UP, 180.0, 4.0, 0.3)
+			burst(at, el if el in KINDS else "air", 14, Vector3.UP, 180.0, 4.0, 0.3, false)
 			pool.light(at, tint[0], 3.5, 0.2, 5.0)
 		"late":
 			pool.play("flash", xf, 0.14, 0.3, 1.0, tint[0], tint[1])
-			burst(at, el if el in KINDS else "air", 8, Vector3.UP, 120.0, 2.0, 0.2)
+			burst(at, el if el in KINDS else "air", 8, Vector3.UP, 120.0, 2.0, 0.2, false)
 		"whiff":
 			pool.shoot("puff_air", at, 6, Vector3.UP, 120.0, Vector2(0.3, 0.8), Vector2(0.15, 0.3), 0.4)
 
 
-## The Kick's floor wave's body (BendBolt floor_wave, under the bolt: its local X across, -Z its way): a row of low flame
-## tongues across `width` m, `height` tall at most, standing on the deck, embers and a warm light. The holder (its scale.x
-## the wave's width over `width`: the bolt widens it as it runs). Headless: the holder alone.
+## The Kick's floor wave's body (BendBolt floor_wave, under the bolt: its local X across, -Z its way; round 4, LOOKS: bigger
+## and thicker, ToonFx.looks floor_wave): three rows of flame tongues across `width` m (wave_tongues: a bright crest at the
+## front, a body, a low trail; 1.0-1.4 m deep), the crest's visible top the height a jump clears (wave_top: the bolt's
+## miss_above_m, read from its spec; `height` when it has none), a soft glow under them, a bright lip along the deck under
+## the crest (a ToonRibbon laid across), sparks thrown ahead, embers, a warm light that travels with it, scorches left along
+## its path and embers spilling past the deck's lip (WaveFx). The holder (its scale.x the wave's width over `width`: the bolt
+## widens it as it runs). Headless: the holder alone.
 static func floor_wave_body(parent: Node3D, width: float, height: float) -> Node3D:
 	var holder := Node3D.new()
 	holder.name = "Wave"
 	parent.add_child(holder)
 	if not live():
 		return holder
+	var fw := ToonFx.looks("floor_wave")
+	var top := wave_top(parent, height)
+	var tg := wave_tongues(width, top)
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_colors = true
 	mm.mesh = ToonFx.quad_base()
-	var n := 9
-	mm.instance_count = n
-	for i in n:
-		var x := ((float(i) + 0.5) / n - 0.5) * width
-		var edge := absf(x) / maxf(width * 0.5, 0.01)
-		var h := height * (1.0 - 0.45 * edge * edge) * ToonFx.vis_rng.randf_range(0.75, 1.05)
-		var z := (0.12 if i % 2 == 0 else -0.12) + edge * 0.25                 # (a shallow bow: the middle leads)
-		mm.set_instance_transform(i, Transform3D(Basis(Vector3.RIGHT * width / n * 1.5, Vector3.UP * h, Vector3.BACK), Vector3(x, 0.0, z)))
+	mm.instance_count = tg.size()
+	for i in tg.size():
+		mm.set_instance_transform(i, tg[i].xf)
+		mm.set_instance_color(i, Color(float(tg[i].heat), 1.0, 1.0, 1.0))
 	var mmi := MultiMeshInstance3D.new()
 	mmi.name = "Tongues"
 	mmi.multimesh = mm
-	mmi.material_override = ToonFx.mat("flame_low")
+	mmi.set_meta(&"tongues", tg)                  # (what it laid out: the tests read it, a dummy server keeps no instances)
+	mmi.material_override = ToonFx.mat("flame_wave")
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mmi.extra_cull_margin = 3.0
 	mmi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
 	mmi.set_instance_shader_parameter(&"grow", 1.0)
 	holder.add_child(mmi)
-	var em := emitter(holder, "embers", Vector3(width * 0.5, 0.15, 0.2), 14, 0.6, 1.4, 0.05)
+	_glow(holder, Vector3(width * 1.5, top * 1.9, 1.0), Vector3(0.0, top * 0.45, 0.45))
+	var lip := ToonRibbon.new()
+	lip.name = "Lip"
+	lip.main_mat = ToonFx.mat("flame_lip")
+	lip.width = 0.13
+	holder.add_child(lip)
+	lip.lay_across(holder, width * 0.55, 0.04)
+	var em := emitter(holder, "embers", Vector3(width * 0.5, 0.15, 0.5), 14, 0.6, 1.4, 0.05)
 	if em != null:
-		em.position = Vector3.UP * 0.3
+		em.position = Vector3(0.0, 0.3, 0.45)
+	var sv: Array = fw.get("spark_mps", [3.0, 6.5])
+	var sp := emitter(holder, "embers", Vector3(width * 0.5, 0.1, 0.05), int(fw.get("sparks", 16)), 0.45, 1.0, 0.05)
+	if sp != null:
+		sp.position = Vector3(0.0, 0.2, -0.1)
+		var pm := sp.process_material as ParticleProcessMaterial
+		pm.direction = Vector3(0.0, 0.35, -1.0).normalized()          # (thrown ahead of the crest, along its way)
+		pm.spread = 28.0
+		pm.initial_velocity_min = float(sv[0])
+		pm.initial_velocity_max = float(sv[1])
+		pm.gravity = Vector3(0.0, -6.0, 0.0)
+	var fx := WaveFx.new()
+	fx.name = "WaveFx"
+	fx.base_w = width
+	holder.add_child(fx)
 	var l := OmniLight3D.new()
 	l.light_color = Color(1.0, 0.55, 0.2)
 	l.light_energy = 2.0
@@ -825,6 +1048,37 @@ static func floor_wave_body(parent: Node3D, width: float, height: float) -> Node
 	l.shadow_enabled = false
 	holder.add_child(l)
 	return holder
+
+
+## The Kick's visible top (round 4): the height its strike stops at for a jumper (the bolt's miss_above_m: feet over it clear
+## it), else `height`.
+static func wave_top(bolt: Node, height: float) -> float:
+	if bolt != null and "miss_above_m" in bolt:
+		return float(bolt.get(&"miss_above_m"))
+	return height
+
+
+## The Kick's tongues (round 4; ToonFx.looks floor_wave.rows): [{xf, heat, row}] across `width` m, the crest's tallest one's
+## visible top (its quad's height x fill) at `top` m; each row behind the last, the middle leading a little.
+static func wave_tongues(width: float, top: float) -> Array[Dictionary]:
+	var fw := ToonFx.looks("floor_wave")
+	var fill := float(fw.get("fill", 0.92))
+	var out: Array[Dictionary] = []
+	var rows: Array = fw.get("rows", [])
+	for ri in rows.size():
+		var row: Dictionary = rows[ri]
+		var n := int(row.get("n", 8))
+		var zr: Array = row.get("z", [0.0, 0.1])
+		var hr: Array = row.get("h", [0.9, 1.0])
+		for i in n:
+			var x := ((float(i) + 0.5 + ToonFx.vis_rng.randf_range(-0.2, 0.2)) / n - 0.5) * width
+			var edge := absf(x) / maxf(width * 0.5, 0.01)
+			var h := top / fill * ToonFx.vis_rng.randf_range(float(hr[0]), float(hr[1])) * (1.0 - 0.22 * edge * edge)
+			var z := ToonFx.vis_rng.randf_range(float(zr[0]), float(zr[1])) + edge * 0.18
+			var w := width / n * float(row.get("w", 1.8))
+			out.append({"xf": Transform3D(Basis(Vector3.RIGHT * w, Vector3.UP * h, Vector3.BACK), Vector3(x, 0.0, z)),
+					"heat": float(row.get("heat", 1.0)), "row": String(row.get("name", str(ri)))})
+	return out
 
 
 ## The Geyser's water at `at` (BendEffects.spout): low and weak at once, its column at its peak `rise_s` later, `r` round.
@@ -946,6 +1200,89 @@ static func _hands(sway: Node) -> Vector3:
 	if sway is Node3D:
 		return (sway as Node3D).global_position + Vector3.UP * 1.3
 	return Vector3.ZERO
+
+
+## Under an air bolt (round 4): every every_s while its bolt flies within over_m of the deck under it, a thin line of dust
+## rises along the stretch it flew (the pool's puff_dust laid along it). No marker: the dust is the air's own.
+class AirDust:
+	extends Node3D
+
+	var _last := Vector3.INF
+	var _t := 0.0
+
+	func _process(dt: float) -> void:
+		_t -= dt
+		if _t > 0.0:
+			return
+		var ad := ToonFx.looks("air_dust")
+		_t = float(ad.get("every_s", 0.1))
+		var p := global_position
+		var was := _last
+		_last = p
+		if not was.is_finite() or not is_inside_tree():
+			return
+		var w := get_world_3d()
+		if w == null:
+			return
+		var over := float(ad.get("over_m", 1.5))
+		var q := PhysicsRayQueryParameters3D.create(p, p + Vector3.DOWN * over, 1)
+		var h := w.direct_space_state.intersect_ray(q)
+		if h.is_empty():
+			return
+		var pool := BendLooks._pool()
+		if pool == null:
+			return
+		var seg := Vector3(p.x - was.x, 0.0, p.z - was.z)
+		var l := seg.length()
+		if l < 0.05 or l > 8.0:
+			return
+		var fwd := seg / l
+		var x := Vector3.UP.cross(fwd).normalized()
+		var foot := Vector3((p.x + was.x) * 0.5, (h.position as Vector3).y + 0.05, (p.z + was.z) * 0.5)
+		pool.shoot("puff_dust", foot, 7, Vector3.UP, 15.0, Vector2(0.4, 1.1), Vector2(0.12, 0.26), 0.5, Vector3.ZERO, 1.5,
+				{"box": Vector3(0.04, 0.02, l * 0.5), "basis": Basis(x, Vector3.UP, fwd)})
+
+
+## The Kick's own (round 4): a scorch left on the deck every scorch_every_m of its path (fading over scorch_s), and past the
+## deck's lip its embers spilling and falling.
+class WaveFx:
+	extends Node3D
+
+	var base_w := 1.2
+	var _last := Vector3.INF
+	var _acc := 0.0
+	var _spill := 0.0
+
+	func _process(dt: float) -> void:
+		var pool := BendLooks._pool()
+		if pool == null:
+			return
+		var fw := ToonFx.looks("floor_wave")
+		var p := global_position
+		var deck := _deck(p)
+		if _last.is_finite():
+			_acc += Vector2(p.x - _last.x, p.z - _last.z).length()
+		_last = p
+		var w := base_w * absf((get_parent() as Node3D).scale.x) if get_parent() is Node3D else base_w
+		if _acc >= float(fw.get("scorch_every_m", 1.1)) or _acc == 0.0:
+			_acc = 0.0001
+			if deck.is_finite():
+				pool.mark("scorch", deck, Vector3.UP, clampf(float(fw.get("scorch_size_m", 1.3)) * w / 2.2 + 0.4, 0.8, 2.2),
+						float(fw.get("scorch_s", 2.0)))
+		_spill -= dt
+		if not deck.is_finite() and _spill <= 0.0:
+			_spill = float(fw.get("spill_every_s", 0.05))
+			pool.shoot("spark_fire", p + Vector3.UP * 0.15, int(fw.get("spill_n", 8)), Vector3.DOWN, 50.0, Vector2(0.5, 2.0),
+					Vector2(0.03, 0.06), 0.9, Vector3(0.0, -9.0, 0.0), 0.3, {"box": Vector3(w * 0.5, 0.05, 0.1),
+					"basis": global_basis.orthonormalized()})
+
+	## The deck under `p` (its point), INF past the lip.
+	func _deck(p: Vector3) -> Vector3:
+		var w := get_world_3d()
+		if w == null:
+			return Vector3.INF
+		var h := w.direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(p + Vector3.UP * 0.3, p + Vector3.DOWN * 0.5, 1))
+		return h.position if not h.is_empty() else Vector3.INF
 
 
 ## Lightning's charge on a body's hands (charge): sparks round the hands and a looped hum, both by `level`. end() lets it go.

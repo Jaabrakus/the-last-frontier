@@ -19,6 +19,7 @@ shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
 #include "res://shaders/common/canopy.gdshaderinc"
+#include "res://shaders/bend_fx/dither.gdshaderinc"
 
 uniform int look = 0;
 uniform vec3 col_a : source_color = vec3(0.45, 0.44, 0.42);     // the main tone
@@ -35,6 +36,9 @@ uniform float wet = 0.0;
 uniform float stones = 0.0;
 uniform float top_k = 0.0;
 instance uniform float seed = 0.0;
+// Round 4 (LOOKS; scripts/fx/own_fade.gd): your own wall between the camera and your head, or by the camera, drawn at
+// `fade` in a screen-door (no sorting; a look only). 1: whole (everyone else's, the open world's).
+instance uniform float fade = 1.0;
 
 varying vec3 v_obj;
 varying vec3 v_onrm;
@@ -117,6 +121,9 @@ void vertex() {
 }
 
 void fragment() {
+	if (dither_cut(fade, FRAGCOORD.xy)) {
+		discard;
+	}
 	vec3 s3 = vec3(seed * 3.17, seed * 1.91, seed * 2.53);
 	vec3 p = v_obj * scale + s3;
 	// how fine a detail the pixel still holds (high frequencies fade with distance, no shimmer)

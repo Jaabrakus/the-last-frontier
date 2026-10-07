@@ -1,0 +1,24 @@
+{
+  "_doc": "Round 4 LOOKS: the numbers of the elements' looks (ToonFx.looks reads them; the shaders' uniforms are set from here by ToonFx.mat). Looks only: no hitbox, speed, damage or zone radius is here. near: every effect's pixels fade (a screen-door dither, no sorting) from far_m to near_alpha at near_m from the camera (nothing of your own fills your view). own_wall: your own walls and pillars between the camera and your head, or within near_m of the camera, dither to alpha (they still block everything); speed: how fast the fade moves (per s). own_guard: your own Wind Guard's bands drawn band_w as wide, seen from your own camera. range: a bolt's drawn core grows past from_m from the camera up to max times at full_m (its hitbox unchanged). flame: soft edges (soft, in the flame field's units), the domain warp, the tips' embers, the fade where flames meet the deck (deck_fade_m), the fireball's tongues (tongues, each its own phase), the fire wall's flames (count_mult as many at width_mult as wide), the glow underlay's strength. floor_wave: the Kick's three rows (crest, body, trail: their counts, depths behind the front (m) and heights as a share of the crest), fill (how much of a tongue's quad its flame fills: its visible top), the scorch every scorch_every_m fading over scorch_s, sparks thrown ahead, the embers that spill past the lip. smoke: Breath's smoke (a lit volume): its curl (rad over its life), its growth, its tints, its warm under-glow (warm_s from the flame), the deck fade. puffs: a hit's burst on a body stays within body_share of the body's height (body_h_m when it says none; a body within find_r_m of the hit); the puffs between the camera and the struck body drawn at half. air_dust: under an air bolt within over_m of the deck a thin line of dust rises, every every_s. shadow: each bolt's shadow-only core, as a share of its radius by kind.",
+  "near": {"near_m": 2.5, "far_m": 4.0, "near_alpha": 0.25},
+  "own_wall": {"alpha": 0.35, "near_m": 2.5, "speed": 5.0},
+  "own_guard": {"band_w": 0.6},
+  "range": {"from_m": 14.0, "full_m": 25.0, "max": 2.2},
+  "flame": {"soft": 0.07, "warp": 0.3, "embers": 1.0, "deck_fade_m": 0.3, "tongues": 8, "glow": 0.4,
+    "wall": {"count_mult": 2.0, "width_mult": 0.6}},
+  "floor_wave": {
+    "fill": 0.92,
+    "rows": [
+      {"name": "crest", "n": 10, "z": [-0.05, 0.08], "h": [0.9, 1.0], "w": 2.7, "heat": 1.0},
+      {"name": "body", "n": 8, "z": [0.38, 0.55], "h": [0.66, 0.84], "w": 3.0, "heat": 0.8},
+      {"name": "trail", "n": 7, "z": [0.85, 1.15], "h": [0.32, 0.48], "w": 3.2, "heat": 0.55}
+    ],
+    "scorch_every_m": 1.1, "scorch_s": 2.0, "scorch_size_m": 1.3,
+    "sparks": 16, "spark_mps": [3.0, 6.5],
+    "spill_every_s": 0.05, "spill_n": 8
+  },
+  "smoke": {"curl": 1.6, "grow": [1.0, 1.5], "tint": 0.4, "warm_s": 0.5, "deck_fade_m": 0.25, "opacity": 1.0},
+  "puffs": {"body_share": 0.6, "body_h_m": 1.8, "find_r_m": 0.9, "half": 0.5},
+  "air_dust": {"over_m": 1.5, "every_s": 0.1},
+  "shadow": {"stone": 1.0, "ice": 1.3, "water": 1.3, "fire": 1.0}
+}

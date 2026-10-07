@@ -6,9 +6,13 @@ extends MeshInstance3D
 ## `life` s of the path (points at most MAX_PTS); stop() lets go of the target and it shrinks into its tail and hides.
 ## UV.x runs 0 at the head to 1 at the tail (by age), UV.y across, UV2.x the half width; NORMAL is along the strip.
 ## Not freed when done: ToonFxPool reuses it with its trail.
+## Round 4 (LOOKS): lay_across(anchor, half_w) draws it instead as one line across `anchor` (its local X, from -half_w to
+## half_w, `lift` m up, ACROSS_PTS points; UV.x m along it), following the anchor as it moves and widens: the bright lip
+## along the deck under the Kick's crest (ToonFx "flame_lip").
 
 const MAX_PTS := 14
 const STEP_M := 0.14
+const ACROSS_PTS := 9
 
 var target: Node3D
 var life := 0.14
@@ -21,6 +25,10 @@ var coil_w := 0.04
 var coil_spin := 18.0
 var coil_mat: Material
 var done := true
+## Laid across an anchor (lay_across): the anchor, its half width (local m) and the line's height over it.
+var across_anchor: Node3D
+var across_hw := 1.0
+var lift := 0.03
 
 var _pts := PackedVector3Array()
 var _ts := PackedFloat32Array()
@@ -54,6 +62,18 @@ func prime(a: Vector3, b: Vector3) -> void:
 
 func stop() -> void:
 	target = null
+	across_anchor = null
+
+
+## Drawn as one line across `anchor` (see the header) until stop() or the anchor goes.
+func lay_across(anchor: Node3D, half_w: float, p_lift := 0.03) -> void:
+	across_anchor = anchor
+	across_hw = half_w
+	lift = p_lift
+	target = null
+	done = false
+	visible = true
+	set_process(true)
 
 
 func _ready() -> void:
@@ -62,6 +82,16 @@ func _ready() -> void:
 
 func _process(dt: float) -> void:
 	_t += dt
+	if across_anchor != null:
+		if not is_instance_valid(across_anchor) or not across_anchor.is_inside_tree():
+			across_anchor = null
+			_im.clear_surfaces()
+			done = true
+			visible = false
+			set_process(false)
+			return
+		_across()
+		return
 	if target != null and not is_instance_valid(target):
 		target = null
 	if target != null:
@@ -115,6 +145,32 @@ func _strand(m: Material, w: float, tw: float, off: float, k: int) -> void:
 		for a in 2:
 			_im.surface_set_normal(along)
 			_im.surface_set_uv(Vector2(u, float(a)))
+			_im.surface_set_uv2(Vector2(hw, 1.0))
+			_im.surface_add_vertex(p)
+	_im.surface_end()
+
+
+func _across() -> void:
+	_im.clear_surfaces()
+	if main_mat == null:
+		return
+	var xf := across_anchor.global_transform
+	var n := ACROSS_PTS
+	var a := xf * Vector3(-across_hw, lift, 0.0)
+	var b := xf * Vector3(across_hw, lift, 0.0)
+	var along := (b - a)
+	var l := along.length()
+	if l < 1e-4:
+		return
+	along /= l
+	_im.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP, main_mat)
+	for i in n:
+		var u := float(i) / float(n - 1)
+		var p := a.lerp(b, u)
+		var hw := width * (0.55 + 0.45 * sin(u * PI))
+		for k in 2:
+			_im.surface_set_normal(along)
+			_im.surface_set_uv(Vector2(u * l, float(k)))
 			_im.surface_set_uv2(Vector2(hw, 1.0))
 			_im.surface_add_vertex(p)
 	_im.surface_end()

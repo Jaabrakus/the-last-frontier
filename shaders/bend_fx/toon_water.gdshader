@@ -4,6 +4,8 @@ shader_type spatial;
 //   mode 0  a mesh (a bolt's head, a bubble, a wall, a splash crown); `wobble` m of vertex swell
 //   mode 1  a strip along a line (ToonRibbon) shaded as a round tube (the stream behind a water bolt)
 // `flow` scrolls the foam (UV per s); `fade` (instance) eats it away from its thin places.
+// Round 4 (LOOKS): `range_on` (instance, a bolt's head) grows it with its distance from the camera (fx_common range_scale);
+// thinned near the camera (near_cut).
 render_mode unshaded, blend_mix, depth_draw_always, cull_back, shadows_disabled, fog_disabled, skip_vertex_transform;
 
 #include "res://shaders/bend_fx/fx_common.gdshaderinc"
@@ -24,6 +26,7 @@ uniform float wobble = 0.0;
 uniform float alpha_mul = 1.0;
 instance uniform float fade = 1.0;
 instance uniform float seed = 0.0;
+instance uniform float range_on = 0.0;
 
 varying vec3 v_side;
 varying vec3 v_wpos;
@@ -36,6 +39,9 @@ void vertex() {
 		if (wobble > 0.0) {
 			float s = textureLod(noise, UV * 1.5 + vec2(TIME * 0.21, TIME * 0.13) + seed, 0.0).r;
 			nv += NORMAL * (s - 0.5) * 2.0 * wobble;
+		}
+		if (range_on > 0.5) {
+			nv *= range_scale(length(cam - MODEL_MATRIX[3].xyz));
 		}
 		w = (MODEL_MATRIX * vec4(nv, 1.0)).xyz;
 		NORMAL = normalize((MODELVIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
@@ -84,5 +90,5 @@ void fragment() {
 		discard;
 	}
 	ALBEDO = (col.rgb) * fx_gain;
-	ALPHA = col.a * alpha_mul * a;
+	ALPHA = col.a * alpha_mul * a * near_fade(length(VERTEX)) * own_fade;      // (blended: the near fade is its alpha)
 }

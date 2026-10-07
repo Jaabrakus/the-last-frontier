@@ -16,6 +16,9 @@ instance uniform float t = 0.0;
 instance uniform float seed = 0.0;
 
 void fragment() {
+	if (near_cut(VERTEX, FRAGCOORD.xy)) {
+		discard;
+	}
 	vec2 p = UV * 2.0 - 1.0;
 	float r = length(p);
 	float ang = atan(p.y, p.x);

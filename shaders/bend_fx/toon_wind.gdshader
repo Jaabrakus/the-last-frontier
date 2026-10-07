@@ -6,6 +6,9 @@ shader_type spatial;
 //   mode 1  a strip along a line (ToonRibbon: UV.x along, UV.y across): speed lines
 //   mode 2  a flat crescent mesh (UV.x along the arc, UV.y across): an air slice
 // `fade` (instance) eats it away.
+// Round 4 (LOOKS): `band_w` (instance) draws a band that share as wide about its middle, its silhouette edge kept (your own
+// Wind Guard, seen from your own camera: 0.6); `range_on` (instance, a bolt's core) grows it with its distance from the
+// camera (fx_common range_scale); thinned near the camera (near_cut).
 render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, shadows_disabled, fog_disabled, skip_vertex_transform;
 
 #include "res://shaders/bend_fx/fx_common.gdshaderinc"
@@ -23,6 +26,8 @@ uniform float streak = 0.5;
 uniform float glow = 1.0;
 instance uniform float fade = 1.0;
 instance uniform float seed = 0.0;
+instance uniform float band_w = 1.0;
+instance uniform float range_on = 0.0;
 
 void vertex() {
 	vec3 cam = CAMERA_POSITION_WORLD;
@@ -36,6 +41,9 @@ void vertex() {
 			float a = TIME * spin + seed * 6.2831;
 			v = vec3(v.x * cos(a) - v.z * sin(a), v.y, v.x * sin(a) + v.z * cos(a));
 		}
+		if (range_on > 0.5) {
+			v *= range_scale(length(cam - MODEL_MATRIX[3].xyz));
+		}
 		w = (MODEL_MATRIX * vec4(v, 1.0)).xyz;
 	}
 	VERTEX = (VIEW_MATRIX * vec4(w, 1.0)).xyz;
@@ -45,7 +53,10 @@ void vertex() {
 
 void fragment() {
 	float along = UV.x;
-	float across = UV.y;
+	float across = (UV.y - 0.5) / max(band_w, 0.05) + 0.5;
+	if (across < 0.0 || across > 1.0) {
+		discard;
+	}
 	float n = texture(noise, vec2(along * nscale.x - TIME * speed * (mode == 0 ? 0.0 : 1.0) + seed, across * nscale.y + seed * 0.7)).r;
 	float mid = 1.0 - abs(across * 2.0 - 1.0);
 	float v = n * 1.1 + mid * 0.75 - streak - (1.0 - fade) * 1.3;
@@ -62,5 +73,7 @@ void fragment() {
 	vec4 col = mix(c_edge, c_main, core);
 	col.rgb = mix(col.rgb, c_ink, ink * (1.0 - aastep(0.07, v)));
 	ALBEDO = (col.rgb * glow) * fx_gain;
-	ALPHA = col.a * a;
+	// (blended: the near fade is its alpha; your own Wind Guard's bands, band_w < 1, see-through inside their edge)
+	float inside = mix(1.0, band_w, core);
+	ALPHA = col.a * a * inside * near_fade(length(VERTEX)) * own_fade;
 }

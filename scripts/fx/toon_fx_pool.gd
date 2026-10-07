@@ -10,6 +10,8 @@ extends Node3D
 const LIGHTS := 4
 const BOLTS := 4
 const TRAILS_PER_KIND := 12
+## Marks on the ground of each kind at once (round 4: the Kick's scorches along its path, ToonFx.looks floor_wave).
+const MARKS := 16
 
 static var _pool: ToonFxPool
 
@@ -58,7 +60,8 @@ func now() -> float:
 ## `count` particles of `key` (ToonFx.recipe) from `at` along `dir` within `spread` deg, at `v` m/s (min, max), `s` m big
 ## (min, max), living `life` s, pulled by `gravity`, slowed by `damp` m/s². opt: r (the emission sphere's radius), box
 ## (emission box half extents), flat (flatness 0..1), ang (angular velocity, deg/s, min = -max), xf (the emitter's basis:
-## local coords), radial (m/s outward).
+## local coords), radial (m/s outward), occl (round 4: Vector4 a struck body's middle and radius: the puffs between the
+## camera and it drawn at half; none: zero).
 func shoot(key: String, at: Vector3, count: int, dir: Vector3, spread: float, v: Vector2, s: Vector2, life: float,
 		gravity := Vector3.ZERO, damp := 0.0, opt := {}) -> GPUParticles3D:
 	if count <= 0:
@@ -84,6 +87,8 @@ func shoot(key: String, at: Vector3, count: int, dir: Vector3, spread: float, v:
 	if opt.has("ang"):
 		pm.angular_velocity_min = -float(opt.ang)
 		pm.angular_velocity_max = float(opt.ang)
+	if (rec.mat as ShaderMaterial).shader == ToonFx.SHADERS.puff:
+		g.set_instance_shader_parameter(&"occl", opt.get("occl", Vector4.ZERO))
 	g.lifetime = life
 	g.amount_ratio = clampf(float(count) / float(g.amount), 0.02, 1.0)
 	g.global_transform = Transform3D(opt.get("basis", Basis.IDENTITY), at)
@@ -147,7 +152,7 @@ func play(key: String, xf: Transform3D, life: float, s0: float, s1: float, tint 
 
 
 func _shape(key: String, mesh: Mesh) -> MeshInstance3D:
-	var cap := 10 if key.begins_with("mark") else 12
+	var cap := MARKS if key.begins_with("mark") else 12
 	var k := key + (str(mesh.get_instance_id()) if mesh != null else "")
 	var e: Dictionary = _shapes.get(k, {})
 	if e.is_empty():

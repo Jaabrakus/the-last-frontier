@@ -158,7 +158,10 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 ##   ice_patch    a frost sheet on the ground, sparkles
 ##   tornado      stacked wind rings widening upward, each turning, rock debris and dust whirled up round it
 ##   vacuum       wind bands drawing in, air
-##   smoke/dust/spray/steam  cel puffs
+##   smoke/dust/spray/steam  cel puffs (round 4: Breath's smoke a lit volume, warm from the flame for its first warm_s)
+## Round 4 (LOOKS; data/bending/fx_looks.json): the fire wall's flames twice as many at 0.6 as wide over a soft glow; your own
+## Wind Guard's bands drawn 0.6 as wide (band_w; everyone else's read of it unchanged); your own fire, wind and water walls
+## faded by your camera as your earth walls are (OwnFade). Its look only: what it does, its timing and its size stay.
 func _look() -> void:
 	if not BendLooks.live():
 		return
@@ -180,6 +183,7 @@ func _look() -> void:
 				b.position = Vector3.UP * (0.3 + i * 0.62)
 				b.rotation = Vector3(0.24 * (1.0 if i % 2 == 0 else -1.0), i * 1.1, 0.12 * i)
 				b.set_instance_shader_parameter(&"seed", i * 0.37)
+				b.set_instance_shader_parameter(&"band_w", own_band_w())
 			_fx.append(BendLooks.emitter(self, "dust", Vector3(radius * 0.9, 0.05, radius * 0.9), 14, 0.7, 0.6, 0.35))
 			_grow(look, Vector3.ONE * 0.2)
 		"water_wall":
@@ -197,6 +201,7 @@ func _look() -> void:
 				e.position = Vector3.UP * size.y
 			_fx.append_array([crest, foam, foot])
 			_grow(look, Vector3(1.0, 0.02, 1.0))
+			_own_fade(look)
 		"fire_wall", "burn":
 			_flames(look)
 			var h := size.y if kind == "fire_wall" else 0.5
@@ -216,6 +221,8 @@ func _look() -> void:
 			l.position = Vector3.UP * 1.0
 			l.shadow_enabled = false
 			add_child(l)
+			if kind == "fire_wall":
+				_own_fade(look)
 		"ice_patch":
 			var fr := _part(look, ToonFx.plane(), ToonFx.mat("mark_frost"))
 			fr.scale = Vector3(radius, 1.0, radius)
@@ -225,8 +232,15 @@ func _look() -> void:
 			_fx.append(BendLooks.emitter(self, "sparkle", Vector3(radius * 0.7, 0.05, radius * 0.7), 10, 0.8, 0.3, 0.12))
 			_grow(look, Vector3(0.1, 1.0, 0.1))
 		"smoke", "dust", "spray":
-			_fx.append(BendLooks.emitter(self, "smoke" if kind == "smoke" else ("dust" if kind == "dust" else "foam"),
-					Vector3(radius, 0.8, radius), 40, 2.2, 0.6, 1.6))
+			var cl := BendLooks.emitter(self, "smoke" if kind == "smoke" else ("dust" if kind == "dust" else "foam"),
+					Vector3(radius, 0.8, radius), 40, 2.2, 0.6, 1.6)
+			_fx.append(cl)
+			if kind == "smoke" and cl != null:
+				# (round 4: lit warm from under by the flame that made it, for its first warm_s)
+				cl.set_instance_shader_parameter(&"warm", 1.0)
+				var tw := cl.create_tween()
+				tw.tween_method(func(v: float) -> void: cl.set_instance_shader_parameter(&"warm", v), 1.0, 0.0,
+						maxf(float(ToonFx.looks("smoke").get("warm_s", 0.5)), 0.05))
 		"steam":
 			var st := BendLooks.emitter(self, "steam", Vector3(radius * 0.7, 0.6, radius * 0.7), 30, minf(life_s, 1.4), 1.2, 1.3)
 			st.position = Vector3.UP * 0.6
@@ -300,6 +314,7 @@ func _look() -> void:
 				air.position = Vector3.UP * size.y * 0.5
 			_fx.append_array([foot, air])
 			_grow(look, Vector3(1.0, 0.05, 1.0))
+			_own_fade(look)
 		"puddle":
 			var wet := _part(look, ToonFx.plane(), ToonFx.mat("mark_wet"))
 			wet.scale = Vector3(radius, 1.0, radius)
@@ -318,6 +333,26 @@ func _part(under: Node3D, m: Mesh, mat: Material) -> MeshInstance3D:
 	return mi
 
 
+## Your own Wind Guard's bands' width (round 4): ToonFx.looks own_guard.band_w seen from your own camera (its owner is this
+## machine's player), else 1 (everyone else's read of his guard).
+func own_band_w() -> float:
+	return float(ToonFx.looks("own_guard").get("band_w", 0.6)) if ToonFx.is_own(owner_node) else 1.0
+
+
+## A wall's look faded by its owner's camera (round 4, OwnFade: between his camera and his head, or by the camera): every
+## mesh under `look` and its emitters.
+func _own_fade(look: Node3D) -> void:
+	var gs: Array = []
+	for c in look.get_children():
+		if c is GeometryInstance3D:
+			gs.append(c)
+	for e in _fx:
+		if e is GeometryInstance3D:
+			gs.append(e)
+	OwnFade.attach(self, gs, AABB(Vector3(-size.x * 0.5, 0.0, -size.z * 0.5 - 0.2), Vector3(size.x, size.y, size.z + 0.4)),
+			&"own_fade", owner_node)
+
+
 ## The look grows from `from` (its scale) to whole in a quarter second.
 func _grow(look: Node3D, from: Vector3) -> void:
 	look.scale = from
@@ -326,7 +361,8 @@ func _grow(look: Node3D, from: Vector3) -> void:
 
 
 ## The flames of a fire wall (tall sheets in two staggered rows along it) or burning ground (low, scattered over its strip):
-## one MultiMesh of flame quads facing the camera, raised from nothing.
+## one MultiMesh of flame quads facing the camera, raised from nothing. Round 4: the fire wall's twice as many at 0.6 as wide
+## (ToonFx.looks flame.wall), a soft glow under each.
 func _flames(look: Node3D) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = absi(hash(Vector3i(global_position * 10.0)))
@@ -335,12 +371,14 @@ func _flames(look: Node3D) -> void:
 	mm.mesh = ToonFx.quad_base()
 	var xs: Array[Transform3D] = []
 	if kind == "fire_wall":
-		var n := maxi(int(size.x / 0.42), 3)
+		var fwl: Dictionary = ToonFx.looks("flame").get("wall", {})
+		var n := maxi(int(size.x / 0.42 * float(fwl.get("count_mult", 2.0))), 3)
+		var wk := float(fwl.get("width_mult", 0.6))
 		for row in 2:
 			for i in n:
 				var x := (float(i) + 0.5 + (0.5 if row == 1 else 0.0) * 0.9) / n - 0.5
 				var h := size.y * rng.randf_range(0.7, 1.15) * (1.0 if row == 0 else 0.8)
-				var w := rng.randf_range(0.75, 1.05)
+				var w := rng.randf_range(0.75, 1.05) * wk
 				var z := (row - 0.5) * size.z * 0.5
 				xs.append(Transform3D(Basis(Vector3.RIGHT * w, Vector3.UP * h, Vector3.BACK), Vector3(x * size.x, 0.0, z)))
 	else:
@@ -361,6 +399,16 @@ func _flames(look: Node3D) -> void:
 	mmi.set_instance_shader_parameter(&"seed", rng.randf() * 10.0)
 	mmi.set_instance_shader_parameter(&"grow", 0.0)
 	look.add_child(mmi)
+	var gl := MeshInstance3D.new()
+	gl.name = "Glow"
+	gl.mesh = ToonFx.quad()
+	gl.material_override = ToonFx.mat("flame_glow")
+	gl.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var gh := size.y if kind == "fire_wall" else 0.6
+	gl.scale = Vector3(size.x * 1.25, gh * 1.5, 1.0)
+	gl.position = Vector3.UP * gh * 0.45
+	gl.set_instance_shader_parameter(&"seed", rng.randf() * 10.0)
+	look.add_child(gl)
 	var tw := mmi.create_tween()
 	tw.tween_method(func(v: float) -> void: mmi.set_instance_shader_parameter(&"grow", v), 0.0, 1.0, 0.3) \
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
