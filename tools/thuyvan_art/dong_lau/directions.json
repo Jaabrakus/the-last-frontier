@@ -1,0 +1,45 @@
+{
+  "_about": "The Reed Marches' light directions for the review renders, in palettes.json's 'directions' fields. silver_overcast and smoke_and_lantern are places_se.md §9.4 (PROPOSAL rows, PLACES_SE); heron_morning is this kit's PROPOSAL, a brighter, more saturated third direction in the World of Warcraft Classic spirit for the owner to weigh against the flat overcast. The art director decides which reach palettes.json.",
+  "silver_overcast": {
+    "title": "Silver Overcast",
+    "status": "places_se.md §9.4 (PROPOSAL)",
+    "pitch": "Low cloud, flat silver light, fog close (200-500 m), reed gold and green in long bands, silver water mirroring the sky, black stilt timber, indigo heron banners hanging still, white herons lifting out of the reeds.",
+    "sun": {"azimuth_deg": 200, "elevation_deg": 40, "color": "#e8eef0", "energy": 0.9, "angular_deg": 12.0},
+    "sky": {"zenith": "#8e9ea4", "mid": "#aebcbe", "horizon": "#cdd6d4", "cloud_lit": "#e6ecea", "cloud_shade": "#8e9ca2",
+            "clouds": "one low overcast deck with soft brushed heaps and a brighter rift over the sun"},
+    "ambient": {"color": "#b8c4c4", "energy": 1.3},
+    "fog": {"color": "#b9c6c2", "density": 0.0016, "aerial_perspective": 0.7},
+    "mist_bands_m": [[0, 6, "lying on the water between reed bands"], [10, 22, "round the fort's waist far off"]],
+    "grade": {"contrast": 1.05, "saturation": 1.12},
+    "lanterns": 0.0,
+    "targets": {"far_karst": "#a3b0b0", "mid_karst_lit": "#b8c2bc", "karst_shade": "#8a9898", "mist": "#d6dedc"}
+  },
+  "smoke_and_lantern": {
+    "title": "Smoke and Lantern",
+    "status": "places_se.md §9.4 (PROPOSAL)",
+    "pitch": "Evening: lanterns #ffb060 low over the water under a violet-grey sky, kitchen smoke lying on the water, the sun gone behind the reeds in the west.",
+    "sun": {"azimuth_deg": 280, "elevation_deg": 3, "color": "#e89a6a", "energy": 0.6, "angular_deg": 3.0},
+    "sky": {"zenith": "#4e4a6e", "mid": "#6e6488", "low": "#a8889a", "horizon": "#c49488", "cloud_lit": "#e8a888", "cloud_shade": "#5e5878",
+            "clouds": "long bars lit warm from beneath toward the west"},
+    "ambient": {"color": "#6e6a8a", "energy": 0.7},
+    "fog": {"color": "#8e8498", "density": 0.0013, "aerial_perspective": 0.6},
+    "mist_bands_m": [[0, 5, "smoke and mist on the water"]],
+    "grade": {"contrast": 1.08, "saturation": 1.1},
+    "lanterns": 1.0,
+    "targets": {"far_karst": "#7a7090", "mid_karst_lit": "#8e7a8e", "karst_shade": "#5e5878", "mist": "#a898a8"}
+  },
+  "heron_morning": {
+    "title": "Heron Morning",
+    "status": "PROPOSAL (MARSH): the bright option",
+    "pitch": "The marsh in the WoW-Classic key: a clear morning after rain, sun low from the east-south-east, blue sky with big soft cumulus over the far hills, reed gold glowing, the water a bright mirror, fog only far off.",
+    "sun": {"azimuth_deg": 115, "elevation_deg": 28, "color": "#ffe9c8", "energy": 2.0, "angular_deg": 1.5},
+    "sky": {"zenith": "#4f8fc4", "mid": "#86b6d8", "horizon": "#dbe8e2", "cloud_lit": "#fff8ec", "cloud_shade": "#a9bccc",
+            "clouds": "two or three soft cumulus heaps over the far hills, a few low banks"},
+    "ambient": {"color": "#a4c0d0", "energy": 1.1},
+    "fog": {"color": "#c6d8d6", "density": 0.0008, "aerial_perspective": 0.5},
+    "mist_bands_m": [[0, 4, "thin morning mist in the far channels"]],
+    "grade": {"contrast": 1.12, "saturation": 1.22},
+    "lanterns": 0.0,
+    "targets": {"far_karst": "#94adbc", "mid_karst_lit": "#c4c8b4", "karst_shade": "#7c90a4", "mist": "#e4ecea"}
+  }
+}

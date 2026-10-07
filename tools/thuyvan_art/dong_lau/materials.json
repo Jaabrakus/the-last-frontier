@@ -1,0 +1,32 @@
+{
+  "_about": "Thủy Vân Reed Marches stilt kit (Đồng Lau, dl_*): one row per material key. paint_dong_lau.py paints textures/<key>.png from it; dong_lau_kit.py names Blender/glTF materials tvd_<key> and lays UVs so that 1 UV unit = tile_m metres (about 256 px/m on buildings). Ramps are names in the art director's docs/thuyvan/plan/look/palettes.json: a bare name is albedo.dong_lau, 'zone.name' borrows another zone's ramp (rope, iron, bamboo, the cloth dyes) because dong_lau has none; never retype a hex value. rough/spec are the Godot StandardMaterial3D values (style guide 5.2). 'alpha' keys are alpha-scissor (threshold 0.5).",
+  "palette_zone": "dong_lau",
+  "keys": {
+    "timber":       {"painter": "planks", "ramp": "stilt_timber",     "px": 512,  "tile_m": 2.0, "boards_m": 0.5,  "gaps": false, "value": 0.36, "rough": 0.95, "spec": 0.12},
+    "plank":        {"painter": "planks", "ramp": "stilt_timber",     "px": 1024, "tile_m": 4.0, "boards_m": 0.3,  "gaps": true,  "value": 0.50, "rough": 0.95, "spec": 0.12},
+    "pile":         {"painter": "pile",   "ramp": "stilt_timber",     "px": 512,  "tile_m": 2.0, "value": 0.34, "rough": 0.95, "spec": 0.1},
+    "thatch":       {"painter": "thatch", "ramp": "thatch",           "px": 1024, "tile_m": 4.0, "value": 0.52, "rough": 1.0,  "spec": 0.1},
+    "reed":         {"painter": "bundle", "ramp": "reed_gold",        "px": 512,  "tile_m": 2.0, "value": 0.58, "rough": 1.0,  "spec": 0.1},
+    "weave":        {"painter": "weave",  "ramp": "thatch",           "px": 512,  "tile_m": 2.0, "value": 0.52, "rough": 0.95, "spec": 0.1},
+    "screen":       {"painter": "weave",  "ramp": "reed_gold",        "px": 512,  "tile_m": 1.0, "value": 0.60, "rough": 0.95, "spec": 0.1},
+    "rope":         {"painter": "rope",   "ramp": "r1.rope",          "px": 512,  "tile_m": 1.0, "value": 0.45, "rough": 1.0,  "spec": 0.1},
+    "net":          {"painter": "net",    "ramp": "r1.rope",          "px": 512,  "tile_m": 1.0, "value": 0.40, "rough": 1.0,  "spec": 0.1, "alpha": true},
+    "iron":         {"painter": "iron",   "ramp": "r1.iron",          "px": 256,  "tile_m": 1.0, "value": 0.16, "rough": 0.8,  "spec": 0.2},
+    "bamboo":       {"painter": "bamboo", "ramp": "r1.bamboo",        "px": 512,  "tile_m": 1.0, "value": 0.55, "rough": 0.85, "spec": 0.15},
+    "mud":          {"painter": "earth",  "ramp": "mudflat",          "px": 1024, "tile_m": 4.0, "value": 0.40, "rough": 1.0,  "spec": 0.1},
+    "clay":         {"painter": "earth",  "ramp": "r1.laterite",      "px": 256,  "tile_m": 1.0, "value": 0.42, "rough": 0.85, "spec": 0.15},
+    "bark":         {"painter": "bark",   "ramp": "mangrove_root",    "px": 1024, "tile_m": 3.0, "value": 0.34, "rough": 0.95, "spec": 0.1},
+    "leaf":         {"painter": "leaf",   "ramp": "reed_green",       "px": 1024, "tile_m": 4.0, "value": 0.36, "rough": 1.0,  "spec": 0.08},
+    "fish":         {"painter": "fish",   "ramp": "mudflat",          "px": 256,  "tile_m": 0.5, "value": 0.55, "rough": 0.7,  "spec": 0.25},
+    "paper":        {"painter": "paper",  "ramp": "lantern",          "px": 256,  "tile_m": 1.0, "value": 0.62, "rough": 0.9,  "spec": 0.1, "emission": "#ffb060"},
+    "cloth_madder": {"painter": "cloth",  "ramp": "r1.madder_cloth",  "px": 512,  "tile_m": 2.0, "value": 0.32, "rough": 1.0,  "spec": 0.1},
+    "cloth_bone":   {"painter": "cloth",  "ramp": "r1.bone_cloth",    "px": 512,  "tile_m": 2.0, "value": 0.80, "rough": 1.0,  "spec": 0.1},
+    "cloth_indigo": {"painter": "cloth",  "ramp": "heron_banner",     "px": 512,  "tile_m": 2.0, "value": 0.26, "rough": 1.0,  "spec": 0.1},
+    "banner_heron":   {"painter": "banner", "ramp": "heron_banner", "mark": "heron_standing", "px": 256, "py": 768, "value": 0.27, "rough": 1.0, "spec": 0.1, "unit_uv": true},
+    "banner_heron_b": {"painter": "banner", "ramp": "heron_banner", "mark": "heron_ring",     "px": 256, "py": 768, "value": 0.27, "rough": 1.0, "spec": 0.1, "unit_uv": true},
+    "banner_heron_c": {"painter": "banner", "ramp": "heron_banner", "mark": "heron_reeds",    "px": 256, "py": 768, "value": 0.27, "rough": 1.0, "spec": 0.1, "unit_uv": true},
+    "reedcard":     {"painter": "reedcard", "ramps": ["reed_gold", "reed_green"], "px": 1024, "py": 512, "rough": 1.0, "spec": 0.08, "unit_uv": true, "alpha": true},
+    "tally":        {"painter": "tally",  "ramp": "stilt_timber",     "px": 256,  "py": 1024, "value": 0.40, "rough": 0.95, "spec": 0.1, "unit_uv": true},
+    "oldstone":     {"painter": "oldstone", "ramp": "r1.karst_limestone", "px": 1024, "tile_m": 4.0, "value": 0.40, "rough": 0.95, "spec": 0.1}
+  }
+}
