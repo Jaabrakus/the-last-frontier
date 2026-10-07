@@ -219,13 +219,13 @@ func _panel(p: Array) -> Image:
 				n = Kit.rock(e[1], false)
 			"village":
 				n = Kit.village(e[1])
+			"veg":
+				n = Kit.plant(e[1], int(e[2]), 0)
+				label = "%s v%d" % [e[1], int(e[2])]
 		if n and String(e[0]) != "veg" and e.size() > 2:
 			n.rotation.y = deg_to_rad(float(e[2]))
 		if n and String(e[1]) == "white_stones":
 			_spread(n)
-			"veg":
-				n = Kit.plant(e[1], int(e[2]), 0)
-				label = "%s v%d" % [e[1], int(e[2])]
 		if n == null:
 			push_error("kit_lineup: %s %s did not load" % [e[0], e[1]])
 			continue
