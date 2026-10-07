@@ -111,8 +111,8 @@ func _plants() -> void:
 func _textures() -> void:
 	var meta: Dictionary = _json(TV + "paint/terrain/terrain_slices.json")
 	var n_slices := (meta["slices"] as Array).size()
-	var arr := load(TV + "paint/terrain/tv_terrain_albedo_array.webp") as Texture2DArray
-	_expect(arr != null and arr.get_layers() == n_slices, "textures: the terrain array is a Texture2DArray of %d slices (%s)"
+	var arr := load(TV + "paint/terrain/tv_terrain_albedo_array.webp") as CompressedTexture2DArray
+	_expect(arr != null and arr.get_layers() == n_slices, "textures: the terrain array is a CompressedTexture2DArray of %d slices (%s)"
 			% [n_slices, str(arr.get_layers()) if arr else "not one"])
 	_expect(_imported(TV + "paint/terrain/tv_terrain_albedo_array.webp", true, true)
 			and "s3tc_bptc" in str(_import_cfg(TV + "paint/terrain/tv_terrain_albedo_array.webp").get_value("remap", "metadata", {})),

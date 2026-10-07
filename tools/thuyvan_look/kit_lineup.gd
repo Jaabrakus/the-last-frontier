@@ -21,7 +21,8 @@ const SKY_SHADER := "res://shaders/thuyvan/tv_sky.gdshader"
 const W := 1280
 const H := 720
 const COLS := 2
-## [id, caption, [[kit, piece, variant], ...], porter beside]
+## [id, caption, [[kit, piece, variant or yaw°], ...], porter beside]: rock and village pieces may turn (the Two Heights
+## bridge runs north-south: turned 90° its span faces the camera)
 const PANELS := [
 	["karst_hero", "ROCK R01 karst hero towers (110-240 m)", [["rock", "karst_hero_a"], ["rock", "karst_hero_b"],
 			["rock", "karst_hero_c"], ["rock", "karst_hero_d"], ["rock", "karst_hero_e"]], false],
@@ -33,7 +34,7 @@ const PANELS := [
 			["rock", "cliff_concave_75"], ["rock", "cliff_notch_75"], ["rock", "cliff_ledge_30"], ["rock", "bridge_needle"]],
 			false],
 	["two_heights", "ROCK R06 the Two Heights bridge and its two stone heads", [["rock", "two_heights_head_s"],
-			["rock", "two_heights_bridge"], ["rock", "two_heights_head_n"]], false],
+			["rock", "two_heights_bridge", 90], ["rock", "two_heights_head_n"]], false],
 	["stones", "ROCK R04 boulders, R05 the white stones of Đá Trắng, R08 burial cairns", [["rock", "boulder_a"],
 			["rock", "boulder_b"], ["rock", "boulder_c"], ["rock", "boulder_d"], ["rock", "boulder_e"], ["rock", "boulder_f"],
 			["rock", "white_stones"], ["rock", "cairn_a"], ["rock", "cairn_b"], ["rock", "cairn_c"], ["rock", "cairn_d"],
@@ -218,6 +219,10 @@ func _panel(p: Array) -> Image:
 				n = Kit.rock(e[1], false)
 			"village":
 				n = Kit.village(e[1])
+		if n and String(e[0]) != "veg" and e.size() > 2:
+			n.rotation.y = deg_to_rad(float(e[2]))
+		if n and String(e[1]) == "white_stones":
+			_spread(n)
 			"veg":
 				n = Kit.plant(e[1], int(e[2]), 0)
 				label = "%s v%d" % [e[1], int(e[2])]
@@ -276,13 +281,23 @@ func _panel(p: Array) -> Image:
 ## Camera on a 3/4 view from the front-right and a little above, far enough that the whole span fits.
 func _frame(span: AABB) -> void:
 	var c := span.get_center()
-	var dir := Vector3(0.22, 0.22, 1.0).normalized()
+	var dir := Vector3(0.22, 0.14, 1.0).normalized()
 	var vh := deg_to_rad(_cam.fov) * 0.5
 	var hh := atan(tan(vh) * float(W) / H)
-	var d := maxf(span.size.x * 0.5 / tan(hh), span.size.y * 0.5 / tan(vh)) * 1.12 + span.size.z * 0.5
+	var d := maxf(span.size.x * 0.5 / tan(hh), span.size.y * 0.6 / tan(vh)) * 1.04 + span.size.z * 0.5
 	_cam.position = c + dir * d
-	_cam.look_at(c + Vector3(0, -span.size.y * 0.04, 0), Vector3.UP)
+	# the pieces sit a little below the frame's middle, the sky's painted range above them
+	_cam.look_at(c + Vector3(0, span.size.y * 0.12, 0), Vector3.UP)
 	_cam.near = maxf(0.05, d * 0.002)
+
+
+## The white stones' GLB holds its 12 variants at one origin: lay them in a row, a little apart.
+func _spread(n: Node3D) -> void:
+	var x := 0.0
+	for mi in Kit._meshes(n):
+		var box := mi.get_aabb()
+		mi.position = Vector3(x - box.position.x, mi.position.y, 0.0)
+		x += box.size.x + 0.3
 
 
 func _tag(text: String, at: Vector2, size: int, title: bool) -> Control:
