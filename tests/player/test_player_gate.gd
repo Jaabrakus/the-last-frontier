@@ -6,6 +6,8 @@ extends SceneTree
 ##                third Space in the air change nothing; the camera's arm 4.1 m and the field of view 52.5; BendKnock adds its
 ##                knocks (two of 3 m/s carry 6), air decay 0.8, ragdoll at 9 m/s; a fighter (the duel's kind) has no
 ##                RingMoves and jumps on its own GRAVITY 18 (5 m/s: about 0.69 m)
+##                round 4 (READ): the camera centred and level (no ring camera variant, even one asked for); a bolt there
+##                plays no flight voice (BendSounds.flight: arenas only)
 ##   an arena (scenes/ring.tscn, no match)  no PlayerTraversal, no PlayerGrip, no RingMoves
 ## METRIC gate_unchanged_ok. Last line "PLAYER GATE PASSED" or "PLAYER GATE FAILED".
 ##   Godot --headless --fixed-fps 60 --path . -s tests/player/test_player_gate.gd
@@ -101,6 +103,27 @@ func _open_world() -> void:
 	_expect(p.ring_moves == null and RingMoves.of(p) == null and BendStatus.take_filters.is_empty() and not RingRules.stock_on(),
 			"the open world: no RingMoves, no take filter, the gate off")
 	_expect(is_equal_approx(p.cam_distance_now(), 4.1) and is_equal_approx(p.fov, 52.5), "the camera: arm 4.1 m, field of view 52.5")
+	# (round 4, READ: the ring camera's variants and the flight voices never reach the open world)
+	RingCamera.override = "high"
+	await physics_frame
+	var cam_ok := is_equal_approx(p.spring_arm.position.x, p.shoulder_offset) and is_equal_approx(p.cam_shoulder_now(), p.shoulder_offset) \
+			and p.camera_tilt.rotation == Vector3.ZERO and p.camera.global_basis.is_equal_approx(p.camera_pivot.global_basis) \
+			and is_equal_approx(p.spring_arm.spring_length, 4.1)
+	RingCamera.override = ""
+	print("METRIC open_world_cam_unchanged_ok %s" % cam_ok)
+	_expect(cam_ok, "the camera centred and level, the ring's variants never read (even one asked for)")
+	BendSounds.voices_headless = true
+	var n0 := BendSounds.flights_started
+	var from := p.global_position + Vector3(0.0, 1.4, 0.0)
+	var bolt := BendBolt.launch(p, from, Vector3(1.0, 0.2, 0.0).normalized(), {"kind": "fire", "mps": 20.0, "damage": 10.0,
+			"knock_mps": 2.0, "range_m": 30.0})
+	await physics_frame
+	var silent := not BendSounds.arena_on(self) and BendSounds.flights_started == n0 and BendSounds.flight_voice_of(bolt) == null \
+			and BendSounds.flight_voices() == 0
+	bolt.end("test")
+	BendSounds.voices_headless = false
+	print("METRIC open_world_silent_ok %s" % silent)
+	_expect(silent, "an open-world bolt plays no flight voice (no arena)")
 	# the jump: 4.4 m/s at the world's 9.8
 	var at := _ground(SPOT.x, SPOT.z)
 	p.global_position = at + Vector3.UP * 0.1

@@ -22,6 +22,19 @@ extends RefCounted
 ## Buses: Sfx's (World for the elements: its open-air reverb; Ambience for the stands; SFX for the ring's moments), so the
 ## settings' volumes hold. Headless: ids resolve and are counted (played, recent) but no voice is made unless
 ## voices_headless (the tests).
+## ROUND 4 (READ): shots in flight (the owner's FEEL list: "readable incoming attacks WITHOUT any target cue"; the genre
+## times its guards from a shot's sound). Every shot carries a looping voice of its kind (FLIGHTS: stone_whirr, ice_whistle,
+## water_rush, fire_flight, air_flight; the Kick's floor wave floor_run; lightning stays instant), synthesized by
+## tools/sfx/bend/flight.py:
+##   flight(kind, node, db)   a voice following `node` (a BendBolt: its launch; a Gust lift's stone in flight, a bot's spike:
+##                            the pool's own watch, so a Spike and a caught stone thrown back whirr too), or null
+##   flight_end(node_or_p)    let go: a FLIGHT_OUT_S fade where it ended (a BendBolt's end: its hit, the world, its range)
+## The pool: FLIGHT_POOL 3D voices of their own, at most FLIGHT_MAX playing, the ones nearest the listener kept (the rest
+## wait silent and take a voice when one is free or they come nearer); doppler tracked on the physics step on these voices
+## only (every other sound as before); a steep level curve (each flight row's unit and maxd, FLIGHT_MAX_DB over it), so a
+## shot within 6 m is clearly louder; a FLIGHT_IN_S fade in. The listener's own shots (the player whose camera hears)
+## play OWN_DB under, so the incoming read leads. Arenas only (a RingArena or a DuelMode in the scene: arena_on): the open
+## world's shots stay silent in flight as before.
 
 const DIR := "res://audio/sfx/bend/"
 const MAX_VARIANTS := 8
@@ -85,7 +98,27 @@ const TABLE := {
 	&"lock_grow": {"vol": -2.0, "unit": 4.0, "maxd": 50.0, "bus": "World", "rp": 1.03, "rv": 1.0, "cap": 2},
 	&"lock_sputter": {"vol": -4.0, "unit": 4.0, "maxd": 50.0, "bus": "World", "rp": 1.06, "rv": 1.5, "cap": 2},
 	&"carried_whistle": {"vol": -3.0, "unit": 5.0, "maxd": 50.0, "bus": "World", "rp": 1.05, "rv": 1.5, "cap": 2},
+	# round 4 (READ): the shots' voices in flight (loops; flight(): FLIGHT_MAX at once in all, cap unused). unit 4 m and
+	# FLIGHT_MAX_DB: a shot at 2 m is about 15 dB over one at 12 m (level_db)
+	&"stone_whirr": {"vol": 0.0, "unit": 4.0, "maxd": 60.0, "bus": "World", "rp": 1.04, "rv": 1.0, "cap": 6, "loop": true},
+	&"ice_whistle": {"vol": 0.0, "unit": 4.0, "maxd": 60.0, "bus": "World", "rp": 1.03, "rv": 1.0, "cap": 6, "loop": true},
+	&"water_rush": {"vol": 0.0, "unit": 4.0, "maxd": 60.0, "bus": "World", "rp": 1.04, "rv": 1.0, "cap": 6, "loop": true},
+	&"fire_flight": {"vol": 0.0, "unit": 4.0, "maxd": 60.0, "bus": "World", "rp": 1.04, "rv": 1.0, "cap": 6, "loop": true},
+	&"air_flight": {"vol": 0.0, "unit": 4.0, "maxd": 60.0, "bus": "World", "rp": 1.04, "rv": 1.0, "cap": 6, "loop": true},
+	&"floor_run": {"vol": 0.0, "unit": 4.0, "maxd": 50.0, "bus": "World", "rp": 1.04, "rv": 1.0, "cap": 6, "loop": true},
 }
+
+## Round 4 (READ): a shot's voice in flight by its kind ("floor": the Kick's floor wave). Lightning has none (instant).
+const FLIGHTS := {"stone": &"stone_whirr", "ice": &"ice_whistle", "water": &"water_rush", "fire": &"fire_flight",
+		"air": &"air_flight", "floor": &"floor_run"}
+## The flight pool: voices of its own, at most FLIGHT_MAX playing (the nearest to the listener kept), the level's cap over
+## the inverse-distance curve (dB), the fades (s), the listener's own shots under the rest (dB).
+const FLIGHT_POOL := 8
+const FLIGHT_MAX := 6
+const FLIGHT_MAX_DB := 6.0
+const FLIGHT_IN_S := 0.04
+const FLIGHT_OUT_S := 0.08
+const OWN_DB := -6.0
 
 ## Moments by name (event()).
 const EVENTS := {
@@ -141,6 +174,10 @@ static var _on_disk := {}          ## id -> its first variant's file exists (has
 static var _last := {}             ## id -> the variant played last
 static var _warned := {}
 static var _runner: _Voices
+## Round 4: each flight id's looping streams (made once from its files), and the flights started (headless too; the tests).
+static var _loops := {}
+static var flights_started := 0
+static var flight_recent: Array[StringName] = []
 
 
 static func _seeded() -> RandomNumberGenerator:
@@ -166,6 +203,124 @@ static func event(name: String, at := Vector3.INF, db := 0.0, pitch := 1.0) -> v
 	var id: StringName = EVENTS.get(name, &"")
 	if id != &"":
 		play(id, at, db, pitch)
+
+
+# ---------------------------------------------------------------- in flight (round 4, READ)
+## A shot's voice in flight: `kind`'s (FLIGHTS) following `node` (a BendBolt, a GustLift, a bot's spike Flight: where it
+## is read each physics step), `db` over its level (the listener's own shots OWN_DB more, read each step: a shot sent back
+## at him is his no more). The voice it has now, or null (out of an arena, no such kind, headless, waiting for a voice: it
+## takes one once it is among the FLIGHT_MAX nearest). One flight a node.
+static func flight(kind: String, node: Node, db := 0.0) -> AudioStreamPlayer3D:
+	var id: StringName = FLIGHTS.get(kind, &"")
+	if id == &"" or node == null or not is_instance_valid(node) or not node.is_inside_tree() or not has(id):
+		return null
+	if not arena_on(node.get_tree()):
+		return null                               # (the open world's shots stay silent in flight: the gate)
+	flights_started += 1
+	flight_recent.append(id)
+	if flight_recent.size() > 16:
+		flight_recent.remove_at(0)
+	if DisplayServer.get_name() == "headless" and not voices_headless:
+		return null
+	var r := _get_runner()
+	if r == null or not r.is_inside_tree():
+		return null
+	return r.flight_start(id, node, db)
+
+
+## Lets go of the flight of `what` (its node, or the voice flight() gave): the voice fades over FLIGHT_OUT_S where it is
+## and is free again. Nothing when there is none.
+static func flight_end(what: Object) -> void:
+	if what == null or not is_instance_valid(_runner):
+		return
+	_runner.flight_stop(what)
+
+
+## The flight kind of BendBolt `b`: its kind, the floor wave's "floor"; "" none (lightning; a reach with no blow, the
+## Grab's: no shot).
+static func flight_kind(b: BendBolt) -> String:
+	if b == null:
+		return ""
+	if b.floor_wave:
+		return "floor"
+	if b.damage <= 0.0 and b.knock_mps <= 0.0:
+		return ""
+	return b.kind if FLIGHTS.has(b.kind) else ""
+
+
+## A ring or a duel is under way in `tree` (shots sound in flight only there).
+static func arena_on(tree: SceneTree) -> bool:
+	if tree == null:
+		return false
+	return RingArena.find(tree) != null or DuelMode.find(tree) != null
+
+
+## The level (dB) of flight id `id` heard `d` m away: Godot's inverse distance from its unit, capped at FLIGHT_MAX_DB,
+## silent past its maxd (-80) (AudioStreamPlayer3D's own formula, with the voice's volume).
+static func level_db(id: StringName, d: float, db := 0.0) -> float:
+	var c: Dictionary = TABLE.get(id, {})
+	var maxd := float(c.get("maxd", 0.0))
+	if maxd > 0.0 and d > maxd:
+		return -80.0
+	var att := linear_to_db(1.0 / (d / float(c.get("unit", 6.0)) + 0.00001)) + float(c.get("vol", 0.0)) + db
+	return minf(att, FLIGHT_MAX_DB)
+
+
+## Where the listener is in `vp` (its AudioListener3D when one is current, else its camera; INF none).
+static func listener_pos(vp: Viewport) -> Vector3:
+	if vp == null:
+		return Vector3.INF
+	var l := vp.get_audio_listener_3d()
+	if l != null:
+		return l.global_position
+	var cam := vp.get_camera_3d()
+	return cam.global_position if cam != null else Vector3.INF
+
+
+## The flight voices that have a shot now (fading ones not counted), and every one still sounding (the tests).
+static func flight_voices() -> int:
+	return _runner.flight_count(false) if is_instance_valid(_runner) else 0
+
+
+static func flight_sounding() -> int:
+	return _runner.flight_count(true) if is_instance_valid(_runner) else 0
+
+
+## The voice of `node`'s flight now (null: none, or waiting).
+static func flight_voice_of(node: Object) -> AudioStreamPlayer3D:
+	return _runner.voice_of(node) if is_instance_valid(_runner) else null
+
+
+## A loop of `id` (variant `n`): its file's stream with its loop set over the whole of it (made once).
+static func loop_stream(id: StringName, n: int) -> AudioStream:
+	if not _loops.has(id):
+		var out := []
+		for s: AudioStream in streams(id):
+			if s is AudioStreamWAV:
+				var w := (s as AudioStreamWAV).duplicate() as AudioStreamWAV
+				w.loop_mode = AudioStreamWAV.LOOP_FORWARD
+				w.loop_begin = 0
+				w.loop_end = int(round(w.get_length() * w.mix_rate))
+				out.append(w)
+			else:
+				out.append(s)
+		_loops[id] = out
+	var list: Array = _loops[id]
+	return list[n % list.size()] if not list.is_empty() else null
+
+
+## The listener's own shot: `node`'s shooter is the player whose camera hears.
+static func own_shot(node: Node, vp: Viewport) -> bool:
+	var by: Variant = null
+	if node is BendBolt:
+		by = (node as BendBolt).caster
+	elif node is GustLift:
+		by = (node as GustLift).by()
+	elif node != null and &"shooter" in node:
+		by = node.get(&"shooter")
+	if not (by is FrontierPlayer) or not is_instance_valid(by) or vp == null:
+		return false
+	return (by as FrontierPlayer).camera != null and (by as FrontierPlayer).camera == vp.get_camera_3d()
 
 
 ## The cast BendEffects is making now (its _cur: set just before it calls BendLooks.sound(kind, "cast")): its move's
@@ -272,6 +427,8 @@ static func has(id: StringName) -> bool:
 static func warm() -> void:
 	for id: StringName in TABLE:
 		streams(id)
+		if bool((TABLE[id] as Dictionary).get("loop", false)):
+			loop_stream(id, 0)                     # (round 4: the flight loops made here too, not on a shot's first frame)
 
 
 ## The file of variant `n` (1-based) of `id`.
@@ -325,6 +482,11 @@ static func play(id: StringName, at := Vector3.INF, db := 0.0, pitch := 1.0) -> 
 			push_warning("BendSounds: '%s' is not in the table" % id)
 		return null
 	if not has(id):
+		return null
+	if bool((TABLE[id] as Dictionary).get("loop", false)):
+		if not _warned.has(id):
+			_warned[id] = true
+			push_warning("BendSounds: '%s' is a flight loop (flight(), not play())" % id)
 		return null
 	played += 1
 	recent.append(id)
@@ -387,7 +549,7 @@ static func _setup_3d(p: AudioStreamPlayer3D, c: Dictionary, at: Vector3) -> voi
 	p.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
 	p.unit_size = float(c.get("unit", 6.0))
 	p.max_distance = float(c.get("maxd", 0.0))
-	p.max_db = 3.0
+	p.max_db = FLIGHT_MAX_DB if bool(c.get("loop", false)) else 3.0
 	p.panning_strength = 1.0
 	p.attenuation_filter_cutoff_hz = DIST_CUT_HZ
 	p.attenuation_filter_db = DIST_CUT_DB
@@ -501,3 +663,202 @@ class _Voices extends Node:
 		_serial += 1
 		p.set_meta(&"serial", _serial)
 		return p
+
+	# ------------------------------------------------------------ round 4: the flights
+	## The shots in flight: {node, id, db, voice (null: waiting), out}; their voices (FLIGHT_POOL at most), each with metas
+	## gain (0..1), fade (1 in, 0 held, -1 out), base_db.
+	var flights: Array[Dictionary] = []
+	var fvoices: Array[AudioStreamPlayer3D] = []
+	var _flight_of := {}              ## node instance id -> its flight
+
+	func _ready() -> void:
+		process_physics_priority = 100        # (after the shots have moved this step)
+
+	func flight_start(id: StringName, node: Node, db: float) -> AudioStreamPlayer3D:
+		var nid := node.get_instance_id()
+		if _flight_of.has(nid):
+			return (_flight_of[nid] as Dictionary).get("voice")
+		var e := {"node": node, "nid": nid, "id": id, "db": db, "voice": null, "out": false, "at": _pos(node)}
+		flights.append(e)
+		_flight_of[nid] = e
+		_rank()
+		return e.voice
+
+	func flight_stop(what: Object) -> void:
+		for e: Dictionary in flights:
+			if e.out:
+				continue
+			if e.voice == what or (is_instance_valid(e.node) and e.node == what) or int(e.nid) == what.get_instance_id():
+				_end_flight(e)
+				return
+
+	func voice_of(what: Object) -> AudioStreamPlayer3D:
+		var e: Variant = _flight_of.get(what.get_instance_id()) if what != null else null
+		return (e as Dictionary).get("voice") if e is Dictionary else null
+
+	func flight_count(fading: bool) -> int:
+		var n := 0
+		for v in fvoices:
+			if v.playing and (fading or int(v.get_meta(&"fade", 0)) >= 0):
+				n += 1
+		return n
+
+	func _end_flight(e: Dictionary) -> void:
+		e.out = true
+		_flight_of.erase(e.nid)
+		if e.voice != null:
+			_let_go(e.voice)
+			e.voice = null
+
+	func _let_go(v: AudioStreamPlayer3D) -> void:
+		v.set_meta(&"fade", -1)
+		v.set_meta(&"node", null)
+
+	func _physics_process(dt: float) -> void:
+		if flights.is_empty() and not _sounding() and not _watching():
+			return
+		_watch()
+		var keep: Array[Dictionary] = []
+		for e: Dictionary in flights:
+			if not e.out and not _flying(e.node):
+				_end_flight(e)
+			if not e.out:
+				e.at = _pos(e.node)
+				keep.append(e)
+		flights = keep
+		_rank()
+		_fade(dt)
+
+	## Each flight's place to the listener: the FLIGHT_MAX nearest have voices, the rest wait (their voices let go).
+	func _rank() -> void:
+		var lp := BendSounds.listener_pos(get_viewport())
+		var order := flights.filter(func(e: Dictionary) -> bool: return not e.out)
+		if lp.is_finite():
+			order.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+				return (a.at as Vector3).distance_squared_to(lp) < (b.at as Vector3).distance_squared_to(lp))
+		for i in order.size():
+			var e: Dictionary = order[i]
+			if i < FLIGHT_MAX and e.voice == null:
+				e.voice = _give(e)
+			elif i >= FLIGHT_MAX and e.voice != null:
+				_let_go(e.voice)
+				e.voice = null
+
+	func _give(e: Dictionary) -> AudioStreamPlayer3D:
+		var v: AudioStreamPlayer3D = null
+		var quiet: AudioStreamPlayer3D = null
+		for p in fvoices:
+			if not p.playing:
+				v = p
+				break
+			if int(p.get_meta(&"fade", 0)) < 0 and (quiet == null or float(p.get_meta(&"gain", 0.0)) < float(quiet.get_meta(&"gain", 0.0))):
+				quiet = p
+		if v == null and fvoices.size() < FLIGHT_POOL:
+			v = AudioStreamPlayer3D.new()
+			v.name = "Flight%d" % fvoices.size()
+			add_child(v)
+			fvoices.append(v)
+		if v == null:
+			v = quiet
+		if v == null:
+			return null
+		if v.playing:
+			v.stop()
+		var c: Dictionary = TABLE[e.id]
+		var s := BendSounds.loop_stream(e.id, BendSounds.rng.randi())
+		if s == null:
+			return null
+		v.stream = s
+		v.bus = BendSounds._bus(String(c.get("bus", "World")))
+		v.doppler_tracking = AudioStreamPlayer3D.DOPPLER_TRACKING_DISABLED
+		BendSounds._setup_3d(v, c, e.at)
+		# (tracking from here: switched on at its new place, so the step from its last shot is no speed)
+		v.doppler_tracking = AudioStreamPlayer3D.DOPPLER_TRACKING_PHYSICS_STEP
+		var rv := float(c.get("rv", 0.0))
+		v.set_meta(&"base_db", float(c.get("vol", 0.0)) + float(e.db) + BendSounds.rng.randf_range(-0.5, 0.5) * rv)
+		v.set_meta(&"gain", 0.0)
+		v.set_meta(&"fade", 1)
+		v.set_meta(&"node", e.node)
+		v.set_meta(&"id", e.id)
+		v.pitch_scale = maxf(pow(float(c.get("rp", 1.0)), BendSounds.rng.randf_range(-1.0, 1.0)), 0.05)
+		v.volume_db = -80.0
+		v.play(BendSounds.rng.randf() * maxf(s.get_length() - 0.05, 0.0))
+		return v
+
+	## The voices' fades, places and levels (each physics step).
+	func _fade(dt: float) -> void:
+		var vp := get_viewport()
+		for v in fvoices:
+			if not v.playing:
+				continue
+			var f := int(v.get_meta(&"fade", 0))
+			var g := float(v.get_meta(&"gain", 0.0))
+			if f > 0:
+				g = minf(g + dt / FLIGHT_IN_S, 1.0)
+				if g >= 1.0:
+					v.set_meta(&"fade", 0)
+			elif f < 0:
+				g = maxf(g - dt / FLIGHT_OUT_S, 0.0)
+				if g <= 0.0:
+					v.stop()
+					v.set_meta(&"gain", 0.0)
+					continue
+			v.set_meta(&"gain", g)
+			var n: Variant = v.get_meta(&"node", null)
+			var own := false
+			if n is Node and is_instance_valid(n):
+				v.global_position = _pos(n)
+				own = BendSounds.own_shot(n, vp)
+			v.set_meta(&"own", own)
+			v.volume_db = float(v.get_meta(&"base_db", 0.0)) + (OWN_DB if own else 0.0) + linear_to_db(maxf(g, 0.0001))
+
+	func _sounding() -> bool:
+		for v in fvoices:
+			if v.playing:
+				return true
+		return false
+
+	## Whether the pool watches the Gust lifts and the bots' spikes (an arena only).
+	func _watching() -> bool:
+		return BendSounds.arena_on(get_tree())
+
+	## The stones not launched as a BendBolt: a Gust lift's stone in flight (the Spike, the Boulder, a caught stone thrown
+	## back), a bot's spike: each its whirr while it flies (a caught stone held has none: it is no lift in flight).
+	func _watch() -> void:
+		if not _watching():
+			return
+		for n in get_tree().get_nodes_in_group(GustLift.GROUP):
+			var l := n as GustLift
+			if l != null and l.phase == GustLift.Phase.FLIGHT and not _flight_of.has(l.get_instance_id()) \
+					and l.stone != null and is_instance_valid(l.stone):
+				BendSounds.flight("stone", l)
+		for n in get_tree().get_nodes_in_group(NpcBending.FLIGHT_GROUP):
+			var st: Variant = n.get(&"stone")
+			if st is Node3D and is_instance_valid(st) and not _flight_of.has(n.get_instance_id()):
+				BendSounds.flight("stone", n)
+
+	## Still in flight: a bolt not spent, a lift still flying, a bot's spike with its stone.
+	func _flying(n: Variant) -> bool:
+		if not (n is Node) or not is_instance_valid(n) or not (n as Node).is_inside_tree() or (n as Node).is_queued_for_deletion():
+			return false
+		if n is BendBolt:
+			return not (n as BendBolt).spent
+		if n is GustLift:
+			var l := n as GustLift
+			return l.phase == GustLift.Phase.FLIGHT and l.stone != null and is_instance_valid(l.stone)
+		var st: Variant = (n as Node).get(&"stone")
+		if st != null:
+			return st is Node3D and is_instance_valid(st)
+		return true
+
+	## Where a flight is now: a lift's or a spike's stone, else the node itself.
+	func _pos(n: Variant) -> Vector3:
+		if n is GustLift and (n as GustLift).stone != null and is_instance_valid((n as GustLift).stone):
+			return (n as GustLift).stone.global_position
+		if n is Node and not (n is Node3D):
+			var st: Variant = (n as Node).get(&"stone")
+			if st is Node3D and is_instance_valid(st):
+				return (st as Node3D).global_position
+		if n is Node3D:
+			return (n as Node3D).global_position
+		return Vector3.ZERO

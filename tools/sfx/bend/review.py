@@ -246,3 +246,143 @@ def write(review_dir: str, src: str, sounds: dict) -> None:
     with open(os.path.join(review_dir, "r1_sounds.html"), "w") as f:
         f.write("\n".join(parts))
     print("review: %s (montage limit %.1f dB)" % (os.path.join(review_dir, "r1_sounds.html"), m["limit_db"]))
+
+
+# ================================================================================================ round 4 (READ)
+# The shots' flight voices (flight.py; scripts/bending/bend_sounds.gd FLIGHTS and their TABLE rows): the listen page
+# r4_read_listen.html. Each id alone (its loop, three times round), a 4 s pass-by rendered offline the way the game plays
+# it (Godot's inverse-distance level from `unit` m capped at max_db, silent past maxd, its doppler pitch: c / (c + v . r),
+# the far top end dulled), and an incoming shot from 15 m (the element's cast there, the voice closing in, its hit at
+# you), next to the element's own cast and hit.
+# id -> (the bolt kind's speed m/s, the element's cast id, its hit id, what flies). Speeds from data/sway/moves.json.
+FLIGHT_SHOTS = {
+    "stone_whirr": (34.0, "earth_cast_crack", "earth_hit", "a Spike, a stone disc, pebbles, a caught stone sent back"),
+    "ice_whistle": (42.0, "ice_cast", "ice_hit", "the ice spear, ice shards"),
+    "water_rush": (34.0, "water_cast_rush", "water_hit", "the whip, the jet, a splash"),
+    "fire_flight": (32.0, "fire_whoomph", "fire_hit", "the punch, the stream, the fireball, embers, the high kick"),
+    "air_flight": (45.0, "air_whoosh", "air_hit", "the slice, the wind ball, Gust and Pull"),
+    "floor_run": (18.0, "fire_roar", "fire_hit", "the Kick's floor wave along the deck"),
+}
+# The game's numbers for these (bend_sounds.gd: the flight rows of TABLE, vol dB, unit m, maxd m, and FLIGHT_MAX_DB). Kept
+# in step by hand: the page is a review, the game reads its own table.
+FLIGHT_LEVEL = {"vol": 0.0, "unit": 4.0, "maxd": 60.0, "max_db": 6.0}
+SPEED_OF_SOUND = 343.0
+
+
+def _loop_read(x: np.ndarray, pitch: np.ndarray, start: float = 0.0) -> np.ndarray:
+    """The loop x read round and round at a pitch per output sample (linear interpolation)."""
+    pos = (start + np.cumsum(pitch)) % len(x)
+    i = np.floor(pos).astype(int)
+    fr = pos - i
+    return x[i] * (1.0 - fr) + x[(i + 1) % len(x)] * fr
+
+
+def _att_db(d: np.ndarray, lv: dict) -> np.ndarray:
+    a = 20.0 * np.log10(1.0 / (np.maximum(d, 1e-3) / lv["unit"] + 1e-6)) + lv["vol"]
+    a = np.minimum(a, lv["max_db"])
+    return np.where(d > lv["maxd"], -80.0, a)
+
+
+def pass_by(x: np.ndarray, v: float, dur: float = 4.0, miss_m: float = 1.2, lv: dict | None = None) -> np.ndarray:
+    """A shot flying straight past the listener `miss_m` to his right at `v` m/s, closest at dur/2: stereo, the game's
+    level curve and doppler."""
+    lv = lv or FLIGHT_LEVEL
+    n = kit.N(dur)
+    t = kit.T(n)
+    z = v * (dur * 0.5 - t)                                  # ahead of him (+z), coming in, then behind
+    px = np.full(n, miss_m)
+    d = np.sqrt(px * px + z * z)
+    approaching = -z / d                                     # its direction from him . its velocity's (-z)
+    pitch = SPEED_OF_SOUND / (SPEED_OF_SOUND + v * approaching)
+    y = _loop_read(x, np.clip(pitch, 1.0 / 8.0, 8.0))
+    att = _att_db(d, lv)
+    dull = kit.band(y, None, 6500.0, 1)
+    w = np.clip(-att / 30.0, 0.0, 1.0)                       # far: toward the dulled copy (the game's distance filter)
+    y = (y * (1.0 - w) + dull * w) * 10.0 ** (att / 20.0)
+    p = np.clip(px / d, -1.0, 1.0) * 0.8
+    a = (p + 1.0) * np.pi / 4.0
+    return np.stack([y * np.cos(a), y * np.sin(a)], axis=1)
+
+
+def incoming(src: str, sid: str, from_m: float = 15.0) -> np.ndarray:
+    """A shot from `from_m` straight at the listener: the element's cast there, the voice closing in, its hit at him."""
+    v, cast, hit, _what = FLIGHT_SHOTS[sid]
+    x = _load(src, sid)
+    tf = from_m / v
+    pre, post = 0.35, 0.9
+    n = kit.N(pre + tf + post)
+    out = np.zeros(n)
+    dsp.place(out, _load(src, cast), 0.0, 10.0 ** (min(20.0 * np.log10(6.0 / from_m), 3.0) / 20.0))
+    m = kit.N(tf)
+    t = kit.T(m)
+    d = np.maximum(from_m - v * t, 0.4)
+    pitch = np.full(m, SPEED_OF_SOUND / (SPEED_OF_SOUND - v))
+    y = _loop_read(x, pitch) * 10.0 ** (_att_db(d, FLIGHT_LEVEL) / 20.0)
+    y *= np.clip(t / 0.04, 0.0, 1.0)                         # the game's 0.04 s fade in
+    tail = min(kit.N(0.08), m)
+    y[-tail:] *= np.linspace(1.0, 0.0, tail)                 # and its 0.08 s fade out on the hit
+    dsp.place(out, y, pre, 1.0)
+    dsp.place(out, _load(src, hit), pre + tf, 10.0 ** (3.0 / 20.0))
+    return out
+
+
+def write_flight(review_dir: str, src: str, sounds: dict) -> None:
+    """The flight voices' listen page: <review_dir>/r4_read_listen.html, its files under r4_read_listen/."""
+    out = os.path.join(review_dir, "r4_read_listen")
+    os.makedirs(out, exist_ok=True)
+    levels = json.load(open(os.path.join(src, "levels.json")))
+    e = html.escape
+    cards = []
+    for sid, (v, cast, hit, what) in FLIGHT_SHOTS.items():
+        if sid not in sounds:
+            continue
+        nv = sounds[sid][1]
+        files = []
+        for k in range(1, nv + 1):
+            f = "%s_%02d.wav" % (sid, k)
+            dsp.write_wav(os.path.join(out, f), np.tile(_load(src, sid, k), 3), dither=False)
+            files.append(f)
+        x = _load(src, sid)
+        dsp.spectrogram_png(np.tile(x, 2), os.path.join(out, sid + ".png"), n_fft=1024, fmax=12000.0, width=640,
+                            height=170, db_range=80.0, title=sid + " (two turns of the loop)")
+        pb, _cut = kit.limit(pass_by(x, v) * dsp.db2lin(-12.0), -1.0)
+        dsp.write_wav(os.path.join(out, sid + "_passby.wav"), pb, dither=False)
+        dsp.spectrogram_png(pb, os.path.join(out, sid + "_passby.png"), n_fft=1024, fmax=12000.0, width=640,
+                            height=170, db_range=80.0, title=sid + " pass-by at %.0f m/s, 1.2 m off" % v)
+        inc, _cut = kit.limit(incoming(src, sid) * dsp.db2lin(-12.0), -1.0)
+        dsp.write_wav(os.path.join(out, sid + "_incoming.wav"), inc, dither=False)
+        for other in (cast, hit):
+            shutil.copy2(os.path.join(src, other + "_01.wav"), os.path.join(out, other + "_01.wav"))
+        lv = levels.get(sid + "_01.wav", {})
+        rows = ["<div class='card'><h3>%s</h3><p class='what'>%s</p><p class='plays'>Flies on: %s · %.0f m/s</p>" % (
+            e(sid), e(sounds[sid][3]), e(what), v)]
+        rows.append("<img src='r4_read_listen/%s.png' alt='spectrogram of %s' loading='lazy'>" % (sid, e(sid)))
+        rows.append("<p class='plays'>Alone (each variant, its loop three times round)</p>")
+        for f in files:
+            rows.append("<audio controls preload='none' src='r4_read_listen/%s'></audio>" % f)
+        rows.append("<div class='lv'>loop %.2f s · loudness %.1f dB · peak %.1f dBFS</div>" % (
+            lv.get("dur_s", 0), lv.get("loud_db", 0), lv.get("peak_dbfs", 0)))
+        rows.append("<p class='plays'>A pass-by (4 s, 1.2 m to your right; the game's level curve and doppler; "
+                    "headphones)</p><audio controls preload='none' src='r4_read_listen/%s_passby.wav'></audio>" % sid)
+        rows.append("<img src='r4_read_listen/%s_passby.png' alt='pass-by spectrogram' loading='lazy'>" % sid)
+        rows.append("<p class='plays'>Incoming from 15 m: the cast there, the voice closing in, the hit at you</p>"
+                    "<audio controls preload='none' src='r4_read_listen/%s_incoming.wav'></audio>" % sid)
+        rows.append("<p class='plays'>Its element's cast (%s) and hit (%s), as round 1 made them</p>"
+                    "<audio controls preload='none' src='r4_read_listen/%s_01.wav'></audio>"
+                    "<audio controls preload='none' src='r4_read_listen/%s_01.wav'></audio></div>" % (
+                        e(cast), e(hit), cast, hit))
+        cards.append("\n".join(rows))
+    parts = ["<!doctype html><html lang='en'><head><meta charset='utf-8'>",
+             "<meta name='viewport' content='width=device-width, initial-scale=1'><title>Shots In Flight</title>",
+             "<style>%s</style></head><body><main>" % CSS,
+             "<h1>Shots in flight</h1>",
+             "<p class='lead'>Round 4: every shot now carries its own voice through the air, louder as it nears, its "
+             "pitch falling as it passes (doppler), so an attack coming at you is heard before it lands. Lightning stays "
+             "instant. Your own shots play 6 dB under the ones coming at you. All made in code (tools/sfx/bend/flight.py);"
+             " the pass-bys and the incoming shots are rendered offline with the game's level curve (inverse distance "
+             "from %.0f m, capped at +%.0f dB, silent past %.0f m).</p>" % (
+                 FLIGHT_LEVEL["unit"], FLIGHT_LEVEL["max_db"], FLIGHT_LEVEL["maxd"]),
+             "<div class='grid'>"] + cards + ["</div></main></body></html>"]
+    with open(os.path.join(review_dir, "r4_read_listen.html"), "w") as f:
+        f.write("\n".join(parts))
+    print("review: %s" % os.path.join(review_dir, "r4_read_listen.html"))

@@ -290,6 +290,9 @@ var collision: CollisionShape3D
 var visual: Node3D
 var camera_pivot: Node3D
 var spring_arm: SpringArm3D
+## The camera's tilt (round 4, READ): between the spring arm and the camera, turned down about its right axis only by a %
+## ring's camera variant (RingCamera tilt_deg); level otherwise.
+var camera_tilt: Node3D
 var camera: Camera3D
 var skeleton: Skeleton3D
 var anim: PlayerAnim
@@ -511,10 +514,15 @@ func _build_camera() -> void:
 	spring_arm.margin = 0.15
 	spring_arm.add_excluded_object(get_rid())
 	camera_pivot.add_child(spring_arm)
+	# (round 4, READ: the camera under a tilt the spring arm carries; level, as ever, except in a % ring's tilted variant:
+	# RingCamera, cam_bias's tilt_deg. CameraShake turns the camera itself, under it)
+	camera_tilt = Node3D.new()
+	camera_tilt.name = "CameraTilt"
+	spring_arm.add_child(camera_tilt)
 	camera = Camera3D.new()
 	camera.fov = fov
 	camera.far = 1500.0
-	spring_arm.add_child(camera)
+	camera_tilt.add_child(camera)
 	camera.current = is_local
 	_eye_y = eye_height
 	camera_pivot.position.y = _eye_y
@@ -1383,8 +1391,14 @@ func _after_move(delta: float) -> void:
 	if riding == null and spring_arm != null and not (grip and grip.owns_camera()):
 		spring_arm.spring_length = cam_distance_now()
 		spring_arm.position.x = cam_shoulder_now()
+	if ring_moves != null and camera_tilt != null:
+		# (round 4, READ: the % ring's camera variant tilts the view down a fixed amount: never by a hit, the opponent or
+		# the aim; the crosshair stays the screen's centre)
+		camera_tilt.rotation.x = -deg_to_rad(float(_ring_bias.get("tilt_deg", 0.0)))
 	# (no shake while sprinting: user 2026-10-01, "the screen shake on sprint is bad")
 	var fov_target := fov * (1.0 - (1.0 - (weapon.fov_mult() if weapon != null else 1.0)) * aim_zoom_share)
+	if ring_moves != null:
+		fov_target += float(_ring_bias.get("fov_add", 0.0))      # (round 4, READ: the camera variant's wider view)
 	if ring_moves != null and float(_ring_bias.get("fov_w", 0.0)) > 0.0:
 		fov_target = lerpf(fov_target, float(_ring_bias.fov), float(_ring_bias.fov_w))
 	camera.fov = lerpf(camera.fov, fov_target, 1.0 - exp(-10.0 * delta))
@@ -1816,6 +1830,9 @@ func cam_distance_now() -> float:
 
 
 func cam_shoulder_now() -> float:
+	if ring_moves != null and _ring_bias.has("shoulder"):
+		# (round 4, READ: the % ring's camera variant's shoulder, RingCamera; centred by default)
+		return lerpf(float(_ring_bias.shoulder), aim_shoulder_offset, smoothstep(0.0, 1.0, _aim_cam_w))
 	return lerpf(shoulder_offset, aim_shoulder_offset, smoothstep(0.0, 1.0, _aim_cam_w))
 
 

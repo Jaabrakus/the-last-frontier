@@ -16,6 +16,10 @@ extends CanvasLayer
 ##   Aim help: light    how much the casts are helped onto a fighter near the crosshair, in turn: at once, kept
 ##   Key hints: on      the control scheme's keys at the top left until each is used (FirstHints; GameSettings' hints
 ##                      section): at once, kept; on, they show in the match under way
+##   Camera: High       round 4 (READ): where the camera sits behind you, in turn (RingCamera: High, Close, Shoulder, High
+##                      shoulder; camera.json's words): at once, kept (GameSettings ring.camera)
+##   Screen jolt: On    round 4: the view's jolt when a hit lands on or off (IMPACT's GameSettings ring.jolt; the aim never
+##                      moves either way): at once, kept
 ##   Controls           the element in play's buttons (round 2 of the skills, KitWords: its passive and guard, LMB jab,
 ##                      E guard, 1-5 with their plain names; in the % ring first the one line of practice.json
 ##                      menu.controls_line), the four rules, and the row "Other ways to pick moves:
@@ -40,6 +44,8 @@ var _diff: Button
 var _scheme: Button
 var _aim: Button
 var _hints: Button
+var _camera: Button
+var _jolt: Button
 var _rules: Button
 var _games: Button
 var _practice: Button
@@ -104,6 +110,10 @@ func _ready() -> void:
 	_aim.name = "AimHelp"
 	_hints = _row(FirstHints.row_text(), toggle_hints, FirstHints.row_line())
 	_hints.name = "KeyHints"
+	_camera = _row(RingCamera.row_text(), cycle_camera, RingCamera.row_line())
+	_camera.name = "Camera"
+	_jolt = _row(RingCamera.jolt_row_text(), toggle_jolt, RingCamera.word("jolt_line"))
+	_jolt.name = "ScreenJolt"
 	var ctl := _row(KitWords.w("controls", "Controls"), _controls, KitWords.w("controls_line"))
 	ctl.name = "Controls"
 	# (the other ways to pick moves: a row of the Controls panel, round 2; kept here, laid into the panel as it opens)
@@ -181,6 +191,9 @@ func open() -> void:
 	_note.text = note_text()
 	_clear_panel()
 	_practice.visible = match_mode != null and match_mode.practice and RingRules.stock_on()
+	# (round 4: the camera's variants and the jolt are the % ring's; the zone rules' ring is as it was)
+	_camera.visible = RingRules.stock_on()
+	_jolt.visible = RingRules.stock_on()
 	_paint()
 	_root.visible = true
 	get_tree().paused = true
@@ -330,6 +343,20 @@ func toggle_hints() -> void:
 	_note.text = FirstHints.row_text()
 
 
+## The camera's variant in turn (RingCamera): at once (the next frame's framing), kept.
+func cycle_camera() -> void:
+	RingCamera.set_key(RingCamera.next_key())
+	_paint()
+	_note.text = RingCamera.word("changed") % RingCamera.label()
+
+
+## The screen's jolt on a hit on or off (GameSettings ring.jolt, IMPACT's): at once, kept.
+func toggle_jolt() -> void:
+	RingCamera.set_jolt(not RingCamera.jolt_on())
+	_paint()
+	_note.text = RingCamera.word("jolt_changed") % RingCamera.word("jolt_on" if RingCamera.jolt_on() else "jolt_off")
+
+
 func cycle_scheme() -> void:
 	MatchSetup.set_scheme(MatchSetup.next_scheme())
 	_paint()
@@ -360,6 +387,8 @@ func _paint() -> void:
 	_set_row(_scheme, KitWords.other_ways_row(), KitWords.other_ways_line())
 	_set_row(_aim, MatchSetup.aim_row(), MatchSetup.aim_row_line())
 	_set_row(_hints, FirstHints.row_text(), FirstHints.row_line())
+	_set_row(_camera, RingCamera.row_text(), RingCamera.row_line())
+	_set_row(_jolt, RingCamera.jolt_row_text(), RingCamera.word("jolt_line"))
 
 
 static func _set_row(b: Button, text: String, sub_line := "") -> void:

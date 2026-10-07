@@ -37,6 +37,8 @@ extends Node3D
 ## BendR3.deliver; a guard sending it back makes it a return (BendZone.return_info). In the % ring the floor wave runs on
 ## floor_wave_lip_over_m past the deck's lip at the deck's height (a hanger's hands), and a caster's own held stone is not in
 ## his bolts' way.
+## ROUND 4 (READ): in a ring or a duel it sounds in flight (BendSounds.flight from its launch, its kind's loop following it;
+## the floor wave's floor_run), let go at its end (its hit, the world, its range, a guard's catch: BendSounds.flight_end).
 
 signal struck(who: Node, dmg: float)
 signal ended(why: String)
@@ -179,6 +181,8 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 	else:
 		BendLooks.bolt_body(holder, b.kind, float(spec.get("look_r", b.radius)), b.long, b.shape)
 		b._trail = BendLooks.trail(b, b.kind, b.radius)
+	# (round 4, READ: its voice in flight, an arena's only; let go at its end: BendSounds.flight)
+	BendSounds.flight(BendSounds.flight_kind(b), b)
 	return b
 
 
@@ -682,6 +686,7 @@ func end(why: String) -> void:
 		return
 	spent = true
 	remove_from_group(GROUP)
+	BendSounds.flight_end(self)
 	BendLooks.stop_trail(_trail)
 	BendLooks.stop_trail(_fire_trail)
 	ended.emit(why)
