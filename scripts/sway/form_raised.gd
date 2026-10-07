@@ -28,6 +28,9 @@ extends AnimatableBody3D
 ## freeze_water) crumbles that caster's oldest standing ones past the cap ("capped"). Only where a RingArena stands; the
 ## open world keeps its cover walls uncapped. The look (LOOK-B): BendLooks.rise as a wall comes up, BendLooks.shatter when
 ## one is shot down.
+## Round 4 (LOOKS): your own (its meta bend_by your player) standing between the camera and your head, or within 2.5 m of
+## the camera, is drawn at 35% in a screen-door (OwnFade; data/bending/fx_looks.json own_wall). A look only: it still stops
+## shots, bodies and the bots' sight; one in front of you is cover and stays whole.
 
 signal crumbled(raised: FormRaised, why: String)
 
@@ -136,6 +139,9 @@ static func raise(parent: Node, p_kind: String, xf: Transform3D, d: Dictionary, 
 		r.mesh_instance.mesh = FormModels.wall_mesh(r.size.x, r.size.y, r.size.z, seed, bury, r.matter)
 	r.mesh_instance.set_instance_shader_parameter(&"seed", float(seed % 97))
 	r.add_child(r.mesh_instance)
+	# (round 4 LOOKS: your own wall or pillar between the camera and your head, or by the camera, drawn faded; it blocks
+	# all the same: OwnFade, form_matter's fade)
+	OwnFade.attach(r, [r.mesh_instance], AABB(Vector3(-r.size.x * 0.5, 0.0, -r.size.z * 0.5), r.size), &"fade")
 	parent.add_child(r)
 	r.global_transform = r._at(0.0)
 	if p_kind == "wall" and not r.drowned and r.matter != "wood" and r.is_inside_tree():
