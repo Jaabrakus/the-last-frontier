@@ -240,6 +240,8 @@ func _run() -> void:
 		await _ko_splash()
 	elif part == "knock":
 		await _knock()
+	elif part == "jab":
+		await _jab_pop()
 	else:
 		await _knock()
 		await _jab_pop()
@@ -304,6 +306,13 @@ func _jab_pop() -> void:
 	_place_foe(at_s(e, 12.0, 0.0), p.global_position)
 	rules.reset_pct(foe, 30.0)
 	await _secs(0.5)
+	# the jabs one by one, each landing watched a step at a time, until one launches him (the Pop, 9 m/s): the strip from it
+	var pop := false
+	var got := [0.0]
+	var on_launch := func(b: Node3D, v: Vector3, _hs: float, _by: Node, _tg: String) -> void:
+		if b == foe:
+			got[0] = v.length()
+	rules.launched.connect(on_launch)
 	for j in 2:
 		c.quick_override = true
 		for i in 120:
@@ -311,26 +320,33 @@ func _jab_pop() -> void:
 				break
 			await physics_frame
 		c.quick_override = false
-		await _secs(0.2)
-		_place_foe(at_s(e, 12.0, 0.0), p.global_position)
-		var kn0 := BendKnock.peek(foe)
-		if kn0 != null:
-			kn0.reset()
-	var n0 := BendR3.hits_log.size()
-	c.quick_override = true
-	for i in 120:
-		if c.state == SwayCaster.State.FULL:
+		got[0] = 0.0
+		paused = true
+		for i in 40:
+			await _step()
+			if got[0] > 0.0:
+				break
+		print("  jab %d: launched at %.1f m/s" % [j + 1, got[0]])
+		if got[0] >= 6.0:
+			pop = true
 			break
-		await physics_frame
-	c.quick_override = false
-	paused = true
-	var hit := false
-	for i in 60:
+		paused = false
+		await _secs(0.12)
+	if not pop:
+		# (the string did not reach its Pop here: the Pop's own hit given by hand from 2 m, jab/pop's class (its set 9 m/s
+		# launch), with earth's Pop look at him)
+		paused = false
+		var way := foe.global_position - p.global_position
+		way.y = 0.0
+		way = way.normalized()
+		var info := {"tag": "jab/pop", "from": p.global_position}
+		BendStatus.hurt(foe, 10.0, foe.global_position + Vector3.UP, way, p, -1.0, info)
+		BendStatus.knock(foe, way * 6.0 + Vector3.UP * 6.0, p, info)
+		BendLooks.burst(foe.global_position + Vector3.UP * 0.9, "stone", 30, Vector3.UP, 40.0, 6.0, 0.4)
+		print("  the Pop given by hand: launched at %.1f m/s" % got[0])
 		await _step()
-		if BendR3.hits_log.size() > n0:
-			hit = true
-			break
-	print("  jab string: %d hits logged, the Pop landed %s" % [BendR3.hits_log.size(), hit])
+	rules.launched.disconnect(on_launch)
+	print("  jab string: the Pop landed %s" % pop)
 	var side := _hi(at_s(e, 11.0, 5.5, 2.2), at_s(e, 11.0, 0.0, 1.0))
 	var rows := await _strip8(side, "jab_pop")
 	_sheet(rows, "r4_impact_jab_pop_strip_" + tag)
