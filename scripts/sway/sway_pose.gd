@@ -50,6 +50,11 @@ extends Node
 ## stand-in while CLIPS has not landed it; loops looped, one-shots held at their end), in place of the knock layer above; under
 ## a cast released in the air (SwayCaster.air_cast) the air legs (own-bend-air-legs) play under the cast's upper body; the
 ## steer's lean is RingMoves.LeanMod's (a bone tilt, not a clip). ring_clip() / ring_weight() say what plays.
+## ROUND 5 (CLIPWIRE): the hit-stop holds this pose too (_process's dt by BendImpact.pose_rate, as PlayerAnim's graph: a
+## held pose stands still, then catches up), and through the hold the struck contact pose shows over every layer
+## (own-bend-hit-impact-<front|back|left|right> by where the hit came from; _tick_struck), its recoil then easing into the
+## tumble or the flinch under it. Off the spout onto the deck with no cast on the body the step-off plays once
+## (movement.json clips spout_step_off).
 ## THE COMBO: a pose with an "alt" (the next hand: a throw's or a punch's mirrored twin) takes its alt when the same move
 ## in the same variation locks again within BendPoses.combo_window_s() of its last cast, and its first clip the time after
 ## (left, right, left); combo_alt says which the pose now is.
@@ -138,6 +143,8 @@ var _al_anim: Animation
 var _al_t := 0.0
 var _al_w := 0.0
 var _ring_lean := false
+## Round 5: the spout's step-off plays until this (this node's clock; -INF none).
+var _off_until := -INF
 ## The combo: this pose took its alt; the last cast's move/mode, whether it was the alt, and when (this node's clock, s).
 var combo_alt := false
 var _clock := 0.0
@@ -404,6 +411,7 @@ func clip_time() -> float:
 func _process(dt: float) -> void:
 	if caster == null or caster.player == null or not is_instance_valid(caster.player):
 		return
+	pass #EXPERIMENT dt *= BendImpact.pose_rate(caster.player, dt)        # (round 4, IMPACT: the hit-stop holds his visible pose too)
 	_clock += dt
 	_cast_layers = []
 	_tick(dt)
@@ -413,6 +421,7 @@ func _process(dt: float) -> void:
 	else:
 		_tick_knock(dt)
 	_tick_stance(dt)
+	_tick_struck(dt)
 	_apply()
 	_aim_follow(dt)
 
@@ -440,8 +449,9 @@ func _apply() -> void:
 	var stance := _st_anim != null and _st_w > 0.0
 	var ring := _r_anim != null and _r_w > 0.0
 	var legs := _al_anim != null and _al_w > 0.0
+	var hit := _s_anim != null and _s_w > 0.0
 	if _pose == null or not is_instance_valid(_pose):
-		if (knock == "" and not stance and not ring and not legs) or not _ensure_pose():
+		if (knock == "" and not stance and not ring and not legs and not hit) or not _ensure_pose():
 			return
 	var ls: Array = []
 	if stance:
@@ -454,6 +464,8 @@ func _apply() -> void:
 		ls.append({"anim": _k_anim, "time": _k_t, "weight": _k_w, "mask": "full"})
 	if ring:
 		ls.append({"anim": _r_anim, "time": _r_t, "weight": _r_w, "mask": _r_mask})
+	if hit:
+		ls.append({"anim": _s_anim, "time": _s_t, "weight": _s_w, "mask": "full"})
 	_pose.layers = ls
 	if ls.is_empty() and phase == "":
 		_pose.active = false
@@ -614,6 +626,16 @@ func _tick_ring(dt: float, rm: RingMoves) -> void:
 		# (AIR's held guard: its own loop per element while E keeps it up, SwayCaster.guard_hold_clip, else its stand-in)
 		st = "guard_hold"
 		nm = caster.guard_hold_clip()
+	elif phase == "" and not rm.airborne():
+		# (round 5: off the spout onto the deck, no cast on the body: the step off, once through)
+		if ring_state == "spout_ride":
+			var so := BendPoses.animation(String(RingMoves.clip_for("spout_step_off")[0]))
+			_off_until = _clock + so.length if so != null else -INF
+		if _clock < _off_until:
+			st = "spout_step_off"
+			nm = String(RingMoves.clip_for(st)[0])
+	if st != "spout_step_off":
+		_off_until = -INF
 	if nm != "" and (nm != _r_name or st != ring_state):
 		var a := BendPoses.animation(nm)
 		if a != null:
@@ -651,6 +673,53 @@ func _tick_ring(dt: float, rm: RingMoves) -> void:
 		_al_w = maxf(_al_w - dt / RING_OUT_S, 0.0)
 		if _al_w <= 0.0:
 			_al_anim = null
+
+
+## The struck contact pose (round 5, CLIPWIRE; BendImpact's STRUCK_META, recorded at a held hit): a new one goes on over
+## every layer at once, at its clip's hold_s (the contact), and stays there while the hit-stop holds the pose (dt is nothing
+## then); after the hold its recoil plays on (at the hold's catch-up rate) and fades out by the clip's end into what is under
+## it (the ring's tumble or flinch, eased in meanwhile). struck_clip() / struck_weight() say what shows.
+var _s_anim: Animation
+var _s_name := ""
+var _s_t := 0.0
+var _s_w := 0.0
+var _s_from := 0.0
+var _s_at := -INF
+
+
+func struck_clip() -> StringName:
+	return StringName(_s_name) if _s_anim != null and _s_w > 0.0 else &""
+
+
+func struck_weight() -> float:
+	return _s_w if _s_anim != null else 0.0
+
+
+func _tick_struck(dt: float) -> void:
+	var p := caster.player
+	var s := BendImpact.struck_of(p)
+	if not s.is_empty() and float(s.get("at", -INF)) != _s_at:
+		_s_at = float(s.get("at", -INF))
+		var a := BendPoses.animation(String(s.get("clip", "")))
+		if a != null:
+			_s_anim = a
+			_s_name = String(s.clip)
+			_s_from = clampf(float(a.get_meta(&"hold_s", a.length * 0.5)), 0.0, a.length)
+			_s_t = _s_from
+			_s_w = 1.0
+	if _s_anim == null:
+		return
+	if p.is_dead:
+		_s_anim = null
+		_s_name = ""
+		_s_w = 0.0
+		return
+	_s_t = minf(_s_t + dt, _s_anim.length)
+	_s_w = clampf((_s_anim.length - _s_t) / maxf(_s_anim.length - _s_from, 0.01), 0.0, 1.0)
+	if _s_t >= _s_anim.length:
+		_s_anim = null
+		_s_name = ""
+		_s_w = 0.0
 
 
 ## The airborne cast was let go within AIR_LEGS_S (on RingMoves' clock).

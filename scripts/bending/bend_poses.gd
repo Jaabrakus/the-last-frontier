@@ -213,7 +213,9 @@ static func pick(m: String, mode: String, element: String) -> Dictionary:
 	return {}
 
 
-## `p` with what it leaves out from the file's clips table, then the clip's own metas.
+## `p` with what it leaves out from the file's clips table, then the clip's own metas. A meta in the clips' own words is put
+## the game's (round 5, CLIPWIRE): its limb (HANDS: "r" the right palm, "foot_l" the left foot, ...), and its "root" only
+## when it is a yes or no (the lane's root "place" says where the clip's root sits, not that the caster is held still).
 static func _filled(p: Dictionary, d: Dictionary) -> Dictionary:
 	var nm := String(p.clip)
 	var table: Dictionary = (d.get("clips", {}) as Dictionary).get(nm, {})
@@ -223,9 +225,21 @@ static func _filled(p: Dictionary, d: Dictionary) -> Dictionary:
 	var a := animation(nm)
 	if a != null:
 		for k: String in META_KEYS:
-			if not p.has(k) and a.has_meta(k):
-				p[k] = a.get_meta(k)
+			if p.has(k) or not a.has_meta(k):
+				continue
+			var v: Variant = a.get_meta(k)
+			if k == "root" and not (v is bool or v is int or v is float):
+				continue
+			if k == "legs_always" and (v is int or v is float):
+				v = float(v) > 0.0
+			p[k] = v
+	if p.has("hand"):
+		p["hand"] = HANDS.get(String(p.hand), String(p.hand))
 	return p
+
+
+## The clips' own limb words (their meta "hand") as the game names the limbs (SwayPose.strike_point, NpcBody.strike_point).
+const HANDS := {"r": "r_palm", "l": "l_palm", "both": "both", "foot_r": "r_foot", "foot_l": "l_foot"}
 
 
 ## The strike's moment on the release's clip (s; -1 none known).

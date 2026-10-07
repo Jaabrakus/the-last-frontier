@@ -197,7 +197,7 @@
 		"grow": 0.6
 	},
 	"clips": {
-		"_about": "spec §13: each body state's clip (CLIPS' exact names) and its stand-in while the clip is not in yet (BendPoses passes over a missing name); loop: held as a loop; mask: the layer (full, upper); lift_m: a stand-in's raise of the body (the hang's hands and head over the lip until its clip lands)",
+		"_about": "spec §13: each body state's clip (CLIPS' exact names) and its stand-in while the clip is not in yet (BendPoses passes over a missing name); loop: held as a loop; mask: the layer (full, upper); lift_m: a stand-in's raise of the body (the hang's hands and head over the lip until its clip lands). Round 5 (CLIPWIRE): spout_step_off the step off the spout onto the deck (SwayPose and NpcBody, as the ride ends on the deck with no cast); struck_<side> the hit-stop's contact pose by where the hit came from (BendImpact, shown through the hold, then the tumble or the flinch)",
 		"tumble": {"clip": "own-bend-tumble", "standin": "own-bend-knock-air", "loop": true},
 		"knock_spiked": {"clip": "own-bend-knock-spiked", "standin": "own-bend-tumble"},
 		"knock_bounce": {"clip": "own-bend-knock-bounce", "standin": "own-bend-tumble"},
@@ -236,7 +236,12 @@
 		"getup_attack": {"clip": "own-bend-getup-attack", "standin": "own-bend-fire-sweep"},
 		"teeter": {"clip": "own-bend-teeter", "standin": ""},
 		"spout_ride": {"clip": "own-bend-spout-ride", "standin": "", "loop": true},
-		"air_legs": {"clip": "own-bend-air-legs", "standin": ""}
+		"spout_step_off": {"clip": "own-bend-spout-step-off", "standin": ""},
+		"air_legs": {"clip": "own-bend-air-legs", "standin": ""},
+		"struck_front": {"clip": "own-bend-hit-impact-front", "standin": ""},
+		"struck_back": {"clip": "own-bend-hit-impact-back", "standin": ""},
+		"struck_left": {"clip": "own-bend-hit-impact-left", "standin": ""},
+		"struck_right": {"clip": "own-bend-hit-impact-right", "standin": ""}
 	},
 	"words": {
 		"_about": "player-facing names (the owner's word rules: tests/ring/test_player_words.gd)",

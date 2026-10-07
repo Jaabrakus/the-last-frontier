@@ -102,6 +102,31 @@ const KNOCK_SLIDE := "own-bend-knock-slide"
 const KNOCK_AIR := "own-bend-knock-air"
 ## The own clips' strike limb (their meta "hand") as strike_point reads it.
 const HANDS := {"r": "r_palm", "l": "l_palm", "both": "both", "foot_r": "r_foot", "foot_l": "l_foot"}
+## THE % RING'S CLIPS (round 5, CLIPWIRE; only while its fighter has a RingMoves: a stock-rules ring), the player's from the
+## same state (spec §13: "NpcBody plays the same clips from the same state"):
+##   the struck pose   show_struck (BendImpact, at a held hit): own-bend-hit-impact-<side> at its contact (hold_s), held by
+##                     the hit-stop (pose_rate), the clips asked for meanwhile waiting (the flinch, the knock); as the hold
+##                     ends the last of them takes over, blended, while the recoil plays on under it
+##   the reactions     a flinch's clip (hit_*: Actor_B's) and a knock's (play_knock) are the ring's own reaction instead:
+##                     its RingMoves state's (tumble, flinch, the spiked and bounce knocks), else the tumble when it flies
+##                     and the flinch when it does not (the player's SwayPose plays the ring's layer in place of the knock's)
+##   the held guard    its guard held up past the beat as a shield (NpcRingMind.shield) loops own-bend-guard-hold-<element>
+##                     (poses.json guard_hold, its stand-in until it lands; in the library looped as "guard_hold_<element>")
+##                     in place of its idle and steps
+##   the spout         off the spout's ride onto the deck into its steps or idle: the step-off once, the steps after it
+##   the Pop           a jab with the Pop armed (BendR3.pop_armed) casts with the Pop's rising hand (poses.json pop)
+## `bridge` says which clip has the body to itself now ("" none: "struck", "step_off").
+const GUARD_HOLD_PREFIX := "guard_hold_"
+const SPOUT_RIDE := "own-bend-spout-ride"
+## The plain steps and stands the held guard and the step-off take the place of.
+const STEP_KEYS := ["idle", "walk", "run", "sprint", "crouch", "crouch_walk"]
+## The ring states whose clip is a reaction to a hit (RingMoves.clip_state).
+const REACT_STATES := ["tumble", "flinch", "knock_spiked", "knock_bounce"]
+var bridge := ""
+## The last clip asked for while a bridge had the body: ["play" | "once", key, blend, speed] ([] none).
+var _deferred: Array = []
+## Counted for the tests: struck poses shown.
+var struck_shows := 0
 var _alt := {}
 ## The library clip "idle" plays now (its element's stance, else the idle).
 var _played := ""
@@ -226,6 +251,20 @@ static func library() -> AnimationLibrary:
 				sa = sa.duplicate() as Animation
 				sa.loop_mode = Animation.LOOP_LINEAR
 			_lib.add_animation(STANCE_PREFIX + el, sa)
+	# each element's held guard, looped (round 5: a bot's shield held up; its own clip, else its stand-in)
+	var holds: Variant = BendPoses.data().get("guard_hold", {})
+	if holds is Dictionary:
+		for el: String in (holds as Dictionary):
+			var gp := BendPoses._as_pose(holds[el])
+			while not gp.is_empty() and not BendPoses.usable(String(gp.clip)):
+				gp = BendPoses._as_pose(gp.get("stand_in", ""))
+			if gp.is_empty():
+				continue
+			var ga := BendPoses.animation(String(gp.clip))
+			if ga.loop_mode != Animation.LOOP_LINEAR:
+				ga = ga.duplicate() as Animation
+				ga.loop_mode = Animation.LOOP_LINEAR
+			_lib.add_animation(GUARD_HOLD_PREFIX + el, ga)
 	return _lib
 
 
@@ -274,6 +313,16 @@ func clip_length(key: String) -> float:
 
 ## Plays clip `key` (blended in over `blend` s) at `speed`; the same clip again only takes the new speed.
 func play(key: String, blend := 0.2, speed := 1.0) -> void:
+	_bridge_check()
+	if bridge != "":
+		_deferred = ["play", key, blend, speed]
+		return
+	if key in STEP_KEYS and _in_ring():
+		var gh := _guard_hold_key()
+		if gh != "":
+			key = gh                                # (round 5: its guard held up as a shield: the hold's loop)
+		elif _played == SPOUT_RIDE and _on_floor() and _step_off(key, blend, speed):
+			return                                  # (round 5: off the spout onto the deck: the step-off first)
 	var real := _stance_key() if key == "idle" else key
 	if not has_clip(real):
 		real = key
@@ -300,7 +349,18 @@ func _stance_key() -> String:
 
 ## Plays one-shot clip `key` from its start (a flinch, a swing, a death); returns its length (0: no such clip).
 func play_once(key: String, blend := 0.1, speed := 1.0) -> float:
-	if not has_clip(key):
+	if key.begins_with("hit_") and _in_ring():
+		var rc := _ring_react(false)
+		if rc != "":
+			key = rc                                # (round 5: the ring's own reaction, not Actor_B's flinch)
+	_bridge_check()
+	if bridge == "step_off":
+		bridge = ""                                 # (anything but the steps cuts the step-off short)
+		_deferred = []
+	if bridge != "":
+		_deferred = ["once", key, blend, speed]
+		return clip_length(key) / maxf(speed, 0.01)
+	if not has_clip(key) and not (key.begins_with(BendPoses.OWN_PREFIX) and _add_pose(key) and has_clip(key)):
 		return 0.0
 	ap.speed_scale = speed
 	clip = key
@@ -325,7 +385,11 @@ func play_cast(move: String, mode: String, wind_s: Variant = 0.8, element: Varia
 	var e := String(el) if el is String or el is StringName else ""
 	if e == "":
 		e = BendPoses.element_of(get_parent())
-	var pk := _pick_turn(move, mode, e) if e != "" else {}
+	var md := mode
+	if md != "pop" and _in_ring() and BendR3.is_jab(move, md) and BendPoses.has_spec(move, "pop") \
+			and BendR3.pop_armed(get_parent()):
+		md = "pop"                                  # (round 5: the Pop armed: its rising hand, the player's pose)
+	var pk := _pick_turn(move, md, e) if e != "" else {}
 	var key := "cast_push"
 	var strike := -1.0
 	if not pk.is_empty() and (has_clip(String(pk.clip)) or (_add_pose(String(pk.clip)) and has_clip(String(pk.clip)))):
@@ -369,6 +433,12 @@ func _pick_turn(move: String, mode: String, element: String) -> Dictionary:
 ## Its own knock reaction (NpcFighter.on_bend_knock): launched (`v` lifts it at BendKnock.LAUNCH_UP_MPS or more) the airborne
 ## clip, else the braced slide; from its start, held at its hold_s while the knock lasts (_step). The length played (0: none).
 func play_knock(v: Vector3) -> float:
+	if _in_ring():
+		var rc := _ring_react(v.y >= BendKnock.LAUNCH_UP_MPS)
+		if rc != "":
+			_knock_hold = -1.0                      # (round 5: the ring's own reaction, as the player's ring layer)
+			set_arms("")
+			return play_once(rc, 0.08, 1.0)
 	var nm := KNOCK_AIR if v.y >= BendKnock.LAUNCH_UP_MPS else KNOCK_SLIDE
 	if not has_clip(nm) and not (_add_pose(nm) and has_clip(nm)):
 		return 0.0
@@ -376,6 +446,130 @@ func play_knock(v: Vector3) -> float:
 	_knock_hold = float(a.get_meta(&"hold_s", -1.0))
 	set_arms("")
 	return play_once(nm, 0.08, 1.0)
+
+
+# ---------------------------------------------------------------- the % ring's clips (round 5, CLIPWIRE; see the header)
+## The struck contact pose `nm` now, at its hold_s (BendImpact, at a held hit): it has the body while the hold stands.
+func show_struck(nm: String) -> void:
+	if ap == null or not (has_clip(nm) or (_add_pose(nm) and has_clip(nm))):
+		return
+	var a := ap.get_animation(LIB + "/" + nm)
+	bridge = "struck"
+	_deferred = []
+	_knock_hold = -1.0
+	set_arms("")
+	ap.speed_scale = 1.0
+	clip = nm
+	_played = nm
+	_props_after(nm)
+	ap.play(LIB + "/" + nm, 0.0)
+	ap.seek(clampf(float(a.get_meta(&"hold_s", 0.0)), 0.0, a.length), true)
+	struck_shows += 1
+
+
+## The bridge over when its clip is done (the struck pose: the hold over; the step-off: played through): the clip asked for
+## meanwhile, if any, takes over.
+func _bridge_check() -> void:
+	if bridge == "":
+		return
+	match bridge:
+		"struck":
+			if BendImpact.held(get_parent()):
+				return
+		"step_off":
+			if ap != null and ap.is_playing() and ap.current_animation == LIB + "/" + _played \
+					and ap.current_animation_position < ap.current_animation_length - 0.02:
+				return
+	bridge = ""
+	var d := _deferred
+	_deferred = []
+	if d.size() < 4:
+		return
+	if String(d[0]) == "once":
+		play_once(String(d[1]), maxf(float(d[2]), 0.1), float(d[3]))
+	else:
+		play(String(d[1]), float(d[2]), float(d[3]))
+
+
+## The step-off (movement.json clips spout_step_off) played once, the steps asked for (`key`) after it; false: none.
+func _step_off(key: String, blend: float, speed: float) -> bool:
+	var nm := String(RingMoves.clip_for("spout_step_off")[0])
+	if nm == "" or not (has_clip(nm) or (_add_pose(nm) and has_clip(nm))):
+		return false
+	play_once(nm, 0.1)
+	bridge = "step_off"
+	_deferred = ["play", key, blend, speed]
+	return true
+
+
+## Its fighter plays under the % ring's movement (a RingMoves on it).
+func _in_ring() -> bool:
+	var f := get_parent()
+	return f != null and f.get(&"ring_moves") != null
+
+
+func _on_floor() -> bool:
+	var f := get_parent() as CharacterBody3D
+	return f != null and f.is_on_floor()
+
+
+## The ring's reaction clip to a hit now ("" none): its RingMoves state's when that is a reaction, else the tumble when it
+## flies (`up`, or its knock tumbling or launched) and the flinch when it does not.
+func _ring_react(up: bool) -> String:
+	var f := get_parent()
+	var rm: Variant = f.get(&"ring_moves") if f != null else null
+	if rm == null:
+		return ""
+	var st := String((rm as RingMoves).clip_state())
+	if not st in REACT_STATES:
+		var kn := BendKnock.peek(f)
+		st = "tumble" if up or (kn != null and (kn.tumble or kn.is_launched())) else "flinch"
+	var nm := String(RingMoves.clip_for(st)[0])
+	return nm if nm != "" and (has_clip(nm) or (_add_pose(nm) and has_clip(nm))) else ""
+
+
+## Its held guard's loop ("guard_hold_<element>"; "" none): its guard standing as a shield it holds up (NpcRingMind.shield).
+func _guard_hold_key() -> String:
+	var f := get_parent()
+	var e: Variant = f.get(&"element") if f != null else null
+	if not (e is String or e is StringName) or not has_clip(GUARD_HOLD_PREFIX + String(e)):
+		return ""
+	return GUARD_HOLD_PREFIX + String(e) if shield_held() else ""
+
+
+## Its guard held up as a shield now (its ring mind's shield with its zone standing).
+func shield_held() -> bool:
+	var f := get_parent()
+	var br: Variant = f.get(&"brain") if f != null else null
+	if not (br is Object) or not is_instance_valid(br):
+		return false
+	var bend: Variant = (br as Object).get(&"bending")
+	if not (bend is Object) or not is_instance_valid(bend):
+		return false
+	var mind: Variant = (bend as Object).get(&"ring_mind")
+	if not (mind is Object) or not is_instance_valid(mind):
+		return false
+	var sh: Variant = (mind as Object).get(&"shield")
+	if not (sh is Dictionary):
+		return false
+	var z: Variant = (sh as Dictionary).get("zone")
+	return z != null and is_instance_valid(z) and z is Node and not (z as Node).is_queued_for_deletion()
+
+
+## The clip on the body now by its own name (the stance's and the held guard's library keys put back as their clips; ""
+## none).
+func shown_clip() -> String:
+	if ap == null or ap.current_animation == "":
+		return ""
+	var k := String(ap.current_animation).trim_prefix(LIB + "/")
+	if k.begins_with(STANCE_PREFIX) or k.begins_with(GUARD_HOLD_PREFIX):
+		var el := k.trim_prefix(STANCE_PREFIX).trim_prefix(GUARD_HOLD_PREFIX)
+		var tbl: Variant = BendPoses.data().get("stance" if k.begins_with(STANCE_PREFIX) else "guard_hold", {})
+		var pz := BendPoses._as_pose((tbl as Dictionary).get(el, "")) if tbl is Dictionary else {}
+		while not pz.is_empty() and not BendPoses.usable(String(pz.clip)):
+			pz = BendPoses._as_pose(pz.get("stand_in", ""))
+		return String(pz.get("clip", k))
+	return k
 
 
 ## Where a cast leaves the body (world): the pose's limb (its "hand": l_palm, r_palm, both, l_foot, r_foot), else the
@@ -582,6 +776,7 @@ func _process(delta: float) -> void:
 
 
 func _step(dt: float) -> void:
+	_bridge_check()
 	if _knock_hold >= 0.0:
 		if not clip.begins_with(KNOCK_PREFIX):
 			_knock_hold = -1.0
