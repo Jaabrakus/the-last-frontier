@@ -1,0 +1,41 @@
+{
+ "format": "thuyvan.traits",
+ "version": 1,
+ "status": "proposal",
+ "note": "The Thủy Vân peoples' body marks on today's body (peoples_design 2.4 and 2.8): the `trait`, `tint` and `reflect_eye` blocks the six people rows of data/customizer/thuyvan_peoples.json take (CharacterPeoples.trait_of / people(); BodyMaterials.set_trait and eye_material read them), the rite's ash markings, and the Hồ Tinh features (fox_features.json). Visual only: no row is a stat, nothing is locked to a people (anyone may wear the ash marks; the fur colours and tail count are free), and every face, skin tone and hair of the creator stays a choice for every people. Maps: assets/thuyvan/character/traits (tools/thuyvan_art/traits/trait_maps.py); shader: assets/thuyvan/shaders/tv_traits.gdshaderinc.",
+ "kinds": {
+  "scales": {"id": 3, "order": "trait_order_tv.png R", "spread": ["wrists", "temples and cheekbones", "shoulders and collarbones", "outer forearms", "along the spine", "outer thighs"], "cell_m": [0.009, 0.0075], "cell_face_m": [0.0062, 0.0052], "share": 0.70, "roughness": 0.30, "sheen": "thin film teal -> violet -> gold over 1 - N.V"},
+  "plates": {"id": 4, "order": "trait_order_tv.png G (one value per plate)", "spread": ["forearms and knuckles", "upper arms and shoulders", "brow ridge and cheekbones", "back", "chest", "shins and thighs", "most of the body"], "never": ["lips", "eyelids", "palms", "inner elbows"], "plates_per_m": 18, "plates_per_m_face": 34, "share": 0.78, "roughness": 0.80, "crack_mm": [0.6, 1.3], "rim_mm": [1.5, 4.5], "quartz_share": 0.083},
+  "river": {"id": 5, "order": "trait_order_tv.png B (wet sheen) and A (scale patches)", "gills": "trait_detail_tv.png B: 3 slits a side behind the jaw, 4.5 cm, 9 mm apart; inner #8a4a5a; drawn above amount 0.1", "wet_roughness": 0.30, "sheen_tone": "#d8e4e4", "scale_cell_share": 0.55}
+ },
+ "peoples": {
+  "dragon_sea": {
+   "trait": {"kind": "scales", "default": 0.5, "rows": {"None": 0.0, "Wrists": 0.2, "Marked": 0.5, "Heavy": 0.85},
+             "tones": {"sea_teal": "#3f9a9a", "silver": "#a9b4bc", "gold": "#c9a24a", "jade": "#5f9a80"}, "color": "#3f9a9a", "glow": 0.0,
+             "npc_note": "most commoners None or Wrists; no row is tied to rank"},
+   "reflect_eye": {"tapetum": "#9fd08a", "default": 0.5, "rows": {"Off": 0.0, "Faint": 0.5, "Strong": 1.0}}
+  },
+  "mountain_folk": {"trait": null, "note": "no body trait: the people shows in dress, tattoos and hair (W1)"},
+  "stone_children": {
+   "trait": {"kind": "plates", "default": 0.9, "rows": {"Patches": 0.3, "Half": 0.6, "Most": 0.9},
+             "tones": {"slate": "#6f7f8c", "sandstone": "#b49a72", "granite": "#8a8682", "jade_veined": "#6f8f80", "ochre": "#a8844e"}, "color": "#6f7f8c", "glow": 0.0,
+             "note": "the plates take 78 % of the tone over the person's own skin, so every skin shows through (owner question 4)"}
+  },
+  "riverborn": {
+   "trait": {"kind": "river", "default": 0.6, "rows": {"Gills only": 0.12, "Patches": 0.4, "Marked": 0.6, "Heavy": 0.9},
+             "tones": {"sea_teal": "#3f9a9a", "pearl": "#a9c9c2"}, "color": "#3f9a9a", "glow": 0.0},
+   "tint": {"kind": "river", "hue": 230.0, "chroma": 0.062, "default": 0.75, "range": [0.3, 1.0],
+            "note": "the design's chroma 0.050 pushed to 0.062 by eye for the painted look; a light tone turns silver-blue, a mid tone the sheet's blue-grey, a deep tone a deep slate-teal (owner question 3)"},
+   "reflect_eye": {"tapetum": "#e8c060", "default": 0.5, "rows": {"Off": 0.0, "Faint": 0.5, "Strong": 1.0}},
+   "later": "webbed hands and the gill shape key with the body pass after the swim track; the living fin is owner question 2"
+  },
+  "ho_tinh": {"trait": null, "features": {"ears": ["pointed", "rounded", "tufted"], "tails": {"min": 1, "max": 9, "built": [1, 3, 9]}, "shown_default": false,
+                                           "fur": ["cream", "russet", "silver_white", "ash", "black_tipped"], "data": "data/thuyvan_art/fox_features.json"}},
+  "ancestor_bound": {"trait": null, "markings_first": ["ash_thumbprint", "ash_rite"], "note": "not a body: an Ancestor House lineage plus the Condition row; any human lineage may take it"}
+ },
+ "markings": {
+  "ash_thumbprint": {"label": "Ash thumbprint", "ash": ["thumbprint"], "note": "a pale ash thumbprint on the brow (the rite's mark); anyone may wear it"},
+  "ash_rite": {"label": "Ash of the rite", "ash": ["thumbprint", "cheeks", "hands"], "note": "the thumbprint, two fingers of ash on each cheekbone, ash on the backs of the hands; anyone may wear it"}
+ },
+ "eye_colors": {"sea_grey": "#7d9496", "river_gold": "#c99a3a", "pale_jade": "#9cc0a8", "pearl_grey": "#b8c0c0", "jade": "#5f8a6a", "flint": "#7c7a74", "fox_amber": "#d4892a"}
+}

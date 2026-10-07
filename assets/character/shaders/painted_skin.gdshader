@@ -57,6 +57,7 @@ const float MOUTH_H = 1.4221;
 varying flat uint v_region;
 varying flat uint v_zone;
 varying float v_body_value;
+varying vec2 v_mh;      // the MakeHuman UVs (CUSTOM0): the Thủy Vân trait maps (tv_traits.gdshaderinc)
 
 #include "res://assets/character/shaders/skin_common.gdshaderinc"
 #include "res://assets/character/shaders/people_trait.gdshaderinc"
@@ -66,6 +67,7 @@ void vertex() {
 	v_region = code & 63u;
 	v_zone = code >> 6u;
 	v_body_value = 1.0 - UV2.y;
+	v_mh = CUSTOM0.xy;
 	if (region_hidden(v_region)) {
 		VERTEX = vec3(0.0);
 	}
@@ -167,6 +169,7 @@ void fragment() {
 	}
 	// a world people's mark in the skin (people_trait.gdshaderinc: keelstone flecks, Form veins), not on the lips
 	vec3 trait_emit = trait_shade(UV, v_region, 1.0 - mucosa, albedo, rough);
+	trait_emit += tv_trait_shade(UV, v_mh, v_region, 1.0 - mucosa, dot(NORMAL, VIEW), albedo, rough);
 	// lips: the realistic mucosa colour, painted with the same value and a soft highlight
 	if (mucosa > 0.001) {
 		vec3 lip = tone_at(melanin * 0.82 + 0.02) * albedo_scale * blood(0.5 + 0.55 + 0.25 * haemoglobin, melanin * 0.8);

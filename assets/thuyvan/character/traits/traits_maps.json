@@ -1,0 +1,76 @@
+{
+ "format": "thuyvan.trait_maps",
+ "version": 1,
+ "note": "The Thủy Vân peoples' skin traits in body.glb's MakeHuman UV atlas (TEXCOORD_2 / CUSTOM0.xy), built by tools/thuyvan_art/traits/trait_maps.py from the body's own anatomy (fixed seeds). Order maps: a texel is marked where order < amount x 255 (255 never). Visual only: no stat is read from any of it.",
+ "size": 2048,
+ "uv": "TEXCOORD_2 (Godot CUSTOM0.xy), row = v * size",
+ "files": {
+  "trait_order_tv.png": {
+   "R": "scales order (kind 3)",
+   "G": "plates order, one value per plate (kind 4)",
+   "B": "river sheen order (kind 5)",
+   "A": "river scale-patch order (kind 5)"
+  },
+  "trait_detail_tv.png": {
+   "R": "plate crack distance, 0.1 mm per step (0 on the crack)",
+   "G": "plate hash",
+   "B": "gill slits (255 core, about 100 the lit lip)",
+   "A": "sheen value noise"
+  },
+  "ash_marks_tv.png": {
+   "R": "ash thumbprint (brow)",
+   "G": "ash fingers (cheekbones)",
+   "B": "ash on the backs of the hands",
+   "A": "powder grain"
+  }
+ },
+ "plates_per_m": 18.0,
+ "scale_cell_m": [
+  0.009,
+  0.0075
+ ],
+ "scale_cell_face_m": [
+  0.0062,
+  0.0052
+ ],
+ "texel_mm_by_region": {
+  "head": 0.45,
+  "neck_upper": 0.4,
+  "neck_lower": 0.692,
+  "chest_upper_front": 0.765,
+  "chest_upper_side": 0.62,
+  "chest_upper_back": 1.02,
+  "chest_front": 0.742,
+  "chest_side": 0.653,
+  "chest_back": 0.86,
+  "abdomen_front": 0.765,
+  "abdomen_side": 0.787,
+  "abdomen_back": 0.891,
+  "pelvis_center": 0.936,
+  "pelvis_side": 1.028,
+  "upper_arm_l": 0.916,
+  "forearm_a_l": 1.119,
+  "forearm_b_l": 1.17,
+  "forearm_c_l": 1.134,
+  "wrist_l": 1.079,
+  "hand_l": 0.709,
+  "upper_arm_r": 0.916,
+  "forearm_a_r": 1.118,
+  "forearm_b_r": 1.17,
+  "forearm_c_r": 1.134,
+  "wrist_r": 1.08,
+  "hand_r": 0.709,
+  "thigh_upper_l": 0.972,
+  "thigh_lower_l": 0.975,
+  "shin_upper_l": 1.282,
+  "shin_lower_l": 1.042,
+  "ankle_l": 1.12,
+  "foot_l": 0.795,
+  "thigh_upper_r": 0.973,
+  "thigh_lower_r": 0.975,
+  "shin_upper_r": 1.282,
+  "shin_lower_r": 1.042,
+  "ankle_r": 1.119,
+  "foot_r": 0.795
+ }
+}
