@@ -3,8 +3,11 @@
   "configurations": [
     {
       "name": "soundtrack",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8765", "--bind", "127.0.0.1", "--directory", "/Users/kiwimango/Downloads/Frontier"],
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "cd '/private/tmp/claude-501/-Users-kiwimango-Downloads-Frontier/1b3b0f6a-b14c-46fe-9f0b-43043e88ad73/scratchpad/site' && exec python3 -m http.server 8765 --bind 127.0.0.1"
+      ],
       "port": 8765
     }
   ]
