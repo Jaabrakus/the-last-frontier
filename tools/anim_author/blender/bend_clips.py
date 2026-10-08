@@ -465,15 +465,16 @@ CLIPS = {
         "fyaw_l": [(0, 7), (9, 10), (14, 22), (30, 22), (40, 7)],
         "knee_l": [(0, "auto"), (14, (0.45, 0.0, 1.0)), (30, (0.45, 0.0, 1.0)), (40, "auto")],
     },
+    # 2026-10-08 elemental polish: stagger hips/chest through release, preserve all gameplay moments.
     "earth_push": {
         "length": 40, "meta": {"hold_s": 9 / FPS, "strike_s": 13 / FPS, "back_s": 24 / FPS, "hand": "both", "mask": "full",
                                "root": "place"},
         "root": [(0, (0, -0.015, 0)), (8, (-0.03, -0.07, -0.07)), (9, (-0.03, -0.075, -0.065)), (13, (0.0, -0.13, 0.15)),
                  (16, (0.0, -0.14, 0.17)), (24, (0.0, -0.13, 0.15)), (32, (0.0, -0.05, 0.03)), (40, (0, -0.015, 0))],
-        "yaw": [(0, 0), (8, -8), (13, 6), (24, 4), (40, 0)],
+        "yaw": [(0, 0), (8, -10), (12, 8), (16, 8), (24, 4), (40, 0)],
         "hips": [(0, 0), (8, -4), (13, 7), (16, 9), (24, 7), (40, 0)],
-        "chest": [(0, 0), (8, -6), (13, 9), (16, 12), (24, 8), (40, 0)],
-        "twist": [(0, 0), (8, -6), (13, 4), (24, 3), (40, 0)],
+        "chest": [(0, 0), (9, -6), (14, 10), (17, 12), (25, 7), (40, 0)],
+        "twist": [(0, 0), (9, -6), (13, 8), (17, 10), (24, 3), (40, 0)],
         "head": [(0, 0), (8, -3), (13, -2), (16, 0), (40, 0)],
         "clav_r": [(0, (0, 0)), (8, (-8, 4)), (13, (14, -2)), (16, (16, -2)), (24, (13, -2)), (40, (0, 0))],
         "clav_l": [(0, (0, 0)), (8, (-8, 4)), (13, (14, -2)), (16, (16, -2)), (24, (13, -2)), (40, (0, 0))],
@@ -1028,15 +1029,16 @@ SET2 = {
     # the straight punch (Fire Blast: punch, stream; Fire Jab: jab): a short step in, the fists up; the right fist chambered at
     # the ribs, the body coiled (held); the hips snap through and the fist drives straight out, the left pulled back to the
     # ribs.  strike_s: the fist out
+    # 2026-10-08 elemental polish: stagger hips/chest through release, preserve all gameplay moments.
     "fire_punch": {
         "length": 26, "mirror": True,
         "meta": {"hold_s": 5 / FPS, "strike_s": 8 / FPS, "back_s": 15 / FPS, "hand": "r", "mask": "full", "root": "place"},
         "root": [(0, (0, -0.015, 0)), (4, (0.0, -0.06, 0.03)), (5, (0.0, -0.065, 0.03)), (8, (0.0, -0.09, 0.11)),
                  (10, (0.0, -0.095, 0.12)), (15, (0.0, -0.09, 0.11)), (21, (0.0, -0.04, 0.03)), (26, (0, -0.015, 0))],
-        "yaw": [(0, 0), (5, -18), (8, 16), (10, 20), (15, 16), (26, 0)],
-        "twist": [(0, 0), (5, -10), (8, 12), (10, 14), (15, 12), (26, 0)],
+        "yaw": [(0, 0), (5, -20), (7, 16), (9, 21), (15, 12), (26, 0)],
+        "twist": [(0, 0), (5, -10), (8, 13), (10, 17), (16, 8), (26, 0)],
         "hips": [(0, 0), (5, 3), (8, 7), (10, 8), (15, 6), (26, 0)],
-        "chest": [(0, 0), (5, 4), (8, 8), (10, 9), (15, 7), (26, 0)],
+        "chest": [(0, 0), (5, 4), (9, 9), (11, 10), (17, 5), (26, 0)],
         "head": [(0, 0), (5, 2), (8, -2), (26, 0)],
         "clav_r": [(0, (0, 0)), (5, (-8, 2)), (8, (16, -4)), (10, (18, -4)), (15, (14, -3)), (26, (0, 0))],
         "clav_l": [(0, (0, 0)), (5, (8, -2)), (8, (-6, 2)), (15, (-4, 2)), (26, (0, 0))],
@@ -1282,12 +1284,13 @@ SET2 = {
     # the wave (Wave: push, tide, surf): the palms sink to the hips as the body sinks back (the water gathered), then rise in
     # arcs to the chest with the palms turning forward (held, the wave stood up); both palms push out wide as the weight goes
     # onto the front leg.  strike_s: the push
+    # 2026-10-08 elemental polish: stagger hips/chest through release, preserve all gameplay moments.
     "water_wave": {
         "length": 42,
         "meta": {"hold_s": 11 / FPS, "strike_s": 15 / FPS, "back_s": 26 / FPS, "hand": "both", "mask": "full", "root": "place"},
         "root": [(0, (0, -0.015, 0)), (6, (0.0, -0.12, -0.05)), (11, (0.0, -0.09, -0.06)), (15, (0.0, -0.11, 0.13)),
                  (19, (0.0, -0.12, 0.15)), (26, (0.0, -0.11, 0.13)), (35, (0.0, -0.04, 0.03)), (42, (0, -0.015, 0))],
-        "yaw": [(0, 0), (6, -6), (11, -8), (15, 4), (26, 3), (42, 0)],
+        "yaw": [(0, 0), (6, -9), (11, -7), (15, 5), (20, 8), (28, 3), (42, 0)],
         "hips": [(0, 0), (6, 6), (11, -2), (15, 6), (19, 8), (26, 6), (42, 0)],
         "chest": [(0, 0), (6, 8), (11, -5), (15, 6), (19, 10), (26, 7), (42, 0)],
         "head": [(0, 0), (6, 6), (11, -4), (15, -2), (42, 0)],
@@ -1315,6 +1318,8 @@ SET2 = {
         "foot_r": [(0, FR), (6, (-0.16, 0.077, -0.08)), (29, (-0.16, 0.077, -0.08)), (36, FR)],
         "fyaw_r": [(0, 7), (6, 30), (29, 30), (36, 7)],
         "knee_r": [(0, "auto"), (6, (-0.4, 0.0, 1.0)), (32, (-0.4, 0.0, 1.0)), (36, "auto")],
+        "twist": [(0, 0), (7, -5), (12, -3), (17, 6), (23, 7), (31, 2), (42, 0)],
+        "side": [(0, 0), (6, -3), (11, -2), (17, 3), (24, 2), (34, 0), (42, 0)],
     },
     # the draw (Flow: draw, geyser; Frost): from a pool: the palms reach out low and down over the water, the body sinking;
     # they part and circle out wide (held); then sweep in and up before the body, the palms turning up, drawing the water up
@@ -1422,16 +1427,17 @@ SET2 = {
     # the circular sweep (Air Blast: ball, vacuum): both arms wound out to the right, the body turned with them (held); they
     # sweep round flat before the body in a big circle to the left, the palms pushing the air round, the body turning through.
     # strike_s: the palms across the front
+    # 2026-10-08 elemental polish: stagger hips/chest through release, preserve all gameplay moments.
     "air_sweep": {
         "length": 36,
         "meta": {"hold_s": 7 / FPS, "strike_s": 11 / FPS, "back_s": 22 / FPS, "hand": "both", "mask": "full", "root": "place"},
         "root": [(0, (0, -0.015, 0)), (7, (-0.03, -0.08, 0.0)), (11, (0.0, -0.1, 0.06)), (15, (0.03, -0.1, 0.05)),
                  (22, (0.03, -0.09, 0.04)), (30, (0.0, -0.035, 0.01)), (36, (0, -0.015, 0))],
-        "yaw": [(0, 0), (7, -30), (11, 0), (15, 28), (22, 24), (36, 0)],
-        "twist": [(0, 0), (7, -20), (11, 0), (15, 18), (22, 14), (36, 0)],
+        "yaw": [(0, 0), (7, -34), (10, -5), (14, 32), (18, 34), (25, 17), (36, 0)],
+        "twist": [(0, 0), (7, -18), (11, 0), (16, 23), (21, 17), (29, 4), (36, 0)],
         "hips": [(0, 0), (7, 4), (11, 6), (15, 4), (36, 0)],
         "chest": [(0, 0), (7, 4), (11, 7), (15, 4), (36, 0)],
-        "side": [(0, 0), (7, -4), (11, 0), (15, 4), (36, 0)],
+        "side": [(0, 0), (7, -5), (11, -1), (16, 5), (23, 3), (30, 0), (36, 0)],
         "clav_r": [(0, (0, 0)), (7, (-8, -6)), (11, (10, -8)), (15, (14, -4)), (36, (0, 0))],
         "clav_l": [(0, (0, 0)), (7, (12, -6)), (11, (10, -8)), (15, (-6, -6)), (36, (0, 0))],
         "hand_r": [(0, HR), (4, (-0.32, 1.1, 0.1)), (7, (-0.46, 1.22, 0.05)), (9, (-0.38, 1.25, 0.4)), (11, (-0.09, 1.25, 0.55)),

@@ -1403,6 +1403,9 @@ static func warm_up(cam: Camera3D, progress := Callable()) -> void:
 	made.append(holder)
 	# (the groups, each a callable run on its own frame)
 	var groups: Array[Callable] = []
+	groups.append(func() -> void:
+		for el: String in Bending.ELEMENTS:
+			pool.play("monsoon_seal", xf, 0.1, 0.01, 0.01, MonsoonIdentity.accent(el), Color.WHITE, MonsoonIdentity.mesh(el)))
 	for k: String in KINDS:
 		groups.append(func() -> void:
 			burst(at, k, 2, Vector3.UP, 30.0, 0.1, 0.01)

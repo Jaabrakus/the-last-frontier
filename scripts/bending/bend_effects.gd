@@ -172,6 +172,7 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 			"spec": spec})
 	var kind := String(spec.get("kind", "stone"))
 	BendLooks.sound(kind, "cast", p.global_position + Vector3.UP, -4.0)
+	MonsoonIdentity.release(p, Bending.element_of(m), mode == "big" or grew)
 	match String(spec.get("do", "")):
 		"bolt":
 			bolts(bc, a, spec)

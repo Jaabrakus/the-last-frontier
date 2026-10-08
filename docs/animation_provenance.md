@@ -89,3 +89,18 @@ Validation: `git diff --check` passed. Source-independent tests ran 45 cases: tw
 passed and 43 skipped because external rebuild inputs were unavailable. Godot
 4.7.2 Mono completed headless editor import without reported GDScript parse
 errors; the sandbox denied its IDE socket and editor-settings write.
+
+## Separate Spellbreak reference conversion (2026-10-08)
+
+The user supplied a local Spellbreak community Windows client and requested
+animation extraction and Godot conversion. Those source clips remain separately
+attributed in `/Users/kiwimango/Downloads/Spellbreak_Reference_Extracts/godot`.
+`tools/reference_animation/psa_to_glb.py` converts their actual motion and source
+skeletons; `bake_godot_libraries.gd` retains source attribution and input hashes.
+These are third-party conversions, not newly authored Tidebreak motion. Their
+presence does not establish a licence or any dependency of the playable game.
+
+The same task revised five project-authored elemental clips by changing typed
+pose keys in `tools/anim_author/blender/bend_clips.py`. That generator reads the
+project rig and authored keys, not the converted reference clips. This describes
+these specific changes, not a new blanket verification of other bundled assets.

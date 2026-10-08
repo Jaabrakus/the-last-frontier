@@ -5,7 +5,7 @@
 	"elements": {
 		"earth": {
 			"_away": "bone and umber against ochre and moss: a bone tunic with umber bands, bone trousers with umber shin wraps, an umber sash, bone arm wraps",
-			"home": [0.86, 0.65, 0.33],
+			"home": [0.7804, 0.6471, 0.4078],
 			"away": [0.93, 0.9, 0.8],
 			"away_dress": {
 				"shirt": {"0": "linen_white", "1": "ring_umber", "3": "ring_umber"},
@@ -17,7 +17,7 @@
 		},
 		"water": {
 			"_away": "ice and navy against sea blue: an ice-blue parka with navy seams over frost trousers, a navy belt, ice boots",
-			"home": [0.4, 0.66, 0.98],
+			"home": [0.4431, 0.7216, 0.6863],
 			"away": [0.78, 0.9, 1.0],
 			"away_dress": {
 				"outer": {"0": "ring_ice", "1": "ring_snow_fur", "2": "ring_navy"},
@@ -27,20 +27,20 @@
 			}
 		},
 		"fire": {
-			"_away": "char and gold against flame red: a char top with its gold collar, char trousers with gold bands, a gold sash, char guards with gold rims",
-			"home": [0.95, 0.38, 0.27],
+			"_away": "warm ivory against charcoal: dark collar and bands, copper sash trim",
+			"home": [0.8941, 0.6353, 0.4627],
 			"away": [0.98, 0.78, 0.36],
 			"away_dress": {
-				"shirt": {"0": "ring_char", "1": "ring_gold", "2": "ring_char"},
-				"legs.lower": {"0": "ring_char", "1": "ring_gold"},
-				"accessories.waist": {"0": "ring_gold", "3": "ring_char"},
-				"accessories.arms": {"0": "ring_char", "1": "ring_gold"},
-				"feet": {"0": "ring_char", "1": "ring_sole", "2": "ring_gold"}
+				"shirt": {"0": "#e3cfb0", "1": "#50404a", "2": "#e3cfb0"},
+				"legs.lower": {"0": "#e3cfb0", "1": "#50404a"},
+				"accessories.waist": {"0": "#50404a", "3": "#e4a276"},
+				"accessories.arms": {"0": "#e3cfb0", "1": "#50404a"},
+				"feet": {"0": "#50404a", "1": "ring_sole", "2": "#e3cfb0"}
 			}
 		},
 		"air": {
-			"_away": "rust and umber against marigold: a rust tunic with cream bands, umber trousers with rust bands, a cream sash",
-			"home": [0.99, 0.82, 0.37],
+			"_away": "rust and umber against pale lilac: a rust tunic with cream bands, umber trousers with rust bands, a cream sash",
+			"home": [0.7725, 0.7412, 0.8392],
 			"away": [0.85, 0.48, 0.24],
 			"away_dress": {
 				"shirt": {"0": "ring_rust", "1": "ring_cream"},

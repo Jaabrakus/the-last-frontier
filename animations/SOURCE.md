@@ -454,3 +454,15 @@ visual references, no animation files imported) is his statement; the rows below
 - These rows record inputs that bear on wiring the clips into the ring sport. They do not establish any clip's origin.
   The `axe_d` fit and the `Actor_B_from_A.res` carry read are the specific inputs to trace for the parry, high-block and stab
   clips before they are counted as fully own.
+
+## Elemental presentation polish (2026-10-08)
+
+Direct generator changes: `tools/anim_author/blender/bend_clips.py` updates the
+hips/torso turn keys on `earth_push`, `fire_punch` (and its generated mirrored
+variant), `water_wave` and `air_sweep`. The keys are authored in that table and
+baked from the same project rig rest pose. No Spellbreak motion file is read by
+this authoring path. Timing metadata and runtime aliases remain unchanged.
+The separate Spellbreak reference conversions retain their third-party origin
+and stay outside the project animation libraries. See
+`docs/animation_reference_lessons.md` for source observations, inferences,
+conversion boundaries and validation.

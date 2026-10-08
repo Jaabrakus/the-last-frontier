@@ -17,3 +17,6 @@ AGLS_extracted/
 
 # Temporary local animation diagnostics
 /tests/anim/_tmp_*
+
+# Local reference extraction and verified full-client backup
+/Spellbreak_Reference_Extracts/

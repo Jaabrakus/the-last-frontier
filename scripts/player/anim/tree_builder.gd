@@ -713,8 +713,12 @@ func _union_layers(leaf_layers: Array) -> Array:
 
 func _build_single(bt: AnimationNodeBlendTree, s: Dictionary, rec: Dictionary) -> void:
 	var p: String = rec.node
-	bt.add_node("clip", _anim(s.clip, "norm", s.loop))
-	var top := _stack(bt, "clip", s.layers, "", s.loop, p, rec.layers, "", not s.get("own_weapon", false))
+	# This fall is an entry into a sustained pose, not a seamless cycle (the current
+	# override jumps 0.73 rad at its wrap). Hold its end until movement selects another state.
+	# Keep the normalized timeline and source resource intact; casting still layers above it.
+	var loop := bool(s.loop) and String(s.clip) != "actor_b-p-fall"
+	bt.add_node("clip", _anim(s.clip, "norm", loop))
+	var top := _stack(bt, "clip", s.layers, "", loop, p, rec.layers, "", not s.get("own_weapon", false))
 	bt.add_node("seek", AnimationNodeTimeSeek.new())
 	bt.connect_node("seek", 0, top)
 	bt.add_node("ts", AnimationNodeTimeScale.new())
@@ -723,7 +727,7 @@ func _build_single(bt: AnimationNodeBlendTree, s: Dictionary, rec: Dictionary) -
 	_nodes += 3
 	var length := _length(s.clip)
 	rec["clip"] = s.clip
-	rec["loop"] = s.loop
+	rec["loop"] = loop
 	rec["length"] = length
 	rec["ts"] = idx.param("%s/ts/scale" % p)
 	rec["seek"] = idx.param("%s/seek/seek_request" % p)

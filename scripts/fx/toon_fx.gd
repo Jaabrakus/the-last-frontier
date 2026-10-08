@@ -14,6 +14,7 @@ extends RefCounted
 ## shadow-only core (shadow_mat), and is_own tells your own body (your own Wind Guard and walls are drawn for your eye).
 
 const SHADERS := {
+	"monsoon_seal": preload("res://shaders/bend_fx/monsoon_seal.gdshader"),
 	"flame": preload("res://shaders/bend_fx/toon_flame.gdshader"),
 	"puff": preload("res://shaders/bend_fx/toon_puff.gdshader"),
 	"spark": preload("res://shaders/bend_fx/toon_spark.gdshader"),
@@ -78,6 +79,8 @@ static func mat(key: String) -> ShaderMaterial:
 	var m := ShaderMaterial.new()
 	var p := {}
 	match key:
+		"monsoon_seal":
+			m.shader = SHADERS.monsoon_seal
 		"flame":
 			m.shader = SHADERS.flame
 		"flame_strip":
