@@ -25,6 +25,7 @@ static var force := false
 
 var mode: RingMode
 var scheme := ""
+var _preset := ""
 ## Per row: {box, caps (its HowToKeys, redrawn each frame), uses: [StringName], used, a}.
 var rows: Array = []
 var _panel: PanelContainer
@@ -123,6 +124,7 @@ func close() -> void:
 ## The rows for the scheme now (again when it changes).
 func _lay() -> void:
 	scheme = MatchSetup.scheme()
+	_preset = MatchSetup.controls()
 	for c in _vb.get_children():
 		if c.name != "Kicker":
 			_vb.remove_child(c)
@@ -130,7 +132,8 @@ func _lay() -> void:
 	rows.clear()
 	_acts.clear()
 	var rs := RingLessons.rules_now()
-	for h: Dictionary in _hints_data().get(KitWords.scheme_id(scheme), []):
+	var help_scheme := "basic" if _preset == "basic" else KitWords.scheme_id(scheme)
+	for h: Dictionary in _hints_data().get(help_scheme, []):
 		if h.has("rules") and not rs in (h.rules as Array):
 			continue                             # (round 3: a row for one rule set only: the % ring's "[jump] twice")
 		var r := LessonCard.resolve(String(h.get("line", "")))
@@ -166,7 +169,7 @@ func _input(e: InputEvent) -> void:
 
 
 func _process(dt: float) -> void:
-	if MatchSetup.scheme() != scheme and not _closing:
+	if (MatchSetup.scheme() != scheme or MatchSetup.controls() != _preset) and not _closing:
 		_lay()
 	var left := 0
 	for r: Dictionary in rows:

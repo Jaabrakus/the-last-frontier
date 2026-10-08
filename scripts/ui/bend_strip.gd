@@ -18,8 +18,8 @@ extends Control
 ## Each control scheme (MatchSetup.scheme(): keys, first_moves, direction, radial) keeps the seven chips: direction heads the
 ## columns W / 1, A D / 3, S / 4 and lights the held one; the wheel's scheme says so in its help line.
 ## ROUND 3, the % ring (RingRules.stock_on(); smash_r3 spec v2 §10.4; screens.json strip_stock): while your own RingMoves says
-## you are airborne key 2 shows your Slam (Hammer, Downpour, Axe Kick, Down Gust), key 3 "Dodge", keys 4 and 5 grey with
-## "lands"; key 3 never takes the readied highlight (it acts at once); your move names dim a shade at 2, 4 and 6 stale copies
+## you are airborne key 2 shows your Slam (Hammer, Downpour, Axe Kick, Down Gust), key 3 "Dodge", ground spells grey with
+## "lands" (Breath stays available); key 3 never takes the readied highlight; move names dim at 2, 4 and 6 stale copies
 ## (RingRules.stale_count: your own queue); "safe" for safe_s after a hit of yours passed through a safe body. column(i)
 ## adds {grey, stale}; safe_shown().
 ## ROUND 4 (HUD; the owner's FEEL list: "a cleaner HUD"; "those big cards are terrible"): the strip OFF THE BODY and cleaner.
@@ -551,8 +551,8 @@ static func sw(key: String, def: Variant = null) -> Variant:
 	return (MatchSetup.screens().get("strip_stock", {}) as Dictionary).get(key, def)
 
 
-## Key i's column in the % ring: key 3 never lit as readied; in the air key 2 the Slam, key 3 "Dodge", 4 and 5 grey with
-## "lands"; its stale copies (your own queue).
+## Key i's column in the % ring: key 3 never lit as readied; in the air key 2 the Slam, key 3 "Dodge", ground-dependent
+## spells grey with "lands". Share the caster's predicate: Breath stays usable even though it shares the wall key.
 func _stock_column(out: Dictionary, i: int, el: String) -> void:
 	out["grey"] = false
 	if i == 2:
@@ -580,10 +580,11 @@ func _stock_column(out: Dictionary, i: int, el: String) -> void:
 				out.icon_id = "dodge"
 				out.icon_mode = el
 			3, 4:
-				out.grey = true
-				out.sub = String(sw("lands", "lands"))
-				out.tap = ""
-				out.readied = false
+				if SwayCaster.needs_ground(String(out.id), String(out.mode)):
+					out.grey = true
+					out.sub = String(sw("lands", "lands"))
+					out.tap = ""
+					out.readied = false
 	out["stale"] = stale_copies(String(out.id), String(out.mode))
 
 
@@ -775,7 +776,7 @@ func refresh() -> void:
 				not bool(col.hidden), String(col.icon_id), String(col.icon_mode), el)
 		var ui: Dictionary = _cols[i]
 		if col.has("stale"):
-			# (the % ring: the name a shade dimmer by its stale copies; a grey chip in the air for keys 4 and 5)
+			# (the % ring: the name dims by stale copies; ground-dependent spells have a grey chip in the air)
 			(ui.name as Label).modulate.a = stale_alpha(int(col.stale))
 			ui["grey"] = bool(col.get("grey", false))
 			if bool(col.get("grey", false)):

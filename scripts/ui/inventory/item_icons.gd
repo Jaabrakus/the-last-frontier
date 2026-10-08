@@ -110,6 +110,9 @@ func prewarm(delay_s := 2.0) -> void:
 	if DisplayServer.get_name() == "headless" or not is_inside_tree():
 		return
 	await get_tree().create_timer(delay_s, true, false, true).timeout
+	# The ring uses its spell SVGs. Painting the open world's pack compiles unrelated shaders during fights.
+	if get_tree().current_scene is RingLevel:
+		return
 	for k: String in InventoryState.NAMES:
 		get_icon(k)
 

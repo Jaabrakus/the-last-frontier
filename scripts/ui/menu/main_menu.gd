@@ -28,7 +28,8 @@ extends Control
 ##                 Lessons row the same practice with the lessons' cards (RingLessons.ask: your element's dummy, a card at
 ##                 a time, each done by doing it; its line says where they resume)
 ##   Your look     the character creator on the saved look (CharacterCreator; Accept keeps it)
-##   Open world    the valley of 1765 as it was, in a sub-panel (its rows and their handlers unchanged; Esc from a screen
+##   Legacy only  the retained Open world panel is not linked from the Tidebreak demo menu. Its rows and handlers remain
+##                 available to development tools and their regression checks. Esc from a screen
 ##                 opened there comes back to it):
 ##       Continue      the latest save (its date and hour under it); only when there is one
 ##       New game      the start's switches (the story, a start with nothing, a spouse) and Begin: the level fresh, the
@@ -57,8 +58,8 @@ const GAME_SCENE := "res://scenes/main.tscn"
 ## The ring sport's light scene (RingLevel): the deck over the water, no open world loaded.
 const RING_SCENE := "res://scenes/ring.tscn"
 ## The title over the menu and the line under it (constants for the name the owner gives the game).
-const TITLE := "FRONTIER"
-const SUBTITLE := "Cosby's Manor, on the Mohawk  ·  1765"
+const TITLE := "TIDEBREAK"
+const SUBTITLE := "ELEMENTAL ARENA COMBAT"
 const SHOW_S := 16.0         ## s a painting shows before the next
 const XFADE_S := 2.5
 const DRIFT := 0.07
@@ -83,6 +84,7 @@ var _cap_text: Label
 var _items: VBoxContainer
 var _panel: VBoxContainer
 var _panel_scroll: ScrollContainer
+var _menu_layout: Control
 var _t := 0.0
 var _fade := -1.0
 var _chosen_bg := ""
@@ -117,15 +119,15 @@ func _ready() -> void:
 		MusicDirector.play_menu(self)       # the main theme (its bus made before the volumes are set)
 	GameSettings.apply_global()
 	var bg := ColorRect.new()
-	bg.color = Color(0.03, 0.022, 0.014)
+	bg.color = MenuUI.BACKDROP
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 	_a = _picture()
 	_b = _picture()
 	_b.modulate.a = 0.0
-	var shade := MenuUI.left_shade(0.86)
+	var shade := MenuUI.left_shade(0.94)
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
-	shade.anchor_right = 0.58
+	shade.anchor_right = 0.67
 	add_child(shade)
 	var right := MenuUI.left_shade(0.8)
 	right.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -134,25 +136,36 @@ func _ready() -> void:
 	right.name = "RightShade"
 	right.visible = false
 	add_child(right)
+	# Keep the authored menu and its hit targets together in small windows. The game viewport and pictures stay native.
+	_menu_layout = Control.new()
+	_menu_layout.name = "MenuLayout"
+	_menu_layout.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_menu_layout)
+	resized.connect(_fit_menu_layout)
+	_fit_menu_layout()
 	# the title and the menu
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", 4)
 	left.offset_left = 88
-	left.offset_top = 90
+	left.offset_top = 40
 	left.offset_right = 88 + 560
-	add_child(left)
-	var title := MenuUI.label(TITLE, 76, MenuUI.INK)
+	_menu_layout.add_child(left)
+	var title := MenuUI.label(TITLE, 70, MenuUI.INK)
+	title.name = "GameTitle"
 	var fv := FontVariation.new()
 	fv.base_font = FrontierHUD.serif()
-	fv.spacing_glyph = 10
+	fv.spacing_glyph = 6
 	title.add_theme_font_override("font", fv)
 	left.add_child(title)
-	left.add_child(MenuUI.label(SUBTITLE, 22, MenuUI.GOLD))
+	var subtitle := MenuUI.label(SUBTITLE, 19, MenuUI.GOLD)
+	subtitle.name = "GameSubtitle"
+	left.add_child(subtitle)
+	left.add_child(MenuUI.label("EARLY PLAYABLE DEMO  ·  IN DEVELOPMENT", 15, MenuUI.DIM))
 	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(0, 34)
+	gap.custom_minimum_size = Vector2(0, 8)
 	left.add_child(gap)
 	_items = VBoxContainer.new()
-	_items.add_theme_constant_override("separation", 3)
+	_items.add_theme_constant_override("separation", 2)
 	left.add_child(_items)
 	_build_items()
 	# the painting's caption at the lower left
@@ -165,7 +178,7 @@ func _ready() -> void:
 	cap.offset_top = -56
 	cap.offset_bottom = -56
 	cap.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	add_child(cap)
+	_menu_layout.add_child(cap)
 	_cap_title = MenuUI.label("", 20, MenuUI.GOLD)
 	cap.add_child(_cap_title)
 	_cap_text = MenuUI.label("", 16, MenuUI.DIM, true)
@@ -181,7 +194,7 @@ func _ready() -> void:
 	_panel_scroll.offset_bottom = -80
 	_panel_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_panel_scroll.visible = false
-	add_child(_panel_scroll)
+	_menu_layout.add_child(_panel_scroll)
 	_panel = VBoxContainer.new()
 	_panel.add_theme_constant_override("separation", 16)
 	_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -190,6 +203,14 @@ func _ready() -> void:
 	_first_focus()
 	if RingAssist.offer_basics():
 		_offer_basics.call_deferred()      # (round 4 SIMPLE: the game's first launch offers the Basics once)
+
+
+func _fit_menu_layout() -> void:
+	var view := get_viewport_rect().size
+	var fit := minf(1.0, minf(view.x / 1600.0, view.y / 900.0))
+	fit = maxf(fit, 0.01)
+	_menu_layout.scale = Vector2.ONE * fit
+	_menu_layout.size = view / fit
 
 
 func _picture() -> TextureRect:
@@ -262,11 +283,16 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _build_items() -> void:
 	for c in _items.get_children():
+		_items.remove_child(c)
 		c.queue_free()
 	MatchSetup.load()                     # (the last setup: the panel starts from it, Quick match plays it)
 	var tb := MenuUI.item(MatchSetup.sport(), 32, MatchSetup.menu_line())
 	tb.pressed.connect(_open_match)
 	_items.add_child(tb)
+	var start := MenuUI.item("Start here", 32, "learn at your own pace, or play an easy match")
+	start.name = "StartHere"
+	start.pressed.connect(_offer_basics)
+	_items.add_child(start)
 	var qm := MenuUI.item("Quick match", 32, MatchSetup.quick_line())
 	qm.pressed.connect(_quick_match)
 	_items.add_child(qm)
@@ -276,9 +302,6 @@ func _build_items() -> void:
 	var lk := MenuUI.item("Your look", 32, "the character creator: face, build and dress")
 	lk.pressed.connect(_open_look)
 	_items.add_child(lk)
-	var ow := MenuUI.item("Open world", 32, "the valley, 1765: your saves, a new life, the museum, co-op")
-	ow.pressed.connect(_open_world)
-	_items.add_child(ow)
 	var st := MenuUI.item("Settings", 32)
 	st.pressed.connect(_open_settings)
 	_items.add_child(st)
@@ -789,8 +812,8 @@ func _open_controls() -> void:
 	(sch if sch.visible else preset).grab_focus.call_deferred()
 
 
-## Round 4 SIMPLE: the Basics offered once, on the game's first launch (RingAssist.offer_basics; the words in
-## data/bending/schemes.json controls.offer): Learn the basics (the Basics track's practice, RingLessons.ask) or Not now.
+## The first-launch offer and the permanent Start here row share one beginner path. Opening it changes no settings;
+## either launch explicitly enables the existing Basic helpers and the easy setup described on screen.
 func _offer_basics() -> void:
 	_open_panel()
 	var wd: Dictionary = (MatchSetup.schemes_data().get("controls", {}) as Dictionary).get("offer", {})
@@ -803,18 +826,58 @@ func _offer_basics() -> void:
 	var line := MenuUI.label(String(wd.get("line", "")), 18, MenuUI.INK, true)
 	line.custom_minimum_size = Vector2(520, 0)
 	box.add_child(line)
+	InputSetup.ensure()
+	for spec: String in wd.get("first_keys", []):
+		var text := String(LessonCard.resolve(spec).text).replace("[LMB]", "left mouse button").replace("[RMB]", "right mouse button")
+		var keys := MenuUI.label(text, 20, MenuUI.INK, true)
+		keys.custom_minimum_size = Vector2(520, 0)
+		box.add_child(keys)
 	box.add_child(_gap(6))
 	var go := MenuUI.item(String(wd.get("go", "Learn the basics")), 30, String(wd.get("go_line", "")))
 	go.name = "Basics"
-	go.pressed.connect(func() -> void:
-		RingLessons.ask(MatchSetup.element)
-		_play_match())
+	go.pressed.connect(_beginner_start.bind(true))
 	box.add_child(go)
+	var easy := MenuUI.item(String(wd.get("easy", "Play an easy match")), 30, String(wd.get("easy_line", "")))
+	easy.name = "EasyMatch"
+	easy.pressed.connect(_beginner_start.bind(false))
+	box.add_child(easy)
+	var help := MenuUI.label(String(wd.get("help", "")), 18, MenuUI.DIM, true)
+	help.custom_minimum_size = Vector2(520, 0)
+	box.add_child(help)
 	var later := MenuUI.item(String(wd.get("later", "Not now")), 22)
 	later.name = "NotNow"
 	later.pressed.connect(_close_panel)
 	box.add_child(later)
 	go.grab_focus.call_deferred()
+
+
+func _beginner_start(lessons: bool) -> void:
+	MatchSetup.set_controls("basic")
+	MatchSetup.set_aim_help("strong")
+	FirstHints.set_on(true)
+	MatchSetup.difficulty = "easy"
+	MatchSetup.rules_choice = "stock"
+	MatchSetup.games_n = 1
+	MatchSetup.rounds_to_win = 1
+	MatchSetup.format = "1v1"
+	MatchSetup.mates = []
+	MatchSetup.spectate = false
+	# A prior custom practice must not slow the lessons or keep launching a new player off the deck.
+	MatchSetup.speed = 1.0
+	MatchSetup.throw_me = false
+	MatchSetup.foe_pct = -1.0
+	MatchSetup.my_pct = -1.0
+	MatchSetup.steer = "none"
+	MatchSetup.fresh = false
+	if lessons:
+		MatchSetup.set_practice(RingLessons.dummy_for(MatchSetup.element), "stand")
+		RingLessons.ask(MatchSetup.element)
+	else:
+		RingMode.lessons_asked = false
+		MatchSetup.set_match()
+		MatchSetup.foes = [MatchSetup.ANY]
+		MatchSetup.quick = true              # use the existing first-match hints; keep the custom opponent choice
+	_play_match()
 
 
 ## A row's main line and (when given) the line under it rewritten.

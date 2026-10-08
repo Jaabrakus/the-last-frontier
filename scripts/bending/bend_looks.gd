@@ -619,20 +619,37 @@ static func stop_trail(g: GPUParticles3D) -> void:
 		if pool != null:
 			pool.trail_release(g)
 			return
+	if not g.is_inside_tree():
+		return
 	var xf := g.global_transform
-	var scn := g.get_tree().current_scene if g.is_inside_tree() else null
+	var scn := g.get_tree().current_scene
 	if scn == null:
 		return
-	g.get_parent().remove_child(g)
-	scn.add_child(g)
-	g.global_transform = xf
 	g.emitting = false
 	var longest := g.lifetime
 	for c in g.get_children():
 		if c is GPUParticles3D:
 			(c as GPUParticles3D).emitting = false
 			longest = maxf(longest, (c as GPUParticles3D).lifetime)
-	g.get_tree().create_timer(longest + 0.2, false).timeout.connect(g.queue_free)
+	# A fighter's exit can end a sibling guard while the scene is removing children. Reparent only once that
+	# notification has finished; deferred calls run before queued deletion. Weak references also cover a scene freed now.
+	_finish_trail.call_deferred(weakref(g), weakref(scn), xf, longest + 0.2)
+
+
+static func _finish_trail(trail_ref: WeakRef, scene_ref: WeakRef, xf: Transform3D, fade_s: float) -> void:
+	var g := trail_ref.get_ref() as GPUParticles3D
+	var scn := scene_ref.get_ref() as Node
+	if g == null or g.is_queued_for_deletion():
+		return
+	if scn == null or not scn.is_inside_tree() or scn.is_queued_for_deletion():
+		g.queue_free()
+		return
+	if g.get_parent() == null:
+		scn.add_child(g)
+	elif g.get_parent() != scn:
+		g.reparent(scn, false)
+	g.global_transform = xf
+	scn.get_tree().create_timer(fade_s, false).timeout.connect(g.queue_free)
 
 
 # ---------------------------------------------------------------- bursts

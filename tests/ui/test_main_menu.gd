@@ -3,12 +3,12 @@ extends SceneTree
 ##
 ##   Godot --headless --path . -s tests/ui/test_main_menu.gd
 ##
-##   start     the project starts at the menu; the boot splash is the game's own painting
+##   start     Tidebreak app title and arena splash; the existing desktop user-data directory remains stable
 ##   pictures  every game picture there (the menu's and the loading screens'), each with a title and a caption; a
 ##             round shows each before a repeat; the museum's paintings, each with its artist and story; no portraits
 ##   menu      the ring sport first (Tidebreak; the owner, 2026-10-04), Quick match (its line the last setup against a random
 ##             opponent), Practice, Your look,
-##             Open world, Settings, Credits, Quit; the sport's row opens its panel (the setup itself:
+##             Settings, Credits, Quit; legacy Open world is absent from the public menu. The sport's row opens its panel (the setup itself:
 ##             tests/ring/test_match_setup.gd); Your look opens the character creator over the menu
 ##   open world  the open world's rows in their own panel. No save: New game first, Load greyed ("no saves yet"),
 ##             Campaigns greyed ("coming"), Co-op open, the Museum and the duel test; a save: Continue first, its line
@@ -47,14 +47,22 @@ func frames(n: int) -> void:
 
 func _run() -> void:
 	check(String(ProjectSettings.get_setting("application/run/main_scene")) == "res://scenes/main_menu.tscn", "the game starts at the menu")
-	check(String(ProjectSettings.get_setting("application/boot_splash/image")) == "res://assets/ui/splash.png"
-			and ResourceLoader.exists("res://assets/ui/splash.png"), "the boot splash is the game's own")
+	check(String(ProjectSettings.get_setting("application/config/name")) == "Tidebreak", "the application is named Tidebreak")
+	check(String(ProjectSettings.get_setting("application/boot_splash/image")) == "res://assets/ui/tidebreak_splash.png"
+			and ResourceLoader.exists("res://assets/ui/tidebreak_splash.png"), "the boot splash is Tidebreak's arena artwork")
+	if OS.get_name() in ["macOS", "Windows", "Linux"]:
+		var suffix := "/godot/app_userdata/Frontier" if OS.get_name() == "Linux" else "/Godot/app_userdata/Frontier"
+		check(OS.get_user_data_dir().replace("\\", "/").ends_with(suffix),
+				"renaming the application preserves the existing saves/settings directory (%s)" % OS.get_user_data_dir())
 	# the game's pictures, and the museum's
 	var all := MenuPaintings.all()
-	check(all.size() == MenuPaintings.PICTURES.size() and all.size() >= 4,
+	check(all.size() == MenuPaintings.PICTURES.size() and all.size() >= 3,
 			"every game picture is there (%d of %d)" % [all.size(), MenuPaintings.PICTURES.size()])
 	check(all.all(func(e: Dictionary) -> bool: return String(e.path).begins_with(MenuPaintings.PICTURES_DIR) and not e.has("by")),
 			"the menu and loading screens show the game's own pictures")
+	check(all.all(func(e: Dictionary) -> bool: return String(e.path).begins_with("res://assets/ui/tidebreak/")),
+			"the public rotation uses arena screenshots only")
+	check(MenuPaintings.legacy().size() == MenuPaintings.LEGACY_PICTURES.size(), "legacy screenshots remain available outside the demo rotation")
 	var mus := MenuPaintings.museum()
 	check(mus.size() == MenuPaintings.LIST.size() and mus.size() >= 5, "every museum painting is there (%d of %d)" % [mus.size(), MenuPaintings.LIST.size()])
 	check(not DirAccess.dir_exists_absolute("res://assets/ui/paintings/portraits") and mus.all(func(e: Dictionary) -> bool: return not e.has("whole")),
@@ -106,13 +114,16 @@ func _run() -> void:
 		_end()
 		return
 	var names := _names(m)
-	check(names == [MatchSetup.sport(), "Quick match", "Practice", "Your look", "Open world", "Settings", "Credits", "Quit"],
-			"the menu: the sport first, Quick match, Practice, Your look, Open world, Settings, Credits, Quit (%s)" % [names])
+	check(names == [MatchSetup.sport(), "Start here", "Quick match", "Practice", "Your look", "Settings", "Credits", "Quit"],
+			"the demo menu keeps the arena entry points and omits the legacy Open world (%s)" % [names])
+	check((m.find_child("GameTitle", true, false) as Label).text == "TIDEBREAK"
+			and (m.find_child("GameSubtitle", true, false) as Label).text == "ELEMENTAL ARENA COMBAT", "the visible title identifies the elemental arena game")
 	check(_sub(m, "Quick match") == MatchSetup.quick_line() and _sub(m, MatchSetup.sport()) != "",
 			"Quick match's line is the last setup against a random opponent (%s)" % _sub(m, "Quick match"))
 	check(_sub(m, "Practice").contains("dummy"), "Practice's line names the dummy (%s)" % _sub(m, "Practice"))
-	# the open world's rows, in its panel
-	(_item(m, "Open world") as Button).pressed.emit()
+	await _small_window(m)
+	# Retained legacy code remains testable directly; it has no entry in the public demo menu.
+	m._open_world()
 	await frames(2)
 	var wn := _panel_names(m)
 	check(m._panel_scroll.visible and _panel_texts(m).has("Open world") and wn.size() > 0 and wn[0] == "New game",
@@ -270,6 +281,53 @@ func _run() -> void:
 	await frames(2)
 	check(not paused and not pm.is_open(), "closed: running")
 	_end()
+
+
+func _small_window(m: MainMenu) -> void:
+	var previous := root.size
+	var old_title := m._cap_title.text
+	var old_caption := m._cap_text.text
+	m.set_process(false)
+	# Longest arena caption is the strongest check against the menu's hit targets.
+	var longest := 0
+	for picture: Dictionary in MenuPaintings.PICTURES:
+		if String(picture.captions[0]).length() > longest:
+			longest = String(picture.captions[0]).length()
+			m._cap_title.text = String(picture.title)
+			m._cap_text.text = String(picture.captions[0])
+	m._close_panel()
+	root.size = Vector2i(1280, 720)
+	await frames(3)
+	var view := Rect2(Vector2.ZERO, Vector2(root.size))
+	var fits := true
+	for b: Control in m._items.get_children():
+		fits = fits and view.encloses(b.get_global_rect())
+	check(fits, "1280x720: every main-menu button fits inside the window")
+	var caption_gap := m._cap_title.get_global_rect().position.y - m._items.get_global_rect().end.y
+	check(caption_gap >= 16.0, "1280x720: the longest arena caption clears menu hit targets by at least 16px (%.1fpx)" % caption_gap)
+	var start := _item(m, "Start here")
+	if start != null:
+		var at := start.get_global_rect().get_center()
+		for down in [true, false]:
+			var click := InputEventMouseButton.new()
+			click.button_index = MOUSE_BUTTON_LEFT
+			click.pressed = down
+			click.position = at
+			root.push_input(click, true)
+			await frames(1)
+	await frames(2)
+	var learn := m._panel.find_child("Basics", true, false) as Button
+	var easy := m._panel.find_child("EasyMatch", true, false) as Button
+	check(m._panel_scroll.visible and learn != null and easy != null,
+			"1280x720: a click at the scaled Start here button opens its choices")
+	check(learn != null and easy != null and view.encloses(learn.get_global_rect()) and view.encloses(easy.get_global_rect()),
+			"1280x720: both beginner launch buttons fit inside the window")
+	m._close_panel()
+	root.size = previous
+	m._cap_title.text = old_title
+	m._cap_text.text = old_caption
+	m.set_process(true)
+	await frames(3)
 
 
 func _names(m: MainMenu) -> Array:

@@ -204,7 +204,7 @@ func _build_ui() -> void:
 		vrow.add_child(b)
 	var light := OptionButton.new()
 	light.add_item("Studio light", 0)
-	light.add_item("Frontier light", 1)
+	light.add_item("Game daylight", 1)
 	light.item_selected.connect(_set_light)
 	vrow.add_child(light)
 	var hint := Label.new()

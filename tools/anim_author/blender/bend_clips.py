@@ -2244,8 +2244,17 @@ HELPLESS_LAG = 2 * math.pi * 3 / 24                            # the head three 
 ## and 60 degrees (still unequal, the left trailing); lying back 34-50 degrees (-42 +/- 8), the cartwheel halved (12) and the
 ## lazy turn wider (30), so at the loop's middle he turns broadside to the foe's camera instead of rolling side-on to it.
 ## The feet's places (the ankles' before the heel lift): the right knee bent about 45 degrees, the left about 60 and trailing.
-HELPLESS_FOOT_R = (-0.15, 0.22, 0.2)
-HELPLESS_FOOT_L = (0.16, 0.2, 0.02)
+## Lane pass 3 (the critic's notes): no chair from the foe's front three quarters: the legs lifted and lengthened so they
+## trail up and out in a jackknife V with the trunk (about 55 degrees at the hip, the knees 20-35, the left lower and more
+## bent), the soles at or over the hips' height in the world; the V banked across the screen (a standing roll of 10-26
+## degrees, the left side up); the left arm trailing out wide only just over the shoulder (the elbow about 20), the right
+## kept overhead, so the arms are an uneven, broken line and never a "hooray"; the body carried by the air: each foot's sway
+## 3-4 frames behind the body's own, the pitch swinging 12 degrees (about a deeper lean, so it never comes nearer upright).
+HELPLESS_FOOT_R = (-0.17, 0.53, 0.53)
+HELPLESS_FOOT_L = (0.2, 0.42, 0.43)
+HELPLESS_FOOT_LAG = 2 * math.pi * 3.5 / 24                     # the feet's sway three and a half frames behind the body's
+## the left arm's reach from its shoulder (the chest's frame): out wide, only just over the shoulder, the elbow about 20
+HELPLESS_REACH_L = (0.44, 0.125, 0.07)
 
 
 def _swing(v, u, w):
@@ -2266,7 +2275,7 @@ def helpless_at(a):
     yaw = 30.0 * _s(a, 0.6)
     side_ph = 0.67                                               # the chest's side bend 6 cos(a - 0.9) as a sine's phase
     return {
-        "flip": -42.0 + 8.0 * _s(a), "cart": 12.0 * _c(a), "yaw": yaw,
+        "flip": -46.0 + 12.0 * _s(a), "cart": 18.0 + 8.0 * _c(a), "yaw": yaw,
         "root": (0.0, 0.03, 0.0),
         "hips": 14.0 + 2.0 * _s(a, -0.5), "chest": -14.0 + 5.0 * _s(a, -1.0), "side": 6.0 * _s(a, side_ph),
         "twist": 8.0 * _s(a, -1.0), "head": -20.0 + 7.0 * _s(a, -1.6), "look": 10.0 * _s(a, -1.4),
@@ -2277,14 +2286,19 @@ def helpless_at(a):
         # bent about 35-50 degrees; the left lower and out wider, on its own beat with a second
         # harmonic, so the V is never level or mirrored)
         "hand_r": _swing((-0.174, 0.377, 0.24), 0.05 * _s(a, 0.41), 0.04 * _c(a, 0.41)),
-        "hand_l": _swing((0.34, 0.24, 0.2), 0.045 * _s(a, 3.55) + 0.02 * _s(2 * a, 1.0), 0.035 * _c(a, 3.55)),
+        "hand_l": _swing(HELPLESS_REACH_L, 0.045 * _s(a, 3.55) + 0.02 * _s(2 * a, 1.0), 0.035 * _c(a, 3.55)),
         "face_r": "limp_up", "face_l": "limp_up",
         "pole_r": (-1.0, -0.4, -0.3), "pole_l": (1.0, -0.4, -0.3),
         "grip_r": 0.05 + 0.08 * _s(a, -2.2), "grip_l": 0.08 + 0.08 * _s(2 * a, 1.0),
         # the legs hang limp, the knees soft (the right a little, the left more), the left foot trailing back; each swings a
         # little after the hips that carry it; the toes dangling, not pointed
-        "foot_r": _yawv(_add(HELPLESS_FOOT_R, (0.02 * _s(a, -0.6), 0.01 * _s(a, -0.6), 0.03 * _c(a, -0.6))), yaw),
-        "foot_l": _yawv(_add(HELPLESS_FOOT_L, (-0.02 * _s(a, 2.2), 0.01 * _s(a, 2.2), 0.03 * _c(a, 2.2))), yaw),
+        # (lane pass 3: each foot's sway lags the body's pitch (flip, a sine) and bank (cart, a cosine) by 3.5 frames, the
+        # left a frame more, so the legs trail the wallow on the air)
+        "foot_r": _yawv(_add(HELPLESS_FOOT_R, (0.03 * _c(a, -HELPLESS_FOOT_LAG), 0.03 * _s(a, -HELPLESS_FOOT_LAG),
+                                              -0.04 * _s(a, -HELPLESS_FOOT_LAG))), yaw),
+        "foot_l": _yawv(_add(HELPLESS_FOOT_L, (0.03 * _c(a, -HELPLESS_FOOT_LAG - 0.26),
+                                              0.03 * _s(a, -HELPLESS_FOOT_LAG - 0.26) + 0.01 * _s(2 * a, 0.5),
+                                              -0.04 * _s(a, -HELPLESS_FOOT_LAG - 0.26))), yaw),
         "heel_r": 34.0 + 6.0 * _s(a, -1.2), "heel_l": 30.0 + 6.0 * _s(a, 1.9),
         "fyaw_r": 14.0 - yaw, "fyaw_l": 18.0 + yaw,
         "knee_r": _yawv((-0.3, 0.0, 1.0), yaw), "knee_l": _yawv((0.35, 0.0, 1.0), yaw),
@@ -2323,8 +2337,29 @@ FACING["swept"] = ((-0.08, -0.75, -0.66), (0.6, 0.53, -0.6))   # swept back from
 ## leading, the head down 22); the arms swept tighter and further back, two tails beside the hips that show past the torso
 ## from the front three quarters; the wind buffets him at two beats a loop: the hands 0.08 m two frames behind the chest,
 ## the clavicles 4 degrees either way in turn, the head shaken 6 degrees, the feet fluttering 0.02 m two frames after the hands.
-FALL_FAST_FOOT = (0.06, 0.2, 0.02)     # the left ankle's place before the heel lift (the right's mirrored): the knees drawn up
-FALL_FAST_HAND = (0.342, 0.936, -0.3)   # the left palm's place (the right's mirrored): beside and behind the hips
+## Lane pass 3 (the critic's notes): a real wedge, a cannonball-arrow with the crown leading: the thighs brought forward and
+## up (about 50 degrees at the hip, the knees about 85-95 and matched, the shins angled back under the seat), the pelvis
+## curled under (hips +10) and the whole figure pitched 28 degrees (the head down 26); the hands swung out more than back, an
+## arrowhead from the front that clears the robe's sleeves; the buffet big enough to read at 15 m: the hands about 0.12 m
+## (across the arm's line, with a share along it so the elbows flex 10-15 degrees), the chest 5 degrees, the trunk's twist 4
+## at two beats, the feet fluttering 0.04 m out of phase (one up as the other goes down), each part a frame or two behind.
+# Integration correction: retain the bank and trunk buffet, with a reachable arm arc,
+# 74-84 degree matched knees and palms at least 0.20 m behind the hips in the engine.
+FALL_FAST_FOOT = (0.06, 0.26, 0.05)    # the left ankle's place before the heel lift (the right's mirrored): the knees drawn up
+FALL_FAST_HAND = (0.34, 1.08, -0.34)   # the left palm's place (the right's mirrored): out beside and behind the hips
+FALL_FAST_SHOULDER = (0.133, 1.28, -0.029)   # the left shoulder at rest (the arm's line the buffet flexes the elbow along)
+
+
+def _fall_fast_flap(b, ph, sx):
+    """A hand's buffet at the shiver's two beats (sx -1 the right, +1 the left): across the arm's line (up and back, then down
+    and forward) and, a quarter beat later, in and out along it (the elbow flexing)."""
+    hx, hy, hz = FALL_FAST_HAND
+    d = (hx - FALL_FAST_SHOULDER[0], hy - FALL_FAST_SHOULDER[1], hz - FALL_FAST_SHOULDER[2])
+    n = math.sqrt(sum(v * v for v in d))
+    d = (sx * d[0] / n, d[1] / n, d[2] / n)
+    across = 0.06 * _s(b, ph)
+    along = 0.025 * _s(b, ph + 1.2)
+    return (sx * 0.015 * _s(b / 2, 1.0 + ph) + d[0] * along, 0.65 * across + d[1] * along, -0.76 * across + d[2] * along)
 
 
 def fall_fast_at(a):
@@ -2333,19 +2368,20 @@ def fall_fast_at(a):
     fx, fy, fz = FALL_FAST_FOOT
     hx, hy, hz = FALL_FAST_HAND
     return {
-        "flip": 20.0, "root": (0.0, 0.03, 0.0),
-        "hips": 2.0, "chest": 2.0 + 3.0 * _s(b), "head": 22.0 + 2.0 * _s(b, -fr), "roll": 0.8 * _s(b, 1.0),
-        "look": 6.0 * _s(3 * a, 0.5), "twist": 1.5 * _s(a, 0.4),
-        "clav_r": (-30.0, 4.0 + 4.0 * _s(b, -fr)), "clav_l": (-30.0, 4.0 - 4.0 * _s(b, -fr)),
-        # (the buffet flaps each hand across the arm's line, up and back then down and forward, so the arm keeps its length)
-        "hand_r": _add((-hx, hy, hz), (0.012 * _s(a, 1.0), 0.05 * _s(b, -2 * fr), -0.062 * _s(b, -2 * fr))),
-        "hand_l": _add((hx, hy, hz), (-0.012 * _s(a, 2.0), 0.05 * _s(b, -2 * fr + 0.6), -0.062 * _s(b, -2 * fr + 0.6))),
+        "flip": 28.0, "root": (0.0, 0.03, 0.0),
+        "hips": 10.0, "chest": 2.0 + 5.0 * _s(b), "head": 26.0 + 2.5 * _s(b, -fr), "roll": 1.2 * _s(b, 1.0),
+        "look": 6.0 * _s(3 * a, 0.5), "twist": 4.0 * _s(b, 0.4 - fr),
+        "clav_r": (-24.0, 8.0 + 4.0 * _s(b, -fr)), "clav_l": (-24.0, 8.0 - 4.0 * _s(b, -fr)),
+        # (the buffet two frames behind the chest, the left a little after the right)
+        "hand_r": _add((-hx, hy, hz), _fall_fast_flap(b, -2 * fr, -1.0)),
+        "hand_l": _add((hx, hy, hz), _fall_fast_flap(b, -2 * fr + 0.6, 1.0)),
         "face_r": "swept", "face_l": "swept",
-        "pole_r": (-0.6, 0.2, -1.0), "pole_l": (0.6, 0.2, -1.0),
+        "pole_r": (-0.7, 0.2, -1.0), "pole_l": (0.7, 0.2, -1.0),
         "grip_r": 0.15, "grip_l": 0.15,
+        # (the feet out of phase, the right up as the left goes down, two frames after the hands)
         "foot_r": _add((-fx, fy, fz), (0.0, 0.02 * _s(b, -4 * fr), 0.012 * _c(b, -4 * fr))),
         "foot_l": _add((fx, fy, fz), (0.0, 0.02 * _s(b, -4 * fr + 1.2), 0.012 * _c(b, -4 * fr + 1.2))),
-        "heel_r": 72.0 + 3.0 * _s(b, -0.8), "heel_l": 72.0 + 3.0 * _s(b, 0.2), "fyaw_r": 0.0, "fyaw_l": 0.0,
+        "heel_r": 72.0 + 3.0 * _s(b, -0.8), "heel_l": 72.0 + 3.0 * _s(b, -0.8 + math.pi), "fyaw_r": 0.0, "fyaw_l": 0.0,
         "knee_r": (0.0, 0.3, 1.0), "knee_l": (0.0, 0.3, 1.0),
     }
 
@@ -2391,8 +2427,20 @@ TUMBLE_DRIFT = 0.03
 TUMBLE_ARMS_IN = 0.45
 TUMBLE_LEGS_IN = 0.7
 ## the hands' places at the arms' most drawn in (the turned figure's frame): out beside the knees, a little apart in height
-TUMBLE_HALF_R = (-0.5, 1.02, 0.16)
-TUMBLE_HALF_L = (0.52, 1.05, 0.1)
+## (lane pass 3: 0.05 m further out and 0.1 m back, so both open hands show outside the ball from the front at f15-f18)
+TUMBLE_HALF_R = (-0.48, 1.02, 0.06)
+TUMBLE_HALF_L = (0.48, 1.05, 0.0)
+## Lane pass 3 (the critic's notes): the upright pass broken out of its symmetry, a launched body, never a squat or a stuck
+## landing: over f18-f23 the right leg is flung out long (the knee about 30 degrees) while the left stays bent about 95 and
+## trails; the arms a frame behind it, the right flung up past the head and the left dropped out and low, so the upright pass
+## shows one diagonal line through the body instead of a level T over two matched knees. The places are the turned figure's.
+TUMBLE_FLING_FOOT_R = (-0.21, 0.32, 0.41)
+TUMBLE_FLING_FOOT_L = (0.16, 0.30, -0.13)
+TUMBLE_FLING_HAND_R = (-0.32, 1.54, -0.1)
+TUMBLE_FLING_HAND_L = (0.53, 0.98, 0.05)
+## the cartwheel's bank (deg): its peaks at f21 (+, the left side up) and f9, so the upright pass tips across the screen
+TUMBLE_BANK = 22.0
+TUMBLE_BANK_PH = 2 * math.pi * (6 - 21) / 24.0
 
 
 def tumble_at(f):
@@ -2410,25 +2458,34 @@ def tumble_at(f):
     total = math.radians(-TUMBLE_RATE * f + flip)
     d = TUMBLE_DRIFT - 2 * TUMBLE_DRIFT * tt
     sa, sl = math.sin(math.pi * ta / TUMBLE_ARMS_IN), math.sin(math.pi * tl / TUMBLE_LEGS_IN)
+    wl = _win(f, 17, 20, 22, 25, n)           # (lane pass 3) the legs' fling: out f17-20, held to f22, back by f1
+    wa = _win(f, 18, 20, 22, 25, n)           # the arms' fling a frame behind the legs
+    open_r = _lerp(_lerp((-0.2, 0.4, 0.24), (-0.27, 0.27, 0.14), o), (-0.13, 0.6, 0.27), tl)
+    open_l = _lerp(_lerp((0.22, 0.31, 0.05), (0.3, 0.25, -0.1), o), (0.14, 0.57, 0.23), tl)
+    hand_r = _add(_lerp(_lerp((-0.6, 1.38, -0.24), (-0.6, 1.32, -0.29), o), TUMBLE_HALF_R, ta / TUMBLE_ARMS_IN),
+                  (0.04 * sa, 0.02 * sa, 0.02 * sa))
+    hand_l = _add(_lerp(_lerp((0.58, 1.34, -0.17), (0.57, 1.3, -0.23), o), TUMBLE_HALF_L, ta / TUMBLE_ARMS_IN),
+                  (0.0, 0.02 * sa, 0.0))
+    # (lane pass 3: the clavicles opened 4 degrees more through the tuck, so the hands clear the ball)
+    clav_r = _add(_lerp(_lerp((-6.0, -22.0), (-8.0, -26.0), o), (10.0, 6.0), ta), (0.0, -4.0 * ta / TUMBLE_ARMS_IN))
+    clav_l = _add(_lerp(_lerp((-4.0, -18.0), (-8.0, -24.0), o), (10.0, 6.0), ta), (0.0, -4.0 * ta / TUMBLE_ARMS_IN))
     return {
-        "flip": flip, "cart": 14.0 * _s(a, 0.8), "twist": 10.0 * _s(a, 1.6),
+        "flip": flip, "cart": TUMBLE_BANK * _s(a, TUMBLE_BANK_PH), "twist": 10.0 * _s(a, 1.6),
         # (the world's up drift carried into the turned body's frame)
         "root": (0.0, d * math.cos(total), -d * math.sin(total)),
         "hips": hips, "chest": chest, "head": _lerp(-18.0 - 3.0 * o, 20.0, th), "side": _lerp(4.0 + 2.0 * o, -3.0, tt),
-        "clav_r": _lerp(_lerp((-6.0, -22.0), (-8.0, -26.0), o), (10.0, 6.0), ta),
-        "clav_l": _lerp(_lerp((-4.0, -18.0), (-8.0, -24.0), o), (10.0, 6.0), ta),
+        # (lane pass 3: the right clavicle lifted under the arm flung up past the head)
+        "clav_r": _lerp(clav_r, (-4.0, -32.0), wa), "clav_l": _lerp(clav_l, (-6.0, -14.0), wa),
         # (each hand on an arc out round the body between the flung pose and the shins, not through the chest)
         # (lane pass 2: drawn in only to TUMBLE_HALF, out beside the knees with the hands open, not onto the shins)
-        "hand_r": _add(_lerp(_lerp((-0.6, 1.38, -0.24), (-0.6, 1.32, -0.29), o), TUMBLE_HALF_R, ta / TUMBLE_ARMS_IN),
-                       (0.04 * sa, 0.02 * sa, 0.02 * sa)),
-        "hand_l": _add(_lerp(_lerp((0.58, 1.34, -0.17), (0.57, 1.3, -0.23), o), TUMBLE_HALF_L, ta / TUMBLE_ARMS_IN),
-                       (0.0, 0.02 * sa, 0.0)),
+        "hand_r": _lerp(hand_r, TUMBLE_FLING_HAND_R, wa), "hand_l": _lerp(hand_l, TUMBLE_FLING_HAND_L, wa),
         "pole_r": _lerp((-0.3, -0.8, -0.6), (-1.0, 0.0, 0.2), ta), "pole_l": _lerp((0.3, -0.8, -0.6), (1.0, 0.0, 0.2), ta),
         # (open hands throughout, the fingers loose: never a grip on the shins)
         "grip_r": _lerp(-0.28 - 0.02 * o, 0.1, ta / TUMBLE_ARMS_IN), "grip_l": _lerp(-0.22 - 0.06 * o, 0.05, ta / TUMBLE_ARMS_IN),
-        "foot_r": _add(_lerp(_lerp((-0.2, 0.4, 0.24), (-0.27, 0.27, 0.14), o), (-0.13, 0.6, 0.27), tl), (0.0, 0.0, 0.05 * sl)),
-        "foot_l": _add(_lerp(_lerp((0.22, 0.31, 0.05), (0.3, 0.25, -0.1), o), (0.14, 0.57, 0.23), tl), (0.0, 0.0, 0.05 * sl)),
-        "heel_r": _lerp(30.0 + 10.0 * o, 32.0, tl), "heel_l": _lerp(34.0 + 10.0 * o, 30.0, tl),
+        # (lane pass 3: the right leg flung out long and the left kept bent and trailing through the upright pass)
+        "foot_r": _lerp(_add(open_r, (0.0, 0.0, 0.05 * sl)), TUMBLE_FLING_FOOT_R, wl),
+        "foot_l": _lerp(_add(open_l, (0.0, 0.0, 0.05 * sl)), TUMBLE_FLING_FOOT_L, wl),
+        "heel_r": _lerp(_lerp(30.0 + 10.0 * o, 32.0, tl), 50.0, wl), "heel_l": _lerp(_lerp(34.0 + 10.0 * o, 30.0, tl), 40.0, wl),
         "fyaw_r": 16.0, "fyaw_l": 20.0,
         "knee_r": (-0.35, 0.3, 1.0), "knee_l": (0.4, 0.3, 1.0),
     }
@@ -2512,17 +2569,22 @@ SET4 = {
         # (the head a frame behind the chest through the push: thrown back at f4, not snapped with it)
         "head": [(0, AIR["head"]), (1, AIR["head"] + 3), (2, AIR["head"] + 6), (3, -11), (4, -14), (5, -7), (6, 1), (7, 6),
                  (9, 8), (10, 7), (12, AIR["head"])],
-        "clav_r": [(0, AIR["clav_r"]), (2, (6, -4)), (3, (-12, 8)), (4, (-12, 7)), (5, (0, -14)), (7, (10, 0)), (9, (10, 0)),
+        # (lane pass 3: an airy corkscrew through the push: the trunk turned +12 at the push and on round to -6 as it tucks,
+        # and bent 6 degrees toward the driving right leg over f3-f4)
+        "twist": [(0, AIR["twist"]), (2, AIR["twist"]), (3, 12), (4, 10), (5, -6), (7, -3), (9, -2), (12, AIR["twist"])],
+        "side": [(0, 0), (2, 0), (3, 6), (4, 6), (6, 1), (8, 0), (12, 0)],
+        "clav_r": [(0, AIR["clav_r"]), (2, (6, -4)), (3, (-14, 10)), (4, (-14, 9)), (5, (0, -14)), (7, (10, 0)), (9, (10, 0)),
                    (12, AIR["clav_r"])],
-        "clav_l": [(0, AIR["clav_l"]), (2, (6, -4)), (3, (-12, 8)), (4, (-12, 7)), (5, (0, -14)), (7, (10, 0)), (9, (10, 0)),
+        "clav_l": [(0, AIR["clav_l"]), (2, (6, -4)), (3, (-10, 2)), (4, (-10, 1)), (5, (0, -14)), (7, (10, 0)), (9, (10, 0)),
                    (12, AIR["clav_l"])],
-        # (the hands: drawn in and down to the chest in the gather, flung wide and high behind the hips for the push and held
-        # there a second frame, out round the side at f5 and on up and in onto the knees: one loop)
-        "hand_r": [(0, AR), (1, (-0.44, 1.17, 0.19)), (2, (-0.25, 1.05, 0.25)), (3, (-0.51, 0.98, -0.355)), (4, (-0.5, 0.99, -0.355)),
-                   (5, (-0.52, 1.15, -0.04)), (6, (-0.34, 1.11, 0.25)), (7, (-0.17, 0.99, 0.36)), (8, (-0.175, 0.985, 0.355)),
+        # (the hands: drawn in and down to the chest in the gather, flung wide behind the hips for the push and held there a
+        # second frame, out round the side at f5 and on up and in onto the knees: one loop. Lane pass 3: the push's arms
+        # unmirrored, the right low and far back, the left higher and wider, a tilted diagonal from behind, never a level T)
+        "hand_r": [(0, AR), (1, (-0.44, 1.17, 0.19)), (2, (-0.25, 1.05, 0.25)), (3, (-0.46, 0.9, -0.4)), (4, (-0.455, 0.91, -0.395)),
+                   (5, (-0.52, 1.12, -0.06)), (6, (-0.34, 1.11, 0.25)), (7, (-0.17, 0.99, 0.36)), (8, (-0.175, 0.985, 0.355)),
                    (9, (-0.19, 0.98, 0.35)), (10, (-0.33, 1.1, 0.27)), (11, (-0.48, 1.22, 0.17)), (12, AR)],
-        "hand_l": [(0, AL), (1, (0.44, 1.18, 0.18)), (2, (0.25, 1.06, 0.24)), (3, (0.515, 0.97, -0.365)), (4, (0.505, 0.975, -0.37)),
-                   (5, (0.52, 1.16, -0.05)), (6, (0.34, 1.12, 0.24)), (7, (0.17, 0.99, 0.35)), (8, (0.175, 0.985, 0.345)),
+        "hand_l": [(0, AL), (1, (0.44, 1.18, 0.18)), (2, (0.25, 1.06, 0.24)), (3, (0.525, 1.103, -0.273)), (4, (0.525, 1.108, -0.279)),
+                   (5, (0.52, 1.18, -0.03)), (6, (0.34, 1.12, 0.24)), (7, (0.17, 0.99, 0.35)), (8, (0.175, 0.985, 0.345)),
                    (9, (0.19, 0.98, 0.34)), (10, (0.34, 1.11, 0.26)), (11, (0.48, 1.23, 0.15)), (12, AL)],
         "face_r": [(0, "balance"), (2, "palm_down"), (3, "swept"), (4, "swept"), (5, "flung_up"), (7, "knee"), (9, "knee"),
                    (12, "balance")],
@@ -2534,15 +2596,16 @@ SET4 = {
                    (7, (1.0, -0.2, 0.2)), (9, (1.0, -0.2, 0.2)), (12, AIR["pole_l"])],
         "grip_r": [(0, AIR["grip_r"]), (2, 0.45), (3, -0.25), (4, -0.25), (5, -0.3), (7, 0.5), (9, 0.5), (12, AIR["grip_r"])],
         "grip_l": [(0, AIR["grip_l"]), (2, 0.45), (3, -0.25), (4, -0.25), (5, -0.3), (7, 0.5), (9, 0.5), (12, AIR["grip_l"])],
-        # (the feet: driven up and forward in the gather, kicked long, back and apart for the push, settled a tenth at f4)
-        "foot_r": [(0, AFR), (1, _add(AFR, (0.0, 0.1, 0.0))), (2, (-0.14, 0.49, 0.16)), (3, (-0.18, 0.09, -0.37)),
-                   (4, (-0.18, 0.1, -0.36)), (5, (-0.13, 0.36, 0.08)), (6, (-0.12, 0.54, 0.05)), (7, (-0.12, 0.62, 0.02)),
+        # (the feet: driven up and forward in the gather, kicked back for the push, settled a tenth at f4. Lane pass 3: the
+        # push offset between the legs, both long enough to show the spring before the left recoils at f5)
+        "foot_r": [(0, AFR), (1, _add(AFR, (0.0, 0.1, 0.0))), (2, (-0.14, 0.49, 0.16)), (3, (-0.146, 0.086, -0.4)),
+                   (4, (-0.147, 0.092, -0.392)), (5, (-0.13, 0.36, 0.08)), (6, (-0.12, 0.54, 0.05)), (7, (-0.12, 0.62, 0.02)),
                    (9, (-0.12, 0.6, 0.03)), (10, (-0.13, 0.5, 0.08)), (11, (-0.14, 0.38, 0.16)), (12, AFR)],
-        "foot_l": [(0, AFL), (1, _add(AFL, (0.0, 0.1, 0.04))), (2, (0.14, 0.53, -0.08)), (3, (0.18, 0.1, -0.39)),
-                   (4, (0.18, 0.11, -0.38)), (5, (0.13, 0.34, 0.04)), (6, (0.13, 0.52, 0.02)), (7, (0.13, 0.6, 0.0)),
+        "foot_l": [(0, AFL), (1, _add(AFL, (0.0, 0.1, 0.04))), (2, (0.14, 0.53, -0.08)), (3, (0.16, 0.12, -0.34)),
+                   (4, (0.16, 0.14, -0.33)), (5, (0.13, 0.4, 0.04)), (6, (0.13, 0.54, 0.02)), (7, (0.13, 0.6, 0.0)),
                    (9, (0.13, 0.58, 0.01)), (11, (0.15, 0.42, -0.1)), (12, AFL)],
-        "heel_r": [(0, AIR["heel_r"]), (2, AIR["heel_r"] + 8), (3, 72), (4, 65), (5, 50), (7, 40), (9, 40), (12, AIR["heel_r"])],
-        "heel_l": [(0, AIR["heel_l"]), (2, AIR["heel_l"] + 8), (3, 72), (4, 65), (5, 50), (7, 40), (9, 40), (12, AIR["heel_l"])],
+        "heel_r": [(0, AIR["heel_r"]), (2, AIR["heel_r"] + 8), (3, 72), (4, 66), (5, 50), (7, 40), (9, 40), (12, AIR["heel_r"])],
+        "heel_l": [(0, AIR["heel_l"]), (2, AIR["heel_l"] + 8), (3, 55), (4, 52), (5, 46), (7, 40), (9, 40), (12, AIR["heel_l"])],
         "knee_r": [(0, AIR["knee_r"]), (2, (-0.1, 0.2, 1.0)), (3, (-0.15, 0.0, 1.0)), (7, (-0.15, 0.15, 1.0)), (9, (-0.15, 0.15, 1.0)),
                    (12, AIR["knee_r"])],
         "knee_l": [(0, AIR["knee_l"]), (2, (0.1, 0.2, 1.0)), (3, (0.15, 0.0, 1.0)), (7, (0.15, 0.15, 1.0)), (9, (0.15, 0.15, 1.0)),

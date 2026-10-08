@@ -174,6 +174,9 @@ func _run() -> void:
 	_expect(ok and RingRules.stock_on(), "the stock ring, its match and its player")
 	if not ok:
 		return _end()
+	if OS.get_cmdline_user_args().has("only=catch"):
+		await _catch_checks()
+		return _end()
 	for v: float in [6.0, 12.0, 18.0]:
 		var hs := RingRules.hitstun_of(v)
 		print("METRIC hold_ms_%d=%.1f (hitstun %.0f ms)" % [int(v), BendImpact.hold_for(v, hs) * 1000.0, hs * 1000.0])
@@ -487,6 +490,7 @@ func _catch_run(feel: bool) -> Array:
 	var caught_i := -1
 	var ret_i := -1
 	var path: Array = []
+	var parts_excluded := false
 	for i in 80:
 		await physics_frame
 		var hs := BendZone.held_stone(player)
@@ -500,6 +504,10 @@ func _catch_run(feel: bool) -> Array:
 		for l in get_nodes_in_group(GustLift.GROUP):
 			if (l as GustLift).phase == GustLift.Phase.FLIGHT:
 				fl = l as GustLift
+		if fl != null and fl.hit.has(f.get_instance_id()):
+			parts_excluded = true
+			for rid: RID in f.ray_exclude():
+				parts_excluded = parts_excluded and fl._ex.has(rid)
 		if fl != null and ret_i < 0:
 			ret_i = i
 		if fl != null and is_instance_valid(fl.stone):
@@ -507,7 +515,7 @@ func _catch_run(feel: bool) -> Array:
 		elif hs != null:
 			path.append(hs.global_position)
 	c.guard_override = false
-	return [caught_i, res.duplicate(), ret_i, path]
+	return [caught_i, res.duplicate(), ret_i, path, parts_excluded]
 
 
 func _catch_checks() -> void:
@@ -516,6 +524,7 @@ func _catch_checks() -> void:
 	var on := await _catch_run(true)
 	var beat := BendImpact.guard_holds - g0
 	var off2 := await _catch_run(false)
+	_expect(bool(off[4]) and bool(on[4]) and bool(off2[4]), "the return strikes its foe and excludes its capsule, torso and head after contact")
 	var noise := 0.0
 	for i in mini((off[3] as Array).size(), (off2[3] as Array).size()):
 		noise = maxf(noise, ((off[3] as Array)[i] as Vector3).distance_to((off2[3] as Array)[i] as Vector3))
@@ -748,7 +757,8 @@ func _end() -> void:
 	RingRules.rule_set_override = ""
 	for k: String in ["stun_end_unchanged_ok", "player_cam_aim_lock_unchanged_ok", "ko_calibration_unchanged_ok",
 			"catch_unchanged_ok", "jolt_basis_unchanged_ok", "timescale_restored_ok", "open_world_unchanged_ok"]:
-		print("METRIC %s=%s" % [k, str(bool(metrics.get(k, false))).to_lower()])
+		if metrics.has(k):
+			print("METRIC %s=%s" % [k, str(bool(metrics[k])).to_lower()])
 	if fails.is_empty() and checks > 0:
 		print("%s PASSED (%d checks)" % [NAME, checks])
 		quit(0)

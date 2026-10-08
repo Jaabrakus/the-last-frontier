@@ -360,12 +360,17 @@ func _fly(dt: float) -> void:
 			return
 		if body:
 			_except(who)                        # (through him or past him: never carrying him on)
+			var first_hit := not hit.has(who.get_instance_id())
 			_strike(col, who, c_at)
+			# A fighter has a capsule, torso and head. Exclude all of them after
+			# contact so its reaction pose cannot slow the same stone again.
+			if who.has_method(&"ray_exclude"):
+				_ex.append_array(who.call(&"ray_exclude"))
 			if info.has("rid"):
 				_ex.append(info.rid)
 			if who is CollisionObject3D:
 				_ex.append((who as CollisionObject3D).get_rid())
-			if not bool(hd.get("pierce", false)):
+			if first_hit and not bool(hd.get("pierce", false)):
 				velocity *= 0.65                    # (a ball knocks a man down and goes on, slowed)
 			_place(to)
 			return

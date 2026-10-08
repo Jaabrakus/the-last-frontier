@@ -423,10 +423,47 @@ func _menu() -> void:
 	m._unhandled_input(esc)
 	await frames(1)
 	check(not m._panel_scroll.visible, "Esc closes the panel")
+	await _beginner_path(m)
 	MainMenu.launch_hook = Callable()
 	MatchSetup.leave()
 	GameSettings.path = GameSettings.PATH
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+
+
+func _beginner_path(m: MainMenu) -> void:
+	MatchSetup.set_controls("full")
+	MatchSetup.set_aim_help("off")
+	MatchSetup.difficulty = "hard"
+	MatchSetup.rules_choice = "classic"
+	MatchSetup.speed = 0.2
+	MatchSetup.throw_me = true
+	var start := m._items.find_child("StartHere", false, false) as Button
+	check(start != null, "Start here remains reachable after the first-launch offer")
+	if start == null:
+		return
+	start.pressed.emit()
+	await frames(2)
+	check(MatchSetup.controls() == "full" and MatchSetup.aim_help() == "off" and MatchSetup.difficulty == "hard",
+			"opening Start here preserves the current settings")
+	var learn := m._panel.find_child("Basics", true, false) as Button
+	var easy := m._panel.find_child("EasyMatch", true, false) as Button
+	check(learn != null and easy != null and m._panel.get_combined_minimum_size().y <= 710.0,
+			"both beginner choices fit on screen")
+	if learn == null or easy == null:
+		return
+	learn.pressed.emit()
+	check(MatchSetup.basic() and MatchSetup.practice() and RingMode.lessons_asked and MatchSetup.rule_set() == "stock"
+			and MatchSetup.aim_help() == "strong" and MatchSetup.difficulty == "easy",
+			"Learn the basics uses Basic, strong aim help and the five-card Lives practice from a saved Full/Zones setup")
+	check(is_equal_approx(MatchSetup.speed, 1.0) and not MatchSetup.throw_me and MatchSetup.dummy == "stand"
+			and RingLessons.lessons_for(MatchSetup.scheme(), MatchSetup.element).size() == 5,
+			"the guided practice clears earlier speed/throw settings and includes recovery")
+	check(launched.back() == MainMenu.RING_SCENE and MatchSetup.element == "fire", "the beginner path keeps the chosen element and launches the ring")
+	easy.pressed.emit()
+	check(not MatchSetup.practice() and not RingMode.lessons_asked and MatchSetup.quick and FirstHints.on()
+			and MatchSetup.basic() and MatchSetup.difficulty == "easy" and MatchSetup.games_n == 1,
+			"Play an easy match launches one easy game with Basic helpers and key hints")
+	check(String(GameSettings.get_value("match", "foe")) == "water", "the easy match keeps the custom opponent choice for later")
 
 
 func _row_text(b: Node) -> String:

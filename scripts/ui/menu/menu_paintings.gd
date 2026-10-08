@@ -1,7 +1,8 @@
 class_name MenuPaintings
 extends RefCounted
 ## The pictures of the main menu, the loading screens and the museum.
-##   all()     pictures of the game itself (user 2026-09-28: "have our game pictures instead of the paintings"; "use this
+##   all()     Tidebreak arena screenshots for the public demo menu and fallback loading screens.
+##   legacy()  retained pictures of the earlier game (user 2026-09-28: "have our game pictures instead of the paintings"; "use this
 ##             video for the stills": stills of the river and its fish, with no player in them), behind the menu and
 ##             on the loading screens (assets/ui/pictures/SOURCE.md); each with a title and captions from the history
 ##             of the place and the time
@@ -10,8 +11,19 @@ extends RefCounted
 ##             each download approved (assets/ui/paintings/world/SOURCE.md), for the menu's Museum
 ## The folklore in the captions keeps to what people of the time believed and wrote.
 
-const PICTURES_DIR := "res://assets/ui/pictures/"
+const PICTURES_DIR := "res://assets/ui/tidebreak/"
 const PICTURES := [
+	{"file": "deck.png", "title": "Four elements. One arena.",
+		"captions": ["Choose Earth, Water, Fire or Air. Build pressure, earn your opening and send your opponent into the water."]},
+	{"file": "behind.png", "title": "Find your rhythm",
+		"captions": ["Tap to attack, move to make space, and watch for an opening. Start here offers an easy match or lessons at your own pace."]},
+	{"file": "sky.png", "title": "Make waves",
+		"captions": ["Jump, dodge and recover above the water. Practice has no countdown, so there is time to find what works for you."]},
+]
+
+## Archived open-world presentation. Kept with its source record; not in the demo rotation.
+const LEGACY_PICTURES_DIR := "res://assets/ui/pictures/"
+const LEGACY_PICTURES := [
 	{"file": "shallows.jpg", "title": "The shallows",
 		"captions": ["The rivers were full of fish. The Six Nations took them with weirs, nets and spears at the places and seasons they had always known, and the settlers learned the same places from them."]},
 	{"file": "deep_water.jpg", "title": "Deep water",
@@ -49,6 +61,10 @@ static var _i := 0
 ## loading screens.
 static func all() -> Array:
 	return _present(PICTURES, PICTURES_DIR)
+
+
+static func legacy() -> Array:
+	return _present(LEGACY_PICTURES, LEGACY_PICTURES_DIR)
 
 
 ## The museum's paintings present, in its order, each {file, title, by, captions, path; `sheet`: a drawing, shown

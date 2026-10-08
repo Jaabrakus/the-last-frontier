@@ -6,7 +6,7 @@
  "note": "Chosen at camp / a chest later; for now data-driven presets. Items name the point they start at; counts are the carried number (in hand + on the body).",
  "presets": {
   "musket_bow": {
-   "name": "Frontier hunter: musket and bow",
+   "name": "Hunter: musket and bow",
    "grade": "C",
    "note": "Keeps today's three weapons (bow, musket, pistol). A gun and a bow together is game licence for a 1750s hunter; rangers did not carry bows. The realistic reference kit is ranger_1758.",
    "gear": [

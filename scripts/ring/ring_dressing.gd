@@ -52,7 +52,8 @@ extends Node3D
 ## the kit (a build without assets/ring_kit) the primitives are drawn as before.
 
 const NAME := "RingDressing"
-const GOLD := Color(1.0, 0.74, 0.32)
+## Restrained brass, slate and clay palette; the element glyphs retain their contrast.
+const GOLD := Color(0.86, 0.72, 0.47)
 const CLOTH_SHADER := "res://shaders/ring/ring_cloth.gdshader"
 const KIT_DIR := "res://assets/ring_kit/"
 const KIT_SHADER := "res://assets/ring_kit/ring_banner.gdshader"
@@ -62,7 +63,7 @@ const KIT_KEYS := {"lacquer": &"paint", "wood": &"paint", "board": &"paint", "pa
 		"paint_teal": &"paint", "gold": &"gold", "tile": &"tile", "stone": &"ring_walk", "lamp_red": &"lamp_red",
 		"iron": &"metal"}
 ## The canopies' glazed tiles, bay by bay.
-const CANOPY_TILES := [Color(0.08, 0.27, 0.29), Color(0.44, 0.11, 0.06)]
+const CANOPY_TILES := [Color(0.3, 0.43, 0.48), Color(0.48, 0.27, 0.21)]
 const FLAME_SHADER := "res://shaders/ring/ring_flame.gdshader"
 const HALO_SHADER := "res://shaders/ring/ring_halo.gdshader"
 const FOAM_SHADER := "res://shaders/ring/ring_foam.gdshader"
@@ -75,14 +76,14 @@ const FRONT_Y := 6.6              ## the awnings' front edge
 ## Each element's banner: base cloth, trim, mark, the mark's glyph (ring_cloth.gdshader) and its team colour (the
 ## parapet, the frieze, the fans' clothes).
 const ELEMENTS := {
-	"earth": {"base": Color(0.36, 0.24, 0.1), "trim": Color(1.0, 0.74, 0.32), "mark": Color(0.95, 0.84, 0.58), "glyph": 0,
-			"team": Color(0.6, 0.42, 0.18)},
-	"water": {"base": Color(0.05, 0.2, 0.48), "trim": Color(0.95, 0.78, 0.4), "mark": Color(0.7, 0.9, 1.0), "glyph": 1,
-			"team": Color(0.12, 0.34, 0.72)},
-	"fire": {"base": Color(0.58, 0.07, 0.04), "trim": Color(1.0, 0.72, 0.28), "mark": Color(1.0, 0.82, 0.4), "glyph": 2,
-			"team": Color(0.78, 0.16, 0.06)},
-	"air": {"base": Color(0.9, 0.87, 0.78), "trim": Color(0.95, 0.52, 0.14), "mark": Color(0.22, 0.5, 0.8), "glyph": 3,
-			"team": Color(0.92, 0.9, 0.82)},
+	"earth": {"base": Color(0.37, 0.33, 0.22), "trim": GOLD, "mark": Color(0.91, 0.84, 0.63), "glyph": 0,
+			"team": Color(0.56, 0.49, 0.3)},
+	"water": {"base": Color(0.15, 0.27, 0.42), "trim": GOLD, "mark": Color(0.74, 0.85, 0.9), "glyph": 1,
+			"team": Color(0.25, 0.43, 0.6)},
+	"fire": {"base": Color(0.6, 0.26, 0.17), "trim": GOLD, "mark": Color(0.96, 0.87, 0.66), "glyph": 2,
+			"team": Color(0.74, 0.32, 0.2)},
+	"air": {"base": Color(0.89, 0.86, 0.77), "trim": Color(0.73, 0.44, 0.28), "mark": Color(0.27, 0.44, 0.6), "glyph": 3,
+			"team": Color(0.9, 0.87, 0.8)},
 }
 ## The moods (RingLook's presets): lit lamps, the glow of lamps / letters / coals, the flames, the halos, the water's
 ## light on the stone, the deck lamps.
@@ -371,10 +372,10 @@ func _build() -> void:
 func _materials() -> void:
 	for k: StringName in ring.mats:
 		mats[k] = ring.mats[k]
-	mats[&"paint"] = _std(Color.WHITE, 0.7)
-	mats[&"tile"] = _std(Color.WHITE, 0.55)
-	var gold := _std(Color.WHITE, 0.3)
-	gold.metallic = 0.85
+	mats[&"paint"] = _std(Color.WHITE, 0.8)
+	mats[&"tile"] = _std(Color.WHITE, 0.75)
+	var gold := _std(Color.WHITE, 0.48)
+	gold.metallic = 0.65
 	mats[&"gold"] = gold
 	var metal := _std(Color.WHITE, 0.45)
 	metal.metallic = 0.7
@@ -405,19 +406,19 @@ func _materials() -> void:
 	_cloth_group("awning_b", 1, 0.05, 1.0)
 	_cloth_group("flag_x", 0, 0.18, 3.2)
 	var aa := _group("awning_a").mat as ShaderMaterial
-	aa.set_shader_parameter(&"base", Color(0.66, 0.1, 0.07))
+	aa.set_shader_parameter(&"base", Color(0.6, 0.26, 0.18))
 	aa.set_shader_parameter(&"trim", Color(0.93, 0.88, 0.76))
 	aa.set_shader_parameter(&"mark", GOLD)
 	aa.set_shader_parameter(&"stripes", 9.0)
 	aa.set_shader_parameter(&"wave_k", 2.0)
 	var ab := _group("awning_b").mat as ShaderMaterial
-	ab.set_shader_parameter(&"base", Color(0.07, 0.36, 0.4))
+	ab.set_shader_parameter(&"base", Color(0.25, 0.4, 0.45))
 	ab.set_shader_parameter(&"trim", Color(0.93, 0.88, 0.76))
 	ab.set_shader_parameter(&"mark", GOLD)
 	ab.set_shader_parameter(&"stripes", 9.0)
 	ab.set_shader_parameter(&"wave_k", 2.0)
 	var fx := _group("flag_x").mat as ShaderMaterial
-	fx.set_shader_parameter(&"base", Color(0.62, 0.08, 0.06))
+	fx.set_shader_parameter(&"base", Color(0.6, 0.26, 0.18))
 	fx.set_shader_parameter(&"trim", GOLD)
 	fx.set_shader_parameter(&"mark", Color(0.72, 0.92, 1.0))
 	fx.set_shader_parameter(&"glyph", 1)
@@ -708,8 +709,8 @@ func _string(kit: StructureMeshKit, a: Vector3, b: Vector3, sag: float, step := 
 				Vector2.ZERO, col, StructureMeshKit.KIND_TEX, 0.0, PackedColorArray(), side)
 	if not flags:
 		return
-	var palette := [Color(0.78, 0.1, 0.07), Color(0.98, 0.74, 0.22), Color(0.07, 0.42, 0.46), Color(0.94, 0.9, 0.8),
-			Color(0.14, 0.3, 0.66), Color(0.9, 0.42, 0.1)]
+	var palette := [Color(0.72, 0.38, 0.26), Color(0.84, 0.72, 0.46), Color(0.3, 0.44, 0.49), Color(0.9, 0.88, 0.81),
+			Color(0.34, 0.46, 0.6), Color(0.74, 0.49, 0.3)]
 	var count := floori(l / step)
 	for k in range(1, count):
 		var f := float(k) / float(count)
@@ -1137,8 +1138,8 @@ func _water(t: Vector2) -> void:
 	if w == null:
 		return
 	if w.material != null:
-		w.material.set_shader_parameter(&"deep_color", Color(0.0, 0.05, 0.1))
-		w.material.set_shader_parameter(&"shallow_tint", Color(0.42, 0.8, 0.86))
+		w.material.set_shader_parameter(&"deep_color", Color(0.035, 0.07, 0.1))
+		w.material.set_shader_parameter(&"shallow_tint", Color(0.55, 0.67, 0.74))
 		w.material.set_shader_parameter(&"absorb", 0.95)
 		w.material.set_shader_parameter(&"ripple_strength", 0.42)
 	var wy := RingArena.num("water_y", -1.4)

@@ -75,7 +75,7 @@
       "column": {"role": "control", "range_m": [3.0, 20.0], "cool_s": 5.0}
     },
     "earth_skate": {
-      "burrow": {"way": "side", "answers": ["fire", "water", "ice", "air", "under"], "min_knock": 6.0, "cool_s": 4.0}
+      "burrow": {"way": "side", "answers": ["stone", "fire", "water", "ice", "air", "under"], "min_knock": 6.0, "cool_s": 4.0}
     },
     "water_whip": {"whip": {"range_m": [3.0, 16.0]}},
     "water_jet": {"splash": {"range_m": [0.0, 10.0], "cool_s": 1.5}},
@@ -192,8 +192,8 @@
     "recover_dt": 0.0333,
     "recover_horizon_s": 2.5,
     "_ko": "the KO read (RingPredict through the rules' own launch): a killing option x ko_bonus; normal needs ko_margin_m more (the foe read that much further in), hard the foe's best steering (di_deg each way); x far_finisher_mult when cast from past far_finisher_m (it walks in to finish); below build_pct x build_mult on the options with the best % per lock second (the top build_top of them); hard keeps a finisher fresh (x fresh_mult on a KO move staled fresh_stale_n or more times while the foe is under fresh_below_pct); the up-launchers (uplaunch) never get the KO bonus",
-    "_keep_m": "round 4: the range band each element keeps in NEUTRAL in the % ring (NpcRingMind.keep_band), over round 2's elements.keep_m (the duel and the open world keep theirs): nearer, so strings come true and the air play reaches",
-    "keep_m": {"earth": [4.0, 10.0], "water": [3.0, 8.0], "fire": [3.0, 8.0], "air": [2.0, 7.0]},
+    "_keep_m": "round 4: the range band each element keeps in NEUTRAL in the % ring (NpcRingMind.keep_band), over round 2's elements.keep_m (the duel and the open world keep theirs): nearer, so strings come true and the air play reaches; October 2026 verification: Fire keeps 2-6 m for its close-range Ember volley and kit, with player damage and spread unchanged",
+    "keep_m": {"earth": [4.0, 10.0], "water": [3.0, 8.0], "fire": [2.0, 6.0], "air": [2.0, 7.0]},
     "far_finisher_m": 15.0,
     "far_finisher_mult": 0.6,
     "_ko_fresh_k": "round 4: a killing option x 1 / (1 + ko_fresh_k x its stale count): the finishers spread (the soak's top finisher <= 0.5)",
@@ -206,6 +206,10 @@
     "fresh_mult": 0.5,
     "di_deg": 15.0,
     "uplaunch": ["earth_shove/column", "wave/spout", "fire_kick/high_kick"],
+    "_guard_kinds": "round 5 (R5-BALANCE): in the % ring every guard stops every attack (spec v2 §2.5: perfect nothing, late half as a slide; its own kinds still sent back as round 2's), so the bot's guard on E answers each of these threat kinds, not only its element's zones.*.answers ('under': a Column or a Geyser being cast at it, met on the beat as the player meets it with E). Lightning stays fire's (only a Parry on the beat sends it back); 'held' and 'vortex' keep round 2's answers. Round 4's soak: a guard of its own kinds only left earth open to every fire, water and air shot, fire to every Lash, Wave and Geyser, and water's Turn alone met fire's shots: water won 0.83 of its games, fire 0.29.",
+    "guard_kinds": ["stone", "water", "ice", "fire", "air", "under"],
+    "_held_shove": "round 5: a stone its Catch holds is thrown back with E (the return: x1.2, faster each rally) or, at this chance, with Shove (key 2: 'Shove throws the stone you hold'), as a player mixes them; the catch itself and the return are untouched. Round 4's earth mirror was 0.34 of each side's casts on E (each catch and each return a cast of it).",
+    "held_shove": 0.25,
     "_strings": "true strings (spec §6.6, §6.9; lead_combos.out v2): after `lead` lands, `next` begins only while RingRules.hitstun_left(foe) >= its lock + its flight - 1/60 (hitstun_left counts the 0.6 s escape). lead 'jab' is the element's jab; 'pop' the jab string's third hit (the Pop); next 'guard' is E (earth: the Pop's stone, or a caught stone, thrown). holding: only with a stone in hand. read: a read, not a string (it ends one at read_end's chance). Never the same move twice in a row, jabs aside (the step and the Pop are the jab string). Round 4: lead 'air_hit' the air close hit, 'slam' the Slam; lead '*' any lead but the jab; next 'air_hit' a jump at him then the air close hit (only from pct.air.air_follow_m, weighted by the preset's air_follow); of the true follow-ups one by its weight w (1 by default; a stone in hand first). jab_step_s mirrors AIR's jab step (spec §6.4: the next jab ready that long after the last left the hand once it hit); AIR's moves.json jab_step_s rules when present.",
     "jab_step_s": 0.15,
     "strings": {
@@ -257,7 +261,6 @@
         {"lead": "pop", "next": "air_hit", "pct": [0, 999]},
         {"lead": "slam", "next": "jab", "pct": [0, 999]},
         {"lead": "slam", "next": "air_hit", "pct": [0, 999]},
-        {"lead": "*", "next": "jab", "pct": [0, 999]},
         {"lead": "*", "next": "air_hit", "pct": [0, 999]}
       ]
     },

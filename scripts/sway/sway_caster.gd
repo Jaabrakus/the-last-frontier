@@ -154,7 +154,8 @@ extends Node
 ##              air hit (air_hit; landing turns it back into the jab, the time kept); the jab with the Pop armed "pop" (its
 ##              rising hand). LMB and 1 otherwise the same move along the 3D aim
 ##   the air    locks fill at moving_mult by the horizontal speed as on the deck (Footwork full); nothing grows in the air;
-##              keys 4 and 5 wait for the ground (the fill paused, the release kept); a pose's root ignored airborne;
+##              terrain spells wait for the ground (the fill paused, the release kept); aimed attacks including Breath
+##              fill and release airborne regardless of their key; a pose's root ignored airborne;
 ##              air_cast(move, mode) at a release in the air
 ##   the lag    a cast is out from its release to its strike + out_after_s (the Slam's slam_out_after_s; key 1's at least
 ##              strike_out_min_s): landing while out, RingMoves.land_lag(land_lag[class]), halved after a hit (note_hit)
@@ -297,6 +298,10 @@ var full_t := 0.0
 var hold_t := 0.0
 ## This lock's time (s): the move's, stretched by the range, times the tier's and lock_mult.
 var lock_s := 0.0
+## Earned charge beyond a temporarily shorter airborne lock, retained for landing or a mode switch.
+var _air_charge_extra := 0.0
+## Landing may make a completed short air lock incomplete; completing it again must not restart its release window.
+var _air_keep_full_timer := false
 ## The casting arm of the first lock (SwayArm): "r", "l", "" (no hand free now).
 var side := ""
 ## Why the last lock ended without a cast: "off", "let go", "far", "gone", "hit", "sprint", "climbing", "weapon", "strain", ...
@@ -879,9 +884,20 @@ func frozen() -> bool:
 	return r3() and hitstun_left() > 0.0
 
 
-## Round 3: a release must wait now (it is kept, and goes on the first frame it may): hitstun, RingMoves.can_cast() false
-## (landing lag, a dodge, the edge, helpless), or key 4 or 5's move in the air (no walls over the water, no healing while
-## falling).
+## Terrain and restorative moves need the caster grounded. A hotbar key is not a terrain rule: Fire Breath shares the
+## wall key but is an aimed attack. Keep the Form wall/Lift/mend and explicit ground effects grounded, while projectiles,
+## cones, held attacks, guards and the Slam retain their existing airborne behavior. The caller gates this to round 3.
+static func needs_ground(m: String, mode: String) -> bool:
+	if m in ["earth_wall", "pillar", "mend", "patch", "fire_wall"]:
+		return true
+	var modes: Dictionary = SwayMoves.move(m).get("bend", {})
+	var spec: Dictionary = modes.get(mode, {})
+	return bool(spec.get("wall_key", false)) or String(spec.get("do", "")) in [
+			"ice_wall", "wind_wall", "column", "ramp", "shell", "spout", "draw", "freeze_water", "heal"]
+
+
+## Round 3: a release must wait now (kept until the first allowed frame): hitstun, RingMoves.can_cast() false
+## (landing lag, a dodge, the edge, helpless), or a ground-dependent move while airborne.
 func _cast_wait() -> bool:
 	if not r3():
 		return false
@@ -890,7 +906,7 @@ func _cast_wait() -> bool:
 	var rm := RingMoves.of(player)
 	if rm != null and not rm.can_cast():
 		return true
-	return move != "" and _key_index(move) >= 3 and airborne()
+	return move != "" and needs_ground(move, mode_of(move)) and airborne()
 
 
 ## The key (0-based) holding move `m` for the player's element (-1 none).
@@ -957,6 +973,8 @@ func _r3_tick() -> void:
 	var air := airborne()
 	if _was_air and not air:
 		_landed()
+	if _was_air != air:
+		_refresh_air_lock()
 	_was_air = air
 	if _gzone != null:
 		if not is_instance_valid(_gzone) or _gzone.is_queued_for_deletion():
@@ -971,6 +989,30 @@ func _r3_tick() -> void:
 		if rm == null or not rm.in_landing_lag():
 			_buf3 = false
 			key3_press()
+
+
+## Only modes with explicit airborne timing are rebased at takeoff/landing. Preserve earned seconds, including any
+## excess above the shorter lock, rather than multiplying its filled percentage by the longer ground/Boulder lock.
+## No new lock, resource, stone, queued release, or release-window timer is created by an air edge.
+func _refresh_air_lock() -> void:
+	if not state in [State.LOCKING, State.FULL] or not _alive(target):
+		return
+	var times: Dictionary = SwayMoves.move(move).get("mode_air_lock_s", {})
+	if not times.has(mode_of(move)):
+		return
+	var want := _lock_time(move, target, reach_to(locked_point(), move), range_of(move, target))
+	if is_equal_approx(want, lock_s):
+		return
+	var earned := fill * lock_s + _air_charge_extra
+	lock_s = want
+	fill = clampf(earned / maxf(lock_s, MIN_LOCK_S), 0.0, 1.0)
+	_air_charge_extra = maxf(earned - lock_s, 0.0)
+	if state == State.FULL and fill < 1.0:
+		state = State.LOCKING
+		_air_keep_full_timer = true
+	elif state == State.LOCKING and fill >= 1.0 and not frozen():
+		_raise_at_fill()
+		_full()
 
 
 ## He landed (the gate on): see _r3_tick.
@@ -1547,7 +1589,7 @@ func _physics_process(dt: float) -> void:
 				if elem() and BendStatus.now() < _switch_hold_until:
 					_queued = true                # (a switch's new pose shows its hold first: it goes then)
 				elif _cast_wait():
-					_queued = true                # (round 3: hitstun, landing lag, 4 and 5 in the air: kept, it goes when it may)
+					_queued = true                # (round 3: hitstun, landing lag, ground spell in the air: kept until allowed)
 				else:
 					_cast()
 			State.LOCKING:
@@ -2312,6 +2354,8 @@ func _r3_form(m: String) -> void:
 ## hands.
 func _began() -> void:
 	_queued = false
+	_air_charge_extra = 0.0
+	_air_keep_full_timer = false
 	grown = false
 	_sputtered = false
 	_switch_hold_until = -INF
@@ -2336,6 +2380,9 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 	var mlk: Dictionary = d.get("mode_lock_s", {})
 	if mlk.has(mode_of(m)) and not holds_stone(m, t):
 		base = float(mlk[mode_of(m)])              # (a variation's own lock: the fireball's, lightning's)
+	if r3() and airborne():
+		var air_times: Dictionary = d.get("mode_air_lock_s", {})
+		base = float(air_times.get(mode_of(m), base))
 	if elem() and lock_src == SRC_GUARD:
 		# (the guard's own: the throw back of a stone held, or a whiffed guard's slower one: BendZone.guard_lock_s)
 		return maxf(BendZone.guard_lock_s(player, base * lock_mult * tier_mult(m)), 0.05)
@@ -2502,7 +2549,7 @@ func _hotbar_turn(k: int, id: String) -> void:
 ## (back to LOCKING when the new move wants longer, FULL at once when it is past it), the circle and pose begun again.
 func _switch_lock(id: String, mode: String) -> bool:
 	var keep := [_sch_id, _sch_mode]
-	var spent := fill * lock_s
+	var spent := fill * lock_s + _air_charge_extra
 	_sch_id = id
 	_sch_mode = mode
 	var pk := _lock_target(id, _q)
@@ -2524,6 +2571,8 @@ func _switch_lock(id: String, mode: String) -> bool:
 	lock_s = _lock_time(id, t, dist, r)
 	off_t = 0.0
 	fill = clampf(spent / lock_s, 0.0, 1.0)
+	_air_charge_extra = 0.0
+	_air_keep_full_timer = false
 	full_t = 0.0
 	grown = false
 	_sputtered = false
@@ -2597,6 +2646,10 @@ func _moving_mult(m: String) -> float:
 	var d := SwayMoves.move(m)
 	if r3() and m == "patch":
 		return float(d.get("ring_moving_mult", 0.0))     # (round 3: Patch fills only standing still; Footwork never)
+	if r3() and airborne():
+		var air_mults: Dictionary = d.get("mode_air_moving_mult", {})
+		if air_mults.has(mode_of(m)):
+			return float(air_mults[mode_of(m)])
 	var mm: Dictionary = d.get("mode_moving_mult", {})
 	var k := float(mm.get(mode_of(m), d.get("moving_mult", 0.6)))
 	if elem() and quick_element() == "fire":
@@ -2629,8 +2682,8 @@ func _hold(dt: float, q: Dictionary) -> void:
 	if state == State.LOCKING:
 		if not on:
 			return                            # (the grace: the ring flickers and waits)
-		if r3() and _key_index(move) >= 3 and airborne():
-			return                                # (round 3: keys 4 and 5 wait for the ground, the fill kept)
+		if r3() and needs_ground(move, mode_of(move)) and airborne():
+			return                                # (terrain spells wait for the ground, the fill kept)
 		var rate := 1.0 / lock_s
 		var hs := _hspeed()
 		if hs > moving_mps:
@@ -2660,7 +2713,7 @@ func _hold(dt: float, q: Dictionary) -> void:
 		if elem() and grows(move):
 			if not grown and full_t >= Bending.rule("grow_after_s", 0.45) and not (r3() and airborne()):
 				_grow()                       # (round 3: nothing grows in the air; grown before takeoff it stays)
-			if rw > 0.0 and full_t >= rw:
+			if rw > 0.0 and full_t >= rw and not _cast_wait():
 				_cast()                       # (a grown move goes by itself: it never fizzles)
 				_wait_release = true          # (the button still held: let go before the next lock)
 				_wait_src = lock_src
@@ -2806,7 +2859,9 @@ static func holds_stone(m: String, t: Node) -> bool:
 func _full() -> void:
 	state = State.FULL
 	fill = 1.0
-	full_t = 0.0
+	if not _air_keep_full_timer:
+		full_t = 0.0
+	_air_keep_full_timer = false
 	if ring:
 		ring.click()
 	_sfx("click", -4.0)
@@ -2954,6 +3009,9 @@ func _strain_tremble(dt: float) -> void:
 
 
 func _cast() -> void:
+	if _cast_wait():
+		_queued = true                            # (every release path shares the stun/movement/ground gate)
+		return
 	var m := move
 	var t := target
 	var at := locked_point()
@@ -3111,6 +3169,8 @@ func _end_lock() -> void:
 	fill = 0.0
 	off_t = 0.0
 	full_t = 0.0
+	_air_charge_extra = 0.0
+	_air_keep_full_timer = false
 	hold_t = 0.0
 	_queued = false
 	_sputtered = false

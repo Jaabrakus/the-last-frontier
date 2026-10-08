@@ -277,6 +277,8 @@
       "label": "Stone Form",
       "art": "form",
       "lock_s": 1.1,
+      "mode_air_lock_s": {"spike": 0.6},
+      "mode_air_moving_mult": {"spike": 1.0},
       "motes": 2,
       "range_m": 11.0,
       "targets": ["ground"],
@@ -615,7 +617,7 @@
       },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30],
-      "mode_lock_s": {"column": 1.6, "slam": 0.35},
+      "mode_lock_s": {"column": 1.6, "slam": 0.25},
       "mode_range_m": {"column": 20.0}
     },
     "stone_catch": {
@@ -1518,7 +1520,7 @@
         },
         "slam": {"do": "slam", "kind": "air", "label": "Down Gust", "width_m": 2.5, "depth_m": 4.0, "lean_m": 1.5, "active_s": 0.12, "damage": 12.0, "knock_mps": 7.0, "angle_deg": -70.0, "set_stun": 0.3, "bounce_k": 0.45, "bounce_add": 2.0, "self_lift_mps": 2.5}
       },
-      "mode_lock_s": {"slam": 0.35},
+      "mode_lock_s": {"gust": 0.45, "slam": 0.35},
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
@@ -1539,6 +1541,7 @@
       "self_lock": true,
       "modes": ["slice", "ball"],
       "mode_labels": {"slice": "Slice", "ball": "Wind Ball"},
+      "mode_lock_s": {"ball": 0.75},
       "bend": {
         "slice": {
           "do": "bolt",

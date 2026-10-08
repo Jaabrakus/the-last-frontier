@@ -14,7 +14,9 @@ extends SceneTree
 ##   the Slam  its tag, set 0.30 s and -70 deg knock; bounce_once (earth 0.55) on a grounded body; the same space at pitch
 ##             +30 and -60; Downpour's puddle (a Geyser source); the Axe Kick's wave; Down Gust's lift once an airtime; the
 ##             Hammer with a held stone throws it
-##   4 and 5   the fill pauses in the air and goes on from the same fill on landing
+##   air attacks  key-1 attacks and Fire Breath fill/release in the air; a held ground lock keeps its progress on takeoff
+##   ground moves  walls and healing keep their ground requirement, regardless of their key
+##   release gates  grown auto-release waits for can_cast; a queued airborne release spends once after hitstun
 ##   land lag  a Punch landing within 0.35 s of its release plants 0.20 (0.10 after a hit); after it, or still locking, none;
 ##             during it a lock fills, key 3 and E wait
 ##   air fill  a water Lash at 4.5 m/s of drift fills at moving_mult; fire's Punch at full
@@ -34,7 +36,7 @@ extends SceneTree
 ##   the gate  with the fakes gone (the classic ring) key 3 readies as round 2 did and nothing of the above runs
 ## METRIC lines (key3_keeps_ready_ok, key2_form_at_start_ok, walls_off_lip_ok, lock_frozen_in_hitstun_ok, air_release_share).
 ## Last line "R3 AIR PASSED" or "R3 AIR FAILED"; exit 0 only on a pass; a watchdog quits with 2.
-##   Godot --headless --fixed-fps 60 --path . -s tests/bending/test_r3_air.gd
+##   Godot --headless --fixed-fps 60 --path . -s tests/bending/test_r3_air.gd [-- only=air_attacks,release_gates,...]
 
 const NAME := "R3 AIR"
 const WATCHDOG_S := 600.0
@@ -124,6 +126,7 @@ var _foe_at := Vector3.INF
 var _hold_y := -INF
 var _hold_v := Vector3.INF
 var _foe_y := -INF
+var only := ""
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -135,6 +138,9 @@ func _expect(ok: bool, what: String) -> void:
 
 func _initialize() -> void:
 	MatchSetup._aim_help = "strong"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("only="):
+			only = arg.get_slice("=", 1)
 	seed(1750)
 	create_timer(WATCHDOG_S, true, false, true).timeout.connect(func() -> void:
 		print("%s FAILED (watchdog)" % NAME)
@@ -212,27 +218,12 @@ func _run() -> void:
 	physics_frame.connect(_hold)
 	await _secs(0.4)
 	_fakes(true)
-	await _forms()
-	await _key3()
-	await _slam()
-	await _slam_touches()
-	await _paused_45()
-	await _land_lag()
-	await _air_fill()
-	await _hit_info()
-	await _air_guard()
-	await _walls()
-	await _deck_only()
-	await _frozen()
-	await _tumble_e()
-	await _macos()
-	await _patch()
-	await _fall()
-	await _spout()
-	await _kick_jumps()
-	await _kick_lip()
-	await _breath()
-	await _gate_off()
+	for part in ["forms", "key3", "slam", "slam_touches", "paused_45", "ground_spells", "air_attacks", "spike_follow", "air_timing", "air_hud", "release_gates", "land_lag",
+			"air_fill", "hit_info", "air_guard", "walls", "deck_only", "frozen", "tumble_e", "macos", "patch", "fall",
+			"spout", "kick_jumps", "kick_lip", "breath", "gate_off"]:
+		if only != "" and not part in only.split(","):
+			continue
+		await call("_" + part)
 	_end()
 
 
@@ -670,6 +661,265 @@ func _paused_45() -> void:
 	_expect(f0 > 0.1 and absf(f2 - f1) < 0.02 and f3 > f2 + 0.05, "key 4's lock waits in the air and goes on from the same fill on landing (%.2f, %.2f..%.2f, %.2f)" % [f0, f1, f2, f3])
 	c.held_override = false
 	await _ticks(3)
+
+
+# ---------------------------------------------------------------- airborne attack releases (the owner's jump-casting request)
+func _ground_spells() -> void:
+	for el: String in ["earth", "water", "fire", "air"]:
+		await _near_foe(el)
+		await _tap(3)
+		var wanted := c.readied_spell
+		var full := await _rmb_full(3.5)
+		await _lift(1.5)
+		c.held_override = false
+		await _secs(0.3)
+		var waiting := released.is_empty() and c.state == SwayCaster.State.FULL and c.fill == 1.0
+		await _land()
+		await _secs(0.2)
+		_expect(full and waiting and released.size() == 1 and _last_rel()[0] == wanted and air_casts.is_empty(),
+				"%s wall keeps a full airborne release queued until landing (%s, %s)" % [el, waiting, released])
+	await _near_foe("earth")
+	await _tap(4)
+	await _lift(1.5)
+	var patched_before := fr.patched
+	c.held_override = true
+	await _secs(0.4)
+	_expect(c.state == SwayCaster.State.IDLE and fr.patched == patched_before and released.is_empty(),
+			"Patch cannot start or heal in the air")
+	c.held_override = false
+	await _land()
+
+
+func _air_attacks() -> void:
+	for el: String in ["earth", "water", "fire", "air"]:
+		await _near_foe(el, 5.0)
+		await _tap(0)
+		var wanted := c.readied_spell
+		await _lift(1.5)
+		await _aim_foe()
+		var full := await _rmb_full(2.5)
+		c.held_override = false
+		await _secs(0.15)
+		_expect(full and released.size() == 1 and _last_rel()[0] == wanted and air_casts.size() == 1,
+				"%s key-1 attack fills and releases once airborne (%s)" % [el, released])
+	# Breath shares key 4 with a wall, but is an aimed attack; its key must not require the floor.
+	await _near_foe("fire", 3.0)
+	await _tap(3)
+	await _tap(3)
+	var selected := c.readied_spell == "fire_breath"
+	c.held_override = true
+	await _secs(0.15)
+	var before := c.fill
+	await _lift(1.2)
+	var after := c.fill
+	var full := await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 1.0) < INF
+	c.held_override = false
+	await _secs(0.15)
+	_expect(selected and before > 0.0 and after >= before and full and released.size() == 1
+			and _last_rel()[0] == "fire_breath" and air_casts.size() == 1,
+			"Fire Breath keeps its charge through takeoff and releases airborne (%.2f -> %.2f; %s)" % [before, after, released])
+	await _secs(0.35)
+	var rec := BendEffects.last_of(BendCaster.of(p))
+	_expect(String(rec.get("do", "")) == "cone" and String(rec.get("move", "")) == "fire_breath",
+			"airborne Breath reaches the attack effect (%s)" % [rec.get("move", "-")])
+	c.held_override = true
+	full = await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 1.0) < INF
+	c.held_override = false
+	await _secs(0.15)
+	_expect(full and released.size() == 2 and air_casts.size() == 2,
+			"a fresh Fire Breath lock also starts and releases entirely in the air (%s)" % [released])
+	await _land()
+
+
+func _spike_follow() -> void:
+	for start_in_air: bool in [false, true]:
+		await _near_foe("earth", 6.0)
+		p.global_rotation.y += PI * 0.5
+		p.pitch = 0.3
+		await _tap(0)
+		if start_in_air:
+			await _lift(1.5)
+		var full := await _rmb_full(2.0)
+		var th := FormEffects.raised_of(p)
+		if not start_in_air:
+			await _lift(1.5)
+		await _secs(0.1)
+		var held_y := th.stone.global_position.y - p.global_position.y if is_instance_valid(th) and is_instance_valid(th.stone) else -INF
+		_expect(full and absf(held_y - 1.3) < 0.15,
+				"Spike raised %s follows the airborne caster's hands (stone %.3f m above feet)" % ["in air" if start_in_air else "before takeoff", held_y])
+		c.held_override = false
+		var launched := await _until(func() -> bool: return is_instance_valid(th) and th.is_thrown, 0.6) < INF
+		var launch_at := th.stone.global_position if launched and is_instance_valid(th.stone) else Vector3.INF
+		var in_flight := launched and is_instance_valid(th.lift) and th.lift.phase == GustLift.Phase.FLIGHT
+		var direction := th.lift.velocity.normalized() if in_flight else Vector3.ZERO
+		var aim := (th.target - launch_at).normalized() if launched else Vector3.ZERO
+		await _secs(0.1)
+		var traveled := launch_at.distance_to(th.stone.global_position) if launched and is_instance_valid(th) and is_instance_valid(th.stone) else 0.0
+		_expect(in_flight and launch_at.y > rm.ring.deck_y() + 2.5 and direction.dot(aim) > 0.995 and traveled > 2.0,
+				"Spike %s actually launches above deck toward its crosshair and travels (height %.3f, alignment %.4f, travel %.2f m)"
+				% ["started in air" if start_in_air else "charged before jump", launch_at.y - rm.ring.deck_y(), direction.dot(aim), traveled])
+		await _land()
+
+
+func _air_timing() -> void:
+	# Natural jump timing is checked separately with real inputs; here drift and charge accounting are isolated.
+	await _near_foe("earth")
+	await _tap(0)
+	await _lift(1.5)
+	c.speed_override = 4.5
+	var started := BendStatus.now()
+	var full := await _rmb_full(1.0)
+	var elapsed := BendStatus.now() - started
+	_expect(full and elapsed >= 0.5 and elapsed <= 0.68 and is_equal_approx(c.lock_s, 0.6),
+			"moving airborne Spike completes in a usable jump window (%.3f s, lock %.3f)" % [elapsed, c.lock_s])
+	# A completed short lock that lands owes the remaining ground time, but keeps its already elapsed release window.
+	await _secs(0.2)
+	c.stun_override = 1.0
+	var timer := c.full_t
+	var raised_before := c.raised
+	var began := c.lock_began_at
+	var source := c.lock_src
+	var uses_before := c.uses_of("stone_form")
+	c._queued = true
+	fm.air = false
+	c._r3_tick()
+	_expect(c.state == SwayCaster.State.LOCKING and is_equal_approx(c.lock_s, 1.1)
+			and is_equal_approx(c.fill * c.lock_s + c._air_charge_extra, 0.6) and is_equal_approx(c.full_t, timer)
+			and c.raised == raised_before and c.lock_began_at == began and c.lock_src == source and c._queued
+			and c.uses_of("stone_form") == uses_before,
+			"landing keeps .60 earned seconds, pending release, stone, source and release-window timer without a free cast")
+	var switched := c.step_other()
+	_expect(switched and c.mode_of("stone_form") == "cannonball" and is_equal_approx(c.lock_s, 1.1)
+			and is_equal_approx(c.fill * c.lock_s, 0.6),
+			"landing then switching to Boulder cannot turn .60s of Spike charge into 1.10s")
+	c.speed_override = null
+	c.stun_override = null
+	c.drop_all()
+	c.held_override = false
+	await _land()
+	# If landing makes a full air lock incomplete, reaching full again must not grant a new release window.
+	await _near_foe("earth")
+	await _tap(0)
+	await _lift(1.5)
+	full = await _rmb_full(1.0)
+	await _secs(0.2)
+	timer = c.full_t
+	fm.air = false
+	c._r3_tick()
+	var refilled := await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 1.0) < INF
+	_expect(full and refilled and c.full_t >= timer and c.full_t <= timer + 0.03,
+			"refilling after landing retains the elapsed release window (%.3f -> %.3f s)" % [timer, c.full_t])
+	c.drop_all()
+	c.held_override = false
+	await _land()
+	# A full ground charge is retained through repeated jumps; the shorter air lock must not discard its extra credit.
+	await _near_foe("earth")
+	await _tap(0)
+	full = await _rmb_full(2.0)
+	await _secs(0.2)
+	timer = c.full_t
+	c.stun_override = 1.0
+	var same := full
+	for i in 3:
+		fm.air = true
+		c._r3_tick()
+		same = same and is_equal_approx(c.fill * c.lock_s + c._air_charge_extra, 1.1) and is_equal_approx(c.full_t, timer)
+		fm.air = false
+		c._r3_tick()
+		same = same and c.state == SwayCaster.State.FULL and is_equal_approx(c.fill * c.lock_s, 1.1) and is_equal_approx(c.full_t, timer)
+	_expect(same and released.is_empty(), "repeated takeoff/landing neither creates nor loses a full ground charge or resets its timer")
+	c.stun_override = null
+	c.drop_all()
+	c.held_override = false
+	# Boulder retains its moving penalty and lock in the air.
+	await _near_foe("earth")
+	await _tap(0)
+	await _tap(0)
+	await _lift(1.5)
+	c.speed_override = 4.5
+	c.held_override = true
+	await _secs(0.3)
+	_expect(c.mode_of("stone_form") == "cannonball" and is_equal_approx(c.lock_s, 1.1)
+			and c.fill < 0.2 and is_equal_approx(c._moving_mult("stone_form"), 0.5),
+			"Boulder keeps its original 1.10s lock and moving penalty in air (fill %.3f)" % c.fill)
+	c.speed_override = null
+	c.held_override = false
+	c.drop_all()
+	await _land()
+
+
+func _air_hud() -> void:
+	await _near_foe("fire")
+	var strip := p.hud.bend_strip
+	strip.air_override = true
+	await _tap(3)
+	strip.refresh()
+	var wall := strip.column(3)
+	_expect(wall.id == "fire_wall" and bool(wall.grey) and wall.sub == "lands" and not bool(wall.readied),
+			"airborne HUD defers the actual Fire Wall")
+	await _tap(3)
+	strip.refresh()
+	var breath := strip.column(3)
+	var heal := strip.column(4)
+	_expect(breath.id == "fire_breath" and not bool(breath.grey) and breath.sub != "lands" and bool(breath.readied),
+			"airborne HUD keeps selected Breath usable and highlighted")
+	_expect(bool(heal.grey) and heal.sub == "lands", "airborne HUD still defers healing")
+	var instructions := " ".join(KitWords.rule_lines())
+	_expect(instructions.contains("Attack while jumping") and instructions.contains("Walls and healing need ground"),
+			"active kit help explains air attacks and the ground requirement")
+	strip.air_override = null
+	strip.refresh()
+
+
+func _release_gates() -> void:
+	# A held grow move's automatic release must use the same movement gate as a manual release.
+	await _near_foe("fire")
+	await _tap(0)
+	var full := await _rmb_full(2.0)
+	fm.cast_ok = false
+	await _secs(1.5)
+	var waiting := released.is_empty() and c.state == SwayCaster.State.FULL
+	fm.cast_ok = true
+	await _secs(0.15)
+	var once := released.size() == 1
+	await _secs(0.25)
+	_expect(full and waiting and once and released.size() == 1,
+			"grown automatic release waits for can_cast, then goes once without starting a free second lock (%s, %s)" % [waiting, released])
+	# A release in hitstun remains queued and costs exactly one cast, even after taking off.
+	await _near_foe("fire", 3.0)
+	await _tap(3)
+	await _tap(3)
+	SwayCaster.free_override = false
+	# The shipped ring attacks cost zero. Give this fixture one mote to verify the shared paid-cast path too.
+	var breath_data := SwayMoves.move("fire_breath")
+	var saved_cost: Variant = breath_data.get("motes", 0)
+	breath_data["motes"] = 1
+	var had_grant := c.granted.has("fire_breath")
+	c.grant("fire_breath", false)
+	c.set_uses("fire_breath", 100)
+	c.set_motes(c.belt_max)
+	var cost := SwayCaster.cost_of("fire_breath")
+	var motes_before := c.motes
+	var uses_before := c.uses_of("fire_breath")
+	full = await _rmb_full(2.0)
+	await _lift(1.2)
+	c.stun_override = 0.5
+	c.held_override = false
+	await _secs(0.25)
+	var untouched := released.is_empty() and c.motes == motes_before and c.uses_of("fire_breath") == uses_before
+	c.stun_override = 0.0
+	await _secs(0.15)
+	var paid_once := c.motes == motes_before - cost and c.uses_of("fire_breath") == uses_before + 1
+	await _secs(0.25)
+	_expect(full and cost > 0 and untouched and paid_once and released.size() == 1 and air_casts.size() == 1,
+			"airborne Breath waits through stun and spends/counts exactly once afterward (cost %d, unchanged %s, paid once %s, %s)"
+			% [cost, untouched, paid_once, released])
+	SwayCaster.free_override = true
+	breath_data["motes"] = saved_cost
+	if not had_grant:
+		c.granted.erase("fire_breath")
+	c.stun_override = null
+	await _land()
 
 
 # ---------------------------------------------------------------- landing lag (spec §6.3)

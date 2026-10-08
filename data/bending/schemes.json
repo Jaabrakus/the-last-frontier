@@ -45,16 +45,24 @@
     "labels": {"basic": "Basic", "full": "Full"},
     "row": "Controls:  %s",
     "lines": {
-      "basic": "seven keys; thrown off, hold Space and you come back; the edge climbs for you",
+      "basic": "fewer moves to learn; hold Space for help getting back; climb the edge automatically",
       "full": "every key and move: dodges, rolls, the edge's choices, and other ways to pick moves"
     },
     "changed": "Controls: %s",
     "offer": {
-      "_doc": "The game's first launch offers the Basics once (the main menu: RingAssist.offer_basics).",
-      "title": "New here?",
-      "line": "Five short cards, each done by doing it: walk up and click, ready and cast, guard, push it off, get back.",
+      "_doc": "The first-launch offer and the main menu's permanent Start here row. Both launch buttons use Basic controls, easy difficulty, strong aim help and the Lives rules; opening this panel changes nothing.",
+      "title": "Start here",
+      "line": "Push your opponent into the water. Learn one move at a time, with no timer or score in practice.",
+      "first_keys": [
+        "Move: [move_forward] [move_left] [move_back] [move_right]  ·  Aim: move the mouse",
+        "Up close: [fire] to jab  ·  Hold [bend_guard] to guard",
+        "Thrown off? Hold [jump] for help getting back"
+      ],
       "go": "Learn the basics",
-      "go_line": "a practice against a dummy, about five minutes",
+      "go_line": "five short lessons; take as long as you like",
+      "easy": "Play an easy match",
+      "easy_line": "one game against an easy opponent, with key hints",
+      "help": "Both options use Basic controls and strong aim help. Esc pauses the game. You can change these in Controls and Aim help from the pause menu.",
       "later": "Not now"
     }
   },

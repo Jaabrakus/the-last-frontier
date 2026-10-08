@@ -114,7 +114,7 @@ func splash(at: Vector3, speed := 5.0) -> void:
 # ---------------------------------------------------------------- round 4: the KO splash
 ## A fall into the water at `at` (world; its x, z on the water) at `speed` m/s, `k` its size (2: a game's last fall). See the
 ## header. The point is kept inside the tank (a body out past the curtain splashes just inside it).
-func ko_splash(at: Vector3, speed := 10.0, k := 1.0) -> void:
+func ko_splash(at: Vector3, speed := 10.0, k := 1.0, warming := false) -> void:
 	var d := BendImpact.block("ko_splash")
 	var l := to_local(at)
 	l.x = clampf(l.x, -tank_half.x + 0.8, tank_half.x - 0.8)
@@ -125,10 +125,11 @@ func ko_splash(at: Vector3, speed := 10.0, k := 1.0) -> void:
 	var sp := BendImpact.pair("ko_splash", "speed_mps", Vector2(6.0, 20.0))
 	var f := clampf((speed - sp.x) / maxf(sp.y - sp.x, 0.01), 0.0, 1.0)
 	var col_h := lerpf(cm.x, cm.y, f) * k
-	ko_splashes += 1
-	last_ko = {"at": p, "speed": speed, "k": k, "column_m": col_h}
-	BendSounds.play(&"ringout_splash", p, float(d.get("sound_db", 3.0)))
-	BendSounds.play(&"knock_thud", p, float(d.get("low_db", 0.0)), float(d.get("low_pitch", 0.6)))
+	if not warming:
+		ko_splashes += 1
+		last_ko = {"at": p, "speed": speed, "k": k, "column_m": col_h}
+		BendSounds.play(&"ringout_splash", p, float(d.get("sound_db", 3.0)))
+		BendSounds.play(&"knock_thud", p, float(d.get("low_db", 0.0)), float(d.get("low_pitch", 0.6)))
 	if not visuals or DisplayServer.get_name() == "headless" or not is_inside_tree():
 		return
 	var pool := ToonFxPool.of(get_tree().current_scene if get_tree().current_scene != null else self)

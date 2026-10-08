@@ -34,11 +34,22 @@ extends SceneTree
 ## and restart_ms (each restart); a limit of 0 only reports. load_ms guards what the stepped build reached (its longest frame
 ## the player's own build: ~0.55-0.6 s windowed with the shader cache warm, ~3 s on a first launch); the round's aim of
 ## ~250 ms (LOAD_AIM_MS) is printed against it, not asserted, until FrontierPlayer._ready is built in steps too.
+## falls=1 (improvement round 5, PERF: "stall pairs of ~1.2-3.9 s during a fight and at a restart, music on"): the games are
+## decided by real falls instead (a 3-life game: the side WINNERS says loses is launched off the deck by the other, the
+## playcheck's way, fall_wait_s of live fight before each launch, the bot fighting meanwhile), with the Splash Cam's replay of
+## every fall (RingReplay.force on, as a player's game has it: Every fall), so the KO splash, the slow beat, the stingers,
+## the crowd's ripple and the replay's ghosts are all met; the stretches fall<n> (the 3.5 s after a fall, its replay
+## excepted) and replay<n> (a replay playing) are measured beside fight<n> and restart<n>, and fight_ms (default 100; 0 only
+## reports) limits the longest frame of every fight, fall, replay and restart.
+## Each hitch line also says where the rest went (late: after the scripts' process to the draw: tweens, timers, deferred
+## calls, deletions; post: after the draw to the next frame's physics: the audio server's update, the window's events) and
+## what changed in it (static memory MB, objects, resources and nodes made), and with diag=1 what happened in the frames
+## before it (music cues and stingers started, phases, falls, replays; meshes added). frames_csv gets every frame's split.
 ## In-test watchdog LIMIT_S. Last line "RING HITCHES PASSED" or
 ## "... FAILED"; exit 0 only on a pass.
 
 const NAME := "RING HITCHES"
-const LIMIT_S := 300.0
+const LIMIT_S := 400.0
 const OWN_CFG := "user://ring_hitches_test.cfg"
 ## s of fight before the test ends a round, and of the round's pause before it skips on.
 const FIGHT_S := 1.5
@@ -79,6 +90,20 @@ var _shots := 0
 ## Pipelines compiled over the run: canvas, mesh, surface, draw, specialization.
 var compiled := [0, 0, 0, 0, 0]
 var _clock: Clock
+## falls=1: the games decided by real falls (see the header); fall_wait_s of live fight before each launch.
+var falls_mode := false
+var fall_wait_s := 1.2
+var fight_ms := 100.0
+var _launching := false
+var _ko_usec := -1
+var kos := 0
+var replays := 0
+## What happened, frame by frame (diag): [frame, text].
+var _events: Array = []
+## The monitors last frame: static memory, objects, resources, nodes.
+var _mon := PackedFloat64Array([0, 0, 0, 0])
+var _md_started := 0
+var _md_stings := 0
 
 
 ## Where a frame goes (ms): the last frame's process (process_frame to the last _process) and draw (RenderingServer's pre to
@@ -94,6 +119,11 @@ class Clock extends Node:
 	var _s0 := 0
 	var _scripts := 0
 	var _steps := 0
+	## The first physics step of this frame began (or -1); the last draw ended.
+	var _post0 := 0
+	## The frame's moments in order (diag: a hitch's timeline): [tag, usec]; P a physics step began, p its scripts ended, x the
+	## scripts' process ended, D the draw began, d it ended (RenderingServer's frame_post_draw).
+	var marks: Array = []
 
 	func _ready() -> void:
 		process_priority = 1 << 30
@@ -102,32 +132,103 @@ class Clock extends Node:
 
 	func physics_start() -> void:
 		_s0 = Time.get_ticks_usec()
+		marks.append(["P", _s0])
 		if _f0 < 0:
 			_f0 = _s0
+			_post0 = _s0
 		_steps += 1
 
 	func _physics_process(_dt: float) -> void:
-		_scripts += Time.get_ticks_usec() - _s0
+		var t := Time.get_ticks_usec()
+		_scripts += t - _s0
+		marks.append(["p", t])
+		if fine:
+			# (the rest of the physics frame cut up: q the deferred calls flushed, t the physics timers run, f the deletions
+			# made; from there to the next P the physics server's own step)
+			_q.call_deferred()
+			get_tree().create_timer(0.0, true, true).timeout.connect(func() -> void: marks.append(["t", Time.get_ticks_usec()]))
+			var doomed := Doomed.new()
+			doomed.clock = self
+			add_child(doomed)
+			doomed.queue_free()
+
+	func _q() -> void:
+		marks.append(["q", Time.get_ticks_usec()])
 
 	func _process(_dt: float) -> void:
 		_p1 = Time.get_ticks_usec()
+		marks.append(["x", _p1])
+		if fine:
+			_probe()
+
+	## fine: the worker threads' wait, probed: a tiny high-priority task put on WorkerThreadPool each frame; how long it waited
+	## for a thread (the pool's busy: the physics server's steps, the pipelines' compiles and the threaded loads all queue there).
+	var fine := false
+	var _probe_task := -1
+	var _probe_at := 0
+	var _probe_ran := [0]
+	## The longest wait this frame (usec; a probe still waiting counts what it has waited).
+	var pool_wait := 0
+
+	func _probe() -> void:
+		var now := Time.get_ticks_usec()
+		if _probe_task >= 0:
+			if not WorkerThreadPool.is_task_completed(_probe_task):
+				pool_wait = maxi(pool_wait, now - _probe_at)
+				return
+			WorkerThreadPool.wait_for_task_completion(_probe_task)
+			pool_wait = maxi(pool_wait, int(_probe_ran[0]) - _probe_at)
+		var ran := _probe_ran
+		_probe_at = now
+		_probe_task = WorkerThreadPool.add_task(func() -> void: ran[0] = Time.get_ticks_usec(), true, "hitch probe")
+
+	func _exit_tree() -> void:
+		if _probe_task >= 0:
+			WorkerThreadPool.wait_for_task_completion(_probe_task)
+			_probe_task = -1
 
 	func draw_start() -> void:
 		_d0 = Time.get_ticks_usec()
+		marks.append(["D", _d0])
 
 	func draw_end() -> void:
 		_d1 = Time.get_ticks_usec()
+		marks.append(["d", _d1])
 
-	## [process, draw, physics scripts, physics in all, physics steps]; the process clock started for the frame now beginning.
+	## The marks since the last split as "tag+ms" from `t0` (usec), and cleared.
+	func timeline(t0: int) -> String:
+		var out := PackedStringArray()
+		for m: Array in marks:
+			out.append("%s%.0f" % [m[0], (int(m[1]) - t0) / 1000.0])
+		marks.clear()
+		if fine:
+			out.append("pool_wait %.0f" % (pool_wait / 1000.0))
+			pool_wait = 0
+		return " ".join(out)
+
+	## [process, draw, physics scripts, physics in all, physics steps, late (the scripts' process to the draw: tweens, timers,
+	## deferred calls, deletions, the rendering's sync), post (the draw to this frame's physics or process: the audio server's
+	## update, the window's events)]; the process clock started for the frame now beginning.
 	func split() -> Array:
 		var now := Time.get_ticks_usec()
+		var post_end := _post0 if _f0 >= 0 else now
 		var out := [maxf(_p1 - _p0, 0) / 1000.0, maxf(_d1 - _d0, 0) / 1000.0, _scripts / 1000.0,
-				(now - _f0) / 1000.0 if _f0 >= 0 else 0.0, _steps]
+				(now - _f0) / 1000.0 if _f0 >= 0 else 0.0, _steps,
+				maxf(_d0 - _p1, 0) / 1000.0 if _d0 >= _p1 else 0.0, maxf(post_end - _d1, 0) / 1000.0 if _d1 >= _p1 else 0.0]
 		_p0 = now
 		_f0 = -1
 		_scripts = 0
 		_steps = 0
 		return out
+
+
+## A node made and queue_freed each physics step (Clock.fine): its deletion marks when the delete queue was flushed.
+class Doomed extends Node:
+	var clock: Clock
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_PREDELETE and clock != null and is_instance_valid(clock):
+			clock.marks.append(["f", Time.get_ticks_usec()])
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -160,6 +261,16 @@ func _initialize() -> void:
 				shots_dir = v
 			"diag":
 				diag = v in ["1", "on"]
+			"falls":
+				falls_mode = v in ["1", "on"]
+			"fall_wait_s":
+				if v.is_valid_float():
+					fall_wait_s = float(v)
+			"fight_ms":
+				if v.is_valid_float():
+					fight_ms = float(v)
+	if falls_mode:
+		RingReplay.force = "on"                  # (a player's game: Every fall; a script run plays none unless asked)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	GameSettings.path = OWN_CFG
 	MatchSetup.reload_scheme()
@@ -176,6 +287,7 @@ func _initialize() -> void:
 
 
 func _end() -> void:
+	RingReplay.force = ""
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	GameSettings.path = GameSettings.PATH
 	MatchSetup.reload_scheme()
@@ -200,8 +312,10 @@ func _run() -> void:
 				(nd as Node3D).visibility_changed.connect(func() -> void:
 					if is_instance_valid(nd) and (nd as Node3D).is_visible_in_tree():
 						_added.append([_n, nd])))
+	RenderingServer.viewport_set_measure_render_time(root.get_viewport_rid(), true)
 	_clock = Clock.new()
 	_clock.name = "HitchClock"
+	_clock.fine = diag
 	root.add_child(_clock)
 	physics_frame.connect(_clock.physics_start)
 	RenderingServer.frame_pre_draw.connect(_clock.draw_start)
@@ -214,8 +328,14 @@ func _run() -> void:
 		var now := Time.get_ticks_usec()
 		n += 1
 		_n = n
-		frames.append([stretch, n, (now - last) / 1000.0])
 		var split := _clock.split()
+		var st := _label(now)
+		var mon := _monitors()
+		var dm := PackedFloat64Array([mon[0] - _mon[0], mon[1] - _mon[1], mon[2] - _mon[2], mon[3] - _mon[3]])
+		_mon = mon
+		_note_music(n)
+		frames.append([st, n, (now - last) / 1000.0, split, dm])
+		var tl := _clock.timeline(last)
 		var p2 := _pipelines()
 		var made := PackedInt32Array()
 		for i in p2.size():
@@ -225,14 +345,27 @@ func _run() -> void:
 		if now - last > HITCH_US:
 			# (where it went: the last frame's process and draw, this frame's physics steps (ms; Clock), and the pipelines
 			# compiled meanwhile: canvas, mesh, surface, draw (at draw time: a stall), specialization)
-			print("PERF hitch %s #%d %.1f ms (process %.0f draw %.0f physics %.0f of it scripts %.0f x%d; pipelines %s)" % [
-					stretch, n, (now - last) / 1000.0, split[0], split[1], split[3], split[2], split[4], made])
-			if diag and made[3] > 0:
+			print(("PERF hitch %s #%d %.1f ms (process %.0f draw %.0f physics %.0f of it scripts %.0f x%d late %.0f post %.0f; " +
+					"pipelines %s; mem %+.1f MB objects %+d resources %+d nodes %+d)") % [
+					st, n, (now - last) / 1000.0, split[0], split[1], split[3], split[2], split[4], split[5], split[6], made,
+					dm[0] / 1048576.0, int(dm[1]), int(dm[2]), int(dm[3])])
+			var vp := root.get_viewport_rid()
+			print("PERF   timeline %s x%.0f at %.2f (render cpu %.1f gpu %.1f setup %.1f ms)" % [tl, (now - last) / 1000.0,
+					Time.get_unix_time_from_system(),
+					RenderingServer.viewport_get_measured_render_time_cpu(vp), RenderingServer.viewport_get_measured_render_time_gpu(vp),
+					RenderingServer.get_frame_setup_time_cpu()])
+			if diag:
+				for e: Array in _events:
+					if int(e[0]) >= n - 3:
+						print("PERF   at #%d %s" % [e[0], e[1]])
+				var shown := 0
 				for a: Array in _added:
-					if int(a[0]) >= n - 3 and is_instance_valid(a[1]):
+					if int(a[0]) >= n - 3 and is_instance_valid(a[1]) and shown < 12:
+						shown += 1
 						print("PERF   new #%d %s" % [a[0], _what(a[1] as Node)])
 		if diag:
 			_added = _added.filter(func(a: Array) -> bool: return int(a[0]) >= n - 3)
+			_events = _events.filter(func(a: Array) -> bool: return int(a[0]) >= n - 3)
 		last = now
 		_step(now)
 	_report()
@@ -250,6 +383,18 @@ func _step(now: int) -> void:
 		mode = RingMode.find(self)
 		if mode != null:
 			mode.phase_changed.connect(_on_phase)
+			mode.rules.ko.connect(func(b: Node3D, _by: Node, _p: float, _t: String, left: int) -> void:
+				kos += 1
+				_ko_usec = Time.get_ticks_usec()
+				if mode.foe != null and b == mode.foe:
+					mode.foe.held = false
+				_events.append([_n, "fall of %s (%d left)" % [b.name, left]]))
+			var rp := RingReplay.find(self)
+			if rp != null:
+				rp.started.connect(func(_c: Variant) -> void:
+					replays += 1
+					_events.append([_n, "replay started"]))
+				rp.finished.connect(func(_s: bool) -> void: _events.append([_n, "replay finished"]))
 	if shots_dir != "":
 		_shoot()
 	if t_ring < 0 and mode != null and not LoadingScreen.covering():
@@ -260,6 +405,14 @@ func _step(now: int) -> void:
 		"FIGHT":
 			if t_fight < 0:
 				t_fight = now
+			if falls_mode:
+				if not _launching and mode.phase_t >= fall_wait_s and not paused and not RingMoment.busy():
+					var rp := RingReplay.find(self)
+					var loser := _loser()
+					if (rp == null or (rp.pending() == 0 and not rp.is_playing())) and loser != null \
+							and not mode.rules.is_away(loser) and (_ko_usec < 0 or now - _ko_usec > int(fall_wait_s * 1e6) + 3000000):
+						_launch(loser)
+				return
 			if mode.phase_t >= FIGHT_S and _ended_round < mode.round:
 				_ended_round = mode.round
 				mode._end_round(int(WINNERS[mini(mode.round - 1, WINNERS.size() - 1)]), "territory")
@@ -268,6 +421,82 @@ func _step(now: int) -> void:
 				mode._skip = true
 		"DONE":
 			_done = true
+
+
+## The stretch a frame falls in: a replay playing (replay<n>), the 3.5 s after a fall (fall<n>), else the phase's.
+func _label(now: int) -> String:
+	if mode == null or not is_instance_valid(mode):
+		return stretch
+	if RingReplay.playing_now() != null:
+		return "replay%d" % mode.round
+	if _ko_usec >= 0 and now - _ko_usec < 3500000 and not stretch.begins_with("restart"):
+		return "fall%d" % mode.round
+	return stretch
+
+
+## Static memory (bytes), objects, resources, nodes (Performance's monitors).
+func _monitors() -> PackedFloat64Array:
+	return PackedFloat64Array([Performance.get_monitor(Performance.MEMORY_STATIC), Performance.get_monitor(Performance.OBJECT_COUNT),
+			Performance.get_monitor(Performance.OBJECT_RESOURCE_COUNT), Performance.get_monitor(Performance.OBJECT_NODE_COUNT)])
+
+
+## The music cues and stingers MusicDirector started since last frame, as events (diag).
+func _note_music(n: int) -> void:
+	var md := get_first_node_in_group(MusicDirector.GROUP) as MusicDirector
+	if md == null:
+		return
+	while _md_started < md.started.size():
+		_events.append([n, "music cue %s" % md.started[_md_started]])
+		_md_started += 1
+	while _md_stings < md.ring_stings.size():
+		_events.append([n, "music sting %s" % md.ring_stings[_md_stings]])
+		_md_stings += 1
+
+
+## The side WINNERS says loses this game: its competitor (the foe, or the player).
+func _loser() -> Node3D:
+	var w := int(WINNERS[mini(mode.round - 1, WINNERS.size() - 1)])
+	var b: Node3D = mode.foe if w == 0 else mode.player
+	return b if b != null and is_instance_valid(b) else null
+
+
+## A real launch off the deck (the playcheck's way): `b` stood near its end, the other close behind, then knocked over the lip
+## into the water by him.
+func _launch(b: Node3D) -> void:
+	_launching = true
+	var other: Node3D = mode.player if b == mode.foe else mode.foe
+	var ring := mode.ring as RingArena
+	var foe_was := mode.foe.held if mode.foe != null else false
+	if mode.foe != null:
+		mode.foe.held = true
+	var kn := BendKnock.of(b)
+	kn.reset()
+	if b is CharacterBody3D:
+		(b as CharacterBody3D).velocity = Vector3.ZERO
+	var end := mode.player_end if b == mode.player else 1 - mode.player_end
+	var side := RingArena.side_sign(end) if end in [0, 1] else 1.0
+	b.global_position = ring.to_global(Vector3(side * (ring.half_l() - 2.5), ring.top() + 0.05, 0.0))
+	other.global_position = ring.to_global(Vector3(side * (ring.half_l() - 7.0), ring.top() + 0.05, 1.0))
+	for i in 10:
+		await physics_frame
+	if mode == null or mode.phase != "FIGHT":
+		_launching = false
+		return
+	mode.rules.reset_pct(b, 120.0)
+	var v := ring.global_basis * Vector3(16.0 * side, 7.0, 0.0)
+	mode.rules.launched.emit(b, v, 0.8, other, "stone_form/spike")
+	kn.knock(Vector3.ZERO, other, {"_launch": {"v": v, "hitstun_s": 0.8, "tumble": true}})
+	if mode.foe != null and b != mode.foe:
+		mode.foe.held = foe_was
+	_events.append([_n, "launch of %s" % b.name])
+	# (the flight given its time to end in the water: no other launch meanwhile)
+	var k0 := kos
+	var t0 := Time.get_ticks_msec()
+	while kos == k0 and Time.get_ticks_msec() - t0 < 4000:
+		await process_frame
+	if kos == k0:
+		print("PERF launch of %s did not end in the water (round %d)" % [b.name, mode.round])
+	_launching = false
 
 
 ## A mesh or emitter as diag prints it: its path, class and its first material's shader (or material class).
@@ -316,6 +545,7 @@ func _pipelines() -> PackedInt32Array:
 
 
 func _on_phase(ph: String) -> void:
+	_events.append([_n, "phase %s round %d" % [ph, mode.round]])
 	match ph:
 		"FIGHT":
 			stretch = "fight%d" % mode.round
@@ -355,11 +585,30 @@ func _report() -> void:
 		if restart_ms > 0.0:
 			_expect(rw[2] > 0 and rw[0] <= restart_ms, "round %d's restart's longest frame: %.1f ms (frame #%d; at most %.0f)" % [
 					r, rw[0], rw[1], restart_ms])
+	if falls_mode:
+		print("PERF falls=%d replays=%d" % [kos, replays])
+		_expect(kos >= 6 and replays >= 6, "falls decided the games, each with its replay (%d falls, %d replays)" % [kos, replays])
+	for kind in ["fight", "fall", "replay", "restart"]:
+		var worst := [0.0, -1, ""]
+		var count := 0
+		for f: Array in frames:
+			if String(f[0]).begins_with(kind):
+				count += 1
+				if float(f[2]) > float(worst[0]):
+					worst = [float(f[2]), int(f[1]), String(f[0])]
+		print("PERF %s_longest_ms=%.1f frames=%d (%s #%d)" % [kind, worst[0], count, worst[2], worst[1]])
+		if fight_ms > 0.0 and count > 0 and (falls_mode or kind in ["fight", "restart"]):
+			_expect(float(worst[0]) <= fight_ms, "every %s's longest frame: %.1f ms (%s #%d; at most %.0f)" % [kind, worst[0], worst[2],
+					worst[1], fight_ms])
 	if csv_path != "":
 		var f := FileAccess.open(csv_path, FileAccess.WRITE)
 		if f != null:
+			f.store_line("stretch,frame,ms,process,draw,scripts,physics,steps,late,post,mem_mb,objects,resources,nodes")
 			for fr: Array in frames:
-				f.store_line("%s,%d,%.2f" % [fr[0], fr[1], fr[2]])
+				var sp: Array = fr[3]
+				var d: PackedFloat64Array = fr[4]
+				f.store_line("%s,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%.2f,%.2f,%.2f,%d,%d,%d" % [fr[0], fr[1], fr[2], sp[0], sp[1], sp[2],
+						sp[3], sp[4], sp[5], sp[6], d[0] / 1048576.0, int(d[1]), int(d[2]), int(d[3])])
 	var sorted := frames.duplicate()
 	sorted.sort_custom(func(a: Array, b: Array) -> bool: return float(a[2]) > float(b[2]))
 	for f: Array in sorted.slice(0, 10):

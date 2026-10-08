@@ -811,7 +811,7 @@ class _Voices extends Node:
 			# engine ERROR with its backtrace every step of every let-go voice's fade)
 			var n: Variant = v.get_meta(&"node") if v.has_meta(&"node") else null
 			var own := false
-			if n is Node and is_instance_valid(n):
+			if typeof(n) == TYPE_OBJECT and is_instance_valid(n) and n is Node:
 				v.global_position = _pos(n)
 				own = BendSounds.own_shot(n, vp)
 			v.set_meta(&"own", own)
@@ -839,30 +839,37 @@ class _Voices extends Node:
 				BendSounds.flight("stone", l)
 		for n in get_tree().get_nodes_in_group(NpcBending.FLIGHT_GROUP):
 			var st: Variant = n.get(&"stone")
-			if st is Node3D and is_instance_valid(st) and not _flight_of.has(n.get_instance_id()):
+			if typeof(st) == TYPE_OBJECT and is_instance_valid(st) and st is Node3D and not _flight_of.has(n.get_instance_id()):
 				BendSounds.flight("stone", n)
 
 	## Still in flight: a bolt not spent, a lift still flying, a bot's spike with its stone.
 	func _flying(n: Variant) -> bool:
-		if not (n is Node) or not is_instance_valid(n) or not (n as Node).is_inside_tree() or (n as Node).is_queued_for_deletion():
+		# A projectile may have been freed by match cleanup while its Variant remains in the pool.
+		# Even `is Node` rejects a freed instance: validate the Object before any class check/cast.
+		if typeof(n) != TYPE_OBJECT or not is_instance_valid(n) or not (n is Node):
+			return false
+		if not (n as Node).is_inside_tree() or (n as Node).is_queued_for_deletion():
 			return false
 		if n is BendBolt:
 			return not (n as BendBolt).spent
 		if n is GustLift:
 			var l := n as GustLift
 			return l.phase == GustLift.Phase.FLIGHT and l.stone != null and is_instance_valid(l.stone)
-		var st: Variant = (n as Node).get(&"stone")
-		if st != null:
-			return st is Node3D and is_instance_valid(st)
+		# A freed typed stone can read as null; its owner is no longer a generic live flight.
+		if &"stone" in n:
+			var st: Variant = (n as Node).get(&"stone")
+			return typeof(st) == TYPE_OBJECT and is_instance_valid(st) and st is Node3D
 		return true
 
 	## Where a flight is now: a lift's or a spike's stone, else the node itself.
 	func _pos(n: Variant) -> Vector3:
+		if typeof(n) != TYPE_OBJECT or not is_instance_valid(n) or not (n is Node):
+			return Vector3.ZERO
 		if n is GustLift and (n as GustLift).stone != null and is_instance_valid((n as GustLift).stone):
 			return (n as GustLift).stone.global_position
 		if n is Node and not (n is Node3D):
 			var st: Variant = (n as Node).get(&"stone")
-			if st is Node3D and is_instance_valid(st):
+			if typeof(st) == TYPE_OBJECT and is_instance_valid(st) and st is Node3D:
 				return (st as Node3D).global_position
 		if n is Node3D:
 			return (n as Node3D).global_position

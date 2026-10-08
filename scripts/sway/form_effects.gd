@@ -358,7 +358,7 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 	sfx("rise", foot, -2.0, 0.9)
 	sfx("rumble", foot, -4.0, 1.1)
 	var th := Throw.start(bc, s, td)
-	if th != null and face != Vector3.INF:
+	if th != null and BendR3.on(bc.body) and BendR3.airborne(bc.body):
 		th.follow = true
 	return s
 
@@ -632,8 +632,8 @@ class Throw:
 	## before its first aim (start's `p_fixed`).
 	var fixed := Vector3.INF
 	## Round 3: the hit info its stone carries (BendR3.cur at its start; the cast's, set again at the throw: stone_form,
-	## BendZone.return_stone), handed to its flight (GustLift meta bend_info); and `follow` (raised in the air: from where it
-	## tore loose to before the caster's hands over its rise, and kept there as he moves).
+	## BendZone.return_stone), handed to its flight (GustLift meta bend_info); and `follow` (raised in the air, or taken into
+	## a jump while still held: from its source to the caster's hands over its rise, and kept there as he moves).
 	var info := {}
 	var follow := false
 	var _from := Vector3.INF
@@ -681,6 +681,8 @@ class Throw:
 		var aim := _aim()
 		if aim != Vector3.INF:
 			lift.aim = aim
+		if waiting and not follow and caster != null and caster.valid() and BendR3.on(caster.body) and BendR3.airborne(caster.body):
+			follow = true                          # (a stone raised before takeoff joins the hands; no new stone or charge)
 		if follow and caster != null and caster.valid():
 			_follow()
 		if t >= rise_s and not waiting:

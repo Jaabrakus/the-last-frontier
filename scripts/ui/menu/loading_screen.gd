@@ -86,7 +86,7 @@ func _ready() -> void:
 	_root.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_root)
 	var bg := ColorRect.new()
-	bg.color = Color(0.03, 0.022, 0.014)
+	bg.color = MenuUI.BACKDROP
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(bg)
 	# (the ring has its own: a still of the dressed ring and Tidebreak's captions, not the open world's paintings and lore)

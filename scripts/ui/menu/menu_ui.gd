@@ -4,10 +4,11 @@ extends RefCounted
 ## soft shade, no boxes (user 2026-09-27: "no big cards"), the chosen row marked with a gold rule at its left as in
 ## the Tab screen's pack list.
 
-const INK := Color(0.95, 0.9, 0.78)
-const DIM := Color(0.72, 0.66, 0.56)
-const FAINT := Color(0.55, 0.5, 0.42)
-const GOLD := Color(0.95, 0.77, 0.4)
+const INK := Color("e4e0ce")
+const DIM := Color("bec8ce")
+const FAINT := Color("8e9eac")
+const GOLD := Color("c8b68a")
+const BACKDROP := Color("1c2535")
 const SHADOW := Color(0, 0, 0, 0.6)
 
 
@@ -91,9 +92,9 @@ static func heading(text: String, size := 34) -> VBoxContainer:
 ## A soft shade from the left edge (for the menu over a painting): `a` its darkness, `w` how far it reaches (0..1).
 static func left_shade(a := 0.82) -> TextureRect:
 	var g := Gradient.new()
-	g.set_color(0, Color(0.03, 0.022, 0.014, a))
-	g.set_color(1, Color(0.03, 0.022, 0.014, 0.0))
-	g.add_point(0.55, Color(0.03, 0.022, 0.014, a * 0.7))
+	g.set_color(0, Color(BACKDROP, a))
+	g.set_color(1, Color(BACKDROP, 0.0))
+	g.add_point(0.55, Color(BACKDROP, a * 0.85))
 	var t := GradientTexture2D.new()
 	t.gradient = g
 	t.fill_from = Vector2(0, 0.5)

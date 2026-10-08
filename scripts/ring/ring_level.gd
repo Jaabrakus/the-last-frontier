@@ -380,6 +380,11 @@ func _warm_looks() -> void:
 		var done := [false]
 		var run := func() -> void:
 			await BendLooks.warm_up(cam, func(f: float) -> void: set_meta(&"loading_progress", 0.8 + 0.2 * f))
+			# Draw the large fall effects only behind the loading screen. Direct scene launches
+			# must not cover the live competitors in a warm-up splash.
+			if ring.water != null and LoadingScreen.covering():
+				ring.water.ko_splash(player.global_position, 20.0, 2.0, true)
+				await get_tree().create_timer(3.3).timeout
 			done[0] = true
 		run.call()
 		while not done[0]:

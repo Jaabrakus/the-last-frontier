@@ -757,6 +757,17 @@ func _hints() -> void:
 			"a Quick match: the hints up, %d rows for the keys scheme" % (h.rows.size() if h != null else -1))
 	if h == null:
 		return
+	MatchSetup.set_controls("basic")
+	await _ticks(3)
+	var taught := []
+	for r: Dictionary in h.rows:
+		taught.append_array(r.uses)
+	_expect(h.rows.size() == _hint_rows("basic").size() and not taught.has(&"weapon_4") and not taught.has(&"weapon_5")
+			and taught.has(&"move_forward") and taught.has(&"jump"),
+			"Basic hints teach movement and recovery without locked Wall/Heal keys")
+	MatchSetup.set_controls("full")
+	await _ticks(3)
+	_expect(h.rows.size() == want.size() and h.scheme == "keys", "switching back to Full refreshes hints even with the same keys scheme")
 	var texts := []
 	for r: Dictionary in h.rows:
 		var t := ""

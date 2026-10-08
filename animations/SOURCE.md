@@ -254,6 +254,16 @@ visual references, no animation files imported) is his statement; the rows below
   degrees, a larger buffet) and `own-bend-helpless` (`helpless_at`: the hips bowed forward, the knees bent, lying back
   34-50 degrees, `HELPLESS_FOOT_R/L`). Their lengths and metas (`strike_s`, `hold_s`, `back_s`, `hand`, `mask`, `root`) are
   unchanged; the other clips' tracks are as before.
+  Integration follow-up on 2026-10-07: the saved `tb/ANIM-polish-wip-3` key edits were completed for four clips:
+  `own-bend-tumble`, `own-bend-jump-double`, `own-bend-fall-fast` and `own-bend-helpless`. Direct code observations:
+  `tools/anim_author/blender/bend_clips.py` uses its default input `assets/character/actor_b_body.glb` for the rig;
+  these four motions come from its typed keys and loop functions. The generated JSON was installed with
+  `tools/anim_author/install_bend.gd`, which takes track prefixes from `Frontier_Form.res` and merges the four clips
+  into `animations_extra/Frontier_Bend.res`. Unreachable limb targets were shortened; the fast-fall knees and arm
+  sweep and the double-jump push were corrected against the engine's geometry checks. This describes the observed
+  generation route, not an independent ownership audit of the rig or the other bundled assets. The owner's reported
+  AI/Blender workflow remains the account recorded above. The historical critic notes remain available; passing the
+  technical checks does not assign these four clips a new artistic score.
 - Fifth set (2026-10-06, round 3's first playable: the deck's edge and the ground dodges of the % ring): the same generator
   and the same inputs (the rig's rest pose and keys typed into the table, now its `SET5` and `SET5B` parts; the hang's loop
   written as a typed function of its phase, `hang_at`, sampled at every frame by `_loop`; the three rolls from one typed

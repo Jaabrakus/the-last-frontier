@@ -145,7 +145,7 @@
 			"lock": "Click: it goes when ready. Hold: aim while it fills, let go to cast; let go early to call it off. Hold 2 longer: ▲ it grows.",
 			"guard": "{guard}: on the beat it's yours. Late, half gets through. Earth always catches stone.",
 			"web": "Water douses fire, fire melts ice, air drops stone.",
-			"dodge": "Fire along the floor? Jump. Through the air: dash or guard. Rising under you: step off."
+			"dodge": "Attack while jumping. Walls and healing need ground. Jump over low fire; dash or guard high shots. Step off rising ground."
 		},
 		"passives": {
 			"earth": {"name": "Rooted", "line": "stand still and your locks fill faster, and you are pushed less."},
@@ -166,18 +166,18 @@
 		"other_ways_line": "the keys, as above; press for first moves only, direction or the wheel"
 	},
 	"loading": {
-		"_doc": "The ring's loading screen: its own still of the dressed ring (rendered from the ring by tools/ring/ring_still.gd) and a caption drawn by lot. No word from any show.",
-		"picture": "res://assets/ui/loading/ring_still.jpg",
+		"_doc": "The ring's loading screen: a current arena screenshot (assets/ui/tidebreak/SOURCE.md) and a caption drawn by lot. No word from any show.",
+		"picture": "res://assets/ui/tidebreak/deck.png",
 		"title": "Tidebreak",
 		"captions": [
-			"The deck over the water: three zones a side, and the sea behind each end.",
-			"Knock them back a zone at a time; the last push sends them into the water.",
+			"Build pressure with each hit. Higher pressure makes the next launch stronger.",
+			"A fall into the water costs a life. Jump, dodge and rise to get back onto the deck.",
 			"The crowd fills the stands before the gong.",
 			"Stone, water, fire and wind: one ring, one rule. Stay on the deck."
 		]
 	},
 	"strip_stock": {
-		"_doc": "Your own strip in the % ring (BendStrip, rule set stock; spec v2 §10.4): while you are in the air key 2 shows your Slam's name, key 3 'Dodge', keys 4 and 5 grey with 'lands'; key 3 is never lit as readied (it acts at once); your move names dim a shade at 2, 4 and 6 stale copies (stale_alpha); after a hit on a safe body 'safe' for safe_s on your own strip.",
+		"_doc": "Your own strip in the % ring (BendStrip, rule set stock): while you are in the air key 2 shows your Slam's name, key 3 'Dodge', ground-dependent spells grey with 'lands' using SwayCaster.needs_ground; Fire Breath remains usable on the wall key. Key 3 is never lit as readied (it acts at once); your move names dim a shade at 2, 4 and 6 stale copies (stale_alpha); after a hit on a safe body 'safe' for safe_s on your own strip.",
 		"slam": {"earth": "Hammer", "water": "Downpour", "fire": "Axe Kick", "air": "Down Gust"},
 		"dodge": "Dodge",
 		"lands": "lands",

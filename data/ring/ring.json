@@ -34,14 +34,14 @@
 	"clock_hour": 12.25,
 	"looks": {
 		"_about": "How each part of the deck is laid: kind stone (cut slabs, slab_m square, a little uneven) or boards (planks plank_w wide running along grain x or z, board_m long, joints staggered); tint multiplies the material's own colour; jitter the slab-to-slab or plank-to-plank tint spread.",
-		"neutral": {"kind": "stone", "slab_m": 1.0, "uv_m": 5.0, "tint": [0.92, 0.58, 0.42], "jitter": 0.06},
-		"zone_1": {"kind": "boards", "grain": "z", "plank_w": 0.24, "board_m": 3.5, "tint": [1.0, 0.7, 0.42], "jitter": 0.08},
-		"zone_2": {"kind": "stone", "slab_m": 1.0, "uv_m": 5.0, "tint": [0.5, 0.58, 0.7], "jitter": 0.07},
-		"zone_3": {"kind": "boards", "grain": "x", "plank_w": 0.24, "board_m": 2.5, "tint": [0.27, 0.2, 0.16], "jitter": 0.08},
-		"plinth": {"tint": [0.72, 0.7, 0.66]},
-		"tank": {"tint": [0.5, 0.52, 0.5]},
-		"plaza": {"tint": [0.78, 0.76, 0.72]},
-		"stands": {"tint": [0.86, 0.74, 0.6]},
+		"neutral": {"kind": "stone", "slab_m": 1.0, "uv_m": 5.0, "tint": [0.87, 0.66, 0.53], "jitter": 0.06},
+		"zone_1": {"kind": "boards", "grain": "z", "plank_w": 0.24, "board_m": 3.5, "tint": [0.93, 0.84, 0.65], "jitter": 0.08},
+		"zone_2": {"kind": "stone", "slab_m": 1.0, "uv_m": 5.0, "tint": [0.58, 0.67, 0.75], "jitter": 0.07},
+		"zone_3": {"kind": "boards", "grain": "x", "plank_w": 0.24, "board_m": 2.5, "tint": [0.3, 0.28, 0.25], "jitter": 0.08},
+		"plinth": {"tint": [0.76, 0.74, 0.68]},
+		"tank": {"tint": [0.5, 0.54, 0.59]},
+		"plaza": {"tint": [0.84, 0.82, 0.75]},
+		"stands": {"tint": [0.81, 0.77, 0.67]},
 		"ground": {"tint": [0.34, 0.31, 0.24]}
 	},
 	"sockets": {
@@ -66,7 +66,7 @@
 		"shallow_tint": [0.7, 0.86, 0.88],
 		"absorb": 0.55,
 		"ripple_strength": 0.3,
-		"water_roughness": 0.03,
+		"water_roughness": 0.1,
 		"grid_m": 2.0,
 		"splash_n": 46,
 		"splash_mps": 6.5
@@ -96,13 +96,13 @@
 			"face_depth_m": 3.0,
 			"wall_lip_clear_m": 3.5,
 			"spout_z": [4.0, -4.0, 0.0],
-			"coping": {"w": 0.25, "proud": 0.04, "nose_r": 0.04, "tint": [0.93, 0.9, 0.82]},
+			"coping": {"w": 0.25, "proud": 0.04, "nose_r": 0.04, "tint": [0.89, 0.87, 0.8]},
 			"piers": {"every_m": 4.25, "w": 1.1, "inset_m": 1.2, "tint": [0.66, 0.64, 0.6]},
 			"lanterns": {"post_h": 1.7, "out_m": 0.45, "light": [1.0, 0.7, 0.38], "energy": 1.6, "range_m": 9.0},
 			"curtain": {
 				"flow_mps": 5.5,
-				"tint": [0.62, 0.82, 0.86],
-				"foam": [0.92, 0.97, 1.0],
+				"tint": [0.53, 0.69, 0.77],
+				"foam": [0.9, 0.92, 0.89],
 				"alpha": 0.82,
 				"channel_w": 0.9,
 				"channel_h": 0.5

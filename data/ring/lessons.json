@@ -468,7 +468,7 @@
       "role": "jab",
       "by": {
         "*": {
-          "line": "Walk up to it: [move_forward] [move_left] [move_back] [move_right].  Click [fire]: {jab}",
+          "line": "Move with [move_forward] [move_left] [move_back] [move_right]. Aim with the mouse. Walk close to the dummy and click [fire]: {jab}",
           "do": "jab"
         }
       }
@@ -483,7 +483,7 @@
       "per_element": true,
       "by": {
         "*": {
-          "line": "{press}: {name} is ready.  Right-click: it goes as soon as it can{grow}",
+          "line": "Press {press} to choose {name}. Aim at the dummy, then right-click to cast{grow}",
           "do": "cast"
         }
       }
@@ -499,7 +499,7 @@
       "per_element": true,
       "by": {
         "*": {
-          "line": "It throws {thing} now, slowly.  [bend_guard] just before one hits: {name}.  Hold [bend_guard]: it stays up",
+          "line": "Hold [bend_guard] for {name} to block its slow throw. Press just before it reaches you for a stronger guard",
           "do": "guarded"
         }
       }
@@ -518,7 +518,7 @@
       "place_m": 6.0,
       "by": {
         "*": {
-          "line": "{press}: {name}.  Hold right-click past the second click: it grows.  Push it off the end into the water",
+          "line": "Press {press} to choose {name}. Aim at the dummy, hold right-click to charge, then release to push it into the water",
           "do": "out"
         }
       }
@@ -535,7 +535,7 @@
       "place_below_m": 0.5,
       "by": {
         "*": {
-          "line": "Off the deck?  Hold [jump]: you come back by yourself",
+          "line": "Off the deck? Hold [jump] right away for help getting back. Keep holding until you land",
           "do": "back"
         }
       }
@@ -544,7 +544,7 @@
   "basics_hints": {
     "_doc": "Round 4 SIMPLE: the hint queue's lines under the Basic controls (RingLessons, MatchSetup.basic()), over hint_queue.lines where one is here: the edge climbs by itself, Space held brings you back.",
     "edge": "Fall off and you grab the edge.  It climbs by itself, or press [jump] or any direction",
-    "recover": "Off the deck?  Hold [jump]: you come back by yourself"
+    "recover": "Off the deck? Hold [jump] right away for help getting back"
   },
   "_doc_basics": "Round 4 SIMPLE: the Basics track (track 'basics'), five cards for the Basic controls (MatchSetup.controls() 'basic'), each done by doing it: move and jab, ready and cast (1, right-click), guard a slow throw (do 'guarded': any guard of yours that took one of its throws, on the beat or late), push it off (2 held, the dummy at 110% near an end, do 'out'), get back (you put off an end: hold Space, RingAssist brings you back, do 'back'). Under Basic the run is this track only; under Full every card but these ('schemes': ['basic'] keeps them out until RingLessons reads the track). The first launch of the game offers them once (RingAssist.offer_basics).",
   "hints": {
@@ -552,6 +552,15 @@
     "kicker": "YOUR KEYS",
     "row": "Key hints:  %s",
     "row_line": "your control scheme's keys at the top left until you have used each",
+    "basic": [
+      {"line": "[move_forward] [move_left] [move_back] [move_right]: move · Mouse: aim", "uses": ["move_forward", "move_left", "move_back", "move_right"]},
+      {"line": "Up close: click [fire] to jab", "uses": ["fire"]},
+      {"line": "[weapon_1] strike or [weapon_2] push, then [aim] to cast", "uses": ["aim"]},
+      {"line": "Hold [bend_guard]: guard", "uses": ["bend_guard"]},
+      {"line": "[jump]: jump · Thrown off? Hold [jump] for help", "uses": ["jump"], "rules": ["stock"]},
+      {"line": "[jump]: jump", "uses": ["jump"], "rules": ["classic"]},
+      {"line": "[weapon_3]: dash on the deck", "uses": ["weapon_3"]}
+    ],
     "keys": [
       {
         "line": "Click [fire]: your jab",

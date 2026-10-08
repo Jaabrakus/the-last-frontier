@@ -30,7 +30,7 @@ SLOTS = ["head", "hair", "shirt", "vest", "outer", "legs.lower", "legs.over", "f
          "accessories.arms", "accessories.ears_nose", "accessories.hands"]
 SETS = {"frontier": "Frontiersman / trapper", "militia": "Colonial militia & provincials",
         "woodlands": "Eastern Woodlands (1750s)", "regulars": "British & French regulars", "common": "Common",
-        "hair": "Hair"}
+        "hair": "Hair", "colonial": "Classic clothing"}
 SET_TOOLTIPS = {"woodlands": ("Clothing of the Native nations of the Northeast, such as the Haudenosaunee, Lenape, "
                               "Shawnee and Wabanaki, in the mid-1700s: wool and linen trade cloth, quillwork and "
                               "silverwork.")}

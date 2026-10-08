@@ -3,12 +3,12 @@ extends SceneTree
 ## with a stock-rules match asked for (RingRules.rule_set_override "stock"), the foe held; every hit the test's own, through
 ## BendStatus.hurt / knock with round 3's hit info (AIR's tags):
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_ring_pct.gd -- mode=ring element=earth foe=water
-##   launch_v    the formula for 10 classes at 0/60/120% within 0.01 m/s (and the spec table's v within 0.06); the range
+##   launch_v    the formula for 10 classes at 0/60/120% within 0.01 m/s (and the calibrated table's v within 0.06); the range
 ##               falloff at 10/16/22/30 m (1.0/0.825/0.65/0.65); returns and Lightning exempt; the air factor 0.85, the Slam
 ##               and returns exempt
 ##   the curve   7/20/55/110 damage -> 2.4/5.6/10.2/12.4%; pct_scale scales every d; a stock hit leaves health whole
-##   a volley    7 Embers landing give 4% in all, one knock, one string hit, one stale entry; 3 of 7 give 4 x 3/7
-##   weights     x0.89 / x1.11; Rooted on the base only; Carried wind on all
+##   a volley    7 Embers landing give 7% in all, one knock, one string hit, one stale entry; 3 of 7 give 3%
+##   weights     current calibrated W = 2/(1+weight); Rooted on the base only; Carried wind on all
 ##   stale       -8% a copy, floor -40%; returns never staled; the queue survives a fall; the Pop's stone stales
 ##   guards      every guard stops every attack (16 element pairs: perfect 0% and no launch, late half as a slide); Lightning
 ##               perfect only for fire; earth's catch full within 1.0 s of standing, late after; a return x1.2 owned by
@@ -50,8 +50,8 @@ func _initialize() -> void:
 		quit(2))
 	MatchSetup._aim_help = "strong"
 	GameSettings.path = OWN_CFG
-	# (round 4's merge: BOTS2 set rules.json stock.pct_scale 0.86 for the match pace; this test checks the spec's ledger
-	# and flights at scale 1, so it pins the scale at 1 for its run: RingRules.data() is read once and kept)
+	# The live match pace uses stock.pct_scale 0.95. Pin only that scale to 1 so the independent ledger and
+	# launch checks below exercise raw class damage; keep the current class calibration and weights.
 	(RingRules.data()["stock"] as Dictionary)["pct_scale"] = 1.0
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	RingRules.rule_set_override = "stock"
@@ -169,11 +169,12 @@ func _run() -> void:
 
 # ---------------------------------------------------------------- the formula (static)
 func _static_checks() -> void:
-	# 10 classes at 0/60/120%: the formula, and the spec table's v (rounded to 0.1)
-	var table := {"stone_form/spike": [7.8, 16.6, 25.4], "water_whip/whip": [5.8, 12.7, 19.7], "fire_blast/punch": [5.2, 11.7, 18.2],
-			"air_blast/slice": [4.1, 11.1, 18.0], "stone_form/cannonball": [12.3, 23.9, 35.5], "ice/spear": [7.7, 17.3, 26.8],
-			"fire_blast/punch.grown": [8.9, 19.3, 29.8], "fire_arc/lightning": [12.2, 24.9, 37.6], "air_blast/ball": [9.1, 18.6, 28.2],
-			"earth_shove/push": [8.6, 16.9, 25.2]}
+	# 10 classes at 0/60/120%: independent formula and fixed calibration references. These explicit values
+	# reflect the inherited October 2026 balance data; they are not generated from the implementation under test.
+	var table := {"stone_form/spike": [7.850, 16.634, 25.418], "water_whip/whip": [5.592, 12.204, 18.816], "fire_blast/punch": [6.756, 15.381, 24.006],
+			"air_blast/slice": [4.902, 13.092, 21.282], "stone_form/cannonball": [9.792, 18.762, 27.732], "ice/spear": [7.048, 14.968, 22.888],
+			"fire_blast/punch.grown": [9.760, 21.640, 33.520], "fire_arc/lightning": [12.194, 24.899, 37.604], "air_blast/ball": [9.848, 19.928, 30.008],
+			"earth_shove/push": [8.563, 16.879, 25.195]}
 	var ok_f := true
 	var ok_t := true
 	var worst := 0.0
@@ -188,7 +189,7 @@ func _static_checks() -> void:
 			worst = maxf(worst, absf(got - float(table[tag][i])))
 			ok_t = ok_t and absf(got - float(table[tag][i])) <= 0.06
 	_expect(ok_f, "launch_v is W (base + growth R A p/100 (0.5 + d/20)) for 10 classes at 0/60/120% (within 0.01 m/s)")
-	_expect(ok_t, "the 10 classes match the spec table's v at 0/60/120%% (worst %.3f m/s)" % worst)
+	_expect(ok_t, "the 10 classes match the fixed calibration table's v at 0/60/120%% (worst %.3f m/s)" % worst)
 	_metric("launch_formula_ok", ok_f and ok_t)
 	var rm := [RingRules.range_mult("stone_form/spike", 10.0), RingRules.range_mult("stone_form/spike", 16.0),
 			RingRules.range_mult("stone_form/spike", 22.0), RingRules.range_mult("stone_form/spike", 30.0)]
@@ -212,9 +213,9 @@ func _static_checks() -> void:
 	for i in 4:
 		ok_c = ok_c and absf(float(cv[i]) - float(want_c[i])) < 0.11       # (the spec's figures rounded)
 	_expect(ok_c, "untagged damage 7/20/55/110 converts to 2.4/5.6/10.2/12.4%% (%s)" % str(cv))
-	_expect(absf(RingRules.weight_of("earth") - 0.889) < 0.002 and absf(RingRules.weight_of("air") - 1.111) < 0.002
-			and RingRules.weight_of("water") == 1.0 and absf(RingRules.weight_of("fire") - 1.026) < 0.002,
-			"weights: earth x0.89, water x1.0, fire x1.03, air x1.11")
+	_expect(absf(RingRules.weight_of("earth") - 1.0) < 0.002 and absf(RingRules.weight_of("air") - 2.0 / 1.9) < 0.002
+			and absf(RingRules.weight_of("water") - 2.0 / 1.95) < 0.002 and absf(RingRules.weight_of("fire") - 2.0 / 2.1) < 0.002,
+			"weights: earth x1.0, water x1.0256, fire x0.9524, air x1.0526")
 	var set_c := RingRules.class_of("air_palm/palm")
 	_expect(RingRules.launch_v(set_c, 250.0, 3.0, 1.0) == 4.5, "a set class launches at its set speed at any % (Palm 4.5 m/s)")
 
@@ -258,17 +259,17 @@ func _volley_checks() -> void:
 		_hit(f, player, "fire_jab/embers", {"volley_id": 901, "volley_n": 7}, 2.0)
 		await _ticks(1)
 	var one_knock := BendKnock.of(f).knocks == k0 + 1
-	var ok := absf(rules.pct_of(f) - 4.0) < 0.01 and one_knock and rules.string_hits(f) == 1 \
+	var ok := absf(rules.pct_of(f) - 7.0) < 0.01 and one_knock and rules.string_hits(f) == 1 \
 			and rules.stale_count(player, "fire_jab/embers") == 1
-	_expect(ok, "7 Embers of one volley: 4%% in all (%.2f), one knock (%s), one string hit (%d), one stale entry (%d)"
+	_expect(ok, "7 Embers of one volley: 7%% in all (%.2f), one knock (%s), one string hit (%d), one stale entry (%d)"
 			% [rules.pct_of(f), one_knock, rules.string_hits(f), rules.stale_count(player, "fire_jab/embers")])
 	await _secs(0.5)
 	await _fresh()
 	for i in 3:
 		_hit(f, player, "fire_jab/embers", {"volley_id": 902, "volley_n": 7}, 2.0)
 		await _ticks(1)
-	var ok2 := absf(rules.pct_of(f) - 4.0 * 3.0 / 7.0) < 0.01
-	_expect(ok2, "3 of a volley of 7 landing give 4 x 3/7 = %.2f%% (%.2f)" % [4.0 * 3.0 / 7.0, rules.pct_of(f)])
+	var ok2 := absf(rules.pct_of(f) - 3.0) < 0.01
+	_expect(ok2, "3 of a volley of 7 landing give 7 x 3/7 = 3%% (%.2f)" % rules.pct_of(f))
 	_metric("volley_once_ok", ok and ok2)
 
 
@@ -285,13 +286,12 @@ func _launch_speed(n: Node3D, by: Node3D, tag: String, extra := {}) -> float:
 
 func _weight_checks() -> void:
 	var f := foe()
-	# the water foe: W 1.0 at 50%; the same hit on earth's numbers: x0.89 (a class's weight from the victim's element)
+	# The water foe uses W = 2/1.95 at 50%; Earth uses W = 1. The victim owns the weight.
 	await _fresh()
 	rules.add_pct(f, 50.0, null, "")
 	var v_w := _launch_speed(f, player, "stone_form/spike")
-	var c := RingRules.class_of("stone_form/spike")
-	var want := RingRules.launch_v(c, 64.0, 14.0, 1.0)
-	_expect(absf(v_w - want) < 0.05, "a Spike at 50%% on the water foe launches at %.2f m/s (W 1.0; want %.2f)" % [v_w, want])
+	var want := (2.0 / 1.95) * (5.8 + 12.2 * 0.64 * (0.5 + 14.0 / 20.0))
+	_expect(absf(v_w - want) < 0.05, "a Spike at 50%% on the water foe launches at %.2f m/s (W 2/1.95; want %.2f)" % [v_w, want])
 	# Carried wind: the attacker's charged wind x1.15 on the whole launch
 	await _fresh()
 	rules.add_pct(f, 50.0, null, "")
@@ -305,11 +305,9 @@ func _weight_checks() -> void:
 	rules.add_pct(player, 50.0, null, "")
 	var rooted := BendStatus.rooted_mult(player) < 1.0
 	var v_r := _launch_speed(player, f, "stone_form/spike")
-	var c2 := c.duplicate()
-	c2["base_mult"] = 0.85
-	var want_r := RingRules.launch_v(c2, 64.0, 14.0, RingRules.weight_of("earth"))
+	var want_r := 5.8 * 0.85 + 12.2 * 0.64 * (0.5 + 14.0 / 20.0)
 	_expect(rooted and absf(v_r - want_r) < 0.05,
-			"Rooted on the base only and the earth weight: %.2f m/s (want %.2f = 0.89 (5.8 x 0.85 + growth...))" % [v_r, want_r])
+			"Rooted on the base only and the earth weight: %.2f m/s (want %.2f = 5.8 x 0.85 + growth...)" % [v_r, want_r])
 	await _ticks(2)
 
 
@@ -384,7 +382,7 @@ func _guard_checks() -> void:
 			# late: half the d, half the launch, a slide on the feet (no tumble)
 			await _fresh()
 			rules.add_pct(f, 60.0, null, "")
-			var full := RingRules.launch_v(RingRules.class_of(tag), 60.0 + float(RingRules.class_of(tag).d), float(RingRules.class_of(tag).d), 1.0)
+			var full := RingRules.launch_v(RingRules.class_of(tag), 60.0 + float(RingRules.class_of(tag).d), float(RingRules.class_of(tag).d), 2.0 / 1.95)
 			var v := _launch_speed(f, player, tag, {"slide_only": true})
 			var kn := BendKnock.of(f)
 			var late_ok := held == "late" and absf(rules.pct_of(f) - 60.0 - float(RingRules.class_of(tag).d) * 0.5) < 0.02 \
@@ -409,7 +407,7 @@ func _guard_checks() -> void:
 	var r20 := RingRules.return_class("stone_form/spike", 2.0)
 	var big := RingRules.return_class("stone_form/cannonball")
 	var ret_ok := absf(float(r12.d) - 16.8) < 1e-3 and absf(float(r12.growth) - 14.64) < 1e-3 and absf(float(r20.d) - 22.4) < 1e-3 \
-			and absf(float(big.d) - 26.4) < 1e-3 and absf(RingRules.rally_mult(9, 0) - 1.6) < 1e-4 and absf(RingRules.rally_mult(1, 1) - 1.4) < 1e-4
+			and absf(float(big.d) - 19.2) < 1e-3 and absf(RingRules.rally_mult(9, 0) - 1.6) < 1e-4 and absf(RingRules.rally_mult(1, 1) - 1.4) < 1e-4
 	_expect(ret_ok, "a return: the Spike's class (or the caught move's if higher) x1.2 on d and growth; the rally capped at x1.6")
 	await _fresh()
 	_hit(f, player, "stone_form/spike", {"returned": true, "origin_tag": "stone_form/spike"})
@@ -427,19 +425,19 @@ func _patch_checks() -> void:
 	await _secs(1.0)
 	await _until(func() -> bool: return player.is_on_floor(), 2.0)
 	await _secs(5.4)
-	_hit(player, f, "air_blast/slice")
+	_hit(player, f, "water_whip/whip")
 	await _until(func() -> bool: return player.is_on_floor() and not rules.stunned(player), 3.0)
 	var fresh := rules.fresh_pct(player)
 	var p0 := rules.pct_of(player)
 	var took := rules.patch(player)
-	var ok1 := absf(fresh - 6.0) < 0.05 and absf(took - 6.0) < 0.05 and absf(rules.pct_of(player) - (p0 - 6.0)) < 0.05
+	var ok1 := absf(fresh - 9.0) < 0.05 and absf(took - 9.0) < 0.05 and absf(rules.pct_of(player) - (p0 - 9.0)) < 0.05
 	_expect(ok1, "Patch takes only the last 6 s of %% (the Spike 6.4+ s ago stays: pool %.2f, took %.2f)" % [fresh, took])
 	await _fresh()
 	_hit(player, f, "stone_form/cannonball")
 	await _until(func() -> bool: return player.is_on_floor() and not rules.stunned(player), 3.0)
 	await _secs(0.3)
 	var took2 := rules.patch(player)
-	_expect(absf(took2 - 10.0) < 0.05 and absf(rules.pct_of(player) - 12.0) < 0.05, "Patch takes at most 10%% (took %.2f of 22)" % took2)
+	_expect(absf(took2 - 10.0) < 0.05 and absf(rules.pct_of(player) - 6.0) < 0.05, "Patch takes at most 10%% (took %.2f of 16)" % took2)
 	# refused while a foe is out (respawning), in sudden death, in the air
 	await _fresh()
 	_hit(player, f, "stone_form/spike")

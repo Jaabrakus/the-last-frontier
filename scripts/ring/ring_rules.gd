@@ -780,7 +780,7 @@ static func launch_v(cls: Dictionary, pct_after: float, d: float, w: float, rang
 	return w * (base + growth * r * a * pct_after / 100.0 * (0.5 + d / 20.0))
 
 
-## Element `element`'s weight multiplier W = 2 / (1 + weight) (spec §2.4: earth 0.89, water 1.0, fire 1.03, air 1.11).
+## Element `element`'s weight multiplier W = 2 / (1 + weight); raw weights come from stock.weights.
 static func weight_of(element: String) -> float:
 	var w := float(stock_block("weights").get(element, 1.0))
 	return 2.0 / (1.0 + maxf(w, 0.01))

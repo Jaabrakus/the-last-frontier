@@ -7,3 +7,13 @@ __pycache__/
 *.import-*
 # Raw AGLS extraction (licensed for Unreal Engine use; its raw files must not be shared)
 AGLS_extracted/
+# Local balance logs, source snapshots and reproducibility manifests
+/artifacts/tidebreak_balance/
+
+# Local gameplay recordings and generated review evidence
+/artifacts/
+*.mp4
+*.gif
+
+# Temporary local animation diagnostics
+/tests/anim/_tmp_*

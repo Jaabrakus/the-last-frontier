@@ -368,7 +368,7 @@ func _build_right() -> void:
 	if _outfit_ui:
 		_clothing_button = _button("Clothing", Vector2(0, 32), func() -> void: _show_clothing(not _clothing), 14)
 		_clothing_button.name = "Clothing"
-		_clothing_button.tooltip_text = "Garments over the frontier clothes"
+		_clothing_button.tooltip_text = "Garments over your base outfit"
 		_clothing_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		hb.add_child(_clothing_button)
 
@@ -652,7 +652,7 @@ func _refresh_note() -> void:
 	elif focus_row == "body":
 		t = "Body type 1 is the male fit, 2 the female fit."
 	elif focus_row == "clothing":
-		t = "Garments worn over the frontier clothes."
+		t = "Garments worn over your base outfit."
 	_note.text = t
 
 
