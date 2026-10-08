@@ -50,6 +50,11 @@ extends Node
 ## stand-in while CLIPS has not landed it; loops looped, one-shots held at their end), in place of the knock layer above; under
 ## a cast released in the air (SwayCaster.air_cast) the air legs (own-bend-air-legs) play under the cast's upper body; the
 ## steer's lean is RingMoves.LeanMod's (a bone tilt, not a clip). ring_clip() / ring_weight() say what plays.
+## ROUND 5 (CLIPWIRE): the hit-stop holds this pose too (_process's dt by BendImpact.pose_rate, as PlayerAnim's graph: a
+## held pose stands still, then catches up), and through the hold the struck contact pose shows over every layer
+## (own-bend-hit-impact-<front|back|left|right> by where the hit came from; _tick_struck), its recoil then easing into the
+## tumble or the flinch under it. Off the spout with no cast on the body the step-off plays once
+## (movement.json clips spout_step_off).
 ## THE COMBO: a pose with an "alt" (the next hand: a throw's or a punch's mirrored twin) takes its alt when the same move
 ## in the same variation locks again within BendPoses.combo_window_s() of its last cast, and its first clip the time after
 ## (left, right, left); combo_alt says which the pose now is.
@@ -71,6 +76,9 @@ const PUSH_TWO := &"own-sway-push-two"
 const PUSH_ONE := &"own-sway-push-one"
 const BLEND_IN_S := 0.12
 const BLEND_OUT_S := 0.22
+## Replacing an active cast or skipping to its recovery carries the displayed pose briefly. The clip and strike
+## clocks keep advancing normally; a release's strike is the latest this handoff may finish.
+const CAST_HANDOFF_S := 0.08
 ## Body speeds (m/s) over which the squat ("full") gives way to the upper body alone (the legs the player's).
 const STILL_MPS := Vector2(0.35, 1.2)
 
@@ -110,6 +118,9 @@ var _strike_at := Vector3.INF
 var _limb_ids := {}
 ## The cast's layers this frame (the knock's go over them).
 var _cast_layers: Array = []
+var _cast_from: Array = []
+var _cast_mix_t := 0.0
+var _cast_mix_s := 0.0
 ## The knock playing: "" none, "slide" or "air"; its stage ("hold": in and held, "out": the recovery), clip time, weight.
 var knock := ""
 var _k_stage := ""
@@ -127,6 +138,15 @@ var _st_w := 0.0
 const RING_IN_S := 0.08
 const RING_OUT_S := 0.15
 const AIR_LEGS_S := 0.6
+## Landing plants the lower body immediately; its upper body recovers from the airborne pose over this interval.
+const LAND_UPPER_S := 0.08
+## Ordinary airborne movement supports a cast; reactions/recoveries still take the body away from it.
+const RING_UNDER_CAST := ["fall", "fall_fast", "double_jump", "spout_step_off"]
+## These clips establish contact in their first frame or two; the spout is a respawn. Keep contact on time and clear
+## the outgoing pose when the fighter is placed on the spout. Flinch takes only the upper body, so it must also release
+## the outgoing state's legs immediately instead of holding them underneath an upper-only handoff.
+const RING_CONTACT := ["edge_grab", "edge_hang", "edge_scramble", "tech", "tech_wall", "land_light", "land_heavy",
+		"knock_bounce", "spout_ride", "flinch"]
 var ring_state := ""
 var _r_anim: Animation
 var _r_name := ""
@@ -134,10 +154,20 @@ var _r_t := 0.0
 var _r_w := 0.0
 var _r_mask := "full"
 var _r_loop := false
+var _r_over_cast := true
+## Sampled outgoing layers survive a state change while the incoming clip blends in.
+var _r_from: Array = []
+var _r_from_w := 1.0
+var _r_mix := 1.0
+var _land_from: Array = []
+var _land_t := 0.0
+var _land_s := 0.0
 var _al_anim: Animation
 var _al_t := 0.0
 var _al_w := 0.0
 var _ring_lean := false
+## Round 5: the spout's step-off plays until this (this node's clock; -INF none).
+var _off_until := -INF
 ## The combo: this pose took its alt; the last cast's move/mode, whether it was the alt, and when (this node's clock, s).
 var combo_alt := false
 var _clock := 0.0
@@ -347,7 +377,17 @@ func _begin(clip: StringName, p_phase: String, from_t := 0.0) -> void:
 	var a := _animation(clip)
 	if a == null:
 		phase = ""
+		_cast_from = []
 		return
+	var continuing := a == _anim and is_equal_approx(from_t, clip_time()) and p_phase != "press"
+	if not continuing:
+		_cast_from = ToolPose.collapse_layers(_cast_layers) if weight > 0.0 else []
+		_cast_mix_t = 0.0
+		_cast_mix_s = CAST_HANDOFF_S
+	if p_phase == "release" and _strike >= 0.0:
+		_cast_mix_s = minf(_cast_mix_s, _cast_mix_t + maxf(_strike - from_t, 0.0))
+	if _cast_mix_s <= _cast_mix_t:
+		_cast_from = []
 	_anim = a
 	anim_name = String(clip)
 	phase = p_phase
@@ -404,6 +444,7 @@ func clip_time() -> float:
 func _process(dt: float) -> void:
 	if caster == null or caster.player == null or not is_instance_valid(caster.player):
 		return
+	dt *= BendImpact.pose_rate(caster.player, dt)        # (round 4, IMPACT: the hit-stop holds his visible pose too)
 	_clock += dt
 	_cast_layers = []
 	_tick(dt)
@@ -413,6 +454,7 @@ func _process(dt: float) -> void:
 	else:
 		_tick_knock(dt)
 	_tick_stance(dt)
+	_tick_struck(dt)
 	_apply()
 	_aim_follow(dt)
 
@@ -440,20 +482,30 @@ func _apply() -> void:
 	var stance := _st_anim != null and _st_w > 0.0
 	var ring := _r_anim != null and _r_w > 0.0
 	var legs := _al_anim != null and _al_w > 0.0
+	var hit := _s_anim != null and _s_w > 0.0
 	if _pose == null or not is_instance_valid(_pose):
-		if (knock == "" and not stance and not ring and not legs) or not _ensure_pose():
+		if (knock == "" and not stance and not ring and not legs and not hit) or not _ensure_pose():
 			return
 	var ls: Array = []
 	if stance:
 		ls.append({"anim": _st_anim, "time": _st_t, "weight": _st_w, "mask": "full"})
+	var ring_layers := _ring_layers() if ring else []
+	for layer: Dictionary in ring_layers:
+		if not bool(layer.get("over_cast", true)):
+			ls.append(layer)
 	if legs:
-		# (the air legs under the cast: its upper layer after this one keeps the arms the cast's)
+		# (the air legs over ordinary falling, under the cast: the arms remain the upper-body cast's)
 		ls.append({"anim": _al_anim, "time": _al_t, "weight": _al_w, "mask": "full"})
 	ls.append_array(_cast_layers)
 	if knock != "" and _k_anim != null and _k_w > 0.0:
 		ls.append({"anim": _k_anim, "time": _k_t, "weight": _k_w, "mask": "full"})
-	if ring:
-		ls.append({"anim": _r_anim, "time": _r_t, "weight": _r_w, "mask": _r_mask})
+	for layer: Dictionary in ring_layers:
+		if bool(layer.get("over_cast", true)):
+			ls.append(layer)
+	if not _land_from.is_empty():
+		ls.append({"blend_from": _land_from, "blend_to": [], "blend_weight": _land_t / _land_s, "blend_mask": "upper"})
+	if hit:
+		ls.append({"anim": _s_anim, "time": _s_t, "weight": _s_w, "mask": "full"})
 	_pose.layers = ls
 	if ls.is_empty() and phase == "":
 		_pose.active = false
@@ -493,9 +545,15 @@ func _tick(dt: float) -> void:
 	var mask := _mask()
 	if mask != "upper":
 		_cast_layers = [{"anim": _anim, "time": t, "weight": w, "mask": mask}]
-		return
-	var still := 1.0 if _legs_always() else 1.0 - smoothstep(STILL_MPS.x, STILL_MPS.y, caster.player.horizontal_speed())
-	_cast_layers = [{"anim": _anim, "time": t, "weight": w, "mask": "upper"}, {"anim": _anim, "time": t, "weight": w * still, "mask": "full"}]
+	else:
+		var still := 1.0 if _legs_always() else 1.0 - smoothstep(STILL_MPS.x, STILL_MPS.y, caster.player.horizontal_speed())
+		_cast_layers = [{"anim": _anim, "time": t, "weight": w, "mask": "upper"}, {"anim": _anim, "time": t, "weight": w * still, "mask": "full"}]
+	if not _cast_from.is_empty():
+		_cast_mix_t += dt
+		if _cast_mix_t >= _cast_mix_s:
+			_cast_from = []
+		else:
+			_cast_layers = [{"blend_from": _cast_from, "blend_to": _cast_layers, "blend_weight": _cast_mix_t / _cast_mix_s}]
 
 
 ## The clip's mask: the pose's, the clip's meta, else the rule (the one-handed push "reach_l"; else "upper", with "full" as
@@ -524,6 +582,9 @@ func _stop() -> void:
 	_hand = ""
 	_strike_at = Vector3.INF
 	_cast_layers = []
+	_cast_from = []
+	_cast_mix_t = 0.0
+	_cast_mix_s = 0.0
 	if _pose != null and is_instance_valid(_pose) and knock == "":
 		_pose.layers = []
 		_pose.active = false
@@ -594,6 +655,38 @@ func ring_weight() -> float:
 	return _r_w if _r_anim != null else 0.0
 
 
+## The sampled ring pose, including an interrupted handoff. ToolPose blends rotations and root/pelvis positions together.
+func _ring_layers() -> Array:
+	var layers: Array = []
+	if _r_anim == null or _r_w <= 0.0:
+		return layers
+	if _r_mix < 1.0:
+		# ToolPose composes layers in order: retain the outgoing pose, then lerp the incoming one over it.
+		var fade := _r_w / maxf(_r_from_w, 0.001)
+		for from: Dictionary in _r_from:
+			var layer := from.duplicate()
+			layer["weight"] = float(layer.weight) * fade
+			if float(layer.weight) > 0.0:
+				layers.append(layer)
+	layers.append({"anim": _r_anim, "time": _r_t, "weight": _r_w * _r_mix, "mask": _r_mask,
+			"over_cast": _r_over_cast})
+	return layers
+
+
+func _clear_ring() -> void:
+	ring_state = ""
+	_r_anim = null
+	_r_name = ""
+	_r_t = 0.0
+	_r_w = 0.0
+	_r_from.clear()
+	_r_mix = 1.0
+	_land_from = []
+	_land_t = 0.0
+	_land_s = 0.0
+	_off_until = -INF
+
+
 ## The ring's state layer from RingMoves.clip_state (its clip or stand-in, eased in and out; a loop looped, a one-shot held at
 ## its end), the air legs under an airborne cast, the steer's lean put on the skeleton once.
 func _tick_ring(dt: float, rm: RingMoves) -> void:
@@ -603,7 +696,7 @@ func _tick_ring(dt: float, rm: RingMoves) -> void:
 		_ring_lean = true
 		RingMoves.lean_on(p.skeleton, rm)
 	if p.is_dead:
-		_r_w = 0.0
+		_clear_ring()
 		_al_w = 0.0
 		return
 	var st := rm.clip_state()
@@ -614,9 +707,41 @@ func _tick_ring(dt: float, rm: RingMoves) -> void:
 		# (AIR's held guard: its own loop per element while E keeps it up, SwayCaster.guard_hold_clip, else its stand-in)
 		st = "guard_hold"
 		nm = caster.guard_hold_clip()
+	elif phase == "":
+		# (round 5: off the spout, no cast on the body: the step off, once through, until another state takes over)
+		if ring_state == "spout_ride":
+			var so := BendPoses.animation(String(RingMoves.clip_for("spout_step_off")[0]))
+			_off_until = _clock + so.length if so != null else -INF
+		if _clock < _off_until:
+			st = "spout_step_off"
+			nm = String(RingMoves.clip_for(st)[0])
+	if st != "spout_step_off":
+		_off_until = -INF
+	# Once recovery travel ends, its fading pose goes under the first follow-up attack. Active recoveries still own the body.
+	if ring_state.begins_with("rise_") and rm.can_cast():
+		_r_over_cast = false
+		for layer: Dictionary in _r_from:
+			layer["over_cast"] = false
 	if nm != "" and (nm != _r_name or st != ring_state):
 		var a := BendPoses.animation(nm)
 		if a != null:
+			_land_from = []
+			if st in ["land_light", "land_heavy"] and _pose != null and is_instance_valid(_pose):
+				_land_from = ToolPose.collapse_layers(_pose.layers)
+				_land_t = 0.0
+				_land_s = LAND_UPPER_S
+				if phase == "release" and not _struck and _strike >= 0.0:
+					_land_s = minf(_land_s, maxf(_strike - clip_time(), 0.0))
+				if _land_s <= 0.0:
+					_land_from = []
+			var switching := _r_anim != null and _r_w > 0.0 and nm != _r_name
+			if switching and not st in RING_CONTACT:
+				_r_from = _ring_layers()
+				_r_from_w = _r_w
+				_r_mix = 0.0
+			elif not switching or st in RING_CONTACT:
+				_r_from.clear()
+				_r_mix = 1.0
 			if _r_anim == null or _r_w <= 0.0 or nm != _r_name:
 				_r_t = 0.0
 			_r_anim = a
@@ -624,7 +749,17 @@ func _tick_ring(dt: float, rm: RingMoves) -> void:
 			var spec := RingMoves.clip_spec(st) if st != "guard_hold" else {"mask": "full", "loop": true}
 			_r_mask = String(spec.get("mask", "full"))
 			_r_loop = bool(spec.get("loop", false))
+			_r_over_cast = not st in RING_UNDER_CAST
+			if st in RING_CONTACT:
+				_r_w = 1.0
 	ring_state = st if nm != "" else ""
+	_r_mix = minf(_r_mix + dt / RING_IN_S, 1.0)
+	if _r_mix >= 1.0:
+		_r_from.clear()
+	if not _land_from.is_empty():
+		_land_t += dt
+		if _land_t >= _land_s:
+			_land_from = []
 	if ring_state != "" and _r_anim != null:
 		_r_t += dt
 		if _r_loop and _r_anim.length > 0.0:
@@ -635,8 +770,7 @@ func _tick_ring(dt: float, rm: RingMoves) -> void:
 	else:
 		_r_w = maxf(_r_w - dt / RING_OUT_S, 0.0)
 		if _r_w <= 0.0:
-			_r_anim = null
-			_r_name = ""
+			_clear_ring()
 	# the air legs: under a cast let go in the air, while he is still in the air
 	var legs_on := rm.looks != null and rm.airborne() and rm.looks.air_legs_at > -INF \
 			and rm.mode_t >= 0.0 and _clock_ok(rm)
@@ -651,6 +785,59 @@ func _tick_ring(dt: float, rm: RingMoves) -> void:
 		_al_w = maxf(_al_w - dt / RING_OUT_S, 0.0)
 		if _al_w <= 0.0:
 			_al_anim = null
+
+
+## The struck contact pose (round 5, CLIPWIRE; BendImpact's STRUCK_META, recorded at a held hit): a new one goes on over
+## every layer at once, at its clip's hold_s (the contact), and stays there while the hit-stop holds the pose (dt is nothing
+## then); after the hold its recoil plays on (at the hold's catch-up rate) and fades out by the clip's end into what is under
+## it (the ring's tumble or flinch, eased in meanwhile). struck_clip() / struck_weight() say what shows.
+var _s_anim: Animation
+var _s_name := ""
+var _s_t := 0.0
+var _s_w := 0.0
+var _s_from := 0.0
+var _s_at := -INF
+
+
+func struck_clip() -> StringName:
+	return StringName(_s_name) if _s_anim != null and _s_w > 0.0 else &""
+
+
+func struck_weight() -> float:
+	return _s_w if _s_anim != null else 0.0
+
+
+func _tick_struck(dt: float) -> void:
+	var p := caster.player
+	var s := BendImpact.struck_of(p)
+	if s.is_empty():
+		_s_anim = null
+		_s_name = ""
+		_s_w = 0.0
+		_s_at = -INF
+		return
+	if not s.is_empty() and float(s.get("at", -INF)) != _s_at:
+		_s_at = float(s.get("at", -INF))
+		var a := BendPoses.animation(String(s.get("clip", "")))
+		if a != null:
+			_s_anim = a
+			_s_name = String(s.clip)
+			_s_from = clampf(float(a.get_meta(&"hold_s", a.length * 0.5)), 0.0, a.length)
+			_s_t = _s_from
+			_s_w = 1.0
+	if _s_anim == null:
+		return
+	if p.is_dead:
+		_s_anim = null
+		_s_name = ""
+		_s_w = 0.0
+		return
+	_s_t = minf(_s_t + dt, _s_anim.length)
+	_s_w = clampf((_s_anim.length - _s_t) / maxf(_s_anim.length - _s_from, 0.01), 0.0, 1.0)
+	if _s_t >= _s_anim.length:
+		_s_anim = null
+		_s_name = ""
+		_s_w = 0.0
 
 
 ## The airborne cast was let go within AIR_LEGS_S (on RingMoves' clock).

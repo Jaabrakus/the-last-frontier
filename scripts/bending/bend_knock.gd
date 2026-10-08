@@ -582,6 +582,7 @@ func scale_carry(k: float) -> void:
 
 ## All of it gone (a respawn, a death, a new round).
 func reset() -> void:
+	BendImpact.clear_pose(body)
 	_pend_until = -INF
 	kv = Vector3.ZERO
 	applied = Vector3.ZERO

@@ -28,7 +28,7 @@ extends Node
 ## THE RULES (spec v2): gravity 20 (BendKnock.gravity_override when set), run 5 / sprint 6.5, the element's air drift; Space
 ## is always the full jump (2.0 m) and the short hop (0.8 m) is Space within 0.05 s of a cast's release (either order);
 ## Space in the air the double jump (it keeps half the launch's carry: BendKnock.scale_carry); once it is spent, off the deck
-## and a fresh press 0.2 s after it, the Rise (once per airtime, helpless after); refreshed by landing, a grab and a tumbling
+## and a fresh press 0.2 s after it, the Rise (once per airtime, free air control after); refreshed by landing, a grab and a tumbling
 ## launch only (BendKnock.launched with refresh). C: fast fall after the apex, crouch held on the deck, no grab while held,
 ## let go on the edge; the guard's Roll and Duck; the air dodge (3, AIR routes it here); the teeter at every lip; the edge
 ## (the grab box, the snap, 0.6 s first-grab safety, 4 s, deck-relative options, occupancy, three grabs then the deck); each
@@ -84,6 +84,8 @@ var _last_dt := 1.0 / 60.0
 var _t := 0.0
 var _air := false
 var _helpless := false
+## A Rise still owes its landing recovery after air controls return. This does not replenish any air move.
+var _rise_landing := false
 var _glide := false
 var _ff := false
 var _lag := 0.0
@@ -329,7 +331,7 @@ func off_deck() -> bool:
 	return absf(l.x) > float(g.hl) or absf(l.z) > float(g.hw) or l.y < float(g.top) - num("rise", "off_under_m", 0.3)
 
 
-## After the Rise: no more air moves until he lands or grabs the edge.
+## An explicitly restricted airborne state. Completing a Rise returns ordinary air control instead.
 func helpless() -> bool:
 	return _helpless
 
@@ -836,7 +838,7 @@ func _land() -> void:
 	_ff = false
 	_glide = false
 	_jump_short = false
-	if _helpless:
+	if _helpless or _rise_landing:
 		_lag = maxf(_lag, num("rise", "helpless_lag_s", 0.35))
 		_lag_heavy = true
 	_helpless = false
@@ -863,6 +865,7 @@ func _refresh() -> void:
 	dodge_ready = true
 	rise_ready = true
 	_helpless = false
+	_rise_landing = false
 	_exhaled = false
 
 
@@ -1412,6 +1415,7 @@ func _start_rise() -> void:
 	var el := _el()
 	var r := rise_of(el)
 	rise_ready = false
+	_rise_landing = true
 	_ff = false
 	_glide = false
 	var spec := {"el": el, "kind": String(r.get("kind", "up")), "startup": float(r.get("startup_s", 0.1)),
@@ -1513,7 +1517,6 @@ func _step_rise(dt: float) -> void:
 	if mode == "rise":
 		if _grounded() and mode_t > startup + 0.05:
 			_set_mode("", {})
-			_helpless = true
 			_land()
 			return
 		_try_grab()
@@ -1524,14 +1527,12 @@ func _end_rise() -> void:
 	var r: Dictionary = _m.r
 	var el := String(_m.el)
 	_set_mode("", {})
-	_helpless = true
+	_helpless = false
 	_rise_end_at = _t
-	# (helpless from here: his own flat speed no more than the helpless drift, the Pillar's its own share; the Jet's burst
-	# does not carry on past its 7.5 m)
-	var cap := drift_of(el).x * num("rise", "helpless_drift", 0.6)
+	# Return steering, casts and any unspent dodge. The Rise and double jump stay spent; the Jet's burst still ends here.
+	var cap := drift_of(el).x
 	if kind == "pillar":
 		_o.y = float(r.get("end_vy", 3.0))
-		cap = minf(cap, drift_of(el).x * float(r.get("drift", 0.3)))
 	else:
 		_o.y = minf(_o.y, float(r.get("end_vy", 2.0)))
 	var flat := Vector3(_o.x, 0.0, _o.z).limit_length(cap)
@@ -2361,12 +2362,13 @@ func _vjudge() -> String:
 func _snap() -> Dictionary:
 	var g := _vgeo
 	return {"t": _t, "dt": _last_dt, "pos": _vpos, "vel": _o + _vkv, "own": _o, "jumps_left": jumps_left, "dodge_ready": dodge_ready,
-			"rise_ready": rise_ready, "helpless": _helpless, "mode": mode, "free": _vstun <= 0.0, "lip": _lip(g, _vpos),
+			"rise_ready": rise_ready, "helpless": _helpless, "rise_landing": _rise_landing,
+			"mode": mode, "free": _vstun <= 0.0, "lip": _lip(g, _vpos),
 			"lip_y": _lip_y(g), "off_deck": off_deck(), "dj_at": _dj_at, "air": _air}
 
 
 ## The bots' look-ahead (spec §9.6), the same mover on a body of numbers. `state`: {pos (feet, world), vel (own velocity),
-## kv (the knock's flat carry), stun_s (hitstun left), stun_total, element, jumps_left, dodge_ready, rise_ready, helpless,
+## kv (the knock's flat carry), stun_s (hitstun left), stun_total, element, jumps_left, dodge_ready, rise_ready, helpless, rise_landing,
 ## grabs, air (default: not on the deck's top), geo (a deck from box_geo(); default the RingArena found, else the box at the
 ## origin)}. `plan`: a Callable(snapshot) -> intent, an Array of events [{t, ...intent keys}] (a press fires once at its t;
 ## move, aim and the holds stand until changed), or a String: a plan() kind toward the nearest lip. Steps of `dt` up to
@@ -2429,6 +2431,7 @@ func _vinit(s: Dictionary) -> void:
 	dodge_ready = bool(s.get("dodge_ready", true))
 	rise_ready = bool(s.get("rise_ready", true))
 	_helpless = bool(s.get("helpless", false))
+	_rise_landing = bool(s.get("rise_landing", false))
 	_grabs = int(s.get("grabs", 0))
 	var l := _local(_vgeo, _vpos)
 	var on := absf(l.x) <= float(_vgeo.hl) and absf(l.z) <= float(_vgeo.hw) and absf(l.y - float(_vgeo.top)) < 0.02

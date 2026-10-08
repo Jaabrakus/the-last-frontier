@@ -1137,10 +1137,12 @@ func _ring_pose() -> bool:
 
 
 func _pose() -> void:
-	if body == null or action in ["swing", "flinch", "dead", "down", "cast"]:
+	if body == null or action in ["swing", "dead", "down", "cast"]:
 		return
 	if ring_moves != null and _ring_pose():
 		return                                      # (the % ring's body-state clip: the hang, a roll, the Rise...)
+	if action == "flinch":
+		return
 	if (knock_t() > 0.0 or is_launched()) and body.clip.begins_with(NpcBody.KNOCK_PREFIX):
 		return                                      # (a knock's own clip plays while the knock lasts: NpcBody.play_knock)
 	var has_gun := gun != null and gun.visible
@@ -1166,10 +1168,21 @@ func _pose() -> void:
 		body.play("crouch", 0.4)
 		return
 	var alert := brain != null and brain.state in [NpcBrain.State.SUSPICIOUS, NpcBrain.State.COMBAT]
-	var hs := Vector2(velocity.x, velocity.z).length()
+	var motion := velocity
+	if ring_moves != null and not has_gun:
+		var kn := BendKnock.peek(self)
+		motion = kn.base_of(velocity) if kn != null else velocity
+	var hs := Vector2(motion.x, motion.z).length()
 	var key := "idle"
 	var arms := ""
 	var rate := 1.0
+	if hs > 0.25 and ring_moves != null and not has_gun:
+		# The ring bot circles its opponent with its facing locked. Its feet follow
+		# actual steering, including while the body turns, rather than always running forward.
+		var gait := "crouch_walk" if is_crouching else ("sprint" if hs > RUN_SPEED + 0.45 else ("run" if hs > WALK_SPEED + 0.6 else "walk"))
+		body.play_locomotion(gait, Vector2(motion.dot(global_basis.x), motion.dot(forward())))
+		body.set_arms("")
+		return
 	if hs > 0.25 and face_lock != Vector3.INF and has_gun:
 		# a step out to peek and back, facing the foe: the aimed side-steps (left, right) and the step back, at their own pace
 		var fwd := forward()

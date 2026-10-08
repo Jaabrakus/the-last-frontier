@@ -1067,7 +1067,7 @@ func body_state() -> Dictionary:
 		st.jumps_left = 1 - mini(_own_jumps_used, 1)
 		st.dodge_ready = not _own_dodged
 		st.rise_ready = not _own_rised
-		st.helpless = _own_rised
+		st.helpless = false                     # Spending the Rise leaves the remaining air actions available.
 	return st
 
 
@@ -2132,7 +2132,7 @@ static func standin_step(s: Dictionary, intent: Dictionary, dt: float, geo: Dict
 				# (lead_model v2: the Pillar pushes off its top at end_vy, the others keep a little of the lift)
 				v.y = float(rs.get("end_vy", 0.0)) if rs.has("end_vy") and float(rs.get("end_vy", 0.0)) > 0.0 \
 						else minf(float(rs.get("m", 4.0)) / maxf(float(rs.get("s", 0.5)), 0.01), 2.0)
-				s.helpless = true
+				s.helpless = false                  # Match RingMoves: ordinary air control after recovery travel.
 				s.rise_end_t = s.t
 		"glide":
 			v.y = maxf(v.y - g * dt, -float(rs.get("glide_mps", 3.0)))

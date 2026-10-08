@@ -9,7 +9,8 @@ extends SceneTree
 ##   masher    Space every 60 ms against nothing at all, 12 launches off the deck at 120% (the Lash's speed x the weight, 25
 ##             and 40 degrees, 1-5 m inside two lips), each element: it comes back at least as often (RingMoves.simulate)
 ##   sim       the simulation and the engine trace the same jump, double jump and Rise within 2 cm
-##   helpless  Space, 3, E and a cast key only play "spent"; 0.35 s of landing lag; can_cast false
+##   recovery  all four Rises return casting/full steering and an unused dodge; spent resources stay spent;
+##             0.35 s of recovery landing lag remains, then resources refresh
 ##   refresh   a tumbling launch gives every air move back, a set knock nothing
 ##   dodge     3.2 +- 0.1 m; a bolt through him at 0.15 s flies on unspent, one at 0.40 s hits; a second 3 nothing; landing in it
 ##             0.3 s of lag
@@ -31,7 +32,7 @@ extends SceneTree
 ##   spout     held there; a jump, a cast key or its time lets go (left_spout)
 ## METRIC lines (hop_apex_m, short_hop_apex_m, double_jump_m, dj_carry_keep, air_dodge_m, rise_m, masher_vs_idle, parity_cm,
 ## sim_vs_engine_cm, camera_ok, recover_turn_ok, deck_behind_m). Last line "RING MOVES PASSED" or "RING MOVES FAILED".
-##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_ring_moves.gd
+##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_ring_moves.gd -- only=recovery,rises,refresh,hitstun,fast_fall
 
 const NAME := "RING MOVES"
 const WATCHDOG_S := 600.0
@@ -47,6 +48,7 @@ var rm: RingMoves
 var moves_seen: Array[String] = []
 var bot: NpcFighter
 var _hold_at := Vector3.INF
+var only: Array[String] = []
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -57,6 +59,9 @@ func _expect(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("only="):
+			only.assign(arg.trim_prefix("only=").split(",", false))
 	MatchSetup._aim_help = "strong"
 	seed(1750)
 	create_timer(WATCHDOG_S, true, false, true).timeout.connect(func() -> void:
@@ -81,23 +86,16 @@ func _run() -> void:
 	_expect(p.ring_moves == rm and p.traversal == null and p.grip == null, "the arena player: ring_moves his, no traversal or grip")
 	rm.moved.connect(func(k: String) -> void: moves_seen.append(k))
 	physics_frame.connect(_hold_tick)
-	await _jumps()
-	_masher()
-	await _sim_vs_engine()
-	await _helpless()
-	await _refresh()
-	await _dodge()
-	await _fast_fall()
-	await _roll_duck()
-	await _guard_jump()
-	await _teeter()
-	await _rises()
-	await _hitstun()
-	await _breaks()
-	await _sounds()
-	await _parity()
-	await _camera()
-	await _spout()
+	var parts := {"jumps": _jumps, "masher": _masher, "sim": _sim_vs_engine, "recovery": _recovery_control,
+			"refresh": _refresh, "dodge": _dodge, "fast_fall": _fast_fall, "roll_duck": _roll_duck,
+			"guard_jump": _guard_jump, "teeter": _teeter, "rises": _rises, "hitstun": _hitstun,
+			"breaks": _breaks, "sounds": _sounds, "parity": _parity, "camera": _camera, "spout": _spout}
+	for name: String in only:
+		_expect(parts.has(name), "known partition: " + name)
+	for name: String in parts:
+		if only.is_empty() or name in only:
+			print("PART " + name)
+			await (parts[name] as Callable).call()
 	_end()
 
 
@@ -330,35 +328,70 @@ func _sim_vs_engine() -> void:
 	await rig.secs(1.5)
 
 
-# ---------------------------------------------------------------- helpless
-func _helpless() -> void:
+# ---------------------------------------------------------------- control after a completed recovery
+func _recovery_control() -> void:
+	for el: String in ELS:
+		await _el(el)
+		for dodge_spent in [false, true]:
+			await _air_at(7.0, 4.0, true)
+			if dodge_spent:
+				rm.dodge(Vector3.ZERO)
+				await rig.until(func() -> bool: return rm.mode == "", 1.0)
+				_expect(not rm.dodge_ready, el + ": the earlier dodge was actually spent")
+			if el == "fire":
+				p.yaw = PI * 0.5
+				p.rotation.y = p.yaw
+			moves_seen.clear()
+			rig.tap(&"jump")
+			var started := await rig.until(func() -> bool: return rm.mode == "rise", 0.3)
+			var ended := await rig.until(func() -> bool: return rm.mode != "rise", 1.5)
+			var r := RingMoves.rise_of(el)
+			var expected_vy := float(r.get("end_vy", 2.0))
+			var vy_error := absf(p.velocity.y - expected_vy)
+			_expect(started < INF and ended < INF and rm.mode == "" and not rm.helpless() and rm.can_cast(),
+					"%s Rise returns controlled airborne casting (dodge spent=%s)" % [el, dodge_spent])
+			_expect(vy_error <= RingMoves.gravity() / Engine.physics_ticks_per_second + 0.01 and (el != "air" or rm._glide),
+					"%s keeps end velocity %.2f and its glide contract (actual %.3f)" % [el, expected_vy, p.velocity.y])
+			_expect(rm.jumps_left == 0 and not rm.rise_ready and rm.dodge_ready != dodge_spent,
+					el + ": recovery expiry grants no jump, Rise or dodge resource")
+			var rise_count := moves_seen.count("rise")
+			var jump_count := moves_seen.count("double_jump")
+			rig.tap(&"jump")
+			await rig.ticks(2)
+			_expect(rm.mode == "" and moves_seen.count("rise") == rise_count and moves_seen.count("double_jump") == jump_count,
+					el + ": another Space cannot create an endless Rise/jump chain")
+			# Keep this a fixed-direction steering measurement: the outward-facing Fire trial otherwise auto-turns
+			# its recovery camera while the key is held, rotating the target velocity during the acceleration check.
+			rm.note_mouse()
+			rig.hold(&"move_right", true)
+			await rig.secs(0.4)
+			rig.hold(&"move_right", false)
+			var flat := Vector2(p.velocity.x, p.velocity.z).length()
+			var drift := RingMoves.drift_of(el).x
+			_expect(flat >= drift * 0.95 and flat <= drift + 0.02,
+					"%s regains ordinary air steering (%.3f / %.3f m/s)" % [el, flat, drift])
+			var dodge_count := moves_seen.count("dodge")
+			SwayCaster.of(p).key3_press()
+			await rig.ticks(1)
+			_expect((rm.mode == "dodge" and moves_seen.count("dodge") == dodge_count + 1) if not dodge_spent
+					else (rm.mode == "" and moves_seen.count("dodge") == dodge_count),
+					"%s key 3 %s after recovery" % [el, "uses the remaining dodge" if not dodge_spent else "cannot reuse the spent dodge"])
+	# Return naturally to the deck after a Water Rise; control in the air must not bypass the existing landing recovery.
 	await _el("water")
 	await _air_at(0.8, 0.5, true)
 	rig.tap(&"jump")
-	await rig.until(func() -> bool: return rm.helpless(), 1.5)
-	_expect(rm.helpless() and not rm.can_cast(), "after the Rise: helpless, no cast")
-	var heard0 := rm.looks.heard.count("spent")
-	var vy0 := p.velocity.y
-	rig.tap(&"jump")
-	await rig.ticks(2)
-	rm.dodge(Vector3.RIGHT)
-	await rig.ticks(1)
-	rig.tap(InputSetup.GUARD_ACTION)
-	await rig.ticks(2)
-	rig.tap(&"fire")
-	await rig.ticks(2)
-	var spent := rm.looks.heard.count("spent") - heard0
-	_expect(spent == 4 and rm.jumps_left == 0 and rm.mode == "" and rm.helpless() and p.velocity.y < vy0,
-			"helpless: Space, 3, E and a cast key each only 'spent' (%d), nothing moves" % spent)
+	await rig.until(func() -> bool: return rm.mode == "rise", 0.3)
+	await rig.until(func() -> bool: return rm.mode != "rise", 1.5)
 	rig.hold(&"move_forward", true)
 	var landed := await rig.until(func() -> bool: return p.is_on_floor() and not rm.airborne(), 3.0)
 	rig.hold(&"move_forward", false)
-	var lag0 := rm.in_landing_lag()
+	var lag0 := rm.in_landing_lag() and not rm.can_cast()
 	await rig.secs(0.3)
 	var lag1 := rm.in_landing_lag()
 	await rig.secs(0.08)
-	_expect(landed < INF and lag0 and lag1 and not rm.in_landing_lag() and not rm.helpless() and rm.jumps_left == 1,
-			"a helpless landing: 0.35 s of landing lag, then every air move back")
+	_expect(landed < INF and lag0 and lag1 and not rm.in_landing_lag() and not rm.helpless()
+			and rm.jumps_left == 1 and rm.dodge_ready and rm.rise_ready and rm.can_cast(),
+			"recovery landing retains 0.35 s lag, then every air resource and casting are available")
 
 
 # ---------------------------------------------------------------- refreshes
@@ -455,7 +488,7 @@ func _fast_fall() -> void:
 	await _el("air")
 	await _air_at(4.0, 2.0, true)
 	rig.tap(&"jump")
-	await rig.until(func() -> bool: return rm.helpless() and rm._glide, 1.5)
+	await rig.until(func() -> bool: return rm.mode == "" and not rm.rise_ready and rm._glide, 1.5)
 	await rig.secs(0.3)
 	var glide_vy := p.velocity.y
 	rig.tap(&"crouch")
@@ -600,7 +633,7 @@ func _rises() -> void:
 				var pitch := rad_to_deg(asin(d.normalized().y))
 				_expect(absf(d.length() - 7.5) <= 0.2 and absf(pitch - 20.0) < 1.0, "fire's Jet, a level aim: %.2f m at %.1f degrees (lifted to +20)" % [d.length(), pitch])
 			"air":
-				_expect(absf(d.y - 3.5) <= 0.2 and rm.helpless() and rm._glide, "air's Updraft: %.2f m up, then a helpless glide" % d.y)
+				_expect(absf(d.y - 3.5) <= 0.2 and not rm.helpless() and rm._glide and rm.can_cast(), "air's Updraft: %.2f m up, then a controlled glide" % d.y)
 		await rig.secs(2.5)
 	print("METRIC rise_m %s" % str(r_m))
 	# the scramble: a Rise meeting the face with the head 1.8 m under the grab box reaches the hang; 2.4 m does not
@@ -618,14 +651,16 @@ func _rises() -> void:
 		rm._dj_at = -INF
 		moves_seen.clear()
 		var g0 := rm._grabs
+		var trial_at := rm._t
 		rig.tap(&"jump")
-		await rig.until(func() -> bool: return rm.on_ledge() or (rm.helpless() and rm._t - rm._rise_end_at > 0.2), 2.0)
+		await rig.until(func() -> bool: return rm.on_ledge() or (rm._rise_end_at >= trial_at and rm._t - rm._rise_end_at > 0.2), 2.0)
 		await rig.secs(0.4)
-		res[under] = [moves_seen.has("scramble"), rm.mode, rm._grabs - g0]
+		res[under] = [moves_seen.has("scramble"), rm.mode, rm._grabs - g0, rm.can_cast()]
 		rig.place(p, rig.at(8.0), -PI * 0.5)
 		await rig.secs(0.3)
 	_expect(bool(res[1.8][0]) and String(res[1.8][1]) == "hang" and int(res[1.8][2]) == 1 and not bool(res[2.4][0]),
 			"the scramble: from 1.8 m under the grab box to the hang (a grab counted), from 2.4 m not (%s)" % str(res))
+	_expect(String(res[1.8][1]) == "hang" and not bool(res[1.8][3]), "a successful recovery grab still gives the ledge priority over spell casting")
 	# the Pillar strikes a body over him
 	await _el("earth")
 	if bot == null:

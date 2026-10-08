@@ -15,7 +15,9 @@ extends RefCounted
 ##                 was within melee_m of the struck one (the jab string, the Pop, the Slam, kicks: a bolt landing 15 m away
 ##                 holds nothing on its caster). Nobody's movement, aim, camera or lock ever waits: for the player nothing
 ##                 but his pose (spec §3: a hit never touches the camera's turn, the aim or the lock). knock_thud plays at the
-##                 hold's start, its pitch and gain from |v|. Nothing is drawn on anyone.
+##                 hold's start, its pitch and gain from |v|. Nothing is drawn on anyone. Round 5 (CLIPWIRE): the held pose
+##                 is the struck contact pose (own-bend-hit-impact-<side>, by where the hit came from: see "the struck pose"),
+##                 on the player's visible ring pose too (SwayPose holds by pose_rate as PlayerAnim does).
 ##   the jolt      the owner's "camera kick" is CameraShake.jolt: an offset jolt of the view (h_offset, v_offset) that never
 ##                 turns the camera, so the aim never moves (kick() and sustain() turn it: never used for a hit). The local
 ##                 player's view jolts when he takes a launch of take_min_mps or more, when he lands one of deal_min_mps or
@@ -39,6 +41,8 @@ const HOLD_META := &"bend_pose_hold_until"
 const HOOK_META := &"bend_impact_hooked"
 ## The pose time a held body still owes (s): made up after the hold (pose_rate).
 const OWE_META := &"bend_pose_owed"
+## The player has two animation consumers. They share one rate and one debt update per drawn frame.
+const RATE_META := &"bend_pose_frame_rate"
 
 ## Tests: true / false forces the feel on / off (null: feel.json `enabled`).
 static var enabled_override: Variant = null
@@ -124,6 +128,7 @@ static func on_hit(n: Node, v: Vector3, by: Node, _info: Dictionary, hitstun_s: 
 	last_hold_s = hold
 	holds += 1
 	pose_hold(n, hold)
+	_strike_pose(n, v, by, _info, hold)
 	if by != null and is_instance_valid(by) and by != n and by is Node3D and n is Node3D \
 			and (by as Node3D).global_position.distance_to((n as Node3D).global_position) <= num("hitstop", "melee_m", 3.0):
 		pose_hold(by, hold)
@@ -155,6 +160,17 @@ static func pose_hold(b: Node, s: float) -> void:
 		return
 	var until := BendStatus.now() + s
 	b.set_meta(HOLD_META, maxf(until, float(b.get_meta(HOLD_META, -INF))))
+	if b.has_meta(RATE_META):
+		b.remove_meta(RATE_META)
+
+
+## Clear all visual hold state when a fighter is reset or respawned.
+static func clear_pose(b: Node) -> void:
+	if b == null or not is_instance_valid(b):
+		return
+	for key: StringName in [HOLD_META, OWE_META, RATE_META, STRUCK_META]:
+		if b.has_meta(key):
+			b.remove_meta(key)
 
 
 ## The rate `b`'s pose advances at now, for a step of `dt` (PlayerAnim's tick and NpcBody's step multiply their dt by it):
@@ -163,6 +179,19 @@ static func pose_hold(b: Node, s: float) -> void:
 ## point a cast leaves from, a fighter's hit parts) is where it would have been without the hold (a perfect Catch's return
 ## leaves from the same place). Else 1. A body never held carries no meta: 1, with nothing read.
 static func pose_rate(b: Node, dt := 0.0) -> float:
+	if b == null:
+		return 1.0
+	if dt > 0.0 and b.has_meta(RATE_META):
+		var cached: Dictionary = b.get_meta(RATE_META)
+		if int(cached.frame) == Engine.get_process_frames():
+			return float(cached.rate)
+	var rate := _advance_pose_rate(b, dt)
+	if dt > 0.0 and (rate != 1.0 or b.has_meta(HOLD_META)):
+		b.set_meta(RATE_META, {"frame": Engine.get_process_frames(), "rate": rate})
+	return rate
+
+
+static func _advance_pose_rate(b: Node, dt: float) -> float:
 	if b == null or not b.has_meta(HOLD_META):
 		return 1.0
 	if BendStatus.now() < float(b.get_meta(HOLD_META)) - 1e-6:
@@ -183,6 +212,73 @@ static func pose_rate(b: Node, dt := 0.0) -> float:
 	else:
 		b.set_meta(OWE_META, owed)
 	return 1.0 + extra / dt
+
+
+# ---------------------------------------------------------------- the struck pose (round 5, CLIPWIRE)
+## The struck one's contact pose shown through the hold (the animation lane's own clips own-bend-hit-impact-<side>, named
+## in movement.json clips struck_<side>): the side the hit came from against the way he faces (struck_side), recorded on
+## him (STRUCK_META {clip, side, at, until}: the player's SwayPose lays it over every layer, at the clip's hold_s, the
+## contact, while the hold stands, then plays its recoil out into the tumble or the flinch) and handed at once to a body
+## that shows its own (NpcBody.show_struck: the same pose, the knock's and the flinch's clips waiting behind it). Poses
+## only, as the hold: never the motion, the aim, the camera or the lock. Only where a hold is given (the gate, the feel on).
+const STRUCK_META := &"bend_struck"
+## Counted for the tests: struck poses given, and the last one's side.
+static var struck_shown := 0
+static var last_struck_side := ""
+
+
+## Where a hit of launch `v` on `n` came from against the way `n` faces: "front", "back", "left" or "right" (the struck
+## body recoils along the launch, so the hit came from against it; a launch near straight up or down: from the hit's origin,
+## info.from, else the hitter's place; nothing known: "front").
+static func struck_side(n: Node3D, v: Vector3, by: Node = null, info := {}) -> String:
+	var from := -Vector3(v.x, 0.0, v.z)
+	if from.length() < 0.5:
+		var src := Vector3.INF
+		var f: Variant = info.get("from", null)
+		if f is Vector3 and (f as Vector3) != Vector3.ZERO:
+			src = f
+		elif by is Node3D and is_instance_valid(by) and by != n:
+			src = (by as Node3D).global_position
+		if src != Vector3.INF:
+			from = src - n.global_position
+			from.y = 0.0
+	if from.length() < 1e-3:
+		return "front"
+	var fwd := -n.global_basis.z
+	fwd.y = 0.0
+	fwd = fwd.normalized() if fwd.length() > 0.01 else Vector3.FORWARD
+	var right := fwd.cross(Vector3.UP)
+	var a := rad_to_deg(atan2(from.dot(right), from.dot(fwd)))
+	if absf(a) <= 45.0:
+		return "front"
+	if absf(a) >= 135.0:
+		return "back"
+	return "right" if a > 0.0 else "left"
+
+
+## The struck pose for the hit on `n` (see above): recorded, and shown at once by a body with its own (a bot's NpcBody).
+static func _strike_pose(n: Node, v: Vector3, by: Node, info: Dictionary, hold: float) -> void:
+	if not (n is Node3D):
+		return
+	var side := struck_side(n as Node3D, v, by, info)
+	var nm := String(RingMoves.clip_for("struck_" + side)[0])
+	if nm == "":
+		return
+	var now := BendStatus.now()
+	n.set_meta(STRUCK_META, {"clip": nm, "side": side, "at": now, "until": now + hold})
+	struck_shown += 1
+	last_struck_side = side
+	var body: Variant = n.get(&"body")
+	if body is Object and is_instance_valid(body) and (body as Object).has_method(&"show_struck"):
+		(body as Object).call(&"show_struck", nm)
+
+
+## The struck pose recorded on `b` ({} none): {clip, side, at, until} (game s).
+static func struck_of(b: Node) -> Dictionary:
+	if b == null or not is_instance_valid(b) or not b.has_meta(STRUCK_META):
+		return {}
+	var d: Variant = b.get_meta(STRUCK_META)
+	return d if d is Dictionary else {}
 
 
 ## Round 4 (VIRAL's clash beat, BendClash): `body`'s pose held `secs` (game s), only in the % ring with the feel on. Poses
@@ -363,3 +459,5 @@ static func reset() -> void:
 	last_hold_s = 0.0
 	last_jolt = {}
 	_jolt_read_ms = -100000
+	struck_shown = 0
+	last_struck_side = ""

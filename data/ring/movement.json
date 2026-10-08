@@ -102,7 +102,7 @@
 				"tag": "edge/attack", "d": 7.0, "set_mps": 6.0, "angle_deg": 20.0}
 	},
 	"rise": {
-		"_about": "spec §5.4: Space once the double jump is spent, off the deck only (feet outside the deck or more than off_under_m under the lip), a fresh press rise_after_s after the double jump, once per airtime; helpless after (drift x helpless_drift, landing lag helpless_lag_s). The scramble: a Rise meeting the face (during it or scramble_after_s after) with the head at most scramble_m under the grab box slides up to the hang in scramble_s (face_m: touching the face, its plinth foot included). Per element: startup (the tell), travel m in s (drift share), its hit (tag, d %, set m/s, angle, hit_r), its loud tell sound",
+		"_about": "Space once the double jump is spent, off the deck only (feet outside the deck or more than off_under_m under the lip), a fresh press rise_after_s after the double jump, once per airtime. After travel, normal air steering, attacks and any unused dodge return; the Rise and double jump stay spent. Landing recovery keeps helpless_lag_s (the existing data key); helpless_drift applies only to an explicitly restricted state. The scramble: a Rise meeting the face (during it or scramble_after_s after) with the head at most scramble_m under the grab box slides up to the hang in scramble_s (face_m: touching the face, its plinth foot included). Per element: startup (the tell), travel m in s (drift share), its hit (tag, d %, set m/s, angle, hit_r), its loud tell sound",
 		"off_under_m": 0.3,
 		"helpless_drift": 0.6,
 		"helpless_lag_s": 0.35,
@@ -197,7 +197,7 @@
 		"grow": 0.6
 	},
 	"clips": {
-		"_about": "spec §13: each body state's clip (CLIPS' exact names) and its stand-in while the clip is not in yet (BendPoses passes over a missing name); loop: held as a loop; mask: the layer (full, upper); lift_m: a stand-in's raise of the body (the hang's hands and head over the lip until its clip lands)",
+		"_about": "spec §13: each body state's clip (CLIPS' exact names) and its stand-in while the clip is not in yet (BendPoses passes over a missing name); loop: held as a loop; mask: the layer (full, upper); lift_m: a stand-in's raise of the body (the hang's hands and head over the lip until its clip lands). Round 5 (CLIPWIRE): spout_step_off the step off the spout (SwayPose and NpcBody, as the ride ends with no cast and no other state); struck_<side> the hit-stop's contact pose by where the hit came from (BendImpact, shown through the hold, then the tumble or the flinch)",
 		"tumble": {"clip": "own-bend-tumble", "standin": "own-bend-knock-air", "loop": true},
 		"knock_spiked": {"clip": "own-bend-knock-spiked", "standin": "own-bend-tumble"},
 		"knock_bounce": {"clip": "own-bend-knock-bounce", "standin": "own-bend-tumble"},
@@ -236,7 +236,12 @@
 		"getup_attack": {"clip": "own-bend-getup-attack", "standin": "own-bend-fire-sweep"},
 		"teeter": {"clip": "own-bend-teeter", "standin": ""},
 		"spout_ride": {"clip": "own-bend-spout-ride", "standin": "", "loop": true},
-		"air_legs": {"clip": "own-bend-air-legs", "standin": ""}
+		"spout_step_off": {"clip": "own-bend-spout-step-off", "standin": ""},
+		"air_legs": {"clip": "own-bend-air-legs", "standin": ""},
+		"struck_front": {"clip": "own-bend-hit-impact-front", "standin": ""},
+		"struck_back": {"clip": "own-bend-hit-impact-back", "standin": ""},
+		"struck_left": {"clip": "own-bend-hit-impact-left", "standin": ""},
+		"struck_right": {"clip": "own-bend-hit-impact-right", "standin": ""}
 	},
 	"words": {
 		"_about": "player-facing names (the owner's word rules: tests/ring/test_player_words.gd)",
