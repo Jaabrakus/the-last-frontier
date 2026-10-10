@@ -196,10 +196,9 @@ static func apply_body(body: CharacterBodyMesh) -> void:
 		body.add_to_group(GROUP)
 	var soft := on() and not bool(body.get_meta(META_OFF, false))
 	var made := {}
-	# (light: the other side in a ring match; the player's own, and anyone outside a match — the lobby's fighter — dark)
-	# (outside a ring match, the lobby's and the menus' figures, everyone wears the player's side: the study's teal)
-	var in_match := RingSides.sides_override != null or RingSides.match_node() != null
-	var side := "dark" if _is_player(body) or not in_match else "light"
+	# (light: the other side in a ring match; the player's side — the player and, in a team format, the team-mates — dark, and
+	# anyone outside a match too: the lobby's and the menus' figures wear the study's teal)
+	var side := "light" if side_of(body) == 1 else "dark"
 	for tag: String in body.parts:
 		for mi in body.parts[tag]:
 			if not is_instance_valid(mi) or (mi as MeshInstance3D).mesh == null:
@@ -241,14 +240,20 @@ static func lift(body: CharacterBodyMesh) -> bool:
 	return any
 
 
-## Whether `body` is the player's own (the dark side in the ring).
-static func _is_player(body: Node) -> bool:
+## The ring side `body` fights for: 0 the player's (the player; in a team format a team-mate too, its faction ring_team_a),
+## 1 the other (its faction ring_team_b, or any other a bot was given), -1 outside a ring match (the lobby, the menus).
+static func side_of(body: Node) -> int:
+	if RingSides.sides_override == null and RingSides.match_node() == null:
+		return -1
 	var n := body
 	while n != null:
 		if n.is_in_group("player"):
-			return true
+			return 0
+		var f: Variant = n.get(&"faction")
+		if f is String and String(f) != "":
+			return 0 if RingSides.team_of_faction(String(f)) == 0 else 1
 		n = n.get_parent()
-	return false
+	return 1
 
 
 ## A ring garment (the catalog's set "ring"): a side's colour, its hue kept.

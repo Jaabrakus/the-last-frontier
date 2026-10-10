@@ -283,6 +283,40 @@ func _run() -> void:
 		var dv: float = (means[1][0] as Vector3).x - (means[0][0] as Vector3).x
 		print("  sides %s: main garment lightness dark %.3f, light %.3f" % [el, (means[0][0] as Vector3).x, (means[1][0] as Vector3).x])
 		_check(dv > 0.15, "%s: the other side's main garment is clearly lighter than the player's (%.3f)" % [el, dv])
+	# a team format: a team-mate (faction ring_team_a) wears the player's side, a bot of the other side (ring_team_b) the other's
+	RingSides.sides_override = [["earth", "earth"], ["earth", "earth"]]
+	var fighter_src := GDScript.new()
+	fighter_src.source_code = "extends Node3D\nvar faction := \"\"\n"
+	fighter_src.reload()
+	var teal4 := ClothMaterials.lin4(Color(SoftLook.PALETTE["teal"]))
+	var cream4 := ClothMaterials.lin4(Color(SoftLook.PALETTE["cream"]))
+	for fac: String in ["ring_team_a", "ring_team_b"]:
+		var fh := Node3D.new()
+		fh.set_script(fighter_src)
+		fh.set(&"faction", fac)
+		root.add_child(fh)
+		var fb := _body()
+		var fa: Node = fb
+		while fa.get_parent() != _holder:
+			fa = fa.get_parent()
+		fa.reparent(fh)
+		var flk := look.duplicate(true)
+		flk["outfit"] = PlayerAppearance.arena_outfit("earth", float(flk.get("sex", 0.0)))
+		PlayerAppearance.dress(fb, flk)
+		var want := teal4 if fac == "ring_team_a" else cream4
+		var mains := 0
+		var right := 0
+		for e: Array in _surfaces(fb):
+			var gid := String((e[0] as Node).get_meta("garment", ""))
+			if (e[2] as Material).has_meta(SoftLook.META_CLASSIC) and SoftLook.team_garment(gid) and ("tunic" in gid or "top" in gid or "parka" in gid):
+				mains += 1
+				var t: Variant = (e[2] as ShaderMaterial).get_shader_parameter("tint0")
+				if t is Vector4 and (t as Vector4).is_equal_approx(want):
+					right += 1
+		_check(mains > 0 and right == mains, "%s wears %s (%d of %d main garments)" % [fac,
+				"the player's side's teal" if fac == "ring_team_a" else "the other side's cream", right, mains])
+		_check(SoftLook.side_of(fb) == (0 if fac == "ring_team_a" else 1), "%s is told as side %d" % [fac, 0 if fac == "ring_team_a" else 1])
+		fh.queue_free()
 	RingSides.sides_override = null
 	# outside a match (the lobby's figure): the player's side, the study's teal, whoever wears it
 	var lb := _body()
