@@ -378,6 +378,9 @@ func _fly(dt: float) -> void:
 				_ex.append(info.rid)
 			if who is CollisionObject3D:
 				_ex.append((who as CollisionObject3D).get_rid())
+			if first_hit and _shatters():
+				_shatter(c_at, -velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.UP)
+				return                              # (the ring: it bursts on him)
 			if first_hit and not bool(hd.get("pierce", false)):
 				velocity *= 0.65                    # (a ball knocks a man down and goes on, slowed)
 			_place(to)
@@ -472,6 +475,9 @@ func _strike(col: Node, who: Node, p: Vector3) -> void:
 ## It meets the world at `p` (its middle; `contact` the touch): a spike sticks there along its flight; a ball or a stone is in
 ## the physics again with what is left of its speed (it rolls).
 func _land(p: Vector3, n: Vector3, contact: Vector3) -> void:
+	if _shatters():
+		_shatter(contact, n)                     # (the ring: it bursts on what it met, nothing left lying)
+		return
 	phase = Phase.DONE
 	var scn := get_tree().current_scene
 	var sbk := SbFx.key_of(get_meta(&"bend_info", {}))
@@ -507,6 +513,97 @@ func _land(p: Vector3, n: Vector3, contact: Vector3) -> void:
 	_release_stone()
 	landed.emit(contact)
 	queue_free()
+
+
+## A stone piece's look for the bursts: jagged shards of each ground's stone (six, made once: about 0.25 m long, scaled per
+## piece), so the burst reads as broken stone, not pebbles.
+static var _chunk_cache := {}
+
+
+static func _chunk_mesh(matter: String, i: int) -> Mesh:
+	if not _chunk_cache.has(matter):
+		var list: Array = []
+		for j in 6:
+			list.append(FormModels.spike_mesh(0.09 + 0.015 * float(j % 3), 0.2 + 0.05 * float(j % 2), 13 + j * 7, 0.0, matter))
+		_chunk_cache[matter] = list
+	var l: Array = _chunk_cache[matter]
+	return l[i % l.size()]
+
+
+## Whether this stone bursts on what it meets (moves.json stone_form.shatter; the owner, 2026-10-10: "the boulders and rocks
+## they need to explode", shatter on impact): a Spike's or a Boulder's (a FormStone) in the ring (ring_only), a deck socket's
+## stone hurled too.
+func _shatters() -> bool:
+	var sd := shatter_d()
+	if sd.is_empty() or not (stone is FormStone) or not is_inside_tree():
+		return false
+	return not bool(sd.get("ring_only", true)) or RingArena.find(get_tree()) != null
+
+
+static func shatter_d() -> Dictionary:
+	var v: Variant = SwayMoves.move("stone_form").get("shatter", {})
+	return v if v is Dictionary else {}
+
+
+## It bursts at `at` (`n` the face it met): chips, dust, stone bits and a few pieces flung out that fade, a crack; the stone
+## gone. Bigger for a grown one (its scale). Its hit was struck before (_strike); `landed` is told as a landing's is.
+func _shatter(at: Vector3, n: Vector3) -> void:
+	phase = Phase.DONE
+	SbFx.stop(self, "flight")
+	var sd := shatter_d()
+	var k := float(stone.get_meta(FormEffects.GROWN_META, 1.0)) if stone != null and is_instance_valid(stone) else 1.0
+	var scn := get_tree().current_scene
+	var dir := velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.DOWN
+	var out := (n - dir * 0.6).normalized() if (n - dir * 0.6).length_squared() > 1e-4 else Vector3.UP
+	GatherFx.stone_chips(scn, at, n, int(float(sd.get("chips", 24)) * k))
+	GatherFx.fall_dust(scn, at, float(sd.get("dust_m", 1.8)) * k)
+	BendLooks.burst(at, "stone", int(float(sd.get("burst_n", 36)) * k), out, 150.0, float(sd.get("burst_mps", 6.5)) * sqrt(k),
+			float(sd.get("burst_size", 0.5)) * k)
+	GatherFx.fall_dust(scn, at + Vector3.UP * 0.4 * k, float(sd.get("dust_m", 1.8)) * k * 0.7)
+	FormEffects.sfx("break", at, 2.0, 0.9 / sqrt(k))
+	FormEffects.sfx("strike", at, -1.0, 0.75)
+	var matter := (stone as FormStone).matter if stone is FormStone else "stone"
+	_chunks(scn, at, out, k, matter, sd)
+	_release_stone()
+	landed.emit(at)
+	if stone != null and is_instance_valid(stone):
+		stone.queue_free()
+	queue_free()
+
+
+## A few pieces of the stone flung out from `at` round `out`, falling under the flight's own gravity and shrinking away over
+## chunk_life_s (looks only: no body).
+static func _chunks(scn: Node, at: Vector3, out: Vector3, k: float, matter: String, sd: Dictionary) -> void:
+	if scn == null or DisplayServer.get_name() == "headless":
+		return
+	var n := int(float(sd.get("chunks", 7)) * k)
+	var life := float(sd.get("chunk_life_s", 1.3))
+	var ar := RingArena.find(scn.get_tree())
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var side := out.cross(Vector3.UP)
+	side = side.normalized() if side.length_squared() > 1e-4 else Vector3.RIGHT
+	for i in n:
+		var mi := MeshInstance3D.new()
+		mi.mesh = _chunk_mesh(matter, i)
+		var sz := rng.randf_range(0.8, 2.0) * k
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		scn.add_child(mi)
+		mi.global_position = at
+		var a := rng.randf_range(-PI, PI)
+		var d := (out + side.rotated(out, a) * rng.randf_range(0.4, 1.0)).normalized()
+		var v0 := d * float(sd.get("chunk_mps", 5.5)) * rng.randf_range(0.6, 1.2) + Vector3.UP * float(sd.get("chunk_up_mps", 3.5)) * rng.randf_range(0.5, 1.1)
+		var spin := Vector3(rng.randf_range(-9, 9), rng.randf_range(-9, 9), rng.randf_range(-9, 9))
+		var tw := mi.create_tween()
+		tw.tween_method(func(t: float) -> void:
+			if is_instance_valid(mi):
+				var p := at + v0 * t + Vector3.DOWN * 9.0 * t * t
+				if ar != null and is_instance_valid(ar) and ar.on_deck(p):
+					p.y = maxf(p.y, ar.deck_y() + ar.floor_at(p) + 0.05)    # (it lands on the deck, a piece, a step)
+				mi.global_position = p
+				mi.rotation = spin * t
+				mi.scale = Vector3.ONE * sz * clampf(1.0 - pow(t / life, 3.0), 0.01, 1.0), 0.0, life, life)
+		tw.tween_callback(mi.queue_free)
 
 
 ## The hold broken: it falls where it hangs. In flight too (a Catch, a deflect, a cushion took it: BendZone): it stops there

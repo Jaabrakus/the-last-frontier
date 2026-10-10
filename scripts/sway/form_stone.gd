@@ -120,6 +120,30 @@ static func _make(p_kind: String, d: Dictionary) -> FormStone:
 	return s
 
 
+## Grown in the hands (FormEffects.grow_raised: a Spike or a Boulder held on past its lock): its body `k` x its size at once,
+## its look swelling to it over `over_s` (a little past and back).
+func grow(k: float, over_s := 0.25) -> void:
+	radius *= k
+	height *= k
+	var cs := get_node_or_null(^"Shape") as CollisionShape3D
+	if cs != null and cs.shape != null:
+		var sh := cs.shape.duplicate() as Shape3D
+		if sh is SphereShape3D:
+			(sh as SphereShape3D).radius *= k
+		elif sh is CylinderShape3D:
+			(sh as CylinderShape3D).radius *= k
+			(sh as CylinderShape3D).height *= k
+		cs.shape = sh
+		cs.position *= k
+	if mesh_instance == null:
+		return
+	if over_s <= 0.0 or not is_inside_tree():
+		mesh_instance.scale = Vector3.ONE * k
+		return
+	var tw := create_tween()
+	tw.tween_property(mesh_instance, ^"scale", Vector3.ONE * k, over_s).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
 ## Its place `u` (0..1) of the way out of the ground.
 func _risen(u: float) -> Transform3D:
 	var e := 1.0 - pow(1.0 - clampf(u, 0.0, 1.0), 3.0)

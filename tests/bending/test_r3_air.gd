@@ -633,13 +633,14 @@ func _slam_touches() -> void:
 	await _calm("earth", _foe_at + Vector3(4.0, 0, 0))
 	var bc := BendCaster.of(p)
 	var held := BendR3.pop_stone(bc)
+	var had := held != null                  # (taken now: in the ring the thrown stone bursts on what it meets, gone after)
 	await _lift(2.0)
 	await _tap(1)
 	await _rmb_full(2.0)
 	c.held_override = false
 	await _secs(0.35)
 	var hr := BendEffects.last_of(bc)
-	_expect(held != null and String(hr.get("how", "")) == "held" and hr.has("throw") and BendZone.held_stone(p) == null,
+	_expect(had and String(hr.get("how", "")) == "held" and hr.has("throw") and BendZone.held_stone(p) == null,
 			"the Hammer holding a stone throws it instead (%s, throw %s, still held %s)" % [hr.get("how", "-"), hr.get("throw"), BendZone.held_stone(p)])
 	await _land()
 

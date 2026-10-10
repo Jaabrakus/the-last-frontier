@@ -65,7 +65,9 @@ static func apply(c: SwayCaster, m: String, t: Node3D, at: Vector3) -> void:
 		BendEffects.apply(c, m, mode, bd[mode], t, at)
 		return
 	var keep := BendR3.cur
-	BendR3.cur = BendR3.info_for(c, m, mode)        # (round 3: the hit info a stone thrown now carries)
+	var bc0 := BendCaster.of(c.player)
+	var grew := bc0 != null and bc0.grown and (d.get("grow", {}) as Dictionary).get(mode) is Dictionary
+	BendR3.cur = BendR3.info_for(c, m, mode, grew)  # (round 3: the hit info a stone thrown now carries; ".grown" when it grew)
 	match m:
 		"earth_wall":
 			if BendPoses.element_of(c.player) != "":
@@ -341,6 +343,8 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 		th0.waiting = false
 		if not BendR3.cur.is_empty():
 			th0.info = BendR3.cur.duplicate()
+		if String(th0.info.get("tag", "")).ends_with(".grown") and not th0.stone.has_meta(GROWN_META):
+			grow_raised(th0, "stone_form", mode, true)    # (grown with no stone swelled yet: at once)
 		return th0.stone
 	var td: Dictionary = d.get("throw", {})
 	var aim := aim_point(bc)
@@ -367,6 +371,8 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 	var th := Throw.start(bc, s, td)
 	if th != null and BendR3.on(bc.body) and BendR3.airborne(bc.body):
 		th.follow = true
+	if th != null and String(BendR3.cur.get("tag", "")).ends_with(".grown"):
+		grow_raised(th, "stone_form", mode, true)     # (cast grown with no stone raised first: a bot's, a test's)
 	return s
 
 
@@ -444,6 +450,39 @@ static func _new_stone(bc: BendCaster, d: Dictionary, mode: String) -> FormStone
 	sfx("rise", foot, -2.0, 0.9)
 	sfx("rumble", foot, -4.0, 1.1)
 	return s
+
+
+## The meta on a stone grown in the hands (its scale).
+const GROWN_META := &"form_grown"
+
+
+## The raised stone of Throw `th` (move `m`'s `mode`) grown (stone_form.grow.<mode>; the caster held on past the full lock):
+## it swells to scale x its size over swell_s (`now`: at once), its flight's sweep and hurl the grown one's (slower, harder).
+static func grow_raised(th: Node, m: String, mode: String, now := false) -> void:
+	var t := th as Throw
+	if t == null or not is_instance_valid(t) or t.stone == null or not is_instance_valid(t.stone) or t.stone.has_meta(GROWN_META):
+		return
+	var g: Variant = (SwayMoves.move(m if m != "" else "stone_form").get("grow", {}) as Dictionary).get(mode)
+	if not (g is Dictionary):
+		return
+	var gd := g as Dictionary
+	var k := float(gd.get("scale", 1.5))
+	t.stone.set_meta(GROWN_META, k)
+	t.stone.grow(k, 0.0 if now else float(gd.get("swell_s", 0.25)))
+	if t.lift != null and is_instance_valid(t.lift):
+		t.lift.radius *= k
+		t.lift._q = null                           # (its sweep made again at the new size)
+		var hurl := (t.lift.d.get("hurl", {}) as Dictionary).duplicate(true)
+		var kind := t.lift.kind
+		var hk: Dictionary = (hurl.get(kind, {}) as Dictionary).duplicate()
+		hk.merge(gd.get("hurl", {}) as Dictionary, true)
+		hurl[kind] = hk
+		t.lift.d["hurl"] = hurl
+	var at := t.stone.global_position
+	sfx("rumble", at, -1.0, 0.8)
+	sfx("rise", at, -3.0, 0.75)
+	if t.stone.is_inside_tree():
+		GatherFx.fall_dust(t.stone.get_tree().current_scene, at, t.stone.radius * 2.0)
 
 
 ## The Throw of the stone `body` raised and still holds (null none).

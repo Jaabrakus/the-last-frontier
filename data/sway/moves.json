@@ -379,6 +379,15 @@
       "ai_factor": 1.15,
       "element": "earth",
       "raise_at_fill": 0.6,
+      "shatter": {
+        "_about": "In the ring a thrown Spike or Boulder bursts on what it meets (the owner, 2026-10-10: \"the boulders and rocks they need to explode\", picked: shatter on impact): a fighter, a wall, a piece, the deck: shards and dust and a crack, the stone gone (nothing left lying). Its hit is the throw's as ever (no blast). A grown one bursts bigger (x its scale). chunks: stone pieces flung out (chunk_mps, up chunk_up_mps) that fade over chunk_life_s; burst_n bits of dust-stone (burst_mps), chips the small chips, dust_m the dust's reach. ring_only: the open world keeps its stones lying (true).",
+        "ring_only": true, "chunks": 10, "chunk_mps": 6.5, "chunk_up_mps": 4.0, "chunk_life_s": 1.4, "burst_n": 48, "burst_mps": 7.5, "burst_size": 0.55, "chips": 30, "dust_m": 2.4
+      },
+      "grow": {
+        "_about": "Spike and Boulder grow when held (the owner, 2026-10-10: \"similar to rock throws for boulder and spike\", like fire's Punch held into the Fireball): held on past the full lock by grow_after_s, the stone hanging before the caster swells to scale x its size over swell_s (a rumble, a puff of dust), and it is hurled with hurl over the throw's (slower, harder); its hit's tag gets .grown (rules.json stock.classes: a bigger launch). Nothing grows in the air.",
+        "spike": {"scale": 1.45, "swell_s": 0.22, "hurl": {"mps": [27.0, 27.0], "gravity": 3.0, "damage": [95.0, 95.0], "pierce": true}},
+        "cannonball": {"scale": 1.7, "swell_s": 0.28, "hurl": {"mps": [17.0, 17.0], "gravity": 6.0, "damage": [115.0, 115.0], "roll": true}}
+      },
       "drop_on_cancel": true,
       "weight": {"spike": "medium", "cannonball": "heavy"},
       "bend": {
@@ -1883,7 +1892,7 @@
     "strike_out_min_s": 0.35,
     "land_lag": {"jab": 0.1, "quick": 0.2, "big": 0.25, "lightning": 0.35, "slam": 0.3, "key2": 0.25, "guard": 0.0},
     "land_lag_hit_mult": 0.5,
-    "lag_class": {"stone_form/spike": "quick", "stone_form/cannonball": "big", "water_whip/whip": "quick", "ice/spear": "big", "fire_blast/punch": "quick", "fire_blast/punch.grown": "big", "fire_arc/lightning": "lightning", "air_blast/slice": "quick", "air_blast/ball": "big"},
+    "lag_class": {"stone_form/spike": "quick", "stone_form/cannonball": "big", "stone_form/spike.grown": "big", "stone_form/cannonball.grown": "big", "water_whip/whip": "quick", "ice/spear": "big", "fire_blast/punch": "quick", "fire_blast/punch.grown": "big", "fire_arc/lightning": "lightning", "air_blast/slice": "quick", "air_blast/ball": "big"},
     "jab_step_s": 0.15,
     "jab_strike_max_s": 0.05,
     "jab_string_gap_s": 0.6,

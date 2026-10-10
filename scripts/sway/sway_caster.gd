@@ -2417,9 +2417,14 @@ func spec_of(m: String) -> Dictionary:
 	return s if s is Dictionary else {}
 
 
-## Whether move `m` at its mode now grows (▲: its spec's grow).
+## Whether move `m` at its mode now grows (▲: its spec's grow; Spike's and Boulder's stone: stone_form.grow.<mode>).
 func grows(m: String) -> bool:
-	return elem() and spec_of(m).get("grow") is Dictionary
+	if not elem():
+		return false
+	if spec_of(m).get("grow") is Dictionary:
+		return true
+	var g: Variant = SwayMoves.move(m).get("grow")
+	return g is Dictionary and (g as Dictionary).get(mode_of(m)) is Dictionary
 
 
 ## A key of `m`'s spec at its mode, else of the move (raise_at_fill, self_lock, place ...): `def` when neither has it.
@@ -2748,6 +2753,8 @@ func _grow() -> void:
 		ring.click()
 	_sfx("click", -1.0)
 	BendLooks.grow_click(self)
+	if raised != null and is_instance_valid(raised):
+		FormEffects.grow_raised(raised, move, mode_of(move))   # (Spike's or Boulder's stone swells in the hands)
 	grew.emit(move)
 
 

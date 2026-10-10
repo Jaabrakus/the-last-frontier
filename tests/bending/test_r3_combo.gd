@@ -393,11 +393,12 @@ func _pop_stone() -> void:
 		await _cast("quick")
 		await _until(func() -> bool: return _counted().size() >= i + 1, 1.0)
 	var held := BendZone.held_stone(p)
+	var had := held != null                  # (taken now: in the ring the thrown stone bursts on what it meets, gone after)
 	BendR3.hits_log.clear()
 	await _cast("guard")
 	await _until(func() -> bool: return _counted().any(func(e: Dictionary) -> bool: return e.tag == "rock_jab/pop_stone"), 2.0)
 	var hs := _counted().filter(func(e: Dictionary) -> bool: return not (e.tag in ["rock_jab/pebbles", "jab/pop"]))
-	var ok := held != null and hs.size() == 1 and String(hs[0].tag) == "rock_jab/pop_stone" and not bool(hs[0].info.get("returned", false))
+	var ok := had and hs.size() == 1 and String(hs[0].tag) == "rock_jab/pop_stone" and not bool(hs[0].info.get("returned", false))
 	_expect(ok, "E throws the Pop's stone: rock_jab/pop_stone, not a return (%s)" % [hs.map(func(e: Dictionary) -> String: return e.tag)])
 	metrics["earth_pop_stone_ok"] = ok
 

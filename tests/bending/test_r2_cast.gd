@@ -81,6 +81,7 @@ func _initialize() -> void:
 	# (the specs round 2 reads, given here: KITS writes them in moves.json)
 	var mv: Dictionary = SwayMoves.data().moves
 	(mv["stone_form"] as Dictionary)["raise_at_fill"] = 0.6
+	(mv["stone_form"] as Dictionary).erase("grow")    # (this test's Spike is its move that does not grow; the owner's grow of it: test_stone_shatter)
 	var shove: Dictionary = (mv["earth_shove"] as Dictionary).bend
 	(shove["push"] as Dictionary)["grow"] = {"knock_mult": 1.5, "grew_mark": true}
 	((mv["fire_blast"] as Dictionary).bend.punch as Dictionary)["grow"] = FIREBALL.duplicate()
@@ -620,8 +621,12 @@ func _shove() -> void:
 	r = BendEffects.last_of(p)
 	_expect(String(r.get("how", "")) == "kick_up" and is_instance_valid(far) and not GustLift.busy(far),
 			"a loose stone at 8 m is not taken: a stone kicked up instead (%s)" % r.get("how"))
-	await _secs(0.8)
-	_expect(r.get("throw") != null, "the kicked-up stone pushed at the kick-up's strike (%s)" % r.get("throw"))
+	# (watched over the 0.8 s: in the ring the pushed stone bursts on what it meets, its Throw gone after)
+	var pushed := [false]
+	for i in int(0.8 * Engine.physics_ticks_per_second):
+		await physics_frame
+		pushed[0] = pushed[0] or (r.has("throw") and is_instance_valid(r.get("throw")))
+	_expect(pushed[0], "the kicked-up stone pushed at the kick-up's strike (%s)" % r.get("throw"))
 	# within 6 m: taken
 	await _calm()
 	fwd = bc.facing()

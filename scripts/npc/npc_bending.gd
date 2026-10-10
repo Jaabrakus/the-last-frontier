@@ -404,7 +404,8 @@ func _build_options() -> void:
 		var spec := spec_of(id, md)
 		var o := {"id": id, "mode": md, "key": id + "/" + md, "spec": spec, "old": spec.is_empty(),
 				"do": String(spec.get("do", "old")),
-				"knock": float(spec.get("knock_mps", 0.0)), "grow": spec.get("grow") is Dictionary,
+				"knock": float(spec.get("knock_mps", 0.0)), "grow": spec.get("grow") is Dictionary \
+						or (stock() and (SwayMoves.move(id).get("grow", {}) as Dictionary).get(md) is Dictionary),
 				"guard": pr == gd, "jab": pr == jb}
 		o["hint"] = hint_of(id, md, spec)
 		options.append(o)
@@ -1060,6 +1061,12 @@ func _guard_fits(o: Dictionary, t: Node3D) -> bool:
 	return true
 
 
+## Whether its last look at what comes at it (this frame's or the frame before's _threats) saw anything: read from that look,
+## never a new one (a new look reads wind-ups with its dice).
+func _recent_threats() -> bool:
+	return Engine.get_physics_frames() - _threats_frame <= 2 and not _threats_last.is_empty()
+
+
 ## What comes at it now: [{id, kind, tti, knock, src}] (BendBolt and a bot's spike by their flight; a hurled GustLift stone; a
 ## tornado coming at it, kind "vortex"; a stone held up and aimed at it, kind "held"; the foe's lightning by his lock's fill;
 ## his wind-up). knock: the move's knock_mps; src: a light bolt's sender (its instance id: its volley, VOLLEY_S), else none.
@@ -1300,11 +1307,18 @@ func begin(id: String, md: String) -> void:
 	_lock_at = _now()
 	var o := _option(id + "/" + md)
 	grown = false
-	if bool(o.get("grow", false)):
-		# (held past the second click: it grows; its element's grow_chance, a move's own "grow" over it)
+	if bool(o.get("grow", false)) and not me.held and not (id == "stone_form" and (_recent_threats() or _held_stone() != null)):
+		# (held past the second click: it grows; its element's grow_chance, a move's own "grow" over it. Never a held one's:
+		# Practice's dummy throws the same plain move every time, for its guards to be learnt. A Spike or a Boulder grows only
+		# with nothing coming at it and no caught stone in its hands: a grown stone's longer lock is no time to be caught out)
 		var el_ai: Dictionary = (ai().get("elements", {}) as Dictionary).get(element, {})
 		var gc := float((o.hint as Dictionary).get("grow", el_ai.get("grow", 0.35)))
-		grown = me.rng.randf() < gc
+		if id == "stone_form":
+			# (the Spike's and Boulder's grow, 2026-10-10: its own roll from its dice's seed and its casts so far, the bot's
+			# dice left untouched: every other choice it makes the same as before stones grew)
+			grown = float(absi(hash(Vector2i(me.rng_seed, casts + 7))) % 10000) / 10000.0 < gc
+		else:
+			grown = me.rng.randf() < gc
 		if grown:
 			lock_s += rule("grow_after_s")
 	if bool(o.get("guard", false)):

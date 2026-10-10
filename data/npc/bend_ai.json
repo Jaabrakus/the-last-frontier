@@ -60,9 +60,10 @@
         "range_m": [3.0, 22.0],
         "cool_s": 2.5,
         "combo": {"after": "earth_shove/column", "bonus": 2.5},
-        "weight": 0.8
+        "weight": 0.8,
+        "grow": 0.25
       },
-      "cannonball": {"role": "offence", "range_m": [3.0, 18.0], "cool_s": 4.0}
+      "cannonball": {"role": "offence", "range_m": [3.0, 18.0], "cool_s": 4.0, "grow": 0.3}
     },
     "earth_wall": {"wall": {"role": "defence", "cool_s": 7.0, "when": ["hurt"], "answers": ["held"], "min_knock": 7.0}},
     "pillar": {"self": {"role": "mobility", "cool_s": 7.0, "when": ["close"], "weight": 1.5, "answers": ["floor"]}},

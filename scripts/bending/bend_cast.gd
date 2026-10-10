@@ -43,7 +43,9 @@ static func cast(c: Variant, id: String, mode: String, t: Node3D = null, at := V
 		return not String(BendEffects.last_of(bc).get("do", "")) in ["", "dry"]
 	var made: Object = null
 	var keep := BendR3.cur
-	BendR3.cur = BendR3.info_for(bc, id, mode)       # (round 3: the hit info a stone thrown now carries)
+	# (round 3: the hit info a stone thrown now carries; ".grown" for a Spike or Boulder held on: stone_form.grow)
+	var grew := bc.grown and (d.get("grow", {}) as Dictionary).get(mode) is Dictionary
+	BendR3.cur = BendR3.info_for(bc, id, mode, grew)
 	match id:
 		"gust":
 			made = _gust(bc, d, mode, t, at)
