@@ -477,5 +477,7 @@ func _name_of(b: Variant, cap: bool) -> String:
 		return String(w.get("them", "%s")) % "Tide"
 	if b == _player():
 		return String(w.get("you", "You"))
+	if RingMode.name_of(b) != "":
+		return RingMode.name_of(b)             # (a team format's own name, no article: "Linh")
 	var el := RingReplay._element_of(b as Node)
 	return String(w.get("them", "%s")) % MatchSetup.competitor(el)

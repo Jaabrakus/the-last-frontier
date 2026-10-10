@@ -157,6 +157,13 @@ func _on_moment(kind: String, body: Node, info: Dictionary, h: RingHighlights) -
 	if c.is_empty():
 		return
 	var mine_team := h.my_team()
+	# (a team format: only your own moments are called out (a fall: one you dealt or took), never a team-mate's or a bot's
+	# far across the deck; the owner, 2026-10-10: team modes "Triple AAA"; callouts.json team_self_only)
+	var m := RingMode.find(get_tree())
+	if m != null and m.team_n() > 1 and bool(data().get("team_self_only", true)) and kind != "last_life":
+		var faller: Variant = info.get("faller")
+		if body != m.player and faller != m.player:
+			return
 	if String(c.get("who", "any")) == "mine" and mine_team >= 0:
 		var r := RingRules.current()
 		if body == null or r == null or r.team_of(body) != mine_team:

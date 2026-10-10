@@ -1213,17 +1213,20 @@ func _open_match() -> void:
 	back.name = "CardBack"
 	BroadcastUI.rect(mc, Rect2(0, 0, 494, 4), BroadcastUI.TEAL)
 	BroadcastUI.put(mc, BroadcastUI.lab("THE MATCH", BroadcastUI.head(false, 5, 1), 19, BroadcastUI.TEAL), Rect2(24, 14, 300, 24))
-	var fm: Dictionary = (MatchSetup.data().get("formats", {}) as Dictionary).get("1v1", {})
-	var fmt := BroadcastUI.hbox(8)
-	fmt.name = "Format"
-	fmt.alignment = BoxContainer.ALIGNMENT_END
-	var ftag := BroadcastUI.tag(String(fm.get("label", "1 v 1")), 16, BroadcastUI.INK, BroadcastUI.TEAL, 2)
-	ftag.name = "FormatTag"
-	fmt.add_child(ftag)
-	var fline := BroadcastUI.caps(String(fm.get("line", "")), BroadcastUI.head(false, 2, 1), 16, BroadcastUI.FAINT)
-	fline.name = "FormatLine"
-	fmt.add_child(fline)
-	BroadcastUI.put(mc, fmt, Rect2(176, 12, 298, 28))
+	# the format in the head: 1 v 1, 2 v 2, 4 v 4 (the owner, 2026-10-10: team modes on decks big enough; a row would push the
+	# card past a 720-high window), its line on each chip's tooltip
+	var fmt_opts: Array = []
+	for f: String in MatchSetup.FORMATS:
+		fmt_opts.append({"text": String(((MatchSetup.data().get("formats", {}) as Dictionary).get(f, {}) as Dictionary).get("label", f)),
+				"value": f, "name": "Format_" + f})
+	var frm := BroadcastUI.segments(fmt_opts, maxi(MatchSetup.FORMATS.find(MatchSetup.format), 0), 16, 9.0)
+	frm.name = "Format"
+	for i in frm.chips.size():
+		(frm.chips[i] as Control).tooltip_text = MatchSetup.menu_word("format_line_" + String(MatchSetup.FORMATS[i]))
+	frm.picked.connect(func(i: int) -> void:
+		MatchSetup.format = String(MatchSetup.FORMATS[i])
+		_paint_setup())
+	BroadcastUI.put(mc, frm, Rect2(232, 10, 238, 30))
 	# you against them
 	var vs := Control.new()
 	vs.name = "Versus"
@@ -1518,6 +1521,9 @@ func _paint_setup() -> void:
 		return
 	var foes: Array = Bending.ELEMENTS + [MatchSetup.ANY]
 	var f := MatchSetup.foe()
+	var frm := mc.find_child("Format", true, false) as BroadcastUI.Segments
+	if frm != null:
+		frm.set_chosen(maxi(MatchSetup.FORMATS.find(MatchSetup.format), 0))
 	(mc.find_child("Opponent", true, false) as BroadcastUI.Segments).set_chosen(maxi(foes.find(f), 0))
 	# (the nickname and the style's head: "Gale  ·  movement and pushing"; the whole style is under the cards for your own element)
 	_say(mc, "OpponentRow", MatchSetup.competitor(f) + "  ·  " + MatchSetup.style(f).get_slice(":", 0) if f != MatchSetup.ANY else MatchSetup.style(f))
@@ -1526,6 +1532,8 @@ func _paint_setup() -> void:
 	var rs := MatchSetup.rule_set()
 	(mc.find_child("Rules", true, false) as BroadcastUI.Segments).set_chosen(maxi(MatchSetup.RULE_SETS.find(rs), 0))
 	var rk := "rules_line_" + rs
+	if MatchSetup.team_size() > 1 and MatchSetup.menu_word(rk + "_team") != rk + "_team":
+		rk += "_team"                     # (a team format: 2 lives each)
 	_say(mc, "RulesRow", MatchSetup.menu_word(rk) if MatchSetup.menu_word(rk) != rk else MatchSetup.menu_word("rules_line"))
 	var stock := rs == "stock"
 	(mc.find_child("RoundsRow", true, false) as Control).visible = not stock
@@ -1665,7 +1673,7 @@ func _link_setup() -> void:
 	for el: String in Bending.ELEMENTS:
 		cards.append(_element_rows[el])
 	var rows: Array = []
-	for nm: String in ["Opponent", "Difficulty", "Rules", "Rounds", "Games", "Light"]:
+	for nm: String in ["Format", "Opponent", "Difficulty", "Rules", "Rounds", "Games", "Light"]:
 		var sg := mc.find_child(nm, true, false) as BroadcastUI.Segments
 		if sg != null and sg.chips.size() > 0 and sg.get_parent().visible:
 			rows.append(sg)

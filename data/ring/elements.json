@@ -6,7 +6,8 @@
     "name": "Tidebreak",
     "menu_line": "the ring sport: your element against another",
     "line": "Two sides on a deck over the water. Knock the other side back through its three zones and off the open end into the water to take the round.",
-    "line_stock": "Two sides on a deck over the water. Every hit raises the other side's %, and the higher it climbs, the farther they fly. Three lives each: the last side with lives left wins."
+    "line_stock": "Two sides on a deck over the water. Every hit raises the other side's %, and the higher it climbs, the farther they fly. Three lives each: the last side with lives left wins.",
+    "line_stock_team": "Two sides on a deck over the water. Every hit raises the other side's %, and the higher it climbs, the farther they fly. Two lives each in a team: the last side with anyone left wins."
   },
   "elements": {
     "earth": {
@@ -51,7 +52,15 @@
     "hard": "quick locks, close aim, and your moves answered"
   },
   "formats": {
-    "1v1": {"label": "1 v 1", "line": "3 v 3 teams: coming"}
+    "1v1": {"label": "1 v 1", "line": "one against one"},
+    "2v2": {
+     "label": "2 v 2",
+     "line": "two a side, a wider deck"
+    },
+    "4v4": {
+     "label": "4 v 4",
+     "line": "four a side, the big deck"
+    }
   },
   "lights": {
     "noon": "a clear midday sun high over the deck",

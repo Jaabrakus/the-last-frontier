@@ -637,6 +637,12 @@ func _hint_step() -> void:
 	if kn != null and kn.lying_t > 0.0:
 		hints.push("break_fall")
 	var now := BendStatus.now()
+	if mode.rules != null and mode.rules.is_away(p):
+		# (in the water, on the way back, or out of lives and watching (RingSpectate): no hint now, one up goes)
+		if _hint_until > 0.0:
+			_hint_until = -1.0
+			card.hide_card()
+		return
 	if FirstHints.find(get_tree()) != null:
 		# (a first match's key hints up: the hints wait in the queue, and a card already up goes)
 		if _hint_until > 0.0:

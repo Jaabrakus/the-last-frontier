@@ -1,14 +1,14 @@
 class_name MatchSetup
 extends RefCounted
 ## THE MATCH'S SETUP for Tidebreak, the elemental ring sport (the owner, 2026-10-04: the sport is called Tidebreak; a 1 v 1
-## first, the team lists kept for a 3 v 3 later): what the main menu chose, or the user args gave, for the ring scene
+## first; 2026-10-10: 2 v 2 and 4 v 4 on decks big enough, docs/tidebreak/team_formats_and_arenas.md): what the main menu chose, or the user args gave, for the ring scene
 ## (scenes/ring.tscn) to take at its start. Statics, so they outlive the scene change (the menu fills them, LoadingScreen
 ## loads the ring, the ring's level takes them).
 ##   element        the player's element (Bending.ELEMENTS): the character's own once it is chosen (AppearanceStore.element, read
 ##                  by load()), else the kept setup's; a match may play another, which is that match's only
-##   foes           the other side's elements, one per competitor (["water"] in a 1 v 1, three in a 3 v 3 later); ANY is
-##                  drawn by lot when the match begins (resolved())
-##   mates          the player's team-mates' elements ([] in a 1 v 1)
+##   foes           the other side's elements, one per competitor (["water"] in a 1 v 1); ANY is drawn by lot when the
+##                  match begins (resolved()); a team format's side short of names is filled with ANY (lineup())
+##   mates          the player's team-mates' elements ([] in a 1 v 1; a team format's short of names filled with ANY)
 ##   difficulty     the bots' (DIFFICULTIES: easy, normal, hard)
 ##   rounds_to_win  round wins that take the match (2: best of 3)
 ##   round_s        a round's length (s)
@@ -26,7 +26,8 @@ extends RefCounted
 ##   dummy          the practice dummy's way (DUMMIES: "stand" still, "block" its guards and cover, "throw" its element's
 ##                  strike every few seconds, so every guard can be practised: practice_move; data/ring/screens.json
 ##                  "practice")
-##   format         "1v1" (FORMATS; "3v3" is the structure only, shown as coming: format_ready)
+##   format         "1v1", "2v2" or "4v4" (FORMATS; team_size(f) its fighters a side; RingArena's deck for it: ring.json
+##                  formats). Practice and Quick match are 1v1's; kept with the setup
 ## The words a player sees come from data/ring/elements.json (info, label, competitor, style, color, sport): each element's
 ## name, the name its competitors go by (Stone, Tide, Ember, Gale) and its one-line style; no word from any show
 ## (tests/ring/test_player_words.gd holds them to that).
@@ -87,8 +88,8 @@ const GAMES := [1, 3]
 ## Practice's rows (data/ring/practice.json).
 const PRACTICE_PATH := "res://data/ring/practice.json"
 ## The match formats; only those in FORMATS_READY can be played (the rest are shown as coming).
-const FORMATS := ["1v1", "3v3"]
-const FORMATS_READY := ["1v1"]
+const FORMATS := ["1v1", "2v2", "4v4"]
+const FORMATS_READY := ["1v1", "2v2", "4v4"]
 
 ## Set by the main menu's Begin for the scene it loads (taken once: take()).
 static var incoming := false
@@ -276,7 +277,8 @@ static func save() -> void:
 		var kept := String(GameSettings.get_value(SECTION, "foe"))
 		if not elements_in(kept, true).is_empty():
 			f = kept
-	GameSettings.set_section(SECTION, {"element": element, "foe": f, "difficulty": difficulty, "rounds": rounds_to_win,
+	GameSettings.set_section(SECTION, {"element": element, "foe": f, "format": format if not quick else String(_kept("format", "1v1")),
+			"difficulty": difficulty, "rounds": rounds_to_win,
 			"light": light, "dummy": dummy, "rules": rules_choice, "games": games_n, "foe_pct": foe_pct, "my_pct": my_pct,
 			"steer": steer, "speed": speed, "fresh": fresh, "throw_me": throw_me})
 
@@ -294,6 +296,8 @@ static func load() -> void:
 	var f := elements_in(String(GameSettings.get_value(SECTION, "foe")), true)
 	if not f.is_empty():
 		foes = f
+	var fm := str(_kept("format", "1v1"))
+	format = fm if fm in FORMATS else "1v1"
 	var d := String(GameSettings.get_value(SECTION, "difficulty"))
 	if d in DIFFICULTIES:
 		difficulty = d
@@ -474,9 +478,30 @@ static func practice_move(el: String, what: String) -> String:
 	return String((((screens().get("practice", {}) as Dictionary).get(what, {})) as Dictionary).get(el, ""))
 
 
-## Whether format `f` can be played now ("1v1"); the others are shown as coming.
+## Whether format `f` can be played now; the others are shown as coming.
 static func format_ready(f: String) -> bool:
 	return f in FORMATS_READY
+
+
+## The fighters a side in format `f` ("" the chosen one): 1, 2 or 4.
+static func team_size(f := "") -> int:
+	var x := f if f != "" else format
+	return maxi(int(x.get_slice("v", 0)), 1) if x.get_slice("v", 0).is_valid_int() else 1
+
+
+## The match's sides, `n` fighters a side (-1: the chosen format's; a practice 1), ANY drawn by lot from `rng`: {mates: the
+## player's team-mates' elements (n - 1), foes: the other side's (n; foes[0] the chosen opponent, foe())}. Names short of a
+## side are ANY. A 1v1 draws as resolved([foe()]) does.
+static func lineup(rng: RandomNumberGenerator, n := -1) -> Dictionary:
+	if n < 1:
+		n = 1 if practice() else team_size()
+	var m: Array = mates.slice(0, n - 1)
+	while m.size() < n - 1:
+		m.append(ANY)
+	var f: Array = [foe()] + foes.slice(1, n)
+	while f.size() < n:
+		f.append(ANY)
+	return {"mates": resolved(m, rng), "foes": resolved(f, rng)}
 
 
 ## The practice dummy's way in words ("throws a stone every few seconds"; data/ring/screens.json practice.ways, the % ring's
@@ -966,7 +991,8 @@ static func sport() -> String:
 ## The sport's rule in a line (the menu's panel): the rule set's own ("line_stock": the % ring's lives), else "line" (the zones).
 static func sport_line() -> String:
 	var sp: Dictionary = data().get("sport", {})
-	return String(sp.get("line_" + rule_set(), sp.get("line", "")))
+	var line := String(sp.get("line_" + rule_set(), sp.get("line", "")))
+	return String(sp.get("line_" + rule_set() + "_team", line)) if team_size() > 1 else line
 
 
 ## The sport's row's line in the main menu.

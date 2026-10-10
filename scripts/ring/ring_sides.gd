@@ -7,6 +7,7 @@ extends RefCounted
 ##   away(team, el)         team 1 wears its element's away dress: el (or, "" given, any of its elements) is also on team 0
 ##                          (sides.json always: every ring match). The player's side, team 0, is ALWAYS home.
 ##   colour(team, el)       the plates' side colour: the element's home colour, its away colour for a side wearing away
+##   team_colour(team)      a team format's side colour (home the player's, away the other; team_game() one is played)
 ##   home_colour(el)        the element's home colour (the strip's readied picture: the player's side is always home)
 ##   dress(team, el)        the ring dress (slot -> {id, colors}) a fighter of `team` in `el` wears: ring_team_a's
 ##                          element_dress, the away colours merged over it when away(team, el); NpcSquad.element_look takes it
@@ -45,6 +46,11 @@ static func _el_cfg(el: String) -> Dictionary:
 static func always() -> bool:
 	if always_override != null:
 		return bool(always_override)
+	# (a team format: the other side always in its away kit, home against away like a sport's jerseys, so a team-mate and a foe
+	# of one element are told apart at a glance; sides.json always_teams)
+	var m := match_node()
+	if m != null and m.team_n() > 1 and bool(cfg().get("always_teams", true)):
+		return true
 	return bool(cfg().get("always", false))
 
 
@@ -122,6 +128,8 @@ static func away(team: int, el := "") -> bool:
 ## The plates' side colour of `team` (of its fighter in `el`; "" its first element): the element's home colour, or its away
 ## colour when that side wears away.
 static func colour(team: int, el := "") -> Color:
+	if sides_override == null and team_game():
+		return team_colour(team)             # (a team format: the side's own colour, its fighters' elements by their marks)
 	var e := el
 	if e == "":
 		var es := elements(team)
@@ -132,6 +140,20 @@ static func colour(team: int, el := "") -> Color:
 	if a is Array and (a as Array).size() >= 3:
 		return Color(float(a[0]), float(a[1]), float(a[2]))
 	return Color(0.98, 0.8, 0.42) if team == 0 else Color(0.55, 0.78, 1.0)
+
+
+## A team format is being played (2v2, 4v4: RingMode.team_n() > 1).
+static func team_game() -> bool:
+	var m := match_node()
+	return m != null and m.team_n() > 1
+
+
+## Side `team`'s own colour in a team format (sides.json team_colours: home the player's side, away the other).
+static func team_colour(team: int) -> Color:
+	var a: Variant = (cfg().get("team_colours", {}) as Dictionary).get("home" if team == 0 else "away")
+	if a is Array and (a as Array).size() >= 3:
+		return Color(float(a[0]), float(a[1]), float(a[2]))
+	return Color(0.13, 0.83, 0.76) if team == 0 else Color(1.0, 0.36, 0.38)
 
 
 ## Element `el`'s home colour (the strip's readied picture: the player's side is always home; a plate of a home side).

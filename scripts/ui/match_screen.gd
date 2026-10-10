@@ -227,19 +227,21 @@ func _paint_rows() -> void:
 func board() -> Dictionary:
 	var out := {"head": "", "line": "", "win": -1, "tags": [], "me": {"el": MatchSetup.element, "name": "You"},
 			"foe": {"el": MatchSetup.foe(), "name": ""}, "score": Vector2i.ZERO, "stock": false, "lives_line": "", "games": [],
-			"falls_head": "", "falls": [], "numbers": []}
+			"falls_head": "", "falls": [], "numbers": [], "team": false, "roster": [], "format": "1 v 1"}
 	var m := match_mode
 	if m == null or not is_instance_valid(m):
 		return out
 	var l := lines()
-	var them := String(m.call(&"foe_name"))
+	var team := team_game()
+	var them := w("team_them") if team else String(m.call(&"foe_name"))
+	out.team = team
 	var stock: bool = m.has_method(&"stock") and bool(m.call(&"stock"))
 	out.head = String(l.head)
 	out.line = String(l.line)
 	out.win = int(m.get(&"winner"))
 	out.score = m.get(&"score")
 	out.stock = stock
-	out.me = {"el": String(m.get(&"element")), "name": RingMode.words("you")}
+	out.me = {"el": String(m.get(&"element")), "name": w("team_you") if team else RingMode.words("you")}
 	out.foe = {"el": String(m.get(&"foe_element")), "name": them}
 	var to_win := int(m.get(&"to_win"))
 	var length := (MatchSetup.rounds_label(2) if to_win > 1 else String(MatchSetup.screens().get("one_game", "one game"))) if stock \
@@ -253,7 +255,7 @@ func board() -> Dictionary:
 		if String(h.get("why", "")) in ["ringout", "winded", "knockout"]:
 			how = w("round_at") % [how, "%d:%02d" % [floori(at / 60.0), floori(fmod(at, 60.0))]]
 		out.games.append({"n": int(h.get("round", 0)), "side": 0 if res == "win" else (1 if res == "loss" else -1),
-				"who": w("who_win") if res == "win" else (w("who_loss") % them if res == "loss" else w("who_draw")),
+				"who": w("who_win") if res == "win" else ((w("who_loss_team") if team else w("who_loss") % them) if res == "loss" else w("who_draw")),
 				"lives": h.get("lives", [0, 0]), "how": how})
 	if not stock:
 		var a: Dictionary = m.call(&"match_tally", 0)
@@ -263,7 +265,14 @@ func board() -> Dictionary:
 		return out
 	if not hist.is_empty():
 		var lv: Array = (hist.back() as Dictionary).get("lives", [0, 0])
-		out.lives_line = w("lives_line") % [int(lv[0]), them, int(lv[1])]
+		out.lives_line = w("lives_line_team") % [int(lv[0]), int(lv[1])] if team else w("lives_line") % [int(lv[0]), them, int(lv[1])]
+	if team:
+		# (a team format: every fighter with his own numbers, in place of every fall; RingMode.roster)
+		out.format = String(((MatchSetup.data().get("formats", {}) as Dictionary).get(RingArena.format, {}) as Dictionary).get("label", RingArena.format))
+		for e: Dictionary in m.call(&"roster"):
+			var r := e.duplicate()
+			r.erase("body")
+			out.roster.append(r)
 	# the last game's falls
 	var player: Variant = m.get(&"player")
 	var all: Array = m.get(&"falls")
@@ -305,6 +314,9 @@ func _rebuild_board(b: Dictionary) -> void:
 	var them := String((b.foe as Dictionary).name)
 	var pc := BroadcastUI.plate_c(me)
 	var fc := BroadcastUI.plate_c(fe)
+	if bool(b.team):
+		pc = RingSides.team_colour(0)              # (a team format: each side's own colour, not one fighter's element)
+		fc = RingSides.team_colour(1)
 	var win := int(b.win)
 	# the head: the result and its line
 	var hd := BroadcastUI.group(_board, Vector2(0, 0), Vector2(84, 40), Vector2(760, 250))
@@ -326,14 +338,15 @@ func _rebuild_board(b: Dictionary) -> void:
 	var sb := BroadcastUI.group(_board, Vector2(1, 0), Vector2(-820, 48), Vector2(740, 200))
 	sb.name = "Scoreboard"
 	var score: Vector2i = b.score
-	_team(sb, Rect2(0, 0, 280, 150), me, String((b.me as Dictionary).name), false)
+	var sub_me := String(b.format) if bool(b.team) else ""
+	_team(sb, Rect2(0, 0, 280, 150), me, String((b.me as Dictionary).name), false, sub_me, pc if bool(b.team) else Color(0, 0, 0, 0))
 	BroadcastUI.plate(sb, Rect2(276, 0, 188, 150), Color(BroadcastUI.NAVY0, 0.96))
 	BroadcastUI.put(sb, BroadcastUI.lab(str(score.x), BroadcastUI.head(), 140, BroadcastUI.WHITE if score.x >= score.y else BroadcastUI.FAINT,
 			HORIZONTAL_ALIGNMENT_CENTER), Rect2(282, -22, 80, 150))
 	BroadcastUI.put(sb, BroadcastUI.lab(str(score.y), BroadcastUI.head(), 140, BroadcastUI.WHITE if score.y >= score.x else BroadcastUI.FAINT,
 			HORIZONTAL_ALIGNMENT_CENTER), Rect2(380, -22, 80, 150))
 	BroadcastUI.rect(sb, Rect2(369, 50, 3, 52), Color(BroadcastUI.FAINT, 0.8))
-	_team(sb, Rect2(460, 0, 280, 150), fe, them, true)
+	_team(sb, Rect2(460, 0, 280, 150), fe, them, true, sub_me, fc if bool(b.team) else Color(0, 0, 0, 0))
 	if String(b.lives_line) != "":
 		var ll := BroadcastUI.hbox(0)
 		ll.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -357,7 +370,9 @@ func _rebuild_board(b: Dictionary) -> void:
 		BroadcastUI.put(gl, BroadcastUI.caps(tail, BroadcastUI.head(false, 2), 20 if bool(b.stock) else 16, BroadcastUI.DIM, HORIZONTAL_ALIGNMENT_RIGHT),
 				Rect2(250, y, 206, 44))
 		y += 50.0
-	if bool(b.stock) and not (b.falls as Array).is_empty():
+	if bool(b.team) and not (b.roster as Array).is_empty():
+		_roster(gl, y + 10.0, b.roster as Array, pc, fc)
+	elif bool(b.stock) and not (b.falls as Array).is_empty():
 		y += 10.0
 		BroadcastUI.put(gl, BroadcastUI.caps(String(b.falls_head), BroadcastUI.head(false, 4, 1), 16, BroadcastUI.FAINT), Rect2(0, y, 470, 22))
 		y += 26.0
@@ -377,11 +392,11 @@ func _rebuild_board(b: Dictionary) -> void:
 	BroadcastUI.section(ms, Vector2(0, 0), "The numbers", 460.0)
 	var lh := BroadcastUI.hbox(8)
 	lh.add_child(BroadcastUI.glyph(me, pc, 20.0))
-	lh.add_child(BroadcastUI.caps("You", BroadcastUI.head(false, 3, 1), 20, pc))
+	lh.add_child(BroadcastUI.caps(w("team_you_short") if bool(b.team) else "You", BroadcastUI.head(false, 3, 1), 20, pc))
 	BroadcastUI.put(ms, lh, Rect2(0, 32, 200, 26))
 	var rh := BroadcastUI.hbox(8)
 	rh.alignment = BoxContainer.ALIGNMENT_END
-	rh.add_child(BroadcastUI.caps(them, BroadcastUI.head(false, 3, 1), 20, fc))
+	rh.add_child(BroadcastUI.caps(w("team_them_short") if bool(b.team) else them, BroadcastUI.head(false, 3, 1), 20, fc))
 	rh.add_child(BroadcastUI.glyph(fe, fc, 20.0))
 	BroadcastUI.put(ms, rh, Rect2(260, 32, 200, 26))
 	var rows: Array = b.numbers
@@ -408,6 +423,48 @@ func _rebuild_board(b: Dictionary) -> void:
 		sy += pitch
 
 
+## A team format's roster under the game log (from `y`): every fighter with his own numbers, his side's colour at the left, the
+## best of each side marked; in a scroll when it runs past the column's foot.
+func _roster(gl: Control, y: float, roster: Array, pc: Color, fc: Color) -> void:
+	BroadcastUI.put(gl, BroadcastUI.caps(w("roster_head"), BroadcastUI.head(false, 4, 1), 16, BroadcastUI.FAINT), Rect2(0, y, 200, 22))
+	for c: Array in [[w("roster_falls"), 300.0], [w("roster_pct"), 362.0], [w("roster_lost"), 420.0]]:
+		BroadcastUI.put(gl, BroadcastUI.caps(String(c[0]), BroadcastUI.head(false, 3, 1), 15, BroadcastUI.FAINT, HORIZONTAL_ALIGNMENT_RIGHT),
+				Rect2(float(c[1]) - 10.0, y, 56, 22))
+	y += 26.0
+	var sc := ScrollContainer.new()
+	sc.name = "Roster"
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	BroadcastUI.put(gl, sc, Rect2(0, y, 470, maxf(460.0 - y, 96.0)))
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 4)
+	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.add_child(vb)
+	for e: Dictionary in roster:
+		var mine := int(e.team) == 0
+		var col := pc if mine else fc
+		var h := Control.new()
+		h.custom_minimum_size = Vector2(470, 32)
+		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		BroadcastUI.plate(h, Rect2(0, 0, 470, 32), Color(BroadcastUI.NAVY1, 0.95 if bool(e.mine) else 0.82))
+		BroadcastUI.plate(h, Rect2(0, 0, 6, 32), col)
+		BroadcastUI.put(h, BroadcastUI.glyph(String(e.element), BroadcastUI.plate_c(String(e.element)), 20.0), Rect2(14, 6, 20, 20))
+		var nm := BroadcastUI.caps(String(e.name), BroadcastUI.head(false, 2), 21, BroadcastUI.WHITE if bool(e.mine) else BroadcastUI.DIM)
+		BroadcastUI.put(h, nm, Rect2(44, 0, 160, 32))
+		if bool(e.mvp):
+			BroadcastUI.put(h, BroadcastUI.tag(w("mvp"), 14, BroadcastUI.INK, col, 2), Rect2(196, 6, 0, 0))
+		for c: Array in [[str(int(e.falls_dealt)), 300.0, BroadcastUI.WHITE], [str(int(e.pct_dealt)), 362.0, BroadcastUI.DIM],
+				[str(int(e.falls_taken)), 420.0, BroadcastUI.FAINT]]:
+			BroadcastUI.put(h, BroadcastUI.lab(String(c[0]), BroadcastUI.head(), 24, c[2] as Color, HORIZONTAL_ALIGNMENT_RIGHT),
+					Rect2(float(c[1]) - 10.0, 0, 56, 32))
+		vb.add_child(h)
+
+
+## A team format's match (2v2, 4v4): your team and theirs, each fighter by his own name, the roster in place of every fall.
+func team_game() -> bool:
+	return match_mode != null and is_instance_valid(match_mode) and match_mode.has_method(&"team_n") \
+			and int(match_mode.call(&"team_n")) > 1
+
+
 ## One of the last game's falls: when, a dot in the colour of who went in, "the Tide into the water at 104%", the move that did it.
 func _fall_row(f: Dictionary, pc: Color, fc: Color) -> Control:
 	var mine := bool(f.mine)
@@ -424,8 +481,8 @@ func _fall_row(f: Dictionary, pc: Color, fc: Color) -> Control:
 
 
 ## One side of the scoreboard: the side's colour with hatching, your bust or the other's mark, its name and its element.
-func _team(p: Control, r: Rect2, el: String, who: String, right: bool) -> void:
-	var pc := BroadcastUI.plate_c(el)
+func _team(p: Control, r: Rect2, el: String, who: String, right: bool, sub_text := "", col := Color(0, 0, 0, 0)) -> void:
+	var pc := col if col.a > 0.0 else BroadcastUI.plate_c(el)
 	var g := BroadcastUI.group(p, Vector2.ZERO, r.position, r.size)
 	g.clip_contents = true
 	BroadcastUI.grad(g, [[0.0, pc], [1.0, pc.darkened(0.35)]], Vector2(0.5, 0), Vector2(0.5, 1))
@@ -445,7 +502,8 @@ func _team(p: Control, r: Rect2, el: String, who: String, right: bool) -> void:
 		else:
 			_dress_bust.call_deferred()
 	var name := BroadcastUI.caps(who, BroadcastUI.head(true, 2), 54, BroadcastUI.INK, HORIZONTAL_ALIGNMENT_RIGHT if right else HORIZONTAL_ALIGNMENT_LEFT)
-	var sub := BroadcastUI.caps(MatchSetup.label(el), BroadcastUI.head(false, 4, 1), 18, Color(BroadcastUI.INK, 0.7),
+	BroadcastUI.fit_text(name, 136.0, 24)          # (a team's name, "Your team", in the width of an element's)
+	var sub := BroadcastUI.caps(sub_text if sub_text != "" else MatchSetup.label(el), BroadcastUI.head(false, 4, 1), 18, Color(BroadcastUI.INK, 0.7),
 			HORIZONTAL_ALIGNMENT_RIGHT if right else HORIZONTAL_ALIGNMENT_LEFT)
 	var k := BroadcastUI.boost
 	var sub_y := 34.0 + 58.0 * k
@@ -499,10 +557,14 @@ func lines() -> Dictionary:
 	var m := match_mode
 	if m == null or not is_instance_valid(m):
 		return out
-	var them := String(m.call(&"foe_name"))
+	var team := team_game()
+	var them := w("team_them") if team else String(m.call(&"foe_name"))
 	var win := int(m.get(&"winner"))
 	out.head = w("head_win") if win == 0 else (w("head_loss") if win == 1 else w("head_draw"))
-	out.line = w("line_win") if win == 0 else (w("line_loss") % them if win == 1 else w("line_draw"))
+	if team:
+		out.line = w("line_win_team") if win == 0 else (w("line_loss_team") if win == 1 else w("line_draw"))
+	else:
+		out.line = w("line_win") if win == 0 else (w("line_loss") % them if win == 1 else w("line_draw"))
 	out.score = String(m.call(&"score_text"))
 	var rows: Array = []
 	if m.has_method(&"stock") and bool(m.call(&"stock")):
@@ -523,7 +585,7 @@ func _stock_lines(m: Node, them: String, out: Dictionary) -> Dictionary:
 	var hist: Array = m.get(&"history")
 	if not hist.is_empty():
 		var lv: Array = (hist.back() as Dictionary).get("lives", [0, 0])
-		rows.append(w("lives_line") % [int(lv[0]), them, int(lv[1])])
+		rows.append(w("lives_line_team") % [int(lv[0]), int(lv[1])] if team_game() else w("lives_line") % [int(lv[0]), them, int(lv[1])])
 	var multi := int(m.get(&"to_win")) > 1
 	var player: Variant = m.get(&"player")
 	for f: Dictionary in m.get(&"falls"):
@@ -554,7 +616,8 @@ static func fall_line(f: Dictionary, them: String, mine: bool, multi := false) -
 ## A fall's parts: {when ("1:12"), who ("you", "the Tide"), mine, pct, how (the move, or "own fall")}.
 static func fall_parts(f: Dictionary, them: String, mine: bool) -> Dictionary:
 	var s := float(f.get("at_s", 0.0))
-	return {"when": "%d:%02d" % [floori(s / 60.0), floori(fmod(s, 60.0))], "who": w("fall_you") if mine else w("fall_them") % them,
+	var who := w("fall_you") if mine else (RingMode.name_of(f.get("who")) if RingMode.name_of(f.get("who")) != "" else w("fall_them") % them)
+	return {"when": "%d:%02d" % [floori(s / 60.0), floori(fmod(s, 60.0))], "who": who,
 			"mine": mine, "pct": roundi(float(f.get("pct", 0.0))),
 			"how": w("fall_self") if bool(f.get("self", false)) or f.get("by") == null else move_of(String(f.get("tag", "")))}
 

@@ -1,6 +1,8 @@
 {
   "_about": "Round 4 VIRAL: the callouts (Callouts, scripts/ui/callouts.gd) and the clash moment (BendClash, scripts/bending/bend_clash.gd). Big short words on the player's own screen, centred above the strip, never on or over anyone. One at a time: a higher priority one takes over, lower ones wait (at most queue_n, dropped after stale_s).",
   "enabled": true,
+  "team_self_only": true,
+  "_team_self_only": "A team format (2v2, 4v4): only the player's own moments are called out (a splash: a fall he dealt or took), never a team-mate's or another bot's; last_life stays for everyone. false: the who rules below as in a 1v1.",
   "show_s": 0.9,
   "queue_n": 3,
   "stale_s": 1.2,

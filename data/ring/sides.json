@@ -1,6 +1,9 @@
 {
 	"_about": "Tidebreak round 4 (HUD): side colours, like team jerseys (the owner's FEEL list: \"side colours in mirror matches\"; critic_r2 backlog item 5). RingSides (scripts/ring/ring_sides.gd) reads it. In a mirror match (an element worn on both sides) team 1 wears its element's AWAY dress: the same ring garments (the catalog's set ring, nothing new, nothing drawn on anyone), only their cloth colours changed: the element's family kept, its trims and its value turned round. The player's side is always home and the player's own dress never changes (PlayerAppearance.ring_dress). The plates' 2 px side rule and life glyphs take colour(team): the element's home colour, or its away colour for a side wearing away. always: true puts team 1 in its away dress in every ring match, not only in mirrors (the owner's call; default false). The duel and the open world never read this (no ring match: home).",
 	"always": false,
+	"always_teams": true,
+  "_team_colours": "A team format (2v2, 4v4; the owner, 2026-10-10: \"Triple AAA\"): each side's own colour on the plates' rule and life pips and on the match screen, whatever its fighters' elements (a side of four is of several): home the player's side (the menus' accent teal), away the other (a coral no element wears). The element still shows by its mark beside each name.",
+  "team_colours": {"home": [0.13, 0.83, 0.76], "away": [1.0, 0.36, 0.38]},
 	"_elements": "per element: home (the plates' colour for a side in the element's own dress), away (the plates' colour for a side in the away dress: its trim's), away_dress (slot -> zone -> palette token or #hex, merged over ring_team_a's element_dress colours for that slot; the garments themselves are the home dress's)",
 	"elements": {
 		"earth": {

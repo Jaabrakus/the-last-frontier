@@ -1,0 +1,5 @@
+{
+	"_about": "The team formats' fighters' own names (RingMode._name_for; the owner, 2026-10-10: 2v2 and 4v4 \"Triple AAA\": in a 4v4 two fighters of one element could not be told apart by 'the Gale'). A 1v1 keeps the element's competitor name (the Stone, the Tide). Each match draws its names from this list by its seed, none twice; the element shows on the plate beside the name. Short (the plates and the end screen's rows hold about 8 letters at their size), plain letters only (every font of the HUD has them). Owner: change the list freely; the Thủy Vân peoples' own names can replace these.",
+	"names": ["Linh", "Bao", "Tam", "Mai", "Kiet", "Lan", "Vu", "Hoa", "Sang", "Thu", "Duc", "Nga", "Phong", "Quy", "Tien", "Hai",
+			"Minh", "Yen", "Long", "Chau", "Khoa", "Ngoc", "Son", "Trang"]
+}

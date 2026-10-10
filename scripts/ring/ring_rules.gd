@@ -78,6 +78,8 @@ signal side_out(side: int)
 signal winded(who: Node3D, by: Node, to_zone: int)
 ## Round 3 (stock rules only; see the header): b's % now and what this change added.
 signal pct_changed(b: Node3D, pct: float, delta: float)
+## `delta` % dealt to b by `by` (another's hit: what the side's pct_dealt tally counts), for a fighter's own numbers (RingMode.roster).
+signal pct_dealt(by: Node, b: Node3D, delta: float)
 ## b launched at `v` (m/s) with `hitstun_s` of hitstun by `by`'s move `tag`.
 signal launched(b: Node3D, v: Vector3, hitstun_s: float, by: Node, tag: String)
 ## b lost a life (`stocks_left` left) at `pct`, credited to `by`'s `tag` (by null: his own fall).
@@ -390,6 +392,10 @@ func clamp_for(pos: Vector3, body: Node3D) -> Vector3:
 		var ls := ring.to_local(pos)
 		ls.x = clampf(ls.x, -ring.half_l() + 0.6, ring.half_l() - 0.6)
 		ls.z = clampf(ls.z, -ring.half_w() + 0.6, ring.half_w() - 0.6)
+		# (a team arena's raised pieces: a bot on the deck is sent round them, never into a wall; one up on a perch keeps its
+		# place there)
+		if not ring.pieces().is_empty() and ring.floor_at(body.global_position) < 0.5:
+			return ring.off_pieces(ring.to_global(ls), 0.7)
 		return ring.to_global(ls)
 	var sg := RingArena.side_sign(e)
 	var l := ring.to_local(pos)
@@ -968,6 +974,7 @@ func add_pct(b: Node, delta: float, by: Node, tag: String) -> void:
 			var t := team_of(by)
 			if t >= 0:
 				_tally(t, "pct_dealt", delta)
+				pct_dealt.emit(by, b as Node3D, delta)
 	pct_changed.emit(b, float(st.pct), float(st.pct) - was)
 
 

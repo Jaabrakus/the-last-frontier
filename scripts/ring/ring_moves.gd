@@ -469,7 +469,9 @@ func _step_free(dt: float) -> void:
 		_step(dt)
 		return
 	_crouch_to(on_ground and _b("down_held") and not stun and _lag <= 0.0)
-	if _b("jump"):
+	if _b("jump") and _b("sprint") and on_ground and not stun and _lag <= 0.0 and _drop_off():
+		on_ground = false                        # (Shift + Space at a raised piece's edge: down off it, not a jump)
+	elif _b("jump"):
 		_on_jump_press(on_ground)
 		if mode != "":
 			_step(dt)
@@ -490,6 +492,7 @@ func _step_free(dt: float) -> void:
 	if on_ground:
 		_ground_physics(dt, stun)
 		_lip_guard(dt, stun)
+		_piece_guard(dt, stun)
 	else:
 		_air_physics(dt, stun, 1.0)
 	_apply(dt)
@@ -829,6 +832,62 @@ func _lip_guard(dt: float, stun: bool) -> void:
 	lv.x = _stop_at(l.x, lv.x, lim.x, dt)
 	lv.z = _stop_at(l.z, lv.z, lim.y, dt)
 	_o = xf.basis * lv
+
+
+## A team arena's raised pieces (RingArena THE LAYOUT; the owner, 2026-10-10: "Shift + Space drops"): walking or running never
+## takes you off a perch, a wall's top or a ramp's side (a drop of more than piece_edge.drop_m just ahead: that way stops, the
+## other way slides on along the edge); Shift + Space within piece_edge.reach_m of such an edge hops you down off it
+## (_drop_off). A knock or hitstun carries you over; the deck's own lips are _lip_guard's.
+func _piece_guard(dt: float, stun: bool) -> void:
+	if stun or virtual or _arena == null or not is_instance_valid(_arena) or _arena.pieces().is_empty():
+		return
+	var at := _pos()
+	var here := _arena.floor_at(at)
+	if here < 0.3:
+		return
+	var drop := num("piece_edge", "drop_m", 0.6)
+	var look := num("piece_edge", "look_m", 0.35)
+	for ax in [0, 2]:
+		var v: float = _o[ax]
+		if absf(v) < 0.01:
+			continue
+		var ahead := Vector3.ZERO
+		ahead[ax] = v * dt + signf(v) * look
+		if here - _arena.floor_at(at + ahead) > drop:
+			_o[ax] = 0.0
+			_teetering = true
+
+
+## Shift + Space on a raised piece: the nearest edge with a drop past it within reach_m (the one nearest the held way first)
+## found, a hop down over it (hop_mps out, hop_up_mps up). False when none is near (then it is the sprint's jump).
+func _drop_off() -> bool:
+	_geo()                                       # (the arena found, when this frame has not asked yet)
+	if virtual or _arena == null or not is_instance_valid(_arena) or _arena.pieces().is_empty():
+		return false
+	var at := _pos()
+	var here := _arena.floor_at(at)
+	if here < 0.3:
+		return false
+	var reach := num("piece_edge", "reach_m", 1.0)
+	var drop := num("piece_edge", "drop_m", 0.6)
+	var want := _move_vec()
+	var best := Vector3.ZERO
+	var best_k := -INF
+	for i in 16:
+		var d := Vector3.FORWARD.rotated(Vector3.UP, TAU * float(i) / 16.0)
+		for m: float in [reach * 0.5, reach]:
+			if here - _arena.floor_at(at + d * m) > drop:
+				var k := (want.dot(d) if want.length() > 0.1 else 0.0) - m * 0.5
+				if k > best_k:
+					best_k = k
+					best = d
+				break
+	if best == Vector3.ZERO:
+		return false
+	_o = best * num("piece_edge", "hop_mps", 3.2) + Vector3.UP * num("piece_edge", "hop_up_mps", 2.6)
+	_jump_at = _t
+	_leave_ground()
+	return true
 
 
 # ---------------------------------------------------------------- landing, leaving the ground, refreshes

@@ -127,6 +127,10 @@ var _held_up := false              ## sudden death: the murmur held up till "cal
 ## Round 3, the stock overlay (RingArena.stock(); smash_r3 spec v2 §5.1): how far the walk, the stands and what stands on
 ## them moved out with the wider tank (tank_margin over the classic 6 m: 4 m), and the lanterns on the lip's piers.
 var out_m := 0.0
+## How far the stands stand past the classic 1v1 ring's along the deck (x) and across it (z): out_m both ways on the 1v1 deck,
+## more on a team format's bigger one (the owner, 2026-10-10: 2v2, 4v4). The lamps, posts and awning poles are laid from them.
+var out_x := 0.0
+var out_z := 0.0
 var lanterns := 0
 var _front_z := FRONT_Z
 var _flame_mat: ShaderMaterial
@@ -332,7 +336,10 @@ func _build() -> void:
 	oz = t.y + wt + float(sd.get("plaza_side", 3.0))
 	back = oz + td * float(tiers)
 	out_m = maxf(RingArena.num("tank_margin", 6.0) - 6.0, 0.0)     # (stock: the stands and the walk 4 m out)
-	_front_z = FRONT_Z + out_m
+	# (the classic 1v1 ring's ox 27.8 and oz 16.8: the numbers below were laid for it)
+	out_x = maxf(ox - 27.8, out_m)
+	out_z = maxf(oz - 16.8, out_m)
+	_front_z = FRONT_Z + out_z
 	xs.clear()
 	for k in BAYS + 1:
 		xs.append(-ox + float(k) * 2.0 * ox / float(BAYS))
@@ -1053,7 +1060,7 @@ func _braziers(kit: StructureMeshKit) -> void:
 	var at: Array[Vector3] = []
 	for sg: float in [-1.0, 1.0]:
 		for sz: float in [-1.0, 1.0]:
-			at.append(Vector3(sg * (25.8 + out_m), y0, sz * (15.3 + out_m)))
+			at.append(Vector3(sg * (25.8 + out_x), y0, sz * (15.3 + out_z)))
 			at.append(Vector3(sg * (ox - 2.2), y0, sz * 6.2))
 	for p in at:
 		var stone := Color(0.78, 0.74, 0.68)
@@ -1073,8 +1080,8 @@ func _posts(kit: StructureMeshKit) -> void:
 	var timber := Color(0.4, 0.11, 0.06)
 	for sz: float in [-1.0, 1.0]:
 		for k in 7:
-			var x := (-21.0 + 7.0 * float(k)) * (1.0 + out_m / 25.0)
-			var p := Vector3(x, y0, sz * (15.5 + out_m))
+			var x := (-21.0 + 7.0 * float(k)) * (1.0 + out_x / 25.0)
+			var p := Vector3(x, y0, sz * (15.5 + out_z))
 			RingArena.wbox(kit, &"ring_walk", p + Vector3(0, 0.2, 0), Vector3(0.45, 0.4, 0.45), 1.2, Color(0.75, 0.72, 0.66), 8)
 			prism(kit, &"paint", p + Vector3(0, 0.4, 0), 0.08, 0.065, 2.6, 8, timber)
 			prism(kit, &"gold", p + Vector3(0, 3.0, 0), 0.1, 0.0, 0.22, 8, GOLD)

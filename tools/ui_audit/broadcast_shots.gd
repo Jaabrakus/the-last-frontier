@@ -2,7 +2,7 @@ extends SceneTree
 ## The broadcast menus' AFTER shots (the owner chose the "Arena broadcast" style, 2026-10-10): the main menu (the lobby), the
 ## match setup with each element chosen, the ring's Esc menu with its two sub-panels, and the match-end board, as a player
 ## meets them in the game itself. Needs a window (not --headless); never opens the character creator.
-##   zsh tools/loop/godot_run.sh --path . --resolution 1600x900 -s tools/ui_audit/broadcast_shots.gd -- part=menu|ring|all [out=DIR] [tag=] [px=1600x900] [els=fire,earth,water,air]
+##   zsh tools/loop/godot_run.sh --path . --resolution 1600x900 -s tools/ui_audit/broadcast_shots.gd -- part=menu|ring|all [out=DIR] [tag=] [px=1600x900] [els=fire,earth,water,air] [format=4v4]
 ## part=practice plays a practice from the menu's Practice screen and takes the Esc menu there (pause_practice.png and its panel).
 ## part=element runs the first-run path of the menu with a stand-in for the character creator (MainMenu.creator_hook: the creator is
 ## never opened, a made-up look is saved as its Accept): the "Choose your element" step (element.png with Fire picked,
@@ -37,6 +37,8 @@ var tag := ""
 var px := Vector2i(1600, 900)
 var els: Array = ["fire", "earth", "water", "air"]
 var with_falls := true           ## falls=off: part=ring stops after the Esc menu's shots (no falls, no round or match-end boards)
+## format=: the match setup shown in that team format (MatchSetup.FORMATS).
+var fmt_arg := ""
 var vp: SubViewport
 var n := 0
 var m: MainMenu
@@ -139,6 +141,7 @@ func _initialize() -> void:
 			"px": px = Vector2i(int(v.get_slice("x", 0)), int(v.get_slice("x", 1)))
 			"els": els = Array(v.split(",", false))
 			"falls": with_falls = v != "off"
+			"format": fmt_arg = v if v in MatchSetup.FORMATS else ""
 	out = ProjectSettings.globalize_path(out)
 	if not CaptureKit.begin(self, "broadcast_shots", out):
 		return
@@ -149,6 +152,9 @@ func _initialize() -> void:
 	MatchSetup._aim_help = "strong"
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	GameSettings.path = OWN_CFG
+	if fmt_arg != "":
+		MatchSetup.format = fmt_arg              # (the match card's format chips: kept in its own file, where the menu reads it)
+		MatchSetup.save()
 	MatchSetup.reload_scheme()
 	InputSetup.ensure()
 	MatchSetup.set_controls("full")

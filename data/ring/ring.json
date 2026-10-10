@@ -82,6 +82,48 @@
 		"end_wall_h": 4.6,
 		"end_wall_t": 1.0
 	},
+	"formats": {
+		"_about": "The team formats' decks (docs/tidebreak/team_formats_and_arenas.md; the owner, 2026-10-10: 2v2 and 4v4 \"we need arenas built big enough\"): merged over the base and the rule set's overlay (modes.stock) when MatchSetup's format is one of these (RingArena.set_format); 1v1 is the base. deck_l = neutral_m + 2 x zones x zone_m. slot_z: the spawn line's places across the deck, the player's side's slot 0 his; spout_z: the respawn grates on each end's s line_s(zones - 1), one per fighter of a side; grate_z: every grate line's grates (spout_z among them); sockets.at [s, z] per side. layout: the team arena's raised pieces (RingArena THE LAYOUT; the owner's pick 2026-10-10, 'C · Ruins': a perch with its stairs on each team's flank, broken walls for cover, a broken column, the centre open; each piece also built turned half round the middle), checked against the spawns, grates, spouts and sockets (none within 1 m).",
+		"2v2": {
+			"deck_w": 20.0,
+			"deck_l": 40.0,
+			"zone_m": 6.0,
+			"slot_z": [-3.5, 3.5],
+			"grate_z": [5.0, -5.0],
+			"grates_per_line": 2,
+			"spout_z": [5.0, -5.0],
+			"sockets_at": [[6.0, 7.5], [11.0, 3.0]],
+			"layout": {
+				"name": "ruins",
+				"pieces": [
+					{"id": "perch", "kind": "perch", "rect": [-7.0, 6.0, -3.0, 9.0], "h": 2.6, "ramp": {"rect": [-12.0, 6.5, -7.0, 8.5], "up": "+x"}},
+					{"id": "wall_mid", "kind": "wall", "rect": [-0.8, -7.5, 0.0, -5.0], "h": 1.8},
+					{"id": "wall_back", "kind": "wall", "rect": [-11.4, -1.5, -10.6, 1.5], "h": 1.6},
+					{"id": "pillar", "kind": "pillar", "rect": [-4.0, -8.8, -3.0, -7.8], "h": 3.4}
+				]
+			}
+		},
+		"4v4": {
+			"deck_w": 28.0,
+			"deck_l": 52.0,
+			"zone_m": 8.0,
+			"slot_z": [-3.0, 3.0, -7.0, 7.0],
+			"grate_z": [4.0, -4.0, 8.0, -8.0],
+			"grates_per_line": 4,
+			"spout_z": [8.0, -8.0, 4.0, -4.0],
+			"sockets_at": [[6.0, 10.5], [13.5, 4.0]],
+			"layout": {
+				"name": "ruins",
+				"pieces": [
+					{"id": "perch", "kind": "perch", "rect": [-9.0, 9.0, -3.0, 13.0], "h": 3.0, "ramp": {"rect": [-15.0, 9.5, -9.0, 12.5], "up": "+x"}},
+					{"id": "wall_mid", "kind": "wall", "rect": [-0.8, -10.0, 0.0, -6.5], "h": 1.8},
+					{"id": "wall_back", "kind": "wall", "rect": [-13.4, -1.5, -12.6, 1.5], "h": 1.6},
+					{"id": "wall_flank", "kind": "wall", "rect": [-7.5, -13.0, -4.5, -12.2], "h": 1.4},
+					{"id": "pillar", "kind": "pillar", "rect": [-4.0, -12.6, -3.0, -11.6], "h": 3.6}
+				]
+			}
+		}
+	},
 	"modes": {
 		"_about": "Overlays on the numbers above for a rule set (RingArena.set_mode: the ring's rule set, RingRules.pick_rule_set). A key here replaces the base's; a block (coping, lanterns, piers, curtain) is the overlay's own. classic has none: today's numbers.",
 		"stock": {

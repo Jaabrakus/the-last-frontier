@@ -26,6 +26,9 @@ const GROUP := &"ring_match"
 const DATA_PATH := "res://data/ring/hud.json"
 
 static var _cfg := {}
+## The bottom of the plates down the screen's right while they stand at the top (global y; -1 none): the hint card (LessonCard)
+## stands under them, so a team format's stacked plates are never under a hint (the owner, 2026-10-10: team modes "Triple AAA").
+static var right_bottom := -1.0
 
 var player: FrontierPlayer
 ## The layout shown ("A" | "B"; "" hud.json's).
@@ -97,10 +100,15 @@ func match_node() -> Node:
 	return ns[0] if not ns.is_empty() else null
 
 
+func _exit_tree() -> void:
+	right_bottom = -1.0
+
+
 func _process(dt: float) -> void:
 	_t += dt
 	var m := match_node()
 	var on := m != null and player != null and is_instance_valid(player) and RingRules.stock_on()
+	right_bottom = -1.0
 	if not on:
 		if visible:
 			visible = false
@@ -121,6 +129,9 @@ func _process(dt: float) -> void:
 			if float(s.fall_t) > _fall_cfg("zero_s", 1.0) + 0.4:
 				s["fall_t"] = -1.0
 	_tick_pips()
+	var theirs := team(1 - my_side()).size()
+	if is_visible_in_tree() and theirs > 0 and String(((_blk("layouts")).get(layout(), {}) as Dictionary).get("corner", "top")) == "top":
+		right_bottom = get_global_rect().position.y + plate_rect(1, theirs - 1).end.y
 	queue_redraw()
 
 
@@ -292,6 +303,8 @@ func my_side() -> int:
 func _name_of(b: Node) -> String:
 	if b == player:
 		return "You"
+	if RingMode.name_of(b) != "":
+		return RingMode.name_of(b)             # (a team format's own name: two of one element told apart)
 	return MatchSetup.competitor(_element_of(b))
 
 

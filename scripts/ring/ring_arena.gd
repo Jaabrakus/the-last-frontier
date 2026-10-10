@@ -53,6 +53,20 @@ extends Node3D
 ##   spout_at(side, slot) -> Vector3         where a respawn spout rises: the grate on that end's last grate line (s 12 m),
 ##                                           at spout_z[slot] (z 4, -4; 0 the third for 3v3)
 ##   wall_place_ok(pos) -> Vector3           stock: a wall's place clamped wall_lip_clear_m (3.5) inside every lip
+## TEAM FORMATS (the owner, 2026-10-10: 2v2 and 4v4 on decks "big enough"; docs/tidebreak/team_formats_and_arenas.md):
+## set_format(f) reads ring.json formats[f] over the base and the rule set's overlay as the ring is made (make: MatchSetup's
+## format; a practice is 1v1's): 2v2 a 20 x 40 m deck, 4v4 28 x 52 m, their spawn slots, grates, respawn grates (one per
+## fighter of a side) and sockets. Everything above reads the merged numbers, so nothing else changes with the size.
+## THE LAYOUT (team formats; the owner, 2026-10-10: arena "C · Ruins": flank perches with ramps, broken walls, an open centre;
+## docs/tidebreak/team_formats_and_arenas.md): ring.json formats[f].layout.pieces, each also built turned half round the deck's
+## middle ((x, z) -> (-x, -z): the two ends fair, as the ends swap each game) unless "mirror": false. Kinds: perch (a raised
+## stone platform h m high, its ramp: stone stairs over a smooth slope, "ramp": {rect, up: the way it rises}), wall (a broken
+## wall, cover), pillar (a broken column). Each its own StaticBody3D on layer 1 (meta ring_deck "piece_<id>", form_matter
+## earth, surface stone). A 1v1 has none: the deck is flat.
+##   pieces() -> Array                [{id, kind, rect: Rect2 (local x, z), h, ramp {rect, up}}], the turned copies with them
+##   floor_at(pos) -> float           the height one stands at over the deck top there (0 the deck; a ramp's along its rise)
+##   piece_at(pos, margin) -> {}      the piece (or its ramp) over that point, grown by margin ({} none)
+##   off_pieces(pos, margin) -> pos   a place moved off every piece's footprint (grown by margin) it is in, to the nearest side
 
 const DATA_PATH := "res://data/ring/ring.json"
 const GROUP := &"ring_arena"
@@ -73,6 +87,9 @@ static var _data := {}
 ## merged numbers for it.
 static var mode := "classic"
 static var _merged := {}
+## The team format's deck ("1v1": the base; "2v2", "4v4": ring.json formats over the base and the mode's overlay; the owner,
+## 2026-10-10: team arenas "big enough"; docs/tidebreak/team_formats_and_arenas.md).
+static var format := "1v1"
 
 var visuals := true
 var water: RingWater
@@ -82,21 +99,32 @@ var grates: Array[Node3D] = []
 var sockets: Array[Dictionary] = []
 var mats := {}
 var _stones: Node3D
+## The layout's pieces (pieces(): parsed once, the turned copies with them).
+var _pieces: Array = []
+var _pieces_read := false
 
 
 static func data() -> Dictionary:
 	if _data.is_empty():
 		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(DATA_PATH))
 		_data = d if d is Dictionary else {}
-	if mode == "classic":
+	var fov: Variant = (_data.get("formats", {}) as Dictionary).get(format, null)
+	if mode == "classic" and not (fov is Dictionary):
 		return _data
 	if _merged.is_empty():
 		_merged = _data.duplicate(true)
-		var ov: Variant = ((_data.get("modes", {}) as Dictionary).get(mode, {}))
-		if ov is Dictionary:
-			for k: String in (ov as Dictionary):
-				if not k.begins_with("_"):
-					_merged[k] = (ov as Dictionary)[k]
+		var ov: Variant = ((_data.get("modes", {}) as Dictionary).get(mode, {})) if mode != "classic" else null
+		for o: Variant in [ov, fov]:
+			if not (o is Dictionary):
+				continue
+			for k: String in (o as Dictionary):
+				if k == "sockets_at":
+					# (a format moves the sockets only: their stones and hurls stay the base's)
+					var sk := (_merged.get("sockets", {}) as Dictionary).duplicate(true)
+					sk["at"] = (o as Dictionary)[k]
+					_merged["sockets"] = sk
+				elif not k.begins_with("_"):
+					_merged[k] = (o as Dictionary)[k]
 	return _merged
 
 
@@ -106,6 +134,20 @@ static func set_mode(m: String) -> void:
 	if want != mode:
 		mode = want
 		_merged = {}
+
+
+## The team format's deck from now on (`f` one of ring.json formats, else the base 1v1's).
+static func set_format(f: String) -> void:
+	var want := f if (_raw().get("formats", {}) as Dictionary).has(f) and not f.begins_with("_") else "1v1"
+	if want != format:
+		format = want
+		_merged = {}
+
+
+static func _raw() -> Dictionary:
+	if _data.is_empty():
+		data()
+	return _data
 
 
 ## Round 3: the stock overlay is on (the % ring's stage).
@@ -125,6 +167,7 @@ static func num(key: String, def := 0.0) -> float:
 
 static func make(parent: Node, xf := Transform3D.IDENTITY) -> RingArena:
 	set_mode(RingRules.pick_rule_set())
+	set_format(MatchSetup.format if not MatchSetup.practice() else "1v1")
 	var a := RingArena.new()
 	a.name = "RingArena"
 	a.transform = xf
@@ -149,6 +192,7 @@ func _ready() -> void:
 	_ropes()
 	_grates()
 	_collars()
+	_layout()
 	_surround()
 	water = RingWater.new()
 	water.name = "RingWater"
@@ -323,6 +367,11 @@ func spout_at(side: int, slot := 0) -> Vector3:
 	var z := float(zs[posmod(slot, zs.size())]) if not zs.is_empty() else 0.0
 	var s := line_s(side, int(num("zones", 3.0)) - 1)
 	return to_global(Vector3(side_sign(side) * s, top(), z))
+
+
+## The respawn grates an end has (spout_z's, at least 2).
+func spout_count() -> int:
+	return maxi((data().get("spout_z", data().get("grate_z", [4.0, -4.0])) as Array).size(), 2)
 
 
 ## A wall's place kept off the lip (spec §5.2): under the stock overlay clamped at least wall_lip_clear_m inside every lip (no
@@ -1137,6 +1186,287 @@ func _long_planks(kit: StructureMeshKit, c: Vector3, size: Vector3, tint: Color,
 		kit.box(&"ring_boards", Transform3D(Basis(), Vector3(x + l * 0.5, c.y, c.z)), Vector3(l - 0.01, size.y, size.z), StructureMeshKit.GRAIN_X,
 				rng.randi_range(0, 3), rng.randf() * 4.0, Color(tint.r * k, tint.g * k, tint.b * k), StructureMeshKit.KIND_ENDGRAIN, 0, 0.3)
 		x += l
+
+
+# ---------------------------------------------------------------- the layout (team formats: the Ruins)
+func pieces() -> Array:
+	if _pieces_read:
+		return _pieces
+	_pieces_read = true
+	var lay: Variant = data().get("layout", {})
+	if not (lay is Dictionary):
+		return _pieces
+	for e: Variant in (lay as Dictionary).get("pieces", []):
+		if not (e is Dictionary):
+			continue
+		var d := e as Dictionary
+		var one := _piece_of(d, false)
+		if one.is_empty():
+			continue
+		_pieces.append(one)
+		if bool(d.get("mirror", true)):
+			_pieces.append(_piece_of(d, true))
+	return _pieces
+
+
+## A piece from its data (`turned`: its copy half round the middle).
+static func _piece_of(d: Dictionary, turned: bool) -> Dictionary:
+	var r: Variant = d.get("rect")
+	if not (r is Array) or (r as Array).size() < 4:
+		return {}
+	var out := {"id": String(d.get("id", "piece")) + ("_t" if turned else ""), "kind": String(d.get("kind", "wall")),
+			"rect": _rect_of(r as Array, turned), "h": float(d.get("h", 1.5))}
+	var rp: Variant = d.get("ramp")
+	if rp is Dictionary and ((rp as Dictionary).get("rect") is Array):
+		var up := String((rp as Dictionary).get("up", "+x"))
+		if turned:
+			up = String({"+x": "-x", "-x": "+x", "+z": "-z", "-z": "+z"}.get(up, up))
+		out["ramp"] = {"rect": _rect_of((rp as Dictionary).rect as Array, turned), "up": up}
+	return out
+
+
+static func _rect_of(a: Array, turned: bool) -> Rect2:
+	var x0 := float(a[0])
+	var z0 := float(a[1])
+	var x1 := float(a[2])
+	var z1 := float(a[3])
+	if turned:
+		var t := [-x1, -z1, -x0, -z0]
+		x0 = t[0]
+		z0 = t[1]
+		x1 = t[2]
+		z1 = t[3]
+	return Rect2(minf(x0, x1), minf(z0, z1), absf(x1 - x0), absf(z1 - z0))
+
+
+## How far up a ramp is at local (x, z): 0 at its foot, 1 at its head (the way it rises: "+x" up toward +x).
+static func ramp_t(rp: Dictionary, x: float, z: float) -> float:
+	var r: Rect2 = rp.rect
+	match String(rp.get("up", "+x")):
+		"+x":
+			return clampf((x - r.position.x) / maxf(r.size.x, 0.01), 0.0, 1.0)
+		"-x":
+			return clampf((r.end.x - x) / maxf(r.size.x, 0.01), 0.0, 1.0)
+		"+z":
+			return clampf((z - r.position.y) / maxf(r.size.y, 0.01), 0.0, 1.0)
+	return clampf((r.end.y - z) / maxf(r.size.y, 0.01), 0.0, 1.0)
+
+
+func floor_at(pos: Vector3) -> float:
+	var l := to_local(pos)
+	var p := Vector2(l.x, l.z)
+	var best := 0.0
+	for pc: Dictionary in pieces():
+		if (pc.rect as Rect2).has_point(p):
+			best = maxf(best, float(pc.h))
+		var rp: Variant = pc.get("ramp")
+		if rp is Dictionary and ((rp as Dictionary).rect as Rect2).has_point(p):
+			best = maxf(best, float(pc.h) * ramp_t(rp as Dictionary, l.x, l.z))
+	return best
+
+
+func piece_at(pos: Vector3, margin := 0.0) -> Dictionary:
+	var l := to_local(pos)
+	var p := Vector2(l.x, l.z)
+	for pc: Dictionary in pieces():
+		if (pc.rect as Rect2).grow(margin).has_point(p):
+			return pc
+		var rp: Variant = pc.get("ramp")
+		if rp is Dictionary and ((rp as Dictionary).rect as Rect2).grow(margin).has_point(p):
+			return pc
+	return {}
+
+
+func off_pieces(pos: Vector3, margin := 0.6) -> Vector3:
+	var l := to_local(pos)
+	var p := Vector2(l.x, l.z)
+	for _pass in 4:
+		var inside: Rect2 = Rect2()
+		var found := false
+		for pc: Dictionary in pieces():
+			for r: Rect2 in _foot_rects(pc, margin):
+				if r.has_point(p):
+					inside = r
+					found = true
+					break
+			if found:
+				break
+		if not found:
+			break
+		# (out by its nearest side that is clear of every other piece; the nearest side when none is)
+		var exits: Array[Vector2] = [Vector2(inside.position.x - 0.01, p.y), Vector2(inside.end.x + 0.01, p.y),
+				Vector2(p.x, inside.position.y - 0.01), Vector2(p.x, inside.end.y + 0.01)]
+		exits.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.distance_to(p) < b.distance_to(p))
+		var pick := exits[0]
+		for e: Vector2 in exits:
+			if not _in_any(e, margin):
+				pick = e
+				break
+		p = pick
+	return to_global(Vector3(p.x, l.y, p.y))
+
+
+## A piece's footprint and its ramp's, grown by `margin`.
+static func _foot_rects(pc: Dictionary, margin: float) -> Array[Rect2]:
+	var out: Array[Rect2] = [(pc.rect as Rect2).grow(margin)]
+	var rp: Variant = pc.get("ramp")
+	if rp is Dictionary:
+		out.append(((rp as Dictionary).rect as Rect2).grow(margin))
+	return out
+
+
+func _in_any(p: Vector2, margin: float) -> bool:
+	for pc: Dictionary in pieces():
+		for r: Rect2 in _foot_rects(pc, margin):
+			if r.has_point(p):
+				return true
+	return false
+
+
+## The layout built: each piece a body of stone on the deck, its look from the deck's own stone (the art pass to come).
+func _layout() -> void:
+	if pieces().is_empty():
+		return
+	var root := Node3D.new()
+	root.name = "Layout"
+	add_child(root)
+	var y := top()
+	var kit := StructureMeshKit.new() if visuals else null
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1777
+	for pc: Dictionary in pieces():
+		var r: Rect2 = pc.rect
+		var h := float(pc.h)
+		var b := StaticBody3D.new()
+		b.name = "Piece_" + String(pc.id)
+		b.collision_layer = 1
+		b.collision_mask = 0
+		b.set_meta(DECK_META, "piece_" + String(pc.id))
+		b.set_meta(&"form_matter", "earth")
+		b.set_meta(&"surface", "stone")
+		root.add_child(b)
+		var ctr := Vector3(r.get_center().x, y + h * 0.5, r.get_center().y)
+		var size := Vector3(r.size.x, h, r.size.y)
+		_box_shape(b, AABB(ctr - size * 0.5, size))
+		var rp: Variant = pc.get("ramp")
+		if rp is Dictionary:
+			_ramp_shape(b, rp as Dictionary, h)
+		if kit == null:
+			continue
+		match String(pc.kind):
+			"perch":
+				_perch_look(kit, r, h, rng)
+				if rp is Dictionary:
+					_stairs_look(kit, rp as Dictionary, h)
+			"pillar":
+				_pillar_look(kit, r, h, rng)
+			_:
+				_wall_look(kit, r, h, rng)
+	if kit != null:
+		_commit(root, kit, "LayoutMesh")
+
+
+## A ramp's collider: the smooth wedge from its foot (the deck) to its head (h up), so a walker goes up it as up a slope.
+func _ramp_shape(b: StaticBody3D, rp: Dictionary, h: float) -> void:
+	var r: Rect2 = rp.rect
+	var y := top()
+	var x0 := r.position.x
+	var x1 := r.end.x
+	var z0 := r.position.y
+	var z1 := r.end.y
+	var pts := PackedVector3Array()
+	for c: Vector2 in [Vector2(x0, z0), Vector2(x1, z0), Vector2(x1, z1), Vector2(x0, z1)]:
+		pts.append(Vector3(c.x, y, c.y))
+		pts.append(Vector3(c.x, y + h * ramp_t(rp, c.x, c.y), c.y))
+	var cs := CollisionShape3D.new()
+	var sh := ConvexPolygonShape3D.new()
+	sh.points = pts
+	cs.shape = sh
+	b.add_child(cs)
+
+
+## A perch: a block of the deck's stone, its courses' joints a little out of line, a pale coping round its top.
+func _perch_look(kit: StructureMeshKit, r: Rect2, h: float, rng: RandomNumberGenerator) -> void:
+	var y := top()
+	var course := 0.75
+	var n := maxi(int(round(h / course)), 1)
+	for i in n:
+		var ch := h / float(n)
+		var inset := 0.04 * float(i % 2)
+		wbox(kit, &"ring_wall", Vector3(r.get_center().x, y + ch * (float(i) + 0.5), r.get_center().y),
+				Vector3(r.size.x - inset, ch, r.size.y - inset), 2.2, Color(0.86, 0.84, 0.8).darkened(rng.randf() * 0.06), 0,
+				Vector2(rng.randf(), rng.randf()))
+	wbox(kit, &"ring_stone", Vector3(r.get_center().x, y + h + 0.06, r.get_center().y), Vector3(r.size.x + 0.16, 0.12, r.size.y + 0.16),
+			1.6, Color(0.92, 0.9, 0.84))
+
+
+## A ramp's look: stone stairs from the deck to the perch's top (each step's tread on the slope's line).
+func _stairs_look(kit: StructureMeshKit, rp: Dictionary, h: float) -> void:
+	var r: Rect2 = rp.rect
+	var y := top()
+	var up := String(rp.get("up", "+x"))
+	var along_x := up in ["+x", "-x"]
+	var run := r.size.x if along_x else r.size.y
+	var n := maxi(int(ceil(h / 0.25)), 2)
+	for i in n:
+		var t0 := float(i) / float(n)
+		var t1 := float(i + 1) / float(n)
+		var sh := h * (t0 + t1) * 0.5           # (the tread half a riser over the slope's line at the step's middle)
+		var a := run * t0
+		var lo: float
+		var hi: float
+		if up in ["+x", "+z"]:
+			lo = (r.position.x if along_x else r.position.y) + a
+			hi = (r.position.x if along_x else r.position.y) + run
+		else:
+			lo = (r.end.x if along_x else r.end.y) - run
+			hi = (r.end.x if along_x else r.end.y) - a
+		var c := Vector3(0.0, y + sh * 0.5, 0.0)
+		var sz := Vector3.ZERO
+		if along_x:
+			c.x = (lo + hi) * 0.5
+			c.z = r.get_center().y
+			sz = Vector3(hi - lo, sh, r.size.y)
+		else:
+			c.z = (lo + hi) * 0.5
+			c.x = r.get_center().x
+			sz = Vector3(r.size.x, sh, hi - lo)
+		if sz.x > 0.01 and sz.z > 0.01:
+			wbox(kit, &"ring_stone", c, sz, 1.4, Color(0.9, 0.88, 0.83).darkened(0.03 * float(i % 2)), 0)
+
+
+## A broken wall: three stretches of stone at heights round h, the top ragged, a fallen block at its foot.
+func _wall_look(kit: StructureMeshKit, r: Rect2, h: float, rng: RandomNumberGenerator) -> void:
+	var y := top()
+	var long_x := r.size.x >= r.size.y
+	var len := r.size.x if long_x else r.size.y
+	var parts := 3
+	for i in parts:
+		var a := len * float(i) / float(parts)
+		var bl := len / float(parts)
+		var ph := h * (0.8 + rng.randf() * 0.35) if i != 1 else h
+		var c := Vector3(r.get_center().x, y + ph * 0.5, r.get_center().y)
+		var sz := Vector3(bl, ph, r.size.y) if long_x else Vector3(r.size.x, ph, bl)
+		if long_x:
+			c.x = r.position.x + a + bl * 0.5
+		else:
+			c.z = r.position.y + a + bl * 0.5
+		wbox(kit, &"ring_wall", c, sz, 2.0, Color(0.84, 0.82, 0.77).darkened(rng.randf() * 0.08), 0, Vector2(rng.randf(), 0.0))
+	var foot := Vector3(r.end.x + 0.35, y + 0.18, r.get_center().y) if not long_x else Vector3(r.get_center().x, y + 0.18, r.end.y + 0.35)
+	wbox(kit, &"ring_wall", foot, Vector3(0.5, 0.36, 0.45), 1.0, Color(0.8, 0.78, 0.73))
+
+
+## A broken column: a square plinth, a shaft of drums a little turned on each other, its top broken off at h.
+func _pillar_look(kit: StructureMeshKit, r: Rect2, h: float, rng: RandomNumberGenerator) -> void:
+	var y := top()
+	var c := r.get_center()
+	wbox(kit, &"ring_stone", Vector3(c.x, y + 0.2, c.y), Vector3(r.size.x + 0.3, 0.4, r.size.y + 0.3), 1.2, Color(0.9, 0.88, 0.82))
+	var drums := maxi(int(round((h - 0.4) / 0.8)), 1)
+	var dh := (h - 0.4) / float(drums)
+	for i in drums:
+		var w := minf(r.size.x, r.size.y) * (0.86 - 0.02 * float(i))
+		wbox(kit, &"ring_wall", Vector3(c.x + rng.randf_range(-0.03, 0.03), y + 0.4 + dh * (float(i) + 0.5), c.y + rng.randf_range(-0.03, 0.03)),
+				Vector3(w, dh - 0.02, w), 1.6, Color(0.86, 0.84, 0.78).darkened(rng.randf() * 0.06), 0, Vector2(rng.randf(), rng.randf()))
 
 
 func _box_shape(b: StaticBody3D, a: AABB) -> void:

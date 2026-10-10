@@ -71,6 +71,7 @@
 		"neutral_end_s": 0.15,
 		"neutral_land_lag_s": 0.15
 	},
+	"piece_edge": {"_about": "A team arena's raised pieces (RingMoves._piece_guard, _drop_off; the owner, 2026-10-10: \"Shift + Space drops\"): walking stops where the floor drops more than drop_m within look_m ahead; Shift + Space within reach_m of such an edge hops down off it, hop_mps out and hop_up_mps up.", "drop_m": 0.6, "look_m": 0.35, "reach_m": 1.0, "hop_mps": 3.2, "hop_up_mps": 2.6},
 	"teeter": {
 		"_about": "spec §4.7: running stops lip_m inside the lip; holding toward the water step_off_s steps off; hold_dot: how square to the water the held keys must be",
 		"step_off_s": 0.3,
