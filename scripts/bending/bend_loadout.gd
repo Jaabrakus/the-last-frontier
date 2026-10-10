@@ -37,6 +37,8 @@ const STYLE_META := &"fighting_style"
 const PICKS_META := &"loadout_picks"
 const OVERLAY_META := &"loadout_overlay"
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
+## What a body that wears nothing reads (shared and read-only: the readers never change what overlay_of gives them).
+const NONE := {}
 
 ## Tests only: merged over the file (enabled, live, styles_live replace; nodes merge by id).
 static var config_override: Dictionary = {}
@@ -49,6 +51,8 @@ static var _tree: Dictionary = {}                ## id -> the skill tree's node
 static var _styles: Dictionary = {}              ## fighting_styles.json "styles"
 static var _resolved: Dictionary = {}            ## id -> resolve()
 static var _lib_exists: Dictionary = {}          ## library path -> whether the file is there (asked once)
+static var _ok_memo: Dictionary = {}             ## style -> element -> style_ok, made under _ok_memo_cfg
+static var _ok_memo_cfg: Variant = null          ## the config_override the memo was made under
 
 
 # ---------------------------------------------------------------- the switches
@@ -77,6 +81,8 @@ static func reload_data() -> void:
 	_styles = {}
 	_resolved = {}
 	_lib_exists = {}
+	_ok_memo = {}
+	_ok_memo_cfg = null
 
 
 ## The master switch (data/bending/loadout_apply.json "enabled"): off, no style and no number applies.
@@ -131,7 +137,26 @@ static func _style_def(style: String) -> Dictionary:
 ## Whether `style` plays for a body that casts as `element`: master switch on, in styles_live, animated (never parked or
 ## coming: Capoeira is parked), of that element, with poses in style_poses.json and its library on disk.
 static func style_ok(style: String, element: String) -> bool:
-	if style == "" or element == "" or not enabled():
+	if style == "" or element == "":
+		return false
+	# (asked every frame for a styled body's stance and held guard: answered once per config, then looked up; a new
+	# config_override, as a test sets one, or reload_data asks again)
+	if not is_same(_ok_memo_cfg, config_override):
+		_ok_memo = {}
+		_ok_memo_cfg = config_override
+	var by: Variant = _ok_memo.get(style)
+	if by is Dictionary and (by as Dictionary).has(element):
+		return bool((by as Dictionary)[element])
+	var ok := _style_ok(style, element)
+	if not (by is Dictionary):
+		by = {}
+		_ok_memo[style] = by
+	(by as Dictionary)[element] = ok
+	return ok
+
+
+static func _style_ok(style: String, element: String) -> bool:
+	if not enabled():
 		return false
 	if not style in (config().get("styles_live", []) as Array):
 		return false
@@ -389,9 +414,14 @@ static func clear(body: Node) -> void:
 ## The overlay `body` wears ({} Classic: nothing worn, or nothing of it live).
 static func overlay_of(body: Object) -> Dictionary:
 	if body == null or not is_instance_valid(body) or not (body is Node) or not (body as Node).has_meta(OVERLAY_META):
-		return {}
+		return NONE
 	var ov: Variant = (body as Node).get_meta(OVERLAY_META)
-	return ov if ov is Dictionary else {}
+	return ov if ov is Dictionary else NONE
+
+
+## Whether `body` wears numbers (the readers' first question: Classic answers it with one meta lookup, nothing made).
+static func _wears(body: Object) -> bool:
+	return body != null and is_instance_valid(body) and body is Node and (body as Node).has_meta(OVERLAY_META)
 
 
 ## The node ids `body` wears live (the applied picks).
@@ -452,6 +482,8 @@ static func wear_player(body: Node, element: String) -> void:
 ## Spec `base` of move `m` at `mode`, with the wearer's numbers over it (`base` itself for Classic: no copy). Nested keys are
 ## merged (a spec's grow, fwd, back and side keep their other keys); `base` is never changed.
 static func spec(body: Object, m: String, mode: String, base: Dictionary) -> Dictionary:
+	if not _wears(body):
+		return base
 	var ov := overlay_of(body)
 	if ov.is_empty():
 		return base
@@ -471,6 +503,8 @@ static func _merged(base: Dictionary, over: Dictionary) -> Dictionary:
 
 ## Move `m`'s lock at `mode` for `body`: `base` (the data's, before the stretch, the tier and lock_mult) or the wearer's own.
 static func lock(body: Object, m: String, mode: String, base: float) -> float:
+	if not _wears(body):
+		return base
 	var ov := overlay_of(body)
 	if ov.is_empty():
 		return base
@@ -481,7 +515,7 @@ static func lock(body: Object, m: String, mode: String, base: float) -> float:
 ## mode), "ice" Ice Wall; the wearer's numbers over the base and, for snow, over the matter's own (materials.snow.hits).
 static func wall_numbers(body: Object, kind: String, base: Dictionary, matter: String) -> Dictionary:
 	var entry := FormMatter.entry("earth_wall", matter)
-	var ov: Variant = overlay_of(body).get(kind)
+	var ov: Variant = overlay_of(body).get(kind) if _wears(body) else null
 	if not (ov is Dictionary) or (ov as Dictionary).is_empty():
 		return FormMatter.numbers(base, entry, matter)
 	var o := ov as Dictionary

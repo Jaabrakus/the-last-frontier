@@ -81,10 +81,11 @@ up on a new machine, what is switched off, and what is waiting on the owner.
 
 ## Known gaps at handoff (be honest about these)
 
-- **Live loadouts (Boxing + the 8 talents):** built and tested by their builder (`tests/ring/test_loadout_apply.gd`, the fairness soak
-  in `docs/tidebreak/loadouts_live.md`), but the independent review pass was cut off by a usage limit. Re-run that review before
-  trusting it: check Classic is unchanged (nothing worn = identical numbers), that each talent changes only the wearer, and that Boxing
-  keeps Classic's cast timings. The default is safe (nothing applies until a loadout is worn in the window).
+- **Live loadouts (Boxing + the 8 talents):** independently reviewed on 2026-10-10 (`docs/tidebreak/loadouts_live.md`, "Independent
+  review"; `tests/ring/test_loadout_review.gd`). Classic is byte-for-byte the code before the loadouts, a talent changes only its wearer,
+  and Boxing keeps Classic's cast timings. Fixed: a damaged save could stop the read with script errors and wear the wrong slot; Classic
+  reads made a new dictionary each time. Open for the owner: Boxing's High Kick and Pop leave from the boxing fist (the High Kick
+  0.9 m higher than the kicking foot).
 - **Menus, first pass, open items from the critic:** the between-games round screen and the loading screen still use the old serif look;
   the match-setup fighter cards are about 30% smaller than the approved mockup; at 1280x720 the match card's wrapped help lines touch the
   next row's rule; the lobby adds a ~1.1 s frozen frame about 1.1 s after the menu appears. Second pass (loading, practice, settings,

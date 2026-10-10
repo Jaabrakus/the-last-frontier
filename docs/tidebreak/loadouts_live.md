@@ -130,12 +130,46 @@ What this says:
 - Freeze (the frost ice wall) is not a Thick Ice wall; shell and ramp are not Thick Wall walls (the nodes extend the Wall and the Ice Wall modes only).
 - A style or node that does not fit the worn element (another element's id in a slot) applies nothing for that body.
 
+## Independent review (10 October 2026, second pass)
+
+The review the usage limit cut off, done again. Each point has a test, `tests/ring/test_loadout_review.gd`, and each test checks against something that does not come from `BendLoadout`. The "Classic before" side is a fingerprint taken from the code BEFORE the loadouts commit (`c0a631a0^`) with `tools/ring/loadout_classic_print_run.gd` and kept in `tests/ring/fixtures/loadout_classic_golden.json`. That fingerprint covers 123 move/mode locks for the player and the bot (near and far, every difficulty), the ranges, what a hit costs, 480 cast poses, 386 cast timelines (three lock lengths and the other hand, frame by frame), and 47 real casts (speed, size, damage, knock, lift, dashes, the walls).
+
+| # | Claim | Verdict | Proof |
+|---|---|---|---|
+| 1 | Classic is unchanged | **CLEARED** | Today's fingerprint matches the code before the loadouts byte for byte. It also matches with the master switch off, with every node and Boxing switched on and nothing worn, and in the next match after one played wearing a loadout (test part 1, 16 checks). |
+| 2 | A talent changes only its wearer | **CLEARED** | For every element: while the player wears all its nodes, the bot's casts and all its locks are Classic's. While the bot wears them, the player's are Classic's. The wearer's own casts do change. The loadout persists through rounds of a match and is gone in the next match without it, also for a new bot (part 2 and the end of part 5). |
+| 3 | Boxing keeps Classic's cast timings | **CLEARED** (timing) | 52 driven casts: every Boxing pick at 0.03 s, hold + 0.15 s and hold + 0.7 s of lock, plus the other hand, with Quick Step worn alongside. Every one strikes, ends, roots and waits on Classic's frames, and on the strike frame the Boxing clip shows its own strike (within one frame). A bot given Boxing by hand plays the element's own clips (part 3). |
+| 3b | Boxing is "animation only" | **CONFIRMED, not fixed (owner's call)** | A bolt, a cone, a throw or a floor wave leaves from the pose's limb on the strike frame (`SwayPose.strike_point`, `PlayerBendCaster.launch_point`), so it leaves from Boxing's fist rather than the element clip's limb. Measured in the player's own frame: the **High Kick** (a throw) leaves 0.94 m from where it did before, **0.90 m higher** (the uppercut's fist instead of the kicking foot). The **Pop** leaves 0.52 m away, 0.44 m lower. The other 13 picks are within 0.06 to 0.30 m. The timing is Classic's, but the starting point of the shot is not. Pinned in part 3 (`KNOWN_LAUNCH`) so any change is seen. |
+| 4 | The save is robust and isolated | **CONFIRMED and FIXED** | A hand-edited or damaged `user://advancement.json` stopped the read with a script error and misread the save. `"worn": "x"` or `0.7` wore slot 0. A `null` name or time, a `"yes"` padlock, or a non-string id lost the slot's picks. An empty or broken file printed an engine "Parse JSON failed" error. `AdvancementStore` now reads every field by its type (`_str`, `_int`, `_bool`; a value of the wrong type is read as the default, a non-string id is dropped and named) and parses with `JSON.new()`. Test part 4 has 16 cases: before the fix, 4 failed with 4 SCRIPT ERRORs; after it, all pass. A missing file, an old format, an unknown style and a removed node id were already handled (CLEARED). Reading never writes. The test proves the player's own save is untouched (its modified time is the same before and after). |
+| 5 | The switches gate everything | **CLEARED** | Through `RingMode.restart` (the match start): `enabled` false takes away the node and the class, `nodes.<id>` false or the id left out of `live` takes away the node, `styles_live` empty takes away the class, and `classic_style` works both ways. The window's green dots (`AdvancementData.is_live` / `is_live_style`) agree with `BendLoadout` for all 133 nodes and every style (part 5). The switches are read at the match start; the file is read once per run, so in the game a switch only changes with a new run. |
+| 6 | No per-frame allocation or lookup in hot paths | **CONFIRMED (minor) and FIXED** | Every Classic read made a new empty dictionary (`overlay_of` returned `{}`; a bot's `NpcBending.lock_for` calls it several times per think). A Boxing body ran `style_ok` again every frame (the stance, the held guard) through config and data lookups with default `[]`/`{}` arguments. Now a body that wears nothing is answered by one `has_meta`, and the shared read-only empty overlay is returned. `style_ok` is kept per config (a new `config_override` or `reload_data` asks again). Measured 0.28 µs per Classic `lock()` call and 0.78 µs per Boxing `style_of` call (part 6). The Boxing library (345 KB) still loads on first use: the first stance frame of a styled match, in the countdown. |
+
+Also checked and cleared: the soak's wall keys (`earth_wall/wall`, `water_shield/ice_wall`) are the bots' real cast keys, so "0 casts" means the bots really never wall. No body is ever duplicated with its metas. The ring has no online path today, so the online limit above cannot arise yet. Changing the element in the Esc menu during a match leaves the old element's overlay on the body; it has no effect, because its keys are another element's moves, and it is replaced at the next restart.
+
+**Soak after the fixes** (n = 10 per element, seed 7300, nodes=all, the same command as above):
+
+| Element (nodes worn) | Wearer wins | Rate | Lives lost wearer / other | Casts of the nodes' moves | Same seeds before the fixes |
+|---|---|---|---|---|---|
+| air (Dense Ball, Full Sail, Keen Edge) | 4 of 10 | 0.400 | 26 / 23 | 688 | identical, game by game |
+| earth (Lie Low, Thick Wall forced on) | 5 of 10 | 0.500 | 24 / 24 | 33 | (earth does not replay bit for bit: stones are physics bodies) |
+| fire (Quick Step) | 5 of 10 | 0.500 | 24 / 24 | 123 | identical, game by game |
+| water (Thick Ice forced on) | 3 of 10 | 0.300 | 27 / 22 | 0 (the bots never wall) | identical, game by game |
+
+The fixes moved nothing: air, fire and water played the same ten games, line for line, on the code before the fixes and after them. The loadout was found on the wearer at every check (19 of 19 per run), with no anomaly and no script error. Ten games is a smoke run, not a fairness measure (see "How strict the gate is"). These are mirror matches, so they say nothing about one element against another.
+
 ## Tests and commands
 
 ```
 # the test (headless): the switches, every live node's numbers on a wearer and on a bot, Classic's identity, the styles, the
 # ring scene with a worn slot (real casts), the save never written
 zsh tools/loop/run_test_fps.sh /Users/kiwimango/Downloads/Frontier loadout_apply tests/ring/test_loadout_apply.gd
+
+# the independent review (headless): Classic against the code before the loadouts (the golden fingerprint), the wearer only,
+# Boxing's frames and launch points, the damaged saves, the switches through the match start, the hot paths
+zsh tools/loop/run_test_fps.sh /Users/kiwimango/Downloads/Frontier loadout_review tests/ring/test_loadout_review.gd
+
+# re-take Classic's fingerprint (only when Classic is changed on purpose: then replace tests/ring/fixtures/loadout_classic_golden.json)
+zsh tools/loop/godot_run.sh --headless --fixed-fps 60 --path /Users/kiwimango/Downloads/Frontier -s tools/ring/loadout_classic_print_run.gd -- out=<file.json>
 
 # the soak: one config per run; n games, the wearer alternating sides; nodes=all for the element's live set
 zsh tools/loop/godot_run.sh --headless --fixed-fps 60 --path /Users/kiwimango/Downloads/Frontier -s tools/ring/loadout_soak.gd -- element=air nodes=air.slice.keen n=30 seed=7300
