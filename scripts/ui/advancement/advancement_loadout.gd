@@ -143,8 +143,13 @@ func can_wear(id: String) -> bool:
 	return not has(id) and _check(id)[0] == ""
 
 
-## [code, text] of the first check `id` fails (["", ""] when none).
-func _check(id: String) -> Array:
+## True when only the points stop `id` (every other rule lets it be worn): the window draws it within reach.
+func short_of_points(id: String) -> bool:
+	return not has(id) and _check(id)[0] == "budget" and _check(id, true)[0] == ""
+
+
+## [code, text] of the first check `id` fails (["", ""] when none). `ignore_budget` skips the points check.
+func _check(id: String, ignore_budget := false) -> Array:
 	var n := AdvancementData.node(id)
 	if n.is_empty() or String(n.el) != element:
 		return ["unknown", AdvancementData.word("reasons.unknown")]
@@ -172,7 +177,7 @@ func _check(id: String) -> Array:
 	if bool(n.world_only):
 		return ["world_only", AdvancementData.word("reasons.world_only")]
 	var c := int(n.cost)
-	if cost() + c > AdvancementData.budget():
+	if cost() + c > AdvancementData.budget() and not ignore_budget:
 		return ["budget", AdvancementData.word("reasons.budget") % [c, left()]]
 	var k := tally()
 	var kind := String(n.kind)
@@ -303,6 +308,7 @@ func through_gates(ids: Array) -> Dictionary:
 	var kept: Array = []
 	var back: Array = []
 	var reason := ""
+	var reason_code := ""
 	for id: String in ordered(ids):
 		var code := t.why_not_code(id)
 		if code == "":
@@ -312,9 +318,10 @@ func through_gates(ids: Array) -> Dictionary:
 			back.append(id)
 			if reason == "" and code.begins_with("gate_"):
 				reason = t.why_not(id)
+				reason_code = code
 		else:
-			return {"kept": kept, "held_back": back, "reason": reason, "error": AdvancementData.word("reasons.invalid_pick") % [AdvancementData.name_of(id), t.why_not(id)]}
-	return {"kept": kept, "held_back": back, "reason": reason, "error": ""}
+			return {"kept": kept, "held_back": back, "reason": reason, "reason_code": reason_code, "error": AdvancementData.word("reasons.invalid_pick") % [AdvancementData.name_of(id), t.why_not(id)]}
+	return {"kept": kept, "held_back": back, "reason": reason, "reason_code": reason_code, "error": ""}
 
 
 ## What this (pending) loadout changes against `saved`: {worn: ids here and not there, taken_off: ids there and not here,

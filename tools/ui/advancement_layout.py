@@ -306,6 +306,274 @@ def algorithm(tree, moves, ui, el, side, mode):
     return {'places': places, 'items': items, 'links': links, 'bands': band_info, 'width': W}
 
 
+# --- the diamond lattice (the pins; 2026-10-10 repair of the critic's "sparse lattice") -----------------------------------
+#
+# The reference packs its talents on a diamond lattice: every other row is offset by half a column, each pick sits
+# diagonally under the one before it, and the shut rows lie below one gate line. The pins are packed that way:
+#   points   a point is (x, row) with x in half columns and x + row even (so a row's neighbours are 2 apart and the next
+#            row's are 1 to the side: the diamonds). A pin's col is x / 2.
+#   shapes   each line keeps its tiers on consecutive rows; a tier of k entries spans 2(k-1) half columns, centred under
+#            the tier before it, stepping half a column aside when the row's parity asks (so a chain of one-pick tiers
+#            zig-zags, as the reference's do).
+#   sections the tiers before a line's first gated tier (switches.full_lessons_kinds: twists, techniques, new skills,
+#            sets) go ABOVE the gate row, the rest below it, so one gate line tells the truth: every pick under it waits
+#            for the Full lessons, none above it does.
+#   packing  above the gate, lines go in chip order to the topmost row, then the column, where they fit (no two points
+#            of a row closer than 2) at the least penalty (links crossing links, passing over another plate or running flatter than a diagonal; each line tries its flat shape and, where a tier fans out, a tall one); then
+#            lines that continue below sink to the gate row while that costs nothing; below the gate each line's rest
+#            goes as near under its parents as the penalty allows.
+#   width    every width from layout.lattice.<side>_widths is packed; the least penalty wins, then the shape nearest the
+#            zone's (at lattice.half_px x row_px), then the narrower.
+
+def _lattice_shape(ln, ts, tall=False):
+    """[(row, x, key)] of one line's tiers `ts` from row 0, x >= 0, x + row even. `tall`: a tier whose links to the tier
+    before would run flatter than a diagonal (three picks under one, or one under three: a fan) drops as many rows as it
+    spreads, centred straight under the tier before, so every link is a diagonal or a straight drop (2026-10-10 pass 2,
+    the critic's "fan from the '1' spike root")."""
+    pts = []
+    prev_c = 0
+    prev_k = 0
+    step = -1
+    row = 0
+    for j, t in enumerate(ts):
+        ents = ln['entries'][t]
+        k = len(ents)
+        spread = (prev_k - 1) + (k - 1) if j else 0
+        if tall and j and spread >= 2:
+            # dy = spread keeps the parity with the same centre (spread and k - prev_k have one parity)
+            row += spread
+            want = prev_c
+            start = want - (k - 1)
+        else:
+            row += 1 if j else 0
+            want = prev_c
+            if (want - (k - 1) - row) % 2:
+                step = -step
+                want += step
+            start = want - (k - 1)
+        for i, e in enumerate(ents):
+            pts.append((row, start + 2 * i, e['key']))
+        prev_c = want
+        prev_k = k
+    mn = min(x for _, x, _ in pts)
+    if mn % 2:
+        mn -= 1
+    return [(j, x - mn, k) for j, x, k in pts]
+
+
+def _lattice_shapes(ln, ts):
+    """The line's shapes to try: the flat one and, when it differs, the tall one."""
+    a = _lattice_shape(ln, ts)
+    b = _lattice_shape(ln, ts, tall=True)
+    return [a] if a == b else [a, b]
+
+
+def _lattice_free(occ, pts, r0, x0, W, own=()):
+    for j, x, k in pts:
+        X, R = x + x0, j + r0
+        if X < 0 or X > W or (X + R) % 2:
+            return False
+        for ox, ok in occ.get(R, ()):
+            if ok not in own and abs(ox - X) < 2:
+                return False
+    return True
+
+
+def _lattice_put(occ, pts, r0, x0):
+    for j, x, k in pts:
+        occ.setdefault(j + r0, []).append((x + x0, k))
+    return {k: (x + x0, j + r0) for j, x, k in pts}
+
+
+def _seg_cross(a, b, c, d):
+    if a in (c, d) or b in (c, d):
+        return False
+
+    def o(p, q, r):
+        v = (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+        return (v > 1e-9) - (v < -1e-9)
+    return o(a, b, c) * o(a, b, d) < 0 and o(c, d, a) * o(c, d, b) < 0
+
+
+def _lattice_penalty(P, links, hx, vy, icon):
+    """2 per pair of links that cross, 1 per plate a link passes over (closer than 0.62 icon to its middle part), 1 per
+    link flatter than a diagonal (it runs across its neighbours' links: the critic's "fan")."""
+    segs = [((P[a][0] * hx, P[a][1] * vy), (P[b][0] * hx, P[b][1] * vy), a, b) for a, b in links if a in P and b in P]
+    n = 0
+    for a, b in links:
+        if a in P and b in P and abs(P[b][0] - P[a][0]) > abs(P[b][1] - P[a][1]):
+            n += 1
+    for i in range(len(segs)):
+        for j in range(i + 1, len(segs)):
+            if _seg_cross(segs[i][0], segs[i][1], segs[j][0], segs[j][1]):
+                n += 2
+    for (ax, ay), (bx, by), ka, kb in segs:
+        dx, dy = bx - ax, by - ay
+        l2 = dx * dx + dy * dy
+        for k, (x, y) in P.items():
+            if k in (ka, kb) or l2 == 0:
+                continue
+            px, py = x * hx, y * vy
+            t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / l2))
+            if 0.02 < t < 0.98 and math.hypot(px - (ax + t * dx), py - (ay + t * dy)) < icon * 0.62:
+                n += 1
+    return n
+
+
+def _links_of_lines(lines):
+    out = []
+    for ln in lines:
+        ts = sorted(ln['entries'])
+        for a, b in zip(ts, ts[1:]):
+            for ea in ln['entries'][a]:
+                for eb in ln['entries'][b]:
+                    out.append((ea['key'], eb['key']))
+    return out
+
+
+def _lattice_pack(lines, W, gated, hx, vy, icon):
+    links = _links_of_lines(lines)
+    pen = lambda P: _lattice_penalty(P, links, hx, vy, icon)  # noqa: E731
+    occ, P, uppers, lowers = {}, {}, [], []
+    for li, ln in enumerate(lines):
+        ts = sorted(ln['entries'])
+        cut = 0
+        while cut < len(ts) and (gated is None or not any(gated(e) for e in ln['entries'][ts[cut]])):
+            cut += 1
+        if cut:
+            first, best, base = None, None, pen(P)
+            for si, pts in enumerate(_lattice_shapes(ln, ts[:cut])):
+                for r0 in range(0, 80):
+                    if first is not None and r0 > first + 1:
+                        break
+                    for x0 in range(0, W + 1):
+                        if _lattice_free(occ, pts, r0, x0, W):
+                            if first is None:
+                                first = r0
+                            Q = dict(P)
+                            Q.update({k: (x + x0, j + r0) for j, x, k in pts})
+                            sc = (pen(Q) - base, r0, x0, si)
+                            if best is None or sc < best[0]:
+                                best = (sc, r0, x0, pts)
+            pts = best[3]
+            P.update(_lattice_put(occ, pts, best[1], best[2]))
+            uppers.append((li, pts, best[1], best[2]))
+        if cut < len(ts):
+            lowers.append((li, ts[cut:], ts[:cut]))
+    gate = (max(occ) + 1) if occ else 0
+    # lines that go on below the gate sink toward it (an even step keeps the parity) while that costs nothing
+    for li, pts, r0, x0 in reversed(uppers):
+        if not any(lw[0] == li for lw in lowers):
+            continue
+        keys = {k for _, _, k in pts}
+        h = max(j for j, _, _ in pts) + 1
+        best, base = r0, pen(P)
+        for nr in range(r0 + 2, gate - h + 1, 2):
+            if not _lattice_free(occ, pts, nr, x0, W, own=keys):
+                break
+            Q = dict(P)
+            Q.update({k: (x + x0, j + nr) for j, x, k in pts})
+            if pen(Q) <= base:
+                best = nr
+        if best != r0:
+            for r in occ:
+                occ[r] = [p for p in occ[r] if p[1] not in keys]
+            P.update(_lattice_put(occ, pts, best, x0))
+    for li, ts, upts in lowers:
+        ln = lines[li]
+        parents = [P[e['key']] for e in ln['entries'][upts[-1]]] if upts else []
+        best, base = None, pen(P)
+        for si, pts in enumerate(_lattice_shapes(ln, ts)):
+            for r0 in range(gate, gate + 16):
+                for x0 in range(0, W + 1):
+                    if not _lattice_free(occ, pts, r0, x0, W):
+                        continue
+                    Q = dict(P)
+                    Q.update({k: (x + x0, j + r0) for j, x, k in pts})
+                    dist = 0.0
+                    for p in parents:
+                        for e in ln['entries'][ts[0]]:
+                            c = Q[e['key']]
+                            dist += abs(p[0] - c[0]) * hx + (c[1] - p[1]) * vy
+                    sc = (pen(Q) - base, r0 - gate > 1, round(dist, 3), r0, x0, si)
+                    if best is None or sc < best[0]:
+                        best = (sc, r0, x0, pts)
+        pts = best[3]
+        P.update(_lattice_put(occ, pts, best[1], best[2]))
+    return P, gate, pen(P)
+
+
+def lattice(tree, moves, ui, el, side, mode='ring'):
+    """{'places': {key: [col, row]}, 'gate_row': row or -1, 'width': half columns, 'penalty': n} (see the notes above)."""
+    L = ui['layout']
+    lat = L.get('lattice') or {}
+    widths = lat.get(side + '_widths') or ([6, 13] if side == 'left' else [4, 10])
+    hx, vy = float(lat.get('half_px', 34)), float(lat.get('row_px', 64))
+    icon = float(lat.get('icon', L['icon']))
+    zone = L['zones'][side]
+    zw, zh = float(zone[2]), float(zone[3])
+    kinds = set(ui['switches'].get('full_lessons_kinds') or [])
+    nodes = {n['id']: n for n in element_nodes(tree, el)}
+
+    def gated(e):
+        return e['type'] != 'root' and nodes[e['ids'][0]]['kind'] in kinds
+
+    lines = structure(tree, moves, ui, el, side, mode)['lines']
+    sections = bool(lat.get('sections', False))
+
+    def score(order, W):
+        ls = [lines[i] for i in order]
+        P, gate, pen = _lattice_pack(ls, W, gated if sections else None, hx, vy, icon)
+        xs = [x for x, _ in P.values()]
+        ys = [y for _, y in P.values()]
+        cw = (max(xs) - min(xs)) * hx + icon
+        ch = (max(ys) - min(ys)) * vy + icon
+        # the share of the box's lattice points in use (a ragged tail or a hole reads as sparse)
+        points = sum(1 for r in range(min(ys), max(ys) + 1) for x in range(min(xs), max(xs) + 1) if (x + r) % 2 == 0)
+        fill = len(P) / float(max(points, 1))
+        inv = sum(1 for a in range(len(order)) for b in range(a + 1, len(order)) if order[a] > order[b])
+        sc = (pen, round(abs(math.log((cw / ch) / (zw / zh))) + 1.5 * (1.0 - fill) + 0.01 * inv, 6), W, tuple(order))
+        return sc, P, gate, pen
+
+    best = None
+    for W in range(int(widths[0]), int(widths[1]) + 1):
+        # the lines in chip order, then better orders found by swapping two lines while that improves the score (a line
+        # may leave its chip order to fill a hole: the roots carry their key, so the tree still reads)
+        order = list(range(len(lines)))
+        cur = score(order, W)
+        grew = True
+        while grew:
+            grew = False
+            for a in range(len(order)):
+                for b in range(a + 1, len(order)):
+                    o2 = order[:]
+                    o2[a], o2[b] = o2[b], o2[a]
+                    s2 = score(o2, W)
+                    if s2[0] < cur[0]:
+                        order, cur, grew = o2, s2, True
+        if best is None or cur[0] < best[0]:
+            best = (cur[0], W, cur[1], cur[2], cur[3])
+    _, W, P, gate, pen = best
+    x0 = min(x for x, _ in P.values())
+    x0 -= x0 % 2
+    has_gated = sections and any(gated(e) for ln in lines for es in ln['entries'].values() for e in es)
+    return {'places': {k: [(x - x0) / 2.0, float(y)] for k, (x, y) in P.items()}, 'gate_row': gate if has_gated else -1,
+            'width': W, 'penalty': pen, 'links': _links_of_lines(lines)}
+
+
+def lattice_pins(lat, lines_items):
+    """Pins keyed by node id (each member of a choice at the choice's place) and root key, from lattice places."""
+    out = {}
+    for it in lines_items:
+        p = lat['places'][it['key']]
+        if it['type'] == 'root':
+            out[it['key']] = p
+        else:
+            for i in it['ids']:
+                out[i] = p
+    return out
+
+
 def pins_of(alg):
     """Pins keyed by node id (each member of a choice at the choice's place) and root key."""
     out = {}
@@ -384,11 +652,14 @@ DOC = [
     "data/ui/advancement.json; then hand-tuned by eye in 'pins' (re-running the tool keeps a tuned pin while its id is "
     "still in the tree, adds new ids at the algorithm's place and drops gone ones; --reset puts every pin back).",
     "pins.<element>.<left|right>: {node id or root:<move>/<mode> (root:passive/<id> for the passive line): [col, row]} on "
-    "the slot grid (a col is about layout.pitch_x pixels, a row about layout.pitch_y; halves are the lattice's diamonds). The "
-    "members of a choice share one place (the first member's is used). The window centres the pinned grid in its zone and "
-    "spreads its pitch to fill it (layout.min_pitch_* to max_pitch_*, fill_margin kept clear).",
-    "generated: the algorithm's own places, untouched by hand: tests/ui/test_advancement.gd checks the GDScript algorithm "
-    "gives the same numbers, and that every ring-visible node has a pin; re-run the tool when the tree changes.",
+    "the diamond lattice (version 2, the tool's lattice(): a col is layout.pitch_x pixels, a row layout.pitch_y; a row's "
+    "cols are whole on even rows and halves on odd ones, so each pick sits diagonally under the one before it; the gated "
+    "kinds sit below one gate row). The members of a choice share one place (the first member's is used). The window "
+    "centres the pinned grid in its zone and spreads its pitch to fill it (layout.min_pitch_* to max_pitch_*, fill_margin "
+    "kept clear). A hand-tuned pin must keep the lattice's rule (tests/ui/test_advancement.gd checks it).",
+    "generated: the band algorithm's own places (the GDScript fallback for an unpinned id and world mode), untouched by "
+    "hand: tests/ui/test_advancement.gd checks the GDScript algorithm gives the same numbers, and that every ring-visible "
+    "node has a pin; re-run the tool when the tree changes.",
 ]
 
 
@@ -407,10 +678,13 @@ def build(reset=False):
             alg = algorithm(tree, moves, ui, el, side, 'ring')
             g = pins_of(alg)
             gen[el][side] = g
+            lat = lattice(tree, moves, ui, el, side, 'ring')
+            seed = lattice_pins(lat, alg['items'])
+            alg['lattice'] = lat
             kept = (old.get(el) or {}).get(side) or {}
-            pins[el][side] = {k: (kept[k] if k in kept else v) for k, v in g.items()}
+            pins[el][side] = {k: (kept[k] if k in kept else v) for k, v in seed.items()}
             report.append((el, side, alg))
-    doc = {'format': 'tidebreak-advancement-layout', 'version': 1, '_doc': DOC,
+    doc = {'format': 'tidebreak-advancement-layout', 'version': 2, '_doc': DOC,
            'source': {'tree_version': tree.get('version', 1), 'by': 'tools/ui/advancement_layout.py'},
            'pins': pins, 'generated': gen}
     return doc, report, ui
@@ -531,6 +805,12 @@ def main(argv):
             el, side, sum(len(b['lines']) for b in alg['bands']), len(alg['bands']),
             ','.join(str(b['width']) for b in alg['bands']), ','.join(str(b['rows']) for b in alg['bands']),
             pitch[0], pitch[1], size[0], size[1], zone[2], zone[3], 'ok' if fits else 'DOES NOT FIT'))
+        lat = alg['lattice']
+        lp, lpitch, lsize = to_px(ui, side, lat['places'])
+        lfits = lsize[0] <= zone[2] + 0.01 and lsize[1] <= zone[3] + 0.01
+        print('      lattice (the pins): width %d half columns, %d rows, gate row %d, penalty %d, pitch %3.0fx%3.0f  %3dx%3d px %s' % (
+            lat['width'], int(max(p[1] for p in lat['places'].values())) + 1, lat['gate_row'], lat['penalty'],
+            lpitch[0], lpitch[1], lsize[0], lsize[1], 'ok' if lfits else 'DOES NOT FIT'))
     if '--png' in argv:
         i = argv.index('--png')
         tree, _moves, _ui = load()

@@ -422,6 +422,83 @@ static func fade_tex(top_a: float, bottom_a: float) -> Texture2D:
 	return _tex[key]
 
 
+# --- a node's picture and its stat glyph (2026-10-10 pass 2: bigger, bolder pictures; picks of one move told apart) -----------
+
+static var _ink := {}
+
+
+## The part of a picture that holds ink (the bounding box of its visible pixels, in texture pixels). The HUD's line icons carry
+## a margin of their own, so a plate draws this part at a set share of its size instead of the whole square.
+static func ink_rect(t: Texture2D) -> Rect2:
+	if t == null:
+		return Rect2()
+	var key := t.get_instance_id()
+	if _ink.has(key):
+		return _ink[key]
+	var full := Rect2(Vector2.ZERO, t.get_size())
+	var out := full
+	var img := t.get_image()
+	if img != null and not img.is_empty():
+		if img.is_compressed():
+			img.decompress()
+		var u := img.get_used_rect()
+		if u.size.x > 0 and u.size.y > 0:
+			# the image may be another size than the texture reports (an SVG's scale): back to texture pixels
+			var k := Vector2(t.get_size()) / Vector2(img.get_size())
+			out = Rect2(Vector2(u.position) * k, Vector2(u.size) * k)
+	_ink[key] = out
+	return out
+
+
+## A number trade's stat glyph from what it does (advancement.json tree.stat_glyphs: the first glyph whose words its `plus`
+## holds): "defence", "width", "reach", "speed", "time", "power", else "" (a plain plus).
+static func stat_glyph(plus: String) -> String:
+	var t := plus.to_lower() + " "
+	for g: Variant in (AdvancementData.tree_cfg().get("stat_glyphs", []) as Array):
+		if not g is Array or (g as Array).size() < 2:
+			continue
+		for w: String in (g[1] as Array):
+			if t.contains(String(w)):
+				return String(g[0])
+	return ""
+
+
+## Draw a stat glyph at `c` in a box of half-size `r` (our own vector marks): a shield, a two-headed arrow, an arrow, a double
+## chevron, a clock, a four-point burst, or a plus.
+static func draw_stat_glyph(ci: CanvasItem, c: Vector2, r: float, glyph: String, col: Color, w := 2.0) -> void:
+	match glyph:
+		"defence":
+			var pts := PackedVector2Array([c + Vector2(-r * 0.75, -r * 0.8), c + Vector2(r * 0.75, -r * 0.8), c + Vector2(r * 0.75, -r * 0.1),
+					c + Vector2(0, r * 0.9), c + Vector2(-r * 0.75, -r * 0.1), c + Vector2(-r * 0.75, -r * 0.8)])
+			ci.draw_polyline(pts, col, w, true)
+		"width":
+			ci.draw_line(c + Vector2(-r * 0.85, 0), c + Vector2(r * 0.85, 0), col, w, true)
+			for s in [-1.0, 1.0]:
+				var e := c + Vector2(r * 0.85 * s, 0)
+				ci.draw_polyline(PackedVector2Array([e + Vector2(-r * 0.4 * s, -r * 0.45), e, e + Vector2(-r * 0.4 * s, r * 0.45)]), col, w, true)
+		"reach":
+			ci.draw_line(c + Vector2(-r * 0.85, r * 0.0), c + Vector2(r * 0.8, 0), col, w, true)
+			var e2 := c + Vector2(r * 0.85, 0)
+			ci.draw_polyline(PackedVector2Array([e2 + Vector2(-r * 0.5, -r * 0.5), e2, e2 + Vector2(-r * 0.5, r * 0.5)]), col, w, true)
+		"speed":
+			for dx in [-0.42, 0.28]:
+				var o := c + Vector2(r * dx, 0)
+				ci.draw_polyline(PackedVector2Array([o + Vector2(-r * 0.3, -r * 0.6), o + Vector2(r * 0.3, 0), o + Vector2(-r * 0.3, r * 0.6)]), col, w, true)
+		"time":
+			ci.draw_arc(c, r * 0.78, 0, TAU, 20, col, w, true)
+			ci.draw_line(c, c + Vector2(0, -r * 0.5), col, w, true)
+			ci.draw_line(c, c + Vector2(r * 0.38, 0), col, w, true)
+		"power":
+			var p := PackedVector2Array()
+			for i in 8:
+				var a := TAU * float(i) / 8.0 - PI * 0.5
+				p.append(c + Vector2.from_angle(a) * (r * (0.9 if i % 2 == 0 else 0.34)))
+			ci.draw_colored_polygon(p, col)
+		_:
+			ci.draw_line(c + Vector2(-r * 0.6, 0), c + Vector2(r * 0.6, 0), col, w + 0.4, true)
+			ci.draw_line(c + Vector2(0, -r * 0.6), c + Vector2(0, r * 0.6), col, w + 0.4, true)
+
+
 # --- small shared drawing -------------------------------------------------------------------------------------------------
 
 ## A rounded rectangle as a polygon (corner radius `r`, `seg` points per corner).
@@ -458,7 +535,8 @@ static func circle_poly(centre: Vector2, r: float, n := 40) -> PackedVector2Arra
 
 ## A flat-sided octagon filling `rect` (the choice node).
 static func octagon_poly(rect: Rect2) -> PackedVector2Array:
-	var k := minf(rect.size.x, rect.size.y) * 0.29
+	# (a shallow cut, so a choice carries the same weight as the squares beside it: pass 2)
+	var k := minf(rect.size.x, rect.size.y) * 0.22
 	var p := rect.position
 	var e := rect.end
 	return PackedVector2Array([

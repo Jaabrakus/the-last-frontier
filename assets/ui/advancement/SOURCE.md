@@ -75,3 +75,24 @@ frame and the portrait medallion's ring, the gate stubs' shade and the lattice's
 gradients, polygons and lines (`AdvancementNode._draw`, `AdvancementTheme.glow_tex` / `stub_tex`, `AdvancementWindow._draw_bevel`,
 `AdvancementTree._draw`). No picture was loaded or traced for them; the colours are the element colours of
 `data/ring/elements.json` and `data/ui/advancement.json` colors (`kind_*`, `set_*`, `live`).
+
+## Third pass (2026-10-10, gaps repair): drawn in code and one shader, no new files of art
+
+- The node plates were redrawn in `AdvancementNode._draw`: the hue led by the kind and tinted by the element (turned a
+  little per pick from a hash of its id), a deeper jewel with the light picture on top (a dark halo of four nudged copies of
+  the same HUD picture), the kind's motif behind it (light rays or rings: polygons and arcs), the rank in a small plate inside
+  the lower right corner and, under a shut newcomer gate, the padlock (`padlock.svg`, above) with the gate's number there.
+- `shaders/ui/adv_backdrop.gdshader` (our own, written for this window): behind each tree and the rail the painting is
+  softened (a 9-tap blur), drained of most of its colour and darkened, with a wide soft edge; the centre gap is untouched.
+  It reads the four painted backdrops above as they are (no painting was changed).
+- The lattice (where the nodes stand) is `tools/ui/advancement_layout.py`'s diamond packer: positions only, no art.
+
+## Fourth pass (2026-10-10, critic's second notes): drawn in code, no new files of art
+
+- Plates: the kind alone sets the jewel (`data/ui/advancement.json` colors `kind_*`), the element's colour is a ring inside the
+  border. The HUD pictures are drawn by their inked part (`AdvancementTheme.ink_rect`, the bounding box of their visible
+  pixels) at about 72% of the plate and thickened by four sub-pixel copies of the same picture. A number trade's corner mark
+  is a stat glyph (shield, two-headed arrow, arrow, double chevron, clock, burst, plus) drawn as lines and polygons in
+  `AdvancementTheme.draw_stat_glyph`; a shut gate's padlock is the same `padlock.svg`, larger, over the picture.
+- `shaders/ui/adv_backdrop.gdshader` was rewritten (still ours): one elliptical falloff round the centre art instead of
+  rectangles, and a soft dimming of the centre's brightest parts. No painting was changed.

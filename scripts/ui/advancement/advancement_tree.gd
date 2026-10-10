@@ -97,6 +97,20 @@ func state_of(id: String) -> String:
 	return "available" if work.why_not(id) == "" else "blocked"
 
 
+## The number of the newcomer gate that holds `id` shut now (1: the first ring win; else the Full lessons left), 0 when none
+## does. The same rule as AdvancementLoadout's gate checks (advancement.json switches), read on its own so a pick that also
+## fails another rule (its requires, the budget) still shows the gate's padlock.
+func gate_number(id: String) -> int:
+	if _gate.is_empty():
+		return 0
+	if bool(_gate.get("first_win", false)) and not bool(_gate.get("won", true)):
+		return 1
+	var left := int(_gate.get("full_left", 0))
+	if bool(_gate.get("full_lessons", false)) and left > 0 and String(AdvancementData.node(id).get("kind", "")) in (AdvancementData.switch("full_lessons_kinds", []) as Array):
+		return left
+	return 0
+
+
 ## One state for a group (a choice): the strongest of its members'.
 func group_state(group: Array) -> Dictionary:
 	var best := ""
@@ -133,7 +147,7 @@ func _refresh_node(n: AdvancementNode) -> void:
 		if String(it.chip) == "passive":
 			pic = AdvancementTheme.passive_root_icon(element)
 		else:
-			pic = BendStrip.icon_texture(String(it.move), String(it.mode))
+			pic = _root_icon(String(it.move), String(it.mode))
 		n.show_as("root", pic)
 		return
 	var g := group_state(n.ids)
@@ -146,6 +160,23 @@ func _refresh_node(n: AdvancementNode) -> void:
 	var hue_set := n.set_id if n.set_id != "" else (AdvancementData.set_of(element) if n.kind == "skill_set" else "")
 	n.hue = AdvancementTheme.set_tint(hue_set) if hue_set != "" else Color.WHITE
 	n.live = AdvancementData.is_live(id)
+	n.stat = AdvancementTheme.stat_glyph(String(nd.get("plus", ""))) if n.kind in ["enhance", "synergy", "passive"] else ""
+	# a gate's padlock on every pick a shut gate holds (all of a choice's options that are not held shut by it), whatever
+	# else stops it; a choice of held and shut options wears it too (pass 2: a dashed choice among padlocks read as open)
+	n.gate_num = 0
+	if st == "blocked" or st == "held":
+		var gn := 1 << 20
+		for o: String in n.ids:
+			if bool(AdvancementData.node(o).get("held", false)):
+				continue
+			gn = mini(gn, gate_number(o))
+		n.gate_num = gn if gn < (1 << 20) else 0
+	# shut only for want of points (every other rule lets one of its options be worn): drawn within reach
+	n.short = false
+	if st == "blocked" and n.gate_num == 0:
+		for o: String in n.ids:
+			if work.short_of_points(o):
+				n.short = true
 	var rank := ""
 	if st == "held":
 		rank = "?"
@@ -154,6 +185,23 @@ func _refresh_node(n: AdvancementNode) -> void:
 	else:
 		rank = "0/1"
 	n.show_as(st, AdvancementTheme.node_icon(id), rank, id)
+
+
+## A root's picture: the HUD's own for the move and mode; a mode with no picture of its own under this move (water's Wave
+## Slam) takes the mode's element picture (spell_slam__water), else the move's first picture, never a bare key.
+func _root_icon(move: String, mode: String) -> Texture2D:
+	var t := BendStrip.icon_texture(move, mode)
+	if t != null:
+		return t
+	for p: String in [BendStrip.ICON_DIR + "spell_%s__%s.svg" % [mode, element], BendStrip.ICON_DIR + "spell_%s.svg" % mode]:
+		if mode != "" and ResourceLoader.exists(p):
+			return AdvancementTheme.tex(p)
+	var m := SwayMoves.move(move)
+	for md: Variant in (m.get("modes", []) if m.get("modes") is Array else []):
+		var p2 := BendStrip.icon_path(move, String(md))
+		if p2 != "":
+			return AdvancementTheme.tex(p2)
+	return null
 
 
 ## Dim every node but the matches (`ids`); null = no search.
@@ -241,10 +289,28 @@ func open_pop(owner_node: AdvancementNode, focus_first: bool) -> void:
 	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_pop.add_child(plate)
 	_pop.size = Vector2(w, h)
+	# above the octagon, below it, or to its side: wherever it covers the fewest other plates (pass 2: it hid the row above)
 	var c := owner_node.position + Vector2(px, px) * 0.5
-	var at := Vector2(c.x - w * 0.5, owner_node.position.y - h - 6.0)
-	if at.y < -30.0:
-		at.y = owner_node.position.y + px + 6.0
+	var cands: Array = [
+		Vector2(c.x - w * 0.5, owner_node.position.y - h - 6.0),
+		Vector2(c.x - w * 0.5, owner_node.position.y + px + 6.0),
+		Vector2(owner_node.position.x + px + 14.0, c.y - h * 0.5),
+		Vector2(owner_node.position.x - 14.0 - w, c.y - h * 0.5),
+	]
+	var at: Vector2 = cands[0]
+	var best := INF
+	for i in cands.size():
+		var p: Vector2 = cands[i]
+		if p.y < -30.0:
+			continue
+		var r := Rect2(p, Vector2(w, h))
+		var cost := float(i) * 0.1
+		for n: AdvancementNode in nodes:
+			if n != owner_node and r.intersects(Rect2(n.position, n.size).grow(4.0)):
+				cost += 1.0
+		if cost < best:
+			best = cost
+			at = p
 	_pop.position = at
 	add_child(_pop)
 	_pop_nodes.clear()
@@ -413,8 +479,8 @@ func _draw() -> void:
 		var p0 := _edge(a, dir, half, na != null and na.shape in ["square", "root"])
 		var p1 := _edge(b, -dir, half, nb != null and nb.shape in ["square", "root"])
 		var both := _lit(na) and _lit(nb)
-		draw_line(p0, p1, Color(0, 0, 0, 0.35), 3.4, true)
-		draw_line(p0, p1, Color(worn_c, 0.62) if both else Color(grey, 0.34), 1.5, true)
+		draw_line(p0, p1, Color(0, 0, 0, 0.4), 3.8, true)
+		draw_line(p0, p1, Color(worn_c, 0.7) if both else Color(grey, 0.46), 1.7, true)
 	for l: Dictionary in plan.links:
 		var na: AdvancementNode = _by_key.get(String(l.from))
 		var nb: AdvancementNode = _by_key.get(String(l.to))
@@ -452,9 +518,13 @@ func _draw_gates(half: float) -> void:
 		var num := 0
 		var kind := String(g.type)
 		if kind == "first_win":
-			if first and not won:
+			# (on the diamond lattice the roots stand on several rows, so a stub at the top row sat beside open roots: every
+			# shut pick wears the gate's padlock and number instead, as for the lessons gate; pass 2)
+			if first and not won and not bool(plan.get("diamond", false)):
 				num = 1
-		elif kind == "full" and bool(_gate.get("full_lessons", false)) and left > 0 and (won or not first):
+		elif kind == "full" and bool(_gate.get("full_lessons", false)) and left > 0 and (won or not first) and not bool(plan.get("diamond", false)):
+			# (on the diamond lattice the shut picks are mixed among open ones: each wears the gate's padlock and number
+			# instead, AdvancementNode.gate_num, so no row line can mislead)
 			num = left
 		if num <= 0:
 			continue
