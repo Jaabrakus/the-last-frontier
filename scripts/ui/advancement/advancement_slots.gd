@@ -131,16 +131,19 @@ func _card(i: int) -> Control:
 		_name_edit.max_length = int(AdvancementData.tree_cfg().get("name_max", 24))
 		AdvancementTheme.style_line_edit(_name_edit, AdvancementTheme.S_LABEL + 2)
 		var ne := _name_edit
+		# the name reads as a plain title until it is being edited (pass 2: a field box ran from the name to the padlock);
+		# the I-beam pointer says it can be renamed, the underline shows while typing
 		var flat := StyleBoxFlat.new()
-		flat.bg_color = Color(0, 0, 0, 0.28)
+		flat.bg_color = Color(0, 0, 0, 0.0)
 		flat.set_border_width_all(0)
-		flat.border_width_bottom = 2
-		flat.border_color = Color(AdvancementData.color("frame_gold"), 0.8)
-		flat.content_margin_left = 6
+		flat.content_margin_left = 0
 		flat.content_margin_right = 6
 		flat.content_margin_top = 1
 		flat.content_margin_bottom = 1
 		var flat_f := flat.duplicate() as StyleBoxFlat
+		flat_f.bg_color = Color(0, 0, 0, 0.28)
+		flat_f.content_margin_left = 6
+		flat_f.border_width_bottom = 2
 		flat_f.border_color = AdvancementData.color("frame_trim")
 		_name_edit.add_theme_stylebox_override("normal", flat)
 		_name_edit.add_theme_stylebox_override("read_only", flat)
@@ -191,9 +194,11 @@ func _card(i: int) -> Control:
 		v.add_child(pl)
 		var worn_now := String(sw[2]) == "worn"
 		var empty := String(sw[2]) == "empty"
-		var wb := AdvancementTheme.button(AdvancementData.word("slot_state.worn") if worn_now else AdvancementData.word("buttons.wear"), "plate", AdvancementTheme.S_BUTTON)
-		wb.disabled = worn_now or empty
-		wb.custom_minimum_size = Vector2(0, 36)
-		wb.pressed.connect(func() -> void: wear_requested.emit(i))
-		v.add_child(wb)
+		# the Wear button; none on the worn card (its gold "Worn" line already says it: pass 2, "Worn" said twice)
+		if not worn_now:
+			var wb := AdvancementTheme.button(AdvancementData.word("buttons.wear"), "plate", AdvancementTheme.S_BUTTON)
+			wb.disabled = empty
+			wb.custom_minimum_size = Vector2(0, 36)
+			wb.pressed.connect(func() -> void: wear_requested.emit(i))
+			v.add_child(wb)
 	return pc

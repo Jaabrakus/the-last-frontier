@@ -5,7 +5,7 @@ extends SceneTree
 ##   open       for each element: the window opens, is above the menus (layer >= 95), keeps working over a paused game
 ##              (PROCESS_MODE_ALWAYS), shows the mouse, places every node of both trees and the rail's traits; closes
 ##              cleanly (`closed` once, freed, the mouse mode back, no nodes left over)
-##   picks      wear (Save glows, undo shows, Reset hides), take off, undo; a premade build; Save writes the slot and
+##   picks      wear (Save glows, undo shows, Reset stays), take off, undo; a premade build; Save writes the slot and
 ##              raises the toasts; Reset makes Classic a pending change; a held node cannot be worn (and says why); a
 ##              choice swaps its options; the pop-out opens and closes; the real mouse's left and right click work
 ##   panels     the Loadouts panel (edit another slot, Wear with its bar, rename, the padlock keeping a slot), the class
@@ -19,6 +19,11 @@ extends SceneTree
 ##              bottom bar; the ribbon tells the truth about the live picks (a green dot and a line in the tip for each); the
 ##              lattice fills its zone evenly with its cross links; the status line stands clear of the trees; the class
 ##              picker's state lines stay inside their cards; a choice of held options reads held
+##   pass 2     the critic's second notes: no link flatter than a diagonal (the fan), the right trees as wide as the left,
+##              Reset stays while changes are pending, the held-back status on one line, an empty search says nothing,
+##              picks shut only for want of points are drawn within reach, a gated choice of held options wears the padlock,
+##              a node's short tip covers no other plate where there is room, the Loadouts panel puts the left tree away,
+##              the counter-play line has one colon, no tip line is shrunk
 ##   look       at 1280x720 nothing is set under 14 px; no word on screen is one the show or another game owns
 ##   Godot --headless --path . -s tests/ui/test_advancement_window.gd
 ## The last line "ADVANCEMENT WINDOW TEST PASSED" or "... FAILED"; exit 0 only on a pass; a watchdog quits with 2.
@@ -201,7 +206,7 @@ func _picks() -> void:
 	var id := n.first_id()
 	n.pressed.emit()
 	check(w.work.has(id) and w.is_pending() and n.state == "pending_on", "a click wears a node as a pending change (%s)" % n.state)
-	check(not w.save_button().disabled and w.undo_button().visible and not w.reset_button().visible, "pending: Save is on, undo shows, Reset hides")
+	check(not w.save_button().disabled and w.undo_button().visible and w.reset_button().visible and not w.reset_button().disabled, "pending: Save is on, undo shows, Reset stays (pass 2: it vanished exactly when changes were pending)")
 	check(not AdvancementStore.slot("earth", 0).has(id), "nothing is written before Save")
 	n.take_off.emit(n)
 	check(not w.work.has(id) and not w.is_pending() and n.state == "available", "a right click takes it off again, nothing pending")
@@ -237,7 +242,7 @@ func _picks() -> void:
 	# Reset makes Classic a pending change
 	check(w.reset_button().visible, "after Save Reset shows again")
 	w.reset_button().pressed.emit()
-	check(w.work.is_empty() and w.is_pending() and not w.reset_button().visible, "Reset is a pending change to Classic")
+	check(w.work.is_empty() and w.is_pending() and w.reset_button().visible and w.reset_button().disabled, "Reset is a pending change to Classic (and greys once the loadout is Classic)")
 	check(not AdvancementStore.slot("earth", 0).is_empty(), "and the slot is untouched until Save")
 	w.save_button().pressed.emit()
 	check(AdvancementStore.slot("earth", 0).is_empty() and not w.is_pending(), "Save keeps Classic")
@@ -677,6 +682,7 @@ func _repairs() -> void:
 	await _repair_live()
 	await _repair_layout()
 	await _repair_picker_and_held()
+	await _pass2()
 
 
 func _repair_gates() -> void:
@@ -775,7 +781,7 @@ func _repair_tips() -> void:
 		short_text += String(l.text) + "\n"
 	check(short_text.contains("Juggle") and short_text.contains("hold two stones") and short_text.contains(AdvancementData.word("tip.take_off")) and not short_text.contains("How he answers") and not short_text.contains("Rank"),
 			"the short tip has the name, the effect, the numbers, the action; not the rank (on the plate) nor the answer")
-	# one line of effect and one of numbers, whatever the node (each kept to one line by the tip itself)
+	# one effect line (wrapped to at most two by the tip, never shrunk: pass 2) and one numbers line, whatever the node
 	var multi: Array = []
 	for el: String in AdvancementData.ELEMENTS:
 		for nd: Dictionary in AdvancementData.nodes(el):
@@ -785,13 +791,13 @@ func _repair_tips() -> void:
 			for l: Dictionary in ls:
 				if l.get("col") == AdvancementData.color("effect"):
 					fx_lines += 1
-					if not bool(l.get("one", false)):
+					if not bool(l.get("one", false)) and int(l.get("max_lines", 99)) > 2:
 						multi.append(String(nd.id))
 				if l.has("parts") and (String(l.text).begins_with("+ ") or String(l.text).begins_with("- ")):
 					num_lines += 1
 			if fx_lines > 1 or num_lines > 1 or ls.size() > 6:
 				multi.append(String(nd.id))
-	check(multi.is_empty(), "every short tip: one effect line, one numbers line, at most 6 lines %s" % [multi.slice(0, 5)])
+	check(multi.is_empty(), "every short tip: one effect line (two at most when wrapped), one numbers line, at most 6 lines %s" % [multi.slice(0, 5)])
 	# Shift and a long stay make it full
 	var w2 := _open("earth")
 	await frames(3)
@@ -1010,6 +1016,117 @@ func _repair_picker_and_held() -> void:
 						wrong.append("%s %s" % [el, n.name])
 		_free(w2)
 	check(found > 0 and wrong.is_empty(), "a choice of held (and blocked) options reads held, dashed with '?' (%d, wrong: %s)" % [found, wrong])
+
+
+func _pass2() -> void:
+	# the layout: every link a diagonal or steeper (no fan), and the right trees carry the left's width
+	var flat: Array = []
+	var narrow: Array = []
+	for el: String in AdvancementData.ELEMENTS:
+		var pl := AdvancementLayout.place(el, "left")
+		var pr := AdvancementLayout.place(el, "right")
+		for p: Dictionary in [pl, pr]:
+			var hx := float(p.pitch.x) * 0.5
+			for l: Dictionary in p.links:
+				var d: Vector2 = (l.b as Vector2) - (l.a as Vector2)
+				if absf(d.x) / hx > absf(d.y) / float(p.pitch.y) + 0.05:
+					flat.append("%s %s>%s" % [el, l.from, l.to])
+		if float(pr.size.x) < float(pl.size.x) * 0.75:
+			narrow.append("%s %.0f vs %.0f" % [el, float(pr.size.x), float(pl.size.x)])
+	check(flat.is_empty(), "no link runs flatter than a diagonal (the critic's fan) %s" % [flat])
+	check(narrow.is_empty(), "each right tree is at least 3/4 as wide as its left tree %s" % [narrow])
+	# an empty search says nothing about matches
+	var w := _open("earth")
+	await frames(3)
+	w.set_search("wall")
+	w.set_search("")
+	check(not w.status_text().ends_with(AdvancementData.word("search.count").get_slice("%d", 1)), "an empty Search box leaves no 'found' count (%s)" % w.status_text())
+	_free(w)
+	# the held-back status: one line, no brackets, inside its label
+	AdvancementData.gates_override = {"won": true, "full_left": 4, "first_win": true, "full_lessons": true}
+	w = _open("earth")
+	await frames(3)
+	w.apply_premade(String(AdvancementData.starters("earth")[0].id))
+	await frames(1)
+	var stl: Label = w._status
+	var sw := stl.get_theme_font("font").get_string_size(stl.text, HORIZONTAL_ALIGNMENT_LEFT, -1, stl.get_theme_font_size("font_size")).x
+	check(stl.text.contains("held back") and not stl.text.contains("(") and stl.text.count(":") == 0 and sw <= stl.size.x + 1.0 and stl.get_theme_font_size("font_size") >= AdvancementTheme.S_SMALL,
+			"the held-back status is one short line (%s, %.0f of %.0f px)" % [stl.text, sw, stl.size.x])
+	# a choice of held and gated options wears the padlock
+	var held_gated := 0
+	var missing: Array = []
+	var kinds: Array = AdvancementData.switch("full_lessons_kinds", [])
+	for t: AdvancementTree in [w.tree("left"), w.tree("right")]:
+		for n: AdvancementNode in t.nodes:
+			if not n.is_choice() or n.state != "held":
+				continue
+			var gated_member := false
+			for id: String in n.ids:
+				var nd := AdvancementData.node(id)
+				if not bool(nd.get("held", false)) and String(nd.kind) in kinds:
+					gated_member = true
+			if gated_member:
+				held_gated += 1
+				if n.gate_num != 4:
+					missing.append(n.name)
+	check(missing.is_empty(), "a dashed choice whose open options a gate holds wears the padlock too (%d, missing %s)" % [held_gated, missing])
+	_free(w)
+	AdvancementData.gates_override = OPEN.duplicate()
+	# within reach, no points: drawn a little lit, and only those
+	w = _open("earth")
+	await frames(3)
+	w.apply_premade(String(AdvancementData.starters("earth")[0].id))
+	w.save()
+	await frames(2)
+	var shorts := 0
+	var wrong_short: Array = []
+	for n: AdvancementNode in w.all_nodes():
+		if not n.short:
+			continue
+		shorts += 1
+		var ok := false
+		for id: String in n.ids:
+			ok = ok or w.work.why_not_code(id) == "budget"
+		if not ok or n.state != "blocked" or n.gate_num != 0:
+			wrong_short.append(n.name)
+	check(w.work.left() == 0 and shorts > 0 and wrong_short.is_empty(), "with no points left the picks within reach read so (%d; wrong %s)" % [shorts, wrong_short])
+	# a node's short tip covers no other plate where the room is there (the tip stands in the gap or beside), and no line shrinks
+	var covered: Array = []
+	var tried := 0
+	for n: AdvancementNode in w.all_nodes():
+		if String(n.item.type) != "node" or not n.kind in ["variation", "mastery"]:
+			continue
+		tried += 1
+		n.tip.emit(n, true)
+		await frames(1)
+		var tr := Rect2(w._tip.position, w._tip.size)
+		for r: Rect2 in w._plate_rects(n):
+			if r.grow(-6.0).intersects(tr.grow(-2.0)):
+				covered.append(n.name)
+				break
+		var small := false
+		for l: Dictionary in w._tip._lines:
+			small = small or int(l.px) < AdvancementTheme.S_SMALL
+		if small:
+			covered.append("%s (a shrunk line)" % n.name)
+		n.tip.emit(n, false)
+	check(tried > 0 and covered.size() * 4 <= tried, "most twist and technique tips cover no other plate and shrink no line (%d of %d do: %s)" % [covered.size(), tried, covered])
+	# the counter-play line reads as one clause
+	var two := false
+	for nd: Dictionary in AdvancementData.tree_nodes("earth", "left", "ring"):
+		for l: Dictionary in AdvancementTip.node_lines(String(nd.id), "available", w.work, true):
+			if String(l.text).begins_with(AdvancementData.word("tip.answer")) and String(l.text).count(": ") >= 1:
+				two = true
+	check(not two, "no tip runs 'How he answers it:' into the answer's own colon")
+	# the Loadouts panel puts the left tree away (no plate half under it), and back
+	w.set_slots_open(true)
+	await create_timer(0.3).timeout
+	var away := w.tree("left").modulate.a < 0.05 and (w.tree("left").nodes[0] as AdvancementNode).mouse_filter == Control.MOUSE_FILTER_IGNORE
+	w.set_slots_open(false)
+	await create_timer(0.3).timeout
+	var back := w.tree("left").modulate.a > 0.95 and (w.tree("left").nodes[0] as AdvancementNode).mouse_filter == Control.MOUSE_FILTER_STOP
+	check(away and back, "the Loadouts panel fades the left tree out of reach, and closing it brings it back")
+	_free(w)
 
 
 func _look() -> void:

@@ -413,7 +413,10 @@ static func place(el: String, side: String, mode := "ring") -> Dictionary:
 	var L := AdvancementData.layout()
 	# ring mode's pins are the diamond lattice: its own pitch limits (layout.lattice), else the band grid's
 	var lat: Dictionary = L.get("lattice", {}) if mode == "ring" and L.get("lattice") is Dictionary else {}
-	var lim := func(k: String, def: float) -> float: return float(lat.get(k, L.get(k, def)))
+	# (a side may carry its own limits, layout.lattice.<side>: the right trees hold fewer picks, so a wider pitch lets them
+	# carry the same weight as the left: 2026-10-10 pass 2, the critic's "lopsided")
+	var own: Dictionary = lat.get(side, {}) if lat.get(side) is Dictionary else {}
+	var lim := func(k: String, def: float) -> float: return float(own.get(k, lat.get(k, L.get(k, def))))
 	var zone := AdvancementData.zone(side)
 	var icon: float = lim.call("icon", 46.0)
 	var px := float(L.get("pitch_x", 64))

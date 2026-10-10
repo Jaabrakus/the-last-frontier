@@ -561,7 +561,10 @@ func _build_trees() -> void:
 	_stage.add_child(_rail)
 
 
-## The calm ground behind each tree (its nodes and its title) and the rail: the backdrop shader's rects, in the picture's UV.
+## The calm ground (2026-10-10 pass 2): one smooth elliptical falloff round the centre art, in the picture's UV (the shader's
+## centre and radii): crisp and in colour at the middle of the centre gap (its peak a little dimmed), calmed (soft, drained,
+## dark) toward the trees and the rail with no edge anywhere. layout.calm_inner / calm_outer set the falloff in units of
+## the gap's half width.
 func _calm_painting() -> void:
 	if _backdrop == null or not _backdrop.material is ShaderMaterial:
 		return
@@ -569,31 +572,16 @@ func _calm_painting() -> void:
 	var origin := _backdrop.position + (_backdrop.get_parent() as Control).position
 	var psz := _backdrop.size
 	var L := AdvancementData.layout()
-	var grow := float(L.get("calm_margin", 22.0))
-	var rects: Array = []
-	for t: AdvancementTree in [_tree_l, _tree_r]:
-		var lo := Vector2(INF, INF)
-		var hi := Vector2(-INF, -INF)
-		var half := float(t.plan.icon) * 0.5
-		for it: Dictionary in t.plan.items:
-			var p: Vector2 = t.position + (it.pos as Vector2)
-			lo = lo.min(p - Vector2(half, half))
-			hi = hi.max(p + Vector2(half, half))
-		if lo.x == INF:
-			continue
-		lo.y = minf(lo.y, _r("left_title").position.y - 18.0)
-		rects.append(Rect2(lo, hi - lo).grow(grow))
-	rects.append(_r("rail").grow(grow * 0.5))
-	var names := ["zone_a", "zone_b", "zone_c"]
-	for i in names.size():
-		var v := Vector4.ZERO
-		if i < rects.size():
-			var r: Rect2 = rects[i]
-			v = Vector4((r.position.x - origin.x) / psz.x, (r.position.y - origin.y) / psz.y, r.size.x / psz.x, r.size.y / psz.y)
-		mat.set_shader_parameter(names[i], v)
-	mat.set_shader_parameter("aspect", psz.x / maxf(psz.y, 1.0))
-	mat.set_shader_parameter("feather", float(L.get("calm_feather", 70.0)) / psz.x)
-	mat.set_shader_parameter("dark", float(L.get("calm_dark", 0.52)))
+	var gap := _r("centre_gap")
+	var art := (_backdrop.get_parent() as Control)
+	var c := gap.get_center()
+	c.y = art.position.y + art.size.y * 0.5
+	mat.set_shader_parameter("centre", Vector2((c.x - origin.x) / psz.x, (c.y - origin.y) / psz.y))
+	mat.set_shader_parameter("radii", Vector2(gap.size.x * 0.5 / psz.x, art.size.y * 0.6 / psz.y))
+	mat.set_shader_parameter("inner", float(L.get("calm_inner", 0.25)))
+	mat.set_shader_parameter("outer", float(L.get("calm_outer", 1.3)))
+	mat.set_shader_parameter("dark", float(L.get("calm_dark", 0.5)))
+	mat.set_shader_parameter("centre_dark", float(L.get("calm_centre_dark", 0.15)))
 	mat.set_shader_parameter("desat", float(L.get("calm_desat", 0.6)))
 	mat.set_shader_parameter("blur_px", float(L.get("calm_blur_px", 3.0)))
 
@@ -681,8 +669,8 @@ func _build_bottom() -> void:
 	_status.name = "Status"
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_status.max_lines_visible = 3
+	# one line (pass 2): long words are cut with an ellipsis, never wrapped into the buttons' band
+	_status.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_status.clip_text = true
 	_status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_place(_status, _r("status"))
@@ -881,7 +869,8 @@ func _update_bar() -> void:
 	var pending := is_pending()
 	_save.disabled = not pending
 	_undo.visible = pending
-	_reset.visible = not pending
+	# Reset stays: the player most wants it while changes are pending (pass 2); greyed when the loadout is already Classic
+	_reset.visible = true
 	_reset.disabled = work.is_empty()
 	_set_glow(pending)
 
@@ -1011,7 +1000,7 @@ func apply_premade(id: String) -> void:
 	work.picks = (got.kept as Array).duplicate()
 	from_id = id
 	from_name = String(s.get("name", ""))
-	# (a build with picks held back says so in place of its line: the status is three lines)
+	# (a build with picks held back says so in place of its line, on one line)
 	var back := _held_back_text(got)
 	_set_status(from_name + back if back != "" else AdvancementData.word("status.premade") % [from_name, String(s.get("line", ""))], AdvancementData.color("text"))
 	_after_change()
@@ -1031,12 +1020,20 @@ func _through_the_gates(lo: AdvancementLoadout) -> Dictionary:
 	return got
 
 
-## " (3 held back: Opens after the Full lessons: 4 left)" for a build some of whose picks a gate keeps out; "" when none.
+## " · 3 picks held back · 4 lessons to go" for a build some of whose picks a gate keeps out; "" when none.
 func _held_back_text(got: Dictionary) -> String:
 	var back: Array = got.held_back
 	if back.is_empty():
 		return ""
-	return AdvancementData.word("status.held_back") % [back.size(), String(got.reason)]
+	# one short line (pass 2: the gate's full words nested in brackets wrapped to two lines): " · 2 picks held back · 4
+	# lessons to go"
+	var why := String(got.reason)
+	match String(got.get("reason_code", "")):
+		"gate_full":
+			why = AdvancementData.word("status.held_full") % int(work.gates.get("full_left", 0))
+		"gate_first_win":
+			why = AdvancementData.word("status.held_first")
+	return AdvancementData.word("status.held_back") % [back.size(), why]
 
 
 func reset_classic() -> void:
@@ -1104,11 +1101,20 @@ func set_search(text: String) -> void:
 	if q == "":
 		_tree_l.apply_search(null)
 		_tree_r.apply_search(null)
+		# an empty box says nothing about matches (pass 2: "9 found" stayed beside an empty Search)
+		if _status != null and (_status.text == AdvancementData.word("search.none") or _is_count(_status.text)):
+			_status.text = ""
 		return
 	var ids := AdvancementData.search(element, q)
 	_tree_l.apply_search(ids)
 	_tree_r.apply_search(ids)
 	_set_status(AdvancementData.word("search.count") % ids.size() if not ids.is_empty() else AdvancementData.word("search.none"), AdvancementData.color("text"))
+
+
+func _is_count(t: String) -> bool:
+	var f := AdvancementData.word("search.count")
+	var cut := f.find("%d")
+	return cut >= 0 and t.ends_with(f.substr(cut + 2)) and t.substr(0, t.length() - (f.length() - cut - 2)).is_valid_int()
 
 
 ## Search matches (non-root nodes with a lit match), in reading order.
@@ -1136,6 +1142,13 @@ func set_slots_open(on: bool) -> void:
 		return
 	_hide_tip()
 	_slots.visible = on
+	# the panel stands over the left tree: the tree steps back (faded, out of reach) so no plate is half cut (pass 2)
+	_tree_l.close_pop()
+	var ft := create_tween()
+	ft.tween_property(_tree_l, "modulate:a", 0.0 if on else 1.0, 0.14)
+	for n: AdvancementNode in _tree_l.nodes:
+		n.mouse_filter = Control.MOUSE_FILTER_IGNORE if on else Control.MOUSE_FILTER_STOP
+		n.focus_mode = Control.FOCUS_NONE if on else Control.FOCUS_ALL
 	if on:
 		_slots.refresh(slot_index)
 		_slots.modulate.a = 0.0
@@ -1392,6 +1405,21 @@ func _stage_rect(c: Control) -> Rect2:
 	return Rect2(tl, c.size * (c.get_global_transform().get_scale().x / sc))
 
 
+## The stage rects a tip should not cover: every plate of both trees (and an open pop-out) but `except`, a little grown so
+## the marks on the corners count too.
+func _plate_rects(except: Control) -> Array:
+	var out: Array = []
+	for t: AdvancementTree in [_tree_l, _tree_r]:
+		if t.modulate.a < 0.5:
+			continue
+		for n: AdvancementNode in t.nodes:
+			if n != except:
+				out.append(_stage_rect(n).grow(6.0))
+		if t._pop != null and t._pop != except:
+			out.append(_stage_rect(t._pop))
+	return out
+
+
 ## Where a tip may stand: the painting, never the bottom bar (Search and Save Changes stay in view).
 func _tip_bounds() -> Rect2:
 	var fr := _r("frame")
@@ -1439,7 +1467,7 @@ func _tip_node(n: AdvancementNode) -> void:
 		wide = full
 	# a pop-out's option shows its tip beside the whole pop-out, so the other options stay in view
 	var anchor: Control = n if n.get_parent() is AdvancementTree else (n.get_parent() as Control)
-	_tip.show_lines(lines, _stage_rect(anchor), _tip_bounds(), AdvancementTip.WIDTH if wide else AdvancementTip.WIDTH_SHORT)
+	_tip.show_lines(lines, _stage_rect(anchor), _tip_bounds(), AdvancementTip.WIDTH if wide else AdvancementTip.WIDTH_SHORT, _plate_rects(anchor))
 
 
 func _on_rail_tip(n: AdvancementNode, tr: Dictionary, on: bool) -> void:
@@ -1497,6 +1525,10 @@ func _set_status(text: String, col: Color) -> void:
 	if _status == null:
 		return
 	_status.text = text
+	# one line: the body size, the small size when that does not fit (never under it), then the ellipsis
+	var f := AdvancementTheme.font("body2")
+	var fits := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, AdvancementTheme.S_BODY).x <= _status.size.x
+	_status.add_theme_font_size_override("font_size", AdvancementTheme.S_BODY if fits else AdvancementTheme.S_SMALL)
 	_status.add_theme_color_override("font_color", col)
 	_status.modulate.a = 1.0
 	if _status_tween != null:

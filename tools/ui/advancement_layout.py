@@ -319,32 +319,53 @@ def algorithm(tree, moves, ui, el, side, mode):
 #            sets) go ABOVE the gate row, the rest below it, so one gate line tells the truth: every pick under it waits
 #            for the Full lessons, none above it does.
 #   packing  above the gate, lines go in chip order to the topmost row, then the column, where they fit (no two points
-#            of a row closer than 2) at the least penalty (links crossing links or passing over another plate); then
+#            of a row closer than 2) at the least penalty (links crossing links, passing over another plate or running flatter than a diagonal; each line tries its flat shape and, where a tier fans out, a tall one); then
 #            lines that continue below sink to the gate row while that costs nothing; below the gate each line's rest
 #            goes as near under its parents as the penalty allows.
 #   width    every width from layout.lattice.<side>_widths is packed; the least penalty wins, then the shape nearest the
 #            zone's (at lattice.half_px x row_px), then the narrower.
 
-def _lattice_shape(ln, ts):
-    """[(row, x, key)] of one line's tiers `ts` from row 0, x >= 0, x + row even."""
+def _lattice_shape(ln, ts, tall=False):
+    """[(row, x, key)] of one line's tiers `ts` from row 0, x >= 0, x + row even. `tall`: a tier whose links to the tier
+    before would run flatter than a diagonal (three picks under one, or one under three: a fan) drops as many rows as it
+    spreads, centred straight under the tier before, so every link is a diagonal or a straight drop (2026-10-10 pass 2,
+    the critic's "fan from the '1' spike root")."""
     pts = []
     prev_c = 0
+    prev_k = 0
     step = -1
+    row = 0
     for j, t in enumerate(ts):
         ents = ln['entries'][t]
         k = len(ents)
-        want = prev_c
-        if (want - (k - 1) - j) % 2:
-            step = -step
-            want += step
-        start = want - (k - 1)
+        spread = (prev_k - 1) + (k - 1) if j else 0
+        if tall and j and spread >= 2:
+            # dy = spread keeps the parity with the same centre (spread and k - prev_k have one parity)
+            row += spread
+            want = prev_c
+            start = want - (k - 1)
+        else:
+            row += 1 if j else 0
+            want = prev_c
+            if (want - (k - 1) - row) % 2:
+                step = -step
+                want += step
+            start = want - (k - 1)
         for i, e in enumerate(ents):
-            pts.append((j, start + 2 * i, e['key']))
+            pts.append((row, start + 2 * i, e['key']))
         prev_c = want
+        prev_k = k
     mn = min(x for _, x, _ in pts)
     if mn % 2:
         mn -= 1
     return [(j, x - mn, k) for j, x, k in pts]
+
+
+def _lattice_shapes(ln, ts):
+    """The line's shapes to try: the flat one and, when it differs, the tall one."""
+    a = _lattice_shape(ln, ts)
+    b = _lattice_shape(ln, ts, tall=True)
+    return [a] if a == b else [a, b]
 
 
 def _lattice_free(occ, pts, r0, x0, W, own=()):
@@ -375,9 +396,13 @@ def _seg_cross(a, b, c, d):
 
 
 def _lattice_penalty(P, links, hx, vy, icon):
-    """2 per pair of links that cross, 1 per plate a link passes over (closer than 0.62 icon to its middle part)."""
+    """2 per pair of links that cross, 1 per plate a link passes over (closer than 0.62 icon to its middle part), 1 per
+    link flatter than a diagonal (it runs across its neighbours' links: the critic's "fan")."""
     segs = [((P[a][0] * hx, P[a][1] * vy), (P[b][0] * hx, P[b][1] * vy), a, b) for a, b in links if a in P and b in P]
     n = 0
+    for a, b in links:
+        if a in P and b in P and abs(P[b][0] - P[a][0]) > abs(P[b][1] - P[a][1]):
+            n += 1
     for i in range(len(segs)):
         for j in range(i + 1, len(segs)):
             if _seg_cross(segs[i][0], segs[i][1], segs[j][0], segs[j][1]):
@@ -416,20 +441,21 @@ def _lattice_pack(lines, W, gated, hx, vy, icon):
         while cut < len(ts) and (gated is None or not any(gated(e) for e in ln['entries'][ts[cut]])):
             cut += 1
         if cut:
-            pts = _lattice_shape(ln, ts[:cut])
             first, best, base = None, None, pen(P)
-            for r0 in range(0, 80):
-                if first is not None and r0 > first + 1:
-                    break
-                for x0 in range(0, W + 1):
-                    if _lattice_free(occ, pts, r0, x0, W):
-                        if first is None:
-                            first = r0
-                        Q = dict(P)
-                        Q.update({k: (x + x0, j + r0) for j, x, k in pts})
-                        sc = (pen(Q) - base, r0, x0)
-                        if best is None or sc < best[0]:
-                            best = (sc, r0, x0)
+            for si, pts in enumerate(_lattice_shapes(ln, ts[:cut])):
+                for r0 in range(0, 80):
+                    if first is not None and r0 > first + 1:
+                        break
+                    for x0 in range(0, W + 1):
+                        if _lattice_free(occ, pts, r0, x0, W):
+                            if first is None:
+                                first = r0
+                            Q = dict(P)
+                            Q.update({k: (x + x0, j + r0) for j, x, k in pts})
+                            sc = (pen(Q) - base, r0, x0, si)
+                            if best is None or sc < best[0]:
+                                best = (sc, r0, x0, pts)
+            pts = best[3]
             P.update(_lattice_put(occ, pts, best[1], best[2]))
             uppers.append((li, pts, best[1], best[2]))
         if cut < len(ts):
@@ -455,23 +481,24 @@ def _lattice_pack(lines, W, gated, hx, vy, icon):
             P.update(_lattice_put(occ, pts, best, x0))
     for li, ts, upts in lowers:
         ln = lines[li]
-        pts = _lattice_shape(ln, ts)
         parents = [P[e['key']] for e in ln['entries'][upts[-1]]] if upts else []
         best, base = None, pen(P)
-        for r0 in range(gate, gate + 16):
-            for x0 in range(0, W + 1):
-                if not _lattice_free(occ, pts, r0, x0, W):
-                    continue
-                Q = dict(P)
-                Q.update({k: (x + x0, j + r0) for j, x, k in pts})
-                dist = 0.0
-                for p in parents:
-                    for e in ln['entries'][ts[0]]:
-                        c = Q[e['key']]
-                        dist += abs(p[0] - c[0]) * hx + (c[1] - p[1]) * vy
-                sc = (pen(Q) - base, r0 - gate > 1, round(dist, 3), r0, x0)
-                if best is None or sc < best[0]:
-                    best = (sc, r0, x0)
+        for si, pts in enumerate(_lattice_shapes(ln, ts)):
+            for r0 in range(gate, gate + 16):
+                for x0 in range(0, W + 1):
+                    if not _lattice_free(occ, pts, r0, x0, W):
+                        continue
+                    Q = dict(P)
+                    Q.update({k: (x + x0, j + r0) for j, x, k in pts})
+                    dist = 0.0
+                    for p in parents:
+                        for e in ln['entries'][ts[0]]:
+                            c = Q[e['key']]
+                            dist += abs(p[0] - c[0]) * hx + (c[1] - p[1]) * vy
+                    sc = (pen(Q) - base, r0 - gate > 1, round(dist, 3), r0, x0, si)
+                    if best is None or sc < best[0]:
+                        best = (sc, r0, x0, pts)
+        pts = best[3]
         P.update(_lattice_put(occ, pts, best[1], best[2]))
     return P, gate, pen(P)
 
