@@ -98,7 +98,10 @@ up on a new machine, what is switched off, and what is waiting on the owner.
   opened cold without the boot path, which only a tool does, still has one renderer pipeline compile of about 0.1 s). Second pass (loading, practice, settings,
   credits, round screen) is not started.
 - **Advancement window:** a critic scored it 6/10 against the owner's reference clip (sparse lattice, flat node art, muddy backdrops,
-  long tooltips, a gate bypass, a status-line overlap); a repair pass addressed those and was not re-scored. Judge it by eye.
+  long tooltips, a gate bypass, a status-line overlap); a repair pass addressed those and was not re-scored. On 2026-10-10
+  (branch tb/GAPS-ADV) two more passes followed: a diamond lattice, kind-coloured jewel plates, a calm backdrop shader, short tips
+  and gate padlocks. An independent critic scored pass 1 at 7/10 ("revise"); pass 2 worked through those notes and has not been
+  re-scored (its builder estimates about 8). Left: line-art pictures, not painted ones; mixed plate outlines. Judge it by eye.
   It saves loadouts; only Boxing and the 8 number-only talents change play (the rest are preview).
 - **Local only (git-ignored), regenerate or ask the owner:** `artifacts/` (mockup renders, reference frames, audit screenshots, the
   skill-tree web mockup generator) and `Spellbreak_Reference_Extracts/`.
