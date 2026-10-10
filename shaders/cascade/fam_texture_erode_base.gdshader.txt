@@ -1,0 +1,67 @@
+// Family: TextureBase01_FxM (Spellbreak, Proletariat; UE4.22 Cascade, converted for this lab).
+// /Game/VFX/Materials/Shared/TextureBase01_FxM -- the shared "plain texture" particle material.
+// 9 instances, all BLEND_Translucent + MSM_Unlit; AtrocioiusRebuke_TrailWings01 is two-sided, the
+// rest one-sided -> template (the library fills blend / unshaded / culling per instance).
+// Used by sprites (FlareFxMI sparkles, Starburst flares, PsychicFocus glow bits, ElysianFall ashes
+// on a 4x4 sub-UV atlas, Zingers velocity sparks) and ribbons (AtrocioiusRebuke head + wings).
+//
+// SOURCE (cooked root graph, stripped to parameter nodes + function shells; 12 expressions,
+// 5 stripped without a name):
+//   TextureSampleParameter2D "Texture" (group "Texture", default /Game/.../Starburst, sampler type
+//   not serialised = Color, i.e. sRGB-decoded; no Coordinates input -> TexCoord0),
+//   ScalarParameters CameraFadeOffset (100), CameraFadeLength (100), PixelDepthFade (50),
+//   StaticBoolParameters HasCameraDepthFade / HasDepthFade (default false),
+//   one MaterialFunctionCall MF_DepthFadeAndCameraDepthFade (its own graph keeps a QualitySwitch,
+//   StaticSwitches and a CameraDepthFade call). No colour/scalar tint parameters and no
+//   DynamicParameter node: the ElysianFall Ashes emitter sets dyn "EmissiveScale" 25, but this root
+//   has nothing to read it, so it is ignored as in UE. Every value is filled per instance from the
+//   source (families/texture_erode_base.json).
+// TEXTURE EVIDENCE (viewed): every texture is grey (R=G=B). 7 of 9 are PF_DXT1 (no alpha):
+//   T_Star_1, Starburst, AtrocioiusRebuke TrailHead/Wings/Zingers, LensFlare, StarField Star02;
+//   FlameBits02_FxT is DXT5 with the silhouette in A and a 0.21 grey DXT floor in RGB where A = 0;
+//   PsychicFocus_BlueGlowMask is BGRA8 with R=G=B=A. All are SRGB (flag not serialised = true).
+//
+// AUTHORED (graph wiring is not in the data):
+//  * emissive = Texture.rgb (sRGB-decoded) * particle colour (HDR); no other tint exists.
+//  * opacity = Texture.r * Texture.a * particle alpha. R because the DXT1 majority has no alpha
+//    (an alpha-only opacity would draw solid squares); the product with A drops FlameBits02's
+//    grey RGB floor outside its alpha silhouette (same mask idiom as the sibling flames_distort
+//    family). Side effect: PsychicFocus_BlueGlowMask (R = A) is effectively squared.
+//  * MF_DepthFadeAndCameraDepthFade: opacity *= DepthFade(PixelDepthFade) if HasDepthFade,
+//    *= CameraDepthFade(CameraFadeOffset, CameraFadeLength) if HasCameraDepthFade (high-quality
+//    branch of the QualitySwitch; plain multiplies, no SmoothStep in this function).
+//  * sub-UV: Cascade bakes the sub-image into TexCoord0, so the plain sample follows the atlas
+//    (ParticleSubUV blending is not available to a TextureSampleParameter2D).
+shader_type spatial;
+render_mode /*RENDER_MODE*/;
+#include "res://shaders/cascade/common.gdshaderinc"
+#include "res://shaders/cascade/particle.gdshaderinc"
+
+uniform sampler2D main_tex : source_color, repeat_enable, filter_linear_mipmap;  // "Texture"
+uniform bool has_camera_depth_fade = false;  // static switch HasCameraDepthFade
+uniform bool has_depth_fade = false;         // static switch HasDepthFade
+uniform float camera_fade_offset = 1.0;      // CameraFadeOffset, 100 cm
+uniform float camera_fade_length = 1.0;      // CameraFadeLength, 100 cm
+uniform float pixel_depth_fade = 0.5;        // PixelDepthFade, 50 cm
+uniform float alpha_clip = 0.333;            // only used if an instance were Masked (none are)
+
+void vertex() {
+	vec4 _e; vec4 _d;
+	particle_vertex(VERTEX, UV, INSTANCE_CUSTOM, INSTANCE_ID, UV2, _e, _d);
+	v_extra = _e; v_dyn = _d; v_color = COLOR; v_quv = UV;
+}
+
+void fragment() {
+	vec2 quv = v_quv;
+	if (!is_trail && grid.x * grid.y > 1.0) { quv = clamp(quv, 0.001, 0.999); }
+	vec4 tx = texture(main_tex, particle_atlas(quv));
+	float op = tx.r * tx.a * v_color.a;
+	if (has_depth_fade) {
+		op *= depth_fade(SCREEN_UV, VERTEX, INV_PROJECTION_MATRIX, pixel_depth_fade);
+	}
+	if (has_camera_depth_fade) {
+		op *= camera_depth_fade(-VERTEX.z, camera_fade_offset, camera_fade_length);
+	}
+	ALBEDO = tx.rgb * v_color.rgb;               // unlit emissive, HDR particle colour -> bloom
+	/*ALPHA_OUT*/
+}

@@ -1,0 +1,21 @@
+{
+ "roots": ["/Game/VFX/Character/Fire/Flames_Distort01_FxM"],
+ "shader": "fam_flames_distort",
+ "template": true,
+ "u": {
+  "mask_tex": ["t", ["MaskTexture"]],
+  "distortion_normal": ["t", ["DistortionNormalMap"]],
+  "distortion_strength": ["s", "Distortion Strength", 1.0, 0.125],
+  "normal_pan": ["v2", "NormalMapPanU", "NormalMapPanV"],
+  "normal_scale": ["v2", "NormalMapScaleU", "NormalMapScaleV"],
+  "fps": ["s", "FPS", 1.0, 12.0],
+  "edge_softness": ["s", "EdgeSoftness", 1.0, 0.3],
+  "mask_contrast": ["s", "MaskContrast", 1.0, 0.5],
+  "camera_fade_offset": ["s", "CameraFadeOffset", 0.01, 100.0],
+  "camera_fade_length": ["s", "CameraFadeLength", 0.01, 100.0],
+  "pixel_depth_fade": ["s", "PixelDepthFade", 0.01, 35.0],
+  "depth_min": ["s", "DepthMin", 1.0, 0.0],
+  "depth_max": ["s", "DepthMax", 1.0, 1.0]
+ },
+ "notes": "Spellbreak (Proletariat) Flames_Distort01_FxM. Evidence: the surviving params are MaskTexture (root default FlameBits02_FxT), DistortionNormalMap, Distortion Strength, NormalMapScale/Pan U/V, FPS, EdgeSoftness, MaskContrast, CameraFadeOffset/Length, PixelDepthFade, DepthMin/DepthMax and DynamicParameter[0]=EmissiveScale. The functions are Luos_Mask_Distorter_FPS, CheapContrast, MF_TransluscentToonErosion, CameraDepthFade and SmoothStep, one call node each. This is the same set as PowerSurge_Glow01_FxM (the approved fireball_core_flames) plus EmissiveScale and DepthMin/Max. It is a template because instances are BLEND_Translucent (13) and BLEND_Additive (2). AUTHORED: (1) The mask channel is chosen per texture from its content. No single UE channel read fits all 15 instances. A mask with alpha uses A: FlameBits02 x2 has a hand-posterised toon flame in A (bands 0.47-0.94) and only a blurred copy of it in RGB over a 0.216 floor; BrightSparks has a soft silhouette in A and a blurrier copy in RGB. A mask without alpha uses R: T_ArcaneCurse_Sparks is DXT1, so its A would draw squares. Detection uses the coarsest-mip alpha (texture mean). This replaces the earlier R*A, whose contour followed the blurred R, at 42% of the silhouette area for FlameBits02. CheapContrast already removes the RGB floor at every instance's MaskContrast. (2) There is no sRGB decode: alpha is linear, and the only R-read mask, T_ArcaneCurse_Sparks, is SRGB=false. (3) Distortion is a normal-map UV offset in atlas space with an FPS-stepped pan. (4) Erosion is smoothstep(1-alpha, 1-alpha+EdgeSoftness, CheapContrast(mask)). (5) The soft-particle fade is smoothstep(DepthMin, DepthMax, DepthFade). (6) Emissive = colour * dyn0 (by index) * mask tone."
+}

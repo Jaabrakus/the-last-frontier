@@ -132,6 +132,7 @@ const STANCE_IN_S := 0.35
 const STANCE_OUT_S := 0.18
 var _st_anim: Animation
 var _st_el := ""
+var _st_style := ""
 var _st_t := 0.0
 var _st_w := 0.0
 ## The % ring's state layer: its state key, clip, time, weight, mask, loop; the air legs' clip, time, weight.
@@ -296,7 +297,7 @@ func _on_started(m: String, _t: Node3D) -> void:
 	move = m
 	tier = caster.tier(m)
 	var el := BendPoses.element_of(caster.player)
-	pick = BendPoses.pick(m, caster.mode_of(m), el) if el != "" else {}
+	pick = BendPoses.pick(m, caster.mode_of(m), el, caster.player) if el != "" else {}
 	combo_alt = false
 	if not pick.is_empty() and pick.has("alt"):
 		# (the same move again within the combo window: the other hand, then back)
@@ -437,7 +438,7 @@ func clip_time() -> float:
 		"press":
 			return minf(clip_t, _hold)
 		"release", "up":
-			return minf(_from_t + clip_t, _anim.length)
+			return minf(_from_t + clip_t, _end())
 	return 0.0
 
 
@@ -533,27 +534,54 @@ func _tick(dt: float) -> void:
 			elif not pressed and t >= _hold:
 				pressed = true                                          # (the wind-up drawn: the palms ready)
 		"release", "up":
-			w = minf(lerpf(_w0, 1.0, clampf(clip_t / 0.06, 0.0, 1.0)), clampf((_anim.length - t) / BLEND_OUT_S, 0.0, 1.0))
-			if phase == "release" and not _struck and (t >= _strike or t >= _anim.length):
+			var end := _end()
+			var run := _from_t + clip_t
+			w = minf(lerpf(_w0, 1.0, clampf(clip_t / 0.06, 0.0, 1.0)), clampf((end - run) / BLEND_OUT_S, 0.0, 1.0))
+			if phase == "release" and not _struck and (t >= _strike or run >= end):
 				_strike_now()                                       # (the strike's moment: the move leaves the hand)
-			if t >= _anim.length:
+			if run >= end:
 				_stop()
 				return
 	weight = w
 	if _pose == null or not is_instance_valid(_pose):
 		return
 	var mask := _mask()
+	var st := _sample_t(t)                                          # (a fighting style's clip is shown on the element's timeline)
 	if mask != "upper":
-		_cast_layers = [{"anim": _anim, "time": t, "weight": w, "mask": mask}]
+		_cast_layers = [{"anim": _anim, "time": st, "weight": w, "mask": mask}]
 	else:
 		var still := 1.0 if _legs_always() else 1.0 - smoothstep(STILL_MPS.x, STILL_MPS.y, caster.player.horizontal_speed())
-		_cast_layers = [{"anim": _anim, "time": t, "weight": w, "mask": "upper"}, {"anim": _anim, "time": t, "weight": w * still, "mask": "full"}]
+		_cast_layers = [{"anim": _anim, "time": st, "weight": w, "mask": "upper"}, {"anim": _anim, "time": st, "weight": w * still, "mask": "full"}]
 	if not _cast_from.is_empty():
 		_cast_mix_t += dt
 		if _cast_mix_t >= _cast_mix_s:
 			_cast_from = []
 		else:
 			_cast_layers = [{"blend_from": _cast_from, "blend_to": _cast_layers, "blend_weight": _cast_mix_t / _cast_mix_s}]
+
+
+## Where the pose ends on its own timeline (s): the pick's end_s (a fighting style's cast ends when the element's own would, so
+## the caster stays rooted as long), else the clip's length.
+func _end() -> float:
+	return float(pick.get("end_s", _anim.length)) if _anim != null else 0.0
+
+
+## The clip's own time for the pose's time `t`: the pick's warp ([[pose s, clip s], ...] by pose time: a fighting style's clip
+## put on the element's hold, strike and back, BendPoses._timed_as), linear between them and at the clip's own pace after the
+## last; `t` itself without one (every element clip).
+func _sample_t(t: float) -> float:
+	var w: Variant = pick.get("warp") if not pick.is_empty() else null
+	if not (w is Array) or (w as Array).size() < 2:
+		return t
+	var pts := w as Array
+	for i in range(1, pts.size()):
+		var a: Array = pts[i - 1]
+		var b: Array = pts[i]
+		if t <= float(b[0]):
+			var span := maxf(float(b[0]) - float(a[0]), 0.0001)
+			return minf(lerpf(float(a[1]), float(b[1]), clampf((t - float(a[0])) / span, 0.0, 1.0)), _anim.length)
+	var last: Array = pts[pts.size() - 1]
+	return minf(float(last[1]) + (t - float(last[0])), _anim.length)
 
 
 ## The clip's mask: the pose's, the clip's meta, else the rule (the one-handed push "reach_l"; else "upper", with "full" as
@@ -593,7 +621,7 @@ func _stop() -> void:
 # ---------------------------------------------------------------- the stance
 ## The element's stance clip playing (&"" none), and its weight now.
 func stance_clip() -> StringName:
-	return StringName(stance_name(_st_el)) if _st_anim != null and _st_w > 0.0 else &""
+	return StringName(stance_name(_st_el, caster.player)) if _st_anim != null and _st_w > 0.0 else &""
 
 
 func stance_weight() -> float:
@@ -601,10 +629,10 @@ func stance_weight() -> float:
 
 
 ## The stance clip poses.json names for `element` ("" none, or not one of our own usable clips).
-static func stance_name(element: String) -> String:
+static func stance_name(element: String, body: Node = null) -> String:
 	if element == "":
 		return ""
-	var v: Variant = (BendPoses.data().get("stance", {}) as Dictionary).get(element, "")
+	var v: Variant = BendPoses.stance_pose(element, body)          # (a fighting style's own stance, else the element's)
 	var nm := String(BendPoses._as_pose(v).get("clip", ""))
 	return nm if nm != "" and BendPoses.usable(nm) else ""
 
@@ -621,9 +649,11 @@ func stance_wanted() -> float:
 
 func _tick_stance(dt: float) -> void:
 	var el := BendPoses.element_of(caster.player)
-	if el != _st_el:
+	var sty := BendPoses.style_of(caster.player, el)
+	if el != _st_el or sty != _st_style:
 		_st_el = el
-		var nm := stance_name(el)
+		_st_style = sty
+		var nm := stance_name(el, caster.player)
 		var a := BendPoses.animation(nm) if nm != "" else null
 		if a != _st_anim:
 			_st_anim = a

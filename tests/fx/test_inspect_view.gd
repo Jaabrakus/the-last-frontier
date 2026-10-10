@@ -241,7 +241,6 @@ func _thigh() -> void:
 			"a musket ball through the left thigh: the femur fractured, through and through (%s)" % _lines(an))
 	_expect(f.limp <= 0.5 and not f.down and not f.is_dead(), "he limps (x%.2f of the walk), on his feet" % f.limp)
 	await _secs(1.0)
-	var speeds := []
 	for g: NpcFighter in [f, ok]:
 		g.go(g.global_position + ax.z * 10.0, NpcFighter.RUN_SPEED, 0.5, true)
 	var top := [0.0, 0.0]

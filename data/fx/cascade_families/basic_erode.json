@@ -1,0 +1,106 @@
+{
+  "roots": [
+    "/Game/VFX/Materials/M_f_ParticleBasicErode"
+  ],
+  "shader": "fam_basic_erode",
+  "template": true,
+  "u": {
+    "mask_tex": [
+      "t",
+      [
+        "Opacity mask"
+      ]
+    ],
+    "subuv_tex": [
+      "t",
+      [
+        "SubUV texture",
+        "Opacity mask"
+      ]
+    ],
+    "use_subuv": [
+      "sw",
+      "Sub UV",
+      false
+    ],
+    "mask_srgb": [
+      "c",
+      true
+    ],
+    "brightness": [
+      "s",
+      "Brightness",
+      1.0,
+      1.0
+    ],
+    "opacity_control": [
+      "s",
+      "Opacity Control",
+      1.0,
+      1.0
+    ],
+    "edge_softness": [
+      "s",
+      "Edge Softness",
+      1.0,
+      0.0
+    ],
+    "erosion_speed": [
+      "s",
+      "Erosion Speed",
+      1.0,
+      0.1
+    ],
+    "mask_radius": [
+      "s",
+      "Mask Radius",
+      1.0,
+      0.103765
+    ],
+    "mask_hardness": [
+      "s",
+      "Mask Hardness",
+      1.0,
+      52.451115
+    ],
+    "toon": [
+      "sw",
+      "Use Toon Transluscency",
+      false
+    ],
+    "particle_opacity": [
+      "sw",
+      "Particle Opacity",
+      false
+    ],
+    "particle_edge": [
+      "sw",
+      "Particle Edge",
+      false
+    ],
+    "debug_alpha": [
+      "sw",
+      "Debug Alpha",
+      false
+    ],
+    "fade_offset": [
+      "s",
+      "Fade Distance Offset",
+      0.01,
+      0.0
+    ],
+    "fade_length": [
+      "s",
+      "Fade Length",
+      0.01,
+      10.0
+    ],
+    "depth_fade_m": [
+      "s",
+      "Depth Fade Dist",
+      0.01,
+      0.0
+    ]
+  },
+  "notes": "Spellbreak (Proletariat) M_f_ParticleBasicErode, 32 instances (materials.json), 99 enabled emitters (mostly mesh rings/tori/flares, plus sprite crescents, snowflakes, bits). EVIDENCE: root keeps ScalarParameters Brightness/Opacity Control/Edge Softness/Erosion Speed/Mask Radius/Mask Hardness/Fade Length/Fade Distance Offset/Depth Fade Dist, static switches Debug Alpha/Sub UV/Particle Opacity/Particle Edge/Use Toon Transluscency (none serialises a DefaultValue -> all default false; 25 of 32 instances set Use Toon Transluscency true, the 7 non-toon ones are CandiedGlide_Star01, Lightning_Bits01, ErosionFlare, Snowflake01/02, Snowflakes01, SnowflakesSplotch), DynamicParameter [Opacity, Edge, Param3, Param4] with DefaultValue (1, 0.05, 1, 1), Opacity mask (Texture2D) + SubUV texture, calls MF_TransluscentToonErosion + Luos_alphaErosion ('Erodes alpha mask instead of fade out.'), Lu_RadialGradient, CameraDepthFade, DebugTimeSine. Instances: Translucent one/two-sided + Additive (ErosionFlare, ErosionFlarePosPurchase) -> template. Masks are grey R=G=B (DXT noise only) with flat toon plateaus or streaks (viewed). All 7 non-toon instances keep Edge Softness 0 -> Edge Softness belongs to the toon erosion. Erosion Speed varies (root default 0.1 kept by 6 of the 7 non-toon instances; 0.5 on ErosionFlare (non-toon), ErosionFlarePosPurchase, ErosionBand2/3 and PoisonCircle; 1.0 on the rest) but Debug Alpha is off in every instance, so it is read only by the DebugTimeSine preview. Particle Opacity emitters (#40, #168 rings, #182, #183, #753, #756) carry 'Opacity' in dynamic channel 0 or have no ParameterDynamic module; they drive it as a plain level (constant 0.2/0.1 on snow splotch/rain, 0..0.378 bell on the buff crescent) while particle alpha does the erosion. The Particle Edge emitters (#40 ParticleSpriteEmitter_6/7) carry 'Edge' in channel 1 and set 0.01 = crisp edge. Ring radii 0.475 (ErosionRing) / 0.481 (_Superthin) / 0.47 (_Thick) sit inside T_F_ErosionRing's band (0.46-0.49), crescent 0.41/0.42 inside its band (0.38-0.45) -> Mask Radius cuts the centre; Radius 0 or Hardness 0 instances must stay visible -> neutral there (every instance with Radius>0 and Hardness>0 that has an enabled emitter is on a sprite). Only #69 DownBurst 'Ring 1' (Ring_Erode02_FxMI, toon, ES 0.1) has particle alpha above 1 (AlphaOverLife 2.0 -> 0); its mask Ring_Erode01_FxT is 81% zero texels with a crisp support edge. AUTHORED: radial cut-out form pow(saturate(dist/R), H); toon erosion saturate((m-(1-a))/EdgeSoftness*OpacityControl); Luos erosion saturate((m-(1-a))*OpacityControl) (as sibling fireball_wisp); erosion gated to the mask support (m > 0.002, as the uber's step(0.002, shape)) so alpha > 1 leaves the painted mask un-eroded instead of turning the empty texels opaque black; emissive = particle colour * Brightness * mask; DebugTimeSine form; mask_srgb is family-wide true (UE default, 12 of 19 masks) because families cannot read a texture's SRGB flag. Dynamic channels are read by position (0 = Opacity, 1 = Edge), as the material reads them; an emitter without a ParameterDynamic module reads (1,1,1,1) (cascade.gd, matching UE's null Cascade dynamic-parameter stream), so the expression DefaultValue (Edge 0.05) is never used in-game. Ignored: TalentScroll_MagicBits01's 'Distortion Strength'/'FPS' (no such nodes in this root), RefractionDepthBias (no refraction in unlit translucency here). OPEN (shared code): families cannot read a texture's SRGB flag; SRGB=false masks in this root (decoded texture assets): SpringstepRing01_FxT, SpringstepCylinder01_FxT, MagicBitsRound01_FxT (TC_Masks), T_F_ErosionRingCrescent, Energy_BandC_FXT, T_f_PoisonMuzzleBurst, T_SnowflakeSplotch -> these should use mask_srgb=false (31 of 99 emitters, incl. ErosionBand2 x14 and the Springstep rings). SM_Flare_Straight (ErosionFlare mesh) is not exported."
+}

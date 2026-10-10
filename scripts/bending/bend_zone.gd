@@ -165,6 +165,8 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 func _look() -> void:
 	if not BendLooks.live():
 		return
+	if _sb_look():
+		return                                 # (the move's Spellbreak effect replaces this look: SbFx)
 	var look := Node3D.new()
 	look.name = "Look"
 	add_child(look)
@@ -322,6 +324,17 @@ func _look() -> void:
 			wet.set_instance_shader_parameter(&"t", 0.15)
 			wet.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
 			_grow(look, Vector3(0.2, 1.0, 0.2))
+
+
+## The zone's Spellbreak effect (SbFx, data/bending/sb_fx; visual only), keyed by the cast that made it (info's tag): its
+## start one-shot and its held look, stopped at end(). True when the held look replaces today's (keep_old false).
+func _sb_look() -> bool:
+	var key := SbFx.key_of(info)
+	if key == "":
+		return false
+	var ctx := {"node": self, "dir": way, "size": size, "radius": radius, "info": info}
+	SbFx.fire(owner_node, key, "zone_start", ctx)
+	return SbFx.start(self, "zone", owner_node, key, "zone", ctx)
 
 
 func _part(under: Node3D, m: Mesh, mat: Material) -> MeshInstance3D:
@@ -491,7 +504,8 @@ func _every(dt: float) -> void:
 		for z in get_tree().get_nodes_in_group(GROUP):
 			var o := z as BendZone
 			if o != self and o.kind in ["fire_wall", "burn"] and inside(o.global_position):
-				BendLooks.burst(o.global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
+				if not SbFx.fire(o.owner_node, SbFx.key_of(o.info), "put_out", {"at": o.global_position, "dir": o.way}):
+					BendLooks.burst(o.global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
 				o.end()
 
 
@@ -533,12 +547,14 @@ func on_bolt(b: BendBolt) -> bool:
 				b.end("melted")
 				return true
 			if b.kind == "water":
-				BendLooks.burst(global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
+				if not SbFx.fire(owner_node, SbFx.key_of(info), "put_out", {"at": global_position, "dir": way}):
+					BendLooks.burst(global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
 				b.end("steam")
 				end()
 				return true
 			if b.kind == "air" and not b.burning:
 				b.burning = true
+				SbFx.fire(owner_node, SbFx.key_of(info), "blown", {"at": b.global_position, "dir": b.velocity})
 				return true
 		"wind_wall":
 			if b.kind in LIGHT and not b.guarded_by.has(get_instance_id()):
@@ -550,7 +566,8 @@ func on_bolt(b: BendBolt) -> bool:
 				var sp := v.length() * 0.6
 				b.velocity = (Vector3.UP * 1.1 + across * (off if absf(off) > 0.0 else 1.0) + v.normalized() * 0.35).normalized() * sp
 				b.travelled = maxf(b.travelled, b.range_m - 6.0)          # (it dies out a few metres on)
-				BendLooks.burst(b.global_position, "air", 10, Vector3.UP, 60.0, 3.0)
+				if not SbFx.fire(owner_node, SbFx.key_of(info), "deflect", {"at": b.global_position, "dir": b.velocity}):
+					BendLooks.burst(b.global_position, "air", 10, Vector3.UP, 60.0, 3.0)
 				took += 1
 				return true
 		"redirect":
@@ -635,7 +652,8 @@ func _guard_bolt(b: BendBolt) -> bool:
 					_late(b)
 			elif what == "fire":
 				if perfect:
-					BendLooks.burst(b.global_position, "steam", 22, Vector3.UP, 120.0, 2.0, 0.7)
+					if not SbFx.fire(owner_node, SbFx.key_of(info, move_id, "redirect"), "doused", {"at": b.global_position, "dir": b.velocity}):
+						BendLooks.burst(b.global_position, "steam", 22, Vector3.UP, 120.0, 2.0, 0.7)
 					BendBolt.steam(owner_node, b.global_position)
 					b.end("steam")
 				else:
@@ -650,7 +668,8 @@ func _guard_bolt(b: BendBolt) -> bool:
 					_late(b)
 			elif what == "ice":
 				if perfect:
-					BendLooks.burst(b.global_position, "water", 14)
+					if not SbFx.fire(owner_node, SbFx.key_of(info, move_id, "parry"), "melted", {"at": b.global_position, "dir": b.velocity}):
+						BendLooks.burst(b.global_position, "water", 14)
 					BendZone.make(owner_node, "puddle", FormEffects.ground_at(owner_node, b.global_position),
 							{"radius_m": 0.9, "life_s": 6.0}, way)
 					b.end("melted")
@@ -753,7 +772,8 @@ func _cushion(b: BendBolt) -> void:
 	s.set_meta(&"bend_weight", b.weight)
 	stones.append(s)
 	FormStone.make_loose(s, by)
-	BendLooks.burst(at, "air", 18)
+	if not SbFx.fire(owner_node, SbFx.key_of(info), "cushion", {"at": foot, "dir": way}):
+		BendLooks.burst(at, "air", 18)
 
 
 ## Where guard `owner` (a body) aims now (its caster's aim point: the player's crosshair, a bot's target), from `from`; along
@@ -834,6 +854,7 @@ static func return_stone(c: Variant, s: Node3D, toward := Vector3.INF) -> FormEf
 	if bc == null or not bc.valid() or s == null or not is_instance_valid(s) or not (s is FormStone):
 		return null
 	var fs := s as FormStone
+	SbFx.stop(fs, "held")                        # (its held look let go: the throw's own flight follows)
 	if fs.has_meta(BendR3.POP_STONE_META):
 		return _throw_pop_stone(bc, fs, toward)
 	var kind := GustLift.kind_of(fs)
@@ -1001,7 +1022,8 @@ func put_out_fires() -> int:
 		var o := z as BendZone
 		if o != null and o != self and o.kind in ["fire_wall", "burn"] and not o.is_queued_for_deletion() \
 				and (inside(o.global_position) or o.global_position.distance_to(global_position) <= radius + 1.0):
-			BendLooks.burst(o.global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
+			if not SbFx.fire(o.owner_node, SbFx.key_of(o.info), "put_out", {"at": o.global_position, "dir": o.way}):
+				BendLooks.burst(o.global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
 			o.end()
 			n += 1
 	var r := maxf(radius, size.x * 0.5) + 0.5
@@ -1072,7 +1094,8 @@ func _stones() -> void:
 					rb0.freeze = false
 					rb0.linear_velocity = lift.velocity * 0.05
 				FormStone.make_loose(st, by)
-				BendLooks.burst(st.global_position, "air", 18)
+				if not SbFx.fire(owner_node, SbFx.key_of(info), "cushion", {"at": st.global_position, "dir": way}):
+					BendLooks.burst(st.global_position, "air", 18)
 			else:
 				_late_lift(lift)
 			took += 1
@@ -1163,7 +1186,8 @@ func _take_stone(s: Node3D, v: Vector3, perfect := false) -> void:
 				s.set_meta(&"bend_caught_at", BendStatus.now())
 			if s is FormStone:
 				(s as FormStone).rest_again()
-			BendLooks.burst(front, "stone", 14)
+			if not SbFx.start(s, "held", owner_node, SbFx.key_of(info, "stone_catch", "catch"), "held", {"node": s, "dir": out}):
+				BendLooks.burst(front, "stone", 14)
 			if not r2:
 				BendLooks.sound("stone", "hit", front, -2.0)
 		"deflect":
@@ -1193,6 +1217,9 @@ func end() -> void:
 	for e in _fx:
 		if e is GPUParticles3D and is_instance_valid(e):
 			BendLooks.stop_trail(e as GPUParticles3D)
+	SbFx.stop(self, "zone")
+	if is_inside_tree():
+		SbFx.fire(owner_node, SbFx.key_of(info), "zone_end", {"node": self, "dir": way, "size": size, "radius": radius})
 	queue_free()
 
 
@@ -1268,6 +1295,7 @@ func _fire_wall_hit(n: Node3D, dt: float) -> void:
 		inf["wall_entry"] = true
 		BendR3.deliver(n, damage_s * dt, n.global_position + Vector3.UP, out, owner_node, -1.0,
 				BendR3.set_v(out, float(fw.get("entry_mps", 5.0)), float(fw.get("entry_deg", 50.0))), inf)
+		SbFx.fire(owner_node, SbFx.key_of(info), "entry", {"at": n.global_position + Vector3.UP * 0.9, "dir": out})
 	else:
 		inf["wall_tick"] = true
 		BendR3.deliver(n, damage_s * dt, n.global_position + Vector3.UP, way, owner_node, -1.0, Vector3.ZERO, inf)

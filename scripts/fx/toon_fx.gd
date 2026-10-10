@@ -148,9 +148,17 @@ static func mat(key: String) -> ShaderMaterial:
 		"spark_line":
 			m.shader = SHADERS.spark
 			p = {"mode": 0, "c_core": Color(1.0, 1.0, 1.0), "glow": 1.3, "rim_glow": 1.0, "stretch": 12.0}
+		"spark_sb":
+			# (the Spellbreak-shaded bolt's sparks, BendLooks.SB_BOLT: spark_elec's shader (nothing new to compile), a
+			# lavender core in the bolt's violet)
+			m.shader = SHADERS.spark
+			p = {"mode": 0, "c_core": Color(0.8, 0.72, 1.0), "glow": 3.2, "rim_glow": 1.8, "stretch": 6.0}
 		"star":
 			m.shader = SHADERS.spark
 			p = {"mode": 1, "c_core": Color(1.0, 1.0, 1.0), "glow": 3.0, "rim_glow": 1.6}
+		"star_sb":
+			m.shader = SHADERS.spark
+			p = {"mode": 1, "c_core": Color(0.84, 0.78, 1.0), "glow": 2.6, "rim_glow": 1.6}
 		"star_still":
 			m.shader = SHADERS.spark
 			p = {"mode": 1, "c_core": Color(1.0, 1.0, 1.0), "glow": 3.0, "rim_glow": 1.6, "twinkle": 1.0}
@@ -507,9 +515,22 @@ static func recipe(key: String) -> Dictionary:
 					if key == "spark_fire" else (ramp([[0.0, Color(0.55, 0.75, 1.0, 1.0)], [1.0, Color(0.4, 0.55, 1.0, 0.0)]])
 					if key == "spark_elec" else ramp([[0.0, Color(0.8, 0.92, 1.0, 1.0)], [1.0, Color(0.7, 0.85, 1.0, 0.0)]]))
 			r.amount = 48
+		"spark_sb":
+			# (the sparks round the Spellbreak-shaded bolt, BendLooks.SB_BOLT: a lavender core, the bolt's violet rim)
+			r.mat = mat("spark_sb")
+			pm.particle_flag_align_y = true
+			pm.angle_min = 0.0
+			pm.angle_max = 0.0
+			pm.color_ramp = ramp([[0.0, Color(0.52, 0.4, 1.0, 1.0)], [1.0, Color(0.42, 0.28, 1.0, 0.0)]])
+			r.amount = 48
 		"star":
 			r.mat = mat("star")
 			pm.color_ramp = ramp([[0.0, Color(0.6, 0.85, 1.0, 1.0)], [0.7, Color(0.6, 0.85, 1.0, 0.8)], [1.0, Color(0.6, 0.85, 1.0, 0.0)]])
+			r.amount = 24
+		"star_sb":
+			# (the stars round the Spellbreak-shaded bolt: a lavender core, the bolt's violet rim)
+			r.mat = mat("star_sb")
+			pm.color_ramp = ramp([[0.0, Color(0.56, 0.44, 1.0, 1.0)], [0.7, Color(0.56, 0.44, 1.0, 0.8)], [1.0, Color(0.46, 0.34, 1.0, 0.0)]])
 			r.amount = 24
 		"shard":
 			r.mesh = shard_mesh(1.0, 0.22, 3, 5)

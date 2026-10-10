@@ -197,9 +197,12 @@ func _take() -> void:
 		_rb.angular_velocity = Vector3.ZERO
 	var scn := get_tree().current_scene
 	var foot := FormEffects.ground_at(stone, stone.global_position)
-	GatherFx.stone_chips(scn, foot + Vector3.UP * 0.1, Vector3.UP, 14)
-	GatherFx.soil(scn, foot, Vector3.UP, 10)
-	GatherFx.fall_dust(scn, foot, radius * 2.0)
+	if not bool(stone.get_meta(&"sbfx_rise", false)):        # (its Spellbreak rise played instead: FormEffects, SbFx)
+		GatherFx.stone_chips(scn, foot + Vector3.UP * 0.1, Vector3.UP, 14)
+		GatherFx.soil(scn, foot, Vector3.UP, 10)
+		GatherFx.fall_dust(scn, foot, radius * 2.0)
+	if stone.has_meta(&"sbfx_rise"):
+		stone.remove_meta(&"sbfx_rise")
 	FormEffects.sfx("tear", foot, -2.0, 1.1)
 	_ex = caster.exclude()                         # (the caster's capsule, and a fighter's hit parts)
 	_except(by())
@@ -299,6 +302,11 @@ func hurl(toward := Vector3.INF) -> void:
 	_fly_t = 0.0
 	FormEffects.sfx("hurl", from, 0.0, 0.7 if kind == "cannonball" else 1.0)
 	GatherFx.fall_dust(get_tree().current_scene, from, radius * 1.5)
+	# (the Spellbreak flight, SbFx: visual only, keyed by its Throw's hit info; a held stone thrown back by the catch's own)
+	var sbk := SbFx.key_of(get_meta(&"bend_info", {}))
+	var sbo := {"node": stone, "dir": velocity, "info": get_meta(&"bend_info", {})}
+	if not (sbk.ends_with(".return") and SbFx.start(self, "flight", by(), "stone_catch/catch", "return_flight", sbo.merged({"el": "earth"}))):
+		SbFx.start(self, "flight", by(), sbk, "flight", sbo)
 
 
 ## The point that leads the flight, from the stone's origin (world offset): a spike's (its origin is its foot) most of the
@@ -396,7 +404,9 @@ func _meet_lifts() -> bool:
 			continue
 		var wa := int(BendBolt.WEIGHTS.get(BendBolt.weight_of(self), 1))
 		var wb := int(BendBolt.WEIGHTS.get(BendBolt.weight_of(l), 1))
-		BendLooks.burst((stone.global_position + l.stone.global_position) * 0.5, "stone", 22)
+		var mid := (stone.global_position + l.stone.global_position) * 0.5
+		if not SbFx.fire(by(), "clash/stone", "clash", {"at": mid, "el": "earth", "node": stone}):
+			BendLooks.burst(mid, "stone", 22)
 		if wb <= wa:
 			l.drop()
 		if wa <= wb:
@@ -431,6 +441,7 @@ func _strike(col: Node, who: Node, p: Vector3) -> void:
 	var dmg := damage_now()
 	var dir := velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.FORWARD
 	var src := by()
+	SbFx.fire(src, SbFx.key_of(get_meta(&"bend_info", {})), "hit", {"at": p, "dir": dir, "node": stone})
 	if RingRules.stock_on() and (who is FrontierPlayer or who is NpcFighter):
 		# (round 3, the % ring: the hit with its info, meta bend_info from its Throw: BendR3.deliver; AIR)
 		var fl := Vector3(dir.x, 0.0, dir.z).normalized() if Vector2(dir.x, dir.z).length_squared() > 1e-6 else Vector3.FORWARD
@@ -463,8 +474,13 @@ func _strike(col: Node, who: Node, p: Vector3) -> void:
 func _land(p: Vector3, n: Vector3, contact: Vector3) -> void:
 	phase = Phase.DONE
 	var scn := get_tree().current_scene
-	GatherFx.stone_chips(scn, contact, n, 12)
-	GatherFx.fall_dust(scn, contact, radius * 1.6)
+	var sbk := SbFx.key_of(get_meta(&"bend_info", {}))
+	SbFx.stop(self, "flight")
+	if not SbFx.fire(by(), sbk, "land", {"at": contact, "normal": n, "dir": velocity, "node": stone}):
+		GatherFx.stone_chips(scn, contact, n, 12)
+		GatherFx.fall_dust(scn, contact, radius * 1.6)
+	if kind != "spike":
+		SbFx.start(stone, "roll", by(), sbk, "roll", {"node": stone, "dir": velocity})
 	FormEffects.sfx("strike", contact, -2.0, 0.7)
 	if kind == "spike":
 		var dir := velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.DOWN
@@ -499,10 +515,13 @@ func drop(fx := true) -> void:
 	if phase == Phase.DONE:
 		return
 	phase = Phase.DONE
+	SbFx.stop(self, "flight")
 	if stone != null and is_instance_valid(stone):
 		if fx and is_inside_tree():
 			var scn := get_tree().current_scene
-			GatherFx.fall_dust(scn, stone.global_position, radius * 2.0)
+			# (the entry grounds the point itself (at "ground"), only when it plays: no rays while the effects are off)
+			if not SbFx.fire(by(), "stone_form/drop", "drop", {"at": stone.global_position, "el": "earth", "node": stone}):
+				GatherFx.fall_dust(scn, stone.global_position, radius * 2.0)
 			FormEffects.sfx("break", stone.global_position, 0.0, 0.9)
 		if _rb != null:
 			_rb.freeze_mode = _mode

@@ -1,0 +1,93 @@
+// Family: Erode_DisortTexture01_FxM (Spellbreak, Proletariat; UE4.22 Cascade, converted for this lab).
+// /Game/VFX/Materials/Shared/Erode_DisortTexture01_FxM -- toon-eroded mask distorted by a panning
+// normal map. 6 instances, all BLEND_Translucent + MSM_Unlit + one-sided (template anyway so the
+// library keeps blend/shading/culling exactly as each instance states).
+// Used by sprites (Villainous dark-magic blobs and bits, AegisWarden "Core Hot", MysticOrbs and
+// UnderworldTitan spirit cores, ShrineB_Earth "Earthpulse") and mesh particles (capture-zone
+// "Cylinder Lines").
+//
+// SOURCE (cooked root graph, stripped to parameter nodes + function shells):
+//   TextureSampleParameter2D "MaskTexture" (group Mask, Coordinates input connected, sampler type
+//   not serialised = Color/sRGB), TextureObjectParameter "DistortionNormalMap" (group Distortion),
+//   ScalarParameters MaskScaleU/V (1), MaskBrightness (1), MaskContrast (0), MaskEdgeSoftness (1),
+//   NormalMapScaleU/V (0.3), NormalMapPanU (0.5) / V (0.6), FPS (12; the function's own FPS
+//   parameter defaults to 60), PixelDepthFade (50), CameraFadeOffset (100), CameraFadeLength (100);
+//   StaticBoolParameters HasCameraDepthFade / HasDepthFade (false);
+//   DynamicParameter ParamNames [Opacity, Distortion Strength, Param3, Param4];
+//   function calls Luos_Mask_Distorter_FPS "Distorts/Refracts the Texture" (its body keeps a
+//   TextureSample of a TextureObject input, an Add node and the FPS parameter), CheapContrast,
+//   MF_TransluscentToonErosion "Erodes alpha mask instead of fade out.", and
+//   MF_DepthFadeAndCameraDepthFade. LinearGradient is listed in MaterialFunctionInfos with no
+//   surviving call shell -> not reproduced. Every value is filled per instance from the source
+//   (families/texture_erode_distort.json). Every emitter labels dyn slot 0 "Opacity" and slot 1
+//   "Distortion Strength" (0.025..0.1), matching the root's ParamNames; UE binds by slot.
+// TEXTURE EVIDENCE (viewed): masks are grey R=G=B soft shapes (LumpyGlow01/02 blobs, EarthShake1
+//   crescents [DXT5, A = RGB], ControlRing_Lines01 diagonal streaks); normal maps are BC5 (RG only,
+//   SRGB=false, TC_Normalmap): T-f_Puddle_N (smooth swirls), tilingcrystal (faceted).
+//
+// AUTHORED (graph wiring is not in the data):
+//  * Luos_Mask_Distorter_FPS: offset = (NormalMap.rg * 2 - 1) * DistortionStrength, normal map
+//    sampled at TexCoord0 * NormalMapScale + NormalMapPan * floor(t * FPS) / FPS, offset ADDED to
+//    the mask UV (the function's Add node); mask UV = TexCoord0 * MaskScale (+ offset), wrap
+//    addressing as UE's default sampler (no clamp).
+//  * Distortion strength = dynamic param slot 1 (no scalar "Distortion Strength" exists in this root).
+//  * mask chain: m = MaskTexture.r * MaskBrightness -> CheapContrast(MaskContrast) ->
+//    toon erosion smoothstep(1 - alpha, 1 - alpha + MaskEdgeSoftness, m) with particle alpha
+//    clamped to 0..1 (same erosion idiom as the owner-approved fireball families).
+//  * opacity = erosion * dyn slot 0 "Opacity" * fades; emissive = particle colour (HDR) * m
+//    (mask tone shading inside the eroded shape, as in the approved fireball_core_flames).
+//  * MF_DepthFadeAndCameraDepthFade: DepthFade(PixelDepthFade) if HasDepthFade,
+//    CameraDepthFade(CameraFadeOffset, CameraFadeLength) if HasCameraDepthFade.
+//  * KNOWN LIMIT: LumpyGlow01_FxT (MysticOrbs/UnderworldTitan cores) is SRGB=false (TC_Masks) in
+//    the cooked data, the other masks are sRGB. A family cannot read a texture's SRGB flag, so the
+//    whole family decodes sRGB (root sampler type); LumpyGlow01 is therefore darker/smaller here
+//    than in UE.
+shader_type spatial;
+render_mode /*RENDER_MODE*/;
+#include "res://shaders/cascade/common.gdshaderinc"
+#include "res://shaders/cascade/particle.gdshaderinc"
+
+uniform sampler2D mask_tex : source_color, repeat_enable, filter_linear_mipmap;      // "MaskTexture"
+uniform sampler2D distortion_normal : hint_normal, repeat_enable, filter_linear_mipmap; // "DistortionNormalMap"
+uniform vec2 mask_scale = vec2(1.0);            // MaskScaleU / MaskScaleV
+uniform float mask_brightness = 1.0;            // MaskBrightness
+uniform float mask_contrast = 0.0;              // MaskContrast
+uniform float mask_edge_softness = 1.0;         // MaskEdgeSoftness
+uniform vec2 normal_scale = vec2(0.3, 0.3);     // NormalMapScaleU / V
+uniform vec2 normal_pan = vec2(0.5, 0.6);       // NormalMapPanU / V
+uniform float fps = 12.0;                       // FPS (Luos_Mask_Distorter_FPS)
+uniform bool has_camera_depth_fade = false;     // static switch HasCameraDepthFade
+uniform bool has_depth_fade = false;            // static switch HasDepthFade
+uniform float camera_fade_offset = 1.0;         // CameraFadeOffset, 100 cm
+uniform float camera_fade_length = 1.0;         // CameraFadeLength, 100 cm
+uniform float pixel_depth_fade = 0.5;           // PixelDepthFade, 50 cm
+uniform float alpha_clip = 0.333;               // only used if an instance were Masked (none are)
+
+void vertex() {
+	vec4 _e; vec4 _d;
+	particle_vertex(VERTEX, UV, INSTANCE_CUSTOM, INSTANCE_ID, UV2, _e, _d);
+	v_extra = _e; v_dyn = _d; v_color = COLOR; v_quv = UV;
+}
+
+void fragment() {
+	// Luos_Mask_Distorter_FPS: FPS-stepped panning normal map offsets the mask UV.
+	float t = stepped(TIME, max(fps, 0.001));
+	vec2 base = particle_atlas(v_quv);          // all instances are 1x1, kept for safety
+	vec2 n = texture(distortion_normal, base * normal_scale + normal_pan * t).rg * 2.0 - 1.0;
+	float strength = v_dyn.y;                   // DynamicParameter slot 1 "Distortion Strength"
+	vec2 muv = base * mask_scale + n * strength;
+	float m = texture(mask_tex, muv).r * mask_brightness;
+	// CheapContrast + MF_TransluscentToonErosion (hard toon edge of width MaskEdgeSoftness).
+	float shaped = cheap_contrast(m, mask_contrast);
+	float thr = 1.0 - clamp(v_color.a, 0.0, 1.0);
+	float ero = smoothstep(thr, thr + max(mask_edge_softness, 1e-3), shaped);
+	float op = ero * v_dyn.x;                   // DynamicParameter slot 0 "Opacity"
+	if (has_depth_fade) {
+		op *= depth_fade(SCREEN_UV, VERTEX, INV_PROJECTION_MATRIX, pixel_depth_fade);
+	}
+	if (has_camera_depth_fade) {
+		op *= camera_depth_fade(-VERTEX.z, camera_fade_offset, camera_fade_length);
+	}
+	ALBEDO = v_color.rgb * m;                    // unlit emissive, HDR particle colour -> bloom
+	/*ALPHA_OUT*/
+}

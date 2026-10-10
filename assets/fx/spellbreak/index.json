@@ -1,0 +1,3090 @@
+{
+ "format": "tidebreak-spellbreak-fx-import",
+ "version": 1,
+ "source": "Spellbreak (Proletariat): artifacts/spellbreak_fx (see SOURCE.md)",
+ "effects": {
+  "g3/Content/Blueprints/Weapons/v3/FX/P_Frozen_Explosion": {
+   "spec": "specs/g3/Content/Blueprints/Weapons/v3/FX/P_Frozen_Explosion.json",
+   "source_index": 12,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "M_CrystalPop_01",
+    "M_Basic_Ring",
+    "M_CrystalPop_spark_01"
+   ],
+   "textures": [
+    "assets/MarketplaceAssets/VFX_Toolkit_V1/Textures/Baked/T_CrystalPop_Albedo.png"
+   ],
+   "meshes": [
+    "assets/MarketplaceAssets/VFX_Toolkit_V1/StaticMeshes/Debris/SM_CrystalPop_Chunk_01.gltf",
+    "assets/MarketplaceAssets/VFX_Toolkit_V1/StaticMeshes/Debris/SM_CrystalPop_Chunk_02.gltf",
+    "assets/MarketplaceAssets/VFX_Toolkit_V1/StaticMeshes/Debris/SM_CrystalPop_Chunk_03.gltf",
+    "assets/MarketplaceAssets/VFX_Toolkit_V1/StaticMeshes/Debris/SM_CrystalPop_Chunk_04.gltf"
+   ],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "water_shield",
+     "role": "shatter (shot down / a Boulder)",
+     "slot": "key 4",
+     "source_index": 12
+    }
+   ]
+  },
+  "g3/Content/Blueprints/Weapons/v3/FX/P_Water_Dissipate": {
+   "spec": "specs/g3/Content/Blueprints/Weapons/v3/FX/P_Water_Dissipate.json",
+   "source_index": 21,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "M_TinyDot"
+   ],
+   "textures": [],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "water_whip",
+     "role": "impact splash on hit",
+     "slot": "key 1",
+     "source_index": 21
+    },
+    {
+     "element": "water",
+     "move_id": "wave/push",
+     "role": "hit splash on the pushed body",
+     "slot": "key 2",
+     "source_index": 21
+    },
+    {
+     "element": "water",
+     "move_id": "wave/spout",
+     "role": "water wells up low 0-0.35 s, no deck mark",
+     "slot": "key 2",
+     "source_index": 21
+    },
+    {
+     "element": "water",
+     "move_id": "water_jet",
+     "role": "splash on hit / the Pop",
+     "slot": "jab",
+     "source_index": 21
+    }
+   ]
+  },
+  "g3/Content/Characters/Cloudburst/ObsidianPlummet/CB_ObsidianPlummet_Unified_FX": {
+   "spec": "specs/g3/Content/Characters/Cloudburst/ObsidianPlummet/CB_ObsidianPlummet_Unified_FX.json",
+   "source_index": 33,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "DropEarthWsh01_FXMI",
+    "DropEarthWsh02_FXMI",
+    "CloudburstObsidian_FxMI",
+    "StoneArc01_FxMI",
+    "MI_OP_Particle_CircleDarken"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/UI/T_f_CracksFullscreen.png",
+    "assets/VFX/Character/Earth/attack_ObsidianBC.png",
+    "assets/VFX/Character/Earth/attack_boulderROD.png",
+    "assets/Environment/Sky/CloudNoise_linearGray.png",
+    "assets/VFX/Character/Earth/attack_boulderN.png",
+    "assets/VFX/Character/Lightning/Lightning_ZapTileV01_FxT.png",
+    "assets/VFX/Textures/T_f_SphereGradient_B_Alpha.png",
+    "assets/VFX/Textures/puffycloud.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Stone_Small01_FxSM.gltf",
+    "assets/VFX/Character/Lightning/Lightning_ShockArc01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "earth_shove:slam",
+     "role": "downward smear (the 0.12 s strike column)",
+     "slot": "key 2 PUSH (in the air)",
+     "source_index": 33
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Dash/DashTrail_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Dash/DashTrail_FX.json",
+   "source_index": 65,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "DefaultParticle",
+    "MI_RibbonTrail_MagicTendrils_Dash",
+    "DashRing02_FXMI",
+    "MI_f_Particle_TriangleStreaks",
+    "MI_f_Particle_BigDirectionalArrow",
+    "MI_f_Particle_LensFlareDash",
+    "M_SphereErosion_SoftEdge",
+    "RibbonSmokeTest_FXM"
+   ],
+   "textures": [
+    "assets/EngineMaterials/OrientParticle.png",
+    "assets/VFX/Cosmetics/Afterglow/Textures/T_f_Distortion_Runtrail_Arc.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/FractalNoiseTile_FXT.png",
+    "assets/VFX/Textures/Ring_Erode01_FxT.png",
+    "assets/VFX/Textures/T_f_StreaksTriangle.png",
+    "assets/VFX/Character/Fire/NoiseCellular01_FXt.png",
+    "assets/VFX/Character/Dash/T_f_ArrowShapeA.png",
+    "assets/VFX/Textures/T_f_DistortionNoise_Large.png",
+    "assets/VFX/Textures/T_f_Campfire8.png",
+    "assets/VFX/Textures/T_f_DistortionE.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Ring_120Tris_Medium01_FxSM.gltf",
+    "assets/VFX/meshes/Sphere_1KTris_01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "air",
+     "move_id": "evade/slip",
+     "role": "dash trail (light step)",
+     "slot": "3",
+     "source_index": 65
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Earth/BoulderMedium_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Earth/BoulderMedium_FX.json",
+   "source_index": 76,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_SmokeFlow_CheapBright",
+    "MI_f_BoulderBall",
+    "MI_f_Particle_ErosionBand2"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_SmokeLargeA.png",
+    "assets/VFX/Textures/T_f_SmokeFlowErosion.png",
+    "assets/VFX/Textures/T_f_SphereNormalFlow.png",
+    "assets/VFX/Textures/T_ScreenDistortionF.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/Textures/Energy_BandC_FXT.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Earth/SM_BoulderMeteorCone.gltf",
+    "assets/VFX/Character/Earth/SM_BoulderMeteorFlyaway.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "stone_form:cannonball",
+     "role": "boulder flight (arcs, gravity 6)",
+     "slot": "key 1 STRIKE (tap twice)",
+     "source_index": 76
+    },
+    {
+     "element": "earth",
+     "move_id": "earth_shove:push",
+     "role": "shoved stone flight",
+     "slot": "key 2 PUSH (tap; grows when held)",
+     "source_index": 76
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Earth/BoulderSmall_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Earth/BoulderSmall_FX.json",
+   "source_index": 77,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_f_BoulderBall"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_ScreenDistortionF.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Earth/SM_BoulderMeteorFlyawayB.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "stone_form:spike",
+     "role": "lance flight (point first, pierces)",
+     "slot": "key 1 STRIKE (tap)",
+     "source_index": 77
+    },
+    {
+     "element": "earth",
+     "move_id": "rock_jab:pebbles",
+     "role": "pebble flight (three tumbling stones)",
+     "slot": "jab (LMB)",
+     "source_index": 77
+    },
+    {
+     "element": "earth",
+     "move_id": "rock_jab:pop",
+     "role": "pop stone thrown with E (0.22 m, 34 m/s)",
+     "slot": "jab string (LMB x3; E throws the stone)",
+     "source_index": 77
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Earth/EarthImpactAOE_FX_Meteor": {
+   "spec": "specs/g3/Content/VFX/Character/Earth/EarthImpactAOE_FX_Meteor.json",
+   "source_index": 78,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_SmokeFlow_Cheap",
+    "MI_f_Particle_ErosionFlare",
+    "MI_HotballMeteor",
+    "EarthBoulder_Toon_Masked",
+    "MI_f_Particle_LensFlareAnamorphic",
+    "MI_Deco_Temperate_Stones",
+    "Ring_Erode02_FxMI",
+    "M_SphereErosion_SoftEdge",
+    "M_MatraRefracB",
+    "SmokeRing_MI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_SmokeLargeA.png",
+    "assets/VFX/Textures/T_f_SmokeFlowErosion.png",
+    "assets/VFX/Textures/T_f_SphereNormalFlow.png",
+    "assets/VFX/Textures/T_F_ErosionFlare.png",
+    "assets/VFX/Textures/T_f_DistortionNoise_Large.png",
+    "assets/VFX/Character/Earth/attack_boulderBC.png",
+    "assets/VFX/Character/Earth/attack_boulderROD.png",
+    "assets/VFX/Character/Earth/attack_boulderN.png",
+    "assets/VFX/Textures/T_f_LensFlare_Anamorphic.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/Environment/Temperate/Landscape_Textures/CliffBKuwahara_TBC.png",
+    "assets/Environment/Temperate/Deco/Stones/Texture/T_Temperate_Stones_n.png",
+    "assets/VFX/Textures/Ring_Erode01_FxT.png",
+    "assets/VFX/Textures/T_f_SmokeHeightB.png",
+    "assets/VFX/Textures/T_SmokeRing.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Sphere_2KTris_01_FxSM.gltf",
+    "assets/VFX/Character/Earth/SM_BoulderFallChunkPivot.gltf",
+    "assets/VFX/meshes/Stone_Small01_FxSM.gltf",
+    "assets/VFX/meshes/Stone_Small02_FxSM.gltf",
+    "assets/VFX/meshes/Stone_Small03_FxSM.gltf",
+    "assets/VFX/meshes/Ring_120Tris_Thin01_FxSM.gltf",
+    "assets/VFX/Character/Earth/SM_SmokeRingMeshA.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "stone_form:cannonball",
+     "role": "landing impact (heavy)",
+     "slot": "key 1 STRIKE (tap twice)",
+     "source_index": 78
+    },
+    {
+     "element": "earth",
+     "move_id": "earth_wall:wall",
+     "role": "crumble (shot down, or a third wall)",
+     "slot": "key 4 WALL",
+     "source_index": 78
+    },
+    {
+     "element": "earth",
+     "move_id": "clash:stone",
+     "role": "two stones meet mid-air and break",
+     "slot": "rule: equal stones both break",
+     "source_index": 78
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Earth/FX_RocksTravelCharge": {
+   "spec": "specs/g3/Content/VFX/Character/Earth/FX_RocksTravelCharge.json",
+   "source_index": 80,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_f_Particle_ErosionBand2"
+   ],
+   "textures": [
+    "assets/VFX/Textures/Energy_BandC_FXT.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "stone_form:spike",
+     "role": "hang / charge while the lock is held",
+     "slot": "key 1 STRIKE (tap)",
+     "source_index": 80
+    },
+    {
+     "element": "earth",
+     "move_id": "earth_shove:push",
+     "role": "grow (held past 0.45 s: a bigger stone)",
+     "slot": "key 2 PUSH (tap; grows when held)",
+     "source_index": 80
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Earth/Gauntlet_Stoneshaper_Idle01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Earth/Gauntlet_Stoneshaper_Idle01_FxP.json",
+   "source_index": 83,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "DefaultParticle",
+    "FakeLightGradient02_FxMI"
+   ],
+   "textures": [
+    "assets/EngineMaterials/OrientParticle.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "rock_jab:pop",
+     "role": "pop stone kept in the hand",
+     "slot": "jab string (LMB x3; E throws the stone)",
+     "source_index": 83
+    },
+    {
+     "element": "earth",
+     "move_id": "stone_catch:catch",
+     "role": "stone held (caught)",
+     "slot": "guard (E)",
+     "source_index": 83
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Earth/P_EarthShockwaveMuzzleFire": {
+   "spec": "specs/g3/Content/VFX/Character/Earth/P_EarthShockwaveMuzzleFire.json",
+   "source_index": 84,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "GroundSmokeSplashClose_MI",
+    "EarthEnergyWave_MI",
+    "MI_f_lightningBranchingBolt4"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_LightningSmokeBurst.png",
+    "assets/VFX/Textures/T_f_EarthEnergyWaveB.png",
+    "assets/VFX/Character/Fire/NoiseCellular01_FXt.png",
+    "assets/VFX/Textures/T_f_MaskSquareSoft.png",
+    "assets/VFX/Textures/T_f_SmokeHeight_Greyscale_Uncompressed.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Lightning/SM_LightningBolt_Arc_C.gltf",
+    "assets/VFX/Character/Earth/SM_EarthEnergyWaveB.gltf",
+    "assets/VFX/Character/Lightning/SM_LightningTorusA.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "earth_shove:push",
+     "role": "push cast (two-hand push)",
+     "slot": "key 2 PUSH (tap; grows when held)",
+     "source_index": 84
+    },
+    {
+     "element": "earth",
+     "move_id": "rock_jab:pebbles",
+     "role": "flick",
+     "slot": "jab (LMB)",
+     "source_index": 84
+    },
+    {
+     "element": "earth",
+     "move_id": "stone_catch:catch",
+     "role": "perfect catch flash (first 0.3 s)",
+     "slot": "guard (E)",
+     "source_index": 84
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Earth/P_Shockwave_Earth_Fast_ToonUnlit": {
+   "spec": "specs/g3/Content/VFX/Character/Earth/P_Shockwave_Earth_Fast_ToonUnlit.json",
+   "source_index": 85,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "EarthBoulder_Toon_MI_B",
+    "EarthEnergyWave_MI"
+   ],
+   "textures": [
+    "assets/VFX/Character/Earth/attack_boulderBC.png",
+    "assets/VFX/Character/Earth/attack_boulderROD.png",
+    "assets/VFX/Character/Earth/attack_boulderN.png",
+    "assets/VFX/Textures/T_f_EarthEnergyWaveB.png",
+    "assets/VFX/Character/Fire/NoiseCellular01_FXt.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Stone_Small03_FxSM.gltf",
+    "assets/VFX/Character/Earth/QuakeRock01_FXSM.gltf",
+    "assets/VFX/Character/Earth/SM_EarthEnergyWave.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "earth_shove:column",
+     "role": "pillar bursts up under the target (no mark beforehand)",
+     "slot": "key 2 PUSH (tap twice)",
+     "source_index": 85
+    },
+    {
+     "element": "earth",
+     "move_id": "pillar:self",
+     "role": "pillar rises under the caster",
+     "slot": "key 3 DASH (tap twice)",
+     "source_index": 85
+    },
+    {
+     "element": "earth",
+     "move_id": "earth_wall:wall",
+     "role": "rise along the foot (0.7 s)",
+     "slot": "key 4 WALL",
+     "source_index": 85
+    },
+    {
+     "element": "earth",
+     "move_id": "rock_jab:pop",
+     "role": "pop hit (launches at 80 deg, stun 0.6)",
+     "slot": "jab string (LMB x3; E throws the stone)",
+     "source_index": 85
+    },
+    {
+     "element": "earth",
+     "move_id": "rise:pillar",
+     "role": "pillar shoots up under the airborne caster (5.5 m in 0.45 s, leaning 20 deg)",
+     "slot": "Space off the deck, double jump spent (movement.json rise.earth)",
+     "source_index": 85
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Earth/Stoneskin02_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Earth/Stoneskin02_FxP.json",
+   "source_index": 86,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Earth_Stoneskin_Boulder01_FxMI",
+    "MI_SimpleFresnelBall3",
+    "EarthBoulder_Toon_M1",
+    "Earth_Dust_Trans01_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Character/Earth/attack_boulderBC.png",
+    "assets/VFX/Character/Earth/attack_boulderROD.png",
+    "assets/VFX/Textures/T_f_CubeHeight.png",
+    "assets/VFX/Character/Earth/attack_boulderN.png",
+    "assets/VFX/Textures/SmokeTransBaseSubUV01_FxT.png",
+    "assets/VFX/Textures/SmokeErosionTile01_FxT.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Stone_Small02_FxSM.gltf",
+    "assets/VFX/meshes/Sphere_1KTris_01_FxSM.gltf",
+    "assets/VFX/meshes/Stone_Small01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "pillar:self",
+     "role": "pillar crumbles / sinks (1.5 s)",
+     "slot": "key 3 DASH (tap twice)",
+     "source_index": 86
+    },
+    {
+     "element": "earth",
+     "move_id": "earth_wall:wall",
+     "role": "shell (open-world mode only, 3 s)",
+     "slot": "key 4 WALL",
+     "source_index": 86
+    },
+    {
+     "element": "earth",
+     "move_id": "patch",
+     "role": "heal on self (earth flavour)",
+     "slot": "key 5 HEAL (tap)",
+     "source_index": 86
+    },
+    {
+     "element": "earth",
+     "move_id": "mend",
+     "role": "stones set again on your own wall",
+     "slot": "key 5 HEAL (tap twice)",
+     "source_index": 86
+    },
+    {
+     "element": "earth",
+     "move_id": "stone_catch:catch",
+     "role": "guard window (1.0 s, 3.5 m)",
+     "slot": "guard (E)",
+     "source_index": 86
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/FX_LightningCharge": {
+   "spec": "specs/g3/Content/VFX/Character/FX_LightningCharge.json",
+   "source_index": 90,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_f_Particle_GenericSpot_masked",
+    "MI_f_lightning_sparkA",
+    "MI_GlowBall",
+    "MI_f_Particle_LensFlare"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_SphereGradient_A.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/T_f_LightningSparkC.png",
+    "assets/VFX/Textures/T_f_TriangleHeight.png",
+    "assets/VFX/Textures/T_f_EnergyBlastB.png",
+    "assets/VFX/Textures/T_f_Lensflare.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/FX_LightningCylinderVelocity.gltf",
+    "assets/VFX/meshes/SM_EnergyMeshB.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_arc/lightning",
+     "role": "2.2 s charge on the hands",
+     "slot": "key 1 (tap twice)",
+     "source_index": 90
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Featherfall/FeatherFall02_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Featherfall/FeatherFall02_FX.json",
+   "source_index": 94,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_f_Particle_softGlow_Featherfall",
+    "MI_f_Particle_softGlow",
+    "Ring_Erode_Thick01_FxMI",
+    "FeatherSuv_FXMI"
+   ],
+   "textures": [
+    "assets/VFX/Character/Featherfall/Featherfall_Glow.png",
+    "assets/VFX/Textures/T_F_EnergyWave_Tiling.png",
+    "assets/VFX/Textures/T_f_Softglow.png",
+    "assets/VFX/Textures/T_f_SphereGradient_B.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/Ring_Erode_Thin01_FxT.png",
+    "assets/VFX/Character/Featherfall/Feathers01_FXT.png",
+    "assets/VFX/Cosmetics/CloudBurst/BlossomBreeze/CherryBlossom_Petals01_FxT.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Ring_240Tris_Medium01_FxSM.gltf",
+    "assets/VFX/Character/Featherfall/Feather01_FXSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "air",
+     "move_id": "air_jump/leap",
+     "role": "glide (slow fall, 4 s loop; open world only)",
+     "slot": "3",
+     "source_index": 94
+    },
+    {
+     "element": "air",
+     "move_id": "wind_run/updraft",
+     "role": "glide after the lift (falls 3 m/s at most)",
+     "slot": "rise",
+     "source_index": 94
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/ExplosionGauntlet_VfxP_ConflagAmulet": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/ExplosionGauntlet_VfxP_ConflagAmulet.json",
+   "source_index": 95,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_SimpleGlow_FireballCore",
+    "MI_SimpleFresnelBall",
+    "M_SphereErosion_SoftEdge_harder",
+    "SmokeDust01_Bright_CameraFade_FXM",
+    "SmokeDust01_Fingers_FXMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_DistortionNoise_Large.png",
+    "assets/Materials/DefaultMask.png",
+    "assets/VFX/Textures/T_f_AlphaErosionN.png",
+    "assets/EngineMaterials/FlatNormal.png",
+    "assets/VFX/Textures/SM_PoisonFinger_Alpha.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Sphere_1KTris_01_FxSM.gltf",
+    "assets/VFX/meshes/Sphere_2KTris_01_FxSM.gltf",
+    "assets/VFX/meshes/Cloud_Boom_Low_FxSM.gltf",
+    "assets/VFX/meshes/Poisonfinger_Low_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_parry/parry",
+     "role": "perfect: flash and ring",
+     "slot": "guard",
+     "source_index": 95
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/FireBImpact_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/FireBImpact_FX.json",
+   "source_index": 96,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Fire_SmallFlames_FxMI",
+    "MI_SmokeTranslucentB1",
+    "MI_Fire_Miniflames",
+    "DefaultParticle"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Campfire3.png",
+    "assets/VFX/Textures/FractalNoiseTile_FXT.png",
+    "assets/VFX/Materials/Smoke/work/T_f_TranslucentSmokeCloudB.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/EngineMaterials/OrientParticle.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Fire/FlameWall_Flames01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_kick/high_kick",
+     "role": "impact",
+     "slot": "key 2 (tap twice)",
+     "source_index": 96
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/FireBoulderImpact_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/FireBoulderImpact_FX.json",
+   "source_index": 97,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Smoke_CameraCenter_Particle_FXMI",
+    "Fire_PyrolysisWall_Flames01_FxMI",
+    "MI_f_Particle_softGlow",
+    "MI_Fire_Miniflames",
+    "MI_SmokeTranslucentB2"
+   ],
+   "textures": [
+    "assets/Materials/DefaultMask.png",
+    "assets/VFX/Textures/T_f_AlphaErosionN.png",
+    "assets/VFX/Textures/T_f_CloudBloomNormal.png",
+    "assets/VFX/Textures/T_f_Campfire90.png",
+    "assets/VFX/Textures/FractalNoiseTile_FXT.png",
+    "assets/VFX/Textures/T_f_Softglow.png",
+    "assets/VFX/Textures/T_f_SphereGradient_B.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/T_f_Campfire3.png",
+    "assets/VFX/Materials/Smoke/work/T_f_TranslucentSmokeCloudB.png",
+    "assets/VFX/Materials/Smoke/work/T_f_TranslucentSmokeCloudA_N.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Cloud_Boom_Medium_FxSM.gltf",
+    "assets/VFX/Character/Fire/FlameWall_Flames01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_kick/kick",
+     "role": "hits / is stopped by a wall",
+     "slot": "key 2",
+     "source_index": 97
+    },
+    {
+     "element": "fire",
+     "move_id": "fire_kick/slam",
+     "role": "slam impact on the deck (+ short 110 wave)",
+     "slot": "key 2 (air)",
+     "source_index": 97
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/FireIgniteSh_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/FireIgniteSh_FX.json",
+   "source_index": 98,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "FireBlob_FXM"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_SmokeFlowErosion.png",
+    "assets/VFX/Textures/T-f_Puddle_N.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_parry/parry",
+     "role": "late or whiff puff",
+     "slot": "guard",
+     "source_index": 98
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/FireIgnite_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/FireIgnite_FX.json",
+   "source_index": 99,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "FireBlob_FXM",
+    "FireTwisttoo_FXMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_SmokeFlowErosion.png",
+    "assets/VFX/Textures/T-f_Puddle_N.png",
+    "assets/VFX/Character/Fire/FireTwist2_FXT.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Fire/FireTwistBS4_FXSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_kick/high_kick",
+     "role": "flame crescent in flight",
+     "slot": "key 2 (tap twice)",
+     "source_index": 99
+    },
+    {
+     "element": "fire",
+     "move_id": "fire_wall/wall",
+     "role": "burning the one who passes (entry pop)",
+     "slot": "key 4",
+     "source_index": 99
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/FireProjectile_Extinguish_Ice_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/FireProjectile_Extinguish_Ice_FxP.json",
+   "source_index": 100,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "SmokePuffB_FxM",
+    "MI_f_Particle_softGlow",
+    "MI_SmokePuffB_FX"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/Textures/T_f_Softglow.png",
+    "assets/VFX/Textures/T_f_SphereGradient_B.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "water_redirect",
+     "role": "fire on the beat doused",
+     "slot": "guard",
+     "source_index": 100
+    },
+    {
+     "element": "fire",
+     "move_id": "fire_parry/parry",
+     "role": "ice caught on the beat: melted",
+     "slot": "guard",
+     "source_index": 100
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/FireWall_Extinguish_Ice_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/FireWall_Extinguish_Ice_FxP.json",
+   "source_index": 101,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "SmokePuffB_FxM",
+    "MI_f_Particle_softGlow",
+    "MI_SmokePuffB_FX",
+    "Fire_Cloudburst_Fireball"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/Textures/T_f_Softglow.png",
+    "assets/VFX/Textures/T_f_SphereGradient_B.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/T_f_Campfire5.png",
+    "assets/VFX/Textures/FractalNoiseTile_FXT.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Fire/FlameWall_Flames01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "wave/push",
+     "role": "puts out fire in the cone (put_out) [missed]",
+     "slot": "key 2",
+     "source_index": 101
+    },
+    {
+     "element": "water",
+     "move_id": "wave/slam",
+     "role": "puts out fire under it (put_out) [missed]",
+     "slot": "key 2",
+     "source_index": 101
+    },
+    {
+     "element": "fire",
+     "move_id": "fire_wall/wall",
+     "role": "put out by water",
+     "slot": "key 4",
+     "source_index": 101
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/FireWall_Extinguish_Wind_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/FireWall_Extinguish_Wind_FxP.json",
+   "source_index": 102,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "SmokePuffB_FxM"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Distortion_B.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_wall/wall",
+     "role": "blown through by air",
+     "slot": "key 4",
+     "source_index": 102
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/FireWall_FX_TranslucentSmoke": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/FireWall_FX_TranslucentSmoke.json",
+   "source_index": 104,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Fire_PyrolysisWall_Flames01_FxMI",
+    "MI_Fire_Miniflames",
+    "MI_DragonFireD",
+    "MI_f_Particle_ErosionBand2",
+    "Flamebits_FXM",
+    "DefaultParticle",
+    "MI_SmokeTranslucentB2",
+    "Smoke_CameraCenter_Particle_FXMI",
+    "FireStreak03_FXMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Campfire90.png",
+    "assets/VFX/Textures/FractalNoiseTile_FXT.png",
+    "assets/VFX/Textures/T_f_Campfire3.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/Energy_BandC_FXT.png",
+    "assets/VFX/Character/Fire/Flamebits4x4Erode_FXT.png",
+    "assets/VFX/Character/Fire/NoiseFlame_FXTN.png",
+    "assets/EngineMaterials/OrientParticle.png",
+    "assets/VFX/Materials/Smoke/work/T_f_TranslucentSmokeCloudB.png",
+    "assets/VFX/Materials/Smoke/work/T_f_TranslucentSmokeCloudA_N.png",
+    "assets/Materials/DefaultMask.png",
+    "assets/VFX/Textures/T_f_AlphaErosionN.png",
+    "assets/VFX/Textures/T_f_CloudBloomNormal.png",
+    "assets/VFX/Textures/fractal_noise.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Fire/FlameWall_Flames01_FxSM.gltf",
+    "assets/VFX/meshes/SM_TorusHalf_Wide.gltf",
+    "assets/VFX/meshes/Cloud_Boom_Medium_FxSM.gltf",
+    "assets/VFX/Character/Fire/SM_FlamenWall_StartFlame_LOD0.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_wall/wall",
+     "role": "raise (spawn)",
+     "slot": "key 4",
+     "source_index": 104
+    },
+    {
+     "element": "fire",
+     "move_id": "fire_wall/wall",
+     "role": "burning idle (5 s)",
+     "slot": "key 4",
+     "source_index": 104
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/Fire_Firefly_End01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/Fire_Firefly_End01_FxP.json",
+   "source_index": 107,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "SmokePuffB_FxM",
+    "Flames_DistortTAdd01_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/Character/Fire/FlameBits02_FxT.png",
+    "assets/VFX/Textures/T-f_Puddle_N.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_kick/kick",
+     "role": "launch at the kicking foot",
+     "slot": "key 2",
+     "source_index": 107
+    },
+    {
+     "element": "fire",
+     "move_id": "footwork/step",
+     "role": "push-off burst at the feet",
+     "slot": "key 3",
+     "source_index": 107
+    },
+    {
+     "element": "fire",
+     "move_id": "fire_jets/jets",
+     "role": "end / landing burst",
+     "slot": "key 3 (tap twice)",
+     "source_index": 107
+    },
+    {
+     "element": "fire",
+     "move_id": "fire_jab/embers",
+     "role": "spray flash at the fist",
+     "slot": "jab",
+     "source_index": 107
+    },
+    {
+     "element": "fire",
+     "move_id": "fire_jab/air_hit",
+     "role": "melee flare burst at reach",
+     "slot": "jab (air)",
+     "source_index": 107
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/Fire_Firefly_Hands01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/Fire_Firefly_Hands01_FxP.json",
+   "source_index": 108,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "DefaultParticle",
+    "Fire_Firefly_RT01_FxMI"
+   ],
+   "textures": [
+    "assets/EngineMaterials/OrientParticle.png",
+    "assets/VFX/Textures/T_f_Campfire3.png",
+    "assets/VFX/Textures/FractalNoiseTile_FXT.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_jets/jets",
+     "role": "jet flames at the hands and feet while flying",
+     "slot": "key 3 (tap twice)",
+     "source_index": 108
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/Fire_Firefly_Launch01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/Fire_Firefly_Launch01_FxP.json",
+   "source_index": 109,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Fire_Firefly_Spiral01_FxMI",
+    "Fire_Firefly_Cone02_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/Firefly_FireSpiral01_FxT.png",
+    "assets/VFX/Textures/FractalNoiseTile_FXT.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/Firefly_FireCone01_FxT.png",
+    "assets/VFX/Textures/FractalNoiseT_FXT.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/TorConeX_FXSM.gltf",
+    "assets/VFX/Character/Fire/Firefly_Twist01_FxSM.gltf",
+    "assets/VFX/Character/Fire/FireFly_Cone02_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_jets/jets",
+     "role": "launch blast",
+     "slot": "key 3 (tap twice)",
+     "source_index": 109
+    },
+    {
+     "element": "fire",
+     "move_id": "fire_breath/breath",
+     "role": "short cone of fire (4.5 m, 45 deg)",
+     "slot": "key 4 (tap twice)",
+     "source_index": 109
+    },
+    {
+     "element": "fire",
+     "move_id": "rise/jet",
+     "role": "jet launch 7.5 m along the aim, then flight",
+     "slot": "rise (data/ring/movement.json)",
+     "source_index": 109
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/Fire_Ignited_Shockwave_Ogles": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/Fire_Ignited_Shockwave_Ogles.json",
+   "source_index": 110,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Flames_IgnitedShockwave01_FxMI",
+    "MI_FireWall4",
+    "SmokeErodeBase01_FxM",
+    "FakeLightGradient02_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Campfire5.png",
+    "assets/VFX/Textures/FractalNoiseTile_FXT.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/SmokeTransBase01_FxT.png",
+    "assets/VFX/Textures/SmokeErosionTile01_FxT.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_kick/kick",
+     "role": "travelling wave of fire along the floor (grown: wider)",
+     "slot": "key 2",
+     "source_index": 110
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/Fireball_Base_Impact01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/Fireball_Base_Impact01_FxP.json",
+   "source_index": 111,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_SimpleGlow_FireballCore",
+    "MI_SimpleFresnelBall",
+    "MI_SmokeFlow",
+    "MI_SphereShock"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_SmokeLargeA.png",
+    "assets/VFX/Textures/T_f_SmokeFlowErosion.png",
+    "assets/VFX/Textures/T_f_SphereNormalFlow.png",
+    "assets/VFX/Textures/T_f_DistortionNoise_Large.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Sphere_1KTris_01_FxSM.gltf",
+    "assets/VFX/meshes/Sphere_2KTris_01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_blast/punch",
+     "role": "impact",
+     "slot": "key 1",
+     "source_index": 111
+    },
+    {
+     "element": "fire",
+     "move_id": "fire_jab/embers",
+     "role": "small hits",
+     "slot": "jab",
+     "source_index": 111
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/Fireball_Base_Projectile01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/Fireball_Base_Projectile01_FxP.json",
+   "source_index": 112,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Fireball_Head01_FxMI",
+    "Fireball_CoreFlames01_FxMI",
+    "FireballProjectile_Trail01_FxMI",
+    "MI_f_Particle_ArcAtlas"
+   ],
+   "textures": [
+    "assets/VFX/Character/Fire/Fireball_ProjectileHead01_FxT.png",
+    "assets/VFX/Textures/FractalNoiseTile_FXT.png",
+    "assets/VFX/Character/Fire/FlameCore02_FxT.png",
+    "assets/VFX/Textures/T-f_Puddle_N.png",
+    "assets/VFX/Textures/T_f_Campfire8_Uncompressed.png",
+    "assets/VFX/Textures/T_f_Distortion_A_Uncompressed.png",
+    "assets/VFX/Textures/T_f_DistortionE_Uncompressed.png",
+    "assets/VFX/Textures/T_f_ArcAtlas.png",
+    "assets/VFX/Character/Fire/NoiseCellular01_FXt.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/SM_EnergyMeshB.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_blast/punch",
+     "role": "projectile in flight",
+     "slot": "key 1",
+     "source_index": 112
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/Fireball_Conflagration_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/Fireball_Conflagration_FxP.json",
+   "source_index": 113,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "FireballProjectile_Trail01_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Campfire8_Uncompressed.png",
+    "assets/VFX/Textures/T_f_Distortion_A_Uncompressed.png",
+    "assets/VFX/Textures/T_f_DistortionE_Uncompressed.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_kick/high_kick",
+     "role": "flame trail behind it",
+     "slot": "key 2 (tap twice)",
+     "source_index": 113
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/Fireball_Pyro_Impact01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/Fireball_Pyro_Impact01_FxP.json",
+   "source_index": 114,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_SimpleGlow_FireballCore",
+    "MI_SimpleFresnelBall",
+    "M_SphereErosion_SoftEdge_harder",
+    "SmokeDust01_Bright_CameraFade_FXM",
+    "SmokeDust01_Fingers_FXMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_DistortionNoise_Large.png",
+    "assets/Materials/DefaultMask.png",
+    "assets/VFX/Textures/T_f_AlphaErosionN.png",
+    "assets/EngineMaterials/FlatNormal.png",
+    "assets/VFX/Textures/SM_PoisonFinger_Alpha.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Sphere_1KTris_01_FxSM.gltf",
+    "assets/VFX/meshes/Cloud_Boom_Medium_FxSM.gltf",
+    "assets/VFX/meshes/Poisonfinger_Low_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_blast/fireball",
+     "role": "explosion",
+     "slot": "key 1 (held)",
+     "source_index": 114
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/Fireball_Pyro_Projectile01_Translucent_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/Fireball_Pyro_Projectile01_Translucent_FxP.json",
+   "source_index": 115,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "m_SmokeFixedLighting",
+    "SmokeTrail1_Pyro",
+    "SmokePuffB_FxM"
+   ],
+   "textures": [
+    "assets/VFX/Materials/Smoke/work/T_SmokeSheetA.png",
+    "assets/VFX/Textures/T_SmokeRibbonTrail_uncompressed.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_blast/fireball",
+     "role": "projectile in flight",
+     "slot": "key 1 (held)",
+     "source_index": 115
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/GauntletFireballMuzzle_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/GauntletFireballMuzzle_FX.json",
+   "source_index": 116,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_f_Particle_softGlow",
+    "MI_Fire_180",
+    "MI_f_Particle_ErosionBand2"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Softglow.png",
+    "assets/VFX/Textures/T_f_SphereGradient_B.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/T_f_Campfire3.png",
+    "assets/VFX/Textures/FractalNoiseT_FXT.png",
+    "assets/VFX/Textures/Energy_BandC_FXT.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/SM_Torus_Wide_XAligned.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_blast/punch",
+     "role": "cast flash at the fist",
+     "slot": "key 1",
+     "source_index": 116
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Fire/Gauntlet_Pyromancer_Idle01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Fire/Gauntlet_Pyromancer_Idle01_FxP.json",
+   "source_index": 117,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "DefaultParticle",
+    "FakeLightGradient02_FxMI"
+   ],
+   "textures": [
+    "assets/EngineMaterials/OrientParticle.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_blast/fireball",
+     "role": "grow / charge on the fist",
+     "slot": "key 1 (held)",
+     "source_index": 117
+    },
+    {
+     "element": "fire",
+     "move_id": "fire_kick/kick",
+     "role": "grow on the kicking foot (held past 0.45 s)",
+     "slot": "key 2",
+     "source_index": 117
+    },
+    {
+     "element": "fire",
+     "move_id": "passive/footwork",
+     "role": "moving aura (hands and feet)",
+     "slot": "passive",
+     "source_index": 117
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Flight/work/Flight_D_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Flight/work/Flight_D_FX.json",
+   "source_index": 121,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "AirCrescent04_FXMI",
+    "AirCrescent05_FXMI"
+   ],
+   "textures": [
+    "assets/Environment/Temperate/Deco/Foliage/Texture/Noize_Wave_N.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Flight/FlyShockW_FXSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "air",
+     "move_id": "air_gust/gust",
+     "role": "travelling wave (2 m wide, 18 m/s, 14 m; grown 3 m / 18 m)",
+     "slot": "2",
+     "source_index": 121
+    },
+    {
+     "element": "air",
+     "move_id": "air_gust/pull",
+     "role": "outgoing wave that reads as pulling",
+     "slot": "2",
+     "source_index": 121
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Ice/Blizzard_Cyl1_FX1": {
+   "spec": "specs/g3/Content/VFX/Character/Ice/Blizzard_Cyl1_FX1.json",
+   "source_index": 122,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "IcePulse_FXMI",
+    "MI_f_GroundTarget_Blizzard_InitialFreeze",
+    "SpringStepRing01_FxMI",
+    "WindStreakTransparent_FXM",
+    "MI_f_Particle_LensFlareAnamorphicDepth",
+    "MI_f_lightningThick",
+    "MI_SmokeTranslucentB"
+   ],
+   "textures": [
+    "assets/Environment/Temperate/Landscape_Textures/Cliff_TN.png",
+    "assets/VFX/Textures/T_IcyWall.png",
+    "assets/VFX/Character/Leap/SpringstepRing01_FxT.png",
+    "assets/VFX/Character/Wind/WindStreak02_FXT.png",
+    "assets/VFX/Character/Fire/NoiseFlameRot_FXTN.png",
+    "assets/VFX/Textures/T_f_LensFlare_Anamorphic.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/T_f_MaskSquareSoft.png",
+    "assets/VFX/Textures/T_f_CubeHeight.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/Materials/Smoke/work/T_f_TranslucentSmokeCloudB.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Ice/SM_BlizzardCylinderE.gltf",
+    "assets/VFX/meshes/SM_BlizzardCylinderB.gltf",
+    "assets/VFX/Character/Leap/SpringstepRing01_FxSM.gltf",
+    "assets/VFX/Character/Ice/TeleportTwistY_FXSM.gltf",
+    "assets/VFX/meshes/SM_Torus3quarter_Wide.gltf"
+   ],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "water_shield",
+     "role": "freezes up (rise)",
+     "slot": "key 4",
+     "source_index": 122
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Ice/Blizzard_Cyl1_FX2": {
+   "spec": "specs/g3/Content/VFX/Character/Ice/Blizzard_Cyl1_FX2.json",
+   "source_index": 123,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_Reticle_BlizzarFast",
+    "MI_f_BlizzardCircle",
+    "MI_f_lightningThick2",
+    "MI_f_BlizzardWisp"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_BlizzardSnowflakes.png",
+    "assets/VFX/Materials/Reticles/T_f_ReticleTornado.png",
+    "assets/VFX/Textures/T_f_GroundTarget_twostripe.png",
+    "assets/VFX/Materials/Reticles/T_BlizzardWisps.png",
+    "assets/VFX/Textures/T_f_MaskSquareSoft.png",
+    "assets/VFX/Textures/T_f_CubeHeight.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/EngineMaterials/DefaultDiffuse.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/SM_BlizzardCylinderD.gltf",
+    "assets/VFX/meshes/SM_BlizzardDisc_C.gltf",
+    "assets/VFX/meshes/SM_Torus3quarter_Wide.gltf",
+    "assets/VFX/meshes/SM_BlizzardWispA.gltf"
+   ],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "water_jet/air_hit",
+     "role": "ring of water round the body",
+     "slot": "jab",
+     "source_index": 123
+    },
+    {
+     "element": "water",
+     "move_id": "water_redirect",
+     "role": "guard window",
+     "slot": "guard",
+     "source_index": 123
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Ice/BoulderFrozen_Mist_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Ice/BoulderFrozen_Mist_FxP.json",
+   "source_index": 125,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "RadialGradient01_FxM"
+   ],
+   "textures": [],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "wave/slam",
+     "role": "puddle left 1.6 m, 6 s (gap)",
+     "slot": "key 2",
+     "source_index": 125
+    },
+    {
+     "element": "water",
+     "move_id": "flow/skate",
+     "role": "3 puddles left 1.2 m, 6 s (gap)",
+     "slot": "key 3",
+     "source_index": 125
+    },
+    {
+     "element": "water",
+     "move_id": "water_shield",
+     "role": "standing (idle cold)",
+     "slot": "key 4",
+     "source_index": 125
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Ice/Gauntlet_Frostborn_Idle01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Ice/Gauntlet_Frostborn_Idle01_FxP.json",
+   "source_index": 127,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "DefaultParticle",
+    "FakeLightGradient02_FxMI"
+   ],
+   "textures": [
+    "assets/EngineMaterials/OrientParticle.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "flowing",
+     "role": "water ready at the hands (idle)",
+     "slot": "passive",
+     "source_index": 127
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Ice/Ice_Lance_ChargeUp01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Ice/Ice_Lance_ChargeUp01_FxP.json",
+   "source_index": 128,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Ice_Lance01_FxMI",
+    "Ice_Lance_Flare01_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Character/Ice/T_F_IcePatch_CrackMasks.png",
+    "assets/VFX/Textures/T_f_Distortion_Post.png",
+    "assets/VFX/Textures/T_f_LighDistanceGlow_LensFlare.png",
+    "assets/VFX/Textures/T_f_SphereGradient_B.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Ice/Ice_Bow01_FxSM.gltf",
+    "assets/VFX/Character/Ice/Ice_Lance01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "ice",
+     "role": "lance forms in the hand (0.6 s lock)",
+     "slot": "key 1",
+     "source_index": 128
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Ice/Ice_Lance_IceProjectile": {
+   "spec": "specs/g3/Content/VFX/Character/Ice/Ice_Lance_IceProjectile.json",
+   "source_index": 132,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_IceToon_IceLance",
+    "M_MatraTrail_01"
+   ],
+   "textures": [
+    "assets/EngineResources/WhiteSquareTexture.png",
+    "assets/VFX/Character/Ice/T_F_IcePatch_CrackMasks.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/SM_IceLance.gltf"
+   ],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "ice",
+     "role": "spear in flight (point first)",
+     "slot": "key 1",
+     "source_index": 132
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Ice/Ice_Lance_IceProjectile_Trail": {
+   "spec": "specs/g3/Content/VFX/Character/Ice/Ice_Lance_IceProjectile_Trail.json",
+   "source_index": 133,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_Particle_RibbonPosion",
+    "M_MatraSmokeTrail_01"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/T_f_RibbonPoisonTest.png",
+    "assets/VFX/Textures/T_f_MaskSquareSoft.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "water_whip",
+     "role": "stream trail (bends with Flowing)",
+     "slot": "key 1",
+     "source_index": 133
+    },
+    {
+     "element": "water",
+     "move_id": "ice",
+     "role": "flight trail (heavy, long)",
+     "slot": "key 1",
+     "source_index": 133
+    },
+    {
+     "element": "water",
+     "move_id": "flowing",
+     "role": "the curve just after release",
+     "slot": "passive",
+     "source_index": 133
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Ice/Ice_Lance_MuzzleFlash01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Ice/Ice_Lance_MuzzleFlash01_FxP.json",
+   "source_index": 134,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Ice_Lance_Clouds01_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/SmokeTransBaseSubUV01_FxT.png",
+    "assets/VFX/Textures/SmokeErosionTile01_FxT.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "water_whip",
+     "role": "cast flash at the hands",
+     "slot": "key 1",
+     "source_index": 134
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Ice/Ice_Lance_Squib": {
+   "spec": "specs/g3/Content/VFX/Character/Ice/Ice_Lance_Squib.json",
+   "source_index": 137,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "M_SimpleGlow",
+    "Ring_Erode02_FxMI",
+    "MI_f_Particle_IceSpark"
+   ],
+   "textures": [
+    "assets/VFX/Textures/Ring_Erode01_FxT.png",
+    "assets/VFX/Textures/T_f_IceSparks.png"
+   ],
+   "meshes": [
+    "assets/VFX/Cosmetics/Artifacts/PermafrostClaw/Sphere_500Tris_01_FxSM.gltf",
+    "assets/VFX/meshes/Ring_120Tris_Thin01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "ice",
+     "role": "impact / shatter",
+     "slot": "key 1",
+     "source_index": 137
+    },
+    {
+     "element": "water",
+     "move_id": "water_redirect",
+     "role": "perfect (on the beat) flash",
+     "slot": "guard",
+     "source_index": 137
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Ice/Ice_Skate_Footstep01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Ice/Ice_Skate_Footstep01_FxP.json",
+   "source_index": 140,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_f_Particle_IceSpark",
+    "Ice_Lance_Clouds01_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_IceSparks.png",
+    "assets/VFX/Textures/SmokeTransBaseSubUV01_FxT.png",
+    "assets/VFX/Textures/SmokeErosionTile01_FxT.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "flow/skate",
+     "role": "push-off and slide at the feet",
+     "slot": "key 3",
+     "source_index": 140
+    },
+    {
+     "element": "water",
+     "move_id": "flow/surf",
+     "role": "spray at the feet / knock bump",
+     "slot": "key 3",
+     "source_index": 140
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Ice/SlowedEnd_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Ice/SlowedEnd_FX.json",
+   "source_index": 141,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_f_Particle_IceSpark"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_IceSparks.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "ice",
+     "role": "one-shot frost shed on the body (no slow look)",
+     "slot": "key 1",
+     "source_index": 141
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Leap/Springstep_Finish02_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Leap/Springstep_Finish02_FxP.json",
+   "source_index": 144,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "SpringStepRing01_FxMI",
+    "MI_SmokePuff_Springstep"
+   ],
+   "textures": [
+    "assets/VFX/Character/Leap/SpringstepRing01_FxT.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Leap/SpringstepRing01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "earth_skate:burrow",
+     "role": "resurface",
+     "slot": "key 3 DASH (tap)",
+     "source_index": 144
+    },
+    {
+     "element": "earth",
+     "move_id": "pillar:self",
+     "role": "landing",
+     "slot": "key 3 DASH (tap twice)",
+     "source_index": 144
+    },
+    {
+     "element": "air",
+     "move_id": "air_jump/leap",
+     "role": "landing",
+     "slot": "3",
+     "source_index": 144
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Leap/Springstep_Start01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Leap/Springstep_Start01_FxP.json",
+   "source_index": 145,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "DefaultParticle",
+    "Springstep_Trail01_FxMI",
+    "SpringStepCylinder01_FxMI",
+    "DashRing02_FXMI",
+    "MI_SmokePuff_Springstep"
+   ],
+   "textures": [
+    "assets/EngineMaterials/OrientParticle.png",
+    "assets/VFX/Textures/T_f_Campfire3.png",
+    "assets/VFX/Textures/T_f_DistortionC.png",
+    "assets/VFX/Character/Leap/SpringstepCylinder01_FxT.png",
+    "assets/VFX/Textures/Ring_Erode01_FxT.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Leap/SpringstepCyliner01_FxSM.gltf",
+    "assets/VFX/meshes/Ring_120Tris_Medium01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "pillar:self",
+     "role": "launch up and forward",
+     "slot": "key 3 DASH (tap twice)",
+     "source_index": 145
+    },
+    {
+     "element": "air",
+     "move_id": "air_jump/leap",
+     "role": "launch burst (12 m/s up)",
+     "slot": "3",
+     "source_index": 145
+    },
+    {
+     "element": "air",
+     "move_id": "air_jump/leap",
+     "role": "rising trail",
+     "slot": "3",
+     "source_index": 145
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Lightning/GauntletLightningMuzzle_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Lightning/GauntletLightningMuzzle_FX.json",
+   "source_index": 146,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_f_Particle_softGlow",
+    "MI_f_lightningBranchingBolt",
+    "M_Basic_Dots",
+    "MI_f_Particle_IceSpark",
+    "MI_f_lightningBranchingBolt3",
+    "RunTrail_Lightning_Wide01_FxMI",
+    "AegisTowerBuff_Glow01_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Softglow.png",
+    "assets/VFX/Textures/T_f_SphereGradient_B.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/T_f_GenericLighting_F.png",
+    "assets/VFX/Textures/T_f_MaskSquareSoft.png",
+    "assets/VFX/Textures/T_f_SmokeHeight_Greyscale_Uncompressed.png",
+    "assets/VFX/Textures/T_f_CubeHeight_uncompressed.png",
+    "assets/VFX/Textures/T_f_IceSparks.png",
+    "assets/VFX/Textures/FractalNoiseTile_FXT.png",
+    "assets/VFX/Cosmetics/Afterglow/Conduit/Lightning_Trail_Wide01_FxT.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/SM_ZapNadoBoltI.gltf",
+    "assets/VFX/meshes/SM_ZapNadoBoltB.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_arc/lightning",
+     "role": "0.25 s flash and crack at release",
+     "slot": "key 1 (tap twice)",
+     "source_index": 146
+    },
+    {
+     "element": "fire",
+     "move_id": "fire_parry/parry",
+     "role": "lightning caught and sent back",
+     "slot": "guard",
+     "source_index": 146
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Lightning/LBolt_ProjectileBeam_WildRev2FX": {
+   "spec": "specs/g3/Content/VFX/Character/Lightning/LBolt_ProjectileBeam_WildRev2FX.json",
+   "source_index": 148,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_LBoltProjectile_Beam",
+    "MI_f_Particle_ArcAtlas",
+    "MI_LBoltProjectile_BeamB"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_MaskSquareSoft.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/Textures/T_f_ArcAtlas.png",
+    "assets/VFX/Character/Fire/NoiseCellular01_FXt.png",
+    "assets/VFX/Textures/T_f_CubeHeight_uncompressed.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_arc/lightning",
+     "role": "strike along the aim",
+     "slot": "key 1 (tap twice)",
+     "source_index": 148
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Lightning/Lightning_Shocked01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Lightning/Lightning_Shocked01_FxP.json",
+   "source_index": 150,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Lightning_ShockArc01_FxMI",
+    "DefaultParticle",
+    "FakeLightGradient01_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Cosmetics/Afterglow/Conduit/Lightning_Trail_Bolt01_FxT.png",
+    "assets/EngineMaterials/OrientParticle.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Lightning/Lightning_ShockArc02_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_arc/lightning",
+     "role": "hit on the target",
+     "slot": "key 1 (tap twice)",
+     "source_index": 150
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Mana/ManaRegenHands_FX1": {
+   "spec": "specs/g3/Content/VFX/Character/Mana/ManaRegenHands_FX1.json",
+   "source_index": 154,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Flamebits_FXM",
+    "GlowBall01_FXM"
+   ],
+   "textures": [
+    "assets/VFX/Character/Fire/Flamebits4x4Erode_FXT.png",
+    "assets/VFX/Character/Fire/NoiseFlame_FXTN.png",
+    "assets/VFX/Character/Mana/GlowBall01_FXT.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "wave/push",
+     "role": "grow: held past the click, water gathers",
+     "slot": "key 2",
+     "source_index": 154
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Mana/ManaRegen_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Mana/ManaRegen_FX.json",
+   "source_index": 155,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "ManaStreakSUV_FXMI"
+   ],
+   "textures": [
+    "assets/VFX/Character/Mana/ManaStreak01_SUVFX.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Earth/ManaLine01_FXSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "air",
+     "move_id": "air_gust/pull",
+     "role": "caught body dragged toward the caster",
+     "slot": "2",
+     "source_index": 155
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Movement/LandingDust_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Movement/LandingDust_FX.json",
+   "source_index": 157,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_SmokePuff_Springstep",
+    "SpringStepRing01_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/Character/Leap/SpringstepRing01_FxT.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Leap/SpringstepRing01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "earth_shove:column",
+     "role": "sinks 1.5 s later",
+     "slot": "key 2 PUSH (tap twice)",
+     "source_index": 157
+    },
+    {
+     "element": "earth",
+     "move_id": "rise:pillar",
+     "role": "pillar sinks 0.4 s after the top",
+     "slot": "Space off the deck, double jump spent (movement.json rise.earth)",
+     "source_index": 157
+    },
+    {
+     "element": "earth",
+     "move_id": "stone_form:drop",
+     "role": "a raised or held stone falls to the deck and becomes loose",
+     "slot": "cancel / set-back / Wind Guard drop",
+     "source_index": 157
+    },
+    {
+     "element": "air",
+     "move_id": "air_blast/slice",
+     "role": "dust line off the deck under a low air bolt (AirDust, < 1.5 m)",
+     "slot": "1",
+     "source_index": 157
+    },
+    {
+     "element": "air",
+     "move_id": "air_shield/shield",
+     "role": "stone dropped at the feet (perfect vs stone)",
+     "slot": "guard",
+     "source_index": 157
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Movement/ManaJump_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Movement/ManaJump_FX.json",
+   "source_index": 158,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "ManaJump_FXMI",
+    "mjumpglow01_FXM",
+    "MJumpStrk_FXMI"
+   ],
+   "textures": [
+    "assets/VFX/Character/Fire/FireRing01_FXt.png",
+    "assets/VFX/Character/Movement/mjumpglow01_FXT.png",
+    "assets/VFX/Character/Movement/LootStreak01_FXT.png",
+    "assets/VFX/Character/Fire/NoiseFlame_FXTN.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Fire/ShockwaveFire_FXg.gltf",
+    "assets/VFX/Character/Movement/ShockGlow01_FXSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "rise/fountain",
+     "role": "water bursts up under you (4.5 m launch)",
+     "slot": "rise",
+     "source_index": 158
+    },
+    {
+     "element": "air",
+     "move_id": "air_gust/slam",
+     "role": "downward blast under the caster (-70 deg column)",
+     "slot": "2 (air)",
+     "source_index": 158
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Squall/Squall_Lvl01_01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Squall/Squall_Lvl01_01_FxP.json",
+   "source_index": 186,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Squall_TwistWind01_FxMI",
+    "Squall_Ring01_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Distortion_B.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Squall/SquallTwist01_FxSM.gltf",
+    "assets/VFX/Character/Squall/SquallRing01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "air",
+     "move_id": "air_gust/gust",
+     "role": "grow click (the ring snapping out at the hands)",
+     "slot": "2",
+     "source_index": 186
+    },
+    {
+     "element": "air",
+     "move_id": "evade/slip",
+     "role": "dash start burst at the feet",
+     "slot": "3",
+     "source_index": 186
+    },
+    {
+     "element": "air",
+     "move_id": "air_palm/air_hit",
+     "role": "spin swipe round the caster (r 1.2 m, 0.1 s)",
+     "slot": "jab (air)",
+     "source_index": 186
+    },
+    {
+     "element": "air",
+     "move_id": "air_shield/shield",
+     "role": "whiff (a dull puff at the hands)",
+     "slot": "guard",
+     "source_index": 186
+    },
+    {
+     "element": "air",
+     "move_id": "passive/carried_wind",
+     "role": "charge pop (the dash charges it)",
+     "slot": "passive",
+     "source_index": 186
+    },
+    {
+     "element": "air",
+     "move_id": "wind_run/updraft",
+     "role": "whirl push on bodies near (hit_r 1.2 m, set 4 m/s)",
+     "slot": "rise",
+     "source_index": 186
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Trails/DropImpact_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Trails/DropImpact_FX.json",
+   "source_index": 190,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_BigSmokeFlowMap_DropFill",
+    "MI_Smoke_FixedLightingA",
+    "GroundSmokeSplashClose_Drop_MI",
+    "MI_f_Particle_ErosionBand",
+    "M_SimpleGlow"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_SmokeLargeA.png",
+    "assets/VFX/Materials/Smoke/work/T_SmokeSheetA.png",
+    "assets/VFX/Textures/T_LightningSmokeBurst.png",
+    "assets/VFX/Textures/Energy_BandB_FXT.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Lightning/SM_LightningBolt_Arc_C.gltf",
+    "assets/Maps/Cinematics/Chapter2_Promo/Assets/SM_SnowBurst.gltf",
+    "assets/VFX/Character/Wind/WindImpRingX02_FXSM.gltf",
+    "assets/VFX/meshes/Sphere_1KTris_01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "earth_shove:slam",
+     "role": "downward smash on the deck (when the deck is within 3 m)",
+     "slot": "key 2 PUSH (in the air)",
+     "source_index": 190
+    },
+    {
+     "element": "earth",
+     "move_id": "earth_skate:burrow",
+     "role": "dive into the deck",
+     "slot": "key 3 DASH (tap)",
+     "source_index": 190
+    },
+    {
+     "element": "water",
+     "move_id": "wave/slam",
+     "role": "slam lands on the deck",
+     "slot": "key 2",
+     "source_index": 190
+    },
+    {
+     "element": "air",
+     "move_id": "air_gust/slam",
+     "role": "ground impact on the deck",
+     "slot": "2 (air)",
+     "source_index": 190
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Vapor/VaporCloud_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Vapor/VaporCloud_FX.json",
+   "source_index": 192,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "M_SimpleGlow",
+    "MI_f_IceCloudB",
+    "MI_f_IceCloud",
+    "MI_f_PoisonFinger",
+    "MI_SmokeFlow_CheapSlow",
+    "GasUp_FXMI",
+    "SteamVaporUP_FXMI",
+    "MI_f_Particle_ErosionBand",
+    "Ring_Erode02_FxMI",
+    "MI_SmokeTranslucent_Blizzard"
+   ],
+   "textures": [
+    "assets/Materials/DefaultMask.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/Textures/SM_PoisonCloudSmooth_N.png",
+    "assets/VFX/Textures/SM_PoisonCloudSmooth_Alpha.png",
+    "assets/VFX/Textures/SM_PoisonFinger_Alpha.png",
+    "assets/Environment/Temperate/Landscape_Textures/NormalFlat_TN.png",
+    "assets/VFX/Textures/T_f_SmokeLargeA.png",
+    "assets/VFX/Textures/T_f_SmokeFlowErosion.png",
+    "assets/VFX/Textures/T_f_SphereNormalFlow.png",
+    "assets/VFX/Character/Vapor/SteamUp01_FXT.png",
+    "assets/VFX/Textures/Energy_BandB_FXT.png",
+    "assets/VFX/Textures/Ring_Erode01_FxT.png",
+    "assets/VFX/Materials/Smoke/work/T_f_TranslucentSmokeCloudA.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Sphere_1KTris_01_FxSM.gltf",
+    "assets/VFX/meshes/PoisonCloud_Medium_FxSM.gltf",
+    "assets/VFX/meshes/PoisonCloud_Low_FxSM.gltf",
+    "assets/VFX/meshes/Poisonfinger_Medium_FxSM.gltf",
+    "assets/VFX/meshes/SM_Torus_Wide.gltf",
+    "assets/VFX/meshes/Ring_120Tris_Medium01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "wave/spout",
+     "role": "column erupts and throws (gap)",
+     "slot": "key 2",
+     "source_index": 192
+    },
+    {
+     "element": "water",
+     "move_id": "water_shield",
+     "role": "melted by fire (steam, puddle left)",
+     "slot": "key 4",
+     "source_index": 192
+    },
+    {
+     "element": "fire",
+     "move_id": "fire_breath/breath",
+     "role": "melts ice in the cone (melt: true)",
+     "slot": "key 4 (tap twice)",
+     "source_index": 192
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Wind/Gauntlet_Tempest_Idle01_FxP": {
+   "spec": "specs/g3/Content/VFX/Character/Wind/Gauntlet_Tempest_Idle01_FxP.json",
+   "source_index": 193,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "GauntWind01_FXMI",
+    "WindTwist01_FXM",
+    "DefaultParticle"
+   ],
+   "textures": [
+    "assets/VFX/Character/Wind/FlameBand03_FXT.png",
+    "assets/VFX/Character/Fire/NoiseFlame_FXTN.png",
+    "assets/VFX/Character/Wind/WindStreak07_FXT.png",
+    "assets/EngineMaterials/OrientParticle.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Wind/WindWrist03_FXSM.gltf",
+    "assets/VFX/Character/Wind/WindStreak05_FXSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "air",
+     "move_id": "air_gust/gust",
+     "role": "grow / charge-up while held",
+     "slot": "2",
+     "source_index": 193
+    },
+    {
+     "element": "air",
+     "move_id": "passive/carried_wind",
+     "role": "charged aura (after a dash, 0.8 s)",
+     "slot": "passive",
+     "source_index": 193
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Wind/TornadoNewSimple": {
+   "spec": "specs/g3/Content/VFX/Character/Wind/TornadoNewSimple.json",
+   "source_index": 198,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "M_SphereErosion",
+    "TorRing02_FXM",
+    "MI_GlowrING",
+    "MI_Reticle_Tornado_Wobble2",
+    "MI_Reticle_Tornado_Blast",
+    "MI_Reticle_Tornado2",
+    "MI_DarkBeacon",
+    "MI_f_lightningThick",
+    "MI_SmokeUnlit_Tempest",
+    "MI_Reticle_Tornado_TopperC",
+    "MI_Reticle_Tornado_TopperB"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Character/Wind/T_St3_Land_Wind_00.png",
+    "assets/VFX/Textures/T_f_EnergyBlastB.png",
+    "assets/VFX/Materials/Reticles/T_f_ReticleTornado_MultiChannel.png",
+    "assets/VFX/Materials/Reticles/T_f_ReticleTornado.png",
+    "assets/VFX/Textures/T_f_DistortionD.png",
+    "assets/VFX/Textures/T_f_MaskSquareSoft.png",
+    "assets/VFX/Textures/T_f_CubeHeight.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/Materials/Smoke/work/T_f_TranslucentSmokeCloudB.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Sphere_1KTris_01_FxSM.gltf",
+    "assets/VFX/meshes/WindRing04_FXSM.gltf",
+    "assets/VFX/meshes/Sphere_1KTris_Twisted_01Z_FxSM.gltf",
+    "assets/VFX/Materials/Reticles/SM_TornadoCone.gltf",
+    "assets/VFX/Materials/Reticles/SM_ReticleLightning.gltf",
+    "assets/VFX/Materials/Reticles/SM_ReticleTornadoPullA.gltf",
+    "assets/VFX/meshes/SM_Torus3quarter_Wide.gltf",
+    "assets/VFX/Materials/Reticles/SM_TornadoCap_LOD0.gltf"
+   ],
+   "uses": [
+    {
+     "element": "air",
+     "move_id": "air_wall/wall",
+     "role": "wall spawn (3 x 2.5 m, placed 2-6 m out)",
+     "slot": "4",
+     "source_index": 198
+    },
+    {
+     "element": "air",
+     "move_id": "air_wall/wall",
+     "role": "standing wall body (4 s)",
+     "slot": "4",
+     "source_index": 198
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Wind/WindExplode_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Wind/WindExplode_FX.json",
+   "source_index": 200,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_f_Particle_ErosionBand",
+    "M_SphereErosion_SoftEdge"
+   ],
+   "textures": [
+    "assets/VFX/Textures/Energy_BandB_FXT.png",
+    "assets/VFX/Textures/T_f_DistortionNoise_Large.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Wind/WindImpRingX02_FXSM.gltf",
+    "assets/VFX/meshes/Sphere_1KTris_01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "air",
+     "move_id": "air_blast/ball",
+     "role": "impact / big knock burst",
+     "slot": "1",
+     "source_index": 200
+    },
+    {
+     "element": "air",
+     "move_id": "air_wall/wall",
+     "role": "wall end (4 s up, or replaced: one at a time)",
+     "slot": "4",
+     "source_index": 200
+    },
+    {
+     "element": "air",
+     "move_id": "air_palm/palm",
+     "role": "pop (third jab that hits: the set knock)",
+     "slot": "jab",
+     "source_index": 200
+    },
+    {
+     "element": "air",
+     "move_id": "passive/carried_wind",
+     "role": "boosted hit (x1.15 knock)",
+     "slot": "passive",
+     "source_index": 200
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Wind/WindExplode_Small_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Wind/WindExplode_Small_FX.json",
+   "source_index": 201,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Ring_Erode_Thin03_FxMI",
+    "WindProjLIne_FXMI",
+    "MI_f_Particle_ErosionBand"
+   ],
+   "textures": [
+    "assets/VFX/Textures/Ring_Erode_Thin01_FxT.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/Character/Wind/WindLightStreak01_FXT.png",
+    "assets/VFX/Textures/T_f_RimlightSmoke.png",
+    "assets/VFX/Textures/Energy_BandB_FXT.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Ring_120Tris_Thin01_FxSM.gltf",
+    "assets/VFX/Character/Wind/WindImpRingX02_FXSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "air",
+     "move_id": "air_blast/slice",
+     "role": "impact (thin hit)",
+     "slot": "1",
+     "source_index": 201
+    },
+    {
+     "element": "air",
+     "move_id": "air_gust/gust",
+     "role": "hit / knock on a body (base, grown)",
+     "slot": "2",
+     "source_index": 201
+    },
+    {
+     "element": "air",
+     "move_id": "air_wall/wall",
+     "role": "deflect flash (shot blown up and aside)",
+     "slot": "4",
+     "source_index": 201
+    },
+    {
+     "element": "air",
+     "move_id": "air_palm/palm",
+     "role": "hit puff",
+     "slot": "jab",
+     "source_index": 201
+    },
+    {
+     "element": "air",
+     "move_id": "air_shield/shield",
+     "role": "perfect guard (bounced back, Clean)",
+     "slot": "guard",
+     "source_index": 201
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Wind/WindMBlast_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Wind/WindMBlast_FX.json",
+   "source_index": 202,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "WindTwist01_FXM",
+    "WindBlastMuz2_FXMI1"
+   ],
+   "textures": [
+    "assets/VFX/Character/Wind/WindStreak07_FXT.png",
+    "assets/VFX/Character/Wind/WindBlastWedge02_FXT.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Wind/WindBlastR_02_FXSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "air",
+     "move_id": "air_blast/slice",
+     "role": "cast flash at the hand (the blade leaves)",
+     "slot": "1",
+     "source_index": 202
+    },
+    {
+     "element": "air",
+     "move_id": "air_blast/ball",
+     "role": "cast flash at the hands (bigger push)",
+     "slot": "1",
+     "source_index": 202
+    },
+    {
+     "element": "air",
+     "move_id": "air_gust/gust",
+     "role": "cast blast at the hands",
+     "slot": "2",
+     "source_index": 202
+    },
+    {
+     "element": "air",
+     "move_id": "air_palm/palm",
+     "role": "palm cone blast (3.5 m, 40 deg)",
+     "slot": "jab",
+     "source_index": 202
+    }
+   ]
+  },
+  "g3/Content/VFX/Character/Wind/WindProj_FX": {
+   "spec": "specs/g3/Content/VFX/Character/Wind/WindProj_FX.json",
+   "source_index": 204,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_f_Particle_WindWisps",
+    "WindProjRibn_FXMI"
+   ],
+   "textures": [
+    "assets/VFX/Character/Skills/T_f_ErosionWindWispsMesh.png",
+    "assets/VFX/Character/Fire/NoiseCellular01_FXt.png",
+    "assets/VFX/Character/Wind/WindStreak05_FXT.png",
+    "assets/VFX/Character/Fire/NoiseFlameRot_FXTN.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/SM_WispTwistB.gltf",
+    "assets/VFX/Character/Wind/WindRibbon02_FXSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "air",
+     "move_id": "air_blast/slice",
+     "role": "projectile in flight (thin fast blade, 45 m/s, r 0.12)",
+     "slot": "1",
+     "source_index": 204
+    },
+    {
+     "element": "air",
+     "move_id": "air_blast/ball",
+     "role": "projectile in flight (wind ball, 28 m/s, r 0.35)",
+     "slot": "1",
+     "source_index": 204
+    }
+   ]
+  },
+  "g3/Content/VFX/Combat/Gateway/Gateway_Prj_Hit_FxP": {
+   "spec": "specs/g3/Content/VFX/Combat/Gateway/Gateway_Prj_Hit_FxP.json",
+   "source_index": 211,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "AirCrescent04_FXMI",
+    "MI_SimpleFresnelBall",
+    "M_SphereErosion_SoftEdge_harder"
+   ],
+   "textures": [
+    "assets/Environment/Temperate/Deco/Foliage/Texture/Noize_Wave_N.png",
+    "assets/VFX/Textures/T_f_DistortionNoise_Large.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Flight/FlyShockW_FXSM.gltf",
+    "assets/VFX/meshes/Sphere_1KTris_01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "air",
+     "move_id": "air_shield/shield",
+     "role": "late guard (half gets through)",
+     "slot": "guard",
+     "source_index": 211
+    }
+   ]
+  },
+  "g3/Content/VFX/Cosmetics/Afterglow/Frostborn/Frostborn_AG_FxP": {
+   "spec": "specs/g3/Content/VFX/Cosmetics/Afterglow/Frostborn/Frostborn_AG_FxP.json",
+   "source_index": 250,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Snowflake01_FxMI",
+    "RunTrail_Ice_Whoosh01_FxMI",
+    "Ice_Lance_Clouds01_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/Snowflake01_FxT.png",
+    "assets/VFX/Textures/T_f_FireNoise.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/SmokeTransBaseSubUV01_FxT.png",
+    "assets/VFX/Textures/SmokeErosionTile01_FxT.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "flow/skate",
+     "role": "slide wake",
+     "slot": "key 3",
+     "source_index": 250
+    }
+   ]
+  },
+  "g3/Content/VFX/Cosmetics/Afterglow/PlunderingBlast/PlunderingBlast_AG_FxP": {
+   "spec": "specs/g3/Content/VFX/Cosmetics/Afterglow/PlunderingBlast/PlunderingBlast_AG_FxP.json",
+   "source_index": 263,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "PlunderingBlast_Fire_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Cosmetics/CloudBurst/FireworkFreefall/FireworkFreefall_FireCone01_FxT.png",
+    "assets/VFX/Textures/FractalNoiseTile_FXT.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/CB_SweetRush_ChrSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "footwork/step",
+     "role": "short movement trail",
+     "slot": "key 3",
+     "source_index": 263
+    }
+   ]
+  },
+  "g3/Content/VFX/Cosmetics/CloudBurst/Conduit/CB_Conduit_B_FX": {
+   "spec": "specs/g3/Content/VFX/Cosmetics/CloudBurst/Conduit/CB_Conduit_B_FX.json",
+   "source_index": 469,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "ConduitDT02_FXMI",
+    "ConduitTrail01_FXMI",
+    "MI_f_lightningBranchingBolt_Thin"
+   ],
+   "textures": [
+    "assets/VFX/Textures/FractalNoiseTile_FXT.png",
+    "assets/VFX/Cosmetics/Afterglow/Conduit/Lightning_Trail_Wide01_FxT.png",
+    "assets/VFX/Textures/T_f_GenericLighting_F.png",
+    "assets/VFX/Textures/T_f_MaskSquareSoft.png",
+    "assets/VFX/Textures/T_f_SmokeHeightB.png",
+    "assets/VFX/Textures/T_f_CubeHeight.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/SM_ZapNadoBoltB.gltf"
+   ],
+   "uses": []
+  },
+  "g3/Content/VFX/Cosmetics/CloudBurst/Pyromancer/CB_Pyromancer_TrailFillBFX": {
+   "spec": "specs/g3/Content/VFX/Cosmetics/CloudBurst/Pyromancer/CB_Pyromancer_TrailFillBFX.json",
+   "source_index": 513,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "FlameStreaks_FXMI",
+    "FlameTrail01_FXMI",
+    "FlameTrail03_FXMI",
+    "Fire_Cloudburst_Fireball"
+   ],
+   "textures": [
+    "assets/VFX/Cosmetics/CloudBurst/Pyromancer/RibFlameStrk1_FXT.png",
+    "assets/VFX/Textures/T_f_Campfire3.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/Cosmetics/CloudBurst/Pyromancer/FireRibbon02x_FXT.png",
+    "assets/VFX/Character/Fire/NoiseFlameRot_FXTN.png",
+    "assets/VFX/Textures/T_f_Campfire5.png",
+    "assets/VFX/Textures/FractalNoiseTile_FXT.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/FireBall_Twist_Uneven_R_FXSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_jets/jets",
+     "role": "body trail",
+     "slot": "key 3 (tap twice)",
+     "source_index": 513
+    }
+   ]
+  },
+  "g3/Content/VFX/Cosmetics/CloudBurst/RiversReflection/CB_RiversReflection_FxP": {
+   "spec": "specs/g3/Content/VFX/Cosmetics/CloudBurst/RiversReflection/CB_RiversReflection_FxP.json",
+   "source_index": 516,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_RiverSpirit_MainTrail_CB",
+    "MI_RiversReflection_Swoosh_B",
+    "Water_Drops_Trans_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Cosmetics/CloudBurst/RiversReflection/Textures/T_MainTrail.png",
+    "assets/VFX/Textures/t_CloudShadows.png",
+    "assets/VFX/Character/Poison/Poison_Drops01_M_FxT.png",
+    "assets/VFX/Textures/T-f_Puddle_N.png"
+   ],
+   "meshes": [
+    "assets/VFX/Cosmetics/CloudBurst/CloudOfBats/CloudOfBats_Swoosh01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "water_whip",
+     "role": "water bolt head in flight (steered)",
+     "slot": "key 1",
+     "source_index": 516
+    },
+    {
+     "element": "water",
+     "move_id": "wave/push",
+     "role": "the cone surge (gap: shape donor)",
+     "slot": "key 2",
+     "source_index": 516
+    },
+    {
+     "element": "water",
+     "move_id": "wave/slam",
+     "role": "water hammered down from the air [missed]",
+     "slot": "key 2",
+     "source_index": 516
+    },
+    {
+     "element": "water",
+     "move_id": "flow/surf",
+     "role": "ridden wave under the body (gap)",
+     "slot": "key 3",
+     "source_index": 516
+    },
+    {
+     "element": "water",
+     "move_id": "water_jet",
+     "role": "small water bolt",
+     "slot": "jab",
+     "source_index": 516
+    },
+    {
+     "element": "water",
+     "move_id": "water_redirect",
+     "role": "bolt swings round you and leaves",
+     "slot": "guard",
+     "source_index": 516
+    },
+    {
+     "element": "water",
+     "move_id": "rise/fountain",
+     "role": "water trailing the rising body",
+     "slot": "rise",
+     "source_index": 516
+    }
+   ]
+  },
+  "g3/Content/VFX/Cosmetics/CloudBurst/StoneShaper/CB_StonShaper_Unified": {
+   "spec": "specs/g3/Content/VFX/Cosmetics/CloudBurst/StoneShaper/CB_StonShaper_Unified.json",
+   "source_index": 539,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "DropEarthWsh01_FXMI",
+    "CloudburstGloRok_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/UI/T_f_CracksFullscreen.png",
+    "assets/VFX/Character/Earth/attack_boulderBC.png",
+    "assets/VFX/Character/Earth/attack_boulderROD.png",
+    "assets/Environment/Sky/CloudNoise_linearGray.png",
+    "assets/VFX/Character/Earth/attack_boulderN.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Stone_Small01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "pillar:self",
+     "role": "airborne trail",
+     "slot": "key 3 DASH (tap twice)",
+     "source_index": 539
+    },
+    {
+     "element": "earth",
+     "move_id": "stone_catch:catch",
+     "role": "thrown back (E again; faster each rally)",
+     "slot": "guard (E)",
+     "source_index": 539
+    }
+   ]
+  },
+  "g3/Content/VFX/Cosmetics/Emote/PushUps/Emote_PushUp_FootDrag_FxP": {
+   "spec": "specs/g3/Content/VFX/Cosmetics/Emote/PushUps/Emote_PushUp_FootDrag_FxP.json",
+   "source_index": 558,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_SmokePuff_Springstep"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Distortion_B.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "stone_form:cannonball",
+     "role": "roll along the floor (after landing)",
+     "slot": "key 1 STRIKE (tap twice)",
+     "source_index": 558
+    },
+    {
+     "element": "earth",
+     "move_id": "earth_skate:burrow",
+     "role": "under-the-deck travel line (0.3 s)",
+     "slot": "key 3 DASH (tap)",
+     "source_index": 558
+    }
+   ]
+  },
+  "g3/Content/VFX/Cosmetics/Triumph/Triump_Earth01_Ground_FxP": {
+   "spec": "specs/g3/Content/VFX/Cosmetics/Triumph/Triump_Earth01_Ground_FxP.json",
+   "source_index": 694,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "EarthEnergyWave_MI",
+    "MI_f_SmokeBespokeAlpha",
+    "MI_f_FingerBespokeAlpha"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_EarthEnergyWaveB.png",
+    "assets/VFX/Character/Fire/NoiseCellular01_FXt.png",
+    "assets/Materials/DefaultMask.png",
+    "assets/VFX/Textures/T_f_CloudBoom_alpha.png",
+    "assets/Environment/Temperate/Landscape_Textures/NormalFlat_TN.png",
+    "assets/VFX/Textures/SM_PoisonFinger_Alpha.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Earth/SM_EarthEnergyWave.gltf",
+    "assets/VFX/meshes/PoisonCloud_Medium_FxSM.gltf",
+    "assets/VFX/Character/Earth/SmokeFinger1_FXSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "stone_form:spike",
+     "role": "rise: ground burst as the spike comes up (60% of the lock)",
+     "slot": "key 1 STRIKE (tap)",
+     "source_index": 694
+    },
+    {
+     "element": "earth",
+     "move_id": "stone_form:cannonball",
+     "role": "stamp + push launch ('left kick, stamp, push')",
+     "slot": "key 1 STRIKE (tap twice)",
+     "source_index": 694
+    },
+    {
+     "element": "earth",
+     "move_id": "earth_shove:push",
+     "role": "kick-up (stone popped at the feet)",
+     "slot": "key 2 PUSH (tap; grows when held)",
+     "source_index": 694
+    },
+    {
+     "element": "earth",
+     "move_id": "rooted",
+     "role": "root takes hold (one-shot when the caster goes still)",
+     "slot": "passive",
+     "source_index": 694
+    }
+   ]
+  },
+  "g3/Content/VFX/Cosmetics/Triumph/Triump_Wind01_Ground_FxP": {
+   "spec": "specs/g3/Content/VFX/Cosmetics/Triumph/Triump_Wind01_Ground_FxP.json",
+   "source_index": 701,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Squall_Twist01_FxM",
+    "SpringStepRing01_FxMI",
+    "Wind_Triumph_EnergyRing01_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/Character/Leap/SpringstepRing01_FxT.png",
+    "assets/VFX/Textures/Energy_Ring01_FxT.png"
+   ],
+   "meshes": [
+    "assets/VFX/Character/Squall/SquallTwist_CCW01_FxSM.gltf",
+    "assets/VFX/Character/Leap/SpringstepRing01_FxSM.gltf",
+    "assets/VFX/meshes/GroundHalfCylinder01_TiltedCCW_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "air",
+     "move_id": "patch/patch",
+     "role": "mend aura on the caster",
+     "slot": "5",
+     "source_index": 701
+    },
+    {
+     "element": "air",
+     "move_id": "air_shield/shield",
+     "role": "raise + stand round the body (r 2.2 m, 0.8 s)",
+     "slot": "guard",
+     "source_index": 701
+    },
+    {
+     "element": "air",
+     "move_id": "wind_run/updraft",
+     "role": "whirl lift (3.5 m in 0.45 s)",
+     "slot": "rise",
+     "source_index": 701
+    }
+   ]
+  },
+  "g3/Content/VFX/Cosmetics/Triumph/Triumph_Fire01_Ball01_FxP": {
+   "spec": "specs/g3/Content/VFX/Cosmetics/Triumph/Triumph_Fire01_Ball01_FxP.json",
+   "source_index": 702,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Fireball_CoreFlames01_FxMI",
+    "Fireball_Trail01_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Character/Fire/FlameCore02_FxT.png",
+    "assets/VFX/Textures/T-f_Puddle_N.png",
+    "assets/VFX/Textures/T_f_Campfire8.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Textures/T_f_DistortionE.png"
+   ],
+   "meshes": [],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_jab/embers",
+     "role": "7 small bolts",
+     "slot": "jab",
+     "source_index": 702
+    }
+   ]
+  },
+  "g3/Content/VFX/Environment/LobbyElementalShrines/LobbyShrine_Frostborn01_In_FxP": {
+   "spec": "specs/g3/Content/VFX/Environment/LobbyElementalShrines/LobbyShrine_Frostborn01_In_FxP.json",
+   "source_index": 732,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "DefaultParticle",
+    "MI_Reticle_BlizzarFast",
+    "LobbyShrine_Ice_Clouds01_FxMI",
+    "MI_f_lightningThick2"
+   ],
+   "textures": [
+    "assets/EngineMaterials/OrientParticle.png",
+    "assets/VFX/Textures/T_BlizzardSnowflakes.png",
+    "assets/VFX/Materials/Reticles/T_f_ReticleTornado.png",
+    "assets/VFX/Textures/SmokeTransBaseSubUV01_FxT.png",
+    "assets/VFX/Textures/SmokeErosionTile01_FxT.png",
+    "assets/VFX/Textures/T_f_MaskSquareSoft.png",
+    "assets/VFX/Textures/T_f_CubeHeight.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Sphere_2KTris_01_FxSM.gltf",
+    "assets/VFX/meshes/SM_Torus3quarter_Wide.gltf"
+   ],
+   "uses": []
+  },
+  "g3/Content/VFX/Props/Pickups_Armor/FX_SmallArmorUse": {
+   "spec": "specs/g3/Content/VFX/Props/Pickups_Armor/FX_SmallArmorUse.json",
+   "source_index": 787,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_f_Particle_LensFlare",
+    "Piclup_ArmorCrystalParticleMI",
+    "MI_f_Particle_SphereErode",
+    "MI_f_Particle_GenericSpot_masked",
+    "Ring_Erode_Thick01_FxMI",
+    "MI_SmokeFlow_CheapSlow",
+    "MI_f_Particle_ShieldIcon",
+    "MI_SimpleFresnelBall3"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_Lensflare.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/Materials/DefaultMask.png",
+    "assets/VFX/Textures/T_f_CubeHeight.png",
+    "assets/VFX/Textures/T_f_PoleRamp.png",
+    "assets/VFX/Textures/T_f_SphereGradient_A.png",
+    "assets/VFX/Textures/T_f_Distortion_B.png",
+    "assets/VFX/Textures/Ring_Erode_Thin01_FxT.png",
+    "assets/VFX/Textures/T_f_SmokeLargeA.png",
+    "assets/VFX/Textures/T_f_SmokeFlowErosion.png",
+    "assets/VFX/Textures/T_f_SphereNormalFlow.png",
+    "assets/VFX/Props/Pickups_Armor/Armor_Crystals_Shield.png",
+    "assets/VFX/Character/Fire/NoiseCellular01_FXt.png"
+   ],
+   "meshes": [
+    "assets/Characters/Props/Pickups/Armor_Crystal_Small.gltf",
+    "assets/Characters/Props/Pickups/ArmorCrystalChunks_AmorCrystalChunk_Large_A.gltf",
+    "assets/Characters/Props/Pickups/ArmorCrystalChunks_AmorCrystalChunk_Large_D.gltf",
+    "assets/Characters/Props/Pickups/ArmorCrystalChunks_AmorCrystalChunk_Large_E.gltf",
+    "assets/VFX/meshes/Sphere_1KTris_01_FxSM.gltf",
+    "assets/VFX/Cosmetics/Artifacts/PermafrostClaw/Sphere_500Tris_01_FxSM.gltf",
+    "assets/VFX/meshes/Ring_120Tris_Medium01_FxSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "water",
+     "move_id": "patch",
+     "role": "heal: restore burst on yourself (gap)",
+     "slot": "key 5",
+     "source_index": 787
+    },
+    {
+     "element": "water",
+     "move_id": "mend",
+     "role": "own wall mended: next hit free",
+     "slot": "key 5",
+     "source_index": 787
+    },
+    {
+     "element": "air",
+     "move_id": "patch/patch",
+     "role": "restore pop (the fresh pool taken back)",
+     "slot": "5",
+     "source_index": 787
+    }
+   ]
+  },
+  "g3/Content/VFX/Quests/Shared/SmkObscureM_FxP": {
+   "spec": "specs/g3/Content/VFX/Quests/Shared/SmkObscureM_FxP.json",
+   "source_index": 838,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_SimpleFresnelBall",
+    "MI_SmokeFlow_Cheap",
+    "MI_SimpleGlow_FireballCoreDepthFade",
+    "MI_f_Particle_softGlow",
+    "Flamebits_FXM",
+    "M_SphereErosion_SoftEdge_harder",
+    "MI_Deco_Temperate_Stones"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_SmokeLargeA.png",
+    "assets/VFX/Textures/T_f_SmokeFlowErosion.png",
+    "assets/VFX/Textures/T_f_SphereNormalFlow.png",
+    "assets/VFX/Textures/T_f_Softglow.png",
+    "assets/VFX/Textures/T_f_SphereGradient_B.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Character/Fire/Flamebits4x4Erode_FXT.png",
+    "assets/VFX/Character/Fire/NoiseFlame_FXTN.png",
+    "assets/VFX/Textures/T_f_DistortionNoise_Large.png",
+    "assets/Environment/Temperate/Landscape_Textures/CliffBKuwahara_TBC.png",
+    "assets/Environment/Temperate/Deco/Stones/Texture/T_Temperate_Stones_n.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Sphere_3KTris_01_FxSM.gltf",
+    "assets/VFX/meshes/Sphere_1KTris_01_FxSM.gltf",
+    "assets/Environment/Temperate/Deco/Stones/DecoSmallStone04_EnvSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "fire_breath/breath",
+     "role": "smoke screen left behind (5 s)",
+     "slot": "key 4 (tap twice)",
+     "source_index": 838
+    }
+   ]
+  },
+  "g3/Content/VFX/Quests/Shared/SmkObscureS_FxP1": {
+   "spec": "specs/g3/Content/VFX/Quests/Shared/SmkObscureS_FxP1.json",
+   "source_index": 839,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_SmokeFlow_Cheap",
+    "MI_SimpleGlow_FireballCoreDepthFade",
+    "MI_f_Particle_softGlow",
+    "MI_SmokeFixedLightingA",
+    "Flamebits_FXM",
+    "M_SphereErosion_SoftEdge_harder",
+    "MI_Deco_Temperate_Stones"
+   ],
+   "textures": [
+    "assets/VFX/Textures/T_f_SmokeLargeA.png",
+    "assets/VFX/Textures/T_f_SmokeFlowErosion.png",
+    "assets/VFX/Textures/T_f_SphereNormalFlow.png",
+    "assets/VFX/Textures/T_f_Softglow.png",
+    "assets/VFX/Textures/T_f_SphereGradient_B.png",
+    "assets/VFX/Textures/T_f_Distortion_A.png",
+    "assets/VFX/Materials/Smoke/work/T_SmokeSheetA.png",
+    "assets/VFX/Character/Fire/Flamebits4x4Erode_FXT.png",
+    "assets/VFX/Character/Fire/NoiseFlame_FXTN.png",
+    "assets/VFX/Textures/T_f_DistortionNoise_Large.png",
+    "assets/Environment/Temperate/Landscape_Textures/CliffBKuwahara_TBC.png",
+    "assets/Environment/Temperate/Deco/Stones/Texture/T_Temperate_Stones_n.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Sphere_1KTris_01_FxSM.gltf",
+    "assets/Environment/Temperate/Deco/Stones/DecoSmallStone04_EnvSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "stone_form:spike",
+     "role": "pierce impact (on a body; the spike flies on)",
+     "slot": "key 1 STRIKE (tap)",
+     "source_index": 839
+    },
+    {
+     "element": "earth",
+     "move_id": "earth_shove:push",
+     "role": "hit (on a body)",
+     "slot": "key 2 PUSH (tap; grows when held)",
+     "source_index": 839
+    },
+    {
+     "element": "earth",
+     "move_id": "earth_shove:slam",
+     "role": "hit on a body (spiked down at -70 deg)",
+     "slot": "key 2 PUSH (in the air)",
+     "source_index": 839
+    },
+    {
+     "element": "earth",
+     "move_id": "earth_wall:wall",
+     "role": "hit / chunk torn off (wall face)",
+     "slot": "key 4 WALL",
+     "source_index": 839
+    },
+    {
+     "element": "earth",
+     "move_id": "rock_jab:pebbles",
+     "role": "light hit",
+     "slot": "jab (LMB)",
+     "source_index": 839
+    },
+    {
+     "element": "earth",
+     "move_id": "rock_jab:air_hit",
+     "role": "knee hit",
+     "slot": "jab (LMB, in the air)",
+     "source_index": 839
+    },
+    {
+     "element": "earth",
+     "move_id": "rise:pillar",
+     "role": "pillar hit (rise/pillar, set 9 m/s at 80 deg)",
+     "slot": "Space off the deck, double jump spent (movement.json rise.earth)",
+     "source_index": 839
+    }
+   ]
+  },
+  "g3/Content/VFX/Quests/ShrineBuffs/ShrineB_Earth_FxP": {
+   "spec": "specs/g3/Content/VFX/Quests/ShrineBuffs/ShrineB_Earth_FxP.json",
+   "source_index": 841,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "MI_f_Particle_CircleBits2",
+    "RadialGradient01_FxM",
+    "Earth_Stoneskin_Boulder01_FxMI",
+    "Erode_DisortTexture01_FxMI"
+   ],
+   "textures": [
+    "assets/VFX/Character/Skills/T_f_ArmorShards.png",
+    "assets/VFX/Character/Fire/NoiseCellular01_FXt.png",
+    "assets/VFX/Character/Earth/attack_boulderBC.png",
+    "assets/VFX/Character/Earth/attack_boulderROD.png",
+    "assets/VFX/Textures/T_f_CubeHeight.png",
+    "assets/VFX/Character/Earth/attack_boulderN.png",
+    "assets/VFX/Quests/ShrineBuffs/EarthShake1_FxT.png",
+    "assets/VFX/Character/Skills/tilingcrystal.png"
+   ],
+   "meshes": [
+    "assets/Environment/Temperate/Deco/Stones/DecoSmallStone04_EnvSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "earth",
+     "move_id": "rooted",
+     "role": "rooted idle at the feet (standing still)",
+     "slot": "passive",
+     "source_index": 841
+    }
+   ]
+  },
+  "g3/Content/VFX/Quests/ShrineBuffs/ShrineB_Pyro_FxP": {
+   "spec": "specs/g3/Content/VFX/Quests/ShrineBuffs/ShrineB_Pyro_FxP.json",
+   "source_index": 843,
+   "source": "Spellbreak (Proletariat)",
+   "materials": [
+    "Flamebits_FXM",
+    "FireBlob_FXM",
+    "SB_RadialGrad_FxMI",
+    "GlowDoubleGradient01_FxMI",
+    "DefaultParticle",
+    "MI_SimpleFresnelBall3",
+    "WindRepeat01_FXMI"
+   ],
+   "textures": [
+    "assets/VFX/Character/Fire/Flamebits4x4Erode_FXT.png",
+    "assets/VFX/Character/Fire/NoiseFlame_FXTN.png",
+    "assets/VFX/Textures/T_f_SmokeFlowErosion.png",
+    "assets/VFX/Textures/T-f_Puddle_N.png",
+    "assets/EngineMaterials/OrientParticle.png",
+    "assets/VFX/Character/Wind/T_St3_Land_Wind_00.png"
+   ],
+   "meshes": [
+    "assets/VFX/meshes/Sphere_1KTris_01_FxSM.gltf",
+    "assets/VFX/meshes/WindRing04_FXSM.gltf"
+   ],
+   "uses": [
+    {
+     "element": "fire",
+     "move_id": "patch/patch",
+     "role": "restore aura on the body (1.0-1.5 s, standing)",
+     "slot": "key 5",
+     "source_index": 843
+    }
+   ]
+  }
+ }
+}

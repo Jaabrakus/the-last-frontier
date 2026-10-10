@@ -113,6 +113,7 @@ static func apply(c: Variant, m: String, mode: String, spec: Dictionary, _t: Nod
 	if bc == null or not bc.valid():
 		return
 	spec = resolved(m, spec)
+	spec = BendLoadout.spec(bc.body, m, mode, spec)          # (a worn loadout's numbers over the spec, before the grow merge)
 	var grew := bc.grown and spec.get("grow") is Dictionary
 	if grew:
 		spec.merge(spec.grow as Dictionary, true)
@@ -173,6 +174,8 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 	var kind := String(spec.get("kind", "stone"))
 	BendLooks.sound(kind, "cast", p.global_position + Vector3.UP, -4.0)
 	MonsoonIdentity.release(p, Bending.element_of(m), mode == "big" or grew)
+	var sbk := SbFx.key_of(spec.get("_info", {}), m, mode)      # (the Spellbreak effects: visual only, SbFx)
+	SbFx.fire(p, sbk, "cast", {"at": a.from, "dir": a.dir, "info": spec.get("_info", {})})
 	match String(spec.get("do", "")):
 		"bolt":
 			bolts(bc, a, spec)
@@ -210,7 +213,10 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 				_cur["patched"] = rr.patch(p)         # (round 3, spec §8: the fresh pool taken back, never health)
 			else:
 				BendStatus.heal(p, float(spec.get("amount", 15.0)))
-			BendLooks.burst(p.global_position + Vector3.UP, "water" if kind == "water" else "air", 20, Vector3.UP, 60.0, 1.5)
+			if bool(_cur.get("patched", false)):
+				SbFx.fire(p, sbk, "heal_pop", {"dir": a.flat})
+			if not SbFx.fire(p, sbk, "heal", {"node": p, "dir": a.flat}):
+				BendLooks.burst(p.global_position + Vector3.UP, "water" if kind == "water" else "air", 20, Vector3.UP, 60.0, 1.5)
 		"cleanse":
 			for k: StringName in [&"bend_root", &"bend_slow"]:
 				if p.has_meta(k):
@@ -400,6 +406,7 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 		var away := to.normalized() if to.length_squared() > 1e-4 else flat
 		BendR3.deliver(n, float(spec.get("damage", 0.0)) * gm, n.global_position + Vector3.UP, away, p, float(spec.get("_lock_s", -1.0)),
 				(away * float(spec.get("knock_mps", 0.0)) + Vector3.UP * float(spec.get("up_mps", 0.0))) * gm, inf)
+		SbFx.fire(p, SbFx.key_of(info), "hit_body", {"at": n.global_position + Vector3.UP, "dir": away, "info": info})
 		if float(spec.get("root_s", 0.0)) > 0.0:
 			BendStatus.root(n, float(spec.root_s))
 		if float(spec.get("slow_s", 0.0)) > 0.0:
@@ -416,7 +423,8 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 			if to.length() > r + 2.0:
 				continue
 			if bool(spec.get("put_out", false)) and bz.kind in ["fire_wall", "burn"]:
-				BendLooks.burst(bz.global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
+				if not SbFx.fire(p, SbFx.key_of(info), "put_out", {"at": bz.global_position, "dir": flat}):
+					BendLooks.burst(bz.global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
 				bz.end()
 			if bool(spec.get("melt", false)) and bz.kind == "ice_patch":
 				bz.end()
@@ -432,7 +440,9 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 				if oz != null and oz.kind == "smoke" and oz.owner_node == p and not oz.is_queued_for_deletion():
 					oz.end()
 		_cur["smoke"] = BendZone.make(p, "smoke", at, {"radius_m": maxf(r * 0.45, 1.5), "life_s": float(spec.smoke_s)}, flat)
-	BendLooks.blast(p.global_position + Vector3.UP * 1.1, flat, deg, r, kind)
+	if not SbFx.fire(p, SbFx.key_of(info), "cone", {"at": p.global_position + Vector3.UP * 1.1, "dir": flat, "radius": r,
+			"to": p.global_position + Vector3.UP * 1.1 + flat * r, "info": info}):
+		BendLooks.blast(p.global_position + Vector3.UP * 1.1, flat, deg, r, kind)
 
 
 ## The caster thrown along `flat` (back: behind; side: to its side_sign's side, the player's keys or a bot's own: no keys read
@@ -512,7 +522,10 @@ static func dash(c: Variant, flat: Vector3, spec: Dictionary) -> void:
 	var gl: Variant = spec.get("glide")
 	if gl is Dictionary and rm == null:            # (round 3: Leap's glide is off in the % ring)
 		bm.glide(float((gl as Dictionary).get("fall_mps", 2.5)), float((gl as Dictionary).get("s", 3.0)), bc.jump_held)
-	BendLooks.burst(p.global_position + Vector3.UP * 0.3, "stone" if bool(spec.get("dust", false)) else kind, 22, -dir + Vector3.UP * 0.3, 50.0, 4.0, 0.4)
+	var dinfo: Dictionary = spec.get("_info", {})
+	if not SbFx.fire(p, SbFx.key_of(dinfo), "dash", {"at": p.global_position + Vector3.UP * 0.05, "dir": dir, "info": dinfo}):
+		BendLooks.burst(p.global_position + Vector3.UP * 0.3, "stone" if bool(spec.get("dust", false)) else kind, 22, -dir + Vector3.UP * 0.3, 50.0, 4.0, 0.4)
+	SbFx.dash_began(p, SbFx.key_of(dinfo), dir, dinfo)
 	if bool(spec.get("burn", false)):
 		var start := p.global_position
 		BendZone.make(p, "burn", start + dir * 3.0, {"width_m": 1.4, "height_m": 0.4, "thick_m": 6.0, "life_s": 3.0, "damage_s": 10.0}, dir)
@@ -536,7 +549,12 @@ static func buff(c: Variant, spec: Dictionary) -> void:
 		"hover", "glide":
 			BendMotion.of(p).fall(float(spec.get("fall_mps", 2.0)), s, kind)
 		"run", "scooter":
-			BendMotion.of(p).run(float(spec.get("mps", 10.0)), s, kind)
+			var rk := SbFx.key_of(spec.get("_info", {}))
+			var rbm := BendMotion.of(p)
+			var rd: Vector3 = rbm.facing.call() if rbm.facing.is_valid() else -p.global_basis.z
+			SbFx.fire(p, rk, "ride_spray", {"dir": rd})
+			var rode := SbFx.start(p, "ride", p, rk, "ride", {"node": p, "dir": rd, "life": s})
+			rbm.run(float(spec.get("mps", 10.0)), s, kind if not rode else "")
 		"redirect_lightning":
 			p.set_meta(&"bend_redirect_lightning", BendStatus.now() + s)
 			BendLooks.burst(p.global_position + Vector3.UP * 1.2, "lightning", 10, Vector3.UP, 180.0, 1.0, 0.2)
@@ -600,7 +618,8 @@ static func status_at(p: Node3D, at: Vector3, spec: Dictionary) -> void:
 			BendStatus.slow(n, float(spec.slow_s))
 		n_hit += 1
 	_cur["hit"] = n_hit
-	BendLooks.burst(at + Vector3.UP * 0.1, kind, 26, Vector3.UP, 50.0, 4.0 if float(spec.get("up_mps", 0.0)) > 0.0 else 2.0, 0.4)
+	if not SbFx.fire(p, SbFx.key_of(info), "throw", {"at": at, "info": info}):
+		BendLooks.burst(at + Vector3.UP * 0.1, kind, 26, Vector3.UP, 50.0, 4.0 if float(spec.get("up_mps", 0.0)) > 0.0 else 2.0, 0.4)
 	if bool(spec.get("hollow", false)):
 		FormHollow.dig(p.get_tree().current_scene, at, Vector3.FORWARD, r * 2.0, r * 2.0, 20.0)
 	BendLooks.sound(kind, "hit", at, -3.0)
@@ -623,7 +642,8 @@ static func spout(c: Variant, at: Vector3, spec: Dictionary) -> void:
 		s["up_mps"] = float(spec.get("up_mps", 12.0)) * (1.0 + (k - 1.0) / 3.0)
 		_cur["source"] = true
 	var rise := float(spec.get("rise_s", 0.35))
-	BendLooks.spout(at, float(s.get("radius_m", 1.8)), rise)
+	if not SbFx.fire(p, SbFx.key_of(spec.get("_info", {})), "low", {"at": at, "radius": float(s.get("radius_m", 1.8))}):
+		BendLooks.spout(at, float(s.get("radius_m", 1.8)), rise)
 	var rec := _cur
 	if rise <= 0.0:
 		status_at(p, at, s)
@@ -665,7 +685,8 @@ static func lightning(c: Variant, a: Dictionary, spec: Dictionary) -> void:
 	var flash := float(spec.get("flash_s", 0.0))
 	var rec := _cur
 	if flash > 0.0:
-		BendLooks.lightning_flash(bc.body, a.from)
+		var flashed := SbFx.fire(bc.body, SbFx.key_of(spec.get("_info", {})), "flash", {"at": a.from, "dir": a.dir})
+		BendLooks.lightning_flash(bc.body, a.from, not flashed)
 		BendSounds.play(&"lightning_crack", a.from, 0.0)
 		rec["flash_s"] = flash
 		rec["hit"] = 0
@@ -688,7 +709,9 @@ static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, 
 	var q := PhysicsRayQueryParameters3D.create(from, from + dir * r, 0xFFFFFFFF, bc.exclude())
 	var h := space.intersect_ray(q)
 	var end: Vector3 = h.position if not h.is_empty() else from + dir * r
-	BendLooks.lightning(from, end)
+	var lk := SbFx.key_of(spec.get("_info", {}))
+	if not SbFx.fire(p, lk, "strike", {"at": from, "to": end, "dir": dir}):
+		BendLooks.lightning(from, end)
 	BendLooks.sound("lightning", "cast", from)
 	var who := BendBolt._taker(h.collider as Node) if not h.is_empty() else null
 	rec["hit"] = 0
@@ -718,7 +741,9 @@ static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, 
 			exl = wbc.exclude()
 		var h2 := space.intersect_ray(PhysicsRayQueryParameters3D.create(bfrom, bfrom + bdir * r, 0xFFFFFFFF, exl))
 		var end2: Vector3 = h2.position if not h2.is_empty() else bfrom + bdir * r
-		BendLooks.lightning(bfrom, end2)
+		SbFx.fire(who, SbFx.key_of({}, "fire_parry", "parry"), "lightning_back", {"at": bfrom, "dir": bdir})
+		if not SbFx.fire(who, lk, "strike", {"at": bfrom, "to": end2, "dir": bdir, "el": "fire"}):
+			BendLooks.lightning(bfrom, end2)
 		var who2 := BendBolt._taker(h2.collider as Node) if not h2.is_empty() else null
 		rec["redirected"] = true
 		if who2 != null and BendStatus.can_take(who2, who):
@@ -737,6 +762,7 @@ static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, 
 		return
 	BendR3.deliver(who, float(spec.get("damage", 50.0)) * late_k, end, dir, p, float(spec.get("_lock_s", -1.0)),
 			(flat * float(spec.get("knock_mps", 6.0)) + Vector3.UP * 2.0) * late_k, info)
+	SbFx.fire(p, lk, "hit", {"at": end, "dir": dir})
 	rec["hit"] = 1
 
 
@@ -768,7 +794,8 @@ static func kick_up(c: Variant, flat: Vector3, spec: Dictionary) -> FormStone:
 	var s := FormStone.ball(p.get_tree().current_scene, foot, {"radius_m": float(spec.get("radius_m", 0.32)), "mass_kg": 30.0,
 			"rise_s": 0.25, "life_s": 30.0, "sink_s": 1.0}, bc.rand_i() % 97, FormMatter.of_ground(p.get_tree(), foot))
 	s.set_meta(&"bend_by", p.get_instance_id())
-	BendLooks.burst(foot + Vector3.UP * 0.2, "stone", 16)
+	if not SbFx.fire(p, SbFx.key_of(BendR3.cur), "kick_up", {"at": foot, "dir": flat}):
+		BendLooks.burst(foot + Vector3.UP * 0.2, "stone", 16)
 	_cur["stone"] = s
 	return s
 
@@ -806,9 +833,9 @@ static func column(c: Variant, at: Vector3, spec: Dictionary) -> FormRaised:
 	return r
 
 
-static func _wall(p: Node3D, xf: Transform3D, matter: String, life := -1.0, w := -1.0) -> FormRaised:
+static func _wall(p: Node3D, xf: Transform3D, matter: String, life := -1.0, w := -1.0, ice := false) -> FormRaised:
 	var wd: Dictionary = (SwayMoves.move("earth_wall").get("wall", {}) as Dictionary)
-	var wn := FormMatter.numbers(wd, FormMatter.entry("earth_wall", matter), matter)
+	var wn := BendLoadout.wall_numbers(p, "ice", wd, matter) if ice else FormMatter.numbers(wd, FormMatter.entry("earth_wall", matter), matter)
 	if life > 0.0:
 		wn["life_s"] = life
 	if w > 0.0:
@@ -856,10 +883,11 @@ static func ice_wall(c: Variant, flat: Vector3, spec := {}) -> FormRaised:
 		foot = FormEffects.place_point(c, spec.get("place", {}))
 		flat = FormEffects.way_to(c, foot)
 	var x := Vector3.UP.cross(flat).normalized()
-	var r := _wall(p, Transform3D(Basis(x, Vector3.UP, flat), foot), "snow")
+	var r := _wall(p, Transform3D(Basis(x, Vector3.UP, flat), foot), "snow", -1.0, -1.0, true)     # (true: the wearer's Ice Wall numbers)
 	r.set_meta(&"bend_ice", true)
 	FormRaised.count_wall(r)                 # (ice walls count with the earth walls: rules.json max_walls)
-	BendLooks.burst(foot + Vector3.UP, "ice", 24)
+	if not bool(r.get_meta(&"sbfx_rise", false)):
+		BendLooks.burst(foot + Vector3.UP, "ice", 24)
 	return r
 
 
@@ -887,7 +915,8 @@ static func melt(p: Node3D, at: Vector3, r: float) -> int:
 	for w in p.get_tree().get_nodes_in_group(FormRaised.GROUP):
 		var fr := w as FormRaised
 		if fr != null and fr.is_up() and (fr.has_meta(&"bend_ice") or fr.matter == "snow") and fr.global_position.distance_to(at) <= r:
-			BendLooks.burst(fr.global_position + Vector3.UP, "water", 30)
+			if not SbFx.fire(p, SbFx.key_of(BendR3.cur), "melt", {"at": fr.global_position, "dir": fr.global_basis.z}):
+				BendLooks.burst(fr.global_position + Vector3.UP, "water", 30)
 			fr.crumble("melted")
 			n += 1
 	for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
@@ -1182,17 +1211,21 @@ static func slam(c: Variant, a: Dictionary, spec: Dictionary) -> Strike:
 			_cur["lifted"] = true
 	var st := Strike.start(bc, "slam", a, spec)
 	var box := slam_box(bc, a, spec)
-	BendLooks.burst(p.global_position + Vector3.UP * 0.4, kind, 30, ((box.foot as Vector3) - p.global_position).normalized(), 25.0, 10.0, 0.4)
+	var slk := SbFx.key_of(spec.get("_info", {}))
+	if not SbFx.fire(p, slk, "slam", {"dir": box.fwd}):
+		BendLooks.burst(p.global_position + Vector3.UP * 0.4, kind, 30, ((box.foot as Vector3) - p.global_position).normalized(), 25.0, 10.0, 0.4)
 	BendLooks.sound(kind, "hit", p.global_position, -2.0)
 	var floor_at := _floor_under(bc, box)
 	_cur["deck"] = floor_at != Vector3.INF
 	if floor_at != Vector3.INF:
-		BendLooks.burst(floor_at + Vector3.UP * 0.1, kind, 26, Vector3.UP, 70.0, 4.0, 0.4)
+		if not SbFx.fire(p, slk, "slam_deck", {"at": floor_at, "dir": box.fwd}):
+			BendLooks.burst(floor_at + Vector3.UP * 0.1, kind, 26, Vector3.UP, 70.0, 4.0, 0.4)
 		if bool(spec.get("put_out", false)):
 			for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
 				var bz := z as BendZone
 				if bz != null and bz.kind in ["fire_wall", "burn"] and bz.global_position.distance_to(floor_at) <= float(spec.get("width_m", 2.5)) + 1.5:
-					BendLooks.burst(bz.global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
+					if not SbFx.fire(p, slk, "put_out", {"at": bz.global_position, "dir": box.fwd}):
+						BendLooks.burst(bz.global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
 					bz.end()
 		var pd: Variant = spec.get("puddle")
 		if pd is Dictionary:
@@ -1266,7 +1299,8 @@ static func air_hit(c: Variant, a: Dictionary, spec: Dictionary) -> Strike:
 	var kind := String(spec.get("kind", "air"))
 	var st := Strike.start(bc, "air_hit", a, spec)
 	var at := st.centre()
-	BendLooks.burst(at, kind, 22, (a.dir as Vector3) if a.has("dir") else bc.facing(), 70.0, 5.0, 0.3)
+	if not SbFx.fire(bc.body, SbFx.key_of(spec.get("_info", {})), "air_hit", {"at": at, "dir": (a.dir as Vector3) if a.has("dir") else bc.facing()}):
+		BendLooks.burst(at, kind, 22, (a.dir as Vector3) if a.has("dir") else bc.facing(), 70.0, 5.0, 0.3)
 	BendLooks.sound(kind, "cast", at, -3.0)
 	return st
 
@@ -1369,4 +1403,5 @@ class Strike:
 		BendR3.deliver(n, float(spec.get("damage", 10.0)) * k, n.global_position + Vector3.UP, kv.normalized(), p,
 				float(spec.get("_lock_s", -1.0)), kv * k, info)
 		rec["hit"] = int(rec.get("hit", 0)) + 1
-		BendLooks.burst(n.global_position + Vector3.UP, String(spec.get("kind", "stone")), 18, Vector3.UP, 120.0, 4.0, 0.3)
+		if not SbFx.fire(p, SbFx.key_of(spec.get("_info", {})), "hit_body", {"at": n.global_position + Vector3.UP, "dir": kv, "info": info}):
+			BendLooks.burst(n.global_position + Vector3.UP, String(spec.get("kind", "stone")), 18, Vector3.UP, 120.0, 4.0, 0.3)

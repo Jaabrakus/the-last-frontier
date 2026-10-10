@@ -1,0 +1,741 @@
+{
+ "format": "tidebreak-sb-fx",
+ "version": 1,
+ "element": "fire",
+ "source": "Spellbreak (Proletariat): rebuilt Cascade effects, res://assets/fx/spellbreak (SOURCE.md names each source package; licence note in animations/SOURCE.md). Seeded from artifacts/spellbreak_fx/bending_fx_map.json (final rows, picks[0]); the shape is documented in data/bending/sb_fx/config.json (_doc).",
+ "moves": {
+  "fire_blast/punch": {
+   "_slot": "key 1",
+   "cast": {
+    "effect": "g3/Content/VFX/Character/Fire/Fire_Firefly_End01_FxP",
+    "map": 107,
+    "map_row": "fire_blast/punch | cast flash at the fist | key 1",
+    "map_pick": 1,
+    "at": "hand",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.5,
+    "keep_old": false,
+    "start": "cast: BendEffects._apply at the release",
+    "stop": "one-shot",
+    "replaced": "map pick 0 (116) -> 107: 116 GauntletFireballMuzzle_FX renders broken in the browser too (a full-screen dark red at 0.45 s)"
+   },
+   "flight": {
+    "effect": "g3/Content/VFX/Character/Fire/Fireball_Base_Projectile01_FxP",
+    "map": 112,
+    "map_row": "fire_blast/punch | projectile in flight | key 1",
+    "at": "node",
+    "follow": true,
+    "orient": "node",
+    "follow_basis": "node",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "launch: BendBolt.launch",
+    "stop": "the bolt ends (BendBolt.end): stopped, its trail plays out"
+   },
+   "impact": {
+    "effect": "g3/Content/VFX/Character/Fire/FireBImpact_FX",
+    "map": 96,
+    "map_row": "fire_blast/punch | impact | key 1",
+    "map_pick": 1,
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "hit: BendBolt._hit (body, world or a raised wall)",
+    "stop": "one-shot",
+    "hide": [
+     "SmokeBase"
+    ],
+    "life": 0.6,
+    "replaced": "map pick 0 (111) -> 96: 111 Fireball_Base_Impact01's glow core and shock sphere draw as a flat grey disc and a 4 m yellow dome in the ring's daylight, hiding the one struck (all but its smoke is spheres)"
+   }
+  },
+  "fire_blast/punch.grown": {
+   "_slot": "key 1 (held)",
+   "grow": {
+    "effect": "g3/Content/VFX/Character/Fire/Gauntlet_Pyromancer_Idle01_FxP",
+    "map": 117,
+    "map_row": "fire_blast/fireball | grow / charge on the fist | key 1 (held)",
+    "at": "hand",
+    "follow": true,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "the lock grows: SwayCaster._grow",
+    "stop": "the lock ends"
+   },
+   "flight": {
+    "effect": "g3/Content/VFX/Character/Fire/Fireball_Base_Projectile01_FxP",
+    "map": 112,
+    "map_row": "fire_blast/fireball | projectile in flight | key 1 (held)",
+    "map_pick": 2,
+    "at": "node",
+    "follow": true,
+    "orient": "node",
+    "follow_basis": "node",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.7,
+    "keep_old": false,
+    "start": "launch: BendBolt.launch",
+    "stop": "the bolt ends (BendBolt.end): stopped, its trail plays out",
+    "replaced": "map pick 0 (115) -> 112: 115 Fireball_Pyro_Projectile01_Translucent draws small yellow diamonds; the approved fireball (112) at 1.7x keeps the grown Fireball big"
+   },
+   "impact": {
+    "effect": "g3/Content/VFX/Character/Fire/FireBImpact_FX",
+    "map": 96,
+    "map_row": "fire_blast/fireball | explosion | key 1 (held)",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.25,
+    "keep_old": false,
+    "start": "hit: BendBolt._hit (body, world or a raised wall)",
+    "stop": "one-shot",
+    "hide": [
+     "SmokeBase"
+    ],
+    "life": 0.8,
+    "replaced": "map pick 0 (114) -> 96: 114 Fireball_Pyro_Impact01 renders broken in the browser too (a solid white sphere); 111's glow core and shock sphere draw as a flat grey disc and a 4 m yellow dome in the ring's daylight (all but its smoke is spheres); 96 (the punch row's second pick) at 1.25x (bigger blows out white in daylight)"
+   }
+  },
+  "fire_arc/lightning": {
+   "_slot": "key 1 (tap twice)",
+   "charge": {
+    "effect": "g3/Content/VFX/Character/FX_LightningCharge",
+    "map": 90,
+    "map_row": "fire_arc/lightning | 2.2 s charge on the hands | key 1 (tap twice)",
+    "at": "hand",
+    "follow": true,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "the lock begins (lightning: BendLooks.Charge)",
+    "stop": "the lock ends"
+   },
+   "flash": {
+    "effect": "g3/Content/VFX/Character/Lightning/GauntletLightningMuzzle_FX",
+    "map": 146,
+    "map_row": "fire_arc/lightning | 0.25 s flash and crack at release | key 1 (tap twice)",
+    "at": "hand",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "BendEffects.lightning (the flash at the release)",
+    "stop": "one-shot"
+   },
+   "strike": {
+    "effect": "g3/Content/VFX/Cosmetics/CloudBurst/Conduit/CB_Conduit_B_FX",
+    "map": 469,
+    "map_row": "fire_arc/lightning | strike along the aim | key 1 (tap twice)",
+    "map_pick": 2,
+    "at": "point",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": true,
+    "start": "BendEffects._strike (from the hand to where it struck)",
+    "stop": "travel, then plays out",
+    "note": "keep_old: today's forked bolt holds the strike's line for 0.26 s (where it went); 469 runs along it",
+    "replaced": "map pick 0 (148) -> 469: 148 LBolt_ProjectileBeam renders broken in the browser too (a solid magenta slab); 469 CB_Conduit_B imported",
+    "travel": true,
+    "travel_s": 0.12
+   },
+   "hit": {
+    "effect": "g3/Content/VFX/Character/Lightning/Lightning_Shocked01_FxP",
+    "map": 150,
+    "map_row": "fire_arc/lightning | hit on the target | key 1 (tap twice)",
+    "at": "point",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "struck",
+    "stop": "one-shot",
+    "note": "a one-shot at the point, never a status loop on the body"
+   }
+  },
+  "fire_kick/kick": {
+   "_slot": "key 2",
+   "cast": {
+    "effect": "g3/Content/VFX/Character/Fire/Fire_Firefly_End01_FxP",
+    "map": 107,
+    "map_row": "fire_kick/kick | launch at the kicking foot | key 2",
+    "at": "feet",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.4,
+    "keep_old": false,
+    "start": "cast: BendEffects._apply at the release",
+    "stop": "one-shot"
+   },
+   "grow": {
+    "effect": "g3/Content/VFX/Character/Fire/Gauntlet_Pyromancer_Idle01_FxP",
+    "map": 117,
+    "map_row": "fire_kick/kick | grow on the kicking foot (held past 0.45 s) | key 2",
+    "at": "caster",
+    "follow": true,
+    "orient": "flat",
+    "follow_basis": "fixed",
+    "offset": [0.0, 0.2, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "the lock grows: SwayCaster._grow",
+    "stop": "the lock ends"
+   },
+   "impact": {
+    "effect": "g3/Content/VFX/Character/Fire/FireBoulderImpact_FX",
+    "map": 97,
+    "map_row": "fire_kick/kick | hits / is stopped by a wall | key 2",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 0.45,
+    "keep_old": false,
+    "start": "hit: BendBolt._hit (body, world or a raised wall)",
+    "stop": "one-shot",
+    "hide": [
+     "SmokeBase",
+     "SmokeCenter"
+    ],
+    "life": 0.8
+   }
+  },
+  "fire_kick/high_kick": {
+   "_slot": "key 2 (tap twice)",
+   "flight": {
+    "effect": "g3/Content/VFX/Character/Fire/FireIgnite_FX",
+    "map": 99,
+    "map_row": "fire_kick/high_kick | flame crescent in flight | key 2 (tap twice)",
+    "at": "node",
+    "follow": true,
+    "orient": "node",
+    "follow_basis": "node",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 2.0,
+    "keep_old": true,
+    "start": "launch: BendBolt.launch",
+    "stop": "the bolt ends (BendBolt.end): stopped, its trail plays out",
+    "note": "99 alone is a few specks at game distance: doubled, over today's crescent (the arc a player reads)"
+   },
+   "impact": {
+    "effect": "g3/Content/VFX/Character/Fire/FireBImpact_FX",
+    "map": 96,
+    "map_row": "fire_kick/high_kick | impact | key 2 (tap twice)",
+    "at": "point",
+    "follow": false,
+    "orient": "normal",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "hit: BendBolt._hit (body, world or a raised wall)",
+    "stop": "one-shot",
+    "hide": [
+     "SmokeBase"
+    ],
+    "life": 0.6
+   }
+  },
+  "fire_kick/slam": {
+   "_slot": "key 2 (air)",
+   "slam_deck": {
+    "effect": "g3/Content/VFX/Character/Fire/FireBoulderImpact_FX",
+    "map": 97,
+    "map_row": "fire_kick/slam | slam impact on the deck (+ short 110 wave) | key 2 (air)",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 0.7,
+    "keep_old": false,
+    "start": "BendEffects.slam (the deck under it)",
+    "stop": "one-shot",
+    "hide": [
+     "SmokeBase",
+     "SmokeCenter"
+    ],
+    "life": 0.8
+   }
+  },
+  "footwork/step": {
+   "_slot": "key 3",
+   "dash": {
+    "effect": "g3/Content/VFX/Character/Fire/Fire_Firefly_End01_FxP",
+    "map": 107,
+    "map_row": "footwork/step | push-off burst at the feet | key 3",
+    "at": "feet",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 2.4,
+    "keep_old": true,
+    "start": "BendEffects.dash",
+    "stop": "one-shot",
+    "note": "Fire_Firefly_End01 without its square puff is faint flames: over today's burst and ring (the step's read)"
+   },
+   "dash_trail": {
+    "effect": "g3/Content/VFX/Cosmetics/Afterglow/PlunderingBlast/PlunderingBlast_AG_FxP",
+    "map": 263,
+    "map_row": "footwork/step | short movement trail | key 3",
+    "at": "caster",
+    "follow": true,
+    "orient": "dir",
+    "follow_basis": "motion",
+    "offset": [0.0, 0.9, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "BendEffects.dash",
+    "stop": "the dash ends: BendMotion._dash_end"
+   }
+  },
+  "fire_jets/jets": {
+   "_slot": "key 3 (tap twice)",
+   "dash": {
+    "effect": "g3/Content/VFX/Character/Fire/Fire_Firefly_Launch01_FxP",
+    "map": 109,
+    "map_row": "fire_jets/jets | launch blast | key 3 (tap twice)",
+    "at": "feet",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "BendEffects.dash",
+    "stop": "one-shot"
+   },
+   "dash_flames": {
+    "effect": "g3/Content/VFX/Character/Fire/Fire_Firefly_Hands01_FxP",
+    "map": 108,
+    "map_row": "fire_jets/jets | jet flames at the hands and feet while flying | key 3 (tap twice)",
+    "at": "caster",
+    "follow": true,
+    "orient": "dir",
+    "follow_basis": "motion",
+    "offset": [0.0, 0.3, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "BendEffects.dash",
+    "stop": "the dash ends: BendMotion._dash_end"
+   },
+   "dash_trail": {
+    "effect": "g3/Content/VFX/Cosmetics/CloudBurst/Pyromancer/CB_Pyromancer_TrailFillBFX",
+    "map": 513,
+    "map_row": "fire_jets/jets | body trail | key 3 (tap twice)",
+    "at": "caster",
+    "follow": true,
+    "orient": "dir",
+    "follow_basis": "motion",
+    "offset": [0.0, 0.9, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "BendEffects.dash",
+    "stop": "the dash ends: BendMotion._dash_end",
+    "hide": [
+     "Big Fireball"
+    ],
+    "note": "its Big Fireball mesh fills the body in a white-hot dome at speed"
+   },
+   "dash_end": {
+    "effect": "g3/Content/VFX/Character/Fire/Fire_Firefly_End01_FxP",
+    "map": 107,
+    "map_row": "fire_jets/jets | end / landing burst | key 3 (tap twice)",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": true,
+    "start": "the dash ends: BendMotion._dash_end",
+    "stop": "one-shot",
+    "note": "Fire_Firefly_End01 without its square puff is faint flames: over today's landing burst"
+   }
+  },
+  "fire_wall/wall": {
+   "_slot": "key 4",
+   "zone": {
+    "effect": "g3/Content/VFX/Character/Fire/FireWall_FX_TranslucentSmoke",
+    "map": 104,
+    "map_row": "fire_wall/wall | raise (spawn) | key 4",
+    "at": "node",
+    "follow": true,
+    "orient": "node",
+    "follow_basis": "node",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 0.45,
+    "keep_old": true,
+    "start": "zone made: BendZone.make/_look",
+    "stop": "zone ends: BendZone.end",
+    "hide": [
+     "SmokeCenter",
+     "Firewall_Initial"
+    ],
+    "note": "104 is one burning segment, not a wall (Spellbreak lays its wall out of several): three along the foot of today's flame sheet, which keeps the wall's extent; its dark SmokeCenter and its teal-ramped Firewall_Initial left out; raise and burning idle are the one looping effect",
+    "spread": 3
+   },
+   "put_out": {
+    "effect": "g3/Content/VFX/Character/Fire/FireWall_Extinguish_Ice_FxP",
+    "map": 101,
+    "map_row": "fire_wall/wall | put out by water | key 4",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "a fire wall put out (water: bolt, wave, slam, water wall)",
+    "stop": "one-shot"
+   },
+   "blown": {
+    "effect": "g3/Content/VFX/Character/Fire/FireWall_Extinguish_Wind_FxP",
+    "map": 102,
+    "map_row": "fire_wall/wall | blown through by air | key 4",
+    "at": "point",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "an air bolt through the fire wall: BendZone.on_bolt",
+    "stop": "one-shot"
+   },
+   "entry": {
+    "effect": "g3/Content/VFX/Character/Fire/FireIgnite_FX",
+    "map": 99,
+    "map_row": "fire_wall/wall | burning the one who passes (entry pop) | key 4",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "a body's entry pop: BendZone._fire_wall_hit",
+    "stop": "one-shot",
+    "life": 0.6
+   }
+  },
+  "fire_breath/breath": {
+   "_slot": "key 4 (tap twice)",
+   "cone": {
+    "effect": "g3/Content/VFX/Character/Fire/Fire_Firefly_Launch01_FxP",
+    "map": 109,
+    "map_row": "fire_breath/breath | short cone of fire (4.5 m, 45 deg) | key 4 (tap twice)",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 0.7,
+    "keep_old": false,
+    "start": "BendEffects.cone",
+    "stop": "one-shot"
+   },
+   "zone": {
+    "effect": "g3/Content/VFX/Quests/Shared/SmkObscureM_FxP",
+    "map": 838,
+    "map_row": "fire_breath/breath | smoke screen left behind (5 s) | key 4 (tap twice)",
+    "at": "node",
+    "follow": true,
+    "orient": "flat",
+    "follow_basis": "fixed",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": true,
+    "start": "zone made: BendZone.make/_look",
+    "stop": "zone ends: BendZone.end",
+    "note": "SmkObscureM lasts about a second: played over today's smoke, which shows the 5 s screen's extent (it hides a fighter from the bots)"
+   },
+   "melt": {
+    "effect": "g3/Content/VFX/Character/Vapor/VaporCloud_FX",
+    "map": 192,
+    "map_row": "fire_breath/breath | melts ice in the cone (melt: true) | key 4 (tap twice)",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 0.5,
+    "keep_old": false,
+    "start": "ice melted (FormRaised.crumble('melted') / BendEffects.melt)",
+    "stop": "one-shot",
+    "hide": [
+     "#1",
+     "#2",
+     "#3"
+    ],
+    "life": 1.2,
+    "note": "VaporCloud's poison-cloud meshes (#1-#3) draw as a dark brown mass in daylight"
+   }
+  },
+  "patch/patch": {
+   "_slot": "key 5",
+   "heal": {
+    "effect": "g3/Content/VFX/Quests/ShrineBuffs/ShrineB_Pyro_FxP",
+    "map": 843,
+    "map_row": "patch/patch | restore aura on the body (1.0-1.5 s, standing) | key 5",
+    "at": "caster",
+    "follow": true,
+    "orient": "flat",
+    "follow_basis": "fixed",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 2.2,
+    "keep_old": false,
+    "start": "BendEffects._apply heal (Patch)",
+    "stop": "life",
+    "life": 1.5,
+    "note": "ShrineB_Pyro is a few embers at the feet at 1x"
+   }
+  },
+  "fire_jab/embers": {
+   "_slot": "jab",
+   "cast": {
+    "effect": "g3/Content/VFX/Character/Fire/Fire_Firefly_End01_FxP",
+    "map": 107,
+    "map_row": "fire_jab/embers | spray flash at the fist | jab",
+    "at": "hand",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.2,
+    "keep_old": false,
+    "start": "cast: BendEffects._apply at the release",
+    "stop": "one-shot"
+   },
+   "flight": {
+    "effect": "g3/Content/VFX/Cosmetics/Triumph/Triumph_Fire01_Ball01_FxP",
+    "map": 702,
+    "map_row": "fire_jab/embers | 7 small bolts | jab",
+    "at": "node",
+    "follow": true,
+    "orient": "node",
+    "follow_basis": "node",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 0.6,
+    "keep_old": false,
+    "start": "launch: BendBolt.launch",
+    "stop": "the bolt ends (BendBolt.end): stopped, its trail plays out",
+    "volley_max": 3
+   },
+   "impact": {
+    "effect": "g3/Content/VFX/Character/Fire/FireBImpact_FX",
+    "map": 96,
+    "map_row": "fire_jab/embers | small hits | jab",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 0.5,
+    "keep_old": false,
+    "start": "hit: BendBolt._hit (body, world or a raised wall)",
+    "stop": "one-shot",
+    "body_scale": 0.8,
+    "hide": [
+     "SmokeBase"
+    ],
+    "life": 0.4,
+    "replaced": "map pick 0 (111) -> 96: 111 Fireball_Base_Impact01's glow core and shock sphere draw as a flat grey disc and a yellow dome in the ring's daylight; 96 (the punch row's second pick)",
+    "volley_max": 2
+   }
+  },
+  "fire_jab/air_hit": {
+   "_slot": "jab (air)",
+   "air_hit": {
+    "effect": "g3/Content/VFX/Character/Fire/Fire_Firefly_End01_FxP",
+    "map": 107,
+    "map_row": "fire_jab/air_hit | melee flare burst at reach | jab (air)",
+    "at": "point",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.4,
+    "keep_old": false,
+    "start": "BendEffects.air_hit",
+    "stop": "one-shot"
+   }
+  },
+  "fire_parry/parry": {
+   "_slot": "guard",
+   "perfect": {
+    "effect": "g3/Content/VFX/Character/Fire/FireBoulderImpact_FX",
+    "map": 97,
+    "map_row": "fire_parry/parry | perfect: flash and ring | guard",
+    "at": "chest",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 0.8,
+    "keep_old": false,
+    "start": "guard result: BendLooks.guard_result",
+    "stop": "one-shot",
+    "hide": [
+     "Big Glow"
+    ],
+    "life": 0.6,
+    "replaced": "map pick 0 (95) -> 97: 95 ExplosionGauntlet renders broken in the browser too (a solid white sphere) and the row's 116 too; this element's fire burst (97) reused"
+   },
+   "late": {
+    "effect": "g3/Content/VFX/Character/Fire/FireIgniteSh_FX",
+    "map": 98,
+    "map_row": "fire_parry/parry | late or whiff puff | guard",
+    "at": "chest",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "guard result: BendLooks.guard_result",
+    "stop": "one-shot",
+    "life": 0.5
+   },
+   "whiff": {
+    "effect": "g3/Content/VFX/Character/Fire/FireIgniteSh_FX",
+    "map": 98,
+    "map_row": "fire_parry/parry | late or whiff puff | guard",
+    "at": "chest",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 0.7,
+    "keep_old": false,
+    "start": "guard result: BendLooks.guard_result",
+    "stop": "one-shot",
+    "life": 0.5
+   },
+   "lightning_back": {
+    "effect": "g3/Content/VFX/Character/Lightning/GauntletLightningMuzzle_FX",
+    "map": 146,
+    "map_row": "fire_parry/parry | lightning caught and sent back | guard",
+    "at": "point",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "a Parry sends lightning back: BendEffects._strike",
+    "stop": "one-shot"
+   },
+   "melted": {
+    "effect": "g3/Content/VFX/Character/Fire/FireProjectile_Extinguish_Ice_FxP",
+    "map": 100,
+    "map_row": "fire_parry/parry | ice caught on the beat: melted | guard",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "ice melted on the beat: BendZone._guard_bolt",
+    "stop": "one-shot"
+   }
+  },
+  "fire_kick/slam_wave": {
+   "_slot": "key 2 (air)",
+   "impact": {
+    "effect": "g3/Content/VFX/Character/Fire/FireBoulderImpact_FX",
+    "map": 97,
+    "map_row": "fire_kick/slam | slam impact on the deck (+ short 110 wave) | key 2 (air)",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 0.6,
+    "keep_old": false,
+    "start": "hit: BendBolt._hit (body, world or a raised wall)",
+    "stop": "one-shot",
+    "hide": [
+     "SmokeBase",
+     "SmokeCenter"
+    ],
+    "life": 0.8
+   }
+  }
+ },
+ "unwired": [
+  {
+   "map_row": "fire_kick/kick | travelling wave of fire along the floor (grown: wider) | key 2",
+   "map": 110,
+   "effect": "g3/Content/VFX/Character/Fire/Fire_Ignited_Shockwave_Ogles",
+   "key": "fire_kick/kick",
+   "role": "wave",
+   "why": "left out (today's look stays): 110 Fire_Ignited_Shockwave_Ogles renders broken in the browser too (a black smoke blob); 104 (the row's second pick) is a burst in one place, not a running line; today's tongues show the height a jump clears"
+  },
+  {
+   "map_row": "fire_kick/high_kick | flame trail behind it | key 2 (tap twice)",
+   "map": 113,
+   "effect": "g3/Content/VFX/Character/Fire/Fireball_Conflagration_FxP",
+   "key": "fire_kick/high_kick",
+   "role": "trail",
+   "why": "left out (today's look stays): 113 Fireball_Conflagration draws nothing visible at game distance (the browser's sweep shows it empty too)"
+  },
+  {
+   "map_row": "fire_kick/slam | slam impact on the deck (+ short 110 wave) | key 2 (air)",
+   "map": 97,
+   "effect": "g3/Content/VFX/Character/Fire/FireBoulderImpact_FX",
+   "key": "fire_kick/slam_wave",
+   "role": "wave",
+   "why": "left out (today's look stays): 110 Fire_Ignited_Shockwave_Ogles renders broken in the browser too (a black smoke blob); today's tongues show the height a jump clears"
+  },
+  {
+   "map_row": "passive/footwork | moving aura (hands and feet) | passive",
+   "map": 117,
+   "effect": "g3/Content/VFX/Character/Fire/Gauntlet_Pyromancer_Idle01_FxP",
+   "why": "no visual or tick exists for Footwork today (an always-on aura while moving; left out for its CPU cost)"
+  },
+  {
+   "map_row": "rise/jet | jet launch 7.5 m along the aim, then flight | rise (data/ring/movement.json)",
+   "map": 109,
+   "effect": "g3/Content/VFX/Character/Fire/Fire_Firefly_Launch01_FxP",
+   "why": "ring_move_looks.gd (RingMoveLooks.rise_tell / rise_end / tick) is outside this bridge's file list"
+  }
+ ]
+}

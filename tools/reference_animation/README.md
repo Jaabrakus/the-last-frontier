@@ -1,8 +1,10 @@
 # Offline animation reference conversion
 
 These tools operate on the user's separate, attributed Spellbreak extraction.
-They are not a runtime dependency and do not install reference motion into the
-Tidebreak animation library.
+The ANIMATION conversion here is not a runtime dependency and installs no reference motion into the
+Tidebreak animation library. (The particle effects are separate: since 2026-10-10 a dormant, switched-off bridge to the
+rebuilt Spellbreak effects lives in the game, see docs/claude_fx_handoff.md 'Update 2026-10-10'; `fx_spec.py`,
+`fx_materials.py` and `extract_fx_closure_from_zip.py` feed it.)
 
 1. Recover full Skeleton rest transforms and parent indices from the cooked
    assets. UE Viewer PSA export uses placeholder parents; do not reconstruct a

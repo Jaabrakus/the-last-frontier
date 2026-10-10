@@ -151,7 +151,7 @@ static func earth_wall(c: Variant, at: Vector3, d: Dictionary, matter := "", tre
 	var tree := bc.body.get_tree()
 	if matter == "" or matter == "wood":
 		matter = FormMatter.of_ground(tree, at)
-	var wn := FormMatter.numbers(w, FormMatter.entry("earth_wall", matter), matter)
+	var wn := BendLoadout.wall_numbers(bc.body, "wall", w, matter)          # (the wearer's Earth Wall numbers; Classic: the move's)
 	var way := way_to(bc, at)
 	var foot := ground_at(bc, at + way * float(wn.get("ahead_m", 0.75)))
 	var across := Vector3.UP.cross(way).normalized()
@@ -162,7 +162,7 @@ static func earth_wall(c: Variant, at: Vector3, d: Dictionary, matter := "", tre
 	FormRaised.count_wall(r)                            # (the ring's cap: rules.json max_walls)
 	var h: Dictionary = d.get("hollow", {})
 	FormHollow.dig(scn, ground_at(bc, at - way * 0.15), way, float(h.get("width_m", 3.0)), float(h.get("depth_m", 1.5)), float(h.get("fade_s", 600.0)))
-	_raised_fx(bc, foot, float(wn.get("width_m", 3.0)), matter)
+	_raised_fx(bc, foot, float(wn.get("width_m", 3.0)), matter, bool(r.get_meta(&"sbfx_rise", false)))
 	return r
 
 
@@ -180,7 +180,7 @@ static func tree_wall(c: Variant, i: int, d: Dictionary) -> FormRaised:
 	var td := hv.describe("tree", "tree", i) if hv != null else {}
 	if td.is_empty():
 		return null
-	var wn := FormMatter.numbers(d.get("wall", {}), FormMatter.entry("earth_wall", "wood"), "wood")
+	var wn := BendLoadout.wall_numbers(bc.body, "wall", d.get("wall", {}), "wood")
 	var root := ground_at(bc, td.pos)
 	var way := way_to(bc, root)
 	var past := float(td.radius) + float(wn.get("thick_m", 0.4)) * 0.5 + float((d.get("tree", {}) as Dictionary).get("gap_m", 0.06))
@@ -242,7 +242,7 @@ static func pillar(c: Variant, at: Vector3, d: Dictionary, mode := "self") -> Fo
 	_mark(r, bc)
 	var h: Dictionary = d.get("hollow", {})
 	FormHollow.dig(scn, foot, way, float(h.get("width_m", 2.1)), float(h.get("depth_m", 2.1)), float(h.get("fade_s", 600.0)))
-	_raised_fx(bc, foot, float(pd.get("radius_m", 0.55)) * 2.0, matter)
+	_raised_fx(bc, foot, float(pd.get("radius_m", 0.55)) * 2.0, matter, bool(r.get_meta(&"sbfx_rise", false)))
 	var elem := BendPoses.element_of(p) != ""
 	if elem:
 		# (round 2's Lift: it sinks back sink_s after it is up, never a wall)
@@ -262,6 +262,10 @@ static func pillar(c: Variant, at: Vector3, d: Dictionary, mode := "self") -> Fo
 		p.velocity = run * float(ld.get("carry", 0.85)) + way * float(ld.get("fwd_mps", 3.0)) * k + Vector3.UP * float(ld.get("up_mps", 6.0)) * k
 		if sc != null:
 			sc.last_launch = {"boost": boost, "gap": gap, "velocity": p.velocity, "k": k}
+		# (the Spellbreak launch, its trail and its landing: SbFx, visual only)
+		var lk := SbFx.key_of(BendR3.cur, "pillar", mode)
+		SbFx.fire(p, lk, "launch", {"at": foot, "dir": way})
+		SbFx.watch_landing(p, lk, "air_trail", "land")
 		if boost:
 			_tell(bc, "On the step: a boost")
 	return r
@@ -333,6 +337,7 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 		# (the stone raised during the lock: thrown now, as its shape is: a switch reshaped it)
 		bc.body.remove_meta(RAISED_META)
 		th0.stone.remove_meta(&"bend_raised_by")
+		SbFx.stop(th0.stone, "hang")              # (its Spellbreak hang let go: the flight follows, SbFx)
 		th0.waiting = false
 		if not BendR3.cur.is_empty():
 			th0.info = BendR3.cur.duplicate()
@@ -357,6 +362,8 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 		FormHollow.dig(scn, foot, way, float(h.get("width_m", 1.3)), float(h.get("depth_m", 1.3)), float(h.get("fade_s", 600.0)))
 	sfx("rise", foot, -2.0, 0.9)
 	sfx("rumble", foot, -4.0, 1.1)
+	if SbFx.fire(bc.body, "stone_form/" + mode, "rise", {"at": foot, "dir": way}):
+		s.set_meta(&"sbfx_rise", true)            # (GustLift's tear dust left out: the Spellbreak rise stands for it)
 	var th := Throw.start(bc, s, td)
 	if th != null and BendR3.on(bc.body) and BendR3.airborne(bc.body):
 		th.follow = true
@@ -397,6 +404,9 @@ static func raise_stone(c: Variant, m: String, mode: String) -> Throw:
 	drop_raised_of(bc.body)
 	var d := SwayMoves.move(m if m != "" else "stone_form")
 	var s := _new_stone(bc, d, mode)
+	var sbk := "%s/%s" % [m if m != "" else "stone_form", mode]
+	if SbFx.fire(bc.body, sbk, "rise", {"at": s.global_position, "dir": bc.facing()}):
+		s.set_meta(&"sbfx_rise", true)            # (GustLift's tear dust left out: the Spellbreak rise stands for it)
 	var th := Throw.start(bc, s, d.get("throw", {}))
 	if th == null:
 		s.queue_free()
@@ -406,6 +416,7 @@ static func raise_stone(c: Variant, m: String, mode: String) -> Throw:
 	th.waiting = true
 	s.set_meta(&"bend_raised_by", bc.body.get_instance_id())
 	bc.body.set_meta(RAISED_META, th.get_instance_id())
+	SbFx.start(s, "hang", bc.body, sbk, "hang", {"node": s, "dir": bc.facing()})
 	return th
 
 
@@ -457,6 +468,8 @@ static func drop_raised(th: Node) -> void:
 	if by != null and int(by.get_meta(RAISED_META, -1)) == t.get_instance_id():
 		by.remove_meta(RAISED_META)
 	var s := t.stone
+	if s != null and is_instance_valid(s):
+		SbFx.stop(s, "hang")
 	if t.lift != null and is_instance_valid(t.lift):
 		t.lift.drop()
 	t.waiting = false
@@ -511,6 +524,7 @@ static func reshape_raised(th: Node, mode: String) -> Node:
 	nt.waiting = true
 	s.set_meta(&"bend_raised_by", bc.body.get_instance_id())
 	bc.body.set_meta(RAISED_META, nt.get_instance_id())
+	SbFx.start(s, "hang", bc.body, "stone_form/" + ("cannonball" if want == "cannonball" else "spike"), "hang", {"node": s})
 	sfx("rumble", at, -4.0, 0.8)
 	return nt
 
@@ -789,12 +803,14 @@ class Throw:
 
 ## The ground breaking as it rises, by its matter: dust and clods and stones (earth), mud thrown up, stone chips, a white
 ## cloud (snow).
-static func _raised_fx(c: Variant, foot: Vector3, width: float, matter := "earth") -> void:
+static func _raised_fx(c: Variant, foot: Vector3, width: float, matter := "earth", sound_only := false) -> void:
 	var bc := BendCaster.wrap(c)
 	if bc == null or not bc.valid():
 		return
 	var scn := bc.body.get_tree().current_scene
-	match matter:
+	match ("" if sound_only else matter):
+		"":
+			pass                                   # (its Spellbreak rise played instead: SbFx)
 		"mud":
 			GatherFx._dust(scn, foot + Vector3.UP * 0.1, Vector3.UP, 18, Vector2(0.08, 0.24), 1.0, Color(0.16, 0.11, 0.07, 0.75))
 		"snow":
@@ -923,7 +939,8 @@ static func mend(c: Variant, t: Node3D, d: Dictionary) -> String:
 					at = p.global_position
 			_tell(bc, "The %s stands again, charred" % BuildData.get_default().name_of(type).to_lower())
 	var scn := bc.body.get_tree().current_scene
-	GatherFx.wood_chips(scn, at + Vector3.UP * 1.0, Vector3.UP, 10)
+	if not SbFx.fire(bc.body, "mend", "mend", {"at": at, "node": t}):
+		GatherFx.wood_chips(scn, at + Vector3.UP * 1.0, Vector3.UP, 10)
 	sfx("mend", at, -2.0, 1.25)
 	return stage
 

@@ -72,6 +72,7 @@ func glide(mps: float, s: float, held: Callable) -> void:
 func _dash_end() -> void:
 	_dash = 0
 	body.set_meta(&"bend_dash_end", BendStatus.now())
+	SbFx.dash_ended(body)                     # (its Spellbreak trails stopped, its end played: visual only)
 	BendZone.carry_wind(body)
 
 
@@ -85,6 +86,8 @@ func carrying() -> bool:
 
 
 func _trail(kind: String) -> void:
+	if kind == "":
+		return                                 # (a Spellbreak ride drawn instead: BendEffects.buff, SbFx)
 	if _fx == null or not is_instance_valid(_fx):
 		_fx = BendLooks.trail(body, kind, 0.35)
 		if _fx != null:

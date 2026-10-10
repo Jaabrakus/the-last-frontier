@@ -108,6 +108,9 @@ committing the cooked archive, generated video or caches.
 The owner subsequently requested preserving as much as possible so the Windows
 client folder can be deleted. A lossless full-client ZIP was completed and verified at:
 `/Users/kiwimango/Downloads/Frontier/Spellbreak_Reference_Extracts/source_backup/spellbreak-client-source.zip`.
+**Moved 2026-10-09** (disk full) to the external drive "The one": `/Volumes/The one/Frontier_offload/Spellbreak_source_backup/spellbreak-client-source.zip`
+(sha256 82a604de…439d, verified on both sides before the local copy was removed; `source_backup/MOVED.txt` has the details;
+`manifest.json` stays local). Pass that path to `extract_fx_closure_from_zip.py --zip` with the drive plugged in.
 Only a finished `.zip` accompanied by `manifest.json` with `verified: true`
 counts as a verified backup; `.zip.partial` does not. Check that marker before
 relying on it. The backup retains the full asset pak and client binaries, not
@@ -135,3 +138,59 @@ deleted without losing its file contents. Keep `Spellbreak_Reference_Extracts`,
 including `source_backup`, and the Frontier artifacts/toolkit. No source folder
 was deleted by the agent. Final source file-set, sizes and modification times
 were rechecked against the manifest after archive verification.
+
+## Update 2026-10-08 (later): general pipeline + full sweep
+
+The owner approved the option-2 look (source particle data + hand-written materials)
+and asked for general tools and a full sweep. Done:
+
+- `artifacts/spell_fx_fireball/` -- fireball-only lab (approved look; outer band 0.25).
+- `artifacts/spellbreak_fx/` -- browser for all 853 particle systems. See its README.
+  Tools (tracked): `tools/reference_animation/extract_fx_closure_from_zip.py`
+  (closure from the backup ZIP; 4,263 packages, 0 decode errors, 4 packages absent from
+  the client), `fx_spec.py` (853/853 specs; fireball output identical to the hand-built
+  spec), `fx_materials.py` (1,381 materials, 534 roots). Asset export + sweep report in
+  `artifacts/spellbreak_fx/tools/`; headless probe `tools/probe.gd`.
+- Full sweep: 853/853, 0 script/shader errors. 139 effects spawn nothing in 1.6 s, all
+  explained (112 all emitters disabled in source, 18 slow ambient, 9 long/random delays).
+- Runtime fixes found by the sweep: lifetime 0 = immortal (100 effects), scalar start
+  locations, materials with no texture parameters (226) now use fixed graph textures or a
+  procedural radial/ring/diamond shape, RGB-without-alpha shape from brightness.
+- Open: 2,525 of 2,661 enabled emitters use the generic uber shader; hand-write families
+  for the most-used roots next (`materials.json` -> `root_usage`). Shader decompile
+  (exact materials) was deferred by the owner. (Superseded: see 'Update 2026-10-10' below; the runtime is now in the game, dormant.)
+  No Niagara assets exist in the client; decals (25) and post-process are not covered.
+
+Storage cleanup (2026-10-08, owner-approved): `artifacts/spell_fx_all/cooked` and the Spellbreak extract's `cooked/`,
+`motion_psa/`, `particle_reference/` were moved to the Trash folder "Frontier cleanup 2026-10-08" (RESTORE.txt
+inside). Re-create cooked packages from the backup ZIP with `extract_fx_closure_from_zip.py` (~35 s per wave) before
+re-running `artifacts/spellbreak_fx/tools/export_assets.py`. Decoded data, specs, materials.json and exported assets stay.
+
+## Update 2026-10-10: the bridge is in the game, switched OFF; only the lightning look is used
+
+What happened after the sweep, in order:
+1. The owner asked for every move to use the rebuilt Spellbreak effects. The Cascade runtime was ported into the game
+   (`scripts/fx/cascade/`: SpellFx facade, CascadeFx, CascadeMaterials, SbFx bridge; shaders in `shaders/cascade/`, families in
+   `data/fx/cascade_families/`, 81 imported effects with their textures and meshes in `assets/fx/spellbreak/` with SOURCE.md,
+   importer `tools/fx/import_spellbreak_fx.py` incl. `--status`). Every move's visual seam was wired to it through one
+   data-driven bridge: `data/bending/sb_fx/<earth|water|fire|air>.json` (effect, anchor, orient, scale, keep_old per role) and
+   `data/bending/sb_fx/config.json` (master switch + one per element, `max_playing`, `max_life_s`, `hide_materials`).
+2. After seeing the first lineups the owner judged them worse ("for water the new ones suck", "most of our particles are better
+   theres just look cleaner"). DECISION: our own effects stay on every element. `config.json` has all four elements `false`
+   (a missing config also means off). The bridge costs nothing while off. Do not switch an element on without a side-by-side
+   the owner picks from (`tools/fx/fx_lineup.gd el=<element>` makes old-vs-new sheets; it forces an element on for its NEW row).
+3. The one Spellbreak look in use: the lightning bolt (owner: "i like our lightning but maybe make it look like spellbreaks or use
+   its shaders"). Our own bolt geometry, path, timing and strike are unchanged; `shaders/cascade/lightning_bolt.gdshader` shades
+   it after Spellbreak's lightning materials; `BendLooks.SB_BOLT` (const, `BendLooks.sb_bolt` static in force) switches back to
+   the old bolt instantly. Hand and hit sparks use our own recoloured recipes (`spark_sb`, `star_sb` in `toon_fx.gd`).
+4. Review loop (2026-10-10): the Cascade step was sped up (module lookups hoisted: ~35% less CPU per particle), a never-ending
+   effect safety net (`max_life_s`) and per-frame step clamp added, lock wrappers fixed to call the sibling `godot_run.sh`,
+   capture-script window policy shared in `tools/ui_audit/capture_kit.gd`. Open items for whoever re-enables an element:
+   `EarthImpactAOE_FX_Meteor` has an emitter whose mesh `SM_Flare_Straight` is not in the extraction (draws a sphere; hide it),
+   `water_redirect/redirect` swing had no life (now capped by `max_life_s`), `TornadoNewSimple` is a white blob in the browser too.
+   Asset trim proposal (24 unwired effects, 16.7 MB of 90.6 MB; nothing deleted): `artifacts/fx_integration/quality/asset_trim.md`.
+5. Licence: the owner's note that Proletariat licensed the Spellbreak assets for Tidebreak is in `animations/SOURCE.md` (line ~548,
+   "Written grant: [where you keep it]" is still blank: the owner has to fill in where the grant is kept).
+Backup zip + the rejected-work git bundle live on the external drive "The one" under `/Volumes/The one/Frontier_offload/`
+(sha256 recorded in `source_backup/MOVED.txt`).
+

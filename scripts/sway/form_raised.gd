@@ -144,7 +144,16 @@ static func raise(parent: Node, p_kind: String, xf: Transform3D, d: Dictionary, 
 	OwnFade.attach(r, [r.mesh_instance], AABB(Vector3(-r.size.x * 0.5, 0.0, -r.size.z * 0.5), r.size), &"fade")
 	parent.add_child(r)
 	r.global_transform = r._at(0.0)
-	if p_kind == "wall" and not r.drowned and r.matter != "wood" and r.is_inside_tree():
+	# (the Spellbreak effects, SbFx: visual only; keyed by the cast raising it, BendR3.cur, kept for its crumble)
+	var sbk := SbFx.key_of(BendR3.cur)
+	r.set_meta(&"sbfx_key", sbk)
+	var sbr := false
+	if not r.drowned and r.is_inside_tree() and sbk != "":
+		var ctx := {"at": r.base.origin, "dir": r.base.basis.z, "size": r.size, "node": r}
+		sbr = SbFx.fire(null, sbk, "rise", ctx)
+		r.set_meta(&"sbfx_rise", sbr)
+		SbFx.start(r, "stand", null, sbk, "stand", ctx)
+	if p_kind == "wall" and not r.drowned and r.matter != "wood" and r.is_inside_tree() and not sbr:
 		BendLooks.rise(r.base.origin, r.size, r.base.basis.z.normalized(), "ice" if r.matter == "snow" else "earth")
 	if r.drowned:
 		r.visible = false
@@ -277,7 +286,9 @@ func apply_hit(damage: float, point: Vector3, dir: Vector3, _source: Node = null
 		return
 	hits += 1
 	if is_inside_tree():
-		_chips(get_tree().current_scene, point, -dir.normalized() if dir.length_squared() > 1e-6 else Vector3.UP, 10)
+		var nrm := -dir.normalized() if dir.length_squared() > 1e-6 else Vector3.UP
+		if not SbFx.fire(null, String(get_meta(&"sbfx_key", "")), "hit", {"at": point, "normal": nrm, "dir": nrm, "node": self}):
+			_chips(get_tree().current_scene, point, nrm, 10)
 	if hits >= hits_max:
 		crumble("shot")
 
@@ -319,7 +330,12 @@ func crumble(why: String) -> void:
 		var scn := get_tree().current_scene
 		var at := global_transform.origin
 		var wide := maxf(size.x, size.z) * 0.5
-		match crumble_style:
+		# (the Spellbreak effects, SbFx: its stand stopped; shot, melted or the rest, replacing the dust and the shatter)
+		var sbk := String(get_meta(&"sbfx_key", ""))
+		SbFx.stop(self, "stand")
+		var sbr := SbFx.fire(null, sbk, {"shot": "shatter", "melted": "melt"}.get(why, "crumble"),
+				{"at": at, "dir": global_basis.z, "size": size, "node": self})
+		match ("" if sbr and crumble_style != "rubble" else crumble_style):
 			"snow":
 				GatherFx._dust(scn, at + Vector3.UP * 0.3, Vector3.UP, 30, Vector2(0.3, 0.8), 1.8, Color(0.9, 0.93, 0.97, 0.45))
 			"slump":
@@ -331,15 +347,18 @@ func crumble(why: String) -> void:
 				for i in 4:
 					GatherFx.wood_chips(scn, global_transform * Vector3((float(i) - 1.5) * size.x * 0.25, size.y * 0.55, 0.0), global_basis.z, 14)
 			"rubble":
-				GatherFx.fall_dust(scn, at, wide)
-				for i in 3:
-					GatherFx.stone_chips(scn, global_transform * Vector3((float(i) - 1.0) * size.x * 0.3, size.y * 0.6, 0.0), Vector3.UP, 10)
+				if not sbr:
+					GatherFx.fall_dust(scn, at, wide)
+					for i in 3:
+						GatherFx.stone_chips(scn, global_transform * Vector3((float(i) - 1.0) * size.x * 0.3, size.y * 0.6, 0.0), Vector3.UP, 10)
 				Rubble.spill(scn, self)
+			"":
+				pass
 			_:
 				GatherFx.fall_dust(scn, at, wide)
 				for i in 3:
 					GatherFx.stone_chips(scn, global_transform * Vector3((float(i) - 1.0) * size.x * 0.3, size.y * 0.6, 0.0), Vector3.UP, 8)
-		if why == "shot" and kind == "wall" and matter != "wood":
+		if why == "shot" and kind == "wall" and matter != "wood" and not sbr:
 			BendLooks.shatter(at, size, global_basis.z.normalized(), "ice" if matter == "snow" else "earth")
 		FormEffects.sfx("splinter" if matter == "wood" else "crumble", at, -2.0, 0.8)
 	crumbled.emit(self, why)

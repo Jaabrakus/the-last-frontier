@@ -1,0 +1,36 @@
+{
+  "format": "tidebreak-loadout-apply",
+  "version": 1,
+  "_doc": [
+    "What a worn Advancement loadout changes in a real match (BendLoadout; docs/tidebreak/loadouts_live.md). Read at every match start (RingMode.restart): the loadout worn for the player's element (AdvancementStore, read only) puts its live nodes' numbers and its live fighting style on the player's body; a bot never wears one. Classic (nothing worn) changes nothing.",
+    "enabled: the master switch. Off, no node number and no style applies anywhere. On is safe by default: with nothing worn every number is today's.",
+    "nodes: one switch per node id (absent counts as on). A node whose soak left its gate (tools/ring/loadout_soak.gd: 0.40-0.60 of the games at 30, 0.45-0.55 at 60) is switched off here and noted in the doc; its numbers then read as the move's own.",
+    "live: the node ids that may apply (the eight number-only nodes of the plan's B2, less those refused): air.ball.dense, air.gust.full_sail, air.slice.keen, earth.burrow.lie_low, fire.step.quick, earth.wall.thick, water.wall.thick_ice. Each node's numbers are read from data/sway/skill_tree.json changes[]; a node applies only when every change in it can be applied per wearer and the data still holds its `from`.",
+    "water.skate.wet_trail is NOT live: its puddles.count and puddles.life_s are in data/sway/moves.json but nothing in the game makes the Skate's puddles, so only its slower travel (-10%) could apply, a pure nerf. It stays out until the Skate leaves puddles. Earth's Steady Point is not in the set either (it needs new fields).",
+    "earth.wall.thick and water.wall.thick_ice are switched OFF (2026-10-10 soak, tools/ring/loadout_soak.gd): the numbers apply and are tested, but the soak's bots never raise an Earth Wall or an Ice Wall (0 casts in 60 mirror games each; they only answer a held stone with one), so the fairness gate cannot see these two nodes. Their rates (Thick Wall 17/30 = 0.567, Thick Ice 23/60 = 0.383) are the mirror's own noise: with nothing worn the same seeds gave 18/30 for earth and, for water, exactly the games the node run played (9/30). Unverified is not live; flip each to true here once a duel or a bot that walls has measured it.",
+    "styles_live: the fighting styles whose clips play (state animated in data/bending/fighting_styles.json and poses in data/bending/style_poses.json). Boxing only; Capoeira is parked and never plays. A style is animation only: its picks are timed as the element's own (BendPoses._timed_as).",
+    "classic_style: false means a class picked with Classic worn (AdvancementStore.set_style, worn index -1) is not played: Classic plays exactly as before. true would play the picked class's clips (animation only) with no loadout worn."
+  ],
+  "enabled": true,
+  "classic_style": false,
+  "nodes": {
+    "air.ball.dense": true,
+    "air.gust.full_sail": true,
+    "air.slice.keen": true,
+    "earth.burrow.lie_low": true,
+    "water.skate.wet_trail": false,
+    "fire.step.quick": true,
+    "earth.wall.thick": false,
+    "water.wall.thick_ice": false
+  },
+  "live": [
+    "air.ball.dense",
+    "air.gust.full_sail",
+    "air.slice.keen",
+    "earth.burrow.lie_low",
+    "fire.step.quick",
+    "earth.wall.thick",
+    "water.wall.thick_ice"
+  ],
+  "styles_live": ["boxing"]
+}

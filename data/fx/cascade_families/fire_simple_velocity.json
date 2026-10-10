@@ -1,0 +1,170 @@
+{
+ "roots": [
+  "/Game/VFX/Materials/M_f_FireSimple_Velocity"
+ ],
+ "shader": "fam_fire_simple",
+ "template": true,
+ "u": {
+  "rgb_tex": [
+   "t",
+   [
+    "RGB Texture"
+   ]
+  ],
+  "mask_tex": [
+   "t",
+   [
+    "MaskTextureUses Packed AlphaChannel"
+   ]
+  ],
+  "noise1_tex": [
+   "t",
+   [
+    "Noise Texture 1"
+   ]
+  ],
+  "noise2_tex": [
+   "t",
+   [
+    "Noise Texture 2",
+    "Noise Texture 1"
+   ]
+  ],
+  "erosion_tex": [
+   "t",
+   [
+    "Erosion Texture"
+   ]
+  ],
+  "core_color_1": [
+   "v4",
+   "Core Color 1"
+  ],
+  "core_color_2": [
+   "v4",
+   "Core Color 2"
+  ],
+  "edge_color_1": [
+   "v4",
+   "Edge Color 1"
+  ],
+  "edge_color_2": [
+   "v4",
+   "Edge Color 2"
+  ],
+  "color_fade": [
+   "s",
+   "Color Fade",
+   1.0,
+   0.0
+  ],
+  "emissive_intensity": [
+   "s",
+   "Emissive Intensity",
+   1.0,
+   1.0
+  ],
+  "fps": [
+   "s",
+   "FPS",
+   1.0,
+   60.0
+  ],
+  "speed": [
+   "s",
+   "speed",
+   1.0,
+   1.0
+  ],
+  "distortion_scale": [
+   "s",
+   "Distortion Scale",
+   1.0,
+   0.5
+  ],
+  "distortion_factor": [
+   "s",
+   "Distortion factor",
+   1.0,
+   2.3
+  ],
+  "uv_offset": [
+   "s",
+   "UV Offset",
+   1.0,
+   0.0
+  ],
+  "turn_off_random_position": [
+   "sw",
+   "TurnOffRandomPosition",
+   false
+  ],
+  "has_texture_rotation": [
+   "sw",
+   "Has TextureRotation",
+   true
+  ],
+  "texture_rotation": [
+   "s",
+   "TextureRotation",
+   1.0,
+   0.0
+  ],
+  "alpha_erosion": [
+   "sw",
+   "Alpha Erosion",
+   false
+  ],
+  "toon_erosion": [
+   "sw",
+   "Toon Erosion",
+   false
+  ],
+  "is_particle": [
+   "sw",
+   "IS PARTICLE",
+   false
+  ],
+  "panner": [
+   "v2",
+   "U Panner",
+   "V Panner"
+  ],
+  "has_rotator_speed": [
+   "sw",
+   "Has Rotator Speed",
+   true
+  ],
+  "rotator_speed": [
+   "s",
+   "Rotator Speed",
+   1.0,
+   0.0
+  ],
+  "erosion_scale": [
+   "s",
+   "Erosion Scale",
+   1.0,
+   1.0
+  ],
+  "debug_alpha": [
+   "s",
+   "Debug Alpha",
+   1.0,
+   1.0
+  ],
+  "edge_softness": [
+   "s",
+   "Edge Softness",
+   1.0,
+   1.0
+  ],
+  "depth_fade_m": [
+   "s",
+   "Depth Fade Dist",
+   0.01,
+   50.0
+  ]
+ },
+ "notes": "Velocity variant: same parameters and identical uniform-expression sets per permutation as M_f_FireSimple, minus the 'Mask Particle Pos' component mask (every instance turns the random position off). Shares the fam_fire_simple template. Spellbreak (Proletariat) M_f_FireSimple family; owner-reported reuse licence in animations/SOURCE.md. EVIDENCE: parameter shells, static switches, function descriptions (CustomRotator, MF_PannerRotator, Luos_alphaErosion / MF_TransluscentToonErosion 'Erodes alpha mask instead of fade out'), and the uniform-expression sets parsed from the cooked inline shader maps of both roots and every static-switch instance (6 permutations): emissive uses rotator(TextureRotation) only with Has TextureRotation, speed, Distortion Scale, FPS, folded Distortion Scale*speed, UV Offset, Distortion factor, Noise 1/2 -> Mask, RGB -> Color Fade, Core1.a, Edge2.a, Edge1.a, Emissive Intensity; opacity (Alpha Erosion only) uses U/V Panner (+Rotator Speed with Has Rotator Speed), Erosion Texture, Erosion Scale, Debug Alpha, clamp(Edge Softness,0.01,1) (Toon Erosion only), max(Depth Fade Dist,0) (translucent/additive only). Textures: R core / G edge bands, B = background (Campfire5, FBCHeadMask), mask A = soft envelope. ALL VALUES from the instances. AUTHORED: noise layout and 0.1 distortion amplitude, erosion gradient = maskA*(0.5+0.5*noise), Debug Alpha as fade<->erode blend with dyn param 0 'Erosion' when IS PARTICLE, Color Fade driven by particle alpha, colour alphas as band weights, per-particle random in place of particle position, Erosion Scale as tiling, 0.2 distortion amplitude weighted to the texture top. DepthFade only for translucent/additive (the template reads its own RENDER_MODE list to skip masked/opaque, matching the source permutations; reading the depth texture from alpha-scissor materials made hair meshes vanish). NOTE: 'v4' colours need FxMaterials to unwrap {'ParameterValue': [...]} vectors."
+}

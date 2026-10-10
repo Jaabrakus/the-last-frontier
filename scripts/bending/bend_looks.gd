@@ -12,7 +12,10 @@ extends RefCounted
 ##   air        swirl bands spinning round a ball (a crescent for a slice), two speed lines corkscrewing behind; on a hit
 ##              crescents spin out, speed lines, puffs, dust off the ground
 ##   stone      the rock in cel facets, dust and grit behind it; chunks, dust puffs, a dust ring and cracks in the ground
-##   lightning  forks with a white core in a blue sheath that flicker, sparks and a flash where it strikes
+##   lightning  forks with a white core in a blue sheath that flicker, sparks and a flash where it strikes; with SB_BOLT the
+##              same forks in Spellbreak's lightning shading (a white-hot core, a lavender sheath, a blue-violet fringe that
+##              crackles and erodes), short forks crackling off the hands at the charge and the release and at the strike,
+##              the sparks and stars round it in the same violet (ToonFx spark_sb, star_sb)
 ## Cheap: ToonFxPool reuses every emitter, shape and trail (caps per kind), materials and meshes are shared; no node is
 ## made per hit once warm (a bolt's body is made with the bolt). Nothing is drawn headless.
 ## The sounds are the ring's own (BendSounds: synthesized for each element, tools/sfx/bend/): sound() hands them on.
@@ -938,23 +941,187 @@ static func shatter(at: Vector3, size: Vector3, way: Vector3, matter := "ice") -
 
 
 ## Lightning from `a` to `b`: forks with a white core in a blue sheath that flicker and go, a flash and sparks where it
-## strikes, a smaller flash at the hand, a flash of light.
+## strikes, a smaller flash at the hand, a flash of light. With SB_BOLT the same forks are shaded the way Spellbreak's
+## lightning is (sb_strike).
 static func lightning(a: Vector3, b: Vector3) -> void:
 	if not live():
 		return
 	var pool := _pool()
 	if pool == null:
 		return
-	pool.lightning(a, b, 0.26, 3)
-	pool.play("flash", Transform3D(Basis.IDENTITY, b), 0.2, 0.6, 1.8, ELEC, Color(0.85, 0.92, 1.0))
-	pool.play("flash", Transform3D(Basis.IDENTITY, a), 0.12, 0.3, 0.8, ELEC, Color(0.85, 0.92, 1.0))
+	var c1 := SB_VIOLET if sb_bolt else ELEC
+	var c2 := SB_LAVENDER if sb_bolt else Color(0.85, 0.92, 1.0)
 	var back := (a - b).normalized()
-	pool.shoot("spark_elec", b, 26, back, 75.0, Vector2(3.0, 9.0), Vector2(0.025, 0.045), 0.35, Vector3(0, -8.0, 0), 2.0)
-	pool.light((a + b) * 0.5, Color(0.65, 0.78, 1.0), 4.0, 0.2, a.distance_to(b) * 0.6 + 4.0)
+	if sb_bolt:
+		sb_strike(pool, a, b, 0.26, 3)
+		_sb_crackle(pool, b, back, SB_HIT_FORKS, 0.26)
+	else:
+		pool.lightning(a, b, 0.26, 3)
+	pool.play("flash", Transform3D(Basis.IDENTITY, b), 0.2, 0.6, 1.8, c1, c2)
+	pool.play("flash", Transform3D(Basis.IDENTITY, a), 0.12, 0.3, 0.8, c1, c2)
+	pool.shoot("spark_sb" if sb_bolt else "spark_elec", b, 26, back, 75.0, Vector2(3.0, 9.0), Vector2(0.025, 0.045), 0.35,
+			Vector3(0, -8.0, 0), 2.0)
+	pool.light((a + b) * 0.5, SB_LIGHT if sb_bolt else Color(0.65, 0.78, 1.0), 4.0, 0.2, a.distance_to(b) * 0.6 + 4.0)
 	var g := _ground(pool, b, -back)
 	if not g.is_empty():
 		pool.mark("scorch", g.pos, g.normal, 1.0, 4.0)
-		pool.play("ring", _flat(g), 0.25, 0.3, 1.4, ELEC, Color(0.85, 0.92, 1.0))
+		pool.play("ring", _flat(g), 0.25, 0.3, 1.4, c1, c2)
+
+
+## The bolt's look (the owner, 2026-10-09: "for lightning i like our lightning but maybe make it look like spellbreaks or
+## use its shaders"). true: our own forked bolt (the same ToonFx.lightning_strips forks, widths, flicker and timing as
+## ToonFxPool.lightning) drawn with Spellbreak's lightning shading (shaders/cascade/lightning_bolt.gdshader, on Spellbreak's
+## T_f_GenericLighting_F plateaus: a white-hot core in a lavender sheath with a blue-violet fringe, crackling at the
+## material's 15 fps and eroding from its fringe as it dies). false: the old cel bolt (ToonFxPool.lightning, toon_bolt), at
+## once. sb_bolt is the switch in force (a test or a capture may flip it). Visual only: where it strikes, when, and what it
+## hits are BendEffects' and unchanged.
+const SB_BOLT := true
+static var sb_bolt := SB_BOLT
+## The flashes, ring and light round a Spellbreak-shaded bolt in its colours (the shader's fringe and sheath).
+const SB_VIOLET := Color(0.46, 0.36, 1.0)
+const SB_LAVENDER := Color(0.88, 0.85, 1.0)
+const SB_LIGHT := Color(0.8, 0.78, 1.0)
+## The short forks of the hand's crackle at the release (Spellbreak's muzzle bolts: GauntletLightningMuzzle_FX's "Lightning
+## Mulit Center") and of the strike's end (Lightning_Shocked01_FxP's "Torso Forks"); their reach (m) and width share.
+const SB_HAND_FORKS := 3
+const SB_HIT_FORKS := 2
+const SB_FORK_M := Vector2(0.35, 0.7)
+const SB_FORK_WIDTH := 0.45
+## The Spellbreak-shaded bolts one scene keeps (SbBolt, under its ToonFxPool): a strike's and the hand's crackle; past
+## this the oldest is taken again (never one node per strike).
+const SB_BOLTS := 10
+const SB_BOLT_SHADER := "res://shaders/cascade/lightning_bolt.gdshader"
+## Spellbreak's textures (assets/fx/spellbreak/SOURCE.md): "Lightning Bolt" and "Noise 1/2" of MI_f_lightningBranchingBolt.
+const SB_BOLT_TEX := "res://assets/fx/spellbreak/assets/VFX/Textures/T_f_GenericLighting_F.png"
+const SB_BOLT_NOISE := "res://assets/fx/spellbreak/assets/VFX/Textures/T_f_SmokeHeight_Greyscale_Uncompressed.png"
+static var _sb_mat: ShaderMaterial
+static var _sb_bolts: Array = []
+static var _sb_i := 0
+
+
+## The Spellbreak-shaded bolt's material (shared; made once; the scene's effect brightness and near fade as ToonFx's own).
+static func sb_bolt_material() -> ShaderMaterial:
+	if _sb_mat == null:
+		_sb_mat = ShaderMaterial.new()
+		_sb_mat.shader = load(SB_BOLT_SHADER)
+		_sb_mat.set_shader_parameter(&"bolt_tex", load(SB_BOLT_TEX))
+		_sb_mat.set_shader_parameter(&"noise_tex", load(SB_BOLT_NOISE))
+		var nr := ToonFx.looks("near")
+		_sb_mat.set_shader_parameter(&"near_m", float(nr.get("near_m", 2.5)))
+		_sb_mat.set_shader_parameter(&"far_m", float(nr.get("far_m", 4.0)))
+		_sb_mat.set_shader_parameter(&"near_alpha", float(nr.get("near_alpha", 0.25)))
+	_sb_mat.set_shader_parameter(&"fx_gain", ToonFx.gain)
+	return _sb_mat
+
+
+## Our forked bolt from `a` to `b` in Spellbreak's shading (SB_BOLT): rebuilt `flickers` times over `life` s and eroded over
+## its last 45 %, as the pool's own bolt. A bolt node of the scene's few (SbBolt) is reused; the one used, or null.
+static func sb_strike(pool: ToonFxPool, a: Vector3, b: Vector3, life := 0.26, flickers := 3, width_k := 1.0) -> SbBolt:
+	if pool == null or not is_instance_valid(pool):
+		return null
+	for i in range(_sb_bolts.size() - 1, -1, -1):
+		var o: Variant = _sb_bolts[i]
+		if not is_instance_valid(o) or (o as Node).get_parent() != pool:
+			_sb_bolts.remove_at(i)
+	var bolt: SbBolt = null
+	for o: SbBolt in _sb_bolts:
+		if not o.on:
+			bolt = o
+			break
+	if bolt == null:
+		if _sb_bolts.size() < SB_BOLTS:
+			bolt = SbBolt.new()
+			bolt.name = "SbBolt"
+			pool.add_child(bolt)
+			_sb_bolts.append(bolt)
+		else:
+			_sb_i = (_sb_i + 1) % _sb_bolts.size()
+			bolt = _sb_bolts[_sb_i]
+	bolt.strike(a, b, life, flickers, width_k)
+	return bolt
+
+
+## A crackle of `n` short thin forks off `at`, mostly along `way` (turned up to `spread` off it), `reach` m long (min, max),
+## `width` of a strike's width, living `life` s and rebuilt `flickers` times.
+static func _sb_crackle(pool: ToonFxPool, at: Vector3, way: Vector3, n: int, life: float, reach := SB_FORK_M,
+		width := SB_FORK_WIDTH, spread := 0.85, flickers := 2) -> void:
+	if pool == null:
+		return
+	var w := way.normalized() if way.length_squared() > 1e-6 else Vector3.UP
+	var r := ToonFx.vis_rng
+	for i in n:
+		var off := Vector3(r.randf_range(-1.0, 1.0), r.randf_range(-0.5, 0.9), r.randf_range(-1.0, 1.0))
+		var d := (w + off * spread).normalized()
+		sb_strike(pool, at, at + d * r.randf_range(reach.x, reach.y), life, flickers, width)
+
+
+## The lightning's share of the level's warm-up (warm_up): the bolt in force drawn once, tiny, so its shader is compiled
+## behind the loading screen (both looks when the switch is on: the old one stays a frame away).
+static func _warm_lightning(pool: ToonFxPool, at: Vector3) -> void:
+	pool.lightning(at, at + Vector3.UP * 0.05, 0.15, 1)
+	if sb_bolt:
+		sb_strike(pool, at, at + Vector3.UP * 0.05, 0.15, 1)
+		for k in ["spark_sb", "star_sb"]:                # (its sparks' own particle programs: their colour ramps)
+			pool.shoot(k, at, 1, Vector3.UP, 10.0, Vector2(0.01, 0.01), Vector2(0.001, 0.001), 0.1)
+
+
+## One Spellbreak-shaded bolt (sb_strike): our forks (ToonFx.lightning_strips) under the shared sb_bolt_material, stepped
+## on the pool's timing (ToonFxPool._bolt_step): rebuilt every 22 % of its life while flickers are left, fade 1 -> 0 over
+## the last 45 % (the shader erodes it), then hidden and its strips cleared, free for the next.
+class SbBolt:
+	extends MeshInstance3D
+
+	var a := Vector3.ZERO
+	var b := Vector3.ZERO
+	var t := 0.0
+	var life := 0.26
+	var next := 0.0
+	var left := 0
+	var on := false
+	## How many times its forks were built (the tests).
+	var builds := 0
+
+	func _init() -> void:
+		mesh = ImmediateMesh.new()
+		cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		extra_cull_margin = 4.0
+		visible = false
+		set_process(false)
+
+	func strike(from: Vector3, to: Vector3, s: float, flickers: int, width_k := 1.0) -> void:
+		material_override = BendLooks.sb_bolt_material()
+		a = from
+		b = to
+		t = 0.0
+		life = maxf(s, 0.01)
+		next = life * 0.22
+		left = flickers - 1
+		on = true
+		visible = true
+		set_instance_shader_parameter(&"fade", 1.0)
+		set_instance_shader_parameter(&"len_m", maxf(a.distance_to(b), 0.05))
+		set_instance_shader_parameter(&"width_k", width_k)
+		_build()
+		set_process(true)
+
+	func _build() -> void:
+		ToonFx.lightning_strips(mesh as ImmediateMesh, a, b)
+		set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf())
+		builds += 1
+
+	func _process(dt: float) -> void:
+		t += dt
+		if t >= life:
+			on = false
+			visible = false
+			(mesh as ImmediateMesh).clear_surfaces()
+			set_process(false)
+			return
+		if left > 0 and t >= next:
+			left -= 1
+			next += life * 0.22
+			_build()
+		set_instance_shader_parameter(&"fade", 1.0 - clampf((t - life * 0.55) / (life * 0.45), 0.0, 1.0))
 
 
 # ---------------------------------------------------------------- round 2: the tells on the caster (or guarder) only
@@ -980,6 +1147,9 @@ static func guard_result(body: Node3D, el: String, result: String) -> void:
 		BendSounds.play(StringName(snd[1]), at, -2.0)
 	if not live():
 		return
+	var g := Bending.guard(el)
+	if SbFx.fire(body, "%s/%s" % [String(g.get("id", "")), String(g.get("mode", ""))], result, {"at": at, "el": el}):
+		return                                   # (the guard's Spellbreak result played instead: SbFx)
 	var pool := _pool()
 	if pool == null:
 		return
@@ -1126,20 +1296,27 @@ static func spout(at: Vector3, r: float, rise_s: float) -> void:
 
 ## Lightning's flash on the caster's hand at `at` (round 2's flash_s: its tell before the strike): a white-blue flash, a
 ## spray of sparks off the hand, a flash of light; the charge on the hands (charge) ends with it.
-static func lightning_flash(body: Node3D, at: Vector3) -> void:
+static func lightning_flash(body: Node3D, at: Vector3, look := true) -> void:
 	for c in body.get_children():
 		if c is Charge:
 			(c as Charge).end()
-	if not live():
+	if not live() or not look:
 		return
 	var pool := _pool()
 	if pool == null:
 		return
-	pool.play("flash", Transform3D(Basis.IDENTITY, at), 0.25, 0.4, 1.8, ELEC, Color(0.92, 0.96, 1.0))
-	pool.play("ring", Transform3D(Basis.IDENTITY, at), 0.25, 0.2, 1.1, Color(0.9, 0.95, 1.0), ELEC)
-	pool.shoot("star", at, 6, Vector3.UP, 180.0, Vector2(0.5, 1.5), Vector2(0.25, 0.4), 0.25, Vector3.ZERO, 2.0)
-	pool.shoot("spark_elec", at, 28, Vector3.UP, 180.0, Vector2(2.0, 6.0), Vector2(0.025, 0.045), 0.3, Vector3(0, -6.0, 0), 2.0)
-	pool.light(at, Color(0.7, 0.82, 1.0), 4.5, 0.25, 6.0)
+	var c1 := SB_VIOLET if sb_bolt else ELEC
+	var c2 := SB_LAVENDER if sb_bolt else Color(0.92, 0.96, 1.0)
+	if sb_bolt:
+		var fwd := -body.global_basis.z
+		_sb_crackle(pool, at, Vector3(fwd.x, 0.15, fwd.z), SB_HAND_FORKS, 0.25)
+	pool.play("flash", Transform3D(Basis.IDENTITY, at), 0.25, 0.4, 1.8, c1, c2)
+	pool.play("ring", Transform3D(Basis.IDENTITY, at), 0.25, 0.2, 1.1, SB_LAVENDER if sb_bolt else Color(0.9, 0.95, 1.0), c1)
+	pool.shoot("star_sb" if sb_bolt else "star", at, 6, Vector3.UP, 180.0, Vector2(0.5, 1.5), Vector2(0.25, 0.4), 0.25,
+			Vector3.ZERO, 2.0)
+	pool.shoot("spark_sb" if sb_bolt else "spark_elec", at, 28, Vector3.UP, 180.0, Vector2(2.0, 6.0), Vector2(0.025, 0.045), 0.3,
+			Vector3(0, -6.0, 0), 2.0)
+	pool.light(at, SB_LIGHT if sb_bolt else Color(0.7, 0.82, 1.0), 4.5, 0.25, 6.0)
 
 
 ## Lightning's charge on `body`'s hands while its lock runs (SwayCaster; a bot's mind may call it too): blue sparks crackling
@@ -1161,6 +1338,14 @@ static func grow_click(sway: Node) -> void:
 	BendSounds.play(&"lock_grow", at, 0.0)
 	if not live():
 		return
+	var body: Variant = sway.get(&"player") if sway != null and is_instance_valid(sway) else null
+	if body is Node3D and sway.has_method(&"mode_of"):
+		# (the Spellbreak grow on the hands, held under the caster until its lock ends: SwayCaster._end_charge; SbFx)
+		var mv := String(sway.get(&"move"))
+		var gk := "%s/%s.grown" % [mv, String(sway.call(&"mode_of", mv))]
+		SbFx.start(sway, "grow", body, gk, "grow", {})
+		if SbFx.fire(body, gk, "grow_click", {"at": at}):
+			return
 	var pool := _pool()
 	if pool != null:
 		pool.play("ring", Transform3D(Basis.IDENTITY, at), 0.28, 0.25, 1.1, Color(1.0, 0.95, 0.7), Color(1.0, 1.0, 1.0))
@@ -1188,6 +1373,10 @@ static func carried(body: Node3D) -> void:
 	BendSounds.play(&"carried_whistle", body.global_position + Vector3.UP, -3.0)
 	if not live():
 		return
+	var aura := SbFx.start(body, "carried", body, "passive/carried_wind", "charged", {"node": body, "el": "air",
+			"life": float(Bending.passive("air").get("after_s", 0.8))})
+	if SbFx.fire(body, "passive/carried_wind", "charge_pop", {"el": "air"}) or aura:
+		return                                   # (the Spellbreak charge played instead: SbFx)
 	var pool := _pool()
 	if pool == null:
 		return
@@ -1201,6 +1390,8 @@ static func carried(body: Node3D) -> void:
 static func rooted_dust(body: Node3D) -> void:
 	if not live():
 		return
+	if SbFx.sustain(body, "rooted", body, "rooted", "idle", {"el": "earth"}, 0.9, "take_hold"):
+		return                                   # (Rooted's Spellbreak look, kept while it helps: SbFx)
 	var pool := _pool()
 	if pool == null:
 		return
@@ -1314,6 +1505,9 @@ class Charge:
 	var _hum: AudioStreamPlayer3D
 	var _glow: MeshInstance3D
 	var _t := 0.0
+	## SB_BOLT: crackling arcs of the Spellbreak-shaded bolt at the hands instead of the spark shards (their next one in s).
+	var _arcs := false
+	var _arc_t := 0.0
 
 	func _ready() -> void:
 		top_level = true
@@ -1325,13 +1519,19 @@ class Charge:
 			started = true
 		if not BendLooks.live():
 			return
-		_sparks = BendLooks.emitter(self, "lightning", Vector3.ONE * 0.18, 18, 0.25, 0.6, 0.04)
+		var mv := String(sway.get(&"move")) if sway != null and is_instance_valid(sway) and "move" in sway else ""
+		var ck := "%s/%s" % [mv, String(sway.call(&"mode_of", mv))] if mv != "" and sway.has_method(&"mode_of") else "fire_arc/lightning"
+		if SbFx.start(self, "charge", get_parent(), ck, "charge", {"node": self}):
+			return                               # (the Spellbreak charge follows this node: SbFx; the hum stays)
+		_arcs = BendLooks.sb_bolt
+		if not _arcs:
+			_sparks = BendLooks.emitter(self, "lightning", Vector3.ONE * 0.18, 18, 0.25, 0.6, 0.04)
 		_glow = MeshInstance3D.new()
 		_glow.mesh = ToonFx.quad()
 		_glow.material_override = ToonFx.mat("orb")
 		_glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_glow.set_instance_shader_parameter(&"tint", ELEC)
-		_glow.set_instance_shader_parameter(&"tint2", Color(0.85, 0.92, 1.0))
+		_glow.set_instance_shader_parameter(&"tint", SB_VIOLET if _arcs else ELEC)
+		_glow.set_instance_shader_parameter(&"tint2", SB_LAVENDER if _arcs else Color(0.85, 0.92, 1.0))
 		_glow.scale = Vector3.ONE * 0.05
 		add_child(_glow)
 
@@ -1354,7 +1554,17 @@ class Charge:
 		if _sparks != null:
 			_sparks.amount_ratio = lerpf(0.2, 1.0, k)
 		if _glow != null:
-			_glow.scale = Vector3.ONE * lerpf(0.08, 0.4, k) * (1.0 + 0.15 * sin(_t * 40.0))
+			_glow.scale = Vector3.ONE * lerpf(0.08, 0.3 if _arcs else 0.4, k) * (1.0 + 0.15 * sin(_t * 40.0))
+		if _arcs:
+			# (an arc off the hands, out in front of him, every 0.16 s at the lock's start down to every 0.06 s at the click,
+			# longer as it fills)
+			_arc_t -= dt
+			if _arc_t <= 0.0:
+				_arc_t = lerpf(0.16, 0.06, k)
+				var b := get_parent() as Node3D
+				var way := (-b.global_basis.z + Vector3.UP * 0.4) if b != null else Vector3.UP
+				BendLooks._sb_crackle(BendLooks._pool(), global_position, way, 1, 0.12,
+						Vector2(0.3, 0.5) + Vector2.ONE * 0.25 * k, SB_FORK_WIDTH, 1.2, 1)
 
 	## Whether its hum plays (the tests).
 	func humming() -> bool:
@@ -1453,14 +1663,22 @@ static func warm_up(cam: Camera3D, progress := Callable()) -> void:
 		for sh in ["flash", "ring", "swirl"]:
 			pool.play(sh, xf, 0.2, 0.01, 0.01)
 		pool.play("crown", xf, 0.2, 0.01, 0.01, Color.WHITE, Color.WHITE, ToonFx.band_mesh(1.0, 1.5, 1.0))
-		pool.lightning(at, at + Vector3.UP * 0.05, 0.15, 1))
+		_warm_lightning(pool, at))
+	# (the Spellbreak effects listed in data/bending/sb_fx: SbFx.prewarm builds each and draws it once, its share of the
+	# progress after the cel groups')
+	var sb_n := SbFx.ids().size()
+	var toon_k := 1.0 if sb_n == 0 else 0.55
 	for i in groups.size():
 		if not is_instance_valid(holder) or not holder.is_inside_tree():
 			return                               # (the level left meanwhile)
 		groups[i].call()
 		if progress.is_valid():
-			progress.call(float(i + 1) / float(groups.size() + 1))
+			progress.call(toon_k * float(i + 1) / float(groups.size() + 1))
 		await tree.process_frame
+	if sb_n > 0:
+		await SbFx.prewarm(cam, func(f: float) -> void:
+			if progress.is_valid():
+				progress.call(toon_k + (1.0 - toon_k) * f * 0.95))
 	for i in WARM_FRAMES:
 		await tree.process_frame
 	if progress.is_valid():

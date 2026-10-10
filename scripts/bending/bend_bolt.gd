@@ -176,11 +176,21 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 		b.add_child(b.spin)
 		b._turn(0.0)
 		holder = b.spin
+	# (the Spellbreak effects, SbFx: visual only; when the move's flight replaces today's body and trail they are not made)
+	var sbk := SbFx.key_of(b.info)
+	var sbo := {"node": b, "dir": b.velocity, "info": b.info, "width": b.width_m}
+	var sb := SbFx.fire(by, sbk, "wave" if b.floor_wave or String(spec.get("do", "")) == "wind_wave" else "flight", sbo)
+	SbFx.fire(by, sbk, "trail", sbo)
+	if b.steer_dps > 0.0:
+		SbFx.fire(by, "flowing", "curve", sbo.merged({"el": "water", "life": b.steer_s + 0.1}, true))
 	if b.floor_wave:
-		b._wave_look = BendLooks.floor_wave_body(b, FLOOR_W0, b.height_m)
-	else:
+		if not sb:
+			b._wave_look = BendLooks.floor_wave_body(b, FLOOR_W0, b.height_m)
+	elif not sb:
 		BendLooks.bolt_body(holder, b.kind, float(spec.get("look_r", b.radius)), b.long, b.shape)
 		b._trail = BendLooks.trail(b, b.kind, b.radius)
+	elif b.kind == "air":
+		BendLooks._air_dust(holder)              # (the dust line under a low air bolt stays: today's look)
 	# (round 4, READ: its voice in flight, an arena's only; let go at its end: BendSounds.flight)
 	BendSounds.flight(BendSounds.flight_kind(b), b)
 	return b
@@ -229,7 +239,8 @@ func begin_swing(by: Node3D, s: float, r: float, k: float) -> void:
 	_swing_a0 = atan2(off.x, off.z)
 	info = BendZone.return_info(info, by, global_position, k)
 	caster = by
-	BendLooks.burst(global_position, kind, 10)
+	if not SbFx.fire(by, "water_redirect/redirect", "swing", {"at": global_position, "dir": velocity, "el": "water"}):
+		BendLooks.burst(global_position, kind, 10)
 
 
 func _swing(dt: float) -> void:
@@ -499,9 +510,12 @@ func _exclude() -> Array[RID]:
 func _hit(col: Node, at: Vector3, n: Vector3) -> void:
 	var who := _taker(col)
 	var by := _by()
+	var sbk := SbFx.key_of(info)
+	var sbo := {"at": at, "normal": n, "dir": velocity, "info": info, "node": self}
 	if who is FormRaised:
 		wear(who as FormRaised, at)
-		BendLooks.burst(at, kind, 14, n, 70.0, 3.0)
+		if not SbFx.fire(by, sbk, "impact", sbo):
+			BendLooks.burst(at, kind, 14, n, 70.0, 3.0)
 		BendLooks.sound(kind, "hit", at, -4.0)
 		if kind == "stone" and weight != "light" and not floor_wave and is_inside_tree():
 			_drop_loose(at + n * (radius + 0.05))    # (a stone off a wall lies loose: earth's ammo)
@@ -520,7 +534,9 @@ func _hit(col: Node, at: Vector3, n: Vector3) -> void:
 		if slow_s > 0.0:
 			BendStatus.slow(who, slow_s)
 		struck.emit(who, damage)
-	BendLooks.burst(at, kind, 16, n, 80.0, 3.5)
+		SbFx.fire(by, sbk, "body_extra", sbo)
+	if not SbFx.fire(by, sbk, "impact", sbo):
+		BendLooks.burst(at, kind, 16, n, 80.0, 3.5)
 	BendLooks.sound(kind, "hit", at, -3.0)
 	end("hit" if who != null else "world")
 
@@ -596,7 +612,8 @@ static func meet_lift(a: BendBolt, l: GustLift) -> void:
 		return
 	var wa := int(WEIGHTS.get(a.weight, 1))
 	var wb := int(WEIGHTS.get(weight_of(l), 1))
-	BendLooks.burst(at, "stone", 20)
+	if not SbFx.fire(a._by(), "clash/stone", "clash", {"at": at, "el": "earth", "node": a}):
+		BendLooks.burst(at, "stone", 20)
 	if wa <= wb:
 		a.end("broken")
 	if wb <= wa:
@@ -623,7 +640,8 @@ static func meet(a: BendBolt, b: BendBolt) -> void:
 	if "stone" in ks:
 		if a.kind == "stone" and b.kind == "stone":
 			# (the bigger stone wins: light < medium < heavy; equal ones both break)
-			BendLooks.burst(at, "stone", 24)
+			if not SbFx.fire(a._by(), "clash/stone", "clash", {"at": at, "el": "earth", "node": a}):
+				BendLooks.burst(at, "stone", 24)
 			var wa := int(WEIGHTS.get(a.weight, 1))
 			var wb := int(WEIGHTS.get(b.weight, 1))
 			if wa <= wb:

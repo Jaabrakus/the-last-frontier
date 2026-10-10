@@ -1,0 +1,112 @@
+{
+  "asset" : {
+    "generator" : "UE Viewer (umodel) build 1",
+    "version" : "2.0"
+  },
+  "scene" : 0,
+  "scenes" : [
+    {
+      "nodes" : [ 0 ]
+    }
+  ],
+  "nodes" : [
+    {
+      "name" : "PoisonCloud_Low_FxSM",
+      "mesh" : 0
+    }
+  ],
+  "materials" : [
+    {
+      "name" : "WorldGridMaterial",
+      "pbrMetallicRoughness" : {
+        "baseColorFactor" : [ 0.3, 0.3, 0.3, 1.0 ],
+        "metallicFactor" : 0.1,
+        "roughnessFactor" : 0.5
+      }
+    }
+  ],
+  "meshes" : [
+    {
+      "primitives" : [
+        {
+          "attributes" : {
+            "POSITION" : 1,
+            "NORMAL" : 2,
+            "TANGENT" : 3,
+            "TEXCOORD_0" : 4
+          },
+          "indices" : 0,
+          "material" : 0
+        }
+      ],
+      "name" : "PoisonCloud_Low_FxSM"
+    }
+  ],
+  "buffers" : [
+    {
+      "uri" : "PoisonCloud_Low_FxSM.bin",
+      "byteLength" : 61872
+    }
+  ],
+  "bufferViews" : [
+    {
+      "buffer" : 0,
+      "byteOffset" : 0,
+      "byteLength" : 12000
+    },
+    {
+      "buffer" : 0,
+      "byteOffset" : 12000,
+      "byteLength" : 12468
+    },
+    {
+      "buffer" : 0,
+      "byteOffset" : 24468,
+      "byteLength" : 12468
+    },
+    {
+      "buffer" : 0,
+      "byteOffset" : 36936,
+      "byteLength" : 16624
+    },
+    {
+      "buffer" : 0,
+      "byteOffset" : 53560,
+      "byteLength" : 8312
+    }
+  ],
+  "accessors" : [
+    {
+      "bufferView" : 0,
+      "componentType" : 5123,
+      "count" : 6000,
+      "type" : "SCALAR"
+    },
+    {
+      "bufferView" : 1,
+      "min" : [ -0.533785, -0.459867, -0.537726 ],
+      "max" : [ 0.451666, 0.51453, 0.516349 ],
+      "componentType" : 5126,
+      "count" : 1039,
+      "type" : "VEC3"
+    },
+    {
+      "bufferView" : 2,
+      "componentType" : 5126,
+      "count" : 1039,
+      "type" : "VEC3"
+    },
+    {
+      "bufferView" : 3,
+      "componentType" : 5126,
+      "count" : 1039,
+      "type" : "VEC4"
+    },
+    {
+      "bufferView" : 4,
+      "componentType" : 5126,
+      "count" : 1039,
+      "type" : "VEC2"
+    }
+  ]
+}

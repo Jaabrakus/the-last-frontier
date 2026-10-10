@@ -956,8 +956,7 @@ func guard_held() -> bool:
 ## Round 3: the held guard's loop clip for his element (poses.json guard_hold: own-bend-guard-hold-<element>, else its stand-in;
 ## "" none), for MOVE's SwayPose to loop while guard_up() and E is held.
 func guard_hold_clip() -> String:
-	var gh: Variant = BendPoses.data().get("guard_hold", {})
-	var p: Variant = (gh as Dictionary).get(quick_element(), "") if gh is Dictionary else ""
+	var p: Variant = BendPoses.guard_hold_pose(quick_element(), player)     # (a fighting style's own loop, else the element's)
 	var pose_d := BendPoses._as_pose(p)
 	while not pose_d.is_empty():
 		if BendPoses.usable(String(pose_d.clip)):
@@ -2361,14 +2360,26 @@ func _began() -> void:
 	_switch_hold_until = -INF
 	lock_began_at = BendStatus.now()
 	_end_charge()
-	if elem() and String(spec_of(move).get("do", "")) == "lightning":
+	_lock_looks(move)
+
+
+## A lock's looks on the hands, visual only (a new lock's, and a switched one's after _end_charge): lightning's charge
+## (BendLooks.charge), else the Spellbreak lock looks (SbFx: the move's charge on the hands, Ice's lance forming; Flowing's
+## water ready).
+func _lock_looks(m: String) -> void:
+	if elem() and String(spec_of(m).get("do", "")) == "lightning":
 		charge = BendLooks.charge(player, self)
+	elif elem():
+		SbFx.start(self, "charge", player, "%s/%s" % [m, mode_of(m)], "charge", {})
+	if elem() and BendPoses.element_of(player) == "water":
+		SbFx.start(self, "flowing", player, "flowing", "idle", {"el": "water"})
 
 
 func _end_charge() -> void:
 	if charge != null and is_instance_valid(charge):
 		charge.call(&"end")
 	charge = null
+	SbFx.stop(self)                           # (the lock's Spellbreak looks: charge, grow, Flowing's)
 
 
 ## A lock's time (s) of `m` on `t` at `dist` of its reach `r`: the move's (a stone's, a variation's own), stretched toward the
@@ -2380,6 +2391,8 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 	var mlk: Dictionary = d.get("mode_lock_s", {})
 	if mlk.has(mode_of(m)) and not holds_stone(m, t):
 		base = float(mlk[mode_of(m)])              # (a variation's own lock: the fireball's, lightning's)
+	if not holds_stone(m, t):
+		base = BendLoadout.lock(player, m, mode_of(m), base)      # (a worn loadout's own lock for this mode; Classic: base)
 	if r3() and airborne():
 		var air_times: Dictionary = d.get("mode_air_lock_s", {})
 		base = float(air_times.get(mode_of(m), base))
@@ -2577,8 +2590,7 @@ func _switch_lock(id: String, mode: String) -> bool:
 	grown = false
 	_sputtered = false
 	_end_charge()
-	if elem() and String(spec_of(id).get("do", "")) == "lightning":
-		charge = BendLooks.charge(player, self)
+	_lock_looks(id)
 	var was_full := state == State.FULL
 	state = State.LOCKING
 	if ring:

@@ -1,0 +1,110 @@
+// Family: M_f_ParticleBasicErode (Spellbreak, Proletariat; UE4.22 Cascade, converted for this lab).
+// 32 instances: BLEND_Translucent (one- and two-sided) and BLEND_Additive (ErosionFlare*), all
+// MSM_Unlit -> template. Used by sprites (rings, crescents, snowflakes, bits) and mesh particles
+// (ring / torus / flare / cylinder meshes). Sibling of M_f_ParticleBasicErodeDistort (fireball_wisp).
+//
+// SOURCE (cooked root graph, stripped to parameter nodes + function shells):
+//   TextureSampleParameter2D "Opacity mask" (group Color), TextureSampleParameterSubUV "SubUV texture",
+//   ScalarParameters Brightness(1), Opacity Control(1), Edge Softness(0), Erosion Speed(0.1),
+//   Mask Radius(0.103765), Mask Hardness(52.4511), Fade Length(10), Fade Distance Offset(0),
+//   Depth Fade Dist(0); StaticSwitches Debug Alpha, Sub UV, Particle Opacity, Particle Edge and
+//   Use Toon Transluscency, all default false (none serialises a DefaultValue; 25 of the 32
+//   instances set Use Toon Transluscency true); DynamicParameter names [Opacity, Edge, Param3,
+//   Param4], DefaultValue (1, 0.05, 1, 1); function calls MF_TransluscentToonErosion and
+//   Luos_alphaErosion (both "Erodes alpha mask instead of fade out."), Lu_RadialGradient ("Uses UV
+//   Channel 0 to create a radial gradient"), CameraDepthFade, DebugTimeSine. Every value is filled
+//   per instance from the source (families/basic_erode.json). The masks are single-channel greys
+//   (R=G=B) painted with flat toon plateaus (MagicBits, Springstep, Lightning bits) or streaks.
+//
+// AUTHORED (graph wiring is not in the data) -- see families/basic_erode.json notes for evidence:
+//  * mask channel = R; sRGB-flagged textures are linearised by hand (mask_srgb). Per-texture sRGB is
+//    NOT available to families, so mask_srgb is one constant for the whole family (UE default true;
+//    7 of the 19 masks are SRGB=false and are therefore too dark here).
+//  * Lu_RadialGradient: mask *= pow(saturate(dist(UV0, 0.5) / Mask Radius), Mask Hardness), i.e. a
+//    centre cut-out that is neutral when Radius <= 0 or Hardness <= 0 (most instances), matching
+//    ErosionRing (0.475) / _Superthin (0.481) radii that sit inside the ring band (0.46-0.49).
+//  * "Use Toon Transluscency" selects the erosion function: true = MF_TransluscentToonErosion, hard
+//    edge saturate((mask - (1 - alpha)) / EdgeSoftness * OpacityControl); false = Luos_alphaErosion,
+//    soft subtractive saturate((mask - (1 - alpha)) * OpacityControl) (as the approved sibling
+//    fireball_wisp). Edge Softness is only ever non-zero on toon instances (all 7 non-toon keep 0).
+//  * Erosion only acts inside the mask's support (mask > 0.002), as the uber did. Particle alpha
+//    above 1 (DownBurst ring, 2.0 -> 0) pushes the threshold below 0; without the gate the empty
+//    81% of the ring texture turned opaque BLACK (emissive = colour * mask = 0). With it, alpha > 1
+//    means "whole painted mask un-eroded", which is what an artist authoring 2.0 would have seen.
+//  * Dynamic parameter channels are read by position, as the material reads them: "Particle
+//    Opacity" multiplies opacity by channel 0 (named Opacity), "Particle Edge" replaces Edge
+//    Softness with channel 1 (named Edge). Cascade feeds (1,1,1,1) when an emitter has no
+//    ParameterDynamic module (UE's null dynamic-parameter stream; cascade.gd does the same); the
+//    expression DefaultValue (1, 0.05, 1, 1) is only the non-particle / editor-preview fallback.
+//  * "Debug Alpha" swaps particle alpha for DebugTimeSine driven by Erosion Speed (editor preview);
+//    it is off in every instance, so Erosion Speed has no visible effect.
+//  * emissive = particle colour (HDR) * Brightness * mask tone (as in the approved sibling).
+shader_type spatial;
+render_mode /*RENDER_MODE*/;
+#include "res://shaders/cascade/common.gdshaderinc"
+#include "res://shaders/cascade/particle.gdshaderinc"
+
+uniform sampler2D mask_tex : repeat_enable, filter_linear_mipmap;
+uniform sampler2D subuv_tex : repeat_enable, filter_linear_mipmap;
+uniform bool use_subuv = false;            // static switch "Sub UV"
+uniform bool mask_srgb = true;             // AUTHORED: family-wide (see header)
+uniform float brightness = 1.0;
+uniform float opacity_control = 1.0;
+uniform float edge_softness = 0.0;
+uniform float erosion_speed = 0.1;
+uniform float mask_radius = 0.103765;
+uniform float mask_hardness = 52.451115;
+uniform bool toon = false;                 // static switch "Use Toon Transluscency" (root default false)
+uniform bool particle_opacity = false;     // static switch "Particle Opacity"
+uniform bool particle_edge = false;        // static switch "Particle Edge"
+uniform bool debug_alpha = false;          // static switch "Debug Alpha"
+uniform float fade_offset = 0.0;           // m (Fade Distance Offset)
+uniform float fade_length = 0.1;           // m (Fade Length)
+uniform float depth_fade_m = 0.0;          // m (Depth Fade Dist; 0 = off)
+
+float to_linear(float c) {
+	return c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4);
+}
+
+void vertex() {
+	vec4 _e; vec4 _d;
+	particle_vertex(VERTEX, UV, INSTANCE_CUSTOM, INSTANCE_ID, UV2, _e, _d);
+	v_extra = _e; v_dyn = _d; v_color = COLOR; v_quv = UV;
+}
+
+void fragment() {
+	vec2 quv = v_quv;
+	bool atlas = grid.x * grid.y > 1.0;
+	if (atlas) { quv = clamp(quv, 0.001, 0.999); }
+	// Cascade sprites bake the sub-image into TexCoord0, so the plain Opacity mask sample shows the
+	// current frame too; the ParticleSubUV path additionally blends to the next frame.
+	float m;
+	if (use_subuv) {
+		m = texture(subuv_tex, particle_atlas(quv)).r;
+		if (subuv_blend && atlas) {
+			float n = grid.x * grid.y;
+			float nxt = mod(floor(v_extra.x) + 1.0, n);
+			float m2 = texture(subuv_tex, atlas_uv(quv, nxt, grid)).r;
+			m = mix(m, m2, fract(v_extra.x));
+		}
+	} else {
+		m = texture(mask_tex, particle_atlas(quv)).r;
+	}
+	if (mask_srgb) { m = to_linear(m); }
+	// Lu_RadialGradient centre cut-out (AUTHORED form; neutral for radius/hardness <= 0)
+	if (mask_radius > 0.0 && mask_hardness > 0.0) {
+		float d = distance(v_quv, vec2(0.5));
+		m *= pow(clamp(d / mask_radius, 0.0, 1.0), mask_hardness);
+	}
+	float a = debug_alpha ? 0.5 + 0.5 * sin(TIME * erosion_speed * TAU) : v_color.a;
+	float thr = 1.0 - a;
+	// DynamicParameter channel 1 = "Edge" (positional, as the material reads it)
+	float soft = toon ? (particle_edge ? v_dyn.y : edge_softness) : 1.0;
+	float op = clamp((m - thr) / max(soft, 0.002) * opacity_control, 0.0, 1.0);
+	op *= step(0.002, m);                  // erode only inside the mask's support (alpha > 1 safe)
+	if (particle_opacity) { op *= v_dyn.x; }   // DynamicParameter channel 0 = "Opacity"
+	op *= camera_depth_fade(-VERTEX.z, fade_offset, fade_length);
+	if (depth_fade_m > 0.0) { op *= depth_fade(SCREEN_UV, VERTEX, INV_PROJECTION_MATRIX, depth_fade_m); }
+	ALBEDO = v_color.rgb * brightness * m;
+	/*ALPHA_OUT*/
+}

@@ -1,0 +1,16 @@
+{
+  "roots": ["/Game/VFX/Materials/TranslucentSoftBase01_FxM"],
+  "shader": "fam_translucent_soft",
+  "template": true,
+  "u": {
+    "opacity_mask": ["t", ["Opacity Mask"]],
+    "edge_softness": ["s", "EdgeSoftness", 1.0, 0.015],
+    "mask_contrast": ["s", "MaskContrast", 1.0, 0.01],
+    "camera_fade_offset": ["s", "CameraFadeOffset", 0.01, 200.0],
+    "camera_fade_length": ["s", "CameraFadeLength", 0.01, 100.0],
+    "pixel_depth_fade": ["s", "PixelDepthFade", 0.01, 50.0],
+    "depth_min": ["s", "DepthMin", 1.0, 0.0],
+    "depth_max": ["s", "DepthMax", 1.0, 1.0]
+  },
+  "notes": "Spellbreak (Proletariat) TranslucentSoftBase01_FxM soft glow sprites. Template because instances are BLEND_Translucent and BLEND_Additive (GlowSoftNear01_FxMI), all MSM_Unlit and one-sided. MATH DECODED, NOT AUTHORED: the opacity code comes from the game's compiled D3D11 pixel shaders in ShaderArchive-g3-PCD3D_SM5.ushaderbytecode (bff398a3 translucent sprite, 5fc033b2 additive GlowSoftNear01 sprite, 986bf464 beam, 3f483215 mesh), with the cb3 registers identified through the decoded preshader set. op = saturate(mask.r * saturate((CheapContrast(mask, MaskContrast) - (1 - particle alpha)) / Clamp(EdgeSoftness, 0.01, 1)) * DynamicParameter.x * SmoothStep(DepthMin, DepthMax, saturate((SceneDepth - PixelDepth) / Max(PixelDepthFade, 1e-5))) * saturate((PixelDepth - CameraFadeOffset) / CameraFadeLength)); emissive = max(particle colour, 0), with no mask factor. Particle alpha is unclamped, and the dynamic parameter is read by slot, so slot 0 applies even where an emitter labels it None. LinearGradient (in MaterialFunctionInfos) is absent from the compiled code. SOURCE DATA: Opacity Mask texture, EdgeSoftness, MaskContrast, CameraFadeOffset/Length (cm), PixelDepthFade (cm), DepthMin/DepthMax, blend mode. KNOWN DEVIATION: T_Star_1 and T_Debris_01_FxT are SRGB=true by engine default (no override serialised) and the game samples them linearised; the other masks are SRGB=false (SphereGradient_A/B TC_Alpha, Softglow TC_EditorIcon, LumpyGlow TC_Masks). materials.json has no SRGB flag, so the shader's mask_srgb uniform stays false and those masks are read raw (star halo too opaque). Once shared code exposes the flag (e.g. a kind [\"t_srgb\", [\"Opacity Mask\"]]), add \"mask_srgb\" mapped to it. /Game/VFX/Cosmetics/CloudBurst/StarryTrain/TranslucentSoftBase01_FxM compiles to the same opacity code and could join this family."
+}

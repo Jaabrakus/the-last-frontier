@@ -7,7 +7,7 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 func _run() -> void:
-	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, OS.has_environment("TB_ON_TOP"))
 	out = "res://artifacts/fluidity"
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out))
 	await _studio()

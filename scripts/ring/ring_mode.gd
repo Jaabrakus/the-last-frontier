@@ -305,6 +305,9 @@ func restart() -> void:
 	_hook_caster()
 	if player != null:
 		Bending.of(player).element = element
+		# (the loadout worn for this element, read from the Advancement save at every match start: its fighting style and its
+		# live node numbers on the player's body; Classic and every bot read the element's own: BendLoadout)
+		BendLoadout.wear_player(player, element)
 		if _bar_laid:
 			lay_bar()
 	next_round()

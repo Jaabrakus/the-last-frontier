@@ -292,6 +292,8 @@ static func _pop_v(by: Node, victim: Node, pop: Dictionary) -> Vector3:
 ## The Pop's element burst at contact (on the hit, not on the one struck: a puff at the point).
 static func _pop_look(by: Node, at: Vector3) -> void:
 	var el := BendPoses.element_of(by)
+	if SbFx.fire(by, "%s/pop" % String(Bending.jab(el).get("id", "")), "pop", {"at": at}):
+		return                                   # (the Pop's Spellbreak burst played instead: SbFx)
 	var kind := String(POP_BURST.get(el, "air"))
 	BendLooks.burst(at, kind, 34, Vector3.UP, 30.0, 7.0, 0.35)
 	BendLooks.burst(at + Vector3.UP * 0.8, kind, 20, Vector3.UP, 15.0, 9.0, 0.3)
@@ -316,7 +318,8 @@ static func pop_stone(bc: BendCaster) -> FormStone:
 	s.set_meta(POP_STONE_META, true)
 	s.set_meta(&"bend_stone_d", {"mps": float(sd.get("mps", 34.0)), "damage": float(sd.get("damage", 30.0)),
 			"knock_mps": float(sd.get("knock_mps", 6.0)), "gravity": float(sd.get("gravity", 3.0)), "pierce": false})
-	BendLooks.burst(front, "stone", 12)
+	if not SbFx.start(s, "held", p, "rock_jab/pop", "held", {"node": s, "dir": out}):
+		BendLooks.burst(front, "stone", 12)
 	return s
 
 

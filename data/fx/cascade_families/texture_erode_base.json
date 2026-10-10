@@ -1,0 +1,14 @@
+{
+  "roots": ["/Game/VFX/Materials/Shared/TextureBase01_FxM"],
+  "shader": "fam_texture_erode_base",
+  "template": true,
+  "u": {
+    "main_tex": ["t", ["Texture"]],
+    "has_camera_depth_fade": ["sw", "HasCameraDepthFade", false],
+    "has_depth_fade": ["sw", "HasDepthFade", false],
+    "camera_fade_offset": ["s", "CameraFadeOffset", 0.01, 100.0],
+    "camera_fade_length": ["s", "CameraFadeLength", 0.01, 100.0],
+    "pixel_depth_fade": ["s", "PixelDepthFade", 0.01, 50.0]
+  },
+  "notes": "Spellbreak (Proletariat) TextureBase01_FxM, the shared plain-texture particle material: 9 instances, all BLEND_Translucent/MSM_Unlit, AtrocioiusRebuke_TrailWings01 two-sided (template for per-instance culling); 34 emitters (sprites incl. a 4x4 sub-UV ash atlas, velocity sparks, and two ribbons). SOURCE: Texture (TextureSampleParameter2D, group Texture, sRGB sampler, TexCoord0), CameraFadeOffset/CameraFadeLength/PixelDepthFade (cm -> m), static switches HasCameraDepthFade/HasDepthFade (default false), one MF_DepthFadeAndCameraDepthFade call; no tint/brightness parameter and no DynamicParameter node (ElysianFall Ashes' dyn EmissiveScale 25 has no reader in this root and is ignored). TEXTURES (viewed): all grey R=G=B; 7/9 DXT1 without alpha; FlameBits02 DXT5 with alpha silhouette over a 0.21 grey RGB floor; PsychicFocus_BlueGlowMask BGRA8 with R=G=B=A. AUTHORED: emissive = Texture.rgb * particle colour; opacity = Texture.r * Texture.a * particle alpha (R because DXT1 has no alpha, *A to drop FlameBits02's RGB floor; squares PsychicFocus' mask); depth fade / camera depth fade multiplied in only when their switch is on (the generic shader applied both to every instance). RefractionDepthBias ignored (no refraction in unlit translucency)."
+}

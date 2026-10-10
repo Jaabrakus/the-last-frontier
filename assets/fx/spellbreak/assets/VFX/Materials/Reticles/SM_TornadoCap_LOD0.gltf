@@ -1,0 +1,137 @@
+{
+  "asset" : {
+    "generator" : "UE Viewer (umodel) build 1",
+    "version" : "2.0"
+  },
+  "scene" : 0,
+  "scenes" : [
+    {
+      "nodes" : [ 0 ]
+    }
+  ],
+  "nodes" : [
+    {
+      "name" : "SM_TornadoCap_LOD0",
+      "mesh" : 0
+    }
+  ],
+  "materials" : [
+    {
+      "name" : "WorldGridMaterial",
+      "pbrMetallicRoughness" : {
+        "baseColorFactor" : [ 0.3, 0.3, 0.3, 1.0 ],
+        "metallicFactor" : 0.1,
+        "roughnessFactor" : 0.5
+      }
+    }
+  ],
+  "meshes" : [
+    {
+      "primitives" : [
+        {
+          "attributes" : {
+            "POSITION" : 1,
+            "NORMAL" : 2,
+            "TANGENT" : 3,
+            "COLOR_0" : 4,
+            "TEXCOORD_0" : 5,
+            "TEXCOORD_1" : 6
+          },
+          "indices" : 0,
+          "material" : 0
+        }
+      ],
+      "name" : "SM_TornadoCap_LOD0"
+    }
+  ],
+  "buffers" : [
+    {
+      "uri" : "SM_TornadoCap_LOD0.bin",
+      "byteLength" : 100500
+    }
+  ],
+  "bufferViews" : [
+    {
+      "buffer" : 0,
+      "byteOffset" : 0,
+      "byteLength" : 15360
+    },
+    {
+      "buffer" : 0,
+      "byteOffset" : 15360,
+      "byteLength" : 17028
+    },
+    {
+      "buffer" : 0,
+      "byteOffset" : 32388,
+      "byteLength" : 17028
+    },
+    {
+      "buffer" : 0,
+      "byteOffset" : 49416,
+      "byteLength" : 22704
+    },
+    {
+      "buffer" : 0,
+      "byteOffset" : 72120,
+      "byteLength" : 5676
+    },
+    {
+      "buffer" : 0,
+      "byteOffset" : 77796,
+      "byteLength" : 11352
+    },
+    {
+      "buffer" : 0,
+      "byteOffset" : 89148,
+      "byteLength" : 11352
+    }
+  ],
+  "accessors" : [
+    {
+      "bufferView" : 0,
+      "componentType" : 5123,
+      "count" : 7680,
+      "type" : "SCALAR"
+    },
+    {
+      "bufferView" : 1,
+      "min" : [ -1.95249, 0.0328642, -1.95249 ],
+      "max" : [ 1.95249, 0.691211, 1.95249 ],
+      "componentType" : 5126,
+      "count" : 1419,
+      "type" : "VEC3"
+    },
+    {
+      "bufferView" : 2,
+      "componentType" : 5126,
+      "count" : 1419,
+      "type" : "VEC3"
+    },
+    {
+      "bufferView" : 3,
+      "componentType" : 5126,
+      "count" : 1419,
+      "type" : "VEC4"
+    },
+    {
+      "bufferView" : 4,
+      "normalized" : true,
+      "componentType" : 5121,
+      "count" : 1419,
+      "type" : "VEC4"
+    },
+    {
+      "bufferView" : 5,
+      "componentType" : 5126,
+      "count" : 1419,
+      "type" : "VEC2"
+    },
+    {
+      "bufferView" : 6,
+      "componentType" : 5126,
+      "count" : 1419,
+      "type" : "VEC2"
+    }
+  ]
+}

@@ -1,8 +1,10 @@
 extends SceneTree
-## Stills of the skeleton map on a body going down: the player shot dead (a ragdoll), and a deer.
-##   Godot --path . -s tools/fx/anatomy_shots.gd -- shots=/some/dir        (a window: stills are drawn)
+## Stills of the skeleton map on a body going down: the player shot dead (a ragdoll); with animals=on instead the map on a deer,
+## a wolf and a bison on the climbing yard's flat ground (tools/fx/anatomy_animal_shots.gd runs that).
+##   zsh tools/loop/godot_run.sh --path . -s tools/fx/anatomy_shots.gd -- shots=/some/dir [animals=on]    (a window: stills are drawn)
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
 var shots := ""
+var animals := false
 var view
 var p: FrontierPlayer
 
@@ -11,6 +13,8 @@ func _initialize() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("shots="):
 			shots = a.substr(6)
+		elif a.begins_with("animals="):
+			animals = a.substr(8) != "off"
 	_run.call_deferred()
 
 
@@ -47,6 +51,10 @@ func _run() -> void:
 	root.disable_3d = true
 	var at := Vector3(0.0, 0.0, -140.0)
 	at.y = FrontierTerrain.height_at(at.x, at.z) + 0.1
+	if animals:
+		await _animals(at)
+		quit()
+		return
 	p.global_position = at
 	await _fr(120)
 	var hips := func() -> Vector3:
@@ -68,3 +76,28 @@ func _run() -> void:
 	await _fr(60)
 	await _shot("down_side", hips.call(), Vector3(-1.4, 1.0, 0.4))
 	quit()
+
+
+## The skeleton map on each species, standing at `at`, from the side.
+func _animals(at: Vector3) -> void:
+	p.global_position = at + Vector3(0, 0, 30)
+	await _fr(60)
+	for sp in ["deer", "wolf", "bison"]:
+		var a := WildAnimal.new()
+		a.species = sp
+		current_scene.add_child(a)
+		a.global_position = at
+		a.rotation.y = PI * 0.5
+		await _fr(20)
+		a.set_active(false)
+		var sk: Skeleton3D = a.get("_skel")
+		Anatomy.attach_to(sk)
+		Anatomy.set_shown(true, self)
+		var h := float(a.data.body[2])
+		var c := at + Vector3.UP * h * 0.5
+		var side := Vector3(-0.35, 0.0, 0.94).normalized()
+		var dist := maxf(h * 3.4, 4.0)
+		await _shot("animal_%s" % sp, c, side * dist + Vector3.UP * h * 0.15)
+		Anatomy.set_shown(false, self)
+		a.queue_free()
+		await _fr(5)

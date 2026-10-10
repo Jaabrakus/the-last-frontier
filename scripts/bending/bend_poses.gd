@@ -27,6 +27,13 @@ extends RefCounted
 ##   animation(name), clip_exists(name), library_of(name), excluded(name), usable(name), all_clips()
 ##   strike_s(pick)              the strike on the release's clip (-1 none); body_strike_s(pick) where it falls when the
 ##                               clip plays straight through (a bot: NpcBody.play_cast)
+## A FIGHTING STYLE, per body (B1 of the Advancement window; data/bending/style_poses.json, docs/tidebreak/loadouts_live.md): a
+## body whose meta `fighting_style` names a live style (BendLoadout.style_ok: switched on, animated, of that element) is picked
+## from that style first: pick(move, mode, element, body) tries the style's mode entry before the element's own (a move or mode
+## the style leaves out is the element's own), stance_pose / guard_hold_pose give its stance and held guard. The style's clips
+## live in its own library (style_poses.json "library"), loaded the first time one of its clips is asked for (a body that wears
+## no style never loads it: LIBRARIES is not changed). Every pick of a style carries the element's own cast timings (hold_s,
+## strike_s, back_s, and end_s where the cast roots the caster), written in the style's entries: the style is animation only.
 ## Tests: `override` is merged over the file (moves, cast, clips and stance by key; exclude added to), `extra_library` holds
 ## clips a test injects (a synthetic strike_s clip). Neither is set by the game.
 
@@ -39,6 +46,9 @@ const LIBRARIES := [
 	"res://animations_extra/Frontier_Bend.res",
 ]
 const OWN_PREFIX := "own-"
+## The fighting styles' poses (a style's library, stance, held guard and the modes it re-poses), and their clips' name prefix.
+const STYLES_PATH := "res://data/bending/style_poses.json"
+const STYLE_PREFIX := "own-style-"
 ## Never a pose, whatever the file says: the felling axe's D, W and A swings (and their intros), measured off reference
 ## swings by fit_ref.gd (data/anim_author/axe_swings.json "fit"; A is D mirrored).
 const NEVER := ["own-axe-d", "own-axe-w", "own-axe-a"]
@@ -52,6 +62,7 @@ static var extra_library: AnimationLibrary = null
 
 static var _file: Dictionary = {}
 static var _libs: Dictionary = {}       ## path -> AnimationLibrary (null: missing)
+static var _styles: Dictionary = {}     ## style_poses.json "styles" (empty: not read yet)
 
 
 # ---------------------------------------------------------------- the data
@@ -103,6 +114,11 @@ static func animation(name: String) -> Animation:
 		var lib := _library(path)
 		if lib != null and lib.has_animation(name):
 			return lib.get_animation(name)
+	var sp := _style_library_of(name)
+	if sp != "":
+		var sl := _library(sp)
+		if sl != null and sl.has_animation(name):
+			return sl.get_animation(name)
 	return null
 
 
@@ -114,6 +130,11 @@ static func library_of(name: String) -> String:
 		var lib := _library(path)
 		if lib != null and lib.has_animation(name):
 			return path
+	var sp := _style_library_of(name)
+	if sp != "":
+		var sl := _library(sp)
+		if sl != null and sl.has_animation(name):
+			return sp
 	return ""
 
 
@@ -173,6 +194,124 @@ static func all_clips() -> Array[String]:
 	return out
 
 
+# ---------------------------------------------------------------- the fighting styles
+## The fighting styles' poses by id (style_poses.json "styles").
+static func styles() -> Dictionary:
+	if _styles.is_empty():
+		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(STYLES_PATH)) if FileAccess.file_exists(STYLES_PATH) else null
+		var st: Variant = (d as Dictionary).get("styles", {}) if d is Dictionary else {}
+		_styles = st if st is Dictionary and not (st as Dictionary).is_empty() else {"_none": {}}
+	return _styles
+
+
+## Style `style`'s poses ({} none): element, library, stance, guard_hold, modes, clips.
+static func style_data(style: String) -> Dictionary:
+	var s: Variant = styles().get(style, {})
+	return s if s is Dictionary else {}
+
+
+## The library path of the style clip `name` ("" not a style clip): own-style-<style>-<clip> names its style's library.
+static func _style_library_of(name: String) -> String:
+	if not name.begins_with(STYLE_PREFIX):
+		return ""
+	for id: String in styles():
+		if name.begins_with(STYLE_PREFIX + id.replace("_", "-") + "-"):
+			return String(style_data(id).get("library", ""))
+	return ""
+
+
+## The fighting style `body` plays now as a caster of `element` ("" none: the element's own clips): its meta, when that style is
+## live (BendLoadout.style_ok) and has poses. A bot is never given one.
+static func style_of(body: Node, element: String) -> String:
+	var st := BendLoadout.style_meta(body)
+	if st == "" or not BendLoadout.style_ok(st, element):
+		return ""
+	return st
+
+
+## The stance pose for `element` ("" none), the body's style's when it has one.
+static func stance_pose(element: String, body: Node = null) -> Variant:
+	var st := style_of(body, element)
+	if st != "" and style_data(st).has("stance") and usable(String(_as_pose(style_data(st).stance).get("clip", ""))):
+		return style_data(st).stance
+	return (data().get("stance", {}) as Dictionary).get(element, "")
+
+
+## The held guard's pose for `element` ({clip, stand_in} or a name; "" none), the body's style's when it has one.
+static func guard_hold_pose(element: String, body: Node = null) -> Variant:
+	var st := style_of(body, element)
+	if st != "" and style_data(st).has("guard_hold") and usable(String(_as_pose(style_data(st).guard_hold).get("clip", ""))):
+		return style_data(st).guard_hold
+	var gh: Variant = data().get("guard_hold", {})
+	return (gh as Dictionary).get(element, "") if gh is Dictionary else ""
+
+
+## Move `m` at `mode` of an `element` caster as style `st` poses it ({} when the style leaves it out, its clip is not usable, or
+## the element itself has no pose for it: a style never poses what the element's does not). The style's entry with its own clips
+## table and the clip's metas filling what it leaves out, then timed as the element's own pick (_timed_as): the same hold,
+## strike and back, the same end and the same root, so a cast takes the same time whichever clips show it. Its alt (the other
+## hand) is timed as the element's alt the same way, and dropped when the element has none.
+static func _style_pick(st: String, m: String, mode: String, element: String) -> Dictionary:
+	var sd := style_data(st)
+	var modes: Variant = (sd.get("modes", {}) as Dictionary).get(m, {})
+	if not (modes is Dictionary and (modes as Dictionary).has(mode)):
+		return {}
+	var table: Dictionary = {"clips": sd.get("clips", {})}
+	var p := _as_pose((modes as Dictionary)[mode])
+	if p.is_empty() or not usable(String(p.clip)):
+		return {}
+	var ep := pick(m, mode, element)
+	if ep.is_empty():
+		return {}
+	var out := _timed_as(_filled(p, table), ep)
+	if out.is_empty():
+		return {}
+	out["from"] = "style"
+	out.erase("alt")
+	var alt := _as_pose(p.get("alt", ""))
+	var ealt := _as_pose(ep.get("alt", ""))
+	if not alt.is_empty() and not ealt.is_empty() and usable(String(alt.clip)):
+		var ta := _timed_as(_filled(alt, table), _filled(ealt, data()))
+		if not ta.is_empty():
+			out["alt"] = ta
+	return out
+
+
+## Style pose `b` (a filled pose dictionary) timed as the element's pose `e`: e's hold_s, strike_s, back_s and root, end_s its
+## clip's length, and a warp ([[time on e's timeline, time on b's clip], ...]) that puts b's own hold, strike, back and end on
+## those, so SwayPose shows b's clip with its strike where e's is. {} when e is timed by a release clip of its own (then,
+## press_s: a floor cast) or b has no times of its own.
+static func _timed_as(b: Dictionary, e: Dictionary) -> Dictionary:
+	if e.has("then") or e.has("press_s"):
+		return {}
+	var ba := animation(String(b.clip))
+	var ea := animation(String(e.clip))
+	if ba == null or ea == null:
+		return {}
+	var bt := []
+	var et := []
+	for k: String in ["hold_s", "strike_s", "back_s"]:
+		if not b.has(k) or not e.has(k):
+			return {}
+		bt.append(float(b[k]))
+		et.append(float(e[k]))
+	bt.append(ba.length)
+	et.append(ea.length)
+	var warp: Array = [[0.0, 0.0]]
+	for i in et.size():
+		var last: Array = warp[warp.size() - 1]
+		if float(et[i]) > float(last[0]) + 0.001 and float(bt[i]) >= float(last[1]):
+			warp.append([float(et[i]), float(bt[i])])
+	var out := b.duplicate(true)
+	out["hold_s"] = et[0]
+	out["strike_s"] = et[1]
+	out["back_s"] = et[2]
+	out["end_s"] = ea.length
+	out["root"] = bool(e.get("root", false))
+	out["warp"] = warp
+	return out
+
+
 # ---------------------------------------------------------------- the pick
 ## A pose as a dictionary ({clip, ...}; {} none).
 static func _as_pose(v: Variant) -> Dictionary:
@@ -189,8 +328,15 @@ static func has_spec(m: String, mode: String) -> bool:
 	return b is Dictionary and (b as Dictionary).has(mode)
 
 
-## The pose move `m` in `mode` is cast with by an `element` caster ({} none: the tier clip). See the header.
-static func pick(m: String, mode: String, element: String) -> Dictionary:
+## The pose move `m` in `mode` is cast with by an `element` caster ({} none: the tier clip). See the header. `body`: the caster's
+## body, for its fighting style (null: the element's own).
+static func pick(m: String, mode: String, element: String, body: Node = null) -> Dictionary:
+	if body != null:
+		var st := style_of(body, element)
+		if st != "":
+			var sp := _style_pick(st, m, mode, element)
+			if not sp.is_empty():
+				return sp
 	var d := data()
 	var e: Variant = (d.get("moves", {}) as Dictionary).get(m, {})
 	var entry: Dictionary = e if e is Dictionary else {}

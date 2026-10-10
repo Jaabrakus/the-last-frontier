@@ -289,7 +289,7 @@ func set_practice_way(way: String) -> void:
 func lock_of(o: Dictionary, t: Node3D) -> float:
 	var id := String(o.id)
 	var md := String(o.mode)
-	var ls := lock_for(id, md, _preset_name(), _cast_dist(id, md, t))
+	var ls := lock_for(id, md, _preset_name(), _cast_dist(id, md, t), me)
 	if bool(o.get("guard", false)):
 		if _held_stone() != null:
 			ls = BendZone.guard_lock_s(me, ls) * float(preset().get("lock_mult", 1.0))
@@ -462,14 +462,16 @@ static func range_of(id: String, md: String) -> float:
 ## The lock time (s) of (id, md) for a bot of difficulty `preset_name` casting `dist` m off: exactly the player's
 ## (SwayCaster._try_begin: base x stretch x lock_mult x tier_mult) with the expert tier (free use) and the preset's lock_mult
 ## for his lock_mult; the move's ai_factor only where the preset says (easy, normal).
-static func lock_for(id: String, md: String, preset_name := "hard", dist := 0.0) -> float:
+static func lock_for(id: String, md: String, preset_name := "hard", dist := 0.0, who: Node = null) -> float:
 	var d := SwayMoves.move(id)
 	var base := float(d.get("lock_s", 1.0))
 	var mlk: Dictionary = d.get("mode_lock_s", {})
 	if id == "gust" and md == "lift":
 		base = float((d.get("stone", {}) as Dictionary).get("lock_s", base))
-	elif mlk.has(md):
-		base = float(mlk[md])
+	else:
+		if mlk.has(md):
+			base = float(mlk[md])
+		base = BendLoadout.lock(who, id, md, base)         # (`who` wears a loadout live: its own lock for this mode; else base)
 	var stretch := 1.0
 	if not self_cast(id, md):
 		var r := range_of(id, md)
@@ -878,7 +880,7 @@ func _reaction() -> Dictionary:
 				continue                             # (along the deck: jumped (_jump_floor), or a guard; a side step is no answer)
 			if float(th.get("knock", INF)) < float(h.get("min_knock", 0.0)) or not _guard_fits(o, t):
 				continue
-			var ls := lock_for(String(o.id), String(o.mode), _preset_name(), 0.0)
+			var ls := lock_for(String(o.id), String(o.mode), _preset_name(), 0.0, me)
 			if bool(o.guard):
 				ls = _guard_lock(ls)
 			if ls > tti:
@@ -930,7 +932,7 @@ func _shield_pick(threats: Array, pr: Dictionary, now: float, react_g: float) ->
 			continue                               # (on the beat its own guard's round-2 timing is the better answer)
 		if not m.shield_roll(int(th.id)):
 			continue
-		var ls := _guard_lock(lock_for(String(g[0]), String(g[1]), _preset_name(), 0.0))
+		var ls := _guard_lock(lock_for(String(g[0]), String(g[1]), _preset_name(), 0.0, me))
 		var tti := float(th.tti)
 		if ls > tti:
 			continue
@@ -1294,7 +1296,7 @@ func begin(id: String, md: String) -> void:
 	mode = md
 	lock_t = 0.0
 	fill = 0.0
-	lock_s = lock_for(id, md, _preset_name(), _cast_dist(id, md, t))
+	lock_s = lock_for(id, md, _preset_name(), _cast_dist(id, md, t), me)
 	_lock_at = _now()
 	var o := _option(id + "/" + md)
 	grown = false
@@ -1679,7 +1681,7 @@ func _landed_form() -> void:
 	var spent := lock_t
 	mode = String(jb[1])
 	var t := brain.target
-	lock_s = _stock_lock(_option(casting + "/" + mode), lock_for(casting, mode, _preset_name(), _cast_dist(casting, mode, t)))
+	lock_s = _stock_lock(_option(casting + "/" + mode), lock_for(casting, mode, _preset_name(), _cast_dist(casting, mode, t), me))
 	lock_t = minf(spent, lock_s)
 	fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)
 	if me.body != null:
@@ -2013,7 +2015,7 @@ func _wall(t: Node3D) -> bool:
 	if matter == "wood":
 		matter = "earth"
 	var w: Dictionary = (SwayMoves.move("earth_wall") as Dictionary).get("wall", {})
-	var wn := FormMatter.numbers(w, FormMatter.entry("earth_wall", matter), matter)
+	var wn := BendLoadout.wall_numbers(me, "wall", w, matter)           # (a worn loadout's Earth Wall numbers: the soak's wearer)
 	var across := Vector3.UP.cross(way).normalized()
 	var scn := me.get_tree().current_scene
 	last_wall = FormRaised.raise(scn, "wall", Transform3D(Basis(across, Vector3.UP, way), foot), wn, absi(hash(foot)) % 97)

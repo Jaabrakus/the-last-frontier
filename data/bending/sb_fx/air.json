@@ -1,0 +1,596 @@
+{
+ "format": "tidebreak-sb-fx",
+ "version": 1,
+ "element": "air",
+ "source": "Spellbreak (Proletariat): rebuilt Cascade effects, res://assets/fx/spellbreak (SOURCE.md names each source package; licence note in animations/SOURCE.md). Seeded from artifacts/spellbreak_fx/bending_fx_map.json (final rows, picks[0]); the shape is documented in data/bending/sb_fx/config.json (_doc).",
+ "moves": {
+  "air_blast/slice": {
+   "_slot": "1",
+   "cast": {
+    "effect": "g3/Content/VFX/Character/Squall/Squall_Lvl01_01_FxP",
+    "map": 186,
+    "map_row": "air_blast/slice | cast flash at the hand (the blade leaves) | 1",
+    "map_pick": 1,
+    "at": "hand",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "cast: BendEffects._apply at the release",
+    "stop": "one-shot",
+    "replaced": "map pick 0 (202) -> 186: 202 WindMBlast_FX renders broken in the browser too (a full-screen dark red)"
+   },
+   "flight": {
+    "effect": "g3/Content/VFX/Character/Wind/WindProj_FX",
+    "map": 204,
+    "map_row": "air_blast/slice | projectile in flight (thin fast blade, 45 m/s, r 0.12) | 1",
+    "at": "node",
+    "follow": true,
+    "orient": "node",
+    "follow_basis": "node",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": true,
+    "start": "launch: BendBolt.launch",
+    "stop": "the bolt ends (BendBolt.end): stopped, its trail plays out",
+    "note": "WindProj is a few thin lines at game distance: today's blade shows where it goes"
+   },
+   "impact": {
+    "effect": "g3/Content/VFX/Character/Wind/WindExplode_Small_FX",
+    "map": 201,
+    "map_row": "air_blast/slice | impact (thin hit) | 1",
+    "at": "point",
+    "follow": false,
+    "orient": "normal",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "hit: BendBolt._hit (body, world or a raised wall)",
+    "stop": "one-shot"
+   }
+  },
+  "air_blast/ball": {
+   "_slot": "1",
+   "cast": {
+    "effect": "g3/Content/VFX/Character/Squall/Squall_Lvl01_01_FxP",
+    "map": 186,
+    "map_row": "air_blast/ball | cast flash at the hands (bigger push) | 1",
+    "map_pick": 1,
+    "at": "hand",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "cast: BendEffects._apply at the release",
+    "stop": "one-shot",
+    "replaced": "map pick 0 (202) -> 186: 202 WindMBlast_FX renders broken in the browser too (a full-screen dark red)"
+   },
+   "flight": {
+    "effect": "g3/Content/VFX/Character/Wind/WindProj_FX",
+    "map": 204,
+    "map_row": "air_blast/ball | projectile in flight (wind ball, 28 m/s, r 0.35) | 1",
+    "at": "node",
+    "follow": true,
+    "orient": "node",
+    "follow_basis": "node",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": true,
+    "start": "launch: BendBolt.launch",
+    "stop": "the bolt ends (BendBolt.end): stopped, its trail plays out",
+    "note": "WindProj is a few thin lines at game distance: today's ball shows where it goes"
+   },
+   "impact": {
+    "effect": "g3/Content/VFX/Character/Wind/WindExplode_FX",
+    "map": 200,
+    "map_row": "air_blast/ball | impact / big knock burst | 1",
+    "at": "point",
+    "follow": false,
+    "orient": "normal",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "hit: BendBolt._hit (body, world or a raised wall)",
+    "stop": "one-shot"
+   }
+  },
+  "air_gust/gust": {
+   "_slot": "2",
+   "grow": {
+    "effect": "g3/Content/VFX/Character/Wind/Gauntlet_Tempest_Idle01_FxP",
+    "map": 193,
+    "map_row": "air_gust/gust | grow / charge-up while held | 2",
+    "at": "hand",
+    "follow": true,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "the lock grows: SwayCaster._grow",
+    "stop": "the lock ends"
+   },
+   "grow_click": {
+    "effect": "g3/Content/VFX/Character/Squall/Squall_Lvl01_01_FxP",
+    "map": 186,
+    "map_row": "air_gust/gust | grow click (the ring snapping out at the hands) | 2",
+    "at": "hand",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "SwayCaster._grow (BendLooks.grow_click)",
+    "stop": "one-shot"
+   },
+   "cast": {
+    "effect": "g3/Content/VFX/Character/Squall/Squall_Lvl01_01_FxP",
+    "map": 186,
+    "map_row": "air_gust/gust | cast blast at the hands | 2",
+    "map_pick": 1,
+    "at": "hand",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "cast: BendEffects._apply at the release",
+    "stop": "one-shot",
+    "replaced": "map pick 0 (202) -> 186: 202 WindMBlast_FX renders broken in the browser too (a full-screen dark red)"
+   },
+   "impact": {
+    "effect": "g3/Content/VFX/Character/Wind/WindExplode_Small_FX",
+    "map": 201,
+    "map_row": "air_gust/gust | hit / knock on a body (base, grown) | 2",
+    "at": "point",
+    "follow": false,
+    "orient": "normal",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "hit: BendBolt._hit (body, world or a raised wall)",
+    "stop": "one-shot"
+   }
+  },
+  "air_gust/pull": {
+   "_slot": "2",
+   "body_extra": {
+    "effect": "g3/Content/VFX/Character/Mana/ManaRegen_FX",
+    "map": 155,
+    "map_row": "air_gust/pull | caught body dragged toward the caster | 2",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "hit on a body: BendBolt._hit",
+    "stop": "one-shot",
+    "life": 0.5
+   }
+  },
+  "air_gust/slam": {
+   "_slot": "2 (air)",
+   "slam_deck": {
+    "effect": "g3/Content/VFX/Character/Trails/DropImpact_FX",
+    "map": 190,
+    "map_row": "air_gust/slam | ground impact on the deck | 2 (air)",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": true,
+    "start": "BendEffects.slam (the deck under it)",
+    "stop": "one-shot",
+    "note": "keep_old: DropImpact without its opaque sheets (hide_materials) is a dark smudge; over today's dust burst (the impact's read)"
+   }
+  },
+  "evade/slip": {
+   "_slot": "3",
+   "dash": {
+    "effect": "g3/Content/VFX/Character/Squall/Squall_Lvl01_01_FxP",
+    "map": 186,
+    "map_row": "evade/slip | dash start burst at the feet | 3",
+    "at": "feet",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "BendEffects.dash",
+    "stop": "one-shot"
+   }
+  },
+  "air_jump/leap": {
+   "_slot": "3",
+   "dash": {
+    "effect": "g3/Content/VFX/Cosmetics/Triumph/Triump_Wind01_Ground_FxP",
+    "map": 701,
+    "map_row": "air_jump/leap | launch burst (12 m/s up) | 3",
+    "map_pick": 2,
+    "at": "feet",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "BendEffects.dash",
+    "stop": "one-shot",
+    "replaced": "map pick 0 (145) -> 701: 145 Springstep_Start01 renders broken in the browser too (dark squares); 158 too"
+   },
+   "dash_end": {
+    "effect": "g3/Content/VFX/Character/Trails/DropImpact_FX",
+    "map": 190,
+    "map_row": "air_jump/leap | landing | 3",
+    "map_pick": 1,
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": true,
+    "start": "the dash ends: BendMotion._dash_end",
+    "stop": "one-shot",
+    "note": "keep_old: DropImpact without its opaque sheets (hide_materials) is a dark smudge; over today's dust burst (the impact's read)",
+    "replaced": "map pick 0 (144) -> 190: 144 Springstep_Finish02 renders broken in the browser too (dark squares)"
+   }
+  },
+  "air_wall/wall": {
+   "_slot": "4",
+   "deflect": {
+    "effect": "g3/Content/VFX/Character/Wind/WindExplode_Small_FX",
+    "map": 201,
+    "map_row": "air_wall/wall | deflect flash (shot blown up and aside) | 4",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "a bolt blown up and aside: BendZone.on_bolt",
+    "stop": "one-shot"
+   },
+   "zone_end": {
+    "effect": "g3/Content/VFX/Character/Wind/WindExplode_FX",
+    "map": 200,
+    "map_row": "air_wall/wall | wall end (4 s up, or replaced: one at a time) | 4",
+    "at": "node",
+    "follow": false,
+    "orient": "node",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "zone ends: BendZone.end",
+    "stop": "one-shot",
+    "spread": 2
+   },
+   "zone": {
+    "effect": "g3/Content/VFX/Cosmetics/Triumph/Triump_Wind01_Ground_FxP",
+    "map": 701,
+    "map_row": "air_wall/wall | wall spawn (3 x 2.5 m, placed 2-6 m out) | 4",
+    "map_pick": 1,
+    "at": "node",
+    "follow": false,
+    "orient": "node",
+    "follow_basis": "node",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": true,
+    "start": "zone made: BendZone.make/_look",
+    "stop": "zone ends: BendZone.end",
+    "note": "map pick 1 (701): pick 0, 198 TornadoNewSimple, is a full-screen white blob in the browser too; replayed every 0.9 s across the wall while it stands; keep_old: the wind bands show the wall's extent",
+    "repeat_s": 0.9,
+    "spread": 3
+   }
+  },
+  "patch/patch": {
+   "_slot": "5",
+   "heal": {
+    "effect": "g3/Content/VFX/Cosmetics/Triumph/Triump_Wind01_Ground_FxP",
+    "map": 701,
+    "map_row": "patch/patch | mend aura on the caster | 5",
+    "at": "caster",
+    "follow": true,
+    "orient": "flat",
+    "follow_basis": "fixed",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "BendEffects._apply heal (Patch)",
+    "stop": "life"
+   },
+   "heal_pop": {
+    "effect": "g3/Content/VFX/Props/Pickups_Armor/FX_SmallArmorUse",
+    "map": 787,
+    "map_row": "patch/patch | restore pop (the fresh pool taken back) | 5",
+    "at": "chest",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "Patch took the fresh pool back",
+    "stop": "one-shot"
+   }
+  },
+  "air_palm/palm": {
+   "_slot": "jab",
+   "cone": {
+    "effect": "g3/Content/VFX/Character/Squall/Squall_Lvl01_01_FxP",
+    "map": 186,
+    "map_row": "air_palm/palm | palm cone blast (3.5 m, 40 deg) | jab",
+    "at": "hand",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": true,
+    "start": "BendEffects.cone",
+    "stop": "one-shot",
+    "replaced": "map pick 0 (202) -> 186: 202 WindMBlast_FX renders broken in the browser too (a full-screen dark red); 121 (the third pick) grows into a white ring filling the view; 118 not imported; this element's Squall (186) at the hands, over today's cone (its reach)"
+   },
+   "hit_body": {
+    "effect": "g3/Content/VFX/Character/Wind/WindExplode_Small_FX",
+    "map": 201,
+    "map_row": "air_palm/palm | hit puff | jab",
+    "at": "point",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "each body struck (cone, slam, air hit)",
+    "stop": "one-shot",
+    "body_scale": 0.8
+   }
+  },
+  "air_palm/pop": {
+   "_slot": "jab",
+   "pop": {
+    "effect": "g3/Content/VFX/Character/Wind/WindExplode_FX",
+    "map": 200,
+    "map_row": "air_palm/palm | pop (third jab that hits: the set knock) | jab",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "the Pop: BendR3._pop_look",
+    "stop": "one-shot"
+   }
+  },
+  "air_palm/air_hit": {
+   "_slot": "jab (air)",
+   "air_hit": {
+    "effect": "g3/Content/VFX/Character/Squall/Squall_Lvl01_01_FxP",
+    "map": 186,
+    "map_row": "air_palm/air_hit | spin swipe round the caster (r 1.2 m, 0.1 s) | jab (air)",
+    "at": "point",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "BendEffects.air_hit",
+    "stop": "one-shot"
+   }
+  },
+  "air_shield/shield": {
+   "_slot": "guard",
+   "zone": {
+    "effect": "g3/Content/VFX/Cosmetics/Triumph/Triump_Wind01_Ground_FxP",
+    "map": 701,
+    "map_row": "air_shield/shield | raise + stand round the body (r 2.2 m, 0.8 s) | guard",
+    "at": "node",
+    "follow": true,
+    "orient": "flat",
+    "follow_basis": "fixed",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": true,
+    "note": "keep_old true (2026-10-09 fix pass): today's wind shell is the guard's read (its 2.2 m reach); the Triumph whirl alone drew only small wisps at the feet (artifacts/fx_integration/fix/lineup/air/sheet_3.png), so it plays over the shell, as on the Air Wall",
+    "start": "zone made: BendZone.make/_look",
+    "stop": "zone ends: BendZone.end"
+   },
+   "perfect": {
+    "effect": "g3/Content/VFX/Character/Wind/WindExplode_Small_FX",
+    "map": 201,
+    "map_row": "air_shield/shield | perfect guard (bounced back, Clean) | guard",
+    "at": "chest",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "guard result: BendLooks.guard_result",
+    "stop": "one-shot"
+   },
+   "late": {
+    "effect": "g3/Content/VFX/Character/Wind/WindExplode_Small_FX",
+    "map": 201,
+    "map_row": "air_shield/shield | late guard (half gets through) | guard",
+    "map_pick": 1,
+    "at": "chest",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "guard result: BendLooks.guard_result",
+    "stop": "one-shot",
+    "note": "211 has a large near-white area in the sweep: check by eye",
+    "replaced": "map pick 0 (211) -> 201: 211 Gateway_Prj_Hit_FxP renders broken in the browser too (a full-screen dark red)"
+   },
+   "cushion": {
+    "effect": "g3/Content/VFX/Character/Wind/WindExplode_Small_FX",
+    "map": 201,
+    "map_row": "air_shield/shield | stone dropped at the feet (perfect vs stone) | guard",
+    "at": "point",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "a stone dropped on the beat: BendZone._cushion/_stones",
+    "stop": "one-shot",
+    "replaced": "map pick 0 (157) -> 201: 157 LandingDust_FX renders broken in the browser too (dark squares) and the row's 144 too; 201 reused"
+   },
+   "whiff": {
+    "effect": "g3/Content/VFX/Character/Squall/Squall_Lvl01_01_FxP",
+    "map": 186,
+    "map_row": "air_shield/shield | whiff (a dull puff at the hands) | guard",
+    "at": "chest",
+    "follow": false,
+    "orient": "dir",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "guard result: BendLooks.guard_result",
+    "stop": "one-shot"
+   }
+  },
+  "passive/carried_wind": {
+   "_slot": "passive",
+   "charged": {
+    "effect": "g3/Content/VFX/Character/Wind/Gauntlet_Tempest_Idle01_FxP",
+    "map": 193,
+    "map_row": "passive/carried_wind | charged aura (after a dash, 0.8 s) | passive",
+    "at": "caster",
+    "follow": true,
+    "orient": "flat",
+    "follow_basis": "fixed",
+    "offset": [0.0, 0.2, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "Carried wind charged: BendLooks.carried",
+    "stop": "after_s (0.8 s)",
+    "life": 0.8
+   },
+   "charge_pop": {
+    "effect": "g3/Content/VFX/Character/Squall/Squall_Lvl01_01_FxP",
+    "map": 186,
+    "map_row": "passive/carried_wind | charge pop (the dash charges it) | passive",
+    "at": "caster",
+    "follow": false,
+    "orient": "flat",
+    "offset": [0.0, 0.0, 0.0],
+    "rot": [0.0, 0.0, 0.0],
+    "scale": 1.0,
+    "keep_old": false,
+    "start": "Carried wind charged: BendLooks.carried",
+    "stop": "one-shot"
+   }
+  }
+ },
+ "unwired": [
+  {
+   "map_row": "air_gust/gust | travelling wave (2 m wide, 18 m/s, 14 m; grown 3 m / 18 m) | 2",
+   "map": 121,
+   "effect": "g3/Content/VFX/Character/Flight/work/Flight_D_FX",
+   "key": "air_gust/gust",
+   "role": "wave",
+   "why": "left out (today's look stays): 121 Flight_D_FX grows into a white ring that fills the whole view in the ring (the browser's sweep shows its first moments only); today's wave shows its width"
+  },
+  {
+   "map_row": "air_gust/pull | outgoing wave that reads as pulling | 2",
+   "map": 121,
+   "effect": "g3/Content/VFX/Character/Flight/work/Flight_D_FX",
+   "key": "air_gust/pull",
+   "role": "wave",
+   "why": "left out (today's look stays): 121 Flight_D_FX grows into a white ring that fills the whole view in the ring; today's wave shows its width"
+  },
+  {
+   "map_row": "air_gust/slam | downward blast under the caster (-70 deg column) | 2 (air)",
+   "map": 158,
+   "effect": "g3/Content/VFX/Character/Movement/ManaJump_FX",
+   "key": "air_gust/slam",
+   "role": "slam",
+   "why": "left out (today's look stays): 158 ManaJump_FX renders broken in the browser too (a full-screen dark red), 202 too, and 121 grows into a white ring filling the view"
+  },
+  {
+   "map_row": "evade/slip | dash trail (light step) | 3",
+   "map": 65,
+   "effect": "g3/Content/VFX/Character/Dash/DashTrail_FX",
+   "key": "evade/slip",
+   "role": "dash_trail",
+   "why": "left out (today's look stays): 65 DashTrail_FX draws a large pink spiked burst and a pink sphere, off the air palette; 120 is a white blow-out, 187 not imported"
+  },
+  {
+   "map_row": "air_jump/leap | rising trail | 3",
+   "map": 145,
+   "effect": "g3/Content/VFX/Character/Leap/Springstep_Start01_FxP",
+   "key": "air_jump/leap",
+   "role": "dash_trail",
+   "why": "left out (today's look stays): 145 Springstep_Start01 renders broken in the browser too (dark squares); 527 a flat blue card, 120 a white blow-out"
+  },
+  {
+   "map_row": "air_blast/slice | dust line off the deck under a low air bolt (AirDust, < 1.5 m) | 1",
+   "map": 157,
+   "effect": "g3/Content/VFX/Character/Movement/LandingDust_FX",
+   "why": "kept today's AirDust line under air bolts (it stays even when the flight effect replaces the bolt's body)"
+  },
+  {
+   "map_row": "air_jump/leap | glide (slow fall, 4 s loop; open world only) | 3",
+   "map": 94,
+   "effect": "g3/Content/VFX/Character/Featherfall/FeatherFall02_FX",
+   "why": "the glide is off in the ring (open world only); no hook"
+  },
+  {
+   "map_row": "passive/carried_wind | boosted hit (x1.15 knock) | passive",
+   "map": 200,
+   "effect": "g3/Content/VFX/Character/Wind/WindExplode_FX",
+   "why": "the boost is only in the cast's spec (never in its hit info or bolt): marking the bolt would need a new key in gameplay data"
+  },
+  {
+   "map_row": "wind_run/updraft | whirl lift (3.5 m in 0.45 s) | rise",
+   "map": 701,
+   "effect": "g3/Content/VFX/Cosmetics/Triumph/Triump_Wind01_Ground_FxP",
+   "why": "ring_move_looks.gd (RingMoveLooks.rise_tell / rise_end / tick) is outside this bridge's file list"
+  },
+  {
+   "map_row": "wind_run/updraft | whirl push on bodies near (hit_r 1.2 m, set 4 m/s) | rise",
+   "map": 186,
+   "effect": "g3/Content/VFX/Character/Squall/Squall_Lvl01_01_FxP",
+   "why": "ring_move_looks.gd (RingMoveLooks.rise_tell / rise_end / tick) is outside this bridge's file list"
+  },
+  {
+   "map_row": "wind_run/updraft | glide after the lift (falls 3 m/s at most) | rise",
+   "map": 94,
+   "effect": "g3/Content/VFX/Character/Featherfall/FeatherFall02_FX",
+   "why": "ring_move_looks.gd (RingMoveLooks.rise_tell / rise_end / tick) is outside this bridge's file list"
+  }
+ ]
+}
