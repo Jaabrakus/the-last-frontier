@@ -7,6 +7,7 @@ extends RefCounted
 ##   [controls]  mouse (the look's sensitivity, FrontierPlayer.cs_sensitivity), invert_y
 ##   [display]   fullscreen, vsync
 ##   [game]      iron_man (Iron Man: injuries stay; see iron_man())
+##   [look]      character: the Character look, "soft" (the default) or "classic" (SoftLook)
 ##   [match]     the last Tidebreak setup (MatchSetup.save / load: element, foe, difficulty, rounds), for the main menu's
 ##               panel and its Quick match
 ##   [quick]     each element's quick spell on the left button ("move/variation"; MatchSetup.quick_of / set_quick)
@@ -23,6 +24,8 @@ const DEFAULTS := {
 	"controls": {"mouse": 2.0, "invert_y": false},
 	"display": {"fullscreen": false, "vsync": true, "cap_60": true},
 	"game": {"iron_man": false},
+	# (the Character look: SoftLook's "soft" (the owner's choice, 2026-10-10) or "classic", the look as it was)
+	"look": {"character": "soft"},
 	"match": {"element": "earth", "foe": "earth", "difficulty": "normal", "rounds": 2, "light": "noon"},
 	# (each element's quick spell on the left button, "move/variation": MatchSetup.quick_of / set_quick)
 	"quick": {"earth": "rock_jab/pebbles", "water": "water_jet/splash", "fire": "fire_jab/jab", "air": "air_palm/palm"},
@@ -43,6 +46,13 @@ static func get_value(section: String, key: String) -> Variant:
 	var cf := ConfigFile.new()
 	cf.load(file())
 	return cf.get_value(section, key, DEFAULTS[section][key])
+
+
+## Whether the file holds `key` of `section` (a value chosen, not the default).
+static func is_set(section: String, key: String) -> bool:
+	var cf := ConfigFile.new()
+	cf.load(file())
+	return cf.has_section_key(section, key)
 
 
 static func set_value(section: String, key: String, v: Variant) -> void:
@@ -123,7 +133,42 @@ static func apply_to(player: Node) -> void:
 	player.set("invert_y", bool(get_value("controls", "invert_y")))
 
 
-## The Settings rows (for a menu's sub-screen): volumes, the mouse, invert, fullscreen, vsync. `player` gets the
+## A row of one choice among a few words (the Character look): the label and the words; `changed` gets the index picked. The
+## broadcast look: a segmented choice (BroadcastUI.segments); the serif menus: the word in force, a press steps to the next.
+static func choice(text: String, options: Array, chosen: int, changed: Callable, broadcast := false) -> HBoxContainer:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 18)
+	h.name = text.replace(" ", "")
+	if broadcast:
+		var l := BroadcastUI.lab(text, BroadcastUI.body(true), 22, BroadcastUI.WHITE)
+		l.custom_minimum_size = Vector2(240, 0)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(l)
+		var sg := BroadcastUI.segments(options, maxi(chosen, 0), 18)
+		sg.picked.connect(func(i: int) -> void: changed.call(i))
+		h.add_child(sg)
+		return h
+	var ml := MenuUI.label(text, 20, MenuUI.INK)
+	ml.custom_minimum_size = Vector2(230, 0)
+	h.add_child(ml)
+	var b := Button.new()
+	b.flat = true
+	b.focus_mode = Control.FOCUS_ALL
+	b.add_theme_font_override("font", FrontierHUD.serif())
+	b.add_theme_font_size_override("font_size", 20)
+	for st in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
+		b.add_theme_color_override(st, MenuUI.GOLD)
+	var at := [maxi(chosen, 0)]
+	b.text = String(options[at[0]]) if not options.is_empty() else ""
+	b.pressed.connect(func() -> void:
+		at[0] = (at[0] + 1) % maxi(options.size(), 1)
+		b.text = String(options[at[0]])
+		changed.call(at[0]))
+	h.add_child(b)
+	return h
+
+
+## The Settings rows (for a menu's sub-screen): volumes, the mouse, invert, fullscreen, vsync, the Character look. `player` gets the
 ## controls' changes at once (the pause menu's), null from the main menu. `broadcast`: the broadcast menus' look (BroadcastUI:
 ## the main menu's and the ring's Esc menu's); the open world's pause menu keeps the serif.
 static func rows(player: Node = null, broadcast := false) -> VBoxContainer:
@@ -155,6 +200,9 @@ static func rows(player: Node = null, broadcast := false) -> VBoxContainer:
 	v.add_child(toggle.call("Cap at 60 frames a second (cooler, quieter)", bool(get_value("display", "cap_60")), func(on: bool) -> void:
 		set_value("display", "cap_60", on)
 		apply_global()))
+	# the Character look (SoftLook): at once on every character shown, kept
+	v.add_child(choice("Character look", ["Classic", "Soft"], SoftLook.MODES.find(SoftLook.mode()), func(i: int) -> void:
+		SoftLook.set_mode(String(SoftLook.MODES[i])), broadcast))
 	if player == null:
 		# (chosen before a game, not in the middle of one)
 		v.add_child(toggle.call("Iron Man: injuries stay", bool(get_value("game", "iron_man")), func(on: bool) -> void:

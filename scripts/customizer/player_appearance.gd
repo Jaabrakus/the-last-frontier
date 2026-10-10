@@ -111,7 +111,8 @@ static func dressed_look(lk: Dictionary, fit: Dictionary) -> Dictionary:
 
 ## Puts body v4 (the part "head") with the look's hair and pubic hair on a CharacterBodyMesh, the garments of its
 ## outfit over it (PlayerOutfit: the basic dress unless the look chooses), the legacy outfit's meshes hidden, and
-## applies `lk`. Returns what PlayerOutfit.dress() did (has_hat, hide_regions, bulk_slots for the slung gear, parts).
+## applies `lk`; then the Character look (SoftLook.apply_body). Returns what PlayerOutfit.dress() did (has_hat, hide_regions,
+## bulk_slots for the slung gear, parts).
 static func dress(b: CharacterBodyMesh, lk: Dictionary) -> Dictionary:
 	if b.part_meshes("head").is_empty():
 		b.add_part("head", BodyMaterials.BODY_GLB)
@@ -125,6 +126,8 @@ static func dress(b: CharacterBodyMesh, lk: Dictionary) -> Dictionary:
 	for mi: MeshInstance3D in b.meshes:
 		if is_instance_valid(mi) and not own.has(mi):
 			mi.visible = false
+	# (the Character look: Soft puts soft copies of the materials on, Classic leaves them as made; SoftLook)
+	SoftLook.apply_body(b)
 	return fit
 
 
@@ -206,6 +209,7 @@ func _undress() -> void:
 		var mask := BodyMaterials.hide_mask(cloth[tag])
 		for mi: MeshInstance3D in body.part_meshes(tag):
 			_set_hide(mi, mask)
+	SoftLook.apply_body(body)                # (apply_look made new skin materials: the Character look on them too)
 
 
 static func _set_hide(mi: MeshInstance3D, mask: Vector2i) -> void:
