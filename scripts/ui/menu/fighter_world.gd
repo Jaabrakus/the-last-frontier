@@ -50,6 +50,10 @@ var _figs := {}
 var _building := {}
 var _order: Array = []
 var _sun: DirectionalLight3D
+var _fill: DirectionalLight3D
+## The classic light (built once) and the Look setting's Soft one (SoftWorld's study light, made when first wanted).
+var _env_classic: Environment
+var _env_soft: Environment
 ## The light's strengths (the lobby's tuning; a tool may change them before the first figure).
 var sun_energy := 2.6
 var sky_ambient := 0.62
@@ -151,6 +155,31 @@ func _ready() -> void:
 	host.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	add_child(host)
 	_build_light()
+	add_to_group(SoftWorld.HOSTS)
+	soft_world_sync()
+
+
+## The light as the Look setting says (SoftWorld.refresh calls it when the setting changes): Soft, the study's (its flat ambient,
+## its warm key light at its height from the same bearing, no fill; the background still clear: the lobby's picture is behind);
+## Classic, the lobby's own.
+func soft_world_sync() -> void:
+	if _sun == null:
+		return
+	if SoftLook.on():
+		if _env_soft == null:
+			_env_soft = SoftWorld.environment("noon")
+			_env_soft.background_mode = Environment.BG_CLEAR_COLOR
+		world.environment = _env_soft
+		_sun.look_at_from_position(Vector3.ZERO, SUN_TRAVELS)
+		SoftWorld.key_light(_sun, "noon", SUN_TRAVELS)
+		_fill.visible = false
+		SoftLook.set_ambient_share(SoftWorld.CHARACTER_AMBIENT)
+	else:
+		world.environment = _env_classic
+		_sun.light_color = Color(1.0, 0.97, 0.9)
+		_sun.light_energy = sun_energy
+		_sun.look_at_from_position(Vector3.ZERO, SUN_TRAVELS)
+		_fill.visible = true
 
 
 ## The saved look (or a tool's), validated; the character's own.
@@ -214,6 +243,7 @@ func _build_light() -> void:
 	env.adjustment_saturation = 1.02
 	env.adjustment_color_correction = GRADE_LUT.texture()
 	world.environment = env
+	_env_classic = env
 	# the noon sun: high, from the camera's left and a little behind it (the ring's own noon light at the lobby's camera)
 	_sun = DirectionalLight3D.new()
 	_sun.name = "Sun"
@@ -226,12 +256,12 @@ func _build_light() -> void:
 	host.add_child(_sun)
 	_sun.look_at_from_position(Vector3.ZERO, SUN_TRAVELS)
 	# a cool fill from the right so the shadow side keeps its shape
-	var fill := DirectionalLight3D.new()
-	fill.name = "Fill"
-	fill.light_color = Color(0.7, 0.8, 1.0)
-	fill.light_energy = fill_energy
-	host.add_child(fill)
-	fill.look_at_from_position(Vector3.ZERO, Vector3(0.3, -0.3, 0.9))
+	_fill = DirectionalLight3D.new()
+	_fill.name = "Fill"
+	_fill.light_color = Color(0.7, 0.8, 1.0)
+	_fill.light_energy = fill_energy
+	host.add_child(_fill)
+	_fill.look_at_from_position(Vector3.ZERO, Vector3(0.3, -0.3, 0.9))
 
 
 ## The figure for `el`, dressed (once): its station, the blob of shadow under it, the stance. All in this frame (a figure that is

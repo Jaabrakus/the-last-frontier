@@ -32,12 +32,15 @@ up on a new machine, what is switched off, and what is waiting on the owner.
 | Menu/HUD fixes | Esc menu fits 1280x720, HUD hidden under overlays, rules text follows Lives vs Zones, first-match key hints collapse, practice banner, credits | `scripts/ui/`, `data/ring/` |
 | Spellbreak FX | The rebuilt Spellbreak particle runtime is in the game and **switched OFF** (the owner prefers our own particles). Only the lightning bolt uses Spellbreak shading | `docs/claude_fx_handoff.md` (Update 2026-10-10), `scripts/fx/cascade/`, `data/bending/sb_fx/` |
 | Tooling | Capture kit, fx lineup tools, portable lock wrappers | `tools/ui_audit/`, `tools/fx/`, `tools/loop/` |
+| Look: Soft (default) | The owner's character study ("03 / softer palette + cel lighting") made the default look of the characters AND the world (owner, 2026-10-10: "this is the new default"). Characters: the study's palette (ring dress: your side teal, the other side cream, the element in the trims) and its soft three-band light. World: the study's sky, flat ambient, warm key light, linear tone curve, every surface in the study's colours, calmed textures; the world's light stays standard (not cel). Settings → Look: Classic gives back the old look exactly. Lobby plates: `assets/ui/menu/lobby_soft_<element>.jpg` | `scripts/customizer/soft_look.gd`, `scripts/world/env/soft_world.gd`, tests `tests/customizer/test_soft_look.gd`, `tests/env/test_soft_world.gd`, review shots `tools/character/soft_look_shots.gd` |
 
 ## Switches (what is on / off)
 
 - `data/bending/sb_fx/config.json`: master + one per element for the Spellbreak effects. **All four are `false`.** Do not turn one on
   without a side-by-side the owner picks from (`tools/fx/fx_lineup.gd el=<element>`).
 - `BendLooks.SB_BOLT` (lightning look): `true`; `false` brings the old blue bolt back exactly.
+- Settings → **Look** (`GameSettings` [look] character): `soft` (the default) or `classic` (characters and world exactly as before
+  2026-10-10). Script runs default to Classic unless they pass `character_look=soft` or set `SoftLook.override`.
 - `data/bending/loadout_apply.json`: `enabled` and per-node switches for the 8 live talents. Nothing applies unless the
   player has worn a loadout in the window (the default is Classic).
 

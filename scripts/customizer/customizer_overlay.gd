@@ -588,8 +588,6 @@ func _build_stage(sv: SubViewport) -> void:
 	var aps := inst.find_children("*", "AnimationPlayer", true, false)
 	var ap: AnimationPlayer = aps[0] if not aps.is_empty() else null
 	_body = CharacterBodyMesh.attach(sk, ap)
-	if _body:
-		_body.set_meta(SoftLook.META_OFF, true)   # (the creator's figure keeps the classic look: SoftLook)
 	BindRest.ensure_character(inst)
 	if ap and ap.has_animation(IDLE):
 		ap.play(IDLE)

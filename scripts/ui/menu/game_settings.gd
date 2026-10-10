@@ -7,7 +7,7 @@ extends RefCounted
 ##   [controls]  mouse (the look's sensitivity, FrontierPlayer.cs_sensitivity), invert_y
 ##   [display]   fullscreen, vsync
 ##   [game]      iron_man (Iron Man: injuries stay; see iron_man())
-##   [look]      character: the Character look, "soft" (the default) or "classic" (SoftLook)
+##   [look]      character: the Look (characters and world), "soft" (the default) or "classic" (SoftLook, SoftWorld)
 ##   [match]     the last Tidebreak setup (MatchSetup.save / load: element, foe, difficulty, rounds), for the main menu's
 ##               panel and its Quick match
 ##   [quick]     each element's quick spell on the left button ("move/variation"; MatchSetup.quick_of / set_quick)
@@ -133,7 +133,7 @@ static func apply_to(player: Node) -> void:
 	player.set("invert_y", bool(get_value("controls", "invert_y")))
 
 
-## A row of one choice among a few words (the Character look): the label and the words; `changed` gets the index picked. The
+## A row of one choice among a few words (the Look): the label and the words; `changed` gets the index picked. The
 ## broadcast look: a segmented choice (BroadcastUI.segments); the serif menus: the word in force, a press steps to the next.
 static func choice(text: String, options: Array, chosen: int, changed: Callable, broadcast := false) -> HBoxContainer:
 	var h := HBoxContainer.new()
@@ -168,7 +168,7 @@ static func choice(text: String, options: Array, chosen: int, changed: Callable,
 	return h
 
 
-## The Settings rows (for a menu's sub-screen): volumes, the mouse, invert, fullscreen, vsync, the Character look. `player` gets the
+## The Settings rows (for a menu's sub-screen): volumes, the mouse, invert, fullscreen, vsync, the Look. `player` gets the
 ## controls' changes at once (the pause menu's), null from the main menu. `broadcast`: the broadcast menus' look (BroadcastUI:
 ## the main menu's and the ring's Esc menu's); the open world's pause menu keeps the serif.
 static func rows(player: Node = null, broadcast := false) -> VBoxContainer:
@@ -200,8 +200,8 @@ static func rows(player: Node = null, broadcast := false) -> VBoxContainer:
 	v.add_child(toggle.call("Cap at 60 frames a second (cooler, quieter)", bool(get_value("display", "cap_60")), func(on: bool) -> void:
 		set_value("display", "cap_60", on)
 		apply_global()))
-	# the Character look (SoftLook): at once on every character shown, kept
-	v.add_child(choice("Character look", ["Classic", "Soft"], SoftLook.MODES.find(SoftLook.mode()), func(i: int) -> void:
+	# the Look (SoftLook, SoftWorld): at once on every character and the world shown, kept
+	v.add_child(choice("Look", ["Classic", "Soft"], SoftLook.MODES.find(SoftLook.mode()), func(i: int) -> void:
 		SoftLook.set_mode(String(SoftLook.MODES[i])), broadcast))
 	if player == null:
 		# (chosen before a game, not in the middle of one)

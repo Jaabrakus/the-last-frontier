@@ -155,6 +155,9 @@ first.
 - **No painted zone lines.**
 - **No cel shading of the world.** The stylized element VFX stay. The world's art direction (Thủy Vân) is "WoW Classic
   vibes": stylized, hand-painted, saturated.
+  - **Since 2026-10-10 the Tidebreak ring's default look is the owner's character study** (Settings → Look: Soft): its calm
+    palette and light on the characters and the world (`scripts/world/env/soft_world.gd`). The world's light is still
+    standard, never banded.
 - **Own animation clips only.** They are keyed by hand in Blender; nothing is imported or retargeted. Follow
   `AGENTS.md`, `animations/SOURCE.md` and `docs/animation_provenance.md`.
 - **Own assets only:** procedural, synthesized or authored. CC0 Poly Haven stays.

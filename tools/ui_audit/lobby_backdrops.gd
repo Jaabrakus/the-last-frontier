@@ -5,6 +5,9 @@ extends SceneTree
 ## your own end's gate and banners behind. Written to assets/ui/menu/lobby_<element>.jpg (1920 x 1080, drawn from a
 ## 3840 x 2160 render) and the sun's direction in the camera's frame printed, so the live fighter's light follows it.
 ##   zsh tools/loop/godot_run.sh --path . --resolution 1600x900 -s tools/ui_audit/lobby_backdrops.gd -- [els=fire,earth,water,air] [out=res://assets/ui/menu]
+##         [look=classic|soft]
+## look=soft: the ring under the Look setting's Soft (SoftWorld: the study's light and colours), written to lobby_soft_<element>.jpg
+## (the main menu shows those in Soft: MainMenu.lobby_plate).
 ## Needs a window (the ring is drawn); not headless. The ring is drawn off-window through the mock's Stage (a SubViewport, as
 ## tools/ring/palette_shots.gd does), so a window behind another one still renders. Read-only on the game; GameSettings
 ## goes to the tool's own cfg; the player's user://how_to.cfg is kept and given back (CaptureKit.keep: on disk, so a run the
@@ -19,6 +22,7 @@ const FOE_OF := {"fire": "water", "earth": "air", "water": "fire", "air": "earth
 
 var els: Array = ["fire", "earth", "water", "air"]
 var out := "res://assets/ui/menu"
+var look := "classic"
 const HOWTO := "user://how_to.cfg"
 
 
@@ -28,6 +32,7 @@ func _initialize() -> void:
 		match kv.get_slice("=", 0):
 			"els": els = Array(kv.get_slice("=", 1).split(",", false))
 			"out": out = kv.get_slice("=", 1)
+			"look": look = kv.get_slice("=", 1)
 	if not CaptureKit.begin(self, "lobby_backdrops"):
 		return
 	auto_accept_quit = false
@@ -36,6 +41,7 @@ func _initialize() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	GameSettings.path = OWN_CFG
 	MatchSetup._aim_help = "strong"
+	SoftLook.override = SoftLook.SOFT if look == "soft" else SoftLook.CLASSIC
 	RingRules.rule_set_override = "stock"
 	InputSetup.ensure()
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out))
@@ -81,7 +87,7 @@ func _run() -> void:
 		var aim := st.at(-1.0 + FighterWorld.LOBBY_AT.x, FighterWorld.LOBBY_AT.z, FighterWorld.LOBBY_AT.y)
 		var img := await st.shot("", Vector2i(3840, 2160), cam, aim, FighterWorld.LOBBY_FOV, 6.2)
 		img.resize(1920, 1080, Image.INTERPOLATE_LANCZOS)
-		var path := ProjectSettings.globalize_path(out.path_join("lobby_%s.jpg" % el))
+		var path := ProjectSettings.globalize_path(out.path_join(("lobby_soft_%s.jpg" if look == "soft" else "lobby_%s.jpg") % el))
 		img.save_jpg(path, 0.92)
 		print("LOBBY BACKDROPS wrote ", path)
 		# the sun in the lobby's frame (ring axes), where it travels, so FighterWorld's sun can follow it

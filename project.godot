@@ -79,6 +79,10 @@ sky_cloud_offset={
 "type": "vec4",
 "value": Vector4(0, 0, 0, 0)
 }
+softlook_ambient={
+"type": "float",
+"value": 0.45
+}
 wind_direction={
 "type": "vec2",
 "value": Vector2(0.866, -0.5)

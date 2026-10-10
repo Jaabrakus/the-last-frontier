@@ -78,6 +78,8 @@ func set_preset(name: String) -> void:
 	var dressing := RingDressing.find_in(level)
 	if dressing != null:
 		dressing.set_mood(preset)
+	# the Look setting's Soft: the study's light and colours over all this (the rig keeps running underneath, unseen)
+	SoftWorld.sync(level, preset)
 
 
 ## The mood's hour and date on the level's clock (stopped), the weather clear.

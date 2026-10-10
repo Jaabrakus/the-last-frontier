@@ -9,10 +9,10 @@ extends SceneTree
 ##             copy of the classic one (the classic code whole, plus light()), one soft shader per classic shader; Classic gives
 ##             the SAME classic materials back with every number as it was, except what the game changed on the copy meanwhile
 ##             (a hide mask), which is carried back; swapping again and again changes nothing more
-##   palette   a side's garment (the ring set) keeps its hue and lightness (chroma only a little less); the everyday dress moves
-##             toward the study colours; a metal zone is never recoloured
+##   palette   every cloth zone takes one of the study's colours (the ring dress too: the player's side dark, the other light);
+##             a metal zone is never recoloured
 ##   sides     every element's home and away dress (RingSides) stay as far apart as before in value and nearly as far in colour
-##   creator   a body marked META_OFF stays classic in Soft
+##   off       a body marked META_OFF stays classic in Soft (the creator's figure no longer is: it shows the chosen look)
 ##   child     ChildSkin works on the classic skin and the body is soft again after
 
 const OWN_CFG := "user://soft_look_test.cfg"
@@ -99,10 +99,10 @@ func _run() -> void:
 	_check(String(GameSettings.get_value("look", "character")) == "soft" and SoftLook.mode() == SoftLook.SOFT,
 			"set_mode(soft) is kept")
 	var rows := GameSettings.rows(null, true)
-	_check(rows.find_child("Characterlook", true, false) != null, "the Settings rows hold the Character look")
+	_check(rows.find_child("Look", true, false) != null, "the Settings rows hold the Look")
 	rows.free()
 	var rows2 := GameSettings.rows(null, false)
-	_check(rows2.find_child("Characterlook", true, false) != null, "the serif Settings rows hold the Character look")
+	_check(rows2.find_child("Look", true, false) != null, "the serif Settings rows hold the Look")
 	rows2.free()
 
 	# ---- classic: dress leaves the materials as made
@@ -135,8 +135,12 @@ func _run() -> void:
 		_check(m != was and m.get_meta(SoftLook.META_CLASSIC) == was, "Soft puts a soft copy over its classic material")
 		var sm := m as ShaderMaterial
 		var cs := (was as ShaderMaterial).shader
-		_check(SoftLook.is_soft(sm.shader) and sm.shader.code.begins_with(cs.code) \
-				and sm.shader.code.contains("void light()"), "the soft shader is the classic code whole plus light()")
+		var swapped := cs.code
+		for swap: Array in SoftLook.STUDY_SWAPS:
+			swapped = swapped.replace(String(swap[0]), String(swap[1]))
+		_check(SoftLook.is_soft(sm.shader) and sm.shader.code == SoftLook.with_ambient_share(swapped) + "\n" + SoftLook.STUDY_LIGHT,
+				"the soft shader is the classic code with the study's swaps, its ambient share and its light()")
+		_check(not sm.shader.code.contains("specular_schlick_ggx"), "no GGX specular in a soft shader (no plastic shine)")
 		kinds[SoftLook.kind_of(cs)] = true
 		if per_shader.has(cs):
 			_check(per_shader[cs] == sm.shader, "one soft shader per classic shader")
@@ -223,56 +227,77 @@ func _run() -> void:
 			if metal is Vector4 and (metal as Vector4)[z] > 0.5:
 				_check(t0 == t1, "a metal zone keeps its colour")
 				continue
-			var l0 := _lab(t0)
 			var l1 := _lab(t1)
+			var is_study := false
+			for k: String in SoftLook.PALETTE:
+				if (t1 as Vector4).is_equal_approx(ClothMaterials.lin4(Color(SoftLook.PALETTE[k]))):
+					is_study = true
+			_check(is_study, "every cloth zone takes a study colour (%s z%d)" % [(e[0] as Node).name, z])
 			if team:
 				team_n += 1
-				var c0 := Vector2(l0.y, l0.z).length()
-				_check(absf(l0.x - l1.x) < 0.004, "a side's garment keeps its lightness (%.3f -> %.3f)" % [l0.x, l1.x])
-				_check(c0 < 0.02 or absf(angle_difference(_hue(l0), _hue(l1))) < deg_to_rad(2.0), "a side's garment keeps its hue")
-				_check(Vector2(l1.y, l1.z).length() <= c0 + 0.0005, "a side's garment is no more saturated")
 			else:
 				every_n += 1
-				var sw := SoftLook.nearest_swatch(l0)
-				_check(l1.distance_to(sw) <= l0.distance_to(sw) + 0.0005, "the everyday dress moves toward the study colours")
 				print("  palette %s z%d %s -> %s" % [(e[0] as Node).name, z, Color(t0.x, t0.y, t0.z).linear_to_srgb().to_html(false),
 						Color(t1.x, t1.y, t1.z).linear_to_srgb().to_html(false)])
+			if l1.x < 0.0:
+				_check(false, "a soft tint is a colour")
 	_check(team_n > 0, "the ring dress was measured (%d zones)" % team_n)
 	_check(every_n > 0, "the everyday dress was measured (%d zones)" % every_n)
 
-	# ---- sides: home and away of every element, as the soft look draws them (the zone-0 tints of each garment, averaged)
+	# ---- sides: in the ring the player's side wears the study's dark main colour, the other side its light one (the owner chose
+	# "study colours, light vs dark", 2026-10-10); the element is in the trims. (In a match: RingSides.sides_override stands in
+	# for one; outside a match everyone wears the player's dark side, checked after.)
 	for el: String in Bending.ELEMENTS:
 		RingSides.sides_override = [[el], [el]]
 		var means := []
-		for team in 2:
-			var dress: Dictionary = RingSides.dress(team, el)
-			var acc0 := Vector3.ZERO
-			var acc1 := Vector3.ZERO
+		for dark in [true, false]:
+			var holder := Node3D.new()
+			root.add_child(holder)
+			if dark:
+				holder.add_to_group("player")
+			var sb := _body()
+			var actor: Node = sb
+			while actor.get_parent() != _holder:
+				actor = actor.get_parent()
+			actor.reparent(holder)
+			var lk := look.duplicate(true)
+			lk["outfit"] = PlayerAppearance.arena_outfit(el, float(lk.get("sex", 0.0)))
+			PlayerAppearance.dress(sb, lk)
+			var acc := Vector3.ZERO
 			var n := 0
-			for slot: String in dress:
-				var v: Variant = dress[slot]
-				if not (v is Dictionary and String((v as Dictionary).get("id", "-")) != "-"):
+			for e: Array in _surfaces(sb):
+				var m := e[2] as Material
+				var gid := String((e[0] as Node).get_meta("garment", ""))
+				if not m.has_meta(SoftLook.META_CLASSIC) or not SoftLook.team_garment(gid):
 					continue
-				var id := String(v.id)
-				var mats := ClothMaterials.garment_materials(PlayerOutfit.entry(id), PlayerOutfit.resolve_colors(id, v.get("colors", {})))
-				for k in mats:
-					var cm := mats[k] as ShaderMaterial
-					var t: Variant = cm.get_shader_parameter("tint0")
-					if t is Vector4:
-						acc0 += _lab(t)
-						acc1 += _lab(SoftLook.soften_lin(t, SoftLook.team_garment(id)))
-						n += 1
-			means.append([acc0 / maxf(n, 1), acc1 / maxf(n, 1), n])
-		RingSides.sides_override = null
-		if means[0][2] == 0 or means[1][2] == 0:
+				if not ("tunic" in gid or "top" in gid or "parka" in gid):
+					continue
+				var t: Variant = (m as ShaderMaterial).get_shader_parameter("tint0")
+				if t is Vector4:
+					acc += _lab(t)
+					n += 1
+			means.append([acc / maxf(n, 1), n])
+			holder.queue_free()
+		if means[0][1] == 0 or means[1][1] == 0:
 			continue
-		var d0: float = (means[0][0] as Vector3).distance_to(means[1][0])
-		var d1: float = (means[0][1] as Vector3).distance_to(means[1][1])
-		var v0: float = absf((means[0][0] as Vector3).x - (means[1][0] as Vector3).x)
-		var v1: float = absf((means[0][1] as Vector3).x - (means[1][1] as Vector3).x)
-		print("  sides %s: dE %.1f -> %.1f, value %.3f -> %.3f" % [el, d0 * 100.0, d1 * 100.0, v0, v1])
-		_check(d1 >= 0.84 * d0, "%s's sides stay apart in colour (dE %.1f -> %.1f)" % [el, d0 * 100.0, d1 * 100.0])
-		_check(absf(v1 - v0) < 0.005, "%s's sides keep their value difference (%.3f -> %.3f)" % [el, v0, v1])
+		var dv: float = (means[1][0] as Vector3).x - (means[0][0] as Vector3).x
+		print("  sides %s: main garment lightness dark %.3f, light %.3f" % [el, (means[0][0] as Vector3).x, (means[1][0] as Vector3).x])
+		_check(dv > 0.15, "%s: the other side's main garment is clearly lighter than the player's (%.3f)" % [el, dv])
+	RingSides.sides_override = null
+	# outside a match (the lobby's figure): the player's side, the study's teal, whoever wears it
+	var lb := _body()
+	var llk := look.duplicate(true)
+	llk["outfit"] = PlayerAppearance.arena_outfit("earth", float(llk.get("sex", 0.0)))
+	PlayerAppearance.dress(lb, llk)
+	var teal := ClothMaterials.lin4(Color(SoftLook.PALETTE["teal"]))
+	var main_teal := 0
+	for e: Array in _surfaces(lb):
+		var gid := String((e[0] as Node).get_meta("garment", ""))
+		if (e[2] as Material).has_meta(SoftLook.META_CLASSIC) and SoftLook.team_garment(gid) and ("tunic" in gid or "top" in gid or "parka" in gid):
+			var t: Variant = ((e[2] as ShaderMaterial).get_shader_parameter("tint0"))
+			if t is Vector4 and (t as Vector4).is_equal_approx(teal):
+				main_teal += 1
+	_check(main_teal > 0, "outside a match a fighter's main garment is the study's teal")
 
 	# ---- creator's figure
 	var cb := _body()
@@ -281,7 +306,7 @@ func _run() -> void:
 	var any_soft := false
 	for e: Array in _surfaces(cb):
 		any_soft = any_soft or (e[2] as Material).has_meta(SoftLook.META_CLASSIC)
-	_check(not any_soft, "the creator's figure (META_OFF) stays classic in Soft")
+	_check(not any_soft, "a body marked META_OFF stays classic in Soft")
 
 	# ---- a child's skin
 	var kid := _body()

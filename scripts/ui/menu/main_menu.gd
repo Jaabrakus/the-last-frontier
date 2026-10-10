@@ -183,6 +183,7 @@ func _ready() -> void:
 	_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_backdrop)
+	add_to_group(SoftWorld.HOSTS)
 	_art_layout = BroadcastUI.cover(self)
 	_art_layout.name = "ArtLayout"
 	_slab = Control.new()
@@ -444,13 +445,27 @@ func _build_ticker(P: Control) -> void:
 	BroadcastUI.put(kr, h, Rect2(16, 14, 382, 36))
 
 
+## The lobby's deck plate for `el`: the ring as the Look setting draws it (Soft: lobby_soft_<el>.jpg, the ring in the study's
+## light and colours; Classic: lobby_<el>.jpg).
+static func lobby_plate(el: String) -> Texture2D:
+	for path: String in ([LOBBY_DIR + "lobby_soft_%s.jpg" % el] if SoftLook.on() else []) + [LOBBY_DIR + "lobby_%s.jpg" % el]:
+		if ResourceLoader.exists(path):
+			return load(path) as Texture2D
+	return null
+
+
+## The Look setting changed (SoftWorld.refresh): the deck plate as it says now.
+func soft_world_sync() -> void:
+	if _backdrop != null:
+		_backdrop.texture = lobby_plate(MatchSetup.element)
+
+
 ## The lobby for MatchSetup.element: its deck plate, the colour's slab, your fighter's card, the bug, the rows' colour. Again
 ## after the setup changed the element (the screen back from the match setup).
 func _paint_lobby() -> void:
 	var el := MatchSetup.element
 	var pc := BroadcastUI.plate_c(el)
-	var path := LOBBY_DIR + "lobby_%s.jpg" % el
-	_backdrop.texture = load(path) as Texture2D if ResourceLoader.exists(path) else null
+	_backdrop.texture = lobby_plate(el)
 	# the slab of your colour behind your fighter, a teal sweep beside it, a white edge; the hatching melts away down it
 	for c in _slab.get_children():
 		_slab.remove_child(c)

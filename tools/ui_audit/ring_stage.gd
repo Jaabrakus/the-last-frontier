@@ -202,6 +202,8 @@ func shot(name: String, px: Vector2i, from: Vector3, to: Vector3, fov: float, do
 		a.dof_blur_far_distance = dof
 		a.dof_blur_far_transition = dof * 1.6
 		a.dof_blur_amount = 0.06
+		if SoftWorld.active():
+			a.auto_exposure_enabled = false     # (the soft world's light has none: SoftWorld's own attributes)
 		view.camera.attributes = a
 	else:
 		view.camera.attributes = null
