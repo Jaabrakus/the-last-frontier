@@ -78,3 +78,21 @@ up on a new machine, what is switched off, and what is waiting on the owner.
    `artifacts/ui_audit/advancement/plan.md` Phase B3, local only; the summary is in `loadouts_live.md`).
 4. The Proletariat written-grant location (above), and whether to publish the Spellbreak-derived files (`assets/fx/spellbreak/`,
    ~88 MB, dormant) outside the private repository.
+
+## Known gaps at handoff (be honest about these)
+
+- **Live loadouts (Boxing + the 8 talents):** built and tested by their builder (`tests/ring/test_loadout_apply.gd`, the fairness soak
+  in `docs/tidebreak/loadouts_live.md`), but the independent review pass was cut off by a usage limit. Re-run that review before
+  trusting it: check Classic is unchanged (nothing worn = identical numbers), that each talent changes only the wearer, and that Boxing
+  keeps Classic's cast timings. The default is safe (nothing applies until a loadout is worn in the window).
+- **Menus, first pass, open items from the critic:** the between-games round screen and the loading screen still use the old serif look;
+  the match-setup fighter cards are about 30% smaller than the approved mockup; at 1280x720 the match card's wrapped help lines touch the
+  next row's rule; the lobby adds a ~1.1 s frozen frame about 1.1 s after the menu appears. Second pass (loading, practice, settings,
+  credits, round screen) is not started.
+- **Advancement window:** a critic scored it 6/10 against the owner's reference clip (sparse lattice, flat node art, muddy backdrops,
+  long tooltips, a gate bypass, a status-line overlap); a repair pass addressed those and was not re-scored. Judge it by eye.
+  It saves loadouts; only Boxing and the 8 number-only talents change play (the rest are preview).
+- **Local only (git-ignored), regenerate or ask the owner:** `artifacts/` (mockup renders, reference frames, audit screenshots, the
+  skill-tree web mockup generator) and `Spellbreak_Reference_Extracts/`.
+- **Menu mockups** `tools/ui_audit/menu_variants/` (A clean, B broadcast, C painted, D advancement-matched) are kept for reference;
+  B was chosen and built, the others are superseded.
