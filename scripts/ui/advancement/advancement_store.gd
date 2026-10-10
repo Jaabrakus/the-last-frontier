@@ -63,8 +63,10 @@ static func _load() -> void:
 	var f := file()
 	var d: Variant = null
 	if FileAccess.file_exists(f):
-		d = JSON.parse_string(FileAccess.get_file_as_string(f))
-	var raw: Dictionary = d if d is Dictionary and String((d as Dictionary).get("format", "")) == FORMAT else {}
+		var j := JSON.new()                      # (not JSON.parse_string: an empty or broken file is Classic, not an engine error)
+		if j.parse(FileAccess.get_file_as_string(f)) == OK:
+			d = j.data
+	var raw: Dictionary = d if d is Dictionary and _str((d as Dictionary).get("format"), "") == FORMAT else {}
 	dropped = []
 	var out := {"format": FORMAT, "version": VERSION, "tree_version": AdvancementData.tree_version(), "elements": {},
 			"world": raw.get("world", {}) if raw.get("world") is Dictionary else {}}
@@ -75,27 +77,48 @@ static func _load() -> void:
 	_doc_file = f
 
 
+## A saved value read as its type, else `def` (a hand-edited or damaged file: null, a string for a number, a dictionary for a
+## name never stops the read; JSON numbers are floats, so a whole float is a whole number and any other is not).
+static func _str(v: Variant, def: String) -> String:
+	return String(v) if v is String or v is StringName else def
+
+
+static func _int(v: Variant, def: int) -> int:
+	if v is int:
+		return v
+	if v is float and is_finite(v) and float(v) == floorf(v) and absf(v) < 1e15:
+		return int(v)
+	return def
+
+
+static func _bool(v: Variant, def: bool) -> bool:
+	return v if v is bool else def
+
+
 static func _clean_element(el: String, e: Dictionary) -> Dictionary:
 	var canon := AdvancementData.canon_style(el)
-	var st := String(e.get("style", canon))
+	var st := _str(e.get("style"), canon)
 	if not AdvancementData.style_fits(el, st):
 		st = canon
 	var slots: Array = []
 	var raw: Array = e.get("slots", []) if e.get("slots") is Array else []
 	for i in AdvancementData.slot_count():
 		slots.append(_clean_slot(el, i, raw[i] if i < raw.size() and raw[i] is Dictionary else {}, st))
-	var worn := int(e.get("worn", -1))
+	var worn := _int(e.get("worn"), -1)
 	if worn < -1 or worn >= slots.size():
 		worn = -1
 	return {"style": st, "worn": worn, "slots": slots}
 
 
 static func _clean_slot(el: String, i: int, s: Dictionary, el_style: String) -> Dictionary:
-	var st := String(s.get("style", el_style))
+	var st := _str(s.get("style"), el_style)
 	if not AdvancementData.style_fits(el, st):
 		st = el_style
 	var nodes: Array = []
 	for v: Variant in (s.get("nodes", []) if s.get("nodes") is Array else []):
+		if not (v is String or v is StringName):
+			dropped.append("%s/%d: %s (not an id)" % [el, i, str(v)])
+			continue
 		var id := String(v)
 		var n := AdvancementData.node(id)
 		var why := ""
@@ -111,8 +134,8 @@ static func _clean_slot(el: String, i: int, s: Dictionary, el_style: String) -> 
 			dropped.append("%s/%d: %s (%s)" % [el, i, id, why])
 			continue
 		nodes.append(id)
-	var out := {"name": String(s.get("name", "")), "style": st, "nodes": nodes, "from": String(s.get("from", "")),
-			"saved_unix": int(s.get("saved_unix", 0)), "keep": bool(s.get("keep", false))}
+	var out := {"name": _str(s.get("name"), ""), "style": st, "nodes": nodes, "from": _str(s.get("from"), ""),
+			"saved_unix": _int(s.get("saved_unix"), 0), "keep": _bool(s.get("keep"), false)}
 	var lo := AdvancementLoadout.new(el, st, nodes)
 	var why_bad := lo.valid()
 	if why_bad != "":
