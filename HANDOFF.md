@@ -1,5 +1,7 @@
 # Handoff: where Tidebreak stands (2026-10-07)
 
+> **Newer:** read `docs/tidebreak/start_here_2026-10-10.md` too: set-up on a new machine, what was built after this page was written, what is switched off, and what is waiting on the owner.
+
 Read this first to continue the work. It covers the game as it is, how it was built, what is unfinished, and the
 owner's standing rules. The design detail is in `docs/bending_design.md` and `docs/tidebreak/`.
 

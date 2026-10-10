@@ -5,10 +5,11 @@
 # ring, bending, sway, npc, hud/ui, perf, smoke, the play-check per element and scheme, the Thuy Van baselines,
 # tests/customizer, tests/story, tests/env). Logs: logs/gate_r4_<name>.log. Compare with gate_r2.tsv and the cleanup gate
 # (logs/gate_clean_*). Prints "DONE <name> <EXIT> | <result> | SE <n>".
-S=/private/tmp/claude-501/-Users-kiwimango-Downloads-Frontier/84dd193e-59da-450f-a5ed-c6e1c2e9b538/scratchpad
+S=${TB_SCRATCH:-${TMPDIR:-/tmp}/tidebreak-scratch}
 W=/Users/kiwimango/Downloads/Frontier/.claude/worktrees/spellcraft
-R="$S/run_test_fps.sh"
-export GODOT_TIMEOUT=420
+R="${0:A:h}/run_test_fps.sh"      # (the sibling in tools/loop, not a copy in some session's scratchpad)
+export TB_SCRATCH="$S" GODOT_TIMEOUT=420
+mkdir -p "$S/logs"
 
 one() {
   local fps="$1"; local name="gate_r4_$2"; shift 2

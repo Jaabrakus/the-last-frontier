@@ -175,7 +175,7 @@ func _initialize() -> void:
 			args[a.get_slice("=", 0)] = a.substr(a.find("=") + 1)
 	out = args.get("out", "user://military_preview")
 	DirAccess.make_dir_recursive_absolute(out)
-	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, OS.has_environment("TB_ON_TOP"))
 	_shader = Shader.new()
 	_shader.code = PREVIEW_SHADER
 	_cover_skin = Shader.new()

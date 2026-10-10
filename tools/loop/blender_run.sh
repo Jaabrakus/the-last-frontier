@@ -2,8 +2,10 @@
 # Blender headless under the same slotted lock as Godot (godot_run.sh: SLOTS slots, the owner's "3 at once"), niced,
 # time-limited.
 #   zsh blender_run.sh -b -P tools/anim_author/blender/bend_clips.py -- --out /path/bend.json
-BASE=/private/tmp/claude-501/-Users-kiwimango-Downloads-Frontier/84dd193e-59da-450f-a5ed-c6e1c2e9b538/scratchpad/godot.lock
+BASE="${TB_LOCK_DIR:-${TMPDIR:-/tmp}/tidebreak-locks}/godot.lock"   # one lock for Godot and Blender; TB_LOCK_DIR moves it
 SLOTS=${GODOT_SLOTS:-3}
+# a reboot empties /private/tmp: without the lock's parent folder mkdir never succeeds and this waits forever
+mkdir -p "$(dirname "$BASE")"
 LOCK=""
 while [[ -z "$LOCK" ]]; do
   for i in $(seq 1 $SLOTS); do
@@ -14,4 +16,4 @@ while [[ -z "$LOCK" ]]; do
   [[ -z "$LOCK" ]] && sleep 3
 done
 trap 'rmdir "$LOCK" 2>/dev/null' EXIT INT TERM
-nice -n 10 perl -e 'alarm shift; exec @ARGV' "${BLENDER_TIMEOUT:-900}" /Applications/Blender.app/Contents/MacOS/Blender "$@"
+nice -n 10 perl -e 'alarm shift; exec @ARGV' "${BLENDER_TIMEOUT:-900}" "${BLENDER_BIN:-/Applications/Blender.app/Contents/MacOS/Blender}" "$@"

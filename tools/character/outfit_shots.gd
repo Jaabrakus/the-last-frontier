@@ -46,7 +46,7 @@ func _initialize() -> void:
 			args[a.get_slice("=", 0)] = a.substr(a.find("=") + 1)
 	out = args.get("out", "user://outfit_shots")
 	DirAccess.make_dir_recursive_absolute(out)
-	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, OS.has_environment("TB_ON_TOP"))
 	if String(args.get("light", "game")) == "game":
 		await _game_stage()
 	else:

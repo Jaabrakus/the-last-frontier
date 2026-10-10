@@ -126,7 +126,7 @@ func _initialize() -> void:
 			args[a.get_slice("=", 0)] = a.substr(a.find("=") + 1)
 	out = args.get("out", "user://woodlands_preview")
 	DirAccess.make_dir_recursive_absolute(out)
-	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, OS.has_environment("TB_ON_TOP"))
 	cat = JSON.parse_string(FileAccess.get_file_as_string(SET_CATALOG))
 	shader = Shader.new()
 	shader.code = SHADER
