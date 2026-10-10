@@ -455,6 +455,85 @@ visual references, no animation files imported) is his statement; the rows below
   The `axe_d` fit and the `Actor_B_from_A.res` carry read are the specific inputs to trace for the parry, high-block and stab
   clips before they are counted as fully own.
 
+## Fighting style clips: Boxing for fire (`animations_extra/Frontier_Style_Boxing.res`)
+
+Recorded 2026-10-09 from the generator code (observations, not an independent audit of the binary library). The first
+fighting style (docs/fighting_styles_design.md: each element keeps its moves, a style re-animates how the body performs
+them). The visual references were watched by Claude in the built-in browser for this task, on the owner's instruction
+("we need to watch videos on martial art styles and create animations for them"); their links and the timestamps used are
+in `docs/fighting_styles/boxing_reference.md` (V1-V4 below).
+
+| Clip | Added | Generator | Inputs | Visual references watched |
+| --- | --- | --- | --- | --- |
+| `own-style-boxing-stance` | 2026-10-09 | `tools/anim_author/blender/style_boxing.py` (`stance`, a loop typed as a function, `stance_at`) | the rig's rest pose; keys typed in the generator | V1, V3 |
+| `own-style-boxing-jab` | 2026-10-09 | `style_boxing.py` (`jab`) | the rig's rest pose; keys typed in `CLIPS` | V2, V4 (timing) |
+| `own-style-boxing-cross` | 2026-10-09 | `style_boxing.py` (`cross`) | the rig's rest pose; keys typed in `CLIPS` | V2, V4 (timing) |
+| `own-style-boxing-hook` | 2026-10-09 | `style_boxing.py` (`hook`) | the rig's rest pose; keys typed in `CLIPS` | V4 |
+| `own-style-boxing-punch` | 2026-10-09 | `style_boxing.py` (`punch`) | the rig's rest pose; keys typed in `CLIPS` | V2 (the cross it extends with a step) |
+| `own-style-boxing-fireball` | 2026-10-09 | `style_boxing.py` (`fireball`, an overhand) | the rig's rest pose; keys typed in `CLIPS` | none (keyed from standard boxing mechanics) |
+| `own-style-boxing-lightning` | 2026-10-09 | `style_boxing.py` (`lightning`, a charged straight) | the rig's rest pose; keys typed in `CLIPS` | V2 (the straight it ends on) |
+| `own-style-boxing-ground-punch` | 2026-10-09 | `style_boxing.py` (`ground_punch`, the Kick; the owner's choice) | the rig's rest pose; keys typed in `CLIPS` | none (the project's own move) |
+| `own-style-boxing-uppercut` | 2026-10-09 | `style_boxing.py` (`uppercut`, the High Kick; the owner's choice) | the rig's rest pose; keys typed in `CLIPS` | none (keyed from standard boxing mechanics) |
+| `own-style-boxing-flurry` | 2026-10-09 | `style_boxing.py` (`flurry`, a 1-2 flurry) | the rig's rest pose; keys typed in `CLIPS` | V2 (its jab and cross), V4 (timing) |
+| `own-style-boxing-slip` | 2026-10-09 | `style_boxing.py` (`slip`, the Parry) | the rig's rest pose; keys typed in `CLIPS` | V2 (the counter jab); the slip itself none |
+| `own-style-boxing-step-in`, `-step-back`, `-step-left`, `-step-right` | 2026-10-09 | `style_boxing.py` (`step_in`, `step_back`, `step_left`, `step_right`) | the rig's rest pose; keys typed in `CLIPS` | V3 (the stance in motion); the steps themselves none |
+
+- V1 FightCamp, "Boxing Stance | Beginner Step-By-Step Tutorial", https://www.youtube.com/watch?v=SjLXzCpRS8U; V2 FightCamp,
+  "How to Punch: Jab & Cross Beginner Boxing Tutorial", https://www.youtube.com/watch?v=YsFK1MMDQgk; V3 FightCamp, "LEARN
+  BEGINNER BOXING FOOTWORK IN 5 MINUTES | Beginner Boxing", https://www.youtube.com/watch?v=dg2Jp3F30Lw; V4 Tony Jeffries,
+  "Basics of Boxing - Training for Beginners at Home", https://www.youtube.com/watch?v=kKDHdsVN0b8. Watched as visual
+  references only: paused and looked at, nothing downloaded, traced, motion-captured or pose-estimated. The clips marked
+  "none" were not checked against a video: the browser pane could not draw the videos for the rest of the session and the
+  owner chose to skip that check (2026-10-09); they are keyed from standard boxing mechanics.
+- `style_boxing.py` keys body and limb targets by hand in its `CLIPS` table (bend_clips.py's channels) and poses and bakes
+  them with `tools/anim_author/blender/bend_clips.py`'s own solver (`pose()`, two-bone IK with `rigkit.ik2`, and `bake()`),
+  imported as a module, on the skeleton of `assets/character/actor_b_body.glb` in Blender. For this bake only (bend_clips.py
+  itself is unchanged) it sets bend_clips' finger curl table to its own `BOX_CURL` and wraps `pose()` so that each thumb is
+  then folded across its fist by two-bone IK on the thumb's own joints (`_thumb_fold`; the owner, 2026-10-09: "make sure the
+  hand ik is closed"); both read only the posed rig. Every clip starts and ends on the boxing guard, the stance loop's
+  first frame, keyed from the rig's rest pose. It reads no library clip, no `dump_move.gd` / `dump_pose.gd` output and no
+  `rigkit.Native` / `MirrorNative`; `fit_ref.gd` was not run. There are no mirrored twins (the stance is orthodox).
+- `tools/anim_author/install_style.gd` writes the baked rotations and root positions into new animations named
+  `own-style-boxing-*`. It reads `own-form-release` from `animations_extra/Frontier_Form.res` only for the track path
+  prefix (as `install_bend.gd` does), writes no `native_asset_id`, `source_attribution` or `original_name`, and sets an
+  `authored` meta naming `style_boxing.py`, the clip's moments (`strike_s`, `hold_s`, `back_s`, `antic_s`, `follow_s`) and
+  words (`hand`, `mask`, `root`, `style`, `element`, `move`, `mode`, `stills`).
+- The clips are not wired into the game yet (animations only; no gameplay numbers). Stills:
+  `tools/anim_author/style_preview.gd`.
+
+## Fighting style clips: Capoeira for air (`animations_extra/Frontier_Style_Capoeira.res`)
+
+Recorded 2026-10-09 from the generator code (observations, not an independent audit of the binary library). The second
+fighting style (the owner chose it on 2026-10-09). No video was watched for these clips: the built-in browser pane could not
+draw the videos (hidden, then the Mac restarted), so they are keyed from standard capoeira mechanics; only a catalogue's
+chapter list was read (move names and times), Mestre Koioty, "60 movimentos de capoeira para Luta (51 Golpes e 9 esquivas)",
+https://www.youtube.com/watch?v=hXyQk4LTlm8 (`docs/fighting_styles/capoeira_reference.md`).
+
+| Clip | Added | Generator | Inputs | Visual references watched |
+| --- | --- | --- | --- | --- |
+| `own-style-capoeira-ginga` | 2026-10-09 | `tools/anim_author/blender/style_capoeira.py` (`ginga`, a loop) | the rig's rest pose; keys typed in the generator | none |
+| `own-style-capoeira-meia-lua`, `-meia-lua-front` | 2026-10-09 | `style_capoeira.py` (`meia_lua`, `meia_lua_front`) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-capoeira-martelo` | 2026-10-09 | `style_capoeira.py` (`martelo`) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-capoeira-bencao` | 2026-10-09 | `style_capoeira.py` (`bencao`) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-capoeira-armada` | 2026-10-09 | `style_capoeira.py` (`armada`) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-capoeira-esquiva` | 2026-10-09 | `style_capoeira.py` (`esquiva`) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-capoeira-au` | 2026-10-09 | `style_capoeira.py` (`au`) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-capoeira-rasteira` | 2026-10-09 | `style_capoeira.py` (`rasteira`) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-capoeira-compasso` | 2026-10-09 | `style_capoeira.py` (`compasso`) | the rig's rest pose; keys typed in `CLIPS` | none |
+
+- `style_capoeira.py` keys body and limb targets by hand in its `CLIPS` table and poses and bakes them with
+  `tools/anim_author/blender/style_kit.py`: bend_clips.py's own solver (`pose()`, two-bone IK with `rigkit.ik2`) and
+  `bake()`, imported, on the skeleton of `assets/character/actor_b_body.glb` in Blender, with the closed-hand finger table and
+  thumb fold first made for the boxing clips (set on bend_clips for the bake only; bend_clips.py unchanged). Every clip
+  starts and ends on the ginga's first frame, keyed from the rig's rest pose. It reads no library clip, no `dump_move.gd` /
+  `dump_pose.gd` output and no `rigkit.Native` / `MirrorNative`; `fit_ref.gd` was not run. The armada and the compasso
+  turn the figure with bend_clips' `spin` channel and the au with its `cart` channel and ground contact (the keys typed in
+  the body's frame).
+- `tools/anim_author/install_style.gd` installs them as for the boxing clips (above): the track path prefix from
+  `own-form-release`, no `native_asset_id`, `source_attribution` or `original_name`, an `authored` meta naming the generator.
+- Parked 2026-10-09: the owner played them ("the animations for the caporia looks whack") and chose to drop Capoeira for
+  now; the library stays, mapped nowhere (not in `data/bending/style_poses.json`, not wired into the game).
+
 ## Elemental presentation polish (2026-10-08)
 
 Direct generator changes: `tools/anim_author/blender/bend_clips.py` updates the
@@ -466,3 +545,4 @@ The separate Spellbreak reference conversions retain their third-party origin
 and stay outside the project animation libraries. See
 `docs/animation_reference_lessons.md` for source observations, inferences,
 conversion boundaries and validation.
+Spellbreak licence (2026-10-08): Proletariat licensed all Spellbreak assets for use in Tidebreak, including public release. Written grant: [where you keep it].

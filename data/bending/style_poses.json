@@ -1,0 +1,61 @@
+{
+  "format": "tidebreak-style-poses",
+  "version": 1,
+  "_doc": "Fighting styles' poses (docs/fighting_styles_design.md: each element keeps its moves, a style re-animates how the body performs them). Per style: its element, its clip library (tools/anim_author/install_style.gd), its stance and held-guard loop, and the moves' modes it re-poses (data/bending/poses.json's shape: a clip name, or {clip, alt}); the modes it leaves out keep the element's own. Read by BendPoses per body (2026-10-10, B1 of the Advancement window, docs/tidebreak/loadouts_live.md): a body whose meta fighting_style names a live style (data/bending/loadout_apply.json styles_live, animated in fighting_styles.json; RingMode.restart sets it on the player from the worn loadout, never on a bot) is picked from these entries first, the element's own for any move or mode left out. A style is animation only: every pick is timed as the element's own pose for that move and mode (the same hold_s, strike_s and back_s, the same end and the same root, BendPoses._timed_as), the style's clip shown on that timeline by a warp, so a cast, its hit and the caster's root take exactly the Classic time; the clips' own times (their metas) only say where the style's clip wants to wind up, strike and recover. tools/anim_author/style_play.gd still puts a style over poses.json through BendPoses' test hooks for the owner to play it (its own timings, global). Boxing (fire), 2026-10-09: the left click's Embers alternates the jab and the cross (alt, the combo window) and the string's Pop is the lead hook; key 1's Punch the stepped straight right, its tap twice Lightning the charged straight; key 2's Kick the ground punch and its High Kick the rising uppercut (the owner's choices); key 3's Step one boxer's step (the pose is picked by the mode, not by the direction held); E's Parry the slip and counter jab, E held the guard loop. The overhand Fireball (the grown Punch) and the 1-2 flurry have clips but no pose the keys reach yet: the game plays a pose's grow clip nowhere so far. Capoeira (air) was tried on 2026-10-09 and parked (the owner: \"the animations for the caporia looks whack ... keep it simple for now\"): its clips stay in animations_extra/Frontier_Style_Capoeira.res, mapped nowhere.",
+  "styles": {
+    "boxing": {
+      "element": "fire",
+      "library": "res://animations_extra/Frontier_Style_Boxing.res",
+      "stance": "own-style-boxing-stance",
+      "guard_hold": "own-style-boxing-stance",
+      "modes": {
+        "fire_jab": {
+          "embers": {
+            "clip": "own-style-boxing-jab",
+            "alt": "own-style-boxing-cross"
+          },
+          "pop": "own-style-boxing-hook",
+          "jab": {
+            "clip": "own-style-boxing-jab",
+            "alt": "own-style-boxing-cross"
+          },
+          "double_jab": "own-style-boxing-flurry"
+        },
+        "fire_blast": {
+          "punch": {
+            "clip": "own-style-boxing-punch",
+            "grow": {
+              "clip": "own-style-boxing-fireball"
+            }
+          },
+          "stream": "own-style-boxing-flurry",
+          "fireball": "own-style-boxing-fireball"
+        },
+        "fire_arc": {
+          "lightning": "own-style-boxing-lightning"
+        },
+        "fire_kick": {
+          "kick": "own-style-boxing-ground-punch",
+          "high_kick": "own-style-boxing-uppercut"
+        },
+        "fire_parry": {
+          "parry": "own-style-boxing-slip"
+        },
+        "footwork": {
+          "step": "own-style-boxing-step-back",
+          "hop": "own-style-boxing-step-right",
+          "back_flip": "own-style-boxing-step-back",
+          "ignite_step": "own-style-boxing-step-in"
+        }
+      },
+      "clips": {
+        "own-style-boxing-ground-punch": {
+          "root": true
+        },
+        "own-style-boxing-uppercut": {
+          "root": true
+        }
+      }
+    }
+  }
+}
