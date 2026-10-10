@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12.87 33.36 C 19.21 30.4, 23.86 40.37, 24.52 48.89 C 24.4 53.36, 17.63 55.41, 15.16 47.74 C 12.2 41.39, 7.43 35.9, 12.87 33.36 Z" stroke-width="2.8" fill="#fff" fill-opacity="0.92"/>
+  <path d="M40.48 14.26 C 47.06 16.66, 43.3 26.99, 37.74 33.48 C 34.49 36.56, 28.26 33.22, 31.93 26.05 C 34.33 19.47, 34.84 12.21, 40.48 14.26 Z" stroke-width="2.8" fill="#fff" fill-opacity="0.92"/>
+  <path d="M10 18 C 14 8, 26 4, 30 10" stroke-width="1.6"/>
+  <path d="M27.86 10.45 L31 12 L30.77 8.51" stroke-width="1.6"/>
+  <path d="M56 46 L62 46" stroke-width="1.6"/>
+  <path d="M54.83 48.83 L57.09 51.09" stroke-width="1.6"/>
+  <path d="M52 50 L52 56" stroke-width="1.6"/>
+  <path d="M49.17 48.83 L46.91 51.09" stroke-width="1.6"/>
+  <path d="M48 46 L42 46" stroke-width="1.6"/>
+  <path d="M49.17 43.17 L46.91 40.91" stroke-width="1.6"/>
+  <path d="M52 42 L52 36" stroke-width="1.6"/>
+  <path d="M54.83 43.17 L57.09 40.91" stroke-width="1.6"/>
+  <path d="M49.5 44 C 48.7 40.96, 51.9 40, 52 36 C 53.4 38.72, 55.3 40.64, 54.5 44 C 54.1 45.6, 49.9 45.6, 49.5 44 Z" stroke-width="1.6" fill="#fff" fill-opacity="0.92"/>
+</svg>

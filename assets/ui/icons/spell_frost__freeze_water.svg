@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M4 40 C 8 33, 12 47, 16 40 C 20 33, 24 47, 28 40" stroke-width="3.4"/>
+  <path d="M30 40 L60 40" stroke-width="3.4"/>
+  <path d="M34 46 L38 44" stroke-width="1.6"/>
+  <path d="M44 47 L49 44" stroke-width="1.6"/>
+  <path d="M54 46 L58 44" stroke-width="1.6"/>
+  <path d="M30 52 L60 52" stroke-width="1.6"/>
+  <path d="M45 20 L45 9" stroke-width="2.8"/>
+  <path d="M45 13.62 L47.36 11" stroke-width="1.6"/>
+  <path d="M45 13.62 L42.64 11" stroke-width="1.6"/>
+  <path d="M45 20 L35.47 14.5" stroke-width="2.8"/>
+  <path d="M39.47 16.81 L38.39 13.46" stroke-width="1.6"/>
+  <path d="M39.47 16.81 L36.03 17.54" stroke-width="1.6"/>
+  <path d="M45 20 L35.47 25.5" stroke-width="2.8"/>
+  <path d="M39.47 23.19 L36.03 22.46" stroke-width="1.6"/>
+  <path d="M39.47 23.19 L38.39 26.54" stroke-width="1.6"/>
+  <path d="M45 20 L45 31" stroke-width="2.8"/>
+  <path d="M45 26.38 L42.64 29" stroke-width="1.6"/>
+  <path d="M45 26.38 L47.36 29" stroke-width="1.6"/>
+  <path d="M45 20 L54.53 25.5" stroke-width="2.8"/>
+  <path d="M50.53 23.19 L51.61 26.54" stroke-width="1.6"/>
+  <path d="M50.53 23.19 L53.97 22.46" stroke-width="1.6"/>
+  <path d="M45 20 L54.53 14.5" stroke-width="2.8"/>
+  <path d="M50.53 16.81 L53.97 17.54" stroke-width="1.6"/>
+  <path d="M50.53 16.81 L51.61 13.46" stroke-width="1.6"/>
+</svg>

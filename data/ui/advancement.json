@@ -1,0 +1,354 @@
+{
+  "format": "tidebreak-advancement-ui",
+  "version": 1,
+  "_doc": [
+    "The Character Advancement window's data (artifacts/ui_audit/advancement/plan.md): every word a player sees on it, the tree split and its titles, the layout constants, the colours and the switches. Read through AdvancementData (word, words, layout, color, switch); nothing in scripts/ui/advancement/ hard-codes a player-facing word, a number or a colour.",
+    "Phase A (the owner, 2026-10-09: 'Yes, as a preview first') and B1/B2 (docs/tidebreak/loadouts_live.md): the window saves loadouts (user://advancement.json, AdvancementStore). A worn loadout changes a match only through the picks data/bending/loadout_apply.json makes live (7 number nodes and the Boxing class); those carry a green dot and say so in their tip, the ribbon says the rest is a preview (AdvancementData.is_live reads that file, read only).",
+    "words: the window's words. Format strings use GDScript's % (%s a word, %d a number). No word from the show, no 'bending' (tests/ring/test_player_words.gd), no third-party game's names.",
+    "text_overrides: player text shown in place of data/sway/skill_tree.json's (a draft other work owns), by node id (name, effect, plus, minus, help, answer) and by starter loadout id (name, line): 'bends'/'bend' read as 'curves'/'curve' (the banned word), and the snow column is named Snowstorm in this window (the draft's name is also a game company's and a famous spell's). Drop an override once the tree's own text changes.",
+    "tree: the split (left = the moves a style shapes, titled with the style; right = dash, wall, heal, the passive and the skill set, titled with the element's skill set), the chip order, the kind tiers of the lattice (AdvancementLayout, tools/ui/advancement_layout.py) and the choice kinds (one per move-mode / slot / loadout, drawn as one octagon).",
+    "layout: authored at 1600x900 (the window scales by min(w/1600, h/900)); zones are [x, y, w, h] in authored pixels; icon, pitch_x, pitch_y in pixels; band_gap in rows; left_width / right_width in slots; a tree taller or wider than its zone shrinks its pitch down to min_pitch_x / min_pitch_y.",
+    "switches: gates (first_win: everything locked until the first ring win; full_lessons: the kinds in full_lessons_kinds locked until the Full lessons are done; skipped_counts: a skipped lesson counts as done, as RingLessons treats it; the user arg adv_gates=off opens both), show_held (held nodes drawn dashed with '?', never wearable), hide_world_only_in_ring, gate_every_band (the lessons gate line on every band, else on the first), pickable_states (styles a player may pick), first_only_schemes (control schemes that reach only each key's first move: their loadouts grey every tap-twice node)."
+  ],
+  "words": {
+    "title": "Character Advancement",
+    "ribbon": "Green-dot picks play in matches; the rest is a preview",
+    "tabs": {"advancement": "Advancement", "loadouts": "Loadouts", "look": "Your look"},
+    "buttons": {
+      "save": "Save Changes",
+      "undo": "Undo",
+      "reset": "Reset",
+      "change_class": "Change class",
+      "close": "Close",
+      "wear": "Wear",
+      "keep": "Keep",
+      "rename": "Rename",
+      "search": "Search",
+      "premade": "Find premade builds...",
+      "loadouts_panel": "Loadouts",
+      "copy_code": "Copy loadout code",
+      "paste_code": "Paste a loadout code"
+    },
+    "loadout": {
+      "slot": "Loadout %d",
+      "slot_named": "Loadout %d · %s",
+      "classic": "Classic",
+      "classic_premade": "Classic (no picks)",
+      "classic_line": "No picks: every move as it comes.",
+      "points": "%d of %d",
+      "class_line": "Class: %s",
+      "panel_title": "Loadouts",
+      "picks_none": "No picks"
+    },
+    "slot_state": {"worn": "Worn", "saved": "Saved", "empty": "Empty", "invalid": "Needs a fix", "kept": "Kept"},
+    "points": {"left_tip": "Points left: %d of %d", "spent_tip": "Points in this tree: %d", "left_cap": "points left", "spent_cap": "points here"},
+    "tip": {
+      "kind_cost_one": "%s · %d point",
+      "kind_cost_many": "%s · %d points",
+      "on_move": "%s · %s",
+      "rank": "Rank %d/%d",
+      "not_with": "Not with: %s",
+      "needs": "Needs: %s",
+      "answer": "How he answers it: %s",
+      "wear": "Click to wear",
+      "take_off": "Right click to take off",
+      "root": "Your move",
+      "root_key": "Key %s",
+      "root_line": "You have this move. Its picks grow below it.",
+      "passive_root_line": "Your element's passive. Pick one passive for a loadout.",
+      "choice": "Choose one",
+      "choose": "Click to choose",
+      "class_trait": "Comes with the class. Costs no points.",
+      "held": "Not ready yet",
+      "live": "Plays in matches",
+      "live_class": "Plays in matches (animation only)",
+      "more": "Hold Shift for the full text",
+      "world_only": "Open world only",
+      "pending_on": "Worn when you save",
+      "pending_off": "Taken off when you save",
+      "set_twist": "Part of the %s skill set"
+    },
+    "reasons": {
+      "unknown": "Not in this tree",
+      "held": "Not ready yet",
+      "excludes": "Not with %s: they pull the same number opposite ways",
+      "requires": "Needs %s",
+      "world_only": "Open world only",
+      "budget": "Not enough points (%d needed, %d left)",
+      "kind_cap": "Only %d %s per loadout",
+      "twist": "%s already has a twist",
+      "move_points": "At most %d points on %s",
+      "scheme": "Your controls reach only each key's first move",
+      "gate_first_win": "Opens after your first ring win",
+      "gate_full": "Opens after the Full lessons: %d left",
+      "invalid_pick": "%s: %s",
+      "duplicate": "%s is worn twice",
+      "style": "That class is not ready yet"
+    },
+    "status": {
+      "worn": "Worn: %s",
+      "taken_off": "Taken off: %s",
+      "sep": " · ",
+      "list_sep": ", ",
+      "cascade": "%s also took off: %s",
+      "saved": "Saved",
+      "no_changes": "No changes",
+      "premade": "%s: %s",
+      "reset": "Classic: no picks. Save to keep it.",
+      "undo": "Back to the saved loadout",
+      "code_copied": "Loadout code copied",
+      "code_read": "Loadout code read",
+      "held_back": " (%d held back: %s)",
+      "code_bad": "That is not a loadout code",
+      "ring_restart": "Worn from the next restart",
+      "worn_now": "Worn",
+      "class_changed": "Class: %s"
+    },
+    "toasts": {
+      "variation": "New twist worn: %s",
+      "mastery": "New technique worn: %s",
+      "new_skill": "New skill worn: %s",
+      "skill_set": "Skill set worn: %s"
+    },
+    "close_ask": {"title": "Save your changes?", "save": "Save", "discard": "Discard", "keep": "Keep editing"},
+    "wear_bar": "Wearing Loadout %d",
+    "class": {
+      "title": "Change class",
+      "line": "Class = your element and a fighting style. Each has two strengths and two weaknesses, so none is stronger.",
+      "rail_head": "Class traits",
+      "any_element": "Every element",
+      "states": {
+        "canon": "Your element's own style",
+        "animated": "Ready to play",
+        "parked": "Parked for now",
+        "coming": "Coming"
+      },
+      "pick": "Pick",
+      "picked": "Picked"
+    },
+    "rail": {"stance": "%s stance", "jab": "Jab string", "signature": "Signature", "guard": "Guard", "perfect": "Perfect: %s"},
+    "levers": {
+      "speed": {"label": "Speed", "up": "quick casts lock 10% faster", "down": "quick casts lock 10% slower"},
+      "power": {"label": "Power", "up": "grown and tap-twice moves hit 10% harder", "down": "grown and tap-twice moves hit 10% softer"},
+      "reach": {"label": "Reach", "up": "10% more range", "down": "10% less range"},
+      "width": {"label": "Width", "up": "10% wider cones, arcs and pushes", "down": "10% narrower cones, arcs and pushes"},
+      "mobility": {"label": "Mobility", "up": "locks fill better on the move, lighter dashes", "down": "heavier on the move"},
+      "defence": {"label": "Defence", "up": "a longer perfect guard window", "down": "a shorter perfect guard window"},
+      "line_up": "%s+: %s",
+      "line_down": "%s-: %s"
+    },
+    "keys": {"LMB": "Jab", "E": "Guard", "1": "Strike", "2": "Push", "3": "Dash", "4": "Wall", "5": "Heal", "passive": "Passive", "set": "Skill set"},
+    "key_badges": {"LMB": "LMB", "E": "E", "1": "1", "2": "2", "3": "3", "4": "4", "5": "5", "passive": "P", "set": "S"},
+    "kinds": {"world_only": "World art"},
+    "gates": {"first_win_badge": "1", "first_win_tip": "Opens after your first ring win", "full_tip": "Twists, techniques, new skills and skill sets open after the Full lessons: %d left"},
+    "menu_line": "%s · %s · %s",
+    "menu_loadout": "Loadout %d: %s, %d of %d",
+    "search": {"none": "No match", "count": "%d found"}
+  },
+  "text_overrides": {
+    "nodes": {
+      "water.lash.long_reach": {
+        "effect": "The Lash reaches 19 m (from 16), but Flowing curves it 12\u00b0 at most (from 15\u00b0).",
+        "minus": "curves 12\u00b0",
+        "help": "A longer Lash that curves a little less."
+      },
+      "water.passive.lazy_river": {
+        "effect": "Flowing: your water curves up to 18\u00b0 (from 15\u00b0) for 0.3 s (from 0.25), but turns at 36\u00b0/s (from 45\u00b0/s).",
+        "plus": "curves farther",
+        "help": "Your water curves farther but turns more slowly."
+      },
+      "water.passive.rapids": {
+        "effect": "Flowing: your water turns at 54\u00b0/s (from 45\u00b0/s), but curves 12\u00b0 at most (from 15\u00b0).",
+        "minus": "curves less",
+        "help": "Your water turns faster but curves less."
+      },
+      "air.frost.blizzard": {
+        "name": "Snowstorm",
+        "help": "Tap 4 twice: a snowstorm where you aim."
+      },
+      "air.frost.whiteout": {
+        "effect": "Home ground: standing on your own crust or in your Snowstorm, your locks fill x1.15. Patch's lock is 1.7 s (from 1.5)."
+      },
+      "water.turn.cleanse": {
+        "effect": "Your Turn, perfect or late, clears gas within 2.2 m of you. Turn's lock is 0.24 s (from 0.2)."
+      },
+      "fire.step.ignite": {
+        "effect": "Your Step leaves a 2 m line of fire for 1.5 s (at most 3% to a foe who stands in it: jump it). Stepping in goes 9 m/s (from 10)."
+      },
+      "fire.parry.hold_storm": {
+        "effect": "After a perfect Parry of Lightning, hold E up to 0.8 s: the bolt waits in your arms and leaves along your aim when you let go (x1.2 as before). A perfect Parry of fire now goes back at x1.1 (from x1.2)."
+      },
+      "air.slot.dust": {
+        "effect": "A 3 m cloud of dust where you aim (2-6 m, placed like a wall, never round you) for 2.5 s that blocks sight both ways, like Breath's smoke. Lock 0.9 s; a new one ends your old one. Trade: your Wind Wall stands 3.5 s (from 4)."
+      },
+      "earth.shove.split": {
+        "effect": "One Shove breaks into three stones in flight.",
+        "help": ""
+      },
+      "earth.burrow.surfacing": {
+        "effect": "You come up hitting: a stomp ring where you surface.",
+        "help": ""
+      },
+      "earth.lift.ramp": {
+        "effect": "Lift raises a tilted slab under you and throws you farther forward and lower.",
+        "help": ""
+      },
+      "earth.slot.shell": {
+        "effect": "Four short slabs close round you for a moment: every shot stops on them.",
+        "help": ""
+      },
+      "water.splash.jet": {
+        "effect": "Splash becomes a stream of six small bolts.",
+        "help": ""
+      },
+      "water.lash.reel": {
+        "effect": "The Lash pulls him toward you instead of pushing.",
+        "help": ""
+      },
+      "water.geyser.twin": {
+        "effect": "One cast raises two Geysers.",
+        "help": ""
+      },
+      "water.surf.breaker": {
+        "effect": "Surf ends in a small wave where you stop.",
+        "help": ""
+      },
+      "water.wall.shatter": {
+        "effect": "Lash your own Ice Wall and it bursts into ice shards.",
+        "help": ""
+      },
+      "water.slot.bubble": {
+        "effect": "A sphere of water round you douses fire and swallows water and air.",
+        "help": ""
+      },
+      "fire.kick.twin": {
+        "effect": "One Kick sends two narrower floor waves.",
+        "help": ""
+      },
+      "fire.breath.clean_burn": {
+        "effect": "Breath leaves no smoke and is wider.",
+        "help": ""
+      },
+      "air.slice.twin": {
+        "effect": "One Slice sends two blades.",
+        "help": ""
+      },
+      "air.slip.gust_step": {
+        "effect": "Your Slip shoves whoever you pass aside.",
+        "help": ""
+      }
+    },
+    "starters": {
+      "water.preset.riptide": {"line": "Turn his water back when you choose, curve what you throw, own the steam."}
+    }
+  },
+  "tree": {
+    "left_chips": ["LMB", "E", "1", "2"],
+    "right_chips": ["3", "4", "5", "passive", "set"],
+    "chip_order": ["LMB", "E", "1", "2", "3", "4", "5", "passive", "set"],
+    "titles": {"left": "style", "right": "set"},
+    "title_case": "upper",
+    "tiers": {"root": 0, "skill_set": 0, "enhance": 1, "synergy": 1, "passive": 1, "variation": 2, "new_skill": 2, "world_only": 2, "mastery": 3},
+    "choice_kinds": ["variation", "new_skill", "passive"],
+    "shapes": {"enhance": "circle", "synergy": "circle", "passive": "circle", "variation": "square", "mastery": "square", "new_skill": "square", "skill_set": "square", "world_only": "square", "root": "root", "choice": "octagon"},
+    "slots": 3,
+    "name_max": 24
+  },
+  "layout": {
+    "authored": [1600, 900],
+    "icon": 50,
+    "pitch_x": 66,
+    "pitch_y": 72,
+    "band_gap": 0.15,
+    "left_width": 7,
+    "right_width": 5,
+    "min_pitch_x": 52,
+    "min_pitch_y": 54,
+    "max_pitch_x": 84,
+    "max_pitch_y": 88,
+    "max_aspect": 1.18,
+    "fill_margin": [8, 14, 22],
+    "top_pad": 0,
+    "zones": {"left": [150, 140, 456, 580], "right": [900, 140, 450, 580]},
+    "window": {
+      "frame": [40, 40, 1520, 780],
+      "title_strip": [40, 40, 1520, 32],
+      "portrait": [64, 64, 38],
+      "left_title": [371, 91],
+      "left_points": [371, 123],
+      "right_title": [1125, 91],
+      "right_points": [1125, 123],
+      "centre_gap": [580, 140, 320, 580],
+      "rail": [1392, 140, 96, 580],
+      "bottom_bar": [40, 730, 1520, 90],
+      "loadout_dropdown": [70, 738, 290, 34],
+      "premade_dropdown": [70, 778, 290, 34],
+      "search": [640, 738, 320, 34],
+      "save": [680, 778, 240, 38],
+      "reset": [1280, 738, 250, 34],
+      "change_class": [1280, 778, 250, 34],
+      "tabs": [40, 822, 620, 36],
+      "toasts": [800, 690],
+      "toast_size": [340, 58],
+      "wear_bar": [640, 696, 320, 28],
+      "slots_panel": [60, 140, 300, 580],
+      "ribbon": [966, 49, 486, 24],
+      "close": [1462, 47, 34, 28],
+      "status": [978, 738, 292, 76]
+    },
+    "wear_bar_s": 1.0,
+    "toast_s": 3.0,
+    "toast_max": 3,
+    "search_dim": 0.35
+  },
+  "colors": {
+    "worn": "#ffd100",
+    "link_worn": "#c9a227",
+    "link": "#8a8f99",
+    "available": "#3ee03e",
+    "blocked": "#7d8794",
+    "reason": "#ff4b3e",
+    "held": "#9aa3b2",
+    "pending_on": "#3ee03e",
+    "pending_off": "#ff4b3e",
+    "gate": "#e28a5c",
+    "gate_line": "#c46a3c",
+    "points_left": "#3ee03e",
+    "points_spent": "#ffd100",
+    "title": "#f1ede2",
+    "text": "#e9e3cf",
+    "text_dim": "#9a9486",
+    "effect": "#ffd100",
+    "plus": "#3ee03e",
+    "minus": "#ff8a7a",
+    "frame_dark": "#12151c",
+    "frame_mid": "#1a1f29",
+    "frame_gold": "#a8844a",
+    "frame_trim": "#d7b26a",
+    "button": "#7a1f17",
+    "button_dark": "#4a0f0b",
+    "ribbon": "#2a2416",
+    "set_sulphur": "#c8cf4a",
+    "set_mud": "#8a6a44",
+    "set_magma": "#e2571e",
+    "set_frostwind": "#b8dcf2",
+    "live": "#58e08a",
+    "kind_enhance": "#ffe9a8",
+    "kind_synergy": "#a8e6ff",
+    "kind_passive": "#b8f5a0",
+    "kind_variation": "#ffc66e",
+    "kind_mastery": "#f2b8ff",
+    "kind_new_skill": "#92f0dc",
+    "kind_skill_set": "#ffd9a0"
+  },
+  "switches": {
+    "gates": {"first_win": true, "full_lessons": true, "skipped_counts": true},
+    "full_lessons_kinds": ["variation", "mastery", "new_skill", "skill_set"],
+    "dev_gates_arg": "adv_gates=off",
+    "show_held": true,
+    "hide_world_only_in_ring": true,
+    "gate_every_band": false,
+    "pickable_states": ["canon", "animated"],
+    "first_only_schemes": ["first_moves", "direction"]
+  }
+}

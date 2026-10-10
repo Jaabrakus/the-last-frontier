@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="32" cy="32" r="30" stroke-width="2.8"/>
+  <circle cx="32" cy="32" r="27" stroke-width="1" stroke-opacity="0.5"/>
+  <g transform="translate(12.2 7.4) scale(0.62)">
+  <path d="M2 16 L34 16" stroke-width="4.2"/>
+  <path d="M34 16 L36.52 16.18 L39 16.71 L41.37 17.58 L43.6 18.77 L45.64 20.27 L47.45 22.03 L48.99 24.04 L50.24 26.24 L51.17 28.59 L51.76 31.05 L51.99 33.56 L51.88 36.09 L51.41 38.57 L50.6 40.97 L49.46 43.23 L48.01 45.3 L46.29 47.15 L44.32 48.74 L42.16 50.05 L39.83 51.03 L37.38 51.68 L34.87 51.98 L32.34 51.92 L29.85 51.51 L27.44 50.76 L25.15 49.67 L23.04 48.28 L21.15 46.6 L19.51 44.68 L18.16 42.54 L17.12 40.24 L16.41 37.81 L16.05 35.31 L16.04 32.78 L16.39 30.27 L17.09 27.84" stroke-width="4.2"/>
+  <path d="M19.26 34.5 L17.09 27.84 L12.41 33.05" stroke-width="4.2"/>
+  <circle cx="34" cy="34" r="3.2" stroke-width="2.8" fill="#fff" fill-opacity="0.92"/>
+  </g>
+  <circle cx="50" cy="50" r="12.5" fill="#000" fill-opacity="0.55" stroke="none"/>
+  <circle cx="50" cy="50" r="11" stroke-width="1.8"/>
+  <g transform="translate(42 42) scale(0.25)">
+  <path d="M6 50 C 14 50, 18 28, 34 22 C 48 17, 58 26, 56 37 C 54 45, 44 46, 42 38 C 41 33, 45 30, 49 32" stroke-width="3.4"/>
+  <path d="M6 57 L 58 57" stroke-width="2.8"/>
+  <path d="M14 50 C 22 46, 26 38, 34 34" stroke-width="1.6"/>
+  </g>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="1200" viewBox="0 0 80 600" fill="none" stroke="none" stroke-linecap="round" stroke-linejoin="round">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3dc9a"/><stop offset="0.5" stop-color="#d7b26a"/><stop offset="1" stop-color="#a8844a"/></linearGradient><linearGradient id="p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0d12"/><stop offset="0.5" stop-color="#1a1f29"/><stop offset="1" stop-color="#0b0d12"/></linearGradient></defs>
+  <rect x="14" y="30" width="52" height="540" rx="5" fill="url(#p)" fill-opacity="0.9" stroke="#0b0d12" stroke-width="5"/>
+  <rect x="14" y="30" width="52" height="540" rx="5" fill="none" stroke="url(#g)" stroke-width="2.6"/>
+  <rect x="18.5" y="34.5" width="43" height="531" rx="3" fill="none" stroke="#a8844a" stroke-width="1"/>
+  <path d="M40 56 L 40 544" stroke="#0b0d12" stroke-width="4" stroke-opacity="0.6"/>
+  <path d="M10.5 210 L 14 206.5 L 17.5 210 L 14 213.5 Z" fill="url(#g)" stroke="#0b0d12" stroke-width="0.8"/>
+  <path d="M62.5 210 L 66 206.5 L 69.5 210 L 66 213.5 Z" fill="url(#g)" stroke="#0b0d12" stroke-width="0.8"/>
+  <path d="M10.5 390 L 14 386.5 L 17.5 390 L 14 393.5 Z" fill="url(#g)" stroke="#0b0d12" stroke-width="0.8"/>
+  <path d="M62.5 390 L 66 386.5 L 69.5 390 L 66 393.5 Z" fill="url(#g)" stroke="#0b0d12" stroke-width="0.8"/>
+  <path d="M40 2 L 60 28 L 40 54 L 20 28 Z" fill="#0b0d12" stroke="#0b0d12" stroke-width="5"/>
+  <path d="M40 2 L 60 28 L 40 54 L 20 28 Z" fill="#1a1f29" stroke="url(#g)" stroke-width="2.6"/>
+  <path d="M40 11.36 L 52 28 L 40 44.64 L 28 28 Z" fill="none" stroke="#a8844a" stroke-width="1.2"/>
+  <path d="M40 21.24 L 44.8 28 L 40 34.76 L 35.2 28 Z" fill="url(#g)" stroke="none"/>
+  <path d="M40 598 L 60 572 L 40 546 L 20 572 Z" fill="#0b0d12" stroke="#0b0d12" stroke-width="5"/>
+  <path d="M40 598 L 60 572 L 40 546 L 20 572 Z" fill="#1a1f29" stroke="url(#g)" stroke-width="2.6"/>
+  <path d="M40 588.64 L 52 572 L 40 555.36 L 28 572 Z" fill="none" stroke="#a8844a" stroke-width="1.2"/>
+  <path d="M40 578.76 L 44.8 572 L 40 565.24 L 35.2 572 Z" fill="url(#g)" stroke="none"/>
+</svg>

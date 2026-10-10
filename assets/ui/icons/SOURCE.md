@@ -28,3 +28,15 @@ dodge `spell_dodge__<element>`, the heals `spell_patch__patch` and `spell_mend__
 spells' family: white round-capped strokes of 3.4, 2.8 and 1.6 on a 64 grid, tinted at draw time. One motif per
 element: earth angular slabs and shards, water curls and crests, fire tongues, air spirals and arcs. No symbol of any
 show or game, no nation marks, nothing traced; no third-party art. The five open-world spell icons above are untouched.
+
+Added 2026-10-10 (Character Advancement window, `scripts/ui/advancement/`): 37 more move and node icons, for the skill-tree
+nodes that had no picture of their own: the wall's `spell_air_wall__dust` and `__blizzard`, `spell_earth_wall__column`,
+`__shell` and `__vent`, `spell_air_jump__glide`, `spell_fire_breath__heat`, `spell_fire_jets__hover`,
+`spell_frost__freeze_water`, `spell_pillar__free`, `spell_stone_form__disc`, `spell_patch__cauterize`,
+`spell_water_shield__bubble`, `__mire` and `__heal`, `spell_wind_run__wind_run`, `spell_synergy__kiln_stone`; the four
+skill sets `spell_set__sulphur`, `__mud`, `__magma`, `__frostwind`; and the passives `spell_passive__rooted`,
+`__deep_roots`, `__swift_roots`, `__sulphur_heart`, `__flowing`, `__lazy_river`, `__rapids`, `__delta`, `__footwork`,
+`__dancing_feet`, `__hot_feet`, `__forge`, `__carried_wind`, `__long_carry`, `__gale_force`, `__whiteout`. Drawn by hand as
+path data in `tools/ui/move_icons.py` (it writes them with the rest), in the same line family; no symbol of any show or
+game, nothing traced, no third-party art. The window's own frame pieces, marks and emblems are in
+`assets/ui/advancement/` (see its SOURCE.md).

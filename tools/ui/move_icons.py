@@ -515,6 +515,333 @@ def mend():
             line([(41, 16), (43, 26)], S3), line([(48, 20), (47, 30)], S3)]
 
 
+# ======================================================================================== ADVANCEMENT: the tree's nodes
+# (2026-10-09: the Character Advancement window's nodes that had no picture of their own, drawn in the same family. The
+# mode-named ones are found by BendStrip.icon_path(move, mode) as they are; the passives, the skill sets and Kiln Stone,
+# which have no mode, are named spell_passive__<name>, spell_set__<set>, spell_synergy__<name>.)
+def _sole(cx, cy, rot=0.0, filled=True, w=S2):
+    """A footprint's sole (fire_step's), turned `rot` degrees round its middle."""
+    pts = [(-1, -10), (6, -10), (6, 1), (3, 9), (1, 13), (-6, 12), (-5, 4), (-5, -3), (-7, -10), (-1, -10)]
+    a = math.radians(rot)
+    q = [(cx + x * math.cos(a) - y * math.sin(a), cy + x * math.sin(a) + y * math.cos(a)) for x, y in pts]
+    d = "M%s %s C %s %s, %s %s, %s %s C %s %s, %s %s, %s %s C %s %s, %s %s, %s %s Z" % tuple(
+        f(v) for p in q for v in p)
+    return P(d, w, FILL if filled else "")
+
+
+def _flake(cx, cy, r, w=S2, branch=True):
+    """A six-armed snow crystal."""
+    out = []
+    for k in range(6):
+        a = math.radians(90 + k * 60)
+        tip = (cx + math.cos(a) * r, cy - math.sin(a) * r)
+        out.append(line([(cx, cy), tip], w))
+        if branch:
+            mid = (cx + math.cos(a) * r * 0.58, cy - math.sin(a) * r * 0.58)
+            for s in (-1, 1):
+                b = a + s * math.radians(42)
+                out.append(line([mid, (mid[0] + math.cos(b) * r * 0.32, mid[1] - math.sin(b) * r * 0.32)], S3))
+    return out
+
+
+def _star(cx, cy, r0, r1, n=8, w=S2, a0=0.0):
+    """An impact burst: n short rays between r0 and r1."""
+    out = []
+    for k in range(n):
+        a = math.radians(a0 + k * 360.0 / n)
+        rr = r1 if k % 2 == 0 else r1 * 0.72
+        out.append(line([(cx + math.cos(a) * r0, cy + math.sin(a) * r0), (cx + math.cos(a) * rr, cy + math.sin(a) * rr)], w))
+    return out
+
+
+def _puff(cx, cy, s, w=S2):
+    """A gas or dust puff: a lumpy closed cloud, `s` its scale (1 = 28 wide)."""
+    k = [(-14, 4), (-15, -3, -11, -9, -6, -7), (-5, -14, 6, -14, 6, -8), (11, -11, 16, -5, 13, 0), (17, 4, 13, 9, 8, 7),
+         (4, 11, -4, 11, -6, 7), (-11, 10, -16, 8, -14, 4)]
+    d = "M%s %s" % (f(cx + k[0][0] * s), f(cy + k[0][1] * s))
+    for c in k[1:]:
+        d += " C %s %s, %s %s, %s %s" % (f(cx + c[0] * s), f(cy + c[1] * s), f(cx + c[2] * s), f(cy + c[3] * s),
+                                         f(cx + c[4] * s), f(cy + c[5] * s))
+    return P(d + " Z", w)
+
+
+def _roots(x, y, depth, spread, w1=S1, w2=S2):
+    """Three roots down from (x, y): `depth` deep, fanning `spread` wide."""
+    return [P("M%s %s C %s %s, %s %s, %s %s" % (f(x - 3), f(y), f(x - 4), f(y + depth * 0.4), f(x - spread * 0.6),
+                                                f(y + depth * 0.7), f(x - spread), f(y + depth)), w2),
+            P("M%s %s L %s %s" % (f(x), f(y), f(x), f(y + depth * 1.05)), w1),
+            P("M%s %s C %s %s, %s %s, %s %s" % (f(x + 3), f(y), f(x + 4), f(y + depth * 0.4), f(x + spread * 0.6),
+                                                f(y + depth * 0.7), f(x + spread), f(y + depth)), w2)]
+
+
+def _block(x0, y0, x1, y1):
+    """A squat slab standing on y1 (earth's filled solid), its top a little uneven."""
+    return [poly([(x0, y1), (x0 + 1, y0 + 2), (x0 + (x1 - x0) * 0.45, y0), (x1 - 1, y0 + 1.5), (x1, y1)], S2),
+            facet("M%s %s L %s %s" % (f(x0 + 2), f((y0 + y1) * 0.5), f(x1 - 2), f((y0 + y1) * 0.5 + 1)))]
+
+
+# -- earth
+def earth_shell():
+    out = [circle(32, 32, 4, S2, True)]
+    for (x0, y0, x1, y1) in [(19, 6, 45, 13), (19, 51, 45, 58), (6, 19, 13, 45), (51, 19, 58, 45)]:
+        out.append(poly([(x0, y0), (x1, y0), (x1, y1), (x0, y1)], S2))
+    out += [facet("M24 9.5 L 40 9.5 M24 54.5 L 40 54.5 M9.5 24 L 9.5 40 M54.5 24 L 54.5 40"),
+            line([(15, 15), (19, 19)], S3), line([(49, 15), (45, 19)], S3), line([(15, 49), (19, 45)], S3),
+            line([(49, 49), (45, 45)], S3)]
+    return out
+
+
+def earth_vent():
+    return [line([(4, 50), (24, 50)], S2), line([(40, 50), (60, 50)], S2),
+            line([(24, 50), (28, 56), (32, 51), (36, 58), (40, 50)], S2),
+            poly([(10, 50), (14, 43), (19, 50)], S3), poly([(46, 50), (51, 44), (55, 50)], S3),
+            _puff(31, 34, 0.55, S2), _puff(25, 19, 0.42, S2), _puff(40, 10, 0.34, S3)]
+
+
+def earth_disc():
+    pts = [(32 + math.cos(math.radians(a)) * 24, 32 + math.sin(math.radians(a)) * 9) for a in range(0, 360, 36)]
+    a1, p1 = arc(32, 32, 28, 195, 265, S2)
+    a2, p2 = arc(32, 32, 28, 15, 85, S2)
+    return [poly(pts, S2), facet("M14 32 C 20 28, 44 28, 50 32"),
+            P("M27 32 C 27 30, 37 30, 37 32 C 37 34, 27 34, 27 32 Z", S3, 'stroke="#000" stroke-opacity="0.45"'),
+            a1, head(p1[-1], p1[-3], 4.5, S2), a2, head(p2[-1], p2[-3], 4.5, S2)]
+
+
+def earth_column_shell():
+    out = [ground(58, 34, 60),
+           poly([(39, 58), (39, 22), (46, 15), (53, 22), (53, 58)], S2), facet("M39 34 L 53 33 M39 46 L 53 47"),
+           line([(46, 10), (46, 3)], S3), line([(40, 11), (36, 6)], S3), line([(52, 11), (56, 6)], S3),
+           line([(4, 20), (28, 20)], S3, 'stroke-dasharray="3 3"'), head((33, 20), (24, 20), 4, S3),
+           circle(16, 44, 2.6, S3, True)]
+    for (x0, y0, x1, y1) in [(9, 33, 23, 37), (9, 51, 23, 55), (5, 37, 9, 51), (23, 37, 27, 51)]:
+        out.append(poly([(x0, y0), (x1, y0), (x1, y1), (x0, y1)], S3))
+    return out
+
+
+def earth_free_pillar():
+    return [ground(56, 4, 60),
+            poly([(6, 56), (32, 56), (32, 36)], S2), facet("M14 52 L 30 40"),
+            poly([(40, 56), (40, 22), (46, 18), (54, 22), (54, 56)], S2), facet("M40 34 L 54 33 M40 45 L 54 46"),
+            line([(47, 13), (47, 4)], S2), head((47, 3), (47, 10), 4.5, S2)]
+
+
+def _seated(x0, x1, top, base, depth, gx0=4, gx1=60):
+    """A broad stone seated on the ground at `base` (earth's filled solid, faceted), its roots spreading sideways under
+    the ground and forking, `depth` deep."""
+    cx = (x0 + x1) * 0.5
+    k = depth / 20.0
+    out = [line([(gx0, base), (gx1, base)], S2),
+           poly([(x0, base), (x0 + 3, top + 6), (x0 + (x1 - x0) * 0.3, top + 1), (x0 + (x1 - x0) * 0.62, top),
+                 (x1 - 3, top + 5), (x1, base)], S2),
+           facet("M%s %s L %s %s L %s %s" % (f(x0 + 6), f(top + 9), f(cx), f(top + 12), f(x1 - 6), f(top + 8)))]
+    for sgn in (-1, 1):
+        a = (cx + sgn * 5, base + 1)
+        b = (cx + sgn * 14 * k, base + 9 * k)
+        c = (cx + sgn * 24 * k, base + 13 * k)
+        out.append(P("M%s %s C %s %s, %s %s, %s %s" % (f(a[0]), f(a[1]), f(a[0] + sgn * 2), f(base + 6 * k), f(b[0] - sgn * 3),
+                                                       f(b[1]), f(b[0]), f(b[1])), S1))
+        out.append(line([b, c], S2))
+        out.append(line([b, (b[0] + sgn * 3 * k, base + 19 * k)], S3))
+        out.append(line([c, (c[0] + sgn * 4 * k, c[1] + 6 * k)], S3))
+    out.append(P("M%s %s C %s %s, %s %s, %s %s" % (f(cx), f(base + 1), f(cx + 1), f(base + 8 * k), f(cx - 2), f(base + 12 * k),
+                                                   f(cx), f(base + 18 * k)), S2))
+    return out
+
+
+def passive_rooted():
+    return _seated(12, 52, 14, 40, 20)
+
+
+def passive_deep_roots():
+    return _seated(16, 48, 6, 30, 30) + [line([(5, 4), (5, 15)], S3), head((5, 18), (5, 11), 3.5, S3)]
+
+
+def passive_swift_roots():
+    return _seated(4, 34, 20, 42, 12, 2, 38) + \
+        [line([(41, 18), (48, 27), (41, 36)], S1), line([(50, 18), (57, 27), (50, 36)], S2)]
+
+
+def passive_sulphur_heart():
+    return [_puff(32, 34, 1.45, S1), circle(32, 36, 5, S2, True),
+            line([(32, 6), (32, 14)], S3), head((32, 4), (32, 10), 4, S3),
+            line([(44, 9), (40, 15)], S3), line([(20, 9), (24, 15)], S3)]
+
+
+def set_sulphur():
+    return [poly([(6, 56), (8, 44), (18, 38), (30, 42), (32, 56)], S2), facet("M10 48 L 20 44 L 28 47"),
+            _puff(36, 30, 0.62, S2), _puff(46, 16, 0.48, S2), _puff(54, 6, 0.3, S3),
+            line([(30, 38), (32, 35)], S3)]
+
+
+def synergy_kiln_stone():
+    pts = [(42 + math.cos(math.radians(a)) * r, 32 + math.sin(math.radians(a)) * r)
+           for a, r in [(0, 13), (50, 12), (100, 13), (150, 12.5), (200, 13), (250, 12), (300, 13)]]
+    return [tongue(26, 22, 6, 16, 0, True, S3, -100), tongue(25, 32, 7, 20, 0, True, S3, -90),
+            tongue(26, 42, 6, 16, 0, True, S3, -80),
+            poly(pts, S2), facet("M36 26 L 42 32 L 50 28 M42 32 L 40 42"),
+            P("M48 10 C 46 7, 50 5, 48 2", S3), P("M56 14 C 54 11, 58 9, 56 6", S3)]
+
+
+# -- water
+def water_bubble():
+    return [circle(32, 30, 22, S1), P("M17 26 C 18 18, 24 12, 32 11", S2), P("M45 37 C 43 42, 39 45, 34 46", S3),
+            dot(13, 57, 1.8), dot(51, 57, 1.8), dot(32, 59, 1.6), P("M14 52 C 24 55, 40 55, 50 52", S3)]
+
+
+def water_mire():
+    return [P("M5 46 C 5 37, 59 37, 59 46 C 59 55, 5 55, 5 46 Z", S1),
+            P("M18 46 C 18 42, 46 42, 46 46 C 46 50, 18 50, 18 46 Z", S2),
+            poly([(26, 46), (29, 41), (35, 40), (39, 46)], S3),
+            circle(22, 28, 3.6, S2), circle(36, 22, 2.6, S3), circle(44, 31, 2.0, S3), dot(30, 33, 1.6)]
+
+
+def water_freeze_river():
+    return [P("M4 40 C 8 33, 12 47, 16 40 C 20 33, 24 47, 28 40", S1), line([(30, 40), (60, 40)], S1),
+            line([(34, 46), (38, 44)], S3), line([(44, 47), (49, 44)], S3), line([(54, 46), (58, 44)], S3),
+            line([(30, 52), (60, 52)], S3)] + _flake(45, 20, 11, S2)
+
+
+def water_heal():
+    return [P("M32 6 C 40 18, 50 28, 50 40 C 50 50, 42 58, 32 58 C 22 58, 14 50, 14 40 C 14 28, 24 18, 32 6 Z", S1),
+            line([(32, 30), (32, 49)], S1), line([(22.5, 39.5), (41.5, 39.5)], S1)]
+
+
+def passive_flowing():
+    return [P("M6 56 C 8 38, 22 30, 34 30 C 44 30, 46 22, 44 16", S1, 'stroke-dasharray="1 0"'),
+            P("M50 4 C 54 10, 58 14, 58 19 C 58 23, 55 26, 51 26 C 47 26, 44 23, 44 19 C 44 14, 47 10, 50 4 Z", S2, FILL),
+            dot(14, 40, 1.4), dot(24, 33, 1.4), line([(4, 60), (14, 60)], S3)]
+
+
+def passive_lazy_river():
+    return [P("M4 18 C 26 18, 36 44, 60 44", S1), P("M4 30 C 22 30, 32 56, 60 56", S1),
+            P("M14 24 C 18 22, 22 26, 26 24", S3), P("M38 44 C 42 42, 46 46, 50 44", S3)]
+
+
+def passive_rapids():
+    return [P("M4 34 C 9 20, 14 48, 20 34 C 26 20, 31 48, 37 34 C 43 20, 48 48, 54 34", S1),
+            head((58, 26), (54, 34), 5, S1),
+            dot(12, 14, 1.6), dot(28, 12, 1.5), dot(44, 16, 1.4), dot(20, 54, 1.4), dot(38, 55, 1.5)]
+
+
+def passive_delta():
+    return [P("M30 4 C 36 10, 26 16, 32 22", S1),
+            P("M32 22 C 26 28, 22 30, 18 36 C 14 42, 18 46, 12 54", S2), P("M18 36 C 22 42, 28 46, 26 56", S3),
+            P("M32 22 C 38 28, 42 30, 46 36 C 50 42, 46 46, 52 54", S2), P("M46 36 C 42 42, 36 46, 38 56", S3),
+            P("M4 60 C 20 56, 44 56, 60 60", S3)]
+
+
+def set_mud():
+    return [P("M4 46 C 4 38, 60 38, 60 46 C 60 54, 4 54, 4 46 Z", S2),
+            P("M16 46 C 16 43, 48 43, 48 46 C 48 49, 16 49, 16 46 Z", S3),
+            poly([(26, 26), (30, 18), (38, 17), (42, 24), (38, 31), (29, 32)], S2), facet("M30 20 L 34 25 L 40 23"),
+            line([(34, 34), (34, 39)], S3), dot(20, 36, 1.6), dot(47, 36, 1.6)]
+
+
+# -- fire
+def fire_cauterize():
+    out = [line([(6, 48), (17, 44), (28, 48), (39, 44), (50, 48), (58, 45)], S1)]
+    for x in (12, 23, 34, 45):
+        out.append(line([(x - 3, 40), (x + 3, 53)], S3))
+    out.append(tongue(32, 36, 13, 30, 3, True, S2))
+    return out
+
+
+def fire_hover():
+    return [line([(15, 12), (29, 12)], S1), line([(35, 12), (49, 12)], S1),
+            tongue(22, 15, 10, 26, 2, True, S3, 180), tongue(42, 15, 10, 26, -2, True, S3, 180),
+            line([(4, 56), (60, 56)], S2, 'stroke-dasharray="4 5"'),
+            line([(8, 26), (8, 44)], S3), head((8, 24), (8, 32), 3.5, S3), head((8, 46), (8, 38), 3.5, S3)]
+
+
+def fire_heat():
+    return [P("M18 34 C 12 28, 24 22, 18 16 C 12 10, 24 6, 18 2", S2),
+            P("M32 34 C 26 28, 38 22, 32 16 C 26 10, 38 6, 32 2", S1),
+            P("M46 34 C 40 28, 52 22, 46 16 C 40 10, 52 6, 46 2", S2),
+            poly([(12, 56), (16, 42), (28, 39), (40, 41), (50, 45), (52, 56)], S2, False),
+            line([(22, 46), (26, 52)], S3), line([(38, 46), (42, 51)], S3),
+            dot(20, 61, 1.5), dot(36, 62, 1.5), dot(46, 60.5, 1.3)]
+
+
+def passive_footwork():
+    return [_sole(22, 38, -8), _sole(42, 30, 8),
+            arc(32, 34, 26, 200, 300, S3)[0], head((45, 11.5), (38, 9), 4, S3),
+            arc(32, 34, 26, 20, 120, S3)[0], head((19, 56.5), (26, 59), 4, S3)]
+
+
+def passive_dancing_feet():
+    return [_sole(18, 42, -25), _sole(38, 24, 20),
+            P("M10 18 C 14 8, 26 4, 30 10", S3), head((31, 12), (27, 6), 3.5, S3)] + \
+        _star(52, 46, 4, 10, 8, S3) + [tongue(52, 44, 5, 8, 0, True, S3)]
+
+
+def passive_hot_feet():
+    return [_sole(42, 24, 35), tongue(30, 40, 6, 14, 0, True, S3, -130), tongue(24, 34, 6, 16, 0, True, S3, -120),
+            tongue(33, 47, 5, 11, 0, True, S3, -140), line([(6, 58), (60, 58)], S3),
+            line([(50, 44), (58, 44)], S3), line([(52, 50), (60, 50)], S3)]
+
+
+def passive_forge():
+    return [poly([(4, 20), (12, 22), (52, 22), (54, 30), (42, 32), (38, 42), (46, 50), (18, 50), (26, 42), (24, 32),
+                  (14, 30)], S2),
+            facet("M30 22 L 33 27 L 29 31"), line([(12, 56), (52, 56)], S2),
+            tongue(33, 18, 5, 9, 0, True, S3)] + _star(46, 10, 3, 8, 6, S3, -90)
+
+
+def set_magma():
+    return [poly([(4, 56), (6, 40), (28, 36), (30, 56)], S2), poly([(34, 56), (36, 36), (58, 40), (60, 56)], S2),
+            line([(30, 56), (31, 46), (33, 44), (32, 36)], S2),
+            tongue(32, 34, 9, 22, 1, True, S2), tongue(22, 34, 6, 12, -1, True, S3), tongue(43, 35, 6, 12, 1, True, S3),
+            facet("M8 46 L 26 44 M38 44 L 56 47")]
+
+
+# -- air
+def air_dust_cloud():
+    return [_puff(32, 34, 1.7, S1), dot(22, 34, 1.8), dot(31, 30, 1.5), dot(40, 36, 1.8), dot(28, 40, 1.3),
+            dot(46, 30, 1.3), line([(4, 60), (60, 60)], S3)]
+
+
+def air_blizzard():
+    return [P("M12 8 C 30 2, 52 6, 48 13 C 44 20, 18 17, 18 24 C 18 31, 46 28, 43 35 C 40 42, 22 39, 23 45 "
+              "C 24 51, 40 50, 36 57", S1)] + _flake(55, 26, 5, S3, False) + _flake(9, 38, 5, S3, False) + \
+        _flake(54, 50, 4, S3, False) + _flake(10, 56, 3.5, S3, False)
+
+
+def air_wind_run():
+    return [spiral(14, 44, 1.5, 9, 1.1, math.radians(0), 36, S2),
+            P("M22 44 C 32 44, 38 30, 52 30", S1), head((55, 30), (46, 30), 6),
+            line([(8, 18), (34, 18)], S2), line([(16, 26), (38, 26)], S3), line([(30, 56), (58, 56)], S3)]
+
+
+def air_glide():
+    return [P("M6 8 C 26 10, 42 22, 50 44", S1), arc(52, 52, 7, 180, 360, S2)[0], arc(52, 52, 12, 200, 340, S3)[0],
+            ground(58, 30, 62, S3), line([(16, 4), (26, 5)], S3), line([(30, 10), (38, 13)], S3)]
+
+
+def passive_carried_wind():
+    return [P("M4 52 C 16 52, 20 32, 34 32", S1), line([(6, 42), (16, 42)], S3), line([(10, 60), (22, 60)], S3)] + \
+        _star(46, 30, 4, 13, 8, S2)
+
+
+def passive_long_carry():
+    return [line([(4, 32), (50, 32)], S1), head((54, 32), (44, 32), 6), arc(56, 24, 5, 90, 300, S3)[0],
+            line([(4, 22), (40, 22)], S3), line([(8, 42), (36, 42)], S3), line([(4, 50), (24, 50)], S3)]
+
+
+def passive_gale_force():
+    return [line([(6, 22), (28, 22)], S1), line([(2, 32), (32, 32)], S1), line([(6, 42), (28, 42)], S1)] + \
+        _star(46, 32, 5, 15, 8, S1)
+
+
+def passive_whiteout():
+    return _flake(32, 24, 17, S1) + [line([(4, 56), (12, 52), (20, 56), (28, 52), (36, 56), (44, 52), (52, 56), (60, 52)],
+                                          S2)]
+
+
+def set_frostwind():
+    return [P("M4 20 L 34 20 C 44 20, 46 10, 39 9 C 34 8, 33 15, 38 15", S1), P("M8 33 L 30 33", S2),
+            P("M4 46 L 26 46", S1)] + _flake(46, 42, 13, S2)
+
+
 # ======================================================================================== the set
 ## file name (without "spell_" and ".svg") -> (the drawing, the element whose motif it is, what it shows)
 ICONS = {
@@ -576,6 +903,45 @@ ICONS = {
     # any element
     "patch__patch": (patch, "any", "a stitched patch"),
     "mend__mend": (mend, "any", "a crack stitched shut"),
+    # the Character Advancement window's nodes (2026-10-09): mode-named ones BendStrip.icon_path finds as they are
+    "water_shield__bubble": (water_bubble, "water", "Bubble: a sphere of water round you"),
+    "water_shield__mire": (water_mire, "water", "Mire: a mud pool, bubbling"),
+    "frost__freeze_water": (water_freeze_river, "water", "Freeze the River: running water set flat, a crystal over it"),
+    "water_shield__heal": (water_heal, "water", "Healing Water: a drop with a cross"),
+    "patch__cauterize": (fire_cauterize, "fire", "Cauterize: a flame over a stitched wound"),
+    "fire_jets__hover": (fire_hover, "fire", "Hover: two jets holding you over the ground"),
+    "fire_breath__heat": (fire_heat, "fire", "Heat: heat shimmer over melting ice"),
+    "air_wall__dust": (air_dust_cloud, "air", "Dust Cloud: a billowing cloud with grit in it"),
+    "air_wall__blizzard": (air_blizzard, "air", "Blizzard: a whirling column of snow"),
+    "wind_run__wind_run": (air_wind_run, "air", "Wind Run and Whirl Ride: a whirl and a long swoop forward"),
+    "air_jump__glide": (air_glide, "air", "Glide Landing: a long glide onto a cushion of air"),
+    "earth_wall__shell": (earth_shell, "earth", "Shell: four slabs closing round you, from above"),
+    "earth_wall__vent": (earth_vent, "earth", "Sulphur Vent: the deck cracking, breathing gas"),
+    "stone_form__disc": (earth_disc, "earth", "Stone Disc: a spinning stone disc"),
+    "earth_wall__column": (earth_column_shell, "earth", "Raised Column and Shell: a far column, a shell of slabs"),
+    "pillar__free": (earth_free_pillar, "earth", "Free Pillar and Ramp: a ramp and a pillar rising"),
+    # ... and the ones with no mode: the element passives, the passive nodes, the skill sets, Kiln Stone
+    "passive__rooted": (passive_rooted, "earth", "Rooted: a slab standing on its roots"),
+    "passive__deep_roots": (passive_deep_roots, "earth", "Deep Roots: long roots, pressed down"),
+    "passive__swift_roots": (passive_swift_roots, "earth", "Swift Roots: short roots, quick chevrons"),
+    "passive__sulphur_heart": (passive_sulphur_heart, "earth", "Sulphur Heart: you in your own cloud, rising"),
+    "set__sulphur": (set_sulphur, "earth", "Sulphur: a stone breathing gas"),
+    "synergy__kiln_stone": (synergy_kiln_stone, "earth", "Kiln Stone: a stone through fire, hot"),
+    "passive__flowing": (passive_flowing, "water", "Flowing: a drop whose trail bends after it leaves"),
+    "passive__lazy_river": (passive_lazy_river, "water", "Lazy River: a wide, slow bend"),
+    "passive__rapids": (passive_rapids, "water", "Rapids: a tight, quick zigzag"),
+    "passive__delta": (passive_delta, "water", "Delta: a stream spreading into mud"),
+    "set__mud": (set_mud, "water", "Mud: a clod dropping into a pool"),
+    "passive__footwork": (passive_footwork, "fire", "Footwork: two soles turning"),
+    "passive__dancing_feet": (passive_dancing_feet, "fire", "Dancing Feet: a step and a flare after it"),
+    "passive__hot_feet": (passive_hot_feet, "fire", "Hot Feet: a sole running with flames behind"),
+    "passive__forge": (passive_forge, "fire", "Forge: an anvil, sparks off it"),
+    "set__magma": (set_magma, "fire", "Magma: cracked ground, fire out of the seam"),
+    "passive__carried_wind": (passive_carried_wind, "air", "Carried wind: a dash into a burst"),
+    "passive__long_carry": (passive_long_carry, "air", "Long Carry: a long streak, carried far"),
+    "passive__gale_force": (passive_gale_force, "air", "Gale Force: short heavy streaks into a big burst"),
+    "passive__whiteout": (passive_whiteout, "air", "Whiteout: a crystal over frozen crust"),
+    "set__frostwind": (set_frostwind, "air", "Frostwind: a gust turning to crystal"),
 }
 
 

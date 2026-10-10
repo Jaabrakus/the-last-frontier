@@ -1,0 +1,366 @@
+{
+ "format": "tidebreak-advancement-art",
+ "version": 1,
+ "_doc": "Written by tools/ui/advancement_art.py: the Character Advancement window's art (res paths). backdrops: tools/menu/paint_advancement.gd. node_icons: every data/sway/skill_tree.json node's picture (white line art, tint it); passive_roots: the element passive at the root of the passive line; kinds: the corner mark per node kind (enhance has none); sets: each skill set's mark, tint and node picture; styles and emblems: per fighting style (emblems per element + style, the 20 classes).",
+ "backdrops": {
+  "earth": "res://assets/ui/advancement/backdrop_earth.jpg",
+  "water": "res://assets/ui/advancement/backdrop_water.jpg",
+  "fire": "res://assets/ui/advancement/backdrop_fire.jpg",
+  "air": "res://assets/ui/advancement/backdrop_air.jpg"
+ },
+ "frame": {
+  "frame_corner": "res://assets/ui/advancement/frame_corner.svg",
+  "rail_frame": "res://assets/ui/advancement/rail_frame.svg",
+  "rail_cap": "res://assets/ui/advancement/rail_cap.svg",
+  "padlock": "res://assets/ui/advancement/padlock.svg",
+  "choice_arrow": "res://assets/ui/advancement/choice_arrow.svg",
+  "rank_plate": "res://assets/ui/advancement/rank_plate.svg",
+  "toast_frame": "res://assets/ui/advancement/toast_frame.svg"
+ },
+ "kinds": {
+  "variation": "res://assets/ui/advancement/kind_variation.svg",
+  "mastery": "res://assets/ui/advancement/kind_mastery.svg",
+  "new_skill": "res://assets/ui/advancement/kind_new_skill.svg",
+  "synergy": "res://assets/ui/advancement/kind_synergy.svg",
+  "skill_set": "res://assets/ui/advancement/kind_skill_set.svg",
+  "passive": "res://assets/ui/advancement/kind_passive.svg",
+  "world_only": "res://assets/ui/advancement/kind_world_only.svg"
+ },
+ "sets": {
+  "sulphur": {
+   "mark": "res://assets/ui/advancement/set_sulphur.svg",
+   "tint": "#c9d24a",
+   "element": "earth",
+   "node_icon": "res://assets/ui/icons/spell_set__sulphur.svg"
+  },
+  "mud": {
+   "mark": "res://assets/ui/advancement/set_mud.svg",
+   "tint": "#8c6a45",
+   "element": "water",
+   "node_icon": "res://assets/ui/icons/spell_set__mud.svg"
+  },
+  "magma": {
+   "mark": "res://assets/ui/advancement/set_magma.svg",
+   "tint": "#e8642a",
+   "element": "fire",
+   "node_icon": "res://assets/ui/icons/spell_set__magma.svg"
+  },
+  "frostwind": {
+   "mark": "res://assets/ui/advancement/set_frostwind.svg",
+   "tint": "#a9dcf2",
+   "element": "air",
+   "node_icon": "res://assets/ui/icons/spell_set__frostwind.svg"
+  }
+ },
+ "styles": {
+  "hung_gar": {
+   "glyph": "res://assets/ui/advancement/style_hung_gar.svg",
+   "element": "earth",
+   "label": "Hung Gar"
+  },
+  "karate": {
+   "glyph": "res://assets/ui/advancement/style_karate.svg",
+   "element": "earth",
+   "label": "Karate"
+  },
+  "sumo": {
+   "glyph": "res://assets/ui/advancement/style_sumo.svg",
+   "element": "earth",
+   "label": "Sumo"
+  },
+  "wrestling": {
+   "glyph": "res://assets/ui/advancement/style_wrestling.svg",
+   "element": "earth",
+   "label": "Wrestling"
+  },
+  "tai_chi": {
+   "glyph": "res://assets/ui/advancement/style_tai_chi.svg",
+   "element": "water",
+   "label": "Tai Chi"
+  },
+  "aikido": {
+   "glyph": "res://assets/ui/advancement/style_aikido.svg",
+   "element": "water",
+   "label": "Aikido"
+  },
+  "judo": {
+   "glyph": "res://assets/ui/advancement/style_judo.svg",
+   "element": "water",
+   "label": "Judo"
+  },
+  "wing_chun": {
+   "glyph": "res://assets/ui/advancement/style_wing_chun.svg",
+   "element": "water",
+   "label": "Wing Chun"
+  },
+  "northern_shaolin": {
+   "glyph": "res://assets/ui/advancement/style_northern_shaolin.svg",
+   "element": "fire",
+   "label": "Northern Shaolin"
+  },
+  "boxing": {
+   "glyph": "res://assets/ui/advancement/style_boxing.svg",
+   "element": "fire",
+   "label": "Boxing"
+  },
+  "muay_thai": {
+   "glyph": "res://assets/ui/advancement/style_muay_thai.svg",
+   "element": "fire",
+   "label": "Muay Thai"
+  },
+  "kickboxing": {
+   "glyph": "res://assets/ui/advancement/style_kickboxing.svg",
+   "element": "fire",
+   "label": "Kickboxing"
+  },
+  "baguazhang": {
+   "glyph": "res://assets/ui/advancement/style_baguazhang.svg",
+   "element": "air",
+   "label": "Baguazhang"
+  },
+  "capoeira": {
+   "glyph": "res://assets/ui/advancement/style_capoeira.svg",
+   "element": "air",
+   "label": "Capoeira"
+  },
+  "taekwondo": {
+   "glyph": "res://assets/ui/advancement/style_taekwondo.svg",
+   "element": "air",
+   "label": "Taekwondo"
+  },
+  "drunken_boxing": {
+   "glyph": "res://assets/ui/advancement/style_drunken_boxing.svg",
+   "element": "air",
+   "label": "Drunken Boxing"
+  },
+  "jeet_kune_do": {
+   "glyph": "res://assets/ui/advancement/style_jeet_kune_do.svg",
+   "element": "any",
+   "label": "Jeet Kune Do"
+  }
+ },
+ "emblems": {
+  "earth": {
+   "hung_gar": "res://assets/ui/advancement/emblem_earth_hung_gar.svg",
+   "karate": "res://assets/ui/advancement/emblem_earth_karate.svg",
+   "sumo": "res://assets/ui/advancement/emblem_earth_sumo.svg",
+   "wrestling": "res://assets/ui/advancement/emblem_earth_wrestling.svg",
+   "jeet_kune_do": "res://assets/ui/advancement/emblem_earth_jeet_kune_do.svg"
+  },
+  "water": {
+   "tai_chi": "res://assets/ui/advancement/emblem_water_tai_chi.svg",
+   "aikido": "res://assets/ui/advancement/emblem_water_aikido.svg",
+   "judo": "res://assets/ui/advancement/emblem_water_judo.svg",
+   "wing_chun": "res://assets/ui/advancement/emblem_water_wing_chun.svg",
+   "jeet_kune_do": "res://assets/ui/advancement/emblem_water_jeet_kune_do.svg"
+  },
+  "fire": {
+   "northern_shaolin": "res://assets/ui/advancement/emblem_fire_northern_shaolin.svg",
+   "boxing": "res://assets/ui/advancement/emblem_fire_boxing.svg",
+   "muay_thai": "res://assets/ui/advancement/emblem_fire_muay_thai.svg",
+   "kickboxing": "res://assets/ui/advancement/emblem_fire_kickboxing.svg",
+   "jeet_kune_do": "res://assets/ui/advancement/emblem_fire_jeet_kune_do.svg"
+  },
+  "air": {
+   "baguazhang": "res://assets/ui/advancement/emblem_air_baguazhang.svg",
+   "capoeira": "res://assets/ui/advancement/emblem_air_capoeira.svg",
+   "taekwondo": "res://assets/ui/advancement/emblem_air_taekwondo.svg",
+   "drunken_boxing": "res://assets/ui/advancement/emblem_air_drunken_boxing.svg",
+   "jeet_kune_do": "res://assets/ui/advancement/emblem_air_jeet_kune_do.svg"
+  }
+ },
+ "passive_roots": {
+  "earth": "res://assets/ui/icons/spell_passive__rooted.svg",
+  "water": "res://assets/ui/icons/spell_passive__flowing.svg",
+  "fire": "res://assets/ui/icons/spell_passive__footwork.svg",
+  "air": "res://assets/ui/icons/spell_passive__carried_wind.svg"
+ },
+ "node_icons": {
+  "air.ball.dense": "res://assets/ui/icons/spell_air_blast__ball.svg",
+  "air.ball.toxic_gale": "res://assets/ui/icons/spell_air_blast__ball.svg",
+  "air.frost.blizzard": "res://assets/ui/icons/spell_air_wall__blizzard.svg",
+  "air.frost.frost_gust": "res://assets/ui/icons/spell_air_gust__gust.svg",
+  "air.frost.hail_ball": "res://assets/ui/icons/spell_air_blast__ball.svg",
+  "air.frost.rime_wall": "res://assets/ui/icons/spell_air_wall__wall.svg",
+  "air.frost.whiteout": "res://assets/ui/icons/spell_passive__whiteout.svg",
+  "air.guard.drift": "res://assets/ui/icons/spell_air_shield__shield.svg",
+  "air.guard.eye": "res://assets/ui/icons/spell_air_shield__shield.svg",
+  "air.guard.rebound": "res://assets/ui/icons/spell_air_shield__shield.svg",
+  "air.gust.carrying": "res://assets/ui/icons/spell_air_gust__gust.svg",
+  "air.gust.dragon_fire": "res://assets/ui/icons/spell_air_gust__gust.svg",
+  "air.gust.full_sail": "res://assets/ui/icons/spell_air_gust__gust.svg",
+  "air.gust.long": "res://assets/ui/icons/spell_air_gust__gust.svg",
+  "air.gust.rising": "res://assets/ui/icons/spell_air_gust__gust.svg",
+  "air.leap.featherfall": "res://assets/ui/icons/spell_air_jump__leap.svg",
+  "air.leap.peak_wind": "res://assets/ui/icons/spell_air_jump__leap.svg",
+  "air.palm.shoving": "res://assets/ui/icons/spell_air_palm__palm.svg",
+  "air.palm.wide": "res://assets/ui/icons/spell_air_palm__palm.svg",
+  "air.passive.gale_force": "res://assets/ui/icons/spell_passive__gale_force.svg",
+  "air.passive.long_carry": "res://assets/ui/icons/spell_passive__long_carry.svg",
+  "air.patch.second_wind": "res://assets/ui/icons/spell_patch__patch.svg",
+  "air.pull.long": "res://assets/ui/icons/spell_air_gust__pull.svg",
+  "air.set.frostwind": "res://assets/ui/icons/spell_set__frostwind.svg",
+  "air.slice.carry_edge": "res://assets/ui/icons/spell_air_blast__slice.svg",
+  "air.slice.keen": "res://assets/ui/icons/spell_air_blast__slice.svg",
+  "air.slice.tailwind": "res://assets/ui/icons/spell_air_blast__slice.svg",
+  "air.slice.twin": "res://assets/ui/icons/spell_air_blast__slice.svg",
+  "air.slip.gust_step": "res://assets/ui/icons/spell_evade__slip.svg",
+  "air.slip.near_miss": "res://assets/ui/icons/spell_evade__slip.svg",
+  "air.slot.dust": "res://assets/ui/icons/spell_air_wall__dust.svg",
+  "air.wall.standing": "res://assets/ui/icons/spell_air_wall__wall.svg",
+  "air.world.glide_landing": "res://assets/ui/icons/spell_air_jump__glide.svg",
+  "air.world.wind_run": "res://assets/ui/icons/spell_wind_run__wind_run.svg",
+  "earth.boulder.avalanche": "res://assets/ui/icons/spell_stone_form__cannonball.svg",
+  "earth.boulder.heavy": "res://assets/ui/icons/spell_stone_form__cannonball.svg",
+  "earth.burrow.lie_low": "res://assets/ui/icons/spell_earth_skate__burrow.svg",
+  "earth.burrow.surfacing": "res://assets/ui/icons/spell_earth_skate__burrow.svg",
+  "earth.catch.clean_return": "res://assets/ui/icons/spell_stone_catch__catch.svg",
+  "earth.catch.juggle": "res://assets/ui/icons/spell_stone_catch__catch.svg",
+  "earth.catch.open_hands": "res://assets/ui/icons/spell_stone_catch__catch.svg",
+  "earth.catch.return_to_sender": "res://assets/ui/icons/spell_stone_catch__catch.svg",
+  "earth.column.broad": "res://assets/ui/icons/spell_earth_shove__column.svg",
+  "earth.column.heave": "res://assets/ui/icons/spell_earth_shove__column.svg",
+  "earth.lift.ramp": "res://assets/ui/icons/spell_pillar__self.svg",
+  "earth.mend.reinforce": "res://assets/ui/icons/spell_mend__mend.svg",
+  "earth.passive.deep_roots": "res://assets/ui/icons/spell_passive__deep_roots.svg",
+  "earth.passive.swift_roots": "res://assets/ui/icons/spell_passive__swift_roots.svg",
+  "earth.pebbles.kick_up": "res://assets/ui/icons/spell_rock_jab__pebbles.svg",
+  "earth.set.sulphur": "res://assets/ui/icons/spell_set__sulphur.svg",
+  "earth.shove.split": "res://assets/ui/icons/spell_earth_shove__push.svg",
+  "earth.slot.shell": "res://assets/ui/icons/spell_earth_wall__shell.svg",
+  "earth.spike.steady_point": "res://assets/ui/icons/spell_stone_form__spike.svg",
+  "earth.spike.swift_lance": "res://assets/ui/icons/spell_stone_form__spike.svg",
+  "earth.stone.kiln_stone": "res://assets/ui/icons/spell_synergy__kiln_stone.svg",
+  "earth.sulphur.boulder": "res://assets/ui/icons/spell_stone_form__cannonball.svg",
+  "earth.sulphur.brimstone_wall": "res://assets/ui/icons/spell_earth_wall__wall.svg",
+  "earth.sulphur.flint_pebbles": "res://assets/ui/icons/spell_rock_jab__pebbles.svg",
+  "earth.sulphur.fuming_column": "res://assets/ui/icons/spell_earth_shove__column.svg",
+  "earth.sulphur.heart": "res://assets/ui/icons/spell_passive__sulphur_heart.svg",
+  "earth.sulphur.spike": "res://assets/ui/icons/spell_stone_form__spike.svg",
+  "earth.sulphur.vent": "res://assets/ui/icons/spell_earth_wall__vent.svg",
+  "earth.wall.quarry": "res://assets/ui/icons/spell_earth_wall__wall.svg",
+  "earth.wall.rubble": "res://assets/ui/icons/spell_earth_wall__wall.svg",
+  "earth.wall.thick": "res://assets/ui/icons/spell_earth_wall__wall.svg",
+  "earth.world.column_shell": "res://assets/ui/icons/spell_earth_wall__column.svg",
+  "earth.world.disc": "res://assets/ui/icons/spell_stone_form__disc.svg",
+  "earth.world.free_pillar": "res://assets/ui/icons/spell_pillar__free.svg",
+  "fire.breath.clean_burn": "res://assets/ui/icons/spell_fire_breath__breath.svg",
+  "fire.breath.scald": "res://assets/ui/icons/spell_fire_breath__breath.svg",
+  "fire.embers.flashfire": "res://assets/ui/icons/spell_fire_jab__embers.svg",
+  "fire.embers.tight": "res://assets/ui/icons/spell_fire_jab__embers.svg",
+  "fire.fireball.blazing": "res://assets/ui/icons/spell_fire_blast__punch.svg",
+  "fire.highkick.crescent_burn": "res://assets/ui/icons/spell_fire_kick__high_kick.svg",
+  "fire.kick.chain": "res://assets/ui/icons/spell_fire_kick__kick.svg",
+  "fire.kick.long": "res://assets/ui/icons/spell_fire_kick__kick.svg",
+  "fire.kick.twin": "res://assets/ui/icons/spell_fire_kick__kick.svg",
+  "fire.lightning.forked": "res://assets/ui/icons/spell_fire_arc__lightning.svg",
+  "fire.lightning.grounded": "res://assets/ui/icons/spell_fire_arc__lightning.svg",
+  "fire.lightning.long": "res://assets/ui/icons/spell_fire_arc__lightning.svg",
+  "fire.lightning.short_fuse": "res://assets/ui/icons/spell_fire_arc__lightning.svg",
+  "fire.magma.fist": "res://assets/ui/icons/spell_fire_blast__punch.svg",
+  "fire.magma.forge": "res://assets/ui/icons/spell_passive__forge.svg",
+  "fire.magma.landing": "res://assets/ui/icons/spell_fire_jets__jets.svg",
+  "fire.magma.lava_kick": "res://assets/ui/icons/spell_fire_kick__kick.svg",
+  "fire.parry.hold_storm": "res://assets/ui/icons/spell_fire_parry__parry.svg",
+  "fire.parry.hot_hands": "res://assets/ui/icons/spell_fire_parry__parry.svg",
+  "fire.parry.reaching": "res://assets/ui/icons/spell_fire_parry__parry.svg",
+  "fire.passive.dancing_feet": "res://assets/ui/icons/spell_passive__dancing_feet.svg",
+  "fire.passive.hot_feet": "res://assets/ui/icons/spell_passive__hot_feet.svg",
+  "fire.punch.rhythm": "res://assets/ui/icons/spell_fire_blast__punch.svg",
+  "fire.punch.snap": "res://assets/ui/icons/spell_fire_blast__punch.svg",
+  "fire.set.magma": "res://assets/ui/icons/spell_set__magma.svg",
+  "fire.slot.cauterize": "res://assets/ui/icons/spell_patch__cauterize.svg",
+  "fire.step.ignite": "res://assets/ui/icons/spell_footwork__step.svg",
+  "fire.step.quick": "res://assets/ui/icons/spell_footwork__step.svg",
+  "fire.wall.curved": "res://assets/ui/icons/spell_fire_wall__wall.svg",
+  "fire.wall.long_curtain": "res://assets/ui/icons/spell_fire_wall__wall.svg",
+  "fire.world.heat": "res://assets/ui/icons/spell_fire_breath__heat.svg",
+  "fire.world.hover": "res://assets/ui/icons/spell_fire_jets__hover.svg",
+  "water.downpour.pooling": "res://assets/ui/icons/spell_slam__water.svg",
+  "water.geyser.twin": "res://assets/ui/icons/spell_wave__spout.svg",
+  "water.lash.long_reach": "res://assets/ui/icons/spell_water_whip__whip.svg",
+  "water.lash.reel": "res://assets/ui/icons/spell_water_whip__whip.svg",
+  "water.lash.splashdown": "res://assets/ui/icons/spell_water_whip__whip.svg",
+  "water.lash.steamcraft": "res://assets/ui/icons/spell_water_whip__whip.svg",
+  "water.mud.delta": "res://assets/ui/icons/spell_passive__delta.svg",
+  "water.mud.lash": "res://assets/ui/icons/spell_water_whip__whip.svg",
+  "water.mud.mire": "res://assets/ui/icons/spell_water_shield__mire.svg",
+  "water.mud.mound": "res://assets/ui/icons/spell_wave__spout.svg",
+  "water.mud.mudslide": "res://assets/ui/icons/spell_wave__push.svg",
+  "water.passive.lazy_river": "res://assets/ui/icons/spell_passive__lazy_river.svg",
+  "water.passive.rapids": "res://assets/ui/icons/spell_passive__rapids.svg",
+  "water.patch.wellspring": "res://assets/ui/icons/spell_patch__patch.svg",
+  "water.set.mud": "res://assets/ui/icons/spell_set__mud.svg",
+  "water.skate.wet_trail": "res://assets/ui/icons/spell_flow__skate.svg",
+  "water.slot.bubble": "res://assets/ui/icons/spell_water_shield__bubble.svg",
+  "water.spear.cold_hands": "res://assets/ui/icons/spell_ice__spear.svg",
+  "water.spear.heavy": "res://assets/ui/icons/spell_ice__spear.svg",
+  "water.splash.jet": "res://assets/ui/icons/spell_water_jet__splash.svg",
+  "water.splash.washout": "res://assets/ui/icons/spell_water_jet__splash.svg",
+  "water.surf.breaker": "res://assets/ui/icons/spell_flow__surf.svg",
+  "water.turn.cleanse": "res://assets/ui/icons/spell_water_redirect__redirect.svg",
+  "water.turn.eddy": "res://assets/ui/icons/spell_water_redirect__redirect.svg",
+  "water.turn.patient": "res://assets/ui/icons/spell_water_redirect__redirect.svg",
+  "water.turn.whirl": "res://assets/ui/icons/spell_water_redirect__redirect.svg",
+  "water.wall.shatter": "res://assets/ui/icons/spell_water_shield__ice_wall.svg",
+  "water.wall.thick_ice": "res://assets/ui/icons/spell_water_shield__ice_wall.svg",
+  "water.wave.broad": "res://assets/ui/icons/spell_wave__push.svg",
+  "water.wave.pooling": "res://assets/ui/icons/spell_wave__push.svg",
+  "water.wave.ride": "res://assets/ui/icons/spell_wave__push.svg",
+  "water.world.freeze_river": "res://assets/ui/icons/spell_frost__freeze_water.svg",
+  "water.world.healing_water": "res://assets/ui/icons/spell_water_shield__heal.svg"
+ },
+ "theme": {
+  "stone_dark": "#12151c",
+  "stone_light": "#1a1f29",
+  "gold": "#a8844a",
+  "gold_light": "#d7b26a",
+  "gold_high": "#f3dc9a",
+  "button_dark": "#4a0f0b",
+  "button_light": "#7a1f17",
+  "worn": "#ffd100",
+  "links": "#c9a227",
+  "available": "#3ee03e",
+  "blocked": "#7d8794",
+  "reason": "#ff4b3e"
+ },
+ "drawn_for_window": [
+  "res://assets/ui/icons/spell_air_jump__glide.svg",
+  "res://assets/ui/icons/spell_air_wall__blizzard.svg",
+  "res://assets/ui/icons/spell_air_wall__dust.svg",
+  "res://assets/ui/icons/spell_earth_wall__column.svg",
+  "res://assets/ui/icons/spell_earth_wall__shell.svg",
+  "res://assets/ui/icons/spell_earth_wall__vent.svg",
+  "res://assets/ui/icons/spell_fire_breath__heat.svg",
+  "res://assets/ui/icons/spell_fire_jets__hover.svg",
+  "res://assets/ui/icons/spell_frost__freeze_water.svg",
+  "res://assets/ui/icons/spell_passive__carried_wind.svg",
+  "res://assets/ui/icons/spell_passive__dancing_feet.svg",
+  "res://assets/ui/icons/spell_passive__deep_roots.svg",
+  "res://assets/ui/icons/spell_passive__delta.svg",
+  "res://assets/ui/icons/spell_passive__flowing.svg",
+  "res://assets/ui/icons/spell_passive__footwork.svg",
+  "res://assets/ui/icons/spell_passive__forge.svg",
+  "res://assets/ui/icons/spell_passive__gale_force.svg",
+  "res://assets/ui/icons/spell_passive__hot_feet.svg",
+  "res://assets/ui/icons/spell_passive__lazy_river.svg",
+  "res://assets/ui/icons/spell_passive__long_carry.svg",
+  "res://assets/ui/icons/spell_passive__rapids.svg",
+  "res://assets/ui/icons/spell_passive__rooted.svg",
+  "res://assets/ui/icons/spell_passive__sulphur_heart.svg",
+  "res://assets/ui/icons/spell_passive__swift_roots.svg",
+  "res://assets/ui/icons/spell_passive__whiteout.svg",
+  "res://assets/ui/icons/spell_patch__cauterize.svg",
+  "res://assets/ui/icons/spell_pillar__free.svg",
+  "res://assets/ui/icons/spell_set__frostwind.svg",
+  "res://assets/ui/icons/spell_set__magma.svg",
+  "res://assets/ui/icons/spell_set__mud.svg",
+  "res://assets/ui/icons/spell_set__sulphur.svg",
+  "res://assets/ui/icons/spell_stone_form__disc.svg",
+  "res://assets/ui/icons/spell_synergy__kiln_stone.svg",
+  "res://assets/ui/icons/spell_water_shield__bubble.svg",
+  "res://assets/ui/icons/spell_water_shield__heal.svg",
+  "res://assets/ui/icons/spell_water_shield__mire.svg",
+  "res://assets/ui/icons/spell_wind_run__wind_run.svg"
+ ]
+}
