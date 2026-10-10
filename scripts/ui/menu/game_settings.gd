@@ -124,37 +124,40 @@ static func apply_to(player: Node) -> void:
 
 
 ## The Settings rows (for a menu's sub-screen): volumes, the mouse, invert, fullscreen, vsync. `player` gets the
-## controls' changes at once (the pause menu's), null from the main menu.
-static func rows(player: Node = null) -> VBoxContainer:
+## controls' changes at once (the pause menu's), null from the main menu. `broadcast`: the broadcast menus' look (BroadcastUI:
+## the main menu's and the ring's Esc menu's); the open world's pause menu keeps the serif.
+static func rows(player: Node = null, broadcast := false) -> VBoxContainer:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 14)
 	var pct := func(x: float) -> String: return "%d%%" % roundi(x * 100.0)
+	var slider: Callable = BroadcastUI.slider if broadcast else MenuUI.slider
+	var toggle: Callable = BroadcastUI.toggle if broadcast else MenuUI.toggle
 	for k: Array in [["master", "Volume"], ["effects", "Effects"], ["ambience", "The woods"], ["music", "Music"]]:
 		var key := String(k[0])
-		v.add_child(MenuUI.slider(String(k[1]), 0.0, 1.0, 0.05, float(get_value("audio", key)), pct, func(x: float) -> void:
+		v.add_child(slider.call(String(k[1]), 0.0, 1.0, 0.05, float(get_value("audio", key)), pct, func(x: float) -> void:
 			set_value("audio", key, x)
 			apply_global()))
-	v.add_child(MenuUI.slider("Mouse", 0.5, 6.0, 0.1, float(get_value("controls", "mouse")),
+	v.add_child(slider.call("Mouse", 0.5, 6.0, 0.1, float(get_value("controls", "mouse")),
 			func(x: float) -> String: return "%.1f" % x, func(x: float) -> void:
 				set_value("controls", "mouse", x)
 				if player:
 					player.set("cs_sensitivity", x)))
-	v.add_child(MenuUI.toggle("Invert the look", bool(get_value("controls", "invert_y")), func(on: bool) -> void:
+	v.add_child(toggle.call("Invert the look", bool(get_value("controls", "invert_y")), func(on: bool) -> void:
 		set_value("controls", "invert_y", on)
 		if player:
 			player.set("invert_y", on)))
-	v.add_child(MenuUI.toggle("Full screen", bool(get_value("display", "fullscreen")), func(on: bool) -> void:
+	v.add_child(toggle.call("Full screen", bool(get_value("display", "fullscreen")), func(on: bool) -> void:
 		set_value("display", "fullscreen", on)
 		apply_global()))
-	v.add_child(MenuUI.toggle("Vertical sync", bool(get_value("display", "vsync")), func(on: bool) -> void:
+	v.add_child(toggle.call("Vertical sync", bool(get_value("display", "vsync")), func(on: bool) -> void:
 		set_value("display", "vsync", on)
 		apply_global()))
-	v.add_child(MenuUI.toggle("Cap at 60 frames a second (cooler, quieter)", bool(get_value("display", "cap_60")), func(on: bool) -> void:
+	v.add_child(toggle.call("Cap at 60 frames a second (cooler, quieter)", bool(get_value("display", "cap_60")), func(on: bool) -> void:
 		set_value("display", "cap_60", on)
 		apply_global()))
 	if player == null:
 		# (chosen before a game, not in the middle of one)
-		v.add_child(MenuUI.toggle("Iron Man: injuries stay", bool(get_value("game", "iron_man")), func(on: bool) -> void:
+		v.add_child(toggle.call("Iron Man: injuries stay", bool(get_value("game", "iron_man")), func(on: bool) -> void:
 			set_value("game", "iron_man", on)))
-	v.add_child(MenuUI.label("Graphics: F2 in the game.", 16, MenuUI.FAINT))
+	v.add_child(BroadcastUI.label("Graphics: F2 in the game.", 16, BroadcastUI.FAINT) if broadcast else MenuUI.label("Graphics: F2 in the game.", 16, MenuUI.FAINT))
 	return v

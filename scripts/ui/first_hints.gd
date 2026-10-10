@@ -2,8 +2,13 @@ class_name FirstHints
 extends CanvasLayer
 ## A first Quick match's key hints (the owner, 2026-10-05: switching moves was hard, nothing taught the keys): small rows at
 ## the top left with the keys of the player's control scheme as he has them bound (data/ring/lessons.json "hints": keys,
-## first_moves, direction, radial; each [action] its binding now, LessonCard.resolve), each fading once one of its actions is
-## pressed; when all have gone (or the match is over) they are turned off for good. They REPLACE the ring's first-time panel
+## first_moves, direction, radial; each [action] its binding now, LessonCard.resolve), a checklist (the owner, 2026-10-02:
+## "it should be a checklist be removed if its there first time there"): a row goes the moment one of its actions is
+## pressed and the rows under it close up (no gap left); when all have gone, or at the latest when the first game (round)
+## ends, the box fades and they are turned off for good. While they stand the % ring's hint card waits (RingLessons' queue:
+## one hint system at a time), under the Esc menu and the round and match screens they are put away with the HUD
+## (MenuUI.cover_hud), and the box steps aside while the ring's centre line runs over it (a fall's line on a narrow
+## screen). They REPLACE the ring's first-time panel
 ## (HowTo; the owner, 2026-10-05: not stacked under it): as they come up the ring's topics count as seen and one up goes
 ## (HowTo.yield_to_hints), and none comes up while they stand. Nothing is drawn on or near the opponent.
 ##   on() / set_on(v)     GameSettings' "hints" section, key key_hints (on until a first Quick match has shown them); the
@@ -102,6 +107,7 @@ func _ready() -> void:
 		ht.yield_to_hints()
 	if mode != null:
 		mode.match_over.connect(func(_w: int) -> void: close())
+		mode.round_over.connect(func(_r: String, _why: String) -> void: close())    # (the first game's end at the latest)
 
 
 ## The rows not yet used.
@@ -175,9 +181,8 @@ func _process(dt: float) -> void:
 	for r: Dictionary in rows:
 		var box := r.box as Control
 		if bool(r.used):
-			r.a = move_toward(float(r.a), 0.0, dt / FADE_S)
-			box.modulate.a = float(r.a)
-			box.visible = float(r.a) > 0.001
+			r.a = 0.0
+			box.visible = false                  # (ticked off: gone at once, the rows under it close up)
 		else:
 			left += 1
 		for c in r.caps:
@@ -185,7 +190,9 @@ func _process(dt: float) -> void:
 				(c as HowToKey).queue_redraw()
 	if left == 0 and not rows.is_empty():
 		close()                                  # (every key used: the first match's hints are done)
-	_a = move_toward(_a, 0.0 if _closing else 1.0, dt / FADE_S)
+	# (the ring's centre line over the box, a fall's "Into the water: ..." on a narrow screen: the box steps aside while it
+	# stands, no text over text)
+	_a = 0.0 if _banner_over() else move_toward(_a, 0.0 if _closing else 1.0, dt / FADE_S)
 	_panel.modulate.a = _a
 	_panel.reset_size()
 	if _closing and _a <= 0.0:
@@ -195,6 +202,18 @@ func _process(dt: float) -> void:
 	var vh := get_viewport().get_visible_rect().size.y
 	var under := PercentBar.top_plates_bottom(vh) if RingRules.stock_on() else -1.0
 	_panel.position = Vector2(36.0 * _s, under + PercentBar.cnum("hints_gap", 12.0) * vh / 720.0 if under >= 0.0 else 36.0 * _s)
+
+
+## Whether the ring's centre line (RingMode.banner, its text centred: a fall's "Into the water: the Stone  ·  2 left" is
+## wide on a 1280 x 720 screen) runs over the box now.
+func _banner_over() -> bool:
+	var b: Label = mode.banner if mode != null and is_instance_valid(mode) else null
+	if b == null or b.text == "" or not b.is_visible_in_tree():
+		return false
+	var tw := b.get_theme_font(&"font").get_string_size(b.text, HORIZONTAL_ALIGNMENT_LEFT, -1,
+			b.get_theme_font_size(&"font_size")).x
+	var r := b.get_global_rect()
+	return Rect2(r.position.x + (r.size.x - tw) * 0.5, r.position.y, tw, r.size.y).intersects(_panel.get_global_rect())
 
 
 ## The player's first-time panel (HowTo), if he has one.

@@ -96,6 +96,8 @@ func _run() -> void:
 	_round2()
 	_moves()
 	_values_r3()
+	_advancement()
+	_advancement_tips()
 	_noted_code()
 	_end()
 
@@ -149,6 +151,75 @@ func _values_r3() -> void:
 	check(count > 200, "round 3's player-facing values read (%d)" % count)
 	check(smash.search("Lives and the water's edge: steer, break your fall") == null and smash.search("three stocks") != null
 			and di.search("hold DI") != null and smash.search("a technique") == null, "the Smash names' patterns catch them, not their neighbours")
+
+
+## The Character Advancement window (scripts/ui/advancement): every word of data/ui/advancement.json, every player-facing
+## string of data/bending/fighting_styles.json (labels, lines, levers), the string literals of the window's scripts, and
+## every line the window shows (tests/ui/test_advancement_window.gd reads the window itself): none of the show's words, no
+## "bend" in any form, no third-party game's names (Spellbreak, Azeroth, Warcraft, Blizzard, WoW, Ascension).
+func _advancement() -> void:
+	var re3 := RegEx.create_from_string("(?i)\\b(?:%s)\\b" % "|".join(PackedStringArray(WORDS + ROUND2_WORDS + ["spellbreak", "azeroth", "warcraft", "blizzard", "wow", "ascension"])))
+	var sources := {}
+	for p: String in ["res://data/ui/advancement.json", "res://data/bending/fighting_styles.json"]:
+		var v: Variant = JSON.parse_string(FileAccess.get_file_as_string(p)) if FileAccess.file_exists(p) else null
+		check(v != null, "%s parses" % p)
+		var vals: Array = []
+		_values(v, vals)
+		sources[p] = vals
+	var idlike := RegEx.create_from_string("^[A-Za-z0-9_./:%-]*$")
+	var n := 0
+	for p: String in sources:
+		var found: Array = []
+		for t: String in sources[p]:
+			if not t.contains(" ") and idlike.search(t) != null and not t.contains("%"):
+				continue                                   # (an id, a tag, a path: not words on the screen)
+			n += 1
+			for m in re3.search_all(t):
+				found.append("'%s': %s" % [t.left(50), m.get_string()])
+		check(found.is_empty(), "%s: no show words, no 'bend', no third-party names (%s)" % [p, found])
+	check(n > 200, "the window's words read (%d)" % n)
+	var dir := DirAccess.open("res://scripts/ui/advancement")
+	if dir != null:
+		for f in dir.get_files():
+			if f.ends_with(".gd"):
+				var found: Array = []
+				var lines := FileAccess.get_file_as_string("res://scripts/ui/advancement/" + f).split("\n")
+				for i in lines.size():
+					for lit: String in literals(lines[i]):
+						if lit.begins_with("res://") or lit.begins_with("user://"):
+							continue                       # (a path, not a word on the screen)
+						for m in re3.search_all(lit):
+							found.append("line %d: %s" % [i + 1, m.get_string()])
+				check(found.is_empty(), "scripts/ui/advancement/%s: no show words in its strings (%s)" % [f, found])
+
+
+## What the window's node tips print (the draft text of data/sway/skill_tree.json comes through AdvancementData's player_text and
+## advancement.json's overrides): every node of every element, in the three states a tip can read, as the short tip and the full
+## one. No show word, no "bend", no third-party name, and nothing a designer wrote for themselves: no raw id (earth_shove),
+## no "question 4", no "round 2", no date, no "dormant", no "deg" for a degree, no "Held for ...", no "Yours to rule on".
+func _advancement_tips() -> void:
+	var re3 := RegEx.create_from_string("(?i)\\b(?:%s)\\b" % "|".join(PackedStringArray(WORDS + ROUND2_WORDS + ["spellbreak", "azeroth", "warcraft", "blizzard", "wow", "ascension"])))
+	var leak := RegEx.create_from_string("(?i)\\b[a-z]+(?:_[a-z]+)+\\b|\\bquestion \\d|\\bround \\d|\\d{4}-\\d{2}-\\d{2}|\\bdormant\\b|\\d ?deg\\b|\\bheld for\\b|yours to rule|bring (?:it|them) back|\\bheld:")
+	var lines_read := 0
+	var bad: Array = []
+	for el: String in AdvancementData.ELEMENTS:
+		var lo := AdvancementLoadout.new(el)
+		for id: String in AdvancementData.node_ids(el):
+			for st: String in ["available", "held", "worn"]:
+				for full: bool in [false, true]:
+					for l: Dictionary in AdvancementTip.node_lines(id, st, lo, full):
+						lines_read += 1
+						var t := String(l.text)
+						var m := leak.search(t)
+						if m != null:
+							bad.append("%s (%s): '%s' in '%s'" % [id, st, m.get_string(), t.left(70)])
+						var w := re3.search(t)
+						if w != null:
+							bad.append("%s (%s): word '%s' in '%s'" % [id, st, w.get_string(), t.left(70)])
+	check(bad.is_empty(), "no node tip reads a design note, a raw id or a banned word (%d of %d lines: %s)" % [bad.size(), lines_read, bad.slice(0, 6)])
+	check(lines_read > 2000, "the node tips were read (%d lines)" % lines_read)
+	check(leak.search("Draws on the dormant earth_shove split.") != null and leak.search("Held for the owner (question 4): x") != null
+			and leak.search("the Lash curves 12 deg at most") != null and leak.search("Rank 1/1 · 2 points · Catch") == null, "the leak patterns catch the notes, not their neighbours")
 
 
 ## Every string value under `v` (the "_..." doc keys and "summary" skipped), into `out`.

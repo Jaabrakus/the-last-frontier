@@ -175,7 +175,12 @@ func _menu_match() -> void:
 	(m._element_rows[el] as Button).pressed.emit()
 	await process_frame
 	_expect(MatchSetup.element == el, "the panel: %s chosen" % el)
-	_expect(await _step("Opponent", func() -> bool: return MatchSetup.foe() == foe_el), "the panel: the opponent %s" % foe_el)
+	# (the broadcast setup: the opponent is a row of chips, one per element: the foe's chip pressed)
+	var foe_chip := _row("Opponent_" + foe_el)
+	if foe_chip != null:
+		foe_chip.pressed.emit()
+		await process_frame
+	_expect(MatchSetup.foe() == foe_el, "the panel: the opponent %s" % foe_el)
 	MatchSetup.games_n = 1
 	var begin := _row("Begin")
 	_expect(begin != null, "the panel's Begin")

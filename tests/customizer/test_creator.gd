@@ -58,6 +58,13 @@ func _frames(n: int) -> void:
 		await process_frame
 
 
+## Removes the first-run offer's flag file (AppearanceStore.offered_path): in a tool run it sits in the test look's own
+## folder (never the owner's save), and left behind it makes the next run's "offered without a saved look" check fail.
+func _clear_offered() -> void:
+	if FileAccess.file_exists(AppearanceStore.offered_path()):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.offered_path()))
+
+
 func _headless() -> bool:
 	return DisplayServer.get_name() == "headless"
 
@@ -95,10 +102,11 @@ func _initialize() -> void:
 			_shots = a.substr(6)
 			DirAccess.make_dir_recursive_absolute(_shots)
 			if not _headless():
-				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
+				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, OS.has_environment("TB_ON_TOP"))
 	_had_file = FileAccess.file_exists(AppearanceStore.current_path())
 	if _had_file:
 		_backup = FileAccess.get_file_as_string(AppearanceStore.current_path())
+	_clear_offered()   # the first-run offer's flag is a file beside the look: a run must start (and end) without it
 	_test_data()
 	_test_cycle_all()
 	await _test_model()
@@ -112,6 +120,7 @@ func _initialize() -> void:
 		f.close()
 	elif FileAccess.file_exists(AppearanceStore.current_path()):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.current_path()))
+	_clear_offered()
 	print("CREATOR TEST %s (%d checks%s)" % ["OK" if _fails.is_empty() else "FAILED", _checks,
 			"" if _fails.is_empty() else ", %d failed" % _fails.size()])
 	quit(0 if _fails.is_empty() else 1)

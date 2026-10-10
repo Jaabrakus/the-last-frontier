@@ -272,8 +272,17 @@ func _menu_match() -> void:
 	(m._element_rows[el] as Button).pressed.emit()
 	await process_frame
 	_expect(MatchSetup.element == el, "the panel: %s chosen" % el)
-	_expect(await _step("Opponent", func() -> bool: return MatchSetup.foe() == foe_el), "the panel: the opponent %s" % foe_el)
-	_expect(await _step("Rounds", func() -> bool: return MatchSetup.rounds_to_win == 2), "the panel: best of 3")
+	# (the broadcast setup: the opponent is a row of chips, one per element, and the rounds' chips are the zone rules' only)
+	var foe_chip := _row("Opponent_" + foe_el)
+	if foe_chip != null:
+		foe_chip.pressed.emit()
+		await process_frame
+	_expect(MatchSetup.foe() == foe_el, "the panel: the opponent %s" % foe_el)
+	var rounds := m._panel.find_child("Rounds", true, false) as BroadcastUI.Segments
+	if rounds != null:
+		rounds.chip(1).pressed.emit()
+		await process_frame
+	_expect(MatchSetup.rounds_to_win == 2, "the panel: best of 3")
 	# (round 2: the scheme is picked under Controls, "Other ways to pick moves"; the keys by default)
 	var ctl := _row("Controls")
 	_expect(ctl != null, "the panel's Controls row")

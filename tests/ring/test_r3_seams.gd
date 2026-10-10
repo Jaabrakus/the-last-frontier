@@ -224,7 +224,7 @@ func _stubs() -> void:
 			and not r.stunned(b) and not r.can_escape(b) and r.string_hits(b) == 0 and r.stale_count(b, "x/y") == 0
 			and r.last_steer_deg(b) == 0.0 and r.fresh_pct(b) == 0.0 and r.heal_allowed(b) and r.patch(b) == 0.0
 			and r.on_hit(b, null, {}).is_empty() and not RingRules.class_of("stone_form/spike").is_empty()
-			and absf(RingRules.weight_of("earth") - 2.0 / 2.25) < 1e-4 and r.rule_set == "classic",
+			and absf(RingRules.weight_of("earth") - 2.0 / (1.0 + float(RingRules.stock_block("weights").get("earth", 1.0)))) < 1e-4 and r.rule_set == "classic",
 			"RingRules' per-body answers off the books and with the gate off: no %, no lives, no stun, heal allowed, no launch (the classes filled)")
 	b.free()
 	r.free()

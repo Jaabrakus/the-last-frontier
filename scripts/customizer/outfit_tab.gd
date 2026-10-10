@@ -127,6 +127,11 @@ func _build() -> void:
 		head.add_child(name_l)
 		var opt := OptionButton.new()
 		opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		# (as wide as the column, not as the longest garment's name: that pushed the creator's Clothing panel off the
+		# screen's right edge; a longer name ends in an ellipsis, whole in the list)
+		opt.fit_to_longest_item = false
+		opt.clip_text = true
+		opt.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		var in_set := "\n"                  # (no set yet: a separator with the set's name before its first garment)
 		for i in ids.size():
 			var id := String(ids[i])

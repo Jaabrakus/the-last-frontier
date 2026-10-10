@@ -144,7 +144,7 @@ func _setup_ik() -> void:
 
 func _on_skeleton_updated() -> void:
 	var sk := player.skeleton
-	if sk and _hand >= 0:
+	if sk and _hand >= 0 and sk.is_inside_tree():      # (a skeleton update as the scene leaves: no global transform)
 		hand_final = sk.global_transform * sk.get_bone_global_pose(_hand).origin
 
 

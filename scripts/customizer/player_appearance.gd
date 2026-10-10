@@ -55,9 +55,9 @@ static func install(player: Node, skeleton: Skeleton3D) -> PlayerAppearance:
 	return pa
 
 
-## True at the first launch of the game: no saved look, a normal run (not a tool or test run
-## with -s, not headless, no --appearance or --no-creator; `check_run` false skips these run
-## checks, for tests).
+## True at the first launch of the game: no saved look and the creator not offered before (Back on the offer saves no
+## look but marks it made: AppearanceStore.mark_offered), a normal run (not a tool or test run with -s, not headless,
+## no --appearance or --no-creator; `check_run` false skips these run checks, for tests).
 static func offer_creator(check_run := true) -> bool:
 	if check_run:
 		var loop := Engine.get_main_loop()
@@ -66,7 +66,19 @@ static func offer_creator(check_run := true) -> bool:
 		for a in OS.get_cmdline_user_args():
 			if a.begins_with("--appearance") or a == "--no-creator":
 				return false
-	return not FileAccess.file_exists(AppearanceStore.current_path())
+	return not FileAccess.file_exists(AppearanceStore.current_path()) and not AppearanceStore.was_offered()
+
+
+## The post-Accept hook of the creator (the main menu's `_after_creator`; the creator itself is untouched): whether the step to
+## choose the character's element comes next, that is, the creator was accepted (Back keeps no look, so no step) and the saved
+## character has none yet (AppearanceStore.element()). A look that has its element is not asked again.
+static func element_due(accepted: bool) -> bool:
+	return accepted and AppearanceStore.element() == ""
+
+
+## The element of the look worn now ("" until chosen).
+func element() -> String:
+	return AppearanceStore.clean_element(look.get("element", ""))
 
 
 func _offer_creator() -> void:
@@ -116,8 +128,18 @@ static func dress(b: CharacterBodyMesh, lk: Dictionary) -> Dictionary:
 	return fit
 
 
+## `lk` validated; the element of the look `was` carried over when `lk` has none (a look the creator builds anew, for another
+## people or a body type, carries none: the character keeps its own).
+static func carry_element(lk: Dictionary, was: Dictionary) -> Dictionary:
+	var out := AppearanceStore.validate(lk)
+	var kept := AppearanceStore.clean_element(was.get("element", ""))
+	if kept != "" and not lk.has("element"):
+		out["element"] = kept
+	return out
+
+
 func apply(lk: Dictionary) -> void:
-	look = AppearanceStore.validate(lk)
+	look = carry_element(lk, look)
 	var fit := dress(body, look)
 	outfit_slots = fit.get("bulk_slots", {})
 	_fit = fit.duplicate(true)

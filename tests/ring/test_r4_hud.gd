@@ -18,6 +18,14 @@ extends SceneTree
 ##             after 20 casts, and never outside them
 ##   no cue    no Label3D or Sprite3D under any body; a bot moved 10 m moves no strip, plate or centre rect; bend_strip.gd,
 ##             percent_bar.gd and ring_sides.gd read no position
+##   menu      the UI audit (2026-10-09): at 1280x720 every row of the Esc menu (RingMenu) and of its Match setup and Options
+##             panels is in view; each panel opens from its row with the focus on its first row, and Esc gives the focus back
+##             to that row; the HUD is put away while the menu is open and back after (MenuUI.cover_hud); F1's arena help
+##             keeps the key hints away when an overlay over the HUD closes, and an overlay still up keeps them as F1 closes
+##   class     the Esc menu's Class & talents row (its line: changes apply from the next restart) opens the Character
+##             Advancement window over the open menu, for the element in play; Esc closes the window alone (the menu stays open,
+##             the game paused) and the focus is back on the row; the window's Your look tab closes it and the menu's note says
+##             where the look is changed
 ##   classic   the classic rules' MatchBar still builds, the strip over the health row
 ## METRIC lines: icon_count, placeholder_icons, icons_unique_ok, strip_layout, strip_body_overlap_px (cameras A and C),
 ## label_overlap_px, contrast_min, help_line_chars, hud_no_cue_ok. The last line "R4 HUD TEST PASSED" or "R4 HUD TEST FAILED";
@@ -143,6 +151,7 @@ func _run() -> void:
 	await _contrast()
 	await _help()
 	await _no_cue()
+	await _menu()
 	await _classic()
 	_end()
 
@@ -490,6 +499,197 @@ func _no_cue() -> void:
 	metrics["hud_no_cue_ok"] = str(ok).to_lower()
 	_expect(ok, "nothing on or following a body: no Label3D or Sprite3D on one %s, a bot moved 10 m moves no HUD rect (%s), the strip, plates and sides read no position (%s)"
 			% [on_bodies, still, src_ok])
+
+
+# ---------------------------------------------------------------- the Esc menu
+## The visible rows of `rows` (each with its sub-line) not wholly inside `vr`, by name.
+func _rows_out(rows: Node, vr: Rect2) -> Array:
+	var out: Array = []
+	for n in rows.get_children():
+		var c := n as Control
+		if c == null or not c.is_visible_in_tree():
+			continue
+		var r := c.get_global_rect()
+		var sub := c.find_child("Sub", true, false) as Control
+		if sub != null:
+			r = r.merge(sub.get_global_rect())
+		if not vr.grow(0.5).encloses(r):
+			out.append("%s %s" % [c.name, r])
+	return out
+
+
+## Esc as the player presses it (through the viewport: the menu's _unhandled_input).
+func _esc() -> void:
+	await _ui(&"ui_cancel")
+
+
+## A UI action as the keys or the pad send it.
+func _ui(a: StringName) -> void:
+	var ev := InputEventAction.new()
+	ev.action = a
+	ev.pressed = true
+	root.push_input(ev)
+	await _frames(2)
+
+
+## The Aim help row of the Options panel: its chips in the order of the help (Off, Light, Strong), Enter and Right and Left all going
+## round the same way (the last value's Right is the first, the first's Left the last).
+func _aim_row(m: RingMenu) -> void:
+	var kept := MatchSetup.aim_help()
+	m.option_rows()
+	await _frames(3)
+	var row := m._aim as BroadcastUI.OptionRow
+	var words: Array = row.chips.chips.map(func(c: BroadcastUI.Chip) -> String: return (c.find_child("Text", true, false) as Label).text)
+	_expect(words == ["Off", "Light", "Strong"] and MatchSetup.AIM_ORDER == ["off", "light", "strong"],
+			"the Aim help chips run from the least help to the most (%s)" % [words])
+	MatchSetup.set_aim_help("strong")
+	m._paint()
+	row.grab_focus()
+	await _frames(2)
+	await _ui(&"ui_right")
+	var wrapped_right := MatchSetup.aim_help() == "off"
+	await _ui(&"ui_left")
+	var wrapped_left := MatchSetup.aim_help() == "strong"
+	MatchSetup.set_aim_help("light")
+	var next := MatchSetup.next_aim_help()                # (Enter's turn: light, then strong, then off)
+	MatchSetup.set_aim_help("strong")
+	var after := MatchSetup.next_aim_help()
+	_expect(wrapped_right and wrapped_left and next == "strong" and after == "off",
+			"Aim help: Right from Strong is Off (%s), Left from Off is Strong (%s), Enter's turn Light > Strong > Off (%s, %s)"
+			% [wrapped_right, wrapped_left, next, after])
+	MatchSetup.set_aim_help(kept)
+	m._paint()
+	await _esc()
+
+
+## One panel of the Esc menu opened from its row (`row`): shown with the focus on its first row, its rows in view, and Esc
+## back to the row with the panel shut.
+func _panel_check(m: RingMenu, row: Button, panel: VBoxContainer, vr: Rect2, what: String) -> void:
+	row.grab_focus()
+	row.pressed.emit()
+	await _frames(3)
+	var rows := panel.get_node(^"Rows")
+	var first: Control = null
+	for n in rows.get_children():
+		if (n as Control).visible:
+			first = n as Control
+			break
+	var open := panel.is_visible_in_tree() and root.gui_get_focus_owner() == first
+	var out := _rows_out(rows, vr)
+	# (the broadcast look: the row that opened the panel stays drawn open beside it, and lets go as Esc closes the panel)
+	var held := row is BroadcastUI.Row and (row as BroadcastUI.Row).held
+	await _esc()
+	var back := m.is_open() and not panel.visible and root.gui_get_focus_owner() == row
+	var let_go := row is BroadcastUI.Row and not (row as BroadcastUI.Row).held
+	_expect(open and out.is_empty() and back and held and let_go, "the Esc menu's %s panel: opens with the focus on its first row (%s), every row in view (out: %s), its row held open beside it (%s) and let go (%s), Esc gives the focus back to its row (%s)"
+			% [what, open, out, held, let_go, back])
+
+
+## The Esc menu's Class & talents row: the real window over the open menu, Esc closing it alone, the focus back on the row.
+func _class_row(m: RingMenu) -> void:
+	var row := m._class_row
+	var sub := row.find_child("Sub", true, false) as Label if row != null else null
+	_expect(row != null and row.is_visible_in_tree() and sub != null and sub.text.contains("next restart"),
+			"the Esc menu's Class & talents row says the changes apply from the next restart ('%s')" % [sub.text if sub else "none"])
+	if row == null:
+		return
+	row.grab_focus()
+	row.pressed.emit()
+	await _frames(3)
+	var wins := m.find_children("*", "AdvancementWindow", false, false).filter(func(w: Node) -> bool: return not w.is_queued_for_deletion())
+	var win := wins[0] as AdvancementWindow if not wins.is_empty() else null
+	_expect(win != null and win.element == mode.element and win.layer > m.layer and win.process_mode == Node.PROCESS_MODE_ALWAYS and paused and m.is_open(),
+			"the row opens the Character Advancement window over the open menu, for the element in play (%s), above it, over the paused game" % [win.element if win else "none"])
+	if win == null:
+		return
+	await _esc()
+	var gone := m.find_children("*", "AdvancementWindow", false, false).filter(func(w: Node) -> bool: return not w.is_queued_for_deletion()).is_empty()
+	_expect(gone and m.is_open() and paused and root.gui_get_focus_owner() == row,
+			"Esc closes the window alone: the menu still open (%s) and the game still paused (%s), the focus back on the row (%s)"
+			% [m.is_open(), paused, root.gui_get_focus_owner() == row])
+	# its Your look tab: the window closes and the menu says where the look is changed (the creator is the main menu's)
+	row.pressed.emit()
+	await _frames(3)
+	var w2 := m.find_children("*", "AdvancementWindow", false, false).filter(func(w: Node) -> bool: return not w.is_queued_for_deletion())
+	if w2.is_empty():
+		_expect(false, "the window opens again for its Your look tab")
+		return
+	(w2[0] as AdvancementWindow).look_requested.emit()
+	await _frames(3)
+	var gone2 := m.find_children("*", "AdvancementWindow", false, false).filter(func(w: Node) -> bool: return not w.is_queued_for_deletion()).is_empty()
+	_expect(gone2 and m.is_open() and m._note.text.contains("main menu") and root.find_children("*", "CharacterCreator", true, false).is_empty(),
+			"the window's Your look tab: it closes, the note says where the look is changed ('%s'), no creator over a match" % m._note.text)
+
+
+## The smallest type under `n` on screen: its theme size times the scale it is drawn at (the visible labels with text).
+func _smallest_text(n: Node) -> float:
+	var small := 9999.0
+	for c in n.find_children("*", "Label", true, false):
+		var l := c as Label
+		if l.is_visible_in_tree() and l.text.strip_edges() != "":
+			small = minf(small, float(l.get_theme_font_size("font_size")) * l.get_global_transform_with_canvas().get_scale().y)
+	return small
+
+
+func _menu() -> void:
+	root.size = Vector2i(1280, 720)
+	await _frames(3)
+	var m := mode.menu as RingMenu
+	if m == null:
+		_expect(false, "the Esc menu installed")
+		return
+	var vr := root.get_visible_rect()
+	m.open()
+	await _frames(3)
+	var rows := 0
+	for n in m._items.get_children():
+		rows += 1 if (n as Control).visible else 0
+	var out := _rows_out(m._items, vr)
+	var covered := not hud.visible
+	_expect(m.is_open() and rows >= 8 and out.is_empty(), "at 1280x720 every row of the Esc menu is in view (%d rows; out: %s)" % [rows, out])
+	var small := _smallest_text(m)
+	_expect(small >= 14.0, "at 1280x720 the Esc menu's smallest type is %.1f px on screen (the audit's floor: 14)" % small)
+	await _panel_check(m, m._setup_row, m._setup, vr, "Match setup")
+	await _panel_check(m, m._options_row, m._options, vr, "Options")
+	await _aim_row(m)
+	await _class_row(m)
+	m.close()
+	await _frames(2)
+	_expect(covered and hud.visible and not paused, "the HUD put away while the Esc menu is open (%s) and back after it closes (%s)" % [covered, hud.visible])
+	# F1's arena help and an overlay over the HUD (the round and match screens' way, MenuUI.cover_hud): one help at a time
+	var was := FirstHints.force
+	FirstHints.force = true
+	var fh := FirstHints.install(mode, true)
+	FirstHints.force = was
+	var over := CanvasLayer.new()
+	over.layer = 85
+	root.add_child(over)
+	await _frames(2)
+	var shown := fh != null and fh.visible
+	MenuUI.cover_hud(over, true)                 # the overlay first, then F1, then the overlay gone: the hints stay away
+	hud._help_box.visible = true
+	await _frames(2)
+	MenuUI.cover_hud(over, false)
+	await _frames(2)
+	var stays := fh != null and not fh.visible and hud.visible
+	hud._help_box.visible = false
+	await _frames(2)
+	var back := fh != null and fh.visible
+	hud._help_box.visible = true                 # F1 first, then the overlay, then F1 shut under it: the hints wait for it
+	await _frames(2)
+	MenuUI.cover_hud(over, true)
+	hud._help_box.visible = false
+	await _frames(2)
+	var waits := fh != null and not fh.visible
+	MenuUI.cover_hud(over, false)
+	await _frames(2)
+	var after := fh != null and fh.visible
+	over.queue_free()
+	if fh != null:
+		fh.queue_free()
+	_expect(shown and stays and back and waits and after,
+			"F1 and an overlay over the HUD: the key hints (%s) stay away when the overlay goes under F1 (%s) and come back with F1 shut (%s); F1 shut under the overlay leaves them away (%s) until it goes (%s)"
+			% [shown, stays, back, waits, after])
 
 
 # ---------------------------------------------------------------- the classic rules

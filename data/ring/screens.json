@@ -3,6 +3,7 @@
 	"version": 1,
 	"summary": "Tidebreak's screens over the ring (RoundScreen after each round, MatchScreen at the match's end), the loading screen's tips on the way into the ring, Quick match's line, and the practice dummy (RingMode's practice: a dummy of a chosen element that stands, blocks or throws; no timer, no rounds; R puts both back at their ends). Plain words only, none from any show (tests/ring/test_player_words.gd reads every string here). The owner, 2026-10-05: 'games not bad', 'it is fun'; catching a stone just before it hits and firing it back is the fun core, so practice is for trying moves and catching.",
 	"quick_line": "%s against a random opponent  ·  %s  ·  %s",
+	"one_game": "one game",
 	"round": {
 		"_doc": "RoundScreen (scripts/ui/round_screen.gd): who took the round and why, the score, a short tally of the round (no replay). %s is the other side's name (Stone, Tide, Ember, Gale); the round number %d.",
 		"head_win": "Round %d  ·  yours",
@@ -97,11 +98,6 @@
 		}
 	},
 	"tips": [
-		"Knock the other side back through its three zones and off the open end into the water to take the round.",
-		"Pushed back over a line, you are held to that zone for the rest of the round.",
-		"You may step into their half only once all of them are pushed back.",
-		"At the bell, the side holding more ground takes the round; on level ground, the stronger side.",
-		"Spent at nothing, you are not out: you are pushed back a zone and get your breath back.",
 		"The Kick runs along the floor: jump it.",
 		"Catch just before it hits: your throw back is faster.",
 		"A hit on the beat is yours.",
@@ -114,6 +110,20 @@
 		"Every return of a caught stone flies faster.",
 		"Q puts your readied move on left click; hold Q to have your jab back.",
 		"Practice from the main menu: a dummy that stands, blocks or throws, no timer."
+	],
+	"tips_classic": [
+		"Knock the other side back through its three zones and off the open end into the water to take the round.",
+		"Pushed back over a line, you are held to that zone for the rest of the round.",
+		"You may step into their half only once all of them are pushed back.",
+		"At the bell, the side holding more ground takes the round; on level ground, the stronger side.",
+		"Spent at nothing, you are not out: you are pushed back a zone and get your breath back."
+	],
+	"tips_stock": [
+		"Three lives each: into the water loses one. The last side with lives left takes the game.",
+		"Every hit raises the %. The higher it climbs, the farther the next hit throws.",
+		"Thrown off the deck? Jump, jump and jump again: your element lifts you back.",
+		"Fall short and you grab the edge: climb up, jump, or roll back in.",
+		"At the bell, more lives left takes the game; level, the next one in the water loses."
 	],
 	"kit": {
 		"_doc": "Round 2 of the skills (the owner, 2026-10-05: 'make the skills easy hard to master ... think human made think avg IQ'): what the player reads about his kit, the same for every element (KitWords: the strip, the wheel, F1, the first-time panels, the element pick, the Controls panels, the lessons). {guard}, {quick}, {aim}, {fire}, {wheel} and {jump} are the keys as bound now. No word from any show.",

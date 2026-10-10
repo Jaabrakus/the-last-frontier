@@ -108,6 +108,50 @@ static func left_shade(a := 0.82) -> TextureRect:
 	return r
 
 
+## The fight's screens put away while an overlay stands over the ring (the ring's Esc menu, the round screen, the match
+## screen; the UI audit, 2026-10-09: the plates, the clock, the strip and the hint boxes drawn under them, text over text):
+## while `on` every CanvasLayer shown under `over` (a lower layer) is hidden, and the same ones are shown again after: the
+## Splash Cam's way with its own (RingReplay._hide_layers). The wheels open and shut themselves, so they are left alone.
+static func cover_hud(over: CanvasLayer, on: bool) -> void:
+	if over == null:
+		return
+	if on:
+		if over.has_meta(&"hud_cover") or not over.is_inside_tree():
+			return
+		var hid: Array = []
+		for n in over.get_tree().root.find_children("*", "CanvasLayer", true, false):
+			var cl := n as CanvasLayer
+			if cl == over or not cl.visible or cl.layer >= over.layer or cl is EquipWheel or cl is RadialWheel:
+				continue
+			hid.append(cl)
+			cl.visible = false
+		over.set_meta(&"hud_cover", hid)
+		if not over.has_meta(&"hud_cover_hook"):
+			# (the overlay gone with them still put away, Main menu from it: a layer that outlives the scene is shown again)
+			over.set_meta(&"hud_cover_hook", true)
+			over.tree_exiting.connect(func() -> void: cover_hud(over, false))
+		return
+	if not over.has_meta(&"hud_cover"):
+		return
+	var had: Array = over.get_meta(&"hud_cover")
+	over.remove_meta(&"hud_cover")
+	for cl in had:
+		if is_instance_valid(cl):
+			(cl as CanvasLayer).visible = true
+
+
+## A layer put away by someone else to show again (`cl`; F1's arena help closing, FrontierHUD._put_hints_away): while an
+## overlay still covers the HUD over it (cover_hud), it joins that overlay's put-away layers and is shown as it goes;
+## else it is shown now.
+static func show_again(cl: CanvasLayer) -> void:
+	if cl.is_inside_tree():
+		for n in cl.get_tree().root.find_children("*", "CanvasLayer", true, false):
+			if n != cl and n.has_meta(&"hud_cover") and (n as CanvasLayer).layer > cl.layer:
+				(n.get_meta(&"hud_cover") as Array).append(cl)
+				return
+	cl.visible = true
+
+
 ## A slider row: the label, a thin slider in gold, the value in words from `fmt` (a Callable of the value).
 static func slider(text: String, lo: float, hi: float, step: float, value: float, fmt: Callable, changed: Callable) -> HBoxContainer:
 	var h := HBoxContainer.new()

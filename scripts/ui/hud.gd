@@ -70,11 +70,25 @@ const HELP := "WASD move · Shift sprint · Ctrl/C crouch (toggle) · Space jump
 		+ "Tab gear · K skills · O character · F1 this help · F3 debug · Esc free mouse"
 ## F1 in the arena (round 2 of the skills: the same buttons for every element, KitWords; no show words:
 ## tests/ring/test_ring_hud.gd holds the HUD's arena lines to that): the moving keys, the buttons (ARENA_KEYS, the scheme's),
-## the four rules (KitWords.rule_lines: the lock, the guard, the counters, the floor and the air), Q, the ring's rule.
-const ARENA_HELP := "WASD move · Shift sprint · Space jump, even while you hold a cast · Ctrl/C crouch\n" \
+## the four rules (KitWords.rule_lines: the lock, the guard, the counters, the floor and the air), Q, the ring's rule
+## (ARENA_RING: the rule set's own, the % ring's lives or the zones).
+## ("Ctrl/C" held together by word joiners: the wrapped column broke it at the slash at 1280x720.)
+const ARENA_HELP := "WASD move · Shift sprint · Space jump, even while you hold a cast · Ctrl⁠/⁠C crouch\n" \
 		+ "%KEYS%\n%RULES%\n" \
 		+ "{quick}: the readied move onto LMB · hold {quick}: your jab back · F1 this help · Esc free mouse\n" \
-		+ "Knock the other side back through its three zones: into the water behind them takes the round"
+		+ "%RING%"
+## F1's last line, the ring's rule, per rule set (RingRules.stock_on(): "stock" the % ring's lives; else the zones).
+const ARENA_RING := {
+	"stock": "Three lives each: into the water loses one, and the last side with lives left takes the game",
+	"classic": "Knock the other side back through its three zones: into the water behind them takes the round",
+}
+## F1 in the arena (the UI audit, 2026-10-09: its lines ran over the strip's names and the player's body): a column at the
+## right, its lines wrapped to ARENA_HELP_W of the screen's width, its foot ARENA_HELP_UP px (at 720 high) over the bottom
+## and clear of the strip, over the soft shade from the screen's right edge (the menus' MenuUI.left_shade, mirrored: no box).
+## While it is open the hint boxes (the key hints, the lesson or hint card, the first-time panel) are put away: one help at
+## a time, and the card stands where its column does.
+const ARENA_HELP_W := 0.4
+const ARENA_HELP_UP := 64.0
 ## The buttons' line of F1 per control scheme (KitWords.scheme_id; {guard}, {wheel}, {aim} as bound).
 const ARENA_KEYS := {
 	"keys": "LMB jab · {guard} guard · 1 strike · 2 push ▲ · 3 dash · 4 wall · 5 heal · tap a key twice: its other move",
@@ -100,6 +114,7 @@ func help_text() -> String:
 	if arena:
 		var keys_l := String(ARENA_KEYS.get(KitWords.scheme_id(), ARENA_KEYS.keys))
 		var h := ARENA_HELP.replace("%KEYS%", keys_l).replace("%RULES%", "\n".join(PackedStringArray(KitWords.rule_lines())))
+		h = h.replace("%RING%", String(ARENA_RING.stock if RingRules.stock_on() else ARENA_RING.classic))
 		return KitWords.keyed(h)
 	# (the control scheme's own line for how moves are chosen, outside the keys scheme)
 	var scheme_l := KitWords.help_line() if KitWords.scheme_id() != "keys" else ""
@@ -169,6 +184,11 @@ var _clock: Label
 var _clock_icon: TextureRect
 var _toasts: VBoxContainer
 var _help_box: Control
+## The arena's F1 shade: the soft shade from the screen's right edge behind the help's column (shown with it; no box).
+var _help_shade: TextureRect
+## The hint boxes' layers F1's arena help put away (shown again as it closes), and whether it has.
+var _hints_away := false
+var _hints_hidden: Array = []
 var _help_hint: Label
 var _help_t := 0.0
 var _icons: ItemIcons
@@ -259,6 +279,13 @@ func _ready() -> void:
 	help.text = HELP
 	_help_label = help
 	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_help_shade = MenuUI.left_shade(0.8)
+	_help_shade.name = "HelpShade"
+	_help_shade.flip_h = true
+	_help_shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_help_shade.anchor_left = 1.0 - ARENA_HELP_W * 1.5
+	_help_shade.visible = false
+	_root.add_child(_help_shade)
 	_help_box = _shaded(help, Vector2(60, 26))
 	_help_box.name = "Help"
 	_root.add_child(_help_box)
@@ -452,6 +479,7 @@ func set_arena(on: bool) -> void:
 		# (round 4: the strip stands over the health row where it shows: the classic ring)
 		bend_strip.lift_px = PercentBar.cnum("strip_lift_health", 30.0) if on and not pct else 0.0
 	_arena_hint(on)
+	_arena_help(on)
 	if _help_label != null:
 		_help_label.text = help_text()
 	if on:
@@ -521,6 +549,80 @@ func _arena_hint(on: bool) -> void:
 		_help_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_help_hint.remove_theme_constant_override("outline_size")
 		_replace(_help_hint, Vector2(0, 1), Vector2(24, -112), Vector2(0, 1))
+
+
+## Arena mode's F1 help: a column at the right (ARENA_HELP_W of the width, its lines wrapped and left-aligned) over the soft
+## shade from the right edge, clear of the strip (_lay_arena_help); out of it the world's centred lines at the bottom.
+func _arena_help(on: bool) -> void:
+	if _help_label == null or _help_box == null:
+		return
+	if on:
+		_help_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_help_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_help_label.add_theme_constant_override("paragraph_spacing", 9)
+		for m: String in ["margin_left", "margin_right"]:
+			_help_box.add_theme_constant_override(m, 20)
+		for m: String in ["margin_top", "margin_bottom"]:
+			_help_box.add_theme_constant_override(m, 10)
+		_lay_arena_help()
+		return
+	_help_shade.visible = false
+	_put_hints_away(false)
+	for m: String in ["margin_left", "margin_right"]:
+		_help_box.add_theme_constant_override(m, 60)
+	for m: String in ["margin_top", "margin_bottom"]:
+		_help_box.add_theme_constant_override(m, 26)
+	_help_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_help_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_help_label.remove_theme_constant_override("paragraph_spacing")
+	_help_label.custom_minimum_size.x = 0.0
+	if (_help_box.get_meta(&"hud_place") as Array)[0] != Vector2(0.5, 1):
+		_replace(_help_box, Vector2(0.5, 1), Vector2(0, -20), Vector2(0.5, 1))
+
+
+## The arena help's place now: its column ARENA_HELP_W of the width at the right, its foot ARENA_HELP_UP px (at 720 high)
+## over the bottom, and higher still if a rect of the strip's stands under it (another strip layout): never over the strip.
+func _lay_arena_help() -> void:
+	var vp := get_viewport().get_visible_rect().size
+	var k := vp.y / 720.0
+	var w := roundf(vp.x * ARENA_HELP_W)
+	if not is_equal_approx(_help_label.custom_minimum_size.x, w):
+		_help_label.custom_minimum_size.x = w
+	var up := ARENA_HELP_UP * k
+	var bw := _help_box.size.x
+	if bend_strip != null and bend_strip.is_visible_in_tree():
+		for sr: Rect2 in bend_strip.strip_rects():
+			if sr.position.x < vp.x - 24.0 and sr.end.x > vp.x - 24.0 - bw:
+				up = maxf(up, vp.y - sr.position.y + 8.0)
+	var pl: Array = _help_box.get_meta(&"hud_place")
+	if pl[0] != Vector2(1, 1) or not (pl[1] as Vector2).is_equal_approx(Vector2(-24.0, -up)):
+		_replace(_help_box, Vector2(1, 1), Vector2(-24.0, -up), Vector2(1, 1))
+
+
+## The hint boxes put away while F1's arena help is open (`on`), or shown again: the key hints (FirstHints), the lesson and
+## hint card (LessonCard) and the first-time panel (HowTo). Looked for each frame it is open: a box shown since (an overlay
+## over the ring closing, MenuUI.cover_hud; Key hints switched on) is put away too. Shown again as it closes, or handed to
+## an overlay still covering the HUD (MenuUI.show_again).
+func _put_hints_away(on: bool) -> void:
+	if not on and not _hints_away:
+		return
+	_hints_away = on
+	if on:
+		for n in get_tree().root.find_children("*", "CanvasLayer", true, false):
+			if (n is FirstHints or n is LessonCard or n is HowTo) and (n as CanvasLayer).visible:
+				if not _hints_hidden.has(n):
+					_hints_hidden.append(n)
+				(n as CanvasLayer).visible = false
+		return
+	for cl in _hints_hidden:
+		if is_instance_valid(cl):
+			MenuUI.show_again(cl as CanvasLayer)
+	_hints_hidden.clear()
+
+
+## The F1 help's rect on the screen (the tests: clear of the strip).
+func help_rect() -> Rect2:
+	return _help_box.get_global_rect() if _help_box != null else Rect2()
 
 
 ## BendKnock's listeners: a body knocked by the player (not himself) flashes the hit mark at the centre (never at the body).
@@ -738,6 +840,10 @@ func _process(delta: float) -> void:
 	_cross.queue_redraw()
 	_help_t = maxf(0.0, _help_t - delta)
 	_help_hint.modulate.a = clampf(_help_t / 2.0, 0.0, 1.0)
+	if arena and _help_box.visible:
+		_lay_arena_help()
+	_help_shade.visible = arena and _help_box.visible
+	_put_hints_away(arena and _help_box.visible)
 	_tick_toasts(delta)
 	if player == null:
 		return

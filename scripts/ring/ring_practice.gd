@@ -65,6 +65,9 @@ var _dummy_next := 0.0
 var _cover_next := 0.0
 ## Round 3 (the % ring): the panel (counter, readout, notes), the counter now and the best, the readout's line.
 var panel: PracticePanel
+## How far the practice's lines and panel stand lower than their 110 px top: under the plates where they reach past it
+## (_lay_lines).
+var _dy := 0.0
 var counter := {"hits": 0, "pct": 0.0, "free": false, "until": -INF, "at": -INF}
 var best := {"hits": 0, "pct": 0.0}
 var readout := ""
@@ -173,9 +176,33 @@ func paint() -> void:
 		if panel.visible:
 			panel.paint(counter_text(), counter_white(), best_text(), readout, MatchSetup.pword("notes"))
 	if on:
+		_lay_lines()
 		hint.text = practice_line()
 		var mine: Dictionary = mode.round_tally[0]
 		tally_label.text = pword("tally") % [int(mine.get("casts", 0)), int(mine.get("catches", 0)), int(mine.get("knock_backs", 0))]
+
+
+## The practice's band, its lines and the panel under the plates (the UI audit, 2026-10-09: at 1600 x 900 the band ran over
+## the bottom of both plates): as at 1280 x 720 where the plates end above 110 px, lower by as much as they reach past it
+## (PercentBar.top_plates_bottom, the key hints' gap under them).
+func _lay_lines() -> void:
+	if hint_back == null or not hint_back.is_inside_tree():
+		return
+	var vh := hint_back.get_viewport_rect().size.y
+	var under := PercentBar.top_plates_bottom(vh) if stock() else -1.0
+	var dy := maxf(under + PercentBar.cnum("hints_gap", 12.0) * vh / 720.0 - 112.0, 0.0) if under >= 0.0 else 0.0
+	if is_equal_approx(dy, _dy):
+		return
+	_dy = dy
+	hint_back.offset_top = 110.0 + dy
+	hint_back.offset_bottom = 158.0 + dy
+	hint.offset_top = 112.0 + dy
+	hint.offset_bottom = 134.0 + dy
+	tally_label.offset_top = 134.0 + dy
+	tally_label.offset_bottom = 156.0 + dy
+	if panel != null:
+		panel.offset_top = dy
+		panel.offset_bottom = dy
 
 
 ## "Practice  ·  a Stone dummy that throws at you every few seconds  ·  R: reset positions ..."

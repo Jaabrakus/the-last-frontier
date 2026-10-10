@@ -68,7 +68,7 @@ func _initialize() -> void:
 			_shots = a.substr(6)
 			DirAccess.make_dir_recursive_absolute(_shots)
 	if not _shots.is_empty() and not _headless():
-		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
+		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, OS.has_environment("TB_ON_TOP"))
 		await _lineups()
 		print("JEWELLERY SHOTS DONE")
 		quit(0)

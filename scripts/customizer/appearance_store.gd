@@ -7,6 +7,8 @@ extends RefCounted
 ##   var look := AppearanceStore.load_current()
 ##   AppearanceStore.save_current(look)
 ##
+## The look also holds `element` (earth, water, fire, air; "" until the character's element is chosen: element(), set_element()).
+##
 ## Command line (tests, tools): --appearance=default | preset:<peoples preset id> | <path>.
 
 const FORMAT := "frontier-appearance"
@@ -24,6 +26,10 @@ static func default_look() -> Dictionary:
 		look = {"sex": 1.0, "face": {}, "melanin": 0.12, "undertone": "neutral", "haemoglobin": 0.6, "iris": "brown"}
 	look["hair"] = {"style": "hair_queue_ribbon", "color": "dark_brown"}
 	look["weathering"] = 0.35
+	# the brows on the creator's nearest Eyebrows choice (the preset's own are none of them: the row read "Custom")
+	var brows := CreatorOptions.options("eyebrows", look)
+	if not brows.is_empty():
+		CreatorOptions.select("eyebrows", look, CreatorOptions.nearest_brows(look, brows), brows)
 	return look
 
 
@@ -32,6 +38,11 @@ static func validate(look: Dictionary) -> Dictionary:
 	var out := default_look()
 	for k in look:
 		out[k] = look[k]
+	# (brows of the look's own without an Eyebrows id: not the default's id, which names other brows)
+	if look.has("brows") and not look.has("eyebrows"):
+		out.erase("eyebrows")
+	# (the creator's own face, kept only while it is open: CreatorOptions.OWN_FACE)
+	out.erase(CreatorOptions.OWN_FACE)
 	for k in ["sex", "melanin", "haemoglobin", "freckles", "weathering", "stubble"]:
 		out[k] = clampf(float(out.get(k, 0.0)), 0.0, 1.0)
 	for k in ["bust", "genital"]:
@@ -73,7 +84,50 @@ static func validate(look: Dictionary) -> Dictionary:
 			"paint": clampf(float(mk.get("paint", 0.0)), 0.0, 1.0)}
 	# tattoos (the creator's Tattoos row): known designs at places they may go, numbers clamped (Tattoos.validate)
 	out["tattoos"] = Tattoos.validate(out.get("tattoos", []))
+	# the element the character fights with ("" until chosen: a look saved before the field existed reads as that)
+	out["element"] = clean_element(out.get("element", ""))
 	return out
+
+
+## The element the character fights with (Tidebreak). Chosen once, in the step after the character is made (the main menu's "Choose
+## your element"), kept in the look as `element`, and the default of every setup: the lobby's fighter, the match setup, Quick match,
+## the advancement window. A match may play another (the setup's choice is that match's only; MatchSetup). "" until chosen.
+static func clean_element(v: Variant) -> String:
+	var s := String(v) if v is String else ""
+	return s if s in Bending.ELEMENTS else ""
+
+
+## The saved character's element ("" until chosen): read from the look's file alone (the setup reads it every time the menu is
+## built, so no look is built or validated here). `--appearance` on the command line (tools) answers for the look it names.
+static func element() -> String:
+	var c := from_cmdline()
+	if not c.is_empty():
+		return clean_element(c.get("element", ""))
+	return file_element(current_path())
+
+
+## The element in the look file at `path` ("" when there is no file, it is not an appearance file or it names none).
+static func file_element(path: String) -> String:
+	if not FileAccess.file_exists(path):
+		return ""
+	var json := JSON.new()
+	if json.parse(FileAccess.get_file_as_string(path)) != OK:
+		return ""                                # (a broken file: none, and no error in the log)
+	var d: Variant = json.data
+	if not d is Dictionary or (d as Dictionary).get("format", "") != FORMAT or not (d as Dictionary).get("look") is Dictionary:
+		return ""
+	return clean_element(((d as Dictionary).look as Dictionary).get("element", ""))
+
+
+## Keeps `el` as the character's element: the saved look written again with it (the default look when none is saved yet).
+## False for a name that is not an element or a write that failed.
+static func set_element(el: String) -> bool:
+	var e := clean_element(el)
+	if e == "":
+		return false
+	var look := load_file(current_path())
+	look["element"] = e
+	return save_current(look)
 
 
 static func from_cmdline() -> Dictionary:
@@ -121,6 +175,30 @@ const TEST_CURRENT := "user://appearance_test/current.json"
 static func current_path() -> String:
 	var args := OS.get_cmdline_args()
 	return TEST_CURRENT if ("-s" in args or "--script" in args) else CURRENT
+
+
+## The first-run offer of the creator made once, however it closed (PlayerAppearance.offer_creator): a flag file beside the
+## look (a tool or test run's beside its own look, current_path), not a save of the look: Back on the offer keeps no look
+## (the default stays the default) and the offer does not come back at the next launch.
+const OFFERED_FILE := "creator_offered"
+
+
+static func offered_path() -> String:
+	return current_path().get_base_dir().path_join(OFFERED_FILE)
+
+
+static func was_offered() -> bool:
+	return FileAccess.file_exists(offered_path())
+
+
+static func mark_offered() -> bool:
+	DirAccess.make_dir_recursive_absolute(offered_path().get_base_dir())
+	var f := FileAccess.open(offered_path(), FileAccess.WRITE)
+	if f == null:
+		return false
+	f.store_string(Time.get_datetime_string_from_system(true) + "\n")
+	f.close()
+	return true
 
 
 ## Atomic write: a temp file, then a rename. A look with no body (empty, or without its sex: a look that was never built) is

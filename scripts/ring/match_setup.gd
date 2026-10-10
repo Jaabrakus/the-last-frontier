@@ -4,7 +4,8 @@ extends RefCounted
 ## first, the team lists kept for a 3 v 3 later): what the main menu chose, or the user args gave, for the ring scene
 ## (scenes/ring.tscn) to take at its start. Statics, so they outlive the scene change (the menu fills them, LoadingScreen
 ## loads the ring, the ring's level takes them).
-##   element        the player's element (Bending.ELEMENTS)
+##   element        the player's element (Bending.ELEMENTS): the character's own once it is chosen (AppearanceStore.element, read
+##                  by load()), else the kept setup's; a match may play another, which is that match's only
 ##   foes           the other side's elements, one per competitor (["water"] in a 1 v 1, three in a 3 v 3 later); ANY is
 ##                  drawn by lot when the match begins (resolved())
 ##   mates          the player's team-mates' elements ([] in a 1 v 1)
@@ -280,11 +281,16 @@ static func save() -> void:
 			"steer": steer, "speed": speed, "fresh": fresh, "throw_me": throw_me})
 
 
-## The kept setup read back over the statics (each value only when it is a good one).
+## The kept setup read back over the statics (each value only when it is a good one). The element is the character's own once it
+## is chosen (AppearanceStore.element: the step after the character is made), else the kept one; a match may play another element,
+## but that is that match's only (save() keeps it as the last setup's, the next read starts from the character's again).
 static func load() -> void:
 	var el := String(GameSettings.get_value(SECTION, "element"))
 	if el in Bending.ELEMENTS:
 		element = el
+	var mine := AppearanceStore.element()
+	if mine != "":
+		element = mine
 	var f := elements_in(String(GameSettings.get_value(SECTION, "foe")), true)
 	if not f.is_empty():
 		foes = f
@@ -344,10 +350,13 @@ static func quick_match(rng: RandomNumberGenerator = null) -> String:
 	return el
 
 
-## Quick match's line under its row: "Earth against a random opponent  ·  normal  ·  best of 3" (the kept setup's).
+## Quick match's line under its row: "Earth against a random opponent  ·  normal  ·  best of 3" (the kept setup's; in the %
+## ring its games, "one game" or "best of 3": the rounds are the zones' only).
 static func quick_line() -> String:
-	return String(screens().get("quick_line", "%s against a random opponent  ·  %s  ·  %s")) % [label(element), difficulty,
-			rounds_label(rounds_to_win)]
+	var length := rounds_label(rounds_to_win)
+	if rule_set() == "stock":
+		length = rounds_label(2) if games() >= 3 else String(screens().get("one_game", "one game"))
+	return String(screens().get("quick_line", "%s against a random opponent  ·  %s  ·  %s")) % [label(element), difficulty, length]
 
 
 ## The next Begin plays a practice against a dummy of element `foe_el` (ANY drawn by lot) standing, blocking or throwing
@@ -704,6 +713,8 @@ static func controls_row_line(c := "") -> String:
 ## no lead), "off" (the crosshair only), "strong" (the old help: a 6 deg cone, his chest, led for the flight). Kept at once
 ## in GameSettings' match section (AIM_KEY); the user arg aim= for a run. Bots are not helped by it.
 const AIMS := ["light", "off", "strong"]
+## The order the choices are shown and stepped in (least help to most: Off, Light, Strong); AIMS stays the data's (light first: the default).
+const AIM_ORDER := ["off", "light", "strong"]
 const AIM_KEY := "aim_help"
 const AIM_CONE_DEG := {"off": 0.0, "light": 2.0, "strong": 6.0}
 const AIM_PULL := {"off": 0.0, "light": 0.45, "strong": 1.0}
@@ -728,7 +739,7 @@ static func set_aim_help(a: String) -> bool:
 
 
 static func next_aim_help() -> String:
-	return String(AIMS[(AIMS.find(aim_help()) + 1) % AIMS.size()])
+	return String(AIM_ORDER[(AIM_ORDER.find(aim_help()) + 1) % AIM_ORDER.size()])
 
 
 static func aim_cone_deg() -> float:
@@ -952,9 +963,10 @@ static func sport() -> String:
 	return String((data().get("sport", {}) as Dictionary).get("name", "Tidebreak"))
 
 
-## The sport's rule in a line (the menu's panel).
+## The sport's rule in a line (the menu's panel): the rule set's own ("line_stock": the % ring's lives), else "line" (the zones).
 static func sport_line() -> String:
-	return String((data().get("sport", {}) as Dictionary).get("line", ""))
+	var sp: Dictionary = data().get("sport", {})
+	return String(sp.get("line_" + rule_set(), sp.get("line", "")))
 
 
 ## The sport's row's line in the main menu.

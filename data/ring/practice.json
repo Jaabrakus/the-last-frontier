@@ -65,10 +65,13 @@
 		"_doc": "The Esc menu's and the main menu's round-3 rows: the rule set (the ids never shown), the games, the Controls listing's line for the % ring.",
 		"rules": "Rules:  %s",
 		"rules_line": "lives: 3 each, into the water loses one  ·  zones: push them back through three zones",
+		"rules_line_stock": "3 lives each: into the water loses one, and all three lost loses the game",
+		"rules_line_classic": "push them back through three zones and off the open end into the water",
 		"stock": "Lives",
 		"classic": "Zones",
 		"games": "Games:  %s",
 		"games_line": "from the next restart",
+		"games_line_menu": "one game, or best of 3: the first to take two",
 		"games_1": "1",
 		"games_3": "best of 3",
 		"controls_line": "1, 2, 4, 5 ready a move  ·  right click casts  ·  left click jabs  ·  E guards  ·  3 dodges  ·  Space jumps  ·  C is down"

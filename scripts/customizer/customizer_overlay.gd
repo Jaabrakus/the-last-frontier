@@ -25,6 +25,10 @@ extends CanvasLayer
 ## PlayerAppearance.dress() path as the game), idling, with a studio or a frontier light.
 
 const IDLE := &"actor_b/actor_b-p-stealth-idle"
+## The screen's margin, the left column's width and its sliders' label column (px).
+const MARGIN := 16
+const LEFT_W := 520
+const SLIDER_LABEL_W := 262
 
 var app: PlayerAppearance
 var look := {}
@@ -123,12 +127,17 @@ func _build_ui() -> void:
 	bg.color = Color(0.05, 0.055, 0.06, 1.0)      # opaque: the HUD text showed through the title
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.add_child(bg)
+	# (a margin round the screen: the title and the sliders' labels began at the window's left edge)
+	var margin := MarginContainer.new()
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	for side in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, MARGIN)
+	root.add_child(margin)
 	var hb := HBoxContainer.new()
-	hb.set_anchors_preset(Control.PRESET_FULL_RECT)
-	hb.add_theme_constant_override("separation", 10)
-	root.add_child(hb)
+	hb.add_theme_constant_override("separation", 16)
+	margin.add_child(hb)
 	var left := VBoxContainer.new()
-	left.custom_minimum_size = Vector2(460, 0)
+	left.custom_minimum_size = Vector2(LEFT_W, 0)
 	hb.add_child(left)
 	var title := Label.new()
 	title.text = "Character"
@@ -220,10 +229,11 @@ func _label(t: String) -> Label:
 
 func _slider(key: String, label: String, lo: float, hi: float, parent: Container, cb: Callable) -> HSlider:
 	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
 	parent.add_child(row)
 	var l := _label(label)
-	l.custom_minimum_size = Vector2(210, 0)
-	l.clip_text = true
+	# (the label column as wide as the longest label, "Nose profile (straight / convex)": it was cut at 210 px)
+	l.custom_minimum_size = Vector2(SLIDER_LABEL_W, 0)
 	row.add_child(l)
 	var s := HSlider.new()
 	s.min_value = lo

@@ -55,6 +55,10 @@ const CLOSED_TAGS := ["underwear", "pants"]
 const GENITALS := "pelvis_center"
 ## Colours used when the look does not choose them (over the catalog's zone defaults).
 const DEFAULT_COLORS := {}
+## A garment over these regions has its cloth over the breasts' apex smoothed as it is put on (garment_chest.gd: tight tops
+## cut on the female body followed the nipples).
+const CHEST := ["chest_front", "chest_side"]
+const GarmentChest := preload("res://scripts/customizer/garment_chest.gd")
 
 static var _catalog := {}
 ## The catalog's sets: id -> label, in the catalog's order; their tooltips.
@@ -332,8 +336,12 @@ static func dress(body: CharacterBodyMesh, outfit: Dictionary, sex := 0.0) -> Di
 			var glb := String(e.get("glb", ""))
 			var sc := scene_of(glb)
 			var added := body.add_part(tag, sc if sc != null else glb)
+			var over_breasts := (e.get("occupies_regions", []) as Array).any(func(r: String) -> bool: return r in CHEST)
 			for mi: MeshInstance3D in added:
 				mi.set_meta("garment", id)
+				# (the cloth over the nipples smoothed: body type 2 showed them through a tight top; GarmentChest)
+				if over_breasts:
+					mi.mesh = GarmentChest.smoothed(mi.mesh)
 		var colors: Dictionary = (DEFAULT_COLORS.get(id, {}) as Dictionary).duplicate()
 		if v is Dictionary and v.get("colors") is Dictionary:
 			colors.merge(v.colors, true)

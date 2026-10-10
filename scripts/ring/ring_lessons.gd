@@ -40,7 +40,8 @@ extends Node
 ##   the hints    ONE hint queue (HintQueue; lessons.json hint_queue) on the same card's place, in a % ring match or a
 ##                practice without the cards (ensure_hints, from RingPractice.arm): at most one every gap_s; the edge and
 ##                recovery hints always shown at once (they pre-empt); the stale-move hint only after the first fall; each
-##                once a match
+##                once a match; none while a first match's key hints stand (FirstHints: one hint system at a time, the UI
+##                audit 2026-10-09): they wait in the queue until the key hints are gone
 
 const DATA_PATH := "res://data/ring/lessons.json"
 const NODE_NAME := "RingLessons"
@@ -636,6 +637,12 @@ func _hint_step() -> void:
 	if kn != null and kn.lying_t > 0.0:
 		hints.push("break_fall")
 	var now := BendStatus.now()
+	if FirstHints.find(get_tree()) != null:
+		# (a first match's key hints up: the hints wait in the queue, and a card already up goes)
+		if _hint_until > 0.0:
+			_hint_until = -1.0
+			card.hide_card()
+		return
 	var id := hints.next(now)
 	var hq: Dictionary = data().get("hint_queue", {})
 	if id != "":

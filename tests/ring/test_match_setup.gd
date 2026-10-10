@@ -17,13 +17,17 @@ extends SceneTree
 ##              none of 1-4; cut moves are none; the scheme ids (first_moves; a kept or asked 'simple' reads as it); each
 ##              element's four first moves and its direction moves
 ##   compile    the checker's check(): a broken script of the test's own is bad, a good one and the setup's own are whole
-##   menu       the sport's row first; its panel: the four element rows (each with its style), the keys block, Opponent,
-##              Format, Difficulty, Rounds, Begin; Fire pressed, Opponent pressed round to Water, Begin: the setup is
-##              fire against ["water"], incoming, kept, and the load asked for match_path() (the ring), no loading screen
+##   menu       the lobby's row 01 is the sport's; its screen: the four element cards (each with its competitors' name; the style
+##              and the keys as chips under them), Opponent, Difficulty, Rules, Games or Rounds, Light as chips, Controls, Begin;
+##              Fire pressed, the Water chip pressed, Begin: the setup is fire against ["water"], incoming, kept, and the load
+##              asked for match_path() (the ring), no loading screen
 ##   round 3    the rule set's Rules row reads "Lives" / "Zones" (never the ids), rules= lives|zones|stock|classic, its default
 ##              rules.json rule_set; games 1 or 3 ("best of 3"); a practice's % rows (foe_pct, my_pct, grows); steer, speed,
 ##              fresh, throw_me; all kept (save then load); the Practice words free of the show's words and of the other
 ##              game's names
+##   character  the character's own element (AppearanceStore.element: chosen once, after the character is made) is the setup's
+##              default: MatchSetup.load() over the kept setup, Quick match, the menu's chosen card; a match may play another
+##              (Begin keeps it as the last setup, the character stays as chosen, the next read starts from the character's)
 ## Ends with "MATCH SETUP TEST PASSED" or "MATCH SETUP TEST FAILED" (exit 0 only on a pass; a watchdog quits with 2).
 
 const NAME := "MATCH SETUP TEST"
@@ -65,15 +69,19 @@ func frames(n: int) -> void:
 func _run() -> void:
 	var real_cfg := ProjectSettings.globalize_path(GameSettings.PATH)
 	var real_t := FileAccess.get_modified_time(real_cfg) if FileAccess.file_exists(real_cfg) else 0
+	_stash_look()
 	_defaults()
 	_words()
 	_take()
 	_parse()
 	_kept()
+	_character()
 	_quick()
 	_round3()
 	_compile()
 	await _menu()
+	await _character_menu()
+	_restore_look()
 	var now_t := FileAccess.get_modified_time(real_cfg) if FileAccess.file_exists(real_cfg) else 0
 	check(now_t == real_t, "the player's own settings file never written (%d -> %d)" % [real_t, now_t])
 	_end()
@@ -143,6 +151,27 @@ func _parse() -> void:
 	MatchSetup.round_s = 180.0
 
 
+## The test run's own look file and offered flag put aside (AppearanceStore.TEST_CURRENT: the kept setup's element is read over by
+## the character's, so a look with an element left there would change what these checks read), and put back at the end.
+var _look_stash := {}
+
+
+func _stash_look() -> void:
+	for p: String in [AppearanceStore.current_path(), AppearanceStore.offered_path()]:
+		_look_stash[p] = FileAccess.get_file_as_bytes(p) if FileAccess.file_exists(p) else null
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+
+
+func _restore_look() -> void:
+	for p: String in _look_stash:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+		if _look_stash[p] != null:
+			var f := FileAccess.open(p, FileAccess.WRITE)
+			if f != null:
+				f.store_buffer(_look_stash[p])
+				f.close()
+
+
 func _kept() -> void:
 	check(GameSettings.file() == GameSettings.TEST_PATH, "a test run reads and writes %s, not the player's file" % GameSettings.file())
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
@@ -164,6 +193,78 @@ func _kept() -> void:
 	var cf := ConfigFile.new()
 	check(cf.load(OWN_CFG) == OK and String(cf.get_value("match", "foe", "")) == "fire", "kept in the test's own file's [match]")
 	check(MatchSetup.summary() == "Water vs Fire  ·  easy  ·  best of 5", "its line: '%s'" % MatchSetup.summary())
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+
+
+## The character's element as the setup's default: read over the kept setup by load() (and Quick match), left to a match to change.
+func _character() -> void:
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+	GameSettings.path = OWN_CFG
+	GameSettings.set_section("match", {"element": "fire", "foe": "air"})
+	MatchSetup.element = "earth"
+	check(AppearanceStore.element() == "", "(no character element chosen)")
+	MatchSetup.load()
+	check(MatchSetup.element == "fire", "no element chosen: the kept setup's (%s)" % MatchSetup.element)
+	AppearanceStore.save_current(AppearanceStore.validate(AppearanceStore.default_look()))
+	AppearanceStore.set_element("water")
+	MatchSetup.element = "earth"
+	MatchSetup.load()
+	check(MatchSetup.element == "water" and MatchSetup.foes == ["air"], "the character's element (Water) is the default over the kept Fire (%s)" % MatchSetup.element)
+	MatchSetup.element = "air"
+	MatchSetup.quick_match()
+	check(MatchSetup.element == "water" and MatchSetup.quick, "Quick match plays the character's element (%s)" % MatchSetup.element)
+	MatchSetup.quick = false
+	MatchSetup.element = "earth"
+	MatchSetup.save()
+	check(String(GameSettings.get_value("match", "element")) == "earth" and AppearanceStore.element() == "water",
+			"a match played as Earth keeps Earth as the last setup; the character stays Water")
+	MatchSetup.load()
+	check(MatchSetup.element == "water", "the next read starts from the character's again (%s)" % MatchSetup.element)
+	# the args of a run (tools, tests) still choose the element
+	MatchSetup.parse(PackedStringArray(["element=air"]))
+	check(MatchSetup.element == "air", "element=air of the run's args is taken as given")
+	MatchSetup.element = "earth"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(AppearanceStore.current_path()))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+
+
+## The menu's setup screen starts on the character's element and a match's own choice leaves the character as chosen.
+func _character_menu() -> void:
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+	GameSettings.path = OWN_CFG
+	AppearanceStore.save_current(AppearanceStore.validate(AppearanceStore.default_look()))
+	AppearanceStore.set_element("water")
+	GameSettings.set_section("match", {"element": "earth", "foe": "earth"})
+	launched.clear()
+	MainMenu.launch_hook = func(p: String) -> void: launched.append(p)
+	MatchSetup.element = "earth"
+	change_scene_to_file("res://scenes/main_menu.tscn")
+	await frames(6)
+	var m := current_scene as MainMenu
+	check(m != null and MatchSetup.element == "water", "the menu starts from the character's element (%s)" % MatchSetup.element)
+	var which := m.find_child("Which", true, false) as Label
+	check(which != null and which.text.to_lower().begins_with("water"), "the lobby's fighter card: Water ('%s')" % [which.text if which else ""])
+	m._open_match()
+	await frames(2)
+	var rows := m._element_rows
+	check(bool(rows["water"].get_meta(&"chosen", false)) and not bool(rows["earth"].get_meta(&"chosen", false)),
+			"the setup opens with the character's card lit (water)")
+	check(_chip_lines(m).has(_key_rows("water")[0]), "its keys under the cards")
+	# a match of its own: Fire pressed, Begin keeps it as the last setup; the character stays Water
+	(rows["fire"] as Button).pressed.emit()
+	await frames(1)
+	MatchSetup.incoming = false
+	(m._panel.find_child("Begin", true, false) as Button).pressed.emit()
+	await frames(2)
+	check(MatchSetup.element == "fire" and String(GameSettings.get_value("match", "element")) == "fire" and AppearanceStore.element() == "water",
+			"Begin as Fire: the match is Fire's, the last setup Fire, the character still Water")
+	MatchSetup.incoming = false
+	m._close_panel()
+	await frames(2)
+	check(MatchSetup.element == "water", "back at the lobby: the character's element again (%s)" % MatchSetup.element)
+	MainMenu.launch_hook = Callable()
+	MatchSetup.leave()
+	GameSettings.path = GameSettings.PATH
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 
 
@@ -325,73 +426,131 @@ func _menu() -> void:
 	check(m != null, "the menu scene")
 	if m == null:
 		return
-	var first := _row_text(m._items.get_child(0))
+	# (the broadcast lobby, 2026-10-10: the rundown's row 01 is the sport's; its setup is a screen of its own with the four
+	# elements as fighter cards and the match's choices as chips)
+	var sport := m._items.find_child("Sport", true, false) as Button
+	var first := _row_text(sport)
 	check(first == MatchSetup.sport(), "the sport's row first (%s)" % first)
-	(m._items.get_child(0) as Button).pressed.emit()
+	check(m._items.find_children("*", "Button", true, false)[0] == sport, "and first in the rundown")
+	sport.pressed.emit()
 	await frames(2)
 	check(m._panel_scroll.visible and root.find_children("*", "CharacterCreator", true, false).is_empty(),
-			"its panel opens (no creator in a test run)")
+			"its screen opens (no creator in a test run)")
 	var rows := m._element_rows
-	check(rows.size() == 4 and Bending.ELEMENTS.all(func(e: String) -> bool: return rows.has(e)), "the four element rows")
+	check(rows.size() == 4 and Bending.ELEMENTS.all(func(e: String) -> bool: return rows.has(e)), "the four element cards")
 	for el: String in Bending.ELEMENTS:
 		var b := rows.get(el) as Button
-		check(b != null and _row_text(b) == MatchSetup.label(el) and _sub_text(b).begins_with(MatchSetup.competitor(el)),
-				"%s's row: '%s', its competitors' name under it ('%s')" % [el, _row_text(b), _sub_text(b)])
-	check(_sub_text(rows["earth"]) == "Stone  ·  chosen", "the chosen element says so (%s)" % _sub_text(rows["earth"]))
+		check(b != null and _row_text(b) == MatchSetup.label(el) and _sub_text(b) == MatchSetup.competitor(el),
+				"%s's card: '%s', its competitors' name under it ('%s')" % [el, _row_text(b), _sub_text(b)])
+	check(bool(rows["earth"].get_meta(&"chosen", false)) and not bool(rows["fire"].get_meta(&"chosen", false)),
+			"the chosen element's card is lit (earth)")
 	var texts := _panel_texts(m)
-	check(texts.has("Stone  ·  " + MatchSetup.style("earth")), "the chosen element's style under the rows")
-	# (round 2: the block is KitWords' lines, the same buttons for every element: LMB JAB and E GUARD, then 1-5 by role)
+	check(texts.has("Earth  ·  Stone") and texts.has(MatchSetup.style("earth")), "the chosen element's style under the cards (its name and nickname, then its style)")
+	# (round 2: the block is KitWords' lines, the same buttons for every element: LMB JAB and E GUARD, then 1-5 by role; each
+	# a chip whose `line` is the whole line)
 	var ek := _key_rows("earth")
+	var chip_lines := _chip_lines(m)
 	check(ek.size() == 5 and ek[0] == "1   STRIKE   Spike  ·  tap twice: Boulder" and ek[4] == "5   HEAL   Patch  ·  tap twice: Mend"
-			and ek.all(func(l: String) -> bool: return texts.has(l)), "the keys block: earth's five keys (%s)" % [ek])
-	for want: String in ["Opponent:  Earth", "Format:  1 v 1", "Difficulty:  normal", "Rounds:  best of 3", "Begin"]:
-		check(texts.has(want), "the row '%s'" % want)
-	var need := m._panel.get_combined_minimum_size().y
-	check(need <= 900.0 - 110.0 - 80.0, "the whole panel in view at 1600 x 900, Begin too (%.0f of %.0f px)" % [need, 900.0 - 190.0])
+			and ek.all(func(l: String) -> bool: return chip_lines.has(l)), "the keys block: earth's five keys as chips (%s)" % [ek])
+	var mc := m._panel.find_child("MatchCard", true, false)
+	for want: String in ["Opponent", "Difficulty", "Rules", "Light"]:
+		check(mc.find_child(want, true, false) is BroadcastUI.Segments, "the choice '%s' as chips" % want)
+	check(texts.has(String(((MatchSetup.data().get("formats", {}) as Dictionary).get("1v1", {}) as Dictionary).get("label", "1 v 1")))
+			and texts.has("Controls") and mc.find_child("Begin", true, false) != null, "the format, Controls and Begin")
+	var box := m._panel.find_child("Match", true, false) as Control
+	check(box.get_combined_minimum_size().y <= 900.0 and box.get_combined_minimum_size().x <= 1600.0,
+			"the whole screen in the 1600 x 900 design space, Begin too (%s)" % box.get_combined_minimum_size())
+	var begin_rect := (mc.find_child("Begin", true, false) as Control).get_global_rect()
+	check(Rect2(Vector2.ZERO, Vector2(1600, 900)).encloses(begin_rect), "Begin in view at 1600 x 900 (%s)" % begin_rect)
 	# Fire, then the opponent round to Water, then Begin
 	(rows["fire"] as Button).pressed.emit()
 	await frames(1)
-	check(MatchSetup.element == "fire" and _sub_text(rows["fire"]) == "Ember  ·  chosen" and _sub_text(rows["earth"]) == "Stone",
-			"Fire pressed: chosen (%s)" % _sub_text(rows["fire"]))
-	check(_panel_texts(m).has(_key_rows("fire")[0]) and _key_rows("fire")[0].begins_with("1   STRIKE ▲   Punch")
-			and _panel_texts(m).has("Ember  ·  " + MatchSetup.style("fire")), "the block: fire's style and keys (%s)" % _key_rows("fire")[0])
+	check(MatchSetup.element == "fire" and bool(rows["fire"].get_meta(&"chosen", false)) and not bool(rows["earth"].get_meta(&"chosen", false)),
+			"Fire pressed: chosen (%s)" % MatchSetup.element)
+	check(_chip_lines(m).has(_key_rows("fire")[0]) and _key_rows("fire")[0].begins_with("1   STRIKE ▲   Punch")
+			and _panel_texts(m).has("Fire  ·  Ember") and _panel_texts(m).has(MatchSetup.style("fire")), "the block: fire's style and keys (%s)" % _key_rows("fire")[0])
 	(rows["water"] as Button).grab_focus()
 	await frames(1)
-	check(_panel_texts(m).has("1   STRIKE   Lash  ·  tap twice: Spear") and MatchSetup.element == "fire", "Water focused: its keys shown, fire still chosen")
+	check(_chip_lines(m).has("1   STRIKE   Lash  ·  tap twice: Spear") and MatchSetup.element == "fire", "Water focused: its keys shown, fire still chosen")
 	(m._panel.find_child("Begin", true, false) as Button).grab_focus()
 	await frames(1)
-	check(_panel_texts(m).has(_key_rows("fire")[0]), "focus gone from the elements: the chosen one's keys again")
-	var opp := m._panel.find_child("Opponent", true, false) as Button
-	var presses := 0
-	while opp and _row_text(opp) != "Opponent:  Water" and presses < 6:
-		opp.pressed.emit()
-		presses += 1
-		await frames(1)
-	check(opp != null and _row_text(opp) == "Opponent:  Water" and MatchSetup.foes == ["water"],
-			"Opponent pressed round to Water (%d presses: %s)" % [presses, MatchSetup.foes])
-	var dif := m._panel.find_child("Difficulty", true, false) as Button
-	if dif:
-		dif.pressed.emit()
-		await frames(1)
-	check(MatchSetup.difficulty == "hard" and dif and _row_text(dif) == "Difficulty:  hard", "Difficulty steps: hard")
-	if dif:
-		dif.pressed.emit()
-		dif.pressed.emit()
-		await frames(1)
-	check(MatchSetup.difficulty == "normal", "and round again to normal")
-	var rnd := m._panel.find_child("Rounds", true, false) as Button
-	if rnd:
-		rnd.pressed.emit()
-		await frames(1)
-	check(MatchSetup.rounds_to_win == 3 and rnd and _row_text(rnd) == "Rounds:  best of 5", "Rounds steps: best of 5")
-	if rnd:
-		rnd.pressed.emit()
-		rnd.pressed.emit()
-		await frames(1)
-	check(MatchSetup.rounds_to_win == 2, "and round again to best of 3")
+	check(_chip_lines(m).has(_key_rows("fire")[0]), "focus gone from the cards: the chosen one's keys again")
+	var opp := mc.find_child("Opponent", true, false) as BroadcastUI.Segments
+	opp.chip(1).pressed.emit()
+	await frames(1)
+	check(MatchSetup.foes == ["water"] and opp.chosen == 1 and _says(mc, "OpponentRow").begins_with("Tide"),
+			"Opponent: the Water chip pressed (%s, line '%s')" % [MatchSetup.foes, _says(mc, "OpponentRow")])
+	var dif := mc.find_child("Difficulty", true, false) as BroadcastUI.Segments
+	dif.chip(2).pressed.emit()
+	await frames(1)
+	check(MatchSetup.difficulty == "hard" and dif.chosen == 2 and _says(mc, "DifficultyRow") == MatchSetup.difficulty_line("hard"),
+			"Difficulty: Hard pressed (%s)" % MatchSetup.difficulty)
+	dif.chip(1).pressed.emit()
+	await frames(1)
+	check(MatchSetup.difficulty == "normal", "and Normal again")
+	# (the rules: the % ring's lives show Games, the zones show Rounds in its place)
+	var rul := mc.find_child("Rules", true, false) as BroadcastUI.Segments
+	var rnd_row := mc.find_child("RoundsRow", true, false) as Control
+	var gms_row := mc.find_child("GamesRow", true, false) as Control
+	rul.chip(0).pressed.emit()
+	await frames(1)
+	check(MatchSetup.rule_set() == "stock" and gms_row.visible and not rnd_row.visible and _says(mc, "RulesRow") == MatchSetup.menu_word("rules_line_stock"),
+			"Lives: the Games row shown, no Rounds row (%s)" % MatchSetup.rule_set())
+	var gms := mc.find_child("Games", true, false) as BroadcastUI.Segments
+	var games_was := MatchSetup.games()
+	var other := 1 if games_was == 1 else 0
+	gms.chip(other).pressed.emit()
+	await frames(1)
+	check(MatchSetup.games() != games_was and gms.chosen == other, "Games: the other chip pressed (%d -> %d)" % [games_was, MatchSetup.games()])
+	gms.chip(MatchSetup.GAMES.find(games_was)).pressed.emit()
+	await frames(1)
+	check(MatchSetup.games() == games_was, "and back to %d" % games_was)
+	rul.chip(1).pressed.emit()
+	await frames(1)
+	check(MatchSetup.rule_set() == "classic" and rnd_row.visible and not gms_row.visible and MatchSetup.rule_label() == "Zones",
+			"Zones: the Rounds row shown in its place (%s)" % MatchSetup.rule_set())
+	var rnd := mc.find_child("Rounds", true, false) as BroadcastUI.Segments
+	rnd.chip(2).pressed.emit()
+	await frames(1)
+	check(MatchSetup.rounds_to_win == 3 and rnd.chosen == 2, "Rounds: best of 5 pressed")
+	rnd.chip(1).pressed.emit()
+	await frames(1)
+	check(MatchSetup.rounds_to_win == 2, "and best of 3 again")
+	rul.chip(0).pressed.emit()
+	await frames(1)
+	var lit := mc.find_child("Light", true, false) as BroadcastUI.Segments
+	lit.chip(2).pressed.emit()
+	await frames(1)
+	check(MatchSetup.light == "night" and lit.chosen == 2, "Light: Night pressed")
+	lit.chip(0).pressed.emit()
+	await frames(1)
+	check(MatchSetup.light == "noon", "and Noon again")
+	# the keys and the pad through the setup: Down from a chip to the chip of the same place in the next row, Right along a row and
+	# no further (the engine's guess would carry the focus to another row's chip), Left from a row's first chip to the chosen card
+	var o1 := mc.find_child("Opponent", true, false) as BroadcastUI.Segments
+	var d1 := mc.find_child("Difficulty", true, false) as BroadcastUI.Segments
+	o1.chip(1).grab_focus()
+	await _key_action(&"ui_down")
+	var at_d1 := root.gui_get_focus_owner() == d1.chip(1)
+	d1.chip(2).grab_focus()
+	await _key_action(&"ui_right")
+	var stays := root.gui_get_focus_owner() == d1.chip(2)
+	d1.chip(0).grab_focus()
+	await _key_action(&"ui_left")
+	var to_card: bool = root.gui_get_focus_owner() == rows[MatchSetup.element]
+	check(at_d1 and stays and to_card, "the keys: Down to the same place in the next row (%s), Right stops at a row's end (%s), Left to the chosen card (%s)" % [at_d1, stays, to_card])
+	# the number keys choose the element
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_1
+	key.pressed = true
+	m._unhandled_input(key)
+	await frames(1)
+	check(MatchSetup.element == "earth", "the number key 1 chooses the first element (%s)" % MatchSetup.element)
+	(rows["fire"] as Button).pressed.emit()
+	await frames(1)
 	var shown := " ".join(PackedStringArray(_panel_texts(m)))
 	var hit := _show_re.search(shown)
-	check(hit == null, "no show word in the panel (%s)" % (hit.get_string() if hit else "none"))
+	check(hit == null, "no show word on the screen (%s)" % (hit.get_string() if hit else "none"))
 	var begin := m._panel.find_child("Begin", true, false) as Button
 	check(begin != null and not begin.disabled, "Begin")
 	MatchSetup.incoming = false
@@ -409,12 +568,18 @@ func _menu() -> void:
 	m._build_items()
 	await frames(1)
 	var qm: Button = null
-	for c in m._items.get_children():
+	for c in m._items.find_children("*", "Button", true, false):
 		if not c.is_queued_for_deletion() and _row_text(c) == "Quick match":
 			qm = c as Button
 	var qs := qm.find_child("Sub", true, false) as Label if qm else null
-	check(qs != null and qs.text == "Fire against a random opponent  ·  normal  ·  best of 3", "Quick match's line: '%s'" % (qs.text if qs else "none"))
-	# Esc closes the panel
+	# (under the % ring's lives its games: one game, or best of 3 with games 3; the rounds under the zone rules)
+	var length := ("best of 3" if MatchSetup.games() >= 3 else "one game") if MatchSetup.rule_set() == "stock" else "best of 3"
+	check(qs != null and qs.text == "Fire against a random opponent  ·  normal  ·  " + length, "Quick match's line: '%s'" % (qs.text if qs else "none"))
+	# the lobby's bug says the next match
+	var bug := m.find_child("BugLine", true, false) as Label
+	m._paint_lobby()
+	check(bug != null and bug.text.contains(MatchSetup.rule_label()) and bug.text.contains(MatchSetup.difficulty), "the lobby's bug: '%s'" % (bug.text if bug else "none"))
+	# Esc closes the screen
 	m._open_match()
 	await frames(1)
 	var esc := InputEventAction.new()
@@ -422,7 +587,7 @@ func _menu() -> void:
 	esc.pressed = true
 	m._unhandled_input(esc)
 	await frames(1)
-	check(not m._panel_scroll.visible, "Esc closes the panel")
+	check(not m._panel_scroll.visible, "Esc closes the screen")
 	await _beginner_path(m)
 	MainMenu.launch_hook = Callable()
 	MatchSetup.leave()
@@ -437,7 +602,7 @@ func _beginner_path(m: MainMenu) -> void:
 	MatchSetup.rules_choice = "classic"
 	MatchSetup.speed = 0.2
 	MatchSetup.throw_me = true
-	var start := m._items.find_child("StartHere", false, false) as Button
+	var start := m._items.find_child("StartHere", true, false) as Button
 	check(start != null, "Start here remains reachable after the first-launch offer")
 	if start == null:
 		return
@@ -448,7 +613,7 @@ func _beginner_path(m: MainMenu) -> void:
 	var learn := m._panel.find_child("Basics", true, false) as Button
 	var easy := m._panel.find_child("EasyMatch", true, false) as Button
 	check(learn != null and easy != null and m._panel.get_combined_minimum_size().y <= 710.0,
-			"both beginner choices fit on screen")
+			"both beginner choices fit on screen (%.0f px)" % m._panel.get_combined_minimum_size().y)
 	if learn == null or easy == null:
 		return
 	learn.pressed.emit()
@@ -464,6 +629,30 @@ func _beginner_path(m: MainMenu) -> void:
 			and MatchSetup.basic() and MatchSetup.difficulty == "easy" and MatchSetup.games_n == 1,
 			"Play an easy match launches one easy game with Basic helpers and key hints")
 	check(String(GameSettings.get_value("match", "foe")) == "water", "the easy match keeps the custom opponent choice for later")
+
+
+## A UI action as the keys or the pad send it, through the window.
+func _key_action(a: StringName) -> void:
+	var ev := InputEventAction.new()
+	ev.action = a
+	ev.pressed = true
+	root.push_input(ev)
+	await frames(2)
+
+
+## The line under a match card's setting row `row` (its Line label).
+func _says(mc: Node, row: String) -> String:
+	var l := mc.find_child(row, true, false).find_child("Line", true, false) as Label
+	return l.text if l else ""
+
+
+## The whole lines of the chips under the cards (each chip's `line` meta).
+func _chip_lines(m: MainMenu) -> Array:
+	var out: Array = []
+	for c in m._keys_box.find_children("Key_*", "Control", true, false):
+		if not c.is_queued_for_deletion() and c.has_meta(&"line"):
+			out.append(String(c.get_meta(&"line")))
+	return out
 
 
 func _row_text(b: Node) -> String:

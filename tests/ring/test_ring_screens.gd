@@ -165,7 +165,7 @@ func _words() -> void:
 			bad.append(s)
 	_expect(bad.is_empty(), "none of the show's words in its %d strings (%s)" % [all.size(), bad])
 	var long: Array = []
-	for t: String in d.get("tips", []):
+	for t: String in d.get("tips", []) + d.get("tips_stock", []) + d.get("tips_classic", []):
 		if t.length() > 120 or t.contains("\n"):
 			long.append(t)
 	_expect(long.is_empty(), "every tip one line (%s)" % [long])
@@ -227,14 +227,14 @@ func _quick() -> void:
 
 
 func _loading() -> void:
-	_expect(LoadingScreen.tip_for("res://scenes/main.tscn") == "" and LoadingScreen.tip_for(LoadingScreen.RING_SCENE) in MatchSetup.screens().tips,
+	_expect(LoadingScreen.tip_for("res://scenes/main.tscn") == "" and LoadingScreen.tip_for(LoadingScreen.RING_SCENE) in LoadingScreen.tip_pool(),
 			"tip_for: a tip on the way to the ring, none to another scene")
 	MatchSetup.incoming = true
 	var ls := LoadingScreen.go(self, LoadingScreen.RING_SCENE)
 	await process_frame
 	await process_frame
 	var tl := ls.find_child("Tip", true, false) as Label
-	_expect(ls.tip in MatchSetup.screens().tips and tl != null and tl.text == ls.tip and tl.is_visible_in_tree(),
+	_expect(ls.tip in LoadingScreen.tip_pool() and tl != null and tl.text == ls.tip and tl.is_visible_in_tree(),
 			"the loading screen into the ring tells a tip: \"%s\"" % ls.tip)
 	# (the ring's own still and words, not the open world's painting and lore)
 	var ld: Dictionary = MatchSetup.screens().get("loading", {})
@@ -243,6 +243,25 @@ func _loading() -> void:
 			and title != null and title.text == String(ld.get("title", "")) and not ls.caption.contains("shallows"),
 			"the ring's loading screen: its own still (%s), \"%s\", \"%s\"" % [ls.picture, title.text if title else "-", ls.caption])
 	_expect(LoadingScreen.ring_entry("res://scenes/main.tscn").is_empty(), "the open world keeps its paintings")
+	# (the broadcast look: the foot plate with its tag, step and percent, the teal line along its top; every label at the type's floor)
+	var small := 9999
+	for lc in ls.find_children("*", "Label", true, false):
+		var lb := lc as Label
+		if lb.text.strip_edges() != "" or lb.name in ["Step", "Percent"]:
+			small = mini(small, lb.get_theme_font_size("font_size"))
+	_expect(ls.find_child("Foot", true, false) != null and ls.find_child("Track", true, false) != null and ls.find_child("Bar", true, false) != null
+			and ls.find_child("Step", true, false) is Label and ls.find_child("Percent", true, false) is Label and small >= BroadcastUI.MIN_PX,
+			"the loading screen in the broadcast look: its foot, the progress line, the step and the percent; the smallest type %d px (floor %d)" % [small, BroadcastUI.MIN_PX])
+	_expect(MenuUI.GOLD != ls.find_child("Title", true, false).get_theme_color("font_color") and ls.find_child("Title", true, false).get_theme_font("font") != FrontierHUD.serif(),
+			"no serif and no gold left on it")
+	var pv := LoadingScreen.preview(root, LoadingScreen.RING_SCENE, 0.5, "Chalking the score")
+	await process_frame
+	await process_frame
+	var pct := pv.find_child("Percent", true, false) as Label
+	var stp := pv.find_child("Step", true, false) as Label
+	_expect(pv.tip != "" and pct != null and pct.text == "50%" and stp != null and stp.text.begins_with("Chalking the score") and LoadingScreen._cover == ls,
+			"a preview shows the screen alone: 50%% and its step ('%s', '%s'), loading nothing" % [pct.text if pct else "-", stp.text if stp else "-"])
+	pv.queue_free()
 	var t := await _until(func() -> bool: return current_scene is RingLevel and RingMode.find(self) != null, 30.0)
 	lvl = current_scene as RingLevel
 	_expect(lvl != null and t < 30.0, "the ring reached through the loading screen (%.1f s)" % t)
@@ -296,6 +315,22 @@ func _round() -> void:
 	_expect(String(l.yours).contains("casts 2") and String(l.yours).contains("catches 1") and String(l.yours).contains("knock-backs 2")
 			and String(l.theirs).begins_with("The Tide"), "the round's tally: \"%s\" / \"%s\"" % [l.yours, l.theirs])
 	_expect(String(l.next).begins_with("next round in"), "the next round's line: \"%s\"" % l.next)
+	# (the broadcast look: the tag, the big word of who took it, the two tally rows, the count and its bar; no serif, every label at the floor)
+	var who := rs.find_child("Who", true, false) as Label
+	var tag_box := rs.find_child("Tag", true, false)
+	var tag_l := tag_box.get_child(0) as Label if tag_box != null else null
+	var yours_row := rs.find_child("Yours", true, false)
+	var theirs_row := rs.find_child("Theirs", true, false)
+	var count := rs.find_child("Count", true, false) as Label
+	var small := 9999
+	for lc in rs.find_children("*", "Label", true, false):
+		small = mini(small, (lc as Label).get_theme_font_size("font_size"))
+	_expect(who != null and who.text == "yours" and who.uppercase and tag_l != null and tag_l.text == "Round 1"
+			and yours_row != null and yours_row.get_child_count() == 4 and theirs_row != null and theirs_row.get_child_count() == 4
+			and count != null and l.next.contains(count.text) and small >= BroadcastUI.MIN_PX,
+			"the round plate: tag '%s', who '%s', the two tallies, the count '%s', the smallest type %d px" % [tag_l.text if tag_l else "-", who.text if who else "-", count.text if count else "-", small])
+	var pr := (rs.find_child("Plate", true, false) as Control).get_global_rect()
+	_expect(Rect2(Vector2.ZERO, BroadcastUI.DESIGN).encloses(pr) and pr.size.x > 1000.0, "the plate stands inside the design space (%s)" % [pr])
 	_expect(mode.banner.text == "" and mode.sub.text == "", "the banner says nothing over it")
 	var bad: Array = []
 	for k: String in l:
@@ -337,6 +372,17 @@ func _match() -> void:
 	_expect(names == ["Rematch", "Element", "Opponent", "MainMenu"], "the rows: %s" % [names])
 	_expect(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE and player.drag_speed_cap == 0.0 and not SwayCaster.of(player).enabled,
 			"the mouse free, the player held (drag cap %.1f, casting %s)" % [player.drag_speed_cap, SwayCaster.of(player).enabled])
+	# the board as plain data (the broadcast look draws it): the result, the tags, the sides, the games, you against them
+	var bd := ms.board()
+	var nums: Array = bd.numbers
+	_expect(String(bd.head) == "Victory" and int(bd.win) == 0 and bd.score == Vector2i(2, 0) and (bd.tags as Array).size() == 3
+			and String((bd.me as Dictionary).el) == "earth" and String((bd.foe as Dictionary).el) == "water" and (bd.games as Array).size() == 2,
+			"the board: %s, win %s, %s, tags %s, games %d" % [bd.head, bd.win, bd.score, bd.tags, (bd.games as Array).size()])
+	_expect(nums.size() == 3 and nums.all(func(r: Dictionary) -> bool: return bool(r.show_b)) and int(nums[0].a) == 2 and int(nums[1].a) == 1
+			and int(nums[2].a) == 2, "the zones' numbers, you against them: %s" % [nums])
+	_expect(not MatchScreen._kept_for_foe([], "catches") and MatchScreen._kept_for_foe([{"pct_tally": [{}, {"catches": 2}]}], "catches")
+			and not MatchScreen._kept_for_foe([{"pct_tally": [{"catches": 1}, {}]}], "catches"),
+			"a number the other side's tally does not keep shows only yours (its bar is hidden)")
 	var bad: Array = []
 	for r: String in rows:
 		bad.append_array(_show(r))

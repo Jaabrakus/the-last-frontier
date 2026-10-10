@@ -5,7 +5,8 @@
   "sport": {
     "name": "Tidebreak",
     "menu_line": "the ring sport: your element against another",
-    "line": "Two sides on a deck over the water. Knock the other side back through its three zones and off the open end into the water to take the round."
+    "line": "Two sides on a deck over the water. Knock the other side back through its three zones and off the open end into the water to take the round.",
+    "line_stock": "Two sides on a deck over the water. Every hit raises the other side's %, and the higher it climbs, the farther they fly. Three lives each: the last side with lives left wins."
   },
   "elements": {
     "earth": {

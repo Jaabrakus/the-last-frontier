@@ -17,7 +17,9 @@ extends Control
 ##               on a heal they roll down with a pale-green flash
 ##   a fall      a white flash, the digits rising and fading, a life glyph cracking and dropping (the row closing up), "0%"
 ##               fading in; the last life's glyph pulses; after a respawn a small glyph and a bar while he is safe
-##   the clock   top centre (the game's time left; in sudden death its own count), the event line under it for event_s
+##   the clock   top centre (the game's time left; in sudden death its own count), the event line under it for event_s;
+##               not while the match's centre line says the same fall (RingMode.ko_line: one line for a fall, not two; the UI
+##               audit, 2026-10-09), so it tells a fall only where the centre says nothing (the last life, a practice)
 ## lines() / plate_info(team, k) / plate_rect(team, k): what it shows, for the tests.
 
 const GROUP := &"ring_match"
@@ -108,6 +110,8 @@ func _process(dt: float) -> void:
 	if m != _m or (RingRules.current() != _rules):
 		_hook(m)
 	_event_t = maxf(_event_t - dt, 0.0)
+	if _event_t > 0.0 and m.has_method(&"ko_line") and String(m.call(&"ko_line")) != "":
+		_event_t = 0.0                            # (the centre's fall line says it: one line, not two)
 	for id in _pl:
 		var s := _pl[id] as Dictionary
 		for k: String in ["roll_t", "pop_t", "shake_t", "heal_t"]:
