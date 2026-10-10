@@ -538,7 +538,9 @@ class Layout extends Control:
 
 	func refit() -> void:
 		var view := BroadcastUI.view_size(self)
-		var f := maxf(minf(1.0, minf(view.x / BroadcastUI.DESIGN.x, view.y / BroadcastUI.DESIGN.y)), 0.01)
+		# (up to MAX_UP as well as down: capped at 1, a 1920 x 1080 window drew the 1600 x 900 design at its own size, the setup's
+		# fighter cards and every plate about 30% smaller on screen than the approved mock-up, a band of empty deck under them)
+		var f := maxf(minf(BroadcastUI.MAX_UP, minf(view.x / BroadcastUI.DESIGN.x, view.y / BroadcastUI.DESIGN.y)), 0.01)
 		scale = Vector2.ONE * f
 		size = view / f
 		position = Vector2.ZERO
