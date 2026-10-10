@@ -454,6 +454,19 @@ func _gates() -> void:
 		if String(n.item.type) == "node" and n.kind == "enhance" and n.state == "available":
 			enh = n
 	check(enh != null, "an enhance can still be worn")
+	# the gate shown on every pick it holds, and on no other (the lattice mixes the rows: each such pick wears the padlock)
+	var gated_kinds: Array = AdvancementData.switch("full_lessons_kinds", [])
+	var wrong_marks: Array = []
+	for n: AdvancementNode in w.all_nodes():
+		if String(n.item.type) == "root" or n.state != "blocked":
+			continue
+		var all_gated := true
+		for id: String in n.ids:
+			if not String(AdvancementData.node(id).kind) in gated_kinds:
+				all_gated = false
+		if (n.gate_num == 4) != all_gated:
+			wrong_marks.append("%s:%d" % [n.name, n.gate_num])
+	check(wrong_marks.is_empty(), "every shut twist, technique, new skill and set wears the lessons gate's padlock with 4, nothing else does %s" % [wrong_marks])
 	_free(w)
 	AdvancementData.gates_override = {"won": false, "full_left": 4, "first_win": true, "full_lessons": true}
 	w = _open("earth")
@@ -463,6 +476,11 @@ func _gates() -> void:
 		if n.state == "available":
 			open_ct += 1
 	check(open_ct == 0, "before the first win nothing can be worn (%d)" % open_ct)
+	var unmarked := 0
+	for n: AdvancementNode in w.all_nodes():
+		if String(n.item.type) != "root" and n.state == "blocked" and n.gate_num != 1:
+			unmarked += 1
+	check(unmarked == 0, "and every shut pick wears the first-win gate's padlock with 1 (%d without)" % unmarked)
 	var items: Array = w.premade_drop().items
 	var all_dis := true
 	for it: Dictionary in items:
@@ -745,7 +763,7 @@ func _repair_tips() -> void:
 			cut += 1
 		_free(w)
 	check(outside.is_empty(), "%d tips (short and full) of every element stay inside the painting, above the bar (%s)" % [cut, outside.slice(0, 5)])
-	check(worst_short <= 330, "the short tip is at most 330 px tall at 1600x900 (the old one reached 490): %d (%s)" % [worst_short, worst_short_id])
+	check(worst_short <= 250, "the short tip is at most 250 px tall at 1600x900 (the first one reached 490, the repair's 330): %d (%s)" % [worst_short, worst_short_id])
 	check(worst_full > worst_short, "and the full one holds more (%d)" % worst_full)
 	# one node, line by line
 	var lo := AdvancementLoadout.new("earth")
@@ -755,7 +773,25 @@ func _repair_tips() -> void:
 	var short_text := ""
 	for l: Dictionary in short:
 		short_text += String(l.text) + "\n"
-	check(short_text.contains("Juggle") and short_text.contains("Rank 1/1") and short_text.contains(AdvancementData.word("tip.take_off")) and not short_text.contains("How he answers"), "the short tip has the name, the rank, the action and not the answer")
+	check(short_text.contains("Juggle") and short_text.contains("hold two stones") and short_text.contains(AdvancementData.word("tip.take_off")) and not short_text.contains("How he answers") and not short_text.contains("Rank"),
+			"the short tip has the name, the effect, the numbers, the action; not the rank (on the plate) nor the answer")
+	# one line of effect and one of numbers, whatever the node (each kept to one line by the tip itself)
+	var multi: Array = []
+	for el: String in AdvancementData.ELEMENTS:
+		for nd: Dictionary in AdvancementData.nodes(el):
+			var ls := AdvancementTip.node_lines(String(nd.id), "available", lo, false)
+			var fx_lines := 0
+			var num_lines := 0
+			for l: Dictionary in ls:
+				if l.get("col") == AdvancementData.color("effect"):
+					fx_lines += 1
+					if not bool(l.get("one", false)):
+						multi.append(String(nd.id))
+				if l.has("parts") and (String(l.text).begins_with("+ ") or String(l.text).begins_with("- ")):
+					num_lines += 1
+			if fx_lines > 1 or num_lines > 1 or ls.size() > 6:
+				multi.append(String(nd.id))
+	check(multi.is_empty(), "every short tip: one effect line, one numbers line, at most 6 lines %s" % [multi.slice(0, 5)])
 	# Shift and a long stay make it full
 	var w2 := _open("earth")
 	await frames(3)
@@ -826,6 +862,8 @@ func _repair_live() -> void:
 func _repair_layout() -> void:
 	var worst_gap := 0.0
 	var worst_fill := 1.0
+	var worst_density := 1.0
+	var off_lattice: Array = []
 	var no_decor: Array = []
 	var bad: Array = []
 	var fm: Array = AdvancementData.layout().get("fill_margin", [0, 0, 0])
@@ -850,6 +888,39 @@ func _repair_layout() -> void:
 				worst_gap = maxf(worst_gap, gap)
 			var avail := zone.size.y - float(fm[1]) - float(fm[2])
 			worst_fill = minf(worst_fill, (bot - top) / avail)
+			# the diamond lattice (2026-10-10 repair of "sparse"): every slot on a lattice point (a whole column on a row of
+			# one parity, a half on the other), and the points of the tree's box mostly in use
+			var hx := float(p.pitch.x) * 0.5
+			var x_min := INF
+			var y_min := INF
+			for it: Dictionary in p.items:
+				x_min = minf(x_min, (it.pos as Vector2).x)
+				y_min = minf(y_min, (it.pos as Vector2).y)
+			var cells := {}
+			var r_max := 0
+			var q_max := 0
+			for it: Dictionary in p.items:
+				var q := roundi(((it.pos as Vector2).x - x_min) / hx)
+				var r := roundi(((it.pos as Vector2).y - y_min) / pitch_y)
+				cells["%d,%d" % [q, r]] = true
+				r_max = maxi(r_max, r)
+				q_max = maxi(q_max, q)
+				if absf(((it.pos as Vector2).x - x_min) / hx - float(q)) > 0.02 or absf(((it.pos as Vector2).y - y_min) / pitch_y - float(r)) > 0.02:
+					off_lattice.append("%s %s %s" % [el, side, it.key])
+			var parity := -1
+			for k: String in cells:
+				var qr := k.split(",")
+				var pp := (int(qr[0]) + int(qr[1])) % 2
+				if parity == -1:
+					parity = pp
+				elif pp != parity:
+					off_lattice.append("%s %s parity %s" % [el, side, k])
+			var points := 0
+			for r in r_max + 1:
+				for q in q_max + 1:
+					if (q + r) % 2 == parity:
+						points += 1
+			worst_density = minf(worst_density, float(cells.size()) / float(maxi(points, 1)))
 			if top < float(fm[1]) - 0.5 or bot > zone.size.y - float(fm[2]) + 0.5:
 				bad.append("%s %s %.0f..%.0f" % [el, side, top, bot])
 			if side == "left" and (p.decor as Array).is_empty():
@@ -861,7 +932,9 @@ func _repair_layout() -> void:
 						bad.append("%s %s decor repeats a link" % [el, side])
 	check(bad.is_empty(), "every tree sits inside its zone with the fill margin kept clear (%s)" % [bad])
 	check(worst_gap <= 1.3, "no hole between two rows of a tree: the widest is %.2f row pitches (it was 1.6)" % worst_gap)
-	check(worst_fill >= 0.85, "every tree fills at least 85%% of its zone's height (%.2f)" % worst_fill)
+	check(worst_fill >= 0.6, "every tree fills at least 60%% of its zone's height (%.2f)" % worst_fill)
+	check(off_lattice.is_empty(), "every slot of every tree is on its diamond lattice %s" % [off_lattice.slice(0, 5)])
+	check(worst_density >= 0.62, "every tree is a dense lattice: at least 62%% of the points in its box hold a slot (%.2f)" % worst_density)
 	check(no_decor.is_empty(), "every left tree has its cross links (%s)" % [no_decor])
 	# the status line stands in the bar, clear of both trees' zones
 	var w := _open("earth")

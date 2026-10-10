@@ -43,6 +43,7 @@ var _stage: Control
 var _tree_l: AdvancementTree
 var _tree_r: AdvancementTree
 var _rail: AdvancementRail
+var _backdrop: TextureRect           ## the painting (its shader calms the ground behind the trees)
 var _tip: AdvancementTip
 var _tip_for: Control
 var _portrait: TextureRect
@@ -268,6 +269,7 @@ func _build() -> void:
 	_build_bevel()
 	_build_titles()
 	_build_trees()
+	_calm_painting()
 	_build_bottom()
 	_build_tabs()
 	_build_overlays()
@@ -310,9 +312,14 @@ func _build_painting() -> void:
 	pic.position = Vector2((art.size.x - pic.size.x) * 0.5, -(ph - art.size.y) * 0.38)
 	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	art.add_child(pic)
-	# the shade: the tree zones darker, the centre gap left bright, tunable without painting again
+	_backdrop = pic
+	# behind the trees and the rail the picture is calmed by a shader (softened, drained of colour, darkened: _calm_painting,
+	# once the trees are placed); a light even shade over the sides keeps the edges quiet, the centre gap stays bright
+	var calm := ShaderMaterial.new()
+	calm.shader = load("res://shaders/ui/adv_backdrop.gdshader") as Shader
+	pic.material = calm
 	var side := TextureRect.new()
-	side.texture = AdvancementTheme.shade_tex(0.7, 0.0)
+	side.texture = AdvancementTheme.shade_tex(float(AdvancementData.layout().get("side_shade", 0.32)), 0.0)
 	side.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	side.stretch_mode = TextureRect.STRETCH_SCALE
 	side.size = art.size
@@ -552,6 +559,43 @@ func _build_trees() -> void:
 	_rail.setup(element, work.style)
 	_rail.tip_wanted.connect(_on_rail_tip)
 	_stage.add_child(_rail)
+
+
+## The calm ground behind each tree (its nodes and its title) and the rail: the backdrop shader's rects, in the picture's UV.
+func _calm_painting() -> void:
+	if _backdrop == null or not _backdrop.material is ShaderMaterial:
+		return
+	var mat := _backdrop.material as ShaderMaterial
+	var origin := _backdrop.position + (_backdrop.get_parent() as Control).position
+	var psz := _backdrop.size
+	var L := AdvancementData.layout()
+	var grow := float(L.get("calm_margin", 22.0))
+	var rects: Array = []
+	for t: AdvancementTree in [_tree_l, _tree_r]:
+		var lo := Vector2(INF, INF)
+		var hi := Vector2(-INF, -INF)
+		var half := float(t.plan.icon) * 0.5
+		for it: Dictionary in t.plan.items:
+			var p: Vector2 = t.position + (it.pos as Vector2)
+			lo = lo.min(p - Vector2(half, half))
+			hi = hi.max(p + Vector2(half, half))
+		if lo.x == INF:
+			continue
+		lo.y = minf(lo.y, _r("left_title").position.y - 18.0)
+		rects.append(Rect2(lo, hi - lo).grow(grow))
+	rects.append(_r("rail").grow(grow * 0.5))
+	var names := ["zone_a", "zone_b", "zone_c"]
+	for i in names.size():
+		var v := Vector4.ZERO
+		if i < rects.size():
+			var r: Rect2 = rects[i]
+			v = Vector4((r.position.x - origin.x) / psz.x, (r.position.y - origin.y) / psz.y, r.size.x / psz.x, r.size.y / psz.y)
+		mat.set_shader_parameter(names[i], v)
+	mat.set_shader_parameter("aspect", psz.x / maxf(psz.y, 1.0))
+	mat.set_shader_parameter("feather", float(L.get("calm_feather", 70.0)) / psz.x)
+	mat.set_shader_parameter("dark", float(L.get("calm_dark", 0.52)))
+	mat.set_shader_parameter("desat", float(L.get("calm_desat", 0.6)))
+	mat.set_shader_parameter("blur_px", float(L.get("calm_blur_px", 3.0)))
 
 
 func _build_bottom() -> void:

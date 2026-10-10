@@ -3,15 +3,19 @@ extends Button
 ## One pick of a tree, drawn in the reference's way: a round plate for a number trade (enhance, synergy, passive), a
 ## square one for something that changes what a move does or adds one (twist, technique, new skill, skill set), an
 ## octagon with gold side tabs for a CHOICE (one of a twist's, a passive's or a new skill's alternatives), and a
-## double-edged gold square for a ROOT (a move you already have, with its key as the badge). A lit plate (worn, can be worn,
-## root) is a jewel: the element's colour (a skill set's own hue for its picks) bright at the middle and dark at the edge, a
-## gloss at the top, a lit rim at the top left and a glow behind the picture; the picture is the HUD's own line art tinted
-## by the kind (gold for a number trade, orange for a twist, violet for a technique, aqua for a new skill, green for a
-## passive). A blocked or held plate stays grey slate. The border is its state:
-##   worn gold, can be worn green, blocked grey, held dashed with a '?', pending on gold with a green ring inside,
-##   pending off grey with a red ring.
-## A corner mark says the kind (twist, technique, ...), the other corner the skill set, outlined digits the rank (0/1, 1/1) and
-## a green dot that the pick plays in matches (AdvancementData.is_live).
+## double-edged gold square for a ROOT (a move you already have, with its key as the badge). A plate in colour (worn, can be
+## worn, root) is a deep jewel (2026-10-10 repair of "flat node art"): its hue led by the kind (gold for a number trade,
+## orange for a twist, violet for a technique, teal for a new skill, green for a passive; a skill set's picks its own hue)
+## and tinted by the element, turned a little per pick so no two neighbours are one colour, bright at the middle and dark at
+## the edge, with the kind's motif behind the picture (light rays for what changes a move, rings for a number trade), a
+## gloss, a lit rim and a glow; the picture is the HUD's own line art in near-white with a dark halo, the brightest thing on
+## the plate. Worn is the full jewel, can-be-worn the same dimmer; a blocked or held plate is grey slate, dimmed. The
+## border is its state:
+##   worn gold, can be worn green, blocked grey (a gate's: rust), held dashed with a '?', pending on gold with a green ring
+##   inside, pending off grey with a red ring.
+## The marks sit on the corners, half on the plate, so none reaches a neighbour on the lattice: the kind top left, the skill
+## set top right, the rank (0/1, 1/1) in a small plate inside the lower right corner (a newcomer gate's padlock and number
+## there instead when a gate holds it: gate_num), a green dot lower left when the pick plays in matches (AdvancementData.is_live).
 ##
 ## A left click or Enter / A emits `wear`; a right click, Delete or X (pad) emits `take_off`. Hover and focus emit `tip`.
 
@@ -32,6 +36,7 @@ var kind := ""
 var set_id := ""
 var hue := Color.WHITE     ## the plate's colour (white: the element's)
 var live := false          ## wearing it changes a real match
+var gate_num := 0          ## > 0: a newcomer gate holds it shut (the gate's number: 1 = the first win, else the lessons left)
 var dim := false           ## a search non-match
 var match_glow := false    ## a search match
 var popped := false        ## a choice with its options out
@@ -145,28 +150,39 @@ func _poly(r: Rect2) -> PackedVector2Array:
 
 
 ## The plate's colour: a skill set's own hue for its picks, else the element's pulled toward the kind's tint (a twist warmer, a
-## technique violet, a new skill teal, a passive green) so a tree is not one brown; then made rich (saturated and bright).
+## technique violet, a new skill teal, a passive green) so a tree is not one brown, turned a little by the pick's own id (each
+## pick its own jewel, as the reference's icons are each their own picture); then made rich (saturated, a deep middle value
+## so the light picture stands out on it).
 func _hue() -> Color:
 	var base: Color = hue
 	if hue == Color.WHITE:
 		base = AdvancementData.element_color(element)
 		if kind != "" and shape != "root":
-			base = base.lerp(AdvancementData.color("kind_" + kind), 0.4)
-	return Color.from_hsv(base.h, clampf(maxf(base.s * 1.25, 0.52), 0.0, 0.92), clampf(maxf(base.v, 0.86), 0.0, 1.0))
+			# the kind leads the hue (a number trade gold, a twist orange, a technique violet, a new skill teal, a passive
+			# green), the element tints it: a tree reads in several jewels, as the reference's does
+			var kc := AdvancementData.color("kind_" + kind)
+			base = Color.from_hsv(kc.h, maxf(kc.s, 0.5), 1.0).lerp(base, 0.35)
+	var turn := 0.0
+	if shape != "root" and shown_id != "":
+		turn = float(int(absi(shown_id.hash())) % 7 - 3) * 0.014
+	return Color.from_hsv(fposmod(base.h + turn, 1.0), clampf(maxf(base.s * 1.5, 0.62), 0.0, 0.88), 0.9)
 
 
+## [middle, edge] of the plate. Lit (worn, pending on, a root): the jewel, deep and saturated, so the light picture is the
+## brightest thing on it. Can be worn: the same jewel, dimmer (in colour, as the reference shows a pick you can take). Shut,
+## held, taking off: grey slate, no colour.
 func _plate_colours() -> Array:
 	var h := _hue()
 	match state:
 		"worn", "pending_on", "root":
-			return [h.darkened(0.1), h.darkened(0.74)]
+			return [Color.from_hsv(h.h, h.s, 0.56), Color.from_hsv(h.h, minf(1.0, h.s * 1.05), 0.09)]
 		"available":
-			return [h.darkened(0.46), h.darkened(0.82)]
+			return [Color.from_hsv(h.h, h.s * 0.8, 0.38), Color.from_hsv(h.h, h.s * 0.8, 0.07)]
 		"pending_off":
 			return [Color(0.27, 0.28, 0.31), Color(0.1, 0.105, 0.125)]
 		"held":
-			return [Color(0.25, 0.26, 0.29), Color(0.1, 0.105, 0.125)]
-	return [Color(0.23, 0.245, 0.28), Color(0.085, 0.095, 0.115)]
+			return [Color(0.22, 0.23, 0.26), Color(0.09, 0.095, 0.11)]
+	return [Color(0.2, 0.21, 0.235), Color(0.07, 0.075, 0.09)]
 
 
 func _border_colour() -> Color:
@@ -179,28 +195,49 @@ func _border_colour() -> Color:
 			return AdvancementData.color("blocked")
 		"held":
 			return AdvancementData.color("held")
-	return AdvancementData.color("blocked").darkened(0.15)
+	if gate_num > 0:
+		return AdvancementData.color("gate_line").darkened(0.1)
+	return AdvancementData.color("blocked").darkened(0.2)
 
 
-## The picture's colour: its kind's tint on a lit plate, light grey-green on a plate that can be worn, grey on the rest.
+## The picture's colour: near-white with a breath of the plate's hue on a lit plate (it is the brightest thing on it), a little
+## softer on a plate that can be worn, grey on the rest.
 func _ink() -> Color:
-	var tint := Color(1.0, 0.97, 0.88)
-	if kind != "" and shape != "root":
-		tint = AdvancementData.color("kind_" + kind).lerp(Color.WHITE, 0.5)
+	var h := _hue()
+	var lit_ink := Color(1.0, 0.99, 0.96).lerp(Color.from_hsv(h.h, 0.3, 1.0), 0.22)
 	match state:
 		"worn", "pending_on", "root":
-			return tint
+			return lit_ink
 		"available":
-			return tint.lerp(Color(0.9, 1.0, 0.92), 0.55)
+			return lit_ink.darkened(0.12)
 		"pending_off":
 			return Color(0.66, 0.68, 0.72, 0.8)
 		"held":
-			return Color(0.62, 0.66, 0.72, 0.62)
-	return Color(0.56, 0.6, 0.67, 0.72)
+			return Color(0.6, 0.63, 0.68, 0.6)
+	return Color(0.55, 0.58, 0.63, 0.7)
 
 
 func _lit_state() -> bool:
 	return state == "worn" or state == "pending_on" or state == "root"
+
+
+## The kind's motif behind the picture on a plate in colour: light rays for what changes a move (a twist, a technique, a new
+## skill, a skill set), a soft ring for a number trade (enhance, synergy, passive); none on a root (its key badge speaks).
+func _draw_motif(s: Vector2, strength: float) -> void:
+	var c := s * 0.5
+	var r := minf(s.x, s.y) * 0.5
+	var light := Color.from_hsv(_hue().h, 0.25, 1.0)
+	if kind in ["variation", "mastery", "new_skill", "skill_set", "world_only"]:
+		var n := 12 if kind == "mastery" else (8 if kind == "new_skill" else 10)
+		var off := float(absi(shown_id.hash()) % 100) * 0.0628
+		for i in n:
+			var a := off + TAU * float(i) / float(n)
+			var w := 0.11 if kind != "mastery" else 0.08
+			var p := PackedVector2Array([c, c + Vector2.from_angle(a - w) * r * 1.3, c + Vector2.from_angle(a + w) * r * 1.3])
+			draw_colored_polygon(p, Color(light, 0.075 * strength))
+	elif kind != "":
+		draw_arc(c, r * 0.72, 0.0, TAU, 36, Color(light, 0.14 * strength), 2.0, true)
+		draw_arc(c, r * 0.52, 0.0, TAU, 32, Color(light, 0.08 * strength), 1.4, true)
 
 
 func _draw() -> void:
@@ -216,40 +253,49 @@ func _draw() -> void:
 		var gc := bc if not match_glow else AdvancementData.color("title")
 		var closed := poly.duplicate()
 		closed.append(poly[0])
-		draw_polyline(closed, Color(gc, 0.2 + (0.12 if _hover else 0.0)), 9.0, true)
+		draw_polyline(closed, Color(gc, 0.22 + (0.14 if _hover else 0.0)), 10.0, true)
 	var back := poly.duplicate()
 	back.append(poly[0])
-	draw_polyline(back, Color(0, 0, 0, 0.6), 6.0, true)
-	# the plate: the colour bright at the middle fading to dark at the edge, clipped to the shape
+	draw_polyline(back, Color(0, 0, 0, 0.7), 6.5, true)
+	# the plate: a deep jewel bright at the middle and dark at the edge, clipped to the shape
 	var cols := _plate_colours()
 	var pt := AdvancementTheme.plate_tex(cols[0], cols[1])
 	var uvs := PackedVector2Array()
 	for p in poly:
 		uvs.append((p - r.position) / r.size)
 	draw_colored_polygon(poly, Color.WHITE, uvs, pt)
-	var isz := minf(s.x, s.y) * (0.84 if shape != "octagon" else 0.78)
+	if lit and shape != "root":
+		_draw_motif(s, 1.0 if _lit_state() else 0.6)
+	var isz := minf(s.x, s.y) * (0.8 if shape != "octagon" else 0.74)
 	var ir := Rect2((s - Vector2(isz, isz)) * 0.5, Vector2(isz, isz))
-	if _lit_state():
-		# a gloss on the upper half and a glow behind the picture
-		var gl := AdvancementTheme.ellipse_poly(Vector2(s.x * 0.5, s.y * 0.27), Vector2(s.x * 0.34, s.y * 0.15))
-		draw_colored_polygon(gl, Color(1, 1, 1, 0.13))
-		draw_texture_rect(AdvancementTheme.glow_tex(), ir.grow(5.0), false, Color(_hue().lightened(0.45), 0.55 + 0.2 * _pulse))
-	# the picture (a lit plate gives it a dark shadow so it reads on the bright middle)
+	if lit:
+		# a glow of the plate's light behind the picture (brighter when worn), a gloss on the upper half
+		var gk := 0.34 if _lit_state() else 0.18
+		draw_texture_rect(AdvancementTheme.glow_tex(), ir.grow(2.0), false, Color(Color.from_hsv(_hue().h, 0.7, 1.0), gk + 0.18 * _pulse))
+		var gl := AdvancementTheme.ellipse_poly(Vector2(s.x * 0.5, s.y * 0.26), Vector2(s.x * 0.36, s.y * 0.15))
+		draw_colored_polygon(gl, Color(1, 1, 1, 0.11 if _lit_state() else 0.06))
+	# the picture, with a dark drop so its light lines read on the glow
 	if pic != null:
-		if _lit_state():
-			draw_texture_rect(pic, Rect2(ir.position + Vector2(0.0, 1.6), ir.size), false, Color(0.04, 0.02, 0.0, 0.55))
+		if lit:
+			# a dark halo round the light lines (four nudges) and a drop below them
+			for o: Vector2 in [Vector2(1.3, 0.0), Vector2(-1.3, 0.0), Vector2(0.0, 1.3), Vector2(0.0, -1.3)]:
+				draw_texture_rect(pic, Rect2(ir.position + o, ir.size), false, Color(0.02, 0.01, 0.0, 0.32))
+			draw_texture_rect(pic, Rect2(ir.position + Vector2(0.0, 2.0), ir.size), false, Color(0.02, 0.01, 0.0, 0.6))
 		draw_texture_rect(pic, ir, false, _ink())
 	else:
 		var fnt := AdvancementTheme.font("head")
 		var txt := badge if badge != "" else "?"
 		draw_string(fnt, Vector2(0, s.y * 0.5 + 9), txt, HORIZONTAL_ALIGNMENT_CENTER, s.x, 26, _ink())
+	# a shut or held plate is dimmed over its picture, so a pick you cannot take reads grey at a glance
+	if not lit and state != "pending_off":
+		draw_colored_polygon(poly, Color(0.03, 0.035, 0.05, 0.28))
 	# the border
 	var edge := poly.duplicate()
 	edge.append(poly[0])
 	if state == "held":
 		AdvancementTheme.dashed_outline(self, poly, bc, 2.4)
 	else:
-		draw_polyline(edge, bc, 3.0, true)
+		draw_polyline(edge, bc, 3.0 if lit or gate_num > 0 else 2.4, true)
 	if lit and state != "held":
 		# a lit rim just inside the border, brightest at the top left
 		var rim := _poly(r.grow(-3.4))
@@ -284,60 +330,75 @@ func _draw() -> void:
 func _draw_tabs(col: Color) -> void:
 	var cy := size.y * 0.5
 	var tc := col
-	var pl := PackedVector2Array([Vector2(-1.5, cy - 8.5), Vector2(-10.5, cy), Vector2(-1.5, cy + 8.5)])
-	var pr := PackedVector2Array([Vector2(size.x + 1.5, cy - 8.5), Vector2(size.x + 10.5, cy), Vector2(size.x + 1.5, cy + 8.5)])
+	var pl := PackedVector2Array([Vector2(-1.5, cy - 8.0), Vector2(-9.5, cy), Vector2(-1.5, cy + 8.0)])
+	var pr := PackedVector2Array([Vector2(size.x + 1.5, cy - 8.0), Vector2(size.x + 9.5, cy), Vector2(size.x + 1.5, cy + 8.0)])
 	draw_colored_polygon(pl, tc)
 	draw_colored_polygon(pr, tc)
 	draw_polyline(PackedVector2Array([pl[0], pl[1], pl[2], pl[0]]), Color(0, 0, 0, 0.55), 1.0, true)
 	draw_polyline(PackedVector2Array([pr[0], pr[1], pr[2], pr[0]]), Color(0, 0, 0, 0.55), 1.0, true)
 
 
+## The marks sit on the plate's corners, half on it, so nothing reaches a neighbour: the kind top left, the skill set top
+## right, the rank (or a gate's padlock) in a small plate on the lower right corner, the green "plays in matches" dot lower left.
 func _draw_marks(bc: Color) -> void:
 	var fnt := AdvancementTheme.font("head2")
-	# the kind mark, top left; the skill set's, top right
+	var mr := 9.5
 	if kind != "" and shape != "root":
 		var km := AdvancementTheme.kind_mark(kind)
 		if km != null:
-			var kr := Rect2(Vector2(-8, -8), Vector2(22, 22))
-			draw_circle(kr.get_center(), 11.0, Color(0.04, 0.045, 0.06, 0.88))
-			draw_arc(kr.get_center(), 11.0, 0, TAU, 20, Color(bc, 0.8), 1.4, true)
-			draw_texture_rect(km, kr.grow(-3.0), false, Color(1.0, 0.9, 0.55) if state in ["worn", "pending_on", "available"] else Color(0.65, 0.68, 0.74))
+			var kc := Vector2(4.0, 4.0)
+			draw_circle(kc, mr, Color(0.035, 0.04, 0.055, 0.94))
+			draw_arc(kc, mr, 0, TAU, 20, Color(bc, 0.85), 1.3, true)
+			draw_texture_rect(km, Rect2(kc - Vector2(mr - 2.5, mr - 2.5), Vector2(mr - 2.5, mr - 2.5) * 2.0), false,
+					Color(1.0, 0.9, 0.55) if state in ["worn", "pending_on", "available"] else Color(0.65, 0.68, 0.74))
 	if set_id != "" and shape != "root":
 		var sm := AdvancementTheme.set_mark(set_id)
 		if sm != null:
-			var sr := Rect2(Vector2(size.x - 14, -8), Vector2(22, 22))
-			draw_circle(sr.get_center(), 11.0, Color(0.04, 0.045, 0.06, 0.88))
-			draw_arc(sr.get_center(), 11.0, 0, TAU, 20, Color(AdvancementTheme.set_tint(set_id), 0.9), 1.4, true)
-			draw_texture_rect(sm, sr.grow(-3.0), false, AdvancementTheme.set_tint(set_id))
-	# a root's key sits in a small plate on its lower edge; a node's rank is bare outlined digits in its lower right corner
-	var txt := ""
-	var tcol := bc
+			var sc := Vector2(size.x - 4.0, 4.0)
+			draw_circle(sc, mr, Color(0.035, 0.04, 0.055, 0.94))
+			draw_arc(sc, mr, 0, TAU, 20, Color(AdvancementTheme.set_tint(set_id), 0.9), 1.3, true)
+			draw_texture_rect(sm, Rect2(sc - Vector2(mr - 2.5, mr - 2.5), Vector2(mr - 2.5, mr - 2.5) * 2.0), false, AdvancementTheme.set_tint(set_id))
 	if shape == "root":
-		txt = badge
-		tcol = AdvancementData.color("worn")
-	elif rank_text != "":
-		txt = rank_text
-		tcol = AdvancementData.color("worn") if state in ["worn", "pending_on"] else (AdvancementData.color("available") if state == "available" else AdvancementData.color("text_dim").lightened(0.2))
-	if txt != "":
-		var px := 18
-		var tw := fnt.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-		if shape == "root":
-			var pw := maxf(tw + 12.0, 30.0)
-			var ph := 20.0
-			var pr := Rect2((size.x - pw) * 0.5, size.y - ph * 0.5 - 1.0, pw, ph)
-			var pp := AdvancementTheme.rounded_poly(pr, 6.0, 3)
-			draw_colored_polygon(pp, Color(0.04, 0.045, 0.06, 0.94))
-			var pe := pp.duplicate()
-			pe.append(pp[0])
-			draw_polyline(pe, Color(tcol, 0.85), 1.4, true)
-			draw_string(fnt, Vector2(pr.position.x, pr.position.y + ph * 0.5 + 6.5), txt, HORIZONTAL_ALIGNMENT_CENTER, pw, px, tcol)
+		# a root's key sits in a small plate on its lower edge
+		var px := 17
+		var tw := fnt.get_string_size(badge, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+		var pw := maxf(tw + 12.0, 28.0)
+		var ph := 19.0
+		var pr := Rect2((size.x - pw) * 0.5, size.y - ph * 0.5 - 1.0, pw, ph)
+		var pp := AdvancementTheme.rounded_poly(pr, 6.0, 3)
+		draw_colored_polygon(pp, Color(0.035, 0.04, 0.055, 0.96))
+		var pe := pp.duplicate()
+		pe.append(pp[0])
+		var tcol := AdvancementData.color("worn")
+		draw_polyline(pe, Color(tcol, 0.85), 1.3, true)
+		draw_string(fnt, Vector2(pr.position.x, pr.position.y + ph * 0.5 + 6.0), badge, HORIZONTAL_ALIGNMENT_CENTER, pw, px, tcol)
+	elif gate_num > 0 or rank_text != "":
+		# the rank (or the gate's padlock) in a small dark plate inside the lower right corner, as the reference prints it
+		var px2 := 14
+		var gate := gate_num > 0 and state == "blocked"
+		var txt := "" if gate else rank_text
+		var tcol2 := AdvancementData.color("worn") if state in ["worn", "pending_on"] else (AdvancementData.color("available") if state == "available" else AdvancementData.color("text_dim").lightened(0.15))
+		var gtxt := str(gate_num)
+		var tw2 := (12.0 + 2.0 + fnt.get_string_size(gtxt, HORIZONTAL_ALIGNMENT_LEFT, -1, px2).x) if gate else fnt.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px2).x
+		var pw2 := tw2 + 8.0
+		var ph2 := 16.0
+		var pr2 := Rect2(size.x - pw2 - 1.0, size.y - ph2 - 1.0, pw2, ph2)
+		var pp2 := AdvancementTheme.rounded_poly(pr2, 4.0, 2)
+		draw_colored_polygon(pp2, Color(0.025, 0.028, 0.04, 0.92))
+		if gate:
+			var gc := AdvancementData.color("gate").lightened(0.2)
+			var pe2 := pp2.duplicate()
+			pe2.append(pp2[0])
+			draw_polyline(pe2, Color(gc, 0.85), 1.2, true)
+			var lock := AdvancementTheme.tex("res://assets/ui/advancement/padlock.svg")
+			if lock != null:
+				draw_texture_rect(lock, Rect2(pr2.position + Vector2(3.0, 2.0), Vector2(12, 12)), false, gc)
+			draw_string(fnt, Vector2(pr2.position.x + 17.0, pr2.position.y + ph2 - 3.5), gtxt, HORIZONTAL_ALIGNMENT_LEFT, -1, px2, gc)
 		else:
-			var at := Vector2(size.x - tw + 9.0, size.y + 9.0)
-			draw_string_outline(fnt, at, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px, 6, Color(0.02, 0.022, 0.03, 0.96))
-			draw_string(fnt, at, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px, tcol)
+			draw_string(fnt, Vector2(pr2.position.x, pr2.position.y + ph2 - 3.5), txt, HORIZONTAL_ALIGNMENT_CENTER, pw2, px2, tcol2)
 	if live and shape != "root":
-		# plays in matches: a small green dot with a white play mark at the lower left
-		var dc := Vector2(1.0, size.y - 1.0)
-		draw_circle(dc, 8.5, Color(0.02, 0.03, 0.03, 0.95))
-		draw_circle(dc, 6.6, AdvancementData.color("live"))
-		draw_colored_polygon(PackedVector2Array([dc + Vector2(-2.2, -3.4), dc + Vector2(3.6, 0.0), dc + Vector2(-2.2, 3.4)]), Color(0.03, 0.12, 0.06))
+		# plays in matches: a small green dot with a dark play mark at the lower left corner
+		var dc := Vector2(4.0, size.y - 4.0)
+		draw_circle(dc, 7.5, Color(0.02, 0.03, 0.03, 0.95))
+		draw_circle(dc, 5.8, AdvancementData.color("live"))
+		draw_colored_polygon(PackedVector2Array([dc + Vector2(-1.9, -3.0), dc + Vector2(3.2, 0.0), dc + Vector2(-1.9, 3.0)]), Color(0.03, 0.12, 0.06))

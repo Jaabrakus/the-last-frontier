@@ -3,6 +3,11 @@ extends RefCounted
 ## Where the Character Advancement window puts each node of a tree (artifacts/ui_audit/advancement/plan.md section 2).
 ## Ring mode reads the pins of data/ui/advancement_layout.json (written by tools/ui/advancement_layout.py, then tuned by
 ## eye); any id with no pin falls back to the algorithm's place with a warning (tests/ui/test_advancement.gd fails on it).
+## Since 2026-10-10 the pins are the tool's DIAMOND LATTICE (its lattice(): every other row offset half a column, each pick
+## diagonally under the one before it, the lines packed tight, as the owner's reference packs its talents): ring mode then
+## uses layout.lattice's icon and pitch limits, draws the lattice's mesh (_lattice_decor: every two diagonal neighbours) and
+## puts the first-win gate on the top row; the lessons gate's picks are mixed among open ones on a lattice, so each wears
+## the gate's padlock and number (AdvancementNode.gate_num) and no row line is drawn for it (its entry stays in `gates`).
 ## World mode (Phase C) uses the algorithm alone. The algorithm here is the tool's, step for step (the test holds the two
 ## to the same numbers): see the tool's header for the rules (lines, tiers, choices, bands, places, links).
 ##
@@ -406,8 +411,11 @@ static func place(el: String, side: String, mode := "ring") -> Dictionary:
 	if not unpinned.is_empty():
 		push_warning("AdvancementLayout: %s %s has no pin for %s: run tools/ui/advancement_layout.py" % [el, side, ", ".join(PackedStringArray(unpinned))])
 	var L := AdvancementData.layout()
+	# ring mode's pins are the diamond lattice: its own pitch limits (layout.lattice), else the band grid's
+	var lat: Dictionary = L.get("lattice", {}) if mode == "ring" and L.get("lattice") is Dictionary else {}
+	var lim := func(k: String, def: float) -> float: return float(lat.get(k, L.get(k, def)))
 	var zone := AdvancementData.zone(side)
-	var icon := float(L.get("icon", 46))
+	var icon: float = lim.call("icon", 46.0)
 	var px := float(L.get("pitch_x", 64))
 	var py := float(L.get("pitch_y", 70))
 	var top_pad := float(L.get("top_pad", 0))
@@ -430,11 +438,11 @@ static func place(el: String, side: String, mode := "ring") -> Dictionary:
 		var avail_w := zone.size.x - m_side * 2.0
 		var avail_h := zone.size.y - top_pad - m_top - m_bottom
 		if r1 > r0:
-			py = clampf((avail_h - icon) / (r1 - r0), float(L.get("min_pitch_y", 54)), float(L.get("max_pitch_y", 1000)))
+			py = clampf((avail_h - icon) / (r1 - r0), lim.call("min_pitch_y", 54.0), lim.call("max_pitch_y", 1000.0))
 		if c1 > c0:
-			px = clampf((avail_w - icon) / (c1 - c0), float(L.get("min_pitch_x", 52)), float(L.get("max_pitch_x", 1000)))
+			px = clampf((avail_w - icon) / (c1 - c0), lim.call("min_pitch_x", 52.0), lim.call("max_pitch_x", 1000.0))
 			if r1 > r0:
-				px = maxf(minf(px, py * float(L.get("max_aspect", 1000.0))), float(L.get("min_pitch_x", 52)))
+				px = maxf(minf(px, py * lim.call("max_aspect", 1000.0)), lim.call("min_pitch_x", 52.0))
 		size = Vector2((c1 - c0) * px + icon, (r1 - r0) * py + icon)
 		var ox := (zone.size.x - size.x) / 2.0 + icon / 2.0 - c0 * px
 		var oy := top_pad + m_top + (avail_h - size.y) / 2.0 + icon / 2.0 - r0 * py
@@ -451,7 +459,8 @@ static func place(el: String, side: String, mode := "ring") -> Dictionary:
 	var links: Array = []
 	for l: Array in alg.links:
 		links.append({"from": l[0], "to": l[1], "a": alg.items[by_key[l[0]]].pos, "b": alg.items[by_key[l[1]]].pos})
-	var decor: Array = _decor(alg, grid)
+	var diamond := not lat.is_empty()
+	var decor: Array = _lattice_decor(alg, grid) if diamond else _decor(alg, grid)
 	var bands: Array = []
 	var gates: Array = []
 	var every := bool(AdvancementData.switch("gate_every_band", false))
@@ -474,11 +483,51 @@ static func place(el: String, side: String, mode := "ring") -> Dictionary:
 		bands.append({"index": bi, "lines": b.lines, "rows": b.rows, "top_y": top_y, "twist_y": tw, "x0": x0, "x1": x1})
 		if bi == 0:
 			gates.append({"type": "first_win", "band": bi, "y": top_y, "x0": x0, "x1": x1})
-		if tw >= 0.0 and (every or gates.size() < 2):
+		if tw >= 0.0 and (every or gates.size() < 2) and not diamond:
 			gates.append({"type": "full", "band": bi, "y": tw, "x0": x0, "x1": x1})
-	return {"element": el, "side": side, "mode": mode, "items": alg.items, "links": links, "decor": decor, "bands": bands, "gates": gates,
+	if diamond and not (alg.items as Array).is_empty():
+		# the lattice mixes the rows: the first-win gate stands at the top row (it shuts everything), the lessons gate at the
+		# first row holding a pick it shuts (each such pick also wears the gate's padlock: AdvancementNode.gate_num)
+		var kinds: Array = AdvancementData.switch("full_lessons_kinds", [])
+		var top_y := INF
+		var gate_y := INF
+		var gx0 := INF
+		var gx1 := -INF
+		for it: Dictionary in alg.items:
+			var p: Vector2 = it.pos
+			top_y = minf(top_y, p.y)
+			gx0 = minf(gx0, p.x - icon / 2.0)
+			gx1 = maxf(gx1, p.x + icon / 2.0)
+			if String(it.type) != "root" and String(AdvancementData.node(String(it.ids[0])).get("kind", "")) in kinds:
+				gate_y = minf(gate_y, p.y)
+		gates = [{"type": "first_win", "band": 0, "y": top_y, "x0": gx0, "x1": gx1}]
+		if gate_y < INF:
+			gates.append({"type": "full", "band": 0, "y": gate_y, "x0": gx0, "x1": gx1})
+	return {"element": el, "side": side, "mode": mode, "items": alg.items, "links": links, "decor": decor, "bands": bands, "gates": gates, "diamond": diamond,
 			"zone": zone, "size": size, "pitch": Vector2(px, py), "icon": icon, "unpinned": unpinned,
 			"by_id": by_id, "by_key": by_key}
+
+
+## The diamond lattice's mesh (ring mode's pins): every two slots that are diagonal neighbours (one row apart, half a column
+## aside) and that no real link joins already, so the tree reads as one lattice, as the reference's does. Drawn only, thin and
+## dim: they hold no rule.
+static func _lattice_decor(alg: Dictionary, grid: Dictionary) -> Array:
+	var out: Array = []
+	var linked := {}
+	for l: Array in alg.links:
+		linked["%s>%s" % [l[0], l[1]]] = true
+		linked["%s>%s" % [l[1], l[0]]] = true
+	var items: Array = alg.items
+	for a: Dictionary in items:
+		var ga: Vector2 = grid[a.key]
+		for b: Dictionary in items:
+			var gb: Vector2 = grid[b.key]
+			if absf(gb.y - ga.y - 1.0) > 0.01 or absf(absf(gb.x - ga.x) - 0.5) > 0.01:
+				continue
+			if linked.has("%s>%s" % [a.key, b.key]):
+				continue
+			out.append({"from": a.key, "to": b.key, "a": a.pos, "b": b.pos})
+	return out
 
 
 ## The lattice's cross links (see the class doc): within a band, for every pair of items in two lines, one row apart and within
