@@ -74,6 +74,8 @@ var warm_frame_ms := -1.0
 ## The camera the stepped build is drawn through until the player's own stands (_build: without one nothing of the ring is
 ## drawn before the player, and every shader of the ring was compiled on his first frame, seconds long).
 var _build_cam: Camera3D
+## The Soft character look's shaders compiled during the stepped build (SoftLook.warm_up through _build_cam).
+var _soft_warmed := false
 ## The prefetch's paths by the part that loads them, and those asked for on the worker threads (held until the build is up).
 var _phases := {}
 var _fetching: PackedStringArray = []
@@ -141,6 +143,10 @@ func _build(steps: bool) -> void:
 	StartupProfile.mark("dressing")
 	if steps:
 		await _step(0.45, "competitors")
+		# (the Soft character look's shaders, SoftLook: each compiled on a frame of its own through the build camera before the
+		# fighters are dressed, not all on the player's frame)
+		await SoftLook.warm_up(_build_cam)
+		_soft_warmed = true
 		await _loaded(FrontierPlayer.CHARACTER_SCENE)
 		await _fetched("player")
 		while _graph_task >= 0 and not WorkerThreadPool.is_task_completed(_graph_task) and is_inside_tree():
@@ -379,6 +385,9 @@ func _warm_looks() -> void:
 		var longest := 0
 		var done := [false]
 		var run := func() -> void:
+			# (the Soft character look's shaders, SoftLook, when the build had no camera of its own: each drawn once here)
+			if not _soft_warmed:
+				await SoftLook.warm_up(cam)
 			await BendLooks.warm_up(cam, func(f: float) -> void: set_meta(&"loading_progress", 0.8 + 0.2 * f))
 			# Draw the large fall effects only behind the loading screen. Direct scene launches
 			# must not cover the live competitors in a warm-up splash.
