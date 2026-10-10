@@ -512,7 +512,24 @@ func _small_window(m: MainMenu) -> void:
 			small_px = minf(small_px, px)
 	check(small_px >= 14.0, "1280x720: the match setup's smallest type is %.1f px on screen (floor 14; boost %.3f fit %.3f root %s): %s" % [small_px, BroadcastUI.boost, BroadcastUI.fit, root.size, small_at])
 	m._close_panel()
+	# a large window: the layouts scale up (to MAX_UP) as the mock-ups do, so the setup's cards are as big on screen as the
+	# approved mock-up's (capped at 1, a 1920 x 1080 window drew them about 30% smaller, the 2026-10-10 critic)
+	root.size = Vector2i(1920, 1080)
+	await frames(3)
+	check(is_equal_approx(m._menu_layout.scale.x, 1.2) and is_equal_approx(BroadcastUI.fit, 1.2) and BroadcastUI.boost == 1.0,
+			"1920x1080: the menu's layout is drawn 1.2 times (scale %.3f, fit %.3f, boost %.3f)" % [m._menu_layout.scale.x, BroadcastUI.fit, BroadcastUI.boost])
+	(_item(m, MatchSetup.sport()) as Button).pressed.emit()
+	await frames(3)
+	var fire := m._element_rows.get("fire") as Control
+	var on_screen := fire.get_global_rect().size if fire != null else Vector2.ZERO
+	check(on_screen.distance_to(Vector2(214, 452) * 1.2) < 1.0, "1920x1080: a fighter card is %s on screen (the mock-up's 214 x 452 at 1.2: %s)" % [on_screen, Vector2(214, 452) * 1.2])
+	_setup_fits(m, "1920x1080")
+	m._close_panel()
+	root.size = Vector2i(2560, 1440)
+	await frames(3)
+	check(is_equal_approx(m._menu_layout.scale.x, 1.5), "2560x1440: the layout at its most, 1.5 (%.3f)" % m._menu_layout.scale.x)
 	root.size = previous
+	await frames(2)
 	m._cap_title.text = old_title
 	m._cap_text.text = old_caption
 	m.set_process(true)
@@ -558,6 +575,40 @@ func _setup_fits(m: MainMenu, tag: String) -> void:
 	var card_end := mc.get_global_rect().end.y
 	var view_h := BroadcastUI.view_size(m).y
 	check(card_end <= view_h + 0.5, "%s: the card ends inside the window (%.0f of %.0f)" % [tag, card_end, view_h])
+	# the breath between rows (the 2026-10-10 critic: at 1280 x 720 a wrapped line touched the next row's rule): every line's last
+	# descender at least ROW_AIR_MIN above the next rule, the full ROW_AIR when the window has the room (1600 x 900 and up), each rule
+	# at least a pixel tall on screen, and Begin clear of the Controls line
+	var least := INF
+	var rows_y: Array = []
+	for nm: String in ["Opponent", "Difficulty", "Rules", "Rounds", "Games", "Light"]:
+		var g := mc.find_child(nm + "Row", false, false) as Control
+		if g != null and g.visible:
+			rows_y.append(g)
+	var thin := 99.0
+	for i in rows_y.size():
+		var g := rows_y[i] as Control
+		var ln := g.find_child("Line", false, false) as Label
+		var ink_end := g.position.y + ln.position.y + float(ln.get_line_height()) * maxi(ln.get_line_count(), 1)
+		var next_rule := (rows_y[i + 1] as Control).position.y if i + 1 < rows_y.size() else ctl.position.y
+		least = minf(least, next_rule - ink_end)
+		var r := g.find_child("Rule", false, false) as Control
+		thin = minf(thin, r.size.y * r.get_global_transform_with_canvas().get_scale().y)
+	var want := MainMenu.ROW_AIR - 0.5 if BroadcastUI.fit >= 1.0 else MainMenu.ROW_AIR_MIN - 0.5
+	check(least >= want, "%s: every row's line clears the next rule by %.1f design px (want %.1f)" % [tag, least, want + 0.5])
+	check(thin >= 0.99, "%s: the rows' rules are at least a pixel on screen (%.2f)" % [tag, thin])
+	var crow := mc.find_child("Controls", false, false) as Control
+	var csub := crow.find_child("Sub", false, false) as Control
+	var sub_end := crow.position.y + csub.position.y + csub.get_minimum_size().y
+	check(sub_end <= begin.position.y + 0.5, "%s: Begin clear of the Controls line (%.0f under %.0f)" % [tag, begin.position.y, sub_end])
+	var link := m._panel.find_child("ElementLink", true, false) as Control
+	var sl := m._panel.find_child("SportLine", true, false) as Label
+	if link != null and sl != null:
+		var sl_end := sl.get_global_transform_with_canvas() * Vector2(0.0, sl.get_minimum_size().y)
+		var link_top := link.get_global_transform_with_canvas() * Vector2.ZERO
+		var card_top := (m._element_rows.values()[0] as Control).get_global_transform_with_canvas() * Vector2.ZERO
+		var link_end := link.get_global_transform_with_canvas() * Vector2(0.0, link.size.y)
+		check(link_top.y >= sl_end.y + 3.0 and link_end.y <= card_top.y + 0.5,
+				"%s: 'Choose your element' clear of the rule line over it and of the cards under it (%.0f..%.0f, line ends %.0f, cards at %.0f)" % [tag, link_top.y, link_end.y, sl_end.y, card_top.y])
 
 
 ## A control's vertical middle on screen.

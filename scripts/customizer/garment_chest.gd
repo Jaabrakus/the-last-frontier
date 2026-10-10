@@ -33,6 +33,9 @@ const WELD := 0.00005
 static var enabled := true
 static var _done := {}
 static var _apexes := {}
+## The apex search done (apexes() / warm_step), and its state while it runs a slice at a time.
+static var _searched := false
+static var _search := {}
 
 
 ## `mesh` with the cloth over the breasts' apex smoothed (a new mesh), or `mesh` itself when it has no point there.
@@ -73,25 +76,75 @@ static func smoothed(mesh: Mesh) -> Mesh:
 ## The body's two breast apexes (the female base's, or under blend shape `shape` at full weight): the skin's most forward
 ## point near each one's nominal place (body.glb). [left, right]; [] when the body has none (or not that shape).
 static func apexes(shape := "") -> Array:
-	if _apexes.is_empty():
-		_apexes[""] = []
+	while not warm_step(1 << 62):
+		pass
+	return _apexes.get(shape, [])
+
+
+## The apex search above, a slice at a time (the menus' figures are dressed while the lobby is shown: the whole search is about
+## 0.35 s, 38 shapes of a 90 000-point body, which in one frame froze the lobby; FighterWorld calls this once a frame until it
+## says true, each call doing about `budget_usec` of work, the arrays' read the longest step at about 50 ms). The same search,
+## the same order and the same results as one call of apexes() (which runs it to the end). true when it is done.
+static func warm_step(budget_usec := 25000) -> bool:
+	if _searched:
+		return true
+	var t0 := Time.get_ticks_usec()
+	if _search.is_empty():
+		# the skin surfaces of the body, mesh by mesh, in the order of the body's nodes
+		var jobs: Array = []
 		var sc := load(BodyMaterials.BODY_GLB) as PackedScene if ResourceLoader.exists(BodyMaterials.BODY_GLB) else null
 		var inst := sc.instantiate() if sc else null
 		if inst:
 			for mi: MeshInstance3D in inst.find_children("*", "MeshInstance3D", true, false):
 				var m := mi.mesh as ArrayMesh
-				if m == null or not (_apexes[""] as Array).is_empty():
+				if m == null:
 					continue
+				var surfs: Array = []
 				for s in m.get_surface_count():
 					var mat := m.surface_get_material(s)
-					if mat == null or mat.resource_name != "skin":
-						continue
-					_apexes[""] = _most_forward(m.surface_get_arrays(s)[Mesh.ARRAY_VERTEX])
-					var bl := m.surface_get_blend_shape_arrays(s)
-					for b in bl.size():
-						_apexes[String(m.get_blend_shape_name(b))] = _most_forward(bl[b][Mesh.ARRAY_VERTEX])
+					if mat != null and mat.resource_name == "skin":
+						surfs.append(s)
+				jobs.append({"mesh": m, "surfs": surfs})
 			inst.free()
-	return _apexes.get(shape, [])
+		_search = {"out": {"": []}, "jobs": jobs, "j": 0, "k": 0, "verts": null, "blends": null, "b": -1}
+		if Time.get_ticks_usec() - t0 >= budget_usec:
+			return false
+	var st := _search
+	var out: Dictionary = st.out
+	while int(st.j) < (st.jobs as Array).size():
+		var job: Dictionary = st.jobs[int(st.j)]
+		# (a mesh after one that found the apex is passed over, as the one-call search did)
+		if int(st.k) == 0 and st.verts == null and not (out[""] as Array).is_empty():
+			st.j = int(st.j) + 1
+			continue
+		if int(st.k) >= (job.surfs as Array).size():
+			st.j = int(st.j) + 1
+			st.k = 0
+			continue
+		var m := job.mesh as ArrayMesh
+		var s := int(job.surfs[int(st.k)])
+		if st.verts == null:
+			st.verts = m.surface_get_arrays(s)[Mesh.ARRAY_VERTEX]
+		elif int(st.b) < 0:
+			out[""] = _most_forward(st.verts)
+			st.b = 0
+		elif st.blends == null:
+			st.blends = m.surface_get_blend_shape_arrays(s)
+		elif int(st.b) < (st.blends as Array).size():
+			var b := int(st.b)
+			out[String(m.get_blend_shape_name(b))] = _most_forward(st.blends[b][Mesh.ARRAY_VERTEX])
+			st.b = b + 1
+		else:
+			st.k = int(st.k) + 1
+			st.verts = null
+			st.blends = null
+			st.b = -1
+		if Time.get_ticks_usec() - t0 >= budget_usec:
+			return false
+	_apexes = out
+	_searched = true
+	_search = {}
+	return true
 
 
 static func _most_forward(p: PackedVector3Array) -> Array:

@@ -19,6 +19,7 @@ signal built(element: String)
 const ACTOR := "res://characters/Actor_B.tscn"
 const IDLE := &"actor_b/actor_b-p-relax-idle"
 const GRADE_LUT := preload("res://scripts/world/env/grade_lut.gd")
+const GarmentChest := preload("res://scripts/customizer/garment_chest.gd")
 ## The distance (m) between two elements' stations in the world.
 const GAP := 14.0
 ## The bust's camera: how far (m) from the head.
@@ -35,6 +36,9 @@ const LOBBY_FOV := 30.0
 const LOBBY_TURN_DEG := -24.0
 ## The ring's own noon sun in the lobby's axes (x toward the camera, z to its left): where its light travels, how strong.
 const SUN_TRAVELS := Vector3(-0.326, -0.842, -0.429)
+## Tools: each build step's cost as it ran ([element, stage, ms]; stage -1 the actor's instance, 10 to 12 the warm-up ahead of the
+## dress): read by tools/ui_audit/lobby_perf.gd.
+static var step_log: Array = []
 ## Tools: a look to show instead of the saved one (the shots never carry the owner's own character's name).
 static var look_override := {}
 
@@ -52,6 +56,8 @@ var sky_ambient := 0.62
 var fill_energy := 0.55
 var exposure := 0.95
 var _look := {}
+## The look's materials made once ahead of the first dress (_warm): held so their textures stay loaded.
+var _warm_mats: Array = []
 
 
 ## True where the fighters can be drawn (a window): not in a headless run.
@@ -60,15 +66,23 @@ static func available() -> bool:
 
 
 ## The files the first figure's dress would otherwise load in one frame, cold (the actor about 0.45 s, the body and the garments
-## about 0.6 s: the lobby froze for over a second just after it appeared): the actor, the body and the garments of the four ring
-## dresses on the saved look's body. Asked of the resource loader's threads as the menu opens (preload_assets), taken
-## when the figure is first built (assets_ready), so the build finds them cached.
+## about 0.6 s: the lobby froze for over a second just after it appeared): the actor, the body, the skin's textures, the look's
+## hair and the garments of the four ring dresses on the saved look's body. Asked of the resource loader's threads as the menu
+## opens (preload_assets), taken when the figure is first built (assets_ready), so the build finds them cached.
 static var _asked := {}
 
 
 static func asset_paths() -> Array:
 	var out: Array = [ACTOR, BodyMaterials.BODY_GLB]
-	var sex := float((look_override if not look_override.is_empty() else AppearanceStore.load_current()).get("sex", 0.0))
+	var lk: Dictionary = look_override if not look_override.is_empty() else AppearanceStore.load_current()
+	var sex := float(lk.get("sex", 0.0))
+	# the skin's textures and the look's hair (the skin material made cold was about 0.09 s of a frame)
+	for p: String in [BodyMaterials.HEAD_DETAIL, BodyMaterials.BODY_DETAIL, BodyMaterials.PAINT_HEAD, BodyMaterials.PAINT_LINES,
+			BodyMaterials.BODY_HAIR_MASK, BodyMaterials.HAIR_ATLAS]:
+		out.append(p)
+	var hair: Variant = lk.get("hair")
+	if hair is Dictionary and String((hair as Dictionary).get("style", "")) != "":
+		out.append(BodyMaterials.HAIR_DIR + String((hair as Dictionary).style) + ".glb")
 	for el: String in Bending.ELEMENTS:
 		var outfit := PlayerAppearance.arena_outfit(el, sex)
 		for slot: String in outfit:
@@ -149,6 +163,7 @@ func look() -> Dictionary:
 ## The look changed (the creator accepted a new one): every figure is dressed again as it is next asked for.
 func refresh() -> void:
 	_look = {}
+	_warm_mats = []
 	for el: String in _building.keys():
 		var b: Dictionary = _building[el]
 		b["dead"] = true
@@ -248,12 +263,39 @@ func ensure_slowly(el: String) -> void:
 		await get_tree().process_frame
 		if not is_inside_tree() or s.get("dead", false) or _building.get(el) != s:
 			return
+		if int(s.stage) == 1 and not _warm(s):
+			continue
 		_step(s)
 
 
 ## Whether a figure is being built in steps now.
 func building() -> bool:
 	return not _building.is_empty()
+
+
+## What the dress would do cold in its one frame, done ahead a piece a frame (the first figure's dress was about 0.55 s in one frame:
+## the cloth's chest search over the body 0.35 s, the skin's textures 0.08 s, the chest garment's smoothing): the chest search a
+## slice a frame (GarmentChest.warm_step), then this dress's chest garments smoothed, then the look's skin, eye and face-hair
+## materials made once (their textures loaded and kept while the menu stands). true when the dress may run.
+func _warm(s: Dictionary) -> bool:
+	var w := int(s.get("warm", 0))
+	var t0 := Time.get_ticks_usec()
+	if w < 3:
+		step_log.append([String(s.el), 10 + w, 0.0])
+	match w:
+		0:
+			if not GarmentChest.warm_step():
+				return false
+		1:
+			PlayerOutfit.warm_chest(PlayerAppearance.arena_outfit(String(s.el), float(look().get("sex", 0.0))), float(look().get("sex", 0.0)))
+		2:
+			if _warm_mats.is_empty():
+				_warm_mats = [BodyMaterials.skin_material(look()), BodyMaterials.eye_material(look()), BodyMaterials.face_hair_material(look())]
+		_:
+			return true
+	(step_log.back() as Array)[2] = (Time.get_ticks_usec() - t0) / 1000.0
+	s["warm"] = w + 1
+	return false
 
 
 ## The first step: the figure's pivot at its station and the actor under it. {} when it cannot be (no window, no actor).
@@ -264,8 +306,10 @@ func _stage_open(el: String) -> Dictionary:
 	pivot.name = "Fighter_" + el
 	pivot.position = station(el)
 	host.add_child(pivot)
+	var t0 := Time.get_ticks_usec()
 	var inst := _actor().instantiate() as Node3D
 	pivot.add_child(inst)
+	step_log.append([el, -1, (Time.get_ticks_usec() - t0) / 1000.0])
 	var sks := inst.find_children("*", "Skeleton3D", true, false)
 	if sks.is_empty():
 		pivot.queue_free()
@@ -276,6 +320,7 @@ func _stage_open(el: String) -> Dictionary:
 
 func _step(s: Dictionary) -> void:
 	var el := String(s.el)
+	var t0 := Time.get_ticks_usec()
 	match int(s.stage):
 		0:
 			s["body"] = CharacterBodyMesh.attach(s.skeleton as Skeleton3D, s.ap as AnimationPlayer)
@@ -287,6 +332,7 @@ func _step(s: Dictionary) -> void:
 				PlayerAppearance.dress(s.body as CharacterBodyMesh, lk)
 		2:
 			_finish(s)
+	step_log.append([el, int(s.stage), (Time.get_ticks_usec() - t0) / 1000.0])
 	s["stage"] = int(s.stage) + 1
 
 

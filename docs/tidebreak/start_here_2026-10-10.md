@@ -86,9 +86,16 @@ up on a new machine, what is switched off, and what is waiting on the owner.
   and Boxing keeps Classic's cast timings. Fixed: a damaged save could stop the read with script errors and wear the wrong slot; Classic
   reads made a new dictionary each time. Open for the owner: Boxing's High Kick and Pop leave from the boxing fist (the High Kick
   0.9 m higher than the kicking foot).
-- **Menus, first pass, open items from the critic:** the between-games round screen and the loading screen still use the old serif look;
-  the match-setup fighter cards are about 30% smaller than the approved mockup; at 1280x720 the match card's wrapped help lines touch the
-  next row's rule; the lobby adds a ~1.1 s frozen frame about 1.1 s after the menu appears. Second pass (loading, practice, settings,
+- **Menus, first pass, open items from the critic (closed 2026-10-10, branch tb/GAPS-MENUS):** the round screen and the loading screen
+  were already in the broadcast look in this commit (Barlow, plates). The fighter cards were the mock-up's size in the 1600 x 900 design
+  but the layouts never scaled up (`BroadcastUI.Layout` capped its fit at 1), so at 1920 x 1080 every broadcast screen was drawn about
+  30% smaller in area than the mock-up; they now scale up to `MAX_UP` (1.2 at 1080p). The match card lays its rows with a breath that
+  opens to the room the window has (`_lay_match`), its rules at least a pixel, Begin clear of the Controls line and "Choose your
+  element" clear of the rule line (`tests/ui/test_main_menu.gd` checks it at 1280 x 720 and 1920 x 1080). The lobby's freeze was the
+  first figure's dress in one frame (the cloth's chest search over the body, 0.35 s; the skin's textures): the search runs a slice a
+  frame (`GarmentChest.warm_step`), the textures load on the loader's threads, and the game's first menu builds all four figures behind
+  the boot splash; `tools/ui_audit/lobby_perf.gd` measures it (the first menu: no frame over 18 ms; after a ring: 25 ms; a menu
+  opened cold without the boot path, which only a tool does, still has one renderer pipeline compile of about 0.1 s). Second pass (loading, practice, settings,
   credits, round screen) is not started.
 - **Advancement window:** a critic scored it 6/10 against the owner's reference clip (sparse lattice, flat node art, muddy backdrops,
   long tooltips, a gate bypass, a status-line overlap); a repair pass addressed those and was not re-scored. Judge it by eye.

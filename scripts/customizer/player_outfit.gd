@@ -371,6 +371,26 @@ static func dress(body: CharacterBodyMesh, outfit: Dictionary, sex := 0.0) -> Di
 	return res
 
 
+## The outfit's garments over the chest smoothed ahead (GarmentChest makes each mesh once and keeps it): a figure dressed in steps
+## (FighterWorld, the menus) does this a frame before its dress, so the dress finds them made. Changes nothing a dress does.
+static func warm_chest(outfit: Dictionary, sex := 0.0) -> void:
+	var eff := effective(outfit, sex)
+	for slot: String in SLOTS:
+		var v = eff.get(slot, {})
+		var id := String(v.get("id", "")) if v is Dictionary else ""
+		var e := entry(id) if id != "" else {}
+		if e.is_empty() or not (e.get("occupies_regions", []) as Array).any(func(r: String) -> bool: return r in CHEST):
+			continue
+		var sc := scene_of(String(e.get("glb", "")))
+		if sc == null:
+			continue
+		var tmp := sc.instantiate()
+		for mi: MeshInstance3D in tmp.find_children("*", "MeshInstance3D", true, false):
+			if mi.mesh != null:
+				GarmentChest.smoothed(mi.mesh)
+		tmp.free()
+
+
 ## Whether garment `id`, worn in `slot`, hides the genitals of a body of `sex` (see CLOSED_IDS).
 static func hides_genitals(id: String, slot: String, sex: float) -> bool:
 	var e := entry(id)

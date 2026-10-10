@@ -14,6 +14,7 @@ extends SceneTree
 ## floor as every shot's does. part=round draws the between-games plate over the ring still with a stand-in for the match (round.png a
 ## game of yours in the % match, round_loss.png the foe's, round_zones.png a drawn round of the zones, round_decided.png the match
 ## decided): the real plate in a real match is part=ring's round.png.
+## part=end draws the match-end board over the ring still with a stand-in for a decided match (end_stub.png, any `px`).
 ## part=menu draws the main menu's scene inside a SubViewport of `px` (so a window behind another one still renders, and any size
 ## can be taken); part=ring plays a real match in the window (the Esc menu and the board are layers over the ring), so that
 ## part needs the window drawn: --resolution as the shots' size, tag=_720 for the small window.
@@ -86,6 +87,45 @@ class RoundStub extends Node:
 
 	func result_line() -> String:
 		return ""
+
+
+## A stand-in for a decided RingMode, with what MatchScreen reads of it (part=end: the board without playing a match; the board after a
+## real match is part=ring's end.png). A best of 3 of the % ring, won 2 : 0, the last game's three falls.
+class EndStub extends Node:
+	signal phase_changed(ph: String)
+	var practice := false
+	var phase := "DONE"
+	var winner := 0
+	var score := Vector2i(2, 0)
+	var element := "fire"
+	var foe_element := "water"
+	var to_win := 2
+	var player: Node = null
+	var history: Array = [{"round": 1, "result": "win", "why": "ringout", "at_s": 31.0, "lives": [3, 0]},
+			{"round": 2, "result": "win", "why": "ringout", "at_s": 24.0, "lives": [3, 0]}]
+	var falls: Array = []
+
+	func _ready() -> void:
+		player = self
+		for f: Array in [[6.0, 143.0, "stone_form/spike"], [14.0, 145.0, "fire_blast/punch"], [22.0, 143.0, "fire_blast/punch"]]:
+			falls.append({"game": 2, "at_s": f[0], "pct": f[1], "tag": f[2], "by": self, "who": null})
+
+	func stock() -> bool:
+		return true
+
+	func foe_name() -> String:
+		return MatchSetup.competitor(foe_element)
+
+	func score_text() -> String:
+		return "You %d  :  %d %s" % [score.x, score.y, foe_name()]
+
+	func stock_tally(side: int) -> Dictionary:
+		if side == 0:
+			return {"falls_dealt": 6.0, "pct_dealt": 79.0, "best_pct": 9.0, "string_hits": 1, "catches": 0.0, "perfect_guards": 0.0, "edge_saves": 0.0}
+		return {"falls_dealt": 0.0, "pct_dealt": 9.0, "best_pct": 149.0, "string_hits": 1}
+
+	func match_tally(_side: int) -> Dictionary:
+		return {}
 
 
 func _initialize() -> void:
@@ -214,6 +254,8 @@ func _run() -> void:
 			await _loading()
 		"round":
 			await _round_stub()
+		"end":
+			await _end_stub()
 		"all":
 			await _menu()
 			await _element()
@@ -446,6 +488,27 @@ func _round_stub() -> void:
 	await _round_plate("round_loss", "earth", "air", "loss", "falls", true, Vector2i(0, 1), 1)
 	await _round_plate("round_zones", "water", "fire", "draw", "time", false, Vector2i(1, 1), 2)
 	await _round_plate("round_decided", "fire", "earth", "win", "territory", false, Vector2i(2, 0), 2, true)
+
+
+## The match-end board over the ring's still with a stand-in for the decided match (end_stub.png): its layout at any `px`.
+func _end_stub() -> void:
+	_setup_for("fire")
+	await _fresh_vp()
+	var back := TextureRect.new()
+	back.texture = load("res://assets/ui/tidebreak/deck.png") as Texture2D
+	back.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	back.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	back.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vp.add_child(back)
+	var st := EndStub.new()
+	vp.add_child(st)
+	var ms := MatchScreen.install(vp, st)
+	await _frames(2)
+	ms.open()
+	await _secs(1.2)
+	await shot("end_stub", vp)
+	ms.queue_free()
+	st.queue_free()
 
 
 # ---------------------------------------------------------------- the ring: Esc menu and the match's end

@@ -59,6 +59,17 @@ const SHOW_S := 16.0         ## s a caption shows before the next
 const LOBBY_DIR := "res://assets/ui/menu/"
 ## A row of the match card at least this high (its parts are laid by _lay_match from their real heights).
 const ROW_H := 84.0
+## In a row of the match card: its name this far under the row's rule, and its line's last descender at least this far above the
+## next row's rule (design px; the 2026-10-10 critic: at 1280 x 720 the wrapped lines touched the next rule).
+## (Their least, the first pass's, where a small window has no room to spare: the card's foot inside the window comes first.)
+const ROW_TOP := 6.0
+const ROW_AIR := 14.0
+const ROW_TOP_MIN := 4.0
+const ROW_AIR_MIN := 8.0
+## Begin's breath under Controls (full and least), and the least room kept under the card at the window's foot.
+const BEGIN_AIR := 10.0
+const BEGIN_AIR_MIN := 0.0
+const CARD_FOOT := 8.0
 const PREBUILD_IDLE_MS := 3000   ## ms the menu is left alone before another figure is built behind it
 const ADVANCEMENT_WINDOW := "res://scripts/ui/advancement/advancement_window.gd"
 const ADVANCEMENT_STORE := "res://scripts/ui/advancement/advancement_store.gd"
@@ -210,10 +221,14 @@ func _ready() -> void:
 	if live_fighter and FighterWorld.available():
 		_fw = FighterWorld.make(self)
 		if not _booted:
-			# the game's first menu: the figure is built before the first frame is drawn, behind the boot splash (its minimum display
-			# time holds it up for 1.2 s anyway): the cold build is about 1 s in one frame, which on a shown menu would be a freeze
+			# the game's first menu: the figures are built before the first frame is drawn, behind the boot splash (its minimum display
+			# time holds it up for 1.2 s anyway): the cold build is about 1 s in one frame, which on a shown menu would be a freeze.
+			# All four of them (the other three about 15 ms each once the first is dressed): built later behind the shown lobby, the
+			# first of them made the renderer compile pipelines for 0.1 to 0.35 s in one frame (tools/ui_audit/lobby_perf.gd)
 			_booted = true
 			_swap_figure(MatchSetup.element)
+			for e: String in Bending.ELEMENTS:
+				_fw.ensure(e)
 			_fade_in_figure.call_deferred()
 		else:
 			# (a menu after a match: the actor, the body and the ring dresses load on the loader's threads, then the figure is built
@@ -1528,6 +1543,28 @@ func _lay_match() -> void:
 	var mc := _panel.find_child("MatchCard", true, false) as Control
 	if mc == null or mc.find_child("Begin", false, false) == null:
 		return
+	# the rows at their least breath first; what the window has to spare under the card then opens them toward their full breath
+	# (a 1280 x 720 window, its type raised, has little to spare: the card must still end inside it)
+	var tight := _lay_rows(mc, 0.0)
+	var room := (_menu_layout.size.y if is_instance_valid(_menu_layout) else BroadcastUI.DESIGN.y) - mc.offset_top - CARD_FOOT
+	var full := _lay_rows(mc, 1.0)
+	var k := clampf((room - tight) / maxf(full - tight, 0.01), 0.0, 1.0)
+	_lay_rows(mc, k)
+	# the offer of the element step under the rule line at the head (in a small window the line wraps to a third line, which sat on it)
+	var link := _panel.find_child("ElementLink", true, false) as Control
+	var sl := _panel.find_child("SportLine", true, false) as Label
+	if link != null and sl != null:
+		var sl_end := (sl.get_parent() as Control).position.y + sl.position.y + sl.get_minimum_size().y
+		var cards_top := 36.0 - maxf(link.size.y, link.get_combined_minimum_size().y) - 2.0      # (the cards start 36 under the group's top)
+		link.position.y = maxf(-8.0, minf(sl_end + 8.0 - (link.get_parent() as Control).position.y, cards_top))
+
+
+## The match card's rows laid with their breath at `k` (0 the least, 1 the full: ROW_TOP / ROW_AIR / BEGIN_AIR); the card's height.
+func _lay_rows(mc: Control, k: float) -> float:
+	var top := lerpf(ROW_TOP_MIN, ROW_TOP, k)
+	var air := lerpf(ROW_AIR_MIN, ROW_AIR, k)
+	# (a hairline is at least a pixel on screen: at 1280 x 720 the layout is drawn at 0.8 and a 1 px rule could fall between rows of pixels)
+	var hair := maxf(1.0, 1.0 / maxf(BroadcastUI.fit, 0.01))
 	var y := 100.0
 	for nm: String in ["Opponent", "Difficulty", "Rules", "Rounds", "Games", "Light"]:
 		var g := mc.find_child(nm + "Row", false, false) as Control
@@ -1536,32 +1573,44 @@ func _lay_match() -> void:
 		var ttl := g.find_child("RowTitle", false, false) as Label
 		var seg := g.find_child(nm, false, false) as Control
 		var ln := g.find_child("Line", false, false) as Label
+		(g.find_child("Rule", false, false) as Control).size.y = hair
 		var th := ttl.get_minimum_size().y
-		ttl.position = Vector2(24.0, 4.0)
+		ttl.position = Vector2(24.0, top)
 		ttl.size = Vector2(200.0, th)
-		var sy := 4.0 + th
+		var sy := top + th
 		var sh := 0.0
 		for c in (seg as BroadcastUI.Segments).chips:
 			sh = maxf(sh, (c as BroadcastUI.Chip).natural_h())
 		seg.position = Vector2(26.0, sy)
 		seg.size = Vector2(444.0, sh)
-		var ly := sy + sh + 1.0
+		var ly := sy + sh + 1.0 + k
 		ln.size = Vector2(446.0, 10.0)
 		var lh := float(ln.get_line_height())
 		var lines := maxi(ln.get_line_count(), 1) if ln.text != "" else 1
 		ln.position = Vector2(26.0, ly)
 		ln.size = Vector2(446.0, lh * lines + 2.0)
-		var h := maxf(ly + lh * lines + 2.0 + 6.0, ROW_H)
+		# (the line's last descender a clear breath above the next row's rule)
+		var h := maxf(ly + lh * lines + air, ROW_H)
 		g.position = Vector2(0.0, y)
 		g.size = Vector2(494.0, h)
 		y += h
-	(mc.find_child("ControlsRule", false, false) as Control).position.y = y
-	(mc.find_child("Controls", false, false) as Control).position.y = y + 4.0
-	y += 82.0
+	var rule := mc.find_child("ControlsRule", false, false) as Control
+	rule.position.y = y
+	rule.size.y = hair
+	var ctl := mc.find_child("Controls", false, false) as Control
+	ctl.position.y = y + 4.0
+	# (Controls as tall as its words are now: a raised type in a small window makes its line taller; Begin a breath under it)
+	var ch := 78.0
+	var sub := ctl.find_child("Sub", false, false) as Label
+	if sub != null:
+		ch = maxf(ch, sub.position.y + sub.get_minimum_size().y + 4.0)
+	ctl.size.y = ch
+	y += 4.0 + ch + lerpf(BEGIN_AIR_MIN, BEGIN_AIR, k)
 	(mc.find_child("Begin", false, false) as Control).position.y = y
-	var hh := maxf(y + 66.0 + 18.0, 696.0)
+	var hh := maxf(y + 66.0 + lerpf(12.0, 18.0, k), 696.0)
 	mc.offset_bottom = mc.offset_top + hh
 	(mc.find_child("CardBack", false, false) as Control).size = Vector2(494.0, hh)
+	return hh
 
 
 func _say(mc: Control, row: String, text: String) -> void:
