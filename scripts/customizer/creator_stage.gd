@@ -212,6 +212,8 @@ func _build_figure() -> void:
 	var aps := inst.find_children("*", "AnimationPlayer", true, false)
 	var ap: AnimationPlayer = aps[0] if not aps.is_empty() else null
 	body = CharacterBodyMesh.attach(skeleton, ap)
+	if body:
+		body.set_meta(SoftLook.META_OFF, true)    # (the creator's figure keeps the classic look: SoftLook)
 	BindRest.ensure_character(inst)
 	if ap:
 		var clip := IDLE if ap.has_animation(IDLE) else IDLE_FALLBACK

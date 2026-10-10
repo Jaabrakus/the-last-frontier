@@ -24,6 +24,7 @@ extends CanvasLayer
 ##                        shoulder; camera.json's words; GameSettings ring.camera)
 ##     Screen jolt: On    round 4: the view's jolt when a hit lands on or off (IMPACT's GameSettings ring.jolt; the aim never
 ##                        moves either way)
+##     Character look     Classic or Soft (SoftLook; the owner's choice Soft the default): at once on both fighters, kept
 ##     Replays, Callouts, Photo   round 4 VIRAL (the % ring's only): the Splash Cam's replays, the callouts, photo mode
 ##   Controls           the element in play's buttons (round 2 of the skills, KitWords: its passive and guard, LMB jab,
 ##                      E guard, 1-5 with their plain names; in the % ring first the one line of practice.json
@@ -72,6 +73,7 @@ var _jolt: Button
 ## Round 4 VIRAL: the Splash Cam's replays, the callouts and photo mode (the % ring's only).
 var _replays: Button
 var _callouts: Button
+var _look: Button
 var _photo: Button
 var _rules: Button
 var _games: Button
@@ -285,6 +287,10 @@ func _ready() -> void:
 	_callouts = _opt_row(_options, "Callouts", "Callouts", ["On", "Off"], toggle_callouts, func(i: int) -> void:
 		if (i == 0) != Callouts.on():
 			toggle_callouts())
+	# (the Character look, SoftLook: Classic or Soft, at once on both fighters, kept)
+	_look = _opt_row(_options, "CharacterLook", "Character look", ["Classic", "Soft"], cycle_look, func(i: int) -> void:
+		if String(SoftLook.MODES[i]) != SoftLook.mode():
+			cycle_look())
 	_photo = _sub_row(_options, "Photo", PhotoMode.row_text(), photo_mode, PhotoMode.row_line())
 	_paint()
 
@@ -712,6 +718,13 @@ func cycle_replays() -> void:
 	_note.text = RingReplay.row_text()
 
 
+## The Character look (SoftLook) in turn, Classic and Soft: at once on every character, kept.
+func cycle_look() -> void:
+	SoftLook.set_mode(SoftLook.next_mode(), get_tree())
+	_paint()
+	_note.text = SoftLook.row_text()
+
+
 ## Round 4 VIRAL: the callouts on or off: at once, kept.
 func toggle_callouts() -> void:
 	Callouts.toggle()
@@ -770,6 +783,7 @@ func _paint() -> void:
 	_opt(_jolt, RingCamera.jolt_row_text(), 0 if RingCamera.jolt_on() else 1, RingCamera.word("jolt_line"))
 	_opt(_replays, RingReplay.row_text(), ["every", "last", "off"].find(RingReplay.setting()), RingReplay.row_line())
 	_opt(_callouts, Callouts.row_text(), 0 if Callouts.on() else 1, Callouts.row_line())
+	_opt(_look, SoftLook.row_text(), SoftLook.MODES.find(SoftLook.mode()), SoftLook.row_line())
 
 
 ## An option row as its option stands now (an OptionRow: the words whole, the chip lit, the line).
