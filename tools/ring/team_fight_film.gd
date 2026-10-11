@@ -89,6 +89,15 @@ func seg_team() -> void:
 		await _frame()
 	recording = false
 	print("TEAM FILM %s casts=%d clicks=%d falls=%s" % [fmt, sim.casts, sim.clicks, mode.falls])
+	# (the board at the take's end, for the notes: each fighter's falls dealt and taken, self falls, the % dealt, its % now)
+	var board: Array = []
+	for e: Dictionary in mode.roster():
+		var b: Variant = e.get("body")
+		board.append({"name": e.name, "el": e.element, "team": e.team, "dealt": e.falls_dealt, "taken": e.falls_taken,
+				"self": e.self_falls, "pct_dealt": e.pct_dealt,
+				"pct_now": roundi(mode.rules.pct_of(b)) if b is Node and is_instance_valid(b) else -1})
+	print("TEAM FILM BOARD ", JSON.stringify(board))
+	FileAccess.open(out.path_join("board.json"), FileAccess.WRITE).store_string(JSON.stringify(board, "\t"))
 	FileAccess.open(out.path_join("events.json"), FileAccess.WRITE).store_string(JSON.stringify(events, "\t"))
 	_write_log()
 
@@ -230,7 +239,9 @@ func _hide_hud() -> void:
 	if use_cine:
 		for n in root.find_children("*", "CanvasLayer", true, false):
 			var cl := n as CanvasLayer
-			if cl == overlay or not cl.visible or view.is_ancestor_of(cl):
+			# (only the game's HUD drawn into the film: never the window's mirror of the picture, which would leave the
+			# window gray, nor the film's own captions)
+			if cl == overlay or not cl.visible or view.is_ancestor_of(cl) or cl.custom_viewport != view:
 				continue
 			cl.visible = false
 			_hid.append(cl)
