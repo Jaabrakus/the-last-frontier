@@ -361,11 +361,11 @@ func _lift(h := 2.0) -> void:
 	await _ticks(2)
 
 
-## The camera's pitch turned onto the foe's chest (a player in the air aims down at him).
-func _aim_foe() -> void:
+## The camera's pitch turned onto the foe's chest (a player in the air aims down at him), or `below` m under it.
+func _aim_foe(below := 0.0) -> void:
 	await _ticks(2)
 	var cam := p.camera
-	var d := NpcSenses.chest_of(foe) - cam.global_position
+	var d := NpcSenses.chest_of(foe) - Vector3.UP * below - cam.global_position
 	p.pitch = asin(clampf(d.normalized().y, -1.0, 1.0))
 	await _ticks(3)
 
@@ -933,7 +933,10 @@ func _punch_land(after: float, aim_foe: bool) -> float:
 	await _tap(0)
 	await _lift(1.0)
 	if aim_foe:
-		await _aim_foe()
+		# (the bolt leaves the hand above the camera's line: aimed at his chest from a metre up it only grazed the top of his
+		# head, a hit by under 2 cm that the 2026-10-11 re-bake's hand (a centimetre higher) lost; aimed at his belly it
+		# meets the body, which is what this check is about)
+		await _aim_foe(0.45)
 	await _rmb_full(2.0)
 	c.held_override = false
 	await _ticks(1)

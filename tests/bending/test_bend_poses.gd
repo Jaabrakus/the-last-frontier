@@ -13,7 +13,8 @@ extends SceneTree
 ##               own-bend-fire-punch, Wind Guard own-bend-air-guard (its own guard clip, round 2; its first mapping,
 ##               own-axe-block-high, is held back: poses.json exclude_why), Gust push (no bend spec, no pose) its mastery
 ##               tier's clip
-##   the strike  a synthetic clip (hold_s 0.2, strike_s 0.3) on Fire Blast punch: the bolt leaves 0.08 s or more after the
+##   the strike  a synthetic clip (hold_s 0.2, strike_s 0.3) on Fire Blast punch: held full, the wind-up still creeps toward
+##               hold_s (the moving hold), never past it; the bolt leaves 0.08 s or more after the
 ##               release, as the pose says struck, from the pose's hand; a Catch on the same clip stands the very frame the
 ##               lock lets go; the pose taken away after a release, the fallback timer still lands the bolt within 0.25 s
 ##   round 5     the round-3 forms (the air hits, the Slams, the air High Kick, the Pop) pick the animation lane's landed clips,
@@ -579,6 +580,13 @@ func _strike() -> void:
 	var wait := c.pose.strike_wait()
 	_expect(full != INF and String(c.pose.current_clip()) == "own-test-strike" and absf(wait - 0.1) < 0.02,
 			"Fire Blast punch locks on the synthetic clip (%s), its strike %.3f s past the hold" % [c.pose.current_clip(), wait])
+	# the moving hold (the owner, 2026-10-11: "make it smoother"): held, the wind-up still creeps toward hold_s, ever slower,
+	# never past it and never stopped dead on it; the strike's wait is the hold's as before (above)
+	var h1 := c.pose.clip_time()
+	await _secs(0.1)
+	var h2 := c.pose.clip_time()
+	_expect(h1 < h2 and h2 < 0.2 and h2 > 0.2 - SwayPose.HOLD_CREEP_S,
+			"a held lock's wind-up creeps toward its hold instead of freezing on it (%.5f -> %.5f s of 0.2)" % [h1, h2])
 	BendEffects.last = {"do": "sentinel"}
 	var rec := {"cast_f": -1, "at_cast": "", "struck_f": -1, "struck_do": "", "point": Vector3.INF}
 	var on_cast := func(_m: String, _t: Node3D) -> void:

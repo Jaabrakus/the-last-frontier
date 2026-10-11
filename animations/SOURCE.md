@@ -76,6 +76,13 @@ Recorded 2026-10-04 from the generator code at the time of the first build (obse
 binary library). The owner's account above (motion made with AI assistance and Blender, videos watched as tutorials and
 visual references, no animation files imported) is his statement; the rows below are what the generator does.
 
+Re-baked 2026-10-11 (the owner: "do a animation for all the moves retouch or make it smoother") from the same generator and
+the same typed keys, with one solver change and seven pole retouches; no new input of any kind, nothing imported or retargeted:
+the limbs' two-bone IK became `rigkit.ik2_hinge` (the same joint places as `rigkit.ik2`, the twist decided so a knee or an
+elbow bends only about its own hinge), and the elbow or knee pole keys of `fire_kick_low`, `fire_fireball`, `fire_axe_kick`,
+`water_skate`, `fire_flip_kick` and `air_hit_earth` (and their mirrored twins), and of `hit_impact_back`, were retyped where
+they had lain along the limb (`docs/tidebreak/animation_retouch_2026-10-11.md`).
+
 | Clip | Added | Generator | Inputs | Visual references the owner watched |
 | --- | --- | --- | --- | --- |
 | `own-bend-earth-stomp` | 2026-10-04 (first set) | `tools/anim_author/blender/bend_clips.py` (`earth_stomp`) | the rig's rest pose; keys in `CLIPS` | (for the owner to fill) |

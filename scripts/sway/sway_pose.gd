@@ -81,6 +81,13 @@ const BLEND_OUT_S := 0.22
 const CAST_HANDOFF_S := 0.08
 ## Body speeds (m/s) over which the squat ("full") gives way to the upper body alone (the legs the player's).
 const STILL_MPS := Vector2(0.35, 1.2)
+## A held lock's moving hold (the owner, 2026-10-11: "do a animation for all the moves retouch or make it smoother"): an
+## element cast's wind-up no longer stops dead on its hold_s while the lock is held; its last HOLD_CREEP_S is drawn out
+## instead, the coil still deepening as it slows (an easing that never quite stops before the release), so a held cast
+## breathes instead of freezing. The release catches the creep's remainder up over its first CATCH_S, so the strike lands
+## on the same frame it always did. The floor and wall presses (their clap and press moments) are held as before.
+const HOLD_CREEP_S := 0.12
+const CATCH_S := 0.05
 
 var caster: SwayCaster
 ## The clip playing: "" none, "press" (the clap and press, or the wind-up: held), "release" (the push, or the push down and
@@ -105,6 +112,8 @@ var _lib: AnimationLibrary
 var _pose: ToolPose
 var _anim: Animation
 var _hold := 0.0
+## The release's catch-up (s): how far the moving hold's pose was short of hold_s as the lock let go, made up over CATCH_S.
+var _catch := 0.0
 var _from_t := 0.0
 var _w0 := 0.0
 var _floor := false
@@ -248,7 +257,8 @@ func strike_wait() -> float:
 	var s := _release_strike()
 	if s < 0.0:
 		return -1.0
-	var from := clip_time() if _release_clip() == StringName(anim_name) else 0.0
+	# (from the wind-up's held time: the moving hold's release makes its creep up, so the strike is where it always was)
+	var from := _held_t() if _release_clip() == StringName(anim_name) else 0.0
 	return maxf(s - from, 0.0)
 
 
@@ -367,8 +377,11 @@ func _on_cast(m: String, _t: Node3D) -> void:
 	if nxt != StringName(anim_name):
 		_begin(nxt, "release", 0.0)                    # (the floor cast: the palms push down and the body stands)
 	else:
+		# (the moving hold's pose short of hold_s: the release goes on from it and makes it up over CATCH_S)
+		var short := maxf(_held_t() - clip_time(), 0.0) if phase == "press" else 0.0
 		_begin(nxt, "release", clip_time())            # (the wall's shove, the push: on from the held moment, or from
 		                                               # where the wind-up is when the lock let go before it was drawn)
+		_catch = short
 	if phase != "release" or _strike < 0.0:
 		_strike_now()                                  # (no clip, or no strike time: the strike is now)
 
@@ -427,6 +440,7 @@ func _begin(clip: StringName, p_phase: String, from_t := 0.0) -> void:
 	phase = p_phase
 	clip_t = 0.0
 	_from_t = from_t
+	_catch = 0.0
 	_w0 = weight
 	if p_phase == "press":
 		_hold = float(pick.get("hold_s", _anim.get_meta(&"hold_s", _anim.length)))
@@ -469,10 +483,30 @@ func clip_time() -> float:
 		return 0.0
 	match phase:
 		"press":
-			return minf(clip_t, _hold)
+			return _creep(clip_t) if _creeps() else minf(clip_t, _hold)
 		"release", "up":
-			return minf(_from_t + clip_t, _end())
+			return minf(_from_t + clip_t + _catch * smoothstep(0.0, CATCH_S, clip_t), _end())
 	return 0.0
+
+
+## The wind-up's time held at hold_s, as the lock has it (the strike's wait counts from here, as it always did).
+func _held_t() -> float:
+	return minf(clip_t, _hold)
+
+
+## Whether this press creeps (the moving hold): an element cast's pose, not the floor's or the wall's press.
+func _creeps() -> bool:
+	return not pick.is_empty() and not _floor and anim_name != String(PRESS_WALL) and _hold > 0.0
+
+
+## The moving hold's time for the wind-up's own time `t`: as it is until the last HOLD_CREEP_S before hold_s, then that last
+## stretch drawn out, its pace falling away from the clip's own (no corner) and nearing hold_s without stopping on it.
+func _creep(t: float) -> float:
+	var c := minf(HOLD_CREEP_S, _hold)
+	var start := _hold - c
+	if t <= start:
+		return t
+	return start + c * (1.0 - exp(-(t - start) / c))
 
 
 func _process(dt: float) -> void:
@@ -564,11 +598,11 @@ func _tick(dt: float) -> void:
 				if not pressed and t >= press_at:
 					pressed = true
 					FormEffects.sfx("press", caster.hand_point(), -4.0, 0.9)
-			elif not pressed and t >= _hold:
+			elif not pressed and _held_t() >= _hold:
 				pressed = true                                          # (the wind-up drawn: the palms ready)
 		"release", "up":
 			var end := _end()
-			var run := _from_t + clip_t
+			var run := _from_t + clip_t + _catch * smoothstep(0.0, CATCH_S, clip_t)
 			w = minf(lerpf(_w0, 1.0, clampf(clip_t / 0.06, 0.0, 1.0)), clampf((end - run) / BLEND_OUT_S, 0.0, 1.0))
 			if phase == "release" and not _struck and (t >= _strike or run >= end):
 				_strike_now()                                       # (the strike's moment: the move leaves the hand)

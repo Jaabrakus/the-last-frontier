@@ -1,7 +1,8 @@
 """Our own ring-sport casts and reactions (Tidebreak, the elemental ring sport; the owner, 2026-10-04: "switch to a elemental
 avatar the last airbender type of game", then: the throw-style moves on NEW OWN throw clips only, and the clips our own:
 docs/animation_provenance.md, animations/SOURCE.md). Derived from tools/anim_author/blender/form_clips.py (the Form casts' route)
-and from nothing else: key poses typed into the CLIPS table below, solved with two-bone IK (rigkit.ik2) on the skeleton of
+and from nothing else: key poses typed into the CLIPS table below, solved with two-bone IK (rigkit.ik2_hinge since 2026-10-11:
+the same joint places as the rigkit.ik2 before it, a knee or an elbow bending only about its hinge; --old-ik) on the skeleton of
 Actor_B's own rig (assets/character/actor_b_body.glb, read from this checkout) in Blender, and baked to the bones' local
 rotations as Godot has them, with the root's position, for tools/anim_author/install_bend.gd. This tool never reads a library
 clip, a dumped move (dump_move.gd / dump_pose.gd output) or rigkit.Native / MirrorNative: the base it starts every clip from is
@@ -1627,7 +1628,11 @@ SET3 = {
         "face_r": [(0, "stand"), (3, "fist_guard"), (7, "fist_guard"), (9, "fist_low"), (13, "chamber"), (22, "chamber"),
                    (32, "stand")],
         "face_l": [(0, "stand"), (3, "fist_guard"), (22, "fist_guard"), (32, "stand")],
-        "pole_r": [(0, (-0.35, -0.1, -1.0)), (6, (-0.5, -1.0, -0.2)), (9, (-1.0, -0.2, 0.2)), (15, (-0.3, -0.5, -1.0)),
+        # (retouched 2026-10-11, the owner's "make it smoother": the right elbow kept out to the side as the fist drops to the
+        # chamber and carried round up and back over it, where its pole lay along the arm (the elbow had flipped above the arm
+        # in one frame at the swing and crossed in front of the chest at f14); the held guard (f6) as it was)
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (6, (-0.5, -1.0, -0.2)), (7, (-1.0, -0.3, 0.0)), (9, (-1.0, -0.2, 0.2)),
+                   (13, (-0.85, 0.44, 0.28)), (16, (-0.55, 0.75, -0.3)), (20, (-0.15, 0.75, -0.65)), (26, (-0.25, 0.3, -0.9)),
                    (32, (-0.35, -0.1, -1.0))],
         "pole_l": [(0, (0.35, -0.1, -1.0)), (6, (0.4, -1.0, -0.2)), (32, (0.35, -0.1, -1.0))],
         "grip_r": [(0, 0.4), (3, 1.0), (26, 1.0), (32, 0.4)],
@@ -1671,7 +1676,11 @@ SET3 = {
         "face_r": [(0, "stand"), (3, "chamber"), (9, "chamber"), (11, "push"), (24, "push"), (36, "stand")],
         "face_l": [(0, "stand"), (4, "fist_guard"), (7, "push"), (9, "push"), (11, "chamber"), (24, "chamber"), (36, "stand")],
         "pole_r": [(0, (-0.35, -0.1, -1.0)), (8, (-0.6, -0.6, -0.6)), (11, (-0.8, -0.6, -0.1)), (36, (-0.35, -0.1, -1.0))],
-        "pole_l": [(0, (0.35, -0.1, -1.0)), (8, (0.5, -0.8, -0.3)), (11, (0.3, -0.5, -1.0)), (36, (0.35, -0.1, -1.0))],
+        # (retouched 2026-10-11: the left elbow carried round the outside as the aiming hand is pulled back to the ribs, and
+        # held out, up and back over the chamber, where its pole had lain along the arm (the elbow swung through the spine at
+        # f11, then sat on a plane the solve could not hold))
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (8, (0.5, -0.8, -0.3)), (11, (0.9, 0.0, -0.4)), (13, (0.45, 0.65, -0.6)),
+                   (22, (0.35, 0.6, -0.7)), (29, (0.35, -0.1, -1.0)), (36, (0.35, -0.1, -1.0))],
         "grip_r": [(0, 0.4), (3, 0.3), (9, 0.3), (11, -0.3), (26, -0.3), (36, 0.4)],
         "grip_l": [(0, 0.4), (4, 0.6), (7, -0.3), (10, 1.0), (26, 1.0), (36, 0.4)],
         "foot_l": [(0, FL), (2, (0.13, 0.12, 0.04)), (5, (0.15, 0.077, 0.28)), (27, (0.15, 0.077, 0.28)), (30, (0.14, 0.12, 0.1)),
@@ -2129,7 +2138,10 @@ SET3 = {
                    (25, (0.19, 0.86, 0.12)), (30, HL)],
         "face_r": [(0, "stand"), (5, "palm_down"), (9, "arms_out"), (20, "arms_out"), (30, "stand")],
         "face_l": [(0, "stand"), (5, "palm_down"), (20, "palm_down"), (30, "stand")],
-        "pole_r": [(0, (-0.35, -0.1, -1.0)), (5, (-0.8, -0.6, -0.2)), (9, (-0.6, -1.0, 0.0)), (30, (-0.35, -0.1, -1.0))],
+        # (retouched 2026-10-11: the right elbow carried round the outside, down, out, then back over the arm as the hand comes
+        # home, where its pole had lain along the arm at f19 and the elbow swung through in two frames)
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (5, (-0.8, -0.6, -0.2)), (9, (-0.6, -1.0, 0.0)), (16, (-0.7, -0.9, 0.2)),
+                   (19, (-1.0, -0.2, 0.3)), (22, (-0.6, 0.3, -0.8)), (26, (-0.4, -0.1, -1.0)), (30, (-0.35, -0.1, -1.0))],
         "pole_l": [(0, (0.35, -0.1, -1.0)), (5, (0.8, -0.6, -0.2)), (9, (0.6, -0.8, 0.0)), (30, (0.35, -0.1, -1.0))],
         "grip_r": [(0, 0.4), (5, -0.3), (24, -0.3), (30, 0.4)],
         "grip_l": [(0, 0.4), (5, -0.3), (24, -0.3), (30, 0.4)],
@@ -3693,6 +3705,14 @@ def surface_low(P):
 
 
 # ---------------------------------------------------------------- one frame
+## The limbs' two-bone IK (2026-10-11, the owner's "do a animation for all the moves retouch or make it smoother"): the hinge
+## solve (rigkit.ik2_hinge: the same joint places as rigkit.ik2, its twist decided so a knee or an elbow never spins about
+## itself between frames); --old-ik bakes with the shortest-arc rigkit.ik2 the clips had before, to compare.
+IK2 = rigkit.ik2_hinge
+## Every clip baked at least this many times a frame (--substeps; a clip's own "substeps" may ask for more).
+MIN_SUBSTEPS = 1
+
+
 def pose(clip, f):
     rots = {k: v.copy() for k, v in REST.items()}
     X, Y, Z = Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1))
@@ -3770,7 +3790,7 @@ def pose(clip, f):
         DIAG[s + "_leg"] = (hip.copy(), ankle.copy(), (P_REST[s + "_knee"] - P_REST[s + "_upper_leg"]).length +
                             (P_REST[s + "_ankle"] - P_REST[s + "_knee"]).length, place.copy())
         for _ in range(2):
-            rigkit.ik2(rots, root, s + "_upper_leg", s + "_knee", s + "_ankle", ankle, knee_pole(clip, s, f, hip, fyaw, Q))
+            IK2(rots, root, s + "_upper_leg", s + "_knee", s + "_ankle", ankle, knee_pole(clip, s, f, hip, fyaw, Q))
         set_global(rots, s + "_ankle", ga)
         # the toes flat on the ground while the ball is on it, else with the foot
         on = 1.0 - smooth((ball.y - 0.04) / 0.08)
@@ -3797,7 +3817,7 @@ def pose(clip, f):
                             (P_REST[s + "_wrist"] - P_REST[s + "_elbow"]).length, palm_t.copy())
         for _ in range(2):
             P, G = SK.fk(rots, root)
-            rigkit.ik2(rots, root, s + "_shoulder", s + "_elbow", s + "_wrist", wrist_t, P[s + "_shoulder"] + pole_v)
+            IK2(rots, root, s + "_shoulder", s + "_elbow", s + "_wrist", wrist_t, P[s + "_shoulder"] + pole_v)
         set_global(rots, s + "_wrist", gw)
         # the fingers: closed about the knuckles' line toward the palm by the grip (a share of a fist's), each joint after its
         # parent (the thumb about its own line)
@@ -5587,8 +5607,10 @@ SET7 = {
         "face_r": [(0, "balance"), (3, "fist_guard"), (5, "fist_guard"), (6, "fist_back"), (10, "fist_back"), (17, "balance"),
                    (22, "balance")],
         "face_l": [(0, "balance"), (3, "push"), (5, "push"), (6, "fist_back"), (11, "fist_back"), (17, "balance"), (22, "balance")],
-        "pole_r": [(0, AIR["pole_r"]), (3, (-0.7, -0.6, -0.3)), (6, (-0.8, -0.3, -0.5)), (13, (-0.8, -0.3, -0.5)), (22, AIR["pole_r"])],
-        "pole_l": [(0, AIR["pole_l"]), (3, (0.6, -0.8, 0.0)), (6, (0.8, -0.3, -0.5)), (13, (0.8, -0.3, -0.5)), (22, AIR["pole_l"])],
+        # (retouched 2026-10-11: the elbows pointed down off the arms held out behind for the balance, where their poles had
+        # lain along the arms (the planes flipped at f5 and f12, the arms twisting whole))
+        "pole_r": [(0, AIR["pole_r"]), (3, (-0.7, -0.6, -0.3)), (5, (-0.3, -1.0, -0.2)), (13, (-0.3, -1.0, -0.2)), (22, AIR["pole_r"])],
+        "pole_l": [(0, AIR["pole_l"]), (3, (0.6, -0.8, 0.0)), (6, (0.3, -1.0, -0.2)), (13, (0.3, -1.0, -0.2)), (22, AIR["pole_l"])],
         "grip_r": [(0, AIR["grip_r"]), (3, 1.0), (12, 1.0), (17, 0.3), (22, AIR["grip_r"])],
         "grip_l": [(0, AIR["grip_l"]), (3, -0.4), (5, -0.2), (6, 1.0), (12, 1.0), (17, 0.3), (22, AIR["grip_l"])],
         # (the kicking ankle's crescent about the hip, keyed where the ankle lands (_heel_key): swung up outside the body at
@@ -5602,7 +5624,9 @@ SET7 = {
         "heel_r": [(0, AIR["heel_r"]), (2, -60), (3, -90), (4, -85), (5, -75), (6, -70), (8, -30), (10, 0), (13, 16),
                    (22, AIR["heel_r"])],
         "fyaw_r": [(0, AIR["fyaw_r"]), (3, 0), (8, 0), (22, AIR["fyaw_r"])],
-        "knee_r": [(0, AIR["knee_r"]), (3, (-0.3, 0.6, 0.8)), (5, (-0.1, 0.3, 1.0)), (6, (-0.1, 0.0, 1.0)), (8, (-0.15, 0.0, 1.0)),
+        # (retouched 2026-10-11: the kicking knee up as the leg rises and up-forward as it comes down, where its pole lay along
+        # the raised leg at f5)
+        "knee_r": [(0, AIR["knee_r"]), (3, (-0.3, 0.6, 0.8)), (5, (-0.1, 1.0, 0.1)), (6, (-0.1, 0.7, 0.7)), (8, (-0.15, 0.0, 1.0)),
                    (22, AIR["knee_r"])],
         # (pass 3: the rear leg folded up under him at the strike, not split back: one long chopping leg against a compact
         # body)
@@ -6063,7 +6087,10 @@ SET8 = {
                    (17, "balance"), (24, "balance")],
         "face_l": [(0, "balance"), (3, "fist_back"), (4, "fist_back"), (6, "arc_back"), (8, "arc_back"), (10, "hug"), (13, "hug"),
                    (18, "balance"), (24, "balance")],
-        "pole_r": [(0, AIR["pole_r"]), (3, (-0.6, 0.2, 0.8)), (6, (-0.9, -0.1, 0.4)), (9, (-1.0, -0.2, 0.0)), (13, (-1.0, -0.2, 0.0)),
+        # (retouched 2026-10-11: the right elbow kept down as the arm drops into the flip, where its pole had passed along the
+        # arm at f1 and the elbow flipped from behind it to before it)
+        "pole_r": [(0, AIR["pole_r"]), (1, (-0.3, -1.0, 0.2)), (3, (-0.6, 0.2, 0.8)), (6, (-0.9, -0.1, 0.4)), (9, (-1.0, -0.2, 0.0)),
+                   (13, (-1.0, -0.2, 0.0)),
                    (24, AIR["pole_r"])],
         "pole_l": [(0, AIR["pole_l"]), (4, (0.6, 0.2, 0.8)), (7, (0.9, -0.1, 0.4)), (10, (1.0, -0.2, 0.0)), (14, (1.0, -0.2, 0.0)),
                    (24, AIR["pole_l"])],
@@ -6126,10 +6153,10 @@ SET8 = {
                    (18, "balance")],
         "face_l": [(0, "balance"), (2, "fist_guard"), (3, "fist_guard"), (6, "fist_guard"), (11, "fist_guard"), (16, "balance"),
                    (18, "balance")],
+        # (retouched 2026-10-11: the right elbow down and back as the arm comes home, where its pole had lain along the arm at
+        # f14 and the elbow flipped from over the arm to under it)
         "pole_r": [(0, AIR["pole_r"]), (2, (-0.8, 0.7, -0.5)), (3, (-0.6, -0.3, 0.2)), (4, (-0.585, 0.23, -0.79)),
-                   (10, (-0.585, 0.23, -0.79)),
-
- (14, (-0.8, -0.4, 0.0)), (18, AIR["pole_r"])],
+                   (10, (-0.585, 0.23, -0.79)), (14, (-0.1, -0.7, -0.7)), (18, AIR["pole_r"])],
         "pole_l": [(0, AIR["pole_l"]), (2, (0.5, -0.6, 0.2)), (5, (0.2, -1.0, 0.3)), (11, (0.2, -1.0, 0.3)), (15, (0.7, -0.5, -0.3)),
                    (18, AIR["pole_l"])],
         "grip_r": [(0, AIR["grip_r"]), (1, 1.0), (13, 1.0), (16, 0.3), (18, AIR["grip_r"])],
@@ -6430,7 +6457,9 @@ SET9 = {
         "root": (0.0, -0.05, 0.2), "hips": -10.0, "chest": -26.0, "side": -20.0, "twist": 14.0, "roll": 2.0,
         "clav_r": (-14.0, -6.0), "clav_l": (-15.0, -7.0),
         "hand_r": (-0.415, -0.14, -0.215), "hand_l": (0.45, -0.1, -0.1), "face_r": "flung_back", "face_l": "flung_back",
-        "pole_r": (-0.8, -0.4, -0.4), "pole_l": (0.8, -0.4, -0.4), "grip_r": -0.4, "grip_l": -0.45,
+        # (retouched 2026-10-11: the elbows down and back off the flung arms, as above; the poles had lain out along the arms,
+        # so the near-straight arms twisted back and forth frame by frame)
+        "pole_r": (-0.3, -1.0, -0.35), "pole_l": (0.3, -1.0, -0.35), "grip_r": -0.4, "grip_l": -0.45,
         "heel_r": 30.0, "heel_l": 18.0, "knee_r": (-0.12, 0.0, 1.0), "knee_l": (0.12, 0.0, 1.0)},
         {"head": (-6, -12, -24, -30, -34, -27, -22), "look": (0, -3, -6, -8, -10, -7, -5),
          "tilt": (0, -3, -8, -12, -14, -10, -7)}),
@@ -6487,10 +6516,14 @@ def bake(clip, fit=None):
         names = [nm for nm in names if any(nm == s + "_" + b for s in "lr" for b in LEG)]
     # (a clip with "substeps": n is baked n times a frame (meta fps FPS * n in the json): a planted hand whose arm moves fast
     # holds its place between the keys too, the game interpolating the bones between them)
-    sub = int(clip.get("substeps", 1))
+    sub = max(int(clip.get("substeps", 1)), MIN_SUBSTEPS)
+    rigkit.PLANES.clear()
     for fi in range(clip["length"] * sub + 1):
         f = fi / sub if sub > 1 else fi
         rigkit.MISS.clear()
+        # (the limbs' bend planes rate-limited on the clip's own time, frame after frame: rigkit.RATE_DPS; not on a loop, whose
+        # last frame must stay its first)
+        rigkit.NOW = None if clip.get("loop") else f / FPS
         rots, root = pose(clip, f)
         frames.append({nm: [rots[nm].x, rots[nm].y, rots[nm].z, rots[nm].w] for nm in names})
         if not legs_only:
@@ -6504,7 +6537,8 @@ def bake(clip, fit=None):
         POINTS.append((f, {j: tuple(round(x, 3) for x in (head_middle(P) if j == "heada" else P[j])) for j in PT_J},
                        (round(low[0], 3), low[1]), round(hat_low(P, G), 3), hat_far))
         ANGLES.append((f, [round(math.degrees((P[s + "_" + b] - P[s + "_" + a]).angle(P[s + "_" + c] - P[s + "_" + b], 0.0)))
-                           for s, (a, b, c) in (("r", ARM_J), ("l", ARM_J), ("r", LEG_J), ("l", LEG_J))]))
+                           for s, (a, b, c) in (("r", ARM_J), ("l", ARM_J), ("r", LEG_J), ("l", LEG_J))] +
+                       [round(rigkit.COND.get(n, 1.0), 2) for n in ("r_shoulder", "l_shoulder", "r_upper_leg", "l_upper_leg")]))
         report.append((f, [round(x, 3) for x in P["r_palm"]], [round(x, 3) for x in P["l_palm"]], round(P["pelvis"].y, 3),
                        [round(x, 3) for x in P["r_ankle"]], [round(x, 3) for x in P["l_ankle"]],
                        round(max([d for _, d in rigkit.MISS] or [0.0]), 3)))
@@ -6523,6 +6557,7 @@ def bake(clip, fit=None):
                             (limb.endswith("leg") and "foot" in str(clip["meta"].get("hand"))):
                         out = place + (target - base).normalized() * (slack - STRIKE_SLACK)
                         fit.append((f, limb + " STRIKE", round(slack, 3), tuple(round(x, 3) for x in out)))
+    rigkit.NOW = None
     return frames, roots, report
 
 
@@ -6561,6 +6596,7 @@ def keep_blend(path, baked):
 
 
 def main():
+    global IK2, MIN_SUBSTEPS
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
@@ -6571,7 +6607,15 @@ def main():
     ap.add_argument("--fit", action="store_true", help="list the frames where a limb is (nearly) locked straight")
     ap.add_argument("--angles", action="store_true", help="print each frame's elbow and knee bends (deg, 0 straight)")
     ap.add_argument("--points", action="store_true", help="print each frame's key joints and the lowest surface (m)")
+    ap.add_argument("--old-ik", action="store_true", help="the limbs on the shortest-arc IK the clips had before 2026-10-11")
+    ap.add_argument("--plane-rate", type=float, default=rigkit.RATE_DPS,
+                    help="the limbs' bend planes' rate limit, deg/s (0: none; rigkit.RATE_DPS)")
+    ap.add_argument("--substeps", type=int, default=MIN_SUBSTEPS, help="every clip baked at least this many times a frame")
     a = ap.parse_args(argv)
+    if a.old_ik:
+        IK2 = rigkit.ik2
+    rigkit.RATE_DPS = a.plane_rate
+    MIN_SUBSTEPS = max(1, a.substeps)
     only = [c for c in a.clips.split(",") if c]
     out = {"fps": FPS, "clips": {}, "names": {},
            "about": "tools/anim_author/blender/bend_clips.py: our own ring-sport casts and knocks, key poses IK-solved on Actor_B's "
@@ -6600,8 +6644,8 @@ def main():
         if clip.get("loop"):
             meta["loop"] = "linear"
         out["clips"][name] = {"frames": frames, "root": roots, "meta": meta}
-        if int(clip.get("substeps", 1)) > 1:
-            out["clips"][name]["fps"] = FPS * int(clip["substeps"])
+        if max(int(clip.get("substeps", 1)), MIN_SUBSTEPS) > 1:
+            out["clips"][name]["fps"] = FPS * max(int(clip.get("substeps", 1)), MIN_SUBSTEPS)
         out["names"][name] = game_name(name)
         baked[name] = (frames, roots)
         worst = max(r[-1] for r in report)
@@ -6610,7 +6654,8 @@ def main():
             print("   FIT %s f%02d %s slack %.3f -> %s" % (name, fr[0], fr[1], fr[2], fr[3]))
         if a.angles:
             for fr, ang in ANGLES:
-                print("   ANG %s f%02d elbow r %3d l %3d  knee r %3d l %3d" % (name, fr, *ang))
+                print("   ANG %s f%02d elbow r %3d l %3d  knee r %3d l %3d  pole r %.2f l %.2f  knee pole r %.2f l %.2f"
+                      % (name, fr, *ang))
         if a.points:
             for fr, pts, low, hat, far in POINTS:
                 print("   PTS %s f%02d low %.3f (%s) " % (name, fr, low[0], low[1]) +

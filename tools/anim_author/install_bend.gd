@@ -13,6 +13,8 @@ extends SceneTree
 ##   zsh <scratchpad>/blender_run.sh -b --factory-startup --python tools/anim_author/blender/bend_clips.py -- --out <bend.json>
 ##       --blend <bend.blend>
 ##   Godot --headless --path . -s tools/anim_author/install_bend.gd -- <bend.json>      (or in=<bend.json>)
+##       [out=res://artifacts/x/Frontier_Bend_try.res]   another library to install into (a bake to look at side by side with
+##       the game's, tools/anim_author/bend_preview.gd lib=; it starts empty when it does not exist yet)
 
 const OUT_LIB := "res://animations_extra/Frontier_Bend.res"
 ## Our own library whose tracks are named as the game's skeleton has them (the node path before the bone).
@@ -26,8 +28,12 @@ const WORD_METAS := ["hand", "mask", "root", "loop", "travel", "stone_hand", "fr
 
 func _initialize() -> void:
 	var path := ""
+	var out_lib := OUT_LIB
 	for a in OS.get_cmdline_user_args():
-		path = a.trim_prefix("in=")
+		if a.begins_with("out="):
+			out_lib = a.substr(4)
+		else:
+			path = a.trim_prefix("in=")
 	if path == "" or not FileAccess.file_exists(path):
 		push_error("install_bend: no json (%s)" % path)
 		quit(1)
@@ -38,8 +44,8 @@ func _initialize() -> void:
 	var fps := float(baked.fps)
 	var names: Dictionary = baked.get("names", {})
 	var lib: AnimationLibrary = null
-	if ResourceLoader.exists(OUT_LIB):
-		lib = (load(OUT_LIB) as AnimationLibrary).duplicate(true) as AnimationLibrary
+	if ResourceLoader.exists(out_lib):
+		lib = (load(out_lib) as AnimationLibrary).duplicate(true) as AnimationLibrary
 	if lib == null:
 		lib = AnimationLibrary.new()
 	for key: String in baked.clips:
@@ -89,6 +95,7 @@ func _initialize() -> void:
 		lib.add_animation(StringName(name), a)
 		print("  %s %.2f s, %d bones, metas %s" % [name, a.length, tracks.size(), str(meta)])
 	print("BEND library: ", lib.get_animation_list())
-	var err := ResourceSaver.save(lib, OUT_LIB, ResourceSaver.FLAG_COMPRESS)
-	print("BEND saved ", err, " -> ", OUT_LIB)
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_lib.get_base_dir()))
+	var err := ResourceSaver.save(lib, out_lib, ResourceSaver.FLAG_COMPRESS)
+	print("BEND saved ", err, " -> ", out_lib)
 	quit(0 if err == OK else 1)
