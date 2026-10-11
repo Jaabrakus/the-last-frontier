@@ -1504,7 +1504,7 @@
     },
     "air_gust": {
       "label": "Gust",
-      "_lance": "The Gust held long is the Air Lance (the owner, 2026-10-10: \"is air big wave to big should we make it a lance instead? like a air spear throw?\", picked: Gust, then Lance when held): held to full, the Gust (its look trimmed to the 2 m it hits: look_r, the wind arc was drawn ~9 m wide); held past grow_after_s, it grows into a lance thrown point first (do throw, shape spear, kind air: a narrow, fast, long throw that hits hard; its tag air_gust/gust.grown, rules.json's grown Gust class). grow_label names it on the bar, as the Punch's Fireball. Water's Turn on the beat takes it and sends it back an ice lance along the turner's aim (2026-10-11: water's answer to it).",
+      "_lance": "The Gust held long is the Air Lance (the owner, 2026-10-10: \"is air big wave to big should we make it a lance instead? like a air spear throw?\", picked: Gust, then Lance when held): held to full, the Gust (its look trimmed to the 2 m it hits: look_r, the wind arc was drawn ~9 m wide; the Pull's the same on 2026-10-11, the owner: \"i hate how that air blast has such a big wave to it\"); held past grow_after_s, it grows into a lance thrown point first (do throw, shape spear, kind air: a narrow, fast, long throw that hits hard; its tag air_gust/gust.grown, rules.json's grown Gust class). grow_label names it on the bar, as the Punch's Fireball. Water's Turn on the beat takes it and sends it back an ice lance along the turner's aim (2026-10-11: water's answer to it).",
       "art": "gale",
       "element": "air",
       "lock_s": 0.35,
@@ -1547,7 +1547,8 @@
           "range_m": 14.0,
           "damage": 0.0,
           "knock_mps": 8.0,
-          "up_mps": 0.5
+          "up_mps": 0.5,
+          "look_r": 0.22
         },
         "slam": {"do": "slam", "kind": "air", "label": "Down Gust", "width_m": 2.5, "depth_m": 4.0, "lean_m": 1.5, "active_s": 0.12, "damage": 12.0, "knock_mps": 7.0, "angle_deg": -70.0, "set_stun": 0.3, "bounce_k": 0.45, "bounce_add": 2.0, "self_lift_mps": 2.5}
       },

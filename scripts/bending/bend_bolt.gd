@@ -222,7 +222,11 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 		for c in holder.get_children():
 			if not c in before:
 				b._body_parts.append(c)              # (its own look: what become() makes anew)
-		b._trail = BendLooks.trail(b, b.kind, b.radius)
+		# (a wind wave's trail the size of its look, not of the 2 m it hits: sized by its radius, its puffs swelled to 1.3 m and
+		# its ribbons coiled 1.35 m round, a white cloud hiding the wave; the owner 2026-10-11: "i hate how that air blast has
+		# such a big wave to it")
+		var trail_r := b.look_r if String(spec.get("do", "")) == "wind_wave" else b.radius
+		b._trail = BendLooks.trail(b, b.kind, trail_r)
 	elif b.kind == "air":
 		BendLooks._air_dust(holder)              # (the dust line under a low air bolt stays: today's look)
 	# (round 4, READ: its voice in flight, an arena's only; let go at its end: BendSounds.flight)
