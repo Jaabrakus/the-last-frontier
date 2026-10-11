@@ -18,6 +18,12 @@ extends RefCounted
 ##           time, -1 unknown) before the body is told (its hurt signal), so SwayCaster pushes a lock back by it (setback_s)
 ##   Rooted: an earth competitor standing still (Bending.passive("earth"): under still_mps) takes knock_mult of a knock
 ##   clear_round(b): every timed bend meta on `b` gone (ROUND_METAS; RingMode.make_whole's list and round 2's)
+## BINDS (2026-10-11, the owner: "each element should have binds and finishers and how they build team comps is on them";
+## his answers: the feet only, as a skill tree twist each element has, fire's a lightning shock): bind(n, s) is the one way a
+## root reaches someone who casts as an element: a twist's hit in the % ring (RingRules.on_hit, the hit's bind_s). The feet
+## held as root() holds them (and RingMoves keeps him from jumping, rolling, dodging and dropping off; BendEffects from his dash
+## key's moves); aim, casts and the guard stay his. Weaker each time on the same body (rules.json stock.bind: x decay within
+## memory_s, none under floor_s); a hit that launches him frees them (unbind, _stock_hit). bound(n) asks.
 ## ROUND 3 (smash_r3 spec v2 §2, §14.3; PERCENT's): take_filters (static: can_take is false when any of them says false;
 ## none registered outside the % ring: RingRules.take_ok while a stock ring stands, MOVE's intangible dodges and edge grabs
 ## theirs), and the hit info (`info`, spec §14.3's keys). On a competitor of a stock-rules ring (stock_body) a hit is %:
@@ -38,7 +44,9 @@ const STOCK_HIT_META := &"bend_stock_hit"
 ## the burrow under the stones, the guard's last result, the last blow's cost).
 const ROUND_METAS: Array[StringName] = [&"bend_root", &"bend_slow", &"bend_anchor", &"bend_redirect_lightning",
 		&"bend_brace", &"bend_dazzle_until", &"bend_whiff_until", &"bend_carry_until", &"bend_under_until",
-		&"bend_last_guard", &"bend_hit_lock_s", &"bend_dash_end", &"bend_slip_until"]
+		&"bend_last_guard", &"bend_hit_lock_s", &"bend_dash_end", &"bend_slip_until", &"bend_bind_memo"]
+## A bind's memory on the bound body: {at: the game time of the last bind tried on him, k: what that one held, as a share}.
+const BIND_MEMO_META := &"bend_bind_memo"
 
 ## Roots and slows left alone because their body casts as an element (the tests).
 static var held_off := 0
@@ -256,6 +264,7 @@ static func _stock_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 		return res
 	var i := info.duplicate()
 	i["_launch"] = res
+	unbind(n)                                   # (a launch frees bound feet)
 	BendKnock.of(n).knock(res.get("v", Vector3.ZERO), by, i)
 	return res
 
@@ -286,6 +295,45 @@ static func root(n: Node, s: float) -> void:
 		held_off += 1
 		return
 	_timed(n, &"bend_root", s, 0.0)
+
+
+## A bind (see BINDS in the header): `n`'s feet held for `s` x what his last binds have left (rules.json stock.bind), on the deck
+## only, its look at his feet in element `el`'s matter (BendLooks.bind_feet). Returns the seconds held (0: none: off the deck,
+## worn down under floor_s, or he cannot be hit now).
+static func bind(n: Node, s: float, el := "") -> float:
+	if n == null or not is_instance_valid(n) or s <= 0.0 or not can_take(n, null):
+		return 0.0
+	if n is CharacterBody3D and not (n as CharacterBody3D).is_on_floor():
+		return 0.0
+	var b := RingRules.stock_block("bind")
+	var t := now()
+	var memo: Variant = n.get_meta(BIND_MEMO_META, {})
+	var k := 1.0
+	if memo is Dictionary and t - float((memo as Dictionary).get("at", -INF)) < float(b.get("memory_s", 6.0)):
+		k = float((memo as Dictionary).get("k", 1.0)) * float(b.get("decay", 0.6))
+	n.set_meta(BIND_MEMO_META, {"at": t, "k": k})
+	var held := s * k
+	if held < float(b.get("floor_s", 0.2)):
+		return 0.0
+	_timed(n, &"bend_root", held, 0.0)
+	if n is Node3D:
+		BendLooks.bind_feet(n as Node3D, el, held)
+	return held
+
+
+## `n`'s feet let go now (a bind's: a hit that launches him).
+static func unbind(n: Node) -> void:
+	if n == null or not is_instance_valid(n) or until(n, &"bend_root") <= 0.0:
+		return
+	n.set_meta(&"bend_root", now())
+	_end_timed(n, &"bend_root", 0.0)
+	if n is Node3D:
+		BendLooks.bind_end(n as Node3D)
+
+
+## Whether `n`'s feet are held now (a bind, or a root in the open world).
+static func bound(n: Node) -> bool:
+	return until(n, &"bend_root") > 0.0
 
 
 ## `n` slowed to SLOW_MPS for `s`. Never on one who casts as an element (held_off).

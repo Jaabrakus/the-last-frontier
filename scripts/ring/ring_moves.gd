@@ -464,12 +464,13 @@ func _step_free(dt: float) -> void:
 		_leave_ground()
 		floor = false
 	var on_ground := floor and not _air
-	# the guard's Roll and Duck (a fresh direction, C)
-	if on_ground and not stun and _lag <= 0.0 and _try_ground_dodge():
+	# the guard's Roll and Duck (a fresh direction, C); none while a bind holds his feet (_bound: nor a jump, a hop or a drop)
+	var held := _bound()
+	if on_ground and not stun and _lag <= 0.0 and not held and _try_ground_dodge():
 		_step(dt)
 		return
 	_crouch_to(on_ground and _b("down_held") and not stun and _lag <= 0.0)
-	if _b("jump") and _b("sprint") and on_ground and not stun and _lag <= 0.0 and _drop_off():
+	if _b("jump") and _b("sprint") and on_ground and not stun and _lag <= 0.0 and not held and _drop_off():
 		on_ground = false                        # (Shift + Space at a raised piece's edge: down off it, not a jump)
 	elif _b("jump"):
 		_on_jump_press(on_ground)
@@ -477,7 +478,7 @@ func _step_free(dt: float) -> void:
 			_step(dt)
 			return
 		on_ground = on_ground and not _air
-	elif _b("jump_short") and on_ground and not stun:
+	elif _b("jump_short") and on_ground and not stun and not held:
 		_ground_jump(true)
 		on_ground = false
 	if _b("dodge") and _air:
@@ -556,7 +557,7 @@ func _on_jump_press(on_ground: bool) -> void:
 	if mode == "spout":
 		return
 	if on_ground:
-		if _lag > 0.0:
+		if _lag > 0.0 or _bound():
 			return
 		var short := _b("jump_short") or _t - _cast_rel_at <= num("jump", "hop_cast_s", 0.05) + 1e-4
 		_ground_jump(short)
@@ -2093,6 +2094,12 @@ func _dead() -> bool:
 	if body is NpcFighter:
 		return (body as NpcFighter).is_dead()
 	return false
+
+
+## A bind holds his feet (BendStatus.bind, a skill tree twist's hit): no jump, hop, roll, dodge or drop off the deck while it
+## lasts; the run is held by _speed_cap (a root's 0). Aim, casts and the guard stay his.
+func _bound() -> bool:
+	return not virtual and body != null and BendStatus.bound(body)
 
 
 ## The body's own speed cap (a root, the countdown, a floor cast; a bot's feet held or held still).

@@ -210,6 +210,8 @@ static func pillar(c: Variant, at: Vector3, d: Dictionary, mode := "self") -> Fo
 	var pd: Dictionary = (d.get("pillar", {}) as Dictionary).duplicate()
 	var ld: Dictionary = pd.get("launch", {})
 	var p := bc.body
+	if mode == "self" and BendStatus.bound(p) and BendStatus.element_mode(p):
+		return null                              # (earth's Lift is its dash key's: a bind holds the feet, BendStatus.bind)
 	var sc := _sway(bc)
 	if at == Vector3.INF:
 		at = p.global_position

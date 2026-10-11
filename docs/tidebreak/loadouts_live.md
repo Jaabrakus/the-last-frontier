@@ -63,6 +63,13 @@ refusals, the requires rule, and one real hit: with Short Fuse worn the player's
 (22 against 25, x the ring's `pct_scale` 0.95), the tag `fire_arc/lightning` either way. Limit: the practice ring's readout
 (`RingPredict.ko_pct`) still reads the move's own class, so its "out at" figure ignores a worn class node.
 
+**Added 11 October 2026: the binds** (the owner: "each element should have binds and finishers"; the feet only, as a
+skill tree twist). Four twists, Stone Grip (`earth.column.grip`), Frost Geyser (`water.geyser.frost`), Static Shock
+(`fire.lightning.shock`) and Tripwind (`air.pull.trip`), each set a spec key Classic does not have, `bind_s`, from none to 0.7
+(`BendLoadout.NEW_SPEC_KEYS`: a node's change may start from null for these keys only), plus their class's lower % and, for
+Static Shock, a 1.4 s charge. Their hit holds the feet in place of the launch. Live on the owner's word, not soaked. Everything
+about them: `docs/tidebreak/binds_2026-10-11.md`.
+
 ## How a loadout becomes live
 
 1. The player wears a slot in the Advancement window; `AdvancementStore` saves `user://advancement.json` (the window does the saving, the match never does).

@@ -30,12 +30,15 @@ const BOXING_LIB := "res://animations_extra/Frontier_Style_Boxing.res"
 ## widens the plain Gust now that the grown one is the Air Lance, not yet soaked; flip them in the json, not here).
 ## Since 2026-10-11 also fire's Storm twist Lightning Pistol (the owner's "have this or that": its own pose, a quicker charge and
 ## a longer flash), live on the owner's word for him to try, and the nine nodes the class numbers made whole (a change
-## class:<tag>+<variant>.<key>: the % ring class of the wearer's own hits; the owner on the tree: "fix it"), live unsoaked.
+## class:<tag>+<variant>.<key>: the % ring class of the wearer's own hits; the owner on the tree: "fix it"), live unsoaked,
+## and the four binds the same day (a spec key Classic lacks, bind_s, from none; tests/ring/test_binds.gd plays them).
 const CLASS_NODES := ["earth.fissure.deep", "water.spear.cold_hands", "water.spear.heavy", "water.downpour.pooling", "fire.punch.snap",
 		"fire.lightning.short_fuse", "fire.embers.tight", "air.palm.shoving", "air.gust.rising"]
+const BIND_NODES := ["earth.column.grip", "water.geyser.frost", "fire.lightning.shock", "air.pull.trip"]
 const LIVE := ["air.ball.dense", "air.gust.full_sail", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick",
-		"earth.wall.thick", "water.wall.thick_ice", "fire.lightning.pistol"] + CLASS_NODES
-const ON_NOW := ["air.ball.dense", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick", "fire.lightning.pistol"] + CLASS_NODES
+		"earth.wall.thick", "water.wall.thick_ice", "fire.lightning.pistol"] + CLASS_NODES + BIND_NODES
+const ON_NOW := ["air.ball.dense", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick", "fire.lightning.pistol"] + CLASS_NODES \
+		+ BIND_NODES
 
 var checks := 0
 var fails: Array[String] = []
@@ -130,7 +133,7 @@ func _run() -> void:
 	var only_known := true
 	for id0: String in live:
 		only_known = only_known and id0 in LIVE
-	_expect(every_on and only_known, "the nodes live now are the four the soak passed, the Lightning Pistol and the nine class nodes, within the resolvable ones (%s)" % [live])
+	_expect(every_on and only_known, "the nodes live now are the four the soak passed, the Lightning Pistol, the nine class nodes and the four binds, within the resolvable ones (%s)" % [live])
 	_expect(not "earth.wall.thick" in live and not "water.wall.thick_ice" in live and BendLoadout.why_not("earth.wall.thick") == "switched off",
 			"the two walls the soak could not exercise are switched off in the json (%s)" % BendLoadout.why_not("earth.wall.thick"))
 	# the rest of this test wants every resolvable node on, whatever the switches say
@@ -184,7 +187,8 @@ func _run() -> void:
 						"%s: the wearer casts %s with %s, the other with %s" % [id, rest, c.to, c.from])
 				continue
 			var to := float(c.to)
-			var from := float(c.from)
+			var none := c.from == null                  # (a spec key Classic does not have: a bind's bind_s)
+			var from := 0.0 if none else float(c.from)
 			if path.begins_with("class:"):
 				# (the % ring class of his hits with that tag: the node's number for the wearer, the data's for the other, and the
 				# tag is the move's)
@@ -216,7 +220,10 @@ func _run() -> void:
 				var ws := BendLoadout.spec(w, mv, md, base)
 				var bs := BendLoadout.spec(bot, mv, md, base)
 				_expect(_near(_dig(ws, keys.slice(1)), to), "%s: the wearer's %s is %s" % [id, path, to])
-				_expect(_near(_dig(bs, keys.slice(1)), from) and bs == base, "%s: a body that wears nothing reads %s (%s)" % [id, path, from])
+				if none:
+					_expect(_dig(bs, keys.slice(1)) == null and bs == base, "%s: a body that wears nothing has no %s" % [id, path])
+				else:
+					_expect(_near(_dig(bs, keys.slice(1)), from) and bs == base, "%s: a body that wears nothing reads %s (%s)" % [id, path, from])
 				# every key the node does not name is today's
 				var named := {}
 				for c2: Dictionary in n.changes:

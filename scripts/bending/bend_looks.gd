@@ -1331,6 +1331,251 @@ static func spout(at: Vector3, r: float, rise_s: float) -> void:
 				ToonFx.band_mesh(1.0, 1.5, 1.0)))
 
 
+## A bind's tell where it is cast (Stone Grip and Frost Geyser, the skill tree's binds, 2026-10-11: what shows in place of the
+## Column's stone or the Geyser's water at `at`, `r` across, the hold landing rise_s later): cracks or frost spreading on the
+## deck and a low puff, then teeth of stone or ice snapping up at the rise. Nothing drawn on anyone.
+static func bind_tell(at: Vector3, el: String, r: float, rise_s: float) -> void:
+	if not live():
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	var ice := el == "water"
+	pool.mark("frost" if ice else "cracks", at, Vector3.UP, r * 1.6, rise_s + 1.2)
+	pool.shoot("puff_frost" if ice else "puff_dust", at + Vector3.UP * 0.1, 10, Vector3.UP, 70.0, Vector2(0.4, 1.0),
+			Vector2(0.3, 0.6), 0.6, Vector3.ZERO, 1.5, {"r": r * 0.6})
+	var tree := pool.get_tree()
+	if tree == null:
+		return
+	tree.create_timer(maxf(rise_s, 0.01), false).timeout.connect(func() -> void:
+		var p2 := _pool()
+		if p2 == null:
+			return
+		p2.shoot("drop" if ice else "chunk", at, 12, Vector3.UP, 25.0, Vector2(2.0, 4.0), Vector2(0.08, 0.22) if ice else Vector2(0.12, 0.22),
+				0.5, Vector3(0, -12.0, 0), 0.0, {"r": r * 0.7})
+		p2.play("crown", Transform3D(Basis.IDENTITY, at + Vector3.UP * 0.05), 0.45, r * 0.5, r * 0.7, ICE if ice else DUST,
+				FOAM if ice else DUST_LIGHT, ToonFx.band_mesh(1.0, 1.3, 0.6)))
+
+
+## A bind's hold on `body`'s feet for `s` (BendStatus.bind), in element `el`'s matter (BindLook: solid for the whole hold): stone
+## closing round the ankles (earth), ice shards (water), lightning crackling up the legs (fire's shock), rings of wind spinning
+## round them (air); a burst of the matter as it takes. At the legs only.
+static func bind_feet(body: Node3D, el: String, s: float) -> void:
+	if not live() or body == null or not is_instance_valid(body):
+		return
+	BindLook.make(body, el, s)
+	var pool := _pool()
+	if pool == null:
+		return
+	var at := body.global_position + Vector3.UP * 0.05
+	match el:
+		"earth":
+			pool.shoot("chunk", at, 10, Vector3.UP, 35.0, Vector2(1.0, 2.2), Vector2(0.1, 0.18), 0.4, Vector3(0, -10.0, 0), 0.0,
+					{"r": 0.35})
+			pool.mark("cracks", at, Vector3.UP, 1.4, s + 0.8)
+		"water":
+			# (no "shard" sparks here: that recipe is stone's colour; the ice is BindLook's own)
+			pool.shoot("drop", at + Vector3.UP * 0.1, 12, Vector3.UP, 40.0, Vector2(1.0, 2.2), Vector2(0.06, 0.12), 0.4,
+					Vector3(0, -9.0, 0), 0.0, {"r": 0.3})
+			pool.shoot("puff_frost", at + Vector3.UP * 0.2, 8, Vector3.UP, 60.0, Vector2(0.2, 0.6), Vector2(0.25, 0.45), s,
+					Vector3.ZERO, 1.0, {"r": 0.3})
+			pool.mark("frost", at, Vector3.UP, 1.4, s + 1.0)
+		"fire":
+			pool.shoot("spark_elec", at + Vector3.UP * 0.15, 24, Vector3.UP, 80.0, Vector2(1.5, 4.0), Vector2(0.04, 0.08),
+					minf(s, 0.5), Vector3.ZERO, 2.0, {"r": 0.3})
+			pool.mark("scorch", at, Vector3.UP, 1.0, s + 0.6)
+			pool.light(at + Vector3.UP * 0.4, ELEC, 1.8, s, 3.0)
+		_:
+			pool.shoot("puff_air", at + Vector3.UP * 0.3, 10, Vector3.UP, 90.0, Vector2(0.5, 1.2), Vector2(0.25, 0.4), s,
+					Vector3.ZERO, 1.0, {"r": 0.4})
+
+
+## The hold on `body`'s feet broken early (a hit that launched him: BendStatus.unbind): its look breaks up at once, a puff
+## where it held.
+static func bind_end(body: Node3D) -> void:
+	if not live() or body == null or not is_instance_valid(body):
+		return
+	var lk: Variant = body.get_meta(BindLook.META) if body.has_meta(BindLook.META) else null
+	if lk is BindLook and is_instance_valid(lk):
+		(lk as BindLook).finish()
+	var pool := _pool()
+	if pool != null:
+		pool.shoot("puff_dust", body.global_position + Vector3.UP * 0.1, 8, Vector3.UP, 80.0, Vector2(1.0, 2.5),
+				Vector2(0.2, 0.4), 0.5, Vector3.ZERO, 2.0, {"r": 0.3})
+
+
+## A bind's look on a body's legs for its hold (bind_feet): solid shapes round the ankles in the binder's matter, rising into
+## place in BUILD_S, held, then gone (sunk, melted, faded) in END_S at the hold's end or when the hold breaks (finish). It stays
+## where the feet were held (top_level: a held body does not move). One a body (a new hold replaces the last).
+class BindLook:
+	extends Node3D
+
+	const META := &"bend_bind_look"
+	const BUILD_S := 0.08
+	const END_S := 0.16
+	static var _mats := {}
+
+	var el := ""
+	var life := 0.7
+	var t := 0.0
+	var end_at := -1.0
+	var parts: Array[MeshInstance3D] = []
+	var rest: Array[Transform3D] = []
+	## Fire's shock: its lightning strips (ARCS of them, rebuilt every ARC_S) and the sparks thrown off it every SPARK_S.
+	const ARCS := 4
+	const ARC_S := 0.04
+	const SPARK_S := 0.12
+	var arcs: Array[MeshInstance3D] = []
+	var arc_t := 0.0
+	var spark_t := 0.0
+
+	static func make(body: Node3D, element: String, s: float) -> BindLook:
+		var old: Variant = body.get_meta(META) if body.has_meta(META) else null
+		if old is BindLook and is_instance_valid(old):
+			(old as BindLook).queue_free()
+		var lk := BindLook.new()
+		lk.el = element
+		lk.life = maxf(s, 0.05)
+		body.add_child(lk)
+		lk.top_level = true
+		lk.global_transform = Transform3D(Basis.IDENTITY, body.global_position)
+		body.set_meta(META, lk)
+		lk._build()
+		return lk
+
+	## The game's own toon facets for stone and ice (ToonFx's rock and ice: the stones' and the Spear's look); wind its own.
+	static func _mat(kind: String) -> Material:
+		if kind == "stone":
+			return ToonFx.mat("rock")
+		if kind == "ice":
+			return ToonFx.mat("ice")
+		if _mats.has(kind):
+			return _mats[kind]
+		var m := StandardMaterial3D.new()
+		m.albedo_color = Color(0.9, 0.97, 1.0, 0.45)
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_mats[kind] = m
+		return m
+
+	func _add(mesh: Mesh, mat: Material, xf: Transform3D) -> MeshInstance3D:
+		var mi := MeshInstance3D.new()
+		mi.mesh = mesh
+		mi.material_override = mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(mi)
+		mi.transform = xf
+		parts.append(mi)
+		rest.append(xf)
+		return mi
+
+	func _build() -> void:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = get_instance_id()
+		match el:
+			"earth":
+				# (a cuff of stone round the ankles, up the shins: eight chunks low, five up to the knee's foot)
+				for i in 13:
+					var low := i < 8
+					var n := 8 if low else 5
+					var a := (float(i if low else i - 8) + rng.randf_range(-0.2, 0.2)) / float(n) * TAU + (0.0 if low else 0.4)
+					var r := rng.randf_range(0.2, 0.26) if low else rng.randf_range(0.16, 0.2)
+					var s := rng.randf_range(0.22, 0.3) if low else rng.randf_range(0.15, 0.2)
+					var b := Basis.from_euler(Vector3(rng.randf_range(-0.6, 0.6), rng.randf() * TAU, rng.randf_range(-0.6, 0.6))).scaled(Vector3.ONE * s)
+					_add(ToonFx.chunk_mesh(i), _mat("stone"), Transform3D(b, Vector3(cos(a) * r, 0.1 if low else 0.32, sin(a) * r)))
+			"water":
+				# (ice shards leaning in round the ankles, up to the knees, on a disc of ice)
+				var disc := CylinderMesh.new()
+				disc.top_radius = 0.44
+				disc.bottom_radius = 0.48
+				disc.height = 0.04
+				_add(disc, _mat("ice"), Transform3D(Basis.IDENTITY, Vector3.UP * 0.02))
+				for i in 10:
+					var a := (float(i) + rng.randf_range(-0.25, 0.25)) / 10.0 * TAU
+					var r := rng.randf_range(0.2, 0.27)
+					var out := Vector3(cos(a), 0.0, sin(a))
+					var lean := Basis(out.cross(Vector3.UP).normalized(), deg_to_rad(rng.randf_range(14.0, 28.0)))
+					# (ToonFx's shard points along -z: stood up first, then turned about itself and leant in)
+					var b := lean * Basis.from_euler(Vector3(0.0, rng.randf() * TAU, 0.0)) * Basis(Vector3.RIGHT, PI * 0.5)
+					_add(ToonFx.shard_mesh(rng.randf_range(0.45, 0.7), rng.randf_range(0.06, 0.09), i), _mat("ice"),
+							Transform3D(b, out * r + Vector3.UP * 0.02))
+			"fire":
+				# (lightning crackling up the legs: ARCS jagged strips, each its own mesh, rebuilt every few frames)
+				for k in ARCS:
+					var m := MeshInstance3D.new()
+					m.mesh = ImmediateMesh.new()
+					m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+					m.extra_cull_margin = 2.0
+					add_child(m)
+					arcs.append(m)
+				_arcs()
+			_:
+				# (a whirl of wind round the legs: two of the Wind Ball's own spinning bands, tilted, the wind shader's noise
+				# breaking them up so they read as wind, never as a clean ring drawn round him)
+				for i in 2:
+					var b := Basis(Vector3.UP, rng.randf() * TAU) * Basis(Vector3.RIGHT, deg_to_rad(10.0 - 20.0 * i))
+					var band := _add(ToonFx.band_mesh(1.0, 0.85, 0.5), ToonFx.mat("wind_band_fast"),
+							Transform3D(b.scaled(Vector3.ONE * (0.42 + 0.08 * i)), Vector3.UP * (0.18 + 0.3 * i)))
+					band.set_instance_shader_parameter(&"seed", 0.31 * i + rng.randf())
+		_pose(0.0)
+
+	func _arcs() -> void:
+		for m: MeshInstance3D in arcs:
+			var a := randf() * TAU
+			var from := Vector3(cos(a) * 0.26, 0.03, sin(a) * 0.26)
+			var b := a + randf_range(1.4, 3.4)
+			var to := Vector3(cos(b) * 0.18, randf_range(0.5, 1.0), sin(b) * 0.18)
+			ToonFx.lightning_strips(m.mesh as ImmediateMesh, from, to)
+
+	## The hold broken: gone now (END_S).
+	func finish() -> void:
+		if end_at < 0.0:
+			end_at = t
+
+	## Each part at its rest, risen u of the way in (0..1) and going g of the way out (0..1).
+	func _pose(g: float) -> void:
+		var u := clampf(t / BUILD_S, 0.0, 1.0)
+		var k := 1.0 - (1.0 - u) * (1.0 - u)
+		for i in parts.size():
+			var xf: Transform3D = rest[i]
+			var p := parts[i]
+			match el:
+				"earth":
+					p.transform = Transform3D(xf.basis.scaled(Vector3.ONE * (1.0 - 0.4 * g)), xf.origin + Vector3.DOWN * (0.3 * (1.0 - k) + 0.25 * g))
+				"water":
+					p.transform = Transform3D(xf.basis.scaled(Vector3.ONE * maxf(k * (1.0 - 0.8 * g), 0.01)), xf.origin)
+				_:
+					p.transform = Transform3D(xf.basis.rotated(Vector3.UP, t * (9.0 if i % 2 == 0 else -7.0)), xf.origin)
+					p.set_instance_shader_parameter(&"fade", 1.0 - g)
+
+	func _process(dt: float) -> void:
+		t += dt
+		if end_at < 0.0 and t >= life:
+			end_at = t
+		var g := clampf((t - end_at) / END_S, 0.0, 1.0) if end_at >= 0.0 else 0.0
+		_pose(g)
+		if not arcs.is_empty():
+			arc_t -= dt
+			spark_t -= dt
+			if arc_t <= 0.0 and g <= 0.0:
+				arc_t = ARC_S
+				_arcs()
+			if spark_t <= 0.0 and g <= 0.0:
+				spark_t = SPARK_S
+				var pool := BendLooks._pool()
+				if pool != null:
+					pool.shoot("spark_elec", global_position + Vector3.UP * randf_range(0.1, 0.6), 10, Vector3.UP, 120.0,
+							Vector2(1.0, 3.0), Vector2(0.03, 0.06), 0.25, Vector3.ZERO, 2.0, {"r": 0.25})
+			for m: MeshInstance3D in arcs:
+				m.visible = g <= 0.0
+		if g >= 1.0:
+			var body := get_parent()
+			if body != null and body.has_meta(META) and body.get_meta(META) == self:
+				body.remove_meta(META)
+			queue_free()
+
+
 ## Lightning's flash on the caster's hand at `at` (round 2's flash_s: its tell before the strike): a white-blue flash, a
 ## spray of sparks off the hand, a flash of light; the charge on the hands (charge) ends with it.
 static func lightning_flash(body: Node3D, at: Vector3, look := true) -> void:

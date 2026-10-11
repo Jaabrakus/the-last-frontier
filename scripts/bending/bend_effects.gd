@@ -63,6 +63,9 @@ extends RefCounted
 ##               up speeds x RingMoves.profile().self_up_mult and no Leap glide in the ring; one Breath smoke a caster
 
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
+## The key (0-based) every element keeps its dashes on (spec.md's 3 Dash: Burrow and Lift, Skate and Surf, Step and Jets, Slip
+## and Leap): what a bind's held feet stop (BendStatus.bind).
+const DASH_KEY := 2
 
 ## What the local player's last cast did (the tests): {do, mode, ...}. Only his (is_local): a bot's casts never write it.
 static var last := {}
@@ -148,6 +151,11 @@ static func resolved(m: String, spec: Dictionary) -> Dictionary:
 
 static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, grew: bool) -> void:
 	var p := bc.body
+	if BendStatus.bound(p) and BendStatus.element_mode(p) and Bending.key_of(BendPoses.element_of(p), m) == DASH_KEY:
+		# (a bind holds his feet: his dash key's moves (a dash, a Skate, a Surf, a Leap) go nowhere till it ends; the cast is
+		# spent as any other; BendStatus.bind)
+		_record(bc, {"do": "held", "mode": mode, "move": m})
+		return
 	spec["_lock_s"] = lock_of(m, mode)
 	if BendR3.is_jab(m, mode) and Bending.element_of(m) == BendPoses.element_of(p) and spec.has("range_m"):
 		# (the element's jab: the close poke, jab_max_m at most whatever its spec says; spec §2.1)
@@ -654,7 +662,10 @@ static func spout(c: Variant, at: Vector3, spec: Dictionary) -> void:
 		s["up_mps"] = float(spec.get("up_mps", 12.0)) * (1.0 + (k - 1.0) / 3.0)
 		_cur["source"] = true
 	var rise := float(spec.get("rise_s", 0.35))
-	if not SbFx.fire(p, SbFx.key_of(spec.get("_info", {})), "low", {"at": at, "radius": float(s.get("radius_m", 1.8))}):
+	if float(spec.get("bind_s", 0.0)) > 0.0:
+		# (Frost Geyser, a bind twist: ice closes round his feet where the water would throw him up; no water column)
+		BendLooks.bind_tell(at, "water", float(s.get("radius_m", 1.8)), rise)
+	elif not SbFx.fire(p, SbFx.key_of(spec.get("_info", {})), "low", {"at": at, "radius": float(s.get("radius_m", 1.8))}):
 		BendLooks.spout(at, float(s.get("radius_m", 1.8)), rise)
 	var rec := _cur
 	if rise <= 0.0:
@@ -826,8 +837,13 @@ static func column(c: Variant, at: Vector3, spec: Dictionary) -> FormRaised:
 		wn["rise_s"] = rise                       # (round 2: it starts low and peaks rise_s later, the throw then)
 	if float(spec.get("sink_s", 0.0)) > 0.0:
 		wn["life_s"] = float(spec.sink_s)         # (it sinks back sink_s after; never a wall: count_wall never sees it)
-	var r := FormRaised.raise(p.get_tree().current_scene, "pillar", Transform3D(Basis.IDENTITY, at), wn, absi(hash(at)) % 97)
-	r.set_meta(&"bend_by", p.get_instance_id())
+	var r: FormRaised = null
+	if float(spec.get("bind_s", 0.0)) > 0.0:
+		# (Stone Grip, a bind twist: stone closes round his feet where the Column would throw him up; no pillar to stand on)
+		BendLooks.bind_tell(at, "earth", float(spec.get("radius_m", 1.3)), rise)
+	else:
+		r = FormRaised.raise(p.get_tree().current_scene, "pillar", Transform3D(Basis.IDENTITY, at), wn, absi(hash(at)) % 97)
+		r.set_meta(&"bend_by", p.get_instance_id())
 	var sa := {"radius_m": float(spec.get("radius_m", 1.3)), "up_mps": float(spec.get("up_mps", 11.0)),
 			"damage": float(spec.get("damage", 10.0)), "kind": "stone", "_lock_s": float(spec.get("_lock_s", -1.0)),
 			"_info": spec.get("_info", {})}

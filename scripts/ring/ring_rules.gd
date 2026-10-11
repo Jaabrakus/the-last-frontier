@@ -1184,6 +1184,14 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	var res := {"none": true, "d": d_add, "tag": String(cls.tag)}
 	if not first or bool(cls.get("no_flinch", false)):
 		return res
+	# a bind (a skill tree twist's hit, info.bind_s: BendStatus.bind): his feet held, no launch, no hitstun, no string hit; a
+	# late guard halves it
+	var bind_s := float(info.get("bind_s", 0.0))
+	if bind_s > 0.0 and not returned:
+		# (its look in its own move's matter: Stone Grip's stone, Frost Geyser's ice, Static Shock's sparks, Tripwind's wind)
+		res["bind_s"] = BendStatus.bind(n, bind_s * (stock_num("late_mult", 0.5) if late else 1.0),
+				Bending.element_of(String(info.get("move", ""))))
+		return res
 	# the launch
 	var lying := BendKnock.peek(n) != null and BendKnock.peek(n).lying_t > 0.0
 	var w := weight_of(BendPoses.element_of(n))

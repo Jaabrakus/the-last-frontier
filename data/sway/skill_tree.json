@@ -1024,6 +1024,45 @@
        ]
       },
       {
+       "id": "earth.column.grip",
+       "name": "Stone Grip",
+       "kind": "variation",
+       "chip": "2",
+       "extends_move": "earth_shove",
+       "mode": "column",
+       "requires": [],
+       "ring_cost": 2,
+       "ring_legal": true,
+       "world_gate": [
+        "expert:earth_shove",
+        "teacher:earth"
+       ],
+       "effect": "Your Column closes round his feet instead of throwing him up: stone grips them for 0.7 s. He can still aim, cast and guard, only not walk, jump, roll or dash, and each bind within 6 s of the last holds him for less (0.42 s, then 0.25, then not at all). A hit that launches him frees his feet; a perfect guard stops it, a late one halves it. It adds 5% (from 9) and never knocks him out.",
+       "plus": "holds his feet 0.7 s",
+       "minus": "no launch; 5% (from 9)",
+       "help": "Your Column grips his feet instead of throwing him up.",
+       "answer": "The same tell, cracks spreading where it is aimed: step off them. Held, guard what comes next.",
+       "owner_words": "2026-10-11: \"i think each element should have binds and finishers and how they build team comps is on them right?\"; his answers: a bind holds the feet only (aim, casting and the guard stay free), weaker each time on the same person, as a skill tree twist; fire's is a lightning shock",
+       "changes": [
+        {
+         "path": "spec:earth_shove/column.bind_s",
+         "from": null,
+         "to": 0.7
+        },
+        {
+         "path": "class:earth_shove/column+grip.d",
+         "from": 9.0,
+         "to": 5.0,
+         "base_tag": "earth_shove/column"
+        }
+       ],
+       "visual": {
+        "kind": "ground",
+        "look": "stone teeth closing round his ankles where the Column would rise"
+       },
+       "identity": "pass: the same cast, aim and tell; it holds his feet where it would throw him up"
+      },
+      {
        "id": "earth.stone.kiln_stone",
        "name": "Kiln Stone",
        "kind": "synergy",
@@ -3255,6 +3294,45 @@
         "why": "one cast raises two Geysers (a volley of rises)."
        },
        "identity": "held: one cast raises two Geysers (a volley of rises)."
+      },
+      {
+       "id": "water.geyser.frost",
+       "name": "Frost Geyser",
+       "kind": "variation",
+       "chip": "2",
+       "extends_move": "wave",
+       "mode": "spout",
+       "requires": [],
+       "ring_cost": 2,
+       "ring_legal": true,
+       "world_gate": [
+        "expert:wave",
+        "teacher:water"
+       ],
+       "effect": "Your Geyser freezes round his feet instead of throwing him up: ice holds them for 0.7 s. He can still aim, cast and guard, only not walk, jump, roll or dash, and each bind within 6 s of the last holds him for less (0.42 s, then 0.25, then not at all). A hit that launches him frees his feet; a perfect guard stops it, a late one halves it. It adds 4% (from 7) and never knocks him out.",
+       "plus": "holds his feet 0.7 s",
+       "minus": "no launch; 4% (from 7)",
+       "help": "Your Geyser freezes his feet instead of throwing him up.",
+       "answer": "The same tell, frost spreading where it is aimed: step off it. Held, guard what comes next.",
+       "owner_words": "2026-10-11: \"i think each element should have binds and finishers and how they build team comps is on them right?\"; his answers: a bind holds the feet only (aim, casting and the guard stay free), weaker each time on the same person, as a skill tree twist; fire's is a lightning shock",
+       "changes": [
+        {
+         "path": "spec:wave/spout.bind_s",
+         "from": null,
+         "to": 0.7
+        },
+        {
+         "path": "class:wave/spout+frost.d",
+         "from": 7.0,
+         "to": 4.0,
+         "base_tag": "wave/spout"
+        }
+       ],
+       "visual": {
+        "kind": "ground",
+        "look": "ice closing round his ankles where the Geyser would rise"
+       },
+       "identity": "pass: the same cast, aim and tell; it holds his feet where it would throw him up"
       },
       {
        "id": "water.downpour.pooling",
@@ -5513,7 +5591,8 @@
        },
        "excludes": [
         "fire.lightning.long",
-        "fire.lightning.pistol"
+        "fire.lightning.pistol",
+        "fire.lightning.shock"
        ],
        "identity": "pass: numbers only"
       },
@@ -5527,7 +5606,8 @@
        "requires": [],
        "excludes": [
         "fire.lightning.short_fuse",
-        "fire.lightning.pistol"
+        "fire.lightning.pistol",
+        "fire.lightning.shock"
        ],
        "ring_cost": 1,
        "ring_legal": false,
@@ -5577,7 +5657,8 @@
        "requires": [],
        "excludes": [
         "fire.lightning.short_fuse",
-        "fire.lightning.long"
+        "fire.lightning.long",
+        "fire.lightning.shock"
        ],
        "ring_cost": 2,
        "ring_legal": true,
@@ -5778,6 +5859,54 @@
         ]
        },
        "identity": "pass: your own broken charge, half kept"
+      },
+      {
+       "id": "fire.lightning.shock",
+       "name": "Static Shock",
+       "kind": "variation",
+       "chip": "1",
+       "extends_move": "fire_arc",
+       "mode": "lightning",
+       "requires": [],
+       "excludes": [
+        "fire.lightning.short_fuse",
+        "fire.lightning.long",
+        "fire.lightning.pistol"
+       ],
+       "ring_cost": 2,
+       "ring_legal": true,
+       "world_gate": [
+        "practised:fire_arc"
+       ],
+       "effect": "Lightning becomes a quick shock that locks his feet: it charges in 1.4 s (from 2.2) and holds his feet for 0.7 s where it strikes. He can still aim, cast and guard, only not walk, jump, roll or dash, and each bind within 6 s of the last holds him for less (0.42 s, then 0.25, then not at all). A hit that launches him frees his feet; a perfect guard stops it, a late one halves it. It adds 8% (from 25) and never knocks him out. The flash on your hand is unchanged: it is the tell.",
+       "plus": "charge 1.4 s; holds his feet 0.7 s",
+       "minus": "8% (from 25); no knockout",
+       "help": "A quick Lightning that shocks his feet still instead of knocking him out.",
+       "answer": "Same answer: step off its line on the flash, or a perfect Parry sends it back.",
+       "owner_words": "2026-10-11: \"i think each element should have binds and finishers and how they build team comps is on them right?\"; his answers: a bind holds the feet only (aim, casting and the guard stay free), weaker each time on the same person, as a skill tree twist; fire's is a lightning shock",
+       "changes": [
+        {
+         "path": "spec:fire_arc/lightning.bind_s",
+         "from": null,
+         "to": 0.7
+        },
+        {
+         "path": "move:fire_arc.mode_lock_s.lightning",
+         "from": 2.2,
+         "to": 1.4
+        },
+        {
+         "path": "class:fire_arc/lightning+shock.d",
+         "from": 25.0,
+         "to": 8.0,
+         "base_tag": "fire_arc/lightning"
+        }
+       ],
+       "visual": {
+        "kind": "ground",
+        "look": "lightning crackling round his feet where it strikes"
+       },
+       "identity": "pass: the same bolt, flash and Parry; it holds his feet where it would knock him out"
       }
      ]
     },
@@ -7025,6 +7154,45 @@
        },
        "ring_note": "open world only: a range swap",
        "identity": "pass: numbers only (open world only: a range swap)"
+      },
+      {
+       "id": "air.pull.trip",
+       "name": "Tripwind",
+       "kind": "variation",
+       "chip": "2",
+       "extends_move": "air_gust",
+       "mode": "pull",
+       "requires": [],
+       "ring_cost": 2,
+       "ring_legal": true,
+       "world_gate": [
+        "expert:air_gust",
+        "teacher:air"
+       ],
+       "effect": "Your Pull sweeps his legs instead of dragging him in: the wind wraps his feet and holds them for 0.7 s where he stands. He can still aim, cast and guard, only not walk, jump, roll or dash, and each bind within 6 s of the last holds him for less (0.42 s, then 0.25, then not at all). A hit that launches him frees his feet; a perfect guard stops it, a late one halves it. It adds 4% (from 7) and never knocks him out.",
+       "plus": "holds his feet 0.7 s",
+       "minus": "no pull; 4% (from 7)",
+       "help": "Your Pull trips his feet where he stands instead of dragging him in.",
+       "answer": "The same wave: jump it, dash it or wall it. Held, guard what comes next.",
+       "owner_words": "2026-10-11: \"i think each element should have binds and finishers and how they build team comps is on them right?\"; his answers: a bind holds the feet only (aim, casting and the guard stay free), weaker each time on the same person, as a skill tree twist; fire's is a lightning shock",
+       "changes": [
+        {
+         "path": "spec:air_gust/pull.bind_s",
+         "from": null,
+         "to": 0.7
+        },
+        {
+         "path": "class:air_gust/pull+trip.d",
+         "from": 7.0,
+         "to": 4.0,
+         "base_tag": "air_gust/pull"
+        }
+       ],
+       "visual": {
+        "kind": "ground",
+        "look": "a whirl of wind round his legs"
+       },
+       "identity": "pass: the same wave, lane and answers; it holds his feet where it would drag him in"
       },
       {
        "id": "air.gust.dragon_fire",

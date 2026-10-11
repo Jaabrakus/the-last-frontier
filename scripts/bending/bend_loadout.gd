@@ -57,6 +57,9 @@ const PARTS := ["spec", "lock", "wall", "ice", "pose", "class"]
 ## The keys of a hit's class a node may change for its wearer (what RingRules.on_hit reads off the class it is handed); the
 ## others (set, jab, pop, pull, dir, ...) are what a hit is, not how much.
 const CLASS_KEYS := ["d", "base", "growth", "angle", "set_stun", "volley_n"]
+## Spec keys a node may add where Classic's spec has none (its change's `from` is null): the code reads each as off when it is
+## absent. bind_s: the skill tree's binds (BendR3.info_for puts it on the hit, RingRules.on_hit holds the feet: BendStatus.bind).
+const NEW_SPEC_KEYS := ["bind_s"]
 
 ## Tests only: merged over the file (enabled, live, styles_live replace; nodes merge by id).
 static var config_override: Dictionary = {}
@@ -285,7 +288,9 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 		return _put(out.pose as Dictionary, [rest], String(to))
 	if kind == "class":
 		return _take_class(out, n, path, rest, from, to)
-	if not (to is float or to is int) or not (from is float or from is int):
+	# (a spec key Classic does not have, from none: NEW_SPEC_KEYS only, which the code reads as off when absent)
+	var new_key := kind == "spec" and from == null and path.get_slice(".", path.get_slice_count(".") - 1) in NEW_SPEC_KEYS
+	if not (to is float or to is int) or not (new_key or from is float or from is int):
 		return "%s: not a number" % path
 	if kind == "spec":
 		# spec:<move>/<mode>.<key>[.<key>...]: a key of the move's bend spec for that mode
@@ -300,7 +305,10 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 		if not (sd is Dictionary):
 			return "%s: no such spec" % path
 		var cur: Variant = _dig(sd, sub)
-		if cur == null or not is_equal_approx(float(cur), float(from)):
+		if new_key:
+			if cur != null:
+				return "%s: the data holds %s, the node says from none" % [path, str(cur)]
+		elif cur == null or not is_equal_approx(float(cur), float(from)):
 			return "%s: the data holds %s, the node says from %s" % [path, str(cur), str(from)]
 		if not _consumed(mv, mode, sub):
 			return "%s: no code reads this number" % path
