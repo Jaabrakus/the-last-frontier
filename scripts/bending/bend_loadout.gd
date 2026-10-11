@@ -58,8 +58,10 @@ const PARTS := ["spec", "lock", "wall", "ice", "pose", "class"]
 ## others (set, jab, pop, pull, dir, ...) are what a hit is, not how much.
 const CLASS_KEYS := ["d", "base", "growth", "angle", "set_stun", "volley_n"]
 ## Spec keys a node may add where Classic's spec has none (its change's `from` is null): the code reads each as off when it is
-## absent. bind_s: the skill tree's binds (BendR3.info_for puts it on the hit, RingRules.on_hit holds the feet: BendStatus.bind).
-const NEW_SPEC_KEYS := ["bind_s"]
+## absent. bind_s: the skill tree's binds (BendR3.info_for puts it on the hit, RingRules.on_hit holds the feet: BendStatus.bind);
+## prison_s: Wind Prison (BendZone: the Wind Wall holds whoever it catches in the air); drench_s: Drenching Wave (the hit carries
+## it, RingRules.on_hit soaks him: BendStatus.drench).
+const NEW_SPEC_KEYS := ["bind_s", "prison_s", "drench_s"]
 
 ## Tests only: merged over the file (enabled, live, styles_live replace; nodes merge by id).
 static var config_override: Dictionary = {}

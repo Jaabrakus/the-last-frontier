@@ -402,6 +402,7 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 	var r := float(spec.get("radius_m", spec.get("range_m", 5.0)))
 	var deg := 360.0 if ring else float(spec.get("deg", 60.0))
 	var kind := String(spec.get("kind", "air"))
+	BendStatus.rescue_near(p, p.global_position + flat * r * 0.5, r * 0.6)   # (a held teammate in its reach freed)
 	var info: Dictionary = spec.get("_info", {})
 	var hit := 0
 	for e in BendCaster.near(p, p.global_position, r):
@@ -618,6 +619,7 @@ static func zone(c: Variant, a: Dictionary, spec: Dictionary) -> BendZone:
 static func status_at(p: Node3D, at: Vector3, spec: Dictionary) -> void:
 	var r := float(spec.get("radius_m", 1.5))
 	var kind := String(spec.get("kind", "stone"))
+	BendStatus.rescue_near(p, at, r)                 # (a held teammate in its reach freed: the Column's, the Geyser's)
 	var info: Dictionary = spec.get("_info", {})
 	var n_hit := 0
 	for e in BendCaster.near(p, at, r):
@@ -868,6 +870,8 @@ static func _wall(p: Node3D, xf: Transform3D, matter: String, life := -1.0, w :=
 		wn["life_s"] = life
 	if w > 0.0:
 		wn["width_m"] = w
+	# (raised before a floating teammate it rises to cover him: BendStatus.float_cover)
+	wn["height_m"] = maxf(float(wn.get("height_m", 2.0)), BendStatus.float_cover(p, xf.origin))
 	var r := FormRaised.raise(p.get_tree().current_scene, "wall", xf, wn, absi(hash(xf.origin)) % 97)
 	r.set_meta(&"bend_by", p.get_instance_id())
 	return r

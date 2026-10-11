@@ -495,6 +495,8 @@ func act_left() -> float:
 
 ## In a hitstun longer than escape_s and escape_s into it: a fresh press may end it now.
 func can_escape() -> bool:
+	if BendStatus.floating(body):
+		return false                    # (a knock-up's float is helpless: BendStatus.float_up)
 	var esc := _sn("escape_s", 0.6)
 	return stun_t > 0.0 and _stun_len > esc + 1e-4 and BendStatus.now() - _stun_from >= esc - 1e-4
 

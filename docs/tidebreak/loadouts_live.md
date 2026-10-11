@@ -68,7 +68,9 @@ skill tree twist). Four twists, Stone Grip (`earth.column.grip`), Frost Geyser (
 (`fire.lightning.shock`) and Tripwind (`air.pull.trip`), each set a spec key Classic does not have, `bind_s`, from none to 0.7
 (`BendLoadout.NEW_SPEC_KEYS`: a node's change may start from null for these keys only), plus their class's lower % and, for
 Static Shock, a 1.4 s charge. Their hit holds the feet in place of the launch. Live on the owner's word, not soaked. Everything
-about them: `docs/tidebreak/binds_2026-10-11.md`.
+about them: `docs/tidebreak/binds_2026-10-11.md`. The same day, two more on the same keys: Wind Prison (`air.wall.prison`,
+`prison_s`) and Drenching Wave (`water.wave.drench`, `drench_s`), with the knock-ups in the base kit:
+`docs/tidebreak/knockups_2026-10-11.md`.
 
 ## How a loadout becomes live
 

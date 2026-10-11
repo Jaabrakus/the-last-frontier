@@ -414,6 +414,8 @@ func _physics_process(dt: float) -> void:
 		else:
 			deck_y = FormEffects.ground_at(self, nxt2).y
 		step = Vector3(step.x, deck_y - from.y, step.z)
+	# a teammate held in a bind or a float on its way is freed (BendStatus.rescue: it passes through him, as through allies)
+	_rescue_on(from, from + step)
 	# the others met on the way (bolts, zones)
 	_meet_bolts()
 	if spent:
@@ -700,6 +702,23 @@ func wear(w: FormRaised, at: Vector3) -> void:
 		w.apply_hit(maxf(w.hit_min, damage), at, velocity.normalized())
 	if is_instance_valid(w):
 		w.set_meta(&"bend_wear", acc)
+
+
+## A teammate of its caster held in a bind or a float within its reach of its path this step (`a` to `b`) is freed (the owner
+## 2026-10-11: allies "break binds to protect them"; BendStatus.rescue). Only a held one is looked at.
+func _rescue_on(a: Vector3, b: Vector3) -> void:
+	var by := _by()
+	if by == null or not is_inside_tree():
+		return
+	var tree := get_tree()
+	for n in tree.get_nodes_in_group(NpcFighter.GROUP) + tree.get_nodes_in_group(&"player"):
+		if n == by or not (n is Node3D) or not (BendStatus.bound(n) or BendStatus.floating(n)):
+			continue
+		var c := (n as Node3D).global_position + Vector3.UP * 0.9
+		var ab := b - a
+		var u := clampf((c - a).dot(ab) / maxf(ab.length_squared(), 1e-6), 0.0, 1.0)
+		if c.distance_to(a + ab * u) <= radius + 0.7:
+			BendStatus.rescue(n, by)
 
 
 func _meet_bolts() -> void:

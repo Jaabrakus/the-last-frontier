@@ -203,6 +203,18 @@
 			"up": 2.0,
 			"width": 2.2
 		},
+		"fire_jab/air_hit": {
+			"damage": 8.0,
+			"gravity": 1.5,
+			"height": 0.9,
+			"knock": 6.0,
+			"lock_s": 0.3,
+			"mps": 30.0,
+			"radius": 0.26,
+			"range": 18.0,
+			"up": 1.0,
+			"width": 2.2
+		},
 		"fire_jets/dash": {
 			"under": 0.0,
 			"v_flat": 15.0,

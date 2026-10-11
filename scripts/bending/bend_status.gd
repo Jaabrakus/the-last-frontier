@@ -44,9 +44,14 @@ const STOCK_HIT_META := &"bend_stock_hit"
 ## the burrow under the stones, the guard's last result, the last blow's cost).
 const ROUND_METAS: Array[StringName] = [&"bend_root", &"bend_slow", &"bend_anchor", &"bend_redirect_lightning",
 		&"bend_brace", &"bend_dazzle_until", &"bend_whiff_until", &"bend_carry_until", &"bend_under_until",
-		&"bend_last_guard", &"bend_hit_lock_s", &"bend_dash_end", &"bend_slip_until", &"bend_bind_memo"]
+		&"bend_last_guard", &"bend_hit_lock_s", &"bend_dash_end", &"bend_slip_until", &"bend_bind_memo", &"bend_float",
+		&"bend_float_memo", &"bend_drench", &"bend_drench_memo"]
 ## A bind's memory on the bound body: {at: the game time of the last bind tried on him, k: what that one held, as a share}.
 const BIND_MEMO_META := &"bend_bind_memo"
+## A knock-up's float on the floating body: {from, until (game s: the hold near the top), fall (m/s while held)}; and its
+## memory as a bind's (FLOAT_MEMO_META).
+const FLOAT_META := &"bend_float"
+const FLOAT_MEMO_META := &"bend_float_memo"
 
 ## Roots and slows left alone because their body casts as an element (the tests).
 static var held_off := 0
@@ -334,6 +339,146 @@ static func unbind(n: Node) -> void:
 ## Whether `n`'s feet are held now (a bind, or a root in the open world).
 static func bound(n: Node) -> bool:
 	return until(n, &"bend_root") > 0.0
+
+
+## A knock-up's float (RingRules.on_hit, a class's float_s; the owner 2026-10-11: a helpless float, his teammates may free him):
+## `n` held near the top of his launch, from `rise` s from now, for `s` x what his last floats have left (rules.json stock.float:
+## x decay within memory_s of the last, none under floor_s), falling only fall_mps meanwhile (RingMoves). Helpless: on_hit
+## runs his hitstun through it and BendKnock.can_escape says no while it lasts. A Wind Prison catches with a rise of 0 (held
+## where he is). Returns the seconds held (0 none).
+static func float_up(n: Node, rise: float, s: float) -> float:
+	if n == null or not is_instance_valid(n) or s <= 0.0:
+		return 0.0
+	var b := RingRules.stock_block("float")
+	var t := now()
+	var memo: Variant = n.get_meta(FLOAT_MEMO_META, {})
+	var k := 1.0
+	if memo is Dictionary and t - float((memo as Dictionary).get("at", -INF)) < float(b.get("memory_s", 6.0)):
+		k = float((memo as Dictionary).get("k", 1.0)) * float(b.get("decay", 0.6))
+	n.set_meta(FLOAT_MEMO_META, {"at": t, "k": k})
+	var held := s * k
+	if held < float(b.get("floor_s", 0.2)):
+		return 0.0
+	var from := t + maxf(rise, 0.0)
+	n.set_meta(FLOAT_META, {"from": from, "until": from + held, "fall": float(b.get("fall_mps", 0.5))})
+	return held
+
+
+## Whether `n` is in a knock-up's float now: from the hit through its hold near the top.
+static func floating(n: Node) -> bool:
+	if n == null or not is_instance_valid(n) or not n.has_meta(FLOAT_META):
+		return false
+	return now() < float((n.get_meta(FLOAT_META) as Dictionary).get("until", -INF))
+
+
+## The fall speed `n` is held at now (m/s, RingMoves' air step), or -1 when his float is not holding him now (not floating, or
+## still rising to its top).
+static func float_fall(n: Node) -> float:
+	if n == null or not is_instance_valid(n) or not n.has_meta(FLOAT_META):
+		return -1.0
+	var f: Dictionary = n.get_meta(FLOAT_META)
+	var t := now()
+	if t >= float(f.get("until", -INF)):
+		n.remove_meta(FLOAT_META)
+		return -1.0
+	return float(f.get("fall", 0.5)) if t >= float(f.get("from", INF)) else -1.0
+
+
+## `n`'s float over now (a launch replaces it: RingRules.on_hit); `free`: his hitstun ends with it too (a teammate freed him:
+## rescue).
+static func unfloat(n: Node, free := false) -> void:
+	if n == null or not is_instance_valid(n) or not n.has_meta(FLOAT_META):
+		return
+	n.remove_meta(FLOAT_META)
+	if free:
+		var kn := BendKnock.peek(n)
+		if kn != null:
+			kn.end_stun()
+
+
+## A teammate's bend reaching `n` (the owner 2026-10-11: "we should allow other players to send walls or break binds to protect
+## them"): a bind on him broken, a float he is held in ended and his hitstun with it (he falls, free). True when it freed him.
+## BendBolt (a bolt passing through him), the cones, the Column and the Geyser (their reach). Never a wall: walls are raised
+## before him to shield him (float_cover), the owner: "no walls can be placed in front of them".
+static func rescue(n: Node, by: Node) -> bool:
+	if n == null or not is_instance_valid(n) or by == null or not is_instance_valid(by) or n == by:
+		return false
+	if not BendCaster.same_team(n, by):
+		return false
+	var freed := false
+	if bound(n):
+		unbind(n)
+		freed = true
+	if floating(n):
+		unfloat(n, true)
+		freed = true
+	if freed and n is Node3D:
+		BendLooks.burst((n as Node3D).global_position + Vector3.UP * 0.8, BendPoses.element_of(by), 14)
+	return freed
+
+
+## Drenched (a skill tree twist's hit, the hit's drench_s: Drenching Wave; the owner 2026-10-11: "water should be able slowdown
+## maybe implement slows", his answer: as a twist, about 30% slower for 1.5 s, aim untouched, weaker each time): `n`'s run and
+## his drift in the air at rules.json stock.drench.k of their speed for `s` x what his last soakings left (x decay within
+## memory_s, none under floor_s); his dashes, aim, casts and guard as ever. Returns the seconds it lasts (0 none).
+static func drench(n: Node, s: float) -> float:
+	if n == null or not is_instance_valid(n) or s <= 0.0 or not can_take(n, null):
+		return 0.0
+	var b := RingRules.stock_block("drench")
+	var t := now()
+	var memo: Variant = n.get_meta(&"bend_drench_memo", {})
+	var k := 1.0
+	if memo is Dictionary and t - float((memo as Dictionary).get("at", -INF)) < float(b.get("memory_s", 6.0)):
+		k = float((memo as Dictionary).get("k", 1.0)) * float(b.get("decay", 0.6))
+	n.set_meta(&"bend_drench_memo", {"at": t, "k": k})
+	var held := s * k
+	if held < float(b.get("floor_s", 0.3)):
+		return 0.0
+	n.set_meta(&"bend_drench", {"until": maxf(t + held, float(drench_left(n)) + t), "mult": float(b.get("k", 0.7))})
+	if n is Node3D:
+		BendLooks.drench(n as Node3D, held)
+	return held
+
+
+## Seconds `n` stays drenched (0 none).
+static func drench_left(n: Node) -> float:
+	if n == null or not is_instance_valid(n) or not n.has_meta(&"bend_drench"):
+		return 0.0
+	return maxf(float((n.get_meta(&"bend_drench") as Dictionary).get("until", -INF)) - now(), 0.0)
+
+
+## The share of his speed `n` runs at now (1: not drenched).
+static func drench_mult(n: Node) -> float:
+	if drench_left(n) <= 0.0:
+		return 1.0
+	return float((n.get_meta(&"bend_drench") as Dictionary).get("mult", 0.7))
+
+
+## How tall a wall `by` raises at `at` must stand to shield a teammate floating within `r` of it (m over `at`: his feet's height
+## and 2 m more; 0 when none floats there). The owner 2026-10-11: walls are "placed in front of them", and "a earth wall can fly
+## up there": a wall raised before a floating teammate rises to cover him (FormEffects.earth_wall, BendEffects._wall).
+static func float_cover(by: Node, at: Vector3, r := 3.0) -> float:
+	if by == null or not is_instance_valid(by) or not by.is_inside_tree():
+		return 0.0
+	var tree := by.get_tree()
+	var h := 0.0
+	for b in tree.get_nodes_in_group(NpcFighter.GROUP) + tree.get_nodes_in_group(&"player"):
+		if b == by or not (b is Node3D) or not floating(b) or not BendCaster.same_team(b, by):
+			continue
+		var q := (b as Node3D).global_position
+		if Vector2(q.x - at.x, q.z - at.z).length() <= r:
+			h = maxf(h, q.y - at.y + 2.0)
+	return h
+
+
+## Every teammate of `by` within `r` of `at` freed (rescue): an area cast's reach.
+static func rescue_near(by: Node, at: Vector3, r: float) -> void:
+	if by == null or not is_instance_valid(by) or not by.is_inside_tree():
+		return
+	var tree := by.get_tree()
+	for b in tree.get_nodes_in_group(NpcFighter.GROUP) + tree.get_nodes_in_group(&"player"):
+		if b is Node3D and (bound(b) or floating(b)) and (b as Node3D).global_position.distance_to(at) <= r + 0.5:
+			rescue(b, by)
 
 
 ## `n` slowed to SLOW_MPS for `s`. Never on one who casts as an element (held_off).

@@ -159,6 +159,8 @@ static func earth_wall(c: Variant, at: Vector3, d: Dictionary, matter := "", tre
 	var across := Vector3.UP.cross(way).normalized()
 	var xf := Transform3D(Basis(across, Vector3.UP, way), foot)
 	var scn := tree.current_scene
+	# (raised before a floating teammate it rises to cover him: BendStatus.float_cover)
+	wn["height_m"] = maxf(float(wn.get("height_m", 2.0)), BendStatus.float_cover(bc.body, foot))
 	var r := FormRaised.raise(scn, "wall", xf, wn, absi(hash(foot)) % 97)
 	_mark(r, bc)
 	FormRaised.count_wall(r)                            # (the ring's cap: rules.json max_walls)

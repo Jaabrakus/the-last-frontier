@@ -31,10 +31,12 @@ const BOXING_LIB := "res://animations_extra/Frontier_Style_Boxing.res"
 ## Since 2026-10-11 also fire's Storm twist Lightning Pistol (the owner's "have this or that": its own pose, a quicker charge and
 ## a longer flash), live on the owner's word for him to try, and the nine nodes the class numbers made whole (a change
 ## class:<tag>+<variant>.<key>: the % ring class of the wearer's own hits; the owner on the tree: "fix it"), live unsoaked,
-## and the four binds the same day (a spec key Classic lacks, bind_s, from none; tests/ring/test_binds.gd plays them).
+## and the four binds the same day (a spec key Classic lacks, bind_s, from none; tests/ring/test_binds.gd plays them), with Wind
+## Prison and Drenching Wave (prison_s, drench_s; tests/ring/test_knockups.gd plays them).
 const CLASS_NODES := ["earth.fissure.deep", "water.spear.cold_hands", "water.spear.heavy", "water.downpour.pooling", "fire.punch.snap",
 		"fire.lightning.short_fuse", "fire.embers.tight", "air.palm.shoving", "air.gust.rising"]
-const BIND_NODES := ["earth.column.grip", "water.geyser.frost", "fire.lightning.shock", "air.pull.trip"]
+const BIND_NODES := ["earth.column.grip", "water.geyser.frost", "fire.lightning.shock", "air.pull.trip", "air.wall.prison",
+		"water.wave.drench"]
 const LIVE := ["air.ball.dense", "air.gust.full_sail", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick",
 		"earth.wall.thick", "water.wall.thick_ice", "fire.lightning.pistol"] + CLASS_NODES + BIND_NODES
 const ON_NOW := ["air.ball.dense", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick", "fire.lightning.pistol"] + CLASS_NODES \

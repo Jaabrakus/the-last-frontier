@@ -90,6 +90,10 @@ var t := 0.0
 var took := 0
 ## What burns in it goes out (the spray); how many it has put out.
 var put_out := false
+## A Wind Prison (a skill tree twist on the Wind Wall, spec prison_s; the owner 2026-10-11: "air should have air prisons where they
+## can catch someone mid flight"): whoever it touches in the air is held inside it for this long, helpless (BendStatus.float_up);
+## it turns no shot aside. 0: a plain Wind Wall.
+var prison_s := 0.0
 var put_out_n := 0
 ## The stones a guard caught or dropped from stone bolts (FormStone), for the tests.
 var stones: Array[FormStone] = []
@@ -113,6 +117,7 @@ var _popped := {}
 var _tick := 0.0
 var _fx: Array[Node] = []
 var _pushed := {}                  ## a wind wall: body id -> when it last pushed it back (BendStatus.now())
+var _caught := {}                  ## a Wind Prison: body id -> true once it has caught him (_imprison)
 
 
 static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_way := Vector3.FORWARD) -> BendZone:
@@ -127,6 +132,7 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	z.damage_s = float(spec.get("damage_s", 0.0))
 	z.speed = float(spec.get("mps", 0.0))
 	z.put_out = bool(spec.get("put_out", false))
+	z.prison_s = float(spec.get("prison_s", 0.0))
 	if not BendR3.cur.is_empty():
 		z.info = BendR3.cur.duplicate()
 	if R2_GUARDS.has(p_kind) and BendStatus.element_mode(by):
@@ -456,11 +462,16 @@ func _physics_process(dt: float) -> void:
 ## A wind wall's push: whoever walks into it is pushed back the way he came (off its near face, WIND_WALL_KNOCK), once a
 ## PUSH_EVERY_S each (every frame looked at: a man running through crosses it in a few).
 func _wind_push() -> void:
-	for e in BendCaster.near(owner_node, global_position, size.x * 0.6 + 1.0):
+	# (a Wind Prison's tall wall looked over from its middle: whoever floats near its top is within near()'s 3 m of it)
+	var at := global_position + (Vector3.UP * size.y * 0.5 if prison_s > 0.0 else Vector3.ZERO)
+	for e in BendCaster.near(owner_node, at, size.x * 0.6 + 1.0):
 		var n: Node3D = e[0]
 		if not inside(n.global_position):
 			continue
 		var id := n.get_instance_id()
+		if prison_s > 0.0 and n is CharacterBody3D and not (n as CharacterBody3D).is_on_floor():
+			_imprison(n)
+			continue
 		if BendStatus.now() - float(_pushed.get(id, -INF)) < PUSH_EVERY_S:
 			continue
 		_pushed[id] = BendStatus.now()
@@ -560,7 +571,7 @@ func on_bolt(b: BendBolt) -> bool:
 				SbFx.fire(owner_node, SbFx.key_of(info), "blown", {"at": b.global_position, "dir": b.velocity})
 				return true
 		"wind_wall":
-			if b.kind in LIGHT and not b.guarded_by.has(get_instance_id()):
+			if b.kind in LIGHT and not b.guarded_by.has(get_instance_id()) and prison_s <= 0.0:
 				# (blown up and aside, not sent back: up over the wall and off to the side it was nearer)
 				b.guarded_by.append(get_instance_id())
 				var across := global_basis.x.normalized()
@@ -600,6 +611,26 @@ func on_bolt(b: BendBolt) -> bool:
 				took += 1
 				return true
 	return false
+
+
+## A Wind Prison's catch (prison_s): `n`, in the air inside it, held where he is for prison_s x what his last floats left
+## (BendStatus.float_up with no rise: it shares a knock-up float's memory), helpless (his hitstun covers it), still, once a
+## wall (a push of it on the ground before does not count). Its look round him: BendLooks.prison, wind bands round his middle.
+func _imprison(n: Node3D) -> void:
+	var id := n.get_instance_id()
+	if _caught.has(id):
+		return
+	_caught[id] = true
+	var held := BendStatus.float_up(n, 0.0, prison_s)
+	if held <= 0.0:
+		return
+	var kn := BendKnock.of(n)
+	if kn != null:
+		kn.stun_t = maxf(kn.stun_t, held)
+		kn.scale_carry(0.0)                      # (held where he is: the knock's carry stopped)
+	if n is CharacterBody3D:
+		(n as CharacterBody3D).velocity = Vector3.ZERO
+	BendLooks.prison(n, held)
 
 
 func _send_back(b: BendBolt) -> void:

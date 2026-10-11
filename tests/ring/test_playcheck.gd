@@ -215,9 +215,10 @@ func _stock_match() -> void:
 	var out := (a.axis() * RingArena.side_sign(e)).normalized()
 	player.global_position = a.to_global(Vector3(RingArena.side_sign(e) * (a.half_l() - 1.0), a.top() + 0.1, 0.0))
 	await _secs(0.2)
-	# (a real hit of the foe's, its Shove at 45%: launched over the end, 5-7 m out past the lip)
+	# (a real hit of the foe's, its held Fissure at 45%: launched over the end, 5-7 m out past the lip; the tapped one is a
+	# knock-up since 2026-10-11, straight up: docs/tidebreak/knockups_2026-10-11.md)
 	RingRules.current().reset_pct(player, 45.0)
-	BendStatus.knock(player, out * 9.0 + Vector3.UP * 4.0, mode.foe, {"tag": "earth_shove/push", "from": player.global_position - out * 3.0})
+	BendStatus.knock(player, out * 9.0 + Vector3.UP * 4.0, mode.foe, {"tag": "earth_shove/push.grown", "from": player.global_position - out * 3.0})
 	await _until(func() -> bool: return moves.off_deck(), 2.0)
 	await _until(func() -> bool: return not RingRules.current().stunned(player), 2.0)
 	# (he looks at the deck, then holds W: camera-relative, toward it)

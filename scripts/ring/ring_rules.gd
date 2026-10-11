@@ -1184,6 +1184,11 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	var res := {"none": true, "d": d_add, "tag": String(cls.tag)}
 	if not first or bool(cls.get("no_flinch", false)):
 		return res
+	# drenched (a skill tree twist's hit, info.drench_s: BendStatus.drench): he runs slower a while, the hit's launch as ever; a
+	# late guard halves it
+	var drench_s := float(info.get("drench_s", 0.0))
+	if drench_s > 0.0 and not returned:
+		res["drench_s"] = BendStatus.drench(n, drench_s * (stock_num("late_mult", 0.5) if late else 1.0))
 	# a bind (a skill tree twist's hit, info.bind_s: BendStatus.bind): his feet held, no launch, no hitstun, no string hit; a
 	# late guard halves it
 	var bind_s := float(info.get("bind_s", 0.0))
@@ -1281,11 +1286,21 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	if not tumble and on_floor and not lying:
 		sv.y = 0.0
 	var refresh := tumble and not bool(cls.get("set", false)) and not bool(cls.get("slam", false)) and not late
+	# a knock-up's float (the class's float_s: the Column, the Geyser, the tapped Fissure and Kick; the owner 2026-10-11:
+	# "knockups ... where they float for a time period", a helpless float): held near the top for it, his hitstun running
+	# through the rise and the float with no escape (BendStatus.float_up); any launch ends a float he was in
+	BendStatus.unfloat(n)
+	var fl := float(cls.get("float_s", 0.0))
+	if fl > 0.0 and tumble and sv.y > 0.0 and not late and not lying:
+		var rise := sv.y / maxf(BendKnock.launch_gravity(), 1.0)
+		var held_f := BendStatus.float_up(n, rise, fl)
+		if held_f > 0.0:
+			stun = maxf(stun, rise + held_f)
 	if by != null:
 		st["last_by"] = by
 	launched.emit(n, sv, stun, by, String(cls.tag))
 	return {"none": false, "v": sv, "hitstun_s": stun, "tumble": tumble, "refresh": refresh, "d": d_add, "tag": String(cls.tag),
-			"lying": lying}
+			"lying": lying, "drench_s": float(res.get("drench_s", 0.0))}
 
 
 ## An untagged hit's class (no tag, or a tag with no class): its d by the curve, a launch from the caller's own knock speed

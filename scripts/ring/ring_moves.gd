@@ -508,6 +508,8 @@ func _step_free(dt: float) -> void:
 func _ground_physics(dt: float, stun: bool) -> void:
 	var mv := _move_vec()
 	var spd := num("physics", "sprint", 6.5) if _b("sprint") else num("physics", "run", 5.0)
+	if not virtual:
+		spd *= BendStatus.drench_mult(body)          # (drenched: slower a while, BendStatus.drench)
 	spd = minf(spd, _speed_cap())
 	var target := mv * spd
 	if _crouch or _lag > 0.0 or stun or _guard_zone():
@@ -526,6 +528,8 @@ func _air_physics(dt: float, stun: bool, mult: float) -> void:
 	var el := _el()
 	var d := drift_of(el)
 	var drift := d.x * mult * (num("rise", "helpless_drift", 0.6) if _helpless else 1.0)
+	if not virtual:
+		drift *= BendStatus.drench_mult(body)        # (drenched: slower a while, BendStatus.drench)
 	var mv := _move_vec()
 	var flat := Vector3(_o.x, 0.0, _o.z)
 	if not stun:
@@ -546,6 +550,13 @@ func _air_physics(dt: float, stun: bool, mult: float) -> void:
 	# (the step moves at the frame's mean fall speed, so a jump's arc is exact at every frame: 2.0 m is 2.0 m at any rate)
 	if is_equal_approx(_o.y, vy0 - gravity() * dt):
 		_g_corr = gravity() * dt * 0.5
+	# (a knock-up's float: held near the top of the launch, sinking only its fall_mps till it ends; BendStatus.float_up. His
+	# hitstun covers it: no steering, no jump, no cast)
+	if not virtual:
+		var fall := BendStatus.float_fall(body)
+		if fall >= 0.0:
+			_o.y = -fall
+			_g_corr = 0.0
 
 
 ## Space: on the deck the jump (the short hop within hop_cast_s after a cast's release); in the air the double jump, else

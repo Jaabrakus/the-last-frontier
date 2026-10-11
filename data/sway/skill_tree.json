@@ -818,22 +818,16 @@
         "expert:earth_shove",
         "teacher:earth"
        ],
-       "effect": "Your Fissure runs 14.5 m/s (from 17) but throws him at 55 deg (from 40), grown too: slower to reach him and easier to jump, but he goes up more than out. It rings out later and sets up your air game.",
+       "effect": "Your Fissure runs 14.5 m/s (from 17), and held long it throws him at 55 deg (from 40), so he goes up more than out. Slower to reach him and easier to jump, it rings him out later but sets up your air game. (Tapped, every Fissure knocks him straight up.)",
        "plus": "throws him up",
        "minus": "runs slower",
-       "help": "A slower Fissure that throws him up instead of out.",
+       "help": "A slower Fissure whose held throw sends him up instead of out.",
        "answer": "Same crack, same answers: jump it, guard it or wall it.",
        "changes": [
         {
          "path": "spec:earth_shove/push.mps",
          "from": 17.0,
          "to": 14.5
-        },
-        {
-         "path": "class:earth_shove/push+deep.angle",
-         "from": 40,
-         "to": 55,
-         "base_tag": "earth_shove/push"
         },
         {
          "path": "class:earth_shove/push.grown+deep.angle",
@@ -852,7 +846,7 @@
          }
         ]
        },
-       "identity": "pass: the same crack, lane and answers; it throws him higher, so it rings out later"
+       "identity": "pass: the same crack, lane and answers; its held throw sends him higher, so it rings out later"
       },
       {
        "id": "earth.fissure.fault_line",
@@ -3241,6 +3235,45 @@
        },
        "answer": "Same cone and answers; the caster comes 3 m closer.",
        "identity": "pass: the same cone; you move with it (deck only, so no change to recovery)"
+      },
+      {
+       "id": "water.wave.drench",
+       "name": "Drenching Wave",
+       "kind": "variation",
+       "chip": "2",
+       "extends_move": "wave",
+       "mode": "push",
+       "requires": [],
+       "ring_cost": 2,
+       "ring_legal": true,
+       "world_gate": [
+        "expert:wave",
+        "teacher:water"
+       ],
+       "effect": "Your Wave soaks whoever it reaches: he runs 30% slower for 1.5 s (his aim, casts, guard and dashes as ever; each soaking within 6 s of the last on him lasts less). It pushes softer: base 6.5 (from 7.5).",
+       "plus": "he runs 30% slower 1.5 s",
+       "minus": "pushes softer",
+       "help": "Your Wave soaks him: he runs slower for a moment.",
+       "answer": "Dash or guard it; soaked, dash out (dashes are not slowed).",
+       "owner_words": "2026-10-11: \"water should be able slowdown maybe implement slows\"; his answer: drenched, as a twist",
+       "changes": [
+        {
+         "path": "spec:wave/push.drench_s",
+         "from": null,
+         "to": 1.5
+        },
+        {
+         "path": "class:wave/push+drench.base",
+         "from": 7.5,
+         "to": 6.5,
+         "base_tag": "wave/push"
+        }
+       ],
+       "visual": {
+        "kind": "body",
+        "look": "water dripping off him while he is soaked"
+       },
+       "identity": "pass: the same wave, lane and answers; it soaks where it pushed harder"
       },
       {
        "id": "water.geyser.twin",
@@ -7694,6 +7727,44 @@
         "air.set.frostwind",
         "air.frost.blizzard"
        ]
+      },
+      {
+       "id": "air.wall.prison",
+       "name": "Wind Prison",
+       "kind": "variation",
+       "chip": "4",
+       "extends_move": "air_wall",
+       "mode": "wall",
+       "requires": [],
+       "ring_cost": 2,
+       "ring_legal": true,
+       "world_gate": [
+        "expert:air_wall",
+        "teacher:air"
+       ],
+       "effect": "Your Wind Wall rises 4.5 m (from 2.5) and becomes a prison for anyone in the air: whoever it touches mid-flight, a jump or a knock-up's float, is caught and held inside it for 1 s, helpless (each hold within 6 s of the last on him, a knock-up's float included, holds for less; a teammate's move that reaches him frees him). Anyone on the ground it still pushes back, but it turns no shot aside.",
+       "plus": "holds him in the air 1 s",
+       "minus": "turns no shot aside",
+       "help": "Your Wind Wall rises tall and catches anyone in the air, holding him there.",
+       "answer": "Keep your feet on the ground near it, or let a teammate's move free you.",
+       "owner_words": "2026-10-11: \"air should have air prisons where they can catch someone mid flight\"; his answer: as a skill tree twist; \"wind prison only works if someone is in the air or knocked up\"",
+       "changes": [
+        {
+         "path": "spec:air_wall/wall.prison_s",
+         "from": null,
+         "to": 1.0
+        },
+        {
+         "path": "spec:air_wall/wall.height_m",
+         "from": 2.5,
+         "to": 4.5
+        }
+       ],
+       "visual": {
+        "kind": "zone",
+        "look": "a ball of spinning wind he hangs in"
+       },
+       "identity": "pass: the same wall where it is placed; it holds what flies into it instead of turning it aside"
       },
       {
        "id": "air.slot.dust",

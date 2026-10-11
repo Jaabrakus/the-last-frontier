@@ -1126,6 +1126,7 @@
       "self_lock": true,
       "modes": ["embers"],
       "mode_labels": {"embers": "Embers"},
+      "_air_fireball": "2026-10-11, the owner: \"for the jump left click for fire it should shoot a fire ball\", then \"the fire air jab was like a drop kick right\": the Flare Kick keeps its drop kick and the kick throws a small fireball from the foot along the aim (the bolt leaves at the clip's strike, from its limb: SwayPose.strike_point); its % class is the air hit's own (rules.json fire_jab/air_hit).",
       "bend": {
         "embers": {
           "do": "bolt",
@@ -1140,7 +1141,7 @@
           "air": "air_hit"
         },
         "pop": {"as": "embers"},
-        "air_hit": {"do": "air_hit", "kind": "fire", "label": "Flare Kick", "reach_m": 1.6, "radius_m": 1.0, "active_s": 0.1, "damage": 8.0, "knock_mps": 6.0, "angle_deg": 35.0, "set_stun": 0.3, "class_hint": {"d": 4, "set": 6.0, "angle": 35, "set_stun": 0.3}},
+        "air_hit": {"do": "bolt", "kind": "fire", "label": "Flare Kick", "mps": 30.0, "gravity": 1.5, "damage": 8.0, "knock_mps": 6.0, "up_mps": 1.0, "radius_m": 0.26, "range_m": 18.0, "set_stun": 0.3, "class_hint": {"d": 4, "set": 6.0, "angle": 35, "set_stun": 0.3}},
         "jab": {"do": "cone", "kind": "fire", "range_m": 3.0, "deg": 40.0, "damage": 12.0, "knock_mps": 4.0},
         "double_jab": {
           "do": "bolt",
@@ -1229,6 +1230,7 @@
       "modes": ["kick", "high_kick"],
       "mode_labels": {"kick": "Kick", "high_kick": "High Kick"},
       "mode_lock_s": {"high_kick": 0.85, "air_kick": 0.85, "slam": 0.3},
+      "_high_kick_blast": "2026-10-11, the owner: \"the high kick we have to make it not like a arch bomb throw but make it a speedy blast\": straight along the aim (as the air kick always flew), 40 m/s (from 22, with 9 m/s2 of drop).",
       "bend": {
         "kick": {
           "do": "floor_wave",
@@ -1251,10 +1253,11 @@
           "kind": "fire",
           "shape": "crescent",
           "flight": "point_first",
+          "straight": true,
           "width_m": 1.6,
           "radius_m": 0.4,
-          "mps": 22.0,
-          "gravity": 9.0,
+          "mps": 40.0,
+          "gravity": 0.0,
           "damage": 16.0,
           "knock_mps": 5.0,
           "up_mps": 4.0,

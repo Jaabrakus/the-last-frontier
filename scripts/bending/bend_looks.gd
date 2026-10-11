@@ -1390,6 +1390,55 @@ static func bind_feet(body: Node3D, el: String, s: float) -> void:
 					Vector3.ZERO, 1.0, {"r": 0.4})
 
 
+## A Wind Prison's hold round `body` for `s` (BendZone._imprison): a whirl of wind bands round his middle (BindLook "prison"), a
+## puff of air about him for the hold.
+static func prison(body: Node3D, s: float) -> void:
+	if not live() or body == null or not is_instance_valid(body):
+		return
+	BindLook.make(body, "prison", s)
+	var pool := _pool()
+	if pool != null:
+		pool.shoot("puff_air", body.global_position + Vector3.UP * 0.9, 12, Vector3.UP, 180.0, Vector2(0.4, 1.0), Vector2(0.3, 0.5),
+				s, Vector3.ZERO, 1.0, {"r": 0.6})
+
+
+## Drenched (BendStatus.drench) for `s`: water dripping off `body` the while (Drip: a few drops every DRIP_S from his shoulders
+## and arms, falling).
+static func drench(body: Node3D, s: float) -> void:
+	if not live() or body == null or not is_instance_valid(body):
+		return
+	for c in body.get_children():
+		if c is Drip:
+			(c as Drip).life = maxf((c as Drip).life, (c as Drip).t + s)
+			return
+	var d := Drip.new()
+	d.name = "Drip"
+	d.life = s
+	body.add_child(d)
+
+
+class Drip:
+	extends Node3D
+
+	const DRIP_S := 0.12
+	var life := 1.5
+	var t := 0.0
+	var _next := 0.0
+
+	func _process(dt: float) -> void:
+		t += dt
+		_next -= dt
+		if _next <= 0.0:
+			_next = DRIP_S
+			var pool := BendLooks._pool()
+			var p := get_parent() as Node3D
+			if pool != null and p != null:
+				pool.shoot("drop", p.global_position + Vector3.UP * randf_range(0.6, 1.5), 4, Vector3.DOWN, 25.0, Vector2(0.5, 1.5),
+						Vector2(0.04, 0.08), 0.45, Vector3(0, -9.0, 0), 0.0, {"r": 0.25})
+		if t >= life:
+			queue_free()
+
+
 ## The hold on `body`'s feet broken early (a hit that launched him: BendStatus.unbind): its look breaks up at once, a puff
 ## where it held.
 static func bind_end(body: Node3D) -> void:
@@ -1510,6 +1559,14 @@ class BindLook:
 					add_child(m)
 					arcs.append(m)
 				_arcs()
+			"prison":
+				# (a Wind Prison: three of the Wind Ball's spinning bands round his middle, tilted every way, a ball of wind he
+				# hangs in)
+				for i in 3:
+					var b := Basis(Vector3.UP, rng.randf() * TAU) * Basis(Vector3.RIGHT, deg_to_rad(-35.0 + 35.0 * i))
+					var band := _add(ToonFx.band_mesh(1.0, 0.85, 0.5), ToonFx.mat("wind_band_fast"),
+							Transform3D(b.scaled(Vector3.ONE * (0.72 + 0.06 * i)), Vector3.UP * 0.95))
+					band.set_instance_shader_parameter(&"seed", 0.29 * i + rng.randf())
 			_:
 				# (a whirl of wind round the legs: two of the Wind Ball's own spinning bands, tilted, the wind shader's noise
 				# breaking them up so they read as wind, never as a clean ring drawn round him)

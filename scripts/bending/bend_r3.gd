@@ -112,6 +112,8 @@ static func info_for(c: Variant, m: String, mode: String, grown := false, spec :
 		out["set_stun"] = float(spec.set_stun)
 	if float(spec.get("bind_s", 0.0)) > 0.0:
 		out["bind_s"] = float(spec.bind_s)            # (a bind twist's hit: the feet held, no launch; RingRules.on_hit)
+	if float(spec.get("drench_s", 0.0)) > 0.0:
+		out["drench_s"] = float(spec.drench_s)        # (Drenching Wave's hit: he runs slower a while; RingRules.on_hit)
 	return out
 
 
