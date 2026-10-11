@@ -173,8 +173,9 @@ func _static_checks() -> void:
 	# reflect the inherited October 2026 balance data; they are not generated from the implementation under test.
 	var table := {"stone_form/spike": [7.850, 16.634, 25.418], "water_whip/whip": [5.592, 12.204, 18.816], "fire_blast/punch": [6.756, 15.381, 24.006],
 			"air_blast/slice": [4.902, 13.092, 21.282], "stone_form/cannonball": [9.792, 18.762, 27.732], "ice/spear": [7.048, 14.968, 22.888],
-			"fire_blast/punch.grown": [9.760, 21.640, 33.520], "fire_arc/lightning": [12.194, 24.899, 37.604], "air_blast/ball": [9.848, 19.928, 30.008],
-			"earth_shove/push": [9.036, 19.476, 29.916]}   # (the Fissure's class since 2026-10-11: d 14, base 6.6, growth 14.5)
+			"fire_blast/punch.grown": [9.760, 21.640, 33.520], "fire_arc/lightning": [12.194, 24.899, 37.604], "air_blast/ball": [9.675, 18.810, 27.945],
+			"earth_shove/push": [9.036, 19.476, 29.916]}   # (the Fissure's class since 2026-10-11: d 14, base 6.6, growth 14.5;
+			# the Wind Ball's growth 16 -> 14.5 the same day: air led every screen, the Ball its finisher)
 	var ok_f := true
 	var ok_t := true
 	var worst := 0.0

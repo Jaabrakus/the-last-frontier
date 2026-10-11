@@ -89,7 +89,7 @@
 			"stone_form/spike.grown": {"d": 18.5, "base": 7.2, "growth": 13.8, "angle": 32},
 			"stone_form/cannonball.grown": {"d": 21.0, "base": 9.0, "growth": 13.0, "angle": 38},
 			"fire_arc/lightning": {"d": 25.0, "base": 6.9, "growth": 12.1, "angle": 30},
-			"air_blast/ball": {"d": 11.0, "base": 8.0, "growth": 16.0, "angle": 35},
+			"air_blast/ball": {"d": 11.0, "base": 8.0, "growth": 14.5, "angle": 35},
 			"earth_shove/push": {"d": 14.0, "base": 6.6, "growth": 14.5, "angle": 40},
 			"earth_shove/push.grown": {"d": 17.0, "base": 7.4, "growth": 15.5, "angle": 40},
 			"wave/push": {"d": 9.0, "base": 7.5, "growth": 12.5, "angle": 30},
