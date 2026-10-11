@@ -795,7 +795,9 @@ func _coach(dt: float) -> void:
 ## `b` can be fought now: a competitor able to fight, not out of the round (the zones) nor away (the % ring's water, a
 ## respawn, no lives left).
 func in_play(b: Variant) -> bool:
-	if not (b is Node3D) or not NpcSenses.can_fight(b) or rules.team_of(b as Node) < 0:
+	# (a side's list can still hold a fighter freed since — a team format's bot made again: `is` on it is a script error;
+	# RingSpectate walks those lists after the player's last life)
+	if not is_instance_valid(b) or not (b is Node3D) or not NpcSenses.can_fight(b) or rules.team_of(b as Node) < 0:
 		return false
 	return not rules.is_out(b as Node) and not (stock() and rules.is_away(b as Node))
 

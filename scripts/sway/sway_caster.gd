@@ -1959,7 +1959,8 @@ const WHY_DELAY_S := 0.35
 func _thread_end() -> Vector3:
 	if _q.has("point") and _alive(target):
 		var n: Variant = _q.get("node")
-		if n is Node and (n == target or target.is_ancestor_of(n)):
+		# (the aim's node can be gone since the query: a thrown stone bursts on what it meets and is freed)
+		if is_instance_valid(n) and n is Node and (n == target or target.is_ancestor_of(n)):
 			return _q.point
 	return locked_point()
 
