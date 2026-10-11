@@ -15,6 +15,7 @@ extends SceneTree
 ## lower body, the ring state, the knock; a bot's clip).
 ##   zsh tools/loop/godot_run.sh --headless --fixed-fps 60 --path . -s tools/anim/stretch_hunt.gd -- [elements=fire,earth,water,air]
 ##       [seconds=60] [seed=5100] [continuity=0]   (0: CharacterBodyMesh's twist bones as before their continuity, to compare)
+##       [cap=0]   (0: the twist bones turn any amount in a frame, as before CharacterBodyMesh.TWIST_STEP_MAX)
 ## Lines: STRETCH {json}, STRETCH_SUMMARY {json}, STRETCH HUNT DONE.
 
 const CaptureKit := preload("res://tools/ui_audit/capture_kit.gd")
@@ -55,8 +56,10 @@ var _frames := 0
 
 
 func _initialize() -> void:
-	var a := CaptureKit.args({"elements": ",".join(elements), "seconds": str(seconds), "seed": str(seed_n), "continuity": "1"})
+	var a := CaptureKit.args({"elements": ",".join(elements), "seconds": str(seconds), "seed": str(seed_n), "continuity": "1",
+			"cap": "1"})
 	CharacterBodyMesh.twist_continuity = String(a.continuity) != "0"
+	CharacterBodyMesh.twist_step_cap = String(a.cap) != "0"
 	elements = Array(String(a.elements).split(",", false))
 	seconds = float(a.seconds)
 	seed_n = int(a.seed)

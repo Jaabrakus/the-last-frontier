@@ -3299,8 +3299,13 @@ def _roll(kind):
         # (pass 3: the knees drawn together to the chest (f5-f7) and the hands kept by the ears, compact; the palms planted from
         # f7 and the head pitched further in, so the push lifts the hat clear of the deck)
         c["head"] = [(0, 0), (1, 10), (2, 24), (3, 34), (6, 48), (7, 65), (10, 65), (11, 35), (12, 18), (13, 8), (15, 3), (18, 0)]
-        c["knee_r"] = [(0, "auto"), (2, (-0.15, 0.0, 1.0)), (14, (-0.15, 0.0, 1.0)), (17, "auto")]
-        c["knee_l"] = [(0, "auto"), (2, (0.15, 0.0, 1.0)), (14, (0.15, 0.0, 1.0)), (17, "auto")]
+        # (2026-10-11, the owner's "elastic" glitch: the knees' way held straight ahead while the feet came up and round in
+        # front of the hips lay along the legs (its quality 0.24 at f4, 0.03 at f11) and the knees flipped side, the thighs
+        # turned 178 degrees in a frame: up and ahead to the chest while the legs are drawn in, as the forward roll's ball)
+        c["knee_r"] = [(0, "auto"), (2, (-0.15, 0.0, 1.0)), (4, BALL["knee_r"]), (11, BALL["knee_r"]), (13, (-0.15, 0.0, 1.0)),
+                       (14, (-0.15, 0.0, 1.0)), (17, "auto")]
+        c["knee_l"] = [(0, "auto"), (2, (0.15, 0.0, 1.0)), (4, _mx(BALL["knee_r"])), (11, _mx(BALL["knee_r"])), (13, (0.15, 0.0, 1.0)),
+                       (14, (0.15, 0.0, 1.0)), (17, "auto")]
         c["pole_r"] = [(0, STAND["pole_r"]), (2, (-1.0, 0.0, 0.4)), (5, (-0.6, 0.0, 1.0)), (11, (-0.6, 0.0, 1.0)),
                        (14, (-0.8, -0.5, -0.3)), (18, STAND["pole_r"])]
         c["pole_l"] = [(0, STAND["pole_l"]), (2, (1.0, 0.0, 0.4)), (5, (0.6, 0.0, 1.0)), (11, (0.6, 0.0, 1.0)),
@@ -3906,7 +3911,7 @@ def mirror_clip(clip):
     for key, keys in clip.items():
         if key in ("length", "meta", "mirror", "loop", "base", "twin_keys", "twin_ends", "twin_tail"):
             continue
-        if key in ("flip_turns", "bones", "hands_from", "floor", "lift", "substeps", "toes", "twin_start"):
+        if key in ("flip_turns", "bones", "hands_from", "floor", "lift", "substeps", "toes", "twin_start", "pole_guard"):
             out[key] = keys
             continue
         if key in ("yaw", "twist", "roll", "side", "look", "spin", "cart", "tilt", "barrel"):
@@ -4977,10 +4982,13 @@ def _getup():
         "heel_r": [(0, LIE["heel_r"]), (2, 40), (4, 50), (7, 40), (8, 24), (9, 8), (11, 0), (13, 0), (15, 6), (17, 0), (20, 0)],
         "heel_l": [(0, LIE["heel_l"]), (2, 40), (4, 50), (7, 40), (8, 24), (9, 8), (11, 0), (13, 0), (15, 6), (17, 0), (20, 0)],
         "fyaw_r": [(0, LIE["fyaw_r"]), (4, 6), (9, 10), (20, 7)], "fyaw_l": [(0, LIE["fyaw_l"]), (4, 6), (9, 10), (20, 7)],
-        "knee_r": [(0, LIE["knee_r"]), (2, (-0.2, 0.3, 1.0)), (7, (-0.2, 0.2, 1.0)), (9, (-0.35, 0.0, 1.0)), (13, (-0.3, 0.0, 1.0)),
-                   (17, "auto")],
-        "knee_l": [(0, LIE["knee_l"]), (2, (0.2, 0.3, 1.0)), (7, (0.2, 0.2, 1.0)), (9, (0.35, 0.0, 1.0)), (13, (0.3, 0.0, 1.0)),
-                   (17, "auto")],
+        # (2026-10-11, the owner's "elastic" glitch: the knees' way ahead lay along the legs piked back over the face (its
+        # quality 0.17 at f2) and the thighs turned 164 degrees in a frame as they whipped down: up across the coil, ahead
+        # again as the feet come down under him)
+        "knee_r": [(0, LIE["knee_r"]), (2, (-0.2, 1.0, 0.3)), (6, (-0.2, 1.0, 0.3)), (8, (-0.2, 0.2, 1.0)), (9, (-0.35, 0.0, 1.0)),
+                   (13, (-0.3, 0.0, 1.0)), (17, "auto")],
+        "knee_l": [(0, LIE["knee_l"]), (2, (0.2, 1.0, 0.3)), (6, (0.2, 1.0, 0.3)), (8, (0.2, 0.2, 1.0)), (9, (0.35, 0.0, 1.0)),
+                   (13, (0.3, 0.0, 1.0)), (17, "auto")],
     }
     return dict({"length": 20, "toes": "foot",
                  "meta": {"hold_s": 4 / FPS, "strike_s": 9 / FPS, "back_s": 11 / FPS, "hand": "both", "mask": "full", "root": "place",
@@ -6131,6 +6139,9 @@ SET8 = {
     # before him; back_s: opening
     "air_hit_earth": {
         "length": 18, "base": AIR, "mirror": True, "twin_ends": True,
+        # (no flip guard: the elbow is driven down onto the knee at the strike in two frames, a swing the guard would catch
+        # up on late and land the elbow 0.4 m off the knee; the skin's twist bones still turn at most their step a frame)
+        "pole_guard": False,
         "meta": {"hold_s": 2 / FPS, "strike_s": 4 / FPS, "back_s": 10 / FPS, "hand": "r", "mask": "full", "root": "place",
                  "legs_always": 1.0, "twin_ends": 1.0},
         "spin": [(0, 0), (1, -28), (2, -50), (3, -14), (4, 18), (5, 24), (6, 88), (7, 155), (8, 220), (9, 272), (10, 312),
@@ -6608,6 +6619,18 @@ SET10 = {
 CLIPS.update(SET10)
 
 
+## ---------------------------------------------------------------- the flip pass (2026-10-11, the owner: "sometime the body
+## like glitches it turns elastic"; "fix them"): knees and elbows flipped side in one frame where a pole lay near the limb's
+## line or the limb swung across it (tools/anim/stretch_hunt.gd, bend_smoothness.py: thighs and upper arms turned 140-178
+## degrees in a frame in the rolls, the get-ups, the double jump), and hands spun round on the forearm faster than a hand turns
+## (a facing keyed half a turn round within a frame), wringing the forearm's skin. Every clip but a loop now takes the flip
+## guard (rigkit.GUARD_DPS: a bend side the keys would flip swings round at POLE_GUARD_DPS instead); it never touches a side
+## that moves less than that, only the flips. A clip may refuse it ("pole_guard": False). The hands' rolls are left to the
+## keys: the skin's twist bones turn at most CharacterBodyMesh.TWIST_STEP_MAX a frame in the game, whatever the pose does
+## (a wrist roll limit here made the hands turn further off their keys for no less wringing).
+POLE_GUARD_DPS = 900.0
+
+
 ## The slack an arm or a leg keeps short of straight at its keys (m): less is flagged by --fit (a limb locked straight by the IK
 ## reads stiff; the polish pulls such keys in).
 SLACK = 0.015
@@ -6642,6 +6665,10 @@ def bake(clip, fit=None):
     # holds its place between the keys too, the game interpolating the bones between them)
     sub = max(int(clip.get("substeps", 1)), MIN_SUBSTEPS)
     rigkit.PLANES.clear()
+    # (the flip guard on every clip but a loop and one that refuses it: a knee or an elbow the keys would flip to its other
+    # side in a frame swings round instead)
+    rigkit.SIDES.clear()
+    rigkit.GUARD_DPS = POLE_GUARD_DPS if clip.get("pole_guard", True) is not False and not clip.get("loop") else 0.0
     for fi in range(clip["length"] * sub + 1):
         f = fi / sub if sub > 1 else fi
         rigkit.MISS.clear()

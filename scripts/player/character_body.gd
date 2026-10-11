@@ -257,14 +257,23 @@ var _drivers: Array = []
 ## (center + 180) goes on past it instead of jumping a whole turn, which swung the fractional bones 108/144/36 degrees in one
 ## frame and wrung the forearm's skin round at once (the owner, 2026-10-11: "sometime the body like glitches it turns
 ## elastic"; the ring's clips hold wrists at 150-180 degrees of roll, past where the wrap was set for the Frontier clips).
-## Only the live update (_process_modification) keeps it; tools and the mesh contacts drive their poses as before.
+## Only the live update (_process_modification) keeps it; tools and the mesh contacts drive their poses as before. It is
+## kept when a part is added or taken off (an outfit or a hair change mid-match rebuilds the drivers on the same bones).
 var _tw_last := {}
 var _live_drive := false
 ## How far past the wrap a roll may go on before it is wrapped back after all (rad, 50 degrees): no flip for a roll that
 ## crosses it and stays near it; one only for a roll wound past it (a forearm turns half a turn at most either way).
 const TWIST_WRAP_SLACK := 0.8727
+## The most a twist bone's twist turns in one drawn frame in the live update (rad, 40 degrees). A twist the pose turns further
+## at once catches up over the next frames instead of wringing the skin round in one: a struck pose snapped in, a keyed roll
+## that flips, a hand folded back near the forearm's line (where its roll about the forearm is undefined and swings half a
+## turn for a small move of the hand), a limb whose bend side flips. A forearm's own roll stays well under it (a hard throw's
+## 1500 deg/s is 25 degrees a frame at 60 fps). Past the wrap's slack the twist holds at the slack's end, never spun round.
+const TWIST_STEP_MAX := 0.6981
 ## Tools only (tools/anim/stretch_hunt.gd's before-and-after): false drives the twist bones as before the continuity.
 static var twist_continuity := true
+## Tools only (tools/anim/stretch_hunt.gd's before-and-after): false lets a twist bone turn any amount in a frame.
+static var twist_step_cap := true
 ## Foot joints (bone indices) for the skirt's floor height.
 var _feet := PackedInt32Array()
 ## The leg joints (bone indices, SKIRT_LEG_JOINTS) of each leg, left then right, for a closed skirt.
@@ -453,6 +462,7 @@ static func _load_scene(path: String) -> PackedScene:
 
 func _begin(sk: Skeleton3D, bind_clip: Animation) -> void:
 	skeleton = sk
+	_tw_last.clear()                       # (kept through a part added or taken off: the same bones, the same last twists)
 	_bind_clip = bind_clip
 	_bind_g = bind_pose_globals(sk, bind_clip) if bind_clip else []
 	report = {"bind_source": String(BIND_CLIP) if bind_clip else "glb", "binds": 0,
@@ -644,7 +654,6 @@ static func _surface_tris(mesh: Mesh, s: int) -> int:
 ## reference bones are bound by the skin (so they share its bind space).
 func _setup_drivers() -> void:
 	_drivers.clear()
-	_tw_last.clear()
 	_breasts.clear()
 	_chest = skeleton.find_bone("spined")
 	for bn: String in BREAST_BONES:
@@ -1197,7 +1206,8 @@ func _queue(qs: Quaternion, down: Vector3) -> Quaternion:
 
 
 ## Driver `d`'s twist of `rel` about `axis` (rad): _twist's, and in the live update continuous with its last frame's (the
-## nearest whole turn to it) for as long as that stays within TWIST_WRAP_SLACK past the wrap (see _tw_last).
+## nearest whole turn to it) for as long as that stays within TWIST_WRAP_SLACK past the wrap (see _tw_last), turned at most
+## TWIST_STEP_MAX from it in a frame.
 func _twist_of(d: Dictionary, rel: Quaternion, axis: Vector3) -> float:
 	var tw := _twist(rel, axis, d.sign, d.center)
 	if not _live_drive or not twist_continuity:
@@ -1206,8 +1216,13 @@ func _twist_of(d: Dictionary, rel: Quaternion, axis: Vector3) -> float:
 	if _tw_last.has(key):
 		var last: float = _tw_last[key]
 		var near := last + wrapf(tw - last, -PI, PI)
-		if absf(near - float(d.center) * float(d.sign)) <= PI + TWIST_WRAP_SLACK:
+		var c := float(d.center) * float(d.sign)
+		if absf(near - c) <= PI + TWIST_WRAP_SLACK:
 			tw = near
+		elif twist_step_cap:
+			tw = clampf(near, c - PI - TWIST_WRAP_SLACK, c + PI + TWIST_WRAP_SLACK)
+		if twist_step_cap:
+			tw = last + clampf(tw - last, -TWIST_STEP_MAX, TWIST_STEP_MAX)
 	_tw_last[key] = tw
 	return tw
 

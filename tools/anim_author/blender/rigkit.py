@@ -224,6 +224,14 @@ COND = {}
 RATE_DPS = 0.0
 NOW = None
 PLANES = {}
+## The flip guard (ik2_hinge; bend_clips.py sets it for every clip but a loop): a knee's or an elbow's bend side that the keys would move more
+## than GUARD_FLIP_DEG in one step swings round at GUARD_DPS deg/s instead (0: off). Unlike the rate limit above it never holds
+## back a side that moves less than that: it acts only on a flip (the owner's "elastic" glitch, 2026-10-11: the rolls' and the
+## get-ups' knees and elbows flipped side in a frame, the thighs and upper arms turned 140-178 degrees at once). SIDES: each
+## limb's last side and the way it is swinging (reset for each clip).
+GUARD_DPS = 0.0
+GUARD_FLIP_DEG = 100.0
+SIDES = {}
 
 
 def hinge(a, b, c):
@@ -259,6 +267,32 @@ def ik2_hinge(rots, pos_root, a, b, c, target, pole):
     # (how well the pole sets the bend's plane: the sine of its angle off the limb's line; near 0 the plane is ill-defined)
     COND[a] = perp.length / max(pd.length, 1e-9)
     perp = perp.normalized() if perp.length > 1e-6 else u.orthogonal().normalized()
+    if NOW is not None and GUARD_DPS > 0.0:
+        # (the flip guard: where the keys would put the bend's side more than GUARD_FLIP_DEG from the last
+        # frame's at once (a pole across the limb's line, or the limb swung across it), the side swings round at GUARD_DPS
+        # instead, one way until it has caught up, then follows the keys again; a side that moves less is the keys' own. In
+        # the limb's parent's frame: a body turning whole (a roll) turns the side with it)
+        gp = G[SK.parent[a]]
+        gpi = gp.inverted()
+        ul = (gpi @ u).normalized()
+        pl = (gpi @ perp).normalized()
+        st = SIDES.setdefault(a, {"t": None, "p": None, "t_prev": None, "p_prev": None, "dir": 0.0, "dir_prev": 0.0})
+        if st["t"] != NOW:
+            st["t_prev"], st["p_prev"], st["dir_prev"] = st["t"], st["p"], st["dir"]
+        st["dir"] = 0.0
+        if st["p_prev"] is not None and NOW > st["t_prev"]:
+            q = st["p_prev"] - ul * st["p_prev"].dot(ul)
+            if q.length > 1e-6:
+                q.normalize()
+                ang = math.atan2(q.cross(pl).dot(ul), q.dot(pl))
+                lim = math.radians(GUARD_DPS) * (NOW - st["t_prev"])
+                if (st["dir_prev"] != 0.0 or abs(ang) > math.radians(GUARD_FLIP_DEG)) and abs(ang) > lim:
+                    sgn = st["dir_prev"] if st["dir_prev"] != 0.0 else math.copysign(1.0, ang)
+                    pl = (Quaternion(ul, sgn * lim) @ q).normalized()
+                    perp = gp @ pl
+                    perp = (perp - u * perp.dot(u)).normalized()
+                    st["dir"] = sgn
+        st["t"], st["p"] = NOW, (gpi @ perp).normalized()
     n = perp.cross(u).normalized()
     d1l, hl, rest_bend = hinge(a, b, c)
     if NOW is not None and RATE_DPS > 0.0:

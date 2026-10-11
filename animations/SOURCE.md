@@ -83,6 +83,12 @@ elbow bends only about its own hinge), and the elbow or knee pole keys of `fire_
 `water_skate`, `fire_flip_kick` and `air_hit_earth` (and their mirrored twins), and of `hit_impact_back`, were retyped where
 they had lain along the limb (`docs/tidebreak/animation_retouch_2026-10-11.md`).
 
+Re-baked again later on 2026-10-11 (the owner: "sometime the body like glitches it turns elastic", then "fix them") from the
+same generator and keys, with one solver change and no new input: the flip guard (`rigkit.ik2_hinge` `GUARD_DPS`), on every
+clip but the loops and `air_hit_earth` and its twin, swings a knee's or an elbow's bend side round over a few frames where the
+keys would flip it over 100 degrees in one; the knee pole keys of `roll_b` (frames 4-11) and `getup` (frames 2-8) were retyped
+to keep each knee on one side. Nothing imported, retargeted or sampled (same document, "The elastic glitch").
+
 | Clip | Added | Generator | Inputs | Visual references the owner watched |
 | --- | --- | --- | --- | --- |
 | `own-bend-earth-stomp` | 2026-10-04 (first set) | `tools/anim_author/blender/bend_clips.py` (`earth_stomp`) | the rig's rest pose; keys in `CLIPS` | (for the owner to fill) |

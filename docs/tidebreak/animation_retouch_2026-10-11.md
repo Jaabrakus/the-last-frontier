@@ -55,8 +55,46 @@ graze became a miss. Aimed at his belly it hits with the old clips and the new. 
   continuous all the same; the dodge's is its own fast twist).
 - Then the 60 fps bake, and a look at the remaining wrist twists (the hands' facings turning fast between keys).
 
+## The elastic glitch (afternoon)
+
+The owner: "sometime the body like glitches it turns elastic why is this", then "fix them". What he saw is the skin along a
+forearm or an upper arm wrung round in one frame. The skin's twist bones (`CharacterBodyMesh`: the forearm's at 30, 60 and 90%
+of the wrist's roll, the upper arm's at a third and two thirds of its twist) follow the limb's twist; when that twist jumps,
+the skin jumps with it. It had four sources, and `tools/anim/stretch_hunt.gd` counts them in real matches (SNAP: a twist bone
+turned over 60 deg about its limb in one drawn frame; 45 s a match, four elements, the player and a bot):
+
+| Source | Fix | Where |
+|---|---|---|
+| A roll crossing the twist bones' wrap jumped a whole turn | the twist kept continuous with its last frame (committed 2d99bbba) | `CharacterBodyMesh._twist_of` |
+| Knees and elbows flipping side in one frame (a pole across the limb's line, or the limb swung across it): thighs and upper arms turned 140-178 deg at once in the rolls, get-ups, double jump | **the flip guard** on every clip but a loop: a bend side the keys would move over 100 deg at once swings round at 900 deg/s instead, then follows the keys again; a side that moves less is the keys' own. All 130 clips re-baked (the Stone Knee and its twin refuse it: its elbow is driven onto the knee at the strike in two frames, which the guard would land late) | `rigkit.ik2_hinge` (`GUARD_DPS`, `GUARD_FLIP_DEG`), `bend_clips.py` (`POLE_GUARD_DPS`, a clip's `"pole_guard": False`) |
+| A hand folded far back on the forearm, where its roll about the forearm has no clear value and swings half a turn for a small move of the hand; struck poses snapped in; keyed rolls that flip | **the twist step cap**: in the game a twist bone turns at most 40 deg a drawn frame and catches up over the next frames (a hard throw's forearm roll is about 25 deg a frame at 60 fps, so no real motion is held back) | `CharacterBodyMesh.TWIST_STEP_MAX` |
+| An outfit or hair change mid-match rebuilt the twist bones and forgot their last twist, so every arm's twist bone jumped at once | the last twists kept through a part added or taken off (cleared only for a new skeleton) | `CharacterBodyMesh._begin` |
+
+| Stretch hunt, same seed | Bot SNAPs | Player SNAPs |
+|---|---|---|
+| this morning | 590 | 866 |
+| after the wrap fix | 474 | 681 |
+| the flip guard on every clip, no cap | 490 | 731 |
+| + the twist step cap | 77 | 24 |
+| + the last twists kept through part changes (in the game now) | **15** | **7** |
+
+The flip guard's bake (`bend_smoothness.py --axes`, all 130 clips, against the clips before it): snaps 1,408 to 1,384, twist
+flips 637 to 598, one-frame twist spikes 160 to 142 (the shoulders 66 to 56, the thighs 15 to 11). Gone: the back roll's
+178 deg thigh flip, the get-up's 164, the tech roll's 171 and 176 deg shoulder flips, the spiked knock's 171. Some fast turns
+remain (the back roll's shoulder 172, the double jump's wrist 168): keyed motion, which the step cap now eases in the skin. A fresh bake of the
+final script matches the installed library to 0.06 deg (the library's own rounding). The stretch hunt's TWIST count (a forearm
+or a shin twisted over 150 deg against the bone above: poses that hold a hand rolled far, like water's Wave press) did not
+change; those are held poses, not snaps, and a look at them is for the next pass.
+
+Tried and dropped: **a wrist roll limit in the bake** (the hand's roll about the forearm kept continuous and at most 1,200 or
+1,800 deg/s). Where the hand is folded far back the roll is ill-defined, so holding it back turned the hands further off their
+keys (the duck's wrist 122 to 171 deg in a frame) for little less wringing; the twist step cap does that job in the game for
+every source at once.
+
 ## The tools
 
+- `tools/anim/stretch_hunt.gd [seconds=45] [continuity=0] [cap=0]`: real matches, the stretch kinds and SNAPs by clip; `cap=0`
+  and `continuity=0` drive the twist bones as before those fixes, to compare.
 - `tools/anim_author/bend_smoothness.py <bake.json> [--axes axes.json]`: snaps, twist flips and their spikes per clip.
 - `tools/anim_author/bend_axes.gd`: the bones' own axes and rests on the game's skeleton, for `--axes`.
 - `tools/anim_author/bend_bake_diff.gd <bake.json> [detail=1]`: a bake against the installed library (the unchanged script
