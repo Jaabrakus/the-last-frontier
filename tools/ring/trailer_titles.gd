@@ -3,9 +3,17 @@ extends SceneTree
 ## GODOT_TIMEOUT=120 zsh tools/loop/godot_run.sh --path . --resolution 480x270 \
 ##   -s tools/ring/trailer_titles.gd -- out=res://artifacts/tidebreak_trailer_60/titles
 ## Uses the same installed Baskerville-first serif family as FrontierHUD, without bundling fonts.
+## set=team: the 4v4 trailer's cards (the owner, 2026-10-11: "make a 4v4 trailer i want to see it"): the same look, its own
+## lines (FOUR AGAINST FOUR on the opener, FOUR A SIDE. / ONE DECK. / MAKE WAVES., TEAM BATTLES on the closing card).
 
 const SIZE := Vector2i(1920, 1080)
 const CARDS := ["opening", "four_elements", "one_arena", "make_waves", "closing"]
+const TEAM_CARDS := ["team_opening", "four_a_side", "one_deck", "team_make_waves", "team_closing"]
+## Each card's lines: the openers' and closers' under the title, the midcards' one line.
+const COPY := {"opening": ["ELEMENTAL ARENA COMBAT"], "closing": ["EARLY PLAYABLE DEMO", "IN DEVELOPMENT"],
+		"team_opening": ["FOUR AGAINST FOUR"], "team_closing": ["TEAM BATTLES", "IN DEVELOPMENT"],
+		"four_elements": ["FOUR ELEMENTS."], "one_arena": ["ONE ARENA."], "make_waves": ["MAKE WAVES."],
+		"four_a_side": ["FOUR A SIDE."], "one_deck": ["ONE DECK."], "team_make_waves": ["MAKE WAVES."]}
 
 class TitleArt extends Node2D:
 	const IVORY := Color("f3efdf")
@@ -24,7 +32,7 @@ class TitleArt extends Node2D:
 
 	func configure(id: String) -> void:
 		card = id
-		var full := card in ["opening", "closing"]
+		var full := _full()
 		var gradient := Gradient.new()
 		if full:
 			gradient.offsets = PackedFloat32Array([0.0, 0.25, 0.5, 0.75, 1.0])
@@ -41,6 +49,10 @@ class TitleArt extends Node2D:
 		plate.fill_to = Vector2(0.5, 1.0) if full else Vector2(1.0, 0.5)
 		manifest = {"card": card, "canvas": [1920, 1080], "text": []}
 		queue_redraw()
+
+	## An opener or a closer: the whole frame shaded, the title and its lines.
+	func _full() -> bool:
+		return card in ["opening", "closing", "team_opening", "team_closing"]
 
 	func _font(tracking: int) -> FontVariation:
 		var font := FontVariation.new()
@@ -70,7 +82,7 @@ class TitleArt extends Node2D:
 
 	func _draw() -> void:
 		manifest.text = []
-		if card in ["opening", "closing"]:
+		if _full():
 			draw_texture_rect(plate, Rect2(Vector2.ZERO, Vector2(1920, 1080)), false)
 			_emblem(Vector2(960, 360), 48.0)
 			_text("TIDEBREAK", Vector2(960, 550), 132, 18, IVORY, true)
@@ -78,18 +90,16 @@ class TitleArt extends Node2D:
 			draw_line(Vector2(1034, 594), Vector2(1255, 594), Color(BRASS, 0.75), 1.0, true)
 			for i in 4:
 				draw_circle(Vector2(933 + i * 18, 594), 2.0, JADE)
-			if card == "opening":
-				_text("ELEMENTAL ARENA COMBAT", Vector2(960, 658), 25, 7, IVORY, true)
-			else:
-				_text("EARLY PLAYABLE DEMO", Vector2(960, 658), 25, 7, IVORY, true)
-				_text("IN DEVELOPMENT", Vector2(960, 722), 22, 5, Color(JADE, 0.95), true)
+			var lines: Array = COPY[card]
+			_text(String(lines[0]), Vector2(960, 658), 25, 7, IVORY, true)
+			if lines.size() > 1:
+				_text(String(lines[1]), Vector2(960, 722), 22, 5, Color(JADE, 0.95), true)
 		else:
 			draw_texture_rect(plate, Rect2(12, 130, 1050, 350), false)
 			draw_line(Vector2(130, 238), Vector2(218, 238), BRASS, 1.2, true)
 			for i in 4:
 				draw_circle(Vector2(235 + i * 13, 238), 1.5, Color(JADE, 0.9))
-			var copy := {"four_elements": "FOUR ELEMENTS.", "one_arena": "ONE ARENA.", "make_waves": "MAKE WAVES."}
-			_text(String(copy[card]), Vector2(128, 329), 70, 5, IVORY)
+			_text(String((COPY[card] as Array)[0]), Vector2(128, 329), 70, 5, IVORY)
 			draw_line(Vector2(131, 363), Vector2(452, 363), Color(BRASS, 0.60), 1.0, true)
 
 
@@ -104,11 +114,14 @@ func _run() -> void:
 		return
 	var out := "res://artifacts/tidebreak_trailer_60/titles"
 	var preview := "res://artifacts/tidebreak_clean_hud/final_frames/t004.00.png"
+	var cards: Array = CARDS
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("out="):
 			out = arg.substr(4)
 		elif arg.begins_with("preview="):
 			preview = arg.substr(8)
+		elif arg == "set=team":
+			cards = TEAM_CARDS
 	out = ProjectSettings.globalize_path(out)
 	DirAccess.make_dir_recursive_absolute(out)
 	var viewport := SubViewport.new()
@@ -128,14 +141,14 @@ func _run() -> void:
 	var contact := Image.create_empty(1280, 1080, false, Image.FORMAT_RGBA8)
 	contact.fill(Color("102b27"))
 	var records: Array[Dictionary] = []
-	for i in CARDS.size():
-		art.configure(CARDS[i])
+	for i in cards.size():
+		art.configure(cards[i])
 		for frame in 3:
 			await process_frame
 			RenderingServer.force_draw(false)
 		var result := viewport.get_texture().get_image()
 		result.convert(Image.FORMAT_RGBA8)
-		var path := out.path_join(CARDS[i] + ".png")
+		var path := out.path_join(cards[i] + ".png")
 		var err := result.save_png(path)
 		if err != OK:
 			push_error("Could not save " + path)
@@ -143,11 +156,11 @@ func _run() -> void:
 			return
 		var comp := backdrop.duplicate() as Image
 		comp.blend_rect(result, Rect2i(Vector2i.ZERO, SIZE), Vector2i.ZERO)
-		comp.save_png(out.path_join(CARDS[i] + "_review.png"))
+		comp.save_png(out.path_join(cards[i] + "_review.png"))
 		comp.resize(640, 360, Image.INTERPOLATE_LANCZOS)
 		contact.blit_rect(comp, Rect2i(0, 0, 640, 360), Vector2i((i % 2) * 640, (i / 2) * 360))
 		records.append(art.manifest.duplicate(true))
-		print("TITLE ", CARDS[i], " ", path)
+		print("TITLE ", cards[i], " ", path)
 	contact.save_png(out.path_join("contact_sheet.png"))
 	var manifest := {"schema": "tidebreak-trailer-titles/v1", "engine": Engine.get_version_info().string,
 		"font": art.serif.get_font_name(), "font_source": "Installed system font, using the game's Baskerville-first family stack; no font files redistributed.",

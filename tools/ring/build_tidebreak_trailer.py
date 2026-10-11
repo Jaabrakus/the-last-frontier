@@ -155,7 +155,7 @@ def main():
             "-c:v", "libx264", "-preset", "fast", "-crf", str(edit.get("crf", 18)),
             "-threads", "4", "-r", "60", "-fps_mode", "cfr", "-frames:v", "3600", "-t", "60",
             "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart",
-            "-metadata", "title=Tidebreak — Gameplay Trailer", "-metadata", "comment=Early playable demo. Recorded in game; automated controls. Edited at normal speed.",
+            "-metadata", "title=" + edit.get("title", "Tidebreak — Gameplay Trailer"), "-metadata", "comment=Early playable demo. Recorded in game; automated controls. Edited at normal speed.",
             str(args.output)]
     (args.out / "encode_command.json").write_text(json.dumps(cmd, indent=2) + "\n")
     (args.out / "frame_map.csv").write_text("output_frame,take,source_frame,engine_frame,element,element_frame\n" + "\n".join(mapping) + "\n")
