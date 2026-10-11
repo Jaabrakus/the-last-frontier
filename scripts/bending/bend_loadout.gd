@@ -17,8 +17,16 @@ extends RefCounted
 ##                                                   clip to the twist's: the Lightning Pistol, the owner 2026-10-11 "have this
 ##                                                   or that and each has it perks and cons"); BendPoses.pick reads it for the
 ##                                                   wearer (pose_of) before his fighting style
+##         class  {tag: {d, base, growth, angle, set_stun, volley_n}}   the % ring numbers of the wearer's own hits with that
+##                                                   tag (a change class:<tag>+<variant>.<key>, rules.json stock.classes; the
+##                                                   owner 2026-10-11 on the tree: "fix it"): RingRules.on_hit puts them over
+##                                                   the class when the hitter wears them (hit_class). The hit keeps its tag:
+##                                                   staling, the range exemption and every other reader of a tag see the move
+##                                                   it is (the tree's variant tags fold back to their base, as its
+##                                                   proposed_classes ask); volley_n only beside the node's own spec count
 ##       A node whose change touches a number nothing reads per wearer is refused whole (never half applied), and so is one whose
-##       data drifted from its `from` (the move was retuned after the tree was written).
+##       data drifted from its `from` (the move was retuned after the tree was written), and one that requires a node that is
+##       not live itself (Mud Lash's numbers without the Mud set's mud would be half the node).
 ## Classic (nothing worn) is no meta at all: every reader asks `overlay_of(body)` first and gets {} (the same dictionaries it
 ## read before), so a body that wears nothing reads exactly today's numbers. A hit's cost (the `_lock_s` a blow carries, the
 ## victim's lock set-back) stays the move's own data lock: a talent changes its wearer's lock, never what a blow costs whom it hits.
@@ -26,7 +34,8 @@ extends RefCounted
 ##                                 writes the save) onto the player's body
 ##   wear(body, picks, style, el)  any body (tests, the soak): the live picks' overlay and the live style
 ##   overlay_of(body), picks_of(body), style_meta(body), clear(body)
-##   spec(body, m, mode, spec), lock(body, m, mode, base), wall_numbers(body, kind, base, matter)   the readers' seams
+##   spec(body, m, mode, spec), lock(body, m, mode, base), wall_numbers(body, kind, base, matter), hit_class(body, cls)
+##                                 the readers' seams
 ##   enabled(), live_ids(), live_styles(), why_not(id), resolve(id), style_ok(style, element)
 ## Tests: `config_override` is merged over the file, `read_store_in_scripts` lets a script run read the store.
 
@@ -44,7 +53,10 @@ const FormMatter := preload("res://scripts/sway/form_matter.gd")
 ## What a body that wears nothing reads (shared and read-only: the readers never change what overlay_of gives them).
 const NONE := {}
 ## The overlay's parts (a number or a pose a node changes per wearer).
-const PARTS := ["spec", "lock", "wall", "ice", "pose"]
+const PARTS := ["spec", "lock", "wall", "ice", "pose", "class"]
+## The keys of a hit's class a node may change for its wearer (what RingRules.on_hit reads off the class it is handed); the
+## others (set, jab, pop, pull, dir, ...) are what a hit is, not how much.
+const CLASS_KEYS := ["d", "base", "growth", "angle", "set_stun", "volley_n"]
 
 ## Tests only: merged over the file (enabled, live, styles_live replace; nodes merge by id).
 static var config_override: Dictionary = {}
@@ -96,8 +108,13 @@ static func enabled() -> bool:
 	return bool(config().get("enabled", false))
 
 
-## Why node `id` is not live now ("" live): the master switch, the live list, its own switch, or the reason it was refused.
+## Why node `id` is not live now ("" live): the master switch, the live list, its own switch, the reason it was refused, or a
+## node it requires that is not live.
 static func why_not(id: String) -> String:
+	return _why_not(id, 0)
+
+
+static func _why_not(id: String, depth: int) -> String:
 	var c := config()
 	if not bool(c.get("enabled", false)):
 		return "the master switch is off"
@@ -106,7 +123,19 @@ static func why_not(id: String) -> String:
 	if not bool((c.get("nodes", {}) as Dictionary).get(id, true)):
 		return "switched off"
 	var r := resolve(id)
-	return "" if bool(r.ok) else String(r.why)
+	if not bool(r.ok):
+		return String(r.why)
+	for q: Variant in _requires(id):
+		var w := _why_not(String(q), depth + 1) if depth < 4 else "required too deep"
+		if w != "":
+			return "needs %s, which is not live (%s)" % [String(q), w]
+	return ""
+
+
+## The nodes node `id` must be worn with (its requires).
+static func _requires(id: String) -> Array:
+	var rq: Variant = _node(id).get("requires", [])
+	return rq as Array if rq is Array else []
 
 
 ## The nodes live now, in the live list's order (switches on and the numbers resolved).
@@ -205,7 +234,7 @@ static func _refused(why: String) -> Dictionary:
 	return {"ok": false, "why": why}
 
 
-## What node `id` changes, as an overlay part: {ok, why, el, spec, lock, wall, ice}. Every change in the node's changes[] must be
+## What node `id` changes, as an overlay part: {ok, why, el, spec, lock, wall, ice, pose, class}. Every change in the node's changes[] must be
 ## a number this applies per wearer, and the data it reads must still hold the change's `from`; else the node is refused whole.
 ## The node must be ring-legal and not held. Cached.
 static func resolve(id: String) -> Dictionary:
@@ -224,7 +253,7 @@ static func _resolve(id: String) -> Dictionary:
 	if not (changes is Array) or (changes as Array).is_empty():
 		return _refused("changes no number")
 	var el := id.get_slice(".", 0)
-	var out := {"ok": true, "why": "", "el": el, "spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}}
+	var out := {"ok": true, "why": "", "el": el, "spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}}
 	for c: Variant in (changes as Array):
 		if not (c is Dictionary):
 			return _refused("a change is not a dictionary")
@@ -254,6 +283,8 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 		if not BendPoses.usable(String(to)):
 			return "%s: %s is no clip a pose may play" % [path, String(to)]
 		return _put(out.pose as Dictionary, [rest], String(to))
+	if kind == "class":
+		return _take_class(out, n, path, rest, from, to)
 	if not (to is float or to is int) or not (from is float or from is int):
 		return "%s: not a number" % path
 	if kind == "spec":
@@ -315,6 +346,42 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 	return "%s: no code reads this number per wearer" % path
 
 
+## class:<tag>+<variant>.<key>: key `key` of the class of the wearer's hits with `tag` (rules.json stock.classes), `from` the
+## data's, into the overlay's class part as {tag: {key: to}} ("" taken, else why not). A change with no key (a whole class: a hit
+## the node adds, Surfacing's, the Reel's) is no number; nor is a key that says what the hit is (set, dir, pull). A volley's
+## count (volley_n) only beside the node's own spec count for that move and mode: the hits a volley's % is spread over are the
+## cast's (BendEffects.apply writes its count on the hit), the class's count only stands in where the hit carries none.
+static func _take_class(out: Dictionary, n: Dictionary, path: String, rest: String, from: Variant, to: Variant) -> String:
+	var plus := rest.find("+")
+	var dot := rest.find(".", plus + 1) if plus > 0 else -1
+	if plus <= 0 or dot < 0:
+		return "%s: a hit the node adds, not a number of one" % path
+	var tag := rest.substr(0, plus)
+	var key := rest.substr(dot + 1)
+	if not (to is float or to is int) or not (from is float or from is int):
+		return "%s: not a number" % path
+	if not key in CLASS_KEYS:
+		return "%s: %s says what the hit is, not how much" % [path, key]
+	var base: Variant = RingRules.stock_block("classes").get(tag)
+	if not (base is Dictionary):
+		return "%s: no class %s" % [path, tag]
+	var cur: Variant = (base as Dictionary).get(key)
+	if cur == null or not is_equal_approx(float(cur), float(from)):
+		return "%s: the data holds %s, the node says from %s" % [path, str(cur), str(from)]
+	if key == "volley_n" and not _counts_with(n, tag, to):
+		return "%s: no spec count of the node's own beside it" % path
+	return _put(out["class"] as Dictionary, [tag, key], to)
+
+
+## Whether node `n` also changes the spec count of the move and mode `tag` names to `to`.
+static func _counts_with(n: Dictionary, tag: String, to: Variant) -> bool:
+	for c: Variant in (n.get("changes", []) as Array):
+		if c is Dictionary and String((c as Dictionary).get("path", "")) == "spec:%s.count" % tag \
+				and is_equal_approx(float((c as Dictionary).get("to", -1.0)), float(to)):
+			return true
+	return false
+
+
 ## Whether game code reads spec key path `sub` of move `mv` at `mode` for the wearer's own cast (BendEffects.apply merges the
 ## overlay in before anything reads the spec). The Skate's puddles are in the data but nothing makes them: the node that sets
 ## them is refused (its other change alone would be a pure slowdown).
@@ -347,10 +414,11 @@ static func _put(into: Dictionary, keys: Array, v: Variant) -> String:
 
 
 # ---------------------------------------------------------------- the overlay of a set of picks
-## The overlay of `picks` for a body that casts as `element` (""): {spec, lock, wall, ice, ids (applied), refused {id: why}}. A pick
-## that is not live, of another element, or that sets a number another already set, applies nothing.
+## The overlay of `picks` for a body that casts as `element` (""): {spec, lock, wall, ice, pose, class, ids (applied), refused
+## {id: why}}. A pick that is not live, of another element, worn without a node it requires, or that sets a number another
+## already set, applies nothing.
 static func overlay_for(picks: Array, element := "") -> Dictionary:
-	var out := {"spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "ids": [], "refused": {}}
+	var out := {"spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "ids": [], "refused": {}}
 	for v: Variant in picks:
 		var id := String(v)
 		var why := why_not(id)
@@ -359,12 +427,17 @@ static func overlay_for(picks: Array, element := "") -> Dictionary:
 			why = "another element's"
 		if why == "" and id in (out.ids as Array):
 			why = "twice"
+		if why == "":
+			for q: Variant in _requires(id):
+				if not q in picks:
+					why = "worn without %s" % String(q)
+					break
 		if why != "":
 			(out.refused as Dictionary)[id] = why
 			continue
-		var trial := {"spec": (out.spec as Dictionary).duplicate(true), "lock": (out.lock as Dictionary).duplicate(true),
-				"wall": (out.wall as Dictionary).duplicate(true), "ice": (out.ice as Dictionary).duplicate(true),
-				"pose": (out.pose as Dictionary).duplicate(true)}
+		var trial := {}
+		for part: String in PARTS:
+			trial[part] = (out[part] as Dictionary).duplicate(true)
 		var clash := ""
 		for part: String in PARTS:
 			clash = _fold(trial[part] as Dictionary, r.get(part, {}) as Dictionary)
@@ -530,6 +603,21 @@ static func pose_of(body: Object, m: String, mode: String) -> String:
 	if ov.is_empty():
 		return ""
 	return String((ov.get("pose", {}) as Dictionary).get("%s/%s" % [m, mode], ""))
+
+
+## The class `cls` (RingRules.class_of's: tagged, its growth scaled) of a hit by `body`, with the wearer's own numbers for its
+## tag over it (`cls` itself for Classic or a tag he changes nothing of: no copy). A growth is scaled as class_of scales the
+## data's. The tag stays the move's.
+static func hit_class(body: Object, cls: Dictionary) -> Dictionary:
+	if cls.is_empty() or not _wears(body):
+		return cls
+	var over: Variant = (overlay_of(body).get("class", {}) as Dictionary).get(String(cls.get("tag", "")))
+	if not (over is Dictionary):
+		return cls
+	var out := cls.duplicate()
+	for k: String in over:
+		out[k] = float(over[k]) * (RingRules.stock_num("growth_scale", 1.0) if k == "growth" else 1.0)
+	return out
 
 
 ## Move `m`'s lock at `mode` for `body`: `base` (the data's, before the stretch, the tier and lock_mult) or the wearer's own.

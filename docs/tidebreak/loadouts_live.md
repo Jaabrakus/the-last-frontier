@@ -32,6 +32,37 @@ The same day Classic's fingerprint (`tests/ring/fixtures/loadout_classic_golden.
 Embers and Ice Spear clips, and the moving hold's visual traces); every lock, real cast and strike, end, root and wait frame is
 as before (that document has the diff).
 
+**Added 11 October 2026: the class numbers** (the owner, on "only 5 change anything in a match": "fix it"). A new change kind,
+`class:<tag>+<variant>.<key>`, sets one number of the % ring class (`data/ring/rules.json` `stock.classes`) of the wearer's own
+hits with that tag: `d`, `base`, `growth`, `angle`, `set_stun`, and `volley_n` only when the same node also changes that move's
+spec `count` (the cast writes its count on every hit; the class's count only stands in where a hit carries none). The overlay's
+`class` part is read in one place, `RingRules.on_hit`, through `BendLoadout.hit_class(by, cls)` right after `class_of(tag)`; a
+growth is scaled by `growth_scale` as `class_of` scales the data's. The hit keeps the move's own tag, so staling, the range
+exemption, the highlights and the bots' string tables see the move it is (the tree's `proposed_classes` asked for the variant
+tag to fold back to its base; keeping the base tag does that without touching any reader). Refused: a whole new class (a hit the
+node adds, such as Surfacing or the Reel), a key that says what the hit is (`set`, `dir`, `pull`), and a number whose data
+drifted from the node's `from`. Also new: a node whose `requires` names a node that is not live is not live itself, and a pick
+worn without the node it requires applies nothing (Mud Lash's numbers resolve, but its Mud set is new matter, not numbers).
+
+That made nine more nodes whole. They are live on the owner's word and not yet soaked (the tree's starting values):
+
+| Node | What it changes for the wearer |
+|---|---|
+| Earth: Deep Fissure (`earth.fissure.deep`) | Fissure 17 to 14.5 m/s; launch angle 40 to 55 degrees, grown too |
+| Water: Cold Hands (`water.spear.cold_hands`) | Spear lock 0.6 to 0.52 s; adds 13% (from 14) |
+| Water: Heavy Spear (`water.spear.heavy`) | adds 16% (from 14); flies 35 m/s (from 42), radius 0.19 m (from 0.16) |
+| Water: Pooling Downpour (`water.downpour.pooling`) | puddle 1.9 m (from 1.6) for 7.2 s (from 6); adds 7% (from 8) |
+| Fire: Snap Punch (`fire.punch.snap`) | Punch 38 m/s (from 32); adds 13% (from 15); the Fireball unchanged |
+| Fire: Short Fuse (`fire.lightning.short_fuse`) | Lightning charges in 1.9 s (from 2.2); adds 22% (from 25) |
+| Fire: Tight Embers (`fire.embers.tight`) | spread 7.2 degrees (from 9), 6 sparks (from 7), the volley's % over 6 |
+| Air: Shoving Palm (`air.palm.shoving`) | set knock 5.4 (from 4.5); adds 4% (from 5) |
+| Air: Rising Gust (`air.gust.rising`) | launch angle 30 to 55 degrees, the Air Lance too |
+
+The test (`tests/ring/test_loadout_apply.gd`) checks every class change on a wearer and on a body that wears nothing, the
+refusals, the requires rule, and one real hit: with Short Fuse worn the player's Lightning adds 20.90% where the bot's adds 23.75
+(22 against 25, x the ring's `pct_scale` 0.95), the tag `fire_arc/lightning` either way. Limit: the practice ring's readout
+(`RingPredict.ko_pct`) still reads the move's own class, so its "out at" figure ignores a worn class node.
+
 ## How a loadout becomes live
 
 1. The player wears a slot in the Advancement window; `AdvancementStore` saves `user://advancement.json` (the window does the saving, the match never does).
@@ -51,6 +82,7 @@ as before (that document has the diff).
 | the mode's lock | `SwayCaster._lock_time` (the player) and `NpcBending.lock_for(..., who)` (a bot): `BendLoadout.lock(body, m, mode, base)` replaces the data's base before the stretch, the tier and `lock_mult` | same; `move:footwork.lock_s` is scoped to the node's own mode (Step) |
 | Earth Wall hits and width | `FormEffects.earth_wall`, `FormEffects.tree_wall`, `NpcBending._wall`: `BendLoadout.wall_numbers(body, "wall", ...)` over `FormMatter.numbers` | stone and mud keep their own strength (`hits` 7 and 2 override the base, as before); shell and ramp are not touched |
 | Ice Wall hits and rise | `BendEffects.ice_wall` through `_wall(..., ice = true)`: `wall_numbers(body, "ice", ...)` | Freeze (frost) and the other snow walls keep the move's numbers |
+| a hit's % ring class (`d`, `base`, `growth`, `angle`, `set_stun`, `volley_n`) | `RingRules.on_hit`: `cls = BendLoadout.hit_class(by, class_of(tag))` | the class is the hitter's (`by`); a returned stone keeps its return class |
 | the cast pose | `BendPoses.pick(m, mode, element, body)`, `BendPoses.stance_pose`, `BendPoses.guard_hold_pose`; `SwayPose` passes `caster.player` | a body without the meta gets the element's pick unchanged |
 
 Nothing else reads these numbers: the HUD and labels do not show them, the ring rules read `info` tags and `%` classes, not the specs. Two readers keep the data's numbers on purpose:

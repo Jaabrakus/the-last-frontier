@@ -2,10 +2,12 @@ extends SceneTree
 ## A worn Advancement loadout in a real match (BendLoadout; B1 and B2 of artifacts/ui_audit/advancement/plan.md section 7;
 ## docs/tidebreak/loadouts_live.md), headless:
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_loadout_apply.gd
-##   the switches    data/bending/loadout_apply.json: the seven live nodes and Boxing, the master switch and a node's own switch,
-##                   the live list; Skate's Wet Trail refused (its puddles are made by nothing)
+##   the switches    data/bending/loadout_apply.json: the live nodes and Boxing, the master switch and a node's own switch,
+##                   the live list; Skate's Wet Trail refused (its puddles are made by nothing), Mud Lash (its Mud set is not
+##                   live), a pick worn without the node it requires
 ##   the numbers     each live node's every change, read from data/sway/skill_tree.json, on its wearer exactly as the node says
-##                   and on a body that wears nothing as today's data (spec, lock, Earth Wall and Ice Wall numbers); Classic reads
+##                   and on a body that wears nothing as today's data (spec, lock, Earth Wall and Ice Wall numbers, the % ring
+##                   class of his hits: d, base, growth, angle, the tag kept, and one real hit's %); Classic reads
 ##                   the same dictionaries it always did and no wear leaves a trace in the shared data (a snapshot of moves.json
 ##                   and poses.json is taken first and last); a node that changes a number nothing reads per wearer, or whose
 ##                   data drifted, is refused whole; a held, world-only, unknown or another element's id applies nothing
@@ -27,10 +29,13 @@ const BOXING_LIB := "res://animations_extra/Frontier_Style_Boxing.res"
 ## live in loadout_apply.json (the two walls are switched off: the soak's bots never raise a wall; Full Sail since 2026-10-10: it
 ## widens the plain Gust now that the grown one is the Air Lance, not yet soaked; flip them in the json, not here).
 ## Since 2026-10-11 also fire's Storm twist Lightning Pistol (the owner's "have this or that": its own pose, a quicker charge and
-## a longer flash), live on the owner's word for him to try.
+## a longer flash), live on the owner's word for him to try, and the nine nodes the class numbers made whole (a change
+## class:<tag>+<variant>.<key>: the % ring class of the wearer's own hits; the owner on the tree: "fix it"), live unsoaked.
+const CLASS_NODES := ["earth.fissure.deep", "water.spear.cold_hands", "water.spear.heavy", "water.downpour.pooling", "fire.punch.snap",
+		"fire.lightning.short_fuse", "fire.embers.tight", "air.palm.shoving", "air.gust.rising"]
 const LIVE := ["air.ball.dense", "air.gust.full_sail", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick",
-		"earth.wall.thick", "water.wall.thick_ice", "fire.lightning.pistol"]
-const ON_NOW := ["air.ball.dense", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick", "fire.lightning.pistol"]
+		"earth.wall.thick", "water.wall.thick_ice", "fire.lightning.pistol"] + CLASS_NODES
+const ON_NOW := ["air.ball.dense", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick", "fire.lightning.pistol"] + CLASS_NODES
 
 var checks := 0
 var fails: Array[String] = []
@@ -125,7 +130,7 @@ func _run() -> void:
 	var only_known := true
 	for id0: String in live:
 		only_known = only_known and id0 in LIVE
-	_expect(every_on and only_known, "the nodes live now are the four the soak passed and the Lightning Pistol, within the eight resolvable ones (%s)" % [live])
+	_expect(every_on and only_known, "the nodes live now are the four the soak passed, the Lightning Pistol and the nine class nodes, within the resolvable ones (%s)" % [live])
 	_expect(not "earth.wall.thick" in live and not "water.wall.thick_ice" in live and BendLoadout.why_not("earth.wall.thick") == "switched off",
 			"the two walls the soak could not exercise are switched off in the json (%s)" % BendLoadout.why_not("earth.wall.thick"))
 	# the rest of this test wants every resolvable node on, whatever the switches say
@@ -156,7 +161,7 @@ func _run() -> void:
 	BendLoadout.config_override = {"styles_live": []}
 	_expect(BendLoadout.live_styles().is_empty() and not BendLoadout.style_ok("boxing", "fire"), "styles_live empty: no style plays")
 	BendLoadout.config_override = {"nodes": all_on}
-	_expect(BendLoadout.live_ids() == LIVE, "every node's switch on: the eight resolvable ones")
+	_expect(BendLoadout.live_ids() == LIVE, "every node's switch on: the %d resolvable ones" % LIVE.size())
 
 	# ---------------------------------------------------------------- each live node's numbers, wearer and bot
 	for id: String in LIVE:
@@ -180,6 +185,29 @@ func _run() -> void:
 				continue
 			var to := float(c.to)
 			var from := float(c.from)
+			if path.begins_with("class:"):
+				# (the % ring class of his hits with that tag: the node's number for the wearer, the data's for the other, and the
+				# tag is the move's)
+				var tag0 := rest.get_slice("+", 0)
+				var key0 := rest.get_slice("+", 1).get_slice(".", 1)
+				var base_c := RingRules.class_of(tag0)
+				var gs := RingRules.stock_num("growth_scale", 1.0) if key0 == "growth" else 1.0
+				var wc := BendLoadout.hit_class(w, base_c)
+				var bc0 := BendLoadout.hit_class(bot, base_c)
+				_expect(_near(wc.get(key0), to * gs) and String(wc.get("tag", "")) == tag0,
+						"%s: the wearer's %s hits have %s %s, the tag kept (%s)" % [id, tag0, key0, to, wc.get(key0)])
+				_expect(is_same(bc0, base_c) and _near(bc0.get(key0), from * gs),
+						"%s: a body that wears nothing hits with the class as it is (%s %s)" % [id, key0, from])
+				var named_keys := {}
+				for c3: Dictionary in n.changes:
+					if String(c3.path).begins_with("class:%s+" % tag0):
+						named_keys[String(c3.path).get_slice("+", 1).get_slice(".", 1)] = true
+				var others_same := true
+				for k: String in base_c:
+					if not named_keys.has(k) and wc.get(k) != base_c[k]:
+						others_same = false
+				_expect(others_same, "%s: %s changes no number of the %s class the node does not name" % [id, path, tag0])
+				continue
 			if path.begins_with("spec:"):
 				var mv := rest.get_slice("/", 0)
 				var keys: Array = Array(rest.substr(mv.length() + 1).split("."))
@@ -268,14 +296,43 @@ func _run() -> void:
 	t["test.nochange"] = {"id": "test.nochange", "kind": "enhance", "ring_legal": true, "mode": "slice", "changes": []}
 	t["test.rule"] = {"id": "test.rule", "kind": "enhance", "ring_legal": true, "mode": "slice", "changes": [{"path": "rules:guard_rules.perfect_mult", "from": 1.2, "to": 1.3}]}
 	t["test.clash"] = {"id": "test.clash", "kind": "enhance", "ring_legal": true, "mode": "slice", "changes": [{"path": "spec:air_blast/slice.mps", "from": 45.0, "to": 51.0}]}
-	BendLoadout.config_override = {"live": ["test.unread", "test.drift", "test.nochange", "test.rule", "test.clash", "air.slice.keen"], "nodes": all_on}
-	for id2: String in ["test.unread", "test.drift", "test.nochange", "test.rule"]:
+	t["test.volley"] = {"id": "test.volley", "kind": "enhance", "ring_legal": true, "mode": "embers",
+			"changes": [{"path": "class:fire_jab/embers+x.volley_n", "from": 7, "to": 6}]}
+	t["test.newhit"] = {"id": "test.newhit", "kind": "enhance", "ring_legal": true, "mode": "whip",
+			"changes": [{"path": "class:water_whip/whip+reel", "from": null, "to": {"d": 7.0, "base": 6.0, "growth": 0.0, "angle": 15}}]}
+	t["test.what"] = {"id": "test.what", "kind": "enhance", "ring_legal": true, "mode": "whip",
+			"changes": [{"path": "class:water_whip/whip+x.dir", "from": 1, "to": 2}]}
+	t["test.cdrift"] = {"id": "test.cdrift", "kind": "enhance", "ring_legal": true, "mode": "whip",
+			"changes": [{"path": "class:water_whip/whip+x.d", "from": 8.0, "to": 10.0}]}
+	BendLoadout.config_override = {"live": ["test.unread", "test.drift", "test.nochange", "test.rule", "test.clash", "air.slice.keen",
+			"test.volley", "test.newhit", "test.what", "test.cdrift"], "nodes": all_on}
+	# (a volley's count without the node's own spec count; a whole new class, a hit the node adds; a key that says what the hit
+	# is; a class number that drifted from the node's from)
+	for id2: String in ["test.unread", "test.drift", "test.nochange", "test.rule", "test.volley", "test.newhit", "test.what", "test.cdrift"]:
 		_expect(not bool(BendLoadout.resolve(id2).ok), "%s is refused (%s)" % [id2, BendLoadout.resolve(id2).why])
 	var wx := _body()
 	var ovx := BendLoadout.wear(wx, ["test.unread", "test.drift", "air.slice.keen", "test.clash"], "", "")
 	_expect((ovx.ids as Array) == ["air.slice.keen"] and _near(BendLoadout.spec(wx, "air_blast", "slice", base_slice).mps, 54.0)
 			and (ovx.refused as Dictionary).has("test.clash") and String(ovx.refused["test.clash"]).contains("mps"),
 			"a refused node leaves no half of itself, and a number two nodes both set is set by the first only (%s)" % [ovx.refused])
+	BendLoadout.config_override = {"nodes": all_on}
+	BendLoadout.reload_data()
+	# a node that requires one that is not live (Mud Lash: the Mud set makes mud, not numbers) is not live itself, and a pick worn
+	# without the node it requires applies nothing
+	BendLoadout.config_override = {"live": LIVE + ["water.mud.lash", "water.set.mud"], "nodes": all_on}
+	_expect(bool(BendLoadout.resolve("water.mud.lash").ok) and not bool(BendLoadout.resolve("water.set.mud").ok)
+			and BendLoadout.why_not("water.mud.lash").begins_with("needs water.set.mud"),
+			"Mud Lash's numbers resolve, but it needs the Mud set, which is not live (%s)" % BendLoadout.why_not("water.mud.lash"))
+	BendLoadout._node("air.slice.keen")
+	t = BendLoadout._tree
+	t["air.test_needs"] = {"id": "air.test_needs", "kind": "enhance", "ring_legal": true, "mode": "slice", "requires": ["air.ball.dense"],
+			"changes": [{"path": "spec:air_blast/slice.range_m", "from": 35.0, "to": 36.0}]}
+	BendLoadout.config_override = {"live": LIVE + ["air.test_needs"], "nodes": all_on}
+	var nalone := BendLoadout.overlay_for(["air.test_needs"], "air")
+	var nboth := BendLoadout.overlay_for(["air.test_needs", "air.ball.dense"], "air")
+	_expect(BendLoadout.why_not("air.test_needs") == "" and (nalone.ids as Array).is_empty()
+			and String((nalone.refused as Dictionary).get("air.test_needs", "")).contains("air.ball.dense") and (nboth.ids as Array).has("air.test_needs"),
+			"a pick worn without the node it requires applies nothing; with it, it applies (%s, %s)" % [nalone.refused, nboth.ids])
 	BendLoadout.config_override = {"nodes": all_on}
 	BendLoadout.reload_data()
 
@@ -630,6 +687,22 @@ func _casts() -> void:
 		if shell_like != null:
 			shell_like.queue_free()
 	BendLoadout.clear(player)
+	# Fire: a real hit's % (RingRules.on_hit): Short Fuse's Lightning adds 22 for the 25 it was, its tag the move's
+	var rules := RingRules.current()
+	if rules != null and RingRules.stock_on():
+		BendLoadout.wear(player, ["fire.lightning.short_fuse"], "", "fire")
+		var keep_stale := rules.stale_off
+		rules.stale_off = true
+		var hw := rules.on_hit(bot, player, {"tag": "fire_arc/lightning", "at": bot.global_position + Vector3.UP})
+		var hb := rules.on_hit(player, bot, {"tag": "fire_arc/lightning", "at": player.global_position + Vector3.UP})
+		rules.stale_off = keep_stale
+		_expect(float(hb.get("d", 0.0)) > 0.0 and absf(float(hw.get("d", 0.0)) / float(hb.get("d", 1.0)) - 22.0 / 25.0) < 0.001
+				and String(hw.get("tag", "")) == "fire_arc/lightning",
+				"a real hit: the wearer's Lightning adds %.2f %%, the bot's %.2f (22 for 25), the tag the move's (%s)" % [float(hw.get("d", 0.0)),
+				float(hb.get("d", 0.0)), hw.get("tag", "-")])
+		BendLoadout.clear(player)
+	else:
+		_expect(false, "the ring plays the % rules")
 	# Fire: the Step
 	BendLoadout.wear(player, ["fire.step.quick"], "", "fire")
 	for who: Array in [[player, pc, "wearer"], [bot, bc, "bot"]]:

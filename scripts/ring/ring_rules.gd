@@ -42,7 +42,8 @@ extends Node
 ## off: the classic code above runs untouched). Under stock: no zones, no confinement, no soft walls, no winding, no edge
 ## guard (forward_limit -INF, bounds_fn_for the deck's rectangle), no knock_scale, no ragdoll (BendKnock.ragdoll_mps INF):
 ##   the ledger  a hit adds d % (never health: BendStatus.hurt does not touch it, and damage that reaches it anyway is turned
-##               into % by the curve and put back, absorb); d is the move's class's (class_of(tag): stock.classes), staled
+##               into % by the curve and put back, absorb); d is the move's class's (class_of(tag): stock.classes; a skill
+##               tree node the hitter wears puts its numbers over it, BendLoadout.hit_class, the tag kept), staled
 ##               (each copy in the attacker's last stale.n hits -stale.step, at most -stale.max; returns never), x pct_scale;
 ##               a volley is one hit (its d / volley_n each; only the first knocks, stuns and counts); untagged damage by
 ##               curve_k (1 - e^(-dmg / curve_s)); a late guard (slide_only) half, a perfect one nothing; a return is its own
@@ -1139,6 +1140,7 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 		cls = return_class(String(info.get("origin_tag", "")), float(info.get("ret_mult", 0.0)))
 	elif tag != "":
 		cls = class_of(tag)
+		cls = BendLoadout.hit_class(by, cls)    # (the hitter's worn numbers for this tag, a skill tree node's; Classic: as is)
 	var untagged := cls.is_empty()
 	if untagged:
 		cls = _untagged_class(info)

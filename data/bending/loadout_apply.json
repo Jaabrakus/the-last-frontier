@@ -11,7 +11,8 @@
     "earth.wall.thick and water.wall.thick_ice are switched OFF (2026-10-10 soak, tools/ring/loadout_soak.gd): the numbers apply and are tested, but the soak's bots never raise an Earth Wall or an Ice Wall (0 casts in 60 mirror games each; they only answer a held stone with one), so the fairness gate cannot see these two nodes. Their rates (Thick Wall 17/30 = 0.567, Thick Ice 23/60 = 0.383) are the mirror's own noise: with nothing worn the same seeds gave 18/30 for earth and, for water, exactly the games the node run played (9/30). Unverified is not live; flip each to true here once a duel or a bot that walls has measured it.",
     "styles_live: the fighting styles whose clips play (state animated in data/bending/fighting_styles.json and poses in data/bending/style_poses.json). Boxing only; Capoeira is parked and never plays. A style is animation only: its picks are timed as the element's own (BendPoses._timed_as).",
     "classic_style: false means a class picked with Classic worn (AdvancementStore.set_style, worn index -1) is not played: Classic plays exactly as before. true would play the picked class's clips (animation only) with no loadout worn.",
-    "fire.lightning.pistol (Lightning Pistol, 2026-10-11, the owner: \"we want both moves the orignal one and the lightning pistol it will be a skill tree thing have this or that and each has it perks and cons\"): fire's Storm twist. Worn, Lightning is cast from the game's standing pistol aim (its change pose:fire_arc/lightning, BendLoadout's pose overlay) and charges in 1.5 s (from 2.2), its flash 0.4 s before the strike (from 0.25); not worn, the original two-handed Lightning plays as before. Live on the owner's word for him to try; its numbers are starting values and have not been through the soak yet."
+    "fire.lightning.pistol (Lightning Pistol, 2026-10-11, the owner: \"we want both moves the orignal one and the lightning pistol it will be a skill tree thing have this or that and each has it perks and cons\"): fire's Storm twist. Worn, Lightning is cast from the game's standing pistol aim (its change pose:fire_arc/lightning, BendLoadout's pose overlay) and charges in 1.5 s (from 2.2), its flash 0.4 s before the strike (from 0.25); not worn, the original two-handed Lightning plays as before. Live on the owner's word for him to try; its numbers are starting values and have not been through the soak yet.",
+    "The class numbers (2026-10-11, the owner on the tree: \"fix it\"): a node's change class:<tag>+<variant>.<key> sets one number (d, base, growth, angle, set_stun; volley_n only beside the node's own spec count) of the % ring class of the wearer's own hits with that tag (BendLoadout's class part, RingRules.on_hit through BendLoadout.hit_class); the hit keeps its tag, so staling and the range exemption still see the move. That made nine more nodes whole, live on the owner's word and NOT yet through the soak (their numbers are the tree's starting values): earth.fissure.deep (Deep Fissure), water.spear.cold_hands (Cold Hands), water.spear.heavy (Heavy Spear), water.downpour.pooling (Pooling Downpour), fire.punch.snap (Snap Punch), fire.lightning.short_fuse (Short Fuse), fire.embers.tight (Tight Embers), air.palm.shoving (Shoving Palm), air.gust.rising (Rising Gust). water.mud.lash is not live: it requires the Mud set (new mud pools, not numbers) and its smother is not in its changes; a node whose required node is not live is refused (BendLoadout.why_not)."
   ],
   "enabled": true,
   "classic_style": false,
@@ -24,7 +25,16 @@
     "fire.step.quick": true,
     "earth.wall.thick": false,
     "water.wall.thick_ice": false,
-    "fire.lightning.pistol": true
+    "fire.lightning.pistol": true,
+    "earth.fissure.deep": true,
+    "water.spear.cold_hands": true,
+    "water.spear.heavy": true,
+    "water.downpour.pooling": true,
+    "fire.punch.snap": true,
+    "fire.lightning.short_fuse": true,
+    "fire.embers.tight": true,
+    "air.palm.shoving": true,
+    "air.gust.rising": true
   },
   "live": [
     "air.ball.dense",
@@ -34,7 +44,16 @@
     "fire.step.quick",
     "earth.wall.thick",
     "water.wall.thick_ice",
-    "fire.lightning.pistol"
+    "fire.lightning.pistol",
+    "earth.fissure.deep",
+    "water.spear.cold_hands",
+    "water.spear.heavy",
+    "water.downpour.pooling",
+    "fire.punch.snap",
+    "fire.lightning.short_fuse",
+    "fire.embers.tight",
+    "air.palm.shoving",
+    "air.gust.rising"
   ],
   "styles_live": ["boxing"]
 }
