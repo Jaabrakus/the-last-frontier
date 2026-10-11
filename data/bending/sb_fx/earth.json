@@ -178,8 +178,8 @@
     "keep_old": false,
     "start": "a stone floor wave made: BendBolt.make",
     "stop": "one-shot, played again every repeat_s where the wave has got to while it runs",
-    "repeat_s": 0.07,
-    "note": "the side-by-side for the owner (\"i think spell break has a fissure animation and effect\"): Stoneshaper's ground shockwave laid down along the Fissure's line (a burst every ~1 m at 15 m/s); earth's bridge stays off unless the owner picks it"
+    "repeat_s": 0.14,
+    "note": "the side-by-side for the owner (\"i think spell break has a fissure animation and effect\"): Stoneshaper's ground shockwave laid down along the Fissure's line (a burst every ~2 m at 15 m/s: every 0.14 s looks as every 0.07 s did and plays half as many at once, 2026-10-11); the owner's pick of 2026-10-10, on by itself through config.json moves_on (earth's bridge stays off)"
    },
    "hit": {
     "effect": "g3/Content/VFX/Quests/Shared/SmkObscureS_FxP1",

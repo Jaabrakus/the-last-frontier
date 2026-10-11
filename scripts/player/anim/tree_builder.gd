@@ -819,9 +819,9 @@ func _bank(bt: AnimationNodeBlendTree, h: String, hs: Dictionary, p: String, hr:
 		if sc == "" or not _has(sc) or not _has(c):
 			hr[side[0]] = &""
 			continue
-		var dname := _bank_diff(c, sc)
 		if hs.loop:
-			_note_loop(sc)
+			_note_loop(sc)                         # (its seam closed first: the difference taken from it loops too)
+		var dname := _bank_diff(c, sc)
 		var dn := "%s_d%s" % [h, side[0]]
 		var an := "%s_a%s" % [h, side[0]]
 		var leaf := AnimationNodeAnimation.new()
@@ -1843,10 +1843,12 @@ func _skeleton_path() -> String:
 	return "Skeleton3D"
 
 
-## Data issue (not a build warning): the graph loops a clip whose first and last poses differ
-## (metrics loop = false, measured by WP2), so every wrap pops. Recorded in idx.loop_seams for
-## WP1 / WP4 to decide (e.g. hold the last frame, or restart through a second input with a
-## short fade); single-pose clips never pop.
+## Data issue: the graph loops a clip whose first and last poses differ (metrics loop = false,
+## measured by WP2), so every wrap would pop (walk-fw-rt, sprint-bw-rt and -lt: 0.12-0.24 rad at
+## a foot). Recorded in idx.loop_seams, and the seam closed in the loaded clip (close_seam: the
+## last SEAM_S ease into the first frame; the file on disk is untouched, the rest of the motion
+## the clip's own). Single-pose clips never pop. Call it before any additive difference is taken
+## from the clip (_bank_diff), so the difference loops too.
 func _note_loop(clip: String) -> void:
 	if idx.loop_seams.has(clip) or not data.has_metrics():
 		return
@@ -1854,11 +1856,68 @@ func _note_loop(clip: String) -> void:
 	if m.is_empty() or m.get("loop", true) != false or _static(clip):
 		return
 	var e: Dictionary = m.get("loop_err", {})
-	idx.loop_seams[clip] = {"rot_rad": float(e.get("rot_rad", 0.0)), "pos_m": float(e.get("pos_m", 0.0)), "bone": e.get("bone")}
-	if not _seam_warned.has(clip):
+	var a: Animation = ap.get_animation(_godot(clip)) if ap.has_animation(_godot(clip)) else null
+	var closed := close_seam(a, SEAM_S) if a != null else 0
+	idx.loop_seams[clip] = {"rot_rad": float(e.get("rot_rad", 0.0)), "pos_m": float(e.get("pos_m", 0.0)), "bone": e.get("bone"),
+			"closed_tracks": closed, "anim": String(_godot(clip))}
+	if (a == null or closed < 0) and not _seam_warned.has(clip):
 		_seam_warned[clip] = true
 		push_warning("TreeBuilder: data issue: %s loops in the graph but its first and last poses differ (%.2f rad at %s): it pops at every wrap" % [
 				clip, float(e.get("rot_rad", 0.0)), e.get("bone")])
+
+
+## How long the end of a looping clip eases into its first frame to close its seam (s; at most a quarter of the clip).
+const SEAM_S := 0.2
+## A position track whose ends differ by more than this (m) travels (root motion): left alone.
+const SEAM_TRAVEL_M := 0.05
+
+
+## Closes `a`'s loop seam in place: over its last `window_s` (at most a quarter of it), every rotation track and every
+## position track that does not travel eases (smoothstep) into its first key's value, so the last frame is the first and
+## the wrap is seamless; before the window the clip is untouched. Already closed (its ends equal): nothing changes, so it
+## is safe to call again on a clip another builder closed. The tracks it changed; -1 when it cannot (a compressed track).
+static func close_seam(a: Animation, window_s: float) -> int:
+	if a == null:
+		return 0
+	var length := a.length
+	var w := minf(window_s, length * 0.25)
+	if w <= 1e-4:
+		return 0
+	var n := 0
+	for t in a.get_track_count():
+		var ty := a.track_get_type(t)
+		var kc := a.track_get_key_count(t)
+		if kc < 2 or not ty in [Animation.TYPE_ROTATION_3D, Animation.TYPE_POSITION_3D]:
+			continue
+		if a.track_is_compressed(t):
+			return -1
+		if ty == Animation.TYPE_ROTATION_3D:
+			var q0: Quaternion = a.track_get_key_value(t, 0)
+			var ql: Quaternion = a.rotation_track_interpolate(t, length)
+			var corr := (q0 * ql.inverse()).normalized()
+			if corr.get_angle() < 1e-4:
+				continue
+			for k in kc:
+				var kt := a.track_get_key_time(t, k)
+				if kt < length - w:
+					continue
+				var q: Quaternion = a.track_get_key_value(t, k)
+				a.track_set_key_value(t, k, (Quaternion.IDENTITY.slerp(corr, smoothstep(length - w, length, kt)) * q).normalized())
+			n += 1
+		elif ty == Animation.TYPE_POSITION_3D:
+			var p0: Vector3 = a.track_get_key_value(t, 0)
+			var pl: Vector3 = a.position_track_interpolate(t, length)
+			var dp := p0 - pl
+			if dp.length() < 1e-5 or dp.length() > SEAM_TRAVEL_M:
+				continue
+			for k in kc:
+				var kt := a.track_get_key_time(t, k)
+				if kt < length - w:
+					continue
+				var v: Vector3 = a.track_get_key_value(t, k)
+				a.track_set_key_value(t, k, v + dp * smoothstep(length - w, length, kt))
+			n += 1
+	return n
 
 
 func _warn_once(key: String, msg: String) -> void:

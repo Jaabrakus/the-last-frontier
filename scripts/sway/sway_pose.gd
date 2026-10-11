@@ -579,6 +579,8 @@ func _tick(dt: float) -> void:
 	if _pose == null or not is_instance_valid(_pose):
 		return
 	var mask := _mask()
+	if mask == "full" and _freed():
+		mask = "upper"                  # (a kick freed at its strike: its legs give way to the walk's as he moves off, below)
 	var st := _sample_t(t)                                          # (a fighting style's clip is shown on the element's timeline)
 	if mask != "upper":
 		_cast_layers = [{"anim": _anim, "time": st, "weight": w, "mask": mask}]
@@ -627,11 +629,17 @@ func _mask() -> String:
 	return "reach_l" if anim_name == String(PUSH_ONE) else "upper"
 
 
-## The legs' clip kept while moving (a kick, a stomp: the pose's or the clip's legs_always). Not once a pose rooted up to its
-## strike has struck: the caster walks out of the recovery on the walk's own legs (no kick's legs sliding along the deck).
-func _legs_always() -> bool:
+## A pose rooted up to its strike (root "strike": fire's kicks) that has struck: the caster is free to walk off.
+func _freed() -> bool:
 	var r: Variant = pick.get("root", false)
-	if r is String and String(r) == "strike" and phase == "release" and _struck:
+	return r is String and String(r) == "strike" and phase == "release" and _struck
+
+
+## The legs' clip kept while moving (a kick, a stomp: the pose's or the clip's legs_always). Not once a pose rooted up to its
+## strike has struck (_freed): the caster walks out of the recovery on the walk's own legs, the clip's legs fading with his
+## speed (no kick's legs sliding along the deck). A full-body kick is split so for that: its upper body kept, its legs so.
+func _legs_always() -> bool:
+	if _freed():
 		return false
 	return bool(pick.get("legs_always", _anim.get_meta(&"legs_always", false) if _anim != null else false))
 

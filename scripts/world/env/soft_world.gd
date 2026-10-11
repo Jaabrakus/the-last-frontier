@@ -418,9 +418,20 @@ func _on_node_added(n: Node) -> void:
 	if host == null or not host.is_ancestor_of(n):
 		return
 	if n is GeometryInstance3D:
-		_soften_node.call_deferred(n)
+		_later.call_deferred(n)
 	elif _is_lamp(n):
-		_add_lamp.call_deferred(n)
+		_later.call_deferred(n)
+
+
+## A node added this frame, taken once its frame is over: it may be freed by then (an effect's short-lived mesh), so it
+## comes untyped and is let be when it is gone.
+func _later(n: Variant) -> void:
+	if not is_instance_valid(n):
+		return
+	if n is GeometryInstance3D:
+		_soften_node(n as GeometryInstance3D)
+	elif n is Light3D:
+		_add_lamp(n as Light3D)
 
 
 func _walk(n: Node) -> void:

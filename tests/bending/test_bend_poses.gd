@@ -308,7 +308,36 @@ func _kick_free() -> void:
 		_expect(ok and began != INF and full != INF and held_winding and struck != INF and free_after,
 				"fire %s: held through the wind-up (%s), free once it has struck while its clip plays on (rooted %s, phase '%s')"
 				% [mode, held_winding, c.rooted, c.pose.phase])
+		# walking off after the strike: the kick's legs give way to the walk's (its upper body kept), so they never slide
+		var legs_gave := false
+		var seen := ""
+		var keys := p.controls
+		p.controls = PlayerControls.new(false)
+		p.controls.set_held(&"move_forward", true)
+		for i in 30:
+			await physics_frame
+			if c.pose.phase != "release":
+				break
+			var ws := _layer_weights(c.pose._cast_layers)
+			seen = "%s at %.1f m/s" % [ws, p.horizontal_speed()]
+			if float(ws.get("upper", 0.0)) > 0.05 and float(ws.get("full", 1.0)) < 0.5 * float(ws.get("upper", 0.0)):
+				legs_gave = true
+				break
+		p.controls.set_held(&"move_forward", false)
+		p.controls = keys
+		p.velocity = Vector3.ZERO
+		_expect(legs_gave, "fire %s: walking off after the strike, its legs give way to the walk's (%s)" % [mode, seen])
 		await _let_go_and_settle()
+
+
+## The cast layers' weight by mask ({mask: weight}; a hand-off blend's incoming side).
+func _layer_weights(layers: Array) -> Dictionary:
+	var out := {}
+	for l: Dictionary in layers:
+		if l.has("blend_to"):
+			return _layer_weights(l.blend_to)
+		out[String(l.get("mask", ""))] = float(l.get("weight", 0.0))
+	return out
 
 
 ## The player in the arena facing +x, the bender `d` m before him, held still and whole.

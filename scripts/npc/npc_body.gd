@@ -437,7 +437,7 @@ func play(key: String, blend := 0.2, speed := 1.0) -> void:
 	clip = key
 	_played = real
 	_props_after(real)
-	ap.play(LIB + "/" + real, blend)
+	ap.play(LIB + "/" + real, _real_blend(blend, speed))
 	if entry >= 0.0:
 		ap.seek(entry * clip_length(real), false)
 
@@ -471,9 +471,15 @@ func play_once(key: String, blend := 0.1, speed := 1.0) -> float:
 	clip = key
 	_played = key
 	_props_after(key)
-	ap.play(LIB + "/" + key, blend)
+	ap.play(LIB + "/" + key, _real_blend(blend, speed))
 	ap.seek(0.0, false)
 	return clip_length(key) / maxf(speed, 0.01)
+
+
+## A blend of `blend` real seconds at playback speed `speed`: the player's blend runs on the clip's own clock, so a cast sped up
+## to strike on time (play_cast's rate, up to 20) would cut over in a frame (the animation quality pass, 2026-10-11).
+static func _real_blend(blend: float, speed: float) -> float:
+	return blend * maxf(speed, 0.01)
 
 
 ## A bender's cast of `move` in `mode` (NpcBending; the user, 2026-10-04: an element bot casts the player's moves): the clip
