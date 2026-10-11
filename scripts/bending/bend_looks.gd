@@ -1196,14 +1196,16 @@ static func guard_result(body: Node3D, el: String, result: String) -> void:
 ## its path and embers spilling past the deck's lip (WaveFx). The holder (its scale.x the wave's width over `width`: the bolt
 ## widens it as it runs). Headless: the holder alone.
 ## Earth's Fissure (a floor wave of kind stone): FissureFx, our own stone spikes bursting along it (a plain holder when nothing
-## is drawn).
+## is drawn). Loaded by its path (FISSURE_FX): a class name new to the project is unknown to a run until the editor has scanned
+## the project, and naming it here made a launcher run of an unscanned checkout fail to compile every effect (2026-10-11).
+const FISSURE_FX := preload("res://scripts/bending/fissure_fx.gd")
 static func fissure_body(parent: Node3D, width: float, height: float) -> Node3D:
 	if not live():
 		var holder := Node3D.new()
 		holder.name = "Fissure"
 		parent.add_child(holder)
 		return holder
-	var f := FissureFx.new()
+	var f := FISSURE_FX.new()
 	f.name = "Fissure"
 	f.width = width
 	f.height = height
